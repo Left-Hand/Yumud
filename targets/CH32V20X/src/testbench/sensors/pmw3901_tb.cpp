@@ -23,7 +23,7 @@ void pmw3901_main(){
 
     spi.init({4_MHz});
 
-    PMW3901 pmw{&spi, spi.allocate_cs_gpio(&portA[15]).unwrap()};
+    PMW3901 pmw{&spi, spi.allocate_cs_gpio(&hal::PA<15>()).unwrap()};
     pmw.init().unwrap();
 
     while(true){

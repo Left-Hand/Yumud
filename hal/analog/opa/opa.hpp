@@ -10,10 +10,10 @@
 
 namespace ymd::hal{
 
-//OpaIndex: 运放序号 1/2
-//TChannel: 通道序号 0:Output -1:Neg 1:Pos
-//TMapping: 布局序号 0/1
-template<uint8_t TOpaIndex, int8_t TChannel, uint8_t TMapping>
+//OpaNth: 运放序号 1/2
+//Channel: 通道序号 0:Output -1:Neg 1:Pos
+//Mapping: 布局序号 0/1
+template<uint8_t OpaNth, int8_t Channel, uint8_t Mapping>
 struct OpaGpioMapping{
     using IoTag = void;
 };
@@ -86,11 +86,11 @@ struct OpaGpioMapping<2, 1, 1>{
 
 namespace ymd::hal{
 
-template<uint8_t TOpaIndex>
-class Opa_t{
+template<uint8_t OpaNth>
+class Opa{
 private:
-    static constexpr uint8_t index = TOpaIndex;
-    static_assert((index >= 1) and (index <= 4), "Opa");
+    static constexpr uint8_t nth = OpaNth;
+    static_assert((nth >= 1) and (nth <= 4), "Opa");
 
 
 
@@ -101,13 +101,15 @@ public:
         static_assert((PosMap >= 0) and (PosMap <= 1), "Opa");
         static_assert((OutMap >= 0) and (OutMap <= 1), "Opa");
 
-        // using NegIoTag = OpaGpioMapping<TOpaIndex, -1, NegMap>::IoTag;
-        // using PosIoTag = OpaGpioMapping<TOpaIndex,  1, PosMap>::IoTag;
-        // using OutIoTag = OpaGpioMapping<TOpaIndex,  0, OutMap>::IoTag;
+        // using NegIoTag = OpaGpioMapping<OpaNth, -1, NegMap>::IoTag;
+        // using PosIoTag = OpaGpioMapping<OpaNth,  1, PosMap>::IoTag;
+        // using OutIoTag = OpaGpioMapping<OpaNth,  0, OutMap>::IoTag;
 
+        #if 0
         Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinNth::_0>().inana();
         Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinNth::_0>().inana();
         Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinNth::_0>().inana();
+        #endif
 
         // Gpio::reflect<NegIoTag::source, NegIoTag::pin>().inana();
         // Gpio::reflect<PosIoTag::source, PosIoTag::pin>().inana();
@@ -119,19 +121,19 @@ public:
         using chip::OPA_Inst;
 
         remap<NegMap, PosMap, OutMap>();
-        OPA_Inst->enable(index, EN);
-        OPA_Inst->select_neg(index, NegMap);
-        OPA_Inst->select_pos(index, PosMap);
-        OPA_Inst->select_out(index, OutMap);
+        OPA_Inst->enable(nth, EN);
+        OPA_Inst->select_neg(nth, NegMap);
+        OPA_Inst->select_pos(nth, PosMap);
+        OPA_Inst->select_out(nth, OutMap);
     }
 };
 
 #ifdef ENABLE_OPA1
-extern Opa_t<1> opa1;
+extern Opa<1> opa1;
 #endif
 
 #ifdef ENABLE_OPA2
-extern Opa_t<2> opa2;
+extern Opa<2> opa2;
 #endif
 
 }

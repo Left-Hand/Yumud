@@ -1,13 +1,22 @@
 #pragma once
 
 
-#include <ostream>
+#include <bits/ios_base.h>
+#include <iomanip>
+
+#include <vector>
+#include <array>
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <tuple>
+#include <optional>
+#include <utility>
+#include <bitset>
 #include <span>
-#include <ranges>
-#include <cstring>
 #include <chrono>
 
-#include "stream_base.hpp"
 #include "core/stream/CharOpTraits.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/math/iq/iq_t.hpp"
@@ -57,13 +66,13 @@ struct _need_display{static constexpr bool value = true;};
 
 template <>
 struct _need_display<std::ios_base& (*)(std::ios_base&)>
-    {static constexpr bool value = false;};
+    :std::false_type{};
 
-template<> struct _need_display<std::_Setprecision>{static constexpr bool value = false;};
+template<> struct _need_display<std::_Setprecision>:std::false_type{};
 
-template<> struct _need_display<std::_Setbase>{static constexpr bool value = false;};
+template<> struct _need_display<std::_Setbase>:std::false_type{};
 
-template<> struct _need_display<Splitter>{static constexpr bool value = false;};
+template<> struct _need_display<Splitter>:std::false_type{};
 
 template<typename T>
 static constexpr bool need_display_v = details::_need_display<std::decay_t<T>>::value;
@@ -88,7 +97,7 @@ struct Brackets{
 
 
 // template<typename T>
-// struct _inhibit_display_asrange{static constexpr bool value = false;};
+// struct _inhibit_display_asrange:std::false_type{};
 
 // template<typename T>
 // requires is_stringlike_v<T>
@@ -461,10 +470,27 @@ public:
     //     }
     //     return *this;
     // }
-    template <typename T>
-    requires std::ranges::contiguous_range<T>
-    OutputStream & operator<<(const T& range) {
-        print_span(std::ranges::data(range), std::ranges::size(range));
+
+
+    template <std::ranges::range R>
+    OutputStream& operator<<(R&& range) {  // 改为万能引用
+        *this << brackets<'['>();
+        
+        auto it = std::ranges::begin(range);
+        auto end = std::ranges::end(range);
+        
+        if (it != end) {
+            *this << *it;
+            ++it;
+            
+            for (; it != end; ++it) {
+                *this << ',' << *it;
+            }
+        } else {
+            *this << '\\';
+        }
+        
+        *this << brackets<']'>();
         return *this;
     }
 
@@ -751,7 +777,12 @@ private:
                 size_t available = OSTREAM_BUF_SIZE - size;
                 size_t copy_size = std::min(available, pbuf.size() - offset);
 
-                std::memcpy(buf + size, pbuf.data() + offset, copy_size);
+                std::copy(
+                    pbuf.data() + offset,
+                    pbuf.data() + offset + copy_size,
+                    buf + size
+                );
+
                 size += static_cast<uint8_t>(copy_size);
                 offset += copy_size;
 

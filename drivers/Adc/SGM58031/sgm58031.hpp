@@ -160,8 +160,10 @@ struct SGM58031_Regs:public SGM58031_Prelude{
 
 class SGM58031 final:public SGM58031_Regs{
 public:
-    SGM58031(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    SGM58031(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    SGM58031(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    SGM58031(hal::I2cDrv && i2c_drv):
+        i2c_drv_(i2c_drv){;}
     SGM58031(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
@@ -181,7 +183,7 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-    real_t full_scale_;
+    real_t full_scale_ = 0;
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){

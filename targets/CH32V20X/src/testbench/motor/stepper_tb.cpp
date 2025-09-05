@@ -67,8 +67,8 @@ void stepper_tb(UartHw & logger_inst){
 
     #if(MOTOR_TYPE == MOTOR_TYPE_STEPPER)
 
-    auto & ena_gpio = portB[0];
-    auto & enb_gpio = portA[7];
+    auto & ena_gpio = hal::PB<0>();
+    auto & enb_gpio = hal::PA<7>();
 
     AT8222 coilA{timer1.oc<3>(), timer1.oc<4>(), ena_gpio.outpp(HIGH)};
     AT8222 coilB{timer1.oc<1>(), timer1.oc<2>(), enb_gpio.outpp(HIGH)};
@@ -128,10 +128,10 @@ void stepper_tb(UartHw & logger_inst){
     spi1.init(18_MHz);
     
 
-    MT6816 encoder{{spi1, spi1.allocate_cs_gpio(portA[15]).value()}};
+    MT6816 encoder{{spi1, spi1.allocate_cs_gpio(hal::PA<15>()).value()}};
     // MT6701 encoder{{spi1, 0}};
 
-    I2cSw i2cSw{portD[1], portD[0]};
+    I2cSw i2cSw{hal::PD<1>(), hal::PD<0>()};
     i2cSw.init(400_KHz);
     AT24CXX at24{AT24CXX::AT24C02{}, i2cSw};
     Memory mem{at24};

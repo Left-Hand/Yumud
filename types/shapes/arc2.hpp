@@ -1,32 +1,19 @@
 #pragma once
 
-#include "core/utils/angle.hpp"
+#include "core/utils/angle_range.hpp"
 
 #include "types/regions/range2.hpp"
 #include "types/shapes/Circle2.hpp"
+
 namespace ymd{
-
-
-template<typename T>
-struct AngleSweep{
-
-};
 
 template<arithmetic T>
 struct Arc2{
 public:
 	Vec2<T> center;
 	T radius;
-	Range2<T> angle_range;
-public:
-	__fast_inline constexpr Arc2(
-		const Vec2<T> & _org, 
-		const T & _r, 
-		const Range2<T> _range
-	):
-        center(_org), radius(_r), angle_range(_range) {}
+	AngleRange<T> angle_range;
 
-    // 最佳推荐：清晰且专业
     static constexpr Arc2 from_chord_and_central_angle(
         const Vec2<T>& chord_start,
         const Vec2<T>& chord_stop,
@@ -84,5 +71,6 @@ __inline OutputStream & operator <<(OutputStream & os, const Arc2<auto> & arc){
 
 template<typename T>
 struct is_placed_t<Arc2<T>>:std::true_type{};
+
 
 }

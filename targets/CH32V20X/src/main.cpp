@@ -54,14 +54,16 @@ int main(){
     // gui_main();
     // canopen_main();
     // bldc_main();
+    nuedc_2025e_main();
     // polar_robot_main();
     // mks_stepper_main();
     // ads7830_main();
+    // render_main();
     // math_main();
     // polar_robot_main();
     // nuedc_2025e_main();
     // render_main();
-    bldc_main();
+    // bldc_main();
     // laser_ctl_main();
 
     // bldc_main();
@@ -126,7 +128,7 @@ int main(){
     // pmdc_tb();
     // uart_tb(uart1);
     // joystick_tb(uart1);
-    // gpio_tb(portC[13]);
+    // gpio_tb(hal::PC<13>());
     // can_tb(logger, can1, false);
     // m3508_main();
     // stepper_tb(uart1);
@@ -162,6 +164,7 @@ int main(){
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
     // uart_main();
+    // render_main();
     // calc_main();
     // dshot_main();
     // usbcdc_tb();
@@ -173,7 +176,7 @@ int main(){
     // smc_main();
     // can_tb(logger, can1, true);
     // pmdc_tb();
-    // gpio_tb(portC[13]);
+    // gpio_tb(hal::PC<13>());
     // dma_tb(logger, dma1Ch1);
     // dma_tb(logger, UART7_RX_DMA_CH);
     // uart_tb(logger);
@@ -184,6 +187,7 @@ int main(){
     // fft_main();
 
     render_main();
+    // mlx90640_main();
 
     // embd_main();
     // mpu6050_main();

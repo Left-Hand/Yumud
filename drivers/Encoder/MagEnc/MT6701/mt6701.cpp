@@ -62,8 +62,8 @@ IResult<> MT6701::update(){
     // }
 }
 
-IResult<real_t> MT6701::read_lap_position(){
-    return Ok(lap_position_);
+IResult<Angle<q31>> MT6701::read_lap_angle(){
+    return Ok(Angle<q31>::from_turns(lap_position_));
 }
 
 

@@ -23,7 +23,7 @@ struct ScanLine{
     uint16_t y;
 
     Rect2u16 bounding_box() const{
-        return Rect2u16(x_range.start, y, x_range.length(), 1);
+        return Rect2u16(Vec2u16{x_range.start, y}, Vec2u16{x_range.length(), 1});
     }
 };
 

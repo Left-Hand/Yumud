@@ -2,8 +2,6 @@
 
 #include "rigid.hpp"
 
-#include "core/stream/stream.hpp"
-
 namespace nuedc::_2023E{
 
 

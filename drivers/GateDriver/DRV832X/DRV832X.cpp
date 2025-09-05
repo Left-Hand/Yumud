@@ -25,26 +25,32 @@ using IResult = Result<T, Error>;
 
 IResult<> DRV8323R::init(const Config & cfg){
 
+    TODO();
     return Ok();
 }
 
 IResult<> DRV8323R::reconf(const Config & cfg){
+    TODO();
     return Ok();
 }
 
 IResult<> DRV8323R::set_peak_current(const PeakCurrent peak_current){
+    TODO();
     return Ok();
 }
 
 IResult<> DRV8323R::set_ocp_mode(const OcpMode ocp_mode){
+    TODO();
     return Ok();
 }
 
 IResult<> DRV8323R::set_gain(const Gain gain){
+    TODO();
     return Ok();
 }
 
 IResult<> DRV8323R::enable_pwm3(const Enable en){
+    TODO();
     return Ok();
 }
 
@@ -87,7 +93,7 @@ IResult<DRV8323R::R16_Status2> DRV8323R::get_status2(){
 struct SpiFormat{
     uint16_t data:11;
     uint16_t addr:4;
-    uint16_t write:1;
+    uint16_t is_write:1;
 
     uint16_t as_val() const {
         return std::bit_cast<uint16_t>(*this);
@@ -98,11 +104,13 @@ struct SpiFormat{
     }
 };
 
+static_assert(sizeof(SpiFormat) == sizeof(uint16_t));
+
 IResult<> DRV8323R_Phy::write_reg(const RegAddress addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
-        .write = 0
+        .is_write = 0
     };
 
     if(const auto res = spi_drv_.write_single<uint16_t>((spi_format));
@@ -115,7 +123,7 @@ IResult<> DRV8323R_Phy::read_reg(const RegAddress addr, uint16_t & reg){
     SpiFormat spi_format = {
         .data = 0,
         .addr = uint16_t(addr),
-        .write = 1
+        .is_write = 1
     };
 
     const auto res = spi_drv_.read_single<uint16_t>((spi_format));

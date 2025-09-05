@@ -11,7 +11,7 @@ static void clear_corners(Image<T> & dst){
     const auto size = dst.size();
     const auto w = size_t(size.x);
     const auto h = size_t(size.y);
-    static constexpr T black = T(0);
+    static constexpr T black = T::from_black();
     for(size_t y = 0; y < h; y++)
         dst[{0, y}] = black;
     for(size_t y = 0; y < h; y++)
@@ -35,21 +35,21 @@ void convolution(
     for(size_t y = 1; y < h-1u; y++){
         for(size_t x = 1; x < w-1u; x++){
             size_t pixel = 0;
-            pixel += uint8_t(src[x - 1 + (y - 1) * w]	) * core[0][0];
-            pixel += uint8_t(src[x +  (y - 1) * w]		) * core[0][1];
-            pixel += uint8_t(src[x + 1 + (y - 1) * w]	) * core[0][2];
+            pixel += (src[x - 1 + (y - 1) * w]	).as_u8() * core[0][0];
+            pixel += (src[x +  (y - 1) * w]		).as_u8() * core[0][1];
+            pixel += (src[x + 1 + (y - 1) * w]	).as_u8() * core[0][2];
             
-            pixel += uint8_t(src[x - 1 + (y) * w]		) * core[1][0];
-            pixel += uint8_t(src[x +  (y) * w]			) * core[1][1];
-            pixel += uint8_t(src[x + 1 + (y) * w]		) * core[1][2];
+            pixel += (src[x - 1 + (y) * w]		).as_u8() * core[1][0];
+            pixel += (src[x +  (y) * w]			).as_u8() * core[1][1];
+            pixel += (src[x + 1 + (y) * w]		).as_u8() * core[1][2];
             
-            pixel += uint8_t(src[x - 1 + (y + 1) * w] 	) * core[2][0];
-            pixel += uint8_t(src[x +  (y + 1) * w]		) * core[2][1];
-            pixel += uint8_t(src[x + 1 + (y + 1) * w]	) * core[2][2];
+            pixel += (src[x - 1 + (y + 1) * w] 	).as_u8() * core[2][0];
+            pixel += (src[x +  (y + 1) * w]		).as_u8() * core[2][1];
+            pixel += (src[x + 1 + (y + 1) * w]	).as_u8() * core[2][2];
             
             if(div != 1) pixel /= div;
 
-            dst[x + y * w] = Gray(CLAMP(ABS(pixel), 0, 255));
+            dst[x + y * w] = Gray::from_u8(CLAMP(ABS(pixel), 0, 255));
         }
     }
 }
@@ -84,12 +84,12 @@ void gauss5x5(Image<Gray> & dst, const Image<Gray> & src){
             for(int dy = -core_radius; dy <= int(core_radius); ++dy){
                 for(int dx = -core_radius; dx <= int(core_radius); ++dx){
                     sum += 
-                        uint8_t(src[Vec2u{size_t(x + dx), size_t(y + dy)}]) 
+                        src[Vec2u{size_t(x + dx), size_t(y + dy)}].as_u8()
                         * uint8_t(core[size_t(dy + core_radius)][size_t(dx + core_radius)]);
                 }
             }
             
-            dst[{x,y}] = Gray(CLAMP(sum / core_sum, 0, 255));
+            dst[{x,y}] = Gray::from_u8(CLAMP(sum / core_sum, 0, 255));
         }
     }
 }
@@ -165,19 +165,19 @@ void sobel_xy(Image<Gray> & dst, const Image<Gray> & src){
         for(size_t y = 1; y < h-1u; y++){
             for(size_t x = 1; x < w-1u; x++){
                 size_t pixel = 0;
-                pixel += uint8_t(src[x - 1 + (y - 1) * w]	)* core[0][0];
-                pixel += uint8_t(src[x +  (y - 1) * w]		)* core[0][1];
-                pixel += uint8_t(src[x + 1 + (y - 1) * w]	)* core[0][2];
+                pixel += (src[x - 1 + (y - 1) * w]	).as_u8() * core[0][0];
+                pixel += (src[x +  (y - 1) * w]		).as_u8() * core[0][1];
+                pixel += (src[x + 1 + (y - 1) * w]	).as_u8() * core[0][2];
                 
-                pixel += uint8_t(src[x - 1 + (y) * w]		)* core[1][0];
-                pixel += uint8_t(src[x +  (y) * w]			)* core[1][1];
-                pixel += uint8_t(src[x + 1 + (y) * w]		)* core[1][2];
+                pixel += (src[x - 1 + (y) * w]		).as_u8() * core[1][0];
+                pixel += (src[x +  (y) * w]			).as_u8() * core[1][1];
+                pixel += (src[x + 1 + (y) * w]		).as_u8() * core[1][2];
                 
-                pixel += uint8_t(src[x - 1 + (y + 1) * w] 	)* core[2][0];
-                pixel += uint8_t(src[x +  (y + 1) * w]		)* core[2][1];
-                pixel += uint8_t(src[x + 1 + (y + 1) * w]	)* core[2][2];
+                pixel += (src[x - 1 + (y + 1) * w] 	).as_u8() * core[2][0];
+                pixel += (src[x +  (y + 1) * w]		).as_u8() * core[2][1];
+                pixel += (src[x + 1 + (y + 1) * w]	).as_u8() * core[2][2];
                 
-                dst[x + y * w] = Gray(CLAMP(ABS(pixel), 0, 255));
+                dst[x + y * w] = Gray::from_u8(CLAMP(ABS(pixel), 0, 255));
             }
         }
     }
@@ -186,21 +186,21 @@ void sobel_xy(Image<Gray> & dst, const Image<Gray> & src){
         for(size_t y = 1; y < h-1u; y++){
             for(size_t x = 1; x < w-1u; x++){
                 size_t pixel = 0;
-                pixel += uint8_t(src[x - 1 + (y - 1) * w]	)* core[0][0];
-                pixel += uint8_t(src[x +  (y - 1) * w]		)* core[0][1];
-                pixel += uint8_t(src[x + 1 + (y - 1) * w]	)* core[0][2];
+                pixel += (src[x - 1 + (y - 1) * w]	).as_u8() * core[0][0];
+                pixel += (src[x +  (y - 1) * w]		).as_u8() * core[0][1];
+                pixel += (src[x + 1 + (y - 1) * w]	).as_u8() * core[0][2];
                 
-                pixel += uint8_t(src[x - 1 + (y) * w]		)* core[1][0];
-                pixel += uint8_t(src[x +  (y) * w]			)* core[1][1];
-                pixel += uint8_t(src[x + 1 + (y) * w]		)* core[1][2];
+                pixel += (src[x - 1 + (y) * w]		).as_u8() * core[1][0];
+                pixel += (src[x +  (y) * w]			).as_u8() * core[1][1];
+                pixel += (src[x + 1 + (y) * w]		).as_u8() * core[1][2];
                 
-                pixel += uint8_t(src[x - 1 + (y + 1) * w] 	)* core[2][0];
-                pixel += uint8_t(src[x +  (y + 1) * w]		)* core[2][1];
-                pixel += uint8_t(src[x + 1 + (y + 1) * w]	)* core[2][2];
+                pixel += (src[x - 1 + (y + 1) * w] 	).as_u8() * core[2][0];
+                pixel += (src[x +  (y + 1) * w]		).as_u8() * core[2][1];
+                pixel += (src[x + 1 + (y + 1) * w]	).as_u8() * core[2][2];
                 
-                dst[x + y * w] = Gray(MAX(
-                    uint8_t(dst[x + y *w]), 
-                    uint8_t(CLAMP(ABS(pixel), 0, 255))
+                dst[x + y * w] = Gray::from_u8(MAX(
+                    dst[x + y *w].as_u8(),
+                    CLAMP(ABS(pixel), 0, 255)
                 ));
             }
         }
@@ -215,13 +215,13 @@ void convolution(Image<Gray> & dst, const Image<Gray> & src, const size_t core[2
         for(size_t x = 1; x < w-1u; x++){
             size_t pixel = 0;
 
-            pixel += uint8_t(src[x - 1 + (y - 1) * w]	)* core[0][0];
-            pixel += uint8_t(src[x +  (y - 1) * w]		)* core[0][1];
+            pixel += (src[x - 1 + (y - 1) * w]	).as_u8() * core[0][0];
+            pixel += (src[x +  (y - 1) * w]		).as_u8() * core[0][1];
             
-            pixel += uint8_t(src[x - 1 + (y) * w]		)* core[1][0];
-            pixel += uint8_t(src[x +  (y) * w]			)* core[1][1];
+            pixel += (src[x - 1 + (y) * w]		).as_u8() * core[1][0];
+            pixel += (src[x +  (y) * w]			).as_u8() * core[1][1];
             
-            dst[x + y * w] = Gray(CLAMP(ABS(pixel), 0, 255));
+            dst[x + y * w] = Gray::from_u8(CLAMP(ABS(pixel), 0, 255));
         }
     }
 }
@@ -249,7 +249,7 @@ void dilate(Image<Binary> & dst, const Image<Binary> & src){
             pixel |= src[x +  (y + 1) * w].is_white();
             pixel |= src[x + 1 + (y + 1) * w].is_white();
             
-            dst[x + y * w] = Binary(pixel);
+            dst[x + y * w] = Binary::from_bool(pixel);
         }
     }
 }
@@ -338,7 +338,7 @@ void dilate_y(Image<Binary> & dst, const Image<Binary> & src){
             pixel |= src[x +  (y) * w].is_white();
             pixel |= src[x +  (y + 1) * w].is_white();
             
-            dst[x + y * w] = Binary(pixel);
+            dst[x + y * w] = Binary::from_bool(pixel);
         }
     }
 }
@@ -371,7 +371,7 @@ void erosion(Image<Binary> & dst, const Image<Binary> & src){
             pixel &= src[x +  (y + 1) * w].is_white();
             pixel &= src[x + 1 + (y + 1) * w].is_white();
             
-            dst[x + y * w] = Binary(pixel);
+            dst[x + y * w] = Binary::from_bool(pixel);
         }
     }
 }
@@ -440,11 +440,11 @@ void erosion_y(Image<Binary> & dst, const Image<Binary> & src){
         for(size_t x = 0; x < w; x++){
             bool pixel = true;
 
-            pixel = src[x +  (y - 1) * w].is_white();
-            pixel = src[x +  (y) * w].is_white();
-            pixel = src[x +  (y + 1) * w].is_white();
+            pixel &= src[x +  (y - 1) * w].is_white();
+            pixel &= src[x +  (y) * w].is_white();
+            pixel &= src[x +  (y + 1) * w].is_white();
             
-            dst[x + y * w] = Binary(pixel);
+            dst[x + y * w] = Binary::from_bool(pixel);
         }
     }
 }
@@ -468,7 +468,7 @@ void erosion_xy(Image<Binary> & dst, const Image<Binary> & src){
             pixel &= src[x +  (y) * w].is_white();
             pixel &= src[x +  MIN((y + 1), h-1u) * w].is_white();
             
-            dst[x + y * w] = Binary(pixel);
+            dst[x + y * w] = Binary::from_bool(pixel);
         }
     }
 }
@@ -492,11 +492,11 @@ Image<Gray> x2(const Image<Gray> & src){
 
             for(size_t j = 0; j < 2; j++){
                 for(size_t i = 0; i < 2; i++){
-                    sum += uint8_t(src[{(x << 1) + i,(y << 1) + j}]);
+                    sum += src[{(x << 1) + i,(y << 1) + j}].as_u8();
                 }
             }
 
-            dst[{x,y}] = Gray(sum >> 2);
+            dst[{x,y}] = Gray::from_u8(sum >> 2);
 
             // dst[{x,y}] = src[{x << 1,y << 1}];
         }
@@ -520,7 +520,7 @@ void anti_pepper_x(Image<Binary> & dst,const Image<Binary> & src){
         uint8_t last_two = false;
         for (size_t x = 1; x < w - 2; ++x) {
             uint8_t next = (*(p_src + 1)).is_white();
-            *p_dst = Binary((last_two + next) > 1);
+            *p_dst = Binary::from_bool((last_two + next) > 1);
             last_two = uint8_t((*p_src).is_white()) + next;
 
             p_src++;
@@ -546,7 +546,7 @@ void anti_pepper_y(Image<Binary> & dst,const Image<Binary> & src){
         uint8_t last_two = false;
         for (size_t y = 1; y < h - 2; ++y) {
             uint8_t next = (*(p_src + 1)).is_white();
-            *p_dst = Binary((last_two + next) > 1);
+            *p_dst = Binary::from_bool((last_two + next) > 1);
             last_two = uint8_t(((*p_src)).is_white()) + next;
 
             p_src += w;
@@ -571,7 +571,7 @@ void anti_pepper(Image<Binary> & dst,const Image<Binary> & src){
         uint8_t last_two = true;
         for (size_t x = 1; x < w - 1; ++x) {
             uint8_t next = (*(p_src + 1)).is_white();
-            *p_dst = Binary((last_two + next) > 1);
+            *p_dst = Binary::from_bool((last_two + next) > 1);
             last_two = uint8_t(((*p_src)).is_white()) + next;
 
             p_src++;
@@ -598,7 +598,7 @@ void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real
                     pixel += src[src_pos].is_white();
                 }
             Vec2u dst_pos = Vec2u(x,y);
-            dst[dst_pos] = Binary(bool(pixel > n));
+            dst[dst_pos] = Binary::from_bool(bool(pixel > n));
             }
         }
     }
@@ -740,7 +740,7 @@ void convo_roberts_x(Image<Gray> & dst, const Image<Gray> & src){
         const auto * p_src = &src[y * w];
         auto * p_dst = &dst[y * w];
         for (size_t x = 0; x < w - 1; ++x) {
-            *p_dst = Gray(ABS(uint8_t(*p_src) - uint8_t(*(p_src + 1))));
+            *p_dst = Gray::from_u8(ABS(p_src->as_u8() - (p_src + 1)->as_u8()));
             p_src++;
             p_dst++; 
         }
@@ -764,9 +764,9 @@ void convo_roberts_xy(Image<Gray> & dst, const Image<Gray> & src){
         const auto * p_src2 = &src[(y + 1) * w];
         auto * p_dst = &dst[y * w];
         for (size_t x = 0; x < w - 1; ++x) {
-            *p_dst = Gray(MAX(
-                ABS(uint8_t(*p_src) - uint8_t(*(p_src + 1))), 
-                ABS(uint8_t(*p_src) - uint8_t(*(p_src2)))
+            *p_dst = Gray::from_u8(MAX(
+                ABS(p_src->as_u8() - (p_src + 1)->as_u8()), 
+                ABS(p_src->as_u8() - (p_src2)->as_u8())
             ));
             p_src++;
             p_dst++; 
@@ -779,7 +779,7 @@ void convo_roberts_xy(Image<Gray> & dst, const Image<Gray> & src){
         auto * p_src = &src[y * w];
         auto * p_dst = &dst[y * w];
         for(size_t x = 0; x < w - 1; ++x) {
-            *p_dst = Gray(ABS(uint8_t(*p_src) - uint8_t(*(p_src + 1))));
+            *p_dst = Gray::from_u8(ABS(p_src->as_u8() - (p_src + 1)->as_u8()));
             p_src++;
             p_dst++; 
         }
@@ -809,7 +809,7 @@ static __fast_inline Direction xy_to_dir(const int16_t x, const int16_t y){
 } 
 
 void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & threshold){
-    auto roi = src.size().to_rect();
+    auto roi = Rect2u::from_size(src.size());
 
     const auto [low_thresh, high_thresh] = threshold;
 
@@ -818,7 +818,7 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
         Direction t;
     }__packed;
 
-    auto gm = std::make_unique<gvec_t[]>(roi.get_area());
+    auto gm = std::make_unique<gvec_t[]>(roi.area());
 
     const auto w = roi.w();
     
@@ -838,23 +838,23 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
                 //  2   0   -2
                 //  1   0   -1
 
-                vx =  uint8_t(src[(y - 1) * w + x - 1])
-                    - uint8_t(src[(y - 1) * w + x + 1])
-                    + uint8_t(uint8_t(src[(y + 0) * w + x - 1]) << 1)
-                    - uint8_t(uint8_t(src[(y + 0) * w + x + 1]) << 1)
-                    + uint8_t(src[(y + 1) * w + x - 1])
-                    - uint8_t(src[(y + 1) * w + x + 1]);
+                vx =  (src[(y - 1) * w + x - 1]).as_u8()
+                    - (src[(y - 1) * w + x + 1]).as_u8()
+                    + ((src[(y + 0) * w + x - 1]).as_u8() << 1)
+                    - ((src[(y + 0) * w + x + 1]).as_u8() << 1)
+                    + (src[(y + 1) * w + x - 1]).as_u8()
+                    - (src[(y + 1) * w + x + 1]).as_u8();
 
                 //  1   2   1
                 //  0   0   0
                 //  -1  2   -1
 
-                vy = uint8_t(src[(y - 1) * w + x - 1])
-                    + uint8_t(uint8_t(src[(y - 1) * w + x + 0]) << 1)
-                    + uint8_t(src[(y - 1) * w + x + 1])
-                    - uint8_t(src[(y + 1) * w + x - 1])
-                    - uint8_t(uint8_t(src[(y + 1) * w + x + 0]) << 1)
-                    - uint8_t(src[(y + 1) * w + x + 1]);
+                vy = (src[(y - 1) * w + x - 1]).as_u8()
+                    + ((src[(y - 1) * w + x + 0]).as_u8() << 1)
+                    + (src[(y - 1) * w + x + 1]).as_u8()
+                    - (src[(y + 1) * w + x - 1]).as_u8()
+                    - ((src[(y + 1) * w + x + 0]).as_u8() << 1)
+                    - (src[(y + 1) * w + x + 1]).as_u8();
 
                 // Find the direction and round angle to 0, 45, 90 or 135
 
@@ -881,11 +881,11 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
 
             if (vc->g < low_squ) {
                 // Not an edge
-                *dp = Binary(Binary::BLACK);
+                *dp = Binary::from_black();
                 continue;
                 // Check if strong or weak edge
             } else if (vc->g >= high_squ){
-                *dp = Binary(Binary::WHITE);
+                *dp = Binary::from_white();
             } else{
                 if( gm[(gy - 1) * size_t(roi.w()) + (gx - 1)].g >= high_squ ||
                     gm[(gy - 1) * size_t(roi.w()) + (gx + 0)].g >= high_squ ||
@@ -897,10 +897,10 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
                     gm[(gy + 1) * size_t(roi.w()) + (gx + 1)].g >= high_squ)
                 {
 
-                    *dp = Binary(Binary::WHITE);
+                    *dp = Binary::from_white();
                 } else {
                     // Not an edge
-                    *dp = Binary(Binary::BLACK);
+                    *dp = Binary::from_black();
                     continue;
                 }
             }
@@ -933,113 +933,116 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
             }
 
             if (((vc->g < va->g) || (vc->g < vb->g))) {
-                *dp = Binary(Binary::BLACK);
+                *dp = Binary::from_black();
             }
         }
     }
 }
 
 void eye(Image<Gray> &dst, const Image<Gray> &src){
+    PANIC("todo");
+    // using vec_t = Vec2<int8_t>;
+    // #define square(x) (x * x)
+    // static constexpr size_t shift_bits = 3;
 
-    using vec_t = Vec2<int8_t>;
-    #define square(x) (x * x)
-    static constexpr size_t shift_bits = 3;
-
-    // sizeof(vec_t);
-    auto roi = src.size().to_rect();
-    auto gm = std::make_unique<vec_t[]>(roi.get_area());
+    // // sizeof(vec_t);
+    // auto roi = src.size().to_rect();
+    // auto gm = std::make_unique<vec_t[]>(roi.get_area());
     
-    const auto w = size_t(roi.w());
+    // const auto w = size_t(roi.w());
 
-    //2. Finding Image Gradients
-    {
-        for (size_t y = size_t(roi.y()) + 1; y < size_t(roi.y()) + size_t(roi.h()) - 1u; y++) {
-            for (size_t x = size_t(roi.x()) + 1; x < size_t(roi.x()) + size_t(roi.w()) - 1u; x++) {
-                int16_t vx = 0, vy = 0;
+    // //2. Finding Image Gradients
+    // {
+    //     for (size_t y = size_t(roi.y()) + 1; y < size_t(roi.y()) + size_t(roi.h()) - 1u; y++) {
+    //         for (size_t x = size_t(roi.x()) + 1; x < size_t(roi.x()) + size_t(roi.w()) - 1u; x++) {
+    //             int16_t vx = 0, vy = 0;
 
-                //  1   0   -1
-                //  2   0   -2
-                //  1   0   -1
+    //             //  1   0   -1
+    //             //  2   0   -2
+    //             //  1   0   -1
 
-                vx = uint8_t(src[(y - 1) * w + x - 1])
-                    - uint8_t(src[(y - 1) * w + x + 1])
-                    + uint8_t(uint8_t(src[(y + 0) * w + x - 1]) << 1)
-                    - uint8_t(uint8_t(src[(y + 0) * w + x + 1]) << 1)
-                    + uint8_t(src[(y + 1) * w + x - 1])
-                    - uint8_t(src[(y + 1) * w + x + 1]);
+    //             vx = uint8_t(src[(y - 1) * w + x - 1])
+    //                 - uint8_t(src[(y - 1) * w + x + 1])
+    //                 + uint8_t(uint8_t(src[(y + 0) * w + x - 1]) << 1)
+    //                 - uint8_t(uint8_t(src[(y + 0) * w + x + 1]) << 1)
+    //                 + uint8_t(src[(y + 1) * w + x - 1])
+    //                 - uint8_t(src[(y + 1) * w + x + 1]);
 
-                //  1   2   1
-                //  0   0   0
-                //  -1  2   -1
+    //             //  1   2   1
+    //             //  0   0   0
+    //             //  -1  2   -1
 
-                vy = uint8_t(src[(y - 1) * w + x - 1])
-                    + uint8_t(uint8_t(src[(y - 1) * w + x + 0]) << 1)
-                    + uint8_t(src[(y - 1) * w + x + 1])
-                    - uint8_t(src[(y + 1) * w + x - 1])
-                    - uint8_t(uint8_t(src[(y + 1) * w + x + 0]) << 1)
-                    - uint8_t(src[(y + 1) * w + x + 1]);
+    //             vy = uint8_t(src[(y - 1) * w + x - 1])
+    //                 + uint8_t(uint8_t(src[(y - 1) * w + x + 0]) << 1)
+    //                 + uint8_t(src[(y - 1) * w + x + 1])
+    //                 - uint8_t(src[(y + 1) * w + x - 1])
+    //                 - uint8_t(uint8_t(src[(y + 1) * w + x + 0]) << 1)
+    //                 - uint8_t(src[(y + 1) * w + x + 1]);
 
-                // Find the direction and round angle to 0, 45, 90 or 135
+    //             // Find the direction and round angle to 0, 45, 90 or 135
 
-                gm[w * y + x] = vec_t{
-                    int8_t(vx >> shift_bits), 
-                    int8_t(vy >> shift_bits)};
-            }
-        }
-    }
+    //             gm[w * y + x] = vec_t{
+    //                 int8_t(vx >> shift_bits), 
+    //                 int8_t(vy >> shift_bits)};
+    //         }
+    //     }
+    // }
 
-    clear_corners(dst);
+    // clear_corners(dst);
 
-    static constexpr size_t WINDOW_HALF_SIZE = 4;
+    // [[maybe_unused]] static constexpr size_t WINDOW_HALF_SIZE = 4;
 
-    using template_t = std::array<std::array<vec_t, WINDOW_HALF_SIZE * 2 + 1>, WINDOW_HALF_SIZE * 2 + 1>;
 
-    auto generate_template = []() -> template_t{
-        template_t ret;
-        for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
-            for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
-                real_t rad = atan2(real_t(y), real_t(x));
-                const auto [s, c] = sincos(rad);
-                vec_t vec = vec_t{int8_t(s), int8_t(c)};
-                // vec_t vec = vec_t{scale, 0};
-                ret[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE] = vec;
-            }
-        }
-        return ret;
-    };
+    // using template_t = std::array<
+    //     std::array<vec_t, WINDOW_HALF_SIZE * 2 + 1>, 
+    // WINDOW_HALF_SIZE * 2 + 1>;
 
-    auto temp = generate_template();
+    // auto generate_template = []() -> template_t{
+    //     template_t ret ;
+    //     for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
+    //         for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
+    //             real_t rad = atan2(real_t(y), real_t(x));
+    //             const auto [s, c] = sincos(rad);
+    //             vec_t vec = vec_t{int8_t(s), int8_t(c)};
+    //             // vec_t vec = vec_t{scale, 0};
+    //             ret[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE] = vec;
+    //         }
+    //     }
+    //     return ret;
+    // };
 
-    for (size_t gy = WINDOW_HALF_SIZE; gy < size_t(roi.h()) - WINDOW_HALF_SIZE; gy++) {
-        vec_t * vc = &gm[gy * w];
-        auto * dp = &dst[gy * w];
-        for (size_t gx = WINDOW_HALF_SIZE; gx < size_t(roi.w()) - WINDOW_HALF_SIZE; gx++) {
-            vc++;
-            dp++;
+    // auto temp = generate_template();
 
-            // *dp = fast_sqrt_i<uint16_t>((vc->x * vc->x + vc->y * vc->y));
+    // for (size_t gy = WINDOW_HALF_SIZE; gy < size_t(roi.h()) - WINDOW_HALF_SIZE; gy++) {
+    //     vec_t * vc = &gm[gy * w];
+    //     auto * dp = &dst[gy * w];
+    //     for (size_t gx = WINDOW_HALF_SIZE; gx < size_t(roi.w()) - WINDOW_HALF_SIZE; gx++) {
+    //         vc++;
+    //         dp++;
 
-            // size_t x_sum = 0;
-            // size_t y_sum = 0;
-            size_t sum = 0;
-            for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
-                for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
-                    const auto & vec = gm[(gy + y) * w + (gx + x)];
-                    const auto & tvec = temp[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE];
-                    // x_sum += ABS(vec.x * tvec.x);
-                    // y_sum += ABS(vec.y * tvec.y);
-                    // sum += temp[3][3].length_squared();
-                    // sum += tvec.length_squared();
-                    sum += vec.x * tvec.x + vec.y * tvec.y;
-                }
-            }
-            // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
-            // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
-            // size_t sum = MAX(x_sum, y_sum);
-            // size_t sum =  x_sum * x_sum + y_sum * y_sum;
-            *dp = Gray((ABS(sum) / ((WINDOW_HALF_SIZE * 2 + 1) * (WINDOW_HALF_SIZE * 2 + 1))) >> 4); 
-        }
-    }
+    //         // *dp = fast_sqrt_i<uint16_t>((vc->x * vc->x + vc->y * vc->y));
+
+    //         // size_t x_sum = 0;
+    //         // size_t y_sum = 0;
+    //         size_t sum = 0;
+    //         for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
+    //             for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
+    //                 const auto & vec = gm[(gy + y) * w + (gx + x)];
+    //                 const auto & tvec = temp[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE];
+    //                 // x_sum += ABS(vec.x * tvec.x);
+    //                 // y_sum += ABS(vec.y * tvec.y);
+    //                 // sum += temp[3][3].length_squared();
+    //                 // sum += tvec.length_squared();
+    //                 sum += vec.x * tvec.x + vec.y * tvec.y;
+    //             }
+    //         }
+    //         // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
+    //         // size_t sum = fast_sqrt_i<int>(square(x_sum) + square(y_sum));
+    //         // size_t sum = MAX(x_sum, y_sum);
+    //         // size_t sum =  x_sum * x_sum + y_sum * y_sum;
+    //         *dp = Gray((ABS(sum) / ((WINDOW_HALF_SIZE * 2 + 1) * (WINDOW_HALF_SIZE * 2 + 1))) >> 4); 
+    //     }
+    // }
 }
 
 void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
@@ -1065,7 +1068,7 @@ void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
             std::fill(min_values.begin(), min_values.end(), 255);
             for(size_t i=y-WINDOW_HALF_SIZE;i<=y+WINDOW_HALF_SIZE;i++){
                 for(size_t j=x-WINDOW_HALF_SIZE;j<=x+WINDOW_HALF_SIZE;j++){
-                    auto current_value = uint8_t(src[{j,i}]);
+                    auto current_value = src[{j,i}].as_u8();
                     auto it = std::find_if(min_values.begin(), min_values.end(), [current_value](const uint8_t val){
                         return val > current_value;
                     });
@@ -1079,7 +1082,8 @@ void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
             const auto raw = src[{x,y}];
 
             auto RELU = [](uint8_t _x) -> uint8_t {return (_x) > 0 ? (_x) : (0);};
-            dst[{x,y}] = Gray(CLAMP(RELU(uint8_t(raw) - uint8_t(ave) - 30) * 8, 0, 255));
+            dst[{x,y}] = Gray::from_u8(CLAMP(RELU(
+                raw.as_u8() - uint8_t(ave) - 30) * 8, 0, 255));
         }
     }
 }

@@ -44,7 +44,7 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
 [[maybe_unused]] static 
 void at8222_tb(){
-    // hal::UartSw uart{portA[5], NullGpio}; 
+    // hal::UartSw uart{hal::PA<5>(), NullGpio}; 
     // uart.init({19200});
     // DEBUGGER.retarget(&uart);
 
@@ -180,7 +180,7 @@ void at8222_tb(){
     real_t trackin_sig = 0;
     real_t volt = 0;
 
-    auto & watch_gpio = portA[3];
+    auto & watch_gpio = hal::PA<3>();
     watch_gpio.outpp();
 
     

@@ -1,7 +1,11 @@
 #pragma once
+
+
 #include <array>
 #include <cstdint>
 #include "core/math/realmath.hpp"
+
+
 namespace ymd::dsp {
 
 template<typename T>
@@ -37,7 +41,6 @@ private:
     std::span<T> pbuf_{};
     size_t write_pos_ = 0;
     size_t delay_ = 0;
-
 };
 
 } // namespace dsp

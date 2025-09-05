@@ -617,6 +617,40 @@ template<typename TDummy = void>
 Result() -> Result<void, void>;
 
 
+struct Infallible{};
+template<typename T>
+struct [[nodiscard]] Result<T, Infallible>{
+    constexpr Result(Ok<T> && okay):value_(okay.get()){;}
+    consteval Result(Err<Infallible> && error){;}
+
+    constexpr T examine() const {return value_;}
+    constexpr T unwrap() const {return value_;}
+
+    consteval Infallible unwrap_err() const {return Infallible{};};
+    consteval bool is_err() const {return false;}
+    consteval bool is_ok() const {return true;}
+private:
+    T value_;
+};
+
+
+template<>
+struct [[nodiscard]] Result<void, Infallible>{
+    consteval Result(Ok<void> && okay){;}
+    consteval Result(Err<Infallible> && error){;}
+
+    constexpr void examine() const {}
+    constexpr void unwrap() const {}
+
+    constexpr Infallible unwrap_err() const {return Infallible{};};
+    consteval bool is_err() const {return false;}
+    consteval bool is_ok() const {return true;}
+private:
+
+};
+
+
+
 template<typename Fn, typename Fn_Dur>
 __inline auto retry(const size_t times, Fn && fn, Fn_Dur && fn_dur){
     if constexpr(!std::is_null_pointer_v<Fn_Dur>) std::forward<Fn_Dur>(fn_dur)();
@@ -636,7 +670,7 @@ __inline auto retry(const size_t times, Fn && fn){
 
 
 template<typename T, typename E>
-OutputStream & operator<<(OutputStream & os, const Result<T, E> & res) {
+__inline OutputStream & operator<<(OutputStream & os, const Result<T, E> & res) {
     if(res.is_ok()){
         os << "Ok" << os.brackets<'('>(); 
         if constexpr(!std::is_void_v<T>) os << res.unwrap();
@@ -647,6 +681,11 @@ OutputStream & operator<<(OutputStream & os, const Result<T, E> & res) {
         return os << os.brackets<')'>();
     }
 }
+
+__inline OutputStream & operator << (OutputStream & os, const Infallible){
+    return os << "Infallible";
+}
+
 
 template <typename T, typename E>
 struct __unwrap_helper<Result<T, E>> {

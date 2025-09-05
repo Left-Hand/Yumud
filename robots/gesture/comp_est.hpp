@@ -36,7 +36,7 @@ struct ComplementaryGestureEstimator{
         //     // pos_filter_.position(),
         //     // pos_filter_.lap_position(),
         //     // pos_filter_.speed(),
-        //     ma730_.read_lap_position().examine(),
+        //     ma730_.read_lap_angle().examine(),
         //     meas_elecrad_
         //     // exe_us_
         //     // // leso_.get_disturbance(),

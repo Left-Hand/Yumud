@@ -10,7 +10,7 @@ class Gpio;
 class VGpio final :public GpioIntf{
 protected:
     GpioPortIntf & port_;
-    int8_t pin_index_;
+    Nth nth_;
     static GpioPortIntf & form_gpiotypedef_to_port(uint32_t base);
 public:
     VGpio(const VGpio &) = delete;
@@ -19,14 +19,13 @@ public:
     using GpioIntf::operator=;
 
     VGpio(const Gpio & gpio);
-    VGpio(GpioPortIntf & port, const int8_t pin_index);
-    VGpio(GpioPortIntf & port, const PinNth pin);
-    __fast_inline void set() {port_.set_nth(pin_index_);}
-    __fast_inline void clr() {port_.clr_nth(pin_index_);}
-    __fast_inline void write(const BoolLevel val){port_.write_nth(pin_index_, val);}
-    __fast_inline BoolLevel read() const {return port_.read_nth(pin_index_);}
-    __fast_inline int8_t index() const {return pin_index_;}
-    void set_mode(const GpioMode mode) { port_.set_mode(pin_index_, mode);}
+    VGpio(GpioPortIntf & port, const PinNth pin_nth);
+    __fast_inline void set() {port_.set_nth(nth_);}
+    __fast_inline void clr() {port_.clr_nth(nth_);}
+    __fast_inline void write(const BoolLevel val){port_.write_nth(nth_, val);}
+    __fast_inline BoolLevel read() const {return port_.read_nth(nth_);}
+    __fast_inline Nth nth() const {return nth_;}
+    void set_mode(const GpioMode mode) { port_.set_mode(nth_, mode);}
 };
 
 

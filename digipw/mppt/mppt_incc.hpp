@@ -5,25 +5,6 @@
 namespace ymd::digipw{
 
 class MpptIncc{
-protected:
-	real_t  Ipv;
-	real_t  Vpv;
-	real_t  IpvH;
-	real_t  IpvL;
-	real_t  VpvH;
-	real_t  VpvL;
-	real_t  MaxVolt;
-	real_t  MinVolt;
-	real_t  Stepsize;
-	real_t  VmppOut;
-	real_t  Cond;
-	real_t  IncCond;
-	real_t  DeltaV;
-	real_t  DeltaI;
-	real_t  VpvOld;
-	real_t  IpvOld;
-	real_t  StepFirst;
-	bool inited;
 public:
     MpptIncc(){
         reset();
@@ -34,6 +15,26 @@ public:
 
     void reset();
     void update();
+
+private:
+	real_t  Ipv = 0;
+	real_t  Vpv = 0;
+	real_t  IpvH = 0;
+	real_t  IpvL = 0;
+	real_t  VpvH = 0;
+	real_t  VpvL = 0;
+	real_t  MaxVolt = 0;
+	real_t  MinVolt = 0;
+	real_t  Stepsize = 0;
+	real_t  VmppOut = 0;
+	real_t  Cond = 0;
+	real_t  IncCond = 0;
+	real_t  DeltaV = 0;
+	real_t  DeltaI = 0;
+	real_t  VpvOld = 0;
+	real_t  IpvOld = 0;
+	real_t  StepFirst = 0;
+	bool inited = false;
 } ;
 
 }

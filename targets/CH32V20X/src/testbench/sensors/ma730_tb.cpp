@@ -23,13 +23,13 @@ void ma730_main(){
     auto & spi = hal::spi1;
     spi.init({9_MHz});
 
-    MA730 ma730{&spi, spi.allocate_cs_gpio(&hal::portA[15]).examine()};
+    MA730 ma730{&spi, spi.allocate_cs_gpio(&hal::PA<15>()).examine()};
     ma730.init({
         .direction = CW
     }).examine();
 
     while(true){
         ma730.update().examine();
-        DEBUG_PRINTLN(ma730.read_lap_position().examine());
+        DEBUG_PRINTLN(ma730.read_lap_angle().examine());
     }
 }

@@ -27,9 +27,9 @@
 //     motor.init();
 //     // tim1ch1n
 //     // Exti
-//     // auto trigGpioA = portA[1];
-//     // auto trigGpioB = portA[4];
-//     ABEncoderExti enc(portA[4], portA[1], NvicPriority(0, 7));
+//     // auto trigGpioA = hal::PA<1>();
+//     // auto trigGpioB = hal::PA<4>();
+//     ABEncoderExti enc(hal::PA<4>(), hal::PA<1>(), NvicPriority(0, 7));
 //     // enc.init();
 
 //     // auto odo = Odometer(enc);
@@ -73,7 +73,7 @@
 //     String temp_str;
 
 //     constexpr int closeloop_freq = 1000;
-//     Gpio & t_watch = portA[5];
+//     Gpio & t_watch = hal::PA<5>();
 //     t_watch.outpp();
 //     timer4.init(closeloop_freq);
 //             real_t sense_uni;

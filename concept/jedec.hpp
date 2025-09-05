@@ -1,10 +1,12 @@
 #pragma once
 
+#include<cstdint>
+
 
 namespace ymd{
 
 
-enum class JedecManufacturer:unsigned char{
+enum class JedecManufacturer:uint8_t{
     Cypress = 0x01,
     Fujitsu = 0x04,
     Eon = 0x1C,
@@ -25,7 +27,7 @@ enum class JedecManufacturer:unsigned char{
     Puya = 0x85
 };
 
-enum class JedecStorageType:unsigned char{
+enum class JedecStorageType:uint8_t{
     SRAM = 0x01,
     NOR_Flash = 0x02,
     NAND_Flash = 0x04,

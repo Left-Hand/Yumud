@@ -43,12 +43,12 @@ void TwoPass::twoPassConnectComponent(Image<Gray> & out,const Image<Binary> &src
 		for (size_t x = 0u; x < w; x++){
 			if (src[{x,y}].is_black()) continue;
 			//left and up labels
-			Gray left = (x - 1 < 0) ? Gray(0) : out.at({x - 1, y});
-			Gray up = (y - 1 < 0) ? Gray(0) : out.at({x, y-1});
+			Gray left = (x - 1 < 0) ? Gray::from_black() : out.at({x - 1, y});
+			Gray up = (y - 1 < 0) ? Gray::from_black() : out.at({x, y-1});
 
 			if (left.is_black() and up.is_black()){
 				//non of two labels is markded, so add a new label
-				out[{x,y}] = Gray(++label);
+				out[{x,y}] = Gray::from_u8(++label);
 				continue;
 			}
 			
@@ -63,9 +63,9 @@ void TwoPass::twoPassConnectComponent(Image<Gray> & out,const Image<Binary> &src
 			//adopt smaller label
 			out[{x,y}] = std::min(left, up);
 			if (left <= up)
-				Union(uint8_t(up), uint8_t(left));
+				Union(up.as_u8(), left.as_u8());
 			else if (up<left)
-				Union(uint8_t(left), uint8_t(up));
+				Union(left.as_u8(), up.as_u8());
 		}
 
 	}
@@ -74,8 +74,8 @@ void TwoPass::twoPassConnectComponent(Image<Gray> & out,const Image<Binary> &src
 	//second pass 
 	for (size_t y = 0u; y < h; y++){
 		for (size_t x = 0u; x < w; x++){
-			if (src[{x,y}] != Binary(0))
-				out[{x,y}] = Gray(Find(uint8_t(out[{x,y}])));
+			if (src[{x,y}] != Binary::from_black())
+				out[{x,y}] = Gray::from_u8(Find(out[{x,y}].as_u8()));
 		}
 	}
 }
@@ -88,7 +88,7 @@ int TwoPass::findMaxLabel(const Image<Gray> & out){
 	{
 		for (auto j = 0u; j < imgW; j++)
 		{
-			auto ele = uint8_t(out[{i, j}]);
+			auto ele = out[{i, j}].as_u8();
 			if (ele > max) {
 				max = ele;
 			}

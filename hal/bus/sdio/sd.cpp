@@ -243,15 +243,15 @@ void SD::enable_rcc(const Enable en){
 SD_Error SD::Init( void ){
     enable_rcc(true);
 
-    portC[8].afpp();
-    portC[9].afpp();
-    portC[10].afpp();
-    portC[11].afpp();
-    portC[12].afpp();
+    hal::PC<8>().afpp();
+    hal::PC<9>().afpp();
+    hal::PC<10>().afpp();
+    hal::PC<11>().afpp();
+    hal::PC<12>().afpp();
 
-    portD[2].afpp();
+    hal::PD<2>().afpp();
 
-    portD[7].inpu();
+    hal::PD<7>().inpu();
 
     // GPIO_InitTypeDef  GPIO_InitStructure;
     // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12;

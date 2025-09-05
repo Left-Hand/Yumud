@@ -73,26 +73,36 @@ public:
     template<typename Cfg, typename T = std::decay_t<Cfg>>
     SSD13XX(Phy && phy, Cfg && cfg):
         phy_(std::move(phy)),
-        offset_(_oled_preset<T>::offset), 
-        init_cmds_list_(std::span(_oled_preset<T>::buf)),
-        flip_x_en_(flip_x_en_),
-        flip_y_en_(flip_y_en_),
-        frame_(_oled_preset<T>::size){
-        }
+        frame_(VerticalBinaryImage{cfg.size}){;}
 
 
-
-    [[nodiscard]] IResult<> init();
+    template<typename Cfg>
+    [[nodiscard]] IResult<> init(Cfg && cfg){
+            // DEBUG_PRINTLN(std::showbase, std::hex, init_cmds_list_);
+        if(const auto res = phy_.init() ; 
+            res.is_err()) return res;
+        if(const auto res = preinit_by_cmds(cfg.buf); 
+            res.is_err()) return res;
+        if(const auto res = enable_display(); 
+            res.is_err()) return res;
+        if(const auto res = set_offset(cfg.offset);
+            res.is_err()) return res;
+        if(const auto res = enable_flip_x(DISEN); 
+            res.is_err()) return res;
+        if(const auto res = enable_flip_y(DISEN); 
+            res.is_err()) return res;
+        return Ok();
+    }
 
     [[nodiscard]] IResult<> update();
 
     [[nodiscard]] IResult<> enable_display(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_flip_y(const bool flip = true){
-        return phy_.write_command(0xA0 | flip);}
-    [[nodiscard]] IResult<> enable_flip_x(const bool flip = true){
-        return phy_.write_command(0xC0 | (flip << 3));}
-    [[nodiscard]] IResult<> enable_inversion(const bool inv = true){
-        return phy_.write_command(0xA7 - inv);}  
+    [[nodiscard]] IResult<> enable_flip_y(const Enable flip_en = EN){
+        return phy_.write_command(0xA0 | (flip_en == EN));}
+    [[nodiscard]] IResult<> enable_flip_x(const Enable flip_en = EN){
+        return phy_.write_command(0xC0 | ((flip_en == EN) << 3));}
+    [[nodiscard]] IResult<> enable_inversion(const Enable inv_en = EN){
+        return phy_.write_command(0xA7 - (inv_en == EN));}  
 
     [[nodiscard]] Vec2<uint16_t> size() const {return frame_.size();}
     VerticalBinaryImage & fetch_frame() {return frame_;};
@@ -102,9 +112,6 @@ private:
     Phy phy_;
 
     const Vec2<uint16_t> offset_;
-    const std::span<const uint8_t> init_cmds_list_;
-    const bool flip_x_en_;
-    const bool flip_y_en_;
     VerticalBinaryImage frame_;
 
     [[nodiscard]] IResult<> putpixel_unchecked(const Vec2<uint16_t> pos, const Binary color){
@@ -115,13 +122,13 @@ private:
 
     [[nodiscard]] IResult<> putrect_unchecked(const Rect2u16 rect, const Binary color){
         auto & frame = fetch_frame();
-        frame.putpixel_unchecked(rect.position, color);
+        frame.putpixel_unchecked(rect.top_left, color);
         return Ok();
     }
 
     [[nodiscard]] IResult<> puttexture_unchecked(const Rect2u16 rect, const Binary * pcolor){
         auto & frame = fetch_frame();
-        frame.putpixel_unchecked(rect.position, pcolor[0]);
+        frame.putpixel_unchecked(rect.top_left, pcolor[0]);
         return Ok();
     }
 
@@ -131,7 +138,7 @@ private:
 
     [[nodiscard]] IResult<> set_flush_pos(const Vec2<uint16_t> pos);
 
-    [[nodiscard]] IResult<> preinit_by_cmds();
+    [[nodiscard]] IResult<> preinit_by_cmds(const std::span<const uint8_t> pbuf);
 
     template<typename T>
     friend class DrawTarget;

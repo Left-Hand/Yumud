@@ -1,6 +1,7 @@
 #include "flood_fill.hpp"
 #include <span>
 
+#if 0
 
 template <typename T>
 __fast_inline constexpr T saturate_cast(const auto & v) {
@@ -290,7 +291,12 @@ Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter)
     Gray label{1};
 
     auto get_neighbor_indices = [&](const size_t row,const size_t col) {
-        std::array<Vec2u, 4> result;
+        std::array<Vec2u, 4> result = {
+            Vec2u::ZERO,
+            Vec2u::ZERO,
+            Vec2u::ZERO,
+            Vec2u::ZERO
+        };
         uint8_t i = 0;
         for (const auto& offset : OFFSETS_4) {
             const size_t x = row + offset.x;
@@ -395,3 +401,5 @@ Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter)
     return map;
 }
 }
+
+#endif

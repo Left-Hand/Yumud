@@ -43,7 +43,7 @@ public:
     
     [[nodiscard]] IResult<> set_frequency(const uint freq, const real_t trim);
 
-    [[nodiscard]] IResult<> set_pwm(const uint8_t channel, const uint16_t on, const uint16_t off);
+    [[nodiscard]] IResult<> set_pwm(const Nth nth, const uint16_t on, const uint16_t off);
 
     [[nodiscard]] IResult<> set_sub_addr(const uint8_t index, const uint8_t addr);
 
@@ -90,10 +90,10 @@ public:
     class PCA9685Channel final:public hal::PwmIntf,  hal::GpioIntf{
     private:
         PCA9685 & pca_;
-        uint8_t channel_;
+        Nth nth_;
 
-        PCA9685Channel(PCA9685 & _pca, const uint8_t channel):
-            pca_(_pca), channel_(channel){;}
+        PCA9685Channel(PCA9685 & _pca, const Nth nth):
+            pca_(_pca), nth_(nth){;}
         
         PCA9685Channel(const PCA9685Channel & other) = delete;
         PCA9685Channel(PCA9685Channel && other) = delete;
@@ -103,7 +103,7 @@ public:
     public:
 
         void set_dutycycle(const real_t duty){
-            pca_.set_pwm(channel_, 0, uint16_t(duty << 12)).unwrap();
+            pca_.set_pwm(nth_, 0, uint16_t(duty << 12)).unwrap();
         }
         __fast_inline void set() {this->set_dutycycle(real_t(1));}
         __fast_inline void clr() {this->set_dutycycle(real_t(0));}
@@ -113,7 +113,7 @@ public:
 
         BoolLevel read() const;
 
-        __fast_inline int8_t index() const {return channel_;}
+        __fast_inline Nth nth() const {return nth_;}
 
         void set_mode(const hal::GpioMode mode){}
     };
@@ -123,22 +123,22 @@ private:
     hal::I2cDrv i2c_drv_;
 
     std::array<PCA9685Channel, 16> channels ={
-        PCA9685Channel{*this, 0},
-        PCA9685Channel{*this, 1},
-        PCA9685Channel{*this, 2},
-        PCA9685Channel{*this, 3},
-        PCA9685Channel{*this, 4},
-        PCA9685Channel{*this, 5},
-        PCA9685Channel{*this, 6},
-        PCA9685Channel{*this, 7},
-        PCA9685Channel{*this, 8},
-        PCA9685Channel{*this, 9},
-        PCA9685Channel{*this, 10},
-        PCA9685Channel{*this, 11},
-        PCA9685Channel{*this, 12},
-        PCA9685Channel{*this, 13},
-        PCA9685Channel{*this, 14},
-        PCA9685Channel{*this, 15},
+        PCA9685Channel{*this, 0_nth},
+        PCA9685Channel{*this, 1_nth},
+        PCA9685Channel{*this, 2_nth},
+        PCA9685Channel{*this, 3_nth},
+        PCA9685Channel{*this, 4_nth},
+        PCA9685Channel{*this, 5_nth},
+        PCA9685Channel{*this, 6_nth},
+        PCA9685Channel{*this, 7_nth},
+        PCA9685Channel{*this, 8_nth},
+        PCA9685Channel{*this, 9_nth},
+        PCA9685Channel{*this, 10_nth},
+        PCA9685Channel{*this, 11_nth},
+        PCA9685Channel{*this, 12_nth},
+        PCA9685Channel{*this, 13_nth},
+        PCA9685Channel{*this, 14_nth},
+        PCA9685Channel{*this, 15_nth},
     };
 
 

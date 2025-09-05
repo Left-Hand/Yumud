@@ -32,7 +32,7 @@ enum class Error:uint8_t{
 
 DEF_DERIVE_DEBUG(Error)
 
-using Buf = InlineVector<uint8_t, 8>;
+using Buf = HeaplessVector<uint8_t, 8>;
 
 template<typename T = void>
 using IResult = Result<T, Error>;

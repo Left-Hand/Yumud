@@ -122,12 +122,12 @@ static constexpr Option<std::tuple<Ts...>> make_tuple_from_payload(std::span<con
 
 void lt8960_tb(){
 
-    auto & led = portC[13];
+    auto & led = hal::PC<13>();
     led.outpp();
 
 
-    LT8960L tx_ltr{&portB[6], &portB[7]};
-    LT8960L rx_ltr{&portA[9], &portA[10]};
+    LT8960L tx_ltr{&hal::PB<6>(), &hal::PB<7>()};
+    LT8960L rx_ltr{&hal::PA<9>(), &hal::PA<10>()};
     
     auto common_settings = [](LT8960L & ltr) -> Result<void, LT8960L::Error>{
         static constexpr auto DATA_RATE = LT8960L::DataRate::_62_5K;

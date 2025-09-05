@@ -42,8 +42,8 @@ using Error = AW9523::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-#define GUARD_INDEX(index)\
-if(not is_index_valid(index))\
+#define GUARD_NTH(nth)\
+if(not is_index_valid(nth.count()))\
     return Err(Error::IndexOutOfRange);\
 
 IResult<> AW9523::init(const Config & cfg){
@@ -57,10 +57,10 @@ IResult<> AW9523::init(const Config & cfg){
     auto clear_output = [this]()-> IResult<>{
         for(size_t i = 0; i < MAX_CHANNELS; i++){
             if(const auto res = set_led_current(std::bit_cast<hal::PinNth>(
-                hal::PinMask::from_nth(i).as_u16()), 
+                hal::PinMask::from_nth(Nth(i)).as_u16()), 
                 0); res.is_err()) return Err(res.unwrap_err());
             }
-        led_mode_reg.mask = hal::PinMask(0xffff);
+        led_mode_reg.mask = hal::PinMask::from_u16(0xffff);
         return Ok();
     };
 
@@ -70,31 +70,31 @@ IResult<> AW9523::init(const Config & cfg){
 }
 
 
-IResult<> AW9523::write_nth(const size_t index, const BoolLevel data){
-    GUARD_INDEX(index);
-    buf_mask_ = buf_mask_.modify(index, data);
+IResult<> AW9523::write_nth(const Nth nth, const BoolLevel data){
+    GUARD_NTH(nth);
+    buf_mask_ = buf_mask_.modify(nth, data);
     return write_by_mask(hal::PinMask(buf_mask_));
 }
 
-IResult<BoolLevel> AW9523::read_nth(const size_t index){
-    GUARD_INDEX(index);
+IResult<BoolLevel> AW9523::read_nth(const Nth nth){
+    GUARD_NTH(nth);
     if(const auto res = read_mask();
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(BoolLevel::from(buf_mask_.test(index)));
+    return Ok(BoolLevel::from(buf_mask_.test(nth)));
 }
 
-IResult<> AW9523::set_mode(const size_t index, const hal::GpioMode mode){
-    GUARD_INDEX(index);
+IResult<> AW9523::set_mode(const Nth nth, const hal::GpioMode mode){
+    GUARD_NTH(nth);
 
     {
         auto reg = RegCopy(dir_reg);
-        reg.mask = reg.mask.modify(index, BoolLevel::from(mode.is_input()));
+        reg.mask = reg.mask.modify(nth, BoolLevel::from(mode.is_input()));
         
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
 
-    if(index < 8){
+    if(nth.count() < 8){
         auto reg = RegCopy(ctl_reg);
         reg.p0mod = mode.is_outpp();
         if(const auto res = write_reg(reg);
@@ -104,10 +104,10 @@ IResult<> AW9523::set_mode(const size_t index, const hal::GpioMode mode){
     return Ok();
 }
 
-IResult<> AW9523::enable_irq_by_index(const size_t index, const Enable en ){
-    GUARD_INDEX(index);
+IResult<> AW9523::enable_irq_by_index(const Nth nth, const Enable en ){
+    GUARD_NTH(nth);
     auto reg = RegCopy(inten_reg);
-    reg.mask = reg.mask.modify(index, BoolLevel::from(en == EN));
+    reg.mask = reg.mask.modify(nth, BoolLevel::from(en == EN));
     return write_reg(reg);
 }
 

@@ -38,7 +38,16 @@ public:
     }
 
     constexpr bool operator==(const StringView & other) const { 
-        return size_ == other.size_ && memcmp(data_, other.data_, size_) == 0; }
+
+        if(size_ != other.size_) return false;
+
+        #pragma GCC unroll 4
+        for(size_t i = 0; i < size_; i++){
+            if(data_[i] != other.data_[i]) return false;
+        }
+
+        return true;
+    }
 
     constexpr const char * begin() const {return data_;}
     constexpr const char * c_str() const {return data_;}
@@ -109,7 +118,13 @@ public:
         return self.substr_by_len(start, end - start);
     }
 
-    constexpr operator std::string_view() const { return std::string_view(data_, size_); }
+    constexpr operator std::string_view() const {
+        return std::string_view(data_, size_);
+    }
+
+    std::span<const uint8_t> as_bytes() const {
+        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(data_), size_);
+    }
 private:
     const char * data_;
     size_t size_;

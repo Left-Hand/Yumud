@@ -234,7 +234,7 @@ public:
     [[nodiscard]] constexpr auto size() const {return FRAME_SIZE;}
 private:
     hal::SccbDrv sccb_drv_;
-    Image<Gray> frame_ = {FRAME_SIZE};
+    Image<Gray> frame_ = Image<Gray>{FRAME_SIZE};
 
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint16_t data);
 

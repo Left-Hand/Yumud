@@ -121,9 +121,9 @@ class Plotter{
         static constexpr auto Y_UNIT = Vec2<real_t>::RIGHT.rotated(60_deg);
         static constexpr auto Z_UNIT = Vec2<real_t>::DOWN;
         
-        static constexpr RGB565 X_COLOR = RGB565(ColorEnum::RED);
-        static constexpr RGB565 Y_COLOR = RGB565(ColorEnum::GREEN);
-        static constexpr RGB565 Z_COLOR = RGB565(ColorEnum::BLUE);
+        static constexpr RGB565 X_COLOR = color_cast<RGB565>(ColorEnum::RED);
+        static constexpr RGB565 Y_COLOR = color_cast<RGB565>(ColorEnum::GREEN);
+        static constexpr RGB565 Z_COLOR = color_cast<RGB565>(ColorEnum::BLUE);
         
         const auto arm_length = vec3.length();
         const auto x_axis = Vec3<real_t>::from_x00(arm_length);
@@ -179,26 +179,25 @@ void smc2025_main(){
 
     spi2.init({144_MHz});
     
-    auto & lcd_blk = portD[0];
+    auto & lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_dc = portD[7];
-    auto & dev_rst = portB[7];
+    auto & lcd_dc = hal::PD<7>();
+    auto & dev_rst = hal::PB<7>();
 
-    const auto spi_fd = spi.allocate_cs_gpio(&portD[4]).unwrap();
+    const auto spi_fd = spi.allocate_cs_gpio(&hal::PD<4>()).unwrap();
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
         {240, 240}
     };
 
-    tft.init().examine();
-    drivers::st7789_preset::init(tft, drivers::st7789_preset::_320X170{}).examine();
+    tft.init(drivers::st7789_preset::_320X170{}).examine();
 
-    I2cSw cam_i2c{&hal::portD[2], &hal::portC[12]};
+    I2cSw cam_i2c{&hal::PD<2>(), &hal::PC<12>()};
     cam_i2c.init(100_KHz);
 
-    I2cSw i2c{&hal::portB[3], &hal::portB[5]};
+    I2cSw i2c{&hal::PB<3>(), &hal::PB<5>()};
     i2c.init(400_KHz);
     
     // drivers::MT9V034 camera{&cam_i2c};
@@ -218,7 +217,7 @@ void smc2025_main(){
         tft.put_texture(
             ({
                 const auto ins_opt = area.intersection(
-                    Rect2u(area.position, src.size()));
+                    Rect2u(area.top_left, src.size()));
                 if(ins_opt.is_none()) return;
                 ins_opt.unwrap();
             }), 
@@ -233,7 +232,7 @@ void smc2025_main(){
         tft.put_texture(
             ({
                 const auto ins_opt = area.intersection(
-                    Rect2u(area.position, src.size()));
+                    Rect2u(area.top_left, src.size()));
                 if(ins_opt.is_none()) return;
                 ins_opt.unwrap();
             }), 
@@ -261,17 +260,17 @@ void smc2025_main(){
         });
         // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
         const auto render_use = clock::micros() - mbegin;
-        plot_gray(gray_img, {0,6, 240,240});
+        plot_gray(gray_img, {Vec2u{0,6}, Vec2u{240,240}});
 
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
         // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().x_range());
-        const auto rect = gray_img.size().to_rect();
-        const auto range = Range2<uint32_t>::from_start_and_length(rect.position.x, rect.size.x);
+        const auto rect = Rect2u::from_size(gray_img.size());
+        const auto range = Range2<uint32_t>::from_start_and_length(rect.top_left.x, rect.size.x);
 
         DEBUG_PRINTLN(
             render_use.count(), 
             gray_img.size(), 
-            rect.position.x, 
+            rect.top_left.x, 
             rect.size.x, 
             range 
         );
@@ -282,7 +281,7 @@ void smc2025_main(){
 
 
     [[maybe_unused]] auto test_fill = [&]{
-        tft.fill(ColorEnum::BRRED).examine();
+        tft.fill(color_cast<RGB565>(ColorEnum::BRRED)).examine();
     };
 
     Image<RGB565> rgb_img{{tft.size().x, 20u}};
@@ -292,7 +291,7 @@ void smc2025_main(){
     [[maybe_unused]] auto test_paint = [&]{
         painter.set_color(ColorEnum::WHITE);
         painter.set_en_font(&enfont).examine();
-        painter.fill(ColorEnum::BLACK).examine();
+        painter.fill(color_cast<RGB888>(ColorEnum::BLACK)).examine();
 
         FixedStringStream<64> ss;
         ss.println("helloword", clock::time());

@@ -23,7 +23,7 @@ void pwm_tb(OutputStream & logger){
 
     timer1.init({36000});
     #ifdef PWM_TB_GPIO
-    GpioPwm pwm{portA[8]};
+    GpioPwm pwm{hal::PA<8>()};
     pwm.init(32);
 
     timer1.enable_it(TimerIT::Update, {0,0});

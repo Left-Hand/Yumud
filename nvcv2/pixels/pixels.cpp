@@ -42,7 +42,7 @@ namespace ymd::nvcv2::pixels{
     void conv(Image<RGB565>& dst, const Image<Gray>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = RGB565(src[Vec2u{x, y}]);
+                dst[Vec2u{x, y}] = color_cast<RGB565>(src[Vec2u{x, y}]);
             }
         }
     }
@@ -50,7 +50,7 @@ namespace ymd::nvcv2::pixels{
     void conv(Image<RGB565>& dst, const Image<Binary>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = RGB565(src[Vec2u{x, y}]);
+                dst[Vec2u{x, y}] = color_cast<RGB565>(src[Vec2u{x, y}]);
             }
         }
     }
@@ -61,13 +61,13 @@ namespace ymd::nvcv2::pixels{
     void dyeing(Image<Gray>& dst, const Image<Gray>& src){
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = Gray(lcg[uint8_t(src[Vec2u{x, y}])]);
+                dst[Vec2u{x, y}] = Gray::from_u8(lcg[src[Vec2u{x, y}].as_u8()]);
             }
         }
     }
 
     Gray dyeing(const Gray in){
-        return Gray(lcg[uint8_t(in)]);
+        return Gray::from_u8(lcg[in.as_u8()]);
     }
 
     auto dyeing(const Image<Gray>& src){
@@ -79,7 +79,7 @@ namespace ymd::nvcv2::pixels{
     void binarization(Image<Binary>& dst, const Image<Gray>& src, const Gray threshold){
         for (auto x = 0u; x < std::min(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < std::min(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = src[Vec2u{x, y}].to_bina(threshold);
+                dst[Vec2u{x, y}] = src[Vec2u{x, y}].to_binary(threshold);
             }
         }
     }
@@ -102,7 +102,7 @@ namespace ymd::nvcv2::pixels{
         cnt_map.fill(0);
         
         for(auto cnt = 0u; cnt < size.x * size.y; cnt++){
-            statics[uint8_t(src[cnt])]++;
+            statics[src[cnt].as_u8()]++;
             cnt++;
         }
         
@@ -121,7 +121,7 @@ namespace ymd::nvcv2::pixels{
         const uint total_sum = sum_map[255];
         const uint total_cnt = cnt_map[255];
         
-        real_t p1 = real_t();
+        real_t p1 = 0;
         
         int max_i = 0;
         real_t max_sep = 0;
@@ -144,7 +144,7 @@ namespace ymd::nvcv2::pixels{
             p1 += real_t(1.0f / 256.0f);
         }
 
-        binarization(dst, src, Gray(max_i));
+        binarization(dst, src, Gray::from_u8(max_i));
     }
 
 
@@ -165,7 +165,7 @@ namespace ymd::nvcv2::pixels{
         cnt_map.fill(0);
         
         for(auto cnt = 0u; cnt < size.x * size.y; cnt++){
-            statics[uint8_t(src[cnt])]++;
+            statics[src[cnt].as_u8()]++;
             cnt++;
         }
         
@@ -203,7 +203,7 @@ namespace ymd::nvcv2::pixels{
             }
         }
 
-        binarization(dst, src, Gray(last_i));
+        binarization(dst, src, Gray::from_u8(last_i));
     }
 
     void calc_max_entropy(const Image<Gray>& src, const int thresh){
@@ -215,7 +215,7 @@ namespace ymd::nvcv2::pixels{
         Histogram hist;
 
         for(uint cnt = 0; cnt < size.x * size.y; cnt++){
-            hist[uint8_t(src[cnt])]++;
+            hist[src[cnt].as_u8()]++;
             cnt++;
         }
 
@@ -257,7 +257,7 @@ namespace ymd::nvcv2::pixels{
         int First, Last;
         int Threshold = -1;
         real_t BestEntropy = 114514;
-        real_t Entropy;
+        real_t Entropy = 0;
         //   找到第一个和最后一个非0的色阶值
         for (First = 0; First <int(hist.size()) && hist[First] == 0; First++) ;
         for (Last = hist.size() - 1; Last > First && hist[Last] == 0; Last--) ;
@@ -278,7 +278,7 @@ namespace ymd::nvcv2::pixels{
 
         // 建立公式（4）及（6）所用的查找表
         // real_t[] Smu = new real_t[Last + 1 - First];
-        std::array<real_t, 256> Smu;
+        std::array<real_t, 256> Smu = {0};
 
         // DEBUG_VALUE(First);
         // DEBUG_VALUE(Last);
@@ -326,9 +326,9 @@ namespace ymd::nvcv2::pixels{
         hist.fill(0);
         auto size = dst.size();
             // DEBUG_VALUE(size);
-        for(auto i = 0u; i < size.x * size.y; i++){
+        for(size_t i = 0u; i < size.x * size.y; i++){
             // DEBUG_VALUE(src[i]);
-            hist[uint8_t(src[i])]++;
+            hist[src[i].as_u8()]++;
         }
         // for(size_t i = 0; i < 256; i++){
             // DEBUG_PRINT(i, hist[i]);
@@ -338,8 +338,8 @@ namespace ymd::nvcv2::pixels{
 
 
     void inverse(Image<Gray>& src) {
-        for (auto i = 0u; i < src.size().area(); i++) {
-            src[i] = Gray(~uint8_t(src[i]));
+        for (size_t i = 0u; i < src.size().x_mul_y(); i++) {
+            src[i] = Gray::from_u8(~src[i].as_u8());
         }
     }
 
@@ -349,39 +349,39 @@ namespace ymd::nvcv2::pixels{
 
         if(ga != last_ga){
             last_ga = ga;
-            lut.fill(Gray(0));
+            lut.fill(Gray::from_black());
             for(size_t i = 0; i < 256; i++){
-                lut[i] = Gray(CLAMP(
+                lut[i] = Gray::from_u8(CLAMP(
                     uint8_t(pow(real_t(i)/256, ga)*256), 
                     uint8_t(0), 
-                    uint8_t(255)
-                ));
+                    uint8_t(255))
+                );
             }
         }
 
-        for (auto i = 0u; i < src.size().area(); i++) {
-            src[i] = lut[uint8_t(src[i])];
+        for (size_t i = 0u; i < src.size().x_mul_y(); i++) {
+            src[i] = lut[src[i].as_u8()];
         }
     }
 
 
 
     void sum_with(Image<Gray> & src, Image<Gray>& op) {
-        for (auto i = 0u; i < src.size().area(); i++) {
-            src[i] = Gray(MIN(uint8_t(src[i]) + uint8_t(op[i]), 255));
+        for (size_t i = 0u; i < src.size().x_mul_y(); i++) {
+            src[i] = Gray::from_u8(MIN(src[i].as_u8() + op[i].as_u8(), 255));
         }
     }
 
     void sub_with(Image<Gray> & src, Image<Gray>& op) {
-        for (auto i = 0u; i < src.size().area(); i++) {
-            src[i] = Gray(MAX((uint8_t)src[i] - (uint8_t)op[i], 0));
+        for (size_t i = 0u; i < src.size().x_mul_y(); i++) {
+            src[i] = Gray::from_u8(MAX(src[i].as_u8() - op[i].as_u8(), 0));
         }
     }
 
 
     void mask_with(Image<Gray> & src, const Image<Binary>& op) {
-        for (auto i = 0u; i < src.size().area(); i++) {
-            src[i] = op[i].is_white() ? src[i] : Gray(0);
+        for (size_t i = 0u; i < src.size().x_mul_y(); i++) {
+            src[i] = op[i].is_white() ? src[i] : Gray::from_black();
         }
     }
 }

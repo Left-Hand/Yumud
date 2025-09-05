@@ -246,10 +246,10 @@ template<arithmetic T>
 Color() -> Color<T>;
 
 template<typename T>
-struct RGB_t{
+struct RGB{
     T r, g, b;
 
-    RGB_t & operator *= (const T val){
+    RGB & operator *= (const T val){
         r *= val;
         g *= val;
         b *= val;
@@ -257,7 +257,7 @@ struct RGB_t{
         return *this;
     }
 
-    RGB_t & operator *= (const RGB_t & val){
+    RGB & operator *= (const RGB & val){
         r *= val.r;
         g *= val.g;
         b *= val.b;
@@ -265,7 +265,7 @@ struct RGB_t{
         return *this;
     }
 
-    RGB_t & operator /= (const T val){
+    RGB & operator /= (const T val){
         const auto inv_val = 1 / val;
         r *= inv_val;
         g *= inv_val;
@@ -274,26 +274,26 @@ struct RGB_t{
         return *this;
     }
 
-    RGB_t operator * (const T val) const {
-        auto ret = RGB_t(*this);
+    RGB operator * (const T val) const {
+        auto ret = RGB(*this);
         ret *= val;
         return ret;
     }
 
-    RGB_t operator * (const RGB_t & val) const {
-        auto ret = RGB_t(*this);
+    RGB operator * (const RGB & val) const {
+        auto ret = RGB(*this);
         ret *= val;
         return ret;
     }
 
 
-    RGB_t operator / (const T val) const {
-        auto ret = RGB_t(*this);
+    RGB operator / (const T val) const {
+        auto ret = RGB(*this);
         ret /= val;
         return ret;
     }
 
-    RGB_t & operator += (const RGB_t & val){
+    RGB & operator += (const RGB & val){
         r += val.r;
         g += val.g;
         b += val.b;
@@ -301,13 +301,13 @@ struct RGB_t{
         return *this;
     }
 
-    RGB_t operator + (const RGB_t & val) const {
-        auto ret = RGB_t(*this);
+    RGB operator + (const RGB & val) const {
+        auto ret = RGB(*this);
         ret += val;
         return ret;
     }
 
-    RGB_t & operator -= (const RGB_t & val){
+    RGB & operator -= (const RGB & val){
         r -= val.r;
         g -= val.g;
         b -= val.b;
@@ -315,14 +315,14 @@ struct RGB_t{
         return *this;
     }
 
-    RGB_t operator - (const RGB_t & val) const {
-        auto ret = RGB_t(*this);
+    RGB operator - (const RGB & val) const {
+        auto ret = RGB(*this);
         ret -= val;
         return ret;
     }
 
-    RGB_t operator - () const {
-        return RGB_t(-r,-g,-b);
+    RGB operator - () const {
+        return RGB(-r,-g,-b);
     }
 };
 

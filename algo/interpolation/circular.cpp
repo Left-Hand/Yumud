@@ -4,6 +4,8 @@
 using namespace ymd;
 using namespace ymd::intp;
 
+
+#if 0
 template<typename T>
 static __fast_inline T square(const T x){
     return x * x;
@@ -186,20 +188,16 @@ void CircularFilletInterpoation::computeFilletParameters (
     return;
     }
 
-    real_t d1, d2;
     real_t mPx, mPy;
     mPx = (p3x + p4x)/2;
     mPy = (p3y + p4y)/2;
-    d1 = linetopoint(a1,b1,c1,mPx,mPy);  /* Find distance p1p2 to p3 */
-    if (d1 == 0) {
-    return; 
-    }
+    const real_t d1 = linetopoint(a1,b1,c1,mPx,mPy);  /* Find distance p1p2 to p3 */
+    if (d1 == 0) return; 
+
     mPx = (p1x + p2x)/2;
     mPy = (p1y + p2y)/2;
-    d2 = linetopoint(a2,b2,c2,mPx,mPy);  /* Find distance p3p4 to p2 */
-    if (d2 == 0) {
-    return; 
-    }
+    const real_t d2 = linetopoint(a2,b2,c2,mPx,mPy);  /* Find distance p3p4 to p2 */
+    if (d2 == 0) return;
 
     real_t c1p, c2p, d;
     real_t rr = r;
@@ -224,15 +222,16 @@ void CircularFilletInterpoation::computeFilletParameters (
 
     dP = (a1*a1) + (b1*b1);        /* Clip or extend lines as required */
     if (dP != 0){
-    cP = a1*pCy - b1*pCx;
-    pAx = (-a1*c1 - b1*cP)/dP;
-    pAy = ( a1*cP - b1*c1)/dP;
+        cP = a1*pCy - b1*pCx;
+        pAx = (-a1*c1 - b1*cP)/dP;
+        pAy = ( a1*cP - b1*c1)/dP;
     }
+
     dP = (a2*a2) + (b2*b2);
     if (dP != 0){
-    cP = a2*pCy - b2*pCx;
-    pBx = (-a2*c2 - b2*cP)/dP;
-    pBy = ( a2*cP - b2*c2)/dP;
+        cP = a2*pCy - b2*pCx;
+        pBx = (-a2*c2 - b2*cP)/dP;
+        pBy = ( a2*cP - b2*c2)/dP;
     }
 
     real_t gv1x = pAx-pCx; 
@@ -314,3 +313,5 @@ real_t CircularFilletInterpoation::forward(real_t x) const {
   }
   return y;
 }
+
+#endif

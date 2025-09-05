@@ -11,7 +11,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 IResult<> NCA9555::init(){
-    return set_inversion(hal::PinMask(0));
+    return set_inversion(hal::PinMask::from_u16(0));
 }
 
 
@@ -24,7 +24,7 @@ IResult<> NCA9555::set_inversion(const hal::PinMask mask){
 
 
 IResult<> NCA9555::write_port(const uint16_t _mask){
-    const auto mask = hal::PinMask(_mask);
+    const auto mask = hal::PinMask::from_u16(_mask);
     auto reg = RegCopy(output_reg);
     if(mask == reg.mask) return Ok();
     reg.mask = mask;
@@ -39,12 +39,12 @@ IResult<uint16_t> NCA9555::read_port(){
 }
 
 
-IResult<> NCA9555::set_mode(const size_t index, const hal::GpioMode mode){
-    if(index > 15) return Err(Error::IndexOutOfRange);
+IResult<> NCA9555::set_mode(const Nth nth, const hal::GpioMode mode){
+    if(nth.count() > 15) return Err(Error::IndexOutOfRange);
 
     auto reg = RegCopy(config_reg);
     const auto new_mask = reg.mask.modify(
-        index, 
+        nth, 
         BoolLevel::from(mode.is_input()));
 
     if(reg.mask != new_mask){

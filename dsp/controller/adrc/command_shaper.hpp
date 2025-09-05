@@ -70,7 +70,7 @@ private:
     q16 dt_;
     q16 max_spd_;
     q16 max_acc_;
-    State state_ {};
+    State state_ {T::ZERO, T::ZERO, T::ZERO};
 
     //pure fn
     [[nodiscard]]

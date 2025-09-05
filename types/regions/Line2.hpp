@@ -17,9 +17,6 @@ private:
         d(static_cast<T>(_d)),orientation((angle)){;}
 
 public:
-    [[nodiscard]] constexpr Line2():
-        d(0),
-        orientation(0){;}
 
     [[nodiscard]] constexpr Line2(const Segment2<auto> & seg):
         d(((seg.start).cross(seg.stop)) / (seg.stop - seg.start).length()), 

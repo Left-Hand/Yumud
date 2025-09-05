@@ -3,15 +3,8 @@
 #include "core/math/real_t.hpp"
 
 template<arithmetic T>
-class SchmittFilter_t{
-protected:
-	T lowThr = 0;
-	T highThr = 0;
-	bool output = false;
-
-public:
-
-	SchmittFilter_t(const T _lowThr,const T _highThr):lowThr(_lowThr),highThr(_highThr){;}
+class SchmittFilter{
+	SchmittFilter(const T _lowThr,const T _highThr):lowThr(_lowThr),highThr(_highThr){;}
 
 	bool update(const T & input){
         if(input < lowThr and 
@@ -22,6 +15,11 @@ public:
             output = true;
         return output;
 	}
+private:
+	T lowThr = 0;
+	T highThr = 0;
+	bool output = false;
+
 };
 }
 

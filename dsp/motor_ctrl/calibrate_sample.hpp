@@ -25,11 +25,6 @@ struct CalibrateSample{
         return (measured_);
     }
 
-    template <size_t N>
-    constexpr auto get() const {
-        if constexpr (N == 0) return expected();
-        else if constexpr (N == 1) return measured();
-    }
 
     constexpr q31 to_inaccuracy() const {
         return errmod(q20(expected() - measured()), 0.02_q20);
@@ -84,11 +79,6 @@ public:
         return errmod(q20(expected() - measured()), 0.02_q20);
     }
 
-    template <size_t N>
-    constexpr auto get() const {
-        if constexpr (N == 0) return expected();
-        else if constexpr (N == 1) return measured();
-    }
 private:
     constexpr PackedCalibrateSample(
         const uint16_t expected_packed_data, 

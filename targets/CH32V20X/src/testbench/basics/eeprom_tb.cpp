@@ -360,7 +360,7 @@ void eeprom_main(){
 //     DEBUGGER_INST.init({576000});
 //     DEBUGGER.retarget(&DEBUGGER_INST);
 
-//     // auto & led = portA[8];
+//     // auto & led = hal::PA<8>();
 //     // led.outpp();
 //     // while(true){
 //     //     DEBUG_PRINTLN(millis());

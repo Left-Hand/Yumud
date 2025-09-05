@@ -46,7 +46,7 @@ struct ST7789_Prelude{
 
     class ST7789_ReflashAlgo{
     public:
-        ST7789_ReflashAlgo(const Vec2<uint16_t> & size):
+        ST7789_ReflashAlgo(const Vec2<uint16_t> size):
             size_(size){;}
 
         __fast_inline constexpr
@@ -57,8 +57,8 @@ struct ST7789_Prelude{
         __fast_inline constexpr
         Range2<uint32_t> get_point_index(const Rect2<uint16_t> r){
             return {
-                get_point_index(r.position), 
-                get_point_index({uint16_t(r.position.x + r.size.x - 1), uint16_t(r.position.y + r.size.y - 1)})};
+                get_point_index(r.top_left), 
+                get_point_index({uint16_t(r.top_left.x + r.size.x - 1), uint16_t(r.top_left.y + r.size.y - 1)})};
         }
 
         bool update(const Rect2<uint16_t> rect);
@@ -69,7 +69,7 @@ struct ST7789_Prelude{
         auto size() const {return size_;}
     private:
         const Vec2<uint16_t> size_;
-        Rect2<uint16_t> curr_area_ = {0,0,1,1};
+        Rect2<uint16_t> curr_area_ = Rect2<uint16_t>::ZERO;
         uint32_t last_point_ = 0;
     };
 

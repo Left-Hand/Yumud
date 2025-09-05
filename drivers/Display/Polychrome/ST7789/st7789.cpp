@@ -29,7 +29,7 @@ bool ST7789::ST7789_ReflashAlgo::update(const Rect2<uint16_t> rect){
     }
 } 
 
-IResult<> ST7789::init(){
+IResult<> ST7789::common_init(){
     if(const auto res = phy_.init(); 
         res.is_err())  return res;
     clock::delay(50us);
@@ -62,7 +62,7 @@ IResult<> ST7789::setarea_unchecked(const Rect2<uint16_t> rect){
     if(!need) return;
     #endif
 
-    const Vec2<uint16_t> p1 = offset_ + rect.top_left();
+    const Vec2<uint16_t> p1 = offset_ + rect.top_left;
     const Vec2<uint16_t> p2 = offset_ + rect.bottom_right() - Vec2<uint16_t>(1,1);
 
     if(const auto res = write_command(0x2a);
@@ -110,7 +110,7 @@ IResult<> ST7789::putrect_unchecked(const Rect2<uint16_t> rect, const RGB565 col
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
     if(const auto res = phy_.write_repeat_pixels(
-            color, rect.get_area());
+            color, rect.area());
         res.is_err()) return res;
     return Ok();
 }
@@ -119,7 +119,7 @@ IResult<> ST7789::puttexture_unchecked(const Rect2<uint16_t> rect, const RGB565 
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
     if(const auto res = phy_.write_burst_pixels(
-            std::span<const RGB565>(color_ptr, rect.get_area()));
+            std::span<const RGB565>(color_ptr, rect.area()));
         res.is_err()) return res;
     return Ok();
 }
@@ -135,5 +135,27 @@ IResult<> ST7789::modify_ctrl_reg(const bool is_high,const uint8_t pos){
     if(const auto res = write_data8(scr_ctrl_); 
         res.is_err()) return res;
 
+    return Ok();
+}
+
+
+ST7789_Prelude::IResult<void> st7789_preset::_320X170::advanced_init(ST7789 & displayer){
+
+    if(const auto res = displayer.enable_flip_x(DISEN);
+        res.is_err()) return res;
+    if(const auto res = displayer.enable_flip_y(EN);
+        res.is_err()) return res;
+    if(const auto res = displayer.enable_swap_xy(EN);
+        res.is_err()) return res;
+    if(const auto res = displayer.set_display_offset({0, 35}); 
+        res.is_err()) return res;
+    if(const auto res = displayer.enable_format_rgb(EN);
+        res.is_err()) return res;
+    if(const auto res = displayer.enable_flush_dir_h(EN);
+        res.is_err()) return res;
+    if(const auto res = displayer.enable_flush_dir_v(DISEN);
+        res.is_err()) return res;
+    if(const auto res = displayer.enable_inversion(EN);
+        res.is_err()) return res;
     return Ok();
 }

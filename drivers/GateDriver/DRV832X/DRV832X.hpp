@@ -371,8 +371,8 @@ public:
     [[nodiscard]] IResult<> set_gain(const Gain gain);
     [[nodiscard]] IResult<> enable_pwm3(const Enable en = EN);
 
-    [[nodiscard]] IResult<> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
-    [[nodiscard]] IResult<> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);
+    [[nodiscard]] IResult<> set_drive_hs(const IDriveP drive_p, const IDriveN drive_n);
+    [[nodiscard]] IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);
     [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
 
     [[nodiscard]] IResult<R16_Status1> get_status1();
@@ -413,7 +413,7 @@ public:
         idrive_gpio_(params.idrive_gpio),
         mode_gpio_(params.mode_gpio){;}
 
-    void set_pwmmode(const PwmMode mode){
+    void set_pwm_mode(const PwmMode mode){
         // _6x = GND,
         // _3x = 47K to GND,
         // _1x = HiZ,
@@ -444,19 +444,6 @@ public:
         idrive_gpio_.inflt();
     }
 
-
-
-    // void set_gain(const Gain gain){
-    // // 4-level	MODE	GAIN
-    // // 直连DVDD	Independent	放大40倍
-    // // 高阻态/接>500kΩ电阻到AGND	单路PWM	放大20倍
-    // // 接47kΩ电阻到AGND	3路PWM	放大10倍
-    // // 直连AGND	6路PWM	放大5倍
-
-    //     switch(gain){
-
-    //     }
-    // }
 private:
     hal::Gpio & gain_gpio_;
     hal::Gpio & vds_gpio_;
@@ -482,8 +469,8 @@ public:
     [[nodiscard]] IResult<> set_gain(const Gain gain);
     [[nodiscard]] IResult<> enable_pwm3(const Enable en = EN);
 
-    [[nodiscard]] IResult<> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
-    [[nodiscard]] IResult<> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);
+    [[nodiscard]] IResult<> set_drive_hs(const IDriveP drive_p, const IDriveN drive_n);
+    [[nodiscard]] IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);
     [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
 
 private:

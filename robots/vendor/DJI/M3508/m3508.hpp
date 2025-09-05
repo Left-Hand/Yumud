@@ -1,14 +1,16 @@
 #pragma once
 
 #include "hal/bus/can/can.hpp"
-#include "drivers/Encoder/odometer.hpp"
 
 #include "dsp/controller/pid_ctrl.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
+#include "dsp/motor_ctrl/position_filter.hpp"
 
 #include "robots/foc/stepper/observer/observer.hpp"
 
 #include <bitset>
+
+#include "drivers/Encoder/Encoder.hpp"
 
 namespace ymd::robots{
 using namespace ymd::foc;
@@ -25,13 +27,12 @@ public:
         using Error = drivers::EncoderError;
 
         M3508Encoder(M3508 & owner):owner_(owner){;}
-        void init() {}
         Result<void, Error> update(){
             //pass
             return Ok();
         }
-        Result<real_t, Error> read_lap_position() {
-            return Ok(owner_.lap_position);
+        Result<Angle<q31>, Error> read_lap_angle() {
+            return Ok(Angle<q31>::from_turns(owner_.lap_position));
         }
 
     private:
@@ -39,7 +40,12 @@ public:
     };
 
     M3508Encoder enc_{*this};
-    drivers::Odometer odo_{enc_};
+    dsp::PositionFilter position_filter_ = dsp::PositionFilter{
+        dsp::PositionFilter::Config{
+            .fs = 500,
+            .r = 1
+        }
+    };
     
     M3508(M3508Port & _port, const size_t _index):
         port(_port), index(_index){reset();}
@@ -62,13 +68,16 @@ public:
     void set_target_speed(const real_t spd);
     void set_target_position(const real_t pos);
 
-    real_t get_position() {return odo_.getPosition() / reduction_ratio;}
+    real_t get_position() {
+        // return  / reduction_ratio;
+        return position_filter_.position() / reduction_ratio;
+        // return 0;
+    }
     real_t get_current() const {return curr;}
     real_t get_speed() const {return speed / reduction_ratio * real_t(2.5);}
     real_t read_temp() const {return temperature;}
     auto delta(){return micros_delta;}
     auto & enc() {return enc_;}
-    auto & odo() {return odo_;}
 private:
     M3508Port & port;
     const size_t index;
@@ -80,10 +89,9 @@ private:
     real_t temperature = 0;
     real_t curr_limit = 10;
 
-    using PID = PID_t<real_t>;
 
-    PID spd_pid = {3, 0, 0};
-    PID pos_pid = {3, 0, 0};
+    PID<real_t> spd_pid = {3, 0, 0};
+    PID<real_t> pos_pid = {3, 0, 0};
 
     enum class CtrlMethod:uint8_t{
         NONE,
@@ -103,15 +111,6 @@ private:
     real_t curr_setpoint = 0;
 
     real_t last_t = 0;
-
-    SpeedEstimator::Config spe_config{
-        .err_threshold = real_t(0.02),
-        .est_freq = 200,
-        .max_cycles = 10,
-    };
-    
-    SpeedEstimator spd_ester{spe_config};
-    SpeedEstimator targ_spd_ester{spe_config};
 
     Microseconds last_micros;
     Microseconds micros_delta;

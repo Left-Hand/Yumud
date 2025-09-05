@@ -77,7 +77,7 @@ int main(){
 
     //通过引用获取GPIO
     //端口使用工厂模式返回GPIO，确保GPIO不会被随意构造
-    auto & led = portC[13];
+    auto & led = hal::PC<13>();
 
     //将led设置为输出模式，并以高电平初始化
     led.outpp(HIGH);

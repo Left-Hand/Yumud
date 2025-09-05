@@ -24,13 +24,13 @@ IResult<> PainterBase::draw_hollow_rect(const Rect2u & rect){
     //     drawFilledRect(Rect2u(x_range, y_range));
     // }
 
-    if(const auto res = draw_hri_line(rect.x_range(), rect.position.y);
+    if(const auto res = draw_hri_line(rect.x_range(), rect.top_left.y);
         res.is_err()) return res;
-    if(const auto res = draw_hri_line(rect.x_range(), rect.position.y + rect.size.y - 1);
+    if(const auto res = draw_hri_line(rect.x_range(), rect.top_left.y + rect.size.y - 1);
         res.is_err()) return res;
-    if(const auto res = draw_ver_line(rect.y_range(), rect.position.x);
+    if(const auto res = draw_ver_line(rect.y_range(), rect.top_left.x);
         res.is_err()) return res;
-    if(const auto res = draw_ver_line(rect.y_range(), rect.position.x + rect.size.x - 1);
+    if(const auto res = draw_ver_line(rect.y_range(), rect.top_left.x + rect.size.x - 1);
         res.is_err()) return res;
 
     return Ok();
@@ -330,12 +330,12 @@ IResult<> PainterBase::draw_roi(const Rect2u & rect){
 
 IResult<> PainterBase::draw_hri_line(const Vec2u & pos,const int l){
     const auto ins = Rect2u(pos, Vec2u(l, 1));
-    if(ins.get_area() == 0) return Err(Error::AreaNotExist);
+    if(ins.area() == 0) return Err(Error::AreaNotExist);
     return draw_filled_rect(ins);
 }
 IResult<> PainterBase::draw_ver_line(const Vec2u & pos,const int l){
     const auto ins = Rect2u(pos, Vec2u(1, l));
-    if(ins.get_area() == 0) return Err(Error::AreaNotExist);
+    if(ins.area() == 0) return Err(Error::AreaNotExist);
     return draw_filled_rect(ins);
 }
 IResult<> PainterBase::draw_ver_line(const Range2u & y_range, const int x){

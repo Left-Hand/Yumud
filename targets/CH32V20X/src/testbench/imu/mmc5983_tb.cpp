@@ -23,8 +23,8 @@ using namespace ymd::drivers;
 
 // #define UART uart2
 #define UART uart2
-#define SCL_GPIO hal::portB[3]
-#define SDA_GPIO hal::portB[5]
+#define SCL_GPIO hal::PB<3>()
+#define SDA_GPIO hal::PB<5>()
 static constexpr uint FS = 100;
 static constexpr auto INV_FS = (1.0_q24 / FS);
 // #define MAG_ACTIVATED
@@ -120,7 +120,7 @@ void mmc5983_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
-    // I2cSw i2c{portA[12], portA[15]};
+    // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
     I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
     // i2c.init();
@@ -133,7 +133,7 @@ void mmc5983_main(){
 
     // auto & spi = spi1;
     // spi.init(18_MHz);
-    // MMC5983 imu = {SpiDrv(spi, spi.allocate_cs_gpio(portA[15]).value())};
+    // MMC5983 imu = {SpiDrv(spi, spi.allocate_cs_gpio(hal::PA<15>()).value())};
 
     mmc5983_test(imu);
 }

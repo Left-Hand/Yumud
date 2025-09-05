@@ -9,18 +9,18 @@ using namespace ymd::hal;
 #ifdef ENABLE_DVP
 
 void Dvp::install(){
-    portA[9].inpu();
-    portA[10].inpu();
-    portC[8].inpu();
-    portC[9].inpu();
-    portC[11].inpu();
-    portB[6].inpu();
-    portB[8].inpu();
-    portB[9].inpu();
+    hal::PA<9>().inpu();
+    hal::PA<10>().inpu();
+    hal::PC<8>().inpu();
+    hal::PC<9>().inpu();
+    hal::PC<11>().inpu();
+    hal::PB<6>().inpu();
+    hal::PB<8>().inpu();
+    hal::PB<9>().inpu();
 
-    portA[6].inpu();
-    portA[4].inpu();
-    portA[5].inpu();
+    hal::PA<6>().inpu();
+    hal::PA<4>().inpu();
+    hal::PA<5>().inpu();
 }
 
 void Dvp::init(uint32_t *image0_addr, uint32_t *image1_addr, uint16_t col_len, uint16_t row_len){

@@ -11,7 +11,7 @@
 // (src/testbench/i2c/tm1637_tb.cpp)
 // 示例代码:
 
-// TM1637 tm1637{hal::portB[0], hal::portB[1]};
+// TM1637 tm1637{hal::PB<0>(), hal::PB<1>()};
 
 // while(true){
 //     const auto res = 

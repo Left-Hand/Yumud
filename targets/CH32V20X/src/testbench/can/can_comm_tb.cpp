@@ -11,8 +11,8 @@ using namespace ymd;
 void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
     can.init({hal::CanBaudrate::_1M, hal::CanMode::Normal});
 
-    hal::portC[13].outpp();
-    hal::portC[14].outpp();
+    hal::PC<13>().outpp();
+    hal::PC<14>().outpp();
 
     {
         const uint32_t id = 0x1314;
@@ -77,7 +77,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
 
             cnt++;
             clock::delay(200ms);
-            hal::portC[13].toggle();
+            hal::PC<13>().toggle();
         }else{
             logger.println("ava", can.available());
             while(can.available()){
@@ -93,7 +93,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
             can.write(msg).examine();
 
             clock::delay(200ms);
-            hal::portC[14].toggle();
+            hal::PC<14>().toggle();
         }
     }
 }

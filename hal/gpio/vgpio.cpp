@@ -4,11 +4,9 @@
 
 using namespace ymd::hal;
 VGpio::VGpio(const Gpio & gpio):
-    port_(form_gpiotypedef_to_port(uint32_t(gpio.inst()))), pin_index_(gpio.index()){;}
-VGpio::VGpio(GpioPortIntf & port, const int8_t pin_index):
-    port_(port), pin_index_(pin_index){;}
-VGpio::VGpio(GpioPortIntf & port, const PinNth pin):
-    port_(port), pin_index_(CTZ(uint16_t(pin))){;}
+    port_(form_gpiotypedef_to_port(uint32_t(gpio.inst()))), nth_(gpio.nth()){;}
+VGpio::VGpio(GpioPortIntf & port, const PinNth pin_nth):
+    port_(port), nth_(Nth(CTZ(uint16_t(pin_nth)))){;}
 
 
 GpioPortIntf & VGpio::form_gpiotypedef_to_port(uint32_t base){

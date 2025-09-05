@@ -38,14 +38,7 @@ struct DrawTargetFacade : pro::facade_builder
 
 DEF_ERROR_WITH_KINDS(MyError, ST7789::Error, PainterBase::Error)
 
-[[maybe_unused]]
-static void static_test(){
-	constexpr MyError err = ST7789::Error::CantSetup;
-	constexpr MyError err2 = PainterBase::Error::CropRectIsNone;
 
-	static_assert(err.is<ST7789::Error>());
-	static_assert(err2.is<PainterBase::Error>());
-}
 
 #define DBG_UART hal::uart2
 
@@ -60,19 +53,19 @@ void st7789_main(void){
 
     #ifdef CH32V30X
     auto & spi = hal::spi2;
-    auto & lcd_blk = hal::portC[7];
+    auto & lcd_blk = hal::PC<7>();
     
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_cs = hal::portD[6];
-    auto & lcd_dc = hal::portD[7];
-    auto & dev_rst = hal::portB[7];
+    auto & lcd_cs = hal::PD<6>();
+    auto & lcd_dc = hal::PD<7>();
+    auto & dev_rst = hal::PB<7>();
     #else
     auto & spi = hal::spi1;
-    auto & lcd_blk = hal::portA[10];
-    auto & lcd_cs = hal::portA[15];
-    auto & lcd_dc = hal::portA[11];
-    auto & dev_rst = hal::portA[12];
+    auto & lcd_blk = hal::PA<10>();
+    auto & lcd_cs = hal::PA<15>();
+    auto & lcd_dc = hal::PA<11>();
+    auto & dev_rst = hal::PA<12>();
 
 
     lcd_blk.outpp(HIGH);
@@ -95,10 +88,9 @@ void st7789_main(void){
 
     DEBUG_PRINTLN("--------------");
 
-	tft.init().examine();
-    drivers::st7789_preset::init(tft, drivers::st7789_preset::_240X135{}).examine();
+	tft.init(drivers::st7789_preset::_240X135{}).examine();
 
-    tft.fill(RGB565(ColorEnum::PINK)).examine();
+    tft.fill(color_cast<RGB565>(ColorEnum::PINK)).examine();
     clock::delay(200ms);
 
 	while (1){

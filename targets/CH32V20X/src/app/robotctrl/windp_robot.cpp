@@ -15,13 +15,7 @@
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
-#include "hal/analog/opa/opa.hpp"
 #include "hal/gpio/gpio.hpp"
-
-#include "drivers/Encoder/odometer.hpp"
-#include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
-#include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
-
 
 #include "types/regions/range2.hpp"
 #include "types/vectors/vector2.hpp"

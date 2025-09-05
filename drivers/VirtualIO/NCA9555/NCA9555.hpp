@@ -31,22 +31,22 @@ struct NCA9555_Prelude{
 struct NCA9555_Regs:public NCA9555_Prelude{
     struct InputReg:public Reg16<>{
         static constexpr RegAddress address = 0x00;
-        hal::PinMask mask;
+        hal::PinMask mask = hal::PinMask::from_zero();
     };
 
     struct OutputReg:public Reg16<>{
         static constexpr RegAddress address = 0x02;
-        hal::PinMask mask;
+        hal::PinMask mask = hal::PinMask::from_zero();
     };
 
     struct InversionReg:public Reg16<>{
         static constexpr RegAddress address = 0x04;
-        hal::PinMask mask;
+        hal::PinMask mask = hal::PinMask::from_zero();
     };
 
     struct ConfigReg:public Reg16<>{
         static constexpr RegAddress address = 0x06;
-        hal::PinMask mask;
+        hal::PinMask mask = hal::PinMask::from_zero();
     };
 
     InputReg input_reg = {};
@@ -72,7 +72,7 @@ public:
     IResult<> set_inversion(const hal::PinMask mask);
     IResult<> write_port(const uint16_t data);
     IResult<uint16_t> read_port();
-    IResult<> set_mode(const size_t index, const hal::GpioMode mode);
+    IResult<> set_mode(const Nth nth, const hal::GpioMode mode);
 private:
     hal::I2cDrv i2c_drv_;
 

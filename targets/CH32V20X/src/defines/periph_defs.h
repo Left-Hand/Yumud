@@ -35,13 +35,13 @@
 
     #if UART1_REMAP == 0
 
-    #define UART1_TX_GPIO hal::portA[9]
-    #define UART1_RX_GPIO hal::portA[10]
+    #define UART1_TX_GPIO hal::PA<9>()
+    #define UART1_RX_GPIO hal::PA<10>()
 
     #elif UART1_REMAP == 1
 
-    #define UART1_TX_GPIO hal::portB[6]
-    #define UART1_RX_GPIO hal::portB[7]
+    #define UART1_TX_GPIO hal::PB<6>()
+    #define UART1_RX_GPIO hal::PB<7>()
 
     #endif
 #endif
@@ -56,13 +56,13 @@
 
     #if UART2_REMAP == 0
 
-    #define UART2_TX_GPIO hal::portA[2]
-    #define UART2_RX_GPIO hal::portA[3]
+    #define UART2_TX_GPIO hal::PA<2>()
+    #define UART2_RX_GPIO hal::PA<3>()
 
     #elif UART2_REMAP == 1
 
-    #define UART2_TX_GPIO hal::portD[5]
-    #define UART2_RX_GPIO hal::portD[6]
+    #define UART2_TX_GPIO hal::PD<5>()
+    #define UART2_RX_GPIO hal::PD<6>()
 
     #endif
 #endif
@@ -75,20 +75,20 @@
     #define UART3_RX_DMA_CH hal::dma1Ch3
 
     #if UART3_REMAP == 0
-    #define UART3_TX_GPIO hal::portB[10]
-    #define UART3_RX_GPIO hal::portB[11]
+    #define UART3_TX_GPIO hal::PB<10>()
+    #define UART3_RX_GPIO hal::PB<11>()
 
     #elif UART3_REMAP == 1
-    #define UART3_TX_GPIO hal::portC[10]
-    #define UART3_RX_GPIO hal::portC[11]
+    #define UART3_TX_GPIO hal::PC<10>()
+    #define UART3_RX_GPIO hal::PC<11>()
 
     #elif UART3_REMAP == 2
-    #define UART3_TX_GPIO hal::portA[13]
-    #define UART3_RX_GPIO hal::portA[14]
+    #define UART3_TX_GPIO hal::PA<13>()
+    #define UART3_RX_GPIO hal::PA<14>()
 
     #elif UART3_REMAP == 3
-    #define UART3_TX_GPIO hal::portD[8]
-    #define UART3_RX_GPIO hal::portD[9]
+    #define UART3_TX_GPIO hal::PD<8>()
+    #define UART3_RX_GPIO hal::PD<9>()
 
     #endif
 #endif
@@ -101,20 +101,20 @@
     #define UART4_RX_DMA_CH hal::dma2Ch3
 
     #if UART4_REMAP == 0
-    #define UART4_TX_GPIO hal::portC[10]
-    #define UART4_RX_GPIO hal::portC[11]
+    #define UART4_TX_GPIO hal::PC<10>()
+    #define UART4_RX_GPIO hal::PC<11>()
 
     #elif UART4_REMAP == 1
-    #define UART4_TX_GPIO hal::portB[0]
-    #define UART4_RX_GPIO hal::portB[1]
+    #define UART4_TX_GPIO hal::PB<0>()
+    #define UART4_RX_GPIO hal::PB<1>()
 
     #elif UART4_REMAP == 2
-    #define UART4_TX_GPIO hal::portE[0]
-    #define UART4_RX_GPIO hal::portE[1]
+    #define UART4_TX_GPIO hal::PE<0>()
+    #define UART4_RX_GPIO hal::PE<1>()
 
     #elif UART4_REMAP == 3
-    #define UART4_TX_GPIO hal::portE[0]
-    #define UART4_RX_GPIO hal::portE[1]
+    #define UART4_TX_GPIO hal::PE<0>()
+    #define UART4_RX_GPIO hal::PE<1>()
 
     #endif
 #endif
@@ -127,12 +127,12 @@
     #define UART5_RX_DMA_CH hal::dma2Ch2
 
     #if UART5_REMAP == 0
-    #define UART5_TX_GPIO hal::portC[12]
-    #define UART5_RX_GPIO hal::portD[2]
+    #define UART5_TX_GPIO hal::PC<12>()
+    #define UART5_RX_GPIO hal::PD<2>()
 
     #elif UART5_REMAP == 1
-    #define UART5_TX_GPIO hal::portB[4]
-    #define UART5_RX_GPIO hal::portB[5]
+    #define UART5_TX_GPIO hal::PB<4>()
+    #define UART5_RX_GPIO hal::PB<5>()
 
     #else
     error uart5 1\x rm not supported
@@ -149,16 +149,16 @@
     #define UART6_RX_DMA_CH hal::dma2Ch7
 
     #if UART6_REMAP == 0
-    #define UART6_TX_GPIO hal::portC[0]
-    #define UART6_RX_GPIO hal::portC[1]
+    #define UART6_TX_GPIO hal::PC<0>()
+    #define UART6_RX_GPIO hal::PC<1>()
 
     #elif UART6_REMAP == 1
-    #define UART6_TX_GPIO hal::portB[8]
-    #define UART6_RX_GPIO hal::portB[9]
+    #define UART6_TX_GPIO hal::PB<8>()
+    #define UART6_RX_GPIO hal::PB<9>()
 
     #elif (UART6_REMAP == 2) || (UART6_REMAP == 3)
-    #define UART6_TX_GPIO hal::portE[10]
-    #define UART6_RX_GPIO hal::portE[11]
+    #define UART6_TX_GPIO hal::PE<10>()
+    #define UART6_RX_GPIO hal::PE<11>()
 
     #endif
 #endif
@@ -171,16 +171,16 @@
     #define UART7_RX_DMA_CH hal::dma2Ch9
 
     #if UART7_REMAP == 0
-    #define UART7_TX_GPIO hal::portC[2]
-    #define UART7_RX_GPIO hal::portC[3]
+    #define UART7_TX_GPIO hal::PC<2>()
+    #define UART7_RX_GPIO hal::PC<3>()
 
     #elif UART7_REMAP == 1
-    #define UART7_TX_GPIO hal::portA[6]
-    #define UART7_RX_GPIO hal::portA[7]
+    #define UART7_TX_GPIO hal::PA<6>()
+    #define UART7_RX_GPIO hal::PA<7>()
 
     #elif (UART7_REMAP == 2) || (UART7_REMAP == 3)
-    #define UART7_TX_GPIO hal::portE[12]
-    #define UART7_RX_GPIO hal::portE[13]
+    #define UART7_TX_GPIO hal::PE<12>()
+    #define UART7_RX_GPIO hal::PE<13>()
 
     #endif
 #endif
@@ -194,16 +194,16 @@
     #define UART8_RX_DMA_CH hal::dma2Ch11
 
     #if UART8_REMAP == 0
-    #define UART8_TX_GPIO hal::portC[4]
-    #define UART8_RX_GPIO hal::portC[5]
+    #define UART8_TX_GPIO hal::PC<4>()
+    #define UART8_RX_GPIO hal::PC<5>()
 
     #elif UART8_REMAP == 1
-    #define UART8_TX_GPIO hal::portA[14]
-    #define UART8_RX_GPIO hal::portA[15]
+    #define UART8_TX_GPIO hal::PA<14>()
+    #define UART8_RX_GPIO hal::PA<15>()
 
     #elif (UART8_REMAP == 2) || (UART8_REMAP == 3)
-    #define UART8_TX_GPIO hal::portE[14]
-    #define UART8_RX_GPIO hal::portE[15]
+    #define UART8_TX_GPIO hal::PE<14>()
+    #define UART8_RX_GPIO hal::PE<15>()
 
     #endif
 #endif
@@ -214,25 +214,25 @@
 #ifdef ENABLE_SPI1
 
     #if SPI1_REMAP == 0
-        #define SPI1_CS_GPIO hal::portA[4]
-        #define SPI1_SCLK_GPIO hal::portA[5]
-        #define SPI1_MISO_GPIO hal::portA[6]
-        #define SPI1_MOSI_GPIO hal::portA[7]
+        #define SPI1_CS_GPIO hal::PA<4>()
+        #define SPI1_SCLK_GPIO hal::PA<5>()
+        #define SPI1_MISO_GPIO hal::PA<6>()
+        #define SPI1_MOSI_GPIO hal::PA<7>()
 
     #elif SPI1_REMAP == 1
-        #define SPI1_CS_GPIO hal::portA[15]
-        #define SPI1_SCLK_GPIO hal::portB[3]
-        #define SPI1_MISO_GPIO hal::portB[4]
-        #define SPI1_MOSI_GPIO hal::portB[5]
+        #define SPI1_CS_GPIO hal::PA<15>()
+        #define SPI1_SCLK_GPIO hal::PB<3>()
+        #define SPI1_MISO_GPIO hal::PB<4>()
+        #define SPI1_MOSI_GPIO hal::PB<5>()
     #endif
 #endif
 
 
 #ifdef ENABLE_SPI2
-    #define SPI2_CS_GPIO hal::portB[12]
-    #define SPI2_SCLK_GPIO hal::portB[13]
-    #define SPI2_MISO_GPIO hal::portB[14]
-    #define SPI2_MOSI_GPIO hal::portB[15]
+    #define SPI2_CS_GPIO hal::PB<12>()
+    #define SPI2_SCLK_GPIO hal::PB<13>()
+    #define SPI2_MISO_GPIO hal::PB<14>()
+    #define SPI2_MOSI_GPIO hal::PB<15>()
 #endif
 
 
@@ -240,13 +240,13 @@
 #ifdef ENABLE_I2C1
     #if I2C1_REMAP == 0
 
-        #define I2C1_SCL_GPIO hal::portB[6]
-        #define I2C1_SDA_GPIO hal::portB[7]
+        #define I2C1_SCL_GPIO hal::PB<6>()
+        #define I2C1_SDA_GPIO hal::PB<7>()
 
     #elif I2C1_REMAP == 1
 
-        #define I2C1_SCL_GPIO hal::portB[8]
-        #define I2C1_SDA_GPIO hal::portB[9]
+        #define I2C1_SCL_GPIO hal::PB<8>()
+        #define I2C1_SDA_GPIO hal::PB<9>()
 
     #endif
 #endif
@@ -256,8 +256,8 @@
 
     #if I2C2_REMAP == 0
 
-    #define I2C2_SCL_GPIO hal::portB[10]
-    #define I2C2_SDA_GPIO hal::portB[11]
+    #define I2C2_SCL_GPIO hal::PB<10>()
+    #define I2C2_SDA_GPIO hal::PB<11>()
 
     #endif
 #endif
@@ -272,40 +272,40 @@
     #define TIM1_CH4_DMA_CH hal::dma1Ch4
 
     #if TIM1_REMAP == 0
-        #define TIM1_CH1_GPIO hal::portA[8]
-        #define TIM1_CH1N_GPIO hal::portB[13]
+        #define TIM1_CH1_GPIO hal::PA<8>()
+        #define TIM1_CH1N_GPIO hal::PB<13>()
 
-        #define TIM1_CH2_GPIO hal::portA[9]
-        #define TIM1_CH2N_GPIO hal::portB[14]
+        #define TIM1_CH2_GPIO hal::PA<9>()
+        #define TIM1_CH2N_GPIO hal::PB<14>()
 
-        #define TIM1_CH3_GPIO hal::portA[10]
-        #define TIM1_CH3N_GPIO hal::portB[15]
+        #define TIM1_CH3_GPIO hal::PA<10>()
+        #define TIM1_CH3N_GPIO hal::PB<15>()
 
-        #define TIM1_CH4_GPIO hal::portA[11]
+        #define TIM1_CH4_GPIO hal::PA<11>()
     #elif TIM1_REMAP == 1
-        #define TIM1_CH1_GPIO hal::portA[8]
-        #define TIM1_CH1N_GPIO hal::portA[7]
+        #define TIM1_CH1_GPIO hal::PA<8>()
+        #define TIM1_CH1N_GPIO hal::PA<7>()
 
-        #define TIM1_CH2_GPIO hal::portA[9]
-        #define TIM1_CH2N_GPIO hal::portB[0]
+        #define TIM1_CH2_GPIO hal::PA<9>()
+        #define TIM1_CH2N_GPIO hal::PB<0>()
 
-        #define TIM1_CH3_GPIO hal::portA[10]
-        #define TIM1_CH3N_GPIO hal::portB[1]
+        #define TIM1_CH3_GPIO hal::PA<10>()
+        #define TIM1_CH3N_GPIO hal::PB<1>()
 
-        #define TIM1_CH4_GPIO hal::portA[11]
+        #define TIM1_CH4_GPIO hal::PA<11>()
     #elif TIM1_REMAP == 2
         #error TIM1 remap 2 is preserved
     #elif TIM1_REMAP == 3
-        #define TIM1_CH1_GPIO hal::portE[9]
-        #define TIM1_CH1N_GPIO hal::portE[8]
+        #define TIM1_CH1_GPIO hal::PE<9>()
+        #define TIM1_CH1N_GPIO hal::PE<8>()
 
-        #define TIM1_CH2_GPIO hal::portE[11]
-        #define TIM1_CH2N_GPIO hal::portE[10]
+        #define TIM1_CH2_GPIO hal::PE<11>()
+        #define TIM1_CH2N_GPIO hal::PE<10>()
 
-        #define TIM1_CH3_GPIO hal::portE[13]
-        #define TIM1_CH3N_GPIO hal::portE[12]
+        #define TIM1_CH3_GPIO hal::PE<13>()
+        #define TIM1_CH3N_GPIO hal::PE<12>()
 
-        #define TIM1_CH4_GPIO hal::portE[14]
+        #define TIM1_CH4_GPIO hal::PE<14>()
     #endif
 #endif
 
@@ -317,25 +317,25 @@
     #define TIM2_CH4_DMA_CH hal::dma1Ch7
 
     #if TIM2_REMAP == 0
-        #define TIM2_CH1_GPIO hal::portA[0]
-        #define TIM2_CH2_GPIO hal::portA[1]
-        #define TIM2_CH3_GPIO hal::portA[2]
-        #define TIM2_CH4_GPIO hal::portA[3]
+        #define TIM2_CH1_GPIO hal::PA<0>()
+        #define TIM2_CH2_GPIO hal::PA<1>()
+        #define TIM2_CH3_GPIO hal::PA<2>()
+        #define TIM2_CH4_GPIO hal::PA<3>()
     #elif TIM2_REMAP == 1
-        #define TIM2_CH1_GPIO hal::portA[15]
-        #define TIM2_CH2_GPIO hal::portB[3]
-        #define TIM2_CH3_GPIO hal::portA[2]
-        #define TIM2_CH4_GPIO hal::portA[3]
+        #define TIM2_CH1_GPIO hal::PA<15>()
+        #define TIM2_CH2_GPIO hal::PB<3>()
+        #define TIM2_CH3_GPIO hal::PA<2>()
+        #define TIM2_CH4_GPIO hal::PA<3>()
     #elif TIM2_REMAP == 2
-        #define TIM2_CH1_GPIO hal::portA[0]
-        #define TIM2_CH2_GPIO hal::portA[1]
-        #define TIM2_CH3_GPIO hal::portB[10]
-        #define TIM2_CH4_GPIO hal::portB[11]
+        #define TIM2_CH1_GPIO hal::PA<0>()
+        #define TIM2_CH2_GPIO hal::PA<1>()
+        #define TIM2_CH3_GPIO hal::PB<10>()
+        #define TIM2_CH4_GPIO hal::PB<11>()
     #elif TIM2_REMAP == 3
-        #define TIM2_CH1_GPIO hal::portA[15]
-        #define TIM2_CH2_GPIO hal::portB[3]
-        #define TIM2_CH3_GPIO hal::portB[10]
-        #define TIM2_CH4_GPIO hal::portB[11]
+        #define TIM2_CH1_GPIO hal::PA<15>()
+        #define TIM2_CH2_GPIO hal::PB<3>()
+        #define TIM2_CH3_GPIO hal::PB<10>()
+        #define TIM2_CH4_GPIO hal::PB<11>()
     #endif
 #endif
 
@@ -346,17 +346,17 @@
     #define TIM3_CH4_DMA_CH hal::dma1Ch3
 
     #if TIM3_REMAP == 0
-        #define TIM3_CH1_GPIO hal::portA[6]
-        #define TIM3_CH2_GPIO hal::portA[7]
-        #define TIM3_CH3_GPIO hal::portB[0]
-        #define TIM3_CH4_GPIO hal::portB[1]
+        #define TIM3_CH1_GPIO hal::PA<6>()
+        #define TIM3_CH2_GPIO hal::PA<7>()
+        #define TIM3_CH3_GPIO hal::PB<0>()
+        #define TIM3_CH4_GPIO hal::PB<1>()
     #elif TIM3_REMAP == 1
         #error TIM3 remap 1 is preserved
     #elif TIM3_REMAP == 2
-        #define TIM3_CH1_GPIO hal::portB[4]
-        #define TIM3_CH2_GPIO hal::portB[5]
-        #define TIM3_CH3_GPIO hal::portB[0]
-        #define TIM3_CH4_GPIO hal::portB[1]
+        #define TIM3_CH1_GPIO hal::PB<4>()
+        #define TIM3_CH2_GPIO hal::PB<5>()
+        #define TIM3_CH3_GPIO hal::PB<0>()
+        #define TIM3_CH4_GPIO hal::PB<1>()
     #elif TIM3_REMAP == 3
         #error TIM3 remap 3 is imcomplete
     #endif
@@ -368,15 +368,15 @@
     #define TIM4_CH3_DMA_CH hal::dma1Ch5
 
     #if TIM4_REMAP == 0
-        #define TIM4_CH1_GPIO hal::portB[6]
-        #define TIM4_CH2_GPIO hal::portB[7]
-        #define TIM4_CH3_GPIO hal::portB[8]
-        #define TIM4_CH4_GPIO hal::portB[9]
+        #define TIM4_CH1_GPIO hal::PB<6>()
+        #define TIM4_CH2_GPIO hal::PB<7>()
+        #define TIM4_CH3_GPIO hal::PB<8>()
+        #define TIM4_CH4_GPIO hal::PB<9>()
     #elif TIM4_REMAP == 1
-        #define TIM4_CH1_GPIO hal::portD[12]
-        #define TIM4_CH2_GPIO hal::portD[13]
-        #define TIM4_CH3_GPIO hal::portD[14]
-        #define TIM4_CH4_GPIO hal::portD[15]
+        #define TIM4_CH1_GPIO hal::PD<12>()
+        #define TIM4_CH2_GPIO hal::PD<13>()
+        #define TIM4_CH3_GPIO hal::PD<14>()
+        #define TIM4_CH4_GPIO hal::PD<15>()
     #endif
 #endif
 
@@ -388,10 +388,10 @@
     #define TIM5_CH4_DMA_CH hal::dma2Ch1
 
     #if TIM5_REMAP == 0
-        #define TIM5_CH1_GPIO hal::portA[0]
-        #define TIM5_CH2_GPIO hal::portA[1]
-        #define TIM5_CH3_GPIO hal::portA[2]
-        #define TIM5_CH4_GPIO hal::portA[3]
+        #define TIM5_CH1_GPIO hal::PA<0>()
+        #define TIM5_CH2_GPIO hal::PA<1>()
+        #define TIM5_CH3_GPIO hal::PA<2>()
+        #define TIM5_CH4_GPIO hal::PA<3>()
     #endif
 #endif
 
@@ -411,27 +411,27 @@
     #define TIM8_CH4_DMA_CH hal::dma2Ch2
 
     #if TIM8_REMAP == 0
-        #define TIM8_CH1_GPIO hal::portC[6]
-        #define TIM8_CH1N_GPIO hal::portA[7]
+        #define TIM8_CH1_GPIO hal::PC<6>()
+        #define TIM8_CH1N_GPIO hal::PA<7>()
 
-        #define TIM8_CH2_GPIO hal::portC[7]
-        #define TIM8_CH2N_GPIO hal::portB[0]
+        #define TIM8_CH2_GPIO hal::PC<7>()
+        #define TIM8_CH2N_GPIO hal::PB<0>()
 
-        #define TIM8_CH3_GPIO hal::portC[8]
-        #define TIM8_CH3N_GPIO hal::portB[1]
+        #define TIM8_CH3_GPIO hal::PC<8>()
+        #define TIM8_CH3N_GPIO hal::PB<1>()
 
-        #define TIM8_CH4_GPIO hal::portC[9]
+        #define TIM8_CH4_GPIO hal::PC<9>()
     #elif TIM8_REMAP == 1
-        #define TIM8_CH1_GPIO hal::portB[6]
-        #define TIM8_CH1N_GPIO hal::portA[13]
+        #define TIM8_CH1_GPIO hal::PB<6>()
+        #define TIM8_CH1N_GPIO hal::PA<13>()
 
-        #define TIM8_CH2_GPIO hal::portB[7]
-        #define TIM8_CH2N_GPIO hal::portA[14]
+        #define TIM8_CH2_GPIO hal::PB<7>()
+        #define TIM8_CH2N_GPIO hal::PA<14>()
 
-        #define TIM8_CH3_GPIO hal::portB[8]
-        #define TIM8_CH3N_GPIO hal::portA[15]
+        #define TIM8_CH3_GPIO hal::PB<8>()
+        #define TIM8_CH3N_GPIO hal::PA<15>()
 
-        #define TIM8_CH4_GPIO hal::portC[13]
+        #define TIM8_CH4_GPIO hal::PC<13>()
     #endif
 #endif
 
@@ -442,49 +442,49 @@
     #define TIM9_CH4_DMA_CH hal::dma2Ch8
 
     #if TIM9_REMAP == 0
-        #define TIM9_CH1_GPIO hal::portA[2]
-        #define TIM9_CH1N_GPIO hal::portC[0]
+        #define TIM9_CH1_GPIO hal::PA<2>()
+        #define TIM9_CH1N_GPIO hal::PC<0>()
 
-        #define TIM9_CH2_GPIO hal::portA[3]
-        #define TIM9_CH2N_GPIO hal::portC[1]
+        #define TIM9_CH2_GPIO hal::PA<3>()
+        #define TIM9_CH2N_GPIO hal::PC<1>()
 
-        #define TIM9_CH3_GPIO hal::portA[4]
-        #define TIM9_CH3N_GPIO hal::portC[2]
+        #define TIM9_CH3_GPIO hal::PA<4>()
+        #define TIM9_CH3N_GPIO hal::PC<2>()
 
-        #define TIM9_CH4_GPIO hal::portC[4]
+        #define TIM9_CH4_GPIO hal::PC<4>()
     #elif TIM9_REMAP == 1
-        #define TIM9_CH1_GPIO hal::portA[2]
-        #define TIM9_CH1N_GPIO hal::portB[0]
+        #define TIM9_CH1_GPIO hal::PA<2>()
+        #define TIM9_CH1N_GPIO hal::PB<0>()
 
-        #define TIM9_CH2_GPIO hal::portA[3]
-        #define TIM9_CH2N_GPIO hal::portB[1]
+        #define TIM9_CH2_GPIO hal::PA<3>()
+        #define TIM9_CH2N_GPIO hal::PB<1>()
 
-        #define TIM9_CH3_GPIO hal::portA[4]
-        #define TIM9_CH3N_GPIO hal::portB[2]
+        #define TIM9_CH3_GPIO hal::PA<4>()
+        #define TIM9_CH3N_GPIO hal::PB<2>()
 
-        #define TIM9_CH4_GPIO hal::portC[14]
+        #define TIM9_CH4_GPIO hal::PC<14>()
     #elif TIM9_REMAP == 2
-        #define TIM9_CH1_GPIO hal::portD[9]
-        #define TIM9_CH1N_GPIO hal::portD[8]
+        #define TIM9_CH1_GPIO hal::PD<9>()
+        #define TIM9_CH1N_GPIO hal::PD<8>()
 
-        #define TIM9_CH2_GPIO hal::portD[11]
-        #define TIM9_CH2N_GPIO hal::portD[10]
+        #define TIM9_CH2_GPIO hal::PD<11>()
+        #define TIM9_CH2N_GPIO hal::PD<10>()
 
-        #define TIM9_CH3_GPIO hal::portD[13]
-        #define TIM9_CH3N_GPIO hal::portD[12]
+        #define TIM9_CH3_GPIO hal::PD<13>()
+        #define TIM9_CH3N_GPIO hal::PD<12>()
 
-        #define TIM9_CH4_GPIO hal::portD[15]
+        #define TIM9_CH4_GPIO hal::PD<15>()
     #elif TIM9_REMAP == 3
-        #define TIM9_CH1_GPIO hal::portD[9]
-        #define TIM9_CH1N_GPIO hal::portD[8]
+        #define TIM9_CH1_GPIO hal::PD<9>()
+        #define TIM9_CH1N_GPIO hal::PD<8>()
 
-        #define TIM9_CH2_GPIO hal::portD[11]
-        #define TIM9_CH2N_GPIO hal::portD[10]
+        #define TIM9_CH2_GPIO hal::PD<11>()
+        #define TIM9_CH2N_GPIO hal::PD<10>()
 
-        #define TIM9_CH3_GPIO hal::portD[13]
-        #define TIM9_CH3N_GPIO hal::portD[12]
+        #define TIM9_CH3_GPIO hal::PD<13>()
+        #define TIM9_CH3N_GPIO hal::PD<12>()
 
-        #define TIM9_CH4_GPIO hal::portD[15]
+        #define TIM9_CH4_GPIO hal::PD<15>()
     #endif
 #endif
 
@@ -495,62 +495,62 @@
     #define TIM10_CH4_DMA_CH hal::dma2Ch6
 
     #if TIM10_REMAP == 0
-        #define TIM10_CH1_GPIO hal::portB[8]
-        #define TIM10_CH1N_GPIO hal::portA[12]
+        #define TIM10_CH1_GPIO hal::PB<8>()
+        #define TIM10_CH1N_GPIO hal::PA<12>()
 
-        #define TIM10_CH2_GPIO hal::portB[9]
-        #define TIM10_CH2N_GPIO hal::portA[13]
+        #define TIM10_CH2_GPIO hal::PB<9>()
+        #define TIM10_CH2N_GPIO hal::PA<13>()
 
-        #define TIM10_CH3_GPIO hal::portC[3]
-        #define TIM10_CH3N_GPIO hal::portA[14]
+        #define TIM10_CH3_GPIO hal::PC<3>()
+        #define TIM10_CH3N_GPIO hal::PA<14>()
 
-        #define TIM10_CH4_GPIO hal::portC[11]
+        #define TIM10_CH4_GPIO hal::PC<11>()
     #elif TIM10_REMAP == 1
-        #define TIM10_CH1_GPIO hal::portB[3]
-        #define TIM10_CH1N_GPIO hal::portA[5]
+        #define TIM10_CH1_GPIO hal::PB<3>()
+        #define TIM10_CH1N_GPIO hal::PA<5>()
 
-        #define TIM10_CH2_GPIO hal::portB[4]
-        #define TIM10_CH2N_GPIO hal::portA[6]
+        #define TIM10_CH2_GPIO hal::PB<4>()
+        #define TIM10_CH2N_GPIO hal::PA<6>()
 
-        #define TIM10_CH3_GPIO hal::portB[5]
-        #define TIM10_CH3N_GPIO hal::portA[7]
+        #define TIM10_CH3_GPIO hal::PB<5>()
+        #define TIM10_CH3N_GPIO hal::PA<7>()
 
-        #define TIM10_CH4_GPIO hal::portC[14]
+        #define TIM10_CH4_GPIO hal::PC<14>()
     #elif TIM10_REMAP == 2
-        #define TIM10_CH1_GPIO hal::portD[1]
-        #define TIM10_CH1N_GPIO hal::portE[3]
+        #define TIM10_CH1_GPIO hal::PD<1>()
+        #define TIM10_CH1N_GPIO hal::PE<3>()
 
-        #define TIM10_CH2_GPIO hal::portD[3]
-        #define TIM10_CH2N_GPIO hal::portE[4]
+        #define TIM10_CH2_GPIO hal::PD<3>()
+        #define TIM10_CH2N_GPIO hal::PE<4>()
 
-        #define TIM10_CH3_GPIO hal::portD[5]
-        #define TIM10_CH3N_GPIO hal::portE[5]
+        #define TIM10_CH3_GPIO hal::PD<5>()
+        #define TIM10_CH3N_GPIO hal::PE<5>()
 
-        #define TIM10_CH4_GPIO hal::portD[7]
+        #define TIM10_CH4_GPIO hal::PD<7>()
     #elif TIM10_REMAP == 3
-        #define TIM10_CH1_GPIO hal::portD[1]
-        #define TIM10_CH1N_GPIO hal::portE[3]
+        #define TIM10_CH1_GPIO hal::PD<1>()
+        #define TIM10_CH1N_GPIO hal::PE<3>()
 
-        #define TIM10_CH2_GPIO hal::portD[3]
-        #define TIM10_CH2N_GPIO hal::portE[4]
+        #define TIM10_CH2_GPIO hal::PD<3>()
+        #define TIM10_CH2N_GPIO hal::PE<4>()
 
-        #define TIM10_CH3_GPIO hal::portD[5]
-        #define TIM10_CH3N_GPIO hal::portE[5]
+        #define TIM10_CH3_GPIO hal::PD<5>()
+        #define TIM10_CH3N_GPIO hal::PE<5>()
 
-        #define TIM10_CH4_GPIO hal::portD[7]
+        #define TIM10_CH4_GPIO hal::PD<7>()
     #endif
 #endif
 
 
 #ifdef ENABLE_CAN1
-    #define CAN1_RM0_TX_GPIO hal::portA[12]
-    #define CAN1_RM0_RX_GPIO hal::portA[11]
+    #define CAN1_RM0_TX_GPIO hal::PA<12>()
+    #define CAN1_RM0_RX_GPIO hal::PA<11>()
 
-    #define CAN1_RM1_TX_GPIO hal::portB[9]
-    #define CAN1_RM1_RX_GPIO hal::portB[8]
+    #define CAN1_RM1_TX_GPIO hal::PB<9>()
+    #define CAN1_RM1_RX_GPIO hal::PB<8>()
 
-    #define CAN1_RM3_TX_GPIO hal::portD[1]
-    #define CAN1_RM3_RX_GPIO hal::portD[0]
+    #define CAN1_RM3_TX_GPIO hal::PD<1>()
+    #define CAN1_RM3_RX_GPIO hal::PD<0>()
     
     #if CAN1_REMAP == 0
         #define CAN1_TX_GPIO CAN1_RM0_TX_GPIO
@@ -571,11 +571,11 @@
 #endif
 
 #ifdef ENABLE_CAN2
-    #define CAN2_RM0_TX_GPIO hal::portB[13]
-    #define CAN2_RM0_RX_GPIO hal::portB[12]
+    #define CAN2_RM0_TX_GPIO hal::PB<13>()
+    #define CAN2_RM0_RX_GPIO hal::PB<12>()
 
-    #define CAN2_RM1_TX_GPIO hal::portB[6]
-    #define CAN2_RM1_RX_GPIO hal::portB[5]
+    #define CAN2_RM1_TX_GPIO hal::PB<6>()
+    #define CAN2_RM1_RX_GPIO hal::PB<5>()
     
     #if CAN2_REMAP == 0
         #define CAN2_TX_GPIO CAN2_RM0_TX_GPIO
@@ -589,24 +589,24 @@
 #endif
 
 #ifdef ENABLE_OPA2
-    #define OPA2_N0_GPIO hal::portB[10]
-    #define OPA2_P0_GPIO hal::portB[14]
-    #define OPA2_O0_GPIO hal::portA[2]
+    #define OPA2_N0_GPIO hal::PB<10>()
+    #define OPA2_P0_GPIO hal::PB<14>()
+    #define OPA2_O0_GPIO hal::PA<2>()
 
-    #define OPA2_N1_GPIO hal::portA[5]
-    #define OPA2_P1_GPIO hal::portA[7]
-    #define OPA2_O1_GPIO hal::portA[4]
+    #define OPA2_N1_GPIO hal::PA<5>()
+    #define OPA2_P1_GPIO hal::PA<7>()
+    #define OPA2_O1_GPIO hal::PA<4>()
 
 #endif
 
 #ifdef ENABLE_OPA1
-    #define OPA1_N0_GPIO hal::portB[11]
-    #define OPA1_P0_GPIO hal::portB[15]
-    #define OPA1_O0_GPIO hal::portA[3]
+    #define OPA1_N0_GPIO hal::PB<11>()
+    #define OPA1_P0_GPIO hal::PB<15>()
+    #define OPA1_O0_GPIO hal::PA<3>()
 
-    #define OPA1_N1_GPIO hal::portA[6]
-    #define OPA1_P1_GPIO hal::portB[0]
-    #define OPA1_O1_GPIO hal::portB[1]
+    #define OPA1_N1_GPIO hal::PA<6>()
+    #define OPA1_P1_GPIO hal::PB<0>()
+    #define OPA1_O1_GPIO hal::PB<1>()
 #endif
 
 

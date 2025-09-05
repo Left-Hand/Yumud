@@ -22,16 +22,25 @@ public:
 };
 
 class CircularFilletInterpoation:public Interpolation{
-protected:
-    real_t arcCenterX;
-    real_t arcCenterY;
-    real_t arcStartAngle;
-    real_t arcEndAngle;
-    real_t arcRadius;
-    real_t arcStartX;
-    real_t arcStartY;
-    real_t arcEndX;
-    real_t arcEndY;
+public:
+    CircularFilletInterpoation(const Vec2<q16> & handle, real_t R):
+        _a(handle.x), _b(handle.y), _R(R){
+            computeFilletParameters ({0,0}, {_a,_b}, {_a,_b}, {1,1}, _R);
+        }
+
+
+    real_t forward(real_t x) const override;
+
+private:
+    real_t arcCenterX = 0;
+    real_t arcCenterY = 0;
+    real_t arcStartAngle = 0;
+    real_t arcEndAngle = 0;
+    real_t arcRadius = 0;
+    real_t arcStartX = 0;
+    real_t arcStartY = 0;
+    real_t arcEndX = 0;
+    real_t arcEndY = 0;
 
     void computeFilletParameters (
         const Vec2<q16> & pt1,
@@ -43,15 +52,6 @@ protected:
     const real_t _a;
     const real_t _b;
     const real_t _R;
-public:
-    CircularFilletInterpoation(const Vec2<q16> & handle, real_t R):
-        _a(handle.x), _b(handle.y), _R(R){
-            // computeFilletParameters
-            computeFilletParameters ({0,0}, {_a,_b}, {_a,_b}, {1,1}, _R);
-        }
-
-
-    real_t forward(real_t x) const override;
 };
 
 };

@@ -82,23 +82,26 @@ private:
         Continuous cont = DISC) {
         if (const auto res = spi_
             .begin(idx_.to_req()); res.is_err()) 
-                return Err(res.unwrap_err()); 
+                
+            return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
-                return Err(res.unwrap_err());
+                
+            return Err(res.unwrap_err());
         }
 
         const auto len = pbuf.size();
         // DEBUG_PRINTLN(len, pbuf[0], static_cast<T>(pbuf[0]));
         for (size_t i = 0; i < len; i++){
-            (void)spi_.fast_write(static_cast<RGB565>(pbuf[i]).as_u16());
+            (void)spi_.fast_write(color_cast<RGB565>(pbuf[i]).as_u16());
             // (void)spi_.write(static_cast<uint32_t>(p[i]));
         } 
 
         if (cont == DISC) spi_.end();
 
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_.set_data_width(8); res.is_err()) 
+            return Err(res.unwrap_err());
         }
 
         return Ok();
@@ -110,18 +113,22 @@ private:
         const size_t len, 
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
-        if (const auto res = spi_.begin(idx_.to_req()); res.is_err()) return Err(res.unwrap_err()); 
+        if (const auto res = spi_.begin(idx_.to_req()); res.is_err()) 
+            return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
-                return Err(res.unwrap_err());
+                
+            return Err(res.unwrap_err());
         }
         for (size_t i = 0; i < len; i++){
             if(const auto res = spi_.write((data).as_u16());
-                res.is_err()) return Err(res.unwrap_err());
+                res.is_err()) 
+                return Err(res.unwrap_err());
         } 
         if (cont == DISC) spi_.end();
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_.set_data_width(8); res.is_err()) 
+            return Err(res.unwrap_err());
         }
         return Ok();
     }
@@ -132,21 +139,26 @@ private:
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
-        if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) 
+            return Err(res.unwrap_err());
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
-                return Err(res.unwrap_err());
+                
+            return Err(res.unwrap_err());
         }
 
         if constexpr (sizeof(T) == 1) {
-            if(const auto res = spi_.write(uint8_t(data)); res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_.write(uint8_t(data)); res.is_err()) 
+            return Err(res.unwrap_err());
         } else if constexpr (sizeof(T) == 2) {
-            if(const auto res = spi_.write(uint16_t(data)); res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_.write(uint16_t(data)); res.is_err()) 
+            return Err(res.unwrap_err());
         }
 
         if (cont == DISC) spi_.end();
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) return Err(res.unwrap_err());
+            if(const auto res = spi_.set_data_width(8); res.is_err()) 
+            return Err(res.unwrap_err());
         }
 
         return Ok();

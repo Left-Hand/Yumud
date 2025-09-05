@@ -7,19 +7,19 @@ namespace ymd::drivers{
 
 class MagStatus{
 public:
-    static constexpr MagStatus High(const uint16_t value = 0){
+    static constexpr MagStatus from_high(const uint16_t value = 0){
         return MagStatus{Kind::MagnetHigh, value};
     }
 
-    static constexpr MagStatus Low(const uint16_t value = 0){
+    static constexpr MagStatus from_low(const uint16_t value = 0){
         return MagStatus{Kind::MagnetLow, value};
     }
 
-    static constexpr MagStatus Proper(const uint16_t value = 0){
+    static constexpr MagStatus from_proper(const uint16_t value = 0){
         return MagStatus{Kind::MagnetProper, 0};
     }
 
-    static constexpr MagStatus Invalid(){
+    static constexpr MagStatus from_invalid(){
         return MagStatus{Kind::Invalid, 0};
     }
 

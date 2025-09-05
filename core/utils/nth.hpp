@@ -9,7 +9,7 @@ struct Nth{
     constexpr explicit Nth(const size_t count):
         count_(count){;}
 
-    constexpr size_t count() const {
+    [[nodiscard]] constexpr size_t count() const {
         return count_;
     }
 private:

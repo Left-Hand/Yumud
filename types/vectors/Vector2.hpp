@@ -77,10 +77,7 @@ struct Vec2{
     T x;
     T y;
     
-    
-    [[nodiscard]] constexpr Vec2():
-        x(T(0)),
-        y(T(0)){;}
+
 
     [[nodiscard]] constexpr Vec2(const T _x, const T _y): 
         x(T(_x)), y(T(_y)){;}
@@ -93,21 +90,43 @@ struct Vec2{
     [[nodiscard]] constexpr Vec2(const Vec2<U> & _v) : 
         x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
+    [[nodiscard]] static constexpr Vec2<T> from_unitialized(){
+        return Vec2<T>();
+    }
+
+    template<typename U>
     [[nodiscard]] __fast_inline static constexpr Vec2<T> from_angle(
-        const Angle<T> angle){
+        const Angle<U> angle
+    ){
+        static_assert(not std::is_integral_v<U>);
+        static_assert(not std::is_integral_v<T>);
+
         const auto [s,c] = angle.sincos();
-        return {c, s};
+        return {static_cast<T>(c), static_cast<T>(s)};
     }
 
+    [[nodiscard]] __fast_inline static constexpr Vec2<T> from_ones(const T & len){
+        return Vec2<T>{len, len};
+    }
+
+    [[nodiscard]] __fast_inline static constexpr Vec2<T> from_x_axis(const T & len){
+        return Vec2<T>{len, 0};
+    }
+
+    template<typename U>
     [[nodiscard]] __fast_inline static constexpr Vec2<T> from_angle_and_length(
-        const Angle<T> angle, const T length){
+        const Angle<U> angle, const T length){
         const auto [s,c] = angle.sincos();
-        return {c * length, s * length};
+        return {static_cast<T>(c * length), static_cast<T>(s * length)};
     }
 
-    [[nodiscard]] T & operator [](const size_t index) { return *(&this->x + index);}
+    [[nodiscard]] constexpr T & operator [](const size_t index) { 
+        return *(&this->x + index);
+    }
 
-    [[nodiscard]] const T & operator [](const size_t index) const {return *(&this->x + index);}
+    [[nodiscard]] constexpr const T & operator [](const size_t index) const {
+        return *(&this->x + index);
+    }
 
 
     [[nodiscard]] static constexpr bool sort_by_x(const Vec2 & a, const Vec2 & b){
@@ -129,17 +148,38 @@ struct Vec2{
     [[nodiscard]] constexpr Vec2<T> normalized() const;
     [[nodiscard]] constexpr T cross(const Vec2<T> & other) const;
 
-    [[nodiscard]] __fast_inline constexpr bool is_clockwise_to(const Vec2<T> & other) const{
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr __attribute__((const)) bool 
+    is_clockwise_to(const Vec2<U> & other) const {
         return (x*other.y > y*other.x);
     }
-
-    [[nodiscard]] __fast_inline constexpr bool is_count_clockwise_to(const Vec2<T> & other) const{
+    
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr __attribute__((const)) bool 
+    is_counter_clockwise_to(const Vec2<U> & other) const{
         return (x*other.y < y*other.x);
     }
 
     [[nodiscard]] constexpr T dot(const Vec2<T> & other) const;
-    [[nodiscard]] constexpr Vec2<T> improduct(const Vec2<T> & b) const;
-    [[nodiscard]] __fast_inline constexpr Vec2<T> rotated(const Angle<T> angle)const;
+
+    template<typename U>
+    [[nodiscard]] constexpr Vec2<T> improduct(const Vec2<U> & b) const{
+        return Vec2<T>(
+            static_cast<T>(x*b.x - y*b.y), 
+            static_cast<T>(x*b.y + y*b.x)
+        );
+    }
+
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr Vec2<T> rotated(const Angle<U> angle)const{
+        static_assert(not std::is_integral_v<U>);
+        // return this->improduct(Vec2<T>::from_angle(angle));
+        const auto [s,c] = angle.sincos();
+        return Vec2<T>(
+            static_cast<T>(x*c - y*s), 
+            static_cast<T>(x*s + y*c)
+        );
+    }
     [[nodiscard]] __fast_inline constexpr Vec2<T> abs() const;
 
 
@@ -179,7 +219,22 @@ struct Vec2{
 
     [[nodiscard]] constexpr T aspect() const {return (!!y) ? x/y : T(0);}
     [[nodiscard]] constexpr Vec2<T> bounce(const Vec2<T> & n) const;
-    [[nodiscard]] constexpr Vec2<T> ceil() const;
+
+    template<typename U = T>
+    [[nodiscard]] constexpr Vec2<U> ceil() const{
+        return Vec2<U>{ceil_cast<U>(x), ceil_cast<U>(y)};
+    }
+
+    template<typename U = T>
+
+    [[nodiscard]] constexpr Vec2<U> floor() const{
+        return Vec2<U>{floor_cast<U>(x), floor_cast<U>(y)};
+    }
+
+    template<typename U = T>
+    [[nodiscard]] constexpr Vec2<U> round() const{
+        return Vec2<U>{round_cast<U>(x), round_cast<U>(y)};
+    }
 
     template<arithmetic U>
     [[nodiscard]] constexpr Vec2<T> clampmin(const U & _length) const{
@@ -200,7 +255,7 @@ struct Vec2{
     [[nodiscard]] constexpr Vec2<T> dir_to(const Vec2<T> & b) const;
     [[nodiscard]] constexpr T dist_to(const Vec2<T> & b) const;
     [[nodiscard]] constexpr T dist_squared_to(const Vec2<T> & b) const;
-    [[nodiscard]] constexpr Vec2<T> floor() const;
+
     [[nodiscard]] constexpr bool is_equal_approx(const Vec2<T> & v) const;
     [[nodiscard]] constexpr T manhattan_distance()const{
         return ABS(x) + ABS(y);
@@ -229,7 +284,7 @@ struct Vec2{
     [[nodiscard]] __fast_inline constexpr Vec2<T> project(const Vec2<T> & b) const;
     [[nodiscard]] __fast_inline constexpr T project(const T & rad) const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> reflect(const Vec2<T> & n) const;
-    [[nodiscard]] __fast_inline constexpr Vec2<T> round() const;
+
     [[nodiscard]] __fast_inline constexpr Vec2<T> sign() const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> slerp(const Vec2<T> & b, const T t) const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> slide(const Vec2<T>  & n) const;
@@ -237,8 +292,15 @@ struct Vec2{
     [[nodiscard]] __fast_inline constexpr Vec2<T> cw() const {return Vec2<T>(-y, x);}
     [[nodiscard]] __fast_inline constexpr Vec2<T> ccw() const {return Vec2<T>(y, -x);}
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_y() const {return {x,-y};}
-    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_x() const {return {-x,y};}
+    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_y() const {
+        static_assert(std::is_signed_v<T>);
+        return {x,static_cast<T>(-y)};
+    }
+    
+    [[nodiscard]] __fast_inline constexpr Vec2<T> flip_x() const {
+        static_assert(std::is_signed_v<T>);
+        return {static_cast<T>(-x),y};
+    }
 
     [[nodiscard]] __fast_inline constexpr Vec2<T> swap_xy() const {return {y,x};}
 
@@ -262,23 +324,20 @@ struct Vec2{
     }
 
     [[nodiscard]] __fast_inline constexpr Vec2<T> operator-() const{
-        Vec2<T> ret;
-        ret.x = -x;
-        ret.y = -y;
-        return ret;
+        return Vec2<T> {-x, -y};
     }
 
-    __fast_inline constexpr Vec2<T> & operator*=(const T & n){
-        // using CommonType = typename std::common_type<T, decltype(n)>::type;/
-        // using CommonType = T;
+    template<typename U>
+    __fast_inline constexpr Vec2<T> & operator*=(const U n){
         x = static_cast<T>(x * n);
         y = static_cast<T>(y * n);
         return *this;
     }
 
-    __fast_inline constexpr Vec2<T> & operator/=(const T & n){
-        // using CommonType = typename std::common_type<T, decltype(n)>::type;
-        if constexpr(std::is_integral_v<T>){
+
+    template<typename U>
+    __fast_inline constexpr Vec2<T> & operator/=(const U n){
+        if constexpr(std::is_integral_v<U>){
             x = x / n;
             y = y / n;
         }else{
@@ -289,11 +348,14 @@ struct Vec2{
         return *this;
     }
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> operator*(const T & n) const{
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr Vec2<T> operator*(const U n) const{
         Vec2<T> ret = *this;
         return ret *= n;
     }
-    [[nodiscard]] __fast_inline constexpr Vec2<T> operator/(const T & n) const{
+
+    template<typename U>
+    [[nodiscard]] __fast_inline constexpr Vec2<T> operator/(const U n) const{
         Vec2<T> ret = *this;
         return ret /= n;
     }
@@ -307,20 +369,10 @@ struct Vec2{
     }
 
 
-    [[nodiscard]] __fast_inline static constexpr Vec2<T> from_ones(const T & len){
-        return {len, len};
-    }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect_with_another_corner(const Vec2<auto> & other) const {
-        auto rect = Rect2<T>(other, other - *this);
-        return rect.abs();
-    }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> to_rect() const {
-        return Rect2<T>(ZERO, *this);
-    }
 
-    [[nodiscard]] __fast_inline constexpr T area() const {
+    [[nodiscard]] __fast_inline constexpr T x_mul_y() const {
         return x * y;
     }
 
@@ -337,6 +389,9 @@ struct Vec2{
     [[nodiscard]] __fast_inline constexpr std::array<T, 2> to_array() const {
         return {x, y};
     }
+
+private:
+    constexpr Vec2(){;}
 };
 
 template<arithmetic T>
@@ -367,6 +422,7 @@ using Vec2f = Vec2<float>;
 using Vec2i = Vec2<int>;
 using Vec2u = Vec2<uint>;
 using Vec2u8 = Vec2<uint8_t>;
+using Vec2u16 = Vec2<uint16_t>;
 
 }
 
@@ -378,23 +434,7 @@ constexpr Vec2<T> Vec2<T>::abs() const{
     return Vec2<T>(fabs(x), fabs(y));
 }
 
-template<arithmetic T>
-constexpr Vec2<T> Vec2<T>::ceil() const{
 
-    return Vec2<T>(ceilf(x), ceilf(y));
-}
-
-template<arithmetic T>
-constexpr Vec2<T> Vec2<T>::floor() const{
-
-    return Vec2<T>(floorf(x), floorf(y));
-}
-
-template<arithmetic T>
-constexpr Vec2<T> Vec2<T>::round() const{
-
-    return Vec2<T>(roundf(x), roundf(y));
-}
 
 template<arithmetic T>
 constexpr Vec2<T> Vec2<T>::clamp(const T & _min, const T & _max) const {
@@ -528,16 +568,6 @@ constexpr __fast_inline T Vec2<T>::cross(const Vec2<T> & with) const{
 }
 
 
-template<arithmetic T>
-constexpr __fast_inline Vec2<T> Vec2<T>::improduct(const Vec2<T> & b) const{
-    return Vec2<T>(x*b.x - y*b.y, x*b.y + y*b.x);
-}
-
-template<arithmetic T>
-constexpr __fast_inline Vec2<T> Vec2<T>::rotated(const Angle<T> angle) const{
-    static_assert(not std::is_integral_v<T>);
-    return this->improduct(Vec2<T>::from_angle(angle));
-}
 
 #define VECTOR2_COMPARE_IM_OPERATOR(op) \
 \

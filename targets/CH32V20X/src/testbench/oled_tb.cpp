@@ -113,8 +113,8 @@ public:
 };
 
 static void oled_tb(){
-    auto & SCL_GPIO = hal::portB[0];
-    auto & SDA_GPIO = hal::portB[1];
+    auto & SCL_GPIO = hal::PB<0>();
+    auto & SDA_GPIO = hal::PB<1>();
     static constexpr auto I2C_BAUD = 2'000'000;
     // static constexpr auto MONITOR_HZ = 5000;
 
@@ -122,8 +122,8 @@ static void oled_tb(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_splitter(' ');
 
-    Key key_left{hal::portB[2], LOW};
-    Key key_right{hal::portB[1], LOW};
+    Key key_left{hal::PB<2>(), LOW};
+    Key key_right{hal::PB<1>(), LOW};
 
     Font8x5 font;
 
@@ -131,7 +131,7 @@ static void oled_tb(){
     key_right.init();
     clock::delay(100ms);
 
-    // I2cSw i2c{portB[13], portB[15]};
+    // I2cSw i2c{hal::PB<13>(), hal::PB<15>()};
     hal::I2cSw i2c{SCL_GPIO, SDA_GPIO};
     // i2c.init(0);
     i2c.init(I2C_BAUD);

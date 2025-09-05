@@ -23,7 +23,7 @@ void tca9548_main()
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets();
     
-    auto i2c = hal::I2cSw(&hal::portA[12], &hal::portA[15]);
+    auto i2c = hal::I2cSw(&hal::PA<12>(), &hal::PA<15>());
     i2c.init(400_KHz);
 
     auto tca = drivers::TCA9548A(&i2c, hal::I2cSlaveAddr<7>::from_u7(0x70));

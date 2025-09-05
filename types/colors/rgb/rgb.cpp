@@ -195,11 +195,11 @@ OutputStream & operator<<(OutputStream & os, const Binary & bn){
 }
 
 OutputStream & operator<<(OutputStream & os, const Gray & gs){
-    return os << '(' << uint8_t(gs) << ')';
+    return os << '(' << gs.as_u8() << ')';
 }
 
 OutputStream & operator<<(OutputStream & os, const IGray & sgs){
-    return os << '(' << int8_t(sgs) << ')';
+    return os << '(' << sgs.as_i8() << ')';
 }
 
 #define OS_RGB    return os << '(' << uint8_t(rgb.r) << os.splitter() << uint8_t(rgb.g) << os.splitter() << uint8_t(rgb.b) << ')';
@@ -217,13 +217,13 @@ OutputStream & operator<<(OutputStream & os, const HSV888 & hsv){{OS_XXX(hsv.h, 
 #undef OS_XXX
 
 
-LAB888::LAB888(const RGB888 & rgb){
-    *this = xyz_to_lab888(rgb888_to_xyz(rgb));
-}
+// LAB888::LAB888(const RGB888 & rgb){
+//     *this = xyz_to_lab888(rgb888_to_xyz(rgb));
+// }
 
-LAB888::operator RGB888() const {
-    const auto [x,y,z] = lab888_to_xyz(*this);
-    return xyz_to_rgb888(std::make_tuple(x,y,z));
-}
+// LAB888::operator RGB888() const {
+//     const auto [x,y,z] = lab888_to_xyz(*this);
+//     return xyz_to_rgb888(std::make_tuple(x,y,z));
+// }
 
 }

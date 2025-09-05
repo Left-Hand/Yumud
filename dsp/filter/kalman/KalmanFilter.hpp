@@ -3,21 +3,10 @@
 #include "core/platform.hpp"
 
 template<arithmetic T>
-class KalmanFilter_t{
+class KalmanFilter{
 
-private:
-    T r;
-    T q;
-
-    T x_last;
-    T p_last;
-
-    T p_mid;
-    T kg;
-
-    bool inited = false;
 public:
-    KalmanFilter_t(
+    KalmanFilter(
         const T _r,
         const T _q
     ):
@@ -32,10 +21,23 @@ public:
         p_last = 0;
         inited = false;
     }
+
+
+private:
+    T r;
+    T q;
+
+    T x_last;
+    T p_last;
+
+    T p_mid;
+    T kg;
+
+    bool inited = false;
 };
 
 template<arithmetic T>
-const T KalmanFilter_t<T>::update(const arithmetic auto _x) {
+const T KalmanFilter<T>::update(const arithmetic auto _x) {
     T x = static_cast<T>(_x);
     if (!inited) {
         x_last = x;
@@ -50,7 +52,7 @@ const T KalmanFilter_t<T>::update(const arithmetic auto _x) {
 }
 
 template<arithmetic T>
-const T KalmanFilter_t<T>::predict(const arithmetic auto _x) {
+const T KalmanFilter<T>::predict(const arithmetic auto _x) {
     T x = static_cast<T>(_x);
     p_mid = p_last + q;
     kg = p_mid / (p_mid + r);

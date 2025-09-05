@@ -133,8 +133,8 @@ public:
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] IResult<real_t> read_lap_position(){
-        return Ok(lap_position_);
+    [[nodiscard]] IResult<Angle<q31>> read_lap_angle(){
+        return Ok(Angle<q31>::from_turns(lap_position_));
     }
 
     [[nodiscard]] IResult<> update();
@@ -160,7 +160,7 @@ public:
 private:
 
     Phy phy_;
-    real_t lap_position_ = {};
+    real_t lap_position_ = 0;
 
     [[nodiscard]]
     IResult<> write_reg(const RegAddress addr, uint8_t data);

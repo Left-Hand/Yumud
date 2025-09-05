@@ -117,7 +117,7 @@ void host_main(){
 
     DEBUG_PRINTLN(std::setprecision(4), "poweron");
 
-    auto i2c = I2cSw{portD[2], portC[12]};
+    auto i2c = I2cSw{hal::PD<2>(), hal::PC<12>()};
     i2c.init(3400_KHz);
     auto config = create_default_config();
 
@@ -1275,7 +1275,7 @@ void host_main(){
             cnt++;
         };
 
-        auto & led = portC[14];
+        auto & led = hal::PC<14>();
         led.outpp();
 
 
@@ -1437,7 +1437,7 @@ void host_main(){
     }
 
     if(true){
-        auto & led = portC[14];
+        auto & led = hal::PC<14>();
 
         led.outpp();
 

@@ -56,8 +56,8 @@ private:
     hal::SpiDrv spi_drv_;
 
     PMW3901_Data data_ = {};
-    real_t x_cm = {};
-    real_t y_cm = {};
+    real_t x_cm = 0;
+    real_t y_cm = 0;
 
     [[nodiscard]] Result<bool, Error> assert_reg(const uint8_t command, const uint8_t data);
     [[nodiscard]] IResult<> write_reg(const uint8_t command, const uint8_t data);

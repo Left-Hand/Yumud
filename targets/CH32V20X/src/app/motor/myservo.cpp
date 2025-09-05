@@ -135,7 +135,7 @@ class ServoCtrlSystem{
 public:
     void update(){
         // encoder_.update().unwrap();
-        // const auto lap_pos_raw = encoder_.read_lap_position().unwrap();
+        // const auto lap_pos_raw = encoder_.read_lap_angle().unwrap();
         // fb_pos_td_.update(lap_pos_raw);
 
         // const auto pos_meas = fb_pos_td_.get()[0];
@@ -163,7 +163,10 @@ public:
     }
 
     ServoCtrlSystem(hal::AnalogInIntf & ana, hal::PwmIntf & pwm):
-        encoder_(drivers::AnalogEncoder::Config{.volt_range = {}, .pos_range = {}}, ana),
+        encoder_(drivers::AnalogEncoder::Config{
+            .volt_range = {0,0}, 
+            .pos_range = {0,0}
+        }, ana),
         pwm_(pwm){;}
 private:    
     drivers::AnalogEncoder encoder_;
@@ -205,12 +208,12 @@ void myservo_main(){
     DEBUG_PRINTLN("powerup");
 
 
-    // auto & led = portD[0];
-    auto & led = portB[8];
+    // auto & led = hal::PD<0>();
+    auto & led = hal::PB<8>();
     led.outpp(HIGH);
 
     // {
-    //     auto & ledr = portC[13];
+    //     auto & ledr = hal::PC<13>();
     //     ledr.outpp(HIGH);
     //     while(true){
     //         ledr.toggle();
@@ -250,10 +253,10 @@ void myservo_main(){
 
     auto & can = can1;
 
-    auto & mode1_gpio   = portB[1];
-    auto & phase_gpio   = portA[7];
-    // auto & en_gpio      = portA[6];
-    // auto & mode2_gpio   = portA[5];
+    auto & mode1_gpio   = hal::PB<1>();
+    auto & phase_gpio   = hal::PA<7>();
+    // auto & en_gpio      = hal::PA<6>();
+    // auto & mode2_gpio   = hal::PA<5>();
     phase_gpio.outpp();
 
     using ButterLpf = dsp::ButterLowpassFilter<iq_t<16>, 4>;
@@ -353,7 +356,7 @@ void myservo_main(){
         // clock::delay(200ms);
         // DEBUG_PRINTLN(
         //     real_t(pwm) 
-        //     ,bool(portA[6].read()) 
+        //     ,bool(hal::PA<6>().read()) 
         //     ,bool(phase_gpio.read())
         //     ,real_t(ain1)
         //     ,real_t(ain2)
@@ -382,7 +385,7 @@ void myservo_main(){
             pos_cmd
         );
         // for(auto i = 0; i < 1000; ++i){
-        //     DEBUG_PRINTLN(portB[9].read());
+        //     DEBUG_PRINTLN(hal::PB<9>().read());
         // }
     }
 

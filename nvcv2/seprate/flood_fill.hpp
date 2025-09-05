@@ -2,6 +2,9 @@
 
 #include "nvcv2/nvcv2.hpp"
 
+
+#if 0
+
 namespace ymd::nvcv2::Shape{
 
 struct Blob{
@@ -74,3 +77,4 @@ __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::
     return os << '<' << blob.index << '>' << blob.rect;
 }
 
+#endif

@@ -76,16 +76,16 @@ public:
     }
 
 private:
-    T a_;
-    T v_;
-    T s_;
+    T a_ = 0;
+    T v_ = 0;
+    T s_ = 0;
 
-    T t1;
-    T t2;
-    T t_all;
-    T s1;
-    bool reached_max_speed_;
-    bool is_inversed_;
+    T t1 = 0;
+    T t2 = 0;
+    T t_all = 0;
+    T s1 = 0;
+    bool reached_max_speed_ = false;
+    bool is_inversed_ = false;
 
     T _forward(const T t) const{
         if(reached_max_speed_){

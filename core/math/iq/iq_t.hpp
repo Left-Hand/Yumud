@@ -82,7 +82,6 @@ public:
         value_ = _iq<Q>(other.qvalue());
         return *this;
     };
-    
 
     template<size_t P>
     __fast_inline constexpr iq_t & operator = (iq_t<P> && other){
@@ -202,11 +201,11 @@ public:
     //#endregion
 
     //#region shifts
-    __fast_inline constexpr iq_t operator<<(int shift) const {
+    __fast_inline constexpr iq_t operator<<(int32_t shift) const {
         return iq_t(_iq<Q>::from_i32(as_i32() << shift));
     }
 
-    __fast_inline constexpr iq_t operator>>(int shift) const {
+    __fast_inline constexpr iq_t operator>>(int32_t shift) const {
         return iq_t(_iq<Q>::from_i32(as_i32() >> shift));
     }
     //#endregion
@@ -226,7 +225,7 @@ public:
     requires std::is_floating_point_v<T>
     __inline constexpr explicit operator T() const{
         if(std::is_constant_evaluated()){
-            return float(as_i32()) / int(1u << Q);
+            return float(as_i32()) / int32_t(1u << Q);
         }else{
             return __iqdetails::_IQNtoF<Q>(value_);
         }
@@ -481,11 +480,20 @@ __fast_inline constexpr iq_t<Q> sign(const iq_t<P> iq){
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> fmod(const iq_t<P> a, const iq_t<P> b){
-    return iq_t<Q>(_iq<P>::from_i32(a.as_i32() % b.as_i32()));}
+    return iq_t<Q>(_iq<P>::from_i32(a.as_i32() % b.as_i32()));
+}
+
+template<size_t Q = IQ_DEFAULT_Q, size_t P>
+__fast_inline constexpr iq_t<Q> fposmod(const iq_t<P> a, const iq_t<P> b){
+    const int32_t mod_result_i32 = a.as_i32() % b.as_i32();
+    const int32_t is_negative = (mod_result_i32 >> 31);  // 符号位扩展（0 或 -1）
+    return iq_t<Q>(_iq<P>::from_i32(mod_result_i32 + (b.as_i32() & is_negative)));
+}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> lerp(const iq_t<P> x, const iq_t<P> a, const iq_t<P> b){
-    return a * (1 - x) + b * x;}
+    return a * (1 - x) + b * x;
+}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){
@@ -493,21 +501,69 @@ __fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> frac(const iq_t<P> iq){
-    return iq_t<Q>(_iq<P>::from_i32((iq.as_i32()) & ((1 << P) - 1)));
+    static constexpr int32_t MASK = ((1 << P) - 1);
+    return iq_t<Q>(_iq<P>::from_i32((iq.as_i32()) & MASK));
+}
+
+
+template<size_t P>
+__fast_inline constexpr int32_t floor_int(const iq_t<P> iq){
+    return static_cast<int32_t>(iq.as_i32() >> P);}
+
+template<size_t P>
+__fast_inline constexpr int32_t ceil_int(const iq_t<P> iq){
+    static constexpr int32_t MASK = (1 << P) - 1;
+    return static_cast<int32_t>((iq.as_i32() >> P) + bool(iq.as_i32() & MASK));
+}
+
+template<size_t P>
+__fast_inline constexpr int32_t round_int(const iq_t<P> iq){
+    static constexpr int32_t MASK = (1 << (P - 1));
+    return static_cast<int32_t>((iq.as_i32() + MASK) >> P);
+}
+
+template<typename T, size_t P>
+__fast_inline constexpr T floor_cast(const iq_t<P> iq){
+    if constexpr(std::is_integral_v<T>){
+        return static_cast<T>(floor_int(iq));
+    }else{
+        return static_cast<T>(iq);
+    }
+}
+
+template<typename T, size_t P>
+__fast_inline constexpr T ceil_cast(const iq_t<P> iq){
+    if constexpr(std::is_integral_v<T>){
+        return static_cast<T>(ceil_int(iq));
+    }else{
+        return static_cast<T>(iq);
+    }
+}
+template<typename T, size_t P>
+__fast_inline constexpr T round_cast(const iq_t<P> iq){
+    if constexpr(std::is_integral_v<T>){
+        return static_cast<T>(round_int(iq));
+    }else{
+        return static_cast<T>(iq);
+    }
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> floor(const iq_t<P> iq){
-    return int(iq);}
+    return floor_int(iq);
+}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> ceil(const iq_t<P> iq){
-    return (iq > int(iq)) ? int(iq) + 1 : int(iq);}
+    return ceil_int(iq);
+}
+
+
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> round(const iq_t<P> iq){
-    static constexpr auto HALF_ONE = iq_t<Q>(0.5);
-    return iq_t<Q>(int(iq + HALF_ONE));}
+    return round_int(iq);
+}
 
 
 template<size_t Q>

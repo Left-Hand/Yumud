@@ -9,7 +9,7 @@ using namespace ymd;
 using namespace ymd::hal;
 
 void ad9959_main(){
-    auto & cs_gpio = portA[0];
+    auto & cs_gpio = hal::PA<0>();
 
     SpiSw spisw{
         &SPI1_SCLK_GPIO, 

@@ -2,6 +2,7 @@
 
 #include "core/stream/ostream.hpp"
 #include "core/utils/Option.hpp"
+#include "core/math/real.hpp"
 
 #include "type_traits"
 #include <algorithm>
@@ -16,60 +17,72 @@ public:
     T stop;
     #pragma pack(pop)
 
+    using Tsigned = std::make_signed_t<T>;
+
     static constexpr Range2<T> INF = {
         std::numeric_limits<T>::min(), std::numeric_limits<T>::max()};
     static constexpr Range2<T> POS = {T(0), std::numeric_limits<T>::max()};
     static constexpr Range2<T> NEG = {std::numeric_limits<T>::min(), T(0)};
 
-    [[nodiscard]] __fast_inline constexpr Range2(){;}
 
     template<typename U, typename V>
     [[nodiscard]] __fast_inline constexpr Range2(const U _start, const V _stop): 
-    start(static_cast<T>(_start)), stop(static_cast<T>(_stop)) {
-        if(stop < start) std::swap(start, stop);
-    }
-
-    [[nodiscard]] __fast_inline constexpr Range2(const Range2<T> & other): 
-        start(static_cast<T>(other.start)), 
-        stop(static_cast<T>(other.stop))
-    {
-        if(stop < start) std::swap(start, stop); 
-    }
-
-    [[nodiscard]] __fast_inline constexpr Range2(const std::pair<T, T> & other): 
-        start(static_cast<T>(other.first)), 
-        stop(static_cast<T>(other.second))
-    {
-        if(stop < start) std::swap(start, stop);
-    }
-
-    [[nodiscard]] __fast_inline constexpr Range2(const std::tuple<T, T> & other):
-        start(static_cast<T>(std::get<0>(other))), 
-        stop(static_cast<T>(std::get<1>(other)))
-    {
+    start(floor_cast<T>(_start)), stop(ceil_cast<T>(_stop)) {
         if(stop < start) std::swap(start, stop);
     }
 
     template<typename U>
+    [[nodiscard]] __fast_inline constexpr Range2(const Range2<U> & other): 
+        Range2(other.start, other.stop){;}
+
+    [[nodiscard]] __fast_inline constexpr Range2(const std::pair<T, T> & other): 
+        Range2(other.first, other.second){;}
+
+    [[nodiscard]] __fast_inline constexpr Range2(const std::tuple<T, T> & other):
+        Range2(std::get<0>(other), std::get<1>(other)) {;}
+    static constexpr Range2<T> from_uninitialized(){
+        return Range2();
+    }
+
+    template<typename U, typename V>
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_stop_unchecked(
-        const U _start, const U _stop
+        const U _start, const V _stop
     ){
-        Range2<T> ret;
-        ret.start = static_cast<T>(_start);
-        ret.stop = static_cast<T>(_stop);
+        auto ret = Range2<T>::from_uninitialized();
+        ret.start = floor_cast<T>(_start);
+        ret.stop = ceil_cast<T>(_stop);
         return ret;
     };
+
+    template<typename U, typename V>
+    [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_stop(
+        const U _start, const V _stop
+    ){
+        return Range2<T>{_start, _stop};
+    };
+
+
+    template<typename U, typename V>
+    [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_length(
+        const U start, const V length)
+    {
+        return Range2<T>{
+            start, 
+            start + length
+        };
+    } 
+
     template<typename U>
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_center_and_length(
         const U center, const U length)
     {
         if constexpr(std::is_integral_v<U>){
             const auto half_length = length >> 1;
-            return {center - half_length, center + half_length};
+            return from_start_and_stop_unchecked(center - half_length, center + half_length);
         }else{
             constexpr U HALF_ONE = static_cast<U>(0.5);
             const auto half_length = (length * HALF_ONE);
-            return {center - half_length, center + half_length};
+            return from_start_and_stop_unchecked(center - half_length, center + half_length);
         }
     } 
 
@@ -84,15 +97,6 @@ public:
         return {center, center};
     } 
 
-    template<typename U, typename V>
-    [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_length(
-        const U start, const V length)
-    {
-        return {
-            static_cast<T>(start), 
-            static_cast<T>(start + length)
-        };
-    } 
 
     [[nodiscard]] __fast_inline constexpr Range2<T> swap() const {
         return {stop, start};
@@ -139,6 +143,14 @@ public:
 
     [[nodiscard]] __fast_inline constexpr T length() const{
         return ABS(stop - start);
+    }
+
+    [[nodiscard]] __fast_inline constexpr T length_unchecked() const{
+        return stop - start;
+    }
+
+    [[nodiscard]] __fast_inline constexpr T half_length_unchecked() const{
+        return (stop - start) >> 1;
     }
 
     [[nodiscard]] __fast_inline constexpr T length_signed() const{
@@ -199,7 +211,7 @@ public:
         return Range2<T>(MAX(T(this->start), T(other.start)), MIN(T(this->stop), T(other.stop)));
     }
 
-    [[nodiscard]] constexpr T get_center()const{
+    [[nodiscard]] constexpr T center()const{
         return (start + stop) / 2;
     }
 
@@ -213,10 +225,21 @@ public:
     }
 
 
-    [[nodiscard]] constexpr Range2<T> expand(const arithmetic auto & value) const{
-        const Range2<T> ret = Range2<T>(this->start - value, this->stop + value);
-        if (ret.is_regular()) return ret;
-        else return Range2<T>();
+    [[nodiscard]] constexpr Option<Range2<T>> expand(const arithmetic auto & value) const{
+        const auto next_start = this->start - value;
+        const auto next_stop = this->stop + value; 
+
+        if(next_start > next_stop) return None;
+        return Some(Range2<T>::from_start_and_stop_unchecked(next_start, next_stop));
+    }
+
+    [[nodiscard]] constexpr Option<Range2<T>> shrink(const arithmetic auto & value) const{
+        
+        const auto next_start = this->start + value;
+        const auto next_stop = this->stop - value; 
+
+        if(next_start > next_stop) return None;
+        return Some(Range2<T>::from_start_and_stop_unchecked(next_start, next_stop));
     }
 
     [[nodiscard]] constexpr Range2<T> merge(const Range2<arithmetic auto> & other) const {
@@ -262,6 +285,11 @@ public:
 
     [[nodiscard]] constexpr T max() const {return MAX(this->start, this->stop);}
     [[nodiscard]] constexpr T min() const {return MIN(this->start, this->stop);}
+
+private:
+    [[nodiscard]] __fast_inline constexpr Range2(){;}
+
+    
 };
 
 using Range2i = Range2<int>;

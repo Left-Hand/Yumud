@@ -49,39 +49,17 @@ struct Circle2{
 };
 
 
-template<arithmetic T>
-struct HorizonOval2{
-	Vec2<T> left_center;
-	T radius;
-	T length;
 
-	__fast_inline constexpr Rect2<T> bounding_box() const {
-		const auto top_left = left_center + Vec2<T>(-radius, -radius);
-		const auto size = Vec2<T>(radius * 2 + length, radius * 2);
-		return Rect2<T>{top_left, size};
-	}
-};
 
 template<typename T>
 struct is_placed_t<Circle2<T>> : std::true_type {};
 
-template<typename T>
-struct is_placed_t<HorizonOval2<T>> : std::true_type {};
 
 template<typename T>
 __inline OutputStream & operator <<(OutputStream & os, const Circle2<T> & circle){
     return os << os.brackets<'('>() 
 		<< circle.center << os.splitter()  
 		<< circle.radius << os.brackets<')'>();
-}
-
-
-template<typename T>
-__inline OutputStream & operator <<(OutputStream & os, const HorizonOval2<T> & oval){
-    return os << os.brackets<'('>() 
-	<< oval.left_center << os.splitter()  
-	<< oval.radius << os.splitter()  
-	<< oval.length << os.brackets<')'>();
 }
 
 }

@@ -11,7 +11,7 @@ namespace ymd::hal{
 
 class SpiSlaveIndex{
 public:
-    explicit constexpr SpiSlaveIndex(const uint16_t spi_idx):
+    explicit constexpr SpiSlaveIndex(const uint8_t spi_idx):
         spi_idx_(spi_idx){}
 
     uint8_t as_u8() const {return spi_idx_;}
@@ -45,15 +45,17 @@ protected:
 
     [[nodiscard]] __fast_inline hal::HalResult lead(const LockRequest req){
         const auto index = req.id();
-        if(not cs_port_.is_index_valid(index))
+        const auto nth = Nth(index);
+        if(not cs_port_.is_nth_valid(nth))
             return hal::HalResult::NoSelecter;
-        cs_port_[index].clr();
+        cs_port_[nth].clr();
         last_index = index;
         return hal::HalResult::Ok();
     }
 
     __fast_inline void trail(){
-        cs_port_[last_index.value()].set();
+        const auto nth = Nth(last_index.value());
+        cs_port_[nth].set();
         last_index.reset();
     }
 
@@ -62,7 +64,7 @@ protected:
         const uint8_t index
     ){
         gpio.deref().outpp(HIGH);
-        cs_port_.bind_pin(gpio.deref(), index);
+        cs_port_.bind_pin(gpio.deref(), Nth(index));
     }
 public:
     Spi(){;}

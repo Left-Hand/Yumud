@@ -199,7 +199,7 @@ struct Ps2Joystick_Prelude{
         }
 
         constexpr Vec2i left_direction() const{
-            Vec2i dir;
+            Vec2i dir = Vec2i(0, 0);
 
             if(PressLevel::Pressed == modifiers.left) 
                 dir += Vec2i::LEFT;
@@ -243,6 +243,7 @@ public:
     IResult<DevId> devid() const {
         return Ok(dev_id_);
     }
+
     IResult<RxPayload> read_info() const;
 private:
     hal::SpiDrv spi_drv_;

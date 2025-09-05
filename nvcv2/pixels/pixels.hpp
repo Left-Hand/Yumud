@@ -32,17 +32,17 @@ namespace ymd::nvcv2::pixels{
             return;
         }
 
-        auto window_opt = (dst.size().to_rect())
-            .intersection(src.size().to_rect());
+        auto may_window = (Rect2u::from_size(dst.size()))
+            .intersection(Rect2u::from_size(src.size()));
 
-        if(window_opt.is_none()) return;
-        const auto window = window_opt.unwrap();
+        if(may_window.is_none()) return;
+        const auto window = may_window.unwrap();
         for (auto y = window.y(); y < window.y() + window.h(); y++) {
             for (auto x = window.x(); x < window.x() + window.w(); x++) {
-                const uint8_t a = uint8_t(src[Vec2u{x,y}]);
-                const uint8_t b = uint8_t(src[Vec2u{x+1,y}]);
-                const uint8_t c = uint8_t(src[Vec2u{x,y+1}]);
-                dst[{x,y}] = Gray(uint8_t(CLAMP(std::max(
+                const uint8_t a = src[Vec2u{x,y}].as_u8();
+                const uint8_t b = src[Vec2u{x+1,y}].as_u8();
+                const uint8_t c = src[Vec2u{x,y+1}].as_u8();
+                dst[{x,y}] = Gray::from_u8(uint8_t(CLAMP(std::max(
                     (ABS(a - c)) * 255 / (a + c),
                     (ABS(a - b) * 255 / (a + b))
                 ), 0, 255)));
@@ -53,18 +53,18 @@ namespace ymd::nvcv2::pixels{
     __inline void fast_bina_opera(
             Image<Binary> & out,
             const Image<Gray> & em, 
-            const uint8_t et,
+            const Gray et,
             const Image<Gray>& dm,
-            const uint8_t dt) {
+            const Gray dt) {
 
         const auto area = Vec2<size_t>{
             MIN(em.size().x, dm.size().x), 
             MIN(em.size().y, dm.size().y)
-        }.area();
+        }.x_mul_y();
 
-        for (auto i = 0u; i < area; i++) {
-            out[i] = Binary((static_cast<uint8_t>(em[i]) > et) || 
-                (static_cast<uint8_t>(dm[i]) > dt));
+        for (size_t i = 0u; i < area; i++) {
+            const auto o = Binary(em[i].to_binary(et)).and_with(Binary(dm[i].to_binary(dt)));
+            out[i] = o;
         }
     }
     
@@ -157,27 +157,27 @@ namespace ymd::nvcv2::pixels{
         for(uint j = y_range.start; j < y_range.stop; ++j){
             const auto * ptr = &(image[Vec2u{x_range.start, j}]);
             for(uint i = 0; i < x_range.length(); ++i){
-                sum += uint8_t(ptr[i]);
+                sum += ptr[i].as_u8();
             }
         }
         return sum;
     }
 
     constexpr uint64_t sum(const Image<Gray> & image){
-        return sum(image, image.size().to_rect());
+        return sum(image, Rect2u::from_size(image.size()));
     }
 
 
     constexpr Gray mean(const Image<Gray> & image, const Rect2u & roi){
-        return Gray(sum(image, roi) / (roi.get_area()));
+        return Gray::from_u8(sum(image, roi) / (roi.area()));
     }
 
     constexpr Gray mean(const Image<Gray> & image){
-        return mean(image, image.size().to_rect());
+        return mean(image, Rect2u::from_size(image.size()));
     }
 
     __inline Gray average(const Image<Gray>& src){
-        return Gray(pixels::sum(src) / src.size().area());
+        return Gray::from_u8(pixels::sum(src) / src.size().x_mul_y());
     }
 
 

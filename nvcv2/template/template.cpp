@@ -8,7 +8,7 @@
 
 
 #define BOUNDARY_CHECK()\
-if(not src.size().to_rect().contains(Rect2u{offs, tmp.size()})){\
+if(not Rect2u::from_size(src.size()).contains(Rect2u{offs, tmp.size()})){\
     ASSERT(false, "template_match: out of bound");\
     return 0;\
 }\
@@ -26,7 +26,7 @@ real_t template_match(
     BOUNDARY_CHECK()
 
     const auto size_opt = Rect2u(offs, tmp.size())
-        .intersection(src.size().to_rect());
+        .intersection(Rect2u::from_size(src.size()));
     
     if(size_opt.is_none()) return 0;
     const auto size = size_opt.unwrap();
@@ -42,7 +42,7 @@ real_t template_match(
         }
     }
 
-    return score / size.get_area();
+    return score / size.area();
 }
 
 real_t template_match_ncc(
@@ -52,8 +52,8 @@ real_t template_match_ncc(
 ){
     BOUNDARY_CHECK()
 
-    int32_t t_mean = uint8_t(pixels::mean(tmp));
-    int32_t s_mean = uint8_t(pixels::mean(src, Rect2u(offs, tmp.size())));
+    int32_t t_mean = pixels::mean(tmp).as_u8();
+    int32_t s_mean = pixels::mean(src, Rect2u(offs, tmp.size())).as_u8();
 
     int64_t num = 0;
     uint64_t den_t = 0;
@@ -66,8 +66,8 @@ real_t template_match_ncc(
         int32_t line_num = 0;
 
         for(auto x = 0u; x < tmp.size().x; x++){
-            int32_t tmp_val = int32_t(uint8_t(*p_tmp)) - t_mean;
-            int32_t src_val = int32_t(uint8_t(*p_src)) - s_mean;
+            int32_t tmp_val = int32_t(p_tmp->as_u8()) - t_mean;
+            int32_t src_val = int32_t(p_src->as_u8()) - s_mean;
 
             line_num += ((tmp_val * src_val));
             den_t += square(tmp_val);
@@ -102,8 +102,8 @@ real_t template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, cons
 
         uint32_t line_num = 0;
         for(auto x = 0u; x < tmp.size().x; x++){
-            int32_t tmp_val = uint8_t(*p_tmp);
-            int32_t src_val = uint8_t(*p_src);
+            int32_t tmp_val = p_tmp->as_u8();
+            int32_t src_val = p_src->as_u8();
 
             line_num += FAST_SQUARE8(tmp_val - src_val);
 
@@ -117,7 +117,7 @@ real_t template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, cons
     
     if(num == 0) return 0;
 
-    real_t ret;
+    // real_t ret = 0;
     uint16_t res = num / area;
     return 1 - u16_to_uni(res);
 }

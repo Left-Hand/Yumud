@@ -91,22 +91,7 @@ IResult<> SSD13XX::set_flush_pos(const Vec2u16 pos){
         res.is_err()) return res;
     return Ok();
 }
-IResult<> SSD13XX::init(){   
-    // DEBUG_PRINTLN(std::showbase, std::hex, init_cmds_list_);
-    if(const auto res = phy_.init() ; 
-        res.is_err()) return res;
-    if(const auto res = preinit_by_cmds(); 
-        res.is_err()) return res;
-    if(const auto res = enable_display(); 
-        res.is_err()) return res;
-    if(const auto res = set_offset(offset_); 
-        res.is_err()) return res;
-    if(const auto res = enable_flip_x(flip_x_en_); 
-        res.is_err()) return res;
-    if(const auto res = enable_flip_y(flip_y_en_); 
-        res.is_err()) return res;
-    return Ok();
-}
+
 IResult<> SSD13XX::enable_display(const Enable en){
     
     if(en == EN){
@@ -143,9 +128,9 @@ IResult<> SSD13XX::update(){
     return Ok();
 }
 
-IResult<> SSD13XX::preinit_by_cmds(){
+IResult<> SSD13XX::preinit_by_cmds(const std::span<const uint8_t> init_cmds_list){
     // DEBUG_PRINTLN(init_cmds_list_);
-    for(const auto cmd:init_cmds_list_){
+    for(const auto cmd:init_cmds_list){
         if(const auto res = phy_.write_command(cmd);
             res.is_err()) return res;
     }

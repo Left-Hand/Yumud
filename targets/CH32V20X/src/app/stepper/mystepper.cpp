@@ -20,7 +20,6 @@
 #include "hal/analog/opa/opa.hpp"
 #include "hal/gpio/gpio.hpp"
 
-#include "drivers/Encoder/odometer.hpp"
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 
@@ -50,7 +49,7 @@ using namespace ymd;
 
 #define UART hal::uart1
 
-using digipw::AlphaBetaDuty;
+using digipw::AlphaBetaCoord;
 
 
 
@@ -93,10 +92,10 @@ public:
             if(const auto res = retry(2, [&]{return encoder_.update();});
                 res.is_err()) return Err(Error(res.unwrap_err()));
             // execution_time_ = clock::micros() - begin_u;
-            const auto either_lap_position = encoder_.read_lap_position();
+            const auto either_lap_position = encoder_.read_lap_angle();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
-            1 - either_lap_position.unwrap();
+            Angle<q31>::from_turns(1 - either_lap_position.unwrap().to_turns());
         });
 
         auto & subprogress = calibrate_tasks_;
@@ -153,7 +152,9 @@ public:
         is_subprogress_finished_ = false;
 
 
-        const auto [a,b] = subprogress.resume(meas_lap_position);
+        const auto [a,b] = subprogress.resume(
+            Angle<q16>::from_turns(meas_lap_position.to_turns()));
+
         svpwm_.set_alpha_beta_duty(a,b);
         return Ok();
     }
@@ -163,7 +164,7 @@ public:
     }
 
 
-    void ctrl(q16 meas_lap_position){
+    void ctrl(Angle<q31> meas_lap_position){
 
         pos_filter_.update(meas_lap_position);
         // const auto [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
@@ -350,7 +351,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
 }
 
 [[maybe_unused]] static void eeprom_tb(){
-    hal::I2cSw i2c_sw{&hal::portD[1], &hal::portD[0]};
+    hal::I2cSw i2c_sw{&hal::PD<1>(), &hal::PD<0>()};
     i2c_sw.init(800_KHz);
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 
@@ -384,8 +385,8 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     clock::delay(400ms);
 
     {
-        hal::Gpio & ena_gpio = hal::portB[0];
-        hal::Gpio & enb_gpio = hal::portA[7];
+        hal::Gpio & ena_gpio = hal::PB<0>();
+        hal::Gpio & enb_gpio = hal::PA<7>();
         ena_gpio.outpp(HIGH);
         enb_gpio.outpp(HIGH);
     }
@@ -498,8 +499,8 @@ void mystepper_main(){
     // currentloop_tb();
 
     {
-        hal::Gpio & ena_gpio = hal::portB[0];
-        hal::Gpio & enb_gpio = hal::portA[7];
+        hal::Gpio & ena_gpio = hal::PB<0>();
+        hal::Gpio & enb_gpio = hal::PA<7>();
         ena_gpio.outpp(HIGH);
         enb_gpio.outpp(HIGH);
     }
@@ -564,7 +565,7 @@ void mystepper_main(){
 
     drivers::MT6816 encoder{
         &spi, 
-        spi.allocate_cs_gpio(&hal::portA[15]).unwrap()
+        spi.allocate_cs_gpio(&hal::PA<15>()).unwrap()
     };
 
 

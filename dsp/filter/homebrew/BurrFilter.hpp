@@ -1,6 +1,6 @@
 #pragma once
 template<typename T>
-class BurrFilter_t{
+class BurrFilter{
 	T last = T(0);
 	T current = T(0);
 
@@ -28,7 +28,7 @@ class BurrFilter_t{
 	}
 public:
 
-	BurrFilter_t(const T _certainty_tolerance = T(0.8),
+	BurrFilter(const T _certainty_tolerance = T(0.8),
 		const T _error_tolerance = T(0.3),
 		const uint8_t _max_misjudge_cnt = 2):
 			certainty_tolerance(_certainty_tolerance), error_tolerance(_error_tolerance), max_misjudge_cnt(_max_misjudge_cnt){;}

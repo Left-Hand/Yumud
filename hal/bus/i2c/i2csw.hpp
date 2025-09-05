@@ -16,8 +16,8 @@ private:
     hal::HalResult wait_ack();
     hal::HalResult lead(const hal::LockRequest req) final;
     void trail();
+
 protected :
-    hal::HalResult reset();
     hal::HalResult unlock_bus();
 public:
 
@@ -28,6 +28,7 @@ public:
         I2c(scl, sda){;}
     I2cSw(I2cSw && other) = default;
     
+    hal::HalResult reset();
     hal::HalResult write(const uint32_t data) final;
     hal::HalResult read(uint32_t & data, const Ack ack) final;
     void init(const uint32_t baudrate);

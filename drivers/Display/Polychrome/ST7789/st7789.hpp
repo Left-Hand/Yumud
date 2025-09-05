@@ -25,9 +25,16 @@ public:
         };
     }
 
-    IResult<> init();
+    template<typename Configer>
+    IResult<> init(Configer && cfger){
+        if(const auto res = this->common_init();
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = cfger.advanced_init(*this);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
     IResult<> fill(const RGB565 color){
-        return putrect_unchecked(size().to_rect(), color);
+        return putrect_unchecked(Rect2u16::from_size(size()), color);
     }
     IResult<> setpos_unchecked(const Vec2<uint16_t> pos);
     IResult<> setarea_unchecked(const Rect2<uint16_t> rect);
@@ -41,7 +48,7 @@ public:
     }
 
     IResult<> put_next_texture(const Rect2<uint16_t> rect, const is_color auto * pcolor){
-        return phy_.write_burst_pixels(std::span(pcolor, rect.get_area()));
+        return phy_.write_burst_pixels(std::span(pcolor, rect.area()));
     }
 
     IResult<> set_display_offset(const Vec2<uint16_t> _offset){
@@ -61,19 +68,17 @@ public:
         return modify_ctrl_reg(flip == EN, 5);
     }
 
-    IResult<> set_flush_dir_v(const bool dir){
-        return modify_ctrl_reg(dir, 4);
+    IResult<> enable_flush_dir_v(const Enable dir){
+        return modify_ctrl_reg(dir == EN, 4);
     }
 
-    IResult<> set_format_rgb(const bool is_rgb){
-        return modify_ctrl_reg(!is_rgb, 3);
+    IResult<> enable_format_rgb(const Enable is_rgb){
+        return modify_ctrl_reg(is_rgb == DISEN, 3);
     }
 
-    IResult<> set_flush_dir_h(const bool dir){
-        return modify_ctrl_reg(dir, 2);
+    IResult<> enable_flush_dir_h(const Enable dir){
+        return modify_ctrl_reg(dir == EN, 2);
     }
-
-
     IResult<> enable_inversion(const Enable inv_en){
         return write_command((inv_en == EN) ? 0x21 : 0x20);
     }
@@ -100,7 +105,7 @@ public:
     );
 
     [[nodiscard]] Rect2u get_expose_rect(){
-        return algo_.size().to_rect();
+        return Rect2u::from_size(algo_.size());
     }
 
 private:
@@ -109,7 +114,7 @@ private:
     ST7789_Phy phy_;
     Algo algo_;
 
-    Vec2<uint16_t> offset_;
+    Vec2<uint16_t> offset_ = Vec2<uint16_t>::ZERO;
     uint8_t scr_ctrl_ = 0;
 
     [[nodiscard]] __fast_inline IResult<> write_command(const uint8_t cmd){
@@ -126,6 +131,7 @@ private:
 
     [[nodiscard]] IResult<> modify_ctrl_reg(const bool is_high, const uint8_t pos);
 
+    [[nodiscard]] IResult<> common_init();
     template<typename T>
     friend class DrawTarget;
 };
@@ -160,18 +166,8 @@ struct DrawTarget<ST7789>{
 
 
 namespace st7789_preset{
-    struct _120X80{};
-    struct _240X135{};
-    struct _320X170{};
-
-    template<typename T>
-    struct ST7789_InitDispatcher{
-    };
-
-    template<>
-    struct ST7789_InitDispatcher<_120X80>{
-
-        static ST7789_Prelude::IResult<void> init(ST7789 & displayer, _120X80){
+    struct _120X80{
+        static ST7789_Prelude::IResult<void> advanced_init(ST7789 & displayer){
             if(const auto res = displayer.enable_flip_x(DISEN);
                 res.is_err()) return res;
             if(const auto res = displayer.enable_flip_y(EN);
@@ -180,22 +176,19 @@ namespace st7789_preset{
                 res.is_err()) return res;
             if(const auto res = displayer.set_display_offset({40, 52}); 
                 res.is_err()) return res;
-            if(const auto res = displayer.set_format_rgb(true);
+            if(const auto res = displayer.enable_format_rgb(EN);
                 res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_h(false);
+            if(const auto res = displayer.enable_flush_dir_h(DISEN);
                 res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_v(false);
+            if(const auto res = displayer.enable_flush_dir_v(DISEN);
                 res.is_err()) return res;
             if(const auto res = displayer.enable_inversion(EN);
                 res.is_err()) return res;
             return Ok();
         }
     };
-
-    template<>
-    struct ST7789_InitDispatcher<_240X135>{
-
-        static ST7789_Prelude::IResult<void> init(ST7789 & displayer, _240X135){
+    struct _240X135{
+        static ST7789_Prelude::IResult<void> advanced_init(ST7789 & displayer){
             if(const auto res = displayer.enable_flip_x(DISEN);
                 res.is_err()) return res;
             if(const auto res = displayer.enable_flip_y(EN);
@@ -204,48 +197,21 @@ namespace st7789_preset{
                 res.is_err()) return res;
             if(const auto res = displayer.set_display_offset({40, 52}); 
                 res.is_err()) return res;
-            if(const auto res = displayer.set_format_rgb(true);
+            if(const auto res = displayer.enable_format_rgb(EN);
                 res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_h(false);
+            if(const auto res = displayer.enable_flush_dir_h(DISEN);
                 res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_v(false);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_inversion(EN);
-                res.is_err()) return res;
-            return Ok();
-        }
-    };
-
-    template<>
-    struct ST7789_InitDispatcher<_320X170> {
-        
-        static ST7789_Prelude::IResult<void> init(ST7789 & displayer, _320X170){
-
-            if(const auto res = displayer.enable_flip_x(DISEN);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_flip_y(EN);
-                res.is_err()) return res;
-            if(const auto res = displayer.enable_swap_xy(EN);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_display_offset({0, 35}); 
-                res.is_err()) return res;
-            if(const auto res = displayer.set_format_rgb(true);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_h(false);
-                res.is_err()) return res;
-            if(const auto res = displayer.set_flush_dir_v(false);
+            if(const auto res = displayer.enable_flush_dir_v(DISEN);
                 res.is_err()) return res;
             if(const auto res = displayer.enable_inversion(EN);
                 res.is_err()) return res;
             return Ok();
         }
     };
+    struct _320X170{
+        static ST7789_Prelude::IResult<void> advanced_init(ST7789 & displayer);
+    };
 
-
-    template<typename T>
-    ST7789_Prelude::IResult<void> init(ST7789 & displayer, T && preset){
-        return ST7789_InitDispatcher<T>::init(displayer, std::forward<T>(preset));
-    }
 }
 
 

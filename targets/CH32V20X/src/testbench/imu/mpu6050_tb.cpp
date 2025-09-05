@@ -20,8 +20,8 @@ using namespace ymd::drivers;
 
 // #define UART uart2
 #define UART uart2
-#define SCL_GPIO hal::portB[0]
-#define SDA_GPIO hal::portB[1]
+#define SCL_GPIO hal::PB<0>()
+#define SDA_GPIO hal::PB<1>()
 #define MAG_ACTIVATED
 
 auto init_mpu6050(MPU6050 & mpu) -> Result<void, MPU6050::Error> {
@@ -146,7 +146,7 @@ void mpu6050_main(){
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets();
-    // I2cSw i2c{portA[12], portA[15]};
+    // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
     I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);
     i2c.init(400_KHz);

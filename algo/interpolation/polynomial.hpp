@@ -13,9 +13,8 @@ public:
 class SeatInterpolation:public Interpolation{
 protected:
     static std::tuple<real_t, real_t> get_ab(const Vec2<q16> & handle);
-protected:
-    real_t a;
-    real_t b;
+    real_t a = 0;
+    real_t b = 0;
 public:
     SeatInterpolation(const Vec2<q16> & handle){
         std::tie(a,b) = get_ab(handle);

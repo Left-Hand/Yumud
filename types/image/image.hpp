@@ -18,7 +18,7 @@ public:
     template<typename U = void>
     using IResult = Result<U, Error>;
 
-    Image(const Vec2u size):
+    explicit Image(const Vec2u size):
         size_(size),
         data_(std::make_shared<T[]>(size.x * size.y)){
             ASSERT(not size.is_zero());
@@ -35,7 +35,7 @@ public:
     //     );
     // }
 
-    Image(std::shared_ptr<T[]> data, const Vec2u size):
+    explicit Image(std::shared_ptr<T[]> data, const Vec2u size):
         size_(size),
         data_(data){
             ASSERT(not size.is_zero());
@@ -63,8 +63,10 @@ public:
     }
     
     Image(Image && other){
-        *this = std::move(other);
+        this->size_ = other.size_;
+        this->data_ = std::move(other.data_);
     }
+
     Image & operator=(const Image& other) = delete;
 
     bool operator ==(const Image & other) const = delete;
@@ -140,7 +142,7 @@ public:
 private:
 
 
-    Vec2u size_;
+    Vec2u size_ = Vec2u::ZERO;
 
     std::shared_ptr<T[]> data_;
 

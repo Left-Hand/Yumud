@@ -23,8 +23,8 @@ using namespace ymd::drivers;
 
 #define DBG_UART DEBUGGER_INST
 static constexpr uint SERVO_FREQ = 50;
-#define SCL_GPIO hal::portB[0]
-#define SDA_GPIO hal::portB[1]
+#define SCL_GPIO hal::PB<0>()
+#define SDA_GPIO hal::PB<1>()
 
 
 

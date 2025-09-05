@@ -18,7 +18,7 @@ namespace ymd{
         }else if(1 == exponent){
             return base;
         }else{
-            T ret;
+            T ret = 0;
             if(1 < exponent){
                 for(size_t i = 1; i < exponent; ++i){
                     ret *= base;
@@ -71,13 +71,6 @@ namespace ymd{
     __fast_inline constexpr iq_t<N> square(const iq_t<N> x) {
         return x * x;
     }
-    
-    template<arithmetic T>
-    __fast_inline constexpr T round(const T x) {
-        const size_t i = size_t(floor(x));
-        return T(i) + T(size_t(bool(x - i >= 0.5)));
-    }
-    
     
     __fast_inline constexpr real_t distance(const real_t & a, const real_t & b){
         return ABS(a-b);

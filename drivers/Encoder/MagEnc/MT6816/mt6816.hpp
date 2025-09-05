@@ -37,14 +37,17 @@ public:
     IResult<> reconf(const Config & cfg);
     IResult<> update();
 
-    IResult<real_t> read_lap_position() { return Ok(lap_position_);}
+    IResult<Angle<q31>> read_lap_angle() { 
+        return Ok(Angle<q31>::from_turns(lap_position_));
+    }
+
     uint32_t get_err_cnt() const {return err_cnt_;}
 
     IResult<MagStatus> get_mag_status() {
         if(last_sema_.no_mag){
-            return Ok(MagStatus::Low());
+            return Ok(MagStatus::from_low());
         }else{
-            return Ok(MagStatus::Proper());
+            return Ok(MagStatus::from_proper());
         }
     }
 

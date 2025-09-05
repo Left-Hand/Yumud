@@ -512,8 +512,8 @@ struct BMI160_Regs:public BMI160_Prelude{
     }DEF_R8(self_test)
 
 
-    Vec3<int16_t> gyr = {};
-    Vec3<int16_t> acc = {};
+    Vec3<int16_t> gyr = Vec3<int16_t>::ZERO;;
+    Vec3<int16_t> acc = Vec3<int16_t>::ZERO;;
 
 };
 

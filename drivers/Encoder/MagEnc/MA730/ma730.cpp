@@ -23,7 +23,7 @@ using IResult = typename MA730::IResult<T>;
 IResult<> MA730::init(const Config & cfg){
     if(const auto res = set_direction(cfg.direction);
         unlikely(res.is_err())) return Err(res.unwrap_err());
-    if(const auto res = read_lap_position();
+    if(const auto res = read_lap_angle();
         unlikely(res.is_err())) return Err(res.unwrap_err());
     return Ok();
 }
@@ -68,9 +68,9 @@ IResult<MagStatus> MA730::get_mag_status(){
     const bool mgl = !(magnitude_reg.mgl1 | magnitude_reg.mgl2);
     const bool mgh = magnitude_reg.magnitudeHigh;
 
-    if(mgl) return Ok(MagStatus::Low());
-    else if(mgh) return Ok(MagStatus::High());
-    else return Ok(MagStatus::Proper());
+    if(mgl) return Ok(MagStatus::from_low());
+    else if(mgh) return Ok(MagStatus::from_high());
+    else return Ok(MagStatus::from_proper());
 }
 
 IResult<> MA730::update(){

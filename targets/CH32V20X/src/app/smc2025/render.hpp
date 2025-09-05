@@ -153,7 +153,13 @@ private:
 template<>
 struct BoundingBoxOf<SpotLight>{
     static constexpr auto bounding_box(const SpotLight & obj){
-        return BoundingBox{-obj.radius, -obj.radius, 2 * obj.radius, 2 * obj.radius};
+        return Rect2u16{
+            Vec2u16{static_cast<uint16_t>(-obj.radius), 
+                static_cast<uint16_t>(-obj.radius)}, 
+            Vec2u16{
+                static_cast<uint16_t>(2 * obj.radius), 
+                static_cast<uint16_t>(2 * obj.radius)}
+        };
     }
 };
 
@@ -354,7 +360,7 @@ public:
                 }), ...);
         }, objects_);
 
-        if(!dirty) std::memset(pbuf.get(), 0, CAMERA_SIZE.x * CAMERA_SIZE.y);
+        if(!dirty) std::fill_n(pbuf.get(), CAMERA_SIZE.x * CAMERA_SIZE.y, 0);
         return Image<Gray>(std::move(
             std::reinterpret_pointer_cast<Gray[]>(pbuf)), CAMERA_SIZE);
     }

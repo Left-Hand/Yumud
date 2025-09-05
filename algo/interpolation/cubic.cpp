@@ -72,7 +72,10 @@ q16 NearCubicInterpolation::forward(
     q16 y5 = d;
     static constexpr q16 x3 = 1;  
     static constexpr q16 y3 = 1;
-    q16 x1,y1,x2,y2; // to be solved.
+    q16 x1 = 0;
+    q16 y1 = 0;
+    q16 x2 = 0;
+    q16 y2 = 0; // to be solved.
 
     // arbitrary but reasonable 
     // t-values for interior control points

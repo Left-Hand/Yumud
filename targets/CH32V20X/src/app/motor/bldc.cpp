@@ -40,7 +40,6 @@
 #include "types/regions/perspective_rect.hpp"
 
 #include "dsp/motor_ctrl/position_filter.hpp"
-#include "dsp/motor_ctrl/calibrate_table.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/motor_ctrl/elecrad_compsator.hpp"
 #include "dsp/controller/pi_ctrl.hpp"
@@ -49,7 +48,9 @@
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
 
+#include "dsp/motor_ctrl/sensorless/nonlinear/NonlinearObserver.hpp"
 
+#include "concept/analog_channel.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -196,7 +197,7 @@ void bldc_main(){
 
     MA730 ma730_{
         &spi,
-        spi.allocate_cs_gpio(&hal::portA[15])
+        spi.allocate_cs_gpio(&hal::PA<15>())
             .unwrap()
     };
 
@@ -206,34 +207,22 @@ void bldc_main(){
         .direction = CW
     }).examine();
 
-
-    MP6540 mp6540_{
-        {pwm_u, pwm_v, pwm_w},
-        {   
-            adc.inj<1>(), 
-            adc.inj<2>(), 
-            adc.inj<3>()
-        }
-    };
-
-    mp6540_.init();
-    mp6540_.set_so_res(10'000);
-    
     mp6540_en_gpio_.outpp(HIGH);
     mp6540_nslp_gpio_.outpp(HIGH);
+    static constexpr auto mp6540_scaler = MP6540::make_adc_scaler(10'000);
 
+    [[maybe_unused]] auto u_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
+    [[maybe_unused]] auto v_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
+    [[maybe_unused]] auto w_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
     
-
-    [[maybe_unused]] auto & u_sense = mp6540_.ch(1);
-    [[maybe_unused]] auto & v_sense = mp6540_.ch(2);
-    [[maybe_unused]] auto & w_sense = mp6540_.ch(3);
+    auto uvw_pwmgen = UvwPwmgen(&pwm_u, &pwm_v, &pwm_w);
     
 
     init_adc(adc);
 
-    hal::portA[7].inana();
+    hal::PA<7>().inana();
 
-    AbVoltage ab_volt_;
+    AlphaBetaCoord ab_volt_;
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -262,7 +251,7 @@ void bldc_main(){
     auto pd_ctrl_law_ = PdCtrlLaw{.kp = 128.581_r, .kd = 18.7_r};
 
     q20 q_volt_ = 0;
-    q20 meas_elecrad_ = 0;
+    Angle<q20> meas_elecrad_ = Angle<q20>::ZERO;
 
     [[maybe_unused]] q20 axis_target_position_ = 0;
     [[maybe_unused]] q20 axis_target_speed_ = 0;
@@ -277,21 +266,15 @@ void bldc_main(){
     auto update_sensors = [&]{ 
         ma730_.update().examine();
 
-        const auto meas_lap_position = ma730_.read_lap_position().examine(); 
+        const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
         pos_filter_.update(meas_lap_position);
     };
 
     auto sensored_foc_cb = [&]{
         update_sensors();
 
-        // if(run_status_.state == RunState::Idle){
-        //     svpwm_.set_ab_volt(0, 0);
-        //     leso_.reset();
-        //     return;
-        // }
-
-        const auto meas_lap_position = ma730_.read_lap_position().examine(); 
-        const q20 meas_elecrad = elecrad_comp_(meas_lap_position);
+        const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
+        const auto meas_elecrad = elecrad_comp_(meas_lap_position);
 
         [[maybe_unused]] const auto meas_position = pos_filter_.position();
         [[maybe_unused]] const auto meas_speed = pos_filter_.speed();
@@ -315,23 +298,23 @@ void bldc_main(){
         #if 1
         const auto q_volt = 3.3_r;
 
-        [[maybe_unused]] const auto ab_volt = DqVoltage{
-            0, 
-            q_volt
-        }.to_alpha_beta(ctime);
+        [[maybe_unused]] const auto ab_volt = DqCoord{
+            .d = 0, 
+            .q = q_volt
+        }.to_alpha_beta(Angle<q16>::from_turns(ctime));
         #else
         const auto q_volt = CLAMP2(
             pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)
         , SVPWM_MAX_VOLT);
 
-        [[maybe_unused]] const auto ab_volt = DqVoltage{
+        [[maybe_unused]] const auto ab_volt = DqCoordVoltage{
             0, 
             CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
         #endif
 
 
-        SVPWM3::set_ab_volt(mp6540_, ab_volt[0], ab_volt[1]);
+        SVPWM3::set_ab_volt(uvw_pwmgen, ab_volt[0], ab_volt[1]);
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;

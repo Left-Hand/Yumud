@@ -13,9 +13,7 @@ public:
     Angle<T> orientation;
 
 public:
-    [[nodiscard]] __fast_inline constexpr Ray2():
-        org(Vec2<T>(0,0)),
-        orientation(T(0)){;}
+    [[nodiscard]] __fast_inline constexpr Ray2() = delete;
 
     [[nodiscard]] __fast_inline constexpr Ray2(const Vec2<T> & _org, const Angle<T> & angle): 
             org(static_cast<Vec2<T>>(_org)), orientation(angle){;}

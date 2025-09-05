@@ -1,6 +1,8 @@
 #pragma once
 
 namespace ymd::dsp{
+
+
 template<arithmetic T>
 class HighpassFilter{
 public:
@@ -42,4 +44,6 @@ public:
         return alpha;
     }
 };
+
+
 }

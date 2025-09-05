@@ -21,20 +21,20 @@ using namespace ymd::hal;
 #define UART hal::uart2
 
 #if 0
-#define SCL_GPIO hal::portD[1]
-#define SDA_GPIO hal::portD[0]
+#define SCL_GPIO hal::PD<1>()
+#define SDA_GPIO hal::PD<0>()
 #else
-// #define SCL_GPIO hal::portB[6]
-// #define SDA_GPIO hal::portB[7]
-// #define SCL_GPIO hal::portB[3]
-// #define SDA_GPIO hal::portB[5]
-// #define SCL_GPIO hal::portD[2]
-// #define SDA_GPIO hal::portC[12]
+// #define SCL_GPIO hal::PB<6>()
+// #define SDA_GPIO hal::PB<7>()
+// #define SCL_GPIO hal::PB<3>()
+// #define SDA_GPIO hal::PB<5>()
+// #define SCL_GPIO hal::PD<2>()
+// #define SDA_GPIO hal::PC<12>()
 
-#define SCL_GPIO hal::portB[3]
-#define SDA_GPIO hal::portB[5]
-// #define SCL_GPIO hal::portC[12]
-// #define SDA_GPIO hal::portD[2]
+#define SCL_GPIO hal::PB<3>()
+#define SDA_GPIO hal::PB<5>()
+// #define SCL_GPIO hal::PC<12>()
+// #define SDA_GPIO hal::PD<2>()
 #endif
 struct FoundInfo{
     uint8_t addr;

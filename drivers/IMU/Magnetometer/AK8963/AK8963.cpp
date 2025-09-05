@@ -93,7 +93,6 @@ IResult<> AK8963::validate(){
     return Ok();
 }
 Result<Vec3<uint8_t>, Error> AK8963::get_coeff(){
-    // Vec3 coeff = {};
     if(const auto res = write_reg(0x0a, 0x0f);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_reg(asax_reg);

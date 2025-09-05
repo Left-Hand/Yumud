@@ -123,7 +123,7 @@ void adc_tb(OutputStream & logger){
     // adc1.enableContinous();
     // adc1.enableAutoInject();
 
-    // auto & bled = portA[8];
+    // auto & bled = hal::PA<8>();
     // bled.outpp();
     // auto fn = [&logger](){logger.println("Hi");};
     // void (* fn2)(void) = fn;

@@ -14,10 +14,10 @@ DigitProbability match_numbers(
         const real_t threshold
 ){
     const auto tmp_size = roi.size;
-    auto fault = src.clone(Rect2u(roi.position, tmp_size));
+    auto fault = src.clone(Rect2u(roi.top_left, tmp_size));
     auto fault_bina = fault.mirror<Gray>();
 
-    DigitProbability digit_p;
+    DigitProbability digit_p = {0};
     for(size_t i = 0; i < MAX_NUMBERS; i++){
         Image<Gray> tmp = Image<Gray>::from_buf(
             reinterpret_cast<const Gray *>(digit_images[i]), 
@@ -53,7 +53,7 @@ DigitProbability match_numbers(const Image<Binary> & src, const Rect2u & roi){
             tmp_size
         );
         ymd::nvcv2::pixels::inverse(tmp);
-        digit_p[i] = ymd::nvcv2::match::template_match(src, tmp, roi.position);
+        digit_p[i] = ymd::nvcv2::match::template_match(src, tmp, roi.top_left);
     }
     return digit_p;
     // const auto elp = clock::millis() - begin;

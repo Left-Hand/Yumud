@@ -12,8 +12,8 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 #define UART hal::uart2
-#define SCL_GPIO hal::portB[0]
-#define SDA_GPIO hal::portB[1]
+#define SCL_GPIO hal::PB<0>()
+#define SDA_GPIO hal::PB<1>()
 
 using drivers::VL6180X;
 

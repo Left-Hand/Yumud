@@ -10,17 +10,8 @@ namespace ymd{
 class Mahony{
 public:
     using IQuat = Quat<q24>;
-    using V3 = Vec3<q24>;
-protected:
-    q24 dt_;
+    using IV3 = Vec3<q24>;
 
-    q24 ki_;
-    q24 kp_;
-    q24 kd_;
-    uint fs_;
-    V3 gyr_hat_;
-    V3 inte_;
-	IQuat q;
 public:
     struct Config{
         q24 kp;
@@ -41,19 +32,31 @@ public:
     }
 
     void reset(){
-        inte_ = V3();
+        inte_ = IV3::ZERO;
     }
 
-    void update(const V3 & gyr,const V3 & acc);
+    void update(const IV3 & gyr,const IV3 & acc);
 
-    void myupdate(const V3 & gyr,const V3 & acc);
+    void myupdate(const IV3 & gyr,const IV3 & acc);
 
-    void update_v2(const V3 & gyr,const V3 & acc);
-    void myupdate_v2(const V3 & gyr,const V3 & acc);
+    void update_v2(const IV3 & gyr,const IV3 & acc);
+    void myupdate_v2(const IV3 & gyr,const IV3 & acc);
     
-    // void update(const V3 & gyr,const V3 & acc, const V3 & mag);
+    // void update(const IV3 & gyr,const IV3 & acc, const IV3 & mag);
 
     IQuat result() const {return q;}
+
+private:
+protected:
+    q24 dt_ = 0;
+
+    q24 ki_ = 0;
+    q24 kp_ = 0;
+    q24 kd_ = 0;
+    uint fs_ = 0;
+    IV3 gyr_hat_ = IV3::ZERO;
+    IV3 inte_ = IV3::ZERO;
+	IQuat q = IQuat::IDENTITY;
 };
 
 template<typename T>

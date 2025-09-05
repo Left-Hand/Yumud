@@ -186,11 +186,11 @@ void embd_main(){
     auto & can = hal::can1;
     auto & adc = hal::adc1;
 
-    auto & ledr = hal::portC[13];
-    auto & ledb = hal::portC[14];
-    auto & ledg = hal::portC[15];
-    auto & en_gpio = hal::portA[11];
-    auto & nslp_gpio = hal::portA[12];
+    auto & ledr = hal::PC<13>();
+    auto & ledb = hal::PC<14>();
+    auto & ledg = hal::PC<15>();
+    auto & en_gpio = hal::PA<11>();
+    auto & nslp_gpio = hal::PA<12>();
 
     auto & pwm_u = timer.oc<1>();
     auto & pwm_v = timer.oc<2>();
@@ -261,7 +261,7 @@ void embd_main(){
     ledr.outpp(); 
     ledb.outpp(); 
     ledg.outpp();
-    hal::portA[7].inana();
+    hal::PA<7>().inana();
 
     can.init({
         .baudrate = hal::CanBaudrate::_1M,
@@ -297,13 +297,13 @@ void embd_main(){
 
     MA730 ma730_{
         &spi,
-        spi.allocate_cs_gpio(&hal::portA[15])
+        spi.allocate_cs_gpio(&hal::PA<15>())
             .unwrap()
     };
 
     BMI160 bmi160_{
         &spi,
-        spi.allocate_cs_gpio(&hal::portA[0])
+        spi.allocate_cs_gpio(&hal::PA<0>())
             .unwrap()
     };
 
@@ -342,7 +342,7 @@ void embd_main(){
     // init_opa();
     init_adc(adc);
 
-    hal::portA[7].inana();
+    hal::PA<7>().inana();
 
 
     en_gpio.set();
@@ -431,7 +431,7 @@ void embd_main(){
         ma730_.update().examine();
         bmi160_.update().examine();
 
-        const auto meas_lap = 1 - ma730_.read_lap_position().examine(); 
+        const auto meas_lap = 1 - ma730_.read_lap_angle().examine(); 
         pos_filter_.update(meas_lap);
 
 
@@ -468,7 +468,7 @@ void embd_main(){
         , MAX_VOLT);
 
 
-        const auto ab_volt = DqVoltage{
+        const auto ab_volt = DqCoordVoltage{
             0, 
             CLAMP2(q_volt - leso_.get_disturbance(), MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);

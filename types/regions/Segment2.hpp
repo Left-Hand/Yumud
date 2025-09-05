@@ -13,7 +13,6 @@ public:
     Vec2<T> stop;
 
 public:
-    [[nodiscard]] constexpr Segment2(){;}
 
     template<typename U>
     [[nodiscard]] constexpr explicit Segment2(const Segment2<U> & segment):

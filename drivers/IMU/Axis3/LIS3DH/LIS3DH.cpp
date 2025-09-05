@@ -79,7 +79,7 @@ Result<void, Error> LIS3DH::reset(){
 
 
 IResult<Vec3<q24>> LIS3DH::read_acc(){
-    return Ok(Vec3<q24>());
+    return Ok(Vec3<q24>::ZERO);
 
 }
 

@@ -14,19 +14,6 @@
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
-
-bool isInInterruptContext() {
-    // uint64_t mstatus;
-    // asm volatile("csrr %0, mstatus" : "=r"(mstatus));  // 读取 mstatus 寄存器
-    // uint64_t mpp = mstatus & 0b11;             // 获取 mpp 的值
-    // bool inInterrupt = (mpp == 1 || mpp == 3);        // 如果 mpp 为 1 或 3，则在中断上下文中
-    
-    // return inInterrupt;
-    // static constexpr uint32_t address = 0xE000E04C;
-    // return * (uint32_t *)(address) & (0b01'0000'0000);
-    return QingKeV4::isIntrruptActing();
-}
-
 void lt8920_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
@@ -40,13 +27,13 @@ void lt8920_main(){
     spi.init({2_MHz});
     
 
-    LT8920 lt{&spi, spi.allocate_cs_gpio(&portA[0]).unwrap()};
+    LT8920 lt{&spi, spi.allocate_cs_gpio(&hal::PA<0>()).unwrap()};
     bindSystickCb([&](){
         lt.tick().examine();
     });
 
 
-    lt.bind_nrst_gpio(portB[0]).examine();
+    lt.bind_nrst_gpio(hal::PB<0>()).examine();
     lt.init().examine();
     lt.set_data_rate(1_MHz).examine();
 
