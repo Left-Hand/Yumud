@@ -17,7 +17,7 @@ public:
     };
 
 public:
-    constexpr NonlinearObserver(const Config & cfg){
+    constexpr explicit NonlinearObserver(const Config & cfg){
         reconf(cfg);
         reset();
     }

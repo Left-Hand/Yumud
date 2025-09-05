@@ -6,7 +6,7 @@
 
 namespace ymd::digipw{
 
-struct UvwValue{
+struct UvwCoord{
     q20 u = {};
     q20 v = {};
     q20 w = {};
@@ -19,16 +19,12 @@ struct UvwValue{
         return *(&u + idx);
     }
 
-    friend OutputStream & operator << (OutputStream & os, const UvwValue & self){
+    friend OutputStream & operator << (OutputStream & os, const UvwCoord & self){
         return os << os.brackets<'('>() << 
             self.u << os.splitter() << 
             self.v <<  os.splitter() << 
             self.w << os.brackets<')'>();
     }
 };
-
-
-struct UvwCurrent: public UvwValue{};
-struct UvwVoltage: public UvwValue{};
 
 }

@@ -38,13 +38,13 @@ struct PwmAndDirPhy final{
             dir_gpio_(cfg.dir_gpio.deref())
         {;}
 
-    void set_dutycycle(const q31 duty){
-        if(duty > 0){
+    void set_dutycycle(const q31 dutycycle){
+        if(dutycycle > 0){
             dir_gpio_.set();
-            pwm_.set_dutycycle(duty);
+            pwm_.set_dutycycle(dutycycle);
         }else{
             dir_gpio_.clr();
-            pwm_.set_dutycycle(-duty);
+            pwm_.set_dutycycle(-dutycycle);
         }
     }
 private:
@@ -63,13 +63,13 @@ struct DualPwmPhy final{
             pwm_neg_(cfg.pwm_neg.deref())
         {;}
 
-    void set_dutycycle(const q31 duty){
-        if(duty > 0){
-            pwm_pos_.set_dutycycle(duty);
+    void set_dutycycle(const q31 dutycycle){
+        if(dutycycle > 0){
+            pwm_pos_.set_dutycycle(dutycycle);
             pwm_neg_.set_dutycycle(0);
         }else{
             pwm_pos_.set_dutycycle(0);
-            pwm_neg_.set_dutycycle(-duty);
+            pwm_neg_.set_dutycycle(-dutycycle);
         }
     }
 private:
@@ -127,9 +127,9 @@ struct PwmAndDirPhy_WithFg final{
         fg_gpio_(cfg.fg_gpio.deref())
     {}
 
-    void set_dutycycle(const q31 duty){ 
-        phy_.set_dutycycle(duty);
-        last_duty_ = duty;
+    void set_dutycycle(const q31 dutycycle){ 
+        phy_.set_dutycycle(dutycycle);
+        last_duty_ = dutycycle;
     }
 
     void tick_10khz(){
@@ -174,9 +174,9 @@ struct DualPwmMotorPhy_WithAbEnc final{
                 drivers::AbEncoderByGpio::Config{cfg.line_a, cfg.line_b}})
     {}
 
-    void set_dutycycle(const q31 duty){ 
-        phy_.set_dutycycle(duty);
-        last_duty_ = duty;
+    void set_dutycycle(const q31 dutycycle){ 
+        phy_.set_dutycycle(dutycycle);
+        last_duty_ = dutycycle;
     }
 
     void tick_10khz(){
@@ -328,11 +328,11 @@ void diffspd_vehicle_main(){
         const auto position = motor_td_.position();
         const auto speed = motor_td_.speed();
 
-        const auto duty = CLAMP2(
+        const auto dutycycle = CLAMP2(
             ctrl_law_(targ_position - position, targ_speed - speed),
             0.97_r
         );
-        motor_phy.set_dutycycle(duty);
+        motor_phy.set_dutycycle(dutycycle);
         // motor_phy.set_dutycycle(amp * sinpu(ctime * freq));
     };
 

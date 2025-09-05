@@ -26,7 +26,7 @@ struct AlphaBeta final{
     q20 beta = {};
 
 
-    static constexpr AlphaBeta from_uvw(const UvwCurrent & uvw){
+    static constexpr AlphaBeta from_uvw(const UvwCoord & uvw){
         constexpr auto _2_by_3 = q20(2.0/3);
         constexpr auto _sqrt3_by_3 = q20(sqrt(q20(3)) / 3);
         return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, (uvw.v - uvw.w) * _sqrt3_by_3};

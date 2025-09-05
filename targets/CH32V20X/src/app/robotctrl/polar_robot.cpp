@@ -23,7 +23,7 @@
 
 #include "common_service.hpp"
 #include "joints.hpp"
-#include "gcode.hpp"
+#include "gcode/gcode.hpp"
 #include "gcode_data.hpp"
 
 #ifdef ENABLE_UART1
