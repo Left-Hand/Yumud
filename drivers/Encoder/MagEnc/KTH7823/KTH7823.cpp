@@ -131,7 +131,7 @@ IResult<> KTH7823::set_direction(const bool direction){
 
 IResult<MagStatus> KTH7823::get_mag_status(){
     TODO();
-    return Ok(MagStatus::Proper());
+    return Ok(MagStatus::from_proper());
 }
 
 IResult<> KTH7823::set_zparameters(const Width width, const Phase phase){

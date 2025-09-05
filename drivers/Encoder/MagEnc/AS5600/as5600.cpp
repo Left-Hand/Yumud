@@ -56,10 +56,10 @@ IResult<> AS5600::set_hysteresis(const Hysteresis _hysteresis){
 IResult<MagStatus> AS5600::get_mag_status(){
     if(const auto res = read_reg(status_reg);
         res.is_err()) return Err(res.unwrap_err());
-    if(status_reg.magProper) return Ok(MagStatus::Proper());
-    else if(status_reg.magHigh) return Ok(MagStatus::High());
-    else if(status_reg.magLow) return Ok(MagStatus::Low());
-    else return Ok(MagStatus(MagStatus::Invalid()));
+    if(status_reg.magProper) return Ok(MagStatus::from_proper());
+    else if(status_reg.magHigh) return Ok(MagStatus::from_high());
+    else if(status_reg.magLow) return Ok(MagStatus::from_low());
+    else return Ok(MagStatus(MagStatus::from_invalid()));
 }
 
 IResult<uint8_t> AS5600::get_gain(){

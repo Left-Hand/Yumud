@@ -67,8 +67,10 @@
 
 #include <cstdint>
 
-#ifndef _VL53L1_REGISTER_MAP_H_
-#define _VL53L1_REGISTER_MAP_H_
+#pragma once
+
+
+namespace ymd::drivers::vl53l1x_details{
 
 /** @defgroup VL53L1_register_DefineRegisters_group Define Registers *  @brief List of all the defined registers
  *  @{
@@ -11892,5 +11894,4 @@ static constexpr uint16_t VL53L1_SHADOW_PHASECAL_RESULT__REFERENCE_PHASE_LO = 0x
 
 /** @} VL53L1_register_DefineRegisters_group */
 
-
-#endif
+}

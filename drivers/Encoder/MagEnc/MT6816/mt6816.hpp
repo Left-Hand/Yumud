@@ -45,9 +45,9 @@ public:
 
     IResult<MagStatus> get_mag_status() {
         if(last_sema_.no_mag){
-            return Ok(MagStatus::Low());
+            return Ok(MagStatus::from_low());
         }else{
-            return Ok(MagStatus::Proper());
+            return Ok(MagStatus::from_proper());
         }
     }
 
