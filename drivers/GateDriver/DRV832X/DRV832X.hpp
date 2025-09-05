@@ -371,8 +371,8 @@ public:
     [[nodiscard]] IResult<> set_gain(const Gain gain);
     [[nodiscard]] IResult<> enable_pwm3(const Enable en = EN);
 
-    [[nodiscard]] IResult<> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
-    [[nodiscard]] IResult<> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);
+    [[nodiscard]] IResult<> set_drive_hs(const IDriveP drive_p, const IDriveN drive_n);
+    [[nodiscard]] IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);
     [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
 
     [[nodiscard]] IResult<R16_Status1> get_status1();
@@ -413,7 +413,7 @@ public:
         idrive_gpio_(params.idrive_gpio),
         mode_gpio_(params.mode_gpio){;}
 
-    void set_pwmmode(const PwmMode mode){
+    void set_pwm_mode(const PwmMode mode){
         // _6x = GND,
         // _3x = 47K to GND,
         // _1x = HiZ,
@@ -469,8 +469,8 @@ public:
     [[nodiscard]] IResult<> set_gain(const Gain gain);
     [[nodiscard]] IResult<> enable_pwm3(const Enable en = EN);
 
-    [[nodiscard]] IResult<> set_drive_hs(const IDriveP pdrive, const IDriveN ndrive);
-    [[nodiscard]] IResult<> set_drive_ls(const IDriveP pdrive, const IDriveN ndrive);
+    [[nodiscard]] IResult<> set_drive_hs(const IDriveP drive_p, const IDriveN drive_n);
+    [[nodiscard]] IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);
     [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
 
 private:

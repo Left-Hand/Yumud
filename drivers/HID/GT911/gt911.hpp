@@ -13,12 +13,17 @@
 
 namespace ymd::drivers{
 
-struct GT9XX:public GT9XX_Prelude{ 
+struct GT9XX final:public GT9XX_Prelude{ 
 public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
     using TouchPoints = HeaplessVector<TouchPoint, MAX_NUM_TOUCHPOINTS>;
+
+    explicit GT9XX(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    explicit GT9XX(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
 
     //验证设备是否有效
     IResult<> validate();

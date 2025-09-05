@@ -53,7 +53,7 @@ struct MAX31855_Prelude{
 
 class MAX31855 final:public MAX31855_Prelude{
 public:
-    MAX31855(hal::SpiDrv && spi_drv):   
+    explicit MAX31855(hal::SpiDrv && spi_drv):   
         spi_drv_(std::move(spi_drv)){;}
 
     MAX31855_Result read(){

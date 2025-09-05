@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-class BH1750{
+class BH1750 final{
 public:
     enum class Mode:uint8_t{
         HMode = 0,
@@ -25,13 +25,8 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 public:
-    BH1750(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    BH1750(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-
-    // void power_on(){
-    //     send_command(Command::PowerOn);
-    //     MIN
-    // }
+    explicit BH1750(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    explicit BH1750(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
 
     IResult<> power_down(){
         return send_command(Command::PowerDown);
@@ -53,11 +48,9 @@ public:
 
     IResult<> change_measure_time(const uint16_t ms);
 
-    IResult<int> get_lx();
+    IResult<uint32_t> get_lx();
 
 private:
-
-protected:
     hal::I2cDrv i2c_drv_;
 
     enum class Command:uint8_t{

@@ -49,8 +49,9 @@ IResult<> BH1750::send_command(const uint8_t cmd){
 }
 
 
-IResult<int> BH1750::get_lx(){
+IResult<uint32_t> BH1750::get_lx(){
     uint8_t data[2] = {0};
     // i2c_drv.read(data, 2);
+    TODO();
     return Ok(int(lsb * (int)((data[0] << 8) | data[1])));
 }

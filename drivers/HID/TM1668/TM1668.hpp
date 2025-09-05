@@ -28,7 +28,7 @@ struct TM1668_Prelude{
 class TM1668_Phy final:public TM1668_Prelude{
 public:
 
-    TM1668_Phy(hal::I2c & i2c, hal::GpioIntf & scb_io):
+    explicit TM1668_Phy(hal::I2c & i2c, hal::GpioIntf & scb_io):
         i2c_(i2c), scb_io_(scb_io){;}
     
     enum class PulseWidth:uint8_t{
@@ -156,7 +156,7 @@ public:
 
     static constexpr auto NAME = "TM1668";
 
-    TM1668(TM1668_Phy && phy):
+    explicit TM1668(TM1668_Phy && phy):
         phy_(std::move(phy)){;}
 
     class Display final{
