@@ -5,8 +5,8 @@
 // http://cas.ensmp.fr/~praly/Telechargement/Journaux/2010-IEEE_TPEL-Lee-Hong-Nam-Ortega-Praly-Astolfi.pdf
 // https://www.bilibili.com/video/BV1hmtQzJEBf
 
-namespace ymd::foc{
-class NonlinearObserver final{
+namespace ymd::motor_ctl{
+class NonlinearFluxObserver final{
 public:
     struct Config{
         q16 phase_inductance;
@@ -17,7 +17,7 @@ public:
     };
 
 public:
-    constexpr explicit NonlinearObserver(const Config & cfg){
+    constexpr explicit NonlinearFluxObserver(const Config & cfg){
         reconf(cfg);
         reset();
     }

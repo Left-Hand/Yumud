@@ -3,16 +3,16 @@
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
 
-namespace ymd::foc {
+namespace ymd::dsp::motor_ctl {
 
-class HfiObserver {
+class HighfreqInjectObserver {
 public:
     struct Config{
 
     };
 
 
-    constexpr HfiObserver(const q16 _f_inj, const q16 _Kf, const q16 _Ki)
+    constexpr explicit HighfreqInjectObserver(const q16 _f_inj, const q16 _Kf, const q16 _Ki)
         : 
             f_inj(_f_inj),
             Kf(_Kf),

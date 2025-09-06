@@ -13,8 +13,8 @@
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "drivers/GateDriver/DRV832X/DRV832X.hpp"
 
-#include "dsp/motor_ctrl/sensorless/smo/SmoObserver.hpp"
-#include "dsp/motor_ctrl/sensorless/lbg/RolbgObserver.hpp"
+#include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
+#include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
 
 #include "core/polymorphism/traits.hpp"
 
@@ -28,7 +28,6 @@
 using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
-using namespace ymd::foc;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
 

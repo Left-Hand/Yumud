@@ -29,7 +29,7 @@ public:
         uint32_t fs;
     };
 
-    constexpr Leso(const Config & cfg){reconf(cfg);}
+    constexpr explicit Leso(const Config & cfg){reconf(cfg);}
 
     constexpr void reconf(const Config & cfg){
         b0_ = cfg.b0;

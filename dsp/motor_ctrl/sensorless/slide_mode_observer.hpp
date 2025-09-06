@@ -5,12 +5,10 @@
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
 
-namespace ymd::foc{
+namespace ymd::dsp::motor_ctl{
 
-class SmoObserver{
+class SlideModeObserver{
 public:
-    SmoObserver(const SmoObserver & other) = delete;
-    SmoObserver(SmoObserver && other) = default;
 
     struct  Config{
         q16 f_para;
@@ -19,7 +17,7 @@ public:
         q16 kslf;   
     };
 
-    constexpr SmoObserver(const Config & cfg){
+    constexpr SlideModeObserver(const Config & cfg){
         reconf(cfg);
         reset();
     }

@@ -48,7 +48,6 @@
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
 
-#include "dsp/motor_ctrl/sensorless/nonlinear/NonlinearObserver.hpp"
 
 #include "concept/analog_channel.hpp"
 
