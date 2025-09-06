@@ -148,8 +148,8 @@ public:
             aw9523_.enable_led_mode(pin_).examine();
         }
 
-        void set_dutycycle(const real_t duty) {
-            aw9523_.set_led_current(pin_,int(255 * duty)).examine();
+        void set_dutycycle(const real_t dutycycle) {
+            aw9523_.set_led_current_dutycycle(pin_, dutycycle).examine();
         }
     private:
         AW9523 & aw9523_;
@@ -190,9 +190,10 @@ public:
 
     [[nodiscard]] IResult<> set_led_current_limit(const CurrentLimit limit);
 
-    [[nodiscard]] IResult<> set_led_current(
+    [[nodiscard]] IResult<> set_led_current_dutycycle(
         const hal::PinMask pin, 
-        const uint8_t current);
+        const real_t dutycycle
+    );
     
     [[nodiscard]] IResult<> validate();
 

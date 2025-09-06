@@ -13,31 +13,25 @@ struct TriangleSurface{
     using Vec = Vec3<T>;
 
     Vec3<T> v0, v1, v2;
-    // Vec3<T> normal;
 
     template<typename U>
     constexpr TriangleSurface(const TriangleSurface<U> & other):
         v0(static_cast<Vec>(other.v0)), 
         v1(static_cast<Vec>(other.v1)), 
         v2(static_cast<Vec>(other.v2))
-        // , normal(static_cast<Vec>(other.normal))
-        
         {;}
 
     constexpr TriangleSurface(
         const Vec3<auto> _v0,
         const Vec3<auto> _v1,
         const Vec3<auto> _v2
-        // const Vec3<auto> _normal
     ):
-        v0(static_cast<Vec>(_v0)), 
-        v1(static_cast<Vec>(_v1)), 
-        v2(static_cast<Vec>(_v2))
-        // , normal(static_cast<Vec>(_normal)) 
+        v0(static_cast<Vec3<T>>(_v0)), 
+        v1(static_cast<Vec3<T>>(_v1)), 
+        v2(static_cast<Vec3<T>>(_v2))
         {;}
 };
 
-// TriangleSurface<real_t>
 
 template<typename T>
 struct CacheOf;

@@ -25,12 +25,10 @@ void ads7830_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.no_brackets();
-    // DEBUGGER.no_brackets();
 
     hal::I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
     i2c.init(400_KHz);
 
-    // VL6180X vl6180{i2c, I2cSlaveAddr<7>::from_u7(0)};
     ADS7830 ads7830{&i2c, hal::I2cSlaveAddr<7>::from_u7(0b10010110 >> 1)};
     
     using SensorsValue = VectorX<uint8_t, ADS7830::CHANNEL_COUNT>;
