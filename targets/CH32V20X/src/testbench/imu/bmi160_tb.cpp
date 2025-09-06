@@ -20,7 +20,7 @@ using namespace ymd::drivers;
 void bmi160_main(){
     DBG_UART.init({576_KHz});
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 

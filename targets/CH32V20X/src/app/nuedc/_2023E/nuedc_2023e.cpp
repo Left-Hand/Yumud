@@ -55,7 +55,9 @@ public:
     void setup(){
 
 
-        SERVO_PWMGEN_TIMER.init({50});
+        SERVO_PWMGEN_TIMER.init({
+            .freq = 50
+        }, EN);
 
         #ifndef USE_MOCK_SERVO
 
@@ -149,8 +151,8 @@ void nuedc_2023e_main(){
     using namespace nuedc::_2023E;
     DBG_UART.init({576000});
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.no_brackets();
-    DEBUGGER.force_sync();
+    DEBUGGER.no_brackets(EN);
+    DEBUGGER.force_sync(EN);
     DEBUGGER.set_eps(4);
 
     const auto cfg = Factory::make_cfg();

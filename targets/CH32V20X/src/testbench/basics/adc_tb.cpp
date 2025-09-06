@@ -131,8 +131,7 @@ void adc_tb(OutputStream & logger){
     dma1Ch1.init({DmaMode::toMemCircular, DmaPriority::High});
     dma1Ch1.transfer_pph2mem<uint16_t>(adc_dma_buf.begin(), &(ADC1->RDATAR), adc_dma_buf.size());
 
-    // adc1.enableContinous();
-    adc1.enable_dma();
+    adc1.enable_dma(EN);
     adc1.sw_start_regular(true);
     while(true){
         logger.println(adc_dma_buf[0], dma1Ch1.pending());

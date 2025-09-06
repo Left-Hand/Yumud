@@ -130,7 +130,7 @@ void bldc_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     auto & spi = hal::spi1;
     auto & timer1 = hal::timer1;
@@ -175,7 +175,7 @@ void bldc_main(){
     timer1.init({
         .freq = CHOPPER_FREQ, 
         .mode = hal::TimerCountMode::CenterAlignedUpTrig
-    });
+    }, EN);
 
     timer1.oc<4>().init({.install_en = DISEN});
     timer1.oc<4>().cvr() = timer1.arr() - 1;
@@ -326,7 +326,7 @@ void bldc_main(){
             const auto m = clock::micros();
             sensored_foc_cb();
             exe_us_ = clock::micros() - m;
-        }
+        }, EN
     );
     auto blink_service = [&]{
 

@@ -49,8 +49,8 @@ void mks_stepper_main(){
     #endif
     
     clock::delay(10ms);
-    motor1.activate().unwrap();
-    motor2.activate().unwrap();
+    motor1.activate(EN).unwrap();
+    motor2.activate(EN).unwrap();
     clock::delay(10ms);
 
 

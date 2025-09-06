@@ -38,10 +38,10 @@ static void ak09911c_test(drivers::AK09911C & aku){
         gest = gest.slerp(Quat<q24>::from_direction(dir), 0.05_r);
     };
 
-    timer1.init({ISR_FREQ});
+    timer1.init({ISR_FREQ}, EN);
     timer1.attach(TimerIT::Update, {0,0},[&]{
         measure();
-    });
+    }, EN);
     
     while(true){
         // DEBUG_PRINTLN(aku.update());
@@ -52,7 +52,7 @@ static void ak09911c_test(drivers::AK09911C & aku){
 void ak09911c_main(){
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 

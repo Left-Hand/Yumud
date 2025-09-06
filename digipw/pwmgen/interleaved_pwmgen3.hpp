@@ -155,8 +155,8 @@ public:
         timer_.init({
             cfg.freq, 
             hal::TimerCountMode::CenterAlignedDualTrig, 
-            DISEN}
-        );
+        }, DISEN
+    );
         timer_.set_deadzone_ns(cfg.deadzone_ns);
         timer_.enable_cc_ctrl_sync(DISEN);
 
@@ -189,7 +189,7 @@ public:
 
         pwm_trig_.set_dutycycle(TWO_BY_3);
         test_gpio.outpp();
-        timer_.enable();
+        timer_.enable(EN);
     }
 
     using Duty = std::array<real_t, 3>;

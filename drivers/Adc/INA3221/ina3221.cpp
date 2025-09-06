@@ -42,19 +42,19 @@ IResult<> INA3221::init(const Config & cfg){
     if(const auto res = this->validate(); 
         res.is_err()) return CHECKRES(res, "INA3221 verify failed");
 
-    if(const auto res = this->enable_channel(ChannelNth::CH1);
+    if(const auto res = this->enable_channel(ChannelNth::CH1, EN);
         res.is_err()) return res;
-    if(const auto res = this->enable_channel(ChannelNth::CH2);
+    if(const auto res = this->enable_channel(ChannelNth::CH2, EN);
         res.is_err()) return res;
-    if(const auto res = this->enable_channel(ChannelNth::CH3);
+    if(const auto res = this->enable_channel(ChannelNth::CH3, EN);
         res.is_err()) return res;
     if(const auto res = this->reconf(cfg);
         res.is_err()) return res;
-    if(const auto res = this->enable_continuous();
+    if(const auto res = this->enable_continuous(EN);
         res.is_err()) return res;
-    if(const auto res = this->enable_measure_bus();
+    if(const auto res = this->enable_measure_bus(EN);
         res.is_err()) return res;
-    if(const auto res = this->enable_measure_shunt();
+    if(const auto res = this->enable_measure_shunt(EN);
         res.is_err()) return res;
 
     return Ok();

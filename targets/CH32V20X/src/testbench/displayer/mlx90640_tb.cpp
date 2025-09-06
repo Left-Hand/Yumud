@@ -85,7 +85,7 @@ void mlx90640_main(){
         DEBUGGER.retarget(&DBG_UART);
         DEBUGGER.set_eps(4);
         DEBUGGER.set_splitter(",");
-        DEBUGGER.no_brackets();
+        DEBUGGER.no_brackets(EN);
     };
 
 

@@ -44,7 +44,7 @@ void GpioPort::enable_rcc(const Enable en){
 }
 
 void GpioPort::init(){
-    enable_rcc();
+    enable_rcc(EN);
 }
 
 

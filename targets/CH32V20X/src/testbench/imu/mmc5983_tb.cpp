@@ -116,7 +116,7 @@ static void mmc5983_test(drivers::MMC5983 & imu){
 void mmc5983_main(){
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 

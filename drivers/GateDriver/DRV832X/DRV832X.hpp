@@ -369,7 +369,7 @@ public:
     [[nodiscard]] IResult<> set_peak_current(const PeakCurrent peak_current);
     [[nodiscard]] IResult<> set_ocp_mode(const OcpMode ocp_mode);
     [[nodiscard]] IResult<> set_gain(const Gain gain);
-    [[nodiscard]] IResult<> enable_pwm3(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_pwm3(const Enable en);
 
     [[nodiscard]] IResult<> set_drive_hs(const IDriveP drive_p, const IDriveN drive_n);
     [[nodiscard]] IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);
@@ -467,7 +467,7 @@ public:
     [[nodiscard]] IResult<> set_peak_current(const PeakCurrent peak_current);
     [[nodiscard]] IResult<> set_ocp_mode(const OcpMode ocp_mode);
     [[nodiscard]] IResult<> set_gain(const Gain gain);
-    [[nodiscard]] IResult<> enable_pwm3(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_pwm3(const Enable en);
 
     [[nodiscard]] IResult<> set_drive_hs(const IDriveP drive_p, const IDriveN drive_n);
     [[nodiscard]] IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);

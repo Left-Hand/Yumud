@@ -103,8 +103,8 @@ void rrs3_main(){
 
     DEBUGGER_INST.init({576000u, CommStrategy::Blocking});
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.no_brackets();
-    DEBUGGER.force_sync();
+    DEBUGGER.no_brackets(EN);
+    DEBUGGER.force_sync(EN);
 
     DEBUG_PRINTLN(std::setprecision(4));
     // rr2_tb();

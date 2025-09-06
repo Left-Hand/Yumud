@@ -181,7 +181,7 @@ public:
 
     [[nodiscard]] IResult<> enable_irq_by_index(
         const Nth nth, 
-        const Enable en = EN);
+        const Enable en);
 
     [[nodiscard]] IResult<> enable_led_mode(const hal::PinMask pin);
 

@@ -241,26 +241,26 @@ public:
         return *this;
     }
 
-    OutputStream & no_brackets(const Enable en = EN){
+    OutputStream & no_brackets(const Enable en){
         config_.no_brackets = bool(en == EN);
         return *this;
     }
 
-    OutputStream & no_scoped(const Enable en = EN){ 
+    OutputStream & no_scoped(const Enable en){ 
         config_.no_scoped = bool(en == EN);
         return *this;
     }
 
-    OutputStream & no_fieldname(const Enable en = EN){ 
+    OutputStream & no_fieldname(const Enable en){ 
         config_.no_fieldname = bool(en == EN);
         return *this;
     }
-    OutputStream & force_sync(const Enable en = EN){
+    OutputStream & force_sync(const Enable en){
         config_.force_sync = bool(en == EN);
         return *this;
     }
 
-    OutputStream & no_space(const Enable en = EN){
+    OutputStream & no_space(const Enable en){
         config_.no_space = bool(en == EN);
         return *this;
     }

@@ -93,7 +93,7 @@ void mpu6500_tb(hal::I2c & i2c){
         .fs = 200
     }};
 
-    hal::timer1.init({200});
+    hal::timer1.init({200}, EN);
     hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
         mpu.update().examine();
 
@@ -136,7 +136,7 @@ void mpu6500_tb(hal::I2c & i2c){
             // Quat<real_t>(Vec3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
             end_m - begin_m
         );
-    });
+    }, EN);
 
     while(true);
 }
@@ -145,7 +145,7 @@ void mpu6500_tb(hal::I2c & i2c){
 void mpu6050_main(){
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
     I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
     // i2c.init(400_KHz);

@@ -164,8 +164,8 @@ public:
     IResult<> set_retrans_time(const uint8_t times);
 
     IResult<> enable_auto_cali(const uint16_t open);
-    IResult<> enable_auto_ack(const Enable en = EN);
-    IResult<> enable_crc(const Enable en = EN);
+    IResult<> enable_auto_ack(const Enable en);
+    IResult<> enable_crc(const Enable en);
     IResult<> init();
     IResult<> validate();
     IResult<> set_sync_word(const uint64_t syncword);

@@ -48,11 +48,11 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         static constexpr const real_t depth = 0.7_r;
         const auto [u, v, w] = digipw::SVM(st * depth, ct * depth);
         pwm_gen.set_dutycycle({u, v, w});
-    });
+    }, EN);
 
     timer.attach(TimerIT::CC4, {0,0}, [&]{
         pwm_gen.on_ch4_isr();
-    });
+    }, EN);
 
 
 

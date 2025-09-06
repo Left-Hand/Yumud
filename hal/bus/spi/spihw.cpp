@@ -198,7 +198,7 @@ void SpiHw::init(const Config & cfg){
 
     tx_strategy_ = cfg.tx_strategy;
     rx_strategy_ = cfg.rx_strategy;
-	enable_rcc();
+	enable_rcc(EN);
     install_gpios();
 
     const SPI_InitTypeDef SPI_InitStructure = {

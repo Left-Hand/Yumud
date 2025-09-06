@@ -108,7 +108,7 @@ public:
         i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> enable_high_speed(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_high_speed(const Enable en);
 
     [[nodiscard]] IResult<> set_odr(const Odr rate);
     [[nodiscard]] IResult<> set_sample_number(const SampleNumber number);

@@ -357,7 +357,7 @@ void UartHw::enable_it(const Enable en){
             __builtin_unreachable();
     }
 
-    NvicRequest(pp, sp, irq).enable();
+    NvicRequest(pp, sp, irq).enable(EN);
 }
 
 void UartHw::invoke_tx_it(){
@@ -581,8 +581,8 @@ void UartHw::enable_tx_dma(const Enable en){
 
     if(en == EN){
         tx_dma_.init({DmaMode::toPeriph, DmaPriority::Medium});
-        tx_dma_.enable_it({1,1});
-        tx_dma_.enable_done_it();
+        tx_dma_.enable_it({1,1}, EN);
+        tx_dma_.enable_done_it(EN);
         tx_dma_.bind_done_cb([this](){this->invoke_tx_dma();});
     }
 }
@@ -590,9 +590,9 @@ void UartHw::enable_rx_dma(const Enable en){
     USART_DMACmd(inst_, USART_DMAReq_Rx, en == EN);
     if(en == EN){
         rx_dma_.init({DmaMode::toMemCircular, DmaPriority::Medium});
-        rx_dma_.enable_it({1,1});
-        rx_dma_.enable_done_it();
-        rx_dma_.enable_half_it();
+        rx_dma_.enable_it({1,1}, EN);
+        rx_dma_.enable_done_it(EN);
+        rx_dma_.enable_half_it(EN);
         rx_dma_.bind_done_cb([this](){this->on_rx_dma_done();});
         rx_dma_.bind_half_cb([this](){this->on_rx_dma_half();});
         rx_dma_.transfer_pph2mem<char>(rx_dma_buf_.begin(), (&inst_->DATAR), UART_RX_DMA_BUF_SIZE);

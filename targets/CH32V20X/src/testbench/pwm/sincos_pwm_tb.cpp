@@ -55,8 +55,8 @@ void sincos_pwm_main(){
     auto & pwm_bn = timer.oc<4>();
 
 
-    timer.init({FREQ, TimerCountMode::CenterAlignedDualTrig});
-    timer.enable_arr_sync();
+    timer.init({FREQ, TimerCountMode::CenterAlignedDualTrig}, EN);
+    timer.enable_arr_sync(EN);
 
     #if TIM_INDEX == 1
     #if TIM1_USE_CC4
@@ -138,7 +138,7 @@ void sincos_pwm_main(){
     adc1.attach(AdcIT::JEOC, {0,0}, [&]{
         trig_gpio.toggle();
         // DEBUG_PRINTLN_IDLE(millis());
-    });
+    }, EN);
     
 
     // timer.attach(TimerIT::CC4,{0,0}, [&]{

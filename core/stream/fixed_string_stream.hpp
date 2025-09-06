@@ -18,7 +18,7 @@ public:
         if (N > 0) {
             buf_[0] = '\0';  // Ensure null termination
         }
-        this->force_sync();
+        this->force_sync(EN);
     }
 
     size_t pending() const {

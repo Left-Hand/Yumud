@@ -47,9 +47,9 @@ public:
 
     [[nodiscard]] IResult<> set_sub_addr(const uint8_t index, const uint8_t addr);
 
-    [[nodiscard]] IResult<> enable_ext_clk(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_ext_clk(const Enable en);
 
-    [[nodiscard]] IResult<> enable_sleep(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_sleep(const Enable en);
 
 
 

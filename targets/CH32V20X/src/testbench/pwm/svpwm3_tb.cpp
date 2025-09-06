@@ -56,8 +56,8 @@ void svpwm3_main(){
     auto & pwm_w = timer.oc<3>();
 
 
-    timer.init({CHOP_FREQ, TimerCountMode::CenterAlignedDualTrig});
-    timer.enable_arr_sync();
+    timer.init({CHOP_FREQ, TimerCountMode::CenterAlignedDualTrig}, EN);
+    timer.enable_arr_sync(EN);
 
     #if TIM_INDEX == 1
     #if TIM1_USE_CC4
@@ -93,7 +93,10 @@ void svpwm3_main(){
     };
 
     // timer.init(CHOP_FREQ, TimerCountMode::CenterAlignedUpTrig);
-    timer.init({20000, TimerCountMode::CenterAlignedUpTrig});
+    timer.init(
+        {.freq = 20000, .mode = TimerCountMode::CenterAlignedUpTrig},
+        EN
+    );
 
     timer.oc<4>().init({});
     timer.oc<4>().enable_output(EN);
@@ -137,7 +140,7 @@ void svpwm3_main(){
     adc1.attach(AdcIT::JEOC, {0,0}, [&]{
         trig_gpio.toggle();
         // DEBUG_PRINTLN_IDLE(millis());
-    });
+    }, EN);
     
 
     // timer.attach(TimerIT::CC4,{0,0}, [&]{

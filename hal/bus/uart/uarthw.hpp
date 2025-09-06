@@ -86,7 +86,7 @@ public:
 
     void init(const Config & cfg);
 
-    void enable_single_line_mode(const Enable en = EN);
+    void enable_single_line_mode(const Enable en);
 
     void writeN(const char * data_ptr, const size_t len);
 

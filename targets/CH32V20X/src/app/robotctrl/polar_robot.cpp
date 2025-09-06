@@ -307,7 +307,7 @@ void polar_robot_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.force_sync(EN);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     auto & can = COMM_CAN;
     

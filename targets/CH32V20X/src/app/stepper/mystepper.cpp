@@ -294,13 +294,18 @@ public:
 
 [[maybe_unused]] 
 static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & svpwm){
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     auto motor_system_ = MotorFibre{encoder, svpwm};
 
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
-        motor_system_.resume().examine();
-    });
+    hal::timer1.attach(
+        hal::TimerIT::Update, 
+        {0,0}, 
+        [&](){
+            motor_system_.resume().examine();
+        }, 
+        EN
+    );
 
     robots::ReplServer repl_server = {
         &UART, &UART
@@ -397,9 +402,9 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
         .freq = CHOP_FREQ,
         // .mode = hal::TimerCountMode::CenterAlignedDualTrig
         .mode = hal::TimerCountMode::CenterAlignedUpTrig
-    });
+    }, EN);
 
-    timer.enable_arr_sync();
+    timer.enable_arr_sync(EN);
     timer.set_trgo_source(hal::TimerTrgoSource::Update);
 
 
@@ -456,14 +461,17 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
 
     real_t a_curr;
     real_t b_curr;
-    adc.attach(hal::AdcIT::JEOC, {0,0}, [&]{
-        // isr_trig_gpio.toggle();
-        // DEBUG_PRINTLN_IDLE(millis());
-        // isr_trig_gpio.toggle();
-        // static bool is_a = false;
-        // b_curr = inj_b.get_voltage();
-        // a_curr = inj_a.get_voltage();
-    });
+    adc.attach(
+        hal::AdcIT::JEOC, 
+        {0,0}, [&]{
+            // isr_trig_gpio.toggle();
+            // DEBUG_PRINTLN_IDLE(millis());
+            // isr_trig_gpio.toggle();
+            // static bool is_a = false;
+            // b_curr = inj_b.get_voltage();
+            // a_curr = inj_a.get_voltage();
+        }, EN
+    );
 
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
@@ -476,7 +484,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
             c * mag,
             s * mag
         );
-    });
+    }, EN);
 
     while(true){
         DEBUG_PRINTLN_IDLE(
@@ -510,9 +518,9 @@ void mystepper_main(){
     timer.init({
         .freq = CHOP_FREQ,
         .mode = hal::TimerCountMode::CenterAlignedDownTrig
-    });
+    }, EN);
 
-    timer.enable_arr_sync();
+    timer.enable_arr_sync(EN);
     timer.set_trgo_source(hal::TimerTrgoSource::Update);
 
     digipw::StepperSVPWM svpwm{
@@ -548,16 +556,21 @@ void mystepper_main(){
 
     real_t a_curr;
     real_t b_curr;
-    adc.attach(hal::AdcIT::JEOC, {0,0}, [&]{
-        static bool is_a = false;
-        is_a = !is_a;
-        
-        if(is_a){
-            b_curr = inj_b.get_voltage();
-        }else{
-            a_curr = inj_a.get_voltage();
-        }
-    });
+    adc.attach(
+        hal::AdcIT::JEOC, 
+        {0,0}, 
+        [&]{
+            static bool is_a = false;
+            is_a = !is_a;
+            
+            if(is_a){
+                b_curr = inj_b.get_voltage();
+            }else{
+                a_curr = inj_a.get_voltage();
+            }
+        },
+        EN
+    );
 
 
     auto & spi = hal::spi1;
@@ -576,19 +589,24 @@ void mystepper_main(){
     motorcheck_tb(encoder, svpwm);
     // eeprom_tb();
 
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
-        const auto t = clock::time();
-        const auto [s,c] = sincospu(t);
-        constexpr auto mag = 0.4_r;
-        svpwm.set_alpha_beta_duty(
-            c * mag,
-            s * mag
-        );
-        // svpwm.set_alpha_beta_duty(
-        //     mag,
-        //     mag
-        // );
-    });
+    hal::timer1.attach(
+        hal::TimerIT::Update, 
+        {0,0}, 
+        [&](){
+            const auto t = clock::time();
+            const auto [s,c] = sincospu(t);
+            constexpr auto mag = 0.4_r;
+            svpwm.set_alpha_beta_duty(
+                c * mag,
+                s * mag
+            );
+            // svpwm.set_alpha_beta_duty(
+            //     mag,
+            //     mag
+            // );
+        },
+        EN
+    );
 
     while(true){
         DEBUG_PRINTLN_IDLE(

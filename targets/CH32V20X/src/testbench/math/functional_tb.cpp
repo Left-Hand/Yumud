@@ -30,7 +30,7 @@ namespace ranges = std::ranges;
 void functional_main(){
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
-    DEBUGGER.force_sync();
+    DEBUGGER.force_sync(EN);
     
     // auto process_address = [](uint8_t addr) -> Option<FoundInfo> {
     //     // return 

@@ -71,7 +71,7 @@ public:
     virtual void setPositionLimit(const Range & clamp) = 0;
     virtual void setSpeedLimit(const real_t max_spd) = 0;
     virtual void setAccLimit(const real_t max_acc) = 0;
-    virtual void enable(const Enable en = EN) = 0;
+    virtual void enable(const Enable en) = 0;
     virtual void triggerCali() = 0;
     virtual void reset() = 0;
 

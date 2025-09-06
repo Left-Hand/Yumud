@@ -32,7 +32,7 @@ public:
             Gpio(inst_, PinNth::_15),
         }{;}
     void init();
-    void enable_rcc(const Enable en = EN);
+    void enable_rcc(const Enable en);
 
 
     __inline void write_nth(const Nth nth, const BoolLevel data);

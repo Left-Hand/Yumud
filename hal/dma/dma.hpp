@@ -110,10 +110,10 @@ public:
 
     size_t pending();
 
-    void enable_it(const NvicPriority _priority, const Enable en = EN);
+    void enable_it(const NvicPriority _priority, const Enable en);
 
-    void enable_done_it(const Enable en = EN);
-    void enable_half_it(const Enable en = EN);
+    void enable_done_it(const Enable en);
+    void enable_half_it(const Enable en);
 
     void bind_done_cb(auto && cb){
         done_cb_ = std::move(cb);

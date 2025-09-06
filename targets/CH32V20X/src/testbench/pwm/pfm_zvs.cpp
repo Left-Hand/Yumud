@@ -58,7 +58,7 @@ void pfm_zvs_main(){
 
     // timer.init(CHOP_FREQ);
     // timer.init(2_KHz);
-    timer.init({20_KHz});
+    timer.init({20_KHz}, EN);
     
     pwm_p.init({
         // .valid_level = LOW

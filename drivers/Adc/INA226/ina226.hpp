@@ -232,13 +232,13 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<> enable_shunt_voltage_measure(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_shunt_voltage_measure(const Enable en);
 
-    [[nodiscard]] IResult<> enable_bus_voltage_measure(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_bus_voltage_measure(const Enable en);
 
-    [[nodiscard]] IResult<> enable_continuous_measure(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_continuous_measure(const Enable en);
 
-    [[nodiscard]] IResult<> enable_alert_latch(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_alert_latch(const Enable en);
 private:
     hal::I2cDrv i2c_drv_;
     

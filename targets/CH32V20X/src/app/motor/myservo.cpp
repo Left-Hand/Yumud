@@ -204,7 +204,7 @@ void myservo_main(){
     // UART.enable_single_line_mode(false);
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync();
+    DEBUGGER.force_sync(EN);
     DEBUG_PRINTLN("powerup");
 
 
@@ -224,7 +224,10 @@ void myservo_main(){
 
     while(true){
 
-        hal::timer3.init({TIM_FREQ, TimerCountMode::CenterAlignedUpTrig});
+        hal::timer3.init({
+            .freq = TIM_FREQ, 
+            .mode = TimerCountMode::CenterAlignedUpTrig
+        }, EN);
 
         auto & pwm_pos = hal::timer3.oc<1>();
         auto & pwm_neg = hal::timer3.oc<1>();
@@ -300,7 +303,10 @@ void myservo_main(){
     auto & ain2 = adc1.inj<2>();
 
 
-    hal::timer3.init({TIM_FREQ, TimerCountMode::CenterAlignedUpTrig});
+    hal::timer3.init({
+        .freq = TIM_FREQ, 
+        .mode = TimerCountMode::CenterAlignedUpTrig
+    }, EN);
 
     real_t sense_raw_volt;
     auto & pwm = hal::timer3.oc<1>();
@@ -324,7 +330,7 @@ void myservo_main(){
         sense_raw_volt = ain1.get_voltage();
         curr_filter.update(sense_raw_volt);
         spin_filter.update(ain2.get_voltage());
-    });
+    }, EN);
 
 
     led.outpp();

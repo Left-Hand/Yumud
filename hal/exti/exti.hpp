@@ -88,10 +88,11 @@ public:
     }
 
 
-    void enable_it(const Enable en = EN){
+    void enable_it(const Enable en){
         NvicPriority::enable(
             priority_, 
-            map_source_to_irqn(source_)
+            map_source_to_irqn(source_),
+            EN
         );
     }
 

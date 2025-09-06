@@ -22,7 +22,7 @@ void half_line_uart_main(){
     DEBUGGER.retarget(&UART);
 
     OTHER_UART.init({BAUD});
-    OTHER_UART.enable_single_line_mode();
+    OTHER_UART.enable_single_line_mode(EN);
 
     while(true){
         const auto ava = OTHER_UART.available();

@@ -202,9 +202,9 @@ public:
     
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 
-    [[nodiscard]] IResult<> enable_uvwmux(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_uvwmux(const Enable en);
 
-    [[nodiscard]] IResult<> enable_abzmux(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_abzmux(const Enable en);
 
     [[nodiscard]] IResult<> set_direction(const bool clockwise);
 
@@ -218,9 +218,9 @@ public:
 
     [[nodiscard]] IResult<> set_hysteresis(const Hysteresis hysteresis);
 
-    [[nodiscard]] IResult<> enable_fast_mode(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_fast_mode(const Enable en);
 
-    [[nodiscard]] IResult<> enable_pwm(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_pwm(const Enable en);
 
     [[nodiscard]] IResult<> set_pwm_polarity(const bool polarity);
 

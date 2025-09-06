@@ -84,7 +84,7 @@ void myesc_main(){
     DEBUGGER.retarget(&DEBUG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     clock::delay(200ms);
 
@@ -96,7 +96,10 @@ void myesc_main(){
     en_gpio.outpp(LOW);
     slp_gpio.outpp(LOW);
 
-    timer1.init({CHOPPER_FREQ, TimerCountMode::CenterAlignedUpTrig});
+    timer1.init({
+        CHOPPER_FREQ, 
+        TimerCountMode::CenterAlignedUpTrig
+    }, EN);
 
     static constexpr auto MOS_1C840L_500MA_BEST_DEADZONE = 150ns;
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADZONE = 350ns;
@@ -202,7 +205,7 @@ void myesc_main(){
         pwm_w.set_dutycycle(w);
 
 
-    });
+    }, EN);
 
     while(true){
         DEBUG_PRINTLN_IDLE(

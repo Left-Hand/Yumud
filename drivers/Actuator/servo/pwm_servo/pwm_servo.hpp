@@ -16,7 +16,7 @@ public:
         pwm_(pwm), 
         duty_range_(duty_range){;}
 
-    void enable(const Enable en = EN){
+    void enable(const Enable en){
         enabled_ = en == EN;
         if(en == DISEN) this->set_dutycycle(0);
     }

@@ -75,7 +75,7 @@ public:
         DBG_UART.init({576000});
         DEBUGGER.retarget(&DBG_UART);
         // DEBUGGER.no_brackets();
-        DEBUGGER.force_sync();
+        DEBUGGER.force_sync(EN);
 
         i2c.init(400_KHz);
 
@@ -86,7 +86,9 @@ public:
 
         #endif
 
-        hal::timer1.init({SERVO_FREQ});
+        hal::timer1.init({
+            .freq = SERVO_FREQ
+        }, EN);
     }
 
     template<typename Fn>

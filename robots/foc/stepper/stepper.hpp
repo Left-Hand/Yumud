@@ -146,7 +146,7 @@ public:
         meta.pos_limit = clamp;
     }
 
-    void enable(const Enable en = EN){
+    void enable(const Enable en){
         if(en == EN){
             rework();
         }else{

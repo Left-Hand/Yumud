@@ -133,7 +133,7 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<> enable_contious(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_contious(const Enable en);
 
     [[nodiscard]] IResult<> set_x_average_times(const AverageTimes times);
     [[nodiscard]] IResult<> set_y_average_times(const AverageTimes times);
@@ -141,11 +141,11 @@ public:
     [[nodiscard]] IResult<q16> get_temperature();
 
     [[nodiscard]] IResult<bool> is_data_ready();
-    [[nodiscard]] IResult<> enable_interrupt(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_interrupt(const Enable en);
     [[nodiscard]] IResult<> set_interrupt_level(const BoolLevel lv);
     [[nodiscard]] IResult<bool> get_interrupt_status();
 
-    [[nodiscard]] IResult<> enable_sleep(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_sleep(const Enable en);
 
     [[nodiscard]] IResult<Vec3<q24>> read_mag() override;
 

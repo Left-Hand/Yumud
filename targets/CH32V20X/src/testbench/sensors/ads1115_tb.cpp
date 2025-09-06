@@ -77,7 +77,7 @@ void ads1115_main()
     ads.set_mux(ads.builder().differential(2,3).unwrap()).examine();
     // ads.setMux(ads.builder().singleend(0).unwarp());
     ads.set_pga(drivers::ADS1115::PGA::_1_024V).examine();
-    ads.enable_cont_mode().examine();
+    ads.enable_cont_mode(EN).examine();
     ads.start_conv().examine();
 
     while(true){

@@ -39,9 +39,9 @@ void dma_tb(OutputStream & logger, DmaChannel & channel){
 
 
     logger.println("DMA it bind done");
-    channel.enable_done_it();
-    channel.enable_half_it();
-    channel.enable_it({0,0});
+    channel.enable_done_it(EN);
+    channel.enable_half_it(EN);
+    channel.enable_it({0,0}, EN);
     logger.println("DMA begin");
     channel.transfer_mem2mem<char>(dst, src, sizeof(src));
     while(channel.pending()){

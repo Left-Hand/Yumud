@@ -60,7 +60,9 @@ void test_sogi(){
     real_t u0;
 
 
-    timer1.init({isr_freq});
+    timer1.init({
+        .freq = isr_freq
+    }, EN);
 
     auto run_sogi = [&](){
 
@@ -98,7 +100,7 @@ void test_sogi(){
         dm = clock::micros() - m;
     });
 
-    timer1.enable_it(TimerIT::Update, {0,0});
+    timer1.enable_it(TimerIT::Update, {0,0}, EN);
 
     while(true){
         // DEBUG_PRINTLN_IDLE(raw_theta, spll.theta(), dm);
@@ -132,7 +134,7 @@ void digipw_main(){
     /*-----------------------*/
 
     constexpr auto CHOPPER_FREQ = 100'000;
-    timer1.init({CHOPPER_FREQ});
+    timer1.init({CHOPPER_FREQ}, EN);
     timer1.init_bdtr(10ns);
 
     auto & pwm = timer1.oc<1>();
@@ -171,7 +173,11 @@ void digipw_main(){
         // mp1907 = CLAMP(duty, 0, 0.4_r);
     });
 
-    timer1.enable_it(TimerIT::Update, {0,0});
+    timer1.enable_it(
+        TimerIT::Update, 
+        {0,0},
+        EN
+    );
 
     while(true){
         

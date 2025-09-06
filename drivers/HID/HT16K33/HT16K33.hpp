@@ -423,9 +423,9 @@ private:
 
     [[nodiscard]] IResult<> write_command(const Command cmd);
 
-    [[nodiscard]] IResult<> setup_system(const Enable en = EN);
+    [[nodiscard]] IResult<> setup_system(const Enable en);
 
-    [[nodiscard]] IResult<> setup_displayer(const BlinkFreq freq, const Enable en = EN);
+    [[nodiscard]] IResult<> setup_displayer(const BlinkFreq freq, const Enable en);
 
     [[nodiscard]] IResult<> set_pulse_duty(const PulseDuty duty);
 

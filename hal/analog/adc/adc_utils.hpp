@@ -69,7 +69,7 @@ enum class AdcIT:uint16_t{
 };
 
 namespace adc_details{
-    void install_pin(const AdcChannelNth channel, const Enable en = EN);
+    void install_pin(const AdcChannelNth channel, const Enable en);
     real_t read_temp();
 }
 

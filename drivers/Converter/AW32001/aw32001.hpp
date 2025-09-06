@@ -44,6 +44,14 @@ struct AW32001_Regs:public AW32001_Prelude{
         _5_00V = 0b1110,
         _5_08V = 0b1111
     };
+
+
+    enum class IIN_LIM:uint8_t{
+        _50mA = 0b0000,
+        _80mA = 0b0001,
+        //to 500ma
+        
+    }
 };
 
 

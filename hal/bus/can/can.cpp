@@ -108,11 +108,11 @@ void Can::init_it(){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             //tx interrupt
-            NvicRequest{{1, 7}, USB_HP_CAN1_TX_IRQn}.enable();
+            NvicRequest{{1, 7}, USB_HP_CAN1_TX_IRQn}.enable(EN);
             //rx0 interrupt
-            NvicRequest{{1, 5}, USB_LP_CAN1_RX0_IRQn}.enable();
+            NvicRequest{{1, 5}, USB_LP_CAN1_RX0_IRQn}.enable(EN);
             //rx1 interrupt
-            NvicRequest{{1, 6}, CAN1_RX1_IRQn}.enable();
+            NvicRequest{{1, 6}, CAN1_RX1_IRQn}.enable(EN);
             //sce interrupt
 
             #ifdef SCE_ENABLED

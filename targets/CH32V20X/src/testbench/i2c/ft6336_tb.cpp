@@ -70,7 +70,7 @@ void ft6336_main(){
         .tx_strategy = CommStrategy::Dma
     });
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     
     auto & led = hal::PA<15>();

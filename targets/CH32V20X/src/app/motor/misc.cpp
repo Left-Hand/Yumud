@@ -246,7 +246,7 @@
     [[maybe_unused]] bool can_en = false;
 
     DEBUGGER.set_splitter(',');
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     
     // OutputStream::Config

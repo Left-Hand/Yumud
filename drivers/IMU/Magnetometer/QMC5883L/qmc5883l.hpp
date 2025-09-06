@@ -150,7 +150,7 @@ public:
 
     [[nodiscard]] IResult<> init();
 
-    [[nodiscard]] IResult<> enable_cont_mode(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_cont_mode(const Enable en);
     
     [[nodiscard]] IResult<> set_odr(const Odr rate);
     
@@ -168,7 +168,7 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<> enable_interrupt(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_interrupt(const Enable en);
 
     [[nodiscard]] IResult<bool> is_overflow();
 private:

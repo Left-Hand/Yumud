@@ -21,7 +21,7 @@ void tca9548_main()
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     
     auto i2c = hal::I2cSw(&hal::PA<12>(), &hal::PA<15>());
     i2c.init(400_KHz);

@@ -65,9 +65,9 @@ IResult<> ADS1115::set_threshold(int16_t low, int16_t high){
     return Ok();
 }
 
-IResult<> ADS1115::enable_cont_mode(bool en){
+IResult<> ADS1115::enable_cont_mode(Enable en){
     auto reg = RegCopy(config_reg);
-    reg.oneshot_en =!en;
+    reg.oneshot_en = (en == DISEN);
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
 

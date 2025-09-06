@@ -49,8 +49,8 @@ void zdt_main(){
     #endif
     
     clock::delay(10ms);
-    motor1.activate().examine();
-    motor2.activate().examine();
+    motor1.activate(EN).examine();
+    motor2.activate(EN).examine();
     clock::delay(10ms);
     // motor.set_subdivides(256);
     // motor.trig_homming(ZdtStepper::HommingMode::LapsCollision);

@@ -21,12 +21,18 @@ using namespace ymd::hal;
 
 void pwm_tb(OutputStream & logger){
 
-    timer1.init({36000});
+    timer1.init({
+        .freq = 36000
+    }, EN);
     #ifdef PWM_TB_GPIO
     GpioPwm pwm{hal::PA<8>()};
     pwm.init(32);
 
-    timer1.enable_it(TimerIT::Update, {0,0});
+    timer1.enable_it(
+        TimerIT::Update, 
+        {0,0},
+        EN
+    );
     timer1.bind_cb(TimerIT::Update, [&](){pwm.tick();});
 
     #endif

@@ -558,7 +558,7 @@ void lazy_main() {
     // UART.enable_single_line_mode(false);
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync();
+    DEBUGGER.force_sync(EN);
 
     // auto & led = hal::PD<0>();
     auto & led = hal::PB<8>();

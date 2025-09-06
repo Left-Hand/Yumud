@@ -32,7 +32,7 @@ public:
 
     [[nodiscard]] IResult<bool> is_idle();
 
-    [[nodiscard]] IResult<> enable_spi3(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_spi3(const Enable en);
 
     [[nodiscard]] IResult<int32_t> get_pressure();
 

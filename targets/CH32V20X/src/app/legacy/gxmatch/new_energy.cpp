@@ -711,7 +711,7 @@ void app(){
     gxm::CnTTS tts{tts_uart};
 
     DEBUGGER.retarget(&dbg_uart);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.force_sync();
     DEBUGGER.set_splitter(',');
 

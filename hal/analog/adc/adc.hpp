@@ -139,12 +139,12 @@ public:
         }
     }
 
-    void enable_it(const IT it, const NvicPriority priority, const Enable en = EN){
+    void enable_it(const IT it, const NvicPriority priority, const Enable en){
         ADC_ITConfig(inst_, std::bit_cast<uint16_t>(it), en == EN);
-        priority.enable(ADC_IRQn);
+        priority.enable(ADC_IRQn, EN);
     }
 
-    void attach(const IT it, const NvicPriority priority, auto && cb, const Enable en = EN){
+    void attach(const IT it, const NvicPriority priority, auto && cb, const Enable en){
         bind_cb(it, std::forward<decltype(cb)>(cb));
         enable_it(it, priority, en);
     }
@@ -165,17 +165,17 @@ public:
         inst_->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enable_continous(const Enable en = EN){
+    void enable_continous(const Enable en){
         auto tempreg = std::bit_cast<CTLR2>(inst_->CTLR2);
         tempreg.CONT = en == EN;
         inst_->CTLR2 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enable_auto_inject(const Enable en = EN){
+    void enable_auto_inject(const Enable en){
         ADC_AutoInjectedConvCmd(inst_, en == EN);
     }
 
-    void enable_right_align(const Enable en = EN){
+    void enable_right_align(const Enable en){
         CTLR2 tempreg;
         tempreg.data = inst_->CTLR2;
         tempreg.ALIGN = en == DISEN;
@@ -235,7 +235,7 @@ public:
         return (is_regular_idle() && is_injected_idle());
     }
 
-    void enable_dma(const Enable en = EN){
+    void enable_dma(const Enable en){
         ADC_DMACmd(inst_, en == EN);
     }
 

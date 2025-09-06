@@ -82,7 +82,7 @@ IResult<> HT16K33::init(const Config & cfg){
     if(const auto res = validate(); 
         res.is_err()) return CHECK_RES(res);
 
-    if(const auto res = setup_system();
+    if(const auto res = setup_system(EN);
         res.is_err()) return CHECK_RES(res);
 
     if(const auto res = set_int_pin_func(cfg.int_pin_func);
@@ -94,7 +94,7 @@ IResult<> HT16K33::init(const Config & cfg){
     if(const auto res = set_pulse_duty(cfg.pulse_duty);
         res.is_err()) return CHECK_RES(res);
 
-    if(const auto res = setup_displayer(cfg.blink_freq);
+    if(const auto res = setup_displayer(cfg.blink_freq, EN);
         res.is_err()) return CHECK_RES(res);
 
     return Ok();

@@ -23,7 +23,7 @@ void joystick_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     //  using [[maybe_unused]] Event = Ps2Joystick::JoyStickEvent;
 

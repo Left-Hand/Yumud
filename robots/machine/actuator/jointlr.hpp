@@ -44,7 +44,7 @@ public:
     real_t get_radian(){return (last_radian_);}
     void tick() override;
     void idle(){;}
-    void inverse(const Enable en = EN){
+    void inverse(const Enable en){
         inversed_ = en == EN;
     }
 };

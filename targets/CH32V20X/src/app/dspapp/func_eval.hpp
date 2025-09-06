@@ -35,12 +35,12 @@ struct TransferSysEvaluator{
         hal::timer1.init({
             // .freq = fs_.expect("you have not set fs yet")
             .freq = f_isr
-        });
+        }, EN);
         hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
             input_ = std::forward<FnIn>(fn_in)(time_);
             output_ = std::forward<FnProc>(fn_proc)(input_);
             time_ += delta_;
-        });
+        }, EN);
     }
 
     constexpr auto get_input_and_output() const {

@@ -166,7 +166,7 @@ void smc2025_main(){
 
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
     // while(true){

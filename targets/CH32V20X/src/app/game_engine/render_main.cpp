@@ -534,7 +534,7 @@ void render_main(){
         DEBUGGER.retarget(&DBG_UART);
         DEBUGGER.set_eps(4);
         DEBUGGER.set_splitter(",");
-        DEBUGGER.no_brackets();
+        DEBUGGER.no_brackets(EN);
     };
 
 
@@ -567,11 +567,6 @@ void render_main(){
     auto & dev_rst = hal::PB<7>();
 
     const auto spi_fd = spi.allocate_cs_gpio(&hal::PD<4>()).unwrap();
-    // while(true){
-    //     DEBUG_PRINTLN(clock::millis());
-    //     clock::delay(2ms);
-    // }
-
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
@@ -671,7 +666,7 @@ void render_main(){
             // .str = "B",
             // .str = str,
             // .str = "明白了您只需要编码值而不是以下是修复后的代码",
-            .str = "123456789abcdef",
+            .str = "0123456789abcdef",
             // .str = "a",
             // .str = ss.c_str(),
             // .str = "(0.001, 0.040, -0.367)",

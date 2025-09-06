@@ -131,14 +131,13 @@ public:
     struct Config{
         const uint32_t freq;
         const Mode mode = Mode::Up;
-        const Enable en = EN;
     };
 
-    void init(const Config & cfg);
+    void init(const Config & cfg, const Enable en);
     void remap(const uint8_t rm);
     void deinit();
 
-    void enable(const Enable en = EN);
+    void enable(const Enable en);
     void set_count_mode(const TimerCountMode mode);
 
     void set_psc(const uint16_t psc);
@@ -146,10 +145,10 @@ public:
 
     void set_freq(const uint32_t freq);
 
-    void enable_it(const IT it,const NvicPriority request, const Enable en = EN);
-    void enable_arr_sync(const Enable en = EN);
-    void enable_psc_sync(const Enable en = EN);
-    void enable_cc_ctrl_sync(const Enable en = EN);
+    void enable_it(const IT it,const NvicPriority request, const Enable en);
+    void enable_arr_sync(const Enable en);
+    void enable_psc_sync(const Enable en);
+    void enable_cc_ctrl_sync(const Enable en);
     auto & inst() {return inst_;}
 
     volatile uint16_t & cnt(){return inst_->CNT;}
@@ -159,7 +158,7 @@ public:
     void attach(
             const IT it, 
             const NvicPriority & priority, 
-            Fn && cb, const Enable en = EN){
+            Fn && cb, const Enable en){
         bind_cb(it, std::forward<Fn>(cb));
         enable_it(it, priority, en);
     }

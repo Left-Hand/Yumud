@@ -216,15 +216,15 @@ void lt8960_tb(){
 
 
     if (has_tx_authority()) {
-        hal::timer1.init({TX_FREQ});
-        hal::timer1.attach(hal::TimerIT::Update, {0,0}, tx_task);
+        hal::timer1.init({.freq = TX_FREQ}, EN);
+        hal::timer1.attach(hal::TimerIT::Update, {0,0}, tx_task, EN);
     }
 
     clock::delay(5ms);
 
     if (has_rx_authority()) {
-        hal::timer2.init({RX_FREQ});
-        hal::timer2.attach(hal::TimerIT::Update, {0,1}, rx_task);
+        hal::timer2.init({RX_FREQ}, EN);
+        hal::timer2.attach(hal::TimerIT::Update, {0,1}, rx_task, EN);
     }
 
     while(true){
@@ -242,7 +242,7 @@ void lt8960_main(){
     // DBG_UART.init(1152_KHz);
     DBG_UART.init({6_MHz});
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     lt8960_tb();
 }

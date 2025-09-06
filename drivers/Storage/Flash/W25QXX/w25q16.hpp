@@ -61,7 +61,7 @@ public:
     W25Q16(hal::SpiDrv & _spi_drv):StoragePaged(_m_size, _pagesize), spi_drv(_spi_drv){;}
     W25Q16(hal::Spi & _spi, const hal::SpiSlaveIndex index):StoragePaged(_m_size, _pagesize), spi_drv(hal::SpiDrv(_spi, index)){;}
 
-    void enable_write(const Enable en = EN);
+    void enable_write(const Enable en);
     uint8_t get_device_manufacturer();
     uint8_t get_device_storage_type();
     uint8_t get_device_capacity();

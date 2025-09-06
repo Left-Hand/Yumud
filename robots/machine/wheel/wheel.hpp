@@ -53,7 +53,7 @@ public:
     void forwardPosition(const real_t step);
     void freeze();
 
-    void inverse(const Enable en = EN){
+    void inverse(const Enable en){
         inversed_ = en == EN;
     }
 

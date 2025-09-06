@@ -40,7 +40,7 @@ public:
         current_mode_ = mode;
     }
 
-    void enable_continuous(const Enable en = EN){
+    void enable_continuous(const Enable en){
         cont_en_ = en == EN;
     }
 

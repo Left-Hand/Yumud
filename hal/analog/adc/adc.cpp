@@ -44,7 +44,7 @@ void AdcPrimary::init(
                 i,
                 static_cast<uint8_t>(regular_cfg.cycles)
             );
-            adc_details::install_pin(regular_cfg.nth);
+            adc_details::install_pin(regular_cfg.nth, EN);
 
             temp_verf_activation |= channel_is_temp_or_vref(regular_cfg.nth);
 
@@ -68,7 +68,7 @@ void AdcPrimary::init(
                 inst_, ADC_InjectedChannel_1 + 
                 (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data, 0)); 
                 // offset can`t be negative
-            adc_details::install_pin(injected_cfg.nth);
+            adc_details::install_pin(injected_cfg.nth, EN);
 
             temp_verf_activation |= channel_is_temp_or_vref(injected_cfg.nth);
 

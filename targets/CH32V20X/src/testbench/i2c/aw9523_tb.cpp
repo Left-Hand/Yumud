@@ -24,7 +24,7 @@ void aw9523_main(){
     DBG_UART.init({576000});
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     hal::I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
     i2c.init(200_KHz);

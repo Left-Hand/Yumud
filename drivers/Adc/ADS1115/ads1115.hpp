@@ -107,7 +107,7 @@ public:
 
     [[nodiscard]] IResult<> set_threshold(int16_t low, int16_t high);
 
-    [[nodiscard]] IResult<> enable_cont_mode(bool en = true);
+    [[nodiscard]] IResult<> enable_cont_mode(const Enable en);
 
     [[nodiscard]] IResult<> set_pga(const PGA pga);
 

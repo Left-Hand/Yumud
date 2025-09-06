@@ -54,7 +54,7 @@ void at8222_tb(){
     //     // uart2.write1(0x55);
     // }
     DEBUGGER.retarget(&uart2);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     // while(true){
     //     DEBUG_PRINTLN('/');
@@ -65,7 +65,10 @@ void at8222_tb(){
     auto & timer = hal::timer3;
 
     //因为是中心对齐的顶部触发 所以频率翻�?
-    timer.init({ISR_FREQ * 2, TimerCountMode::CenterAlignedUpTrig});
+    timer.init({
+        .freq = ISR_FREQ * 2, 
+        .mode = TimerCountMode::CenterAlignedUpTrig
+    }, EN);
 
     auto & pwm_pos = timer.oc<1>();
     auto & pwm_neg = timer.oc<2>();
@@ -227,10 +230,7 @@ void at8222_tb(){
         // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
         // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
         pwm_neg.set_dutycycle(0.9_r);
-
-
-
-    });
+    }, EN);
 
 
     TimerOcPair motdrv{

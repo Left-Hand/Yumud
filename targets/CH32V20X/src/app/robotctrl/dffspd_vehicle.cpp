@@ -218,16 +218,16 @@ void diffspd_vehicle_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     auto & timer = hal::timer3;
 
     timer.init({
         .freq = PWM_FREQ,
         .mode = hal::TimerCountMode::Up
-    });
+    }, EN);
 
-    timer.enable_arr_sync();
+    timer.enable_arr_sync(EN);
 
 
     auto init_pwm = [](hal::TimerOC & pwm){
@@ -349,10 +349,14 @@ void diffspd_vehicle_main(){
         );
     };
 
-    timer.attach(hal::TimerIT::Update, {0,0}, [&]{
-        motor_pulse_detect_cb();
-        motor_ctrl_cb();
-    });
+    timer.attach(
+        hal::TimerIT::Update, 
+        {0,0}, 
+        [&]{
+            motor_pulse_detect_cb();
+            motor_ctrl_cb();
+        }, EN
+    );
 
     while(true){
         report_motor_service();

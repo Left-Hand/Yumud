@@ -142,7 +142,7 @@ public:
 
     [[nodiscard]] Result<Package, Error> get_package();
 
-    [[nodiscard]] IResult<> enable_direct_mode(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_direct_mode(const Enable en);
 private:
 
     using Phy = InvensenseSensor_Phy;

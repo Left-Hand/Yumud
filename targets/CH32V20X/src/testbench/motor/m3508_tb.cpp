@@ -27,12 +27,13 @@ void m3508_main(){
 
     M3508Port port{can1};
     
-    timer3.init({CB_FREQ});
+    timer3.init({CB_FREQ}, EN);
 
     timer3.bind_cb(TimerIT::Update, [&](){
         port.tick();
     });
-    timer3.enable_it(TimerIT::Update, {0,0});
+
+    timer3.enable_it(TimerIT::Update, {0,0}, EN);
 
     auto & motor = port[4];
     auto & motor2 = port[1];

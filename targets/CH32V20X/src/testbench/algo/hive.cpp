@@ -20,7 +20,7 @@ void hive_main(){
     DEBUGGER.retarget(&uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     using num_type = int;
     std::hive<num_type> i_hive;

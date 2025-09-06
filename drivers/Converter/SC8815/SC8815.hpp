@@ -297,15 +297,15 @@ public:
 
     [[nodiscard]] IResult<> set_ibat_lim_ratio();
 
-    [[nodiscard]] IResult<> enable_otg(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_trikle_charge(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_ovp_protect(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_dither(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_adc_conv(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_pfm_mode(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_sfb(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_gpo(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_pgate(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_otg(const Enable en);
+    [[nodiscard]] IResult<> enable_trikle_charge(const Enable en);
+    [[nodiscard]] IResult<> enable_ovp_protect(const Enable en);
+    [[nodiscard]] IResult<> enable_dither(const Enable en);
+    [[nodiscard]] IResult<> enable_adc_conv(const Enable en);
+    [[nodiscard]] IResult<> enable_pfm_mode(const Enable en);
+    [[nodiscard]] IResult<> enable_sfb(const Enable en);
+    [[nodiscard]] IResult<> enable_gpo(const Enable en);
+    [[nodiscard]] IResult<> enable_pgate(const Enable en);
 
     [[nodiscard]] IResult<> set_bat_volt(const BatVolt bat_volt);
 

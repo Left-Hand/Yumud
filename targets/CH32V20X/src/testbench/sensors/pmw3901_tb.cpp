@@ -16,7 +16,7 @@ void pmw3901_main(){
 
     uart2.init({921600, CommStrategy::Blocking});
     DEBUGGER.retarget(&uart2);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUG_PRINTLN(std::setprecision(4));
 
     auto & spi = spi1;

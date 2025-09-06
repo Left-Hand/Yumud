@@ -32,7 +32,7 @@ public:
 
     void init(const Config & cfg);
 
-    void enable_hw_cs(const Enable en = EN);
+    void enable_hw_cs(const Enable en);
 
     [[nodiscard]] __fast_inline hal::HalResult fast_write(const uint16_t data){
         while ((inst_->STATR.TXE) == RESET);
@@ -87,10 +87,10 @@ private:
 
     uint32_t get_bus_freq() const;
 
-    void enable_rcc(const Enable en = EN);
+    void enable_rcc(const Enable en);
     void install_gpios();
     
-    void enable_rx_it(const Enable en = EN);
+    void enable_rx_it(const Enable en);
 
     static constexpr uint8_t calculate_prescaler(
             const uint32_t bus_freq, const uint32_t baudrate){

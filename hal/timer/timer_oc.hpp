@@ -11,10 +11,10 @@ class TimerOutBase: public TimerChannel{
 protected:
     TimerOutBase(TIM_TypeDef * inst, const ChannelNth nth):
         TimerChannel(inst, nth){;}
-    void install_to_pin(const Enable en = EN);
+    void install_to_pin(const Enable en);
 public:
     void set_valid_level(const BoolLevel level);
-    void enable_output(const Enable en = EN);
+    void enable_output(const Enable en);
 
 
 };
@@ -47,7 +47,7 @@ public:
     void init(const TimerOcPwmConfig & config);
 
     void set_oc_mode(const Mode mode);
-    void enable_cvr_sync(const Enable en = EN);
+    void enable_cvr_sync(const Enable en);
     
     Option<Gpio &> io();
 

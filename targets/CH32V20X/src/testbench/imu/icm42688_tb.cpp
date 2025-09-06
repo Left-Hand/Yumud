@@ -52,7 +52,7 @@ static void icm42688_tb(ICM42688 & imu){
         .fs = ISR_FREQ
     }};
 
-    timer1.init({ISR_FREQ});
+    timer1.init({ISR_FREQ}, EN);
 
     Vec3<q24> gyr_ = Vec3<q24>::ZERO;
     Vec3<q24> acc_ = Vec3<q24>::ZERO;
@@ -70,7 +70,7 @@ static void icm42688_tb(ICM42688 & imu){
 
         gyr_ = gyr;
         acc_ = acc;
-    });
+    }, EN);
 
     while(true){
         // const auto u0 = clock::micros();
@@ -108,7 +108,7 @@ static void icm42688_tb(ICM42688 & imu){
 void icm42688_main(){
     DBG_UART.init({576_KHz});
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 

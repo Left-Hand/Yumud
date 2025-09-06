@@ -16,7 +16,7 @@ void ma730_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     DEBUGGER_INST.init({576_KHz});
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 

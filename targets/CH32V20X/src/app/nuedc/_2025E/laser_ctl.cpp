@@ -36,7 +36,7 @@ void laser_ctl_main(){
     
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync();
+    DEBUGGER.force_sync(EN);
     DEBUG_PRINTLN("powerup");
 
     auto & can = hal::can1;
@@ -68,7 +68,13 @@ void laser_ctl_main(){
     phase_gpio.outpp();
 
 
-    hal::timer3.init({PWM_FREQ, hal::TimerCountMode::CenterAlignedUpTrig});
+    hal::timer3.init({
+            .freq = PWM_FREQ, 
+            .mode = hal::TimerCountMode::CenterAlignedUpTrig
+        },  
+        EN
+    );
+
     auto & pwm = hal::timer3.oc<1>();
     pwm.init({});
 

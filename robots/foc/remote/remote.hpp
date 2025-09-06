@@ -58,7 +58,7 @@ public:
     void updateAll() const;
 
     void setPositionLimit(const Range & clamp);
-    void enable(const Enable en = EN);
+    void enable(const Enable en);
     // void setNodeId(const NodeId _id);
     void setSpeedLimit(const real_t max_spd);
     void setAccLimit(const real_t max_acc);

@@ -184,7 +184,7 @@ public:
 
     IResult<> set_gain(const Gain gain);
 
-    IResult<> enable_turbo(const Enable en = EN);
+    IResult<> enable_turbo(const Enable en);
 
     IResult<bool> is_done();
 
