@@ -23,22 +23,41 @@ namespace ymd::drivers{
 
 class TCA9548A{
 public:
+
 class TCA9548A_VirtualI2c final: public hal::I2c{
-    protected:
-        TCA9548A & host_;
-        const uint8_t ch_;
-        hal::HalResult lead(const hal::LockRequest req){return host_.lead(req.id(), ch_);}
-        void trail(){return host_.trail(ch_);}
-    public:
-        TCA9548A_VirtualI2c(TCA9548A & host, const uint8_t ch);
+private:
+    TCA9548A & host_;
+    const uint8_t ch_;
+    hal::HalResult lead(const hal::LockRequest req){return host_.lead(req.id(), ch_);}
+    void trail(){return host_.trail(ch_);}
+public:
+    TCA9548A_VirtualI2c(TCA9548A & host, const uint8_t ch);
 
-        hal::HalResult write(const uint32_t data) {return host_.write(data);}
-        hal::HalResult read(uint32_t & data, const Ack ack) {return host_.read(data, ack);}
-        hal::HalResult unlock_bus() {return host_.unlock_bus();}
-        hal::HalResult set_baudrate(const uint32_t baud){return host_.set_baudrate(baud);}
-    };
+    hal::HalResult write(const uint32_t data) {return host_.write(data);}
+    hal::HalResult read(uint32_t & data, const Ack ack) {return host_.read(data, ack);}
+    hal::HalResult unlock_bus() {return host_.unlock_bus();}
+    hal::HalResult set_baudrate(const uint32_t baud){return host_.set_baudrate(baud);}
+};
 
-protected:
+
+public:
+    TCA9548A(hal::I2cDrv && i2c_drv):
+        i2c_(i2c_drv.bus()), self_i2c_drv_(std::move(i2c_drv)){;}
+    TCA9548A(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
+        i2c_(i2c.deref()), self_i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+
+    auto & operator [](const size_t ch){
+        if(unlikely(ch >= 8)) while(true);
+        return v_i2cs_[ch];
+    }
+
+    auto which() const {return last_ch_;}
+
+    hal::HalResult validate() {
+        return self_i2c_drv_.validate();
+    }
+
+private:
     hal::I2c & i2c_;
     hal::I2cDrv self_i2c_drv_;
     Option<uint8_t> last_ch_ = None;
@@ -73,22 +92,6 @@ protected:
         TCA9548A_VirtualI2c(*this, 6),
         TCA9548A_VirtualI2c(*this, 7),
     };
-public:
-    TCA9548A(hal::I2cDrv && i2c_drv):
-        i2c_(i2c_drv.bus()), self_i2c_drv_(std::move(i2c_drv)){;}
-    TCA9548A(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
-        i2c_(i2c.deref()), self_i2c_drv_(hal::I2cDrv(i2c, addr)){;}
-
-    auto & operator [](const size_t ch){
-        if(unlikely(ch >= 8)) while(true);
-        return v_i2cs_[ch];
-    }
-
-    auto which() const {return last_ch_;}
-
-    hal::HalResult validate() {
-        return self_i2c_drv_.validate();
-    }
 };
 
 }

@@ -129,9 +129,8 @@ IResult<> AW9523::set_led_current_dutycycle(
 ){
     auto iter = pin_mask.iter();
     while(iter.has_next()){
-        const auto index = iter.index();
-        // DEBUG_PRINTLN(index);
-        if(const auto res = write_reg(get_dim_addr(index), static_cast<uint8_t>(dutycycle * 255));
+        const auto nth = Nth(iter.index());
+        if(const auto res = write_reg(get_dim_addr(nth), static_cast<uint8_t>(dutycycle * 255));
             res.is_err()) return Err(res.unwrap_err());
         iter.next();
     }

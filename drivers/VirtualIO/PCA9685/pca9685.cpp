@@ -25,6 +25,9 @@ using namespace ymd::drivers;
 using Error = PCA9685::Error;
 using Vport = PCA9685::PCA9685_Vport;
 
+template<typename T = void>
+using IResult = Result<T, Error>;
+
 void Vport::write_mask(const hal::PinMask mask){
     TODO();
 }
@@ -34,7 +37,7 @@ hal::PinMask Vport::read_mask(){
     return hal::PinMask::from_nth(0_nth);
 }
 
-Result<void, Error> PCA9685::set_frequency(uint freq, real_t trim){
+IResult<> PCA9685::set_frequency(uint freq, real_t trim){
     if(const auto res = read_reg(mode1_reg);
         res.is_err()) return res;
     
@@ -61,7 +64,7 @@ Result<void, Error> PCA9685::set_frequency(uint freq, real_t trim){
     return write_reg(mode1_reg_copy);
 }
 
-Result<void, Error> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
+IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
     if(nth.count()) return Err(Error::IndexOutOfRange);
     if(
         #ifdef PCA9685_FORCEWRITE
@@ -95,11 +98,11 @@ Result<void, Error> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
     return Ok();
 }
 
-Result<void, Error> PCA9685::validate(){
+IResult<> PCA9685::validate(){
     return reset();
 }
 
-Result<void, Error> PCA9685::init(){
+IResult<> PCA9685::init(){
     if(const auto res = validate(); res.is_err()){
         PCA9685_PANIC("verify failed");
         return res;
@@ -119,7 +122,7 @@ Result<void, Error> PCA9685::init(){
 }
 
 
-Result<void, Error> PCA9685::set_sub_addr(const uint8_t index, const uint8_t addr){
+IResult<> PCA9685::set_sub_addr(const uint8_t index, const uint8_t addr){
     sub_addr_regs[index] = addr;
     return write_reg(
         RegAddress(uint8_t(RegAddress::SubAddr) + index), 
@@ -127,7 +130,7 @@ Result<void, Error> PCA9685::set_sub_addr(const uint8_t index, const uint8_t add
     );
 }
 
-Result<void, Error> PCA9685::reset(){
+IResult<> PCA9685::reset(){
 
     if(const auto res = read_reg(mode1_reg);
         res.is_err()) return res;
@@ -148,13 +151,13 @@ Result<void, Error> PCA9685::reset(){
     return Ok();
 }
 
-Result<void, Error> PCA9685::enable_ext_clk(const Enable en){
+IResult<> PCA9685::enable_ext_clk(const Enable en){
     auto reg = RegCopy(mode1_reg);
     reg.extclk = en == EN;
     return write_reg(reg);
 }
 
-Result<void, Error> PCA9685::enable_sleep(const Enable en){
+IResult<> PCA9685::enable_sleep(const Enable en){
     auto reg = RegCopy(mode1_reg);
     reg.sleep = en == EN;
     return write_reg(reg);

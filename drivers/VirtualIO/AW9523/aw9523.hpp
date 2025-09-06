@@ -113,10 +113,7 @@ struct AW9523_Regs:public AW9523_Prelude{
         uint8_t id;
     }DEF_R8(chip_id_reg)
 
-
-
-
-
+    
     struct Config{
         CurrentLimit current_limit = CurrentLimit::Low;
     };
@@ -204,8 +201,8 @@ private:
     hal::I2cDrv i2c_drv_;
     hal::PinMask buf_mask_ = hal::PinMask::from_zero();
 
-    static constexpr RegAddress get_dim_addr(const size_t idx){
-        switch(idx){
+    static constexpr RegAddress get_dim_addr(const Nth nth){
+        switch(nth.count()){
             case 0:  return RegAddress::DimP00;
             case 1:  return RegAddress::DimP01;
             case 2:  return RegAddress::DimP02;

@@ -20,14 +20,11 @@
 
 namespace ymd::drivers{
 class PCF8574{
-protected:
-    hal::I2cDrv i2c_drv_;
 
-    uint8_t data;
 public:
-    PCF8574(hal::I2cDrv & i2c_drv):
+    explicit PCF8574(hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
-    PCF8574(hal::I2cDrv && i2c_drv):
+    explicit PCF8574(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
     void write(const uint8_t _data){
@@ -50,5 +47,10 @@ public:
     bool read_bit(const uint16_t index){
         return (read() & (1 << index));
     }
+private:
+
+    hal::I2cDrv i2c_drv_;
+
+    uint8_t data;
 };
 }

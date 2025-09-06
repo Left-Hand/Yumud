@@ -139,10 +139,10 @@ IResult<size_t> GT9XX::get_num_touch_points() {
         res.is_err()) return Err(res.unwrap_err());
         
     const auto status = buf[0];
-    const auto ready = (status & 0x80) > 0;
+    const auto is_ready = (status & 0x80) > 0;
     const auto num_touch_points = static_cast<size_t>(status & 0x0F);
     
-    if (ready) {
+    if (is_ready) {
         return Ok(num_touch_points);
     } else {
         return Err(Error::NotReady);
