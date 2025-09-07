@@ -214,8 +214,8 @@ void SpiHw::init(const Config & cfg){
         .SPI_CRCPolynomial = 7
     };
 
-	SPI_Init((SPI_TypeDef *)inst_, &SPI_InitStructure);
-
+	SPI_Init(reinterpret_cast<SPI_TypeDef *>(inst_), &SPI_InitStructure);
+    // inst_->set_pre
     inst_->enable_spi(EN);
 
 

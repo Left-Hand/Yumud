@@ -407,11 +407,11 @@ void nuedc_2025e_main(){
 
 
 
-    static constexpr auto mp6540_scaler = MP6540::make_adc_scaler(10'000);
+    static constexpr auto mp6540_adc_scaler = MP6540::make_adc_scaler(10'000);
 
-    [[maybe_unused]] auto u_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
-    [[maybe_unused]] auto v_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
-    [[maybe_unused]] auto w_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
+    [[maybe_unused]] auto u_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_adc_scaler);
+    [[maybe_unused]] auto v_sense = hal::ScaledAnalogInput(adc.inj<2>(), mp6540_adc_scaler);
+    [[maybe_unused]] auto w_sense = hal::ScaledAnalogInput(adc.inj<3>(), mp6540_adc_scaler);
     
     auto uvw_pwmgen = UvwPwmgen(&pwm_u, &pwm_v, &pwm_w);
 

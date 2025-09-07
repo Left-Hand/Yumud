@@ -37,6 +37,34 @@ public:
     static constexpr size_t SPI_MAX_PINS = 4;
     #endif
 
+public:
+    Spi(){;}
+    Spi(const hal::Spi &) = delete;
+    Spi(hal::Spi &&) = delete;
+
+    
+    [[nodiscard]] virtual hal::HalResult read(uint32_t & data) = 0;
+    [[nodiscard]] virtual hal::HalResult write(const uint32_t data) = 0;
+    [[nodiscard]] virtual hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx) = 0;
+
+    [[nodiscard]] virtual hal::HalResult set_data_width(const uint8_t len) = 0;
+    [[nodiscard]] virtual hal::HalResult set_baudrate(const uint32_t baud) = 0;
+    [[nodiscard]] virtual hal::HalResult set_bitorder(const Endian endian) = 0;
+
+
+    struct Config{
+        uint32_t baudrate;
+        SpiMode mode = SpiMode::_3;
+        CommStrategy tx_strategy = CommStrategy::Blocking;
+        CommStrategy rx_strategy = CommStrategy::Blocking;
+    };
+
+    virtual void init(const Config & cfg) = 0;
+
+
+    [[nodiscard]]
+    Option<SpiSlaveIndex> allocate_cs_gpio(Some<hal::GpioIntf *> io);
+
 protected:
     VGpioPort <SPI_MAX_PINS> cs_port_ = VGpioPort<SPI_MAX_PINS>();
     CommStrategy tx_strategy_;
@@ -66,33 +94,6 @@ protected:
         gpio.deref().outpp(HIGH);
         cs_port_.bind_pin(gpio.deref(), Nth(index));
     }
-public:
-    Spi(){;}
-    Spi(const hal::Spi &) = delete;
-    Spi(hal::Spi &&) = delete;
-
-    
-    [[nodiscard]] virtual hal::HalResult read(uint32_t & data) = 0;
-    [[nodiscard]] virtual hal::HalResult write(const uint32_t data) = 0;
-    [[nodiscard]] virtual hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx) = 0;
-
-    [[nodiscard]] virtual hal::HalResult set_data_width(const uint8_t len) = 0;
-    [[nodiscard]] virtual hal::HalResult set_baudrate(const uint32_t baud) = 0;
-    [[nodiscard]] virtual hal::HalResult set_bitorder(const Endian endian) = 0;
-
-
-    struct Config{
-        uint32_t baudrate;
-        SpiMode mode = SpiMode::_3;
-        CommStrategy tx_strategy = CommStrategy::Blocking;
-        CommStrategy rx_strategy = CommStrategy::Blocking;
-    };
-
-    virtual void init(const Config & cfg) = 0;
-
-
-    [[nodiscard]]
-    Option<SpiSlaveIndex> allocate_cs_gpio(Some<hal::GpioIntf *> io);
 };
 
 }

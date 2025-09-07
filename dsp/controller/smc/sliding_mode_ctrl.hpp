@@ -4,7 +4,7 @@
 
 namespace ymd::dsp{
 
-class SlidingModeController {
+class SlideModeController {
 public:
     struct Config{
         q20 c;
@@ -13,15 +13,15 @@ public:
         q20 out_min;
         q20 out_max;
 
-        unsigned int fs;
+        uint32_t fs;
 
     };
-    SlidingModeController(const Config & cfg){
+    explicit constexpr SlideModeController(const Config & cfg){
         reconf(cfg);
         reset();
     }
 
-    void reconf(const Config & cfg){
+    constexpr void reconf(const Config & cfg){
         c_ = cfg.c;
         q_ = cfg.q;
 
@@ -31,11 +31,11 @@ public:
         fs_ = cfg.fs;
     }
 
-    void reset(){
+    constexpr void reset(){
         output_ = out_min_;
     }
 
-    void update(const q20 targ,const q20 meas) {
+    constexpr void update(const q20 targ,const q20 meas) {
         const auto c = c_;
         const auto q = q_;
         // const auto fs = fs_;
@@ -50,7 +50,7 @@ public:
         output_ = CLAMP(output_ + delta, out_min_, out_max_);
     }
 
-    auto get() const {return output_;}
+    constexpr auto get() const {return output_;}
 
 private:
 
@@ -60,7 +60,7 @@ private:
     q20 out_min_ = 0;
     q20 out_max_ = 0;
 
-    unsigned int fs_ = 0;
+    uint32_t fs_ = 0;
 
     q20 output_  = 0;
 
