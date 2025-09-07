@@ -122,7 +122,7 @@ private:
         Fn && fn
     ){
         const auto guard = i2c_.create_guard();
-        if(const auto res = i2c_.begin(slave_addr_.to_write_req()); res.is_err()) return res;
+        if(const auto res = i2c_.borrow(slave_addr_.to_write_req()); res.is_err()) return res;
         if(const auto res = this->write_payload(std::span(&addr, 1), endian); res.is_err()) return res;
         return std::forward<Fn>(fn)();
     }
@@ -134,7 +134,7 @@ private:
         Fn && fn
     ){
         return write_template(addr, endian, [&]() -> hal::HalResult{
-            if(const auto reset_err = i2c_.begin(slave_addr_.to_read_req()); reset_err.is_ok()){
+            if(const auto reset_err = i2c_.borrow(slave_addr_.to_read_req()); reset_err.is_ok()){
                 return std::forward<Fn>(fn)();
             }else{
                 return reset_err;

@@ -5,7 +5,7 @@
 // http://cas.ensmp.fr/~praly/Telechargement/Journaux/2010-IEEE_TPEL-Lee-Hong-Nam-Ortega-Praly-Astolfi.pdf
 // https://www.bilibili.com/video/BV1hmtQzJEBf
 
-namespace ymd::motor_ctl{
+namespace ymd::dsp::motor_ctl{
 class NonlinearFluxObserver final{
 public:
     struct Config{

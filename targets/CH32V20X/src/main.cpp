@@ -185,7 +185,7 @@ int main(){
     // st7789_main();
     // smc2025_main();
     // fft_main();
-    adrc_main();
+    // adrc_main();
     render_main();
     // mlx90640_main();
 

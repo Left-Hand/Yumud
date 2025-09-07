@@ -114,7 +114,7 @@ public:
         const auto guard = i2c_.create_guard();
         uint32_t buf;
         TODO();
-        // auto res = i2c_.begin(uint8_t(DataCommand::READ_KEY))
+        // auto res = i2c_.borrow(uint8_t(DataCommand::READ_KEY))
         //     .then([&](){
         //         return i2c_.read(buf, ACK);
         //     })
@@ -140,7 +140,7 @@ private:
         const auto guard = i2c_.create_guard();
 
         auto res = i2c_
-            .begin(hal::LockRequest{payload1, 0})
+            .borrow(hal::LockRequest{payload1, 0})
             .then([&](){return i2c_.write(payload2);})
         ;
 

@@ -4,6 +4,7 @@
 
 #include "bus_enums.hpp"
 #include "hal/hal_result.hpp"
+#include "core/system.hpp"
 
 namespace ymd::hal{
 
@@ -34,84 +35,43 @@ private:
     uint32_t custom_len_:3;
 };
 
-class BusBase{
+
+class BusLocker final{
 private:
-
-    class Locker final{
-    private:
-        uint32_t req_id_:29 = 0;
-        uint32_t is_read:1 = false;
-        uint32_t oninterrupt_:1 = false;
-        uint32_t locked_:1 = false;
-    public:
-        Locker(const Locker & other) = delete;
-        Locker(Locker && other) = delete;
-        __fast_inline Locker(){;}
-
-        __fast_inline ~Locker(){
-            unlock();
-        }
-
-        void lock(const LockRequest req);
-
-        __fast_inline void unlock(){
-            locked_ = false;
-        }
-
-        bool is_owned_by(const LockRequest req) const;
-
-        __fast_inline bool is_locked() const {
-            return locked_;
-        }
-    };
-
-    Locker __own_locker__ = {};
-    Locker & locker;
-
-    virtual HalResult lead(const LockRequest req) = 0;
-    virtual void trail() = 0;
-
-    struct _Guard{
-        BusBase & bus_;
-        
-        __fast_inline _Guard(BusBase & bus):
-            bus_(bus){;}
-        __fast_inline ~_Guard(){
-            bus_.end();
-        }
-    };
+    uint32_t req_id_:29 = 0;
+    uint32_t is_read:1 = false;
+    uint32_t oninterrupt_:1 = false;
+    uint32_t locked_:1 = false;
 public:
-    BusBase():locker(__own_locker__){;}
+    BusLocker(const BusLocker & other) = delete;
+    BusLocker(BusLocker && other) = delete;
+    __fast_inline BusLocker(){;}
 
-    virtual ~BusBase(){;}
-    
-    BusBase(const BusBase &) = delete;
-    BusBase(BusBase &&) = default;
+    __fast_inline ~BusLocker(){
+        unlock();
+    }
 
-    HalResult begin(const LockRequest req);
+    void lock(const LockRequest req){
+        sys::exception::disable_interrupt();
+        oninterrupt_ = sys::exception::is_intrrupt_acting();
+        req_id_ = req.id();
+        locked_ = true;
+        sys::exception::enable_interrupt();
+    }
 
-    void end();
+    __fast_inline void unlock(){
+        locked_ = false;
+    }
 
-    [[nodiscard]]_Guard create_guard(){return _Guard{*this};}
+    bool is_borrowed_by(const LockRequest req) const{
+        return ((req_id_ == req.id()) 
+            and (sys::exception::is_intrrupt_acting() == oninterrupt_));
+    }
 
-    bool occupied(){return locker.is_locked();}
+    __fast_inline bool is_borrowed() const {
+        return locked_;
+    }
 };
-
-template<typename TBus>
-concept is_bus = std::is_base_of_v<BusBase, TBus>;
-
-template<typename TBus>
-concept is_writable_bus = requires(TBus bus, const uint32_t data) {
-    bus.write(data);
-};
-
-template<typename TBus>
-concept is_readable_bus = requires(TBus bus, uint32_t & data, Ack need_ack) {
-    bus.read(data);
-};
-
-template<typename TBus>
-concept is_fulldup_bus = is_writable_bus<TBus> && is_readable_bus<TBus>;
 
 template <typename TBus>
 struct driver_of_bus {

@@ -17,7 +17,7 @@ hal::HalResult TCA9548A::lead(const uint8_t address, const uint8_t ch){
             and (last_ch_.unwrap() == ch)
         )){
         last_ch_ = Some(ch);//lock
-        return i2c_.begin(hal::LockRequest{address, 0});
+        return i2c_.borrow(hal::LockRequest{address, 0});
     }else{
         return hal::HalResult::OccuipedByOther;
     }
@@ -25,7 +25,7 @@ hal::HalResult TCA9548A::lead(const uint8_t address, const uint8_t ch){
 
 void TCA9548A::trail(const uint8_t ch){
     if((last_ch_.is_some()) and (last_ch_.unwrap() == ch)){
-        i2c_.end();
+        i2c_.lend();
         last_ch_ = None;
         return ;
     }

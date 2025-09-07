@@ -57,13 +57,13 @@ public:
 public:
     [[nodiscard]]
     hal::HalResult release(){
-        if (auto res = spi_.begin(idx_.to_req()); 
+        if (auto res = spi_.borrow(idx_.to_req()); 
             res.is_err()) return res;
         __nopn(4);
-        spi_.end();
+        spi_.lend();
         return hal::HalResult::Ok();
     }
-    void end(){return spi_.end();}
+    void lend(){return spi_.lend();}
 
     template<valid_spi_data T>
     hal::HalResult write_single(const is_stdlayout auto data, Continuous cont = DISC);
@@ -134,7 +134,7 @@ template<valid_spi_data T>
 hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous cont) {
     static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
-    if(const auto res = spi_.begin(idx_.to_req()); 
+    if(const auto res = spi_.borrow(idx_.to_req()); 
         res.is_err()) return res;
     if constexpr (sizeof(T) != 1){
         if(const auto res = this->set_data_width(sizeof(T) * 8); 
@@ -149,7 +149,7 @@ hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous con
             res.is_err()) return res;
     }
 
-    if (cont == DISC) spi_.end();
+    if (cont == DISC) spi_.lend();
     if constexpr (sizeof(T) != 1) this->set_data_width(8);
 
     return hal::HalResult::Ok();
@@ -159,14 +159,14 @@ hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous con
 template <valid_spi_data T>
 hal::HalResult SpiDrv::write_repeat(const is_stdlayout auto data, const size_t len, Continuous cont) {
     static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
-    if (const auto res = spi_.begin(idx_.to_req()); 
+    if (const auto res = spi_.borrow(idx_.to_req()); 
         res.is_err()) return res; 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
     for (size_t i = 0; i < len; i++){
         if(const auto res = spi_.write(uint32_t(static_cast<T>(data))); 
             res.is_err()) return res;
     }
-    if (cont == DISC) spi_.end();
+    if (cont == DISC) spi_.lend();
     if constexpr (sizeof(T) != 1) this->set_data_width(8);
     return hal::HalResult::Ok();
 }
@@ -178,14 +178,14 @@ hal::HalResult SpiDrv::write_burst(
         Continuous cont
 ) {
     static_assert(sizeof(T) == sizeof(U));
-    if (const auto res = spi_.begin(idx_.to_req()); 
+    if (const auto res = spi_.borrow(idx_.to_req()); 
         res.is_err()) return res; 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
     for (size_t i = 0; i < pbuf.size(); i++){
         if(const auto res = spi_.write(uint32_t(pbuf[i]));
             res.is_err()) return res;
     } 
-    if (cont == DISC) spi_.end();
+    if (cont == DISC) spi_.lend();
     if constexpr (sizeof(T) != 1) this->set_data_width(8);
     return hal::HalResult::Ok();
 }
@@ -197,7 +197,7 @@ hal::HalResult SpiDrv::read_burst(
         const Continuous cont
 ) {
     static_assert(sizeof(T) == sizeof(U));
-    if(const auto res = spi_.begin(idx_.to_req()); 
+    if(const auto res = spi_.borrow(idx_.to_req()); 
         res.is_err()) return res;
 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
@@ -206,7 +206,7 @@ hal::HalResult SpiDrv::read_burst(
         spi_.read(temp);
         pbuf[i] = temp;
     }
-    if (cont == DISC) spi_.end();
+    if (cont == DISC) spi_.lend();
     if constexpr (sizeof(T) != 1) this->set_data_width(8);
     return hal::HalResult::Ok();
 }
@@ -215,14 +215,14 @@ hal::HalResult SpiDrv::read_burst(
 template <valid_spi_data T>
 hal::HalResult SpiDrv::read_single(is_stdlayout auto & data, const Continuous cont) {
     static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
-    if(const auto res = spi_.begin(idx_.to_req()); 
+    if(const auto res = spi_.borrow(idx_.to_req()); 
         res.is_err()) return res;
     {
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
         uint32_t temp = 0;
         spi_.read(temp);
         memcpy(&data, &temp, sizeof(T));
-        if (cont == DISC) spi_.end();
+        if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) this->set_data_width(8);
     }
     return hal::HalResult::Ok();
@@ -231,7 +231,7 @@ hal::HalResult SpiDrv::read_single(is_stdlayout auto & data, const Continuous co
 
 template <valid_spi_data T>
 hal::HalResult SpiDrv::transceive_single(T & datarx, const T datatx, Continuous cont) {
-    if(const auto res = spi_.begin(idx_.to_req()); 
+    if(const auto res = spi_.borrow(idx_.to_req()); 
         res.is_err()) return res;
     {
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
@@ -239,7 +239,7 @@ hal::HalResult SpiDrv::transceive_single(T & datarx, const T datatx, Continuous 
         spi_.transceive(ret, datatx);
         datarx = ret;
         if constexpr (sizeof(T) != 1) this->set_data_width(8);
-        if (cont == DISC) spi_.end();
+        if (cont == DISC) spi_.lend();
     }
     return hal::HalResult::Ok();
 }
@@ -250,7 +250,7 @@ hal::HalResult SpiDrv::transceive_burst(
     const std::span<const T, N> pbuf_tx, 
     Continuous cont 
 ){
-    if(const auto res = spi_.begin(idx_.to_req()); 
+    if(const auto res = spi_.borrow(idx_.to_req()); 
         res.is_err()) return res;
     {
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
@@ -260,7 +260,7 @@ hal::HalResult SpiDrv::transceive_burst(
             pbuf_rx[i] = dummy;
         }
         if constexpr (sizeof(T) != 1) this->set_data_width(8);
-        if (cont == DISC) spi_.end();
+        if (cont == DISC) spi_.lend();
     }
     return hal::HalResult::Ok();
 }
@@ -271,7 +271,7 @@ hal::HalResult SpiDrv::transceive_burst(
     const std::span<const T> pbuf_tx, 
     Continuous cont
 ){
-    if(const auto res = spi_.begin(idx_.to_req()); 
+    if(const auto res = spi_.borrow(idx_.to_req()); 
         res.is_err()) return res;
     {
         const auto N = pbuf_rx.size();
@@ -282,7 +282,7 @@ hal::HalResult SpiDrv::transceive_burst(
             pbuf_rx[i] = dummy;
         }
         if constexpr (sizeof(T) != 1) this->set_data_width(8);
-        if (cont == DISC) spi_.end();
+        if (cont == DISC) spi_.lend();
     }
     return hal::HalResult::Ok();
 }

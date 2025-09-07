@@ -110,7 +110,7 @@ struct ST7789V3_Phy final:
     template<typename T, typename Iter>
     [[nodiscard]] IResult<> write_by_iter(Iter iter){
         if (const auto res = spi_
-            .begin(idx_.to_req()); 
+            .borrow(idx_.to_req()); 
             res.is_err()) 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
@@ -122,7 +122,7 @@ struct ST7789V3_Phy final:
             (void)spi_.fast_write(iter.next());
         }
 
-        spi_.end();
+        spi_.lend();
 
         if constexpr (sizeof(T) != 1) {
             if(const auto res = spi_.set_data_width(8); 
@@ -143,7 +143,7 @@ private:
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
-        if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) return res;
+        if(const auto res = spi_.borrow(idx_.to_req()); res.is_err()) return res;
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
                 return res;
@@ -155,7 +155,7 @@ private:
             if(const auto res = spi_.write(uint16_t(data)); res.is_err()) return res;
         }
 
-        if (cont == DISC) spi_.end();
+        if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) {
             if(const auto res = spi_.set_data_width(8); res.is_err()) return res;
         }

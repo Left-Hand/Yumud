@@ -646,7 +646,7 @@ void render_main(){
         //     };
         #endif 
 
-        #if 1
+        #if 0
 
         // char str[2] = {
         //     static_cast<char>('0' + (clock::millis().count() / 200) % 16), '\0'};
@@ -733,7 +733,7 @@ void render_main(){
 
         // PANIC{shape, shape.bounding_box()};
 
-        #if 0
+        #if 1
         auto shape = Triangle2<uint16_t>{
             .points = {
                 // Vec2u16{85,85} + Vec2u16::from_x_axis(50).rotated(dest_angle),
