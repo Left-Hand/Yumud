@@ -10,7 +10,15 @@
 
 namespace ymd::drivers{
 
-class CH9431 final{
+class CH9431 final:public CH9431_Prelude{
+public:
 
+    IResult<> write(const hal::CanMsg & msg);
+    IResult<hal::CanMsg> read();
+    IResult<> reset(){
+        return phy_.reset_device();
+    }
+private:
+    CH9431_Phy phy_;
 };
 }

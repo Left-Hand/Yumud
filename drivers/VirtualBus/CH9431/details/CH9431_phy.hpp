@@ -1,11 +1,12 @@
 #pragma once
 
-#include "CH9431_Prelude.hpp"
+#include "ch9431_prelude.hpp"
 
 namespace ymd::drivers{
 
 class CH9431_Phy final:public CH9431_Prelude {
 public:
+
     static constexpr uint8_t WRITE_CMD = 0x03;
     static constexpr uint8_t READ_CMD = 0x02;
 
@@ -16,12 +17,12 @@ public:
         RXB1DO_8 = 0b11,
     };
 
-    static constexpr uint8_t from_read_nm_bits(const ReadNmBits bits){
+    static constexpr uint8_t make_read_rxbuf_cmd(const ReadNmBits bits){
         return (std::bit_cast<uint8_t>(bits) << 1) | 0b10010000;
     }
     
 
-    enum class LoadAbcBits:uint8_t{
+    enum class LoadTxBits:uint8_t{
         TXB0SIDL_5 = 0b00,
         TXB0DO_8 = 0b01,
         TXB1SIDL_5 = 0b00,
@@ -62,7 +63,7 @@ public:
     };
 
     
-    static constexpr uint8_t from_load_abc_bits(const LoadAbcBits bits){
+    static constexpr uint8_t from_load_tx_bits(const LoadTxBits bits){
         return (std::bit_cast<uint8_t>(bits)) | 0b01000000;
     }
     
@@ -75,20 +76,11 @@ public:
 
     static_assert(sizeof(RequestSendKmnBits) == 1);
 
-    
-
     static constexpr uint8_t READ_STATUS_CMD = 0b10100000;
     static constexpr uint8_t READ_RX_STATUS_CMD = 0b10110000;
 
     static constexpr uint8_t BIT_MODIFY_CMD = 0b00001001;
 
-
-private:
-    hal::SpiDrv spi_drv_;
-
-    void wait_tsc(){
-        clock::delay(1us);
-    }
 
     IResult<> modify_bit(const uint8_t addr, const uint8_t mask, const uint8_t data){
         const std::array<uint8_t, 4> buf = {
@@ -98,7 +90,7 @@ private:
             data,
         };
 
-        if(const auto res = spi_drv_.write_burst<uint8_t>(buf.data(), buf.size());
+        if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(buf));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -115,7 +107,7 @@ private:
     IResult<> write_byte(const uint8_t cmd, const uint8_t data){
         const auto buf = std::array{cmd, data};
         
-        if(const auto res = spi_drv_.write_burst<uint8_t>(buf.data(), buf.size());
+        if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(buf));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -133,11 +125,27 @@ private:
             });
     }
 
+    IResult<> reset_device(){
+        static constexpr auto buf = std::to_array<uint8_t>({0xc0});
+        
+        if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(buf));
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
     IResult<ReadStatusBits> read_status(){
         return read_byte(READ_STATUS_CMD)
             .map([](const uint8_t data){
                 return std::bit_cast<ReadStatusBits>(data);
             });
     }
+private:
+    hal::SpiDrv spi_drv_;
+
+    void wait_tsc(){
+        clock::delay(1us);
+    }
+
+
 };
 }
