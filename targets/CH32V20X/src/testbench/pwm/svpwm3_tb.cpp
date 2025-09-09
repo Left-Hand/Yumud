@@ -151,7 +151,7 @@ void svpwm3_main(){
         
         const auto t = clock::time() * real_t(5 * TAU);
         const auto [st,ct] = sincos(t);
-        const auto [u, v, w] = digipw::SVM(st * 0.5_r, ct * 0.5_r);
+        const auto [u, v, w] = digipw::SVM({st * 0.5_r, ct * 0.5_r});
 
         pwm_u.set_dutycycle(u);
         pwm_v.set_dutycycle(v);

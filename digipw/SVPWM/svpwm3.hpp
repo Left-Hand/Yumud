@@ -1,12 +1,12 @@
 #pragma once
 
 #include "core/math/realmath.hpp"
+#include "digipw/prelude/abdq.hpp"
 
 namespace ymd::digipw{
 
-static constexpr std::array<q16, 3> SVM(
-    const q16 alpha_dutycycle, 
-    const q16 beta_dutycycle
+static constexpr UvwCoord<q16> SVM(
+    const AlphaBetaCoord<q16> alpha_beta_dutycycle
 ){
     enum class Sector:uint8_t{
         _1 = 0b010,
@@ -17,9 +17,11 @@ static constexpr std::array<q16, 3> SVM(
         _6 = 0b011
     };
 
+
     constexpr q16 ONE_BY_SQRT3 = 1 / sqrt(3_r);
     constexpr q16 HALF_ONE = q16(0.5);
 
+    const auto [alpha_dutycycle, beta_dutycycle] = alpha_beta_dutycycle;
     const auto beta_by_sqrt3 = beta_dutycycle * ONE_BY_SQRT3;
 
     Sector sector {uint8_t(
@@ -80,8 +82,8 @@ struct SVPWM3{
         const q16 alpha_dutycycle, 
         const q16 beta_dutycycle
     ){
-        const auto dutycycle = SVM(q16(alpha_dutycycle), q16(beta_dutycycle));
-        inst.set_dutycycle(std::span(dutycycle));
+        const auto dutycycle = SVM({q16(alpha_dutycycle), q16(beta_dutycycle)});
+        inst.set_dutycycle(dutycycle);
     }
 };
 

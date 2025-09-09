@@ -15,12 +15,19 @@
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "drivers/GateDriver/DRV832X/DRV832X.hpp"
 
-#include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
-#include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
+
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/SecondOrderLpf.hpp"
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 #include "dsp/filter/rc/LowpassFilter.hpp"
+
+#include "digipw/prelude/abdq.hpp"
+#include "drivers/GateDriver/uvw_pwmgen.hpp"
+
+
+#include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
+#include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
+#include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
@@ -44,7 +51,7 @@ using namespace ymd::dsp;
 // #define TIM1_CH4_GPIO hal::PA<11>()
 
 // static constexpr uint32_t CHOPPER_FREQ = 20_KHz;
-static constexpr uint32_t CHOPPER_FREQ = 20_KHz;
+static constexpr uint32_t CHOPPER_FREQ = 32_KHz;
 
 
 static void init_adc(){
@@ -61,9 +68,14 @@ static void init_adc(){
             // {AdcChannelNth::CH1, AdcSampleCycles::T7_5},
             // {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
 
-            {AdcChannelNth::CH1, AdcSampleCycles::T13_5},
-            {AdcChannelNth::CH4, AdcSampleCycles::T13_5},
-            {AdcChannelNth::CH5, AdcSampleCycles::T13_5},
+            {AdcChannelNth::CH1, AdcSampleCycles::T7_5},
+            {AdcChannelNth::CH4, AdcSampleCycles::T7_5},
+            {AdcChannelNth::CH5, AdcSampleCycles::T7_5},
+
+            // {AdcChannelNth::CH1, AdcSampleCycles::T13_5},
+            // {AdcChannelNth::CH4, AdcSampleCycles::T13_5},
+            // {AdcChannelNth::CH5, AdcSampleCycles::T13_5},
+
             // {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
             // {AdcChannelNth::TEMP, AdcSampleCycles::T7_5},
             // AdcChannelConfig{AdcChannelNth::CH1, AdcCycles::T7_5},
@@ -116,7 +128,7 @@ void myesc_main(){
         TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
-    static constexpr auto MOS_1C840L_500MA_BEST_DEADZONE = 150ns;
+    static constexpr auto MOS_1C840L_500MA_BEST_DEADZONE = 90ns;
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADZONE = 350ns;
     timer1.init_bdtr(MOS_1C840L_500MA_BEST_DEADZONE);
     // timer1.init_bdtr(MOS_1C840L_100MA_BEST_DEADZONE);
@@ -191,21 +203,54 @@ void myesc_main(){
     auto sob_ = ScaledAnalogInput(adc1.inj<2>(), 
         Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
     auto soc_ = ScaledAnalogInput(adc1.inj<3>(), 
-        Rescaler<q16>::from_anti_offset(1.645_r)    * Rescaler<q16>::from_scale(1.0_r));
+        Rescaler<q16>::from_anti_offset(1.65_r)    * Rescaler<q16>::from_scale(1.0_r));
 
-    pwm_u_.set_dutycycle(0.06_r);
 
-    real_t u_curr_ = 0;
-    real_t v_curr_ = 0;
-    real_t w_curr_ = 0;
+    auto uvw_pwmgen_ = UvwPwmgen(&pwm_u_, &pwm_v_, &pwm_w_);
+
+    Angle<q16> openloop_elecrad_ = 0_deg;
+    UvwCoord<q20> uvw_curr_ = {0};
+    DqCoord<q20> dq_curr_ = {0};
+    AlphaBetaCoord<q20> alpha_beta_curr_ = {0};
+    AlphaBetaCoord<q20> alpha_beta_volt_ = {0};
 
     auto & nfault_gpio = hal::PA<6>();
     nfault_gpio.inpu();
 
-    auto    ctrl_isr = [&]{
-        u_curr_ = soa_.get_value();
-        v_curr_ = sob_.get_value();
-        w_curr_ = soc_.get_value();
+    auto sensorless_ob = dsp::motor_ctl::LuenbergerObserver{{}};
+    // auto sensorless_ob = dsp::motor_ctl::SlideModeObserver{{}};
+    auto gen_wave_hfi = [&]{
+        static constexpr q16 HALF_ONE = 0.5_q16;
+        static constexpr q16 WAVE_AMP = 0.14_q16;
+
+        static uint32_t cnt = 0;
+        cnt++;
+
+        const auto wave = WAVE_AMP * ((cnt & 0b01) ? 1 : -1);
+        pwm_u_.set_dutycycle(HALF_ONE + wave);
+        pwm_v_.set_dutycycle(HALF_ONE);
+        pwm_w_.set_dutycycle(HALF_ONE);
+    };
+
+
+
+    auto dq_volt_ = DqCoord<q20>{
+        .d = 0,
+        .q = 0
+    };
+
+    auto ctrl_isr = [&]{
+        uvw_curr_ = {
+            .u = soa_.get_value(),
+            .v = sob_.get_value(),
+            .w = soc_.get_value(),
+        };
+
+
+
+
+        // gen_wave_hfi();
+        // return;
 
 
         // const auto p = ctime * 80;
@@ -216,16 +261,84 @@ void myesc_main(){
         // const auto [s,c] = sincos(ctime * 1.2_r);
         // const auto [s,c] = sincos(ctime * 20.2_r);
         // const auto [s,c] = sincos(0.0_r);
-        const auto [s,c] = sincospu(ctime * 3);
         // const auto [s,c] = sincos(p);
         // const auto mag = 0.06_r;
-        const auto mag = 0.16_r;
-        const auto [u, v, w] = SVM(c * mag, s * mag);
-        // const auto [u, v, w] = ones<3>(0.2_r);
-        pwm_u_.set_dutycycle(u);
-        pwm_v_.set_dutycycle(v);
-        pwm_w_.set_dutycycle(w);
+        static constexpr size_t POLE_PAIRS = 7u;
+        [[maybe_unused]] auto get_position_from_sine_curve = [&]{
+            return Angle<q16>::from_turns(
+                // ctime + sin(ctime)
+                sin(ctime)
+            );
+        };
 
+        [[maybe_unused]] auto get_position_from_linear_curve = [&]{
+            return Angle<q16>::from_turns(
+                ctime * 2
+            );
+        };
+
+        const auto openloop_position = get_position_from_linear_curve();
+        const auto openloop_elecrad = openloop_position * POLE_PAIRS;
+        // const auto openloop_elecrad = Angle<q20>::from_turns(0.5_r);
+
+
+        const auto elecrad = openloop_elecrad;
+        // const auto elecrad = Angle<q16>(sensorless_ob.angle()) - 10_deg;
+        // const auto elecrad = Angle<q16>(sensorless_ob.angle()) - 10_deg;
+        // const auto elecrad = Angle<q16>(sensorless_ob.angle()) + 10_deg;
+        // const auto elecrad = Angle<q16>(sensorless_ob.angle() - 15_deg);
+        alpha_beta_curr_ = AlphaBetaCoord<q20>::from_uvw(uvw_curr_);
+        dq_curr_ = alpha_beta_curr_.to_dq(elecrad);
+
+
+        static constexpr auto MAX_MODU_VOLT = q16(5.5);
+
+        [[maybe_unused]] auto forward_dq_volt_by_pi_ctrl = [&]{
+            auto dq_volt = dq_volt_;
+
+            // const auto dest_q_volt = sinpu(ctime * 50.8_r) * 0.05_r + 0.25_r;
+            // const auto dest_q_volt = sinpu(ctime * 50.8_r) * 0.05_r + 0.25_r;
+
+            const auto dest_q_curr = 0.25_r;
+            dq_volt.d = dq_volt.d + 0.004_q20 * (0 - dq_curr_.d);
+            dq_volt.q = dq_volt.q + 0.004_q20 * (dest_q_curr - dq_curr_.q);
+            return dq_volt;
+        };
+
+        [[maybe_unused]] auto forward_dq_volt_by_constant_voltage = [&]{
+            auto dq_volt = dq_volt_;
+            dq_volt.d = 2;
+            dq_volt.q = 0;
+            return dq_volt;
+        };
+
+        dq_volt_ = forward_dq_volt_by_pi_ctrl().clamp(MAX_MODU_VOLT);
+        // dq_volt_ = forward_dq_volt_by_constant_voltage().clamp(MAX_MODU_VOLT);
+
+
+        static constexpr auto INV_BUS_VOLT = q16(1 / 12.0);
+
+        // const auto MODU_VOLT = 2.05_r;
+        // const auto MODU_VOLT = 5.25_r;
+        // const auto MODU_VOLT = 3.5_r + 1 * sinpu(ctime * 0.2_r);
+        // const auto MODU_VOLT = ABS(3.4_r * sinpu(ctime * 0.2_r));
+
+
+        const auto alpha_beta_volt = dq_volt_.to_alpha_beta(elecrad);
+
+
+
+        sensorless_ob.update(alpha_beta_volt, alpha_beta_curr_);
+
+        const auto uvw_dutycycle = SVM(
+            AlphaBetaCoord<q16>{
+                .alpha = alpha_beta_volt.alpha, 
+                .beta = alpha_beta_volt.beta
+            } * INV_BUS_VOLT);
+        uvw_pwmgen_.set_dutycycle(uvw_dutycycle);
+
+        alpha_beta_volt_ = alpha_beta_volt;
+        openloop_elecrad_ = openloop_elecrad;
     };
 
     
@@ -237,10 +350,17 @@ void myesc_main(){
 
     while(true){
         DEBUG_PRINTLN_IDLE(
-            u_curr_,
-            v_curr_,
-            w_curr_,
-            bool(nfault_gpio.read() == LOW),
+            // uvw_curr_,
+            alpha_beta_curr_,
+            dq_curr_,
+            uvw_curr_,
+            // dq_volt_,
+            // alpha_beta_volt_,
+
+            sensorless_ob.angle().to_turns()
+
+            // openloop_elecrad_.normalized().to_turns()
+            // bool(nfault_gpio.read() == LOW),
 
             // hal::PA<8>().read().to_bool(),
             // hal::PA<9>().read().to_bool(),
@@ -253,14 +373,13 @@ void myesc_main(){
             // pwm_u_.get_dutycycle(),
             // pwm_v_.get_dutycycle(),
             // pwm_w_.get_dutycycle(),
+
             // mosdrv.get_status1().unwrap().as_bitset(),
             // mosdrv.get_status2().unwrap().as_bitset(),
-
-            0
         );
 
         blink_service();
-        clock::delay(2ms);
+        // clock::delay(2ms);
     }
 
 }

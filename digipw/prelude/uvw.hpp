@@ -6,16 +6,17 @@
 
 namespace ymd::digipw{
 
+template<typename T>
 struct UvwCoord{
-    q20 u = {};
-    q20 v = {};
-    q20 w = {};
+    T u = {};
+    T v = {};
+    T w = {};
 
-    constexpr q20 operator [](const size_t idx) const {
+    constexpr T operator [](const size_t idx) const {
         return *(&u + idx);
     }
 
-    constexpr q20 & operator [](const size_t idx){
+    constexpr T & operator [](const size_t idx){
         return *(&u + idx);
     }
 
