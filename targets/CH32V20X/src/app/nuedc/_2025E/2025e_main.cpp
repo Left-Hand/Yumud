@@ -423,7 +423,7 @@ void nuedc_2025e_main(){
     mp6540_nslp_gpio_.outpp(HIGH);
 
 
-    AlphaBetaCoord ab_volt_;
+    AlphaBetaCoord<q16> ab_volt_;
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -526,7 +526,11 @@ void nuedc_2025e_main(){
         update_sensors();
 
         if(run_status_.state == RunState::Idle){
-            SVPWM3::set_ab_volt(uvw_pwmgen, 0, 0);
+
+            SVPWM3::set_alpha_beta_dutycycle(uvw_pwmgen, 
+                0, 
+                0
+            );
             leso_.reset();
             return;
         }
@@ -561,13 +565,20 @@ void nuedc_2025e_main(){
         , SVPWM_MAX_VOLT);
         #endif
 
-        [[maybe_unused]] const auto ab_volt = DqCoord{
+        [[maybe_unused]] const auto ab_volt = DqCoord<q16>{
             .d = 0, 
             .q = CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
             // CLAMP2(q_volt, SVPWM_MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
 
-        SVPWM3::set_ab_volt(uvw_pwmgen, ab_volt[0], ab_volt[1]);
+
+        static constexpr auto INV_BUS_VOLT = q16(1.0/12);
+
+        SVPWM3::set_alpha_beta_dutycycle(uvw_pwmgen, 
+            ab_volt[0] * INV_BUS_VOLT, 
+            ab_volt[1] * INV_BUS_VOLT
+        );
+
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;

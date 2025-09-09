@@ -21,26 +21,27 @@ static constexpr __fast_inline void dq_to_ab(To & ab, const From & dq, const Ang
 };
 }
 
+template<typename T>
 struct AlphaBetaCoord final{
-    q20 alpha;
-    q20 beta;
+    T alpha;
+    T beta;
 
 
     static constexpr AlphaBetaCoord from_uvw(const UvwCoord & uvw){
-        constexpr auto _2_by_3 = q20(2.0/3);
-        constexpr auto _sqrt3_by_3 = q20(sqrt(q20(3)) / 3);
+        constexpr auto _2_by_3 = T(2.0/3);
+        constexpr auto _sqrt3_by_3 = T(sqrt(T(3)) / 3);
         return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, (uvw.v - uvw.w) * _sqrt3_by_3};
     };
 
-    constexpr q20 operator [](const size_t idx) const {
+    constexpr T operator [](const size_t idx) const {
         return *(&alpha + idx);
     }
 
-    constexpr q20 & operator [](const size_t idx){
+    constexpr T & operator [](const size_t idx){
         return *(&alpha + idx);
     }
 
-    constexpr q20 length() const {
+    constexpr T length() const {
         return sqrt(square(alpha) + square(beta));
     }
 
@@ -52,32 +53,33 @@ struct AlphaBetaCoord final{
 };
 
 
+template<typename T>
 struct DqCoord final{
 
-    q20 d;
-    q20 q;
+    T d;
+    T q;
 
-    constexpr q20 operator [](const size_t idx) const {
+    constexpr T operator [](const size_t idx) const {
         return *(&d + idx);
     }
 
-    constexpr q20 & operator [](const size_t idx){
+    constexpr T & operator [](const size_t idx){
         return *(&d + idx);
     }
 
-    constexpr q20 length() const {
+    constexpr T length() const {
         return mag(d,q);
     }
 
 
-    static constexpr DqCoord from_alpha_beta(const AlphaBetaCoord & ab, const Angle<auto> angle){
+    static constexpr DqCoord from_alpha_beta(const AlphaBetaCoord<T> & ab, const Angle<auto> angle){
         DqCoord self;
         details::ab_to_dq(self, ab, angle);
         return self;
     }
 
-    template<typename T>
-    constexpr AlphaBetaCoord to_alpha_beta(const Angle<T> angle) const {
+    template<typename U>
+    constexpr AlphaBetaCoord<T> to_alpha_beta(const Angle<U> angle) const {
         auto [s,c] = angle.sincos();
         auto & self = *this;
         return {c * self.d - s * self.q, c * self.q + s * self.d};

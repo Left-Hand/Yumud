@@ -221,7 +221,7 @@ void bldc_main(){
 
     hal::PA<7>().inana();
 
-    AlphaBetaCoord ab_volt_;
+    AlphaBetaCoord<q16> ab_volt_;
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -297,7 +297,7 @@ void bldc_main(){
         #if 1
         const auto q_volt = 3.3_r;
 
-        [[maybe_unused]] const auto ab_volt = DqCoord{
+        [[maybe_unused]] const auto ab_volt = DqCoord<q16>{
             .d = 0, 
             .q = q_volt
         }.to_alpha_beta(Angle<q16>::from_turns(ctime));
@@ -311,9 +311,12 @@ void bldc_main(){
             CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
         #endif
+        static constexpr auto INV_BUS_VOLT = q16(1.0/12);
 
-
-        SVPWM3::set_ab_volt(uvw_pwmgen, ab_volt[0], ab_volt[1]);
+        SVPWM3::set_alpha_beta_dutycycle(uvw_pwmgen, 
+            ab_volt[0] * INV_BUS_VOLT, 
+            ab_volt[1] * INV_BUS_VOLT
+        );
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;

@@ -7,6 +7,7 @@
 // 可为主机设备扩展CAN功能，连接到外部CAN总线。 
 
 #include "details/CH9431_phy.hpp"
+#include "hal/bus/can/can_msg.hpp"
 
 namespace ymd::drivers{
 

@@ -1,3 +1,5 @@
+#include "src/testbench/tb.h"
+
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
@@ -15,11 +17,6 @@
 
 #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
-
-#include "core/polymorphism/traits.hpp"
-
-#include "src/testbench/tb.h"
-
 #include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/filter/SecondOrderLpf.hpp"
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
@@ -34,7 +31,20 @@ using namespace ymd::dsp;
 #define DEBUG_UART hal::uart2
 
 // static constexpr uint32_t DEBUG_UART_BAUD = 576000;
-static constexpr uint32_t CHOPPER_FREQ = 40_KHz;
+
+// #define TIM1_CH1_GPIO hal::PA<8>()
+// #define TIM1_CH1N_GPIO hal::PA<7>()
+
+// #define TIM1_CH2_GPIO hal::PA<9>()
+// #define TIM1_CH2N_GPIO hal::PB<0>()
+
+// #define TIM1_CH3_GPIO hal::PA<10>()
+// #define TIM1_CH3N_GPIO hal::PB<1>()
+
+// #define TIM1_CH4_GPIO hal::PA<11>()
+
+// static constexpr uint32_t CHOPPER_FREQ = 20_KHz;
+static constexpr uint32_t CHOPPER_FREQ = 20_KHz;
 
 
 static void init_adc(){
@@ -51,9 +61,9 @@ static void init_adc(){
             // {AdcChannelNth::CH1, AdcSampleCycles::T7_5},
             // {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
 
-            {AdcChannelNth::CH5, AdcSampleCycles::T13_5},
-            {AdcChannelNth::CH4, AdcSampleCycles::T13_5},
             {AdcChannelNth::CH1, AdcSampleCycles::T13_5},
+            {AdcChannelNth::CH4, AdcSampleCycles::T13_5},
+            {AdcChannelNth::CH5, AdcSampleCycles::T13_5},
             // {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
             // {AdcChannelNth::TEMP, AdcSampleCycles::T7_5},
             // AdcChannelConfig{AdcChannelNth::CH1, AdcCycles::T7_5},
@@ -66,9 +76,7 @@ static void init_adc(){
         {}
     );
 
-    // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
     adc1.set_injected_trigger(AdcInjectedTrigger::T1CC4);
-    // adc1.enableContinous();
     adc1.enable_auto_inject(DISEN);
 }
 
@@ -78,6 +86,8 @@ std::array<T, N> ones(const T value){
     ret.fill(value);
     return ret;
 }
+
+
 void myesc_main(){
     DEBUG_UART.init({DEBUG_UART_BAUD});
     DEBUGGER.retarget(&DEBUG_UART);
@@ -85,9 +95,15 @@ void myesc_main(){
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets(EN);
 
-    clock::delay(200ms);
+    clock::delay(2ms);
 
+    auto & led_blue_gpio_ = hal::PC<13>();
+    auto & led_red_gpio_ = hal::PC<14>();
+    auto & led_green_gpio_ = hal::PC<15>();
 
+    led_red_gpio_.outpp(); 
+    led_blue_gpio_.outpp(); 
+    led_green_gpio_.outpp();
 
     auto & en_gpio = hal::PA<11>();
     auto & slp_gpio = hal::PA<12>();
@@ -106,43 +122,32 @@ void myesc_main(){
     // timer1.init_bdtr(MOS_1C840L_100MA_BEST_DEADZONE);
     timer1.remap(1);
 
-    auto & pwm_u = timer1.oc<1>(); 
-    auto & pwm_v = timer1.oc<2>(); 
-    auto & pwm_w = timer1.oc<3>(); 
+    auto & pwm_u_ = timer1.oc<1>(); 
+    auto & pwm_v_ = timer1.oc<2>(); 
+    auto & pwm_w_ = timer1.oc<3>(); 
 
-    pwm_u.init({.install_en = DISEN}); 
-    pwm_v.init({.install_en = DISEN}); 
-    pwm_w.init({.install_en = DISEN}); 
+    timer1.ocn<1>().init({}); 
+    timer1.ocn<2>().init({}); 
+    timer1.ocn<3>().init({}); 
+
+    pwm_u_.init({.install_en = DISEN}); 
+    pwm_v_.init({.install_en = DISEN}); 
+    pwm_w_.init({.install_en = DISEN}); 
     
     hal::PA<7>().afpp();
     hal::PB<0>().afpp();
     hal::PB<1>().afpp();
-        //     #define TIM1_CH1_GPIO hal::PA<8>()
-        // #define TIM1_CH1N_GPIO hal::PA<7>()
 
-        // #define TIM1_CH2_GPIO hal::PA<9>()
-        // #define TIM1_CH2N_GPIO hal::PB<0>()
-
-        // #define TIM1_CH3_GPIO hal::PA<10>()
-        // #define TIM1_CH3N_GPIO hal::PB<1>()
-
-        // #define TIM1_CH4_GPIO hal::PA<11>()
     timer1.oc<4>().cvr() = timer1.arr() - 1;
     
-    pwm_u.init({});
-    pwm_v.init({});
-    pwm_w.init({});
+    pwm_u_.init({});
+    pwm_v_.init({});
+    pwm_w_.init({});
     timer1.oc<4>().init({
         .install_en = DISEN
     });
 
     timer1.oc<4>().enable_output(EN);
-
-
-    // drivers::DRV8323H  mosdrv{hal::SpiDrv{
-    //     spi1, 
-    //     spi1.allocate_cs_gpio(hal::PA<15>()).value()
-    // }};
 
     auto & mode_gpio = hal::PB<4>();
     auto & vds_gpio = hal::PB<3>();
@@ -158,6 +163,8 @@ void myesc_main(){
     // gain_gpio.outpp(LOW);
     // gain_gpio.outpp(LOW);
     gain_gpio.inpd();
+
+
     idrive_gpio.outpp(HIGH);
     // idrive_gpio.inflt();
     // idrive_gpio.inpu();
@@ -170,56 +177,90 @@ void myesc_main(){
 
     // mosdrv.init({}).examine();
 
+    auto blink_service = [&]{
+
+        led_red_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
+        led_blue_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+        led_green_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
+    };
 
     init_adc();
 
-    auto & soa = adc1.inj<1>();
-    auto & sob = adc1.inj<2>();
-    auto & soc = adc1.inj<3>();
+    auto soa_ = ScaledAnalogInput(adc1.inj<1>(), 
+        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
+    auto sob_ = ScaledAnalogInput(adc1.inj<2>(), 
+        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
+    auto soc_ = ScaledAnalogInput(adc1.inj<3>(), 
+        Rescaler<q16>::from_anti_offset(1.645_r)    * Rescaler<q16>::from_scale(1.0_r));
 
-    pwm_u.set_dutycycle(0.06_r);
+    pwm_u_.set_dutycycle(0.06_r);
 
-    real_t u_curr;
-    real_t v_curr;
-    real_t w_curr;
+    real_t u_curr_ = 0;
+    real_t v_curr_ = 0;
+    real_t w_curr_ = 0;
 
     auto & nfault_gpio = hal::PA<6>();
     nfault_gpio.inpu();
 
-    timer1.attach(TimerIT::Update, {0,0}, [&]{
-        u_curr = soa.get_voltage();
-        v_curr = sob.get_voltage();
-        w_curr = soc.get_voltage();
-        const auto ctime = clock::time();
+    auto    ctrl_isr = [&]{
+        u_curr_ = soa_.get_value();
+        v_curr_ = sob_.get_value();
+        w_curr_ = soc_.get_value();
+
+
         // const auto p = ctime * 80;
         // const auto p = 60 * sinpu(ctime/4);
         // const auto p = 60 * ctime;
-        const auto [s,c] = sincos(ctime * 80);
+        // const auto [s,c] = sincos(ctime * 80);
+        [[maybe_unused]] const auto ctime = clock::time();
+        // const auto [s,c] = sincos(ctime * 1.2_r);
+        // const auto [s,c] = sincos(ctime * 20.2_r);
+        // const auto [s,c] = sincos(0.0_r);
+        const auto [s,c] = sincospu(ctime * 3);
         // const auto [s,c] = sincos(p);
-        const auto mag = 0.02_r;
-        const auto [u, v, w] = SVM(s * mag, c * mag);
+        // const auto mag = 0.06_r;
+        const auto mag = 0.16_r;
+        const auto [u, v, w] = SVM(c * mag, s * mag);
         // const auto [u, v, w] = ones<3>(0.2_r);
-        pwm_u.set_dutycycle(u);
-        pwm_v.set_dutycycle(v);
-        pwm_w.set_dutycycle(w);
+        pwm_u_.set_dutycycle(u);
+        pwm_v_.set_dutycycle(v);
+        pwm_w_.set_dutycycle(w);
+
+    };
+
+    
+    adc1.attach(hal::AdcIT::JEOC, {0,0}, 
+        ctrl_isr, EN
+    );
 
 
-    }, EN);
 
     while(true){
         DEBUG_PRINTLN_IDLE(
-            u_curr,
-            v_curr,
-            w_curr,
+            u_curr_,
+            v_curr_,
+            w_curr_,
             bool(nfault_gpio.read() == LOW),
+
+            // hal::PA<8>().read().to_bool(),
+            // hal::PA<9>().read().to_bool(),
+            // hal::PA<10>().read().to_bool(),
+
+            // pwm_u_.cvr(),
+            // pwm_v_.cvr(),
+            // pwm_w_.cvr(),
+
+            // pwm_u_.get_dutycycle(),
+            // pwm_v_.get_dutycycle(),
+            // pwm_w_.get_dutycycle(),
             // mosdrv.get_status1().unwrap().as_bitset(),
             // mosdrv.get_status2().unwrap().as_bitset(),
 
             0
         );
 
-
-        // clock::delay(2ms);
+        blink_service();
+        clock::delay(2ms);
     }
 
 }

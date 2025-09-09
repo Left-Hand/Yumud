@@ -74,23 +74,8 @@ static constexpr std::array<q16, 3> SVM(
 
 struct SVPWM3{
 
-    // const int bus_volt = 12;
-    static constexpr q16 INV_SCALE = q16(1.0 / 12);
-
-    // template<typename Inst>
-    // void set_dq_volt(Inst & inst, const q16 dv, const q16 qv, const q16 rad){
-    //     const auto c = cos(rad);
-    //     const auto s = sin(rad);
-    //     set_ab_volt(inst, dv * c - qv * s, dv * c + qv * s);
-    // }
-
     template<typename Inst>
-    static void set_ab_volt(Inst & inst, const q16 av, const q16 bv){
-        set_ab_dutycycle(inst, av * INV_SCALE, bv * INV_SCALE);
-    }
-
-    template<typename Inst>
-    static void set_ab_dutycycle(
+    static void set_alpha_beta_dutycycle(
         Inst & inst, 
         const q16 alpha_dutycycle, 
         const q16 beta_dutycycle
