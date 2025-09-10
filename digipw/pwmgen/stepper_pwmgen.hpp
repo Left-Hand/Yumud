@@ -1,13 +1,14 @@
 #pragma once
 
 #include "hal/timer/timer_oc.hpp"
+#include "digipw/prelude/abdq.hpp"
 
 namespace ymd::digipw{
 
 //AT8222
-class StepperSVPWM{
+class StepperPwmGen{
 public:
-    StepperSVPWM(
+    StepperPwmGen(
         hal::TimerOC & pwm_ap,
         hal::TimerOC & pwm_an,
         hal::TimerOC & pwm_bp,
@@ -18,8 +19,6 @@ public:
     {;}
 
     void init_channels(){
-        // oc.init({.valid_level = LOW});
-
         channel_a_.inverse(EN);
         channel_b_.inverse(DISEN);
 
@@ -32,6 +31,21 @@ public:
             .cvr_sync_en = EN,
             .valid_level = LOW,
         };
+
+        // static constexpr hal::TimerOcPwmConfig pwm_noinv_cfg = {
+        //     .cvr_sync_en = EN,
+        //     .valid_level = LOW
+        // };
+
+        // static constexpr hal::TimerOcPwmConfig pwm_inv_cfg = {
+        //     .cvr_sync_en = EN,
+        //     .valid_level = HIGH,
+        // };
+
+        // channel_a_.inverse(DISEN);
+        // channel_b_.inverse(EN);
+
+
         
         channel_a_.pos_channel().init(pwm_noinv_cfg);
         channel_a_.neg_channel().init(pwm_noinv_cfg);
@@ -40,9 +54,9 @@ public:
 
     }
 
-    void set_alpha_beta_duty(const real_t duty_a, const real_t duty_b){
-        channel_a_.set_dutycycle(duty_a);
-        channel_b_.set_dutycycle(duty_b);
+    void set_dutycycle(const AlphaBetaCoord<q16> alpha_beta_dutycycle){
+        channel_a_.set_dutycycle(alpha_beta_dutycycle.alpha);
+        channel_b_.set_dutycycle(alpha_beta_dutycycle.beta);
     }
 private:
 

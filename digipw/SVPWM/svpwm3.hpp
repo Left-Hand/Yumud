@@ -5,6 +5,7 @@
 
 namespace ymd::digipw{
 
+__attribute__((optimize("O3")))
 static constexpr UvwCoord<q16> SVM(
     const AlphaBetaCoord<q16> alpha_beta_dutycycle
 ){

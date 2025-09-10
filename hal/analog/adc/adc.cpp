@@ -4,6 +4,51 @@
 using namespace ymd;
 using namespace ymd::hal;
 
+void AdcPrimary::set_regular_channels(
+    const std::initializer_list<AdcChannelConfig> & regular_list
+){ 
+    set_regular_count(regular_list.size());
+    uint8_t i = 0;
+    for(const auto & regular_cfg : regular_list){
+        i++;
+        ADC_RegularChannelConfig(
+            inst_,
+            static_cast<uint8_t>(regular_cfg.nth),
+            i,
+            static_cast<uint8_t>(regular_cfg.cycles)
+        );
+        adc_details::install_pin(regular_cfg.nth, EN);
+
+        if(i > 16) break;
+    }
+}
+
+
+void AdcPrimary::set_injected_channels(
+    const std::initializer_list<AdcChannelConfig> & injected_list
+){
+    {
+        set_injected_count(injected_list.size());
+        uint8_t i = 0;
+        for(const auto & injected_cfg : injected_list){
+            i++;
+
+            ADC_InjectedChannelConfig(
+                inst_,
+                static_cast<uint8_t>(injected_cfg.nth),
+                i,
+                static_cast<uint8_t>(injected_cfg.cycles));
+
+            ADC_SetInjectedOffset(
+                inst_, ADC_InjectedChannel_1 + 
+                (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data, 0)); 
+                // offset can`t be negative
+            adc_details::install_pin(injected_cfg.nth, EN);
+
+            if(i > 4) break;
+        }
+    }
+}
 void AdcPrimary::init(
     const std::initializer_list<AdcChannelConfig> & regular_list,
     const std::initializer_list<AdcChannelConfig> & injected_list, 
@@ -26,55 +71,25 @@ void AdcPrimary::init(
 
     ADC_Init(inst_, &ADC_InitStructure);
 
-    bool temp_verf_activation = false;
-
-    auto channel_is_temp_or_vref = [](const ChannelNth nth){
-        return nth == ChannelNth::TEMP or
-                nth == ChannelNth::VREF;
-    };
-
-    { 
-        set_regular_count(regular_list.size());
-        uint8_t i = 0;
-        for(const auto & regular_cfg : regular_list){
-            i++;
-            ADC_RegularChannelConfig(
-                inst_,
-                static_cast<uint8_t>(regular_cfg.nth),
-                i,
-                static_cast<uint8_t>(regular_cfg.cycles)
-            );
-            adc_details::install_pin(regular_cfg.nth, EN);
-
-            temp_verf_activation |= channel_is_temp_or_vref(regular_cfg.nth);
-
-            if(i > 16) break;
+    bool temp_verf_activation = [&]{
+        auto channel_is_temp_or_vref = [](const ChannelNth nth){
+            return nth == ChannelNth::TEMP or
+                    nth == ChannelNth::VREF;
+        };
+        for(const auto cfg : injected_list){
+            if(channel_is_temp_or_vref(cfg.nth))
+                return true;
         }
-    }
-
-    {
-        set_injected_count(injected_list.size());
-        uint8_t i = 0;
-        for(const auto & injected_cfg : injected_list){
-            i++;
-
-            ADC_InjectedChannelConfig(
-                inst_,
-                static_cast<uint8_t>(injected_cfg.nth),
-                i,
-                static_cast<uint8_t>(injected_cfg.cycles));
-
-            ADC_SetInjectedOffset(
-                inst_, ADC_InjectedChannel_1 + 
-                (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data, 0)); 
-                // offset can`t be negative
-            adc_details::install_pin(injected_cfg.nth, EN);
-
-            temp_verf_activation |= channel_is_temp_or_vref(injected_cfg.nth);
-
-            if(i > 4) break;
+        for(const auto cfg : regular_list){
+            if(channel_is_temp_or_vref(cfg.nth))
+                return true;
         }
-    }
+        return false;
+    }();
+
+
+    set_regular_channels(regular_list);
+    set_injected_channels(injected_list);
 
     if(temp_verf_activation) enable_temp_vref(EN);
 

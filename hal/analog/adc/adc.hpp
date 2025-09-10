@@ -123,6 +123,7 @@ public:
     AdcInjectedChannel & inj(){
         return injected_channels[I - 1];
     }
+
     void bind_cb(const IT it,auto && cb){
         switch(it){
             case IT::JEOC:
@@ -174,6 +175,10 @@ public:
     void enable_auto_inject(const Enable en){
         ADC_AutoInjectedConvCmd(inst_, en == EN);
     }
+
+
+    void set_regular_channels(const std::initializer_list<AdcChannelConfig> & regular_list);
+    void set_injected_channels(const std::initializer_list<AdcChannelConfig> & injected_list);
 
     void enable_right_align(const Enable en){
         CTLR2 tempreg;

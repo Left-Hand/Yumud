@@ -11,12 +11,15 @@ struct DqCoord;
 
 namespace details{
 template<typename To, typename From>
+__attribute__((optimize("O3")))
 static constexpr __fast_inline void ab_to_dq(To & dq, const From & ab, const Angle<auto> angle){
     auto [s,c] = angle.sincos();
     dq = {s * ab[1] + c * ab[0], c * ab[1] - s * ab[0]};
 };
 
+
 template<typename To, typename From>
+__attribute__((optimize("O3")))
 static constexpr __fast_inline void dq_to_ab(To & ab, const From & dq, const Angle<auto> angle){
     auto [s,c] = angle.sincos();
     ab = {c * dq[0] - s * dq[1], c * dq[1] + s * dq[0]};
@@ -45,6 +48,10 @@ struct AlphaBetaCoord final{
 
     [[nodiscard]] constexpr T length() const {
         return sqrt(square(alpha) + square(beta));
+    }
+
+    [[nodiscard]] constexpr T length_squared() const {
+        return square(alpha) + square(beta);
     }
 
     [[nodiscard]] constexpr AlphaBetaCoord operator -() const {

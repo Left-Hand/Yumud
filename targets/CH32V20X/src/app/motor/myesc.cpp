@@ -217,8 +217,15 @@ void myesc_main(){
     auto nfault_gpio = hal::PA<6>();
     nfault_gpio.inpu();
 
-    auto sensorless_ob = dsp::motor_ctl::LuenbergerObserver{{}};
-    // auto sensorless_ob = dsp::motor_ctl::SlideModeObserver{{}};
+    auto sensorless_ob = dsp::motor_ctl::NonlinearFluxObserver{
+        dsp::motor_ctl::NonlinearFluxObserver::Config{
+        .phase_inductance = 0.001_q20,
+        .phase_resistance = 4_q20,
+        .observer_gain = 0.05_q20, // [rad/s]
+        .pm_flux_linkage = 0.27_q20, // [V / (rad/s)]
+        .freq = 32000,
+    }};
+    // auto sensorless_ob = dsp::motor_ctl::LuenbergerObserver{{}};
     // auto gen_wave_hfi = [&]{
     //     static constexpr q16 HALF_ONE = 0.5_q16;
     //     static constexpr q16 WAVE_AMP = 0.14_q16;
@@ -258,7 +265,7 @@ void myesc_main(){
         // const auto mag = 0.06_r;
         static constexpr size_t POLE_PAIRS = 7u;
 
-        [[maybe_unused]] static constexpr auto linear_speed = 5;
+        [[maybe_unused]] static constexpr auto linear_speed = 2;
         [[maybe_unused]] auto get_position_from_sine_curve = [&]{
             return Angle<q16>::from_turns(
                 // ctime + sin(ctime)
@@ -282,7 +289,7 @@ void myesc_main(){
         // const auto elecrad = Angle<q16>(sensorless_ob.angle()) - 10_deg;
         // const auto elecrad = Angle<q16>(sensorless_ob.angle()) - 10_deg;
         // const auto elecrad = Angle<q16>(sensorless_ob.angle()) + 10_deg;
-        const auto elecrad = Angle<q16>(sensorless_ob.angle());
+        const auto elecrad = Angle<q16>(sensorless_ob.angle() - 30_deg);
         alpha_beta_curr_ = AlphaBetaCoord<q20>::from_uvw(uvw_curr_);
         dq_curr_ = alpha_beta_curr_.to_dq(elecrad);
 
@@ -303,8 +310,8 @@ void myesc_main(){
 
         [[maybe_unused]] auto forward_dq_volt_by_constant_voltage = [&]{
             auto dq_volt = dq_volt_;
-            dq_volt.d = 1.4_r;
-            dq_volt.q = 0;
+            dq_volt.d = 0_r;
+            dq_volt.q = 3.1_r;
             return dq_volt;
         };
 
@@ -317,8 +324,8 @@ void myesc_main(){
             return dq_volt;
         };
 
-        dq_volt_ = (forward_dq_volt_by_pi_ctrl() + speed_compansate_dq_volt()).clamp(MAX_MODU_VOLT);
-        // dq_volt_ = forward_dq_volt_by_constant_voltage().clamp(MAX_MODU_VOLT);
+        // dq_volt_ = (forward_dq_volt_by_pi_ctrl() + speed_compansate_dq_volt()).clamp(MAX_MODU_VOLT);
+        dq_volt_ = forward_dq_volt_by_constant_voltage().clamp(MAX_MODU_VOLT);
 
 
         static constexpr auto INV_BUS_VOLT = q16(1 / 12.0);
@@ -346,9 +353,14 @@ void myesc_main(){
         openloop_elecrad_ = openloop_elecrad;
     };
 
-    
+    Microseconds exe_us_ = 0us;
     adc1.attach(hal::AdcIT::JEOC, {0,0}, 
-        ctrl_isr, EN
+        [&]{
+            const auto begin_us = clock::micros();
+            ctrl_isr();
+            const auto end_us = clock::micros();
+            exe_us_ = end_us - begin_us;
+        }, EN
     );
 
 
@@ -366,7 +378,8 @@ void myesc_main(){
             // dq_volt_,
             // alpha_beta_volt_,
 
-            sensorless_ob.angle().to_turns()
+            sensorless_ob.angle().to_turns(),
+            uint32_t(exe_us_.count())
 
             // openloop_elecrad_.normalized().to_turns()
             // bool(nfault_gpio.read() == LOW),
