@@ -71,7 +71,7 @@ void test_burshed_motor(){
 
     static mock::MockBrushedMotor motor{{.fs = ISR_FREQ}};
     // uint32_t exe;
-    auto & watch_gpio = hal::PC<13>();
+    auto watch_gpio = hal::PC<13>();
     watch_gpio.outpp();
     auto test_leso = [&](const auto t){
         // const auto tau = 80.0_r;

@@ -54,7 +54,9 @@ public:
 
 class Environment{
 public:
-    I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
+    Gpio scl_gpio = SCL_GPIO;
+    Gpio sda_gpio = SDA_GPIO;
+    I2cSw i2c = {&scl_gpio, &sda_gpio};
     PCA9685 pca{&i2c};
 
 

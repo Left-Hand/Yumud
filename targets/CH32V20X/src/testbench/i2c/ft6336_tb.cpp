@@ -73,17 +73,12 @@ void ft6336_main(){
     DEBUGGER.no_brackets(EN);
 
     
-    auto & led = hal::PA<15>();
+    auto led = hal::PA<15>();
     led.outpp();
 
-    // while(true){
-    //     DEBUG_PRINTLN(clock::millis());
-    //     clock::delay(30ms);
-    //     led.toggle();
-    // }
-
-    // test_result();
-    hal::I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
     i2c.init(200_KHz);
 
     clock::delay(1ms);

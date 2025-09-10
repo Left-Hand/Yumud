@@ -25,7 +25,8 @@ void pwm_tb(OutputStream & logger){
         .freq = 36000
     }, EN);
     #ifdef PWM_TB_GPIO
-    GpioPwm pwm{hal::PA<8>()};
+    auto gpio = hal::PA<8>();
+    GpioPwm pwm{gpio};
     pwm.init(32);
 
     timer1.enable_it(

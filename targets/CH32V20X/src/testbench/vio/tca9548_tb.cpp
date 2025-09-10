@@ -13,9 +13,10 @@
 using namespace ymd;
 
 #define UART hal::uart2
+#define SCL_GPIO hal::PA<12>()
+#define SDA_GPIO hal::PA<15>()
 
-void tca9548_main()
-{
+void tca9548_main(){
 
     UART.init({576000});
     DEBUGGER.retarget(&UART);
@@ -23,7 +24,11 @@ void tca9548_main()
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets(EN);
     
-    auto i2c = hal::I2cSw(&hal::PA<12>(), &hal::PA<15>());
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+
     i2c.init(400_KHz);
 
     auto tca = drivers::TCA9548A(&i2c, hal::I2cSlaveAddr<7>::from_u7(0x70));

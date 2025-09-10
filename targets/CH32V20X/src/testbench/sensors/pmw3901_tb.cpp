@@ -22,8 +22,9 @@ void pmw3901_main(){
     auto & spi = spi1;
 
     spi.init({4_MHz});
+    auto spi_cs_gpio_ = hal::PA<15>();
 
-    PMW3901 pmw{&spi, spi.allocate_cs_gpio(&hal::PA<15>()).unwrap()};
+    PMW3901 pmw{&spi, spi.allocate_cs_gpio(&spi_cs_gpio_).unwrap()};
     pmw.init().unwrap();
 
     while(true){

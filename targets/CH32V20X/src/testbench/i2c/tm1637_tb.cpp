@@ -15,7 +15,9 @@ using namespace ymd::drivers;
 #define UART hal::uart2
 
 static void tm1637_tb(){
-    TM1637 tm1637{hal::PB<0>(), hal::PB<1>()};
+    auto scl_gpio_ = hal::PB<0>();
+    auto sda_gpio_ = hal::PB<1>();
+    TM1637 tm1637{scl_gpio_, sda_gpio_};
 
     while(true){
         tm1637.set( 0, SegDisplayer::digit_to_seg( clock::millis().count() / 1000))

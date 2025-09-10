@@ -13,6 +13,8 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
+#define SCL_GPIO hal::PD<0>()
+#define SDA_GPIO hal::PD<1>()
 void tcs34725_tb(OutputStream & logger, hal::I2c & i2c){
     TCS34725 tcs{&i2c};
     tcs.init({}).examine();
@@ -26,7 +28,11 @@ void tcs34725_tb(OutputStream & logger, hal::I2c & i2c){
 void tcs34725_main(){
     DEBUGGER_INST.init({576000});
     DEBUGGER.retarget(&DEBUGGER_INST);
-    I2cSw i2c{&hal::PD<0>(), &hal::PD<1>()};
+
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+
+    I2cSw i2c{&scl_gpio_, &sda_gpio_};
     i2c.init(100000);
     tcs34725_tb(DEBUGGER, i2c);
 }

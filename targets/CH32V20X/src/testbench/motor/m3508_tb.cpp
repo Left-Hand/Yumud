@@ -18,7 +18,7 @@ using namespace ymd::robots;
 void m3508_main(){
     static constexpr size_t CB_FREQ = 200;
 
-    auto & led = hal::PC<14>();
+    auto led = hal::PC<14>();
     led.outpp(HIGH);
 
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);

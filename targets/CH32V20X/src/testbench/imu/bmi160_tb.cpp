@@ -29,15 +29,16 @@ void bmi160_main(){
 
     using Quat = Quat<real_t>;
     
+    auto bmi_cs_gpio_ = hal::PA<0>();
     BMI160 bmi{{
         &spi1, 
-        spi1.allocate_cs_gpio(&hal::PA<0>()).unwrap()
+        spi1.allocate_cs_gpio(&bmi_cs_gpio_).unwrap()
     }};
 
 
-    auto & ledr = hal::PC<13>();
-    auto & ledb = hal::PC<14>();
-    auto & ledg = hal::PC<15>();
+    auto ledr = hal::PC<13>();
+    auto ledb = hal::PC<14>();
+    auto ledg = hal::PC<15>();
 
     ledr.outpp(); 
     ledb.outpp(); 

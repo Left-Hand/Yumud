@@ -49,7 +49,7 @@ public:
     void set_oc_mode(const Mode mode);
     void enable_cvr_sync(const Enable en);
     
-    Option<Gpio &> io();
+    Gpio io();
 
     __fast_inline volatile uint16_t & cvr() {return cvr_;}
     __fast_inline volatile uint16_t & arr() {return arr_;}
@@ -74,7 +74,7 @@ public:
 
     void init(const TimerOcnPwmConfig & cfg);
 
-    Option<Gpio &> io();
+    Gpio io();
 };
 
 

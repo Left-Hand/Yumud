@@ -121,7 +121,9 @@ void mmc5983_main(){
     DEBUGGER.force_sync(EN);
 
     // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
-    I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+    I2cSw i2c{&scl_gpio_, &sda_gpio_};
     // i2c.init(400_KHz);
     // i2c.init();
     

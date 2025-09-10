@@ -549,9 +549,10 @@ void render_main(){
 
     spi.init({144_MHz});
     
-
+    auto scl_gpio = hal::PB<3>();
+    auto sda_gpio = hal::PB<5>();
     
-    hal::I2cSw i2c{&hal::PB<3>(), &hal::PB<5>()};
+    hal::I2cSw i2c{&scl_gpio, &sda_gpio};
     i2c.init(400_KHz);
 
     drivers::QMC5883L qmc{&i2c};
@@ -560,13 +561,14 @@ void render_main(){
     
 
 
-    auto & lcd_blk = hal::PD<0>();
+    auto lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_dc = hal::PD<7>();
-    auto & dev_rst = hal::PB<7>();
+    auto lcd_dc = hal::PD<7>();
+    auto dev_rst = hal::PB<7>();
+    auto lcd_cs = hal::PD<4>();
 
-    const auto spi_fd = spi.allocate_cs_gpio(&hal::PD<4>()).unwrap();
+    const auto spi_fd = spi.allocate_cs_gpio(&lcd_cs).unwrap();
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 

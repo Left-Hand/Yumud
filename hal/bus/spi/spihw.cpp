@@ -28,8 +28,8 @@ void SpiHw::enable_rcc(const Enable en){
     }
 }
 
-Gpio & SpiHw::get_mosi_gpio(){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+Gpio map_inst_to_mosi_gpio(const void * inst){
+    switch(reinterpret_cast<uint32_t>(inst)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_SPI1
@@ -49,8 +49,8 @@ Gpio & SpiHw::get_mosi_gpio(){
     }
 }
 
-Gpio & SpiHw::get_miso_gpio(){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+Gpio map_inst_to_miso_gpio(const void * inst){
+    switch(reinterpret_cast<uint32_t>(inst)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_SPI1
@@ -70,8 +70,8 @@ Gpio & SpiHw::get_miso_gpio(){
     }
 }
 
-Gpio & SpiHw::get_sclk_gpio(){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+Gpio map_inst_to_sclk_gpio(const void * inst){
+    switch(reinterpret_cast<uint32_t>(inst)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_SPI1
@@ -91,8 +91,8 @@ Gpio & SpiHw::get_sclk_gpio(){
     }
 }
 
-Gpio & SpiHw::get_hw_cs_gpio(){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+Gpio map_inst_to_hw_cs_gpio(const void * inst){
+    switch(reinterpret_cast<uint32_t>(inst)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_SPI1
@@ -112,48 +112,38 @@ Gpio & SpiHw::get_hw_cs_gpio(){
     }
 }
 
+Gpio SpiHw::get_mosi_gpio(){
+    return map_inst_to_mosi_gpio(inst_);
+}
+Gpio SpiHw::get_miso_gpio(){
+    return map_inst_to_miso_gpio(inst_);
+}
+Gpio SpiHw::get_sclk_gpio(){
+    return map_inst_to_sclk_gpio(inst_);
+}
+Gpio SpiHw::get_hw_cs_gpio(){
+    return map_inst_to_hw_cs_gpio(inst_);
+}
 
 void SpiHw::install_gpios(){
     if(tx_strategy_ != CommStrategy::Nil){
-        Gpio & mosi_pin = get_mosi_gpio();
+        auto mosi_pin = get_mosi_gpio();
         mosi_pin.afpp();
     }
 
     if(rx_strategy_ != CommStrategy::Nil){
-        Gpio & miso_pin = get_miso_gpio();
+        auto miso_pin = get_miso_gpio();
         miso_pin.inflt();
     }
 
     {
-        Gpio & sclk_pin = get_sclk_gpio();
+        auto sclk_pin = get_sclk_gpio();
         sclk_pin.afpp();
     }
-
-
-    // if(cs_port_.is_nth_available(0_nth) == true){
-    //     Gpio & cs_gpio = get_hw_cs_gpio();
-    //     cs_gpio.set();
-    //     if(hw_cs_enabled_){
-    //         cs_gpio.afpp();
-    //     }else{
-    //         cs_gpio.outpp();
-    //     }
-    //     bind_cs_gpio(&cs_gpio, 0);
-    // }
-
-    // DEBUG_PRINTLN(std::span(cs_port_.begin(), 4));
-    // for(auto p_io = cs_port_.begin(); p_io != cs_port_.end(); p_io = std::next(p_io)){
-        // if(p_io != nullptr){
-            // p_io -> outpp();
-            // DEBUG_PRINTLN(reinterpret_cast<size_t>(p_io));
-        // }
-    // }
-
-    // while(true);
 }
 
 void SpiHw::enable_hw_cs(const Enable en){
-    Gpio & cs_gpio = get_hw_cs_gpio();
+    auto cs_gpio = get_hw_cs_gpio();
     cs_gpio.set();
 
     if(en == EN){

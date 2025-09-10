@@ -50,23 +50,23 @@ void GpioPort::init(){
 
 namespace ymd::hal{
 #ifdef ENABLE_GPIOA
-GpioPort portA{GPIOA};
+// GpioPort portA{GPIOA};
 #endif
 
 #ifdef ENABLE_GPIOB
-GpioPort portB{GPIOB};
+// GpioPort portB{GPIOB};
 #endif
 
 #ifdef ENABLE_GPIOC
-GpioPort portC{GPIOC};
+// GpioPort portC{GPIOC};
 #endif
 
 #ifdef ENABLE_GPIOD
-GpioPort portD{GPIOD};
+// GpioPort portD{GPIOD};
 #endif
 
 #ifdef ENABLE_GPIOE
-GpioPort portE{GPIOE};
+// GpioPort portE{GPIOE};
 #endif
 
 }

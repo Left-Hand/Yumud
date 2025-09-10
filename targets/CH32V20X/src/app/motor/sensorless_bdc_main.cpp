@@ -183,7 +183,7 @@ void at8222_tb(){
     real_t trackin_sig = 0;
     real_t volt = 0;
 
-    auto & watch_gpio = hal::PA<3>();
+    auto watch_gpio = hal::PA<3>();
     watch_gpio.outpp();
 
     

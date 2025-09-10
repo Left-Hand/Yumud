@@ -132,7 +132,7 @@ void sincos_pwm_main(){
 
     auto & inj = adc1.inj<1>();
 
-    auto & trig_gpio = hal::PC<13>();
+    auto trig_gpio = hal::PC<13>();
     trig_gpio.outpp();
 
     adc1.attach(AdcIT::JEOC, {0,0}, [&]{

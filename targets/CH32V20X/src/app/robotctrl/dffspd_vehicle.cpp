@@ -247,11 +247,11 @@ void diffspd_vehicle_main(){
         auto & LEFT_PWM = timer.oc<1>();
         auto & RIGHT_PWM = timer.oc<2>();
 
-        auto & LEFT_FG_GPIO = hal::PA<5>();
-        auto & RIGHT_FG_GPIO = hal::PB<1>();
+        auto LEFT_FG_GPIO = hal::PA<5>();
+        auto RIGHT_FG_GPIO = hal::PB<1>();
 
-        auto & LEFT_DIR_GPIO = hal::PA<1>();
-        auto & RIGHT_DIR_GPIO = hal::PB<8>();
+        auto LEFT_DIR_GPIO = hal::PA<1>();
+        auto RIGHT_DIR_GPIO = hal::PB<8>();
         
         init_pwm(LEFT_PWM);
         init_pwm(RIGHT_PWM);
@@ -275,8 +275,8 @@ void diffspd_vehicle_main(){
         auto & POS_PWM = timer.oc<1>();
         auto & NEG_PWM = timer.oc<2>();
 
-        auto & POS_FG_GPIO = hal::PA<0>();
-        auto & NEG_FG_GPIO = hal::PA<1>();
+        auto POS_FG_GPIO = hal::PA<0>();
+        auto NEG_FG_GPIO = hal::PA<1>();
         
         init_pwm(POS_PWM);
         init_pwm(NEG_PWM);

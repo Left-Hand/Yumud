@@ -16,5 +16,6 @@ void gpio_tb(hal::GpioIntf & gpio){
 }
 
 void gpio_main(){
-    gpio_tb(hal::PC<13>());
+    auto gpio = hal::PC<13>();
+    gpio_tb(gpio);
 }

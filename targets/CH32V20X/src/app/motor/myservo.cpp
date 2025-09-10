@@ -209,7 +209,7 @@ void myservo_main(){
 
 
     // auto & led = hal::PD<0>();
-    auto & led = hal::PB<8>();
+    auto led = hal::PB<8>();
     led.outpp(HIGH);
 
     // {
@@ -256,8 +256,8 @@ void myservo_main(){
 
     auto & can = can1;
 
-    auto & mode1_gpio   = hal::PB<1>();
-    auto & phase_gpio   = hal::PA<7>();
+    auto mode1_gpio   = hal::PB<1>();
+    auto phase_gpio   = hal::PA<7>();
     // auto & en_gpio      = hal::PA<6>();
     // auto & mode2_gpio   = hal::PA<5>();
     phase_gpio.outpp();

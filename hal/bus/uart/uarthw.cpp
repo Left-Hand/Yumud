@@ -213,8 +213,8 @@ void UartHw::on_rxidle_interrupt(){
 }
 
 
-Gpio & UartHw::rxio(){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+Gpio map_uart_to_rxio(const void * inst){
+    switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef ENABLE_UART1
         case USART1_BASE:
             return UART1_RX_GPIO;
@@ -252,8 +252,8 @@ Gpio & UartHw::rxio(){
     }
 }
 
-Gpio & UartHw::txio(){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+Gpio map_uart_to_txio(const void * inst){
+    switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef ENABLE_UART1
         case USART1_BASE:
             return UART1_TX_GPIO;
@@ -289,6 +289,14 @@ Gpio & UartHw::txio(){
         default:
             __builtin_unreachable();
     }
+}
+
+
+Gpio UartHw::txio(){
+    return map_uart_to_txio(inst_);
+}
+Gpio UartHw::rxio(){
+    return map_uart_to_rxio(inst_);
 }
 
 void UartHw::enable_it(const Enable en){
@@ -413,11 +421,11 @@ void UartHw::invoke_tx_dma(){
 void UartHw::set_tx_strategy(const CommStrategy tx_strategy){
     if(tx_strategy_ == tx_strategy) return;
 
-    Gpio & tx_pin = txio();
+    auto tx_gpio = txio();
     if(tx_strategy != CommStrategy::Nil){
-        tx_pin.afpp();
+        tx_gpio.afpp();
     }else{
-        // tx_pin.inflt();
+        // tx_gpio.inflt();
     }
 
     switch(tx_strategy){
@@ -441,9 +449,9 @@ void UartHw::set_tx_strategy(const CommStrategy tx_strategy){
 void UartHw::set_rx_strategy(const CommStrategy rx_strategy){
     if(rx_strategy_ == rx_strategy) return;
         
-    Gpio & rx_pin = rxio();
+    auto rx_gpio = rxio();
     if(bool(rx_strategy)){
-        rx_pin.inpu();
+        rx_gpio.inpu();
     }
 
     switch(rx_strategy){

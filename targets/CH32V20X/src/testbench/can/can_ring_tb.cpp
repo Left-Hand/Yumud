@@ -20,7 +20,7 @@ void can_ring_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
     
-    auto & led = hal::PC<14>();
+    auto led = hal::PC<14>();
     led.outpp(HIGH);
 
     auto & can = hal::can1;

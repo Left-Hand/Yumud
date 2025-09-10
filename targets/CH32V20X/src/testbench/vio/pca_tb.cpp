@@ -13,8 +13,14 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
+#define SCL_GPIO hal::PD<2>()
+#define SDA_GPIO hal::PC<12>()
+
 void pca_tb(OutputStream & logger){
-    I2cSw i2c = {&hal::PD<2>(), &hal::PC<12>()};
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+
+    I2cSw i2c{&scl_gpio_, &sda_gpio_};
 
     static constexpr int servo_freq = 50;
     

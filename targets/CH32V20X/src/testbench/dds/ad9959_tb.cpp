@@ -8,6 +8,7 @@
 using namespace ymd;
 using namespace ymd::hal;
 
+#if 0
 void ad9959_main(){
     auto & cs_gpio = hal::PA<0>();
 
@@ -31,3 +32,5 @@ void ad9959_main(){
     // AD9959 ad9959{ad9959_drv};
     // ad9959.init();
 }
+
+#endif

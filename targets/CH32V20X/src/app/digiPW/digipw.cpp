@@ -117,8 +117,8 @@ void digipw_main(){
     /*-----------------------*/
 
     // test_sogi();
-    auto & scl_gpio = PB<15>();
-    auto & sda_gpio = PB<14>();
+    auto scl_gpio = PB<15>();
+    auto sda_gpio = PB<14>();
     
     I2cSw i2csw{&scl_gpio, &sda_gpio};
     i2csw.init(1000000);
@@ -144,8 +144,8 @@ void digipw_main(){
     pwmn.init({});
 
     pwm.enable_cvr_sync(EN);
-    auto & en_gpio = PB<0>();
-    auto & led = PA<7>();
+    auto en_gpio = PB<0>();
+    auto led = PA<7>();
 
     en_gpio.outpp();
     led.outpp();

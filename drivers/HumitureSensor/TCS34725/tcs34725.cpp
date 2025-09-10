@@ -96,9 +96,9 @@ IResult<> TCS34725::set_wait_time(const Milliseconds ms){
             res.is_err()) return Err(res.unwrap_err());
     }
 
-    if(long_wait_flag){
+    {
         auto reg = RegCopy(long_wait_reg);
-        reg.waitLong = true;
+        reg.waitLong = long_wait_flag;
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }

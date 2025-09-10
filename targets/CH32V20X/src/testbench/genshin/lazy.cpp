@@ -561,7 +561,7 @@ void lazy_main() {
     DEBUGGER.force_sync(EN);
 
     // auto & led = hal::PD<0>();
-    auto & led = hal::PB<8>();
+    auto led = hal::PB<8>();
     led.outpp();
     while(true){
         led = HIGH;

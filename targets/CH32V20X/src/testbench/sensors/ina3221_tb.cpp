@@ -28,8 +28,9 @@ void ina3221_main(){
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets(EN);
 
-    
-    auto i2c = hal::I2cSw(&SCL_GPIO, &SDA_GPIO);
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+    auto i2c = hal::I2cSw(&scl_gpio_, &sda_gpio_);
     i2c.init(1200_KHz);
 
     INA3221 ina{&i2c};

@@ -188,7 +188,7 @@ public:
         });
 
         pwm_trig_.set_dutycycle(TWO_BY_3);
-        test_gpio.outpp();
+        // test_gpio.outpp();
         timer_.enable(EN);
     }
 
@@ -196,9 +196,9 @@ public:
 
     template<typename UvwDutycycle>
     __no_inline void set_dutycycle(const UvwDutycycle dutycycle){
-        duty_cmd_shadow_[0] = dutycycle[0];
-        duty_cmd_shadow_[1] = dutycycle[1];
-        duty_cmd_shadow_[2] = dutycycle[2];
+        dutycycle_cmd_shadow_[0] = dutycycle[0];
+        dutycycle_cmd_shadow_[1] = dutycycle[1];
+        dutycycle_cmd_shadow_[2] = dutycycle[2];
     }
 
     void set_freq(const uint32_t freq){
@@ -212,7 +212,7 @@ public:
     void static_test();
 
     void on_update_isr(){
-        test_gpio.clr();
+        // test_gpio.clr();
 
         const auto tim_arr = timer_.arr();
         const auto tim_cnt = timer_.cnt();
@@ -231,16 +231,16 @@ public:
         trig_occasion_opt_ = Some(curr_occasion);
 
         if(is_on_top){
-            duty_cmd_[0] = duty_cmd_shadow_[0];
-            duty_cmd_[1] = duty_cmd_shadow_[1];
-            duty_cmd_[2] = duty_cmd_shadow_[2];
+            duty_cmd_[0] = dutycycle_cmd_shadow_[0];
+            duty_cmd_[1] = dutycycle_cmd_shadow_[1];
+            duty_cmd_[2] = dutycycle_cmd_shadow_[2];
         }
 
-        test_gpio.set();
+        // test_gpio.set();
     }
 
     void on_ch4_isr(){
-        test_gpio.clr();
+        // test_gpio.clr();
 
         if(trig_occasion_opt_.is_none()) return;
 
@@ -268,7 +268,7 @@ public:
         set_pwm_shift_120(pwm_v_, duty_cmd_[1], curr_occasion, tim_arr);
         set_pwm_shift_240(pwm_w_, duty_cmd_[2], curr_occasion, tim_arr);
 
-        test_gpio.set();
+        // test_gpio.set();
     }
 
 private:
@@ -282,10 +282,10 @@ private:
     hal::TimerOCN & pwm_vn_;
     hal::TimerOCN & pwm_wn_;
 
-    hal::Gpio & test_gpio = hal::PA<12>();
+    // hal::Gpio & test_gpio = hal::PA<12>();
 
     Option<TrigOccasion> trig_occasion_opt_ = None;
-    Duty duty_cmd_shadow_ = {0.0_r, 0.0_r, 0.0_r};
+    Duty dutycycle_cmd_shadow_ = {0.0_r, 0.0_r, 0.0_r};
     Duty duty_cmd_ = {0.0_r, 0.0_r, 0.0_r};
 
     static void set_pwm_shift_120(

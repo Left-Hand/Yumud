@@ -84,31 +84,10 @@ void i2c_scanner_main(){
     });
     DEBUGGER.retarget(&UART);
     // DEBUGGER.force_sync();
-    
-    I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+    I2cSw i2c{&scl_gpio_, &sda_gpio_};
     i2c.init(100_KHz);
-    
-    // auto data = std::vector{1, 2, 3};
-    // 遍历时打印每个元�?
-    // for (int n : data | log("Value: ")) { /* ... */ }
-    // 输出�?
-    // Value: 1
-    // Value: 2
-    // Value: 3
-
-    namespace views = std::views;
-    std::vector<int> data { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    auto result = data
-       | views::filter([](const auto& value) { return value % 2 == 0; })/* 2 4 6 8 10 */
-       | views::transform([](const auto& value) { return value * 2; })/* 4 8 12 16 20 */
-       | views::drop(2)                                                 /* 12 16 20 */
-       | views::reverse                                                 /* 20 16 12 */
-    //    | views::transform([](int i) { return to_string(i); })           /* "20" "16" "12" */
-    ;
-
-    for(const auto item:result){
-        DEBUG_PRINTLN(item);
-    }
 
 
     DEBUG_PRINTLN();

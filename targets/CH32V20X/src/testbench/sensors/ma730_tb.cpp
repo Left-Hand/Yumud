@@ -22,8 +22,8 @@ void ma730_main(){
 
     auto & spi = hal::spi1;
     spi.init({9_MHz});
-
-    MA730 ma730{&spi, spi.allocate_cs_gpio(&hal::PA<15>()).examine()};
+    auto spi_cs_gpio_ = hal::PA<15>();
+    MA730 ma730{&spi, spi.allocate_cs_gpio(&spi_cs_gpio_).examine()};
     ma730.init({
         .direction = CW
     }).examine();

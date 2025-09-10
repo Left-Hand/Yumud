@@ -14,7 +14,7 @@ using namespace ymd;
 void m2006_main(){
     // static constexpr size_t cb_freq = 200;
 
-    auto & led = hal::PC<14>();
+    auto led = hal::PC<14>();
     led.outpp(HIGH);
 
     // DEBUGGER_INST.init(576000, CommStrategy::Blocking);

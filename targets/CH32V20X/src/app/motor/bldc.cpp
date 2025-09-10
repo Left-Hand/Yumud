@@ -136,13 +136,15 @@ void bldc_main(){
     auto & can = hal::can1;
     auto & adc = hal::adc1;
 
-    auto & led_blue_gpio_ = hal::PC<13>();
-    auto & led_red_gpio_ = hal::PC<14>();
-    auto & led_green_gpio_ = hal::PC<15>();
+    auto led_blue_gpio_ = hal::PC<13>();
+    auto led_red_gpio_ = hal::PC<14>();
+    auto led_green_gpio_ = hal::PC<15>();
 
-    auto & mp6540_en_gpio_ = hal::PB<15>();
-    auto & mp6540_nslp_gpio_ = hal::PB<14>();
-    auto & mp6540_nfault_gpio_ = hal::PA<7>();
+    auto mp6540_en_gpio_ = hal::PB<15>();
+    auto mp6540_nslp_gpio_ = hal::PB<14>();
+    auto mp6540_nfault_gpio_ = hal::PA<7>();
+
+    auto ma730_cs_gpio_ = hal::PA<15>();
 
     auto & pwm_u = timer1.oc<1>();
     auto & pwm_v = timer1.oc<2>();
@@ -194,9 +196,10 @@ void bldc_main(){
     });
 
 
+
     MA730 ma730_{
         &spi,
-        spi.allocate_cs_gpio(&hal::PA<15>())
+        spi.allocate_cs_gpio(&ma730_cs_gpio_)
             .unwrap()
     };
 

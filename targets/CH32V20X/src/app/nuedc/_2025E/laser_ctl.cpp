@@ -52,7 +52,7 @@ void laser_ctl_main(){
     );
 
 
-    auto & led = hal::PB<8>();
+    auto led = hal::PB<8>();
     led.outpp(HIGH);
 
     auto set_led = [&](const bool l){
@@ -63,8 +63,8 @@ void laser_ctl_main(){
     };
 
 
-    [[maybe_unused]] auto & mode1_gpio   = hal::PB<1>();
-    [[maybe_unused]] auto & phase_gpio   = hal::PA<7>();
+    [[maybe_unused]] auto mode1_gpio   = hal::PB<1>();
+    [[maybe_unused]] auto phase_gpio   = hal::PA<7>();
     phase_gpio.outpp();
 
 

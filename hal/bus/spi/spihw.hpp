@@ -80,10 +80,10 @@ private:
     chip::SPI_Def * inst_ = nullptr;
     bool hw_cs_enabled_ = false;
 
-    Gpio & get_mosi_gpio();
-    Gpio & get_miso_gpio();
-    Gpio & get_sclk_gpio();
-    Gpio & get_hw_cs_gpio();
+    Gpio get_mosi_gpio();
+    Gpio get_miso_gpio();
+    Gpio get_sclk_gpio();
+    Gpio get_hw_cs_gpio();
 
     uint32_t get_bus_freq() const;
 

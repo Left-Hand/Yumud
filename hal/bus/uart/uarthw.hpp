@@ -96,8 +96,8 @@ public:
 
     void set_rx_strategy(const CommStrategy rx_strategy);
 
-    Gpio & txio();
-    Gpio & rxio();
+    Gpio txio();
+    Gpio rxio();
 
     #ifdef ENABLE_UART1
     friend void ::USART1_IRQHandler();

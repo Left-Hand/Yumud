@@ -20,6 +20,10 @@ struct UvwCoord{
         return *(&u + idx);
     }
 
+    constexpr T numeric_sum() const {
+        return u + v + w;
+    }
+
     friend OutputStream & operator << (OutputStream & os, const UvwCoord & self){
         return os << os.brackets<'('>() << 
             self.u << os.splitter() << 

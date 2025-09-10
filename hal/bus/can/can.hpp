@@ -130,8 +130,8 @@ private:
 
     bool blocking_write_en_ = false;
 
-    Gpio & get_tx_gpio(const uint8_t remap);
-    Gpio & get_rx_gpio(const uint8_t remap);
+    Gpio get_tx_gpio(const uint8_t remap);
+    Gpio get_rx_gpio(const uint8_t remap);
 
     void install_gpio(const uint8_t remap);
     void enable_rcc(const uint8_t remap);

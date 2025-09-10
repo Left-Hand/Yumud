@@ -356,7 +356,9 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
 }
 
 [[maybe_unused]] static void eeprom_tb(){
-    hal::I2cSw i2c_sw{&hal::PD<1>(), &hal::PD<0>()};
+    auto scl_gpio = hal::PD<1>();
+    auto sda_gpio = hal::PD<0>();
+    hal::I2cSw i2c_sw{&scl_gpio, &sda_gpio};
     i2c_sw.init(800_KHz);
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 
@@ -390,8 +392,8 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     clock::delay(400ms);
 
     {
-        hal::Gpio & ena_gpio = hal::PB<0>();
-        hal::Gpio & enb_gpio = hal::PA<7>();
+        hal::Gpio ena_gpio = hal::PB<0>();
+        hal::Gpio enb_gpio = hal::PA<7>();
         ena_gpio.outpp(HIGH);
         enb_gpio.outpp(HIGH);
     }
@@ -456,7 +458,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     auto & inj_a = adc.inj<1>();
     auto & inj_b = adc.inj<2>();
 
-    auto & isr_trig_gpio = hal::PC<13>();
+    auto isr_trig_gpio = hal::PC<13>();
     isr_trig_gpio.outpp();
 
     real_t a_curr;
@@ -507,8 +509,8 @@ void mystepper_main(){
     // currentloop_tb();
 
     {
-        hal::Gpio & ena_gpio = hal::PB<0>();
-        hal::Gpio & enb_gpio = hal::PA<7>();
+        hal::Gpio ena_gpio = hal::PB<0>();
+        hal::Gpio enb_gpio = hal::PA<7>();
         ena_gpio.outpp(HIGH);
         enb_gpio.outpp(HIGH);
     }
@@ -548,9 +550,10 @@ void mystepper_main(){
 
     auto & inj_a = adc.inj<1>();
     auto & inj_b = adc.inj<2>();
+    auto ma730_cs_gpio_ = hal::PA<15>();
 
-    [[maybe_unused]] auto & isr_trig_gpio = hal::PC<13>();
-    [[maybe_unused]] auto & PROGRAM_FAULT_LED = hal::PC<14>();
+    [[maybe_unused]] auto isr_trig_gpio = hal::PC<13>();
+    [[maybe_unused]] auto PROGRAM_FAULT_LED = hal::PC<14>();
 
     isr_trig_gpio.outpp();
 
@@ -578,7 +581,7 @@ void mystepper_main(){
 
     drivers::MT6816 encoder{
         &spi, 
-        spi.allocate_cs_gpio(&hal::PA<15>()).unwrap()
+        spi.allocate_cs_gpio(&ma730_cs_gpio_).unwrap()
     };
 
 
