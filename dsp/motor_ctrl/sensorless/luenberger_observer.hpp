@@ -38,8 +38,8 @@ public:
     // static constexpr double l1 = -20000;
     // static constexpr double l2 = 52000;
 
-    static constexpr double R = 8.7;
-    static constexpr double L = 0.64E-3;
+    static constexpr double R = 10.0;
+    static constexpr double L = 2.64E-3;
     static constexpr double l1 = -22000;
     static constexpr double l2 = 64000;
     // static constexpr double l1 = -18000;

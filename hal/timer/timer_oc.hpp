@@ -125,9 +125,9 @@ public:
 
         if(is_negative){
             pos_oc_.set_dutycycle(zero_value);
-            neg_oc_.set_dutycycle(abs_value);
+            neg_oc_.set_dutycycle(abs_value );
         }else{
-            pos_oc_.set_dutycycle(abs_value);
+            pos_oc_.set_dutycycle(abs_value );
             neg_oc_.set_dutycycle(zero_value);
         }
     }

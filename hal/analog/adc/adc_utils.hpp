@@ -39,14 +39,14 @@ enum class AdcError:uint8_t{
 };
 
 enum class AdcSampleCycles:uint8_t{
-    T1_5,
-    T7_5,
-    T13_5,
-    T28_5,
-    T41_5,
-    T55_5,
-    T71_5,
-    T239_5
+    T1_5   = 0b000,
+    T7_5   = 0b001,
+    T13_5  = 0b010,
+    T28_5  = 0b011,
+    T41_5  = 0b100,
+    T55_5  = 0b101,
+    T71_5  = 0b110,
+    T239_5 = 0b111
 };
 
 enum class AdcPga:uint8_t{

@@ -12,7 +12,7 @@
 
 
 static constexpr size_t CHOP_FREQ = 15_KHz;
-static constexpr size_t ISR_FREQ = CHOP_FREQ * 2;
+static constexpr size_t ISR_FREQ = CHOP_FREQ;
 
 namespace ymd{
 

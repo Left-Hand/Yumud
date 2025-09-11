@@ -518,7 +518,8 @@ void mystepper_main(){
 
     timer.init({
         .freq = CHOP_FREQ,
-        .mode = hal::TimerCountMode::CenterAlignedDownTrig
+        // .mode = hal::TimerCountMode::CenterAlignedDownTrig
+        .mode = hal::TimerCountMode::CenterAlignedDualTrig
     }, EN);
 
     timer.enable_arr_sync(EN);
@@ -563,16 +564,27 @@ void mystepper_main(){
             
             if(is_a){
                 alpha_beta_curr.alpha = inj_a.get_value();
-                // adc.set_injected_channels({
-                //     {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
-                //     {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
-                // });
+
+                // adc.init(
+                //     {
+                //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+                //     },{
+                //         {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
+                //         {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+                //     },
+                //     {}
+                // );
             }else{
                 alpha_beta_curr.beta = inj_b.get_value();
-                // adc.set_injected_channels({
-                //     {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
-                //     {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
-                // });
+                // adc.init(
+                //     {
+                //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+                //     },{
+                //         {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+                //         {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
+                //     },
+                //     {}
+                // );
             }
         },
         EN
@@ -603,8 +615,8 @@ void mystepper_main(){
         hal::TimerIT::Update, 
         {0,0}, 
         [&](){
-            const auto t = clock::time();
-            const auto [s,c] = sincospu(0_r);
+            [[maybe_unused]] const auto ctime = clock::time();
+            const auto [s,c] = sincospu(10 * ctime);
             constexpr auto mag = 0.3_r;
             pwm_gen_.set_dutycycle({
                 c * mag,
@@ -620,9 +632,9 @@ void mystepper_main(){
 
     while(true){
         DEBUG_PRINTLN_IDLE(
-            alpha_beta_curr,
-            30 * alpha_beta_curr.length_squared(),
-            ADC1->IDATAR2
+            alpha_beta_curr
+            // 30 * alpha_beta_curr.length_squared(),
+            // ADC1->IDATAR2
         );
     }
 }

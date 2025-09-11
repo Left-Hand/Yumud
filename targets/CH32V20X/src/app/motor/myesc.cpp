@@ -99,6 +99,41 @@ std::array<T, N> ones(const T value){
     return ret;
 }
 
+struct PiCurrentCtrl {
+    struct Config {
+        uint32_t fs;                 // 采样频率 (Hz)
+        uint32_t fc;                 // 截止频率/带宽 (Hz)
+        q20 phase_inductance;        // 相电感 (H)
+        q20 phase_resistance;        // 相电阻 (Ω)
+        q20 max_volt;                // 最大电压 (V)
+    };
+
+    explicit constexpr PiCurrentCtrl(const Config& cfg) {
+        reconf(cfg);
+    }
+
+    constexpr void reconf(const Config& cfg) {
+        max_volt_ = cfg.max_volt;
+        q8 omega_bw = q8(q16(TAU) * cfg.fc);
+        kp_ = cfg.phase_inductance * omega_bw;
+        ki_discrete_ = q12(cfg.phase_resistance) * omega_bw / cfg.fs;
+        err_sum_max_ = max_volt_ / ki_discrete_;
+        err_sum_ = q20(0);
+    }
+
+    constexpr auto operator()(const q20 err) {
+        q20 output = CLAMP2(kp_ * err + ki_discrete_ * err_sum_, max_volt_);
+        err_sum_ = CLAMP(err_sum_ + err, -max_volt_ - output , max_volt_ - output);
+        return output;
+    }
+
+    q20 kp_;                // 比例系数
+    q20 ki_discrete_;       // 离散化积分系数（Ki * Ts）
+    q20 max_volt_;          // 最大输出电压限制
+    q20 err_sum_max_;       // 积分项最大限制（抗饱和）
+    q20 err_sum_;           // 误差积分累加器
+};
+
 
 void myesc_main(){
     DEBUG_UART.init({DEBUG_UART_BAUD});
@@ -161,31 +196,31 @@ void myesc_main(){
 
     timer1.oc<4>().enable_output(EN);
 
-    auto mode_gpio = hal::PB<4>();
-    auto vds_gpio = hal::PB<3>();
-    auto idrive_gpio = hal::PB<5>();
-    auto gain_gpio = hal::PA<15>();
-
-    //6xpwm
-    // mode_gpio.outpp(LOW);
-    
-    //inde
-    mode_gpio.outpp(HIGH);
-
-    // gain_gpio.outpp(LOW);
-    // gain_gpio.outpp(LOW);
-    gain_gpio.inpd();
+    auto drv8323_mode_gpio_      = hal::PB<4>();
+    auto drv8323_vds_gpio_       = hal::PB<3>();
+    auto drv8323_idrive_gpio_    = hal::PB<5>();
+    auto drv8323_gain_gpio_      = hal::PA<15>();
 
 
-    idrive_gpio.outpp(HIGH);
-    // idrive_gpio.inflt();
-    // idrive_gpio.inpu();
+    drv8323_mode_gpio_.outpp(LOW);      //6x pwm
+    // drv8323_mode_gpio_.outpp(HIGH);    //independent
+
+    // drv8323_gain_gpio_.outpp(LOW);
+    // drv8323_gain_gpio_.outpp(LOW);
+    drv8323_gain_gpio_.inpd();//20x
+    // drv8323_gain_gpio_.outpp(HIGH);//40x
 
 
-    vds_gpio.outpp(LOW);
+    drv8323_idrive_gpio_.outpp(HIGH);//Sink 2A / Source1A
+
+    // drv8323_idrive_gpio_.inflt();
+    // drv8323_idrive_gpio_.inpu();
+
+
+    drv8323_vds_gpio_.outpp(LOW);
 
     //dangerous no ocp protect!!!!
-    // vds_gpio.outpp(HIGH);
+    // drv8323_vds_gpio_.outpp(HIGH);
 
     // mosdrv.init({}).examine();
 
@@ -217,12 +252,40 @@ void myesc_main(){
     auto nfault_gpio = hal::PA<6>();
     nfault_gpio.inpu();
 
+    // static constexpr auto phase_inductance = 0.00275_q20;
+    // static constexpr auto phase_resistance = 10_q20;
+
+    static constexpr auto PHASE_INDUCTANCE = 0.00275_q20;
+    static constexpr auto PHASE_RESISTANCE = 10_q20;
+    static constexpr uint32_t CURRENT_LOOP_BW = 1000;
+    static constexpr auto MAX_MODU_VOLT = q16(6.5);
+
+    auto d_pi_ctrl_ = PiCurrentCtrl{PiCurrentCtrl::Config{
+            .fs = 32000,                 // 采样频率 (Hz)
+            .fc = CURRENT_LOOP_BW,                 // 截止频率/带宽 (Hz)
+            .phase_inductance = PHASE_INDUCTANCE,        // 相电感 (H)
+            .phase_resistance = PHASE_RESISTANCE,        // 相电阻 (Ω)
+            .max_volt = MAX_MODU_VOLT,                // 最大电压 (V)
+        }
+    };
+
+    auto q_pi_ctrl_ = PiCurrentCtrl{PiCurrentCtrl::Config{
+            .fs = 32000,                 // 采样频率 (Hz)
+            .fc = CURRENT_LOOP_BW,                 // 截止频率/带宽 (Hz)
+            .phase_inductance = PHASE_INDUCTANCE,        // 相电感 (H)
+            .phase_resistance = PHASE_RESISTANCE,        // 相电阻 (Ω)
+            .max_volt = MAX_MODU_VOLT,                // 最大电压 (V)
+        }
+    };
+
     auto sensorless_ob = dsp::motor_ctl::NonlinearFluxObserver{
         dsp::motor_ctl::NonlinearFluxObserver::Config{
-        .phase_inductance = 0.001_q20,
-        .phase_resistance = 4_q20,
-        .observer_gain = 0.05_q20, // [rad/s]
+        .phase_inductance = PHASE_INDUCTANCE,
+        .phase_resistance = PHASE_RESISTANCE,
+        // .observer_gain = 0.05_q20, // [rad/s]
+        .observer_gain = 0.06_q20, // [rad/s]
         .pm_flux_linkage = 0.27_q20, // [V / (rad/s)]
+        // .pm_flux_linkage = 0.22_q20, // [V / (rad/s)]
         .freq = 32000,
     }};
     // auto sensorless_ob = dsp::motor_ctl::LuenbergerObserver{{}};
@@ -252,6 +315,7 @@ void myesc_main(){
             .v = sob_.get_value(),
             .w = soc_.get_value(),
         };
+        alpha_beta_curr_ = AlphaBetaCoord<q20>::from_uvw(uvw_curr_);
 
         // const auto p = ctime * 80;
         // const auto p = 60 * sinpu(ctime/4);
@@ -265,7 +329,6 @@ void myesc_main(){
         // const auto mag = 0.06_r;
         static constexpr size_t POLE_PAIRS = 7u;
 
-        [[maybe_unused]] static constexpr auto linear_speed = 2;
         [[maybe_unused]] auto get_position_from_sine_curve = [&]{
             return Angle<q16>::from_turns(
                 // ctime + sin(ctime)
@@ -275,43 +338,55 @@ void myesc_main(){
 
         [[maybe_unused]] auto get_position_from_linear_curve = [&]{
             return Angle<q16>::from_turns(
-                ctime * linear_speed
+                ctime * 1
                 // 0
             );
         };
 
+
+
+
+
+
         const auto openloop_position = get_position_from_linear_curve();
-        const auto openloop_elecrad = openloop_position * POLE_PAIRS;
-        // const auto openloop_elecrad = Angle<q20>::from_turns(0.5_r);
+        const auto openloop_elec_angle = openloop_position * POLE_PAIRS;
+        // const auto openloop_elec_angle = Angle<q20>::from_turns(0.5_r);
+        // const auto elec_angle = openloop_elec_angle;
+        // const auto elec_angle = Angle<q16>(sensorless_ob.angle()) - 10_deg;
+        // const auto elec_angle = Angle<q16>(sensorless_ob.angle()) - 10_deg;
+        // const auto elec_angle = Angle<q16>(sensorless_ob.angle()) + 10_deg;
+        // const auto elec_angle = Angle<q16>(sensorless_ob.angle() + 90_deg);
+        // const auto elec_angle = Angle<q16>(sensorless_ob.angle() - 90_deg);
+        const auto elec_angle = Angle<q16>(sensorless_ob.angle() - 45_deg);
+        // const auto elec_angle = Angle<q16>(sensorless_ob.angle() + 0_deg);
+        // const auto elec_angle = Angle<q16>(sensorless_ob.angle() + 0_deg);
+        dq_curr_ = alpha_beta_curr_.to_dq(elec_angle);
 
 
-        // const auto elecrad = openloop_elecrad;
-        // const auto elecrad = Angle<q16>(sensorless_ob.angle()) - 10_deg;
-        // const auto elecrad = Angle<q16>(sensorless_ob.angle()) - 10_deg;
-        // const auto elecrad = Angle<q16>(sensorless_ob.angle()) + 10_deg;
-        const auto elecrad = Angle<q16>(sensorless_ob.angle() - 30_deg);
-        alpha_beta_curr_ = AlphaBetaCoord<q20>::from_uvw(uvw_curr_);
-        dq_curr_ = alpha_beta_curr_.to_dq(elecrad);
 
-
-        static constexpr auto MAX_MODU_VOLT = q16(3.5);
 
         [[maybe_unused]] auto forward_dq_volt_by_pi_ctrl = [&]{
-            auto dq_volt = dq_volt_;
+            // auto dq_volt = dq_volt_;
 
             // const auto dest_q_volt = sinpu(ctime * 50.8_r) * 0.05_r + 0.25_r;
-            // const auto dest_q_volt = sinpu(ctime * 50.8_r) * 0.05_r + 0.25_r;
+            // const auto dest_q_curr = sinpu(ctime * 2.8_r) * 0.05_r + 0.25_r;
+            const auto dest_q_curr = 0.14_r * sinpu(ctime * 0.2_r);
+            // const auto dest_q_curr = 0.1_r;
 
-            const auto dest_q_curr = 0.15_r;
-            dq_volt.d = dq_volt.d + 0.014_q20 * (0 - dq_curr_.d);
-            dq_volt.q = dq_volt.q + 0.014_q20 * (dest_q_curr - dq_curr_.q);
-            return dq_volt;
+            // const auto dest_q_curr = 0.15_r + 0.1_r ;
+            // dq_volt.d = dq_volt.d + 0.014_q20 * (0 - dq_curr_.d);
+            // dq_volt.q = dq_volt.q + 0.014_q20 * (dest_q_curr - dq_curr_.q);
+            return DqCoord<q20>{
+                .d = d_pi_ctrl_(0 - dq_curr_.d),
+                .q = q_pi_ctrl_(dest_q_curr - dq_curr_.q)
+            };
+            // return dq_volt;
         };
 
         [[maybe_unused]] auto forward_dq_volt_by_constant_voltage = [&]{
             auto dq_volt = dq_volt_;
             dq_volt.d = 0_r;
-            dq_volt.q = 3.1_r;
+            dq_volt.q = 1.3_r;
             return dq_volt;
         };
 
@@ -324,8 +399,8 @@ void myesc_main(){
             return dq_volt;
         };
 
-        // dq_volt_ = (forward_dq_volt_by_pi_ctrl() + speed_compansate_dq_volt()).clamp(MAX_MODU_VOLT);
-        dq_volt_ = forward_dq_volt_by_constant_voltage().clamp(MAX_MODU_VOLT);
+        dq_volt_ = (forward_dq_volt_by_pi_ctrl()).clamp(MAX_MODU_VOLT);
+        // dq_volt_ = forward_dq_volt_by_constant_voltage().clamp(MAX_MODU_VOLT);
 
 
         static constexpr auto INV_BUS_VOLT = q16(1 / 12.0);
@@ -335,8 +410,28 @@ void myesc_main(){
         // const auto MODU_VOLT = 3.5_r + 1 * sinpu(ctime * 0.2_r);
         // const auto MODU_VOLT = ABS(3.4_r * sinpu(ctime * 0.2_r));
 
+        [[maybe_unused]] auto forward_alpha_beta_volt_by_dq_volt = [&]{
+            return (dq_volt_ + speed_compansate_dq_volt()).to_alpha_beta(elec_angle);;
+        };
+        
+        // [[maybe_unused]] auto forward_alpha_beta_volt_by_constant_voltage = [&]{
+        //     // return AlphaBetaCoord<q20>{.alpha = 0.0_q20, .beta = 1.5_q20};
+        //     return AlphaBetaCoord<q20>{.alpha = 0.0_q20, .beta = 0.5_q20};
+        // };
 
-        const auto alpha_beta_volt = dq_volt_.to_alpha_beta(elecrad);
+        [[maybe_unused]] auto forward_alpha_beta_volt_by_sine_hfi = [&]{
+            static constexpr size_t HFI_FREQ = 1000;
+            // return AlphaBetaCoord<q20>{.alpha = 0.0_q20, .beta = 1.5_q20};
+            return AlphaBetaCoord<q20>{
+                .alpha = 1.0_q20 * sinpu(ctime * HFI_FREQ), 
+                .beta = 0_q20
+            };
+        };
+
+
+        const auto alpha_beta_volt = forward_alpha_beta_volt_by_dq_volt();
+        // const auto alpha_beta_volt = forward_alpha_beta_volt_by_constant_voltage();
+        // const auto alpha_beta_volt = forward_alpha_beta_volt_by_sine_hfi();
 
 
 
@@ -350,7 +445,7 @@ void myesc_main(){
         uvw_pwmgen_.set_dutycycle(uvw_dutycycle);
 
         alpha_beta_volt_ = alpha_beta_volt;
-        openloop_elecrad_ = openloop_elecrad;
+        openloop_elecrad_ = openloop_elec_angle;
     };
 
     Microseconds exe_us_ = 0us;
@@ -368,7 +463,7 @@ void myesc_main(){
     while(true){
         DEBUG_PRINTLN_IDLE(
             // uvw_curr_,
-            alpha_beta_curr_,
+            // alpha_beta_curr_,
             dq_curr_,
             dq_volt_,
             // uvw_curr_,
@@ -378,8 +473,8 @@ void myesc_main(){
             // dq_volt_,
             // alpha_beta_volt_,
 
-            sensorless_ob.angle().to_turns(),
-            uint32_t(exe_us_.count())
+            sensorless_ob.angle().to_turns()
+            // uint32_t(exe_us_.count())
 
             // openloop_elecrad_.normalized().to_turns()
             // bool(nfault_gpio.read() == LOW),

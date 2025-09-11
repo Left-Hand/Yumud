@@ -91,7 +91,7 @@ public:
     }
 
     constexpr Angle<q16> angle() const {
-        return Angle<q16>::from_turns(q16(turns_));
+        return Angle<q16>::from_turns(frac(q16(turns_)));
     }
 private:
     // Config config_;
