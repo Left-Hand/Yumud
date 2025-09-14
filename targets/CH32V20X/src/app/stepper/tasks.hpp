@@ -41,10 +41,10 @@ struct MotorTaskPrelude{
 
     DEF_FRIEND_DERIVE_DEBUG(ServiceError)
 
-    // static constexpr auto DRIVE_DUTY = 0.3_r;
-    static constexpr auto CALIBRATE_DRIVE_DUTY = 0.3_r;
-    static constexpr auto STALL_DRIVE_DUTY = 0.3_r;
-    static constexpr auto BEEP_DRIVE_DUTY = 0.3_r;
+    // static constexpr auto DUTYCYCLE = 0.3_r;
+    static constexpr auto CALIBRATE_DUTYCYCLE = 0.3_r;
+    static constexpr auto STALL_DUTYCYCLE = 0.3_r;
+    static constexpr auto BEEP_DUTYCYCLE = 0.3_r;
 
     static constexpr size_t MICROSTEPS_PER_SECTOR = 256;
 
@@ -89,8 +89,8 @@ struct MotorTaskPrelude{
             const auto [s,c] = sincospu(targ_elec_rotation_);
 
             return digipw::AlphaBetaCoord<q16>{
-                .alpha = c * STALL_DRIVE_DUTY,
-                .beta = s * STALL_DRIVE_DUTY
+                .alpha = c * STALL_DUTYCYCLE,
+                .beta = s * STALL_DUTYCYCLE
             };
         }
 
@@ -136,8 +136,8 @@ struct MotorTaskPrelude{
             const auto expected_lap_position = ticks_to_linear_position(tick_cnt_);
             const auto [s,c] = sincospu(0.25_r * sinpu(expected_lap_position * freq_));
             return digipw::AlphaBetaCoord<q16>{
-                .alpha = BEEP_DRIVE_DUTY * 2,
-                .beta = s * BEEP_DRIVE_DUTY * 2
+                .alpha = BEEP_DUTYCYCLE * 2,
+                .beta = s * BEEP_DUTYCYCLE * 2
             };
         }
 
@@ -181,8 +181,8 @@ struct MotorTaskPrelude{
             const auto [s,c] = sincospu(expected_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
             return digipw::AlphaBetaCoord<q16>{
-                .alpha = c * STALL_DRIVE_DUTY,
-                .beta = s * STALL_DRIVE_DUTY
+                .alpha = c * STALL_DUTYCYCLE,
+                .beta = s * STALL_DUTYCYCLE
             };
         }
 
@@ -225,8 +225,8 @@ struct MotorTaskPrelude{
             const auto [s,c] = sincospu(expected_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
             return digipw::AlphaBetaCoord<q16>{
-                .alpha = c * STALL_DRIVE_DUTY,
-                .beta = s * STALL_DRIVE_DUTY
+                .alpha = c * STALL_DUTYCYCLE,
+                .beta = s * STALL_DUTYCYCLE
             };
         }
 
@@ -337,7 +337,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
             const auto duty = sinpu(LERP(
                 q16(tick_cnt_) / MOVE_CHECK_TICKS,
                 -0.5_r, 0.5_r
-            )) * STALL_DRIVE_DUTY;
+            )) * STALL_DUTYCYCLE;
 
             auto make_duty = [&]() -> digipw::AlphaBetaCoord<q16>{
                 if(is_beta_){
@@ -454,8 +454,8 @@ struct CalibrateRotateTask final{
 
 
         return digipw::AlphaBetaCoord<q16>{
-            .alpha = c * CALIBRATE_DRIVE_DUTY,
-            .beta = s * CALIBRATE_DRIVE_DUTY
+            .alpha = c * CALIBRATE_DUTYCYCLE,
+            .beta = s * CALIBRATE_DUTYCYCLE
         };
     }
 

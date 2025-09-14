@@ -9,7 +9,11 @@ class LuenbergerObserver{
 public:
 
     struct Config{
-
+        // uint32_t fs;
+        // q20 R = 10.0;
+        // q20 L = 2.64E-3;
+        // int32_t l1 = -22000;
+        // int32_t l2 = 64000;
     };
 
     constexpr LuenbergerObserver(const Config & cfg){
@@ -58,7 +62,8 @@ public:
         recalc(i_alpha_, e_alpha_, Valpha, Ialpha);
         recalc(i_beta_, e_beta_, Vbeta, Ibeta);
 
-        turns_ = frac(atan2pu<16>(e_beta_, e_alpha_));
+        turns_ = frac(atan2pu<16>(-e_alpha_, e_beta_));
+        // turns_ = frac(atan2pu(-Ealpha, Ebeta));
     }
 
     constexpr Angle<q16> angle() const {

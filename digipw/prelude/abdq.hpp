@@ -31,6 +31,10 @@ struct AlphaBetaCoord final{
     T alpha;
     T beta;
 
+    static constexpr AlphaBetaCoord ZERO = AlphaBetaCoord{
+        static_cast<T>(0),
+        static_cast<T>(0)
+    };
 
     [[nodiscard]] static constexpr AlphaBetaCoord from_uvw(const UvwCoord<T> & uvw){
         constexpr auto _2_by_3 = T(2.0/3);
@@ -107,6 +111,12 @@ struct DqCoord final{
 
     T d;
     T q;
+
+    
+    static constexpr DqCoord ZERO = DqCoord{
+        static_cast<T>(0),
+        static_cast<T>(0)
+    };
 
     [[nodiscard]] constexpr T operator [](const size_t idx) const {
         return *(&d + idx);

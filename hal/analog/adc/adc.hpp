@@ -145,8 +145,9 @@ public:
         priority.enable(ADC_IRQn, EN);
     }
 
-    void attach(const IT it, const NvicPriority priority, auto && cb, const Enable en){
-        bind_cb(it, std::forward<decltype(cb)>(cb));
+    template<typename Fn>
+    void attach(const IT it, const NvicPriority priority, Fn && cb, const Enable en){
+        bind_cb(it, std::forward<Fn>(cb));
         enable_it(it, priority, en);
     }
 
@@ -156,13 +157,13 @@ public:
 
     void set_mode(const Mode mode){
         auto tempreg = std::bit_cast<CTLR1>(inst_->CTLR1);
-        tempreg.DUALMOD = (uint8_t)mode;
+        tempreg.DUALMOD = std::bit_cast<uint8_t>(mode);
         inst_->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     };
 
     void set_pga(const Pga pga){
         auto tempreg = std::bit_cast<CTLR1>(inst_->CTLR1);
-        tempreg.PGA = (uint8_t)pga;
+        tempreg.PGA = std::bit_cast<uint8_t>(pga);
         inst_->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
