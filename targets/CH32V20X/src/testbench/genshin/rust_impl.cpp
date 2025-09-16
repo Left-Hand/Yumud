@@ -14,7 +14,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 namespace ymd{
 template<typename Trait, typename Obj>
@@ -182,8 +182,8 @@ struct MyStruct {
 
 
 template<>
-struct ImplFor<DeserializeFrom<CanMsg>, MyStruct> {
-    static constexpr Option<MyStruct> deserialize(const CanMsg & msg){
+struct ImplFor<DeserializeFrom<hal::CanMsg>, MyStruct> {
+    static constexpr Option<MyStruct> deserialize(const hal::CanMsg & msg){
 
         
         switch(msg.size()){
@@ -223,10 +223,10 @@ static constexpr auto deserialized4f = std::get<0>(deserialized4);
 static constexpr auto deserialized4q = std::get<1>(deserialized4);
 
 // static constexpr auto msg = hal::CanMsg::from_bytes(CanStdId(0x123), std::span(serialized2));
-static constexpr auto msg = hal::CanMsg::from_bytes(CanStdId(0x123), std::span(serialized2));
+static constexpr auto msg = hal::CanMsg::from_bytes(hal::CanStdId(0x123), std::span(serialized2));
 // static constexpr auto deserialized4m = deserialize<CanMsg, MyStruct>(msg);
 static constexpr auto msg_size = msg.size();
-static constexpr auto deserialized4m = deserialize<CanMsg, MyStruct>(msg).unwrap();
+static constexpr auto deserialized4m = deserialize<hal::CanMsg, MyStruct>(msg).unwrap();
 
 // static_assert(deserialized1 == 42, "deserialized1 != 42");
 static_assert(deserialized2 == 1_q16, "deserialized2 != 1_q16");

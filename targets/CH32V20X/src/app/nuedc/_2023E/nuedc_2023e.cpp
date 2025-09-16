@@ -24,7 +24,7 @@ static constexpr auto CTRL_FREQ = 50;
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::robots;
 
 #define USE_MOCK_SERVO
@@ -86,7 +86,7 @@ public:
     template<typename Fn>
     void register_servo_ctl_callback(Fn && callback){
 
-        SERVO_PWMGEN_TIMER.attach(TimerIT::Update, {0, 0}, std::forward<Fn>(callback));
+        SERVO_PWMGEN_TIMER.attach(hal::TimerIT::Update, {0, 0}, std::forward<Fn>(callback));
     }
 private:
 

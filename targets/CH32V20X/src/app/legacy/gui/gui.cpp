@@ -26,7 +26,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::nvcv2;
-using namespace ymd::hal;
+
 
 #define WHARE_OK while(true){DEBUGGER.println(millis());};
 

@@ -13,10 +13,10 @@
 #include "robots/gesture/mahony.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
-#define DBG_UART uart2
+#define DBG_UART hal::uart2
 #define SCL_GPIO hal::PB<3>()
 #define SDA_GPIO hal::PB<5>()
 static constexpr uint ISR_FREQ = 500;
@@ -52,11 +52,11 @@ static void icm42688_tb(ICM42688 & imu){
         .fs = ISR_FREQ
     }};
 
-    timer1.init({ISR_FREQ}, EN);
+    hal::timer1.init({ISR_FREQ}, EN);
 
     Vec3<q24> gyr_ = Vec3<q24>::ZERO;
     Vec3<q24> acc_ = Vec3<q24>::ZERO;
-    timer1.attach(TimerIT::Update, {0,0},[&]{
+    hal::timer1.attach(hal::TimerIT::Update, {0,0},[&]{
         const auto u0 = clock::micros();
         imu.update().examine();
         const auto gyr = imu.read_gyr().examine();
@@ -119,7 +119,7 @@ void icm42688_main(){
 
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;
-    I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
     // i2c.init(400_KHz);
     i2c.init({2000_KHz});
 

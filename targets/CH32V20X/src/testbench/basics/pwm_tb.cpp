@@ -17,24 +17,24 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 void pwm_tb(OutputStream & logger){
 
-    timer1.init({
+    hal::timer1.init({
         .freq = 36000
     }, EN);
     #ifdef PWM_TB_GPIO
     auto gpio = hal::PA<8>();
-    GpioPwm pwm{gpio};
+    hal::GpioPwm pwm{gpio};
     pwm.init(32);
 
-    timer1.enable_it(
-        TimerIT::Update, 
+    hal::timer1.enable_it(
+        hal::TimerIT::Update, 
         {0,0},
         EN
     );
-    timer1.bind_cb(TimerIT::Update, [&](){pwm.tick();});
+    hal::timer1.bind_cb(hal::TimerIT::Update, [&](){pwm.tick();});
 
     #endif
 

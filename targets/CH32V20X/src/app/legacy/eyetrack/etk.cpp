@@ -27,7 +27,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 using namespace ymd::nvcv2;
 using namespace etk;

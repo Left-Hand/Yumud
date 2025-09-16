@@ -9,7 +9,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #define UART hal::uart2
 // #define OTHER_UART hal::uart1

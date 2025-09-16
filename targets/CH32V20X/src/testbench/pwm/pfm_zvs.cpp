@@ -14,7 +14,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 // 外设：
 // UART:576000波特率输出，用于观察信号 

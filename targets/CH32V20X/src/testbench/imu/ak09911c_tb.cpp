@@ -14,11 +14,11 @@
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 // #define UART uart2
-#define UART uart2
+#define UART hal::uart2
 #define SCL_GPIO hal::PB<3>()
 #define SDA_GPIO hal::PB<5>()
 static constexpr uint ISR_FREQ = 100;
@@ -38,8 +38,8 @@ static void ak09911c_test(drivers::AK09911C & aku){
         gest = gest.slerp(Quat<q24>::from_direction(dir), 0.05_r);
     };
 
-    timer1.init({ISR_FREQ}, EN);
-    timer1.attach(TimerIT::Update, {0,0},[&]{
+    hal::timer1.init({ISR_FREQ}, EN);
+    hal::timer1.attach(hal::TimerIT::Update, {0,0},[&]{
         measure();
     }, EN);
     
@@ -59,7 +59,7 @@ void ak09911c_main(){
     // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;
-    I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
     // i2c.init(400_KHz);
     i2c.init({200_KHz});
     // i2c.init();

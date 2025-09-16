@@ -13,13 +13,13 @@
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 using ymd::drivers::BMI088_Acc;
 using ymd::drivers::BMI088_Gyr;
 
-#define UART uart2
+#define UART hal::uart2
 #define ACC_CS_GPIO hal::PB<0>()
 #define GYR_CS_GPIO hal::PB<1>()
 
@@ -50,7 +50,7 @@ static void bmi088_tb(hal::Spi & spi){
 
     hal::timer1.init({CALC_FREQ_HZ}, EN);
     hal::timer1.attach(
-        TimerIT::Update, 
+        hal::TimerIT::Update, 
         {0,0}, [&](){
 
             const auto begin_m = clock::micros();
@@ -80,6 +80,6 @@ void bmi088_main(){
     DEBUGGER.no_brackets(EN);
     clock::delay(200ms);
 
-    spi1.init({9_MHz});
+    hal::spi1.init({9_MHz});
     bmi088_tb(hal::spi1);
 }

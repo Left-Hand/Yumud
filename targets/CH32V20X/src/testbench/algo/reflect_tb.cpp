@@ -4,7 +4,7 @@
 #include "core/math/real.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #define REFLECT_FOREACH_1(f, _1) f(_1)
 #define REFLECT_FOREACH_2(f, _1, _2) f(_1) f(_2)

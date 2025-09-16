@@ -10,11 +10,11 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 using drivers::INA3221;
 
-#define UART uart2
+#define UART hal::uart2
 #define SCL_GPIO hal::PB<0>()
 #define SDA_GPIO hal::PB<1>()
 

@@ -10,7 +10,7 @@
 #include "hal/analog/adc/adcs/adc1.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 // 适用于步进电机驱动单电阻采样方案的正交pwm输出
 // 其中A相与B相的采样点错开
@@ -40,13 +40,13 @@ void sincos_pwm_main(){
 
     
     #if TIM_INDEX == 1
-    auto & timer = timer1;
+    auto & timer = hal::timer1;
     #elif TIM_INDEX == 2
-    auto & timer = timer2;
+    auto & timer = hal::timer2;
     #elif TIM_INDEX == 3
-    auto & timer = timer3;
+    auto & timer = hal::timer3;
     #elif TIM_INDEX == 4
-    auto & timer = timer4;
+    auto & timer = hal::timer4;
     #endif
 
     auto & pwm_ap = timer.oc<1>();
@@ -55,7 +55,7 @@ void sincos_pwm_main(){
     auto & pwm_bn = timer.oc<4>();
 
 
-    timer.init({FREQ, TimerCountMode::CenterAlignedDualTrig}, EN);
+    timer.init({FREQ, hal::TimerCountMode::CenterAlignedDualTrig}, EN);
     timer.enable_arr_sync(EN);
 
     #if TIM_INDEX == 1
@@ -69,7 +69,7 @@ void sincos_pwm_main(){
     // trig_oc.cvr() = 10;
     #else
     //重要!!!!
-    timer.set_trgo_source(TimerTrgoSource::Update);
+    timer.set_trgo_source(hal::TimerTrgoSource::Update);
     #endif
     #elif TIM_INDEX == 2
     //重要!!!!
@@ -86,12 +86,12 @@ void sincos_pwm_main(){
     timer.set_trgo_source(TimerTrgoSource::Update);
     #endif
 
-    const TimerOcPwmConfig pwm_noinv_cfg = {
+    const hal::TimerOcPwmConfig pwm_noinv_cfg = {
         .cvr_sync_en = EN,
         .valid_level = HIGH
     };
 
-    const TimerOcPwmConfig pwm_inv_cfg = {
+    const hal::TimerOcPwmConfig pwm_inv_cfg = {
         .cvr_sync_en = EN,
         .valid_level = LOW,
     };
@@ -101,41 +101,41 @@ void sincos_pwm_main(){
     pwm_bp.init(pwm_inv_cfg);
     pwm_bn.init(pwm_inv_cfg);
 
-    TimerOcPair pwm_a = {pwm_ap, pwm_an};
-    TimerOcPair pwm_b = {pwm_bp, pwm_bn};
+    auto pwm_a = hal::TimerOcPair{pwm_ap, pwm_an};
+    auto pwm_b = hal::TimerOcPair{pwm_bp, pwm_bn};
 
     pwm_b.inverse(EN);
 
-    adc1.init(
+    hal::adc1.init(
         {
-            {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
+            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            {AdcChannelNth::CH5, AdcSampleCycles::T28_5},
+            {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T28_5},
         }, {}
     );
 
     #if TIM_INDEX == 1
     #if TIM1_USE_CC4
-    adc1.set_injected_trigger(AdcInjectedTrigger::T1CC4);
+    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T1CC4);
     #else
-    adc1.set_injected_trigger(AdcInjectedTrigger::T1TRGO);
+    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T1TRGO);
     #endif
     #elif TIM_INDEX == 2
-    adc1.set_injected_trigger(AdcInjectedTrigger::T2TRGO);
+    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T2TRGO);
     #elif TIM_INDEX == 3
-    adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
+    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T3CC4);
     #elif TIM_INDEX == 4
-    adc1.set_injected_trigger(AdcInjectedTrigger::T4TRGO);
+    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T4TRGO);
     #endif
 
-    adc1.enable_auto_inject(DISEN);
+    hal::adc1.enable_auto_inject(DISEN);
 
-    auto & inj = adc1.inj<1>();
+    auto & inj = hal::adc1.inj<1>();
 
     auto trig_gpio = hal::PC<13>();
     trig_gpio.outpp();
 
-    adc1.attach(AdcIT::JEOC, {0,0}, [&]{
+    hal::adc1.attach(hal::AdcIT::JEOC, {0,0}, [&]{
         trig_gpio.toggle();
         // DEBUG_PRINTLN_IDLE(millis());
     }, EN);

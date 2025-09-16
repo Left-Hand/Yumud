@@ -12,7 +12,7 @@
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::robots;
 
 void m3508_main(){
@@ -23,17 +23,17 @@ void m3508_main(){
 
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
-    can1.init({CanBaudrate::_1M, CanMode::Normal});
+    hal::can1.init({hal::CanBaudrate::_1M, hal::CanMode::Normal});
 
-    M3508Port port{can1};
+    M3508Port port{hal::can1};
     
-    timer3.init({CB_FREQ}, EN);
+    hal::timer3.init({CB_FREQ}, EN);
 
-    timer3.bind_cb(TimerIT::Update, [&](){
+    hal::timer3.bind_cb(hal::TimerIT::Update, [&](){
         port.tick();
     });
 
-    timer3.enable_it(TimerIT::Update, {0,0}, EN);
+    hal::timer3.enable_it(hal::TimerIT::Update, {0,0}, EN);
 
     auto & motor = port[4];
     auto & motor2 = port[1];

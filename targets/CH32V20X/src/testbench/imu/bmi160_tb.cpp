@@ -12,7 +12,7 @@
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 #define DBG_UART DEBUGGER_INST
@@ -24,15 +24,15 @@ void bmi160_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
-    spi1.init({18000000});
+    hal::spi1.init({18000000});
 
 
     using Quat = Quat<real_t>;
     
     auto bmi_cs_gpio_ = hal::PA<0>();
     BMI160 bmi{{
-        &spi1, 
-        spi1.allocate_cs_gpio(&bmi_cs_gpio_).unwrap()
+        &hal::spi1, 
+        hal::spi1.allocate_cs_gpio(&bmi_cs_gpio_).unwrap()
     }};
 
 

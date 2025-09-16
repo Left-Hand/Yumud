@@ -18,11 +18,11 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 // #define UART uart2
-#define UART uart2
+#define UART hal::uart2
 #define SCL_GPIO hal::PB<3>()
 #define SDA_GPIO hal::PB<5>()
 static constexpr uint FS = 100;
@@ -126,7 +126,7 @@ void mmc5983_main(){
     // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;
-    I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
     // i2c.init(400_KHz);
     // i2c.init();
     

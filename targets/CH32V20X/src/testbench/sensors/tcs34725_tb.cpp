@@ -10,7 +10,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 #define SCL_GPIO hal::PD<0>()
@@ -32,7 +32,7 @@ void tcs34725_main(){
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;
 
-    I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
     i2c.init({100000});
     tcs34725_tb(DEBUGGER, i2c);
 }

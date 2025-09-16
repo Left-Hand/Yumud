@@ -30,7 +30,7 @@
 #include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
@@ -60,40 +60,35 @@ static constexpr int a = Zero;
 
 static void init_adc(){
 
-    adc1.init({
-            {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
+    hal::adc1.init({
+            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            // {AdcChannelNth::CH5, AdcSampleCycles::T28_5},
-            // {AdcChannelNth::CH4, AdcSampleCycles::T28_5},
-            // {AdcChannelNth::CH1, AdcSampleCycles::T28_5},
+            // {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T28_5},
+            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T28_5},
+            // {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T28_5},
 
-            // {AdcChannelNth::CH5, AdcSampleCycles::T7_5},
-            // {AdcChannelNth::CH4, AdcSampleCycles::T7_5},
-            // {AdcChannelNth::CH1, AdcSampleCycles::T7_5},
-            // {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
+            // {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T7_5},
+            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+            // {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T7_5},
+            // {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T7_5},
 
-            {AdcChannelNth::CH1, AdcSampleCycles::T7_5},
-            {AdcChannelNth::CH4, AdcSampleCycles::T7_5},
-            {AdcChannelNth::CH5, AdcSampleCycles::T7_5},
+            {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T7_5},
 
-            // {AdcChannelNth::CH1, AdcSampleCycles::T13_5},
-            // {AdcChannelNth::CH4, AdcSampleCycles::T13_5},
-            // {AdcChannelNth::CH5, AdcSampleCycles::T13_5},
+            // {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T13_5},
+            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T13_5},
+            // {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T13_5},
 
-            // {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
-            // {AdcChannelNth::TEMP, AdcSampleCycles::T7_5},
-            // AdcChannelConfig{AdcChannelNth::CH1, AdcCycles::T7_5},
-            // AdcChannelConfig{AdcChannelNth::CH4, AdcCycles::T28_5},
-            // AdcChannelConfig{AdcChannelNth::CH5, AdcCycles::T28_5},
-            // AdcChannelConfig{AdcChannelNth::CH1, AdcCycles::T41_5},
-            // AdcChannelConfig{AdcChannelNth::CH4, AdcCycles::T41_5},
-            // AdcChannelConfig{AdcChannelNth::CH5, AdcCycles::T41_5},
+            // {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T7_5},
+            // {hal::AdcChannelNth::TEMP, hal::AdcSampleCycles::T7_5},
+
         },
         {}
     );
 
-    adc1.set_injected_trigger(AdcInjectedTrigger::T1CC4);
-    adc1.enable_auto_inject(DISEN);
+    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T1CC4);
+    hal::adc1.enable_auto_inject(DISEN);
 }
 
 template<size_t N, typename T>
@@ -163,40 +158,42 @@ void myesc_main(){
     en_gpio.outpp(LOW);
     slp_gpio.outpp(LOW);
 
-    timer1.init({
+    auto & timer = hal::timer1;
+
+    timer.init({
         CHOPPER_FREQ, 
-        TimerCountMode::CenterAlignedUpTrig
+        hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
     static constexpr auto MOS_1C840L_500MA_BEST_DEADZONE = 90ns;
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADZONE = 350ns;
-    timer1.init_bdtr(MOS_1C840L_500MA_BEST_DEADZONE);
-    // timer1.init_bdtr(MOS_1C840L_100MA_BEST_DEADZONE);
-    timer1.remap(1);
+    timer.init_bdtr(MOS_1C840L_500MA_BEST_DEADZONE);
+    // timer.init_bdtr(MOS_1C840L_100MA_BEST_DEADZONE);
+    timer.remap(1);
 
-    auto & pwm_u_ = timer1.oc<1>(); 
-    auto & pwm_v_ = timer1.oc<2>(); 
-    auto & pwm_w_ = timer1.oc<3>(); 
+    auto & pwm_u_ = timer.oc<1>(); 
+    auto & pwm_v_ = timer.oc<2>(); 
+    auto & pwm_w_ = timer.oc<3>(); 
 
-    timer1.ocn<1>().init({}); 
-    timer1.ocn<2>().init({}); 
-    timer1.ocn<3>().init({}); 
+    timer.ocn<1>().init({}); 
+    timer.ocn<2>().init({}); 
+    timer.ocn<3>().init({}); 
 
     hal::PA<7>().afpp();
     hal::PB<0>().afpp();
     hal::PB<1>().afpp();
 
-    timer1.oc<4>().cvr() = timer1.arr() - 1;
+    timer.oc<4>().cvr() = timer.arr() - 1;
     
     pwm_u_.init({});
     pwm_v_.init({});
     pwm_w_.init({});
 
-    timer1.oc<4>().init({
+    timer.oc<4>().init({
         .install_en = DISEN
     });
 
-    timer1.oc<4>().enable_output(EN);
+    timer.oc<4>().enable_output(EN);
 
     auto drv8323_mode_gpio_      = hal::PB<4>();
     auto drv8323_vds_gpio_       = hal::PB<3>();
@@ -235,11 +232,11 @@ void myesc_main(){
 
     init_adc();
 
-    auto soa_ = ScaledAnalogInput(adc1.inj<1>(), 
+    auto soa_ = hal::ScaledAnalogInput(hal::adc1.inj<1>(), 
         Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
-    auto sob_ = ScaledAnalogInput(adc1.inj<2>(), 
+    auto sob_ = hal::ScaledAnalogInput(hal::adc1.inj<2>(), 
         Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
-    auto soc_ = ScaledAnalogInput(adc1.inj<3>(), 
+    auto soc_ = hal::ScaledAnalogInput(hal::adc1.inj<3>(), 
         Rescaler<q16>::from_anti_offset(1.65_r)    * Rescaler<q16>::from_scale(1.0_r));
 
 
@@ -464,7 +461,7 @@ void myesc_main(){
     };
 
     Microseconds exe_us_ = 0us;
-    adc1.attach(hal::AdcIT::JEOC, {0,0}, 
+    hal::adc1.attach(hal::AdcIT::JEOC, {0,0}, 
         [&]{
             const auto begin_us = clock::micros();
             ctrl_isr();

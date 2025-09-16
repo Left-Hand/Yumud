@@ -15,11 +15,11 @@
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 // #define UART uart2
-#define UART uart2
+#define UART hal::uart2
 #define SCL_GPIO hal::PB<0>()
 #define SDA_GPIO hal::PB<1>()
 #define MAG_ACTIVATED
@@ -94,7 +94,7 @@ void mpu6500_tb(hal::I2c & i2c){
     }};
 
     hal::timer1.init({200}, EN);
-    hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
+    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
         mpu.update().examine();
 
         #ifdef MAG_ACTIVATED
@@ -148,7 +148,7 @@ void mpu6050_main(){
     DEBUGGER.no_brackets(EN);
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;
-    I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
     // i2c.init(400_KHz);
     i2c.init({400_KHz});
     // i2c.init();

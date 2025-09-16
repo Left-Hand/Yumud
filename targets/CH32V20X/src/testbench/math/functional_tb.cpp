@@ -15,7 +15,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 struct FoundInfo{
     uint8_t addr;
@@ -23,7 +23,7 @@ struct FoundInfo{
 };
 
 
-#define UART uart2
+#define UART hal::uart2
 
 namespace ranges = std::ranges;
 

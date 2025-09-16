@@ -7,7 +7,7 @@
 
 #if 0
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::coro;
 // using Task = coro::Task;
 
@@ -50,12 +50,12 @@ Future<void> coro_tb() {
     //     }
     // }
 
-    // 链式调用：hello �? world �? 完成处理
+    // 链式调用：hello �? world �? 完成处理
     // auto task = hello(3).then([](auto) {
     //     return world(3);
     // }).then([](auto) {
     //     DEBUGGER << "All tasks completed!\n";
-    //     return Future<void>{}; // 终止�?
+    //     return Future<void>{}; // 终止�?
     // });
 
     // 使用协程链式调用

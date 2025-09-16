@@ -10,7 +10,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 static constexpr size_t CHOP_FREQ = 40_KHz;
 // #define CHOP_FREQ 200
@@ -30,8 +30,8 @@ static constexpr size_t CHOP_FREQ = 40_KHz;
 
 
 void co_ab_main(){
-    uart2.init({576000});
-    DEBUGGER.retarget(&uart2);
+    hal::uart2.init({576000});
+    DEBUGGER.retarget(&hal::uart2);
 
     #if TIM_INDEX == 1
     auto & timer = hal::timer1;
@@ -51,7 +51,7 @@ void co_ab_main(){
     pwm_p.init({});
     pwm_n.init({});
 
-    TimerOcMirror pwm_mirror{pwm_p, pwm_n};
+    hal::TimerOcMirror pwm_mirror{pwm_p, pwm_n};
 
     while(true){
         DEBUG_PRINTLN(clock::millis());

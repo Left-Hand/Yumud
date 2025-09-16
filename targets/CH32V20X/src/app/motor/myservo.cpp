@@ -21,7 +21,7 @@
 #include "dsp/controller/adrc/tracking_differentiator.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 namespace ymd::motorctl{
 class ServoElectrics{
 public:
@@ -226,7 +226,7 @@ void myservo_main(){
 
         hal::timer3.init({
             .freq = TIM_FREQ, 
-            .mode = TimerCountMode::CenterAlignedUpTrig
+            .mode = hal::TimerCountMode::CenterAlignedUpTrig
         }, EN);
 
         auto & pwm_pos = hal::timer3.oc<1>();
@@ -254,7 +254,7 @@ void myservo_main(){
         }
     }
 
-    auto & can = can1;
+    auto & can = hal::can1;
 
     auto mode1_gpio   = hal::PB<1>();
     auto phase_gpio   = hal::PA<7>();
@@ -279,33 +279,33 @@ void myservo_main(){
     }};
 
     auto init_adc = []{
-        adc1.init(
+        hal::adc1.init(
             {
-                {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
+                {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
             },{
-                {AdcChannelNth::CH4, AdcSampleCycles::T7_5},
-                {AdcChannelNth::CH1, AdcSampleCycles::T28_5},
+                {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+                {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T28_5},
             },
             {}
         );
 
-        // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
-        adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
-        // adc1.enableContinous();
-        adc1.enable_auto_inject(DISEN);
+        hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T3CC4);
+        hal::adc1.enable_auto_inject(DISEN);
     };
 
     // can.init(CanBaudrate::_1M, CanMode::Internal);
-    can.init({CanBaudrate::_1M});
+    can.init({
+        .baudrate = hal::CanBaudrate::_1M
+    });
     init_adc();
 
-    auto & ain1 = adc1.inj<1>();
-    auto & ain2 = adc1.inj<2>();
+    auto & ain1 = hal::adc1.inj<1>();
+    auto & ain2 = hal::adc1.inj<2>();
 
 
     hal::timer3.init({
         .freq = TIM_FREQ, 
-        .mode = TimerCountMode::CenterAlignedUpTrig
+        .mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
     real_t sense_raw_volt;
@@ -314,7 +314,7 @@ void myservo_main(){
     pwm.init({});
     pwm_trig.init({.install_en = DISEN});
     pwm_trig.set_dutycycle(0.001_r);
-    hal::timer3.set_trgo_source(TimerTrgoSource::OC4R);
+    hal::timer3.set_trgo_source(hal::TimerTrgoSource::OC4R);
 
     // real_t curr_cmd = 0;
 
@@ -326,7 +326,7 @@ void myservo_main(){
         pwm.set_dutycycle(ABS(duty));
     };
 
-    hal::adc1.attach(AdcIT::JEOC, {0,0}, [&]{
+    hal::adc1.attach(hal::AdcIT::JEOC, {0,0}, [&]{
         sense_raw_volt = ain1.get_voltage();
         curr_filter.update(sense_raw_volt);
         spin_filter.update(ain2.get_voltage());

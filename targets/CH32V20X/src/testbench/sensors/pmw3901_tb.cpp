@@ -9,17 +9,17 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 void pmw3901_main(){
 
-    uart2.init({921600, CommStrategy::Blocking});
-    DEBUGGER.retarget(&uart2);
+    hal::uart2.init({921600, CommStrategy::Blocking});
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.no_brackets(EN);
     DEBUG_PRINTLN(std::setprecision(4));
 
-    auto & spi = spi1;
+    auto & spi = hal::spi1;
 
     spi.init({4_MHz});
     auto spi_cs_gpio_ = hal::PA<15>();

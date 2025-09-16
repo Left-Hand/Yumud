@@ -12,7 +12,7 @@
 #include "core/string/string_view.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 void lt8920_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
@@ -20,7 +20,7 @@ void lt8920_main(){
 
     // SpiSw spisw {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};
 
-    auto & spi = spi1;
+    auto & spi = hal::spi1;
     // auto & spi = spisw;
 
 

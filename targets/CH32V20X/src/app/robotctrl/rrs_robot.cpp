@@ -18,7 +18,7 @@
 #define MOCK_TEST_ALL
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 #define DBG_UART DEBUGGER_INST
@@ -54,9 +54,9 @@ public:
 
 class Environment{
 public:
-    Gpio scl_gpio = SCL_GPIO;
-    Gpio sda_gpio = SDA_GPIO;
-    I2cSw i2c = {&scl_gpio, &sda_gpio};
+    hal::Gpio scl_gpio = SCL_GPIO;
+    hal::Gpio sda_gpio = SDA_GPIO;
+    hal::I2cSw i2c = {&scl_gpio, &sda_gpio};
     PCA9685 pca{&i2c};
 
 

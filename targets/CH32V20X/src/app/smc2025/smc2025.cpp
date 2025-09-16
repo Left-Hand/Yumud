@@ -29,7 +29,7 @@
 #include "scenes.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #define UART hal::uart6
 

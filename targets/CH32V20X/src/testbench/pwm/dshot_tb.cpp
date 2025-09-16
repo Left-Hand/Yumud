@@ -9,7 +9,7 @@
 #include "drivers/Modem/dshot/dshot.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 static constexpr size_t N = 40;
@@ -37,7 +37,7 @@ static std::array<uint16_t, N> data;
 }
 
 
-[[maybe_unused]] static void dshot_tb_new(OutputStream & logger, TimerOC & oc1, TimerOC & oc2){
+[[maybe_unused]] static void dshot_tb_new(OutputStream & logger, hal::TimerOC & oc1, hal::TimerOC & oc2){
     DShotChannel ch1{oc1};
     DShotChannel ch2{oc2};
 
@@ -95,7 +95,7 @@ void dshot_main(){
 
     DEBUGGER.set_radix(10);
     DEBUGGER.set_eps(4);
-    AdvancedTimer & timer = timer1;
+    auto & timer = hal::timer1;
 
     // timer.enableArrSync();
     // timer.enableCvrSync();

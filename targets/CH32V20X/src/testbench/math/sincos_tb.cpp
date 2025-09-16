@@ -42,7 +42,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 namespace expeprimental{
 static constexpr __fast_inline 

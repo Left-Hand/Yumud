@@ -22,7 +22,7 @@
 #include "hal/rng/rng.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #if 0
 
@@ -414,7 +414,7 @@ void light_tracking_main(void){
     auto lcd_dc = hal::PD<7>();
     auto dev_rst = hal::PB<7>();
     #else
-    auto & spi = spi1;
+    auto & spi = hal::spi1;
     auto lcd_blk = hal::PA<10>();
     auto lcd_cs = hal::PA<15>();
     auto lcd_dc = hal::PA<11>();

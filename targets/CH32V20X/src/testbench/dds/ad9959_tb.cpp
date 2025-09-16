@@ -6,7 +6,7 @@
 #include "hal/bus/spi/spidrv.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #if 0
 void ad9959_main(){

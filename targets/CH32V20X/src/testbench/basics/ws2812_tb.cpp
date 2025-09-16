@@ -8,7 +8,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #define TARG_UART hal::uart2
 
