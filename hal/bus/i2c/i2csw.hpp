@@ -7,7 +7,6 @@
 namespace ymd::hal{
 class I2cSw final: public I2c{
 private:
-    volatile int8_t occupied_ = -1;
 
     uint16_t delays_ = 10;
 
@@ -31,7 +30,7 @@ public:
     hal::HalResult reset();
     hal::HalResult write(const uint32_t data) final;
     hal::HalResult read(uint32_t & data, const Ack ack) final;
-    void init(const uint32_t baudrate);
+    void init(const Config & cfg);
     hal::HalResult set_baudrate(const uint32_t baudrate);
 };
 

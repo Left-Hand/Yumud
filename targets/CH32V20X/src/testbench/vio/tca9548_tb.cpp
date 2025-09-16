@@ -29,7 +29,7 @@ void tca9548_main(){
 
     hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
 
-    i2c.init(400_KHz);
+    i2c.init({400_KHz});
 
     auto tca = drivers::TCA9548A(&i2c, hal::I2cSlaveAddr<7>::from_u7(0x70));
 
@@ -37,9 +37,14 @@ void tca9548_main(){
 
     auto & act_i2c = vi2c;
 
-    auto mpu = drivers::MPU6050{&act_i2c};
+    using Mems = drivers::MPU6050;
+    auto mpu = Mems{&act_i2c};
     
-    mpu.init({}).examine();
+    mpu.init({
+        .packge = Mems::Package::MPU6050,
+        .acc_fs = Mems::AccFs::_2G,
+        .gyr_fs = Mems::GyrFs::_1000deg
+    }).examine();
 
 
     while(true){

@@ -42,7 +42,7 @@ void st1615_main(){
     auto sda_gpio_ = SDA_GPIO;
 
     hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
-    i2c.init(ST1615::MAX_I2C_BAUDRATE);
+    i2c.init({ST1615::MAX_I2C_BAUDRATE});
 
     auto nrst_gpio = hal::PB<0>();
     nrst_gpio.set_mode(hal::GpioMode::OutPP);

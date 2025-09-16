@@ -553,7 +553,7 @@ void render_main(){
     auto sda_gpio = hal::PB<5>();
     
     hal::I2cSw i2c{&scl_gpio, &sda_gpio};
-    i2c.init(400_KHz);
+    i2c.init({400_KHz});
 
     drivers::QMC5883L qmc{&i2c};
     retry(2, [&]{return qmc.init();}).examine();

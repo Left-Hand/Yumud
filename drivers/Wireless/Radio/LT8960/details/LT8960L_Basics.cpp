@@ -508,7 +508,7 @@ auto reg = RegCopy(regs_.flag_reg);
 
 
 IResult<> LT8960L_Phy::init(){
-    i2c_.init(600'000);
+    i2c_.init({600'000});
     return Ok();
 }
 

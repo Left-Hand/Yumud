@@ -107,7 +107,7 @@ public:
     }
 
     void init(){
-        i2c_.init(100000);
+        i2c_.init({100000});
     }
 private:
     hal::I2cSw i2c_;

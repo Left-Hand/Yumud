@@ -317,7 +317,7 @@ void eeprom_main(){
     auto sda_gpio = hal::PB<12>();
 
     hal::I2cSw i2csw = {&scl_gpio, &sda_gpio};
-    i2csw.init(400000);
+    i2csw.init({400000});
 
     
     using namespace drivers;

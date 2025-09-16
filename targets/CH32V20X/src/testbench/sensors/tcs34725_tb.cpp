@@ -33,6 +33,6 @@ void tcs34725_main(){
     auto sda_gpio_ = SDA_GPIO;
 
     I2cSw i2c{&scl_gpio_, &sda_gpio_};
-    i2c.init(100000);
+    i2c.init({100000});
     tcs34725_tb(DEBUGGER, i2c);
 }

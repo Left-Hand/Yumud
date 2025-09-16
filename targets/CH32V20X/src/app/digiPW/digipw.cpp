@@ -121,7 +121,7 @@ void digipw_main(){
     auto sda_gpio = PB<14>();
     
     I2cSw i2csw{&scl_gpio, &sda_gpio};
-    i2csw.init(1000000);
+    i2csw.init({1000000});
     
     // INA226 ina226{i2csw};
     // // ina226.init(10, 5);

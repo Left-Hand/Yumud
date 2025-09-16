@@ -29,7 +29,7 @@ void aw9523_main(){
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;  
     hal::I2cSw i2c = {&scl_gpio_, &sda_gpio_};
-    i2c.init(200_KHz);
+    i2c.init({200_KHz});
 
     AW9523 aw9523{&i2c};
     

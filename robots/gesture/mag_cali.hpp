@@ -160,11 +160,11 @@ public:
 
     using Flags = std::array<Flag, N>;
 
-    EllipseCalibrator(){
+    constexpr EllipseCalibrator(){
         flags_.fill(0);
     }
 
-    void add_data(const Vec3<q24> & v3){
+    constexpr void add_sample(const Vec3<q24> & v3){
         // const auto v2 = project_v3_to_v2(v3.normalized());
         // const auto idx = project_v2_to_idx(v2, N);
 
@@ -197,23 +197,19 @@ public:
         const size_t idx = idx8 * 6 + idx6;
         // if(idx >= N) PANIC(N);
         if(idx < N and is_index_empty(idx)){
-            // data_[idx] = v3;
-            data_.push_back(v3);
+            // samples_[idx] = v3;
+            samples_.push_back(v3);
             flags_[idx] = 1;
         }
     }
 
 
-    auto dignosis() const {
-        return calibrate_magfield(std::span(data_));
+    constexpr auto dignosis() const {
+        return calibrate_magfield(std::span(samples_));
     }
 
-    template<typename T>
-    static constexpr T reduce_span(const std::span<const T> data){
-            return std::accumulate(data.begin(), data.end(), 0);
-    };
 
-    std::array<uint8_t, 8> get_progress() const {
+    constexpr std::array<uint8_t, 8> get_progress() const {
         std::array<uint8_t, 8> ret;
 
         for(size_t i = 0; i < 48; i+=6){
@@ -236,10 +232,16 @@ public:
         return flags_[i] == false;
     }
 
-    std::span<const Vec3<q24>> data() const {return data_;}
+    std::span<const Vec3<q24>> samples() const {return samples_;}
 private:
-    Data data_;
+    Data samples_;
     Flags flags_;
+
+
+    template<typename T>
+    static constexpr T reduce_span(const std::span<const T> samples){
+            return std::accumulate(samples.begin(), samples.end(), 0);
+    };
 
 };
 

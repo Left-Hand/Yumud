@@ -73,17 +73,19 @@ hal::HalResult I2cSw::lead(const LockRequest req){
     scl().clr();
     delay_dur();
 
-    constexpr auto header_err_transform = 
-    [](const HalResult res) -> HalResult{
+    constexpr auto header_err_transform = [](const HalResult res) -> HalResult{
         if(res == HalResult::WritePayloadAckTimeout) 
             return HalResult::SlaveAddrAckTimeout;
         return res;
     };
 
     switch(req.custom_len()){
-        case 0:return header_err_transform(write(req.id()));
-        case 1:return header_err_transform(write(req.id() << 1 | req.custom()));
-        default: break;
+        case 0:
+            return header_err_transform(write(req.id()));
+        case 1:
+            return header_err_transform(write(req.id() << 1 | req.custom()));
+        default: 
+            return HalResult::InvalidArgument;
     }
     return HalResult::InvalidArgument;
 }
@@ -142,7 +144,7 @@ hal::HalResult I2cSw::read(uint32_t & data, const Ack ack){
     return hal::HalResult::Ok();
 }
 
-void I2cSw::init(const uint32_t baudrate){
+void I2cSw::init(const Config & cfg){
 
     sda().set();
     sda().outod();
@@ -154,12 +156,15 @@ void I2cSw::init(const uint32_t baudrate){
     scl().outod();
     #endif
 
-    set_baudrate(10'000);
-    for(size_t i = 0; i < 4; i++){
-        lend();
-    }
+    auto release_bus = [&]{
+        set_baudrate(10'000);
+        for(size_t i = 0; i < 4; i++){
+            lend();
+        }
+    };
 
-    set_baudrate(baudrate);
+    release_bus();
+    set_baudrate(cfg.baudrate);
 }
 
 hal::HalResult I2cSw::set_baudrate(const uint32_t baudrate) {

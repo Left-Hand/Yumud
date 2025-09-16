@@ -26,7 +26,7 @@ void ads1115_main()
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;
     auto i2c = hal::I2cSw(&scl_gpio_, &sda_gpio_);
-    i2c.init(400_KHz);
+    i2c.init({400_KHz});
 
     drivers::ADS1115 ads{&i2c};
 

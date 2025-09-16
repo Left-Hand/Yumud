@@ -361,7 +361,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     auto scl_gpio = hal::PD<1>();
     auto sda_gpio = hal::PD<0>();
     hal::I2cSw i2c_sw{&scl_gpio, &sda_gpio};
-    i2c_sw.init(800_KHz);
+    i2c_sw.init({800_KHz});
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 
     const auto begin_u = clock::micros();

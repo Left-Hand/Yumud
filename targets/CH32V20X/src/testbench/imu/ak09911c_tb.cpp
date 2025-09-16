@@ -61,7 +61,7 @@ void ak09911c_main(){
     auto sda_gpio_ = SDA_GPIO;
     I2cSw i2c{&scl_gpio_, &sda_gpio_};
     // i2c.init(400_KHz);
-    i2c.init(200_KHz);
+    i2c.init({200_KHz});
     // i2c.init();
 
     clock::delay(200ms);

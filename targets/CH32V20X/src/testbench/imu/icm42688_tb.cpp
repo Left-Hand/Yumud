@@ -121,7 +121,7 @@ void icm42688_main(){
     auto sda_gpio_ = SDA_GPIO;
     I2cSw i2c{&scl_gpio_, &sda_gpio_};
     // i2c.init(400_KHz);
-    i2c.init(2000_KHz);
+    i2c.init({2000_KHz});
 
     auto imu = ICM42688{
         &i2c,

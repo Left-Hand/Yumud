@@ -114,7 +114,10 @@ static void mmc5983_test(drivers::MMC5983 & imu){
 }
 
 void mmc5983_main(){
-    UART.init({576_KHz});
+    UART.init({
+        .baudrate = 576_KHz
+    });
+
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
@@ -129,7 +132,7 @@ void mmc5983_main(){
     
     clock::delay(200ms);
     
-    i2c.init(2000_KHz);
+    i2c.init({2000_KHz});
 
     MMC5983 imu{&i2c};
 

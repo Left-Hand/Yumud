@@ -13,6 +13,10 @@ class I2c{
 public:
     I2c(I2c && other) = default;
 
+    struct Config{
+        uint32_t baudrate;
+    };
+
     void set_timeout(const std::chrono::microseconds timeout){timeout_ = timeout;}
     void discard_ack(const Enable en){discard_ack_ = en == EN;}
 
@@ -52,11 +56,6 @@ public:
     };
 
     auto create_guard(){return Guard(*this);}
-private:
-    hal::Gpio & scl_gpio_;
-    hal::Gpio & sda_gpio_;
-
-    BusLocker locker = {};
 protected:
     using Timeout = std::chrono::duration<uint16_t, std::micro>;
     Timeout timeout_ = Timeout(10);
@@ -64,6 +63,11 @@ protected:
 
     I2c(Some<hal::Gpio *> scl_gpio, Some<hal::Gpio *> sda_gpio):
         scl_gpio_(scl_gpio.deref()),sda_gpio_(sda_gpio.deref()){}
+private:
+    hal::Gpio & scl_gpio_;
+    hal::Gpio & sda_gpio_;
+
+    BusLocker locker = {};
 };
 
 

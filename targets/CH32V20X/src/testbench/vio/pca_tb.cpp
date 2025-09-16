@@ -24,9 +24,12 @@ void pca_tb(OutputStream & logger){
 
     static constexpr int servo_freq = 50;
     
-    i2c.init(100_KHz);
+    i2c.init({100_KHz});
     PCA9685 pca{&i2c};
-    pca.init({servo_freq, 1.09_r}).unwrap();
+    pca.init({
+        .freq = servo_freq, 
+        .trim = 1.09_r
+    }).unwrap();
 
     MG995 servo_left{pca[0]};
     MG995 servo_right{pca[1]};
