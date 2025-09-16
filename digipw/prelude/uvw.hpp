@@ -1,8 +1,10 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "core/stream/ostream.hpp"
 #include "core/math/realmath.hpp"
+
+#include "core/stream/ostream.hpp"
+#include "core/utils/zero.hpp"
 
 namespace ymd::digipw{
 
@@ -33,5 +35,19 @@ struct UvwCoord{
             self.w << os.brackets<')'>();
     }
 };
+
+}
+
+namespace ymd{
+template<typename T>
+struct FromZeroDispatcher<digipw::UvwCoord<T>>{
+    static consteval digipw::UvwCoord<T> from_zero() {
+        return digipw::UvwCoord<T>(
+            FromZeroDispatcher<T>::from_zero(), 
+            FromZeroDispatcher<T>::from_zero(), 
+            FromZeroDispatcher<T>::from_zero()
+        );
+    }
+}; 
 
 }

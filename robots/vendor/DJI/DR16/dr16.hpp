@@ -46,7 +46,7 @@ public:
 
         void reset(){
             // memset(data, 0, sizeof(data));
-            buf.fill(0);    
+            this->buf.fill(0);    
         }
     };
 

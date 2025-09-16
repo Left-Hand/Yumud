@@ -54,57 +54,7 @@ using namespace ymd::dsp;
 static constexpr uint32_t CHOPPER_FREQ = 32_KHz;
 
 
-template<typename T>
-struct FromZeroDispatcher{
 
-};
-
-
-template<arithmetic T>
-struct FromZeroDispatcher<T>{
-    static consteval T from_zero() {
-        return static_cast<T>(0);
-    }
-}; 
-
-template<typename T>
-struct FromZeroDispatcher<AlphaBetaCoord<T>>{
-    static consteval AlphaBetaCoord<T> from_zero() {
-        return AlphaBetaCoord<T>(
-            FromZeroDispatcher<T>::from_zero(), 
-            FromZeroDispatcher<T>::from_zero()
-        );
-    }
-}; 
-template<typename T>
-struct FromZeroDispatcher<DqCoord<T>>{
-    static consteval DqCoord<T> from_zero() {
-        return DqCoord<T>(
-            FromZeroDispatcher<T>::from_zero(), 
-            FromZeroDispatcher<T>::from_zero()
-        );
-    }
-}; 
-
-template<typename T>
-struct FromZeroDispatcher<UvwCoord<T>>{
-    static consteval UvwCoord<T> from_zero() {
-        return UvwCoord<T>(
-            FromZeroDispatcher<T>::from_zero(), 
-            FromZeroDispatcher<T>::from_zero(), 
-            FromZeroDispatcher<T>::from_zero()
-        );
-    }
-}; 
-
-struct _Zero{
-    template<typename T>
-    consteval operator T() const {
-        return FromZeroDispatcher<T>::from_zero();
-    }
-};
-
-static constexpr inline _Zero Zero = _Zero{};
 
 static constexpr int a = Zero; 
 

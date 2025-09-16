@@ -180,7 +180,30 @@ struct DqCoord final{
             self.q << os.brackets<')'>();
     }
 
-
 };
+
+}
+
+namespace ymd{
+
+
+template<typename T>
+struct FromZeroDispatcher<digipw::AlphaBetaCoord<T>>{
+    static consteval digipw::AlphaBetaCoord<T> from_zero() {
+        return digipw::AlphaBetaCoord<T>{
+            FromZeroDispatcher<T>::from_zero(), 
+            FromZeroDispatcher<T>::from_zero()
+        };
+    }
+}; 
+template<typename T>
+struct FromZeroDispatcher<digipw::DqCoord<T>>{
+    static consteval digipw::DqCoord<T> from_zero() {
+        return digipw::DqCoord<T>{
+            FromZeroDispatcher<T>::from_zero(), 
+            FromZeroDispatcher<T>::from_zero()
+        };
+    }
+}; 
 
 }
