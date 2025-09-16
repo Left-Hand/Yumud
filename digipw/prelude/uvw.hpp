@@ -8,9 +8,11 @@ namespace ymd::digipw{
 
 template<typename T>
 struct UvwCoord{
-    T u = {};
-    T v = {};
-    T w = {};
+    T u;
+    T v;
+    T w;
+
+    static constexpr UvwCoord<T> ZERO = {T(0), T(0), T(0)};
 
     constexpr T operator [](const size_t idx) const {
         return *(&u + idx);

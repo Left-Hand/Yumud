@@ -4,9 +4,6 @@
 
 // https://zhuanlan.zhihu.com/p/692439642
 
-
-namespace ymd::dsp{
-
 // function [dx1,dx2] = fcn(y,u,x1,x2)
 // % X=[电机转速rad/s, 总扰动]
 // % 系统开环增益
@@ -20,6 +17,8 @@ namespace ymd::dsp{
 // dx1=x2+b0*u+g1*(y-x1);
 // dx2=g2*(y-x1);
 
+
+namespace ymd::dsp{
 
 class Leso{
 public:
@@ -46,8 +45,8 @@ public:
         this->state_ = State{0, 0};
     }
 
-    constexpr const auto & get() const {return this->state_;}
-    constexpr const auto & get_disturbance() const {return this->state_[1];}
+    constexpr const auto & state() const {return this->state_;}
+    constexpr auto disturbance() const {return this->state_[1];}
 private:
     using Self = Leso;
     using State = StateVector<q20, 2>;

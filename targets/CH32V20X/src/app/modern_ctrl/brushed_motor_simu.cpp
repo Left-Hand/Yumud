@@ -105,8 +105,8 @@ void test_burshed_motor(){
         const auto dist_inj = d;
         
 
-        motor.update(u + dist_inj - leso.get_disturbance());
-        // motor.update(u + dist_inj - leso.get_disturbance());
+        motor.update(u + dist_inj - leso.disturbance());
+        // motor.update(u + dist_inj - leso.disturbance());
         leso.update(motor.get()[1], u);
         // const auto u1 = clock::micros();
 
@@ -114,7 +114,7 @@ void test_burshed_motor(){
         // DEBUG_PRINTLN(
         //     p0, p, v, u,
         //     motor.get()[0], motor.get()[1],
-        //     leso.get_disturbance(),
+        //     leso.disturbance(),
         //     u1 - u0, dist_inj
         // );
 
@@ -141,7 +141,7 @@ void test_burshed_motor(){
         DEBUG_PRINTLN(
             //     p0, p, v, u,
                 motor.get()[0], motor.get()[1],
-                leso.get_disturbance()
+                leso.disturbance()
             //     u1 - u0, dist_inj
         );
     }

@@ -300,25 +300,25 @@ void bldc_main(){
         #if 1
         const auto q_volt = 3.3_r;
 
-        [[maybe_unused]] const auto ab_volt = DqCoord<q16>{
+        [[maybe_unused]] const auto alphabeta_volt = DqCoord<q16>{
             .d = 0, 
             .q = q_volt
-        }.to_alpha_beta(Angle<q16>::from_turns(ctime));
+        }.to_alphabeta(Angle<q16>::from_turns(ctime));
         #else
         const auto q_volt = CLAMP2(
             pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)
         , SVPWM_MAX_VOLT);
 
-        [[maybe_unused]] const auto ab_volt = DqCoordVoltage{
+        [[maybe_unused]] const auto alphabeta_volt = DqCoordVoltage{
             0, 
             CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
         #endif
         static constexpr auto INV_BUS_VOLT = q16(1.0/12);
 
-        SVPWM3::set_alpha_beta_dutycycle(uvw_pwmgen, 
-            ab_volt[0] * INV_BUS_VOLT, 
-            ab_volt[1] * INV_BUS_VOLT
+        SVPWM3::set_alpha_beta_dutycycle(
+            uvw_pwmgen, 
+            alphabeta_volt * INV_BUS_VOLT 
         );
         leso_.update(meas_speed, q_volt);
 

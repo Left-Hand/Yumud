@@ -12,17 +12,17 @@ struct DqCoord;
 namespace details{
 template<typename To, typename From>
 __attribute__((optimize("O3")))
-static constexpr __fast_inline void ab_to_dq(To & dq, const From & ab, const Angle<auto> angle){
+static constexpr __fast_inline void alphabeta_to_dq(To & dq, const From & alphabeta, const Angle<auto> angle){
     auto [s,c] = angle.sincos();
-    dq = {s * ab[1] + c * ab[0], c * ab[1] - s * ab[0]};
+    dq = {s * alphabeta[1] + c * alphabeta[0], c * alphabeta[1] - s * alphabeta[0]};
 };
 
 
 template<typename To, typename From>
 __attribute__((optimize("O3")))
-static constexpr __fast_inline void dq_to_ab(To & ab, const From & dq, const Angle<auto> angle){
+static constexpr __fast_inline void dq_to_alphabeta(To & alphabeta, const From & dq, const Angle<auto> angle){
     auto [s,c] = angle.sincos();
-    ab = {c * dq[0] - s * dq[1], c * dq[1] + s * dq[0]};
+    alphabeta = {c * dq[0] - s * dq[1], c * dq[1] + s * dq[0]};
 };
 }
 
@@ -30,6 +30,8 @@ template<typename T>
 struct AlphaBetaCoord final{
     T alpha;
     T beta;
+
+    enum class Axis { Alpha, Beta };
 
     static constexpr AlphaBetaCoord ZERO = AlphaBetaCoord{
         static_cast<T>(0),
@@ -80,7 +82,7 @@ struct AlphaBetaCoord final{
 
     [[nodiscard]] constexpr DqCoord<T> to_dq(const Angle<auto> angle) const{
         DqCoord<T> dq;
-        details::ab_to_dq(dq, *this, angle);
+        details::alphabeta_to_dq(dq, *this, angle);
         return dq;
     }
 
@@ -112,6 +114,7 @@ struct DqCoord final{
     T d;
     T q;
 
+    enum class Axis {D, Q};
     
     static constexpr DqCoord ZERO = DqCoord{
         static_cast<T>(0),
@@ -158,14 +161,14 @@ struct DqCoord final{
     }
 
 
-    [[nodiscard]] static constexpr DqCoord from_alpha_beta(const AlphaBetaCoord<T> & ab, const Angle<auto> angle){
+    [[nodiscard]] static constexpr DqCoord from_alphabeta(const AlphaBetaCoord<T> & ab, const Angle<auto> angle){
         DqCoord self;
-        details::ab_to_dq(self, ab, angle);
+        details::alphabeta_to_dq(self, ab, angle);
         return self;
     }
 
     template<typename U>
-    [[nodiscard]] constexpr AlphaBetaCoord<T> to_alpha_beta(const Angle<U> angle) const {
+    [[nodiscard]] constexpr AlphaBetaCoord<T> to_alphabeta(const Angle<U> angle) const {
         auto [s,c] = angle.sincos();
         auto & self = *this;
         return {c * self.d - s * self.q, c * self.q + s * self.d};

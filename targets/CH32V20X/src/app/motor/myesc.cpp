@@ -54,6 +54,60 @@ using namespace ymd::dsp;
 static constexpr uint32_t CHOPPER_FREQ = 32_KHz;
 
 
+template<typename T>
+struct FromZeroDispatcher{
+
+};
+
+
+template<arithmetic T>
+struct FromZeroDispatcher<T>{
+    static consteval T from_zero() {
+        return static_cast<T>(0);
+    }
+}; 
+
+template<typename T>
+struct FromZeroDispatcher<AlphaBetaCoord<T>>{
+    static consteval AlphaBetaCoord<T> from_zero() {
+        return AlphaBetaCoord<T>(
+            FromZeroDispatcher<T>::from_zero(), 
+            FromZeroDispatcher<T>::from_zero()
+        );
+    }
+}; 
+template<typename T>
+struct FromZeroDispatcher<DqCoord<T>>{
+    static consteval DqCoord<T> from_zero() {
+        return DqCoord<T>(
+            FromZeroDispatcher<T>::from_zero(), 
+            FromZeroDispatcher<T>::from_zero()
+        );
+    }
+}; 
+
+template<typename T>
+struct FromZeroDispatcher<UvwCoord<T>>{
+    static consteval UvwCoord<T> from_zero() {
+        return UvwCoord<T>(
+            FromZeroDispatcher<T>::from_zero(), 
+            FromZeroDispatcher<T>::from_zero(), 
+            FromZeroDispatcher<T>::from_zero()
+        );
+    }
+}; 
+
+struct _Zero{
+    template<typename T>
+    consteval operator T() const {
+        return FromZeroDispatcher<T>::from_zero();
+    }
+};
+
+static constexpr inline _Zero Zero = _Zero{};
+
+static constexpr int a = Zero; 
+
 static void init_adc(){
 
     adc1.init({
@@ -255,8 +309,8 @@ void myesc_main(){
 
     static constexpr auto PHASE_INDUCTANCE = 0.00275_q20;
     static constexpr auto PHASE_RESISTANCE = 10_q20;
+    // static constexpr uint32_t CURRENT_LOOP_BW = 1000;
     static constexpr uint32_t CURRENT_LOOP_BW = 1000;
-    // static constexpr uint32_t CURRENT_LOOP_BW = 400;
     static constexpr auto MAX_MODU_VOLT = q16(6.5);
 
     auto d_pi_ctrl_ = PiCurrentCtrl::from_inductance_and_resistance({
@@ -313,7 +367,7 @@ void myesc_main(){
 
 
 
-    auto dq_volt_ = DqCoord<q20>::ZERO;
+    DqCoord<q20> dq_volt_ = Zero;
 
     auto ctrl_isr = [&]{
         uvw_curr_ = {
@@ -362,7 +416,7 @@ void myesc_main(){
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 40_deg;
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 70_deg;
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) + 10_deg;
-        const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 180_deg + 40_deg);
+        const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 180_deg + 70_deg);
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 50_deg);
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() - 135_deg);
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() - 135_deg);
@@ -419,7 +473,7 @@ void myesc_main(){
         // const auto MODU_VOLT = ABS(3.4_r * sinpu(ctime * 0.2_r));
 
         [[maybe_unused]] auto forward_alpha_beta_volt_by_dq_volt = [&]{
-            return (dq_volt_ + speed_compansate_dq_volt()).to_alpha_beta(elec_angle);
+            return (dq_volt_ + speed_compansate_dq_volt()).to_alphabeta(elec_angle);
         };
         
         // [[maybe_unused]] auto forward_alpha_beta_volt_by_constant_voltage = [&]{

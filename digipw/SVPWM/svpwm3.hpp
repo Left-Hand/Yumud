@@ -28,7 +28,7 @@ static constexpr UvwCoord<q16> SVM(
     Sector sector {uint8_t(
         (  uint8_t(std::signbit(beta_by_sqrt3 + alpha_dutycycle)) << 2)
         | (uint8_t(std::signbit(beta_by_sqrt3 - alpha_dutycycle)) << 1)
-        | (uint8_t(std::signbit(beta_dutycycle)))
+        | (uint8_t(std::signbit(beta_by_sqrt3)))
     )};
 
     switch(sector){
@@ -80,11 +80,10 @@ struct SVPWM3{
     template<typename Inst>
     static void set_alpha_beta_dutycycle(
         Inst & inst, 
-        const q16 alpha_dutycycle, 
-        const q16 beta_dutycycle
+        AlphaBetaCoord<q16> alphabeta_dutycycle
     ){
-        const auto dutycycle = SVM({q16(alpha_dutycycle), q16(beta_dutycycle)});
-        inst.set_dutycycle(dutycycle);
+        const auto uvw_dutycycle = SVM(alphabeta_dutycycle);
+        inst.set_dutycycle(uvw_dutycycle);
     }
 };
 
