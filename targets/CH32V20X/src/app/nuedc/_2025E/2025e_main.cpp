@@ -519,8 +519,8 @@ void nuedc_2025e_main(){
             bmi160_.update().examine();
         }
 
-        const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
-        pos_filter_.update(meas_lap_position);
+        const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
+        pos_filter_.update(meas_lap_angle);
     };
 
     auto sensored_foc_cb = [&]{
@@ -533,8 +533,8 @@ void nuedc_2025e_main(){
             return;
         }
 
-        const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
-        const auto meas_elecrad = elecrad_comp_(meas_lap_position);
+        const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
+        const auto meas_elec_angle_ = elecrad_comp_(meas_lap_angle);
 
         const auto meas_position = pos_filter_.position();
         const auto meas_speed = pos_filter_.speed();
@@ -563,24 +563,24 @@ void nuedc_2025e_main(){
         , SVPWM_MAX_VOLT);
         #endif
 
-        [[maybe_unused]] const auto ab_volt = DqCoord<q16>{
+        [[maybe_unused]] const auto alphabeta_volt = DqCoord<q16>{
             .d = 0, 
             .q = CLAMP2(q_volt - leso_.disturbance(), SVPWM_MAX_VOLT)
             // CLAMP2(q_volt, SVPWM_MAX_VOLT)
-        }.to_alphabeta(meas_elecrad);
+        }.to_alphabeta(meas_elec_angle_);
 
 
         static constexpr auto INV_BUS_VOLT = q16(1.0/12);
 
         SVPWM3::set_alpha_beta_dutycycle(
             uvw_pwmgen, 
-            ab_volt * INV_BUS_VOLT
+            alphabeta_volt * INV_BUS_VOLT
         );
 
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
-        meas_elecrad_ = meas_elecrad;
+        meas_elecrad_ = meas_elec_angle_;
     };
 
     adc.attach(hal::AdcIT::JEOC, {0,0}, 

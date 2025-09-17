@@ -97,6 +97,13 @@ struct Rescaler {
             .offset = -offset
         };
     }
+
+    [[nodiscard]] __fast_inline constexpr Rescaler<D> inverse() const {
+        return Rescaler<D>{
+            .scale = 1 / scale,
+            .offset = -offset / scale
+        };
+    }
     
     [[nodiscard]] __fast_inline constexpr D operator()(const D& d) const {
         return scale * d + offset;

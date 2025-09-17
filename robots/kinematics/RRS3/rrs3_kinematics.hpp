@@ -12,6 +12,7 @@
 
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
+#include "core/utils/nth.hpp"
 
 namespace ymd::robots{
 
@@ -162,8 +163,8 @@ public:
     };
 
 
-    using Solution2 = typename RR2_Kinematics<T>::Solution;
-    using Solution = std::array<Solution2, 3>;
+    using SideSolution = typename RR2_Kinematics<T>::Solution;
+    using Solution = std::array<SideSolution, 3>;
 
     constexpr RRS_Kinematics(const Config & cfg){
         reconf(cfg);
@@ -203,7 +204,7 @@ public:
         cfg_ = cfg;
 
         // for(size_t i = 0; i < 3; i++)
-        //     norms_[i] = get_xynorm_from_idx(i);
+        //     norms_[i] = get_xynorm_from_nth(i);
     }
 private:
     Config cfg_ {};
@@ -216,8 +217,8 @@ private:
     };
 
     //pure fn
-    static constexpr Vec2<T> get_xynorm_from_idx(const size_t idx){
-        return Vec2<T>::RIGHT.rotated(idx * T(TAU / 3));
+    static constexpr Vec2<T> get_xynorm_from_nth(const Nth nth){
+        return Vec2<T>::RIGHT.rotated(nth.count() * T(TAU / 3));
     };
 
     //pure fn
@@ -297,28 +298,27 @@ private:
 
     //pure fn
     //通过计算底部，顶部铰链位置和切片圆的半径 将问题转换为二维平面上的双转动副问题
-    static constexpr Option<Solution2> inverse_single_axis(
+    static constexpr Option<SideSolution> inverse_single_axis(
         const Config & cfg, 
         const Vec2<T> xy_norm, 
         const Gesture & gest
     ){
         const auto sphere = get_top_sphere(cfg, xy_norm, gest);
-        const auto circle_opt = project_sphere_to_circle(sphere, xy_norm);
-        if(circle_opt.is_none()) return None;
-        const auto circle = circle_opt.unwrap();
-        const auto r_to_org = std::sqrt(square(circle.org.x) + square(circle.org.y));
+        const auto circle = ({
+            const auto may_circle = project_sphere_to_circle(sphere, xy_norm);
+            if(may_circle.is_none()) return None;
+            may_circle.unwrap();
+        });
 
         return RR2_Kinematics<T>::inverse(
-            //大臂长度和小臂长度
-            {.base_length = cfg.base_length, .link_length = circle.radius}, 
-
-            //目的位置
-            {.shift_position = Vec2<T>{r_to_org, circle.org.z} - Vec2<T>{cfg.base_plate_radius, 0}}
+            {.base_length = cfg.base_length, .link_length = circle.radius},//大臂长度和小臂长度
+            {.shift_position = Vec2<T>{circle.org.length(), circle.org.z} 
+                - Vec2<T>{cfg.base_plate_radius, 0}}            //目的位置
         );
     }
 
     // 正解需要考虑yaw角错位 难度极高
-    // static constexpr Vec3<T> forward_point(const Config & cfg, const Vec2<T> xy_norm, const Solution2 & solu){
+    // static constexpr Vec3<T> forward_point(const Config & cfg, const Vec2<T> xy_norm, const SideSolution & solu){
     //     const auto p_2d = RR2_Kinematics<T>::forward(
     //         //大臂长度和小臂长度
     //         {.base_length = cfg.base_length, .link_length = cfg.link_length}, 
