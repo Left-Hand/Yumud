@@ -126,7 +126,7 @@ struct PiCurrentCtrl {
         err_sum_ = CLAMP(err_sum_ + err, -max_out_ - output , max_out_ - output);
         return output;
     }
-
+private:
     q20 kp_;                // 比例系数
     q24 ki_discrete_;       // 离散化积分系数（Ki * Ts）
     q20 max_out_;          // 最大输出电压限制
