@@ -113,10 +113,7 @@ struct AW9523_Regs:public AW9523_Prelude{
         uint8_t id;
     }DEF_R8(chip_id_reg)
 
-
-
-
-
+    
     struct Config{
         CurrentLimit current_limit = CurrentLimit::Low;
     };
@@ -148,8 +145,8 @@ public:
             aw9523_.enable_led_mode(pin_).examine();
         }
 
-        void set_dutycycle(const real_t duty) {
-            aw9523_.set_led_current(pin_,int(255 * duty)).examine();
+        void set_dutycycle(const real_t dutycycle) {
+            aw9523_.set_led_current_dutycycle(pin_, dutycycle).examine();
         }
     private:
         AW9523 & aw9523_;
@@ -184,15 +181,16 @@ public:
 
     [[nodiscard]] IResult<> enable_irq_by_index(
         const Nth nth, 
-        const Enable en = EN);
+        const Enable en);
 
     [[nodiscard]] IResult<> enable_led_mode(const hal::PinMask pin);
 
     [[nodiscard]] IResult<> set_led_current_limit(const CurrentLimit limit);
 
-    [[nodiscard]] IResult<> set_led_current(
+    [[nodiscard]] IResult<> set_led_current_dutycycle(
         const hal::PinMask pin, 
-        const uint8_t current);
+        const real_t dutycycle
+    );
     
     [[nodiscard]] IResult<> validate();
 
@@ -203,8 +201,8 @@ private:
     hal::I2cDrv i2c_drv_;
     hal::PinMask buf_mask_ = hal::PinMask::from_zero();
 
-    static constexpr RegAddress get_dim_addr(const size_t idx){
-        switch(idx){
+    static constexpr RegAddress get_dim_addr(const Nth nth){
+        switch(nth.count()){
             case 0:  return RegAddress::DimP00;
             case 1:  return RegAddress::DimP01;
             case 2:  return RegAddress::DimP02;

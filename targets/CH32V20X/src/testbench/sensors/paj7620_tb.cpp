@@ -7,7 +7,7 @@
 #include "drivers/Proximeter/PAJ7620/paj7620.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 #define UART_DEST_FPGA 0
@@ -16,12 +16,17 @@ using namespace ymd::drivers;
 #define UART_DEST UART_DEST_PC
 // #define UART_DEST UART_DEST_FPGA
 
+#define SCL_GPIO hal::PD<2>()
+#define SDA_GPIO hal::PC<12>()
 void paj7620_main(){
     auto & logger = DEBUGGER_INST;
     logger.init({576000});
     
-    I2cSw i2c = {&hal::PD<2>(), &hal::PC<12>()};
-    i2c.init(400_KHz);
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;  
+
+    hal::I2cSw i2c = {&scl_gpio_, &sda_gpio_};
+    i2c.init({400_KHz});
 
 
     PAJ7620 paj{&i2c};

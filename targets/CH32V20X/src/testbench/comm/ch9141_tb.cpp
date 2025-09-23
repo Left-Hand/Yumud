@@ -5,7 +5,7 @@
 
 #if 0
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 void ch9141_tb(IOStream & logger, Uart & uart){

@@ -20,24 +20,24 @@
 // DATA[4] <- temprature()
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 void adc_tb(OutputStream & logger){
     #ifdef ADC_TB_MAIN
 
-    adc1.init(
+    hal::adc1.init(
         {
-            AdcChannelConfig{AdcChannelNth::CH0},
+            hal::AdcChannelConfig{hal::AdcChannelNth::CH0},
         },{
-            AdcChannelConfig{AdcChannelNth::TEMP, AdcCycleEnum::T239_5},
-            AdcChannelConfig{AdcChannelNth::VREF, AdcCycleEnum::T239_5},
-            AdcChannelConfig{AdcChannelNth::CH0, AdcCycleEnum::T239_5},
-            AdcChannelConfig{AdcChannelNth::CH1, AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelNth::TEMP, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelNth::VREF, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelNth::CH0, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelNth::CH1, hal::AdcCycleEnum::T239_5},
         });
 
-    adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);
-    adc1.enableContinous();
-    adc1.enableAutoInject();
+    hal::adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);
+    hal::adc1.enableContinous();
+    hal::adc1.enableAutoInject();
 
     timer1.init(36000);
     auto & pwm = timer1.oc(1);
@@ -64,7 +64,7 @@ void adc_tb(OutputStream & logger){
 
     while(true){
         // bled = (millis() / 2000) & 0b1;
-        // adc1.swStartInjected();
+        // hal::adc1.swStartInjected();
 
         // auto Vsense = (real_t(uint16_t(ADC1->IDATAR1)) >> 12) * 3.3;           // ��ѹֵ 
         // auto temperate = ((1.43 - Vsense) / 0.0043 + 25);    // ת��Ϊ�¶�ֵ��ת����ʽ��T���棩= ((V25 - Vsense) / Avg_Slope) + 25
@@ -79,28 +79,28 @@ void adc_tb(OutputStream & logger){
     #endif
 
     #ifdef ADC_TB_REGULAR_BLOCKING
-    adc1.init(
+    hal::adc1.init(
         {
-            AdcChannelConfig{AdcChannelNth::TEMP, AdcCycleEnum::T239_5},
-            AdcChannelConfig{AdcChannelNth::VREF, AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelNth::TEMP, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelNth::VREF, hal::AdcCycleEnum::T239_5},
         },{
-            // AdcChannelConfig{AdcChannelNth::CH0},
+            // hal::AdcChannelConfig{AdcChannelNth::CH0},
         });
 
     while(true){
-        adc1.swStartRegular(true);
+        hal::adc1.swStartRegular(true);
 
         while(true){
             clock::delay(1ms);
-            bool still_waiting = !adc1.isIdle();
-            while(!adc1.isIdle()){
+            bool still_waiting = !hal::adc1.isIdle();
+            while(!hal::adc1.isIdle()){
                 logger.println(".");
                 clock::delay(200ms);
             }
             if(still_waiting) logger.println();
             break;
         };
-        logger.println(adc1.getConvResult() * 3300 / 4096);
+        logger.println(hal::adc1.getConvResult() * 3300 / 4096);
     }
     #endif
 
@@ -110,32 +110,22 @@ void adc_tb(OutputStream & logger){
 
     hal::adc1.init(
         {
-            AdcChannelConfig{AdcChannelNth::TEMP, AdcSampleCycles::T239_5},
-            AdcChannelConfig{AdcChannelNth::VREF, AdcSampleCycles::T239_5},
-            // AdcChannelConfig{AdcChannelNth::CH0, AdcCycleEnum::T239_5},
-            // AdcChannelConfig{AdcChannelNth::CH1, AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelNth::TEMP, hal::AdcSampleCycles::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T239_5},
+            // hal::AdcChannelConfig{hal::AdcChannelNth::CH0, hal::AdcCycleEnum::T239_5},
+            // hal::AdcChannelConfig{hal::AdcChannelNth::CH1, hal::AdcCycleEnum::T239_5},
         },{
-            // AdcChannelConfig{AdcChannelNth::CH0},
+            // hal::AdcChannelConfig{hal::AdcChannelNth::CH0},
         }, {});
 
-    // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);
-
-    // adc1.enableContinous();
-    // adc1.enableAutoInject();
-
-    // auto & bled = hal::PA<8>();
-    // bled.outpp();
-    // auto fn = [&logger](){logger.println("Hi");};
-    // void (* fn2)(void) = fn;
     std::array<uint16_t, 16> adc_dma_buf;
-    dma1Ch1.init({DmaMode::toMemCircular, DmaPriority::High});
-    dma1Ch1.transfer_pph2mem<uint16_t>(adc_dma_buf.begin(), &(ADC1->RDATAR), adc_dma_buf.size());
+    hal::dma1Ch1.init({hal::DmaMode::toMemCircular, hal::DmaPriority::High});
+    hal::dma1Ch1.transfer_pph2mem<uint16_t>(adc_dma_buf.begin(), &(ADC1->RDATAR), adc_dma_buf.size());
 
-    // adc1.enableContinous();
-    adc1.enable_dma();
-    adc1.sw_start_regular(true);
+    hal::adc1.enable_dma(EN);
+    hal::adc1.sw_start_regular(true);
     while(true){
-        logger.println(adc_dma_buf[0], dma1Ch1.pending());
+        logger.println(adc_dma_buf[0], hal::dma1Ch1.pending());
     }
 
     #endif

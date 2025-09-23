@@ -51,6 +51,14 @@ struct Rescaler {
     }
 
     template<typename U>
+    [[nodiscard]] static constexpr Rescaler<D> from_anti_offset(const U offset){
+        return Rescaler<D>{
+            .scale = static_cast<D>(1),
+            .offset = -offset
+        };
+    }
+
+    template<typename U>
     [[nodiscard]] __fast_inline constexpr Rescaler<D> operator *(const Rescaler<U>& rhs) const {
         auto & lhs = *this;
         return Rescaler<D>{
@@ -87,6 +95,13 @@ struct Rescaler {
         return Rescaler<D>{
             .scale = -scale,
             .offset = -offset
+        };
+    }
+
+    [[nodiscard]] __fast_inline constexpr Rescaler<D> inverse() const {
+        return Rescaler<D>{
+            .scale = 1 / scale,
+            .offset = -offset / scale
         };
     }
     

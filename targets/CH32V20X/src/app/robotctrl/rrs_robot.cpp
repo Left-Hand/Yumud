@@ -18,7 +18,7 @@
 #define MOCK_TEST_ALL
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 #define DBG_UART DEBUGGER_INST
@@ -54,7 +54,9 @@ public:
 
 class Environment{
 public:
-    I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
+    hal::Gpio scl_gpio = SCL_GPIO;
+    hal::Gpio sda_gpio = SDA_GPIO;
+    hal::I2cSw i2c = {&scl_gpio, &sda_gpio};
     PCA9685 pca{&i2c};
 
 
@@ -75,9 +77,9 @@ public:
         DBG_UART.init({576000});
         DEBUGGER.retarget(&DBG_UART);
         // DEBUGGER.no_brackets();
-        DEBUGGER.force_sync();
+        DEBUGGER.force_sync(EN);
 
-        i2c.init(400_KHz);
+        i2c.init({400_KHz});
 
         #ifndef USE_MOCK_SERVO
         if(const auto res = [&]{
@@ -86,7 +88,9 @@ public:
 
         #endif
 
-        hal::timer1.init({SERVO_FREQ});
+        hal::timer1.init({
+            .freq = SERVO_FREQ
+        }, EN);
     }
 
     template<typename Fn>

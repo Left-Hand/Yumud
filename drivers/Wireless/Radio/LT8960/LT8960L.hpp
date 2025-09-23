@@ -48,7 +48,7 @@ public:
 
     [[nodiscard]] IResult<> set_retrans_time(const uint8_t times);
 
-    [[nodiscard]] IResult<> enable_autoack(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_autoack(const Enable en);
 
     [[nodiscard]] IResult<> init(const Config & cfg);
 

@@ -12,7 +12,7 @@
 #include "core/string/string_view.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 void lt8920_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
@@ -20,20 +20,22 @@ void lt8920_main(){
 
     // SpiSw spisw {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};
 
-    auto & spi = spi1;
+    auto & spi = hal::spi1;
     // auto & spi = spisw;
 
 
     spi.init({2_MHz});
-    
+    auto spi_cs_gpio_ = hal::PA<0>();
 
-    LT8920 lt{&spi, spi.allocate_cs_gpio(&hal::PA<0>()).unwrap()};
+    LT8920 lt{&spi, spi.allocate_cs_gpio(&spi_cs_gpio_).unwrap()};
     bindSystickCb([&](){
         lt.tick().examine();
     });
 
 
-    lt.bind_nrst_gpio(hal::PB<0>()).examine();
+    auto nrst_gpio_ = hal::PB<0>();
+    
+    lt.bind_nrst_gpio(nrst_gpio_).examine();
     lt.init().examine();
     lt.set_data_rate(1_MHz).examine();
 

@@ -14,7 +14,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 void filter_tb(OutputStream & logger){
     logger.set_eps(4);
 
@@ -22,8 +22,8 @@ void filter_tb(OutputStream & logger){
     // real_t fc = 2;
     // real_t fs = 1000;
 
-    // const real_t mean = 0.0_r;//均�?
-    // const real_t stddev = 1.0_r;//标准�?
+    // const real_t mean = 0.0_r;//均�?
+    // const real_t stddev = 1.0_r;//标准�?
     // // std::default_random_engine generator;
     // // std::normal_distribution<real_t> dist(mean, stddev);
 

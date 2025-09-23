@@ -23,15 +23,18 @@ void joystick_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
-    //  using [[maybe_unused]] Event = Ps2Joystick::JoyStickEvent;
+    auto SCLK_GPIO = SPI1_SCLK_GPIO;
+    auto MOSI_GPIO = SPI1_MOSI_GPIO;
+    auto MISO_GPIO = SPI1_MISO_GPIO;
+    auto CS_GPIO = SPI1_CS_GPIO;
 
     hal::SpiSw spisw{
-        &SPI1_SCLK_GPIO, 
-        &SPI1_MOSI_GPIO, 
-        &SPI1_MISO_GPIO, 
-        &SPI1_CS_GPIO
+        &SCLK_GPIO, 
+        &MOSI_GPIO, 
+        &MISO_GPIO, 
+        &CS_GPIO
     };
 
     auto & spi = spisw;
@@ -41,9 +44,10 @@ void joystick_main(){
     if(const auto res = spi.set_bitorder(LSB);  
         res.is_err()) PANIC(res.unwrap_err());
 
+    auto spi_cs_gpio_ = hal::PA<15>();
     hal::SpiDrv ps2_drv{
         &spi, 
-        spi.allocate_cs_gpio(&hal::PA<15>()).unwrap()
+        spi.allocate_cs_gpio(&spi_cs_gpio_).unwrap()
     };
 
     Ps2Joystick joystick{ps2_drv};

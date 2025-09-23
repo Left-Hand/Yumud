@@ -16,17 +16,17 @@ enum class AdcChannelNth:uint8_t{
     TEMP, VREF
 };
 
-enum class AdcMode:uint32_t{
-    Independent                       	= ADC_Mode_Independent,
-    RegInjecSimult                      = ADC_Mode_RegSimult,
-    RegSimult_AlterTrig                	= ADC_Mode_RegSimult_AlterTrig,
-    InjecSimult_FastInterl             	= ADC_Mode_InjecSimult_FastInterl,
-    InjecSimult_SlowInterl             	= ADC_Mode_InjecSimult_SlowInterl,
-    InjecSimult                        	= ADC_Mode_InjecSimult,
-    RegSimult                          	= ADC_Mode_RegSimult,
-    FastInterl                         	= ADC_Mode_FastInterl,
-    SlowInterl                         	= ADC_Mode_SlowInterl,
-    AlterTrig                          	= ADC_Mode_AlterTrig
+enum class AdcMode:uint8_t{
+    Independent                       	= ADC_Mode_Independent >> 16,
+    RegInjecSimult                      = ADC_Mode_RegSimult >> 16,
+    RegSimult_AlterTrig                	= ADC_Mode_RegSimult_AlterTrig >> 16,
+    InjecSimult_FastInterl             	= ADC_Mode_InjecSimult_FastInterl >> 16,
+    InjecSimult_SlowInterl             	= ADC_Mode_InjecSimult_SlowInterl >> 16,
+    InjecSimult                        	= ADC_Mode_InjecSimult >> 16,
+    RegSimult                          	= ADC_Mode_RegSimult >> 16,
+    FastInterl                         	= ADC_Mode_FastInterl >> 16,
+    SlowInterl                         	= ADC_Mode_SlowInterl >> 16,
+    AlterTrig                          	= ADC_Mode_AlterTrig >> 16
 };
 
 enum class AdcError:uint8_t{
@@ -39,14 +39,14 @@ enum class AdcError:uint8_t{
 };
 
 enum class AdcSampleCycles:uint8_t{
-    T1_5,
-    T7_5,
-    T13_5,
-    T28_5,
-    T41_5,
-    T55_5,
-    T71_5,
-    T239_5
+    T1_5   = 0b000,
+    T7_5   = 0b001,
+    T13_5  = 0b010,
+    T28_5  = 0b011,
+    T41_5  = 0b100,
+    T55_5  = 0b101,
+    T71_5  = 0b110,
+    T239_5 = 0b111
 };
 
 enum class AdcPga:uint8_t{
@@ -69,7 +69,7 @@ enum class AdcIT:uint16_t{
 };
 
 namespace adc_details{
-    void install_pin(const AdcChannelNth channel, const Enable en = EN);
+    void install_pin(const AdcChannelNth channel, const Enable en);
     real_t read_temp();
 }
 

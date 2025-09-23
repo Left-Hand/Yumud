@@ -91,11 +91,11 @@ IResult<> INA226::init(const Config & cfg){
         res.is_err()) return res;
     if(const auto res = set_shunt_conversion_time(cfg.shunt_conv_time);
         res.is_err()) return res;
-    if(const auto res = enable_bus_voltage_measure();
+    if(const auto res = enable_bus_voltage_measure(EN);
         res.is_err()) return res;
-    if(const auto res = enable_continuous_measure();
+    if(const auto res = enable_continuous_measure(EN);
         res.is_err()) return res;
-    if(const auto res = enable_shunt_voltage_measure();
+    if(const auto res = enable_shunt_voltage_measure(EN);
         res.is_err()) return res;
     if(const auto res = set_scale(cfg.mohms, cfg.max_current_a);
         res.is_err()) return res;

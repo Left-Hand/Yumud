@@ -12,7 +12,7 @@
 
 
 static constexpr size_t CHOP_FREQ = 15_KHz;
-static constexpr size_t ISR_FREQ = CHOP_FREQ * 2;
+static constexpr size_t ISR_FREQ = CHOP_FREQ;
 
 namespace ymd{
 
@@ -41,10 +41,10 @@ struct MotorTaskPrelude{
 
     DEF_FRIEND_DERIVE_DEBUG(ServiceError)
 
-    // static constexpr auto DRIVE_DUTY = 0.3_r;
-    static constexpr auto CALIBRATE_DRIVE_DUTY = 0.3_r;
-    static constexpr auto STALL_DRIVE_DUTY = 0.3_r;
-    static constexpr auto BEEP_DRIVE_DUTY = 0.3_r;
+    // static constexpr auto DUTYCYCLE = 0.3_r;
+    static constexpr auto CALIBRATE_DUTYCYCLE = 0.3_r;
+    static constexpr auto STALL_DUTYCYCLE = 0.3_r;
+    static constexpr auto BEEP_DUTYCYCLE = 0.3_r;
 
     static constexpr size_t MICROSTEPS_PER_SECTOR = 256;
 
@@ -83,14 +83,14 @@ struct MotorTaskPrelude{
             ticks_ = cfg.timeout_ticks;
         } 
 
-        constexpr digipw::AlphaBetaCoord resume(const Angle<q16> lappos){
+        constexpr digipw::AlphaBetaCoord<q16> resume(const Angle<q16> lappos){
             tick_cnt_++;
 
             const auto [s,c] = sincospu(targ_elec_rotation_);
 
-            return digipw::AlphaBetaCoord{
-                .alpha = c * STALL_DRIVE_DUTY,
-                .beta = s * STALL_DRIVE_DUTY
+            return digipw::AlphaBetaCoord<q16>{
+                .alpha = c * STALL_DUTYCYCLE,
+                .beta = s * STALL_DUTYCYCLE
             };
         }
 
@@ -131,13 +131,13 @@ struct MotorTaskPrelude{
             ;
         }
 
-        constexpr digipw::AlphaBetaCoord resume(const Angle<q16> measured_lap_position){
+        constexpr digipw::AlphaBetaCoord<q16> resume(const Angle<q16> measured_lap_position){
             tick_cnt_++;
             const auto expected_lap_position = ticks_to_linear_position(tick_cnt_);
             const auto [s,c] = sincospu(0.25_r * sinpu(expected_lap_position * freq_));
-            return digipw::AlphaBetaCoord{
-                .alpha = BEEP_DRIVE_DUTY * 2,
-                .beta = s * BEEP_DRIVE_DUTY * 2
+            return digipw::AlphaBetaCoord<q16>{
+                .alpha = BEEP_DUTYCYCLE * 2,
+                .beta = s * BEEP_DUTYCYCLE * 2
             };
         }
 
@@ -176,13 +176,13 @@ struct MotorTaskPrelude{
             ;
         } 
 
-        constexpr digipw::AlphaBetaCoord resume(const Angle<q16> measured_lap_position){
+        constexpr digipw::AlphaBetaCoord<q16> resume(const Angle<q16> measured_lap_position){
             const auto expected_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
             const auto [s,c] = sincospu(expected_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
-            return digipw::AlphaBetaCoord{
-                .alpha = c * STALL_DRIVE_DUTY,
-                .beta = s * STALL_DRIVE_DUTY
+            return digipw::AlphaBetaCoord<q16>{
+                .alpha = c * STALL_DUTYCYCLE,
+                .beta = s * STALL_DUTYCYCLE
             };
         }
 
@@ -220,13 +220,13 @@ struct MotorTaskPrelude{
             ;
         } 
 
-        constexpr digipw::AlphaBetaCoord resume(const Angle<q16> measured_lap_position){
+        constexpr digipw::AlphaBetaCoord<q16> resume(const Angle<q16> measured_lap_position){
             const auto expected_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_);
             const auto [s,c] = sincospu(expected_lap_position * MOTOR_POLE_PAIRS);
             tick_cnt_++;
-            return digipw::AlphaBetaCoord{
-                .alpha = c * STALL_DRIVE_DUTY,
-                .beta = s * STALL_DRIVE_DUTY
+            return digipw::AlphaBetaCoord<q16>{
+                .alpha = c * STALL_DUTYCYCLE,
+                .beta = s * STALL_DUTYCYCLE
             };
         }
 
@@ -273,14 +273,14 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
         
         constexpr CheckStallTask(const Config & cfg){;} 
 
-        constexpr digipw::AlphaBetaCoord resume(const Angle<q16> cont_position){
+        constexpr digipw::AlphaBetaCoord<q16> resume(const Angle<q16> cont_position){
 
             if(may_move_range_.is_none())
                 may_move_range_ = Some(Range2<q16>::from_center(cont_position.to_turns()));
             else 
                 may_move_range_ = Some(may_move_range_.unwrap().merge(cont_position.to_turns()));
             tick_cnt_++;
-            return digipw::AlphaBetaCoord{
+            return digipw::AlphaBetaCoord<q16>{
                 .alpha = 0,
                 .beta = 0
             };
@@ -327,7 +327,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
             is_beta_ = cfg.is_beta;
         };
 
-        constexpr digipw::AlphaBetaCoord resume(const Angle<q16> cont_position){
+        constexpr digipw::AlphaBetaCoord<q16> resume(const Angle<q16> cont_position){
 
             if(may_move_range_.is_none())
                 may_move_range_ = Some(Range2<q16>::from_center(cont_position.to_turns()));
@@ -337,9 +337,9 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
             const auto duty = sinpu(LERP(
                 q16(tick_cnt_) / MOVE_CHECK_TICKS,
                 -0.5_r, 0.5_r
-            )) * STALL_DRIVE_DUTY;
+            )) * STALL_DUTYCYCLE;
 
-            auto make_duty = [&]() -> digipw::AlphaBetaCoord{
+            auto make_duty = [&]() -> digipw::AlphaBetaCoord<q16>{
                 if(is_beta_){
                     return {duty, 0};
                 }else{
@@ -437,7 +437,7 @@ struct CalibrateRotateTask final{
     constexpr CalibrateRotateTask & operator = (const CalibrateRotateTask & ) = default;
     constexpr CalibrateRotateTask & operator = (CalibrateRotateTask &&) = default;
 
-    constexpr digipw::AlphaBetaCoord resume(const Angle<q16> measured_lap_angle){
+    constexpr digipw::AlphaBetaCoord<q16> resume(const Angle<q16> measured_lap_angle){
         const auto measured_lap_position = measured_lap_angle.to_turns();
         const auto expected_lap_position = SIGN_AS(ticks_to_linear_position(tick_cnt_), delta_position_);
         const auto [s,c] = sincospu(expected_lap_position * MOTOR_POLE_PAIRS);
@@ -453,9 +453,9 @@ struct CalibrateRotateTask final{
         }
 
 
-        return digipw::AlphaBetaCoord{
-            .alpha = c * CALIBRATE_DRIVE_DUTY,
-            .beta = s * CALIBRATE_DRIVE_DUTY
+        return digipw::AlphaBetaCoord<q16>{
+            .alpha = c * CALIBRATE_DUTYCYCLE,
+            .beta = s * CALIBRATE_DUTYCYCLE
         };
     }
 
@@ -514,7 +514,7 @@ struct TaskSequence final{
             }
         }, tasks_variant_);
 
-        return std::visit([&](auto && task) -> digipw::AlphaBetaCoord {
+        return std::visit([&](auto && task) -> digipw::AlphaBetaCoord<q16> {
             return task.resume(cont_position);
         }, tasks_variant_);
     };
@@ -650,7 +650,7 @@ public:
         using Configs = IConfigs;
         using Error = TaskError;
         using Args = Angle<q16>;
-        using Ret = digipw::AlphaBetaCoord;
+        using Ret = digipw::AlphaBetaCoord<q16>;
     };
     TaskSequence<Settings> task_sequence_ = {configs_};
 
@@ -663,7 +663,7 @@ public:
             backward_calibrate_table
         )){;}
 
-    constexpr digipw::AlphaBetaCoord resume(const Angle<q16> lap_position){
+    constexpr digipw::AlphaBetaCoord<q16> resume(const Angle<q16> lap_position){
         return task_sequence_.resume(lap_position);
     }
 
@@ -737,7 +737,7 @@ public:
         }
     );
 
-    constexpr digipw::AlphaBetaCoord resume(const Angle<q16> lap_position){
+    constexpr digipw::AlphaBetaCoord<q16> resume(const Angle<q16> lap_position){
         return task_sequence_.resume(lap_position);
     }
 
@@ -758,7 +758,7 @@ private:
         using Configs = std::decay_t<decltype(CONFIGS_QUEUE)>;
         using Error = TaskError;
         using Args = Angle<q16>;
-        using Ret = digipw::AlphaBetaCoord;
+        using Ret = digipw::AlphaBetaCoord<q16>;
     };
 
     TaskSequence<Settings> task_sequence_ = {CONFIGS_QUEUE};
@@ -796,7 +796,7 @@ public:
         }
     );
 
-    constexpr digipw::AlphaBetaCoord resume(const Angle<q16> lap_position){
+    constexpr digipw::AlphaBetaCoord<q16> resume(const Angle<q16> lap_position){
         return task_sequence_.resume(lap_position);
     }
 
@@ -817,7 +817,7 @@ private:
         using Configs = std::decay_t<decltype(CONFIGS_QUEUE)>;
         using Error = TaskError;
         using Args = Angle<q16>;
-        using Ret = digipw::AlphaBetaCoord;
+        using Ret = digipw::AlphaBetaCoord<q16>;
     };
 
     TaskSequence<Settings> task_sequence_ = {CONFIGS_QUEUE};

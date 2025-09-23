@@ -41,11 +41,12 @@ public:
                 }__packed;
                 uint16_t __resv__:16;
             };
-            uint8_t data[18];
+            std::array<uint8_t, 18> buf;
         }__packed;
 
         void reset(){
-            memset(data, 0, sizeof(data));
+            // memset(data, 0, sizeof(data));
+            this->buf.fill(0);    
         }
     };
 

@@ -16,10 +16,30 @@
 
 #include <ranges>
 
+template<std::ranges::range R, size_t... Is>
+constexpr auto to_array_impl(R&& range, std::index_sequence<Is...>) {
+    auto it = std::ranges::begin(range);
+    return std::array<typename std::ranges::range_value_t<R>, sizeof...(Is)>{
+        ((void)Is, *it++)...
+    };
+}
+
+template<size_t N, std::ranges::range R>
+constexpr auto to_array(R&& range) {
+    return to_array_impl(std::forward<R>(range), std::make_index_sequence<N>{});
+}
+
+
 using namespace ymd;
 using namespace ymd::drivers;
 
 #if CH32V30X
+
+static constexpr size_t MLX90640_COLS = 32;
+static constexpr size_t MLX90640_ROWS = 24;
+
+static constexpr auto LCD_WIDTH = 320;
+static constexpr auto LCD_HEIGHT = 170;
 
 static constexpr size_t UART_BAUD = 576000;
 static constexpr auto MLX90640_I2CADDR = 0x33;
@@ -27,7 +47,10 @@ static constexpr auto MLX90640_I2CADDR = 0x33;
 #define SCL_GPIO hal::PE<9>()
 #define SDA_GPIO hal::PE<11>()
 
-hal::I2cSw i2c_sw_ = {&SCL_GPIO, &SDA_GPIO};
+hal::Gpio scl_gpio_ = SCL_GPIO;
+hal::Gpio sda_gpio_ = SDA_GPIO;
+
+hal::I2cSw i2c_sw_ = {&scl_gpio_, &sda_gpio_};
 hal::I2cDrv i2c_drv_ = hal::I2cDrv{&i2c_sw_, hal::I2cSlaveAddr<7>::from_u7(MLX90640_I2CADDR)};
 
 
@@ -47,22 +70,7 @@ Result<void, MLX90640_Error> MLX90640_I2CWrite(uint8_t slaveAddr,uint16_t writeA
 }
 }
 
-static constexpr size_t MLX90640_COLS = 32;
-static constexpr size_t MLX90640_ROWS = 24;
 
-
-template<std::ranges::range R, size_t... Is>
-constexpr auto to_array_impl(R&& range, std::index_sequence<Is...>) {
-    auto it = std::ranges::begin(range);
-    return std::array<typename std::ranges::range_value_t<R>, sizeof...(Is)>{
-        ((void)Is, *it++)...
-    };
-}
-
-template<size_t N, std::ranges::range R>
-constexpr auto to_array(R&& range) {
-    return to_array_impl(std::forward<R>(range), std::make_index_sequence<N>{});
-}
 
 void mlx90640_main(){
     uint16_t EE[832];
@@ -85,7 +93,7 @@ void mlx90640_main(){
         DEBUGGER.retarget(&DBG_UART);
         DEBUGGER.set_eps(4);
         DEBUGGER.set_splitter(",");
-        DEBUGGER.no_brackets();
+        DEBUGGER.no_brackets(EN);
     };
 
 
@@ -100,16 +108,14 @@ void mlx90640_main(){
 
     spi.init({144_MHz});
     
-    auto & lcd_blk = hal::PD<0>();
+    auto lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
 
-    static constexpr auto LCD_WIDTH = 320;
-    static constexpr auto LCD_HEIGHT = 170;
 
-    auto & lcd_dc = hal::PD<7>();
-    auto & dev_rst = hal::PB<7>();
-
-    const auto spi_fd = spi.allocate_cs_gpio(&hal::PD<4>()).unwrap();
+    auto lcd_dc = hal::PD<7>();
+    auto dev_rst = hal::PB<7>();
+    auto spi_cs = hal::PD<4>();
+    const auto spi_fd = spi.allocate_cs_gpio(&spi_cs).unwrap();
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
@@ -133,7 +139,7 @@ void mlx90640_main(){
     // Color<q16>
 
 
-    i2c_sw_.init(190'000);
+    i2c_sw_.init(180_KHz);
     clock::delay(50ms);                                    //预留一点时间让MLX传感器完成自己的初始化
     // MLX90640_SetRefreshRate(MLX90640_I2CADDR, 0).examine();       //0.5hz
     MLX90640_SetRefreshRate(MLX90640_I2CADDR, MLX90640_DataRate::_64Hz).examine();

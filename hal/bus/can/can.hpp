@@ -93,11 +93,11 @@ public:
     void enable_blocking_write(const Enable en){blocking_write_en_ = en == EN;}
     [[nodiscard]] bool is_tranmitting();
     [[nodiscard]] bool is_receiving();
-    void enable_hw_retransmit(const Enable en = EN);
+    void enable_hw_retransmit(const Enable en);
     void cancel_transmit(const uint8_t mbox);
     void cancel_all_transmits();
-    void enable_fifo_lock(const Enable en = EN);
-    void enable_index_priority(const Enable en = EN);
+    void enable_fifo_lock(const Enable en);
+    void enable_index_priority(const Enable en);
     [[nodiscard]] uint8_t get_tx_errcnt();
     [[nodiscard]] uint8_t get_rx_errcnt();
     [[nodiscard]] Option<CanFault> get_last_fault();
@@ -130,8 +130,8 @@ private:
 
     bool blocking_write_en_ = false;
 
-    Gpio & get_tx_gpio(const uint8_t remap);
-    Gpio & get_rx_gpio(const uint8_t remap);
+    Gpio get_tx_gpio(const uint8_t remap);
+    Gpio get_rx_gpio(const uint8_t remap);
 
     void install_gpio(const uint8_t remap);
     void enable_rcc(const uint8_t remap);

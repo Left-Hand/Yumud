@@ -15,7 +15,7 @@ using namespace ymd::drivers;
 void kth7823_main(){
     DEBUGGER_INST.init({576_KHz});
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
@@ -23,9 +23,11 @@ void kth7823_main(){
     auto & spi = hal::spi1;
     spi.init({9_MHz});
 
+    auto spi_cs_gpio = hal::PA<15>();
+
     KTH7823 kth7823{
         &spi, 
-        spi.allocate_cs_gpio(&hal::PA<15>()).examine()
+        spi.allocate_cs_gpio(&spi_cs_gpio).examine()
     };
 
     while(true){

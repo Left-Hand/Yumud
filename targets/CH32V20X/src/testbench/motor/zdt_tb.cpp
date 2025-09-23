@@ -12,7 +12,7 @@
 
 #ifdef ENABLE_UART1
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::robots;
 using robots::zdtmotor::ZdtStepper;
 
@@ -39,8 +39,8 @@ void zdt_main(){
     ZdtStepper motor{{.nodeid = {1}}, &COMM_UART};
     #else
     COMM_CAN.init({
-        .baudrate = CanBaudrate::_1M, 
-        .mode = CanMode::Normal
+        .baudrate = hal::CanBaudrate::_1M, 
+        .mode = hal::CanMode::Normal
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
@@ -49,8 +49,8 @@ void zdt_main(){
     #endif
     
     clock::delay(10ms);
-    motor1.activate().examine();
-    motor2.activate().examine();
+    motor1.activate(EN).examine();
+    motor2.activate(EN).examine();
     clock::delay(10ms);
     // motor.set_subdivides(256);
     // motor.trig_homming(ZdtStepper::HommingMode::LapsCollision);

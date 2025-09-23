@@ -208,7 +208,7 @@ void embd_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     // DEBUGGER.force_sync(EN);
     // DEBUGGER.no_fieldname();
     // DEBUGGER.no_scoped();

@@ -86,7 +86,7 @@ public:
 
     void init(const Config & cfg);
 
-    void enable_single_line_mode(const Enable en = EN);
+    void enable_single_line_mode(const Enable en);
 
     void writeN(const char * data_ptr, const size_t len);
 
@@ -96,8 +96,8 @@ public:
 
     void set_rx_strategy(const CommStrategy rx_strategy);
 
-    Gpio & txio();
-    Gpio & rxio();
+    Gpio txio();
+    Gpio rxio();
 
     #ifdef ENABLE_UART1
     friend void ::USART1_IRQHandler();

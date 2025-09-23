@@ -8,7 +8,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 void float_main(){
     DEBUGGER_INST.init({576000, CommStrategy::Blocking});
 

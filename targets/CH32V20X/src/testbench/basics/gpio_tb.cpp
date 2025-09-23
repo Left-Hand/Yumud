@@ -4,7 +4,7 @@
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 void gpio_tb(hal::GpioIntf & gpio){
     gpio.outpp();
     while(true){
@@ -16,5 +16,6 @@ void gpio_tb(hal::GpioIntf & gpio){
 }
 
 void gpio_main(){
-    gpio_tb(hal::PC<13>());
+    auto gpio = hal::PC<13>();
+    gpio_tb(gpio);
 }

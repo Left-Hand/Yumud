@@ -21,7 +21,7 @@ public:
     void reset();
     bool locked();
     hal::HalResult unlock_bus();
-    void enable_hw_timeout(const Enable en = EN);
+    void enable_hw_timeout(const Enable en);
 
 private:
     void enable_rcc(const Enable enable = EN);

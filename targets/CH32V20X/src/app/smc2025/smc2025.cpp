@@ -29,7 +29,7 @@
 #include "scenes.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #define UART hal::uart6
 
@@ -166,7 +166,7 @@ void smc2025_main(){
 
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
     // while(true){
@@ -179,13 +179,13 @@ void smc2025_main(){
 
     spi2.init({144_MHz});
     
-    auto & lcd_blk = hal::PD<0>();
+    auto lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_dc = hal::PD<7>();
-    auto & dev_rst = hal::PB<7>();
-
-    const auto spi_fd = spi.allocate_cs_gpio(&hal::PD<4>()).unwrap();
+    auto lcd_dc = hal::PD<7>();
+    auto dev_rst = hal::PB<7>();
+    auto spi_cs_gpio = hal::PD<4>();
+    const auto spi_fd = spi.allocate_cs_gpio(&spi_cs_gpio).unwrap();
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
@@ -194,10 +194,14 @@ void smc2025_main(){
 
     tft.init(drivers::st7789_preset::_320X170{}).examine();
 
-    I2cSw cam_i2c{&hal::PD<2>(), &hal::PC<12>()};
+    auto cam_i2c_scl = hal::PD<2>();
+    auto cam_i2c_sda = hal::PC<12>();
+    I2cSw cam_i2c{&cam_i2c_scl, &cam_i2c_sda};
     cam_i2c.init(100_KHz);
 
-    I2cSw i2c{&hal::PB<3>(), &hal::PB<5>()};
+    auto i2c_scl = hal::PB<3>();
+    auto i2c_sda = hal::PB<5>();
+    I2cSw i2c{&i2c_scl, &i2c_sda};
     i2c.init(400_KHz);
     
     // drivers::MT9V034 camera{&cam_i2c};

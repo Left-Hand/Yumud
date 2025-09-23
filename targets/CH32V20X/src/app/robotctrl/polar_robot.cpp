@@ -28,7 +28,7 @@
 
 #ifdef ENABLE_UART1
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::robots;
 using robots::zdtmotor::ZdtStepper;
 
@@ -307,7 +307,7 @@ void polar_robot_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.force_sync(EN);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     auto & can = COMM_CAN;
     
@@ -331,8 +331,8 @@ void polar_robot_main(){
     #else
 
     can.init({
-        .baudrate = CanBaudrate::_1M, 
-        .mode = CanMode::Normal
+        .baudrate = hal::CanBaudrate::_1M, 
+        .mode = hal::CanMode::Normal
     });
 
     can.enable_hw_retransmit(DISEN);

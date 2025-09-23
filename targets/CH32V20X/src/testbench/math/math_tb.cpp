@@ -33,7 +33,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #define EQUAL_ASSERT(a, b)\
 do{\
@@ -60,7 +60,7 @@ void math_main(){
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     // using Vec3 = Vec3<real_t>;
     // using Plane = Plane<real_t>;

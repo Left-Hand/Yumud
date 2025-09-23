@@ -15,7 +15,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 struct FoundInfo{
     uint8_t addr;
@@ -23,14 +23,14 @@ struct FoundInfo{
 };
 
 
-#define UART uart2
+#define UART hal::uart2
 
 namespace ranges = std::ranges;
 
 void functional_main(){
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
-    DEBUGGER.force_sync();
+    DEBUGGER.force_sync(EN);
     
     // auto process_address = [](uint8_t addr) -> Option<FoundInfo> {
     //     // return 

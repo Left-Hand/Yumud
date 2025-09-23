@@ -43,6 +43,8 @@
 #include "dsp/motor_ctrl/position_corrector.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 
+
+
 using namespace ymd;
 
 #ifdef ENABLE_UART1
@@ -65,10 +67,10 @@ public:
     using TaskError = BeepTasks::TaskError;
     MotorFibre(
         drivers::EncoderIntf & encoder,
-        digipw::StepperSVPWM & svpwm
+        digipw::StepperPwmGen & pwm_gen_
     ):
         encoder_(encoder),
-        svpwm_(svpwm)
+        svpwm_(pwm_gen_)
         {;}
 
     struct Error{
@@ -155,7 +157,7 @@ public:
         const auto [a,b] = subprogress.resume(
             Angle<q16>::from_turns(meas_lap_position.to_turns()));
 
-        svpwm_.set_alpha_beta_duty(a,b);
+        svpwm_.set_dutycycle({a,b});
         return Ok();
     }
 
@@ -210,7 +212,7 @@ public:
         const auto [s,c] = sincospu(
         (pos_filter_.lap_position() + SIGN_AS(0.005_r * tangles, curr)) * 50);
         
-        svpwm_.set_alpha_beta_duty(c * mag,s * mag);
+        svpwm_.set_dutycycle({c * mag,s * mag});
 
 
     }
@@ -249,7 +251,7 @@ public:
     using CommandShaperConfig = CommandShaper::Config;
 
     drivers::EncoderIntf & encoder_;
-    digipw::StepperSVPWM & svpwm_;
+    digipw::StepperPwmGen & svpwm_;
 
     CoilMotionCheckTasks coil_motion_check_comp_{};
 
@@ -293,14 +295,19 @@ public:
 
 
 [[maybe_unused]] 
-static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & svpwm){
-    DEBUGGER.no_brackets();
+static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen & pwm_gen_){
+    DEBUGGER.no_brackets(EN);
 
-    auto motor_system_ = MotorFibre{encoder, svpwm};
+    auto motor_system_ = MotorFibre{encoder, pwm_gen_};
 
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
-        motor_system_.resume().examine();
-    });
+    hal::timer1.attach(
+        hal::TimerIT::Update, 
+        {0,0}, 
+        [&](){
+            motor_system_.resume().examine();
+        }, 
+        EN
+    );
 
     robots::ReplServer repl_server = {
         &UART, &UART
@@ -351,8 +358,10 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
 }
 
 [[maybe_unused]] static void eeprom_tb(){
-    hal::I2cSw i2c_sw{&hal::PD<1>(), &hal::PD<0>()};
-    i2c_sw.init(800_KHz);
+    auto scl_gpio = hal::PD<1>();
+    auto sda_gpio = hal::PD<0>();
+    hal::I2cSw i2c_sw{&scl_gpio, &sda_gpio};
+    i2c_sw.init({800_KHz});
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 
     const auto begin_u = clock::micros();
@@ -385,8 +394,8 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     clock::delay(400ms);
 
     {
-        hal::Gpio & ena_gpio = hal::PB<0>();
-        hal::Gpio & enb_gpio = hal::PA<7>();
+        hal::Gpio ena_gpio = hal::PB<0>();
+        hal::Gpio enb_gpio = hal::PA<7>();
         ena_gpio.outpp(HIGH);
         enb_gpio.outpp(HIGH);
     }
@@ -397,9 +406,9 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
         .freq = CHOP_FREQ,
         // .mode = hal::TimerCountMode::CenterAlignedDualTrig
         .mode = hal::TimerCountMode::CenterAlignedUpTrig
-    });
+    }, EN);
 
-    timer.enable_arr_sync();
+    timer.enable_arr_sync(EN);
     timer.set_trgo_source(hal::TimerTrgoSource::Update);
 
 
@@ -451,19 +460,22 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
     auto & inj_a = adc.inj<1>();
     auto & inj_b = adc.inj<2>();
 
-    auto & isr_trig_gpio = hal::PC<13>();
+    auto isr_trig_gpio = hal::PC<13>();
     isr_trig_gpio.outpp();
 
     real_t a_curr;
     real_t b_curr;
-    adc.attach(hal::AdcIT::JEOC, {0,0}, [&]{
-        // isr_trig_gpio.toggle();
-        // DEBUG_PRINTLN_IDLE(millis());
-        // isr_trig_gpio.toggle();
-        // static bool is_a = false;
-        // b_curr = inj_b.get_voltage();
-        // a_curr = inj_a.get_voltage();
-    });
+    adc.attach(
+        hal::AdcIT::JEOC, 
+        {0,0}, [&]{
+            // isr_trig_gpio.toggle();
+            // DEBUG_PRINTLN_IDLE(millis());
+            // isr_trig_gpio.toggle();
+            // static bool is_a = false;
+            // b_curr = inj_b.get_voltage();
+            // a_curr = inj_a.get_voltage();
+        }, EN
+    );
 
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
@@ -476,7 +488,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperSVPWM & 
             c * mag,
             s * mag
         );
-    });
+    }, EN);
 
     while(true){
         DEBUG_PRINTLN_IDLE(
@@ -493,36 +505,34 @@ void mystepper_main(){
 
     UART.init({576000});
     DEBUGGER.retarget(&UART);
+    DEBUGGER.no_brackets(EN);
     // DEBUG_PRINTLN(hash(.unwrap()));
     clock::delay(400ms);
 
-    // currentloop_tb();
-
-    {
-        hal::Gpio & ena_gpio = hal::PB<0>();
-        hal::Gpio & enb_gpio = hal::PA<7>();
-        ena_gpio.outpp(HIGH);
-        enb_gpio.outpp(HIGH);
-    }
+    hal::Gpio ena_gpio = hal::PB<0>();
+    hal::Gpio enb_gpio = hal::PA<7>();
+    ena_gpio.outpp(HIGH);
+    enb_gpio.outpp(HIGH);
 
     auto & timer = hal::timer1;
 
     timer.init({
         .freq = CHOP_FREQ,
-        .mode = hal::TimerCountMode::CenterAlignedDownTrig
-    });
+        // .mode = hal::TimerCountMode::CenterAlignedDownTrig
+        .mode = hal::TimerCountMode::CenterAlignedDualTrig
+    }, EN);
 
-    timer.enable_arr_sync();
+    timer.enable_arr_sync(EN);
     timer.set_trgo_source(hal::TimerTrgoSource::Update);
 
-    digipw::StepperSVPWM svpwm{
+    digipw::StepperPwmGen pwm_gen_{
         timer.oc<1>(),
         timer.oc<2>(),
         timer.oc<3>(),
         timer.oc<4>(),
     };
 
-    svpwm.init_channels();
+    pwm_gen_.init_channels();
 
     auto & adc = hal::adc1;
     adc.init(
@@ -537,35 +547,60 @@ void mystepper_main(){
 
     adc.set_injected_trigger(hal::AdcInjectedTrigger::T1TRGO);
     adc.enable_auto_inject(DISEN);
+    auto inj_a = hal::ScaledAnalogInput{adc.inj<1>(), Rescaler<q16>::from_scale(1)};
+    auto inj_b = hal::ScaledAnalogInput{adc.inj<2>(), Rescaler<q16>::from_scale(1)};
+    auto ma730_cs_gpio_ = hal::PA<15>();
 
-    auto & inj_a = adc.inj<1>();
-    auto & inj_b = adc.inj<2>();
 
-    [[maybe_unused]] auto & isr_trig_gpio = hal::PC<13>();
-    [[maybe_unused]] auto & PROGRAM_FAULT_LED = hal::PC<14>();
+
+    digipw::AlphaBetaCoord<q16> alpha_beta_curr = {0, 0};
+    adc.attach(
+        hal::AdcIT::JEOC, 
+        {0,0}, 
+        [&]{
+            // static bool is_a = false;
+            static bool is_a = true;
+            is_a = !is_a;
+            
+            if(is_a){
+                alpha_beta_curr.alpha = inj_a.get_value();
+
+                // adc.init(
+                //     {
+                //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+                //     },{
+                //         {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
+                //         {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+                //     },
+                //     {}
+                // );
+            }else{
+                alpha_beta_curr.beta = inj_b.get_value();
+                // adc.init(
+                //     {
+                //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+                //     },{
+                //         {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+                //         {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
+                //     },
+                //     {}
+                // );
+            }
+        },
+        EN
+    );
+
+    [[maybe_unused]] auto isr_trig_gpio = hal::PC<13>();
+    [[maybe_unused]] auto PROGRAM_FAULT_LED = hal::PC<14>();
 
     isr_trig_gpio.outpp();
-
-    real_t a_curr;
-    real_t b_curr;
-    adc.attach(hal::AdcIT::JEOC, {0,0}, [&]{
-        static bool is_a = false;
-        is_a = !is_a;
-        
-        if(is_a){
-            b_curr = inj_b.get_voltage();
-        }else{
-            a_curr = inj_a.get_voltage();
-        }
-    });
-
 
     auto & spi = hal::spi1;
     spi.init({18_MHz});
 
     drivers::MT6816 encoder{
         &spi, 
-        spi.allocate_cs_gpio(&hal::PA<15>()).unwrap()
+        spi.allocate_cs_gpio(&ma730_cs_gpio_).unwrap()
     };
 
 
@@ -573,28 +608,33 @@ void mystepper_main(){
         .fast_mode_en = DISEN
     }).examine();
 
-    motorcheck_tb(encoder, svpwm);
+    // motorcheck_tb(encoder, pwm_gen_);
     // eeprom_tb();
 
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
-        const auto t = clock::time();
-        const auto [s,c] = sincospu(t);
-        constexpr auto mag = 0.4_r;
-        svpwm.set_alpha_beta_duty(
-            c * mag,
-            s * mag
-        );
-        // svpwm.set_alpha_beta_duty(
-        //     mag,
-        //     mag
-        // );
-    });
+    hal::timer1.attach(
+        hal::TimerIT::Update, 
+        {0,0}, 
+        [&](){
+            [[maybe_unused]] const auto ctime = clock::time();
+            const auto [s,c] = sincospu(10 * ctime);
+            constexpr auto mag = 0.3_r;
+            pwm_gen_.set_dutycycle({
+                c * mag,
+                s * mag
+            });
+            // pwm_gen_.set_alpha_beta_duty(
+            //     mag,
+            //     mag
+            // );
+        },
+        EN
+    );
 
     while(true){
         DEBUG_PRINTLN_IDLE(
-            a_curr,
-            b_curr,
-            30 * (a_curr * a_curr + b_curr * b_curr)
+            alpha_beta_curr
+            // 30 * alpha_beta_curr.length_squared(),
+            // ADC1->IDATAR2
         );
     }
 }

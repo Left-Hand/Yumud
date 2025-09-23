@@ -30,15 +30,18 @@ public:
 
 template<typename Inst, typename T>
 struct ScaledAnalogInput{
-    constexpr ScaledAnalogInput(const Inst & inst, const Rescaler<T> & rescaler):
+    constexpr ScaledAnalogInput(
+        Inst & inst, 
+        const Rescaler<T> & rescaler
+    ):
         inst_(inst), rescaler_(rescaler){}
 
-    constexpr T get_value(){
+    __inline T get_value(){
         return rescaler_(inst_.get_voltage());
     }
 private:
-    const Inst & inst_;
-    const Rescaler<T> & rescaler_;
+    Inst & inst_;
+    Rescaler<T> rescaler_;
 };
 
 template<typename Inst, typename T>

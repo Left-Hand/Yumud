@@ -328,7 +328,7 @@ void BasicTimer::set_freq(const uint32_t freq){
 }
 
 
-void BasicTimer::init(const Config & cfg){
+void BasicTimer::init(const Config & cfg, const Enable en){
     this->enable_rcc(EN);
 
     TIM_InternalClockConfig(inst_);
@@ -339,7 +339,7 @@ void BasicTimer::init(const Config & cfg){
 
     TIM_ClearFlag(inst_, 0x1e7f);
     TIM_ClearITPendingBit(inst_, 0x00ff);
-    enable(cfg.en);
+    enable(en);
 }
 
 

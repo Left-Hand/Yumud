@@ -21,7 +21,7 @@
 
 #if 0
 using namespace ymd;
-using namespace ymd::hal;
+
 
 using Point = Vec2<real_t>;
 using Points = std::vector<Vec2<real_t>>;

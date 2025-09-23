@@ -8,7 +8,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #define TARG_UART hal::uart2
 
@@ -24,5 +24,6 @@ using namespace ymd::hal;
 
 
 void ws2812_main(){
-    ws2812_tb(hal::PB<1>());
+    auto gpio = hal::PB<1>();
+    ws2812_tb(gpio);
 }

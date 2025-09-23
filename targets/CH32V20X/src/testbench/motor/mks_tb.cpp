@@ -12,7 +12,7 @@
 
 #ifdef ENABLE_UART1
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::robots;
 using robots::mksmotor::MksStepper;
 
@@ -39,8 +39,8 @@ void mks_stepper_main(){
     MksStepper motor{{.nodeid = {1}}, &COMM_UART};
     #else
     COMM_CAN.init({
-        .baudrate = CanBaudrate::_1M, 
-        .mode = CanMode::Normal
+        .baudrate = hal::CanBaudrate::_1M, 
+        .mode = hal::CanMode::Normal
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
@@ -49,8 +49,8 @@ void mks_stepper_main(){
     #endif
     
     clock::delay(10ms);
-    motor1.activate().unwrap();
-    motor2.activate().unwrap();
+    motor1.activate(EN).unwrap();
+    motor2.activate(EN).unwrap();
     clock::delay(10ms);
 
 

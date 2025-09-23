@@ -1,6 +1,6 @@
 #pragma once
 
-#include "matrix/matrix_static.hpp"
+#include "matrix/static_matrix.hpp"
 
 namespace ymd{
 

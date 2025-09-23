@@ -108,11 +108,11 @@ void Can::init_it(){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             //tx interrupt
-            NvicRequest{{1, 7}, USB_HP_CAN1_TX_IRQn}.enable();
+            NvicRequest{{1, 7}, USB_HP_CAN1_TX_IRQn}.enable(EN);
             //rx0 interrupt
-            NvicRequest{{1, 5}, USB_LP_CAN1_RX0_IRQn}.enable();
+            NvicRequest{{1, 5}, USB_LP_CAN1_RX0_IRQn}.enable(EN);
             //rx1 interrupt
-            NvicRequest{{1, 6}, CAN1_RX1_IRQn}.enable();
+            NvicRequest{{1, 6}, CAN1_RX1_IRQn}.enable(EN);
             //sce interrupt
 
             #ifdef SCE_ENABLED
@@ -154,8 +154,8 @@ void Can::clear_mailbox(const uint8_t mbox){
 }
 
 
-Gpio & Can::get_tx_gpio(const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
+    switch(reinterpret_cast<uint32_t>(inst)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_CAN1
@@ -179,13 +179,11 @@ Gpio & Can::get_tx_gpio(const uint8_t remap){
         case CAN2_BASE:
             return CAN2_TX_GPIO;
         #endif
-
-
     }
 }
 
-Gpio & Can::get_rx_gpio(const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
+    switch(reinterpret_cast<uint32_t>(inst)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_CAN1
@@ -211,6 +209,15 @@ Gpio & Can::get_rx_gpio(const uint8_t remap){
             return CAN2_RX_GPIO;
         #endif
     }
+}
+
+Gpio Can::get_tx_gpio(const uint8_t remap){
+    return map_inst_to_tx_gpio(inst_, remap);
+}
+
+
+Gpio Can::get_rx_gpio(const uint8_t remap){
+    return map_inst_to_rx_gpio(inst_, remap);
 }
 
 void Can::install_gpio(const uint8_t remap){

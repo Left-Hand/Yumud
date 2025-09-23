@@ -74,7 +74,7 @@ public:
     void init(){
         instance_.init();
         instance_.bind_cb([this](){this->update();});
-        instance_.enable_it();
+        instance_.enable_it(EN);
     }
 
     template<typename Fn>

@@ -9,10 +9,10 @@
 #define DMA_TB_STRING
 
 using namespace ymd;
-using namespace ymd::hal;
 
 
-void dma_tb(OutputStream & logger, DmaChannel & channel){
+
+void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
 
     char src[] = "The quick brown fox jumps over the lazy dog, A favorite copy set by writing teachers for their pupils is the following, because it contains every letter of the alphabet:'A quick brown fox jumps over the lazy dog.";
     char dst[sizeof(src)];
@@ -24,7 +24,7 @@ void dma_tb(OutputStream & logger, DmaChannel & channel){
     logger.println("dst:", dst);
     logger.println("======");
 
-    channel.init({DmaChannel::Mode::synergy, DmaPriority::High});
+    channel.init({hal::DmaMode::synergy, hal::DmaPriority::High});
     logger.println("DMA init done");
 
 
@@ -39,9 +39,9 @@ void dma_tb(OutputStream & logger, DmaChannel & channel){
 
 
     logger.println("DMA it bind done");
-    channel.enable_done_it();
-    channel.enable_half_it();
-    channel.enable_it({0,0});
+    channel.enable_done_it(EN);
+    channel.enable_half_it(EN);
+    channel.enable_it({0,0}, EN);
     logger.println("DMA begin");
     channel.transfer_mem2mem<char>(dst, src, sizeof(src));
     while(channel.pending()){

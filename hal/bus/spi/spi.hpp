@@ -30,48 +30,38 @@ enum class SpiMode:uint8_t{
     _3
 };
 
-class Spi:public BusBase{
+class Spi{
 public:
 
     #ifndef SPI_MAX_PINS
     static constexpr size_t SPI_MAX_PINS = 4;
     #endif
 
-protected:
-    VGpioPort <SPI_MAX_PINS> cs_port_ = VGpioPort<SPI_MAX_PINS>();
-    CommStrategy tx_strategy_;
-    CommStrategy rx_strategy_;
-    std::optional<uint8_t> last_index;
-
-    [[nodiscard]] __fast_inline hal::HalResult lead(const LockRequest req){
-        const auto index = req.id();
-        const auto nth = Nth(index);
-        if(not cs_port_.is_nth_valid(nth))
-            return hal::HalResult::NoSelecter;
-        cs_port_[nth].clr();
-        last_index = index;
-        return hal::HalResult::Ok();
-    }
-
-    __fast_inline void trail(){
-        const auto nth = Nth(last_index.value());
-        cs_port_[nth].set();
-        last_index.reset();
-    }
-
-    void bind_cs_gpio(
-        Some<hal::GpioIntf *> gpio, 
-        const uint8_t index
-    ){
-        gpio.deref().outpp(HIGH);
-        cs_port_.bind_pin(gpio.deref(), Nth(index));
-    }
 public:
     Spi(){;}
     Spi(const hal::Spi &) = delete;
     Spi(hal::Spi &&) = delete;
 
     
+    HalResult borrow(const LockRequest req){
+        if(false == locker.is_borrowed()){
+            locker.lock(req);
+            return lead(req);
+        }else if(locker.is_borrowed_by(req)){
+            locker.lock(req);
+            return lead(req);
+        }else{
+            return hal::HalResult::OccuipedByOther;
+        }
+    }
+
+    void lend(){
+        this->trail();
+        locker.unlock();
+    }
+
+    bool is_occupied(){return locker.is_borrowed();}
+
     [[nodiscard]] virtual hal::HalResult read(uint32_t & data) = 0;
     [[nodiscard]] virtual hal::HalResult write(const uint32_t data) = 0;
     [[nodiscard]] virtual hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx) = 0;
@@ -93,6 +83,38 @@ public:
 
     [[nodiscard]]
     Option<SpiSlaveIndex> allocate_cs_gpio(Some<hal::GpioIntf *> io);
+
+protected:
+    VGpioPort <SPI_MAX_PINS> cs_port_ = VGpioPort<SPI_MAX_PINS>();
+    CommStrategy tx_strategy_;
+    CommStrategy rx_strategy_;
+    Option<Nth> last_nth_ = None;
+
+    [[nodiscard]] __fast_inline hal::HalResult lead(const LockRequest req){
+        const auto index = req.id();
+        const auto nth = Nth(index);
+        if(not cs_port_.is_nth_valid(nth))
+            return hal::HalResult::NoSelecter;
+        cs_port_[nth].clr();
+        last_nth_ = Some(nth);
+        return hal::HalResult::Ok();
+    }
+
+    __fast_inline void trail(){
+        const auto nth = last_nth_.unwrap();
+        cs_port_[nth].set();
+        last_nth_ = None;
+    }
+
+    void bind_cs_gpio(
+        Some<hal::GpioIntf *> gpio, 
+        const Nth nth
+    ){
+        gpio.deref().outpp(HIGH);
+        cs_port_.bind_pin(gpio.deref(), nth);
+    }
+
+    BusLocker locker = {};
 };
 
 }

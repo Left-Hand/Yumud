@@ -36,7 +36,7 @@ void laser_ctl_main(){
     
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync();
+    DEBUGGER.force_sync(EN);
     DEBUG_PRINTLN("powerup");
 
     auto & can = hal::can1;
@@ -52,7 +52,7 @@ void laser_ctl_main(){
     );
 
 
-    auto & led = hal::PB<8>();
+    auto led = hal::PB<8>();
     led.outpp(HIGH);
 
     auto set_led = [&](const bool l){
@@ -63,12 +63,18 @@ void laser_ctl_main(){
     };
 
 
-    [[maybe_unused]] auto & mode1_gpio   = hal::PB<1>();
-    [[maybe_unused]] auto & phase_gpio   = hal::PA<7>();
+    [[maybe_unused]] auto mode1_gpio   = hal::PB<1>();
+    [[maybe_unused]] auto phase_gpio   = hal::PA<7>();
     phase_gpio.outpp();
 
 
-    hal::timer3.init({PWM_FREQ, hal::TimerCountMode::CenterAlignedUpTrig});
+    hal::timer3.init({
+            .freq = PWM_FREQ, 
+            .mode = hal::TimerCountMode::CenterAlignedUpTrig
+        },  
+        EN
+    );
+
     auto & pwm = hal::timer3.oc<1>();
     pwm.init({});
 

@@ -10,11 +10,11 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 using drivers::INA3221;
 
-#define UART uart2
+#define UART hal::uart2
 #define SCL_GPIO hal::PB<0>()
 #define SDA_GPIO hal::PB<1>()
 
@@ -26,11 +26,12 @@ void ina3221_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
-    
-    auto i2c = hal::I2cSw(&SCL_GPIO, &SDA_GPIO);
-    i2c.init(1200_KHz);
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+    auto i2c = hal::I2cSw(&scl_gpio_, &sda_gpio_);
+    i2c.init({1200_KHz});
 
     INA3221 ina{&i2c};
 

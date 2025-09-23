@@ -13,13 +13,13 @@
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
 using ymd::drivers::BMI088_Acc;
 using ymd::drivers::BMI088_Gyr;
 
-#define UART uart2
+#define UART hal::uart2
 #define ACC_CS_GPIO hal::PB<0>()
 #define GYR_CS_GPIO hal::PB<1>()
 
@@ -28,8 +28,11 @@ static constexpr size_t CALC_FREQ_HZ = 200;
 
 
 static void bmi088_tb(hal::Spi & spi){
-    const auto acc_cs_idx = spi.allocate_cs_gpio(&ACC_CS_GPIO).unwrap();
-    const auto gyr_cs_idx = spi.allocate_cs_gpio(&GYR_CS_GPIO).unwrap();
+    auto acc_cs_gpio_ = ACC_CS_GPIO;
+    auto gyr_cs_gpio_ = GYR_CS_GPIO;
+
+    const auto acc_cs_idx = spi.allocate_cs_gpio(&acc_cs_gpio_).unwrap();
+    const auto gyr_cs_idx = spi.allocate_cs_gpio(&gyr_cs_gpio_).unwrap();
     
 
     auto acc_sensor = BMI088_Acc{&spi, acc_cs_idx};
@@ -45,24 +48,27 @@ static void bmi088_tb(hal::Spi & spi){
         .fs = 200
     }};
 
-    hal::timer1.init({CALC_FREQ_HZ});
-    hal::timer1.attach(TimerIT::Update, {0,0}, [&](){
+    hal::timer1.init({CALC_FREQ_HZ}, EN);
+    hal::timer1.attach(
+        hal::TimerIT::Update, 
+        {0,0}, [&](){
 
-        const auto begin_m = clock::micros();
+            const auto begin_m = clock::micros();
 
-        
-        mahony.update(
-            gyr_sensor.read_gyr().unwrap(), 
-            acc_sensor.read_acc().unwrap()
-        );
             
-        const auto end_m = clock::micros();
+            mahony.update(
+                gyr_sensor.read_gyr().unwrap(), 
+                acc_sensor.read_acc().unwrap()
+            );
+                
+            const auto end_m = clock::micros();
 
-        DEBUG_PRINTLN(
-            mahony.result(), 
-            end_m - begin_m
-        );
-    });
+            DEBUG_PRINTLN(
+                mahony.result(), 
+                end_m - begin_m
+            );
+        }, EN
+    );
 
     while(true);
 }
@@ -71,9 +77,9 @@ static void bmi088_tb(hal::Spi & spi){
 void bmi088_main(){
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     clock::delay(200ms);
 
-    spi1.init({9_MHz});
+    hal::spi1.init({9_MHz});
     bmi088_tb(hal::spi1);
 }

@@ -19,7 +19,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 enum class Fruit:uint8_t{
     BANANA = 5,
@@ -65,8 +65,8 @@ auto runtime_true(){
 
 void enum_main(){
 
-    uart2.init({576000});
-    DEBUGGER.retarget(&uart2);
+    hal::uart2.init({576000});
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 

@@ -50,7 +50,7 @@ public:
     IResult<> set_speed(const SpeedSetpoint spd);
     IResult<> brake();
     IResult<> set_subdivides(const uint16_t subdivides);
-    IResult<> activate(const Enable en = EN);
+    IResult<> activate(const Enable en);
     IResult<> trig_cali();
     IResult<> query_homming_paraments();
     IResult<> trig_homming(const HommingMode mode);

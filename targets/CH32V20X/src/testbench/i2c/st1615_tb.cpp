@@ -35,20 +35,16 @@ void st1615_main(){
     DEBUGGER.retarget(&UART);
 
     
-    auto & led = hal::PA<15>();
+    auto led = hal::PA<15>();
     led.outpp();
 
-    // while(true){
-    //     DEBUG_PRINTLN(clock::millis());
-    //     clock::delay(30ms);
-    //     led.toggle();
-    // }
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
 
-    // test_result();
-    hal::I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
-    i2c.init(ST1615::MAX_I2C_BAUDRATE);
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    i2c.init({ST1615::MAX_I2C_BAUDRATE});
 
-    auto & nrst_gpio = hal::PB<0>();
+    auto nrst_gpio = hal::PB<0>();
     nrst_gpio.set_mode(hal::GpioMode::OutPP);
     nrst_gpio.clr();
     clock::delay(1ms);

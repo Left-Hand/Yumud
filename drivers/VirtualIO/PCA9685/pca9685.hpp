@@ -19,11 +19,11 @@ class PCA9685 final:public PCA9685_Regs{
 public:
     class PCA9685Channel;
     class PCA9685_Vport;
-    PCA9685(const hal::I2cDrv & i2c_drv):
+    explicit PCA9685(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
-    PCA9685(hal::I2cDrv && i2c_drv):
+    explicit PCA9685(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    PCA9685(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit PCA9685(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_{i2c, addr}{;}
 
     [[nodiscard]] IResult<> init(const Config & cfg){
@@ -47,9 +47,9 @@ public:
 
     [[nodiscard]] IResult<> set_sub_addr(const uint8_t index, const uint8_t addr);
 
-    [[nodiscard]] IResult<> enable_ext_clk(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_ext_clk(const Enable en);
 
-    [[nodiscard]] IResult<> enable_sleep(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_sleep(const Enable en);
 
 
 

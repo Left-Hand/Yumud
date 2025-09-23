@@ -158,7 +158,7 @@ protected:
     //     InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
     //         bmi_(bmi), ctrl_(ctrl), address_(address){;}
 
-    //     [[nodiscard]] IResult<> enable_output(const Enable en = EN){
+    //     [[nodiscard]] IResult<> enable_output(const Enable en){
     //         auto reg = RegCopy(ctrl_);
     //         reg.int_out = en == EN;
     //         return bmi_.phy_.write_reg(reg);

@@ -22,14 +22,15 @@ public:
         }
     };
 
+
+    constexpr explicit MotorTrackingDifferentiator(const Config & cfg){
+        reconf(cfg);
+        reset();
+    }
+
     constexpr void reconf(const Config & cfg){
         r_ = cfg.r;
         dt_ = 1_q24 / cfg.fs;
-    }
-
-    constexpr MotorTrackingDifferentiator(const Config & cfg){
-        reconf(cfg);
-        reset();
     }
 
     constexpr void reset(){

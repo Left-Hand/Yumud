@@ -3,16 +3,25 @@
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
 
-namespace ymd::foc {
+// https://zhuanlan.zhihu.com/p/150779067
 
-class HfiObserver {
+namespace ymd::dsp::motor_ctl {
+
+class SquareHighfreqInjectObserver {
+public:
+    struct Config{
+
+    };
+};
+
+class SineHighfreqInjectObserver {
 public:
     struct Config{
 
     };
 
 
-    constexpr HfiObserver(const q16 _f_inj, const q16 _Kf, const q16 _Ki)
+    constexpr explicit SineHighfreqInjectObserver(const q16 _f_inj, const q16 _Kf, const q16 _Ki)
         : 
             f_inj(_f_inj),
             Kf(_Kf),

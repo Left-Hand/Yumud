@@ -25,7 +25,7 @@ using std::max;
 #define endl "\r\n";
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 static void getline(OutputStream & logger, string & str){
     // String temp_str;
@@ -1666,8 +1666,8 @@ static void calc_tb(OutputStream & logger){
 
 void calc_main(){
     // auto & logger = uart2;
-    uart2.init({576000, CommStrategy::Blocking});
-	DEBUGGER.retarget(&uart2);
+    hal::uart2.init({576000, CommStrategy::Blocking});
+	DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     calc_tb(DEBUGGER);
     while(true);

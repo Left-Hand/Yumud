@@ -91,9 +91,10 @@ void vl6180x_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();
-
-    hal::I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
-    i2c.init(400_KHz);
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    i2c.init({400_KHz});
 
     // VL6180X vl6180{i2c, I2cSlaveAddr<7>::from_u7(0)};
     VL6180X vl6180{&i2c};

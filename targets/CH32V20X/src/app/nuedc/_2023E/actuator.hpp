@@ -16,7 +16,7 @@
 #include "prelude.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 namespace nuedc::_2023E{
 

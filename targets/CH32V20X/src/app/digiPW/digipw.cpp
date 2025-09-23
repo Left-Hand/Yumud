@@ -36,7 +36,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 using namespace ymd::digipw;
 
@@ -50,7 +50,7 @@ void test_sogi(){
     // static constexpr int isr_freq = 16384/4;
     // static constexpr int isr_freq = 16384;
     static constexpr int isr_freq = 8192;
-
+    auto & timer = hal::timer1;
     Spll spll = {
         isr_freq, ac_freq,
         // 33,-32
@@ -60,7 +60,9 @@ void test_sogi(){
     real_t u0;
 
 
-    timer1.init({isr_freq});
+    hal::timer1.init({
+        .freq = isr_freq
+    }, EN);
 
     auto run_sogi = [&](){
 
@@ -92,13 +94,13 @@ void test_sogi(){
     }
 
     Microseconds dm = 0us;
-    timer1.bind_cb(TimerIT::Update, [&](){
+    timer.bind_cb(hal::TimerIT::Update, [&](){
         const auto m = clock::micros();
         run_sogi();
         dm = clock::micros() - m;
     });
 
-    timer1.enable_it(TimerIT::Update, {0,0});
+    timer.enable_it(hal::TimerIT::Update, {0,0}, EN);
 
     while(true){
         // DEBUG_PRINTLN_IDLE(raw_theta, spll.theta(), dm);
@@ -115,11 +117,11 @@ void digipw_main(){
     /*-----------------------*/
 
     // test_sogi();
-    auto & scl_gpio = PB<15>();
-    auto & sda_gpio = PB<14>();
+    auto scl_gpio = hal::PB<15>();
+    auto sda_gpio = hal::PB<14>();
     
-    I2cSw i2csw{&scl_gpio, &sda_gpio};
-    i2csw.init(1000000);
+    hal::I2cSw i2csw{&scl_gpio, &sda_gpio};
+    i2csw.init({1000000});
     
     // INA226 ina226{i2csw};
     // // ina226.init(10, 5);
@@ -132,18 +134,19 @@ void digipw_main(){
     /*-----------------------*/
 
     constexpr auto CHOPPER_FREQ = 100'000;
-    timer1.init({CHOPPER_FREQ});
-    timer1.init_bdtr(10ns);
+    auto & timer = hal::timer1;
+    timer.init({CHOPPER_FREQ}, EN);
+    timer.init_bdtr(10ns);
 
-    auto & pwm = timer1.oc<1>();
-    auto & pwmn = timer1.ocn<1>();
+    auto & pwm = timer.oc<1>();
+    auto & pwmn = timer.ocn<1>();
 
     pwm.init({});
     pwmn.init({});
 
     pwm.enable_cvr_sync(EN);
-    auto & en_gpio = PB<0>();
-    auto & led = PA<7>();
+    auto en_gpio = hal::PB<0>();
+    auto led = hal::PA<7>();
 
     en_gpio.outpp();
     led.outpp();
@@ -161,7 +164,7 @@ void digipw_main(){
     // int a;
     // DEBUG_PRINTLN(a);
 
-    timer1.bind_cb(TimerIT::Update, [&](){
+    timer.bind_cb(hal::TimerIT::Update, [&](){
         static q20 mt = 0;
         static constexpr q20 dt = 1_q20 / CHOPPER_FREQ;
         mt += dt;
@@ -171,7 +174,11 @@ void digipw_main(){
         // mp1907 = CLAMP(duty, 0, 0.4_r);
     });
 
-    timer1.enable_it(TimerIT::Update, {0,0});
+    timer.enable_it(
+        hal::TimerIT::Update, 
+        {0,0},
+        EN
+    );
 
     while(true){
         

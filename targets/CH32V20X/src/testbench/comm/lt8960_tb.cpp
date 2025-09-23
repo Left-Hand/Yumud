@@ -21,7 +21,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 using namespace ymd::drivers;
 
@@ -122,12 +122,17 @@ static constexpr Option<std::tuple<Ts...>> make_tuple_from_payload(std::span<con
 
 void lt8960_tb(){
 
-    auto & led = hal::PC<13>();
+    auto led = hal::PC<13>();
     led.outpp();
 
+    auto scl1_gpio = hal::PB<6>();
+    auto sda1_gpio = hal::PB<7>();
 
-    LT8960L tx_ltr{&hal::PB<6>(), &hal::PB<7>()};
-    LT8960L rx_ltr{&hal::PA<9>(), &hal::PA<10>()};
+    auto scl2_gpio = hal::PA<9>();
+    auto sda2_gpio = hal::PA<10>();
+
+    LT8960L tx_ltr{&scl1_gpio, &sda1_gpio};
+    LT8960L rx_ltr{&scl2_gpio, &sda2_gpio};
     
     auto common_settings = [](LT8960L & ltr) -> Result<void, LT8960L::Error>{
         static constexpr auto DATA_RATE = LT8960L::DataRate::_62_5K;
@@ -216,15 +221,15 @@ void lt8960_tb(){
 
 
     if (has_tx_authority()) {
-        hal::timer1.init({TX_FREQ});
-        hal::timer1.attach(hal::TimerIT::Update, {0,0}, tx_task);
+        hal::timer1.init({.freq = TX_FREQ}, EN);
+        hal::timer1.attach(hal::TimerIT::Update, {0,0}, tx_task, EN);
     }
 
     clock::delay(5ms);
 
     if (has_rx_authority()) {
-        hal::timer2.init({RX_FREQ});
-        hal::timer2.attach(hal::TimerIT::Update, {0,1}, rx_task);
+        hal::timer2.init({RX_FREQ}, EN);
+        hal::timer2.attach(hal::TimerIT::Update, {0,1}, rx_task, EN);
     }
 
     while(true){
@@ -242,7 +247,7 @@ void lt8960_main(){
     // DBG_UART.init(1152_KHz);
     DBG_UART.init({6_MHz});
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     lt8960_tb();
 }

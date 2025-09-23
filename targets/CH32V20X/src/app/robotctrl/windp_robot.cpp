@@ -30,15 +30,15 @@ using namespace ymd;
 namespace PhysicalConstants {
     static constexpr real_t L_s = 0.098_r;
     static constexpr real_t L = 0.679_r;
-    static constexpr real_t g = 9.8_r;
+    static constexpr real_t G = 9.8_r;
     static constexpr real_t h = 0.038_r;
     static constexpr real_t H = L + h;
     static constexpr real_t W = L + h;
-    static constexpr real_t m1 = 0.07_r;
-    static constexpr real_t m2 = 0.05_r;
-    static constexpr real_t M = m1+m2;
-    static constexpr real_t x = (m1 + 2*m2)/(2*m1 + 2*m2)*L;
-    static constexpr real_t J = m1*L*L/3 + m2*L*L;
+    static constexpr real_t M1 = 0.07_r;
+    static constexpr real_t M2 = 0.05_r;
+    static constexpr real_t M = M1+M2;
+    static constexpr real_t x = (M1 + 2*M2)/(2*M1 + 2*M2)*L;
+    static constexpr real_t J = M1*L*L/3 + M2*L*L;
 }
 
 static constexpr real_t cali_r(const real_t _x){
@@ -106,263 +106,83 @@ private:
 
 static constexpr real_t DELTA = 0.01_r;
 
-struct RobotMetaData{
-    Vec3<real_t> accel;
-    Vec3<real_t> gyro;
 
-    Quat<real_t> gravity_of_rs;
-    Vec3<real_t> gyro_of_rs;
-
-    Vec2<real_t> dir;
-    real_t rot_bias = 0;
-};
-
+template<typename Derived>
 struct TaskBase{
-    struct Input{
-        Vec2<real_t> a;
-        Vec2<real_t> w;
-        Vec2<real_t> p;
+    struct Measurements{
+        Vec2<real_t> angular_accel;
+        Vec2<real_t> omega;
+        Vec2<real_t> orientation;
     };
 
     using Output = Vec2<real_t>;
 };
 
-struct TaskCenter:public TaskBase{
-    constexpr Output calc(const Input & input){
-        return ((-0.017_r*input.a)+(-0.42_r*input.w));
+struct TaskCenter:public TaskBase<TaskCenter>{
+    static constexpr real_t Kp = 0.017_r;
+    static constexpr real_t Kd = 0.42_r;
+    constexpr Output calc(const Measurements meas) const {
+        return Kp*(-meas.angular_accel)+ Kd*(-meas.omega);
     }
 };
 
 
-struct TaskCircle:public TaskBase{
+struct TaskCircle:public TaskBase<TaskCircle>{
+    static constexpr real_t K_tan = 0.23_r;
+    static constexpr real_t Kp_norm = 2.2_r;
+    static constexpr real_t Kd_norm = 0.07_r;
 
-    constexpr Output calc(const Input & input){
+    real_t expected_radius;
+    constexpr Output calc(const Measurements meas) const {
         using namespace PhysicalConstants;
-        const auto p = input.p;
-        const auto a = input.a; 
-        const auto w = input.w;
-        const Vec2 vec_norm = p.normalized();
-        const Vec2 vec_tan = vec_norm.rotated(90_deg);
+
+        const auto vec_norm = meas.orientation.normalized();//计算当前摆杆姿态的法向量
+        const auto vec_tan = vec_norm.rotated(90_deg);//计算当前摆杆姿态的切向量
         
-        const real_t q = atan2(W, H);
-        const real_t theta = acos(cos(p.x)*cos(p.y));
+        const real_t cmd_theta = std::atan2(W, H);
+        const real_t meas_theta = std::acos( //计算摆杆与铅垂线的角度
+            std::cos(meas.orientation.x) * std::cos(meas.orientation.y));
+        const real_t theta_err = cmd_theta - meas_theta;
 
+        const real_t cmd_omega = std::sin(cmd_theta) * //期望的公转角速度
+            std::sqrt(G / (x * std::cos(cmd_theta)));
+        const real_t omega_err = cmd_omega - std::abs(meas.omega.dot(vec_tan));
 
-        const real_t targ_w = sin(q)*sqrt(g/(x*cos(q)));
-        const real_t d_w = targ_w - abs(w.dot(vec_tan));
-        
-        const Vec2 dir_t = 0.23_r*d_w*vec_tan*sign(w.dot(vec_tan));
-        const Vec2 dir_n = 2.2_r*(q-theta - 0.07_r*a.dot(vec_norm))*vec_norm*
-            (pow(abs(q-theta),0.8_r));
+        const auto out_tan = K_tan * omega_err * vec_tan * //切向控制器输出
+            sign(meas.omega.dot(vec_tan));
 
+        const auto out_norm = //法向控制器输出
+            (Kp_norm * theta_err - Kd_norm * meas.angular_accel.dot(vec_norm))
+            * vec_norm * std::abs(theta_err);
 
-        return dir_n + dir_t;
+        return out_norm + out_tan;
     }
 };
 
-struct TaskLine:public TaskBase{
-    constexpr Output calc(const Input & input, const Angle<real_t> theta){
+struct TaskLine:public TaskBase<TaskLine>{
+    constexpr Output calc(const Measurements meas, const Angle<real_t> theta){
         using namespace PhysicalConstants;
 
-        const auto p = input.p;
-        const auto a = input.a; 
-        const auto w = input.w;
+        const auto orientation = meas.orientation;
+        const auto angular_accel = meas.angular_accel; 
+        const auto omega = meas.omega;
 
         const Vec2 vec_norm = Vec2(0.0_r, 1.0_r).rotated(theta);
         const Vec2 vec_tan = Vec2(1.0_r, 0.0_r).rotated(theta);
         
-        const real_t d1 = input.w.cross(vec_tan);
-        const real_t d2 = input.a.cross(vec_tan);
-        const Vec2 dir_n = (0.027_r*d2 + 0.37_r*d1)*vec_norm;
+        const real_t d1 = meas.omega.cross(vec_tan);
+        const real_t d2 = meas.angular_accel.cross(vec_tan);
+        const Vec2 out_norm = (0.027_r*d2 + 0.37_r*d1)*vec_norm;
 
-        const real_t E_targ = M*g*x*(1.0_r - H / sqrt(H*H + W*W));
+        const real_t E_targ = M * G * x * (1.0_r - H / sqrt(H*H + W*W));
         
-        const real_t E_p = M*g*x*(1.0_r - cos(p.x)*cos(p.y));
-        const real_t E_k = 0.5_r * J * (w.project(vec_tan)).length_squared();
+        const real_t E_p = M * G * x * (1.0_r - cos(orientation.x)*cos(orientation.y));
+        const real_t E_k = 0.5_r * J * (omega.project(vec_tan)).length_squared();
         const real_t E = E_p + E_k;
 
-        Vec2 dir_t = 15_r*(E_targ - E + 0.00037_r*abs(a.dot(vec_tan))) 
-            * vec_tan * sign(w.dot(vec_tan));
-        return dir_n + dir_t;
+        const Vec2 out_tan = 15_r*(E_targ - E + 0.00037_r*abs(angular_accel.dot(vec_tan))) 
+            * vec_tan * sign(omega.dot(vec_tan));
+
+        return out_norm + out_tan;
     }
 };
-
-
-#if 0
-
-#include <Arduino.h>
-#include <SSD1315_128_64.hpp>
-#include <array>
-#include <SSD1315_72_40.hpp>
-#include <SSD1315_128_32.hpp>
-#include <Vec2.hpp>
-#include <PID.hpp>
-#include <math.h>
-#include <Basis.hpp>
-#include <MPU6050.hpp>
-#include <Basis.hpp>
-#include <Wire.h>
-#include <algorithm>
-
-// #include <MPU6050_6Axis_MotionApps20.h>
-// #include <VL53L0X.h>
-
-
-const uint8_t pin_L_r = D8;
-const uint8_t pin_LB = D7;
-const uint8_t pin_R_r = D6;
-const uint8_t pin_RB = D5;
-const uint8_t pin_EN = D0;
-const uint8_t pin_LK = D3;
-
-#de_rine EPS 0.00_r
-#de_rine XO_rS 0.05_r
-#de_rine ZO_rS 0.20_r
-
-MPU6050 mpu;
-SSD1315_128_64 oled;
-
-
-
-IRAM_ATTR void lock(){
-    static bool last_state = false;
-    // bool current_state = digitalRead(pin_LK)
-    digitalWrite(pin_EN, !last_state);
-    last_state = !last_state;
-}
-
-
-void sysCali(){
-    using namespace GlobalCon_rig;
-    static constexpr uint8_t n = 8;
-
-    Vec3 temp_gravity = Vec3();
-    Vec3 temp_gyro_of_rs = Vec3();
-    
-    for(uint8_t i = 0;i < n;i++){
-        temp_gravity += mpu.get_accel();
-        temp_gyro_of_rs += mpu.get_gyro();    
-        delay(5);
-    }
-    Vec3 gravity = temp_gravity / (real_t)n;
-    gravity_of_rs = Quat(Vec3(0,0,-1),gravity/gravity.length()).inverse();
-    gyro_of_rs = temp_gyro_of_rs / (real_t)n;
-}
-
-void getPos(){
-    using namespace GlobalCon_rig;
-    using namespace Measurements;
-    
-    accel = gravity_of_rs.x_rorm(mpu.get_accel_orignal());
-    accel.x = -accel.x;
-    Serial.println(accel.x);
-    gyro = (mpu.get_gyro_orignal() - gyro_of_rs);
-
-    static uint32_t last_us = 0;
-    DELTA = (micros() - last_us)*1E-6;
-    last_us = micros();
-
-    w = Vec2(gyro.x, gyro.y);
-    static Vec2 last_w = Vec2();
-    Vec2 a_temp = (w - last_w)/DELTA;
-    last_w = w;
-
-    static constexpr real_t k1 = 0.85;
-    static constexpr real_t k2 = 1.0 - k1;
-
-    static Vec2 a_filted = Vec2(0,0);
-    a_filted = k1*a_filted + k2*a_temp;
-    a = a_filted;
-
-    Vec3 g_fixed = Vec3(a.x, a.y, w.length_squared())*L_s + accel;
-    Quat pose = Quat(g_fixed.normalized(), Vec3(0,0,-1));
-
-    Basis pose_basis = pose; 
-    Vec3 pos3 = pose_basis.get_euler_xyz();
-
-    p = Vec2(-pos3.y, pos3.x);
-}
-
-// void 
-
-void displayOled(){
-    using namespace GlobalCon_rig;
-    Serial.println("T");
-    static uint32_t framen = 0;
-    framen ++;
-
-    Frame & frame = *oled.fetch_rrame();
-    frame.clear();
-    
-    frame.drawStringRow(Vec2i(0,0),"x:"+String(accel.x));
-    frame.drawStringRow(Vec2i(0,1),"y:"+String(accel.y));
-    frame.drawStringRow(Vec2i(0,2),"z:"+String(accel.z));
-    frame.drawStringRow(Vec2i(0,3),"l:"+String(accel.length()));
-
-    frame.drawStringRow(Vec2i(64,0),"x:"+String(gyro.x));
-    frame.drawStringRow(Vec2i(64,1),"y:"+String(gyro.y));
-    frame.drawStringRow(Vec2i(64,2),"z:"+String(gyro.z));
-    frame.drawStringRow(Vec2i(64,3),"l:"+String(gyro.length()));
-
-    // frame.drawStringRow(Vec2i(0,4),"x:"+String(pos.x));
-    // frame.drawStringRow(Vec2i(0,5),"y:"+String(pos.y));
-    // frame.drawStringRow(Vec2i(0,7),"l:"+String(pos.length()));
-
-    frame.drawChar(Vec2i(96, 48), '*');
-    static std::vector<Vec2i> tails;
-    i_r(framen % 4 == 0)tails.push_back(Vec2i(96-32*p.y, 48-32*p.x));
-    i_r(tails.size()>=8) tails.erase(tails.begin());
-    for (Vec2i tail:tails){
-        i_r (tail!= tails.back()) frame.drawChar(tail,'.');
-        else frame.drawChar(tail, '+');
-    }
-
-    frame.drawChar(Vec2i(32-32*dir.y, 48-32*dir.x), '+');
-    oled.pushStream();
-}
-
-void setup() {
-    initConn();
-    delay(20);
-    oled.init();
-    mpu.init();
-    delay(20);
-    // sysCali();
-
-}
-
-
-void loop() {
-    static real_t theta = 0.0_r;
-    theta += 0.001_r;
-    getPos();
-    displayOled();
-    // Wire.setClock
-    // displayOled();
-    // move(Vec2(-0.05,0.05));
-    // controlPoint();
-
-    i_r (Serial.available()) {  // 如果串口上有可用数据
-        String input = Serial.readStringUntil('\n');  // 读取一行字符，以换行符为分隔符
-        uint8_t first_separator = input.indexO_r(' ');  // 找到第一个逗号的位置
-        uint8_t second_separator = input.indexO_r(' ', first_separator + 1);  // 找到第二个逗号的位置
-        uint8_t cnt = (uint8_t)(first_separator != -1) + (uint8_t)(first_separator != -1);
-        
-        switch (cnt)
-        {
-        case 0:
-            
-            break;
-        
-        de_rault:
-            break;
-        }
-    }
-    
-    taskCenter();
-    // taskLine(0, 0.15_r);
-    // taskCircle(0.18_r);
-    // taskCircle();
-}
-
-#endif

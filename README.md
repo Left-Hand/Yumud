@@ -343,7 +343,7 @@ int main(){
 - [x] Line2 二维直线类
 - [ ] matrix 矩阵
     - [x] matrix_dynamic 动态矩阵
-    - [ ] matrix_static 静态矩阵
+    - [ ] static_matrix 静态矩阵
         - [x] 加减乘法
         - [x] 求转置/逆
         - [ ] 求行列式 

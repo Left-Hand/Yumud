@@ -56,7 +56,7 @@ IResult<> AW9523::init(const Config & cfg){
         res.is_err()) return res;
     auto clear_output = [this]()-> IResult<>{
         for(size_t i = 0; i < MAX_CHANNELS; i++){
-            if(const auto res = set_led_current(std::bit_cast<hal::PinNth>(
+            if(const auto res = set_led_current_dutycycle(std::bit_cast<hal::PinNth>(
                 hal::PinMask::from_nth(Nth(i)).as_u16()), 
                 0); res.is_err()) return Err(res.unwrap_err());
             }
@@ -123,12 +123,14 @@ IResult<> AW9523::set_led_current_limit(const CurrentLimit limit){
     return write_reg(reg);
 }
 
-IResult<> AW9523::set_led_current(const hal::PinMask pin_mask, const uint8_t current){
+IResult<> AW9523::set_led_current_dutycycle(
+    const hal::PinMask pin_mask, 
+    const real_t dutycycle
+){
     auto iter = pin_mask.iter();
     while(iter.has_next()){
-        const auto index = iter.index();
-        // DEBUG_PRINTLN(index);
-        if(const auto res = write_reg(get_dim_addr(index), current);
+        const auto nth = Nth(iter.index());
+        if(const auto res = write_reg(get_dim_addr(nth), static_cast<uint8_t>(dutycycle * 255));
             res.is_err()) return Err(res.unwrap_err());
         iter.next();
     }

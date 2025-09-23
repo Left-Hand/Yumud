@@ -14,7 +14,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 // 外设：
 // UART:576000波特率输出，用于观察信号 
@@ -58,7 +58,7 @@ void pfm_zvs_main(){
 
     // timer.init(CHOP_FREQ);
     // timer.init(2_KHz);
-    timer.init({20_KHz});
+    timer.init({20_KHz}, EN);
     
     pwm_p.init({
         // .valid_level = LOW

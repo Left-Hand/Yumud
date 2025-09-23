@@ -48,7 +48,6 @@
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
 
-#include "dsp/motor_ctrl/sensorless/nonlinear/NonlinearObserver.hpp"
 
 #include "concept/analog_channel.hpp"
 
@@ -130,20 +129,22 @@ void bldc_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     auto & spi = hal::spi1;
     auto & timer1 = hal::timer1;
     auto & can = hal::can1;
     auto & adc = hal::adc1;
 
-    auto & led_blue_gpio_ = hal::PC<13>();
-    auto & led_red_gpio_ = hal::PC<14>();
-    auto & led_green_gpio_ = hal::PC<15>();
+    auto led_blue_gpio_ = hal::PC<13>();
+    auto led_red_gpio_ = hal::PC<14>();
+    auto led_green_gpio_ = hal::PC<15>();
 
-    auto & mp6540_en_gpio_ = hal::PB<15>();
-    auto & mp6540_nslp_gpio_ = hal::PB<14>();
-    auto & mp6540_nfault_gpio_ = hal::PA<7>();
+    auto mp6540_en_gpio_ = hal::PB<15>();
+    auto mp6540_nslp_gpio_ = hal::PB<14>();
+    auto mp6540_nfault_gpio_ = hal::PA<7>();
+
+    auto ma730_cs_gpio_ = hal::PA<15>();
 
     auto & pwm_u = timer1.oc<1>();
     auto & pwm_v = timer1.oc<2>();
@@ -175,7 +176,7 @@ void bldc_main(){
     timer1.init({
         .freq = CHOPPER_FREQ, 
         .mode = hal::TimerCountMode::CenterAlignedUpTrig
-    });
+    }, EN);
 
     timer1.oc<4>().init({.install_en = DISEN});
     timer1.oc<4>().cvr() = timer1.arr() - 1;
@@ -195,9 +196,10 @@ void bldc_main(){
     });
 
 
+
     MA730 ma730_{
         &spi,
-        spi.allocate_cs_gpio(&hal::PA<15>())
+        spi.allocate_cs_gpio(&ma730_cs_gpio_)
             .unwrap()
     };
 
@@ -209,11 +211,11 @@ void bldc_main(){
 
     mp6540_en_gpio_.outpp(HIGH);
     mp6540_nslp_gpio_.outpp(HIGH);
-    static constexpr auto mp6540_scaler = MP6540::make_adc_scaler(10'000);
+    static constexpr auto mp6540_adc_scaler = MP6540::make_adc_scaler(10'000);
 
-    [[maybe_unused]] auto u_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
-    [[maybe_unused]] auto v_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
-    [[maybe_unused]] auto w_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_scaler);
+    [[maybe_unused]] auto u_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_adc_scaler);
+    [[maybe_unused]] auto v_sense = hal::ScaledAnalogInput(adc.inj<2>(), mp6540_adc_scaler);
+    [[maybe_unused]] auto w_sense = hal::ScaledAnalogInput(adc.inj<3>(), mp6540_adc_scaler);
     
     auto uvw_pwmgen = UvwPwmgen(&pwm_u, &pwm_v, &pwm_w);
     
@@ -222,7 +224,7 @@ void bldc_main(){
 
     hal::PA<7>().inana();
 
-    AlphaBetaCoord ab_volt_;
+    AlphaBetaCoord<q16> ab_volt_;
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -298,23 +300,26 @@ void bldc_main(){
         #if 1
         const auto q_volt = 3.3_r;
 
-        [[maybe_unused]] const auto ab_volt = DqCoord{
+        [[maybe_unused]] const auto alphabeta_volt = DqCoord<q16>{
             .d = 0, 
             .q = q_volt
-        }.to_alpha_beta(Angle<q16>::from_turns(ctime));
+        }.to_alphabeta(Angle<q16>::from_turns(ctime));
         #else
         const auto q_volt = CLAMP2(
             pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)
         , SVPWM_MAX_VOLT);
 
-        [[maybe_unused]] const auto ab_volt = DqCoordVoltage{
+        [[maybe_unused]] const auto alphabeta_volt = DqCoordVoltage{
             0, 
             CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
         }.to_alpha_beta(meas_elecrad);
         #endif
+        static constexpr auto INV_BUS_VOLT = q16(1.0/12);
 
-
-        SVPWM3::set_ab_volt(uvw_pwmgen, ab_volt[0], ab_volt[1]);
+        SVPWM3::set_alpha_beta_dutycycle(
+            uvw_pwmgen, 
+            alphabeta_volt * INV_BUS_VOLT 
+        );
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
@@ -326,7 +331,7 @@ void bldc_main(){
             const auto m = clock::micros();
             sensored_foc_cb();
             exe_us_ = clock::micros() - m;
-        }
+        }, EN
     );
     auto blink_service = [&]{
 

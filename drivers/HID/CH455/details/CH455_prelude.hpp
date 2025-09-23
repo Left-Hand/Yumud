@@ -83,31 +83,31 @@ public:
         i2c_(scl, sda){;}
 
     IResult<> write_u16(const uint16_t cmd){
-        if(const auto res = i2c_.begin(
+        if(const auto res = i2c_.borrow(
                 hal::LockRequest((uint8_t(cmd>>7)&CH455_I2C_MASK)|CH455_I2C_ADDR, 0)
             );
             res.is_err()) return Err(res.unwrap_err());
         
         const auto res = i2c_.write(uint8_t(cmd&0xFF));
-        i2c_.end();
+        i2c_.lend();
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<uint8_t> read_u8(){
-        if(const auto res = i2c_.begin(
+        if(const auto res = i2c_.borrow(
                 hal::LockRequest((uint8_t(CH455_GET_KEY>>7) & CH455_I2C_MASK) | 0x01 | CH455_I2C_ADDR, 0));
             res.is_err()) return Err(res.unwrap_err());
 
         uint32_t ret;
         const auto res = i2c_.read(ret, NACK);
-        i2c_.end();
+        i2c_.lend();
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok(uint8_t(ret));
     }
 
     void init(){
-        i2c_.init(100000);
+        i2c_.init({100000});
     }
 private:
     hal::I2cSw i2c_;

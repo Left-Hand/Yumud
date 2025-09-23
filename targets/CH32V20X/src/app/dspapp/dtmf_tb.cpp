@@ -62,7 +62,7 @@ void dtmf_main(){
 
     hal::timer1.init({
         .freq = FS
-    });
+    }, EN);
 
     hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
         const auto t = clock::time();
@@ -79,5 +79,5 @@ void dtmf_main(){
             h_filter.output(),
             l_filter.output() 
         );
-    });
+    }, EN);
 }

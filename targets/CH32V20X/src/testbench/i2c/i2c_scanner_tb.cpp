@@ -15,7 +15,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 // #define UART DEBUGGER_INST
 #define UART hal::uart2
@@ -46,8 +46,8 @@ struct I2cTester{
     static constexpr uint32_t start_freq = 200_KHz;
     static constexpr auto grow_scale = 2;
     
-    static Result<uint32_t, hal::HalError> get_max_baudrate(I2c & i2c, const uint8_t read_addr){
-        hal::I2cDrv i2c_drv{&i2c, I2cSlaveAddr<7>::from_u7(read_addr >> 1)};
+    static Result<uint32_t, hal::HalError> get_max_baudrate(hal::I2c & i2c, const uint8_t read_addr){
+        hal::I2cDrv i2c_drv{&i2c, hal::I2cSlaveAddr<7>::from_u7(read_addr >> 1)};
 
         const uint32_t max_baud = [&]{
             uint32_t baud = start_freq;
@@ -65,12 +65,12 @@ struct I2cTester{
         }();
 
         // DEBUG_PRINTLN("??");
-        uart2.set_rx_strategy(CommStrategy::Blocking);
+        hal::uart2.set_rx_strategy(CommStrategy::Blocking);
 
         return Ok{max_baud};
     }
-    static Result<void, hal::HalError> validate(I2c & i2c, const uint8_t read_addr, const uint32_t bbaud = start_freq){
-        const auto res = hal::I2cDrv{&i2c, I2cSlaveAddr<7>::from_u7(read_addr >> 1)}.validate();
+    static Result<void, hal::HalError> validate(hal::I2c & i2c, const uint8_t read_addr, const uint32_t bbaud = start_freq){
+        const auto res = hal::I2cDrv{&i2c, hal::I2cSlaveAddr<7>::from_u7(read_addr >> 1)}.validate();
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -84,31 +84,10 @@ void i2c_scanner_main(){
     });
     DEBUGGER.retarget(&UART);
     // DEBUGGER.force_sync();
-    
-    I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
-    i2c.init(100_KHz);
-    
-    // auto data = std::vector{1, 2, 3};
-    // 遍历时打印每个元�?
-    // for (int n : data | log("Value: ")) { /* ... */ }
-    // 输出�?
-    // Value: 1
-    // Value: 2
-    // Value: 3
-
-    namespace views = std::views;
-    std::vector<int> data { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    auto result = data
-       | views::filter([](const auto& value) { return value % 2 == 0; })/* 2 4 6 8 10 */
-       | views::transform([](const auto& value) { return value * 2; })/* 4 8 12 16 20 */
-       | views::drop(2)                                                 /* 12 16 20 */
-       | views::reverse                                                 /* 20 16 12 */
-    //    | views::transform([](int i) { return to_string(i); })           /* "20" "16" "12" */
-    ;
-
-    for(const auto item:result){
-        DEBUG_PRINTLN(item);
-    }
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    i2c.init({100_KHz});
 
 
     DEBUG_PRINTLN();

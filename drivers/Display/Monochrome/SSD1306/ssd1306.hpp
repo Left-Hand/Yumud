@@ -83,7 +83,7 @@ public:
             res.is_err()) return res;
         if(const auto res = preinit_by_cmds(cfg.buf); 
             res.is_err()) return res;
-        if(const auto res = enable_display(); 
+        if(const auto res = enable_display(EN); 
             res.is_err()) return res;
         if(const auto res = set_offset(cfg.offset);
             res.is_err()) return res;
@@ -96,7 +96,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> enable_display(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_display(const Enable en);
     [[nodiscard]] IResult<> enable_flip_y(const Enable flip_en = EN){
         return phy_.write_command(0xA0 | (flip_en == EN));}
     [[nodiscard]] IResult<> enable_flip_x(const Enable flip_en = EN){

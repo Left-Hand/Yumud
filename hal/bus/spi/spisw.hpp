@@ -50,7 +50,7 @@ public:
     ):
         SpiSw(sclk_gpio, mosi_gpio, miso_gpio)
     {
-        bind_cs_gpio(cs_gpio, 0);
+        bind_cs_gpio(cs_gpio, 0_nth);
     }
 
     SpiSw(const SpiSw &) = delete;

@@ -54,10 +54,6 @@ public:
     Uart(const Uart & other) = delete;
     Uart(Uart && other) = delete;
 
-
-    virtual Gpio & txio() = 0;
-    virtual Gpio & rxio() = 0;
-
     struct Config{
         uint32_t baudrate;
         CommStrategy rx_strategy = CommStrategy::Dma;
@@ -71,7 +67,7 @@ public:
     size_t remain() const {return tx_fifo_.size() - tx_fifo_.available();}
 
     virtual void set_tx_strategy(const CommStrategy _tx_strategy) = 0;
-    virtual void set_rx_strategy(const CommStrategy _rxMethod) = 0;
+    virtual void set_rx_strategy(const CommStrategy _rx_strategy) = 0;
     void bind_post_tx_cb(auto && cb){post_tx_cb_ = std::move(cb);}
     void bind_post_rx_cb(auto && cb){post_rx_cb_ = std::move(cb);}
 

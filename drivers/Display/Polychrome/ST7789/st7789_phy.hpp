@@ -81,7 +81,7 @@ private:
         const std::span<const auto> pbuf, 
         Continuous cont = DISC) {
         if (const auto res = spi_
-            .begin(idx_.to_req()); res.is_err()) 
+            .borrow(idx_.to_req()); res.is_err()) 
                 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
@@ -97,7 +97,7 @@ private:
             // (void)spi_.write(static_cast<uint32_t>(p[i]));
         } 
 
-        if (cont == DISC) spi_.end();
+        if (cont == DISC) spi_.lend();
 
         if constexpr (sizeof(T) != 1) {
             if(const auto res = spi_.set_data_width(8); res.is_err()) 
@@ -113,7 +113,7 @@ private:
         const size_t len, 
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
-        if (const auto res = spi_.begin(idx_.to_req()); res.is_err()) 
+        if (const auto res = spi_.borrow(idx_.to_req()); res.is_err()) 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
@@ -125,7 +125,7 @@ private:
                 res.is_err()) 
                 return Err(res.unwrap_err());
         } 
-        if (cont == DISC) spi_.end();
+        if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) {
             if(const auto res = spi_.set_data_width(8); res.is_err()) 
             return Err(res.unwrap_err());
@@ -139,7 +139,7 @@ private:
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
-        if(const auto res = spi_.begin(idx_.to_req()); res.is_err()) 
+        if(const auto res = spi_.borrow(idx_.to_req()); res.is_err()) 
             return Err(res.unwrap_err());
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
@@ -155,7 +155,7 @@ private:
             return Err(res.unwrap_err());
         }
 
-        if (cont == DISC) spi_.end();
+        if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) {
             if(const auto res = spi_.set_data_width(8); res.is_err()) 
             return Err(res.unwrap_err());

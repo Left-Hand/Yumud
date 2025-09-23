@@ -55,8 +55,8 @@ public:
 
     [[nodiscard]] IResult<uint16_t> read_signal_count();
 
-    [[nodiscard]] IResult<> enable_high_precision(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_cont_mode(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_high_precision(const Enable en);
+    [[nodiscard]] IResult<> enable_cont_mode(const Enable en);
     [[nodiscard]] IResult<> update();
 
 private:

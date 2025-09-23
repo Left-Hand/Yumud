@@ -123,9 +123,9 @@ public:
 
     struct SlaveAlgoHelper{
 
-        static constexpr DutySpan calc_duty_span(const real_t duty){
+        static constexpr DutySpan calc_duty_span(const real_t dutycycle){
             constexpr auto NEAR_ONE = 0.999_r;
-            return static_cast<DutySpan>(uint8_t(NEAR_ONE + duty * 3)); 
+            return static_cast<DutySpan>(uint8_t(NEAR_ONE + dutycycle * 3)); 
         }
 
         void test();
@@ -155,8 +155,8 @@ public:
         timer_.init({
             cfg.freq, 
             hal::TimerCountMode::CenterAlignedDualTrig, 
-            DISEN}
-        );
+        }, DISEN
+    );
         timer_.set_deadzone_ns(cfg.deadzone_ns);
         timer_.enable_cc_ctrl_sync(DISEN);
 
@@ -188,16 +188,17 @@ public:
         });
 
         pwm_trig_.set_dutycycle(TWO_BY_3);
-        test_gpio.outpp();
-        timer_.enable();
+        // test_gpio.outpp();
+        timer_.enable(EN);
     }
 
     using Duty = std::array<real_t, 3>;
 
-    __no_inline void set_dutycycle(const Duty duty){
-        duty_cmd_shadow_[0] = duty[0];
-        duty_cmd_shadow_[1] = duty[1];
-        duty_cmd_shadow_[2] = duty[2];
+    template<typename UvwDutycycle>
+    __no_inline void set_dutycycle(const UvwDutycycle dutycycle){
+        dutycycle_cmd_shadow_[0] = dutycycle[0];
+        dutycycle_cmd_shadow_[1] = dutycycle[1];
+        dutycycle_cmd_shadow_[2] = dutycycle[2];
     }
 
     void set_freq(const uint32_t freq){
@@ -211,7 +212,7 @@ public:
     void static_test();
 
     void on_update_isr(){
-        test_gpio.clr();
+        // test_gpio.clr();
 
         const auto tim_arr = timer_.arr();
         const auto tim_cnt = timer_.cnt();
@@ -230,16 +231,16 @@ public:
         trig_occasion_opt_ = Some(curr_occasion);
 
         if(is_on_top){
-            duty_cmd_[0] = duty_cmd_shadow_[0];
-            duty_cmd_[1] = duty_cmd_shadow_[1];
-            duty_cmd_[2] = duty_cmd_shadow_[2];
+            duty_cmd_[0] = dutycycle_cmd_shadow_[0];
+            duty_cmd_[1] = dutycycle_cmd_shadow_[1];
+            duty_cmd_[2] = dutycycle_cmd_shadow_[2];
         }
 
-        test_gpio.set();
+        // test_gpio.set();
     }
 
     void on_ch4_isr(){
-        test_gpio.clr();
+        // test_gpio.clr();
 
         if(trig_occasion_opt_.is_none()) return;
 
@@ -267,7 +268,7 @@ public:
         set_pwm_shift_120(pwm_v_, duty_cmd_[1], curr_occasion, tim_arr);
         set_pwm_shift_240(pwm_w_, duty_cmd_[2], curr_occasion, tim_arr);
 
-        test_gpio.set();
+        // test_gpio.set();
     }
 
 private:
@@ -281,19 +282,19 @@ private:
     hal::TimerOCN & pwm_vn_;
     hal::TimerOCN & pwm_wn_;
 
-    hal::Gpio & test_gpio = hal::PA<12>();
+    // hal::Gpio & test_gpio = hal::PA<12>();
 
     Option<TrigOccasion> trig_occasion_opt_ = None;
-    Duty duty_cmd_shadow_ = {0.0_r, 0.0_r, 0.0_r};
+    Duty dutycycle_cmd_shadow_ = {0.0_r, 0.0_r, 0.0_r};
     Duty duty_cmd_ = {0.0_r, 0.0_r, 0.0_r};
 
     static void set_pwm_shift_120(
         hal::TimerOC & pwm, 
-        const real_t duty,
+        const real_t dutycycle,
         const TrigOccasion curr_ocs, 
         const uint32_t arr
     ){
-        const auto duty_span = SlaveAlgoHelper::calc_duty_span(duty);
+        const auto duty_span = SlaveAlgoHelper::calc_duty_span(dutycycle);
 
         switch(duty_span){
         case DutySpan::_120:
@@ -301,7 +302,7 @@ private:
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::ActiveForever);
-                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 + duty)));
+                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 + dutycycle)));
                     pwm.set_oc_mode(OcMode::ActiveBelowCvr);
                     pwm.enable_cvr_sync(EN);
                     pwm.set_cvr(uint32_t(arr * (0)));
@@ -312,7 +313,7 @@ private:
                     pwm.set_cvr(uint32_t(arr * (1)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     pwm.enable_cvr_sync(EN);
-                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - duty)));
+                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - dutycycle)));
                     break;
                 default: break;
             };break;
@@ -323,7 +324,7 @@ private:
                     pwm.set_oc_mode(OcMode::ActiveForever);
                     pwm.set_cvr(uint32_t(arr * (0)));
                     pwm.enable_cvr_sync(EN);
-                    pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - duty)));
+                    pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - dutycycle)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     break;
                 case TrigOccasion::DownSecond:
@@ -331,7 +332,7 @@ private:
                     pwm.set_oc_mode(OcMode::InactiveForever);
                     pwm.set_cvr(uint32_t(arr * (1)));
                     pwm.enable_cvr_sync(EN);
-                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - duty)));
+                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - dutycycle)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     break;
                 default: break;
@@ -344,12 +345,12 @@ private:
                     pwm.set_cvr(uint32_t(arr * (0)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     pwm.enable_cvr_sync(EN);
-                    pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - duty)));
+                    pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - dutycycle)));
                     break;
                 case TrigOccasion::DownSecond:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::InactiveForever);
-                    pwm.set_cvr(uint32_t(arr * (duty - TWO_BY_3)));
+                    pwm.set_cvr(uint32_t(arr * (dutycycle - TWO_BY_3)));
                     pwm.set_oc_mode(OcMode::ActiveBelowCvr);
                     pwm.enable_cvr_sync(EN);
                     pwm.set_cvr(uint32_t(arr * (1)));
@@ -362,11 +363,11 @@ private:
 
     static void set_pwm_shift_240(
         hal::TimerOC & pwm, 
-        const real_t duty,
+        const real_t dutycycle,
         const TrigOccasion curr_ocs, 
         const uint32_t arr
     ){
-        const auto duty_span = SlaveAlgoHelper::calc_duty_span(duty);
+        const auto duty_span = SlaveAlgoHelper::calc_duty_span(dutycycle);
 
         switch(duty_span){
         case DutySpan::_120:
@@ -377,12 +378,12 @@ private:
                     pwm.set_cvr(uint32_t(arr * (0)));
                     pwm.set_oc_mode(OcMode::ActiveBelowCvr);
                     pwm.enable_cvr_sync(EN);
-                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 + duty)));
+                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 + dutycycle)));
                     break;
                 case TrigOccasion::DownFirst:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::ActiveForever);
-                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - duty)));
+                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - dutycycle)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     pwm.enable_cvr_sync(EN);
                     pwm.set_cvr(uint32_t(arr * (1)));
@@ -396,7 +397,7 @@ private:
                     pwm.set_oc_mode(OcMode::ActiveForever);
                     pwm.set_cvr(uint32_t(arr * (0)));
                     pwm.enable_cvr_sync(EN);
-                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - duty)));
+                    pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - dutycycle)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     break;
                 case TrigOccasion::DownSecond:
@@ -404,7 +405,7 @@ private:
                     pwm.set_oc_mode(OcMode::InactiveForever);
                     pwm.set_cvr(uint32_t(arr * (1)));
                     pwm.enable_cvr_sync(EN);
-                    pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - duty)));
+                    pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - dutycycle)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     break;
                 default: break;
@@ -414,7 +415,7 @@ private:
                 case TrigOccasion::UpFirst:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::InactiveForever);
-                    pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - duty)));
+                    pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - dutycycle)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     pwm.enable_cvr_sync(EN);
                     pwm.set_cvr(uint32_t(arr * (0)));
@@ -425,7 +426,7 @@ private:
                     pwm.set_cvr(uint32_t(arr * (1)));
                     pwm.set_oc_mode(OcMode::ActiveBelowCvr);
                     pwm.enable_cvr_sync(EN);
-                    pwm.set_cvr(uint32_t(arr * (duty - TWO_BY_3)));
+                    pwm.set_cvr(uint32_t(arr * (dutycycle - TWO_BY_3)));
                     break;
                 default: break;
             }; break;

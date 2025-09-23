@@ -16,14 +16,14 @@ void ma730_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     DEBUGGER_INST.init({576_KHz});
     DEBUGGER.retarget(&DEBUGGER_INST);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
     auto & spi = hal::spi1;
     spi.init({9_MHz});
-
-    MA730 ma730{&spi, spi.allocate_cs_gpio(&hal::PA<15>()).examine()};
+    auto spi_cs_gpio_ = hal::PA<15>();
+    MA730 ma730{&spi, spi.allocate_cs_gpio(&spi_cs_gpio_).examine()};
     ma730.init({
         .direction = CW
     }).examine();

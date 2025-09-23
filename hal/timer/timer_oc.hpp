@@ -11,10 +11,10 @@ class TimerOutBase: public TimerChannel{
 protected:
     TimerOutBase(TIM_TypeDef * inst, const ChannelNth nth):
         TimerChannel(inst, nth){;}
-    void install_to_pin(const Enable en = EN);
+    void install_to_pin(const Enable en);
 public:
     void set_valid_level(const BoolLevel level);
-    void enable_output(const Enable en = EN);
+    void enable_output(const Enable en);
 
 
 };
@@ -47,9 +47,9 @@ public:
     void init(const TimerOcPwmConfig & config);
 
     void set_oc_mode(const Mode mode);
-    void enable_cvr_sync(const Enable en = EN);
+    void enable_cvr_sync(const Enable en);
     
-    Option<Gpio &> io();
+    Gpio io();
 
     __fast_inline volatile uint16_t & cvr() {return cvr_;}
     __fast_inline volatile uint16_t & arr() {return arr_;}
@@ -59,7 +59,7 @@ public:
 
     __fast_inline void set_dutycycle(const real_t duty){cvr_ = int(duty * arr_);}
     __fast_inline void set_cvr(const uint cvr){cvr_ = cvr;}
-    __fast_inline real_t get_dutycycle(){return iq_t<8>(cvr_) / int(arr_);}
+    __fast_inline real_t get_dutycycle(){return iq_t<16>(cvr_) / uint32_t(arr_);}
 
 
 };
@@ -74,7 +74,7 @@ public:
 
     void init(const TimerOcnPwmConfig & cfg);
 
-    Option<Gpio &> io();
+    Gpio io();
 };
 
 
@@ -125,9 +125,9 @@ public:
 
         if(is_negative){
             pos_oc_.set_dutycycle(zero_value);
-            neg_oc_.set_dutycycle(abs_value);
+            neg_oc_.set_dutycycle(abs_value );
         }else{
-            pos_oc_.set_dutycycle(abs_value);
+            pos_oc_.set_dutycycle(abs_value );
             neg_oc_.set_dutycycle(zero_value);
         }
     }

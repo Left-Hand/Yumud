@@ -10,17 +10,26 @@
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
+#define SCL_GPIO hal::PD<2>()
+#define SDA_GPIO hal::PC<12>()
+
 void pca_tb(OutputStream & logger){
-    I2cSw i2c = {&hal::PD<2>(), &hal::PC<12>()};
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
 
     static constexpr int servo_freq = 50;
     
-    i2c.init(100_KHz);
+    i2c.init({100_KHz});
     PCA9685 pca{&i2c};
-    pca.init({servo_freq, 1.09_r}).unwrap();
+    pca.init({
+        .freq = servo_freq, 
+        .trim = 1.09_r
+    }).unwrap();
 
     MG995 servo_left{pca[0]};
     MG995 servo_right{pca[1]};

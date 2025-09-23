@@ -24,7 +24,7 @@ static constexpr auto CTRL_FREQ = 50;
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::robots;
 
 #define USE_MOCK_SERVO
@@ -55,7 +55,9 @@ public:
     void setup(){
 
 
-        SERVO_PWMGEN_TIMER.init({50});
+        SERVO_PWMGEN_TIMER.init({
+            .freq = 50
+        }, EN);
 
         #ifndef USE_MOCK_SERVO
 
@@ -84,7 +86,7 @@ public:
     template<typename Fn>
     void register_servo_ctl_callback(Fn && callback){
 
-        SERVO_PWMGEN_TIMER.attach(TimerIT::Update, {0, 0}, std::forward<Fn>(callback));
+        SERVO_PWMGEN_TIMER.attach(hal::TimerIT::Update, {0, 0}, std::forward<Fn>(callback));
     }
 private:
 
@@ -149,8 +151,8 @@ void nuedc_2023e_main(){
     using namespace nuedc::_2023E;
     DBG_UART.init({576000});
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.no_brackets();
-    DEBUGGER.force_sync();
+    DEBUGGER.no_brackets(EN);
+    DEBUGGER.force_sync(EN);
     DEBUGGER.set_eps(4);
 
     const auto cfg = Factory::make_cfg();

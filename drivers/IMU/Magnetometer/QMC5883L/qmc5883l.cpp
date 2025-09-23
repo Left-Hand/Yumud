@@ -31,7 +31,7 @@ IResult<> QMC5883L::init(){
         res.is_err()) return res;
     if(const auto res = this->set_reset_period(1);
         res.is_err()) return res;
-    if(const auto res = this->enable_cont_mode();
+    if(const auto res = this->enable_cont_mode(EN);
         res.is_err()) return res;
     if(const auto res = this->set_fs(FullScale::_2G);
         res.is_err()) return res;

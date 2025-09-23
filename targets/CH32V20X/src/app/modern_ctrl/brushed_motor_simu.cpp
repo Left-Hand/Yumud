@@ -47,62 +47,6 @@ void test_burshed_motor(){
         DEBUG_PRINTLN(u, td.get()[0][0], td.get()[1][0], td.get()[2], u1 - u0);
     };
 
-    [[maybe_unused]]
-    auto test_cs = [&](const auto t){
-        const auto tau = 80.0_r;
-        // const auto u = 6 * Vec2<q16>::RIGHT.rotated(real_t(TAU) * t);
-        // const auto [x,y] = sincos(real_t(TAU) * t);
-        // const auto m = sin(3 * real_t(TAU) * t);
-        // const auto [x,y] = sincos(ret);
-        // const auto u = Vec2<q16>{CLAMP(70 * x, -30, 30), 6 * y};
-        // const auto u = Vec2<q16>{CLAMP(70 * x, -5, 5) + m, 0};
-        
-        // const auto u = 10 * frac(t);
-        // const auto u = 10 * sinpu(t);
-        // const auto u = 150 * CLAMP2(sin(t/5), 0.7_r);
-        // const auto u = 15 * CLAMP2(sin(t), 0.7_r);
-        // const auto u = 15 * t + 5 * sin(3 * t);
-        // const auto u = 5 * frac(t);
-        const auto u = 10 * sign(sin(3 * t));
-
-        // const auto u = Vec2<q16>{CLAMP(70 * x, -30, 30), 0};
-        // const auto u = Vec2<q16>{6 * x, 0};
-
-        static dsp::Leso leso{dsp::Leso::Config{
-            .b0 = 1,
-            .w = 17.8_r,
-            .fs = 1000
-        }};
-
-        static dsp::CommandShaper1 cs{{
-            .kp = tau * tau,
-            .kd = 2 * tau,
-            .max_spd = 40.0_r,
-            // .max_acc = 200.0_r,
-            // .max_acc = 80.0_r,
-            .max_acc = 100.0_r,
-            .fs = 1000
-        }};
-
-
-        const auto u0 = clock::micros();
-        cs.update(u);
-        const auto u1 = clock::micros();
-
-        leso.update(cs.get()[0], u);
-        DEBUG_PRINTLN(
-            u,
-            cs.get()[0],
-            leso.get_disturbance(),
-            u1 - u0
-        //     cs.get()[0], 
-        //     cs.get()[1], 
-        //     cs.get()[2],
-        //     cs.kp_,
-        //     cs.max_acc_
-        //     // u1 - u0
-        );
-    };
 
     static constexpr uint ISR_FREQ = 20000;
 
@@ -127,8 +71,8 @@ void test_burshed_motor(){
 
     static mock::MockBrushedMotor motor{{.fs = ISR_FREQ}};
     // uint32_t exe;
-    auto & test_gpio = hal::PC<13>();
-    test_gpio.outpp();
+    auto watch_gpio = hal::PC<13>();
+    watch_gpio.outpp();
     auto test_leso = [&](const auto t){
         // const auto tau = 80.0_r;
 
@@ -143,7 +87,7 @@ void test_burshed_motor(){
         // const auto p0 = 30 * sin(t);
 
         // const auto u0 = clock::micros();
-        test_gpio.clr();
+
 
         cs.update(p0);
         const auto p = cs.get()[0];
@@ -161,16 +105,16 @@ void test_burshed_motor(){
         const auto dist_inj = d;
         
 
-        motor.update(u + dist_inj - leso.get_disturbance());
-        // motor.update(u + dist_inj - leso.get_disturbance());
+        motor.update(u + dist_inj - leso.disturbance());
+        // motor.update(u + dist_inj - leso.disturbance());
         leso.update(motor.get()[1], u);
         // const auto u1 = clock::micros();
-        test_gpio.set();
+
 
         // DEBUG_PRINTLN(
         //     p0, p, v, u,
         //     motor.get()[0], motor.get()[1],
-        //     leso.get_disturbance(),
+        //     leso.disturbance(),
         //     u1 - u0, dist_inj
         // );
 
@@ -178,20 +122,18 @@ void test_burshed_motor(){
     };
 
     clock::delay(20ms);
-    // bindSystickCb([&]{
-    //     const auto t = time();
-    //     // test_td(t);
-    //     test_cs(t);
-    // });
-    
+
     real_t t = 0.0_r;
 
-    hal::timer1.init({ISR_FREQ});
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&]{
-        t += (1.0_r / ISR_FREQ);
-        test_leso(t);
-
-    });
+    hal::timer1.init({ISR_FREQ}, EN);
+    hal::timer1.attach(hal::TimerIT::Update, {0,0}, 
+        [&]{
+            watch_gpio.clr();
+            t += (1.0_r / ISR_FREQ);
+            test_leso(t);
+            watch_gpio.set();
+        }, EN
+    );
 
     while(true){
         clock::delay(1ms);
@@ -199,7 +141,7 @@ void test_burshed_motor(){
         DEBUG_PRINTLN(
             //     p0, p, v, u,
                 motor.get()[0], motor.get()[1],
-                leso.get_disturbance()
+                leso.disturbance()
             //     u1 - u0, dist_inj
         );
     }

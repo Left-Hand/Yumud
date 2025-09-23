@@ -13,14 +13,14 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 void hive_main(){
-    uart2.init({576000});
-    DEBUGGER.retarget(&uart2);
+    hal::uart2.init({576000});
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
     using num_type = int;
     std::hive<num_type> i_hive;

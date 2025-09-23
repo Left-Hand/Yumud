@@ -23,7 +23,7 @@
 // https://zplutor.github.io/2022/03/25/cpp-coroutine-beginner/
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 struct CustomAllocator {
     void* allocate(size_t size){
@@ -558,10 +558,10 @@ void lazy_main() {
     // UART.enable_single_line_mode(false);
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync();
+    DEBUGGER.force_sync(EN);
 
     // auto & led = hal::PD<0>();
-    auto & led = hal::PB<8>();
+    auto led = hal::PB<8>();
     led.outpp();
     while(true){
         led = HIGH;

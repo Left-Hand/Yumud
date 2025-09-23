@@ -13,10 +13,10 @@
 #include "robots/gesture/mahony.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 using namespace ymd::drivers;
 
-#define DBG_UART uart2
+#define DBG_UART hal::uart2
 #define SCL_GPIO hal::PB<3>()
 #define SDA_GPIO hal::PB<5>()
 static constexpr uint ISR_FREQ = 500;
@@ -52,11 +52,11 @@ static void icm42688_tb(ICM42688 & imu){
         .fs = ISR_FREQ
     }};
 
-    timer1.init({ISR_FREQ});
+    hal::timer1.init({ISR_FREQ}, EN);
 
     Vec3<q24> gyr_ = Vec3<q24>::ZERO;
     Vec3<q24> acc_ = Vec3<q24>::ZERO;
-    timer1.attach(TimerIT::Update, {0,0},[&]{
+    hal::timer1.attach(hal::TimerIT::Update, {0,0},[&]{
         const auto u0 = clock::micros();
         imu.update().examine();
         const auto gyr = imu.read_gyr().examine();
@@ -70,7 +70,7 @@ static void icm42688_tb(ICM42688 & imu){
 
         gyr_ = gyr;
         acc_ = acc;
-    });
+    }, EN);
 
     while(true){
         // const auto u0 = clock::micros();
@@ -108,7 +108,7 @@ static void icm42688_tb(ICM42688 & imu){
 void icm42688_main(){
     DBG_UART.init({576_KHz});
     DEBUGGER.retarget(&DBG_UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
@@ -116,9 +116,12 @@ void icm42688_main(){
 
     #if PHY_SEL == PHY_SEL_I2C
     // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
-    I2cSw i2c{&SCL_GPIO, &SDA_GPIO};
+
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;
+    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
     // i2c.init(400_KHz);
-    i2c.init(2000_KHz);
+    i2c.init({2000_KHz});
 
     auto imu = ICM42688{
         &i2c,

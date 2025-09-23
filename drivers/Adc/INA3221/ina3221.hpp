@@ -422,11 +422,11 @@ public:
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
-    [[nodiscard]] IResult<> enable_measure_bus(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_measure_shunt(const Enable en = EN);
-    [[nodiscard]] IResult<> enable_continuous(const Enable en = EN);
+    [[nodiscard]] IResult<> enable_measure_bus(const Enable en);
+    [[nodiscard]] IResult<> enable_measure_shunt(const Enable en);
+    [[nodiscard]] IResult<> enable_continuous(const Enable en);
 
-    [[nodiscard]] IResult<> enable_channel(const ChannelNth nth, const Enable en = EN);
+    [[nodiscard]] IResult<> enable_channel(const ChannelNth nth, const Enable en);
 
     [[nodiscard]] IResult<> set_bus_conversion_time(const ConversionTime time);
     [[nodiscard]] IResult<> set_shunt_conversion_time(const ConversionTime time);

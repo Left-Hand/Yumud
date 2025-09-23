@@ -17,24 +17,24 @@ public:
     }
 
     __fast_inline constexpr static Matrix from_zero(){
-        Matrix result = Matrix::from_uninitialized();
-        result.fill(0);
-        return result;
+        Matrix ret = Matrix::from_uninitialized();
+        ret.fill(0);
+        return ret;
     }
 
     // 单位矩阵生成函数
     __fast_inline constexpr static Matrix<T, R, C> from_identity(){
         static_assert(R == C, "Identity matrix must be square.");
 
-        Matrix<T, R, C> result;
+        Matrix<T, R, C> ret;
 
         for (size_t i = 0; i < R; ++i) {
             for (size_t j = 0; j < C; ++j) {
-                result.at(i, j) = (i == j) ? T(1) : T(0);
+                ret.at(i, j) = (i == j) ? T(1) : T(0);
             }
         }
 
-        return result;
+        return ret;
     }
 
 
@@ -93,15 +93,15 @@ public:
             // static_assert(col_start <= col_end && col_end <= C);
         }
 
-        Matrix<T, R2, C2> result;
+        Matrix<T, R2, C2> ret;
 
         for (size_t i = 0; i < R2; ++i) {
             for (size_t j = 0; j < C2; ++j) {
-                result.at(i, j) = this->at(row_start + i, col_start + j);
+                ret.at(i, j) = this->at(row_start + i, col_start + j);
             }
         }
 
-        return result;
+        return ret;
     }
 
     template<arithmetic U>
@@ -189,34 +189,41 @@ public:
 
     template<size_t C2>
     __fast_inline constexpr Matrix<T, R, C2> operator * (const Matrix<T, C, C2> & other) const{
-        auto result = Matrix<T, R, C2>::from_uninitialized();
+        auto ret = Matrix<T, R, C2>::from_uninitialized();
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < C2; j++) {
                 T sum = 0;
                 for (size_t k = 0; k < C; k++) {
                     sum += this->at(i, k) * other.at(k, j);
                 }
-                result.at(i, j) = sum;
+                ret.at(i, j) = sum;
             }
         }
-        return result;
+        return ret;
     }
 
-
+    __fast_inline constexpr T trace() const {
+        static_assert(R == C, "Matrix must be square");
+        T ret = 0;
+        for (size_t i = 0; i < C; i++) {
+            ret += this->at(i, i);
+        }
+        return ret;
+    }
     __fast_inline constexpr Matrix<T, C, R> transpose() const{
-        Matrix<T, C, R> result = Matrix<T, C, R>::from_uninitialized();
+        Matrix<T, C, R> ret = Matrix<T, C, R>::from_uninitialized();
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < C; j++) {
-                result.at(j, i) = this->at(i, j);
+                ret.at(j, i) = this->at(i, j);
             }
         }
-        return result;
+        return ret;
     }
 
     // __fast_inline constexpr Matrix<T, R, R> guassian_inverse() const{
 
     //     Matrix<T, R, 2 * R> W;
-    //     Matrix<T, R, R> result;
+    //     Matrix<T, R, R> ret;
     //     T tem_1, tem_2, tem_3;
     
     //     // 对矩阵右半部分进行扩增
@@ -287,10 +294,10 @@ public:
     //     {
     //         for(size_t j=R;j<2*R;j++)
     //         {
-    //             result[i][j-R] = W[i][j];
+    //             ret[i][j-R] = W[i][j];
     //         }
     //     }
-    //     return result;
+    //     return ret;
     // }
     __fast_inline constexpr Matrix<T, R, R> lu_inverse() const{
         // https://blog.csdn.net/weixin_46207279/article/details/120374064
@@ -408,8 +415,7 @@ public:
     template<typename U = T, typename std::enable_if_t<std::is_arithmetic_v<U>, int> = 0>
     __fast_inline constexpr Matrix<T, R, R> inverse() const{
         static_assert(R == C);
-        // return this->transpose() / this->determinant();
-        // return lu_inverse();
+
         Matrix<T, R, 2 * R> augmented = Matrix<T, R, 2 * R>::from_uninitialized();
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < R; j++) {
@@ -453,14 +459,14 @@ public:
         }
 
         // 提取逆矩阵部分
-        Matrix<T, R, R> result;
+        Matrix<T, R, R> ret;
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < R; j++) {
-                result.at(i, j) = augmented.at(i, j + R);
+                ret.at(i, j) = augmented.at(i, j + R);
             }
         }
 
-        return result;
+        return ret;
     }
 
     __fast_inline constexpr

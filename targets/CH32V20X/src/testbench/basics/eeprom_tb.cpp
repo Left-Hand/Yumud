@@ -313,8 +313,11 @@ void eeprom_main(){
     DEBUGGER.set_radix(10);
     DEBUGGER.set_splitter("\t");
 
-    hal::I2cSw i2csw = {&hal::PB<13>(), &hal::PB<12>()};
-    i2csw.init(400000);
+    auto scl_gpio = hal::PB<13>();
+    auto sda_gpio = hal::PB<12>();
+
+    hal::I2cSw i2csw = {&scl_gpio, &sda_gpio};
+    i2csw.init({400000});
 
     
     using namespace drivers;

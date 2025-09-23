@@ -305,12 +305,6 @@ private:
     T * pobj_;
 };
 
-
-template<std::size_t I, typename T>
-auto get(const Option<T>& opt) {
-    if constexpr (I == 0) return opt.unwrap();
-}
-
 // 增强CTAD
 template<typename T>
 Option(Some<T>) -> Option<T>;

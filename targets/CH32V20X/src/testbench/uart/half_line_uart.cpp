@@ -9,7 +9,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #define UART hal::uart2
 // #define OTHER_UART hal::uart1
@@ -22,7 +22,7 @@ void half_line_uart_main(){
     DEBUGGER.retarget(&UART);
 
     OTHER_UART.init({BAUD});
-    OTHER_UART.enable_single_line_mode();
+    OTHER_UART.enable_single_line_mode(EN);
 
     while(true){
         const auto ava = OTHER_UART.available();

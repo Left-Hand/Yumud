@@ -534,7 +534,7 @@ void render_main(){
         DEBUGGER.retarget(&DBG_UART);
         DEBUGGER.set_eps(4);
         DEBUGGER.set_splitter(",");
-        DEBUGGER.no_brackets();
+        DEBUGGER.no_brackets(EN);
     };
 
 
@@ -549,10 +549,11 @@ void render_main(){
 
     spi.init({144_MHz});
     
-
+    auto scl_gpio = hal::PB<3>();
+    auto sda_gpio = hal::PB<5>();
     
-    hal::I2cSw i2c{&hal::PB<3>(), &hal::PB<5>()};
-    i2c.init(400_KHz);
+    hal::I2cSw i2c{&scl_gpio, &sda_gpio};
+    i2c.init({400_KHz});
 
     drivers::QMC5883L qmc{&i2c};
     retry(2, [&]{return qmc.init();}).examine();
@@ -560,18 +561,14 @@ void render_main(){
     
 
 
-    auto & lcd_blk = hal::PD<0>();
+    auto lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_dc = hal::PD<7>();
-    auto & dev_rst = hal::PB<7>();
+    auto lcd_dc = hal::PD<7>();
+    auto dev_rst = hal::PB<7>();
+    auto lcd_cs = hal::PD<4>();
 
-    const auto spi_fd = spi.allocate_cs_gpio(&hal::PD<4>()).unwrap();
-    // while(true){
-    //     DEBUG_PRINTLN(clock::millis());
-    //     clock::delay(2ms);
-    // }
-
+    const auto spi_fd = spi.allocate_cs_gpio(&lcd_cs).unwrap();
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
@@ -651,7 +648,7 @@ void render_main(){
         //     };
         #endif 
 
-        #if 1
+        #if 0
 
         // char str[2] = {
         //     static_cast<char>('0' + (clock::millis().count() / 200) % 16), '\0'};
@@ -671,7 +668,7 @@ void render_main(){
             // .str = "B",
             // .str = str,
             // .str = "明白了您只需要编码值而不是以下是修复后的代码",
-            .str = "123456789abcdef",
+            .str = "0123456789abcdef",
             // .str = "a",
             // .str = ss.c_str(),
             // .str = "(0.001, 0.040, -0.367)",
@@ -738,7 +735,7 @@ void render_main(){
 
         // PANIC{shape, shape.bounding_box()};
 
-        #if 0
+        #if 1
         auto shape = Triangle2<uint16_t>{
             .points = {
                 // Vec2u16{85,85} + Vec2u16::from_x_axis(50).rotated(dest_angle),

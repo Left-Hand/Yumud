@@ -17,7 +17,7 @@
 
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 // https://www.cnblogs.com/wchmcu/p/18781096
 // https://www.cnblogs.com/wchmcu/p/18325273
@@ -38,7 +38,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         .deadzone_ns = 200ns
     });
 
-    timer.attach(TimerIT::Update, {0,0}, [&]{
+    timer.attach(hal::TimerIT::Update, {0,0}, [&]{
         pwm_gen.on_update_isr();
 
         const auto t = clock::time();
@@ -46,13 +46,13 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         const auto [st, ct] = sincospu(700 * t);
 
         static constexpr const real_t depth = 0.7_r;
-        const auto [u, v, w] = digipw::SVM(st * depth, ct * depth);
-        pwm_gen.set_dutycycle({u, v, w});
-    });
+        const auto uvw_dutycycle = digipw::SVM({st * depth, ct * depth});
+        pwm_gen.set_dutycycle(uvw_dutycycle);
+    }, EN);
 
-    timer.attach(TimerIT::CC4, {0,0}, [&]{
+    timer.attach(hal::TimerIT::CC4, {0,0}, [&]{
         pwm_gen.on_ch4_isr();
-    });
+    }, EN);
 
 
 

@@ -75,17 +75,21 @@ IResult<> SSD1306_Phy::write_repeat(const T data, size_t len){
 template<typename T = void>
 using IResult = Result<T, Error>;
 IResult<> SSD13XX::set_offset(const Vec2u16 offset){
-    if(const auto res = phy_.write_command(0xD3); res.is_err()) return res; 
-    if(const auto res = phy_.write_command(offset.y); res.is_err()) return res;
+    if(const auto res = phy_.write_command(0xD3);
+        res.is_err()) return res; 
+    if(const auto res = phy_.write_command(offset.y);
+        res.is_err()) return res;
     return Ok();
 }
 
 
 IResult<> SSD13XX::set_flush_pos(const Vec2u16 pos){
-    const auto [x, y] = pos + offset_;
-    if(const auto res = phy_.write_command(0xb0 | size_t(y / 8));
+    const auto x = std::get<0>(pos + offset_);
+    const auto y = std::get<1>(pos + offset_);
+    // const auto [x, y] = pos + offset_;
+    if(const auto res = phy_.write_command(0xb0 | size_t(y >> 3));
         res.is_err()) return res;
-    if(const auto res = phy_.write_command(((x & 0xf0 )>>4) |0x10);
+    if(const auto res = phy_.write_command(((x & 0xf0 )>>4) | 0x10);
         res.is_err()) return res;
     if(const auto res = phy_.write_command((x & 0x0f));
         res.is_err()) return res;

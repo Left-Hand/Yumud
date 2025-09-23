@@ -133,7 +133,7 @@ public:
     
     [[nodiscard]] CyberGear_Result<> on_receive(const CanMsg & msg);
 
-    [[nodiscard]] CyberGear_Result<> enable(const Enable en = EN, const bool clear_fault = true);
+    [[nodiscard]] CyberGear_Result<> enable(const Enable en, const bool clear_fault = true);
 
     [[nodiscard]] CyberGear_Result<> set_current_as_machine_home();
 

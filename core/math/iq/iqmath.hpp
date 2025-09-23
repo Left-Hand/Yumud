@@ -96,7 +96,7 @@ namespace ymd{
     __fast_inline constexpr iq_t<Q> atan(const iq_t<P> iq) {
         return atanf(iq);
     }
-    
+
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     requires (Q < 30)
     __fast_inline constexpr iq_t<Q> atan2f(const iq_t<P> a, const iq_t<P> b) {
@@ -107,6 +107,12 @@ namespace ymd{
     requires (Q < 30)
     __fast_inline constexpr iq_t<Q> atan2(const iq_t<P> a, const iq_t<P> b) {
         return atan2f(a, b);
+    }
+    
+    template<size_t Q = IQ_DEFAULT_Q, size_t P>
+    requires (Q < 30)
+    __fast_inline constexpr iq_t<Q> atan2pu(const iq_t<P> a, const iq_t<P> b) {
+        return iq_t<Q>(_iq<Q>(__iqdetails::_IQNatan2PU<P>(a.qvalue(),b.qvalue())));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>

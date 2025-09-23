@@ -104,7 +104,7 @@ public:
     bool is_busy();
 
 
-    void enable_write(const Enable en = EN){
+    void enable_write(const Enable en){
         if(en){
             write_byte(Command::WriteEnable);
         }else{
@@ -127,7 +127,7 @@ public:
         return 1 << jedec_id.capacity;
     }
 
-    void enable_power_down(const Enable en = EN);
+    void enable_power_down(const Enable en);
 
 
     bool is_writeable();

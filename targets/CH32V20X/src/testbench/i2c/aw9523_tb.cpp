@@ -24,30 +24,30 @@ void aw9523_main(){
     DBG_UART.init({576000});
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
 
-    hal::I2cSw i2c = {&SCL_GPIO, &SDA_GPIO};
-    i2c.init(200_KHz);
+    auto scl_gpio_ = SCL_GPIO;
+    auto sda_gpio_ = SDA_GPIO;  
+    hal::I2cSw i2c = {&scl_gpio_, &sda_gpio_};
+    i2c.init({200_KHz});
 
-    // VL6180X vl6180{i2c, I2cSlaveAddr<7>::from_u7(0)};
     AW9523 aw9523{&i2c};
     
     aw9523.init({
         .current_limit = AW9523::CurrentLimit::Low
     }).examine();
 
-    // aw9523.enable_led_mode(hal::PinMask::from_u16(0xffff))
-    //     .examine();
     aw9523.enable_led_mode(hal::PinMask::from_u16(0x0000))
         .examine();
+
     while(true){
-        const auto current = uint8_t((0.5_r + 0.5_r * sin(clock::time())) * 255);
-        aw9523.set_led_current(
+        const auto dutycycle = (0.5_r + 0.5_r * sin(clock::time()));
+        aw9523.set_led_current_dutycycle(
             hal::PinMask::from_u16(0xffff),
-            current
+            dutycycle
         ).examine();
         clock::delay(5ms);
-        DEBUG_PRINTLN(clock::millis(), current);
+        DEBUG_PRINTLN(clock::millis(), dutycycle);
     }
 
 }

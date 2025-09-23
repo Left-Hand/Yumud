@@ -23,7 +23,7 @@
 #include "dsp/controller/smc/sliding_mode_ctrl.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 static constexpr size_t ISR_FREQ = 19200 * 2;
 static constexpr real_t SAMPLE_RES = 0.008_r;
@@ -44,17 +44,13 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 
 [[maybe_unused]] static 
 void at8222_tb(){
-    // hal::UartSw uart{hal::PA<5>(), NullGpio}; 
-    // uart.init({19200});
-    // DEBUGGER.retarget(&uart);
 
-    
-    uart2.init({4000000, CommStrategy::Nil});
+    hal::uart2.init({4000000, CommStrategy::Nil});
     // while(true){
     //     // uart2.write1(0x55);
     // }
-    DEBUGGER.retarget(&uart2);
-    DEBUGGER.no_brackets();
+    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.no_brackets(EN);
 
     // while(true){
     //     DEBUG_PRINTLN('/');
@@ -65,7 +61,10 @@ void at8222_tb(){
     auto & timer = hal::timer3;
 
     //因为是中心对齐的顶部触发 所以频率翻�?
-    timer.init({ISR_FREQ * 2, TimerCountMode::CenterAlignedUpTrig});
+    timer.init({
+        .freq = ISR_FREQ * 2, 
+        .mode = hal::TimerCountMode::CenterAlignedUpTrig
+    }, EN);
 
     auto & pwm_pos = timer.oc<1>();
     auto & pwm_neg = timer.oc<2>();
@@ -75,20 +74,20 @@ void at8222_tb(){
     pwm_neg.init({});
 
 
-    adc1.init(
+    hal::adc1.init(
         {
-            {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
+            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            // {AdcChannelNth::CH4, AdcSampleCycles::T28_5},
-            {AdcChannelNth::CH4, AdcSampleCycles::T28_5},
+            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T28_5},
+            {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T28_5},
         }, {}
     );
 
-    adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
-    adc1.enable_auto_inject(DISEN);
-    // adc1.set_pga(AdcPga::X16);
+    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T3CC4);
+    hal::adc1.enable_auto_inject(DISEN);
+    // hal::adc1.set_pga(AdcPga::X16);
 
-    timer.set_trgo_source(TimerTrgoSource::OC4R);
+    timer.set_trgo_source(hal::TimerTrgoSource::OC4R);
 
     timer.oc<4>().init({.install_en = DISEN});
 
@@ -180,23 +179,12 @@ void at8222_tb(){
     real_t trackin_sig = 0;
     real_t volt = 0;
 
-    auto & watch_gpio = hal::PA<3>();
+    auto watch_gpio = hal::PA<3>();
     watch_gpio.outpp();
 
-    
-    // while(true){
-    //     DEBUG_PRINTLN('/');
-    //     static bool i = 0;
-    //     i = !i;
-    //     // clock::delay(2us);
-    //     // __nopn(60);
-    //     // clock::delay(1ms);
-    //     watch_gpio.write(i);
-    // }
-
-    adc1.attach(AdcIT::JEOC, {0,0}, [&](){
+    hal::adc1.attach(hal::AdcIT::JEOC, {0,0}, [&](){
         watch_gpio.toggle();
-        volt = adc1.inj<1>().get_voltage();
+        volt = hal::adc1.inj<1>().get_voltage();
         const auto curr_raw = volt_2_current(volt);
 
         lpf.update(curr_raw);
@@ -227,13 +215,10 @@ void at8222_tb(){
         // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
         // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
         pwm_neg.set_dutycycle(0.9_r);
+    }, EN);
 
 
-
-    });
-
-
-    TimerOcPair motdrv{
+    hal::TimerOcPair motdrv{
         pwm_pos, pwm_neg
     };
 

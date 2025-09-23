@@ -26,7 +26,7 @@ using IResult= Result<T, Error>;
 IResult<> HMC5883L::init(){
     if(const auto res = validate();
         res.is_err()) return res;
-    if(const auto res = enable_high_speed();
+    if(const auto res = enable_high_speed(EN);
         res.is_err()) return res;
     if(const auto res = set_mode(Mode::Continuous);
         res.is_err()) return res;

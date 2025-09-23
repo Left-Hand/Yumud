@@ -220,7 +220,7 @@ static constexpr void rfft(std::span<Complex<T>, N> out, std::span<const T, N> i
 void fft_main(){
     UART.init({576_KHz});
     DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets();
+    DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 

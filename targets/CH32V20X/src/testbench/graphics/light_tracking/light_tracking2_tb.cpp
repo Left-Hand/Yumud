@@ -22,7 +22,7 @@
 #include "hal/rng/rng.hpp"
 
 using namespace ymd;
-using namespace ymd::hal;
+
 
 #if 0
 
@@ -265,16 +265,16 @@ static Option<RGB<q16>> sample_light(
     return Some((sample * lightColor * mis_weight * 2) / light_pdf);
 }
 
-// ���ɴ�Ĭ��Z��(0,0,1)��ת�����߷������Ԫ��
+
 static Quat<real_t> quat_from_normal(const Vec3<real_t>& normal)
 {
     const auto ilen = isqrt(1 + (normal.z + 2) * normal.z);
     return Quat<real_t>::from_xyzw(
-        -normal.y,
-        normal.x,
+        -normal.y * ilen,
+        normal.x * ilen,
         0,
-        real_t(1) + normal.z
-    ) * ilen; // ���һ����һ�����ɺϲ������������У�
+        (1 + normal.z) * ilen
+    );
 }
 
 [[maybe_unused]]
@@ -406,19 +406,19 @@ void light_tracking_main(void){
 
     #ifdef CH32V30X
     auto & spi = spi2;
-    auto & lcd_blk = hal::PC<7>();
+    auto lcd_blk = hal::PC<7>();
     
     lcd_blk.outpp(HIGH);
 
-    auto & lcd_cs = hal::PD<6>();
-    auto & lcd_dc = hal::PD<7>();
-    auto & dev_rst = hal::PB<7>();
+    auto lcd_cs = hal::PD<6>();
+    auto lcd_dc = hal::PD<7>();
+    auto dev_rst = hal::PB<7>();
     #else
-    auto & spi = spi1;
-    auto & lcd_blk = hal::PA<10>();
-    auto & lcd_cs = hal::PA<15>();
-    auto & lcd_dc = hal::PA<11>();
-    auto & dev_rst = hal::PA<12>();
+    auto & spi = hal::spi1;
+    auto lcd_blk = hal::PA<10>();
+    auto lcd_cs = hal::PA<15>();
+    auto lcd_dc = hal::PA<11>();
+    auto dev_rst = hal::PA<12>();
     
 
     lcd_blk.outpp(HIGH);
