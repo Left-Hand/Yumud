@@ -149,7 +149,7 @@ public:
 
         static constexpr Gesture from(const Initializer & iz){
             const Gesture gest{
-                .orientation = Quat<real_t>::from_euler<EulerAnglePolicy::XYZ>({
+                .orientation = Quat<real_t>::from_euler_angles<EulerAnglePolicy::XYZ>({
                     .x = iz.yaw, 
                     .y = iz.pitch, 
                     .z = 0

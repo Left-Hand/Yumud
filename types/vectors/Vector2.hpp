@@ -120,30 +120,16 @@ struct Vec2{
         return {static_cast<T>(c * length), static_cast<T>(s * length)};
     }
 
-    [[nodiscard]] constexpr T & operator [](const size_t index) { 
-        return *(&this->x + index);
+    [[nodiscard]] constexpr T & operator [](const size_t idx) { 
+        return *(&this->x + idx);
     }
 
-    [[nodiscard]] constexpr const T & operator [](const size_t index) const {
-        return *(&this->x + index);
+    [[nodiscard]] constexpr const T & operator [](const size_t idx) const {
+        return *(&this->x + idx);
     }
 
 
-    [[nodiscard]] static constexpr bool sort_by_x(const Vec2 & a, const Vec2 & b){
-        return a.x < b.x;
-    };
 
-    [[nodiscard]] static constexpr bool sort_by_y(const Vec2 & a, const Vec2 & b){
-        return a.y < b.y;
-    };
-
-    [[nodiscard]] static constexpr bool sort_by_length(const Vec2 & a, const Vec2 & b){
-        return a.length_squared() < b.length_squared();
-    };
-
-    [[nodiscard]] static constexpr bool sort_by_angle(const Vec2 & a, const Vec2 & b){
-        return a.cross(b) > 0;
-    };
 
     [[nodiscard]] constexpr Vec2<T> normalized() const;
     [[nodiscard]] constexpr T cross(const Vec2<T> & other) const;
@@ -185,12 +171,12 @@ struct Vec2{
 
 
     template<arithmetic U>
-    [[nodiscard]] __fast_inline constexpr Vec2<T> increase_x(const U & v){
+    [[nodiscard]] __fast_inline constexpr Vec2<T> increase_x(const U & v) const {
         return {x + v, y};
     }
 
     template<arithmetic U>
-    [[nodiscard]] __fast_inline constexpr Vec2<T> increase_y(const U & v){
+    [[nodiscard]] __fast_inline constexpr Vec2<T> increase_y(const U & v) const {
         return {x, y + v};
     }
 
@@ -376,8 +362,6 @@ struct Vec2{
         return x * y;
     }
 
-
-
     [[nodiscard]] __fast_inline constexpr Rect2<T> overlap_as_rect(const Vec2<T> & other) const {
         return Rect2<T>({0,0}, {MIN(x, other.x), MIN(y, other.y)});
     }
@@ -390,6 +374,35 @@ struct Vec2{
         return {x, y};
     }
 
+
+    [[nodiscard]] static constexpr bool sort_by_x(const Vec2 & a, const Vec2 & b){
+        return a.x < b.x;
+    };
+
+    [[nodiscard]] static constexpr bool sort_by_y(const Vec2 & a, const Vec2 & b){
+        return a.y < b.y;
+    };
+
+    [[nodiscard]] static constexpr bool sort_by_length(const Vec2 & a, const Vec2 & b){
+        return a.length_squared() < b.length_squared();
+    };
+
+    [[nodiscard]] static constexpr bool sort_by_angle(const Vec2 & a, const Vec2 & b){
+        return a.cross(b) > 0;
+    };
+
+
+    template<std::size_t I>
+    constexpr auto& get(){
+        if constexpr (I == 0) return x;
+        else if constexpr (I == 1) return y;
+    }
+    
+    template<std::size_t I>
+    constexpr const auto& get() const{
+        if constexpr (I == 0) return x;
+        else if constexpr (I == 1) return y;
+    }
 private:
     constexpr Vec2(){;}
 };
@@ -630,9 +643,26 @@ Vec2() -> Vec2<T>;
 }
 
 namespace std{
-    template<size_t I, typename T>
-    static constexpr T get(const ymd::Vec2<T> &p_vector2){
-        if constexpr(I == 0) return p_vector2.x;
-        else if constexpr(I == 1) return p_vector2.y;
+    template<typename T>
+    struct tuple_size<ymd::Vec2<T>> : integral_constant<size_t, 2> {};
+    
+    template<typename T>
+    struct tuple_element<0, ymd::Vec2<T>> { using type = T; };
+    
+    template<typename T>
+    struct tuple_element<1, ymd::Vec2<T>> { using type = T; };
+    
+    template<size_t I>
+    constexpr auto& get(ymd::Vec2<auto>& p_vector2) {
+        if constexpr (I == 0) return p_vector2.x;
+        else return p_vector2.y;
     }
+    
+    template<size_t I>
+    constexpr const auto& get(const ymd::Vec2<auto>& p_vector2) {
+        if constexpr (I == 0) return p_vector2.x;
+        else return p_vector2.y;
+    }
+
+
 }

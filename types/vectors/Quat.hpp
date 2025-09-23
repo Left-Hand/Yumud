@@ -66,18 +66,26 @@ struct Quat{
     __fast_inline static constexpr Quat from_array(
         std::array<T, 4> p_array
     ){
-        return from_xyzw(p_array[0], p_array[1], p_array[2], p_array[3]);
+        return from_xyzw(
+            p_array[0], 
+            p_array[1], 
+            p_array[2], 
+            p_array[3]
+        );
     }
 
     [[nodiscard]]
-    __fast_inline static constexpr Quat from_axis_angle(const Vec3<T> &axis, const T angle) {
+    __fast_inline static constexpr Quat from_axis_angle(const Vec3<T> &axis, const Angle<T> angle) {
         Quat ret;
         ret.set_axis_angle(axis, angle);
         return ret;
     }
 
     [[nodiscard]]
-    static constexpr Quat from_shortest_arc(const Vec3<T> &v0, const Vec3<T> &v1){
+    static constexpr Quat from_shortest_arc(
+        const Vec3<T> &v0, 
+        const Vec3<T> &v1
+    ){
         const Vec3<T> n0 = v0.normalized();
         const Vec3<T> n1 = v1.normalized();
 
@@ -103,10 +111,10 @@ struct Quat{
         const Vec3<T> normalized_dir = dir.normalized();
         
         // Calculate the dot product to determine the angle between the vectors
-        T dot = default_dir.dot(normalized_dir);
+        T dot_product = default_dir.dot(normalized_dir);
         
         // If the vectors are nearly parallel, return the identity quaternion
-        if (std::abs(dot) > T(1) - T(CMP_EPSILON)) {
+        if (std::abs(dot_product) > T(1) - T(CMP_EPSILON)) {
             return Quat<T>::IDENTITY;
         }
         
@@ -114,7 +122,7 @@ struct Quat{
         Vec3<T> axis = default_dir.cross(normalized_dir);
         
         // Calculate the angle between the vectors
-        T angle = std::acos(dot);
+        const auto angle = Angle<T>::from_radians(std::acos(dot_product));
         
         // Create and return the quaternion representing the rotation
         return Quat<T>::from_axis_angle(axis, angle);
@@ -123,11 +131,19 @@ struct Quat{
 
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
     [[nodiscard]]
-    static constexpr Quat<T> from_euler(const EulerAngle<T, P> &euler) {
+    static constexpr Quat<T> from_euler_angles(const EulerAngle<T, P> &euler_angle) {
         Quat<T> ret;
-        ret.set_euler({euler.x, euler.y, euler.z});
+        ret.set_euler_angles(euler_angle.x, euler_angle.y, euler_angle.z);
         return ret;
     }
+
+    // template<EulerAnglePolicy P>
+    // [[nodiscard]]
+    // static constexpr Quat<T> from_euler_angles(const Angle<T> a1, const Angle<T> a2, const Angle<T> a3) {
+    //     Quat<T> ret;
+    //     ret.set_euler_angles(euler_angle.x, euler_angle.y, euler_angle.z);
+    //     return ret;
+    // }
 
     [[nodiscard]] 
     constexpr bool is_pure_real() const {
@@ -188,14 +204,33 @@ struct Quat{
     [[nodiscard]]
     constexpr T angle_to(const Quat &p_to) const;
 
-    constexpr void set_euler(const EulerAngle<T, EulerAnglePolicy::XYZ> &p_euler);
+    // set_euler_angles expects a vector containing the Euler angles in the format
+    // (ax,ay,az), where ax is the angle of rotation around x axis,
+    // and similar for other axes.
+    // This implementation uses XYZ convention (Z is the first rotation).
+    constexpr void set_euler_angles(const Angle<T> x, const Angle<T> y, const Angle<T> z) {
+        // R = X(a1).Y(a2).Z(a3) convention for Euler angles.
+        // Conversion to Quat<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
+        // a3 is the angle of the first rotation, following the notation in this reference.
+
+        auto [sin_a1, cos_a1] = (x / 2).sincos();
+        auto [sin_a2, cos_a2] = (y / 2).sincos();
+        auto [sin_a3, cos_a3] = (z / 2).sincos();
+
+        set(
+            +sin_a1 * cos_a2 * cos_a3 + sin_a2 * sin_a3 * cos_a1,
+            -sin_a1 * sin_a3 * cos_a2 + sin_a2 * cos_a1 * cos_a3,
+            +sin_a1 * sin_a2 * cos_a3 + sin_a3 * cos_a1 * cos_a2,
+            -sin_a1 * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3
+        );
+    }
 
     [[nodiscard]]
     constexpr Quat integral(const Vec3<T> & norm_dir, const T delta) const {
         const auto k = delta / 2;
         return Quat<T>::from_xyzw(
             x + k * (-y * norm_dir.z + z * norm_dir.y + w * norm_dir.x),
-            y + k * (x * norm_dir.z - z * norm_dir.x + w * norm_dir.y),
+            y + k * ( x * norm_dir.z - z * norm_dir.x + w * norm_dir.y),
             z + k * (-x * norm_dir.y + y * norm_dir.x + w * norm_dir.z),
             w + k * (-x * norm_dir.x - y * norm_dir.y - z * norm_dir.z)
         ).normalized();
@@ -210,13 +245,13 @@ struct Quat{
     [[nodiscard]]
     constexpr Quat cubic_slerp(const Quat &p_b, const Quat &p_pre_a, const Quat &p_post_b, const T p_weight) const;
 
-    constexpr void set_axis_angle(const Vec3<T> &axis, const T angle){
+    constexpr void set_axis_angle(const Vec3<T> &axis, const Angle<T> angle){
         T d = axis.length();
         if (d == 0) {
             set(T(0), T(0), T(0), T(0));
         } else {
             const auto half_angle = angle * static_cast<T>(0.5);
-            const auto [sin_angle, cos_angle] = sincos(half_angle);
+            const auto [sin_angle, cos_angle] = half_angle.sincos();
             const T s = sin_angle / d;
             set(
                 axis.x * s, 
@@ -245,11 +280,6 @@ struct Quat{
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Quat operator*(const T v) const {
-        return Quat::from_xyzw(x * v,  y * v, z * v,  w * v);
-    }
-
-    [[nodiscard]] __fast_inline constexpr
     Vec3<T> xform(const Vec3<T> &v) const {
         Vec3<T> u(x, y, z);
         Vec3<T> uv = u.cross(v);
@@ -274,13 +304,6 @@ struct Quat{
         );
     }
 
-    __fast_inline constexpr
-    Quat & operator/=(const T s){return *this = *this / s;};
-
-    [[nodiscard]] __fast_inline constexpr
-    Quat operator/(const T s) const;
-
-
     // https://blog.csdn.net/xiaoma_bk/article/details/79082629
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
     EulerAngle<T, P> to_euler() const {
@@ -290,8 +313,8 @@ struct Quat{
     
         // roll (x-axis rotation)
 
-        const auto qx_squ = q.x * q.x;
-        const auto qy_squ = q.y * q.y;
+        const auto qx_squ = square(q.x);
+        const auto qy_squ = square(q.y);
         T sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
         T cosr_cosp = 1 - 2 * (qx_squ + qy_squ);
 
@@ -312,6 +335,10 @@ struct Quat{
         return angles;
     }
 
+    Quat<T> conj() const{
+        return Quat<T>(-x, -y, -z, w);
+    }
+
 private:
     void set(T x, T y, T z, T w){
         this->x = x;
@@ -321,10 +348,6 @@ private:
     }
 };
 
-template<arithmetic T>
-[[nodiscard]] __fast_inline constexpr Quat<T> operator*(const arithmetic auto & n, const Quat<T> & vec){
-    return vec * n;
-}
 
 [[nodiscard]] __fast_inline constexpr auto lerp(const Quat<arithmetic auto> & a, const Quat<arithmetic auto> & b, const arithmetic auto & t){
     return a.slerp(b, t);
@@ -341,9 +364,6 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const ymd::Quat<auto>
 template<arithmetic T>
 Quat() -> Quat<T>;
 }
-
-
-
 
 
 namespace ymd{
@@ -368,43 +388,19 @@ constexpr T Quat<T>::inv_length() const {
 	return T(isqrt(x * x + y * y + z * z + w * w));
 }
 
-// set_euler expects a vector containing the Euler angles in the format
-// (ax,ay,az), where ax is the angle of rotation around x axis,
-// and similar for other axes.
-// This implementation uses XYZ convention (Z is the first rotation).
-template<typename T>
-constexpr void Quat<T>::set_euler(const EulerAngle<T, EulerAnglePolicy::XYZ> &p_euler) {
 
-
-	// R = X(a1).Y(a2).Z(a3) convention for Euler angles.
-	// Conversion to Quat<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
-	// a3 is the angle of the first rotation, following the notation in this reference.
-
-	auto [sin_a1, cos_a1] = (p_euler.x / 2).sincos();
-	auto [sin_a2, cos_a2] = (p_euler.y / 2).sincos();
-	auto [sin_a3, cos_a3] = (p_euler.z / 2).sincos();
-
-	set(
-        sin_a1 * cos_a2 * cos_a3 + sin_a2 * sin_a3 * cos_a1,
-        -sin_a1 * sin_a3 * cos_a2 + sin_a2 * cos_a1 * cos_a3,
-        sin_a1 * sin_a2 * cos_a3 + sin_a3 * cos_a1 * cos_a2,
-        -sin_a1 * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3
-    );
-}
 
 template<typename T>
 constexpr void Quat<T>::operator*=(const Quat<T> &p_q) {
-	set(    T(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y),
-			T(w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z),
-			T(w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x),
-			T(w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z)
-		);
-
-	// x = T(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y);
-	// y = T(w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z);
-	// z = T(w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x);
-	// w = T(w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z);
+	set(
+        static_cast<T>(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y),
+        static_cast<T>(w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z),
+        static_cast<T>(w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x),
+        static_cast<T>(w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z)
+    );
 }
+
+
 template<typename T>
 constexpr Quat<T> Quat<T>::operator*(const Quat<T> & p_q) const {
 	Quat<T> r = *this;
@@ -425,30 +421,24 @@ template<typename T>
 constexpr T Quat<T>::length() const {
 	return sqrt(length_squared());
 }
-template<typename T>
-constexpr void Quat<T>::normalize() {
-	*this *= inv_length();
-}
+
 template<typename T>
 constexpr Quat<T> Quat<T>::normalized() const {
-	return *this * inv_length();
+    const auto ilen = inv_length();
+    const auto ret = Quat<T>(x * ilen, y * ilen, z * ilen, w * ilen);
+    return ret;
 }
 template<typename T>
 constexpr bool Quat<T>::is_normalized() const {
 	return is_equal_approx(length_squared(), T(1)); //use less epsilon
 }
-template<typename T>
-constexpr Quat<T> Quat<T>::operator/(const T s) const{
-	const T inv_s = 1 / s;
-    return Quat<T>(x * inv_s, y * inv_s, z * inv_s, w * inv_s);
-}
+
 template<typename T>
 constexpr Quat<T> Quat<T>::inverse() const {
-#ifdef MATH_CHECKS
-	ERR_FAIL_COND_V_MSG(!is_normalized(), Quat<T>(), "The Quat<T> must be normalized.");
-#endif
 	return Quat<T>::from_xyzw(-x, -y, -z, w);
 }
+
+
 template<typename T>
 constexpr Quat<T> Quat<T>::slerp(const Quat<T> &p_to, const T p_weight) const {
 	// Quat<T> to1 = Quat<T>::ZERO;

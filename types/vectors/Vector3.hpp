@@ -42,21 +42,21 @@ public:
     T y;
     T z;
 
-    static constexpr Vec3<T> LEFT = Vec3<T>(-1, 0, 0);
-    static constexpr Vec3<T> RIGHT = Vec3<T>(1, 0, 0);
-    static constexpr Vec3<T> UP = Vec3<T>(0, 1, 0);
-    static constexpr Vec3<T> DOWN = Vec3<T>(0, -1, 0);
-    static constexpr Vec3<T> FORWARD = Vec3<T>(0, 0, 1);
-    static constexpr Vec3<T> BACK = Vec3<T>(0, 0, -1);
+    static constexpr Vec3<T> LEFT       =  Vec3<T>(-1, 0, 0);
+    static constexpr Vec3<T> RIGHT      =  Vec3<T>(1, 0, 0);
+    static constexpr Vec3<T> UP         =  Vec3<T>(0, 1, 0);
+    static constexpr Vec3<T> DOWN       =  Vec3<T>(0, -1, 0);
+    static constexpr Vec3<T> FORWARD    =  Vec3<T>(0, 0, 1);
+    static constexpr Vec3<T> BACK       =  Vec3<T>(0, 0, -1);
 
-    static constexpr Vec3<T> X_AXIS = Vec3<T>(1, 0, 0);
-    static constexpr Vec3<T> Y_AXIS = Vec3<T>(0, 1, 0);
-    static constexpr Vec3<T> Z_AXIS = Vec3<T>(0, 0, 1);
+    static constexpr Vec3<T> X_AXIS     =  Vec3<T>(1, 0, 0);
+    static constexpr Vec3<T> Y_AXIS     =  Vec3<T>(0, 1, 0);
+    static constexpr Vec3<T> Z_AXIS     =  Vec3<T>(0, 0, 1);
 
-    static constexpr Vec3<T> ZERO = Vec3<T>(0, 0, 0);
-    static constexpr Vec3<T> ONE = Vec3<T>(1, 1, 1);
+    static constexpr Vec3<T> ZERO       =  Vec3<T>(0, 0, 0);
+    static constexpr Vec3<T> ONE        =  Vec3<T>(1, 1, 1);
 
-    static constexpr Vec3<T> INF = Vec3<T>(INFINITY, INFINITY, INFINITY);
+    static constexpr Vec3<T> INF        =  Vec3<T>(INFINITY, INFINITY, INFINITY);
 
     [[nodiscard]] __fast_inline constexpr Vec3() = delete;
 
@@ -91,7 +91,10 @@ public:
         return Vec3<T>(T(0), T(0), _z);}
 
     template<arithmetic U = T>
-    [[nodiscard]] __fast_inline constexpr Vec3(const std::tuple<U, U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)), z(std::get<2>(v)){;}
+    [[nodiscard]] __fast_inline constexpr Vec3(const std::tuple<U, U, U> & v) : 
+        x(std::get<0>(v)), 
+        y(std::get<1>(v)), 
+        z(std::get<2>(v)){;}
 
     [[nodiscard]] constexpr T & operator [](const size_t idx) { return (&x)[idx];}
 
@@ -105,25 +108,6 @@ public:
         return *this;
     };
 
-    [[nodiscard]]
-    static constexpr bool sort_by_x(const Vec3 & a, const Vec3 & b){
-
-        return a.x < b.x;
-    };
-    [[nodiscard]]
-    static constexpr bool sort_by_y(const Vec3 & a, const Vec3 & b){
-        return a.y < b.y;
-    };
-
-    [[nodiscard]]
-    static constexpr bool sort_by_z(const Vec3 & a, const Vec3 & b){
-        return a.y < b.y;
-    };
-
-    [[nodiscard]]
-    static constexpr bool sort_by_length(const Vec3 & a, const Vec3 & b){
-        return a.length_squared() < b.length_square();
-    };
 
 
     template<arithmetic U>
@@ -260,7 +244,7 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3 operator -(const Vec3<U>& other) const {
+    Vec3 operator -(const Vec3<U> & other) const {
         return Vec3{
             x - static_cast<T>(other.x),
             y - static_cast<T>(other.y),
@@ -384,28 +368,77 @@ public:
     }
 
 
+    [[nodiscard]]
+    static constexpr bool sort_by_x(const Vec3 & a, const Vec3 & b){
+
+        return a.x < b.x;
+    };
+    [[nodiscard]]
+    static constexpr bool sort_by_y(const Vec3 & a, const Vec3 & b){
+        return a.y < b.y;
+    };
+
+    [[nodiscard]]
+    static constexpr bool sort_by_z(const Vec3 & a, const Vec3 & b){
+        return a.y < b.y;
+    };
+
+    [[nodiscard]]
+    static constexpr bool sort_by_length(const Vec3 & a, const Vec3 & b){
+        return a.length_squared() < b.length_square();
+    };
+
+    template<std::size_t I>
+    constexpr auto& get(){
+        if constexpr (I == 0) return x;
+        else if constexpr (I == 1) return y;
+        else if constexpr (I == 2) return z;
+    }
+    
+    template<std::size_t I>
+    constexpr const auto& get() const{
+        if constexpr (I == 0) return x;
+        else if constexpr (I == 1) return y;
+        else if constexpr (I == 2) return z;
+    }
 };
 
 template<arithmetic T>
-[[nodiscard]] __fast_inline constexpr Vec3<T> operator*(const arithmetic auto & n, const Vec3<T> & vec){
+[[nodiscard]] __fast_inline constexpr Vec3<T> operator*(
+    const arithmetic auto & n, 
+    const Vec3<T> & vec
+){
     return vec * n;
 }
 
 
-[[nodiscard]] __fast_inline constexpr auto lerp(const Vec3<arithmetic auto> & a, const Vec3<arithmetic auto> & b, const arithmetic auto & t){
+[[nodiscard]] __fast_inline constexpr auto lerp(
+    const Vec3<arithmetic auto> & a, 
+    const Vec3<arithmetic auto> & b, 
+    const arithmetic auto & t
+){
     return a + (b - a) * t;
 }
 
-[[nodiscard]] __fast_inline constexpr auto distance(const Vec3<arithmetic auto> & a, const Vec3<arithmetic auto> & b){
+[[nodiscard]] __fast_inline constexpr auto distance(
+    const Vec3<arithmetic auto> & a, 
+    const Vec3<arithmetic auto> & b
+){
     return (a - b).length();
 }
 
-[[nodiscard]] __fast_inline constexpr auto normal(const Vec3<arithmetic auto> & from, const Vec3<arithmetic auto> & to){
+[[nodiscard]] __fast_inline constexpr auto normal(
+    const Vec3<arithmetic auto> & from, 
+    const Vec3<arithmetic auto> & to
+){
     return (to - from).normalized();
 }
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vec3<auto> & value){
-    return os << os.brackets<'('>() << value.x << os.splitter() << value.y << os.splitter() << value.z << os.brackets<')'>();
+    return os << os.brackets<'('>() << value.x 
+        << os.splitter() << value.y 
+        << os.splitter() << value.z
+        << os.brackets<')'>();
 }
 
 
