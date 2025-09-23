@@ -13,9 +13,6 @@ requires (std::is_arithmetic_v<T>)
 struct Polar{
     T radius;
     Angle<T> angle;
-    constexpr Polar(){;}
-    constexpr Polar(const T _radius, const Angle<T> _angle) : 
-        radius(_radius), angle(_angle) {;}
 
     constexpr Polar from_vec2(const Vec2<T> & v){
         return Polar(v.length(), v.angle());

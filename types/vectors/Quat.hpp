@@ -49,7 +49,12 @@ struct Quat{
 
     static_assert(not std::is_integral_v<T>);
 
-    static constexpr Quat<T> IDENTITY = Quat<T>::from_xyzw(0,0,0,1);
+    static constexpr Quat<T> IDENTITY = Quat<T>::from_xyzw(
+        static_cast<T>(0),
+        static_cast<T>(0),
+        static_cast<T>(0),
+        static_cast<T>(1)
+    );
 
     [[nodiscard]]
     __fast_inline static constexpr Quat from_xyzw(
@@ -93,12 +98,12 @@ struct Quat{
 
         if (std::abs(d) > T(1) - T(CMP_EPSILON)) {
             const auto axis = n0.get_any_perpendicular();
-            return Quat<T>::from_xyzw(axis.x, axis.y, axis.z, T(0));
+            return from_xyzw(axis.x, axis.y, axis.z, T(0));
         } else {
             Vec3<T> c = n0.cross(n1);
             const T s = std::sqrt((T(1) + d) * T(2));
             const T inv_s = T(1) / s;
-            return Quat<T>::from_xyzw(c.x * inv_s, c.y * inv_s, c.z * inv_s, s / 2);
+            return from_xyzw(c.x * inv_s, c.y * inv_s, c.z * inv_s, s / 2);
         }
     }
 
@@ -115,7 +120,7 @@ struct Quat{
         
         // If the vectors are nearly parallel, return the identity quaternion
         if (std::abs(dot_product) > T(1) - T(CMP_EPSILON)) {
-            return Quat<T>::IDENTITY;
+            return IDENTITY;
         }
         
         // Calculate the rotation axis using the cross product
@@ -125,7 +130,7 @@ struct Quat{
         const auto angle = Angle<T>::from_radians(std::acos(dot_product));
         
         // Create and return the quaternion representing the rotation
-        return Quat<T>::from_axis_angle(axis, angle);
+        return from_axis_angle(axis, angle);
     }
 
 
@@ -177,32 +182,160 @@ struct Quat{
     __fast_inline constexpr const T  operator [](const size_t idx) const {return (&x)[idx];}
 
     [[nodiscard]]
-    constexpr T length_squared() const;
+    constexpr T angle_to(const Quat<T> &p_to) const {
+        T d = dot(p_to);
+        return acosf(CLAMP(d * d * 2 - 1, -1, 1));
+    }
 
     [[nodiscard]]
-    constexpr T inv_length() const;
+    constexpr T dot(const Quat<T> &p_q) const {
+        return T(x * p_q.x + y * p_q.y + z * p_q.z + w * p_q.w);
+    }
 
     [[nodiscard]]
-    constexpr bool is_equal_approx(const Quat & other) const;
+    constexpr T length_squared() const{
+        return dot(*this);
+    }
 
     [[nodiscard]]
-    constexpr T length() const;
-    constexpr void normalize();
+    constexpr T inv_length() const {
+        return T(isqrt(x * x + y * y + z * z + w * w));
+    }
+
+    constexpr void operator*=(const Quat<T> &p_q) {
+        set(
+            static_cast<T>(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y),
+            static_cast<T>(w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z),
+            static_cast<T>(w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x),
+            static_cast<T>(w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z)
+        );
+    }
 
     [[nodiscard]]
-    constexpr Quat normalized() const;
+    constexpr Quat<T> operator*(const Quat<T> & p_q) const {
+        Quat<T> r = *this;
+        r *= p_q;
+        return r;
+    }
 
     [[nodiscard]]
-    constexpr bool is_normalized() const;
+    constexpr Quat<T> operator*(Quat<T> && p_q) const {
+        p_q *= *this;
+        return p_q;
+    }
 
     [[nodiscard]]
-    constexpr Quat inverse() const;
+    constexpr bool is_equal_approx(const Quat<T> & other) const {
+        return is_equal_approx(x, other.x) && is_equal_approx(y, other.y) && is_equal_approx(z, other.z) && is_equal_approx(w, other.w);
+    }
 
     [[nodiscard]]
-    constexpr T dot(const Quat &p_q) const;
+    constexpr T length() const {
+        return sqrt(length_squared());
+    }
 
     [[nodiscard]]
-    constexpr T angle_to(const Quat &p_to) const;
+    constexpr Quat<T> normalized() const {
+        const auto ilen = inv_length();
+        const auto ret = Quat<T>(x * ilen, y * ilen, z * ilen, w * ilen);
+        return ret;
+    }
+
+    [[nodiscard]]
+    constexpr bool is_normalized() const {
+        return is_equal_approx(length_squared(), T(1)); //use less epsilon
+    }
+
+    [[nodiscard]]
+    constexpr Quat<T> inverse() const {
+        return from_xyzw(-x, -y, -z, w);
+    }
+
+
+    [[nodiscard]]
+    constexpr Quat<T> slerp(const Quat<T> &p_to, const T p_weight) const {
+        // Quat<T> to1 = ZERO;
+        struct {
+            T x;
+            T y;
+            T z;
+            T w;
+        } to1;
+
+        T omega = 0;
+        T sinom = 0;
+        T scale0 = 0;
+        T scale1 = 0;
+
+        // calc cosine
+        T cosom = dot(p_to);
+
+        // adjust signs (if necessary)
+        if (cosom < T(0)) {
+            cosom = -cosom;
+            to1.x = -p_to.x;
+            to1.y = -p_to.y;
+            to1.z = -p_to.z;
+            to1.w = -p_to.w;
+        } else {
+            to1.x = p_to.x;
+            to1.y = p_to.y;
+            to1.z = p_to.z;
+            to1.w = p_to.w;
+        }
+
+        // calculate coefficients
+
+        if ((T(1) - cosom) > T(CMP_EPSILON)) {
+            // standard case (slerp)
+            omega = std::acos(cosom);
+            sinom = std::sinf(omega);
+            const auto inv_sinom = 1 / sinom;
+            scale0 = std::sinf((1 - p_weight) * omega) * inv_sinom;
+            scale1 = std::sinf(p_weight * omega) * inv_sinom;
+        } else {
+            // "from" and "to" Quat<T>s are very close
+            //  ... so we can do a linear interpolation
+            scale0 = T(1) - p_weight;
+            scale1 = p_weight;
+        }
+        // calculate final values
+        return from_xyzw(
+                scale0 * x + scale1 * to1.x,
+                scale0 * y + scale1 * to1.y,
+                scale0 * z + scale1 * to1.z,
+                scale0 * w + scale1 * to1.w);
+    }
+
+    [[nodiscard]]
+    constexpr Quat<T> slerpni(const Quat<T> &p_to, const T p_weight) const {
+        const Quat<T> &from = *this;
+
+        T dot = from.dot(p_to);
+
+        if (abs(dot) > T(0.9999)) {
+            return from;
+        }
+
+        T theta = acos(dot),
+                sinT = 1 / sinf(theta),
+                newFactor = sinf(p_weight * theta) * sinT,
+                invFactor = sinf((1 - p_weight) * theta) * sinT;
+
+        return Quat<T>(invFactor * from.x + newFactor * p_to.x,
+                invFactor * from.y + newFactor * p_to.y,
+                invFactor * from.z + newFactor * p_to.z,
+                invFactor * from.w + newFactor * p_to.w);
+    }
+
+    [[nodiscard]]
+    constexpr Quat<T> cubic_slerp(const Quat<T> &p_b, const Quat<T> &p_pre_a, const Quat<T> &p_post_b, const T p_weight) const {
+
+        T t2 = (T(1) - p_weight) * p_weight * 2;
+        Quat<T> sp = this->slerp(p_b, p_weight);
+        Quat<T> sq = p_pre_a.slerpni(p_post_b, p_weight);
+        return sp.slerpni(sq, t2);
+    }
 
     // set_euler_angles expects a vector containing the Euler angles in the format
     // (ax,ay,az), where ax is the angle of rotation around x axis,
@@ -228,7 +361,7 @@ struct Quat{
     [[nodiscard]]
     constexpr Quat integral(const Vec3<T> & norm_dir, const T delta) const {
         const auto k = delta / 2;
-        return Quat<T>::from_xyzw(
+        return from_xyzw(
             x + k * (-y * norm_dir.z + z * norm_dir.y + w * norm_dir.x),
             y + k * ( x * norm_dir.z - z * norm_dir.x + w * norm_dir.y),
             z + k * (-x * norm_dir.y + y * norm_dir.x + w * norm_dir.z),
@@ -236,14 +369,6 @@ struct Quat{
         ).normalized();
     }
 
-    [[nodiscard]]
-    constexpr Quat slerp(const Quat &p_to, const T p_weight) const;
-
-    [[nodiscard]]
-    constexpr Quat slerpni(const Quat &p_to, const T p_weight) const;
-
-    [[nodiscard]]
-    constexpr Quat cubic_slerp(const Quat &p_b, const Quat &p_pre_a, const Quat &p_post_b, const T p_weight) const;
 
     constexpr void set_axis_angle(const Vec3<T> &axis, const Angle<T> angle){
         T d = axis.length();
@@ -261,15 +386,6 @@ struct Quat{
             );
         }
     }
-
-    __fast_inline constexpr 
-    void operator*=(const Quat &p_q);
-
-    [[nodiscard]] __fast_inline constexpr 
-    Quat operator*(Quat && p_q) const;
-
-    [[nodiscard]] __fast_inline constexpr
-    Quat operator*(const Quat & p_q) const;
 
 
     [[nodiscard]] __fast_inline constexpr
@@ -306,7 +422,7 @@ struct Quat{
 
     // https://blog.csdn.net/xiaoma_bk/article/details/79082629
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
-    EulerAngle<T, P> to_euler() const {
+    [[nodiscard]] constexpr EulerAngle<T, P> to_euler() const {
         auto & q = *this;
 
         EulerAngle<T, P> angles;
@@ -365,162 +481,5 @@ template<arithmetic T>
 Quat() -> Quat<T>;
 }
 
-
-namespace ymd{
-template<typename T>
-constexpr T Quat<T>::angle_to(const Quat<T> &p_to) const {
-	T d = dot(p_to);
-	return acosf(CLAMP(d * d * 2 - 1, -1, 1));
-}
-
-template<typename T>
-constexpr T Quat<T>::dot(const Quat<T> &p_q) const {
-	return T(x * p_q.x + y * p_q.y + z * p_q.z + w * p_q.w);
-}
-
-template<typename T>
-constexpr T Quat<T>::length_squared() const{
-    return dot(*this);
-}
-
-template<typename T>
-constexpr T Quat<T>::inv_length() const {
-	return T(isqrt(x * x + y * y + z * z + w * w));
-}
-
-
-
-template<typename T>
-constexpr void Quat<T>::operator*=(const Quat<T> &p_q) {
-	set(
-        static_cast<T>(w * p_q.x + x * p_q.w + y * p_q.z - z * p_q.y),
-        static_cast<T>(w * p_q.y + y * p_q.w + z * p_q.x - x * p_q.z),
-        static_cast<T>(w * p_q.z + z * p_q.w + x * p_q.y - y * p_q.x),
-        static_cast<T>(w * p_q.w - x * p_q.x - y * p_q.y - z * p_q.z)
-    );
-}
-
-
-template<typename T>
-constexpr Quat<T> Quat<T>::operator*(const Quat<T> & p_q) const {
-	Quat<T> r = *this;
-	r *= p_q;
-	return r;
-}
-
-template<typename T>
-constexpr Quat<T> Quat<T>::operator*(Quat<T> && p_q) const {
-	p_q *= *this;
-	return p_q;
-}
-template<typename T>
-constexpr bool Quat<T>::is_equal_approx(const Quat<T> & other) const {
-	return is_equal_approx(x, other.x) && is_equal_approx(y, other.y) && is_equal_approx(z, other.z) && is_equal_approx(w, other.w);
-}
-template<typename T>
-constexpr T Quat<T>::length() const {
-	return sqrt(length_squared());
-}
-
-template<typename T>
-constexpr Quat<T> Quat<T>::normalized() const {
-    const auto ilen = inv_length();
-    const auto ret = Quat<T>(x * ilen, y * ilen, z * ilen, w * ilen);
-    return ret;
-}
-template<typename T>
-constexpr bool Quat<T>::is_normalized() const {
-	return is_equal_approx(length_squared(), T(1)); //use less epsilon
-}
-
-template<typename T>
-constexpr Quat<T> Quat<T>::inverse() const {
-	return Quat<T>::from_xyzw(-x, -y, -z, w);
-}
-
-
-template<typename T>
-constexpr Quat<T> Quat<T>::slerp(const Quat<T> &p_to, const T p_weight) const {
-	// Quat<T> to1 = Quat<T>::ZERO;
-    struct {
-        T x;
-        T y;
-        T z;
-        T w;
-    } to1;
-
-	T omega = 0;
-    T sinom = 0;
-    T scale0 = 0;
-    T scale1 = 0;
-
-	// calc cosine
-	T cosom = dot(p_to);
-
-	// adjust signs (if necessary)
-	if (cosom < T(0)) {
-		cosom = -cosom;
-		to1.x = -p_to.x;
-		to1.y = -p_to.y;
-		to1.z = -p_to.z;
-		to1.w = -p_to.w;
-	} else {
-		to1.x = p_to.x;
-		to1.y = p_to.y;
-		to1.z = p_to.z;
-		to1.w = p_to.w;
-	}
-
-	// calculate coefficients
-
-	if ((T(1) - cosom) > T(CMP_EPSILON)) {
-		// standard case (slerp)
-		omega = std::acos(cosom);
-		sinom = std::sinf(omega);
-		const auto inv_sinom = 1 / sinom;
-		scale0 = std::sinf((1 - p_weight) * omega) * inv_sinom;
-		scale1 = std::sinf(p_weight * omega) * inv_sinom;
-	} else {
-		// "from" and "to" Quat<T>s are very close
-		//  ... so we can do a linear interpolation
-		scale0 = T(1) - p_weight;
-		scale1 = p_weight;
-	}
-	// calculate final values
-	return Quat<T>::from_xyzw(
-			scale0 * x + scale1 * to1.x,
-			scale0 * y + scale1 * to1.y,
-			scale0 * z + scale1 * to1.z,
-			scale0 * w + scale1 * to1.w);
-}
-template<typename T>
-constexpr Quat<T> Quat<T>::slerpni(const Quat<T> &p_to, const T p_weight) const {
-	const Quat<T> &from = *this;
-
-	T dot = from.dot(p_to);
-
-	if (abs(dot) > T(0.9999)) {
-		return from;
-	}
-
-	T theta = acos(dot),
-            sinT = 1 / sinf(theta),
-		    newFactor = sinf(p_weight * theta) * sinT,
-		    invFactor = sinf((1 - p_weight) * theta) * sinT;
-
-	return Quat<T>(invFactor * from.x + newFactor * p_to.x,
-			invFactor * from.y + newFactor * p_to.y,
-			invFactor * from.z + newFactor * p_to.z,
-			invFactor * from.w + newFactor * p_to.w);
-}
-template<typename T>
-constexpr Quat<T> Quat<T>::cubic_slerp(const Quat<T> &p_b, const Quat<T> &p_pre_a, const Quat<T> &p_post_b, const T p_weight) const {
-
-	T t2 = (T(1) - p_weight) * p_weight * 2;
-	Quat<T> sp = this->slerp(p_b, p_weight);
-	Quat<T> sq = p_pre_a.slerpni(p_post_b, p_weight);
-	return sp.slerpni(sq, t2);
-}
-}
 
 #undef set
