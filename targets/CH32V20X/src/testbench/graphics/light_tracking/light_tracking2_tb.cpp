@@ -405,7 +405,7 @@ void light_tracking_main(void){
 
 
     #ifdef CH32V30X
-    auto & spi = spi2;
+    auto & spi = hal::spi2;
     auto lcd_blk = hal::PC<7>();
     
     lcd_blk.outpp(HIGH);

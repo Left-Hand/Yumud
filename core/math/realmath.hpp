@@ -91,4 +91,10 @@ namespace ymd{
         }
         return value;
     }
+
+    template<floating T>
+    std::array<T, 2> sincospu(const T turns){
+        const auto theta = turns * static_cast<T>(TAU);
+        return {std::sin(theta), std::cos(theta)};
+    }
 }

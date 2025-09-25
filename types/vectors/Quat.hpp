@@ -341,14 +341,18 @@ struct Quat{
     // (ax,ay,az), where ax is the angle of rotation around x axis,
     // and similar for other axes.
     // This implementation uses XYZ convention (Z is the first rotation).
-    constexpr void set_euler_angles(const Angle<T> x, const Angle<T> y, const Angle<T> z) {
+    constexpr void set_euler_angles(
+        const Angle<T> euler_x, 
+        const Angle<T> euler_y, 
+        const Angle<T> euler_z
+    ) {
         // R = X(a1).Y(a2).Z(a3) convention for Euler angles.
         // Conversion to Quat<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
         // a3 is the angle of the first rotation, following the notation in this reference.
 
-        auto [sin_a1, cos_a1] = (x / 2).sincos();
-        auto [sin_a2, cos_a2] = (y / 2).sincos();
-        auto [sin_a3, cos_a3] = (z / 2).sincos();
+        auto [sin_a1, cos_a1] = (euler_x / 2).sincos();
+        auto [sin_a2, cos_a2] = (euler_y / 2).sincos();
+        auto [sin_a3, cos_a3] = (euler_z / 2).sincos();
 
         set(
             +sin_a1 * cos_a2 * cos_a3 + sin_a2 * sin_a3 * cos_a1,
@@ -456,11 +460,11 @@ struct Quat{
     }
 
 private:
-    void set(T x, T y, T z, T w){
-        this->x = x;
-        this->y = y;
-        this->z = z;
-        this->w = w;
+    void set(T _x, T _y, T _z, T _w){
+        this->x = _x;
+        this->y = _y;
+        this->z = _z;
+        this->w = _w;
     }
 };
 

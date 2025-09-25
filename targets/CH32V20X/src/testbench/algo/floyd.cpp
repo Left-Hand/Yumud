@@ -18,20 +18,20 @@ struct Edge{
 template<typename T, size_t X_N, size_t Y_N>
 struct Matrix{
 	using Row = std::array<T, X_N>;
-	using Mat = std::array<Row, Y_N>;
+	using Storage = std::array<Row, Y_N>;
 	
 	static constexpr size_t w = X_N;
 	static constexpr size_t h = Y_N;
 	
-	Mat _mat;
+	Storage data_;
 	
 	T & operator [](const size_t x, const size_t y){
-		auto & row =  (_mat[y]);
+		auto & row =  (data_[y]);
 		return row[x];
 	}
 
 	const T & operator [](const size_t x, const size_t y)const{
-		auto & row =  (_mat[y]);
+		auto & row =  (data_[y]);
 		return row[x];
 	}
 	

@@ -9,8 +9,7 @@
 namespace ymd{
 template<arithmetic T, size_t R, size_t C>
 class Matrix{
-private:
-    __fast_inline constexpr Matrix(){}
+
 public:
     static constexpr Matrix from_uninitialized(){
         return Matrix();
@@ -64,24 +63,29 @@ public:
         }
     }
 
-    __fast_inline constexpr size_t rows() const { return R;}
-    __fast_inline constexpr size_t cols() const { return C;}
-    __fast_inline constexpr std::span<T, C> operator[](const size_t row) 
+    [[nodiscard]] __fast_inline constexpr size_t rows() const { return R;}
+    [[nodiscard]] __fast_inline constexpr size_t cols() const { return C;}
+    [[nodiscard]] __fast_inline constexpr std::span<T, C> operator[](const size_t row) 
         {return std::span<T, C>(&storage_[row * C], C);}
 
-    __fast_inline constexpr std::span<const T, C> operator[](const size_t row) const 
+    [[nodiscard]] __fast_inline constexpr std::span<const T, C> operator[](const size_t row) const 
         {return std::span<const T, C>(&storage_[row * C], C);}
 
-    __fast_inline constexpr T & at(const size_t row, const size_t col) 
+    [[nodiscard]] __fast_inline constexpr T & at(const size_t row, const size_t col) 
         { return storage_[row * C + col];}
-    __fast_inline constexpr const T & at(const size_t row, const size_t col) const 
+    [[nodiscard]] __fast_inline constexpr const T & at(const size_t row, const size_t col) const 
         { return storage_[row * C + col];}
-    __fast_inline constexpr size_t size() const { return R*C;}
-    __fast_inline constexpr T * data() { return storage_.data();}
-    __fast_inline constexpr const T * data() const { return storage_.data(); }
+
+    [[nodiscard]] __fast_inline constexpr T & operator()(const size_t row, const size_t col) 
+        { return storage_[row * C + col];}
+    [[nodiscard]] __fast_inline constexpr const T & operator()(const size_t row, const size_t col) const 
+        { return storage_[row * C + col];}
+    [[nodiscard]] __fast_inline constexpr size_t size() const { return R*C;}
+    [[nodiscard]] __fast_inline constexpr T * data() { return storage_.data();}
+    [[nodiscard]] __fast_inline constexpr const T * data() const { return storage_.data(); }
 
     template<size_t R2, size_t C2>
-    __fast_inline constexpr Matrix<T, R2, C2> block(
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R2, C2> block(
         const size_t row_start, const size_t col_start) const{   
         static_assert(R2 <= R and C2 <= C);
 
@@ -116,7 +120,7 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Matrix operator + (const Matrix<U, R, C> & other) const {
+    [[nodiscard]] __fast_inline constexpr Matrix operator + (const Matrix<U, R, C> & other) const {
         Matrix ret = Matrix::from_uninitialized();
         auto ptr = data();
         auto ret_ptr = ret.data();
@@ -140,7 +144,7 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Matrix operator - (const Matrix<U, R, C> & other) const {
+    [[nodiscard]] __fast_inline constexpr Matrix operator - (const Matrix<U, R, C> & other) const {
         Matrix ret = Matrix::from_uninitialized();
         auto ptr = data();
         auto ret_ptr = ret.data();
@@ -152,7 +156,7 @@ public:
         return ret;
     }
 
-    __fast_inline constexpr Matrix operator - () const {
+    [[nodiscard]] __fast_inline constexpr Matrix operator - () const {
         Matrix ret = Matrix::from_uninitialized();
         auto ptr = data();
         auto ret_ptr = ret.data();
@@ -164,7 +168,7 @@ public:
     }
 
 
-    __fast_inline constexpr Matrix operator * (const arithmetic auto & scalar) const{
+    [[nodiscard]] __fast_inline constexpr Matrix operator * (const arithmetic auto & scalar) const{
         Matrix ret = Matrix::from_uninitialized();
         auto ptr = data();
         auto ret_ptr = ret.data();
@@ -175,7 +179,7 @@ public:
     }
 
 
-    __fast_inline constexpr Matrix operator / (const arithmetic auto & scalar) const{
+    [[nodiscard]] __fast_inline constexpr Matrix operator / (const arithmetic auto & scalar) const{
         Matrix ret = Matrix::from_uninitialized();
         auto ptr = data();
         auto ret_ptr = ret.data();
@@ -185,10 +189,20 @@ public:
         return ret;
     }
 
-
+    
+    template<typename Fn>
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C> map(Fn fn) const{ 
+        Matrix<T, R, C> ret = Matrix<T, R, C>::from_uninitialized();
+        auto ptr = data();
+        auto ret_ptr = ret.data();
+        for(size_t i = 0; i < size(); i++){
+            ret_ptr[i] = std::forward<Fn>(fn)(ptr[i]);
+        }
+        return ret;
+    }
 
     template<size_t C2>
-    __fast_inline constexpr Matrix<T, R, C2> operator * (const Matrix<T, C, C2> & other) const{
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C2> operator * (const Matrix<T, C, C2> & other) const{
         auto ret = Matrix<T, R, C2>::from_uninitialized();
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < C2; j++) {
@@ -202,7 +216,7 @@ public:
         return ret;
     }
 
-    __fast_inline constexpr T trace() const {
+    [[nodiscard]] __fast_inline constexpr T trace() const {
         static_assert(R == C, "Matrix must be square");
         T ret = 0;
         for (size_t i = 0; i < C; i++) {
@@ -210,7 +224,7 @@ public:
         }
         return ret;
     }
-    __fast_inline constexpr Matrix<T, C, R> transpose() const{
+    [[nodiscard]] __fast_inline constexpr Matrix<T, C, R> transpose() const{
         Matrix<T, C, R> ret = Matrix<T, C, R>::from_uninitialized();
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < C; j++) {
@@ -220,86 +234,7 @@ public:
         return ret;
     }
 
-    // __fast_inline constexpr Matrix<T, R, R> guassian_inverse() const{
-
-    //     Matrix<T, R, 2 * R> W;
-    //     Matrix<T, R, R> ret;
-    //     T tem_1, tem_2, tem_3;
-    
-    //     // 对矩阵右半部分进行扩增
-    //     for(size_t i = 0;i < R; i++){
-    //         for(size_t j = 0;j < 2 * R; j++){
-    //             if(j<R){
-    //                 W[i][j] = (T) (*this)[i][j];
-    //             }
-    //             else{
-    //                 W[i][j] = (T) (j-R == i ? 1:0);
-    //             }
-    //         }
-    //     }
-    
-    //     for(size_t i=0;i<R;i++)
-    //     {
-    //         // 判断矩阵第一行第一列的元素是否为0，若为0，继续判断第二行第一列元素，直到不为0，将其加到第一行
-    //         if( ((int) W[i][i]) == 0)
-    //         { 
-    //             size_t j=i+1;
-    //             for(;j<R;j++)
-    //             {
-    //                 if( ((int) W[j][i]) != 0 ) break;
-    //             }
-    //             if(j == R){
-    //                 break;
-    //             }
-    //             //将前面为0的行加上后面某一行
-    //             for(size_t k=0;k<2*R;k++)
-    //             {
-    //                 W[i][k] += W[j][k];
-    //             }
-    //         }
-    
-    //         //将前面行首位元素置1
-    //         tem_1 = W[i][i];
-    //         for(size_t j=0;j<2*R;j++)
-    //         {
-    //             W[i][j] = W[i][j] / tem_1;
-    //         }
-    
-    //         //将后面所有行首位元素置为0
-    //         for(size_t j=i+1;j<R;j++)
-    //         {
-    //             tem_2 = W[j][i];
-    //             for(size_t k=i;k<2*R;k++)
-    //             {
-    //                 W[j][k] = W[j][k] - tem_2 * W[i][k];
-    //             }
-    //         }
-    //     }
-    
-    //     // 将矩阵前半部分标准化
-    //     for(size_t i=R-1;i>=0;i--)
-    //     {
-    //         for(size_t j=i-1;j>=0;j--)
-    //         {
-    //             tem_3 = W[j][i];
-    //             for(size_t k=i;k<2*R;k++)
-    //             {
-    //                 W[j][k] = W[j][k] - tem_3*W[i][k];
-    //             }
-    //         }
-    //     }
-    
-    //     //得出逆矩阵
-    //     for(size_t i=0;i<R;i++)
-    //     {
-    //         for(size_t j=R;j<2*R;j++)
-    //         {
-    //             ret[i][j-R] = W[i][j];
-    //         }
-    //     }
-    //     return ret;
-    // }
-    __fast_inline constexpr Matrix<T, R, R> lu_inverse() const{
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R, R> lu_inverse() const{
         // https://blog.csdn.net/weixin_46207279/article/details/120374064
 
         T L[R][R], U[R][R], L_n[R][R], U_n[R][R];
@@ -413,7 +348,7 @@ public:
     }
 
     template<typename U = T, typename std::enable_if_t<std::is_arithmetic_v<U>, int> = 0>
-    __fast_inline constexpr Matrix<T, R, R> inverse() const{
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R, R> inverse() const{
         static_assert(R == C);
 
         Matrix<T, R, 2 * R> augmented = Matrix<T, R, 2 * R>::from_uninitialized();
@@ -469,12 +404,57 @@ public:
         return ret;
     }
 
-    __fast_inline constexpr
-    const T & operator()(const size_t i, const size_t j) const {
-        return this->at(i,j);
+
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R-1, C-1> minor(size_t i, size_t j) const {
+        static_assert(R > 1, "minor: matrix rows must be greater than 1");
+        static_assert(C > 1, "minor: matrix columns must be greater than 1");
+        Matrix<T, R-1, C-1> ret = Matrix<T, R-1, C-1>::from_uninitialized();
+        size_t dst_row = 0;
+        for (size_t src_row = 0; src_row < R; ++src_row) {
+            if (src_row == i) continue;
+            size_t dst_col = 0;
+            for (size_t src_col = 0; src_col < C; ++src_col) {
+                if (src_col == j) continue;
+                ret.at(dst_row, dst_col) = this->at(src_row, src_col);
+                ++dst_col;
+            }
+            ++dst_row;
+        }
+        return ret;
     }
 
-    __fast_inline constexpr
+    [[nodiscard]] __fast_inline constexpr T minor_determinant(size_t i, size_t j) const {
+        static_assert(R > 1, "minor_determinant: matrix rows must be greater than 1");
+        static_assert(C > 1, "minor_determinant: matrix columns must be greater than 1");
+        static_assert(R == C, "minor_determinant: matrix must be square for determinant calculation");
+        
+        if constexpr (R == 2) {
+            // 2x2矩阵：直接返回对角元素
+            return this->at(1 - i, 1 - j);
+        } else if constexpr (R == 3) {
+            // 3x3矩阵：硬编码2x2行列式计算
+            T elements[4];
+            size_t idx = 0;
+            for (size_t r = 0; r < 3; ++r) {
+                if (r == i) continue;
+                for (size_t c = 0; c < 3; ++c) {
+                    if (c == j) continue;
+                    elements[idx++] = this->at(r, c);
+                }
+            }
+            return elements[0] * elements[3] - elements[1] * elements[2];
+        } else if constexpr (R == 4) {
+            // 也可以为4x4矩阵添加特化
+            return compute_4x4_minor_determinant(i, j);
+        } else {
+            // 大矩阵使用通用算法
+            return compute_determinant_without_row_col(i, j);
+        }
+    }
+
+
+
+    [[nodiscard]] __fast_inline constexpr
     T determinant() const{
         static_assert(R == C, "Determinant can only be calculated for square matrices.");
 
@@ -487,19 +467,129 @@ public:
         } else {
             T det = 0;
             for (size_t j = 0; j < C; ++j) {
-                det += ((j % 2 == 0 ? 1 : -1) * this->at(0, j)) * this->minor(0, j).determinant();
+                det += ((j % 2 == 0 ? 1 : -1) * this->at(0, j)) * this->minor_determinant(0,j);
             }
             return det;
         }
     }
 
-    __fast_inline constexpr 
+    [[nodiscard]] __fast_inline constexpr 
     T abs() const {
         return determinant();
     }
 private:
-    // std::array<std::array<T, C>, R> storage_;
     std::array<T, C * R> storage_;
+
+    __fast_inline constexpr Matrix(){}
+
+    // 辅助函数：计算跳过指定行和列的行列式
+    [[nodiscard]] __fast_inline constexpr T compute_determinant_without_row_col(size_t skip_row, size_t skip_col) const {
+        constexpr size_t N = R - 1;
+        
+        if constexpr (N == 1) {
+            // 找到唯一剩余的元素
+            const size_t row = (skip_row == 0) ? 1 : 0;
+            const size_t col = (skip_col == 0) ? 1 : 0;
+            return this->at(row, col);
+        } else if constexpr (N == 2) {
+            // 2x2 子矩阵的行列式
+            // 找到剩余的行和列索引
+            size_t rows[2], cols[2];
+            size_t r_idx = 0;
+            for (size_t i = 0; i < R; ++i) {
+                if (i != skip_row) rows[r_idx++] = i;
+            }
+            size_t c_idx = 0;
+            for (size_t j = 0; j < C; ++j) {
+                if (j != skip_col) cols[c_idx++] = j;
+            }
+            
+            return this->at(rows[0], cols[0]) * this->at(rows[1], cols[1]) 
+                - this->at(rows[0], cols[1]) * this->at(rows[1], cols[0]);
+        } else {
+            // 对于更大的矩阵，使用拉普拉斯展开
+            T det = T(0);
+            int sign = 1;
+            
+            // 选择第一行进行展开（跳过skip_row和skip_col后剩余的第一行）
+            size_t expand_row = 0;
+            while (expand_row == skip_row && expand_row < R) {
+                expand_row++;
+            }
+            
+            size_t col_idx = 0;
+            for (size_t j = 0; j < C; ++j) {
+                if (j == skip_col) continue;
+                
+                T cofactor = sign * this->at(expand_row, j) 
+                        * compute_determinant_without_row_col_col(expand_row, j, skip_row, skip_col);
+                det += cofactor;
+                sign = -sign;
+                col_idx++;
+            }
+            
+            return det;
+        }
+    }
+
+    // 辅助函数：计算跳过两行两列的行列式
+    [[nodiscard]] __fast_inline constexpr T compute_determinant_without_row_col_col(
+        size_t skip_row1, size_t skip_col1, size_t skip_row2, size_t skip_col2) const {
+        
+        constexpr size_t N = R - 2;
+        
+        if constexpr (N == 1) {
+            // 找到唯一剩余的元素
+            for (size_t i = 0; i < R; ++i) {
+                if (i != skip_row1 && i != skip_row2) {
+                    for (size_t j = 0; j < C; ++j) {
+                        if (j != skip_col1 && j != skip_col2) {
+                            return this->at(i, j);
+                        }
+                    }
+                }
+            }
+            return T(0); // 不应该到达这里
+        } else {
+            // 递归计算更小的子矩阵
+            Matrix<T, N, N> submatrix;
+            size_t dst_row = 0;
+            
+            for (size_t src_row = 0; src_row < R; ++src_row) {
+                if (src_row == skip_row1 || src_row == skip_row2) continue;
+                
+                size_t dst_col = 0;
+                for (size_t src_col = 0; src_col < C; ++src_col) {
+                    if (src_col == skip_col1 || src_col == skip_col2) continue;
+                    
+                    submatrix.at(dst_row, dst_col) = this->at(src_row, src_col);
+                    dst_col++;
+                }
+                dst_row++;
+            }
+            
+            return submatrix.determinant();
+        }
+    }
+
+
+    [[nodiscard]] __fast_inline constexpr T compute_4x4_minor_determinant(size_t i, size_t j) const {
+        // 手动展开4x4矩阵的3x3子矩阵行列式计算
+        // 选择展开行（跳过第i行）
+        const size_t rows[3];
+        size_t r_idx = 0;
+        for (size_t r = 0; r < 4; ++r) {
+            if (r != i) rows[r_idx++] = r;
+        }
+        
+        // 拉普拉斯展开计算3x3行列式
+        return this->at(rows[0], (j+1)%4) * (this->at(rows[1], (j+2)%4) * this->at(rows[2], (j+3)%4) - 
+                                            this->at(rows[1], (j+3)%4) * this->at(rows[2], (j+2)%4))
+            - this->at(rows[0], (j+2)%4) * (this->at(rows[1], (j+1)%4) * this->at(rows[2], (j+3)%4) - 
+                                            this->at(rows[1], (j+3)%4) * this->at(rows[2], (j+1)%4))
+            + this->at(rows[0], (j+3)%4) * (this->at(rows[1], (j+1)%4) * this->at(rows[2], (j+2)%4) - 
+                                            this->at(rows[1], (j+2)%4) * this->at(rows[2], (j+1)%4));
+    }
 };
 
 
@@ -531,4 +621,11 @@ using Matrix3x3 = Matrix<T,3,3>;
 
 template<typename T>
 using Matrix4x4 = Matrix<T,3,3>;
+
+template<typename T, size_t N>
+using RowVector = Matrix<T,N,1>;
+
+template<typename T, size_t N>
+using ColVector = Matrix<T,1,N>;
+
 }

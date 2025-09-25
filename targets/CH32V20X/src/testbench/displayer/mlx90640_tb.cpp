@@ -139,7 +139,7 @@ void mlx90640_main(){
     // Color<q16>
 
 
-    i2c_sw_.init(180_KHz);
+    i2c_sw_.init({180_KHz});
     clock::delay(50ms);                                    //预留一点时间让MLX传感器完成自己的初始化
     // MLX90640_SetRefreshRate(MLX90640_I2CADDR, 0).examine();       //0.5hz
     MLX90640_SetRefreshRate(MLX90640_I2CADDR, MLX90640_DataRate::_64Hz).examine();
