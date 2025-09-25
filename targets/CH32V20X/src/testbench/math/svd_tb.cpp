@@ -91,29 +91,108 @@ struct Rotation3{
 };
 
 template<typename T>
-struct Rotation2{
-    Matrix<T, 2, 2> matrix;
+struct Rotation2 {
+    constexpr Rotation2(const Matrix2x2<T>& matrix):
+        sine_(matrix.template at<1,0>()), cosine_(matrix.template at<1,1>()){;} 
 
-    static constexpr Rotation2 from_angle(Angle<T> angle){
-        const auto [s,c] = angle.sincos();
-        const auto matrix = Matrix<T, 2, 2>(
-            c, s,
-            -s, c
+    // 从角度构造
+    static constexpr Rotation2 from_angle(Angle<T> angle) {
+        const auto [s, c] = angle.sincos();
+        return Rotation2{s, c};
+    }
+
+
+    // 恒等旋转（单位旋转）
+    static constexpr Rotation2 from_identity() {
+        return Rotation2{T(0), T(1)};
+    }
+    
+    // 从旋转矩阵构造（如果矩阵是标准形式）
+    static constexpr Rotation2 from_matrix(const Matrix<T, 2, 2>& mat) {
+        // 假设矩阵形式为：[cos, -sin]
+        //                [sin,  cos]
+        return Rotation2{mat(1, 0), mat(0, 0)};
+    }
+
+    // 获取旋转矩阵
+    constexpr Matrix<T, 2, 2> to_matrix() const {
+        return Matrix<T, 2, 2>(
+            cosine_, -sine_,
+            sine_,  cosine_
         );
-
-        return Rotation2{matrix};
     }
 
-    constexpr Rotation2 normalized() const { 
-        return *this;
+    // 获取角度
+    constexpr Angle<T> angle() const {
+        return Angle<T>::from_turns(atan2pu(sine_, cosine_));
     }
 
-    constexpr Vec2<T> operator *(const Vec2<T>& v) const {
-        return Vec2<T>(matrix * to_matrix(v));
+    // 旋转变换：R * v
+    constexpr Vec2<T> operator*(const Vec2<T>& v) const {
+        return Vec2<T>(
+            cosine_ * v.x - sine_ * v.y,
+            sine_ * v.x + cosine_ * v.y
+        );
     }
 
-    friend OutputStream & operator << (OutputStream & os, const Rotation2<T> & self) { 
-        return os << self.matrix;
+    // 旋转组合：R1 * R2
+    constexpr Rotation2 operator*(const Rotation2& other) const {
+        // 三角函数公式：sin(a+b) = sin(a)cos(b) + cos(a)sin(b)
+        //             cos(a+b) = cos(a)cos(b) - sin(a)sin(b)
+        return Rotation2{
+            sine_ * other.cosine_ + cosine_ * other.sine_,
+            cosine_ * other.cosine_ - sine_ * other.sine_
+        };
+    }
+
+    // 逆旋转（转置）
+    constexpr Rotation2 inverse() const {
+        return Rotation2{-sine_, cosine_}; // 角度取反
+    }
+
+    constexpr Rotation2 transpose() const {
+        return Rotation2{-sine_, cosine_}; // 角度取反
+    }
+
+    // 插值：球面线性插值
+    constexpr Rotation2 slerp(const Rotation2& other, T t) const {
+        T cos_theta = cosine_ * other.cosine_ + sine_ * other.sine_;
+        
+        // 处理数值误差
+        cos_theta = std::clamp(cos_theta, T(-1), T(1));
+        
+        T theta = std::acos(cos_theta);
+        
+        if (std::abs(theta) < 1e-6) {
+            // 角度很小，直接线性插值
+            return Rotation2{
+                sine_ + t * (other.sine_ - sine_),
+                cosine_ + t * (other.cosine_ - cosine_)
+            }.normalized();
+        }
+        
+        T sin_theta = std::sin(theta);
+        T a = std::sin((1 - t) * theta) / sin_theta;
+        T b = std::sin(t * theta) / sin_theta;
+        
+        return Rotation2{
+            a * sine_ + b * other.sine_,
+            a * cosine_ + b * other.cosine_
+        }.normalized();
+    }
+
+
+private:
+    T sine_;
+    T cosine_;
+
+
+    // 直接从sine和cosine构造
+    constexpr Rotation2(T sin_val, T cos_val) : sine_(sin_val), cosine_(cos_val) {;}
+
+    friend OutputStream& operator<<(OutputStream& os, const Rotation2<T>& self) {
+        return os << "Rotation2(sin=" << self.sine_ << ", cos=" << self.cosine_ 
+                    << ", angle=" << self.angle().to_degrees() << "°)";
     }
 };
 
@@ -147,6 +226,144 @@ struct Isometry2 {
     }
 };
 
+namespace ymd::slam::details{
+
+    template<typename T>    
+    __fast_inline Rotation2<T> svd_2x2(const Matrix<T,2,2> H) {
+
+        const auto [a, b, c, d] = H.to_flatten_array();
+            // 使用更数值稳定的方法
+        // const T trace = a + d;
+        const T diff = a - d;
+        const T off_diag = b + c;
+        
+        // 直接计算旋转角度，忽略次要项
+        const T rotation_angle = atan2pu(off_diag, diff);
+        
+        
+        return Rotation2<T>::from_angle(Angle<T>::from_turns(0.5f * rotation_angle));
+
+        // // 直接计算旋转角度，忽略次要项
+        // const auto rotation_angle = atan2pu(b + c, a - d);  // atan2(g, f)的2倍简化
+        
+        // return Rotation2<T>::from_angle(Angle<T>::from_turns(static_cast<T>(0.5f) * rotation_angle));
+
+        const T e = static_cast<T>(0.5f) * (a + d);
+        const T f = static_cast<T>(0.5f) * (a - d);
+        const T g = static_cast<T>(0.5f) * (b + c);
+        const T h = static_cast<T>(0.5f) * (c - b);
+
+        // const T a1 = atan2pu(g, f);
+        // const T a2 = atan2pu(h, e);
+
+        // const auto theta_angle = Angle<T>::from_turns(static_cast<T>(0.5f) * (a2 - a1));
+        // const auto phi_angle = Angle<T>::from_turns(static_cast<T>(0.5f) * (a2 + a1));
+
+        // return Rotation2<T>::from_angle(theta_angle - phi_angle);  // ❌ 这里错了！
+        // const T q = mag(e, h);
+        // const T r = mag(f, g);
+
+        // const T sx = q + r;
+        // const T sy = q - r;
+
+        // const auto sigma = Matrix<T,2,2>(
+        //     sx, 0,
+        //     0, sy
+        // );
+
+        const auto a1 = std::atan2(g, f);
+        const auto a2 = std::atan2(h, e);
+
+        const auto theta_angle = Angle<T>::from_radians(static_cast<T>(0.5f) * (a2 - a1));
+        const auto phi_angle = Angle<T>::from_radians(static_cast<T>(0.5f) * (a2 + a1));
+
+        // return Rotation2<T>::from_angle(theta_angle - phi_angle);
+
+        const auto [theta_sin, theta_cos] = (theta_angle).sincos();
+        const auto [phi_sin, phi_cos] = (phi_angle).sincos();
+
+        const auto u = Matrix<T,2,2>(
+            theta_cos, -theta_sin,
+            theta_sin, theta_cos
+        );
+
+        const auto v = Matrix<T,2,2>(
+            phi_cos, -phi_sin,
+            phi_sin, phi_cos
+        );
+
+        return Rotation2<T>(u * v.transpose());
+    }
+
+    struct IndexRelations{
+        struct Index{
+            static constexpr uint16_t INVALID_NTH = 0xffff;
+            static constexpr Index from_none(){
+                return Index{INVALID_NTH};
+            }
+
+            static constexpr Index from_index(uint16_t nth){
+                ASSERT(nth != INVALID_NTH);
+                return Index{nth};
+            }
+
+            static constexpr Index from_index_unchecked(uint16_t nth){
+                return Index{nth};
+            }
+
+            constexpr bool is_valid(Index index) const{
+                return nth_ != INVALID_NTH;
+            }
+
+            constexpr uint16_t unwrap() const {
+                if(nth_ == INVALID_NTH){
+                    PANIC();
+                }
+
+                return nth_;
+            }
+        // private:
+            uint16_t nth_;
+        };
+
+        struct IndexRelationsIterator{
+
+        };
+
+        // std::span<Index>
+    };
+
+    template<typename T>
+    struct CorrespondPointCloudIterator{
+    private:
+        const std::span<const Vec2<T>> pts1_; 
+        const std::span<const Vec2<T>> pts2_;
+        IndexRelations relations_;
+    };
+
+    template<typename T>
+    static constexpr Matrix2x2<T> compute_cross_variance_2x2(
+        const std::span<const Vec2<T>> pts1, 
+        const std::span<const Vec2<T>> pts2,
+        const int16_t * cor
+    ) {
+        Matrix2x2<T> cov = Matrix2x2<T>::from_zero(); 
+        for (size_t i = 0; i < pts1.size(); i++) {
+            const auto j = cor[i];
+            if (j < 0) continue;
+            const auto p = pts1[i];
+            const auto q = pts2[j];
+            cov.template at<0, 0>() += p.x * q.x;
+            cov.template at<0, 1>() += p.y * q.x;
+            cov.template at<1, 0>() += p.x * q.y;
+            cov.template at<1, 1>() += p.y * q.y;
+        }
+
+        return cov;
+    }
+}
+
+
 template<typename T, size_t D, 
     typename Isometry = std::conditional_t<D == 2, Isometry2<T>, Isometry3<T>>,
     typename Vec = std::conditional_t<D == 2, Vec2<T>, Vec3<T>>
@@ -170,42 +387,52 @@ static Result<Isometry, SlamErrorKind> pose_estimation(
 
     const auto n = pts1.size();
     
-    // center of mass
-    auto center_of_pts = [](const std::span<const Vec> pts) -> Vec {
+    // centroid of mass
+    auto centroid_of_pts = [](const std::span<const Vec> pts) -> Vec {
         Vec sum = Vec::ZERO;
         for (auto &pt : pts)
             sum += pt;
         return sum / static_cast<T>(pts.size());
     };
 
-    auto  covariance_mat_of_vec = [](const Vec p1, const Vec p2) -> W_Matrix {
+    auto  covariance_mat_of_vec = [](const Vec centroid1, const Vec centroid2) -> W_Matrix {
+        #if 0
+
         auto ret = W_Matrix::from_uninitialized();
-        ret(0, 0) = p1.x * p2.x;
-        ret(0, 1) = p1.x * p2.y;
-        ret(1, 0) = p1.y * p2.x;
-        ret(1, 1) = p1.y * p2.y;
+        ret(0, 0) = centroid1.x * centroid2.x;
+        ret(0, 1) = centroid1.x * centroid2.y;
+        ret(1, 0) = centroid1.y * centroid2.x;
+        ret(1, 1) = centroid1.y * centroid2.y;
         return ret;
-        // return to_matrix(p1) * to_matrix(p2).transpose();
+
+        #else
+
+        return to_matrix(centroid1) * to_matrix(centroid2).transpose();
+
+        #endif
     };
 
-    const Vec p1 = center_of_pts(pts1);
-    const Vec p2 = center_of_pts(pts2);
+    const Vec centroid1 = centroid_of_pts(pts1);
+    const Vec centroid2 = centroid_of_pts(pts2);
 
-    // DEBUG_PRINTLN(p1, p2);
 
     // Compute covariance matrix W
-    auto W = W_Matrix::from_zero();
-    for (size_t i = 0; i < n; i++) {
-        W += covariance_mat_of_vec(pts1[i] - p1, pts2[i] - p2);
-    }
+    const auto W = [&]{
+        auto ret = W_Matrix::from_zero();
+        for (size_t i = 0; i < n; i++) {
+            ret += covariance_mat_of_vec(pts1[i] - centroid1, pts2[i] - centroid2);
+        }
+        return ret;
+    }();
 
+    #if 1
     // SVD on W: W = U * Sigma * V^T
-    JacobiSVD<T, D, D> svd(W, max_iterations);
+    const JacobiSVD<T, D, D> svd_solver(W, max_iterations);
 
-    if(!svd.is_computed()) 
+    if(!svd_solver.is_computed()) 
         return Err(SlamErrorKind::JacobiSvdIterLimitReached);
 
-    const auto sol = svd.solution().unwrap();
+    const auto sol = svd_solver.solution().unwrap();
     const Matrix<T, D, D> & U = sol.U;
     const Matrix<T, D, D> & V = sol.V;
 
@@ -213,9 +440,11 @@ static Result<Isometry, SlamErrorKind> pose_estimation(
     // 确保是旋转矩阵（行列式为正）
     auto R_matrix = U * V.transpose();
     // DEBUG_PRINTLN("u", U, "v", V, V.transpose(), U * V.transpose());
-
-    const auto R = Rotation(R_matrix).normalized();
-    const auto t = p1 - R * p2;  // 直接使用Rotation3的运算符
+    const auto R = Rotation(R_matrix);
+    #else
+    const auto R = slam::details::svd_2x2(W);
+    #endif
+    const auto t = centroid1 - R * centroid2;  // 直接使用Rotation3的运算符
 
     // DEBUG_PRINTLN("R", R, "t", t);
     return Ok(Isometry(R, t));
@@ -298,17 +527,17 @@ void svd_main(){
     // PANIC{A};
     
     // Compute SVD
-    JacobiSVD<float, 3, 2> svd(A, 100);  // 100 max iterations
+    JacobiSVD<float, 3, 2> svd_solver(A, 100);  // 100 max iterations
 
     DEBUG_PRINTLN(clock::micros() - begin_micros);
     
     // Get SVD components
-    const auto sol = svd.solution().expect();
+    const auto sol = svd_solver.solution().expect();
     const auto U = sol.U;
     const auto sigma = sol.sigma;
     const auto V = sol.V;
 
-    ASSERT(svd.is_computed());
+    ASSERT(svd_solver.is_computed());
     DEBUG_PRINTLN(U);
     DEBUG_PRINTLN(U.transpose() * U);
     DEBUG_PRINTLN(sigma);

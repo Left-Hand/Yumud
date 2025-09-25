@@ -34,7 +34,7 @@ namespace ymd{
     
     template<floating T>
     __fast_inline constexpr T sinpu(const T val){
-        return std::sin(float(val * float(TAU)));
+        return std::sin(T(val * T(TAU)));
     }
     
     template<floating T>
@@ -42,7 +42,8 @@ namespace ymd{
         return cos(val * (1 / TAU));
     }
     
-    __fast_inline constexpr float isqrt(const float val){
+    template<floating T>
+    __fast_inline constexpr T isqrt(const T val){
         if(std::is_constant_evaluated()) return 1 /ConstexprMath::sqrt(val);
         else return 1 / std::sqrt(val);
     }
@@ -57,44 +58,37 @@ namespace ymd{
         return std::sqrt(a * a + b * b);
     }
 
-    template<floating T>
-    __fast_inline constexpr std::array<T, 2> sincos(const T x){
-        return {std::sin(x), std::cos(x)};
-    }
     
     template<arithmetic T>
     __fast_inline constexpr T square(const T x) {
         return x * x;
     }
-    
-    template<size_t N>
-    __fast_inline constexpr iq_t<N> square(const iq_t<N> x) {
-        return x * x;
-    }
-    
-    __fast_inline constexpr real_t distance(const real_t & a, const real_t & b){
+
+    template<arithmetic T>
+    __fast_inline constexpr T distance(const T a, const T b){
         return ABS(a-b);
     }
     
-    __fast_inline constexpr real_t normal(const real_t & a, const real_t & b){
+    template<arithmetic T>
+    __fast_inline constexpr T normal(const T a, const T b){
         return SIGN(b - a);
     }
 
-    template<size_t N>
-    static __fast_inline constexpr iq_t<N> errmod(const iq_t<N> x, const iq_t<N> s) {
-        const auto s_by_2 = s >> 1;
-        iq_t<N> value = fmod(x, s);
-        if (value > s_by_2) {
-            value -= s;
-        } else if (value <= -s_by_2) {
-            value += s;
-        }
-        return value;
-    }
 
     template<floating T>
     std::array<T, 2> sincospu(const T turns){
         const auto theta = turns * static_cast<T>(TAU);
         return {std::sin(theta), std::cos(theta)};
+    }
+
+    template<floating T>
+    std::array<T, 2> sincos(const T theta){
+        return {std::sin(theta), std::cos(theta)};
+    }
+
+    template<floating T>
+    __fast_inline constexpr T atan2pu(const T a, const T b) {
+        static constexpr auto INV_TAU = static_cast<T>(1 / TAU);
+        return std::atan2(a, b) * INV_TAU;
     }
 }

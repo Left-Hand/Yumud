@@ -579,6 +579,25 @@ bool is_in_one(const iq_t<Q> qv){
     return not is_in_one(qv);
 }
 
+    
+template<size_t Q>
+__fast_inline constexpr iq_t<Q> square(const iq_t<Q> x) {
+    return x * x;
+}
+
+
+template<size_t Q>
+static __fast_inline constexpr iq_t<Q> errmod(const iq_t<Q> x, const iq_t<Q> s) {
+    const auto s_by_2 = s >> 1;
+    iq_t<Q> value = fmod(x, s);
+    if (value > s_by_2) {
+        value -= s;
+    } else if (value <= -s_by_2) {
+        value += s;
+    }
+    return value;
+}
+
 }
 
 namespace std{

@@ -76,6 +76,14 @@ public:
     [[nodiscard]] __fast_inline constexpr const T & at(const size_t row, const size_t col) const 
         { return storage_[row * C + col];}
 
+    template<size_t I, size_t J>
+    [[nodiscard]] __fast_inline constexpr T & at() 
+        { return storage_[I * C + J];}
+
+    template<size_t I, size_t J>
+    [[nodiscard]] __fast_inline constexpr const T & at() const 
+        { return storage_[I * C + J];}
+
     [[nodiscard]] __fast_inline constexpr T & operator()(const size_t row, const size_t col) 
         { return storage_[row * C + col];}
     [[nodiscard]] __fast_inline constexpr const T & operator()(const size_t row, const size_t col) const 
@@ -476,6 +484,11 @@ public:
     [[nodiscard]] __fast_inline constexpr 
     T abs() const {
         return determinant();
+    }
+
+    [[nodiscard]] __fast_inline constexpr 
+    const std::array<T, C * R> & to_flatten_array() const { 
+        return storage_;
     }
 private:
     std::array<T, C * R> storage_;
