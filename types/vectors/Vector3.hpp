@@ -456,6 +456,16 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Vec3<auto> & va
 template<arithmetic T>
 Vec3(T, T, T) -> Vec3<T>;
 
+
+template<typename T>
+struct ToMatrixDispatcher<Vec3<T>>{
+    static constexpr auto cast(const Vec3<T>& p){
+        return Matrix<T, 3, 1>(p.x, p.y, p.z);
+    }
+};
+
+
+
 using Vec3f = Vec3<float>;
 using Vec3d = Vec3<double>;
 using Vec3i = Vec3<int>;

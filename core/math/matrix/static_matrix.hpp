@@ -627,6 +627,18 @@ __inline OutputStream & operator<<(OutputStream & os, const Matrix<T, R, C> & ma
 
 
 template<typename T>
+struct ToMatrixDispatcher{
+    //static constexpr auto cast();
+};
+
+
+template<typename T>
+auto to_matrix(T && obj){
+    return ToMatrixDispatcher<std::decay_t<T>>::cast(obj);
+}
+
+
+template<typename T>
 using Matrix2x2 = Matrix<T,2,2>;
 
 template<typename T>

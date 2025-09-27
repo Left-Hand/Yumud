@@ -24,6 +24,11 @@ struct Quat{
     );
 
     [[nodiscard]]
+    __fast_inline static constexpr Quat from_identity() {
+        return Quat<T>::IDENTITY;
+    }
+
+    [[nodiscard]]
     __fast_inline static constexpr Quat from_xyzw(
         const T p_x, const T p_y, const T p_z, const T p_w){
         return Quat<T> {
@@ -353,9 +358,21 @@ struct Quat{
 
     [[nodiscard]] __fast_inline constexpr
     Vec3<T> operator*(const Vec3<T> &v) const {
+        #if 1
         Vec3<T> u(x, y, z);
         Vec3<T> uv = u.cross(v);
         return v + ((uv * w) + u.cross(uv)) * 2;
+        #else
+        T tx = 2 * (y*v.z - z*v.y);
+        T ty = 2 * (z*v.x - x*v.z); 
+        T tz = 2 * (x*v.y - y*v.x);
+        
+        return Vec3<T>(
+            v.x + w*tx + y*tz - z*ty,
+            v.y + w*ty + z*tx - x*tz, 
+            v.z + w*tz + x*ty - y*tx
+        );
+        #endif
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -414,8 +431,12 @@ struct Quat{
         return angles;
     }
 
-    Quat<T> conj() const{
+    [[nodiscard]] constexpr Quat<T> conj() const{
         return Quat<T>(-x, -y, -z, w);
+    }
+
+    [[nodiscard]] std::array<T, 4> to_xyzw_array() const {
+        return {x, y, z, w};
     }
 
 private:

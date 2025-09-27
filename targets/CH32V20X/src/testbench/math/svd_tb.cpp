@@ -15,7 +15,8 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 #include "robots/slam/svd.hpp"
-#include "types/vectors/Vector3.hpp"
+#include "types/vectors/vector3.hpp"
+#include "types/vectors/quat.hpp"
 
 using namespace ymd;
 
@@ -38,105 +39,128 @@ OutputStream & operator<<(OutputStream & os, const SlamErrorKind & error){
     }
 }
 
-template<typename T>
-struct ToMatrixDispatcher{
-    //static constexpr auto cast();
-};
 
 template<typename T>
-struct ToMatrixDispatcher<Vec3<T>>{
-    static constexpr auto cast(const Vec3<T>& p){
-        return Matrix<T, 3, 1>(p.x, p.y, p.z);
+static constexpr Quat<T> mat3x3_to_quat(const Matrix<T, 3, 3>& R){
+    // https://zhuanlan.zhihu.com/p/635847061
+    const T trace = R(0, 0) + R(1, 1) + R(2, 2);
+    std::array<T, 4> buf;
+
+    if (trace >= 0.0) {
+        T t = sqrt(trace + T(1.0));
+        buf[0] = T(0.5) * t;
+        t = T(0.5) / t;
+        buf[1] = (R(2, 1) - R(1, 2)) * t;
+        buf[2] = (R(0, 2) - R(2, 0)) * t;
+        buf[3] = (R(1, 0) - R(0, 1)) * t;
+    } else {
+        size_t i = 0;
+        
+        if (R(1, 1) > R(0, 0)) {
+            i = 1;
+        }
+
+        if (R(2, 2) > R(i, i)) {
+            i = 2;
+        }
+
+        const size_t j = (i + 1) % 3;
+        const size_t k = (j + 1) % 3;
+        T t = sqrt(R(i, i) - R(j, j) - R(k, k) + T(1.0));
+        buf[i + 1] = T(0.5) * t;
+        t = T(0.5) / t;
+        buf[0] = (R(k, j) - R(j, k)) * t;
+        buf[j + 1] = (R(j, i) + R(i, j)) * t;
+        buf[k + 1] = (R(k, i) + R(i, k)) * t;
     }
-};
 
-
-template<typename T>
-struct ToMatrixDispatcher<Vec2<T>>{
-    static constexpr auto cast(const Vec2<T>& p){
-        return Matrix<T, 2, 1>(p.x, p.y);
-    }
-};
-
+    return Quat<T>::from_array(buf);
+}
 
 template<typename T>
-auto to_matrix(T && obj){
-    return ToMatrixDispatcher<std::decay_t<T>>::cast(obj);
+static constexpr Matrix3x3<T> quat_to_mat3x3(const Quat<T> q){
+    // https://zhuanlan.zhihu.com/p/635847061
+    const auto [x, y, z, w] = q.to_xyzw_array();
+    return Matrix3x3<T>(
+        1 - 2 * (y * y + z * z),            2 * (x * y - z * w),            2 * (x * z + y * w),
+        2 * (x * y + z * w),                1 - 2 * (x * x + z * z),        2 * (y * z - x * w),
+        2 * (x * z - y * w),                2 * (y * z + x * w),            1 - 2 * (x * x + y * y)
+    );
 }
 
 template<typename T>
 struct Rotation3{
-    Matrix<T, 3, 3> matrix;
+    // Matrix<T, 3, 3> matrix;
+
+
 
     static constexpr Rotation3 from_identity(){
-        return Rotation3(Matrix<T, 3, 3>::identity());
+        return Rotation3(Quat<T>::from_identity());
     }
 
     static constexpr Rotation3 from_matrix(const Matrix<T, 3, 3> & matrix){
-        return Rotation3(matrix);
+        return Rotation3(mat3x3_to_quat(matrix));
     }
 
     constexpr Vec3<T> operator *(const Vec3<T>& v) const {
-        return Vec3<T>(matrix * to_matrix(v));
+        return Vec3<T>(quat_ * to_matrix(v));
     }
 
-    constexpr Rotation3 normalized() const { 
-        return *this;
-    }
 
-    friend OutputStream & operator << (OutputStream & os, const Rotation3<T> & self) { 
-        return os << self.matrix;
-    }
-
+private:
+    Quat<T> quat_;
 };
 
 template<typename T>
 struct Rotation2 {
-    constexpr Rotation2(const Matrix2x2<T>& matrix):
+    constexpr explicit Rotation2(const Matrix2x2<T>& matrix):
         sine_(matrix.template at<1,0>()), cosine_(matrix.template at<1,1>()){;} 
 
     // 从角度构造
-    static constexpr Rotation2 from_angle(Angle<T> angle) {
+    [[nodiscard]] static constexpr 
+    Rotation2 from_angle(Angle<T> angle) {
         const auto [s, c] = angle.sincos();
         return Rotation2{s, c};
     }
 
 
     // 恒等旋转（单位旋转）
-    static constexpr Rotation2 from_identity() {
+    [[nodiscard]] static constexpr 
+    Rotation2 from_identity() {
         return Rotation2{T(0), T(1)};
     }
     
     // 从旋转矩阵构造（如果矩阵是标准形式）
-    static constexpr Rotation2 from_matrix(const Matrix<T, 2, 2>& mat) {
+    [[nodiscard]] static constexpr 
+    Rotation2 from_matrix(const Matrix<T, 2, 2>& mat) {
         // 假设矩阵形式为：[cos, -sin]
         //                [sin,  cos]
         return Rotation2{mat(1, 0), mat(0, 0)};
     }
 
-    // 获取旋转矩阵
-    constexpr Matrix<T, 2, 2> to_matrix() const {
+    [[nodiscard]] constexpr 
+    Matrix<T, 2, 2> to_matrix() const {
         return Matrix<T, 2, 2>(
             cosine_, -sine_,
             sine_,  cosine_
         );
     }
 
-    // 获取角度
-    constexpr Angle<T> angle() const {
+    [[nodiscard]] constexpr 
+    Angle<T> angle() const {
         return Angle<T>::from_turns(atan2pu(sine_, cosine_));
     }
 
-    // 旋转变换：R * v
-    constexpr Vec2<T> operator*(const Vec2<T>& v) const {
+    [[nodiscard]] constexpr 
+    Vec2<T> operator*(const Vec2<T>& v) const {
         return Vec2<T>(
             cosine_ * v.x - sine_ * v.y,
             sine_ * v.x + cosine_ * v.y
         );
     }
 
-    // 旋转组合：R1 * R2
-    constexpr Rotation2 operator*(const Rotation2& other) const {
+    [[nodiscard]] constexpr 
+    Rotation2 operator*(const Rotation2& other) const {
         // 三角函数公式：sin(a+b) = sin(a)cos(b) + cos(a)sin(b)
         //             cos(a+b) = cos(a)cos(b) - sin(a)sin(b)
         return Rotation2{
@@ -146,14 +170,20 @@ struct Rotation2 {
     }
 
     // 逆旋转（转置）
-    constexpr Rotation2 inverse() const {
+    [[nodiscard]] constexpr 
+    Rotation2 inverse() const {
         return Rotation2{-sine_, cosine_}; // 角度取反
     }
 
-    constexpr Rotation2 transpose() const {
-        return Rotation2{-sine_, cosine_}; // 角度取反
+    [[nodiscard]] constexpr 
+    Rotation2 transpose() const {
+        return inverse();
     }
 
+    [[nodiscard]] constexpr T sine() const {return sine_;}
+    [[nodiscard]] constexpr T cosine() const {return cosine_;}
+
+    #if 0
     // 插值：球面线性插值
     constexpr Rotation2 slerp(const Rotation2& other, T t) const {
         T cos_theta = cosine_ * other.cosine_ + sine_ * other.sine_;
@@ -180,6 +210,7 @@ struct Rotation2 {
             a * cosine_ + b * other.cosine_
         }.normalized();
     }
+    #endif
 
 
 private:
@@ -208,8 +239,8 @@ struct Isometry3 {
 
     // }
 
-    friend OutputStream & operator << (OutputStream & os, const Isometry3<T> & iso) { 
-        return os << "rotation: " << iso.rotation << " translation: " << iso.translation;
+    friend OutputStream & operator << (OutputStream & os, const Isometry3<T> & self) { 
+        return os << "rotation: " << self.rotation << " translation: " << self.translation;
     }
 };
 
@@ -221,12 +252,16 @@ struct Isometry2 {
     Rotation2<T> rotation;
     Vec2<T> translation;
 
-    friend OutputStream & operator << (OutputStream & os, const Isometry2<T> & iso) { 
-        return os << "rotation: " << iso.rotation << " translation: " << iso.translation;
+    friend OutputStream & operator << (OutputStream & os, const Isometry2<T> & self) { 
+        return os << "rotation: " << self.rotation << " translation: " << self.translation;
     }
 };
 
 namespace ymd::slam::details{
+
+
+namespace experimental{ 
+
 
     template<typename T>    
     __fast_inline Rotation2<T> svd_2x2(const Matrix<T,2,2> H) {
@@ -294,7 +329,7 @@ namespace ymd::slam::details{
 
         return Rotation2<T>(u * v.transpose());
     }
-
+}
     struct IndexRelations{
         struct Index{
             static constexpr uint16_t INVALID_NTH = 0xffff;

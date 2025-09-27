@@ -646,6 +646,13 @@ constexpr Vec2<T> operator/(const Vec2<T> &p_vector2, const Vec2<U> &d_vector2){
 template<arithmetic T>
 Vec2() -> Vec2<T>;
 
+template<typename T>
+struct ToMatrixDispatcher<Vec2<T>>{
+    static constexpr auto cast(const Vec2<T>& p){
+        return Matrix<T, 2, 1>(p.x, p.y);
+    }
+};
+
 }
 
 namespace std{
