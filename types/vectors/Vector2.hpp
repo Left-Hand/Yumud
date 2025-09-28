@@ -35,6 +35,7 @@
 #include "core/stream/ostream.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/angle.hpp"
+#include "core/math/matrix/static_matrix.hpp"
 
 namespace ymd{
 
@@ -89,6 +90,11 @@ struct Vec2{
     template<arithmetic U = T>
     [[nodiscard]] constexpr Vec2(const Vec2<U> & _v) : 
         x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+
+
+    [[nodiscard]] __fast_inline constexpr Vec2(
+        const Matrix<auto, 2, 1> mat):
+        x(mat(0, 0)), y(mat(1, 0)){;}
 
     [[nodiscard]] static constexpr Vec2<T> from_unitialized(){
         return Vec2<T>();
@@ -639,6 +645,13 @@ constexpr Vec2<T> operator/(const Vec2<T> &p_vector2, const Vec2<U> &d_vector2){
 
 template<arithmetic T>
 Vec2() -> Vec2<T>;
+
+template<typename T>
+struct ToMatrixDispatcher<Vec2<T>>{
+    static constexpr auto cast(const Vec2<T>& p){
+        return Matrix<T, 2, 1>(p.x, p.y);
+    }
+};
 
 }
 

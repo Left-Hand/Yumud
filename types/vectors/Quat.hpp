@@ -1,41 +1,8 @@
 #pragma once
 
-/**************************************************************************/
-/*                         This file is part of:                          */
-/*                             GODOT ENGINE                               */
-/*                        https://godotengine.org                         */
-/**************************************************************************/
-/* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
-/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
-/* Copyright (c) 2024  Rstr1aN / Yumud                                    */
-/*                                                                        */
-/* Permission is hereby granted, free of charge, to any person obtaining  */
-/* a copy of this software and associated documentation files (the        */
-/* "Software"), to deal in the Software without restriction, including    */
-/* without limitation the rights to use, copy, modify, merge, publish,    */
-/* distribute, sublicense, and/or sell copies of the Software, and to     */
-/* permit persons to whom the Software is furnished to do so, subject to  */
-/* the following conditions:                                              */
-/*                                                                        */
-/* The above copyright notice and this permission notice shall be         */
-/* included in all copies or substantial portions of the Software.        */
-/*                                                                        */
-/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
-/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
-/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
-/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
-/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
-/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
-/*                                                                        */
-/* Note: This file has been modified by Rstr1aN / Yumud.                  */
-/**************************************************************************/
 
-
-// #include "vector3/vector3.hpp"
 #include "types/vectors/vector3.hpp"
 #include "types/transforms/euler.hpp"
-// #include "core/math/fast/conv.hpp"
 
 namespace ymd{
 
@@ -55,6 +22,11 @@ struct Quat{
         static_cast<T>(0),
         static_cast<T>(1)
     );
+
+    [[nodiscard]]
+    __fast_inline static constexpr Quat from_identity() {
+        return Quat<T>::IDENTITY;
+    }
 
     [[nodiscard]]
     __fast_inline static constexpr Quat from_xyzw(
@@ -141,14 +113,6 @@ struct Quat{
         ret.set_euler_angles(euler_angle.x, euler_angle.y, euler_angle.z);
         return ret;
     }
-
-    // template<EulerAnglePolicy P>
-    // [[nodiscard]]
-    // static constexpr Quat<T> from_euler_angles(const Angle<T> a1, const Angle<T> a2, const Angle<T> a3) {
-    //     Quat<T> ret;
-    //     ret.set_euler_angles(euler_angle.x, euler_angle.y, euler_angle.z);
-    //     return ret;
-    // }
 
     [[nodiscard]] 
     constexpr bool is_pure_real() const {
@@ -341,14 +305,18 @@ struct Quat{
     // (ax,ay,az), where ax is the angle of rotation around x axis,
     // and similar for other axes.
     // This implementation uses XYZ convention (Z is the first rotation).
-    constexpr void set_euler_angles(const Angle<T> x, const Angle<T> y, const Angle<T> z) {
+    constexpr void set_euler_angles(
+        const Angle<T> euler_x, 
+        const Angle<T> euler_y, 
+        const Angle<T> euler_z
+    ) {
         // R = X(a1).Y(a2).Z(a3) convention for Euler angles.
         // Conversion to Quat<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
         // a3 is the angle of the first rotation, following the notation in this reference.
 
-        auto [sin_a1, cos_a1] = (x / 2).sincos();
-        auto [sin_a2, cos_a2] = (y / 2).sincos();
-        auto [sin_a3, cos_a3] = (z / 2).sincos();
+        auto [sin_a1, cos_a1] = (euler_x / 2).sincos();
+        auto [sin_a2, cos_a2] = (euler_y / 2).sincos();
+        auto [sin_a3, cos_a3] = (euler_z / 2).sincos();
 
         set(
             +sin_a1 * cos_a2 * cos_a3 + sin_a2 * sin_a3 * cos_a1,
@@ -390,9 +358,21 @@ struct Quat{
 
     [[nodiscard]] __fast_inline constexpr
     Vec3<T> operator*(const Vec3<T> &v) const {
+        #if 1
         Vec3<T> u(x, y, z);
         Vec3<T> uv = u.cross(v);
         return v + ((uv * w) + u.cross(uv)) * 2;
+        #else
+        T tx = 2 * (y*v.z - z*v.y);
+        T ty = 2 * (z*v.x - x*v.z); 
+        T tz = 2 * (x*v.y - y*v.x);
+        
+        return Vec3<T>(
+            v.x + w*tx + y*tz - z*ty,
+            v.y + w*ty + z*tx - x*tz, 
+            v.z + w*tz + x*ty - y*tx
+        );
+        #endif
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -451,21 +431,29 @@ struct Quat{
         return angles;
     }
 
-    Quat<T> conj() const{
+    [[nodiscard]] constexpr Quat<T> conj() const{
         return Quat<T>(-x, -y, -z, w);
     }
 
+    [[nodiscard]] std::array<T, 4> to_xyzw_array() const {
+        return {x, y, z, w};
+    }
+
 private:
-    void set(T x, T y, T z, T w){
-        this->x = x;
-        this->y = y;
-        this->z = z;
-        this->w = w;
+    void set(T _x, T _y, T _z, T _w){
+        this->x = _x;
+        this->y = _y;
+        this->z = _z;
+        this->w = _w;
     }
 };
 
 
-[[nodiscard]] __fast_inline constexpr auto lerp(const Quat<arithmetic auto> & a, const Quat<arithmetic auto> & b, const arithmetic auto & t){
+[[nodiscard]] __fast_inline constexpr auto lerp(
+    const Quat<arithmetic auto> & a, 
+    const Quat<arithmetic auto> & b, 
+    const arithmetic auto t
+){
     return a.slerp(b, t);
 }
 
@@ -480,6 +468,3 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const ymd::Quat<auto>
 template<arithmetic T>
 Quat() -> Quat<T>;
 }
-
-
-#undef set

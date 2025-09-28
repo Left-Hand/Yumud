@@ -42,35 +42,10 @@ static constexpr auto LCD_WIDTH = 320;
 static constexpr auto LCD_HEIGHT = 170;
 
 static constexpr size_t UART_BAUD = 576000;
-static constexpr auto MLX90640_I2CADDR = 0x33;
+
 
 #define SCL_GPIO hal::PE<9>()
 #define SDA_GPIO hal::PE<11>()
-
-hal::Gpio scl_gpio_ = SCL_GPIO;
-hal::Gpio sda_gpio_ = SDA_GPIO;
-
-hal::I2cSw i2c_sw_ = {&scl_gpio_, &sda_gpio_};
-hal::I2cDrv i2c_drv_ = hal::I2cDrv{&i2c_sw_, hal::I2cSlaveAddr<7>::from_u7(MLX90640_I2CADDR)};
-
-
-namespace ymd::drivers{
-Result<void, MLX90640_Error> MLX90640_I2CRead(uint8_t slaveAddr,uint16_t startAddress, uint16_t nMemAddressRead, uint16_t *data){
-
-    if(const auto res = i2c_drv_.read_burst<uint16_t>(startAddress, 
-        std::span<uint16_t>((data), size_t(nMemAddressRead)), MSB);
-        res.is_err()) return Err(res.unwrap_err());
-    return Ok();
-}
-
-Result<void, MLX90640_Error> MLX90640_I2CWrite(uint8_t slaveAddr,uint16_t writeAddress, uint16_t data){
-    if(const auto res = i2c_drv_.write_reg<uint16_t>(writeAddress, data, MSB);
-        res.is_err()) return Err(res.unwrap_err());
-    return Ok();
-}
-}
-
-
 
 void mlx90640_main(){
     uint16_t EE[832];
@@ -117,6 +92,11 @@ void mlx90640_main(){
     auto spi_cs = hal::PD<4>();
     const auto spi_fd = spi.allocate_cs_gpio(&spi_cs).unwrap();
 
+    hal::Gpio scl_gpio_ = SCL_GPIO;
+    hal::Gpio sda_gpio_ = SDA_GPIO;
+
+    hal::I2cSw i2c_sw_ = {&scl_gpio_, &sda_gpio_};
+
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
         {LCD_WIDTH, LCD_HEIGHT}
@@ -136,18 +116,15 @@ void mlx90640_main(){
         ).examine();
     };
 
-    // Color<q16>
 
-
-    i2c_sw_.init(180_KHz);
+    i2c_sw_.init({180_KHz});
+    MLX90640 mlx{&i2c_sw_};
     clock::delay(50ms);                                    //预留一点时间让MLX传感器完成自己的初始化
     // MLX90640_SetRefreshRate(MLX90640_I2CADDR, 0).examine();       //0.5hz
-    MLX90640_SetRefreshRate(MLX90640_I2CADDR, MLX90640_DataRate::_64Hz).examine();
-    MLX90640_I2CRead(MLX90640_I2CADDR, 0x2400, 832, EE).examine();                     //读取像素校正参数
-    MLX90640_ExtractParameters(EE, &MLXPars).examine();    //解析校正参数（计算温度时需要）
+    mlx.init(EE, MLXPars).examine();
     // Ta=MLX90640_GetTa(Frame, &MLXPars);                  //计算实时外壳温度
     while (1){
-        if (const auto res = MLX90640_GetFrameData(MLX90640_I2CADDR, Frame); res.is_err()){
+        if (const auto res = mlx.GetFrameData(Frame); res.is_err()){
             static Milliseconds last_millis_ = 0ms;
             const auto curr_millis_ = clock::millis();
             DEBUG_PRINTLN(res.unwrap_err(), curr_millis_ - last_millis_, real_t::from(Vdd), real_t::from(Ta));
@@ -157,10 +134,10 @@ void mlx90640_main(){
 
         // continue;
         // Vdd=MLX90640_GetVdd(Frame, &MLXPars);   //计算Vdd（这句可有可无）
-        Ta=MLX90640_GetTa(Frame, &MLXPars);                  //计算实时外壳温度
+        Ta=mlx.GetTa(Frame, &MLXPars);                  //计算实时外壳温度
         Tr=Ta-8.0;         //计算环境温度用于温度补偿
 
-        MLX90640_CalculateTo(Frame, &MLXPars, 0.95, Tr, Temp);    //计算像素点温度
+        mlx.CalculateTo(Frame, &MLXPars, 0.95, Tr, Temp);    //计算像素点温度
 
 
         for(uint16_t j = 0; j < MLX90640_ROWS; j++){

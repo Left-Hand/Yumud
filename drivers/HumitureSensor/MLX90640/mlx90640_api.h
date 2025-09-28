@@ -43,16 +43,7 @@ enum class MLX90640_ErrorKind:uint8_t{
 DEF_DERIVE_DEBUG(MLX90640_ErrorKind)
 DEF_ERROR_SUMWITH_HALERROR(MLX90640_Error, MLX90640_ErrorKind)
 
-enum class MLX90640_DataRate:uint8_t{
-    _0_5Hz = 0,
-    _1Hz = 1,
-    _2Hz = 2,
-    _4Hz = 3,
-    _8Hz = 4,
-    _16Hz = 5,
-    _32Hz = 6,
-    _64Hz = 7
-};
+
 
 
 #define SCALEALPHA 0.000001
@@ -87,31 +78,82 @@ struct paramsMLX90640{
     uint16_t outlierPixels[5];  
 } ;
 
+struct MLX90640{
+public:
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x33);
 
-Result<void, MLX90640_Error> MLX90640_DumpEE(uint8_t slaveAddr, uint16_t *eeData);
-Result<void, MLX90640_Error> MLX90640_SynchFrame(uint8_t slaveAddr);
-Result<uint16_t, MLX90640_Error> MLX90640_GetFrameData(uint8_t slaveAddr, uint16_t *frameData);
-Result<void, MLX90640_Error> MLX90640_ExtractParameters(uint16_t *eeData, paramsMLX90640 *mlx90640);
-Result<void, MLX90640_Error> MLX90640_SetResolution(uint8_t slaveAddr, uint8_t resolution);
-Result<uint16_t, MLX90640_Error> MLX90640_GetCurResolution(uint8_t slaveAddr);
-Result<void, MLX90640_Error> MLX90640_SetRefreshRate(uint8_t slaveAddr, MLX90640_DataRate rate);   
-Result<uint16_t, MLX90640_Error> MLX90640_GetCurMode(uint8_t slaveAddr); 
-Result<void, MLX90640_Error> MLX90640_SetInterleavedMode(uint8_t slaveAddr);
-Result<void, MLX90640_Error> MLX90640_SetChessMode(uint8_t slaveAddr);
-Result<uint16_t, MLX90640_Error> MLX90640_GetRefreshRate(uint8_t slaveAddr);  
-
-float MLX90640_GetTa(uint16_t *frameData, const paramsMLX90640 *params);
-void MLX90640_GetImage(uint16_t *frameData, const paramsMLX90640 *params, float *result);
-void MLX90640_CalculateTo(uint16_t *frameData, const paramsMLX90640 *params, float emissivity, float tr, float *result);
-
-int MLX90640_GetSubPageNumber(uint16_t *frameData);
-
-void MLX90640_BadPixelsCorrection(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params);
+    enum class DataRate:uint8_t{
+        _0_5Hz = 0,
+        _1Hz = 1,
+        _2Hz = 2,
+        _4Hz = 3,
+        _8Hz = 4,
+        _16Hz = 5,
+        _32Hz = 6,
+        _64Hz = 7
+    };
 
 
-extern void MLX90640_I2CInit(void);
-extern Result<void, MLX90640_Error> MLX90640_I2CGeneralReset(void);
-extern Result<void, MLX90640_Error> MLX90640_I2CRead(uint8_t slaveAddr,uint16_t startAddress, uint16_t nMemAddressRead, uint16_t *data);
-extern Result<void, MLX90640_Error> MLX90640_I2CWrite(uint8_t slaveAddr,uint16_t writeAddress, uint16_t data);
-extern void MLX90640_I2CFreqSet(int freq);
+    explicit MLX90640(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    explicit MLX90640(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+    explicit MLX90640(
+        Some<hal::I2c *> i2c, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(i2c, addr){;}
+
+
+
+    template<typename T = void>
+    using IResult = Result<T, MLX90640_Error>;
+
+
+    IResult<> init(uint16_t EE[832], paramsMLX90640 & MLXPars);
+    
+    IResult<> DumpEE(uint16_t *eeData);
+    IResult<> SynchFrame(uint8_t slaveAddr);
+    IResult<uint16_t> GetFrameData(uint16_t *frameData);
+    IResult<> ExtractParameters(uint16_t *eeData, paramsMLX90640 *mlx90640);
+    IResult<> SetResolution(uint8_t resolution);
+    IResult<uint16_t> GetCurResolution(uint8_t slaveAddr);
+    IResult<> SetRefreshRate(DataRate rate);   
+    IResult<uint16_t> GetCurMode(uint8_t slaveAddr); 
+    IResult<> SetInterleavedMode(uint8_t slaveAddr);
+    IResult<> SetChessMode(uint8_t slaveAddr);
+    IResult<uint16_t> GetRefreshRate(uint8_t slaveAddr); 
+    float GetTa(uint16_t *frameData, const paramsMLX90640 *params);
+    void GetImage(uint16_t *frameData, const paramsMLX90640 *params, float *result);
+    void CalculateTo(uint16_t *frameData, const paramsMLX90640 *params, float emissivity, float tr, float *result);
+
+    int GetSubPageNumber(uint16_t *frameData);
+
+    void BadPixelsCorrection(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params);
+
+
+    void I2CInit(void);
+    IResult<> I2CGeneralReset(void);
+
+    void I2CFreqSet(int freq);
+
+    IResult<> I2CRead(uint16_t startAddress, uint16_t nMemAddressRead, uint16_t *data){
+
+        if(const auto res = i2c_drv_.read_burst<uint16_t>(startAddress, 
+            std::span<uint16_t>((data), size_t(nMemAddressRead)), MSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    IResult<> I2CWrite(uint16_t writeAddress, uint16_t data){
+        if(const auto res = i2c_drv_.write_reg<uint16_t>(writeAddress, data, MSB);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+private:
+    hal::I2cDrv i2c_drv_;
+};
+
+
+
 }

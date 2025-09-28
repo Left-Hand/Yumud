@@ -175,9 +175,9 @@ void smc2025_main(){
     // }
 
     // bkp.init();edRunStatus();
-    auto & spi = spi2;
+    auto & spi = hal::spi2;
 
-    spi2.init({144_MHz});
+    hal::spi2.init({144_MHz});
     
     auto lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
@@ -196,13 +196,13 @@ void smc2025_main(){
 
     auto cam_i2c_scl = hal::PD<2>();
     auto cam_i2c_sda = hal::PC<12>();
-    I2cSw cam_i2c{&cam_i2c_scl, &cam_i2c_sda};
-    cam_i2c.init(100_KHz);
+    hal::I2cSw cam_i2c{&cam_i2c_scl, &cam_i2c_sda};
+    cam_i2c.init({100_KHz});
 
     auto i2c_scl = hal::PB<3>();
     auto i2c_sda = hal::PB<5>();
-    I2cSw i2c{&i2c_scl, &i2c_sda};
-    i2c.init(400_KHz);
+    hal::I2cSw i2c{&i2c_scl, &i2c_sda};
+    i2c.init({400_KHz});
     
     // drivers::MT9V034 camera{&cam_i2c};
 

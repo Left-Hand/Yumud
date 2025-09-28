@@ -33,6 +33,7 @@
 
 #include "core/math/realmath.hpp"
 #include "types/vectors/vector2.hpp"
+#include "core/math/matrix/static_matrix.hpp"
 
 namespace ymd{
 template <arithmetic T>
@@ -61,33 +62,49 @@ public:
     [[nodiscard]] __fast_inline constexpr Vec3() = delete;
 
     [[nodiscard]] __fast_inline constexpr Vec3(const Vec3<arithmetic auto>& v) :
-        x(static_cast<T>(v.x)), y(static_cast<T>(v.y)), z(static_cast<T>(v.z)) {;}
+        x(static_cast<T>(v.x)), 
+        y(static_cast<T>(v.y)), 
+        z(static_cast<T>(v.z)) {;}
 
     [[nodiscard]] __fast_inline constexpr Vec3(
         const Vec2<arithmetic auto>& v, const arithmetic auto z_) : 
         
         x(v.x), y(v.y), z(z_) {;}
 
-    [[nodiscard]] __fast_inline constexpr Vec3(const auto & _x, const auto & _y, const auto & _z): 
-        x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
+    [[nodiscard]] __fast_inline constexpr Vec3(
+        const Matrix<auto, 3, 1> mat):
+        x(mat(0, 0)), y(mat(1, 0)), z(mat(2, 0)){;}
+    
 
-    [[nodiscard]] __fast_inline constexpr Vec3(const T _x, const T _y, const T _z): 
-        x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
+    [[nodiscard]] __fast_inline constexpr Vec3(
+        const arithmetic auto _x, 
+        const arithmetic auto _y, 
+        const arithmetic auto _z
+    ): 
+        x(static_cast<T>(_x)), 
+        y(static_cast<T>(_y)), 
+        z(static_cast<T>(_z)){;}
 
-    [[nodiscard]] __fast_inline static constexpr Vec3 from_ones(const T & _x){
+    [[nodiscard]] __fast_inline static constexpr 
+    Vec3 from_ones(const arithmetic auto _x){
         return Vec3<T>(_x, _x, _x);}
-    [[nodiscard]] __fast_inline static constexpr Vec3 from_rcp(const T & _x, const T & _y, const T & _z){
-        return Vec3<T>(1/_x, 1/_y, 1/_z);}
-    [[nodiscard]] __fast_inline static constexpr Vec3 from_rcp(const Vec3<arithmetic auto>& v){
-        return Vec3<T>(1/v.x, 1/v.y, 1/v.z);}
+    [[nodiscard]] __fast_inline static constexpr 
+    Vec3 from_rcp(const arithmetic auto _x, const arithmetic auto _y, const arithmetic auto _z){
+        return Vec3<T>(static_cast<T>(1)/_x, static_cast<T>(1)/_y, static_cast<T>(1)/_z);}
+    [[nodiscard]] __fast_inline static constexpr 
+    Vec3 from_rcp(const Vec3<arithmetic auto>& v){
+        return Vec3<T>(static_cast<T>(1)/v.x, static_cast<T>(1)/v.y, static_cast<T>(1)/v.z);}
 
-    [[nodiscard]] __fast_inline static constexpr Vec3 from_x00(T _x){
+    [[nodiscard]] __fast_inline static constexpr 
+    Vec3 from_x00(T _x){
         return Vec3<T>(_x, T(0), T(0));}
 
-    [[nodiscard]] __fast_inline static constexpr Vec3 from_0y0(T _y){
+    [[nodiscard]] __fast_inline static constexpr 
+    Vec3 from_0y0(T _y){
         return Vec3<T>(T(0), _y, T(0));}
 
-    [[nodiscard]] __fast_inline static constexpr Vec3 from_00z(T _z){
+    [[nodiscard]] __fast_inline static constexpr 
+    Vec3 from_00z(T _z){
         return Vec3<T>(T(0), T(0), _z);}
 
     template<arithmetic U = T>
@@ -113,9 +130,9 @@ public:
     template<arithmetic U>
     __fast_inline constexpr 
     Vec3 & operator += (const Vec3<U>& v) {
-        x = static_cast<T>(x + static_cast<T>(v.x));
-        y = static_cast<T>(y + static_cast<T>(v.y));
-        z = static_cast<T>(z + static_cast<T>(v.z));
+        x += static_cast<T>(v.x);
+        y += static_cast<T>(v.y);
+        z += static_cast<T>(v.z);
         return *this;
     }
     
@@ -139,26 +156,26 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3<T> increase_x(const U & v) const {
+    Vec3<T> increase_x(const U v) const {
         return {x + v, y, z};
     }
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3<T> increase_y(const U & v) const {
+    Vec3<T> increase_y(const U v) const {
         return {x, y + v, z};
     }
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3<T> increase_z(const U & v) const {
+    Vec3<T> increase_z(const U v) const {
         return {x, y, z + v};
     }
 
     template<arithmetic U>
     __fast_inline constexpr 
-    Vec3 & operator *= (const U & _v){
-        T v = static_cast<T>(_v);
+    Vec3 & operator *= (const U _v){
+        const T v = static_cast<T>(_v);
         x = x * v;
         y = y * v;
         z = z * v;
@@ -176,7 +193,7 @@ public:
 
     template<arithmetic U>
     __fast_inline constexpr 
-    Vec3 & operator /= (const U & _v){
+    Vec3 & operator /= (const U _v){
         if constexpr(std::is_integral_v<T>){
             const T v = static_cast<T>(_v);
             x /= v;
@@ -193,7 +210,7 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3 operator *(const U & _v) const{
+    Vec3 operator *(const U _v) const{
         Vec3 other = *this;
         other *= _v;
         return other;
@@ -208,7 +225,7 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
-    Vec3 operator /(const U & _v) const{
+    Vec3 operator /(const U _v) const{
         Vec3 other = *this;
         other /= _v;
         return other;
@@ -228,18 +245,13 @@ public:
         return ret += *this;
     }
 
-    [[nodiscard]] __fast_inline constexpr 
-    Vec3 abs() const{
-        return Vec3{
-            ABS(x),
-            ABS(y),
-            ABS(z)
-        };
-    }
-
 	[[nodiscard]] __fast_inline constexpr 
     Vec3 minf(arithmetic auto p_scalar) const {
-		return Vec3(MIN(x, static_cast<T>(p_scalar)), MIN(y, static_cast<T>(p_scalar)), MIN(z, static_cast<T>(p_scalar)));
+		return Vec3(
+            MIN(x, static_cast<T>(p_scalar)), 
+            MIN(y, static_cast<T>(p_scalar)), 
+            MIN(z, static_cast<T>(p_scalar))
+        );
 	}
 
     template<arithmetic U>
@@ -260,7 +272,7 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] constexpr 
-    Vec3<T> clampmin(const U & _length) const{
+    Vec3<T> clampmin(const U _length) const{
         T length = static_cast<T>(_length);
         T l = this->length();
         return (l < length ? *this * length / l : *this);
@@ -268,7 +280,7 @@ public:
 
     template<arithmetic U>
     [[nodiscard]] constexpr 
-    Vec3<T> clampmax(const U & _length) const{
+    Vec3<T> clampmax(const U _length) const{
         T length = static_cast<T>(_length);
         T l = this->length();
         return (l > length ? *this * length / l : *this);
@@ -281,7 +293,7 @@ public:
 
     [[nodiscard]] constexpr __fast_inline 
     T dot(const Vec3<arithmetic auto > &v) const{
-        return x * static_cast<T>(v.x) + y * static_cast<T>(v.y) + z * static_cast<T>(v.z);
+        return static_cast<T>(x * v.x + y * v.y + z * v.z);
     }
 
     [[nodiscard]] constexpr __fast_inline 
@@ -306,9 +318,9 @@ public:
     __fast_inline constexpr 
     Vec3 cross(const Vec3<U> &u) const{
         return Vec3(
-            static_cast<T>(y * static_cast<T>(u.z) - z * static_cast<T>(u.y)),
-            static_cast<T>(z * static_cast<T>(u.x) - x * static_cast<T>(u.z)), 
-            static_cast<T>(x * static_cast<T>(u.y) - y * static_cast<T>(u.x))
+            static_cast<T>(y * u.z - z * u.y),
+            static_cast<T>(z * u.x - x * u.z), 
+            static_cast<T>(x * u.y - y * u.x)
         );
     }
 
@@ -326,11 +338,11 @@ public:
 
     constexpr void normalize() {
         static_assert(not std::is_integral_v<T>);
-        T lengthsq = length_squared();
-        if (unlikely(lengthsq == 0)) {
+        T squ_len = length_squared();
+        if (unlikely(squ_len == 0)) {
             x = y = z = 0;
         } else{
-            T inv_len = isqrt(lengthsq);
+            T inv_len = isqrt(squ_len);
             x *= inv_len;
             y *= inv_len;
             z *= inv_len;
@@ -344,7 +356,6 @@ public:
         v.normalize();
         return v;
     }
-
     [[nodiscard]] Vec3<T> get_any_perpendicular() const {
         // Return the any perpendicular vector by cross product with the Vec3.RIGHT or Vec3.UP,
         // whichever has the greater angle to the current vector with the sign of each element positive.
@@ -355,7 +366,7 @@ public:
             Vec3<T>(1, 0, 0) : 
             Vec3<T>(0, 1, 0)).normalized();
     }
-
+    
     [[nodiscard]]
     constexpr bool is_zero() const {
         if constexpr(std::is_integral<T>::value){
@@ -443,7 +454,17 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Vec3<auto> & va
 
 
 template<arithmetic T>
-Vec3() -> Vec3<T>;
+Vec3(T, T, T) -> Vec3<T>;
+
+
+template<typename T>
+struct ToMatrixDispatcher<Vec3<T>>{
+    static constexpr auto cast(const Vec3<T>& p){
+        return Matrix<T, 3, 1>(p.x, p.y, p.z);
+    }
+};
+
+
 
 using Vec3f = Vec3<float>;
 using Vec3d = Vec3<double>;
