@@ -244,8 +244,8 @@ void myesc_main(){
     Angle<q16> openloop_elecrad_ = 0_deg;
     UvwCoord<q20> uvw_curr_ = {0};
     DqCoord<q20> dq_curr_ = {0};
-    AlphaBetaCoord<q20> alpha_beta_curr_ = {0};
-    AlphaBetaCoord<q20> alpha_beta_volt_ = {0};
+    AlphaBetaCoord<q20> alphabeta_curr_ = {0};
+    AlphaBetaCoord<q20> alphabeta_volt_ = {0};
 
     auto nfault_gpio = hal::PA<6>();
     nfault_gpio.inpu();
@@ -332,7 +332,7 @@ void myesc_main(){
             .v = sob_.get_value(),
             .w = soc_.get_value(),
         };
-        alpha_beta_curr_ = AlphaBetaCoord<q20>::from_uvw(uvw_curr_);
+        alphabeta_curr_ = AlphaBetaCoord<q20>::from_uvw(uvw_curr_);
 
         // const auto p = ctime * 80;
         // const auto p = 60 * sinpu(ctime/4);
@@ -378,7 +378,7 @@ void myesc_main(){
         // const auto elec_angle = Angle<q16>(lbg_sensorless_ob.angle() + 30_deg);
         // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle());
         // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle() + 90_deg);
-        dq_curr_ = alpha_beta_curr_.to_dq(elec_angle);
+        dq_curr_ = alphabeta_curr_.to_dq(elec_angle);
 
 
 
@@ -428,16 +428,16 @@ void myesc_main(){
         // const auto MODU_VOLT = 3.5_r + 1 * sinpu(ctime * 0.2_r);
         // const auto MODU_VOLT = ABS(3.4_r * sinpu(ctime * 0.2_r));
 
-        [[maybe_unused]] auto forward_alpha_beta_volt_by_dq_volt = [&]{
+        [[maybe_unused]] auto forward_alphabeta_volt_by_dq_volt = [&]{
             return (dq_volt_ + speed_compansate_dq_volt()).to_alphabeta(elec_angle);
         };
         
-        // [[maybe_unused]] auto forward_alpha_beta_volt_by_constant_voltage = [&]{
+        // [[maybe_unused]] auto forward_alphabeta_volt_by_constant_voltage = [&]{
         //     // return AlphaBetaCoord<q20>{.alpha = 0.0_q20, .beta = 1.5_q20};
         //     return AlphaBetaCoord<q20>{.alpha = 0.0_q20, .beta = 0.5_q20};
         // };
 
-        [[maybe_unused]] auto forward_alpha_beta_volt_by_sine_hfi = [&]{
+        [[maybe_unused]] auto forward_alphabeta_volt_by_sine_hfi = [&]{
             [[maybe_unused]] static constexpr size_t HFI_FREQ = 1000;
             // return AlphaBetaCoord<q20>{.alpha = 0.0_q20, .beta = 1.5_q20};
             return AlphaBetaCoord<q20>{
@@ -448,22 +448,22 @@ void myesc_main(){
         };
 
 
-        const auto alpha_beta_volt = forward_alpha_beta_volt_by_dq_volt();
-        // const auto alpha_beta_volt = forward_alpha_beta_volt_by_constant_voltage();
-        // const auto alpha_beta_volt = forward_alpha_beta_volt_by_sine_hfi();
+        const auto alphabeta_volt = forward_alphabeta_volt_by_dq_volt();
+        // const auto alphabeta_volt = forward_alphabeta_volt_by_constant_voltage();
+        // const auto alphabeta_volt = forward_alphabeta_volt_by_sine_hfi();
 
-        flux_sensorless_ob.update(alpha_beta_volt, alpha_beta_curr_);
-        lbg_sensorless_ob.update(alpha_beta_volt, alpha_beta_curr_);
-        smo_sensorless_ob.update(alpha_beta_volt, alpha_beta_curr_);    
+        flux_sensorless_ob.update(alphabeta_volt, alphabeta_curr_);
+        lbg_sensorless_ob.update(alphabeta_volt, alphabeta_curr_);
+        smo_sensorless_ob.update(alphabeta_volt, alphabeta_curr_);    
 
         const auto uvw_dutycycle = SVM(
             AlphaBetaCoord<q16>{
-                .alpha = alpha_beta_volt.alpha, 
-                .beta = alpha_beta_volt.beta
+                .alpha = alphabeta_volt.alpha, 
+                .beta = alphabeta_volt.beta
             } * INV_BUS_VOLT);
         uvw_pwmgen_.set_dutycycle(uvw_dutycycle);
 
-        alpha_beta_volt_ = alpha_beta_volt;
+        alphabeta_volt_ = alphabeta_volt;
         openloop_elecrad_ = openloop_elec_angle;
     };
 
@@ -482,7 +482,7 @@ void myesc_main(){
     while(true){
         DEBUG_PRINTLN_IDLE(
             // uvw_curr_,
-            alpha_beta_curr_,
+            alphabeta_curr_,
             dq_curr_,
             dq_volt_,
             // uvw_curr_,
@@ -490,7 +490,7 @@ void myesc_main(){
             // -0.02_q20 - uvw_curr_.u - uvw_curr_.v,
             // uvw_curr_.numeric_sum(),
             // dq_volt_,
-            // alpha_beta_volt_,
+            // alphabeta_volt_,
 
             flux_sensorless_ob.angle().to_turns(),
             lbg_sensorless_ob.angle().to_turns(),

@@ -56,9 +56,9 @@ public:
 
 
 
-    constexpr void update(auto alpha_beta_volt, auto alpha_beta_curr) {
-        const auto [Valpha, Vbeta] = alpha_beta_volt;
-        const auto [Ialpha, Ibeta] = alpha_beta_curr;
+    constexpr void update(auto alphabeta_volt, auto alphabeta_curr) {
+        const auto [Valpha, Vbeta] = alphabeta_volt;
+        const auto [Ialpha, Ibeta] = alphabeta_curr;
         recalc(i_alpha_, e_alpha_, Valpha, Ialpha);
         recalc(i_beta_, e_beta_, Vbeta, Ibeta);
 

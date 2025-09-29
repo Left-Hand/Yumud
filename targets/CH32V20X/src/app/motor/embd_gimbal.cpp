@@ -471,7 +471,7 @@ void embd_main(){
         const auto ab_volt = DqCoordVoltage{
             0, 
             CLAMP2(q_volt - leso_.get_disturbance(), MAX_VOLT)
-        }.to_alpha_beta(meas_elecrad);
+        }.to_alphabeta(meas_elecrad);
 
         svpwm_.set_ab_volt(ab_volt[0], ab_volt[1]);
 

@@ -312,14 +312,14 @@ void bldc_main(){
         [[maybe_unused]] const auto alphabeta_volt = DqCoordVoltage{
             0, 
             CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
-        }.to_alpha_beta(meas_elecrad);
+        }.to_alphabeta(meas_elecrad);
         #endif
         static constexpr auto INV_BUS_VOLT = q16(1.0/12);
 
-        SVPWM3::set_alpha_beta_dutycycle(
-            uvw_pwmgen, 
-            alphabeta_volt * INV_BUS_VOLT 
+        uvw_pwmgen.set_dutycycle(
+            SVM(alphabeta_volt * INV_BUS_VOLT)
         );
+
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;

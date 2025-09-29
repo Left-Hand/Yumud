@@ -430,7 +430,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
         }
     };
 
-    auto set_alpha_beta_duty = [&](const real_t alpha, const real_t beta){
+    auto set_alphabeta_duty = [&](const real_t alpha, const real_t beta){
         {
             const auto [ap,an] = convert_pair_duty(alpha);
             pwm_ap.set_dutycycle(ap);
@@ -484,7 +484,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
         const auto t = clock::time();
         const auto [s,c] = sincospu(t);
         constexpr auto mag = 0.4_r;
-        set_alpha_beta_duty(
+        set_alphabeta_duty(
             c * mag,
             s * mag
         );
@@ -553,7 +553,7 @@ void mystepper_main(){
 
 
 
-    digipw::AlphaBetaCoord<q16> alpha_beta_curr = {0, 0};
+    digipw::AlphaBetaCoord<q16> alphabeta_curr = {0, 0};
     adc.attach(
         hal::AdcIT::JEOC, 
         {0,0}, 
@@ -563,7 +563,7 @@ void mystepper_main(){
             is_a = !is_a;
             
             if(is_a){
-                alpha_beta_curr.alpha = inj_a.get_value();
+                alphabeta_curr.alpha = inj_a.get_value();
 
                 // adc.init(
                 //     {
@@ -575,7 +575,7 @@ void mystepper_main(){
                 //     {}
                 // );
             }else{
-                alpha_beta_curr.beta = inj_b.get_value();
+                alphabeta_curr.beta = inj_b.get_value();
                 // adc.init(
                 //     {
                 //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
@@ -622,7 +622,7 @@ void mystepper_main(){
                 c * mag,
                 s * mag
             });
-            // pwm_gen_.set_alpha_beta_duty(
+            // pwm_gen_.set_alphabeta_duty(
             //     mag,
             //     mag
             // );
@@ -632,8 +632,8 @@ void mystepper_main(){
 
     while(true){
         DEBUG_PRINTLN_IDLE(
-            alpha_beta_curr
-            // 30 * alpha_beta_curr.length_squared(),
+            alphabeta_curr
+            // 30 * alphabeta_curr.length_squared(),
             // ADC1->IDATAR2
         );
     }

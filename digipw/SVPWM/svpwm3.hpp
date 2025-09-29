@@ -7,7 +7,7 @@ namespace ymd::digipw{
 
 __attribute__((optimize("O3")))
 static constexpr UvwCoord<q16> SVM(
-    const AlphaBetaCoord<q16> alpha_beta_dutycycle
+    const AlphaBetaCoord<q16> alphabeta_dutycycle
 ){
     enum class Sector:uint8_t{
         _1 = 0b010,
@@ -18,17 +18,16 @@ static constexpr UvwCoord<q16> SVM(
         _6 = 0b011
     };
 
-
-    constexpr q16 ONE_BY_SQRT3 = 1 / sqrt(3_r);
+    constexpr q16 ONE_BY_SQRT3 = 1 / sqrt(3_q16);
     constexpr q16 HALF_ONE = q16(0.5);
 
-    const auto [alpha_dutycycle, beta_dutycycle] = alpha_beta_dutycycle;
+    const auto [alpha_dutycycle, beta_dutycycle] = alphabeta_dutycycle;
     const auto beta_by_sqrt3 = beta_dutycycle * ONE_BY_SQRT3;
 
-    Sector sector {uint8_t(
-        (  uint8_t(std::signbit(beta_by_sqrt3 + alpha_dutycycle)) << 2)
-        | (uint8_t(std::signbit(beta_by_sqrt3 - alpha_dutycycle)) << 1)
-        | (uint8_t(std::signbit(beta_by_sqrt3)))
+    const auto sector = Sector{static_cast<uint8_t>(
+        (  static_cast<uint8_t>(std::signbit(beta_by_sqrt3 + alpha_dutycycle)) << 2)
+        | (static_cast<uint8_t>(std::signbit(beta_by_sqrt3 - alpha_dutycycle)) << 1)
+        | (static_cast<uint8_t>(std::signbit(beta_by_sqrt3)))
     )};
 
     switch(sector){
@@ -73,19 +72,6 @@ static constexpr UvwCoord<q16> SVM(
             __builtin_unreachable();
     }
 }
-
-
-struct SVPWM3{
-
-    template<typename Inst>
-    static void set_alpha_beta_dutycycle(
-        Inst & inst, 
-        AlphaBetaCoord<q16> alphabeta_dutycycle
-    ){
-        const auto uvw_dutycycle = SVM(alphabeta_dutycycle);
-        inst.set_dutycycle(uvw_dutycycle);
-    }
-};
 
 
 }

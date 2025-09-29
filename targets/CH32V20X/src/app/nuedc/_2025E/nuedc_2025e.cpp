@@ -447,7 +447,7 @@ void nuedc_2025e_main(){
         }()
     );
 
-    ElecradCompensator elecrad_comp_{
+    ElecradCompensator elecangle_comp_{
         .base = [&]{
             switch(self_node_role_){
                 case NodeRole::YawJoint:
@@ -502,7 +502,7 @@ void nuedc_2025e_main(){
 
 
     q20 q_volt_ = 0;
-    Angle<q20> meas_elecrad_ = Angle<q20>::ZERO;
+    Angle<q20> meas_elecangle_ = Angle<q20>::ZERO;
 
     q20 axis_target_position_ = 0;
     q20 axis_target_speed_ = 0;
@@ -527,60 +527,49 @@ void nuedc_2025e_main(){
         update_sensors();
 
         if(run_status_.state == RunState::Idle){
-
-            SVPWM3::set_alpha_beta_dutycycle(uvw_pwmgen, AlphaBetaCoord<q16>::ZERO);
+            uvw_pwmgen.set_dutycycle(UvwCoord<q16>::ZERO);
             leso_.reset();
             return;
         }
 
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
-        const auto meas_elec_angle_ = elecrad_comp_(meas_lap_angle);
+        const auto meas_elecangle = elecangle_comp_(meas_lap_angle);
 
         const auto meas_position = pos_filter_.position();
         const auto meas_speed = pos_filter_.speed();
 
-        // [[maybe_unused]] static constexpr q20 omega = 2;
-        // [[maybe_unused]] static constexpr q20 amp = 0.300_r;
-        // [[maybe_unused]] const auto ctime = clock::time();
-
         const auto [axis_target_position, axis_target_speed] = ({
             std::make_tuple(
-                // amp * sin(omega * ctime), amp * omega * cos(omega * ctime)
                 axis_target_position_, axis_target_speed_
             );
         });
 
 
-        [[maybe_unused]] const auto targ_position = axis_target_position;
-        [[maybe_unused]] const auto targ_speed = axis_target_speed;
+        const auto targ_position = axis_target_position;
+        const auto targ_speed = axis_target_speed;
 
 
-        #if 0
-        const auto q_volt = 1.3_r;
-        #else
         const auto q_volt = CLAMP2(
             pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)
         , SVPWM_MAX_VOLT);
-        #endif
 
         [[maybe_unused]] const auto alphabeta_volt = DqCoord<q16>{
             .d = 0, 
             .q = CLAMP2(q_volt - leso_.disturbance(), SVPWM_MAX_VOLT)
             // CLAMP2(q_volt, SVPWM_MAX_VOLT)
-        }.to_alphabeta(meas_elec_angle_);
+        }.to_alphabeta(meas_elecangle);
 
 
         static constexpr auto INV_BUS_VOLT = q16(1.0/12);
 
-        SVPWM3::set_alpha_beta_dutycycle(
-            uvw_pwmgen, 
-            alphabeta_volt * INV_BUS_VOLT
+        uvw_pwmgen.set_dutycycle(
+            SVM(alphabeta_volt * INV_BUS_VOLT)
         );
 
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
-        meas_elecrad_ = meas_elec_angle_;
+        meas_elecangle_ = meas_elecangle;
     };
 
     adc.attach(hal::AdcIT::JEOC, {0,0}, 
@@ -1183,7 +1172,7 @@ void nuedc_2025e_main(){
                 DEBUG_PRINTLN_IDLE(
                     // pos_filter_.cont_position(), 
                     // pos_filter_.speed(),
-                    // meas_elecrad_,
+                    // meas_elecangle_,
                     // q_volt_,
                     // pos_filter_.position(),
                     // pos_filter_.speed(),
