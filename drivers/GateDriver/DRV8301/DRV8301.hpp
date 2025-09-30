@@ -25,33 +25,33 @@ struct DRV8301_Prelude{
 
     using RegAddress = uint8_t;
 
-    enum class PeakCurrent:uint8_t{
+    enum class PeakCurrent:uint16_t{
         _1_7A = 0,
         _0_7A = 1,
         _0_25A = 2,
     };
 
-    enum class OcpMode:uint8_t{
+    enum class OcpMode:uint16_t{
         CurrentLimit = 0,
         OClatchShutdown = 1,
         ReportOnly = 2,
         OCdisabled = 3
     };
 
-    enum class OctwMode:uint8_t{
+    enum class OctwMode:uint16_t{
         OTandOC = 0,
         OTonly = 1,
         OConly = 2,
     };
 
-    enum class Gain:uint8_t{
+    enum class Gain:uint16_t{
         X10 = 0,
         X20 = 1,
         X40 = 2,
         X80 = 3
     };
 
-    enum class OcAdTable:uint8_t{
+    enum class OcAdTable:uint16_t{
         _060mA = 0,
         _068mA,
         _076mA,
@@ -122,19 +122,19 @@ struct DRV8301_Regs:public DRV8301_Prelude{
     struct Ctrl1Reg:public Reg16<>{
         static constexpr RegAddress address = 0x02;
 
-        uint16_t gate_current:2;
+        PeakCurrent gate_current:2;
         uint16_t gate_reset:1;
         uint16_t pwm3_en:1;
-        uint16_t ocp_mode:3;
-        uint16_t oc_adj_set:5;
+        OcpMode ocp_mode:3;
+        OcAdTable oc_adj_set:5;
         uint16_t :6;
     };
 
     struct Ctrl2Reg:public Reg16<>{
         static constexpr RegAddress address = 0x03;
 
-        uint16_t octw_mode:2;
-        uint16_t gain:2;
+        OctwMode octw_mode:2;
+        Gain gain:2;
         uint16_t dc_cal_ch1:1;
         uint16_t dc_cal_ch2:1;
 

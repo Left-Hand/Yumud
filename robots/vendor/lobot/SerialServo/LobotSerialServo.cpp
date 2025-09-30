@@ -37,17 +37,17 @@ static constexpr uint8_t LOBOT_SERVO_LED_ERROR_READ        = 36;
 #pragma pack(push, 1)
 
 template<typename T>
-struct FrameWapper_t{
+struct FrameWapper{
 protected:
 
     template<typename U>
-    struct FrameBody_t{
-        const uint8_t length = sizeof(FrameBody_t<U>);
+    struct FrameBody{
+        const uint8_t length = sizeof(FrameBody<U>);
         const uint8_t command;
         const U content;
         const uint8_t checksum;
         
-        constexpr FrameBody_t(uint8_t _command, U && _content) :
+        constexpr FrameBody(uint8_t _command, U && _content) :
                 command(_command), content(std::forward<U>(_content)), 
                 checksum(CalculateCheckSum(reinterpret_cast<const uint8_t *>(this), length)) {;}
 
@@ -68,14 +68,14 @@ protected:
 
     const uint8_t id;
     
-    const FrameBody_t<T> body;
+    const FrameBody<T> body;
     
 public:
-    constexpr FrameWapper_t(const uint8_t _id, uint8_t _command, T && _content) :
+    constexpr FrameWapper(const uint8_t _id, uint8_t _command, T && _content) :
             id(_id), body(_command, std::forward<T>(_content)) {;}
 
-    constexpr FrameWapper_t(const FrameWapper_t & other) = delete;
-    constexpr FrameWapper_t(FrameWapper_t && other) = delete;
+    constexpr FrameWapper(const FrameWapper & other) = delete;
+    constexpr FrameWapper(FrameWapper && other) = delete;
     
 
     constexpr uint8_t operator[](const size_t idx) const {
@@ -83,7 +83,7 @@ public:
     }
 
     consteval size_t size() const {
-        return sizeof(FrameWapper_t<T>);
+        return sizeof(FrameWapper<T>);
     }
 
     constexpr const uint8_t * begin() const {
@@ -104,7 +104,7 @@ public:
 
 using namespace ymd::robots;
 
-#define CREATE_FRAME(command, ...) FrameWapper_t(this->id_, command, std::make_tuple(__VA_ARGS__))
+#define CREATE_FRAME(command, ...) FrameWapper(this->id_, command, std::make_tuple(__VA_ARGS__))
 #define WRITE_FRAME(command, ...) this->write_frame(CREATE_FRAME(command, __VA_ARGS__));
 
 
