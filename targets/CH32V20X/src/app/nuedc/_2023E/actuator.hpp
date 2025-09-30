@@ -63,10 +63,10 @@ private:
     ymd::hal::PwmIntf & pwm_;
 };
 
-PwmServo make_sg90(const ServoConfig & cfg, ymd::hal::PwmIntf & pwm){
+PwmServo make_sg90(const ServoConfig & cfg, hal::PwmIntf & pwm){
     return PwmServo(cfg, 0.025_r, 0.125_r, pwm);
 }
-PwmServo make_mg995(const ServoConfig & cfg, ymd::hal::PwmIntf & pwm){
+PwmServo make_mg995(const ServoConfig & cfg, hal::PwmIntf & pwm){
     return PwmServo(cfg, 0.025_r, 0.125_r, pwm);
 }
 

@@ -44,15 +44,13 @@ public:
 
     static constexpr double R = 10.0;
     static constexpr double L = 2.64E-3;
-    static constexpr double l1 = -22000;
-    static constexpr double l2 = 64000;
     // static constexpr double l1 = -18000;
     // static constexpr double l2 = 102000;
 
     static constexpr auto Tr_L = q20(- T * R / L);
     static constexpr auto T_L  = q20(T / L);
-    static constexpr auto l1T  = q20(l1 * T);
-    static constexpr auto l2T  = q20(l2 * T);
+    static constexpr auto l1T  = q20(-0.68);
+    static constexpr auto l2T  = q20(2);
 
 
 
