@@ -202,7 +202,7 @@ IResult<real_t> INA3221::get_bus_volt(const ChannelNth nth){
 }
 
 
-IResult<> INA3221::set_instant_ovc(const ChannelNth nth, const real_t volt){
+IResult<> INA3221::set_instant_ovc_threshold(const ChannelNth nth, const real_t volt){
     const RegAddress addr = [&]{
         switch(nth){
             case ChannelNth::CH1: return instant_ovc1_reg.address; 
@@ -216,7 +216,7 @@ IResult<> INA3221::set_instant_ovc(const ChannelNth nth, const real_t volt){
 }
 
 
-IResult<> INA3221::set_constant_ovc(const ChannelNth nth, const real_t volt){
+IResult<> INA3221::set_constant_ovc_threshold(const ChannelNth nth, const real_t volt){
     const RegAddress addr = [&]{
         switch(nth){
             case ChannelNth::CH1: return constant_ovc1_reg.address; 

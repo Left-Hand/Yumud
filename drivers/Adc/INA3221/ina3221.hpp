@@ -6,16 +6,12 @@
 //这个驱动还未支持所有特性
 
 // eg:
-// auto i2c = hal::I2cSw(SCL_GPIO, SDA_GPIO);
-// i2c.init(100_KHz);
-
-// INA3221 ina = {i2c};
+// INA3221 ina = {&i2c};
 
 // ina.init().unwrap();
 
 // while(true){
-//     const auto ch = INA3221::ChannelNth::CH1;
-//     ina.update(ch).unwrap();
+//     ina.update(INA3221::ChannelNth::CH1).unwrap();
 //     DEBUG_PRINTLN(
 //         ina.get_bus_volt(ch).unwrap(), 
 //         ina.get_shunt_volt(ch).unwrap() * real_t(INV_SHUNT_RES)
@@ -367,48 +363,15 @@ private:
 class INA3221 final:
     public INA3221_Regs{
 public:
-    struct INA3221Channel:public hal::AnalogInIntf{
-    public:
-        enum class ChannelType:uint8_t{
-            Shunt,
-            BusBar,
-        };
-
-    protected:
-        INA3221 & parent_;
-        ChannelType ch_;
-        ChannelNth nth_;
-    public:
-        INA3221Channel(INA3221 & parent, const ChannelType ch, const ChannelNth nth):
-                parent_(parent), ch_(ch), nth_(nth){}
-
-        INA3221Channel(const INA3221Channel & other) = delete;
-        INA3221Channel(INA3221Channel && other) = delete;
-
-        real_t get_voltage() {
-            return get_volt().unwrap();
-        }
-
-        IResult<real_t> get_volt(){
-            switch(ch_){
-                case ChannelType::Shunt:
-                    return parent_.get_shunt_volt(nth_);
-                case ChannelType::BusBar:
-                    return parent_.get_bus_volt(nth_);
-                default: __builtin_unreachable();
-            }
-        }
-    };
-public:
     static constexpr auto DEFAULT_CONFIG = Config{
         .shunt_conv_time = ConversionTime::_140us, 
         .bus_conv_time = ConversionTime::_140us, 
         .average_times = AverageTimes::_1
     };
 
-    INA3221(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
-    INA3221(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    INA3221(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit INA3221(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
+    explicit INA3221(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
+    explicit INA3221(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv(i2c, addr)){;}
     ~INA3221(){;}
     
@@ -437,8 +400,8 @@ public:
     [[nodiscard]] IResult<real_t> get_shunt_volt(const ChannelNth nth);
     [[nodiscard]] IResult<real_t> get_bus_volt(const ChannelNth nth);
 
-    [[nodiscard]] IResult<> set_instant_ovc(const ChannelNth nth, const real_t volt);
-    [[nodiscard]] IResult<> set_constant_ovc(const ChannelNth nth, const real_t volt);
+    [[nodiscard]] IResult<> set_instant_ovc_threshold(const ChannelNth nth, const real_t volt);
+    [[nodiscard]] IResult<> set_constant_ovc_threshold(const ChannelNth nth, const real_t volt);
 private:
     INA3221_Phy phy_;
 
@@ -464,15 +427,6 @@ private:
         return phy_.write_reg(addr, data);
     }
 
-
-    std::array<INA3221Channel, 6> channels = {
-        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelNth::CH1},
-        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelNth::CH1},
-        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelNth::CH2},
-        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelNth::CH2},
-        INA3221Channel{*this, INA3221Channel::ChannelType::BusBar,    ChannelNth::CH3},
-        INA3221Channel{*this, INA3221Channel::ChannelType::Shunt,  ChannelNth::CH3},
-    };
 };
 
 }

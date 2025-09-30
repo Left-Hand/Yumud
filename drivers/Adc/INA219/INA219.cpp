@@ -7,10 +7,10 @@ using namespace ymd::hal;
 using namespace ymd;
 
 
-#define INA219_DEBUG_ON 0
-// #define INA219_DEBUG_ON 1
+#define INA219_DEBUG_EN 0
+// #define INA219_DEBUG_EN 1
 
-#if INA219_DEBUG_ON
+#if INA219_DEBUG_EN
 #define INA219_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define INA219_PANIC(...) PANIC(__VA_ARGS__)
 #define INA219_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
