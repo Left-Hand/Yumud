@@ -361,7 +361,10 @@ struct Vec2{
     }
 
 
-
+    [[nodiscard]]
+    constexpr Matrix<T, 1, 2> to_matrix() const{
+        return Matrix<T, 1, 2>(x,y);
+    }
 
 
     [[nodiscard]] __fast_inline constexpr T x_mul_y() const {

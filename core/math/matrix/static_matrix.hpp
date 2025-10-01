@@ -93,7 +93,7 @@ public:
     [[nodiscard]] __fast_inline constexpr const T * data() const { return storage_.data(); }
 
     template<size_t R2, size_t C2>
-    [[nodiscard]] __fast_inline constexpr Matrix<T, R2, C2> block(
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R2, C2> submatrix(
         const size_t row_start, const size_t col_start) const{   
         static_assert(R2 <= R and C2 <= C);
 
@@ -105,11 +105,27 @@ public:
             // static_assert(col_start <= col_end && col_end <= C);
         }
 
-        Matrix<T, R2, C2> ret;
+        Matrix<T, R2, C2> ret = Matrix<T, R2, C2>::from_uninitialized();
 
         for (size_t i = 0; i < R2; ++i) {
             for (size_t j = 0; j < C2; ++j) {
                 ret.at(i, j) = this->at(row_start + i, col_start + j);
+            }
+        }
+
+        return ret;
+    }
+
+    template<size_t Y, size_t X, size_t R2, size_t C2>
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R2, C2> submatrix() const {
+        static_assert(Y <= R and X <= C);
+        static_assert(R2 <= R - Y and C2 <= C - X);
+
+        Matrix<T, R2, C2> ret = Matrix<T, R2, C2>::from_uninitialized();
+
+        for (size_t i = 0; i < R2; ++i) {
+            for (size_t j = 0; j < C2; ++j) {
+                ret.at(i, j) = this->at(Y + i, X + j);
             }
         }
 
@@ -652,5 +668,50 @@ using RowVector = Matrix<T,N,1>;
 
 template<typename T, size_t N>
 using ColVector = Matrix<T,1,N>;
+
+
+
+template<typename T, size_t R1, size_t C1, size_t R2, size_t C2>
+[[nodiscard]] __fast_inline static constexpr Matrix<T, R1 + R2, C1 + C2> make_matrix_from_quad(
+    const Matrix<T, R1, C1>& m1, 
+    const Matrix<T, R1, C2>& m2, 
+    const Matrix<T, R2, C1>& m3, 
+    const Matrix<T, R2, C2>& m4)
+{
+    // Ensure valid submatrix dimensions
+    static_assert(R1 > 0 && C1 > 0 && R2 > 0 && C2 > 0, "Submatrix dimensions must be positive");
+    
+    Matrix<T, R1 + R2, C1 + C2> result = Matrix<T, R1 + R2, C1 + C2>::from_uninitialized();
+    
+    // Fill top-left block (m1)
+    for (size_t i = 0; i < R1; ++i) {
+        for (size_t j = 0; j < C1; ++j) {
+            result.at(i, j) = m1.at(i, j);
+        }
+    }
+    
+    // Fill top-right block (m2)
+    for (size_t i = 0; i < R1; ++i) {
+        for (size_t j = 0; j < C2; ++j) {
+            result.at(i, j + C1) = m2.at(i, j);
+        }
+    }
+    
+    // Fill bottom-left block (m3)
+    for (size_t i = 0; i < R2; ++i) {
+        for (size_t j = 0; j < C1; ++j) {
+            result.at(i + R1, j) = m3.at(i, j);
+        }
+    }
+    
+    // Fill bottom-right block (m4)
+    for (size_t i = 0; i < R2; ++i) {
+        for (size_t j = 0; j < C2; ++j) {
+            result.at(i + R1, j + C1) = m4.at(i, j);
+        }
+    }
+    
+    return result;
+}
 
 }

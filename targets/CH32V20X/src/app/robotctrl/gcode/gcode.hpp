@@ -58,7 +58,7 @@ struct Mnemonic final{
 
     DEF_FRIEND_DERIVE_DEBUG(Kind);
 
-    static constexpr Option<Mnemonic> from_letter(const char letter){
+    [[nodiscard]] static constexpr Option<Mnemonic> from_letter(const char letter){
         switch(letter){
             case 'G':
                 return Some(Mnemonic{Kind::General});
@@ -74,7 +74,7 @@ struct Mnemonic final{
     }
 
     template<char letter>
-    static consteval Mnemonic from_letter(){
+    [[nodiscard]] static consteval Mnemonic from_letter(){
         return from_letter(letter).unwrap();
     }
 
@@ -169,6 +169,7 @@ struct GcodeArg{
             case 'P':
             case 'T':
                 return true;
+
             default: 
                 return false;
         }
