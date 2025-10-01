@@ -45,12 +45,13 @@ namespace ymd::drivers{
 
 struct INA3221_Prelude{
 public:
-    enum class Error_Kind{
+    enum class Error_Kind:uint8_t{
         WrongChipId,
         WrongManuId,
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
+    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -135,9 +136,15 @@ public:
         ConversionTime shunt_conv_time;
         ConversionTime bus_conv_time;
         AverageTimes average_times;
+
+        static constexpr Config from_default() {
+            return Config{
+                .shunt_conv_time = ConversionTime::_140us, 
+                .bus_conv_time = ConversionTime::_140us, 
+                .average_times = AverageTimes::_1
+            };
+        }
     };
-
-
 
 };
 
@@ -363,14 +370,11 @@ private:
 class INA3221 final:
     public INA3221_Regs{
 public:
-    static constexpr auto DEFAULT_CONFIG = Config{
-        .shunt_conv_time = ConversionTime::_140us, 
-        .bus_conv_time = ConversionTime::_140us, 
-        .average_times = AverageTimes::_1
-    };
 
-    explicit INA3221(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
-    explicit INA3221(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
+    explicit INA3221(const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv){;}
+    explicit INA3221(hal::I2cDrv && i2c_drv):
+        phy_(std::move(i2c_drv)){;}
     explicit INA3221(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv(i2c, addr)){;}
     ~INA3221(){;}
@@ -378,7 +382,7 @@ public:
     [[nodiscard]] IResult<bool> is_ready();
 
 
-    [[nodiscard]] IResult<> init(const Config & cfg = DEFAULT_CONFIG);
+    [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> reconf(const Config & cfg);
     [[nodiscard]] IResult<> update();
     [[nodiscard]] IResult<> update(const ChannelNth nth);

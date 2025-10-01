@@ -35,16 +35,16 @@ void ina3221_main(){
 
     INA3221 ina{&i2c};
 
-    ina.init().unwrap();
+    ina.init(INA3221::Config::from_default()).examine();
 
     while(true){
         const auto ch = INA3221::ChannelNth::CH1;
-        ina.update(ch).unwrap();
-        ina.update(INA3221::ChannelNth::CH2).unwrap();
-        ina.update(INA3221::ChannelNth::CH3).unwrap();
+        ina.update(ch).examine();
+        ina.update(INA3221::ChannelNth::CH2).examine();
+        ina.update(INA3221::ChannelNth::CH3).examine();
         DEBUG_PRINTLN(
-            ina.get_bus_volt(ch).unwrap(), 
-            ina.get_shunt_volt(ch).unwrap() * real_t(INV_SHUNT_RES)
+            ina.get_bus_volt(ch).examine(), 
+            ina.get_shunt_volt(ch).examine() * real_t(INV_SHUNT_RES)
         );
         clock::delay(1ms);
     }

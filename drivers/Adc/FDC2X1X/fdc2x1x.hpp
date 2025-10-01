@@ -230,58 +230,23 @@ class FDC2X1X final:public FDC1X2X_Regs{
 public:
 
 
-    FDC2X1X(const hal::I2cDrv & i2c_drv):
+    explicit FDC2X1X(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
-    FDC2X1X(hal::I2cDrv && i2c_drv):
+    explicit FDC2X1X(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    FDC2X1X(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit FDC2X1X(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
 
     IResult<> init();
 
-    IResult<bool> is_conv_done(){
-        if(const auto res = read_reg(StatusReg::address, status_reg.as_ref());
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok(bool(status_reg.data_ready));
-    }
+    IResult<bool> is_conv_done();
 
-    IResult<bool> is_conv_done(uint8_t idx){
-        if(idx > 3) return Err(Error::ChannelNthOutOfRange);
+    IResult<bool> is_conv_done(uint8_t idx);
 
-        if(const auto res = read_reg(StatusReg::address, status_reg.as_ref());
-            res.is_err()) return Err(res.unwrap_err());
-        switch(idx){
-            case 0: return Ok(bool(status_reg.ch0_unread_conv));
-            case 1: return Ok(bool(status_reg.ch1_unread_conv));
-            case 2: return Ok(bool(status_reg.ch2_unread_conv));
-            case 3: return Ok(bool(status_reg.ch3_unread_conv));
-            default: __builtin_unreachable();
-        }
-    }
+    IResult<> reset();
 
-    IResult<> reset(){
-        auto reg = RegCopy(reset_dev_reg);
-        reg.reset_dev = true;
-        return write_reg(ResetDevReg::address,(reg.as_val()));
-    }
-
-    IResult<uint32_t> get_data(uint8_t idx){
-        if(idx > 3)  return Err(Error::ChannelNthOutOfRange);
-
-        uint32_t ret = 0;
-        auto & highreg = conv_data_regs[idx].high;
-        auto & lowreg = conv_data_regs[idx].low;
-
-        if(const auto res = read_reg(highreg.address, (highreg.as_ref()));
-            res.is_err()) return Err(res.unwrap_err());
-        ret |= (highreg.data_msb << 16);
-        if(const auto res = read_reg(lowreg.address, (lowreg.as_ref()));
-            res.is_err()) return Err(res.unwrap_err());
-        ret |= lowreg.data_lsb;
-
-        return Ok(ret);
-    }
+    IResult<uint32_t> get_data(uint8_t idx);
 
 private:
     hal::I2cDrv i2c_drv_;
