@@ -52,6 +52,7 @@ using namespace ymd::dsp;
 
 // static constexpr uint32_t CHOPPER_FREQ = 20_KHz;
 static constexpr uint32_t CHOPPER_FREQ = 32_KHz;
+static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
 static void init_adc(){
 
@@ -125,6 +126,7 @@ struct PiCurrentCtrl {
         err_sum_ = CLAMP(err_sum_ + err, -max_out_ - output , max_out_ - output);
         return output;
     }
+
 private:
     q24 kp_;                // 比例系数
     q24 ki_discrete_;       // 离散化积分系数（Ki * Ts）
@@ -266,39 +268,45 @@ void myesc_main(){
     static constexpr auto MAX_MODU_VOLT = q16(4.5);
 
     auto d_pi_ctrl_ = PiCurrentCtrl::from_inductance_and_resistance({
-            .fs = 32000,                 // 采样频率 (Hz)
-            .fc = CURRENT_LOOP_BW,                 // 截止频率/带宽 (Hz)
-            .phase_inductance = PHASE_INDUCTANCE,        // 相电感 (H)
-            .phase_resistance = PHASE_RESISTANCE,        // 相电阻 (Ω)
-            .max_volt = MAX_MODU_VOLT,                // 最大电压 (V)
+            .fs = FOC_FREQ,                         // 采样频率 (Hz)
+            .fc = CURRENT_LOOP_BW,                  // 截止频率/带宽 (Hz)
+            .phase_inductance = PHASE_INDUCTANCE,   // 相电感 (H)
+            .phase_resistance = PHASE_RESISTANCE,   // 相电阻 (Ω)
+            .max_volt = MAX_MODU_VOLT,              // 最大电压 (V)
         }
     );
 
     auto q_pi_ctrl_ = PiCurrentCtrl::from_inductance_and_resistance({
-            .fs = 32000,                 // 采样频率 (Hz)
-            .fc = CURRENT_LOOP_BW,                 // 截止频率/带宽 (Hz)
-            .phase_inductance = PHASE_INDUCTANCE,        // 相电感 (H)
-            .phase_resistance = PHASE_RESISTANCE,        // 相电阻 (Ω)
-            .max_volt = MAX_MODU_VOLT,                // 最大电压 (V)
+            .fs = FOC_FREQ,                         // 采样频率 (Hz)
+            .fc = CURRENT_LOOP_BW,                  // 截止频率/带宽 (Hz)
+            .phase_inductance = PHASE_INDUCTANCE,   // 相电感 (H)
+            .phase_resistance = PHASE_RESISTANCE,   // 相电阻 (Ω)
+            .max_volt = MAX_MODU_VOLT,              // 最大电压 (V)
         }
     );
 
     auto flux_sensorless_ob = dsp::motor_ctl::NonlinearFluxObserver{
         dsp::motor_ctl::NonlinearFluxObserver::Config{
-        .phase_inductance = PHASE_INDUCTANCE,
-        .phase_resistance = PHASE_RESISTANCE,
-        // .observer_gain = 0.05_q20, // [rad/s]
-        // .observer_gain = 0.06_q20, // [rad/s]
-        // .pm_flux_linkage = 0.27_q20, // [V / (rad/s)]
+            .fs = FOC_FREQ,
+            .phase_inductance = PHASE_INDUCTANCE,
+            .phase_resistance = PHASE_RESISTANCE,
+            // .observer_gain = 0.05_q20, // [rad/s]
+            // .observer_gain = 0.06_q20, // [rad/s]
+            // .pm_flux_linkage = 0.27_q20, // [V / (rad/s)]
 
-        .observer_gain = 0.06_q20, // [rad/s]
-        // .pm_flux_linkage = 0.37_q20, // [V / (rad/s)]
-        .pm_flux_linkage = 0.42_q20, // [V / (rad/s)]
+            .observer_gain = 0.06_q20, // [rad/s]
+            // .pm_flux_linkage = 0.37_q20, // [V / (rad/s)]
+            .pm_flux_linkage = 0.42_q20, // [V / (rad/s)]
 
-        // .pm_flux_linkage = 0.22_q20, // [V / (rad/s)]
-        .freq = 32000,
+            // .pm_flux_linkage = 0.22_q20, // [V / (rad/s)]
+
     }};
-    auto lbg_sensorless_ob = dsp::motor_ctl::LuenbergerObserver{{}};
+    auto lbg_sensorless_ob = dsp::motor_ctl::LuenbergerObserver{
+        dsp::motor_ctl::LuenbergerObserver::Config{
+            .fs = FOC_FREQ,
+            .phase_inductance = PHASE_INDUCTANCE,
+            .phase_resistance = PHASE_RESISTANCE
+    }};
 
     auto smo_sensorless_ob = dsp::motor_ctl::SlideModeObserver{
         dsp::motor_ctl::SlideModeObserver::Config{

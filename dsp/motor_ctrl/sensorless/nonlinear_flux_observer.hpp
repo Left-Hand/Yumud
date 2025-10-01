@@ -11,11 +11,12 @@ namespace ymd::dsp::motor_ctl{
 class NonlinearFluxObserver final{
 public:
     struct Config{
+        uint32_t fs;
         q16 phase_inductance;
         q16 phase_resistance;
         q16 observer_gain; // [rad/s]
         q16 pm_flux_linkage; // [V / (rad/s)]
-        size_t freq;
+
     };
 
 public:
@@ -26,9 +27,9 @@ public:
 
     constexpr void reconf(const Config & cfg){
         phase_resistance_ = cfg.phase_resistance;
-        pm_flux_sqr_mf_2_ = square(cfg.pm_flux_linkage * cfg.freq);
+        pm_flux_sqr_mf_2_ = square(cfg.pm_flux_linkage * cfg.fs);
         temp1_ = (cfg.observer_gain / pm_flux_sqr_mf_2_);
-        phase_inductance_mul_config_freq_ = (cfg.phase_inductance * cfg.freq);
+        phase_inductance_mul_config_freq_ = (cfg.phase_inductance * cfg.fs);
     }
 
     constexpr void reset(){
