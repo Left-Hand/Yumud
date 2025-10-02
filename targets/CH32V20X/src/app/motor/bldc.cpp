@@ -303,7 +303,7 @@ void bldc_main(){
         [[maybe_unused]] const auto alphabeta_volt = DqCoord<q16>{
             .d = 0, 
             .q = q_volt
-        }.to_alphabeta(Angle<q16>::from_turns(ctime));
+        }.to_alphabeta(Rotation2<q16>::from_angle(Angle<q16>::from_turns(ctime)));
         #else
         const auto q_volt = CLAMP2(
             pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)

@@ -15,24 +15,21 @@ public:
         return Matrix();
     }
 
-    __fast_inline constexpr static Matrix from_zero(){
+    __fast_inline static constexpr Matrix from_zero(){
         Matrix ret = Matrix::from_uninitialized();
         ret.fill(0);
         return ret;
     }
 
     // 单位矩阵生成函数
-    __fast_inline constexpr static Matrix<T, R, C> from_identity(){
+    __fast_inline static constexpr Matrix<T, R, C> from_identity(){
         static_assert(R == C, "Identity matrix must be square.");
 
-        Matrix<T, R, C> ret;
-
-        for (size_t i = 0; i < R; ++i) {
-            for (size_t j = 0; j < C; ++j) {
-                ret.at(i, j) = (i == j) ? T(1) : T(0);
-            }
+        Matrix<T, R, C> ret = Matrix<T, R, C>::from_zero();
+        auto * pdata = ret.data();
+        for(size_t i = 0; i < R * R; i += R + 1){
+            pdata[i] = static_cast<T>(1);
         }
-
         return ret;
     }
 
@@ -48,9 +45,9 @@ public:
     }
 
 
-    __fast_inline constexpr Matrix& operator = (const Matrix & other){
+    __fast_inline constexpr Matrix& operator = (const Matrix & rhs){
         for(size_t i = 0; i < size(); i++){
-            data()[i] = static_cast<T>(other.storage_[i]);
+            data()[i] = static_cast<T>(rhs.storage_[i]);
         }
         return *this;
     }
@@ -65,15 +62,19 @@ public:
 
     [[nodiscard]] __fast_inline constexpr size_t rows() const { return R;}
     [[nodiscard]] __fast_inline constexpr size_t cols() const { return C;}
-    [[nodiscard]] __fast_inline constexpr std::span<T, C> operator[](const size_t row) 
+    [[nodiscard]] __fast_inline constexpr std::span<T, C> 
+    operator[](const size_t row) 
         {return std::span<T, C>(&storage_[row * C], C);}
 
-    [[nodiscard]] __fast_inline constexpr std::span<const T, C> operator[](const size_t row) const 
+    [[nodiscard]] __fast_inline constexpr std::span<const T, C> 
+    operator[](const size_t row) const 
         {return std::span<const T, C>(&storage_[row * C], C);}
 
-    [[nodiscard]] __fast_inline constexpr T & at(const size_t row, const size_t col) 
+    [[nodiscard]] __fast_inline constexpr T & 
+    at(const size_t row, const size_t col) 
         { return storage_[row * C + col];}
-    [[nodiscard]] __fast_inline constexpr const T & at(const size_t row, const size_t col) const 
+    [[nodiscard]] __fast_inline constexpr const T & 
+    at(const size_t row, const size_t col) const 
         { return storage_[row * C + col];}
 
     template<size_t I, size_t J>
@@ -84,9 +85,11 @@ public:
     [[nodiscard]] __fast_inline constexpr const T & at() const 
         { return storage_[I * C + J];}
 
-    [[nodiscard]] __fast_inline constexpr T & operator()(const size_t row, const size_t col) 
+    [[nodiscard]] __fast_inline constexpr T & 
+    operator()(const size_t row, const size_t col) 
         { return storage_[row * C + col];}
-    [[nodiscard]] __fast_inline constexpr const T & operator()(const size_t row, const size_t col) const 
+    [[nodiscard]] __fast_inline constexpr const T & 
+    operator()(const size_t row, const size_t col) const 
         { return storage_[row * C + col];}
     [[nodiscard]] __fast_inline constexpr size_t size() const { return R*C;}
     [[nodiscard]] __fast_inline constexpr T * data() { return storage_.data();}
@@ -97,14 +100,6 @@ public:
         const size_t row_start, const size_t col_start) const{   
         static_assert(R2 <= R and C2 <= C);
 
-        if(std::is_constant_evaluated()){
-            // size_t row_end = row_start + R2;
-            // size_t col_end = col_start + C2;
-
-            // static_assert(row_start <= row_end && row_end <= R);
-            // static_assert(col_start <= col_end && col_end <= C);
-        }
-
         Matrix<T, R2, C2> ret = Matrix<T, R2, C2>::from_uninitialized();
 
         for (size_t i = 0; i < R2; ++i) {
@@ -114,6 +109,15 @@ public:
         }
 
         return ret;
+    }
+
+    [[nodiscard]]
+    __fast_inline constexpr T frobenius_norm() const {
+        const T sum_sq = std::reduce(
+            storage_.begin(), storage_.end(), T(0), 
+            [](T a, T b) { return a + square(b); 
+        });
+        return sqrt(sum_sq);
     }
 
     template<size_t Y, size_t X, size_t R2, size_t C2>
@@ -133,50 +137,38 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Matrix & operator += (const Matrix<U, R, C> & other){
+    __fast_inline constexpr Matrix & operator += (const Matrix<U, R, C> & rhs){
         auto ptr = data();
-        auto other_ptr = other.data();
+        auto pdata_rhs = rhs.data();
         for(size_t i = 0; i < size(); i++){
-            ptr[i] += static_cast<T>(other_ptr[i]);
+            ptr[i] += static_cast<T>(pdata_rhs[i]);
         }
 
         return *this;
     }
 
     template<arithmetic U>
-    [[nodiscard]] __fast_inline constexpr Matrix operator + (const Matrix<U, R, C> & other) const {
-        Matrix ret = Matrix::from_uninitialized();
-        auto ptr = data();
-        auto ret_ptr = ret.data();
-        auto other_ptr = other.data();
-        for(size_t i = 0; i < size(); i++){
-            ret_ptr[i] = ptr[i] + static_cast<T>(other_ptr[i]);
-        }
-
+    [[nodiscard]] __fast_inline constexpr Matrix operator + (const Matrix<U, R, C> & rhs) const {
+        Matrix ret = *this;
+        ret += rhs;
         return ret;
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Matrix & operator -= (const Matrix<U, R, C> & other){
+    __fast_inline constexpr Matrix & operator -= (const Matrix<U, R, C> & rhs){
         auto ptr = data();
-        auto other_ptr = other.data();
+        auto pdata_rhs = rhs.data();
         for(size_t i = 0; i < size(); i++){
-            ptr[i] -= static_cast<T>(other_ptr[i]);
+            ptr[i] -= static_cast<T>(pdata_rhs[i]);
         }
 
         return *this;
     }
 
     template<arithmetic U>
-    [[nodiscard]] __fast_inline constexpr Matrix operator - (const Matrix<U, R, C> & other) const {
-        Matrix ret = Matrix::from_uninitialized();
-        auto ptr = data();
-        auto ret_ptr = ret.data();
-        auto other_ptr = other.data();
-        for(size_t i = 0; i < size(); i++){
-            ret_ptr[i] = ptr[i] - static_cast<T>(other_ptr[i]);
-        }
-
+    [[nodiscard]] __fast_inline constexpr Matrix operator - (const Matrix<U, R, C> & rhs) const {
+        Matrix ret = *this;
+        ret -= rhs;
         return ret;
     }
 
@@ -226,13 +218,13 @@ public:
     }
 
     template<size_t C2>
-    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C2> operator * (const Matrix<T, C, C2> & other) const{
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C2> operator * (const Matrix<T, C, C2> & rhs) const{
         auto ret = Matrix<T, R, C2>::from_uninitialized();
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < C2; j++) {
                 T sum = 0;
                 for (size_t k = 0; k < C; k++) {
-                    sum += this->at(i, k) * other.at(k, j);
+                    sum += this->at(i, k) * rhs.at(k, j);
                 }
                 ret.at(i, j) = sum;
             }

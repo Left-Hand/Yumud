@@ -76,6 +76,10 @@ struct Rotation2 {
     [[nodiscard]] constexpr T sine() const {return sine_;}
     [[nodiscard]] constexpr T cosine() const {return cosine_;}
 
+    [[nodiscard]] constexpr std::array<T, 2> sincos() const {
+        return {sine_, cosine_};
+    }
+
     #if 0
     // 插值：球面线性插值
     constexpr Rotation2 slerp(const Rotation2& other, T t) const {

@@ -557,7 +557,7 @@ void nuedc_2025e_main(){
             .d = 0, 
             .q = CLAMP2(q_volt - leso_.disturbance(), SVPWM_MAX_VOLT)
             // CLAMP2(q_volt, SVPWM_MAX_VOLT)
-        }.to_alphabeta(meas_elecangle);
+        }.to_alphabeta(Rotation2<q20>::from_angle(meas_elecangle));
 
 
         static constexpr auto INV_BUS_VOLT = q16(1.0/12);

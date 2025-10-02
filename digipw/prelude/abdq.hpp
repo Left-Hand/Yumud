@@ -2,7 +2,7 @@
 
 #include "uvw.hpp"
 #include "core/utils/angle.hpp"
-
+#include "types/gesture/rotation2.hpp"
 
 namespace ymd::digipw{
 
@@ -12,17 +12,23 @@ struct DqCoord;
 namespace details{
 template<typename To, typename From>
 __attribute__((optimize("O3")))
-static constexpr __fast_inline void alphabeta_to_dq(To & dq, const From & alphabeta, const Angle<auto> angle){
+static constexpr __fast_inline void alphabeta_to_dq(
+    To & dq, const From & alphabeta, const auto & angle
+){
     auto [s,c] = angle.sincos();
-    dq = {s * alphabeta[1] + c * alphabeta[0], c * alphabeta[1] - s * alphabeta[0]};
+    dq.template get<0>() = s * alphabeta.template get<1>() + c * alphabeta.template get<0>();
+    dq.template get<1>() = c * alphabeta.template get<1>() - s * alphabeta.template get<0>();
 };
 
 
 template<typename To, typename From>
 __attribute__((optimize("O3")))
-static constexpr __fast_inline void dq_to_alphabeta(To & alphabeta, const From & dq, const Angle<auto> angle){
+static constexpr __fast_inline void dq_to_alphabeta(
+    To & alphabeta, const From & dq, const auto & angle
+){
     auto [s,c] = angle.sincos();
-    alphabeta = {c * dq[0] - s * dq[1], c * dq[1] + s * dq[0]};
+    alphabeta.template get<0>() = c * dq.template get<0>() - s * dq.template get<1>();
+    alphabeta.template get<1>() = c * dq.template get<1>() + s * dq.template get<0>();
 };
 }
 
@@ -39,9 +45,10 @@ struct AlphaBetaCoord final{
     };
 
     [[nodiscard]] static constexpr AlphaBetaCoord from_uvw(const UvwCoord<T> & uvw){
-        constexpr auto _2_by_3 = T(2.0/3);
-        constexpr auto _sqrt3_by_3 = T(sqrt(T(3)) / 3);
-        return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, (uvw.v - uvw.w) * _sqrt3_by_3};
+        return AlphaBetaCoord{
+            .alpha = (uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, 
+            .beta = (uvw.v - uvw.w) * _sqrt3_by_3
+        };
     };
 
     [[nodiscard]] constexpr T operator [](const size_t idx) const {
@@ -53,45 +60,70 @@ struct AlphaBetaCoord final{
     }
 
     [[nodiscard]] constexpr T length() const {
-        return sqrt(square(alpha) + square(beta));
+        return imag(alpha + beta);
     }
 
     [[nodiscard]] constexpr T length_squared() const {
         return square(alpha) + square(beta);
     }
 
+    [[nodiscard]] constexpr AlphaBetaCoord operator +() const {
+        return AlphaBetaCoord{alpha, beta};
+    }
+
     [[nodiscard]] constexpr AlphaBetaCoord operator -() const {
-        return {-alpha, -beta};
+        return AlphaBetaCoord{-alpha, -beta};
     }
 
     [[nodiscard]] constexpr AlphaBetaCoord operator +(const AlphaBetaCoord & rhs) const {
-        return {alpha + rhs.alpha, beta + rhs.beta};
+        return AlphaBetaCoord{alpha + rhs.alpha, beta + rhs.beta};
     }
 
     [[nodiscard]] constexpr AlphaBetaCoord operator -(const AlphaBetaCoord & rhs) const {
-        return {alpha - rhs.alpha, beta - rhs.beta};
+        return AlphaBetaCoord{alpha - rhs.alpha, beta - rhs.beta};
     }
 
     [[nodiscard]] constexpr AlphaBetaCoord operator *(const auto rhs) const {
-        return {alpha * rhs, beta * rhs};
+        return AlphaBetaCoord{alpha * rhs, beta * rhs};
     }
 
     [[nodiscard]] constexpr AlphaBetaCoord operator /(const auto rhs) const {
-        return {alpha / rhs, beta / rhs};
+        return AlphaBetaCoord{alpha / rhs, beta / rhs};
     }
 
-    [[nodiscard]] constexpr DqCoord<T> to_dq(const Angle<auto> angle) const{
+    template<typename U>
+    [[nodiscard]] constexpr DqCoord<T> to_dq(const Rotation2<U> rot) const{
         DqCoord<T> dq;
-        details::alphabeta_to_dq(dq, *this, angle);
+        details::alphabeta_to_dq(dq, *this, rot);
         return dq;
     }
 
     [[nodiscard]] constexpr AlphaBetaCoord clamp(const auto max) const {
         return AlphaBetaCoord{
-            CLAMP2(this->alpha, max), 
-            CLAMP2(this->beta, max)
+            CLAMP2(this->alpha, static_cast<T>(max)), 
+            CLAMP2(this->beta, static_cast<T>(max))
         };
     }
+
+    template<size_t I>
+    requires (I < 2)
+    [[nodiscard]] constexpr T get() const{
+        if constexpr(I == 0){
+            return this->alpha;
+        } else if constexpr(I == 1){
+            return this->beta;
+        }
+    } 
+
+    template<size_t I>
+    requires (I < 2)
+    [[nodiscard]] constexpr T & get(){
+        if constexpr(I == 0){
+            return this->alpha;
+        } else if constexpr(I == 1){
+            return this->beta;
+        }
+    } 
 
     template<typename U>
     [[nodiscard]] constexpr operator AlphaBetaCoord<U>(){
@@ -105,6 +137,10 @@ struct AlphaBetaCoord final{
             self.alpha << os.splitter() << 
             self.beta << os.brackets<')'>();
     }
+
+private:
+    static constexpr T _2_by_3 = static_cast<T>(2.0/3);
+    static constexpr T _sqrt3_by_3 = static_cast<T>(sqrt(T(3)) / 3);
 };
 
 
@@ -121,6 +157,17 @@ struct DqCoord final{
         static_cast<T>(0)
     };
 
+    template<typename U>
+    [[nodiscard]] static constexpr DqCoord from_alphabeta(
+        const AlphaBetaCoord<T> & ab, 
+        const Rotation2<U> rot
+    ){
+        DqCoord self;
+        details::alphabeta_to_dq(self, ab, rot);
+        return self;
+    }
+
+
     [[nodiscard]] constexpr T operator [](const size_t idx) const {
         return *(&d + idx);
     }
@@ -133,24 +180,28 @@ struct DqCoord final{
         return mag(d,q);
     }
 
+    [[nodiscard]] constexpr DqCoord operator + () const {
+        return DqCoord{d, q};
+    }
+
     [[nodiscard]] constexpr DqCoord operator -() const {
-        return {-d, -q};
+        return DqCoord{-d, -q};
     }
 
     [[nodiscard]] constexpr DqCoord operator +(const DqCoord & rhs) const {
-        return {d + rhs.d, q + rhs.q};
+        return DqCoord{d + rhs.d, q + rhs.q};
     }
 
     [[nodiscard]] constexpr DqCoord operator -(const DqCoord & rhs) const {
-        return {d - rhs.d, q - rhs.q};
+        return DqCoord{d - rhs.d, q - rhs.q};
     }
 
     [[nodiscard]] constexpr DqCoord operator *(const auto rhs) const {
-        return {d * rhs, q * rhs};
+        return DqCoord{d * rhs, q * rhs};
     }
 
     [[nodiscard]] constexpr DqCoord operator /(const auto rhs) const {
-        return {d / rhs, q / rhs};
+        return DqCoord{d / rhs, q / rhs};
     }
 
     [[nodiscard]] constexpr DqCoord clamp(const auto max) const {
@@ -160,18 +211,33 @@ struct DqCoord final{
         };
     }
 
+    template<size_t I>
+    requires (I < 2)
+    [[nodiscard]] constexpr T get() const{
+        if constexpr(I == 0){
+            return this->d;
+        } else if constexpr(I == 1){
+            return this->q;
+        }
+    } 
 
-    [[nodiscard]] static constexpr DqCoord from_alphabeta(const AlphaBetaCoord<T> & ab, const Angle<auto> angle){
-        DqCoord self;
-        details::alphabeta_to_dq(self, ab, angle);
-        return self;
-    }
+    template<size_t I>
+    requires (I < 2)
+    [[nodiscard]] constexpr T & get(){
+        if constexpr(I == 0){
+            return this->d;
+        } else if constexpr(I == 1){
+            return this->q;
+        }
+    } 
+
+
 
     template<typename U>
-    [[nodiscard]] constexpr AlphaBetaCoord<T> to_alphabeta(const Angle<U> angle) const {
-        auto [s,c] = angle.sincos();
-        auto & self = *this;
-        return {c * self.d - s * self.q, c * self.q + s * self.d};
+    [[nodiscard]] constexpr AlphaBetaCoord<T> to_alphabeta(const Rotation2<U> rot) const {
+        AlphaBetaCoord<T> ret;
+        details::dq_to_alphabeta(ret, *this, rot);
+        return ret;
     }
 
     friend OutputStream & operator << (OutputStream & os, const DqCoord & self){
