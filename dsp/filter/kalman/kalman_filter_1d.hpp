@@ -2,20 +2,39 @@
 
 #include "core/platform.hpp"
 
+
+namespace ymd::dsp{
 template<arithmetic T>
-class KalmanFilter{
+class KalmanFilter1d{
 
 public:
-    KalmanFilter(
+    constexpr KalmanFilter1d(
         const T _r,
         const T _q
     ):
         r(static_cast<T>(_r)), 
         q(static_cast<T>(_q)){;}
 
-    const T update(const arithmetic auto x);
+    const T update(const arithmetic auto _x) {
+        T x = static_cast<T>(_x);
+        if (!inited) {
+            x_last = x;
+            p_last = T(0);
+            inited = true;
+        }else {
+            x_last = predict(x);
+            p_last = (1-kg)*p_mid;
+        }
+        
+        return x_last;
+    }
 
-    const T predict(const arithmetic auto x);
+    const T predict(const arithmetic auto _x) {
+        T x = static_cast<T>(_x);
+        p_mid = p_last + q;
+        kg = p_mid / (p_mid + r);
+        return (x_last + kg * (x - x_last));
+    }
 
     void reset(){
         p_last = 0;
@@ -36,28 +55,6 @@ private:
     bool inited = false;
 };
 
-template<arithmetic T>
-const T KalmanFilter<T>::update(const arithmetic auto _x) {
-    T x = static_cast<T>(_x);
-    if (!inited) {
-        x_last = x;
-        p_last = T(0);
-        inited = true;
-    }else {
-        x_last = predict(x);
-        p_last = (1-kg)*p_mid;
-    }
-    
-    return x_last;
-}
-
-template<arithmetic T>
-const T KalmanFilter<T>::predict(const arithmetic auto _x) {
-    T x = static_cast<T>(_x);
-    p_mid = p_last + q;
-    kg = p_mid / (p_mid + r);
-    return (x_last + kg * (x - x_last));
-}
 
 
 #if 0
@@ -104,3 +101,6 @@ void Kalman_Filter_X(real_t Accel,real_t Gyro)		{
 
 
 #endif
+
+
+}

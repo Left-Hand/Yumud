@@ -489,6 +489,11 @@ public:
         }
     }
 
+    [[nodiscard]] __fast_inline constexpr
+    bool is_symmetric() const {
+        return this->transpose() == *this;
+    }
+
     [[nodiscard]] __fast_inline constexpr 
     T abs() const {
         return determinant();

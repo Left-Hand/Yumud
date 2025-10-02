@@ -2,6 +2,8 @@
 
 #include "core/platform.hpp"
 
+
+namespace ymd::encrypt::crc{
 // Calculates an arbitrary CRC for one byte.
 // Adapted from https://barrgroup.com/Embedded-Systems/How-To/CRC-Calculation-C-Code
 template<typename T, unsigned POLYNOMIAL>
@@ -58,4 +60,5 @@ template<unsigned POLYNOMIAL>
 __fast_inline constexpr  uint16_t calc_crc16(uint16_t remainder, const uint8_t *buffer, size_t length)
 {
     return calc_crc<uint16_t, POLYNOMIAL>(remainder, buffer, length);
+}
 }
