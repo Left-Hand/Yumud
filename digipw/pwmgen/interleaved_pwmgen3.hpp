@@ -132,7 +132,7 @@ public:
     };
 
 public:
-    InterleavedPwmGen3(hal::AdvancedTimer & timer):
+    explicit InterleavedPwmGen3(hal::AdvancedTimer & timer):
         timer_(timer), 
         pwm_u_(timer.oc<1>()), 
         pwm_v_(timer.oc<2>()), 

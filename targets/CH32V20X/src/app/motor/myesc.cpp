@@ -22,6 +22,7 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
 #include "digipw/prelude/abdq.hpp"
+#include "digipw/ctrl/pi_controller.hpp"
 #include "drivers/GateDriver/uvw_pwmgen.hpp"
 
 
@@ -69,73 +70,7 @@ static constexpr auto PHASE_RESISTANCE = 0.123_q20;
 static constexpr uint32_t CURRENT_LOOP_BW = 1000;
 static constexpr auto MAX_MODU_VOLT = q16(4.5);
 
-static void init_adc(){
 
-    hal::adc1.init({
-            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
-        },{
-            // {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T28_5},
-            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T28_5},
-            // {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T28_5},
-
-            // {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T7_5},
-            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
-            // {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T7_5},
-            // {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T7_5},
-
-            {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T7_5},
-            {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
-            {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T7_5},
-
-            // {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T13_5},
-            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T13_5},
-            // {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T13_5},
-
-            // {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T7_5},
-            // {hal::AdcChannelNth::TEMP, hal::AdcSampleCycles::T7_5},
-
-        },
-        {}
-    );
-
-    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T1CC4);
-    hal::adc1.enable_auto_inject(DISEN);
-}
-
-
-struct PiController {
-    struct Cofficients { 
-        q24 kp;                // 比例系数
-        q24 ki_discrete;       // 离散化积分系数（Ki * Ts）
-        q24 max_out;          // 最大输出电压限制
-        q20 err_sum_max;       // 积分项最大限制（抗饱和）
-    };
-
-    constexpr PiController(const Cofficients& cfg):
-        kp_(cfg.kp),
-        ki_discrete_(cfg.ki_discrete),
-        max_out_(cfg.max_out),
-        err_sum_max_(cfg.err_sum_max)
-    {}
-
-
-    constexpr void reset(){
-        err_sum_ = q20(0);
-    }
-
-    constexpr auto operator()(const q24 err) {
-        q24 output = CLAMP2(kp_ * err + err_sum_ * ki_discrete_, max_out_);
-        err_sum_ = CLAMP(err_sum_ + err, -max_out_ - output , max_out_ - output);
-        return output;
-    }
-
-private:
-    q24 kp_;                // 比例系数
-    q24 ki_discrete_;       // 离散化积分系数（Ki * Ts）
-    q24 max_out_;          // 最大输出电压限制
-    q20 err_sum_max_;       // 积分项最大限制（抗饱和）
-    q24 err_sum_;           // 误差积分累加器
-};
 
 struct CurrentRegulatorConfig{
     uint32_t fs;                 // 采样频率 (Hz)
@@ -144,9 +79,9 @@ struct CurrentRegulatorConfig{
     q20 phase_resistance;        // 相电阻 (Ω)
     q20 max_voltage;                // 最大电压 (V)
 
-    [[nodiscard]] constexpr PiController make_pi_controller() const {
+    [[nodiscard]] constexpr digipw::PiController make_pi_controller() const {
         const auto & self = *this;
-        PiController::Cofficients cof;
+        digipw::PiController::Cofficients cof;
         cof.max_out = self.max_voltage;
         q12 omega_bw = q12(TAU) * self.fc;
         cof.kp = q20(self.phase_inductance) * q20(TAU) * self.fc;
@@ -155,11 +90,29 @@ struct CurrentRegulatorConfig{
         // PANIC(cof.ki_discrete_ * 100);
         cof.err_sum_max = q24(self.max_voltage / self.phase_resistance) * q24(self.fs / omega_bw);
         // PANIC(cof.ki_discrete_ * 100, cof.err_sum_max_ * 100);
-        return PiController(cof);
+        return digipw::PiController(cof);
 
     }
 
 };
+
+static void init_adc(){
+
+    hal::adc1.init({
+            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+        },{
+
+            {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T7_5},
+
+        },
+        {}
+    );
+
+    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T1CC4);
+    hal::adc1.enable_auto_inject(DISEN);
+}
 
 void myesc_main(){
     DEBUG_UART.init({DEBUG_UART_BAUD});

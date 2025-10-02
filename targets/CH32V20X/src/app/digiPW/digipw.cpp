@@ -26,7 +26,6 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
-#include "digipw/buck/buck.hpp"
 #include "digipw/pll/sogi/spll.hpp"
 
 #include <sstream>
@@ -52,8 +51,12 @@ void test_sogi(){
     static constexpr int isr_freq = 8192;
     auto & timer = hal::timer1;
     Spll spll = {
-        isr_freq, ac_freq,
-        // 33,-32
+        typename Spll::Config{
+            .fs = isr_freq,
+            .ac_freq = ac_freq, 
+            .b0_lpf = 222.2862_r,
+            .b1_lpf = -222.034_r,
+        }
     };
 
     real_t raw_theta;

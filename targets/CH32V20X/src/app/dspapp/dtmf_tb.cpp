@@ -26,7 +26,7 @@ using Particle = dsp::Particle<q16, q16>;
 
 void dtmf_main(){
     static constexpr uint FS = 8000;
-    using DTMF = DoubleToneMultiFrequencySiggen;
+    using DTMF = dsp::DoubleToneMultiFrequencySiggen;
     DTMF dtmf = {{
         .fl_map = {70, 77, 85, 94}, 
         .fh_map = {120, 133, 148, 163}, 

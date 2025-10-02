@@ -7,7 +7,7 @@ namespace ymd::dsp{
 
 class LcgNoiseSiggen {
 public:
-    LcgNoiseSiggen(uint32_t seed = 0) : state_(seed) {}
+    constexpr explicit LcgNoiseSiggen(uint32_t seed = 0) : state_(seed) {}
 
     constexpr 
     void set_seed(uint32_t seed) { state_ = seed; }
