@@ -14,14 +14,6 @@
 using namespace ymd;
 
 
-// 适用于步进电机驱动单电阻采样方案的正交pwm输出
-// 其中A相与B相的采样点错开
-// 可以配置不同的串口输出和定时器（在下方以宏给出）
-
-// 外设：
-// UART:576000波特率输出，用于观察信号 
-// TIM:CH1和CH2构成A相驱动芯片的两个输入端 CH3和CH4构成B相驱动芯片的两个输入端
-
 static constexpr size_t CHOP_FREQ = 40_KHz;
 // #define CHOP_FREQ 200
 
@@ -142,15 +134,10 @@ void svpwm3_main(){
         // DEBUG_PRINTLN_IDLE(millis());
     }, EN);
     
-
-    // timer.attach(TimerIT::CC4,{0,0}, [&]{
-    //     trig_gpio = !trig_gpio;
-    // });
-
     while(true){
         
-        const auto t = clock::time() * real_t(5 * TAU);
-        const auto [st,ct] = sincos(t);
+        const auto ctime = clock::time() * real_t(5 * TAU);
+        const auto [st,ct] = sincos(ctime);
         const auto [u, v, w] = digipw::SVM({st * 0.5_r, ct * 0.5_r});
 
         pwm_u.set_dutycycle(u);

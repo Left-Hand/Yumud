@@ -4,7 +4,7 @@
 #include <cmath>
 
 namespace ymd{
-
+namespace details{
 template<typename T, size_t R, size_t C>
 struct JacobiSVD {
 private:
@@ -245,4 +245,10 @@ private:
 
     bool is_computed_ = false;        // 计算完成标志
 };
+}
+template<typename T, size_t R, size_t C, typename S = details::JacobiSVD<T, R, C>::Solution>
+Option<S> solve_jacobi_svd(const Matrix<T, R, C> & matrix, size_t max_iterations) {
+    return details::JacobiSVD<T, R, C>(matrix, max_iterations).solution();
+}
+
 }

@@ -46,6 +46,17 @@ using Error = INA226::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
+
+static constexpr INA226::AverageTimes times2avtimes(const uint16_t times){
+    uint8_t temp = CTZ(times);
+
+    if(times <= 64){
+        return std::bit_cast<INA226::AverageTimes>(uint16_t(temp / 2));
+    }else{
+        return std::bit_cast<INA226::AverageTimes>(uint16_t(4 + (temp - 7))); 
+    }
+} 
+
 IResult<> INA226::update(){
     if(const auto res = this->read_reg(bus_volt_reg);
         res.is_err()) return res;
@@ -97,17 +108,17 @@ IResult<> INA226::init(const Config & cfg){
         res.is_err()) return res;
     if(const auto res = enable_shunt_voltage_measure(EN);
         res.is_err()) return res;
-    if(const auto res = set_scale(cfg.mohms, cfg.max_current_a);
+    if(const auto res = set_scale(cfg.sample_res_mohms, cfg.max_current_a);
         res.is_err()) return res;
     return Ok();
 }
 
-IResult<> INA226::set_scale(const uint mohms, const uint max_current_a){
-    INA226_DEBUG(mohms, max_current_a);
+IResult<> INA226::set_scale(const uint sample_res_mohms, const uint max_current_a){
+    INA226_DEBUG(sample_res_mohms, max_current_a);
     
     current_lsb_ma_ = real_t(int(max_current_a) * 1000) >> 15;
-    // INA226_DEBUG(current_lsb_ma_, mohms * max_current_a);
-    const auto val = int(0.00512 * 32768 * 1000) / (mohms * max_current_a);
+    // INA226_DEBUG(current_lsb_ma_, sample_res_mohms * max_current_a);
+    const auto val = int(0.00512 * 32768 * 1000) / (sample_res_mohms * max_current_a);
     // PANIC(calibration_reg.as_val());
     auto reg = RegCopy(calibration_reg);
     reg.as_ref() = int16_t(val);
@@ -115,15 +126,7 @@ IResult<> INA226::set_scale(const uint mohms, const uint max_current_a){
     return write_reg(reg);
 }
 
-static constexpr INA226::AverageTimes times2avtimes(const uint16_t times){
-    uint8_t temp = CTZ(times);
 
-    if(times <= 64){
-        return std::bit_cast<INA226::AverageTimes>(uint16_t(temp / 2));
-    }else{
-        return std::bit_cast<INA226::AverageTimes>(uint16_t(4 + (temp - 7))); 
-    }
-} 
 IResult<> INA226::set_average_times(const uint16_t times){
     return set_average_times(times2avtimes(times));
 }

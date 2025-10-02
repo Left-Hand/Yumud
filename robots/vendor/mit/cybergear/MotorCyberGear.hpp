@@ -68,8 +68,8 @@ namespace details{
 
     struct CyberGear_Temperature{
         uint16_t data;
-        
-        operator real_t() const {
+
+        constexpr explicit operator real_t() const {
             return real_t(data) / 10;
         }
     };

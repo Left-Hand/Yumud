@@ -53,8 +53,15 @@ struct CgId final{
 };
 
 
-
-
+static constexpr Err<CyberGear_Error> make_err_from_cmp(const std::weak_ordering ord){
+    if (ord == std::weak_ordering::less) {
+        return Err<CyberGear_Error>(CyberGear_Error::INPUT_LOWER_THAN_LIMIT);
+    } else if (ord == std::weak_ordering::greater) {
+        return Err<CyberGear_Error>(CyberGear_Error::INPUT_HIGHER_THAN_LIMIT);
+    } else {
+        __builtin_unreachable();
+    }
+}
 
 IResult<> CyberGear::init(){
     return Ok{};
@@ -67,7 +74,7 @@ IResult<> CyberGear::request_mcu_id(){
 
 IResult<> CyberGear::ctrl(const MitParams & params){
 
-    struct Payload{
+    struct CgPayload{
         uint64_t data;
         auto cmd_rad() {return make_bitfield<0, 16, CmdRad>(data);}
         auto cmd_omega() {return make_bitfield<16, 32, CmdOmega>(data);}
@@ -75,17 +82,19 @@ IResult<> CyberGear::ctrl(const MitParams & params){
         auto cmd_kd() {return make_bitfield<48, 64, CmdKd>(data);}
     };
 
-    Payload payload = {0};
+    CgPayload payload = {0};
 
     {
-        const auto res = CmdTorque::check(params.torque) 
-            | CmdRad::check(params.rad) 
-            | CmdOmega::check(params.omega) 
-            | CmdKp::check(params.kp) 
-            | CmdKd::check(params.kd) 
-        ;
-
-        if(res) return Err(CyberGear_Error::INPUT_OUT_OF_RANGE);
+        if(const auto cmp = CmdTorque::compare(params.torque);
+            cmp != 0) return make_err_from_cmp(cmp);
+        if(const auto cmp = CmdRad::compare(params.rad);
+            cmp != 0) return make_err_from_cmp(cmp);
+        if(const auto cmp = CmdOmega::compare(params.omega);
+            cmp != 0) return make_err_from_cmp(cmp);
+        if(const auto cmp = CmdKp::compare(params.kp);
+            cmp != 0) return make_err_from_cmp(cmp);
+        if(const auto cmp = CmdKd::compare(params.kd);
+            cmp != 0) return make_err_from_cmp(cmp);
     }
 
     payload.cmd_rad() = CmdRad(params.rad);
@@ -95,7 +104,7 @@ IResult<> CyberGear::ctrl(const MitParams & params){
 
     return this->transmit(
         CgId::from(CyberGear_Command::SEND_CTRL1, 
-        CmdTorque(params.torque).data, node_id_).id,
+        CmdTorque(params.torque).value, node_id_).id,
         payload.data, sizeof(payload)
     );
 }
@@ -109,30 +118,32 @@ IResult<> CyberGear::on_mcu_id_feed_back(const uint32_t id, const uint64_t data,
     return Ok();
 }
 
+struct CgPayload{
+    uint64_t data;
+    constexpr auto rad() const {            
+        return make_bitfield<0, 16, CmdRad>(data);}
+    constexpr auto omega() const {          
+        return make_bitfield<16, 32, CmdOmega>(data);}
+    constexpr auto torque() const {         
+        return make_bitfield<32, 48, CmdTorque>(data);}
+    constexpr auto temperature() const {    
+        return make_bitfield<48, 64, Temperature>(data);}
+};
+
+
 IResult<> CyberGear::on_ctrl2_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc){
-    struct Payload{
-        uint64_t data;
-        auto rad() {            return make_bitfield<0, 16, CmdRad>(data);}
-        auto omega() {          return make_bitfield<16, 32, CmdOmega>(data);}
-        auto torque() {         return make_bitfield<32, 48, CmdTorque>(data);}
-        auto temperature() {    return make_bitfield<48, 64, Temperature>(data);}
-    };
 
 
-    if(dlc != sizeof(Payload)){
+    if(dlc != sizeof(CgPayload)){
         return Err(CyberGear_Error::RET_DLC_SHORTER);
     }
 
-    Payload payload = {data};
+    const CgPayload payload = {data};
 
-    feedback_.rad = 
-        real_t(payload.rad().as_val());
-    feedback_.omega = 
-        real_t(payload.omega().as_val());
-    feedback_.torque = 
-        real_t(payload.torque().as_val());
-    feedback_.temperature = 
-        real_t(payload.temperature().as_val());
+    feedback_.rad =         payload.rad().as_val().to<real_t>();
+    feedback_.omega =       payload.omega().as_val().to<real_t>();
+    feedback_.torque =      payload.torque().as_val().to<real_t>();
+    feedback_.temperature = static_cast<real_t>(payload.temperature().as_val());
 
     return Ok();
 }

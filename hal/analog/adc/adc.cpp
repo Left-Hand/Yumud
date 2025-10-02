@@ -76,12 +76,12 @@ void AdcPrimary::init(
             return nth == ChannelNth::TEMP or
                     nth == ChannelNth::VREF;
         };
-        for(const auto cfg : injected_list){
-            if(channel_is_temp_or_vref(cfg.nth))
+        for(const auto injected_cfg : injected_list){
+            if(channel_is_temp_or_vref(injected_cfg.nth))
                 return true;
         }
-        for(const auto cfg : regular_list){
-            if(channel_is_temp_or_vref(cfg.nth))
+        for(const auto regular_cfg : regular_list){
+            if(channel_is_temp_or_vref(regular_cfg.nth))
                 return true;
         }
         return false;

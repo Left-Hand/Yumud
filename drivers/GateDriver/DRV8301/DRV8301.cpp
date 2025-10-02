@@ -29,32 +29,32 @@ IResult<> DRV8301::init(){
 
 IResult<> DRV8301::set_peak_current(const PeakCurrent peak_current){
     auto reg = RegCopy(ctrl1_reg);
-    reg.gate_current = uint16_t(peak_current);
+    reg.gate_current = peak_current;
     return write_reg(reg);
 }
 
 IResult<> DRV8301::set_ocp_mode(const OcpMode ocp_mode){
     auto reg = RegCopy(ctrl1_reg);
-    reg.ocp_mode = uint16_t(ocp_mode);
+    reg.ocp_mode = ocp_mode;
     return write_reg(reg);
 }
 
 
 IResult<> DRV8301::set_octw_mode(const OctwMode octw_mode){
     auto reg = RegCopy(ctrl2_reg);
-    reg.octw_mode = uint16_t(octw_mode);
+    reg.octw_mode = octw_mode;
     return write_reg(reg);
 }
 
 IResult<> DRV8301::set_gain(const Gain gain){
     auto reg = RegCopy(ctrl2_reg);
-    reg.gain = uint16_t(gain);
+    reg.gain = gain;
     return write_reg(reg);
 }
 
 IResult<> DRV8301::set_oc_ad_table(const OcAdTable oc_ad_table){
     auto reg = RegCopy(ctrl1_reg);
-    reg.oc_adj_set = uint8_t(oc_ad_table);
+    reg.oc_adj_set = oc_ad_table;
     return write_reg(reg);
 }
 
@@ -64,7 +64,7 @@ IResult<> DRV8301::enable_pwm3(const Enable en){
     return write_reg(reg);
 }
 
-struct Payload{
+struct Drv8301Payload{
     uint16_t data:11;
     uint16_t addr:4;
     uint16_t write:1;
@@ -78,10 +78,10 @@ struct Payload{
     }
 };
 
-static_assert(sizeof(Payload) == 2);
+static_assert(sizeof(Drv8301Payload) == 2);
 
 IResult<> DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
-    const Payload payload = {
+    const Drv8301Payload payload = {
         .data = reg,
         .addr = uint16_t(addr),
         .write = 0
@@ -93,7 +93,7 @@ IResult<> DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
 }
 
 IResult<> DRV8301::read_reg(const RegAddress addr, uint16_t & reg){
-    Payload payload = {
+    Drv8301Payload payload = {
         .data = 0,
         .addr = uint16_t(addr),
         .write = 1

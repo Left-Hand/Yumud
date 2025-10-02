@@ -303,7 +303,7 @@ void bldc_main(){
         [[maybe_unused]] const auto alphabeta_volt = DqCoord<q16>{
             .d = 0, 
             .q = q_volt
-        }.to_alphabeta(Angle<q16>::from_turns(ctime));
+        }.to_alphabeta(Rotation2<q16>::from_angle(Angle<q16>::from_turns(ctime)));
         #else
         const auto q_volt = CLAMP2(
             pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)
@@ -312,14 +312,14 @@ void bldc_main(){
         [[maybe_unused]] const auto alphabeta_volt = DqCoordVoltage{
             0, 
             CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
-        }.to_alpha_beta(meas_elecrad);
+        }.to_alphabeta(meas_elecrad);
         #endif
         static constexpr auto INV_BUS_VOLT = q16(1.0/12);
 
-        SVPWM3::set_alpha_beta_dutycycle(
-            uvw_pwmgen, 
-            alphabeta_volt * INV_BUS_VOLT 
+        uvw_pwmgen.set_dutycycle(
+            SVM(alphabeta_volt * INV_BUS_VOLT)
         );
+
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;

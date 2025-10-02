@@ -36,10 +36,10 @@ public:
 
 
     // 更新函数
-    constexpr void update(auto alpha_beta_volt, auto alpha_beta_curr){
+    constexpr void update(auto alphabeta_volt, auto alphabeta_curr){
 
-        const auto [Valpha, Vbeta] = alpha_beta_volt;
-        const auto [Ialpha, Ibeta] = alpha_beta_curr;
+        const auto [Valpha, Vbeta] = alphabeta_volt;
+        const auto [Ialpha, Ibeta] = alphabeta_curr;
 
         // 滑模电流观测器
         est_i_alpha_ = (f_para_ * est_i_alpha_) + (g_para_ * (Valpha - e_alpha_ - z_alpha_));

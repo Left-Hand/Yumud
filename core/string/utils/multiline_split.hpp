@@ -132,23 +132,5 @@ private:
     }(), "Iterator with trimming test failed");
 }
 
-struct LineText{
-    explicit LineText(const StringView text):text_(text){}
-    
-    constexpr StringView text(){
-        return text_;
-    };
-private:
-    StringView text_;
-
-};
-
-struct MultiLineText{
-    Option<StringView> get_line(const size_t line_nth) const {
-        //TODO
-        return None;
-    }
-private:
-};
 
 }

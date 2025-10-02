@@ -177,7 +177,7 @@ public:
         const uint average_times = 16;
         const ConversionTime bus_conv_time = ConversionTime::_140us;
         const ConversionTime shunt_conv_time = ConversionTime::_140us;
-        const uint mohms;
+        const uint sample_res_mohms;
         const uint max_current_a;
     };
 

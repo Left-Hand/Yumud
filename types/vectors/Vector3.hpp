@@ -378,6 +378,10 @@ public:
         }
     }
 
+    [[nodiscard]]
+    constexpr Matrix<T, 1, 3> to_matrix() const{
+        return Matrix<T, 1, 3>(x,y,z);
+    }
 
     [[nodiscard]]
     static constexpr bool sort_by_x(const Vec3 & a, const Vec3 & b){

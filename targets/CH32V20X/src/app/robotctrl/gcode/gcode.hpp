@@ -8,6 +8,26 @@
 namespace ymd::gcode{
 
 
+struct LineText{
+    explicit constexpr LineText(const StringView text):text_(text){}
+    
+    constexpr StringView text(){
+        return text_;
+    };
+private:
+    StringView text_;
+
+};
+
+struct MultiLineText{
+    constexpr Option<StringView> get_line(const size_t line_nth) const {
+        //TODO
+        return None;
+    }
+private:
+};
+
+
 enum class GcodeParseError:uint8_t{
     NoLetterFounded,
     NoStringSegmentFounded,
@@ -38,7 +58,7 @@ struct Mnemonic final{
 
     DEF_FRIEND_DERIVE_DEBUG(Kind);
 
-    static constexpr Option<Mnemonic> from_letter(const char letter){
+    [[nodiscard]] static constexpr Option<Mnemonic> from_letter(const char letter){
         switch(letter){
             case 'G':
                 return Some(Mnemonic{Kind::General});
@@ -54,7 +74,7 @@ struct Mnemonic final{
     }
 
     template<char letter>
-    static consteval Mnemonic from_letter(){
+    [[nodiscard]] static consteval Mnemonic from_letter(){
         return from_letter(letter).unwrap();
     }
 
@@ -149,6 +169,7 @@ struct GcodeArg{
             case 'P':
             case 'T':
                 return true;
+
             default: 
                 return false;
         }

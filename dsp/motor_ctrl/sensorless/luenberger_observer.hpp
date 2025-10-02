@@ -3,21 +3,40 @@
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
 
+// 全面推导龙伯格观测器相关公式
+// https://zhuanlan.zhihu.com/p/960435762
+
 namespace ymd::dsp::motor_ctl {
 
 class LuenbergerObserver{
 public:
 
     struct Config{
-        // uint32_t fs;
+        uint32_t fs;
         // q20 R = 10.0;
         // q20 L = 2.64E-3;
         // int32_t l1 = -22000;
         // int32_t l2 = 64000;
+        q20 phase_inductance;
+        q20 phase_resistance;
     };
 
-    constexpr LuenbergerObserver(const Config & cfg){
+    constexpr explicit LuenbergerObserver(const Config & cfg){
+        reconf(cfg);
         reset();
+    }
+
+    constexpr void reconf(const Config & cfg){
+        //exp 43
+        auto & self = *this;
+        const auto R = cfg.phase_resistance;
+        const auto L = cfg.phase_inductance;
+        const auto dt = q20(1) / cfg.fs;
+
+        self.Tr_L = q20(- dt * R / L);
+        self.T_L  = q20(dt / L);
+        self.l1T  = q20(dt * R / L - 2);
+        self.l2T  = q20(L * cfg.fs);
     }
 
     constexpr void reset(){
@@ -26,39 +45,10 @@ public:
         e_alpha_ = 0;
         e_beta_ = 0;
     }
-    
 
-
-    static constexpr double freq = 32000;
-    static constexpr double T = 1.0 / freq;
-
-
-
-    // static constexpr double R = 0.9;
-    // static constexpr double L = 0.16E-3;
-
-    // static constexpr double R = 2.7;
-    // static constexpr double L = 0.72E-3;
-    // static constexpr double l1 = -20000;
-    // static constexpr double l2 = 52000;
-
-    static constexpr double R = 10.0;
-    static constexpr double L = 2.64E-3;
-    static constexpr double l1 = -22000;
-    static constexpr double l2 = 64000;
-    // static constexpr double l1 = -18000;
-    // static constexpr double l2 = 102000;
-
-    static constexpr auto Tr_L = q20(- T * R / L);
-    static constexpr auto T_L  = q20(T / L);
-    static constexpr auto l1T  = q20(l1 * T);
-    static constexpr auto l2T  = q20(l2 * T);
-
-
-
-    constexpr void update(auto alpha_beta_volt, auto alpha_beta_curr) {
-        const auto [Valpha, Vbeta] = alpha_beta_volt;
-        const auto [Ialpha, Ibeta] = alpha_beta_curr;
+    constexpr void update(auto alphabeta_volt, auto alphabeta_curr) {
+        const auto [Valpha, Vbeta] = alphabeta_volt;
+        const auto [Ialpha, Ibeta] = alphabeta_curr;
         recalc(i_alpha_, e_alpha_, Valpha, Ialpha);
         recalc(i_beta_, e_beta_, Vbeta, Ibeta);
 
@@ -77,10 +67,14 @@ public:
     q20 e_alpha_ = 0;
     q20 e_beta_ = 0;
     q20 turns_ = 0;
+    q20 Tr_L = 0;
+    q20 T_L  = 0;
+    q20 l1T  = 0;
+    q20 l2T  = 0;
 
 private:
     __fast_inline
-    static constexpr void recalc(q20 __restrict & i, q20 __restrict & e, const q20 meas_volt, const q20 meas_i){
+    constexpr void recalc(q20 __restrict & i, q20 __restrict & e, const q20 meas_volt, const q20 meas_i){
         const auto err_i = (i - meas_i);
         i += Tr_L * i + T_L * (meas_volt - e) + l1T * err_i; 
         e += l2T * err_i;

@@ -27,7 +27,7 @@ public:
         const T a2 = a*a;
 
         for(size_t i = 0; i < N / 2; ++i){
-            auto & state = states[i];
+            auto & state = states_[i];
             const T r = std::sin((T(PI)*(2*i+1)) / (2 * N));
             const T s = a2 + 2 * a * r + 1;
 
@@ -38,7 +38,7 @@ public:
     }
 
     constexpr void reset(){
-        for(auto & state : states){
+        for(auto & state : states_){
             state.reset();
         }
         result_ = 0;
@@ -67,7 +67,7 @@ protected:
         }
     };
 
-    std::array<StateVector, N/2> states;
+    std::array<StateVector, N/2> states_;
     T result_;
 };
 }
@@ -80,7 +80,7 @@ public:
     constexpr ButterHighpassFilter(const Config & cfg):
         Super(cfg){;}
     constexpr void update(T x){
-        for(auto & state : this->states){
+        for(auto & state : this->states_){
             state.w0 = state.conv(x);
 
             x = state.A * (
@@ -112,7 +112,7 @@ public:
     constexpr ButterLowpassFilter(const Config & cfg):
         Super(cfg){;}
     constexpr void update(T x){
-        for(auto & state : this->states){
+        for(auto & state : this->states_){
             state.w0 = state.conv(x);
 
             x = state.A * (

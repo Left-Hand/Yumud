@@ -116,8 +116,6 @@ IResult<> SGM58031::enable_cont_mode(const Enable en){
     return write_reg(reg);
 }
 
-IResult<> SGM58031::set_datarate(const DataRate _dr);
-
 IResult<> SGM58031::set_mux(const MUX _mux){
     auto reg = RegCopy(config_reg);
     reg.mux = _mux;

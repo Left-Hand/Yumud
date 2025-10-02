@@ -5,41 +5,43 @@
 
 namespace ymd::details{
 
-template<typename T, typename D>
-struct _PerUnit{
-    D data;
-    constexpr _PerUnit(const real_t value):data(static_cast<D>(
-        real_t(INVLERP(get_min(), get_max(), CLAMP(value, get_min(), get_max())) * std::numeric_limits<D>::max()))){;}
+template<typename Derived, typename D>
+struct _PerUnitCrtp{
+    D value;
+    constexpr explicit _PerUnitCrtp(const auto _value):value(static_cast<D>(
+        D(INVLERP(min(), max(), CLAMP(_value, min(), max())) * std::numeric_limits<D>::max()))){;}
 
-    constexpr operator real_t() const {
+    template<typename T>
+    constexpr T to() const {
         return LERP(
-            get_min(), 
-            get_max(), 
-            real_t(data) / std::numeric_limits<D>::max()
+            min(), 
+            max(), 
+            T(value) / std::numeric_limits<D>::max()
         );
     } 
 
-    static constexpr int check(const real_t value){
-        if(unlikely(value > get_max())) return 1;
-        if(unlikely(value < get_min())) return -1;
-        return 0;
+    static constexpr std::weak_ordering compare(const auto other){
+        if(unlikely(other > max())) return std::weak_ordering::greater;
+        if(unlikely(other < min())) return std::weak_ordering::less;
+        return std::weak_ordering::equivalent;
     }
 
-    static constexpr bool is_valid(const real_t value){
-        if(unlikely(value > get_max())) return false;
-        if(unlikely(value < get_min())) return false;
+    static constexpr bool is_valid(const D other){
+        if(unlikely(other > max())) return false;
+        if(unlikely(other < min())) return false;
         return true;
     }
     
 private:
-    static constexpr real_t get_min() {return std::get<0>(T::get_range());}
-    static constexpr real_t get_max() {return std::get<1>(T::get_range());}
+    static constexpr D min() {return std::get<0>(Derived::range());}
+    static constexpr D max() {return std::get<1>(Derived::range());}
 };
 
 }
 
 #define DEF_PER_UNIT(name, dtype, min, max)\
-struct name:public ::ymd::details::_PerUnit<name, dtype>{\
-    static constexpr std::tuple<real_t, real_t> get_range(){\
-        return {static_cast<real_t>(min),static_cast<real_t>(max)};}\
+struct name:public ::ymd::details::_PerUnitCrtp<name, dtype>{\
+    using _PerUnitCrtp<name, dtype>::_PerUnitCrtp;\
+    static constexpr std::tuple<dtype, dtype> range(){\
+        return {static_cast<dtype>(min),static_cast<dtype>(max)};}\
 };
