@@ -67,7 +67,7 @@ public:
         coeff_(cfg.to_coeff())
     {
         this->fn=cfg.ac_freq;
-        this->delta_t_x256=(q16(256)/cfg.fs);
+        this->dt_=(q16(256)/cfg.fs);
         reset();
     }
 
@@ -95,7 +95,7 @@ public:
         
         fo=0;
         
-        _theta_x256=0;
+        turns_=0;
         
         sine=0;
         cosine=0;
@@ -104,11 +104,9 @@ public:
     constexpr void update(const q16 u0){
         // SPLL_1PH_SOGI_run(&spll1,(q16)u0);
         // Update the u[0] with the grid value
-        u[0] = u0 >> volt_scale_bits;
+        u[0] = u0;
 
-        //
-        // Orthogonal Signal Generator
-        //
+
         osg_u[0] = 
             (coeff_.osg_b0 * (u[0]-u[2])) +
             (coeff_.osg_a1 * osg_u[1]) +
@@ -148,24 +146,20 @@ public:
 
         fo = fn + ylf[0];
 
-        _theta_x256 =_theta_x256 + (fo*(delta_t_x256*(q16)(TAU)));
+        turns_ = frac(turns_ + (dt_ * fo));
 
-        if(_theta_x256 >= (q16)(TAU * 256)){
-            _theta_x256 -= (q16)(TAU * 256);
-        }
-
-        auto [sin_val, cos_val] = sincos(_theta_x256);
+        auto [sin_val, cos_val] = sincospu(turns_);
         sine = sin_val;
         cosine = cos_val;
     }
 
-    q16 ferq() const{return this->fo;}
+    q16 freq() const{return this->fo;}
 
-    q16 theta() const{return this->_theta_x256 >> 8;}
+    Angle<q16> angle() const{return Angle<q16>::from_turns(static_cast<q16>(turns_));}
 
-    q16 ud() const{return this->u_D[0] << volt_scale_bits;}
+    q16 ud() const{return this->u_D[0];}
 
-    q16 uq() const{return this->u_Q[0] << volt_scale_bits;}
+    q16 uq() const{return this->u_Q[0];}
 
 
 private:
@@ -174,7 +168,6 @@ private:
     static constexpr q16 default_ac_freq = 50.0_r;
     static constexpr q16 default_b0_lpf = 222.2862_r;
     static constexpr q16 default_b1_lpf = -222.034_r;
-    static constexpr int volt_scale_bits = 3;
     // static constexpr int volt_scale_bits = 0;
 
 
@@ -186,9 +179,9 @@ private:
     q16   u_D[2] = {0,0};     // D-axis component
     q16   ylf[2] = {0,0};     // Loop filter data storage
     q16   fn = 0;         // Nominal frequency (Hz)
-    q16   delta_t_x256 = {0};    // Inverse of the ISR rate at which module is called
+    q24   dt_ = {0};    // Inverse of the ISR rate at which module is called
     q16   fo = {0};         // Output frequency of PLL(Hz)
-    q16   _theta_x256 = {0};      // Angle output (0-2*pi)
+    q24   turns_ = {0};      // turns output (0-1)
     q16   cosine = {0};     // Cosine value of the PLL angle
     q16   sine = {0};       // Sine value of the PLL angle
 };

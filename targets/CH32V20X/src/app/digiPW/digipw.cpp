@@ -22,14 +22,11 @@
 #include "drivers/Adc/HX711/HX711.hpp"
 #include "drivers/Wireless/Radio/HC12/HC12.hpp"
 
-#include "dsp/controller/pid_ctrl.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "digipw/pll/sogi/spll.hpp"
 
-#include <sstream>
-#include <ctime>
 
 #include "core/math/realmath.hpp"
 
@@ -43,12 +40,12 @@ using namespace ymd::digipw;
 
 
 void test_sogi(){
-    static constexpr int ac_freq = 50;
-    // static constexpr int ac_freq = 25;
-    // static constexpr int ac_freq = 5;
-    // static constexpr int isr_freq = 16384/4;
-    // static constexpr int isr_freq = 16384;
-    static constexpr int isr_freq = 8192;
+    static constexpr size_t ac_freq = 50;
+    // static constexpr size_t ac_freq = 25;
+    // static constexpr size_t ac_freq = 5;
+    // static constexpr size_t isr_freq = 16384/4;
+    // static constexpr size_t isr_freq = 16384;
+    static constexpr size_t isr_freq = 8192;
     auto & timer = hal::timer1;
     Spll spll = {
         typename Spll::Config{
@@ -107,7 +104,7 @@ void test_sogi(){
 
     while(true){
         // DEBUG_PRINTLN_IDLE(raw_theta, spll.theta(), dm);
-        DEBUG_PRINTLN(u0, raw_theta, spll.theta());
+        DEBUG_PRINTLN(u0, raw_theta, spll.angle().to_degrees());
         clock::delay(1ms);
     }
 }
@@ -164,7 +161,7 @@ void digipw_main(){
 
     // iq_t<24> duty = 0.5_r;
 
-    // int a;
+    // size_t a;
     // DEBUG_PRINTLN(a);
 
     timer.bind_cb(hal::TimerIT::Update, [&](){
