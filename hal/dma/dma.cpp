@@ -106,14 +106,14 @@ void DmaChannel::enable_rcc(Enable en){
 }
 
 
-void DmaChannel::start_transfer(void * dst, const void * src, const size_t size){
+void DmaChannel::start_transfer(size_t dst_addr, size_t src_addr, const size_t size){
 
     if(dst_is_periph(mode_)){
-        SDK_INST(inst_) -> PADDR = reinterpret_cast<uint32_t>(dst);
-        SDK_INST(inst_) -> MADDR = reinterpret_cast<uint32_t>(src);
+        SDK_INST(inst_) -> PADDR = dst_addr;
+        SDK_INST(inst_) -> MADDR = src_addr;
     }else{
-        SDK_INST(inst_) -> PADDR = reinterpret_cast<uint32_t>(src);
-        SDK_INST(inst_) -> MADDR = reinterpret_cast<uint32_t>(dst);
+        SDK_INST(inst_) -> PADDR = src_addr;
+        SDK_INST(inst_) -> MADDR = dst_addr;
     }
     SDK_INST(inst_) -> CNTR = size;
     resume();
@@ -233,13 +233,10 @@ static constexpr IRQn map_inst_to_irq(const uint8_t dma_index, const uint8_t cha
     }
 
 }
-void DmaChannel::enable_it(const NvicPriority _priority, const Enable en){
+void DmaChannel::register_nvic(const NvicPriority _priority, const Enable en){
     const IRQn irq = map_inst_to_irq(dma_index_, channel_index_);
     NvicPriority::enable(_priority, IRQn(irq), en);
 }
-
-
-
 
 void DmaChannel::set_periph_width(const size_t width){
     uint32_t tmpreg = SDK_INST(inst_)->CFGR;

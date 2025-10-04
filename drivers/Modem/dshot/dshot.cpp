@@ -17,7 +17,7 @@ void BurstDmaPwm::borrow(std::span<const uint16_t> pbuf){
     pbuf_ = pbuf;
 }
 void BurstDmaPwm::invoke(){
-    dma_channel_.transfer_mem2pph<uint16_t>(
+    dma_channel_.start_transfer_mem2pph<uint16_t>(
         &timer_oc_.cvr(), pbuf_.data(), pbuf_.size()
     );
 }

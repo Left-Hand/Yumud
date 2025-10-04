@@ -405,10 +405,10 @@ void UartHw::invoke_tx_dma(){
     if(tx_dma_.pending() == 0){
         if(tx_fifo_.available()){
             const size_t tx_amount = tx_fifo_.available();
-            (void)tx_fifo_.pop(std::span(tx_dma_buf_.begin(), tx_amount));
-            tx_dma_.transfer_mem2pph<char>(
+            (void)tx_fifo_.pop(std::span(tx_dma_buf_.data(), tx_amount));
+            tx_dma_.start_transfer_mem2pph<char>(
                 (&inst_->DATAR), 
-                tx_dma_buf_.begin(), tx_amount
+                tx_dma_buf_.data(), tx_amount
             );
         }else{
             invoke_post_tx_callback();
@@ -589,24 +589,33 @@ void UartHw::enable_tx_dma(const Enable en){
 
     if(en == EN){
         tx_dma_.init({DmaMode::toPeriph, DmaPriority::Medium});
-        tx_dma_.enable_it({1,1}, EN);
-        tx_dma_.enable_done_it(EN);
-        tx_dma_.bind_done_cb([this](){this->invoke_tx_dma();});
+        tx_dma_.register_nvic({1,1}, EN);
+        tx_dma_.enable_interrupt<DmaIT::Done>(EN);
+        tx_dma_.set_interrupt_callback<DmaIT::Done>(
+            [this](){this->invoke_tx_dma();}
+        );
     }
 }
 void UartHw::enable_rx_dma(const Enable en){
     USART_DMACmd(inst_, USART_DMAReq_Rx, en == EN);
     if(en == EN){
         rx_dma_.init({DmaMode::toMemCircular, DmaPriority::Medium});
-        rx_dma_.enable_it({1,1}, EN);
-        rx_dma_.enable_done_it(EN);
-        rx_dma_.enable_half_it(EN);
-        rx_dma_.bind_done_cb([this](){this->on_rx_dma_done();});
-        rx_dma_.bind_half_cb([this](){this->on_rx_dma_half();});
-        rx_dma_.transfer_pph2mem<char>(rx_dma_buf_.begin(), (&inst_->DATAR), UART_RX_DMA_BUF_SIZE);
+        rx_dma_.register_nvic({1,1}, EN);
+        rx_dma_.enable_interrupt<DmaIT::Done>(EN);
+        rx_dma_.enable_interrupt<DmaIT::Half>(EN);
+        rx_dma_.set_interrupt_callback<DmaIT::Done>(
+            [this](){this->on_rx_dma_done();
+        });
+
+        rx_dma_.set_interrupt_callback<DmaIT::Half>([this](){this->on_rx_dma_half();});
+        rx_dma_.start_transfer_pph2mem<char>(
+            rx_dma_buf_.data(), 
+            (&inst_->DATAR), 
+            UART_RX_DMA_BUF_SIZE
+        );
     }else{
-        rx_dma_.bind_done_cb(nullptr);
-        rx_dma_.bind_half_cb(nullptr);
+        rx_dma_.set_interrupt_callback<DmaIT::Done>(nullptr);
+        rx_dma_.set_interrupt_callback<DmaIT::Half>(nullptr);
     }
 }
 
