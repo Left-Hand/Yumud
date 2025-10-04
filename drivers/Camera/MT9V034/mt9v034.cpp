@@ -42,7 +42,6 @@ static constexpr uint8_t COARSE_SHUTTER_WIDTH_TOTAL_ADDR = 0x0B;
 static constexpr uint16_t COARSE_SHUTTER_WIDTH_TOTAL_VALUE = (60 * 7); // Related to exposure time
 
 static constexpr uint8_t VERTICAL_BLANKING_ADDR = 0x06;
-// Value = COARSE_SHUTTER_WIDTH_TOTAL_VALUE-COARSE_SHUTTER_WIDTH_1_ADDR+7
 
 static constexpr uint8_t READ_MODE_ADDR = 0x0D;
 static constexpr uint8_t READ_MODE_VALUE = 0x3A; // 4*4 binning mode & flip row and column
@@ -125,7 +124,12 @@ IResult<> MT9V034::init(){
 
     #ifdef ENABLE_DVP
     const auto size = this->size();
-    dvp.init((uint32_t *)frame_.get_data(), (uint32_t *)frame_.get_data(), size.x * size.y, size.y);
+    dvp.init({
+        .image0_addr = reinterpret_cast<uint32_t *>(frame_.data()), 
+        .image1_addr = reinterpret_cast<uint32_t *>(frame_.data()), 
+        .num_col = size.x * size.y, 
+        .num_row = size.y
+    });
     #endif
 
     return Ok();

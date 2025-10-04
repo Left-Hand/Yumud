@@ -219,7 +219,7 @@ Gpio Can::get_rx_gpio(const uint8_t remap){
     return map_inst_to_rx_gpio(inst_, remap);
 }
 
-void Can::install_gpio(const uint8_t remap){
+void Can::plant_gpio(const uint8_t remap){
     get_tx_gpio(remap).afpp();
     get_rx_gpio(remap).afpp();
 }
@@ -268,7 +268,7 @@ void Can::enable_rcc(const uint8_t remap){
 
 void Can::init(const Config & cfg){
     enable_rcc(cfg.remap);
-    install_gpio(cfg.remap);
+    plant_gpio(cfg.remap);
 
 
     const CAN_InitTypeDef CAN_InitConf = {
@@ -286,14 +286,6 @@ void Can::init(const Config & cfg){
         .CAN_TXFP = DISABLE,
     };
 
-    // DEBUG_PRINTLN(
-    //     std::bit_cast<uint8_t>(cfg.mode),
-    //     setting.prescale,
-    //     std::bit_cast<uint8_t>(setting.swj),
-    //     std::bit_cast<uint8_t>(setting.bs1),
-    //     std::bit_cast<uint8_t>(setting.bs2)
-    // );
-
     CAN_Init(inst_, &CAN_InitConf);
     init_it();
 }
@@ -306,8 +298,8 @@ size_t Can::pending(){
     else return 3;
 }
 
-Option<CanMailBox> Can::transmit(const CanMsg & msg){
-    const auto transmit_mailbox = [this] -> int{
+Option<CanMailboxNth> Can::transmit(const CanMsg & msg){
+    const auto transmit_mailbox = [this] -> int32_t{
         const uint32_t tempreg = inst_->TSTATR;
         if((tempreg & CAN_TSTATR_TME0)) return 0;
         else if((tempreg & CAN_TSTATR_TME1)) return 1;
@@ -319,14 +311,17 @@ Option<CanMailBox> Can::transmit(const CanMsg & msg){
 
     const uint32_t tempmir = msg.sxx32_identifier_as_u32();
     const uint64_t data = msg.payload_as_u64();
-    inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDLR = data & UINT32_MAX;
-    inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDHR = data >> 32;
+    auto & mailbox_setting = inst_->sTxMailBox[
+        static_cast<size_t>(transmit_mailbox)];
 
-    inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDTR = uint32_t(0xFFFF0000 | msg.size());
-    inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMIR = tempmir;
+    mailbox_setting.TXMDLR = data & UINT32_MAX;
+    mailbox_setting.TXMDHR = data >> 32;
+
+    mailbox_setting.TXMDTR = uint32_t(0xFFFF0000 | msg.size());
+    mailbox_setting.TXMIR = tempmir;
 
     return Some(
-        std::bit_cast<CanMailBox>(uint8_t(transmit_mailbox))
+        std::bit_cast<CanMailboxNth>(uint8_t(transmit_mailbox))
     );
 }
 
@@ -379,7 +374,7 @@ uint8_t Can::get_tx_errcnt(){
     return inst_->ERRSR >> 16;
 }
 
-Option<Can::Fault> Can::get_last_fault(){
+Option<Can::Fault> Can::last_fault(){
     const auto code = CAN_GetLastErrorCode(inst_);
     if(code == 0) return None;
     return Some(std::bit_cast<Can::Fault>(code));
@@ -397,8 +392,8 @@ bool Can::is_busoff(){
     return inst_->ERRSR & CAN_ERRSR_BOFF;
 }
 
-void Can::cancel_transmit(const uint8_t mbox){
-    CAN_CancelTransmit(inst_, mbox);
+void Can::cancel_transmit(const CanMailboxNth mbox){
+    CAN_CancelTransmit(inst_, std::bit_cast<uint8_t>(mbox));
 }
 
 void Can::cancel_all_transmits(){
@@ -428,8 +423,9 @@ CanMsg Can::receive(const uint8_t fifo_num){
 
     const uint8_t dlc = rxmdtr & (0x0F);
 
-    const uint64_t data = inst_->sFIFOMailBox[fifo_num].RXMDLR 
-        | (uint64_t(inst_->sFIFOMailBox[fifo_num].RXMDHR) << 32);
+    const uint64_t data = 
+        static_cast<uint64_t>(inst_->sFIFOMailBox[fifo_num].RXMDLR) 
+        | (static_cast<uint64_t>(inst_->sFIFOMailBox[fifo_num].RXMDHR) << 32);
 
     switch(fifo_num){
         case CAN_FIFO0:

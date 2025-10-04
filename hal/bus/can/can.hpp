@@ -59,6 +59,9 @@ namespace ymd::hal{
 class Gpio;
 
 struct CanFilter;
+
+
+
 class Can final{
 public:
     using BaudRate = CanBaudrate;
@@ -94,23 +97,20 @@ public:
     [[nodiscard]] bool is_tranmitting();
     [[nodiscard]] bool is_receiving();
     void enable_hw_retransmit(const Enable en);
-    void cancel_transmit(const uint8_t mbox);
+    void cancel_transmit(const CanMailboxNth mailbox_nth);
     void cancel_all_transmits();
     void enable_fifo_lock(const Enable en);
     void enable_index_priority(const Enable en);
     [[nodiscard]] uint8_t get_tx_errcnt();
     [[nodiscard]] uint8_t get_rx_errcnt();
-    [[nodiscard]] Option<CanFault> get_last_fault();
+    [[nodiscard]] Option<CanFault> last_fault();
     [[nodiscard]] bool is_busoff();
 
-    template<typename Fn>
-    void bind_tx_ok_cb(Fn && cb){cb_txok_ = std::forward<Fn>(cb);}
+    template<CanIT I, typename Fn>
+    void set_callback(Fn && cb){
+        get_callback<I>() = std::forward<Fn>(cb);
+    }
 
-    template<typename Fn>
-    void bind_tx_fail_cb(Fn && cb){cb_txfail_ = std::forward<Fn>(cb);}
-
-    template<typename Fn>
-    void bind_rx_cb(Fn && cb){cb_rx_ = std::forward<Fn>(cb);}
 
     template<size_t I>
     requires (I < 14)
@@ -132,12 +132,19 @@ private:
     Callback cb_txfail_;
     Callback cb_rx_;
 
+    template<CanIT I>
+    auto & get_callback(){
+        if constexpr (I == CanIT::TME) return cb_txok_;
+        // if constexpr (I == CanIT::)
+    }
+
+
     bool blocking_write_en_ = false;
 
     Gpio get_tx_gpio(const uint8_t remap);
     Gpio get_rx_gpio(const uint8_t remap);
 
-    void install_gpio(const uint8_t remap);
+    void plant_gpio(const uint8_t remap);
     void enable_rcc(const uint8_t remap);
     bool is_mail_box_done(const uint8_t mbox);
     void clear_mailbox(const uint8_t mbox);
@@ -151,7 +158,7 @@ private:
 
 
 
-    [[nodiscard]] Option<CanMailBox> transmit(const CanMsg & msg);
+    [[nodiscard]] Option<CanMailboxNth> transmit(const CanMsg & msg);
     [[nodiscard]] CanMsg receive(const uint8_t fifo_num);
 
     friend class CanFilter;

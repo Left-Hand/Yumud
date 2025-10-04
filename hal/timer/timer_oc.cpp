@@ -6,7 +6,7 @@ using namespace ymd;
 using namespace ymd::hal;
 
 
-void TimerOutBase::install_to_pin(const Enable en){
+void TimerOutBase::plant_to_pin(const Enable en){
     auto gpio = details::get_pin(inst_, nth_);
     if(en == EN) gpio.afpp();
 }
@@ -21,12 +21,12 @@ void TimerOC::init(const TimerOcPwmConfig & cfg){
     set_oc_mode(cfg.oc_mode);
     enable_cvr_sync(cfg.cvr_sync_en);
     set_valid_level(cfg.valid_level);
-    install_to_pin(cfg.install_en);
+    plant_to_pin(cfg.plant_en);
     enable_output(cfg.out_en);
 }
 
 void TimerOCN::init(const TimerOcnPwmConfig & cfg){
-    install_to_pin(cfg.install_en);
+    plant_to_pin(cfg.plant_en);
     enable_output(cfg.out_en);
 }
 

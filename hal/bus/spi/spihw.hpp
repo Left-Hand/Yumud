@@ -88,7 +88,7 @@ private:
     uint32_t get_bus_freq() const;
 
     void enable_rcc(const Enable en);
-    void install_gpios();
+    void plant_gpios();
     
     void enable_rx_it(const Enable en);
 

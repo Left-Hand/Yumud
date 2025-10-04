@@ -64,7 +64,7 @@ class Plotter{
     }
 
     IResult<> plot_rgb(const Image<RGB565> image, const Rect2u & area){
-        tft_.put_texture(area, image.get_data()).examine();
+        tft_.put_texture(area, image.data()).examine();
 
         return Ok();
     };
@@ -225,7 +225,7 @@ void smc2025_main(){
                 if(ins_opt.is_none()) return;
                 ins_opt.unwrap();
             }), 
-            src.get_data()
+            src.data()
         ).examine();
     };
 
@@ -240,7 +240,7 @@ void smc2025_main(){
                 if(ins_opt.is_none()) return;
                 ins_opt.unwrap();
             }), 
-            src.get_data()
+            src.data()
         ).examine();
     };
 
@@ -304,7 +304,7 @@ void smc2025_main(){
         // painter.draw_hollow_rect({0,0,7,7}).examine();
         tft.put_texture(
             Rect2u16::from_size(rgb_img.size()),
-            rgb_img.get_data()
+            rgb_img.data()
         ).examine();
 
     };

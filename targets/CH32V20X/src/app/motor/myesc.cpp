@@ -169,7 +169,7 @@ void myesc_main(){
     pwm_w_.init({});
 
     timer.oc<4>().init({
-        .install_en = DISEN
+        .plant_en = DISEN
     });
 
     timer.oc<4>().enable_output(EN);

@@ -10,6 +10,39 @@ namespace ymd{
 }
 namespace ymd::hal{
 
+enum class CanFifoNth:uint8_t{
+    _0 = 0,
+    _1 = 1
+};
+
+enum class CanMailboxNth:uint8_t{
+    _0 = 0,
+    _1 = 1,
+    _2 = 2
+};
+
+enum class CanIT:uint16_t{
+    TME = (1u << 0),
+
+    FMP0 = (1u << 1),
+    FF0 = (1u << 2),
+    FOV0 = (1u << 3),
+    FMP1 = (1u << 4),
+    FF1 = (1u << 5),
+    FOV1 = (1u << 6),
+
+    WKU = (1u << 7),
+    SLK = (1u << 8),
+
+    EWG = (1u << 9),
+    EPV = (1u << 10),
+    BOF = (1u << 11),
+    LEC = (1u << 12),
+    ERR = (1u << 13),
+};
+
+
+
 enum class CanSwj:uint8_t{
     _1tq = 0x00,
     _2tq = 0x01,
@@ -154,17 +187,13 @@ OutputStream & operator<<(OutputStream & os, const CanFault & fault);
 
 enum class CanError:uint8_t{
     BlockingTransmitTimeout,
-    NoMailboxFounded,
+    NoMailboxAvailable,
     SoftFifoOverflow
 };
 
 OutputStream & operator<<(OutputStream & os, const CanError & error);
 
-enum class CanMailBox:uint8_t{
-    _0 = 0,
-    _1 = 1,
-    _2 = 2
-};
+
 
 enum class CanRtr:uint8_t{
     Data = 0,

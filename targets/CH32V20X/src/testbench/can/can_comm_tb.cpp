@@ -68,7 +68,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
                     can.get_tx_errcnt(), 
                     can.get_rx_errcnt(), 
                     can.is_busoff(), 
-                    can.get_last_fault()
+                    can.last_fault()
                 );
                 clock::delay(2ms);
             }

@@ -15,7 +15,7 @@ DigitProbability match_numbers(
 ){
     const auto tmp_size = roi.size;
     auto fault = src.clone(Rect2u(roi.top_left, tmp_size));
-    auto fault_bina = fault.mirror<Gray>();
+    auto fault_bina = fault.make_mirror<Gray>();
 
     DigitProbability digit_p = {0};
     for(size_t i = 0; i < MAX_NUMBERS; i++){

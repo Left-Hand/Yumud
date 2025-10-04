@@ -184,7 +184,7 @@ public:
         pwm_trig_.init({
             .oc_mode = hal::TimerOcMode::ActiveBelowCvr,
             .cvr_sync_en = DISEN,
-            .install_en = EN,
+            .plant_en = EN,
         });
 
         pwm_trig_.set_dutycycle(TWO_BY_3);

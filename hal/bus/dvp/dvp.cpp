@@ -8,7 +8,7 @@ using namespace ymd;
 using namespace ymd::hal;
 #ifdef ENABLE_DVP
 
-void Dvp::install(){
+void Dvp::plant(){
     hal::PA<9>().inpu();
     hal::PA<10>().inpu();
     hal::PC<8>().inpu();
@@ -23,9 +23,14 @@ void Dvp::install(){
     hal::PA<5>().inpu();
 }
 
-void Dvp::init(uint32_t *image0_addr, uint32_t *image1_addr, uint16_t col_len, uint16_t row_len){
-    install();
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DVP, ENABLE);
+
+void Dvp::enable_rcc(const Enable en){
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DVP, en == EN);
+}    
+
+void Dvp::init(const Config & cfg){
+    plant();
+    enable_rcc(EN);
 
     // 使用8位采集模式，PCLK上升沿采样数据，HSYNC高电平有效，VSYNC高电平数据有效，使能DVP
     DVP->CR0 = RB_DVP_D8_MOD | RB_DVP_V_POLAR | RB_DVP_ENABLE;
@@ -33,11 +38,11 @@ void Dvp::init(uint32_t *image0_addr, uint32_t *image1_addr, uint16_t col_len, u
     // 捕获所有帧，捕获完整图像，连续模式，使能DMA
     DVP->CR1 = DVP_RATE_100P | RB_DVP_DMA_EN;
 
-    DVP->ROW_NUM = row_len;                     // rows行数
-    DVP->COL_NUM = col_len;                     // cols列数
+    DVP->ROW_NUM = cfg.num_row;                     // rows行数
+    DVP->COL_NUM = cfg.num_col;                     // cols列数
 
-    DVP->DMA_BUF0 = (uint32_t)image0_addr;        // DMA addr0
-    DVP->DMA_BUF1 = (uint32_t)image1_addr;        // DMA addr1
+    DVP->DMA_BUF0 = reinterpret_cast<size_t>(cfg.image0_addr);        // DMA addr0
+    DVP->DMA_BUF1 = reinterpret_cast<size_t>(cfg.image1_addr);        // DMA addr1
 
     // 使能中断
     DVP->IER = RB_DVP_IE_FRM_DONE;              // 开启帧接收完成中断

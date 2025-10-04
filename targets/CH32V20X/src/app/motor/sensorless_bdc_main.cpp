@@ -89,7 +89,7 @@ void at8222_tb(){
 
     timer.set_trgo_source(hal::TimerTrgoSource::OC4R);
 
-    timer.oc<4>().init({.install_en = DISEN});
+    timer.oc<4>().init({.plant_en = DISEN});
 
     // timer.oc(4).cvr() = timer.arr() - 1; 
     // timer.oc(4).cvr() = int(timer.arr() * 0.1_r); 

@@ -178,7 +178,7 @@ void bldc_main(){
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
-    timer1.oc<4>().init({.install_en = DISEN});
+    timer1.oc<4>().init({.plant_en = DISEN});
     timer1.oc<4>().cvr() = timer1.arr() - 1;
 
     pwm_u.init({});
