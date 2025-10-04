@@ -27,9 +27,6 @@
 
 namespace ymd::drivers{
 
-
-
-
 enum class MLX90640_ErrorKind:uint8_t{
     BrokenPixelsNum = 3,
     OutlierPixelsNum = 4,
@@ -43,10 +40,6 @@ enum class MLX90640_ErrorKind:uint8_t{
 DEF_DERIVE_DEBUG(MLX90640_ErrorKind)
 DEF_ERROR_SUMWITH_HALERROR(MLX90640_Error, MLX90640_ErrorKind)
 
-
-
-
-#define SCALEALPHA 0.000001
     
 struct paramsMLX90640{
     int16_t kVdd;
@@ -130,11 +123,6 @@ public:
 
     void BadPixelsCorrection(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params);
 
-
-    void I2CInit(void);
-    IResult<> I2CGeneralReset(void);
-
-    void I2CFreqSet(int freq);
 
     IResult<> I2CRead(uint16_t startAddress, uint16_t nMemAddressRead, uint16_t *data){
 

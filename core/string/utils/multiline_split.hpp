@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core/string/string_view.hpp"
+#include "core/utils/scope_guard.hpp"
+
 
 namespace ymd::strconv2{
 
@@ -13,19 +15,20 @@ struct StringSplitIter {
     }
 
     constexpr bool has_next() const {
-        return start_ < text_.size();
+        return pos_ < text_.size();
     }
 
-    constexpr StringView next() {
-        const StringView line = text_.substr_by_len(start_, end_ - start_);
-        start_ = end_ + 1; // Skip the newline character
-        seek_next_line();
-        return line;
+    constexpr Option<StringView> next() {
+        auto guard = make_scope_guard([&]{
+            pos_ = end_ + 1; // Skip the newline character
+            seek_next_line();
+        });
+        return text_.substr_by_len(pos_, end_ - pos_);
     }
 
 private:
     constexpr void seek_next_line() {
-        end_ = start_;
+        end_ = pos_;
         while (end_ < text_.size() && text_[end_] != delimiter_) {
             ++end_;
         }
@@ -33,7 +36,7 @@ private:
 
     const StringView text_;
     const char delimiter_;
-    size_t start_   = 0;  // Start of current line
+    size_t pos_   = 0;  // Start of current line
     size_t end_     = 0;    // End of current line (points to '\n' or text_.size())
 };
 
@@ -61,7 +64,7 @@ private:
         StringView single = "hello";
         StringSplitIter single_iter(single, '\n');
         if (!single_iter.has_next()) return false;
-        if (!test_string_view_equal(single_iter.next(), "hello")) return false;
+        if (!test_string_view_equal(single_iter.next().unwrap(), "hello")) return false;
         if (single_iter.has_next()) return false;
         return true;
     }(), "Single line test failed");
@@ -72,13 +75,13 @@ private:
         StringSplitIter multi_iter(multi, '\n');
         
         if (!multi_iter.has_next()) return false;
-        if (!test_string_view_equal(multi_iter.next(), "line1")) return false;
+        if (!test_string_view_equal(multi_iter.next().unwrap(), "line1")) return false;
         
         if (!multi_iter.has_next()) return false;
-        if (!test_string_view_equal(multi_iter.next(), "line2")) return false;
+        if (!test_string_view_equal(multi_iter.next().unwrap(), "line2")) return false;
         
         if (!multi_iter.has_next()) return false;
-        if (!test_string_view_equal(multi_iter.next(), "line3")) return false;
+        if (!test_string_view_equal(multi_iter.next().unwrap(), "line3")) return false;
         
         if (multi_iter.has_next()) return false;
         return true;
@@ -90,13 +93,13 @@ private:
         StringSplitIter iter(with_empty, '\n');
         
         if (!iter.has_next()) return false;
-        if (!test_string_view_equal(iter.next(), "")) return false;
+        if (!test_string_view_equal(iter.next().unwrap(), "")) return false;
         
         if (!iter.has_next()) return false;
-        if (!test_string_view_equal(iter.next(), "line")) return false;
+        if (!test_string_view_equal(iter.next().unwrap(), "line")) return false;
         
         if (!iter.has_next()) return false;
-        if (!test_string_view_equal(iter.next(), "")) return false;
+        if (!test_string_view_equal(iter.next().unwrap(), "")) return false;
         
         if (iter.has_next()) return false;
         return true;
@@ -110,7 +113,7 @@ private:
         
         StringView all_ws = " \t\r\n ";
         trimmed = all_ws.trim();
-        if (!trimmed.is_empty()) return false;
+        if (trimmed.length() != 0) return false;
         return true;
     }(), "Trim test failed");
 
@@ -120,11 +123,11 @@ private:
         StringSplitIter iter(text, '\n');
         
         if (!iter.has_next()) return false;
-        StringView line1 = iter.next().trim();
+        StringView line1 = iter.next().unwrap().trim();
         if (!test_string_view_equal(line1, "line1")) return false;
         
         if (!iter.has_next()) return false;
-        StringView line2 = iter.next().trim();
+        StringView line2 = iter.next().unwrap().trim();
         if (!test_string_view_equal(line2, "line2")) return false;
         
         if (iter.has_next()) return false;

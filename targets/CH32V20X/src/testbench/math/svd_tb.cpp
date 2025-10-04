@@ -21,6 +21,8 @@
 #include "types/gesture/isometry2.hpp"
 #include "types/gesture/isometry3.hpp"
 
+#include "core/string/string_view.hpp"
+
 using namespace ymd;
 
 #define UART hal::uart6
@@ -90,6 +92,8 @@ static constexpr Matrix3x3<T> quat_to_mat3x3(const Quat<T> q){
         2 * (x * z - y * w),                2 * (y * z + x * w),            1 - 2 * (x * x + y * y)
     );
 }
+
+
 
 
 namespace ymd::slam::details{

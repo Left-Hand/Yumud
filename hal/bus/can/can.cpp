@@ -6,7 +6,6 @@
 
 #include "core/debug/debug.hpp"
 
-
 using namespace ymd;
 using namespace ymd::hal;
 
@@ -271,14 +270,13 @@ void Can::init(const Config & cfg){
     enable_rcc(cfg.remap);
     install_gpio(cfg.remap);
 
-    const auto setting = cfg.baudrate.dump();
 
     const CAN_InitTypeDef CAN_InitConf = {
-        .CAN_Prescaler = setting.prescale,
+        .CAN_Prescaler = cfg.coeffs.prescale,
         .CAN_Mode = std::bit_cast<uint8_t>(cfg.mode),
-        .CAN_SJW = std::bit_cast<uint8_t>(setting.swj),
-        .CAN_BS1 = std::bit_cast<uint8_t>(setting.bs1),
-        .CAN_BS2 = std::bit_cast<uint8_t>(setting.bs2),
+        .CAN_SJW = std::bit_cast<uint8_t>(cfg.coeffs.swj),
+        .CAN_BS1 = std::bit_cast<uint8_t>(cfg.coeffs.bs1),
+        .CAN_BS2 = std::bit_cast<uint8_t>(cfg.coeffs.bs2),
 
         .CAN_TTCM = DISABLE,
         .CAN_ABOM = ENABLE,
@@ -448,10 +446,7 @@ CanMsg Can::receive(const uint8_t fifo_num){
 }
 
 
-CanFilter Can::filter(const size_t idx) const {
-    if(idx > 13) HALT;
-    return CanFilter(this->inst_, idx);
-}
+
 
 void Can::on_tx_interrupt(){
 
@@ -600,10 +595,10 @@ void CAN2_SCE_IRQHandler(void){
 namespace ymd::hal{
 
 #ifdef ENABLE_CAN1
-Can can1 = {CAN1};
+Can can1 = Can{CAN1};
 #endif
 
 #ifdef ENABLE_CAN2
-Can can2 = {CAN2};
+Can can2 = Can{CAN2};
 #endif
 }

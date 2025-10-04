@@ -40,14 +40,15 @@ void laser_ctl_main(){
     DEBUG_PRINTLN("powerup");
 
     auto & can = hal::can1;
+
     can.init({
-        .baudrate = hal::CanBaudrate::_1M,
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
         .mode = hal::CanMode::Normal,
         .remap = 0
     });
 
 
-    can.filter(0).apply(
+    can.filters<0>().apply(
         hal::CanFilterConfig::from_accept_all()
     );
 

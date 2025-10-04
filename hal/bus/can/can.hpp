@@ -69,13 +69,13 @@ public:
     using Callback = std::function<void(void)>;
 
     struct Config{
-        BaudRate baudrate;
+        CanBitTimmingCoeffs coeffs;
         Mode mode = Mode::Normal;
         uint8_t remap = CAN1_REMAP;
     };
 
 public:
-    Can(CAN_TypeDef * instance):inst_(instance){;}
+    explicit Can(CAN_TypeDef * inst):inst_(inst){;}
     Can(const Can & other) = delete;
     Can(Can && other) = delete;
 
@@ -112,7 +112,11 @@ public:
     template<typename Fn>
     void bind_rx_cb(Fn && cb){cb_rx_ = std::forward<Fn>(cb);}
 
-    CanFilter filter(const size_t idx) const ;
+    template<size_t I>
+    requires (I < 14)
+    CanFilter filters() const {
+        return CanFilter(this->inst_, Nth(I));
+    }
 
 private:
     CAN_TypeDef * inst_;

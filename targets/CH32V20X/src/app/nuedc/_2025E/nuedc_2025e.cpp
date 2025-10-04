@@ -335,11 +335,11 @@ void nuedc_2025e_main(){
     clock::delay(2ms);
 
     can.init({
-        .baudrate = hal::CanBaudrate::_1M, 
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
         .mode = hal::CanMode::Normal
     });
 
-    can.filter(0) 
+    can.filters<0>() 
         .apply(hal::CanFilterConfig::from_pair(
             hal::CanStdIdMaskPair::from_id_and_mask(
                 comb_role_and_cmd(self_node_role_, uint8_t(0x00)), 
@@ -371,7 +371,7 @@ void nuedc_2025e_main(){
     mp6540_nfault_gpio_.inana();
 
     can.init({
-        .baudrate = hal::CanBaudrate::_1M,
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
         .mode = hal::CanMode::Normal
     });
 

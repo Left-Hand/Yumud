@@ -295,7 +295,7 @@ void myservo_main(){
 
     // can.init(CanBaudrate::_1M, CanMode::Internal);
     can.init({
-        .baudrate = hal::CanBaudrate::_1M
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
     init_adc();
 

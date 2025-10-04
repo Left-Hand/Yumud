@@ -61,7 +61,7 @@ private:
             
             if(line[i] != delimiter and 
                 (i + 1 >= line.length() or line[i + 1] == delimiter or line[i + 1] == '\0')){
-                strs.push_back(line.substr_by_range(from, i+1));
+                strs.push_back(line.substr_by_range(from, i+1).unwrap());
             }
     
             if((strs.size() == STR_MAX_PIECES)){

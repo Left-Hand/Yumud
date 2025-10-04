@@ -3,6 +3,7 @@
 #include "core/string/string_view.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
+#include "core/utils/scope_guard.hpp"
 
 
 #include "hal/bus/can/can_msg.hpp"
@@ -22,8 +23,15 @@ enum class AsciiCanError:uint8_t{
     InvalidExtId,
     ArgTooLong,
     ArgTooShort,
+    
+    StdIdTooLong,
+    StdIdTooShort,
+
+    ExtIdTooLong,
+    ExtIdTooShort,
+
     UnsupportedCharInHex,
-    DataExistsInRemote,
+    InvalidFieldInRemoteMsg,
     NotImplemented
 };
 
@@ -33,14 +41,13 @@ public:
     constexpr StringCutter(const StringView str): 
         str_(str){}
 
-    constexpr StringView fetch_next(const size_t len){
-        const auto end = MIN(pos_ + len, str_.length());
-        const auto res = str_.substr_by_range(pos_, end);
-        pos_ = end;
-        return res;
+    constexpr Option<StringView> fetch_next(const size_t len){
+        const auto next_pos = MIN(pos_ + len, str_.length());
+        const auto guard = make_scope_guard([&]{pos_ = next_pos;});
+        return str_.substr_by_range(pos_, next_pos);
     }
 
-    constexpr StringView fetch_remaining(){
+    constexpr Option<StringView> fetch_remaining(){
         return str_.substr(pos_);
     }
 private:
