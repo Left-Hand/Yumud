@@ -39,7 +39,7 @@ static void ak09911c_test(drivers::AK09911C & aku){
     };
 
     hal::timer1.init({ISR_FREQ}, EN);
-    hal::timer1.attach(hal::TimerIT::Update, {0,0},[&]{
+    hal::timer1.attach<hal::TimerIT::Update>({0,0},[&]{
         measure();
     }, EN);
     

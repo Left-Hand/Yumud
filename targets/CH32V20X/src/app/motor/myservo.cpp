@@ -226,7 +226,7 @@ void myservo_main(){
 
         hal::timer3.init({
             .freq = TIM_FREQ, 
-            .mode = hal::TimerCountMode::CenterAlignedUpTrig
+            .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
         }, EN);
 
         auto & pwm_pos = hal::timer3.oc<1>();
@@ -305,7 +305,7 @@ void myservo_main(){
 
     hal::timer3.init({
         .freq = TIM_FREQ, 
-        .mode = hal::TimerCountMode::CenterAlignedUpTrig
+        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
     real_t sense_raw_volt;

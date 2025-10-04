@@ -32,11 +32,9 @@ void m3508_main(){
     
     hal::timer3.init({CB_FREQ}, EN);
 
-    hal::timer3.bind_cb(hal::TimerIT::Update, [&](){
+    hal::timer3.attach<hal::TimerIT::Update>({0,0}, [&](){
         port.tick();
-    });
-
-    hal::timer3.enable_it(hal::TimerIT::Update, {0,0}, EN);
+    }, EN);
 
     auto & motor = port[4];
     auto & motor2 = port[1];

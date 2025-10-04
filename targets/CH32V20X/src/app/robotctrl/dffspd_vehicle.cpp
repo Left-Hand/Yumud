@@ -224,7 +224,7 @@ void diffspd_vehicle_main(){
 
     timer.init({
         .freq = PWM_FREQ,
-        .mode = hal::TimerCountMode::Up
+        .count_mode = hal::TimerCountMode::Up
     }, EN);
 
     timer.enable_arr_sync(EN);
@@ -349,8 +349,7 @@ void diffspd_vehicle_main(){
         );
     };
 
-    timer.attach(
-        hal::TimerIT::Update, 
+    timer.attach<hal::TimerIT::Update>(
         {0,0}, 
         [&]{
             motor_pulse_detect_cb();

@@ -64,7 +64,7 @@ void dtmf_main(){
         .freq = FS
     }, EN);
 
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
+    hal::timer1.attach<hal::TimerIT::Update>({0,0}, [&](){
         const auto t = clock::time();
         dtmf.update(t);
         const auto wave = q16(dtmf.result());

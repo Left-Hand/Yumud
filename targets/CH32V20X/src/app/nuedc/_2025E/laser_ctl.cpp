@@ -70,7 +70,7 @@ void laser_ctl_main(){
 
     hal::timer3.init({
             .freq = PWM_FREQ, 
-            .mode = hal::TimerCountMode::CenterAlignedUpTrig
+            .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
         },  
         EN
     );

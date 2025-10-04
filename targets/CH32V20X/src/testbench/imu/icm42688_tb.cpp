@@ -56,7 +56,7 @@ static void icm42688_tb(ICM42688 & imu){
 
     Vec3<q24> gyr_ = Vec3<q24>::ZERO;
     Vec3<q24> acc_ = Vec3<q24>::ZERO;
-    hal::timer1.attach(hal::TimerIT::Update, {0,0},[&]{
+    hal::timer1.attach<hal::TimerIT::Update>({0,0},[&]{
         const auto u0 = clock::micros();
         imu.update().examine();
         const auto gyr = imu.read_gyr().examine();

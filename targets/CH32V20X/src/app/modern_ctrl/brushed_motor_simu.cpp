@@ -126,7 +126,7 @@ void test_burshed_motor(){
     real_t t = 0.0_r;
 
     hal::timer1.init({ISR_FREQ}, EN);
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, 
+    hal::timer1.attach<hal::TimerIT::Update>({0,0}, 
         [&]{
             watch_gpio.clr();
             t += (1.0_r / ISR_FREQ);

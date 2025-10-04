@@ -355,7 +355,7 @@ void nuedc_2025e_main(){
 
     timer1.init({
         .freq = CHOPPER_FREQ, 
-        .mode = hal::TimerCountMode::CenterAlignedUpTrig
+        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
     timer1.oc<4>().init({.install_en = DISEN});

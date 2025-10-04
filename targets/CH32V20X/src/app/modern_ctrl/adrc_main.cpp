@@ -247,8 +247,7 @@ void adrc_main(){
     };
 
     hal::timer1.init({.freq = 20000}, EN);
-    hal::timer1.attach(
-        hal::TimerIT::Update, 
+    hal::timer1.attach<hal::TimerIT::Update>(
         {0, 0}, [&]{
             command_shaper_poller();
         }, 
