@@ -13,6 +13,8 @@
 #include "algo/encrypt/base64.hpp"
 #include "algo/encrypt/sha256.hpp"
 #include "algo/encrypt/aes.hpp"
+#include "algo/encrypt/lz77.hpp"
+#include "algo/encrypt/curve25519.hpp"
 
 using namespace ymd;
 using namespace ymd::encrypt;
