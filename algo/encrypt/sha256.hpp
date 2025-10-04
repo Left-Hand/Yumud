@@ -89,11 +89,6 @@ struct Sha256Context{
         0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19
     };
 
-    uint64_t    length = 0;
-    std::array<uint32_t, 8>    state = INITIAL_STATE;
-    uint32_t    curlen = 0;
-    std::array<uint8_t, BLOCK_SIZE>     buf = {};
-
     constexpr void update(const std::span<const uint8_t> pbuf){
         uint32_t n;
 
@@ -164,6 +159,10 @@ struct Sha256Context{
     }
 
 private:
+    uint64_t    length = 0;
+    std::array<uint32_t, 8>    state = INITIAL_STATE;
+    uint32_t    curlen = 0;
+    std::array<uint8_t, BLOCK_SIZE>     buf = {};
 
     constexpr void transform(std::span<const uint8_t, BLOCK_SIZE> block){
         std::array<uint32_t, 8> S = state;

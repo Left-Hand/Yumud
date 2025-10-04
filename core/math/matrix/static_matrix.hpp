@@ -11,18 +11,18 @@ template<arithmetic T, size_t R, size_t C>
 class Matrix{
 
 public:
-    static constexpr Matrix from_uninitialized(){
+    [[nodiscard]] __fast_inline static constexpr Matrix from_uninitialized(){
         return Matrix();
     }
 
-    __fast_inline static constexpr Matrix from_zero(){
+    [[nodiscard]] __fast_inline static constexpr Matrix from_zero(){
         Matrix ret = Matrix::from_uninitialized();
         ret.fill(0);
         return ret;
     }
 
     // 单位矩阵生成函数
-    __fast_inline static constexpr Matrix<T, R, C> from_identity(){
+    [[nodiscard]] __fast_inline static constexpr Matrix<T, R, C> from_identity(){
         static_assert(R == C, "Identity matrix must be square.");
 
         Matrix<T, R, C> ret = Matrix<T, R, C>::from_zero();
@@ -37,7 +37,7 @@ public:
 
     template<typename ... Args>
     requires (sizeof...(Args) == R * C) 
-    __fast_inline constexpr explicit 
+    [[nodiscard]] __fast_inline constexpr explicit 
     Matrix(Args... args) {
         static_assert(sizeof...(args) == R * C);
         auto values = std::array<T, R * C>{{static_cast<T>(args)...}};
@@ -62,6 +62,7 @@ public:
 
     [[nodiscard]] __fast_inline constexpr size_t rows() const { return R;}
     [[nodiscard]] __fast_inline constexpr size_t cols() const { return C;}
+
     [[nodiscard]] __fast_inline constexpr std::span<T, C> 
     operator[](const size_t row) 
         {return std::span<T, C>(&storage_[row * C], C);}
@@ -94,6 +95,10 @@ public:
     [[nodiscard]] __fast_inline constexpr size_t size() const { return R*C;}
     [[nodiscard]] __fast_inline constexpr T * data() { return storage_.data();}
     [[nodiscard]] __fast_inline constexpr const T * data() const { return storage_.data(); }
+
+    [[nodiscard]] __fast_inline constexpr T sum() const {
+        return std::reduce(storage_.begin(), storage_.end());
+    }
 
     template<size_t R2, size_t C2>
     [[nodiscard]] __fast_inline constexpr Matrix<T, R2, C2> submatrix(
@@ -468,7 +473,123 @@ public:
         }
     }
 
-
+    #if 0
+    [[nodiscard]] __fast_inline constexpr auto symmetric_eigen() const {
+        static_assert(R == C, "Eigen decomposition requires a square matrix");
+        
+        struct EigenSolution {
+            Matrix<T, R, 1> values;
+            Matrix<T, R, R> vectors;
+        };
+        
+        // Only works for symmetric matrices
+        if constexpr (R == 2) {
+            // Analytical solution for 2x2 symmetric matrix
+            const T a = this->at(0, 0);
+            const T b = this->at(0, 1);
+            const T c = this->at(1, 1);
+            
+            const T trace = a + c;
+            const T det = a * c - b * b;
+            const T discriminant = sqrt(trace * trace - 4 * det);
+            
+            EigenSolution solution;
+            solution.values.at(0, 0) = (trace + discriminant) / 2;
+            solution.values.at(1, 0) = (trace - discriminant) / 2;
+            
+            if (abs(b) < 1e-10) {
+                // Already diagonal
+                solution.vectors = Matrix<T, 2, 2>::from_identity();
+            } else {
+                // Calculate eigenvectors
+                const T lambda1 = solution.values.at(0, 0);
+                const T lambda2 = solution.values.at(1, 0);
+                
+                // First eigenvector
+                const T norm1 = sqrt(b*b + (lambda1 - c)*(lambda1 - c));
+                solution.vectors.at(0, 0) = b / norm1;
+                solution.vectors.at(1, 0) = (lambda1 - c) / norm1;
+                
+                // Second eigenvector (orthogonal to first)
+                const T norm2 = sqrt(b*b + (lambda2 - c)*(lambda2 - c));
+                solution.vectors.at(0, 1) = (lambda2 - c) / norm2;
+                solution.vectors.at(1, 1) = -b / norm2;
+            }
+            
+            return solution;
+        } else {
+            // For larger matrices, use iterative Jacobi method
+            EigenSolution solution;
+            solution.vectors = Matrix<T, R, R>::from_identity();
+            Matrix<T, R, R> A = *this;
+            
+            constexpr int max_iterations = 100;
+            constexpr T tolerance = 1e-12;
+            
+            for (int iter = 0; iter < max_iterations; iter++) {
+                // Find largest off-diagonal element
+                T max_val = 0;
+                size_t p = 0, q = 1;
+                
+                for (size_t i = 0; i < R - 1; i++) {
+                    for (size_t j = i + 1; j < R; j++) {
+                        if (abs(A.at(i, j)) > max_val) {
+                            max_val = abs(A.at(i, j));
+                            p = i;
+                            q = j;
+                        }
+                    }
+                }
+                
+                // Check for convergence
+                if (max_val < tolerance) {
+                    break;
+                }
+                
+                // Calculate rotation angle
+                const T app = A.at(p, p);
+                const T aqq = A.at(q, q);
+                const T apq = A.at(p, q);
+                
+                const T phi = 0.5 * atan2(2 * apq, aqq - app);
+                const T c = cos(phi);
+                const T s = sin(phi);
+                
+                // Apply rotation to matrix A
+                A.at(p, p) = c * c * app + s * s * aqq - 2 * c * s * apq;
+                A.at(q, q) = s * s * app + c * c * aqq + 2 * c * s * apq;
+                A.at(p, q) = 0;
+                A.at(q, p) = 0;
+                
+                for (size_t i = 0; i < R; i++) {
+                    if (i != p && i != q) {
+                        const T aip = A.at(i, p);
+                        const T aiq = A.at(i, q);
+                        A.at(i, p) = c * aip - s * aiq;
+                        A.at(p, i) = A.at(i, p);
+                        A.at(i, q) = s * aip + c * aiq;
+                        A.at(q, i) = A.at(i, q);
+                    }
+                }
+                
+                // Update eigenvectors
+                for (size_t i = 0; i < R; i++) {
+                    const T vip = solution.vectors.at(i, p);
+                    const T viq = solution.vectors.at(i, q);
+                    solution.vectors.at(i, p) = c * vip - s * viq;
+                    solution.vectors.at(i, q) = s * vip + c * viq;
+                }
+            }
+            
+            // Extract eigenvalues (diagonal elements)
+            for (size_t i = 0; i < R; i++) {
+                solution.values.at(i, 0) = A.at(i, i);
+            }
+            
+            return solution;
+        }
+    }
+    #endif
 
     [[nodiscard]] __fast_inline constexpr
     T determinant() const{
@@ -492,11 +613,6 @@ public:
     [[nodiscard]] __fast_inline constexpr
     bool is_symmetric() const {
         return this->transpose() == *this;
-    }
-
-    [[nodiscard]] __fast_inline constexpr 
-    T abs() const {
-        return determinant();
     }
 
     [[nodiscard]] __fast_inline constexpr 
