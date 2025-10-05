@@ -122,6 +122,7 @@ Mnist::Result Mnist::update(const Image<Gray> & img, const Vec2u & pos){
 }
 
 Mnist::Result Mnist::update(const Image<Gray> & img){
+    #if 0
     tm_mat_t in_uint8 = {3,IMAGE_SIZE.x,IMAGE_SIZE.y,IMAGE_CHANNELS, (mtype_t*)img.data()};
     auto err = tm_preprocess(&mdl, TMPP_UINT2INT, &in_uint8, &in); 
 
@@ -131,5 +132,6 @@ Mnist::Result Mnist::update(const Image<Gray> & img){
         parse_output();        
     }
 
+    #endif
     return output;
 }

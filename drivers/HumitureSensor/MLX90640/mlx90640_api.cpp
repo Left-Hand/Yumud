@@ -106,7 +106,7 @@ static bool IsPixelBad(uint16_t pixel,paramsMLX90640 *params)
     return false;     
 }     
 
-static float GetVdd(uint16_t *frameData, const paramsMLX90640 *params)
+static float get_vdd(uint16_t *frameData, const paramsMLX90640 *params)
 {
     float vdd;
     float resolutionCorrection;
@@ -122,7 +122,7 @@ static float GetVdd(uint16_t *frameData, const paramsMLX90640 *params)
 
 
 
-IResult<> MLX90640::DumpEE(uint16_t *eeData)
+IResult<> MLX90640::dump_ee(uint16_t *eeData)
 {
     return I2CRead(EEPROM_START_ADDRESS, EEPROM_DUMP_NUM, eeData);
 }
@@ -856,7 +856,7 @@ static IResult<> ExtractDeviatingPixels(uint16_t *eeData, paramsMLX90640 *mlx906
 //------------------------------------------------------------------------------
 
 
-IResult<> MLX90640::SynchFrame(uint8_t slaveAddr)
+IResult<> MLX90640::synch_frame(uint8_t slaveAddr)
 {
     uint16_t dataReady = 0;
     uint16_t statusRegister;
@@ -875,7 +875,7 @@ IResult<> MLX90640::SynchFrame(uint8_t slaveAddr)
     return Ok();
 }
 
-Result<uint16_t, Error> MLX90640::GetFrameData(uint16_t *frameData)
+Result<uint16_t, Error> MLX90640::get_frame_data(uint16_t *frameData)
 {
     uint16_t dataReady = 0;
     uint16_t controlRegister1;
@@ -927,7 +927,7 @@ Result<uint16_t, Error> MLX90640::GetFrameData(uint16_t *frameData)
     return Ok(frameData[833]);    
 }
 
-IResult<> MLX90640::ExtractParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+IResult<> MLX90640::extract_parameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
 {
     
     ExtractVDDParameters(eeData, mlx90640);
@@ -948,7 +948,7 @@ IResult<> MLX90640::ExtractParameters(uint16_t *eeData, paramsMLX90640 *mlx90640
 
 //------------------------------------------------------------------------------
 
-IResult<> MLX90640::SetResolution(uint8_t resolution)
+IResult<> MLX90640::set_resolution(uint8_t resolution)
 {
     uint16_t controlRegister1;
     uint16_t value;
@@ -971,16 +971,16 @@ IResult<> MLX90640::SetResolution(uint8_t resolution)
 //------------------------------------------------------------------------------
 
 Result<void, Error> MLX90640::init(uint16_t EE[832], paramsMLX90640 & MLXPars){
-    if(const auto res = SetRefreshRate(MLX90640::DataRate::_64Hz);
+    if(const auto res = set_refresh_rate(MLX90640::DataRate::_64Hz);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = I2CRead(0x2400, 832, EE);                     //读取像素校正参数
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = ExtractParameters(EE, &MLXPars);    //解析校正参数（计算温度时需要）
+    if(const auto res = extract_parameters(EE, &MLXPars);    //解析校正参数（计算温度时需要）
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
-Result<uint16_t, Error> MLX90640::GetCurResolution(uint8_t slaveAddr)
+Result<uint16_t, Error> MLX90640::get_cur_resolution(uint8_t slaveAddr)
 {
     uint16_t controlRegister1;
     int resolutionRAM;
@@ -995,7 +995,7 @@ Result<uint16_t, Error> MLX90640::GetCurResolution(uint8_t slaveAddr)
 
 //------------------------------------------------------------------------------
 
-IResult<> MLX90640::SetRefreshRate(DataRate datarate)
+IResult<> MLX90640::set_refresh_rate(DataRate datarate)
 {
     uint16_t controlRegister1;
     uint16_t value;
@@ -1015,7 +1015,7 @@ IResult<> MLX90640::SetRefreshRate(DataRate datarate)
 
 //------------------------------------------------------------------------------
 
-Result<uint16_t, Error> MLX90640::GetRefreshRate(uint8_t slaveAddr)
+Result<uint16_t, Error> MLX90640::get_refresh_rate(uint8_t slaveAddr)
 {
     uint16_t controlRegister1;
     int refreshRate;
@@ -1029,7 +1029,7 @@ Result<uint16_t, Error> MLX90640::GetRefreshRate(uint8_t slaveAddr)
 
 //------------------------------------------------------------------------------
 
-IResult<> MLX90640::SetInterleavedMode(uint8_t slaveAddr)
+IResult<> MLX90640::set_interleaved_mode(uint8_t slaveAddr)
 {
     uint16_t controlRegister1;
     uint16_t value;
@@ -1048,7 +1048,7 @@ IResult<> MLX90640::SetInterleavedMode(uint8_t slaveAddr)
 
 //------------------------------------------------------------------------------
 
-IResult<> MLX90640::SetChessMode(uint8_t slaveAddr)
+IResult<> MLX90640::set_chess_mode(uint8_t slaveAddr)
 {
     uint16_t controlRegister1;
     uint16_t value;
@@ -1066,7 +1066,7 @@ IResult<> MLX90640::SetChessMode(uint8_t slaveAddr)
 
 //------------------------------------------------------------------------------
 
-Result<uint16_t, Error> MLX90640::GetCurMode(uint8_t slaveAddr)
+Result<uint16_t, Error> MLX90640::get_cur_mode(uint8_t slaveAddr)
 {
     uint16_t controlRegister1;
     int modeRAM;
@@ -1082,7 +1082,7 @@ Result<uint16_t, Error> MLX90640::GetCurMode(uint8_t slaveAddr)
 
 //------------------------------------------------------------------------------
 
-void MLX90640::CalculateTo(
+void MLX90640::calculate_to(
     uint16_t *frameData, 
     const paramsMLX90640 *params, 
     float emissivity, float tr, 
@@ -1114,8 +1114,8 @@ void MLX90640::CalculateTo(
     float kv;
     
     subPage = frameData[833];
-    vdd = GetVdd(frameData, params);
-    ta = GetTa(frameData, params);
+    vdd = get_vdd(frameData, params);
+    ta = get_ta(frameData, params);
     
     ta4 = (ta + ABSOLUTE_ZERO);
     ta4 = ta4 * ta4;
@@ -1215,7 +1215,7 @@ void MLX90640::CalculateTo(
 
 //------------------------------------------------------------------------------
 
-void MLX90640::GetImage(uint16_t *frameData, const paramsMLX90640 *params, float *result){
+void MLX90640::get_image(uint16_t *frameData, const paramsMLX90640 *params, float *result){
     float vdd;
     float ta;
     float gain;
@@ -1235,8 +1235,8 @@ void MLX90640::GetImage(uint16_t *frameData, const paramsMLX90640 *params, float
     float kv;
     
     subPage = frameData[833];
-    vdd = GetVdd(frameData, params);
-    ta = GetTa(frameData, params);
+    vdd = get_vdd(frameData, params);
+    ta = get_ta(frameData, params);
     
     ktaScale = POW2(params->ktaScale);
     kvScale = POW2(params->kvScale);
@@ -1294,14 +1294,14 @@ void MLX90640::GetImage(uint16_t *frameData, const paramsMLX90640 *params, float
 }
 
 
-float MLX90640::GetTa(uint16_t *frameData, const paramsMLX90640 *params)
+float MLX90640::get_ta(uint16_t *frameData, const paramsMLX90640 *params)
 {
     int16_t ptat;
     float ptatArt;
     float vdd;
     float ta;
     
-    vdd = GetVdd(frameData, params);
+    vdd = get_vdd(frameData, params);
     
     ptat = (int16_t)frameData[800];
     
@@ -1315,14 +1315,14 @@ float MLX90640::GetTa(uint16_t *frameData, const paramsMLX90640 *params)
 
 //------------------------------------------------------------------------------
 
-int MLX90640::GetSubPageNumber(uint16_t *frameData)
+int MLX90640::get_subpage_number(uint16_t *frameData)
 {
     return frameData[833];    
 
 }    
 
 //------------------------------------------------------------------------------
-void MLX90640::BadPixelsCorrection(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params)
+void MLX90640::bad_pixels_correction(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params)
 {   
     float ap[4];
     uint8_t pix;

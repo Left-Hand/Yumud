@@ -11,6 +11,7 @@ using namespace ymd::hal;
 
 using Callback = Can::Callback;
 
+
 static constexpr auto Mailbox_Index_To_TSTATR(auto x) {
     return CAN_TSTATR_RQCP0 << (x << 3);
 }
@@ -103,7 +104,7 @@ void Can::init_it(){
     CAN_ClearITPendingBit(inst_, it_mask);
     CAN_ITConfig(inst_, it_mask, ENABLE);
 
-    switch(reinterpret_cast<uint32_t>(inst_)){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             //tx interrupt
@@ -154,7 +155,7 @@ void Can::clear_mailbox(const uint8_t mbox){
 
 
 Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst)){
+    switch(reinterpret_cast<size_t>(inst)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_CAN1
@@ -182,7 +183,7 @@ Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
 }
 
 Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst)){
+    switch(reinterpret_cast<size_t>(inst)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_CAN1
@@ -225,11 +226,29 @@ void Can::plant_gpio(const uint8_t remap){
 }
 
 
-void Can::enable_rcc(const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+void Can::enable_rcc(const Enable en){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+        }
+        break;
+        #endif
+
+
+        #ifdef ENABLE_CAN2
+        case CAN2_BASE:{
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, ENABLE);
+        }
+        break;
+        #endif
+    }
+}
+
+void Can::set_remap(const uint8_t remap){
+    switch(reinterpret_cast<size_t>(inst_)){
+        #ifdef ENABLE_CAN1
+        case CAN1_BASE:{
             switch(remap){
                 case 0:
                     GPIO_PinRemapConfig(GPIO_Remap1_CAN1, DISABLE);
@@ -250,9 +269,7 @@ void Can::enable_rcc(const uint8_t remap){
 
         #ifdef ENABLE_CAN2
         case CAN2_BASE:{
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, ENABLE);
-            uint8_t remap = CAN2_REMAP;
-                switch(remap){
+            switch(remap){
                 case 0:
                     GPIO_PinRemapConfig(GPIO_Remap_CAN2, DISABLE);
                     break;
@@ -266,8 +283,10 @@ void Can::enable_rcc(const uint8_t remap){
     }
 }
 
+
 void Can::init(const Config & cfg){
-    enable_rcc(cfg.remap);
+    enable_rcc(EN);
+    set_remap(cfg.remap);
     plant_gpio(cfg.remap);
 
 
@@ -346,15 +365,14 @@ Result<void, CanError> Can::write(const CanMsg & msg){
             }
             return Err(CanError::SoftFifoOverflow);
         };
-        if(pending() < 3){
-            if(transmit(msg).is_some()){
-                return Ok();
-            }else{
-                return push_buf();
-            }
-        }else{
+
+        if(pending() >= 3)
             return push_buf();
-        }
+        
+        if(transmit(msg).is_none())
+            return push_buf();
+
+        return Ok();
     }
 }
 

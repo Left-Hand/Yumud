@@ -152,7 +152,7 @@ static constexpr uint8_t calculate_deadzone_code_from_ns(
 
 
 void BasicTimer::enable_rcc(const Enable en){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_TIM1
         case TIM1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, en == EN);
@@ -190,8 +190,8 @@ void BasicTimer::enable_rcc(const Enable en){
     }
 }
 
-void BasicTimer::remap(const uint8_t rm){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+void BasicTimer::set_remap(const uint8_t rm){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_TIM1
         case TIM1_BASE:
             switch(rm){

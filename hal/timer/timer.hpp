@@ -107,14 +107,14 @@ protected:
 
     template<IT I>
     __fast_inline Callback & get_callback(){
-        if constexpr (I == IT::Update){return cbs_[0];}
-        else if constexpr (I == IT::CC1){return cbs_[1];}
-        else if constexpr (I == IT::CC2){return cbs_[2];}
-        else if constexpr (I == IT::CC3){return cbs_[3];}
-        else if constexpr (I == IT::CC4){return cbs_[4];}
-        else if constexpr (I == IT::COM){return cbs_[5];}
-        else if constexpr (I == IT::Trigger){return cbs_[6];}
-        else if constexpr (I == IT::Break){return cbs_[7];}
+        if constexpr (I == IT::Update)          return cbs_[0];
+        else if constexpr (I == IT::CC1)        return cbs_[1];
+        else if constexpr (I == IT::CC2)        return cbs_[2];
+        else if constexpr (I == IT::CC3)        return cbs_[3];
+        else if constexpr (I == IT::CC4)        return cbs_[4];
+        else if constexpr (I == IT::COM)        return cbs_[5];
+        else if constexpr (I == IT::Trigger)    return cbs_[6];
+        else if constexpr (I == IT::Break)      return cbs_[7];
     }
 
     template<IT I>
@@ -132,7 +132,7 @@ public:
     };
 
     void init(const Config & cfg, const Enable en);
-    void remap(const uint8_t rm);
+    void set_remap(const uint8_t rm);
     void deinit();
 
     void enable(const Enable en);

@@ -104,24 +104,24 @@ public:
 
     IResult<> init(uint16_t EE[832], paramsMLX90640 & MLXPars);
     
-    IResult<> DumpEE(uint16_t *eeData);
-    IResult<> SynchFrame(uint8_t slaveAddr);
-    IResult<uint16_t> GetFrameData(uint16_t *frameData);
-    IResult<> ExtractParameters(uint16_t *eeData, paramsMLX90640 *mlx90640);
-    IResult<> SetResolution(uint8_t resolution);
-    IResult<uint16_t> GetCurResolution(uint8_t slaveAddr);
-    IResult<> SetRefreshRate(DataRate rate);   
-    IResult<uint16_t> GetCurMode(uint8_t slaveAddr); 
-    IResult<> SetInterleavedMode(uint8_t slaveAddr);
-    IResult<> SetChessMode(uint8_t slaveAddr);
-    IResult<uint16_t> GetRefreshRate(uint8_t slaveAddr); 
-    float GetTa(uint16_t *frameData, const paramsMLX90640 *params);
-    void GetImage(uint16_t *frameData, const paramsMLX90640 *params, float *result);
-    void CalculateTo(uint16_t *frameData, const paramsMLX90640 *params, float emissivity, float tr, float *result);
+    IResult<> dump_ee(uint16_t *eeData);
+    IResult<> synch_frame(uint8_t slaveAddr);
+    IResult<uint16_t> get_frame_data(uint16_t *frameData);
+    IResult<> extract_parameters(uint16_t *eeData, paramsMLX90640 *mlx90640);
+    IResult<> set_resolution(uint8_t resolution);
+    IResult<uint16_t> get_cur_resolution(uint8_t slaveAddr);
+    IResult<> set_refresh_rate(DataRate rate);   
+    IResult<uint16_t> get_cur_mode(uint8_t slaveAddr); 
+    IResult<> set_interleaved_mode(uint8_t slaveAddr);
+    IResult<> set_chess_mode(uint8_t slaveAddr);
+    IResult<uint16_t> get_refresh_rate(uint8_t slaveAddr); 
+    float get_ta(uint16_t *frameData, const paramsMLX90640 *params);
+    void get_image(uint16_t *frameData, const paramsMLX90640 *params, float *result);
+    void calculate_to(uint16_t *frameData, const paramsMLX90640 *params, float emissivity, float tr, float *result);
 
-    int GetSubPageNumber(uint16_t *frameData);
+    int get_subpage_number(uint16_t *frameData);
 
-    void BadPixelsCorrection(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params);
+    void bad_pixels_correction(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params);
 
 
     IResult<> I2CRead(uint16_t startAddress, uint16_t nMemAddressRead, uint16_t *data){

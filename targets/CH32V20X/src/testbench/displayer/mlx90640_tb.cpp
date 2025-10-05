@@ -47,6 +47,11 @@ static constexpr size_t UART_BAUD = 576000;
 #define SCL_GPIO hal::PE<9>()
 #define SDA_GPIO hal::PE<11>()
 
+
+__no_inline void trap(){
+    __builtin_trap();
+}
+
 void mlx90640_main(){
     uint16_t EE[832];
     uint16_t Frame[834];
@@ -121,23 +126,24 @@ void mlx90640_main(){
     MLX90640 mlx{&i2c_sw_};
     clock::delay(50ms);                                    //预留一点时间让MLX传感器完成自己的初始化
     // MLX90640_SetRefreshRate(MLX90640_I2CADDR, 0).examine();       //0.5hz
+    mlx.set_refresh_rate(MLX90640::DataRate::_64Hz).examine();
     mlx.init(EE, MLXPars).examine();
     // Ta=MLX90640_GetTa(Frame, &MLXPars);                  //计算实时外壳温度
-    while (1){
-        if (const auto res = mlx.GetFrameData(Frame); res.is_err()){
+    while (true){
+        if (const auto res = mlx.get_frame_data(Frame); res.is_err()){
             static Milliseconds last_millis_ = 0ms;
             const auto curr_millis_ = clock::millis();
-            DEBUG_PRINTLN(res.unwrap_err(), curr_millis_ - last_millis_, real_t::from(Vdd), real_t::from(Ta));
+            DEBUG_PRINTLN(res.unwrap_err(), curr_millis_ - last_millis_, q16::from(Vdd), q16::from(Ta));
             last_millis_ = curr_millis_;
             continue;
         }      //有转换完成的帧
 
         // continue;
         // Vdd=MLX90640_GetVdd(Frame, &MLXPars);   //计算Vdd（这句可有可无）
-        Ta=mlx.GetTa(Frame, &MLXPars);                  //计算实时外壳温度
+        Ta=mlx.get_ta(Frame, &MLXPars);                  //计算实时外壳温度
         Tr=Ta-8.0;         //计算环境温度用于温度补偿
 
-        mlx.CalculateTo(Frame, &MLXPars, 0.95, Tr, Temp);    //计算像素点温度
+        mlx.calculate_to(Frame, &MLXPars, 0.95, Tr, Temp);    //计算像素点温度
 
 
         for(uint16_t j = 0; j < MLX90640_ROWS; j++){
@@ -148,16 +154,16 @@ void mlx90640_main(){
                 | std::views::filter([=](uint16_t i) {
                     return (i % 2 == j % 2);
                 })
-                | std::views::transform([=, &Temp](uint16_t i) {
-                    return static_cast<real_t>(real_t::from(Temp[i + j * MLX90640_COLS]));
+                | std::views::transform([=, &Temp](uint16_t i) -> q16{
+                    return static_cast<q16>(q16::from(Temp[i + j * MLX90640_COLS]));
                 })
 
-                | std::views::transform([](const real_t temp) -> RGB565{
-                    const auto color = Color<q16>::from_hsv(1-temp / 60, 1, 1, 1);
+                | std::views::transform([](const q16 temp) -> RGB565{
+                    const auto color = RGB<q16>::from_hsv(1 - temp / 60, 1, 1);
                     return RGB565::from_r5g6b5(
-                        uint8_t(color.r * 31),
-                        uint8_t(color.g * 63),
-                        uint8_t(color.b * 31)
+                        static_cast<uint8_t>(color.r * 31),
+                        static_cast<uint8_t>(color.g * 63),
+                        static_cast<uint8_t>(color.b * 31)
                     );
                 })
             );
@@ -173,7 +179,8 @@ void mlx90640_main(){
             }
 
             // DEBUG_PRINTLN(std::setprecision(2), row_pixels_view);
-            plot_rgb(row_pixels_scaled.data(), Rect2u::from_xywh(0, j, VALID_PIXELS * 4, 1));
+            plot_rgb(row_pixels_scaled.data(), Rect2u::from_xywh(0, 2 * j, VALID_PIXELS * 4, 1));
+            plot_rgb(row_pixels_scaled.data(), Rect2u::from_xywh(0, 2 * j + 1, VALID_PIXELS * 4, 1));
             // DEBUG_PRINTLN(row_pixels);
 
             // clock::delay(2ms);

@@ -78,11 +78,12 @@ IResult<Option<GT9XX::TouchPoint>> GT9XX::get_touch_point(const Nth nth) {
     if (const auto res = read(map_nth_to_addr(nth), buf);
         res.is_err()) return Err(res.unwrap_err());
 
-    Option<TouchPoint> may_point = None;
-    if (num_touch_points > 0) {
+    const auto may_point = [&] -> Option<TouchPoint>{
+        if (num_touch_points == 0) 
+            return None;
         const auto decoded_point = decode_point(std::span(buf));
-        may_point = Some(decoded_point);
-    }
+        return Some(decoded_point);
+    }();
     
     // clear status register
     if (const auto res = clear_status();
@@ -120,7 +121,7 @@ IResult<GT9XX::TouchPoints> GT9XX::get_touch_points() {
             res.is_err()) return Err(res.unwrap_err());
 
         for (size_t n = 0; n < num_touch_points; n++) {
-            const auto point = map_buf_to_point(std::span(buf), Nth(n));
+            const auto point = decode_specified_point(std::span(buf), Nth(n));
             points.push_back(point);
         }
     }

@@ -15,10 +15,10 @@ class WS2812_Phy{
 public:
     WS2812_Phy(hal::GpioIntf & gpio):gpio_(gpio){;}
 
-    __no_inline void delay_long();
-    __no_inline void delay_short();
+    __no_inline static void delay_long();
+    __no_inline static void delay_short();
 
-    void send_code(const bool state);
+    void send_bit(const bool state);
     void send_byte(const uint8_t data);
     void send_reset();
     void init();
@@ -28,32 +28,18 @@ private:
 
 
 class WS2812: public RgbLedIntf{
-protected:
-
-    WS2812_Phy phy_;
-    void _update(const Color<real_t> &color);
 public:
-    WS2812(hal::GpioIntf & gpio):phy_(gpio){;}
+    explicit WS2812(hal::GpioIntf & gpio):phy_(gpio){;}
     void init();
-    WS2812 & operator = (const Color<real_t> & color) override{
-        _update(color);
-        return *this;
-    }
+    void set_rgb(const RGB<q16> &color);
+private:
+    WS2812_Phy phy_;
 };
 
 class WS2812Single: public RgbLedIntf{
-protected:
-    void _update(const Color<real_t> & _color){
-        color = _color;
-    }
 public:
-    Color<real_t> color;
+    RGB<q16> color;
     WS2812Single() = default;
-
-    WS2812Single & operator = (const Color<real_t> & _color) override{
-        _update(_color);
-        return *this;
-    }
 };
 
 
@@ -66,7 +52,7 @@ protected:
 public:
     WS2812Chain(hal::GpioIntf & gpio):phy_(gpio){;}
     void init(){
-        for(auto & led : leds) led = Color(0,0,0);
+        for(auto & led : leds) led = RGB(0,0,0);
         phy_.init();
     }
 

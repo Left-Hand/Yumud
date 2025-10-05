@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/container/ringbuf.hpp"
 #include "core/sdk.hpp"
-
+#include "ral/chip.hpp"
 #include "can_utils.hpp"
 #include "can_msg.hpp"
 
@@ -74,7 +74,7 @@ public:
     struct Config{
         CanBitTimmingCoeffs coeffs;
         Mode mode = Mode::Normal;
-        uint8_t remap = CAN1_REMAP;
+        uint8_t remap;
     };
 
 public:
@@ -145,7 +145,8 @@ private:
     Gpio get_rx_gpio(const uint8_t remap);
 
     void plant_gpio(const uint8_t remap);
-    void enable_rcc(const uint8_t remap);
+    void enable_rcc(const Enable en);
+    void set_remap(const uint8_t remap);
     bool is_mail_box_done(const uint8_t mbox);
     void clear_mailbox(const uint8_t mbox);
     void init_it();

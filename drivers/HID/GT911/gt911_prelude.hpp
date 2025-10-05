@@ -74,7 +74,7 @@ protected:
         return point;
     }
 
-    static constexpr TouchPoint map_buf_to_point(
+    static constexpr TouchPoint decode_specified_point(
         const std::span<const uint8_t, GET_MULTITOUCH_BUF_SIZE> pbuf, 
         const Nth nth
     ){

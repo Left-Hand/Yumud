@@ -63,13 +63,13 @@ public:
         hal::CanMsg msg;
     };
 
-    struct SendStr{
-        static constexpr size_t MAX_STR_LEN = 8;
+    struct SendSerialStr{
+        static constexpr size_t MAX_STR_LEN = 16;
 
         char str[MAX_STR_LEN];
 
-        static constexpr SendStr from_str(const StringView strv){
-            SendStr ret;
+        static constexpr SendSerialStr from_str(const StringView strv){
+            SendSerialStr ret;
             if(strv.size() > MAX_STR_LEN) sys::abort();
 
             for(size_t i = 0; i < strv.size(); i++){
@@ -79,7 +79,7 @@ public:
         }
     };
 
-    struct SetStreamBaud{
+    struct SetSerialBaud{
         uint32_t baud;
     };
 
@@ -97,8 +97,8 @@ public:
 
 private:
     using Storage = std::variant<
-        SendStr,
-        SetStreamBaud,
+        SendSerialStr,
+        SetSerialBaud,
         SetCanBaud,
         Open,
         Close
@@ -140,11 +140,11 @@ public:
     }
 
     [[nodiscard]] constexpr auto oper_send_str(const StringView str){
-        return Oper::SendStr::from_str(str);
+        return Oper::SendSerialStr::from_str(str);
     }
 
     [[nodiscard]] constexpr auto oper_set_stream_baud(const uint32_t baud){
-        return Oper::SetStreamBaud{baud};
+        return Oper::SetSerialBaud{baud};
     }
 
     [[nodiscard]] constexpr auto oper_set_can_baud(const uint32_t baud){

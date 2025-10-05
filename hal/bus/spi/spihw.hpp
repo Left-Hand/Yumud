@@ -52,12 +52,12 @@ public:
     }
     
     [[nodiscard]] __fast_inline hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx){
-        if(bool(tx_strategy_)){
+        if(tx_strategy_ != CommStrategy::Nil){
             while ((inst_->STATR.TXE) == RESET);
             inst_->DATAR.DR = data_tx;
         }
     
-        if(bool(rx_strategy_)){
+        if(rx_strategy_ != CommStrategy::Nil){
             while ((inst_->STATR.RXNE) == RESET);
             data_rx = inst_->DATAR.DR;
         }

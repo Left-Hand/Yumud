@@ -8,7 +8,7 @@
 #endif
 
 
-namespace CH32V20x{
+namespace ymd::ral::CH32V203{
     struct R32_CAN_CTLR{
         uint32_t INRQ:1;
         uint32_t SLEEP:1;

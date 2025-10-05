@@ -304,10 +304,10 @@ static constexpr Result<Isometry, SlamErrorKind> pose_estimation(
 
 
 template<typename T, typename Fn>
-static auto make_point_cloud2d_from_lambda(Fn && fn, size_t N){
+static std::vector<Vec2<T>> make_points2d_from_lambda(Fn && fn, size_t num){
     std::vector<Vec2<T>> pts;
-    pts.reserve(N);
-    for(size_t i = 0; i < N; ++i){
+    pts.reserve(num);
+    for(size_t i = 0; i < num; ++i){
         pts.push_back(std::forward<Fn>(fn)(i));
     }
     return pts;
@@ -315,9 +315,9 @@ static auto make_point_cloud2d_from_lambda(Fn && fn, size_t N){
 
 
 template<typename T, typename Fn>
-static auto make_point_cloud3d_from_lambda(Fn && fn, size_t N){
-    std::vector<Vec3<T>> pts(N);
-    for(size_t i = 0; i < N; ++i){
+static auto make_point_cloud3d_from_lambda(Fn && fn, size_t num){
+    std::vector<Vec3<T>> pts(num);
+    for(size_t i = 0; i < num; ++i){
         pts.push_back(std::forward<Fn>(fn)(i));
     }
     return pts;
@@ -325,7 +325,7 @@ static auto make_point_cloud3d_from_lambda(Fn && fn, size_t N){
 
 template<typename T>
 static void point_cloud_demo(){
-    static constexpr size_t N = 400;
+    static constexpr size_t NUM_POINTS = 400;
     static constexpr size_t MAX_ITERATIONS = 100;
 
     auto lambda1 = [](size_t i){ 
@@ -333,12 +333,13 @@ static void point_cloud_demo(){
     };
 
     auto lambda2 = [](size_t i){ 
-        const auto angle = Angle<T>::from_radians(i * static_cast<T>(0.1) + static_cast<T>(0.1));
+        const auto angle = Angle<T>::from_radians(i * static_cast<T>(0.1) + 
+            Angle<T>::from_degrees(10).to_radians());
         return Vec2<T>::from_angle(angle) + Vec2<T>(40, 50);
     };
 
-    const auto pts1 = make_point_cloud2d_from_lambda<T>(lambda1,N);
-    const auto pts2 = make_point_cloud2d_from_lambda<T>(lambda2,N);
+    const auto pts1 = make_points2d_from_lambda<T>(lambda1,NUM_POINTS);
+    const auto pts2 = make_points2d_from_lambda<T>(lambda2,NUM_POINTS);
 
     const auto begin_micros = clock::micros();
     const auto res = pose_estimation<T, 2>(std::span(pts1), std::span(pts2), MAX_ITERATIONS);
