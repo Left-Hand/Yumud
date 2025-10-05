@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types/vectors/vector3.hpp"
+#include "types/vectors/quat.hpp"
 
 namespace ymd{
 

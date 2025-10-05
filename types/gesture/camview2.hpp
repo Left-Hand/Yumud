@@ -1,11 +1,11 @@
 #pragma once
 
-#include "pose2.hpp"
+#include "types/gesture/isometry2.hpp"
 
 namespace ymd{
 template<typename T>
 struct CamView2{
-    Pose2<T> pose;
+    Isometry2<T> pose;
     T zoom;
 };
 

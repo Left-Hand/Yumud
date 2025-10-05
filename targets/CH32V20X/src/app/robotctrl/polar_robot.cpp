@@ -482,7 +482,7 @@ void polar_robot_main(){
 
         rpc::make_function("next", [&](){
             static Vec2<q16> position = {0.1_r, 0};
-            position = position.cw();
+            position = position.forward_90deg();
             actuator_.set_coord(regu_(position));
         })
     );

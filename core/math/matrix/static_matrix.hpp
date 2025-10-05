@@ -4,6 +4,7 @@
 
 #include "core/math/real.hpp"
 #include "core/stream/ostream.hpp"
+#include "core/utils/Option.hpp"
 
 
 namespace ymd{
@@ -222,6 +223,18 @@ public:
         return ret;
     }
 
+    [[nodiscard]] __fast_inline constexpr Matrix<T, R, C> abs() const{
+        return map([](T x){ return std::abs(x); });
+    }
+
+    [[nodiscard]] constexpr T max() const {
+        return *std::max_element(storage_.begin(), storage_.end());
+    }
+
+    [[nodiscard]] constexpr T min() const {
+        return *std::min_element(storage_.begin(), storage_.end());
+    }
+
     template<size_t C2>
     [[nodiscard]] __fast_inline constexpr Matrix<T, R, C2> operator * (const Matrix<T, C, C2> & rhs) const{
         auto ret = Matrix<T, R, C2>::from_uninitialized();
@@ -369,7 +382,7 @@ public:
     }
 
     template<typename U = T, typename std::enable_if_t<std::is_arithmetic_v<U>, int> = 0>
-    [[nodiscard]] __fast_inline constexpr Matrix<T, R, R> inverse() const{
+    [[nodiscard]] constexpr Matrix<T, R, R> inverse() const{
         static_assert(R == C);
 
         Matrix<T, R, 2 * R> augmented = Matrix<T, R, 2 * R>::from_uninitialized();
@@ -415,7 +428,7 @@ public:
         }
 
         // 提取逆矩阵部分
-        Matrix<T, R, R> ret;
+        Matrix<T, R, R> ret = Matrix<T, R, R>::from_uninitialized();
         for (size_t i = 0; i < R; i++) {
             for (size_t j = 0; j < R; j++) {
                 ret.at(i, j) = augmented.at(i, j + R);
@@ -425,6 +438,21 @@ public:
         return ret;
     }
 
+    [[nodiscard]] constexpr Option<Matrix<T, R, R>> try_inverse() const {
+        static_assert(R == C, "Inverse can only be computed for square matrices.");
+        
+        // First check if the matrix is invertible by computing its determinant
+        T det = this->determinant();
+        
+        // If determinant is zero (or very close to zero), matrix is not invertible
+        if (ABS(det) < std::numeric_limits<T>::epsilon()) {
+            return None;
+        }
+        
+        return Some(this->inverse());
+    } 
+
+    
 
     [[nodiscard]] __fast_inline constexpr Matrix<T, R-1, C-1> minor(size_t i, size_t j) const {
         static_assert(R > 1, "minor: matrix rows must be greater than 1");

@@ -29,12 +29,12 @@ struct _EulerAngleStorage<T, EulerAnglePolicy::YXZ> {
     Angle<T> y, x, z;
 };
 
-// Main EulerAngle template
+// Main EulerAngles template
 template <arithmetic T, EulerAnglePolicy P>
-using EulerAngle = _EulerAngleStorage<T, P>;
+using EulerAngles = _EulerAngleStorage<T, P>;
 
 template <arithmetic T, EulerAnglePolicy P>
-__fast_inline OutputStream & operator<<(OutputStream & os, const EulerAngle<T, P> & value){
+__fast_inline OutputStream & operator<<(OutputStream & os, const EulerAngles<T, P> & value){
     return os << os.brackets<'('>()
         << value.x << os.splitter()
         << value.y << os.splitter()

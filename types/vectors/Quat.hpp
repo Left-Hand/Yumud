@@ -6,6 +6,61 @@
 
 namespace ymd{
 
+namespace details{
+
+template<typename T, typename Dst>
+static constexpr void mat3x3_to_quat(Dst & dst, const Matrix<T, 3, 3>& R){
+    // https://zhuanlan.zhihu.com/p/635847061
+    const T trace = R(0, 0) + R(1, 1) + R(2, 2);
+    std::array<T, 4> buf;
+
+    if (trace >= 0.0) {
+        T t = sqrt(trace + T(1.0));
+        buf[0] = T(0.5) * t;
+        t = T(0.5) / t;
+        buf[1] = (R(2, 1) - R(1, 2)) * t;
+        buf[2] = (R(0, 2) - R(2, 0)) * t;
+        buf[3] = (R(1, 0) - R(0, 1)) * t;
+    } else {
+        size_t i = 0;
+        
+        if (R(1, 1) > R(0, 0)) {
+            i = 1;
+        }
+
+        if (R(2, 2) > R(i, i)) {
+            i = 2;
+        }
+
+        const size_t j = (i + 1) % 3;
+        const size_t k = (j + 1) % 3;
+        T t = sqrt(R(i, i) - R(j, j) - R(k, k) + T(1.0));
+        buf[i + 1] = T(0.5) * t;
+        t = T(0.5) / t;
+        buf[0] = (R(k, j) - R(j, k)) * t;
+        buf[j + 1] = (R(j, i) + R(i, j)) * t;
+        buf[k + 1] = (R(k, i) + R(i, k)) * t;
+    }
+
+    dst.x = buf[0];
+    dst.y = buf[1];
+    dst.z = buf[2];
+    dst.w = buf[3];
+}
+
+template<typename T>
+static constexpr Matrix3x3<T> quat_to_mat3x3(const auto q){
+    // https://zhuanlan.zhihu.com/p/635847061
+    const auto [x, y, z, w] = q.to_xyzw_array();
+    return Matrix3x3<T>(
+        1 - 2 * (y * y + z * z),            2 * (x * y - z * w),            2 * (x * z + y * w),
+        2 * (x * y + z * w),                1 - 2 * (x * x + z * z),        2 * (y * z - x * w),
+        2 * (x * z - y * w),                2 * (y * z + x * w),            1 - 2 * (x * x + y * y)
+    );
+}
+
+}
+
 template <arithmetic T>
 
 struct Quat{
@@ -23,6 +78,8 @@ struct Quat{
         static_cast<T>(1)
     );
 
+
+
     [[nodiscard]]
     __fast_inline static constexpr Quat from_identity() {
         return Quat<T>::IDENTITY;
@@ -32,15 +89,15 @@ struct Quat{
     __fast_inline static constexpr Quat from_xyzw(
         const T p_x, const T p_y, const T p_z, const T p_w){
         return Quat<T> {
-            .x = p_x,
-            .y = p_y,
-            .z = p_z,
-            .w = p_w
+            p_x,
+            p_y,
+            p_z,
+            p_w
         };
     }
 
     [[nodiscard]] 
-    __fast_inline static constexpr Quat from_array(
+    __fast_inline static constexpr Quat from_xyzw_array(
         std::array<T, 4> p_array
     ){
         return from_xyzw(
@@ -50,9 +107,20 @@ struct Quat{
             p_array[3]
         );
     }
+    [[nodiscard]] static constexpr Quat from_uninitialized(){
+        return Quat{};
+    }
+
+    [[nodiscard]] static constexpr Quat 
+    from_mat3x3(const Matrix3x3<T> & mat){
+        auto ret = Quat::from_uninitialized();
+        details::mat3x3_to_quat(ret, mat);
+        return ret;
+    }
 
     [[nodiscard]]
-    __fast_inline static constexpr Quat from_axis_angle(const Vec3<T> &axis, const Angle<T> angle) {
+    __fast_inline static constexpr Quat 
+    from_axis_angle(const Vec3<T> &axis, const Angle<T> angle) {
         Quat ret;
         ret.set_axis_angle(axis, angle);
         return ret;
@@ -108,7 +176,7 @@ struct Quat{
 
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
     [[nodiscard]]
-    static constexpr Quat<T> from_euler_angles(const EulerAngle<T, P> &euler_angle) {
+    static constexpr Quat<T> from_euler_angles(const EulerAngles<T, P> &euler_angle) {
         Quat<T> ret;
         ret.set_euler_angles(euler_angle.x, euler_angle.y, euler_angle.z);
         return ret;
@@ -201,7 +269,7 @@ struct Quat{
     [[nodiscard]]
     constexpr Quat<T> normalized() const {
         const auto ilen = inv_length();
-        const auto ret = Quat<T>(x * ilen, y * ilen, z * ilen, w * ilen);
+        const auto ret = Quat<T>::from_xyzw(x * ilen, y * ilen, z * ilen, w * ilen);
         return ret;
     }
 
@@ -402,10 +470,10 @@ struct Quat{
 
     // https://blog.csdn.net/xiaoma_bk/article/details/79082629
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
-    [[nodiscard]] constexpr EulerAngle<T, P> to_euler() const {
+    [[nodiscard]] constexpr EulerAngles<T, P> to_euler() const {
         auto & q = *this;
 
-        EulerAngle<T, P> angles;
+        EulerAngles<T, P> angles;
     
         // roll (x-axis rotation)
 
@@ -439,13 +507,21 @@ struct Quat{
         return {x, y, z, w};
     }
 
+    [[nodiscard]] Matrix3x3<T> to_mat3x3() const {
+        return details::quat_to_mat3x3(*this);
+    }
+
 private:
-    void set(T _x, T _y, T _z, T _w){
+    constexpr void set(T _x, T _y, T _z, T _w){
         this->x = _x;
         this->y = _y;
         this->z = _z;
         this->w = _w;
     }
+
+    constexpr Quat() = default;
+    constexpr Quat(T _x, T _y, T _z, T _w):
+        x(_x), y(_y), z(_z), w(_w){;}
 };
 
 

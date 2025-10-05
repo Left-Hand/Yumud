@@ -281,8 +281,8 @@ struct Vec2{
     [[nodiscard]] __fast_inline constexpr Vec2<T> slerp(const Vec2<T> & b, const T t) const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> slide(const Vec2<T>  & n) const;
     [[nodiscard]] __fast_inline constexpr Vec2<T> snapped(const Vec2<T> & by) const;
-    [[nodiscard]] __fast_inline constexpr Vec2<T> cw() const {return Vec2<T>(-y, x);}
-    [[nodiscard]] __fast_inline constexpr Vec2<T> ccw() const {return Vec2<T>(y, -x);}
+    [[nodiscard]] __fast_inline constexpr Vec2<T> forward_90deg() const {return Vec2<T>(-y, x);}
+    [[nodiscard]] __fast_inline constexpr Vec2<T> backward_90deg() const {return Vec2<T>(y, -x);}
 
     [[nodiscard]] __fast_inline constexpr Vec2<T> flip_y() const {
         static_assert(std::is_signed_v<T>);

@@ -43,7 +43,6 @@
 #include "dsp/motor_ctrl/calibrate_table.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/motor_ctrl/elecrad_compsator.hpp"
-#include "dsp/controller/pi_ctrl.hpp"
 #include "dsp/controller/adrc/leso.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"

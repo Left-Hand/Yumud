@@ -44,55 +44,41 @@ OutputStream & operator<<(OutputStream & os, const SlamErrorKind & error){
     }
 }
 
+namespace ymd::slam{
+// pub fn jacobian_so3(m: &Matrix3<f64>) -> SMatrix<f64, 3, 9> {
+//     let trace = m.trace();
+//     let cos = (trace - 1.0).sqrt() * 0.5;
+//     let mut a1 = 0.0;
+//     let mut a2 = 0.0;
+//     let mut a3 = 0.0;
+//     let mut b = 0.5;
 
-template<typename T>
-static constexpr Quat<T> mat3x3_to_quat(const Matrix<T, 3, 3>& R){
-    // https://zhuanlan.zhihu.com/p/635847061
-    const T trace = R(0, 0) + R(1, 1) + R(2, 2);
-    std::array<T, 4> buf;
+//     if cos < 0.9999999 {
+//         let sin = (1.0 - cos * cos).sqrt();
+//         let theta = f64::atan2(sin, cos);
+//         let factor = (theta * cos - sin) / (4.0 * sin * sin * sin);
+//         a1 = (m.m32 - m.m23) * factor;
+//         a2 = (m.m13 - m.m31) * factor;
+//         a3 = (m.m21 - m.m12) * factor;
+//         b = 0.5 * theta / sin;
+//     }
 
-    if (trace >= 0.0) {
-        T t = sqrt(trace + T(1.0));
-        buf[0] = T(0.5) * t;
-        t = T(0.5) / t;
-        buf[1] = (R(2, 1) - R(1, 2)) * t;
-        buf[2] = (R(0, 2) - R(2, 0)) * t;
-        buf[3] = (R(1, 0) - R(0, 1)) * t;
-    } else {
-        size_t i = 0;
-        
-        if (R(1, 1) > R(0, 0)) {
-            i = 1;
-        }
-
-        if (R(2, 2) > R(i, i)) {
-            i = 2;
-        }
-
-        const size_t j = (i + 1) % 3;
-        const size_t k = (j + 1) % 3;
-        T t = sqrt(R(i, i) - R(j, j) - R(k, k) + T(1.0));
-        buf[i + 1] = T(0.5) * t;
-        t = T(0.5) / t;
-        buf[0] = (R(k, j) - R(j, k)) * t;
-        buf[j + 1] = (R(j, i) + R(i, j)) * t;
-        buf[k + 1] = (R(k, i) + R(i, k)) * t;
-    }
-
-    return Quat<T>::from_array(buf);
+//     #[rustfmt::skip]
+//     let res = SMatrix::<f64, 3, 9>::from_column_slice(&[ 
+//         // transpose of actual matrix
+//         a1,  a2,  a3,  
+//         0.0, 0.0,   b,
+//         0.0,  -b, 0.0,
+//         0.0, 0.0,  -b,
+//         a1,  a2,  a3,
+//         b, 0.0, 0.0,
+//         0.0,   b, 0.0,
+//         -b, 0.0, 0.0,
+//         a1,  a2,  a3
+//     ]);
+//     res
+// }
 }
-
-template<typename T>
-static constexpr Matrix3x3<T> quat_to_mat3x3(const Quat<T> q){
-    // https://zhuanlan.zhihu.com/p/635847061
-    const auto [x, y, z, w] = q.to_xyzw_array();
-    return Matrix3x3<T>(
-        1 - 2 * (y * y + z * z),            2 * (x * y - z * w),            2 * (x * z + y * w),
-        2 * (x * y + z * w),                1 - 2 * (x * x + z * z),        2 * (y * z - x * w),
-        2 * (x * z - y * w),                2 * (y * z + x * w),            1 - 2 * (x * x + y * y)
-    );
-}
-
 
 
 
