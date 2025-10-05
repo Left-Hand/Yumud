@@ -37,7 +37,7 @@ template<typename T>
     const auto org = iso.translation + ar;
     const auto delta = (-ar).rotated(angle);
     return Isometry2<T>{
-        .rotation = iso.rotation * Rotation2<T>::from_angle(angle),
+        .rotation = iso.rotation * UnitComplex<T>::from_angle(angle),
         .translation =  org + delta, 
     };
 }

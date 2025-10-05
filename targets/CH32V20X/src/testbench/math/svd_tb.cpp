@@ -44,40 +44,38 @@ OutputStream & operator<<(OutputStream & os, const SlamErrorKind & error){
     }
 }
 
+
+// https://github.com/jgsimard/RustRobotics/blob/main/src/mapping/se2_se3.rs
+
 namespace ymd::slam{
-// pub fn jacobian_so3(m: &Matrix3<f64>) -> SMatrix<f64, 3, 9> {
-//     let trace = m.trace();
-//     let cos = (trace - 1.0).sqrt() * 0.5;
-//     let mut a1 = 0.0;
-//     let mut a2 = 0.0;
-//     let mut a3 = 0.0;
-//     let mut b = 0.5;
 
-//     if cos < 0.9999999 {
-//         let sin = (1.0 - cos * cos).sqrt();
-//         let theta = f64::atan2(sin, cos);
-//         let factor = (theta * cos - sin) / (4.0 * sin * sin * sin);
-//         a1 = (m.m32 - m.m23) * factor;
-//         a2 = (m.m13 - m.m31) * factor;
-//         a3 = (m.m21 - m.m12) * factor;
-//         b = 0.5 * theta / sin;
-//     }
+template<typename T>
+static constexpr Matrix<T, 3, 9> jacobian_so3(const Matrix3x3<T> & m){
+    const auto trace = m.trace();
+    const auto c = sqrt(trace - 1) * static_cast<T>(0.5);
+    if(c > static_cast<T>(0.999999))
+        return Matrix<T, 3, 9>::from_zero();
+    const auto s = sqrt(1 - square(c));
 
-//     #[rustfmt::skip]
-//     let res = SMatrix::<f64, 3, 9>::from_column_slice(&[ 
-//         // transpose of actual matrix
-//         a1,  a2,  a3,  
-//         0.0, 0.0,   b,
-//         0.0,  -b, 0.0,
-//         0.0, 0.0,  -b,
-//         a1,  a2,  a3,
-//         b, 0.0, 0.0,
-//         0.0,   b, 0.0,
-//         -b, 0.0, 0.0,
-//         a1,  a2,  a3
-//     ]);
-//     res
-// }
+    const auto theta = atan2(s, c);
+    const auto factor = (theta * c - s) / (4  * s * s * s);
+    const auto a1 = m.template at<2,1> - m.template at<1,2> * factor;
+    const auto a2 = m.template at<0,2> - m.template at<2,0> * factor;
+    const auto a3 = m.template at<1,0> - m.template at<0,1> * factor;
+    const auto b = static_cast<T>(0.5) * theta / s;
+
+    return Matrix<T, 3, 9>(
+        a1,  a2,  a3,  
+        0.0, 0.0,   b,
+        0.0,  -b, 0.0,
+        0.0, 0.0,  -b,
+        a1,  a2,  a3,
+        b, 0.0, 0.0,
+        0.0,   b, 0.0,
+        -b, 0.0, 0.0,
+        a1,  a2,  a3
+    );
+}
 }
 
 

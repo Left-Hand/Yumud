@@ -248,7 +248,7 @@ void smc2025_main(){
     
         [[maybe_unused]]const auto ctime = clock::time();
         const auto pose = Isometry2<real_t>{
-            .rotation = Rotation2<real_t>::from_radians(ctime + real_t(1 / TAU) * sinpu(ctime)),
+            .rotation = UnitComplex<real_t>::from_radians(ctime + real_t(1 / TAU) * sinpu(ctime)),
             .translation = Vec2<real_t>(0, -1.5_r) + Vec2<real_t>(-1.9_r, 0).rotated(Angle<real_t>::from_radians(ctime)), 
         };
             // {1.0_r, -0.5_r}, 0.0_r};

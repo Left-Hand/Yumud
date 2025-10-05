@@ -7,7 +7,7 @@ static constexpr auto make_scene1(){
     constexpr auto ROAD_WIDTH = 0.45_r;
     BlueprintSpawner spawner = {
         {.road_width = ROAD_WIDTH}
-        ,Isometry2<real_t>{ Rotation2<real_t>::from_angle(180_deg), Vec2<real_t>{0, 0}}
+        ,Isometry2<real_t>{ UnitComplex<real_t>::from_angle(180_deg), Vec2<real_t>{0, 0}}
     };
 
     return make_static_scene(
@@ -49,7 +49,7 @@ static constexpr auto make_scene2(){
     constexpr auto ROAD_WIDTH = 0.05_r;
     BlueprintSpawner spawner = {
         {.road_width = ROAD_WIDTH}
-        ,Isometry2<real_t>{Rotation2<real_t>::from_angle(180_deg), Vec2<real_t>{0, 0}}
+        ,Isometry2<real_t>{UnitComplex<real_t>::from_angle(180_deg), Vec2<real_t>{0, 0}}
     };
     
     return make_static_scene(
