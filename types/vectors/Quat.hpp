@@ -214,9 +214,9 @@ struct Quat{
     __fast_inline constexpr const T  operator [](const size_t idx) const {return (&x)[idx];}
 
     [[nodiscard]]
-    constexpr T angle_to(const Quat<T> &p_to) const {
-        T d = dot(p_to);
-        return acosf(CLAMP(d * d * 2 - 1, -1, 1));
+    constexpr Angle<T> angle_to(const Quat<T> &p_to) const {
+        T d = std::abs(dot(p_to));
+        return Angle<T>::from_radians(2 * std::acos(CLAMP(d, -1, 1)));
     }
 
     [[nodiscard]]
@@ -369,30 +369,6 @@ struct Quat{
         return sp.slerpni(sq, t2);
     }
 
-    // set_euler_angles expects a vector containing the Euler angles in the format
-    // (ax,ay,az), where ax is the angle of rotation around x axis,
-    // and similar for other axes.
-    // This implementation uses XYZ convention (Z is the first rotation).
-    constexpr void set_euler_angles(
-        const Angle<T> euler_x, 
-        const Angle<T> euler_y, 
-        const Angle<T> euler_z
-    ) {
-        // R = X(a1).Y(a2).Z(a3) convention for Euler angles.
-        // Conversion to Quat<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
-        // a3 is the angle of the first rotation, following the notation in this reference.
-
-        auto [sin_a1, cos_a1] = (euler_x / 2).sincos();
-        auto [sin_a2, cos_a2] = (euler_y / 2).sincos();
-        auto [sin_a3, cos_a3] = (euler_z / 2).sincos();
-
-        set(
-            +sin_a1 * cos_a2 * cos_a3 + sin_a2 * sin_a3 * cos_a1,
-            -sin_a1 * sin_a3 * cos_a2 + sin_a2 * cos_a1 * cos_a3,
-            +sin_a1 * sin_a2 * cos_a3 + sin_a3 * cos_a1 * cos_a2,
-            -sin_a1 * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3
-        );
-    }
 
     [[nodiscard]]
     constexpr Quat integral(const Vec3<T> & norm_dir, const T delta) const {
@@ -406,22 +382,6 @@ struct Quat{
     }
 
 
-    constexpr void set_axis_angle(const Vec3<T> &axis, const Angle<T> angle){
-        T d = axis.length();
-        if (d == 0) {
-            set(T(0), T(0), T(0), T(0));
-        } else {
-            const auto half_angle = angle * static_cast<T>(0.5);
-            const auto [sin_angle, cos_angle] = half_angle.sincos();
-            const T s = sin_angle / d;
-            set(
-                axis.x * s, 
-                axis.y * s, 
-                axis.z * s,
-                cos_angle
-            );
-        }
-    }
 
 
     [[nodiscard]] __fast_inline constexpr
@@ -470,7 +430,7 @@ struct Quat{
 
     // https://blog.csdn.net/xiaoma_bk/article/details/79082629
     template<EulerAnglePolicy P = EulerAnglePolicy::XYZ>
-    [[nodiscard]] constexpr EulerAngles<T, P> to_euler() const {
+    [[nodiscard]] constexpr EulerAngles<T, P> to_euler_angles() const {
         auto & q = *this;
 
         EulerAngles<T, P> angles;
@@ -522,6 +482,49 @@ private:
     constexpr Quat() = default;
     constexpr Quat(T _x, T _y, T _z, T _w):
         x(_x), y(_y), z(_z), w(_w){;}
+
+    // set_euler_angles expects a vector containing the Euler angles in the format
+    // (ax,ay,az), where ax is the angle of rotation around x axis,
+    // and similar for other axes.
+    // This implementation uses XYZ convention (Z is the first rotation).
+    constexpr void set_euler_angles(
+        const Angle<T> euler_x, 
+        const Angle<T> euler_y, 
+        const Angle<T> euler_z
+    ) {
+        // R = X(a1).Y(a2).Z(a3) convention for Euler angles.
+        // Conversion to Quat<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
+        // a3 is the angle of the first rotation, following the notation in this reference.
+
+        auto [sin_a1, cos_a1] = (euler_x / 2).sincos();
+        auto [sin_a2, cos_a2] = (euler_y / 2).sincos();
+        auto [sin_a3, cos_a3] = (euler_z / 2).sincos();
+
+        set(
+            +sin_a1 * cos_a2 * cos_a3 + sin_a2 * sin_a3 * cos_a1,
+            -sin_a1 * sin_a3 * cos_a2 + sin_a2 * cos_a1 * cos_a3,
+            +sin_a1 * sin_a2 * cos_a3 + sin_a3 * cos_a1 * cos_a2,
+            -sin_a1 * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3
+        );
+    }
+
+    constexpr void set_axis_angle(const Vec3<T> &axis, const Angle<T> angle){
+        T d = axis.length();
+        if (d == 0) {
+            set(T(0), T(0), T(0), T(0));
+        } else {
+            const auto half_angle = angle * static_cast<T>(0.5);
+            const auto [sin_angle, cos_angle] = half_angle.sincos();
+            const T s = sin_angle / d;
+            set(
+                axis.x * s, 
+                axis.y * s, 
+                axis.z * s,
+                cos_angle
+            );
+        }
+    }
+
 };
 
 
