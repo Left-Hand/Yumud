@@ -63,7 +63,7 @@ struct ParamFromString final{
 
     template<typename T>
     constexpr IResult<T> to() const{
-        const auto res = strconv2::from_str<T>(str_);
+        const auto res = strconv2::defmt_str<T>(str_);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok(res.unwrap());
     }
