@@ -125,7 +125,7 @@ void adc_tb(OutputStream & logger){
     hal::adc1.enable_dma(EN);
     hal::adc1.sw_start_regular(true);
     while(true){
-        logger.println(adc_dma_buf[0], hal::dma1Ch1.pending());
+        logger.println(adc_dma_buf[0], hal::dma1Ch1.remaining());
     }
 
     #endif

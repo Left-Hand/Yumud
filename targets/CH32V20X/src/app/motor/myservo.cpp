@@ -122,7 +122,7 @@ public:
         };
     }
 
-    const State & get() const {return state_;}
+    const State & state() const {return state_;}
 private:
     q24 kp_;
     q24 kd_;

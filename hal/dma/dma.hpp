@@ -53,19 +53,19 @@ public:
     using Mode = DmaMode;
     using Priority = DmaPriority;
 
-public:
-
-    DmaChannel() = delete;
-
-    DmaChannel(const DmaChannel & other) = delete;
-    DmaChannel(DmaChannel && other) = delete;
-
     DmaChannel(DMA_Channel_TypeDef * inst):
         inst_(inst), 
         done_mask_(calculate_done_mask(inst)),
         half_mask_(calculate_half_mask(inst)),
         dma_index_(calculate_dma_index(inst)),
         channel_index_(calculate_channel_index(inst)){;}
+
+    DmaChannel() = delete;
+
+    DmaChannel(const DmaChannel & other) = delete;
+    DmaChannel(DmaChannel && other) = delete;
+
+
 
     struct Config{
         const Mode mode;
@@ -112,7 +112,7 @@ public:
         );
     }
 
-    size_t pending();
+    [[nodiscard]] size_t remaining();
 
     void register_nvic(const NvicPriority _priority, const Enable en);
 
@@ -128,9 +128,9 @@ public:
     template<DmaIT I, typename Fn>
     void set_interrupt_callback(Fn && cb){
         if constexpr(I == DmaIT::Half){
-            half_cb_ = std::move(cb);
+            half_cb_ = std::forward<Fn>(cb);
         }else if constexpr(I == DmaIT::Done){
-            done_cb_ = std::move(cb);
+            done_cb_ = std::forward<Fn>(cb);
         }
     }
 

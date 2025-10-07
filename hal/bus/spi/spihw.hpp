@@ -25,7 +25,7 @@ class Gpio;
 
 class SpiHw final:public Spi{
 public:
-    explicit SpiHw(chip::SPI_Def * instance):inst_(instance){;}
+    explicit SpiHw(chip::SPI_Def * inst):inst_(inst){;}
 
     SpiHw(const SpiHw & other) = delete;
     SpiHw(SpiHw && other) = delete;
@@ -34,24 +34,24 @@ public:
 
     void enable_hw_cs(const Enable en);
 
-    [[nodiscard]] __fast_inline hal::HalResult fast_write(const uint16_t data){
+    [[nodiscard]] __fast_inline HalResult fast_write(const uint16_t data){
         while ((inst_->STATR.TXE) == RESET);
         inst_->DATAR.DR = data;
 
-        return hal::HalResult::Ok();
+        return HalResult::Ok();
     }
 
-    [[nodiscard]] __fast_inline hal::HalResult write(const uint32_t data){
+    [[nodiscard]] __fast_inline HalResult write(const uint32_t data){
         uint32_t dummy;
         return transceive(dummy, data);
     }
     
     
-    [[nodiscard]] __fast_inline hal::HalResult read(uint32_t & data){
+    [[nodiscard]] __fast_inline HalResult read(uint32_t & data){
         return transceive(data, 0);
     }
     
-    [[nodiscard]] __fast_inline hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx){
+    [[nodiscard]] __fast_inline HalResult transceive(uint32_t & data_rx, const uint32_t data_tx){
         if(tx_strategy_ != CommStrategy::Nil){
             while ((inst_->STATR.TXE) == RESET);
             inst_->DATAR.DR = data_tx;
@@ -62,11 +62,11 @@ public:
             data_rx = inst_->DATAR.DR;
         }
     
-        return hal::HalResult::Ok();
+        return HalResult::Ok();
     }
-    [[nodiscard]] hal::HalResult set_data_width(const uint8_t len);
-    [[nodiscard]] hal::HalResult set_baudrate(const uint32_t baudrate);
-    [[nodiscard]] hal::HalResult set_bitorder(const Endian endian);
+    [[nodiscard]] HalResult set_data_width(const uint8_t len);
+    [[nodiscard]] HalResult set_baudrate(const uint32_t baudrate);
+    [[nodiscard]] HalResult set_bitorder(const Endian endian);
 
     #ifdef ENABLE_SPI1
     friend void ::SPI1_IRQHandler(void);
@@ -88,6 +88,7 @@ private:
     uint32_t get_bus_freq() const;
 
     void enable_rcc(const Enable en);
+    void set_remap(const uint8_t remap);
     void plant_gpios();
     
     void enable_rx_it(const Enable en);

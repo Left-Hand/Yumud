@@ -29,11 +29,11 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
 
 
     channel.set_interrupt_callback<hal::DmaIT::Half>([&](){
-        logger.println("h", channel.pending());
+        logger.println("h", channel.remaining());
     });
 
     channel.set_interrupt_callback<hal::DmaIT::Done>([&](){
-        logger.println("d", channel.pending());
+        logger.println("d", channel.remaining());
     });
 
 
@@ -44,8 +44,8 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
     channel.register_nvic({0,0}, EN);
     logger.println("DMA begin");
     channel.start_transfer_mem2mem<char>(dst, src, sizeof(src));
-    while(channel.pending()){
-        logger.println(channel.pending());
+    while(channel.remaining()){
+        logger.println(channel.remaining());
         clock::delay(200ms);
     }
 

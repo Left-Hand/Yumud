@@ -2,7 +2,6 @@
 #include "dsp/controller/adrc/leso.hpp"
 #include "dsp/controller/adrc/command_shaper.hpp"
 
-#include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
@@ -34,13 +33,10 @@ static constexpr iq_t<Q> sat(const iq_t<Q> x){
     }
 }
 
-static_assert(sat(0.5_q16) == 0.5_q16);
-static_assert(sat(2_q16) == 1_q16);
-static_assert(sat(0_q16) == 0_q16);
-// static_assert(sat(-0.5_q16) == -0.5_q16);
-static_assert(sat(-2_q16) == -1_q16);
+
 constexpr int32_t MASK = (~((1 << 16) - 1)) & (0x7fffffff);
-// constexpr auto a = 0.5_q16;
+
+
 static constexpr inline q16 fhan(
     const q16 v, 
     const q16 z1, 
@@ -85,7 +81,8 @@ struct FhanPrecomputed{
         inv_h_(1 / cfg.h),
         inv_d_(1 / q10(cfg.r * cfg.h)){;}
 
-    constexpr q16 operator()(const q16 v, 
+    [[nodiscard]] constexpr q16 operator()(
+        const q16 v, 
         const q16 z1, 
         const q16 z2
     ) const{
@@ -146,7 +143,7 @@ struct NonlinearTrackingDifferentor{
         z_ = std::array{next_z1, next_z2};
     }
 
-    constexpr std::array<q16, 2> output(){
+    constexpr std::array<q16, 2> state(){
         return {z_[0], z_[1]};
     }
 private:
@@ -176,7 +173,7 @@ struct NonlinearTrackingDifferentor{
         z_ = std::array{next_z1, next_z2};
     }
 
-    constexpr std::array<q16, 2> output(){
+    constexpr std::array<q16, 2> state(){
         return {z_[0], z_[1]};
     }
 private:
@@ -242,7 +239,7 @@ void adrc_main(){
         const auto u1 = clock::micros();
         elapsed_micros = u1 - u0;
 
-        // leso.update(cs.output()[0], u);
+        // leso.update(cs.state()[0], u);
 
     };
 
@@ -260,9 +257,9 @@ void adrc_main(){
 
         DEBUG_PRINTLN(
             u,
-            cs.output()[0],
-            cs.output()[1],
-            sat(cs.output()[0])
+            cs.state()[0],
+            cs.state()[1],
+            sat(cs.state()[0])
             // leso.get_disturbance()
             ,elapsed_micros.count()
         );

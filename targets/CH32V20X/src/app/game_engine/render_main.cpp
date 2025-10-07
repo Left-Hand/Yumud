@@ -599,7 +599,7 @@ void render_main(){
     while(true){
 
 
-        [[maybe_unused]] auto repl_service = [&]{
+        [[maybe_unused]] auto repl_service_poller = [&]{
             static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
             static const auto list = rpc::make_list(
@@ -617,7 +617,7 @@ void render_main(){
             repl_server.invoke(list);
         };
 
-        repl_service();
+        repl_service_poller();
         const auto ctime = clock::time();
         // const auto dest_angle = Angle<q16>::from_turns(ctime * 0.3_r);
         const auto dest_angle = Angle<q16>::from_turns(ctime * 0.1_r);

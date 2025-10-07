@@ -200,7 +200,7 @@ void at8222_tb(){
 
         const auto pos = ect.count() * 0.01_r;
         td.update(pos);
-        [[maybe_unused]] const auto spd = td.get()[1];
+        [[maybe_unused]] const auto spd = td.state()[1];
 
         // static constexpr auto kp = 267.0_r;
         // static constexpr auto kd = 0.0_r;

@@ -368,7 +368,7 @@ void UartHw::set_remap(const uint8_t remap){
 }
 
 
-void UartHw::enable_it(const Enable en){
+void UartHw::register_nvic(const Enable en){
     IRQn irq = IRQn::Software_IRQn;
     uint8_t pp = 1;
     uint8_t sp = 7;
@@ -441,19 +441,26 @@ void UartHw::enable_it(const Enable en){
 void UartHw::on_rxidle_interrupt(){
     switch(rx_strategy_){
         case CommStrategy::Dma:{
-            const size_t index = UART_RX_DMA_BUF_SIZE - rx_dma_.pending();
-            if(unlikely(index >= UART_RX_DMA_BUF_SIZE)) while(true);
-            if((index != (UART_RX_DMA_BUF_SIZE / 2)) and (index != UART_RX_DMA_BUF_SIZE)){
+            // __builtin_trap();
+            const size_t next_index = UART_RX_DMA_BUF_SIZE - rx_dma_.remaining();
+
+            if(unlikely(next_index >= UART_RX_DMA_BUF_SIZE)) 
+                __builtin_trap();
+
+            if((next_index != (UART_RX_DMA_BUF_SIZE / 2)) and (next_index != UART_RX_DMA_BUF_SIZE)){
+            // if(true){
                 (void)this->rx_fifo_.push(std::span(
-                    &rx_dma_buf_[rx_dma_buf_index_], (index - rx_dma_buf_index_))); 
+                    &rx_dma_buf_[rx_dma_buf_index_], (next_index - rx_dma_buf_index_))); 
+                // (void)this->rx_fifo_.push(1); 
             }
-            rx_dma_buf_index_ = index;
+
+            rx_dma_buf_index_ = next_index;
             invoke_post_rx_callback();
         }; 
             break;
 
         default:
-            while(true);
+            __builtin_trap();
     }
 }
 
@@ -468,6 +475,7 @@ void UartHw::on_rx_dma_done(){
 }
 
 void UartHw::on_rx_dma_half(){
+
     //将数据从当前索引填充至半满
     (void)this->rx_fifo_.push(std::span(
         &rx_dma_buf_[rx_dma_buf_index_], 
@@ -487,18 +495,17 @@ void UartHw::enable_single_line_mode(const Enable en){
 }
 
 void UartHw::invoke_tx_dma(){
-    if(tx_dma_.pending() == 0){
-        if(tx_fifo_.available()){
-            const size_t tx_amount = tx_fifo_.available();
-            (void)tx_fifo_.pop(std::span(tx_dma_buf_.data(), tx_amount));
-            tx_dma_.start_transfer_mem2pph<char>(
-                (&inst_->DATAR), 
-                tx_dma_buf_.data(), tx_amount
-            );
-        }else{
-            invoke_post_tx_callback();
-        }
+    if(tx_dma_.remaining())    return;
+    if(tx_fifo_.available() == 0){
+        invoke_post_tx_callback();
+        return;
     }
+    const size_t tx_amount = tx_fifo_.available();
+    (void)tx_fifo_.pop(std::span(tx_dma_buf_.data(), tx_amount));
+    tx_dma_.start_transfer_mem2pph<char>(
+        (&inst_->DATAR), 
+        tx_dma_buf_.data(), tx_amount
+    );
 }
 
 
@@ -535,6 +542,7 @@ void UartHw::set_rx_strategy(const CommStrategy rx_strategy){
     if(rx_strategy_ == rx_strategy) return;
         
     auto rx_gpio = rxio();
+
     if(rx_strategy != CommStrategy::Nil){
         rx_gpio.inpu();
     }
@@ -578,7 +586,7 @@ void UartHw::init(const Config & cfg){
     USART_Init(inst_, &USART_InitStructure);
     USART_Cmd(inst_, ENABLE);
 
-    enable_it(EN);
+    register_nvic(EN);
     set_tx_strategy(cfg.tx_strategy);
     set_rx_strategy(cfg.rx_strategy);
 }
@@ -598,7 +606,7 @@ void UartHw::writeN(const char * pbuf, const size_t len){
             break;
         case CommStrategy::Interrupt:
             (void)tx_fifo_.push(std::span(pbuf, len));
-            invoke_tx_it();
+            enable_tx_it();
 
             break;
         case CommStrategy::Dma:
@@ -622,7 +630,7 @@ void UartHw::write1(const char data){
 
         case CommStrategy::Interrupt:
             tx_fifo_.push(data);
-            invoke_tx_it();
+            enable_tx_it();
             break;
 
         case CommStrategy::Dma:
@@ -674,28 +682,38 @@ void UartHw::enable_tx_dma(const Enable en){
     USART_DMACmd(inst_, USART_DMAReq_Tx, en == EN);
 
     if(en == EN){
+        static constexpr NvicPriority NVIC_PRIORITY = {1,1};
         tx_dma_.init({DmaMode::toPeriph, DmaPriority::Medium});
-        tx_dma_.register_nvic({1,1}, EN);
+
+        tx_dma_.register_nvic(NVIC_PRIORITY, EN);
         tx_dma_.enable_interrupt<DmaIT::Done>(EN);
         tx_dma_.set_interrupt_callback<DmaIT::Done>(
             [this](){this->invoke_tx_dma();}
         );
+    }else{
+        tx_dma_.set_interrupt_callback<DmaIT::Done>(nullptr);
     }
 }
+
 void UartHw::enable_rx_dma(const Enable en){
     USART_DMACmd(inst_, USART_DMAReq_Rx, en == EN);
     if(en == EN){
+        static constexpr NvicPriority NVIC_PRIORITY = {1,1};
         rx_dma_.init({DmaMode::toMemCircular, DmaPriority::Medium});
-        rx_dma_.register_nvic({1,1}, EN);
+
+        rx_dma_.register_nvic(NVIC_PRIORITY, EN);
         rx_dma_.enable_interrupt<DmaIT::Done>(EN);
         rx_dma_.enable_interrupt<DmaIT::Half>(EN);
         rx_dma_.set_interrupt_callback<DmaIT::Done>(
-            [this](){this->on_rx_dma_done();
-        });
+
+            [this](){this->on_rx_dma_done();}
+        );
 
         rx_dma_.set_interrupt_callback<DmaIT::Half>(
+
             [this](){this->on_rx_dma_half();}
         );
+
         rx_dma_.start_transfer_pph2mem<char>(
             rx_dma_buf_.data(), 
             &inst_->DATAR, 
@@ -712,7 +730,7 @@ void UartHw::enable_rxne_it(const Enable en){
     USART_ITConfig(inst_, USART_IT_RXNE, en == EN);
 }
 
-void UartHw::invoke_tx_it(){
+void UartHw::enable_tx_it(){
     USART_ITConfig(inst_, USART_IT_TXE, ENABLE);
 }
 

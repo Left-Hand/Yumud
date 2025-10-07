@@ -99,9 +99,6 @@ void SpiHw::enable_rcc(const Enable en){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en == EN);
-            if(SPI1_REMAP){
-                GPIO_PinRemapConfig(GPIO_Remap_SPI1, ENABLE);
-            }
             break;
         #endif
         #ifdef ENABLE_SPI2
@@ -112,6 +109,41 @@ void SpiHw::enable_rcc(const Enable en){
     }
 }
 
+void SpiHw::set_remap(const uint8_t remap){
+    switch(reinterpret_cast<size_t>(inst_)){
+        default:
+            __builtin_unreachable();
+        #ifdef ENABLE_SPI1
+        case SPI1_BASE:
+            if(SPI1_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_SPI1, ENABLE);
+            }
+            break;
+        #endif
+        #ifdef ENABLE_SPI2
+        case SPI2_BASE:
+            //SPI2 NO REMAP
+            break;
+        #endif
+    }
+}
+
+
+static constexpr uint8_t get_default_remap(const void * inst_){
+    switch(reinterpret_cast<size_t>(inst_)){
+        default:
+            __builtin_unreachable();
+        #ifdef ENABLE_SPI1
+        case SPI1_BASE:
+            return SPI1_REMAP;
+        #endif
+        #ifdef ENABLE_SPI2
+        case SPI2_BASE:
+            //SPI2 NO REMAP
+            return 0;
+        #endif
+    }
+}
 
 
 Gpio SpiHw::get_mosi_gpio(){
@@ -188,6 +220,7 @@ void SpiHw::init(const Config & cfg){
     tx_strategy_ = cfg.tx_strategy;
     rx_strategy_ = cfg.rx_strategy;
 	enable_rcc(EN);
+    set_remap(get_default_remap(inst_));
     plant_gpios();
 
     const SPI_InitTypeDef SPI_InitStructure = {

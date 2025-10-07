@@ -235,7 +235,7 @@ static constexpr IRQn map_inst_to_irq(const uint8_t dma_index, const uint8_t cha
 }
 void DmaChannel::register_nvic(const NvicPriority _priority, const Enable en){
     const IRQn irq = map_inst_to_irq(dma_index_, channel_index_);
-    NvicPriority::enable(_priority, IRQn(irq), en);
+    NvicPriority::enable(_priority, irq, en);
 }
 
 void DmaChannel::set_periph_width(const size_t width){
@@ -260,7 +260,7 @@ void DmaChannel::resume(){
     DMA_Cmd(SDK_INST(inst_), ENABLE);
 }
 
-size_t DmaChannel::pending(){
+size_t DmaChannel::remaining(){
     return SDK_INST(inst_) -> CNTR;
 }
 

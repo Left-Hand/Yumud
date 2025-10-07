@@ -29,6 +29,9 @@
 #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
+#include "robots/rpc/rpc.hpp"
+#include "robots/repl/repl_service.hpp"
+#include "hal/dma/dma.hpp"
 
 using namespace ymd;
 
@@ -36,7 +39,7 @@ using namespace ymd::drivers;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
 
-#define DEBUG_UART hal::uart2
+#define DBG_UART hal::uart2
 
 // static constexpr uint32_t DEBUG_UART_BAUD = 576000;
 
@@ -115,8 +118,12 @@ static void init_adc(){
 }
 
 void myesc_main(){
-    DEBUG_UART.init({DEBUG_UART_BAUD});
-    DEBUGGER.retarget(&DEBUG_UART);
+    DBG_UART.init({
+        .baudrate = DEBUG_UART_BAUD,
+        .rx_strategy = CommStrategy::Dma,
+        .tx_strategy = CommStrategy::Dma
+    });
+    DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets(EN);
@@ -202,7 +209,7 @@ void myesc_main(){
 
     // mosdrv.init({}).examine();
 
-    auto blink_service = [&]{
+    auto blink_service_poller = [&]{
 
         led_red_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
         led_blue_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
@@ -437,24 +444,38 @@ void myesc_main(){
     );
 
 
+    [[maybe_unused]] auto repl_service_poller = [&]{
+        static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
+
+        static const auto list = rpc::make_list(
+            "list",
+
+            rpc::make_function("errn", [&](int32_t a, int32_t b){ 
+                DEBUG_PRINTLN(a,b);
+            }),
+            rpc::make_function("errn2", [&](int32_t a, int32_t b){ 
+                DEBUG_PRINTLN(a,b);
+            })
+
+        );
+
+        repl_server.invoke(list);
+    };
 
     while(true){
-        DEBUG_PRINTLN_IDLE(
+        if(1) DEBUG_PRINTLN_IDLE(
             // uvw_curr_,
+            // UART2_RX_DMA_CH.remaining(),
+            // DBG_UART.rx_fifo().pop(),
+            // DBG_UART.available()
             alphabeta_curr_,
             dq_curr_,
-            dq_volt_,
-            // uvw_curr_,
+            dq_volt_
 
-            // -0.02_q20 - uvw_curr_.u - uvw_curr_.v,
-            // uvw_curr_.numeric_sum(),
-            // dq_volt_,
-            // alphabeta_volt_,
-
-            flux_sensorless_ob.angle().to_turns(),
-            lbg_sensorless_ob.angle().to_turns(),
-            smo_sensorless_ob.angle().to_turns(),
-            uint32_t(exe_us_.count())
+            // flux_sensorless_ob.angle().to_turns(),
+            // lbg_sensorless_ob.angle().to_turns(),
+            // smo_sensorless_ob.angle().to_turns(),
+            // uint32_t(exe_us_.count())
 
             // openloop_elecrad_.normalized().to_turns()
             // bool(nfault_gpio_.read() == LOW),
@@ -475,7 +496,8 @@ void myesc_main(){
             // mosdrv.get_status2().unwrap().as_bitset(),
         );
 
-        blink_service();
+        blink_service_poller();
+        repl_service_poller();
         // clock::delay(2ms);
     }
 

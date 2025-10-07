@@ -167,7 +167,7 @@ public:
             Fn && cb, const Enable en){
         register_nvic<I>(priority, en);
         enable_interrupt<I>(en);
-        set_callback<I>(std::forward<Fn>(cb));
+        set_interrupt_callback<I>(std::forward<Fn>(cb));
     }
 
     template<IT I>
@@ -176,7 +176,7 @@ public:
     }
 
     template<IT I, typename Fn>
-    void set_callback(Fn && cb){
+    void set_interrupt_callback(Fn && cb){
         get_callback<I>() = std::forward<Fn>(cb);
     }
 

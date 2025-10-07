@@ -29,7 +29,7 @@ void BurstDmaPwm::install(){
 }
 
 bool BurstDmaPwm::is_done(){
-    return dma_channel_.pending() == 0;
+    return dma_channel_.remaining() == 0;
 }
 
 uint32_t BurstDmaPwm::calc_cvr_from_duty(const q31 duty) const {

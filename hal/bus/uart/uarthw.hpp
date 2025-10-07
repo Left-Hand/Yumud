@@ -65,16 +65,17 @@ public:
 
     Gpio txio();
     Gpio rxio();
+
 private:
     USART_TypeDef * inst_;
 
     void enable_rcc(const Enable en);
-    void enable_it(const Enable en);
+    void register_nvic(const Enable en);
     void set_remap(const uint8_t remap);
 
     void enable_rxne_it(const Enable en);
     void enable_idle_it(const Enable en);
-    void invoke_tx_it();
+    void enable_tx_it();
 
     void enable_rx_dma(const Enable en);
     void enable_tx_dma(const Enable en);

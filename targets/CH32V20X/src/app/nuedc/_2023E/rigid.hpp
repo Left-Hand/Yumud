@@ -46,7 +46,7 @@ public:
 
     void tick(){
         td_.update({targ_.yaw, targ_.pitch});
-        const auto [ref_yaw, ref_pitch] = td_.get()[0];
+        const auto [ref_yaw, ref_pitch] = td_.state()[0];
         ref_ = GimbalSolution{ref_yaw, ref_pitch};
         actuator_.set_gest(ref_);
     }
