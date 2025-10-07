@@ -1,6 +1,5 @@
 #pragma once
 
-#include "types/gesture/pose2.hpp"
 #include "types/gesture/twist2.hpp"
 
 namespace ymd{
@@ -17,7 +16,7 @@ public:
 protected:
     const Config & config;
 
-    Vec2<T> get_velocity_from_wheels(const T4 & spd4) {
+    constexpr Vec2<T> get_velocity_from_wheels(const T4 & spd4) {
         T s0 = std::get<0>(spd4);
         T s1 = std::get<1>(spd4);
         T s2 = std::get<2>(spd4);
@@ -28,7 +27,7 @@ protected:
         return Vec2<T>(x, y);
     }
 
-    T get_spinrate_from_wheels(const T4 & spd4) {
+    constexpr T get_spinrate_from_wheels(const T4 & spd4) {
         T temp = (config.chassis_height_meter + config.chassis_width_meter) / 2;
         T s0 = std::get<0>(spd4);
         T s1 = std::get<1>(spd4);
@@ -37,7 +36,7 @@ protected:
         return (s1 - s0 + s2 - s3) / (4 * temp);
     }
 
-    T4  get_wheels_from_status(const Vec2<T>& spd, T spinrate) {
+    constexpr T4  get_wheels_from_status(const Vec2<T>& spd, T spinrate) {
         T temp = (config.chassis_height_meter + config.chassis_width_meter) / 2;
         return {
             spd.y + spd.x - spinrate * temp,
@@ -48,13 +47,13 @@ protected:
     }
 
 public:
-    Mecanum4Kinematics(const Config & _config):config(_config) {}
+    constexpr Mecanum4Kinematics(const Config & _config):config(_config) {}
 
-    Twist2<T> forward(const T4 & spd4){
+    constexpr Twist2<T> forward(const T4 & spd4){
         return {get_velocity_from_wheels(spd4), get_spinrate_from_wheels(spd4)};
     }
     
-    T4 inverse(const Twist2<T> & pv){
+    constexpr T4 inverse(const Twist2<T> & pv){
         return get_wheels_from_status(pv.linear, pv.angular);
     }
 };

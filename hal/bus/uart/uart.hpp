@@ -38,19 +38,7 @@ public:
     using Callback = std::function<void(void)>;
     using Parity = UartParity;
 
-public:
-    hal::HalResult read(uint32_t & data) {
-        char _;read1(_);data = _;return hal::HalResult::Ok();};
 
-    hal::HalResult write(const uint32_t data) {
-        write1(char(data)); return hal::HalResult::Ok();};
-
-    virtual void writeN(const char * pdata, const size_t len) = 0;
-
-    virtual void write1(const char data) = 0;
-
-    void read1(char & data);
-    void readN(char * pbuf, const size_t len);
     Uart(const Uart & other) = delete;
     Uart(Uart && other) = delete;
 
@@ -71,7 +59,21 @@ public:
     void bind_post_tx_cb(auto && cb){post_tx_cb_ = std::move(cb);}
     void bind_post_rx_cb(auto && cb){post_rx_cb_ = std::move(cb);}
 
+    HalResult read(uint32_t & data) {
+        char _;read1(_);data = _;return HalResult::Ok();};
 
+    HalResult write(const uint32_t data) {
+        write1(char(data)); return HalResult::Ok();};
+
+    virtual void writeN(const char * pdata, const size_t len) = 0;
+
+    virtual void write1(const char data) = 0;
+
+    void read1(char & data);
+    void readN(char * pbuf, const size_t len);
+
+    auto & tx_fifo(){return tx_fifo_;}
+    auto & rx_fifo(){return rx_fifo_;}
 private:
     Callback post_tx_cb_;
     Callback post_rx_cb_;

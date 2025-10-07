@@ -18,9 +18,10 @@
 
 #include "dsp/filter/homebrew/debounce_filter.hpp"
 #include "dsp/controller/adrc/tracking_differentiator.hpp"
-#include "dsp/controller/pi_ctrl.hpp"
 #include "dsp/homebrew/edge_counter.hpp"
 #include "dsp/controller/smc/sliding_mode_ctrl.hpp"
+
+#include "digipw/ctrl/pi_controller.hpp"
 
 using namespace ymd;
 
@@ -63,7 +64,7 @@ void at8222_tb(){
     //因为是中心对齐的顶部触发 所以频率翻�?
     timer.init({
         .freq = ISR_FREQ * 2, 
-        .mode = hal::TimerCountMode::CenterAlignedUpTrig
+        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
     auto & pwm_pos = timer.oc<1>();
@@ -89,7 +90,7 @@ void at8222_tb(){
 
     timer.set_trgo_source(hal::TimerTrgoSource::OC4R);
 
-    timer.oc<4>().init({.install_en = DISEN});
+    timer.oc<4>().init({.plant_en = DISEN});
 
     // timer.oc(4).cvr() = timer.arr() - 1; 
     // timer.oc(4).cvr() = int(timer.arr() * 0.1_r); 
@@ -151,15 +152,13 @@ void at8222_tb(){
     //     .fs = ISR_FREQ
     // }};
     
-    dsp::DeltaPdController pi_ctrl{{
-        .kp = 0.8_r,
-        .kd = 0.00_r,
-
-        .out_min = 0.7_r,
-        .out_max = 0.97_r,
-
-        .fs = ISR_FREQ
-    }};
+    // digipw::PiController pi_ctrl{{
+    //     .fs = ISR_FREQ
+    //     .kp = 0.01_r,
+    //     .ki = 0.01_r,
+    //     .out_min = 0.7_r,
+    //     .out_max = 0.97_r,
+    // }};
 
     dsp::TrackingDifferentiatorByOrders<2> td{{
         // .r = 14.96_r,
@@ -201,12 +200,12 @@ void at8222_tb(){
 
         const auto pos = ect.count() * 0.01_r;
         td.update(pos);
-        const auto spd = td.get()[1];
+        [[maybe_unused]] const auto spd = td.state()[1];
 
         // static constexpr auto kp = 267.0_r;
         // static constexpr auto kd = 0.0_r;
         // const auto spd_cmd = kp * (pos_targ - pos) + kd * (spd_targ - spd);
-        pi_ctrl.update(spd_targ, spd);
+        // pi_ctrl.update(spd_targ, spd);
         // pwm_pos = pi_ctrl.get();
         // pwm_pos = 0.87_r * abs(sinpu(time()));
         // pwm_pos = 0.7_r + 0.17_r * abs(sinpu(time()));

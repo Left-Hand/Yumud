@@ -16,6 +16,12 @@ struct Rotation2 {
         return Rotation2{s, c};
     }
 
+    [[nodiscard]] static constexpr 
+    Rotation2 from_radians(const T radians) {
+        const auto [s, c] = ymd::sincos(radians);
+        return Rotation2{s, c};
+    }
+
 
     // 恒等旋转（单位旋转）
     [[nodiscard]] static constexpr 
@@ -40,11 +46,6 @@ struct Rotation2 {
     }
 
     [[nodiscard]] constexpr 
-    Angle<T> angle() const {
-        return Angle<T>::from_turns(atan2pu(sine_, cosine_));
-    }
-
-    [[nodiscard]] constexpr 
     Vec2<T> operator*(const Vec2<T>& v) const {
         return Vec2<T>(
             cosine_ * v.x - sine_ * v.y,
@@ -62,6 +63,21 @@ struct Rotation2 {
         };
     }
 
+    // [[nodiscard]] constexpr 
+    // Rotation2 operator + (const Angle<T> & angle) const {
+    //     return *this * Rotation2::from_angle(angle);
+    // }
+
+    // [[nodiscard]] constexpr 
+    // Rotation2 operator - (const Angle<T> & angle) const {
+    //     return *this * (Rotation2::from_angle(angle).inverse());
+    // }
+
+    [[nodiscard]] constexpr 
+    Rotation2 operator -() const {
+        return this->inverse();
+    }
+
     // 逆旋转（转置）
     [[nodiscard]] constexpr 
     Rotation2 inverse() const {
@@ -73,11 +89,33 @@ struct Rotation2 {
         return inverse();
     }
 
+    [[nodiscard]] constexpr 
+    Rotation2 forward_90deg() const {
+        return Rotation2{cosine_, -sine_};
+    }
+
+    [[nodiscard]] constexpr
+    Rotation2 backward_90deg() const {
+        return Rotation2{-cosine_, sine_};
+    }
+
     [[nodiscard]] constexpr T sine() const {return sine_;}
     [[nodiscard]] constexpr T cosine() const {return cosine_;}
 
     [[nodiscard]] constexpr std::array<T, 2> sincos() const {
         return {sine_, cosine_};
+    }
+
+    [[nodiscard]] constexpr Angle<T> to_angle() const {
+        return Angle<T>::from_turns(atan2pu(sine_, cosine_));
+    }
+
+    [[nodiscard]] constexpr Vec2<T> to_vec2(const T length) const {
+        return Vec2<T>(cosine_ * length, sine_ * length);
+    }
+
+    [[nodiscard]] constexpr Vec2<T> to_unit_vec2() const {
+        return Vec2<T>(cosine_, sine_);
     }
 
     #if 0
@@ -121,8 +159,15 @@ private:
     constexpr explicit Rotation2(T sin_val, T cos_val) : sine_(sin_val), cosine_(cos_val) {;}
 
     friend OutputStream& operator<<(OutputStream& os, const Rotation2<T>& self) {
-        return os << "Rotation2(sin=" << self.sine_ << ", cos=" << self.cosine_ 
-                    << ", angle=" << self.angle().to_degrees() << "°)";
+        const auto guard = os.create_guard();
+        os.set_splitter(',');
+        return os << os.brackets<'('>() <<
+            "sin=" << self.sine_ << os.splitter() << 
+            "cos=" << self.cosine_ << os.splitter() <<
+            // self.sine_ << self.cosine_
+            "angle=" << self.to_angle().to_degrees() << "°" <<
+            os.brackets<')'>()
+        ;
     }
 };
 }

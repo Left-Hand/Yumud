@@ -19,9 +19,13 @@ void m2006_main(){
 
     // DEBUGGER_INST.init(576000, CommStrategy::Blocking);
     auto & can = hal::can1;
-    can.init({hal::CanBaudrate::_1M});
+    can.init({
+        // hal::CanBaudrate::_1M
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
+        .mode = hal::CanMode::Normal
+    });
 
-    can.filter(0).apply(
+    can.filters<0>().apply(
         hal::CanFilterConfig::from_accept_all()
     );
 

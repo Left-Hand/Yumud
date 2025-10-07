@@ -7,19 +7,19 @@ using IT = TimerIT;
 
 #define ADVANCED_TIMER_IT_TEMPLATE(x)\
 void TIM##x##_BRK_IRQHandler(void){\
-    timer##x.on_break_interrupt();\
+    timer##x.invoke_callback<IT::Break>();\
     TIM_ClearFlag(TIM##x, TIM_IT_Break);\
 }\
 void TIM##x##_UP_IRQHandler(void){\
-    timer##x.on_update_interrupt();\
+    timer##x.invoke_callback<IT::Update>();\
     TIM_ClearFlag(TIM##x, TIM_IT_Update);\
 }\
 void TIM##x##_TRG_COM_IRQHandler(void){\
     if(TIM_GetITStatus(TIM##x, TIM_IT_Trigger)){\
-        timer##x.on_trigger_interrupt();\
+        timer##x.invoke_callback<IT::Trigger>();\
         TIM_ClearFlag(TIM##x, TIM_IT_Trigger);\
     }else if(TIM_GetITStatus(TIM##x, TIM_IT_COM)){\
-        timer##x.on_com_interrupt();\
+        timer##x.invoke_callback<IT::COM>();\
         TIM_ClearFlag(TIM##x, TIM_IT_COM);\
     }\
 }\

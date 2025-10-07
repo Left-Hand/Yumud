@@ -5,12 +5,12 @@
 namespace ymd::dsp{
 template<arithmetic T>
 
-struct GaussianNoiseGenerator_t{
+struct GaussianNoiseGenerator{
 public:
     T m_mu;
     T m_sigma;
 
-    GaussianNoiseGenerator_t(T mu, T sigma):m_mu(mu),m_sigma(sigma){;}
+    GaussianNoiseGenerator(T mu, T sigma):m_mu(mu),m_sigma(sigma){;}
     T update(){
         return gaussianNoise(m_mu, m_sigma);
     }
@@ -39,6 +39,6 @@ public:
 };
 
 template<arithmetic T>
-GaussianNoiseGenerator -> GaussianNoiseGenerator_t<T>;
+GaussianNoiseGenerator -> GaussianNoiseGenerator<T>;
 
 }

@@ -61,7 +61,7 @@ public:
     
     //impure fn
     [[nodiscard]]
-    constexpr const auto & get() const {
+    constexpr const auto & state() const {
         return state_;
     }
 private:
@@ -165,7 +165,7 @@ public:
     
     //impure fn
     [[nodiscard]]
-    constexpr const State get() const {
+    constexpr const State state() const {
         return {
             state_[0],
             state_[1] * 0.6_r
@@ -212,20 +212,20 @@ public:
         // static 
 
         self.lpf.update(u0);
-        const auto u = self.lpf.get()[0];
+        const auto u = self.lpf.state()[0];
         // const auto u = u0;
         const auto pos_err = u - pos;
         const auto dist = ABS(pos_err);
         // const auto expect_spd = CLAMP2(SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_);
-        // const auto expect_spd = iq_t<16>(CLAMP2(self.lpf.get()[1] + SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_));
-        // DEBUG_PRINTLN(u0, u, pos, spd, expect_spd, self.max_spd_, self.lpf.get());
+        // const auto expect_spd = iq_t<16>(CLAMP2(self.lpf.state()[1] + SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_));
+        // DEBUG_PRINTLN(u0, u, pos, spd, expect_spd, self.max_spd_, self.lpf.state());
         
         // DEBUG_PRINTLN(expect_spd);
         // if(dist > 0.1_r){
         if(true){
             auto expect_spd = std::copysign(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err);
             // auto expect_spd = std::copysign(std::sqrt(1.57_r * self.max_acc_ * dist), pos_err);
-            if(spd * self.lpf.get()[1] < 0) expect_spd += self.lpf.get()[1];
+            if(spd * self.lpf.state()[1] < 0) expect_spd += self.lpf.state()[1];
             const auto spd_cmd = q20(CLAMP2(expect_spd, self.max_spd_));
             return {
                 pos + spd * dt, 

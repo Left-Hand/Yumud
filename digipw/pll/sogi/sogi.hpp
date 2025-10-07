@@ -18,14 +18,14 @@ public:
     float u_beta_;
 
 
-    SogiF(const Config& config): config_(config){;}
+    constexpr SogiF(const Config& config): config_(config){;}
 
-    void reset(){
+    constexpr void reset(){
         u_alpha_ = 0.0f;
         u_beta_ = 0.0f;
     }
 
-    void update(const float uin){
+    constexpr void update(const float uin){
         const auto u_alpha = u_alpha_;
         const auto u_beta = u_beta_;
 
@@ -38,35 +38,38 @@ class SogiQ{
 public:
 
     struct Config{
-        iq_t<16> w;
-        int freq;
+        uint32_t fs;
+        q16 w;
     };
 
-    const iq_t<16> w_by_freq;
-    iq_t<16> u_alpha_;
-    iq_t<16> u_beta_;
 
-    SogiQ(const Config & config):
-        w_by_freq(config.w / config.freq){
+    constexpr SogiQ(const Config & config):
+        w_by_freq(config.w / config.fs){
         reset();
     }
 
-    void reset(){
+    constexpr void reset(){
         u_alpha_ = 0;
         u_beta_ = 0;
     }
 
-    void update(const iq_t<16> uin){
-        static constexpr iq_t<16> kp = iq_t<16>(1.414_r);
+    constexpr void update(const q16 uin){
+        static constexpr q16 kp = q16(1.414_r);
         const auto u_alpha = u_alpha_;
         const auto u_beta = u_beta_;
-   
+
         u_alpha_ += (((uin)- u_alpha) * kp - u_beta) * w_by_freq;
         u_beta_ += u_alpha * w_by_freq;
     }
 
-    AbCurrent ab() const {
+    constexpr AbCurrent ab() const {
         return {u_alpha_, u_beta_};
     }
+
+private:
+    const q16 w_by_freq;
+    q16 u_alpha_;
+    q16 u_beta_;
+
 };
 }

@@ -79,7 +79,7 @@ public:
             return -r*sign(a);
     }
 
-    const auto & get() const {return state_;}
+    const auto & state() const {return state_;}
 
 
     void reconf(const Config & cfg){
@@ -175,7 +175,7 @@ public:
     }
 
     constexpr const auto & back() const {return state_.back();}
-    constexpr const auto & get() const {return state_;}
+    constexpr const auto & state() const {return state_;}
 
 
 private:

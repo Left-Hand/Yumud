@@ -132,7 +132,7 @@ public:
     };
 
 public:
-    InterleavedPwmGen3(hal::AdvancedTimer & timer):
+    explicit InterleavedPwmGen3(hal::AdvancedTimer & timer):
         timer_(timer), 
         pwm_u_(timer.oc<1>()), 
         pwm_v_(timer.oc<2>()), 
@@ -184,7 +184,7 @@ public:
         pwm_trig_.init({
             .oc_mode = hal::TimerOcMode::ActiveBelowCvr,
             .cvr_sync_en = DISEN,
-            .install_en = EN,
+            .plant_en = EN,
         });
 
         pwm_trig_.set_dutycycle(TWO_BY_3);

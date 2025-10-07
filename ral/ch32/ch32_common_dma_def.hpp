@@ -151,7 +151,7 @@ struct DMA_CH_Def{
 struct DMA1_Def{
     volatile R32_DMA_INTFR INTFR;
     volatile R32_DMA_INTFCR INTFCR;
-    volatile DMA_CH_Def CH[8];
+    DMA_CH_Def CH[8];
 
     constexpr void clear_global_flag(const uint8_t index){
         INTFCR.DATA = (1 << (index * 4 - 4));

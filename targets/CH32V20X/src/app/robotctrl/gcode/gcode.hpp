@@ -195,8 +195,8 @@ struct GcodeArgsIter {
 
     constexpr Result<GcodeArg, Error> next() {
         while (arg_str_iter_.has_next()) {
-            const auto token_str = arg_str_iter_.next();
-            if (token_str.is_empty()) continue; // Skip empty tokens (e.g., multiple spaces)
+            const auto token_str = arg_str_iter_.next().unwrap();
+            if (token_str.length() == 0) continue; // Skip empty tokens (e.g., multiple spaces)
 
             const char letter = token_str[0];
             // if (Mnemonic::is_letter_valid(letter))
@@ -207,7 +207,7 @@ struct GcodeArgsIter {
             }
 
             // Parse value (skip letter)
-            const auto value_str = token_str.substr(1);
+            const auto value_str = token_str.substr(1).unwrap();
             const auto res = strconv2::str_to_iq<16>(value_str);
             if (res.is_err()) {
                 // Value parsing failed (e.g., "X1.2.3") -> return Error
@@ -246,7 +246,7 @@ struct GcodeLine{
     constexpr IResult<uint16_t> query_major(Mnemonic mnemoic) const {
         return query_tmp<uint16_t>(mnemoic.to_letter(), 
         [](const StringView str) -> Result<uint16_t, Error>{
-            const auto res = (strconv2::FstrDump::from_str(str.substr(1)));
+            const auto res = (strconv2::FstrDump::from_str(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
             if(dump.digit_part > std::numeric_limits<uint16_t>::max())
@@ -258,7 +258,7 @@ struct GcodeLine{
     constexpr IResult<uint16_t> query_minor(Mnemonic mnemoic) const {
         return query_tmp<uint16_t>(mnemoic.to_letter(), 
         [](const StringView str) -> Result<uint16_t, Error>{
-            const auto res = (strconv2::FstrDump::from_str(str.substr(1)));
+            const auto res = (strconv2::FstrDump::from_str(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
             if(dump.scale == 0) return Err(GcodeParseError::NoMinorNumber);
@@ -270,7 +270,7 @@ struct GcodeLine{
 
     constexpr IResult<q16> query_arg_value(const char letter) const {
         return query_tmp<q16>(letter, [](const StringView str) -> IResult<q16>{
-            const auto res = (strconv2::str_to_iq<16>(str.substr(1)));
+            const auto res = (strconv2::str_to_iq<16>(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             return Ok(res.unwrap());
         });
@@ -288,12 +288,12 @@ private:
         });
 
         auto iter = strconv2::StringSplitIter(
-            line_.substr(value_position), ' '
+            line_.substr(value_position).unwrap(), ' '
         );
 
         if(not iter.has_next()) 
             return Err(GcodeParseError::NoStringSegmentFounded);
-        return Ok(iter.next());
+        return Ok(iter.next().unwrap());
     }
 
     template<typename T, typename Fn>

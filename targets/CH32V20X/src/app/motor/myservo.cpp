@@ -122,7 +122,7 @@ public:
         };
     }
 
-    const State & get() const {return state_;}
+    const State & state() const {return state_;}
 private:
     q24 kp_;
     q24 kd_;
@@ -226,7 +226,7 @@ void myservo_main(){
 
         hal::timer3.init({
             .freq = TIM_FREQ, 
-            .mode = hal::TimerCountMode::CenterAlignedUpTrig
+            .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
         }, EN);
 
         auto & pwm_pos = hal::timer3.oc<1>();
@@ -295,7 +295,7 @@ void myservo_main(){
 
     // can.init(CanBaudrate::_1M, CanMode::Internal);
     can.init({
-        .baudrate = hal::CanBaudrate::_1M
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
     init_adc();
 
@@ -305,14 +305,14 @@ void myservo_main(){
 
     hal::timer3.init({
         .freq = TIM_FREQ, 
-        .mode = hal::TimerCountMode::CenterAlignedUpTrig
+        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
     real_t sense_raw_volt;
     auto & pwm = hal::timer3.oc<1>();
     auto & pwm_trig = hal::timer3.oc<4>();
     pwm.init({});
-    pwm_trig.init({.install_en = DISEN});
+    pwm_trig.init({.plant_en = DISEN});
     pwm_trig.set_dutycycle(0.001_r);
     hal::timer3.set_trgo_source(hal::TimerTrgoSource::OC4R);
 

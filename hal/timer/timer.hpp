@@ -94,7 +94,7 @@ namespace ymd::hal{
 class BasicTimer{
 public:
     using IT = TimerIT;
-    using Mode = TimerCountMode;
+    using CountMode = TimerCountMode;
     using TrgoSource = TimerTrgoSource;
     using Callback = std::function<void(void)>;
 private:
@@ -105,23 +105,21 @@ protected:
     uint32_t get_bus_freq();
     void enable_rcc(const Enable en);
 
-    
-    __fast_inline Callback & get_callback(const IT it){
-        switch(it){
-            default:
-            case IT::Update: return cbs_[0];
-            case IT::CC1: return cbs_[1];
-            case IT::CC2: return cbs_[2];
-            case IT::CC3: return cbs_[3];
-            case IT::CC4: return cbs_[4];
-            case IT::COM: return cbs_[5];
-            case IT::Trigger: return cbs_[6];
-            case IT::Break: return cbs_[7];
-        }
+    template<IT I>
+    __fast_inline Callback & get_callback(){
+        if constexpr (I == IT::Update)          return cbs_[0];
+        else if constexpr (I == IT::CC1)        return cbs_[1];
+        else if constexpr (I == IT::CC2)        return cbs_[2];
+        else if constexpr (I == IT::CC3)        return cbs_[3];
+        else if constexpr (I == IT::CC4)        return cbs_[4];
+        else if constexpr (I == IT::COM)        return cbs_[5];
+        else if constexpr (I == IT::Trigger)    return cbs_[6];
+        else if constexpr (I == IT::Break)      return cbs_[7];
     }
 
-    __fast_inline void invoke_callback(const IT it){
-        auto & cb = get_callback(it);
+    template<IT I>
+    __fast_inline void invoke_callback(){
+        auto & cb = get_callback<I>();
         EXECUTE(cb);
     }
 
@@ -130,11 +128,11 @@ public:
 
     struct Config{
         const uint32_t freq;
-        const Mode mode = Mode::Up;
+        const CountMode count_mode = CountMode::Up;
     };
 
     void init(const Config & cfg, const Enable en);
-    void remap(const uint8_t rm);
+    void set_remap(const uint8_t rm);
     void deinit();
 
     void enable(const Enable en);
@@ -145,7 +143,16 @@ public:
 
     void set_freq(const uint32_t freq);
 
-    void enable_it(const IT it,const NvicPriority request, const Enable en);
+    template<IT I>
+    void enable_interrupt(const Enable en){
+        TIM_ITConfig(inst_, std::bit_cast<uint8_t>(I), en == EN);
+    }
+
+    template<IT I>
+    void register_nvic(const NvicPriority request, const Enable en){
+        NvicPriority::enable(request, details::it_to_irq(inst_, I), en);
+    }
+
     void enable_arr_sync(const Enable en);
     void enable_psc_sync(const Enable en);
     void enable_cc_ctrl_sync(const Enable en);
@@ -154,22 +161,23 @@ public:
     volatile uint16_t & cnt(){return inst_->CNT;}
     volatile uint16_t & arr(){return inst_->ATRLR;}
 
-    template<typename Fn>
+    template<IT I, typename Fn>
     void attach(
-            const IT it, 
             const NvicPriority & priority, 
             Fn && cb, const Enable en){
-        bind_cb(it, std::forward<Fn>(cb));
-        enable_it(it, priority, en);
+        register_nvic<I>(priority, en);
+        enable_interrupt<I>(en);
+        set_interrupt_callback<I>(std::forward<Fn>(cb));
     }
 
-    void attach(const IT it, const NvicPriority & priority, std::nullptr_t cb){
-        attach(it, priority, nullptr, DISEN);
+    template<IT I>
+    void attach(const NvicPriority & priority, std::nullptr_t cb){
+        attach<I>(priority, nullptr, DISEN);
     }
 
-    template<typename Fn>
-    void bind_cb(const IT ch, Fn && cb){
-        get_callback(ch) = std::forward<Fn>(cb);
+    template<IT I, typename Fn>
+    void set_interrupt_callback(Fn && cb){
+        get_callback<I>() = std::forward<Fn>(cb);
     }
 
     #ifdef ENABLE_TIM6
@@ -198,7 +206,7 @@ public:
             TimerOC(inst_, TimerChannel::ChannelNth::CH4)
         }{;}
 
-    void init_as_encoder(const Mode mode = Mode::Up);
+    void init_as_encoder(const CountMode mode = CountMode::Up);
     void enable_single(const Enable en);
     void set_trgo_source(const TrgoSource source);
 
@@ -244,11 +252,6 @@ protected:
     uint8_t calculate_deadzone(const Nanoseconds deadzone_ns);
 
     TimerOCN n_channels[3];
-
-    __fast_inline void on_update_interrupt(){invoke_callback(IT::Update);}
-    __fast_inline void on_break_interrupt(){invoke_callback(IT::Break);}
-    __fast_inline void on_trigger_interrupt(){invoke_callback(IT::Trigger);}
-    __fast_inline void on_com_interrupt(){invoke_callback(IT::COM);}
 
 public:
     using LockLevel = TimerBdtrLockLevel;

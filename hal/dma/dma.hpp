@@ -42,18 +42,16 @@ extern"C"{
 
 namespace ymd::hal{
 
+enum class DmaIT:uint8_t{
+    Done,
+    Half
+};
+
 struct DmaChannel final{
 public:
     using Callback = std::function<void(void)>;
     using Mode = DmaMode;
     using Priority = DmaPriority;
-
-public:
-
-    DmaChannel() = delete;
-
-    DmaChannel(const DmaChannel & other) = delete;
-    DmaChannel(DmaChannel && other) = delete;
 
     DmaChannel(DMA_Channel_TypeDef * inst):
         inst_(inst), 
@@ -61,6 +59,13 @@ public:
         half_mask_(calculate_half_mask(inst)),
         dma_index_(calculate_dma_index(inst)),
         channel_index_(calculate_channel_index(inst)){;}
+
+    DmaChannel() = delete;
+
+    DmaChannel(const DmaChannel & other) = delete;
+    DmaChannel(DmaChannel && other) = delete;
+
+
 
     struct Config{
         const Mode mode;
@@ -72,55 +77,61 @@ public:
     void resume();
 
     template <typename T>
-    void transfer_pph2mem(auto * dst, const volatile auto * src, size_t size){
-        set_dst_width(sizeof(T) << 3);
-        set_src_width(sizeof(T) << 3);
+    void start_transfer_pph2mem(void * dst, const volatile void * src, size_t size){
+        set_dst_bits(sizeof(T) << 3);
+        set_src_bits(sizeof(T) << 3);
 
         start_transfer(
-            reinterpret_cast<void *>(dst), 
-            reinterpret_cast<const void *>(const_cast<const T *>(
-                reinterpret_cast<const volatile T *>(src))), 
+            reinterpret_cast<size_t>(dst),
+            reinterpret_cast<size_t>(src),
             size
         );
     }
 
     template <typename T>
-    void transfer_mem2pph(volatile auto * dst, const auto * src, size_t size){
-        set_dst_width(sizeof(T) << 3);
-        set_src_width(sizeof(T) << 3);
+    void start_transfer_mem2pph(volatile void * dst, const void * src, size_t size){
+        set_dst_bits(sizeof(T) << 3);
+        set_src_bits(sizeof(T) << 3);
 
         start_transfer(
-            reinterpret_cast<void *>(const_cast<T *>(reinterpret_cast<volatile T *>(dst))), 
-            reinterpret_cast<const void *>(src), 
+            reinterpret_cast<size_t>(dst),
+            reinterpret_cast<size_t>(src),
             size
         );
     }
 
     template<typename T>
-    void transfer_mem2mem(auto * dst, const auto * src, size_t size){
-        set_dst_width(sizeof(T) << 3);
-        set_src_width(sizeof(T) << 3);
+    void start_transfer_mem2mem(void * dst, const void * src, size_t size){
+        set_dst_bits(sizeof(T) << 3);
+        set_src_bits(sizeof(T) << 3);
 
         start_transfer(
-            reinterpret_cast<void *>(const_cast<T *>((dst))), 
-            reinterpret_cast<const void *>(src), 
+            reinterpret_cast<size_t>(dst),
+            reinterpret_cast<size_t>(src),
             size
         );
     }
 
-    size_t pending();
+    [[nodiscard]] size_t remaining();
 
-    void enable_it(const NvicPriority _priority, const Enable en);
+    void register_nvic(const NvicPriority _priority, const Enable en);
 
-    void enable_done_it(const Enable en);
-    void enable_half_it(const Enable en);
-
-    void bind_done_cb(auto && cb){
-        done_cb_ = std::move(cb);
+    template<DmaIT I>
+    void enable_interrupt(const Enable en){
+        if constexpr(I == DmaIT::Half){
+            enable_half_it(en);
+        }else if constexpr(I == DmaIT::Done){
+            enable_done_it(en);
+        }
     }
 
-    void bind_half_cb(auto && cb){
-        half_cb_ = std::move(cb);
+    template<DmaIT I, typename Fn>
+    void set_interrupt_callback(Fn && cb){
+        if constexpr(I == DmaIT::Half){
+            half_cb_ = std::forward<Fn>(cb);
+        }else if constexpr(I == DmaIT::Done){
+            done_cb_ = std::forward<Fn>(cb);
+        }
     }
 
     bool is_done(){
@@ -140,13 +151,17 @@ private:
     Callback half_cb_;
     Mode mode_;
 
+
+    void enable_done_it(const Enable en);
+    void enable_half_it(const Enable en);
+
     void enable_rcc(const Enable en);
 
     void set_periph_width(const size_t width);
 
     void set_mem_width(const size_t width);
 
-    __fast_inline void set_dst_width(const size_t width){
+    __fast_inline void set_dst_bits(const size_t width){
         if(dst_is_periph(mode_)){
             set_periph_width(width);
         }else{
@@ -154,7 +169,7 @@ private:
         }
     }
 
-    __fast_inline void set_src_width(const size_t width){
+    __fast_inline void set_src_bits(const size_t width){
         if(!dst_is_periph(mode_)){
             set_periph_width(width);
         }else{
@@ -283,7 +298,7 @@ private:
 
 
 
-    void start_transfer(void * dst, const void * src, size_t size);
+    void start_transfer(size_t dst, const size_t src, size_t size);
     
 
 };

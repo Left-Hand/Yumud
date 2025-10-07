@@ -42,7 +42,7 @@ DEF_DERIVE_DEBUG(EntryAccessError)
 
 
 enum class EntryInteractError: uint8_t{
-    ValueIsGreaterThanLimit,
+    ValueIsGreatThanLimit,
     ValueIsLessThanLimit
 };
 
@@ -62,8 +62,8 @@ struct ParamFromString final{
         str_(str){;}
 
     template<typename T>
-    constexpr IResult<T> to() const{
-        const auto res = strconv2::from_str<T>(str_);
+    constexpr IResult<T> defmt_to() const{
+        const auto res = strconv2::defmt_str<T>(str_);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok(res.unwrap());
     }
@@ -114,14 +114,16 @@ private:
 static constexpr AccessProvider_BySubSpan make_sub_provider(
     const AccessProviderIntf & owner, 
     const size_t offset, 
-    const size_t end){
-        return AccessProvider_BySubSpan(owner, offset, end);
+    const size_t end
+){
+    return AccessProvider_BySubSpan(owner, offset, end);
 }
 
 static constexpr AccessProvider_BySubSpan make_sub_provider(
     const AccessProviderIntf & owner, 
-    const size_t offset){
-        return AccessProvider_BySubSpan(owner, offset, owner.size());
+    const size_t offset
+){
+    return AccessProvider_BySubSpan(owner, offset, owner.size());
 }
 
 class AccessProvider_ByStringViews final: public AccessProviderIntf{
@@ -143,32 +145,20 @@ private:
 using AccessReponserIntf = OutputStream;
 
 
-
-
-
-
-// 主模板定义（处理非模板类和默认情况）
-template <typename T, typename = void>
-struct EntryVisitor {
-    static IResult<> visit(T& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
-        static_assert(sizeof(T) == 0, "No visitor specialization found for this type");
-        return Err(EntryAccessError::NotImplemented);
-    }
-};
-
-
-
 template<typename T>
 struct Property{
-    constexpr Property(const StringView name,T * value):
+    constexpr explicit Property(
+        const StringView name,
+        T * value
+    ):
         name_(name),
         value_(value){;}
 
-    constexpr T & deref() const {
+    [[nodiscard]] constexpr T & get() const {
         return *value_;
     }
 
-    constexpr StringView name() const{
+    [[nodiscard]] constexpr StringView name() const{
         return name_;
     }
 private:
@@ -180,7 +170,7 @@ template<typename T>
 struct PropertyWithLimit final:public Property<T>{
     static_assert(std::is_const_v<T> == false, "value must be setable");
 
-    constexpr PropertyWithLimit(
+    constexpr explicit PropertyWithLimit(
         const StringView name,
         T * value, 
         std::pair<T, T> limits
@@ -189,69 +179,17 @@ struct PropertyWithLimit final:public Property<T>{
         limits_(limits)
         {;}
 
-    constexpr T min() const {
+    [[nodiscard]] constexpr T min() const {
         return limits_.first;
     }
 
-    constexpr T max() const {
+    [[nodiscard]] constexpr T max() const {
         return limits_.second;
     }
 private:
     std::pair<T, T> limits_;
 };
 
-// Property<T> 非const特化
-template <typename T>
-struct EntryVisitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
-    static IResult<> visit(
-        const Property<T>& self, 
-        AccessReponserIntf& ar, 
-        const AccessProviderIntf& ap
-    ) {
-        if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
-        self.deref() = ap[0].template to<std::decay_t<T>>();
-        ar << self.deref() << ar.endl();
-        return Ok();
-    }
-};
-
-// Property<T> const特化
-template <typename T>
-struct EntryVisitor<const Property<T>, void> {
-    static IResult<> visit(
-        const Property<T>& self, 
-        AccessReponserIntf& ar, 
-        const AccessProviderIntf& ap) {
-        if (ap.size()) 
-            return Err(EntryAccessError::CantModifyReadOnly);
-        ar << self.deref() << ar.endl();
-        return Ok();
-    }
-};
-
-// Property<T> 非const特化
-template <typename T>
-struct EntryVisitor<PropertyWithLimit<T>, std::enable_if_t<!std::is_const_v<T>>> {
-    static IResult<> visit(
-        const PropertyWithLimit<T>& self, 
-        AccessReponserIntf& ar, 
-        const AccessProviderIntf& ap
-    ) {
-        if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
-        const auto val = ({
-            const auto res = ap[0].template to<std::decay_t<T>>();
-            if(unlikely(res.is_err())) return Err(res.unwrap_err());
-            res.unwrap();
-        });
-        if(unlikely(val < self.min()))
-            return Err(EntryInteractError::ValueIsLessThanLimit);
-        if(unlikely(val > self.max()))
-            return Err(EntryInteractError::ValueIsGreaterThanLimit);
-        self.deref() = val;
-        ar << self.deref() << ar.endl();
-        return Ok();
-    }
-};
 
 
 // 递归转换辅助类
@@ -265,7 +203,7 @@ struct ConvertHelper {
         // 转换当前参数
         using Element = std::tuple_element_t<I, Tuple>;
         static_assert(is_result_v<Element> == false);
-        Result<Element, Error> res = ParamFromString(params[I]).template to<Element>();
+        Result<Element, Error> res = ParamFromString(params[I]).template defmt_to<Element>();
         if (res.is_err()) {
             return Err(res.unwrap_err());  // 遇到错误立即返回
         }
@@ -273,7 +211,7 @@ struct ConvertHelper {
         return apply(params, std::index_sequence<Js...>{}, 
                         std::forward<Args>(args)..., res.unwrap());
     }
-
+private:
     // 终止条件：所有索引处理完成
     template <typename... Args>
     static constexpr Result<Tuple, Error>
@@ -281,9 +219,9 @@ struct ConvertHelper {
         // 使用完美转发构造目标元组
         return Ok(Tuple{std::forward<Args>(args)...});
     }
-
-
 };
+
+
 template<typename Tuple, std::size_t... Is>
 static constexpr Result<Tuple, Error>
 convert_params_to_tuple(const auto& params, std::index_sequence<Is...>) 
@@ -318,61 +256,28 @@ convert_params_to_tuple(const auto& params, std::index_sequence<Is...>)
 
 template<typename Ret, typename ... Args>
 struct MethodByLambda final{
-protected:
+public:
     static constexpr size_t N = sizeof...(Args);
-
+    
+    using Tup = std::tuple<Args...>;
     using Callback = std::function<Ret(Args...)>;
 
-private:
-public:
-    StringView name_;
-    Callback callback_;
-
-    constexpr MethodByLambda(const StringView name, const Callback && callback)
+    constexpr explicit MethodByLambda(
+        const StringView name, 
+        const Callback && callback
+    )
         : name_(name), callback_(callback) {}
 
-    constexpr StringView name() const { return name_; }
-};
-
-
-
-template <typename Ret, typename... Args>
-struct EntryVisitor<MethodByLambda<Ret, Args...>> {
-    using Self = MethodByLambda<Ret, Args...>;
-    using Tup = std::tuple<Args...>;
-    static IResult<Tup> dump( 
-        const AccessProviderIntf& ap){
-        if constexpr (std::is_same_v<Tup, std::tuple<>>)
-            return Ok(Tup{});
-        else return ({
-            const auto res = convert_params_to_tuple<Tup>(
-                ap, std::index_sequence_for<Args...>{});
-            if(res.is_err()) return Err(res.unwrap_err());
-            Ok(res.unwrap());
-        });
+    [[nodiscard]] constexpr StringView name() const {
+        return name_;
     }
 
-    static IResult<> visit(const Self & self, 
-        AccessReponserIntf& ar, 
-        const AccessProviderIntf& ap
-    ) {
-        if (ap.size() != sizeof...(Args)) {
-            return Err(EntryAccessError::ArgsCountNotMatch);
-        }
-
-        const Tup tuple_params = ({
-            const auto res = dump(ap);
-            if(res.is_err()) return Err(res.unwrap_err());
-            res.unwrap();
-        });
-
-        if constexpr(std::is_void_v<Ret>){
-            std::apply(self.callback_, tuple_params);
-        } else {
-            ar << std::apply(self.callback_, tuple_params);
-        }
-        return Ok();
+    constexpr Ret invoke(const Tup & tup) const {
+        return std::apply(callback_, tup);
     }
+private:
+    StringView name_;
+    Callback callback_;
 };
 
 
@@ -383,11 +288,6 @@ struct MethodByMemFunc final{
 
     using Callback = Ret (Obj::*)(Args...);
 
-private:
-    StringView name_;
-    Obj * obj_;
-    Callback callback_;
-public:
     constexpr MethodByMemFunc(
         const StringView name, 
         Obj * obj, 
@@ -398,63 +298,26 @@ public:
 
     constexpr StringView name() const{return name_;}
 
-    // 新增的 call 方法
-    template<typename... CallArgs>
-    constexpr auto call(CallArgs&&... args) const {
-        static_assert(sizeof...(CallArgs) == sizeof...(Args), "Argument count mismatch");
-        return std::invoke(callback_, obj_, std::forward<CallArgs>(args)...);
+    // 新增的 invoke 方法
+    template<typename... InvokeArgs>
+    constexpr auto invoke(InvokeArgs&&... args) const {
+        static_assert(sizeof...(InvokeArgs) == sizeof...(Args), "Argument count mismatch");
+        return std::invoke(callback_, obj_, std::forward<InvokeArgs>(args)...);
     }
+private:
+    StringView name_;
+    Obj * obj_;
+    Callback callback_;
 };
 
-
-// MethodByMemFunc 非const特化
-template <typename Obj, typename Ret, typename ... Args>
-struct EntryVisitor<MethodByMemFunc<Obj, Ret, Args...>> {
-    using Self = MethodByMemFunc<Obj, Ret, Args...>;
-    using Tup = std::tuple<Args...>;
-    static IResult<Tup> dump( 
-        const AccessProviderIntf& ap){
-        if constexpr (std::is_same_v<Tup, std::tuple<>>)
-            return Ok(Tup{});
-        else return ({
-            const auto res = convert_params_to_tuple<Tup>(
-                ap, std::index_sequence_for<Args...>{});
-            if(res.is_err()) return Err(res.unwrap_err());
-            Ok(res.unwrap());
-        });
-    }
-
-    static IResult<> visit(const Self & self, 
-        AccessReponserIntf& ar, 
-        const AccessProviderIntf& ap
-    ) {
-        if (ap.size() != sizeof...(Args)) {
-            return Err(EntryAccessError::ArgsCountNotMatch);
-        }
-
-        const Tup tuple_params = ({
-            const auto res = dump(ap);
-            if(res.is_err()) return Err(res.unwrap_err());
-            res.unwrap();
-        });
-
-
-        if constexpr(std::is_void_v<Ret>){
-            std::apply([&self](Args... args) { self.call(args...); }, tuple_params);
-        } else {
-            ar << std::apply([&self](Args... args) -> Ret { return self.call(args...); }, tuple_params);
-        }
-        return Ok();
-    }
-};
 
 template<typename... Entries>
-struct EntryList final{
-    EntryList(const StringView name):
-    name_(name){;}
+struct List final{
+    explicit List(const StringView name):
+        name_(name){;}
 
     template<typename... Args>
-    EntryList(const StringView name, Args&&... entries) :
+    explicit List(const StringView name, Args&&... entries) :
         name_(name),
         entries_(std::forward<Args>(entries)...) {
             const auto check_res = check_hash_collision(entries...);
@@ -471,8 +334,8 @@ private:
     StringView name_;
     std::tuple<Entries...> entries_;
 
-    constexpr Result<void, std::tuple<size_t, size_t>> 
-    check_hash_collision(auto... entries) {
+    [[nodiscard]] constexpr Result<void, std::tuple<size_t, size_t>> 
+    check_hash_collision(auto && ... entries) {
         const std::array hashes = { entries.name().hash()... };
         for (size_t i = 0; i < hashes.size(); ++i) {
             for (size_t j = i + 1; j < hashes.size(); ++j) {
@@ -485,12 +348,168 @@ private:
     }
 };
 
-template<typename... Entries>
-struct EntryVisitor<EntryList<Entries...>> {
-    using Self = EntryList<Entries...>;
+
+
+
+// 主模板定义（处理非模板类和默认情况）
+template <typename T, typename = void>
+struct EntryVisitor {
+    static IResult<> visit(
+        T& self, 
+        AccessReponserIntf & ar, 
+        const AccessProviderIntf & ap
+    ) {
+        static_assert(sizeof(T) == 0, "No visitor specialization found for this type");
+        return Err(EntryAccessError::NotImplemented);
+    }
+};
+
+
+// Property<T> 非const特化
+template <typename T>
+struct EntryVisitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
+    static IResult<> visit(
+        const Property<T> & self, 
+        AccessReponserIntf & ar, 
+        const AccessProviderIntf & ap
+    ) {
+        if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
+        self.deref() = ap[0].template defmt_to<std::decay_t<T>>();
+        ar << self.deref() << ar.endl();
+        return Ok();
+    }
+};
+
+// Property<T> const特化
+template <typename T>
+struct EntryVisitor<const Property<T>, void> {
+    static IResult<> visit(
+        const Property<T> & self, 
+        AccessReponserIntf & ar,     
+        const AccessProviderIntf & ap
+    ) {
+        if (ap.size()) 
+            return Err(EntryAccessError::CantModifyReadOnly);
+        ar << self.deref() << ar.endl();
+        return Ok();
+    }
+};
+
+// Property<T> 非const特化
+template <typename T>
+struct EntryVisitor<PropertyWithLimit<T>, std::enable_if_t<!std::is_const_v<T>>> {
+    static IResult<> visit(
+        const PropertyWithLimit<T> & self, 
+        AccessReponserIntf & ar, 
+        const AccessProviderIntf & ap
+    ) {
+        if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
+        const auto val = ({
+            const auto res = ap[0].template defmt_to<std::decay_t<T>>();
+            if(unlikely(res.is_err())) return Err(res.unwrap_err());
+            res.unwrap();
+        });
+        if(unlikely(val < self.min()))
+            return Err(EntryInteractError::ValueIsLessThanLimit);
+        if(unlikely(val > self.max()))
+            return Err(EntryInteractError::ValueIsGreatThanLimit);
+        self.get() = val;
+        ar << self.get() << ar.endl();
+        return Ok();
+    }
+};
+
+
+template <typename Ret, typename... Args>
+struct EntryVisitor<MethodByLambda<Ret, Args...>> final{
+    using Self = MethodByLambda<Ret, Args...>;
+    using Tup = std::tuple<Args...>;
+
     static IResult<> visit(const Self & self, 
-        AccessReponserIntf& ar, 
-        const AccessProviderIntf& ap
+        AccessReponserIntf & ar, 
+        const AccessProviderIntf & ap
+    ) {
+        if (ap.size() != sizeof...(Args)) {
+            return Err(EntryAccessError::ArgsCountNotMatch);
+        }
+
+        const Tup tuple_params = ({
+            const auto res = dump(ap);
+            if(res.is_err()) return Err(res.unwrap_err());
+            res.unwrap();
+        });
+
+        if constexpr(std::is_void_v<Ret>){
+            self.invoke(tuple_params);
+        } else {
+            ar << self.invoke(tuple_params);
+        }
+        return Ok();
+    }
+private:
+    static IResult<Tup> dump( 
+        const AccessProviderIntf & ap){
+        if constexpr (std::is_same_v<Tup, std::tuple<>>)
+            return Ok(Tup{});
+        else return ({
+            const auto res = convert_params_to_tuple<Tup>(
+                ap, std::index_sequence_for<Args...>{});
+            if(res.is_err()) return Err(res.unwrap_err());
+            Ok(res.unwrap());
+        });
+    }
+};
+
+// MethodByMemFunc 非const特化
+template <typename Obj, typename Ret, typename ... Args>
+struct EntryVisitor<MethodByMemFunc<Obj, Ret, Args...>> final {
+    using Self = MethodByMemFunc<Obj, Ret, Args...>;
+    using Tup = std::tuple<Args...>;
+
+
+    static IResult<> visit(const Self & self, 
+        AccessReponserIntf & ar, 
+        const AccessProviderIntf & ap
+    ) {
+        if (ap.size() != sizeof...(Args)) {
+            return Err(EntryAccessError::ArgsCountNotMatch);
+        }
+
+        const Tup tuple_params = ({
+            const auto res = dump(ap);
+            if(res.is_err()) return Err(res.unwrap_err());
+            res.unwrap();
+        });
+
+
+        if constexpr(std::is_void_v<Ret>){
+            std::apply([&self](Args... args) { self.invoke(args...); }, tuple_params);
+        } else {
+            ar << std::apply([&self](Args... args) -> Ret { return self.invoke(args...); }, tuple_params);
+        }
+        return Ok();
+    }
+
+private:
+    static IResult<Tup> dump( 
+        const AccessProviderIntf & ap){
+        if constexpr (std::is_same_v<Tup, std::tuple<>>)
+            return Ok(Tup{});
+        else return ({
+            const auto res = convert_params_to_tuple<Tup>(
+                ap, std::index_sequence_for<Args...>{});
+            if(res.is_err()) return Err(res.unwrap_err());
+            Ok(res.unwrap());
+        });
+    }
+};
+
+template<typename... Entries>
+struct EntryVisitor<List<Entries...>> final{
+    using Self = List<Entries...>;
+    static IResult<> visit(const Self & self, 
+        AccessReponserIntf & ar, 
+        const AccessProviderIntf & ap
     ) {
         if(ap.size() == 0) 
             return Err(EntryAccessError::EmptyArgs);
@@ -515,13 +534,6 @@ struct EntryVisitor<EntryList<Entries...>> {
         }, self.entries());
     }
 };
-
-//对一个对象提供内存紧凑的反射树
-template<typename Obj>
-struct Object{
-
-};
-
 
 namespace details{
 template<typename Ret, typename ArgsTuple, template<typename, typename...> 
@@ -605,7 +617,7 @@ auto make_ro_property(const StringView name, const T * val){
 
 template<typename ... Args>
 auto make_list(const StringView name, Args && ... entries){
-    return EntryList<Args...>(
+    return List<Args...>(
         name, 
         // std::forward<Args>(entries)...
         entries...
@@ -615,7 +627,7 @@ auto make_list(const StringView name, Args && ... entries){
 
 // 统一访问接口
 template <typename T>
-IResult<> visit(T&& self, AccessReponserIntf& ar, const AccessProviderIntf& ap) {
+IResult<> visit(T&& self, AccessReponserIntf & ar, const AccessProviderIntf & ap) {
     return EntryVisitor<std::remove_cvref_t<T>>::visit(
         std::forward<T>(self), ar, ap);
 }

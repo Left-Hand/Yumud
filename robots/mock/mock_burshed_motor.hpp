@@ -21,7 +21,7 @@ public:
         self.state_ = forward(self, state_, u);
     }
 
-    const auto & get() const {return state_;}
+    const auto & state() const {return state_;}
 private:
     using Self = MockBrushedMotor;
     using State = dsp::StateVector<real_t, 2>;

@@ -75,7 +75,7 @@ public:
         auto temp = Image<T>(img_size);
 
         for(size_t i = 0; i < img_size.x * img_size.y; i++){
-            temp.get_data()[i] = this->get_data()[i];
+            temp.data()[i] = this->data()[i];
         }
         return temp;
     }
@@ -92,9 +92,9 @@ public:
 
     template<typename ColorType2> 
     requires (sizeof(T) == sizeof(ColorType2))
-    [[nodiscard]] Image<ColorType2> mirror(){
+    [[nodiscard]] Image<ColorType2> make_mirror(){
         return Image<ColorType2>(
-            std::reinterpret_pointer_cast<T[]>(this->get_ptr()),
+            std::reinterpret_pointer_cast<T[]>(this->ptr()),
             this->size());
     }
 
@@ -103,7 +103,7 @@ public:
     }
 
     void putpixel(const Vec2u pos, const T color) {
-        assert_pos_is_inrange(pos);
+        assert_position_is_inrange(pos);
         putpixel_unchecked(pos, color);
     }
 
@@ -123,15 +123,15 @@ public:
 
     template<typename ToColorType>
     [[nodiscard]] __fast_inline ToColorType at(const Vec2u pos) const {
-        assert_pos_is_inrange(pos);
+        assert_position_is_inrange(pos);
         return data_[pos.x + pos.y * this->size().x]; }
 
     [[nodiscard]] __fast_inline T & at(const Vec2u pos){
-        assert_pos_is_inrange(pos);
+        assert_position_is_inrange(pos);
         return data_[pos.x + pos.y * this->size().x]; }
 
     [[nodiscard]] __fast_inline const T & at(const Vec2u pos)const{
-        assert_pos_is_inrange(pos);
+        assert_position_is_inrange(pos);
         return data_[pos.x + pos.y * this->size().x]; }
 
     void putpixel_unchecked(const Vec2u pos, const T color) 
@@ -146,15 +146,16 @@ private:
 
     std::shared_ptr<T[]> data_;
 
-    __fast_inline void assert_pos_is_inrange(const Vec2u pos){
+    __fast_inline void assert_position_is_inrange(const Vec2u pos){
         ASSERT(size_.x > pos.x and size_.y > pos.y);
     }
 
 public:
     constexpr Vec2u size() const { return size_; }
 
-    constexpr auto get_data() const {return this->data_.get();}
-    constexpr auto get_ptr() const {return this->data_;}
+    constexpr const T * data() const {return this->data_.get();}
+    constexpr T * data() {return this->data_.get();}
+    constexpr std::shared_ptr<T[]> ptr() const {return this->data_;}
 };
 
 

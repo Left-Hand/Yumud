@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/container/ringbuf.hpp"
 #include "core/sdk.hpp"
-
+#include "ral/chip.hpp"
 #include "can_utils.hpp"
 #include "can_msg.hpp"
 
@@ -59,6 +59,9 @@ namespace ymd::hal{
 class Gpio;
 
 struct CanFilter;
+
+
+
 class Can final{
 public:
     using BaudRate = CanBaudrate;
@@ -69,13 +72,13 @@ public:
     using Callback = std::function<void(void)>;
 
     struct Config{
-        BaudRate baudrate;
+        CanBitTimmingCoeffs coeffs;
         Mode mode = Mode::Normal;
-        uint8_t remap = CAN1_REMAP;
+        uint8_t remap;
     };
 
 public:
-    Can(CAN_TypeDef * instance):inst_(instance){;}
+    explicit Can(CAN_TypeDef * inst):inst_(inst){;}
     Can(const Can & other) = delete;
     Can(Can && other) = delete;
 
@@ -94,25 +97,26 @@ public:
     [[nodiscard]] bool is_tranmitting();
     [[nodiscard]] bool is_receiving();
     void enable_hw_retransmit(const Enable en);
-    void cancel_transmit(const uint8_t mbox);
+    void cancel_transmit(const CanMailboxNth mailbox_nth);
     void cancel_all_transmits();
     void enable_fifo_lock(const Enable en);
     void enable_index_priority(const Enable en);
     [[nodiscard]] uint8_t get_tx_errcnt();
     [[nodiscard]] uint8_t get_rx_errcnt();
-    [[nodiscard]] Option<CanFault> get_last_fault();
+    [[nodiscard]] Option<CanFault> last_fault();
     [[nodiscard]] bool is_busoff();
 
-    template<typename Fn>
-    void bind_tx_ok_cb(Fn && cb){cb_txok_ = std::forward<Fn>(cb);}
+    template<CanIT I, typename Fn>
+    void set_callback(Fn && cb){
+        get_callback<I>() = std::forward<Fn>(cb);
+    }
 
-    template<typename Fn>
-    void bind_tx_fail_cb(Fn && cb){cb_txfail_ = std::forward<Fn>(cb);}
 
-    template<typename Fn>
-    void bind_rx_cb(Fn && cb){cb_rx_ = std::forward<Fn>(cb);}
-
-    CanFilter filter(const size_t idx) const ;
+    template<size_t I>
+    requires (I < 14)
+    CanFilter filters() const {
+        return CanFilter(this->inst_, Nth(I));
+    }
 
 private:
     CAN_TypeDef * inst_;
@@ -128,13 +132,21 @@ private:
     Callback cb_txfail_;
     Callback cb_rx_;
 
+    template<CanIT I>
+    auto & get_callback(){
+        if constexpr (I == CanIT::TME) return cb_txok_;
+        // if constexpr (I == CanIT::)
+    }
+
+
     bool blocking_write_en_ = false;
 
     Gpio get_tx_gpio(const uint8_t remap);
     Gpio get_rx_gpio(const uint8_t remap);
 
-    void install_gpio(const uint8_t remap);
-    void enable_rcc(const uint8_t remap);
+    void plant_gpio(const uint8_t remap);
+    void enable_rcc(const Enable en);
+    void set_remap(const uint8_t remap);
     bool is_mail_box_done(const uint8_t mbox);
     void clear_mailbox(const uint8_t mbox);
     void init_it();
@@ -147,7 +159,7 @@ private:
 
 
 
-    [[nodiscard]] Option<CanMailBox> transmit(const CanMsg & msg);
+    [[nodiscard]] Option<CanMailboxNth> transmit(const CanMsg & msg);
     [[nodiscard]] CanMsg receive(const uint8_t fifo_num);
 
     friend class CanFilter;

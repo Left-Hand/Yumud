@@ -161,7 +161,7 @@ public:
 
     template<typename Iter>
     requires (is_std_iter_v<Iter>)
-    constexpr Result<void, void> append_unchecked(Iter && iter){ 
+    constexpr Result<void, void> append(Iter && iter){ 
         while(iter.has_next()){
             if(size_ + 1 > N) return Err();
             append_unchecked(iter.next());

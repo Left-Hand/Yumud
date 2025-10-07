@@ -8,116 +8,108 @@
 #endif
 
 namespace ymd::ral::CH32V20x{
-    struct R16_SPI_CTLR1{
-        uint16_t CPHA:1;
-        uint16_t CPOL:1;
-        uint16_t MSTR:1;
-        uint16_t BR:3;
-        uint16_t SPE:1;
-        uint16_t LSB:1;
+    struct R32_SPI_CTLR1{
+        uint32_t CPHA:1;
+        uint32_t CPOL:1;
+        uint32_t MSTR:1;
+        uint32_t BR:3;
+        uint32_t SPE:1;
+        uint32_t LSB:1;
 
-        uint16_t SSI:1;
-        uint16_t SSM:1;
-        uint16_t RXONLY:1;
-        uint16_t DFF:1;
-        uint16_t CRCNEXT:1;
-        uint16_t CRCEN:1;
-        uint16_t BIDIOE:1;
-        uint16_t BIDIMODE:1;
-    };CHECK_R16(R16_SPI_CTLR1);
+        uint32_t SSI:1;
+        uint32_t SSM:1;
+        uint32_t RXONLY:1;
+        uint32_t DFF:1;
+        uint32_t CRCNEXT:1;
+        uint32_t CRCEN:1;
+        uint32_t BIDIOE:1;
+        uint32_t BIDIMODE:1;
+        uint32_t :16;
+    };CHECK_R32(R32_SPI_CTLR1);
 
 
-    struct R16_SPI_CTLR2{
-        uint16_t RXDMAEN:1;
-        uint16_t TXDMAEN:1;
-        uint16_t SSOE:1;
-        uint16_t :2;
-        uint16_t ERRIR:1;
-        uint16_t RXNEIE:1;
-        uint16_t TXEIE:1;
-        uint16_t :8;
-    };CHECK_R16(R16_SPI_CTLR2);
+    struct R32_SPI_CTLR2{
+        uint32_t RXDMAEN:1;
+        uint32_t TXDMAEN:1;
+        uint32_t SSOE:1;
+        uint32_t :2;
+        uint32_t ERRIR:1;
+        uint32_t RXNEIE:1;
+        uint32_t TXEIE:1;
+        uint32_t :24;
+    };CHECK_R32(R32_SPI_CTLR2);
 
 
 
     //SPI 状态寄存器1
-    struct R16_SPI_STATR{
-        uint16_t RXNE:1;
-        uint16_t TXE:1;
-        uint16_t CHSIDE:1;
-        uint16_t UDR:1;
+    struct R32_SPI_STATR{
+        uint32_t RXNE:1;
+        uint32_t TXE:1;
+        uint32_t CHSIDE:1;
+        uint32_t UDR:1;
 
-        uint16_t CRCEER:1;
-        uint16_t MODF:1;
-        uint16_t OVR:1;
-        uint16_t BSY:1;
+        uint32_t CRCEER:1;
+        uint32_t MODF:1;
+        uint32_t OVR:1;
+        uint32_t BSY:1;
 
-        uint16_t :8;
-    };CHECK_R16(R16_SPI_STATR);
+        uint32_t :24;
+    };CHECK_R32(R32_SPI_STATR);
 
-    struct R16_SPI_DATAR{
-        uint16_t DR;
+    struct R32_SPI_DATAR{
+        uint32_t DR;
     };
 
-    struct R16_SPI_CRCR{
-        uint16_t CRCPOLY;
+    struct R32_SPI_CRCR{
+        uint32_t CRCPOLY;
     };
 
-    struct R16_SPI_RCRCR{
-        uint16_t RXCRC;
+    struct R32_SPI_RCRCR{
+        uint32_t RXCRC;
     };
 
-    struct R16_SPI_TCRCR{
-        uint16_t TXCRC;
+    struct R32_SPI_TCRCR{
+        uint32_t TXCRC;
     };
 
     //SPI 时钟寄存器
-    struct R16_SPI_CFGR{
-        uint16_t CHLEN:1;
-        uint16_t DATLEN:2;
-        uint16_t CKPOL:1;
+    struct R32_SPI_CFGR{
+        uint32_t CHLEN:1;
+        uint32_t DATLEN:2;
+        uint32_t CKPOL:1;
 
-        uint16_t I2SSTD:2;
-        uint16_t :1;
-        uint16_t PCMSYNC:1;
+        uint32_t I2SSTD:2;
+        uint32_t :1;
+        uint32_t PCMSYNC:1;
 
-        uint16_t I2SCFG:2;
-        uint16_t ISSE:1;
-        uint16_t I2SMOD:1;
-        uint16_t :4;
+        uint32_t I2SCFG:2;
+        uint32_t ISSE:1;
+        uint32_t I2SMOD:1;
+        uint32_t :20;
     };
 
-    struct R16_SPI_PR{
-        uint16_t I2SDIV:8;
-        uint16_t ODD:1;
-        uint16_t MCKOE:1;
-        uint16_t :6;
+    struct R32_SPI_PR{
+        uint32_t I2SDIV:8;
+        uint32_t ODD:1;
+        uint32_t MCKOE:1;
+        uint32_t :22;
     };
 
-    struct R16_SPI_HSCR{
-        uint16_t HSRXEN:1;
-        uint16_t :15;
+    struct R32_SPI_HSCR{
+        uint32_t HSRXEN:1;
+        uint32_t :31;
     };
 
     struct SPI_Def{
-        volatile R16_SPI_CTLR1 CTLR1;
-        uint16_t :16;
-        volatile R16_SPI_CTLR2 CTLR2;
-        uint16_t :16;
-        volatile R16_SPI_STATR STATR;
-        uint16_t :16;
-        volatile R16_SPI_DATAR DATAR;
-        uint16_t :16;
-        volatile R16_SPI_CRCR CRCR;
-        uint16_t :16;
-        volatile R16_SPI_RCRCR RCRCR;
-        uint16_t :16;
-        volatile R16_SPI_TCRCR TCRCR;
-        uint16_t :16;
-        volatile R16_SPI_CFGR CFGR;
-        uint16_t :16;
-        volatile R16_SPI_HSCR HSCR;
-        uint16_t :16;
+        volatile R32_SPI_CTLR1 CTLR1;
+        volatile R32_SPI_CTLR2 CTLR2;
+        volatile R32_SPI_STATR STATR;
+        volatile R32_SPI_DATAR DATAR;
+        volatile R32_SPI_CRCR CRCR;
+        volatile R32_SPI_RCRCR RCRCR;
+        volatile R32_SPI_TCRCR TCRCR;
+        volatile R32_SPI_CFGR CFGR;
+        volatile R32_SPI_HSCR HSCR;
 
         struct Events{
             uint8_t RXNE:1;
@@ -148,12 +140,12 @@ namespace ymd::ral::CH32V20x{
             CTLR2.RXDMAEN = en == EN;
         }
 
-        constexpr void send(const uint16_t data){
+        constexpr void send(const uint32_t data){
             DATAR.DR = data;
         }
 
-        constexpr uint16_t receive(){
-            return std::bit_cast<uint16_t>(DATAR.DR);
+        constexpr uint32_t receive(){
+            return std::bit_cast<uint32_t>(DATAR.DR);
         }
 
         constexpr void enable_soft_cs(const Enable en){
@@ -176,16 +168,16 @@ namespace ymd::ral::CH32V20x{
             CTLR1.CRCNEXT = 1;
         }
 
-        constexpr uint16_t get_rx_crc(){
-            return std::bit_cast<uint16_t>(RCRCR.RXCRC);
+        constexpr uint32_t get_rx_crc(){
+            return std::bit_cast<uint32_t>(RCRCR.RXCRC);
         }
 
-        constexpr uint16_t get_tx_crc(){
-            return std::bit_cast<uint16_t>(TCRCR.TXCRC);
+        constexpr uint32_t get_tx_crc(){
+            return std::bit_cast<uint32_t>(TCRCR.TXCRC);
         }
 
-        constexpr uint16_t get_crc_polynomial(){
-            return std::bit_cast<uint16_t>(CRCR.CRCPOLY);
+        constexpr uint32_t get_crc_polynomial(){
+            return std::bit_cast<uint32_t>(CRCR.CRCPOLY);
         }
 
         constexpr void switch_bidi_to_txonly(){
@@ -201,14 +193,14 @@ namespace ymd::ral::CH32V20x{
         }
 
         constexpr Events get_events(){
-            return BIT_CAST(Events, uint8_t(std::bit_cast<uint16_t>(STATR)));
+            return BIT_CAST(Events, uint8_t(std::bit_cast<uint32_t>(STATR)));
         }
 
         constexpr void clear_events(const Events events){
-            uint16_t mask = BIT_CAST(uint8_t, events);
-            const_cast<R16_SPI_STATR &>(STATR) = 
-                BIT_CAST(R16_SPI_STATR, 
-                    uint16_t((~mask) & std::bit_cast<uint16_t>(STATR))
+            uint32_t mask = BIT_CAST(uint8_t, events);
+            const_cast<R32_SPI_STATR &>(STATR) = 
+                BIT_CAST(R32_SPI_STATR, 
+                    uint32_t((~mask) & std::bit_cast<uint32_t>(STATR))
                 );
         }
     };

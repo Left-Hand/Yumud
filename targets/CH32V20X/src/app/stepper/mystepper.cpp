@@ -300,8 +300,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     auto motor_system_ = MotorFibre{encoder, pwm_gen_};
 
-    hal::timer1.attach(
-        hal::TimerIT::Update, 
+    hal::timer1.attach<hal::TimerIT::Update>(
         {0,0}, 
         [&](){
             motor_system_.resume().examine();
@@ -405,7 +404,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     timer.init({
         .freq = CHOP_FREQ,
         // .mode = hal::TimerCountMode::CenterAlignedDualTrig
-        .mode = hal::TimerCountMode::CenterAlignedUpTrig
+        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
     timer.enable_arr_sync(EN);
@@ -478,7 +477,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     );
 
 
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
+    hal::timer1.attach<hal::TimerIT::Update>({0,0}, [&](){
         b_curr = inj_b.get_voltage();
         a_curr = inj_a.get_voltage();
         const auto t = clock::time();
@@ -519,7 +518,7 @@ void mystepper_main(){
     timer.init({
         .freq = CHOP_FREQ,
         // .mode = hal::TimerCountMode::CenterAlignedDownTrig
-        .mode = hal::TimerCountMode::CenterAlignedDualTrig
+        .count_mode = hal::TimerCountMode::CenterAlignedDualTrig
     }, EN);
 
     timer.enable_arr_sync(EN);
@@ -611,8 +610,7 @@ void mystepper_main(){
     // motorcheck_tb(encoder, pwm_gen_);
     // eeprom_tb();
 
-    hal::timer1.attach(
-        hal::TimerIT::Update, 
+    hal::timer1.attach<hal::TimerIT::Update>(
         {0,0}, 
         [&](){
             [[maybe_unused]] const auto ctime = clock::time();

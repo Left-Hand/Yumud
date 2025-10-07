@@ -17,7 +17,7 @@ void BurstDmaPwm::borrow(std::span<const uint16_t> pbuf){
     pbuf_ = pbuf;
 }
 void BurstDmaPwm::invoke(){
-    dma_channel_.transfer_mem2pph<uint16_t>(
+    dma_channel_.start_transfer_mem2pph<uint16_t>(
         &timer_oc_.cvr(), pbuf_.data(), pbuf_.size()
     );
 }
@@ -29,7 +29,7 @@ void BurstDmaPwm::install(){
 }
 
 bool BurstDmaPwm::is_done(){
-    return dma_channel_.pending() == 0;
+    return dma_channel_.remaining() == 0;
 }
 
 uint32_t BurstDmaPwm::calc_cvr_from_duty(const q31 duty) const {

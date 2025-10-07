@@ -1,7 +1,6 @@
-#include "LQR.hpp"
+#include "dsp/controller/lqr/lqr.hpp"
 
 using namespace ymd;
-using namespace ymd::modctrl;
 
 void test_lqr(){
 
@@ -10,28 +9,30 @@ void test_lqr(){
     constexpr size_t Un = 1; // Control input dimension
 
     // State transition matrix A
-    constexpr auto A = Matrix<double, Xn, Xn>{
+    constexpr auto A = Matrix<float, Xn, Xn>{
         0.0, 1.0,
         10.0, 0.0
     };
 
     // Control matrix B
-    constexpr auto B = Matrix<double, Xn, Un>{
+    constexpr auto B = Matrix<float, Xn, Un>{
         0.0,
         -1.0
     };
 
     // State cost matrix Q
-    constexpr auto Q = Matrix<double, Xn, Xn>{
+    constexpr auto Q = Matrix<float, Xn, Xn>{
         1.0, 0.0,
         0.0, 0.1
     };
 
-
-
     // Control cost matrix R
-    constexpr Matrix<double, Un, Un> R{
+    constexpr Matrix<float, Un, Un> R{
         1.0
+    };
+
+    constexpr dsp::LinearTimeInvariantModel<float, Xn, Un> model{
+        A, B, R, Q
     };
 
     
@@ -39,7 +40,7 @@ void test_lqr(){
     // constexpr auto I = Q * Q_;
     // [[maybe_unused]]constexpr auto Q_2 = Q.guassian_inverse();
     // Solve LQR
-    [[maybe_unused]] constexpr auto P = solve_DARE(A, B, Q, R);
-    [[maybe_unused]] constexpr auto K = solveLQR(A, B, Q, R);
+    // [[maybe_unused]] constexpr auto P = solve_DARE(A, B, Q, R);
+    [[maybe_unused]] constexpr auto K = dsp::solve_lqr<float>(model, 150, 0.001).unwrap();
 
 }

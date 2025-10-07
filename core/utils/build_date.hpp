@@ -58,25 +58,21 @@ struct Month final{
     }
 
     friend OutputStream & operator <<(OutputStream & os, const Month & self){
-        switch(self.kind){
-            case Kind::Jan ... Kind::Dec: {
-                const auto str = MONTH_STR[std::bit_cast<uint8_t>(self.kind) - 1];
-                return os << StringView(str,3);
-
-            }
-            default: __builtin_unreachable();
-        }
+        const auto str = MONTH_STR[std::bit_cast<uint8_t>(self.kind) - 1];
+        return os << StringView(str,3);
     }
 
 private:
     template<size_t... Is>
-    static constexpr std::array<uint32_t, sizeof...(Is)> make_month_hashes(std::index_sequence<Is...>) {
+    static constexpr std::array<uint32_t, sizeof...(Is)> 
+    make_month_hashes(std::index_sequence<Is...>) {
         return {{hash(Month::MONTH_STR[Is])...}};
     }
 
-    static constexpr const char * MONTH_STR[] = 
-        {"Jan","Feb","Mar","Apr","May","Jun",
-        "Jul","Aug","Sep","Oct","Nov","Dec"};
+    static constexpr std::array<const char *, 12> MONTH_STR = {
+        "Jan","Feb","Mar","Apr","May","Jun",
+        "Jul","Aug","Sep","Oct","Nov","Dec"
+    };
 };
 
 
@@ -104,6 +100,7 @@ struct Date final{
     }
 
     static constexpr Option<Date> from_str(const StringView str) {
+        if(str.length() < 10) return None;
         // Parse day (next 2 chars, space-padded)
         uint8_t d = (str[4] == ' ') ? 
             (str[5] - '0') : 
@@ -114,7 +111,7 @@ struct Date final{
                         (str[9] - '0') * 10 +
                         (str[10] - '0');
         
-        const auto may_month = Month::from_str(str.substr_by_range(0,3));
+        const auto may_month = Month::from_str(str.substr_by_range(0,3).unwrap());
         if(may_month.is_none()) return None;
         return Some(Date{y, may_month.unwrap(), d});
     }
@@ -194,23 +191,19 @@ struct Time final{
         return (hour < 24) && (minute < 60) && (seconds < 60);
     }
 
-    constexpr bool operator == (const Time & rhs) const{
-        return (hour == rhs.hour) && (minute == rhs.minute) && (seconds == rhs.seconds);
+    constexpr bool operator==(const Time & rhs) const {
+        return hour == rhs.hour && minute == rhs.minute && seconds == rhs.seconds;
     }
 
-    constexpr bool operator < (const Time & rhs) const {
+    constexpr auto operator <=> (const Time & rhs) const {
         // 层级比较：小时 → 分钟 → 秒
         if (hour != rhs.hour) {
-            return hour < rhs.hour;
+            return hour <=> rhs.hour;
         }
         if (minute != rhs.minute) {
-            return minute < rhs.minute;
+            return minute <=> rhs.minute;
         }
-        return seconds < rhs.seconds;
-    }
-
-    constexpr bool is_latest() const{
-        return *this == Time::from_compiler();
+        return seconds <=> rhs.seconds;
     }
 
     friend OutputStream & operator <<(OutputStream & os, const Time & self){

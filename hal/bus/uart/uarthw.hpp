@@ -42,14 +42,40 @@ class DmaChannel;
 
 class UartHw final:public Uart{
 public:
-protected:
+    explicit UartHw(
+        USART_TypeDef * inst, 
+        DmaChannel & tx_dma, 
+        DmaChannel & rx_dma
+    ):
+        inst_(inst), 
+        tx_dma_(tx_dma), 
+        rx_dma_(rx_dma){;}
+
+    void init(const Config & cfg);
+
+    void enable_single_line_mode(const Enable en);
+
+    void writeN(const char * data_ptr, const size_t len);
+
+    void write1(const char data);
+    
+    void set_tx_strategy(const CommStrategy tx_strategy);
+
+    void set_rx_strategy(const CommStrategy rx_strategy);
+
+    Gpio txio();
+    Gpio rxio();
+
+private:
     USART_TypeDef * inst_;
 
     void enable_rcc(const Enable en);
-    void enable_it(const Enable en);
+    void register_nvic(const Enable en);
+    void set_remap(const uint8_t remap);
+
     void enable_rxne_it(const Enable en);
     void enable_idle_it(const Enable en);
-    void invoke_tx_it();
+    void enable_tx_it();
 
     void enable_rx_dma(const Enable en);
     void enable_tx_dma(const Enable en);
@@ -77,27 +103,6 @@ protected:
 
     DmaChannel & tx_dma_;
     DmaChannel & rx_dma_;
-
-public:
-    UartHw(USART_TypeDef * instance, DmaChannel & tx_dma, DmaChannel & rx_dma):
-            inst_(instance), tx_dma_(tx_dma), rx_dma_(rx_dma){;}
-
-
-
-    void init(const Config & cfg);
-
-    void enable_single_line_mode(const Enable en);
-
-    void writeN(const char * data_ptr, const size_t len);
-
-    void write1(const char data);
-    
-    void set_tx_strategy(const CommStrategy tx_strategy);
-
-    void set_rx_strategy(const CommStrategy rx_strategy);
-
-    Gpio txio();
-    Gpio rxio();
 
     #ifdef ENABLE_UART1
     friend void ::USART1_IRQHandler();

@@ -6,11 +6,11 @@
 
 #include "core/debug/debug.hpp"
 
-
 using namespace ymd;
 using namespace ymd::hal;
 
 using Callback = Can::Callback;
+
 
 static constexpr auto Mailbox_Index_To_TSTATR(auto x) {
     return CAN_TSTATR_RQCP0 << (x << 3);
@@ -104,7 +104,7 @@ void Can::init_it(){
     CAN_ClearITPendingBit(inst_, it_mask);
     CAN_ITConfig(inst_, it_mask, ENABLE);
 
-    switch(reinterpret_cast<uint32_t>(inst_)){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             //tx interrupt
@@ -155,7 +155,7 @@ void Can::clear_mailbox(const uint8_t mbox){
 
 
 Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst)){
+    switch(reinterpret_cast<size_t>(inst)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_CAN1
@@ -183,7 +183,7 @@ Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
 }
 
 Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst)){
+    switch(reinterpret_cast<size_t>(inst)){
         default:
             __builtin_unreachable();
         #ifdef ENABLE_CAN1
@@ -220,17 +220,35 @@ Gpio Can::get_rx_gpio(const uint8_t remap){
     return map_inst_to_rx_gpio(inst_, remap);
 }
 
-void Can::install_gpio(const uint8_t remap){
+void Can::plant_gpio(const uint8_t remap){
     get_tx_gpio(remap).afpp();
     get_rx_gpio(remap).afpp();
 }
 
 
-void Can::enable_rcc(const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+void Can::enable_rcc(const Enable en){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+        }
+        break;
+        #endif
+
+
+        #ifdef ENABLE_CAN2
+        case CAN2_BASE:{
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, ENABLE);
+        }
+        break;
+        #endif
+    }
+}
+
+void Can::set_remap(const uint8_t remap){
+    switch(reinterpret_cast<size_t>(inst_)){
+        #ifdef ENABLE_CAN1
+        case CAN1_BASE:{
             switch(remap){
                 case 0:
                     GPIO_PinRemapConfig(GPIO_Remap1_CAN1, DISABLE);
@@ -251,9 +269,7 @@ void Can::enable_rcc(const uint8_t remap){
 
         #ifdef ENABLE_CAN2
         case CAN2_BASE:{
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, ENABLE);
-            uint8_t remap = CAN2_REMAP;
-                switch(remap){
+            switch(remap){
                 case 0:
                     GPIO_PinRemapConfig(GPIO_Remap_CAN2, DISABLE);
                     break;
@@ -267,18 +283,19 @@ void Can::enable_rcc(const uint8_t remap){
     }
 }
 
-void Can::init(const Config & cfg){
-    enable_rcc(cfg.remap);
-    install_gpio(cfg.remap);
 
-    const auto setting = cfg.baudrate.dump();
+void Can::init(const Config & cfg){
+    enable_rcc(EN);
+    set_remap(cfg.remap);
+    plant_gpio(cfg.remap);
+
 
     const CAN_InitTypeDef CAN_InitConf = {
-        .CAN_Prescaler = setting.prescale,
+        .CAN_Prescaler = cfg.coeffs.prescale,
         .CAN_Mode = std::bit_cast<uint8_t>(cfg.mode),
-        .CAN_SJW = std::bit_cast<uint8_t>(setting.swj),
-        .CAN_BS1 = std::bit_cast<uint8_t>(setting.bs1),
-        .CAN_BS2 = std::bit_cast<uint8_t>(setting.bs2),
+        .CAN_SJW = std::bit_cast<uint8_t>(cfg.coeffs.swj),
+        .CAN_BS1 = std::bit_cast<uint8_t>(cfg.coeffs.bs1),
+        .CAN_BS2 = std::bit_cast<uint8_t>(cfg.coeffs.bs2),
 
         .CAN_TTCM = DISABLE,
         .CAN_ABOM = ENABLE,
@@ -287,14 +304,6 @@ void Can::init(const Config & cfg){
         .CAN_RFLM = DISABLE,
         .CAN_TXFP = DISABLE,
     };
-
-    // DEBUG_PRINTLN(
-    //     std::bit_cast<uint8_t>(cfg.mode),
-    //     setting.prescale,
-    //     std::bit_cast<uint8_t>(setting.swj),
-    //     std::bit_cast<uint8_t>(setting.bs1),
-    //     std::bit_cast<uint8_t>(setting.bs2)
-    // );
 
     CAN_Init(inst_, &CAN_InitConf);
     init_it();
@@ -308,8 +317,8 @@ size_t Can::pending(){
     else return 3;
 }
 
-Option<CanMailBox> Can::transmit(const CanMsg & msg){
-    const auto transmit_mailbox = [this] -> int{
+Option<CanMailboxNth> Can::transmit(const CanMsg & msg){
+    const auto transmit_mailbox = [this] -> int32_t{
         const uint32_t tempreg = inst_->TSTATR;
         if((tempreg & CAN_TSTATR_TME0)) return 0;
         else if((tempreg & CAN_TSTATR_TME1)) return 1;
@@ -321,14 +330,17 @@ Option<CanMailBox> Can::transmit(const CanMsg & msg){
 
     const uint32_t tempmir = msg.sxx32_identifier_as_u32();
     const uint64_t data = msg.payload_as_u64();
-    inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDLR = data & UINT32_MAX;
-    inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDHR = data >> 32;
+    auto & mailbox_setting = inst_->sTxMailBox[
+        static_cast<size_t>(transmit_mailbox)];
 
-    inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMDTR = uint32_t(0xFFFF0000 | msg.size());
-    inst_->sTxMailBox[uint32_t(transmit_mailbox)].TXMIR = tempmir;
+    mailbox_setting.TXMDLR = data & UINT32_MAX;
+    mailbox_setting.TXMDHR = data >> 32;
+
+    mailbox_setting.TXMDTR = uint32_t(0xFFFF0000 | msg.size());
+    mailbox_setting.TXMIR = tempmir;
 
     return Some(
-        std::bit_cast<CanMailBox>(uint8_t(transmit_mailbox))
+        std::bit_cast<CanMailboxNth>(uint8_t(transmit_mailbox))
     );
 }
 
@@ -353,15 +365,14 @@ Result<void, CanError> Can::write(const CanMsg & msg){
             }
             return Err(CanError::SoftFifoOverflow);
         };
-        if(pending() < 3){
-            if(transmit(msg).is_some()){
-                return Ok();
-            }else{
-                return push_buf();
-            }
-        }else{
+
+        if(pending() >= 3)
             return push_buf();
-        }
+        
+        if(transmit(msg).is_none())
+            return push_buf();
+
+        return Ok();
     }
 }
 
@@ -381,7 +392,7 @@ uint8_t Can::get_tx_errcnt(){
     return inst_->ERRSR >> 16;
 }
 
-Option<Can::Fault> Can::get_last_fault(){
+Option<Can::Fault> Can::last_fault(){
     const auto code = CAN_GetLastErrorCode(inst_);
     if(code == 0) return None;
     return Some(std::bit_cast<Can::Fault>(code));
@@ -399,8 +410,8 @@ bool Can::is_busoff(){
     return inst_->ERRSR & CAN_ERRSR_BOFF;
 }
 
-void Can::cancel_transmit(const uint8_t mbox){
-    CAN_CancelTransmit(inst_, mbox);
+void Can::cancel_transmit(const CanMailboxNth mbox){
+    CAN_CancelTransmit(inst_, std::bit_cast<uint8_t>(mbox));
 }
 
 void Can::cancel_all_transmits(){
@@ -430,8 +441,9 @@ CanMsg Can::receive(const uint8_t fifo_num){
 
     const uint8_t dlc = rxmdtr & (0x0F);
 
-    const uint64_t data = inst_->sFIFOMailBox[fifo_num].RXMDLR 
-        | (uint64_t(inst_->sFIFOMailBox[fifo_num].RXMDHR) << 32);
+    const uint64_t data = 
+        static_cast<uint64_t>(inst_->sFIFOMailBox[fifo_num].RXMDLR) 
+        | (static_cast<uint64_t>(inst_->sFIFOMailBox[fifo_num].RXMDHR) << 32);
 
     switch(fifo_num){
         case CAN_FIFO0:
@@ -448,10 +460,7 @@ CanMsg Can::receive(const uint8_t fifo_num){
 }
 
 
-CanFilter Can::filter(const size_t idx) const {
-    if(idx > 13) HALT;
-    return CanFilter(this->inst_, idx);
-}
+
 
 void Can::on_tx_interrupt(){
 
@@ -600,10 +609,10 @@ void CAN2_SCE_IRQHandler(void){
 namespace ymd::hal{
 
 #ifdef ENABLE_CAN1
-Can can1 = {CAN1};
+Can can1 = Can{CAN1};
 #endif
 
 #ifdef ENABLE_CAN2
-Can can2 = {CAN2};
+Can can2 = Can{CAN2};
 #endif
 }

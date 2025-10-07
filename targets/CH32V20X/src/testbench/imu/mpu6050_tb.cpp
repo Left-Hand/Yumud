@@ -94,7 +94,7 @@ void mpu6500_tb(hal::I2c & i2c){
     }};
 
     hal::timer1.init({200}, EN);
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, [&](){
+    hal::timer1.attach<hal::TimerIT::Update>({0,0}, [&](){
         mpu.update().examine();
 
         #ifdef MAG_ACTIVATED

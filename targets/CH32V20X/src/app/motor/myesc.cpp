@@ -22,12 +22,16 @@
 #include "dsp/filter/rc/LowpassFilter.hpp"
 
 #include "digipw/prelude/abdq.hpp"
+#include "digipw/ctrl/pi_controller.hpp"
 #include "drivers/GateDriver/uvw_pwmgen.hpp"
 
 
 #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
+#include "robots/rpc/rpc.hpp"
+#include "robots/repl/repl_service.hpp"
+#include "hal/dma/dma.hpp"
 
 using namespace ymd;
 
@@ -35,7 +39,7 @@ using namespace ymd::drivers;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
 
-#define DEBUG_UART hal::uart2
+#define DBG_UART hal::uart2
 
 // static constexpr uint32_t DEBUG_UART_BAUD = 576000;
 
@@ -69,30 +73,41 @@ static constexpr auto PHASE_RESISTANCE = 0.123_q20;
 static constexpr uint32_t CURRENT_LOOP_BW = 1000;
 static constexpr auto MAX_MODU_VOLT = q16(4.5);
 
+
+
+struct CurrentRegulatorConfig{
+    uint32_t fs;                 // 采样频率 (Hz)
+    uint32_t fc;                 // 截止频率/带宽 (Hz)
+    q20 phase_inductance;        // 相电感 (H)
+    q20 phase_resistance;        // 相电阻 (Ω)
+    q20 max_voltage;                // 最大电压 (V)
+
+    [[nodiscard]] constexpr digipw::PiController make_pi_controller() const {
+        const auto & self = *this;
+        digipw::PiController::Cofficients cof;
+        cof.max_out = self.max_voltage;
+        q12 omega_bw = q12(TAU) * self.fc;
+        cof.kp = q20(self.phase_inductance) * q20(TAU) * self.fc;
+        cof.ki_discrete = q16(q16(self.phase_resistance) * q16(TAU)) * self.fc / self.fs;
+
+        // PANIC(cof.ki_discrete_ * 100);
+        cof.err_sum_max = q24(self.max_voltage / self.phase_resistance) * q24(self.fs / omega_bw);
+        // PANIC(cof.ki_discrete_ * 100, cof.err_sum_max_ * 100);
+        return digipw::PiController(cof);
+
+    }
+
+};
+
 static void init_adc(){
 
     hal::adc1.init({
             {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            // {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T28_5},
-            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T28_5},
-            // {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T28_5},
-
-            // {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T7_5},
-            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
-            // {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T7_5},
-            // {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T7_5},
 
             {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T7_5},
             {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
             {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T7_5},
-
-            // {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T13_5},
-            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T13_5},
-            // {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T13_5},
-
-            // {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T7_5},
-            // {hal::AdcChannelNth::TEMP, hal::AdcSampleCycles::T7_5},
 
         },
         {}
@@ -102,68 +117,13 @@ static void init_adc(){
     hal::adc1.enable_auto_inject(DISEN);
 }
 
-
-struct PiController {
-    struct Cofficients { 
-        q24 kp;                // 比例系数
-        q24 ki_discrete;       // 离散化积分系数（Ki * Ts）
-        q24 max_out;          // 最大输出电压限制
-        q20 err_sum_max;       // 积分项最大限制（抗饱和）
-    };
-
-    constexpr PiController(const Cofficients& cfg):
-        kp_(cfg.kp),
-        ki_discrete_(cfg.ki_discrete),
-        max_out_(cfg.max_out),
-        err_sum_max_(cfg.err_sum_max)
-    {}
-
-
-    constexpr void reset(){
-        err_sum_ = q20(0);
-    }
-
-    constexpr auto operator()(const q24 err) {
-        q24 output = CLAMP2(kp_ * err + err_sum_ * ki_discrete_, max_out_);
-        err_sum_ = CLAMP(err_sum_ + err, -max_out_ - output , max_out_ - output);
-        return output;
-    }
-
-private:
-    q24 kp_;                // 比例系数
-    q24 ki_discrete_;       // 离散化积分系数（Ki * Ts）
-    q24 max_out_;          // 最大输出电压限制
-    q20 err_sum_max_;       // 积分项最大限制（抗饱和）
-    q24 err_sum_;           // 误差积分累加器
-};
-
-struct CurrentRegulatorConfig{
-    uint32_t fs;                 // 采样频率 (Hz)
-    uint32_t fc;                 // 截止频率/带宽 (Hz)
-    q20 phase_inductance;        // 相电感 (H)
-    q20 phase_resistance;        // 相电阻 (Ω)
-    q20 max_voltage;                // 最大电压 (V)
-
-    [[nodiscard]] constexpr PiController make_pi_controller() const {
-        const auto & self = *this;
-        PiController::Cofficients cof;
-        cof.max_out = self.max_voltage;
-        q12 omega_bw = q12(TAU) * self.fc;
-        cof.kp = q20(self.phase_inductance) * q20(TAU) * self.fc;
-        cof.ki_discrete = q16(q16(self.phase_resistance) * q16(TAU)) * self.fc / self.fs;
-
-        // PANIC(cof.ki_discrete_ * 100);
-        cof.err_sum_max = q24(self.max_voltage / self.phase_resistance) * q24(self.fs / omega_bw);
-        // PANIC(cof.ki_discrete_ * 100, cof.err_sum_max_ * 100);
-        return PiController(cof);
-
-    }
-
-};
-
 void myesc_main(){
-    DEBUG_UART.init({DEBUG_UART_BAUD});
-    DEBUGGER.retarget(&DEBUG_UART);
+    DBG_UART.init({
+        .baudrate = DEBUG_UART_BAUD,
+        .rx_strategy = CommStrategy::Dma,
+        .tx_strategy = CommStrategy::Dma
+    });
+    DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets(EN);
@@ -195,7 +155,7 @@ void myesc_main(){
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADZONE = 350ns;
     timer.init_bdtr(MOS_1C840L_500MA_BEST_DEADZONE);
     // timer.init_bdtr(MOS_1C840L_100MA_BEST_DEADZONE);
-    timer.remap(1);
+    timer.set_remap(1);
 
     auto & pwm_u_ = timer.oc<1>(); 
     auto & pwm_v_ = timer.oc<2>(); 
@@ -216,7 +176,7 @@ void myesc_main(){
     pwm_w_.init({});
 
     timer.oc<4>().init({
-        .install_en = DISEN
+        .plant_en = DISEN
     });
 
     timer.oc<4>().enable_output(EN);
@@ -249,7 +209,7 @@ void myesc_main(){
 
     // mosdrv.init({}).examine();
 
-    auto blink_service = [&]{
+    auto blink_service_poller = [&]{
 
         led_red_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
         led_blue_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
@@ -484,24 +444,38 @@ void myesc_main(){
     );
 
 
+    [[maybe_unused]] auto repl_service_poller = [&]{
+        static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
+
+        static const auto list = rpc::make_list(
+            "list",
+
+            rpc::make_function("errn", [&](int32_t a, int32_t b){ 
+                DEBUG_PRINTLN(a,b);
+            }),
+            rpc::make_function("errn2", [&](int32_t a, int32_t b){ 
+                DEBUG_PRINTLN(a,b);
+            })
+
+        );
+
+        repl_server.invoke(list);
+    };
 
     while(true){
-        DEBUG_PRINTLN_IDLE(
+        if(1) DEBUG_PRINTLN_IDLE(
             // uvw_curr_,
+            // UART2_RX_DMA_CH.remaining(),
+            // DBG_UART.rx_fifo().pop(),
+            // DBG_UART.available()
             alphabeta_curr_,
             dq_curr_,
-            dq_volt_,
-            // uvw_curr_,
+            dq_volt_
 
-            // -0.02_q20 - uvw_curr_.u - uvw_curr_.v,
-            // uvw_curr_.numeric_sum(),
-            // dq_volt_,
-            // alphabeta_volt_,
-
-            flux_sensorless_ob.angle().to_turns(),
-            lbg_sensorless_ob.angle().to_turns(),
-            smo_sensorless_ob.angle().to_turns(),
-            uint32_t(exe_us_.count())
+            // flux_sensorless_ob.angle().to_turns(),
+            // lbg_sensorless_ob.angle().to_turns(),
+            // smo_sensorless_ob.angle().to_turns(),
+            // uint32_t(exe_us_.count())
 
             // openloop_elecrad_.normalized().to_turns()
             // bool(nfault_gpio_.read() == LOW),
@@ -522,7 +496,8 @@ void myesc_main(){
             // mosdrv.get_status2().unwrap().as_bitset(),
         );
 
-        blink_service();
+        blink_service_poller();
+        repl_service_poller();
         // clock::delay(2ms);
     }
 

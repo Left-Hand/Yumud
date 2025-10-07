@@ -3,6 +3,7 @@
 #include "core/string/string_view.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
+#include "core/utils/scope_guard.hpp"
 
 
 #include "hal/bus/can/can_msg.hpp"
@@ -22,8 +23,15 @@ enum class AsciiCanError:uint8_t{
     InvalidExtId,
     ArgTooLong,
     ArgTooShort,
+    
+    StdIdTooLong,
+    StdIdTooShort,
+
+    ExtIdTooLong,
+    ExtIdTooShort,
+
     UnsupportedCharInHex,
-    DataExistsInRemote,
+    InvalidFieldInRemoteMsg,
     NotImplemented
 };
 
@@ -33,14 +41,13 @@ public:
     constexpr StringCutter(const StringView str): 
         str_(str){}
 
-    constexpr StringView fetch_next(const size_t len){
-        const auto end = MIN(pos_ + len, str_.length());
-        const auto res = str_.substr_by_range(pos_, end);
-        pos_ = end;
-        return res;
+    constexpr Option<StringView> fetch_next(const size_t len){
+        const auto next_pos = MIN(pos_ + len, str_.length());
+        const auto guard = make_scope_guard([&]{pos_ = next_pos;});
+        return str_.substr_by_range(pos_, next_pos);
     }
 
-    constexpr StringView fetch_remaining(){
+    constexpr Option<StringView> fetch_remaining(){
         return str_.substr(pos_);
     }
 private:
@@ -56,13 +63,13 @@ public:
         hal::CanMsg msg;
     };
 
-    struct SendStr{
-        static constexpr size_t MAX_STR_LEN = 8;
+    struct SendSerialStr{
+        static constexpr size_t MAX_STR_LEN = 16;
 
         char str[MAX_STR_LEN];
 
-        static constexpr SendStr from_str(const StringView strv){
-            SendStr ret;
+        static constexpr SendSerialStr from_str(const StringView strv){
+            SendSerialStr ret;
             if(strv.size() > MAX_STR_LEN) sys::abort();
 
             for(size_t i = 0; i < strv.size(); i++){
@@ -72,7 +79,7 @@ public:
         }
     };
 
-    struct SetStreamBaud{
+    struct SetSerialBaud{
         uint32_t baud;
     };
 
@@ -90,8 +97,8 @@ public:
 
 private:
     using Storage = std::variant<
-        SendStr,
-        SetStreamBaud,
+        SendSerialStr,
+        SetSerialBaud,
         SetCanBaud,
         Open,
         Close
@@ -133,11 +140,11 @@ public:
     }
 
     [[nodiscard]] constexpr auto oper_send_str(const StringView str){
-        return Oper::SendStr::from_str(str);
+        return Oper::SendSerialStr::from_str(str);
     }
 
     [[nodiscard]] constexpr auto oper_set_stream_baud(const uint32_t baud){
-        return Oper::SetStreamBaud{baud};
+        return Oper::SetSerialBaud{baud};
     }
 
     [[nodiscard]] constexpr auto oper_set_can_baud(const uint32_t baud){

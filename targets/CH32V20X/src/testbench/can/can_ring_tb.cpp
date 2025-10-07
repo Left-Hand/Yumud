@@ -25,7 +25,7 @@ void can_ring_main(){
 
     auto & can = hal::can1;
     can.init({
-        .baudrate = hal::CanBaudrate::_1M, 
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
         .mode = hal::Can::Mode::Loopback
     });
 

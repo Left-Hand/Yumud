@@ -7,24 +7,38 @@ namespace ymd::strconv2{
 
 enum class DestringError:uint8_t{
     InvalidNumber,
-    InvalidBoolean,         // Boolean parsing failed
+    InvalidBooleanNum,         // 布尔值只能为0或1
+    InvalidBooleanAlpha,       // 布尔值只能为true或false
+    InvalidBooleanLength,      // 布尔值的长度必须为1,4,5
+	InvalidBooleanChar,		   // 单符号布尔只能为'0','1'
+
     InvalidChar,            // Single character parsing failed
     InvalidDigit,
+
 	UnexpectedPositive,
 	UnexpectedNegative,
+	MultiplyNegative,
+	MultiplyPositive,
+
 	MultipleDot,
+
 	UnexpectedSpace,
 	UnexpectedChar,
 	UnexpectedAlpha,
 	NoDigit,
     PosOverflow,
+
     DigitOverflow,
 	FracOverflow,
+
 	NoDigits,
 	OnlySignFounded,
 	NoDigitsAfterSign,
 	NoDigitsAfterDot,
-    NegOverflow,
+
+	Overflow,
+    NegOverflow, //负值超过能表示的范围
+	NegForUnsigned, //负值不能用于无符号数
     EmptyString,
 };
 

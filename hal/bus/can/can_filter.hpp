@@ -6,6 +6,7 @@
 #include "core/io/regs.hpp"
 #include "can_utils.hpp"
 #include "can_id.hpp"
+#include "core/utils/nth.hpp"
 
 namespace ymd{
     class StringView;
@@ -314,8 +315,10 @@ public:
     void apply(const CanFilterConfig & cfg);
 private:
     CAN_TypeDef * can_;
-    uint8_t idx_;
-    CanFilter(CAN_TypeDef * can, const uint16_t idx):can_(can), idx_(idx){};
+    uint8_t nth_count_;
+    CanFilter(CAN_TypeDef * can, const Nth nth):
+        can_(can), nth_count_(nth.count()){};
+
     CanFilter(const CanFilter & other) = delete;
     CanFilter(CanFilter && other) = delete;
 

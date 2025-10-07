@@ -1,22 +1,23 @@
 #pragma once
 
 #include "rotation2.hpp"
+#include "types/vectors/complex.hpp"
 
 namespace ymd{
 
 
 template<typename T>
 struct Isometry2 { 
-    using Rotation = Rotation2<T>;
+    using Rotation = UnitComplex<T>;
     using Vec = Vec2<T>;
 
 
-    Rotation2<T> rotation;
+    UnitComplex<T> rotation;
     Vec2<T> translation;
 
     [[nodiscard]] static constexpr Isometry2 from_matrix(const Matrix<T, 3, 3>& matrix) { 
         return Isometry2{
-            .rotation = Rotation2<T>::from_matrix(matrix.template submatrix<2,2>(0,0)),
+            .rotation = UnitComplex<T>(matrix.template at<0,0>(), matrix.template at<0,1>()),
             .translation = Vec2<T>(matrix.template submatrix<2,1>(0,2))
         };
     }

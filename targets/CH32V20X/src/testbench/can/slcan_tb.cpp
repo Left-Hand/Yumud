@@ -19,14 +19,17 @@ void slcan_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
-    hal::can1.init({hal::Can::BaudRate::_1M});
-    robots::asciican::AsciiCanPhy phy{hal::can1};
-    robots::asciican::Slcan slcan{phy};
+    auto & can = hal::can1;
+    can.init({
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs() 
+    });
+    robots::asciican::AsciiCanPhy phy{can};
+    robots::slcan::Slcan slcan{phy};
     auto list = rpc::make_list(
         "slcan",
         rpc::make_function("tx", [&](const StringView str) {
             const auto u_begin = clock::micros();
-            const auto res = slcan.on_recv_string(str);
+            const auto res = slcan.on_recv_str(str);
             const auto u_end = clock::micros();
             DEBUG_PRINTLN(res, u_end - u_begin);
             // DEBUG_PRINTLN(res.is_err());

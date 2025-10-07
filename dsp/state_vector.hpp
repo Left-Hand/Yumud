@@ -35,7 +35,16 @@ public:
         return *this;
     }
 
-    constexpr const auto & get() const{return data_;}
+    template<size_t I>
+    requires (I < N)
+    constexpr const T & get() const{return data_[I];}
+
+    constexpr T * begin() {return data_.begin();}
+    constexpr const T * begin() const {return data_.begin();}
+
+    constexpr T * end() {return data_.end();}
+    constexpr const T * end() const {return data_.end();}
+
     constexpr const T & back() const{return data_.back();}
 private:    
     std::array<T, N> data_;

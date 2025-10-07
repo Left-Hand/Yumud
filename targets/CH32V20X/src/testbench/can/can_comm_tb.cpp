@@ -9,7 +9,10 @@
 using namespace ymd;
 
 void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
-    can.init({hal::CanBaudrate::_1M, hal::CanMode::Normal});
+    can.init({
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
+        .mode = hal::CanMode::Normal
+    });
 
     hal::PC<13>().outpp();
     hal::PC<14>().outpp();
@@ -65,7 +68,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
                     can.get_tx_errcnt(), 
                     can.get_rx_errcnt(), 
                     can.is_busoff(), 
-                    can.get_last_fault()
+                    can.last_fault()
                 );
                 clock::delay(2ms);
             }

@@ -6,10 +6,19 @@
 
 namespace ymd::hal{
 class Dvp{
-protected:
-    void install();
 public:
-    void init(uint32_t *image0_addr, uint32_t *image1_addr, uint16_t col_len, uint16_t row_len);
+    struct Config{
+        uint32_t *image0_addr;
+        uint32_t *image1_addr; 
+        size_t num_col; 
+        size_t num_row;
+    };
+
+    void init(const Config & cfg);
+private:
+    void plant();
+
+    void enable_rcc(const Enable en);
 };
 
 #ifdef ENABLE_DVP

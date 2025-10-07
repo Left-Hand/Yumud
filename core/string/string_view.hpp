@@ -3,16 +3,82 @@
 #include "core/string/utils/strconv.hpp"
 #include "core/utils/hash_func.hpp"
 #include "core/utils/option.hpp"
-#include <span>
-#include <vector>
-#include <string>
-#include <string_view>
-#include <optional>
-
 
 namespace ymd{
 
 class String;
+class StringView;
+
+#if 0
+struct NullableStringView{
+    static constexpr NullableStringView from_null(){
+        return NullableStringView(nullptr);
+    }
+
+    constexpr NullableStringView() = delete;
+    constexpr NullableStringView(const char * str) = delete;
+
+    constexpr explicit NullableStringView(std::nullptr_t):
+        data_(nullptr),
+        size_(0){}
+
+    constexpr NullableStringView(_None_t):
+        data_(nullptr),
+        size_(0){}
+
+    constexpr NullableStringView(const StringView & str):
+        data_(str.data()),
+        size_(str.length()){}
+
+    constexpr NullableStringView(Some<StringView> str):
+        NullableStringView(str.get()){;}
+
+    constexpr NullableStringView(Option<StringView> may_str){
+        if(may_str.is_some()){
+            const auto str = may_str.unwrap();
+            data_ = str.data();
+            size_ = str.size();
+        }else{
+            data_ = nullptr;
+            size_ = 0;
+        }
+    }
+
+
+    constexpr explicit NullableStringView(const NullableStringView & other):
+        data_(other.data_),
+        size_(other.size_){}
+    constexpr explicit NullableStringView(NullableStringView && other):
+        data_(other.data_),
+        size_(other.size_){}
+
+    constexpr bool is_null() const{return size_==0;}
+    constexpr bool is_none() const{return size_==0;}
+    constexpr bool is_some() const{return size_!=0;}
+
+    constexpr StringView unwrap_or(const StringView default_str) const{
+        if(unlikely(size_ == 0)) return default_str;
+        return unwrap();
+    }
+
+    constexpr StringView unwrap() const{
+        if(unlikely(size_ == 0)) __builtin_trap();
+        return StringView(data_, size_);
+    }
+
+    constexpr StringView unwrap_unchecked() const{
+        return StringView(data_, size_);
+    }
+
+    constexpr size_t length() const{
+        return size_;
+    }
+
+private:
+    const char * data_;
+    size_t size_;
+};
+#endif
 
 class StringView {
 public:
@@ -56,26 +122,26 @@ public:
     constexpr size_t size() const { return size_; }
     constexpr size_t length() const {return size_;}
 
-    constexpr bool is_empty() const { return size_ == 0; }
-
     constexpr const char* data() const { return data_; }
 
     constexpr char operator [](const size_t index) const {return data_[index];}
-	__fast_inline constexpr StringView substr(size_t left) const {
+	__fast_inline constexpr Option<StringView> substr(size_t left) const {
         return substr_by_range(left, size_);};
-	__fast_inline constexpr StringView substr_by_range(size_t left, size_t right) const {
-        if (unlikely(left > right)) std::swap(left, right);
+	__fast_inline constexpr Option<StringView> substr_by_range(size_t left, size_t right) const {
+        if (unlikely(left > right)) 
+            return None;
         
-        if (left >= size_) 
-            return StringView(this->data_, 0);
+        if (right > size_) 
+            return None;
 
-        if (right > size_) right = size_;
-
-        return StringView(this->data_ + left, right - left);
+        return Some(StringView(this->data_ + left, right - left));
     }
 
-	__fast_inline constexpr StringView substr_by_len(size_t left, size_t len) const {
-        return substr_by_range(left, left + len);
+	__fast_inline constexpr Option<StringView> substr_by_len(size_t left, size_t len) const {
+        if (left + len > size_) 
+            return None;
+
+        return Some(StringView(this->data_ + left, len));
     }
     
     constexpr Option<size_t> find(char c) const{
@@ -99,10 +165,6 @@ public:
             return c == ' ' || c == '\t' || c == '\n' || c == '\r';
         };
 
-        if (self.is_empty()) {
-            return self;
-        }
-
         // Find first non-whitespace character
         size_t start = 0;
         while (start < self.size() && is_whitespace(self[start])) {
@@ -115,7 +177,10 @@ public:
             --end;
         }
 
-        return self.substr_by_len(start, end - start);
+        return StringView(
+            self.data() + start, 
+            static_cast<size_t>(MAX(static_cast<int>(end - start), 0))
+        );
     }
 
     constexpr operator std::string_view() const {
@@ -124,6 +189,10 @@ public:
 
     std::span<const uint8_t> as_bytes() const {
         return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(data_), size_);
+    }
+
+    constexpr std::span<const char> as_chars() const {
+        return std::span<const char>(data_, size_);
     }
 private:
     const char * data_;

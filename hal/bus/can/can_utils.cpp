@@ -17,19 +17,23 @@ OutputStream & operator<<(OutputStream & os, const CanFault & fault){
             return os << "BitDominant";
         case CanFault::Crc: 
             return os << "Crc";
-        default: __builtin_unreachable();
+        case CanFault::SoftwareSet:
+            return os << "SoftwareSet";
     }
+    __builtin_unreachable();
+    return os;
 }
 
 OutputStream & operator<<(OutputStream & os, const CanError & error){
     switch(error){
         case CanError::BlockingTransmitTimeout: 
             return os << "BlockingTransmitTimeout";
-        case CanError::NoMailboxFounded: 
-            return os << "NoMailboxFounded";
+        case CanError::NoMailboxAvailable: 
+            return os << "NoMailboxAvailable";
         case CanError::SoftFifoOverflow: 
             return os << "SoftFifoOverflow";
-        default: __builtin_unreachable();
     }
+    __builtin_unreachable();
+    return os;
 }
 }

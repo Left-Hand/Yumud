@@ -31,21 +31,21 @@ static void ak09911c_test(drivers::AK09911C & aku){
     aku.set_mode(AK09911C::Mode::Cont4).examine();
     DEBUG_PRINTLN("app started");
 
-    Quat<q24> gest;
+    auto rotation = Quat<q24>::from_uninitialized();
     auto measure = [&](){
         aku.update().examine();
         const auto dir = aku.read_mag().examine();
-        gest = gest.slerp(Quat<q24>::from_direction(dir), 0.05_r);
+        rotation = rotation.slerp(Quat<q24>::from_direction(dir), 0.05_r);
     };
 
     hal::timer1.init({ISR_FREQ}, EN);
-    hal::timer1.attach(hal::TimerIT::Update, {0,0},[&]{
+    hal::timer1.attach<hal::TimerIT::Update>({0,0},[&]{
         measure();
     }, EN);
     
     while(true){
         // DEBUG_PRINTLN(aku.update());
-        DEBUG_PRINTLN(clock::millis(), gest, aku.read_mag());
+        DEBUG_PRINTLN(clock::millis(), rotation, aku.read_mag());
     }
 }
 

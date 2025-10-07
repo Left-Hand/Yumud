@@ -25,7 +25,7 @@ void WS2812_Phy::delay_short(){
     }
 }
 
-void WS2812_Phy::send_code(const bool state){
+void WS2812_Phy::send_bit(const bool state){
     // __disable_irq();
     if(state){
         gpio_.set();
@@ -43,7 +43,7 @@ void WS2812_Phy::send_code(const bool state){
 
 void WS2812_Phy::send_byte(const uint8_t data){
     for(uint8_t mask = 0x80; mask; mask >>= 1){
-        send_code(data & mask);
+        send_bit(data & mask);
     }
 }
 
@@ -56,10 +56,10 @@ void WS2812_Phy::init(){
     gpio_.outpp();
 }
 
-void WS2812::_update(const Color<real_t> &color){
-    uint8_t g = uint8_t(CLAMP(int(color.g * color.a * 256), 0, 255));
-    uint8_t r = uint8_t(CLAMP(int(color.r * color.a * 256), 0, 255));
-    uint8_t b = uint8_t(CLAMP(int(color.b * color.a * 256), 0, 255));
+void WS2812::set_rgb(const RGB<q16> &color){
+    uint8_t g = uint8_t(CLAMP(int(color.g * 256), 0, 255));
+    uint8_t r = uint8_t(CLAMP(int(color.r * 256), 0, 255));
+    uint8_t b = uint8_t(CLAMP(int(color.b * 256), 0, 255));
     
 
     phy_.send_reset();

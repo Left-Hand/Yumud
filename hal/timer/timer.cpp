@@ -152,7 +152,7 @@ static constexpr uint8_t calculate_deadzone_code_from_ns(
 
 
 void BasicTimer::enable_rcc(const Enable en){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_TIM1
         case TIM1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, en == EN);
@@ -190,8 +190,8 @@ void BasicTimer::enable_rcc(const Enable en){
     }
 }
 
-void BasicTimer::remap(const uint8_t rm){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+void BasicTimer::set_remap(const uint8_t rm){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_TIM1
         case TIM1_BASE:
             switch(rm){
@@ -333,8 +333,8 @@ void BasicTimer::init(const Config & cfg, const Enable en){
 
     TIM_InternalClockConfig(inst_);
 
-    set_freq(details::is_aligned_count_mode(cfg.mode) ? (cfg.freq * 2) : (cfg.freq));
-    set_count_mode(cfg.mode);
+    set_freq(details::is_aligned_count_mode(cfg.count_mode) ? (cfg.freq * 2) : (cfg.freq));
+    set_count_mode(cfg.count_mode);
     enable_arr_sync(EN);
 
     TIM_ClearFlag(inst_, 0x1e7f);
@@ -357,7 +357,7 @@ void BasicTimer::enable(const Enable en){
     }
 }
 
-void GenericTimer::init_as_encoder(const Mode mode){
+void GenericTimer::init_as_encoder(const CountMode mode){
     this->enable_rcc(EN);
 
     {
@@ -436,20 +436,16 @@ uint8_t AdvancedTimer::calculate_deadzone(const Nanoseconds ns){
     );
 }
 
-void BasicTimer::enable_it(const IT it,const NvicPriority request, const Enable en){
-    NvicPriority::enable(request, details::it_to_irq(inst_, it), en);
-    TIM_ITConfig(inst_, std::bit_cast<uint8_t>(it), en == EN);
-}
 
 void BasicTimer::enable_cc_ctrl_sync(const Enable en){
     TIM_CCPreloadControl(inst_, en == EN);
 }
 
 
-#define TRY_HANDLE_IT(it)\
-if((itstatus & uint8_t(it))) {\
-    invoke_callback(it); \
-    TIM_ClearITPendingBit(inst_, uint8_t(it)); \
+#define TRY_HANDLE_IT(I)\
+if((itstatus & uint8_t(I))) {\
+    invoke_callback<I>(); \
+    TIM_ClearITPendingBit(inst_, uint8_t(I)); \
     return;\
 }\
 

@@ -331,13 +331,13 @@ void polar_robot_main(){
     #else
 
     can.init({
-        .baudrate = hal::CanBaudrate::_1M, 
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
         .mode = hal::CanMode::Normal
     });
 
     can.enable_hw_retransmit(DISEN);
 
-    can.filter(0).apply(
+    can.filters<0>().apply(
         hal::CanFilterConfig::from_accept_all()
     );
 
@@ -388,7 +388,7 @@ void polar_robot_main(){
     [[maybe_unused]] auto get_next_gcode_line = [] -> Option<StringView>{
         static strconv2::StringSplitIter line_iter{GCODE_LINES_NANJING, '\n'};
         while(line_iter.has_next()){
-            const auto next_line = line_iter.next();
+            const auto next_line = line_iter.next().unwrap();
             if(next_line.trim().length() == 0)
                 continue;
             return Some(next_line); 
@@ -482,7 +482,7 @@ void polar_robot_main(){
 
         rpc::make_function("next", [&](){
             static Vec2<q16> position = {0.1_r, 0};
-            position = position.cw();
+            position = position.forward_90deg();
             actuator_.set_coord(regu_(position));
         })
     );

@@ -85,8 +85,10 @@ void svpwm3_main(){
     };
 
     // timer.init(CHOP_FREQ, TimerCountMode::CenterAlignedUpTrig);
-    timer.init(
-        {.freq = 20000, .mode = hal::TimerCountMode::CenterAlignedUpTrig},
+    timer.init({
+            .freq = 20000, 
+            .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
+        },
         EN
     );
 

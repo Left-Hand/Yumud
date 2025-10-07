@@ -3,6 +3,7 @@
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
 
+namespace ymd::dsp{
 class DoubleToneMultiFrequencySiggen{
 public:
     struct Config{
@@ -11,44 +12,44 @@ public:
         uint32_t fs;
     };
 
-    DoubleToneMultiFrequencySiggen(const Config & cfg){
+    constexpr DoubleToneMultiFrequencySiggen(const Config & cfg){
         reconf(cfg);
         reset();
     }
 
-    void reconf(const Config & cfg){
+    constexpr void reconf(const Config & cfg){
         fl_map_ = cfg.fl_map;
         fh_map_ = cfg.fh_map;
 
-        delta_ = real_t(1) / cfg.fs;
+        delta_ = q16(1) / cfg.fs;
     }
 
-    void reset(){
+    constexpr void reset(){
         fl_index_ = 0;
         fh_index_ = 0;
     }
 
-    void update(const real_t now_seconds){
+    constexpr void update(const q16 now_seconds){
         const auto fl_ = fl_map_[fl_index_];
         const auto fh_ = fh_map_[fh_index_];
 
-        const auto rad = real_t(TAU) * frac(now_seconds);
+        const auto rad = q16(TAU) * frac(now_seconds);
         result_ = sin(fl_ * rad) + sin(fh_ * rad);
     }
 
-    auto fl() const{
+    constexpr auto fl() const{
         return fl_map_[fl_index_];
     }
 
-    auto fh() const{
+    constexpr auto fh() const{
         return fh_map_[fh_index_];
     }
 
-    auto result() const{
+    constexpr auto result() const{
         return result_;
     }
 
-    auto operator ()() const{
+    constexpr auto operator ()() const{
         return result();
     }
 private:
@@ -58,6 +59,8 @@ private:
     std::array<uint16_t, 4> fl_map_;
     std::array<uint16_t, 4> fh_map_;
 
-    real_t delta_;
-    real_t result_;
+    q16 delta_;
+    q16 result_;
 };
+
+}

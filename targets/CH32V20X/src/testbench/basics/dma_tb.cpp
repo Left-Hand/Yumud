@@ -28,24 +28,24 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
     logger.println("DMA init done");
 
 
-    channel.bind_half_cb([&](){
-        logger.println("h", channel.pending());
+    channel.set_interrupt_callback<hal::DmaIT::Half>([&](){
+        logger.println("h", channel.remaining());
     });
 
-    channel.bind_done_cb([&](){
-        logger.println("d", channel.pending());
+    channel.set_interrupt_callback<hal::DmaIT::Done>([&](){
+        logger.println("d", channel.remaining());
     });
 
 
 
     logger.println("DMA it bind done");
-    channel.enable_done_it(EN);
-    channel.enable_half_it(EN);
-    channel.enable_it({0,0}, EN);
+    channel.enable_interrupt<hal::DmaIT::Done>(EN);
+    channel.enable_interrupt<hal::DmaIT::Half>(EN);
+    channel.register_nvic({0,0}, EN);
     logger.println("DMA begin");
-    channel.transfer_mem2mem<char>(dst, src, sizeof(src));
-    while(channel.pending()){
-        logger.println(channel.pending());
+    channel.start_transfer_mem2mem<char>(dst, src, sizeof(src));
+    while(channel.remaining()){
+        logger.println(channel.remaining());
         clock::delay(200ms);
     }
 

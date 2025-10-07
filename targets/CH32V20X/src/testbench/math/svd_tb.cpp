@@ -21,6 +21,8 @@
 #include "types/gesture/isometry2.hpp"
 #include "types/gesture/isometry3.hpp"
 
+#include "core/string/string_view.hpp"
+
 using namespace ymd;
 
 #define UART hal::uart6
@@ -43,53 +45,39 @@ OutputStream & operator<<(OutputStream & os, const SlamErrorKind & error){
 }
 
 
-template<typename T>
-static constexpr Quat<T> mat3x3_to_quat(const Matrix<T, 3, 3>& R){
-    // https://zhuanlan.zhihu.com/p/635847061
-    const T trace = R(0, 0) + R(1, 1) + R(2, 2);
-    std::array<T, 4> buf;
+// https://github.com/jgsimard/RustRobotics/blob/main/src/mapping/se2_se3.rs
 
-    if (trace >= 0.0) {
-        T t = sqrt(trace + T(1.0));
-        buf[0] = T(0.5) * t;
-        t = T(0.5) / t;
-        buf[1] = (R(2, 1) - R(1, 2)) * t;
-        buf[2] = (R(0, 2) - R(2, 0)) * t;
-        buf[3] = (R(1, 0) - R(0, 1)) * t;
-    } else {
-        size_t i = 0;
-        
-        if (R(1, 1) > R(0, 0)) {
-            i = 1;
-        }
-
-        if (R(2, 2) > R(i, i)) {
-            i = 2;
-        }
-
-        const size_t j = (i + 1) % 3;
-        const size_t k = (j + 1) % 3;
-        T t = sqrt(R(i, i) - R(j, j) - R(k, k) + T(1.0));
-        buf[i + 1] = T(0.5) * t;
-        t = T(0.5) / t;
-        buf[0] = (R(k, j) - R(j, k)) * t;
-        buf[j + 1] = (R(j, i) + R(i, j)) * t;
-        buf[k + 1] = (R(k, i) + R(i, k)) * t;
-    }
-
-    return Quat<T>::from_array(buf);
-}
+namespace ymd::slam{
 
 template<typename T>
-static constexpr Matrix3x3<T> quat_to_mat3x3(const Quat<T> q){
-    // https://zhuanlan.zhihu.com/p/635847061
-    const auto [x, y, z, w] = q.to_xyzw_array();
-    return Matrix3x3<T>(
-        1 - 2 * (y * y + z * z),            2 * (x * y - z * w),            2 * (x * z + y * w),
-        2 * (x * y + z * w),                1 - 2 * (x * x + z * z),        2 * (y * z - x * w),
-        2 * (x * z - y * w),                2 * (y * z + x * w),            1 - 2 * (x * x + y * y)
+static constexpr Matrix<T, 3, 9> jacobian_so3(const Matrix3x3<T> & m){
+    const auto trace = m.trace();
+    const auto c = sqrt(trace - 1) * static_cast<T>(0.5);
+    if(c > static_cast<T>(0.999999))
+        return Matrix<T, 3, 9>::from_zero();
+    const auto s = sqrt(1 - square(c));
+
+    const auto theta = atan2(s, c);
+    const auto factor = (theta * c - s) / (4  * s * s * s);
+    const auto a1 = m.template at<2,1> - m.template at<1,2> * factor;
+    const auto a2 = m.template at<0,2> - m.template at<2,0> * factor;
+    const auto a3 = m.template at<1,0> - m.template at<0,1> * factor;
+    const auto b = static_cast<T>(0.5) * theta / s;
+
+    return Matrix<T, 3, 9>(
+        a1,  a2,  a3,  
+        0.0, 0.0,   b,
+        0.0,  -b, 0.0,
+        0.0, 0.0,  -b,
+        a1,  a2,  a3,
+        b, 0.0, 0.0,
+        0.0,   b, 0.0,
+        -b, 0.0, 0.0,
+        a1,  a2,  a3
     );
 }
+}
+
 
 
 namespace ymd::slam::details{
@@ -300,10 +288,10 @@ static constexpr Result<Isometry, SlamErrorKind> pose_estimation(
 
 
 template<typename T, typename Fn>
-static auto make_point_cloud2d_from_lambda(Fn && fn, size_t N){
+static std::vector<Vec2<T>> make_points2d_from_lambda(Fn && fn, size_t num){
     std::vector<Vec2<T>> pts;
-    pts.reserve(N);
-    for(size_t i = 0; i < N; ++i){
+    pts.reserve(num);
+    for(size_t i = 0; i < num; ++i){
         pts.push_back(std::forward<Fn>(fn)(i));
     }
     return pts;
@@ -311,9 +299,9 @@ static auto make_point_cloud2d_from_lambda(Fn && fn, size_t N){
 
 
 template<typename T, typename Fn>
-static auto make_point_cloud3d_from_lambda(Fn && fn, size_t N){
-    std::vector<Vec3<T>> pts(N);
-    for(size_t i = 0; i < N; ++i){
+static auto make_point_cloud3d_from_lambda(Fn && fn, size_t num){
+    std::vector<Vec3<T>> pts(num);
+    for(size_t i = 0; i < num; ++i){
         pts.push_back(std::forward<Fn>(fn)(i));
     }
     return pts;
@@ -321,7 +309,7 @@ static auto make_point_cloud3d_from_lambda(Fn && fn, size_t N){
 
 template<typename T>
 static void point_cloud_demo(){
-    static constexpr size_t N = 400;
+    static constexpr size_t NUM_POINTS = 400;
     static constexpr size_t MAX_ITERATIONS = 100;
 
     auto lambda1 = [](size_t i){ 
@@ -329,12 +317,13 @@ static void point_cloud_demo(){
     };
 
     auto lambda2 = [](size_t i){ 
-        const auto angle = Angle<T>::from_radians(i * static_cast<T>(0.1) + static_cast<T>(0.1));
+        const auto angle = Angle<T>::from_radians(i * static_cast<T>(0.1) + 
+            Angle<T>::from_degrees(10).to_radians());
         return Vec2<T>::from_angle(angle) + Vec2<T>(40, 50);
     };
 
-    const auto pts1 = make_point_cloud2d_from_lambda<T>(lambda1,N);
-    const auto pts2 = make_point_cloud2d_from_lambda<T>(lambda2,N);
+    const auto pts1 = make_points2d_from_lambda<T>(lambda1,NUM_POINTS);
+    const auto pts2 = make_points2d_from_lambda<T>(lambda2,NUM_POINTS);
 
     const auto begin_micros = clock::micros();
     const auto res = pose_estimation<T, 2>(std::span(pts1), std::span(pts2), MAX_ITERATIONS);

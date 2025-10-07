@@ -324,7 +324,7 @@ static RGB<q16> samplePixel(
     const uint y,
     std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
 ){
-    auto sample = RGB<q16>();
+    auto sample = RGB<q16>::from_unitialized();
 
     [[maybe_unused]] static constexpr auto uz = - real_t(0.5) / 
         tanf(real_t((alpha * TAU / 360) * 0.5f));

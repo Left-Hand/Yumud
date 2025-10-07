@@ -11,7 +11,7 @@ class TimerOutBase: public TimerChannel{
 protected:
     TimerOutBase(TIM_TypeDef * inst, const ChannelNth nth):
         TimerChannel(inst, nth){;}
-    void install_to_pin(const Enable en);
+    void plant_to_pin(const Enable en);
 public:
     void set_valid_level(const BoolLevel level);
     void enable_output(const Enable en);
@@ -24,12 +24,12 @@ struct TimerOcPwmConfig final{
     Enable cvr_sync_en = EN;
     BoolLevel valid_level = HIGH;
     Enable out_en = EN;
-    Enable install_en = EN;
+    Enable plant_en = EN;
 };
 
 struct TimerOcnPwmConfig final{
     Enable out_en = EN;
-    Enable install_en = EN;
+    Enable plant_en = EN;
 };
 
 class TimerOC final:public PwmIntf, public TimerOutBase{

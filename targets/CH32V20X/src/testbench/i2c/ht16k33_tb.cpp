@@ -385,8 +385,8 @@ private:
         const auto str = self.str();
         const auto cp = self.cursor().position();
         #if 1
-        const auto head = str.substr_by_range(0, cp);
-        const auto tail = str.substr_by_range(cp, str.length());
+        const auto head = str.substr_by_range(0, cp).unwrap();
+        const auto tail = str.substr_by_range(cp, str.length()).unwrap();
         os << os.brackets<'['>() << cp << os.brackets<']'>() << ' ';
         if(head.length()) os << head;
         os << '|';

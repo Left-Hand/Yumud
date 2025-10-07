@@ -29,12 +29,11 @@ void pwm_tb(OutputStream & logger){
     hal::GpioPwm pwm{gpio};
     pwm.init(32);
 
-    hal::timer1.enable_it(
-        hal::TimerIT::Update, 
+    hal::timer1.attach<hal::TimerIT::Update>(
         {0,0},
+        [&](){pwm.tick();},
         EN
     );
-    hal::timer1.bind_cb(hal::TimerIT::Update, [&](){pwm.tick();});
 
     #endif
 

@@ -2,7 +2,6 @@
 #include "dsp/controller/adrc/leso.hpp"
 #include "dsp/controller/adrc/command_shaper.hpp"
 
-#include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
@@ -44,7 +43,7 @@ void test_burshed_motor(){
         const auto u0 = clock::micros();
         td.update(u);
         const auto u1 = clock::micros();
-        DEBUG_PRINTLN(u, td.get()[0][0], td.get()[1][0], td.get()[2], u1 - u0);
+        DEBUG_PRINTLN(u, td.state()[0][0], td.state()[1][0], td.state()[2], u1 - u0);
     };
 
 
@@ -90,16 +89,16 @@ void test_burshed_motor(){
 
 
         cs.update(p0);
-        const auto p = cs.get()[0];
-        const auto v = cs.get()[1];
+        const auto p = cs.state()[0];
+        const auto v = cs.state()[1];
 
 
         static constexpr auto mc_w2 = mc_w;
         static constexpr auto kp = mc_w2 * mc_w2;
         static constexpr auto kd = 2 * mc_w2;
-        // const auto u = kd * dsp::adrc::ssqrt(p - motor.get()[0]) + kd * (v - motor.get()[1]);
-        // const auto u = kp * (p - motor.get()[0]) + kd * (v - motor.get()[1]);
-        const auto u = CLAMP2(kp * (p - motor.get()[0]) + kd * (v - motor.get()[1]), 89);
+        // const auto u = kd * dsp::adrc::ssqrt(p - motor.state()[0]) + kd * (v - motor.state()[1]);
+        // const auto u = kp * (p - motor.state()[0]) + kd * (v - motor.state()[1]);
+        const auto u = CLAMP2(kp * (p - motor.state()[0]) + kd * (v - motor.state()[1]), 89);
         // const auto dist_inj = + 0.1_r* sinpu(3 * t);
         // const auto dist_inj = 80 + 30.1_r * sin(10 * t);
         const auto dist_inj = d;
@@ -107,13 +106,13 @@ void test_burshed_motor(){
 
         motor.update(u + dist_inj - leso.disturbance());
         // motor.update(u + dist_inj - leso.disturbance());
-        leso.update(motor.get()[1], u);
+        leso.update(motor.state()[1], u);
         // const auto u1 = clock::micros();
 
 
         // DEBUG_PRINTLN(
         //     p0, p, v, u,
-        //     motor.get()[0], motor.get()[1],
+        //     motor.state()[0], motor.state()[1],
         //     leso.disturbance(),
         //     u1 - u0, dist_inj
         // );
@@ -126,7 +125,7 @@ void test_burshed_motor(){
     real_t t = 0.0_r;
 
     hal::timer1.init({ISR_FREQ}, EN);
-    hal::timer1.attach(hal::TimerIT::Update, {0,0}, 
+    hal::timer1.attach<hal::TimerIT::Update>({0,0}, 
         [&]{
             watch_gpio.clr();
             t += (1.0_r / ISR_FREQ);
@@ -140,8 +139,8 @@ void test_burshed_motor(){
 
         DEBUG_PRINTLN(
             //     p0, p, v, u,
-                motor.get()[0], motor.get()[1],
-                leso.disturbance()
+            motor.state()[0], motor.state()[1],
+            leso.disturbance()
             //     u1 - u0, dist_inj
         );
     }

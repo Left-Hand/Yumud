@@ -39,7 +39,7 @@ void mks_stepper_main(){
     MksStepper motor{{.nodeid = {1}}, &COMM_UART};
     #else
     COMM_CAN.init({
-        .baudrate = hal::CanBaudrate::_1M, 
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
         .mode = hal::CanMode::Normal
     });
 

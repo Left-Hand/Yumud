@@ -524,8 +524,8 @@ private:
 void render_main(){
 
 
+    auto & DBG_UART = DEBUGGER_INST;
     auto init_debugger = []{
-        auto & DBG_UART = DEBUGGER_INST;
 
         DBG_UART.init({
             .baudrate = UART_BAUD
@@ -597,6 +597,27 @@ void render_main(){
     [[maybe_unused]] auto en_font2 = MonoFont16x8{};
 
     while(true){
+
+
+        [[maybe_unused]] auto repl_service_poller = [&]{
+            static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
+
+            static const auto list = rpc::make_list(
+                "list",
+
+                rpc::make_function("errn", [&](int32_t a, int32_t b){ 
+                    DEBUG_PRINTLN(a,b);
+                }),
+                rpc::make_function("errn2", [&](int32_t a, int32_t b){ 
+                    DEBUG_PRINTLN(a,b);
+                })
+
+            );
+
+            repl_server.invoke(list);
+        };
+
+        repl_service_poller();
         const auto ctime = clock::time();
         // const auto dest_angle = Angle<q16>::from_turns(ctime * 0.3_r);
         const auto dest_angle = Angle<q16>::from_turns(ctime * 0.1_r);
@@ -862,7 +883,9 @@ void render_main(){
         });
 
 
+        #if 1
         DEBUG_PRINTLN(
+            DBG_UART.available(),
             render_us.count()
             
             // ,shape.points
@@ -877,6 +900,7 @@ void render_main(){
             // render_iter
             // shape_bb
         );
+        #endif
     }
 
 };

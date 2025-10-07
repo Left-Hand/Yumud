@@ -4,10 +4,6 @@ using namespace ymd::hal;
 
 // static uint8_t NVIC_Priority_Group;
 
-NvicPriority::NvicPriority(const uint8_t pre, const uint8_t sub):
-    _pre(pre & 0b1), 
-    _sub(sub & 0b111){;}
-
 void NvicPriority::enable(const NvicPriority & request, const IRQn _irq, const Enable en){
     NVIC_SetPriority(_irq, (request._pre << 7) | (request._sub << 4));
 

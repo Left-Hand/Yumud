@@ -42,7 +42,6 @@
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/motor_ctrl/elecrad_compsator.hpp"
-#include "dsp/controller/pi_ctrl.hpp"
 #include "dsp/controller/adrc/leso.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
@@ -158,11 +157,11 @@ void bldc_main(){
     clock::delay(2ms);
 
     can.init({
-        .baudrate = hal::CanBaudrate::_1M, 
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
         .mode = hal::CanMode::Normal
     });
 
-    can.filter(0) 
+    can.filters<0>() 
         .apply(hal::CanFilterConfig::from_pair(
             hal::CanStdIdMaskPair::from_accept_all()
         )
@@ -175,10 +174,10 @@ void bldc_main(){
 
     timer1.init({
         .freq = CHOPPER_FREQ, 
-        .mode = hal::TimerCountMode::CenterAlignedUpTrig
+        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
-    timer1.oc<4>().init({.install_en = DISEN});
+    timer1.oc<4>().init({.plant_en = DISEN});
     timer1.oc<4>().cvr() = timer1.arr() - 1;
 
     pwm_u.init({});
@@ -191,7 +190,7 @@ void bldc_main(){
     mp6540_nfault_gpio_.inana();
 
     can.init({
-        .baudrate = hal::CanBaudrate::_1M,
+        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
         .mode = hal::CanMode::Normal
     });
 
