@@ -83,13 +83,18 @@ private:
 class StringView {
 public:
     // 构造函数 从容器构造必须为显式 避免调用者没注意到生命周期
-    constexpr explicit StringView(const std::string & str): data_(str.c_str()), size_(str.length()) {}
-
-    constexpr StringView(const std::string_view str): data_(str.data()), size_(str.length()) {}
-    constexpr StringView(const char* str) : data_(str), size_(str ? strlen(str) : 0) {}
-    constexpr StringView(const char* str, size_t size) : data_(str), size_(size) {}
-    constexpr StringView(const StringView & other): data_(other.data_), size_(other.size_){;}
-    constexpr StringView(StringView && other): data_(other.data_), size_(other.size_){;}
+    constexpr explicit StringView(const std::string & str): 
+        data_(str.c_str()), size_(str.length()) {}
+    constexpr StringView(const std::string_view str): 
+        data_(str.data()), size_(str.length()) {}
+    constexpr StringView(const char* str) : 
+        data_(str), size_(str ? strlen(str) : 0) {}
+    constexpr StringView(const char* str, size_t size) : 
+        data_(str), size_(size) {}
+    constexpr StringView(const StringView & other): 
+        data_(other.data_), size_(other.size_){;}
+    constexpr StringView(StringView && other): 
+        data_(other.data_), size_(other.size_){;}
 
     constexpr StringView& operator=(const StringView & other) {
         data_ = other.data_;

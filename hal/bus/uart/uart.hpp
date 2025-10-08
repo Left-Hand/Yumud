@@ -38,15 +38,14 @@ public:
     using Callback = std::function<void(void)>;
     using Parity = UartParity;
 
-
-    Uart(const Uart & other) = delete;
-    Uart(Uart && other) = delete;
-
     struct Config{
         uint32_t baudrate;
         CommStrategy rx_strategy = CommStrategy::Dma;
         CommStrategy tx_strategy = CommStrategy::Dma;
     };
+
+    Uart(const Uart & other) = delete;
+    Uart(Uart && other) = delete;
 
     virtual void init(const Config & cfg) = 0;
 
@@ -56,8 +55,12 @@ public:
 
     virtual void set_tx_strategy(const CommStrategy _tx_strategy) = 0;
     virtual void set_rx_strategy(const CommStrategy _rx_strategy) = 0;
-    void bind_post_tx_cb(auto && cb){post_tx_cb_ = std::move(cb);}
-    void bind_post_rx_cb(auto && cb){post_rx_cb_ = std::move(cb);}
+
+    template<typename Fn>
+    void set_post_tx_callback(Fn && cb){post_tx_cb_ = std::forward<Fn>(cb);}
+
+    template<typename Fn>
+    void set_post_rx_callback(Fn && cb){post_rx_cb_ = std::forward<Fn>(cb);}
 
     HalResult read(uint32_t & data) {
         char _;read1(_);data = _;return HalResult::Ok();};

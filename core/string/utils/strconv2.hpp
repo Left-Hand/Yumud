@@ -44,11 +44,6 @@ struct FstrDump final{
 		const auto len = str.length();
 		size_t index = 0;
 
-		// 略过空格
-		while (index < len && str[index] == ' ') {
-			index++;
-		}
-
 		// 处理符号
 		if (str[index] == '+' || str[index] == '-') {
 			status.is_negative = (str[0] == '-');
@@ -243,10 +238,24 @@ __fast_inline constexpr uint32_t fast_exp10(const size_t n){
 	return FAST_EXP10_TABLE[n];
 }
 
+template<typename T>
+struct extended_unsigned;
+
+
+template<> struct extended_unsigned<uint8_t>{using type = uint32_t;};
+template<> struct extended_unsigned<uint16_t>{using type = uint32_t;};
+template<> struct extended_unsigned<uint32_t>{using type = uint64_t;};
+template<> struct extended_unsigned<int8_t>{using type = uint32_t;};
+template<> struct extended_unsigned<int16_t>{using type = uint32_t;};
+template<> struct extended_unsigned<int32_t>{using type = uint32_t;};
+template<> struct extended_unsigned<int>{using type = uint32_t;};
+
+template<typename T>
+using extended_unsigned_t = typename extended_unsigned<T>::type;
+
 template<integral T>
 struct IntDeformatter{
-	using U = std::make_unsigned_t<T>;
-	static constexpr U MAX_BY_10 = static_cast<U>(std::numeric_limits<T>::max() / 10); 
+	using U = extended_unsigned_t<T>;
 	static constexpr DestringResult<T> defmt(const StringView str) {
 
 		const auto len = str.length();
@@ -266,6 +275,10 @@ struct IntDeformatter{
 			case '+':
 				existing_sign = '+';
 				break;
+			case '0' ... '9':
+				break;
+			default:
+				return Err(DestringError::InvalidChar);
 		}
 
 		for(size_t i = size_t(bool(existing_sign)); i < len; i++){
@@ -285,18 +298,21 @@ struct IntDeformatter{
 						return Err(DestringError::MultiplyPositive);
 					return Err(DestringError::UnexpectedPositive);
 				case '0' ... '9':
-					if(unlikely(unsigned_ret > MAX_BY_10))
-						return Err(DestringError::Overflow);
-
 					unsigned_ret = (10u * unsigned_ret) + static_cast<U>(chr - '0');
+					if(unlikely(unsigned_ret > static_cast<U>(std::numeric_limits<T>::max())))
+						return Err(DestringError::Overflow);
 					break;
+				default:
+					return Err(DestringError::InvalidChar);
 			}
 		}
 	end_proc:
-		if(unlikely(unsigned_ret > std::numeric_limits<T>::max()))
-			return Err(DestringError::Overflow);
-		const auto ret_without_sign = static_cast<T>(unsigned_ret);
-		return Ok(((existing_sign == '-') ? -ret_without_sign : ret_without_sign));
+		if constexpr(std::is_signed_v<T>){
+			const auto ret_without_sign = static_cast<T>(unsigned_ret);
+			return Ok(((existing_sign == '-') ? -ret_without_sign : ret_without_sign));
+		}else{
+			return Ok(static_cast<T>(unsigned_ret));
+		}
 	}
 };
 
@@ -442,23 +458,37 @@ struct IntFormatter{
 		}
 
 		const auto radix_count = radix.count();
-		const bool is_negative = value < 0;
+		
+		if constexpr (std::is_signed_v<T>){
+			const bool is_negative = value < 0;
+			if (is_negative) {
+				str[0] = '-';
+			}
 
-		// Make value positive
-		using U = std::make_unsigned_t<T>;
-		U uvalue = is_negative ? (U)(-(value + 1)) + 1 : (U)value;
+			// Make value positive
+			using U = std::make_unsigned_t<T>;
+			U uvalue = is_negative ? 
+				static_cast<U>(-(value + 1)) + 1u : 
+				static_cast<U>(value);
 
-		// Compute length safely
-		size_t len = uint_to_num_chars(uvalue, radix) + (is_negative ? 1 : 0);
-		if (str.length() < len) return Err(TostringError::OutOfMemory);
+			// Compute length safely
+			const size_t uint_length = uint_to_num_chars(uvalue, radix);
+			const size_t total_length = uint_length + (is_negative ? 1 : 0);
+			if (str.length() < total_length) return Err(TostringError::OutOfMemory);
 
-		dyn_fmt_u32<PaddingStrategy::NoPadding>(StringRef(str.data(), len), uvalue, radix_count);
+			dyn_fmt_u32<PaddingStrategy::NoPadding>(
+				StringRef(str.data() + is_negative, uint_length), 
+			uvalue, radix_count);
 
-		if (is_negative) {
-			str[0] = '-';
+			return Ok(total_length);
+		}else{
+			const size_t total_length = uint_to_num_chars(value, radix);
+			if (str.length() < total_length) return Err(TostringError::OutOfMemory);
+			dyn_fmt_u32<PaddingStrategy::NoPadding>(
+				StringRef(str.data(), total_length), 
+			value, radix_count);
+			return Ok(total_length);
 		}
-
-		return Ok(len);
 	}
 
 
@@ -554,10 +584,6 @@ static constexpr TostringResult<size_t> to_str(StringRef str, iq_t<Q> value, con
 	return details::Iq16Formatter::fmt(str, value, eps);
 }
 
-template<size_t Q>
-static constexpr DestringResult<iq_t<Q>> str_to_iq(StringView str){
-	return details::IqDeformatter<iq_t<Q>>::defmt(str);
-}
 
 template<typename T>
 struct DefmtStrDispatcher;
@@ -572,7 +598,7 @@ struct DefmtStrDispatcher<StringView>{
 template<size_t Q>
 struct DefmtStrDispatcher<iq_t<Q>>{
 	static constexpr DestringResult<iq_t<Q>> from_str(StringView str){
-		return str_to_iq<Q>(str);
+		return details::IqDeformatter<iq_t<Q>>::defmt(str);
 	}
 };
 

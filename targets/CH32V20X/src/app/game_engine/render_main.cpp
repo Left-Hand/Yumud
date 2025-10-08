@@ -52,6 +52,7 @@
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "frame_buffer.hpp"
+#include "core/string/utils/strconv2.hpp"
 
 
 namespace ymd{
@@ -210,7 +211,212 @@ static constexpr auto LCD_WIDTH = 320u;
 static constexpr auto LCD_HEIGHT = 170u;
 
 
+// struct StringDeserializeSpawner{
+//     explicit StringDeserializeSpawner(const StringView str):
+//         remain_str_(str){;}
+// private:
+//     StringView remain_str_;
+// };
 
+namespace ymd::tmp::tuple_tmp::details {
+
+// 基础工具：判断类型是否在包中
+template<typename T, typename... Args>
+struct type_in_pack : std::false_type {};
+
+template<typename T, typename First, typename... Rest>
+struct type_in_pack<T, First, Rest...> 
+    : std::conditional_t<std::is_same_v<T, First>, 
+                        std::true_type, 
+                        type_in_pack<T, Rest...>> {};
+
+template<typename T>
+struct type_in_pack<T> : std::false_type {};
+
+// 元组移除指定类型的实现
+template<typename Tuple, typename... RemoveTypes>
+struct tuple_remove_specified_impl;
+
+// 递归基案：空元组
+template<typename... RemoveTypes>
+struct tuple_remove_specified_impl<std::tuple<>, RemoveTypes...> {
+    using type = std::tuple<>;
+};
+
+// 递归步骤
+template<typename First, typename... Rest, typename... RemoveTypes>
+struct tuple_remove_specified_impl<std::tuple<First, Rest...>, RemoveTypes...> {
+private:
+    using remaining_tuple = typename tuple_remove_specified_impl<
+        std::tuple<Rest...>, RemoveTypes...>::type;
+    
+public:
+    using type = std::conditional_t<
+        type_in_pack<First, RemoveTypes...>::value,
+        remaining_tuple,
+        decltype(std::tuple_cat(std::declval<std::tuple<First>>(), 
+            std::declval<remaining_tuple>()))
+    >;
+};
+
+// 元组替换指定类型的实现
+template<typename Tuple, typename NewType, typename... ReplaceTypes>
+struct tuple_replace_specified_impl;
+
+// 递归基案：空元组
+template<typename NewType, typename... ReplaceTypes>
+struct tuple_replace_specified_impl<std::tuple<>, NewType, ReplaceTypes...> {
+    using type = std::tuple<>;
+};
+
+// 递归步骤
+template<typename First, typename... Rest, typename NewType, typename... ReplaceTypes>
+struct tuple_replace_specified_impl<std::tuple<First, Rest...>, NewType, ReplaceTypes...> {
+private:
+    using remaining_tuple = typename tuple_replace_specified_impl<
+        std::tuple<Rest...>, NewType, ReplaceTypes...>::type;
+    
+    using current_type = std::conditional_t<
+        type_in_pack<First, ReplaceTypes...>::value,
+        NewType,
+        First
+    >;
+    
+public:
+    using type = decltype(std::tuple_cat(
+        std::declval<std::tuple<current_type>>(),
+        std::declval<remaining_tuple>()
+    ));
+};
+
+// 元组映射的实现
+template<template<typename> class Mapper, typename Tuple>
+struct tuple_map_impl;
+
+// 递归基案：空元组
+template<template<typename> class Mapper>
+struct tuple_map_impl<Mapper, std::tuple<>> {
+    using type = std::tuple<>;
+};
+
+// 递归步骤
+template<template<typename> class Mapper, typename First, typename... Rest>
+struct tuple_map_impl<Mapper, std::tuple<First, Rest...>> {
+private:
+    using mapped_first = typename Mapper<First>::type;
+    using mapped_rest = typename tuple_map_impl<Mapper, std::tuple<Rest...>>::type;
+    
+public:
+    using type = decltype(std::tuple_cat(
+        std::declval<std::tuple<mapped_first>>(),
+        std::declval<mapped_rest>()
+    ));
+};
+
+// 元组规约的实现 - 根据策略剔除元素
+template<template<typename> class Predicate, typename Tuple>
+struct tuple_reduce_impl;
+
+// 递归基案：空元组
+template<template<typename> class Predicate>
+struct tuple_reduce_impl<Predicate, std::tuple<>> {
+    using type = std::tuple<>;
+};
+
+// 递归步骤
+template<template<typename> class Predicate, typename First, typename... Rest>
+struct tuple_reduce_impl<Predicate, std::tuple<First, Rest...>> {
+private:
+    using remaining_tuple = typename tuple_reduce_impl<Predicate, std::tuple<Rest...>>::type;
+    
+public:
+    using type = std::conditional_t<
+        Predicate<First>::value,
+        remaining_tuple,
+        decltype(std::tuple_cat(std::declval<std::tuple<First>>(), 
+            std::declval<remaining_tuple>()))
+    >;
+};
+
+// 支持模板别名版本的谓词（如 std::is_integral_v 的适配器）
+template<template<typename> class Predicate, typename Tuple>
+struct tuple_reduce_alias_impl;
+
+template<template<typename> class Predicate>
+struct tuple_reduce_alias_impl<Predicate, std::tuple<>> {
+    using type = std::tuple<>;
+};
+
+template<template<typename> class Predicate, typename First, typename... Rest>
+struct tuple_reduce_alias_impl<Predicate, std::tuple<First, Rest...>> {
+private:
+    using remaining_tuple = typename tuple_reduce_alias_impl<Predicate, std::tuple<Rest...>>::type;
+    
+public:
+    using type = std::conditional_t<
+        Predicate<First>::value,
+        remaining_tuple,
+        decltype(std::tuple_cat(std::declval<std::tuple<First>>(), 
+        std::declval<remaining_tuple>()))
+    >;
+};
+
+} // namespace details
+
+namespace ymd::tmp::tuple_tmp{
+// 主模板别名
+template<typename T, typename... Args>
+using tuple_remove_specified_t = typename details::tuple_remove_specified_impl<T, Args...>::type;
+
+template<typename T, typename U, typename... Args>
+using tuple_replace_specified_t = typename details::tuple_replace_specified_impl<T, U, Args...>::type;
+
+// 主模板别名
+template<template<typename> class Mapper, typename Tuple>
+using tuple_map_t = typename details::tuple_map_impl<Mapper, Tuple>::type;
+
+
+// 主模板别名 - 自动检测谓词类型
+template<template<typename> class Predicate, typename Tuple>
+using tuple_reduce_t = typename details::tuple_reduce_alias_impl<Predicate, Tuple>::type;
+
+// 测试代码
+static_assert(std::is_same_v<
+    tuple_reduce_t<std::is_integral, std::tuple<int, double, char, float>>,
+    std::tuple<double, float>
+>);
+
+static_assert(std::is_same_v<
+    tuple_map_t<std::add_const, std::tuple<int, double, char>>,
+    std::tuple<const int, const double, const char>
+>);
+
+// static_assert(std::is_same_v<
+//     tuple_remove_specified_t<std::tuple<int, double, char, float>, double, char>,
+//     std::tuple<int, float>
+// >);
+
+// static_assert(std::is_same_v<
+//     tuple_replace_specified_t<std::tuple<int, double, char>, float, double, char>,
+//     std::tuple<int, float, float>
+// >);
+
+// static_assert(std::is_same_v<
+//     tuple_remove_specified_t<std::tuple<int, double>, float>,
+//     std::tuple<int, double>
+// >);
+
+// static_assert(std::is_same_v<
+//     tuple_replace_specified_t<std::tuple<>, float, int, double>,
+//     std::tuple<>
+// >);
+
+}
+
+template<typename ... Args>
+struct StringDeformatter{
+private:
+};
 
 template<typename Shape>
 // auto make_DrawDispatchIterator
@@ -521,6 +727,53 @@ private:
 }
 
 
+
+struct ReplServer2 final{
+public:
+    ReplServer2(ReadCharProxy && is, WriteCharProxy && os) :
+        is_(std::move(is)), 
+        os_(std::move(os)){;}
+
+    template<typename T>
+    void invoke(T && obj){
+        while(is_->available()){
+            char chr;
+            is_->read1(chr);
+            if(not is_visible_char(chr)) continue;
+            DEBUG_PRINTLN(chr);
+        }
+    }
+
+    void set_outen(Enable outen){ outen_ = outen == EN; }   
+private:
+    ReadCharProxy is_;
+    OutputStreamByRoute os_;
+
+    bool outen_ = false;
+    
+    template<typename T>
+    auto respond(T && obj, const std::span<const StringView> strs){
+        const auto guard = os_.create_guard();
+        if(outen_){
+            os_.force_sync(EN);
+            os_.prints("<<=", strs);
+        }
+
+        return [&]{
+            if(!this->outen_){
+                DummyOutputStream dos{};
+                return rpc::visit(obj, dos, rpc::AccessProvider_ByStringViews(strs));
+            }else{
+                return rpc::visit(obj, os_, rpc::AccessProvider_ByStringViews(strs));
+            }
+        }();
+    }
+
+    static constexpr bool is_visible_char(const char c){
+        return (c >= 32) and (c <= 126);
+    }
+};
+
 void render_main(){
 
 
@@ -534,7 +787,7 @@ void render_main(){
         DEBUGGER.retarget(&DBG_UART);
         DEBUGGER.set_eps(4);
         DEBUGGER.set_splitter(",");
-        DEBUGGER.no_brackets(EN);
+        // DEBUGGER.no_brackets(EN);
     };
 
 
@@ -600,7 +853,7 @@ void render_main(){
 
 
         [[maybe_unused]] auto repl_service_poller = [&]{
-            static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
+            static ReplServer2 repl_server{&DBG_UART, &DBG_UART};
 
             static const auto list = rpc::make_list(
                 "list",
@@ -617,7 +870,7 @@ void render_main(){
             repl_server.invoke(list);
         };
 
-        repl_service_poller();
+
         const auto ctime = clock::time();
         // const auto dest_angle = Angle<q16>::from_turns(ctime * 0.3_r);
         const auto dest_angle = Angle<q16>::from_turns(ctime * 0.1_r);
@@ -882,11 +1135,15 @@ void render_main(){
             }
         });
 
-
-        #if 1
-        DEBUG_PRINTLN(
-            DBG_UART.available(),
-            render_us.count()
+        
+        if(0) DEBUG_PRINTLN(
+            // DBG_UART.available(),
+            // DBG_UART.rx_dma_buf_index_,
+            // DBG_UART.rx_fifo().write_idx(),
+            // DBG_UART.rx_fifo().read_idx(),
+            render_us.count(),
+            strconv2::defmt_str<bool>("1")
+            // strconv2::defmt_str<uint8_t>("256")
             
             // ,shape.points
             // ,render_iter.is_mid_at_right()
@@ -900,7 +1157,8 @@ void render_main(){
             // render_iter
             // shape_bb
         );
-        #endif
+
+        repl_service_poller();
     }
 
 };
