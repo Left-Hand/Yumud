@@ -1,0 +1,469 @@
+#include "src/testbench/tb.h"
+
+#include "core/clock/time.hpp"
+#include "core/utils/nth.hpp"
+#include "core/utils/stdrange.hpp"
+#include "core/utils/data_iter.hpp"
+#include "core/utils/rescaler.hpp"
+#include "core/string/fixed_string.hpp"
+
+#include "hal/gpio/gpio_port.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/uartsw.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+
+#include "types/image/painter/painter.hpp"
+#include "types/colors/rgb/rgb.hpp"
+#include "types/regions/rect2.hpp"
+
+#include "types/vectors/quat.hpp"
+#include "types/image/image.hpp"
+#include "types/image/font/font.hpp"
+
+#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
+#include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
+
+#include "robots/rpc/rpc.hpp"
+#include "robots/repl/repl_service.hpp"
+#include "robots/mock/mock_burshed_motor.hpp"
+
+#include "frame_buffer.hpp"
+#include "core/string/utils/strconv2.hpp"
+
+
+using namespace ymd;
+
+// struct StringDeserializeSpawner{
+//     explicit StringDeserializeSpawner(const StringView str):
+//         remain_str_(str){;}
+// private:
+//     StringView remain_str_;
+// };
+namespace ymd::strconv2{
+
+struct StringSplitSeeker{ 
+    explicit constexpr StringSplitSeeker(const char delimiter):
+        delimiter_(delimiter){}
+
+    Option<size_t> find_intro(const StringView str){
+        for(size_t i = 0; i < str.size(); i++){
+            if(not is_delimiter(str[i])) return Some(i);
+        }
+        return None;
+    }
+private:
+    char delimiter_;
+
+    constexpr bool is_delimiter(const char c) const{
+        return (c == delimiter_) || (c == '\0');
+    }
+};
+
+template<typename T>
+using DestringResult = strconv2::DestringResult<T>;
+
+template<typename T>
+struct StringEntitySeeker{
+
+    template<typename SpBeginner, typename SpTerminator>
+    static constexpr DestringResult<std::tuple<size_t, size_t>> match(
+        const StringView str,
+        const SpBeginner && beginner, 
+        const SpBeginner && terminator
+    ){
+        const size_t left = ({
+            const auto may_left = beginner.find_intro(str);
+            if(may_left.is_none()) return Err(DestringError::BeginnerNotFounded);
+            may_left.unwrap();
+        });
+
+        const size_t right = ({
+            const auto may_right = terminator.find_intro(str);
+            if(may_right.is_none()) return Err(DestringError::TerminatorNotFounded);
+            may_right.unwrap();
+        });
+
+        return Ok(std::make_tuple(left, right));
+    }
+};
+
+template<>
+struct StringEntitySeeker<StringView>{
+    template<typename SpBeginner, typename SpTerminator>
+    static constexpr DestringResult<std::tuple<size_t, size_t>> match(
+        const StringView str,
+        const SpBeginner && beginner, 
+        const SpBeginner && terminator
+    ){
+        const size_t left = ({
+            const auto may_left = beginner.find_intro(str);
+            if(may_left.is_none()) return Err(DestringError::BeginnerNotFounded);
+            may_left.unwrap();
+        });
+
+        const size_t right = ({
+            const auto may_right = terminator.find_intro(str);
+            if(may_right.is_none()) return Err(DestringError::TerminatorNotFounded);
+            may_right.unwrap();
+        });
+
+        return Ok(std::make_tuple(left, right));
+    }
+};
+// struct StringDeformatIterator{
+//     template<typename T>
+//     using DestringResult = strconv2::DestringResult;
+
+//     explicit constexpr StringDeformatIterator(StringView str):str_(str){}
+
+//     template<typename T, typename SpSeeker>
+//     constexpr DestringResult<T> next(SpSeeker && sperator_Seeker){
+//     }
+// private:
+//     StringView str_;
+// };
+
+
+
+template<typename SpBeginner, typename SpTerminator>
+struct StringEntitySpawner{ 
+    explicit constexpr StringEntitySpawner(
+        const SpBeginner && beginner, 
+        const SpBeginner && terminator
+    ):
+        beginner_(std::move(beginner)),
+        terminator_(std::move(terminator)){}
+
+
+    // 输入待序列化对象的可变引用, 以及包含待序列化的对象及后续子句字符串
+    // 返回后续子句字符串或错误
+    template<typename T>
+    DestringResult<StringView> spawn(T & obj, const StringView str){
+
+        return Ok(str);
+    }
+private:
+    const SpBeginner beginner_;
+    const SpTerminator terminator_;
+};
+}
+
+namespace ymd::tmp::tuple_tmp::details {
+
+// 基础工具：判断类型是否在包中
+template<typename T, typename... Args>
+struct type_in_pack : std::false_type {};
+
+template<typename T, typename First, typename... Rest>
+struct type_in_pack<T, First, Rest...> 
+    : std::conditional_t<std::is_same_v<T, First>, 
+                        std::true_type, 
+                        type_in_pack<T, Rest...>> {};
+
+template<typename T>
+struct type_in_pack<T> : std::false_type {};
+
+// 元组移除指定类型的实现
+template<typename Tuple, typename... RemoveTypes>
+struct tuple_remove_specified_impl;
+
+// 递归基案：空元组
+template<typename... RemoveTypes>
+struct tuple_remove_specified_impl<std::tuple<>, RemoveTypes...> {
+    using type = std::tuple<>;
+};
+
+// 递归步骤
+template<typename First, typename... Rest, typename... RemoveTypes>
+struct tuple_remove_specified_impl<std::tuple<First, Rest...>, RemoveTypes...> {
+private:
+    using remaining_tuple = typename tuple_remove_specified_impl<
+        std::tuple<Rest...>, RemoveTypes...>::type;
+    
+public:
+    using type = std::conditional_t<
+        type_in_pack<First, RemoveTypes...>::value,
+        remaining_tuple,
+        decltype(std::tuple_cat(std::declval<std::tuple<First>>(), 
+            std::declval<remaining_tuple>()))
+    >;
+};
+
+// 元组替换指定类型的实现
+template<typename Tuple, typename NewType, typename... ReplaceTypes>
+struct tuple_replace_specified_impl;
+
+// 递归基案：空元组
+template<typename NewType, typename... ReplaceTypes>
+struct tuple_replace_specified_impl<std::tuple<>, NewType, ReplaceTypes...> {
+    using type = std::tuple<>;
+};
+
+// 递归步骤
+template<typename First, typename... Rest, typename NewType, typename... ReplaceTypes>
+struct tuple_replace_specified_impl<std::tuple<First, Rest...>, NewType, ReplaceTypes...> {
+private:
+    using remaining_tuple = typename tuple_replace_specified_impl<
+        std::tuple<Rest...>, NewType, ReplaceTypes...>::type;
+    
+    using current_type = std::conditional_t<
+        type_in_pack<First, ReplaceTypes...>::value,
+        NewType,
+        First
+    >;
+    
+public:
+    using type = decltype(std::tuple_cat(
+        std::declval<std::tuple<current_type>>(),
+        std::declval<remaining_tuple>()
+    ));
+};
+
+// 元组映射的实现
+template<template<typename> class Mapper, typename Tuple>
+struct tuple_map_impl;
+
+// 递归基案：空元组
+template<template<typename> class Mapper>
+struct tuple_map_impl<Mapper, std::tuple<>> {
+    using type = std::tuple<>;
+};
+
+// 递归步骤
+template<template<typename> class Mapper, typename First, typename... Rest>
+struct tuple_map_impl<Mapper, std::tuple<First, Rest...>> {
+private:
+    using mapped_first = typename Mapper<First>::type;
+    using mapped_rest = typename tuple_map_impl<Mapper, std::tuple<Rest...>>::type;
+    
+public:
+    using type = decltype(std::tuple_cat(
+        std::declval<std::tuple<mapped_first>>(),
+        std::declval<mapped_rest>()
+    ));
+};
+
+// 元组规约的实现 - 根据策略剔除元素
+template<template<typename> class Predicate, typename Tuple>
+struct tuple_reduce_impl;
+
+// 递归基案：空元组
+template<template<typename> class Predicate>
+struct tuple_reduce_impl<Predicate, std::tuple<>> {
+    using type = std::tuple<>;
+};
+
+// 递归步骤
+template<template<typename> class Predicate, typename First, typename... Rest>
+struct tuple_reduce_impl<Predicate, std::tuple<First, Rest...>> {
+private:
+    using remaining_tuple = typename tuple_reduce_impl<Predicate, std::tuple<Rest...>>::type;
+    
+public:
+    using type = std::conditional_t<
+        Predicate<First>::value,
+        remaining_tuple,
+        decltype(std::tuple_cat(std::declval<std::tuple<First>>(), 
+            std::declval<remaining_tuple>()))
+    >;
+};
+
+// 支持模板别名版本的谓词（如 std::is_integral_v 的适配器）
+template<template<typename> class Predicate, typename Tuple>
+struct tuple_reduce_alias_impl;
+
+template<template<typename> class Predicate>
+struct tuple_reduce_alias_impl<Predicate, std::tuple<>> {
+    using type = std::tuple<>;
+};
+
+template<template<typename> class Predicate, typename First, typename... Rest>
+struct tuple_reduce_alias_impl<Predicate, std::tuple<First, Rest...>> {
+private:
+    using remaining_tuple = typename tuple_reduce_alias_impl<Predicate, std::tuple<Rest...>>::type;
+    
+public:
+    using type = std::conditional_t<
+        Predicate<First>::value,
+        remaining_tuple,
+        decltype(std::tuple_cat(std::declval<std::tuple<First>>(), 
+        std::declval<remaining_tuple>()))
+    >;
+};
+
+} // namespace details
+
+namespace ymd::tmp::tuple_tmp{
+// 主模板别名
+template<typename T, typename... Args>
+using tuple_remove_specified_t = typename details::tuple_remove_specified_impl<T, Args...>::type;
+
+template<typename T, typename U, typename... Args>
+using tuple_replace_specified_t = typename details::tuple_replace_specified_impl<T, U, Args...>::type;
+
+// 主模板别名
+template<template<typename> class Mapper, typename Tuple>
+using tuple_map_t = typename details::tuple_map_impl<Mapper, Tuple>::type;
+
+
+// 主模板别名 - 自动检测谓词类型
+template<template<typename> class Predicate, typename Tuple>
+using tuple_reduce_t = typename details::tuple_reduce_alias_impl<Predicate, Tuple>::type;
+
+// 测试代码
+static_assert(std::is_same_v<
+    tuple_reduce_t<std::is_integral, std::tuple<int, double, char, float>>,
+    std::tuple<double, float>
+>);
+
+static_assert(std::is_same_v<
+    tuple_map_t<std::add_const, std::tuple<int, double, char>>,
+    std::tuple<const int, const double, const char>
+>);
+
+// static_assert(std::is_same_v<
+//     tuple_remove_specified_t<std::tuple<int, double, char, float>, double, char>,
+//     std::tuple<int, float>
+// >);
+
+// static_assert(std::is_same_v<
+//     tuple_replace_specified_t<std::tuple<int, double, char>, float, double, char>,
+//     std::tuple<int, float, float>
+// >);
+
+// static_assert(std::is_same_v<
+//     tuple_remove_specified_t<std::tuple<int, double>, float>,
+//     std::tuple<int, double>
+// >);
+
+// static_assert(std::is_same_v<
+//     tuple_replace_specified_t<std::tuple<>, float, int, double>,
+//     std::tuple<>
+// >);
+
+}
+
+namespace ymd::rpc{
+
+struct ReplServer2 final{
+public:
+    ReplServer2(ReadCharProxy && is, WriteCharProxy && os) :
+        is_(std::move(is)), 
+        os_(std::move(os)){;}
+
+    template<typename T>
+    void invoke(T && obj){
+        while(is_->available()){
+            char chr;
+            is_->read1(chr);
+            if(not is_visible_char(chr)) continue;
+            DEBUG_PRINTLN(chr);
+        }
+    }
+
+    void set_outen(Enable outen){ outen_ = outen == EN; }   
+private:
+    ReadCharProxy is_;
+    OutputStreamByRoute os_;
+    // FixedString<32> temp_str_;
+
+    bool outen_ = false;
+    
+    template<typename T>
+    auto respond(T && obj, const std::span<const StringView> strs){
+        const auto guard = os_.create_guard();
+        if(outen_){
+            os_.force_sync(EN);
+            os_.prints("<<=", strs);
+        }
+
+        return [&]{
+            if(!this->outen_){
+                DummyOutputStream dos{};
+                return rpc::visit(obj, dos, rpc::AccessProvider_ByStringViews(strs));
+            }else{
+                return rpc::visit(obj, os_, rpc::AccessProvider_ByStringViews(strs));
+            }
+        }();
+    }
+
+    static constexpr bool is_visible_char(const char c){
+        return (c >= 32) and (c <= 126);
+    }
+};
+
+
+
+
+
+
+}
+
+
+void script_main(){
+
+    auto & DBG_UART = DEBUGGER_INST;
+    static constexpr uint32_t UART_BAUD = 576000;
+
+    auto init_debugger = []{
+
+        DBG_UART.init({
+            .baudrate = UART_BAUD
+        });
+
+        DEBUGGER.retarget(&DBG_UART);
+        DEBUGGER.set_eps(4);
+        DEBUGGER.set_splitter(",");
+        // DEBUGGER.no_brackets(EN);
+    };
+
+
+
+    init_debugger();
+
+
+    while(true){
+        [[maybe_unused]] auto repl_service_poller = [&]{
+            static rpc::ReplServer2 repl_server{&DBG_UART, &DBG_UART};
+
+            static const auto list = rpc::make_list(
+                "list",
+
+                rpc::make_function("errn", [&](int32_t a, int32_t b){ 
+                    DEBUG_PRINTLN(a,b);
+                }),
+                rpc::make_function("errn2", [&](int32_t a, int32_t b){ 
+                    DEBUG_PRINTLN(a,b);
+                })
+
+            );
+
+            repl_server.invoke(list);
+        };
+
+        if(0) DEBUG_PRINTLN(
+            // DBG_UART.available(),
+            // DBG_UART.rx_dma_buf_index_,
+            // DBG_UART.rx_fifo().write_idx(),
+            // DBG_UART.rx_fifo().read_idx(),
+            strconv2::defmt_str<bool>("1")
+            // strconv2::defmt_str<uint8_t>("256")
+            
+            // ,shape.points
+            // ,render_iter.is_mid_at_right()
+            // clear_us.count(), 
+            // upload_us.count(), 
+            // total_us.count(),
+            // shape_bb
+            
+            // clock::micros().count()
+
+            // render_iter
+            // shape_bb
+        );
+
+        repl_service_poller();
+    }
+}
