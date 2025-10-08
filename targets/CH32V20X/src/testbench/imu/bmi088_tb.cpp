@@ -63,7 +63,7 @@ static void bmi088_tb(hal::Spi & spi){
             const auto end_m = clock::micros();
 
             DEBUG_PRINTLN(
-                mahony.result(), 
+                mahony.rotation(), 
                 end_m - begin_m
             );
         }, EN

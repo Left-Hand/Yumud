@@ -7,7 +7,7 @@
 
 #ifdef HDW_SXX32
 
-#define ADVANCED_TIMER_IT_FORWARD_DECL(x)\
+#define DEF_ADVANCED_TIMER_IT_FORWARD_DECL(x)\
 extern "C"{\
 __interrupt void TIM##x##_BRK_IRQHandler(void);\
 __interrupt void TIM##x##_UP_IRQHandler(void);\
@@ -16,16 +16,61 @@ __interrupt void TIM##x##_CC_IRQHandler(void);\
 }\
 
 
-#define GENERIC_TIMER_IT_FORWARD_DECL(x)\
+#define DEF_GENERIC_TIMER_IT_FORWARD_DECL(x)\
 extern "C"{\
 __interrupt void TIM##x##_IRQHandler(void);\
 }\
 
 
-#define BASIC_TIMER_IT_FORWARD_DECL(x)\
+#define DEF_BASIC_TIMER_IT_FORWARD_DECL(x)\
 extern "C"{\
 __interrupt void TIM##x##_IRQHandler(void);\
 }\
+
+
+#ifdef ENABLE_TIM1
+DEF_ADVANCED_TIMER_IT_FORWARD_DECL(1)
+#endif
+
+#ifdef ENABLE_TIM2
+DEF_GENERIC_TIMER_IT_FORWARD_DECL(2)
+#endif
+
+#ifdef ENABLE_TIM3
+DEF_GENERIC_TIMER_IT_FORWARD_DECL(3)
+#endif
+
+#ifdef ENABLE_TIM4
+DEF_GENERIC_TIMER_IT_FORWARD_DECL(4)
+#endif
+
+#ifdef ENABLE_TIM5
+DEF_GENERIC_TIMER_IT_FORWARD_DECL(5)
+#endif
+
+#ifdef ENABLE_TIM6
+DEF_BASIC_TIMER_IT_FORWARD_DECL(6)
+#endif
+
+#ifdef ENABLE_TIM7
+DEF_BASIC_TIMER_IT_FORWARD_DECL(7)
+#endif
+
+#ifdef ENABLE_TIM8
+DEF_ADVANCED_TIMER_IT_FORWARD_DECL(8)
+#endif
+
+#ifdef ENABLE_TIM9
+DEF_ADVANCED_TIMER_IT_FORWARD_DECL(9)
+#endif
+
+#ifdef ENABLE_TIM10
+DEF_ADVANCED_TIMER_IT_FORWARD_DECL(10)
+#endif
+
+#undef DEF_ADVANCED_TIMER_IT_FORWARD_DECL
+#undef DEF_GENERIC_TIMER_IT_FORWARD_DECL
+#undef DEF_BASIC_TIMER_IT_FORWARD_DECL
 
 
 
@@ -42,52 +87,6 @@ friend void ::TIM##x##_IRQHandler(void);\
 
 #define DEF_BASIC_TIMER_FRIEND_DECL(x)\
 friend void ::TIM##x##_IRQHandler(void);\
-
-
-#ifdef ENABLE_TIM1
-ADVANCED_TIMER_IT_FORWARD_DECL(1)
-#endif
-
-#ifdef ENABLE_TIM2
-GENERIC_TIMER_IT_FORWARD_DECL(2)
-#endif
-
-#ifdef ENABLE_TIM3
-GENERIC_TIMER_IT_FORWARD_DECL(3)
-#endif
-
-#ifdef ENABLE_TIM4
-GENERIC_TIMER_IT_FORWARD_DECL(4)
-#endif
-
-#ifdef ENABLE_TIM5
-GENERIC_TIMER_IT_FORWARD_DECL(5)
-#endif
-
-#ifdef ENABLE_TIM6
-BASIC_TIMER_IT_FORWARD_DECL(6)
-#endif
-
-#ifdef ENABLE_TIM7
-BASIC_TIMER_IT_FORWARD_DECL(7)
-#endif
-
-#ifdef ENABLE_TIM8
-ADVANCED_TIMER_IT_FORWARD_DECL(8)
-#endif
-
-#ifdef ENABLE_TIM9
-ADVANCED_TIMER_IT_FORWARD_DECL(9)
-#endif
-
-#ifdef ENABLE_TIM10
-ADVANCED_TIMER_IT_FORWARD_DECL(10)
-#endif
-
-#undef ADVANCED_TIMER_IT_FORWARD_DECL
-#undef GENERIC_TIMER_IT_FORWARD_DECL
-#undef BASIC_TIMER_IT_FORWARD_DECL
-
 
 namespace ymd::hal{
 
@@ -288,6 +287,8 @@ public:
     #ifdef ENABLE_TIM10
     DEF_ADVANCED_TIMER_FRIEND_DECL(10);
     #endif
+
+
 };
 
 
@@ -295,45 +296,6 @@ public:
 #undef DEF_GENERIC_TIMER_FRIEND_DECL
 #undef DEF_ADVANCED_TIMER_FRIEND_DECL
 
-#ifdef ENABLE_TIM1
-extern AdvancedTimer timer1;
-#endif
-
-#ifdef ENABLE_TIM2
-extern GenericTimer timer2;
-#endif
-
-#ifdef ENABLE_TIM3
-extern GenericTimer timer3;
-#endif
-
-#ifdef ENABLE_TIM4
-extern GenericTimer timer4;
-#endif
-
-#ifdef ENABLE_TIM5
-extern GenericTimer timer5;
-#endif
-
-#ifdef ENABLE_TIM6
-extern BasicTimer timer6;
-#endif
-
-#ifdef ENABLE_TIM7
-extern BasicTimer timer7;
-#endif
-
-#ifdef ENABLE_TIM8
-extern AdvancedTimer timer8;
-#endif
-
-#ifdef ENABLE_TIM9
-extern AdvancedTimer timer9;
-#endif
-
-#ifdef ENABLE_TIM10
-extern AdvancedTimer timer10;
-#endif
 
 }
 

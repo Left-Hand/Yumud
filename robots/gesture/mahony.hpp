@@ -7,7 +7,7 @@
 #include "core/math/fast/conv.hpp"
 
 namespace ymd{
-class Mahony{
+class Mahony final{
 public:
     using IQuat = Quat<q24>;
     using IV3 = Vec3<q24>;
@@ -44,10 +44,9 @@ public:
     
     // void update(const IV3 & gyr,const IV3 & acc, const IV3 & mag);
 
-    IQuat result() const {return q;}
+    [[nodiscard]] IQuat rotation() const {return q;}
 
 private:
-protected:
     q24 dt_ = 0;
 
     q24 ki_ = 0;

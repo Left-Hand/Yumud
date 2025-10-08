@@ -5,7 +5,7 @@
 #include "core/arch.hpp"
 
 #include "hal/crc/crc.hpp"
-#include "hal/timer/timer.hpp"
+#include "hal/timer/instance/timer_hw.hpp"
 
 #include "core/clock/clock.hpp"
 

@@ -56,13 +56,11 @@ void ak09911c_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
-    // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;
+
     hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
-    // i2c.init(400_KHz);
     i2c.init({200_KHz});
-    // i2c.init();
 
     clock::delay(200ms);
 
