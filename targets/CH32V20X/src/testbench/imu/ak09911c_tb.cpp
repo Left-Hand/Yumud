@@ -21,6 +21,7 @@ using namespace ymd::drivers;
 #define UART hal::uart2
 #define SCL_GPIO hal::PB<3>()
 #define SDA_GPIO hal::PB<5>()
+
 static constexpr uint ISR_FREQ = 100;
 static constexpr auto INV_ISR_FREQ = (1.0_q24 / ISR_FREQ);
 

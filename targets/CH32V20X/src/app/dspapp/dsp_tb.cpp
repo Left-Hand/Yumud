@@ -20,6 +20,7 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "func_eval.hpp"
+#include "digipw/ctrl/qpr_controller.hpp"
 
 using namespace ymd;
 

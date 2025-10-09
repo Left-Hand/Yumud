@@ -19,6 +19,7 @@ using namespace ymd::drivers;
 #define DBG_UART hal::uart2
 #define SCL_GPIO hal::PB<3>()
 #define SDA_GPIO hal::PB<5>()
+
 static constexpr uint ISR_FREQ = 500;
 static constexpr auto INV_FS = (1.0_q24 / ISR_FREQ);
 
