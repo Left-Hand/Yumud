@@ -84,6 +84,8 @@ void MY_CAN_ClearITPendingBit(CAN_TypeDef* CANx)
         CANx->STATR = CAN_STATR_ERRI; 
 	}
 }
+
+
 void Can::init_it(){
     const uint32_t it_mask = 
         CAN_IT_TME      //tx done
@@ -148,6 +150,7 @@ bool Can::is_mail_box_done(const uint8_t mbox){
     return ((inst_->TSTATR & TSTATR_FLAG) == TSTATR_FLAG);
 }
 
+
 void Can::clear_mailbox(const uint8_t mbox){
     const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
     inst_->TSTATR = TSTATR_FLAG;
@@ -182,6 +185,7 @@ Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
     }
 }
 
+
 Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
     switch(reinterpret_cast<size_t>(inst)){
         default:
@@ -211,6 +215,7 @@ Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
     }
 }
 
+
 Gpio Can::get_tx_gpio(const uint8_t remap){
     return map_inst_to_tx_gpio(inst_, remap);
 }
@@ -219,6 +224,7 @@ Gpio Can::get_tx_gpio(const uint8_t remap){
 Gpio Can::get_rx_gpio(const uint8_t remap){
     return map_inst_to_rx_gpio(inst_, remap);
 }
+
 
 void Can::plant_gpio(const uint8_t remap){
     get_tx_gpio(remap).afpp();

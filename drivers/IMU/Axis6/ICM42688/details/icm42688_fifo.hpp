@@ -5,7 +5,7 @@
 
 // https://github.com/ProfFan/icm426xx/blob/main/src/fifo.rs
 
-namespace ymd::drivers::details::icm42688{
+namespace ymd::drivers::icm42688::details{
 
 // FifoHeader: 8位bitfield结构体
 struct FifoHeader {
@@ -17,6 +17,8 @@ struct FifoHeader {
     uint8_t has_accel : 1;             // 1: Packet is sized so that accel data have location in the packet, FIFO_ACCEL_EN must be 1
     uint8_t header_msg : 1;            // 1: FIFO is empty
 };
+
+static_assert(sizeof(FifoHeader) == 1);
 
 // FifoPacket4: 数据包结构体，共20字节
 struct FifoPacket4 {
@@ -56,41 +58,41 @@ private:
     }
 
 public:
-    int32_t accel_data_x() const {
+    [[nodiscard]] constexpr int32_t accel_data_x() const {
         uint8_t ext_accel_x = (ext_accel_x_gyro_x & 0xF0) >> 4;
         return convert_parts_to_20bit(accel_data_x1, accel_data_x0, ext_accel_x);
     }
 
-    int32_t accel_data_y() const {
+    [[nodiscard]] constexpr int32_t accel_data_y() const {
         uint8_t ext_accel_y = (ext_accel_y_gyro_y & 0xF0) >> 4;
         return convert_parts_to_20bit(accel_data_y1, accel_data_y0, ext_accel_y);
     }
 
-    int32_t accel_data_z() const {
+    [[nodiscard]] constexpr int32_t accel_data_z() const {
         uint8_t ext_accel_z = (ext_accel_z_gyro_z & 0xF0) >> 4;
         return convert_parts_to_20bit(accel_data_z1, accel_data_z0, ext_accel_z);
     }
 
-    int32_t gyro_data_x() const {
+    [[nodiscard]] constexpr int32_t gyro_data_x() const {
         uint8_t ext_gyro_x = ext_accel_x_gyro_x & 0x0F;
         return convert_parts_to_20bit(gyro_data_x1, gyro_data_x0, ext_gyro_x);
     }
 
-    int32_t gyro_data_y() const {
+    [[nodiscard]] constexpr int32_t gyro_data_y() const {
         uint8_t ext_gyro_y = ext_accel_y_gyro_y & 0x0F;
         return convert_parts_to_20bit(gyro_data_y1, gyro_data_y0, ext_gyro_y);
     }
 
-    int32_t gyro_data_z() const {
+    [[nodiscard]] constexpr int32_t gyro_data_z() const {
         uint8_t ext_gyro_z = ext_accel_z_gyro_z & 0x0F;
         return convert_parts_to_20bit(gyro_data_z1, gyro_data_z0, ext_gyro_z);
     }
 
-    uint16_t temperature_raw() const {
+    [[nodiscard]] constexpr uint16_t temperature_raw() const {
         return (uint16_t(temp_data1) << 8) | temp_data0;
     }
 
-    uint16_t timestamp() const {
+    [[nodiscard]] constexpr uint16_t timestamp() const {
         return (uint16_t(timestamp_h) << 8) | timestamp_l;
     }
 };

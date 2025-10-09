@@ -23,7 +23,7 @@ HeaplessVector<Vec2<T>, 2> calculate_circle_center(
 
     const Vec2<T> vec_p1_p2 = p2 - p1;
 
-    const T distance_squ_div4 = vec_p1_p2.length_squared()/4;
+    const T distance_squ_div4 = vec_p1_p2.length_squared() / 4;
     const T radius_squ = radius * radius;
 
     if (distance_squ_div4 == 0 || distance_squ_div4 > radius_squ) {

@@ -123,10 +123,10 @@ IResult<> ICM42605::reset(){
 
 IResult<Vec3<q24>> ICM42605::read_acc(){
     TODO();
-    return Ok{Vec3<q24>{0,0,0}};//TODO
+    return Ok{Vec3<q24>{0,0,0}};
 }
 
 IResult<Vec3<q24>> ICM42605::read_gyr(){
     TODO();
-    return Ok{Vec3<q24>{0,0,0}};//TODO
+    return Ok{Vec3<q24>{0,0,0}};
 }

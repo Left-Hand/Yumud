@@ -198,6 +198,7 @@ IResult<> ICM42688::reset(){
 
 IResult<>  ICM42688::update(){
 	int16_t buf[6];
+
 	if(const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, buf, 6);
 		res.is_err()) return Err(res.unwrap_err());
 	

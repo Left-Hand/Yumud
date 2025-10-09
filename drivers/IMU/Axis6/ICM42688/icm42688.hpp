@@ -33,6 +33,14 @@ private:
     InvensenseSensor_Phy phy_;
     Option<Bank> last_bank_ = None;
 
+    q24 acc_scale_ = 0;
+    q24 gyr_scale_ = 0;
+
+    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
+    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
+    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
+    [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
+    
     [[nodiscard]] IResult<> switch_bank(const Bank bank){
         static constexpr uint8_t SWITCH_BANK_COMMAND = 0x76; 
         if(last_bank_.is_none() or (last_bank_.unwrap() != bank)){
@@ -59,7 +67,7 @@ private:
         return phy_.read_reg(reg.address, reg.as_ref());
     };
 
-    static constexpr q24 calc_gyr_scale(const GyrFs fs){
+    [[nodiscard]] static constexpr q24 calc_gyr_scale(const GyrFs fs){
         switch(fs){
             case GyrFs::_2000deg  :      return (2 * 2000_deg   ).to_radians()         ;
             case GyrFs::_1000deg  :      return (2 * 1000_deg   ).to_radians()         ;
@@ -73,7 +81,7 @@ private:
         }
     }
 
-    static constexpr q24 calc_acc_scale(const AccFs fs){
+    [[nodiscard]] static constexpr q24 calc_acc_scale(const AccFs fs){
         switch(fs){
             case AccFs::_16G    :       return GRAVITY_ACC<q24> * 32;
             case AccFs::_8G     :       return GRAVITY_ACC<q24> * 16;
@@ -83,13 +91,6 @@ private:
         }
     }
 
-    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
-    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
-    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
-    
-    q24 acc_scale_ = 0;
-    q24 gyr_scale_ = 0;
 };
 
 }
