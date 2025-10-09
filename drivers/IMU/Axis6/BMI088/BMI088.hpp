@@ -191,14 +191,18 @@ protected:
         }
     }
 public:
-    BMI088_Acc(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
-    BMI088_Acc(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    BMI088_Acc(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit BMI088_Acc(const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv){;}
+    explicit BMI088_Acc(hal::I2cDrv && i2c_drv):
+        phy_(std::move(i2c_drv)){;}
+    explicit BMI088_Acc(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
-    BMI088_Acc(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
-    BMI088_Acc(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    BMI088_Acc(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    explicit BMI088_Acc(const hal::SpiDrv & spi_drv):
+        phy_(spi_drv){;}
+    explicit BMI088_Acc(hal::SpiDrv && spi_drv):
+        phy_(std::move(spi_drv)){;}
+    explicit BMI088_Acc(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         phy_(hal::SpiDrv{spi, index}){;}
 
 
@@ -273,26 +277,30 @@ protected:
             default:
                 return None;
             case GyrFs::_125deg:
-                return Some(real_t(ANGLE2RAD(150)));
+                return Some(DEG2RAD<real_t>(150));
             case GyrFs::_250deg:
-                return Some(real_t(ANGLE2RAD(250)));
+                return Some(DEG2RAD<real_t>(250));
             case GyrFs::_500deg:
-                return Some(real_t(ANGLE2RAD(500)));
+                return Some(DEG2RAD<real_t>(500));
             case GyrFs::_1000deg:
-                return Some(real_t(ANGLE2RAD(1000)));
+                return Some(DEG2RAD<real_t>(1000));
             case GyrFs::_2000deg:
-                return Some(real_t(ANGLE2RAD(2000)));
+                return Some(DEG2RAD<real_t>(2000));
         }
     }
 public:
-    BMI088_Gyr(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
-    BMI088_Gyr(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    BMI088_Gyr(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit BMI088_Gyr(const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv){;}
+    explicit BMI088_Gyr(hal::I2cDrv && i2c_drv):
+        phy_(std::move(i2c_drv)){;}
+    explicit BMI088_Gyr(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
-    BMI088_Gyr(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
-    BMI088_Gyr(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    explicit BMI088_Gyr(const hal::SpiDrv & spi_drv):
+        phy_(spi_drv){;}
+    explicit BMI088_Gyr(hal::SpiDrv && spi_drv):
+        phy_(std::move(spi_drv)){;}
+    explicit BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
         phy_(hal::SpiDrv{spi, index}){;}
 
 

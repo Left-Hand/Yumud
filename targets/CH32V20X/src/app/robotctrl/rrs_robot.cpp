@@ -226,8 +226,8 @@ void rrs3_robot_main(){
         
         actuator_.set_gest(
             RRS3_RobotActuator::Gesture::from({
-                .yaw = ANGLE2RAD(3.0_r * s), 
-                .pitch = ANGLE2RAD(3.0_r * c), 
+                .yaw = DEG2RAD<real_t>(3.0_r * s), 
+                .pitch = DEG2RAD<real_t>(3.0_r * c), 
                 .height = 0.14_r
             })
         );

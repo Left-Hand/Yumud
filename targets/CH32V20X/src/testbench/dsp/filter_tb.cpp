@@ -4,10 +4,6 @@
 #include "core/math/real.hpp"
 #include "core/stream/ostream.hpp"
 
-#include "dsp/filter/homebrew/BurrFilter.hpp"
-#include "dsp/filter/rc/HighPassFilter.hpp"
-#include "dsp/filter/rc/LowPassFilter.hpp"
-
 #include <iterator>
 #include "hal/bus/uart/uarthw.hpp"
 

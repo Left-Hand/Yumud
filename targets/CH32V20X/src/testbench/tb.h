@@ -185,3 +185,4 @@ void mlx90640_main();
 
 void adrc_main();
 void svd_main();
+void script_main();

@@ -12,9 +12,7 @@
 
 #include "src/testbench/tb.h"
 
-#include "dsp/filter/rc/LowpassFilter.hpp"
-#include "dsp/filter/SecondOrderLpf.hpp"
-#include "dsp/filter/rc/LowpassFilter.hpp"
+#include "dsp/filter/firstorder/lpf.hpp"
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 #include "drivers/Encoder/Encoder.hpp"
 #include "drivers/Encoder/AnalogEncoder.hpp"
@@ -63,15 +61,16 @@ public:
         curr_lpf_.reset();
         state_.reset();
     }
+
     void update(const Params params){
         curr_lpf_.update(params.curr_meas_raw);
         const auto curr_now = curr_lpf_.get();
-        state_ = forward_state(state_, params.curr_targ, curr_now);
+        state_ = forward_state(state_, params.curr_targ - curr_now);
     }
 
     const State & get() const {return state_;}
 private:
-    using Lpf = dsp::LowpassFilter<q24>;
+    using Lpf = dsp::FirstOrderLowpassFilter<q24>;
     // SenseConfig sense_cfg_;
     Lpf curr_lpf_;
     q8 kp_;
@@ -79,9 +78,9 @@ private:
 
     State state_ = {};
 
-    constexpr State forward_state(const State & state, const q24 curr_targ, const q24 curr_now) const {
+    constexpr State forward_state(const State & state, const q24 err) const {
         return State{
-            .duty = state.duty + (curr_now - curr_targ) * kp_
+            .duty = state.duty + (err) * kp_
         };
     }
 };
@@ -265,7 +264,7 @@ void myservo_main(){
     using ButterLpf = dsp::ButterLowpassFilter<iq_t<16>, 4>;
     using ButterLpfConfig = typename ButterLpf::Config;
 
-    using RcLpf = dsp::LowpassFilter<iq_t<20>>;
+    using RcLpf = dsp::FirstOrderLowpassFilter<iq_t<20>>;
     using RcLpfConfig = typename RcLpf::Config;
 
     ButterLpf curr_filter = {ButterLpfConfig{

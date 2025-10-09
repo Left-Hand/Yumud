@@ -52,6 +52,7 @@
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "frame_buffer.hpp"
+#include "core/string/utils/strconv2.hpp"
 
 
 namespace ymd{
@@ -521,6 +522,7 @@ private:
 }
 
 
+
 void render_main(){
 
 
@@ -534,7 +536,7 @@ void render_main(){
         DEBUGGER.retarget(&DBG_UART);
         DEBUGGER.set_eps(4);
         DEBUGGER.set_splitter(",");
-        DEBUGGER.no_brackets(EN);
+        // DEBUGGER.no_brackets(EN);
     };
 
 
@@ -599,25 +601,6 @@ void render_main(){
     while(true){
 
 
-        [[maybe_unused]] auto repl_service_poller = [&]{
-            static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
-
-            static const auto list = rpc::make_list(
-                "list",
-
-                rpc::make_function("errn", [&](int32_t a, int32_t b){ 
-                    DEBUG_PRINTLN(a,b);
-                }),
-                rpc::make_function("errn2", [&](int32_t a, int32_t b){ 
-                    DEBUG_PRINTLN(a,b);
-                })
-
-            );
-
-            repl_server.invoke(list);
-        };
-
-        repl_service_poller();
         const auto ctime = clock::time();
         // const auto dest_angle = Angle<q16>::from_turns(ctime * 0.3_r);
         const auto dest_angle = Angle<q16>::from_turns(ctime * 0.1_r);
@@ -882,11 +865,8 @@ void render_main(){
             }
         });
 
-
-        #if 1
-        DEBUG_PRINTLN(
-            DBG_UART.available(),
-            render_us.count()
+        
+        if(0) DEBUG_PRINTLN(
             
             // ,shape.points
             // ,render_iter.is_mid_at_right()
@@ -900,7 +880,7 @@ void render_main(){
             // render_iter
             // shape_bb
         );
-        #endif
+
     }
 
 };

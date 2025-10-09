@@ -88,7 +88,7 @@ namespace ymd{
 
     template<floating T>
     __fast_inline constexpr T atan2pu(const T a, const T b) {
-        static constexpr auto INV_TAU = static_cast<T>(1 / TAU);
+        constexpr auto INV_TAU = static_cast<T>(1 / TAU);
         return std::atan2(a, b) * INV_TAU;
     }
 }

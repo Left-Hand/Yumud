@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types/vectors/vector3.hpp"
-#include "dsp/filter/homebrew/ComplementaryFilter.hpp"
+#include "dsp/filter/homebrew/complementary_filter.hpp"
 
 namespace ymd::robots{
 struct ComplementaryGestureEstimator{

@@ -2,6 +2,7 @@
 
 #include "core/platform.hpp"
 #include "core/utils/angle.hpp"
+#include "core/math/realmath.hpp"
 #include "types/vectors/Vector2.hpp"
 
 namespace ymd{
@@ -151,7 +152,9 @@ public:
     }
 
 
-
+    [[nodiscard]] constexpr Angle<T> to_angle() const {
+        return Angle<T>::from_turns(atan2pu(imag, real));
+    }
 
     template <typename U>
     __fast_inline constexpr Complex& operator=(const Complex<U>& other) {

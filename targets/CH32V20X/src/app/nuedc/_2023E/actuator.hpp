@@ -10,7 +10,7 @@
 #include "concept/pwm_channel.hpp"
 #include "types/vectors/vector2.hpp"
 #include "types/vectors/vector2.hpp"
-#include "dsp/filter/rc/LowpassFilter.hpp"
+#include "dsp/filter/firstorder/lpf.hpp"
 
 #include "robots/mock/mock_servo.hpp"
 #include "prelude.hpp"

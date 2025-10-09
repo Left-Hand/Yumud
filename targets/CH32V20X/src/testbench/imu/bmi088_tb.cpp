@@ -38,8 +38,8 @@ static void bmi088_tb(hal::Spi & spi){
     auto acc_sensor = BMI088_Acc{&spi, acc_cs_idx};
     auto gyr_sensor = BMI088_Gyr{&spi, gyr_cs_idx};
 
-    acc_sensor.init().unwrap();
-    gyr_sensor.init().unwrap();
+    acc_sensor.init().examine();
+    gyr_sensor.init().examine();
 
 
     Mahony mahony{{
@@ -56,14 +56,14 @@ static void bmi088_tb(hal::Spi & spi){
 
             
             mahony.update(
-                gyr_sensor.read_gyr().unwrap(), 
-                acc_sensor.read_acc().unwrap()
+                gyr_sensor.read_gyr().examine(), 
+                acc_sensor.read_acc().examine()
             );
                 
             const auto end_m = clock::micros();
 
             DEBUG_PRINTLN(
-                mahony.result(), 
+                mahony.rotation(), 
                 end_m - begin_m
             );
         }, EN

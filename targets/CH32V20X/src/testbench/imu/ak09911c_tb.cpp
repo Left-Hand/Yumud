@@ -21,6 +21,7 @@ using namespace ymd::drivers;
 #define UART hal::uart2
 #define SCL_GPIO hal::PB<3>()
 #define SDA_GPIO hal::PB<5>()
+
 static constexpr uint ISR_FREQ = 100;
 static constexpr auto INV_ISR_FREQ = (1.0_q24 / ISR_FREQ);
 
@@ -56,13 +57,11 @@ void ak09911c_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
-    // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;
+
     hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
-    // i2c.init(400_KHz);
     i2c.init({200_KHz});
-    // i2c.init();
 
     clock::delay(200ms);
 

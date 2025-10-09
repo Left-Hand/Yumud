@@ -199,23 +199,23 @@ struct ConvertHelper {
     // 递归情况：处理至少一个索引
     template <size_t I, size_t... Js, typename... Args>
     static constexpr Result<Tuple, Error>
-    apply(const auto& params, std::index_sequence<I, Js...>, Args&&... args) {
+    apply(const auto& ap, std::index_sequence<I, Js...>, Args&&... args) {
         // 转换当前参数
         using Element = std::tuple_element_t<I, Tuple>;
         static_assert(is_result_v<Element> == false);
-        Result<Element, Error> res = ParamFromString(params[I]).template defmt_to<Element>();
+        Result<Element, Error> res = ParamFromString(ap[I]).template defmt_to<Element>();
         if (res.is_err()) {
             return Err(res.unwrap_err());  // 遇到错误立即返回
         }
         // 递归处理剩余参数
-        return apply(params, std::index_sequence<Js...>{}, 
+        return apply(ap, std::index_sequence<Js...>{}, 
                         std::forward<Args>(args)..., res.unwrap());
     }
 private:
     // 终止条件：所有索引处理完成
     template <typename... Args>
     static constexpr Result<Tuple, Error>
-    apply(const auto& /*params*/, std::index_sequence<>, Args&&... args) {
+    apply(const auto& /*ap*/, std::index_sequence<>, Args&&... args) {
         // 使用完美转发构造目标元组
         return Ok(Tuple{std::forward<Args>(args)...});
     }
@@ -224,35 +224,37 @@ private:
 
 template<typename Tuple, std::size_t... Is>
 static constexpr Result<Tuple, Error>
-convert_params_to_tuple(const auto& params, std::index_sequence<Is...>) 
+convert_params_to_tuple(const auto & ap, std::index_sequence<Is...>) 
 {
     // 参数数量检查
-    if (params.size() != sizeof...(Is)) {
+    if (ap.size() != sizeof...(Is)) {
         return Err(rpc::EntryAccessError::ArgsCountNotMatch);
     }
 
     // 开始递归转换
-    return ConvertHelper<Tuple>::apply(params, std::index_sequence<Is...>{});
+    return ConvertHelper<Tuple>::apply(ap, std::index_sequence<Is...>{});
 }
 
+#if 0
 [[maybe_unused]] static void static_test(){
     {
-        constexpr std::array params = {"1", "2"}; 
+        constexpr std::array ap = {"1", "2"}; 
 
-        constexpr auto result = convert_params_to_tuple<std::tuple<int, int>>(params, std::make_index_sequence<2>{});    
+        constexpr auto result = convert_params_to_tuple<std::tuple<int, int>>(ap, std::make_index_sequence<2>{});    
         static_assert(result.is_ok());
         static_assert(std::get<0>(result.unwrap()) == 1);
         static_assert(std::get<1>(result.unwrap()) == 2);
     }
 
     {
-        constexpr std::array params = {"1"}; 
+        constexpr std::array ap = {"1"}; 
 
-        constexpr auto result = convert_params_to_tuple<std::tuple<int>>(params, std::make_index_sequence<1>{});    
+        constexpr auto result = convert_params_to_tuple<std::tuple<int>>(ap, std::make_index_sequence<1>{});    
         static_assert(result.is_ok());
         static_assert(std::get<0>(result.unwrap()) == 1);
     }
 }
+#endif
 
 template<typename Ret, typename ... Args>
 struct MethodByLambda final{
@@ -356,8 +358,8 @@ template <typename T, typename = void>
 struct EntryVisitor {
     static IResult<> visit(
         T& self, 
-        AccessReponserIntf & ar, 
-        const AccessProviderIntf & ap
+        auto & ar,
+        auto && ap
     ) {
         static_assert(sizeof(T) == 0, "No visitor specialization found for this type");
         return Err(EntryAccessError::NotImplemented);
@@ -370,8 +372,8 @@ template <typename T>
 struct EntryVisitor<Property<T>, std::enable_if_t<!std::is_const_v<T>>> {
     static IResult<> visit(
         const Property<T> & self, 
-        AccessReponserIntf & ar, 
-        const AccessProviderIntf & ap
+        auto & ar,
+        auto && ap
     ) {
         if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
         self.deref() = ap[0].template defmt_to<std::decay_t<T>>();
@@ -400,8 +402,8 @@ template <typename T>
 struct EntryVisitor<PropertyWithLimit<T>, std::enable_if_t<!std::is_const_v<T>>> {
     static IResult<> visit(
         const PropertyWithLimit<T> & self, 
-        AccessReponserIntf & ar, 
-        const AccessProviderIntf & ap
+        auto & ar,
+        auto && ap
     ) {
         if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
         const auto val = ({
@@ -426,8 +428,8 @@ struct EntryVisitor<MethodByLambda<Ret, Args...>> final{
     using Tup = std::tuple<Args...>;
 
     static IResult<> visit(const Self & self, 
-        AccessReponserIntf & ar, 
-        const AccessProviderIntf & ap
+        auto & ar,
+        auto && ap
     ) {
         if (ap.size() != sizeof...(Args)) {
             return Err(EntryAccessError::ArgsCountNotMatch);
@@ -448,7 +450,8 @@ struct EntryVisitor<MethodByLambda<Ret, Args...>> final{
     }
 private:
     static IResult<Tup> dump( 
-        const AccessProviderIntf & ap){
+        auto & ap
+    ){
         if constexpr (std::is_same_v<Tup, std::tuple<>>)
             return Ok(Tup{});
         else return ({
@@ -468,8 +471,8 @@ struct EntryVisitor<MethodByMemFunc<Obj, Ret, Args...>> final {
 
 
     static IResult<> visit(const Self & self, 
-        AccessReponserIntf & ar, 
-        const AccessProviderIntf & ap
+        auto & ar,
+        auto && ap
     ) {
         if (ap.size() != sizeof...(Args)) {
             return Err(EntryAccessError::ArgsCountNotMatch);
@@ -492,7 +495,8 @@ struct EntryVisitor<MethodByMemFunc<Obj, Ret, Args...>> final {
 
 private:
     static IResult<Tup> dump( 
-        const AccessProviderIntf & ap){
+        auto & ap
+    ){
         if constexpr (std::is_same_v<Tup, std::tuple<>>)
             return Ok(Tup{});
         else return ({
@@ -508,8 +512,8 @@ template<typename... Entries>
 struct EntryVisitor<List<Entries...>> final{
     using Self = List<Entries...>;
     static IResult<> visit(const Self & self, 
-        AccessReponserIntf & ar, 
-        const AccessProviderIntf & ap
+        auto & ar,
+        auto && ap
     ) {
         if(ap.size() == 0) 
             return Err(EntryAccessError::EmptyArgs);

@@ -380,9 +380,11 @@ __fast_inline constexpr uint32_t  __ymd_clz_impl(uint32_t x){
 static constexpr auto BITS(auto x) {return (sizeof(x) * 8);}
 static consteval auto PLAT_WIDTH() {return BITS(std::size_t());}
 
+template<typename T>
+static constexpr T DEG2RAD(auto x) {return ((x) * static_cast<T>(TAU / 360));}
 
-static constexpr auto ANGLE2RAD(auto x) {return ((x) * static_cast<decltype(x)>(TAU / 360));}
-static constexpr auto RAD2ANGLE(auto x) {return ((x) * static_cast<decltype(x)>(360 / TAU));}
+template<typename T>
+static constexpr T RAD2DEG(auto x) {return ((x) * static_cast<T>(360 / TAU));}
 
 static consteval auto YEAR() {return (((__DATE__[9]-'0')) * 10 + (__DATE__[10]-'0'));}
 static consteval auto MONTH() {

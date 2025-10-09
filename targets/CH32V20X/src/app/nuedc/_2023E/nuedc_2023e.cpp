@@ -10,7 +10,7 @@
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/timer.hpp"
+#include "hal/timer/instance/timer_hw.hpp"
 #include "hal/analog/adc/adcs/adc1.hpp"
 #include "hal/bus/uart/uartsw.hpp"
 

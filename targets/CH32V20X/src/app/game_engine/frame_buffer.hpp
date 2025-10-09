@@ -4,6 +4,7 @@
 #include "core/stream/ostream.hpp"
 #include "core/utils/result.hpp"
 #include "types/regions/Rect2.hpp"
+#include "types/shapes/prelude.hpp"
 
 namespace ymd{
 
@@ -164,7 +165,7 @@ private:
     size_t y_;
 };
 
-OutputStream & operator << (OutputStream & os, const LineBufferSpan<Binary> & line){
+inline OutputStream & operator << (OutputStream & os, const LineBufferSpan<Binary> & line){
     const size_t size = line.size();
 
     static constexpr char BLACK_CHAR = '_';
@@ -347,7 +348,7 @@ template<typename T, typename Iter = LineBufferSpan<T>::ToLineSpanIter>
 requires requires(OutputStream& os, const LineBufferSpan<T>& line_span) {
     os << line_span;
 }
-OutputStream & operator << (OutputStream & os, Iter && iter){
+inline OutputStream & operator << (OutputStream & os, Iter && iter){
     for(auto line_span : StdRange(iter)){
         os.println(line_span);
     }
@@ -356,7 +357,7 @@ OutputStream & operator << (OutputStream & os, Iter && iter){
 
 
 template<typename T>
-OutputStream & operator << (OutputStream & os, FrameBufferSpan<T> & frame_span){
+inline OutputStream & operator << (OutputStream & os, FrameBufferSpan<T> & frame_span){
     return os << frame_span.iter();
 }
 

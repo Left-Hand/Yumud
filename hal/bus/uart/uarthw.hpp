@@ -95,8 +95,6 @@ private:
     
     void on_rxidle_interrupt();
 
-    size_t rx_dma_buf_index_;
-
 
     std::array<char, UART_DMA_BUF_SIZE> tx_dma_buf_;
     std::array<char, UART_DMA_BUF_SIZE> rx_dma_buf_;
@@ -135,7 +133,8 @@ private:
     #ifdef ENABLE_UART8
     friend void ::UART8_IRQHandler(void);
     #endif
-
+public:
+    size_t rx_dma_buf_index_ = 0;
 };
 
 

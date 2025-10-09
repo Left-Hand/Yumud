@@ -154,8 +154,8 @@ public:
     static constexpr size_t MASK = (N - 1);
 private:
     alignas(T) uint8_t storage[N * sizeof(T)];
-    volatile size_t read_idx = 0;
-    volatile size_t write_idx = 0;
+    volatile size_t read_idx_ = 0;
+    volatile size_t write_idx_ = 0;
     
     T* data_ptr() noexcept {
         return reinterpret_cast<T*>(storage);
@@ -190,9 +190,9 @@ public:
     
     ~RingBuf() {
         // 销毁所有已构造的对象
-        while (read_idx != write_idx) {
-            std::destroy_at(data_ptr() + read_idx);
-            read_idx = advance(read_idx, 1);
+        while (read_idx_ != write_idx_) {
+            std::destroy_at(data_ptr() + read_idx_);
+            read_idx_ = advance(read_idx_, 1);
         }
     }
     
@@ -210,20 +210,20 @@ public:
     RingBuf& operator=(RingBuf&& other) noexcept {
         if (this != &other) {
             // 销毁当前对象
-            while (read_idx != write_idx) {
-                std::destroy_at(data_ptr() + read_idx);
-                read_idx = advance(read_idx, 1);
+            while (read_idx_ != write_idx_) {
+                std::destroy_at(data_ptr() + read_idx_);
+                read_idx_ = advance(read_idx_, 1);
             }
             
             // 移动数据
-            while (other.read_idx != other.write_idx) {
+            while (other.read_idx_ != other.write_idx_) {
                 std::construct_at(
-                    data_ptr() + write_idx, 
-                    std::move(other.data_ptr()[other.read_idx])
+                    data_ptr() + write_idx_, 
+                    std::move(other.data_ptr()[other.read_idx_])
                 );
-                std::destroy_at(other.data_ptr() + other.read_idx);
-                write_idx = advance(write_idx, 1);
-                other.read_idx = other.advance(other.read_idx, 1);
+                std::destroy_at(other.data_ptr() + other.read_idx_);
+                write_idx_ = advance(write_idx_, 1);
+                other.read_idx_ = other.advance(other.read_idx_, 1);
             }
         }
         return *this;
@@ -237,10 +237,10 @@ public:
     template<typename... Args>
     void emplace(Args&&... args) {
         std::construct_at(
-            data_ptr() + write_idx, 
+            data_ptr() + write_idx_, 
             std::forward<Args>(args)...
         );
-        write_idx = advance(write_idx, 1);
+        write_idx_ = advance(write_idx_, 1);
     }
 
     [[nodiscard]] size_t push(std::span<const T> pdata) {
@@ -249,19 +249,19 @@ public:
         
         len = std::min(len, available);
         
-        if (write_idx + len < N) {
+        if (write_idx_ + len < N) {
             // 单次拷贝
             for (size_t i = 0; i < len; i++) {
-                std::construct_at(data_ptr() + write_idx + i, pdata[i]);
+                std::construct_at(data_ptr() + write_idx_ + i, pdata[i]);
             }
         } else {
             // 环绕拷贝
-            const size_t first_chunk = (N - 1) - write_idx;
+            const size_t first_chunk = (N - 1) - write_idx_;
             const size_t second_chunk = len - first_chunk;
             
             // 第一段
             for (size_t i = 0; i < first_chunk; i++) {
-                std::construct_at(data_ptr() + write_idx + i, pdata[i]);
+                std::construct_at(data_ptr() + write_idx_ + i, pdata[i]);
             }
             
             // 第二段
@@ -270,34 +270,34 @@ public:
             }
         }
         
-        write_idx = advance(write_idx, len);
+        write_idx_ = advance(write_idx_, len);
         return len;
     }
 
     [[nodiscard]] size_t pop(std::span<T> pdata) {
         const size_t len = std::min(pdata.size(), available());
         
-        if (read_idx + len < N) {
+        if (read_idx_ + len < N) {
             // 单次移动
             for (size_t i = 0; i < len; i++) {
                 std::construct_at(
                     &pdata[i], 
-                    data_ptr()[read_idx + i]
+                    data_ptr()[read_idx_ + i]
                 );
-                std::destroy_at(data_ptr() + read_idx + i);
+                std::destroy_at(data_ptr() + read_idx_ + i);
             }
         } else {
             // 环绕移动
-            const size_t first_chunk = (N - 1) - read_idx;
+            const size_t first_chunk = (N - 1) - read_idx_;
             const size_t second_chunk = len - first_chunk;
             
             // 第一段
             for (size_t i = 0; i < first_chunk; i++) {
                 std::construct_at(
                     &pdata[i], 
-                    std::move(data_ptr()[read_idx + i])
+                    std::move(data_ptr()[read_idx_ + i])
                 );
-                std::destroy_at(data_ptr() + read_idx + i);
+                std::destroy_at(data_ptr() + read_idx_ + i);
             }
             
             // 第二段
@@ -310,55 +310,71 @@ public:
             }
         }
         
-        read_idx = advance(read_idx, len);
+        read_idx_ = advance(read_idx_, len);
         return len;
     }
 
     [[nodiscard]] T pop() {
-        T result = std::move(data_ptr()[read_idx]);
-        std::destroy_at(data_ptr() + read_idx);
-        read_idx = advance(read_idx, 1);
+        T result = std::move(data_ptr()[read_idx_]);
+        std::destroy_at(data_ptr() + read_idx_);
+        read_idx_ = advance(read_idx_, 1);
         return result;  // 返回值，不是右值引用
     }
 
+    [[nodiscard]] constexpr size_t read_idx() const {return read_idx_;}
+    [[nodiscard]] constexpr size_t write_idx() const {return write_idx_;}
+
     void push(T&& data) {
         std::construct_at(
-            data_ptr() + write_idx, 
+            data_ptr() + write_idx_, 
             std::move(data)
         );
-        write_idx = advance(write_idx, 1);
+        write_idx_ = advance(write_idx_, 1);
     }
 
     void push(const T& data) {
-        std::construct_at(data_ptr() + write_idx, data);
-        write_idx = advance(write_idx, 1);
+        std::construct_at(data_ptr() + write_idx_, data);
+        write_idx_ = advance(write_idx_, 1u);
     }
 
     [[nodiscard]] inline constexpr size_t available() const noexcept {
-        if (write_idx >= read_idx) {
-            return write_idx - read_idx;
+        const int diff = static_cast<int>(write_idx_) - static_cast<int>(read_idx_);
+        #if 0
+        if(diff == 0){
+            return N;
+        }else if (diff > 0) {
+            return static_cast<size_t>(diff);
         } else {
-            return N - (read_idx - write_idx);
+            return static_cast<size_t>(static_cast<int>(N) - diff);
         }
+        #else
+        if (diff >= 0) {
+            return static_cast<size_t>(diff);
+        } else {
+            return static_cast<size_t>(static_cast<int>(N) + diff);
+        }
+        #endif
     }
 
     [[nodiscard]] inline constexpr size_t writable_capacity() const noexcept {
         return N - available();
     }
 
+    #if 0
     [[nodiscard]] inline constexpr size_t safe_dma_length() const noexcept {
-        if (write_idx >= read_idx) {
-            return write_idx - read_idx;
+        if (write_idx_ >= read_idx_) {
+            return write_idx_ - read_idx_;
         } else {
-            return N - read_idx;
+            return N - read_idx_;
         }
     }
+    #endif
 
     inline void waste(size_t len) noexcept {
         len = std::min(len, available());
         for (size_t i = 0; i < len; i++) {
-            std::destroy_at(data_ptr() + read_idx);
-            read_idx = advance(read_idx, 1);
+            std::destroy_at(data_ptr() + read_idx_);
+            read_idx_ = advance(read_idx_, 1);
         }
     }
     
@@ -368,8 +384,8 @@ public:
         static_assert(BatchSize <= N, "Batch size exceeds buffer size");
         
         Unroller<0, BatchSize>::apply([&](size_t i) {
-            std::construct_at(data_ptr() + write_idx, data[i]);
-            write_idx = advance(write_idx, 1);
+            std::construct_at(data_ptr() + write_idx_, data[i]);
+            write_idx_ = advance(write_idx_, 1);
         });
     }
 };

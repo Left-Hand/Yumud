@@ -208,7 +208,7 @@ struct GcodeArgsIter {
 
             // Parse value (skip letter)
             const auto value_str = token_str.substr(1).unwrap();
-            const auto res = strconv2::str_to_iq<16>(value_str);
+            const auto res = strconv2::defmt_str<q16>(value_str);
             if (res.is_err()) {
                 // Value parsing failed (e.g., "X1.2.3") -> return Error
                 return Err(res.unwrap_err());
@@ -235,6 +235,7 @@ struct GcodeLine{
     constexpr IResult<Mnemonic> query_mnemonic() const {
         if(line_.length() < 1) 
             return Err(GcodeParseError::NoMnemonicFounded);
+
         return ({
             auto may_mnemoic = Mnemonic::from_letter(line_[0]);
             if(may_mnemoic.is_none()) 
@@ -270,7 +271,7 @@ struct GcodeLine{
 
     constexpr IResult<q16> query_arg_value(const char letter) const {
         return query_tmp<q16>(letter, [](const StringView str) -> IResult<q16>{
-            const auto res = (strconv2::str_to_iq<16>(str.substr(1).unwrap()));
+            const auto res = (strconv2::defmt_str<q16>(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             return Ok(res.unwrap());
         });

@@ -5,6 +5,9 @@
 
 namespace ymd{
 
+template<typename T>
+struct IsometryMatrix2 { 
+};
 
 template<typename T>
 struct Isometry2 { 

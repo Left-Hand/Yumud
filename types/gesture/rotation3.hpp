@@ -63,6 +63,31 @@ struct Rotation3{
     [[nodiscard]] constexpr Matrix<T, 3, 3> to_matrix() const {
         return matrix_;
     }
+
+    [[nodiscard]] constexpr const Matrix<T, 3, 3> & matrix() const {
+        return matrix_;
+    }
+
+    template<EulerAnglePolicy P>
+    [[nodiscard]] constexpr EulerAngles<T, P> to_euler_angles() const {
+        // https://blog.csdn.net/weixin_41010198/article/details/115960331
+        const Angle<T> theta_z = Angle<T>::from_atan2(
+            - matrix_.template at<2, 0>(),
+            matrix_.template at<0, 0>()
+        );
+
+        const Angle<T> theta_y = Angle<T>::from_atan2(
+            matrix_.template at<2, 0>(),
+            imag(matrix_.template at<0, 0>(), matrix_.template at<2, 0>())
+        );
+
+        const Angle<T> theta_x = Angle<T>::from_atan2(
+            matrix_.template at<2, 1>(),
+            matrix_.template at<2, 2>()
+        );
+
+        return EulerAngles<T, P>::from_xyz(theta_x, theta_y, theta_z);
+    }
 private:
     [[nodiscard]] constexpr explicit Rotation3(const Matrix<T, 3, 3> & matrix):
         matrix_(matrix){;}

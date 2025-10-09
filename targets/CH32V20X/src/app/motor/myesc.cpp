@@ -16,10 +16,8 @@
 #include "drivers/GateDriver/DRV832X/DRV832X.hpp"
 
 
-#include "dsp/filter/rc/LowpassFilter.hpp"
-#include "dsp/filter/SecondOrderLpf.hpp"
+#include "dsp/filter/firstorder/lpf.hpp"
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
-#include "dsp/filter/rc/LowpassFilter.hpp"
 
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/ctrl/pi_controller.hpp"

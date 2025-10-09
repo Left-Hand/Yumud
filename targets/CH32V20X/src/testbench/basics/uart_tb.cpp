@@ -22,13 +22,13 @@ using namespace ymd;
     tx_led.outpp();
     rx_led.outpp();
 
-    uart.bind_post_tx_cb([&](){
+    uart.set_post_tx_callback([&](){
         tx_led.set();
         clock::delay(1ms);
         tx_led.clr();
     });
 
-    uart.bind_post_rx_cb([&](){
+    uart.set_post_rx_callback([&](){
         rx_led.set();
         clock::delay(1ms);
         rx_led.clr();
