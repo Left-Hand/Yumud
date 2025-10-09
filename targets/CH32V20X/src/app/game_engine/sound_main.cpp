@@ -12,13 +12,14 @@
 #include "hal/bus/uart/uartsw.hpp"
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "types/vectors/complex.hpp"
+
+#include "dsp/z_transformation.hpp"
 
 namespace ymd{
 
 template<typename T>
-static constexpr T rem_euclid(T a, T numerator){
-    return fposmod(a, numerator);
+static constexpr T rem_euclid(T a, T num){
+    return fposmod(a, num);
 }
 
 
@@ -80,7 +81,7 @@ static constexpr T cubic_interpolate(
     const auto c0 = values[1];
     const auto c1 = static_cast<T>(0.5) * (values[2] - values[0]);
     const auto c2 = values[0] - static_cast<T>(2.5) * values[1] + 
-        static_cast<T>(2.0) * values[2] - static_cast<T>(0.5) * values[3];
+        2 * values[2] - static_cast<T>(0.5) * values[3];
     const auto c3 = static_cast<T>(0.5) * (values[3] - values[0]) + 1.5 * (values[1] - values[2]);
 
 	return c0 + t * (c1 + t * (c2 + t * c3));
@@ -356,96 +357,14 @@ struct Saturator{
 };
 
 
-template<typename T>
-struct AmplitudeAndPhase{
-    T amplitude;
-    Angle<T> phase;
-};
 
 
-
-template<typename T>
-struct ResponseCalculator;
-
-
-template<typename T, size_t NUM, size_t DEN>
-struct Z_TransferCoefficients{
-    std::array<T, NUM> numerator;
-    std::array<T, DEN> denominator;
-
-    using Self = Z_TransferCoefficients<T, NUM, DEN>;
-    
-    constexpr Z_TransferCoefficients() = default;
-    
-    constexpr Z_TransferCoefficients(const std::array<T, NUM>& num, const std::array<T, DEN>& den)
-        : numerator(num), denominator(den) {}
-    
-    [[nodiscard]] constexpr const T& num(size_t index) const {
-        return numerator[index];
-    }
-    
-    [[nodiscard]] constexpr const T& den(size_t index) const {
-        return denominator[index];
-    }
-    
-    [[nodiscard]] constexpr T& num(size_t index) {
-        return numerator[index];
-    }
-    
-    [[nodiscard]] constexpr T& den(size_t index) {
-        return denominator[index];
-    }
-    
-    [[nodiscard]] static constexpr size_t num_size() {
-        return NUM;
-    }
-    
-    [[nodiscard]] static constexpr size_t den_size() {
-        return DEN;
-    }
-
-    [[nodiscard]] constexpr AmplitudeAndPhase<T> complex_response(
-        const auto freq, const auto fs
-    ) const {
-        return ResponseCalculator<Self>::calc_complex_response(*this, freq, fs);
-    }
-};
-
-template<typename T>
-struct ResponseCalculator<Z_TransferCoefficients<T, 3, 2>>{
-    
-    static constexpr AmplitudeAndPhase<T> calc_complex_response(
-        const Z_TransferCoefficients<T, 3, 2>& self, 
-        const auto freq, const auto fs
-    ){
-        const auto frequency = static_cast<T>(2.0 * PI) * freq / fs;
-
-		const T cos_f = cos(frequency);
-		const T sin_f = sin(frequency);
-		const T cos_2f = 2 * cos_f * cos_f - 1;
-		const T sin_2f = 2 * cos_f * sin_f;
-
-        const Complex<T> n = {
-            self.numerator[0] + self.numerator[1] * cos_f + self.numerator[2] * cos_2f,
-            - (self.numerator[1] * sin_f + self.numerator[2] * sin_2f)
-        };
-		
-        const Complex<T> d = {
-            1 + self.denominator[0] * cos_f + self.denominator[1] * cos_2f,
-            - (self.denominator[0] * sin_f + self.denominator[1] * sin_2f)
-        };
-
-		const auto amplitude = n.length() / d.length();
-		const auto phase = (n.to_angle() - d.to_angle()).normalized();
-
-		return {amplitude, phase};
-    }
-};
 
 // static constexpr auto coeff = Z_TransferCoefficients<float, 3, 2>{{1, 0.5f, 0}, {1, 0.5f}};
 // static constexpr auto resp = coeff.complex_response(1000.0f, 1000.0f);
 // static_assert(resp.amplitude == 0.5f);
 
+using namespace ymd::dsp;
 template<typename T, size_t CHANNELS = 2>
 struct DownSampler{
     uint32_t target_sample_rate;
@@ -462,6 +381,12 @@ struct FilterParaments{
     T fs;
     T f0;
     T q;
+
+    [[nodiscard]] constexpr std::pair<T, T> k_and_norm() const {
+        T k = tan(PI * f0 / fs);
+        T norm = 1 / (1 + k / q + k * k);
+        return {k, norm};
+    }
 };
 
 
@@ -470,61 +395,57 @@ struct Biquad{
 private:
     static constexpr T Q1 = static_cast<T>(0.70710677);
 
-    [[nodiscard]] static constexpr std::pair<T, T> get_k_and_norm(T fs, T f0, T q) {
-        T k = tan(PI * f0 / fs);
-        T norm = static_cast<T>(1.0) / (static_cast<T>(1.0) + k / q + k * k);
-        return {k, norm};
-    }
+
 
 public:
     [[nodiscard]] static constexpr Z_TransferCoefficients<T, 3, 2>
-    butterworth_hp(T fs, T f0, T q) {
-        auto [k, norm] = get_k_and_norm(fs, f0, q);
+    butterworth_hp(const FilterParaments<T> & para) {
+        auto [k, norm] = para.k_and_norm();
 
-        T b0 = static_cast<T>(1.0) * norm;
-        T b1 = static_cast<T>(-2.0) * norm;
-        T b2 = static_cast<T>(1.0) * norm;
-        T a1 = static_cast<T>(2.0) * (k * k - static_cast<T>(1.0)) * norm;
-        T a2 = (static_cast<T>(1.0) - k / q + k * k) * norm;
+        T b0 = 1 * norm;
+        T b1 = (-2) * norm;
+        T b2 = 1 * norm;
+        T a1 = 2 * (k * k - 1) * norm;
+        T a2 = (1 - k / para.q + k * k) * norm;
 
         return {std::array<T, 3>{b0, b1, b2}, std::array<T, 2>{a1, a2}};
     }
 
     [[nodiscard]] static constexpr Z_TransferCoefficients<T, 3, 2>
-    butterworth_lp(T fs, T f0, T q) {
-        auto [k, norm] = get_k_and_norm(fs, f0, q);
+    butterworth_lp(const FilterParaments<T> & para) {
+        auto [k, norm] = para.k_and_norm();
 
         T b0 = k * k * norm;
-        T b1 = static_cast<T>(2.0) * k * k * norm;
+        T b1 = 2 * k * k * norm;
         T b2 = k * k * norm;
-        T a1 = static_cast<T>(2.0) * (k * k - static_cast<T>(1.0)) * norm;
-        T a2 = (static_cast<T>(1.0) - k / q + k * k) * norm;
+        T a1 = 2 * (k * k - 1) * norm;
+        T a2 = (1 - k / para.q + k * k) * norm;
 
         return {std::array<T, 3>{b0, b1, b2}, std::array<T, 2>{a1, a2}};
     }
 
     [[nodiscard]] static constexpr Z_TransferCoefficients<T, 3, 2>
-    butterworth_bp(T fs, T f0, T q) {
-        auto [k, norm] = get_k_and_norm(fs, f0, q);
+    butterworth_bp(const FilterParaments<T> & para) {
+        auto [k, norm] = para.k_and_norm();
         
         T b0 = k * norm;
         T b1 = static_cast<T>(0.0);
         T b2 = -k * norm;
-        T a1 = static_cast<T>(2.0) * (k * k - static_cast<T>(1.0)) * norm;
-        T a2 = (static_cast<T>(1.0) - k / q + k * k) * norm;
+        T a1 = 2 * (k * k - 1) * norm;
+        T a2 = (1 - k / para.q + k * k) * norm;
 
         return {std::array<T, 3>{b0, b1, b2}, std::array<T, 2>{a1, a2}};
     }
 
     [[nodiscard]] static constexpr Z_TransferCoefficients<T, 3, 2>
-    butterworth_bs(T fs, T f0, T q) {
-        auto [k, norm] = get_k_and_norm(fs, f0, q);
+    butterworth_bs(const FilterParaments<T> & para) {
+        auto [k, norm] = para.k_and_norm();
         
-        T b0 = (static_cast<T>(1.0) + k * k) * norm;
-        T b1 = static_cast<T>(2.0) * (k * k - static_cast<T>(1.0)) * norm;
-        T b2 = (static_cast<T>(1.0) + k * k) * norm;
-        T a1 = static_cast<T>(2.0) * (k * k - static_cast<T>(1.0)) * norm;
-        T a2 = (static_cast<T>(1.0) - k / q + k * k) * norm;
+        T b0 = (1 + k * k) * norm;
+        T b1 = 2 * (k * k - 1) * norm;
+        T b2 = (1 + k * k) * norm;
+        T a1 = 2 * (k * k - 1) * norm;
+        T a2 = (1 - k / para.q + k * k) * norm;
 
         return {std::array<T, 3>{b0, b1, b2}, std::array<T, 2>{a1, a2}};
     }
@@ -532,6 +453,6 @@ public:
 
 #if 0
 static constexpr auto coeff = Biquad<float>::butterworth_bp(100, 1000, 2);
-static_assert(coeff.denominator[0] == 1.0f);
-static_assert(coeff.denominator[1] == 1.0f);
+static_assert(coeff.den[0] == 1.0f);
+static_assert(coeff.den[1] == 1.0f);
 #endif

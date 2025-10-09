@@ -18,7 +18,6 @@
 #include "details/polar_robot_curvedata.hpp"
 
 #include "types/colors/color/color.hpp"
-#include "types/vectors/polar.hpp"
 #include "core/string/utils/multiline_split.hpp"
 
 #include "common_service.hpp"

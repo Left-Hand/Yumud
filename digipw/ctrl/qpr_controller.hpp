@@ -8,7 +8,6 @@ namespace ymd::digipw{
 struct QPRController {
 
     struct Coeffs{
-        float d0;
         float a1;
         float a2;
         float b0;
@@ -41,7 +40,7 @@ struct QPRController {
                 4 * kp + t_sample * t_sample * kp * wr * wr - 
                 4 * t_sample * kp * wc - 4 * t_sample * kr * wc) / d0;
 
-            return Coeffs{d0, a1, a2, b0, b1, b2};
+            return Coeffs{a1, a2, b0, b1, b2};
         }
     };
 
@@ -50,7 +49,6 @@ struct QPRController {
 
         const auto coeffs = cfg.to_coeffs();
 
-        d0 = coeffs.d0;
         a1 = coeffs.a1;
         a2 = coeffs.a2;
         b0 = coeffs.b0;
@@ -93,7 +91,6 @@ struct QPRController {
 
 private:
     // 传递函数系数
-    float d0;
     float a1;
     float a2;
     float b0;
