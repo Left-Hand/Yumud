@@ -70,8 +70,33 @@ class BMI088_Acc final:
     public AccelerometerIntf,
     public BMI088_Prelude{
 public:
+    explicit BMI088_Acc(const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv){;}
+    explicit BMI088_Acc(hal::I2cDrv && i2c_drv):
+        phy_(std::move(i2c_drv)){;}
+    explicit BMI088_Acc(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
-protected:
+    explicit BMI088_Acc(const hal::SpiDrv & spi_drv):
+        phy_(spi_drv){;}
+    explicit BMI088_Acc(hal::SpiDrv && spi_drv):
+        phy_(std::move(spi_drv)){;}
+    explicit BMI088_Acc(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+        phy_(hal::SpiDrv{spi, index}){;}
+
+
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> update();
+
+    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<real_t> read_temp();
+
+    [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
+    [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
+    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
+private:
     real_t acc_scaler_ = 0;
     BoschSensor_Phy phy_;
 
@@ -190,33 +215,6 @@ protected:
                 return Some(real_t(g * 24));
         }
     }
-public:
-    explicit BMI088_Acc(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
-    explicit BMI088_Acc(hal::I2cDrv && i2c_drv):
-        phy_(std::move(i2c_drv)){;}
-    explicit BMI088_Acc(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
-
-    explicit BMI088_Acc(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
-    explicit BMI088_Acc(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
-    explicit BMI088_Acc(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
-        phy_(hal::SpiDrv{spi, index}){;}
-
-
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> update();
-
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
-    [[nodiscard]] IResult<real_t> read_temp();
-
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
-    [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
-    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
 };
 
 
@@ -228,7 +226,32 @@ public:
 
     template<typename T = void>
     using IResult = Result<T, Error>;
-protected:
+public:
+    explicit BMI088_Gyr(const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv){;}
+    explicit BMI088_Gyr(hal::I2cDrv && i2c_drv):
+        phy_(std::move(i2c_drv)){;}
+    explicit BMI088_Gyr(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+
+    explicit BMI088_Gyr(const hal::SpiDrv & spi_drv):
+        phy_(spi_drv){;}
+    explicit BMI088_Gyr(hal::SpiDrv && spi_drv):
+        phy_(std::move(spi_drv)){;}
+    explicit BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+        phy_(hal::SpiDrv{spi, index}){;}
+
+
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> update();
+    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
+
+
+    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs range);
+    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
+private:
     BoschSensor_Phy phy_;
     real_t gyr_scaler_ = 0;
 
@@ -288,31 +311,6 @@ protected:
                 return Some(DEG2RAD<real_t>(2000));
         }
     }
-public:
-    explicit BMI088_Gyr(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
-    explicit BMI088_Gyr(hal::I2cDrv && i2c_drv):
-        phy_(std::move(i2c_drv)){;}
-    explicit BMI088_Gyr(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
-
-    explicit BMI088_Gyr(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
-    explicit BMI088_Gyr(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
-    explicit BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
-        phy_(hal::SpiDrv{spi, index}){;}
-
-
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
-
-
-    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs range);
-    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
 };
     
 

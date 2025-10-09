@@ -6,17 +6,21 @@
 namespace ymd::robots{
     
 template<arithmetic T>
-class TrapezoidSolver_t final{
-
+class TrapezoidSolver final{
 public:
-    TrapezoidSolver_t(const TrapezoidSolver_t<T> & other) = delete;
-    TrapezoidSolver_t(TrapezoidSolver_t<T> && other) = default;
+    struct Config{
+        T max_acc;
+        T max_speed;
+    };
 
-    TrapezoidSolver_t(T a, T v,T s):
-        a_(ABS(a)), v_(ABS(v)), s_(ABS(s)) {
+    constexpr TrapezoidSolver(const Config & cfg, T s):
+        a_(ABS(cfg.max_acc)), 
+        v_(ABS(cfg.max_speed)), 
+        s_(ABS(s))
+    {
 
-        a = ABS(a);
-        v = ABS(v);
+        const T a = a_;
+        const T v = v_;
 
         is_inversed_ = (s < 0);
         s = ABS(s);
@@ -59,15 +63,15 @@ public:
         }   
     }
 
-    T forward(const T t)const{
+    constexpr T forward(const T t)const{
         return is_inversed_ ? -_forward(t) : _forward(t);
     }
 
-    T period() const {
+    constexpr T elapsed() const {
         return t_all;
     }
 
-    T peak_speed(){
+    constexpr T peak_speed(){
         if(reached_max_speed_){
             return v_;
         }else{

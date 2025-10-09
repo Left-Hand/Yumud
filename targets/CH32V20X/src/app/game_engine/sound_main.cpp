@@ -28,6 +28,10 @@ struct dB{
     constexpr explicit dB(T value):
         value_(value){}
 
+    [[nodiscard]] static constexpr dB from_nonscale(){
+        return dB(0);
+    }
+
     constexpr T to_linear() const{
         return pow(10, value_/10);
     }

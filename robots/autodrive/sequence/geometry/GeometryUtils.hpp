@@ -7,13 +7,14 @@
 #include "types/vectors/quat.hpp"
 #include "types/transforms/basis.hpp"
 #include "types/regions/line2.hpp"
+#include "core/container/inline_vector.hpp"
 
 #include "core/utils/Option.hpp"
 
 namespace ymd::geometry{
 
 template<arithmetic T>
-std::tuple<Option<Vec2<T>>, Option<Vec2<T>>> calculate_circle_center(
+HeaplessVector<Vec2<T>, 2> calculate_circle_center(
     const Vec2<T> & p1, 
     const Vec2<T> & p2, 
     const T radius
@@ -26,21 +27,23 @@ std::tuple<Option<Vec2<T>>, Option<Vec2<T>>> calculate_circle_center(
     const T radius_squ = radius * radius;
 
     if (distance_squ_div4 == 0 || distance_squ_div4 > radius_squ) {
-        return {None, None};
+        return {};
     }
 
     // 计算法线向量
-    const Vec2<T> normal_vector = Vec2<T>(-vec_p1_p2.y, vec_p1_p2.x).normalized();
+    const Vec2<T> norm_vec = Vec2<T>(-vec_p1_p2.y, vec_p1_p2.x).normalized();
 
     // 计算圆心到中点的距离
     const T d = sqrt(radius * radius - (distance_squ_div4));
 
+    if(d == 0)
+        return {mid_point};
+    
     // 计算两个可能的圆心
-    const Vec2<T> center1 = mid_point + normal_vector * d;
-    const Vec2<T> center2 = mid_point - normal_vector * d;
+    const Vec2<T> center1 = mid_point + norm_vec * d;
+    const Vec2<T> center2 = mid_point - norm_vec * d;
 
-    // 返回其中一个圆心（这里返回第一个）
-    return {Some(center1), Some(center2)};
+    return {center1, center2};
 }
 
 template<arithmetic T>

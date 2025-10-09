@@ -6,6 +6,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "core/utils/result.hpp"
+
 namespace ymd{
 
 template<typename T, size_t N>
@@ -13,6 +15,16 @@ class HeaplessVector {
 public:
     // 构造函数 - constexpr
     constexpr HeaplessVector() noexcept : size_(0) {}
+
+    constexpr HeaplessVector(const std::initializer_list<T> & list) noexcept : 
+        size_(list.size()
+    ){
+        if(list.size() > N) __builtin_trap();
+
+        for (auto & elem : list) {
+            push_back(elem);
+        }
+    }
 
     // 析构函数 - constexpr
     constexpr ~HeaplessVector() {
