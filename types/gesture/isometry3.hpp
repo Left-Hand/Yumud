@@ -40,7 +40,7 @@ struct DhParameters{
 
 
 template<typename T>
-struct Isometry3_Matrix { 
+struct IsometryMatrix3 { 
     using Rotation = Rotation3<T>;
     using Vec = Vec3<T>;
 
@@ -50,14 +50,14 @@ struct Isometry3_Matrix {
     Rotation3<T> rotation;
     Vec3<T> translation;
 
-    [[nodiscard]] static constexpr Isometry3_Matrix from_matrix(const Matrix<T, 4, 4>& matrix) { 
-        return Isometry3_Matrix{
+    [[nodiscard]] static constexpr IsometryMatrix3 from_matrix(const Matrix<T, 4, 4>& matrix) { 
+        return IsometryMatrix3{
             .translation = Vec3<T>(matrix.template submatrix<3,1>(0,3))
             .rotation = Rotation3<T>::from_matrix(matrix.template submatrix<3,3>(0,0)),
         };
     }
 
-    [[nodiscard]] static constexpr Isometry3_Matrix from_dh_parameters(const DhParameters<T>& dh) { 
+    [[nodiscard]] static constexpr IsometryMatrix3 from_dh_parameters(const DhParameters<T>& dh) { 
         // https://zhuanlan.zhihu.com/p/638117473
 
         const auto [s_theta, c_theta] = dh.theta.sincos();
@@ -75,14 +75,14 @@ struct Isometry3_Matrix {
             dh.d
         );
 
-        return Isometry3_Matrix{
+        return IsometryMatrix3{
             .rotation = rotation,
             .translation = translation
         };
     }
 
-    [[nodiscard]] static constexpr Isometry3_Matrix<T> from_identity() {
-        return Isometry3_Matrix<T>{
+    [[nodiscard]] static constexpr IsometryMatrix3<T> from_identity() {
+        return IsometryMatrix3<T>{
             .translation = Vec3<T>::ZERO
             .rotation = Rotation3<T>::from_identity(),
         };
@@ -96,16 +96,16 @@ struct Isometry3_Matrix {
     }
 
     // 添加群运算
-    [[nodiscard]] constexpr Isometry3_Matrix operator*(const Isometry3_Matrix& other) const {
-        return Isometry3_Matrix{
+    [[nodiscard]] constexpr IsometryMatrix3 operator*(const IsometryMatrix3& other) const {
+        return IsometryMatrix3{
             .rotation = rotation * other.rotation,
             .translation = rotation * other.translation + translation
         };
     }
     
-    [[nodiscard]] constexpr Isometry3_Matrix inverse() const {
+    [[nodiscard]] constexpr IsometryMatrix3 inverse() const {
         const auto inv_rot = rotation.inverse();
-        return Isometry3_Matrix{
+        return IsometryMatrix3{
             .rotation = inv_rot,
             .translation = -(inv_rot * translation)
         };
@@ -118,7 +118,7 @@ struct Isometry3_Matrix {
     
 
 
-    friend OutputStream & operator << (OutputStream & os, const Isometry3_Matrix<T> & self) { 
+    friend OutputStream & operator << (OutputStream & os, const IsometryMatrix3<T> & self) { 
         return os << "rotation: " << self.rotation << " translation: " << self.translation;
     }
 };
@@ -205,7 +205,7 @@ struct Isometry3 {
     
 
 
-    friend OutputStream & operator << (OutputStream & os, const Isometry3_Matrix<T> & self) { 
+    friend OutputStream & operator << (OutputStream & os, const IsometryMatrix3<T> & self) { 
         return os << "rotation: " << self.rotation << " translation: " << self.translation;
     }
 };

@@ -91,6 +91,10 @@ struct Angle{
 		return make_angle_from_turns(turns);
 	}
 
+	static constexpr Angle from_atan2(const T y, const T x){
+		return make_angle_from_turns(atan2pu(y, x));
+	}
+
 	template<typename U>
 	constexpr Angle<T> operator = (const Angle<U> & rhs){
 		return Angle<T>::from_turns(static_cast<T>(rhs.turns_));
