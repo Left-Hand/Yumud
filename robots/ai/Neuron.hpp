@@ -7,17 +7,17 @@
 namespace ymd::ann{
 
 template<arithmetic T>
-class Neuron_t{
+class Neuron{
 protected:
     std::vector<T> weights_;
 
-    Neuron_t(const Neuron_t & other) = default;
-    Neuron_t(Neuron_t && other) = default;
+    Neuron(const Neuron & other) = default;
+    Neuron(Neuron && other) = default;
 public:
 
-    Neuron_t(size_t size) : weights_(size) {}
+    Neuron(size_t size) : weights_(size) {}
 
-    Neuron_t(std::span<T> weights) {
+    Neuron(std::span<T> weights) {
         std::copy(weights.begin(), weights.end(), weights_.begin());
     }
 
@@ -41,11 +41,11 @@ public:
         return sum;
     }
 
-    Neuron_t copy() const {
+    Neuron copy() const {
         return *this;
     }
 };
 
-using Neuron = Neuron_t<real_t>;
+using Neuron = Neuron<real_t>;
 
 }

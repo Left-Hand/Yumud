@@ -49,9 +49,43 @@ public:
     constexpr bool operator ==(const FieldKind kind) const {return kind_ == kind;}
     constexpr bool operator ==(const Field other) const {return kind_ == other.kind_;}
 
-    Vec2<real_t> to_pos(const Map & map) const;
-    Angle<real_t> to_rot(const Map & map) const;
-    Ray2<real_t> to_ray(const Map & map) const;
+    [[nodiscard]] Vec2<real_t> to_position(const Map & map) const {
+        switch(kind_){
+            default:
+                HALT;
+            case FieldKind::Billboard:
+                return (map.billboard_gest).org;
+            case FieldKind::Garbage:
+                return (map.garbage_gest).org;
+            case FieldKind::RawMaterial:
+                return (map.raw_material_gest).org;
+            case FieldKind::RoughProcess:
+                return (map.rough_process_gest).org;
+            case FieldKind::Staging:
+                return (map.staging_gest).org;
+        }
+    }
+
+    [[nodiscard]] Angle<real_t> to_angle(const Map & map) const {
+        switch(kind_){
+            default:
+                HALT;
+            case FieldKind::Billboard:
+                return (map.billboard_gest).orientation;
+            case FieldKind::Garbage:
+                return (map.garbage_gest).orientation;
+            case FieldKind::RawMaterial:
+                return (map.raw_material_gest).orientation;
+            case FieldKind::RoughProcess:
+                return (map.rough_process_gest).orientation;
+            case FieldKind::Staging:
+                return (map.staging_gest).orientation;
+        }
+    }
+
+    [[nodiscard]] Ray2<real_t> to_isometry(const Map & map) const{
+        return {to_pos(map), to_rot(map)};
+    }
 };
 
 
