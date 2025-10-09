@@ -3,6 +3,7 @@
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "core/utils/serde.hpp"
 #include "robots/rpc/rpc.hpp"
+#include <atomic>
 
 namespace ymd::robots{
 

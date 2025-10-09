@@ -1,18 +1,9 @@
 #pragma once
 
-#include "core/platform.hpp"
+#include <cstdint>
 
-template<typename T, unsigned int N>
+template<typename T, size_t N>
 class AverageFilter {
-protected:
-    static constexpr T invN = T(1.0 / N);
-
-    T data_[N];
-    T sum = T(0);
-    int index = 0;
-    bool inited = false;
-    
-
 public:
     void reset(const T x) {
         for(unsigned int i = 0; i < N; i++) data_[i] = x;
@@ -35,4 +26,13 @@ public:
 
         return sum * invN;
     }
+
+private:
+    static constexpr T invN = T(1.0 / N);
+
+    T data_[N];
+    T sum = T(0);
+    int index = 0;
+    bool inited = false;
+    
 };

@@ -4,7 +4,6 @@
 #include "core/clock/time.hpp"
 #include "core/debug/debug.hpp"
 
-#include "dsp/filter/rc/LowpassFilter.hpp"
 
 #include "hal/gpio/vport.hpp"
 #include "hal/bus/uart/uarthw.hpp"

@@ -1,22 +1,22 @@
 #pragma once
 
+#include <cstdint>
+
 namespace ymd::dsp{
 
 
-template<arithmetic T>
-class HighpassFilter{
+template<typename T>
+class FirstOrderHighpassFilter{
 public:
     struct Config{
         T fc;
         uint fs;
     };
 
-    T m_alpha;
-    T last = 0;
-    T last_x;
+
 public:
-    HighpassFilter() = default;
-    constexpr HighpassFilter(const Config & config){
+    FirstOrderHighpassFilter() = default;
+    constexpr FirstOrderHighpassFilter(const Config & config){
         reconf(config);
         reset();
     }
@@ -43,6 +43,10 @@ public:
         T alpha = 1 / (1 + omega_c);  // Alpha coefficient
         return alpha;
     }
+private:
+    T m_alpha;
+    T last = 0;
+    T last_x;
 };
 
 

@@ -4,7 +4,7 @@
 #include "core/clock/time.hpp"
 #include "core/sync/timer.hpp"
 #include "core/string/string_view.hpp"
-
+#include "core/string/utils/multiline_split.hpp"
 
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "robots/rpc/rpc.hpp"
@@ -12,13 +12,13 @@
 #include "robots/cannet/slcan/slcan.hpp"
 #include "robots/cannet/can_chain.hpp"
 
-
-#include "atomic"
+#include "types/vectors/polar.hpp"
 #include "types/vectors/vector2.hpp"
+
 #include "details/polar_robot_curvedata.hpp"
 
 #include "types/colors/color/color.hpp"
-#include "core/string/utils/multiline_split.hpp"
+
 
 #include "common_service.hpp"
 #include "joints.hpp"
@@ -87,10 +87,10 @@ public:
     void set_coord(const Polar<q16> p){
 
         const auto rho_position = Angle<q16>::from_turns(
-            p.radius * cfg_.rho_transform_scale);
+            p.amplitude * cfg_.rho_transform_scale);
 
         const auto theta_position = 
-            p.angle * cfg_.theta_transform_scale;
+            p.phase * cfg_.theta_transform_scale;
 
         joint_rho_.set_position(rho_position - cfg_.center_bias);
         joint_theta_.set_position(-theta_position);

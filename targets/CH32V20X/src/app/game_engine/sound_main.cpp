@@ -456,3 +456,38 @@ static constexpr auto coeff = Biquad<float>::butterworth_bp(100, 1000, 2);
 static_assert(coeff.den[0] == 1.0f);
 static_assert(coeff.den[1] == 1.0f);
 #endif
+
+template<typename T>
+struct SecondOrderFilterConfig{
+    uint32_t fs;
+    T fc;
+
+
+    [[nodiscard]] constexpr Z_TransferCoefficients<T, 3, 3> to_coeffs() const {
+        auto & self = *this;
+        static constexpr T q_butterworth = T(0.7071);
+
+        T b0, b1, b2, a0, a1, a2;
+
+        const T w0 = T(TAU) * self.fc / self.fs;
+        const T sin_w0 = T(sin((w0)));
+        const T cos_w0 = T(cos((w0)));
+        const T alpha = sin_w0 / (2 * q_butterworth);
+
+
+        b0 = (1 - cos_w0) / 2;
+        b1 = b0 * 2;
+        b2 = b0;
+        a0 = 1 + alpha;
+        a1 = -2 * cos_w0;
+        a2 = 1 - alpha;
+
+        // a0_ = b0 / a0;
+        // a1_ = b1 / a0;
+        // a2_ = b2 / a0;
+        // a3_ = a1 / a0;
+        // a4_ = a2 / a0;
+
+        return Z_TransferCoefficients<T, 3, 3>{};
+    }
+};

@@ -1,14 +1,10 @@
 #pragma once
 
 #include "types/vectors/complex.hpp"
+#include "types/vectors/polar.hpp"
 
 namespace ymd::dsp{
 
-template<typename T>
-struct AmplitudeAndPhase{
-    T amplitude;
-    Angle<T> phase;
-};
 
 
 
@@ -205,7 +201,7 @@ static_assert(product.den[1] == 0.2f);
 template<typename T>
 struct ResponseCalculator<Z_TransferCoefficients<T, 3, 2>>{
     
-    static constexpr AmplitudeAndPhase<T> calc_complex_response(
+    static constexpr Polar<T> calc_complex_response(
         const Z_TransferCoefficients<T, 3, 2>& self, 
         const auto freq, const auto fs
     ){

@@ -10,7 +10,7 @@
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 #include "dsp/filter/butterworth/Order4ZeroPhaseShiftButterWothLowpassFilter.hpp"
-#include "dsp/filter/rc/LowpassFilter.hpp"
+#include "dsp/filter/firstorder/lpf.hpp"
 
 #include "dsp/sigproc/tunning_filter.hpp"
 #include "dsp/sigproc/comb_allpass.hpp"
@@ -27,7 +27,7 @@ using namespace ymd;
 template<arithmetic T>
 class EnvelopeFilter{
 public:
-    using Lpf = dsp::LowpassFilter<T>;
+    using Lpf = dsp::FirstOrderLowpassFilter<T>;
     using Config = Lpf::Config;
 
     EnvelopeFilter(const Config & cfg){
@@ -89,7 +89,7 @@ template<arithmetic T, size_t N>
 class EvelopeBandpassFilter{
 public:
     using Bpf = typename dsp::ButterBandpassFilter<T, N>;
-    using Lpf = typename dsp::LowpassFilter<T>;
+    using Lpf = typename dsp::FirstOrderLowpassFilter<T>;
     Bpf bpf_;
     Lpf lpf_;
     struct Config{

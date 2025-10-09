@@ -10,7 +10,6 @@
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 #include "dsp/filter/butterworth/ButterSideFilter.hpp"
 #include "dsp/filter/butterworth/Order4ZeroPhaseShiftButterWothLowpassFilter.hpp"
-#include "dsp/filter/rc/LowpassFilter.hpp"
 #include "dsp/siggen/dtmf.hpp"
 
 
