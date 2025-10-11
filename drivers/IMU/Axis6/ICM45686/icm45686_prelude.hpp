@@ -14,11 +14,11 @@ struct ICM45686_Prelude{
     using IResult = Result<T, Error>;
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
-    // enum class RegAddress{
+    // enum class RegAddr{
     //     Config0 = 0x16
     // };
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
 
     enum class REGISTER: uint8_t{
@@ -82,7 +82,7 @@ struct ICM45686_Prelude{
 struct ICM45686_Regs:public ICM45686_Prelude{
 
     struct R8_Int1Config0:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress{0x16};
+        static constexpr auto ADDRESS = RegAddr{0x16};
 
         uint8_t en_fifo_full:1;
         uint8_t en_fifo_ths:1;
@@ -95,7 +95,7 @@ struct ICM45686_Regs:public ICM45686_Prelude{
     };
 
     struct R8_Int1Config1:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress{0x17};
+        static constexpr auto ADDRESS = RegAddr{0x17};
 
         uint8_t en_pll_rdy:1;
         uint8_t en_wom_x:1;

@@ -193,37 +193,37 @@ IResult<> MT9V034::init_general_regs(const uint16_t max_pixel_count){
         res.is_err()) return res; // reg 0x2F = 0x4 (4)
 
     // disable any test pattern by default
-    if(const auto res = write_general_reg(GeneralRegAddress::TestPattern, 0x0000);
+    if(const auto res = write_general_reg(GeneralRegAddr::TestPattern, 0x0000);
         res.is_err()) return res;
 
-    if(const auto res = write_general_reg(GeneralRegAddress::RowNoiseCorrCtrl, 0x0101);
+    if(const auto res = write_general_reg(GeneralRegAddr::RowNoiseCorrCtrl, 0x0101);
         res.is_err()) return res; //default noise correction
-    if(const auto res = write_general_reg(GeneralRegAddress::AecAgcEnable, 0x0011);
+    if(const auto res = write_general_reg(GeneralRegAddr::AecAgcEnable, 0x0011);
         res.is_err()) return res; //enable both AEC and AGC
-    if(const auto res = write_general_reg(GeneralRegAddress::HdrEnable, 0x0001);
+    if(const auto res = write_general_reg(GeneralRegAddr::HdrEnable, 0x0001);
         res.is_err()) return res; // enable HDR
-    if(const auto res = write_general_reg(GeneralRegAddress::MinExposure, 0x0001);
+    if(const auto res = write_general_reg(GeneralRegAddr::MinExposure, 0x0001);
         res.is_err()) return res;
-    if(const auto res = write_general_reg(GeneralRegAddress::MaxExposure, 0x1F4);
+    if(const auto res = write_general_reg(GeneralRegAddr::MaxExposure, 0x1F4);
         res.is_err()) return res;
 
-    if(const auto res = write_general_reg(GeneralRegAddress::AgcMaxGain, 0x0010);
+    if(const auto res = write_general_reg(GeneralRegAddr::AgcMaxGain, 0x0010);
         res.is_err()) return res;
     if(const auto res = set_agc_pixel_count(max_pixel_count);
         res.is_err()) return res;
-    if(const auto res = write_general_reg(GeneralRegAddress::AgcAecDesiredBin, 20);
+    if(const auto res = write_general_reg(GeneralRegAddr::AgcAecDesiredBin, 20);
         res.is_err()) return res; //desired luminance
-    if(const auto res = write_general_reg(GeneralRegAddress::AdcResCtrl, 0x0303);
+    if(const auto res = write_general_reg(GeneralRegAddr::AdcResCtrl, 0x0303);
         res.is_err()) return res; // 12 bit ADC
 
-    if(const auto res = write_general_reg(GeneralRegAddress::AecUpdate, 0x02);
+    if(const auto res = write_general_reg(GeneralRegAddr::AecUpdate, 0x02);
         res.is_err()) return res;
-    if(const auto res = write_general_reg(GeneralRegAddress::AecLowpass, 0x01);
+    if(const auto res = write_general_reg(GeneralRegAddr::AecLowpass, 0x01);
         res.is_err()) return res;
 
-    if(const auto res = write_general_reg(GeneralRegAddress::AgcUpdate, 0x02);
+    if(const auto res = write_general_reg(GeneralRegAddr::AgcUpdate, 0x02);
         res.is_err()) return res;
-    if(const auto res = write_general_reg(GeneralRegAddress::AgcLowpass, 0x02);
+    if(const auto res = write_general_reg(GeneralRegAddr::AgcLowpass, 0x02);
         res.is_err()) return res;
 
     return Ok();
@@ -236,25 +236,25 @@ IResult<> MT9V034::enable_pixel_test_pattern(
     auto & self = *this;
     if(en == EN){
         if(const auto res = self.write_general_reg(
-            GeneralRegAddress::TestPattern,
+            GeneralRegAddr::TestPattern,
             uint16_t(pattern) | 0x2000
         ); res.is_err()) return res;
         //disable row noise correction as well (pass through test pixels)
-        return self.write_general_reg(GeneralRegAddress::RowNoiseCorrCtrl, 0x0000);
+        return self.write_general_reg(GeneralRegAddr::RowNoiseCorrCtrl, 0x0000);
     } else {
         // clear the test pattern
-        if(const auto res = self.write_general_reg(GeneralRegAddress::TestPattern, 0x0000);
+        if(const auto res = self.write_general_reg(GeneralRegAddr::TestPattern, 0x0000);
             res.is_err()) return res;
         //enable default noise correction
-        return self.write_general_reg(GeneralRegAddress::RowNoiseCorrCtrl, 0x0101);
+        return self.write_general_reg(GeneralRegAddr::RowNoiseCorrCtrl, 0x0101);
     }
 }
 
 IResult<> MT9V034::set_exposure_range(const Range2u range){
-    if(const auto res = write_general_reg(GeneralRegAddress::MinExposure, range.start);
+    if(const auto res = write_general_reg(GeneralRegAddr::MinExposure, range.start);
         res.is_err()) return res;
 
-    if(const auto res = write_general_reg(GeneralRegAddress::MaxExposure, range.stop);
+    if(const auto res = write_general_reg(GeneralRegAddr::MaxExposure, range.stop);
         res.is_err()) return res;
 
     return Ok();

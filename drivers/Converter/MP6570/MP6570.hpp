@@ -27,7 +27,7 @@ struct MP6570_Prelude{
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 };
 
 
@@ -59,32 +59,32 @@ struct MP6570_Regs:public MP6570_Prelude{
 
 
     struct R16_ThetaCmdL:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x01;
+        static constexpr RegAddr REG_ADDR = 0x01;
 
         uint16_t :16;
     };
 
     struct R16_ThetaCmdM:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x02;
+        static constexpr RegAddr REG_ADDR = 0x02;
 
         uint16_t :16;
     };
 
     struct R16_ThetaCmH:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x03;
+        static constexpr RegAddr REG_ADDR = 0x03;
 
         uint16_t :16;
     };
 
     struct R16_CycleReg:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x04;
+        static constexpr RegAddr REG_ADDR = 0x04;
 
         uint8_t pole_pair;
         uint8_t cycle_p;
     };
 
     struct R16_Ctrl1:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x05;
+        static constexpr RegAddr REG_ADDR = 0x05;
         uint16_t nstep:9;
         uint16_t fgsel:5;
         uint16_t theta_cmd_type:1;
@@ -92,7 +92,7 @@ struct MP6570_Regs:public MP6570_Prelude{
     };
 
     struct R16_Gain1:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x06;
+        static constexpr RegAddr REG_ADDR = 0x06;
 
         uint16_t iq_limit:11;
         uint16_t gain_coe:4;
@@ -100,56 +100,56 @@ struct MP6570_Regs:public MP6570_Prelude{
     };
 
     struct R16_ThetaBias:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x07;
+        static constexpr RegAddr REG_ADDR = 0x07;
 
         uint16_t theta_bias:11;
         uint16_t :5;
     };
 
     struct R32_ThetaKi:public Reg32<>{
-        static constexpr RegAddress REG_ADDR = 0x08;
+        static constexpr RegAddr REG_ADDR = 0x08;
 
         using Reg32::operator =;
         uint32_t :32;
     };
 
     struct R16_ErrLimitH:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x0a;
+        static constexpr RegAddr REG_ADDR = 0x0a;
 
         using Reg16::operator =;
         uint16_t :16;
     };
 
     struct R16_ZP1A:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x0b;
+        static constexpr RegAddr REG_ADDR = 0x0b;
 
         using Reg16::operator =;
         uint16_t :16;
     };
 
     struct R16_ZP1B:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x0c;
+        static constexpr RegAddr REG_ADDR = 0x0c;
 
         using Reg16::operator =;
         uint16_t :16;
     };
 
     struct R16_ZP2A:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x0d;
+        static constexpr RegAddr REG_ADDR = 0x0d;
 
         using Reg16::operator =;
         uint16_t :16;
     };
 
     struct R16_ZP2B:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x0e;
+        static constexpr RegAddr REG_ADDR = 0x0e;
 
         using Reg16::operator =;
         uint16_t :16;
     };
 
     struct R16_Gain2:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x0f;
+        static constexpr RegAddr REG_ADDR = 0x0f;
 
         uint16_t set_gain2:4;
         uint16_t set_gain1:5;
@@ -157,14 +157,14 @@ struct MP6570_Regs:public MP6570_Prelude{
     };
 
     struct R16_IdRef:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x10;
+        static constexpr RegAddr REG_ADDR = 0x10;
 
         using Reg16::operator =;
         uint16_t :16;        
     };
 
     struct R16_IqRef:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x11;
+        static constexpr RegAddr REG_ADDR = 0x11;
 
         using Reg16::operator =;
         uint16_t :16;        
@@ -172,21 +172,21 @@ struct MP6570_Regs:public MP6570_Prelude{
 
     
     struct R16_CurrentKi:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x12;
+        static constexpr RegAddr REG_ADDR = 0x12;
 
         using Reg16::operator =;
         uint16_t :16;        
     };
 
     struct R16_CurrentKp:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x13;
+        static constexpr RegAddr REG_ADDR = 0x13;
 
         using Reg16::operator =;
         uint16_t :16;        
     };
 
     struct R16_ThetaDir:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x05;
+        static constexpr RegAddr REG_ADDR = 0x05;
 
         uint16_t :15;
         uint16_t theta_dir:1;
@@ -194,7 +194,7 @@ struct MP6570_Regs:public MP6570_Prelude{
 
 
     struct R16_SpiSdoMod:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x33;
+        static constexpr RegAddr REG_ADDR = 0x33;
 
         uint16_t spi_o_mod:1;
         uint16_t :15;

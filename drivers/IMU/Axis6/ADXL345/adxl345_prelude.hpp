@@ -10,8 +10,9 @@ namespace ymd::drivers{
 
 struct ADXL345_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1D);
+    static constexpr uint8_t VALID_DEVICE_ID = 0xE5;
 
-    enum class RegAddress:uint8_t{
+    enum class RegAddr:uint8_t{
         DeviceID = 0x00,
         TapThreshold = 0x1D,
         OffsetX = 0x1E,
@@ -70,52 +71,52 @@ struct ADXL345_Prelude{
 
 };
 
-struct ADXL345_Regs final :public ADXL345_Prelude{
-    struct DeviceIDReg:public Reg8<>{
+struct ADXL345_Regset final :public ADXL345_Prelude{
+    struct R8_DeviceID:public Reg8<>{
+        uint8_t id;
+    }DEF_R8(deviceid_reg)
+
+    struct R8_TapThreshold:public Reg8<>{
         uint8_t data;
     };
 
-    struct TapThresholdReg:public Reg8<>{
+    struct R8_OffsetX:public Reg8<>{
         uint8_t data;
     };
 
-    struct OffsetXReg:public Reg8<>{
+    struct R8_OffsetY:public Reg8<>{
         uint8_t data;
     };
 
-    struct OffsetYReg:public Reg8<>{
+    struct R8_OffsetZ:public Reg8<>{
         uint8_t data;
     };
 
-    struct OffsetZReg:public Reg8<>{
+    struct R8_TapDuration:public Reg8<>{
         uint8_t data;
     };
 
-    struct TapDurationReg:public Reg8<>{
+    struct R8_TapLatency:public Reg8<>{
         uint8_t data;
     };
 
-    struct TapLatencyReg:public Reg8<>{
+    struct R8_TapWindow:public Reg8<>{
         uint8_t data;
     };
 
-    struct TapWindowReg:public Reg8<>{
+    struct R8_ActivityThreshold:public Reg8<>{
         uint8_t data;
     };
 
-    struct ActivityThresholdReg:public Reg8<>{
+    struct R8_InactivityThreshold:public Reg8<>{
         uint8_t data;
     };
 
-    struct InactivityThresholdReg:public Reg8<>{
+    struct R8_InactivityTime:public Reg8<>{
         uint8_t data;
     };
 
-    struct InactivityTimeReg:public Reg8<>{
-        uint8_t data;
-    };
-
-    struct AxisEnablerReg:public Reg8<>{
+    struct R8_AxisEnabler:public Reg8<>{
         
         uint8_t InactiveZ :1;
         uint8_t InactiveY :1;
@@ -128,15 +129,15 @@ struct ADXL345_Regs final :public ADXL345_Prelude{
         
     };
 
-    struct FreefallThresholdReg:public Reg8<>{
+    struct R8_FreefallThreshold:public Reg8<>{
         uint8_t data;
     };
 
-    struct FreefallTimeReg:public Reg8<>{
+    struct R8_FreefallTime:public Reg8<>{
         uint8_t data;
     };
 
-    struct AxisControlForSingle2DoubleTapReg:public Reg8<>{
+    struct R8_AxisControlForSingle2DoubleTap:public Reg8<>{
         
         uint8_t tapZenabled :1;
         uint8_t tapYenabled :1;
@@ -146,7 +147,7 @@ struct ADXL345_Regs final :public ADXL345_Prelude{
         
     };
 
-    struct SourceOfSingle2DoubleTapReg:public Reg8<>{
+    struct R8_SourceOfSingle2DoubleTap:public Reg8<>{
         
         uint8_t tapZSource :1;
         uint8_t tapYSource :1;
@@ -159,7 +160,7 @@ struct ADXL345_Regs final :public ADXL345_Prelude{
         
     };
 
-    struct DataRateReg:public Reg8<>{
+    struct R8_DataRate:public Reg8<>{
         
         uint8_t dataRate :4;
         uint8_t lowPower :1;
@@ -167,7 +168,7 @@ struct ADXL345_Regs final :public ADXL345_Prelude{
         
     };
 
-    struct PowerSavingReg:public Reg8<>{
+    struct R8_PowerSaving:public Reg8<>{
         
         uint8_t wakeupFreq :2;
         uint8_t sleep :1;
@@ -177,7 +178,7 @@ struct ADXL345_Regs final :public ADXL345_Prelude{
         
     };
 
-    struct InterruptEnablerReg:public Reg8<>{
+    struct R8_InterruptEnabler:public Reg8<>{
         
         uint8_t overrun :1;
         uint8_t watermark :1;
@@ -190,7 +191,7 @@ struct ADXL345_Regs final :public ADXL345_Prelude{
         
     };
 
-    struct InterruptMapReg:public Reg8<>{
+    struct R8_InterruptMap:public Reg8<>{
         
         uint8_t overrun :1;
         uint8_t watermark :1;
@@ -203,7 +204,7 @@ struct ADXL345_Regs final :public ADXL345_Prelude{
         
     };
 
-    struct SourceOfInterruptReg:public Reg8<>{
+    struct R8_SourceOfInterrupt:public Reg8<>{
         
         uint8_t overrun :1;
         uint8_t watermark :1;
@@ -216,7 +217,7 @@ struct ADXL345_Regs final :public ADXL345_Prelude{
         
     };
 
-    struct DataFormatReg:public Reg8<>{
+    struct R8_DataFormat:public Reg8<>{
         
         uint8_t range :2;
         uint8_t justify:1;
@@ -228,31 +229,31 @@ struct ADXL345_Regs final :public ADXL345_Prelude{
         
     };
 
-    struct DataX0Reg:public Reg8<>{
+    struct R8_DataX0:public Reg8<>{
         uint8_t data;
     };
 
-    struct DataX1Reg:public Reg8<>{
+    struct R8_DataX1:public Reg8<>{
         uint8_t data;
     };
 
-    struct DataY0Reg:public Reg8<>{
+    struct R8_DataY0:public Reg8<>{
         uint8_t data;
     };
 
-    struct DataY1Reg:public Reg8<>{
+    struct R8_DataY1:public Reg8<>{
         uint8_t data;
     };
 
-    struct DataZ0Reg:public Reg8<>{
+    struct R8_DataZ0:public Reg8<>{
         uint8_t data;
     };
 
-    struct DataZ1Reg:public Reg8<>{
+    struct R8_DataZ1:public Reg8<>{
         uint8_t data;
     };
 
-    struct FifoCtrlReg:public Reg8<>{
+    struct R8_FifoCtrl:public Reg8<>{
         
         uint8_t samples:5;
         uint8_t trigger :1;
@@ -260,44 +261,14 @@ struct ADXL345_Regs final :public ADXL345_Prelude{
         
     };
 
-    struct FifoStatusReg:public Reg8<>{
+    struct R8_FifoStatus:public Reg8<>{
         
         uint8_t entires:6;
         uint8_t __resv__ :1;
         uint8_t fifoTrig:1;
         
-    };
+    }DEF_R8(fifo_status_reg)
 
-    DeviceIDReg deviceIDReg = {};
-    TapThresholdReg tapThresholdReg = {};
-    OffsetXReg offsetXReg = {};
-    OffsetYReg offsetYReg = {};
-    OffsetZReg offsetZReg = {};
-    TapDurationReg tapDurationReg = {};
-    TapLatencyReg tapLatencyReg = {};
-    TapWindowReg tapWindowReg = {};
-    ActivityThresholdReg activityThresholdReg = {};
-    InactivityThresholdReg inactivityThresholdReg = {};
-    InactivityTimeReg inactivityTimeReg = {};
-    AxisEnablerReg axisEnablerReg = {};
-    FreefallThresholdReg freefallThresholdReg = {};
-    FreefallTimeReg freefallTimeReg = {};
-    AxisControlForSingle2DoubleTapReg axisControlForSingle2DoubleTapReg = {};
-    SourceOfSingle2DoubleTapReg sourceOfSingle2DoubleTapReg = {};
-    DataRateReg dataRateReg = {};
-    PowerSavingReg powerSavingReg = {};
-    InterruptEnablerReg interruptEnablerReg = {};
-    InterruptMapReg interruptMapReg = {};
-    SourceOfInterruptReg sourceOfInterruptReg = {};
-    DataFormatReg dataFormatReg = {};
-    DataX0Reg dataX0Reg = {};
-    DataX1Reg dataX1Reg = {};
-    DataY0Reg dataY0Reg = {};
-    DataY1Reg dataY1Reg = {};
-    DataZ0Reg dataZ0Reg = {};
-    DataZ1Reg dataZ1Reg = {};
-    FifoCtrlReg fifoCtrlReg = {};
-    FifoStatusReg fifoStatusReg = {};
 };
 
 }

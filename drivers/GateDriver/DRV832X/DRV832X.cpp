@@ -106,7 +106,7 @@ struct SpiFormat{
 
 static_assert(sizeof(SpiFormat) == sizeof(uint16_t));
 
-IResult<> DRV8323R_Phy::write_reg(const RegAddress addr, const uint16_t reg){
+IResult<> DRV8323R_Phy::write_reg(const RegAddr addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
@@ -119,7 +119,7 @@ IResult<> DRV8323R_Phy::write_reg(const RegAddress addr, const uint16_t reg){
     return Ok();
 }
 
-IResult<> DRV8323R_Phy::read_reg(const RegAddress addr, uint16_t & reg){
+IResult<> DRV8323R_Phy::read_reg(const RegAddr addr, uint16_t & reg){
     SpiFormat spi_format = {
         .data = 0,
         .addr = uint16_t(addr),

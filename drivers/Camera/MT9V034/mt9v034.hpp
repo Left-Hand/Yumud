@@ -30,7 +30,7 @@ struct MT9V034_Prelude{
     static constexpr Vec2u FRAME_SIZE = {188, 120};
 
 
-    enum class GeneralRegAddress{
+    enum class GeneralRegAddr{
         ChipVersion = 0x00,
         /// Control register: used for eg switching config contexts
         Control = 0x07,
@@ -73,7 +73,7 @@ struct MT9V034_Prelude{
         RegisterLock = 0xfe,
     };
 
-    enum class ContextARegAddress:uint8_t{
+    enum class ContextARegAddr:uint8_t{
         ColumnStart = 0x01,
         RowStart = 0x02,
         WindowHeight = 0x03,
@@ -105,7 +105,7 @@ struct MT9V034_Prelude{
         FineShutterTotal = 0xD5,
     };
 
-    enum class ContextBRegAddress:uint8_t{
+    enum class ContextBRegAddr:uint8_t{
         ColumnStart = 0xC9,
         RowStart = 0xCA,
         WindowHeight = 0xCB,
@@ -154,7 +154,7 @@ struct MT9V034_Prelude{
 
 
 
-    enum class RegAddress : uint8_t {
+    enum class RegAddr : uint8_t {
         ChipId = 0,
         RowStart,
         ColumnStart,
@@ -241,28 +241,28 @@ private:
     [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint16_t & data);
 
     [[nodiscard]] IResult<> write_general_reg(
-        const GeneralRegAddress addr, 
+        const GeneralRegAddr addr, 
         const uint16_t data
     ){
         return write_reg(static_cast<uint8_t>(addr), data);
     }
 
     [[nodiscard]] IResult<> write_context_a_reg(
-        const ContextARegAddress addr, 
+        const ContextARegAddr addr, 
         const uint16_t data
     ){
         return write_reg(static_cast<uint8_t>(addr), data);
     }
 
     [[nodiscard]] IResult<> write_context_b_reg(
-        const ContextBRegAddress addr, 
+        const ContextBRegAddr addr, 
         const uint16_t data
     ){
         return write_reg(static_cast<uint8_t>(addr), data);
     }
 
     [[nodiscard]] IResult<> set_context(const ParamContext context){
-        return write_general_reg(GeneralRegAddress::Control, uint16_t(context));
+        return write_general_reg(GeneralRegAddr::Control, uint16_t(context));
     }
 
     [[nodiscard]] IResult<> set_exposure_range(const Range2u range);
@@ -277,7 +277,7 @@ private:
     /// Set just the maximum pixels to be used for adjusting automatic gain control
     /// Note this the _output_ pixel count, ie the pixels post-binning
     [[nodiscard]] IResult<> set_agc_pixel_count(uint16_t max_pixels){
-        return write_general_reg(GeneralRegAddress::AgcAecPixelCount, max_pixels);
+        return write_general_reg(GeneralRegAddr::AgcAecPixelCount, max_pixels);
     }
 };
 

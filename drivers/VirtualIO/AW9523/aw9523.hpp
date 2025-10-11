@@ -34,7 +34,7 @@ struct AW9523_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
 
 
-    enum class RegAddress:uint8_t{
+    enum class RegAddr:uint8_t{
         In = 0x00,
         Out = 0x02,
         Dir = 0x04,
@@ -68,25 +68,25 @@ struct AW9523_Regs:public AW9523_Prelude{
     static constexpr size_t MAX_CHANNELS = 16;
     
     struct InputReg  : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::In;
+        static constexpr auto ADDRESS = RegAddr::In;
 
         hal::PinMask mask = hal::PinMask::from_zero();
     }DEF_R16(input_reg)
 
     struct OutputReg  : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::Out;
+        static constexpr auto ADDRESS = RegAddr::Out;
 
         hal::PinMask mask = hal::PinMask::from_zero();
     }DEF_R16(output_reg)
 
     struct DirReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::Dir;
+        static constexpr auto ADDRESS = RegAddr::Dir;
 
         hal::PinMask mask = hal::PinMask::from_zero();
     }DEF_R16(dir_reg)
 
     struct CtlReg:Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Ctl;
+        static constexpr auto ADDRESS = RegAddr::Ctl;
         uint8_t isel:2;
         uint8_t __resv1__:2;
         uint8_t p0mod:1;
@@ -94,21 +94,21 @@ struct AW9523_Regs:public AW9523_Prelude{
     }DEF_R8(ctl_reg)
 
     struct IntEnReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::Inten;
+        static constexpr auto ADDRESS = RegAddr::Inten;
 
         hal::PinMask mask = hal::PinMask::from_zero();
     }DEF_R16(inten_reg)
 
 
     struct LedModeReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::LedMode;
+        static constexpr auto ADDRESS = RegAddr::LedMode;
 
         hal::PinMask mask = hal::PinMask::from_zero();
     }DEF_R16(led_mode_reg);
 
 
     struct ChipIdReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::ChipId;
+        static constexpr auto ADDRESS = RegAddr::ChipId;
 
         uint8_t id;
     }DEF_R8(chip_id_reg)
@@ -156,7 +156,7 @@ public:
     
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> reset(){
-        return write_reg(RegAddress::SwRst, (uint8_t)0x00);
+        return write_reg(RegAddr::SwRst, (uint8_t)0x00);
     }
 
     [[nodiscard]] IResult<> set_by_mask(const hal::PinMask mask) {
@@ -201,24 +201,24 @@ private:
     hal::I2cDrv i2c_drv_;
     hal::PinMask buf_mask_ = hal::PinMask::from_zero();
 
-    static constexpr RegAddress get_dim_addr(const Nth nth){
+    static constexpr RegAddr get_dim_addr(const Nth nth){
         switch(nth.count()){
-            case 0:  return RegAddress::DimP00;
-            case 1:  return RegAddress::DimP01;
-            case 2:  return RegAddress::DimP02;
-            case 3:  return RegAddress::DimP03;
-            case 4:  return RegAddress::DimP04;
-            case 5:  return RegAddress::DimP05;
-            case 6:  return RegAddress::DimP06;
-            case 7:  return RegAddress::DimP07;
-            case 8:  return RegAddress::DimP10;
-            case 9:  return RegAddress::DimP11;
-            case 10: return RegAddress::DimP12;
-            case 11: return RegAddress::DimP13;
-            case 12: return RegAddress::DimP14;
-            case 13: return RegAddress::DimP15;
-            case 14: return RegAddress::DimP16;
-            case 15: return RegAddress::DimP17;
+            case 0:  return RegAddr::DimP00;
+            case 1:  return RegAddr::DimP01;
+            case 2:  return RegAddr::DimP02;
+            case 3:  return RegAddr::DimP03;
+            case 4:  return RegAddr::DimP04;
+            case 5:  return RegAddr::DimP05;
+            case 6:  return RegAddr::DimP06;
+            case 7:  return RegAddr::DimP07;
+            case 8:  return RegAddr::DimP10;
+            case 9:  return RegAddr::DimP11;
+            case 10: return RegAddr::DimP12;
+            case 11: return RegAddr::DimP13;
+            case 12: return RegAddr::DimP14;
+            case 13: return RegAddr::DimP15;
+            case 14: return RegAddr::DimP16;
+            case 15: return RegAddr::DimP17;
             default: __builtin_unreachable();
         }
     }
@@ -241,10 +241,10 @@ private:
         return read_reg(T::ADDRESS, reg.as_ref());
     }
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data);
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t data);
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, T & data){
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, T & data){
         if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -252,7 +252,7 @@ private:
 
     [[nodiscard]] IResult<> write_by_mask(const hal::PinMask mask) {
         buf_mask_ = mask;
-        return write_reg(RegAddress::Out, buf_mask_.as_u16());
+        return write_reg(RegAddr::Out, buf_mask_.as_u16());
     }
 
     [[nodiscard]] IResult<hal::PinMask> read_mask() {

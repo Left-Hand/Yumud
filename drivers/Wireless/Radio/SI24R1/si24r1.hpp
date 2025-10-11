@@ -44,12 +44,12 @@ public:
         NOP               = 0b1111'1111   // NOP
     };
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
     
 
     struct TopConfigReg:public Reg8<>{
-        static constexpr RegAddress address = 0x00;
+        static constexpr RegAddr address = 0x00;
         uint8_t prim_rx:1;
         uint8_t power_up:1;
         uint8_t crc_2bytes:1;
@@ -61,7 +61,7 @@ public:
     };
 
     struct AutoAcknowledgeReg:public Reg8<>{
-        static constexpr RegAddress address = 0x01;
+        static constexpr RegAddr address = 0x01;
         uint8_t p0:1;
         uint8_t p1:1;
         uint8_t p2:1;
@@ -72,7 +72,7 @@ public:
     };
     
     struct EnableRxAddressReg:public Reg8<>{
-        static constexpr RegAddress address = 0x02;
+        static constexpr RegAddr address = 0x02;
         uint8_t p0:1;
         uint8_t p1:1;
         uint8_t p2:1;
@@ -83,13 +83,13 @@ public:
     };
 
     struct AddressWidthReg:public Reg8<>{
-        static constexpr RegAddress address = 0x03;
+        static constexpr RegAddr address = 0x03;
         uint8_t pipex_address_width:2;
         uint8_t __resv__:6;
     };
 
     struct AutoRetransmissionReg:public Reg8<>{
-        static constexpr RegAddress address = 0x04;
+        static constexpr RegAddr address = 0x04;
         // 0000: disabled
         // 0001: up to 1 re-transmit on fail of AA
         // ...
@@ -105,14 +105,14 @@ public:
     };
 
     struct RFChannelReg:public Reg8<>{
-        static constexpr RegAddress address = 0x05;
+        static constexpr RegAddr address = 0x05;
 
         uint8_t rf_channel:7;
         uint8_t __resv__:1;
     };
 
     struct RFConfigReg:public Reg8<>{
-        static constexpr RegAddress address = 0x06;
+        static constexpr RegAddr address = 0x06;
         uint8_t rf_power:3;
         uint8_t rf_datarate_highbit:1;
         uint8_t pll_lock:1;
@@ -122,7 +122,7 @@ public:
     };
 
     struct StatusReg:public Reg8<>{
-        static constexpr RegAddress address = 0x07;
+        static constexpr RegAddr address = 0x07;
         uint8_t tx_full:1;
         uint8_t rx_pipe_number:2;
         uint8_t max_rt:1;
@@ -132,34 +132,34 @@ public:
     };
 
     struct TransmissionObservationReg:public Reg8<>{
-        static constexpr RegAddress address = 0x08;
+        static constexpr RegAddr address = 0x08;
         uint8_t arc_cnt:4;
         uint8_t plos_cnt:4;
     };
 
     struct RssiReg:public Reg8<>{
-        static constexpr RegAddress address = 0x09;
+        static constexpr RegAddr address = 0x09;
         uint8_t rssi_less_than_60dbm:1;
         uint8_t __resv__:7;
     };
 
     struct RxAddrReg:public Reg8<>{
-        static constexpr RegAddress head_address = 0x0A;
+        static constexpr RegAddr head_address = 0x0A;
         uint8_t data;
     };
 
     struct TxAddrReg:public Reg8<>{
-        static constexpr RegAddress address = 0x10;
+        static constexpr RegAddr address = 0x10;
         uint64_t data;
     };
     
     struct RxPowerReg:public Reg8<>{
-        static constexpr RegAddress head_address = 0x11;
+        static constexpr RegAddr head_address = 0x11;
         uint8_t data;
     };
 
     struct FifoStatusReg:public Reg8<>{
-        static constexpr RegAddress address = 0x17;
+        static constexpr RegAddr address = 0x17;
         uint8_t rx_empty:1;
         uint8_t rx_full:1;
         uint8_t __resv1__:2;
@@ -170,7 +170,7 @@ public:
     };
 
     struct DynamicPayloadLengthReg:public Reg8<>{
-        static constexpr RegAddress address = 0x1c;
+        static constexpr RegAddr address = 0x1c;
         uint8_t dpl_p0:1;
         uint8_t dpl_p1:1;
         uint8_t dpl_p2:1;
@@ -181,7 +181,7 @@ public:
     };
 
     struct FeatureReg:public Reg8<> {
-        static constexpr RegAddress address = 0x1d;
+        static constexpr RegAddr address = 0x1d;
         uint8_t en_dyn_ack : 1;          // Set 1 enables the W_TX_PAYLOAD_NOACK command
         uint8_t en_ack_pay : 1;          // Set 1 enables payload on ACK
         uint8_t en_dpl : 1;              // Set 1 enables dynamic payload length
@@ -206,14 +206,14 @@ public:
     FeatureReg feature_reg;
 
 
-    IResult<> write_reg(RegAddress addr, const auto & value){
+    IResult<> write_reg(RegAddr addr, const auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
         spi_drv_.transceive_single(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT);
         return spi_drv_.write_burst(&(value), sizeof(value));
     }
 
-    IResult<> read_reg(RegAddress addr, auto & value){
+    IResult<> read_reg(RegAddr addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
         const auto res = spi_drv_.transceive_single(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT)

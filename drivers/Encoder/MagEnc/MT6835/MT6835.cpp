@@ -40,7 +40,7 @@ struct Frame{
 static_assert(sizeof(Frame) == 2);
 
 
-IResult<> MT6835::write_reg(const RegAddress addr, const uint8_t data){
+IResult<> MT6835::write_reg(const RegAddr addr, const uint8_t data){
 
     Frame format = {
         .addr = addr,
@@ -57,7 +57,7 @@ IResult<> MT6835::write_reg(const RegAddress addr, const uint8_t data){
 }
 
 
-IResult<> MT6835::read_reg(const RegAddress addr, uint8_t & data){
+IResult<> MT6835::read_reg(const RegAddr addr, uint8_t & data){
 
     Frame format = {
         .addr = addr,

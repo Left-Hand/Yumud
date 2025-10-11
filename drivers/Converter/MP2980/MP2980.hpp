@@ -16,7 +16,7 @@ namespace ymd::drivers{
 struct MP2980_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b01100000 >> 1);
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
     enum class Error_Kind:uint8_t{
 
@@ -83,7 +83,7 @@ struct MP2980_Prelude{
 struct MP2980_Regs:public MP2980_Prelude{
 
     struct RefReg:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x00;
+        static constexpr RegAddr REG_ADDR = 0x00;
 
         uint16_t data;
 
@@ -103,7 +103,7 @@ struct MP2980_Regs:public MP2980_Prelude{
     };
 
     struct Ctrl1Reg:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x02;
+        static constexpr RegAddr REG_ADDR = 0x02;
 
         uint8_t en_pwr:1;
         uint8_t go_bit:1;
@@ -115,7 +115,7 @@ struct MP2980_Regs:public MP2980_Prelude{
     };
 
     struct Ctrl2Reg:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x03;
+        static constexpr RegAddr REG_ADDR = 0x03;
 
         uint8_t ovp_mode:1;
         uint8_t ocp_mode:1;
@@ -125,7 +125,7 @@ struct MP2980_Regs:public MP2980_Prelude{
     };
 
     struct IlimReg:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x04;
+        static constexpr RegAddr REG_ADDR = 0x04;
 
         uint8_t ilim:3;
         uint8_t :5;
@@ -133,12 +133,12 @@ struct MP2980_Regs:public MP2980_Prelude{
 
 
     struct StatusReg:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x05;
+        static constexpr RegAddr REG_ADDR = 0x05;
         Interrupts interrupts;
     };
 
     struct MaskReg:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x06;
+        static constexpr RegAddr REG_ADDR = 0x06;
         Interrupts interrupts_mask;
     };
 
@@ -182,7 +182,7 @@ private:
     uint32_t fb_down_res_ohms = 10 * 1000;
 
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress address, const uint8_t reg){
+    [[nodiscard]] IResult<> write_reg(const RegAddr address, const uint8_t reg){
         if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -196,7 +196,7 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress address, uint8_t & reg){
+    [[nodiscard]] IResult<> read_reg(const RegAddr address, uint8_t & reg){
         if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

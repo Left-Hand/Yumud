@@ -56,7 +56,7 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
 
     // Address Pins and Slave Addresses
@@ -150,7 +150,7 @@ public:
 
 struct INA3221_Regs:public INA3221_Prelude {
     struct R16_Config:public Reg16<>{
-        static constexpr RegAddress address = 0x00;
+        static constexpr RegAddr address = 0x00;
 
         uint16_t shunt_measure_en :1;
         uint16_t bus_measure_en :1;
@@ -190,15 +190,15 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     struct R16_ShuntVolt1:public R16_ShuntVolt{
-        static constexpr RegAddress address = 0x01;};
+        static constexpr RegAddr address = 0x01;};
     struct R16_ShuntVolt2:public R16_ShuntVolt{
-        static constexpr RegAddress address = 0x03;};
+        static constexpr RegAddr address = 0x03;};
     struct R16_ShuntVolt3:public R16_ShuntVolt{
-        static constexpr RegAddress address = 0x05;};
+        static constexpr RegAddr address = 0x05;};
     struct R16_ShuntVoltSum:public R16_ShuntVolt{
-        static constexpr RegAddress address = 0x0D;};
+        static constexpr RegAddr address = 0x0D;};
     struct R16_ShuntVoltSumLimit:public R16_ShuntVolt{
-        static constexpr RegAddress address = 0x0E;};
+        static constexpr RegAddr address = 0x0E;};
 
     struct R16_BusVolt:public Reg16i<>{
 
@@ -218,11 +218,11 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     struct R16_BusVolt1:public R16_BusVolt{
-        static constexpr RegAddress address = 0x02;};
+        static constexpr RegAddr address = 0x02;};
     struct R16_BusVolt2:public R16_BusVolt{
-        static constexpr RegAddress address = 0x04;};
+        static constexpr RegAddr address = 0x04;};
     struct R16_BusVolt3:public R16_BusVolt{
-        static constexpr RegAddress address = 0x06;};
+        static constexpr RegAddr address = 0x06;};
 
 
 
@@ -234,11 +234,11 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     struct R16_InstantOVC1:public R16_InstantOVC{
-        static constexpr RegAddress address = 0x07;};
+        static constexpr RegAddr address = 0x07;};
     struct R16_InstantOVC2:public R16_InstantOVC{
-        static constexpr RegAddress address = 0x09;};
+        static constexpr RegAddr address = 0x09;};
     struct R16_InstantOVC3:public R16_InstantOVC{
-        static constexpr RegAddress address = 0x0b;};
+        static constexpr RegAddr address = 0x0b;};
 
     struct R16_ConstantOVC:public Reg16i<>{
         static constexpr int16_t to_i16(const real_t volt){
@@ -248,11 +248,11 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     struct R16_ConstantOVC1:public R16_ConstantOVC{
-        static constexpr RegAddress address = 0x08;};
+        static constexpr RegAddr address = 0x08;};
     struct R16_ConstantOVC2:public R16_ConstantOVC{
-        static constexpr RegAddress address = 0x0A;};
+        static constexpr RegAddr address = 0x0A;};
     struct R16_ConstantOVC3:public R16_ConstantOVC{
-        static constexpr RegAddress address = 0x0C;};
+        static constexpr RegAddr address = 0x0C;};
 
     struct R16_Mask:public Reg16<>{
         uint16_t conv_ready:1;
@@ -272,25 +272,25 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     struct R16_PowerHo:public Reg16i<>{
-        static constexpr RegAddress address = 0x10;
+        static constexpr RegAddr address = 0x10;
         int16_t :16;
     };
 
     struct R16_PowerLo:public Reg16i<>{
-        static constexpr RegAddress address = 0x11;
+        static constexpr RegAddr address = 0x11;
         int16_t :16;
     };
 
     struct R16_ManuId:public Reg16<>{
         static constexpr uint16_t key = 0x5449;
-        static constexpr RegAddress address = 0xfe;
+        static constexpr RegAddr address = 0xfe;
         uint16_t:16;
     };
 
     
     struct R16_ChipId:public Reg16<>{
         static constexpr uint16_t key = 0x3220;
-        static constexpr RegAddress address = 0xff;
+        static constexpr RegAddr address = 0xff;
         uint16_t:16;
     };
 
@@ -326,7 +326,7 @@ public:
         i2c_drv_(i2c_drv){;}
     
     [[nodiscard]] IResult<> read_reg(
-        const RegAddress addr, uint16_t & data
+        const RegAddr addr, uint16_t & data
     ){
         if(const auto res = i2c_drv_.read_reg((addr), data, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());
@@ -334,7 +334,7 @@ public:
     }
 
     [[nodiscard]] IResult<> write_reg(
-        const RegAddress addr, const uint16_t data
+        const RegAddr addr, const uint16_t data
     ){
         if(const auto res = (i2c_drv_.write_reg((addr), data, ENDIAN));
             res.is_err()) return Err(res.unwrap_err());
@@ -342,7 +342,7 @@ public:
     }
 
     [[nodiscard]] IResult<> read_reg(
-        const RegAddress addr, int16_t & data
+        const RegAddr addr, int16_t & data
     ){
         if(const auto res = (i2c_drv_.read_reg((addr), data, ENDIAN));
             res.is_err()) return Err(res.unwrap_err());
@@ -350,7 +350,7 @@ public:
     }
 
     [[nodiscard]] IResult<> write_reg(
-        const RegAddress addr, const int16_t data
+        const RegAddr addr, const int16_t data
     ){
         if(const auto res = (i2c_drv_.write_reg((addr), data, ENDIAN));
             res.is_err()) return Err(res.unwrap_err());
@@ -358,7 +358,7 @@ public:
     }
 
     [[nodiscard]] IResult<> read_burst(
-        const RegAddress addr, std::span<uint16_t> pbuf){
+        const RegAddr addr, std::span<uint16_t> pbuf){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -423,11 +423,11 @@ private:
         return phy_.read_reg(reg.address, reg.as_ref());
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, auto & data){
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, auto & data){
         return phy_.read_reg(addr, data);
     }
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const auto data){
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const auto data){
         return phy_.write_reg(addr, data);
     }
 

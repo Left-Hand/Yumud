@@ -15,8 +15,8 @@ namespace ymd::drivers{
 
 struct VL6180X_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0101001);
-    // using RegAddress = uint8_t;
-    enum class RegAddress:uint16_t{
+    // using RegAddr = uint8_t;
+    enum class RegAddr:uint16_t{
         IDENTIFICATION__MODEL_ID              = 0x000,
         IDENTIFICATION__MODEL_REV_MAJOR       = 0x001,
         IDENTIFICATION__MODEL_REV_MINOR       = 0x002,

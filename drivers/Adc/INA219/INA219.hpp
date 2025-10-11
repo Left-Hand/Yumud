@@ -12,7 +12,7 @@
 namespace ymd::drivers{
 
 struct INA219_Prelude{
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u7(0x80 >> 1);
@@ -48,7 +48,7 @@ struct INA219_Prelude{
 
 struct INA219_Regs:public INA219_Prelude{
     struct R16_Config:public Reg16<>{
-        static constexpr RegAddress address = 0x00;
+        static constexpr RegAddr address = 0x00;
 
         uint16_t mode:3;
         uint16_t sdac:4;
@@ -60,26 +60,26 @@ struct INA219_Regs:public INA219_Prelude{
     }DEF_R16(config_reg)
 
     struct R16_ShuntVolt:public Reg16<>{
-        static constexpr RegAddress address = 0x01;
+        static constexpr RegAddr address = 0x01;
         uint16_t :16;
     }DEF_R16(shunt_volt_reg)
 
     struct R16_BusVolt:public Reg16<>{
-        static constexpr RegAddress address = 0x02;
+        static constexpr RegAddr address = 0x02;
         uint16_t :16;
     }DEF_R16(bus_volt_reg)
 
     struct R16_Power:public Reg16i<>{
-        static constexpr RegAddress address = 0x03;
+        static constexpr RegAddr address = 0x03;
         int16_t :16;
     }DEF_R16(power_reg)
     struct R16_Current:public Reg16i<>{
-        static constexpr RegAddress address = 0x04;
+        static constexpr RegAddr address = 0x04;
         int16_t :16;
     }DEF_R16(current_reg)
     
     struct R16_Calibration:public Reg16i<>{
-        static constexpr RegAddress address = 0x05;
+        static constexpr RegAddr address = 0x05;
         int16_t :16;
     }DEF_R16(calibration_reg)
 };
@@ -113,12 +113,12 @@ private:
         return Ok();
     }
     
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data);
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t data);
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & data);
     
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, int16_t & data);
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, int16_t & data);
 
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, std::span<uint16_t> pbuf);
+    [[nodiscard]] IResult<> read_burst(const RegAddr addr, std::span<uint16_t> pbuf);
 };
 }

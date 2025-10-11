@@ -71,7 +71,7 @@ struct ICM42605_Prelude{
         _500HZ,
     };
 
-    enum class RegAddress:uint8_t{
+    enum class RegAddr:uint8_t{
         ID = 0x47,
         DEVICE_CONFIG             = 0x11,
         DRIVE_CONFIG              = 0x13,

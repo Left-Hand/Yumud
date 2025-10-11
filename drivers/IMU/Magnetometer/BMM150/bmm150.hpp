@@ -17,7 +17,7 @@ public:
 
 protected:
     BoschSensor_Phy phy_;
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
 

@@ -154,7 +154,7 @@ IResult<> INA3221::reset(){
 
 IResult<int> INA3221::get_shunt_volt_uv(const ChannelNth nth){
 
-    // RegAddress addr;
+    // RegAddr addr;
     const R16_ShuntVolt & reg = [&]() -> const R16_ShuntVolt &{
         switch(nth){
             case ChannelNth::CH1:return shuntvolt1_reg;
@@ -172,7 +172,7 @@ IResult<int> INA3221::get_shunt_volt_uv(const ChannelNth nth){
 
 
 IResult<int> INA3221::get_bus_volt_mv(const ChannelNth nth){
-    // RegAddress addr;
+    // RegAddr addr;
     const R16_BusVolt & reg = [&]() -> const R16_BusVolt &{
         switch(nth){
             default: __builtin_unreachable();
@@ -203,7 +203,7 @@ IResult<real_t> INA3221::get_bus_volt(const ChannelNth nth){
 
 
 IResult<> INA3221::set_instant_ovc_threshold(const ChannelNth nth, const real_t volt){
-    const RegAddress addr = [&]{
+    const RegAddr addr = [&]{
         switch(nth){
             case ChannelNth::CH1: return instant_ovc1_reg.address; 
             case ChannelNth::CH2: return instant_ovc1_reg.address; 
@@ -217,7 +217,7 @@ IResult<> INA3221::set_instant_ovc_threshold(const ChannelNth nth, const real_t 
 
 
 IResult<> INA3221::set_constant_ovc_threshold(const ChannelNth nth, const real_t volt){
-    const RegAddress addr = [&]{
+    const RegAddr addr = [&]{
         switch(nth){
             case ChannelNth::CH1: return constant_ovc1_reg.address; 
             case ChannelNth::CH2: return constant_ovc1_reg.address; 

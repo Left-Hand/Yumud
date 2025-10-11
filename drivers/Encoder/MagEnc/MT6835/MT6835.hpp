@@ -13,7 +13,7 @@ struct MT6835_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
     enum class UVWPoles:uint8_t{
         _1 = 0,
@@ -25,22 +25,22 @@ struct MT6835_Prelude{
 
 class MT6835_Regs:public MT6835_Prelude{
     struct UserIdReg:public Reg8<>{
-        static constexpr RegAddress address = 0x001;
+        static constexpr RegAddr address = 0x001;
         uint8_t id:8;
     };
 
     struct AngleHReg:public Reg8<>{
-        static constexpr RegAddress address = 0x003;
+        static constexpr RegAddr address = 0x003;
         uint8_t angle:8;
     };
 
     struct AngleMReg:public Reg8<>{
-        static constexpr RegAddress address = 0x004;
+        static constexpr RegAddr address = 0x004;
         uint8_t angle:8;
     };
 
     struct AngleLReg:public Reg8<>{
-        static constexpr RegAddress address = 0x005;
+        static constexpr RegAddr address = 0x005;
         uint8_t over_speed:1;
         uint8_t mag_weak:1;
         uint8_t under_voltage:1;
@@ -48,29 +48,29 @@ class MT6835_Regs:public MT6835_Prelude{
     };
 
     struct CrcReg:public Reg8<>{
-        static constexpr RegAddress address = 0x006;
+        static constexpr RegAddr address = 0x006;
         uint8_t crc:8;
     };
 
     struct AbzResHReg:public Reg8<>{
-        static constexpr RegAddress address = 0x007;
+        static constexpr RegAddr address = 0x007;
         uint8_t resolution:8;
     };
 
     struct AbzResLReg:public Reg8<>{
-        static constexpr RegAddress address = 0x008;
+        static constexpr RegAddr address = 0x008;
         uint8_t ab_swap:1;
         uint8_t abz_off:1;
         uint8_t resolution:6;
     };
 
     struct ZeroPosHReg:public Reg8<>{
-        static constexpr RegAddress address = 0x009;
+        static constexpr RegAddr address = 0x009;
         uint8_t zero_pos:8;
     };
 
     struct ZeroPosLReg:public Reg8<>{
-        static constexpr RegAddress address = 0x00A;
+        static constexpr RegAddr address = 0x00A;
         uint8_t z_pul_wid:3;
         uint8_t z_falling_on_0edge:1;
         uint8_t zero_pos:4;
@@ -78,7 +78,7 @@ class MT6835_Regs:public MT6835_Prelude{
 
 
     struct UvwReg:public Reg8<>{
-        static constexpr RegAddress address = 0x00B;
+        static constexpr RegAddr address = 0x00B;
         uint8_t uvw_res:4;
         uint8_t uvw_off:1;
         uint8_t uvw_mux:1;
@@ -87,7 +87,7 @@ class MT6835_Regs:public MT6835_Prelude{
 
 
     struct PwmReg:public Reg8<>{
-        static constexpr RegAddress address = 0x00C;
+        static constexpr RegAddr address = 0x00C;
         uint8_t pwm_sel:3;
         uint8_t pwm_pol:1;
         uint8_t pwm_fq:1;
@@ -95,13 +95,13 @@ class MT6835_Regs:public MT6835_Prelude{
     };
 
     struct RoatationReg:public Reg8<>{
-        static constexpr RegAddress address = 0x00D;
+        static constexpr RegAddr address = 0x00D;
         uint8_t hyst:3;
         uint8_t rot_dir:1;
     };
 
     struct CaliReg:public Reg8<>{
-        static constexpr RegAddress address = 0x00E;
+        static constexpr RegAddr address = 0x00E;
 
         uint8_t :4;
         uint8_t autocal_freq:3;
@@ -109,14 +109,14 @@ class MT6835_Regs:public MT6835_Prelude{
     };
 
     struct BandWidthReg:public Reg8<>{
-        static constexpr RegAddress address = 0x011;
+        static constexpr RegAddr address = 0x011;
         uint8_t bw:3;
         uint8_t :5;
     };
 
     struct NlcReg:public Reg8<>{
-        static constexpr RegAddress address = 0x013;
-        static constexpr RegAddress address_end = 0x0D2;
+        static constexpr RegAddr address = 0x013;
+        static constexpr RegAddr address_end = 0x0D2;
 
         uint8_t :8;
     };
@@ -149,8 +149,8 @@ private:
 
     uint16_t get_position_data();
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint8_t data);
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint8_t & data);
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t data);
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & data);
 };
 
 };

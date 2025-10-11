@@ -18,53 +18,53 @@ struct TM7705_Prelude{
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
 
     
 
     struct R8_Comm:public Reg8<>{
-        static constexpr RegAddress address = 0x00;
+        static constexpr RegAddr address = 0x00;
         uint8_t ch0:1;
         uint8_t ch1:1;
         uint8_t stby:1;
         uint8_t read_else_write:1;
-        RegAddress rs:3;
+        RegAddr rs:3;
         uint8_t drdy:1;
     };
 
     static_assert(sizeof(R8_Comm) == 1);
 
     struct R8_Setting:public Reg8<>{
-        static constexpr RegAddress address = 0x01;
+        static constexpr RegAddr address = 0x01;
         // uint8_t 
     };
 
     struct R8_Clock:public Reg8<>{
-        static constexpr RegAddress address = 0x02;
+        static constexpr RegAddr address = 0x02;
         // uint8_t 
     };
 
     struct R16_Data:public Reg16<>{
-        static constexpr RegAddress address = 0x03;
+        static constexpr RegAddr address = 0x03;
         // uint16_t 
     };
 
     struct R8_Test:public Reg8<>{
-        static constexpr RegAddress address = 0x04;
+        static constexpr RegAddr address = 0x04;
         // uint8_t 
     };
 
     struct R8_Nop:public Reg8<>{
-        static constexpr RegAddress address = 0x05;
+        static constexpr RegAddr address = 0x05;
     };
 
     struct R24_Offset:public Reg24<>{
-        static constexpr RegAddress address = 0x06;
+        static constexpr RegAddr address = 0x06;
     };
 
     struct R24_Gain:public Reg24<>{
-        static constexpr RegAddress address = 0x07;
+        static constexpr RegAddr address = 0x07;
     };
 
     template<typename T = void>

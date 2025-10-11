@@ -27,36 +27,36 @@ struct KTH7823_Prelude{
         mT23, mT38, mT53, mT67, mT81, mT95, mT109, mT123
     };
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
 };
 
 struct KTH7823_Regs:public KTH7823_Prelude{
 
     struct R8_Zero_low:public Reg8<>{
-        static constexpr RegAddress address = 0x00;
+        static constexpr RegAddr address = 0x00;
         uint8_t data;
     }DEF_R8(zero_low_reg)
 
     struct R8_Zero_high:public Reg8<>{
-        static constexpr RegAddress address = 0x01;
+        static constexpr RegAddr address = 0x01;
         uint8_t data;
     }DEF_R8(zero_high_reg)
 
     struct R8_GainTrim:public Reg8<>{
-        static constexpr RegAddress address = 0x02;
+        static constexpr RegAddr address = 0x02;
         uint8_t gain_trim;
     }DEF_R8(gain_trim_reg)
 
     struct R8_XyTraim:public Reg8<>{
-        static constexpr RegAddress address = 0x03;
+        static constexpr RegAddr address = 0x03;
         uint8_t x_trim:1;
         uint8_t y_trim:1;
         uint8_t __resv__:6;
     }DEF_R8(xy_trim_reg)
 
     struct R8_Z_Config:public Reg8<>{
-        static constexpr RegAddress address = 0x04;
+        static constexpr RegAddr address = 0x04;
         uint8_t __resv__:2;
         uint8_t zd:2;
         uint8_t zl:2;
@@ -64,30 +64,30 @@ struct KTH7823_Regs:public KTH7823_Prelude{
     }DEF_R8(z_config_reg)
 
     struct R8_PPT_High:public Reg8<>{
-        static constexpr RegAddress address = 0x05;
+        static constexpr RegAddr address = 0x05;
         uint8_t ppt_high;
     }DEF_R8(ppt_high_reg)
 
     struct R8_MagAlert:public Reg8<>{
-        static constexpr RegAddress address = 0x06;
+        static constexpr RegAddr address = 0x06;
         uint8_t __resv__:2;
         MagThreshold mag_low:3;
         MagThreshold mag_high:3;
     }DEF_R8(mag_alert_reg)
 
     struct R8_Npp:public Reg8<>{
-        static constexpr RegAddress address = 0x07;
+        static constexpr RegAddr address = 0x07;
         uint8_t __resv__:5;
         uint8_t npp:3;
     }DEF_R8(npp_reg)
 
     struct R8_AbzLimit:public Reg8<>{
-        static constexpr RegAddress address = 0x08;
+        static constexpr RegAddr address = 0x08;
         uint8_t abz_limit;
     }DEF_R8(abz_limit_reg)
 
     struct R8_Rd:public Reg8<>{
-        static constexpr RegAddress address = 0x09;
+        static constexpr RegAddr address = 0x09;
         uint8_t __resv__:7;
         uint8_t rd:1;
     }DEF_R8(rd_reg)
@@ -163,10 +163,10 @@ private:
     real_t lap_position_ = 0;
 
     [[nodiscard]]
-    IResult<> write_reg(const RegAddress addr, uint8_t data);
+    IResult<> write_reg(const RegAddr addr, uint8_t data);
 
     [[nodiscard]]
-    IResult<> read_reg(const RegAddress addr, uint8_t & reg);
+    IResult<> read_reg(const RegAddr addr, uint8_t & reg);
 
     [[nodiscard]]
     IResult<> direct_read(uint16_t & data);

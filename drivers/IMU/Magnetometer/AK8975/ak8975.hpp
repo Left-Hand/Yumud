@@ -19,7 +19,7 @@ public:
     };
 
 protected:
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
 
 

@@ -122,19 +122,19 @@ struct ADS112C04_Prelude{
         _16BIT = 0b10, // 10 : CRC 16-bit
         __RESV__ = 0b11 // 11 : CRC 24-bit
     };
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 };
 
 struct ADS112C04_Regs:public ADS112C04_Prelude{
     struct R8_Config0:public Reg8<>{
-        static constexpr RegAddress address = 0;
+        static constexpr RegAddr address = 0;
         uint8_t pga_bypass:1;
         Gain gain:3;
         Mux mux:4;
     }DEF_R8(config0_reg)
 
     struct R8_Config1:public Reg8<>{
-        static constexpr RegAddress address = 1;
+        static constexpr RegAddr address = 1;
         uint8_t temp_sensor_mode:1;
         Vref vref:2;
         uint8_t cont_mode:1;
@@ -143,7 +143,7 @@ struct ADS112C04_Regs:public ADS112C04_Prelude{
     }DEF_R8(config1_reg)
 
     struct R8_Config2:public Reg8<>{
-        static constexpr RegAddress address = 2;
+        static constexpr RegAddr address = 2;
         IDAC idac:3;
         uint8_t current_sense_en:1;
         CrcType crc_type:2;
@@ -152,7 +152,7 @@ struct ADS112C04_Regs:public ADS112C04_Prelude{
     }DEF_R8(config2_reg)
 
     struct R8_Config3:public Reg8<>{
-        static constexpr RegAddress address = 3;
+        static constexpr RegAddr address = 3;
         uint8_t __resv__:2;
         IDAC1_MUX idac1_mux:3;
         IDAC2_MUX idac2_mux:3;
@@ -201,14 +201,14 @@ private:
         return Ok();
     }
 
-    IResult<> read_reg(const RegAddress addr, uint8_t & data){
+    IResult<> read_reg(const RegAddr addr, uint8_t & data){
         if(const auto res = i2c_drv_.read_reg(uint8_t(
                 std::bit_cast<uint8_t>(Command::READ_REG) + addr), data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> write_reg(const RegAddress addr, const uint8_t data){
+    IResult<> write_reg(const RegAddr addr, const uint8_t data){
         if(const auto res = i2c_drv_.write_reg(uint8_t(
                 std::bit_cast<uint8_t>(Command::WRITE_REG) + addr), data);
             res.is_err()) return Err(res.unwrap_err());

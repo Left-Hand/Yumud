@@ -34,7 +34,7 @@ struct HMC5883L_Prelude{
 };
 
 struct HMC5883L_Regs:public HMC5883L_Prelude{
-    enum class RegAddress:uint8_t{
+    enum class RegAddr:uint8_t{
         ConfigA = 0x00,
         ConfigB = 0x01,
         Mode = 0x02,
@@ -49,7 +49,7 @@ struct HMC5883L_Regs:public HMC5883L_Prelude{
 
 
     struct R8_ConfigA:public Reg8<>{
-        static constexpr RegAddress address = RegAddress::ConfigA;
+        static constexpr RegAddr address = RegAddr::ConfigA;
         uint8_t measureMode:3;
         uint8_t dataRate:2;
         uint8_t sampleNumber:2;
@@ -57,37 +57,37 @@ struct HMC5883L_Regs:public HMC5883L_Prelude{
     }DEF_R8(config_a_reg)
 
     struct R8_ConfigB:public Reg8<>{
-        static constexpr RegAddress address = RegAddress::ConfigB;
+        static constexpr RegAddr address = RegAddr::ConfigB;
         uint8_t __resv__:5;
         Gain gain:3;
     }DEF_R8(config_b_reg)
 
     struct R8_Mode:public Reg8<>{
-        static constexpr RegAddress address = RegAddress::Mode;
+        static constexpr RegAddr address = RegAddr::Mode;
         Mode mode:2;
         uint8_t __resv__:5;
         uint8_t hs:1;
     }DEF_R8(mode_reg)
 
     struct R8_Status:public Reg8<>{
-        static constexpr RegAddress address = RegAddress::Status;
+        static constexpr RegAddr address = RegAddr::Status;
         uint8_t ready:1;
         uint8_t lock:1;
         uint8_t __resv__:6;
     }DEF_R8(status_reg)
 
     struct R8_IdA:public Reg8<>{
-        static constexpr RegAddress address = RegAddress::IDA;
+        static constexpr RegAddr address = RegAddr::IDA;
         uint8_t data;
     }DEF_R8(id_a_reg)
 
     struct R8_IdB:public Reg8<>{
-        static constexpr RegAddress address = RegAddress::IDB;
+        static constexpr RegAddr address = RegAddr::IDB;
         uint8_t data;
     }DEF_R8(id_b_reg)
 
     struct R8_IdC:public Reg8<>{
-        static constexpr RegAddress address = RegAddress::IDC;
+        static constexpr RegAddr address = RegAddr::IDC;
         uint8_t data;
     }DEF_R8(id_c_reg)
 
@@ -146,7 +146,7 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, int16_t * pbuf, size_t len){
+    [[nodiscard]] IResult<> read_burst(const RegAddr addr, int16_t * pbuf, size_t len){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(pbuf, len), MSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

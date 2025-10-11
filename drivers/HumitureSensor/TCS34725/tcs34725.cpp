@@ -23,7 +23,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 IResult<> TCS34725::read_burst(
-    const TCS34725::RegAddress addr, 
+    const TCS34725::RegAddr addr, 
     const std::span<uint16_t> pbuf
 ){
     uint8_t address = conv_reg_address_repeated(addr);
@@ -43,7 +43,7 @@ std::tuple<real_t, real_t, real_t, real_t> TCS34725::get_crgb(){
 }
 
 IResult<> TCS34725::update(){
-    return read_burst(RegAddress::ClearData, std::span(crgb.data(), 4));
+    return read_burst(RegAddr::ClearData, std::span(crgb.data(), 4));
 }
 
 

@@ -35,28 +35,28 @@ struct MMC5603_Prelude{
 
 
 struct MMC5603_Regs:public MMC5603_Prelude { 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
     struct AxisReg:public Reg16<>{
-        static constexpr RegAddress address_x = 0x00;
-        static constexpr RegAddress address_y = 0x02;
-        static constexpr RegAddress address_z = 0x04;
+        static constexpr RegAddr address_x = 0x00;
+        static constexpr RegAddr address_y = 0x02;
+        static constexpr RegAddr address_z = 0x04;
 
         uint8_t data_h;
         uint8_t data_l;
     };
 
     struct ExtAxisReg:public Reg8<>{
-        static constexpr RegAddress address_x = 0x06;
-        static constexpr RegAddress address_y = 0x07;
-        static constexpr RegAddress address_z = 0x08;
+        static constexpr RegAddr address_x = 0x06;
+        static constexpr RegAddr address_y = 0x07;
+        static constexpr RegAddr address_z = 0x08;
 
         uint8_t :4;
         uint8_t data:4;
     };
 
     struct TempReg:public Reg8<>{
-        static constexpr RegAddress address = 0x09;
+        static constexpr RegAddr address = 0x09;
         uint8_t :8;
         operator int() const {
             return ((uint8_t(*this) * int(0.8 * 65536) >> 16) - 75);
@@ -64,7 +64,7 @@ struct MMC5603_Regs:public MMC5603_Prelude {
     };
 
     struct Status1Reg:public Reg8<>{
-        static constexpr RegAddress address = 0x18;
+        static constexpr RegAddr address = 0x18;
 
         uint8_t:4;
 
@@ -77,12 +77,12 @@ struct MMC5603_Regs:public MMC5603_Prelude {
     struct OdrReg:public Reg8<>{
         using Reg8::operator=;
 
-        static constexpr RegAddress address = 0x1a;
+        static constexpr RegAddr address = 0x1a;
         DataRate data_rate;
     };
 
     struct Ctrl0Reg:public Reg8<>{
-        static constexpr RegAddress address = 0x1B;
+        static constexpr RegAddr address = 0x1B;
 
         uint8_t do_mag_measure:1;
         uint8_t do_temp_measure:1;
@@ -96,7 +96,7 @@ struct MMC5603_Regs:public MMC5603_Prelude {
     };
 
     struct Ctrl1Reg:public Reg8<>{
-        static constexpr RegAddress address = 0x1C;
+        static constexpr RegAddr address = 0x1C;
 
         uint8_t bandwidth:2;
         uint8_t x_inhibit:1;
@@ -109,7 +109,7 @@ struct MMC5603_Regs:public MMC5603_Prelude {
     };
 
     struct Ctrl2Reg:public Reg8<>{
-        static constexpr RegAddress address = 0x1D;
+        static constexpr RegAddr address = 0x1D;
 
         //These bits determine how many measurements are done before a set is executed, when the 
         // part is in continuous mode and the automatic set/reset is enabled. From 000 to 111, the sensor 
@@ -126,23 +126,23 @@ struct MMC5603_Regs:public MMC5603_Prelude {
 
     struct AxisSelfTestXReg:public Reg8<>{
         using Reg8::operator=;
-        static constexpr RegAddress address = 0x1e;
+        static constexpr RegAddr address = 0x1e;
         uint8_t :8;
     };
 
     struct AxisSelfTestYReg:public Reg8<>{
         using Reg8::operator=;
-        static constexpr RegAddress address = 0x1f;
+        static constexpr RegAddr address = 0x1f;
         uint8_t :8;
     };
 
     struct AxisSelfTestZReg:public Reg8<>{
         using Reg8::operator=;
-        static constexpr RegAddress address = 0x20;
+        static constexpr RegAddr address = 0x20;
         uint8_t :8;
     };
     struct ProductIdReg:public Reg8<>{
-        static constexpr RegAddress address = 0x39;
+        static constexpr RegAddr address = 0x39;
         static constexpr uint8_t correct_id = 0b00010000;
         
         uint8_t id;
@@ -199,7 +199,7 @@ protected:
     hal::I2cDrv i2c_drv_;
 
 
-    [[nodiscard]] IResult<> read_burst(const RegAddress addr, uint8_t * data, size_t len){
+    [[nodiscard]] IResult<> read_burst(const RegAddr addr, uint8_t * data, size_t len){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

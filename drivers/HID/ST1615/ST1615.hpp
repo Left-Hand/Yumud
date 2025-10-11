@@ -20,20 +20,20 @@ struct ST1615_Prelude{
     static constexpr auto MAX_I2C_BAUDRATE = 18_KHz;
     static constexpr size_t MAX_POINTS_COUNT = 9;
     
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
-    static constexpr RegAddress STATUS = 0x01;
-    static constexpr RegAddress CONTACT_COUNT_MAX = 0x3F;
-    static constexpr RegAddress MISC_INFO = 0xF0;
+    static constexpr RegAddr STATUS = 0x01;
+    static constexpr RegAddr CONTACT_COUNT_MAX = 0x3F;
+    static constexpr RegAddr MISC_INFO = 0xF0;
 
-    static constexpr RegAddress XY_RESOLUTION_H = 0x04;
-    static constexpr RegAddress X_RESOLUTION_L = 0x05;
-    static constexpr RegAddress Y_RESOLUTION_L = 0x06;
+    static constexpr RegAddr XY_RESOLUTION_H = 0x04;
+    static constexpr RegAddr X_RESOLUTION_L = 0x05;
+    static constexpr RegAddr Y_RESOLUTION_L = 0x06;
 
-    static constexpr RegAddress SENSING_COUNTER_L = 0x07;
-    static constexpr RegAddress SENSING_COUNTER_H = 0x08;
+    static constexpr RegAddr SENSING_COUNTER_L = 0x07;
+    static constexpr RegAddr SENSING_COUNTER_H = 0x08;
 
-    static constexpr RegAddress ADVANCED_TOUCH_INFO = 0x10;
+    static constexpr RegAddr ADVANCED_TOUCH_INFO = 0x10;
 
 
     enum class Error_Kind:uint8_t{

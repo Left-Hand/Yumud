@@ -40,7 +40,7 @@ struct QMC5883L_Prelude{
 };
 
 struct QMC5883L_Regs:public QMC5883L_Prelude{
-    enum class RegAddress:uint8_t{
+    enum class RegAddr:uint8_t{
         MagX = 0x00,
         MagY = 0x02,
         MagZ = 0x04,
@@ -53,24 +53,24 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
     };
 
     struct MagXReg:public Reg16i<>{
-        static constexpr auto ADDRESS = RegAddress::MagX;
+        static constexpr auto ADDRESS = RegAddr::MagX;
         int16_t :16;
     };
 
     struct MagYReg:public Reg16i<>{
-        static constexpr auto ADDRESS = RegAddress::MagY;
+        static constexpr auto ADDRESS = RegAddr::MagY;
 
         int16_t :16;
     };
 
     struct MagZReg:public Reg16i<>{
-        static constexpr auto ADDRESS = RegAddress::MagZ;
+        static constexpr auto ADDRESS = RegAddr::MagZ;
 
         int16_t :16;
     };
 
     struct StatusReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Status;
+        static constexpr auto ADDRESS = RegAddr::Status;
 
         uint8_t ready:1;
         uint8_t ovl:1;
@@ -79,13 +79,13 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
     };
 
     struct TemperatureReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::Tempature;
+        static constexpr auto ADDRESS = RegAddr::Tempature;
 
         uint16_t data;
     };
 
     struct ConfigAReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::ConfigA;
+        static constexpr auto ADDRESS = RegAddr::ConfigA;
         uint8_t measureMode:2;
         Odr odr:2;
         FullScale fs:2;
@@ -94,7 +94,7 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
     };
 
     struct ConfigBReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::ConfigB;
+        static constexpr auto ADDRESS = RegAddr::ConfigB;
 
         uint8_t intEn:1;
         uint8_t __resv__:5;
@@ -104,13 +104,13 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
     };
 
     struct ResetPeriodReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::ResetPeriod;
+        static constexpr auto ADDRESS = RegAddr::ResetPeriod;
         using Reg8::operator=;
         uint8_t data;
     };
 
     struct ChipIDReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::ChipID;
+        static constexpr auto ADDRESS = RegAddr::ChipID;
 
         uint8_t data;
     };
@@ -202,7 +202,7 @@ private:
 
 
     [[nodiscard]] IResult<> read_burst(
-        const RegAddress addr, 
+        const RegAddr addr, 
         std::span<int16_t> pbuf
     ){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, LSB);
