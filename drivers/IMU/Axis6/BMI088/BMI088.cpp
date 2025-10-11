@@ -93,7 +93,7 @@ IResult<Vec3<q24>> BMI088_Acc::read_acc(){
         regs_.acc_z_reg.as_val() * acc_scaler_
     ));
 }
-IResult<real_t> BMI088_Acc::read_temp(){
+IResult<q24> BMI088_Acc::read_temp(){
     auto & reg = regs_.temp_reg;
     auto bytes = reg.as_bytes();
 	auto bmi088_raw_temp = int16_t((bytes[0] << 3) | (bytes[1] >> 5));
@@ -111,7 +111,7 @@ IResult<Vec3<q24>> BMI088_Gyr::read_gyr(){
 
 IResult<> BMI088_Acc::set_acc_fs(const AccFs fs){
     auto & reg = regs_.acc_range_reg;
-    acc_scaler_ = calculate_acc_scale(fs).unwrap();
+    acc_scaler_ = calculate_acc_scale(fs);
     reg.acc_range = uint8_t(fs);
     return phy_.write_regs(reg);
 }
@@ -131,7 +131,7 @@ IResult<> BMI088_Acc::set_acc_odr(const AccOdr odr){
 }
 
 IResult<> BMI088_Gyr::set_gyr_fs(const GyrFs fs){
-    gyr_scaler_ = calculate_gyr_scale(fs).unwrap();
+    gyr_scaler_ = calculate_gyr_scale(fs);
     auto & reg = regs_.gyro_range_reg;
     reg.data = uint8_t(fs);
     return phy_.write_regs(reg);

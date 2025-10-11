@@ -29,7 +29,7 @@ public:
 
     [[nodiscard]] IResult<Vec3<q24>> read_acc();
     [[nodiscard]] IResult<Vec3<q24>> read_gyr();
-    [[nodiscard]] IResult<real_t> read_temp();
+    [[nodiscard]] IResult<q16> read_temp();
 
     [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
@@ -47,8 +47,8 @@ private:
 
     using Phy = InvensenseSensor_Phy;
     Phy phy_;
-    real_t acc_scaler_ = 0;
-    real_t gyr_scaler_ = 0;
+    q16 acc_scaler_ = 0;
+    q16 gyr_scaler_ = 0;
 
     bool is_data_valid_ = false;
     Package package_ = Package::MPU6050;
@@ -80,25 +80,25 @@ private:
         return read_reg(reg.address, reg.as_ref());
     }
 
-    static constexpr real_t calculate_acc_scale(const AccFs fs){
+    static constexpr q16 calculate_acc_scale(const AccFs fs){
         constexpr double g = 9.806;
         switch(fs){
-            case AccFs::_2G: return real_t(g * 2);
-            case AccFs::_4G: return real_t(g * 4);
-            case AccFs::_8G: return real_t(g * 8);
-            case AccFs::_16G: return real_t(g * 16);
-            default: __builtin_unreachable();
+            case AccFs::_2G: return q16(g * 2);
+            case AccFs::_4G: return q16(g * 4);
+            case AccFs::_8G: return q16(g * 8);
+            case AccFs::_16G: return q16(g * 16);
         }
+        __builtin_unreachable();
     }
 
-    static constexpr real_t calculate_gyr_scale(const GyrFs fs){
+    static constexpr q16 calculate_gyr_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_250deg: return (250_deg).to_radians();
-            case GyrFs::_500deg: return (500_deg).to_radians();
-            case GyrFs::_1000deg: return (1000_deg).to_radians();
-            case GyrFs::_2000deg: return (2000_deg).to_radians();
-            default: __builtin_unreachable();
+            case GyrFs::_250deg: return DEG2RAD<q16>(250);
+            case GyrFs::_500deg: return DEG2RAD<q16>(500);
+            case GyrFs::_1000deg: return DEG2RAD<q16>(1000);
+            case GyrFs::_2000deg: return DEG2RAD<q16>(2000);
         }
+        __builtin_unreachable();
     }
 
 };

@@ -27,8 +27,8 @@ public:
         phy_(spi_drv){;}
     explicit BMI088_Acc(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit BMI088_Acc(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        phy_(hal::SpiDrv{spi, index}){;}
+    explicit BMI088_Acc(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        phy_(hal::SpiDrv{spi, rank}){;}
 
 
     [[nodiscard]] IResult<> init();
@@ -37,14 +37,14 @@ public:
     [[nodiscard]] IResult<> update();
 
     [[nodiscard]] IResult<Vec3<q24>> read_acc();
-    [[nodiscard]] IResult<real_t> read_temp();
+    [[nodiscard]] IResult<q24> read_temp();
 
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
+    [[nodiscard]] IResult<> set_acc_fs(const AccFs gyr_fs);
     [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
     [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
 private:
     BoschSensor_Phy phy_;
-    real_t acc_scaler_ = 0;
+    q20 acc_scaler_ = 0;
     BMI088_AccRegs regs_ = {};
 
 
@@ -76,21 +76,21 @@ private:
     // };
     #endif
 
-    [[nodiscard]] static constexpr Option<real_t> 
-    calculate_acc_scale(const AccFs range){
+    [[nodiscard]] static constexpr q20
+    calculate_acc_scale(const AccFs acc_fs){
         constexpr double g = 9.806;
-        switch(range){
-            default:
-                return None;
+        switch(acc_fs){
             case AccFs::_3G:
-                return Some(real_t(g * 3));
+                return q20(g * 3);
             case AccFs::_6G:
-                return Some(real_t(g * 6));
+                return q20(g * 6);
             case AccFs::_12G:
-                return Some(real_t(g * 12));
+                return q20(g * 12);
             case AccFs::_24G:
-                return Some(real_t(g * 24));
+                return q20(g * 24);
         }
+
+        __builtin_unreachable();
     }
 };
 
@@ -116,8 +116,8 @@ public:
         phy_(spi_drv){;}
     explicit BMI088_Gyr(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        phy_(hal::SpiDrv{spi, index}){;}
+    explicit BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        phy_(hal::SpiDrv{spi, rank}){;}
 
 
     [[nodiscard]] IResult<> init();
@@ -127,32 +127,32 @@ public:
     [[nodiscard]] IResult<Vec3<q24>> read_gyr();
 
 
-    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs range);
+    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs gyr_fs);
     [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
 private:
     BoschSensor_Phy phy_;
-    real_t gyr_scaler_ = 0;
+    q20 gyr_scaler_ = 0;
 
     BMI088_GyrRegs regs_ = {};
 
     [[nodiscard]] IResult<> verify_chip_id();
 
-    [[nodiscard]] static constexpr Option<real_t> 
-    calculate_gyr_scale(const GyrFs range){
-        switch(range){
-            default:
-                return None;
+    [[nodiscard]] static constexpr q20
+    calculate_gyr_scale(const GyrFs gyr_fs){
+        switch(gyr_fs){
             case GyrFs::_125deg:
-                return Some(DEG2RAD<real_t>(150));
+                return DEG2RAD<q20>(150);
             case GyrFs::_250deg:
-                return Some(DEG2RAD<real_t>(250));
+                return DEG2RAD<q20>(250);
             case GyrFs::_500deg:
-                return Some(DEG2RAD<real_t>(500));
+                return DEG2RAD<q20>(500);
             case GyrFs::_1000deg:
-                return Some(DEG2RAD<real_t>(1000));
+                return DEG2RAD<q20>(1000);
             case GyrFs::_2000deg:
-                return Some(DEG2RAD<real_t>(2000));
+                return DEG2RAD<q20>(2000);
         }
+
+        __builtin_unreachable();
     }
 };
     

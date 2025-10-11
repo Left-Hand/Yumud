@@ -69,16 +69,16 @@ private:
 
     [[nodiscard]] static constexpr q24 calc_gyr_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_2000deg  :      return (2 * 2000_deg   ).to_radians()         ;
-            case GyrFs::_1000deg  :      return (2 * 1000_deg   ).to_radians()         ;
-            case GyrFs::_500deg   :      return (2 * 500_deg).to_radians()         ;
-            case GyrFs::_250deg   :      return (2 * 250_deg).to_radians()         ;
-            case GyrFs::_125deg   :      return (2 * 125_deg).to_radians()         ;
-            case GyrFs::_62_5deg  :      return (2 * 62.5_deg   ).to_radians()         ;
-            case GyrFs::_31_25deg :      return (2 * 31.25_deg  ).to_radians()         ;
-            case GyrFs::_15_625deg:      return (2 * 15.625_deg ).to_radians()         ;
-            default: __builtin_unreachable();
+            case GyrFs::_2000deg  :      return DEG2RAD<q24>(q24(2 * 2000   ));
+            case GyrFs::_1000deg  :      return DEG2RAD<q24>(q24(2 * 1000   ));
+            case GyrFs::_500deg   :      return DEG2RAD<q24>(q24(2 * 500    ));
+            case GyrFs::_250deg   :      return DEG2RAD<q24>(q24(2 * 250    ));
+            case GyrFs::_125deg   :      return DEG2RAD<q24>(q24(2 * 125    ));
+            case GyrFs::_62_5deg  :      return DEG2RAD<q24>(q24(2 * 62.5   ));
+            case GyrFs::_31_25deg :      return DEG2RAD<q24>(q24(2 * 31.25  ));
+            case GyrFs::_15_625deg:      return DEG2RAD<q24>(q24(2 * 15.625 ));
         }
+        __builtin_unreachable();
     }
 
     [[nodiscard]] static constexpr q24 calc_acc_scale(const AccFs fs){
@@ -87,8 +87,8 @@ private:
             case AccFs::_8G     :       return GRAVITY_ACC<q24> * 16;
             case AccFs::_4G     :       return GRAVITY_ACC<q24> * 8;
             case AccFs::_2G     :       return GRAVITY_ACC<q24> * 4;
-            default: __builtin_unreachable();
         }
+        __builtin_unreachable();
     }
 
 };

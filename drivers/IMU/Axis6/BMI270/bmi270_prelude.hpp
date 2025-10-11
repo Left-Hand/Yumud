@@ -35,13 +35,13 @@ struct BMI270_Prelude{
         STEP_CNT_CLR = 0xB2
     };
 
-    enum class PmuType{
+    enum class PmuType:uint8_t{
         ACC,
         GYR,
         MAG
     };
 
-    enum class PmuMode{
+    enum class PmuMode:uint8_t{
         SUSPEND,
         NORMAL,
         LOW_POWER,
@@ -53,7 +53,7 @@ struct BMI270_Prelude{
 
 struct BMI270_Regs:public BMI270_Prelude{
     
-    #include "regs.ipp"
+    #include "bmi270_regs.ipp"
 
     ChipIdReg chipid_reg = {};
     uint8_t :8;

@@ -50,8 +50,8 @@ using IResult = Result<T, Error>;
 
 MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
     phy_(i2c_drv),
-    package_(package){
-    }
+    package_(package)
+{}
 
 IResult<> MPU6050::validate(){
 
@@ -110,22 +110,22 @@ IResult<> MPU6050::update(){
 }
 
 IResult<Vec3<q24>> MPU6050::read_acc(){
-    real_t x = uni(acc_x_reg.as_val()) * acc_scaler_;
-    real_t y = uni(acc_y_reg.as_val()) * acc_scaler_;
-    real_t z = uni(acc_z_reg.as_val()) * acc_scaler_;
+    q16 x = uni(acc_x_reg.as_val()) * acc_scaler_;
+    q16 y = uni(acc_y_reg.as_val()) * acc_scaler_;
+    q16 z = uni(acc_z_reg.as_val()) * acc_scaler_;
     return  Ok{Vec3<q24>{x, y, z}};
 }
 
 IResult<Vec3<q24>> MPU6050::read_gyr(){
-    real_t x = uni(gyr_x_reg.as_val()) * gyr_scaler_;
-    real_t y = uni(gyr_y_reg.as_val()) * gyr_scaler_;
-    real_t z = uni(gyr_z_reg.as_val()) * gyr_scaler_;
+    q16 x = uni(gyr_x_reg.as_val()) * gyr_scaler_;
+    q16 y = uni(gyr_y_reg.as_val()) * gyr_scaler_;
+    q16 z = uni(gyr_z_reg.as_val()) * gyr_scaler_;
     return Ok{Vec3<q24>{x, y, z}};
 }
 
-IResult<real_t> MPU6050::read_temp(){
-    static constexpr auto INV_340 = real_t(1.0 / 340);
-    return Ok(real_t(36.65f) + uni(temperature_reg.as_val()) * INV_340);
+IResult<q16> MPU6050::read_temp(){
+    static constexpr auto INV_340 = q16(1.0 / 340);
+    return Ok(q16(36.65f) + uni(temperature_reg.as_val()) * INV_340);
 }
 
 IResult<> MPU6050::set_acc_fs(const AccFs range){

@@ -114,10 +114,12 @@ IResult<> ICM42605::validate(){
 
 
 IResult<> ICM42605::update(){
+    TODO();
     return Ok();
 }
 
 IResult<> ICM42605::reset(){
+    TODO();
     return Ok();
 }
 

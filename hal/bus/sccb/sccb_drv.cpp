@@ -40,18 +40,25 @@ hal::HalResult SccbDrv::read_reg(const uint8_t addr, uint16_t & data){
     uint32_t data_l, data_h;
 
     // 写入地址字节
-    i2c_.write(addr);
+    if(const auto res = i2c_.write(addr);
+        res.is_err()) return res;
 
     // 写入第一个字节        
-    i2c_.borrow(slave_addr_.with_read());
-    i2c_.read(data_h, NACK);
+    if(const auto res = i2c_.borrow(slave_addr_.with_read());
+        res.is_err()) return res;
+    if(const auto res = i2c_.read(data_h, NACK);
+        res.is_err()) return res;
 
     // 写入第二个字节
-    i2c_.borrow(slave_addr_.with_write());
-    i2c_.write(0xF0);
+    if(const auto res = i2c_.borrow(slave_addr_.with_write());
+        res.is_err()) return res;
+    if(const auto res = i2c_.write(0xF0);
+        res.is_err()) return res;
 
-    i2c_.borrow(slave_addr_.with_read());
-    i2c_.read(data_l, NACK);
+    if(const auto res = i2c_.borrow(slave_addr_.with_read());
+        res.is_err()) return res;
+    if(const auto res = i2c_.read(data_l, NACK);
+        res.is_err()) return res;
     
     // i2c_.end();
 

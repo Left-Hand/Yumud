@@ -12,13 +12,15 @@ class Gpio;
 
 class I2c{
 public:
+    using Timeout = std::chrono::duration<uint16_t, std::micro>;
+
     I2c(I2c && other) = default;
 
     struct Config{
         uint32_t baudrate;
     };
 
-    void set_timeout(const std::chrono::microseconds timeout){timeout_ = timeout;}
+    void set_timeout(const Timeout timeout){timeout_ = timeout;}
     void discard_ack(const Enable en){discard_ack_ = en == EN;}
 
     virtual hal::HalResult read(uint32_t & data, const Ack ack) = 0;
@@ -48,7 +50,7 @@ public:
 
     auto create_guard(){return Guard(*this);}
 protected:
-    using Timeout = std::chrono::duration<uint16_t, std::micro>;
+
     Timeout timeout_ = Timeout(10);
     bool discard_ack_ = false;
 

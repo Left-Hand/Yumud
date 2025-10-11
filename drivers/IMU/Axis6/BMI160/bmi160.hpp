@@ -68,24 +68,24 @@ private:
             case AccFs::_4G:    return GRAVITY_ACC<q20> * 8;
             case AccFs::_8G:    return GRAVITY_ACC<q20> * 16;
             case AccFs::_16G:   return GRAVITY_ACC<q20> * 32;
-            default: __builtin_unreachable();
         }
+        __builtin_unreachable();
     }
 
     [[nodiscard]] static constexpr 
     q20 gyrfs_to_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_125deg:    return (2 * 125_deg).to_radians();
-            case GyrFs::_250deg:    return (2 * 250_deg).to_radians();
-            case GyrFs::_500deg:    return (2 * 500_deg).to_radians();
-            case GyrFs::_1000deg:   return (2 * 1000_deg).to_radians();
-            case GyrFs::_2000deg:   return (2 * 2000_deg).to_radians();
-            default: __builtin_unreachable();
+            case GyrFs::_125deg:    return DEG2RAD<q20>(2 * 125);
+            case GyrFs::_250deg:    return DEG2RAD<q20>(2 * 250);
+            case GyrFs::_500deg:    return DEG2RAD<q20>(2 * 500);
+            case GyrFs::_1000deg:   return DEG2RAD<q20>(2 * 1000);
+            case GyrFs::_2000deg:   return DEG2RAD<q20>(2 * 2000);
         }
+        __builtin_unreachable();
     }
 
     [[nodiscard]] constexpr
-    Option<GyrOdr> from_gyr_odr(const real_t odr){
+    Option<GyrOdr> from_gyr_odr(const q16 odr){
         constexpr std::array odr_map = {
             25, 50, 100, 200, 400, 800, 1600, 3200
         };
@@ -100,20 +100,20 @@ private:
     }
 
     [[nodiscard]] static constexpr
-    Option<AccOdr> from_acc_odr(const real_t odr){
+    Option<AccOdr> from_acc_odr(const q16 odr){
         constexpr std::array odr_map = {
-            real_t(25.0/32),
-            real_t(25.0/16),
-            real_t(25.0/8),
-            real_t(25.0/4),
-            real_t(25.0/2),
-            real_t(25), 
-            real_t(50), 
-            real_t(100), 
-            real_t(200), 
-            real_t(400), 
-            real_t(800),
-            real_t(1600)
+            q16(25.0/32),
+            q16(25.0/16),
+            q16(25.0/8),
+            q16(25.0/4),
+            q16(25.0/2),
+            q16(25), 
+            q16(50), 
+            q16(100), 
+            q16(200), 
+            q16(400), 
+            q16(800),
+            q16(1600)
         };
     
         auto it = std::lower_bound(odr_map.begin(), odr_map.end(), (odr));
