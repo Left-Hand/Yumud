@@ -32,7 +32,7 @@ struct dB{
         return dB(0);
     }
 
-    constexpr T to_linear() const{
+    [[nodiscard]] constexpr T to_linear() const{
         return pow(10, value_/10);
     }
 

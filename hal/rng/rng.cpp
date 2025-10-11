@@ -11,7 +11,7 @@ void Rng::init(){
     #endif
 }
 
-int Rng::update(){
+int32_t Rng::update(){
 
     #ifdef ENABLE_RNG
     while(RNG_GetFlagStatus(RNG_FLAG_DRDY)==RESET){

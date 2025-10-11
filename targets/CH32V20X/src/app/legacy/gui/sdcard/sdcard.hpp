@@ -57,7 +57,7 @@ protected:
 public:
     SDcard(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     SDcard(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    SDcard(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):spi_drv_(hal::SpiDrv(spi, index)){;}
+    SDcard(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):spi_drv_(hal::SpiDrv(spi, index)){;}
     
     void init();
 };

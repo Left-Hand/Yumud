@@ -1,5 +1,6 @@
 #include "Sequencer.hpp"
 #include "TrapezoidSolver_t.hpp"
+#include "../geometry/geometryUtils.hpp"
 
 using namespace ymd;
 using namespace ymd::geometry;

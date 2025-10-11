@@ -130,7 +130,7 @@ public:
         spi_drv_(spi_drv){;}
     MT6835(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    MT6835(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    MT6835(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] IResult<> init();

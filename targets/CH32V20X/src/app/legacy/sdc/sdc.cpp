@@ -18,9 +18,9 @@ void w25qxx_main(){
     auto & spi = spi1;
     auto & w25_cs = hal::PD<5>();
 
-    const auto spi_fd = spi.allocate_cs_gpio(w25_cs).value();
+    const auto spi_rank = spi.allocate_cs_gpio(w25_cs).value();
     spi.init(36_MHz);
-    X25QXX w25{hal::SpiDrv{spi, spi_fd}, 1_MB};
+    X25QXX w25{hal::SpiDrv{spi, spi_rank}, 1_MB};
     std::array<uint8_t, 8> arr;
     clock::delay(20ms);
     arr = {1,1,4,5,1,4};

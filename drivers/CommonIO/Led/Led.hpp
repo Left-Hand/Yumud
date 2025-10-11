@@ -4,7 +4,7 @@
 #include <type_traits>
 
 #include "core/system.hpp"
-#include "hal/timer/pwm/gpio_or_pwm.hpp"
+#include "core/math/real.hpp"
 
 namespace ymd::hal{
     class GpioIntf;
@@ -32,10 +32,11 @@ public:
 
     void set_dutycycle(const real_t duty);
 
-    explicit operator bool() const{return state ^ inversed;}
-    explicit operator real_t() const{return state ^ inversed;}
+    // explicit operator bool() const{return state ^ inversed;}
+    // explicit operator real_t() const{return state ^ inversed;}
 };
 
+#if 0
 class LedAnalog : public LedIntf{
 protected:
     hal::GpioOrPwm inst;
@@ -56,5 +57,6 @@ public:
         inst.set_dutycycle(last_duty_);
     }
 };
+#endif
 
 };

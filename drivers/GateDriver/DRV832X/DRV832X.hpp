@@ -341,7 +341,7 @@ public:
         spi_drv_(spi_drv){;}
     DRV8323R_Phy(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    DRV8323R_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    DRV8323R_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv(spi, index)){;}
 
     [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t reg);
@@ -359,7 +359,7 @@ public:
         phy_(spi_drv){;}
     DRV8323R(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    DRV8323R(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    DRV8323R(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         phy_(hal::SpiDrv(spi, index)){;}
 
 

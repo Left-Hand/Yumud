@@ -74,7 +74,7 @@ public:
         spi_drv_(spi_drv){;}
     InvensenseSensor_Phy(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    InvensenseSensor_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    InvensenseSensor_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] Result<void, Error> reset(){

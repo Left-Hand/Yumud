@@ -161,7 +161,7 @@ public:
         phy_(spi_drv){;}
     LIS3DH(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    LIS3DH(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    LIS3DH(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         phy_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] IResult<> init();

@@ -139,7 +139,7 @@ public:
     PAW3805_Phy(hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
 
-    PAW3805_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    PAW3805_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv(spi, index)){;}
 
     uint8_t read_reg(uint8_t addr);

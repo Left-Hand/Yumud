@@ -1,6 +1,7 @@
 #pragma once
 
-#include "geometry/GeometryUtils.hpp"
+#include "core/math/real.hpp"
+#include "types/regions/ray2.hpp"
 
 namespace ymd::robots{
 
@@ -20,7 +21,7 @@ struct SequenceParas{
 //压缩储存的位置和朝向 与Ray互转
 struct CurvePoint {
 protected:
-    static constexpr int XY_SHIFT_BITS = 10;
+    static constexpr size_t XY_SHIFT_BITS = 10;
     static constexpr q16 RAD_SCALE = q16(1024 / TAU);
     static constexpr q16 INV_RAD_SCALE = q16(TAU / 1024);
     

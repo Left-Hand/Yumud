@@ -16,12 +16,12 @@ public:
 
     explicit ST7789_Phy(
         Some<hal::SpiHw *> spi,
-        const hal::SpiSlaveIndex index,
+        const hal::SpiSlaveRank rank,
         Some<hal::Gpio *> dc_gpio, 
         Option<hal::Gpio &> res_gpio = None
     ):  
         spi_(spi.deref()), 
-        idx_(index), 
+        rank_(rank), 
         dc_gpio_(dc_gpio.deref()), 
         res_gpio_(res_gpio)
         {};
@@ -71,7 +71,7 @@ public:
     }
 private:
     hal::SpiHw & spi_;
-    hal::SpiSlaveIndex idx_;
+    hal::SpiSlaveRank rank_;
 
     hal::Gpio & dc_gpio_;
     Option<hal::Gpio &>res_gpio_;
@@ -81,7 +81,7 @@ private:
         const std::span<const auto> pbuf, 
         Continuous cont = DISC) {
         if (const auto res = spi_
-            .borrow(idx_.to_req()); res.is_err()) 
+            .borrow(rank_); res.is_err()) 
                 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
@@ -113,7 +113,7 @@ private:
         const size_t len, 
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
-        if (const auto res = spi_.borrow(idx_.to_req()); res.is_err()) 
+        if (const auto res = spi_.borrow(rank_); res.is_err()) 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
@@ -139,7 +139,7 @@ private:
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
-        if(const auto res = spi_.borrow(idx_.to_req()); res.is_err()) 
+        if(const auto res = spi_.borrow(rank_); res.is_err()) 
             return Err(res.unwrap_err());
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())

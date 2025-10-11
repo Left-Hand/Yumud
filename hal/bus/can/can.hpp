@@ -1,6 +1,5 @@
 #pragma once
 
-#include "hal/bus/bus_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/container/ringbuf.hpp"
 #include "core/sdk.hpp"

@@ -77,7 +77,7 @@ public:
         spi_drv_(spi_drv){;}
     AsahiKaseiSensor_Phy(hal::SpiDrv && spi_drv):
         spi_drv_(spi_drv){;}
-    AsahiKaseiSensor_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    AsahiKaseiSensor_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 };
 }

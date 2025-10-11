@@ -1,81 +1,116 @@
 #pragma once
 
-#include "core/platform.hpp"
-
-#include "bus_enums.hpp"
-#include "hal/hal_result.hpp"
 #include "core/system.hpp"
+#include <atomic>
 
 namespace ymd::hal{
 
-
-class LockRequest{
-public:
-    constexpr explicit LockRequest(const uint32_t payload, const uint32_t custom_len):
-        payload_(payload), 
-        custom_len_(custom_len){}
-
-    constexpr uint32_t custom() const {
-        return ((1 << custom_len_) - 1) & payload_; 
-    }
-
-    constexpr uint32_t id() const {
-        return (payload_ >> custom_len_);
-    }
-
-    constexpr size_t custom_len() const {
-        return custom_len_;
-    }
-
-    constexpr uint32_t as_u32() const {
-        return std::bit_cast<uint32_t>(*this);
-    }
+class PeripheralOwnershipTracker final {
 private:
-    uint32_t payload_:29;
-    uint32_t custom_len_:3;
-};
+    // 使用单个原子变量打包所有状态，避免位域的非原子性问题
+    struct State {
+        uint32_t req_id : 16;
+        uint32_t on_interrupt : 1;
+        uint32_t is_borrowed : 1;
+    };
+    
+    static_assert(sizeof(State) == sizeof(uint32_t), "State should be 32 bits");
+    
+    std::atomic<uint32_t> state_{0};
 
-
-class BusLocker final{
-private:
-    uint32_t req_id_:29 = 0;
-    uint32_t is_read:1 = false;
-    uint32_t oninterrupt_:1 = false;
-    uint32_t locked_:1 = false;
-public:
-    BusLocker(const BusLocker & other) = delete;
-    BusLocker(BusLocker && other) = delete;
-    __fast_inline BusLocker(){;}
-
-    __fast_inline ~BusLocker(){
-        unlock();
+    // 从原子值解码状态
+    __fast_inline State load_state() const noexcept {
+        return std::bit_cast<State>(state_.load(std::memory_order_acquire));
     }
 
-    void lock(const LockRequest req){
+
+public:
+    __fast_inline PeripheralOwnershipTracker() = default;
+
+    __fast_inline ~PeripheralOwnershipTracker() {
+        lend();
+    }
+
+    PeripheralOwnershipTracker(const PeripheralOwnershipTracker& other) = delete;
+    PeripheralOwnershipTracker(PeripheralOwnershipTracker&& other) = delete;
+    PeripheralOwnershipTracker& operator=(const PeripheralOwnershipTracker& other) = delete;
+    PeripheralOwnershipTracker& operator=(PeripheralOwnershipTracker&& other) = delete;
+
+    template<typename BorrowRequest>
+    void borrow(const BorrowRequest req) {
+        // 禁用中断以确保操作的原子性
         sys::exception::disable_interrupt();
-        oninterrupt_ = sys::exception::is_intrrupt_acting();
-        req_id_ = req.id();
-        locked_ = true;
+        
+        State new_state{
+            .req_id = req.as_unique_id(),
+            .on_interrupt = sys::exception::is_interrupt_acting(),
+            .is_borrowed = true
+        };
+        
+        // 原子性地更新所有状态
+        state_.store(std::bit_cast<uint32_t>(new_state), std::memory_order_release);
+        
         sys::exception::enable_interrupt();
     }
 
-    __fast_inline void unlock(){
-        locked_ = false;
+    __fast_inline void lend() noexcept {
+        // 使用原子交换操作确保线程安全
+        State current = load_state();
+        if (current.is_borrowed) {
+            current.is_borrowed = false;
+            state_.store(std::bit_cast<uint32_t>(current), std::memory_order_release);
+        }
     }
 
-    bool is_borrowed_by(const LockRequest req) const{
-        return ((req_id_ == req.id()) 
-            and (sys::exception::is_intrrupt_acting() == oninterrupt_));
+    template<typename BorrowRequest>
+    bool is_borrowed_by(const BorrowRequest req) const noexcept {
+        // 一次性读取所有状态，确保一致性
+        State current = load_state();
+        return (current.is_borrowed && 
+                current.req_id == req.as_unique_id() &&
+                current.on_interrupt == sys::exception::is_interrupt_acting());
     }
 
-    __fast_inline bool is_borrowed() const {
-        return locked_;
+    [[nodiscard]] __fast_inline bool is_borrowed() const noexcept {
+        return load_state().is_borrowed;
     }
-};
 
-template <typename TBus>
-struct driver_of_bus {
-    using driver_type = void;
+    // 可选：提供更细粒度的状态查询
+    [[nodiscard]] __fast_inline uint32_t requester_id() const noexcept {
+        return load_state().req_id;
+    }
+
+    [[nodiscard]] __fast_inline bool was_borrowed_in_interrupt() const noexcept {
+        return load_state().on_interrupt;
+    }
+
+    #if 0
+    // 原子性比较和交换操作，用于高级用例
+    template<typename BorrowRequest>
+    bool try_transfer_ownership(const BorrowRequest from, const BorrowRequest to) {
+        sys::exception::disable_interrupt();
+        
+        State expected = load_state();
+        State desired = expected;
+        
+        bool success = false;
+        if (expected.is_borrowed && 
+            expected.req_id == from.as_unique_id() &&
+            expected.on_interrupt == sys::exception::is_interrupt_acting()) {
+            
+            desired.req_id = to.as_unique_id();
+            success = state_.compare_exchange_strong(
+                reinterpret_cast<uint32_t &>(expected), 
+                std::bit_cast<uint32_t>(desired),
+                std::memory_order_acq_rel,
+                std::memory_order_acquire
+            );
+        }
+        
+        sys::exception::enable_interrupt();
+        return success;
+    }
+    #endif
 };
 
 };

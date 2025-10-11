@@ -190,9 +190,9 @@ int main(){
     // fft_main();
     // adrc_main();
     // render_main();
-    script_main();
+    // script_main();
     // svd_main();
-    // mlx90640_main();
+    mlx90640_main();
     // smc2025_main();
 
     // embd_main();

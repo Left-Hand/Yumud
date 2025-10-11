@@ -169,12 +169,7 @@ void smc2025_main(){
     DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
-    // while(true){
-    //     DEBUG_PRINTLN(clock::millis());
-    //     clock::delay(5ms);
-    // }
 
-    // bkp.init();edRunStatus();
     auto & spi = hal::spi2;
 
     hal::spi2.init({144_MHz});
@@ -185,10 +180,10 @@ void smc2025_main(){
     auto lcd_dc = hal::PD<7>();
     auto dev_rst = hal::PB<7>();
     auto spi_cs_gpio = hal::PD<4>();
-    const auto spi_fd = spi.allocate_cs_gpio(&spi_cs_gpio).unwrap();
+    const auto spi_rank = spi.allocate_cs_gpio(&spi_cs_gpio).unwrap();
 
     drivers::ST7789 tft{
-        drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
+        drivers::ST7789_Phy{&spi, spi_rank, &lcd_dc, &dev_rst}, 
         {240, 240}
     };
 
@@ -278,6 +273,7 @@ void smc2025_main(){
             rect.size.x, 
             range 
         );
+    
         // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
         // clock::delay(20ms);
         // DEBUG_PRINTLN(render_use.count(), pose);

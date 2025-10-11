@@ -96,7 +96,7 @@ struct KTH7823_Regs:public KTH7823_Prelude{
 class KTH7823_Phy final:public KTH7823_Prelude{ 
 public:
     KTH7823_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){}
-    KTH7823_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):
+    KTH7823_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
         spi_drv_(hal::SpiDrv(spi, idx)){}
 
     [[nodiscard]] IResult<uint16_t> direct_read();
@@ -127,7 +127,7 @@ class KTH7823 final:
     public KTH7823_Regs{
 public:
     using Phy = KTH7823_Phy;
-    explicit KTH7823(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):
+    explicit KTH7823(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
         phy_(Phy{spi, idx}){;}
 
     [[nodiscard]] IResult<> init();

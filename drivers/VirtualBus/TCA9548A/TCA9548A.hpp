@@ -28,7 +28,7 @@ class TCA9548A_VirtualI2c final: public hal::I2c{
 private:
     TCA9548A & host_;
     const uint8_t ch_;
-    hal::HalResult lead(const hal::LockRequest req){return host_.lead(req.id(), ch_);}
+    hal::HalResult lead(const hal::I2cSlaveAddrWithRw req){return host_.lead(req, ch_);}
     void trail(){return host_.trail(ch_);}
 public:
     TCA9548A_VirtualI2c(TCA9548A & host, const uint8_t ch);
@@ -65,7 +65,7 @@ private:
     hal::HalResult switch_vbus(const uint8_t ch);
     hal::HalResult unlock_bus(){return i2c_.unlock_bus();}
 
-    hal::HalResult lead(const uint8_t address, const uint8_t ch);
+    hal::HalResult lead(const hal::I2cSlaveAddrWithRw address, const uint8_t ch);
 
     void trail(const uint8_t ch);
 

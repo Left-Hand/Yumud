@@ -75,7 +75,7 @@ public:
         spi_drv_(spi_drv){;}
     PMW3901(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    PMW3901(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    PMW3901(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv(spi, index)){;}
 
     PMW3901(const PMW3901 & other) = delete;

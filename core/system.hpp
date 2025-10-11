@@ -32,7 +32,7 @@ namespace ymd::sys{
         void disable_interrupt();
         void enable_interrupt();
         bool is_interrupt_pending();
-        bool is_intrrupt_acting();
+        bool is_interrupt_acting();
         uint8_t get_interrupt_depth();
     }
 

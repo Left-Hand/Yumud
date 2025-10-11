@@ -12,7 +12,7 @@ void GpioPort::set_mode(const Nth nth, const GpioMode mode){
 }
 
 void GpioPort::enable_rcc(const Enable en){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_GPIOA
         case GPIOA_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, en == EN);

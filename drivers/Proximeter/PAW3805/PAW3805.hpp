@@ -46,7 +46,7 @@ namespace ymd::drivers{
 
 class PAW3805:public PAW3805_Prelude{
 public:
-    PAW3805(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):phy_(spi, index){;}
+    PAW3805(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):phy_(spi, index){;}
 
     void init(void (*userfn)(void*, uint8_t), void* userdata);
     void enable_Interrupt(bool enabled);

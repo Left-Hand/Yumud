@@ -28,7 +28,7 @@ public:
     explicit ADXL345(hal::SpiDrv && _spi_drv): 
         phy_(_spi_drv){;}
 
-    explicit ADXL345(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index): 
+    explicit ADXL345(Some<hal::Spi *> spi, const hal::SpiSlaveRank index): 
         phy_(hal::SpiDrv(spi, index)){;}
 
     // uint8_t get_device_id(){

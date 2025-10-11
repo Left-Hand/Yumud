@@ -24,9 +24,9 @@ concept valid_spi_data = (
 class SpiDrv final{
 public:
 
-    SpiDrv(Some<Spi *> spi, const SpiSlaveIndex idx):
+    SpiDrv(Some<Spi *> spi, const SpiSlaveRank rank):
         spi_(spi.deref()),
-        idx_(idx)
+        rank_(rank)
         {;}
 
     template<typename T>
@@ -57,7 +57,7 @@ public:
 public:
     [[nodiscard]]
     hal::HalResult release(){
-        if (auto res = spi_.borrow(idx_.to_req()); 
+        if (auto res = spi_.borrow(rank_); 
             res.is_err()) return res;
         __nopn(4);
         spi_.lend();
@@ -120,7 +120,7 @@ public:
 
 private:
     Spi & spi_;
-    SpiSlaveIndex idx_;
+    SpiSlaveRank rank_;
     Endian endian_ = LSB;  
     uint32_t baudrate_ = 1000000;
     uint8_t last_width_ = -1;
@@ -134,7 +134,7 @@ template<valid_spi_data T>
 hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous cont) {
     static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
-    if(const auto res = spi_.borrow(idx_.to_req()); 
+    if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
     if constexpr (sizeof(T) != 1){
         if(const auto res = this->set_data_width(sizeof(T) * 8); 
@@ -159,7 +159,7 @@ hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous con
 template <valid_spi_data T>
 hal::HalResult SpiDrv::write_repeat(const is_stdlayout auto data, const size_t len, Continuous cont) {
     static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
-    if (const auto res = spi_.borrow(idx_.to_req()); 
+    if (const auto res = spi_.borrow(rank_); 
         res.is_err()) return res; 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
     for (size_t i = 0; i < len; i++){
@@ -178,7 +178,7 @@ hal::HalResult SpiDrv::write_burst(
         Continuous cont
 ) {
     static_assert(sizeof(T) == sizeof(U));
-    if (const auto res = spi_.borrow(idx_.to_req()); 
+    if (const auto res = spi_.borrow(rank_); 
         res.is_err()) return res; 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
     for (size_t i = 0; i < pbuf.size(); i++){
@@ -197,7 +197,7 @@ hal::HalResult SpiDrv::read_burst(
         const Continuous cont
 ) {
     static_assert(sizeof(T) == sizeof(U));
-    if(const auto res = spi_.borrow(idx_.to_req()); 
+    if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
 
     if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
@@ -215,7 +215,7 @@ hal::HalResult SpiDrv::read_burst(
 template <valid_spi_data T>
 hal::HalResult SpiDrv::read_single(is_stdlayout auto & data, const Continuous cont) {
     static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
-    if(const auto res = spi_.borrow(idx_.to_req()); 
+    if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
     {
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
@@ -231,7 +231,7 @@ hal::HalResult SpiDrv::read_single(is_stdlayout auto & data, const Continuous co
 
 template <valid_spi_data T>
 hal::HalResult SpiDrv::transceive_single(T & datarx, const T datatx, Continuous cont) {
-    if(const auto res = spi_.borrow(idx_.to_req()); 
+    if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
     {
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
@@ -250,7 +250,7 @@ hal::HalResult SpiDrv::transceive_burst(
     const std::span<const T, N> pbuf_tx, 
     Continuous cont 
 ){
-    if(const auto res = spi_.borrow(idx_.to_req()); 
+    if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
     {
         if constexpr (sizeof(T) != 1) this->set_data_width(sizeof(T) * 8);
@@ -271,7 +271,7 @@ hal::HalResult SpiDrv::transceive_burst(
     const std::span<const T> pbuf_tx, 
     Continuous cont
 ){
-    if(const auto res = spi_.borrow(idx_.to_req()); 
+    if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
     {
         const auto N = pbuf_rx.size();
@@ -287,11 +287,5 @@ hal::HalResult SpiDrv::transceive_burst(
     return hal::HalResult::Ok();
 }
 
-
-
-template<>
-struct driver_of_bus<hal::SpiHw>{
-    using driver_type = hal::SpiDrv;
-};
 
 }

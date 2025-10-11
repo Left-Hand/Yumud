@@ -5,7 +5,7 @@
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-#include "core/magic/enum_traits.hpp"
+
 
 #include "types/vectors/vector3.hpp"
 #include "hal/hal_result.hpp"
@@ -47,9 +47,12 @@ enum class ImuError_Kind:uint8_t{
 
     Unreachable
 };
-DEF_DERIVE_DEBUG(ImuError_Kind)
 }
 DEF_ERROR_SUMWITH_HALERROR(ImuError, details::ImuError_Kind)
+}
+
+namespace ymd{
+OutputStream& operator << (OutputStream& os, const drivers::details::ImuError_Kind & value);
 }
 
 

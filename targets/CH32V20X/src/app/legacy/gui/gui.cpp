@@ -117,12 +117,12 @@ void gui_main(){
     #endif
 
 
-    const auto spi_fd = spi.allocate_cs_gpio(lcd_cs).unwrap();
+    const auto spi_rank = spi.allocate_cs_gpio(lcd_cs).unwrap();
     spi.init({144_MHz});
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
-    ST7789 tft({spi, spi_fd, lcd_dc, dev_rst}, {240, 135});
+    ST7789 tft({spi, spi_rank, lcd_dc, dev_rst}, {240, 135});
 
     drivers::init_lcd(tft, st7789_preset::_240X135).examine();
 

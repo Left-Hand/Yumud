@@ -13,7 +13,7 @@ public:
         phy_(spi_drv){;}
     explicit BMI160(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit BMI160(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    explicit BMI160(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         phy_(hal::SpiDrv(spi, index)){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);

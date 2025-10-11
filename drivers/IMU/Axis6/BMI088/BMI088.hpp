@@ -27,7 +27,7 @@ public:
         phy_(spi_drv){;}
     explicit BMI088_Acc(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit BMI088_Acc(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    explicit BMI088_Acc(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         phy_(hal::SpiDrv{spi, index}){;}
 
 
@@ -116,7 +116,7 @@ public:
         phy_(spi_drv){;}
     explicit BMI088_Gyr(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    explicit BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         phy_(hal::SpiDrv{spi, index}){;}
 
 

@@ -58,7 +58,7 @@ hal::HalResult I2cSw::wait_ack(){
     }
 }
 
-hal::HalResult I2cSw::lead(const LockRequest req){
+hal::HalResult I2cSw::lead(const hal::I2cSlaveAddrWithRw req){
     #ifdef I2CSW_SCL_USE_PP_THAN_OD
     scl().outpp();
     #else
@@ -79,15 +79,13 @@ hal::HalResult I2cSw::lead(const LockRequest req){
         return res;
     };
 
-    switch(req.custom_len()){
-        case 0:
-            return header_err_transform(write(req.id()));
-        case 1:
-            return header_err_transform(write(req.id() << 1 | req.custom()));
-        default: 
-            return HalResult::InvalidArgument;
-    }
-    return HalResult::InvalidArgument;
+    const uint16_t addr = req.addr_without_rw();
+    const bool is_read = req.is_read();
+
+
+    return header_err_transform(
+        write((addr << 1)| static_cast<uint16_t>(is_read))
+    );
 }
 
 void I2cSw::trail(){

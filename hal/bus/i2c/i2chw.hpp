@@ -15,17 +15,17 @@ public:
 
     I2cHw(I2C_TypeDef * inst);
 
-    hal::HalResult write(const uint32_t data) final;
-    hal::HalResult read(uint32_t & data, const Ack ack) final;
+    HalResult write(const uint32_t data) final;
+    HalResult read(uint32_t & data, const Ack ack) final;
     void init(const uint32_t baudrate);
     void reset();
     bool locked();
-    hal::HalResult unlock_bus();
+    HalResult unlock_bus();
     void enable_hw_timeout(const Enable en);
 
 private:
     void enable_rcc(const Enable enable = EN);
-    hal::HalResult lead(const LockRequest req) final;
+    HalResult lead(const I2cSlaveAddrWithRw req) final;
     void trail() final;
 
 protected:

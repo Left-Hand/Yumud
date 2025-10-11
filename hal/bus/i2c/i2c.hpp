@@ -3,8 +3,9 @@
 #include <chrono>
 
 #include "hal/bus/bus_base.hpp"
-#include "i2c_utils.hpp"
 #include "core/utils/Option.hpp"
+
+#include "i2c_utils.hpp"
 
 namespace ymd::hal{
 class Gpio;
@@ -28,26 +29,16 @@ public:
     __fast_inline hal::Gpio & scl(){return scl_gpio_;};
     __fast_inline hal::Gpio & sda(){return sda_gpio_;};
 
-    virtual HalResult lead(const LockRequest req) = 0;
+    virtual HalResult lead(const I2cSlaveAddrWithRw req) = 0;
     virtual void trail() = 0;
-    HalResult borrow(const LockRequest req){
-        if(false == locker.is_borrowed()){
-            locker.lock(req);
-            return lead(req);
-        }else if(locker.is_borrowed_by(req)){
-            locker.lock(req);
-            return lead(req);
-        }else{
-            return hal::HalResult::OccuipedByOther;
-        }
-    }
+    HalResult borrow(const I2cSlaveAddrWithRw req);
 
     void lend(){
         this->trail();
-        locker.unlock();
+        owner_.lend();
     }
 
-    bool is_occupied(){return locker.is_borrowed();}
+    bool is_occupied(){return owner_.is_borrowed();}
 
     struct Guard {
         I2c & i2c_;
@@ -67,7 +58,7 @@ private:
     hal::Gpio & scl_gpio_;
     hal::Gpio & sda_gpio_;
 
-    BusLocker locker = {};
+    PeripheralOwnershipTracker owner_ = {};
 };
 
 

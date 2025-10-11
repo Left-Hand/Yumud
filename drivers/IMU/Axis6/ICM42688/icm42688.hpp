@@ -14,7 +14,7 @@ class ICM42688:
 public:
     explicit ICM42688(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
         phy_(i2c, i2c_addr){;}
-    explicit ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):
+    explicit ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
         phy_(spi, idx){;}
     explicit ICM42688(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}

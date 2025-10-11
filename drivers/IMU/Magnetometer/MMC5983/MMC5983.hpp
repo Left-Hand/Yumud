@@ -137,7 +137,7 @@ public:
         MMC5983_Phy(hal::I2cDrv{i2c, addr}){;}
     MMC5983_Phy(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    MMC5983_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    MMC5983_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] __fast_inline
@@ -199,13 +199,13 @@ public:
         Odr data_rate = Odr::_200Hz;
     };
 
-    MMC5983(const hal::I2cDrv & i2c_drv):
+    explicit MMC5983(const hal::I2cDrv & i2c_drv):
         phy_(i2c_drv){;}
-    MMC5983(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit MMC5983(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, addr}){;}
-    MMC5983(const hal::SpiDrv & spi_drv):
+    explicit MMC5983(const hal::SpiDrv & spi_drv):
         phy_(spi_drv){;}
-    MMC5983(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    explicit MMC5983(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         phy_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);

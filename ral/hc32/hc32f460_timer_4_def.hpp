@@ -31,11 +31,7 @@ struct TMR4_CCSR{
     uint16_t IRQZEN:1;
     uint16_t IRQZF:1;
     uint16_t ECKEN:1;
-
-
 };
-
-
 
 
 struct TMR4_CVPR{

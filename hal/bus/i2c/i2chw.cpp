@@ -149,9 +149,9 @@ void I2cHw::trail(){
 }
 
 
-hal::HalResult I2cHw::lead(const LockRequest req){
-    const auto address = req.id();
-    const bool is_read = req.custom();
+hal::HalResult I2cHw::lead(const hal::I2cSlaveAddrWithRw req){
+    const auto address = req.addr_without_rw();
+    const bool is_read = req.is_read();
     // while(I2C_GetFlagStatus(inst_, I2C_FLAG_BUSY));
     I2C_GenerateSTART(inst_, ENABLE);
 

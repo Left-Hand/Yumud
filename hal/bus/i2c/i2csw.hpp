@@ -13,7 +13,7 @@ private:
     __no_inline void delay_dur();
 
     hal::HalResult wait_ack();
-    hal::HalResult lead(const hal::LockRequest req) final;
+    hal::HalResult lead(const hal::I2cSlaveAddrWithRw req) final;
     void trail();
 
 protected :
