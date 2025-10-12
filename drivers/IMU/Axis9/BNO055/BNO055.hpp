@@ -1,20 +1,9 @@
 #pragma once
 
-#include "core/io/regs.hpp"
-#include "drivers/IMU/IMU.hpp"
-
-
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
+#include "bno055_prelude.hpp"
 
 namespace ymd::drivers{
 
-struct BNO055_Prelude{
-
-};
-
-struct BNO055_Regs:public BNO055_Prelude{
-};
 
 class BNO055:
     public AccelerometerIntf,
@@ -23,6 +12,4 @@ class BNO055:
     public BNO055_Regs{
     
 };
-
-
 }

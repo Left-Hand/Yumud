@@ -72,7 +72,7 @@ private:
     }
 
     [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
-        return phy_.read_burst(addr, pbuf.data(), pbuf.size());
+        return phy_.read_burst(addr, pbuf);
     }
 
     template<typename T>

@@ -29,14 +29,14 @@ public:
         phy_(hal::I2cDrv(i2c, addr)){;}
 
 
-    void init();
-    void update();
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> update();
 
-    bool validate();
+    [[nodiscard]] IResult<bool> validate();
 
-    void reset();
+    [[nodiscard]] IResult<> reset();
 
-    IResult<Vec3<q24>> read_mag();
+    [[nodiscard]] IResult<Vec3<q24>> read_mag();
 };
 
 

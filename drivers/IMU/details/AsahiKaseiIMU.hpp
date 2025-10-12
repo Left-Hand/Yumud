@@ -43,15 +43,15 @@ public:
         return Err(ImuError::NoAvailablePhy);
     }
 
-    [[nodiscard]] Result<void, ImuError> read_burst(const uint8_t addr, int16_t * datas, const size_t len){
+    [[nodiscard]] Result<void, ImuError> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
         if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB);
+            if(const auto res = i2c_drv_->read_burst<int16_t>(uint8_t(addr), pbuf, LSB);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else if(spi_drv_){
             if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
                 res.is_err()) return Err(res.unwrap_err());
-            if(const auto res = spi_drv_->read_burst<int16_t>(std::span(datas, len));
+            if(const auto res = spi_drv_->read_burst<int16_t>(pbuf);
                 res.is_err()) return Err(res.unwrap_err()); 
             return Ok();
         }

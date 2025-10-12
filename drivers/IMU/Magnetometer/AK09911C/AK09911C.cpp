@@ -203,19 +203,22 @@ IResult<bool> AK09911C::is_data_overrun(){
 }
 
 IResult<> AK09911C::enable_hs_i2c(const Enable en){
-    st1_reg.hsm = (en == EN) ? 1 : 0;
-    return write_reg(st1_reg);
+    auto reg = RegCopy(st1_reg);
+    reg.hsm = (en == EN) ? 1 : 0;
+    return write_reg(reg);
 }
 
 IResult<> AK09911C::set_mode(const Mode mode){
-    cntl2_reg.mode = mode;
-    return write_reg(cntl2_reg);
+    auto reg = RegCopy(cntl2_reg);
+    reg.mode = mode;
+    return write_reg(reg);
 }
 
 IResult<> AK09911C::reset(){
-    cntl3_reg.srst = 1;
-    const auto res = write_reg(cntl3_reg);
-    cntl3_reg.srst = 0;
+    auto reg = RegCopy(cntl3_reg);
+    reg.srst = 1;
+    const auto res = write_reg(reg);
+    reg.srst = 0;
     return res;
 }
 

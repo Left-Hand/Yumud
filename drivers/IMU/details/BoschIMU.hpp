@@ -74,14 +74,15 @@ public:
     }
 
     [[nodiscard]] __fast_inline
-    Result<void, Error> read_burst(const uint8_t addr, int16_t * datas, const size_t len){
+    Result<void, Error> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
         if(i2c_drv_){
-            if(const auto res = (i2c_drv_->read_burst<int16_t>(uint8_t(addr), std::span(datas, len), LSB));
+            if(const auto res = (i2c_drv_->read_burst<int16_t>(uint8_t(addr), pbuf, LSB));
                 res.is_err()) return Err(res.unwrap_err());
         }else if(spi_drv_){
             if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
                 res.is_err()) return Err(res.unwrap_err());
-            if(const auto res = spi_drv_->read_burst<uint8_t>(std::span(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t)));
+            if(const auto res = spi_drv_->read_burst<uint8_t>(
+                std::span(reinterpret_cast<uint8_t *>(pbuf.data()), pbuf.size() * sizeof(int16_t)));
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }

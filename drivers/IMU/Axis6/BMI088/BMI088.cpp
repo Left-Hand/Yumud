@@ -73,7 +73,7 @@ IResult<> BMI088_Acc::update(){
     auto & reg = regs_.acc_x_reg;
     return phy_.read_burst(
         reg.address, 
-        &(reg.as_ref()), 3
+        std::span(&(reg.as_ref()), 3)
     );
 }
 
@@ -81,7 +81,7 @@ IResult<> BMI088_Gyr::update(){
     auto & reg = regs_.gyr_x_reg;
     return phy_.read_burst(
         reg.address, 
-        &(reg.as_ref()), 3
+        std::span(&(reg.as_ref()), 3)
     );
 }
 

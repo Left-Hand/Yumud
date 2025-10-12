@@ -110,7 +110,7 @@ IResult<> ICM42688::init(const Config & cfg){
 	if(const auto res = phy_.write_reg(0x69,0x00);//Null
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	
-/*****抗混叠滤波器@536Hz*****/
+	/*****抗混叠滤波器@536Hz*****/
 	
 	/*GYR抗混叠滤波器配置*/
 	/*指定Bank1*/
@@ -138,7 +138,7 @@ IResult<> ICM42688::init(const Config & cfg){
 	if(const auto res = phy_.write_reg(0x05,0x80);//ACC_AAF_BITSHIFT 8 (default 6)
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
-/*****自定义滤波器1号@111Hz*****/
+	/*****自定义滤波器1号@111Hz*****/
 
 	/*指定Bank0*/
 	if(const auto res = phy_.write_reg(0x76,0x00);
@@ -199,7 +199,7 @@ IResult<> ICM42688::reset(){
 IResult<>  ICM42688::update(){
 	int16_t buf[6];
 
-	if(const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, buf, 6);
+	if(const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, std::span(buf, 6));
 		res.is_err()) return Err(res.unwrap_err());
 	
 	acc_data_ = {buf[0], buf[1], buf[2]};
