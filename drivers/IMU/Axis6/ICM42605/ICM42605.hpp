@@ -14,7 +14,7 @@ class ICM42605 final:
     public GyroscopeIntf
 {
 public:
-    ICM42605(
+    explicit ICM42605(
         Some<hal::I2c *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):

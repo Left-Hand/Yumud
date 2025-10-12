@@ -110,16 +110,16 @@ IResult<> MPU6050::update(){
 }
 
 IResult<Vec3<q24>> MPU6050::read_acc(){
-    q16 x = uni(acc_x_reg.as_val()) * acc_scaler_;
-    q16 y = uni(acc_y_reg.as_val()) * acc_scaler_;
-    q16 z = uni(acc_z_reg.as_val()) * acc_scaler_;
+    q24 x = uni(acc_x_reg.as_val()) * acc_scaler_;
+    q24 y = uni(acc_y_reg.as_val()) * acc_scaler_;
+    q24 z = uni(acc_z_reg.as_val()) * acc_scaler_;
     return  Ok{Vec3<q24>{x, y, z}};
 }
 
 IResult<Vec3<q24>> MPU6050::read_gyr(){
-    q16 x = uni(gyr_x_reg.as_val()) * gyr_scaler_;
-    q16 y = uni(gyr_y_reg.as_val()) * gyr_scaler_;
-    q16 z = uni(gyr_z_reg.as_val()) * gyr_scaler_;
+    q24 x = uni(gyr_x_reg.as_val()) * gyr_scaler_;
+    q24 y = uni(gyr_y_reg.as_val()) * gyr_scaler_;
+    q24 z = uni(gyr_z_reg.as_val()) * gyr_scaler_;
     return Ok{Vec3<q24>{x, y, z}};
 }
 
@@ -128,11 +128,11 @@ IResult<q16> MPU6050::read_temp(){
     return Ok(q16(36.65f) + uni(temperature_reg.as_val()) * INV_340);
 }
 
-IResult<> MPU6050::set_acc_fs(const AccFs range){
-    this->acc_scaler_ = this->calculate_acc_scale(range);
+IResult<> MPU6050::set_acc_fs(const AccFs fs){
+    this->acc_scaler_ = this->calculate_acc_scaler(fs);
 
     auto reg = RegCopy(acc_conf_reg);
-    reg.afs_sel = range;
+    reg.afs_sel = fs;
     return this->write_reg(reg);
 }
 
@@ -143,10 +143,10 @@ Result<MPU6050::Package, Error> MPU6050::get_package(){
     return Ok{Package(whoami_reg.data)};
 }
 
-IResult<> MPU6050::set_gyr_fs(const GyrFs range){
-    this->gyr_scaler_ = this->calculate_gyr_scale(range);
+IResult<> MPU6050::set_gyr_fs(const GyrFs fs){
+    this->gyr_scaler_ = this->calculate_gyr_scaler(fs);
     auto reg = RegCopy(gyr_conf_reg);
-    reg.fs_sel = range;
+    reg.fs_sel = fs;
 
     return write_reg(reg);
 }

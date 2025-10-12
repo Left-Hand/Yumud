@@ -22,6 +22,7 @@
 
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
+#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
@@ -29,6 +30,7 @@
 #include "scenes.hpp"
 
 using namespace ymd;
+using namespace ymd::drivers;
 
 
 #define UART hal::uart6
@@ -41,10 +43,6 @@ using Piles = std::map<uint8_t, Pile>;
 // using Pixel = Vec2<uint8_t>;
 // using PixelSegment = std::pair<Pixel ,Pixel>;
 // using Pixels = sstl::vector<Pixel, MAX_COAST_ITEMS>;
-
-
-struct HwPort{
-};
 
 
 
@@ -114,29 +112,29 @@ class Plotter{
     };
 
 
-    IResult<> plot_vec3(const Vec3<real_t> & vec3,  const Vec2u pos){
+    IResult<> plot_vec3(const Vec3<q16> & vec3,  const Vec2u pos){
         static constexpr auto WINDOW_LENGTH = 50u;
         static constexpr auto ARROW_RADIUS = 3u;
-        static constexpr auto X_UNIT = Vec2<real_t>::RIGHT;
-        static constexpr auto Y_UNIT = Vec2<real_t>::RIGHT.rotated(60_deg);
-        static constexpr auto Z_UNIT = Vec2<real_t>::DOWN;
+        static constexpr auto X_UNIT = Vec2<q16>::RIGHT;
+        static constexpr auto Y_UNIT = Vec2<q16>::RIGHT.rotated(60_deg);
+        static constexpr auto Z_UNIT = Vec2<q16>::DOWN;
         
         static constexpr RGB565 X_COLOR = color_cast<RGB565>(ColorEnum::RED);
         static constexpr RGB565 Y_COLOR = color_cast<RGB565>(ColorEnum::GREEN);
         static constexpr RGB565 Z_COLOR = color_cast<RGB565>(ColorEnum::BLUE);
         
         const auto arm_length = vec3.length();
-        const auto x_axis = Vec3<real_t>::from_x00(arm_length);
-        const auto y_axis = Vec3<real_t>::from_0y0(arm_length);
-        const auto z_axis = Vec3<real_t>::from_00z(arm_length);
+        const auto x_axis = Vec3<q16>::from_x00(arm_length);
+        const auto y_axis = Vec3<q16>::from_0y0(arm_length);
+        const auto z_axis = Vec3<q16>::from_00z(arm_length);
 
-        const auto rot = Quat<real_t>::from_direction(vec3);
+        const auto rot = Quat<q16>::from_direction(vec3);
         const Vec2u center_point = pos + Vec2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
 
         auto plot_vec3_to_plane = [&](
-            const Vec3<real_t> & axis, const char chr, const RGB565 color)
+            const Vec3<q16> & axis, const char chr, const RGB565 color)
         -> IResult<>{
-            const Vec3<real_t> end = rot.xform(axis);
+            const Vec3<q16> end = rot.xform(axis);
             const Vec2u end_point = center_point + (X_UNIT * end.x + Y_UNIT * end.y + Z_UNIT * end.z);
             painter_.set_color(color);
             if(const auto res = painter_.draw_line(center_point, end_point);
@@ -161,6 +159,16 @@ private:
     Painter<RGB565> painter_;
 };
 
+static auto init_mpu6050(MPU6050 & mpu) -> Result<void, MPU6050::Error> {
+    mpu.set_package(MPU6050::Package::MPU6050);
+    if(const auto res = mpu.init({});
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = mpu.set_acc_fs(MPU6050::AccFs::_2G);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = mpu.enable_direct_mode(EN);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
+}
 
 void smc2025_main(){
 
@@ -199,15 +207,22 @@ void smc2025_main(){
     hal::I2cSw i2c{&i2c_scl, &i2c_sda};
     i2c.init({400_KHz});
     
+    #if 0
     // drivers::MT9V034 camera{&cam_i2c};
 
     // camera.init().examine();
     // camera.set_exposure_value(1200).examine();
     // camera.set_gain(2.4_r).examine();
+    #endif
 
     drivers::QMC5883L qmc{&i2c};
     retry(2, [&]{return qmc.init();}).examine();
-    
+
+    MPU6050 mpu{&i2c};
+
+    init_mpu6050(mpu).examine();
+
+    auto yaw_angle = Angle<q16>::ZERO; 
 
     [[maybe_unused]] auto plot_gray = [&](
         const Image<Gray> & src, 
@@ -242,9 +257,11 @@ void smc2025_main(){
     [[maybe_unused]] auto test_render = [&]{
     
         [[maybe_unused]]const auto ctime = clock::time();
-        const auto pose = Isometry2<real_t>{
-            .rotation = UnitComplex<real_t>::from_radians(ctime + real_t(1 / TAU) * sinpu(ctime)),
-            .translation = Vec2<real_t>(0, -1.5_r) + Vec2<real_t>(-1.9_r, 0).rotated(Angle<real_t>::from_radians(ctime)), 
+        const auto pose = Isometry2<q16>{
+            // .rotation = UnitComplex<q16>::from_radians(ctime + q16(1 / TAU) * sinpu(ctime)),
+            // .translation = Vec2<q16>(0, -1.5_r) + Vec2<q16>(-1.9_r, 0).rotated(Angle<q16>::from_radians(ctime)), 
+            .rotation = UnitComplex<q16>::from_angle(yaw_angle),
+            .translation = Vec2<q16>(0, -1.5_r), 
         };
             // {1.0_r, -0.5_r}, 0.0_r};
             // {-1.0_r, -1.81_r}, 1.57_r};
@@ -308,6 +325,15 @@ void smc2025_main(){
     while(true){
         // test_fill();
         test_render();
+
+        mpu.update().examine();
+        const auto gyr = mpu.read_gyr().examine();
+        yaw_angle = yaw_angle + Angle<q16>::from_radians(gyr.z) * 0.04_q16;
+        // DEBUG_PRINTLN_IDLE(gyr.z);
+        DEBUG_PRINTLN_IDLE(yaw_angle.to_degrees());
+        //     mpu.read_acc().examine(),
+            
+        // );
         // test_paint();
         // test_paint();
         // qmc.update().examine();

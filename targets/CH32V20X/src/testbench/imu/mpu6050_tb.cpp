@@ -24,7 +24,7 @@ using namespace ymd::drivers;
 #define SDA_GPIO hal::PB<1>()
 #define MAG_ACTIVATED
 
-auto init_mpu6050(MPU6050 & mpu) -> Result<void, MPU6050::Error> {
+[[maybe_unused]] static auto init_mpu6050(MPU6050 & mpu) -> Result<void, MPU6050::Error> {
     mpu.set_package(MPU6050::Package::MPU6050);
     if(const auto res = mpu.init({});
         res.is_err()) return Err(res.unwrap_err());
@@ -35,7 +35,7 @@ auto init_mpu6050(MPU6050 & mpu) -> Result<void, MPU6050::Error> {
     return Ok();
 }
 
-void ak8963_tb(hal::I2c & i2c){
+[[maybe_unused]] static void ak8963_tb(hal::I2c & i2c){
     MPU6050 mpu{&i2c};
     
     init_mpu6050(mpu).examine();
@@ -52,7 +52,7 @@ void ak8963_tb(hal::I2c & i2c){
     while(true);
 }
 
-void mpu6050_tb(hal::I2c & i2c){
+[[maybe_unused]] static void mpu6050_tb(hal::I2c & i2c){
     MPU6050 mpu{&i2c};
 
     init_mpu6050(mpu).examine();
@@ -66,7 +66,7 @@ void mpu6050_tb(hal::I2c & i2c){
     }
 }
 
-void mpu6500_tb(hal::I2c & i2c){
+[[maybe_unused]] static void mpu6500_tb(hal::I2c & i2c){
     MPU6050 mpu{&i2c};
 
     #ifdef MAG_ACTIVATED

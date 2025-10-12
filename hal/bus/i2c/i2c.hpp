@@ -28,9 +28,6 @@ public:
     virtual hal::HalResult unlock_bus() = 0;
     virtual hal::HalResult set_baudrate(const uint32_t baudrate) = 0;
 
-    __fast_inline hal::Gpio & scl(){return scl_gpio_;};
-    __fast_inline hal::Gpio & sda(){return sda_gpio_;};
-
     virtual HalResult lead(const I2cSlaveAddrWithRw req) = 0;
     virtual void trail() = 0;
     HalResult borrow(const I2cSlaveAddrWithRw req);
@@ -39,8 +36,6 @@ public:
         this->trail();
         owner_.lend();
     }
-
-    bool is_occupied(){return owner_.is_borrowed();}
 
     struct Guard {
         I2c & i2c_;
@@ -54,13 +49,9 @@ protected:
     Timeout timeout_ = Timeout(10);
     bool discard_ack_ = false;
 
-    I2c(Some<hal::Gpio *> scl_gpio, Some<hal::Gpio *> sda_gpio):
-        scl_gpio_(scl_gpio.deref()),sda_gpio_(sda_gpio.deref()){}
-private:
-    hal::Gpio & scl_gpio_;
-    hal::Gpio & sda_gpio_;
-
     PeripheralOwnershipTracker owner_ = {};
+
+    I2c() = default;
 };
 
 

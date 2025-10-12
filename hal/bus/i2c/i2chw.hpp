@@ -2,6 +2,7 @@
 
 #include "i2c.hpp"
 #include "core/sdk.hpp"
+#include "hal/gpio/gpio.hpp"
 
 namespace ymd::hal{
 
@@ -15,22 +16,24 @@ public:
 
     I2cHw(I2C_TypeDef * inst);
 
-    HalResult write(const uint32_t data) final;
-    HalResult read(uint32_t & data, const Ack ack) final;
+    HalResult write(const uint32_t data);
+    HalResult read(uint32_t & data, const Ack ack);
     void init(const uint32_t baudrate);
     void reset();
     bool locked();
     HalResult unlock_bus();
     void enable_hw_timeout(const Enable en);
 
+    hal::Gpio & scl() {return scl_;}
+    hal::Gpio & sda() {return scl_;}
 private:
-    void enable_rcc(const Enable enable = EN);
-    HalResult lead(const I2cSlaveAddrWithRw req) final;
-    void trail() final;
-
-protected:
     I2C_TypeDef * inst_;
+    hal::Gpio scl_;
+    hal::Gpio sda_;
 
+    void enable_rcc(const Enable en);
+    HalResult lead(const I2cSlaveAddrWithRw req);
+    void trail();
 };
 
 

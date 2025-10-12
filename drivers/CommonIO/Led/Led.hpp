@@ -19,21 +19,19 @@ public:
     virtual void set_dutycycle(const real_t duty) = 0;
 };
 
-class LedGpio:public LedIntf{
-protected:
-    hal::GpioIntf & inst_;
-    bool state = false;
-    bool inversed;
+class LedGpio final:public LedIntf{
 
 public:
     LedGpio(hal::GpioIntf & inst, const bool inv = false):inst_(inst), inversed(inv){;}
 
-    void toggle() override;
+    void toggle();
 
     void set_dutycycle(const real_t duty);
+private:
+    hal::GpioIntf & inst_;
+    bool state = false;
+    bool inversed;
 
-    // explicit operator bool() const{return state ^ inversed;}
-    // explicit operator real_t() const{return state ^ inversed;}
 };
 
 #if 0
@@ -47,7 +45,7 @@ public:
 
     LedAnalog(auto & _inst, const bool inv = false):inst(_inst), inversed(inv){;}
 
-    void toggle() override {
+    void toggle() {
         last_duty_ = 1 - last_duty_;
         this->set_dutycycle(last_duty_);
     }

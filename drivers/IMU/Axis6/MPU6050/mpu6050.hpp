@@ -80,7 +80,7 @@ private:
         return read_reg(reg.address, reg.as_ref());
     }
 
-    static constexpr q16 calculate_acc_scale(const AccFs fs){
+    static constexpr q16 calculate_acc_scaler(const AccFs fs){
         constexpr double g = 9.806;
         switch(fs){
             case AccFs::_2G: return q16(g * 2);
@@ -91,12 +91,12 @@ private:
         __builtin_unreachable();
     }
 
-    static constexpr q16 calculate_gyr_scale(const GyrFs fs){
+    static constexpr q16 calculate_gyr_scaler(const GyrFs fs){
         switch(fs){
-            case GyrFs::_250deg: return DEG2RAD<q16>(250);
-            case GyrFs::_500deg: return DEG2RAD<q16>(500);
-            case GyrFs::_1000deg: return DEG2RAD<q16>(1000);
-            case GyrFs::_2000deg: return DEG2RAD<q16>(2000);
+            case GyrFs::_250deg: return DEG2RAD<q16>(500);
+            case GyrFs::_500deg: return DEG2RAD<q16>(1000);
+            case GyrFs::_1000deg: return DEG2RAD<q16>(2000);
+            case GyrFs::_2000deg: return DEG2RAD<q16>(4000);
         }
         __builtin_unreachable();
     }
