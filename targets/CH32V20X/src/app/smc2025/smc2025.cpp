@@ -327,10 +327,13 @@ void smc2025_main(){
         test_render();
 
         mpu.update().examine();
+        qmc.update().examine();
         const auto gyr = mpu.read_gyr().examine();
-        yaw_angle = yaw_angle + Angle<q16>::from_radians(gyr.z) * 0.04_q16;
+        // const auto dir = qmc.read_mag().examine();
+        yaw_angle = (yaw_angle + Angle<q16>::from_radians(gyr.z) * 0.04_q16).normalized();
+        // yaw_angle = Angle<q16>::from_radians(atan2pu(dir.x, dir.y));
         // DEBUG_PRINTLN_IDLE(gyr.z);
-        DEBUG_PRINTLN_IDLE(yaw_angle.to_degrees());
+        DEBUG_PRINTLN_IDLE(yaw_angle.to_degrees(), mpu.read_acc().examine());
         //     mpu.read_acc().examine(),
             
         // );

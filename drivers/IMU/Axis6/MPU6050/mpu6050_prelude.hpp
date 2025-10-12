@@ -51,7 +51,7 @@ struct MPU6050_Prelude{
 };
 
 struct MPU6050_Regs:public MPU6050_Prelude{ 
-    struct GyrConfReg:public Reg8<>{
+    struct R8_GyrConf:public Reg8<>{
         static constexpr RegAddr address = 0x1b;
 
         const uint8_t __resv__:3 = 0;
@@ -62,7 +62,7 @@ struct MPU6050_Regs:public MPU6050_Prelude{
     }DEF_R8(gyr_conf_reg)
     
 
-    struct AccConfReg:public Reg8<>{
+    struct R8_AccConf:public Reg8<>{
         static constexpr RegAddr address = 0x1c;
 
         const uint8_t __resv__:3 = 0;
@@ -83,7 +83,7 @@ struct MPU6050_Regs:public MPU6050_Prelude{
     REG16I_QUICK_DEF(0x47, GyrZReg, gyr_z_reg);
     
 
-    struct IntPinCfgReg:public Reg8<>{
+    struct R8_IntPinCfg:public Reg8<>{
         static constexpr RegAddr address = 55;
 
         const uint8_t __resv__:1 = 0;
@@ -98,9 +98,9 @@ struct MPU6050_Regs:public MPU6050_Prelude{
 
     }DEF_R8(int_pin_cfg_reg)
 
-    struct WhoAmIReg:public Reg8<>{
+    struct R8_WhoAmI:public Reg8<>{
         static constexpr RegAddr address = 0x75;
-        uint8_t data;
+        Package package;
     } DEF_R8(whoami_reg)
 };
 }

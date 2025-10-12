@@ -293,7 +293,7 @@ IResult<> BMI160::set_acc_fs(const AccFs fs){
     reg.acc_fs = fs;
     if(const auto res = write_reg(reg);
         unlikely(res.is_err())) return res;
-    this->acc_scale_ = this->accfs_to_scale(fs);
+    acc_scale_ = accfs_to_scale(fs);
     return Ok();
 }
 
@@ -309,7 +309,7 @@ IResult<> BMI160::set_gyr_fs(const GyrFs fs){
     reg.gyr_fs = fs;
     if(const auto res = write_reg(reg);
         unlikely(res.is_err())) return res;
-    this->gyr_scale_ = this->gyrfs_to_scale(fs);
+    gyr_scale_ = gyrfs_to_scale(fs);
     return Ok();
 }
 

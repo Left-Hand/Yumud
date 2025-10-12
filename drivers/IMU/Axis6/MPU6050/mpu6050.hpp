@@ -83,10 +83,10 @@ private:
     static constexpr q16 calculate_acc_scaler(const AccFs fs){
         constexpr double g = 9.806;
         switch(fs){
-            case AccFs::_2G: return q16(g * 2);
-            case AccFs::_4G: return q16(g * 4);
-            case AccFs::_8G: return q16(g * 8);
-            case AccFs::_16G: return q16(g * 16);
+            case AccFs::_2G: return q16(g * 4);
+            case AccFs::_4G: return q16(g * 8);
+            case AccFs::_8G: return q16(g * 16);
+            case AccFs::_16G: return q16(g * 32);
         }
         __builtin_unreachable();
     }

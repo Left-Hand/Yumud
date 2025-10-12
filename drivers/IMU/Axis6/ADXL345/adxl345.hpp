@@ -32,6 +32,8 @@ public:
 
     [[nodiscard]] IResult<Vec3<q24>> read_acc();
     [[nodiscard]] IResult<> validate();
+
+    [[nodiscard]] IResult<> selftest();
 private:
     AnalogDeviceIMU_Phy phy_;
     ADXL345_Regset regs_ = {};
