@@ -197,9 +197,7 @@ OutputStream & operator<<(OutputStream & os, const CanError & error);
 
 enum class CanRtr:uint8_t{
     Data = 0,
-    // Any = 0,
     Remote = 1,
-    // Specified = 1
 };  
 
 };

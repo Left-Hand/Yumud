@@ -21,7 +21,6 @@ OutputStream & operator<<(OutputStream & os, const CanFault & fault){
             return os << "SoftwareSet";
     }
     __builtin_unreachable();
-    return os;
 }
 
 OutputStream & operator<<(OutputStream & os, const CanError & error){
@@ -34,6 +33,5 @@ OutputStream & operator<<(OutputStream & os, const CanError & error){
             return os << "SoftFifoOverflow";
     }
     __builtin_unreachable();
-    return os;
 }
 }
