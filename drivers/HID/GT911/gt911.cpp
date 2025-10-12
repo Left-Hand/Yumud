@@ -11,6 +11,8 @@ using Error = GT9XX::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
+static constexpr auto VALID_PRODUCT_ID = 
+    std::bit_cast<uint32_t>(std::to_array<char>({'9', '1', '1', '\0'}));
 
 static constexpr uint8_t GT9147_CFG_TBL[]=
 { 
@@ -39,18 +41,17 @@ static constexpr uint8_t GT9147_CFG_TBL[]=
 
 
 IResult<> GT9XX::validate(){
-    if(const auto res = write(GT9XX_COMMAND_REG, 0);
+    if(const auto res = write_reg(GT9XX_COMMAND_REG, 0);
         res.is_err()) return Err(res.unwrap_err());
 
     std::array<uint8_t, 4> buf;
-    if(const auto res = read(GT9XX_PRODUCT_ID_REG, buf);
+    if(const auto res = read_reg(GT9XX_PRODUCT_ID_REG, buf);
         res.is_err()) return Err(res.unwrap_err());
 
     const auto product_id = std::bit_cast<uint32_t>(buf);
-    static constexpr auto VALID_PRODUCT_ID = 
-        std::bit_cast<uint32_t>(std::to_array<char>({'9', '1', '1', '\0'}));
 
-    if(product_id != VALID_PRODUCT_ID) return Err(Error::UnexpectedProductId);
+    if(product_id != VALID_PRODUCT_ID) 
+        return Err(Error::UnexpectedProductId);
 
     return Ok();
 }
@@ -67,15 +68,14 @@ IResult<Option<GT9XX::TouchPoint>> GT9XX::get_touch_point(const Nth nth) {
 
     const auto num_touch_points = ({
         const auto res = get_num_touch_points();
-        if (res.is_err()) {
+        if (res.is_err()) 
             return Err(res.unwrap_err());
-        }
         res.unwrap();
     });
     
     std::array<uint8_t, TOUCHPOINT_ENTRY_LEN> buf;
 
-    if (const auto res = read(map_nth_to_addr(nth), buf);
+    if (const auto res = read_reg(map_nth_to_addr(nth), buf);
         res.is_err()) return Err(res.unwrap_err());
 
     const auto may_point = [&] -> Option<TouchPoint>{
@@ -88,12 +88,12 @@ IResult<Option<GT9XX::TouchPoint>> GT9XX::get_touch_point(const Nth nth) {
     // clear status register
     if (const auto res = clear_status();
         res.is_err()) return Err(res.unwrap_err());
-        
+
     return Ok(may_point);
 }
 
 IResult<> GT9XX::clear_status(){
-    return write(GT9XX_TOUCHPOINT_STATUS_REG, 0);
+    return write_reg(GT9XX_TOUCHPOINT_STATUS_REG, 0);
 }
 
 IResult<GT9XX::TouchPoints> GT9XX::get_touch_points() {
@@ -116,7 +116,7 @@ IResult<GT9XX::TouchPoints> GT9XX::get_touch_points() {
         std::array<uint8_t, TOUCHPOINT_ENTRY_LEN * MAX_NUM_TOUCHPOINTS> buf;
         const auto read_size = TOUCHPOINT_ENTRY_LEN * num_touch_points;
         
-        if (const auto res = read(GT9XX_TOUCHPOINT_1_REG, 
+        if (const auto res = read_reg(GT9XX_TOUCHPOINT_1_REG, 
                 std::span<uint8_t>(buf.data(), read_size));
             res.is_err()) return Err(res.unwrap_err());
 
@@ -134,14 +134,14 @@ IResult<GT9XX::TouchPoints> GT9XX::get_touch_points() {
 }
 
 IResult<size_t> GT9XX::get_num_touch_points() {
-    // read coords
+    // read_reg coords
     std::array<uint8_t, 1> buf;
-    if (const auto res = read(GT9XX_TOUCHPOINT_STATUS_REG, buf);
+    if (const auto res = read_reg(GT9XX_TOUCHPOINT_STATUS_REG, buf);
         res.is_err()) return Err(res.unwrap_err());
         
-    const auto status = buf[0];
-    const auto is_ready = (status & 0x80) > 0;
-    const auto num_touch_points = static_cast<size_t>(status & 0x0F);
+    const uint8_t status = buf[0];
+    const bool is_ready = static_cast<bool>(status & 0x80);
+    const size_t num_touch_points = static_cast<size_t>(status & 0x0F);
     
     if (is_ready) {
         return Ok(num_touch_points);
