@@ -570,10 +570,10 @@ void render_main(){
     auto dev_rst = hal::PB<7>();
     auto lcd_cs = hal::PD<4>();
 
-    const auto spi_fd = spi.allocate_cs_gpio(&lcd_cs).unwrap();
+    const auto spi_rank = spi.allocate_cs_gpio(&lcd_cs).unwrap();
 
     drivers::ST7789 tft{
-        drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
+        drivers::ST7789_Phy{&spi, spi_rank, &lcd_dc, &dev_rst}, 
         {LCD_WIDTH, LCD_HEIGHT}
     };
 

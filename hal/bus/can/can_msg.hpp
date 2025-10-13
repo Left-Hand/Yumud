@@ -130,7 +130,8 @@ struct CanMsg_Prelude{
 }
 
 
-struct alignas(16) CanMsg final:public details::CanMsg_Prelude{
+struct alignas(16) [[nodiscard]] 
+CanMsg final:public details::CanMsg_Prelude{
 public:
     constexpr CanMsg() = default;
 

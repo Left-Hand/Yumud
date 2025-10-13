@@ -16,7 +16,7 @@ namespace ymd::drivers{
 struct NCA9555_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b01000000 >> 1);
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
     enum class Error_Kind{
         IndexOutOfRange
@@ -30,22 +30,22 @@ struct NCA9555_Prelude{
 
 struct NCA9555_Regs:public NCA9555_Prelude{
     struct InputReg:public Reg16<>{
-        static constexpr RegAddress address = 0x00;
+        static constexpr RegAddr address = 0x00;
         hal::PinMask mask = hal::PinMask::from_zero();
     };
 
     struct OutputReg:public Reg16<>{
-        static constexpr RegAddress address = 0x02;
+        static constexpr RegAddr address = 0x02;
         hal::PinMask mask = hal::PinMask::from_zero();
     };
 
     struct InversionReg:public Reg16<>{
-        static constexpr RegAddress address = 0x04;
+        static constexpr RegAddr address = 0x04;
         hal::PinMask mask = hal::PinMask::from_zero();
     };
 
     struct ConfigReg:public Reg16<>{
-        static constexpr RegAddress address = 0x06;
+        static constexpr RegAddr address = 0x06;
         hal::PinMask mask = hal::PinMask::from_zero();
     };
 

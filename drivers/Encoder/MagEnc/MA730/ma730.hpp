@@ -30,7 +30,7 @@ struct MA730_Prelude{
         mT23, mT38, mT53, mT67, mT81, mT95, mT109, mT123
     };
 
-    enum class RegAddress:uint8_t{
+    enum class RegAddr:uint8_t{
         ZeroDataLow,
         ZeroDataHigh,
         Trim,
@@ -47,28 +47,28 @@ struct MA730_Prelude{
 struct MA730_Regs:public MA730_Prelude{
 
     struct R8_ZeroDataLow:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::ZeroDataLow;
+        static constexpr auto ADDRESS = RegAddr::ZeroDataLow;
         uint8_t data;
     };
 
     struct R8_ZeroDataHigh:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::ZeroDataHigh;
+        static constexpr auto ADDRESS = RegAddr::ZeroDataHigh;
         uint8_t data;
     };
 
     struct R8_Trim:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Trim;
+        static constexpr auto ADDRESS = RegAddr::Trim;
         uint8_t trim;
     };
     struct R8_TrimConfig:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::TrimConfig;
+        static constexpr auto ADDRESS = RegAddr::TrimConfig;
         uint8_t enableX:1;
         uint8_t enableY:1;
         uint8_t :6;
     };
 
     struct R8_ZParameters:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::ZParameters;
+        static constexpr auto ADDRESS = RegAddr::ZParameters;
         uint8_t :2;
         Phase zPhase :2;
         Width zWidth :2;
@@ -76,25 +76,25 @@ struct MA730_Regs:public MA730_Prelude{
     };
 
     struct R8_PulsePerTurn:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::PulsePerTurn;
+        static constexpr auto ADDRESS = RegAddr::PulsePerTurn;
         uint8_t data;
     };
 
     struct R8_Threshold:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Threshold;
+        static constexpr auto ADDRESS = RegAddr::Threshold;
         uint8_t :2;
         uint8_t thresholdHigh :3;
         uint8_t thresholdLow :3;
     };
 
     struct R8_Direction:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Direction;
+        static constexpr auto ADDRESS = RegAddr::Direction;
         uint8_t :7;
         uint8_t direction :1;
     };
 
     struct R8_Magnitude:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Magnitude;
+        static constexpr auto ADDRESS = RegAddr::Magnitude;
         uint8_t :2;
         uint8_t mgl1:1;
         uint8_t mgl2:1;
@@ -127,7 +127,7 @@ public:
         spi_drv_(spi_drv){;}
     explicit MA730(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit MA730(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    explicit MA730(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv(spi, index)){;}
 
 

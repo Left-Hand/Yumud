@@ -73,7 +73,7 @@ IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
         sub_channels[nth.count()].on.cvr != on
         #endif
     ){
-        if(const auto res = write_reg(RegAddress(uint8_t(RegAddress::LED0_ON_L) + 4 * nth.count()), on); 
+        if(const auto res = write_reg(RegAddr(uint8_t(RegAddr::LED0_ON_L) + 4 * nth.count()), on); 
             res.is_err()) return res;
         sub_channels[nth.count()].on.cvr = on;
     }
@@ -89,7 +89,7 @@ IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
 
         reg.full = false;
         reg.cvr = off;
-        const auto address = RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * nth.count());
+        const auto address = RegAddr(uint8_t(RegAddr::LED0_OFF_L) + 4 * nth.count());
         if(const auto res = write_reg(address, reg.as_val());
             res.is_err()) return res;
     }
@@ -125,7 +125,7 @@ IResult<> PCA9685::init(){
 IResult<> PCA9685::set_sub_addr(const uint8_t index, const uint8_t addr){
     sub_addr_regs[index] = addr;
     return write_reg(
-        RegAddress(uint8_t(RegAddress::SubAddr) + index), 
+        RegAddr(uint8_t(RegAddr::SubAddr) + index), 
         sub_addr_regs[index]
     );
 }

@@ -30,11 +30,20 @@ void m3508_main(){
 
     M3508Port port{hal::can1};
     
-    hal::timer3.init({CB_FREQ}, EN);
+    auto & timer = hal::timer3;
+    timer.init({CB_FREQ}, EN);
 
-    hal::timer3.attach<hal::TimerIT::Update>({0,0}, [&](){
-        port.tick();
-    }, EN);
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
+            port.tick();
+            break;
+        }
+        default: break;
+        }
+    });
 
     auto & motor = port[4];
     auto & motor2 = port[1];

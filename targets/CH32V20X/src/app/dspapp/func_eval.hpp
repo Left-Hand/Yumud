@@ -32,15 +32,25 @@ struct TransferSysEvaluator{
 
     template<typename FnIn, typename FnProc>
     void run_func(const uint32_t f_isr, FnIn && fn_in, FnProc && fn_proc){
-        hal::timer1.init({
+        auto & timer = hal::timer1;
+        timer.init({
             // .freq = fs_.expect("you have not set fs yet")
             .freq = f_isr
         }, EN);
-        hal::timer1.attach<hal::TimerIT::Update>({0,0}, [&](){
-            input_ = std::forward<FnIn>(fn_in)(time_);
-            output_ = std::forward<FnProc>(fn_proc)(input_);
-            time_ += delta_;
-        }, EN);
+
+        timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+        timer.enable_interrupt<hal::TimerIT::Update>(EN);
+        timer.set_event_callback([&](hal::TimerEvent ev){
+            switch(ev){
+            case hal::TimerEvent::Update:{
+                input_ = std::forward<FnIn>(fn_in)(time_);
+                output_ = std::forward<FnProc>(fn_proc)(input_);
+                time_ += delta_;
+                break;
+            }
+            default: break;
+            }
+        });
     }
 
     constexpr auto get_input_and_output() const {

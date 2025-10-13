@@ -1,23 +1,23 @@
 #include "Sequencer.hpp"
 #include "TrapezoidSolver_t.hpp"
+#include "../geometry/geometryUtils.hpp"
 
 using namespace ymd;
 using namespace ymd::geometry;
 using namespace ymd::robots;
 
-using TrapezoidSolver = TrapezoidSolver_t<q16>;
 
 void Sequencer::rotate(Curve & curve, const Ray2<q16> & from, const Angle<q16> end_angle){
 
-    const TrapezoidSolver solver{
-        limits_.max_agr, 
-        limits_.max_gyr, 
+    const TrapezoidSolver<q16> solver{
+        {limits_.max_agr, 
+        limits_.max_gyr}, 
         (end_angle - from.orientation).abs().to_radians() 
     };
 
     const bool inv = end_angle < from.orientation;
     const auto freq = paras_.freq;
-    const auto n = size_t(solver.period() * freq);
+    const auto n = size_t(solver.elapsed() * freq);
     
     curve.reserve(curve.size() + n);
     
@@ -35,14 +35,14 @@ void Sequencer::linear(Curve & curve, const Ray2<q16> & from, const Vec2<q16> & 
     const auto vec = (end_pos - from_pos);
     const auto norm = vec.normalized();
     
-    const TrapezoidSolver solver{
-        limits_.max_acc, 
-        limits_.max_spd, 
+    const TrapezoidSolver<q16> solver{
+        {limits_.max_acc, 
+        limits_.max_spd}, 
         vec.length()
     };
 
     const auto freq = paras_.freq;
-    const auto n = size_t(solver.period() * freq);
+    const auto n = size_t(solver.elapsed() * freq);
     
     curve.reserve(curve.size() + n);
     
@@ -64,7 +64,7 @@ void Sequencer::arc(
     if(may_center.is_none()) return;
     // const auto center = may_center.unwrap();
     
-    // TrapezoidSolver solver{
+    // TrapezoidSolver<q16> solver{
     //     limits_.max_agr, 
     //     limits_.max_gyr, 
     //     ABS(end_angle - from.orientation)    
@@ -72,7 +72,7 @@ void Sequencer::arc(
 
     // bool inv = end_angle < from.orientation;
     // const auto freq = paras_.freq;
-    // const auto n = size_t(int(solver.period() * freq));
+    // const auto n = size_t(int(solver.elapsed() * freq));
     
     // curve.reserve(curve.size() + n);
     // for(size_t i = 0; i < n; i++){

@@ -197,7 +197,7 @@ IResult<> BMI160::self_test_gyr(){
 IResult<> BMI160::update(){
     std::array<int16_t, 6> buf;
 
-    if(const auto res = phy_.read_burst(regs_.GYR_ADDRESS, buf.data(), buf.size());
+    if(const auto res = phy_.read_burst(regs_.GYR_ADDRESS, buf);
         unlikely(res.is_err())) return Err(res.unwrap_err());
 
     regs_.gyr = {buf[0], buf[1], buf[2]};
@@ -253,15 +253,14 @@ IResult<Vec3<q24>> BMI160::read_gyr(){
 IResult<> BMI160::set_pmu_mode(const PmuType pmu, const PmuMode mode){
     const auto cmd = [&] -> uint8_t {
         switch(pmu){
-        case PmuType::ACC:
-            return(std::bit_cast<uint8_t>(Command::ACC_SET_PMU) | std::bit_cast<uint8_t>(mode));
-        case PmuType::GYR:
-            return(std::bit_cast<uint8_t>(Command::GYR_SET_PMU) | std::bit_cast<uint8_t>(mode));
-        case PmuType::MAG:
-            return(std::bit_cast<uint8_t>(Command::MAG_SET_PMU) | std::bit_cast<uint8_t>(mode));
-        default:
-            __builtin_unreachable();
+            case PmuType::ACC:
+                return(std::bit_cast<uint8_t>(Command::ACC_SET_PMU) | std::bit_cast<uint8_t>(mode));
+            case PmuType::GYR:
+                return(std::bit_cast<uint8_t>(Command::GYR_SET_PMU) | std::bit_cast<uint8_t>(mode));
+            case PmuType::MAG:
+                return(std::bit_cast<uint8_t>(Command::MAG_SET_PMU) | std::bit_cast<uint8_t>(mode));
         }
+        __builtin_unreachable();
     }();
 
     return write_command(cmd);
@@ -277,8 +276,9 @@ IResult<BMI160::PmuMode> BMI160::get_pmu_mode(const PmuType type){
         case PmuType::ACC:  return  Ok(PmuMode(reg.acc_pmu_status));
         case PmuType::GYR:  return  Ok(PmuMode(reg.gyr_pmu_status));
         case PmuType::MAG:  return  Ok(PmuMode(reg.mag_pmu_status));
-        default: __builtin_unreachable();
     }
+
+    __builtin_unreachable();
 }
 
 IResult<> BMI160::set_acc_odr(const AccOdr odr){
@@ -293,7 +293,7 @@ IResult<> BMI160::set_acc_fs(const AccFs fs){
     reg.acc_fs = fs;
     if(const auto res = write_reg(reg);
         unlikely(res.is_err())) return res;
-    this->acc_scale_ = this->accfs_to_scale(fs);
+    acc_scale_ = accfs_to_scale(fs);
     return Ok();
 }
 
@@ -309,7 +309,7 @@ IResult<> BMI160::set_gyr_fs(const GyrFs fs){
     reg.gyr_fs = fs;
     if(const auto res = write_reg(reg);
         unlikely(res.is_err())) return res;
-    this->gyr_scale_ = this->gyrfs_to_scale(fs);
+    gyr_scale_ = gyrfs_to_scale(fs);
     return Ok();
 }
 

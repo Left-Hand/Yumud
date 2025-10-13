@@ -98,7 +98,7 @@ IResult<> HMC5883L::validate(){
 }
 
 IResult<> HMC5883L::update(){
-    return read_burst(RegAddress::MagX, &magXReg, 3);
+    return read_burst(RegAddr::MagX, std::span(&magXReg, 3));
 }
 
 

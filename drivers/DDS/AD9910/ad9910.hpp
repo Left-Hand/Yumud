@@ -70,7 +70,7 @@ public:
         spi_drv(_spi_drv){;}
     AD9910(hal::SpiDrv && _spi_drv):
         spi_drv(std::move(_spi_drv)){;}
-    AD9910(hal::Spi & _spi, const hal::SpiSlaveIndex index):
+    AD9910(hal::Spi & _spi, const hal::SpiSlaveRank index):
         spi_drv(hal::SpiDrv(_spi, index)){;}
 
     void init(void);

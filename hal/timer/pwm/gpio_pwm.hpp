@@ -5,12 +5,11 @@
 
 
 namespace ymd::hal{
-class GpioPwm:public PwmIntf, public Countable<uint16_t>{
-protected:
-    GpioIntf & gpio_;
-    volatile uint16_t cnt_ = 0;
-    volatile uint16_t cvr_ = 0;
-    volatile uint16_t arr_ = 1;
+class GpioPwm final:
+    public PwmIntf, 
+    public CountableIntf<uint16_t>
+{
+
 public:
 
     GpioPwm(GpioIntf & gpio):gpio_(gpio){;}
@@ -29,8 +28,8 @@ public:
     
     __fast_inline void tick(){gpio_ = BoolLevel::from(cnt_ < cvr_); cnt_ = (cnt_ + 1)% arr_;}
 
-    __inline void setThreshold(const uint16_t val){cvr_ = val - 1;}
-    __inline void setPeriod(const uint16_t val){arr_ = val - 1;}
+    __inline void set_threshold(const uint16_t val){cvr_ = val - 1;}
+    __inline void set_period(const uint16_t val){arr_ = val - 1;}
 
     void set_dutycycle(const real_t duty) override{
         if(duty == real_t(0)) {cvr_ = 0;}
@@ -38,7 +37,12 @@ public:
         else {cvr_ = int(duty * arr_);}
     }
 
-    __inline operator real_t(){return real_t(cvr_) / real_t(arr_);}
+    [[nodiscard]] real_t get_dutyscale(){return real_t(cvr_) / real_t(arr_);}
+private:
+    GpioIntf & gpio_;
+    volatile uint16_t cnt_ = 0;
+    volatile uint16_t cvr_ = 0;
+    volatile uint16_t arr_ = 1;
 };
 
 }

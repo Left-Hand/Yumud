@@ -62,7 +62,7 @@ public:
     };
 
 protected:
-    static constexpr TouchPoint decode_point(
+    [[nodiscard]] static constexpr TouchPoint decode_point(
         const std::span<const uint8_t, TOUCHPOINT_ENTRY_LEN> pbuf
     ) {
 
@@ -74,7 +74,7 @@ protected:
         return point;
     }
 
-    static constexpr TouchPoint decode_specified_point(
+    [[nodiscard]] static constexpr TouchPoint decode_specified_point(
         const std::span<const uint8_t, GET_MULTITOUCH_BUF_SIZE> pbuf, 
         const Nth nth
     ){
@@ -83,7 +83,7 @@ protected:
             pbuf.data() + start, TOUCHPOINT_ENTRY_LEN));
     }
 
-    static constexpr RegAddr map_nth_to_addr(
+    [[nodiscard]] static constexpr RegAddr map_nth_to_addr(
         const Nth nth
     ){
         return GT9XX_TOUCHPOINT_1_REG + nth.count() * TOUCHPOINT_ENTRY_LEN;
@@ -128,13 +128,13 @@ struct GT9XX_Regs:public GT9XX_Prelude{
         uint16_t y;
     };
 
-    struct VendorId{
+    struct R8_VendorId{
         static constexpr RegAddr ADDRESS = 0x8148;
 
         uint8_t id;
     };
 
-    struct Status{
+    struct R8_Status{
         static constexpr RegAddr ADDRES = 0x814e;
 
         uint8_t points_count:4;

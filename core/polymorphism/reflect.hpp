@@ -904,17 +904,17 @@ template<class T, fixed_string Name>
     constexpr std::string_view incorrect = Name;
     constexpr std::string_view infix2 = "`. Did you mean `";
     constexpr std::string_view correct = [] {
-      constexpr auto distance = [](std::string_view correct) {
-        constexpr std::string_view incorrect = Name;
-        std::array<std::size_t, incorrect.size() + 1> prev;
-        std::array<std::size_t, incorrect.size() + 1> curr{};
+      constexpr auto distance = [](std::string_view m_correct) {
+        constexpr std::string_view m_incorrect = Name;
+        std::array<std::size_t, m_incorrect.size() + 1> prev;
+        std::array<std::size_t, m_incorrect.size() + 1> curr{};
         for (decltype(prev.size()) i{}; i < prev.size(); ++i) prev[i] = i;
-        for (decltype(correct.size()) i{}; i < correct.size(); ++i) {
+        for (decltype(m_correct.size()) i{}; i < m_correct.size(); ++i) {
           curr[0] = i + 1;
-          for (decltype(incorrect.size()) j{}; j < incorrect.size(); ++j) {
+          for (decltype(m_incorrect.size()) j{}; j < m_incorrect.size(); ++j) {
             const auto del = prev[j + 1] + 1;
             const auto ins = curr[j] + 1;
-            const auto sub = prev[j] + (correct[i] != incorrect[j]);
+            const auto sub = prev[j] + (m_correct[i] != m_incorrect[j]);
             const auto min_del_ins = del < ins ? del : ins;
             curr[j + 1] = min_del_ins < sub ? min_del_ins : sub;
           }

@@ -23,7 +23,7 @@ struct DRV8301_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
     enum class PeakCurrent:uint16_t{
         _1_7A = 0,
@@ -92,7 +92,7 @@ struct DRV8301_Prelude{
 
 struct DRV8301_Regs:public DRV8301_Prelude{
     struct Status1Reg:public Reg16<>{
-        static constexpr RegAddress address = 0x00;
+        static constexpr RegAddr address = 0x00;
 
         uint16_t fetlc_oc:1;
         uint16_t fethc_oc:1;
@@ -111,7 +111,7 @@ struct DRV8301_Regs:public DRV8301_Prelude{
     };
 
     struct Status2Reg:public Reg16<>{
-        static constexpr RegAddress address = 0x01;
+        static constexpr RegAddr address = 0x01;
 
         uint16_t device_id:4;
         uint16_t :3;
@@ -120,7 +120,7 @@ struct DRV8301_Regs:public DRV8301_Prelude{
     };
 
     struct Ctrl1Reg:public Reg16<>{
-        static constexpr RegAddress address = 0x02;
+        static constexpr RegAddr address = 0x02;
 
         PeakCurrent gate_current:2;
         uint16_t gate_reset:1;
@@ -131,7 +131,7 @@ struct DRV8301_Regs:public DRV8301_Prelude{
     };
 
     struct Ctrl2Reg:public Reg16<>{
-        static constexpr RegAddress address = 0x03;
+        static constexpr RegAddr address = 0x03;
 
         OctwMode octw_mode:2;
         Gain gain:2;
@@ -155,7 +155,7 @@ public:
 public:
     DRV8301(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     DRV8301(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    DRV8301(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):spi_drv_(hal::SpiDrv(spi, idx)){;}
+    DRV8301(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):spi_drv_(hal::SpiDrv(spi, idx)){;}
 
 
     [[nodiscard]] IResult<> init();
@@ -168,8 +168,8 @@ public:
 private:
     hal::SpiDrv spi_drv_;
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t reg);
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & reg);
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t reg);
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & reg);
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

@@ -11,9 +11,9 @@ namespace ymd::drivers{
 
 // REG_TEMPLATE(Reg24, uint24_t)
 struct AD9959_Regs{
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
     struct R8_ChannelSelect:public Reg8<>{
-        static constexpr RegAddress address = 0x00;
+        static constexpr RegAddr address = 0x00;
 
         uint8_t lsb_first:1;
         uint8_t serial_io_mode:2;
@@ -25,7 +25,7 @@ struct AD9959_Regs{
     } DEF_R8(channel_select)
 
     // struct R32_Funtion1:public Reg32<>{
-    //     static constexpr RegAddress address = 0x01;
+    //     static constexpr RegAddr address = 0x01;
 
     //     uint8_t manual_software_sync:1;
     //     uint8_t manual_hardware_sync:1;
@@ -45,7 +45,7 @@ struct AD9959_Regs{
     // } DEF_R32(function1);
 
     struct R16_Funtion2:public Reg16<>{
-        static constexpr RegAddress address = 0x02;
+        static constexpr RegAddr address = 0x02;
 
         uint8_t system_clock_offset:2;
         uint8_t open:2;
@@ -62,7 +62,7 @@ struct AD9959_Regs{
     } DEF_R16(function2);
 
     struct R32_ChannelFunction:public Reg32<>{
-        static constexpr RegAddress address = 0x03;
+        static constexpr RegAddr address = 0x03;
 
         uint8_t sinewave_output_en:1;
         uint8_t clr_phase_accu:1;
@@ -83,12 +83,12 @@ struct AD9959_Regs{
     };
 
     struct R32_ChannelFreqencyTuning:public Reg32<>{
-        static constexpr RegAddress address = 0x04;
+        static constexpr RegAddr address = 0x04;
         uint32_t data;
     };
 
     struct R32_AmplitudeControl:public Reg32<>{
-        static constexpr RegAddress address = 0x06;
+        static constexpr RegAddr address = 0x06;
 
         uint32_t factor:10;
         uint32_t load_addr_at_io_update:1;
@@ -103,7 +103,7 @@ struct AD9959_Regs{
 
 
     struct R32_RisingDeltaWord:public Reg32<>{
-        static constexpr RegAddress address = 0x04;
+        static constexpr RegAddr address = 0x04;
 
         uint16_t data;
     };
@@ -111,19 +111,19 @@ struct AD9959_Regs{
 
 
     struct R16_LinearSweepRate:public Reg16<>{
-        static constexpr RegAddress address = 0x07;
+        static constexpr RegAddr address = 0x07;
 
         uint16_t data;
     };
 
     struct R32_FallingDeltaWord:public Reg32<>{
-        static constexpr RegAddress address = 0x08;
+        static constexpr RegAddr address = 0x08;
 
         uint32_t data;
     };
 
     struct R32_ChannelWord:public Reg32<>{
-        static constexpr RegAddress address = 0x09;
+        static constexpr RegAddr address = 0x09;
         uint32_t data;
     };
 

@@ -80,7 +80,7 @@ private:
 };
 #endif
 
-class StringView {
+class [[nodiscard]] StringView {
 public:
     // 构造函数 从容器构造必须为显式 避免调用者没注意到生命周期
     constexpr explicit StringView(const std::string & str): 
@@ -91,6 +91,10 @@ public:
         data_(str), size_(str ? strlen(str) : 0) {}
     constexpr StringView(const char* str, size_t size) : 
         data_(str), size_(size) {}
+
+    template<size_t N>
+    constexpr StringView(const char (&str)[N]):
+        data_(str), size_(strnlen(str, N)){}
     constexpr StringView(const StringView & other): 
         data_(other.data_), size_(other.size_){;}
     constexpr StringView(StringView && other): 

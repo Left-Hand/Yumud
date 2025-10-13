@@ -221,15 +221,37 @@ void lt8960_tb(){
 
 
     if (has_tx_authority()) {
-        hal::timer1.init({.freq = TX_FREQ}, EN);
-        hal::timer1.attach<hal::TimerIT::Update>({0,0}, tx_task, EN);
+        auto & timer = hal::timer1;
+        timer.init({.freq = TX_FREQ}, EN);
+        timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+        timer.enable_interrupt<hal::TimerIT::Update>(EN);
+        timer.set_event_callback([&](hal::TimerEvent ev){
+            switch(ev){
+            case hal::TimerEvent::Update:{
+                tx_task();
+                break;
+            }
+            default: break;
+            }
+        });
     }
 
     clock::delay(5ms);
 
     if (has_rx_authority()) {
-        hal::timer2.init({RX_FREQ}, EN);
-        hal::timer2.attach<hal::TimerIT::Update>({0,1}, rx_task, EN);
+        auto & timer = hal::timer2;
+        timer.init({RX_FREQ}, EN);
+        timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+        timer.enable_interrupt<hal::TimerIT::Update>(EN);
+        timer.set_event_callback([&](hal::TimerEvent ev){
+            switch(ev){
+            case hal::TimerEvent::Update:{
+                rx_task();
+                break;
+            }
+            default: break;
+            }
+        });
     }
 
     while(true){

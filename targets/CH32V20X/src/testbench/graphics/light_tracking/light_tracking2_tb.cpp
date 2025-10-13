@@ -443,7 +443,7 @@ void light_tracking_main(void){
     // }
 
     // spi.bind_cs_pin(lcd_cs, 0);
-    const auto spi_fd = spi.allocate_cs_gpio(&lcd_cs).unwrap();
+    const auto spi_rank = spi.allocate_cs_gpio(&lcd_cs).unwrap();
     // spi.init(144_MHz, CommStrategy::Blocking);
     spi.init({LCD_SPI_FREQ_HZ});
     // spi.init(2_MHz, CommStrategy::Blocking, CommStrategy::Nil);
@@ -456,7 +456,7 @@ void light_tracking_main(void){
     ST7789 displayer(
         ST7789_Phy{
             &spi, 
-            spi_fd, 
+            spi_rank, 
             &lcd_dc, 
             &dev_rst
         }, 
@@ -464,7 +464,6 @@ void light_tracking_main(void){
     );
 
     DEBUG_PRINTLN("--------------");
-    DEBUG_PRINTLN(spi_fd.as_u8());
     displayer.init(drivers::st7789_preset::_320X170{}).examine();
 
     displayer.fill(color_cast<RGB565>(ColorEnum::PINK)).examine();

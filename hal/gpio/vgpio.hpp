@@ -11,13 +11,12 @@ class VGpio final :public GpioIntf{
 protected:
     GpioPortIntf & port_;
     Nth nth_;
-    // static GpioPortIntf & form_gpiotypedef_to_port(uint32_t base);
 public:
     VGpio(const VGpio &) = delete;
     VGpio(VGpio &&) = delete;
+    VGpio(GpioPortIntf & port, const PinNth pin_nth):
+        port_(port), nth_(Nth(CTZ(uint16_t(pin_nth)))){;}
 
-
-    VGpio(GpioPortIntf & port, const PinNth pin_nth);
     __fast_inline void set() {port_.set_nth(nth_);}
     __fast_inline void clr() {port_.clr_nth(nth_);}
     __fast_inline void write(const BoolLevel val){port_.write_nth(nth_, val);}

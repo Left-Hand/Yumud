@@ -8,7 +8,7 @@ public:
     Rng(){};
 
     void init();
-    int update();
+    int32_t update();
 private:
     bool inited_ = false;
 };

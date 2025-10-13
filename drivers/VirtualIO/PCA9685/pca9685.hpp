@@ -142,26 +142,26 @@ private:
     };
 
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint8_t reg){
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t reg){
         const auto res = i2c_drv_.write_reg(uint8_t(addr), reg);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     };
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t reg){
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t reg){
         const auto res = i2c_drv_.write_reg(uint8_t(addr), reg, LSB);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint8_t & reg){
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & reg){
         const auto res = i2c_drv_.read_reg(uint8_t(addr), reg);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & reg){
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & reg){
         const auto res = i2c_drv_.read_reg(uint8_t(addr), reg, LSB);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();

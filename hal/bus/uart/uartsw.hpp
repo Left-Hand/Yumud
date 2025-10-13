@@ -19,8 +19,6 @@ protected:
 
     uint16_t current_char = '\0';
     uint16_t fetch_next(){return tx_fifo_.pop();}
-    hal::HalResult lead(const LockRequest req){return hal::HalResult::Ok();}
-    void trail(){;}
 public:
 
     UartSw(Gpio & tx_gpio, Gpio & rx_gpio): tx_gpio_(tx_gpio), rx_gpio_(rx_gpio){;}

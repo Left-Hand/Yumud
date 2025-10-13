@@ -25,17 +25,17 @@ using Error = ImuError;
 template<typename T = void>
 using IResult= Result<T, Error>;
 IResult<> AK8963::write_reg(const uint8_t addr, const uint8_t data){
-    auto res = phy_.write_reg(uint8_t(addr), data);
+    auto res = phy_.write_reg(std::bit_cast<uint8_t>(addr), data);
     return res;
 }
 
 IResult<> AK8963::read_reg(const uint8_t addr, uint8_t & data){
-    auto res = phy_.read_reg(uint8_t(addr), data);
+    auto res = phy_.read_reg(std::bit_cast<uint8_t>(addr), data);
     return res;
 }
 
 IResult<> AK8963::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
-    auto res = phy_.read_burst(reg_addr, pbuf.data(), pbuf.size());
+    auto res = phy_.read_burst(reg_addr, pbuf);
     return res;
 }
 
@@ -54,8 +54,8 @@ IResult<> AK8963::init(){
         if(coeff_res.is_err()) return Err(coeff_res.unwrap_err());
         const auto coeff = coeff_res.unwrap();
 
-        auto coeff2adj = [&](const uint8_t _coeff) -> real_t{
-            return ((iq_t<16>(_coeff - 128) >> 8) + 1);
+        auto coeff2adj = [&](const uint8_t _coeff) -> q16{
+            return ((q16(_coeff - 128) >> 8) + 1);
         };
 
         adj_scale_ = Vec3<q24>(

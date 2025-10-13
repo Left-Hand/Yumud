@@ -41,7 +41,7 @@ struct AS5600_Prelude{
         None = 0, LSB6, LSB7, LSB9, LSB18, LSB21, LSB24, LSB10
     };
 
-    enum class RegAddress : uint8_t {
+    enum class RegAddr : uint8_t {
         ProgramTimes = 0x00,
         StartAngle = 0x01,
         EndAngle = 0x03,
@@ -60,39 +60,39 @@ struct AS5600_Prelude{
 struct AS5600_Regs:public AS5600_Prelude{
 
     struct R8_ProgramTimes:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::ProgramTimes;
+        static constexpr auto ADDRESS = RegAddr::ProgramTimes;
         uint8_t times :2;
         uint8_t __resv__ :6;
         
     };
 
     struct R16_StartAngle:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::StartAngle;
+        static constexpr auto ADDRESS = RegAddr::StartAngle;
         uint16_t data;
     };
 
     struct R16_EndAngle:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::EndAngle;
+        static constexpr auto ADDRESS = RegAddr::EndAngle;
         uint16_t data;
     };
 
     struct R16_AmountAngle:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::AmountAngle;        
+        static constexpr auto ADDRESS = RegAddr::AmountAngle;        
         uint16_t data;
     };
 
     struct R16_RawAngle:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::RawAngle;
+        static constexpr auto ADDRESS = RegAddr::RawAngle;
         uint16_t data;
     };
 
     struct R16_Angle:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::Angle;
+        static constexpr auto ADDRESS = RegAddr::Angle;
         uint16_t data;
     };
 
     struct R16_Config:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::Config;
+        static constexpr auto ADDRESS = RegAddr::Config;
         uint8_t powerMode :2;
         uint8_t hysteresis:2;
         uint8_t outputStage:2;
@@ -104,7 +104,7 @@ struct AS5600_Regs:public AS5600_Prelude{
     };
 
     struct R8_Status:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Status;
+        static constexpr auto ADDRESS = RegAddr::Status;
         
         uint8_t __resv1__ :3;
         uint8_t magHigh:1;
@@ -115,17 +115,17 @@ struct AS5600_Regs:public AS5600_Prelude{
     };
 
     struct R8_AutoGain:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::AutoGain;
+        static constexpr auto ADDRESS = RegAddr::AutoGain;
         uint8_t data;
     };
 
     struct R16_Magnitude:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::Magnitude;
+        static constexpr auto ADDRESS = RegAddr::Magnitude;
         uint16_t data;
     };
 
     struct R8_Burn:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Burn;
+        static constexpr auto ADDRESS = RegAddr::Burn;
 
         uint8_t data;
     };

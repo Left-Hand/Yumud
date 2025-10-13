@@ -41,10 +41,10 @@ DmaChannel dma2Ch11{DMA2_Channel11};
 #define DMA1_IT_TEMPLATE(y)\
 __interrupt void DMA1##_Channel##y##_IRQHandler(void){\
     if(DMA1_Inst->get_transfer_done_flag(y)){\
-        NAME_OF_DMA_XY(1,y).on_transfer_done_interrupt();\
+        NAME_OF_DMA_XY(1,y).on_interrupt(DmaEvent::TransferComplete);\
         DMA1_Inst->clear_transfer_done_flag(y);\
     }else if(DMA1_Inst->get_transfer_onhalf_flag(y)){\
-        NAME_OF_DMA_XY(1,y).on_transfer_half_interrupt();\
+        NAME_OF_DMA_XY(1,y).on_interrupt(DmaEvent::HalfTransfer);\
         DMA1_Inst->clear_transfer_onhalf_flag(y);\
     }\
 }\
@@ -63,10 +63,10 @@ DMA1_IT_TEMPLATE(7);
 #define DMA2_IT_TEMPLATE(y)\
 __interrupt void DMA2##_Channel##y##_IRQHandler(void){\
     if(DMA2_Inst->get_transfer_done_flag(y)){\
-        NAME_OF_DMA_XY(2,y).on_transfer_done_interrupt();\
+        NAME_OF_DMA_XY(2,y).on_interrupt(DmaEvent::TransferComplete);\
         DMA2_Inst->clear_transfer_done_flag(y);\
     }else if(DMA2_Inst->get_transfer_onhalf_flag(y)){\
-        NAME_OF_DMA_XY(2,y).on_transfer_half_interrupt();\
+        NAME_OF_DMA_XY(2,y).on_interrupt(DmaEvent::HalfTransfer);\
         DMA2_Inst->clear_transfer_onhalf_flag(y);\
     }\
 }\

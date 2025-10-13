@@ -9,16 +9,16 @@ namespace ymd::drivers{
 
 struct AS5047_Prelude{
 
-    using RegAddress = uint16_t;
+    using RegAddr = uint16_t;
     using Error = EncoderError;
 
 };
 
 struct AS5047_Regs:public AS5047_Prelude{
 
-    // static constexpr RegAddress MAG_ENC_REG_ADDR = 0x3FF;
+    // static constexpr RegAddr MAG_ENC_REG_ADDR = 0x3FF;
     struct ErrflReg:public Reg8<>{
-        static constexpr RegAddress address = 0x001;
+        static constexpr RegAddr address = 0x001;
         uint8_t frame_error:1;
         uint8_t invalid_cmd_error:1;
         uint8_t parity_error:1;
@@ -26,7 +26,7 @@ struct AS5047_Regs:public AS5047_Prelude{
     };
 
     struct ProgReg:public Reg8<>{
-        static constexpr RegAddress address = 0x002;
+        static constexpr RegAddr address = 0x002;
 
         uint8_t prog_otp_en:1;
         uint8_t otp_reflash:1;
@@ -51,7 +51,7 @@ public:
         spi_drv_(spi_drv){;}
     explicit AS5047(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit AS5047(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
+    explicit AS5047(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] IResult<> init() ;
@@ -73,8 +73,8 @@ private:
 
     uint16_t get_position_data();
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint8_t data);
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint8_t & data);
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t data);
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & data);
 
 };
 

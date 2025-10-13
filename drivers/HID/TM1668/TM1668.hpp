@@ -140,7 +140,7 @@ private:
         const auto guard = i2c_.create_guard();
 
         auto res = i2c_
-            .borrow(hal::LockRequest{payload1, 0})
+            .borrow(hal::I2cSlaveAddrWithRw::from_8bits(payload1))
             .then([&](){return i2c_.write(payload2);})
         ;
 

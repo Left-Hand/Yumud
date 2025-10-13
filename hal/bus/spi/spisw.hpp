@@ -13,14 +13,14 @@ protected:
     hal::GpioIntf & miso_gpio_;
 
     uint16_t delays = 100;
-    uint8_t data_bits = 8;
-    bool m_msb = true;
+    uint8_t width_ = 8;
+    bool is_msb_ = true;
 
     __no_inline void delay_dur(){
         clock::delay(Microseconds(delays));
     }
-    hal::HalResult lead(const LockRequest req) {
-        auto ret = Spi::lead(req);
+    hal::HalResult lead(const SpiSlaveRank rank) {
+        auto ret = Spi::lead(rank);
         delay_dur();
         return ret;
     }
@@ -84,12 +84,12 @@ public:
     }
 
     hal::HalResult set_data_width(const uint8_t bits)  {
-        data_bits = bits;
+        width_ = bits;
         return HalResult::Ok();
     }
 
     hal::HalResult set_bitorder(const Endian endian)  {
-        m_msb = (endian == MSB);
+        is_msb_ = (endian == MSB);
         return HalResult::Ok();
     }
 };

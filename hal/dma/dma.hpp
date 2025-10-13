@@ -47,13 +47,19 @@ enum class DmaIT:uint8_t{
     Half
 };
 
+enum class DmaEvent:uint8_t{
+    TransferComplete,
+    HalfTransfer,
+    TransferError
+};
+
 struct DmaChannel final{
 public:
-    using Callback = std::function<void(void)>;
+    using Callback = std::function<void(DmaEvent)>;
     using Mode = DmaMode;
     using Priority = DmaPriority;
 
-    DmaChannel(DMA_Channel_TypeDef * inst):
+    explicit DmaChannel(DMA_Channel_TypeDef * inst):
         inst_(inst), 
         done_mask_(calculate_done_mask(inst)),
         half_mask_(calculate_half_mask(inst)),
@@ -125,13 +131,9 @@ public:
         }
     }
 
-    template<DmaIT I, typename Fn>
-    void set_interrupt_callback(Fn && cb){
-        if constexpr(I == DmaIT::Half){
-            half_cb_ = std::forward<Fn>(cb);
-        }else if constexpr(I == DmaIT::Done){
-            done_cb_ = std::forward<Fn>(cb);
-        }
+    template<typename Fn>
+    void set_event_callback(Fn && cb){
+        callback_ = std::forward<Fn>(cb);
     }
 
     bool is_done(){
@@ -148,7 +150,7 @@ private:
     const uint8_t channel_index_;
     
     Callback done_cb_;
-    Callback half_cb_;
+    Callback callback_;
     Mode mode_;
 
 
@@ -264,13 +266,11 @@ private:
         return 0;
     }
 
-    __fast_inline void on_transfer_half_interrupt(){
-        EXECUTE(half_cb_);
+    
+    __fast_inline void on_interrupt(DmaEvent event){
+        EXECUTE(callback_, event);
     }
     
-    __fast_inline void on_transfer_done_interrupt(){
-        EXECUTE(done_cb_);
-    }
 
     #ifdef ENABLE_DMA1
         friend void ::DMA1_Channel1_IRQHandler(void);

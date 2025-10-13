@@ -1,6 +1,7 @@
 #pragma once
 
 #include "details/vl6180x_prelude.hpp"
+
 namespace ymd::drivers{
 
 class VL6180X final:public VL6180X_Prelude{
@@ -31,11 +32,11 @@ public:
     [[nodiscard]] IResult<uint8_t> read_range_status();
 
     [[nodiscard]] IResult<> set_max_convergence_time(const uint8_t ms){
-        return write_reg(RegAddress::SYSRANGE__MAX_CONVERGENCE_TIME, ms);
+        return write_reg(RegAddr::SYSRANGE__MAX_CONVERGENCE_TIME, ms);
     }
 
     [[nodiscard]] IResult<>  set_inter_measurement_period(const uint8_t ms){
-        return write_reg(RegAddress::SYSRANGE__INTERMEASUREMENT_PERIOD, ms);
+        return write_reg(RegAddr::SYSRANGE__INTERMEASUREMENT_PERIOD, ms);
     }
 
     [[nodiscard]] IResult<uint16_t> read_range_millimeters() { 
@@ -45,14 +46,14 @@ public:
     }
 
     [[nodiscard]] IResult<> invoke_read_range(){
-        return write_reg(RegAddress::SYSRANGE__START, 0x01);
+        return write_reg(RegAddr::SYSRANGE__START, 0x01);
     }
 
     [[nodiscard]] IResult<> invoke_read_ambient(){
-        return write_reg(RegAddress::SYSALS__START, 0x01);
+        return write_reg(RegAddr::SYSALS__START, 0x01);
     }
 private:
-    [[nodiscard]] IResult<> write_reg(RegAddress reg, uint8_t value){
+    [[nodiscard]] IResult<> write_reg(RegAddr reg, uint8_t value){
         return phy_.write_reg<uint8_t>(std::bit_cast<uint16_t>(reg), value);
     }
 
@@ -60,7 +61,7 @@ private:
         return phy_.write_reg<uint8_t>(std::bit_cast<uint16_t>(reg), value);
     }
 
-    [[nodiscard]] IResult<> write_reg16_bit(RegAddress reg, uint16_t value){
+    [[nodiscard]] IResult<> write_reg16_bit(RegAddr reg, uint16_t value){
         return phy_.write_reg<uint16_t>(std::bit_cast<uint16_t>(reg), value);
     }
     [[nodiscard]] IResult<> write_reg16_bit(const uint16_t reg, uint16_t value){
@@ -74,10 +75,10 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(RegAddress reg, T & value){
+    [[nodiscard]] IResult<> read_reg(RegAddr reg, T & value){
         return read_reg(std::bit_cast<uint16_t>(reg), value);
     }
-    [[nodiscard]] IResult<> read_reg16_bit(RegAddress reg, uint16_t & value){
+    [[nodiscard]] IResult<> read_reg16_bit(RegAddr reg, uint16_t & value){
         return phy_.read_reg<uint16_t>(std::bit_cast<uint16_t>(reg), value);
     }
 

@@ -75,13 +75,13 @@ IResult<> VL6180X::init(){
 	if(const auto res = validate();
 		res.is_err()) return res;
 
-	if(const auto res = read_reg(RegAddress::SYSRANGE__PART_TO_PART_RANGE_OFFSET, ptp_offset);
+	if(const auto res = read_reg(RegAddr::SYSRANGE__PART_TO_PART_RANGE_OFFSET, ptp_offset);
 		res.is_err()) return res;
 	
 	if (
 		({
 			uint8_t dummy;
-			if(const auto res = read_reg(RegAddress::SYSTEM__FRESH_OUT_OF_RESET, dummy);
+			if(const auto res = read_reg(RegAddr::SYSTEM__FRESH_OUT_OF_RESET, dummy);
 				res.is_err()) return res;
 			dummy;
 		}) == 1)
@@ -93,13 +93,13 @@ IResult<> VL6180X::init(){
 				res.is_err()) return res;
 		}
 
-		if(const auto res = write_reg(RegAddress::SYSTEM__FRESH_OUT_OF_RESET, 0);
+		if(const auto res = write_reg(RegAddr::SYSTEM__FRESH_OUT_OF_RESET, 0);
 			res.is_err()) return res;
 	}else{
 		// Sensor has already been initialized, so try to get scaling settings by
 		// reading registers.
 		uint16_t s ;
-		if(const auto res = read_reg16_bit(RegAddress::RANGE_SCALER, s);
+		if(const auto res = read_reg16_bit(RegAddr::RANGE_SCALER, s);
 			res.is_err()) return res;
 
 		if      (s == ScalerValues[3]) { scaling = 3; }
@@ -121,54 +121,54 @@ IResult<> VL6180X::init(){
 //
 // Note that this function does not set up GPIO1 as an interrupt output as
 // suggested, though you can do so by calling:
-// write_reg(RegAddress::SYSTEM__MODE_GPIO1, 0x10);
+// write_reg(RegAddr::SYSTEM__MODE_GPIO1, 0x10);
 IResult<> VL6180X::configure_default(){
 	// "Recommended : Public registers"
 
 	// readout__averaging_sample_period = 48
-	if(const auto res = write_reg(RegAddress::READOUT__AVERAGING_SAMPLE_PERIOD, 0x30);
+	if(const auto res = write_reg(RegAddr::READOUT__AVERAGING_SAMPLE_PERIOD, 0x30);
 		res.is_err()) return res;
 
 	// sysals__analogue_gain_light = 6 (ALS gain = 1 nominal, actually 1.01 according to table "Actual gain values" in datasheet)
-	if(const auto res = write_reg(RegAddress::SYSALS__ANALOGUE_GAIN, 0x46);
+	if(const auto res = write_reg(RegAddr::SYSALS__ANALOGUE_GAIN, 0x46);
 		res.is_err()) return res;
 
 	// sysrange__vhv_repeat_rate = 255 (auto Very High Voltage temperature recalibration after every 255 range measurements)
-	if(const auto res = write_reg(RegAddress::SYSRANGE__VHV_REPEAT_RATE, 0xFF);
+	if(const auto res = write_reg(RegAddr::SYSRANGE__VHV_REPEAT_RATE, 0xFF);
 		res.is_err()) return res;
 
 	// sysals__integration_period = 99 (100 ms)
-	if(const auto res = write_reg16_bit(RegAddress::SYSALS__INTEGRATION_PERIOD, 99);
+	if(const auto res = write_reg16_bit(RegAddr::SYSALS__INTEGRATION_PERIOD, 99);
 		res.is_err()) return res;
 
 	// sysrange__vhv_recalibrate = 1 (manually trigger a VHV recalibration)
-	if(const auto res = write_reg(RegAddress::SYSRANGE__VHV_RECALIBRATE, 0x01);
+	if(const auto res = write_reg(RegAddr::SYSRANGE__VHV_RECALIBRATE, 0x01);
 		res.is_err()) return res;
 
 
 	// "Optional: Public registers"
 
 	// sysrange__intermeasurement_period = 9 (100 ms)
-	if(const auto res = write_reg(RegAddress::SYSRANGE__INTERMEASUREMENT_PERIOD, 0x09);
+	if(const auto res = write_reg(RegAddr::SYSRANGE__INTERMEASUREMENT_PERIOD, 0x09);
 		res.is_err()) return res;
 
 	// sysals__intermeasurement_period = 49 (500 ms)
-	if(const auto res = write_reg(RegAddress::SYSALS__INTERMEASUREMENT_PERIOD, 0x31);
+	if(const auto res = write_reg(RegAddr::SYSALS__INTERMEASUREMENT_PERIOD, 0x31);
 		res.is_err()) return res;
 
 	// als_int_mode = 4 (ALS new sample ready interrupt); range_int_mode = 4 (range new sample ready interrupt)
-	if(const auto res = write_reg(RegAddress::SYSTEM__INTERRUPT_CONFIG_GPIO, 0x24);
+	if(const auto res = write_reg(RegAddr::SYSTEM__INTERRUPT_CONFIG_GPIO, 0x24);
 		res.is_err()) return res;
 
 
 	// Reset other settings to power-on defaults
 
 	// sysrange__max_convergence_time = 49 (49 ms)
-	if(const auto res = write_reg(RegAddress::SYSRANGE__MAX_CONVERGENCE_TIME, 0x31);
+	if(const auto res = write_reg(RegAddr::SYSRANGE__MAX_CONVERGENCE_TIME, 0x31);
 		res.is_err()) return res;
 
 	// disable interleaved mode
-	if(const auto res = write_reg(RegAddress::INTERLEAVED_MODE__ENABLE, 0);
+	if(const auto res = write_reg(RegAddr::INTERLEAVED_MODE__ENABLE, 0);
 		res.is_err()) return res;
 
 	// reset range scaling factor to 1x
@@ -192,24 +192,24 @@ IResult<> VL6180X::set_scaling(uint8_t new_scaling){
 	if (new_scaling < 1 || new_scaling > 3) { return Err(Error::InvalidScaling); }
 
 	scaling = new_scaling;
-	if(const auto res =write_reg16_bit(RegAddress::RANGE_SCALER, ScalerValues[scaling]);
+	if(const auto res =write_reg16_bit(RegAddr::RANGE_SCALER, ScalerValues[scaling]);
 		res.is_err()) return res;
 
 	// apply scaling on part-to-part offset
-	if(const auto res = write_reg(RegAddress::SYSRANGE__PART_TO_PART_RANGE_OFFSET, ptp_offset / scaling);
+	if(const auto res = write_reg(RegAddr::SYSRANGE__PART_TO_PART_RANGE_OFFSET, ptp_offset / scaling);
 		res.is_err()) return res;
 
 	// apply scaling on CrossTalkValidHeight
-	if(const auto res = write_reg(RegAddress::SYSRANGE__CROSSTALK_VALID_HEIGHT, DefaultCrosstalkValidHeight / scaling);
+	if(const auto res = write_reg(RegAddr::SYSRANGE__CROSSTALK_VALID_HEIGHT, DefaultCrosstalkValidHeight / scaling);
 		res.is_err()) return res;
 
 	// This function does not apply scaling to RANGE_IGNORE_VALID_HEIGHT.
 
 	// enable early convergence estimate only at 1x scaling
 	uint8_t rce;
-	if(const auto res = read_reg(RegAddress::SYSRANGE__RANGE_CHECK_ENABLES, rce);
+	if(const auto res = read_reg(RegAddr::SYSRANGE__RANGE_CHECK_ENABLES, rce);
 		res.is_err()) return res;
-	if(const auto res = write_reg(RegAddress::SYSRANGE__RANGE_CHECK_ENABLES, 
+	if(const auto res = write_reg(RegAddr::SYSRANGE__RANGE_CHECK_ENABLES, 
 		(rce & 0xFE) | (scaling == 1));
 		res.is_err()) return res;
 
@@ -227,9 +227,9 @@ IResult<> VL6180X::start_range_continuous(uint16_t period)
 {
 	const uint8_t period_reg = CLAMP(int16_t(period / 10) - 1, 0, 254);
 
-	if(const auto res = write_reg(RegAddress::SYSRANGE__INTERMEASUREMENT_PERIOD, period_reg);
+	if(const auto res = write_reg(RegAddr::SYSRANGE__INTERMEASUREMENT_PERIOD, period_reg);
 		res.is_err()) return res;
-	if(const auto res = write_reg(RegAddress::SYSRANGE__START, 0x03);
+	if(const auto res = write_reg(RegAddr::SYSRANGE__START, 0x03);
 		res.is_err()) return res;
 
 	return Ok();
@@ -244,9 +244,9 @@ IResult<> VL6180X::start_range_continuous(uint16_t period)
 IResult<> VL6180X::start_ambient_continuous(uint16_t period){
 	const uint8_t raw = CLAMP(int16_t(period / 10) - 1, 0, 254);
 
-	if(const auto res = write_reg(RegAddress::SYSALS__INTERMEASUREMENT_PERIOD, raw);
+	if(const auto res = write_reg(RegAddr::SYSALS__INTERMEASUREMENT_PERIOD, raw);
 		res.is_err()) return res;
-	if(const auto res = write_reg(RegAddress::SYSALS__START, 0x03);
+	if(const auto res = write_reg(RegAddr::SYSALS__START, 0x03);
 		res.is_err()) return res;
 
 	return Ok();
@@ -265,11 +265,11 @@ IResult<> VL6180X::start_ambient_continuous(uint16_t period){
 IResult<> VL6180X::start_interleaved_continuous(uint16_t period){
 	const uint8_t raw = CLAMP(int16_t(period / 10) - 1, 0, 254);
 
-	if(const auto res = write_reg(RegAddress::INTERLEAVED_MODE__ENABLE, 1);
+	if(const auto res = write_reg(RegAddr::INTERLEAVED_MODE__ENABLE, 1);
 		res.is_err()) return res;
-	if(const auto res = write_reg(RegAddress::SYSALS__INTERMEASUREMENT_PERIOD, raw);
+	if(const auto res = write_reg(RegAddr::SYSALS__INTERMEASUREMENT_PERIOD, raw);
 		res.is_err()) return res;
-	if(const auto res = write_reg(RegAddress::SYSALS__START, 0x03);
+	if(const auto res = write_reg(RegAddr::SYSALS__START, 0x03);
 		res.is_err()) return res;
 
 	return Ok();
@@ -279,33 +279,33 @@ IResult<> VL6180X::start_interleaved_continuous(uint16_t period){
 // real_t VL6180X::readLux(uint8_t gain) {
 // 	uint8_t reg;
 
-// 	reg = read8(RegAddress::SYSTEM__INTERRUPT_CONFIG_GPIO);
+// 	reg = read8(RegAddr::SYSTEM__INTERRUPT_CONFIG_GPIO);
 // 	reg &= ~0x38;
 // 	reg |= (0x4 << 3); // IRQ on ALS ready
-// 	write8(RegAddress::SYSTEM__INTERRUPT_CONFIG_GPIO, reg);
+// 	write8(RegAddr::SYSTEM__INTERRUPT_CONFIG_GPIO, reg);
 
 // 	// 100 ms integration period
-// 	write8(RegAddress::SYSALS_INTEGRATION_PERIOD_HI, 0);
-// 	write8(RegAddress::SYSALS_INTEGRATION_PERIOD_LO, 100);
+// 	write8(RegAddr::SYSALS_INTEGRATION_PERIOD_HI, 0);
+// 	write8(RegAddr::SYSALS_INTEGRATION_PERIOD_LO, 100);
 
 // 	// analog gain
 // 	if (gain > VL6180X_ALS_GAIN_40) {
 // 		gain = VL6180X_ALS_GAIN_40;
 // 	}
-// 	write8(RegAddress::SYSALS_ANALOGUE_GAIN, 0x40 | gain);
+// 	write8(RegAddr::SYSALS_ANALOGUE_GAIN, 0x40 | gain);
 
 // 	// start ALS
-// 	write8(RegAddress::SYSALS_START, 0x1);
+// 	write8(RegAddr::SYSALS_START, 0x1);
 
 // 	// Poll until "New Sample Ready threshold event" is set
-// 	while (4 != ((read8(RegAddress::RESULT_INTERRUPT_STATUS_GPIO) >> 3) & 0x7))
+// 	while (4 != ((read8(RegAddr::RESULT_INTERRUPT_STATUS_GPIO) >> 3) & 0x7))
 // 		;
 
 // 	// read lux!
-// 	float lux = read16(RegAddress::RESULT_ALS_VAL);
+// 	float lux = read16(RegAddr::RESULT_ALS_VAL);
 
 // 	// clear interrupt
-// 	write8(RegAddress::SYSTEM_INTERRUPT_CLEAR, 0x07);
+// 	write8(RegAddr::SYSTEM_INTERRUPT_CLEAR, 0x07);
 
 // 	lux *= 0.32; // calibrated count/lux
 // 	switch (gain) {
@@ -344,11 +344,11 @@ IResult<> VL6180X::start_interleaved_continuous(uint16_t period){
 // wait a few hundred ms after calling this function to let that complete
 // before starting continuous mode again or taking a reading.
 IResult<> VL6180X::stop_continuous(){
-	if(const auto res = write_reg(RegAddress::SYSRANGE__START, 0x01);
+	if(const auto res = write_reg(RegAddr::SYSRANGE__START, 0x01);
 		res.is_err()) return res;
-	if(const auto res = write_reg(RegAddress::SYSALS__START, 0x01);
+	if(const auto res = write_reg(RegAddr::SYSALS__START, 0x01);
 		res.is_err()) return res;
-	if(const auto res = write_reg(RegAddress::INTERLEAVED_MODE__ENABLE, 0);
+	if(const auto res = write_reg(RegAddr::INTERLEAVED_MODE__ENABLE, 0);
 		res.is_err()) return res;
 
 	return Ok();
@@ -362,15 +362,15 @@ IResult<uint8_t> VL6180X::read_range(){
 	// only watching if bits 2:0 (mask 0x07) are set to 0b100 (0x04)
 	if((({
 		uint8_t dummy;
-		if(const auto res = read_reg(RegAddress::RESULT__INTERRUPT_STATUS_GPIO, dummy);
+		if(const auto res = read_reg(RegAddr::RESULT__INTERRUPT_STATUS_GPIO, dummy);
 			res.is_err()) return Err(res.unwrap_err());
 		dummy;
 	}) & 0x07) != 0x04) return Err(Error::RangeDataNotReady);
 
 	uint8_t range; 
-	if(const auto res = read_reg(RegAddress::RESULT__RANGE_VAL, range);
+	if(const auto res = read_reg(RegAddr::RESULT__RANGE_VAL, range);
 		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = write_reg(RegAddress::SYSTEM__INTERRUPT_CLEAR, 0x01);
+	if(const auto res = write_reg(RegAddr::SYSTEM__INTERRUPT_CLEAR, 0x01);
 		res.is_err()) return Err(res.unwrap_err());
 
 	return Ok(range);
@@ -385,15 +385,15 @@ IResult<uint16_t> VL6180X::read_ambient(){
 	if(
 		(({
 			uint8_t dummy;
-			if(const auto res = read_reg(RegAddress::RESULT__INTERRUPT_STATUS_GPIO, dummy);
+			if(const auto res = read_reg(RegAddr::RESULT__INTERRUPT_STATUS_GPIO, dummy);
 				res.is_err()) return Err(res.unwrap_err());
 			dummy; 
 		}) & 0x38) != 0x20) return Err(Error::AmbientDataNotReady);
 
 	uint16_t ambient;
-	if(const auto res = read_reg16_bit(RegAddress::RESULT__ALS_VAL, ambient);
+	if(const auto res = read_reg16_bit(RegAddr::RESULT__ALS_VAL, ambient);
 		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = write_reg(RegAddress::SYSTEM__INTERRUPT_CLEAR, 0x02);
+	if(const auto res = write_reg(RegAddr::SYSTEM__INTERRUPT_CLEAR, 0x02);
 		res.is_err()) return Err(res.unwrap_err());
 
 	return Ok(ambient);
@@ -403,7 +403,7 @@ IResult<uint16_t> VL6180X::read_ambient(){
 // Return error code; One of possible VL6180X_ERROR_* values
 IResult<uint8_t> VL6180X::read_range_status(){
 	uint8_t dummy;
-	if(const auto res = read_reg(RegAddress::RESULT__RANGE_STATUS, dummy);
+	if(const auto res = read_reg(RegAddr::RESULT__RANGE_STATUS, dummy);
 		res.is_err()) return Err(res.unwrap_err());
 	return Ok(dummy >> 4);
 }

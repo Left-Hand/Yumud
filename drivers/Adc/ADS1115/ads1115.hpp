@@ -21,7 +21,7 @@ struct ADS111X_Prelude{
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
     DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
     // ADDR PIN CONNECTION SLAVE ADDRESS
     // GND 1001000
@@ -57,12 +57,12 @@ struct ADS111X_Prelude{
 struct ADS111X_Regs:public ADS111X_Prelude{ 
 
     struct ConversionReg:public Reg16<>{
-        static constexpr RegAddress address = 0b00; 
+        static constexpr RegAddr address = 0b00; 
         int16_t data;
     };
 
     struct ConfigReg:public Reg16<>{
-        static constexpr RegAddress address = 0b01; 
+        static constexpr RegAddr address = 0b01; 
         uint16_t comp_que:2;
         uint16_t comp_latch:1;
         uint16_t comp_pol:1;
@@ -78,12 +78,12 @@ struct ADS111X_Regs:public ADS111X_Prelude{
     };
 
     struct LowThreshReg:public Reg16i<>{
-        static constexpr RegAddress address = 0b10;
+        static constexpr RegAddr address = 0b10;
         int16_t data;
     };
 
     struct HighThreshReg:public Reg16i<>{
-        static constexpr RegAddress address = 0b11; 
+        static constexpr RegAddr address = 0b11; 
         int16_t data;
     };
 
@@ -125,9 +125,9 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-    [[nodiscard]] IResult<> read_reg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & data);
 
-    [[nodiscard]] IResult<> write_reg(const RegAddress addr, const uint16_t data); 
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t data); 
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

@@ -34,7 +34,7 @@ struct SC8815_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
 
     enum class IBatRatio:uint8_t{
@@ -126,7 +126,7 @@ struct SC8815_Prelude{
 struct SC8815_Regs:public SC8815_Prelude {
 
     struct R8_VbatSet:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x00;
+        static constexpr RegAddr REG_ADDR = 0x00;
 
         BatVolt vcell_set:3;
         BatCells csel:2;
@@ -135,37 +135,37 @@ struct SC8815_Regs:public SC8815_Prelude {
     }DEF_R8(vbat_set_reg)
 
     struct R16_VbusRefISet:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x01;
+        static constexpr RegAddr REG_ADDR = 0x01;
 
         uint16_t value;
     }DEF_R16(vbus_ref_i_set_reg)
 
     struct R16_VbusRefESet:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x03;
+        static constexpr RegAddr REG_ADDR = 0x03;
         
         uint16_t value;
     }DEF_R16(vbus_ref_e_set_reg)
     
     struct R8_IBusLimSet:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x05;
+        static constexpr RegAddr REG_ADDR = 0x05;
         
         uint8_t :8;
     }DEF_R8(ibus_lim_set_reg)
     
     struct R8_IBatLimSet:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x06;
+        static constexpr RegAddr REG_ADDR = 0x06;
 
         uint8_t :8;
     }DEF_R8(ibat_lim_set_reg)
 
     struct R8_VinSet:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x07;
+        static constexpr RegAddr REG_ADDR = 0x07;
 
         uint8_t :8;
     }DEF_R8(vin_set_reg)
     
     struct R8_Ratio:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x08;
+        static constexpr RegAddr REG_ADDR = 0x08;
 
         VBusRatio vbus_ratio:1;
         VBatMonRatio vbat_mon_ratio:1;
@@ -175,7 +175,7 @@ struct SC8815_Regs:public SC8815_Prelude {
     }DEF_R8(ratio_reg)
 
     struct R8_Ctrl0Set:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x09;
+        static constexpr RegAddr REG_ADDR = 0x09;
 
         uint8_t dt_set:2;
         uint8_t freq_set:2;
@@ -185,7 +185,7 @@ struct SC8815_Regs:public SC8815_Prelude {
     }DEF_R8(ctrl0_set_reg)
 
     struct R8_Ctrl1Set:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x0A;
+        static constexpr RegAddr REG_ADDR = 0x0A;
         
         uint8_t :2;
         uint8_t dis_ovp:1;
@@ -197,7 +197,7 @@ struct SC8815_Regs:public SC8815_Prelude {
     }DEF_R8(ctrl1_set_reg)
 
     struct R8_Ctrl2Set:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x0B;
+        static constexpr RegAddr REG_ADDR = 0x0B;
         
         uint8_t slew_set:2;
         uint8_t en_dither:1;
@@ -206,7 +206,7 @@ struct SC8815_Regs:public SC8815_Prelude {
     }DEF_R8(ctrl2_set_reg)
 
     struct R8_Ctrl3Set:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x0C;
+        static constexpr RegAddr REG_ADDR = 0x0C;
         
         uint8_t en_pfm:1;
         uint8_t eoc_set:1;
@@ -219,42 +219,42 @@ struct SC8815_Regs:public SC8815_Prelude {
     }DEF_R8(ctrl3_set_reg)
 
     struct R16_VbusFbValue:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x0d;
+        static constexpr RegAddr REG_ADDR = 0x0d;
 
         uint16_t value;
     }DEF_R16(vbus_fb_value_reg)
 
     struct R16_VbatFbValue:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x0f;
+        static constexpr RegAddr REG_ADDR = 0x0f;
 
         uint16_t value;
     }DEF_R16(vbat_fb_value_reg)
 
     struct R16_IBusValue:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x11;
+        static constexpr RegAddr REG_ADDR = 0x11;
 
         uint16_t value;
     }DEF_R16(ibus_value_reg)
 
     struct R16_IBatValue:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x13;
+        static constexpr RegAddr REG_ADDR = 0x13;
 
         uint16_t value;
     }DEF_R16(ibat_value_reg)
 
     struct R16_AdinValue:public Reg16<>{
-        static constexpr RegAddress REG_ADDR = 0x03;
+        static constexpr RegAddr REG_ADDR = 0x03;
 
         uint16_t value;
     }DEF_R16(adin_value_reg)
 
     struct R8_Status:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x17;
+        static constexpr RegAddr REG_ADDR = 0x17;
         Interrupts interrupts;
     }DEF_R8(status_reg)
 
     struct R8_Mask:public Reg8<>{
-        static constexpr RegAddress REG_ADDR = 0x19;
+        static constexpr RegAddr REG_ADDR = 0x19;
         Interrupts interrupts_mask;
     }DEF_R8(mask_reg)
 };
@@ -355,7 +355,7 @@ private:
 
     
     [[nodiscard]] IResult<> read_burst(
-        const RegAddress addr, 
+        const RegAddr addr, 
         const std::span<uint8_t> pbuf
     ){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf);

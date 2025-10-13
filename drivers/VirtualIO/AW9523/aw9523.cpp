@@ -147,7 +147,7 @@ IResult<> AW9523::validate(){
 }
 
 
-IResult<> AW9523::write_reg(const RegAddress addr, const uint16_t data){
+IResult<> AW9523::write_reg(const RegAddr addr, const uint16_t data){
     // DEBUG_PRINTLN(uint8_t(addr), data);
     if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, LSB);
         res.is_err()) return Err(res.unwrap_err());

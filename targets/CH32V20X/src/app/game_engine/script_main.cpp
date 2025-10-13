@@ -150,200 +150,6 @@ private:
 };
 }
 
-namespace ymd::tmp::tuple_tmp::details {
-
-// 基础工具：判断类型是否在包中
-template<typename T, typename... Args>
-struct type_in_pack : std::false_type {};
-
-template<typename T, typename First, typename... Rest>
-struct type_in_pack<T, First, Rest...> 
-    : std::conditional_t<std::is_same_v<T, First>, 
-                        std::true_type, 
-                        type_in_pack<T, Rest...>> {};
-
-template<typename T>
-struct type_in_pack<T> : std::false_type {};
-
-// 元组移除指定类型的实现
-template<typename Tuple, typename... RemoveTypes>
-struct tuple_remove_specified_impl;
-
-// 递归基案：空元组
-template<typename... RemoveTypes>
-struct tuple_remove_specified_impl<std::tuple<>, RemoveTypes...> {
-    using type = std::tuple<>;
-};
-
-// 递归步骤
-template<typename First, typename... Rest, typename... RemoveTypes>
-struct tuple_remove_specified_impl<std::tuple<First, Rest...>, RemoveTypes...> {
-private:
-    using remaining_tuple = typename tuple_remove_specified_impl<
-        std::tuple<Rest...>, RemoveTypes...>::type;
-    
-public:
-    using type = std::conditional_t<
-        type_in_pack<First, RemoveTypes...>::value,
-        remaining_tuple,
-        decltype(std::tuple_cat(std::declval<std::tuple<First>>(), 
-            std::declval<remaining_tuple>()))
-    >;
-};
-
-// 元组替换指定类型的实现
-template<typename Tuple, typename NewType, typename... ReplaceTypes>
-struct tuple_replace_specified_impl;
-
-// 递归基案：空元组
-template<typename NewType, typename... ReplaceTypes>
-struct tuple_replace_specified_impl<std::tuple<>, NewType, ReplaceTypes...> {
-    using type = std::tuple<>;
-};
-
-// 递归步骤
-template<typename First, typename... Rest, typename NewType, typename... ReplaceTypes>
-struct tuple_replace_specified_impl<std::tuple<First, Rest...>, NewType, ReplaceTypes...> {
-private:
-    using remaining_tuple = typename tuple_replace_specified_impl<
-        std::tuple<Rest...>, NewType, ReplaceTypes...>::type;
-    
-    using current_type = std::conditional_t<
-        type_in_pack<First, ReplaceTypes...>::value,
-        NewType,
-        First
-    >;
-    
-public:
-    using type = decltype(std::tuple_cat(
-        std::declval<std::tuple<current_type>>(),
-        std::declval<remaining_tuple>()
-    ));
-};
-
-// 元组映射的实现
-template<template<typename> class Mapper, typename Tuple>
-struct tuple_map_impl;
-
-// 递归基案：空元组
-template<template<typename> class Mapper>
-struct tuple_map_impl<Mapper, std::tuple<>> {
-    using type = std::tuple<>;
-};
-
-// 递归步骤
-template<template<typename> class Mapper, typename First, typename... Rest>
-struct tuple_map_impl<Mapper, std::tuple<First, Rest...>> {
-private:
-    using mapped_first = typename Mapper<First>::type;
-    using mapped_rest = typename tuple_map_impl<Mapper, std::tuple<Rest...>>::type;
-    
-public:
-    using type = decltype(std::tuple_cat(
-        std::declval<std::tuple<mapped_first>>(),
-        std::declval<mapped_rest>()
-    ));
-};
-
-// 元组规约的实现 - 根据策略剔除元素
-template<template<typename> class Predicate, typename Tuple>
-struct tuple_reduce_impl;
-
-// 递归基案：空元组
-template<template<typename> class Predicate>
-struct tuple_reduce_impl<Predicate, std::tuple<>> {
-    using type = std::tuple<>;
-};
-
-// 递归步骤
-template<template<typename> class Predicate, typename First, typename... Rest>
-struct tuple_reduce_impl<Predicate, std::tuple<First, Rest...>> {
-private:
-    using remaining_tuple = typename tuple_reduce_impl<Predicate, std::tuple<Rest...>>::type;
-    
-public:
-    using type = std::conditional_t<
-        Predicate<First>::value,
-        remaining_tuple,
-        decltype(std::tuple_cat(std::declval<std::tuple<First>>(), 
-            std::declval<remaining_tuple>()))
-    >;
-};
-
-// 支持模板别名版本的谓词（如 std::is_integral_v 的适配器）
-template<template<typename> class Predicate, typename Tuple>
-struct tuple_reduce_alias_impl;
-
-template<template<typename> class Predicate>
-struct tuple_reduce_alias_impl<Predicate, std::tuple<>> {
-    using type = std::tuple<>;
-};
-
-template<template<typename> class Predicate, typename First, typename... Rest>
-struct tuple_reduce_alias_impl<Predicate, std::tuple<First, Rest...>> {
-private:
-    using remaining_tuple = typename tuple_reduce_alias_impl<Predicate, std::tuple<Rest...>>::type;
-    
-public:
-    using type = std::conditional_t<
-        Predicate<First>::value,
-        remaining_tuple,
-        decltype(std::tuple_cat(std::declval<std::tuple<First>>(), 
-        std::declval<remaining_tuple>()))
-    >;
-};
-
-} // namespace details
-
-namespace ymd::tmp::tuple_tmp{
-// 主模板别名
-template<typename T, typename... Args>
-using tuple_remove_specified_t = typename details::tuple_remove_specified_impl<T, Args...>::type;
-
-template<typename T, typename U, typename... Args>
-using tuple_replace_specified_t = typename details::tuple_replace_specified_impl<T, U, Args...>::type;
-
-// 主模板别名
-template<template<typename> class Mapper, typename Tuple>
-using tuple_map_t = typename details::tuple_map_impl<Mapper, Tuple>::type;
-
-
-// 主模板别名 - 自动检测谓词类型
-template<template<typename> class Predicate, typename Tuple>
-using tuple_reduce_t = typename details::tuple_reduce_alias_impl<Predicate, Tuple>::type;
-
-// 测试代码
-static_assert(std::is_same_v<
-    tuple_reduce_t<std::is_integral, std::tuple<int, double, char, float>>,
-    std::tuple<double, float>
->);
-
-static_assert(std::is_same_v<
-    tuple_map_t<std::add_const, std::tuple<int, double, char>>,
-    std::tuple<const int, const double, const char>
->);
-
-// static_assert(std::is_same_v<
-//     tuple_remove_specified_t<std::tuple<int, double, char, float>, double, char>,
-//     std::tuple<int, float>
-// >);
-
-// static_assert(std::is_same_v<
-//     tuple_replace_specified_t<std::tuple<int, double, char>, float, double, char>,
-//     std::tuple<int, float, float>
-// >);
-
-// static_assert(std::is_same_v<
-//     tuple_remove_specified_t<std::tuple<int, double>, float>,
-//     std::tuple<int, double>
-// >);
-
-// static_assert(std::is_same_v<
-//     tuple_replace_specified_t<std::tuple<>, float, int, double>,
-//     std::tuple<>
-// >);
-
-}
 
 namespace ymd::rpc{
 
@@ -389,18 +195,39 @@ private:
         }();
     }
 
-    static constexpr bool is_visible_char(const char c){
+    [[nodiscard]] static constexpr bool is_visible_char(const char c){
         return (c >= 32) and (c <= 126);
     }
 };
 
 
-
-
-
-
 }
 
+
+// pub enum JsonVariant {
+//     Object(Vec<(String, JsonVariant)>),
+//     Array(Vec<JsonVariant>),
+//     String(String),
+//     Number(f64),
+//     Bool(bool),
+//     Null,
+// }
+
+struct JsonVariant{
+    enum class Kind{
+        Object,
+        Array,
+        String,
+        Number,
+        Bool,
+        Null,
+    };
+    constexpr JsonVariant(const Kind kind,const StringView content):
+        kind_(kind), content_(content){}
+private:
+    Kind kind_;
+    StringView content_;
+};
 
 void script_main(){
 
@@ -443,12 +270,18 @@ void script_main(){
             repl_server.invoke(list);
         };
 
+        while(DBG_UART.available()){
+            uint32_t chr;
+            DBG_UART.read(chr);
+            DEBUG_PRINTLN(static_cast<char>(chr));
+        } 
         if(0) DEBUG_PRINTLN(
             // DBG_UART.available(),
             // DBG_UART.rx_dma_buf_index_,
             // DBG_UART.rx_fifo().write_idx(),
             // DBG_UART.rx_fifo().read_idx(),
-            strconv2::defmt_str<bool>("1")
+            // strconv2::defmt_str<bool>("1")
+            
             // strconv2::defmt_str<uint8_t>("256")
             
             // ,shape.points

@@ -95,7 +95,7 @@ void mlx90640_main(){
     auto lcd_dc = hal::PD<7>();
     auto dev_rst = hal::PB<7>();
     auto spi_cs = hal::PD<4>();
-    const auto spi_fd = spi.allocate_cs_gpio(&spi_cs).unwrap();
+    const auto spi_rank = spi.allocate_cs_gpio(&spi_cs).unwrap();
 
     hal::Gpio scl_gpio_ = SCL_GPIO;
     hal::Gpio sda_gpio_ = SDA_GPIO;
@@ -103,7 +103,7 @@ void mlx90640_main(){
     hal::I2cSw i2c_sw_ = {&scl_gpio_, &sda_gpio_};
 
     drivers::ST7789 tft{
-        drivers::ST7789_Phy{&spi, spi_fd, &lcd_dc, &dev_rst}, 
+        drivers::ST7789_Phy{&spi, spi_rank, &lcd_dc, &dev_rst}, 
         {LCD_WIDTH, LCD_HEIGHT}
     };
 

@@ -12,8 +12,8 @@ using namespace ymd::hal;
 using Callback = Can::Callback;
 
 
-static constexpr auto Mailbox_Index_To_TSTATR(auto x) {
-    return CAN_TSTATR_RQCP0 << (x << 3);
+static constexpr auto Mailbox_Index_To_TSTATR(CanMailboxNth x) {
+    return CAN_TSTATR_RQCP0 << (std::bit_cast<uint8_t>(x) << 3);
 }
 
 
@@ -84,7 +84,9 @@ void MY_CAN_ClearITPendingBit(CAN_TypeDef* CANx)
         CANx->STATR = CAN_STATR_ERRI; 
 	}
 }
-void Can::init_it(){
+
+
+void Can::init_interrupts(){
     const uint32_t it_mask = 
         CAN_IT_TME      //tx done
         | CAN_IT_FMP0   //rx fifo0
@@ -143,12 +145,13 @@ void Can::init_it(){
 
 
 
-bool Can::is_mail_box_done(const uint8_t mbox){
+bool Can::is_mail_box_done(const CanMailboxNth mbox){
     const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
     return ((inst_->TSTATR & TSTATR_FLAG) == TSTATR_FLAG);
 }
 
-void Can::clear_mailbox(const uint8_t mbox){
+
+void Can::clear_mailbox(const CanMailboxNth mbox){
     const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
     inst_->TSTATR = TSTATR_FLAG;
 }
@@ -182,6 +185,7 @@ Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
     }
 }
 
+
 Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
     switch(reinterpret_cast<size_t>(inst)){
         default:
@@ -211,6 +215,7 @@ Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
     }
 }
 
+
 Gpio Can::get_tx_gpio(const uint8_t remap){
     return map_inst_to_tx_gpio(inst_, remap);
 }
@@ -219,6 +224,7 @@ Gpio Can::get_tx_gpio(const uint8_t remap){
 Gpio Can::get_rx_gpio(const uint8_t remap){
     return map_inst_to_rx_gpio(inst_, remap);
 }
+
 
 void Can::plant_gpio(const uint8_t remap){
     get_tx_gpio(remap).afpp();
@@ -306,7 +312,7 @@ void Can::init(const Config & cfg){
     };
 
     CAN_Init(inst_, &CAN_InitConf);
-    init_it();
+    init_interrupts();
 }
 
 size_t Can::pending(){
@@ -351,29 +357,21 @@ void Can::enable_hw_retransmit(const Enable en){
 }
 
 Result<void, CanError> Can::write(const CanMsg & msg){
-    if(this->blocking_write_en_){
-        const auto begin_ms = clock::millis();
-        while(clock::millis() - begin_ms < 10ms){
-            if(transmit(msg).is_some()) return Ok();
+    auto push_buf = [this, &msg]() -> Result<void, CanError>{ 
+        if(tx_fifo_.writable_capacity() > 0){
+            tx_fifo_.push(msg);
+            return Ok();
         }
-        return Err(CanError::BlockingTransmitTimeout);
-    }else{
-        auto push_buf = [this, &msg]() -> Result<void, CanError>{ 
-            if(tx_fifo_.writable_capacity() > 0){
-                tx_fifo_.push(msg);
-                return Ok();
-            }
-            return Err(CanError::SoftFifoOverflow);
-        };
+        return Err(CanError::SoftFifoOverflow);
+    };
 
-        if(pending() >= 3)
-            return push_buf();
-        
-        if(transmit(msg).is_none())
-            return push_buf();
+    if(pending() >= 3)
+        return push_buf();
+    
+    if(transmit(msg).is_none())
+        return push_buf();
 
-        return Ok();
-    }
+    return Ok();
 }
 
 CanMsg Can::read(){
@@ -435,25 +433,25 @@ void Can::set_baudrate(const uint32_t baudrate){
     //TODO
 }
 
-CanMsg Can::receive(const uint8_t fifo_num){
-    const uint32_t rxmir = inst_->sFIFOMailBox[fifo_num].RXMIR;
-    const uint32_t rxmdtr = inst_->sFIFOMailBox[fifo_num].RXMDTR;
+CanMsg Can::receive(const CanFifoNth fifo_num){
+    const size_t index = std::bit_cast<uint8_t>(fifo_num);
+    auto & mailbox = inst_->sFIFOMailBox[index];
+    const uint32_t rxmir = mailbox.RXMIR;
+    const uint32_t rxmdtr = mailbox.RXMDTR;
 
     const uint8_t dlc = rxmdtr & (0x0F);
 
     const uint64_t data = 
-        static_cast<uint64_t>(inst_->sFIFOMailBox[fifo_num].RXMDLR) 
-        | (static_cast<uint64_t>(inst_->sFIFOMailBox[fifo_num].RXMDHR) << 32);
+        static_cast<uint64_t>(mailbox.RXMDLR) 
+        | (static_cast<uint64_t>(mailbox.RXMDHR) << 32);
 
     switch(fifo_num){
-        case CAN_FIFO0:
+        case CanFifoNth::_0:
             inst_->RFIFO0 = CAN_RFIFO0_RFOM0 | inst_->RFIFO0;
             break;
-        case CAN_FIFO1:
+        case CanFifoNth::_1:
             inst_->RFIFO1 = CAN_RFIFO1_RFOM1 | inst_->RFIFO1;
             break;
-        default:
-            __builtin_unreachable();
     }
 
     return CanMsg::from_sxx32_regs(rxmir, data, dlc);
@@ -462,45 +460,51 @@ CanMsg Can::receive(const uint8_t fifo_num){
 
 
 
-void Can::on_tx_interrupt(){
+void Can::accept_tx_interrupt(){
 
+    //遍历每个邮箱
     for(uint8_t mbox = 0; mbox < 3; mbox++){
-        if(not is_mail_box_done(mbox)) continue; // if existing message done
+        //如果还没完成 那么略过
+        if(not is_mail_box_done(std::bit_cast<CanMailboxNth>(mbox))) continue; 
 
-        const uint8_t tx_status = CAN_TransmitStatus(inst_, mbox);
+        const auto tx_status = CAN_TransmitStatus(inst_, mbox);
+
 
         switch (tx_status){
             case(CAN_TxStatus_Failed):
                 //process failed message
-                EXECUTE(cb_txfail_);
+                if(callback_ != nullptr)
+                    callback_(CanEvent(CanTransmitEvent::Failed));
                 break;
             case(CAN_TxStatus_Ok):
-                //process success message
-                EXECUTE(cb_txok_);
+                if(callback_ != nullptr)
+                    callback_(CanEvent(CanTransmitEvent::Success));
                 break;
             default:
                 __builtin_unreachable();
         }
 
-        clear_mailbox(mbox);
-
-        if(tx_fifo_.available()){
-            (void)transmit(tx_fifo_.pop());
-        }
-    
+        clear_mailbox(std::bit_cast<CanMailboxNth>(mbox));
+    }
+    //poll next
+    if(tx_fifo_.available()){
+        (void)transmit(tx_fifo_.pop());
     }
 }
 
-void Can::on_rx_msg_interrupt(const uint8_t fifo_num){
+void Can::accept_rx_msg_interrupt(const CanFifoNth fifo_num){
     //process rx pending
     //如果没有接收到 直接返回
-    if(CAN_MessagePending(inst_, fifo_num) == 0) return;
+    if(CAN_MessagePending(inst_, std::bit_cast<uint8_t>(fifo_num)) == 0) return;
     
     rx_fifo_.push(receive(fifo_num));
-    EXECUTE(cb_rx_);
+    
+    // if(callback_){
+    //     pass
+    // }
 }
 
-void Can::on_sce_interrupt(){
+void Can::accept_sce_interrupt(){
     #if 1
     const auto reg = inst_->INTENR;
     // #ifdef SCE_ENABLED
@@ -531,22 +535,30 @@ void Can::on_sce_interrupt(){
     #endif
 }
 
+void Can::accept_rx_full_interrupt(const CanFifoNth fifo_num){
+
+}
+
+void Can::accept_rx_overrun_interrupt(const CanFifoNth fifo_num){
+
+}
+
 
 #ifdef ENABLE_CAN1
 void USB_HP_CAN1_TX_IRQHandler(void){
-    can1.on_tx_interrupt();
+    can1.accept_tx_interrupt();
 }
 
 
 #define CAN_RX_HANDLER(inst, uinst)\
 if (MY_CAN_GetITStatus<FMP_MASK>(reg, uinst)){\
-    inst.on_rx_msg_interrupt(FIFO_NUM);\
+    inst.accept_rx_msg_interrupt(FIFO_NUM);\
     MY_CAN_ClearITPendingBit<FMP_MASK>(uinst);\
 }else if(MY_CAN_GetITStatus<FF_MASK>(reg, uinst)){\
-    inst.on_rx_full_interrupt();\
+    inst.accept_rx_full_interrupt(FIFO_NUM);\
     MY_CAN_ClearITPendingBit<FF_MASK>(uinst);\
 }else if(MY_CAN_GetITStatus<FOV_MASK>(reg, uinst)){\
-    inst.on_rx_overrun_interrupt();\
+    inst.accept_rx_overrun_interrupt(FIFO_NUM);\
     MY_CAN_ClearITPendingBit<FOV_MASK>(uinst);\
 }\
 
@@ -554,9 +566,8 @@ void USB_LP_CAN1_RX0_IRQHandler(void) {
     static constexpr auto FMP_MASK = CAN_IT_FMP0;
     static constexpr auto FF_MASK = CAN_IT_FF0;
     static constexpr auto FOV_MASK = CAN_IT_FOV0;
-    static constexpr auto FIFO_NUM = CAN_FIFO0;
+    static constexpr auto FIFO_NUM = CanFifoNth::_0;
     const auto reg = CAN1->INTENR;
-    // DEBUG_PRINTLN("what");
     CAN_RX_HANDLER(can1, CAN1)
 }
 
@@ -564,9 +575,8 @@ void CAN1_RX1_IRQHandler(void){
     static constexpr auto FMP_MASK = CAN_IT_FMP1;
     static constexpr auto FF_MASK = CAN_IT_FF1;
     static constexpr auto FOV_MASK = CAN_IT_FOV1;
-    static constexpr auto FIFO_NUM = CAN_FIFO1;
+    static constexpr auto FIFO_NUM = CanFifoNth::_1;
     const auto reg = CAN1->INTENR;
-    // DEBUG_PRINTLN("what1");
     CAN_RX_HANDLER(can1, CAN1)
 }
 

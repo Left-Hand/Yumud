@@ -7,8 +7,6 @@
 
 namespace ymd::hal{
 
-// template<typename T>
-// class Ok;
 
 class HalError{
 public:

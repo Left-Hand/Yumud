@@ -6,9 +6,10 @@
 #include <span>
 #include <bitset>
 
-#include "i2c.hpp"
 #include "core/utils/BytesIterator.hpp"
 #include "core/utils/Result.hpp"
+
+#include "i2c.hpp"
 
 namespace ymd::hal{
 
@@ -21,15 +22,14 @@ public:
         slave_addr_(addr){;}
 
     I2c & bus(){return i2c_;}
-    void set_baudrate(const uint baud){
-        i2c_.set_baudrate(baud);
+    hal::HalResult set_baudrate(const uint32_t baud){
+        return i2c_.set_baudrate(baud);
     }
 private:
 
     I2c & i2c_;
     I2cSlaveAddr<7> slave_addr_;
 
-    // uint8_t data_width_ = 8;
     uint16_t timeout_ = 10;
     hal::HalResult write_repeat_impl(
         const valid_i2c_regaddr auto addr, 
@@ -122,7 +122,7 @@ private:
         Fn && fn
     ){
         const auto guard = i2c_.create_guard();
-        if(const auto res = i2c_.borrow(slave_addr_.to_write_req()); res.is_err()) return res;
+        if(const auto res = i2c_.borrow(slave_addr_.with_write()); res.is_err()) return res;
         if(const auto res = this->write_payload(std::span(&addr, 1), endian); res.is_err()) return res;
         return std::forward<Fn>(fn)();
     }
@@ -134,7 +134,7 @@ private:
         Fn && fn
     ){
         return write_template(addr, endian, [&]() -> hal::HalResult{
-            if(const auto reset_err = i2c_.borrow(slave_addr_.to_read_req()); reset_err.is_ok()){
+            if(const auto reset_err = i2c_.borrow(slave_addr_.with_read()); reset_err.is_ok()){
                 return std::forward<Fn>(fn)();
             }else{
                 return reset_err;
@@ -301,12 +301,6 @@ public:
     [[nodiscard]]
     hal::HalResult release();
 };
-
-template<>
-struct driver_of_bus<hal::I2c>{
-    using driver_type = hal::I2cDrv;
-};
-
 
 }
 

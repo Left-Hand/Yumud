@@ -381,10 +381,10 @@ static constexpr auto BITS(auto x) {return (sizeof(x) * 8);}
 static consteval auto PLAT_WIDTH() {return BITS(std::size_t());}
 
 template<typename T>
-static constexpr T DEG2RAD(auto x) {return ((x) * static_cast<T>(TAU / 360));}
+static constexpr T DEG2RAD(auto x) {return (static_cast<T>(x) * static_cast<T>(TAU / 360));}
 
 template<typename T>
-static constexpr T RAD2DEG(auto x) {return ((x) * static_cast<T>(360 / TAU));}
+static constexpr T RAD2DEG(auto x) {return (static_cast<T>(x) * static_cast<T>(360 / TAU));}
 
 static consteval auto YEAR() {return (((__DATE__[9]-'0')) * 10 + (__DATE__[10]-'0'));}
 static consteval auto MONTH() {

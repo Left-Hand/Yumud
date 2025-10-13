@@ -1,26 +1,25 @@
 #pragma once
 
-#include "hal/gpio/vport.hpp"
-#include "hal/bus/bus_base.hpp"
-
 #include <optional>
 #include "core/utils/Option.hpp"
+
+#include "hal/gpio/vport.hpp"
+#include "hal/bus/bus_base.hpp"
+#include "hal/bus/bus_enums.hpp"
+#include "hal/hal_result.hpp"
 
 namespace ymd::hal{
 
 
-class SpiSlaveIndex{
+class SpiSlaveRank{
 public:
-    explicit constexpr SpiSlaveIndex(const uint8_t spi_idx):
-        spi_idx_(spi_idx){}
+    explicit constexpr SpiSlaveRank(const uint8_t rank):
+        rank_(rank){}
 
-    uint8_t as_u8() const {return spi_idx_;}
+    uint16_t as_unique_id() const {return static_cast<uint16_t>(rank_);}
 
-    LockRequest to_req() const {
-        return LockRequest(spi_idx_, 0);
-    }
 private:
-    uint8_t spi_idx_;
+    uint8_t rank_;
 };
 
 enum class SpiMode:uint8_t{
@@ -28,6 +27,16 @@ enum class SpiMode:uint8_t{
     _1,
     _2,
     _3
+};
+
+enum class SpiClockPolarity:uint8_t{
+    IdleLow = 0,
+    IdleHigh = 1
+};
+
+enum class SpiClockPhase:uint8_t{
+    CaptureOnFirst = 0,
+    CaptureOnSecond = 1
 };
 
 class Spi{
@@ -43,13 +52,13 @@ public:
     Spi(hal::Spi &&) = delete;
 
     
-    HalResult borrow(const LockRequest req){
-        if(false == locker.is_borrowed()){
-            locker.lock(req);
-            return lead(req);
-        }else if(locker.is_borrowed_by(req)){
-            locker.lock(req);
-            return lead(req);
+    HalResult borrow(const SpiSlaveRank rank){
+        if(false == owner_.is_borrowed()){
+            owner_.borrow(rank);
+            return lead(rank);
+        }else if(owner_.is_borrowed_by(rank)){
+            owner_.borrow(rank);
+            return lead(rank);
         }else{
             return hal::HalResult::OccuipedByOther;
         }
@@ -57,16 +66,16 @@ public:
 
     void lend(){
         this->trail();
-        locker.unlock();
+        owner_.lend();
     }
 
-    bool is_occupied(){return locker.is_borrowed();}
+    bool is_occupied(){return owner_.is_borrowed();}
 
     [[nodiscard]] virtual hal::HalResult read(uint32_t & data) = 0;
     [[nodiscard]] virtual hal::HalResult write(const uint32_t data) = 0;
     [[nodiscard]] virtual hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx) = 0;
 
-    [[nodiscard]] virtual hal::HalResult set_data_width(const uint8_t len) = 0;
+    [[nodiscard]] virtual hal::HalResult set_data_width(const uint8_t bits) = 0;
     [[nodiscard]] virtual hal::HalResult set_baudrate(const uint32_t baud) = 0;
     [[nodiscard]] virtual hal::HalResult set_bitorder(const Endian endian) = 0;
 
@@ -82,17 +91,17 @@ public:
 
 
     [[nodiscard]]
-    Option<SpiSlaveIndex> allocate_cs_gpio(Some<hal::GpioIntf *> io);
+    Option<SpiSlaveRank> allocate_cs_gpio(Some<hal::GpioIntf *> io);
 
 protected:
     VGpioPort <SPI_MAX_PINS> cs_port_ = VGpioPort<SPI_MAX_PINS>();
     CommStrategy tx_strategy_;
     CommStrategy rx_strategy_;
+    PeripheralOwnershipTracker owner_ = {};
     Option<Nth> last_nth_ = None;
 
-    [[nodiscard]] __fast_inline hal::HalResult lead(const LockRequest req){
-        const auto index = req.id();
-        const auto nth = Nth(index);
+    [[nodiscard]] __fast_inline hal::HalResult lead(const SpiSlaveRank rank){
+        const auto nth = Nth(rank.as_unique_id());
         if(not cs_port_.is_nth_valid(nth))
             return hal::HalResult::NoSelecter;
         cs_port_[nth].clr();
@@ -114,7 +123,7 @@ protected:
         cs_port_.bind_pin(gpio.deref(), nth);
     }
 
-    BusLocker locker = {};
+
 };
 
 }

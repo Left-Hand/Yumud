@@ -102,18 +102,20 @@ protected:
     real_t acc_scale = 0;
     real_t gyr_scale = 0;
 
-    using RegAddress = uint8_t;
-    struct TempOutReg:public Reg16<>{static constexpr RegAddress address = 0x0D; uint8_t data;};
-    struct WhoAmIReg:public Reg8<>{static constexpr RegAddress address = 0x0F; uint8_t data;};
+    using RegAddr = uint8_t;
+    struct TempOutReg:public Reg16<>{
+        static constexpr RegAddr address = 0x0D; uint8_t data;};
+    struct WhoAmIReg:public Reg8<>{
+        static constexpr RegAddr address = 0x0F; uint8_t data;};
     struct Ctrl1Reg:public Reg8<>{
-        static constexpr RegAddress address = 0x20;
+        static constexpr RegAddr address = 0x20;
         uint8_t lp_mode:2;
         uint8_t mode:2;
         uint8_t odr:4;    
     };
 
     struct Ctrl2Reg:public Reg8<>{
-        static constexpr RegAddress address = 0x21;
+        static constexpr RegAddr address = 0x21;
         uint8_t sim:1;
         uint8_t i2c_disable:1;
         uint8_t if_add_inc:1;
@@ -125,7 +127,7 @@ protected:
     };
 
     struct Ctrl3Reg:public Reg8<>{
-        static constexpr RegAddress address = 0x22;
+        static constexpr RegAddr address = 0x22;
         uint8_t slp_mode_1:1;
         uint8_t slp_mode_sel:1;
         uint8_t :1;
@@ -136,7 +138,7 @@ protected:
     };
 
     struct Ctrl4Reg:public Reg8<>{
-        static constexpr RegAddress address = 0x23;
+        static constexpr RegAddr address = 0x23;
         uint8_t int1_drdy:1;
         uint8_t int1_fth:1;
         uint8_t int1_diff5:1;
@@ -148,7 +150,7 @@ protected:
     };
 
     struct Ctrl5Reg:public Reg8<>{
-        static constexpr RegAddress address = 0x24;
+        static constexpr RegAddr address = 0x24;
         uint8_t int2_drdy:1;
         uint8_t int2_fth:1;
         uint8_t int2_diff5:1;
@@ -160,7 +162,7 @@ protected:
     };
 
     struct Ctrl6Reg:public Reg8<>{
-        static constexpr RegAddress address = 0x25;
+        static constexpr RegAddr address = 0x25;
         uint8_t :2;
         uint8_t low_noise:1;
         uint8_t fds:1;
@@ -168,10 +170,10 @@ protected:
         uint8_t bw_filt:2;
     };
 
-    struct TempOut8Reg:public Reg16<>{static constexpr RegAddress address = 0x26; uint8_t data;};
+    struct TempOut8Reg:public Reg16<>{static constexpr RegAddr address = 0x26; uint8_t data;};
 
     struct StatusReg:public Reg8<>{
-        static constexpr RegAddress address = 0x27;
+        static constexpr RegAddr address = 0x27;
         uint8_t drdy:1;
         uint8_t ff_ia:1;
         uint8_t _6d_ia:1;
@@ -182,18 +184,18 @@ protected:
         uint8_t fifo_ths:1;
     };
 
-    struct OutputXReg:public Reg16i<>{static constexpr RegAddress address = 0x28; int16_t data;};
-    struct OutputYReg:public Reg16i<>{static constexpr RegAddress address = 0x2A; int16_t data;};
-    struct OutputZReg:public Reg16i<>{static constexpr RegAddress address = 0x2C; int16_t data;};
+    struct OutputXReg:public Reg16i<>{static constexpr RegAddr address = 0x28; int16_t data;};
+    struct OutputYReg:public Reg16i<>{static constexpr RegAddr address = 0x2A; int16_t data;};
+    struct OutputZReg:public Reg16i<>{static constexpr RegAddr address = 0x2C; int16_t data;};
 
     struct FifoCtrlReg:public Reg8<>{
-        static constexpr RegAddress address = 0x2E;
+        static constexpr RegAddr address = 0x2E;
         uint8_t fth:5;
         uint8_t fmode:3;
     };
 
     struct FifoSamplesReg:public Reg8<>{
-        static constexpr RegAddress address = 0x2F;
+        static constexpr RegAddr address = 0x2F;
         uint8_t diff0:6;
         uint8_t fifo_ovr:1;
         uint8_t fifo_fth:1;
@@ -211,7 +213,7 @@ public:
     LIS2DW12(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
     LIS2DW12(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
     LIS2DW12(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    LIS2DW12(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):phy_(hal::SpiDrv{spi, index}){;}
+    LIS2DW12(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):phy_(hal::SpiDrv{spi, index}){;}
 
     void init();
     void update();

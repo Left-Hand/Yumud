@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include "core/polymorphism/reflect.hpp"
 
 namespace ymd::mavlink::payload{
     

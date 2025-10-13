@@ -35,7 +35,7 @@ IResult<> AK8975::update_adj(){
 
 
 IResult<> AK8975::update(){
-    return phy_.read_burst(0x03, &x, 2 * 3);
+    return phy_.read_burst(0x03, std::span(&x, 2 * 3));
 }
 
 

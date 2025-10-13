@@ -356,13 +356,14 @@ IResult<> LT8960L_Phy::_write_reg(
 ){
     auto guard = i2c_.create_guard();
     
-    auto res = i2c_.borrow(hal::LockRequest(address, 0))
+    auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(address))
         .then([&]{return i2c_.write(data >> 8);})
         .then([&]{return i2c_.write(data);})
     ;
 
-    if(res.is_ok()) return Ok();
-    else return Err(Error(res.unwrap_err()));
+    
+    if(res.is_err()) return Err(Error(res.unwrap_err()));
+    return Ok();
 }
 
 IResult<> LT8960L_Phy::_read_reg(
@@ -372,7 +373,7 @@ IResult<> LT8960L_Phy::_read_reg(
     auto guard = i2c_.create_guard();
     
 
-    auto res = i2c_.borrow(hal::LockRequest(address | 0x80, 0))
+    auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(address | 0x80))
         .then([&](){
             uint32_t dummy = 0; 
             const auto err = i2c_.read(dummy, ACK); 
@@ -521,7 +522,7 @@ IResult<size_t> LT8960L_Phy::read_burst(uint8_t address, std::span<uint8_t> pbuf
 
     LT8960L_ASSERT(pbuf.size() <= 0xff, "app given buf length too long");
 
-    auto res = i2c_.borrow(hal::LockRequest{uint32_t(address | 0x80), 0})
+    auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(static_cast<uint8_t>(address | 0x80)))
         .then([&]() -> hal::HalResult{
             const auto err = i2c_.read(len, ACK);
             if(err.is_err()) return err;
@@ -559,7 +560,7 @@ IResult<size_t> LT8960L_Phy::write_burst(uint8_t address, std::span<const uint8_
     
     LT8960L_ASSERT(pbuf.size() <= 0xff, "buf length too long");
 
-    auto res = i2c_.borrow(hal::LockRequest{address, 0})
+    auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(address))
         .then([&](){
             return i2c_.write(pbuf.size());
         })

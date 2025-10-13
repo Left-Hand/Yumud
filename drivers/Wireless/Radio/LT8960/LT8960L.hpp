@@ -133,7 +133,7 @@ private:
     Channel curr_channel_ = Channel(0);
 
     [[nodiscard]] __fast_inline
-    IResult<> write_reg(const RegAddress address, const uint16_t reg){
+    IResult<> write_reg(const RegAddr address, const uint16_t reg){
         return phy_.write_reg(address, reg);
     }
 
@@ -148,7 +148,7 @@ private:
 
 
     [[nodiscard]] __fast_inline
-    IResult<> read_reg(const RegAddress address, uint16_t & reg){
+    IResult<> read_reg(const RegAddr address, uint16_t & reg){
         return phy_.read_reg(address, reg);
     }
 

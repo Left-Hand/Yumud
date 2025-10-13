@@ -10,14 +10,14 @@ hal::HalResult TCA9548A::switch_vbus(const uint8_t ch){
     return self_i2c_drv_.write_blocks<>(temp, LSB);
 }
 
-hal::HalResult TCA9548A::lead(const uint8_t address, const uint8_t ch){
+hal::HalResult TCA9548A::lead(const hal::I2cSlaveAddrWithRw addr, const uint8_t ch){
     if((last_ch_.is_none()) 
         or (
             (last_ch_.is_some()) 
             and (last_ch_.unwrap() == ch)
         )){
         last_ch_ = Some(ch);//lock
-        return i2c_.borrow(hal::LockRequest{address, 0});
+        return i2c_.borrow(addr);
     }else{
         return hal::HalResult::OccuipedByOther;
     }

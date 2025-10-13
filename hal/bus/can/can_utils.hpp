@@ -2,6 +2,7 @@
 
 #include "core/sdk.hpp"
 #include "core/utils/Option.hpp"
+#include "core/utils/sumtype.hpp"
 #include <memory>
 #include <functional>
 
@@ -81,6 +82,32 @@ enum class CanBs2:uint8_t{
 };
 
 
+enum class CanTransmitEvent:uint8_t{
+    Failed,
+    Success
+};
+
+enum class CanReceiveEvent:uint8_t{
+    Fifo0Pending,
+    Fifo0Full,
+    Fifo0Overrun,
+    Fifo1Pending,
+    Fifo1Full,
+    Fifo1Overrun,
+};
+
+enum class CanStatusEvent:uint8_t{
+    Wakeup,
+    SleepAcknowledge,
+    ErrorWarninh,
+    ErrorPassive,
+    BusOff,
+    LastErrorCode,
+    Error
+};
+
+struct CanEvent:public Sumtype<CanTransmitEvent, CanReceiveEvent, CanStatusEvent>{};
+
 struct CanBitTimmingCoeffs{
     uint16_t prescale;
     CanSwj swj;
@@ -104,8 +131,6 @@ public:
     };
 
     using enum Kind;
-
-
     constexpr CanBaudrate(Kind kind):kind_(kind){}
     static constexpr Option<CanBaudrate> from_freq(const uint32_t freq){
         const auto may_kind = freq2kind(freq);
@@ -164,6 +189,21 @@ private:
             case Kind::_1M: return 1000'000;
         }
     }
+
+    friend OutputStream & operator<<(OutputStream & os, const CanBaudrate & self){
+        switch(self.kind()){
+            case Kind::_10K: return os << "10K";
+            case Kind::_20K: return os << "20K";
+            case Kind::_50K: return os << "50K";
+            case Kind::_100K:    return os << "100K";
+            case Kind::_125K:    return os << "125K";
+            case Kind::_250K:    return os << "250K";
+            case Kind::_500K:    return os << "500K";
+            case Kind::_800K:    return os << "800K";
+            case Kind::_1M:  return os << "1M";
+        }
+        __builtin_unreachable();
+    }
 };
 
 enum class CanMode:uint8_t{
@@ -197,9 +237,7 @@ OutputStream & operator<<(OutputStream & os, const CanError & error);
 
 enum class CanRtr:uint8_t{
     Data = 0,
-    // Any = 0,
     Remote = 1,
-    // Specified = 1
 };  
 
 };

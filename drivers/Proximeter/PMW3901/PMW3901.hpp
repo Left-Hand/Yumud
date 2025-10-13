@@ -27,6 +27,29 @@ public:
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+public:
+
+    explicit PMW3901(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    explicit PMW3901(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+    explicit PMW3901(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){;}
+
+    PMW3901(const PMW3901 & other) = delete;
+    PMW3901(PMW3901 && other) = delete;
+
+    ~PMW3901() = default;
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> init();
+
+    [[nodiscard]] IResult<> update();
+
+    [[nodiscard]] Vec2<q16> get_position(){
+        return {x_cm * q16(0.01), y_cm * q16(0.01)};
+    }
+
+    [[nodiscard]] IResult<> set_led(bool on);
 private:
     struct MotionReg:public Reg8<>{
         using Reg8::operator=;
@@ -56,8 +79,8 @@ private:
     hal::SpiDrv spi_drv_;
 
     PMW3901_Data data_ = {};
-    real_t x_cm = 0;
-    real_t y_cm = 0;
+    q16 x_cm = 0;
+    q16 y_cm = 0;
 
     [[nodiscard]] Result<bool, Error> assert_reg(const uint8_t command, const uint8_t data);
     [[nodiscard]] IResult<> write_reg(const uint8_t command, const uint8_t data);
@@ -69,30 +92,6 @@ private:
     [[nodiscard]] IResult<> read_data();
 
     [[nodiscard]] IResult<> write_list(std::span<const std::pair<uint8_t, uint8_t>>);
-public:
-
-    PMW3901(const hal::SpiDrv & spi_drv):
-        spi_drv_(spi_drv){;}
-    PMW3901(hal::SpiDrv && spi_drv):
-        spi_drv_(std::move(spi_drv)){;}
-    PMW3901(Some<hal::Spi *> spi, const hal::SpiSlaveIndex index):
-        spi_drv_(hal::SpiDrv(spi, index)){;}
-
-    PMW3901(const PMW3901 & other) = delete;
-    PMW3901(PMW3901 && other) = delete;
-
-    ~PMW3901() = default;
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> init();
-
-    [[nodiscard]] IResult<> update();
-    // [[nodiscard]] IResult<> update(const real_t rad);
-
-    [[nodiscard]] Vec2<real_t> get_position(){
-        return {x_cm * real_t(0.01), y_cm * real_t(0.01)};
-    }
-
-    [[nodiscard]] IResult<> set_led(bool on);
 };
 
 }

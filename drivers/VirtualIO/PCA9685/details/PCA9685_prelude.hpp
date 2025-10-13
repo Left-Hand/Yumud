@@ -14,7 +14,7 @@ namespace ymd::drivers{
 struct PCA9685_Prelude{
 public:
 
-    enum class RegAddress:uint8_t{
+    enum class RegAddr:uint8_t{
         Mode1,
         Mode2,
         LED0_ON_L = 0x06,
@@ -46,7 +46,7 @@ public:
 struct PCA9685_Regs :public PCA9685_Prelude{
 
     struct Mode1Reg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Mode1;
+        static constexpr auto ADDRESS = RegAddr::Mode1;
         
         uint8_t allcall:1;
         uint8_t sub:3;
@@ -57,7 +57,7 @@ struct PCA9685_Regs :public PCA9685_Prelude{
     }DEF_R8(mode1_reg)
 
     struct Mode2Reg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Mode2;
+        static constexpr auto ADDRESS = RegAddr::Mode2;
 
         uint8_t outne:2;
         uint8_t outdrv:1;
@@ -67,7 +67,7 @@ struct PCA9685_Regs :public PCA9685_Prelude{
     }DEF_R8(mode2_reg)
 
     struct LedOnOffReg:public Reg16<>{
-        // static constexpr auto ADDRESS = RegAddress::Led;
+        // static constexpr auto ADDRESS = RegAddr::Led;
 
         uint16_t cvr:12 = 0;
         uint16_t full:1 = 0;
@@ -80,7 +80,7 @@ struct PCA9685_Regs :public PCA9685_Prelude{
     };
 
     struct PrescaleReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Prescale;
+        static constexpr auto ADDRESS = RegAddr::Prescale;
 
         uint8_t prescale:8;
     }DEF_R8(prescale_reg)

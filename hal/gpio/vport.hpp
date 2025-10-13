@@ -10,8 +10,6 @@ namespace ymd::hal{
 
 template<size_t N>
 class VGpioPortIntf : public GpioPortIntf{
-// protected:
-//     bool is_nth_valid(const Nth nth){return (index < N);}
 public:
     constexpr size_t size(){
         return N;
@@ -36,7 +34,7 @@ protected:
     std::array<E *, N> p_pins_ = {nullptr};
 
     void write_by_mask(const PinMask mask)  {
-        for(uint8_t i = 0; i < 16; i++){
+        for(size_t i = 0; i < 16; i++){
             const auto nth = Nth(i);
             write_nth(nth, BoolLevel::from(mask.test(nth)));
         }
@@ -44,7 +42,7 @@ protected:
 
     PinMask read_mask()  {
         uint16_t data = 0;
-        for(uint8_t i = 0; i < 16; i++){
+        for(size_t i = 0; i < 16; i++){
             data |= uint16_t(p_pins_[i]->read().to_bool() << i);
         }
         return PinMask::from_u16(data);
@@ -63,7 +61,7 @@ public:
         p_pins_[nth.count()]->write((data));
     }
 
-    __fast_inline BoolLevel read_nth(const Nth nth) {
+    [[nodiscard]] __fast_inline BoolLevel read_nth(const Nth nth) {
         if(!is_nth_valid(nth))return LOW;
         return (p_pins_[nth.count()])->read();
     }

@@ -2,17 +2,8 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-
-
-#include "hal/bus/i2c/i2csw.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
-
-#include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
-
 #include "core/utils/sumtype.hpp"
 #include "core/utils/Match.hpp"
-#include "core/utils/Unit.hpp"
 #include "digipw/SVPWM/svpwm3.hpp"
 
 using namespace ymd;
@@ -40,17 +31,14 @@ namespace ymd{
 
 
 // using Shape = Sumtype<Circle, Rectangle>;
+struct Shape_Prelude{
+    struct Circle{int radius;};
+    struct Rectangle{int a; int b;};
+    struct Square{int a;};
+};
 
-struct Circle{int radius;};
-struct Rectangle{int a; int b;};
-struct Square{int a;};
-
-struct Shape:public Sumtype<Circle, Rectangle>{
-    using Circle = ::Circle;
-    using Rectangle = ::Rectangle;
-    using Square = ::Square;
-
-    
+struct Shape:public Sumtype<Shape_Prelude::Circle, Shape_Prelude::Rectangle>, public Shape_Prelude
+{    
     // struct Circle{int radius;};
     // struct Rectangle{int a; int b;};
 
@@ -68,20 +56,20 @@ using namespace fp;
 
 constexpr auto shape = Shape(Shape::Circle(1));
 // constexpr auto shape = Circle(1);
-constexpr auto is_circle = (pattern | fpm::is<Circle>).is_compatible(shape);
+constexpr auto is_circle = (pattern | fpm::is<Shape::Circle>).is_compatible(shape);
 // constexpr auto is_circle = (pattern | fpm::unhandled).is_compatible(shape);
-constexpr auto is_rectangle = (pattern | fpm::is<Rectangle>).is_compatible(shape);
+constexpr auto is_rectangle = (pattern | fpm::is<Shape::Rectangle>).is_compatible(shape);
 
 // constexpr auto reflection = match(Rectangle(1,2))(
 // constexpr auto reflection = match(Shape::Circle(1))(
 // constexpr auto reflection = match(Shape::Rectangle(2,2))(
 constexpr auto reflection = match(Shape::Square(1))(
-    pattern | fpm::is<Circle> >>= [](Circle circle){return circle.radius;},
+    pattern | fpm::is<Shape::Circle> >>= [](const Shape::Circle & circle){return circle.radius;},
     // pattern | fpm::is<Circle> = 1,
     // pattern | fpm::is<Circle> = 1,
-    pattern | fpm::is<Rectangle> >>= [](const Rectangle & rect){return rect.a + rect.b;},
+    pattern | fpm::is<Shape::Rectangle> >>= [](const Shape::Rectangle & rect){return rect.a + rect.b;},
     // pattern | fpm::is<Rectangle> = 4,
-    pattern | fpm::is<Square> >>= 4
+    pattern | fpm::is<Shape::Square> >>= 4
 );
 
 static_assert(is_circle, "");
@@ -89,7 +77,7 @@ static_assert(is_circle, "");
 static_assert(reflection == 4, "");
 // static_assert(reflection == 1, "");
 
-static_assert(std::is_same_v<Circle, Shape::Circle>);
+static_assert(std::is_same_v<Shape::Circle, Shape::Circle>);
 
 
 }

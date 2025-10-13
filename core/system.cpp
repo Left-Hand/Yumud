@@ -291,7 +291,7 @@ bool sys::exception::is_interrupt_pending(){
     #endif
 }
 
-bool sys::exception::is_intrrupt_acting(){
+bool sys::exception::is_interrupt_acting(){
     #ifdef ARCH_QKV4
     return QingKeV4::isIntrruptActing();
     #else

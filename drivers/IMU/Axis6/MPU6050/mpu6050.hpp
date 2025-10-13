@@ -2,109 +2,9 @@
 
 //这个驱动已经完成了基础使用
 
-#include "core/io/regs.hpp"
-#include "core/utils/angle.hpp"
-#include "core/utils/Errno.hpp"
-
-#include "drivers/IMU/IMU.hpp"
-#include "drivers/IMU/details/InvensenseIMU.hpp"
+#include "mpu6050_prelude.hpp"
 
 namespace ymd::drivers{
-
-struct MPU6050_Prelude{
-    using Error = ImuError;
-    
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    enum class Package:uint8_t{
-        MPU6050 = 0x68,
-        MPU6500 = 0x70,
-        MPU9250 = 0x71
-    };
-
-
-    static constexpr auto DEFAULT_I2C_ADDR = 
-        hal::I2cSlaveAddr<7>::from_u7(0b1101000);
-
-
-    enum class AccFs:uint8_t{
-        _2G     =   0,
-        _4G     =   1,
-        _8G     =   2,
-        _16G    =   3
-    };
-
-    enum class GyrFs:uint8_t{
-        _250deg     =   0,
-        _500deg     =   1,
-        _1000deg    =   2,
-        _2000deg    =   3
-    };
-
-    using RegAddress = uint8_t;   
-
-    struct Config{
-        Package packge = Package::MPU6050;
-        AccFs acc_fs = AccFs::_2G;
-        GyrFs gyr_fs = GyrFs::_1000deg;
-    };
-};
-
-struct MPU6050_Regs:public MPU6050_Prelude{ 
-    struct GyrConfReg:public Reg8<>{
-        static constexpr RegAddress address = 0x1b;
-
-        const uint8_t __resv__:3 = 0;
-        GyrFs fs_sel:2;
-        uint8_t zg_st:1 = 0;
-        uint8_t yg_st:1 = 0;
-        uint8_t xg_st:1 = 0;
-    }DEF_R8(gyr_conf_reg)
-    
-
-    struct AccConfReg:public Reg8<>{
-        static constexpr RegAddress address = 0x1c;
-
-        const uint8_t __resv__:3 = 0;
-        AccFs afs_sel:2;
-        uint8_t zg_st:1 = 0;
-        uint8_t yg_st:1 = 0;
-        uint8_t xg_st:1 = 0;
-    }DEF_R8(acc_conf_reg)
-    
-    REG16I_QUICK_DEF(0x3B, AccXReg, acc_x_reg);
-    REG16I_QUICK_DEF(0x3D, AccYReg, acc_y_reg);
-    REG16I_QUICK_DEF(0x3F, AccZReg, acc_z_reg);
-
-    REG16_QUICK_DEF(0x41, TemperatureReg, temperature_reg);
-
-    REG16I_QUICK_DEF(0x43, GyrXReg, gyr_x_reg);
-    REG16I_QUICK_DEF(0x45, GyrYReg, gyr_y_reg);
-    REG16I_QUICK_DEF(0x47, GyrZReg, gyr_z_reg);
-    
-
-    struct IntPinCfgReg:public Reg8<>{
-        static constexpr RegAddress address = 55;
-
-        const uint8_t __resv__:1 = 0;
-        uint8_t bypass_en:1 = 0;
-        uint8_t fsync_int_mode_en:1;
-        uint8_t actl_fsync:1;
-
-        uint8_t int_anyed_2clear:1;
-        uint8_t latch_int_en:1;
-        uint8_t open:1;
-        uint8_t actl:1;
-
-    }DEF_R8(int_pin_cfg_reg)
-
-    struct WhoAmIReg:public Reg8<>{
-        static constexpr RegAddress address = 0x75;
-        uint8_t data;
-    } DEF_R8(whoami_reg)
-};
-
 class MPU6050 final:
     public AccelerometerIntf, 
     public GyroscopeIntf,
@@ -129,7 +29,7 @@ public:
 
     [[nodiscard]] IResult<Vec3<q24>> read_acc();
     [[nodiscard]] IResult<Vec3<q24>> read_gyr();
-    [[nodiscard]] IResult<real_t> read_temp();
+    [[nodiscard]] IResult<q16> read_temp();
 
     [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
@@ -147,8 +47,8 @@ private:
 
     using Phy = InvensenseSensor_Phy;
     Phy phy_;
-    real_t acc_scaler_ = 0;
-    real_t gyr_scaler_ = 0;
+    q16 acc_scaler_ = 0;
+    q16 gyr_scaler_ = 0;
 
     bool is_data_valid_ = false;
     Package package_ = Package::MPU6050;
@@ -172,7 +72,7 @@ private:
     }
 
     [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
-        return phy_.read_burst(addr, pbuf.data(), pbuf.size());
+        return phy_.read_burst(addr, pbuf);
     }
 
     template<typename T>
@@ -180,25 +80,25 @@ private:
         return read_reg(reg.address, reg.as_ref());
     }
 
-    static constexpr real_t calculate_acc_scale(const AccFs fs){
+    static constexpr q16 calculate_acc_scaler(const AccFs fs){
         constexpr double g = 9.806;
         switch(fs){
-            case AccFs::_2G: return real_t(g * 2);
-            case AccFs::_4G: return real_t(g * 4);
-            case AccFs::_8G: return real_t(g * 8);
-            case AccFs::_16G: return real_t(g * 16);
-            default: __builtin_unreachable();
+            case AccFs::_2G: return q16(g * 4);
+            case AccFs::_4G: return q16(g * 8);
+            case AccFs::_8G: return q16(g * 16);
+            case AccFs::_16G: return q16(g * 32);
         }
+        __builtin_unreachable();
     }
 
-    static constexpr real_t calculate_gyr_scale(const GyrFs fs){
+    static constexpr q16 calculate_gyr_scaler(const GyrFs fs){
         switch(fs){
-            case GyrFs::_250deg: return (250_deg).to_radians();
-            case GyrFs::_500deg: return (500_deg).to_radians();
-            case GyrFs::_1000deg: return (1000_deg).to_radians();
-            case GyrFs::_2000deg: return (2000_deg).to_radians();
-            default: __builtin_unreachable();
+            case GyrFs::_250deg: return DEG2RAD<q16>(500);
+            case GyrFs::_500deg: return DEG2RAD<q16>(1000);
+            case GyrFs::_1000deg: return DEG2RAD<q16>(2000);
+            case GyrFs::_2000deg: return DEG2RAD<q16>(4000);
         }
+        __builtin_unreachable();
     }
 
 };

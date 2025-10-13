@@ -186,14 +186,16 @@ int main(){
     // pmw3901_main();
     // ch9141_tb(logger, uart7);
     // st7789_main();
-    // smc2025_main();
+    smc2025_main();
     // fft_main();
     // adrc_main();
     // render_main();
-    script_main();
+    // script_main();
     // svd_main();
     // mlx90640_main();
     // smc2025_main();
+    
+    // slcan_main();
 
     // embd_main();
     // mpu6050_main();

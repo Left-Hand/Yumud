@@ -56,7 +56,7 @@ struct HT16K33_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 
 
     //  1 1 1 0 A2 A1 A0 0
@@ -315,14 +315,14 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_data(const RegAddress addr, const uint8_t data){
+    [[nodiscard]] IResult<> write_data(const RegAddr addr, const uint8_t data){
         if(const auto res = i2c_drv_.write_reg(addr, data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     [[nodiscard]] IResult<> write_burst(
-        const RegAddress addr, 
+        const RegAddr addr, 
         const std::span<const uint8_t> pbuf
     ){
         // page 23
@@ -333,14 +333,14 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_data(const RegAddress addr, uint8_t & data){
+    [[nodiscard]] IResult<> read_data(const RegAddr addr, uint8_t & data){
         if(const auto res = i2c_drv_.read_reg(addr, data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     [[nodiscard]] IResult<> read_burst(
-        const RegAddress addr, 
+        const RegAddr addr, 
         const std::span<uint8_t> pbuf
     ){
         if(const auto res = i2c_drv_.read_burst(addr, pbuf);

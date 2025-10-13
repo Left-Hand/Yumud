@@ -21,7 +21,7 @@ struct GP22_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 };
 
 struct GP22_Regs:public GP22_Prelude{
@@ -75,7 +75,7 @@ struct GP22_Regs:public GP22_Prelude{
     using u32 = uint32_t;
 
     struct R32_Cfg0:public Reg32<>{
-        static constexpr RegAddress address = 0x1;
+        static constexpr RegAddr address = 0x1;
 
         u32 id0:8;
         u32 neg_stop1:1;
@@ -95,7 +95,7 @@ struct GP22_Regs:public GP22_Prelude{
     }DEF_R32(cfg0_reg)
 
     struct R32_Cfg1:public Reg32<>{
-        static constexpr RegAddress address = 0x1;
+        static constexpr RegAddr address = 0x1;
 
         uint32_t id1:8;
 

@@ -25,7 +25,7 @@ hal::HalResult SpiSw::transceive(uint32_t & data_rx, const uint32_t data_tx){
 
     sclk_gpio_.set();
 
-    for(uint8_t i = 0; i < data_bits; i++){
+    for(uint8_t i = 0; i < width_; i++){
         sclk_gpio_.set();
         delay_dur();
         mosi_gpio_ = BoolLevel::from(data_tx & (1 << (i)));
@@ -33,13 +33,13 @@ hal::HalResult SpiSw::transceive(uint32_t & data_rx, const uint32_t data_tx){
         sclk_gpio_.clr();
         delay_dur();
 
-        if(m_msb){
-            mosi_gpio_ = BoolLevel::from(data_tx & (1 << (data_bits - 2 - i)));
+        if(is_msb_){
+            mosi_gpio_ = BoolLevel::from(data_tx & (1 << (width_ - 2 - i)));
             ret <<= 1; ret |= miso_gpio_.read().to_bool();
             delay_dur();
         }else{
             mosi_gpio_ = BoolLevel::from(data_tx & (1 << i));
-            ret >>= 1; ret |= (uint32_t(miso_gpio_.read().to_bool()) << (data_bits - 1)) ;
+            ret >>= 1; ret |= (uint32_t(miso_gpio_.read().to_bool()) << (width_ - 1)) ;
             delay_dur();
         }
     }

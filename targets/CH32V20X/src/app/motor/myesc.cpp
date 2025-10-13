@@ -294,10 +294,6 @@ void myesc_main(){
     //     pwm_w_.set_dutycycle(HALF_ONE);
     // };
 
-
-
-
-
     auto ctrl_isr = [&]{
         uvw_curr_ = {
             .u = soa_.get_value(),
@@ -432,15 +428,22 @@ void myesc_main(){
     };
 
     Microseconds exe_us_ = 0us;
-    hal::adc1.attach(hal::AdcIT::JEOC, {0,0}, 
-        [&]{
-            const auto begin_us = clock::micros();
-            ctrl_isr();
-            const auto end_us = clock::micros();
-            exe_us_ = end_us - begin_us;
-        }, EN
-    );
 
+    hal::adc1.register_nvic({0,0}, EN);
+    hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    hal::adc1.set_event_callback(
+        [&](const hal::AdcEvent ev){
+            switch(ev){
+            case hal::AdcEvent::EndOfInjectedConversion:{
+                const auto begin_us = clock::micros();
+                ctrl_isr();
+                const auto end_us = clock::micros();
+                exe_us_ = end_us - begin_us;
+                break;}
+            default: break;
+            }
+        }
+    );
 
     [[maybe_unused]] auto repl_service_poller = [&]{
         static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
@@ -495,7 +498,7 @@ void myesc_main(){
         );
 
         blink_service_poller();
-        repl_service_poller();
+        // repl_service_poller();
         // clock::delay(2ms);
     }
 

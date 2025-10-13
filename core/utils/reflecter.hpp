@@ -89,7 +89,7 @@ struct Displayer{
 
 
 
-
+#if 0
 // 辅助宏：计算参数数量
 #define DEF_GET_NTH_ARG(_1, _2, _3, _4, _5, N, ...) N
 #define DEF_COUNT_ARGS(...) DEF_GET_NTH_ARG(__VA_ARGS__, 5, 4, 3, 2, 1)
@@ -101,6 +101,7 @@ struct Displayer{
 // 连接宏
 #define DEF_CONCAT(a, b) DEF_CONCAT_INNER(a, b)
 #define DEF_CONCAT_INNER(a, b) a ## b
+#endif
 
 // 定义不同参数数量的实现
 #define DEF_DERIVE_MEM_REFLECTER_0(T) \

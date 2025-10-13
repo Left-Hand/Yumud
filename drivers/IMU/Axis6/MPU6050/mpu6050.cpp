@@ -1,9 +1,9 @@
 #include "mpu6050.hpp"
 #include "core/debug/debug.hpp"
 
-// #define MPU6050_DEBUG_EN
+#define MPU6050_DEBUG_EN 0
 
-#ifdef MPU6050_DEBUG_EN
+#if MPU6050_DEBUG_EN == 1
 #define MPU6050_TODO(...) TODO()
 #define MPU6050_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define MPU6050_PANIC(...) PANIC{__VA_ARGS__}
@@ -34,12 +34,6 @@
 #endif
 
 
-#define RETURN_ON_ERR(x) ({\
-    if(const auto __res_return_on_err = (x); __res_return_on_err.is_err()){\
-        return CHECK_RES(__res_return_on_err);\
-    }\
-});\
-
 using namespace ymd;
 using namespace ymd::drivers;
 
@@ -50,26 +44,27 @@ using IResult = Result<T, Error>;
 
 MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
     phy_(i2c_drv),
-    package_(package){
-    }
+    package_(package)
+{}
 
 IResult<> MPU6050::validate(){
 
-    RETURN_ON_ERR(this->reset())
+    if(const auto res = reset();
+        res.is_err()) return Err(res.unwrap_err());
 
-    const auto pkres = this->get_package();
-    if(!MPU6050_ASSERT(pkres.is_ok(), "read who am I failed")) 
+    const auto res = get_package();
+    if(!MPU6050_ASSERT(res.is_ok(), "read who am I failed")) 
         return Err(Error::WrongWhoAmI);
     
-    const auto package = pkres.unwrap();
+    const auto founded_package = res.unwrap();
 
-    if(package != package_){
-        switch(package){
+    if(founded_package != package_){
+        switch(founded_package){
             case Package::MPU6050: MPU6050_DEBUG("this is MPU6050 in fact"); break;
             case Package::MPU6500: MPU6050_DEBUG("this is MPU6500 in fact"); break;
             case Package::MPU9250: MPU6050_DEBUG("this is MPU9250 in fact"); break;
-            default: {MPU6050_PANIC(
-                "this is unknown device", uint8_t(package)); 
+            default: {
+                MPU6050_PANIC("this is unknown device", uint8_t(founded_package)); 
                 return Err(Error(Error::UnknownDevice));
             }
         }
@@ -103,50 +98,54 @@ IResult<> MPU6050::init(const Config & cfg){
 }
 
 IResult<> MPU6050::update(){
-    auto res = this->read_burst(
+    auto res = read_burst(
         acc_x_reg.address, std::span(&acc_x_reg.as_ref(), 7));
     is_data_valid_ = res.is_ok();
     return res;
 }
 
 IResult<Vec3<q24>> MPU6050::read_acc(){
-    real_t x = uni(acc_x_reg.as_val()) * acc_scaler_;
-    real_t y = uni(acc_y_reg.as_val()) * acc_scaler_;
-    real_t z = uni(acc_z_reg.as_val()) * acc_scaler_;
-    return  Ok{Vec3<q24>{x, y, z}};
+
+    return  Ok{Vec3<q24>{
+        uni(acc_x_reg.as_val()) * acc_scaler_,
+        uni(acc_y_reg.as_val()) * acc_scaler_,
+        uni(acc_z_reg.as_val()) * acc_scaler_
+    }};
 }
 
 IResult<Vec3<q24>> MPU6050::read_gyr(){
-    real_t x = uni(gyr_x_reg.as_val()) * gyr_scaler_;
-    real_t y = uni(gyr_y_reg.as_val()) * gyr_scaler_;
-    real_t z = uni(gyr_z_reg.as_val()) * gyr_scaler_;
-    return Ok{Vec3<q24>{x, y, z}};
+
+    return Ok{Vec3<q24>{
+        uni(gyr_x_reg.as_val()) * gyr_scaler_,
+        uni(gyr_y_reg.as_val()) * gyr_scaler_,
+        uni(gyr_z_reg.as_val()) * gyr_scaler_
+    }};
 }
 
-IResult<real_t> MPU6050::read_temp(){
-    static constexpr auto INV_340 = real_t(1.0 / 340);
-    return Ok(real_t(36.65f) + uni(temperature_reg.as_val()) * INV_340);
+IResult<q16> MPU6050::read_temp(){
+    static constexpr auto INV_340 = q16(1.0 / 340);
+    return Ok(q16(36.65f) + uni(temperature_reg.as_val()) * INV_340);
 }
 
-IResult<> MPU6050::set_acc_fs(const AccFs range){
-    this->acc_scaler_ = this->calculate_acc_scale(range);
+IResult<> MPU6050::set_acc_fs(const AccFs fs){
+    acc_scaler_ = calculate_acc_scaler(fs);
 
     auto reg = RegCopy(acc_conf_reg);
-    reg.afs_sel = range;
-    return this->write_reg(reg);
+    reg.afs_sel = fs;
+    return write_reg(reg);
 }
 
 Result<MPU6050::Package, Error> MPU6050::get_package(){
-    if(const auto err = read_reg(whoami_reg); err.is_err()){
-        MPU6050_PANIC("read who am I failed", err.unwrap_err().as<hal::HalError>().unwrap());
-    }
-    return Ok{Package(whoami_reg.data)};
+    if(const auto res = read_reg(whoami_reg); 
+        res.is_err()) MPU6050_PANIC("read who am I failed", res.unwrap_err());
+
+    return Ok{whoami_reg.package};
 }
 
-IResult<> MPU6050::set_gyr_fs(const GyrFs range){
-    this->gyr_scaler_ = this->calculate_gyr_scale(range);
+IResult<> MPU6050::set_gyr_fs(const GyrFs fs){
+    gyr_scaler_ = calculate_gyr_scaler(fs);
     auto reg = RegCopy(gyr_conf_reg);
-    reg.fs_sel = range;
+    reg.fs_sel = fs;
 
     return write_reg(reg);
 }
@@ -156,13 +155,14 @@ IResult<> MPU6050::reset(){
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
+
 IResult<> MPU6050::enable_direct_mode(const Enable en){
-    // int_pin_cfg_reg.bypass_en = bool(en);
     auto reg = RegCopy(int_pin_cfg_reg);
     reg.as_ref() = 0x22;
-    RETURN_ON_ERR(write_reg(reg))
-    // RETURN_ON_ERR(write_reg(int_pin_cfg_reg))
-    RETURN_ON_ERR(write_reg(0x56, 0x01))
+    if(const auto res = write_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = write_reg(0x56, 0x01);
+        res.is_err()) return Err(res.unwrap_err());
     return Ok();
     
 }

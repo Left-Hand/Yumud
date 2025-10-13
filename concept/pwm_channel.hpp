@@ -8,7 +8,7 @@ public:
 };
 
 template <typename T>
-class Countable{
+class CountableIntf{
 public:
     virtual volatile T & cnt() = 0;
     virtual volatile T & cvr() = 0;

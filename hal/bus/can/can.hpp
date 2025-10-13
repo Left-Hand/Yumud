@@ -1,9 +1,7 @@
 #pragma once
 
-#include "hal/bus/bus_base.hpp"
 #include "core/utils/Result.hpp"
 #include "core/container/ringbuf.hpp"
-#include "core/sdk.hpp"
 #include "ral/chip.hpp"
 #include "can_utils.hpp"
 #include "can_msg.hpp"
@@ -69,7 +67,7 @@ public:
     using Fault = CanFault;
     using Error = CanError;
 
-    using Callback = std::function<void(void)>;
+    using Callback = std::function<void(CanEvent)>;
 
     struct Config{
         CanBitTimmingCoeffs coeffs;
@@ -92,8 +90,6 @@ public:
     [[nodiscard]] size_t pending();
     [[nodiscard]] size_t available();
 
-    void clear_rx(){while(this->available()){(void)this->read();}}
-    void enable_blocking_write(const Enable en){blocking_write_en_ = en == EN;}
     [[nodiscard]] bool is_tranmitting();
     [[nodiscard]] bool is_receiving();
     void enable_hw_retransmit(const Enable en);
@@ -106,9 +102,9 @@ public:
     [[nodiscard]] Option<CanFault> last_fault();
     [[nodiscard]] bool is_busoff();
 
-    template<CanIT I, typename Fn>
+    template<typename Fn>
     void set_callback(Fn && cb){
-        get_callback<I>() = std::forward<Fn>(cb);
+        callback_ = std::forward<Fn>(cb);
     }
 
 
@@ -128,18 +124,8 @@ private:
     RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
     RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
 
-    Callback cb_txok_;
-    Callback cb_txfail_;
-    Callback cb_rx_;
+    Callback callback_ = nullptr;
 
-    template<CanIT I>
-    auto & get_callback(){
-        if constexpr (I == CanIT::TME) return cb_txok_;
-        // if constexpr (I == CanIT::)
-    }
-
-
-    bool blocking_write_en_ = false;
 
     Gpio get_tx_gpio(const uint8_t remap);
     Gpio get_rx_gpio(const uint8_t remap);
@@ -147,20 +133,18 @@ private:
     void plant_gpio(const uint8_t remap);
     void enable_rcc(const Enable en);
     void set_remap(const uint8_t remap);
-    bool is_mail_box_done(const uint8_t mbox);
-    void clear_mailbox(const uint8_t mbox);
-    void init_it();
-    
-    void on_tx_interrupt();
-    void on_rx_msg_interrupt(const uint8_t fifo_num);
-    void on_rx_overrun_interrupt(){;}
-    void on_rx_full_interrupt(){;}
-    void on_sce_interrupt();
+    bool is_mail_box_done(const CanMailboxNth mbox);
+    void clear_mailbox(const CanMailboxNth mbox);
+    void init_interrupts();
+    void accept_tx_interrupt();
+    void accept_rx_full_interrupt(const CanFifoNth fifo_num);
+    void accept_rx_overrun_interrupt(const CanFifoNth fifo_num);
 
-
+    void accept_rx_msg_interrupt(const CanFifoNth fifo_num);
+    void accept_sce_interrupt();
 
     [[nodiscard]] Option<CanMailboxNth> transmit(const CanMsg & msg);
-    [[nodiscard]] CanMsg receive(const uint8_t fifo_num);
+    [[nodiscard]] CanMsg receive(const CanFifoNth fifo_num);
 
     friend class CanFilter;
 

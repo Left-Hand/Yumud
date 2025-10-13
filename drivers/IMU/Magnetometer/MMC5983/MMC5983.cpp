@@ -33,7 +33,8 @@ using IResult = Result<T, Error>;
 
 
 IResult<> MMC5983::update(){
-    return read_burst(data_packet_.address, data_packet_.as_bytes());
+    auto & packet = regs_.data_packet_;
+    return read_burst(packet.address, packet.as_bytes());
 }
 
 
@@ -65,18 +66,19 @@ IResult<> MMC5983::init(const Config & cfg){
 IResult<> MMC5983::validate(){
     if(const auto res = phy_.release(); 
         res.is_err()) return CHECK_RES(res);
-        
-    if(const auto res = read_reg(product_id_reg); 
+    
+    auto & reg = regs_.product_id_reg;
+    if(const auto res = read_reg(reg); 
         res.is_err()) return CHECK_RES(res);
     
-    if(product_id_reg.product_id != product_id_reg.KEY)
-        return CHECK_ERR(Err(Error::WrongWhoAmI), product_id_reg.product_id);
+    if(reg.product_id != reg.KEY)
+        return CHECK_ERR(Err(Error::WrongWhoAmI), reg.product_id);
 
     return Ok();
 }
 
 IResult<> MMC5983::reset(){
-    auto reg = RegCopy(internal_control_1_reg);
+    auto reg = RegCopy(regs_.internal_control_1_reg);
     reg.sw_rst = 1;
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
@@ -89,25 +91,25 @@ IResult<> MMC5983::reset(){
 }
 
 IResult<> MMC5983::set_odr(const Odr odr){
-    auto reg = RegCopy(internal_control_2_reg);
+    auto reg = RegCopy(regs_.internal_control_2_reg);
     reg.data_rate = odr;
     reg.cmm_en = (odr != Odr::SingleShot);
     return write_reg(reg);
 }
 
 IResult<> MMC5983::set_bandwidth(const BandWidth bw){
-    auto reg = RegCopy(internal_control_1_reg);
+    auto reg = RegCopy(regs_.internal_control_1_reg);
     reg.bw = bw;
     return write_reg(reg);
 }
 
 IResult<> MMC5983::enable_x(const Enable en){
-    auto reg = RegCopy(internal_control_1_reg);
+    auto reg = RegCopy(regs_.internal_control_1_reg);
     reg.x_inhibit = (en == EN) ? false : true;
     return write_reg(reg);
 }
 IResult<> MMC5983::enable_yz(const Enable en){
-    auto reg = RegCopy(internal_control_1_reg);
+    auto reg = RegCopy(regs_.internal_control_1_reg);
     reg.yz_inhibit = (en == EN) ? false : true;
     return write_reg(reg);
 }
@@ -115,7 +117,7 @@ IResult<> MMC5983::enable_yz(const Enable en){
 IResult<Vec3<q24>> MMC5983::read_mag(){
     static constexpr auto LSB_18BIT = 0.0000625_q24;
 
-    const auto mag3i = data_packet_.to_vec3();
+    const auto mag3i = regs_.data_packet_.to_vec3();
     // DEBUG_PRINTLN(mag3i);
     
     return Ok(Vec3<q24>{
@@ -126,11 +128,11 @@ IResult<Vec3<q24>> MMC5983::read_mag(){
 }
 
 IResult<q16> MMC5983::read_temp(){
-    return Ok(data_packet_.to_temp());
+    return Ok(regs_.data_packet_.to_temp());
 }
 
 IResult<bool> MMC5983::is_mag_meas_done(){
-    auto & reg = status_reg;
+    auto & reg = regs_.status_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(bool(reg.meas_mag_done));
@@ -138,7 +140,7 @@ IResult<bool> MMC5983::is_mag_meas_done(){
 
 
 IResult<bool> MMC5983::is_temp_meas_done(){
-    auto & reg = status_reg;
+    auto & reg = regs_.status_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(bool(reg.meas_temp_done));
@@ -147,14 +149,14 @@ IResult<bool> MMC5983::is_temp_meas_done(){
 
 
 IResult<> MMC5983::enable_mag_meas(const Enable en){
-    auto reg = RegCopy(internal_control_0_reg);
+    auto reg = RegCopy(regs_.internal_control_0_reg);
     reg.tm_m = (en == EN)? true : false;
     return write_reg(reg);
 }
 
 
 IResult<> MMC5983::enable_temp_meas(const Enable en){
-    auto reg = RegCopy(internal_control_0_reg);
+    auto reg = RegCopy(regs_.internal_control_0_reg);
     reg.tm_t = (en == EN)? true : false;
     return write_reg(reg);
 }
@@ -163,18 +165,18 @@ IResult<> MMC5983::set_prd_magset(const PrdSet prdset){
     if(prdset != PrdSet::_1) 
         if(const auto res = enable_auto_mag_sr(EN);
             res.is_err()) return res;
-    auto reg = RegCopy(internal_control_2_reg);
+    auto reg = RegCopy(regs_.internal_control_2_reg);
     reg.prd_set = prdset;
     return write_reg(reg);
 }
 IResult<> MMC5983::enable_magset(const Enable en){
-    auto reg = RegCopy(internal_control_0_reg);
+    auto reg = RegCopy(regs_.internal_control_0_reg);
     reg.set = true;
     return write_reg(reg);
 }
 
 IResult<> MMC5983::enable_magreset(const Enable en){
-    auto reg = RegCopy(internal_control_0_reg);
+    auto reg = RegCopy(regs_.internal_control_0_reg);
     reg.reset = true;
     return write_reg(reg);
 }
@@ -208,7 +210,7 @@ MMC5983::IResult<Vec3<q24>> MMC5983::do_magreset(){
 }
 
 IResult<> MMC5983::enable_auto_mag_sr(const Enable en){
-    auto reg = RegCopy(internal_control_0_reg);
-    reg.auto_sr_en = en == EN ? true : false;
+    auto reg = RegCopy(regs_.internal_control_0_reg);
+    reg.auto_sr_en = en == EN;
     return write_reg(reg);
 }

@@ -80,7 +80,7 @@ struct Drv8301Payload{
 
 static_assert(sizeof(Drv8301Payload) == 2);
 
-IResult<> DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
+IResult<> DRV8301::write_reg(const RegAddr addr, const uint16_t reg){
     const Drv8301Payload payload = {
         .data = reg,
         .addr = uint16_t(addr),
@@ -92,7 +92,7 @@ IResult<> DRV8301::write_reg(const RegAddress addr, const uint16_t reg){
     return Ok();
 }
 
-IResult<> DRV8301::read_reg(const RegAddress addr, uint16_t & reg){
+IResult<> DRV8301::read_reg(const RegAddr addr, uint16_t & reg){
     Drv8301Payload payload = {
         .data = 0,
         .addr = uint16_t(addr),

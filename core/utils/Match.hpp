@@ -175,10 +175,6 @@ constexpr PatternLhs<std::decay_t<T>> operator |(PatternKeyword, T && other){
     return PatternLhs<std::decay_t<T>>(std::forward<T>(other));
 }
 
-// template<typename T>
-// struct KeyWordCrtp{
-
-// };
 
 namespace primitive{
 
@@ -241,9 +237,6 @@ static constexpr auto is = Keyword_Is<T>{};
 static constexpr auto unhandled = KeyWord_Unhandled{};
 }
 
-
-
-// static constexpr bool is_compatible(const T & )
 template<typename T>
 struct MatcherEntry{
     template<typename U>

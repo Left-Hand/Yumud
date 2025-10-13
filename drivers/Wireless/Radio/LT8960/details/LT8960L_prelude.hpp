@@ -127,7 +127,7 @@ struct LT8960L_Prelude{
         uint8_t ch_;
     };
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
 };
 
 

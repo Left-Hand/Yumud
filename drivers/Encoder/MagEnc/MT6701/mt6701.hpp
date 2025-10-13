@@ -31,7 +31,7 @@ struct MT6701_Prelude{
     };
 
 
-    enum class RegAddress:uint8_t{
+    enum class RegAddr:uint8_t{
         RawAngle = 0x03,
         UVWMux = 0x25,
         ABZMux = 0x29,
@@ -48,10 +48,10 @@ struct MT6701_Prelude{
 
 class MT6701_Phy:public MT6701_Prelude{
 public:
-    using RegAddress = MT6701_Phy::RegAddress;
+    using RegAddr = MT6701_Phy::RegAddr;
 
-    MT6701_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveIndex idx):
-        MT6701_Phy(std::nullopt, hal::SpiDrv(spi, idx)){;}
+    MT6701_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        MT6701_Phy(std::nullopt, hal::SpiDrv(spi, rank)){;}
 
     MT6701_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
         MT6701_Phy(hal::I2cDrv(i2c, addr), std::nullopt){;}
@@ -100,18 +100,18 @@ private:
 
 struct MT6701_Regs:public MT6701_Prelude{
     struct R16_RawAngle : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::RawAngle;
+        static constexpr auto ADDRESS = RegAddr::RawAngle;
         uint16_t angle;
     }DEF_R16(raw_angle_reg)
 
     struct R8_UVWMux : public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::UVWMux;
+        static constexpr auto ADDRESS = RegAddr::UVWMux;
         uint8_t __resv__:7;
         uint8_t uvwMux:1;
     };
 
     struct R8_ABZMux : public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::ABZMux;
+        static constexpr auto ADDRESS = RegAddr::ABZMux;
 
         uint8_t __resv1__:1;
         uint8_t clockwise:1;
@@ -121,27 +121,27 @@ struct MT6701_Regs:public MT6701_Prelude{
     };
 
     struct R16_Resolution : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::Resolution;
+        static constexpr auto ADDRESS = RegAddr::Resolution;
         uint16_t abzResolution:10;
         uint16_t __resv__:2;
         uint16_t poles:4;
     };
 
     struct R16_ZeroConfig : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddress::ZeroConfig;
+        static constexpr auto ADDRESS = RegAddr::ZeroConfig;
         uint16_t zeroPosition:12;
         uint16_t zeroPulseWidth:3;
         uint16_t hysteresis:1;
     };
 
     struct R8_Hystersis : public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Hystersis;
+        static constexpr auto ADDRESS = RegAddr::Hystersis;
         uint8_t __resv__:6;
         uint8_t hysteresis:2;
     };
 
     struct R8_WireConfig : public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::WireConfig;
+        static constexpr auto ADDRESS = RegAddr::WireConfig;
         uint8_t __resv__:5;
         uint8_t isPwm:1;
         uint8_t pwmPolarityLow:1;
@@ -149,18 +149,18 @@ struct MT6701_Regs:public MT6701_Prelude{
     };
 
     struct R8_StartStop : public Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::StartStop;
+        static constexpr auto ADDRESS = RegAddr::StartStop;
         uint8_t start:4;
         uint8_t stop:4;
     };
 
     struct R8_Start:public  Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Start;
+        static constexpr auto ADDRESS = RegAddr::Start;
         uint8_t data;
     };
 
     struct R8_Stop:public  Reg8<>{
-        static constexpr auto ADDRESS = RegAddress::Stop;
+        static constexpr auto ADDRESS = RegAddr::Stop;
         uint8_t data;
     };
 

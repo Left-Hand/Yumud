@@ -106,7 +106,8 @@ static constexpr auto INIT_LIST1 = std::to_array({
     std::make_pair<uint8_t, uint8_t>(0x7F, 0x07),
     std::make_pair<uint8_t, uint8_t>(0x40, 0x41),
     std::make_pair<uint8_t, uint8_t>(0x70, 0x00),
-});static_assert(sizeof(INIT_LIST1) == 2 * INIT_LIST1.size());
+});
+static_assert(sizeof(INIT_LIST1) == 2 * INIT_LIST1.size());
 
 static constexpr auto INIT_LIST2 = std::to_array({
     std::make_pair<uint8_t, uint8_t>(0x32, 0x44),
@@ -123,10 +124,11 @@ static constexpr auto INIT_LIST2 = std::to_array({
     std::make_pair<uint8_t, uint8_t>(0x4E, 0xA8),
     std::make_pair<uint8_t, uint8_t>(0x5A, 0x50),
     std::make_pair<uint8_t, uint8_t>(0x40, 0x80),
-});static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
+});
+static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
 
 
-static constexpr real_t scale = real_t(13.0/2000);
+static constexpr q16 scale = q16(13.0/2000);
 
 IResult<> PMW3901::write_reg(const uint8_t command, const uint8_t data){
     if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT);
@@ -237,10 +239,10 @@ IResult<> PMW3901::update(){
 
 }
 
-// IResult<> PMW3901::update(const real_t rad){
+// IResult<> PMW3901::update(const q16 rad){
 //     return read_data()
 //     .if_ok([&]{
-//         auto delta = Vec2<real_t>(data_.dx.as_val(), data_.dy.as_val())
+//         auto delta = Vec2<q16>(data_.dx.as_val(), data_.dy.as_val())
 //             .rotated(rad - 90_deg) * scale;
 //         x_cm += delta.x;
 //         y_cm += delta.y;
@@ -275,9 +277,6 @@ IResult<> PMW3901::validate(){
 }
 
 IResult<> PMW3901::init() {
-
-
-
     if(const auto res = spi_drv_.release(); res.is_err()) 
         return Err(res.unwrap_err());
     

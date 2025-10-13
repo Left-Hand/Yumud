@@ -9,8 +9,23 @@ namespace ymd::robots{
 
 
 template<arithmetic T>
-class Seg7Solver_t{
-protected:
+struct Seg7Solver final{
+public:
+    struct Config{
+        T max_jerk;
+        T max_acc;
+        T max_speed;
+    };
+    Seg7Solver(const Seg7Solver & other) = delete;
+    Seg7Solver(Seg7Solver && other) = delete;
+    Seg7Solver(T j, T a, T v, T s): j_(j), a_(a), v_(v), s_(s){
+        // t1 = 0;
+        // t2 = 0;
+        // t_all = 0;
+        // s1 = 0;
+        // peaked = false;
+    }
+private:
     T j_;
     T a_;
     T v_;
@@ -21,18 +36,6 @@ protected:
     // T t_all;
     // T s1;
     // bool peaked;
-    
-public:
-    Seg7Solver_t(const Seg7Solver_t & other) = delete;
-    Seg7Solver_t(Seg7Solver_t && other) = delete;
-    Seg7Solver_t(T j, T a, T v, T s): j_(j), a_(a), v_(v), s_(s){
-        // t1 = 0;
-        // t2 = 0;
-        // t_all = 0;
-        // s1 = 0;
-        // peaked = false;
-    }
-    
 };
 
 }

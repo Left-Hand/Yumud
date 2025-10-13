@@ -244,13 +244,21 @@ void adrc_main(){
 
     };
 
-    hal::timer1.init({.freq = 20000}, EN);
-    hal::timer1.attach<hal::TimerIT::Update>(
-        {0, 0}, [&]{
+    auto & timer = hal::timer1;
+    timer.init({.freq = 20000}, EN);
+
+
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
             command_shaper_poller();
-        }, 
-        EN
-    );
+            break;
+        }
+        default: break;
+        }
+    });
 
     while(true){
         const auto ctime = clock::time();

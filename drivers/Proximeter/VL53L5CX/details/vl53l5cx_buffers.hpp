@@ -4,15 +4,8 @@
 
 namespace ymd::drivers::vl53l5cx_details{
 
-/**
- * @brief Inner internal number of targets.
- */
-
-#if VL53L5CX_NB_TARGET_PER_ZONE == 1
-static constexpr size_t  VL53L5CX_FW_NBTAR_RANGING	= 2;
-#else
-static constexpr size_t  VL53L5CX_FW_NBTAR_RANGING	= VL53L5CX_NB_TARGET_PER_ZONE;
-#endif
+static constexpr size_t  VL53L5CX_FW_NBTAR_RANGING	= 
+    (VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 2 : VL53L5CX_NB_TARGET_PER_ZONE;
 
 /**
  * @brief This buffer contains the VL53L5CX firmware (MM1.2)

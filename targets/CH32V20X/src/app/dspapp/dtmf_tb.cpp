@@ -59,24 +59,35 @@ void dtmf_main(){
         h_filter.reset();
     }
 
-    hal::timer1.init({
+    auto & timer = hal::timer1;
+
+    timer.init({
         .freq = FS
     }, EN);
 
-    hal::timer1.attach<hal::TimerIT::Update>({0,0}, [&](){
-        const auto t = clock::time();
-        dtmf.update(t);
-        const auto wave = q16(dtmf.result());
 
-        l_filter.update(wave);
-        h_filter.update(wave);
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
+            const auto t = clock::time();
+            dtmf.update(t);
+            const auto wave = q16(dtmf.result());
 
-        DEBUG_PRINTLN(
-            // CLAMP(wave,0,1),
-            t,
-            wave,
-            h_filter.output(),
-            l_filter.output() 
-        );
-    }, EN);
+            l_filter.update(wave);
+            h_filter.update(wave);
+
+            DEBUG_PRINTLN(
+                // CLAMP(wave,0,1),
+                t,
+                wave,
+                h_filter.output(),
+                l_filter.output() 
+            );
+        }
+        default: break;
+        }
+    });
+
 }

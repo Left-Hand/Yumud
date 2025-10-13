@@ -49,11 +49,11 @@ struct ST7789V3_Phy final:
 
     explicit ST7789V3_Phy(
         Some<hal::SpiHw *> spi,
-        const hal::SpiSlaveIndex index,
+        const hal::SpiSlaveRank index,
         Option<hal::Gpio &> res_gpio = None
     ):  
         spi_(spi.deref()), 
-        idx_(index), 
+        rank_(index), 
         res_gpio_(res_gpio)
         {};
 
@@ -110,7 +110,7 @@ struct ST7789V3_Phy final:
     template<typename T, typename Iter>
     [[nodiscard]] IResult<> write_by_iter(Iter iter){
         if (const auto res = spi_
-            .borrow(idx_.to_req()); 
+            .borrow(rank_); 
             res.is_err()) 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
@@ -133,7 +133,7 @@ struct ST7789V3_Phy final:
     }
 private:
     hal::SpiHw & spi_;
-    hal::SpiSlaveIndex idx_;
+    hal::SpiSlaveRank rank_;
 
     Option<hal::Gpio &>res_gpio_;
 
@@ -143,7 +143,7 @@ private:
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
-        if(const auto res = spi_.borrow(idx_.to_req()); res.is_err()) return res;
+        if(const auto res = spi_.borrow(rank_); res.is_err()) return res;
         if constexpr (sizeof(T) != 1){
             if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
                 return res;
