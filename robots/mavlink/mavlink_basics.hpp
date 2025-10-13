@@ -3,7 +3,6 @@
 #include <span>
 
 #include "core/math/real.hpp"
-#include "core/polymorphism/reflect.hpp"
 
 namespace ymd::mavlink{
 

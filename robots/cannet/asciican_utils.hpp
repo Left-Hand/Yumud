@@ -16,11 +16,13 @@ namespace ymd::robots::asciican{
 enum class AsciiCanError:uint8_t{
     NoInput,
     NoArg,
-    InvalidPayloadLength,
+    PayloadLengthMismatch,
+    PayloadLengthOverflow,
     InvalidCommand,
-    InvalidBaud,
-    InvalidStdId,
-    InvalidExtId,
+    UnknownCommand,
+    InvalidBaudrate,
+    StdIdOverflow,
+    ExtIdOverflow,
     ArgTooLong,
     ArgTooShort,
     
@@ -30,7 +32,7 @@ enum class AsciiCanError:uint8_t{
     ExtIdTooLong,
     ExtIdTooShort,
 
-    UnsupportedCharInHex,
+    UnsupportedHexChar,
     InvalidFieldInRemoteMsg,
     NotImplemented
 };
@@ -57,54 +59,7 @@ private:
 
 
 
-class Oper{
-public:
-    struct SendCanMsg{
-        hal::CanMsg msg;
-    };
 
-    struct SendSerialStr{
-        static constexpr size_t MAX_STR_LEN = 16;
-
-        char str[MAX_STR_LEN];
-
-        static constexpr SendSerialStr from_str(const StringView strv){
-            SendSerialStr ret;
-            if(strv.size() > MAX_STR_LEN) sys::abort();
-
-            for(size_t i = 0; i < strv.size(); i++){
-                ret.str[i] = strv[i];
-            }
-            return ret;
-        }
-    };
-
-    struct SetSerialBaud{
-        uint32_t baud;
-    };
-
-    struct SetCanBaud{
-        uint32_t baud;
-    };
-
-    struct Open{
-
-    };
-
-    struct Close{
-
-    };
-
-private:
-    using Storage = std::variant<
-        SendSerialStr,
-        SetSerialBaud,
-        SetCanBaud,
-        Open,
-        Close
-    >;
-    // Storage oper_;
-};
 
 class AsciiCanPhy final{
 public:
@@ -134,30 +89,6 @@ public:
     [[nodiscard]] IResult<> open();
 
     [[nodiscard]] IResult<> close();
-
-    [[nodiscard]] constexpr auto oper_send_can_msg(const Msg && msg){
-        return Oper::SendCanMsg{msg};
-    }
-
-    [[nodiscard]] constexpr auto oper_send_str(const StringView str){
-        return Oper::SendSerialStr::from_str(str);
-    }
-
-    [[nodiscard]] constexpr auto oper_set_stream_baud(const uint32_t baud){
-        return Oper::SetSerialBaud{baud};
-    }
-
-    [[nodiscard]] constexpr auto oper_set_can_baud(const uint32_t baud){
-        return Oper::SetCanBaud{baud};
-    }
-
-    [[nodiscard]] constexpr auto oper_open(){
-        return Oper::Open{};
-    }
-
-    [[nodiscard]] constexpr auto oper_close(){
-        return Oper::Close{};
-    }
 
     DEF_FRIEND_DERIVE_DEBUG(AsciiCanError)
 

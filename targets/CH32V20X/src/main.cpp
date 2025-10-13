@@ -193,7 +193,8 @@ int main(){
     // script_main();
     // svd_main();
     // mlx90640_main();
-    smc2025_main();
+    // smc2025_main();
+    slcan_main();
 
     // embd_main();
     // mpu6050_main();

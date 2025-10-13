@@ -28,7 +28,6 @@ private:
         if(!str.size()) return Err(Error::NoArg);
         const char baud = str[0];
         switch(baud){
-            default:return Err(Error::InvalidBaud);
             case '0': return phy_.set_can_baud(10_KHz);
             case '1': return phy_.set_can_baud(20_KHz);
             case '2': return phy_.set_can_baud(50_KHz);
@@ -39,6 +38,7 @@ private:
             case '7': return phy_.set_can_baud(800_KHz);
             case '8': return phy_.set_can_baud(1000_KHz);
         }
+        return Err(Error::InvalidBaudrate);
     }
 
     template<typename T, typename Ret>

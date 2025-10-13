@@ -29,6 +29,12 @@ public:
 
     [[nodiscard]] IResult<Vec3<q24>> read_acc();
     [[nodiscard]] IResult<Vec3<q24>> read_gyr();
+
+    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
+    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
+    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
+    [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
+    
 private:
     InvensenseSensor_Phy phy_;
     Option<Bank> last_bank_ = None;
@@ -36,19 +42,13 @@ private:
     q24 acc_scale_ = 0;
     q24 gyr_scale_ = 0;
 
-    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
-    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
-    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
-    
+
     [[nodiscard]] IResult<> switch_bank(const Bank bank){
         static constexpr uint8_t SWITCH_BANK_COMMAND = 0x76; 
-        if(last_bank_.is_none() or (last_bank_.unwrap() != bank)){
-            const auto res = phy_.write_reg(SWITCH_BANK_COMMAND, static_cast<uint8_t>(bank));
-            last_bank_ = Some(bank);
-            return res;
-        }
-        return Ok();
+        if(last_bank_.is_some() and (last_bank_.unwrap() == bank))
+            return Ok();
+        last_bank_ = Some(bank);
+        return phy_.write_reg(SWITCH_BANK_COMMAND, static_cast<uint8_t>(bank));
     }
 
     template<typename T>

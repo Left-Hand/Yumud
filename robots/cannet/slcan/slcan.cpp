@@ -3,6 +3,7 @@
 using namespace ymd;
 using namespace ymd::robots::slcan;
 using namespace ymd::robots::asciican;
+using namespace operations;
 
 // #define SLCAN_DEBUG_EN 1
 #define SLCAN_DEBUG_EN 0
@@ -11,9 +12,9 @@ using namespace ymd::robots::asciican;
 
 #if SLCAN_DEBUG_EN
 #define constexpr
-#define RET_ERR(e, ...) {DEBUG_PRINTLN(__VA_ARGS__); return Err(e);}
+#define RETURN_ERR(e, ...) {DEBUG_PRINTLN(__VA_ARGS__); return Err(e);}
 #else
-#define RET_ERR(e, ...) {return Err(e);}
+#define RETURN_ERR(e, ...) {return Err(e);}
 #endif
 
 using Error = Slcan::Error;
@@ -23,7 +24,8 @@ using Error = Slcan::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-static constexpr Option<uint8_t> hex2digit(char c){
+[[nodiscard]] static constexpr Option<uint8_t> 
+hex2digit(char c){
     switch(c){
         case '0' ... '9':
             return Some(c - '0');
@@ -36,7 +38,8 @@ static constexpr Option<uint8_t> hex2digit(char c){
     }
 }
 
-static constexpr char digit2hex(const uint8_t digit){
+[[nodiscard]] static constexpr char 
+digit2hex(const uint8_t digit){
     switch(digit){
         case 0 ... 9:
             return digit + '0';
@@ -48,9 +51,10 @@ static constexpr char digit2hex(const uint8_t digit){
 }
 
 
-static constexpr IResult<uint32_t> parse_hex(const StringView str){
+[[nodiscard]] static constexpr IResult<uint32_t> 
+parse_hex(const StringView str){
     if(str.length() == 0)
-        RET_ERR(Error::NoArg);
+        RETURN_ERR(Error::NoArg);
 
     uint32_t ret = 0;
 
@@ -59,26 +63,27 @@ static constexpr IResult<uint32_t> parse_hex(const StringView str){
         const auto may_digit = hex2digit(chr);
 
         if(may_digit.is_none())
-            RET_ERR(Error::UnsupportedCharInHex, chr);
+            RETURN_ERR(Error::UnsupportedHexChar, chr);
 
-        ret = ret << 4 | may_digit.unwrap();
+        ret = static_cast<uint32_t>(ret << 4) | static_cast<uint32_t>(may_digit.unwrap());
     }
 
     return Ok(ret);
 }
 
-static constexpr IResult<uint32_t> parse_hex(const char c1, const char c2){
+[[nodiscard]] static constexpr IResult<uint32_t> 
+parse_hex(const char c1, const char c2){
 
     const auto d1 = ({
         const auto may_digit = hex2digit(c1);
-        if(may_digit.is_none()) return Err(Error::UnsupportedCharInHex);
+        if(may_digit.is_none()) return Err(Error::UnsupportedHexChar);
         may_digit.unwrap();
     });
 
 
     const auto d2 = ({
         const auto may_digit = hex2digit(c2);
-        if(may_digit.is_none()) return Err(Error::UnsupportedCharInHex);
+        if(may_digit.is_none()) return Err(Error::UnsupportedHexChar);
         may_digit.unwrap();
     });
 
@@ -86,63 +91,64 @@ static constexpr IResult<uint32_t> parse_hex(const char c1, const char c2){
     return Ok(static_cast<uint32_t>(d1 << 4 | d2));
 }
 
-static constexpr IResult<hal::CanStdId> parse_std_id(const StringView str){
+[[nodiscard]] static constexpr IResult<hal::CanStdId> 
+parse_std_id(const StringView str){
     if(str.length() == 0)
-        RET_ERR(Error::NoArg);
+        RETURN_ERR(Error::NoArg);
     if(str.length() > 3)
-        RET_ERR(Error::StdIdTooLong);
+        RETURN_ERR(Error::StdIdTooLong);
     if(str.length() < 3)
-        RET_ERR(Error::StdIdTooShort);
+        RETURN_ERR(Error::StdIdTooShort);
 
     const auto either_id = parse_hex(str);
     
     if(either_id.is_err())
-        RET_ERR(either_id.unwrap_err());
+        RETURN_ERR(either_id.unwrap_err());
 
     const auto id = either_id.unwrap();
 
     if(id > 0x7ff)
-        RET_ERR(Error::InvalidStdId);
+        RETURN_ERR(Error::StdIdOverflow);
 
     return Ok(hal::CanStdId(id));
 }
 
 #if SLCAN_STATIC_TEST_EN == 1
 static_assert(parse_std_id("123").unwrap().to_u11() == 0x123);
-static_assert(parse_std_id("923").unwrap_err() == Error::InvalidStdId);
+static_assert(parse_std_id("923").unwrap_err() == Error::StdIdOverflow);
 static_assert(parse_std_id("9scd").unwrap_err() == Error::StdIdTooLong);
-static_assert(parse_std_id("9sc").unwrap_err() == Error::UnsupportedCharInHex);
+static_assert(parse_std_id("9sc").unwrap_err() == Error::UnsupportedHexChar);
 #endif
 
-[[maybe_unused]]
-static constexpr IResult<hal::CanExtId> parse_ext_id(const StringView str){
+[[nodiscard]] static constexpr IResult<hal::CanExtId> 
+parse_ext_id(const StringView str){
     if(str.length() == 0) 
-        RET_ERR(Error::NoArg);
+        RETURN_ERR(Error::NoArg);
     if(str.length() > 8)
-        RET_ERR(Error::ExtIdTooLong);
+        RETURN_ERR(Error::ExtIdTooLong);
     if(str.length() < 8)
-        RET_ERR(Error::ExtIdTooShort);
+        RETURN_ERR(Error::ExtIdTooShort);
 
 
     const auto either_id = parse_hex(str);
     
     if(either_id.is_err())
-        RET_ERR(either_id.unwrap_err());
+        RETURN_ERR(either_id.unwrap_err());
 
     const auto id = either_id.unwrap();
 
     if(id > ((1u << 29) - 1))
-        RET_ERR(Error::InvalidExtId);
+        RETURN_ERR(Error::ExtIdOverflow);
 
     return Ok(hal::CanExtId(id));
 }
 
-static constexpr IResult<std::array<uint8_t, 8>> parse_payload(
+[[nodiscard]] static constexpr IResult<std::array<uint8_t, 8>> parse_payload(
     const StringView str, 
     const size_t dlc
 ){
     if(str.size() != dlc * 2) 
-        RET_ERR(Error::InvalidPayloadLength, str.size(), dlc, str);
+        RETURN_ERR(Error::PayloadLengthMismatch, str.size(), dlc, str);
 
     std::array<uint8_t, 8> buf;
 
@@ -151,7 +157,7 @@ static constexpr IResult<std::array<uint8_t, 8>> parse_payload(
             str[i * 2], str[i * 2 + 1]
         );
         if(either_data8.is_err())
-            RET_ERR(either_data8.unwrap_err());
+            RETURN_ERR(either_data8.unwrap_err());
 
         buf[i] = either_data8.unwrap();
     }
@@ -161,29 +167,35 @@ static constexpr IResult<std::array<uint8_t, 8>> parse_payload(
 
 
 #if SLCAN_STATIC_TEST_EN == 0
-static_assert(parse_payload("11x", 1).unwrap_err() == Error::InvalidPayloadLength);
+static_assert(parse_payload("11x", 1).unwrap_err() == Error::PayloadLengthMismatch);
 static_assert(parse_payload("11", 1).unwrap()[0] == 0x11);
 static_assert(parse_payload("1122334455667788", 8).unwrap()[7] == 0x88);
 #endif
 
-static constexpr IResult<size_t> parse_len(const StringView str){
+[[nodiscard]] static constexpr 
+IResult<size_t> parse_len(const StringView str){
     if(str.length() == 0) 
-        RET_ERR(Error::NoArg);
+        RETURN_ERR(Error::NoArg);
     if(str.length() != 1) 
-        RET_ERR(Error::InvalidPayloadLength, str.length());
+        RETURN_ERR(Error::PayloadLengthMismatch, str.length());
 
-    const auto either_len = parse_hex(str);
+    const auto len = ({
+        const auto either_len = parse_hex(str);
+        
+        if(either_len.is_err()) 
+            RETURN_ERR(either_len.unwrap_err());
+        either_len.unwrap();
+    });
 
-    if(either_len.is_err()) 
-        RET_ERR(either_len.unwrap_err());
+    if(len > 8) 
+        RETURN_ERR(Error::PayloadLengthOverflow, len);
 
-    const auto len = either_len.unwrap();
-    if(len > 8) RET_ERR(Error::InvalidPayloadLength, len);
     return Ok(len);
 }
 
 template<bool is_ext>
-static constexpr auto parse_id_as_u32(const StringView str) -> IResult<uint32_t>{
+[[nodiscard]] static constexpr auto 
+parse_id_as_u32(const StringView str) -> IResult<uint32_t>{
     if constexpr(is_ext){
         return parse_ext_id(str).
             map([](const hal::CanExtId id) -> uint32_t{return id.to_u29();}); 
@@ -194,27 +206,28 @@ static constexpr auto parse_id_as_u32(const StringView str) -> IResult<uint32_t>
 };
 
 template<bool is_ext>
-static constexpr IResult<hal::CanMsg> parse_msg(const StringView str, bool is_rmt){
+[[nodiscard]] static constexpr IResult<hal::CanMsg> 
+parse_msg(const StringView str, bool is_rmt){
     if(str.size() == 0) 
-        RET_ERR(Error::NoArg);
+        RETURN_ERR(Error::NoArg);
 
     constexpr size_t ID_LEN = is_ext ? 8 : 3;
     constexpr size_t DLC_LEN = 1;
 
     if(str.length() < 4)
-        RET_ERR(Error::ArgTooShort, str.length());
+        RETURN_ERR(Error::ArgTooShort, str.length());
 
     auto cutter = StringCutter{str};
 
     const uint32_t id_u32_checked = ({
         const auto res = parse_id_as_u32<is_ext>(cutter.fetch_next(ID_LEN).unwrap());
-        if(res.is_err()) RET_ERR(res.unwrap_err());
+        if(res.is_err()) RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });
 
     const size_t dlc = ({
         const auto res = parse_len(cutter.fetch_next(DLC_LEN).unwrap());
-        if(res.is_err()) RET_ERR(res.unwrap_err());
+        if(res.is_err()) RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });
 
@@ -224,7 +237,7 @@ static constexpr IResult<hal::CanMsg> parse_msg(const StringView str, bool is_rm
     if(not is_rmt){
         const auto payload = ({
             const auto res = parse_payload(payload_str, dlc);
-            if(res.is_err()) RET_ERR(res.unwrap_err());
+            if(res.is_err()) RETURN_ERR(res.unwrap_err());
             res.unwrap();
         });
 
@@ -234,7 +247,7 @@ static constexpr IResult<hal::CanMsg> parse_msg(const StringView str, bool is_rm
 
     }else{
         if(payload_str.size()) 
-            RET_ERR(Error::InvalidFieldInRemoteMsg);
+            RETURN_ERR(Error::InvalidFieldInRemoteMsg);
         return Ok(hal::CanMsg::from_remote(ID(id_u32_checked)));
     }
 }
@@ -244,7 +257,7 @@ static constexpr IResult<hal::CanMsg> parse_msg(const StringView str, bool is_rm
 
 
 #if 0
-[[maybe_unused]] static void static_test(){
+[[nodiscard]] static void static_test(){
 
     // static constexpr auto msg = parse_msg("0A7111", true).unwrap();
     // static constexpr auto msg = parse_msg("0A70", true).unwrap();
@@ -258,102 +271,92 @@ static constexpr IResult<hal::CanMsg> parse_msg(const StringView str, bool is_rm
 }
 #endif
 
-IResult<> Slcan::on_recv_str(const StringView str){
+
+auto map_chr_to_buad = [](char chr) -> hal::CanBaudrate{ 
+    switch(chr){
+        case '0': return hal::CanBaudrate::_10K;
+        case '1': return hal::CanBaudrate::_20K;
+        case '2': return hal::CanBaudrate::_50K;
+        case '3': return hal::CanBaudrate::_100K;
+        case '4': return hal::CanBaudrate::_125K;
+        case '5': return hal::CanBaudrate::_250K;
+        case '6': return hal::CanBaudrate::_500K;
+        case '7': return hal::CanBaudrate::_800K;
+        case '8': return hal::CanBaudrate::_1M;
+    }
+    __builtin_unreachable();
+};
+
+auto map_msg_to_operation = [](const hal::CanMsg & msg) { return Operation(SendCanMsg{msg}); };
+
+IResult<Operation> Slcan::handle_line(const StringView str) const {
     static constexpr bool REMOTE = true;
 
-    if(str.size() == 0){
-        RET_ERR(Error::NoInput);
-    }else if(str.size() == 1){
-        switch(str[0]){
-            default: RET_ERR(Error::InvalidCommand);
+    const StringView line = str.trim();
+    // DEBUG_PRINTLN(line, line.length());
+    if(line.size() == 0){
+        RETURN_ERR(Error::NoInput);
+    }else if(line.size() == 1){
+        switch(line[0]){
+            case 'F': return Ok(Operation(response_flag()));
+            case 'V': return Ok(Operation(response_version()));
+            case 'N': return Ok(Operation(response_serial_idx()));
+            
+            case 'O': return Ok(Operation(Open{}));
+            case 'C': return Ok(Operation(Close{}));
 
-            case 'F': return response_flag();
-            case 'V': return response_version();
-            case 'N': return response_serial_idx();
+            case 'Z': RETURN_ERR(Error::NotImplemented);
         }
+        RETURN_ERR(Error::UnknownCommand);
     }else{
-        const auto cmd_str = str.substr(1).unwrap();
+        const auto cmd_line = line.substr(1).unwrap();
 
-        switch(str[0]){
-            default:RET_ERR(Error::InvalidCommand);
+        switch(line[0]){
+            case 'S': {
+                if(cmd_line.size() == 0) 
+                    RETURN_ERR(Error::NoArg);
+                if(cmd_line.size() > 1) 
+                    RETURN_ERR(Error::ArgTooLong);
+                const auto chr = cmd_line[0];
+                if(chr < '0' || chr > '8') 
+                    return Err(Error::InvalidBaudrate);
 
-            case 'S': return on_recv_set_baud(cmd_str);
+                return Ok(Operation(SetCanBaud{.baudrate = map_chr_to_buad(chr)}));
+            }
 
-            case 't': return on_recv_send_std_msg(cmd_str, not REMOTE);
-            case 'r': return on_recv_send_std_msg(cmd_str, REMOTE);
+            case 't': return parse_msg<false>(cmd_line, not REMOTE)
+                .map(map_msg_to_operation);
+            case 'r': return parse_msg<false>(cmd_line, REMOTE)
+                .map(map_msg_to_operation);
 
-            case 'T': return on_recv_send_ext_msg(cmd_str, not REMOTE);
-            case 'R': return on_recv_send_ext_msg(cmd_str, REMOTE);
+            case 'T': return parse_msg<true>(cmd_line, not REMOTE)
+                .map(map_msg_to_operation);
+            case 'R': return parse_msg<true>(cmd_line, REMOTE)
+                .map(map_msg_to_operation);
 
-            case 'O': return on_recv_open(cmd_str);
-            case 'C': return on_recv_close(cmd_str);
-
-
-            case 'Z': RET_ERR(Error::NotImplemented);
         }
+        RETURN_ERR(Error::UnknownCommand);
     }
 
     __builtin_unreachable();
 }
 
-IResult<> Slcan::response_version(){
-    return phy_.send_str("V1013\r");
+SendText Slcan::response_version() const{
+    return SendText::from_str("V1013\r");
 }
 
-IResult<> Slcan::response_serial_idx(){
-    return phy_.send_str("NA123\r");
+SendText Slcan::response_serial_idx() const{
+    return SendText::from_str("NA123\r");
 }
 
 Slcan::Flags Slcan::get_flag() const {
     return Flags::RxFifoFull;
 }
 
-IResult<> Slcan::response_flag(){
+SendText Slcan::response_flag() const{
     const char str[2] = {
         char(get_flag()), 'r'
     };
 
-    return phy_.send_str(StringView(str, 2));
-}
-
-IResult<> Slcan::on_recv_set_baud(const StringView str){
-    if(str.size() == 0) 
-        RET_ERR(Error::NoArg);
-    if(str.size() > 1) 
-        RET_ERR(Error::ArgTooLong);
-
-    switch(str[0]){
-        default:RET_ERR(Error::InvalidBaud);
-        case '0': return phy_.set_can_baud(10_KHz);
-        case '1': return phy_.set_can_baud(20_KHz);
-        case '2': return phy_.set_can_baud(50_KHz);
-        case '3': return phy_.set_can_baud(100_KHz);
-        case '4': return phy_.set_can_baud(125_KHz);
-        case '5': return phy_.set_can_baud(250_KHz);
-        case '6': return phy_.set_can_baud(500_KHz);
-        case '7': return phy_.set_can_baud(800_KHz);
-        case '8': return phy_.set_can_baud(1000_KHz);
-    }
-}
-
-
-IResult<> Slcan::on_recv_send_std_msg(const StringView str, const bool is_rmt){
-    // riiil\r, 发送标准远程帧, 如 r1000\r 表示 发送 0x100 的远程帧, 返回 z\r 表示 OK, \b表示 ERROR
-
-    const auto res = parse_msg<false>(str, is_rmt);
-    if(res.is_err()) RET_ERR(res.unwrap_err());
-    return phy_.send_can_msg(res.unwrap());
-}
-
-IResult<> Slcan::on_recv_send_ext_msg(const StringView str, const bool is_rmt){
-    const auto res = parse_msg<true>(str, is_rmt);
-    if(res.is_err()) RET_ERR(res.unwrap_err());
-    return phy_.send_can_msg(res.unwrap());
-}
-IResult<> Slcan::on_recv_open(const StringView str){ 
-    return phy_.open();
-}
-
-IResult<> Slcan::on_recv_close(const StringView str){ 
-    return phy_.close();
+    return SendText::from_str(StringView(str, 2));
 }

@@ -9,7 +9,6 @@
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
-#include "robots/cannet/slcan/slcan.hpp"
 #include "robots/cannet/can_chain.hpp"
 
 #include "types/vectors/polar.hpp"
