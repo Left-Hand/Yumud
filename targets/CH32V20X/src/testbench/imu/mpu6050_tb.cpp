@@ -93,50 +93,61 @@ using namespace ymd::drivers;
         .fs = 200
     }};
 
-    hal::timer1.init({200}, EN);
-    hal::timer1.attach<hal::TimerIT::Update>({0,0}, [&](){
-        mpu.update().examine();
+    auto & timer = hal::timer1;
+    
+    timer.init({200}, EN);
 
-        #ifdef MAG_ACTIVATED
-        aku.update().examine();
-        #endif
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
+            mpu.update().examine();
 
-        // mahony.update9(
-            // mpu.read_gyr().examine(), 
-            // mpu.read_acc().examine(), 
-            // aku.read_mag().examine()
-        // );
+            #ifdef MAG_ACTIVATED
+            aku.update().examine();
+            #endif
 
-        // mahony.update(
-        //     mpu.read_gyr().examine(), 
-        //     mpu.read_acc().examine(),
-        //     aku.read_mag().examine()
-        // );
+            // mahony.update9(
+                // mpu.read_gyr().examine(), 
+                // mpu.read_acc().examine(), 
+                // aku.read_mag().examine()
+            // );
 
-        const auto begin_m = clock::micros();
+            // mahony.update(
+            //     mpu.read_gyr().examine(), 
+            //     mpu.read_acc().examine(),
+            //     aku.read_mag().examine()
+            // );
 
-        // mahony.update(
-        //     mpu.read_gyr().examine(), 
-        //     mpu.read_acc().examine()
-        //     // aku.read_mag().examine()
-        // );
+            const auto begin_m = clock::micros();
 
-        
-        mahony.update(
-            mpu.read_gyr().examine(), 
-            mpu.read_acc().examine()
-        );
+            // mahony.update(
+            //     mpu.read_gyr().examine(), 
+            //     mpu.read_acc().examine()
+            //     // aku.read_mag().examine()
+            // );
+
             
-        const auto end_m = clock::micros();
-        // DEBUG_PRINTLN(fusion.quat());
-        // DEBUG_PRINTLN(Basis<real_t>(mahony.result()).get_euler_xyz(), end_m - begin_m);
-        // DEBUG_PRINTLN(mahony.result());
-        DEBUG_PRINTLN(
-            mahony.rotation(), 
-            // Quat<real_t>(Vec3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
-            end_m - begin_m
-        );
-    }, EN);
+            mahony.update(
+                mpu.read_gyr().examine(), 
+                mpu.read_acc().examine()
+            );
+                
+            const auto end_m = clock::micros();
+            // DEBUG_PRINTLN(fusion.quat());
+            // DEBUG_PRINTLN(Basis<real_t>(mahony.result()).get_euler_xyz(), end_m - begin_m);
+            // DEBUG_PRINTLN(mahony.result());
+            DEBUG_PRINTLN(
+                mahony.rotation(), 
+                // Quat<real_t>(Vec3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
+                end_m - begin_m
+            );
+            break;
+        }
+        default: break;
+        }
+    });
 
     while(true);
 }

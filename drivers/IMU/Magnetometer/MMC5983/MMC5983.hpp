@@ -14,8 +14,8 @@ namespace ymd::drivers{
 
 
 class MMC5983:
-    public MagnetometerIntf,
-    public MMC5983_Regs{
+    public MMC5983_Prelude,
+    public MagnetometerIntf{
 public:
     struct Config{
         PrdSet prd_set = PrdSet::_100;
@@ -61,6 +61,7 @@ public:
 private:    
     using Phy = MMC5983_Phy;
     Phy phy_;
+    MMC5983_Regs regs_ = {};
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

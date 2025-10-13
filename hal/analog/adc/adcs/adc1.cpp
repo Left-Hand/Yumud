@@ -13,13 +13,13 @@ __interrupt void ADC1_2_IRQHandler(void){
     #define CLEAR_IT(x) ADC1->STATR = ~(uint32_t)(x >> 8);
 
     if(CHECK_IT(ADC_IT_JEOC)){
-        adc1.on_jeoc_interrupt();
+        adc1.accept_jeoc_interrupt();
         CLEAR_IT(ADC_IT_JEOC);
     }else if(CHECK_IT(ADC_IT_EOC)){
-        adc1.on_eoc_interrupt();
+        adc1.accept_eoc_interrupt();
         CLEAR_IT(ADC_IT_EOC);
     }else if(CHECK_IT(ADC_IT_AWD)){
-        adc1.on_awd_interrupt();
+        adc1.accept_awd_interrupt();
         CLEAR_IT(ADC_IT_AWD);
     }
 }

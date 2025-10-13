@@ -345,7 +345,7 @@ void BasicTimer::init(const Config & cfg, const Enable en){
 
 void BasicTimer::deinit(){
     this->enable_rcc(DISEN);
-    cbs_.fill(nullptr);
+    callback_ = nullptr;
 }
 
 

@@ -7,21 +7,17 @@
 namespace ymd::hal{
 
 
-enum class I2cError:uint8_t{
-
-};
-
 class I2cHw final: public I2c{
 public:
 
     I2cHw(I2C_TypeDef * inst);
 
-    HalResult write(const uint32_t data);
-    HalResult read(uint32_t & data, const Ack ack);
+    [[nodiscard]] HalResult write(const uint32_t data);
+    [[nodiscard]] HalResult read(uint32_t & data, const Ack ack);
     void init(const uint32_t baudrate);
     void reset();
     bool locked();
-    HalResult unlock_bus();
+    [[nodiscard]] HalResult unlock_bus();
     void enable_hw_timeout(const Enable en);
 
     hal::Gpio & scl() {return scl_;}
@@ -32,7 +28,7 @@ private:
     hal::Gpio sda_;
 
     void enable_rcc(const Enable en);
-    HalResult lead(const I2cSlaveAddrWithRw req);
+    [[nodiscard]] HalResult lead(const I2cSlaveAddrWithRw req);
     void trail();
 };
 

@@ -11,6 +11,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
+#include "hal/timer/instance/timer_hw.hpp"
 
 #include "types/vectors/quat.hpp"
 #include "types/image/image.hpp"
@@ -322,15 +323,29 @@ void smc2025_main(){
 
     };
 
+    auto & timer = hal::timer1;
+    timer.init({.freq = 25}, EN);
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
+            mpu.update().examine();
+            qmc.update().examine();
+            const auto gyr = mpu.read_gyr().examine();
+            // const auto dir = qmc.read_mag().examine();
+            yaw_angle = (yaw_angle + Angle<q16>::from_radians(gyr.z) * 0.04_q16).normalized();
+            break;
+        }
+        default: break;
+        }
+    });
+
     while(true){
         // test_fill();
         test_render();
 
-        mpu.update().examine();
-        qmc.update().examine();
-        const auto gyr = mpu.read_gyr().examine();
-        // const auto dir = qmc.read_mag().examine();
-        yaw_angle = (yaw_angle + Angle<q16>::from_radians(gyr.z) * 0.04_q16).normalized();
+
         // yaw_angle = Angle<q16>::from_radians(atan2pu(dir.x, dir.y));
         // DEBUG_PRINTLN_IDLE(gyr.z);
         DEBUG_PRINTLN_IDLE(yaw_angle.to_degrees(), mpu.read_acc().examine());
@@ -345,40 +360,5 @@ void smc2025_main(){
         // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
 
     }
-
-    // timer4.init(24000);
-    // timer5.init(24000);
-    // timer8.init(234, 1);
-    // timer8.oc(1).init();
-    // timer8.oc(2).init();
-
-    // clock::delay(200ms);
-
-    // clock::delay(200ms);
-
-    // i2c.init(400000);
-    // sccb.init(10000);
-
-    // measurer.init();
-
-    // start_key.init();
-    // stop_key.init();
-
-    // tft.init();
-    // tft.setFlipX(true);
-    // tft.setFlipY(false);
-    // tft.setSwapXY(true);
-    // tft.setFormatRGB(true);
-    // tft.setFlushDirH(false);
-    // tft.setFlushDirV(false);
-    // tft.setInversion(true);
-
-
-    // cali();
-
-    // GenericTimer & timer = timer2;
-    // timer.init(ctrl_freq);
-    // timer.bindCb(TimerIT::Update, [this](){this->ctrl();});
-    // timer.enableIt(TimerIT::Update, NvicPriority{0,0});
 
 }

@@ -570,14 +570,21 @@ void nuedc_2025e_main(){
         meas_elecangle_ = meas_elecangle;
     };
 
-    adc.attach(hal::AdcIT::JEOC, {0,0}, 
-        [&]{
-            const auto m = clock::micros();
-            sensored_foc_cb();
-            exe_us_ = clock::micros() - m;
-        }, EN
+    adc.register_nvic({0,0}, EN);
+    adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    adc.set_event_callback(
+        [&](const hal::AdcEvent ev){
+            switch(ev){
+            case hal::AdcEvent::EndOfInjectedConversion:{
+                const auto m = clock::micros();
+                sensored_foc_cb();
+                exe_us_ = clock::micros() - m;
+                break;
+            }
+            default: break;
+            }
+        }
     );
-
     
     bool seeked_before_tracking_ = false;
     bool report_en_ = false;

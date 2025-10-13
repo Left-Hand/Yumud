@@ -349,13 +349,20 @@ void diffspd_vehicle_main(){
         );
     };
 
-    timer.attach<hal::TimerIT::Update>(
-        {0,0}, 
-        [&]{
+
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
             motor_pulse_detect_cb();
             motor_ctrl_cb();
-        }, EN
-    );
+            break;
+        }
+        default: break;
+        }
+    });
+
 
     while(true){
         report_motor_service();

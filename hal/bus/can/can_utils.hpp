@@ -2,6 +2,7 @@
 
 #include "core/sdk.hpp"
 #include "core/utils/Option.hpp"
+#include "core/utils/sumtype.hpp"
 #include <memory>
 #include <functional>
 
@@ -80,6 +81,32 @@ enum class CanBs2:uint8_t{
     _8tq = 0x07,
 };
 
+
+enum class CanTransmitEvent:uint8_t{
+    Failed,
+    Success
+};
+
+enum class CanReceiveEvent:uint8_t{
+    Fifo0Pending,
+    Fifo0Full,
+    Fifo0Overrun,
+    Fifo1Pending,
+    Fifo1Full,
+    Fifo1Overrun,
+};
+
+enum class CanStatusEvent:uint8_t{
+    Wakeup,
+    SleepAcknowledge,
+    ErrorWarninh,
+    ErrorPassive,
+    BusOff,
+    LastErrorCode,
+    Error
+};
+
+struct CanEvent:public Sumtype<CanTransmitEvent, CanReceiveEvent, CanStatusEvent>{};
 
 struct CanBitTimmingCoeffs{
     uint16_t prescale;

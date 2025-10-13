@@ -1,6 +1,7 @@
 #pragma once
 
 #include "details/vl6180x_prelude.hpp"
+
 namespace ymd::drivers{
 
 class VL6180X final:public VL6180X_Prelude{

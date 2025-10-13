@@ -29,6 +29,16 @@ enum class SpiMode:uint8_t{
     _3
 };
 
+enum class SpiClockPolarity:uint8_t{
+    IdleLow = 0,
+    IdleHigh = 1
+};
+
+enum class SpiClockPhase:uint8_t{
+    CaptureOnFirst = 0,
+    CaptureOnSecond = 1
+};
+
 class Spi{
 public:
 

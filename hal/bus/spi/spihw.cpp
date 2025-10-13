@@ -223,6 +223,8 @@ void SpiHw::init(const Config & cfg){
     set_remap(get_default_remap(inst_));
     plant_gpios();
 
+
+    #if 1
     const SPI_InitTypeDef SPI_InitStructure = {
         .SPI_Direction = SPI_Direction_2Lines_FullDuplex,
         .SPI_Mode = SPI_Mode_Master,
@@ -235,12 +237,25 @@ void SpiHw::init(const Config & cfg){
         .SPI_FirstBit = SPI_FirstBit_MSB,
         .SPI_CRCPolynomial = 7
     };
-
 	SPI_Init(reinterpret_cast<SPI_TypeDef *>(inst_), &SPI_InitStructure);
-    // inst_->set_pre
+
+    #endif
+
+
+    #if 0
+    inst_->enable_dualbyte(DISEN);
+    inst_ -> set_bitorder(MSB);
+    inst_->enable_soft_cs(EN);
+    inst_->set_cpol(true);
+    inst_->set_cpha(true);
+    inst_->enable_bidi(DISEN);
+    inst_->enable_i2s(DISEN);
+    set_baudrate(cfg.baudrate);
+    inst_->CRCR.CRCPOLY = 7;
+    reinterpret_cast<SPI_TypeDef *>(inst_)->I2SCFGR &= ((uint16_t)0xF7FF);
+    #endif
+
     inst_->enable_spi(EN);
-
-
     while ((inst_->STATR.TXE) == RESET);
     inst_->DATAR.DR = 0;
 
@@ -259,6 +274,8 @@ void SpiHw::init(const Config & cfg){
 //     field_reg.BIDIMODE = 1u;
 //     return std::bit_cast<uint32_t>(field_reg);
 // }();
+
+
 hal::HalResult SpiHw::set_data_width(const uint8_t bits){
     inst_->enable_dualbyte((bits == 16) ? EN : DISEN);
     return hal::HalResult::Ok();
@@ -270,7 +287,7 @@ hal::HalResult SpiHw::set_baudrate(const uint32_t baudrate){
 }
 
 hal::HalResult SpiHw::set_bitorder(const Endian endian){
-    inst_ -> CTLR1.LSB = (endian == MSB) ? 0 : 1;
+    inst_->set_bitorder(endian);
     return hal::HalResult::Ok();
 }
 

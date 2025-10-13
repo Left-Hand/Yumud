@@ -53,25 +53,36 @@ static void icm42688_tb(ICM42688 & imu){
         .fs = ISR_FREQ
     }};
 
-    hal::timer1.init({ISR_FREQ}, EN);
-
     Vec3<q24> gyr_ = Vec3<q24>::ZERO;
     Vec3<q24> acc_ = Vec3<q24>::ZERO;
-    hal::timer1.attach<hal::TimerIT::Update>({0,0},[&]{
-        const auto u0 = clock::micros();
-        imu.update().examine();
-        const auto gyr = imu.read_gyr().examine();
-        const auto acc = imu.read_acc().examine();
 
-        z = z + INV_FS * gyr.z;
-        // mahony.update(imu.read_gyr().examine(), imu.read_acc().examine());
-        // mahony.update(imu.read_gyr().examine(), imu.read_acc().examine());
-        mahony.myupdate_v2(gyr, acc);
-        exe = clock::micros() - u0;
+    auto & timer = hal::timer1;
+    timer.init({ISR_FREQ}, EN);
 
-        gyr_ = gyr;
-        acc_ = acc;
-    }, EN);
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
+            const auto u0 = clock::micros();
+            imu.update().examine();
+            const auto gyr = imu.read_gyr().examine();
+            const auto acc = imu.read_acc().examine();
+
+            z = z + INV_FS * gyr.z;
+            // mahony.update(imu.read_gyr().examine(), imu.read_acc().examine());
+            // mahony.update(imu.read_gyr().examine(), imu.read_acc().examine());
+            mahony.myupdate_v2(gyr, acc);
+            exe = clock::micros() - u0;
+
+            gyr_ = gyr;
+            acc_ = acc;
+            break;
+        }
+        default: break;
+        }
+    });
+
 
     while(true){
         // const auto u0 = clock::micros();

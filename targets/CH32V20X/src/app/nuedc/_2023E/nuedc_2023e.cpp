@@ -86,7 +86,9 @@ public:
     template<typename Fn>
     void register_servo_ctl_callback(Fn && callback){
 
-        SERVO_PWMGEN_TIMER.attach(hal::TimerIT::Update, {0, 0}, std::forward<Fn>(callback));
+        SERVO_PWMGEN_TIMER.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+        SERVO_PWMGEN_TIMER.enable_interrupt<hal::TimerIT::Update>(EN);
+        SERVO_PWMGEN_TIMER.set_event_callback(std::forward<Fn>(callback));
     }
 private:
 

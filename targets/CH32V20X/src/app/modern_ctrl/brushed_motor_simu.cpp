@@ -125,15 +125,24 @@ void test_burshed_motor(){
 
     real_t t = 0.0_r;
 
-    hal::timer1.init({ISR_FREQ}, EN);
-    hal::timer1.attach<hal::TimerIT::Update>({0,0}, 
-        [&]{
+    auto & timer = hal::timer1;
+    timer.init({ISR_FREQ}, EN);
+
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
             watch_gpio.clr();
             t += (1.0_r / ISR_FREQ);
             test_leso(t);
             watch_gpio.set();
-        }, EN
-    );
+            break;
+        }
+        default: break;
+        }
+    });
+
 
     while(true){
         clock::delay(1ms);

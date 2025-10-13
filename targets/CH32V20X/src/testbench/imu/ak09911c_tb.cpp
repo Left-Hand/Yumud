@@ -39,10 +39,21 @@ static void ak09911c_test(drivers::AK09911C & aku){
         rotation = rotation.slerp(Quat<q24>::from_direction(dir), 0.05_r);
     };
 
-    hal::timer1.init({ISR_FREQ}, EN);
-    hal::timer1.attach<hal::TimerIT::Update>({0,0},[&]{
-        measure();
-    }, EN);
+    auto & timer = hal::timer1;
+    timer.init({ISR_FREQ}, EN);
+
+
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
+            measure();
+            break;
+        }
+        default: break;
+        }
+    });
     
     while(true){
         // DEBUG_PRINTLN(aku.update());

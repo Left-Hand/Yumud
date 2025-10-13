@@ -88,42 +88,32 @@ friend void ::TIM##x##_IRQHandler(void);\
 #define DEF_BASIC_TIMER_FRIEND_DECL(x)\
 friend void ::TIM##x##_IRQHandler(void);\
 
-namespace ymd::hal{
 
+namespace ymd::hal{
+    
+using TimerEvent = TimerIT;
 class BasicTimer{
 public:
     using IT = TimerIT;
     using CountMode = TimerCountMode;
     using TrgoSource = TimerTrgoSource;
-    using Callback = std::function<void(void)>;
+    using Callback = std::function<void(TimerEvent)>;
 private:
-    std::array<Callback, 8> cbs_;
+    Callback callback_ = nullptr;
 protected:
     TIM_TypeDef * inst_;
 
     uint32_t get_bus_freq();
     void enable_rcc(const Enable en);
 
-    template<IT I>
-    __fast_inline Callback & get_callback(){
-        if constexpr (I == IT::Update)          return cbs_[0];
-        else if constexpr (I == IT::CC1)        return cbs_[1];
-        else if constexpr (I == IT::CC2)        return cbs_[2];
-        else if constexpr (I == IT::CC3)        return cbs_[3];
-        else if constexpr (I == IT::CC4)        return cbs_[4];
-        else if constexpr (I == IT::COM)        return cbs_[5];
-        else if constexpr (I == IT::Trigger)    return cbs_[6];
-        else if constexpr (I == IT::Break)      return cbs_[7];
-    }
 
     template<IT I>
     __fast_inline void invoke_callback(){
-        auto & cb = get_callback<I>();
-        EXECUTE(cb);
+        EXECUTE(callback_, I);
     }
 
 public:
-    BasicTimer(TIM_TypeDef * _base):inst_(_base){;}
+    explicit BasicTimer(TIM_TypeDef * _base):inst_(_base){;}
 
     struct Config{
         const uint32_t freq;
@@ -160,23 +150,9 @@ public:
     volatile uint16_t & cnt(){return inst_->CNT;}
     volatile uint16_t & arr(){return inst_->ATRLR;}
 
-    template<IT I, typename Fn>
-    void attach(
-            const NvicPriority & priority, 
-            Fn && cb, const Enable en){
-        register_nvic<I>(priority, en);
-        enable_interrupt<I>(en);
-        set_interrupt_callback<I>(std::forward<Fn>(cb));
-    }
-
-    template<IT I>
-    void attach(const NvicPriority & priority, std::nullptr_t cb){
-        attach<I>(priority, nullptr, DISEN);
-    }
-
-    template<IT I, typename Fn>
-    void set_interrupt_callback(Fn && cb){
-        get_callback<I>() = std::forward<Fn>(cb);
+    template<typename Fn>
+    void set_event_callback(Fn && cb){
+        callback_ = std::forward<Fn>(cb);
     }
 
     #ifdef ENABLE_TIM6
@@ -196,7 +172,7 @@ protected:
 private:
     void on_it_interrupt();
 public:
-    GenericTimer(TIM_TypeDef * _base):
+    explicit GenericTimer(TIM_TypeDef * _base):
         BasicTimer(_base),
         channels{
             TimerOC(inst_, TimerChannel::ChannelNth::CH1),
@@ -255,7 +231,7 @@ protected:
 public:
     using LockLevel = TimerBdtrLockLevel;
 
-    AdvancedTimer(TIM_TypeDef * _base):
+    explicit AdvancedTimer(TIM_TypeDef * _base):
             GenericTimer(_base),
             n_channels{
                 TimerOCN(inst_, TimerChannel::ChannelNth::CH1N),

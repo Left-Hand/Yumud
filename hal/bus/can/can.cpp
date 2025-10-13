@@ -86,7 +86,7 @@ void MY_CAN_ClearITPendingBit(CAN_TypeDef* CANx)
 }
 
 
-void Can::init_it(){
+void Can::init_interrupts(){
     const uint32_t it_mask = 
         CAN_IT_TME      //tx done
         | CAN_IT_FMP0   //rx fifo0
@@ -312,7 +312,7 @@ void Can::init(const Config & cfg){
     };
 
     CAN_Init(inst_, &CAN_InitConf);
-    init_it();
+    init_interrupts();
 }
 
 size_t Can::pending(){
@@ -460,45 +460,51 @@ CanMsg Can::receive(const CanFifoNth fifo_num){
 
 
 
-void Can::on_tx_interrupt(){
+void Can::accept_tx_interrupt(){
 
+    //遍历每个邮箱
     for(uint8_t mbox = 0; mbox < 3; mbox++){
-        if(not is_mail_box_done(std::bit_cast<CanMailboxNth>(mbox))) continue; // if existing message done
+        //如果还没完成 那么略过
+        if(not is_mail_box_done(std::bit_cast<CanMailboxNth>(mbox))) continue; 
 
         const auto tx_status = CAN_TransmitStatus(inst_, mbox);
+
 
         switch (tx_status){
             case(CAN_TxStatus_Failed):
                 //process failed message
-                EXECUTE(cb_txfail_);
+                if(callback_ != nullptr)
+                    callback_(CanEvent(CanTransmitEvent::Failed));
                 break;
             case(CAN_TxStatus_Ok):
-                //process success message
-                EXECUTE(cb_txok_);
+                if(callback_ != nullptr)
+                    callback_(CanEvent(CanTransmitEvent::Success));
                 break;
             default:
                 __builtin_unreachable();
         }
 
         clear_mailbox(std::bit_cast<CanMailboxNth>(mbox));
-
-        if(tx_fifo_.available()){
-            (void)transmit(tx_fifo_.pop());
-        }
-    
+    }
+    //poll next
+    if(tx_fifo_.available()){
+        (void)transmit(tx_fifo_.pop());
     }
 }
 
-void Can::on_rx_msg_interrupt(const CanFifoNth fifo_num){
+void Can::accept_rx_msg_interrupt(const CanFifoNth fifo_num){
     //process rx pending
     //如果没有接收到 直接返回
     if(CAN_MessagePending(inst_, std::bit_cast<uint8_t>(fifo_num)) == 0) return;
     
     rx_fifo_.push(receive(fifo_num));
-    EXECUTE(cb_rx_);
+    
+    // if(callback_){
+    //     pass
+    // }
 }
 
-void Can::on_sce_interrupt(){
+void Can::accept_sce_interrupt(){
     #if 1
     const auto reg = inst_->INTENR;
     // #ifdef SCE_ENABLED
@@ -529,22 +535,30 @@ void Can::on_sce_interrupt(){
     #endif
 }
 
+void Can::accept_rx_full_interrupt(const CanFifoNth fifo_num){
+
+}
+
+void Can::accept_rx_overrun_interrupt(const CanFifoNth fifo_num){
+
+}
+
 
 #ifdef ENABLE_CAN1
 void USB_HP_CAN1_TX_IRQHandler(void){
-    can1.on_tx_interrupt();
+    can1.accept_tx_interrupt();
 }
 
 
 #define CAN_RX_HANDLER(inst, uinst)\
 if (MY_CAN_GetITStatus<FMP_MASK>(reg, uinst)){\
-    inst.on_rx_msg_interrupt(FIFO_NUM);\
+    inst.accept_rx_msg_interrupt(FIFO_NUM);\
     MY_CAN_ClearITPendingBit<FMP_MASK>(uinst);\
 }else if(MY_CAN_GetITStatus<FF_MASK>(reg, uinst)){\
-    inst.on_rx_full_interrupt();\
+    inst.accept_rx_full_interrupt(FIFO_NUM);\
     MY_CAN_ClearITPendingBit<FF_MASK>(uinst);\
 }else if(MY_CAN_GetITStatus<FOV_MASK>(reg, uinst)){\
-    inst.on_rx_overrun_interrupt();\
+    inst.accept_rx_overrun_interrupt(FIFO_NUM);\
     MY_CAN_ClearITPendingBit<FOV_MASK>(uinst);\
 }\
 

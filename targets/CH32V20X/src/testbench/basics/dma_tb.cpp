@@ -28,14 +28,18 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
     logger.println("DMA init done");
 
 
-    channel.set_interrupt_callback<hal::DmaIT::Half>([&](){
-        logger.println("h", channel.remaining());
+    channel.set_event_callback([&](const hal::DmaEvent ev){
+        switch(ev){
+            case hal::DmaEvent::TransferComplete:
+                logger.println("d", channel.remaining());
+                break;
+            case hal::DmaEvent::HalfTransfer:
+                logger.println("h", channel.remaining());
+                break;
+            default:
+                break;
+        }
     });
-
-    channel.set_interrupt_callback<hal::DmaIT::Done>([&](){
-        logger.println("d", channel.remaining());
-    });
-
 
 
     logger.println("DMA it bind done");

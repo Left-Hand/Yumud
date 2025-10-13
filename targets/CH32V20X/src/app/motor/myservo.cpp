@@ -325,13 +325,22 @@ void myservo_main(){
         pwm.set_dutycycle(ABS(duty));
     };
 
-    hal::adc1.attach(hal::AdcIT::JEOC, {0,0}, [&]{
-        sense_raw_volt = ain1.get_voltage();
-        curr_filter.update(sense_raw_volt);
-        spin_filter.update(ain2.get_voltage());
-    }, EN);
 
 
+    hal::adc1.register_nvic({0,0}, EN);
+    hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    hal::adc1.set_event_callback(
+        [&](const hal::AdcEvent ev){
+            switch(ev){
+            case hal::AdcEvent::EndOfInjectedConversion:{
+                sense_raw_volt = ain1.get_voltage();
+                curr_filter.update(sense_raw_volt);
+                spin_filter.update(ain2.get_voltage());
+                break;}
+            default: break;
+            }
+        }
+    );
     led.outpp();
     while(true){
         led = BoolLevel::from((clock::millis() % 400).count() > 200);

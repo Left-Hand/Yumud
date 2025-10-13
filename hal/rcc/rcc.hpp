@@ -4,7 +4,7 @@
 #include "ral/chip.hpp"
 
 namespace ymd::hal::rcc{
-enum class APB1Periph:uint32_t{
+enum class Apb1Periph:uint32_t{
     _TIM2              = 0x00000001u,
     _TIM3              = 0x00000002u,
     _TIM4              = 0x00000004u,
@@ -32,7 +32,7 @@ enum class APB1Periph:uint32_t{
 };
 
 
-enum class APB2Periph:uint32_t{
+enum class Apb2Periph:uint32_t{
     _AFIO              = 0x00000001u,
     _GPIOA             = 0x00000004u,
     _GPIOB             = 0x00000008u,
@@ -49,7 +49,7 @@ enum class APB2Periph:uint32_t{
     _TIM10             = 0x00100000u,
 };
 
-enum class AHBPeriph:uint32_t{
+enum class AhbPeriph:uint32_t{
     _DMA1               = 0x00000001u,
     _DMA2               = 0x00000002u,
     _SRAM               = 0x00000004u,

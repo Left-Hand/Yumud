@@ -22,34 +22,34 @@ enum class ExtiTrigMode:uint8_t{
 };
 
 enum class ExtiTrigSource:uint32_t{
-    _0 = EXTI_Line0,
-    _1 = EXTI_Line1,
-    _2 = EXTI_Line2,
-    _3 = EXTI_Line3,
-    _4 = EXTI_Line4,
-    _5 = EXTI_Line5,
-    _6 = EXTI_Line6,
-    _7 = EXTI_Line7,
-    _8 = EXTI_Line8,
-    _9 = EXTI_Line9,
-    _10 = EXTI_Line10,
-    _11 = EXTI_Line11,
-    _12 = EXTI_Line12,
-    _13 = EXTI_Line13,
-    _14 = EXTI_Line14,
-    _15 = EXTI_Line15
+    _0 = static_cast<uint32_t>(1u << 0),
+    _1 = static_cast<uint32_t>(1u << 1),
+    _2 = static_cast<uint32_t>(1u << 2),
+    _3 = static_cast<uint32_t>(1u << 3),
+    _4 = static_cast<uint32_t>(1u << 4),
+    _5 = static_cast<uint32_t>(1u << 5),
+    _6 = static_cast<uint32_t>(1u << 6),
+    _7 = static_cast<uint32_t>(1u << 7),
+    _8 = static_cast<uint32_t>(1u << 8),
+    _9 = static_cast<uint32_t>(1u << 9),
+    _10 = static_cast<uint32_t>(1u << 10),
+    _11 = static_cast<uint32_t>(1u << 11),
+    _12 = static_cast<uint32_t>(1u << 12),
+    _13 = static_cast<uint32_t>(1u << 13),
+    _14 = static_cast<uint32_t>(1u << 14),
+    _15 = static_cast<uint32_t>(1u << 15)
 
 
     #if defined(CH32)
-    ,Pvd = EXTI_Line16
-    ,RtcAlarm = EXTI_Line17
-    ,UsbDWakeup = EXTI_Line18
-    ,EtherNetWakeUp = EXTI_Line19
-    ,UsbHSFsWakeUp = EXTI_Line20
+    ,Pvd = static_cast<uint32_t>(1u << 16)
+    ,RtcAlarm = static_cast<uint32_t>(1u << 17)
+    ,UsbDWakeup = static_cast<uint32_t>(1u << 18)
+    ,EtherNetWakeUp = static_cast<uint32_t>(1u << 19)
+    ,UsbHSFsWakeUp = static_cast<uint32_t>(1u << 20)
     #endif
 
     #if defined(CH32V20x_D8) || defined(CH32V20x_D8W)
-    ,OscWakeUp = EXTI_Line21
+    ,OscWakeUp = static_cast<uint32_t>(1u << 21)
     #endif
 };
 

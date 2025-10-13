@@ -100,8 +100,9 @@ void svpwm3_main(){
     pwm_v.init(pwm_noinv_cfg);
     pwm_w.init(pwm_noinv_cfg);
 
+    auto & adc = hal::adc1;
 
-    hal::adc1.init(
+    adc.init(
         {
             {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
         },{
@@ -111,31 +112,41 @@ void svpwm3_main(){
 
     #if TIM_INDEX == 1
     #if TIM1_USE_CC4
-    hal::adc1.set_injected_trigger(AdcInjectedTrigger::T1CC4);
+    adc.set_injected_trigger(AdcInjectedTrigger::T1CC4);
     #else
-    hal::adc1.set_injected_trigger(hal::AdcInjectedTrigger::T1TRGO);
+    adc.set_injected_trigger(hal::AdcInjectedTrigger::T1TRGO);
     #endif
     #elif TIM_INDEX == 2
-    hal::adc1.set_injected_trigger(AdcInjectedTrigger::T2TRGO);
+    adc.set_injected_trigger(AdcInjectedTrigger::T2TRGO);
     #elif TIM_INDEX == 3
-    hal::adc1.set_injected_trigger(AdcInjectedTrigger::T3CC4);
+    adc.set_injected_trigger(AdcInjectedTrigger::T3CC4);
     #elif TIM_INDEX == 4
-    hal::adc1.set_injected_trigger(AdcInjectedTrigger::T4TRGO);
+    adc.set_injected_trigger(AdcInjectedTrigger::T4TRGO);
     #endif
 
-    hal::adc1.enable_auto_inject(DISEN);
 
-    auto & inj = hal::adc1.inj<1>();
+    adc.enable_auto_inject(DISEN);
+
+    auto & inj = adc.inj<1>();
 
     auto trig_gpio = hal::PC<13>();
     trig_gpio.outpp();
 
+    adc.register_nvic({0,0}, EN);
+    adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    adc.set_event_callback(
+        [&](const hal::AdcEvent ev){
+            switch(ev){
+            case hal::AdcEvent::EndOfInjectedConversion:{
+                trig_gpio.toggle();
+                break;}
+            default: break;
+            }
+        }
+    );
     
-    hal::adc1.attach(hal::AdcIT::JEOC, {0,0}, [&]{
-        trig_gpio.toggle();
-        // DEBUG_PRINTLN_IDLE(millis());
-    }, EN);
-    
+
+
     while(true){
         
         const auto ctime = clock::time() * real_t(5 * TAU);

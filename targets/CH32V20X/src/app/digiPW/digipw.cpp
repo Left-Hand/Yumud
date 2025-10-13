@@ -93,15 +93,20 @@ void test_sogi(){
     }
 
     Microseconds dm = 0us;
-    timer.attach<hal::TimerIT::Update>(
-        {0,0},
-        [&](){
-            const auto m = clock::micros();
-            run_sogi();
-            dm = clock::micros() - m;
-        }, EN
-    );
 
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+            case hal::TimerEvent::Update:{
+                const auto m = clock::micros();
+                run_sogi();
+                dm = clock::micros() - m;
+                break;
+            }
+            default: break;
+        }
+    });
 
     while(true){
         // DEBUG_PRINTLN_IDLE(raw_theta, spll.theta(), dm);
@@ -166,19 +171,24 @@ void digipw_main(){
     // DEBUG_PRINTLN(a);
 
 
-    timer.attach<hal::TimerIT::Update>(
-        {0,0},
-        [&](){
-            static q20 mt = 0;
-            static constexpr q20 dt = 1_q20 / CHOPPER_FREQ;
-            mt += dt;
-            // mp1907 = real_t(0.5) + 0.1_r * sinpu(50 * time());
-            pwm.set_dutycycle(real_t(0.5) + 0.1_r * sinpu(50 * real_t(mt)));
-            // const auto duty = 0.3_r;
-            // mp1907 = CLAMP(duty, 0, 0.4_r);
-        },
-        EN
-    );
+
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+            case hal::TimerEvent::Update:{
+                static q20 mt = 0;
+                static constexpr q20 dt = 1_q20 / CHOPPER_FREQ;
+                mt += dt;
+                // mp1907 = real_t(0.5) + 0.1_r * sinpu(50 * time());
+                pwm.set_dutycycle(real_t(0.5) + 0.1_r * sinpu(50 * real_t(mt)));
+                // const auto duty = 0.3_r;
+                // mp1907 = CLAMP(duty, 0, 0.4_r);
+                break;
+            }
+            default: break;
+        }
+    });
 
     while(true){
         

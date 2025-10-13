@@ -74,7 +74,6 @@ bool I2cHw::locked(){
 }
 
 void I2cHw::init(const uint32_t baudrate){
-    // preinit();
     enable_rcc(EN);
 
     scl().afod();

@@ -182,40 +182,51 @@ void at8222_tb(){
     auto watch_gpio = hal::PA<3>();
     watch_gpio.outpp();
 
-    hal::adc1.attach(hal::AdcIT::JEOC, {0,0}, [&](){
-        watch_gpio.toggle();
-        volt = hal::adc1.inj<1>().get_voltage();
-        const auto curr_raw = volt_2_current(volt);
 
-        lpf.update(curr_raw);
-        lpf_mid.update(curr_raw);
-        // curr = lpf.get();
-        curr = curr_raw;
-        watch_gpio.toggle();
-        // bpf.update(curr_raw);
+    hal::adc1.register_nvic({0,0}, EN);
+    hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    hal::adc1.set_event_callback(
+        [&](const hal::AdcEvent ev){
+            switch(ev){
+            case hal::AdcEvent::EndOfInjectedConversion:{
+                watch_gpio.toggle();
+                volt = hal::adc1.inj<1>().get_voltage();
+                const auto curr_raw = volt_2_current(volt);
 
-        bpf.update(curr_raw);
-        curr_mid = lpf_mid.get();
+                lpf.update(curr_raw);
+                lpf_mid.update(curr_raw);
+                // curr = lpf.get();
+                curr = curr_raw;
+                watch_gpio.toggle();
+                // bpf.update(curr_raw);
 
-        ect.update(bool(bpf.output() > 0));
+                bpf.update(curr_raw);
+                curr_mid = lpf_mid.get();
 
-        const auto pos = ect.count() * 0.01_r;
-        td.update(pos);
-        [[maybe_unused]] const auto spd = td.state()[1];
+                ect.update(bool(bpf.output() > 0));
 
-        // static constexpr auto kp = 267.0_r;
-        // static constexpr auto kd = 0.0_r;
-        // const auto spd_cmd = kp * (pos_targ - pos) + kd * (spd_targ - spd);
-        // pi_ctrl.update(spd_targ, spd);
-        // pwm_pos = pi_ctrl.get();
-        // pwm_pos = 0.87_r * abs(sinpu(time()));
-        // pwm_pos = 0.7_r + 0.17_r * abs(sinpu(time()));
-        // pwm_pos = 0.13_r + 0.817_r * abs(sinpu(time()));
-        pwm_pos.set_dutycycle(0_r);
-        // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
-        // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
-        pwm_neg.set_dutycycle(0.9_r);
-    }, EN);
+                const auto pos = ect.count() * 0.01_r;
+                td.update(pos);
+                [[maybe_unused]] const auto spd = td.state()[1];
+
+                // static constexpr auto kp = 267.0_r;
+                // static constexpr auto kd = 0.0_r;
+                // const auto spd_cmd = kp * (pos_targ - pos) + kd * (spd_targ - spd);
+                // pi_ctrl.update(spd_targ, spd);
+                // pwm_pos = pi_ctrl.get();
+                // pwm_pos = 0.87_r * abs(sinpu(time()));
+                // pwm_pos = 0.7_r + 0.17_r * abs(sinpu(time()));
+                // pwm_pos = 0.13_r + 0.817_r * abs(sinpu(time()));
+                pwm_pos.set_dutycycle(0_r);
+                // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
+                // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
+                pwm_neg.set_dutycycle(0.9_r);
+                break;}
+            default: break;
+            }
+        }
+    );
+
 
 
     hal::TimerOcPair motdrv{

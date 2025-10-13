@@ -300,13 +300,19 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     auto motor_system_ = MotorFibre{encoder, pwm_gen_};
 
-    hal::timer1.attach<hal::TimerIT::Update>(
-        {0,0}, 
-        [&](){
+    auto & timer = hal::timer1;
+
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
             motor_system_.resume().examine();
-        }, 
-        EN
-    );
+            break;
+        }
+        default: break;
+        }
+    });
 
     robots::ReplServer repl_server = {
         &UART, &UART
@@ -462,32 +468,40 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     auto isr_trig_gpio = hal::PC<13>();
     isr_trig_gpio.outpp();
 
-    real_t a_curr;
-    real_t b_curr;
-    adc.attach(
-        hal::AdcIT::JEOC, 
-        {0,0}, [&]{
-            // isr_trig_gpio.toggle();
-            // DEBUG_PRINTLN_IDLE(millis());
-            // isr_trig_gpio.toggle();
-            // static bool is_a = false;
-            // b_curr = inj_b.get_voltage();
-            // a_curr = inj_a.get_voltage();
-        }, EN
+    adc.register_nvic({0,0}, EN);
+    adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    adc.set_event_callback(
+        [&](const hal::AdcEvent ev){
+            switch(ev){
+            case hal::AdcEvent::EndOfInjectedConversion:{
+                //pass
+                break;}
+            default: break;
+            }
+        }
     );
 
+    real_t a_curr, b_curr;
 
-    hal::timer1.attach<hal::TimerIT::Update>({0,0}, [&](){
-        b_curr = inj_b.get_voltage();
-        a_curr = inj_a.get_voltage();
-        const auto t = clock::time();
-        const auto [s,c] = sincospu(t);
-        constexpr auto mag = 0.4_r;
-        set_alphabeta_duty(
-            c * mag,
-            s * mag
-        );
-    }, EN);
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
+            b_curr = inj_b.get_voltage();
+            a_curr = inj_a.get_voltage();
+            const auto t = clock::time();
+            const auto [s,c] = sincospu(t);
+            constexpr auto mag = 0.4_r;
+            set_alphabeta_duty(
+                c * mag,
+                s * mag
+            );
+            break;
+        }
+        default: break;
+        }
+    });
 
     while(true){
         DEBUG_PRINTLN_IDLE(
@@ -550,44 +564,49 @@ void mystepper_main(){
     auto inj_b = hal::ScaledAnalogInput{adc.inj<2>(), Rescaler<q16>::from_scale(1)};
     auto ma730_cs_gpio_ = hal::PA<15>();
 
-
-
     digipw::AlphaBetaCoord<q16> alphabeta_curr = {0, 0};
-    adc.attach(
-        hal::AdcIT::JEOC, 
-        {0,0}, 
-        [&]{
-            // static bool is_a = false;
-            static bool is_a = true;
-            is_a = !is_a;
-            
-            if(is_a){
-                alphabeta_curr.alpha = inj_a.get_value();
 
-                // adc.init(
-                //     {
-                //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
-                //     },{
-                //         {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
-                //         {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
-                //     },
-                //     {}
-                // );
-            }else{
-                alphabeta_curr.beta = inj_b.get_value();
-                // adc.init(
-                //     {
-                //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
-                //     },{
-                //         {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
-                //         {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
-                //     },
-                //     {}
-                // );
+    adc.register_nvic({0,0}, EN);
+    adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    adc.set_event_callback(
+        [&](const hal::AdcEvent ev){
+            switch(ev){
+            case hal::AdcEvent::EndOfInjectedConversion:{
+                // static bool is_a = false;
+                static bool is_a = true;
+                is_a = !is_a;
+                
+                if(is_a){
+                    alphabeta_curr.alpha = inj_a.get_value();
+
+                    // adc.init(
+                    //     {
+                    //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+                    //     },{
+                    //         {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
+                    //         {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+                    //     },
+                    //     {}
+                    // );
+                }else{
+                    alphabeta_curr.beta = inj_b.get_value();
+                    // adc.init(
+                    //     {
+                    //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+                    //     },{
+                    //         {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+                    //         {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
+                    //     },
+                    //     {}
+                    // );
+                }
+                break;}
+            default: break;
             }
-        },
-        EN
+        }
     );
+
+
 
     [[maybe_unused]] auto isr_trig_gpio = hal::PC<13>();
     [[maybe_unused]] auto PROGRAM_FAULT_LED = hal::PC<14>();
@@ -610,9 +629,12 @@ void mystepper_main(){
     // motorcheck_tb(encoder, pwm_gen_);
     // eeprom_tb();
 
-    hal::timer1.attach<hal::TimerIT::Update>(
-        {0,0}, 
-        [&](){
+
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
             [[maybe_unused]] const auto ctime = clock::time();
             const auto [s,c] = sincospu(10 * ctime);
             constexpr auto mag = 0.3_r;
@@ -624,9 +646,11 @@ void mystepper_main(){
             //     mag,
             //     mag
             // );
-        },
-        EN
-    );
+            break;
+        }
+        default: break;
+        }
+    });
 
     while(true){
         DEBUG_PRINTLN_IDLE(

@@ -24,6 +24,7 @@ namespace ymd::ral::CH32V20x{
         uint32_t CRCEN:1;
         uint32_t BIDIOE:1;
         uint32_t BIDIMODE:1;
+
         uint32_t :16;
     };CHECK_R32(R32_SPI_CTLR1);
 
@@ -73,7 +74,7 @@ namespace ymd::ral::CH32V20x{
     };
 
     //SPI 时钟寄存器
-    struct R32_SPI_CFGR{
+    struct R32_SPI_I2S_CFGR{
         uint32_t CHLEN:1;
         uint32_t DATLEN:2;
         uint32_t CKPOL:1;
@@ -108,7 +109,7 @@ namespace ymd::ral::CH32V20x{
         volatile R32_SPI_CRCR CRCR;
         volatile R32_SPI_RCRCR RCRCR;
         volatile R32_SPI_TCRCR TCRCR;
-        volatile R32_SPI_CFGR CFGR;
+        volatile R32_SPI_I2S_CFGR I2S_CFGR;
         volatile R32_SPI_HSCR HSCR;
 
         struct Events{
@@ -123,13 +124,20 @@ namespace ymd::ral::CH32V20x{
         };
 
 
+        constexpr void set_cpol(const bool level){
+            CTLR1.CPOL = level;
+        }
+
+        constexpr void set_cpha(const bool level){
+            CTLR1.CPHA = level;
+        }
 
         constexpr void enable_spi(const Enable en){
             CTLR1.SPE = en == EN;
         }
 
         constexpr void enable_i2s(const Enable en){
-            CFGR.ISSE = en == EN;
+            I2S_CFGR.ISSE = en == EN;
         }
 
         constexpr void enable_dma_tx(const Enable en){
@@ -158,6 +166,10 @@ namespace ymd::ral::CH32V20x{
 
         constexpr void enable_dualbyte(const Enable en){
             CTLR1.DFF = en == EN;
+        }
+
+        constexpr void set_bitorder(const Endian endian){
+            CTLR1.LSB = (endian == LSB);
         }
 
         constexpr void transmit_crc(){

@@ -48,10 +48,14 @@ static void bmi088_tb(hal::Spi & spi){
         .fs = 200
     }};
 
-    hal::timer1.init({CALC_FREQ_HZ}, EN);
-    hal::timer1.attach<hal::TimerIT::Update>(
-        {0,0}, [&](){
+    auto & timer = hal::timer1;
+    timer.init({CALC_FREQ_HZ}, EN);
 
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
             const auto begin_m = clock::micros();
 
             
@@ -66,8 +70,12 @@ static void bmi088_tb(hal::Spi & spi){
                 mahony.rotation(), 
                 end_m - begin_m
             );
-        }, EN
-    );
+            break;
+        }
+        default: break;
+        }
+    });
+
 
     while(true);
 }

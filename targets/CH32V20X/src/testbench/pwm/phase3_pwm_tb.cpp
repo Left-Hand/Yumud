@@ -38,22 +38,33 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         .deadzone_ns = 200ns
     });
 
-    timer.attach<hal::TimerIT::Update>({0,0}, [&]{
-        pwm_gen.on_update_isr();
 
-        const auto t = clock::time();
+    timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
 
-        const auto [st, ct] = sincospu(700 * t);
+    timer.register_nvic<hal::TimerIT::CC4>({0,0}, EN);
+    timer.enable_interrupt<hal::TimerIT::CC4>(EN);
+    timer.set_event_callback([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
+            pwm_gen.on_update_isr();
 
-        static constexpr const real_t depth = 0.7_r;
-        const auto uvw_dutycycle = digipw::SVM({st * depth, ct * depth});
-        pwm_gen.set_dutycycle(uvw_dutycycle);
-    }, EN);
+            const auto t = clock::time();
 
-    timer.attach<hal::TimerIT::CC4>({0,0}, [&]{
-        pwm_gen.on_ch4_isr();
-    }, EN);
+            const auto [st, ct] = sincospu(700 * t);
 
+            static constexpr const real_t depth = 0.7_r;
+            const auto uvw_dutycycle = digipw::SVM({st * depth, ct * depth});
+            pwm_gen.set_dutycycle(uvw_dutycycle);
+            break;
+        }
+        case hal::TimerEvent::CC4:{
+            pwm_gen.on_ch4_isr();
+            break;
+        }
+        default: break;
+        }
+    });
 
 
     while(true){

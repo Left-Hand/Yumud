@@ -18,8 +18,14 @@ namespace ymd::hal{
 
 class DmaChannel;
 
+enum class AdcEvent:uint8_t{
+    EndOfConversion,
+    EndOfInjectedConversion,
+    AnalogWatchdog
+};
+
 struct Adc_Prelude{
-    using Callback = std::function<void()>;
+    using Callback = std::function<void(AdcEvent)>;
 
     struct CTLR1{
         uint32_t AWDCH:5;
@@ -124,36 +130,21 @@ public:
         return injected_channels[I - 1];
     }
 
-    void bind_cb(const IT it,auto && cb){
-        switch(it){
-            case IT::JEOC:
-                jeoc_cb_ = std::forward<decltype(cb)>(cb);
-                break;
-            case IT::EOC:
-                eoc_cb_ = std::forward<decltype(cb)>(cb);
-                break;
-            case IT::AWD:
-                awd_cb_ = std::forward<decltype(cb)>(cb);
-                break;
-            default:
-                break;
-        }
-    }
-
-    void enable_it(const IT it, const NvicPriority priority, const Enable en){
-        ADC_ITConfig(inst_, std::bit_cast<uint16_t>(it), en == EN);
-        priority.enable(ADC_IRQn, EN);
-    }
 
     template<typename Fn>
-    void attach(const IT it, const NvicPriority priority, Fn && cb, const Enable en){
-        bind_cb(it, std::forward<Fn>(cb));
-        enable_it(it, priority, en);
+    void set_event_callback(Fn && cb){
+        callback_ = std::forward<Fn>(cb);
     }
 
-    void attach(const IT it, const NvicPriority priority, std::nullptr_t cb){
-        attach(it, priority, nullptr, DISEN);
+    void register_nvic(const NvicPriority priority, const Enable en){
+        priority.enable(ADC_IRQn, en);
     }
+
+    template<IT I>
+    void enable_interrupt(const Enable en){
+        ADC_ITConfig(inst_, std::bit_cast<uint16_t>(I), en == EN);
+    }
+
 
     void set_mode(const Mode mode){
         auto tempreg = std::bit_cast<CTLR1>(inst_->CTLR1);
@@ -205,7 +196,7 @@ public:
         inst_->CTLR2 = tempreg.data;
     }
 
-    void set_wdt_threshold(const int low,const int high){
+    void set_wdt_threshold(const uint16_t low,const uint16_t high){
         inst_->WDHTR = CLAMP(low, 0, get_max_value());
         inst_->WDLTR = CLAMP(high, 0, get_max_value());
     }
@@ -251,9 +242,7 @@ public:
 
 protected:
     ADC_TypeDef * inst_;
-    Callback jeoc_cb_;
-    Callback eoc_cb_;
-    Callback awd_cb_;
+    Callback callback_;
 
     bool right_align = true;
 
@@ -325,16 +314,16 @@ protected:
     friend void ::ADC1_2_IRQHandler(void);
     #endif
 
-    __fast_inline void on_jeoc_interrupt(){
-        EXECUTE(jeoc_cb_);
+    __fast_inline void accept_jeoc_interrupt(){
+        EXECUTE(callback_, AdcEvent::EndOfInjectedConversion);
     }
 
-    __fast_inline void on_eoc_interrupt(){
-        EXECUTE(eoc_cb_);
+    __fast_inline void accept_eoc_interrupt(){
+        EXECUTE(callback_, AdcEvent::EndOfConversion);
     }
 
-    __fast_inline void on_awd_interrupt(){
-        EXECUTE(awd_cb_);
+    __fast_inline void accept_awd_interrupt(){
+        EXECUTE(callback_, AdcEvent::AnalogWatchdog);
     }
 };
 

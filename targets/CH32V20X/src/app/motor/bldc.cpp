@@ -324,13 +324,23 @@ void bldc_main(){
         meas_elecrad_ = meas_elecrad;
     };
 
-    adc.attach(hal::AdcIT::JEOC, {0,0}, 
-        [&]{
-            const auto m = clock::micros();
-            sensored_foc_cb();
-            exe_us_ = clock::micros() - m;
-        }, EN
+
+    adc.register_nvic({0,0}, EN);
+    adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
+    adc.set_event_callback(
+        [&](const hal::AdcEvent ev){
+            switch(ev){
+            case hal::AdcEvent::EndOfInjectedConversion:{
+                const auto m = clock::micros();
+                sensored_foc_cb();
+                exe_us_ = clock::micros() - m;
+                break;
+            }
+            default: break;
+            }
+        }
     );
+
     auto blink_service = [&]{
 
         const auto blink_pattern = [&] -> BlinkPattern{

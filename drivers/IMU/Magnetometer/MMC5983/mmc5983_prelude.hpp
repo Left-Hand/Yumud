@@ -57,7 +57,7 @@ struct MMC5983_Prelude{
 };
 
 
-struct MMC5983_Regs:public MMC5983_Prelude{
+struct MMC5983_Regs final:public MMC5983_Prelude{
     struct alignas(sizeof(8)) DataPacket{
         static constexpr uint8_t address = 0;
 

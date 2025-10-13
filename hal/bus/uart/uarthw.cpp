@@ -687,11 +687,19 @@ void UartHw::enable_tx_dma(const Enable en){
 
         tx_dma_.register_nvic(NVIC_PRIORITY, EN);
         tx_dma_.enable_interrupt<DmaIT::Done>(EN);
-        tx_dma_.set_interrupt_callback<DmaIT::Done>(
-            [this](){this->invoke_tx_dma();}
+        tx_dma_.set_event_callback(
+            [this](const DmaEvent event){
+                switch(event){
+                    case DmaEvent::TransferComplete:
+                        this->invoke_tx_dma();
+                        break;
+                    default:
+                        break;
+                }
+            }
         );
     }else{
-        tx_dma_.set_interrupt_callback<DmaIT::Done>(nullptr);
+        tx_dma_.set_event_callback(nullptr);
     }
 }
 
@@ -704,14 +712,20 @@ void UartHw::enable_rx_dma(const Enable en){
         rx_dma_.register_nvic(NVIC_PRIORITY, EN);
         rx_dma_.enable_interrupt<DmaIT::Done>(EN);
         rx_dma_.enable_interrupt<DmaIT::Half>(EN);
-        rx_dma_.set_interrupt_callback<DmaIT::Done>(
+        rx_dma_.set_event_callback(
 
-            [this](){this->on_rx_dma_done();}
-        );
-
-        rx_dma_.set_interrupt_callback<DmaIT::Half>(
-
-            [this](){this->on_rx_dma_half();}
+            [this](const DmaEvent event) -> void{
+                switch(event){
+                    case DmaEvent::TransferComplete:
+                        this->on_rx_dma_done();
+                        break;
+                    case DmaEvent::HalfTransfer:
+                        this->on_rx_dma_half();
+                        break;
+                    default:
+                        break;
+                }
+            }
         );
 
         rx_dma_.start_transfer_pph2mem<char>(
@@ -720,8 +734,7 @@ void UartHw::enable_rx_dma(const Enable en){
             UART_RX_DMA_BUF_SIZE
         );
     }else{
-        rx_dma_.set_interrupt_callback<DmaIT::Done>(nullptr);
-        rx_dma_.set_interrupt_callback<DmaIT::Half>(nullptr);
+        rx_dma_.set_event_callback(nullptr);
     }
 }
 
