@@ -78,10 +78,10 @@ void at8222_tb(){
 
     hal::adc1.init(
         {
-            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+            {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            // {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T28_5},
-            {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T28_5},
+            // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T28_5},
+            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T28_5},
         }, {}
     );
 

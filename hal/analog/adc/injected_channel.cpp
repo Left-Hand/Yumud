@@ -2,7 +2,7 @@
 
 using namespace ymd::hal;
 
-AdcInjectedChannel::AdcInjectedChannel(ADC_TypeDef * _instance, const AdcChannelNth _channel, const uint8_t _rank):
+AdcInjectedChannel::AdcInjectedChannel(ADC_TypeDef * _instance, const AdcChannelSelection _channel, const uint8_t _rank):
         AdcChannelOnChip(_instance, _channel, _rank),
         mask((ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (rank - 1) + ADC_InjectedChannel_1){;}
 

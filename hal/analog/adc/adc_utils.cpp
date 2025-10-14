@@ -3,7 +3,7 @@
 
 namespace ymd::hal::adc_details{
 
-    void install_pin(const AdcChannelNth channel_nth, const Enable en){
+    void install_pin(const AdcChannelSelection channel_nth, const Enable en){
         uint8_t ch_index = std::bit_cast<uint8_t>(channel_nth);
 
         if(ch_index > 15) return;

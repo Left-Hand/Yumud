@@ -103,17 +103,17 @@ void stepper_tb(UartHw & logger_inst){
     timer1.oc<3>().init({.valid_level = LOW});
     timer1.oc<4>().init({.valid_level = LOW});
     
-    // using AdcChannelNth = AdcChannelNth;
+    // using AdcChannelSelection = AdcChannelSelection;
     // using AdcCycleEnum = AdcSampleCycles;
 
 
 
     // adc1.init(
     //     {
-    //         AdcChannelConfig{AdcChannelNth::VREF, AdcCycleEnum::T28_5}
+    //         AdcChannelConfig{AdcChannelSelection::VREF, AdcCycleEnum::T28_5}
     //     },{
-    //         AdcChannelConfig{AdcChannelNth::CH4, AdcCycleEnum::T7_5},
-    //         AdcChannelConfig{AdcChannelNth::CH3, AdcCycleEnum::T7_5},
+    //         AdcChannelConfig{AdcChannelSelection::CH4, AdcCycleEnum::T7_5},
+    //         AdcChannelConfig{AdcChannelSelection::CH3, AdcCycleEnum::T7_5},
     //     }
     // );
 

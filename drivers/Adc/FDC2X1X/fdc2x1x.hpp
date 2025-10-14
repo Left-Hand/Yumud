@@ -24,7 +24,7 @@ struct FDC2X1X_Prelude{
     };
 
     enum class Error_Kind:uint8_t{
-        ChannelNthOutOfRange
+        ChannelSelectionOutOfRange
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)

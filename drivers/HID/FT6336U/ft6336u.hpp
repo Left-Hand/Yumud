@@ -33,10 +33,10 @@ public:
     [[nodiscard]] IResult<TouchPoints>       get_touch_points(); 
 
 
-    [[nodiscard]] IResult<uint8_t>      get_touch_event(const ChannelNth nth);
-    [[nodiscard]] IResult<uint8_t>      get_touch_id(const ChannelNth nth);
-    [[nodiscard]] IResult<uint8_t>      get_touch_weight(const ChannelNth nth);
-    [[nodiscard]] IResult<uint8_t>      get_touch_misc(const ChannelNth nth);
+    [[nodiscard]] IResult<uint8_t>      get_touch_event(const ChannelSelection nth);
+    [[nodiscard]] IResult<uint8_t>      get_touch_id(const ChannelSelection nth);
+    [[nodiscard]] IResult<uint8_t>      get_touch_weight(const ChannelSelection nth);
+    [[nodiscard]] IResult<uint8_t>      get_touch_misc(const ChannelSelection nth);
 
     // Mode Parameter Register
     [[nodiscard]] IResult<uint8_t>  get_touch_threshold();

@@ -27,12 +27,12 @@ void adc_tb(OutputStream & logger){
 
     hal::adc1.init(
         {
-            hal::AdcChannelConfig{hal::AdcChannelNth::CH0},
+            hal::AdcChannelConfig{hal::AdcChannelSelection::CH0},
         },{
-            hal::AdcChannelConfig{hal::AdcChannelNth::TEMP, hal::AdcCycleEnum::T239_5},
-            hal::AdcChannelConfig{hal::AdcChannelNth::VREF, hal::AdcCycleEnum::T239_5},
-            hal::AdcChannelConfig{hal::AdcChannelNth::CH0, hal::AdcCycleEnum::T239_5},
-            hal::AdcChannelConfig{hal::AdcChannelNth::CH1, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelSelection::TEMP, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelSelection::VREF, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelSelection::CH0, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelSelection::CH1, hal::AdcCycleEnum::T239_5},
         });
 
     hal::adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);
@@ -81,10 +81,10 @@ void adc_tb(OutputStream & logger){
     #ifdef ADC_TB_REGULAR_BLOCKING
     hal::adc1.init(
         {
-            hal::AdcChannelConfig{hal::AdcChannelNth::TEMP, hal::AdcCycleEnum::T239_5},
-            hal::AdcChannelConfig{hal::AdcChannelNth::VREF, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelSelection::TEMP, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelSelection::VREF, hal::AdcCycleEnum::T239_5},
         },{
-            // hal::AdcChannelConfig{AdcChannelNth::CH0},
+            // hal::AdcChannelConfig{AdcChannelSelection::CH0},
         });
 
     while(true){
@@ -110,12 +110,12 @@ void adc_tb(OutputStream & logger){
 
     hal::adc1.init(
         {
-            hal::AdcChannelConfig{hal::AdcChannelNth::TEMP, hal::AdcSampleCycles::T239_5},
-            hal::AdcChannelConfig{hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T239_5},
-            // hal::AdcChannelConfig{hal::AdcChannelNth::CH0, hal::AdcCycleEnum::T239_5},
-            // hal::AdcChannelConfig{hal::AdcChannelNth::CH1, hal::AdcCycleEnum::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelSelection::TEMP, hal::AdcSampleCycles::T239_5},
+            hal::AdcChannelConfig{hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T239_5},
+            // hal::AdcChannelConfig{hal::AdcChannelSelection::CH0, hal::AdcCycleEnum::T239_5},
+            // hal::AdcChannelConfig{hal::AdcChannelSelection::CH1, hal::AdcCycleEnum::T239_5},
         },{
-            // hal::AdcChannelConfig{hal::AdcChannelNth::CH0},
+            // hal::AdcChannelConfig{hal::AdcChannelSelection::CH0},
         }, {});
 
     std::array<uint16_t, 16> adc_dma_buf;

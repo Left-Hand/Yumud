@@ -31,7 +31,7 @@ void TimerOCN::init(const TimerOcnPwmConfig & cfg){
 }
 
 void TimerOC::set_oc_mode(const TimerOC::Mode mode){
-    using enum ChannelNth;
+    using enum ChannelSelection;
 
     const uint8_t raw_code = uint8_t(mode) << 4;
 
@@ -86,7 +86,7 @@ void TimerOutBase::enable_output(const Enable en){
 }
 
 void TimerOC::enable_cvr_sync(const Enable en){
-    using enum ChannelNth;
+    using enum ChannelSelection;
 
     switch(nth_){
         case CH1:

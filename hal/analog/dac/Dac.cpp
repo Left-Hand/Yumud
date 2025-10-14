@@ -27,10 +27,10 @@ DacChannel &ymd::hal::DacChannel::operator=(const real_t value){
     const auto align_mask = uint32_t(align_);
 
     switch(idx_){
-        case ChannelNth::_1:
+        case ChannelSelection::_1:
             DAC_SetChannel1Data(align_mask, d);
             break;
-        case ChannelNth::_2:
+        case ChannelSelection::_2:
             DAC_SetChannel2Data(align_mask, d);
             break;
     }
@@ -40,12 +40,12 @@ DacChannel &ymd::hal::DacChannel::operator=(const real_t value){
 
 
 
-uint32_t DacChannel::get_channel_mask(const ChannelNth nth){
+uint32_t DacChannel::get_channel_mask(const ChannelSelection nth){
     switch(idx){
         default:
-        case ChannelNth::_1:
+        case ChannelSelection::_1:
             return DAC_Channel_1;
-        case ChannelNth::_2:  
+        case ChannelSelection::_2:  
             return DAC_Channel_2;
     }
 }
@@ -55,9 +55,9 @@ void DacChannel::settle(){
     auto & io = [this]() -> Gpio & {
         switch(idx_){
             default:
-            case ChannelNth::_1:
+            case ChannelSelection::_1:
                 return hal::PA<4>();
-            case ChannelNth::_2:
+            case ChannelSelection::_2:
                 return hal::PA<5>();
         }
     }();

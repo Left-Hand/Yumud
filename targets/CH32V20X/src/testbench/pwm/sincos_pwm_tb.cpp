@@ -110,9 +110,9 @@ void sincos_pwm_main(){
 
     adc.init(
         {
-            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+            {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            {hal::AdcChannelNth::CH5, hal::AdcSampleCycles::T28_5},
+            {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T28_5},
         }, {}
     );
 

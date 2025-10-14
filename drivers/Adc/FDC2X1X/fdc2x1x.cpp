@@ -55,7 +55,7 @@ IResult<bool> FDC2X1X::is_conv_done(){
 }
 
 IResult<bool> FDC2X1X::is_conv_done(uint8_t idx){
-	if(idx > 3) return Err(Error::ChannelNthOutOfRange);
+	if(idx > 3) return Err(Error::ChannelSelectionOutOfRange);
 
 	if(const auto res = read_reg(StatusReg::address, status_reg.as_ref());
 		res.is_err()) return Err(res.unwrap_err());
@@ -75,7 +75,7 @@ IResult<> FDC2X1X::reset(){
 }
 
 IResult<uint32_t> FDC2X1X::get_data(uint8_t idx){
-	if(idx > 3)  return Err(Error::ChannelNthOutOfRange);
+	if(idx > 3)  return Err(Error::ChannelSelectionOutOfRange);
 
 	uint32_t ret = 0;
 	auto & highreg = conv_data_regs[idx].high;

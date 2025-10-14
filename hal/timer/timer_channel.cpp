@@ -4,8 +4,8 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-volatile uint16_t & TimerChannel::from_channel_to_cvr(TIM_TypeDef * timer, const ChannelNth nth){
-    using enum ChannelNth;
+volatile uint16_t & TimerChannel::from_channel_to_cvr(TIM_TypeDef * timer, const ChannelSelection nth){
+    using enum ChannelSelection;
 
     switch(nth){
         default:
@@ -25,7 +25,7 @@ volatile uint16_t & TimerChannel::from_channel_to_cvr(TIM_TypeDef * timer, const
 
 
 TimerChannel & TimerChannel::enable_dma(const Enable en){
-    using enum ChannelNth;
+    using enum ChannelSelection;
 
     uint16_t source = 0;
 
@@ -53,7 +53,7 @@ TimerChannel & TimerChannel::enable_dma(const Enable en){
 
 
 DmaChannel & TimerChannel::dma() const {
-    using enum ChannelNth;
+    using enum ChannelSelection;
 
     #define DMA_NULL dma1_ch1
 

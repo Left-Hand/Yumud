@@ -25,7 +25,7 @@ namespace ymd::hal{
     //     CenterAlignedDualTrig   = 0x06
     // };
 
-    enum class TimerChannelNth:uint8_t{
+    enum class TimerChannelSelection:uint8_t{
         CH1     =   0b000,
         CH1N    =   0b001,
         CH2     =   0b010,
@@ -115,7 +115,7 @@ namespace ymd::hal{
 
     IRQn it_to_irq(const TIM_TypeDef * instance, const TimerIT it);
 
-    Gpio get_pin(const TIM_TypeDef * instance, const TimerChannelNth channel);
+    Gpio get_pin(const TIM_TypeDef * instance, const TimerChannelSelection channel);
 
     constexpr bool is_aligned_count_mode(const TimerCountMode mode){
         return  (mode == TimerCountMode::CenterAlignedDownTrig) ||

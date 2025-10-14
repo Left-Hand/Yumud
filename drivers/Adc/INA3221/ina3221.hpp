@@ -11,7 +11,7 @@
 // ina.init().unwrap();
 
 // while(true){
-//     ina.update(INA3221::ChannelNth::CH1).unwrap();
+//     ina.update(INA3221::ChannelSelection::CH1).unwrap();
 //     DEBUG_PRINTLN(
 //         ina.get_bus_volt(ch).unwrap(), 
 //         ina.get_shunt_volt(ch).unwrap() * real_t(INV_SHUNT_RES)
@@ -69,7 +69,7 @@ public:
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u7(0b1000000);
 
-    enum class ChannelNth:uint8_t{
+    enum class ChannelSelection:uint8_t{
         CH1 = 0,
         CH2,
         CH3
@@ -385,7 +385,7 @@ public:
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> reconf(const Config & cfg);
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<> update(const ChannelNth nth);
+    [[nodiscard]] IResult<> update(const ChannelSelection nth);
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
@@ -393,19 +393,19 @@ public:
     [[nodiscard]] IResult<> enable_measure_shunt(const Enable en);
     [[nodiscard]] IResult<> enable_continuous(const Enable en);
 
-    [[nodiscard]] IResult<> enable_channel(const ChannelNth nth, const Enable en);
+    [[nodiscard]] IResult<> enable_channel(const ChannelSelection nth, const Enable en);
 
     [[nodiscard]] IResult<> set_bus_conversion_time(const ConversionTime time);
     [[nodiscard]] IResult<> set_shunt_conversion_time(const ConversionTime time);
 
-    [[nodiscard]] IResult<int> get_shunt_volt_uv(const ChannelNth nth);
-    [[nodiscard]] IResult<int> get_bus_volt_mv(const ChannelNth nth);
+    [[nodiscard]] IResult<int> get_shunt_volt_uv(const ChannelSelection nth);
+    [[nodiscard]] IResult<int> get_bus_volt_mv(const ChannelSelection nth);
 
-    [[nodiscard]] IResult<real_t> get_shunt_volt(const ChannelNth nth);
-    [[nodiscard]] IResult<real_t> get_bus_volt(const ChannelNth nth);
+    [[nodiscard]] IResult<real_t> get_shunt_volt(const ChannelSelection nth);
+    [[nodiscard]] IResult<real_t> get_bus_volt(const ChannelSelection nth);
 
-    [[nodiscard]] IResult<> set_instant_ovc_threshold(const ChannelNth nth, const real_t volt);
-    [[nodiscard]] IResult<> set_constant_ovc_threshold(const ChannelNth nth, const real_t volt);
+    [[nodiscard]] IResult<> set_instant_ovc_threshold(const ChannelSelection nth, const real_t volt);
+    [[nodiscard]] IResult<> set_constant_ovc_threshold(const ChannelSelection nth, const real_t volt);
 private:
     INA3221_Phy phy_;
 

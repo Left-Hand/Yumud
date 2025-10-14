@@ -280,10 +280,10 @@ void myservo_main(){
     auto init_adc = []{
         hal::adc1.init(
             {
-                {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+                {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
             },{
-                {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
-                {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T28_5},
+                {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
+                {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T28_5},
             },
             {}
         );

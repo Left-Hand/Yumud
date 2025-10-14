@@ -38,7 +38,7 @@ struct ADS7830_Prelude{
         RefOn_AdcOn = 0b11,
     };
 
-    struct ChannelNth{
+    struct ChannelSelection{
         enum class Kind:uint8_t{
             CH0 = 0,
             CH1,
@@ -53,18 +53,18 @@ struct ADS7830_Prelude{
 
         using enum Kind;
 
-        constexpr ChannelNth(Kind kind):kind_(kind){}
+        constexpr ChannelSelection(Kind kind):kind_(kind){}
 
-        static constexpr Option<ChannelNth> from_index(uint8_t nth){
+        static constexpr Option<ChannelSelection> from_nth(uint8_t nth){
             if(nth >= 8) return None;
-            return Some(ChannelNth(std::bit_cast<Kind>(nth)));
+            return Some(ChannelSelection(std::bit_cast<Kind>(nth)));
         }
 
         constexpr Kind kind() const {
             return kind_;
         }
 
-        constexpr bool operator == (ChannelNth const & rhs) const{
+        constexpr bool operator == (ChannelSelection const & rhs) const{
             return kind_ == rhs.kind_;
         }
 
@@ -75,7 +75,7 @@ struct ADS7830_Prelude{
         Kind kind_;
     };
 
-    class ChannelSelection{
+    class PairSelection{
     public:
         enum class Kind:uint8_t{
             P0N1 = 0b0000,
@@ -99,22 +99,22 @@ struct ADS7830_Prelude{
             P7NC  = 0b1111,
         };
 
-        constexpr ChannelSelection(const Kind kind):
+        constexpr PairSelection(const Kind kind):
             kind_(kind){;}
 
-        static constexpr Option<ChannelSelection> 
+        static constexpr Option<PairSelection> 
             from_pos(
-            const ChannelNth pos){
-            return from_pos_and_neg(pos, ChannelNth::COM);
+            const ChannelSelection pos){
+            return from_pos_and_neg(pos, ChannelSelection::COM);
         }
 
-        static constexpr Option<ChannelSelection> 
+        static constexpr Option<PairSelection> 
             from_pos_and_neg(
-            const ChannelNth pos, 
-            const ChannelNth neg
+            const ChannelSelection pos, 
+            const ChannelSelection neg
         ){
-            return posneg2kind(pos, ChannelNth::COM).
-                map([](const Kind kind){return ChannelSelection(kind);});
+            return posneg2kind(pos, ChannelSelection::COM).
+                map([](const Kind kind){return PairSelection(kind);});
         }
 
         constexpr Kind kind() const {return kind_;};
@@ -122,27 +122,27 @@ struct ADS7830_Prelude{
         Kind kind_;
 
         static constexpr Option<Kind> posneg2kind(
-            const ChannelNth pos,
-            const ChannelNth neg
+            const ChannelSelection pos,
+            const ChannelSelection neg
         ){
             constexpr auto map = std::to_array<
-                std::pair<std::pair<ChannelNth, ChannelNth>, Kind>>({
-                std::make_pair(std::make_pair(ChannelNth::CH0, ChannelNth::CH1), Kind::P0N1),
-                std::make_pair(std::make_pair(ChannelNth::CH2, ChannelNth::CH3), Kind::P2N3),
-                std::make_pair(std::make_pair(ChannelNth::CH4, ChannelNth::CH5), Kind::P4N5),
-                std::make_pair(std::make_pair(ChannelNth::CH6, ChannelNth::CH7), Kind::P6N7),
-                std::make_pair(std::make_pair(ChannelNth::CH1, ChannelNth::CH0), Kind::P1N0),
-                std::make_pair(std::make_pair(ChannelNth::CH3, ChannelNth::CH2), Kind::P3N2),
-                std::make_pair(std::make_pair(ChannelNth::CH5, ChannelNth::CH4), Kind::P5N4),
-                std::make_pair(std::make_pair(ChannelNth::CH7, ChannelNth::CH6), Kind::P7N6),
-                std::make_pair(std::make_pair(ChannelNth::CH0, ChannelNth::COM), Kind::P0NC),
-                std::make_pair(std::make_pair(ChannelNth::CH2, ChannelNth::COM), Kind::P2NC),
-                std::make_pair(std::make_pair(ChannelNth::CH4, ChannelNth::COM), Kind::P4NC),
-                std::make_pair(std::make_pair(ChannelNth::CH6, ChannelNth::COM), Kind::P6NC),
-                std::make_pair(std::make_pair(ChannelNth::CH1, ChannelNth::COM), Kind::P1NC),
-                std::make_pair(std::make_pair(ChannelNth::CH3, ChannelNth::COM), Kind::P3NC),
-                std::make_pair(std::make_pair(ChannelNth::CH5, ChannelNth::COM), Kind::P5NC),
-                std::make_pair(std::make_pair(ChannelNth::CH7, ChannelNth::COM), Kind::P7NC),
+                std::pair<std::pair<ChannelSelection, ChannelSelection>, Kind>>({
+                std::make_pair(std::make_pair(ChannelSelection::CH0, ChannelSelection::CH1), Kind::P0N1),
+                std::make_pair(std::make_pair(ChannelSelection::CH2, ChannelSelection::CH3), Kind::P2N3),
+                std::make_pair(std::make_pair(ChannelSelection::CH4, ChannelSelection::CH5), Kind::P4N5),
+                std::make_pair(std::make_pair(ChannelSelection::CH6, ChannelSelection::CH7), Kind::P6N7),
+                std::make_pair(std::make_pair(ChannelSelection::CH1, ChannelSelection::CH0), Kind::P1N0),
+                std::make_pair(std::make_pair(ChannelSelection::CH3, ChannelSelection::CH2), Kind::P3N2),
+                std::make_pair(std::make_pair(ChannelSelection::CH5, ChannelSelection::CH4), Kind::P5N4),
+                std::make_pair(std::make_pair(ChannelSelection::CH7, ChannelSelection::CH6), Kind::P7N6),
+                std::make_pair(std::make_pair(ChannelSelection::CH0, ChannelSelection::COM), Kind::P0NC),
+                std::make_pair(std::make_pair(ChannelSelection::CH2, ChannelSelection::COM), Kind::P2NC),
+                std::make_pair(std::make_pair(ChannelSelection::CH4, ChannelSelection::COM), Kind::P4NC),
+                std::make_pair(std::make_pair(ChannelSelection::CH6, ChannelSelection::COM), Kind::P6NC),
+                std::make_pair(std::make_pair(ChannelSelection::CH1, ChannelSelection::COM), Kind::P1NC),
+                std::make_pair(std::make_pair(ChannelSelection::CH3, ChannelSelection::COM), Kind::P3NC),
+                std::make_pair(std::make_pair(ChannelSelection::CH5, ChannelSelection::COM), Kind::P5NC),
+                std::make_pair(std::make_pair(ChannelSelection::CH7, ChannelSelection::COM), Kind::P7NC),
             });
 
             for(const auto & [key, value] : map){
@@ -156,7 +156,7 @@ struct ADS7830_Prelude{
     struct CommandByte{
         const uint8_t __resv__:2 = 0;
         const PowerDownSel pd:2;
-        const ChannelSelection::Kind sel:4;
+        const PairSelection::Kind sel:4;
 
         constexpr uint8_t as_u8() const {
             return std::bit_cast<uint8_t>(*this);
@@ -206,8 +206,8 @@ public:
 
     IResult<> validate();
 
-    IResult<ConvData> read_pos_channel(const ChannelNth nth);
-    IResult<ConvData> read_channel(const ChannelSelection ch);
+    IResult<ConvData> read_pos_channel(const ChannelSelection nth);
+    IResult<ConvData> read_channel(const PairSelection ch);
 
     void set_pwdn_sel(const PowerDownSel sel){
         pwdn_sel_ = sel;
