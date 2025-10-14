@@ -181,7 +181,7 @@ struct TCAN1145_Prelude{
                 uint8_t reserved2 : 4;
             };
         };
-    } Watchdog_Config;
+    } WatchdogConfig;
     //Addr 13h-14h, 16h
 
     /*
@@ -337,10 +337,12 @@ struct TCAN1145_Prelude{
         uint8_t wd1 : 2;
         uint8_t wd2 : 2;
         uint8_t wd3 : 2;
+
         uint8_t wd4 : 2;
         uint8_t wd5 : 2;
         uint8_t wd6 : 2;
         uint8_t wd7 : 2;
+        
         uint8_t wd8 : 2;
         uint8_t wd9 : 2;
         uint8_t wd10 : 2;
