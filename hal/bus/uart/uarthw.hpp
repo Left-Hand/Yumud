@@ -75,7 +75,7 @@ private:
 
     void enable_rxne_it(const Enable en);
     void enable_idle_it(const Enable en);
-    void enable_tx_it();
+    void enable_tx_it(const Enable en);
 
     void enable_rx_dma(const Enable en);
     void enable_tx_dma(const Enable en);

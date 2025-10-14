@@ -139,7 +139,7 @@ public:
 
     template<IT I>
     void register_nvic(const NvicPriority request, const Enable en){
-        NvicPriority::enable(request, details::it_to_irq(inst_, I), en);
+        request.with_irqn(details::it_to_irq(inst_, I)).enable(en);
     }
 
     void enable_arr_sync(const Enable en);

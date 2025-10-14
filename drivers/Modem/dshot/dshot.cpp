@@ -13,9 +13,11 @@ using namespace ymd::drivers;
 static constexpr auto DSHOT_LEN = DShotChannel::DSHOT_LEN;
 
 void BurstDmaPwm::borrow(std::span<const uint16_t> pbuf){
-    dma_channel_.init({DmaMode::toPeriph, DmaPriority::Medium});
+    dma_channel_.init({DmaMode::ToPeriph, DmaPriority::Medium});
     pbuf_ = pbuf;
 }
+
+
 void BurstDmaPwm::invoke(){
     dma_channel_.start_transfer_mem2pph<uint16_t>(
         &timer_oc_.cvr(), pbuf_.data(), pbuf_.size()
@@ -23,7 +25,7 @@ void BurstDmaPwm::invoke(){
 }
 
 void BurstDmaPwm::install(){
-    dma_channel_.init({DmaMode::toPeriph, DmaPriority::Ultra});
+    dma_channel_.init({DmaMode::ToPeriph, DmaPriority::Ultra});
     timer_oc_.init({});
     timer_oc_.enable_cvr_sync(EN);
 }
@@ -46,7 +48,10 @@ DShotChannel::DShotChannel(hal::TimerOC & oc):
     burst_dma_pwm_(oc){;}
 
 BurstDmaPwm::BurstDmaPwm(hal::TimerOC & timer_oc):
-    timer_oc_(timer_oc), dma_channel_(timer_oc.dma()){;}
+    timer_oc_(timer_oc), 
+    dma_channel_(timer_oc.dma()){;}
+
+
 void DShotChannel::update(const std::span<uint16_t, DSHOT_LEN> buf, const uint16_t data){
     uint16_t tempbuf = data;
     for(size_t i = 0; i < 16; i++){
@@ -58,7 +63,11 @@ void DShotChannel::update(const std::span<uint16_t, DSHOT_LEN> buf, const uint16
 WS2812_Phy_of_BurstPwm::WS2812_Phy_of_BurstPwm(BurstDmaPwm & burst_dma_pwm)
     : burst_dma_pwm_(burst_dma_pwm){}
 
-void WS2812_Phy_of_BurstPwm::apply_mono_to_buf(const std::span<uint16_t, 8> buf, uint8_t mono) const{
+
+void WS2812_Phy_of_BurstPwm::apply_mono_to_buf(
+    const std::span<uint16_t, 8> buf, 
+    uint8_t mono
+) const{
     uint16_t HIGH_CVR = burst_dma_pwm_.calc_cvr_from_duty(q31(0.85 / 1.25));
     uint16_t LOW_CVR = burst_dma_pwm_.calc_cvr_from_duty(q31(0.4 / 1.25));
 
@@ -68,7 +77,10 @@ void WS2812_Phy_of_BurstPwm::apply_mono_to_buf(const std::span<uint16_t, 8> buf,
     }
 }
 
-void WS2812_Phy_of_BurstPwm::apply_color_to_buf(std::span<uint16_t, 24> buf, std::array<uint8_t, 3> color) const{
+void WS2812_Phy_of_BurstPwm::apply_color_to_buf(
+    std::span<uint16_t, 24> buf, 
+    std::array<uint8_t, 3> color
+) const{
     apply_mono_to_buf(std::span<uint16_t, 8>(buf.begin() + 0, 8), color[0]);
     apply_mono_to_buf(std::span<uint16_t, 8>(buf.begin() + 8, 8), color[1]);
     apply_mono_to_buf(std::span<uint16_t, 8>(buf.begin() + 16, 8), color[2]);

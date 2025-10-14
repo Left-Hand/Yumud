@@ -606,7 +606,7 @@ void UartHw::writeN(const char * pbuf, const size_t len){
             break;
         case CommStrategy::Interrupt:
             (void)tx_fifo_.push(std::span(pbuf, len));
-            enable_tx_it();
+            enable_tx_it(EN);
 
             break;
         case CommStrategy::Dma:
@@ -630,7 +630,7 @@ void UartHw::write1(const char data){
 
         case CommStrategy::Interrupt:
             tx_fifo_.push(data);
-            enable_tx_it();
+            enable_tx_it(EN);
             break;
 
         case CommStrategy::Dma:
@@ -683,7 +683,7 @@ void UartHw::enable_tx_dma(const Enable en){
 
     if(en == EN){
         static constexpr NvicPriority NVIC_PRIORITY = {1,1};
-        tx_dma_.init({DmaMode::toPeriph, DmaPriority::Medium});
+        tx_dma_.init({DmaMode::ToPeriph, DmaPriority::Medium});
 
         tx_dma_.register_nvic(NVIC_PRIORITY, EN);
         tx_dma_.enable_interrupt<DmaIT::Done>(EN);
@@ -707,7 +707,7 @@ void UartHw::enable_rx_dma(const Enable en){
     USART_DMACmd(inst_, USART_DMAReq_Rx, en == EN);
     if(en == EN){
         static constexpr NvicPriority NVIC_PRIORITY = {1,1};
-        rx_dma_.init({DmaMode::toMemCircular, DmaPriority::Medium});
+        rx_dma_.init({DmaMode::ToMemCircular, DmaPriority::Medium});
 
         rx_dma_.register_nvic(NVIC_PRIORITY, EN);
         rx_dma_.enable_interrupt<DmaIT::Done>(EN);
@@ -743,8 +743,8 @@ void UartHw::enable_rxne_it(const Enable en){
     USART_ITConfig(inst_, USART_IT_RXNE, en == EN);
 }
 
-void UartHw::enable_tx_it(){
-    USART_ITConfig(inst_, USART_IT_TXE, ENABLE);
+void UartHw::enable_tx_it(const Enable en){
+    USART_ITConfig(inst_, USART_IT_TXE, en == EN);
 }
 
 

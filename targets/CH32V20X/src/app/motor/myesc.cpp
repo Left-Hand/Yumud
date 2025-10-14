@@ -429,17 +429,22 @@ void myesc_main(){
 
     Microseconds exe_us_ = 0us;
 
+    auto jeoc_isr = [&]{ 
+        const auto begin_us = clock::micros();
+        ctrl_isr();
+        const auto end_us = clock::micros();
+        exe_us_ = end_us - begin_us;
+    };
+
     hal::adc1.register_nvic({0,0}, EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
     hal::adc1.set_event_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
-                const auto begin_us = clock::micros();
-                ctrl_isr();
-                const auto end_us = clock::micros();
-                exe_us_ = end_us - begin_us;
-                break;}
+                jeoc_isr();
+                break;
+            }
             default: break;
             }
         }

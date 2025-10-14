@@ -9,15 +9,10 @@
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
-#include "robots/cannet/can_chain.hpp"
-
 #include "types/vectors/polar.hpp"
 #include "types/vectors/vector2.hpp"
 
 #include "details/polar_robot_curvedata.hpp"
-
-#include "types/colors/color/color.hpp"
-
 
 #include "common_service.hpp"
 #include "joints.hpp"

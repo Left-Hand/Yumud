@@ -137,7 +137,7 @@ public:
     }
 
     void register_nvic(const NvicPriority priority, const Enable en){
-        priority.enable(ADC_IRQn, en);
+        priority.with_irqn(ADC_IRQn).enable(en);
     }
 
     template<IT I>
@@ -201,13 +201,13 @@ public:
         inst_->WDLTR = CLAMP(high, 0, get_max_value());
     }
 
-    void bind_wdt_it(Callback && cb){
-        //TODO
-    }
 
-    void set_trigger(const RegularTrigger _rtrigger, const InjectedTrigger _jtrigger){
-        set_regular_trigger(_rtrigger);
-        set_injected_trigger(_jtrigger);
+    void set_trigger(
+        const RegularTrigger r_trigger, 
+        const InjectedTrigger j_trigger
+    ){
+        set_regular_trigger(r_trigger);
+        set_injected_trigger(j_trigger);
     }
 
     void sw_start_regular(const bool force = false){
@@ -220,15 +220,15 @@ public:
         ADC_SoftwareStartInjectedConvCmd(inst_, true);
     }
 
-    bool is_regular_idle(){
+    [[nodiscard]] bool is_regular_idle(){
         return ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC);
     }
 
-    bool is_injected_idle(){
+    [[nodiscard]] bool is_injected_idle(){
         return ADC_GetFlagStatus(ADC1, ADC_FLAG_JEOC);
     }
 
-    bool is_idle(){
+    [[nodiscard]] bool is_idle(){
         return (is_regular_idle() && is_injected_idle());
     }
 

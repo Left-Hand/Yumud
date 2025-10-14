@@ -35,15 +35,10 @@ static void mmc5983_test(drivers::MMC5983 & imu){
 
     imu.enable_auto_mag_sr(EN).examine();
 
-    // DEBUG_PRINTLN(do_set().examine());
-
-    // while(true);
-    // const auto m = millis();
-    const auto up = (imu.do_magreset().examine() + imu.do_magreset().examine())/ 2;
-    const auto down = (imu.do_magset().examine() + imu.do_magset().examine())/ 2;
+    const auto up = (imu.do_mag_reset().examine() + imu.do_mag_reset().examine())/ 2;
+    const auto down = (imu.do_mag_set().examine() + imu.do_mag_set().examine())/ 2;
     const auto base = (up + down)/2;
-    // PANIC(millis() - m);
-    // sstl::vector<Vec3<q24>, 64> data;
+
     robots::EllipseCalibrator calibrator;
 
     #if 0

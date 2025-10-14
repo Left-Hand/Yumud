@@ -14,7 +14,11 @@ using namespace ymd;
 
 void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
 
-    char src[] = "The quick brown fox jumps over the lazy dog, A favorite copy set by writing teachers for their pupils is the following, because it contains every letter of the alphabet:'A quick brown fox jumps over the lazy dog.";
+    char src[] = 
+    R"(The quick brown fox jumps over the lazy dog, 
+    A favorite copy set by writing teachers for their pupils is the following, 
+    because it contains every letter of the alphabet:
+    'A quick brown fox jumps over the lazy dog.)";
     char dst[sizeof(src)];
 
     logger.println("DMA Test");
@@ -24,7 +28,7 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
     logger.println("dst:", dst);
     logger.println("======");
 
-    channel.init({hal::DmaMode::synergy, hal::DmaPriority::High});
+    channel.init({hal::DmaMode::Synergy, hal::DmaPriority::High});
     logger.println("DMA init done");
 
 

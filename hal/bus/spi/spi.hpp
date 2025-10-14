@@ -16,6 +16,7 @@ public:
     explicit constexpr SpiSlaveRank(const uint8_t rank):
         rank_(rank){}
 
+    uint8_t count() const {return rank_;}
     uint16_t as_unique_id() const {return static_cast<uint16_t>(rank_);}
 
 private:
@@ -95,13 +96,13 @@ public:
 
 protected:
     VGpioPort <SPI_MAX_PINS> cs_port_ = VGpioPort<SPI_MAX_PINS>();
-    CommStrategy tx_strategy_;
-    CommStrategy rx_strategy_;
+    CommStrategy tx_strategy_ = CommStrategy::Nil;
+    CommStrategy rx_strategy_ = CommStrategy::Nil;
     PeripheralOwnershipTracker owner_ = {};
     Option<Nth> last_nth_ = None;
 
     [[nodiscard]] __fast_inline hal::HalResult lead(const SpiSlaveRank rank){
-        const auto nth = Nth(rank.as_unique_id());
+        const auto nth = Nth(rank.count());
         if(not cs_port_.is_nth_valid(nth))
             return hal::HalResult::NoSelecter;
         cs_port_[nth].clr();

@@ -29,8 +29,8 @@ public:
         phy_(hal::I2cDrv{i2c, addr}){;}
     explicit MMC5983(const hal::SpiDrv & spi_drv):
         phy_(spi_drv){;}
-    explicit MMC5983(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        phy_(hal::SpiDrv{spi, index}){;}
+    explicit MMC5983(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        phy_(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> validate();
@@ -48,12 +48,11 @@ public:
     [[nodiscard]] IResult<bool> is_mag_meas_done();
     [[nodiscard]] IResult<bool> is_temp_meas_done();
     
-    
-    [[nodiscard]] IResult<> set_prd_magset(const PrdSet prdset);
-    [[nodiscard]] IResult<> enable_magset(const Enable en);
-    [[nodiscard]] IResult<> enable_magreset(const Enable en);
-    [[nodiscard]] IResult<Vec3<q24>> do_magset();
-    [[nodiscard]] IResult<Vec3<q24>> do_magreset();
+    [[nodiscard]] IResult<> set_prd_mag_set(const PrdSet prdset);
+    [[nodiscard]] IResult<> enable_mag_set(const Enable en);
+    [[nodiscard]] IResult<> enable_mag_reset(const Enable en);
+    [[nodiscard]] IResult<Vec3<q24>> do_mag_set();
+    [[nodiscard]] IResult<Vec3<q24>> do_mag_reset();
     [[nodiscard]] IResult<> enable_auto_mag_sr(const Enable en);
     
     [[nodiscard]] IResult<> enable_mag_meas(const Enable en);

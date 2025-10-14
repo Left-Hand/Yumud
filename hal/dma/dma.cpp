@@ -108,7 +108,7 @@ void DmaChannel::enable_rcc(Enable en){
 
 void DmaChannel::start_transfer(size_t dst_addr, size_t src_addr, const size_t size){
 
-    if(dst_is_periph(mode_)){
+    if(mode_.dst_is_periph()){
         SDK_INST(inst_) -> PADDR = dst_addr;
         SDK_INST(inst_) -> MADDR = src_addr;
     }else{
@@ -125,13 +125,10 @@ void DmaChannel::init(const Config & cfg){
     mode_ = cfg.mode;
     DMA_InitTypeDef DMA_InitStructure;
 
-    DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+    DMA_InitStructure.DMA_Mode = cfg.mode.is_circular() ? DMA_Mode_Circular : DMA_Mode_Normal;
 
-    switch(cfg.mode){
-        case Mode::toMemCircular:
-            DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-            [[fallthrough]];
-        case Mode::toMem:
+    switch(DmaDirection(cfg.mode).kind()){
+        case DmaDirection::ToMemory:
             DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
             DMA_InitStructure.DMA_MemoryBaseAddr = 0;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
@@ -140,10 +137,8 @@ void DmaChannel::init(const Config & cfg){
             DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
             DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
             break;
-        case Mode::toPeriphCircular:
-            DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-            [[fallthrough]];
-        case Mode::toPeriph:
+            
+        case DmaDirection::ToPeriph:
             DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
             DMA_InitStructure.DMA_MemoryBaseAddr = 0;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
@@ -152,10 +147,7 @@ void DmaChannel::init(const Config & cfg){
             DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
             DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
             break;
-        case Mode::synergyCircular:
-            DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-            [[fallthrough]];
-        case Mode::synergy:
+        case DmaDirection::Synergy:
             DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
             DMA_InitStructure.DMA_MemoryBaseAddr = 0;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
@@ -164,10 +156,7 @@ void DmaChannel::init(const Config & cfg){
             DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
             DMA_InitStructure.DMA_M2M = DMA_M2M_Enable;
             break;
-        case Mode::distributeCircular:
-            DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-            [[fallthrough]];
-        case Mode::distribute:
+        case DmaDirection::Distribute:
             DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
             DMA_InitStructure.DMA_MemoryBaseAddr = 0;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
@@ -176,17 +165,6 @@ void DmaChannel::init(const Config & cfg){
             DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Disable;
             DMA_InitStructure.DMA_M2M = DMA_M2M_Enable;
             break;
-        case Mode::automatic:
-            DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
-            DMA_InitStructure.DMA_MemoryBaseAddr = 0;
-            DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-            DMA_InitStructure.DMA_BufferSize = 0;
-            DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Enable;
-            DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Disable;
-            DMA_InitStructure.DMA_M2M = DMA_M2M_Enable;
-            break;
-        default:
-            __builtin_unreachable();
     }
 
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
@@ -233,9 +211,9 @@ static constexpr IRQn map_inst_to_irq(const uint8_t dma_index, const uint8_t cha
     }
 
 }
-void DmaChannel::register_nvic(const NvicPriority _priority, const Enable en){
+void DmaChannel::register_nvic(const NvicPriority priority, const Enable en){
     const IRQn irq = map_inst_to_irq(dma_index_, channel_index_);
-    NvicPriority::enable(_priority, irq, en);
+    priority.with_irqn(irq).enable(en);
 }
 
 void DmaChannel::set_periph_width(const size_t width){
