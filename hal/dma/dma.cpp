@@ -9,42 +9,42 @@ namespace ymd::hal{
 
 
 #ifdef ENABLE_DMA1
-DmaChannel dma1Ch1{DMA1_Channel1};
-DmaChannel dma1Ch2{DMA1_Channel2};
-DmaChannel dma1Ch3{DMA1_Channel3};
-DmaChannel dma1Ch4{DMA1_Channel4};
-DmaChannel dma1Ch5{DMA1_Channel5};
-DmaChannel dma1Ch6{DMA1_Channel6};
-DmaChannel dma1Ch7{DMA1_Channel7};
+DmaChannel dma1_ch1{DMA1_Channel1};
+DmaChannel dma1_ch2{DMA1_Channel2};
+DmaChannel dma1_ch3{DMA1_Channel3};
+DmaChannel dma1_ch4{DMA1_Channel4};
+DmaChannel dma1_ch5{DMA1_Channel5};
+DmaChannel dma1_ch6{DMA1_Channel6};
+DmaChannel dma1_ch7{DMA1_Channel7};
 #endif
 
 #ifdef ENABLE_DMA2
-DmaChannel dma2Ch1{DMA2_Channel1};
-DmaChannel dma2Ch2{DMA2_Channel2};
-DmaChannel dma2Ch3{DMA2_Channel3};
-DmaChannel dma2Ch4{DMA2_Channel4};
-DmaChannel dma2Ch5{DMA2_Channel5};
-DmaChannel dma2Ch6{DMA2_Channel6};
-DmaChannel dma2Ch7{DMA2_Channel7};
-DmaChannel dma2Ch8{DMA2_Channel8};
-DmaChannel dma2Ch9{DMA2_Channel9};
-DmaChannel dma2Ch10{DMA2_Channel10};
-DmaChannel dma2Ch11{DMA2_Channel11};
+DmaChannel dma2_ch1{DMA2_Channel1};
+DmaChannel dma2_ch2{DMA2_Channel2};
+DmaChannel dma2_ch3{DMA2_Channel3};
+DmaChannel dma2_ch4{DMA2_Channel4};
+DmaChannel dma2_ch5{DMA2_Channel5};
+DmaChannel dma2_ch6{DMA2_Channel6};
+DmaChannel dma2_ch7{DMA2_Channel7};
+DmaChannel dma2_ch8{DMA2_Channel8};
+DmaChannel dma2_ch9{DMA2_Channel9};
+DmaChannel dma2_ch10{DMA2_Channel10};
+DmaChannel dma2_ch11{DMA2_Channel11};
 #endif
 }
 
 
-#define NAME_OF_DMA_XY(x,y) dma##x##Ch##y
+#define NAME_OF_DMA_XY(x,y) dma##x##_ch##y
 
 #ifdef ENABLE_DMA1
 #define DMA1_Inst reinterpret_cast<DMA1_Def *>(DMA1)
 #define DMA1_IT_TEMPLATE(y)\
 __interrupt void DMA1##_Channel##y##_IRQHandler(void){\
     if(DMA1_Inst->get_transfer_done_flag(y)){\
-        NAME_OF_DMA_XY(1,y).on_interrupt(DmaEvent::TransferComplete);\
+        NAME_OF_DMA_XY(1,y).accept_interrupt(DmaEvent::TransferComplete);\
         DMA1_Inst->clear_transfer_done_flag(y);\
     }else if(DMA1_Inst->get_transfer_onhalf_flag(y)){\
-        NAME_OF_DMA_XY(1,y).on_interrupt(DmaEvent::HalfTransfer);\
+        NAME_OF_DMA_XY(1,y).accept_interrupt(DmaEvent::HalfTransfer);\
         DMA1_Inst->clear_transfer_onhalf_flag(y);\
     }\
 }\
@@ -63,10 +63,10 @@ DMA1_IT_TEMPLATE(7);
 #define DMA2_IT_TEMPLATE(y)\
 __interrupt void DMA2##_Channel##y##_IRQHandler(void){\
     if(DMA2_Inst->get_transfer_done_flag(y)){\
-        NAME_OF_DMA_XY(2,y).on_interrupt(DmaEvent::TransferComplete);\
+        NAME_OF_DMA_XY(2,y).accept_interrupt(DmaEvent::TransferComplete);\
         DMA2_Inst->clear_transfer_done_flag(y);\
     }else if(DMA2_Inst->get_transfer_onhalf_flag(y)){\
-        NAME_OF_DMA_XY(2,y).on_interrupt(DmaEvent::HalfTransfer);\
+        NAME_OF_DMA_XY(2,y).accept_interrupt(DmaEvent::HalfTransfer);\
         DMA2_Inst->clear_transfer_onhalf_flag(y);\
     }\
 }\
@@ -109,13 +109,13 @@ void DmaChannel::enable_rcc(Enable en){
 void DmaChannel::start_transfer(size_t dst_addr, size_t src_addr, const size_t size){
 
     if(mode_.dst_is_periph()){
-        SDK_INST(inst_) -> PADDR = dst_addr;
-        SDK_INST(inst_) -> MADDR = src_addr;
+        reinterpret_cast<DMA_CH_Def *>(inst_) -> PADDR = dst_addr;
+        reinterpret_cast<DMA_CH_Def *>(inst_) -> MADDR = src_addr;
     }else{
-        SDK_INST(inst_) -> PADDR = src_addr;
-        SDK_INST(inst_) -> MADDR = dst_addr;
+        reinterpret_cast<DMA_CH_Def *>(inst_) -> PADDR = src_addr;
+        reinterpret_cast<DMA_CH_Def *>(inst_) -> MADDR = dst_addr;
     }
-    SDK_INST(inst_) -> CNTR = size;
+    reinterpret_cast<DMA_CH_Def *>(inst_) -> CNTR = size;
     resume();
 }
 
@@ -217,17 +217,11 @@ void DmaChannel::register_nvic(const NvicPriority priority, const Enable en){
 }
 
 void DmaChannel::set_periph_width(const size_t width){
-    uint32_t tmpreg = SDK_INST(inst_)->CFGR;
-    tmpreg &= ((~(0b11u << 8)));
-    tmpreg |= ((width >> 3) - 1) << 8;
-    SDK_INST(inst_)->CFGR = tmpreg;
+    reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.PSIZE = (width >> 3) - 1;
 }
 
 void DmaChannel::set_mem_width(const size_t width){
-    uint32_t tmpreg = SDK_INST(inst_)->CFGR;
-    tmpreg &= ((~(0b11u << 10)));
-    tmpreg |= ((width >> 3) - 1) << 10;
-    SDK_INST(inst_)->CFGR = tmpreg;
+    reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.MSIZE = (width >> 3) - 1;
 }
 
 
@@ -239,7 +233,7 @@ void DmaChannel::resume(){
 }
 
 size_t DmaChannel::remaining(){
-    return SDK_INST(inst_) -> CNTR;
+    return reinterpret_cast<DMA_CH_Def *>(inst_) -> CNTR;
 }
 
 void DmaChannel::enable_done_it(const Enable en){

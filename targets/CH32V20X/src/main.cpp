@@ -180,7 +180,7 @@ int main(){
     // can_tb(logger, can1, true);
     // pmdc_tb();
     // gpio_tb(hal::PC<13>());
-    // dma_tb(logger, dma1Ch1);
+    // dma_tb(logger, dma1_ch1);
     // dma_tb(logger, UART7_RX_DMA_CH);
     // uart_tb(logger);
     // pmw3901_main();

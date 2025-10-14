@@ -178,10 +178,7 @@ private:
         }
     }
 
-
-
-    
-    __fast_inline void on_interrupt(DmaEvent event){
+    __fast_inline void accept_interrupt(DmaEvent event){
         EXECUTE(callback_, event);
     }
     
@@ -218,26 +215,26 @@ private:
 };
 
 #ifdef ENABLE_DMA1
-    extern DmaChannel dma1Ch1;
-    extern DmaChannel dma1Ch2;
-    extern DmaChannel dma1Ch3;
-    extern DmaChannel dma1Ch4;
-    extern DmaChannel dma1Ch5;
-    extern DmaChannel dma1Ch6;
-    extern DmaChannel dma1Ch7;
+    extern DmaChannel dma1_ch1;
+    extern DmaChannel dma1_ch2;
+    extern DmaChannel dma1_ch3;
+    extern DmaChannel dma1_ch4;
+    extern DmaChannel dma1_ch5;
+    extern DmaChannel dma1_ch6;
+    extern DmaChannel dma1_ch7;
 #endif
 
 #ifdef ENABLE_DMA2
-    extern DmaChannel dma2Ch1;
-    extern DmaChannel dma2Ch2;
-    extern DmaChannel dma2Ch3;
-    extern DmaChannel dma2Ch4;
-    extern DmaChannel dma2Ch5;
-    extern DmaChannel dma2Ch6;
-    extern DmaChannel dma2Ch7;
-    extern DmaChannel dma2Ch8;
-    extern DmaChannel dma2Ch9;
-    extern DmaChannel dma2Ch10;
-    extern DmaChannel dma2Ch11;
+    extern DmaChannel dma2_ch1;
+    extern DmaChannel dma2_ch2;
+    extern DmaChannel dma2_ch3;
+    extern DmaChannel dma2_ch4;
+    extern DmaChannel dma2_ch5;
+    extern DmaChannel dma2_ch6;
+    extern DmaChannel dma2_ch7;
+    extern DmaChannel dma2_ch8;
+    extern DmaChannel dma2_ch9;
+    extern DmaChannel dma2_ch10;
+    extern DmaChannel dma2_ch11;
 #endif
 }

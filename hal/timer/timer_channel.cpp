@@ -55,7 +55,7 @@ TimerChannel & TimerChannel::enable_dma(const Enable en){
 DmaChannel & TimerChannel::dma() const {
     using enum ChannelNth;
 
-    #define DMA_NULL dma1Ch1
+    #define DMA_NULL dma1_ch1
 
     #define FULL_DMA_CASE(x)\
         case TIM##x##_BASE:\

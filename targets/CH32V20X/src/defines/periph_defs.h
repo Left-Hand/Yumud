@@ -30,8 +30,8 @@
     #define UART1_IT_PP 1
     #define UART1_IT_SP 0
 
-    #define UART1_TX_DMA_CH hal::dma1Ch4
-    #define UART1_RX_DMA_CH hal::dma1Ch5
+    #define UART1_TX_DMA_CH hal::dma1_ch4
+    #define UART1_RX_DMA_CH hal::dma1_ch5
 
     #if UART1_REMAP == 0
 
@@ -51,8 +51,8 @@
     #define UART2_IT_PP 0
     #define UART2_IT_SP 1
 
-    #define UART2_TX_DMA_CH hal::dma1Ch7
-    #define UART2_RX_DMA_CH hal::dma1Ch6
+    #define UART2_TX_DMA_CH hal::dma1_ch7
+    #define UART2_RX_DMA_CH hal::dma1_ch6
 
     #if UART2_REMAP == 0
 
@@ -71,8 +71,8 @@
     #define UART3_IT_PP 1
     #define UART3_IT_SP 1
 
-    #define UART3_TX_DMA_CH hal::dma1Ch2
-    #define UART3_RX_DMA_CH hal::dma1Ch3
+    #define UART3_TX_DMA_CH hal::dma1_ch2
+    #define UART3_RX_DMA_CH hal::dma1_ch3
 
     #if UART3_REMAP == 0
     #define UART3_TX_GPIO hal::PB<10>()
@@ -97,8 +97,8 @@
     #define UART4_IT_PP 1
     #define UART4_IT_SP 1
 
-    #define UART4_TX_DMA_CH hal::dma2Ch5
-    #define UART4_RX_DMA_CH hal::dma2Ch3
+    #define UART4_TX_DMA_CH hal::dma2_ch5
+    #define UART4_RX_DMA_CH hal::dma2_ch3
 
     #if UART4_REMAP == 0
     #define UART4_TX_GPIO hal::PC<10>()
@@ -123,8 +123,8 @@
     #define UART5_IT_PP 1
     #define UART5_IT_SP 1
 
-    #define UART5_TX_DMA_CH hal::dma2Ch4
-    #define UART5_RX_DMA_CH hal::dma2Ch2
+    #define UART5_TX_DMA_CH hal::dma2_ch4
+    #define UART5_RX_DMA_CH hal::dma2_ch2
 
     #if UART5_REMAP == 0
     #define UART5_TX_GPIO hal::PC<12>()
@@ -145,8 +145,8 @@
     #define UART6_IT_PP 0
     #define UART6_IT_SP 1
 
-    #define UART6_TX_DMA_CH hal::dma2Ch6
-    #define UART6_RX_DMA_CH hal::dma2Ch7
+    #define UART6_TX_DMA_CH hal::dma2_ch6
+    #define UART6_RX_DMA_CH hal::dma2_ch7
 
     #if UART6_REMAP == 0
     #define UART6_TX_GPIO hal::PC<0>()
@@ -167,8 +167,8 @@
     #define UART7_IT_PP 0
     #define UART7_IT_SP 1
 
-    #define UART7_TX_DMA_CH hal::dma2Ch8
-    #define UART7_RX_DMA_CH hal::dma2Ch9
+    #define UART7_TX_DMA_CH hal::dma2_ch8
+    #define UART7_RX_DMA_CH hal::dma2_ch9
 
     #if UART7_REMAP == 0
     #define UART7_TX_GPIO hal::PC<2>()
@@ -190,8 +190,8 @@
     #define UART8_IT_PP 1
     #define UART8_IT_SP 1
 
-    #define UART8_TX_DMA_CH hal::dma2Ch10
-    #define UART8_RX_DMA_CH hal::dma2Ch11
+    #define UART8_TX_DMA_CH hal::dma2_ch10
+    #define UART8_RX_DMA_CH hal::dma2_ch11
 
     #if UART8_REMAP == 0
     #define UART8_TX_GPIO hal::PC<4>()
@@ -266,10 +266,10 @@
 
 
 #ifdef ENABLE_TIM1
-    #define TIM1_CH1_DMA_CH hal::dma1Ch2
-    #define TIM1_CH2_DMA_CH hal::dma1Ch3
-    #define TIM1_CH3_DMA_CH hal::dma1Ch6
-    #define TIM1_CH4_DMA_CH hal::dma1Ch4
+    #define TIM1_CH1_DMA_CH hal::dma1_ch2
+    #define TIM1_CH2_DMA_CH hal::dma1_ch3
+    #define TIM1_CH3_DMA_CH hal::dma1_ch6
+    #define TIM1_CH4_DMA_CH hal::dma1_ch4
 
     #if TIM1_REMAP == 0
         #define TIM1_CH1_GPIO hal::PA<8>()
@@ -311,10 +311,10 @@
 
 
 #ifdef ENABLE_TIM2
-    #define TIM2_CH1_DMA_CH hal::dma1Ch5
-    #define TIM2_CH2_DMA_CH hal::dma1Ch7
-    #define TIM2_CH3_DMA_CH hal::dma1Ch1
-    #define TIM2_CH4_DMA_CH hal::dma1Ch7
+    #define TIM2_CH1_DMA_CH hal::dma1_ch5
+    #define TIM2_CH2_DMA_CH hal::dma1_ch7
+    #define TIM2_CH3_DMA_CH hal::dma1_ch1
+    #define TIM2_CH4_DMA_CH hal::dma1_ch7
 
     #if TIM2_REMAP == 0
         #define TIM2_CH1_GPIO hal::PA<0>()
@@ -341,9 +341,9 @@
 
 
 #ifdef ENABLE_TIM3
-    #define TIM3_CH1_DMA_CH hal::dma1Ch6
-    #define TIM3_CH3_DMA_CH hal::dma1Ch2
-    #define TIM3_CH4_DMA_CH hal::dma1Ch3
+    #define TIM3_CH1_DMA_CH hal::dma1_ch6
+    #define TIM3_CH3_DMA_CH hal::dma1_ch2
+    #define TIM3_CH4_DMA_CH hal::dma1_ch3
 
     #if TIM3_REMAP == 0
         #define TIM3_CH1_GPIO hal::PA<6>()
@@ -363,9 +363,9 @@
 #endif
 
 #ifdef ENABLE_TIM4
-    #define TIM4_CH1_DMA_CH hal::dma1Ch1
-    #define TIM4_CH2_DMA_CH hal::dma1Ch4
-    #define TIM4_CH3_DMA_CH hal::dma1Ch5
+    #define TIM4_CH1_DMA_CH hal::dma1_ch1
+    #define TIM4_CH2_DMA_CH hal::dma1_ch4
+    #define TIM4_CH3_DMA_CH hal::dma1_ch5
 
     #if TIM4_REMAP == 0
         #define TIM4_CH1_GPIO hal::PB<6>()
@@ -382,10 +382,10 @@
 
 
 #ifdef ENABLE_TIM5
-    #define TIM5_CH1_DMA_CH hal::dma2Ch5
-    #define TIM5_CH2_DMA_CH hal::dma2Ch4
-    #define TIM5_CH3_DMA_CH hal::dma2Ch2
-    #define TIM5_CH4_DMA_CH hal::dma2Ch1
+    #define TIM5_CH1_DMA_CH hal::dma2_ch5
+    #define TIM5_CH2_DMA_CH hal::dma2_ch4
+    #define TIM5_CH3_DMA_CH hal::dma2_ch2
+    #define TIM5_CH4_DMA_CH hal::dma2_ch1
 
     #if TIM5_REMAP == 0
         #define TIM5_CH1_GPIO hal::PA<0>()
@@ -405,10 +405,10 @@
 
 #ifdef ENABLE_TIM8
 
-    #define TIM8_CH1_DMA_CH hal::dma2Ch3
-    #define TIM8_CH2_DMA_CH hal::dma2Ch5
-    #define TIM8_CH3_DMA_CH hal::dma2Ch1
-    #define TIM8_CH4_DMA_CH hal::dma2Ch2
+    #define TIM8_CH1_DMA_CH hal::dma2_ch3
+    #define TIM8_CH2_DMA_CH hal::dma2_ch5
+    #define TIM8_CH3_DMA_CH hal::dma2_ch1
+    #define TIM8_CH4_DMA_CH hal::dma2_ch2
 
     #if TIM8_REMAP == 0
         #define TIM8_CH1_GPIO hal::PC<6>()
@@ -436,10 +436,10 @@
 #endif
 
 #ifdef ENABLE_TIM9
-    #define TIM9_CH1_DMA_CH hal::dma2Ch7
-    #define TIM9_CH2_DMA_CH hal::dma2Ch9
-    #define TIM9_CH3_DMA_CH hal::dma2Ch11
-    #define TIM9_CH4_DMA_CH hal::dma2Ch8
+    #define TIM9_CH1_DMA_CH hal::dma2_ch7
+    #define TIM9_CH2_DMA_CH hal::dma2_ch9
+    #define TIM9_CH3_DMA_CH hal::dma2_ch11
+    #define TIM9_CH4_DMA_CH hal::dma2_ch8
 
     #if TIM9_REMAP == 0
         #define TIM9_CH1_GPIO hal::PA<2>()
@@ -489,10 +489,10 @@
 #endif
 
 #ifdef ENABLE_TIM10
-    #define TIM10_CH1_DMA_CH hal::dma2Ch8
-    #define TIM10_CH2_DMA_CH hal::dma2Ch10
-    #define TIM10_CH3_DMA_CH hal::dma2Ch9
-    #define TIM10_CH4_DMA_CH hal::dma2Ch6
+    #define TIM10_CH1_DMA_CH hal::dma2_ch8
+    #define TIM10_CH2_DMA_CH hal::dma2_ch10
+    #define TIM10_CH3_DMA_CH hal::dma2_ch9
+    #define TIM10_CH4_DMA_CH hal::dma2_ch6
 
     #if TIM10_REMAP == 0
         #define TIM10_CH1_GPIO hal::PB<8>()
