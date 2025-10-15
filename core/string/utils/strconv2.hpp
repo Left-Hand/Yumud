@@ -570,19 +570,6 @@ struct Iq16Formatter{
 
 }
 
-template<integral T>
-static constexpr TostringResult<size_t> to_str(
-	StringRef str, 
-	T value, 
-	Radix radix_count = Radix(Radix::Kind::Dec)
-){
-	return details::IntFormatter<T>::conv(str, value, radix_count);
-}
-
-template<size_t Q>
-static constexpr TostringResult<size_t> to_str(StringRef str, iq_t<Q> value, const Eps eps = Eps(3)){
-	return details::Iq16Formatter::fmt(str, value, eps);
-}
 
 
 template<typename T>
@@ -610,6 +597,7 @@ struct DefmtStrDispatcher<T>{
 	}
 };
 
+#if 0
 template<typename T>
 struct DefmtStrDispatcher<Angle<T>>{
 	static constexpr DestringResult<Angle<T>> from_str(StringView str){
@@ -618,10 +606,27 @@ struct DefmtStrDispatcher<Angle<T>>{
 		else return Ok(Angle<T>::from_turns(res.unwrap()));
 	}
 };
+#endif
 
 template<typename T>
 static constexpr DestringResult<T> defmt_str(StringView str){
 	return DefmtStrDispatcher<T>::from_str(str);
 }
+
+
+template<integral T>
+static constexpr TostringResult<size_t> to_str(
+	StringRef str, 
+	T value, 
+	Radix radix_count = Radix(Radix::Kind::Dec)
+){
+	return details::IntFormatter<T>::conv(str, value, radix_count);
+}
+
+template<size_t Q>
+static constexpr TostringResult<size_t> to_str(StringRef str, iq_t<Q> value, const Eps eps = Eps(3)){
+	return details::Iq16Formatter::fmt(str, value, eps);
+}
+
 
 }

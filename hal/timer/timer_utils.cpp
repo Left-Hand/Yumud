@@ -6,8 +6,8 @@ using namespace ymd;
 using namespace ymd::hal;
 
 namespace ymd::hal::details{
-bool is_basic_timer(const TIM_TypeDef * inst){
-    switch(reinterpret_cast<uint32_t>(inst)){
+bool is_basic_timer(const void * inst){
+    switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_TIM6
         case TIM6_BASE: return true;
         #endif
@@ -20,8 +20,8 @@ bool is_basic_timer(const TIM_TypeDef * inst){
     }
 }
 
-bool is_generic_timer(const TIM_TypeDef * inst){
-    switch(reinterpret_cast<uint32_t>(inst)){
+bool is_generic_timer(const void * inst){
+    switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_TIM2
         case TIM2_BASE: return true;
         #endif
@@ -43,8 +43,8 @@ bool is_generic_timer(const TIM_TypeDef * inst){
     }
 }
 
-bool is_advanced_timer(const TIM_TypeDef * inst){
-    switch(reinterpret_cast<uint32_t>(inst)){
+bool is_advanced_timer(const void * inst){
+    switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_TIM1
         case TIM1_BASE: return true;
         #endif
@@ -66,8 +66,7 @@ bool is_advanced_timer(const TIM_TypeDef * inst){
     }
 }
 
-IRQn it_to_irq(const TIM_TypeDef * inst, const TimerIT it){
-    using enum TimerChannelSelection;
+IRQn it_to_irq(const void * inst, const TimerIT it){
 
     #define GENERIC_TIMER_IRQ_TEMPLATE(x)\
     case TIM##x##_BASE:\
@@ -91,7 +90,7 @@ IRQn it_to_irq(const TIM_TypeDef * inst, const TimerIT it){
         }\
         break;\
 
-    switch(reinterpret_cast<uint32_t>(inst)){
+    switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_TIM1
         ADVANCED_TIMER_IRQ_TEMPLATE(1)
         #endif
@@ -142,46 +141,45 @@ IRQn it_to_irq(const TIM_TypeDef * inst, const TimerIT it){
 }
 
 
-Gpio get_pin(const TIM_TypeDef * inst, const TimerChannelSelection channel){    
-    using enum TimerChannelSelection;
+Gpio get_pin(const void * inst, const TimerChannelSelection ch_sel){    
 
     #define ADVANCED_TIMER_GPIO_TEMPLATE(x)\
     case TIM##x##_BASE:\
-        switch(channel){\
+        switch(ch_sel.kind()){\
             default:\
-            case CH1:\
+            case TimerChannelSelection::CH1:\
                 return TIM##x##_CH1_GPIO;\
-            case CH1N:\
+            case TimerChannelSelection::CH1N:\
                 return TIM##x##_CH1N_GPIO;\
-            case CH2:\
+            case TimerChannelSelection::CH2:\
                 return TIM##x##_CH2_GPIO;\
-            case CH2N:\
+            case TimerChannelSelection::CH2N:\
                 return TIM##x##_CH2N_GPIO;\
-            case CH3:\
+            case TimerChannelSelection::CH3:\
                 return TIM##x##_CH3_GPIO;\
-            case CH3N:\
+            case TimerChannelSelection::CH3N:\
                 return TIM##x##_CH3N_GPIO;\
-            case CH4:\
+            case TimerChannelSelection::CH4:\
                 return TIM##x##_CH4_GPIO;\
         }\
         break;\
 
     #define GENERIC_TIMER_GPIO_TEMPLATE(x)\
     case TIM##x##_BASE:\
-        switch(channel){\
+        switch(ch_sel.kind()){\
             default:\
-            case CH1:\
+            case TimerChannelSelection::CH1:\
                 return TIM##x##_CH1_GPIO;\
-            case CH2:\
+            case TimerChannelSelection::CH2:\
                 return TIM##x##_CH2_GPIO;\
-            case CH3:\
+            case TimerChannelSelection::CH3:\
                 return TIM##x##_CH3_GPIO;\
-            case CH4:\
+            case TimerChannelSelection::CH4:\
                 return TIM##x##_CH4_GPIO;\
         }\
         break;\
 
-    switch(reinterpret_cast<uint32_t>(inst)){
+    switch(reinterpret_cast<size_t>(inst)){
         default:
             while(true);
 

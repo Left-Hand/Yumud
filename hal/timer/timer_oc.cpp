@@ -7,14 +7,14 @@ using namespace ymd::hal;
 
 
 void TimerOutBase::plant_to_pin(const Enable en){
-    auto gpio = details::get_pin(inst_, nth_);
+    auto gpio = details::get_pin(inst_, ch_sel_);
     if(en == EN) gpio.afpp();
 }
 
 
 void TimerOutBase::set_valid_level(const BoolLevel level){
-    if(level == LOW) inst_->CCER |= (1 << (std::bit_cast<uint8_t>(nth_) * 2 + 1));
-    else inst_->CCER &= (~(1 << ((std::bit_cast<uint8_t>(nth_)) * 2 + 1)));
+    if(level == LOW) inst_->CCER |= (1 << (std::bit_cast<uint8_t>(ch_sel_) * 2 + 1));
+    else inst_->CCER &= (~(1 << ((std::bit_cast<uint8_t>(ch_sel_)) * 2 + 1)));
 }
 
 void TimerOC::init(const TimerOcPwmConfig & cfg){
@@ -31,13 +31,12 @@ void TimerOCN::init(const TimerOcnPwmConfig & cfg){
 }
 
 void TimerOC::set_oc_mode(const TimerOC::Mode mode){
-    using enum ChannelSelection;
 
-    const uint8_t raw_code = uint8_t(mode) << 4;
+    const uint8_t raw_code = std::bit_cast<uint8_t>(mode) << 4;
 
-    switch(nth_){
-        default: ymd::sys::abort();
-        case CH1:{
+    switch(ch_sel_.kind()){
+        default: __builtin_trap();
+        case ChannelSelection::CH1:{
             uint16_t tmpccmrx = inst_->CHCTLR1;
             const uint16_t m_code = TIM_OC1M;
             const uint16_t s_code = TIM_CC1S;
@@ -47,7 +46,7 @@ void TimerOC::set_oc_mode(const TimerOC::Mode mode){
             inst_->CHCTLR1 = tmpccmrx;
             break;
         }
-        case CH2:{
+        case ChannelSelection::CH2:{
             uint16_t tmpccmrx = inst_->CHCTLR1;
             const uint16_t m_code = TIM_OC2M;
             const uint16_t s_code = TIM_CC2S;
@@ -57,7 +56,7 @@ void TimerOC::set_oc_mode(const TimerOC::Mode mode){
             inst_->CHCTLR1 = tmpccmrx;
             break;
         }
-        case CH3:{
+        case ChannelSelection::CH3:{
             uint16_t tmpccmrx = inst_->CHCTLR2;
             const uint16_t m_code = TIM_OC3M;
             const uint16_t s_code = TIM_CC3S;
@@ -67,7 +66,7 @@ void TimerOC::set_oc_mode(const TimerOC::Mode mode){
             inst_->CHCTLR2 = tmpccmrx;
             break;
         }
-        case CH4:{
+        case ChannelSelection::CH4:{
             uint16_t tmpccmrx = inst_->CHCTLR2;
             const uint16_t m_code = TIM_OC4M;
             const uint16_t s_code = TIM_CC4S;
@@ -81,40 +80,35 @@ void TimerOC::set_oc_mode(const TimerOC::Mode mode){
 
 }
 void TimerOutBase::enable_output(const Enable en){
-    if(en == EN) inst_->CCER |= (1 << (std::bit_cast<uint8_t>(nth_) * 2));
-    else inst_->CCER &= (~(1 << ((std::bit_cast<uint8_t>(nth_)) * 2)));
+    if(en == EN) inst_->CCER |= (1 << (std::bit_cast<uint8_t>(ch_sel_) * 2));
+    else inst_->CCER &= (~(1 << ((std::bit_cast<uint8_t>(ch_sel_)) * 2)));
 }
 
 void TimerOC::enable_cvr_sync(const Enable en){
-    using enum ChannelSelection;
-
-    switch(nth_){
-        case CH1:
-            TIM_OC1PreloadConfig(inst_, (en == EN) ? 
-                TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+    const auto e_code = (en == EN) ? TIM_OCPreload_Enable : TIM_OCPreload_Disable;
+    switch(ch_sel_.kind()){
+        case ChannelSelection::CH1:
+            TIM_OC1PreloadConfig(inst_, e_code);
             break;
-        case CH2:
-            TIM_OC2PreloadConfig(inst_, (en == EN) ? 
-                TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+        case ChannelSelection::CH2:
+            TIM_OC2PreloadConfig(inst_, e_code);
             break;
-        case CH3:
-            TIM_OC3PreloadConfig(inst_, (en == EN) ? 
-                TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+        case ChannelSelection::CH3:
+            TIM_OC3PreloadConfig(inst_, e_code);
             break;
-        case CH4:
-            TIM_OC4PreloadConfig(inst_, (en == EN) ? 
-                TIM_OCPreload_Enable : TIM_OCPreload_Disable);
+        case ChannelSelection::CH4:
+            TIM_OC4PreloadConfig(inst_, e_code);
             break;
         default:
-            sys::abort();
+            __builtin_trap();
             break;
     }
 }
 
 Gpio TimerOC::io(){
-    return details::get_pin(inst_, nth_);
+    return details::get_pin(inst_, ch_sel_);
 }
 
 Gpio TimerOCN::io(){
-    return details::get_pin(inst_, nth_);
+    return details::get_pin(inst_, ch_sel_);
 }

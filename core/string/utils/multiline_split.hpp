@@ -9,37 +9,40 @@ namespace ymd::strconv2{
 
 struct StringSplitIter {
     constexpr explicit StringSplitIter(const StringView text, const char delimiter)
-        : text_(text), 
-        delimiter_(delimiter){
-        seek_next_line();
+        : str_(text), 
+        delimiter_(delimiter)
+    {
+        seek_next();
     }
 
     constexpr bool has_next() const {
-        return pos_ < text_.size();
+        return pos_ < str_.size();
     }
 
     constexpr Option<StringView> next() {
         auto guard = make_scope_guard([&]{
             pos_ = end_ + 1; // Skip the newline character
-            seek_next_line();
+            seek_next();
         });
-        return text_.substr_by_len(pos_, end_ - pos_);
+        return str_.substr_by_len(pos_, end_ - pos_);
     }
 
 private:
-    constexpr void seek_next_line() {
+    constexpr void seek_next() {
         end_ = pos_;
-        while (end_ < text_.size() && text_[end_] != delimiter_) {
+        while (end_ < str_.size() && str_[end_] != delimiter_) {
             ++end_;
         }
     }
 
-    const StringView text_;
+    const StringView str_;
     const char delimiter_;
     size_t pos_   = 0;  // Start of current line
-    size_t end_     = 0;    // End of current line (points to '\n' or text_.size())
+    size_t end_     = 0;    // End of current line (points to '\n' or str_.size())
 };
 
+
+#if 0
 [[maybe_unused]] static void static_test_multi_line_iter(){
 // Test helper function
     auto test_string_view_equal = [](StringView a, StringView b) -> bool{
@@ -134,6 +137,6 @@ private:
         return true;
     }(), "Iterator with trimming test failed");
 }
-
+#endif
 
 }

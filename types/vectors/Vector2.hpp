@@ -39,10 +39,10 @@
 
 namespace ymd{
 
-template<arithmetic T>
+template<typename T>
 struct Rect2;
 
-template<arithmetic T>
+template<typename T>
 struct Vec2{
     static constexpr Vec2<T> ZERO = Vec2<T>(0, 0);
     static constexpr Vec2<T> ONE = Vec2<T>(1, 1);
@@ -83,11 +83,11 @@ struct Vec2{
     [[nodiscard]] constexpr Vec2(const T _x, const T _y): 
         x(T(_x)), y(T(_y)){;}
 
-    template<arithmetic U = T>
+    template<typename U = T>
     [[nodiscard]] constexpr Vec2(const std::tuple<U, U> & v) : 
         x(std::get<0>(v)), y(std::get<1>(v)){;}
 
-    template<arithmetic U = T>
+    template<typename U = T>
     [[nodiscard]] constexpr Vec2(const Vec2<U> & _v) : 
         x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
@@ -96,7 +96,7 @@ struct Vec2{
         const Matrix<auto, 2, 1> mat):
         x(mat(0, 0)), y(mat(1, 0)){;}
 
-    [[nodiscard]] static constexpr Vec2<T> from_unitialized(){
+    [[nodiscard]] static constexpr Vec2<T> from_uninitialized(){
         return Vec2<T>();
     }
 
@@ -176,12 +176,12 @@ struct Vec2{
 
 
 
-    template<arithmetic U>
+    template<typename U>
     [[nodiscard]] __fast_inline constexpr Vec2<T> increase_x(const U & v) const {
         return {x + v, y};
     }
 
-    template<arithmetic U>
+    template<typename U>
     [[nodiscard]] __fast_inline constexpr Vec2<T> increase_y(const U & v) const {
         return {x, y + v};
     }
@@ -228,14 +228,14 @@ struct Vec2{
         return Vec2<U>{round_cast<U>(x), round_cast<U>(y)};
     }
 
-    template<arithmetic U>
+    template<typename U>
     [[nodiscard]] constexpr Vec2<T> clampmin(const U & _length) const{
         T length = static_cast<T>(_length);
         T l = this->length();
         return (l < length ? *this * length / l : *this);
     }
 
-    template<arithmetic U>
+    template<typename U>
     [[nodiscard]] constexpr Vec2<T> clampmax(const U & _length) const{
         T length = static_cast<T>(_length);
         T l = this->length();
@@ -416,22 +416,22 @@ private:
     constexpr Vec2(){;}
 };
 
-template<arithmetic T>
+template<typename T>
 [[nodiscard]] __fast_inline constexpr Vec2<T> operator*(const T n, const Vec2<T> & vec){
     return vec * n;
 }
 
-template<arithmetic T>
+template<typename T>
 [[nodiscard]] __fast_inline constexpr auto lerp(const Vec2<T> & a, const Vec2<T> & b, const T t){
     return a + (b - a) * t;
 }
 
-template<arithmetic T>
+template<typename T>
 [[nodiscard]] __fast_inline constexpr auto distance(const Vec2<T> & from, const Vec2<T> & to){
     return (to - from).length();
 }
 
-template<arithmetic T>
+template<typename T>
 [[nodiscard]] __fast_inline constexpr auto normal(const Vec2<T> & from, const Vec2<T> & to){
     return (to - from).normalized();
 }
@@ -451,14 +451,14 @@ using Vec2u16 = Vec2<uint16_t>;
 namespace ymd{
 
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::abs() const{
     return Vec2<T>(fabs(x), fabs(y));
 }
 
 
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::clamp(const T & _min, const T & _max) const {
     T min = static_cast<T>(_min);
     T max = static_cast<T>(_max);
@@ -472,71 +472,71 @@ constexpr Vec2<T> Vec2<T>::clamp(const T & _min, const T & _max) const {
     return *this;
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::dir_to(const Vec2<T> & b) const{
     return (b - *this).normalized();
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr T Vec2<T>::dist_to(const Vec2<T> & b) const{
     return (b - *this).length();
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr T Vec2<T>::dist_squared_to(const Vec2<T> & b) const{
     return (b - *this).length_squared();
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::reflect(const Vec2<T> & n) const {
     return 2 * n * this->dot(n) - *this;
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::bounce(const Vec2<T> & n) const {
     return -reflect(n);
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::lerp(const Vec2<T> & b, const T _t) const{
     static_assert(not std::is_integral_v<T>);
     return *this * (1-_t)+b * _t;
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::slerp(const Vec2<T> & b, const T _t) const{
     static_assert(not std::is_integral_v<T>);
     return lerp(b, sin(static_cast<T>(PI / 2) * _t));
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::posmod(const T & mod) const{
     return Vec2<T>( fmod(x, mod), fmod(y, mod));
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::posmodv(const Vec2<T> & b) const{
     return Vec2<T>(fmod(x, b.x), fmod(y, b.y));
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::project(const Vec2<T> & b) const{
     return (this->dot(b)) * b / b.length_squared();
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr T Vec2<T>::project(const T & rad) const{
     auto [s,c] = sincos(rad);
     return (this->x) * c + (this->y) * s;
 
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr bool Vec2<T>::is_equal_approx(const Vec2<T> & b) const{
     return ymd::is_equal_approx(x, b.x) && ymd::is_equal_approx(y, b.y);
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr bool Vec2<T>::has_point(const Vec2<auto> & _v) const{
     bool ret = true;
     Vec2<T> v = _v;
@@ -549,7 +549,7 @@ constexpr bool Vec2<T>::has_point(const Vec2<auto> & _v) const{
     return ret;
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::move_toward(const Vec2<T> & b, const T delta) const{
     if (!is_equal_approx(b)){
         Vec2<T> d = b - *this;
@@ -558,33 +558,33 @@ constexpr Vec2<T> Vec2<T>::move_toward(const Vec2<T> & b, const T delta) const{
     return *this;
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::slide(const Vec2<T> & n) const {
     return *this - n * this->dot(n);
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::sign() const{
     return Vec2<T>(sign(x), sign(y));
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr Vec2<T> Vec2<T>::snapped(const Vec2<T> &by) const{
     return Vec2<T>(snap(x, by.x), snap(y, by.y));
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr __fast_inline Vec2<T> Vec2<T>::normalized() const{
     static_assert(not std::is_integral_v<T>);
     return (*this) * isqrt(this->length_squared());
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr __fast_inline T Vec2<T>::dot(const Vec2<T> & with) const{
     return (x*with.x + y*with.y);
 }
 
-template<arithmetic T>
+template<typename T>
 constexpr __fast_inline T Vec2<T>::cross(const Vec2<T> & with) const{
     return (x*with.y - y*with.x);
 }
@@ -593,18 +593,18 @@ constexpr __fast_inline T Vec2<T>::cross(const Vec2<T> & with) const{
 
 #define VECTOR2_COMPARE_IM_OPERATOR(op) \
 \
-template <arithmetic T, arithmetic U> \
+template <typename T, typename U> \
 constexpr __fast_inline bool operator op (const Vec2<T>& lhs, const U& rhs) { \
     T absrhs = static_cast<T>(abs(rhs)); \
     return lhs.length_squared() op (absrhs * absrhs); \
 } \
 \
-template <arithmetic T, arithmetic U> \
+template <typename T, typename U> \
 constexpr __fast_inline bool operator op (const U& lhs, const Vec2<T>& rhs) { \
     T abslhs = static_cast<T>(abs(lhs)); \
     return (abslhs * abslhs) op rhs.length_squared(); \
 }\
-template <arithmetic T, arithmetic U> \
+template <typename T, typename U> \
 constexpr __fast_inline bool operator op (const Vec2<T>& lhs, const Vec2<U>& rhs) { \
     return (lhs.x == rhs.x) && (lhs.y == rhs.y);\
 }\
@@ -617,21 +617,21 @@ VECTOR2_COMPARE_IM_OPERATOR(>=)
 VECTOR2_COMPARE_IM_OPERATOR(==)
 VECTOR2_COMPARE_IM_OPERATOR(!=)
 
-template <arithmetic T, arithmetic U = T>
+template <typename T, typename U = T>
 constexpr __fast_inline Vec2<T> operator +(const Vec2<T> &p_vector2, const Vec2<U> &d_vector2){
     Vec2<T> ret = p_vector2;
     ret += d_vector2;
     return ret;
 }
 
-template <arithmetic T, arithmetic U = T>
+template <typename T, typename U = T>
 constexpr __fast_inline Vec2<T> operator -(const Vec2<T> &p_vector2, const Vec2<U> &d_vector2){
     Vec2<T> ret = p_vector2;
     ret -= d_vector2;
     return ret;
 }
 
-template <arithmetic T, arithmetic U = T>
+template <typename T, typename U = T>
 constexpr __fast_inline Vec2<T> operator *(const T &lvalue, const Vec2<U> &p_vector2){
     Vec2<T> ret = p_vector2;
     ret *= lvalue;
@@ -639,14 +639,14 @@ constexpr __fast_inline Vec2<T> operator *(const T &lvalue, const Vec2<U> &p_vec
 }
 
 
-template <arithmetic T,arithmetic U = T >
+template <typename T,typename U = T >
 constexpr Vec2<T> operator/(const Vec2<T> &p_vector2, const Vec2<U> &d_vector2){
     Vec2<T> final = p_vector2;
     final /= d_vector2;
     return final;
 }
 
-template<arithmetic T>
+template<typename T>
 Vec2() -> Vec2<T>;
 
 template<typename T>

@@ -9,7 +9,7 @@
 
 namespace ymd{
 
-template<arithmetic T>
+template<typename T>
 class [[nodiscard]] Rect2{
 public:
     using Tsigned = std::make_signed_t<T>;
@@ -253,7 +253,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr Rect2<T> scale_around_corner(
-        const arithmetic auto & ratio
+        const auto & ratio
     ) const{
         Rect2<T> ret = (*this);
         ret.top_left *= ratio;
@@ -321,7 +321,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] constexpr Rect2<T> scale_around_center(const arithmetic auto & amount)const {
+    [[nodiscard]] constexpr Rect2<T> scale_around_center(const auto & amount)const {
         return Rect2<T>::from_center_and_size(
             this->get_center(), this->size * amount);
     }
@@ -340,8 +340,8 @@ public:
 
 private:
     [[nodiscard]] constexpr Rect2():
-        top_left(Vec2<T>::from_unitialized()),
-        size(Vec2<T>::from_unitialized())
+        top_left(Vec2<T>::from_uninitialized()),
+        size(Vec2<T>::from_uninitialized())
         {;}
 
     [[nodiscard]] __fast_inline constexpr Option<Rect2<T>> shrink_impl(
