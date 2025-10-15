@@ -15,25 +15,22 @@ public:
     explicit MLX90393(MLX90393_Phy && phy):
         phy_(phy){;}
 
-    [[nodiscard]] IResult<> reset(void);
-    [[nodiscard]] IResult<> exit_mode(void);
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> reset();
+    [[nodiscard]] IResult<> exit_mode();
     
     [[nodiscard]] IResult<Vec3<q24>> read_measurement();
-    [[nodiscard]] IResult<> start_single_measurement(void);
+    [[nodiscard]] IResult<> start_single_measurement();
     
     [[nodiscard]] IResult<> set_gain(Gain gain);
-    [[nodiscard]] IResult<Gain> get_gain(void);
     
     [[nodiscard]] IResult<> set_resolution(Axis, Resolution resolution);
-    [[nodiscard]] IResult<Resolution> get_resolution(Axis);
     
     [[nodiscard]] IResult<> set_filter(Filter filter);
-    [[nodiscard]] IResult<Filter> get_filter(void);
     
     [[nodiscard]] IResult<> set_oversampling(OverSampling oversampling);
-    [[nodiscard]] IResult<OverSampling> get_oversampling(void);
     
-    [[nodiscard]] IResult<> set_trig_int(bool state);
+    [[nodiscard]] IResult<> enable_trig_int(Enable en);
     [[nodiscard]] IResult<Vec3<q24>> read_data();
 
     
@@ -49,7 +46,7 @@ private:
         reg.apply();
         return Ok();
     }
-    [[nodiscard]] IResult<> _init(void);
+
     [[nodiscard]] IResult<> transceive(
         std::span<uint8_t> rx_pbuf, 
         std::span<const uint8_t> tx_pbuf, 

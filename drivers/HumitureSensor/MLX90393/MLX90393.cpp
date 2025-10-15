@@ -8,21 +8,8 @@ using namespace ymd::drivers;
 
 
 static constexpr uint8_t MLX90393_AXIS_ALL =  (0x0E);      /**< X+Y+Z axis bits for commands. */
-static constexpr uint8_t MLX90393_CONF1 =  (0x00);         /**< Gain */
-static constexpr uint8_t MLX90393_CONF2 =  (0x01);         /**< Bur.t_r, comm.mode_r */
-static constexpr uint8_t MLX90393_CONF3 =  (0x02);         /**< Oversampli.g_r, filt.r_r, res. */
-static constexpr uint8_t MLX90393_CONF4 =  (0x03);         /**< Sensitivty drift. */
 static constexpr uint8_t MLX90393_GAIN_SHIFT =  (4);       /**< Left-shift for gain bits. */
 static constexpr uint8_t MLX90393_HALL_CONF =  (0x0C);     /**< Hall plate spinning rate adj. */
-static constexpr uint8_t MLX90393_STATUS_OK =  (0x00);     /**< OK value for status response. */
-static constexpr uint8_t MLX90393_STATUS_SMMODE =  (0x08); /**< SM Mode status response. */
-static constexpr uint8_t MLX90393_STATUS_RESET =  (0x01);  /**< Reset value for status response. */
-static constexpr uint8_t MLX90393_STATUS_ERROR =  (0xFF);  /**< OK value for status response. */
-static constexpr uint8_t MLX90393_STATUS_MASK =  (0xFC);   /**< Mask for status OK checks. */
-
-
-
-
 
 using Error = MLX90393::Error;
 
@@ -34,7 +21,7 @@ using Resolution = MLX90393::Resolution;
 using OverSampling = MLX90393::OverSampling;
 using Filter = MLX90393::Filter;
 
-IResult<> MLX90393::_init(void) {
+IResult<> MLX90393::init() {
 
     if(const auto res = exit_mode(); res.is_err())
         return Err(res.unwrap_err());
@@ -63,14 +50,14 @@ IResult<> MLX90393::_init(void) {
         return Err(res.unwrap_err());
 
     /* set INT pin to output interrupt */
-    if(const auto res = set_trig_int(false) ; res.is_err())
+    if(const auto res = enable_trig_int(DISEN) ; res.is_err())
         return Err(res.unwrap_err());
 
     return Ok();
 }
 
 
-IResult<> MLX90393::exit_mode(void) {
+IResult<> MLX90393::exit_mode() {
     const uint8_t tx[1] = {MLX90393_REG_EX};
     uint8_t rx[1] = {0};
     /* Perform the transaction. */
@@ -78,7 +65,7 @@ IResult<> MLX90393::exit_mode(void) {
 }
 
 
-IResult<> MLX90393::reset(void) {
+IResult<> MLX90393::reset() {
     const uint8_t tx[1] = {MLX90393_REG_RT};
     uint8_t rx[1] = {0};
 
@@ -125,25 +112,14 @@ IResult<> MLX90393::set_oversampling(OverSampling oversampling) {
     return write_register(reg);
 }
 
-IResult<> MLX90393::set_trig_int(bool state) {
-    uint16_t data;
-    if(const auto res = read_register(MLX90393_CONF2, data);
-        res.is_err()) return res;
-
-    // mask off trigint bit
-    data &= ~0x8000;
-
-    // set trigint bit if desired
-    if (state) {
-        /* Set the INT, highest bit */
-        data |= 0x8000;
-    }
-
-    return write_register(MLX90393_CONF2, data);
+IResult<> MLX90393::enable_trig_int(Enable en) {
+    auto reg = RegCopy(regs_.conf2_reg);
+    reg.trig_int = en == EN;
+    return write_register(reg);
 }
 
 
-IResult<> MLX90393::start_single_measurement(void) {
+IResult<> MLX90393::start_single_measurement() {
     const uint8_t tx[1] = {MLX90393_REG_SM | MLX90393_AXIS_ALL};
     uint8_t rx[1] = {0};
 
@@ -193,23 +169,13 @@ IResult<Vec3<q24>> MLX90393::read_measurement() {
         }
     );
 }
-
-/**
- * Performs a single X/Y/Z conversion and returns the results.
- *
- * @param x     Pointer to where the 'x' value should be stored.
- * @param y     Pointer to where the 'y' value should be stored.
- * @param z     Pointer to where the 'z' value should be stored.
- *
- * @return True if the operation succeeded, otherwise false.
- */
 IResult<Vec3<q24>> MLX90393::read_data() {
     if(const auto res = start_single_measurement(); res.is_err())
         return Err(Error::CantReadData);
-  // See MLX90393 Getting Started Guide for fancy formula
-  // tconv = f(OSR, DIG_FILT, OSR2, ZYXT)
-  // For now, using Table 18 from datasheet
-  // Without +10ms delay measurement doesn't always seem to work
+    // See MLX90393 Getting Started Guide for fancy formula
+    // tconv = f(OSR, DIG_FILT, OSR2, ZYXT)
+    // For now, using Table 18 from datasheet
+    // Without +10ms delay measurement doesn't always seem to work
     auto & reg = regs_.conf3_reg;
     clock::delay(Milliseconds(get_conv_time_ms(reg.digit_filter, reg.osr)));
     return read_measurement();
