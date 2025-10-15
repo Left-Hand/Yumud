@@ -1,122 +1,18 @@
 #pragma once
 
+// 迈来芯 MLX90393 是迈来芯位置传感器IC的新晋成员，
+// 同时也是该产品组合中灵活性最高的最小组件。此外，这款磁场传感器 IC 专为微功率应用而设计，
+// 其占空比可在 0.1％ 至 100％ 的范围内编程设定。
+
 // https://github.com/adafruit/MLX90393_Library/blob/master/MLX90393.h
 
-#include <tuple>
-#include <optional>
-
-#include "core/io/regs.hpp"
-#include "core/math/real.hpp"
-#include "types/vectors/vector3.hpp"
-
-#include "core/utils/result.hpp"
-#include "core/utils/errno.hpp"
-
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
-
-
-
+#include "mlx90393_prelude.hpp"
 namespace ymd::drivers{
 
 
-struct MLX90393_Prelude{
-    enum class Error_Kind{
-        CantReadData
-    };
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
-    
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x0C >> 1);
-    /** Register map. */
-    static constexpr uint8_t MLX90393_REG_SB = (0x10);  /**< Start burst mode. */
-    static constexpr uint8_t MLX90393_REG_SW = (0x20);  /**< Start wakeup on change mode. */
-    static constexpr uint8_t MLX90393_REG_SM = (0x30);  /**> Start single-meas mode. */
-    static constexpr uint8_t MLX90393_REG_RM = (0x40);  /**> Read measurement. */
-    static constexpr uint8_t MLX90393_REG_RR = (0x50);  /**< Read register. */
-    static constexpr uint8_t MLX90393_REG_WR = (0x60);  /**< Write register. */
-    static constexpr uint8_t MLX90393_REG_EX = (0x80);  /**> Exit moode. */
-    static constexpr uint8_t MLX90393_REG_HR = (0xD0);  /**< Memory recall. */
-    static constexpr uint8_t MLX90393_REG_HS = (0x70);  /**< Memory store. */
-    static constexpr uint8_t MLX90393_REG_RT = (0xF0);  /**< Reset. */
-    static constexpr uint8_t MLX90393_REG_NOP = (0x00); /**< NOP. */
-
-    /** Gain settings for CONF1 register. */
-    enum Gain{
-        MLX90393_GAIN_5X = (0x00),
-        MLX90393_GAIN_4X,
-        MLX90393_GAIN_3X,
-        MLX90393_GAIN_2_5X,
-        MLX90393_GAIN_2X,
-        MLX90393_GAIN_1_67X,
-        MLX90393_GAIN_1_33X,
-        MLX90393_GAIN_1X
-    };
-
-    /** Resolution settings for CONF3 register. */
-    enum Resolution {
-        MLX90393_RES_16,
-        MLX90393_RES_17,
-        MLX90393_RES_18,
-        MLX90393_RES_19,
-    } ;
-
-    /** Axis designator. */
-    enum Axis{
-        MLX90393_X,
-        MLX90393_Y,
-        MLX90393_Z
-    };
-
-    /** Digital filter settings for CONF3 register. */
-    enum Filter {
-        MLX90393_FILTER_0,
-        MLX90393_FILTER_1,
-        MLX90393_FILTER_2,
-        MLX90393_FILTER_3,
-        MLX90393_FILTER_4,
-        MLX90393_FILTER_5,
-        MLX90393_FILTER_6,
-        MLX90393_FILTER_7,
-    };
-
-    /** Oversampling settings for CONF3 register. */
-    enum OverSampling{
-        MLX90393_OSR_0,
-        MLX90393_OSR_1,
-        MLX90393_OSR_2,
-        MLX90393_OSR_3,
-    };
-};
-
-struct MLX90393_Regs:public MLX90393_Prelude{
-
-};
-
-class MLX90393_Phy final:public MLX90393_Prelude{
-private:
-    MLX90393_Phy(std::optional<hal::I2cDrv> && i2c_drv, std::optional<hal::SpiDrv> && spi_drv):
-        i2c_drv_(std::move(i2c_drv)),
-        spi_drv_(std::move(spi_drv)){;}
-
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
+class MLX90393 final: public MLX90393_Prelude{
 public:
-    MLX90393_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        MLX90393_Phy(hal::I2cDrv(i2c, addr), std::nullopt){;}
-
-    MLX90393_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank slave_index):
-        MLX90393_Phy(std::nullopt, hal::SpiDrv(spi, slave_index)){;}
-
-    [[nodiscard]] IResult<> transceive(
-        std::span<uint8_t> rx_pbuf, std::span<const uint8_t> tx_pbuf);
-};
-
-class MLX90393 final: public MLX90393_Regs{
-public:
-    MLX90393(MLX90393_Phy && phy):
+    explicit MLX90393(MLX90393_Phy && phy):
         phy_(phy){;}
 
     [[nodiscard]] IResult<> reset(void);
@@ -145,6 +41,14 @@ private:
     MLX90393_Phy phy_;
     [[nodiscard]] IResult<> read_register(uint8_t reg, uint16_t & data);
     [[nodiscard]] IResult<> write_register(uint8_t reg, uint16_t data);
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_register(const RegCopy<T> & reg){
+        if(const auto res =write_register(T::ADDRESS, reg.as_val());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
+    }
     [[nodiscard]] IResult<> _init(void);
     [[nodiscard]] IResult<> transceive(
         std::span<uint8_t> rx_pbuf, 
@@ -153,11 +57,8 @@ private:
     ){
         return phy_.transceive(rx_pbuf, tx_pbuf);
     }
-    
-    Gain _gain;
-    Resolution _res_x, _res_y, _res_z;
-    Filter _dig_filt;
-    OverSampling _osr;
+
+    MLX90393_Regset regs_;
 };
 
 }
