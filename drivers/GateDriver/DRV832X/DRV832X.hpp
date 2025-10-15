@@ -8,11 +8,11 @@ namespace ymd::drivers{
 class DRV8323R final:
     public DRV832X_Regs{
 public:
-    DRV8323R(const hal::SpiDrv & spi_drv):
+    explicit DRV8323R(const hal::SpiDrv & spi_drv):
         phy_(spi_drv){;}
-    DRV8323R(hal::SpiDrv && spi_drv):
+    explicit DRV8323R(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    DRV8323R(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit DRV8323R(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         phy_(hal::SpiDrv(spi, rank)){;}
 
 
@@ -56,7 +56,7 @@ class DRV8323H final:
 public:
 
     template<typename ... Args>
-    DRV8323H(Args && ... args):
+    explicit DRV8323H(Args && ... args):
         phy_(std::forward<Args>(args)...){;}
 
 

@@ -8,8 +8,24 @@
 #include "hal/bus/bus_enums.hpp"
 #include "hal/hal_result.hpp"
 
+#include "core/sdk.hpp"
+
 namespace ymd::hal{
 
+enum class SpiI2sIT:uint8_t{
+    TXE = ((uint8_t)0x71),
+    RXNE = ((uint8_t)0x60),
+    ERR = ((uint8_t)0x50),
+    OVR = ((uint8_t)0x56),
+    MODF = ((uint8_t)0x55),
+    CRCERR = ((uint8_t)0x54),
+    UDR = ((uint8_t)0x53)
+};
+
+enum class SpiEvent:uint8_t{
+    TransmitBufferEmpty,
+    ReceiveBufferNotEmpty
+};
 
 class SpiSlaveRank{
 public:
@@ -87,8 +103,6 @@ public:
         CommStrategy tx_strategy = CommStrategy::Blocking;
         CommStrategy rx_strategy = CommStrategy::Blocking;
     };
-
-    virtual void init(const Config & cfg) = 0;
 
 
     [[nodiscard]]
