@@ -289,11 +289,11 @@ public:
 
     template<typename Fn>
     constexpr void handle_enter(Fn && fn){
-        std::forward<Fn>(fn)(str_.to_stringview());
+        std::forward<Fn>(fn)(str_.view());
     }
 
     [[nodiscard]] constexpr StringView str() const{
-        return str_.to_stringview();
+        return str_.view();
     }
 
     [[nodiscard]] constexpr auto cursor() const{

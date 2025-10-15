@@ -17,7 +17,7 @@ using namespace operations;
 #define RETURN_ERR(e, ...) {return Err(e);}
 #endif
 
-using Error = Slcan::Error;
+using Error = SlcanParser::Error;
 
 
 
@@ -289,14 +289,16 @@ auto map_chr_to_buad = [](char chr) -> hal::CanBaudrate{
 
 auto map_msg_to_operation = [](const hal::CanMsg & msg) { return Operation(SendCanMsg{msg}); };
 
-IResult<Operation> Slcan::handle_line(const StringView str) const {
+IResult<Operation> SlcanParser::handle_line(const StringView str) const {
     static constexpr bool REMOTE = true;
 
     const StringView line = str.trim();
     // DEBUG_PRINTLN(line, line.length());
     if(line.size() == 0){
         RETURN_ERR(Error::NoInput);
-    }else if(line.size() == 1){
+    }
+    
+    if(line.size() == 1){
         switch(line[0]){
             case 'F': return Ok(Operation(response_flag()));
             case 'V': return Ok(Operation(response_version()));
@@ -319,9 +321,14 @@ IResult<Operation> Slcan::handle_line(const StringView str) const {
                     RETURN_ERR(Error::ArgTooLong);
                 const auto chr = cmd_line[0];
                 if(chr < '0' || chr > '8') 
-                    return Err(Error::InvalidBaudrate);
+                    return Err(Error::InvalidCanBaudrate);
 
                 return Ok(Operation(SetCanBaud{.baudrate = map_chr_to_buad(chr)}));
+            }
+            case 's':{
+                //set serial buadrate
+                TODO();
+                return Ok(Operation(SetSerialBaud{.baudrate = 0}));
             }
 
             case 't': return parse_msg<false>(cmd_line, not REMOTE)
@@ -341,19 +348,19 @@ IResult<Operation> Slcan::handle_line(const StringView str) const {
     __builtin_unreachable();
 }
 
-SendText Slcan::response_version() const{
+SendText SlcanParser::response_version() const{
     return SendText::from_str("V1013\r");
 }
 
-SendText Slcan::response_serial_idx() const{
+SendText SlcanParser::response_serial_idx() const{
     return SendText::from_str("NA123\r");
 }
 
-Slcan::Flags Slcan::get_flag() const {
+SlcanParser::Flags SlcanParser::get_flag() const {
     return Flags::RxFifoFull;
 }
 
-SendText Slcan::response_flag() const{
+SendText SlcanParser::response_flag() const{
     const char str[2] = {
         char(get_flag()), 'r'
     };

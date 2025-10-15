@@ -20,7 +20,8 @@ enum class AsciiCanError:uint8_t{
     PayloadLengthOverflow,
     InvalidCommand,
     UnknownCommand,
-    InvalidBaudrate,
+    InvalidCanBaudrate,
+    InvalidSerialBaudrate,
     StdIdOverflow,
     ExtIdOverflow,
     ArgTooLong,
@@ -37,6 +38,7 @@ enum class AsciiCanError:uint8_t{
     NotImplemented
 };
 
+::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const AsciiCanError & value);
 
 class StringCutter{
 public:
@@ -90,7 +92,7 @@ public:
 
     [[nodiscard]] IResult<> close();
 
-    DEF_FRIEND_DERIVE_DEBUG(AsciiCanError)
+
 
     hal::Can & can_;
 };

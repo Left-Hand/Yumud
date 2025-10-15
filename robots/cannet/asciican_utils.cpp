@@ -40,3 +40,10 @@ IResult<> AsciiCanPhy::close(){
     DEBUG_PRINTLN("close");
     return Ok();
 }
+
+namespace ymd::robots::asciican{
+::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const AsciiCanError & value){
+    DeriveDebugDispatcher<AsciiCanError>::call(os, value);
+    return os;
+}
+}
