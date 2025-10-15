@@ -1,40 +1,31 @@
 #pragma once
 
-#include "TempSensor.hpp"
-#include "hal/analog/adc/adc_channel.hpp"
+#include "core/math/realmath.hpp"
 
 namespace ymd::drivers{
 
-class NTC:public TempSensor{
-protected:
-    static constexpr real_t R_kOhms = 100;
-    static constexpr real_t R0_kOhms = 10;
-
-    uint8_t index;
-
-    real_t last_temp = 0;
-
-    hal::AnalogInIntf & channel_;
-    uint B_ = 3950;
-    
-    real_t get_uniV(){
-        return channel_.get_voltage();
-    }
-
+class [[nodiscard]] NtcCalculator final{
 public:
+    struct Config{
+        uint32_t B0;
+        q16 r0_kohms;
+        q16 pull_r_kohms;
+    };
 
-    NTC(hal::AnalogInIntf & channel, const uint B = 3950):channel_(channel), B_(B){;}
+    constexpr NtcCalculator(const Config & cfg):
+        cfg_(cfg){;}
 
-    void update();
-
-    real_t getRes(){
-        real_t VR = get_uniV();
-        return VR/(1-VR) * R_kOhms;
+    constexpr q16 operator()(const q16 normed_voltage){
+        static constexpr q16 T0= q16(273.15+25);
+        static constexpr q16 Ka= q16(273.15);
+        q16 VR = normed_voltage;
+        q16 Rt_kOhms = (VR)/(1-VR) * cfg_.pull_r_kohms;
+        return q16(q16(cfg_.B)/(q16(cfg_.B)/T0+log(Rt_kOhms/cfg_.r0_kohms))) - Ka + q16(0.5);
     }
-
-    real_t getTemp(){
-        return last_temp;
-    }
+private:
+    const Config cfg_;
 };
+
+
 
 };

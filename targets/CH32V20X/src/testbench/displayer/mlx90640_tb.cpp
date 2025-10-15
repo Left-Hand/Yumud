@@ -5,13 +5,11 @@
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
-#include "drivers/HumitureSensor/MLX90640/mlx90640_api.h"
-#include "drivers/HumitureSensor/MLX90640/mlx90640_i2c_driver.hpp"
+#include "drivers/HumitureSensor/MLX90640/mlx90640.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
 #include <ranges>
@@ -57,10 +55,7 @@ void mlx90640_main(){
     uint16_t Frame[834];
     float Temp[768];
 
-    paramsMLX90640 MLXPars;
-    float Vdd = 0;
-    float Ta = 0;
-    float Tr = 0;
+    MLX90640_Coeffs MLXPars;
 
 
     auto init_debugger = []{
@@ -126,22 +121,20 @@ void mlx90640_main(){
     MLX90640 mlx{&i2c_sw_};
     clock::delay(50ms);                                    //预留一点时间让MLX传感器完成自己的初始化
     // MLX90640_SetRefreshRate(MLX90640_I2CADDR, 0).examine();       //0.5hz
-    mlx.set_refresh_rate(MLX90640::DataRate::_64Hz).examine();
+    mlx.set_refresh_rate(MLX90640::DataRate::_0_5Hz).examine();
     mlx.init(EE, MLXPars).examine();
     // Ta=MLX90640_GetTa(Frame, &MLXPars);                  //计算实时外壳温度
     while (true){
         if (const auto res = mlx.get_frame_data(Frame); res.is_err()){
             static Milliseconds last_millis_ = 0ms;
             const auto curr_millis_ = clock::millis();
-            DEBUG_PRINTLN(res.unwrap_err(), curr_millis_ - last_millis_, q16::from(Vdd), q16::from(Ta));
+            // DEBUG_PRINTLN(res.unwrap_err(), curr_millis_ - last_millis_, q16::from(Vdd), q16::from(Ta));
             last_millis_ = curr_millis_;
             continue;
-        }      //有转换完成的帧
+        }
 
-        // continue;
-        // Vdd=MLX90640_GetVdd(Frame, &MLXPars);   //计算Vdd（这句可有可无）
-        Ta=mlx.get_ta(Frame, &MLXPars);                  //计算实时外壳温度
-        Tr=Ta-8.0;         //计算环境温度用于温度补偿
+        const auto Ta=mlx.get_ta(Frame, &MLXPars);                  //计算实时外壳温度
+        const auto Tr=Ta-8.0;         //计算环境温度用于温度补偿
 
         mlx.calculate_to(Frame, &MLXPars, 0.95, Tr, Temp);    //计算像素点温度
 

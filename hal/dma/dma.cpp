@@ -216,14 +216,53 @@ void DmaChannel::register_nvic(const NvicPriority priority, const Enable en){
     priority.with_irqn(irq).enable(en);
 }
 
-void DmaChannel::set_periph_width(const size_t width){
-    reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.PSIZE = (width >> 3) - 1;
+template<typename T, typename Fn>
+static inline void modify_reg(volatile T* reg, Fn&& fn) {
+    static_assert(std::is_trivially_copyable_v<T>, 
+                  "T must be trivially copyable for register operations");
+    
+    // 读取并转换
+    T temp = std::bit_cast<T>(*const_cast<const T*>(reg));
+    
+    // 应用修改
+    temp = fn(temp);
+    
+    // 写回
+    *const_cast<T*>(reg) = temp;
 }
 
-void DmaChannel::set_mem_width(const size_t width){
-    reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.MSIZE = (width >> 3) - 1;
-}
+// #include <atomic>
 
+// template<typename T, typename Fn>
+// void modify_reg(volatile T* reg, Fn&& fn) {
+//     // 使用原子操作（如果硬件支持）
+//     std::atomic<T>* atomic_reg = reinterpret_cast<std::atomic<T>*>(const_cast<T *>(reg));
+    
+//     T expected = atomic_reg->load(std::memory_order_acquire);
+//     T desired;
+    
+//     do {
+//         desired = std::forward<Fn>(fn)(expected);
+//     } while (!atomic_reg->compare_exchange_weak(
+//         expected, desired,
+//         std::memory_order_release,
+//         std::memory_order_acquire
+//     ));
+// }
+
+void DmaChannel::set_mem_and_periph_bytes(
+    const size_t mem_bytes, 
+    const size_t periph_bytes
+){ 
+    // reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.MSIZE = (mem_bytes) - 1;
+    // reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.PSIZE = (periph_bytes) - 1;
+    auto * dma_ch = reinterpret_cast<DMA_CH_Def *>(inst_);
+    modify_reg(&dma_ch->CFGR, [&](ymd::ral::CH32::R32_DMA_CFGR reg){
+        reg.MSIZE = (mem_bytes) - 1;
+        reg.PSIZE = (periph_bytes) - 1;
+        return reg;
+    });
+}
 
 void DmaChannel::resume(){
     DMA_ClearFlag(done_mask_);

@@ -32,7 +32,6 @@ public:
 private:
     hal::GpioIntf & gpio_;
     bool active_level_is_high_ = false;
-    //TODO add exti
 };
 
 }

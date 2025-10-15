@@ -10,6 +10,7 @@
 namespace ymd::drivers{
 
 struct TCA8418_Prelude{
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0110100);
     using RegAddr = uint8_t;
 
     enum class Error_Kind:uint8_t{

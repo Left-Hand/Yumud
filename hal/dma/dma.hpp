@@ -84,8 +84,7 @@ public:
 
     template <typename T>
     void start_transfer_pph2mem(void * dst, const volatile void * src, size_t size){
-        set_dst_bits(sizeof(T) << 3);
-        set_src_bits(sizeof(T) << 3);
+        set_src_and_dst_bytes(sizeof(T), sizeof(T));
 
         start_transfer(
             reinterpret_cast<size_t>(dst),
@@ -96,8 +95,7 @@ public:
 
     template <typename T>
     void start_transfer_mem2pph(volatile void * dst, const void * src, size_t size){
-        set_dst_bits(sizeof(T) << 3);
-        set_src_bits(sizeof(T) << 3);
+        set_src_and_dst_bytes(sizeof(T), sizeof(T));
 
         start_transfer(
             reinterpret_cast<size_t>(dst),
@@ -108,8 +106,7 @@ public:
 
     template<typename T>
     void start_transfer_mem2mem(void * dst, const void * src, size_t size){
-        set_dst_bits(sizeof(T) << 3);
-        set_src_bits(sizeof(T) << 3);
+        set_src_and_dst_bytes(sizeof(T), sizeof(T));
 
         start_transfer(
             reinterpret_cast<size_t>(dst),
@@ -136,7 +133,7 @@ public:
         callback_ = std::forward<Fn>(cb);
     }
 
-    bool is_done(){
+    [[nodiscard]] bool is_done(){
         return DMA_GetFlagStatus(done_mask_);
     }
 
@@ -158,25 +155,21 @@ private:
 
     void enable_rcc(const Enable en);
 
-    void set_periph_width(const size_t width);
-
-    void set_mem_width(const size_t width);
-
-    __fast_inline void set_dst_bits(const size_t width){
+    __fast_inline void set_src_and_dst_bytes(
+        const size_t src_bytes, 
+        const size_t dst_bytes
+    ){ 
         if(mode_.dst_is_periph()){
-            set_periph_width(width);
+            set_mem_and_periph_bytes(src_bytes, dst_bytes);
         }else{
-            set_mem_width(width);
+            set_mem_and_periph_bytes(dst_bytes, src_bytes);
         }
     }
 
-    __fast_inline void set_src_bits(const size_t width){
-        if(not mode_.dst_is_periph()){
-            set_periph_width(width);
-        }else{
-            set_mem_width(width);
-        }
-    }
+    void set_mem_and_periph_bytes(
+        const size_t src_bytes, 
+        const size_t dst_bytes
+    );
 
     __fast_inline void accept_interrupt(DmaEvent event){
         EXECUTE(callback_, event);
@@ -207,11 +200,7 @@ private:
         friend void ::DMA2_Channel11_IRQHandler(void);
     #endif
 
-
-
     void start_transfer(size_t dst, const size_t src, size_t size);
-    
-
 };
 
 #ifdef ENABLE_DMA1
