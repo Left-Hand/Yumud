@@ -162,32 +162,32 @@ IResult<> ICM42688::init(const Config & cfg){
 }
 
 IResult<> ICM42688::set_gyr_odr(const GyrOdr odr){
-	auto reg = RegCopy(gyro_config0_reg);
+	auto reg = RegCopy(regs_.gyro_config0_reg);
 	reg.gyro_odr = odr;
 	return write_reg(reg);
 }
 IResult<> ICM42688::set_gyr_fs(const GyrFs fs){
-	auto reg = RegCopy(gyro_config0_reg);
+	auto reg = RegCopy(regs_.gyro_config0_reg);
 	reg.gyro_fs = fs;
 	gyr_scale_ = calc_gyr_scale(fs);
 	return write_reg(reg);
 }
 
 IResult<> ICM42688::set_acc_odr(const AccOdr odr){
-	auto reg = RegCopy(accel_config0_reg);
+	auto reg = RegCopy(regs_.accel_config0_reg);
 	reg.accel_odr = odr;
 	return write_reg(reg);
 }
 
 IResult<> ICM42688::set_acc_fs(const AccFs fs){
-	auto reg = RegCopy(accel_config0_reg);
+	auto reg = RegCopy(regs_.accel_config0_reg);
 	reg.accel_fs = fs;
 	acc_scale_ = calc_acc_scale(fs);
 	return write_reg(reg);
 }
 
 IResult<> ICM42688::reset(){
-	auto reg = RegCopy(device_config_reg);
+	auto reg = RegCopy(regs_.device_config_reg);
 	reg.soft_reset_config = 1;
 	if(const auto res = write_reg(reg);
 		res.is_err()) return Err(res.unwrap_err());
@@ -202,19 +202,20 @@ IResult<>  ICM42688::update(){
 	if(const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, std::span(buf, 6));
 		res.is_err()) return Err(res.unwrap_err());
 	
-	acc_data_ = {buf[0], buf[1], buf[2]};
-	gyr_data_ = {buf[3], buf[4], buf[5]};
+	regs_.acc_data_ = {buf[0], buf[1], buf[2]};
+	regs_.gyr_data_ = {buf[3], buf[4], buf[5]};
 
 	return Ok();
 }
 
 
 IResult<>  ICM42688::validate(){
-	if(const auto res = read_reg(who_am_i_reg);
+	auto & reg = regs_.who_am_i_reg;
+	if(const auto res = read_reg(reg);
 		res.is_err()) return res;
 	
-	if(who_am_i_reg.data != who_am_i_reg.KEY){
-		return CHECK_ERR(Err(Error::WrongWhoAmI), who_am_i_reg.data);
+	if(reg.data != reg.KEY){
+		return CHECK_ERR(Err(Error::WrongWhoAmI), reg.data);
 	}
 
 	return Ok();
@@ -222,9 +223,9 @@ IResult<>  ICM42688::validate(){
 
 IResult<Vec3<q24>> ICM42688::read_acc(){
     return Ok{Vec3<q24>{
-		acc_scale_ * q24(q16(acc_data_.x) >> 16), 
-		acc_scale_ * q24(q16(acc_data_.y) >> 16), 
-		acc_scale_ * q24(q16(acc_data_.z) >> 16), 
+		acc_scale_ * q24(q16(regs_.acc_data_.x) >> 16), 
+		acc_scale_ * q24(q16(regs_.acc_data_.y) >> 16), 
+		acc_scale_ * q24(q16(regs_.acc_data_.z) >> 16), 
 	}};
 }
 
@@ -232,8 +233,8 @@ IResult<Vec3<q24>> ICM42688::read_acc(){
 IResult<Vec3<q24>> ICM42688::read_gyr(){
 
     return Ok{Vec3<q24>{
-		gyr_scale_ * q24(q16(gyr_data_.x) >> 16),
-		gyr_scale_ * q24(q16(gyr_data_.y) >> 16),
-		gyr_scale_ * q24(q16(gyr_data_.z) >> 16)
+		gyr_scale_ * q24(q16(regs_.gyr_data_.x) >> 16),
+		gyr_scale_ * q24(q16(regs_.gyr_data_.y) >> 16),
+		gyr_scale_ * q24(q16(regs_.gyr_data_.z) >> 16)
 	}};
 }

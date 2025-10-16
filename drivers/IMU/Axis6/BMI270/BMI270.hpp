@@ -6,8 +6,8 @@ namespace ymd::drivers{
 
 
 class BMI270 final:
-    public AccelerometerIntf, 
-    private BMI270_Regs{
+    public BMI270_Prelude,
+    public AccelerometerIntf{
 public:
     using Error = BMI270_Prelude::Error;
 
@@ -42,7 +42,7 @@ public:
     [[nodiscard]] IResult<Vec3<q24>> read_acc();
 private:
     BoschSensor_Phy phy_;
-
+    BMI270_Regset regs_ = {};
 };
 
 }

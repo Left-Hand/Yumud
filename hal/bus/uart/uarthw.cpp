@@ -11,68 +11,6 @@ using namespace ymd::hal;
 using namespace ymd::ral::CH32;
 
 
-
-#define UART_IT_TEMPLATE(name, uname, fname)\
-__interrupt void fname(void){\
-    const auto events = uname##_Inst->get_events();\
-    if(events.RXNE){\
-        name.on_rxne_interrupt();\
-        uname##_Inst->clear_events({.RXNE = 1});\
-    }else if(events.IDLE){\
-        name.on_rxidle_interrupt();\
-        uname##_Inst->STATR;\
-        uname##_Inst->DATAR;\
-    }else if(events.TXE){\
-        name.on_txe_interrupt();\
-        uname##_Inst->clear_events({.TXE = 1});\
-    }else if(events.ORE){\
-        uname##_Inst->DATAR;\
-        uname##_Inst->clear_events({.ORE = 1});\
-    }\
-}\
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-
-#ifdef ENABLE_UART1
-UART_IT_TEMPLATE(uart1, USART1, USART1_IRQHandler)
-#endif
-
-#ifdef ENABLE_UART2
-UART_IT_TEMPLATE(uart2, USART2, USART2_IRQHandler)
-#endif
-
-#ifdef ENABLE_UART3
-UART_IT_TEMPLATE(uart3, USART3, USART3_IRQHandler)
-#endif
-
-#ifdef ENABLE_UART4
-UART_IT_TEMPLATE(uart4, USART4, UART4_IRQHandler)
-#endif
-
-#ifdef ENABLE_UART5
-UART_IT_TEMPLATE(uart5, USART5, UART5_IRQHandler)
-#endif
-
-#ifdef ENABLE_UART6
-UART_IT_TEMPLATE(uart6, USART6, UART6_IRQHandler)
-#endif
-
-#ifdef ENABLE_UART7
-UART_IT_TEMPLATE(uart7, USART7, UART7_IRQHandler)
-#endif
-
-#ifdef ENABLE_UART8
-UART_IT_TEMPLATE(uart8, USART8, UART8_IRQHandler)
-#endif
-
-
-#pragma GCC diagnostic pop
-
-
-
-
-
 Gpio map_uart_to_rxio(const void * inst){
     switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef ENABLE_UART1
@@ -367,74 +305,48 @@ void UartHw::set_remap(const uint8_t remap){
     }
 }
 
+static NvicRequest get_nvic_request(const void * inst){
 
-void UartHw::register_nvic(const Enable en){
-    IRQn irq = IRQn::Software_IRQn;
-    uint8_t pp = 1;
-    uint8_t sp = 7;
-
-    switch(reinterpret_cast<uint32_t>(inst_)){
+    switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_UART1
         case USART1_BASE:
-            irq = USART1_IRQn;
-            pp = UART1_IT_PP;
-            sp = UART1_IT_SP;
-            break;
+            return NvicRequest(UART1_IT_PP, UART1_IT_SP, USART1_IRQn);
         #endif
         #ifdef ENABLE_UART2
         case USART2_BASE:
-            irq = USART2_IRQn;
-            pp = UART2_IT_PP;
-            sp = UART2_IT_SP;
-            break;
+            return NvicRequest(UART2_IT_PP, UART2_IT_SP, USART2_IRQn);
         #endif
         #ifdef ENABLE_UART3
         case USART3_BASE:
-            irq = USART3_IRQn;
-            pp = UART3_IT_PP;
-            sp = UART3_IT_SP;
-            break;
+            return NvicRequest(UART3_IT_PP, UART3_IT_SP, USART3_IRQn);
         #endif
         #ifdef ENABLE_UART4
         case UART4_BASE:
-            irq = UART4_IRQn;
-            pp = UART4_IT_PP;
-            sp = UART4_IT_SP;
-            break;
+            return NvicRequest(UART4_IT_PP, UART4_IT_SP, UART4_IRQn);
         #endif
         #ifdef ENABLE_UART5
         case UART5_BASE:
-            irq = UART5_IRQn;
-            pp = UART5_IT_PP;
-            sp = UART5_IT_SP;
-            break;
+            return NvicRequest(UART5_IT_PP, UART5_IT_SP, UART5_IRQn);
         #endif
         #ifdef ENABLE_UART6
         case UART6_BASE:
-            irq = UART6_IRQn;
-            pp = UART6_IT_PP;
-            sp = UART6_IT_SP;
-            break;
+            return NvicRequest(UART6_IT_PP, UART6_IT_SP, UART6_IRQn);
         #endif
         #ifdef ENABLE_UART7
         case UART7_BASE:
-            irq = UART7_IRQn;
-            pp = UART7_IT_PP;
-            sp = UART7_IT_SP;
-            break;
+            return NvicRequest(UART8_IT_PP, UART7_IT_SP, UART7_IRQn);
         #endif
         #ifdef ENABLE_UART8
         case UART8_BASE:
-            irq = UART8_IRQn;
-            pp = UART8_IT_PP;
-            sp = UART8_IT_SP;
-            break;
+            return NvicRequest(UART8_IT_PP, UART8_IT_SP, UART8_IRQn);
         #endif
         default:
-            __builtin_unreachable();
+            __builtin_trap();
     }
+}
 
-    NvicRequest(pp, sp, irq).enable(EN);
+void UartHw::register_nvic(const Enable en){
+    get_nvic_request(inst_).enable(EN);
 }
 
 
@@ -643,40 +555,6 @@ void UartHw::write1(const char data){
 }
 
 
-namespace ymd::hal{
-    #ifdef ENABLE_UART1
-    UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART2
-    UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART3
-    UartHw uart3{USART3, UART3_TX_DMA_CH, UART3_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART4
-    UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART5
-    UartHw uart5{UART5, UART5_TX_DMA_CH, UART5_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART6
-    UartHw uart6{UART6, UART6_TX_DMA_CH, UART6_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART7
-    UartHw uart7{UART7, UART7_TX_DMA_CH, UART7_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART8
-    UartHw uart8{UART8, UART8_TX_DMA_CH, UART8_RX_DMA_CH};
-    #endif
-}
-    
 
 void UartHw::enable_tx_dma(const Enable en){
     USART_DMACmd(inst_, USART_DMAReq_Tx, en == EN);
@@ -752,3 +630,96 @@ void UartHw::enable_idle_it(const Enable en){
     USART_ClearITPendingBit(inst_, USART_IT_IDLE);
     USART_ITConfig(inst_, USART_IT_IDLE, en == EN);
 }
+
+
+namespace ymd::hal{
+    #ifdef ENABLE_UART1
+    UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
+    #endif
+    
+    #ifdef ENABLE_UART2
+    UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
+    #endif
+    
+    #ifdef ENABLE_UART3
+    UartHw uart3{USART3, UART3_TX_DMA_CH, UART3_RX_DMA_CH};
+    #endif
+    
+    #ifdef ENABLE_UART4
+    UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
+    #endif
+    
+    #ifdef ENABLE_UART5
+    UartHw uart5{UART5, UART5_TX_DMA_CH, UART5_RX_DMA_CH};
+    #endif
+    
+    #ifdef ENABLE_UART6
+    UartHw uart6{UART6, UART6_TX_DMA_CH, UART6_RX_DMA_CH};
+    #endif
+    
+    #ifdef ENABLE_UART7
+    UartHw uart7{UART7, UART7_TX_DMA_CH, UART7_RX_DMA_CH};
+    #endif
+    
+    #ifdef ENABLE_UART8
+    UartHw uart8{UART8, UART8_TX_DMA_CH, UART8_RX_DMA_CH};
+    #endif
+}
+    
+
+#define UART_IT_TEMPLATE(name, uname, fname)\
+__interrupt void fname(void){\
+    const auto events = uname##_Inst->get_events();\
+    if(events.RXNE){\
+        name.on_rxne_interrupt();\
+        uname##_Inst->clear_events({.RXNE = 1});\
+    }else if(events.IDLE){\
+        name.on_rxidle_interrupt();\
+        uname##_Inst->STATR;\
+        uname##_Inst->DATAR;\
+    }else if(events.TXE){\
+        name.on_txe_interrupt();\
+        uname##_Inst->clear_events({.TXE = 1});\
+    }else if(events.ORE){\
+        uname##_Inst->DATAR;\
+        uname##_Inst->clear_events({.ORE = 1});\
+    }\
+}\
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
+#ifdef ENABLE_UART1
+UART_IT_TEMPLATE(uart1, USART1, USART1_IRQHandler)
+#endif
+
+#ifdef ENABLE_UART2
+UART_IT_TEMPLATE(uart2, USART2, USART2_IRQHandler)
+#endif
+
+#ifdef ENABLE_UART3
+UART_IT_TEMPLATE(uart3, USART3, USART3_IRQHandler)
+#endif
+
+#ifdef ENABLE_UART4
+UART_IT_TEMPLATE(uart4, USART4, UART4_IRQHandler)
+#endif
+
+#ifdef ENABLE_UART5
+UART_IT_TEMPLATE(uart5, USART5, UART5_IRQHandler)
+#endif
+
+#ifdef ENABLE_UART6
+UART_IT_TEMPLATE(uart6, USART6, UART6_IRQHandler)
+#endif
+
+#ifdef ENABLE_UART7
+UART_IT_TEMPLATE(uart7, USART7, UART7_IRQHandler)
+#endif
+
+#ifdef ENABLE_UART8
+UART_IT_TEMPLATE(uart8, USART8, UART8_IRQHandler)
+#endif
+
+
+#pragma GCC diagnostic pop

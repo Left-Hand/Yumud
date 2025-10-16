@@ -51,12 +51,12 @@ struct BMI270_Prelude{
 };
 
 
-struct BMI270_Regs:public BMI270_Prelude{
+struct BMI270_Regset:public BMI270_Prelude{
 
     struct R8_ChipId:public Reg8<>{
         static constexpr RegAddr address = 0x00;
 
-        static constexpr uint8_t correct = 0x24;
+        static constexpr uint8_t KEY = 0x24;
         uint8_t data;
     };
 

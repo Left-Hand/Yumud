@@ -294,7 +294,9 @@ void myservo_main(){
 
     // can.init(CanBaudrate::_1M, CanMode::Internal);
     can.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
+        .remap = 0,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
     init_adc();
 

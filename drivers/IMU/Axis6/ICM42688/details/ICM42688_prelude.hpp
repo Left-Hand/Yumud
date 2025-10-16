@@ -130,7 +130,7 @@ struct ICM42688_Prelude{
     };
 };
 
-struct ICM42688_Regs:public ICM42688_Prelude{
+struct ICM42688_Regset:public ICM42688_Prelude{
     struct R8_DEVICE_CONFIG:public Reg8<>{
         static constexpr RegAddr address = 0x11;
         static constexpr Bank bank = Bank::_0;

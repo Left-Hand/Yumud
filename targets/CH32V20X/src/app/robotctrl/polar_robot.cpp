@@ -325,8 +325,9 @@ void polar_robot_main(){
     #else
 
     can.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
-        .mode = hal::CanMode::Normal
+        .remap = 0,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
     can.enable_hw_retransmit(DISEN);

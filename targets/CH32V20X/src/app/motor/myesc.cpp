@@ -31,6 +31,10 @@
 #include "robots/repl/repl_service.hpp"
 #include "hal/dma/dma.hpp"
 
+#include <memory_resource>
+
+// using PmrCallback = std::pmr::function<void(void)>;
+
 using namespace ymd;
 
 using namespace ymd::drivers;
@@ -73,7 +77,7 @@ static constexpr auto MAX_MODU_VOLT = q16(6.5);
 
 
 
-struct CurrentRegulatorConfig{
+struct LrSeriesCurrentRegulatorConfig{
     uint32_t fs;                 // 采样频率 (Hz)
     uint32_t fc;                 // 截止频率/带宽 (Hz)
     q20 phase_inductance;        // 相电感 (H)
@@ -82,17 +86,15 @@ struct CurrentRegulatorConfig{
 
     [[nodiscard]] constexpr digipw::PiController make_pi_controller() const {
         const auto & self = *this;
-        digipw::PiController::Cofficients cof;
-        cof.max_out = self.max_voltage;
+        digipw::PiController::Cofficients coeff;
+        coeff.max_out = self.max_voltage;
         q12 omega_bw = q12(TAU) * self.fc;
-        cof.kp = q20(self.phase_inductance) * q20(TAU) * self.fc;
-        cof.ki_discrete = q16(q16(self.phase_resistance) * q16(TAU)) * self.fc / self.fs;
+        coeff.kp = q20(self.phase_inductance) * q20(TAU) * self.fc;
+        coeff.ki_discrete = q16(q16(self.phase_resistance) * q16(TAU)) * self.fc / self.fs;
 
-        cof.err_sum_max = q24(self.max_voltage / self.phase_resistance) * q24(self.fs / omega_bw);
-        return digipw::PiController(cof);
-
+        coeff.err_sum_max = q24(self.max_voltage / self.phase_resistance) * q24(self.fs / omega_bw);
+        return digipw::PiController(coeff);
     }
-
 };
 
 static void init_adc(){
@@ -236,7 +238,7 @@ void myesc_main(){
 
 
 
-    const auto current_regulator_cfg = CurrentRegulatorConfig{
+    const auto current_regulator_cfg = LrSeriesCurrentRegulatorConfig{
         .fs = FOC_FREQ,
         .fc = CURRENT_LOOP_BW,
         .phase_inductance = PHASE_INDUCTANCE,

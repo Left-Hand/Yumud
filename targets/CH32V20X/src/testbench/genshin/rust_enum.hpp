@@ -37,10 +37,13 @@ struct Shape_Prelude{
     struct Square{int a;};
 };
 
-struct Shape:public Sumtype<Shape_Prelude::Circle, Shape_Prelude::Rectangle>, public Shape_Prelude
+struct Shape:public Sumtype<std::monostate,  Shape_Prelude::Circle, Shape_Prelude::Rectangle>
 {    
     // struct Circle{int radius;};
     // struct Rectangle{int a; int b;};
+    using Circle = Shape_Prelude::Circle;
+    using Rectangle = Shape_Prelude::Rectangle;
+    using Square = Shape_Prelude::Square;
 
 };
 

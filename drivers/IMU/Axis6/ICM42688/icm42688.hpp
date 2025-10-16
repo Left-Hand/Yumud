@@ -7,15 +7,15 @@
 namespace ymd::drivers{
 
 class ICM42688:
+    public ICM42688_Prelude,
     public AccelerometerIntf, 
-    public GyroscopeIntf,
-    public ICM42688_Regs
+    public GyroscopeIntf
 {
 public:
     explicit ICM42688(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
         phy_(i2c, i2c_addr){;}
-    explicit ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
-        phy_(spi, idx){;}
+    explicit ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        phy_(spi, rank){;}
     explicit ICM42688(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
 
@@ -38,6 +38,7 @@ public:
 private:
     InvensenseSensor_Phy phy_;
     Option<Bank> last_bank_ = None;
+    ICM42688_Regset regs_ = {};
 
     q24 acc_scale_ = 0;
     q24 gyr_scale_ = 0;

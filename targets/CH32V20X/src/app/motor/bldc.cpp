@@ -20,7 +20,6 @@
 #include "hal/analog/opa/opa.hpp"
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
-#include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
 
 #include "types/vectors/quat.hpp"
@@ -156,8 +155,9 @@ void bldc_main(){
     clock::delay(2ms);
 
     can.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
-        .mode = hal::CanMode::Normal
+        .remap = 0,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
     can.filters<0>() 
@@ -189,8 +189,9 @@ void bldc_main(){
     mp6540_nfault_gpio_.inana();
 
     can.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
-        .mode = hal::CanMode::Normal
+        .remap = 0,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
 
