@@ -6,15 +6,17 @@
 
 namespace ymd::drivers{
 class MPU6050 final:
+    public MPU6050_Prelude,
     public AccelerometerIntf, 
-    public GyroscopeIntf,
-    public MPU6050_Regs{
+    public GyroscopeIntf{
 public:
 
     explicit MPU6050(const hal::I2cDrv & i2c_drv):
         MPU6050(i2c_drv, Package::MPU6050){;}
+
     explicit MPU6050(hal::I2cDrv && i2c_drv):
         MPU6050(std::move(i2c_drv), Package::MPU6050){;}
+
     explicit MPU6050(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MPU6050(hal::I2cDrv(i2c, addr), Package::MPU6050){;}
 
@@ -47,6 +49,7 @@ private:
 
     using Phy = InvensenseSensor_Phy;
     Phy phy_;
+    MPU6050_Regset regs_ = {};
     q16 acc_scaler_ = 0;
     q16 gyr_scaler_ = 0;
 

@@ -297,11 +297,11 @@ void Can::init(const Config & cfg){
 
 
     const CAN_InitTypeDef CAN_InitConf = {
-        .CAN_Prescaler = cfg.coeffs.prescale,
+        .CAN_Prescaler = cfg.timming_coeffs.prescale,
         .CAN_Mode = std::bit_cast<uint8_t>(cfg.mode),
-        .CAN_SJW = std::bit_cast<uint8_t>(cfg.coeffs.swj),
-        .CAN_BS1 = std::bit_cast<uint8_t>(cfg.coeffs.bs1),
-        .CAN_BS2 = std::bit_cast<uint8_t>(cfg.coeffs.bs2),
+        .CAN_SJW = std::bit_cast<uint8_t>(cfg.timming_coeffs.swj),
+        .CAN_BS1 = std::bit_cast<uint8_t>(cfg.timming_coeffs.bs1),
+        .CAN_BS2 = std::bit_cast<uint8_t>(cfg.timming_coeffs.bs2),
 
         .CAN_TTCM = DISABLE,
         .CAN_ABOM = ENABLE,

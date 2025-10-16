@@ -10,8 +10,9 @@ using namespace ymd;
 
 void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
     can.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
-        .mode = hal::CanMode::Normal
+        .remap = 0,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
     hal::PC<13>().outpp();

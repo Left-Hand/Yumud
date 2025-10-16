@@ -99,7 +99,7 @@ IResult<> MPU6050::init(const Config & cfg){
 
 IResult<> MPU6050::update(){
     auto res = read_burst(
-        acc_x_reg.address, std::span(&acc_x_reg.as_ref(), 7));
+        regs_.acc_x_reg.address, std::span(&regs_.acc_x_reg.as_ref(), 7));
     is_data_valid_ = res.is_ok();
     return res;
 }
@@ -107,44 +107,46 @@ IResult<> MPU6050::update(){
 IResult<Vec3<q24>> MPU6050::read_acc(){
 
     return  Ok{Vec3<q24>{
-        uni(acc_x_reg.as_val()) * acc_scaler_,
-        uni(acc_y_reg.as_val()) * acc_scaler_,
-        uni(acc_z_reg.as_val()) * acc_scaler_
+        uni(regs_.acc_x_reg.as_val()) * acc_scaler_,
+        uni(regs_.acc_y_reg.as_val()) * acc_scaler_,
+        uni(regs_.acc_z_reg.as_val()) * acc_scaler_
     }};
 }
 
 IResult<Vec3<q24>> MPU6050::read_gyr(){
 
     return Ok{Vec3<q24>{
-        uni(gyr_x_reg.as_val()) * gyr_scaler_,
-        uni(gyr_y_reg.as_val()) * gyr_scaler_,
-        uni(gyr_z_reg.as_val()) * gyr_scaler_
+        uni(regs_.gyr_x_reg.as_val()) * gyr_scaler_,
+        uni(regs_.gyr_y_reg.as_val()) * gyr_scaler_,
+        uni(regs_.gyr_z_reg.as_val()) * gyr_scaler_
     }};
 }
 
 IResult<q16> MPU6050::read_temp(){
+    auto & reg = regs_.temperature_reg;
     static constexpr auto INV_340 = q16(1.0 / 340);
-    return Ok(q16(36.65f) + uni(temperature_reg.as_val()) * INV_340);
+    return Ok(q16(36.65f) + uni(reg.as_val()) * INV_340);
 }
 
 IResult<> MPU6050::set_acc_fs(const AccFs fs){
     acc_scaler_ = calculate_acc_scaler(fs);
 
-    auto reg = RegCopy(acc_conf_reg);
+    auto reg = RegCopy(regs_.acc_conf_reg);
     reg.afs_sel = fs;
     return write_reg(reg);
 }
 
 Result<MPU6050::Package, Error> MPU6050::get_package(){
-    if(const auto res = read_reg(whoami_reg); 
+    auto & reg = regs_.whoami_reg;
+    if(const auto res = read_reg(reg); 
         res.is_err()) MPU6050_PANIC("read who am I failed", res.unwrap_err());
 
-    return Ok{whoami_reg.package};
+    return Ok{reg.package};
 }
 
 IResult<> MPU6050::set_gyr_fs(const GyrFs fs){
     gyr_scaler_ = calculate_gyr_scaler(fs);
-    auto reg = RegCopy(gyr_conf_reg);
+    auto reg = RegCopy(regs_.gyr_conf_reg);
     reg.fs_sel = fs;
 
     return write_reg(reg);
@@ -157,7 +159,7 @@ IResult<> MPU6050::reset(){
 }
 
 IResult<> MPU6050::enable_direct_mode(const Enable en){
-    auto reg = RegCopy(int_pin_cfg_reg);
+    auto reg = RegCopy(regs_.int_pin_cfg_reg);
     reg.as_ref() = 0x22;
     if(const auto res = write_reg(reg);
         res.is_err()) return Err(res.unwrap_err());

@@ -10,23 +10,25 @@ using Vec2u16 = Vec2<uint16_t>;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> SSD1306_Phy::write_command(const uint32_t cmd){
+IResult<> SSD1306_Phy::write_command(const uint8_t cmd){
     if(p_i2c_drv_.has_value()){
         if(const auto res = p_i2c_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(p_spi_drv_.has_value()){
         // return IResult<>(p_spi_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd)));
+        TODO();
     }
     return Err(Error(Error::NoAvailablePhy));
 }
 
-IResult<> SSD1306_Phy::write_data(const uint32_t data){
+IResult<> SSD1306_Phy::write_data(const uint8_t data){
     if(p_i2c_drv_.has_value()) {
         if(const auto res = p_i2c_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data));
             res.is_err()) return Err(res.unwrap_err());
     }else if(p_spi_drv_.has_value()){
         // return IResult<>(p_spi_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data)));
+        TODO();
     }
     return Err(Error(Error::NoAvailablePhy));
 }
@@ -49,8 +51,8 @@ IResult<> SSD1306_Phy::write_burst(const std::span<const T> pbuf){
         // }else {
         //     return IResult<>(p_spi_drv_->write_burst<T>(pbuf));
         // }
+        TODO();
     }
-    // return IResult<>(Err(Error(Error::NoAvailablePhy)));
     return Err(Error(Error::Kind::NoAvailablePhy));
 }
 
@@ -63,6 +65,7 @@ IResult<> SSD1306_Phy::write_repeat(const T data, size_t len){
             return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len));
         }
     }else if(p_spi_drv_.has_value()){
+        TODO();
         // if constexpr(sizeof(data) != 1){
         //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len, LSB));
         // }else {
@@ -87,11 +90,11 @@ IResult<> SSD13XX::set_flush_pos(const Vec2u16 pos){
     const auto x = std::get<0>(pos + offset_);
     const auto y = std::get<1>(pos + offset_);
     // const auto [x, y] = pos + offset_;
-    if(const auto res = phy_.write_command(0xb0 | size_t(y >> 3));
+    if(const auto res = phy_.write_command(static_cast<uint8_t>(0xb0 | static_cast<uint8_t>(y >> 3)));
         res.is_err()) return res;
-    if(const auto res = phy_.write_command(((x & 0xf0 )>>4) | 0x10);
+    if(const auto res = phy_.write_command(static_cast<uint8_t>((x & 0xf0 ) >> 4) | 0x10);
         res.is_err()) return res;
-    if(const auto res = phy_.write_command((x & 0x0f));
+    if(const auto res = phy_.write_command(static_cast<uint8_t>(x & 0x0f));
         res.is_err()) return res;
     return Ok();
 }

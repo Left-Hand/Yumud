@@ -50,7 +50,7 @@ struct MPU6050_Prelude{
     };
 };
 
-struct MPU6050_Regs:public MPU6050_Prelude{ 
+struct MPU6050_Regset:public MPU6050_Prelude{ 
     struct R8_GyrConf:public Reg8<>{
         static constexpr RegAddr address = 0x1b;
 
