@@ -155,16 +155,12 @@ void bldc_main(){
     clock::delay(2ms);
 
     can.init({
-        .remap = 0,
+        .remap = CAN1_REMAP,
         .mode = hal::CanMode::Normal,
         .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
-    can.filters<0>() 
-        .apply(hal::CanFilterConfig::from_pair(
-            hal::CanStdIdMaskPair::from_accept_all()
-        )
-    );
+    can.filters<0>().apply(hal::CanFilterConfig::from_accept_all());
 
     spi.init({
         .baudrate = 18_MHz
@@ -189,7 +185,7 @@ void bldc_main(){
     mp6540_nfault_gpio_.inana();
 
     can.init({
-        .remap = 0,
+        .remap = CAN1_REMAP,
         .mode = hal::CanMode::Normal,
         .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });

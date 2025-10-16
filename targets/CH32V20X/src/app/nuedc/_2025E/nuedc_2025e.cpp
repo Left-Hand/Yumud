@@ -216,37 +216,40 @@ enum class BlinkPattern:uint8_t{
     BLUE
 };
 
+
+struct GenericTask{
+    Milliseconds start_tick;
+
+    Milliseconds millis_since_started(){
+        return clock::millis() - start_tick; 
+    }
+
+    static GenericTask from_default(){
+        return GenericTask{
+            .start_tick = clock::millis()
+        };
+    }
+};
+
+struct AdvancedTask{
+    Milliseconds start_tick;
+
+    Milliseconds millis_since_started(){
+        return clock::millis() - start_tick; 
+    }
+
+    static AdvancedTask from_advanced(){
+        return AdvancedTask{
+            .start_tick = clock::millis()
+        };
+    }
+};
+
 struct Task{
-    // Generic,
-    // Advanced
+    // GenericTask,
+    // AdvancedTask
 
-    struct Generic{
-        Milliseconds start_tick;
 
-        Milliseconds millis_since_started(){
-            return clock::millis() - start_tick; 
-        }
-
-        static Generic from_default(){
-            return Generic{
-                .start_tick = clock::millis()
-            };
-        }
-    };
-
-    struct Advanced{
-        Milliseconds start_tick;
-
-        Milliseconds millis_since_started(){
-            return clock::millis() - start_tick; 
-        }
-
-        static Advanced from_advanced(){
-            return Advanced{
-                .start_tick = clock::millis()
-            };
-        }
-    };
 };
 
 
@@ -333,7 +336,7 @@ void nuedc_2025e_main(){
     clock::delay(2ms);
 
     can.init({
-        .remap = 0,
+        .remap = CAN1_REMAP,
         .mode = hal::CanMode::Normal,
         .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
     });
@@ -370,7 +373,7 @@ void nuedc_2025e_main(){
     mp6540_nfault_gpio_.inana();
 
     can.init({
-        .remap = 0,
+        .remap = CAN1_REMAP,
         .mode = hal::CanMode::Normal,
         .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
@@ -696,8 +699,8 @@ void nuedc_2025e_main(){
     };
 
     auto update_err_xy = [&](Vec2<q20> err_xy){
-        // static constexpr real_t alpha_x = 0.8_r;
-        // static constexpr real_t alpha_y = 0.5_r;
+        // static constexpr q16 alpha_x = 0.8_r;
+        // static constexpr q16 alpha_y = 0.5_r;
         // captured_err_xy_.x = captured_err_xy_.x * alpha_x + err_xy.x * (1 - alpha_x);
         // captured_err_xy_.y = captured_err_xy_.y * alpha_y + err_xy.y * (1 - alpha_y);
 
@@ -923,12 +926,12 @@ void nuedc_2025e_main(){
 
             rpc::make_property_with_limit("kd", &pd_ctrl_law_.kd, 0, 30),
 
-            rpc::make_function("setp", [&](real_t p){axis_target_position_ = p;}),
+            rpc::make_function("setp", [&](q16 p){axis_target_position_ = p;}),
             rpc::make_function("errp", [&](
-                const real_t px, 
-                const real_t py,
-                const real_t z, 
-                const real_t e
+                const q16 px, 
+                const q16 py,
+                const q16 z, 
+                const q16 e
             ){
                 may_err_position_ = Some(ErrPosition{
                     .px = px,
@@ -1048,7 +1051,7 @@ void nuedc_2025e_main(){
                 break;
             case NodeRole::YawJoint:{
                 const auto ctime = clock::time();
-                auto hesitate_spin_curve = [&](const real_t t){
+                auto hesitate_spin_curve = [&](const q16 t){
                     return (- 0.3_q20 * (1.25_r + sinpu(3.0_r * t)) / MACHINE_CTRL_FREQ);
                 };
 

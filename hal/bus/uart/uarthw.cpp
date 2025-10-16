@@ -12,7 +12,7 @@ using namespace ymd::ral::CH32;
 
 
 Gpio map_uart_to_rxio(const void * inst){
-    switch(reinterpret_cast<uint32_t>(inst)){
+    switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_UART1
         case USART1_BASE:
             return UART1_RX_GPIO;
@@ -45,13 +45,12 @@ Gpio map_uart_to_rxio(const void * inst){
         case UART8_BASE:
             return UART8_RX_GPIO;
         #endif
-        default:
-            __builtin_unreachable();
     }
+    __builtin_trap();
 }
 
 Gpio map_uart_to_txio(const void * inst){
-    switch(reinterpret_cast<uint32_t>(inst)){
+    switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_UART1
         case USART1_BASE:
             return UART1_TX_GPIO;
@@ -84,9 +83,8 @@ Gpio map_uart_to_txio(const void * inst){
         case UART8_BASE:
             return UART8_TX_GPIO;
         #endif
-        default:
-            __builtin_unreachable();
     }
+    __builtin_trap();
 }
 
 
@@ -98,128 +96,132 @@ Gpio UartHw::rxio(){
 }
 
 void UartHw::enable_rcc(const Enable en){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_UART1
         case USART1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, en == EN);
-            break;
+            return;
         #endif
         #ifdef ENABLE_UART2
         case USART2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, en == EN);
-            break;
+            return;
         #endif
         #ifdef ENABLE_UART3
         case USART3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, en == EN);
-            break;
+            return;
         #endif
         #ifdef ENABLE_UART4
         case UART4_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, en == EN);
-            break;
+            return;
         #endif
         #ifdef ENABLE_UART5
         case UART5_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, en == EN);
-            break;
+            return;
         #endif
         #ifdef ENABLE_UART6
         case UART6_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART6, en == EN);
-            break;
+            return;
         #endif
         #ifdef ENABLE_UART7
         case UART7_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, en == EN);
-            break;
+            return;
         #endif
         #ifdef ENABLE_UART8
         case UART8_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART8, en == EN);
-            break;
+            return;
         #endif
-        default:
-            break;
     }
+    __builtin_trap();
 }
 
 static constexpr uint8_t get_default_remap(const void * inst){
-    switch(reinterpret_cast<uint32_t>(inst)){
+    switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_UART1
         case USART1_BASE:
             return UART1_REMAP;
-            break;
         #endif
         #ifdef ENABLE_UART2
         case USART2_BASE:
             return UART2_REMAP;
-            break;
         #endif
         #ifdef ENABLE_UART3
         case USART3_BASE:
             return UART3_REMAP;
-            break;
         #endif
         #ifdef ENABLE_UART4
         case UART4_BASE:
             return UART4_REMAP;
-            break;
         #endif
         #ifdef ENABLE_UART5
         case UART5_BASE:
             return UART5_REMAP;
-            break;
         #endif
         #ifdef ENABLE_UART6
         case UART6_BASE:
             return UART6_REMAP;
-            break;
         #endif
         #ifdef ENABLE_UART7
         case UART7_BASE:
             return UART7_REMAP;
-            break;
         #endif
         #ifdef ENABLE_UART8
         case UART8_BASE:
             return UART8_REMAP;
-            break;
         #endif
-        default:
-            break;
     }
-    return 0;
+    __builtin_trap();
 }
 
 void UartHw::set_remap(const uint8_t remap){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+    switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_UART1
         case USART1_BASE:
-            if(remap){
-                GPIO_PinRemapConfig(GPIO_Remap_USART1, true);
+            switch(remap){
+                case 0:
+                    GPIO_PinRemapConfig(GPIO_Remap_USART1, DISABLE);
+                    return;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_Remap_USART1, ENABLE);
+                    return;
+                default:
+                    break;
             }
-            break;
         #endif
         #ifdef ENABLE_UART2
         case USART2_BASE:
-            if(remap){
-                GPIO_PinRemapConfig(GPIO_Remap_USART2, true);
+            switch(remap){
+                case 0:
+                    GPIO_PinRemapConfig(GPIO_Remap_USART2, DISABLE);
+                    return;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_Remap_USART2, ENABLE);
+                    return;
+                default:
+                    break;
             }
-            break;
         #endif
         #ifdef ENABLE_UART3
         case USART3_BASE:
             switch (remap){
+                case 0:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_USART3, DISABLE);
+                    return;
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap1_USART3, ENABLE);
-                    break;
+                    return;
                 case 2:
                     GPIO_PinRemapConfig(GPIO_PartialRemap2_USART3, ENABLE);
-                    break;
+                    return;
                 case 3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART3, ENABLE);
-                    break;
+                    return;
                 default:
                     break;
             }
@@ -228,13 +230,16 @@ void UartHw::set_remap(const uint8_t remap){
         #ifdef ENABLE_UART4
         case UART4_BASE:
             switch (remap){
+                case 0:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_USART4, DISABLE);
+                    return;
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART4, ENABLE);
-                    break;
+                    return;
                 case 2:
                 case 3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART4, ENABLE);
-                    break;
+                    return;
                 default:
                     break;
             }
@@ -243,13 +248,16 @@ void UartHw::set_remap(const uint8_t remap){
         #ifdef ENABLE_UART5
         case UART5_BASE:
             switch (remap){
+                case 0:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_USART5, DISABLE);
+                    return;
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART5, ENABLE);
-                    break;
+                    return;
                 case 2:
                 case 3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART5, ENABLE);
-                    break;
+                    return;
                 default:
                     break;
             }
@@ -258,13 +266,16 @@ void UartHw::set_remap(const uint8_t remap){
         #ifdef ENABLE_UART6
         case UART6_BASE:
             switch (remap){
+                case 0:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_USART6, DISABLE);
+                    return;
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART6, ENABLE);
-                    break;
+                    return;
                 case 2:
                 case 3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART6, ENABLE);
-                    break;
+                    return;
                 default:
                     break;
             }
@@ -273,13 +284,16 @@ void UartHw::set_remap(const uint8_t remap){
         #ifdef ENABLE_UART7
         case UART7_BASE:
             switch (remap){
+                case 0:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_USART7, DISABLE);
+                    return;
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART7, ENABLE);
-                    break;
+                    return;
                 case 2:
                 case 3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART7, ENABLE);
-                    break;
+                    return;
                 default:
                     break;
             }
@@ -288,21 +302,23 @@ void UartHw::set_remap(const uint8_t remap){
         #ifdef ENABLE_UART8
         case UART8_BASE:
             switch (remap){
+                case 0:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_USART8, DISABLE);
+                    return;
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART8, ENABLE);
-                    break;
+                    return;
                 case 2:
                 case 3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART8, ENABLE);
-                    break;
+                    return;
                 default:
                     break;
             }
             break;
         #endif
-        default:
-            break;
     }
+    __builtin_trap();
 }
 
 static NvicRequest get_nvic_request(const void * inst){
@@ -340,9 +356,8 @@ static NvicRequest get_nvic_request(const void * inst){
         case UART8_BASE:
             return NvicRequest(UART8_IT_PP, UART8_IT_SP, UART8_IRQn);
         #endif
-        default:
-            __builtin_trap();
     }
+    __builtin_trap();
 }
 
 void UartHw::register_nvic(const Enable en){
@@ -633,39 +648,38 @@ void UartHw::enable_idle_it(const Enable en){
 
 
 namespace ymd::hal{
-    #ifdef ENABLE_UART1
-    UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART2
-    UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART3
-    UartHw uart3{USART3, UART3_TX_DMA_CH, UART3_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART4
-    UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART5
-    UartHw uart5{UART5, UART5_TX_DMA_CH, UART5_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART6
-    UartHw uart6{UART6, UART6_TX_DMA_CH, UART6_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART7
-    UartHw uart7{UART7, UART7_TX_DMA_CH, UART7_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART8
-    UartHw uart8{UART8, UART8_TX_DMA_CH, UART8_RX_DMA_CH};
-    #endif
+#ifdef ENABLE_UART1
+UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
+#endif
+
+#ifdef ENABLE_UART2
+UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
+#endif
+
+#ifdef ENABLE_UART3
+UartHw uart3{USART3, UART3_TX_DMA_CH, UART3_RX_DMA_CH};
+#endif
+
+#ifdef ENABLE_UART4
+UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
+#endif
+
+#ifdef ENABLE_UART5
+UartHw uart5{UART5, UART5_TX_DMA_CH, UART5_RX_DMA_CH};
+#endif
+
+#ifdef ENABLE_UART6
+UartHw uart6{UART6, UART6_TX_DMA_CH, UART6_RX_DMA_CH};
+#endif
+
+#ifdef ENABLE_UART7
+UartHw uart7{UART7, UART7_TX_DMA_CH, UART7_RX_DMA_CH};
+#endif
+
+#ifdef ENABLE_UART8
+UartHw uart8{UART8, UART8_TX_DMA_CH, UART8_RX_DMA_CH};
+#endif
 }
-    
 
 #define UART_IT_TEMPLATE(name, uname, fname)\
 __interrupt void fname(void){\

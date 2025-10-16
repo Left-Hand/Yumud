@@ -237,18 +237,20 @@ void Can::enable_rcc(const Enable en){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+            return;
         }
-        break;
         #endif
 
 
         #ifdef ENABLE_CAN2
         case CAN2_BASE:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, ENABLE);
+            return;
         }
-        break;
         #endif
     }
+
+    __builtin_trap();
 }
 
 void Can::set_remap(const uint8_t remap){
@@ -258,15 +260,15 @@ void Can::set_remap(const uint8_t remap){
             switch(remap){
                 case 0:
                     GPIO_PinRemapConfig(GPIO_Remap1_CAN1, DISABLE);
-                    break;
+                    return;
                 case 1:
                 case 2:
                     GPIO_PinRemapConfig(GPIO_Remap1_CAN1, ENABLE);
-                    break;
+                    return;
                 case 3:
                     GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);//for TEST
                     GPIO_PinRemapConfig(GPIO_Remap2_CAN1, ENABLE);
-                    break;
+                    return;
             }
         }
         break;
@@ -278,15 +280,16 @@ void Can::set_remap(const uint8_t remap){
             switch(remap){
                 case 0:
                     GPIO_PinRemapConfig(GPIO_Remap_CAN2, DISABLE);
-                    break;
+                    return;
                 case 1:
                     GPIO_PinRemapConfig(GPIO_Remap_CAN2, ENABLE);
-                    break;
+                    return;
             }
         }
         break;
         #endif
     }
+    __builtin_trap();
 }
 
 

@@ -42,7 +42,7 @@ void laser_ctl_main(){
     auto & can = hal::can1;
 
     can.init({
-        .remap = 0,
+        .remap = CAN1_REMAP,
         .mode = hal::CanMode::Normal,
         .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
