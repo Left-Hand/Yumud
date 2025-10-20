@@ -48,14 +48,4 @@ public:
 };
 
 
-class IncrementalEncoderIntf: public EncoderIntf{
-
-};
-
-class AbsoluteEncoderIntf: public EncoderIntf{
-protected:
-    // virtual void forward() = 0;
-    // virtual void backward() = 0;
-};
-
 }

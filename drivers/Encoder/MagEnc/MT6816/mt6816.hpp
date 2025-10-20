@@ -24,13 +24,13 @@ public:
     };
 
 public:
-    MT6816(const hal::SpiDrv & spi_drv):
+    explicit MT6816(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
 
-    MT6816(hal::SpiDrv && spi_drv):
+    explicit MT6816(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
 
-    MT6816(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
+    explicit MT6816(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     IResult<> init(const Config & cfg);
