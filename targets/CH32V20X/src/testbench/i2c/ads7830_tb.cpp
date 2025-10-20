@@ -28,7 +28,7 @@ void ads7830_main(){
 
     auto scl_gpio = SCL_GPIO;
     auto sda_gpio = SDA_GPIO;
-    hal::I2cSw i2c = {&scl_gpio, &sda_gpio};
+    hal::I2cSw i2c = hal::I2cSw{&scl_gpio, &sda_gpio};
     i2c.init({400_KHz});
 
     ADS7830 ads7830{&i2c, hal::I2cSlaveAddr<7>::from_u7(0b10010110 >> 1)};

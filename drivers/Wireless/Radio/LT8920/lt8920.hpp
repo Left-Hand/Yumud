@@ -140,60 +140,60 @@ public:
     LT8920(Some<hal::Spi *> spi, const hal::SpiSlaveRank index) : 
         spi_drv_(hal::SpiDrv(spi, index)) {;}
 
-    IResult<> bind_nrst_gpio(hal::GpioIntf & gpio){
+    [[nodiscard]] IResult<> bind_nrst_gpio(hal::GpioIntf & gpio){
         nrst_gpio = &gpio;
         return Ok();
     }
-    IResult<> bind_pkt_gpio(hal::GpioIntf & gpio){
+    [[nodiscard]] IResult<> bind_pkt_gpio(hal::GpioIntf & gpio){
         pkt_status_gpio = &gpio;
         return Ok();
     }
-    IResult<bool> is_rf_synth_locked();
-    IResult<uint8_t> get_rssi();
-    IResult<> set_rf_channel(const uint8_t ch);
-    IResult<> set_rf_freq_m_hz(const uint freq);
-    IResult<> start_listen(){return set_role(Role::LISTENER);}
-    IResult<> set_pa_current(const uint8_t current);
-    IResult<> set_pa_gain(const uint8_t gain);
-    IResult<> enable_rssi(const uint16_t open = true);
-    IResult<> reset();
+    [[nodiscard]] IResult<bool> is_rf_synth_locked();
+    [[nodiscard]] IResult<uint8_t> get_rssi();
+    [[nodiscard]] IResult<> set_rf_channel(const uint8_t ch);
+    [[nodiscard]] IResult<> set_rf_freq_m_hz(const uint freq);
+    [[nodiscard]] IResult<> start_listen(){return set_role(Role::LISTENER);}
+    [[nodiscard]] IResult<> set_pa_current(const uint8_t current);
+    [[nodiscard]] IResult<> set_pa_gain(const uint8_t gain);
+    [[nodiscard]] IResult<> enable_rssi(const uint16_t open = true);
+    [[nodiscard]] IResult<> reset();
 
-    IResult<> set_brclk_sel(const BrclkSel brclkSel);
+    [[nodiscard]] IResult<> set_brclk_sel(const BrclkSel brclkSel);
 
-    IResult<> set_sync_word_bitsgth(const SyncWordBits len);
-    IResult<> set_retrans_time(const uint8_t times);
+    [[nodiscard]] IResult<> set_sync_word_bitsgth(const SyncWordBits len);
+    [[nodiscard]] IResult<> set_retrans_time(const uint8_t times);
 
-    IResult<> enable_auto_cali(const uint16_t open);
-    IResult<> enable_auto_ack(const Enable en);
-    IResult<> enable_crc(const Enable en);
-    IResult<> init();
-    IResult<> validate();
-    IResult<> set_sync_word(const uint64_t syncword);
-    IResult<> set_err_bits_tolerance(uint8_t errbits);
-    IResult<> set_data_rate(const DataRate dr);
-    IResult<> set_data_rate(const uint32_t dr);
-    IResult<bool> received_ack();
+    [[nodiscard]] IResult<> enable_auto_cali(const uint16_t open);
+    [[nodiscard]] IResult<> enable_auto_ack(const Enable en);
+    [[nodiscard]] IResult<> enable_crc(const Enable en);
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> validate();
+    [[nodiscard]] IResult<> set_sync_word(const uint64_t syncword);
+    [[nodiscard]] IResult<> set_err_bits_tolerance(uint8_t errbits);
+    [[nodiscard]] IResult<> set_data_rate(const DataRate dr);
+    [[nodiscard]] IResult<> set_data_rate(const uint32_t dr);
+    [[nodiscard]] IResult<bool> received_ack();
 
 
-    IResult<> write_block(std::span<const uint8_t> pbuf);
-    IResult<> read_block(std::span<uint8_t> pbuf);
+    [[nodiscard]] IResult<> write_block(std::span<const uint8_t> pbuf);
+    [[nodiscard]] IResult<> read_block(std::span<uint8_t> pbuf);
 
-    IResult<> tick();
+    [[nodiscard]] IResult<> tick();
 
-    IResult<bool> is_idle(){
+    [[nodiscard]] IResult<bool> is_idle(){
         return Ok(State::IDLE == state);}
 protected:
-    IResult<> set_role(const Role _role);
-    IResult<> clear_fifo_write_ptr();
-    IResult<> clear_fifo_read_ptr();
-    IResult<> clear_fifo_ptr();
+    [[nodiscard]] IResult<> set_role(const Role _role);
+    [[nodiscard]] IResult<> clear_fifo_write_ptr();
+    [[nodiscard]] IResult<> clear_fifo_read_ptr();
+    [[nodiscard]] IResult<> clear_fifo_ptr();
 
-    IResult<> on_fifo_interrupt();
-    IResult<> on_pkt_interrupt();
-    IResult<> on_rx_timeout_interrupt();
+    [[nodiscard]] IResult<> on_fifo_interrupt();
+    [[nodiscard]] IResult<> on_pkt_interrupt();
+    [[nodiscard]] IResult<> on_rx_timeout_interrupt();
  
-    IResult<bool> get_fifo_status();
-    IResult<bool> get_pkt_status();
+    [[nodiscard]] IResult<bool> get_fifo_status();
+    [[nodiscard]] IResult<bool> get_pkt_status();
 
     std::optional<hal::SpiDrv> spi_drv_;
     std::optional<hal::I2cDrv> i2c_drv_;
@@ -213,14 +213,14 @@ protected:
 
 
     template<typename T>
-    IResult<> write_reg(const RegCopy<T> & reg){
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
 
-    IResult<> write_reg(const uint8_t address, const uint16_t reg){
+    [[nodiscard]] IResult<> write_reg(const uint8_t address, const uint16_t reg){
         if(spi_drv_){
             if(const auto res = 
                 spi_drv_->transceive_single(
@@ -240,12 +240,12 @@ protected:
     }
 
     template<typename T>
-    IResult<> read_reg(T & reg){
+    [[nodiscard]] IResult<> read_reg(T & reg){
         return read_reg(uint8_t(T::ADDRESS), reg.as_ref());
     }
 
 
-    IResult<> read_reg(const uint8_t address, uint16_t & data){
+    [[nodiscard]] IResult<> read_reg(const uint8_t address, uint16_t & data){
         if(spi_drv_){
             if(const auto res = spi_drv_->transceive_single(
                 reinterpret_cast<uint8_t &>(flag_reg.as_bytes()[0]), 
@@ -262,10 +262,10 @@ protected:
     }
 
 
-    IResult<> write_fifo(std::span<const uint8_t> pbuf);
-    IResult<> read_fifo(std::span<uint8_t> pbuf);
+    [[nodiscard]] IResult<> write_fifo(std::span<const uint8_t> pbuf);
+    [[nodiscard]] IResult<> read_fifo(std::span<uint8_t> pbuf);
 
-    IResult<> update_fifo_status();
+    [[nodiscard]] IResult<> update_fifo_status();
 };
 
 }

@@ -176,39 +176,39 @@ public:
 
     };
 
-    IResult<> init();
+    [[nodiscard]] IResult<> init();
 
-    IResult<> validate();
+    [[nodiscard]] IResult<> validate();
 
-    IResult<> set_mux(const Mux mux);
+    [[nodiscard]] IResult<> set_mux(const Mux mux);
 
-    IResult<> set_gain(const Gain gain);
+    [[nodiscard]] IResult<> set_gain(const Gain gain);
 
-    IResult<> enable_turbo(const Enable en);
+    [[nodiscard]] IResult<> enable_turbo(const Enable en);
 
-    IResult<bool> is_done();
+    [[nodiscard]] IResult<bool> is_done();
 
-    IResult<> set_idac(const IDAC idac);
+    [[nodiscard]] IResult<> set_idac(const IDAC idac);
 
-    IResult<> set_data_rate(const DataRate data_rate);
+    [[nodiscard]] IResult<> set_data_rate(const DataRate data_rate);
 private:
     hal::I2cDrv i2c_drv_;
 
-    IResult<> read_data(uint16_t & data){
+    [[nodiscard]] IResult<> read_data(uint16_t & data){
         if(const auto res = i2c_drv_.read_reg(
                 std::bit_cast<uint8_t>(Command::READ_DATA), data, LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> read_reg(const RegAddr addr, uint8_t & data){
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & data){
         if(const auto res = i2c_drv_.read_reg(uint8_t(
                 std::bit_cast<uint8_t>(Command::READ_REG) + addr), data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> write_reg(const RegAddr addr, const uint8_t data){
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t data){
         if(const auto res = i2c_drv_.write_reg(uint8_t(
                 std::bit_cast<uint8_t>(Command::WRITE_REG) + addr), data);
             res.is_err()) return Err(res.unwrap_err());
@@ -216,7 +216,7 @@ private:
     }
 
     template<typename T>
-    IResult<> write_reg(const RegCopy<T> & reg){
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -224,7 +224,7 @@ private:
     }
 
     template<typename T>
-    IResult<> read_reg(T & reg){
+    [[nodiscard]] IResult<> read_reg(T & reg){
         return read_reg(T::ADDRESS, reg.as_ref());
     }
 };

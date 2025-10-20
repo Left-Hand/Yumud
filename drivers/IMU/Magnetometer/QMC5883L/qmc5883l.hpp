@@ -10,20 +10,21 @@ class QMC5883L:
     public MagnetometerIntf,
     public QMC5883L_Regs{
 public:
-    QMC5883L(const QMC5883L & other) = delete;
-    QMC5883L(QMC5883L && other) = delete;
-
-    QMC5883L(const hal::I2cDrv & i2c_drv):
+    explicit QMC5883L(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
 
-    QMC5883L(hal::I2cDrv && i2c_drv):
+    explicit QMC5883L(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
-    QMC5883L(
+    explicit QMC5883L(
         Some<hal::I2c *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
         i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+
+
+    QMC5883L(const QMC5883L & other) = delete;
+    QMC5883L(QMC5883L && other) = delete;
 
     [[nodiscard]] IResult<> init();
 
@@ -88,7 +89,7 @@ private:
     }
 
 
-    IResult<bool> is_busy(){
+    [[nodiscard]] IResult<bool> is_busy(){
         if(const auto res = read_reg(status_reg);
             res.is_err()) return Err(res.unwrap_err());
         return Ok(status_reg.ready == false);

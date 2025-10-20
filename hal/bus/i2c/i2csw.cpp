@@ -16,7 +16,7 @@ void I2cSw::delay_dur(){
     else for(size_t i = 0; i < 3; i++) __nopn(5);
 }
 
-hal::HalResult I2cSw::wait_ack(){
+HalResult I2cSw::wait_ack(){
 
     delay_dur();
     sda().set();
@@ -52,13 +52,26 @@ hal::HalResult I2cSw::wait_ack(){
     sda().outod();
     
     if(ovt and (discard_ack_ == false)){
-        return hal::HalResult::WritePayloadAckTimeout;
+        return HalResult::WritePayloadAckTimeout;
     }else{
-        return hal::HalResult::Ok();
+        return HalResult::Ok();
     }
 }
 
-hal::HalResult I2cSw::lead(const hal::I2cSlaveAddrWithRw req){
+HalResult I2cSw::borrow(const I2cSlaveAddrWithRw req){
+    if(false == owner_.is_borrowed()){
+        owner_.borrow(req);
+        return lead(req);
+    }else if(owner_.is_borrowed_by(req)){
+        owner_.borrow(req);
+        return lead(req);
+    }else{
+        return HalResult::OccuipedByOther;
+    }
+}
+
+
+HalResult I2cSw::lead(const I2cSlaveAddrWithRw req){
     #ifdef I2CSW_SCL_USE_PP_THAN_OD
     scl().outpp();
     #else
@@ -101,7 +114,7 @@ void I2cSw::trail(){
 
 
 
-hal::HalResult I2cSw::write(const uint32_t data){
+HalResult I2cSw::write(const uint32_t data){
     sda().outod();
 
     for(uint8_t mask = 0x80; mask; mask >>= 1){
@@ -115,7 +128,7 @@ hal::HalResult I2cSw::write(const uint32_t data){
     return wait_ack();
 }
 
-hal::HalResult I2cSw::read(uint32_t & data, const Ack ack){
+HalResult I2cSw::read(uint32_t & data, const Ack ack){
     uint8_t ret = 0;
 
     sda().set();
@@ -139,7 +152,7 @@ hal::HalResult I2cSw::read(uint32_t & data, const Ack ack){
     sda().inpu();
 
     data = ret;
-    return hal::HalResult::Ok();
+    return HalResult::Ok();
 }
 
 void I2cSw::init(const Config & cfg){
@@ -165,7 +178,7 @@ void I2cSw::init(const Config & cfg){
     set_baudrate(cfg.baudrate);
 }
 
-hal::HalResult I2cSw::set_baudrate(const uint32_t baudrate) {
+HalResult I2cSw::set_baudrate(const uint32_t baudrate) {
     if(baudrate == 0){
         delays_ = 0;
     }else{
@@ -173,13 +186,13 @@ hal::HalResult I2cSw::set_baudrate(const uint32_t baudrate) {
         delays_ = 400 / b;
     }
 
-    return hal::HalResult::Ok();
+    return HalResult::Ok();
 }
 
-hal::HalResult I2cSw::reset(){
-    return hal::HalResult::Ok();
+HalResult I2cSw::reset(){
+    return HalResult::Ok();
 }
 
-hal::HalResult I2cSw::unlock_bus(){
-    return hal::HalResult::Ok();
+HalResult I2cSw::unlock_bus(){
+    return HalResult::Ok();
 }

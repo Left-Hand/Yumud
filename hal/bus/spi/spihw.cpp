@@ -108,17 +108,17 @@ void SpiHw::enable_rcc(const Enable en){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en == EN);
-            break;
+            return;
         #endif
         #ifdef ENABLE_SPI2
         case SPI2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, en == EN);
-            break;
+            return;
         #endif
         #ifdef ENABLE_SPI3
         case SPI3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, en == EN);
-            break;
+            return;
         #endif
     }
     __builtin_trap();
@@ -128,14 +128,19 @@ void SpiHw::set_remap(const uint8_t remap){
     switch(reinterpret_cast<size_t>(inst_)){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
-            if(SPI1_REMAP){
-                GPIO_PinRemapConfig(GPIO_Remap_SPI1, ENABLE);
+            switch(remap){
+                case 0: return GPIO_PinRemapConfig(GPIO_Remap_SPI1, DISABLE);
+                case 1: return GPIO_PinRemapConfig(GPIO_Remap_SPI1, ENABLE);
+                default: break;
             }
             break;
         #endif
         #ifdef ENABLE_SPI2
         case SPI2_BASE:
-            //SPI2 NO REMAP
+            switch(remap){
+                case 0: return ; //SPI2 NO REMAP
+                default: break;
+            }
             break;
         #endif
     }

@@ -56,7 +56,7 @@ class Environment{
 public:
     hal::Gpio scl_gpio = SCL_GPIO;
     hal::Gpio sda_gpio = SDA_GPIO;
-    hal::I2cSw i2c = {&scl_gpio, &sda_gpio};
+    hal::I2cSw i2c = hal::I2cSw{&scl_gpio, &sda_gpio};
     PCA9685 pca{&i2c};
 
 

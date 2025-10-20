@@ -37,6 +37,8 @@ public:
     hal::HalResult read(uint32_t & data, const Ack ack) {return host_.read(data, ack);}
     hal::HalResult unlock_bus() {return host_.unlock_bus();}
     hal::HalResult set_baudrate(const uint32_t baud){return host_.set_baudrate(baud);}
+
+    void lend(){;}
 };
 
 

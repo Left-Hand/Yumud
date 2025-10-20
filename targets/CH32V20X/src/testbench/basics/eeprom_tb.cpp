@@ -316,7 +316,7 @@ void eeprom_main(){
     auto scl_gpio = hal::PB<13>();
     auto sda_gpio = hal::PB<12>();
 
-    hal::I2cSw i2csw = {&scl_gpio, &sda_gpio};
+    hal::I2cSw i2csw = hal::I2cSw{&scl_gpio, &sda_gpio};
     i2csw.init({400000});
 
     
