@@ -215,7 +215,7 @@ struct DRV832X_Prelude{
 
 struct DRV832X_Regs:public DRV832X_Prelude{
     struct R16_Status1{
-        static constexpr RegAddr address = 0x00;
+        static constexpr RegAddr ADDRESS = 0x00;
 
         uint16_t vds_lc:1;
         uint16_t vds_hc:1;
@@ -242,7 +242,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
     }DEF_R16(status1_reg)
 
     struct R16_Status2{
-        static constexpr RegAddr address = 0x01;
+        static constexpr RegAddr ADDRESS = 0x01;
 
         uint16_t vgs_lc:1;
         uint16_t vgs_hc:1;
@@ -268,7 +268,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
     }DEF_R16(status2_reg)
 
     struct R16_Ctrl1:public Reg16<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
 
         uint16_t clr_flt:1;
         uint16_t brake:1;
@@ -284,7 +284,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
     }DEF_R16(ctrl1_reg)
 
     struct R16_GateDriveHs:public Reg16<>{
-        static constexpr RegAddr address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
 
         IDriveN idrive_n_hs:4;
         IDriveP idrive_p_hs:4;
@@ -294,7 +294,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
     }DEF_R16(gate_drv_hs_reg)
 
     struct R16_GateDriveLs:public Reg16<>{
-        static constexpr RegAddr address = 0x04;
+        static constexpr RegAddr ADDRESS = 0x04;
 
         IDriveN idrive_n_ls:4;
         IDriveP idrive_p_ls:4;
@@ -305,7 +305,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
     }DEF_R16(gate_drv_ls_reg)
 
     struct R16_OcpCtrl:public Reg16<>{
-        static constexpr RegAddr address = 0x05;
+        static constexpr RegAddr ADDRESS = 0x05;
 
         VdsLevel vds_lvl:4;
         OcpDeglitchTime ocp_deg:2;
@@ -317,7 +317,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
     }DEF_R16(ocp_ctrl_reg)
 
     struct R16_CsaCtrl{
-        static constexpr RegAddr address = 0x06;
+        static constexpr RegAddr ADDRESS = 0x06;
 
         SenseLevel sen_lvl:2;
         uint16_t csa_cal_c:1;

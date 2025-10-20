@@ -56,16 +56,17 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        if(const auto res = phy_.write_reg(reg.address, reg.as_val());
+        if(const auto res = phy_.write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return res;
         reg.apply();
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(auto & reg){
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        return phy_.read_reg(reg.address, reg.as_ref());
+        return phy_.read_reg(T::ADDRESS, reg.as_ref());
     };
 
     [[nodiscard]] static constexpr q24 calc_gyr_scale(const GyrFs fs){

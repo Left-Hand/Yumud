@@ -140,7 +140,7 @@ private:
     template<typename T>
     [[nodiscard]] __fast_inline
     IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
+        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -156,18 +156,18 @@ private:
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
     IResult<> read_regs(Ts & ... reg) {
-        return (phy_.read_reg(reg.address, reg.as_ref()) | ...);
+        return (phy_.read_reg(reg.ADDRESS, reg.as_ref()) | ...);
     }
 
     template<typename T>
     [[nodiscard]] __fast_inline
     IResult<> read_reg(T & reg){
-        return phy_.read_reg(reg.address, reg.as_ref());
+        return phy_.read_reg(reg.ADDRESS, reg.as_ref());
     }
 
 
     [[nodiscard]] __fast_inline IResult<size_t> write_fifo(std::span<const uint8_t> buf){
-        return phy_.write_burst(Regs::R16_Fifo::address, buf);
+        return phy_.write_burst(Regs::R16_Fifo::ADDRESS, buf);
     }
 
     [[nodiscard]] IResult<size_t> read_fifo(std::span<uint8_t> buf);

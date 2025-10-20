@@ -51,7 +51,7 @@ struct INA226_Prelude{
 
 struct INA226_Regs:public INA226_Prelude{
     struct ConfigReg:public Reg16<>{
-        static constexpr RegAddr address = 0x00;
+        static constexpr RegAddr ADDRESS = 0x00;
 
         uint16_t shunt_voltage_enable :1;
         uint16_t bus_voltage_enable :1;
@@ -64,32 +64,32 @@ struct INA226_Regs:public INA226_Prelude{
     }DEF_R16(config_reg)
 
     struct ShuntVoltReg:public Reg16<>{
-        static constexpr RegAddr address = 0x01;
+        static constexpr RegAddr ADDRESS = 0x01;
         uint16_t data;
     }DEF_R16(shunt_volt_reg)
 
     struct BusVoltReg:public Reg16<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
         uint16_t data;
     }DEF_R16(bus_volt_reg)
 
     struct PowerReg:public Reg16i<>{
-        static constexpr RegAddr address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
         int16_t data;
     }DEF_R16(power_reg)
 
     struct CurrentReg:public Reg16i<>{
-        static constexpr RegAddr address = 0x04;
+        static constexpr RegAddr ADDRESS = 0x04;
         int16_t data;
     }DEF_R16(current_reg)
     
     struct CalibrationReg:public Reg16i<>{
-        static constexpr RegAddr address = 0x05;
+        static constexpr RegAddr ADDRESS = 0x05;
         int16_t data;
     }DEF_R16(calibration_reg)
     
     struct MaskReg:public Reg16<>{
-        static constexpr RegAddr address = 0x06;
+        static constexpr RegAddr ADDRESS = 0x06;
 
         uint16_t alert_latch_enable:1;
         uint16_t alert_polarity:1;
@@ -106,17 +106,17 @@ struct INA226_Regs:public INA226_Prelude{
     }DEF_R16(mask_reg)
 
     struct AlertLimitReg:public Reg16<>{
-        static constexpr RegAddr address = 0x07;
+        static constexpr RegAddr ADDRESS = 0x07;
         uint16_t data;
     }DEF_R16(alert_limit_reg)
 
     struct ManufactureReg:public Reg16<>{
-        static constexpr RegAddr address = 0xfe;
+        static constexpr RegAddr ADDRESS = 0xfe;
         uint16_t data;
     }DEF_R16(manufacture_reg)
 
     struct ChipIdReg:public Reg16<>{
-        static constexpr RegAddr address = 0xff;
+        static constexpr RegAddr ADDRESS = 0xff;
         uint16_t data;
     }DEF_R16(chip_id_reg)
 };
@@ -253,12 +253,12 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(reg.address, reg.as_ref());
+        return read_reg(T::ADDRESS, reg.as_ref());
     }
     
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
+        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();

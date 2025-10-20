@@ -132,13 +132,13 @@ struct BMI160_Regs:public BMI160_Prelude{
     using RegAddr = uint8_t;
 
     struct R8_ChipId:public Reg8<>{
-        static constexpr RegAddr address = 0x00;
+        static constexpr RegAddr ADDRESS = 0x00;
         static constexpr uint8_t CORRECT_ID = 0xD1;
         uint8_t data;
     }DEF_R8(chip_id)
 
     struct R8_Err:public Reg8<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
         uint8_t fatal_err:1;
         uint8_t err_code:4;
         uint8_t i2c_fail_err:1;
@@ -147,7 +147,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     }DEF_R8(err)
 
     struct R8_PmuStatus:public Reg8<>{
-        static constexpr RegAddr address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
         PmuMode mag_pmu_status:2;
         PmuMode gyr_pmu_status:2;
         PmuMode acc_pmu_status:2;
@@ -155,7 +155,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     }DEF_R8(pmu_status)
 
     struct R8_Rhall:public Reg8<>{
-        static constexpr RegAddr address = 0x0A;
+        static constexpr RegAddr ADDRESS = 0x0A;
     };
 
     static constexpr RegAddr GYR_ADDRESS = 0x0c;
@@ -176,12 +176,12 @@ struct BMI160_Regs:public BMI160_Prelude{
     // static constexpr RegAddr acc_z_address = 0x16;
 
     struct R8_SensorTime:public Reg8<>{
-        static constexpr RegAddr address = 0x18; // SENSOR_TIME_2
+        static constexpr RegAddr ADDRESS = 0x18; // SENSOR_TIME_2
         uint32_t time: 24; // Assuming 8 bits for sensor time
     };
 
     struct R8_Status:public Reg8<>{
-        static constexpr RegAddr address = 0x1B;
+        static constexpr RegAddr ADDRESS = 0x1B;
         uint8_t __resv__:1;
         uint8_t gyr_self_test_ok:1;
         uint8_t mag_man_op:1;
@@ -193,7 +193,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     }DEF_R8(status)
 
     struct R8_IntStatus0:public Reg8<>{
-        static constexpr RegAddr address = 0x1c; // INT_STATUS_3
+        static constexpr RegAddr ADDRESS = 0x1c; // INT_STATUS_3
         uint8_t step_int:1;
         uint8_t sigmot_int:1;
         uint8_t anym_int:1;
@@ -205,7 +205,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntStatus1:public Reg8<>{
-        static constexpr RegAddr address = 0x1d; // INT_STATUS_3
+        static constexpr RegAddr ADDRESS = 0x1d; // INT_STATUS_3
         uint8_t __resv__:2;
         uint8_t highg_int:1;
         uint8_t lowg_int:1;
@@ -216,7 +216,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntStatus2:public Reg8<>{
-        static constexpr RegAddr address = 0x1d; // INT_STATUS_3
+        static constexpr RegAddr ADDRESS = 0x1d; // INT_STATUS_3
         
         uint8_t anym_first_x: 1;
         uint8_t anym_first_y: 1;
@@ -231,7 +231,7 @@ struct BMI160_Regs:public BMI160_Prelude{
 
 
     struct R8_IntStatus3:public Reg8<>{
-        static constexpr RegAddr address = 0x1e; // INT_STATUS_3
+        static constexpr RegAddr ADDRESS = 0x1e; // INT_STATUS_3
         uint8_t high_first_x: 1;
         uint8_t high_first_y: 1;
         uint8_t high_first_z: 1;
@@ -243,23 +243,23 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_Temperature:public Reg8<>{
-        static constexpr RegAddr address = 0x21; // TEMPERATURE_1
+        static constexpr RegAddr ADDRESS = 0x21; // TEMPERATURE_1
         uint16_t temperature: 16; // Assuming 8 bits for temperature
     };
 
     struct R8_FifoLength:public Reg8<>{
-        static constexpr RegAddr address = 0x23; // FIFO_LENGTH_1
+        static constexpr RegAddr ADDRESS = 0x23; // FIFO_LENGTH_1
         uint16_t fifo_byte_counter: 11; // Assuming 8 bits for temperature
         uint16_t __resv__:5;
     };
     
     struct R8_FifoData:public Reg8<>{
-        static constexpr RegAddr address = 0x25;
+        static constexpr RegAddr ADDRESS = 0x25;
         uint8_t data;
     };
 
     struct R8_AccConf:public Reg8<>{
-        static constexpr RegAddr address = 0x40;
+        static constexpr RegAddr ADDRESS = 0x40;
         AccOdr acc_odr:4;
         uint8_t acc_bwp:3;
 
@@ -268,32 +268,32 @@ struct BMI160_Regs:public BMI160_Prelude{
     }DEF_R8(acc_conf)
     
     struct R8_AccFs:public Reg8<>{
-        static constexpr RegAddr address = 0x41;
+        static constexpr RegAddr ADDRESS = 0x41;
         AccFs acc_fs:4;
         uint8_t __resv__:4;
     }DEF_R8(acc_fs)
 
     struct R8_GyrConf:public Reg8<>{
-        static constexpr RegAddr address = 0x42;
+        static constexpr RegAddr ADDRESS = 0x42;
         GyrOdr gyr_odr:4;
         uint8_t gyr_bwp:2;
         uint8_t __resv__:2 = 0;
     }DEF_R8(gyr_conf)
 
     struct R8_GyrFs:public Reg8<>{
-        static constexpr RegAddr address = 0x43;
+        static constexpr RegAddr ADDRESS = 0x43;
         GyrFs gyr_fs:3;
         uint8_t __resv__:5 = 0;
     }DEF_R8(gyr_fs)
 
     struct R8_MagConf:public Reg8<>{
-        static constexpr RegAddr address = 0x44;
+        static constexpr RegAddr ADDRESS = 0x44;
         uint8_t mag_odr:4;
         uint8_t __resv__:4;
     };
 
     struct R8_FifoDowns:public Reg8<>{
-        static constexpr uint8_t address = 0x45;
+        static constexpr RegAddr ADDRESS = 0x45;
         uint8_t gyr_fifo_down : 3; // 8 bits for acc_fifo_filt_data
         uint8_t gyr_fifo_filt_data:1;
         uint8_t acc_fifo_data : 3; // 8 bits for gyr_fifo_filt_data
@@ -301,12 +301,12 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_FifoConfig0:public Reg8<>{
-        static constexpr uint8_t address = 0x46;
+        static constexpr RegAddr ADDRESS = 0x46;
         uint8_t fifo_water_mark : 8; // 8 bits for fifo_water_mark
     };
 
     struct R8_FifoConfig1:public Reg8<>{
-        static constexpr uint8_t address = 0x47;
+        static constexpr RegAddr ADDRESS = 0x47;
 
         uint8_t __resv__ : 1;   // 1 bit reserved
         uint8_t fifo_time_en : 1; // 1 bit for fifo_time_en
@@ -320,13 +320,13 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_MagIf0:public Reg8<>{
-        static constexpr uint8_t address = 0x4B;
+        static constexpr RegAddr ADDRESS = 0x4B;
         uint8_t __resv__:1;
         uint8_t i2c_device_addr: 7; // Reserved (no specific fields)
     };
 
     struct R8_MagIf1:public Reg8<>{
-        static constexpr uint8_t address = 0x4C;
+        static constexpr RegAddr ADDRESS = 0x4C;
         uint8_t mag_rd_burst:2;
         uint8_t mag_offset:4;
         uint8_t __resv__ : 1;   // 7 bits reserved
@@ -334,22 +334,22 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_MagIf2:public Reg8<>{
-        static constexpr uint8_t address = 0x4D;
+        static constexpr RegAddr ADDRESS = 0x4D;
         uint8_t read_addr : 8; // 8 bits for read_addr
     };
 
     struct R8_MagIf3:public Reg8<>{
-        static constexpr uint8_t address = 0x4E;
+        static constexpr RegAddr ADDRESS = 0x4E;
         uint8_t write_addr : 8; // 8 bits for write_addr
     };
 
     struct R8_MagIf4:public Reg8<>{
-        static constexpr uint8_t address = 0x4F;
+        static constexpr RegAddr ADDRESS = 0x4F;
         uint8_t write_data : 8; // 8 bits for write_data
     };
 
     struct R8_IntEn0:public Reg8<>{
-        static constexpr uint8_t address = 0x50;
+        static constexpr RegAddr ADDRESS = 0x50;
         
         uint8_t int_anymo_x_en:1;
         uint8_t int_anymo_y_en:1;
@@ -363,7 +363,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntEn1:public Reg8<>{
-        static constexpr uint8_t address = 0x51;
+        static constexpr RegAddr ADDRESS = 0x51;
         uint8_t int_highg_x_en : 1;
         uint8_t int_highg_y_en : 1;
         uint8_t int_highg_z_en : 1;
@@ -376,7 +376,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntEn2:public Reg8<>{
-        static constexpr uint8_t address = 0x52;
+        static constexpr RegAddr ADDRESS = 0x52;
         uint8_t int_nomox_en:1;
         uint8_t int_nomoy_en:1;
         uint8_t int_nomoz_en:1;
@@ -385,7 +385,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntOutCtrl:public Reg8<>{
-        static constexpr uint8_t address = 0x53;
+        static constexpr RegAddr ADDRESS = 0x53;
         uint8_t int1_edge_ctrl:1;
         uint8_t int1_lvl:1;
         uint8_t int1_od:1;
@@ -397,7 +397,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntLatch:public Reg8<>{
-        static constexpr uint8_t address = 0x54;
+        static constexpr RegAddr ADDRESS = 0x54;
         uint8_t int_latch:4;
         uint8_t int1_input_en:1;
         uint8_t int2_input_en:1;
@@ -405,7 +405,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntMap0:public Reg8<>{
-        static constexpr uint8_t address = 0x55;
+        static constexpr RegAddr ADDRESS = 0x55;
 
         uint8_t int1_lowg_step:1;
         uint8_t int1_highg:1;
@@ -419,7 +419,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntMap1:public Reg8<>{
-        static constexpr uint8_t address = 0x56;
+        static constexpr RegAddr ADDRESS = 0x56;
         uint8_t int2_pmu_trig:1;
         uint8_t int2_fful:1;
         uint8_t int2_fwm:1;
@@ -432,7 +432,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntMap2:public Reg8<>{
-        static constexpr uint8_t address = 0x57;
+        static constexpr RegAddr ADDRESS = 0x57;
 
         uint8_t int2_lowg_step:1;
         uint8_t int2_highg:1;
@@ -446,7 +446,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntData0:public Reg8<>{
-        static constexpr uint8_t address = 0x58;
+        static constexpr RegAddr ADDRESS = 0x58;
         uint8_t:3;
         uint8_t int_tap_src:1;
         uint8_t:3;
@@ -454,56 +454,56 @@ struct BMI160_Regs:public BMI160_Prelude{
     };
 
     struct R8_IntData1:public Reg8<>{
-        static constexpr uint8_t address = 0x59;
+        static constexpr RegAddr ADDRESS = 0x59;
         uint8_t:7;
         uint8_t int_motion_src:1;
     };
 
     struct R8_IntLowHigh0:public Reg8<>{
-        static constexpr uint8_t address = 0x5A;
+        static constexpr RegAddr ADDRESS = 0x5A;
         uint8_t int_low_dur;
     };
 
     struct R8_IntLowHigh1:public Reg8<>{
-        static constexpr uint8_t address = 0x5B;
+        static constexpr RegAddr ADDRESS = 0x5B;
         uint8_t int_low_th;
     };
 
     struct R8_IntLowHigh2:public Reg8<>{
-        static constexpr uint8_t address = 0x5C;
+        static constexpr RegAddr ADDRESS = 0x5C;
         uint8_t int_low_hy:2;
         uint8_t :4;
         uint8_t int_high_hy:2;
     };
 
     struct R8_IntLowHigh3:public Reg8<>{
-        static constexpr uint8_t address = 0x5D;
+        static constexpr RegAddr ADDRESS = 0x5D;
         uint8_t int_high_dur;
     };
 
     struct R8_IntLowHigh4:public Reg8<>{
-        static constexpr uint8_t address = 0x5E;
+        static constexpr RegAddr ADDRESS = 0x5E;
         uint8_t int_high_th;
     };
 
     struct R8_IntMotion0:public Reg8<>{
-        static constexpr uint8_t address = 0x5F;
+        static constexpr RegAddr ADDRESS = 0x5F;
         uint8_t int_anym_dur:2;
         uint8_t int_slo_nomo_dur:6;
     };
 
     struct R8_IntMotion1:public Reg8<>{
-        static constexpr uint8_t address = 0x60;
+        static constexpr RegAddr ADDRESS = 0x60;
         uint8_t int_anymo_th;
     };
 
     struct R8_IntMotion2:public Reg8<>{
-        static constexpr uint8_t address = 0x61;
+        static constexpr RegAddr ADDRESS = 0x61;
         uint8_t int_slo_nomo_th;
     };
 
     struct R8_SelfTest:public Reg8<>{
-        static constexpr uint8_t address = 0x6D;
+        static constexpr RegAddr ADDRESS = 0x6D;
         uint8_t acc_self_test_en:2;
         uint8_t acc_self_test_sign:1;
         uint8_t acc_self_test_amp:1;

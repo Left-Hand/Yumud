@@ -214,7 +214,7 @@ protected:
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
+        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -241,7 +241,7 @@ protected:
 
     template<typename T>
     IResult<> read_reg(T & reg){
-        return read_reg(uint8_t(reg.address), reg.as_ref());
+        return read_reg(uint8_t(T::ADDRESS), reg.as_ref());
     }
 
 

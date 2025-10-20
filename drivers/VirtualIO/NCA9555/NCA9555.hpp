@@ -30,22 +30,22 @@ struct NCA9555_Prelude{
 
 struct NCA9555_Regs:public NCA9555_Prelude{
     struct InputReg:public Reg16<>{
-        static constexpr RegAddr address = 0x00;
+        static constexpr RegAddr ADDRESS = 0x00;
         hal::PinMask mask = hal::PinMask::from_zero();
     };
 
     struct OutputReg:public Reg16<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
         hal::PinMask mask = hal::PinMask::from_zero();
     };
 
     struct InversionReg:public Reg16<>{
-        static constexpr RegAddr address = 0x04;
+        static constexpr RegAddr ADDRESS = 0x04;
         hal::PinMask mask = hal::PinMask::from_zero();
     };
 
     struct ConfigReg:public Reg16<>{
-        static constexpr RegAddr address = 0x06;
+        static constexpr RegAddr ADDRESS = 0x06;
         hal::PinMask mask = hal::PinMask::from_zero();
     };
 
@@ -79,7 +79,7 @@ private:
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(reg.address), reg.as_val(), LSB);
+        if(const auto res = i2c_drv_.write_reg(std::bit_cast<uint8_t>(T::ADDRESS), reg.as_val(), LSB);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -87,7 +87,7 @@ private:
     
     template<typename T>
     IResult<> read_reg(T & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(reg.address), reg.as_ref(), LSB);
+        if(const auto res = i2c_drv_.read_reg(std::bit_cast<uint8_t>(T::ADDRESS), reg.as_ref(), LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

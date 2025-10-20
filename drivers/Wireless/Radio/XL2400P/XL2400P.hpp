@@ -12,7 +12,7 @@ public:
     using RegAddr = uint8_t;
 
     struct R8_TopConfig{
-        static constexpr RegAddr address = 0x01;
+        static constexpr RegAddr ADDRESS = 0x01;
 
         uint8_t rx_on:1;
         uint8_t power_on:1;
@@ -49,12 +49,12 @@ public:
     struct R8_EnableRxAddress:public Reg8<>{
         uint8_t data;
     public:
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
         auto p(const size_t n){return make_bfarray<0, 6, 6>(data);}
     };
 
     struct R8_AddressWidth:public Reg8<>{
-        static constexpr RegAddr address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
 
         uint8_t pipex_address_width:2;
         uint8_t tx_address_width:2;

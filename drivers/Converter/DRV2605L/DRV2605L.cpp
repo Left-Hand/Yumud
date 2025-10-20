@@ -58,9 +58,9 @@ using namespace ymd::drivers;
 using Error = DRV2605L::Error;
 
 Result<void, Error> DRV2605L::set_fb_brake_factor(const FbBrakeFactor factor){
-    feedback_control_reg.fb_brake_factor = uint8_t(factor);
-    if(const auto res = write_reg(feedback_control_reg); res.is_err()) return res;
-    return Ok();
+    auto reg = RegCopy(feedback_control_reg);
+    reg.fb_brake_factor = uint8_t(factor);
+    return write_reg(reg);
 }
 
 Result<void, Error> DRV2605L::set_fb_brake_factor(const int fractor){
@@ -78,24 +78,24 @@ Result<void, Error> DRV2605L::set_fb_brake_factor(const int fractor){
 }
 
 Result<void, Error> DRV2605L::set_bemf_gain(const BemfGain gain){
-    feedback_control_reg.bemf_gain = uint8_t(gain);
-    if(const auto res = write_reg(feedback_control_reg); res.is_err()) return res;
-    return Ok();
+    auto reg = RegCopy(feedback_control_reg);
+    reg.bemf_gain = uint8_t(gain);
+    return write_reg(reg);
 }
 
 Result<void, Error> DRV2605L::set_loop_gain(const LoopGain gain){
-    feedback_control_reg.loop_gain = uint8_t(gain);
-    if(const auto res = write_reg(feedback_control_reg); res.is_err()) return res;
-    return Ok();
+    auto reg = RegCopy(feedback_control_reg);
+    reg.loop_gain = uint8_t(gain);
+    return write_reg(reg);
 }
 
 Result<void, Error> DRV2605L::init(){
     // 1. After powerup, wait at least 250 µs before the DRV2605 device accepts I
     // 2C commands.
     // 2. Assert the EN pin (logic high). The EN pin can be asserted any time during or after the 250-µs wait period.
-    
-    mode_reg = 0x40;
-    if(const auto res = write_reg(mode_reg); res.is_err()) return res;
+    auto reg = RegCopy(mode_reg);
+    reg.as_ref() = 0x40;
+    if(const auto res = write_reg(reg); res.is_err()) return res;
 
     clock::delay(250us);
 
@@ -130,9 +130,11 @@ Result<void, Error> DRV2605L::init(){
 }
 
 Result<void, Error> DRV2605L::reset(){
-    mode_reg.dev_reset = 1;
-    if(const auto res = write_reg(mode_reg); res.is_err()) return res;
-    mode_reg.dev_reset = 0;
+    auto reg = RegCopy(mode_reg);
+    reg.dev_reset = 1;
+    if(const auto res = write_reg(reg); res.is_err()) return res;
+    reg.dev_reset = 0;
+    reg.apply();
     return Ok();
 }
 

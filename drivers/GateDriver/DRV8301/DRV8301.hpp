@@ -92,7 +92,7 @@ struct DRV8301_Prelude{
 
 struct DRV8301_Regs:public DRV8301_Prelude{
     struct Status1Reg:public Reg16<>{
-        static constexpr RegAddr address = 0x00;
+        static constexpr RegAddr ADDRESS = 0x00;
 
         uint16_t fetlc_oc:1;
         uint16_t fethc_oc:1;
@@ -111,7 +111,7 @@ struct DRV8301_Regs:public DRV8301_Prelude{
     };
 
     struct Status2Reg:public Reg16<>{
-        static constexpr RegAddr address = 0x01;
+        static constexpr RegAddr ADDRESS = 0x01;
 
         uint16_t device_id:4;
         uint16_t :3;
@@ -120,7 +120,7 @@ struct DRV8301_Regs:public DRV8301_Prelude{
     };
 
     struct Ctrl1Reg:public Reg16<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
 
         PeakCurrent gate_current:2;
         uint16_t gate_reset:1;
@@ -131,7 +131,7 @@ struct DRV8301_Regs:public DRV8301_Prelude{
     };
 
     struct Ctrl2Reg:public Reg16<>{
-        static constexpr RegAddr address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
 
         OctwMode octw_mode:2;
         Gain gain:2;
@@ -153,16 +153,19 @@ class DRV8301 final:
 public:
 
 public:
-    DRV8301(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    DRV8301(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    DRV8301(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):spi_drv_(hal::SpiDrv(spi, idx)){;}
+    explicit DRV8301(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    explicit DRV8301(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+    explicit DRV8301(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){;}
 
 
     [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> set_peak_current(const PeakCurrent peak_current);
-    [[nodiscard]] IResult<> set_ocp_mode(const OcpMode ocp_mode);
-    [[nodiscard]] IResult<> set_octw_mode(const OctwMode octw_mode);
-    [[nodiscard]] IResult<> set_gain(const Gain gain);
+    [[nodiscard]] IResult<> set_peak_current(   const PeakCurrent peak_current);
+    [[nodiscard]] IResult<> set_ocp_mode(       const OcpMode ocp_mode);
+    [[nodiscard]] IResult<> set_octw_mode(      const OctwMode octw_mode);
+    [[nodiscard]] IResult<> set_gain(           const Gain gain);
     [[nodiscard]] IResult<> set_oc_ad_table(const OcAdTable oc_ad_table);
     [[nodiscard]] IResult<> enable_pwm3(const Enable en);
 private:
@@ -173,7 +176,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = write_reg(reg.address, reg.as_val());
+        const auto res = write_reg(T::ADDRESS, reg.as_val());
         if(res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();

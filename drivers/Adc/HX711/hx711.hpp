@@ -11,27 +11,19 @@ namespace ymd::hal{
 
 namespace ymd::drivers{
 
-class HX711{
+class HX711 final{
 public:
     enum class ConvType{
         A128 = 1, B32, A64
     };
-protected:
-    hal::GpioIntf & sck_gpio_;
-    hal::GpioIntf & sdo_gpio_;
-    ConvType conv_type = ConvType::A128;
-
-    uint32_t last_data;
-    uint32_t zero_offset;
-    bool inversed = false;
-
     static constexpr real_t GRAVITY_G = real_t(9.8);
-
-    uint32_t read_data(void);
-
 public:
-    HX711(hal::GpioIntf & sck_gpio, hal::GpioIntf & sdo_gpio):
-        sck_gpio_(sck_gpio), sdo_gpio_(sdo_gpio){;}
+    explicit HX711(
+        hal::GpioIntf & sck_gpio, 
+        hal::GpioIntf & sdo_gpio
+    ):
+        sck_gpio_(sck_gpio), 
+        sdo_gpio_(sdo_gpio){;}
     ~HX711(){;}
     void init();
     bool is_idle();
@@ -64,6 +56,14 @@ public:
     void setConvType(const ConvType & _convtype){
         conv_type = _convtype;
     }
+private:
+    hal::GpioIntf & sck_gpio_;
+    hal::GpioIntf & sdo_gpio_;
+    ConvType conv_type = ConvType::A128;
 
+    uint32_t last_data;
+    uint32_t zero_offset;
+    bool inversed = false;
+    uint32_t read_data(void);
 };
 }

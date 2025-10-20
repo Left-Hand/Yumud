@@ -127,14 +127,14 @@ struct ADS112C04_Prelude{
 
 struct ADS112C04_Regs:public ADS112C04_Prelude{
     struct R8_Config0:public Reg8<>{
-        static constexpr RegAddr address = 0;
+        static constexpr RegAddr ADDRESS = 0;
         uint8_t pga_bypass:1;
         Gain gain:3;
         Mux mux:4;
     }DEF_R8(config0_reg)
 
     struct R8_Config1:public Reg8<>{
-        static constexpr RegAddr address = 1;
+        static constexpr RegAddr ADDRESS = 1;
         uint8_t temp_sensor_mode:1;
         Vref vref:2;
         uint8_t cont_mode:1;
@@ -143,7 +143,7 @@ struct ADS112C04_Regs:public ADS112C04_Prelude{
     }DEF_R8(config1_reg)
 
     struct R8_Config2:public Reg8<>{
-        static constexpr RegAddr address = 2;
+        static constexpr RegAddr ADDRESS = 2;
         IDAC idac:3;
         uint8_t current_sense_en:1;
         CrcType crc_type:2;
@@ -152,7 +152,7 @@ struct ADS112C04_Regs:public ADS112C04_Prelude{
     }DEF_R8(config2_reg)
 
     struct R8_Config3:public Reg8<>{
-        static constexpr RegAddr address = 3;
+        static constexpr RegAddr ADDRESS = 3;
         uint8_t __resv__:2;
         IDAC1_MUX idac1_mux:3;
         IDAC2_MUX idac2_mux:3;
@@ -217,7 +217,7 @@ private:
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
+        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -225,7 +225,7 @@ private:
 
     template<typename T>
     IResult<> read_reg(T & reg){
-        return read_reg(reg.address, reg.as_ref());
+        return read_reg(T::ADDRESS, reg.as_ref());
     }
 };
 

@@ -40,20 +40,20 @@ struct AK8963_Prelude{
 struct AK8963_Regs:public AK8963_Prelude{ 
 
     struct R8_WIA:public Reg8<>{
-        static constexpr RegAddr address = 0x00;
+        static constexpr RegAddr ADDRESS = 0x00;
         static constexpr uint8_t correct = 0x48;
 
         uint8_t data;
     } DEF_R8(wia_reg)
 
     struct R8_INFO:public Reg8<>{
-        static constexpr RegAddr address = 0x01;
+        static constexpr RegAddr ADDRESS = 0x01;
 
         uint8_t data;
     } DEF_R8(info_reg)
 
     struct R8_ST1:public Reg8<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
 
         uint8_t drdy:1;
         uint8_t dor:1;
@@ -68,7 +68,7 @@ struct AK8963_Regs:public AK8963_Prelude{
     REG16I_QUICK_DEF(0x07, MagZReg, mag_z_reg);
 
     struct R8_ST2:public Reg8<>{
-        static constexpr RegAddr address = 0x09;
+        static constexpr RegAddr ADDRESS = 0x09;
 
         uint8_t :3;
         uint8_t hofl:1;
@@ -77,7 +77,7 @@ struct AK8963_Regs:public AK8963_Prelude{
     } DEF_R8(st2_reg)
 
     struct R8_CNTL1:public Reg8<>{
-        static constexpr RegAddr address = 0x0A;
+        static constexpr RegAddr ADDRESS = 0x0A;
 
         uint8_t mode:4;
         uint8_t bit:1;
@@ -85,14 +85,14 @@ struct AK8963_Regs:public AK8963_Prelude{
     } DEF_R8(cntl1_reg)
 
     struct R8_CNTL2:public Reg8<>{
-        static constexpr RegAddr address = 0x0B;
+        static constexpr RegAddr ADDRESS = 0x0B;
 
         uint8_t srst:1;
         uint8_t :7;
     } DEF_R8(cntl2_reg)
 
     struct R8_ASTC:public Reg8<>{
-        static constexpr RegAddr address = 0x0C;
+        static constexpr RegAddr ADDRESS = 0x0C;
 
         uint8_t :6;
         uint8_t self:1;
@@ -100,7 +100,7 @@ struct AK8963_Regs:public AK8963_Prelude{
     } DEF_R8(astc_reg)
 
     struct R8_I2CDIS:public Reg8<>{
-        static constexpr RegAddr address = 0x0F;
+        static constexpr RegAddr ADDRESS = 0x0F;
 
         static constexpr uint8_t key = 0b00011011;
         uint8_t data;
@@ -111,15 +111,15 @@ struct AK8963_Regs:public AK8963_Prelude{
     };
 
     struct R8_ASAX:public _R8_ASA{
-        static constexpr RegAddr address = 0x10;
+        static constexpr RegAddr ADDRESS = 0x10;
     } DEF_R8(asax_reg)
 
     struct R8_ASAY:public _R8_ASA{
-        static constexpr RegAddr address = 0x11;
+        static constexpr RegAddr ADDRESS = 0x11;
     } DEF_R8(asay_reg)
 
     struct R8_ASAZ:public _R8_ASA{
-        static constexpr RegAddr address = 0x12;
+        static constexpr RegAddr ADDRESS = 0x12;
     } DEF_R8(asaz_reg)
 };
 

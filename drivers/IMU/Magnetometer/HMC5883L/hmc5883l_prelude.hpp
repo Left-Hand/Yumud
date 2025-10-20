@@ -48,7 +48,7 @@ struct HMC5883L_Regs:public HMC5883L_Prelude{
 
 
     struct R8_ConfigA:public Reg8<>{
-        static constexpr RegAddr address = RegAddr::ConfigA;
+        static constexpr RegAddr ADDRESS = RegAddr::ConfigA;
         uint8_t measureMode:3;
         uint8_t dataRate:2;
         uint8_t sampleNumber:2;
@@ -56,37 +56,37 @@ struct HMC5883L_Regs:public HMC5883L_Prelude{
     }DEF_R8(config_a_reg)
 
     struct R8_ConfigB:public Reg8<>{
-        static constexpr RegAddr address = RegAddr::ConfigB;
+        static constexpr RegAddr ADDRESS = RegAddr::ConfigB;
         uint8_t __resv__:5;
         Gain gain:3;
     }DEF_R8(config_b_reg)
 
     struct R8_Mode:public Reg8<>{
-        static constexpr RegAddr address = RegAddr::Mode;
+        static constexpr RegAddr ADDRESS = RegAddr::Mode;
         Mode mode:2;
         uint8_t __resv__:5;
         uint8_t hs:1;
     }DEF_R8(mode_reg)
 
     struct R8_Status:public Reg8<>{
-        static constexpr RegAddr address = RegAddr::Status;
+        static constexpr RegAddr ADDRESS = RegAddr::Status;
         uint8_t ready:1;
         uint8_t lock:1;
         uint8_t __resv__:6;
     }DEF_R8(status_reg)
 
     struct R8_IdA:public Reg8<>{
-        static constexpr RegAddr address = RegAddr::IDA;
+        static constexpr RegAddr ADDRESS = RegAddr::IDA;
         uint8_t data;
     }DEF_R8(id_a_reg)
 
     struct R8_IdB:public Reg8<>{
-        static constexpr RegAddr address = RegAddr::IDB;
+        static constexpr RegAddr ADDRESS = RegAddr::IDB;
         uint8_t data;
     }DEF_R8(id_b_reg)
 
     struct R8_IdC:public Reg8<>{
-        static constexpr RegAddr address = RegAddr::IDC;
+        static constexpr RegAddr ADDRESS = RegAddr::IDC;
         uint8_t data;
     }DEF_R8(id_c_reg)
 

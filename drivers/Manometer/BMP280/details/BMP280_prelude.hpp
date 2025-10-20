@@ -50,19 +50,19 @@ struct BMP280_Prelude{
 struct BMP280_Regs : public BMP280_Prelude {
 
     struct ChipIDReg:public Reg8<>{
-        static constexpr RegAddr address=0xD0;
+        static constexpr RegAddr ADDRESS=0xD0;
         uint8_t :8;
     };
 
     struct ResetReg:public Reg8<>{
-        static constexpr RegAddr address=0xE0;
+        static constexpr RegAddr ADDRESS=0xE0;
 
         using Reg8<>::operator=;
         uint8_t :8;
     };
 
     struct StatusReg:public Reg8<>{
-        static constexpr RegAddr address=0xF3;
+        static constexpr RegAddr ADDRESS=0xF3;
         uint8_t im:1;
         uint8_t __resv1__:2;
         uint8_t busy:1;
@@ -70,14 +70,14 @@ struct BMP280_Regs : public BMP280_Prelude {
     };
 
     struct CtrlReg:public Reg8<>{
-        static constexpr RegAddr address=0xF4;
+        static constexpr RegAddr ADDRESS=0xF4;
         uint8_t mode:2;
         uint8_t osrs_p:3;
         uint8_t osrs_t:3;
     };
 
     struct ConfigReg:public Reg8<>{
-        static constexpr RegAddr address=0xF5;
+        static constexpr RegAddr ADDRESS=0xF5;
         uint8_t spi3_en:1;
         uint8_t __resv__:1;
         uint8_t filter:3;
@@ -85,22 +85,22 @@ struct BMP280_Regs : public BMP280_Prelude {
     };
 
     struct PressureReg:public Reg16<>{
-        static constexpr RegAddr address=0xF6;
+        static constexpr RegAddr ADDRESS=0xF6;
         uint16_t:16;
     };
 
     struct PressureXReg:public Reg8<>{
-        static constexpr RegAddr address=0xF9;
+        static constexpr RegAddr ADDRESS=0xF9;
         uint8_t:8;
     };
 
     struct TemperatureReg:public Reg16<>{
-        static constexpr RegAddr address=0xFA;
+        static constexpr RegAddr ADDRESS=0xFA;
         uint16_t:16;
     };
 
     struct TemperatureXReg:public Reg8<>{
-        static constexpr RegAddr address=0xFC;
+        static constexpr RegAddr ADDRESS=0xFC;
         uint8_t:8;
     };
 

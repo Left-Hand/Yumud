@@ -57,12 +57,12 @@ struct ADS111X_Prelude{
 struct ADS111X_Regs:public ADS111X_Prelude{ 
 
     struct ConversionReg:public Reg16<>{
-        static constexpr RegAddr address = 0b00; 
+        static constexpr RegAddr ADDRESS = 0b00; 
         int16_t data;
     };
 
     struct ConfigReg:public Reg16<>{
-        static constexpr RegAddr address = 0b01; 
+        static constexpr RegAddr ADDRESS = 0b01; 
         uint16_t comp_que:2;
         uint16_t comp_latch:1;
         uint16_t comp_pol:1;
@@ -78,12 +78,12 @@ struct ADS111X_Regs:public ADS111X_Prelude{
     };
 
     struct LowThreshReg:public Reg16i<>{
-        static constexpr RegAddr address = 0b10;
+        static constexpr RegAddr ADDRESS = 0b10;
         int16_t data;
     };
 
     struct HighThreshReg:public Reg16i<>{
-        static constexpr RegAddr address = 0b11; 
+        static constexpr RegAddr ADDRESS = 0b11; 
         int16_t data;
     };
 
@@ -131,13 +131,14 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = write_reg(reg.address, reg.as_val());
+        const auto res = write_reg(T::ADDRESS, reg.as_val());
         if(res.is_ok()) reg.apply();
         return res;
     }
 
-    [[nodiscard]] IResult<> read_reg(auto & reg){
-        return read_reg(reg.address, reg.as_ref());
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        return read_reg(T::ADDRESS, reg.as_ref());
     }
 
     struct ConfigBuilder{

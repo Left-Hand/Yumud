@@ -64,7 +64,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = phy_.write_reg(reg.address, reg.as_val());
+        const auto res = phy_.write_reg(T::ADDRESS, reg.as_val());
         if(res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return res;
@@ -72,7 +72,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return phy_.read_reg(reg.address, reg.as_ref());
+        return phy_.read_reg(T::ADDRESS, reg.as_ref());
     }
 
     [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){

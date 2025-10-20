@@ -37,7 +37,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = phy_.write_reg(reg.address, reg.as_val());
+        if(const auto res = phy_.write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -46,7 +46,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return phy_.read_reg(reg.address, reg.as_ref());
+        return phy_.read_reg(T::ADDRESS, reg.as_ref());
     }
 };
 

@@ -64,26 +64,26 @@ struct SC8721_Prelude{
 
 struct SC8721_Regs:public SC8721_Prelude{
     struct R8_CSO:public Reg8<>{
-        static constexpr RegAddr address = 0x01;
+        static constexpr RegAddr ADDRESS = 0x01;
 
         uint8_t cso_set;
     }DEF_R8(cso_reg)
 
     struct R8_SlopeComp:public Reg8<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
 
         uint8_t slop_comp:1;
         uint8_t :7;
     }DEF_R8(slope_comp_reg)
 
     struct R8_VoutSetMsb:public Reg8<>{//msb
-        static constexpr RegAddr address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
 
         uint8_t vout_set_msb;
     }DEF_R8(vout_set_msb_reg)
 
     struct R8_VoutSetLsb:public Reg8<>{//msb
-        static constexpr RegAddr address = 0x04;
+        static constexpr RegAddr ADDRESS = 0x04;
 
         uint8_t vout_set_lsb:2;
         uint8_t fb_dir:1;
@@ -93,7 +93,7 @@ struct SC8721_Regs:public SC8721_Prelude{
     }DEF_R8(vout_set_lsb_reg)
 
     struct R8_GlobalCtrl:public Reg8<>{//msb
-        static constexpr RegAddr address = 0x05;
+        static constexpr RegAddr ADDRESS = 0x05;
 
         uint8_t :1;
         uint8_t reg_load:1;
@@ -102,7 +102,7 @@ struct SC8721_Regs:public SC8721_Prelude{
     }DEF_R8(global_ctrl_reg)
 
     struct R8_SysSet:public Reg8<>{//msb
-        static constexpr RegAddr address = 0x06;
+        static constexpr RegAddr ADDRESS = 0x06;
 
         uint8_t :4;
         uint8_t en_vinreg:1;
@@ -112,14 +112,14 @@ struct SC8721_Regs:public SC8721_Prelude{
     }DEF_R8(sys_set_reg)
 
     struct R8_FreqSet:public Reg8<>{
-        static constexpr RegAddr address = 0x08;
+        static constexpr RegAddr ADDRESS = 0x08;
 
         uint8_t freq_set:2;
         uint8_t :6;
     }DEF_R8(freq_set_reg)
 
     struct R8_Status1:public Reg8<>{
-        static constexpr RegAddr address = 0x09;
+        static constexpr RegAddr ADDRESS = 0x09;
 
         uint8_t ocp:1;
         uint8_t :2;
@@ -130,7 +130,7 @@ struct SC8721_Regs:public SC8721_Prelude{
     }DEF_R8(status1_reg)
 
     struct R8_Status2:public Reg8<>{
-        static constexpr RegAddr address = 0x0A;
+        static constexpr RegAddr ADDRESS = 0x0A;
 
         uint8_t :1;
         uint8_t ibus_flag:1;
@@ -189,14 +189,15 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = write_reg(reg.address, reg.as_val());
-        if(res.is_ok()) reg.apply();
-        return res;
+        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
+            res.is_err()) return Err(res.unwrap_err());
+        reg.apply();
+        return Ok();
     }
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(reg.address, reg.as_ref());
+        return read_reg(T::ADDRESS, reg.as_ref());
     }
 };
 
