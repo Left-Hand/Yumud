@@ -41,7 +41,7 @@ public:
 
     [[nodiscard]] IResult<> validate();
     
-    [[nodiscard]] IResult<> set_frequency(const uint freq, const real_t trim);
+    [[nodiscard]] IResult<> set_frequency(const uint32_t freq, const real_t trim);
 
     [[nodiscard]] IResult<> set_pwm(const Nth nth, const uint16_t on, const uint16_t off);
 
@@ -65,10 +65,10 @@ public:
         return {dump_one(args)...};
     }
     
-    PCA9685Channel & operator [](const size_t index){
-        if(index >= CHANNELS_COUNT) sys::abort();
-        return channels[index];
-    }
+    // PCA9685Channel & operator [](const size_t index){
+    //     if(index >= CHANNELS_COUNT) sys::abort();
+    //     return channels[index];
+    // }
 
     class PCA9685_Vport final: public hal::VGpioPortIntf<16>{ 
         void write_mask(const hal::PinMask mask);
@@ -87,59 +87,30 @@ public:
         void set_mode(const size_t index, const hal::GpioMode mode);
     };
 
-    class PCA9685Channel final:public hal::PwmIntf,  hal::GpioIntf{
-    private:
-        PCA9685 & pca_;
-        Nth nth_;
 
-        PCA9685Channel(PCA9685 & _pca, const Nth nth):
-            pca_(_pca), nth_(nth){;}
-        
-        PCA9685Channel(const PCA9685Channel & other) = delete;
-        PCA9685Channel(PCA9685Channel && other) = delete;
-        
-
-        friend class PCA9685;
-    public:
-
-        void set_dutycycle(const real_t duty){
-            pca_.set_pwm(nth_, 0, uint16_t(duty << 12)).unwrap();
-        }
-        __fast_inline void set() {this->set_dutycycle(real_t(1));}
-        __fast_inline void clr() {this->set_dutycycle(real_t(0));}
-        __fast_inline void write(const BoolLevel val){
-            this->set_dutycycle(real_t((val.to_bool())));
-        }
-
-        BoolLevel read() const;
-
-        __fast_inline Nth nth() const {return nth_;}
-
-        void set_mode(const hal::GpioMode mode){}
-    };
 private:
     static constexpr uint8_t VALID_CHIP_ID = 0x23;
 
     hal::I2cDrv i2c_drv_;
 
-    std::array<PCA9685Channel, 16> channels ={
-        PCA9685Channel{*this, 0_nth},
-        PCA9685Channel{*this, 1_nth},
-        PCA9685Channel{*this, 2_nth},
-        PCA9685Channel{*this, 3_nth},
-        PCA9685Channel{*this, 4_nth},
-        PCA9685Channel{*this, 5_nth},
-        PCA9685Channel{*this, 6_nth},
-        PCA9685Channel{*this, 7_nth},
-        PCA9685Channel{*this, 8_nth},
-        PCA9685Channel{*this, 9_nth},
-        PCA9685Channel{*this, 10_nth},
-        PCA9685Channel{*this, 11_nth},
-        PCA9685Channel{*this, 12_nth},
-        PCA9685Channel{*this, 13_nth},
-        PCA9685Channel{*this, 14_nth},
-        PCA9685Channel{*this, 15_nth},
-    };
+    // std::array<PCA9685Channel, 16> channels ={
+    //     PCA9685Channel{*this, 0_nth},
+    //     PCA9685Channel{*this, 1_nth},
+    //     PCA9685Channel{*this, 2_nth},
+    //     PCA9685Channel{*this, 3_nth},
+    //     PCA9685Channel{*this, 4_nth},
+    //     PCA9685Channel{*this, 5_nth},
+    //     PCA9685Channel{*this, 6_nth},
+    //     PCA9685Channel{*this, 7_nth},
+    //     PCA9685Channel{*this, 8_nth},
+    //     PCA9685Channel{*this, 9_nth},
+    //     PCA9685Channel{*this, 10_nth},
+    //     PCA9685Channel{*this, 11_nth},
+    //     PCA9685Channel{*this, 12_nth},
+    //     PCA9685Channel{*this, 13_nth},
+    //     PCA9685Channel{*this, 14_nth},
+    //     PCA9685Channel{*this, 15_nth},
+    // };
 
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t reg){

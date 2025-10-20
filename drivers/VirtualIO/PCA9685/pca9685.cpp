@@ -37,7 +37,7 @@ hal::PinMask Vport::read_mask(){
     return hal::PinMask::from_nth(0_nth);
 }
 
-IResult<> PCA9685::set_frequency(uint freq, real_t trim){
+IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
     if(const auto res = read_reg(mode1_reg);
         res.is_err()) return res;
     
@@ -49,7 +49,7 @@ IResult<> PCA9685::set_frequency(uint freq, real_t trim){
 
     {
         auto reg = RegCopy(prescale_reg);
-        reg.prescale = int((real_t(25000000.0 / 4096) / freq - 1) * trim);
+        reg.prescale = int((q16(25000000.0 / 4096) / freq - 1) * trim);
         if(const auto res = write_reg(reg); 
             res.is_err()) return res;
     }
@@ -65,7 +65,7 @@ IResult<> PCA9685::set_frequency(uint freq, real_t trim){
 }
 
 IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
-    if(nth.count()) return Err(Error::IndexOutOfRange);
+    if(nth.count() >= 16) return Err(Error::IndexOutOfRange);
     if(
         #ifdef PCA9685_FORCEWRITE
         true
@@ -210,10 +210,4 @@ void Vport::set_mode(const size_t index, const hal::GpioMode mode){
 //         ctl.p0mod = GpioMode::isPP(mode);
 //         write_reg(ctl.data);
 //     }
-}
-
-
-__fast_inline BoolLevel PCA9685::PCA9685Channel::read() const {
-    TODO();
-    return LOW;
 }

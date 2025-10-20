@@ -3,122 +3,11 @@
 
 #pragma once
 
-#include "core/io/regs.hpp"
-#include "core/utils/Result.hpp"
-#include "core/utils/Errno.hpp"
-
-#include "hal/gpio/vport.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
-
-#include "concept/pwm_channel.hpp"
-
+#include "aw9523_prelude.hpp"
 
 
 namespace ymd::drivers{
-struct AW9523_Prelude{
-    enum class Error_Kind:uint8_t{
-        WrongChipId,
-        IndexOutOfRange
-    };
 
-    DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
-    DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    enum class CurrentLimit{
-        Max, High, Medium, Low
-    };
-
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
-
-
-    enum class RegAddr:uint8_t{
-        In = 0x00,
-        Out = 0x02,
-        Dir = 0x04,
-        Inten = 0x06,
-        ChipId = 0x10,
-        Ctl = 0x11,
-        LedMode = 0x12,
-        DimP10 = 0x20,
-        DimP11 = 0x21,
-        DimP12 = 0x22,
-        DimP13 = 0x23,
-        DimP00 = 0x24,
-        DimP01 = 0x25,
-        DimP02 = 0x26,
-        DimP03 = 0x27,
-        DimP04 = 0x28,
-        DimP05 = 0x29,
-        DimP06  = 0x2a,
-        DimP07  = 0x2b,
-        DimP14  = 0x2c,
-        DimP15  = 0x2d,
-        DimP16  = 0x2e,
-        DimP17  = 0x2f,
-        SwRst = 0x7f
-    };
-
-};
-
-struct AW9523_Regs:public AW9523_Prelude{
-    static constexpr uint8_t VALID_CHIP_ID = 0x23;
-    static constexpr size_t MAX_CHANNELS = 16;
-    
-    struct InputReg  : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::In;
-
-        hal::PinMask mask = hal::PinMask::from_zero();
-    }DEF_R16(input_reg)
-
-    struct OutputReg  : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Out;
-
-        hal::PinMask mask = hal::PinMask::from_zero();
-    }DEF_R16(output_reg)
-
-    struct DirReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Dir;
-
-        hal::PinMask mask = hal::PinMask::from_zero();
-    }DEF_R16(dir_reg)
-
-    struct CtlReg:Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Ctl;
-        uint8_t isel:2;
-        uint8_t __resv1__:2;
-        uint8_t p0mod:1;
-        uint8_t __resv2__:3;
-    }DEF_R8(ctl_reg)
-
-    struct IntEnReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Inten;
-
-        hal::PinMask mask = hal::PinMask::from_zero();
-    }DEF_R16(inten_reg)
-
-
-    struct LedModeReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::LedMode;
-
-        hal::PinMask mask = hal::PinMask::from_zero();
-    }DEF_R16(led_mode_reg);
-
-
-    struct ChipIdReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ChipId;
-
-        uint8_t id;
-    }DEF_R8(chip_id_reg)
-
-    
-    struct Config{
-        CurrentLimit current_limit = CurrentLimit::Low;
-    };
-
-};
 
 class AW9523 final:
     public AW9523_Regs{
@@ -130,28 +19,6 @@ public:
         i2c_drv_(std::move(i2c_drv)){;}
     explicit AW9523(Some<hal::I2c *> i2c):
         i2c_drv_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
-
-
-    class AW9523Pwm:public hal::PwmIntf{
-    protected:
-        AW9523Pwm(AW9523 & aw9523, const hal::PinNth pin):aw9523_(aw9523), pin_(pin){;}
-
-        DELETE_COPY_AND_MOVE(AW9523Pwm)
-        
-        friend class AW9523;
-    public:
-
-        void init(){
-            aw9523_.enable_led_mode(pin_).examine();
-        }
-
-        void set_dutycycle(const real_t dutycycle) {
-            aw9523_.set_led_current_dutycycle(pin_, dutycycle).examine();
-        }
-    private:
-        AW9523 & aw9523_;
-        hal::PinNth pin_;
-    };
 
     
     [[nodiscard]] IResult<> init(const Config & cfg);
@@ -194,9 +61,6 @@ public:
     
     [[nodiscard]] IResult<> validate();
 
-    AW9523Pwm operator [](const Nth nth){
-        return AW9523Pwm(*this, static_cast<hal::PinNth>(1 << nth.count()));
-    }
 private:
     hal::I2cDrv i2c_drv_;
     hal::PinMask buf_mask_ = hal::PinMask::from_zero();
