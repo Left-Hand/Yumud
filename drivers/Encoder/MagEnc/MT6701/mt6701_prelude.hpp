@@ -78,7 +78,7 @@ struct MT6701_Prelude{
         __inline constexpr IResult<> validate() const {
             if(pushed) return Err(Error::MagnetHigh);
             if(overspd) return Err(Error::OverSpeed);
-            if(is_crc_valid() == false) return Err(Error::WrongCrc);
+            if(is_crc_valid() == false) return Err(Error::InvalidCrc);
             return Ok();
         }
 
@@ -112,7 +112,7 @@ public:
             reg.apply();
             return Ok();
         }else{
-            return Err(details::EncoderError_Kind::NoSupportedPhy);
+            return Err(details::EncoderError_Kind::SpiIsNotImplementedYet);
         }
     }
 
@@ -126,7 +126,7 @@ public:
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else{
-            return Err(details::EncoderError_Kind::NoSupportedPhy);
+            return Err(details::EncoderError_Kind::SpiIsNotImplementedYet);
         }
     }
 

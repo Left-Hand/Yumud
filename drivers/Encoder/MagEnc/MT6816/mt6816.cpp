@@ -117,7 +117,7 @@ IResult<> MT6816::update(){
             lap_position_ = semantic.to_position();
         }else{
             err_cnt_++;
-            return CHECK_ERR(Err(Error::WrongPc), std::bitset<16>(raw_16));
+            return CHECK_ERR(Err(Error::InvalidCrc), std::bitset<16>(raw_16));
         }
 
     }else{
