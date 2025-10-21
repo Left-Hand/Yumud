@@ -380,14 +380,14 @@ IResult<> LT8960L_Phy::_read_reg(
         res.is_err()) return Err(Error(res.unwrap_err()));
 
     {
-        uint32_t dummy = 0; 
+        uint8_t dummy = 0; 
         if(const auto res = i2c_.read(dummy, ACK); 
             res.is_err()) return Err(Error(res.unwrap_err()));
         data = (dummy & 0xff)<< 8;
     }
 
     {
-        uint32_t dummy = 0; 
+        uint8_t dummy = 0; 
         if(const auto res = i2c_.read(dummy, NACK); 
             res.is_err()) return Err(Error(res.unwrap_err()));
         data |= (dummy & 0xff);
@@ -518,8 +518,8 @@ IResult<size_t> LT8960L_Phy::read_burst(uint8_t address, std::span<uint8_t> pbuf
 
 
     auto guard = i2c_.create_guard();
-    uint32_t len = 0;
-    bool invalid = false;
+    uint8_t len = 0;
+    bool is_invalid = false;
 
     LT8960L_ASSERT(pbuf.size() <= 0xff, "app given buf length too long");
 
@@ -532,18 +532,16 @@ IResult<size_t> LT8960L_Phy::read_burst(uint8_t address, std::span<uint8_t> pbuf
     if(len > LT8960L_MAX_PACKET_SIZE or len > pbuf.size()) {
         // LT8960L_PANIC("read buf length too long", len);
         // return hal::BusError::LengthOverflow;
-        invalid = true;
+        is_invalid = true;
     }
 
 
-    for(size_t i = 0; i < len; i++){
-        uint32_t dummy = 0;
-        const auto res = i2c_.read(dummy, (i == len - 1 ? NACK : ACK));
+    for(uint8_t i = 0; i < len; i++){
+        const auto res = i2c_.read(pbuf[i], (i == len - 1 ? NACK : ACK));
         if(res.is_err()) return Err(res.unwrap_err());
-        pbuf[i] = uint8_t(dummy);
     }
 
-    return Ok(invalid ? 0 : len);
+    return Ok(is_invalid ? 0 : len);
 }
 
 

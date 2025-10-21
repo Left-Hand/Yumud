@@ -41,11 +41,13 @@ IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
     if(const auto res = read_reg(mode1_reg);
         res.is_err()) return res;
     
-    auto mode1_reg_copy = RegCopy(mode1_reg);
+    {
+        auto reg = RegCopy(mode1_reg);
 
-    mode1_reg_copy.sleep = true;
-    if(const auto res = write_reg(mode1_reg_copy); 
-        res.is_err()) return res;
+        reg.sleep = true;
+        if(const auto res = write_reg(reg); 
+            res.is_err()) return res;
+    }
 
     {
         auto reg = RegCopy(prescale_reg);
@@ -54,14 +56,19 @@ IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
             res.is_err()) return res;
     }
 
-    mode1_reg_copy.sleep = false;
-    
-    if(const auto res = write_reg(mode1_reg_copy);
-        res.is_err()) return res;
-    clock::delay(5ms);
+    {
+        auto reg = RegCopy(mode1_reg);
+        reg.sleep = false;
+        
+        if(const auto res = write_reg(reg);
+            res.is_err()) return res;
 
-    mode1_reg_copy.as_ref() = uint8_t(mode1_reg_copy.as_val() | uint8_t(0xa1));
-    return write_reg(mode1_reg_copy);
+        reg.as_ref() = uint8_t(reg.as_val() | uint8_t(0xa1));
+        clock::delay(5ms);
+        return write_reg(reg);
+    }
+    
+
 }
 
 IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){

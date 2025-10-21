@@ -45,7 +45,7 @@ struct MT6701_Prelude{
     };
 
 
-    struct Semantic{
+    struct [[nodiscard]] Semantic{
         union{
             struct{
                 uint32_t crc:6;
@@ -65,9 +65,11 @@ struct MT6701_Prelude{
             };
         };
         
-        Semantic(const uint16_t data):data8(0), data16(data){;}
+        constexpr Semantic(const uint16_t data):
+            data8(0), data16(data){;}
 
-        Semantic(const uint8_t _data8, const uint16_t _data16):data8(_data8), data16(_data16){;}
+        constexpr Semantic(const uint8_t _data8, const uint16_t _data16):
+            data8(_data8), data16(_data16){;}
         
         __inline constexpr IResult<> validate_fast() const {
             if(pushed) return Err(Error::MagnetHigh);

@@ -34,7 +34,7 @@ public:
     TCA9548A_VirtualI2c(TCA9548A & host, const uint8_t ch);
 
     hal::HalResult write(const uint32_t data) {return host_.write(data);}
-    hal::HalResult read(uint32_t & data, const Ack ack) {return host_.read(data, ack);}
+    hal::HalResult read(uint8_t & data, const Ack ack) {return host_.read(data, ack);}
     hal::HalResult unlock_bus() {return host_.unlock_bus();}
     hal::HalResult set_baudrate(const uint32_t baud){return host_.set_baudrate(baud);}
 
@@ -77,7 +77,7 @@ private:
         return i2c_.write(data);
     }
 
-    hal::HalResult read(uint32_t & data, const Ack ack){
+    hal::HalResult read(uint8_t & data, const Ack ack){
         return i2c_.read(data, ack);
     }
 

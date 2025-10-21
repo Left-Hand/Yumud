@@ -16,14 +16,14 @@ public:
         sda_(sda.deref()){;}
 
     I2cSw(I2cSw && other) = default;
-
+    void init(const Config & cfg);
     Gpio & scl() {return scl_;}
     Gpio & sda() {return sda_;}
     HalResult borrow(const I2cSlaveAddrWithRw req);
     HalResult reset();
     HalResult write(const uint32_t data) final;
-    HalResult read(uint32_t & data, const Ack ack) final;
-    void init(const Config & cfg);
+    HalResult read(uint8_t & data, const Ack ack) final;
+
     HalResult set_baudrate(const uint32_t baudrate);
     void set_timeout(const Timeout timeout){timeout_ = timeout;}
     void discard_ack(const Enable en){discard_ack_ = en == EN;}

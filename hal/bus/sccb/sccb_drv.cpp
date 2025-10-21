@@ -35,7 +35,7 @@ hal::HalResult SccbDrv::read_reg(const uint8_t reg_addr, uint16_t & reg_val){
     if(const auto res = i2c_.borrow(slave_addr_.with_write());
         res.is_err()) return res;
 
-    uint32_t data_l, data_h;
+    uint8_t data_l, data_h;
 
     // 写入地址字节
     if(const auto res = i2c_.write(reg_addr);

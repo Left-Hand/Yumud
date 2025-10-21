@@ -68,7 +68,7 @@ public:
 
 
 
-    virtual HalResult read(uint32_t & data, const Ack ack) = 0;
+    virtual HalResult read(uint8_t & data, const Ack ack) = 0;
     virtual HalResult write(const uint32_t data) = 0;
     virtual HalResult unlock_bus() = 0;
     virtual HalResult set_baudrate(const uint32_t baudrate) = 0;

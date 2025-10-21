@@ -34,13 +34,13 @@ public:
 
     [[nodiscard]] IResult<> set_direction(const bool clockwise);
 
-    [[nodiscard]] IResult<> set_poles(const uint8_t _poles);
+    [[nodiscard]] IResult<> set_poles(const uint8_t poles);
 
-    [[nodiscard]] IResult<> set_abz_resolution(const uint16_t abzResolution);
+    [[nodiscard]] IResult<> set_abz_resolution(const uint16_t abz_resolution);
 
-    [[nodiscard]] IResult<> set_zero_position(const uint16_t zeroPosition);
+    [[nodiscard]] IResult<> set_zero_position(const uint16_t zero_position);
 
-    [[nodiscard]] IResult<> set_zero_pulse_width(const ZeroPulseWidth zeroPulseWidth);
+    [[nodiscard]] IResult<> set_zero_pulse_width(const ZeroPulseWidth zero_pulse_width);
 
     [[nodiscard]] IResult<> set_hysteresis(const Hysteresis hysteresis);
 
@@ -50,7 +50,7 @@ public:
 
     [[nodiscard]] IResult<> set_pwm_polarity(const bool polarity);
 
-    [[nodiscard]] IResult<> set_pwm_freq(const PwmFreq pwmFreq);
+    [[nodiscard]] IResult<> set_pwm_freq(const PwmFreq pwm_freq);
 
     [[nodiscard]] IResult<> set_start_position(const real_t start);
 

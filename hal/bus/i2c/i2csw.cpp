@@ -128,7 +128,7 @@ HalResult I2cSw::write(const uint32_t data){
     return wait_ack();
 }
 
-HalResult I2cSw::read(uint32_t & data, const Ack ack){
+HalResult I2cSw::read(uint8_t & data, const Ack ack){
     uint8_t ret = 0;
 
     sda().set();

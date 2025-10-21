@@ -13,7 +13,7 @@ public:
     I2cHw(I2C_TypeDef * inst);
 
     [[nodiscard]] HalResult write(const uint32_t data);
-    [[nodiscard]] HalResult read(uint32_t & data, const Ack ack);
+    [[nodiscard]] HalResult read(uint8_t & data, const Ack ack);
     void init(const uint32_t baudrate);
     void reset();
     bool locked();
