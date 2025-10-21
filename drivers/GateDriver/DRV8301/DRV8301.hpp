@@ -8,8 +8,7 @@ namespace ymd::drivers{
 class DRV8301 final:
     public DRV8301_Prelude{
 public:
-
-public:
+    static constexpr auto NAME = "DRV8301";
     explicit DRV8301(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
     explicit DRV8301(hal::SpiDrv && spi_drv):

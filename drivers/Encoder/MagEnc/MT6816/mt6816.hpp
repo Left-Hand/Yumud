@@ -44,7 +44,7 @@ public:
     uint32_t get_err_cnt() const {return err_cnt_;}
 
     IResult<MagStatus> get_mag_status() {
-        if(last_sema_.no_mag){
+        if(last_packet_.no_mag){
             return Ok(MagStatus::from_low());
         }else{
             return Ok(MagStatus::from_proper());
@@ -52,14 +52,14 @@ public:
     }
 
 private:
-    struct Semantic{
+    struct Packet{
         uint16_t pc:1;
         uint16_t no_mag:1;
         uint16_t data_14bit:14;
 
-        // constexpr Semantic() : pc(0), no_mag(0), data_14bit(0) {}
+        // constexpr Packet() : pc(0), no_mag(0), data_14bit(0) {}
 
-        Semantic(uint16_t data){
+        Packet(uint16_t data){
             reinterpret_cast<uint16_t &>(*this) = data;
         }
 
@@ -68,14 +68,14 @@ private:
         }
     };
 
-    static_assert(sizeof(Semantic) == 2);
+    static_assert(sizeof(Packet) == 2);
 
     hal::SpiDrv spi_drv_;
 
     real_t lap_position_ = 0;
     size_t err_cnt_ = 0;
     bool fast_mode_ = false;
-    Semantic last_sema_ = {0};
+    Packet last_packet_ = {0};
 
     IResult<uint16_t> get_position_data();
 };

@@ -9,12 +9,12 @@ template<typename T = void>
 using IResult = AS5600::IResult<T>;
 
 
-static constexpr q16 _12bits_2_pos(const uint16_t data){
-    return q16::from_i32(data << 4);
+static constexpr Angle<q31> u12_to_angle(const uint16_t data){
+    return Angle<q31>::from_turns(q31(q16::from_i32(data << 4)));
 }
 
-static constexpr uint16_t pos_2_12bits(const q16 pos){
-    return pos.as_i32() >> 4; 
+static constexpr uint16_t angle_to_u12(const Angle<q31> pos){
+    return q16(pos.to_turns()).as_i32() >> 4; 
 }
 
 IResult<> AS5600::set_power_mode(const PowerMode _power_mode){
@@ -74,33 +74,33 @@ IResult<uint16_t> AS5600::get_magnitude(){
     return Ok((magnitude_reg.data) & 0xFFF);
 }
 
-IResult<real_t> AS5600::get_raw_position(){
+IResult<Angle<q31>> AS5600::get_raw_angle(){
     if(const auto res = read_reg(raw_angle_reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(_12bits_2_pos(raw_angle_reg.data));
+    return Ok(u12_to_angle(raw_angle_reg.data));
 }
 
-IResult<real_t> AS5600::get_position(){
+IResult<Angle<q31>> AS5600::get_angle(){
     if(const auto res = read_reg(angle_reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(_12bits_2_pos(angle_reg.data));
+    return Ok(u12_to_angle(angle_reg.data));
 }
 
-IResult<> AS5600::set_start_position(const real_t angle){
+IResult<> AS5600::set_start_angle(const Angle<q31> angle){
     auto reg = RegCopy(start_angle_reg);
-    reg.data = pos_2_12bits(angle);
+    reg.data = angle_to_u12(angle);
     return write_reg(reg);
 }
 
-IResult<> AS5600::set_end_position(const real_t angle){
+IResult<> AS5600::set_end_angle(const Angle<q31> angle){
     auto reg = RegCopy(end_angle_reg);
-    reg.data = pos_2_12bits(angle);
+    reg.data = angle_to_u12(angle);
     return write_reg(reg);
 }
 
-IResult<> AS5600::set_amount_position(const real_t angle){
+IResult<> AS5600::set_amount_angle(const Angle<q31> angle){
     auto reg = RegCopy(amount_angle_reg);
-    reg.data = pos_2_12bits(angle);
+    reg.data = angle_to_u12(angle);
     return write_reg(reg);
 }
 

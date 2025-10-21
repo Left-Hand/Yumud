@@ -86,7 +86,9 @@ IResult<uint16_t> MT6816::get_position_data(){
             std::span(rx), std::span(tx));
         res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
-    return Ok<uint16_t>(((rx[1] & 0x00FF) << 8) | (rx[0] & 0x00FF));
+    return Ok<uint16_t>(static_cast<uint16_t>(
+        static_cast<uint16_t>(rx[1] & 0x00FF) << 8) | 
+        static_cast<uint16_t>(rx[0] & 0x00FF));
 }
 
 IResult<> MT6816::update(){
@@ -96,32 +98,32 @@ IResult<> MT6816::update(){
         res.unwrap();
     });
 
-    Semantic semantic = raw_16;
+    Packet packet = raw_16;
 
     if(fast_mode_ == false){
-        last_sema_ = semantic;
+        last_packet_ = packet;
 
-        if(semantic.no_mag)
+        if(packet.no_mag)
             return CHECK_ERR(Err(Error::MagnetLost));
 
         uint8_t count = 0;
 
         uint16_t raw_16_copy = raw_16;
-        raw_16_copy -= semantic.pc;
+        raw_16_copy -= packet.pc;
         while(raw_16_copy){//Brian Kernighan algorithm
             raw_16_copy &= raw_16_copy - 1;
             ++count;
         }
 
-        if(count % 2 == semantic.pc){
-            lap_position_ = semantic.to_position();
+        if(count % 2 == packet.pc){
+            lap_position_ = packet.to_position();
         }else{
             err_cnt_++;
             return CHECK_ERR(Err(Error::InvalidCrc), std::bitset<16>(raw_16));
         }
 
     }else{
-        lap_position_ = semantic.to_position();
+        lap_position_ = packet.to_position();
     }
 
     return Ok();

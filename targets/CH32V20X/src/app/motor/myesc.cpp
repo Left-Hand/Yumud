@@ -15,6 +15,8 @@
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "drivers/GateDriver/DRV832X/DRV832X.hpp"
 
+#include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
+
 
 #include "dsp/filter/firstorder/lpf.hpp"
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"

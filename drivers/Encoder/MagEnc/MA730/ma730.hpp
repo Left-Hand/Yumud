@@ -6,8 +6,8 @@ namespace ymd::drivers{
 
 
 class MA730 final:
-    public MagEncoderIntf,
-    public MA730_Regs{
+    public MA730_Prelude,
+    public MagEncoderIntf{
 public:
     struct Config{
         ClockDirection direction;
@@ -17,16 +17,16 @@ public:
         spi_drv_(spi_drv){;}
     explicit MA730(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit MA730(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        spi_drv_(hal::SpiDrv(spi, index)){;}
+    explicit MA730(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){;}
 
 
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> set_zero_position(const real_t position);
+    [[nodiscard]] IResult<> set_zero_angle(const Angle<q31> angle);
     [[nodiscard]] IResult<Angle<q31>> read_lap_angle(){
-        return Ok(Angle<q31>::from_turns(lap_position_));
+        return Ok(Angle<q31>::from_turns(lap_angle_));
     }
 
     [[nodiscard]] IResult<> set_trim_x(const real_t k);
@@ -42,13 +42,14 @@ public:
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 
     [[nodiscard]]
-    IResult<> set_zparameters(const Width width, const Phase phase);
+    IResult<> set_zparameters(const PulseWidth width, const PulsePhase phase);
 
     [[nodiscard]]
     IResult<> set_pulse_per_turn(const uint16_t ppt);
 private:
     hal::SpiDrv spi_drv_;
-    q31 lap_position_ = 0;
+    MA730_Regset regs_ = {};
+    q31 lap_angle_ = 0;
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

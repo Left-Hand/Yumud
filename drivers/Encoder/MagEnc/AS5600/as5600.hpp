@@ -7,12 +7,12 @@ class AS5600 final:
     public MagEncoderIntf,
     public AS5600_Regs{
 public:
-    AS5600(const hal::I2cDrv & i2c_drv):
+    explicit AS5600(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
-    AS5600(hal::I2cDrv && i2c_drv):
+    explicit AS5600(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
-    AS5600(
+    explicit AS5600(
         Some<hal::I2c *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
@@ -37,15 +37,15 @@ public:
     
     [[nodiscard]] IResult<uint16_t> get_magnitude();
     
-    [[nodiscard]] IResult<real_t> get_raw_position();
+    [[nodiscard]] IResult<Angle<q31>> get_raw_angle();
     
-    [[nodiscard]] IResult<real_t> get_position();
+    [[nodiscard]] IResult<Angle<q31>> get_angle();
     
-    [[nodiscard]] IResult<> set_start_position(const real_t position);
+    [[nodiscard]] IResult<> set_start_angle(const Angle<q31> angle);
     
-    [[nodiscard]] IResult<> set_end_position(const real_t position);
+    [[nodiscard]] IResult<> set_end_angle(const Angle<q31> angle);
     
-    [[nodiscard]] IResult<> set_amount_position(const real_t position);
+    [[nodiscard]] IResult<> set_amount_angle(const Angle<q31> angle);
     
     [[nodiscard]] IResult<uint8_t> get_program_times();
     

@@ -108,7 +108,7 @@ private:
 class DRV8323H final:
     public DRV832X_Prelude{
 public:
-
+    static constexpr auto name = "DRV8323H";
     template<typename ... Args>
     explicit DRV8323H(Args && ... args):
         phy_(std::forward<Args>(args)...){;}

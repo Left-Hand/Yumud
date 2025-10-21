@@ -18,16 +18,16 @@ struct MA730_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class Width:uint8_t{
+    enum class PulseWidth:uint8_t{
         W90, W180, W270, W360
     };
 
-    enum class Phase:uint8_t{
+    enum class PulsePhase:uint8_t{
         P0, P90, P180, P270
     };
 
     enum class MagThreshold:uint8_t{
-        mT23, mT38, mT53, mT67, mT81, mT95, mT109, mT123
+        _23mT, _38mT, _53mT, _67mT, _81mT, _95mT, _109mT, _123mT
     };
 
     enum class RegAddr:uint8_t{
@@ -44,7 +44,7 @@ struct MA730_Prelude{
 
 };
 
-struct MA730_Regs:public MA730_Prelude{
+struct MA730_Regset:public MA730_Prelude{
 
     struct R8_ZeroDataLow:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ZeroDataLow;
@@ -70,8 +70,8 @@ struct MA730_Regs:public MA730_Prelude{
     struct R8_ZParameters:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ZParameters;
         uint8_t :2;
-        Phase zPhase :2;
-        Width zWidth :2;
+        PulsePhase zPhase :2;
+        PulseWidth zWidth :2;
         uint8_t ppt:2;
     };
 
@@ -83,8 +83,8 @@ struct MA730_Regs:public MA730_Prelude{
     struct R8_Threshold:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Threshold;
         uint8_t :2;
-        uint8_t thresholdHigh :3;
-        uint8_t thresholdLow :3;
+        MagThreshold high :3;
+        MagThreshold low :3;
     };
 
     struct R8_Direction:public Reg8<>{

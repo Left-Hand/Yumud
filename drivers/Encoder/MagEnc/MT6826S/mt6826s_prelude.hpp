@@ -1,5 +1,7 @@
 #pragma once
 
+//15位磁编码器
+
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/angle.hpp"
