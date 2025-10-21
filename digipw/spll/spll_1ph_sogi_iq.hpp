@@ -2,6 +2,7 @@
 
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
+#include "core/utils/angle.hpp"
 
 namespace ymd::digipw{
 class Spll{

@@ -14,8 +14,7 @@
  * limitations under the License.
  *
  */
-#include "mlx90640_api.h"
-#include "mlx90640_i2c_driver.hpp"
+#include "mlx90640.hpp"
 #include <algorithm>
 #include <math.h>
 
@@ -24,56 +23,65 @@ using namespace ymd;
 
 namespace ymd::drivers{
 
-using Error = MLX90640_Error;
+using Error = MLX90640::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
 
 #define BIT_MASK(x) (1UL << (x))
-#define REG_MASK(sbit,nbits) ~((~(~0UL << (nbits))) << (sbit))
+// #define REG_MASK(sbit,nbits) ~((~(~0UL << (nbits))) << (sbit))
+static constexpr uint16_t REG_MASK(uint16_t sbit, uint16_t nbits) {
+    // return ~((~(~0UL << (nbits))) << (sbit));
+    const auto m0 = ~(~0UL << nbits);
+    return static_cast<uint16_t>(~(m0 << sbit));
+}
 
-#define EEPROM_START_ADDRESS 0x2400
-#define EEPROM_DUMP_NUM 832
-#define PIXEL_DATA_START_ADDRESS 0x0400
-#define PIXEL_NUM 768
-#define LINE_NUM 24
-#define COLUMN_NUM 32
-#define LINE_SIZE 32
-#define COLUMN_SIZE 24
-#define AUX_DATA_START_ADDRESS 0x0700
-#define AUX_NUM 64
-#define STATUS_REG 0x8000
-#define INIT_STATUS_VALUE 0x0030
-#define STAT_FRAME_MASK BIT_MASK(0) 
+static constexpr uint16_t EEPROM_START_ADDRESS = 0x2400;
+static constexpr uint16_t PIXEL_DATA_START_ADDRESS = 0x0400;
+static constexpr uint16_t AUX_DATA_START_ADDRESS = 0x0700;
+static constexpr uint16_t STATUS_REG = 0x8000;
+static constexpr uint16_t MS_BYTE_MASK = 0xFF00;
+static constexpr uint16_t LS_BYTE_MASK = 0x00FF;
+static constexpr uint16_t MSBITS_6_MASK = 0xFC00;
+static constexpr uint16_t LSBITS_10_MASK = 0x03FF;
+
+static constexpr uint16_t CTRL_REG = 0x800D;
+static constexpr uint16_t INIT_STATUS_VALUE = 0x0030;
+
+
+
+static constexpr size_t LINE_SIZE  =  32;
+static constexpr size_t COLUMN_SIZE  =  24;
+
+
+
+static constexpr size_t  STAT_FRAME_MASK = BIT_MASK(0); 
+static constexpr size_t  STAT_DATA_READY_MASK = BIT_MASK(3); 
 #define GET_FRAME(reg_value) (reg_value & STAT_FRAME_MASK)
-#define STAT_DATA_READY_MASK BIT_MASK(3) 
 #define GET_DATA_READY(reg_value) (reg_value & STAT_DATA_READY_MASK)
 
-#define CTRL_REG 0x800D
-#define CTRL_TRIG_READY_MASK BIT_MASK(15) 
-#define CTRL_REFRESH_SHIFT 7
-#define CTRL_REFRESH_MASK REG_MASK(CTRL_REFRESH_SHIFT,3)
-#define CTRL_RESOLUTION_SHIFT 10
-#define CTRL_RESOLUTION_MASK REG_MASK(CTRL_RESOLUTION_SHIFT,2)
-#define CTRL_MEAS_MODE_SHIFT 12
-#define CTRL_MEAS_MODE_MASK BIT_MASK(12)
 
-#define MS_BYTE_SHIFT 8
-#define MS_BYTE_MASK 0xFF00
-#define LS_BYTE_MASK 0x00FF
-#define MS_BYTE(reg16) ((reg16 & MS_BYTE_MASK) >> MS_BYTE_SHIFT)
-#define LS_BYTE(reg16) (reg16 & LS_BYTE_MASK)
-#define MSBITS_6_MASK 0xFC00
-#define LSBITS_10_MASK 0x03FF
-#define NIBBLE1_MASK 0x000F
-#define NIBBLE2_MASK 0x00F0
-#define NIBBLE3_MASK 0x0F00
-#define NIBBLE4_MASK 0xF000
-#define NIBBLE1(reg16) ((reg16 & NIBBLE1_MASK))
-#define NIBBLE2(reg16) ((reg16 & NIBBLE2_MASK) >> 4)
-#define NIBBLE3(reg16) ((reg16 & NIBBLE3_MASK) >> 8)
-#define NIBBLE4(reg16) ((reg16 & NIBBLE4_MASK) >> 12)
+static constexpr size_t CTRL_REFRESH_SHIFT  = 7;
+static constexpr size_t CTRL_RESOLUTION_SHIFT = 10;
+static constexpr size_t CTRL_MEAS_MODE_SHIFT  = 12;
 
+static constexpr uint16_t CTRL_MEAS_MODE_MASK = BIT_MASK(12);
+static constexpr uint16_t CTRL_TRIG_READY_MASK = BIT_MASK(15);
+static constexpr uint16_t CTRL_REFRESH_MASK = REG_MASK(CTRL_REFRESH_SHIFT,3);
+static constexpr uint16_t CTRL_RESOLUTION_MASK  =REG_MASK(CTRL_RESOLUTION_SHIFT,2);
+
+
+// struct R16_Ctrl{
+//     uint16_t 
+// };
+
+static constexpr uint8_t NIBBLE1(uint16_t reg16) {return static_cast<uint8_t>(((reg16 & 0x000f)));}
+static constexpr uint8_t NIBBLE2(uint16_t reg16) {return static_cast<uint8_t>(((reg16 & 0x00f0) >> 4));}
+static constexpr uint8_t NIBBLE3(uint16_t reg16) {return static_cast<uint8_t>(((reg16 & 0x0f00) >> 8));}
+static constexpr uint8_t NIBBLE4(uint16_t reg16) {return static_cast<uint8_t>(((reg16 & 0xf000) >> 12));}
+
+static constexpr uint8_t LS_BYTE(const uint16_t x){return static_cast<uint8_t>(x & 0xFF);}
+static constexpr uint8_t MS_BYTE(const uint16_t x){return static_cast<uint8_t>(x >> 8);}
 
 static constexpr float VCC_VOLTAGE = 3.3f;
 
@@ -95,19 +103,9 @@ static inline float POW2(const float in){
 //     return pow(2, in);
 // }
 
-static bool IsPixelBad(uint16_t pixel,paramsMLX90640 *params)
-{
-    for(size_t i=0; i<5; i++){
-        if(pixel == params->outlierPixels[i] || pixel == params->brokenPixels[i]){
-            return true;
-        }    
-    }   
-    
-    return false;     
-}     
 
-static float get_vdd(uint16_t *frameData, const paramsMLX90640 *params)
-{
+
+static float get_vdd(const uint16_t *frameData, const MLX90640_Coeffs *params){
     float vdd;
     float resolutionCorrection;
 
@@ -122,73 +120,60 @@ static float get_vdd(uint16_t *frameData, const paramsMLX90640 *params)
 
 
 
-IResult<> MLX90640::dump_ee(uint16_t *eeData)
-{
-    return I2CRead(EEPROM_START_ADDRESS, EEPROM_DUMP_NUM, eeData);
+IResult<> MLX90640::dump_ee(uint16_t *eeData){
+    return read_burst(EEPROM_START_ADDRESS, std::span(eeData, MLX90640_EEPROM_DUMP_NUM));
+}
+
+static IResult<> CheckAdjacentPixels(uint16_t pix1, uint16_t pix2){
+    const uint16_t lp1 = pix1 >> 5;
+    const uint16_t lp2 = pix2 >> 5;
+    const uint16_t cp1 = pix1 - (lp1 << 5);
+    const uint16_t cp2 = pix2 - (lp2 << 5);
+    
+    int pixPosDif = lp1 - lp2;
+    if(pixPosDif > -2 && pixPosDif < 2){
+        pixPosDif = cp1 - cp2;
+        if(pixPosDif > -2 && pixPosDif < 2){
+            return Err(Error::AdjacentBadPixels);
+        }
+
+    } 
+    
+    return Ok();
 }
 
 
-static float GetMedian(float *values, int n)
-{
-    float temp;
-    
-    for(int i=0; i<n-1; i++)
-    {
-        for(int j=i+1; j<n; j++)
-        {
-            if(values[j] < values[i]) 
-            {                
-                temp = values[i];
-                values[i] = values[j];
-                values[j] = temp;
-            }
-        }
-    }
-    
-    if(n%2==0) 
-    {
-        return ((values[n/2] + values[n/2 - 1]) / 2.0);
-        
-    } 
-    else 
-    {
-        return values[n/2];
-    }
-    
-}           
 
-
-static IResult<> ValidateAuxData(uint16_t *auxData)
-{
+static IResult<> ValidateAuxData(const uint16_t *auxData){
     
     if(auxData[0] == 0x7FFF) return Err(Error::FrameDataErr);    
     
-    for(int i=8; i<19; i++)
+    for(size_t i=8; i<19; i++)
     {
         if(auxData[i] == 0x7FFF) return Err(Error::FrameDataErr);
     }
     
-    for(int i=20; i<23; i++)
+    for(size_t i=20; i<23; i++)
     {
         if(auxData[i] == 0x7FFF) return Err(Error::FrameDataErr);
     }
     
-    for(int i=24; i<33; i++)
+    for(size_t i=24; i<33; i++)
     {
         if(auxData[i] == 0x7FFF) return Err(Error::FrameDataErr);
     }
     
-    for(int i=40; i<51; i++)
+    for(size_t i=40; i<51; i++)
     {
         if(auxData[i] == 0x7FFF) return Err(Error::FrameDataErr);
     }
     
-    for(int i=52; i<55; i++)
+    for(size_t i=52; i<55; i++)
     {
         if(auxData[i] == 0x7FFF) return Err(Error::FrameDataErr);
     }
     
-    for(int i=56; i<64; i++)
+    for(size_t i=56; i<64; i++)
     {
         if(auxData[i] == 0x7FFF) return Err(Error::FrameDataErr);
     }
@@ -197,10 +182,8 @@ static IResult<> ValidateAuxData(uint16_t *auxData)
     
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractVDDParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
-{
+static void ExtractVDDParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640){
     int8_t kVdd;
     int16_t vdd25;
     
@@ -213,10 +196,8 @@ static void ExtractVDDParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     mlx90640->vdd25 = vdd25; 
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractPTATParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
-{
+static void ExtractPTATParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640){
     float KvPTAT;
     float KtPTAT;
     int16_t vPTAT25;
@@ -238,7 +219,7 @@ static void ExtractPTATParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     
     vPTAT25 = eeData[49];
     
-    alphaPTAT = (eeData[16] & NIBBLE4_MASK) / static_cast<float>(POW2(14u)) + 8.0f;
+    alphaPTAT = (eeData[16] & 0xf000) / static_cast<float>(POW2(14u)) + 8.0f;
     
     mlx90640->KvPTAT = KvPTAT;
     mlx90640->KtPTAT = KtPTAT;    
@@ -246,23 +227,20 @@ static void ExtractPTATParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     mlx90640->alphaPTAT = alphaPTAT;   
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractGainParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractGainParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     mlx90640->gainEE = (int16_t)eeData[48];;    
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractTgcParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractTgcParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     mlx90640->tgc = (int8_t)LS_BYTE(eeData[60]) / 32.0f;
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractResolutionParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractResolutionParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     uint8_t resolutionEE;
     resolutionEE = (eeData[56] & 0x3000) >> 12;    
@@ -270,16 +248,14 @@ static void ExtractResolutionParameters(uint16_t *eeData, paramsMLX90640 *mlx906
     mlx90640->resolutionEE = resolutionEE;
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractKsTaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractKsTaParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {   
     mlx90640->KsTa = (int8_t)MS_BYTE(eeData[60]) / 8192.0f;
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractKsToParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractKsToParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     int32_t KsToScale;
     int8_t step;
@@ -306,35 +282,10 @@ static void ExtractKsToParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
 }
 
 
-//------------------------------------------------------------------------------
-
-static IResult<> CheckAdjacentPixels(uint16_t pix1, uint16_t pix2)
-{
-    
-    int pixPosDif;
-    uint16_t lp1 = pix1 >> 5;
-    uint16_t lp2 = pix2 >> 5;
-    uint16_t cp1 = pix1 - (lp1 << 5);
-    uint16_t cp2 = pix2 - (lp2 << 5);
-    
-    pixPosDif = lp1 - lp2;
-    if(pixPosDif > -2 && pixPosDif < 2)
-    {
-    pixPosDif = cp1 - cp2;
-    if(pixPosDif > -2 && pixPosDif < 2)
-    {
-        return Err(Error::AdjacentBadPixels);
-    }
-
-    } 
-    
-    return Ok();
-}
 
 
-//------------------------------------------------------------------------------
 
-static void ExtractAlphaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractAlphaParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     int accRow[24];
     int accColumn[32];
@@ -344,7 +295,7 @@ static void ExtractAlphaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     uint8_t accRowScale;
     uint8_t accColumnScale;
     uint8_t accRemScale;
-    float alphaTemp[768];
+    float alphaTemp[MLX90640_PIXEL_NUM];
     float temp;
     
 
@@ -354,7 +305,7 @@ static void ExtractAlphaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     alphaScale = NIBBLE4(eeData[32]) + 30;
     alphaRef = eeData[33];
     
-    for(int i = 0; i < 6; i++)
+    for(size_t i = 0; i < 6; i++)
     {
         p = i * 4;
         accRow[p + 0] = NIBBLE1(eeData[34 + i]);
@@ -363,7 +314,7 @@ static void ExtractAlphaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
         accRow[p + 3] = NIBBLE4(eeData[34 + i]);
     }
     
-    for(int i = 0; i < LINE_NUM; i++)
+    for(size_t i = 0; i < MLX90640_LINE_NUM; i++)
     {
         if (accRow[i] > 7)
         {
@@ -371,7 +322,7 @@ static void ExtractAlphaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
         }
     }
     
-    for(int i = 0; i < 8; i++)
+    for(size_t i = 0; i < 8; i++)
     {
         p = i * 4;
         accColumn[p + 0] = NIBBLE1(eeData[40 + i]);
@@ -380,7 +331,7 @@ static void ExtractAlphaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
         accColumn[p + 3] = NIBBLE4(eeData[40 + i]);
     }
     
-    for(int i = 0; i < COLUMN_NUM; i++)
+    for(size_t i = 0; i < MLX90640_COLUMN_NUM; i++)
     {
         if (accColumn[i] > 7)
         {
@@ -388,9 +339,9 @@ static void ExtractAlphaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
         }
     }
 
-    for(int i = 0; i < LINE_NUM; i++)
+    for(size_t i = 0; i < MLX90640_LINE_NUM; i++)
     {
-        for(int j = 0; j < COLUMN_NUM; j ++)
+        for(size_t j = 0; j < MLX90640_COLUMN_NUM; j ++)
         {
             p = 32 * i +j;
             alphaTemp[p] = (eeData[64 + p] & 0x03F0) >> 4;
@@ -407,7 +358,7 @@ static void ExtractAlphaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     }
     
     temp = alphaTemp[0];
-    for(int i = 1; i < PIXEL_NUM; i++)
+    for(size_t i = 1; i < MLX90640_PIXEL_NUM; i++)
     {
         if (alphaTemp[i] > temp)
         {
@@ -422,7 +373,7 @@ static void ExtractAlphaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
         alphaScale = alphaScale + 1;
     } 
     
-    for(int i = 0; i < PIXEL_NUM; i++)
+    for(size_t i = 0; i < MLX90640_PIXEL_NUM; i++)
     {
         temp = alphaTemp[i] * POW2(alphaScale);        
         mlx90640->alpha[i] = (temp + 0.5);        
@@ -433,9 +384,8 @@ static void ExtractAlphaParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
 
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractOffsetParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractOffsetParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     int occRow[24];
     int occColumn[32];
@@ -451,7 +401,7 @@ static void ExtractOffsetParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     occRowScale = NIBBLE3(eeData[16]);
     offsetRef = (int16_t)eeData[17];
         
-    for(int i = 0; i < 6; i++)
+    for(size_t i = 0; i < 6; i++)
     {
         p = i * 4;
         occRow[p + 0] = NIBBLE1(eeData[18 + i]);
@@ -460,7 +410,7 @@ static void ExtractOffsetParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
         occRow[p + 3] = NIBBLE4(eeData[18 + i]);
     }
     
-    for(int i = 0; i < LINE_NUM; i++)
+    for(size_t i = 0; i < MLX90640_LINE_NUM; i++)
     {
         if (occRow[i] > 7)
         {
@@ -468,7 +418,7 @@ static void ExtractOffsetParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
         }
     }
     
-    for(int i = 0; i < 8; i++)
+    for(size_t i = 0; i < 8; i++)
     {
         p = i * 4;
         occColumn[p + 0] = NIBBLE1(eeData[24 + i]);
@@ -477,7 +427,7 @@ static void ExtractOffsetParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
         occColumn[p + 3] = NIBBLE4(eeData[24 + i]);
     }
     
-    for(int i = 0; i < COLUMN_NUM; i ++)
+    for(size_t i = 0; i < MLX90640_COLUMN_NUM; i ++)
     {
         if (occColumn[i] > 7)
         {
@@ -485,9 +435,9 @@ static void ExtractOffsetParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
         }
     }
 
-    for(int i = 0; i < LINE_NUM; i++)
+    for(size_t i = 0; i < MLX90640_LINE_NUM; i++)
     {
-        for(int j = 0; j < COLUMN_NUM; j ++)
+        for(size_t j = 0; j < MLX90640_COLUMN_NUM; j ++)
         {
             p = 32 * i +j;
             mlx90640->offset[p] = (eeData[64 + p] & MSBITS_6_MASK) >> 10;
@@ -501,16 +451,15 @@ static void ExtractOffsetParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     }
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractKtaPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractKtaPixelParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     int p = 0;
     int8_t KtaRC[4];
     uint8_t ktaScale1;
     uint8_t ktaScale2;
     uint8_t split;
-    float ktaTemp[768];
+    float ktaTemp[MLX90640_PIXEL_NUM];
     float temp;
     
     KtaRC[0] = (int8_t)MS_BYTE(eeData[54]);;
@@ -521,9 +470,9 @@ static void ExtractKtaPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640
     ktaScale1 = NIBBLE2(eeData[56]) + 8;
     ktaScale2 = NIBBLE1(eeData[56]);
 
-    for(int i = 0; i < LINE_NUM; i++)
+    for(size_t i = 0; i < MLX90640_LINE_NUM; i++)
     {
-        for(int j = 0; j < COLUMN_NUM; j ++)
+        for(size_t j = 0; j < MLX90640_COLUMN_NUM; j ++)
         {
             p = 32 * i +j;
             split = 2*(p/32 - (p/64)*2) + p%2;
@@ -540,7 +489,7 @@ static void ExtractKtaPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640
     }
     
     temp = std::abs(ktaTemp[0]);
-    for(int i = 1; i < PIXEL_NUM; i++)
+    for(size_t i = 1; i < MLX90640_PIXEL_NUM; i++)
     {
         if (std::abs(ktaTemp[i]) > temp)
         {
@@ -555,7 +504,7 @@ static void ExtractKtaPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640
         ktaScale1 = ktaScale1 + 1;
     }    
 
-    for(int i = 0; i < PIXEL_NUM; i++)
+    for(size_t i = 0; i < MLX90640_PIXEL_NUM; i++)
     {
         temp = ktaTemp[i] * POW2(ktaScale1);
         if (temp < 0)
@@ -573,9 +522,8 @@ static void ExtractKtaPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640
 }
 
 
-//------------------------------------------------------------------------------
 
-static void ExtractKvPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractKvPixelParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     int p = 0;
     int8_t KvT[4];
@@ -585,7 +533,7 @@ static void ExtractKvPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     int8_t KvReCe;
     uint8_t kvScale;
     uint8_t split;
-    float kvTemp[768];
+    float kvTemp[MLX90640_PIXEL_NUM];
     float temp;
 
     KvRoCo = NIBBLE4(eeData[52]);
@@ -619,9 +567,9 @@ static void ExtractKvPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     kvScale = NIBBLE3(eeData[56]);
 
 
-    for(int i = 0; i < LINE_NUM; i++)
+    for(size_t i = 0; i < MLX90640_LINE_NUM; i++)
     {
-        for(int j = 0; j < COLUMN_NUM; j ++)
+        for(size_t j = 0; j < MLX90640_COLUMN_NUM; j ++)
         {
             p = 32 * i +j;
             split = 2*(p/32 - (p/64)*2) + p%2;
@@ -631,7 +579,7 @@ static void ExtractKvPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     }
     
     temp = std::abs(kvTemp[0]);
-    for(int i = 1; i < PIXEL_NUM; i++)
+    for(size_t i = 1; i < MLX90640_PIXEL_NUM; i++)
     {
         if (std::abs(kvTemp[i]) > temp)
         {
@@ -646,7 +594,7 @@ static void ExtractKvPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
         kvScale = kvScale + 1;
     }    
 
-    for(int i = 0; i < PIXEL_NUM; i++)
+    for(size_t i = 0; i < MLX90640_PIXEL_NUM; i++)
     {
         temp = kvTemp[i] * POW2(kvScale);
         if (temp < 0)
@@ -663,9 +611,8 @@ static void ExtractKvPixelParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     mlx90640->kvScale = kvScale;        
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractCPParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractCPParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     float alphaSP[2];
     int16_t offsetSP[2];
@@ -720,9 +667,8 @@ static void ExtractCPParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
     mlx90640->cpOffset[1] = offsetSP[1];  
 }
 
-//------------------------------------------------------------------------------
 
-static void ExtractCILCParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static void ExtractCILCParameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     float ilChessC[3];
     uint8_t calibrationModeEE;
@@ -759,11 +705,11 @@ static void ExtractCILCParameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
 
 
 
-static IResult<> ValidateFrameData(uint16_t *frameData)
+static IResult<> ValidateFrameData(const uint16_t *frameData)
 {
     uint8_t line = 0;
     
-    for(int i=0; i<PIXEL_NUM; i+=LINE_SIZE)
+    for(size_t i=0; i<MLX90640_PIXEL_NUM; i+=LINE_SIZE)
     {
         if((frameData[i] == 0x7FFF) && (line%2 == frameData[833])) 
             return Err(Error::FrameDataErr);
@@ -774,14 +720,13 @@ static IResult<> ValidateFrameData(uint16_t *frameData)
 }
 
 
-//------------------------------------------------------------------------------
 
-static IResult<> ExtractDeviatingPixels(uint16_t *eeData, paramsMLX90640 *mlx90640)
+static IResult<> ExtractDeviatingPixels(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     uint16_t pixCnt = 0;
     uint16_t brokenPixCnt = 0;
     uint16_t outlierPixCnt = 0;
-    int i;
+    size_t i;
     
     for(pixCnt = 0; pixCnt<5; pixCnt++)
     {
@@ -790,7 +735,7 @@ static IResult<> ExtractDeviatingPixels(uint16_t *eeData, paramsMLX90640 *mlx906
     }
         
     pixCnt = 0;    
-    while (pixCnt < PIXEL_NUM && brokenPixCnt < 5 && outlierPixCnt < 5)
+    while (pixCnt < MLX90640_PIXEL_NUM && brokenPixCnt < 5 && outlierPixCnt < 5)
     {
         if(eeData[pixCnt+64] == 0)
         {
@@ -851,83 +796,8 @@ static IResult<> ExtractDeviatingPixels(uint16_t *eeData, paramsMLX90640 *mlx906
 }
 
 
-//------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-
-
-IResult<> MLX90640::synch_frame(uint8_t slaveAddr)
-{
-    uint16_t dataReady = 0;
-    uint16_t statusRegister;
-    
-    if(const auto res = I2CWrite(STATUS_REG, INIT_STATUS_VALUE);
-        res.is_err()) return Err(res.unwrap_err());
-    
-    while(dataReady == 0)
-    {
-        if(const auto res = I2CRead(STATUS_REG, 1, &statusRegister);
-            res.is_err()) return Err(res.unwrap_err());
-        //dataReady = statusRegister & 0x0008;
-        dataReady = GET_DATA_READY(statusRegister); 
-    }     
-    
-    return Ok();
-}
-
-Result<uint16_t, Error> MLX90640::get_frame_data(uint16_t *frameData)
-{
-    uint16_t dataReady = 0;
-    uint16_t controlRegister1;
-    uint16_t statusRegister;
-    uint16_t data[64];
-    uint8_t cnt = 0;
-    
-    while(dataReady == 0)
-    {
-        if(const auto res = I2CRead(STATUS_REG, 1, &statusRegister);
-            res.is_err()) return Err(res.unwrap_err());
-        //dataReady = statusRegister & 0x0008;
-        dataReady = GET_DATA_READY(statusRegister); 
-    }
-    
-    if(const auto res = I2CWrite(STATUS_REG, INIT_STATUS_VALUE);
-        res.is_err()) return Err(res.unwrap_err());
-
-    if(const auto res = I2CRead(PIXEL_DATA_START_ADDRESS, PIXEL_NUM, frameData); 
-        res.is_err()) return Err(res.unwrap_err());
-
-    if(const auto res = I2CRead(AUX_DATA_START_ADDRESS, AUX_NUM, data);   
-        res.is_err()) return Err(res.unwrap_err());
-        
-    if(const auto res = I2CRead(CTRL_REG, 1, &controlRegister1);
-        res.is_err()) return Err(res.unwrap_err());
-    frameData[832] = controlRegister1;
-    //frameData[833] = statusRegister & 0x0001;
-    frameData[833] = GET_FRAME(statusRegister);
-    
-    // if(res.is_err())
-    // {
-    //     return res;
-    // }
-    
-    if(const auto res = ValidateAuxData(data);
-        res.is_err()) return Err(res.unwrap_err());
-    // if(res == NO_ERROR)
-    // {
-    for(cnt=0; cnt<AUX_NUM; cnt++)
-    {
-        frameData[cnt+PIXEL_NUM] = data[cnt];
-    }
-    // }        
-    
-    if(const auto res = ValidateFrameData(frameData);
-        res.is_err()) return Err(res.unwrap_err()); 
-    
-    return Ok(frameData[833]);    
-}
-
-IResult<> MLX90640::extract_parameters(uint16_t *eeData, paramsMLX90640 *mlx90640)
+IResult<> MLX90640::extract_parameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640)
 {
     
     ExtractVDDParameters(eeData, mlx90640);
@@ -946,7 +816,44 @@ IResult<> MLX90640::extract_parameters(uint16_t *eeData, paramsMLX90640 *mlx9064
     return ExtractDeviatingPixels(eeData, mlx90640);  
 }
 
-//------------------------------------------------------------------------------
+
+Result<uint16_t, Error> MLX90640::get_frame_data(uint16_t *frameData)
+{
+    uint16_t statusRegister;
+    uint16_t data[64];
+    
+    if(const auto res = read_burst(STATUS_REG, std::span(&statusRegister, 1));
+        res.is_err()) return Err(res.unwrap_err());
+    const auto dataReady = GET_DATA_READY(statusRegister); 
+    if(not dataReady)
+        return Err(Error::DataNotReady);
+    
+    if(const auto res = write_reg(STATUS_REG, INIT_STATUS_VALUE);
+        res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = read_burst(PIXEL_DATA_START_ADDRESS, std::span(frameData, MLX90640_PIXEL_NUM)); 
+        res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = read_burst(AUX_DATA_START_ADDRESS, std::span(data,MLX90640_AUX_NUM));   
+        res.is_err()) return Err(res.unwrap_err());
+        
+    if(const auto res = read_burst(CTRL_REG, std::span(&frameData[832], 1));
+        res.is_err()) return Err(res.unwrap_err());
+    frameData[833] = GET_FRAME(statusRegister);
+    
+    if(const auto res = ValidateAuxData(data);
+        res.is_err()) return Err(res.unwrap_err());
+
+    for(size_t i=0; i<MLX90640_AUX_NUM; i++){
+        frameData[i+MLX90640_PIXEL_NUM] = data[i];
+    } 
+    
+    if(const auto res = ValidateFrameData(frameData);
+        res.is_err()) return Err(res.unwrap_err()); 
+    
+    return Ok(frameData[833]);    
+}
+
 
 IResult<> MLX90640::set_resolution(uint8_t resolution)
 {
@@ -958,121 +865,110 @@ IResult<> MLX90640::set_resolution(uint8_t resolution)
     value = ((uint16_t)resolution << CTRL_RESOLUTION_SHIFT);
     value &= ~CTRL_RESOLUTION_MASK;
     
-    if(const auto res = I2CRead(CTRL_REG, 1, &controlRegister1);
+    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
 
     value = (controlRegister1 & CTRL_RESOLUTION_MASK) | value;
-    if(const auto res = I2CWrite(CTRL_REG, value);         
+    if(const auto res = write_reg(CTRL_REG, value);         
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 
 }
 
-//------------------------------------------------------------------------------
 
-Result<void, Error> MLX90640::init(uint16_t EE[832], paramsMLX90640 & MLXPars){
+Result<void, Error> MLX90640::init(uint16_t EE[832], MLX90640_Coeffs & MLXPars){
     if(const auto res = set_refresh_rate(MLX90640::DataRate::_64Hz);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = I2CRead(0x2400, 832, EE);                     //读取像素校正参数
+    if(const auto res = read_burst(0x2400, std::span(EE, 832));                     //读取像素校正参数
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = extract_parameters(EE, &MLXPars);    //解析校正参数（计算温度时需要）
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
-Result<uint16_t, Error> MLX90640::get_cur_resolution(uint8_t slaveAddr)
-{
+Result<uint16_t, Error> MLX90640::get_cur_resolution(){
     uint16_t controlRegister1;
     int resolutionRAM;
 
-    
-    if(const auto res = I2CRead(CTRL_REG, 1, &controlRegister1);
+    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
     resolutionRAM = (controlRegister1 & ~CTRL_RESOLUTION_MASK) >> CTRL_RESOLUTION_SHIFT;
     
     return Ok(resolutionRAM); 
 }
 
-//------------------------------------------------------------------------------
 
 IResult<> MLX90640::set_refresh_rate(DataRate datarate)
 {
     uint16_t controlRegister1;
     uint16_t value;
     
-    //value = (refreshRate & 0x07)<<7;
     value = ((uint16_t)datarate << CTRL_REFRESH_SHIFT);
     value &= ~CTRL_REFRESH_MASK;
     
-    if(const auto res = I2CRead(CTRL_REG, 1, &controlRegister1);
+    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
+
     value = (controlRegister1 & CTRL_REFRESH_MASK) | value;
-    if(const auto res = I2CWrite(CTRL_REG, value);
+
+    if(const auto res = write_reg(CTRL_REG, value);
         res.is_err()) return Err(res.unwrap_err());
     
     return Ok();
 }
 
-//------------------------------------------------------------------------------
 
-Result<uint16_t, Error> MLX90640::get_refresh_rate(uint8_t slaveAddr)
-{
+Result<uint16_t, Error> MLX90640::get_refresh_rate(){
     uint16_t controlRegister1;
     int refreshRate;
     
-    if(const auto res = I2CRead(CTRL_REG, 1, &controlRegister1);
+    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
     refreshRate = (controlRegister1 & ~CTRL_REFRESH_MASK) >> CTRL_REFRESH_SHIFT;
     
     return Ok(refreshRate);
 }
 
-//------------------------------------------------------------------------------
 
-IResult<> MLX90640::set_interleaved_mode(uint8_t slaveAddr)
-{
+IResult<> MLX90640::set_interleaved_mode(){
     uint16_t controlRegister1;
     uint16_t value;
 
     
-    if(const auto res = I2CRead(CTRL_REG, 1, &controlRegister1);
+    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());  
 
     value = (controlRegister1 & ~CTRL_MEAS_MODE_MASK);
 
-    if(const auto res = I2CWrite(CTRL_REG, value);        
+    if(const auto res = write_reg(CTRL_REG, value);        
         res.is_err()) return Err(res.unwrap_err());
     
     return Ok();
 }
 
-//------------------------------------------------------------------------------
 
-IResult<> MLX90640::set_chess_mode(uint8_t slaveAddr)
-{
+IResult<> MLX90640::set_chess_mode(){
     uint16_t controlRegister1;
     uint16_t value;
         
-    if(const auto res = I2CRead(CTRL_REG, 1, &controlRegister1);
+    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
 
     value = (controlRegister1 | CTRL_MEAS_MODE_MASK);
 
-    if(const auto res = I2CWrite(CTRL_REG, value);        
+    if(const auto res = write_reg(CTRL_REG, value);        
         res.is_err()) return Err(res.unwrap_err());
     
     return Ok();
 }
 
-//------------------------------------------------------------------------------
 
-Result<uint16_t, Error> MLX90640::get_cur_mode(uint8_t slaveAddr)
-{
+Result<uint16_t, Error> MLX90640::get_cur_mode(){
     uint16_t controlRegister1;
     int modeRAM;
 
     
-    if(const auto res = I2CRead(CTRL_REG, 1, &controlRegister1);
+    if(const auto res = read_burst(CTRL_REG, std::span(&controlRegister1, 1));
         res.is_err()) return Err(res.unwrap_err());
 
     modeRAM = (controlRegister1 & CTRL_MEAS_MODE_MASK) >> CTRL_MEAS_MODE_SHIFT;
@@ -1080,11 +976,10 @@ Result<uint16_t, Error> MLX90640::get_cur_mode(uint8_t slaveAddr)
     return Ok(modeRAM); 
 }
 
-//------------------------------------------------------------------------------
 
 void MLX90640::calculate_to(
-    uint16_t *frameData, 
-    const paramsMLX90640 *params, 
+    const uint16_t *frameData, 
+    const MLX90640_Coeffs *params, 
     float emissivity, float tr, 
     float *result
 ){
@@ -1151,11 +1046,11 @@ void MLX90640::calculate_to(
       irDataCP[1] = irDataCP[1] - (params->cpOffset[1] + params->ilChessC[0]) * (1 + params->cpKta * (ta - 25)) * (1 + params->cpKv * (vdd - VCC_VOLTAGE));
     }
 
-    for(size_t pixelNumber = 0; pixelNumber < 768; pixelNumber++)
+    for(size_t i = 0; i < MLX90640_PIXEL_NUM; i++)
     {
-        ilPattern = pixelNumber / 32 - (pixelNumber / 64) * 2; 
-        chessPattern = ilPattern ^ (pixelNumber - (pixelNumber/2)*2); 
-        conversionPattern = ((pixelNumber + 2) / 4 - (pixelNumber + 3) / 4 + (pixelNumber + 1) / 4 - pixelNumber / 4) * (1 - 2 * ilPattern);
+        ilPattern = i / 32 - (i / 64) * 2; 
+        chessPattern = ilPattern ^ (i - (i/2)*2); 
+        conversionPattern = ((i + 2) / 4 - (i + 3) / 4 + (i + 1) / 4 - i / 4) * (1 - 2 * ilPattern);
         
         if(mode == 0)
         {
@@ -1167,11 +1062,11 @@ void MLX90640::calculate_to(
         }               
         
         if(pattern == frameData[833]){  
-            irData = (int16_t)frameData[pixelNumber] * gain;
+            irData = (int16_t)frameData[i] * gain;
             
-            kta = params->kta[pixelNumber]/ktaScale;
-            kv = params->kv[pixelNumber]/kvScale;
-            irData = irData - params->offset[pixelNumber]*(1 + kta*(ta - 25))*(1 + kv*(vdd - VCC_VOLTAGE));
+            kta = params->kta[i]/ktaScale;
+            kv = params->kv[i]/kvScale;
+            irData = irData - params->offset[i]*(1 + kta*(ta - 25))*(1 + kv*(vdd - VCC_VOLTAGE));
             
             if(mode !=  params->calibrationModeEE)
             {
@@ -1181,7 +1076,7 @@ void MLX90640::calculate_to(
             irData = irData - params->tgc * irDataCP[subPage];
             irData = irData / emissivity;
             
-            alphaCompensated = SCALEALPHA*alphaScale/params->alpha[pixelNumber];
+            alphaCompensated = SCALEALPHA*alphaScale/params->alpha[i];
             alphaCompensated = alphaCompensated*(1 + params->KsTa * (ta - 25));
                         
             Sx = alphaCompensated * alphaCompensated * alphaCompensated * (irData + alphaCompensated * taTr);
@@ -1208,21 +1103,20 @@ void MLX90640::calculate_to(
             
             To = sqrt(sqrt(irData / (alphaCompensated * alphaCorrR[range] * (1 + params->ksTo[range] * (To - params->ct[range]))) + taTr)) - ABSOLUTE_ZERO;
                         
-            result[pixelNumber] = To;
+            result[i] = To;
         }
     }
 }
 
-//------------------------------------------------------------------------------
 
-void MLX90640::get_image(uint16_t *frameData, const paramsMLX90640 *params, float *result){
+void MLX90640::get_image(const uint16_t *frameData, const MLX90640_Coeffs *params, float *result){
     float vdd;
     float ta;
     float gain;
     float irDataCP[2];
     float irData;
     float alphaCompensated;
-    uint8_t mode;
+
     int8_t ilPattern;
     int8_t chessPattern;
     int8_t pattern;
@@ -1241,13 +1135,13 @@ void MLX90640::get_image(uint16_t *frameData, const paramsMLX90640 *params, floa
     ktaScale = POW2(params->ktaScale);
     kvScale = POW2(params->kvScale);
     
-//------------------------- Gain calculation -----------------------------------    
+    //------------------------- Gain calculation -----------------------------------    
     
     gain = (float)params->gainEE / (int16_t)frameData[778]; 
 
-//------------------------- Image calculation -------------------------------------    
+    //------------------------- Image calculation -------------------------------------    
     
-    mode = (frameData[832] & CTRL_MEAS_MODE_MASK) >> 5;
+    const uint8_t mode = (frameData[832] & CTRL_MEAS_MODE_MASK) >> 5;
     
     irDataCP[0] = (int16_t)frameData[776] * gain;
     irDataCP[1] = (int16_t)frameData[808] * gain;
@@ -1259,10 +1153,10 @@ void MLX90640::get_image(uint16_t *frameData, const paramsMLX90640 *params, floa
       irDataCP[1] = irDataCP[1] - (params->cpOffset[1] + params->ilChessC[0]) * (1 + params->cpKta * (ta - 25)) * (1 + params->cpKv * (vdd - VCC_VOLTAGE));
     }
 
-    for( size_t pixelNumber = 0; pixelNumber < 768; pixelNumber++){
-        ilPattern = pixelNumber / 32 - (pixelNumber / 64) * 2; 
-        chessPattern = ilPattern ^ (pixelNumber - (pixelNumber/2)*2); 
-        conversionPattern = ((pixelNumber + 2) / 4 - (pixelNumber + 3) / 4 + (pixelNumber + 1) / 4 - pixelNumber / 4) * (1 - 2 * ilPattern);
+    for( size_t i = 0; i < MLX90640_PIXEL_NUM; i++){
+        ilPattern = i / 32 - (i / 64) * 2; 
+        chessPattern = ilPattern ^ (i - (i/2)*2); 
+        conversionPattern = ((i + 2) / 4 - (i + 3) / 4 + (i + 1) / 4 - i / 4) * (1 - 2 * ilPattern);
         
         if(mode == 0){
             pattern = ilPattern; 
@@ -1271,30 +1165,29 @@ void MLX90640::get_image(uint16_t *frameData, const paramsMLX90640 *params, floa
         }
         
         if(pattern == frameData[833]){
-            irData = (int16_t)frameData[pixelNumber] * gain;
+            irData = (int16_t)frameData[i] * gain;
             
-            kta = params->kta[pixelNumber]/ktaScale;
-            kv = params->kv[pixelNumber]/kvScale;
-            irData = irData - params->offset[pixelNumber]*(1 + kta*(ta - 25))*(1 + kv*(vdd - VCC_VOLTAGE));
+            kta = params->kta[i]/ktaScale;
+            kv = params->kv[i]/kvScale;
+            irData = irData - params->offset[i]*(1 + kta*(ta - 25))*(1 + kv*(vdd - VCC_VOLTAGE));
 
-            if(mode !=  params->calibrationModeEE)
-            {
+            if(mode !=  params->calibrationModeEE){
               irData = irData + params->ilChessC[2] * (2 * ilPattern - 1) - params->ilChessC[1] * conversionPattern; 
             }
             
             irData = irData - params->tgc * irDataCP[subPage];
                         
-            alphaCompensated = params->alpha[pixelNumber];
+            alphaCompensated = params->alpha[i];
             
             image = irData*alphaCompensated;
             
-            result[pixelNumber] = image;
+            result[i] = image;
         }
     }
 }
 
 
-float MLX90640::get_ta(uint16_t *frameData, const paramsMLX90640 *params)
+float MLX90640::get_ta(const uint16_t *frameData, const MLX90640_Coeffs *params)
 {
     int16_t ptat;
     float ptatArt;
@@ -1305,7 +1198,7 @@ float MLX90640::get_ta(uint16_t *frameData, const paramsMLX90640 *params)
     
     ptat = (int16_t)frameData[800];
     
-    ptatArt = (ptat / (ptat * params->alphaPTAT + (int16_t)frameData[768])) * POW2(18u);
+    ptatArt = (ptat / (ptat * params->alphaPTAT + (int16_t)frameData[MLX90640_PIXEL_NUM])) * POW2(18u);
     
     ta = (ptatArt / (1 + params->KvPTAT * (vdd - VCC_VOLTAGE)) - params->vPTAT25);
     ta = ta / params->KtPTAT + 25;
@@ -1313,16 +1206,9 @@ float MLX90640::get_ta(uint16_t *frameData, const paramsMLX90640 *params)
     return ta;
 }
 
-//------------------------------------------------------------------------------
 
-int MLX90640::get_subpage_number(uint16_t *frameData)
-{
-    return frameData[833];    
-
-}    
-
-//------------------------------------------------------------------------------
-void MLX90640::bad_pixels_correction(uint16_t *pixels, float *to, int mode, paramsMLX90640 *params)
+#if 0
+void MLX90640::bad_pixels_correction(uint16_t *pixels, float *to, int mode, MLX90640_Coeffs *params)
 {   
     float ap[4];
     uint8_t pix;
@@ -1419,7 +1305,6 @@ void MLX90640::bad_pixels_correction(uint16_t *pixels, float *to, int mode, para
         pix = pix + 1;    
     }    
 }
-
-//------------------------------------------------------------------------------
+#endif
 
 }

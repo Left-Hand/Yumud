@@ -8,14 +8,31 @@
 #include "hal/bus/bus_enums.hpp"
 #include "hal/hal_result.hpp"
 
+#include "core/sdk.hpp"
+
 namespace ymd::hal{
 
+enum class SpiI2sIT:uint8_t{
+    TXE = ((uint8_t)0x71),
+    RXNE = ((uint8_t)0x60),
+    ERR = ((uint8_t)0x50),
+    OVR = ((uint8_t)0x56),
+    MODF = ((uint8_t)0x55),
+    CRCERR = ((uint8_t)0x54),
+    UDR = ((uint8_t)0x53)
+};
+
+enum class SpiEvent:uint8_t{
+    TransmitBufferEmpty,
+    ReceiveBufferNotEmpty
+};
 
 class SpiSlaveRank{
 public:
     explicit constexpr SpiSlaveRank(const uint8_t rank):
         rank_(rank){}
 
+    uint8_t count() const {return rank_;}
     uint16_t as_unique_id() const {return static_cast<uint16_t>(rank_);}
 
 private:
@@ -87,21 +104,19 @@ public:
         CommStrategy rx_strategy = CommStrategy::Blocking;
     };
 
-    virtual void init(const Config & cfg) = 0;
-
 
     [[nodiscard]]
     Option<SpiSlaveRank> allocate_cs_gpio(Some<hal::GpioIntf *> io);
 
 protected:
     VGpioPort <SPI_MAX_PINS> cs_port_ = VGpioPort<SPI_MAX_PINS>();
-    CommStrategy tx_strategy_;
-    CommStrategy rx_strategy_;
+    CommStrategy tx_strategy_ = CommStrategy::Nil;
+    CommStrategy rx_strategy_ = CommStrategy::Nil;
     PeripheralOwnershipTracker owner_ = {};
     Option<Nth> last_nth_ = None;
 
     [[nodiscard]] __fast_inline hal::HalResult lead(const SpiSlaveRank rank){
-        const auto nth = Nth(rank.as_unique_id());
+        const auto nth = Nth(rank.count());
         if(not cs_port_.is_nth_valid(nth))
             return hal::HalResult::NoSelecter;
         cs_port_[nth].clr();

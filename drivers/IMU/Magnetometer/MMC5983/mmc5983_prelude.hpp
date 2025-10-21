@@ -84,7 +84,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
     static_assert(sizeof(DataPacket) == 8);
 
     struct R8_Status:public Reg8<>{
-        static constexpr RegAddr address = 0x08;
+        static constexpr RegAddr ADDRESS = 0x08;
         uint8_t meas_mag_done:1;
         uint8_t meas_temp_done:1;
         const uint8_t __resv1__:2 = 0;
@@ -93,7 +93,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
     }DEF_R8(status_reg)
 
     struct R8_InternalControl0:public Reg8<>{
-        static constexpr RegAddr address = 0x09;
+        static constexpr RegAddr ADDRESS = 0x09;
         uint8_t tm_m:1;
         uint8_t tm_t:1;
         uint8_t int_meas_done_en:1;
@@ -105,7 +105,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
     }DEF_R8(internal_control_0_reg)
 
     struct R8_InternalControl1:public Reg8<>{
-        static constexpr RegAddr address = 0x0A;
+        static constexpr RegAddr ADDRESS = 0x0A;
         BandWidth bw:2;
         uint8_t x_inhibit:1;
         uint8_t yz_inhibit:2;
@@ -115,7 +115,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
 
 
     struct R8_InternalControl2:public Reg8<>{
-        static constexpr RegAddr address = 0x0B;
+        static constexpr RegAddr ADDRESS = 0x0B;
         Odr data_rate:3;
         uint8_t cmm_en:1;
         PrdSet prd_set:3;
@@ -123,7 +123,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
     }DEF_R8(internal_control_2_reg)
 
     struct R8_ProductID:public Reg8<>{
-        static constexpr RegAddr address = 0x2F;
+        static constexpr RegAddr ADDRESS = 0x2F;
         static constexpr uint8_t KEY = 0b00110000;
         uint8_t product_id;
     }DEF_R8(product_id_reg)

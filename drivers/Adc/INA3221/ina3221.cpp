@@ -42,11 +42,11 @@ IResult<> INA3221::init(const Config & cfg){
     if(const auto res = this->validate(); 
         res.is_err()) return CHECKRES(res, "INA3221 verify failed");
 
-    if(const auto res = this->enable_channel(ChannelNth::CH1, EN);
+    if(const auto res = this->enable_channel(ChannelSelection::CH1, EN);
         res.is_err()) return res;
-    if(const auto res = this->enable_channel(ChannelNth::CH2, EN);
+    if(const auto res = this->enable_channel(ChannelSelection::CH2, EN);
         res.is_err()) return res;
-    if(const auto res = this->enable_channel(ChannelNth::CH3, EN);
+    if(const auto res = this->enable_channel(ChannelSelection::CH3, EN);
         res.is_err()) return res;
     if(const auto res = this->reconf(cfg);
         res.is_err()) return res;
@@ -86,20 +86,20 @@ IResult<> INA3221::validate(){
     return Ok();
 }
 
-IResult<> INA3221::update(const ChannelNth nth){
+IResult<> INA3221::update(const ChannelSelection sel){
     #define READ_DUAL_REG(r1, r2)\
         if(const auto res = read_reg(r1); res.is_err()) return CHECKRES(res);\
         if(const auto res = read_reg(r2); res.is_err()) return CHECKRES(res);\
         return Ok();\
 
     // update bus and shunt
-    switch(nth){
+    switch(sel){
         default: __builtin_unreachable();
-        case ChannelNth::CH1: 
+        case ChannelSelection::CH1: 
             READ_DUAL_REG(shuntvolt1_reg, busvolt1_reg);
-        case ChannelNth::CH2: 
+        case ChannelSelection::CH2: 
             READ_DUAL_REG(shuntvolt2_reg, busvolt2_reg);
-        case ChannelNth::CH3: 
+        case ChannelSelection::CH3: 
             READ_DUAL_REG(shuntvolt3_reg, busvolt3_reg);
     }
 
@@ -112,17 +112,17 @@ IResult<> INA3221::set_average_times(const AverageTimes times){
     return write_reg(reg);
 }
 
-IResult<> INA3221::enable_channel(const ChannelNth nth, const Enable en){
+IResult<> INA3221::enable_channel(const ChannelSelection sel, const Enable en){
     auto reg = RegCopy(config_reg);
-    switch(nth){
+    switch(sel){
         default: __builtin_unreachable();
-        case ChannelNth::CH1:
+        case ChannelSelection::CH1:
             reg.ch1_en = en == EN;
             break;
-        case ChannelNth::CH2:
+        case ChannelSelection::CH2:
             reg.ch2_en = en == EN;
             break;
-        case ChannelNth::CH3:
+        case ChannelSelection::CH3:
             reg.ch3_en = en == EN;
             break;
     }
@@ -152,14 +152,14 @@ IResult<> INA3221::reset(){
 }
 
 
-IResult<int> INA3221::get_shunt_volt_uv(const ChannelNth nth){
+IResult<int> INA3221::get_shunt_volt_uv(const ChannelSelection sel){
 
     // RegAddr addr;
     const R16_ShuntVolt & reg = [&]() -> const R16_ShuntVolt &{
-        switch(nth){
-            case ChannelNth::CH1:return shuntvolt1_reg;
-            case ChannelNth::CH2:return shuntvolt2_reg;
-            case ChannelNth::CH3:return shuntvolt3_reg;
+        switch(sel){
+            case ChannelSelection::CH1:return shuntvolt1_reg;
+            case ChannelSelection::CH2:return shuntvolt2_reg;
+            case ChannelSelection::CH3:return shuntvolt3_reg;
             default: __builtin_unreachable();
         }
     }();
@@ -171,14 +171,14 @@ IResult<int> INA3221::get_shunt_volt_uv(const ChannelNth nth){
 
 
 
-IResult<int> INA3221::get_bus_volt_mv(const ChannelNth nth){
+IResult<int> INA3221::get_bus_volt_mv(const ChannelSelection sel){
     // RegAddr addr;
     const R16_BusVolt & reg = [&]() -> const R16_BusVolt &{
-        switch(nth){
+        switch(sel){
             default: __builtin_unreachable();
-            case ChannelNth::CH1:return busvolt1_reg;
-            case ChannelNth::CH2:return busvolt2_reg;
-            case ChannelNth::CH3:return busvolt3_reg;
+            case ChannelSelection::CH1:return busvolt1_reg;
+            case ChannelSelection::CH2:return busvolt2_reg;
+            case ChannelSelection::CH3:return busvolt3_reg;
         }
     }();
 
@@ -189,25 +189,25 @@ IResult<int> INA3221::get_bus_volt_mv(const ChannelNth nth){
 }
 
 
-IResult<real_t> INA3221::get_shunt_volt(const ChannelNth nth){
-    const auto res = get_shunt_volt_uv(nth);
+IResult<real_t> INA3221::get_shunt_volt(const ChannelSelection sel){
+    const auto res = get_shunt_volt_uv(sel);
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok(iq_t<16>(iq_t<8>(res.unwrap()) / 100) / 10000);
 }
 
-IResult<real_t> INA3221::get_bus_volt(const ChannelNth nth){
-    const auto res = get_bus_volt_mv(nth);
+IResult<real_t> INA3221::get_bus_volt(const ChannelSelection sel){
+    const auto res = get_bus_volt_mv(sel);
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok(real_t(res.unwrap()) / 1000);
 }
 
 
-IResult<> INA3221::set_instant_ovc_threshold(const ChannelNth nth, const real_t volt){
+IResult<> INA3221::set_instant_ovc_threshold(const ChannelSelection sel, const real_t volt){
     const RegAddr addr = [&]{
-        switch(nth){
-            case ChannelNth::CH1: return instant_ovc1_reg.address; 
-            case ChannelNth::CH2: return instant_ovc1_reg.address; 
-            case ChannelNth::CH3: return instant_ovc1_reg.address; 
+        switch(sel){
+            case ChannelSelection::CH1: return instant_ovc1_reg.ADDRESS; 
+            case ChannelSelection::CH2: return instant_ovc1_reg.ADDRESS; 
+            case ChannelSelection::CH3: return instant_ovc1_reg.ADDRESS; 
             default: __builtin_unreachable();
         }
     }();
@@ -216,12 +216,12 @@ IResult<> INA3221::set_instant_ovc_threshold(const ChannelNth nth, const real_t 
 }
 
 
-IResult<> INA3221::set_constant_ovc_threshold(const ChannelNth nth, const real_t volt){
+IResult<> INA3221::set_constant_ovc_threshold(const ChannelSelection sel, const real_t volt){
     const RegAddr addr = [&]{
-        switch(nth){
-            case ChannelNth::CH1: return constant_ovc1_reg.address; 
-            case ChannelNth::CH2: return constant_ovc1_reg.address; 
-            case ChannelNth::CH3: return constant_ovc1_reg.address; 
+        switch(sel){
+            case ChannelSelection::CH1: return constant_ovc1_reg.ADDRESS; 
+            case ChannelSelection::CH2: return constant_ovc1_reg.ADDRESS; 
+            case ChannelSelection::CH3: return constant_ovc1_reg.ADDRESS; 
             default: __builtin_unreachable();
         }
     }();

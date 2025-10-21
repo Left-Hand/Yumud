@@ -110,11 +110,11 @@ void Can::init_interrupts(){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             //tx interrupt
-            NvicRequest{{1, 7}, USB_HP_CAN1_TX_IRQn}.enable(EN);
+            NvicPriority{1, 7}.with_irqn(USB_HP_CAN1_TX_IRQn).enable(EN);
             //rx0 interrupt
-            NvicRequest{{1, 5}, USB_LP_CAN1_RX0_IRQn}.enable(EN);
+            NvicPriority{1, 5}.with_irqn(USB_LP_CAN1_RX0_IRQn).enable(EN);
             //rx1 interrupt
-            NvicRequest{{1, 6}, CAN1_RX1_IRQn}.enable(EN);
+            NvicPriority{1, 6}.with_irqn(CAN1_RX1_IRQn).enable(EN);
             //sce interrupt
 
             #ifdef SCE_ENABLED
@@ -237,18 +237,20 @@ void Can::enable_rcc(const Enable en){
         #ifdef ENABLE_CAN1
         case CAN1_BASE:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+            return;
         }
-        break;
         #endif
 
 
         #ifdef ENABLE_CAN2
         case CAN2_BASE:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, ENABLE);
+            return;
         }
-        break;
         #endif
     }
+
+    __builtin_trap();
 }
 
 void Can::set_remap(const uint8_t remap){
@@ -258,15 +260,15 @@ void Can::set_remap(const uint8_t remap){
             switch(remap){
                 case 0:
                     GPIO_PinRemapConfig(GPIO_Remap1_CAN1, DISABLE);
-                    break;
+                    return;
                 case 1:
                 case 2:
                     GPIO_PinRemapConfig(GPIO_Remap1_CAN1, ENABLE);
-                    break;
+                    return;
                 case 3:
                     GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);//for TEST
                     GPIO_PinRemapConfig(GPIO_Remap2_CAN1, ENABLE);
-                    break;
+                    return;
             }
         }
         break;
@@ -278,15 +280,16 @@ void Can::set_remap(const uint8_t remap){
             switch(remap){
                 case 0:
                     GPIO_PinRemapConfig(GPIO_Remap_CAN2, DISABLE);
-                    break;
+                    return;
                 case 1:
                     GPIO_PinRemapConfig(GPIO_Remap_CAN2, ENABLE);
-                    break;
+                    return;
             }
         }
         break;
         #endif
     }
+    __builtin_trap();
 }
 
 
@@ -297,11 +300,11 @@ void Can::init(const Config & cfg){
 
 
     const CAN_InitTypeDef CAN_InitConf = {
-        .CAN_Prescaler = cfg.coeffs.prescale,
+        .CAN_Prescaler = cfg.timming_coeffs.prescale,
         .CAN_Mode = std::bit_cast<uint8_t>(cfg.mode),
-        .CAN_SJW = std::bit_cast<uint8_t>(cfg.coeffs.swj),
-        .CAN_BS1 = std::bit_cast<uint8_t>(cfg.coeffs.bs1),
-        .CAN_BS2 = std::bit_cast<uint8_t>(cfg.coeffs.bs2),
+        .CAN_SJW = std::bit_cast<uint8_t>(cfg.timming_coeffs.swj),
+        .CAN_BS1 = std::bit_cast<uint8_t>(cfg.timming_coeffs.bs1),
+        .CAN_BS2 = std::bit_cast<uint8_t>(cfg.timming_coeffs.bs2),
 
         .CAN_TTCM = DISABLE,
         .CAN_ABOM = ENABLE,

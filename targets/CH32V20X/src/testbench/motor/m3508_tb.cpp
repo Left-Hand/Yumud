@@ -24,8 +24,9 @@ void m3508_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
     hal::can1.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
-        .mode = hal::CanMode::Normal
+        .remap = 0,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
     M3508Port port{hal::can1};

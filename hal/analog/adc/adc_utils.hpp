@@ -8,7 +8,7 @@
 
 namespace ymd::hal{
 
-enum class AdcChannelNth:uint8_t{
+enum class AdcChannelSelection:uint8_t{
     CH0, CH1, CH2, CH3, 
     CH4, CH5, CH6, CH7, 
     CH8, CH9, CH10, CH11, 
@@ -54,11 +54,25 @@ enum class AdcPga:uint8_t{
 };
 
 enum class AdcRegularTrigger:uint8_t{
-    T1CC1, T1CC2, T1CC3, T2CC2, T3TRGO, T4CC4, EXTI11_T8TRGO, SW
+    T1CC1 = 0b000, 
+    T1CC2 = 0b001, 
+    T1CC3 = 0b010, 
+    T2CC2 = 0b011, 
+    T3TRGO = 0b100, 
+    T4CC4 = 0b101, 
+    EXTI11_T8TRGO = 0b110, 
+    SW = 0b111
 };
 
 enum class AdcInjectedTrigger:uint8_t{
-    T1TRGO, T1CC4, T2TRGO, T2CC1, T3CC4, T4TRGO, EXTI1515_T8CC4, SW
+    T1TRGO = 0b000, 
+    T1CC4 = 0b001, 
+    T2TRGO = 0b010, 
+    T2CC1 = 0b011, 
+    T3CC4 = 0b100, 
+    T4TRGO = 0b101, 
+    EXTI1515_T8CC4 = 0b110, 
+    SW = 0b111
 };
 
 
@@ -69,7 +83,7 @@ enum class AdcIT:uint16_t{
 };
 
 namespace adc_details{
-    void install_pin(const AdcChannelNth channel, const Enable en);
+    void install_pin(const AdcChannelSelection channel, const Enable en);
     real_t read_temp();
 }
 

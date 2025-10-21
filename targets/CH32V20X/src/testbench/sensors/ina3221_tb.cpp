@@ -38,10 +38,10 @@ void ina3221_main(){
     ina.init(INA3221::Config::from_default()).examine();
 
     while(true){
-        const auto ch = INA3221::ChannelNth::CH1;
+        const auto ch = INA3221::ChannelSelection::CH1;
         ina.update(ch).examine();
-        ina.update(INA3221::ChannelNth::CH2).examine();
-        ina.update(INA3221::ChannelNth::CH3).examine();
+        ina.update(INA3221::ChannelSelection::CH2).examine();
+        ina.update(INA3221::ChannelSelection::CH3).examine();
         DEBUG_PRINTLN(
             ina.get_bus_volt(ch).examine(), 
             ina.get_shunt_volt(ch).examine() * real_t(INV_SHUNT_RES)

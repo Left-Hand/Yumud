@@ -13,7 +13,7 @@ namespace ymd::drivers{
 struct AD9959_Regs{
     using RegAddr = uint8_t;
     struct R8_ChannelSelect:public Reg8<>{
-        static constexpr RegAddr address = 0x00;
+        static constexpr RegAddr ADDRESS = 0x00;
 
         uint8_t lsb_first:1;
         uint8_t serial_io_mode:2;
@@ -25,7 +25,7 @@ struct AD9959_Regs{
     } DEF_R8(channel_select)
 
     // struct R32_Funtion1:public Reg32<>{
-    //     static constexpr RegAddr address = 0x01;
+    //     static constexpr RegAddr ADDRESS = 0x01;
 
     //     uint8_t manual_software_sync:1;
     //     uint8_t manual_hardware_sync:1;
@@ -45,7 +45,7 @@ struct AD9959_Regs{
     // } DEF_R32(function1);
 
     struct R16_Funtion2:public Reg16<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
 
         uint8_t system_clock_offset:2;
         uint8_t open:2;
@@ -62,7 +62,7 @@ struct AD9959_Regs{
     } DEF_R16(function2);
 
     struct R32_ChannelFunction:public Reg32<>{
-        static constexpr RegAddr address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
 
         uint8_t sinewave_output_en:1;
         uint8_t clr_phase_accu:1;
@@ -83,12 +83,12 @@ struct AD9959_Regs{
     };
 
     struct R32_ChannelFreqencyTuning:public Reg32<>{
-        static constexpr RegAddr address = 0x04;
+        static constexpr RegAddr ADDRESS = 0x04;
         uint32_t data;
     };
 
     struct R32_AmplitudeControl:public Reg32<>{
-        static constexpr RegAddr address = 0x06;
+        static constexpr RegAddr ADDRESS = 0x06;
 
         uint32_t factor:10;
         uint32_t load_addr_at_io_update:1;
@@ -103,7 +103,7 @@ struct AD9959_Regs{
 
 
     struct R32_RisingDeltaWord:public Reg32<>{
-        static constexpr RegAddr address = 0x04;
+        static constexpr RegAddr ADDRESS = 0x04;
 
         uint16_t data;
     };
@@ -111,19 +111,19 @@ struct AD9959_Regs{
 
 
     struct R16_LinearSweepRate:public Reg16<>{
-        static constexpr RegAddr address = 0x07;
+        static constexpr RegAddr ADDRESS = 0x07;
 
         uint16_t data;
     };
 
     struct R32_FallingDeltaWord:public Reg32<>{
-        static constexpr RegAddr address = 0x08;
+        static constexpr RegAddr ADDRESS = 0x08;
 
         uint32_t data;
     };
 
     struct R32_ChannelWord:public Reg32<>{
-        static constexpr RegAddr address = 0x09;
+        static constexpr RegAddr ADDRESS = 0x09;
         uint32_t data;
     };
 
@@ -132,7 +132,7 @@ struct AD9959_Regs{
 
 class AD9959{
 protected:
-    enum class ChannelNth:uint8_t{
+    enum class ChannelSelection:uint8_t{
         Nil = 0,
         _0    = 0x10,
         _1    = 0x20,
@@ -273,7 +273,7 @@ protected:
     uint32_t              reciprocal;             // 2^(64-shift)/core_clock
     uint8_t               shift;                  // (2<<shift) < core_clock, but just (28 or less)
     #endif
-    ChannelNth               last_channels;
+    ChannelSelection               last_channels;
     static constexpr uint32_t reference_freq = 25000000; // Use your crystal or reference frequency
     hal::SpiDrv spi_drv_;
     Option<hal::GpioIntf &>         reset_gpio;               // Reset pin (active = high)
@@ -311,27 +311,27 @@ public:
     // Calculating deltas is expensive. You might use this infrequently and then use setDelta
     uint32_t frequency_delta(uint32_t freq) const;
 
-    void set_frequency(ChannelNth chan, uint32_t freq);
+    void set_frequency(ChannelSelection chan, uint32_t freq);
 
-    void set_delta(ChannelNth chan, uint32_t delta);
+    void set_delta(ChannelSelection chan, uint32_t delta);
 
-    void set_amplitude(ChannelNth chan, uint16_t amplitude);        // Maximum amplitude value is 1024
+    void set_amplitude(ChannelSelection chan, uint16_t amplitude);        // Maximum amplitude value is 1024
 
-    void set_phase(ChannelNth chan, uint16_t phase);                // Maximum phase value is 16383
+    void set_phase(ChannelSelection chan, uint16_t phase);                // Maximum phase value is 16383
 
     void update();
 
-    void sweep_frequency(ChannelNth chan, uint32_t freq, bool follow = true);      // Target frequency
+    void sweep_frequency(ChannelSelection chan, uint32_t freq, bool follow = true);      // Target frequency
 
-    void sweep_delta(ChannelNth chan, uint32_t delta, bool follow = true);
+    void sweep_delta(ChannelSelection chan, uint32_t delta, bool follow = true);
 
-    void sweep_amplitude(ChannelNth chan, uint16_t amplitude, bool follow = true);  // Target amplitude (half)
+    void sweep_amplitude(ChannelSelection chan, uint16_t amplitude, bool follow = true);  // Target amplitude (half)
 
-    void sweep_phase(ChannelNth chan, uint16_t phase, bool follow = true);          // Target phase (180 degrees)
+    void sweep_phase(ChannelSelection chan, uint16_t phase, bool follow = true);          // Target phase (180 degrees)
 
-    void sweep_rates(ChannelNth chan, uint32_t increment, uint8_t up_rate, uint32_t decrement = 0, uint8_t down_rate = 0);
+    void sweep_rates(ChannelSelection chan, uint32_t increment, uint8_t up_rate, uint32_t decrement = 0, uint8_t down_rate = 0);
 
-    void set_channels(ChannelNth chan);
+    void set_channels(ChannelSelection chan);
     // To read channel registers, you must first use setChannels to select exactly one channel!
     uint32_t read(Register reg);
     protected:

@@ -80,7 +80,7 @@ IResult<> AK8963::validate(){
     if (const auto res = phy_.validate();
         res.is_err()) return Err(res.unwrap_err());
 
-    if(const auto res = read_reg(wia_reg.address, wia_reg.data);
+    if(const auto res = read_reg(wia_reg.ADDRESS, wia_reg.data);
         res.is_err()) return Err(res.unwrap_err());
 
     if (wia_reg.data != wia_reg.correct){
@@ -131,7 +131,7 @@ IResult<> AK8963::update(){
     // ST2 register at the end. 
     if(const auto res = this->read_burst(mag_x_reg.address, std::span(&mag_x_reg.as_ref(), 3));
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = read_reg(st2_reg.address, st2_reg.as_ref());
+    if(const auto res = read_reg(st2_reg.ADDRESS, st2_reg.as_ref());
         res.is_err()) return Err(res.unwrap_err());
     AK8963_ASSERT(!st2_reg.hofl, "data overflow");
     data_valid_ &= !st2_reg.hofl;

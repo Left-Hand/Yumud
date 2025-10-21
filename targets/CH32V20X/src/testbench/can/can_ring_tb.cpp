@@ -25,8 +25,9 @@ void can_ring_main(){
 
     auto & can = hal::can1;
     can.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
-        .mode = hal::Can::Mode::Loopback
+        .remap = CAN1_REMAP,
+        .mode = hal::Can::Mode::Loopback,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
     auto write_msg = [&](const hal::CanMsg & msg){

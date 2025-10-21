@@ -70,9 +70,9 @@ public:
     using Callback = std::function<void(CanEvent)>;
 
     struct Config{
-        CanBitTimmingCoeffs coeffs;
-        Mode mode = Mode::Normal;
         uint8_t remap;
+        Mode mode;
+        CanBitTimmingCoeffs timming_coeffs;
     };
 
 public:

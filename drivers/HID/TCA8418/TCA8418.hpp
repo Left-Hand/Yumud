@@ -13,10 +13,7 @@ namespace ymd::drivers{
 
 class TCA8418 final:public TCA8418_Regs{
 public:
-
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0110100);
-
-    TCA8418(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit TCA8418(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, addr}){;}
 
     IResult<> validate();

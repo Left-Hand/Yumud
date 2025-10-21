@@ -66,10 +66,12 @@ struct R32_DMA_CFGR{
     uint32_t CIRC:1;
     uint32_t PINC:1;
     uint32_t MINC:1;
+
     uint32_t PSIZE:2;
-    uint32_t MSISE:2;
+    uint32_t MSIZE:2;
     uint32_t PL:2;
     uint32_t MEM2MEM:1;
+
     uint32_t :17;
 };ASSERT_REG_IS_32BIT(R32_DMA_CFGR)
 
@@ -117,14 +119,6 @@ struct DMA_CH_Def{
 
     void enable_mem_increment(const Enable en){
         CFGR.MINC = en == EN;
-    }
-
-    void set_periph_data_size_bytes(const uint8_t size){
-        CFGR.PSIZE = size - 1;
-    }
-
-    void set_mem_data_size_bytes(const uint8_t size){
-        CFGR.MSISE = size - 1;
     }
 
     void set_priority(const uint8_t prio){

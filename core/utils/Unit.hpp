@@ -33,7 +33,7 @@ public:
     static constexpr int m_A = A;
 
     template<typename Other>
-    using Mul = _Mul<
+    using mul_with = _Mul<
         Other::m_L,
         Other::m_M,
         Other::m_T,
@@ -45,7 +45,7 @@ public:
     >;
 
     template<typename Other>
-    using Div = _Div<
+    using div_with = _Div<
         Other::m_L,
         Other::m_M,
         Other::m_T,
@@ -56,7 +56,7 @@ public:
         Other::m_A
     >;
 
-    using Inv = Policy<
+    using inv = Policy<
         -m_L,
         -m_M,
         -m_T,
@@ -81,39 +81,39 @@ namespace policy{
     using amount_of_substance =     Policy<0, 0, 0, 0, 0, 0, 1, 0>;
     using spin             =       Policy<0, 0, 0, 0, 0, 0, 0, 1>;
 
-    using frequency = time::Inv;
-    using speed = length::Div<time>;
-    using angular_speed = spin::Div<time>;
-    using charge = current::Mul<time>;
+    using frequency = time::inv;
+    using speed = length::div_with<time>;
+    using angular_speed = spin::div_with<time>;
+    using charge = current::mul_with<time>;
 
     // Kinematics
-    using acceleration = speed::Div<time>;          // m/s²
-    using jerk = acceleration::Div<time>;           // m/s³
+    using acceleration = speed::div_with<time>;          // m/s²
+    using jerk = acceleration::div_with<time>;           // m/s³
 
     // Dynamics
-    using force = mass::Mul<acceleration>;          // N (kg·m/s²)
-    using torque = force::Mul<length>::Mul<spin>;  // N·m·rad⁻¹
-    using energy = force::Mul<length>;  
-    using power = energy::Div<time>;                // W (J/s)
+    using force = mass::mul_with<acceleration>;          // N (kg·m/s²)
+    using torque = force::mul_with<length>::mul_with<spin>;  // N·m·rad⁻¹
+    using energy = force::mul_with<length>;  
+    using power = energy::div_with<time>;                // W (J/s)
 
     // Electromagnetism
-    using voltage = power::Div<current>;            // V (W/A)
-    using resistance = voltage::Div<current>;       // Ω (V/A)
-    using capacitance = charge::Div<voltage>;       // F (C/V)
+    using voltage = power::div_with<current>;            // V (W/A)
+    using resistance = voltage::div_with<current>;       // Ω (V/A)
+    using capacitance = charge::div_with<voltage>;       // F (C/V)
 
     // Magnetic flux (Weber)
-    using magnetic_flux = voltage::Mul<time>;  // Wb = V·s
+    using magnetic_flux = voltage::mul_with<time>;  // Wb = V·s
     
     // Magnetic flux density (Tesla)
-    using magnetic_flux_density = magnetic_flux::Div<length::Mul<length>>; // T = Wb/m²
+    using magnetic_flux_density = magnetic_flux::div_with<length::mul_with<length>>; // T = Wb/m²
     
     // Inductance (Henry)
-    using inductance = magnetic_flux::Div<current>;  // H = Wb/A
+    using inductance = magnetic_flux::div_with<current>;  // H = Wb/A
     
     // Permeability
-    using permeability = inductance::Div<length>;   // H/m
+    using permeability = inductance::div_with<length>;   // H/m
 
-    using entropy = energy::Div<temperature>;               // J/K
+    using entropy = energy::div_with<temperature>;               // J/K
 }
 
 // // Add C++20 concept for unit checks
@@ -146,6 +146,13 @@ public:
     using ratio = TRatio;
     constexpr Quantity(const T & value):value_(value){;}
 
+    template<typename TRatio2>
+    constexpr Quantity & operator = (const Quantity<TPolicy, T, TRatio2> & other) {
+        using scaler = std::ratio_divide<TRatio2, TRatio>;
+        constexpr auto scale = static_cast<T>(scaler::num) / scaler::den; 
+        value_ = other.value_ * scale;
+        return *this;
+    }
     constexpr Quantity & operator +=(const Quantity & other){
         value_ = value_ + other.value_;
         return *this;
@@ -159,13 +166,13 @@ public:
     
     template<typename TPolicy2, typename TRatio2>
     constexpr auto operator * (const Quantity<TPolicy2, T, TRatio2> & other) const{
-        using Ret = Quantity<typename TPolicy::Mul<TPolicy2>, T, std::ratio_multiply<TRatio, TRatio2>>;
+        using Ret = Quantity<typename TPolicy::mul_with<TPolicy2>, T, std::ratio_multiply<TRatio, TRatio2>>;
         return Ret(value_ * other.value_);
     }
 
     template<typename TPolicy2, typename TRatio2>
     constexpr auto operator / (const Quantity<TPolicy2, T, TRatio2> & other) const{
-        using Ret = Quantity<typename TPolicy::Div<TPolicy2>, T, std::ratio_divide<TRatio, TRatio2>>;
+        using Ret = Quantity<typename TPolicy::div_with<TPolicy2>, T, std::ratio_divide<TRatio, TRatio2>>;
         return Ret(value_ / other.value_);
     }
 
@@ -189,7 +196,7 @@ public:
     }
 
 
-    constexpr T get() const {return value_;}
+    constexpr T count() const {return value_;}
 
 public:
     T value_;
@@ -233,8 +240,8 @@ DEF_META_TEMPLATE(MegaHertz,        policy::frequency,      std::mega,          
 DEF_META_TEMPLATE(GigaHertz,        policy::frequency,      std::giga,          ghz)
 
 DEF_META_TEMPLATE(Revolutions,           policy::spin,                      identity_ratio,     r)
-DEF_META_TEMPLATE(RevolutionsPerSecond,  policy::spin::Div<policy::time>,   identity_ratio,     rps)
-DEF_META_TEMPLATE(RevolutionsPerMinute,  policy::spin::Div<policy::time>,   DEF_RATIO(1,60),    rpm)
+DEF_META_TEMPLATE(RevolutionsPerSecond,  policy::spin::div_with<policy::time>,   identity_ratio,     rps)
+DEF_META_TEMPLATE(RevolutionsPerMinute,  policy::spin::div_with<policy::time>,   DEF_RATIO(1,60),    rpm)
 
 DEF_META_TEMPLATE(Meter,            policy::length,         identity_ratio,     m)
 DEF_META_TEMPLATE(KiliMeter,        policy::length,         std::kilo,          km)
@@ -273,8 +280,7 @@ DEF_META_TEMPLATE(MilliHenry,       policy::inductance,     std::milli,         
 DEF_META_TEMPLATE(MicroHenry,       policy::inductance,     std::micro,         uH)
 
 
-DEF_META_TEMPLATE(AmperePerMeter,   policy::current::Div<policy::length>, identity_ratio, A_m)
-// DEF_META_TEMPLATE(AmpereTurn,       policy::current, identity_ratio, _At)
+DEF_META_TEMPLATE(AmperePerMeter,   policy::current::div_with<policy::length>, identity_ratio, A_m)
 DEF_META_TEMPLATE(Weber,            policy::magnetic_flux,         identity_ratio,     Wb)
 DEF_META_TEMPLATE(Tesla,            policy::magnetic_flux_density, identity_ratio,     T)
 DEF_META_TEMPLATE(Gauss,            policy::magnetic_flux_density, DEF_RATIO(1,10000), Gs) // 1T = 10⁴Gs

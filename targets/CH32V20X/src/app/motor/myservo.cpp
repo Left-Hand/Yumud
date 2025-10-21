@@ -280,10 +280,10 @@ void myservo_main(){
     auto init_adc = []{
         hal::adc1.init(
             {
-                {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+                {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
             },{
-                {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
-                {hal::AdcChannelNth::CH1, hal::AdcSampleCycles::T28_5},
+                {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
+                {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T28_5},
             },
             {}
         );
@@ -294,7 +294,9 @@ void myservo_main(){
 
     // can.init(CanBaudrate::_1M, CanMode::Internal);
     can.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
+        .remap = CAN1_REMAP,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
     init_adc();
 

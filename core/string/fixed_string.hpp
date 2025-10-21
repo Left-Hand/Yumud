@@ -9,7 +9,7 @@
 namespace ymd{
 
 template<size_t N>
-struct FixedString{
+struct [[nodiscard]] FixedString{
     constexpr FixedString():
         len_(0){;}
 
@@ -22,8 +22,16 @@ struct FixedString{
         }
     }
 
+    [[nodiscard]] static constexpr FixedString<N> from_str(const char * str){
+        return FixedString<N>(str);
+    } 
 
-    [[nodiscard]] constexpr StringView to_stringview() const {
+    [[nodiscard]] static constexpr FixedString<N> from_empty(){
+        return FixedString<N>();
+    } 
+
+
+    [[nodiscard]] constexpr StringView view() const {
         return StringView(buf_, len_);
     }
 
@@ -106,7 +114,7 @@ struct FixedString{
     } 
 
     friend OutputStream & operator<<(OutputStream & os, const FixedString<N> self) {
-        return os << self.as_view();
+        return os << self.view();
     }
 
 private:

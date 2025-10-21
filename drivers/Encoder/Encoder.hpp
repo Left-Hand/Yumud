@@ -3,8 +3,8 @@
 
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
-#include "core/utils/Errno.hpp"
 #include "core/utils/angle.hpp"
+#include "core/utils/Errno.hpp"
 
 #include "hal/hal_result.hpp"
 
@@ -14,12 +14,15 @@ namespace ymd::drivers{
 namespace details{
 enum class EncoderError_Kind:uint8_t{
     CantSetup,
-    WrongPc,
-    WrongCrc,
+
+    InvalidPc,
+    InvalidCrc,
+
     MagnetLost,
     MagnetInvalid,
     MagnetLow,
     MagnetHigh,
+
     OverSpeed,
     RegProgramFailed,
     RegProgramResponseFormatInvalid,
@@ -29,33 +32,27 @@ enum class EncoderError_Kind:uint8_t{
 
     SpiIsNotImplementedYet,
     I2cIsNotImplementedYet,
-    NoSupportedPhy,
+
+    UnderVoltage,
     Unreachable
 };
-DEF_DERIVE_DEBUG(EncoderError_Kind)
+}
+DEF_ERROR_SUMWITH_HALERROR(EncoderError, details::EncoderError_Kind)
 }
 
-DEF_ERROR_SUMWITH_HALERROR(EncoderError, details::EncoderError_Kind)
+namespace ymd{
+OutputStream& operator << (OutputStream& os, const drivers::details::EncoderError_Kind value);
+}
 
 
+namespace ymd::drivers{
 class EncoderIntf{
 public:
     virtual Result<Angle<q31>, EncoderError> read_lap_angle() = 0;
     virtual Result<void, EncoderError> update() = 0;
-
-    // DEF_FRIEND_DERIVE_DEBUG(details::EncoderError_Kind);
     virtual ~EncoderIntf() = default;
 };
 
 
-class IncrementalEncoderIntf: public EncoderIntf{
-
-};
-
-class AbsoluteEncoderIntf: public EncoderIntf{
-protected:
-    // virtual void forward() = 0;
-    // virtual void backward() = 0;
-};
-
 }
+

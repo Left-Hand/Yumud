@@ -6,10 +6,10 @@ using namespace ymd::drivers;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-template<typename Fn>
-__inline IResult<> wait(const size_t timeout, Fn && fn){
-    return retry(timeout, std::forward<Fn>(fn), [](){clock::delay(1ms);});
-}
+// template<typename Fn>
+// __inline IResult<> wait(const size_t timeout, Fn && fn){
+//     return retry(timeout, std::forward<Fn>(fn), [](){clock::delay(1ms);});
+// }
 
 IResult<> LT8960L::set_pa_current(const uint8_t current){
     auto reg = RegCopy(regs_.pa_config_reg);
@@ -179,9 +179,8 @@ IResult<> LT8960L::set_datarate(LT8960L::DataRate rate){
             if(const auto res = change_datarate(rate); 
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
-
-        default: __builtin_unreachable();
-    }
+        }
+    __builtin_unreachable();
 
 }
 
@@ -251,31 +250,35 @@ IResult<> LT8960L::start_listen_pkt(){
 IResult<bool> LT8960L::is_pkt_ready(){
     if(use_hw_pkt_){
         return phy_.check_and_skip_hw_listen_pkt();
-    }else{
-    auto reg = RegCopy(regs_.rf_synthlock_reg);
-        return read_reg(reg).to<bool>(reg.pkt_flag_txrx);
     }
+    auto & reg = regs_.rf_synthlock_reg;
+    if(const auto res = read_reg(reg); 
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(bool(reg.pkt_flag_txrx));
 }
 
 IResult<bool> LT8960L::is_rst_done(){
-auto reg = RegCopy(regs_.rf_synthlock_reg);
-    return read_reg(reg).to<bool>(reg.i2c_soft_rstn);
+    auto & reg = regs_.rf_synthlock_reg;
+    if(const auto res = read_reg(reg); 
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(bool(reg.i2c_soft_rstn));
 }
 
-IResult<> LT8960L::wait_pkt_ready(const uint timeout){
-    return 
-    wait(timeout, 
-        [this]{return is_pkt_ready()
-        .and_then([](bool rdy) -> IResult<>{
-            if (rdy) return Ok();
-            else return Err(Error(Error::TransmitTimeout));
-        });}
-    );
-}
+// IResult<> LT8960L::wait_pkt_ready(const uint timeout){
+//     return 
+//     wait(timeout, 
+//         [this]{return is_pkt_ready()
+//         .and_then([](bool rdy) -> IResult<>{
+//             if(not) 
+//                 rdy return Err(Error(Error::TransmitTimeout));
+//             if (rdy) return Ok();
+//         });}
+//     );
+// }
 
-IResult<> LT8960L::wait_rst_done(const uint timeout){
-    return Ok();
-}
+// IResult<> LT8960L::wait_rst_done(const uint timeout){
+//     return Ok();
+// }
 
 IResult<> LT8960L::enable_gain_weaken(const Enable en){
     // 1Mbps数据率传输近距离存在阻塞死区（收发相距15cm内增益过强导致
@@ -373,32 +376,30 @@ IResult<> LT8960L_Phy::_read_reg(
     auto guard = i2c_.create_guard();
     
 
-    auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(address | 0x80))
-        .then([&](){
-            uint32_t dummy = 0; 
-            const auto err = i2c_.read(dummy, ACK); 
-            data = (dummy & 0xff)<< 8;
-            return err;
-        })
+    if(const auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(address | 0x80));
+        res.is_err()) return Err(Error(res.unwrap_err()));
 
-        .then([&](){
-            uint32_t dummy = 0; 
-            const auto err = i2c_.read(dummy, NACK); 
-            data |= (dummy & 0xff);
-            return err;
-        })
+    {
+        uint8_t dummy = 0; 
+        if(const auto res = i2c_.read(dummy, ACK); 
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        data = (dummy & 0xff)<< 8;
+    }
 
-    ;
+    {
+        uint8_t dummy = 0; 
+        if(const auto res = i2c_.read(dummy, NACK); 
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        data |= (dummy & 0xff);
+    };
 
-    if(res.is_ok()) return Ok();
-    else return Err(Error(res.unwrap_err()));
-
+    return Ok();
 }
 
 
 
 IResult<size_t> LT8960L::read_fifo(std::span<uint8_t> buf){
-    return phy_.read_burst(Regs::R16_Fifo::address, buf)
+    return phy_.read_burst(Regs::R16_Fifo::ADDRESS, buf)
         // .if_ok([&](){clear_fifo_write_and_read_ptr().unwrap();})
     ;
 }
@@ -426,7 +427,7 @@ IResult<> LT8960L::set_fifo_empty_threshold(const uint thd){
 IResult<> LT8960L::set_syncword_tolerance_bits(const uint bits){
     // 认为SYNCWORD为正确的阈值
     // 07H表示可以错6bits，01H表示0bit可以错0bits
-auto reg = RegCopy(regs_.threshold_reg);
+    auto reg = RegCopy(regs_.threshold_reg);
     // reg.syncword_threshold = (bits == 0 ? 0 : bits + 1);
     reg.syncword_threshold = (bits + 1);
     return write_reg(reg);
@@ -434,8 +435,10 @@ auto reg = RegCopy(regs_.threshold_reg);
 
 
 IResult<bool> LT8960L::is_rfsynth_locked(){
-auto reg = RegCopy(regs_.rf_synthlock_reg);
-    return read_reg(reg).to<bool>(reg.synth_locked);
+    auto & reg = regs_.rf_synthlock_reg;
+    if(const auto res = read_reg(reg); 
+        res.is_err()) return Err(res.unwrap_err()); 
+    return Ok(bool(reg.synth_locked));
 }
 
 
@@ -445,11 +448,6 @@ auto reg = RegCopy(regs_.rf_config_reg);
     reg.rx_en = rx;
     reg.rf_channel_no = ch.as_u8();
     return write_reg(reg);
-}
-
-IResult<> LT8960L::set_rf_freq_mhz(const uint freq){
-    TODO();
-    return Ok();
 }
 
 IResult<> LT8960L::set_radio_mode(const bool is_rx){
@@ -479,7 +477,7 @@ IResult<> LT8960L::validate(){
 
     if(const auto res = reset() ;
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = read_reg(Regs::R16_ChipId::address, buf);
+    if(const auto res = read_reg(Regs::R16_ChipId::ADDRESS, buf);
         res.is_err()) return Err(res.unwrap_err());
     if((buf == Regs::R16_ChipId::key))
         return Err(Error::ChipIdMismatch);
@@ -487,9 +485,19 @@ IResult<> LT8960L::validate(){
 }
 
 IResult<bool> LT8960L_Phy::check_and_skip_hw_listen_pkt(){
-    bool is_ok = i2c_.sda().read() == HIGH;
-    if(is_ok) i2c_.sda().set();
-    return Ok(is_ok);
+    bool is_completed = i2c_.sda().read() == HIGH;
+    if(is_completed) i2c_.sda().set();
+    return Ok(is_completed);
+}
+
+
+
+IResult<bool> LT8960L::is_receiving(){
+    auto & reg = regs_.flag_reg;
+    if(const auto res = read_reg(reg); 
+        res.is_err()) return Err(res.unwrap_err());
+
+    return Ok(bool(reg.rev_sync));
 }
 
 IResult<> LT8960L_Phy::start_hw_listen_pkt(){
@@ -501,13 +509,6 @@ IResult<> LT8960L_Phy::start_hw_listen_pkt(){
 }
 
 
-IResult<bool> LT8960L::is_receiving(){
-auto reg = RegCopy(regs_.flag_reg);
-    return read_regs(reg).to<bool>(reg.rev_sync);
-}
-
-
-
 IResult<> LT8960L_Phy::init(){
     i2c_.init({600'000});
     return Ok();
@@ -517,40 +518,30 @@ IResult<size_t> LT8960L_Phy::read_burst(uint8_t address, std::span<uint8_t> pbuf
 
 
     auto guard = i2c_.create_guard();
-    uint32_t len = 0;
-    bool invalid = false;
+    uint8_t len = 0;
+    bool is_invalid = false;
 
     LT8960L_ASSERT(pbuf.size() <= 0xff, "app given buf length too long");
 
-    auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(static_cast<uint8_t>(address | 0x80)))
-        .then([&]() -> hal::HalResult{
-            const auto err = i2c_.read(len, ACK);
-            if(err.is_err()) return err;
-            if(len > LT8960L_MAX_PACKET_SIZE || len > pbuf.size()) {
-                // LT8960L_PANIC("read buf length too long", len);
-                // return hal::BusError::LengthOverflow;
-                invalid = true;
-            }
-            return hal::HalResult::Ok();
-            }
-        )
+    if(const auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(static_cast<uint8_t>(address | 0x80)));
+        res.is_err()) return Err(Error(res.unwrap_err()));
 
-        .then([&]() -> hal::HalResult{
-            if(invalid) return hal::HalResult::Ok();
-            for(size_t i = 0; i < len; i++){
-                uint32_t dummy = 0;
-                const auto err = i2c_.read(dummy, (i == len - 1 ? NACK : ACK));
-                if(err.is_err()) return err;
-                pbuf[i] = uint8_t(dummy);
-            }
-            return hal::HalResult::Ok();
-        })
-    ;
+    if(const auto res = i2c_.read(len, ACK);
+        res.is_err()) return Err(Error(res.unwrap_err()));
+    
+    if(len > LT8960L_MAX_PACKET_SIZE or len > pbuf.size()) {
+        // LT8960L_PANIC("read buf length too long", len);
+        // return hal::BusError::LengthOverflow;
+        is_invalid = true;
+    }
 
-    LT8960L_ASSERT(res.is_ok(), "error while read burst", res);
 
-    if(res.is_ok()) return Ok(invalid ? 0 : len);
-    else return Err(Error(res.unwrap_err()));
+    for(uint8_t i = 0; i < len; i++){
+        const auto res = i2c_.read(pbuf[i], (i == len - 1 ? NACK : ACK));
+        if(res.is_err()) return Err(res.unwrap_err());
+    }
+
+    return Ok(is_invalid ? 0 : len);
 }
 
 
@@ -560,23 +551,17 @@ IResult<size_t> LT8960L_Phy::write_burst(uint8_t address, std::span<const uint8_
     
     LT8960L_ASSERT(pbuf.size() <= 0xff, "buf length too long");
 
-    auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(address))
-        .then([&](){
-            return i2c_.write(pbuf.size());
-        })
+    if(const auto res = i2c_.borrow(hal::I2cSlaveAddrWithRw::from_8bits(address));
+        res.is_err()) return Err(Error(res.unwrap_err()));
 
-        .then([&]() -> hal::HalResult{
-            for(const auto data : pbuf){
-                auto err = i2c_.write(uint32_t(data));
-                if (err.is_err()) return err;
-            }
-            return hal::HalResult::Ok();
-        })
-    ;
 
-    LT8960L_ASSERT(res.is_ok(), "error while write burst", res);
+    if(const auto res = i2c_.write(pbuf.size());
+        res.is_err()) return Err(Error(res.unwrap_err()));
 
-    if(res.is_ok()) return Ok(pbuf.size());
-    else return Err(Error(res.unwrap_err()));
+    for(const auto data : pbuf){
+        auto res = i2c_.write(uint32_t(data));
+        if (res.is_err()) return Err(Error(res.unwrap_err()));
+    }
+    return Ok(pbuf.size());
 }
 

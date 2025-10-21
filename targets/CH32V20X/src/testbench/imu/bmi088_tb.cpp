@@ -31,12 +31,12 @@ static void bmi088_tb(hal::Spi & spi){
     auto acc_cs_gpio_ = ACC_CS_GPIO;
     auto gyr_cs_gpio_ = GYR_CS_GPIO;
 
-    const auto acc_cs_idx = spi.allocate_cs_gpio(&acc_cs_gpio_).unwrap();
-    const auto gyr_cs_idx = spi.allocate_cs_gpio(&gyr_cs_gpio_).unwrap();
+    const auto acc_cs_rank = spi.allocate_cs_gpio(&acc_cs_gpio_).unwrap();
+    const auto gyr_cs_rank = spi.allocate_cs_gpio(&gyr_cs_gpio_).unwrap();
     
 
-    auto acc_sensor = BMI088_Acc{&spi, acc_cs_idx};
-    auto gyr_sensor = BMI088_Gyr{&spi, gyr_cs_idx};
+    auto acc_sensor = BMI088_Acc{&spi, acc_cs_rank};
+    auto gyr_sensor = BMI088_Gyr{&spi, gyr_cs_rank};
 
     acc_sensor.init().examine();
     gyr_sensor.init().examine();

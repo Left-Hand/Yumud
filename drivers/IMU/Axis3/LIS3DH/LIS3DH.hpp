@@ -38,14 +38,14 @@ struct LIS3DH_Prelude{
 struct _LIS3DH_Regs:public LIS3DH_Prelude{
 
     struct R8_WhoAmI:public Reg8<>{
-        static constexpr RegAddr address = 0x0F; 
+        static constexpr RegAddr ADDRESS = 0x0F; 
         static constexpr uint8_t key = 0x11;
         uint8_t data;
     }DEF_R8(whoami_reg)
 
 
     struct R8_Ctrl1:public Reg8<>{
-        static constexpr RegAddr address = 0x20;
+        static constexpr RegAddr ADDRESS = 0x20;
         uint8_t bdu:1;
         uint8_t drdy_pulse:1;
         uint8_t sw_reset:1;
@@ -66,15 +66,15 @@ struct _LIS3DH_Regs:public LIS3DH_Prelude{
         uint8_t int_drdy:1;
     };
     struct R8_Int1Ctrl:public _R8_Int1Ctrl{
-        static constexpr RegAddr address = 0x21;
+        static constexpr RegAddr ADDRESS = 0x21;
     }DEF_R8(int1_ctrl_reg)
 
     struct R8_Int2Ctrl:public _R8_Int1Ctrl{
-        static constexpr RegAddr address = 0x22;
+        static constexpr RegAddr ADDRESS = 0x22;
     }DEF_R8(int2_ctrl_reg)
 
     struct R8_Ctrl4:public Reg8<>{
-        static constexpr RegAddr address = 0x23;
+        static constexpr RegAddr ADDRESS = 0x23;
         
         uint8_t __resv__:1;
         uint8_t fifo_en:1;
@@ -86,7 +86,7 @@ struct _LIS3DH_Regs:public LIS3DH_Prelude{
     }DEF_R8(ctrl4_reg)
 
     struct R8_Ctrl5:public Reg8<>{
-        static constexpr RegAddr address = 0x24;
+        static constexpr RegAddr ADDRESS = 0x24;
         uint8_t fifo_spi_hs_on:1;
         uint8_t __resv__:7;
     }DEF_R8(ctrl5_reg)
@@ -94,7 +94,7 @@ struct _LIS3DH_Regs:public LIS3DH_Prelude{
     REG16_QUICK_DEF(0x25, R16_OutTemp, out_temp_reg)
 
     struct R8_Status:public Reg8<>{
-        static constexpr RegAddr address = 0x27;
+        static constexpr RegAddr ADDRESS = 0x27;
         uint8_t x_drdy:1;
         uint8_t y_drdy:1;
         uint8_t z_drdy:1;
@@ -110,13 +110,13 @@ struct _LIS3DH_Regs:public LIS3DH_Prelude{
     REG16_QUICK_DEF(0x2C, R16_OutZ, out_z_reg)
 
     struct R8_FifoCtrl:public Reg8<>{
-        static constexpr RegAddr address = 0x2E;
+        static constexpr RegAddr ADDRESS = 0x2E;
         uint8_t fifo_threshold:5;
         uint8_t fifo_mode:3;
     }DEF_R8(fifo_ctrl_reg)
 
     struct R8_FifoSrc:public Reg8<>{
-        static constexpr RegAddr address = 0x27;
+        static constexpr RegAddr ADDRESS = 0x27;
         uint8_t fss:6;
         uint8_t ovrn:1;
         uint8_t fth:1;
@@ -247,14 +247,15 @@ namespace ymd::drivers{
 
 template<typename T>
 LIS3DH::IResult<> LIS3DH::write_reg(const RegCopy<T> & reg){
-    const auto res = phy_.write_reg(reg.address, reg.as_val());
+    const auto res = phy_.write_reg(T::ADDRESS, reg.as_val());
     if(res.is_err()) return res;
     reg.apply();
     return Ok();
 }
 
-LIS3DH::IResult<> LIS3DH::read_reg(auto & reg){
-    return LIS3DH::IResult<>(phy_.read_reg(reg.address, reg.as_ref()));
+template<typename T>    
+LIS3DH::IResult<> LIS3DH::read_reg(T & reg){
+    return LIS3DH::IResult<>(phy_.read_reg(T::ADDRESS, reg.as_ref()));
 }
 
 LIS3DH::IResult<> LIS3DH::verify_phy(){

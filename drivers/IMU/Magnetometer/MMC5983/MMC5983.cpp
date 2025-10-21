@@ -51,7 +51,7 @@ IResult<> MMC5983::init(const Config & cfg){
     if(const auto res = enable_temp_meas(EN);
         res.is_err()) return CHECK_RES(res);
 
-    if(const auto res = set_prd_magset(cfg.prd_set);
+    if(const auto res = set_prd_mag_set(cfg.prd_set);
         res.is_err()) return CHECK_RES(res);
 
     if(const auto res = set_bandwidth(cfg.bandwidth);
@@ -118,7 +118,6 @@ IResult<Vec3<q24>> MMC5983::read_mag(){
     static constexpr auto LSB_18BIT = 0.0000625_q24;
 
     const auto mag3i = regs_.data_packet_.to_vec3();
-    // DEBUG_PRINTLN(mag3i);
     
     return Ok(Vec3<q24>{
         LSB_18BIT * mag3i.x,
@@ -128,21 +127,26 @@ IResult<Vec3<q24>> MMC5983::read_mag(){
 }
 
 IResult<q16> MMC5983::read_temp(){
-    return Ok(regs_.data_packet_.to_temp());
+    const q16 temp = regs_.data_packet_.to_temp();
+    return Ok(temp);
 }
 
 IResult<bool> MMC5983::is_mag_meas_done(){
     auto & reg = regs_.status_reg;
+
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
+
     return Ok(bool(reg.meas_mag_done));
 }
 
 
 IResult<bool> MMC5983::is_temp_meas_done(){
     auto & reg = regs_.status_reg;
+
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
+
     return Ok(bool(reg.meas_temp_done));
 }
 
@@ -150,41 +154,44 @@ IResult<bool> MMC5983::is_temp_meas_done(){
 
 IResult<> MMC5983::enable_mag_meas(const Enable en){
     auto reg = RegCopy(regs_.internal_control_0_reg);
-    reg.tm_m = (en == EN)? true : false;
+    reg.tm_m = (en == EN) ? true : false;
     return write_reg(reg);
 }
 
 
 IResult<> MMC5983::enable_temp_meas(const Enable en){
     auto reg = RegCopy(regs_.internal_control_0_reg);
-    reg.tm_t = (en == EN)? true : false;
+    reg.tm_t = (en == EN) ? true : false;
     return write_reg(reg);
 }
 
-IResult<> MMC5983::set_prd_magset(const PrdSet prdset){
-    if(prdset != PrdSet::_1) 
+IResult<> MMC5983::set_prd_mag_set(const PrdSet prdset){
+    if(prdset != PrdSet::_1){
         if(const auto res = enable_auto_mag_sr(EN);
-            res.is_err()) return res;
+            res.is_err()) return Err(res.unwrap_err());
+    }
+
     auto reg = RegCopy(regs_.internal_control_2_reg);
     reg.prd_set = prdset;
     return write_reg(reg);
 }
-IResult<> MMC5983::enable_magset(const Enable en){
+IResult<> MMC5983::enable_mag_set(const Enable en){
     auto reg = RegCopy(regs_.internal_control_0_reg);
-    reg.set = true;
+    reg.set = en == EN;
     return write_reg(reg);
 }
 
-IResult<> MMC5983::enable_magreset(const Enable en){
+IResult<> MMC5983::enable_mag_reset(const Enable en){
     auto reg = RegCopy(regs_.internal_control_0_reg);
-    reg.reset = true;
+    reg.reset = en == EN;
     return write_reg(reg);
 }
 
 template<typename Fn>
-static auto do_setreset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
+static auto do_set_reset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
     if(const auto res = std::forward<Fn>(fn)(EN);
         res.is_err()) return Err(res.unwrap_err());
+
     for(auto m = clock::millis(); ;){
         if(const auto res = imu.is_mag_meas_done(); 
             res.is_err()) return Err(res.unwrap_err());
@@ -192,21 +199,23 @@ static auto do_setreset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
             break;
         if(clock::millis() - m > 1000ms) return Err<ImuError>(ImuError(ImuError::Kind::MagCantSetup));
     }
+
     if(const auto res = imu.update();
         res.is_err()) return Err(res.unwrap_err());
 
     if(const auto res = std::forward<Fn>(fn)(DISEN);
         res.is_err()) return Err(res.unwrap_err());
+
     return imu.read_mag();
 };
 
 
-MMC5983::IResult<Vec3<q24>> MMC5983::do_magset(){
-    return do_setreset(*this, [this](Enable en){return enable_magset(en);});
+MMC5983::IResult<Vec3<q24>> MMC5983::do_mag_set(){
+    return do_set_reset(*this, [this](Enable en){return enable_mag_set(en);});
 }
 
-MMC5983::IResult<Vec3<q24>> MMC5983::do_magreset(){
-    return do_setreset(*this, [this](Enable en){return enable_magreset(en);});
+MMC5983::IResult<Vec3<q24>> MMC5983::do_mag_reset(){
+    return do_set_reset(*this, [this](Enable en){return enable_mag_reset(en);});
 }
 
 IResult<> MMC5983::enable_auto_mag_sr(const Enable en){

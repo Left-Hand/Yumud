@@ -20,9 +20,9 @@ void m2006_main(){
     // DEBUGGER_INST.init(576000, CommStrategy::Blocking);
     auto & can = hal::can1;
     can.init({
-        // hal::CanBaudrate::_1M
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
-        .mode = hal::CanMode::Normal
+        .remap = CAN1_REMAP,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
     });
 
     can.filters<0>().apply(

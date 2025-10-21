@@ -6,26 +6,6 @@
 //TM1637是天微半导体的一款LED矩阵驱动/按键矩阵扫描芯片
 
 
-// 快速上手:
-
-// (src/testbench/i2c/tm1637_tb.cpp)
-// 示例代码:
-
-// TM1637 tm1637{hal::PB<0>(), hal::PB<1>()};
-
-// while(true){
-//     const auto res = 
-//         tm1637.set(0, SegDisplayer::digit_to_seg(millis() / 1000))
-//         | tm1637.set(1, SegDisplayer::digit_to_seg(millis() / 100))
-//         | tm1637.set(2, SegDisplayer::digit_to_seg(millis() / 10))
-//         | tm1637.set(3, SegDisplayer::digit_to_seg(millis() % 10))
-//         | tm1637.flush()
-//     ;
-//     if(res.is_err()) PANIC();
-//     DEBUG_PRINTLN(millis(), uint8_t(millis()));
-//     clock::delay(20ms);
-// }
-
 #pragma once
 
 #include "core/utils/Result.hpp"

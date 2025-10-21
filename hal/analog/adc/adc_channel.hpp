@@ -18,18 +18,18 @@ class AdcCompanion;
 
 class AdcChannelOnChip: public AnalogInIntf{
 protected:
-    using ChannelNth = AdcChannelNth;
+    using ChannelSelection = AdcChannelSelection;
     using SampleCycles = AdcSampleCycles;
 
     ADC_TypeDef * inst_;
-    ChannelNth nth_;
+    ChannelSelection nth_;
     uint8_t rank;
 
     friend class AdcOnChip;
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:
-    AdcChannelOnChip(ADC_TypeDef * _inst, const ChannelNth nth, const uint8_t _rank):
+    AdcChannelOnChip(ADC_TypeDef * _inst, const ChannelSelection nth, const uint8_t _rank):
             inst_(_inst), nth_(nth), rank(_rank){};
     
     void init(){

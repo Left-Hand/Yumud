@@ -45,7 +45,7 @@ protected:
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         const auto res = i2c_drv_.write_reg(
-            uint8_t(reg.address), 
+            uint8_t(T::ADDRESS), 
             reg.as_val(), LSB);
         if(res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -55,7 +55,7 @@ protected:
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
         const auto res = i2c_drv_.read_reg(
-            uint8_t(reg.address), 
+            uint8_t(reg.ADDRESS), 
             reg.as_ref(), LSB);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();

@@ -8,6 +8,14 @@ using namespace ymd;
 using namespace ymd::hal;
 #ifdef ENABLE_DVP
 
+enum class DvpIT:uint8_t{
+    STR_FRM	=    0x01,				    // RW1, interrupt flag for DVP frame start
+    ROW_DONE	=	0x02,				    // RW1, interrupt flag for DVP row receive done
+    FRM_DONE	=	0x04,				    // RW1, interrupt flag for DVP frame receive done
+    FIFO_OV	=	0x08,				    // RW1, interrupt flag for DVP receive fifo overflow
+    STP_FRM	=	0x10				    // RW1, interrupt flag for DVP frame stop
+};
+
 void Dvp::plant(){
     hal::PA<9>().inpu();
     hal::PA<10>().inpu();
@@ -53,27 +61,31 @@ void Dvp::init(const Config & cfg){
 
 extern "C"{
 __interrupt void DVP_IRQHandler(void){
-    if (DVP->IFR & RB_DVP_IF_ROW_DONE){
+    const auto tempreg = DVP->IFR;
+    if (tempreg & RB_DVP_IF_ROW_DONE){
         /* Write 0 clear 0 */
         DVP->IFR &= ~RB_DVP_IF_ROW_DONE;  //clear Interrupt
-
+        return;
     }
 
-    else if (DVP->IFR & RB_DVP_IF_FRM_DONE){
+    else if (tempreg & RB_DVP_IF_FRM_DONE){
         DVP->IFR &= ~RB_DVP_IF_FRM_DONE;  //clear Interrupt
-
+        return;
     }
 
-    else if (DVP->IFR & RB_DVP_IF_STR_FRM){
+    else if (tempreg & RB_DVP_IF_STR_FRM){
         DVP->IFR &= ~RB_DVP_IF_STR_FRM;  //clear Interrupt
+        return;
     }
 
-    else if (DVP->IFR & RB_DVP_IF_STP_FRM){
+    else if (tempreg & RB_DVP_IF_STP_FRM){
         DVP->IFR &= ~RB_DVP_IF_STP_FRM;  //clear Interrupt
+        return;
     }
 
-    else if (DVP->IFR & RB_DVP_IF_FIFO_OV){
+    else if (tempreg & RB_DVP_IF_FIFO_OV){
         DVP->IFR &= ~RB_DVP_IF_FIFO_OV;   //clear Interrupt
+        return;
     }
 }
 }

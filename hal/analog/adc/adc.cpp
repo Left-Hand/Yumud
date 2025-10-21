@@ -72,9 +72,9 @@ void AdcPrimary::init(
     ADC_Init(inst_, &ADC_InitStructure);
 
     bool temp_verf_activation = [&]{
-        auto channel_is_temp_or_vref = [](const ChannelNth nth){
-            return nth == ChannelNth::TEMP or
-                    nth == ChannelNth::VREF;
+        auto channel_is_temp_or_vref = [](const ChannelSelection nth){
+            return nth == ChannelSelection::TEMP or
+                    nth == ChannelSelection::VREF;
         };
         for(const auto injected_cfg : injected_list){
             if(channel_is_temp_or_vref(injected_cfg.nth))

@@ -24,7 +24,7 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
-#include "digipw/pll/sogi/spll.hpp"
+#include "digipw/spll/spll_1ph_sogi_iq.hpp"
 
 
 #include "core/math/realmath.hpp"
@@ -55,8 +55,8 @@ void test_sogi(){
         }
     };
 
-    real_t raw_theta;
-    real_t u0;
+    q16 raw_theta;
+    q16 u0;
 
 
     hal::timer1.init({
@@ -74,20 +74,20 @@ void test_sogi(){
         DEBUG_PRINTLN("start");
 
         const auto micros_begin = clock::micros();
-        real_t tm = 0;
+        q16 tm = 0;
 
         for(size_t i = 0; i < times; i++){
-            static constexpr real_t dt = real_t(1) / isr_freq;
+            static constexpr q16 dt = q16(1) / isr_freq;
             tm += dt;
     
-            raw_theta = real_t(TAU) * frac(ac_freq * tm);
-            // raw_theta = real_t(TAU) * frac((ac_freq-4.2_r) * tm);
+            raw_theta = q16(TAU) * frac(ac_freq * tm);
+            // raw_theta = q16(TAU) * frac((ac_freq-4.2_r) * tm);
             u0 = 32.0_r * sin(raw_theta) * (0.05_r * sin(8 * tm) + 1);
             spll.update(u0);
         }
 
         const auto micros_end = clock::micros();
-        DEBUG_PRINT(real_t((micros_end - micros_begin).count()) / times,"us per call");
+        DEBUG_PRINT(q16((micros_end - micros_begin).count()) / times,"us per call");
         DEBUG_PRINTLN(micros_begin, micros_end);
         while(true);
     }
@@ -180,8 +180,8 @@ void digipw_main(){
                 static q20 mt = 0;
                 static constexpr q20 dt = 1_q20 / CHOPPER_FREQ;
                 mt += dt;
-                // mp1907 = real_t(0.5) + 0.1_r * sinpu(50 * time());
-                pwm.set_dutycycle(real_t(0.5) + 0.1_r * sinpu(50 * real_t(mt)));
+                // mp1907 = q16(0.5) + 0.1_r * sinpu(50 * time());
+                pwm.set_dutycycle(q16(0.5) + 0.1_r * sinpu(50 * q16(mt)));
                 // const auto duty = 0.3_r;
                 // mp1907 = CLAMP(duty, 0, 0.4_r);
                 break;
@@ -196,21 +196,21 @@ void digipw_main(){
         
         // const auto t = 6 * time();
         // const auto s = sinpu<31>(t);
-        // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch));
-        // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), sin(t), sqrt(t), atan2(cos(t), sin(t)));
+        // DEBUG_PRINTLN_IDLE(q16(curr_ch), q16(volt_ch));
+        // DEBUG_PRINTLN_IDLE(q16(curr_ch), q16(volt_ch), sin(t), sqrt(t), atan2(cos(t), sin(t)));
 
-        // const auto curr_meas = iq_t<24>(real_t(curr_ch));
+        // const auto curr_meas = iq_t<24>(q16(curr_ch));
         // const auto curr_targ = 0.04_q24;
         // const auto curr_err = curr_targ - curr_meas;
         // const auto delta = (curr_err * 0.007_r);
         // duty = duty + delta;
-        // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), real_t(power_ch), duty, pwm.cvr());
-        // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), real_t(power_ch));
-        // DEBUG_PRINTLN_IDLE(real_t(volt_ch), real_t(curr_ch));
+        // DEBUG_PRINTLN_IDLE(q16(curr_ch), q16(volt_ch), q16(power_ch), duty, pwm.cvr());
+        // DEBUG_PRINTLN_IDLE(q16(curr_ch), q16(volt_ch), q16(power_ch));
+        // DEBUG_PRINTLN_IDLE(q16(volt_ch), q16(curr_ch));
 
-        // mp1907 = real_t(0.5) + real_t(0.4) * sin(t);
+        // mp1907 = q16(0.5) + q16(0.4) * sin(t);
 
-        //  + real_t(0.4) * sin(t);
+        //  + q16(0.4) * sin(t);
         // mp1907 = duty;
         led.toggle();
     }

@@ -43,30 +43,31 @@ IResult<uint16_t> MA730::get_raw_data(){
 
 IResult<> MA730::set_zero_data(const uint16_t data){
     {
-        auto reg = RegCopy(zero_data_low_reg);
+        auto reg = RegCopy(regs_.zero_data_low_reg);
         reg.data = data & 0xff;
         return write_reg(reg);
     }
 
     {
-        auto reg = RegCopy(zero_data_high_reg);
+        auto reg = RegCopy(regs_.zero_data_high_reg);
         reg.data = data >> 8;
         return write_reg(reg);
     }
 }
 
 
-IResult<> MA730::set_zero_position(const real_t position){
-    const auto data = uni_to_u16(frac(position));
+IResult<> MA730::set_zero_angle(const Angle<q31> angle){
+    const auto data = uni_to_u16(static_cast<q16>(angle.to_turns()));
     return set_zero_data(data);
 }
 
 IResult<MagStatus> MA730::get_mag_status(){
-    const auto res = read_reg(magnitude_reg);
+    auto & reg = regs_.magnitude_reg;
+    const auto res = read_reg(reg);
     if(unlikely(res.is_err())) return Err(res.unwrap_err());
 
-    const bool mgl = !(magnitude_reg.mgl1 | magnitude_reg.mgl2);
-    const bool mgh = magnitude_reg.magnitudeHigh;
+    const bool mgl = !(reg.mgl1 | reg.mgl2);
+    const bool mgh = reg.magnitudeHigh;
 
     if(mgl) return Ok(MagStatus::from_low());
     else if(mgh) return Ok(MagStatus::from_high());
@@ -79,19 +80,19 @@ IResult<> MA730::update(){
         if(unlikely(res.is_err())) return Err(res.unwrap_err());
         res.unwrap();
     });
-    lap_position_ = u16_to_uni(data);
+    lap_angle_ = u16_to_uni(data);
     return Ok();
 }
 
 
 IResult<> MA730::set_trim_x(const real_t k){
     {
-        auto reg = RegCopy(trim_reg);
+        auto reg = RegCopy(regs_.trim_reg);
         reg.trim = uint8_t((real_t(1) - real_t(1) / k) * 258);
         return write_reg(reg);
     }
     {
-        auto reg = RegCopy(trim_config_reg);
+        auto reg = RegCopy(regs_.trim_config_reg);
         reg.enableX = true;
         reg.enableY = false;
         return write_reg(reg);
@@ -100,12 +101,12 @@ IResult<> MA730::set_trim_x(const real_t k){
 
 IResult<> MA730::set_trim_y(const real_t k){
     {
-        auto reg = RegCopy(trim_reg);
+        auto reg = RegCopy(regs_.trim_reg);
         reg.trim = uint8_t((1.0_r - k) * 258);
         return write_reg(reg);
     }
     {
-        auto reg = RegCopy(trim_config_reg);
+        auto reg = RegCopy(regs_.trim_config_reg);
         reg.enableX = false;
         reg.enableY = true;
         return write_reg(reg);
@@ -120,21 +121,21 @@ IResult<> MA730::set_trim(const real_t am, const real_t e){
 }
 
 IResult<> MA730::set_mag_threshold(const MagThreshold low, const MagThreshold high){
-    auto reg = RegCopy(threshold_reg);
-    reg.thresholdLow = uint8_t(low);
-    reg.thresholdHigh = uint8_t(high);
+    auto reg = RegCopy(regs_.threshold_reg);
+    reg.low = low;
+    reg.high = high;
     return write_reg(reg);
 }
 
 IResult<> MA730::set_direction(const ClockDirection direction){
-    auto reg = RegCopy(direction_reg);
+    auto reg = RegCopy(regs_.direction_reg);
     reg.direction = direction == CCW;
     return write_reg(reg);
 }
 
 
-IResult<> MA730::set_zparameters(const Width width, const Phase phase){
-    auto reg = RegCopy(z_parameters_reg);
+IResult<> MA730::set_zparameters(const PulseWidth width, const PulsePhase phase){
+    auto reg = RegCopy(regs_.z_parameters_reg);
     reg.zWidth = width;
     reg.zPhase = phase;
     return write_reg(reg);
@@ -146,7 +147,7 @@ IResult<> MA730::set_pulse_per_turn(uint16_t ppt){
     {
         const uint8_t ppt_l = ppt_u10 & 0b11;
 
-        auto reg = RegCopy(z_parameters_reg);
+        auto reg = RegCopy(regs_.z_parameters_reg);
         reg.ppt = ppt_l;
 
         if(const auto res = (write_reg(reg));
@@ -156,7 +157,7 @@ IResult<> MA730::set_pulse_per_turn(uint16_t ppt){
     {
         const uint8_t ppt_h = ppt_u10 >> 2;
 
-        auto reg = RegCopy(pulse_per_turn_reg);
+        auto reg = RegCopy(regs_.pulse_per_turn_reg);
         reg.data = ppt_h;
 
         if(const auto res = (write_reg(reg));

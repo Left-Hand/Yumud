@@ -41,9 +41,9 @@ using namespace ymd;
 // #define CHANGE_STATE(x) state = x; LT8920_DEBUG("state = ", (uint8_t)state)
 #define CHANGE_STATE(x) state = x;
 
-#define CRCERR_FLAG flag_reg.crcErrorFlag
-#define PKT_FLAG flag_reg.pktFlag
-#define FIFO_FLAG flag_reg.fifoFlag
+#define CRCERR_FLAG flag_reg.crc_error_flag
+#define PKT_FLAG flag_reg.pkt_flag
+#define FIFO_FLAG flag_reg.fifo_flag
 
 
 using Error = LT8920::Error;
@@ -69,22 +69,22 @@ IResult<> LT8920::validate(){
 IResult<bool> LT8920::is_rf_synth_locked() {
     if(const auto res = read_reg((rf_synth_lock_reg));
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(bool(rf_synth_lock_reg.synthLocked));
+    return Ok(bool(rf_synth_lock_reg.synth_locked));
 }
 
 IResult<uint8_t> LT8920::get_rssi() {
     if(const auto res = read_reg((raw_rssi_reg));
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(uint8_t(raw_rssi_reg.rawRssi));
+    return Ok(uint8_t(raw_rssi_reg.raw_rssi));
 }
 
 IResult<> LT8920::set_rf_channel(const uint8_t ch) {
     auto reg = RegCopy(rf_config_reg);
-    reg.rfChannelNo = ch;
+    reg.rf_channel_no = ch;
     return write_reg(reg);
 }
 
-IResult<> LT8920::set_rf_freq_m_hz(const uint freq) {
+IResult<> LT8920::set_rf_freq_m_hz(const uint32_t freq) {
     // Implementation for setRfFreqMHz
     return set_rf_channel(freq - 2402);
 }
@@ -93,16 +93,16 @@ IResult<> LT8920::set_role(const Role _role) {
     auto reg = RegCopy( rf_config_reg);
     switch(_role){
         case Role::IDLE:
-            reg.rxEn = false;
-            reg.txEn = false;
+            reg.rx_en = false;
+            reg.tx_en = false;
             break;
         case Role::BROADCASTER:
-            reg.rxEn = false;
-            reg.txEn = true;
+            reg.rx_en = false;
+            reg.tx_en = true;
             break;
         case Role::LISTENER:
-            reg.txEn = false;
-            reg.rxEn = true;
+            reg.tx_en = false;
+            reg.rx_en = true;
             break;
     }
 
@@ -112,74 +112,74 @@ IResult<> LT8920::set_role(const Role _role) {
 
 IResult<> LT8920::set_pa_current(const uint8_t current) {
     auto reg = RegCopy(pa_config_reg);
-    reg.paCurrent = current;
+    reg.pa_current = current;
     return write_reg((reg));
 }
 
 IResult<> LT8920::set_pa_gain(const uint8_t gain) {
     auto reg = RegCopy(pa_config_reg);
-    reg.paGain = gain;
+    reg.pa_gain = gain;
     return write_reg((reg));
 }
 
 IResult<> LT8920::enable_rssi(const uint16_t open) {
     auto reg = RegCopy(rssi_pdn_reg);
-    reg.rssiPdn = open;
+    reg.rssi_pdn = open;
     return write_reg((reg));
 }
 
 IResult<> LT8920::enable_auto_cali(const uint16_t open) {
     auto reg = RegCopy(auto_cali_reg);
-    reg.autoCali = open;
+    reg.auto_cali = open;
     return write_reg((reg));
 }
 
 IResult<> LT8920::set_brclk_sel(const BrclkSel brclkSel) {
     auto reg = RegCopy(config1_reg);
-    reg.brclkSel = (uint16_t)brclkSel;
+    reg.brclk_sel = (uint16_t)brclkSel;
     return write_reg((reg));
 }
 
 IResult<> LT8920::clear_fifo_write_ptr() {
     auto reg = RegCopy(fifo_ptr_reg);
-    reg.clearWritePtr = 1;
+    reg.clear_write_ptr = 1;
     return write_reg(reg);
 }
 
 IResult<> LT8920::clear_fifo_read_ptr() {
     auto reg = RegCopy(fifo_ptr_reg);
-    reg.clearReadPtr = 1;
+    reg.clear_read_ptr = 1;
     return write_reg((reg));
 }
 
 IResult<> LT8920::clear_fifo_ptr() {
     auto reg = RegCopy(fifo_ptr_reg);
-    reg.clearReadPtr = 1;
-    reg.clearWritePtr = 1;
+    reg.clear_read_ptr = 1;
+    reg.clear_write_ptr = 1;
     return write_reg(reg);
 }
 
 IResult<> LT8920::set_sync_word_bitsgth(const SyncWordBits len) {
     auto reg = RegCopy(config1_reg);
-    reg.syncWordLen = std::bit_cast<uint8_t>(len);
+    reg.sync_word_len = std::bit_cast<uint8_t>(len);
     return write_reg((reg));
 }
 
 IResult<> LT8920::set_retrans_time(const uint8_t times) {
     auto reg = RegCopy(config2_reg);
-    reg.retransTimes = times - 1;
+    reg.retrans_times = times - 1;
     return write_reg((reg));
 }
 
 IResult<> LT8920::enable_auto_ack(const Enable en) {
     auto reg = RegCopy(config3_reg);
-    reg.autoAck = en == EN;
+    reg.auto_ack = en == EN;
     return write_reg((reg));
 }
 
 IResult<> LT8920::enable_crc(const Enable en){
     auto reg = RegCopy(config3_reg);
-    reg.crcEn = en == EN;
+    reg.crc_en = en == EN;
     return write_reg((reg));
 }
 
@@ -194,7 +194,7 @@ IResult<bool> LT8920::received_ack(){
     if(auto_ack_en){
         if(const auto res = read_reg(fifo_ptr_reg);
             res.is_err()) return Err(res.unwrap_err());
-        return Ok(fifo_ptr_reg.fifoReadPtr == 0);
+        return Ok(fifo_ptr_reg.fifo_read_ptr == 0);
     }else{
         return Ok(false);
     }
@@ -501,7 +501,7 @@ IResult<bool> LT8920::get_fifo_status(){
     }else{
         if(const auto res = update_fifo_status();
             res.is_err()) return Err(res.unwrap_err());
-        return Ok(bool(flag_reg.fifoFlag));
+        return Ok(bool(flag_reg.fifo_flag));
     }
 }
 
@@ -511,6 +511,6 @@ IResult<bool> LT8920::get_pkt_status(){
     }else{
         if(const auto res = update_fifo_status();
             res.is_err()) return Err(res.unwrap_err());
-        return Ok(bool(flag_reg.pktFlag));
+        return Ok(bool(flag_reg.pkt_flag));
     }
 }

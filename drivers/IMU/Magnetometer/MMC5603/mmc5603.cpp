@@ -21,7 +21,7 @@ using IResult= Result<T, Error>;
 
 IResult<> MMC5603::update(){
     auto reg = RegCopy(x_reg);
-    return read_burst(reg.address_x, &reg.data_h, 6);
+    return read_burst(ADDRESS_X, &reg.data_h, 6);
 }
 
 IResult<> MMC5603::reset(){

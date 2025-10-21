@@ -44,7 +44,7 @@ IResult<> BH1750::start_conv(){
 IResult<> BH1750::send_command(const uint8_t cmd){
     // if(const auto res = i2c_drv_.write(cmd);
     //     res.is_err()) return Err(res.unwrap_err());
-
+    TODO();
     return Ok();
 }
 

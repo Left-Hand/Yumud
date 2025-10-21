@@ -38,7 +38,7 @@ private:
             case '7': return phy_.set_can_baud(800_KHz);
             case '8': return phy_.set_can_baud(1000_KHz);
         }
-        return Err(Error::InvalidBaudrate);
+        return Err(Error::InvalidCanBaudrate);
     }
 
     template<typename T, typename Ret>

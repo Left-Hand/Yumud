@@ -170,27 +170,28 @@ public:
 
         const auto idx8 = [&] -> uint8_t{
             const auto [x,y,z] = v3;
-            const uint8_t b1 = std::signbit(x);
-            const uint8_t b2 = std::signbit(y);
-            const uint8_t b3 = std::signbit(z);
-            return b1 << 2 | b2 << 1 | b3;
+            const uint8_t b1 = static_cast<uint8_t>(std::signbit(x));
+            const uint8_t b2 = static_cast<uint8_t>(std::signbit(y));
+            const uint8_t b3 = static_cast<uint8_t>(std::signbit(z));
+            return (b1 << 2) | (b2 << 1) | b3;
         }();
 
         const auto idx6 = [&] -> uint8_t{
             const auto [x0,y0,z0] = v3;
             const auto [x,y,z] = Vec3{ABS(x0), ABS(y0), ABS(z0)};
 
-            const bool b1 = std::signbit(y-z);
-            const bool b2 = std::signbit(x-z);
-            const bool b3 = std::signbit(x-y);
-            switch(b1 << 2 | b2 << 1 | b3){
+            const uint8_t b1 = static_cast<uint8_t>(std::signbit(y-z));
+            const uint8_t b2 = static_cast<uint8_t>(std::signbit(x-z));
+            const uint8_t b3 = static_cast<uint8_t>(std::signbit(x-y));
+            const uint8_t mask = (b1 << 2) | (b2 << 1) | b3;
+            switch(mask){
                 case 0b100: return 0;
                 case 0b110: return 1;
                 case 0b111: return 2;
                 case 0b011: return 3;
                 case 0b001: return 4;
                 case 0b000: return 5;
-                default: PANIC(b1, b2, b3);
+                default: __builtin_unreachable();
             }
         }();
 

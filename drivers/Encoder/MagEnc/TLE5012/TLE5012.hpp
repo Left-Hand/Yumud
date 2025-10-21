@@ -1,9 +1,7 @@
 #pragma once
 
-#include "core/io/regs.hpp"
-#include "drivers/Encoder/MagEncoder.hpp"
+#include "tle5012_prelude.hpp"
 
-#include "hal/bus/spi/spidrv.hpp"
 
 namespace ymd::drivers{
 
@@ -20,11 +18,6 @@ class TLE5012_Phy final: public TLE5012_Prelude{
 
 };
 
-class TLE5012 final: 
-    public MagEncoderIntf, 
-    public TLE5012_Regs{
-    
-};
 
 
 }

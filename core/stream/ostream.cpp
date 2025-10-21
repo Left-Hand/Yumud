@@ -4,6 +4,8 @@
 #include "core/string/string_view.hpp"
 #include "core/string/string_ref.hpp"
 
+// #include "core/string/utils/strconv2.hpp"
+
 #include <source_location>
 
 using namespace ymd;
@@ -95,13 +97,12 @@ void OutputStream::print_source_loc(const std::source_location & loc){
 
 
 
-OutputStream & OutputStream::operator<<(const float _value){
-    return (*this) << q16::from(_value);
+OutputStream & OutputStream::operator<<(const float value){
+    return (*this) << q16::from(value);
 }
 
 OutputStream & OutputStream::operator<<(const double value){
-    PRINT_FLOAT_TEMPLATE(strconv::ftoa);
-    return *this;
+    return (*this) << q16::from(value);
 }
 
 #define PRINT_INT_TEMPLATE(blen, convfunc)\

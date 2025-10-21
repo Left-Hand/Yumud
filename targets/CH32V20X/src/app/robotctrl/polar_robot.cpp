@@ -3,26 +3,21 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/sync/timer.hpp"
+#include "core/utils/Unit.hpp"
 #include "core/string/string_view.hpp"
 #include "core/string/utils/multiline_split.hpp"
-
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
-#include "robots/cannet/can_chain.hpp"
-
 #include "types/vectors/polar.hpp"
 #include "types/vectors/vector2.hpp"
 
 #include "details/polar_robot_curvedata.hpp"
 
-#include "types/colors/color/color.hpp"
-
-
 #include "common_service.hpp"
 #include "joints.hpp"
 #include "gcode/gcode.hpp"
-#include "gcode_data.hpp"
+#include "details/gcode_data.hpp"
 
 #ifdef ENABLE_UART1
 using namespace ymd;
@@ -59,12 +54,12 @@ struct kind_to_command<CommandKind, K>{ \
 class PolarRobotActuator{
 public:
     struct Config{
-        real_t rho_transform_scale;
-        real_t theta_transform_scale;
-        Angle<real_t> center_bias;
+        q16 rho_transform_scale;
+        q16 theta_transform_scale;
+        Angle<q16> center_bias;
 
-        Range2<real_t> rho_range;
-        Range2<real_t> theta_range;
+        Range2<q16> rho_range;
+        Range2<q16> theta_range;
     };
 
     struct Params{
@@ -235,24 +230,25 @@ private:
 };
 
 
-struct History{
+struct GcodeStateHolder{
     static constexpr auto X_LIMIT = 0.2_r;
     static constexpr auto Y_LIMIT = 0.2_r;
-    real_t max_speed = 0.02_r;
-    real_t speed;
-    real_t x;
-    real_t y;
+
+    q16 max_speed = 0.02_r;
+    q16 speed;
+    unit::Meter<q16> x = unit::Meter<q16>(0);
+    unit::Meter<q16> y = unit::Meter<q16>(0);
     bool is_rapid;
 
-    constexpr void set_speed(const real_t _speed){
+    constexpr void set_speed(const q16 _speed){
         speed = MIN(_speed / 1000, max_speed);
     }
 
-    constexpr void set_x_by_mm(const real_t _x){
+    constexpr void set_x_by_mm(const q16 _x){
         x = CLAMP2(_x / 1000, X_LIMIT);
     }
 
-    constexpr void set_y_by_mm(const real_t _y){
+    constexpr void set_y_by_mm(const q16 _y){
         y = CLAMP2(_y / 1000, Y_LIMIT);
     }
 };
@@ -260,7 +256,7 @@ struct History{
 struct PolarRobotCurveGenerator{
     struct Config{
         uint32_t fs;
-        real_t speed;
+        q16 speed;
         Vec2<q24> initial_position = {0,0};
     };
 
@@ -329,8 +325,9 @@ void polar_robot_main(){
     #else
 
     can.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
-        .mode = hal::CanMode::Normal
+        .remap = CAN1_REMAP,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
     can.enable_hw_retransmit(DISEN);
@@ -359,7 +356,7 @@ void polar_robot_main(){
     PolarRobotActuator actuator_ = {
         {
             .rho_transform_scale = 25_r,
-            .theta_transform_scale = real_t(9.53 / TAU),
+            .theta_transform_scale = q16(9.53 / TAU),
             .center_bias = 0.0_deg,
 
             .rho_range = {0.0_r, 0.4_r},
@@ -383,7 +380,7 @@ void polar_robot_main(){
 
     PolarRobotCurveGenerator curve_gen_{GEN_CONFIG};
 
-    [[maybe_unused]] auto get_next_gcode_line = [] -> Option<StringView>{
+    [[maybe_unused]] auto fetch_next_gcode_line = [] -> Option<StringView>{
         static strconv2::StringSplitIter line_iter{GCODE_LINES_NANJING, '\n'};
         while(line_iter.has_next()){
             const auto next_line = line_iter.next().unwrap();
@@ -400,18 +397,18 @@ void polar_robot_main(){
         ASSERT(line.query_mnemonic().examine().to_letter() == 'G', 
             "only G gcode is supported");
 
-        static History history_;
+        static GcodeStateHolder state_;
 
         auto parse_g_command = [&](const gcode::GcodeArg & arg){
-            const uint16_t major = int(arg.value);
+            const uint16_t major = static_cast<uint16_t>(arg.value);
             switch(major){
             case 0://rapid move
-                curve_gen_.set_move_speed(history_.max_speed);
-                curve_gen_.add_end_position({history_.x, history_.y});
+                curve_gen_.set_move_speed(state_.max_speed);
+                curve_gen_.add_end_position({state_.x.count(), state_.y.count()});
                 break;
             case 1://linear move
-                curve_gen_.set_move_speed(history_.speed);
-                curve_gen_.add_end_position({history_.x, history_.y});
+                curve_gen_.set_move_speed(state_.speed);
+                curve_gen_.add_end_position({state_.x.count(), state_.y.count()});
                 break;
             case 4:
                 break;
@@ -428,13 +425,13 @@ void polar_robot_main(){
         auto parse_arg = [&](const gcode::GcodeArg & arg){
             switch(arg.letter){
             case 'X': 
-                history_.set_x_by_mm(arg.value);
+                state_.x = unit::MilliMeter<q16>(arg.value);
                 break;
             case 'Y':
-                history_.set_y_by_mm(arg.value);
+                state_.y = unit::MilliMeter<q16>(arg.value);
                 break;
             case 'F':
-                history_.set_speed(arg.value);
+                state_.set_speed(arg.value);
                 break;
             case 'G':
                 parse_g_command(arg);
@@ -454,7 +451,7 @@ void polar_robot_main(){
     };
 
     [[maybe_unused]] auto poll_gcode = [&]{
-        const auto may_line_str = get_next_gcode_line();
+        const auto may_line_str = fetch_next_gcode_line();
         if(may_line_str.is_none()) return;
         const auto line = may_line_str.unwrap().trim();
 
@@ -471,7 +468,7 @@ void polar_robot_main(){
         radius_joint_.make_rpc_list("radius_joint"),
         theta_joint_.make_rpc_list("theta_joint"),
 
-        rpc::make_function("pxy", [&](const real_t x, const real_t y){
+        rpc::make_function("pxy", [&](const q16 x, const q16 y){
             curve_gen_.add_end_position({
                 CLAMP2(x, 0.14_r),
                 CLAMP2(y, 0.14_r)
@@ -549,7 +546,7 @@ void polar_robot_main(){
         // const auto [s0,c0] = sincos(clock_time);
         // const auto [s,c] = std::make_tuple(s0, s0);
         // const auto vec = Vec2{s,c};
-        // DEBUG_PRINTLN(s,c, atan2(s,c), vec_angle_diff<real_t>(vec, vec.rotated(1.6_r*s0)));
+        // DEBUG_PRINTLN(s,c, atan2(s,c), vec_angle_diff<q16>(vec, vec.rotated(1.6_r*s0)));
         // clock::delay(1ms);
     }
 }

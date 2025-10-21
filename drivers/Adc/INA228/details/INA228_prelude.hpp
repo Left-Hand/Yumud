@@ -33,7 +33,7 @@ struct INA228_Prelude{
 
 struct INA228_Regs:public INA228_Prelude{
     struct R16_Config:public Reg16<>{
-        static constexpr RegAddr address = 0x00;
+        static constexpr RegAddr ADDRESS = 0x00;
 
         // 3-0保留R 0h保留。始终读为 0。
         const uint16_t __resv1__:4 = 0;
@@ -69,7 +69,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R16_AccConfig:public Reg16<>{
-        static constexpr RegAddr address = 0x01;
+        static constexpr RegAddr ADDRESS = 0x01;
 
         // 2-0 AVG R/W 0h选择 ADC 样片平均计数。平均值计算设置适用于所有有效输入。
         // 当 >0h 时，将在平均值计算完成后更新输出寄存器。
@@ -141,7 +141,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
     struct R16_ShuntCal:public Reg16<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
 
         // 14-0 SHUNT_CAL R/W 1000h寄存器为器件提供一个转换常量值，表示用于计算电流值（安培）的
         // 分流电阻。
@@ -155,7 +155,7 @@ struct INA228_Regs:public INA228_Prelude{
     
 
     struct R8_ShuntTempco:public Reg8<>{
-        static constexpr RegAddr address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
 
         // 13-0
         // TEMPCO R/W 0h 分流器用于温度补偿校正的温度系数。以 +25°C 为基准进行计算。
@@ -168,7 +168,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
     struct R24_reg_shunt_v:public Reg24<>{         
-        static constexpr RegAddr address = 0x04;  // 24 bit, 312.5 - 78.125 nV / LSB (ADCRANGE)
+        static constexpr RegAddr ADDRESS = 0x04;  // 24 bit, 312.5 - 78.125 nV / LSB (ADCRANGE)
 
         // 23-4
         // VSHUNT R 0h 分流输出上测得的差分电压。二进制补码值。
@@ -181,7 +181,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R16_reg_bus_v:public Reg16<>{           
-        static constexpr RegAddr address = 0x05;  // 24 bit, 195.3125 uV / LSB, 4 low bits == 0
+        static constexpr RegAddr ADDRESS = 0x05;  // 24 bit, 195.3125 uV / LSB, 4 low bits == 0
 
         // 23-4
         // VBUS R 0h 总线电压输出。二进制补码，但始终为正。
@@ -195,7 +195,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R16_DieTemp:public Reg16<>{               
-        static constexpr RegAddr address = 0x06;  // 16 bit
+        static constexpr RegAddr ADDRESS = 0x06;  // 16 bit
 
         // 15-0
         // DIETEMP R 0h 内部芯片温度测量。二进制补码值
@@ -205,7 +205,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R24_Current:public Reg24<>{               
-        static constexpr RegAddr address = 0x07;  // 24 bit
+        static constexpr RegAddr ADDRESS = 0x07;  // 24 bit
 
         // 23-4
         // CURRENT R 0h 计算得出的电流输出（单位为安培）。二进制补码值。
@@ -218,7 +218,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R24_Power:public Reg24<>{               
-        static constexpr RegAddr address = 0x08;  // 24 bit
+        static constexpr RegAddr ADDRESS = 0x08;  // 24 bit
 
         // POWER R 0h 计算得出的功率输出。
         // 输出值（单位为瓦特）。
@@ -231,7 +231,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R64_Energy:public Reg64<>{               
-        static constexpr RegAddr address = 0x09;  // 40 bit
+        static constexpr RegAddr ADDRESS = 0x09;  // 40 bit
 
         // ENERGY R 0h 计算得出的电能输出。
         // 输出值以焦耳为单位。无符号表示。正值。
@@ -243,7 +243,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R64_Charge:public Reg64<>{               
-        static constexpr RegAddr address = 0x0A;  // 40 bit
+        static constexpr RegAddr ADDRESS = 0x0A;  // 40 bit
 
         // 39-0
         // CHARGE R 0h 计算得出的电荷输出。输出
@@ -254,7 +254,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R16_Alert:public Reg16<>{            
-        static constexpr RegAddr address = 0x0B;  // 16 bit
+        static constexpr RegAddr ADDRESS = 0x0B;  // 16 bit
 
         // 0 MEMSTAT R/W 1h如果在器件修整存储器空间中检测到校验和错误，则该位设置为 0。
         // 0h = 存储器校验和错误
@@ -370,7 +370,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R16_SOVL:public Reg16<>{            
-        static constexpr RegAddr address = 0x0B;  // 16 bit,  shunt overvoltage threshold
+        static constexpr RegAddr ADDRESS = 0x0B;  // 16 bit,  shunt overvoltage threshold
 
         // 15-0 SOVL R/W 7FFFh设置用于比较值的阈值，以检测分流过压（过流保护）。二进制补码
         // 值。转换因子：5µV/LSB（ADCRANGE = 0 时）
@@ -380,7 +380,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R16_SUVL:public Reg16<>{            
-        static constexpr RegAddr address = 0x0C;  // 16 bit,  shunt undervoltage threshold
+        static constexpr RegAddr ADDRESS = 0x0C;  // 16 bit,  shunt undervoltage threshold
 
         // 15-0 SUVL R/W 8000h设置用于比较值的阈值，以检测分流欠压（欠流保护）。二进制补码
         // 值。转换因子：5µV/LSB（ADCRANGE = 0 时）
@@ -392,7 +392,7 @@ struct INA228_Regs:public INA228_Prelude{
     struct R16_BOVL:public Reg16<>{            
 
         
-        static constexpr RegAddr address = 0x0D;  // 16 bit,  bus overvoltage threshold
+        static constexpr RegAddr ADDRESS = 0x0D;  // 16 bit,  bus overvoltage threshold
 
         // 15
         // 保留R 0h 保留。始终读为 0。
@@ -405,7 +405,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R16_BUVL:public Reg16<>{            
-        static constexpr RegAddr address = 0x0E;  // 16 bit,  bus undervoltage threshold
+        static constexpr RegAddr ADDRESS = 0x0E;  // 16 bit,  bus undervoltage threshold
 
         // 15
         // 保留R 0h 保留。始终读为 0。
@@ -416,7 +416,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
     
     struct R16_TempLimit:public Reg16<>{        
-        static constexpr RegAddr address = 0x10;  // 16 bit,  temp over
+        static constexpr RegAddr ADDRESS = 0x10;  // 16 bit,  temp over
 
         // 15-0
         // TOL R/W 7FFFh 设置用于比较值的阈值，以检测过热测量值。二进制补码值。
@@ -428,7 +428,7 @@ struct INA228_Regs:public INA228_Prelude{
 
     struct R16_PowerLimit:public Reg16<>{         
 
-        static constexpr RegAddr address = 0x11;  // 16 bit,  power over
+        static constexpr RegAddr ADDRESS = 0x11;  // 16 bit,  power over
 
         // 15-0
         // POL R/W FFFFh 设置用于比较值的阈值，以检测功率高于上限测量值。无符号表示，
@@ -440,7 +440,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R16_ManfId:public Reg16<>{        
-        static constexpr RegAddr address = 0x3E;
+        static constexpr RegAddr ADDRESS = 0x3E;
 
         // 15-0
         // MANFID R 5449h 以 ASCII 格式读回 TI。
@@ -450,7 +450,7 @@ struct INA228_Regs:public INA228_Prelude{
 
 
     struct R16_DieId:public Reg16<>{          
-        static constexpr RegAddr address = 0x3F;
+        static constexpr RegAddr ADDRESS = 0x3F;
 
         // 15-4
         // DIEID

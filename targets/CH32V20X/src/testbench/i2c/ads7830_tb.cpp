@@ -28,7 +28,7 @@ void ads7830_main(){
 
     auto scl_gpio = SCL_GPIO;
     auto sda_gpio = SDA_GPIO;
-    hal::I2cSw i2c = {&scl_gpio, &sda_gpio};
+    hal::I2cSw i2c = hal::I2cSw{&scl_gpio, &sda_gpio};
     i2c.init({400_KHz});
 
     ADS7830 ads7830{&i2c, hal::I2cSlaveAddr<7>::from_u7(0b10010110 >> 1)};
@@ -40,7 +40,7 @@ void ads7830_main(){
 
         auto read_channel = [&](size_t i) -> uint8_t{
             return ads7830.read_pos_channel(
-                ADS7830::ChannelNth::from_index(i).unwrap()
+                ADS7830::ChannelSelection::from_nth(i).unwrap()
             ).examine();
         };
     

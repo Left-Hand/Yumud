@@ -149,7 +149,7 @@ void I2cHw::trail(){
 hal::HalResult I2cHw::lead(const hal::I2cSlaveAddrWithRw req){
     const auto address = req.addr_without_rw();
     const bool is_read = req.is_read();
-    // while(I2C_GetFlagStatus(inst_, I2C_FLAG_BUSY));
+
     I2C_GenerateSTART(inst_, ENABLE);
 
     while(I2C_CheckEvent(inst_, I2C_EVENT_MASTER_MODE_SELECT) 
@@ -172,7 +172,7 @@ hal::HalResult I2cHw::write(const uint32_t data){
     return hal::HalResult::Ok();
 }
 
-hal::HalResult I2cHw::read(uint32_t & data, const Ack ack){
+hal::HalResult I2cHw::read(uint8_t & data, const Ack ack){
     I2C_AcknowledgeConfig(inst_, ack == ACK);
     while(I2C_GetFlagStatus(inst_, I2C_FLAG_RXNE) == ErrorStatus::NoREADY);
 

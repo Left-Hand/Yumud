@@ -20,7 +20,6 @@
 #include "hal/analog/opa/opa.hpp"
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
-#include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
 
 #include "types/vectors/quat.hpp"
@@ -87,17 +86,17 @@ struct RunStatus{
 
 [[maybe_unused]] static void init_adc(hal::AdcPrimary & adc){
 
-    using hal::AdcChannelNth;
+    using hal::AdcChannelSelection;
     using hal::AdcSampleCycles;
 
     adc.init(
         {
-            {AdcChannelNth::VREF, AdcSampleCycles::T28_5}
+            {AdcChannelSelection::VREF, AdcSampleCycles::T28_5}
         },{
-            {AdcChannelNth::CH5, AdcSampleCycles::T13_5},
-            {AdcChannelNth::CH4, AdcSampleCycles::T13_5},
-            {AdcChannelNth::CH1, AdcSampleCycles::T13_5},
-            {AdcChannelNth::VREF, AdcSampleCycles::T7_5},
+            {AdcChannelSelection::CH5, AdcSampleCycles::T13_5},
+            {AdcChannelSelection::CH4, AdcSampleCycles::T13_5},
+            {AdcChannelSelection::CH1, AdcSampleCycles::T13_5},
+            {AdcChannelSelection::VREF, AdcSampleCycles::T7_5},
         }, {}
     );
 
@@ -156,15 +155,12 @@ void bldc_main(){
     clock::delay(2ms);
 
     can.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
-        .mode = hal::CanMode::Normal
+        .remap = CAN1_REMAP,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
-    can.filters<0>() 
-        .apply(hal::CanFilterConfig::from_pair(
-            hal::CanStdIdMaskPair::from_accept_all()
-        )
-    );
+    can.filters<0>().apply(hal::CanFilterConfig::from_accept_all());
 
     spi.init({
         .baudrate = 18_MHz
@@ -189,8 +185,9 @@ void bldc_main(){
     mp6540_nfault_gpio_.inana();
 
     can.init({
-        .coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
-        .mode = hal::CanMode::Normal
+        .remap = CAN1_REMAP,
+        .mode = hal::CanMode::Normal,
+        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
 

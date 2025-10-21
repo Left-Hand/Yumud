@@ -137,11 +137,11 @@ IResult<FT6336U::TouchPoints> FT6336U::get_touch_points(){
     }
 }
 
-IResult<uint8_t> FT6336U::get_touch_event(const ChannelNth nth) {
+IResult<uint8_t> FT6336U::get_touch_event(const ChannelSelection nth) {
     const auto reg_addr = [&]{
         switch(nth){
-            case ChannelNth::_1: return FT6336U_ADDR_TOUCH1_EVENT;
-            case ChannelNth::_2: return FT6336U_ADDR_TOUCH2_EVENT;
+            case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_EVENT;
+            case ChannelSelection::_2: return FT6336U_ADDR_TOUCH2_EVENT;
             default: __builtin_unreachable();
         }
     }();
@@ -153,11 +153,11 @@ IResult<uint8_t> FT6336U::get_touch_event(const ChannelNth nth) {
     });
 }
 
-IResult<uint8_t> FT6336U::get_touch_id(const ChannelNth nth) {
+IResult<uint8_t> FT6336U::get_touch_id(const ChannelSelection nth) {
     const auto reg_addr = [&]{
         switch(nth){
-            case ChannelNth::_1: return FT6336U_ADDR_TOUCH1_ID;
-            case ChannelNth::_2: return FT6336U_ADDR_TOUCH2_ID;
+            case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_ID;
+            case ChannelSelection::_2: return FT6336U_ADDR_TOUCH2_ID;
             default: __builtin_unreachable();
         }
     }();
@@ -170,11 +170,11 @@ IResult<uint8_t> FT6336U::get_touch_id(const ChannelNth nth) {
 }
 
 
-IResult<uint8_t> FT6336U::get_touch_weight(const ChannelNth nth) {
+IResult<uint8_t> FT6336U::get_touch_weight(const ChannelSelection nth) {
     const auto reg_addr = [&]{
         switch(nth){
-            case ChannelNth::_1: return FT6336U_ADDR_TOUCH1_WEIGHT;
-            case ChannelNth::_2: return FT6336U_ADDR_TOUCH2_WEIGHT;
+            case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_WEIGHT;
+            case ChannelSelection::_2: return FT6336U_ADDR_TOUCH2_WEIGHT;
             default: __builtin_unreachable();
         }
     }();
@@ -183,11 +183,11 @@ IResult<uint8_t> FT6336U::get_touch_weight(const ChannelNth nth) {
 }
 
 
-IResult<uint8_t> FT6336U::get_touch_misc(const ChannelNth nth) {
+IResult<uint8_t> FT6336U::get_touch_misc(const ChannelSelection nth) {
     const auto reg_addr = [&]{
         switch(nth){
-            case ChannelNth::_1: return FT6336U_ADDR_TOUCH1_MISC;
-            case ChannelNth::_2: return FT6336U_ADDR_TOUCH2_MISC;
+            case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_MISC;
+            case ChannelSelection::_2: return FT6336U_ADDR_TOUCH2_MISC;
             default: __builtin_unreachable();
         }
     }();

@@ -139,7 +139,7 @@ public:
 
     template<IT I>
     void register_nvic(const NvicPriority request, const Enable en){
-        NvicPriority::enable(request, details::it_to_irq(inst_, I), en);
+        request.with_irqn(details::it_to_irq(inst_, I)).enable(en);
     }
 
     void enable_arr_sync(const Enable en);
@@ -175,10 +175,10 @@ public:
     explicit GenericTimer(TIM_TypeDef * _base):
         BasicTimer(_base),
         channels{
-            TimerOC(inst_, TimerChannel::ChannelNth::CH1),
-            TimerOC(inst_, TimerChannel::ChannelNth::CH2),
-            TimerOC(inst_, TimerChannel::ChannelNth::CH3),
-            TimerOC(inst_, TimerChannel::ChannelNth::CH4)
+            TimerOC(inst_, TimerChannel::ChannelSelection::CH1),
+            TimerOC(inst_, TimerChannel::ChannelSelection::CH2),
+            TimerOC(inst_, TimerChannel::ChannelSelection::CH3),
+            TimerOC(inst_, TimerChannel::ChannelSelection::CH4)
         }{;}
 
     void init_as_encoder(const CountMode mode = CountMode::Up);
@@ -234,9 +234,9 @@ public:
     explicit AdvancedTimer(TIM_TypeDef * _base):
             GenericTimer(_base),
             n_channels{
-                TimerOCN(inst_, TimerChannel::ChannelNth::CH1N),
-                TimerOCN(inst_, TimerChannel::ChannelNth::CH2N),
-                TimerOCN(inst_, TimerChannel::ChannelNth::CH3N),
+                TimerOCN(inst_, TimerChannel::ChannelSelection::CH1N),
+                TimerOCN(inst_, TimerChannel::ChannelSelection::CH2N),
+                TimerOCN(inst_, TimerChannel::ChannelSelection::CH3N),
             }{;}
 
     void init_bdtr(const Nanoseconds ns, const LockLevel level = LockLevel::Off);

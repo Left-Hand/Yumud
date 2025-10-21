@@ -104,7 +104,7 @@ public:
             res.is_err()) return Err(res.unwrap_err());
         #endif
         TODO();
-        uint32_t ret;
+        uint8_t ret;
         const auto res = i2c_.read(ret, NACK);
         i2c_.lend();
         if(res.is_err()) return Err(res.unwrap_err());

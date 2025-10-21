@@ -52,7 +52,7 @@ DEF_ERROR_SUMWITH_HALERROR(ImuError, details::ImuError_Kind)
 }
 
 namespace ymd{
-OutputStream& operator << (OutputStream& os, const drivers::details::ImuError_Kind & value);
+OutputStream& operator << (OutputStream& os, const drivers::details::ImuError_Kind value);
 }
 
 

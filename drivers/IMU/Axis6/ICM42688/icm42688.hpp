@@ -7,15 +7,15 @@
 namespace ymd::drivers{
 
 class ICM42688:
+    public ICM42688_Prelude,
     public AccelerometerIntf, 
-    public GyroscopeIntf,
-    public ICM42688_Regs
+    public GyroscopeIntf
 {
 public:
     explicit ICM42688(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
         phy_(i2c, i2c_addr){;}
-    explicit ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
-        phy_(spi, idx){;}
+    explicit ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        phy_(spi, rank){;}
     explicit ICM42688(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
 
@@ -38,6 +38,7 @@ public:
 private:
     InvensenseSensor_Phy phy_;
     Option<Bank> last_bank_ = None;
+    ICM42688_Regset regs_ = {};
 
     q24 acc_scale_ = 0;
     q24 gyr_scale_ = 0;
@@ -55,16 +56,17 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        if(const auto res = phy_.write_reg(reg.address, reg.as_val());
+        if(const auto res = phy_.write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return res;
         reg.apply();
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(auto & reg){
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        return phy_.read_reg(reg.address, reg.as_ref());
+        return phy_.read_reg(T::ADDRESS, reg.as_ref());
     };
 
     [[nodiscard]] static constexpr q24 calc_gyr_scale(const GyrFs fs){

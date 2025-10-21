@@ -5,9 +5,9 @@
 
 namespace ymd::drivers{
 class BMI160 final:
+    public BMI160_Prelude,
     public AccelerometerIntf, 
-    public GyroscopeIntf,
-    public BMI160_Prelude{
+    public GyroscopeIntf{
 public:
     explicit BMI160(const hal::SpiDrv & spi_drv):
         phy_(spi_drv){;}

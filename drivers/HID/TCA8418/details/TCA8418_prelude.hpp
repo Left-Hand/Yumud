@@ -10,6 +10,7 @@
 namespace ymd::drivers{
 
 struct TCA8418_Prelude{
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0110100);
     using RegAddr = uint8_t;
 
     enum class Error_Kind:uint8_t{
@@ -24,7 +25,7 @@ struct TCA8418_Prelude{
 };
 struct TCA8418_Regs:public TCA8418_Prelude{
     struct R8_Cfg:public Reg8<>{
-        static constexpr RegAddr address = 0x01;
+        static constexpr RegAddr ADDRESS = 0x01;
 
         // Key events interrupt enable to host processor
         uint8_t KE_IEN:1;
@@ -52,7 +53,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(cfg_reg)
 
     struct R8_INT_STAT:public Reg8<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
 
         uint8_t K_INT:1;
         uint8_t GPI_INT:1;
@@ -63,7 +64,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(int_stat_reg)
 
     struct R8_KEY_LCK_EC:public Reg8<>{
-        static constexpr RegAddr address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
 
         uint8_t KEC:4;
         uint8_t LCK1:1;
@@ -73,25 +74,25 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(key_lck_ec_reg)
 
     struct R8_KEY_EVENT:public Reg8<>{
-        static constexpr RegAddr address = 0x04;
+        static constexpr RegAddr ADDRESS = 0x04;
 
         uint8_t data;
     }DEF_R8(key_event_reg)
 
     struct R8_KP_LCK_TIMER:public Reg8<>{
-        static constexpr RegAddr address = 0x05;
+        static constexpr RegAddr ADDRESS = 0x05;
 
         uint8_t data;
     }DEF_R8(kp_lck_timer_reg)
 
     struct R8_KP_UNLOCK_TIMER:public Reg8<>{
-        static constexpr RegAddr address = 0x05;
+        static constexpr RegAddr ADDRESS = 0x05;
 
         uint8_t data;
     }DEF_R8(kp_unlock_timer_reg)
 
     struct R8_GPIO_INT_STAT1:public Reg8<>{
-        static constexpr RegAddr address = 0x11;
+        static constexpr RegAddr ADDRESS = 0x11;
 
         uint8_t R0IS:1;
         uint8_t R1IS:1;
@@ -104,7 +105,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_int_stat1_reg)
 
     struct R8_GPIO_INT_STAT2:public Reg8<>{
-        static constexpr RegAddr address = 0x12;
+        static constexpr RegAddr ADDRESS = 0x12;
 
         uint8_t C0IS:1;
         uint8_t C1IS:1;
@@ -117,7 +118,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_int_stat2_reg)
 
     struct R8_GPIO_INT_STAT3:public Reg8<>{
-        static constexpr RegAddr address = 0x13;
+        static constexpr RegAddr ADDRESS = 0x13;
 
         uint8_t C8IS:1;
         uint8_t C9IS:1;
@@ -125,7 +126,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_int_stat3_reg)
 
     struct R8_GPIO_DAT_STAT1:public Reg8<>{
-        static constexpr RegAddr address = 0x14;
+        static constexpr RegAddr ADDRESS = 0x14;
 
         uint8_t R0DS:1;
         uint8_t R1DS:1;
@@ -138,7 +139,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_dat_stat1_reg)
 
     struct R8_GPIO_DAT_STAT2:public Reg8<>{
-        static constexpr RegAddr address = 0x15;
+        static constexpr RegAddr ADDRESS = 0x15;
 
         uint8_t C0DS:1;
         uint8_t C1DS:1;
@@ -151,7 +152,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_dat_stat2_reg)
 
     struct R8_GPIO_DAT_STAT3:public Reg8<>{
-        static constexpr RegAddr address = 0x16;
+        static constexpr RegAddr ADDRESS = 0x16;
 
         uint8_t C8DS:1;
         uint8_t C9DS:1;
@@ -159,7 +160,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_dat_stat3_reg)
 
     struct R8_GPIO_DAT_OUT1:public Reg8<>{
-        static constexpr RegAddr address = 0x17;
+        static constexpr RegAddr ADDRESS = 0x17;
 
         uint8_t R0DO:1;
         uint8_t R1DO:1;
@@ -172,7 +173,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_dat_out1_reg)
 
     struct R8_GPIO_DAT_OUT2:public Reg8<>{
-        static constexpr RegAddr address = 0x18;
+        static constexpr RegAddr ADDRESS = 0x18;
 
         uint8_t C0DO:1;
         uint8_t C1DO:1;
@@ -185,7 +186,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_dat_out2_reg)
 
     struct R8_GPIO_DAT_OUT3:public Reg8<>{
-        static constexpr RegAddr address = 0x19;
+        static constexpr RegAddr ADDRESS = 0x19;
 
         uint8_t C8DO:1;
         uint8_t C9DO:1;
@@ -193,7 +194,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_dat_out3_reg)
 
     struct R8_GPIO_INT_EN1:public Reg8<>{
-        static constexpr RegAddr address = 0x1A;
+        static constexpr RegAddr ADDRESS = 0x1A;
 
         uint8_t R0DO:1;
         uint8_t R1DO:1;
@@ -206,7 +207,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_int_en1_reg)
 
     struct R8_GPIO_INT_EN2:public Reg8<>{
-        static constexpr RegAddr address = 0x1B;
+        static constexpr RegAddr ADDRESS = 0x1B;
 
         uint8_t C0DO:1;
         uint8_t C1DO:1;
@@ -219,7 +220,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_int_en2_reg)
 
     struct R8_GPIO_INT_EN3:public Reg8<>{
-        static constexpr RegAddr address = 0x1C;
+        static constexpr RegAddr ADDRESS = 0x1C;
 
         uint8_t C8DO:1;
         uint8_t C9DO:1;
@@ -227,7 +228,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_int_en3_reg)
 
     struct R8_KP_GPIO1:public Reg8<>{
-        static constexpr RegAddr address = 0x1D;
+        static constexpr RegAddr ADDRESS = 0x1D;
 
         uint8_t R0DO:1;
         uint8_t R1DO:1;
@@ -240,7 +241,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(kp_gpio1_reg)
 
     struct R8_KP_GPIO2:public Reg8<>{
-        static constexpr RegAddr address = 0x1E;
+        static constexpr RegAddr ADDRESS = 0x1E;
 
         uint8_t C0DO:1;
         uint8_t C1DO:1;
@@ -253,7 +254,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(kp_gpio2_reg)
 
     struct R8_KP_GPIO3:public Reg8<>{
-        static constexpr RegAddr address = 0x1F;
+        static constexpr RegAddr ADDRESS = 0x1F;
 
         uint8_t C8DO:1;
         uint8_t C9DO:1;
@@ -262,7 +263,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
 
 
     struct R8_GPI_EM1:public Reg8<>{
-        static constexpr RegAddr address = 0x20;
+        static constexpr RegAddr ADDRESS = 0x20;
 
         uint8_t R0DO:1;
         uint8_t R1DO:1;
@@ -275,7 +276,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(kp_gpio4_reg)
 
     struct R8_GPI_EM2:public Reg8<>{
-        static constexpr RegAddr address = 0x21;
+        static constexpr RegAddr ADDRESS = 0x21;
 
         uint8_t C0DO:1;
         uint8_t C1DO:1;
@@ -288,7 +289,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(kp_gpio5_reg)
 
     struct R8_GPI_EM3:public Reg8<>{
-        static constexpr RegAddr address = 0x22;
+        static constexpr RegAddr ADDRESS = 0x22;
 
         uint8_t C8DO:1;
         uint8_t C9DO:1;
@@ -296,7 +297,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(kp_gpio6_reg)
 
     struct R8_GPIO_DIR1:public Reg8<>{
-        static constexpr RegAddr address = 0x23;
+        static constexpr RegAddr ADDRESS = 0x23;
 
         uint8_t R0DO:1;
         uint8_t R1DO:1;
@@ -309,7 +310,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_dir1_reg)
 
     struct R8_GPIO_DIR2:public Reg8<>{
-        static constexpr RegAddr address = 0x24;
+        static constexpr RegAddr ADDRESS = 0x24;
 
         uint8_t C0DO:1;
         uint8_t C1DO:1;
@@ -322,7 +323,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_dir2_reg)
 
     struct R8_GPIO_DIR3:public Reg8<>{
-        static constexpr RegAddr address = 0x25;
+        static constexpr RegAddr ADDRESS = 0x25;
 
         uint8_t C8DO:1;
         uint8_t C9DO:1;
@@ -330,7 +331,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_dir3_reg)
 
     struct R8_GPIO_INT_LVL1:public Reg8<>{
-        static constexpr RegAddr address = 0x26;
+        static constexpr RegAddr ADDRESS = 0x26;
 
         uint8_t R0DO:1;
         uint8_t R1DO:1;
@@ -343,7 +344,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_int_lvl1_reg)
 
     struct R8_GPIO_INT_LVL2:public Reg8<>{
-        static constexpr RegAddr address = 0x27;
+        static constexpr RegAddr ADDRESS = 0x27;
 
         uint8_t C0DO:1;
         uint8_t C1DO:1;
@@ -356,7 +357,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_int_lvl2_reg)
 
     struct R8_GPIO_INT_LVL3:public Reg8<>{
-        static constexpr RegAddr address = 0x28;
+        static constexpr RegAddr ADDRESS = 0x28;
 
         uint8_t C8DO:1;
         uint8_t C9DO:1;
@@ -364,7 +365,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_int_lvl3_reg)
 
     struct R8_DEBOUNCE_DIS1:public Reg8<>{
-        static constexpr RegAddr address = 0x29;
+        static constexpr RegAddr ADDRESS = 0x29;
 
         uint8_t R0DO:1;
         uint8_t R1DO:1;
@@ -377,7 +378,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(debounce_dis1_reg)
 
     struct R8_DEBOUNCE_DIS2:public Reg8<>{
-        static constexpr RegAddr address = 0x2A;
+        static constexpr RegAddr ADDRESS = 0x2A;
 
         uint8_t C0DO:1;
         uint8_t C1DO:1;
@@ -390,7 +391,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(debounce_dis2_reg)
 
     struct R8_DEBOUNCE_DIS3:public Reg8<>{
-        static constexpr RegAddr address = 0x2B;
+        static constexpr RegAddr ADDRESS = 0x2B;
 
         uint8_t C8DO:1;
         uint8_t C9DO:1;
@@ -398,7 +399,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(debounce_dis3_reg)
 
     struct R8_GPIO_PULL1:public Reg8<>{
-        static constexpr RegAddr address = 0x2C;
+        static constexpr RegAddr ADDRESS = 0x2C;
 
         uint8_t R0DO:1;
         uint8_t R1DO:1;
@@ -411,7 +412,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_pull1_reg)
 
     struct R8_GPIO_PULL2:public Reg8<>{
-        static constexpr RegAddr address = 0x2D;
+        static constexpr RegAddr ADDRESS = 0x2D;
 
         uint8_t C0DO:1;
         uint8_t C1DO:1;
@@ -424,7 +425,7 @@ struct TCA8418_Regs:public TCA8418_Prelude{
     }DEF_R8(gpio_pull2_reg)
 
     struct R8_GPIO_PULL3:public Reg8<>{
-        static constexpr RegAddr address = 0x2E;
+        static constexpr RegAddr ADDRESS = 0x2E;
 
         uint8_t C8DO:1;
         uint8_t C9DO:1;

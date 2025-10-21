@@ -4,47 +4,44 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-volatile uint16_t & TimerChannel::from_channel_to_cvr(TIM_TypeDef * timer, const ChannelNth nth){
-    using enum ChannelNth;
+volatile uint16_t & TimerChannel::from_channel_to_cvr(
+    TIM_TypeDef * timer, 
+    const ChannelSelection ch_sel
+){
 
-    switch(nth){
-        default:
-        case CH1:
-        case CH1N:
+    switch(ch_sel.kind()){
+        default: __builtin_trap();
+        case ChannelSelection::CH1:
+        case ChannelSelection::CH1N:
             return (timer->CH1CVR);
-        case CH2:
-        case CH2N:
+        case ChannelSelection::CH2:
+        case ChannelSelection::CH2N:
             return (timer->CH2CVR);
-        case CH3:
-        case CH3N:
+        case ChannelSelection::CH3:
+        case ChannelSelection::CH3N:
             return (timer->CH3CVR);
-        case CH4:
+        case ChannelSelection::CH4:
             return (timer->CH4CVR);
     }
 }
 
 
 TimerChannel & TimerChannel::enable_dma(const Enable en){
-    using enum ChannelNth;
 
-    uint16_t source = 0;
-
-    switch(nth_){
-        case CH1:
-            source = TIM_DMA_CC1;
-            break;
-        case CH2:
-            source = TIM_DMA_CC2;
-            break;
-        case CH3:
-            source = TIM_DMA_CC3;
-            break;
-        case CH4:
-            source = TIM_DMA_CC4;
-            break;
+    const uint16_t source = [&] -> uint16_t{
+        switch(ch_sel_.kind()){
+        case ChannelSelection::CH1:
+            return TIM_DMA_CC1;
+        case ChannelSelection::CH2:
+            return TIM_DMA_CC2;
+        case ChannelSelection::CH3:
+            return TIM_DMA_CC3;
+        case ChannelSelection::CH4:
+            return TIM_DMA_CC4;
         default:
-            break;
-    }
+            __builtin_trap();
+        }
+    }();
 
     TIM_DMACmd(inst_, source, en == EN);
 
@@ -53,20 +50,19 @@ TimerChannel & TimerChannel::enable_dma(const Enable en){
 
 
 DmaChannel & TimerChannel::dma() const {
-    using enum ChannelNth;
 
-    #define DMA_NULL dma1Ch1
+    #define DMA_NULL dma1_ch1
 
     #define FULL_DMA_CASE(x)\
         case TIM##x##_BASE:\
-        switch(nth_){\
-            case CH1:\
+        switch(ch_sel_.kind()){\
+            case ChannelSelection::CH1:\
                 return TIM##x##_CH1_DMA_CH;\
-            case CH2:\
+            case ChannelSelection::CH2:\
                 return TIM##x##_CH2_DMA_CH;\
-            case CH3:\
+            case ChannelSelection::CH3:\
                 return TIM##x##_CH3_DMA_CH;\
-            case CH4:\
+            case ChannelSelection::CH4:\
                 return TIM##x##_CH4_DMA_CH;\
             default:\
                 break;\
@@ -84,12 +80,12 @@ DmaChannel & TimerChannel::dma() const {
 
         #ifdef ENABLE_TIM3
         case TIM3_BASE:
-        switch(nth_){
-            case CH1:
+        switch(ch_sel_.kind()){
+            case ChannelSelection::CH1:
                 return TIM3_CH1_DMA_CH;
-            case CH3:
+            case ChannelSelection::CH3:
                 return TIM3_CH3_DMA_CH;
-            case CH4:
+            case ChannelSelection::CH4:
                 return TIM3_CH4_DMA_CH;
             default:
                 break;
@@ -99,12 +95,12 @@ DmaChannel & TimerChannel::dma() const {
 
         #ifdef ENABLE_TIM4
         case TIM4_BASE:
-        switch(nth_){
-            case CH1:
+        switch(ch_sel_.kind()){
+            case ChannelSelection::CH1:
                 return TIM4_CH1_DMA_CH;
-            case CH2:
+            case ChannelSelection::CH2:
                 return TIM4_CH2_DMA_CH;
-            case CH3:
+            case ChannelSelection::CH3:
                 return TIM4_CH3_DMA_CH;
             default:
                 break;

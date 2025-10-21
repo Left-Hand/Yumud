@@ -110,7 +110,7 @@ public:
         uint8_t kind_;
     };
 
-    enum class ChannelNth:uint8_t{
+    enum class ChannelSelection:uint8_t{
         _1,
         _2
     };
@@ -135,10 +135,10 @@ public:
             return touch_count_;
         }
 
-        constexpr Option<TouchPoint> operator [](const ChannelNth nth){
+        constexpr Option<TouchPoint> operator [](const ChannelSelection nth){
             switch(nth){
-                case ChannelNth::_1: return get(0);
-                case ChannelNth::_2: return get(1);
+                case ChannelSelection::_1: return get(0);
+                case ChannelSelection::_2: return get(1);
                 default: return None;
             }
         }

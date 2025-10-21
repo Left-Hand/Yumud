@@ -17,7 +17,7 @@
 #define PCA9685_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
-// #define PCA9685_FORCEWRITE
+// #define PCA9685_VOLATILE_REFLASH
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -37,37 +37,42 @@ hal::PinMask Vport::read_mask(){
     return hal::PinMask::from_nth(0_nth);
 }
 
-IResult<> PCA9685::set_frequency(uint freq, real_t trim){
+IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
     if(const auto res = read_reg(mode1_reg);
         res.is_err()) return res;
     
-    auto mode1_reg_copy = RegCopy(mode1_reg);
-
-    mode1_reg_copy.sleep = true;
-    if(const auto res = write_reg(mode1_reg_copy); 
-        res.is_err()) return res;
-
     {
-        auto reg = RegCopy(prescale_reg);
-        reg.prescale = int((real_t(25000000.0 / 4096) / freq - 1) * trim);
+        auto reg = RegCopy(mode1_reg);
+
+        reg.sleep = true;
         if(const auto res = write_reg(reg); 
             res.is_err()) return res;
     }
 
-    mode1_reg_copy.sleep = false;
-    
-    if(const auto res = write_reg(mode1_reg_copy);
-        res.is_err()) return res;
-    clock::delay(5ms);
+    {
+        auto reg = RegCopy(prescale_reg);
+        reg.prescale = static_cast<uint8_t>((q16(25000000.0 / 4096) / freq - 1) * trim);
+        if(const auto res = write_reg(reg); 
+            res.is_err()) return res;
+    }
 
-    mode1_reg_copy.as_ref() = uint8_t(mode1_reg_copy.as_val() | uint8_t(0xa1));
-    return write_reg(mode1_reg_copy);
+    {
+        auto reg = RegCopy(mode1_reg);
+        reg.sleep = false;
+        
+        if(const auto res = write_reg(reg);
+            res.is_err()) return res;
+
+        reg.as_ref() = uint8_t(reg.as_val() | uint8_t(0xa1));
+        clock::delay(5ms);
+        return write_reg(reg);
+    }
 }
 
 IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
-    if(nth.count()) return Err(Error::IndexOutOfRange);
+    if(nth.count() >= 16) return Err(Error::IndexOutOfRange);
     if(
-        #ifdef PCA9685_FORCEWRITE
+        #ifdef PCA9685_VOLATILE_REFLASH
         true
         #else
         sub_channels[nth.count()].on.cvr != on
@@ -79,7 +84,7 @@ IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
     }
 
     if(
-        #ifdef PCA9685_FORCEWRITE
+        #ifdef PCA9685_VOLATILE_REFLASH
         true
         #else
         sub_channels[nth.count()].off.cvr != off
@@ -210,10 +215,4 @@ void Vport::set_mode(const size_t index, const hal::GpioMode mode){
 //         ctl.p0mod = GpioMode::isPP(mode);
 //         write_reg(ctl.data);
 //     }
-}
-
-
-__fast_inline BoolLevel PCA9685::PCA9685Channel::read() const {
-    TODO();
-    return LOW;
 }

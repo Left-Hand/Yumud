@@ -16,14 +16,14 @@ struct ICM42605_Prelude{
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
 
-    enum class AFS:uint8_t{
+    enum class AccFs:uint8_t{
         _16G,// default
         _8G,
         _4G,
         _2G,
     };
 
-    enum class AODR:uint8_t
+    enum class AccOdr:uint8_t
     {
         _32000HZ,
         _16000HZ,
@@ -42,7 +42,7 @@ struct ICM42605_Prelude{
         _500HZ,
     };
 
-    enum class GFS:uint8_t{
+    enum class GyrFs:uint8_t{
         _2000DPS,// default
         _1000DPS,
         _500DPS,
@@ -53,7 +53,7 @@ struct ICM42605_Prelude{
         _15_625DPS,
     };
 
-    enum class GODR:uint8_t{
+    enum class GyrOdr:uint8_t{
         _32000HZ,
         _16000HZ,
         _8000HZ,
@@ -151,6 +151,15 @@ struct ICM42605_Prelude{
         INTF_CONFIG4              = 0x7A,
         INTF_CONFIG5              = 0x7B,
         INTF_CONFIG6              = 0x7C
+    };
+
+
+    enum class Bank{
+        _0 = 0,
+        _1,
+        _2,
+        _3,
+        _4
     };
 };
 

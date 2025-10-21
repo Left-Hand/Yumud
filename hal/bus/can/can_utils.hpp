@@ -42,8 +42,7 @@ enum class CanIT:uint16_t{
     ERR = (1u << 13),
 };
 
-
-
+/// @brief CAN Swj时间长度
 enum class CanSwj:uint8_t{
     _1tq = 0x00,
     _2tq = 0x01,
@@ -51,6 +50,7 @@ enum class CanSwj:uint8_t{
     _4tq = 0x03
 };
 
+/// @brief CAN Bs1时间长度
 enum class CanBs1:uint8_t{
     _1tq = 0x00,
     _2tq = 0x01,
@@ -70,6 +70,8 @@ enum class CanBs1:uint8_t{
     _16tq = 0x0F
 };
 
+
+/// @brief CAN Bs2时间长度
 enum class CanBs2:uint8_t{
     _1tq = 0x00,
     _2tq = 0x01,
@@ -82,11 +84,13 @@ enum class CanBs2:uint8_t{
 };
 
 
+/// @brief CAN发送事件
 enum class CanTransmitEvent:uint8_t{
     Failed,
     Success
 };
 
+/// @brief CAN接收事件
 enum class CanReceiveEvent:uint8_t{
     Fifo0Pending,
     Fifo0Full,
@@ -96,6 +100,7 @@ enum class CanReceiveEvent:uint8_t{
     Fifo1Overrun,
 };
 
+/// @brief CAN状态事件
 enum class CanStatusEvent:uint8_t{
     Wakeup,
     SleepAcknowledge,

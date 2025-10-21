@@ -1,123 +1,13 @@
 #pragma once
 
-#include "core/io/regs.hpp"
-#include "core/utils/Result.hpp"
-#include "core/utils/angle.hpp"
-
-#include "hal/bus/spi/spidrv.hpp"
-
-
-#include "drivers/Encoder/MagEncoder.hpp"
-
+#include "ma730_prelude.hpp"
 
 namespace ymd::drivers{
 
-struct MA730_Prelude{
-    using Error = EncoderError;
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    enum class Width:uint8_t{
-        W90, W180, W270, W360
-    };
-
-    enum class Phase:uint8_t{
-        P0, P90, P180, P270
-    };
-
-    enum class MagThreshold:uint8_t{
-        mT23, mT38, mT53, mT67, mT81, mT95, mT109, mT123
-    };
-
-    enum class RegAddr:uint8_t{
-        ZeroDataLow,
-        ZeroDataHigh,
-        Trim,
-        TrimConfig,
-        ZParameters,
-        PulsePerTurn,
-        Threshold,
-        Direction = 9,
-        Magnitude = 27
-    };
-
-};
-
-struct MA730_Regs:public MA730_Prelude{
-
-    struct R8_ZeroDataLow:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ZeroDataLow;
-        uint8_t data;
-    };
-
-    struct R8_ZeroDataHigh:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ZeroDataHigh;
-        uint8_t data;
-    };
-
-    struct R8_Trim:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Trim;
-        uint8_t trim;
-    };
-    struct R8_TrimConfig:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::TrimConfig;
-        uint8_t enableX:1;
-        uint8_t enableY:1;
-        uint8_t :6;
-    };
-
-    struct R8_ZParameters:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ZParameters;
-        uint8_t :2;
-        Phase zPhase :2;
-        Width zWidth :2;
-        uint8_t ppt:2;
-    };
-
-    struct R8_PulsePerTurn:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::PulsePerTurn;
-        uint8_t data;
-    };
-
-    struct R8_Threshold:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Threshold;
-        uint8_t :2;
-        uint8_t thresholdHigh :3;
-        uint8_t thresholdLow :3;
-    };
-
-    struct R8_Direction:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Direction;
-        uint8_t :7;
-        uint8_t direction :1;
-    };
-
-    struct R8_Magnitude:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Magnitude;
-        uint8_t :2;
-        uint8_t mgl1:1;
-        uint8_t mgl2:1;
-        uint8_t :2;
-        uint8_t magnitudeLow :1;
-        uint8_t magnitudeHigh :1;
-    };
-
-    R8_ZeroDataLow zero_data_low_reg = {};
-    R8_ZeroDataHigh zero_data_high_reg = {};
-    R8_Trim trim_reg = {};
-
-    R8_TrimConfig trim_config_reg = {};
-    R8_ZParameters z_parameters_reg = {};
-    R8_PulsePerTurn pulse_per_turn_reg = {};
-    R8_Threshold threshold_reg = {};
-    R8_Direction direction_reg = {};
-    R8_Magnitude magnitude_reg = {};
-};
 
 class MA730 final:
-    public MagEncoderIntf,
-    public MA730_Regs{
+    public MA730_Prelude,
+    public MagEncoderIntf{
 public:
     struct Config{
         ClockDirection direction;
@@ -127,16 +17,16 @@ public:
         spi_drv_(spi_drv){;}
     explicit MA730(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit MA730(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        spi_drv_(hal::SpiDrv(spi, index)){;}
+    explicit MA730(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){;}
 
 
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> set_zero_position(const real_t position);
+    [[nodiscard]] IResult<> set_zero_angle(const Angle<q31> angle);
     [[nodiscard]] IResult<Angle<q31>> read_lap_angle(){
-        return Ok(Angle<q31>::from_turns(lap_position_));
+        return Ok(Angle<q31>::from_turns(lap_angle_));
     }
 
     [[nodiscard]] IResult<> set_trim_x(const real_t k);
@@ -152,13 +42,14 @@ public:
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 
     [[nodiscard]]
-    IResult<> set_zparameters(const Width width, const Phase phase);
+    IResult<> set_zparameters(const PulseWidth width, const PulsePhase phase);
 
     [[nodiscard]]
     IResult<> set_pulse_per_turn(const uint16_t ppt);
 private:
     hal::SpiDrv spi_drv_;
-    q31 lap_position_ = 0;
+    MA730_Regset regs_ = {};
+    q31 lap_angle_ = 0;
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

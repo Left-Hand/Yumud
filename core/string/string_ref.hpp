@@ -14,6 +14,9 @@ struct StringRef{
     constexpr StringRef(StringRef && other): data_(other.data_), size_(other.size_) {}
     constexpr explicit StringRef(char* str, size_t size) : data_(str), size_(size) {}
 
+    template<size_t N>
+    constexpr explicit StringRef(char (&str)[N]): data_(str), size_(N){;}
+
     constexpr StringRef & operator =(const StringRef & other) = default;
     constexpr StringRef & operator =(StringRef && other) = default;
 

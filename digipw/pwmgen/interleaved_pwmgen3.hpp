@@ -301,7 +301,7 @@ private:
             switch(curr_ocs.kind()){
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysActive);
                     pwm.set_cvr(uint32_t(arr * (TWO_BY_3 + dutycycle)));
                     pwm.set_oc_mode(OcMode::ActiveBelowCvr);
                     pwm.enable_cvr_sync(EN);
@@ -309,7 +309,7 @@ private:
                     break;
                 case TrigOccasion::DownSecond:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysInactive);
                     pwm.set_cvr(uint32_t(arr * (1)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     pwm.enable_cvr_sync(EN);
@@ -321,7 +321,7 @@ private:
             switch(curr_ocs.kind()){
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysActive);
                     pwm.set_cvr(uint32_t(arr * (0)));
                     pwm.enable_cvr_sync(EN);
                     pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - dutycycle)));
@@ -329,7 +329,7 @@ private:
                     break;
                 case TrigOccasion::DownSecond:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysInactive);
                     pwm.set_cvr(uint32_t(arr * (1)));
                     pwm.enable_cvr_sync(EN);
                     pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - dutycycle)));
@@ -341,7 +341,7 @@ private:
             switch(curr_ocs.kind()){
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysActive);
                     pwm.set_cvr(uint32_t(arr * (0)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     pwm.enable_cvr_sync(EN);
@@ -349,7 +349,7 @@ private:
                     break;
                 case TrigOccasion::DownSecond:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysInactive);
                     pwm.set_cvr(uint32_t(arr * (dutycycle - TWO_BY_3)));
                     pwm.set_oc_mode(OcMode::ActiveBelowCvr);
                     pwm.enable_cvr_sync(EN);
@@ -374,7 +374,7 @@ private:
             switch(curr_ocs.kind()){
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysInactive);
                     pwm.set_cvr(uint32_t(arr * (0)));
                     pwm.set_oc_mode(OcMode::ActiveBelowCvr);
                     pwm.enable_cvr_sync(EN);
@@ -382,7 +382,7 @@ private:
                     break;
                 case TrigOccasion::DownFirst:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysActive);
                     pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - dutycycle)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     pwm.enable_cvr_sync(EN);
@@ -394,7 +394,7 @@ private:
             switch(curr_ocs.kind()){
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysActive);
                     pwm.set_cvr(uint32_t(arr * (0)));
                     pwm.enable_cvr_sync(EN);
                     pwm.set_cvr(uint32_t(arr * (TWO_BY_3 - dutycycle)));
@@ -402,7 +402,7 @@ private:
                     break;
                 case TrigOccasion::DownSecond:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysInactive);
                     pwm.set_cvr(uint32_t(arr * (1)));
                     pwm.enable_cvr_sync(EN);
                     pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - dutycycle)));
@@ -414,7 +414,7 @@ private:
             switch(curr_ocs.kind()){
                 case TrigOccasion::UpFirst:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::InactiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysInactive);
                     pwm.set_cvr(uint32_t(arr * (FOUR_BY_3 - dutycycle)));
                     pwm.set_oc_mode(OcMode::ActiveAboveCvr);
                     pwm.enable_cvr_sync(EN);
@@ -422,7 +422,7 @@ private:
                     break;
                 case TrigOccasion::DownSecond:
                     pwm.enable_cvr_sync(DISEN);
-                    pwm.set_oc_mode(OcMode::ActiveForever);
+                    pwm.set_oc_mode(OcMode::AlwaysActive);
                     pwm.set_cvr(uint32_t(arr * (1)));
                     pwm.set_oc_mode(OcMode::ActiveBelowCvr);
                     pwm.enable_cvr_sync(EN);

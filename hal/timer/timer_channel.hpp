@@ -11,7 +11,7 @@ class DmaChannel;
 
 class TimerChannel{
 public:
-    using ChannelNth = TimerChannelNth;
+    using ChannelSelection = TimerChannelSelection;
 
     TimerChannel(const TimerChannel & other) = delete;
     TimerChannel(TimerChannel && other) = delete;
@@ -23,14 +23,14 @@ public:
 protected:
     TIM_TypeDef * inst_;
 
-    const ChannelNth nth_;
+    const ChannelSelection ch_sel_;
 
     static volatile uint16_t & from_channel_to_cvr(
-        TIM_TypeDef * timer, const ChannelNth nth);
+        TIM_TypeDef * timer, const ChannelSelection ch_sel);
 
-    TimerChannel(TIM_TypeDef * inst, const ChannelNth nth):
+    TimerChannel(TIM_TypeDef * inst, const ChannelSelection ch_sel):
         inst_(inst), 
-        nth_(nth){;}
+        ch_sel_(ch_sel){;}
 };
 
 }

@@ -40,7 +40,7 @@ IResult<> IST8310::init(){
     return Ok();
 }
 IResult<> IST8310::update(){
-    return read_burst(axis_x_reg.address, &axis_x_reg.as_ref(), 3);
+    return read_burst(axis_x_reg.ADDRESS, &axis_x_reg.as_ref(), 3);
 }
 
 IResult<> IST8310::validate(){

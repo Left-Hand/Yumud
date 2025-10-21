@@ -289,11 +289,11 @@ public:
 
     template<typename Fn>
     constexpr void handle_enter(Fn && fn){
-        std::forward<Fn>(fn)(str_.to_stringview());
+        std::forward<Fn>(fn)(str_.view());
     }
 
     [[nodiscard]] constexpr StringView str() const{
-        return str_.to_stringview();
+        return str_.view();
     }
 
     [[nodiscard]] constexpr auto cursor() const{
@@ -527,7 +527,7 @@ void ht16k33_main(){
 
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;
-    hal::I2cSw i2c = {&scl_gpio_, &sda_gpio_};
+    hal::I2cSw i2c = hal::I2cSw{&scl_gpio_, &sda_gpio_};
     i2c.init({400_KHz});
 
 

@@ -134,7 +134,7 @@ struct LT8960L_Prelude{
 }
 
 struct LT8960L_Phy final:public details::LT8960L_Prelude{
-    LT8960L_Phy(
+    explicit LT8960L_Phy(
         Some<hal::Gpio *> scl, 
         Some<hal::Gpio *> sda
     ):
@@ -153,8 +153,6 @@ struct LT8960L_Phy final:public details::LT8960L_Prelude{
     [[nodiscard]] IResult<> start_hw_listen_pkt();
 
     [[nodiscard]] IResult<bool> check_and_skip_hw_listen_pkt();
-
-    [[nodiscard]] IResult<> wait_pkt_ready(const uint timeout);
 private:
     hal::I2cSw i2c_;
     [[nodiscard]] IResult<> _write_reg(uint8_t address, uint16_t data);

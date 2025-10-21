@@ -66,22 +66,19 @@ public:
         uint32_t baudrate;
     };
 
-    void set_timeout(const Timeout timeout){timeout_ = timeout;}
-    void discard_ack(const Enable en){discard_ack_ = en == EN;}
 
-    virtual hal::HalResult read(uint32_t & data, const Ack ack) = 0;
-    virtual hal::HalResult write(const uint32_t data) = 0;
-    virtual hal::HalResult unlock_bus() = 0;
-    virtual hal::HalResult set_baudrate(const uint32_t baudrate) = 0;
+
+    virtual HalResult read(uint8_t & data, const Ack ack) = 0;
+    virtual HalResult write(const uint32_t data) = 0;
+    virtual HalResult unlock_bus() = 0;
+    virtual HalResult set_baudrate(const uint32_t baudrate) = 0;
 
     virtual HalResult lead(const I2cSlaveAddrWithRw req) = 0;
     virtual void trail() = 0;
-    HalResult borrow(const I2cSlaveAddrWithRw req);
 
-    void lend(){
-        this->trail();
-        owner_.lend();
-    }
+    virtual void lend() = 0;
+    virtual HalResult borrow(const I2cSlaveAddrWithRw req);
+
 
     struct Guard {
         I2c & i2c_;
@@ -91,11 +88,6 @@ public:
 
     auto create_guard(){return Guard(*this);}
 protected:
-
-    Timeout timeout_ = Timeout(10);
-    bool discard_ack_ = false;
-
-    PeripheralOwnershipTracker owner_ = {};
 
     I2c() = default;
 };

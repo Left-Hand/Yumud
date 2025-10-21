@@ -89,17 +89,17 @@ struct CDS55XX_Regs:public CDS55XX_Prelude{
     using RegAddr = uint8_t;
 
     struct R8_SoftwareVersion:public Reg8<>{
-        static constexpr RegAddr address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
         uint8_t version;
     }DEF_R8(software_version_reg)
 
     struct R8_Id:public Reg8<>{
-        static constexpr RegAddr address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
         uint8_t id;
     }DEF_R8(id_reg)
 
     struct R8_Baudrate:public Reg8<>{
-        static constexpr RegAddr address = 0x04;
+        static constexpr RegAddr ADDRESS = 0x04;
         uint8_t baud;
     }DEF_R8(buad_reg)
 };

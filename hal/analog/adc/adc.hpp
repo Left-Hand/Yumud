@@ -86,17 +86,17 @@ struct Adc_Prelude{
     using RegularTrigger = AdcRegularTrigger;
     using InjectedTrigger = AdcInjectedTrigger;
     
-    using ChannelNth = AdcChannelNth;
+    using ChannelSelection = AdcChannelSelection;
     using SampleCycles = AdcSampleCycles;
     using Mode = AdcMode;
     using IT = AdcIT;
 };
 
 struct AdcChannelConfig{
-    using ChannelNth = AdcChannelNth;
+    using ChannelSelection = AdcChannelSelection;
     using SampleCycles = AdcSampleCycles;
 
-    ChannelNth nth;
+    ChannelSelection nth;
     SampleCycles cycles;
 };
 
@@ -108,10 +108,10 @@ public:
     explicit AdcPrimary(ADC_TypeDef * inst):
         inst_(inst),
         injected_channels{
-            AdcInjectedChannel(inst_, AdcChannelNth::VREF, 1),
-            AdcInjectedChannel(inst_, AdcChannelNth::VREF, 2),
-            AdcInjectedChannel(inst_, AdcChannelNth::VREF, 3),
-            AdcInjectedChannel(inst_, AdcChannelNth::VREF, 4)
+            AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 1),
+            AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 2),
+            AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 3),
+            AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 4)
         }{;}
 
 
@@ -137,7 +137,7 @@ public:
     }
 
     void register_nvic(const NvicPriority priority, const Enable en){
-        priority.enable(ADC_IRQn, en);
+        priority.with_irqn(ADC_IRQn).enable(en);
     }
 
     template<IT I>
@@ -201,13 +201,13 @@ public:
         inst_->WDLTR = CLAMP(high, 0, get_max_value());
     }
 
-    void bind_wdt_it(Callback && cb){
-        //TODO
-    }
 
-    void set_trigger(const RegularTrigger _rtrigger, const InjectedTrigger _jtrigger){
-        set_regular_trigger(_rtrigger);
-        set_injected_trigger(_jtrigger);
+    void set_trigger(
+        const RegularTrigger r_trigger, 
+        const InjectedTrigger j_trigger
+    ){
+        set_regular_trigger(r_trigger);
+        set_injected_trigger(j_trigger);
     }
 
     void sw_start_regular(const bool force = false){
@@ -220,15 +220,15 @@ public:
         ADC_SoftwareStartInjectedConvCmd(inst_, true);
     }
 
-    bool is_regular_idle(){
+    [[nodiscard]] bool is_regular_idle(){
         return ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC);
     }
 
-    bool is_injected_idle(){
+    [[nodiscard]] bool is_injected_idle(){
         return ADC_GetFlagStatus(ADC1, ADC_FLAG_JEOC);
     }
 
-    bool is_idle(){
+    [[nodiscard]] bool is_idle(){
         return (is_regular_idle() && is_injected_idle());
     }
 
@@ -272,7 +272,7 @@ protected:
         injected_cnt = cnt;
     }
 
-    void set_regular_sample_time(const ChannelNth nth,  const SampleCycles _sample_time){
+    void set_regular_sample_time(const ChannelSelection nth,  const SampleCycles _sample_time){
         auto sample_time = _sample_time;
         uint8_t ch = std::bit_cast<uint8_t>(nth);
         uint8_t offset = ch % 10;

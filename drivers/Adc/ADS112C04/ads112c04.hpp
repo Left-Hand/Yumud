@@ -127,14 +127,14 @@ struct ADS112C04_Prelude{
 
 struct ADS112C04_Regs:public ADS112C04_Prelude{
     struct R8_Config0:public Reg8<>{
-        static constexpr RegAddr address = 0;
+        static constexpr RegAddr ADDRESS = 0;
         uint8_t pga_bypass:1;
         Gain gain:3;
         Mux mux:4;
     }DEF_R8(config0_reg)
 
     struct R8_Config1:public Reg8<>{
-        static constexpr RegAddr address = 1;
+        static constexpr RegAddr ADDRESS = 1;
         uint8_t temp_sensor_mode:1;
         Vref vref:2;
         uint8_t cont_mode:1;
@@ -143,7 +143,7 @@ struct ADS112C04_Regs:public ADS112C04_Prelude{
     }DEF_R8(config1_reg)
 
     struct R8_Config2:public Reg8<>{
-        static constexpr RegAddr address = 2;
+        static constexpr RegAddr ADDRESS = 2;
         IDAC idac:3;
         uint8_t current_sense_en:1;
         CrcType crc_type:2;
@@ -152,7 +152,7 @@ struct ADS112C04_Regs:public ADS112C04_Prelude{
     }DEF_R8(config2_reg)
 
     struct R8_Config3:public Reg8<>{
-        static constexpr RegAddr address = 3;
+        static constexpr RegAddr ADDRESS = 3;
         uint8_t __resv__:2;
         IDAC1_MUX idac1_mux:3;
         IDAC2_MUX idac2_mux:3;
@@ -176,39 +176,39 @@ public:
 
     };
 
-    IResult<> init();
+    [[nodiscard]] IResult<> init();
 
-    IResult<> validate();
+    [[nodiscard]] IResult<> validate();
 
-    IResult<> set_mux(const Mux mux);
+    [[nodiscard]] IResult<> set_mux(const Mux mux);
 
-    IResult<> set_gain(const Gain gain);
+    [[nodiscard]] IResult<> set_gain(const Gain gain);
 
-    IResult<> enable_turbo(const Enable en);
+    [[nodiscard]] IResult<> enable_turbo(const Enable en);
 
-    IResult<bool> is_done();
+    [[nodiscard]] IResult<bool> is_done();
 
-    IResult<> set_idac(const IDAC idac);
+    [[nodiscard]] IResult<> set_idac(const IDAC idac);
 
-    IResult<> set_data_rate(const DataRate data_rate);
+    [[nodiscard]] IResult<> set_data_rate(const DataRate data_rate);
 private:
     hal::I2cDrv i2c_drv_;
 
-    IResult<> read_data(uint16_t & data){
+    [[nodiscard]] IResult<> read_data(uint16_t & data){
         if(const auto res = i2c_drv_.read_reg(
                 std::bit_cast<uint8_t>(Command::READ_DATA), data, LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> read_reg(const RegAddr addr, uint8_t & data){
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & data){
         if(const auto res = i2c_drv_.read_reg(uint8_t(
                 std::bit_cast<uint8_t>(Command::READ_REG) + addr), data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> write_reg(const RegAddr addr, const uint8_t data){
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t data){
         if(const auto res = i2c_drv_.write_reg(uint8_t(
                 std::bit_cast<uint8_t>(Command::WRITE_REG) + addr), data);
             res.is_err()) return Err(res.unwrap_err());
@@ -216,16 +216,16 @@ private:
     }
 
     template<typename T>
-    IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
 
     template<typename T>
-    IResult<> read_reg(T & reg){
-        return read_reg(reg.address, reg.as_ref());
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        return read_reg(T::ADDRESS, reg.as_ref());
     }
 };
 

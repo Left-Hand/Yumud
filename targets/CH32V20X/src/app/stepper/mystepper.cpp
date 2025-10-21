@@ -452,10 +452,10 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     auto & adc = hal::adc1;
     adc.init(
         {
-            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+            {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
-            {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelSelection::CH3, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
         }, {}
     );
 
@@ -550,10 +550,10 @@ void mystepper_main(){
     auto & adc = hal::adc1;
     adc.init(
         {
-            {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+            {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
         },{
-            {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
-            {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelSelection::CH3, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
         },
         {}
     );
@@ -581,10 +581,10 @@ void mystepper_main(){
 
                     // adc.init(
                     //     {
-                    //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+                    //         {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
                     //     },{
-                    //         {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
-                    //         {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
+                    //         {hal::AdcChannelSelection::CH3, hal::AdcSampleCycles::T7_5},
+                    //         {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
                     //     },
                     //     {}
                     // );
@@ -592,10 +592,10 @@ void mystepper_main(){
                     alphabeta_curr.beta = inj_b.get_value();
                     // adc.init(
                     //     {
-                    //         {hal::AdcChannelNth::VREF, hal::AdcSampleCycles::T28_5}
+                    //         {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
                     //     },{
-                    //         {hal::AdcChannelNth::CH4, hal::AdcSampleCycles::T7_5},
-                    //         {hal::AdcChannelNth::CH3, hal::AdcSampleCycles::T7_5},
+                    //         {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
+                    //         {hal::AdcChannelSelection::CH3, hal::AdcSampleCycles::T7_5},
                     //     },
                     //     {}
                     // );

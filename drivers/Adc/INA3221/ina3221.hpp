@@ -11,7 +11,7 @@
 // ina.init().unwrap();
 
 // while(true){
-//     ina.update(INA3221::ChannelNth::CH1).unwrap();
+//     ina.update(INA3221::ChannelSelection::CH1).unwrap();
 //     DEBUG_PRINTLN(
 //         ina.get_bus_volt(ch).unwrap(), 
 //         ina.get_shunt_volt(ch).unwrap() * real_t(INV_SHUNT_RES)
@@ -69,7 +69,7 @@ public:
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u7(0b1000000);
 
-    enum class ChannelNth:uint8_t{
+    enum class ChannelSelection:uint8_t{
         CH1 = 0,
         CH2,
         CH3
@@ -150,7 +150,7 @@ public:
 
 struct INA3221_Regs:public INA3221_Prelude {
     struct R16_Config:public Reg16<>{
-        static constexpr RegAddr address = 0x00;
+        static constexpr RegAddr ADDRESS = 0x00;
 
         uint16_t shunt_measure_en :1;
         uint16_t bus_measure_en :1;
@@ -190,15 +190,15 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     struct R16_ShuntVolt1:public R16_ShuntVolt{
-        static constexpr RegAddr address = 0x01;};
+        static constexpr RegAddr ADDRESS = 0x01;};
     struct R16_ShuntVolt2:public R16_ShuntVolt{
-        static constexpr RegAddr address = 0x03;};
+        static constexpr RegAddr ADDRESS = 0x03;};
     struct R16_ShuntVolt3:public R16_ShuntVolt{
-        static constexpr RegAddr address = 0x05;};
+        static constexpr RegAddr ADDRESS = 0x05;};
     struct R16_ShuntVoltSum:public R16_ShuntVolt{
-        static constexpr RegAddr address = 0x0D;};
+        static constexpr RegAddr ADDRESS = 0x0D;};
     struct R16_ShuntVoltSumLimit:public R16_ShuntVolt{
-        static constexpr RegAddr address = 0x0E;};
+        static constexpr RegAddr ADDRESS = 0x0E;};
 
     struct R16_BusVolt:public Reg16i<>{
 
@@ -218,11 +218,11 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     struct R16_BusVolt1:public R16_BusVolt{
-        static constexpr RegAddr address = 0x02;};
+        static constexpr RegAddr ADDRESS = 0x02;};
     struct R16_BusVolt2:public R16_BusVolt{
-        static constexpr RegAddr address = 0x04;};
+        static constexpr RegAddr ADDRESS = 0x04;};
     struct R16_BusVolt3:public R16_BusVolt{
-        static constexpr RegAddr address = 0x06;};
+        static constexpr RegAddr ADDRESS = 0x06;};
 
 
 
@@ -234,11 +234,11 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     struct R16_InstantOVC1:public R16_InstantOVC{
-        static constexpr RegAddr address = 0x07;};
+        static constexpr RegAddr ADDRESS = 0x07;};
     struct R16_InstantOVC2:public R16_InstantOVC{
-        static constexpr RegAddr address = 0x09;};
+        static constexpr RegAddr ADDRESS = 0x09;};
     struct R16_InstantOVC3:public R16_InstantOVC{
-        static constexpr RegAddr address = 0x0b;};
+        static constexpr RegAddr ADDRESS = 0x0b;};
 
     struct R16_ConstantOVC:public Reg16i<>{
         static constexpr int16_t to_i16(const real_t volt){
@@ -248,11 +248,11 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     struct R16_ConstantOVC1:public R16_ConstantOVC{
-        static constexpr RegAddr address = 0x08;};
+        static constexpr RegAddr ADDRESS = 0x08;};
     struct R16_ConstantOVC2:public R16_ConstantOVC{
-        static constexpr RegAddr address = 0x0A;};
+        static constexpr RegAddr ADDRESS = 0x0A;};
     struct R16_ConstantOVC3:public R16_ConstantOVC{
-        static constexpr RegAddr address = 0x0C;};
+        static constexpr RegAddr ADDRESS = 0x0C;};
 
     struct R16_Mask:public Reg16<>{
         uint16_t conv_ready:1;
@@ -272,25 +272,25 @@ struct INA3221_Regs:public INA3221_Prelude {
     };
 
     struct R16_PowerHo:public Reg16i<>{
-        static constexpr RegAddr address = 0x10;
+        static constexpr RegAddr ADDRESS = 0x10;
         int16_t :16;
     };
 
     struct R16_PowerLo:public Reg16i<>{
-        static constexpr RegAddr address = 0x11;
+        static constexpr RegAddr ADDRESS = 0x11;
         int16_t :16;
     };
 
     struct R16_ManuId:public Reg16<>{
         static constexpr uint16_t key = 0x5449;
-        static constexpr RegAddr address = 0xfe;
+        static constexpr RegAddr ADDRESS = 0xfe;
         uint16_t:16;
     };
 
     
     struct R16_ChipId:public Reg16<>{
         static constexpr uint16_t key = 0x3220;
-        static constexpr RegAddr address = 0xff;
+        static constexpr RegAddr ADDRESS = 0xff;
         uint16_t:16;
     };
 
@@ -385,7 +385,7 @@ public:
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> reconf(const Config & cfg);
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<> update(const ChannelNth nth);
+    [[nodiscard]] IResult<> update(const ChannelSelection nth);
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
@@ -393,26 +393,26 @@ public:
     [[nodiscard]] IResult<> enable_measure_shunt(const Enable en);
     [[nodiscard]] IResult<> enable_continuous(const Enable en);
 
-    [[nodiscard]] IResult<> enable_channel(const ChannelNth nth, const Enable en);
+    [[nodiscard]] IResult<> enable_channel(const ChannelSelection nth, const Enable en);
 
     [[nodiscard]] IResult<> set_bus_conversion_time(const ConversionTime time);
     [[nodiscard]] IResult<> set_shunt_conversion_time(const ConversionTime time);
 
-    [[nodiscard]] IResult<int> get_shunt_volt_uv(const ChannelNth nth);
-    [[nodiscard]] IResult<int> get_bus_volt_mv(const ChannelNth nth);
+    [[nodiscard]] IResult<int> get_shunt_volt_uv(const ChannelSelection nth);
+    [[nodiscard]] IResult<int> get_bus_volt_mv(const ChannelSelection nth);
 
-    [[nodiscard]] IResult<real_t> get_shunt_volt(const ChannelNth nth);
-    [[nodiscard]] IResult<real_t> get_bus_volt(const ChannelNth nth);
+    [[nodiscard]] IResult<real_t> get_shunt_volt(const ChannelSelection nth);
+    [[nodiscard]] IResult<real_t> get_bus_volt(const ChannelSelection nth);
 
-    [[nodiscard]] IResult<> set_instant_ovc_threshold(const ChannelNth nth, const real_t volt);
-    [[nodiscard]] IResult<> set_constant_ovc_threshold(const ChannelNth nth, const real_t volt);
+    [[nodiscard]] IResult<> set_instant_ovc_threshold(const ChannelSelection nth, const real_t volt);
+    [[nodiscard]] IResult<> set_constant_ovc_threshold(const ChannelSelection nth, const real_t volt);
 private:
     INA3221_Phy phy_;
 
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = phy_.write_reg(reg.address, reg.as_val());
+        if(const auto res = phy_.write_reg(T::ADDRESS, reg.as_val());
             res.is_err()) return res;
         reg.apply();
         return Ok();
@@ -420,7 +420,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return phy_.read_reg(reg.address, reg.as_ref());
+        return phy_.read_reg(T::ADDRESS, reg.as_ref());
     }
 
     [[nodiscard]] IResult<> read_reg(const RegAddr addr, auto & data){

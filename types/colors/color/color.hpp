@@ -147,7 +147,7 @@ public:
         return RGBA<T>(T(0), T(0), T(0), T(1));
     }
 
-    [[nodiscard]] __fast_inline static constexpr RGBA from_unitialized(){
+    [[nodiscard]] __fast_inline static constexpr RGBA from_uninitialized(){
         return RGBA<T>();
     }
 
@@ -354,7 +354,7 @@ public:
         const T p_v = 1, 
         const T p_a = 1
     ){
-        RGBA<T> c = RGBA<T>::from_unitialized();
+        RGBA<T> c = RGBA<T>::from_uninitialized();
         details::set_hsv(c, p_h, p_s, p_v);
         c.a = p_a;
         return c;
@@ -400,12 +400,12 @@ struct RGB{
     T r, g, b;
 
     [[nodiscard]] constexpr static RGB from_hsv(const T p_h, const T p_s, const T p_v){
-        RGB ret = RGB::from_unitialized();
+        RGB ret = RGB::from_uninitialized();
         details::set_hsv(ret, p_h, p_s, p_v);
         return ret;
     }
 
-    [[nodiscard]] constexpr static RGB from_unitialized(){
+    [[nodiscard]] constexpr static RGB from_uninitialized(){
         return RGB();
     }
 
@@ -504,7 +504,7 @@ template<typename T>
 struct sRGB{
     T r, g, b;
 
-    static constexpr sRGB<T> from_unitialized() {
+    static constexpr sRGB<T> from_uninitialized() {
         return sRGB<T>();
     }
 
@@ -515,13 +515,13 @@ struct sRGB{
     {}
 
     static constexpr sRGB<T> from_linear(const RGB<T> & rgb){
-        auto ret = sRGB<T>::from_unitialized();
+        auto ret = sRGB<T>::from_uninitialized();
         details::rgb2srgb<T>(ret, rgb);
         return ret;
     }
 
     constexpr RGB<T> to_linear() const{
-        auto ret = RGB<T>::from_unitialized();
+        auto ret = RGB<T>::from_uninitialized();
         details::srgb2rgb<T>(ret, *this);
         return ret;
     }
