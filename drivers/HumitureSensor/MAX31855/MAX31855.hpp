@@ -11,7 +11,7 @@ public:
     explicit MAX31855(hal::SpiDrv && spi_drv):   
         spi_drv_(std::move(spi_drv)){;}
 
-    MAX31855_Result read(){
+    IResult read(){
         MAX31855_Payload payload;
         // if(const auto res = spi_drv_.)
         const auto raw_span = payload.as_u16_slice();

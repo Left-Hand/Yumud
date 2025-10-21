@@ -48,7 +48,7 @@ struct MAX31855_Prelude{
 
     static_assert(sizeof(MAX31855_Payload) == 4);
 
-    using MAX31855_Result = Result<MAX31855_Payload, hal::HalError>;
+    using IResult = Result<MAX31855_Payload, hal::HalError>;
 };
 
 

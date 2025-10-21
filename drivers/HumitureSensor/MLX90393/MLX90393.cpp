@@ -50,7 +50,7 @@ IResult<> MLX90393::init() {
         return Err(res.unwrap_err());
 
     /* set INT pin to output interrupt */
-    if(const auto res = enable_trig_int(DISEN) ; res.is_err())
+    if(const auto res = enable_trig_interrupt(DISEN) ; res.is_err())
         return Err(res.unwrap_err());
 
     return Ok();
@@ -77,12 +77,12 @@ IResult<> MLX90393::reset() {
 IResult<> MLX90393::set_gain(Gain gain) {
     auto reg = RegCopy(regs_.conf1_reg);
     reg.gain_sel = gain;
-    return write_register(reg);
+    return write_reg(reg);
 }
 
 
 IResult<> MLX90393::set_resolution(Axis axis, Resolution resolution) {
-    // if(const auto res = read_register(MLX90393_CONF3, data);
+    // if(const auto res = read_reg(MLX90393_CONF3, data);
     //     res.is_err()) return Err(res.unwrap_err());
     auto reg = RegCopy(regs_.conf3_reg);
     switch (axis) {
@@ -97,25 +97,25 @@ IResult<> MLX90393::set_resolution(Axis axis, Resolution resolution) {
         break;
     }
 
-    return write_register(reg);
+    return write_reg(reg);
 }
 
 IResult<> MLX90393::set_filter(Filter filter) {
     auto reg = RegCopy(regs_.conf3_reg);
     reg.digit_filter = filter;
-    return write_register(reg);
+    return write_reg(reg);
 }
 
 IResult<> MLX90393::set_oversampling(OverSampling oversampling) {
     auto reg = RegCopy(regs_.conf3_reg);
     reg.osr = oversampling;
-    return write_register(reg);
+    return write_reg(reg);
 }
 
-IResult<> MLX90393::enable_trig_int(Enable en) {
+IResult<> MLX90393::enable_trig_interrupt(Enable en) {
     auto reg = RegCopy(regs_.conf2_reg);
     reg.trig_int = en == EN;
-    return write_register(reg);
+    return write_reg(reg);
 }
 
 
@@ -181,24 +181,24 @@ IResult<Vec3<q24>> MLX90393::read_data() {
     return read_measurement();
 }
 
-IResult<> MLX90393::write_register(uint8_t reg, uint16_t data) {
+IResult<> MLX90393::write_reg(uint8_t reg, uint16_t data) {
     const uint8_t tx[4] = {
         MLX90393_REG_WR,
         (uint8_t)(data >> 8),   // high byte
         (uint8_t)(data & 0xFF), // low byte
         (uint8_t)(reg << 2)
-    };   // the register itself, shift up by 2 bits!
+    };   // the reg itself, shift up by 2 bits!
 
     uint8_t rx[1] = {0};
     /* Perform the transaction. */
     return transceive(std::span(rx), std::span(tx), 0);
 }
 
-IResult<> MLX90393::read_register(uint8_t reg, uint16_t & data) {
+IResult<> MLX90393::read_reg(uint8_t reg, uint16_t & data) {
     const uint8_t tx[2] = {
         MLX90393_REG_RR,
         (uint8_t)(reg << 2)
-    }; // the register itself, shift up by 2 bits!
+    }; // the reg itself, shift up by 2 bits!
 
     uint8_t rx[2] = {0};
 
