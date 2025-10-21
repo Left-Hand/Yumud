@@ -90,7 +90,7 @@ IResult<DRV8323R::R16_Status2> DRV8323R::get_status2(){
 }
 
 
-struct SpiFormat{
+struct Packet{
     uint16_t data:11;
     uint16_t addr:4;
     uint16_t is_write:1;
@@ -104,31 +104,31 @@ struct SpiFormat{
     }
 };
 
-static_assert(sizeof(SpiFormat) == sizeof(uint16_t));
+static_assert(sizeof(Packet) == sizeof(uint16_t));
 
 IResult<> DRV8323R_Phy::write_reg(const RegAddr addr, const uint16_t reg){
-    const SpiFormat spi_format = {
+    const Packet packet = {
         .data = reg,
         .addr = uint16_t(addr),
         .is_write = 0
     };
 
-    if(const auto res = spi_drv_.write_single<uint16_t>((spi_format));
+    if(const auto res = spi_drv_.write_single<uint16_t>((packet));
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
 IResult<> DRV8323R_Phy::read_reg(const RegAddr addr, uint16_t & reg){
-    SpiFormat spi_format = {
+    Packet packet = {
         .data = 0,
         .addr = uint16_t(addr),
         .is_write = 1
     };
 
-    const auto res = spi_drv_.read_single<uint16_t>((spi_format));
-    if(res.is_err()) return Err(res.unwrap_err());
-    reg = spi_format.data;
+    if(const auto res = spi_drv_.read_single<uint16_t>((packet));
+        res.is_err()) return Err(res.unwrap_err());
+    reg = packet.data;
 
     return Ok();
 }

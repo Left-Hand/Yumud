@@ -17,7 +17,7 @@
 #define PCA9685_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
-// #define PCA9685_FORCEWRITE
+// #define PCA9685_VOLATILE_REFLASH
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -51,7 +51,7 @@ IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
 
     {
         auto reg = RegCopy(prescale_reg);
-        reg.prescale = int((q16(25000000.0 / 4096) / freq - 1) * trim);
+        reg.prescale = static_cast<uint8_t>((q16(25000000.0 / 4096) / freq - 1) * trim);
         if(const auto res = write_reg(reg); 
             res.is_err()) return res;
     }
@@ -67,14 +67,12 @@ IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
         clock::delay(5ms);
         return write_reg(reg);
     }
-    
-
 }
 
 IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
     if(nth.count() >= 16) return Err(Error::IndexOutOfRange);
     if(
-        #ifdef PCA9685_FORCEWRITE
+        #ifdef PCA9685_VOLATILE_REFLASH
         true
         #else
         sub_channels[nth.count()].on.cvr != on
@@ -86,7 +84,7 @@ IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
     }
 
     if(
-        #ifdef PCA9685_FORCEWRITE
+        #ifdef PCA9685_VOLATILE_REFLASH
         true
         #else
         sub_channels[nth.count()].off.cvr != off

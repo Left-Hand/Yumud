@@ -58,7 +58,7 @@ public:
 private:
 
     MT6701_Phy phy_;
-    Semantic semantic_ = {0, 0};
+    Packet packet_ = {0, 0};
     real_t lap_position_ = real_t(0);
     bool fast_mode_ = true;
 

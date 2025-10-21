@@ -9,9 +9,6 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/errno.hpp"
 
-#include "concept/analog_channel.hpp"
-
-
 
 namespace ymd::drivers{
 
@@ -175,10 +172,10 @@ struct DRV832X_Prelude{
         // 10b = 200-ns dead time
         // 11b = 400-ns dead time
 
-        _50_ns = 0,
-        _100_ns = 1,
-        _200_ns = 2,
-        _400_ns = 3,
+        _50ns = 0,
+        _100ns = 1,
+        _200ns = 2,
+        _400ns = 3,
     };
 
     enum class CsaGain:uint16_t{
@@ -337,12 +334,12 @@ struct DRV832X_Regs:public DRV832X_Prelude{
 
 class DRV8323R_Phy final:public DRV832X_Prelude{
 public:
-    DRV8323R_Phy(const hal::SpiDrv & spi_drv):
+    explicit DRV8323R_Phy(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
-    DRV8323R_Phy(hal::SpiDrv && spi_drv):
+    explicit DRV8323R_Phy(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    DRV8323R_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        spi_drv_(hal::SpiDrv(spi, index)){;}
+    explicit DRV8323R_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){;}
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t reg);
     [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & reg);
@@ -350,58 +347,6 @@ private:
     hal::SpiDrv spi_drv_;
 };
 
-class DRV8323H_Phy final:public DRV832X_Prelude{
-public:
-    struct Params{
-        hal::Gpio & gain_gpio;
-        hal::Gpio & vds_gpio;
-        hal::Gpio & idrive_gpio;
-        hal::Gpio & mode_gpio;
-    };
-
-    DRV8323H_Phy(const Params & params):
-        gain_gpio_(params.gain_gpio),
-        vds_gpio_(params.vds_gpio),
-        idrive_gpio_(params.idrive_gpio),
-        mode_gpio_(params.mode_gpio){;}
-
-    void set_pwm_mode(const PwmMode mode){
-        // _6x = GND,
-        // _3x = 47K to GND,
-        // _1x = HiZ,
-        // Independent = VDD,
-
-        switch(mode){
-            case PwmMode::_6x:
-                mode_gpio_.outpp(LOW);
-                break;
-            case PwmMode::_3x:
-                mode_gpio_.inpd();
-                break;
-            case PwmMode::_1x:
-                mode_gpio_.inflt();
-                break;
-                // mode_gpio_.outpp(HIGH);
-                break;
-            case  PwmMode::Independent:
-                mode_gpio_.outpp(HIGH);
-                break;
-        }
-    }
-
-    void set_idrive(const IDriveP drive){
-        // switch(drive){
-        //     case IDriveP::
-        // }
-        idrive_gpio_.inflt();
-    }
-
-private:
-    hal::Gpio & gain_gpio_;
-    hal::Gpio & vds_gpio_;
-    hal::Gpio & idrive_gpio_;
-    hal::Gpio & mode_gpio_;
-};
 
 
 };
