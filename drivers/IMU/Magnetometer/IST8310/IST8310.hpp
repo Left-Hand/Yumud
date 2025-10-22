@@ -6,7 +6,7 @@ namespace ymd::drivers{
 
 class IST8310 final:
     public MagnetometerIntf,
-    public IST8310_Regs{
+    public IST8310_Prelude{
 public:
 
     explicit IST8310(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
@@ -38,11 +38,9 @@ public:
 
     [[nodiscard]] IResult<Vec3<q24>> read_mag() override;
 
-protected:
-
-
-
+private:
     hal::I2cDrv i2c_drv_;
+    IST8310_Regset regs_ = {};
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

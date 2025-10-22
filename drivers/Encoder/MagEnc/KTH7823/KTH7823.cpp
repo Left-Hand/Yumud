@@ -72,7 +72,7 @@ IResult<> KTH7823::update(){
     });
 
 
-    lap_position_ = u16_to_uni(data);
+    lap_turns_ = u16_to_uni(data);
 
     return Ok();
 }
@@ -82,8 +82,8 @@ IResult<> KTH7823::validate(){
     return Ok();
 }
 
-IResult<> KTH7823::set_zero_position(const real_t position){
-    const auto raw16 = uni_to_u16(position);
+IResult<> KTH7823::set_zero_angle(const Angle<q31> angle){
+    const auto raw16 = uni_to_u16(q16(angle.to_turns()));
 
     auto reg_low = RegCopy(zero_low_reg);
     reg_low.data = raw16 & 0xff;
@@ -134,7 +134,7 @@ IResult<MagStatus> KTH7823::get_mag_status(){
     return Ok(MagStatus::from_proper());
 }
 
-IResult<> KTH7823::set_zparameters(const Width width, const Phase phase){
+IResult<> KTH7823::set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase){
     TODO();
     return Ok();
 }

@@ -14,19 +14,17 @@ namespace ymd::drivers{
 class PAW3395 final:
     public PAW3395_Prelude{
 public:
+    explicit PAW3395(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    explicit PAW3395(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+    explicit PAW3395(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){;}
 
-public:
     PAW3395(const PAW3395 & other) = delete;
     PAW3395(PAW3395 && other) = delete;
 
     ~PAW3395() = default;
-    PAW3395(const hal::SpiDrv & spi_drv):
-        spi_drv_(spi_drv){;}
-    PAW3395(hal::SpiDrv && spi_drv):
-        spi_drv_(std::move(spi_drv)){;}
-    PAW3395(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        spi_drv_(hal::SpiDrv(spi, index)){;}
-
     [[nodiscard]] IResult<> init();
 
     [[nodiscard]] IResult<> corded_gaming();

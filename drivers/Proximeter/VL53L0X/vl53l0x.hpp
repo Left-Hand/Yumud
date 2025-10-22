@@ -46,9 +46,10 @@ public:
 
     [[nodiscard]]
     Result<real_t, Error> read_distance(){
-        if(const auto res = read_distance_mm(); res.is_ok())
+        if(const auto res = read_distance_mm(); 
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        else
             return Ok(res.unwrap() * real_t(0.001));
-        else return Err(Error(res.unwrap_err()));
     };
 
     [[nodiscard]] IResult<uint16_t> read_distance_mm();

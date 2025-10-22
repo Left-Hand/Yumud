@@ -26,7 +26,7 @@ public:
 
     [[nodiscard]] IResult<> set_zero_angle(const Angle<q31> angle);
     [[nodiscard]] IResult<Angle<q31>> read_lap_angle(){
-        return Ok(Angle<q31>::from_turns(lap_angle_));
+        return Ok(Angle<q31>::from_turns(lap_turns_));
     }
 
     [[nodiscard]] IResult<> set_trim_x(const real_t k);
@@ -41,15 +41,15 @@ public:
     [[nodiscard]] IResult<> set_direction(const ClockDirection direction);
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 
-    [[nodiscard]]
-    IResult<> set_zparameters(const PulseWidth width, const PulsePhase phase);
+    [[nodiscard]] IResult<> 
+    set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase);
 
-    [[nodiscard]]
-    IResult<> set_pulse_per_turn(const uint16_t ppt);
+    [[nodiscard]] IResult<> 
+    set_pulse_per_turn(const uint16_t ppt);
 private:
     hal::SpiDrv spi_drv_;
     MA730_Regset regs_ = {};
-    q31 lap_angle_ = 0;
+    q31 lap_turns_ = 0;
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

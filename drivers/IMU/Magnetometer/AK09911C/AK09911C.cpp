@@ -91,10 +91,10 @@ IResult<> AK09911C::blocking_update(){
     const auto begin_u = clock::millis();
 
     while(clock::millis() - begin_u < READ_TIMEOUT_MS) {
-        if(const auto res = is_data_ready(); res.is_ok()){
-            if(res.unwrap() == true) break;
-        }else {
+        if(const auto res = is_data_ready(); res.is_err()){
             return CHECK_ERR(Err(res.unwrap_err()));
+        }else {
+            if(res.unwrap() == true) break;
         }
         clock::delay(100us);
     }

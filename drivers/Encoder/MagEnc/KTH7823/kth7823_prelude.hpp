@@ -15,12 +15,12 @@ struct KTH7823_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class Width:uint8_t{
-        W90, W180, W270, W360
+    enum class ZeroPulseWidth:uint8_t{
+        _90deg, _180deg, _270deg, _360deg
     };
 
-    enum class Phase:uint8_t{
-        P0, P90, P180, P270
+    enum class ZeroPulsePhase:uint8_t{
+        _0deg, _90deg, _180deg, _270deg
     };
 
     enum class MagThreshold:uint8_t{

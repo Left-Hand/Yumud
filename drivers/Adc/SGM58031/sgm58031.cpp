@@ -37,14 +37,14 @@ IResult<> SGM58031::validate(){
 IResult<> SGM58031::set_datarate(const DataRate dr){
     {
         auto reg = RegCopy(config_reg);
-        reg.dataRate = uint8_t(std::bit_cast<uint8_t>(dr) & 0b111);
+        reg.data_rate = uint8_t(std::bit_cast<uint8_t>(dr) & 0b111);
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
     }
 
     {
         auto reg = RegCopy(config1_reg);
-        reg.drSel = std::bit_cast<uint8_t>(dr) >> 3;
+        reg.dr_sel = std::bit_cast<uint8_t>(dr) >> 3;
         return write_reg(reg);
     }
 }
@@ -59,17 +59,17 @@ IResult<> SGM58031::set_fs(const FS fs){
 
 
 
-IResult<> SGM58031::set_fs(const real_t _fs, const real_t _vref){
-    real_t ratio = abs(_fs) / _vref;
+IResult<> SGM58031::set_fs(const q16 _fs, const q16 _vref){
+    q16 ratio = abs(_fs) / _vref;
     auto reg = RegCopy(config_reg);
     reg.pga = ratio2pga(ratio);
     return write_reg(reg);
 }
 
 
-IResult<> SGM58031::set_trim(const real_t _trim){
-    real_t trim = _trim * real_t(4.0f / 3.0f);
-    real_t offset = trim - real_t(1.30225f);
+IResult<> SGM58031::set_trim(const q16 _trim){
+    q16 trim = _trim * q16(4.0f / 3.0f);
+    q16 offset = trim - q16(1.30225f);
     auto reg = RegCopy(trim_reg);
     reg.gn = int(offset * 0b01111111010);
     return write_reg(reg);
@@ -103,7 +103,7 @@ IResult<int16_t> SGM58031::get_conv_data(){
     return Ok(conv_reg.as_val());
 }
 
-IResult<real_t> SGM58031::get_conv_voltage(){
+IResult<q16> SGM58031::get_conv_voltage(){
     const auto res = get_conv_data();
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok((res.unwrap() * full_scale_) >> 15);
@@ -125,6 +125,6 @@ IResult<> SGM58031::set_mux(const MUX _mux){
 
 IResult<> SGM58031::enable_ch3_as_ref(const Enable en){
     auto reg = RegCopy(config1_reg);
-    reg.extRef = en == EN;
+    reg.ext_ref = en == EN;
     return write_reg(reg);
 }

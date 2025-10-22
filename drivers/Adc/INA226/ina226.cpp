@@ -47,8 +47,8 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-static constexpr INA226::AverageTimes times2avtimes(const uint16_t times){
-    uint8_t temp = CTZ(times);
+static constexpr INA226::AverageTimes times_to_avtimes(const uint16_t times){
+    const uint8_t temp = CTZ(times);
 
     if(times <= 64){
         return std::bit_cast<INA226::AverageTimes>(uint16_t(temp / 2));
@@ -113,10 +113,10 @@ IResult<> INA226::init(const Config & cfg){
     return Ok();
 }
 
-IResult<> INA226::set_scale(const uint sample_res_mohms, const uint max_current_a){
+IResult<> INA226::set_scale(const uint32_t sample_res_mohms, const uint32_t max_current_a){
     INA226_DEBUG(sample_res_mohms, max_current_a);
     
-    current_lsb_ma_ = real_t(int(max_current_a) * 1000) >> 15;
+    current_lsb_ma_ = q16(int(max_current_a) * 1000) >> 15;
     // INA226_DEBUG(current_lsb_ma_, sample_res_mohms * max_current_a);
     const auto val = int(0.00512 * 32768 * 1000) / (sample_res_mohms * max_current_a);
     // PANIC(calibration_reg.as_val());
@@ -128,10 +128,10 @@ IResult<> INA226::set_scale(const uint sample_res_mohms, const uint max_current_
 
 
 IResult<> INA226::set_average_times(const uint16_t times){
-    return set_average_times(times2avtimes(times));
+    return set_average_times(times_to_avtimes(times));
 }
 
-IResult<real_t> INA226::get_voltage(){
+IResult<q16> INA226::get_voltage(){
     return Ok(bus_volt_reg.as_val() * VOLTAGE_LSB_MV / 1000);
     // return bus_voltage_reg.as_val();
 }
@@ -142,21 +142,21 @@ IResult<int> INA226::get_shunt_voltage_uv(){
     return Ok((val << 1) + (val >> 1));
 }
 
-IResult<real_t> INA226::get_shunt_voltage(){
+IResult<q16> INA226::get_shunt_voltage(){
     const int uv = ({
         const auto res = get_shunt_voltage_uv();
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
-    return Ok(real_t(uv / 100) / 10000);
+    return Ok(q16(uv / 100) / 10000);
 }
 
-IResult<real_t> INA226::get_current(){
+IResult<q16> INA226::get_current(){
     return Ok(current_reg.as_val() * current_lsb_ma_ / 1000);
     // return current_reg.as_val() ;
 }
 
-IResult<real_t> INA226::get_power(){
+IResult<q16> INA226::get_power(){
     return Ok(power_reg.as_val() * current_lsb_ma_ / 40);
     // return power_reg.as_val();
 }

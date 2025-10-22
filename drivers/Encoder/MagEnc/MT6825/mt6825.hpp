@@ -98,7 +98,7 @@ struct Packet{
         return is_odd == pc2;
     }
 private:
-    [[nodiscard]] uint32_t angle_u18() const {
+    [[nodiscard]] constexpr uint32_t angle_u18() const {
         return (angle_17_10 << 10) | (angle_9_4 << 4) | angle_3_0;
     }
 };
@@ -110,8 +110,8 @@ static_assert(sizeof(Packet) == 3);
 struct MT6825:
     public MT6825_Prelude
 {
-    explicit MT6825(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        spi_drv_(hal::SpiDrv(spi, index)){}
+    explicit MT6825(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){}
 
     explicit MT6825(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){}

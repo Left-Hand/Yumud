@@ -1,12 +1,19 @@
 #include "OV2640.hpp"
 
+
+using namespace ymd;
 using namespace ymd::drivers;
 
+using Self = OV2640;
+using Error = OV2640::Error;
 
-bool OV2640::init(){
-    return true;
+template<typename T = void> 
+using IResult = Result<T, Error>;
+
+IResult<> OV2640::init(){
+    return Ok();
 }
 
-bool OV2640::validate(){
-    return true;
+IResult<> OV2640::validate(){
+    return Ok();
 }

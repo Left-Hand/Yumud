@@ -60,14 +60,14 @@ IResult<> PAW3395::set_lift_off(bool height){
 
 IResult<Vec2i> PAW3395::sample_fetch(){
 
-	const bool motion = ({
+	const bool any_motion = ({
 		uint8_t temp = 0;
 		const auto res = read_reg(PAW3395_REG_MOTION, temp);
 		if (res.is_err()) return Err(res.unwrap_err());
 		temp == 0;
 	});
 	
-	if(motion == false) return
+	if(any_motion == false) return
 		Ok(Vec2i(0,0));
 
 	const int16_t x = ({
@@ -130,7 +130,7 @@ IResult<> PAW3395::enable_ripple(const Enable en){
 IResult<> PAW3395::powerup(){
 	/* Write register and data */
 	if(const auto res = write_reg(PAW3395_REG_POWER_UP_RESET, 0x5A);
-		res.is_ok()) return res;
+		res.is_err()) return res;
 
 	clock::delay(5ms);
 
@@ -146,11 +146,11 @@ IResult<> PAW3395::powerup(){
 	for (size_t retry = 0; retry < MAX_RETRY_TIMES; retry++) {
 		uint8_t temp;
 		const auto res = read_reg(0x6C, temp);
-		if(res.is_ok()){
+		if(res.is_err()){
+			return Err(res.unwrap_err());
+		}else{
 			is_susccessfully_inited = (temp == 0x80);
 			break;
-		}else{
-			return Err(res.unwrap_err());
 		}
 		
 		clock::delay(1ms);

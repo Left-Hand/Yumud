@@ -18,12 +18,12 @@ struct MA730_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class PulseWidth:uint8_t{
-        W90, W180, W270, W360
+    enum class ZeroPulseWidth:uint8_t{
+        _90deg, _180deg, _270deg, _360deg
     };
 
-    enum class PulsePhase:uint8_t{
-        P0, P90, P180, P270
+    enum class ZeroPulsePhase:uint8_t{
+        _0deg, _90deg, _180deg, _270deg
     };
 
     enum class MagThreshold:uint8_t{
@@ -62,16 +62,16 @@ struct MA730_Regset:public MA730_Prelude{
     };
     struct R8_TrimConfig:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::TrimConfig;
-        uint8_t enableX:1;
-        uint8_t enableY:1;
+        uint8_t enable_x:1;
+        uint8_t enable_y:1;
         uint8_t :6;
     };
 
     struct R8_ZParameters:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ZParameters;
         uint8_t :2;
-        PulsePhase zPhase :2;
-        PulseWidth zWidth :2;
+        ZeroPulsePhase z_phase :2;
+        ZeroPulseWidth z_width :2;
         uint8_t ppt:2;
     };
 
@@ -99,8 +99,8 @@ struct MA730_Regset:public MA730_Prelude{
         uint8_t mgl1:1;
         uint8_t mgl2:1;
         uint8_t :2;
-        uint8_t magnitudeLow :1;
-        uint8_t magnitudeHigh :1;
+        uint8_t magnitude_low :1;
+        uint8_t magnitude_high :1;
     };
 
     R8_ZeroDataLow zero_data_low_reg = {};
