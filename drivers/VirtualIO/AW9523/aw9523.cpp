@@ -104,7 +104,7 @@ IResult<> AW9523::set_mode(const Nth nth, const hal::GpioMode mode){
     return Ok();
 }
 
-IResult<> AW9523::enable_irq_by_index(const Nth nth, const Enable en ){
+IResult<> AW9523::enable_irq(const Nth nth, const Enable en ){
     GUARD_NTH(nth);
     auto reg = RegCopy(inten_reg);
     reg.mask = reg.mask.modify(nth, BoolLevel::from(en == EN));

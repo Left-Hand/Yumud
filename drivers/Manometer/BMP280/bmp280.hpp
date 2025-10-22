@@ -5,16 +5,22 @@
 
 namespace ymd::drivers{
 
-class BMP280 final:private BMP280_Regs{
+class BMP280 final:public BMP280_Prelude{
 public:
-    using BMP280_Regs::Error;
 
-    BMP280(
+    explicit BMP280(
         Some<hal::I2c *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
         phy_(hal::I2cDrv(i2c, addr)){;}
+
     ~BMP280(){;}
+
+    struct Config{
+        DataRate datarate;
+    };
+
+    [[nodiscard]] IResult<> init(const Config & cfg);
 
     [[nodiscard]] IResult<> validate();
 
@@ -32,14 +38,17 @@ public:
 
     [[nodiscard]] IResult<bool> is_idle();
 
-    [[nodiscard]] IResult<> enable_spi3(const Enable en);
+    [[nodiscard]] IResult<> enable_3wire_spi(const Enable en);
 
     [[nodiscard]] IResult<int32_t> get_pressure();
 
-    [[nodiscard]] IResult<> init();
+
 
 private:
     BMP280_Phy phy_;
+    BMP280_Regset regs_ = {};
+    Coeffs coeffs_;
+
     [[nodiscard]] IResult<uint32_t> get_pressure_data();
 
     [[nodiscard]] IResult<uint32_t> read_temp_data();
@@ -62,7 +71,9 @@ private:
     }
 
     [[nodiscard]] IResult<> read_burst(
-        const uint8_t addr, std::span<int16_t> pbuf){
+        const uint8_t addr, 
+        std::span<int16_t> pbuf
+    ){
         return phy_.read_burst(addr, pbuf);
     }
 

@@ -5,23 +5,39 @@
 
 namespace ymd::drivers{
 
+
+enum class TxPower:uint8_t{
+    _n20dBm,
+    _n15dBm,
+    _n10dBm,
+    _n6dBm,
+    _n5dBm,
+    _n2dBm,
+    _0dBm,
+    _3dBm,
+    _4dBm,
+    _8dBm,
+};
+
 class AtProtocol{
 protected:
 
-    void write_command(const StringView cmd){
+    auto write_command(const StringView cmd){
         return write("AT+", cmd, "\r\n");
     }
 
     template<typename TValue>
-    void write_keyvalue(const StringView key, TValue && value){
+    auto write_keyvalue(const StringView key, TValue && value){
         return write("AT+", key, '=', std::forward<TValue>(value), "\r\n");
     }
+
+
 public:
-    void set_name(const StringView name){
+    auto set_name(const StringView name){
         return write_keyvalue("NAME", name);
     }
 
-    void set_password(const StringView password){
+    auto set_password(const StringView password){
         return write_keyvalue("PASSWORD", password);
     }
 
@@ -31,65 +47,55 @@ public:
         Peripheral = 2,
     };
 
-    void set_role(const Role role){
+    auto set_role(const Role role){
         return write_keyvalue("ROLE", uint8_t(role));
     }
 
-    void reset(){
+    auto reset(){
         return write_command("RST");
     }
 
-    void set_baudrate(uint8_t code){
+    auto set_baudrate(uint8_t code){
         return write_keyvalue("UART", code);
     }
 
-    enum class TxPower:uint8_t{
-        _n20dBm,
-        _n15dBm,
-        _n10dBm,
-        _n6dBm,
-        _n5dBm,
-        _n2dBm,
-        _0dBm,
-        _3dBm,
-        _4dBm,
-        _8dBm,
-    };
 
-    void validate(){
+
+    auto validate(){
         return write("AT\r\n");
     }
 
-    void shutdown(){
+    auto shutdown(){
         return write_command("OFF");
     }
 
-    void disconnect(){
+    auto disconnect(){
         return write_command("DISC");
     }
 
-    void start_scan(){
+    auto start_scan(){
         return write_command("SCAN");
     }
 
-
-    void connect_to(auto && x){
-        return write_keyvalue("CONNECT", std::forward<decltype(x)>(x));
+    template<typename T>
+    auto connect_to(T && x){
+        return write_keyvalue("CONNECT", std::forward<T>(x));
+    }
+    
+    template<typename T>
+    auto set_passward(T && x){
+        return write_keyvalue("PASSWARD", std::forward<T>(x));
     }
 
-    void set_passward(auto && x){
-        return write_keyvalue("PASSWARD", std::forward<decltype(x)>(x));
-    }
-
-    void set_txpower(TxPower power){
+    auto set_txpower(TxPower power){
         return write_keyvalue("POWE", uint8_t(power));
     }
 
-    void resume(){};
+    auto resume(){};
 private:
     template<typename ... Ts>
     void write(Ts && ... args){
-        // return 
+        return; 
     }
 };
 

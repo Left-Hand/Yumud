@@ -35,28 +35,29 @@ IResult<> TCS34725::read_burst(
 
 std::tuple<real_t, real_t, real_t, real_t> TCS34725::get_crgb(){
     return {
-        s16_to_uni(crgb[0]),
-        s16_to_uni(crgb[1]),
-        s16_to_uni(crgb[2]),
-        s16_to_uni(crgb[3])
+        s16_to_uni(crgb_[0]),
+        s16_to_uni(crgb_[1]),
+        s16_to_uni(crgb_[2]),
+        s16_to_uni(crgb_[3])
     };
 }
 
 IResult<> TCS34725::update(){
-    return read_burst(RegAddr::ClearData, std::span(crgb.data(), 4));
+    return read_burst(RegAddr::ClearData, std::span(crgb_));
 }
 
 
 IResult<> TCS34725::validate(){
-    if(const auto res = read_reg(device_id_reg);
+    auto & reg = regs_.device_id_reg;
+    if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    if(device_id_reg.id != device_id_reg.KEY)
+    if(reg.id != reg.KEY)
         return Err(Error::WrongChipId);
     return Ok();
 }
 
 IResult<> TCS34725::set_int_persistence(const uint8_t times){
-    auto reg = RegCopy(int_persistence_reg);
+    auto reg = RegCopy(regs_.int_persistence_reg);
     if(times >= 5){
         uint8_t value = 0b0100 + (times / 5) - 1;
         reg.apers = value;
@@ -71,7 +72,7 @@ IResult<> TCS34725::set_int_persistence(const uint8_t times){
 IResult<> TCS34725::set_integration_time(const Milliseconds ms){
     const uint16_t cycles = CLAMP(ms.count() * 10 / 24, 1, 256);
     const uint16_t temp = 256 - cycles;
-    auto reg = RegCopy(integration_reg);
+    auto reg = RegCopy(regs_.integration_reg);
     reg.data = temp;
     return write_reg(reg);
 }
@@ -90,15 +91,15 @@ IResult<> TCS34725::set_wait_time(const Milliseconds ms){
     }
 
     {
-        auto reg = RegCopy(wait_time_reg);
+        auto reg = RegCopy(regs_.wait_time_reg);
         reg.data = value;
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
 
     {
-        auto reg = RegCopy(long_wait_reg);
-        reg.waitLong = long_wait_flag;
+        auto reg = RegCopy(regs_.long_wait_reg);
+        reg.wait_long = long_wait_flag;
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
@@ -107,13 +108,13 @@ IResult<> TCS34725::set_wait_time(const Milliseconds ms){
 }
 
 IResult<> TCS34725::set_int_thr_low(const uint16_t thr){
-    auto reg = RegCopy(low_thr_reg);
+    auto reg = RegCopy(regs_.low_thr_reg);
     reg.data = thr;
     return write_reg(reg);
 }
 
 IResult<> TCS34725::set_int_thr_high(const uint16_t thr){
-    auto reg = RegCopy(high_thr_reg);
+    auto reg = RegCopy(regs_.high_thr_reg);
     reg.data = thr;
     return write_reg(reg);
 }
@@ -121,33 +122,35 @@ IResult<> TCS34725::set_int_thr_high(const uint16_t thr){
 IResult<> TCS34725::set_int_persistence(const uint8_t times);
 
 IResult<> TCS34725::set_gain(const Gain gain){
-    auto reg = RegCopy(gain_reg);
+    auto reg = RegCopy(regs_.gain_reg);
     reg.gain = gain;
     return write_reg(reg);
 }
 
 IResult<uint8_t> TCS34725::get_id(){
-    if(const auto res = read_reg(device_id_reg);
+    auto & reg = regs_.device_id_reg;
+    if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(device_id_reg.as_val());
+    return Ok(reg.as_val());
 }
 
 IResult<bool> TCS34725::is_idle(){
-    if(const auto res = read_reg(status_reg);
+    auto & reg = regs_.status_reg;
+    if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(uint8_t(status_reg.done_flag));
+    return Ok(uint8_t(reg.done_flag));
 }
 
 IResult<> TCS34725::set_power(const bool on){
-    auto reg = RegCopy(enable_reg);
+    auto reg = RegCopy(regs_.enable_reg);
     reg.powerOn = on;
     return write_reg(reg);
 }
 
 IResult<> TCS34725::start_conv(){
-    auto reg = RegCopy(enable_reg);
+    auto reg = RegCopy(regs_.enable_reg);
 
-    reg.adcEn = true;
+    reg.adc_en = true;
     return write_reg(reg);
 }
 

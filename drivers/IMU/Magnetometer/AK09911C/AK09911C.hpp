@@ -18,12 +18,18 @@ class AK09911C final:
     private AK09911C_Regs{
 public:
 
-    AK09911C(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
-    AK09911C(hal::I2cDrv && i2c_drv):phy_(i2c_drv){;}
-    AK09911C(Some<hal::I2c *> i2c):phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
-    AK09911C(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
-    AK09911C(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    AK09911C(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):phy_(hal::SpiDrv(spi, index)){;}
+    explicit AK09911C(const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv){;}
+    explicit AK09911C(hal::I2cDrv && i2c_drv):
+        phy_(i2c_drv){;}
+    explicit AK09911C(Some<hal::I2c *> i2c, hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv(i2c, addr)){;}
+    explicit AK09911C(const hal::SpiDrv & spi_drv):
+        phy_(spi_drv){;}
+    explicit AK09911C(hal::SpiDrv && spi_drv):
+        phy_(std::move(spi_drv)){;}
+    explicit AK09911C(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
+        phy_(hal::SpiDrv(spi, index)){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();

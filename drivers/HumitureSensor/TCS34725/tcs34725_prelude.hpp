@@ -53,14 +53,14 @@ struct TCS34725_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x52 >> 1);
 };
 
-struct TCS34725_Regs:public TCS34725_Prelude{
+struct TCS34725_Regset final:public TCS34725_Prelude{
     struct R8_Enable:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Enable;
         uint8_t powerOn : 1;
-        uint8_t adcEn : 1;
+        uint8_t adc_en : 1;
         uint8_t __resv1__ :1;
-        uint8_t waitEn : 1;
-        uint8_t intEn : 1;
+        uint8_t wait_en : 1;
+        uint8_t int_en : 1;
         uint8_t __resv2__ :3;
     }DEF_R8(enable_reg)
 
@@ -79,7 +79,7 @@ struct TCS34725_Regs:public TCS34725_Prelude{
     struct R8_LongWait:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::LongWait;
         uint8_t __resv1__ :1;
-        uint8_t waitLong : 1;
+        uint8_t wait_long : 1;
         uint8_t __resv2__ :6;
     }DEF_R8(long_wait_reg)
 
@@ -124,7 +124,7 @@ struct TCS34725_Regs:public TCS34725_Prelude{
         uint8_t id;
     }DEF_R8(device_id_reg)
 
-    std::array<uint16_t, 4> crgb = {0};
+
 };
 
 

@@ -5,12 +5,9 @@
 namespace ymd::drivers{
 
 
-class TCS34725 final:public TCS34725_Regs{
+class TCS34725 final:
+    public TCS34725_Prelude{
 public:
-    struct Config{
-        Milliseconds integration_time = 240ms;
-        Gain gain = Gain::_1x;
-    };
 
     explicit TCS34725(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -25,34 +22,41 @@ public:
     TCS34725(TCS34725 &&) = delete;
     ~TCS34725() = default;
 
-        
-    IResult<> init(const Config & cfg);
+    struct Config{
+        Milliseconds integration_time = 240ms;
+        Gain gain = Gain::_1x;
+    };
 
-    IResult<> validate();
 
-    IResult<> set_integration_time(const Milliseconds ms);
+    [[nodiscard]] IResult<> init(const Config & cfg);
 
-    IResult<> set_wait_time(const Milliseconds ms);
+    [[nodiscard]] IResult<> validate();
 
-    IResult<> set_int_thr_low(const uint16_t thr);
+    [[nodiscard]] IResult<> set_integration_time(const Milliseconds ms);
 
-    IResult<> set_int_thr_high(const uint16_t thr);
+    [[nodiscard]] IResult<> set_wait_time(const Milliseconds ms);
 
-    IResult<> set_int_persistence(const uint8_t times);
+    [[nodiscard]] IResult<> set_int_thr_low(const uint16_t thr);
 
-    IResult<> set_gain(const Gain gain);
+    [[nodiscard]] IResult<> set_int_thr_high(const uint16_t thr);
 
-    IResult<uint8_t> get_id();
-    IResult<bool> is_idle();
+    [[nodiscard]] IResult<> set_int_persistence(const uint8_t times);
 
-    IResult<> set_power(const bool on);
-    IResult<> start_conv();
-    IResult<> update();
+    [[nodiscard]] IResult<> set_gain(const Gain gain);
+
+    [[nodiscard]] IResult<uint8_t> get_id();
+    [[nodiscard]] IResult<bool> is_idle();
+
+    [[nodiscard]] IResult<> set_power(const bool on);
+    [[nodiscard]] IResult<> start_conv();
+    [[nodiscard]] IResult<> update();
 
     std::tuple<real_t, real_t, real_t, real_t> get_crgb();
 
 private:
     hal::I2cDrv i2c_drv_;
+    TCS34725_Regset regs_ = {};
+    std::array<uint16_t, 4> crgb_ = {0};
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
