@@ -5,7 +5,7 @@
 namespace ymd::drivers{
 
 
-class SGM58031 final:public SGM58031_Regs{
+class SGM58031 final:public SGM58031_Prelude{
 public:
     explicit SGM58031(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -29,7 +29,7 @@ public:
     IResult<> enable_ch3_as_ref(const Enable en);
 private:
     hal::I2cDrv i2c_drv_;
-
+    SGM58031_Regset regs_ = {};
     q16 full_scale_ = 0;
 
     template<typename T>

@@ -99,7 +99,7 @@ struct SGM58031_Prelude{
     };
 };
 
-struct SGM58031_Regs:public SGM58031_Prelude{
+struct SGM58031_Regset:public SGM58031_Prelude{
     struct R16_Config:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Config;
         uint8_t comp_que : 2;
