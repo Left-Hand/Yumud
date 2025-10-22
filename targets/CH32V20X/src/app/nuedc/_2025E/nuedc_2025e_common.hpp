@@ -3,13 +3,18 @@
 #include "core/math/real.hpp"
 #include "core/math/float/bf16.hpp"
 
+#include "robots/commands/joint_commands.hpp"
+#include "robots/commands/machine_commands.hpp"
+#include "robots/commands/nmt_commands.hpp"
+#include "robots/nodes/msg_factory.hpp"
+
 
 namespace ymd::nuedc_2025e{
-static constexpr size_t MACHINE_CTRL_FREQ = 200;
-static constexpr auto DELTA_TIME_MS = 1000ms / MACHINE_CTRL_FREQ;
-static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_q20;
 
-static constexpr q20 PITCH_JOINT_POSITION_LIMIT = 0.2_r;
+
+using Vector2u8 = Vec2<uint8_t>;
+using Vector2q20 = Vec2<q20>;
+
 static constexpr size_t CANMSG_QUEUE_SIZE = 8;
 
 static constexpr auto MAX_STATIC_SHOT_ERR = 0.007_q20; 
@@ -17,20 +22,9 @@ static constexpr auto PITCH_SEEKING_ANGLE = 0.012_q20;
 static constexpr q20 PITCH_MAX_POSITION = 0.06_r;
 static constexpr q20 PITCH_MIN_POSITION = -0.03_r;
 
-static constexpr auto ADVANCED_BLINK_PERIOD_MS = 7000ms;
-static constexpr auto STATIC_SHOT_FIRE_MS = 180ms;
-
-static constexpr auto GEN2_TIMEOUT = 1700ms;
-static constexpr auto GEN3_TIMEOUT = 3700ms;
-
-
-using Vector2u8 = Vec2<uint8_t>;
-using Vector2q20 = Vec2<q20>;
-
-
-
-//CTAD
-
+static constexpr size_t MACHINE_CTRL_FREQ = 200;
+static constexpr auto DELTA_TIME_MS = 1000ms / MACHINE_CTRL_FREQ;
+static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_q20;
 
 enum class RunState:uint8_t{
     Idle,

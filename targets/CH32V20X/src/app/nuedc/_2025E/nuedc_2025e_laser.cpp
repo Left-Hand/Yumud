@@ -17,10 +17,7 @@
 #include "robots/nodes/node_role.hpp"
 
 #include "types/vectors/vector2.hpp"
-#include "robots/commands/joint_commands.hpp"
-#include "robots/commands/machine_commands.hpp"
-#include "robots/commands/nmt_commands.hpp"
-#include "robots/nodes/msg_factory.hpp"
+
 #include "nuedc_2025e_common.hpp"
 
 
@@ -33,8 +30,16 @@ using namespace ymd::nuedc_2025e;
 static constexpr uint32_t PWM_FREQ = 10000;
 static constexpr uint32_t ISR_FREQ = PWM_FREQ / 2;
 
-static constexpr auto SVPWM_MAX_VOLT = 3.87_r;
 
+
+static constexpr q20 PITCH_JOINT_POSITION_LIMIT = 0.2_r;
+
+
+static constexpr auto ADVANCED_BLINK_PERIOD_MS = 7000ms;
+static constexpr auto STATIC_SHOT_FIRE_MS = 180ms;
+
+static constexpr auto GEN2_TIMEOUT = 1700ms;
+static constexpr auto GEN3_TIMEOUT = 3700ms;
 
 
 struct GenericTask{
@@ -84,6 +89,26 @@ void nuedc_2025e_laser_main(){
     DEBUGGER.force_sync(EN);
     DEBUG_PRINTLN("powerup");
 
+    [[maybe_unused]] auto mode1_gpio   = hal::PB<1>();
+    [[maybe_unused]] auto phase_gpio   = hal::PA<7>();
+
+    phase_gpio.outpp(LOW);
+
+    hal::timer3.init(
+        {
+            .freq = PWM_FREQ, 
+            .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
+        },  
+        EN
+    );
+
+    auto & laser_pwm = hal::timer3.oc<1>();
+    laser_pwm.init({});
+
+    auto led = hal::PB<8>();
+    led.outpp(HIGH);
+
+
     auto & can = hal::can1;
 
     can.init({
@@ -97,26 +122,6 @@ void nuedc_2025e_laser_main(){
         hal::CanFilterConfig::from_accept_all()
     );
 
-
-
-    [[maybe_unused]] auto mode1_gpio   = hal::PB<1>();
-    [[maybe_unused]] auto phase_gpio   = hal::PA<7>();
-
-    phase_gpio.outpp();
-
-    hal::timer3.init({
-            .freq = PWM_FREQ, 
-            .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
-        },  
-        EN
-    );
-
-    auto & laser_pwm = hal::timer3.oc<1>();
-    laser_pwm.init({});
-
-
-    auto led = hal::PB<8>();
-    led.outpp(HIGH);
 
     bool is_basic3 = false;
     bool report_en_ = false;
