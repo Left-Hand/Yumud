@@ -19,7 +19,7 @@ enum class I2cRole:uint8_t{
 
 
 template<I2cRole R>
-class I2cAddrWithRw{
+struct I2cAddrWithRw{
 public:
     static constexpr uint16_t LSB_READ = 0x01;
     static constexpr uint16_t LSB_WRITE = 0x00;
@@ -73,14 +73,16 @@ private:
 };
 
 template<size_t N, I2cRole R>
-class I2cAddr{
-public:
-    static constexpr I2cAddr<N, R> from_u10(const uint16_t i2c_addr){
-        return I2cAddr<N, R>{uint16_t(i2c_addr)};
-    }
+struct I2cAddr;
 
-    static constexpr I2cAddr<N, R> from_u7(const uint16_t i2c_addr){
-        return I2cAddr<N, R>{uint16_t(i2c_addr)};
+template<size_t N, I2cRole R>
+struct I2cAddr;
+
+template<I2cRole R>
+struct I2cAddr<7, R>{
+public:
+    static constexpr I2cAddr<7, R> from_u7(const uint16_t i2c_addr){
+        return I2cAddr<7, R>{uint16_t(i2c_addr)};
     }
 
     constexpr I2cAddrWithRw<R> with_read() const {
@@ -92,17 +94,33 @@ public:
     }
 
     [[nodiscard]] constexpr uint16_t as_u7() const {return i2c_addr_;}
-    [[nodiscard]] constexpr uint16_t as_u10() const {return i2c_addr_;}
 
 
-    constexpr I2cAddr(const I2cAddr<N, R> & other) = default;
-    constexpr I2cAddr(I2cAddr<N, R> && other) = default;
+    constexpr I2cAddr(const I2cAddr<7, R> & other) = default;
+    constexpr I2cAddr(I2cAddr<7, R> && other) = default;
 private:
     constexpr explicit I2cAddr(const uint16_t i2c_addr):i2c_addr_(i2c_addr){;}
 
     uint16_t i2c_addr_;
 };
 
+
+template<I2cRole R>
+struct I2cAddr<10, R>{
+public:
+    static constexpr I2cAddr<10, R> from_u10(const uint16_t i2c_addr){
+        return I2cAddr<10, R>{uint16_t(i2c_addr)};
+    }
+
+    [[nodiscard]] constexpr uint16_t as_u10() const {return i2c_addr_;}
+
+    constexpr I2cAddr(const I2cAddr<10, R> & other) = default;
+    constexpr I2cAddr(I2cAddr<10, R> && other) = default;
+private:
+    constexpr explicit I2cAddr(const uint16_t i2c_addr):i2c_addr_(i2c_addr){;}
+
+    uint16_t i2c_addr_;
+};
 
 
 

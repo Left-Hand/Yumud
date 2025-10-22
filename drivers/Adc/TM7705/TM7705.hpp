@@ -20,9 +20,11 @@ struct TM7705_Prelude{
 
     using RegAddr = uint8_t;
 
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+};
 
-    
-
+struct TM7705_Regset:public TM7705_Prelude{
     struct R8_Comm:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x00;
         uint8_t ch0:1;
@@ -66,9 +68,6 @@ struct TM7705_Prelude{
     struct R24_Gain:public Reg24<>{
         static constexpr RegAddr ADDRESS = 0x07;
     };
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
 };
 
 class TM7705_Phy final: public TM7705_Prelude{

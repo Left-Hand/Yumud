@@ -167,7 +167,7 @@ struct INA228_Regs:public INA228_Prelude{
         uint16_t __RESV1__:2;
     };
 
-    struct R24_reg_shunt_v:public Reg24<>{         
+    struct R24_reg_shunt_v:public Reg24<>{ 
         static constexpr RegAddr ADDRESS = 0x04;  // 24 bit, 312.5 - 78.125 nV / LSB (ADCRANGE)
 
         // 23-4
@@ -180,7 +180,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_reg_bus_v:public Reg16<>{           
+    struct R16_reg_bus_v:public Reg16<>{   
         static constexpr RegAddr ADDRESS = 0x05;  // 24 bit, 195.3125 uV / LSB, 4 low bits == 0
 
         // 23-4
@@ -194,7 +194,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_DieTemp:public Reg16<>{               
+    struct R16_DieTemp:public Reg16<>{   
         static constexpr RegAddr ADDRESS = 0x06;  // 16 bit
 
         // 15-0
@@ -204,7 +204,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R24_Current:public Reg24<>{               
+    struct R24_Current:public Reg24<>{   
         static constexpr RegAddr ADDRESS = 0x07;  // 24 bit
 
         // 23-4
@@ -217,7 +217,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R24_Power:public Reg24<>{               
+    struct R24_Power:public Reg24<>{   
         static constexpr RegAddr ADDRESS = 0x08;  // 24 bit
 
         // POWER R 0h 计算得出的功率输出。
@@ -230,7 +230,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R64_Energy:public Reg64<>{               
+    struct R64_Energy:public Reg64<>{   
         static constexpr RegAddr ADDRESS = 0x09;  // 40 bit
 
         // ENERGY R 0h 计算得出的电能输出。
@@ -242,7 +242,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R64_Charge:public Reg64<>{               
+    struct R64_Charge:public Reg64<>{   
         static constexpr RegAddr ADDRESS = 0x0A;  // 40 bit
 
         // 39-0
@@ -253,7 +253,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_Alert:public Reg16<>{            
+    struct R16_Alert:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x0B;  // 16 bit
 
         // 0 MEMSTAT R/W 1h如果在器件修整存储器空间中检测到校验和错误，则该位设置为 0。
@@ -369,7 +369,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_SOVL:public Reg16<>{            
+    struct R16_SOVL:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x0B;  // 16 bit,  shunt overvoltage threshold
 
         // 15-0 SOVL R/W 7FFFh设置用于比较值的阈值，以检测分流过压（过流保护）。二进制补码
@@ -379,7 +379,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_SUVL:public Reg16<>{            
+    struct R16_SUVL:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x0C;  // 16 bit,  shunt undervoltage threshold
 
         // 15-0 SUVL R/W 8000h设置用于比较值的阈值，以检测分流欠压（欠流保护）。二进制补码
@@ -389,7 +389,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_BOVL:public Reg16<>{            
+    struct R16_BOVL:public Reg16<>{
 
         
         static constexpr RegAddr ADDRESS = 0x0D;  // 16 bit,  bus overvoltage threshold
@@ -404,7 +404,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_BUVL:public Reg16<>{            
+    struct R16_BUVL:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x0E;  // 16 bit,  bus undervoltage threshold
 
         // 15
@@ -415,7 +415,7 @@ struct INA228_Regs:public INA228_Prelude{
         uint16_t __RESV__:1;
     };
     
-    struct R16_TempLimit:public Reg16<>{        
+    struct R16_TempLimit:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x10;  // 16 bit,  temp over
 
         // 15-0
@@ -426,7 +426,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_PowerLimit:public Reg16<>{         
+    struct R16_PowerLimit:public Reg16<>{ 
 
         static constexpr RegAddr ADDRESS = 0x11;  // 16 bit,  power over
 
@@ -439,7 +439,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_ManfId:public Reg16<>{        
+    struct R16_ManfId:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x3E;
 
         // 15-0
@@ -449,7 +449,7 @@ struct INA228_Regs:public INA228_Prelude{
     };
 
 
-    struct R16_DieId:public Reg16<>{          
+    struct R16_DieId:public Reg16<>{  
         static constexpr RegAddr ADDRESS = 0x3F;
 
         // 15-4

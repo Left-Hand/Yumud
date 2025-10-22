@@ -215,11 +215,9 @@ struct MT9V034_Regs:public MT9V034_Prelude{
 class MT9V034: public MT9V034_Prelude{
 public:
     explicit MT9V034(const hal::SccbDrv & sccb_drv):
-        sccb_drv_(sccb_drv)
-        {;}
+        sccb_drv_(sccb_drv){;}
     explicit MT9V034(hal::SccbDrv && sccb_drv):
-        sccb_drv_(std::move(sccb_drv))
-        {;}
+        sccb_drv_(std::move(sccb_drv)){;}
     explicit MT9V034(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MT9V034(hal::SccbDrv{i2c, addr}){;}
 

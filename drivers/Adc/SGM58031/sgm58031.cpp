@@ -15,19 +15,19 @@ using IResult = Result<T, Error>;
 IResult<> SGM58031::init(){
     if(const auto res = validate();
         res.is_err()) return res;
-    if(const auto res = read_reg(config_reg);
+    if(const auto res = read_reg(regs_.config_reg);
         res.is_err()) return res;
-    if(const auto res = read_reg(low_thr_reg);
+    if(const auto res = read_reg(regs_.low_thr_reg);
         res.is_err()) return res;
-    if(const auto res = read_reg(high_thr_reg);
+    if(const auto res = read_reg(regs_.high_thr_reg);
         res.is_err()) return res;
-    if(const auto res = read_reg(trim_reg);
+    if(const auto res = read_reg(regs_.trim_reg);
         res.is_err()) return res;
     return Ok();
 }
 
 IResult<> SGM58031::validate(){
-    auto & reg = device_id_reg;
+    auto & reg = regs_.device_id_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
     if(reg.as_u16() != reg.KEY) 
@@ -36,15 +36,15 @@ IResult<> SGM58031::validate(){
 }
 IResult<> SGM58031::set_datarate(const DataRate dr){
     {
-        auto reg = RegCopy(config_reg);
-        reg.dataRate = uint8_t(std::bit_cast<uint8_t>(dr) & 0b111);
+        auto reg = RegCopy(regs_.config_reg);
+        reg.data_rate = uint8_t(std::bit_cast<uint8_t>(dr) & 0b111);
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
     }
 
     {
-        auto reg = RegCopy(config1_reg);
-        reg.drSel = std::bit_cast<uint8_t>(dr) >> 3;
+        auto reg = RegCopy(regs_.config1_reg);
+        reg.dr_sel = std::bit_cast<uint8_t>(dr) >> 3;
         return write_reg(reg);
     }
 }
@@ -52,58 +52,60 @@ IResult<> SGM58031::set_datarate(const DataRate dr){
 IResult<> SGM58031::set_fs(const FS fs){
     full_scale_ = fs.to_real();
 
-    auto reg = RegCopy(config_reg);
+    auto reg = RegCopy(regs_.config_reg);
     reg.pga = fs.as_pga();
     return write_reg(reg);
 }
 
 
 
-IResult<> SGM58031::set_fs(const real_t _fs, const real_t _vref){
-    real_t ratio = abs(_fs) / _vref;
-    auto reg = RegCopy(config_reg);
+IResult<> SGM58031::set_fs(const q16 _fs, const q16 _vref){
+    q16 ratio = abs(_fs) / _vref;
+    auto reg = RegCopy(regs_.config_reg);
     reg.pga = ratio2pga(ratio);
     return write_reg(reg);
 }
 
 
-IResult<> SGM58031::set_trim(const real_t _trim){
-    real_t trim = _trim * real_t(4.0f / 3.0f);
-    real_t offset = trim - real_t(1.30225f);
-    auto reg = RegCopy(trim_reg);
+IResult<> SGM58031::set_trim(const q16 _trim){
+    q16 trim = _trim * q16(4.0f / 3.0f);
+    q16 offset = trim - q16(1.30225f);
+    auto reg = RegCopy(regs_.trim_reg);
     reg.gn = int(offset * 0b01111111010);
     return write_reg(reg);
 }
 
 
 IResult<bool> SGM58031::is_idle(){
-    if(const auto res = read_reg(config_reg);
+    auto & reg = regs_.config_reg;
+    if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(bool(config_reg.os));
+    return Ok(bool(reg.os));
 }
 
 IResult<> SGM58031::start_conv(){
     {
-        auto reg = RegCopy(config1_reg);
+        auto reg = RegCopy(regs_.config1_reg);
         reg.pd = true;
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
 
     {
-        auto reg = RegCopy(config_reg);
+        auto reg = RegCopy(regs_.config_reg);
         reg.os = true;
         return write_reg(reg);
     }
 }
 
 IResult<int16_t> SGM58031::get_conv_data(){
-    if(const auto res = read_reg(conv_reg);
+    auto & reg = regs_.conv_reg;
+    if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(conv_reg.as_val());
+    return Ok(reg.as_val());
 }
 
-IResult<real_t> SGM58031::get_conv_voltage(){
+IResult<q16> SGM58031::get_conv_voltage(){
     const auto res = get_conv_data();
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok((res.unwrap() * full_scale_) >> 15);
@@ -111,20 +113,20 @@ IResult<real_t> SGM58031::get_conv_voltage(){
 
 
 IResult<> SGM58031::enable_cont_mode(const Enable en){
-    auto reg = RegCopy(config_reg);
+    auto reg = RegCopy(regs_.config_reg);
     reg.mode = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> SGM58031::set_mux(const MUX _mux){
-    auto reg = RegCopy(config_reg);
+    auto reg = RegCopy(regs_.config_reg);
     reg.mux = _mux;
     return write_reg(reg);
 }
 
 
 IResult<> SGM58031::enable_ch3_as_ref(const Enable en){
-    auto reg = RegCopy(config1_reg);
-    reg.extRef = en == EN;
+    auto reg = RegCopy(regs_.config1_reg);
+    reg.ext_ref = en == EN;
     return write_reg(reg);
 }

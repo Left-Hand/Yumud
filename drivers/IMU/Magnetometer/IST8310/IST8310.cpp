@@ -40,11 +40,12 @@ IResult<> IST8310::init(){
     return Ok();
 }
 IResult<> IST8310::update(){
-    return read_burst(axis_x_reg.ADDRESS, &axis_x_reg.as_ref(), 3);
+    auto & reg = regs_.axis_x_reg;
+    return read_burst(reg.ADDRESS, &reg.as_ref(), 3);
 }
 
 IResult<> IST8310::validate(){
-    auto reg = RegCopy(whoami_reg);
+    auto reg = RegCopy(regs_.whoami_reg);
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
     if(reg.as_val() != reg.expected_value)
@@ -53,21 +54,21 @@ IResult<> IST8310::validate(){
 }
 
 IResult<> IST8310::reset(){
-    auto reg = RegCopy(ctrl2_reg);
+    auto reg = RegCopy(regs_.ctrl2_reg);
     reg.reset = 1;
     return write_reg(reg);
     reg.reset = 0;
 }
 
 IResult<> IST8310::enable_contious(const Enable en){
-    auto reg = RegCopy(ctrl1_reg);
+    auto reg = RegCopy(regs_.ctrl1_reg);
     reg.cont = en == EN;
     return write_reg(reg);;
 }
 
 
 IResult<> IST8310::set_x_average_times(const AverageTimes times){
-    auto reg = RegCopy(average_reg);
+    auto reg = RegCopy(regs_.average_reg);
     reg.x_times = times;
 
     return write_reg(reg);
@@ -75,7 +76,7 @@ IResult<> IST8310::set_x_average_times(const AverageTimes times){
 
 
 IResult<> IST8310::set_y_average_times(const AverageTimes times){
-    auto reg = RegCopy(average_reg);
+    auto reg = RegCopy(regs_.average_reg);
 
     reg.y_times = times;
 
@@ -90,43 +91,43 @@ IResult<Vec3<q24>> IST8310::read_mag(){
     };
 
     return Ok{Vec3<q24>{
-        conv(axis_x_reg.as_val()),
-        conv(axis_y_reg.as_val()),
-        conv(axis_z_reg.as_val())
+        conv(regs_.axis_x_reg.as_val()),
+        conv(regs_.axis_y_reg.as_val()),
+        conv(regs_.axis_z_reg.as_val())
     }};
 }
 
 IResult<q16> IST8310::get_temperature(){
-    return Ok(temp_reg.to_temp());
+    return Ok(regs_.temp_reg.to_temp());
 }
 
 IResult<bool> IST8310::is_data_ready(){
-    auto reg = RegCopy(status1_reg);
+    auto reg = RegCopy(regs_.status1_reg);
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(bool(reg.drdy));
 }
 
 IResult<> IST8310::enable_interrupt(const Enable en){
-    auto reg = RegCopy(ctrl2_reg);
+    auto reg = RegCopy(regs_.ctrl2_reg);
     reg.int_en = en == EN;
     return write_reg(reg);;
 }
 
 IResult<> IST8310::set_interrupt_level(const BoolLevel lv){
-    auto reg = RegCopy(ctrl2_reg);
+    auto reg = RegCopy(regs_.ctrl2_reg);
     reg.drdy_level = lv.to_bool();
     return write_reg(reg);;
 }
 
 IResult<> IST8310::enable_sleep(const Enable en){
-    auto reg = RegCopy(ctrl1_reg);
+    auto reg = RegCopy(regs_.ctrl1_reg);
     reg.awake = en == DISEN;
     return write_reg(reg);;
 }
 
 IResult<bool> IST8310::get_interrupt_status(){
-    auto reg = RegCopy(status2_reg);
+    auto reg = RegCopy(regs_.status2_reg);
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(bool(reg.on_int));

@@ -26,7 +26,7 @@ struct IST8310_Prelude{
     
 };
 
-struct IST8310_Regs:public IST8310_Prelude{
+struct IST8310_Regset:public IST8310_Prelude{
     struct R8_WhoAmI:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x00;
         static constexpr uint8_t expected_value = 0x10;

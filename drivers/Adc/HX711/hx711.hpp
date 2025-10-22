@@ -41,20 +41,13 @@ public:
         zero_offset = last_data;
     }
 
-    int getWeightData(){
-        return inversed ? int(last_data - zero_offset) : int(zero_offset - last_data);
+    int32_t get_weight_data(){
+        return inversed ? int32_t(last_data - zero_offset) : int32_t(zero_offset - last_data);
     }
 
-    int getWeightGram(){
-        return getWeightData() / 1000;
-    }
 
-    real_t getNewton(){
-        return (GRAVITY_G * real_t(getWeightGram())) / 1000;
-    }
-
-    void setConvType(const ConvType & _convtype){
-        conv_type = _convtype;
+    void set_conv_type(const ConvType & convtype){
+        conv_type = convtype;
     }
 private:
     hal::GpioIntf & sck_gpio_;

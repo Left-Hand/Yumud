@@ -333,32 +333,30 @@ private:
 
     constexpr void handle_insert_char(const size_t position, const char chr){
         const auto res = str_.insert(position, chr);
-        if(res.is_ok()){
-            // cursor_ = cursor_.try_shift(1, str_.length());
-            // cursor_ = cursor_.try_shift(1, MAX_LENGTH);
-            // cursor_ = Cursor{1,MAX_LENGTH};
-            // cursor_ = Cursor{static_cast<uint8_t>(position + 1), MAX_LENGTH};
-            cursor_ = cursor_
-                .shift(1, str_.length())
-                .unwrap_or(cursor_);
-            // return next_cursor;
-            // __builtin_abort();
-        }else{
-            // return cursor_;
-            // __builtin_abort();
+        if(res.is_err()){
+            __builtin_trap();
         }
+
+        // cursor_ = cursor_.try_shift(1, str_.length());
+        // cursor_ = cursor_.try_shift(1, MAX_LENGTH);
+        // cursor_ = Cursor{1,MAX_LENGTH};
+        // cursor_ = Cursor{static_cast<uint8_t>(position + 1), MAX_LENGTH};
+        cursor_ = cursor_
+            .shift(1, str_.length())
+            .unwrap_or(cursor_);
+        // return next_cursor;
+        // __builtin_abort();
     }
 
     constexpr void handle_backspace(){
         const auto position = cursor_.position();
         const auto res = str_.erase(position);
-        if(res.is_ok()){
-            cursor_ = cursor_
-                .shift(-1, str_.length())
-                .unwrap_or(cursor_);
-        }else{
-            DEBUG_PRINTLN("can't erase");
+        if(res.is_err()){
+            __builtin_trap();
         }
+        cursor_ = cursor_
+            .shift(-1, str_.length())
+            .unwrap_or(cursor_);
     }
 
     #if 0

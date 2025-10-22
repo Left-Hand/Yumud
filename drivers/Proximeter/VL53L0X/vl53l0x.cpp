@@ -84,27 +84,28 @@ IResult<> VL53L0X::init(){
 }
 
 IResult<> VL53L0X::start_conv(){	
-	if(!continuous_en_){
-		if(const auto res = write_byte_data(0x80, 0x01);
-			res.is_err()) return Err(res.unwrap_err());
-		if(const auto res = write_byte_data(0xFF, 0x01);
-			res.is_err()) return Err(res.unwrap_err());
-		if(const auto res = write_byte_data(0x00, 0x00);
-			res.is_err()) return Err(res.unwrap_err());
-		if(const auto res = write_byte_data(0x91, 0x3c);
-			res.is_err()) return Err(res.unwrap_err());
-		if(const auto res = write_byte_data(0x00, 0x01);
-			res.is_err()) return Err(res.unwrap_err());
-		if(const auto res = write_byte_data(0xFF, 0x00);
-			res.is_err()) return Err(res.unwrap_err());
-		if(const auto res = write_byte_data(0x80, 0x00);
-			res.is_err()) return Err(res.unwrap_err());
-		if(const auto res = write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_START_STOP);
-			res.is_err()) return Err(res.unwrap_err());
-		return Ok();
-    }else{
+	if(continuous_en_){
 		return write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_BACKTOBACK);
-	}	
+	}
+
+	if(const auto res = write_byte_data(0x80, 0x01);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0xFF, 0x01);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x00, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x91, 0x3c);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x00, 0x01);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0xFF, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(0x80, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte_data(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_START_STOP);
+		res.is_err()) return Err(res.unwrap_err());
+	return Ok();
+
 }
 
 IResult<bool> VL53L0X::is_busy(){

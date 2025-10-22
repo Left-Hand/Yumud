@@ -11,16 +11,16 @@ void StatLed::run(){
         case RunStatus::ACTIVE:
             switch(ctrl_type){
                 case CtrlType::CURRENT:
-                    setTranstit(Color(0,1,0), Color(0,0,0), Method::Triangle, 400);
+                    setTranstit(RGB(0,1,0), RGB(0,0,0), Method::Triangle, 400);
                     break;
                 case CtrlType::POSITION:
-                    setTranstit(Color(1,0,0), Color(0,1,0), Method::Triangle, 400);
+                    setTranstit(RGB(1,0,0), RGB(0,1,0), Method::Triangle, 400);
                     break;
                 case CtrlType::SPEED:
-                    setTranstit(Color(0,0,1), Color(0,1,0), Method::Triangle, 400);
+                    setTranstit(RGB(0,0,1), RGB(0,1,0), Method::Triangle, 400);
                     break;
                 case CtrlType::TEACH:
-                    setTranstit(Color(1,1,1), Color(0,0,1), Method::Triangle, 400);
+                    setTranstit(RGB(1,1,1), RGB(0,0,1), Method::Triangle, 400);
                     break;
 
                 default:
@@ -28,17 +28,17 @@ void StatLed::run(){
             }
             break;
         case RunStatus::INACTIVE:
-            setTranstit(Color(1,1,1), Color(0,0,0), Method::Triangle, 2000);
+            setTranstit(RGB(1,1,1), RGB(0,0,0), Method::Triangle, 2000);
             break;
         case RunStatus::CALI:
-            setTranstit(Color(0,0,1), Color(0,0,0), Method::Square, 200);
+            setTranstit(RGB(0,0,1), RGB(0,0,0), Method::Square, 200);
             break;
         case RunStatus::BEEP:
-            setTranstit(Color(0,1,0), Color(0,0,0), Method::Square, 200);
+            setTranstit(RGB(0,1,0), RGB(0,0,0), Method::Square, 200);
             break;
         case RunStatus::ERROR:
         case RunStatus::WARN:
-            setTranstit(Color(1,0,0), Color(0,0,0), Method::Square, 200);
+            setTranstit(RGB(1,0,0), RGB(0,0,0), Method::Square, 200);
         default:
             break;
     }
@@ -60,7 +60,7 @@ void StatLed::run(){
             break;
     }
 
-    Color color_mux = color_a.linear_interpolate(color_b, ratio);
+    RGB color_mux = color_a.linear_interpolate(color_b, ratio);
     led = color_mux;
 }
 

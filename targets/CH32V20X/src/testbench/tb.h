@@ -176,9 +176,9 @@ void mks_stepper_main();
 void slcan_main();
 void st7789_main();
 void fft_main();
-void embd_main();
-void laser_ctl_main();
-void nuedc_2025e_main();
+
+void nuedc_2025e_laser_main();
+void nuedc_2025e_joint_main();
 
 void render_main();
 void mlx90640_main();

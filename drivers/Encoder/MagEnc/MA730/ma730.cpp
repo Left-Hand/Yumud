@@ -67,7 +67,7 @@ IResult<MagStatus> MA730::get_mag_status(){
     if(unlikely(res.is_err())) return Err(res.unwrap_err());
 
     const bool mgl = !(reg.mgl1 | reg.mgl2);
-    const bool mgh = reg.magnitudeHigh;
+    const bool mgh = reg.magnitude_high;
 
     if(mgl) return Ok(MagStatus::from_low());
     else if(mgh) return Ok(MagStatus::from_high());
@@ -80,7 +80,7 @@ IResult<> MA730::update(){
         if(unlikely(res.is_err())) return Err(res.unwrap_err());
         res.unwrap();
     });
-    lap_angle_ = u16_to_uni(data);
+    lap_turns_ = u16_to_uni(data);
     return Ok();
 }
 
@@ -93,8 +93,8 @@ IResult<> MA730::set_trim_x(const real_t k){
     }
     {
         auto reg = RegCopy(regs_.trim_config_reg);
-        reg.enableX = true;
-        reg.enableY = false;
+        reg.enable_x = true;
+        reg.enable_y = false;
         return write_reg(reg);
     }
 }
@@ -107,8 +107,8 @@ IResult<> MA730::set_trim_y(const real_t k){
     }
     {
         auto reg = RegCopy(regs_.trim_config_reg);
-        reg.enableX = false;
-        reg.enableY = true;
+        reg.enable_x = false;
+        reg.enable_y = true;
         return write_reg(reg);
     }
 }
@@ -134,10 +134,10 @@ IResult<> MA730::set_direction(const ClockDirection direction){
 }
 
 
-IResult<> MA730::set_zparameters(const PulseWidth width, const PulsePhase phase){
+IResult<> MA730::set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase){
     auto reg = RegCopy(regs_.z_parameters_reg);
-    reg.zWidth = width;
-    reg.zPhase = phase;
+    reg.z_width = width;
+    reg.z_phase = phase;
     return write_reg(reg);
 }
 

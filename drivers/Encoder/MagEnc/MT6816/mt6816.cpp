@@ -43,7 +43,7 @@ IResult<> MT6816::init(const Config & cfg) {
     [[maybe_unused]] auto pre_wakeup = [&]{
         for(size_t i = 0; i < PRE_WAKEUP_TIMES; i++){
             if(const auto res = this->get_position_data();
-                res.is_ok()){
+                res.is_err()){
                 //pass
             }else{
                 //pass
@@ -60,10 +60,14 @@ IResult<> MT6816::init(const Config & cfg) {
             res.is_err()) return res;
 
         if(const auto res = this->read_lap_angle();
-            res.is_ok()) return Ok();
-        else if(i == MAX_INIT_RETRY_TIMES)
-            return CHECK_ERR(Err(res.unwrap_err()));
-        clock::delay(1ms);
+            res.is_err()){
+            if(i == MAX_INIT_RETRY_TIMES)
+                return CHECK_ERR(Err(res.unwrap_err()));
+            clock::delay(1ms);
+        }else{
+            return Ok();
+        }
+
     } // while reading before get correct position
 
     return Ok();

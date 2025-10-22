@@ -10,12 +10,12 @@ OutputStream & print_halerr_kind(OutputStream & os, const hal::HalError::Kind er
 }
 
 OutputStream & operator << (OutputStream & os, const hal::HalResult & res){
-    if(res.is_ok())
-        os << "Ok";
-    else{
+    if(res.is_err()){
         os << "Err" << os.brackets<'('>();
         print_halerr_kind(os, res.unwrap_err().kind());
         os << os.brackets<')'>();
+    }else{
+        os << "Ok";
     }
     return os;
 }

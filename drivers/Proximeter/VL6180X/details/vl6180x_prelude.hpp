@@ -108,8 +108,10 @@ static_assert(sizeof(VL6180X_Prelude) == 1);
 
 class VL6180X_Phy final:public VL6180X_Prelude{
 public:
-    VL6180X_Phy(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    VL6180X_Phy(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    explicit VL6180X_Phy(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    explicit VL6180X_Phy(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const uint16_t command, const T data){

@@ -4,10 +4,10 @@
 namespace ymd::drivers{
 class BMP280_Phy final:public BMP280_Prelude{
 public:
-    BMP280_Phy(const hal::I2cDrv & i2c_drv):
+    explicit BMP280_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
 
-    BMP280_Phy(hal::I2cDrv && i2c_drv):
+    explicit BMP280_Phy(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
 
