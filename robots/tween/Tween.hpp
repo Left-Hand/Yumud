@@ -7,18 +7,18 @@
 
 namespace ymd::tween{
 
-namespace internal{
+namespace details{
     PRO_DEF_MEM_DISPATCH(MemPeriod, period);
     PRO_DEF_MEM_DISPATCH(MemUpdate, update);
 
     // template<typename T>
     struct TweenerFacade : pro::facade_builder
-        ::add_convention<internal::MemPeriod, real_t() const>
-        ::add_convention<internal::MemUpdate, void(real_t)>
+        ::add_convention<details::MemPeriod, real_t() const>
+        ::add_convention<details::MemUpdate, void(real_t)>
         ::build {};
 }
 // template<typename T>
-using TweenerProxy = pro::proxy<internal::TweenerFacade>;
+using TweenerProxy = pro::proxy<details::TweenerFacade>;
 
 template<typename T>
 class TweenerIntf{
@@ -42,27 +42,27 @@ public:
     using Setter = TweenerIntf<T>::Setter;
     using Curve = TweenerIntf<T>::Curve;
 
-    Setter & _setter;
-    Curve & _curve; 
+    Setter & setter_;
+    Curve & curve_; 
 public:
     TweenerStatic(Setter & setter, Curve & curve):
-        _setter(setter),
-        _curve(curve){}
+        setter_(setter),
+        curve_(curve){}
 
     void update(const real_t time) {
-        // auto && res = _curve(time);
-        _setter( _curve(time));
+        // auto && res = curve_(time);
+        setter_( curve_(time));
     }
 
     real_t period() const {
-        return _curve.period();
+        return curve_.period();
     }
 };
 
 
 
 template<typename T>
-class Tweener_t:public TweenerIntf<T>{
+class Tweener:public TweenerIntf<T>{
 public:
     using Setter = TweenerIntf<T>::Setter;
     using Curve = TweenerIntf<T>::Curve;
@@ -70,26 +70,26 @@ public:
     using SetterWrapper = std::unique_ptr<Setter>;
     using CurveWrapper = std::unique_ptr<Curve>;
 protected:
-    SetterWrapper _setter;
-    CurveWrapper _curve; 
+    SetterWrapper setter_;
+    CurveWrapper curve_; 
 public:
 
     template<typename SetterType, typename CurveType>
-    Tweener_t(const SetterType & setter, const CurveType & curve)
-        : _setter(std::make_unique<SetterType>((setter))),
-          _curve(std::make_unique<CurveType>((curve))) {}
+    Tweener(const SetterType & setter, const CurveType & curve): 
+        setter_(std::make_unique<SetterType>((setter))),
+        curve_(std::make_unique<CurveType>((curve))) {}
 
-    Tweener_t(const SetterWrapper setter, const CurveWrapper curve)
-        : _setter(setter),
-          _curve(curve){}
+    Tweener(const SetterWrapper setter, const CurveWrapper curve): 
+        setter_(setter),
+        curve_(curve){}
 
     void update(const real_t time) override {
-        if(_setter == nullptr or _curve == nullptr) HALT;
-        (*_setter)( (*_curve)(time));
+        if(setter_ == nullptr or curve_ == nullptr) HALT;
+        (*setter_)( (*curve_)(time));
     }
 
     real_t period() const override{
-        return _curve->period();
+        return curve_->period();
     }
 };
 
@@ -97,21 +97,21 @@ public:
 
 template<typename T>
 auto make_tweener(auto && setter, auto && curve){
-    return Tweener_t<T>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
+    return Tweener<T>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
 }
 
 template<typename T>
 auto make_twproxy(auto && setter, auto && curve){
-    return pro::make_proxy<internal::TweenerFacade, Tweener_t<T>>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
+    return pro::make_proxy<details::TweenerFacade, Tweener<T>>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
 }
 
 // template<typename T>
 // auto new_tweener(auto && setter, auto && curve){
-//     return new Tweener_t<T>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
+//     return new Tweener<T>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
 // }
 
 // auto new_tweener(auto && setter, auto && curve){
-//     return new Tweener_t(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
+//     return new Tweener(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
 // }
 
 
@@ -128,7 +128,7 @@ auto make_tweener(
     auto setter = ymd::utils::make_setter(obj, member_func_ptr);
     auto curve = ymd::curve::make_curve(from, to, dur, interpolator);
 
-    return Tweener_t<std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType>>(
+    return Tweener<std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType>>(
         std::move(setter), std::move(curve));
 }
 
@@ -145,7 +145,7 @@ auto make_twproxy(
     auto setter = ymd::utils::make_setter(obj, member_func_ptr);
     auto curve = ymd::curve::make_curve(from, to, dur, interpolator);
 
-    return pro::make_proxy<internal::TweenerFacade, Tweener_t<std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType>>>(
+    return pro::make_proxy<details::TweenerFacade, Tweener<std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType>>>(
         std::move(setter), std::move(curve));
 }
 }

@@ -13,17 +13,4 @@
 
 namespace ymd::drivers{
 
-class AXP192 final: public AXP192_Prelude{
-
-    explicit AXP192(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c.get(), addr)){}
-
-    explicit AXP192(hal::I2cDrv && i2c_drv):
-        i2c_drv_(std::move(i2c_drv)){}
-
-    explicit AXP192(const hal::I2cDrv & i2c_drv):
-        i2c_drv_(i2c_drv){}
-private:
-    hal::I2cDrv i2c_drv_;
-};
 }
