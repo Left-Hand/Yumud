@@ -207,9 +207,9 @@ public:
 
 
 
-    IResult<uint16_t> readRawTemperature();
+    IResult<uint16_t> read_raw_temperature();
 
-    IResult<uint32_t> readRawPressure();
+    IResult<uint32_t> read_raw_pressure();
 
 private:
     hal::I2cDrv i2c_drv_;

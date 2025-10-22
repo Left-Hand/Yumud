@@ -8,7 +8,7 @@ namespace ymd::digipw{
 //AT8222
 class StepperPwmGen{
 public:
-    StepperPwmGen(
+    explicit StepperPwmGen(
         hal::TimerOC & pwm_ap,
         hal::TimerOC & pwm_an,
         hal::TimerOC & pwm_bp,

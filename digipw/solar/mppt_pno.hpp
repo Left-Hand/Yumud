@@ -6,7 +6,7 @@ namespace ymd::digipw{
 
 class MpptPno final{
 public:
-    MpptPno();
+    constexpr MpptPno();
 
     MpptPno(const MpptPno & other) = delete;
     MpptPno(MpptPno && other) = default;

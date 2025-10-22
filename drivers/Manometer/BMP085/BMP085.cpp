@@ -69,7 +69,7 @@ IResult<> BMP085::init(const Config & cfg) {
 
 
 
-IResult<uint16_t> BMP085::readRawTemperature(void) {
+IResult<uint16_t> BMP085::read_raw_temperature(void) {
     if(const auto res = write8(BMP085_CONTROL, BMP085_READTEMPCMD);
         res.is_err()) return Err(res.unwrap_err());
 
@@ -83,7 +83,7 @@ IResult<uint16_t> BMP085::readRawTemperature(void) {
     return Ok(tempdata);
 }
 
-IResult<uint32_t> BMP085::readRawPressure(void) {
+IResult<uint32_t> BMP085::read_raw_pressure(void) {
     const uint8_t command = BMP085_READPRESSURECMD + (static_cast<uint8_t>(mode_) << 6);
     if(const auto res = write8(BMP085_CONTROL, command);
         res.is_err()) return Err(res.unwrap_err());
@@ -113,6 +113,3 @@ IResult<uint32_t> BMP085::readRawPressure(void) {
 
     return Ok(raw);
 }
-
-
-#endif

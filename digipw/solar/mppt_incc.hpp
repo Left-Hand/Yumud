@@ -6,7 +6,7 @@ namespace ymd::digipw{
 
 class MpptIncc{
 public:
-    MpptIncc(){
+    constexpr MpptIncc(){
         reset();
     }
 
