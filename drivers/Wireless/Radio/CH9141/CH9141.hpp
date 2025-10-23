@@ -10,29 +10,7 @@
 #if 0
 
 namespace ymd::drivers{
-struct MacAddress{
-protected:
-    using DataType = std::array<uint8_t, 6>; // Define a type alias for the underlying buffer
-    DataType buf; // Buffer to hold the 6 bytes of the MAC address
 
-public:
-    // Default constructor: Initializes the MAC address with all zeros
-    MacAddress() : buf{} {}
-
-    // // Constructor with initializer list: Allows initialization with a list of bytes
-    // explicit MacAddress(const std::initializer_list<uint8_t> &list)
-    //     : buf{list} {;}
-    //TODO
-
-    // Copy constructor: Initializes the MAC address from another DataType instance
-    MacAddress(const DataType &data) : buf(data) {}
-
-    // Access operator for read: Returns the byte at the specified index
-    uint8_t operator [](const size_t index) const{return buf[index];}
-
-    // Access operator for write: Allows modifying the byte at the specified index
-    uint8_t & operator [](const size_t index) {return buf[index];}
-};
 
 class CH9141 final{
 public:

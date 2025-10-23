@@ -46,8 +46,8 @@ public:
         phy_(i2c_drv){;}
     explicit AK8975(hal::I2cDrv && i2c_drv):
         phy_(i2c_drv){;}
-    explicit AK8975(Some<hal::I2c *> i2c):
-        phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
+    explicit AK8975(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv(i2c, addr)){;}
     explicit AK8975(const hal::SpiDrv & spi_drv):
         phy_(spi_drv){;}
     explicit AK8975(hal::SpiDrv && spi_drv):

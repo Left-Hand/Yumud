@@ -181,10 +181,6 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 };
 
-
-/*!
- * @brief Main BMP085 class
- */
 class BMP085 :public BMP085_Prelude{
 public:
     explicit BMP085(const hal::I2cDrv & i2c_drv):
@@ -199,23 +195,23 @@ public:
         Mode mode;
     };
 
-    IResult<> init(const Config & config);
+    [[nodiscard]] IResult<> init(const Config & config);
 
-    IResult<> validate();
+    [[nodiscard]] IResult<> validate();
 
-    IResult<Coeffs> get_coeffs();
+    [[nodiscard]] IResult<Coeffs> get_coeffs();
 
 
 
-    IResult<uint16_t> read_raw_temperature();
+    [[nodiscard]] IResult<uint16_t> read_raw_temperature();
 
-    IResult<uint32_t> read_raw_pressure();
+    [[nodiscard]] IResult<uint32_t> read_raw_pressure();
 
 private:
     hal::I2cDrv i2c_drv_;
     Mode mode_;
 
-    IResult<> read8(uint8_t addr, uint8_t & data) {
+    [[nodiscard]] IResult<> read8(uint8_t addr, uint8_t & data) {
         if(const auto res = i2c_drv_.read_reg(addr, data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -223,13 +219,13 @@ private:
 
     template<typename T>
     requires (sizeof(T) == 2)
-    IResult<> read16(uint8_t addr, T & data) {
+    [[nodiscard]] IResult<> read16(uint8_t addr, T & data) {
         if(const auto res = i2c_drv_.read_reg(addr, data, MSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> write8(uint8_t addr, uint8_t data) {
+    [[nodiscard]] IResult<> write8(uint8_t addr, uint8_t data) {
         if(const auto res = i2c_drv_.write_reg(addr, data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

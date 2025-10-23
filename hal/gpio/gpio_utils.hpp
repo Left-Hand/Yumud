@@ -174,7 +174,7 @@ enum class PinName:uint8_t{
     #endif
 };
 
-class GpioMode{
+class [[nodiscard]] GpioMode{
 public:
     enum class Kind:uint8_t{
         InAnalog = 0b0000,
@@ -190,39 +190,35 @@ public:
 
     constexpr GpioMode(const Kind kind):kind_(kind){;}
 
-    constexpr bool operator ==(const Kind kind) const 
+    [[nodiscard]] constexpr bool operator ==(const Kind kind) const 
         {return kind_ == kind;}
-    constexpr bool operator ==(const GpioMode other) const
+    [[nodiscard]] constexpr bool operator ==(const GpioMode other) const
         {return kind_ == other.kind_;}
-    constexpr bool is_input() const {
+    [[nodiscard]] constexpr bool is_input() const {
         return (kind_ == InAnalog) 
         || (kind_ == InFloating) 
         || (kind_ == InPullUP) 
         || (kind_ == InPullDN);
     }
 
-    constexpr bool is_output() const {
+    [[nodiscard]] constexpr bool is_output() const {
         return (kind_ == OutPP)
         || (kind_ == OutOD)
         || (kind_ == OutAfPP)
         || (kind_ == OutAfOD);
     }
 
-    constexpr bool is_outpp() const {
+    [[nodiscard]] constexpr bool is_outpp() const {
         return (kind_ == OutPP)
         || (kind_ == OutAfPP);
     }
 
-    constexpr bool is_outod() const {
+    [[nodiscard]] constexpr bool is_outod() const {
         return (kind_ == OutOD)
         || (kind_ == OutAfOD);
     }
 
-    // explicit operator uint8_t() const {
-    //     return std::bit_cast<uint8_t>(kind_);
-    // }
-
-    constexpr uint8_t as_u8() const {
+    [[nodiscard]] constexpr uint8_t as_u8() const {
         return std::bit_cast<uint8_t>(kind_);
     }
 private:

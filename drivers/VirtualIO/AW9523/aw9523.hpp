@@ -17,8 +17,8 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit AW9523(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit AW9523(Some<hal::I2c *> i2c):
-        i2c_drv_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
+    explicit AW9523(Some<hal::I2c *> i2c, hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     
     [[nodiscard]] IResult<> init(const Config & cfg);
@@ -46,7 +46,7 @@ public:
         const Nth nth, 
         const hal::GpioMode mode) ;
 
-    [[nodiscard]] IResult<> enable_irq_by_index(
+    [[nodiscard]] IResult<> enable_irq(
         const Nth nth, 
         const Enable en);
 
@@ -65,7 +65,8 @@ private:
     hal::I2cDrv i2c_drv_;
     hal::PinMask buf_mask_ = hal::PinMask::from_zero();
 
-    static constexpr RegAddr get_dim_addr(const Nth nth){
+    [[nodiscard]] static constexpr RegAddr 
+    get_dim_addr(const Nth nth){
         switch(nth.count()){
             case 0:  return RegAddr::DimP00;
             case 1:  return RegAddr::DimP01;
@@ -87,7 +88,8 @@ private:
         }
     }
 
-    static constexpr bool is_index_valid(const size_t idx){
+    [[nodiscard]] static constexpr bool 
+    is_index_valid(const size_t idx){
         return idx < 16;
     }
 

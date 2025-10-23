@@ -6,7 +6,9 @@ using namespace ymd;
 using namespace ymd::hal;
 using namespace ymd::drivers;
 
-using Error = GT9XX::Error;
+using Self = GT9XX;
+
+using Error = Self::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
@@ -40,7 +42,7 @@ static constexpr uint8_t GT9147_CFG_TBL[]=
 
 
 
-IResult<> GT9XX::validate(){
+IResult<> Self::validate(){
     if(const auto res = write_reg(GT9XX_COMMAND_REG, 0);
         res.is_err()) return Err(res.unwrap_err());
 
@@ -56,7 +58,7 @@ IResult<> GT9XX::validate(){
     return Ok();
 }
 
-IResult<> GT9XX::init(){
+IResult<> Self::init(){
     if(const auto res = validate(); 
         res.is_err()) return Err(res.unwrap_err());
 
@@ -64,7 +66,7 @@ IResult<> GT9XX::init(){
 }
 
 
-IResult<Option<GT9XX::TouchPoint>> GT9XX::get_touch_point(const Nth nth) {
+IResult<Option<Self::TouchPoint>> Self::get_touch_point(const Nth nth) {
 
     const auto num_touch_points = ({
         const auto res = get_num_touch_points();
@@ -77,6 +79,10 @@ IResult<Option<GT9XX::TouchPoint>> GT9XX::get_touch_point(const Nth nth) {
 
     if (const auto res = read_reg(map_nth_to_addr(nth), buf);
         res.is_err()) return Err(res.unwrap_err());
+    
+    // clear status register
+    if (const auto res = clear_status();
+        res.is_err()) return Err(res.unwrap_err());
 
     const auto may_point = [&] -> Option<TouchPoint>{
         if (num_touch_points == 0) 
@@ -84,19 +90,15 @@ IResult<Option<GT9XX::TouchPoint>> GT9XX::get_touch_point(const Nth nth) {
         const auto decoded_point = decode_point(std::span(buf));
         return Some(decoded_point);
     }();
-    
-    // clear status register
-    if (const auto res = clear_status();
-        res.is_err()) return Err(res.unwrap_err());
 
     return Ok(may_point);
 }
 
-IResult<> GT9XX::clear_status(){
+IResult<> Self::clear_status(){
     return write_reg(GT9XX_TOUCHPOINT_STATUS_REG, 0);
 }
 
-IResult<GT9XX::TouchPoints> GT9XX::get_touch_points() {
+IResult<Self::TouchPoints> Self::get_touch_points() {
     
     const size_t num_touch_points = ({
         const auto res = get_num_touch_points();
@@ -133,7 +135,7 @@ IResult<GT9XX::TouchPoints> GT9XX::get_touch_points() {
     return Ok(points);
 }
 
-IResult<size_t> GT9XX::get_num_touch_points() {
+IResult<size_t> Self::get_num_touch_points() {
     // read_reg coords
     std::array<uint8_t, 1> buf;
     if (const auto res = read_reg(GT9XX_TOUCHPOINT_STATUS_REG, buf);
@@ -142,10 +144,12 @@ IResult<size_t> GT9XX::get_num_touch_points() {
     const uint8_t status = buf[0];
     const bool is_ready = static_cast<bool>(status & 0x80);
     const size_t num_touch_points = static_cast<size_t>(status & 0x0F);
-    
-    if (is_ready) {
-        return Ok(num_touch_points);
-    } else {
+
+    if (num_touch_points > MAX_NUM_TOUCHPOINTS)
+        return Err(Error::UnexpectedData);
+
+    if (not is_ready)
         return Err(Error::NotReady);
-    }
+
+    return Ok(num_touch_points);
 }

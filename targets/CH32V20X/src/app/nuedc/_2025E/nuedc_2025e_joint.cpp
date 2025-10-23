@@ -3,9 +3,6 @@
 #include <atomic>
 
 #include "core/debug/debug.hpp"
-#include "core/clock/time.hpp"
-#include "core/system.hpp"
-#include "core/polymorphism/traits.hpp"
 #include "core/sync/timer.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/string/utils/strconv2.hpp"
@@ -25,18 +22,9 @@
 
 #include "types/vectors/quat.hpp"
 
-
 #include "robots/gesture/comp_est.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
-#include "robots/cannet/can_chain.hpp"
-
-#include "robots/commands/joint_commands.hpp"
-#include "robots/commands/machine_commands.hpp"
-#include "robots/commands/nmt_commands.hpp"
-#include "robots/nodes/msg_factory.hpp"
-
-#include "types/regions/perspective_rect.hpp"
 
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/calibrate_table.hpp"
@@ -67,6 +55,16 @@ static constexpr auto SVPWM_MAX_VOLT = 3.87_r;
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
+enum class BlinkPattern:uint8_t{
+    RGB,
+    RED,
+    GREEN,
+    BLUE
+};
+
+static constexpr size_t UART_BAUD = 576000;
+
+
 [[maybe_unused]] static void init_adc(hal::AdcPrimary & adc){
 
     using hal::AdcChannelSelection;
@@ -87,14 +85,7 @@ static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
     adc.enable_auto_inject(DISEN);
 }
 
-enum class BlinkPattern:uint8_t{
-    RGB,
-    RED,
-    GREEN,
-    BLUE
-};
 
-static constexpr size_t UART_BAUD = 576000;
 
 void nuedc_2025e_joint_main(){
     const auto chip_id_crc_ = sys::chip::get_chip_id_crc();

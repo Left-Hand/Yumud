@@ -15,19 +15,40 @@ struct BMP280_Prelude{
     };
 
     enum class TempratureSampleMode:uint8_t{
-        SKIP, Bit16, Bit17, Bit18, Bit19, Bit20 = 0x07
+        SKIP, 
+        _16Bits, 
+        _17Bits, 
+        _18Bits, 
+        _19Bits, 
+        _20Bits = 0x07
     };
 
     enum class PressureSampleMode:uint8_t{
-        SKIP, Bit16, Bit17, Bit18, Bit19, Bit20 = 0x07
+        SKIP, 
+        _16Bits, 
+        _17Bits, 
+        _18Bits, 
+        _19Bits, 
+        _20Bits = 0x07
     };
 
     enum class DataRate:uint8_t{
-        HZ200, HZ16, HZ8, HZ4, HZ2, HZ1, HZ0_5, HZ0_25
+        _200Hz, 
+        _16Hz, 
+        _8Hz, 
+        _4Hz, 
+        _2Hz, 
+        _1Hz, 
+        _0_5Hz, 
+        _0_25Hz
     };
 
-    enum class FilterCoefficient{
-        OFF, FC2, FC4, FC8, FC16
+    enum class FilterCoefficient:uint8_t{
+        OFF, 
+        _2, 
+        _4, 
+        _8, 
+        _16
     };
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0xec >> 1);
@@ -45,91 +66,121 @@ struct BMP280_Prelude{
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+
+    struct Coeffs{
+        uint16_t digT1;
+        int16_t digT2;
+        int16_t digT3;
+        uint16_t digP1;
+        int16_t digP2;
+        int16_t digP3;
+        int16_t digP4;
+        int16_t digP5;
+        int16_t digP6;
+        int16_t digP7;
+        int16_t digP8;
+        int16_t digP9;
+
+        constexpr uint32_t convert(const uint32_t adc_T, const uint32_t adc_P){
+            #if 1
+            uint32_t var1 = (((float)adc_T)/16384.0f-((float)digT1)/1024.0f)*((float)digT2);
+            uint32_t var2 = ((((float)adc_T)/131072.0f-((float)digT1)/8192.0f)*(((float)adc_T)
+                        /131072.0f-((float)digT1)/8192.0f))*((float)digT3);
+
+            uint32_t t_fine = (unsigned long)(var1+var2);
+
+            var1 = ((float)t_fine/2.0f)-64000.0f;
+            var2 = var1*var1*((float)digP6)/32768.0f;
+            var2 = var2 +var1*((float)digP5)*2.0f;
+            var2 = (var2/4.0f)+(((float)digP4)*65536.0f);
+            var1 = (((float)digP3)*var1*var1/524288.0f+((float)digP2)*var1)/524288.0f;
+            var1 = (1.0f+var1/32768.0f)*((float)digP1);
+            uint32_t p = 1048576.0f-(float)adc_P;
+            p = (p-(var2/4096.0f))*6250.0f/var1;
+            var1 = ((float)digP9)*p*p/2147483648.0f;
+            var2 = p*((float)digP8)/32768.0f;
+            return (p+(var1+var2+((float)digP7))/16.0f);
+            #else
+            uint32_t var1 = (((float)adc_T)/16384-((float)digT1)/1024)*((float)digT2);
+            uint32_t var2 = ((((float)adc_T)/131072-((float)digT1)/8192)*(((float)adc_T)
+                        /131072-((float)digT1)/8192))*((float)digT3);
+
+            uint32_t t_fine = uint32_t(var1+var2);
+
+            var1 = (t_fine >> 1) - 64000;
+            var2 = var1*var1*(digP6)/32768;
+            var2 = var2 +var1*(digP5)*2;
+            var2 = (var2/4)+((digP4)*65536);
+            var1 = ((digP3)*var1*var1/524288+(digP2)*var1)/524288;
+            var1 = (1+var1/32768)*(digP1);
+            uint32_t p = 1048576-adc_P;
+            p = (p-(var2/4096))*6250/var1;
+            var1 = (digP9)*p*p/2147483648;
+            var2 = p*(digP8)/32768;
+            return (p+(var1+var2+(digP7))/16);
+            #endif
+        }
+    };
 };
 
-struct BMP280_Regs : public BMP280_Prelude {
+struct BMP280_Regset: public BMP280_Prelude {
 
-    struct ChipIDReg:public Reg8<>{
+    struct R8_ChipID:public Reg8<>{
         static constexpr RegAddr ADDRESS=0xD0;
         uint8_t :8;
-    };
+    }DEF_R8(chipid_reg)
 
-    struct ResetReg:public Reg8<>{
+    struct R8_Reset:public Reg8<>{
         static constexpr RegAddr ADDRESS=0xE0;
 
         using Reg8<>::operator=;
         uint8_t :8;
-    };
+    }DEF_R8(reset_reg)
 
-    struct StatusReg:public Reg8<>{
+    struct R8_Status:public Reg8<>{
         static constexpr RegAddr ADDRESS=0xF3;
         uint8_t im:1;
         uint8_t __resv1__:2;
         uint8_t busy:1;
+
         uint8_t __resv2__:4;
-    };
+    }DEF_R8(status_reg)
 
-    struct CtrlReg:public Reg8<>{
+    struct R8_Ctrl:public Reg8<>{
         static constexpr RegAddr ADDRESS=0xF4;
-        uint8_t mode:2;
-        uint8_t osrs_p:3;
-        uint8_t osrs_t:3;
-    };
+        Mode mode:2;
+        PressureSampleMode   osrs_p:3;
+        TempratureSampleMode osrs_t:3;
+    }DEF_R8(ctrl_reg)
 
-    struct ConfigReg:public Reg8<>{
+    struct R8_Config:public Reg8<>{
         static constexpr RegAddr ADDRESS=0xF5;
         uint8_t spi3_en:1;
         uint8_t __resv__:1;
-        uint8_t filter:3;
-        uint8_t t_sb:3;
-    };
+        FilterCoefficient filter:3;
+        DataRate t_sb:3;
+    }DEF_R8(config_reg)
 
-    struct PressureReg:public Reg16<>{
+    struct R16_Pressure:public Reg16<>{
         static constexpr RegAddr ADDRESS=0xF6;
         uint16_t:16;
-    };
+    }DEF_R16(pressure_reg)
 
-    struct PressureXReg:public Reg8<>{
+    struct R8_PressureX:public Reg8<>{
         static constexpr RegAddr ADDRESS=0xF9;
         uint8_t:8;
-    };
+    }DEF_R8(pressure_x_reg)
 
-    struct TemperatureReg:public Reg16<>{
+    struct R16_Temperature:public Reg16<>{
         static constexpr RegAddr ADDRESS=0xFA;
         uint16_t:16;
-    };
+    }DEF_R16(temperature_reg)
 
-    struct TemperatureXReg:public Reg8<>{
+    struct R8_TemperatureX:public Reg8<>{
         static constexpr RegAddr ADDRESS=0xFC;
         uint8_t:8;
-    };
+    }DEF_R8(temperature_x_reg)
 
-
-    uint16_t digT1;
-    int16_t digT2;
-    int16_t digT3;
-    uint16_t digP1;
-    int16_t digP2;
-    int16_t digP3;
-    int16_t digP4;
-    int16_t digP5;
-    int16_t digP6;
-    int16_t digP7;
-    int16_t digP8;
-    int16_t digP9;
-    ChipIDReg chip_id_reg;
-    ResetReg reset_reg;
-    StatusReg status_reg;
-    CtrlReg ctrl_reg;
-    ConfigReg config_reg;
-    PressureReg pressure_reg;
-    PressureXReg pressure_x_reg;
-    TemperatureReg temperature_reg;
-    TemperatureXReg temperature_x_reg;
-
-    static constexpr uint8_t RESET_REG_ADDR = 0xE0;
-    static constexpr uint8_t DIGT1_REG_ADDR = 0x88;
-    static constexpr uint8_t CTRL_REG_ADDR = 0xF4;
 };
 
 }

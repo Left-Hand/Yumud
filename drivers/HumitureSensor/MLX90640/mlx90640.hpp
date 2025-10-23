@@ -36,18 +36,18 @@ public:
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(i2c, addr){;}
 
-    IResult<> init(uint16_t EE[832], MLX90640_Coeffs & MLXPars);
+    [[nodiscard]] IResult<> init(uint16_t EE[832], MLX90640_Coeffs & MLXPars);
     
-    IResult<> dump_ee(uint16_t *eeData);
-    IResult<uint16_t> get_frame_data(uint16_t *frameData);
-    IResult<> extract_parameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640);
-    IResult<> set_resolution(uint8_t resolution);
-    IResult<uint16_t> get_cur_resolution();
-    IResult<> set_refresh_rate(DataRate rate);   
-    IResult<uint16_t> get_cur_mode(); 
-    IResult<> set_interleaved_mode();
-    IResult<> set_chess_mode();
-    IResult<uint16_t> get_refresh_rate(); 
+    [[nodiscard]] IResult<> dump_ee(uint16_t *eeData);
+    [[nodiscard]] IResult<uint16_t> get_frame_data(uint16_t *frameData);
+    [[nodiscard]] IResult<> extract_parameters(const uint16_t *eeData, MLX90640_Coeffs *mlx90640);
+    [[nodiscard]] IResult<> set_resolution(uint8_t resolution);
+    [[nodiscard]] IResult<uint16_t> get_cur_resolution();
+    [[nodiscard]] IResult<> set_refresh_rate(DataRate rate);   
+    [[nodiscard]] IResult<uint16_t> get_cur_mode(); 
+    [[nodiscard]] IResult<> set_interleaved_mode();
+    [[nodiscard]] IResult<> set_chess_mode();
+    [[nodiscard]] IResult<uint16_t> get_refresh_rate(); 
     float get_ta(const uint16_t *frameData, const MLX90640_Coeffs *params);
     void get_image(const uint16_t *frameData, const MLX90640_Coeffs *params, float *result);
     void calculate_to(const uint16_t *frameData, const MLX90640_Coeffs *params, float emissivity, float tr, float *result);

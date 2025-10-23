@@ -1,5 +1,7 @@
 #pragma once
 
+//非常简陋的8位IO拓展芯片
+
 //这个驱动已经完成
 //这个驱动还未测试
 
@@ -32,7 +34,7 @@ public:
         i2c_drv_.write(data);
     }
 
-    uint8_t read(){
+    uint8_t read_u8(){
         uint8_t ret = 0;
         i2c_drv_.read(ret);
         return ret;
@@ -45,7 +47,7 @@ public:
     }
 
     bool read_bit(const uint16_t index){
-        return (read() & (1 << index));
+        return (read_u8() & (1 << index));
     }
 private:
 

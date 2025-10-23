@@ -4,8 +4,6 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "concept/analog_channel.hpp"
-
 #include "hal/bus/spi/spidrv.hpp"
 #include "hal/gpio/gpio.hpp"
 
