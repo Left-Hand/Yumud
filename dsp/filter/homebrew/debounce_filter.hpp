@@ -44,7 +44,7 @@ public:
 		// resu = (uint8_t)state & 0x01;
 	}
 
-	constexpr bool is_high(){
+	[[nodiscard]] constexpr bool is_high(){
 		return std::bit_cast<uint8_t>(state) & 0x01;
 	}
 

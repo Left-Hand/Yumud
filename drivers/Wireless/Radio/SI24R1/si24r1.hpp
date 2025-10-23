@@ -6,11 +6,11 @@
 namespace ymd::drivers{
 
 class Si24R1:public Si24R1_Prelude{
-public:
-
 public: 
-    explicit Si24R1(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    explicit Si24R1(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    explicit Si24R1(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    explicit Si24R1(hal::SpiDrv && spi_drv):
+        spi_drv_(spi_drv){;}
 
     IResult<size_t> available();
 private:

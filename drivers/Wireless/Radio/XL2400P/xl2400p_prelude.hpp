@@ -7,12 +7,12 @@
 
 namespace ymd::drivers{
 
-class XL2400P_Prelude{
+struct XL2400P_Prelude{
     using RegAddr = uint8_t;
 };
 
-class XL2400P_Regset:public XL2400P_Prelude {
-    struct R8_TopConfig{
+struct XL2400P_Regset:public XL2400P_Prelude {
+    struct R8_TopConfig:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x01;
 
         uint8_t rx_on:1;
@@ -252,29 +252,30 @@ class XL2400P_Regset:public XL2400P_Prelude {
         uint8_t ramp_14:5;
     };
 
-    DEF_R8(R8_TopConfig, top_config_reg)
-    DEF_R8(R8_AutoAcknowledge, auto_ack_reg)
-    DEF_R8(R8_EnableRxAddress, enable_rx_address_reg)
-    DEF_R8(R8_AddressWidth, address_width_reg)
-    DEF_R8(R8_AutoRetransmission, auto_retransmission_reg)
-    DEF_R8(R8_RFChannel, rf_channel_reg)
-    DEF_R8(R8_RFSetting, rf_setting_reg)
-    DEF_R8(R8_Status, status_reg)
-    DEF_R8(R8_TransmissionObservation, transmission_observation_reg)
-    DEF_R8(R8_Rssi, rssi_reg)
-    DEF_R8(R8_RxAddrP0, rx_addr_p0_reg)
-    DEF_R8(R8_RxAddrP1, rx_addr_p1_reg)
-    DEF_R8(R8_RxAddrP2Tops, rx_addr_p2_tops_reg)
-    DEF_R8(R8_Bn9Result, bn9_result_reg)
-    DEF_R8(R8_AGCSetting, agc_setting_reg)
-    DEF_R8(R8_TxAddr, tx_addr_reg)
-    DEF_R8(R8_RxPower, rx_power_reg)
-    DEF_R8(R8_FifoStatus, fifo_status_reg)
-    DEF_R8(R8_RssiRecoder, rssi_recoder_reg)
-    DEF_R8(R8_TxProcessConfig, tx_process_config_reg)
-    DEF_R8(R8_RxProcessConfig, rx_process_config_reg)
-    DEF_R8(R8_Feature, feature_reg)
-    DEF_R8(R8_PayloadLength, payload_length_reg)
-    DEF_R8(R8_PARampConfig, pa_ramp_config_reg)
-}
+    // DEF_R8(R8_TopConfig, top_config_reg)
+    // DEF_R8(R8_AutoAcknowledge, auto_ack_reg)
+    // DEF_R8(R8_EnableRxAddress, enable_rx_address_reg)
+    // DEF_R8(R8_AddressWidth, address_width_reg)
+    // DEF_R8(R8_AutoRetransmission, auto_retransmission_reg)
+    // DEF_R8(R8_RFChannel, rf_channel_reg)
+    // DEF_R8(R8_RFSetting, rf_setting_reg)
+    // DEF_R8(R8_Status, status_reg)
+    // DEF_R8(R8_TransmissionObservation, transmission_observation_reg)
+    // DEF_R8(R8_Rssi, rssi_reg)
+    // DEF_R8(R8_RxAddrP0, rx_addr_p0_reg)
+    // DEF_R8(R8_RxAddrP1, rx_addr_p1_reg)
+    // DEF_R8(R8_RxAddrP2Tops, rx_addr_p2_tops_reg)
+    // DEF_R8(R8_Bn9Result, bn9_result_reg)
+    // DEF_R8(R8_AGCSetting, agc_setting_reg)
+    // DEF_R8(R8_TxAddr, tx_addr_reg)
+    // DEF_R8(R8_RxPower, rx_power_reg)
+    // DEF_R8(R8_FifoStatus, fifo_status_reg)
+    // DEF_R8(R8_RssiRecoder, rssi_recoder_reg)
+    // DEF_R8(R8_TxProcessConfig, tx_process_config_reg)
+    // DEF_R8(R8_RxProcessConfig, rx_process_config_reg)
+    // DEF_R8(R8_Feature, feature_reg)
+    // DEF_R8(R8_PayloadLength, payload_length_reg)
+    // DEF_R8(R8_PARampConfig, pa_ramp_config_reg)
+};
+
 }

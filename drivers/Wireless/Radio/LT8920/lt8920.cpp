@@ -38,8 +38,8 @@ using namespace ymd;
 #endif
 
 
-// #define CHANGE_STATE(x) state = x; LT8920_DEBUG("state = ", (uint8_t)state)
-#define CHANGE_STATE(x) state = x;
+// #define CHANGE_STATE(x) state_ = x; LT8920_DEBUG("state_ = ", (uint8_t)state_)
+#define CHANGE_STATE(x) state_ = x;
 
 #define CRCERR_FLAG flag_reg.crc_error_flag
 #define PKT_FLAG flag_reg.pkt_flag
@@ -84,7 +84,7 @@ IResult<> LT8920::set_rf_channel(const uint8_t ch) {
     return write_reg(reg);
 }
 
-IResult<> LT8920::set_rf_freq_m_hz(const uint32_t freq) {
+IResult<> LT8920::set_rf_freq_mhz(const uint32_t freq) {
     // Implementation for setRfFreqMHz
     return set_rf_channel(freq - 2402);
 }
@@ -106,7 +106,7 @@ IResult<> LT8920::set_role(const Role _role) {
             break;
     }
 
-    role = _role;
+    role_ = _role;
     return write_reg(reg);
 }
 
@@ -191,7 +191,7 @@ IResult<> LT8920::set_err_bits_tolerance(uint8_t errbits){
 }
 
 IResult<bool> LT8920::received_ack(){
-    if(auto_ack_en){
+    if(auto_ack_en_){
         if(const auto res = read_reg(fifo_ptr_reg);
             res.is_err()) return Err(res.unwrap_err());
         return Ok(fifo_ptr_reg.fifo_read_ptr == 0);
@@ -223,8 +223,8 @@ IResult<> LT8920::set_data_rate(const uint32_t dr){
 
 IResult<> LT8920::write_block(const std::span<const uint8_t> pbuf){
     uint8_t len = pbuf.size();
-    if(state != State::IDLE) return Ok();
-    if(role == Role::LISTENER) return Ok();
+    if(state_ != State::IDLE) return Ok();
+    if(role_ == Role::LISTENER) return Ok();
     if(len == 0) return Ok();
 
     len = MIN(len, 32);
@@ -237,7 +237,7 @@ IResult<> LT8920::write_block(const std::span<const uint8_t> pbuf){
         res.is_err()) return res;
 
     {
-        if(first_as_len_en){
+        if(first_as_len_en_){
             //如果使能则第一个字节为数据长度
             if(const auto res = write_fifo(std::span(&len, 1));
                 res.is_err()) return res;
@@ -257,9 +257,9 @@ IResult<> LT8920::write_block(const std::span<const uint8_t> pbuf){
 IResult<> LT8920::tick(){
     if(const auto res = update_fifo_status();
         res.is_err()) return res;
-    switch(role){
+    switch(role_){
         case Role::BROADCASTER:
-            switch(state){
+            switch(state_){
                 case State::TX_WAIT_ACK:
                     if(PKT_FLAG == true){
                         CHANGE_STATE(State::IDLE);
@@ -274,7 +274,7 @@ IResult<> LT8920::tick(){
             break;
 
         case Role::LISTENER:
-            switch(state){
+            switch(state_){
                 case State::IDLE:
                     CHANGE_STATE(State::RX_WAIT_ACK)
                     break;
@@ -298,14 +298,14 @@ IResult<> LT8920::tick(){
 IResult<> LT8920::read_block(std::span<uint8_t> pbuf){
     uint8_t len = pbuf.size();
     if(len == 0) return Ok();
-    if(role != Role::LISTENER) return Ok();
+    if(role_ != Role::LISTENER) return Ok();
     
     if(PKT_FLAG == false) return Ok();
     if(CRCERR_FLAG == true) return Ok();
 
     len = MIN(len, 32);
 
-    if(first_as_len_en){
+    if(first_as_len_en_){
         if(const auto res = read_fifo(std::span(&len, 1));
             res.is_err()) return res;
     }

@@ -10,7 +10,6 @@ namespace ymd::drivers{
 
 class XL2400{
 public:
-public:
     explicit XL2400(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
     explicit XL2400(hal::SpiDrv && spi_drv):

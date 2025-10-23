@@ -25,7 +25,7 @@ public:
     [[nodiscard]] IResult<bool> is_rf_synth_locked();
     [[nodiscard]] IResult<uint8_t> get_rssi();
     [[nodiscard]] IResult<> set_rf_channel(const uint8_t ch);
-    [[nodiscard]] IResult<> set_rf_freq_m_hz(const uint32_t freq);
+    [[nodiscard]] IResult<> set_rf_freq_mhz(const uint32_t freq);
     [[nodiscard]] IResult<> start_listen(){return set_role(Role::LISTENER);}
     [[nodiscard]] IResult<> set_pa_current(const uint8_t current);
     [[nodiscard]] IResult<> set_pa_gain(const uint8_t gain);
@@ -55,7 +55,7 @@ public:
     [[nodiscard]] IResult<> tick();
 
     [[nodiscard]] IResult<bool> is_idle(){
-        return Ok(State::IDLE == state);}
+        return Ok(State::IDLE == state_);}
 protected:
     [[nodiscard]] IResult<> set_role(const Role _role);
     [[nodiscard]] IResult<> clear_fifo_write_ptr();
@@ -75,11 +75,11 @@ protected:
     hal::GpioIntf * fifo_status_gpio = nullptr;
     hal::GpioIntf * nrst_gpio = nullptr;
 
-    State state = State::OFF;
-    Role role = Role::IDLE;
+    State state_ = State::OFF;
+    Role role_ = Role::IDLE;
 
-    bool first_as_len_en = true;
-    bool auto_ack_en = true;
+    bool first_as_len_en_ = true;
+    bool auto_ack_en_ = true;
 
     __no_inline void delayT3();
     __no_inline void delayT5();
