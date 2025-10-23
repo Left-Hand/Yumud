@@ -93,7 +93,7 @@ IResult<> HMC5883L::validate(){
         and regs_.id_b_reg.as_val() == '4' 
         and regs_.id_c_reg.as_val() == '3');
 
-    if(!passed) return Err(Error::WrongWhoAmI);
+    if(!passed) return Err(Error::InvalidChipId);
     return Ok();
 }
 

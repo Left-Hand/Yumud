@@ -42,9 +42,9 @@ IResult<> ICM20948::init()
 	// if(const auto res = accel_calibration();
 	// 		res.is_err()) return res;
 
-	if(const auto res = gyro_full_scale_select(_2000dps);
+	if(const auto res = set_gyr_fs(GyrFs::_1000dps);
 		res.is_err()) return res;
-	if(const auto res = accel_full_scale_select(_16g);
+	if(const auto res = set_acc_fs(AccFs::_16g);
 		res.is_err()) return res;
 
 	return Ok();
@@ -65,7 +65,7 @@ void ak09916_init()
 
 // IResult<> ICM20948::gyro_read(axises* data)
 // {
-// 	uint8_t* temp = read_multiple_reg(ub_0, B0_GYRO_XOUT_H, 6);
+// 	uint8_t* temp = read_multiple_reg(BankKind::_0, B0_GYRO_XOUT_H, 6);
 
 // 	data->x = (int16_t)(temp[0] << 8 | temp[1]);
 // 	data->y = (int16_t)(temp[2] << 8 | temp[3]);
@@ -74,7 +74,7 @@ void ak09916_init()
 
 // IResult<> ICM20948::accel_read(axises* data)
 // {
-// 	uint8_t* temp = read_multiple_reg(ub_0, B0_ACCEL_XOUT_H, 6);
+// 	uint8_t* temp = read_multiple_reg(BankKind::_0, B0_ACCEL_XOUT_H, 6);
 
 // 	data->x = (int16_t)(temp[0] << 8 | temp[1]);
 // 	data->y = (int16_t)(temp[2] << 8 | temp[3]);
@@ -135,11 +135,13 @@ void ak09916_init()
 
 
 /* Sub Functions */
+
+#if 0
 IResult<> ICM20948::validate()
 {
-	const auto id = read_single_reg(ub_0, B0_WHO_AM_I);
+	const auto id = read_single_reg(BankKind::_0, B0_WHO_AM_I);
 
-	if(id != ICM20948_ID) return Err(Error::WrongWhoAmI);
+	if(id != ICM20948_ID) return Err(Error::InvalidChipId);
 
 	return Ok();
 }
@@ -153,10 +155,10 @@ bool ICM20948::ak09916_who_am_i()
 	else
 		return false;
 }
-
+#endif
 IResult<> ICM20948::device_reset()
 {
-	return write_single_reg(ub_0, B0_PWR_MGMT_1, 0x80 | 0x41);
+	return write_single_reg(BankKind::_0, B0_PWR_MGMT_1, 0x80 | 0x41);
 }
 
 void ICM20948::ak09916_soft_reset()
@@ -165,42 +167,43 @@ void ICM20948::ak09916_soft_reset()
 	clock::delay(100ms);
 }
 
+#if 0
 IResult<> ICM20948::wakeup()
 {
-	uint8_t new_val = read_single_reg(ub_0, B0_PWR_MGMT_1);
+	uint8_t new_val = read_single_reg(BankKind::_0, B0_PWR_MGMT_1);
 	new_val &= 0xBF;
 
-	return write_single_reg(ub_0, B0_PWR_MGMT_1, new_val);
+	return write_single_reg(BankKind::_0, B0_PWR_MGMT_1, new_val);
 }
 
 IResult<> ICM20948::sleep()
 {
-	uint8_t new_val = read_single_reg(ub_0, B0_PWR_MGMT_1);
+	uint8_t new_val = read_single_reg(BankKind::_0, B0_PWR_MGMT_1);
 	new_val |= 0x40;
 
-	return write_single_reg(ub_0, B0_PWR_MGMT_1, new_val);
+	return write_single_reg(BankKind::_0, B0_PWR_MGMT_1, new_val);
 }
 
 IResult<> ICM20948::spi_slave_enable(){
-	uint8_t new_val = read_single_reg(ub_0, B0_USER_CTRL);
+	uint8_t new_val = read_single_reg(BankKind::_0, B0_USER_CTRL);
 	new_val |= 0x10;
 
-	return write_single_reg(ub_0, B0_USER_CTRL, new_val);
+	return write_single_reg(BankKind::_0, B0_USER_CTRL, new_val);
 }
 
 IResult<> ICM20948::i2c_master_reset(){
-	uint8_t new_val = read_single_reg(ub_0, B0_USER_CTRL);
+	uint8_t new_val = read_single_reg(BankKind::_0, B0_USER_CTRL);
 	new_val |= 0x02;
 
-	return write_single_reg(ub_0, B0_USER_CTRL, new_val);
+	return write_single_reg(BankKind::_0, B0_USER_CTRL, new_val);
 }
 
 IResult<> ICM20948::i2c_master_enable()
 {
-	uint8_t new_val = read_single_reg(ub_0, B0_USER_CTRL);
+	uint8_t new_val = read_single_reg(BankKind::_0, B0_USER_CTRL);
 	new_val |= 0x20;
 
-	return write_single_reg(ub_0, B0_USER_CTRL, new_val);
+	return write_single_reg(BankKind::_0, B0_USER_CTRL, new_val);
 }
 
 IResult<> ICM20948::i2c_master_clk_frq(uint8_t config)
@@ -213,10 +216,10 @@ IResult<> ICM20948::i2c_master_clk_frq(uint8_t config)
 
 IResult<> ICM20948::clock_source(uint8_t source)
 {
-	uint8_t new_val = read_single_reg(ub_0, B0_PWR_MGMT_1);
+	uint8_t new_val = read_single_reg(BankKind::_0, B0_PWR_MGMT_1);
 	new_val |= source;
 
-	return write_single_reg(ub_0, B0_PWR_MGMT_1, new_val);
+	return write_single_reg(BankKind::_0, B0_PWR_MGMT_1, new_val);
 }
 
 IResult<> ICM20948::odr_align_enable()
@@ -255,10 +258,10 @@ IResult<> ICM20948::accel_sample_rate_divider(uint16_t divider)
 	return write_single_reg(ub_2, B2_ACCEL_SMPLRT_DIV_2, divider_2);
 }
 
-IResult<> ICM20948::ak09916_operation_mode_setting(operation_mode mode)
-{
+IResult<> ICM20948::ak09916_operation_mode_setting(OperationMode mode){
 	return write_single_ak09916_reg(MAG_CNTL2, mode);
 }
+#endif
 
 static constexpr size_t CALI_TIMES = 64;
 static constexpr real_t INV_CALI_TIMES = real_t(1.0 / CALI_TIMES);
@@ -351,7 +354,8 @@ static constexpr real_t INV_CALI_TIMES = real_t(1.0 / CALI_TIMES);
 // 	write_multiple_reg(ub_1, B1_ZA_OFFS_H, &accel_offset[4], 2);
 // }
 
-IResult<> ICM20948::gyro_full_scale_select(gyro_full_scale full_scale)
+#if 0
+IResult<> ICM20948::set_gyr_fs(gyro_full_scale full_scale)
 {
 	uint8_t new_val = read_single_reg(ub_2, B2_GYRO_CONFIG_1);
 	
@@ -487,7 +491,7 @@ uint8_t ICM20948::read_single_ak09916_reg(uint8_t reg)
     // write_single_reg(ub_3, B3_I2C_SLV0_CTRL, 0x81);
 
     // clock::delay(1ms);
-    // return read_single_reg(ub_0, B0_EXT_SLV_SENS_DATA_00);
+    // return read_single_reg(BankKind::_0, B0_EXT_SLV_SENS_DATA_00);
 
     TODO();
     return 0;
@@ -509,8 +513,9 @@ uint8_t* ICM20948::read_multiple_ak09916_reg(uint8_t reg, uint8_t len)
     // write_single_reg(ub_3, B3_I2C_SLV0_CTRL, 0x80 | len);
 
     // clock::delay(1ms);
-    // return read_multiple_reg(ub_0, B0_EXT_SLV_SENS_DATA_00, len);
+    // return read_multiple_reg(BankKind::_0, B0_EXT_SLV_SENS_DATA_00, len);
 
     TODO();
     return nullptr;
 }
+#endif

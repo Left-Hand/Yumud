@@ -58,7 +58,8 @@ IResult<> AK8975::validate(){
         uint8_t id = 0;
         if(const auto res = phy_.read_reg(0x00, id);
             res.is_err()) return Err(res.unwrap_err());
-        if(id != 0x48) return Err(Error::WrongWhoAmI);
+        if(id != CORRECT_CHIP_ID) 
+            return Err(Error::InvalidChipId);
         //id not correct
     }
 

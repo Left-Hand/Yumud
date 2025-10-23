@@ -136,7 +136,7 @@ IResult<> L3G4200D::reconf(const Config & cfg){
 
     uint8_t temp;
     if (const auto res = read_reg(REG_WHO_AM_I, temp); res.is_ok()){
-        if (temp != KEY_WHO_AM_I) return Err(Error::WrongWhoAmI);
+        if (temp != KEY_WHO_AM_I) return Err(Error::InvalidChipId);
     }else return Err(res.unwrap_err());
     // Enable all axis and setup normal mode
     if(const auto res = write_reg(REG_CTRL_REG1, (static_cast<uint8_t>(

@@ -188,7 +188,7 @@ IResult<> Self::validate(){
         if(wia1_reg.as_val() != wia1_reg.KEY) return CHECK_ERR(Err(Error::WrongCompanyId),  
             "wrong company id, correct is", wia1_reg.KEY, "but read is", wia1_reg.as_val());
 
-        if(wia2_reg.as_val() != wia2_reg.KEY) return CHECK_ERR(Err(Error::WrongWhoAmI), 
+        if(wia2_reg.as_val() != wia2_reg.KEY) return CHECK_ERR(Err(Error::InvalidChipId), 
             "wrong device id, correct is", wia2_reg.KEY, "but read is", wia2_reg.as_val());
 
         return Ok();

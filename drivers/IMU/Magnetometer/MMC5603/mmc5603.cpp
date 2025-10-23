@@ -39,7 +39,7 @@ IResult<> MMC5603::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     
-    if(reg.id != reg.correct_id) return Err(Error::WrongWhoAmI);
+    if(reg.id != reg.correct_id) return Err(Error::InvalidChipId);
 
     if(const auto res = set_self_test_threshlds(0,0,0);//TODO change
         res.is_err()) return res;

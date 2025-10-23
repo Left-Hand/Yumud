@@ -54,7 +54,7 @@ IResult<> MPU6050::validate(){
 
     const auto res = get_package();
     if(!MPU6050_ASSERT(res.is_ok(), "read who am I failed")) 
-        return Err(Error::WrongWhoAmI);
+        return Err(Error::InvalidChipId);
     
     const auto founded_package = res.unwrap();
 

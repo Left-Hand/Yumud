@@ -109,7 +109,8 @@ public:
             if(const auto res = i2c_drv_->write_reg(
                     std::bit_cast<uint8_t>(T::ADDRESS), 
                     reg.as_val(), 
-                    MSB);
+                    MSB
+                );
                 res.is_err()) return Err(res.unwrap_err());
             reg.apply();
             return Ok();

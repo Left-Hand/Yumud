@@ -68,94 +68,94 @@ IResult<> ICM42688::init(const Config & cfg){
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/*电源管理*/
-	if(const auto res = phy_.write_reg(0x4E,0x0F);//ACC GYR LowNoise Mode
+	if(const auto res = write_reg(0x4E,0x0F);//ACC GYR LowNoise Mode
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	
 	clock::delay(30ms);
 
 	
 	/*指定Bank0*/
-	if(const auto res = phy_.write_reg(0x76,0x00);
+	if(const auto res = write_reg(0x76,0x00);
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*中断输出设置*/
-	if(const auto res = phy_.write_reg(0x14,0x12);//INT1 INT2 脉冲模式，低有效
+	if(const auto res = write_reg(0x14,0x12);//INT1 INT2 脉冲模式，低有效
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/*Tem设置&Gyr_Config1*/
-	if(const auto res = phy_.write_reg(0x51,0x56);//BW 82Hz Latency = 2ms
+	if(const auto res = write_reg(0x51,0x56);//BW 82Hz Latency = 2ms
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*GYR_ACC_CONFIG0*/
-	if(const auto res = phy_.write_reg(0x52,0x11);//1BW
+	if(const auto res = write_reg(0x52,0x11);//1BW
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*ACC_CONFIG1*/
-	if(const auto res = phy_.write_reg(0x53,0x0D);//Null
+	if(const auto res = write_reg(0x53,0x0D);//Null
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*INT_CONFIG0*/
-	if(const auto res = phy_.write_reg(0x63,0x00);//Null
+	if(const auto res = write_reg(0x63,0x00);//Null
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*INT_CONFIG1*/
-	if(const auto res = phy_.write_reg(0x64,0x00);//中断引脚正常启用
+	if(const auto res = write_reg(0x64,0x00);//中断引脚正常启用
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/*INT_SOURCE0*/
-	if(const auto res = phy_.write_reg(0x65,0x08);//DRDY INT1
+	if(const auto res = write_reg(0x65,0x08);//DRDY INT1
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*INT_SOURCE1*/
-	if(const auto res = phy_.write_reg(0x66,0x00);//Null
+	if(const auto res = write_reg(0x66,0x00);//Null
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*INT_SOURCE3*/
-	if(const auto res = phy_.write_reg(0x68,0x00);//Null
+	if(const auto res = write_reg(0x68,0x00);//Null
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*INT_SOURCE3*/
-	if(const auto res = phy_.write_reg(0x69,0x00);//Null
+	if(const auto res = write_reg(0x69,0x00);//Null
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	
 	/*****抗混叠滤波器@536Hz*****/
 	
 	/*GYR抗混叠滤波器配置*/
 	/*指定Bank1*/
-	if(const auto res = phy_.write_reg(0x76,0x01);
+	if(const auto res = write_reg(0x76,0x01);
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*GYR抗混叠滤波器配置*/
-	if(const auto res = phy_.write_reg(0x0B,0xA0);//开启抗混叠和陷波滤波器
+	if(const auto res = write_reg(0x0B,0xA0);//开启抗混叠和陷波滤波器
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
-	if(const auto res = phy_.write_reg(0x0C,0x0C);//GYR_AAF_DELT 12 (default 13)
+	if(const auto res = write_reg(0x0C,0x0C);//GYR_AAF_DELT 12 (default 13)
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
-	if(const auto res = phy_.write_reg(0x0D,0x90);//GYR_AAF_DELTSQR 144 (default 170)
+	if(const auto res = write_reg(0x0D,0x90);//GYR_AAF_DELTSQR 144 (default 170)
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
-	if(const auto res = phy_.write_reg(0x0E,0x80);//GYR_AAF_BITSHIFT 8 (default 8)
+	if(const auto res = write_reg(0x0E,0x80);//GYR_AAF_BITSHIFT 8 (default 8)
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	
 	/*ACC抗混叠滤波器配置*/
 	/*指定Bank2*/
-	if(const auto res = phy_.write_reg(0x76,0x02);
+	if(const auto res = write_reg(0x76,0x02);
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*ACC抗混叠滤波器配置*/
-	if(const auto res = phy_.write_reg(0x03,0x18);//开启滤波器 ACC_AFF_DELT 12 (default 24)
+	if(const auto res = write_reg(0x03,0x18);//开启滤波器 ACC_AFF_DELT 12 (default 24)
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
-	if(const auto res = phy_.write_reg(0x04,0x90);//ACC_AFF_DELTSQR 144 (default 64)
+	if(const auto res = write_reg(0x04,0x90);//ACC_AFF_DELTSQR 144 (default 64)
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
-	if(const auto res = phy_.write_reg(0x05,0x80);//ACC_AAF_BITSHIFT 8 (default 6)
+	if(const auto res = write_reg(0x05,0x80);//ACC_AAF_BITSHIFT 8 (default 6)
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/*****自定义滤波器1号@111Hz*****/
 
 	/*指定Bank0*/
-	if(const auto res = phy_.write_reg(0x76,0x00);
+	if(const auto res = write_reg(0x76,0x00);
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*滤波器顺序*/
-	if(const auto res = phy_.write_reg(0x51,0x12);//GYR滤波器1st
+	if(const auto res = write_reg(0x51,0x12);//GYR滤波器1st
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
-	if(const auto res = phy_.write_reg(0x53,0x05);//ACC滤波器1st
+	if(const auto res = write_reg(0x53,0x05);//ACC滤波器1st
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*滤波器设置*/
-	if(const auto res = phy_.write_reg(0x52,0x33);//111Hz 03
+	if(const auto res = write_reg(0x52,0x33);//111Hz 03
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*指定Bank0*/
-	if(const auto res = phy_.write_reg(0x76,0x00);
+	if(const auto res = write_reg(0x76,0x00);
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	/*电源管理*/
-	if(const auto res = phy_.write_reg(0x4E,0x0F);//ACC GYR LowNoise Mode
+	if(const auto res = write_reg(0x4E,0x0F);//ACC GYR LowNoise Mode
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	return Ok();
@@ -215,7 +215,7 @@ IResult<>  ICM42688::validate(){
 		res.is_err()) return res;
 	
 	if(reg.data != reg.KEY){
-		return CHECK_ERR(Err(Error::WrongWhoAmI), reg.data);
+		return CHECK_ERR(Err(Error::InvalidChipId), reg.data);
 	}
 
 	return Ok();

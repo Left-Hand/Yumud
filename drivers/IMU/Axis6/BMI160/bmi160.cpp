@@ -216,7 +216,7 @@ IResult<> BMI160::validate(){
         unlikely(res.is_err())) return Err(res.unwrap_err());
 
     if(reg.data != reg.CORRECT_ID)
-        return CHECK_ERR(Err(Error::WrongWhoAmI), "read id is", reg.data);
+        return CHECK_ERR(Err(Error::InvalidChipId), "read id is", reg.data);
 
     return Ok();
 }

@@ -26,7 +26,7 @@
 
 namespace ymd::drivers{
 
-class L3G4200D:public AccelerometerIntf{
+struct L3G4200D_Prelude{
 public:
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0xD0 >> 1);
 
@@ -36,13 +36,13 @@ public:
     using IResult = Result<T, Error>;
 
 
-    enum class Dps{
+    enum class Dps:uint8_t{
         _2000DPS = 0b10,
         _500DPS  = 0b01,
         _250DPS  = 0b00
     };
 
-    enum class OdrBw{
+    enum class OdrBw:uint8_t{
         _800_110_Hz  = 0b1111,
         _800_50_Hz   = 0b1110,
         _800_35_Hz   = 0b1101,
@@ -58,10 +58,20 @@ public:
         _100_25_Hz   = 0b0001,
         _100_12_5_Hz = 0b0000
     } ;
+};
+
+
+struct L3G4200D_Regs:public L3G4200D_Prelude{
+
+};
+
+class L3G4200D:
+    public AccelerometerIntf,
+    public L3G4200D_Prelude{
 public:
-    L3G4200D(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
+    explicit L3G4200D(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
         :i2c_drv_(hal::I2cDrv(i2c, addr)){}
-    L3G4200D(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){}
+    explicit L3G4200D(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){}
 
     struct Config{
         Dps dps;
@@ -81,22 +91,22 @@ public:
     [[nodiscard]] IResult<uint8_t> read_temperature();
 private:
     hal::I2cDrv i2c_drv_;
+    L3G4200D_Regs regs_ = {};
 
-    
-    [[nodiscard]] IResult<> write_reg(uint8_t reg, uint8_t value){
-        if(const auto res = i2c_drv_.write_reg(reg, value);
+    [[nodiscard]] IResult<> write_reg(uint8_t reg_addr, uint8_t reg_val){
+        if(const auto res = i2c_drv_.write_reg(reg_addr, reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(uint8_t reg, uint8_t & ret){
-        if(const auto res = i2c_drv_.read_reg(reg, ret);
+    [[nodiscard]] IResult<> read_reg(uint8_t reg_addr, uint8_t & reg_val){
+        if(const auto res = i2c_drv_.read_reg(reg_addr, reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(uint8_t reg, uint8_t *buf, uint8_t size){
-        if(const auto res = i2c_drv_.read_burst(reg, std::span(buf, size), LSB);
+    [[nodiscard]] IResult<> read_burst(uint8_t reg, std::span<uint8_t> pbuf){
+        if(const auto res = i2c_drv_.read_burst(reg, pbuf, LSB);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

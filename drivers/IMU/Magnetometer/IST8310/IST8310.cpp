@@ -49,7 +49,7 @@ IResult<> IST8310::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
     if(reg.as_val() != reg.expected_value)
-        return Err(Error::WrongWhoAmI);
+        return Err(Error::InvalidChipId);
     return Ok();
 }
 

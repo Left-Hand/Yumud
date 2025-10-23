@@ -24,6 +24,8 @@ public:
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+
+    static constexpr uint8_t CORRECT_CHIP_ID = 0x48;
 };
 
 

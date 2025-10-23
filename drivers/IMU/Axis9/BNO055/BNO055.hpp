@@ -9,7 +9,10 @@ class BNO055:
     public AccelerometerIntf,
     public GyroscopeIntf,
     public MagnetometerIntf,
-    public BNO055_Regs{
+    public BNO055_Prelude{
     
+
+private:
+    BNO055_Regs regs_ = {};
 };
 }

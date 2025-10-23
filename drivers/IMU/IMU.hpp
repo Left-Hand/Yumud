@@ -16,7 +16,7 @@ namespace details{
 enum class ImuError_Kind:uint8_t{
     PackageNotMatch,
     UnknownDevice,
-    WrongWhoAmI,
+    InvalidChipId,
     WrongCompanyId,
     WrongPmuMode,
 

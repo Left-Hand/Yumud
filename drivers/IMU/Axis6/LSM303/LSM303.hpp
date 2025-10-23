@@ -8,10 +8,8 @@
 
 namespace ymd::drivers{
 
-class LSM303:private details::LSM303_Regs{
+class LSM303:public details::LSM303_Prelude{
 public:
-    using Super = details::LSM303_Regs;
-    using Super::Error;
 
     LSM303(void);
 
@@ -24,10 +22,13 @@ public:
     [[nodiscard]] IResult<> read_mag();
     [[nodiscard]] IResult<> read();
 private:
-    
+    details::LSM303_Regs regs_ = {};
+
     Option<Vec3<int16_t>> m_max = None; // maximum magnetometer values, used for calibration
     Option<Vec3<int16_t>> m_min = None; // minimum magnetometer values, used for calibration
+
     deviceType _device = device_auto;; // chip type (D, DLHC, DLM, or DLH)
+    
     uint8_t acc_address;
     uint8_t mag_address;
 
