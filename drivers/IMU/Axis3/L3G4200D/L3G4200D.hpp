@@ -71,7 +71,8 @@ class L3G4200D:
 public:
     explicit L3G4200D(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
         :i2c_drv_(hal::I2cDrv(i2c, addr)){}
-    explicit L3G4200D(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){}
+    explicit L3G4200D(hal::I2cDrv && i2c_drv):
+        i2c_drv_(i2c_drv){}
 
     struct Config{
         Dps dps;

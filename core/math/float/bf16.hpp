@@ -12,11 +12,9 @@ class OutputStream;
 
 struct bf16 {
     struct Storage{
-        #pragma pack(push, 1)
         uint16_t frac:7;
         uint16_t exp:8;
         uint16_t sign:1;
-        #pragma pack(pop)
 
         constexpr Storage(){;}
         

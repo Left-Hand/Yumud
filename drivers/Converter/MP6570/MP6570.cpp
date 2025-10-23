@@ -16,20 +16,6 @@ static constexpr bool is_odd(const uint16_t val){
 
 
 struct TxFrame{
-    // #pragma pack(push, 1)
-    // uint8_t slave_addr:7;
-    // uint8_t write:1;
-    // uint8_t address:7;
-    // uint8_t pen:1;
-    
-    // const uint8_t __resv1__ :4 = 0b0000;
-    // uint8_t data_h:8;
-    // uint8_t data_l:8;
-    // const uint8_t __resv2__ :2 = 0b11;
-    // uint8_t por:1;
-    // const uint8_t __resv2__ :1 = 0b1;
-    // #pragma pack(pop)
-    // strc
     std::array<uint8_t, 2> header;
     std::array<uint8_t, 3> payload;
 

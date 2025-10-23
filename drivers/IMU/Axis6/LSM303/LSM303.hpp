@@ -1,9 +1,10 @@
 #pragma once
 
+//这个驱动还未实现
+
 // https://github.com/pololu/lsm303-arduino/blob/master/LSM303.h
 // https://blog.csdn.net/cp1300/article/details/86997168
 
-//这个驱动还未实现
 #include "details/LSM303_Prelude.hpp"
 
 namespace ymd::drivers{
@@ -28,7 +29,7 @@ private:
     Option<Vec3<int16_t>> m_min = None; // minimum magnetometer values, used for calibration
 
     deviceType _device = device_auto;; // chip type (D, DLHC, DLM, or DLH)
-    
+
     uint8_t acc_address;
     uint8_t mag_address;
 

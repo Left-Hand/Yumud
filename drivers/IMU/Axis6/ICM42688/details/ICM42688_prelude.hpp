@@ -170,10 +170,8 @@ struct ICM42688_Regset:public ICM42688_Prelude{
         uint16_t data;
     }DEF_R16(tempbuf_reg)
 
-    #pragma pack(push, 1)
     Vec3<int16_t> acc_data_ = Vec3<int16_t>::ZERO;
     Vec3<int16_t> gyr_data_ = Vec3<int16_t>::ZERO;
-    #pragma pack(pop)
     
     struct R16_TMST_FSYNC:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x2B;
