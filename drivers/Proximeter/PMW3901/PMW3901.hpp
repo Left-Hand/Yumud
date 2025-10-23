@@ -11,13 +11,41 @@
 
 
 #include "hal/bus/spi/spidrv.hpp"
-#include "types/vectors/Vector2.hpp"
+#include "types/vectors/vector2.hpp"
 
 
 namespace ymd::drivers{
 
+struct PMW3901_Prelude{
+    struct MotionReg:public Reg8<>{
+        using Reg8::operator=;
 
-class PMW3901 final{
+        uint8_t frame_from0:1;
+        uint8_t run_mode:2;
+        const uint8_t __resv1__:1 = 0;
+        uint8_t raw_from0:1;
+        uint8_t __resv2__:2;
+        uint8_t occured:1;
+    };
+
+    struct DeltaReg:public Reg16i<>{
+        int16_t data;
+    };
+
+
+    #pragma pack(push, 1)
+    struct PMW3901_Data {
+    MotionReg motion = {};
+    uint8_t observation = {};
+    DeltaReg dx = {};
+    DeltaReg dy = {};
+    };
+    #pragma pack(pop)
+    static_assert(sizeof(PMW3901_Data) == 1 + 1 + 2 + 2, "PMW3901_Data size error");
+
+};
+
+class PMW3901 final:public PMW3901_Prelude{
 public:
     enum class Error_Kind:uint8_t{
         WrongChipId
@@ -51,30 +79,6 @@ public:
 
     [[nodiscard]] IResult<> set_led(bool on);
 private:
-    struct MotionReg:public Reg8<>{
-        using Reg8::operator=;
-
-        uint8_t frameFrom0:1;
-        uint8_t runMode:2;
-        const uint8_t __resv1__:1 = 0;
-        uint8_t rawFrom0:1;
-        uint8_t __resv2__:2;
-        uint8_t occured:1;
-    };
-
-    struct DeltaReg:public Reg16i<>{
-        int16_t data;
-    };
-
-
-    #pragma pack(push, 1)
-    struct PMW3901_Data {
-    MotionReg motion = {};
-    uint8_t observation = {};
-    DeltaReg dx = {};
-    DeltaReg dy = {};
-    };static_assert(sizeof(PMW3901_Data) == 1 + 1 + 2 + 2, "PMW3901_Data size error");
-    #pragma pack(pop)
 
     hal::SpiDrv spi_drv_;
 
@@ -82,7 +86,7 @@ private:
     q16 x_cm = 0;
     q16 y_cm = 0;
 
-    [[nodiscard]] Result<bool, Error> assert_reg(const uint8_t command, const uint8_t data);
+    [[nodiscard]] IResult<bool> assert_reg(const uint8_t command, const uint8_t data);
     [[nodiscard]] IResult<> write_reg(const uint8_t command, const uint8_t data);
     [[nodiscard]] IResult<> read_reg(const uint8_t command, uint8_t & data);
     [[nodiscard]] IResult<> read_burst(const uint8_t commnad, std::span<uint8_t> pbuf);

@@ -239,18 +239,6 @@ IResult<> PMW3901::update(){
 
 }
 
-// IResult<> PMW3901::update(const q16 rad){
-//     return read_data()
-//     .if_ok([&]{
-//         auto delta = Vec2<q16>(data_.dx.as_val(), data_.dy.as_val())
-//             .rotated(rad - 90_deg) * scale;
-//         x_cm += delta.x;
-//         y_cm += delta.y;
-//     });
-
-// }
-
-
 Result<bool, Error> PMW3901::assert_reg(const uint8_t command, const uint8_t data){
     uint8_t temp = 0;
     if(const auto res = read_reg(command, temp); res.is_err()) return Err(res.unwrap_err());

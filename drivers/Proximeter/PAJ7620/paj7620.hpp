@@ -14,8 +14,10 @@ public:
     explicit PAJ7620(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
 
-    explicit PAJ7620(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    explicit PAJ7620(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    explicit PAJ7620(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    explicit PAJ7620(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
 
 
     [[nodiscard]] IResult<> validate();
