@@ -80,7 +80,8 @@ IResult<> AK8975::validate(){
 
     while(clock::millis() - ms < TIME_OUT_MS){
         const auto res = this->is_busy();
-        if(res.is_err()) return Err(res.unwrap_err());
+        if(res.is_err()) 
+            return Err(res.unwrap_err());
 
         if(res.unwrap() == false){
             readed = true;
@@ -110,16 +111,21 @@ IResult<bool> AK8975::is_stable(){
     if(const auto res = phy_.read_reg(0x09, stat);
         res.is_err()) return Err(res.unwrap_err());
 
-    if(stat != 0) return Ok(false);
+    if(stat != 0) 
+        return Ok(false);
     
     if(const auto res = update();
         res.is_err()) return Err(res.unwrap_err());
 
-    const auto mag = read_mag();
-    if(mag.is_ok()) return Ok(false);
+    const auto mag = ({
+        const auto res = read_mag();
+        if(res.is_err()) return Err(res.unwrap_err());
+        res.unwrap();
+    });
 
-    auto [a, b, c] = mag.unwrap();
-    if(ABS(a) + ABS(b) + ABS(c) > real_t(2.4)) return Ok(false);
+    const auto [a, b, c] = mag;
+    if(ABS(a) + ABS(b) + ABS(c) > q16(2.4)) 
+        return Ok(false);
 
     return Ok(true);
 }
@@ -134,8 +140,8 @@ IResult<> AK8975::disable_i2c(){
 }
 
 IResult<Vec3<q24>> AK8975::read_mag(){
-    static constexpr real_t max_mT = real_t(1.229);
-    #define CONV(n) ((n * max_mT) / 4095) * ((real_t(n##_adj - 128) >> 8) + 1)
+    static constexpr q16 max_mT = q16(1.229);
+    #define CONV(n) ((n * max_mT) / 4095) * ((q16(n##_adj - 128) >> 8) + 1)
     return Ok{Vec3<q24>{CONV(x), CONV(y), CONV(z)}};
     #undef CONV
 }

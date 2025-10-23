@@ -79,7 +79,7 @@ struct AK09911C_Prelude{
 
 };
 
-struct AK09911C_Regs : public AK09911C_Prelude{
+struct AK09911C_Regset : public AK09911C_Prelude{
     struct R8_WIA1:public Reg8<>{
         static constexpr RegAddress address = 0x00;
         static constexpr uint8_t KEY = 0x48;

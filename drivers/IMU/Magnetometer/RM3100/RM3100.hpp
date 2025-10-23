@@ -1,7 +1,7 @@
 #pragma once
 
 // https://github.com/hnguy169/RM3100-Arduino
-// https://github.com/lmnop100/RM3100-Driver/blob/master/QRM3100.h
+// https://github.com/lmnop100/RM3100-Driver/blob/master/RM3100.h
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
@@ -18,43 +18,39 @@ namespace ymd::drivers{
 
 struct RM3100_Prelude{
 
-static constexpr uint8_t QRM3100_CMM  		= 0x01; //initiates continuous measurement mode
-static constexpr uint8_t QRM3100_CCXMSB  		= 0x04; //cycle count regsiter for x-axis (most significant bit)
-static constexpr uint8_t QRM3100_CCXLSB			= 0x05;
-static constexpr uint8_t QRM3100_CCYMSB  		= 0x06; // ... for y-axis
-static constexpr uint8_t QRM3100_CCYLSB  		= 0x07;
-static constexpr uint8_t QRM3100_CCZMSB  		= 0x08; // ... for z-axis
-static constexpr uint8_t QRM3100_CCZLSB  		= 0x09;
-static constexpr uint8_t QRM3100_NOS_REG			= 0x0A;
-static constexpr uint8_t QRM3100_TMRC 		= 0x0B; //sets continuous measurement mode data rate
 
-static constexpr uint8_t QRM3100_MX2   		= 0xA4; // measurement results for x-axis
-static constexpr uint8_t QRM3100_MX1   		= 0xA5;
-static constexpr uint8_t QRM3100_MX0   		= 0xA6;
-static constexpr uint8_t QRM3100_MY2   		= 0xA7; // measurement results for y-axis
-static constexpr uint8_t QRM3100_MY1   		= 0xA8;
-static constexpr uint8_t QRM3100_MY0   		= 0xA9;
-static constexpr uint8_t QRM3100_MZ2   		= 0xAA; // measurement results for z-axis
-static constexpr uint8_t QRM3100_MZ1   		= 0xAB;
-static constexpr uint8_t QRM3100_MZ0   		= 0xAC;
-static constexpr uint8_t QRM3100_STATUS_REG   	= 0xB4; //status of DRDY
-static constexpr uint8_t QRM3100_I2C_ADDRESS   	= 0x20; //Address of slave device
-static constexpr uint8_t QRM3100_POLL		= 0x00; //poll
+
 
 static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x20); // Hexadecimal slave address for RM3100 with Pin 2 and Pin 4 set to LOW
 
-//internal register values without the R/W bit
-static constexpr uint8_t RM3100_REVID_REG       = 0x36; // Hexadecimal address for the Revid internal register
-static constexpr uint8_t RM3100_POLL_REG        = 0x00; // Hexadecimal address for the Poll internal register
-static constexpr uint8_t RM3100_CMM_REG         = 0x01; // Hexadecimal address for the CMM internal register
-static constexpr uint8_t RM3100_STATUS_REG      = 0x34; // Hexadecimal address for the Status internal register
-
+// regs
+static constexpr uint8_t RM3100_POLL_REG = 0x00;
+static constexpr uint8_t RM3100_CMM_REG = 0x01;
 static constexpr uint8_t RM3100_CCX1_REG        = 0x04; // Hexadecimal address for Cycle Count X1 internal register
 static constexpr uint8_t RM3100_CCX0_REG        = 0x05; // Hexadecimal address for the Cycle Count X0 internal register
 static constexpr uint8_t RM3100_CCY1_REG        = 0x04; // Hexadecimal address for Cycle Count Y1 internal register
 static constexpr uint8_t RM3100_CCY0_REG        = 0x05; // Hexadecimal address for the Cycle Count Y0 internal register
 static constexpr uint8_t RM3100_CCZ1_REG        = 0x04; // Hexadecimal address for Cycle Count Z1 internal register
 static constexpr uint8_t RM3100_CCZ0_REG        = 0x05; // Hexadecimal address for the Cycle Count Z0 internal register
+static constexpr uint8_t RM3100_NOS_REG			= 0x0A;
+static constexpr uint8_t RM3100_TMRC_REG = 0x0B;
+static constexpr uint8_t RM3100_MX_REG = 0x24;
+static constexpr uint8_t RM3100_MY_REG = 0x27;
+static constexpr uint8_t RM3100_MZ_REG = 0x2A;
+static constexpr uint8_t RM3100_BIST_REG = 0x33;
+static constexpr uint8_t RM3100_STATUS_REG = 0x34;
+static constexpr uint8_t RM3100_HSHAKE_REG = 0x35;
+static constexpr uint8_t RM3100_REVID_REG = 0x36;
+
+static constexpr uint8_t RM3100_MX2_REG   		= 0xA4; // measurement results for x-axis
+static constexpr uint8_t RM3100_MX1_REG   		= 0xA5;
+static constexpr uint8_t RM3100_MX0_REG   		= 0xA6;
+static constexpr uint8_t RM3100_MY2_REG   		= 0xA7; // measurement results for y-axis
+static constexpr uint8_t RM3100_MY1_REG   		= 0xA8;
+static constexpr uint8_t RM3100_MY0_REG   		= 0xA9;
+static constexpr uint8_t RM3100_MZ2_REG   		= 0xAA; // measurement results for z-axis
+static constexpr uint8_t RM3100_MZ1_REG   		= 0xAB;
+static constexpr uint8_t RM3100_MZ0_REG   		= 0xAC;
 
 //options
 static constexpr auto initialCC = 200; // Set the cycle count
@@ -66,6 +62,23 @@ static constexpr auto useDRDYPin = 1; //0 = not using DRDYPin ; 1 = using DRDYPi
 enum class Error_Kind:uint8_t{
     WrongChipId,
     IndexOutOfRange
+};
+
+enum class UpdateRate:uint8_t {
+    _600Hz = 0x92,
+    _300Hz = 0x93,
+    _150Hz = 0x94,
+    _75Hz = 0x95,
+    _37Hz = 0x96,
+    _18Hz = 0x97,
+    _9Hz = 0x98,
+    _4_5Hz = 0x99,
+    _2_3Hz = 0x9A,
+    _1_2Hz = 0x9B,
+    _0_6Hz = 0x9C,
+    _0_3Hz = 0x9D,
+    _0_15Hz = 0x9E,
+    _0_075Hz = 0x9F,
 };
 
 DEF_FRIEND_DERIVE_DEBUG(Error_Kind)

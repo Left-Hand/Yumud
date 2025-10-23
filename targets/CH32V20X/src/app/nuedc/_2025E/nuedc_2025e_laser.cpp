@@ -226,7 +226,7 @@ void nuedc_2025e_laser_main(){
             rpc::make_function("dall", [&](){
                 publish_dall();
             }),
-            rpc::make_function("dty", [&](const real_t duty){set_laser_dutycycle(duty);}),
+            rpc::make_function("dty", set_laser_dutycycle),
             rpc::make_function("errp", [&](
                 const q16 px, 
                 const q16 py,

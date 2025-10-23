@@ -5,7 +5,7 @@ namespace ymd::drivers{
 
 class MMC5603:
     public MagnetometerIntf,
-    public MMC5603_Regs{
+    public MMC5603_Prelude{
 public:
 
     explicit MMC5603(const hal::I2cDrv & i2c_drv):
@@ -25,7 +25,7 @@ public:
 
     [[nodiscard]] IResult<> set_band_width(const BandWidth bw);
 
-    [[nodiscard]] IResult<> enable_contious(const Enable en);
+    [[nodiscard]] IResult<> enable_continuous(const Enable en);
 
     [[nodiscard]] IResult<> inhibit_channels(bool x, bool y, bool z);
 
@@ -34,10 +34,11 @@ public:
 protected:
 
     hal::I2cDrv i2c_drv_;
+    MMC5603_Regset regs_ = {};  
 
 
-    [[nodiscard]] IResult<> read_burst(const RegAddr addr, uint8_t * data, size_t len){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+    [[nodiscard]] IResult<> read_burst(const RegAddr addr, std::span<uint8_t> pbuf){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

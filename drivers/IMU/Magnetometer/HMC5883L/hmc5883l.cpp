@@ -40,26 +40,26 @@ IResult<> HMC5883L::init(){
 }
 
 IResult<> HMC5883L::enable_high_speed(const Enable en){
-    auto reg = RegCopy(mode_reg);
+    auto reg = RegCopy(regs_.mode_reg);
     reg.hs = true;
     return write_reg(reg);
 }
 
 
 IResult<> HMC5883L::set_odr(const Odr rate){
-    auto reg = RegCopy(config_a_reg);
+    auto reg = RegCopy(regs_.config_a_reg);
     reg.dataRate = static_cast<uint8_t>(rate);
     return write_reg(reg);
 }
 
 IResult<> HMC5883L::set_sample_number(const SampleNumber number){
-    auto reg = RegCopy(config_a_reg);
+    auto reg = RegCopy(regs_.config_a_reg);
     reg.sampleNumber = static_cast<uint8_t>(number);
     return write_reg(reg);
 }
 
 IResult<> HMC5883L::set_gain(const Gain gain){
-    auto reg = RegCopy(config_b_reg);
+    auto reg = RegCopy(regs_.config_b_reg);
     reg.gain = gain;
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
@@ -68,43 +68,43 @@ IResult<> HMC5883L::set_gain(const Gain gain){
 }
 
 IResult<> HMC5883L::set_mode(const Mode mode){
-    auto reg = RegCopy(mode_reg);
+    auto reg = RegCopy(regs_.mode_reg);
     reg.mode = mode;
     return write_reg(reg);
 }
 
 IResult<Vec3<q24>> HMC5883L::read_mag(){
-    real_t x = transform_raw_to_gauss(magXReg, lsb_);
-    real_t y = transform_raw_to_gauss(magYReg, lsb_);
-    real_t z = transform_raw_to_gauss(magZReg, lsb_);
+    real_t x = transform_raw_to_gauss(regs_.mag_x_reg, lsb_);
+    real_t y = transform_raw_to_gauss(regs_.mag_y_reg, lsb_);
+    real_t z = transform_raw_to_gauss(regs_.mag_z_reg, lsb_);
 
     return Ok(Vec3<q24>(x,y,z));
 }
 
 IResult<> HMC5883L::validate(){
-    if(const auto res = read_reg(id_a_reg);
+    if(const auto res = read_reg(regs_.id_a_reg);
         res.is_err()) return res;
-    if(const auto res = read_reg(id_b_reg);
+    if(const auto res = read_reg(regs_.id_b_reg);
         res.is_err()) return res;
-    if(const auto res = read_reg(id_c_reg);
+    if(const auto res = read_reg(regs_.id_c_reg);
         res.is_err()) return res;
     bool passed = (
-        id_a_reg.as_val() == 'H'
-        and id_b_reg.as_val() == '4' 
-        and id_c_reg.as_val() == '3');
+        regs_.id_a_reg.as_val() == 'H'
+        and regs_.id_b_reg.as_val() == '4' 
+        and regs_.id_c_reg.as_val() == '3');
 
     if(!passed) return Err(Error::WrongWhoAmI);
     return Ok();
 }
 
 IResult<> HMC5883L::update(){
-    return read_burst(RegAddr::MagX, std::span(&magXReg, 3));
+    return read_burst(RegAddr::MagX, std::span(&regs_.mag_x_reg, 3));
 }
 
 
 IResult<bool> HMC5883L::is_data_ready(){
-
-    if(const auto res = read_reg(status_reg);
+    auto & reg = regs_.status_reg;
+    if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(status_reg.ready == false);
+    return Ok(reg.ready == false);
 }

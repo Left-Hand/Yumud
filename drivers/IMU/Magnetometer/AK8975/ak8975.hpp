@@ -7,7 +7,8 @@
 
 namespace ymd::drivers{
 
-class AK8975 final:public MagnetometerIntf{
+
+class AK8975_Prelude{
 public:
     using Error = ImuError;
 
@@ -18,28 +19,18 @@ public:
         FuseRomAccess = 0b1111,
     };
 
-protected:
+
     using RegAddr = uint8_t;
-
-
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+};
 
 
-
-    AsahiKaseiSensor_Phy phy_;
-    struct{
-        int16_t x;
-        int16_t y;
-        int16_t z;
-
-        uint8_t x_adj;
-        uint8_t y_adj;
-        uint8_t z_adj;
-    };
-
-    [[nodiscard]] IResult<> update_adj();
+class AK8975 final:
+    public MagnetometerIntf,
+    public AK8975_Prelude{
+public:
 public:
     static constexpr  auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
     explicit AK8975(const hal::I2cDrv & i2c_drv):
@@ -63,6 +54,19 @@ public:
     [[nodiscard]] IResult<> set_mode(const Mode mode);
     [[nodiscard]] IResult<> disable_i2c();
     [[nodiscard]] IResult<Vec3<q24>> read_mag() ;
+private:
+    AsahiKaseiSensor_Phy phy_;
+    struct{
+        int16_t x;
+        int16_t y;
+        int16_t z;
+
+        uint8_t x_adj;
+        uint8_t y_adj;
+        uint8_t z_adj;
+    };
+
+    [[nodiscard]] IResult<> update_adj();
 };
 
 };
