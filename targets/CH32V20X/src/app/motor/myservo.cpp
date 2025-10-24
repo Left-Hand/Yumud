@@ -292,7 +292,6 @@ void myservo_main(){
         hal::adc1.enable_auto_inject(DISEN);
     };
 
-    // can.init(CanBaudrate::_1M, CanMode::Internal);
     can.init({
         .remap = CAN1_REMAP,
         .mode = hal::CanMode::Normal,
