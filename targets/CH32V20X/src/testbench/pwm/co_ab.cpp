@@ -46,7 +46,10 @@ void co_ab_main(){
     auto & pwm_p = timer.oc<1>();
     auto & pwm_n = timer.ocn<1>();
 
-    timer.init({CHOP_FREQ}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(CHOP_FREQ),
+        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
+    }, EN);
 
     pwm_p.init({});
     pwm_n.init({});

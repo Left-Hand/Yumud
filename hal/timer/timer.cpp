@@ -2,7 +2,7 @@
 #include "core/system.hpp"
 #include <optional>
 #include "core/clock/clock.hpp"
-// #include "ral/ch32/ch32_common_tim_def.hpp"
+#include "core/utils/Match.hpp"
 
 #define TIM1_RM_A8_A9_A10_A11__B13_B14_B15 0
 #define TIM1_RM_A8_A9_A10_A11__A7_B0_B1 1
@@ -34,7 +34,9 @@
 #define TIM10_RM_B3_B4_B5_C14__A5_A6_A7 1
 #define TIM10_RM_D1_D3_D5_D7__E3_E4_E5 2
 
+using namespace ymd;
 using namespace ymd::hal;
+using namespace ymd::fp;
 
 
 #ifdef TIM_DEBUG
@@ -47,70 +49,22 @@ __inline void TIM_ASSERT(bool x){
 #endif
 
 
-//pure function, easy test
-static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
-	const uint32_t bus_freq, 
-	const uint32_t tim_freq, 
-	std::pair<uint16_t, uint16_t> arr_range
-){
-    const auto [min_arr, max_arr] = arr_range;
-    const unsigned int target_div = bus_freq / tim_freq;
-    
-    auto calc_psc_from_arr = [target_div](const uint16_t arr) -> uint16_t {
-        return CLAMP(int(target_div) / (int(arr) + 1) - 1, 0, 0xFFFF);
-    };
-
-    [[maybe_unused]]
-    auto calc_arr_from_psc = [target_div](const uint16_t psc) -> uint16_t {
-        return CLAMP(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF);
-    };
-    
-    auto calc_freq_from_arr_and_psc = [bus_freq](const uint16_t arr, const uint16_t psc) -> uint32_t {
-        return bus_freq / (arr + 1) / (psc + 1);
-    };
-    
-    const auto min_psc = calc_psc_from_arr(max_arr);
-    const auto max_psc = calc_psc_from_arr(min_arr);
-
-    if (min_arr > max_arr) ymd::sys::abort();
-    
-    struct Best{
-        uint16_t arr;
-        uint16_t psc;
-        uint32_t freq_err;
-    };
-    
-    Best best{max_arr, min_psc, UINT32_MAX};
-    for(int arr = max_arr; arr >= min_arr; arr--){
-        const auto expect_psc = calc_psc_from_arr(arr);
-        if((expect_psc >= max_psc) or (expect_psc < min_psc)) continue;
-        
-        std::optional<uint32_t> last_freq_;
-
-        // const int psc_start = MAX(min_psc, expect_psc - 5);
-        // const int psc_stop = MIN(max_psc, expect_psc + 5);
-        // if(psc_start >= psc_stop) continue;
-
-        // for(int psc = psc_start; psc < psc_stop; psc++){
-        for(int psc = expect_psc - 2; psc < expect_psc + 2; psc++){
-            const auto freq = calc_freq_from_arr_and_psc(arr, psc);
-            if(last_freq_.has_value()){
-                if((last_freq_.value() - tim_freq) * (freq - tim_freq) < 0) break;
-            }else{
-                last_freq_ = freq;
-            }
-            const auto freq_err = uint32_t(ABS(int(freq) - int(tim_freq)));
-            if(freq_err < best.freq_err){
-                if(freq_err == 0) return {uint16_t(arr), psc};
-                best = {uint16_t(arr), uint16_t(psc), freq_err};
-            }
-        }
+static std::tuple<uint16_t, uint16_t> dump_arr_and_psc(const TimerCountFreq count_freq, const uint32_t periph_freq){
+    if(count_freq.is<NearestFreq>()){
+        const auto arr_and_psc = ArrAndPsc::from_nearest_count_freq(
+            periph_freq,
+            count_freq.unwrap_as<NearestFreq>().count, 
+            {0, 65535}
+        );
+        // PANIC(arr_and_psc.arr, arr_and_psc.psc);
+        return std::make_tuple(arr_and_psc.arr, arr_and_psc.psc);
+    }else if(count_freq.is<ArrAndPsc>()){
+        const auto arr_and_psc = count_freq.unwrap_as<ArrAndPsc>();
+        return std::make_tuple(arr_and_psc.arr, arr_and_psc.psc);
+    }else{
+        __builtin_trap();
     }
-    
-    if(best.freq_err == UINT32_MAX) ymd::sys::abort();
-    return {best.arr, best.psc};
 }
-
 
 static constexpr uint8_t calculate_deadzone_code_from_ns(
     const uint32_t bus_freq, 
@@ -139,17 +93,6 @@ static constexpr uint8_t calculate_deadzone_code_from_ns(
         return 0xff;
     }
 }
-
-// namespace details{
-//     void static_test(){
-//         // Test 1: Perfect match found
-//         static_assert(std::get<0>(calc_best_arr_and_psc(72'000'000, 
-//             2'000, {0, 65535})) == 35999, "Test 1: ARR mismatch");
-//         static_assert(std::get<1>(calc_best_arr_and_psc(72'000'000, 
-//             2'000, {0, 65535})) == 0, "Test 1: PSC mismatch");
-//     }
-// }
-
 
 void BasicTimer::enable_rcc(const Enable en){
     switch(reinterpret_cast<size_t>(inst_)){
@@ -317,12 +260,9 @@ void BasicTimer::enable_psc_sync(const Enable en){
     }
 }
 
+void BasicTimer::set_freq(const TimerCountFreq count_freq){
 
-void BasicTimer::set_freq(const uint32_t freq){
-    const auto [arr, psc] = calc_best_arr_and_psc(
-        get_bus_freq(), freq, {0, 65535}
-    );
-
+    const auto [arr, psc] = dump_arr_and_psc(count_freq, get_bus_freq());
     set_arr(arr);
     set_psc(psc);
 }
@@ -331,9 +271,14 @@ void BasicTimer::set_freq(const uint32_t freq){
 void BasicTimer::init(const Config & cfg, const Enable en){
     this->enable_rcc(EN);
 
-    TIM_InternalClockConfig(inst_);
 
-    set_freq(details::is_aligned_count_mode(cfg.count_mode) ? (cfg.freq * 2) : (cfg.freq));
+    TIM_InternalClockConfig(inst_);
+    const auto [arr, psc] = dump_arr_and_psc(cfg.count_freq, get_bus_freq());
+
+
+    set_arr(arr);
+    set_psc(psc);
+
     set_count_mode(cfg.count_mode);
     enable_arr_sync(EN);
 

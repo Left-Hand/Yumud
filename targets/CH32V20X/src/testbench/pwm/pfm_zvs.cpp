@@ -58,7 +58,10 @@ void pfm_zvs_main(){
 
     // timer.init(CHOP_FREQ);
     // timer.init(2_KHz);
-    timer.init({20_KHz}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(20_KHz),
+        .count_mode = hal::TimerCountMode::Up
+    }, EN);
     
     pwm_p.init({
         // .valid_level = LOW

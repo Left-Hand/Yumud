@@ -153,8 +153,8 @@ public:
     void init(const Config & cfg){
 
         timer_.init({
-            cfg.freq, 
-            hal::TimerCountMode::CenterAlignedDualTrig, 
+            .count_freq = hal::NearestFreq(cfg.freq), 
+            .count_mode = hal::TimerCountMode::CenterAlignedDualTrig, 
         }, DISEN
     );
         timer_.set_deadzone_ns(cfg.deadzone_ns);
@@ -202,7 +202,7 @@ public:
     }
 
     void set_freq(const uint32_t freq){
-        timer_.set_freq(freq);
+        timer_.set_freq(hal::TimerCountFreq(hal::NearestFreq(freq)));
     }
 
     void set_deadzone_ns(const Nanoseconds ns){

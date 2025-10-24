@@ -96,7 +96,7 @@ void nuedc_2025e_laser_main(){
 
     hal::timer3.init(
         {
-            .freq = PWM_FREQ, 
+            .count_freq = hal::NearestFreq(PWM_FREQ * 2), 
             .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
         },  
         EN

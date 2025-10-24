@@ -139,7 +139,7 @@ void nuedc_2025e_joint_main(){
     auto & pwm_w = timer1.oc<3>(); 
 
     timer1.init({
-        .freq = CHOPPER_FREQ, 
+        .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2), 
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 

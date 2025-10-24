@@ -34,8 +34,8 @@ struct TransferSysEvaluator{
     void run_func(const uint32_t f_isr, FnIn && fn_in, FnProc && fn_proc){
         auto & timer = hal::timer1;
         timer.init({
-            // .freq = fs_.expect("you have not set fs yet")
-            .freq = f_isr
+            .count_freq = hal::NearestFreq(f_isr),
+            .count_mode = hal::TimerCountMode::Up
         }, EN);
 
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);

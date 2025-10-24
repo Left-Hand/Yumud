@@ -168,7 +168,7 @@ void bldc_main(){
 
 
     timer1.init({
-        .freq = CHOPPER_FREQ, 
+        .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2), 
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 

@@ -223,7 +223,7 @@ void diffspd_vehicle_main(){
     auto & timer = hal::timer3;
 
     timer.init({
-        .freq = PWM_FREQ,
+        .count_freq = hal::NearestFreq(PWM_FREQ),
         .count_mode = hal::TimerCountMode::Up
     }, EN);
 

@@ -41,7 +41,7 @@ int main(){
     // bldc_main();
     // st1615_main();
     // bldc_main();
-    nuedc_2025e_laser_main();
+    // nuedc_2025e_laser_main();
     // ft6336_main();
     // polar_robot_main();
     // i2c_scanner_main();

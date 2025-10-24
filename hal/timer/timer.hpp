@@ -4,6 +4,7 @@
 #include "timer_oc.hpp"
 #include "timer_utils.hpp"
 #include "hal/nvic/nvic.hpp"
+#include "core/utils/sumtype.hpp"
 
 #ifdef HDW_SXX32
 
@@ -90,7 +91,107 @@ friend void ::TIM##x##_IRQHandler(void);\
 
 
 namespace ymd::hal{
+
+namespace details{
+//pure function, easy test
+static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
+	const uint32_t periph_freq, 
+	const uint32_t count_freq, 
+	std::pair<uint16_t, uint16_t> arr_range
+){
+    const auto [min_arr, max_arr] = arr_range;
+    const uint32_t target_div = periph_freq / count_freq;
     
+    auto calc_psc_from_arr = [target_div](const uint16_t arr) -> uint16_t {
+        return CLAMP(int(target_div) / (int(arr) + 1) - 1, 0, 0xFFFF);
+    };
+
+    [[maybe_unused]]
+    auto calc_arr_from_psc = [target_div](const uint16_t psc) -> uint16_t {
+        return CLAMP(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF);
+    };
+    
+    auto calc_freq_from_arr_and_psc = [periph_freq](const uint16_t arr, const uint16_t psc) -> uint32_t {
+        return periph_freq / (arr + 1) / (psc + 1);
+    };
+    
+    const auto min_psc = calc_psc_from_arr(max_arr);
+    const auto max_psc = calc_psc_from_arr(min_arr);
+
+    if (min_arr > max_arr) ymd::sys::abort();
+    
+    struct Best{
+        uint16_t arr;
+        uint16_t psc;
+        uint32_t freq_err;
+    };
+    
+    Best best{max_arr, min_psc, UINT32_MAX};
+    for(int arr = max_arr; arr >= min_arr; arr--){
+        const auto expect_psc = calc_psc_from_arr(arr);
+        if((expect_psc >= max_psc) or (expect_psc < min_psc)) continue;
+        
+        std::optional<uint32_t> last_freq_;
+
+        // const int psc_start = MAX(min_psc, expect_psc - 5);
+        // const int psc_stop = MIN(max_psc, expect_psc + 5);
+        // if(psc_start >= psc_stop) continue;
+
+        // for(int psc = psc_start; psc < psc_stop; psc++){
+        for(int psc = expect_psc - 2; psc < expect_psc + 2; psc++){
+            const auto freq = calc_freq_from_arr_and_psc(arr, psc);
+            if(last_freq_.has_value()){
+                if((last_freq_.value() - count_freq) * (freq - count_freq) < 0) break;
+            }else{
+                last_freq_ = freq;
+            }
+            const auto freq_err = uint32_t(ABS(int(freq) - int(count_freq)));
+            if(freq_err < best.freq_err){
+                if(freq_err == 0) return {uint16_t(arr), psc};
+                best = {uint16_t(arr), uint16_t(psc), freq_err};
+            }
+        }
+    }
+    
+    if(best.freq_err == UINT32_MAX) ymd::sys::abort();
+    return {best.arr, best.psc};
+}
+}
+
+struct [[nodiscard]] ArrAndPsc{
+    using Self = ArrAndPsc;
+
+    uint16_t arr;
+    uint16_t psc;
+
+    static constexpr ArrAndPsc from_nearest_count_freq(
+        const uint32_t periph_freq,
+        const uint32_t count_freq,
+        std::pair<uint16_t, uint16_t> arr_range
+    ){
+        ArrAndPsc ret;
+        std::tie(ret.arr, ret.psc) = details::calc_best_arr_and_psc(periph_freq, count_freq, arr_range);
+        return ret;
+    }
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os << self.arr << os.splitter() << self.psc;
+    }
+};
+
+struct [[nodiscard]] NearestFreq{
+    using Self = NearestFreq;
+    uint32_t count;
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os << self.count;
+    }
+};
+
+struct [[nodiscard]] TimerCountFreq:
+    public Sumtype<ArrAndPsc, NearestFreq>{
+};
+
 using TimerEvent = TimerIT;
 class BasicTimer{
 public:
@@ -116,8 +217,8 @@ public:
     explicit BasicTimer(TIM_TypeDef * _base):inst_(_base){;}
 
     struct Config{
-        const uint32_t freq;
-        const CountMode count_mode = CountMode::Up;
+        TimerCountFreq count_freq;
+        const CountMode count_mode;
     };
 
     void init(const Config & cfg, const Enable en);
@@ -130,7 +231,7 @@ public:
     void set_psc(const uint16_t psc);
     void set_arr(const uint16_t arr);
 
-    void set_freq(const uint32_t freq);
+    void set_freq(const TimerCountFreq freq);
 
     template<IT I>
     void enable_interrupt(const Enable en){

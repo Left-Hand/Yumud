@@ -245,7 +245,10 @@ void adrc_main(){
     };
 
     auto & timer = hal::timer1;
-    timer.init({.freq = 20000}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(20000),
+        .count_mode = hal::TimerCountMode::Up
+    }, EN);
 
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);

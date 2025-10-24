@@ -48,7 +48,10 @@ void svpwm3_main(){
     auto & pwm_w = timer.oc<3>();
 
 
-    timer.init({CHOP_FREQ, hal::TimerCountMode::CenterAlignedDualTrig}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(CHOP_FREQ * 2), 
+        .count_mode = hal::TimerCountMode::CenterAlignedDualTrig
+    }, EN);
     timer.enable_arr_sync(EN);
 
     #if TIM_INDEX == 1
@@ -86,11 +89,9 @@ void svpwm3_main(){
 
     // timer.init(CHOP_FREQ, TimerCountMode::CenterAlignedUpTrig);
     timer.init({
-            .freq = 20000, 
-            .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
-        },
-        EN
-    );
+        .count_freq = hal::NearestFreq(20000), 
+        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
+    }, EN);
 
     timer.oc<4>().init({});
     timer.oc<4>().enable_output(EN);

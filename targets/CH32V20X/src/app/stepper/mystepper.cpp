@@ -408,7 +408,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     auto & timer = hal::timer1;
 
     timer.init({
-        .freq = CHOP_FREQ,
+        .count_freq = hal::NearestFreq(CHOP_FREQ),
         // .mode = hal::TimerCountMode::CenterAlignedDualTrig
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
@@ -530,8 +530,7 @@ void mystepper_main(){
     auto & timer = hal::timer1;
 
     timer.init({
-        .freq = CHOP_FREQ,
-        // .mode = hal::TimerCountMode::CenterAlignedDownTrig
+        .count_freq = hal::NearestFreq(CHOP_FREQ),
         .count_mode = hal::TimerCountMode::CenterAlignedDualTrig
     }, EN);
 

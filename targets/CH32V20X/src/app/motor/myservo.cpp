@@ -224,7 +224,7 @@ void myservo_main(){
     while(true){
 
         hal::timer3.init({
-            .freq = TIM_FREQ, 
+            .count_freq = hal::NearestFreq(TIM_FREQ * 2), 
             .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
         }, EN);
 
@@ -305,7 +305,7 @@ void myservo_main(){
 
 
     hal::timer3.init({
-        .freq = TIM_FREQ, 
+        .count_freq = hal::NearestFreq(TIM_FREQ), 
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 

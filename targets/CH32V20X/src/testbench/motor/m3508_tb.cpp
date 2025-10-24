@@ -32,7 +32,10 @@ void m3508_main(){
     M3508Port port{hal::can1};
     
     auto & timer = hal::timer3;
-    timer.init({CB_FREQ}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(CB_FREQ),
+        .count_mode = hal::TimerCountMode::Up
+    }, EN);
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);

@@ -55,7 +55,10 @@ void sincos_pwm_main(){
     auto & pwm_bn = timer.oc<4>();
 
 
-    timer.init({FREQ, hal::TimerCountMode::CenterAlignedDualTrig}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(FREQ * 2),
+        .count_mode = hal::TimerCountMode::CenterAlignedDualTrig
+    }, EN);
     timer.enable_arr_sync(EN);
 
     #if TIM_INDEX == 1
