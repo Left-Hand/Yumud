@@ -33,6 +33,7 @@
 #include "robots/repl/repl_service.hpp"
 #include "hal/dma/dma.hpp"
 
+#include "linear_regression.hpp"
 
 using namespace ymd;
 
@@ -43,20 +44,8 @@ using namespace ymd::dsp;
 #define DBG_UART hal::uart2
 
 // static constexpr uint32_t DEBUG_UART_BAUD = 576000;
-
-// #define TIM1_CH1_GPIO hal::PA<8>()
-// #define TIM1_CH1N_GPIO hal::PA<7>()
-
-// #define TIM1_CH2_GPIO hal::PA<9>()
-// #define TIM1_CH2N_GPIO hal::PB<0>()
-
-// #define TIM1_CH3_GPIO hal::PA<10>()
-// #define TIM1_CH3N_GPIO hal::PB<1>()
-
-// #define TIM1_CH4_GPIO hal::PA<11>()
-
 // static constexpr uint32_t CHOPPER_FREQ = 24_KHz;
-static constexpr uint32_t CHOPPER_FREQ = 48_KHz;
+static constexpr uint32_t CHOPPER_FREQ = 32_KHz;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
 // static constexpr auto phase_inductance = 0.00275_q20;
@@ -77,75 +66,14 @@ static constexpr auto PHASE_INDUCTANCE = 0.0001_q20;
 static constexpr auto PHASE_RESISTANCE = 1.123_q20;
 #else
 static constexpr size_t POLE_PAIRS = 7u;
-// static constexpr auto PHASE_INDUCTANCE = 0.0085_q20;
-// static constexpr auto PHASE_INDUCTANCE = 0.00245_q20;
-// static constexpr auto PHASE_INDUCTANCE = 0.0025_q20;
 static constexpr auto PHASE_INDUCTANCE = 0.0007_q20;
 // static constexpr auto PHASE_INDUCTANCE = 0.00325_q20;
 static constexpr auto PHASE_RESISTANCE = 0.523_q20;
 #endif
 
-static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1000;
-// static constexpr uint32_t CURRENT_CUTOFF_FREQ = 100;
+static constexpr uint32_t CURRENT_CUTOFF_FREQ = 2500;
+
 static constexpr auto MAX_MODU_VOLT = q16(6.5);
-
-namespace ymd::digipw{
-
-//antiwinded pi controller
-//kp + ki / s
-
-struct [[nodiscard]] PiController {
-    struct [[nodiscard]] Cofficients { 
-        q16 kp;                // 比例系数
-        q16 ki_discrete;       // 离散化积分系数（Ki * Ts）
-        q16 max_out;          // 最大输出电压限制
-        q16 err_sum_max;       // 积分项最大限制（抗饱和）
-
-        constexpr PiController to_controller() const {
-            return PiController(*this);
-        }
-        friend OutputStream & operator << (OutputStream & os, const Cofficients & self){
-            return os << self.kp << 
-                os.splitter() << self.ki_discrete 
-                << os.splitter() << self.max_out 
-                << os.splitter() << self.err_sum_max 
-            ;
-        }
-    };
-
-    using intergal_t = q20;
-
-    constexpr PiController(const Cofficients& cfg):
-        kp_(cfg.kp),
-        ki_discrete_(cfg.ki_discrete),
-        max_out_(cfg.max_out),
-        err_sum_max_(MIN(static_cast<intergal_t>(cfg.err_sum_max), std::numeric_limits<intergal_t>::max()))
-    {}
-
-    constexpr void reset(){
-        err_sum_ = 0;
-    }
-
-    constexpr auto operator()(const q20 err) {
-        // q16 output = CLAMP2( + ki_discrete_ * q16(err_sum_), max_out_);
-        const auto kp_contribute = CLAMP2(kp_ * q16(err), 0.1_q16);
-        // const auto kp_contribute = kp_ * q16(err);
-        q16 output = CLAMP2(kp_contribute + ki_discrete_ * q16(err_sum_), max_out_);
-        err_sum_ = CLAMP(err_sum_ + err, -err_sum_max_ - output , err_sum_max_ - output);
-        // err_sum_ = CLAMP(err_sum_ + err, -err_sum_max_, err_sum_max_);
-        return output;
-    }
-
-public:
-    q16 kp_;                // 比例系数
-    q16 ki_discrete_;       // 离散化积分系数（Ki * Ts）
-    q16 max_out_;          // 最大输出电压限制
-    intergal_t err_sum_max_;       // 积分项最大限制（抗饱和）
-    intergal_t err_sum_;           // 误差积分累加器
-};
-
-}
-
 
 struct LrSeriesCurrentRegulatorConfig{
     uint32_t fs;                 // 采样频率 (Hz)
@@ -181,30 +109,6 @@ struct LrSeriesCurrentRegulatorConfig{
     }
 };
 
-[[maybe_unused]] auto get_position_from_sine_curve(const q16 ctime){
-    return Angle<q16>::from_turns(
-        // ctime + sin(ctime)
-        sin(ctime)
-    );
-};
-
-[[maybe_unused]] auto get_position_from_linear_curve(){
-    return Angle<q16>::from_turns(
-        // ctime * 5
-        // ctime * 1
-        0
-    );
-};
-
-[[maybe_unused]] auto forward_alphabeta_volt_by_sine_hfi = [](const q16 ctime){
-
-    // return AlphaBetaCoord<q20>{.alpha = 0.0_q20, .beta = 1.5_q20};
-    return AlphaBetaCoord<q20>{
-        // .alpha = 1.0_q20 * sinpu(ctime * HFI_FREQ), 
-        .alpha = 1.0_q20 * cospu(ctime * 2), 
-        .beta = 1.0_q20 * sinpu(ctime * 2)
-    };
-};
 
 #if 0
 [[maybe_unused]] auto speed_compansate_dq_volt = [&]{
@@ -216,19 +120,6 @@ struct LrSeriesCurrentRegulatorConfig{
     return dq_volt;
 };
 
-
-    // auto gen_wave_hfi = [&]{
-    //     static constexpr q16 HALF_ONE = 0.5_q16;
-    //     static constexpr q16 WAVE_AMP = 0.14_q16;
-
-    //     static uint32_t cnt = 0;
-    //     cnt++;
-
-    //     const auto wave = WAVE_AMP * ((cnt & 0b01) ? 1 : -1);
-    //     pwm_u_.set_dutycycle(HALF_ONE + wave);
-    //     pwm_v_.set_dutycycle(HALF_ONE);
-    //     pwm_w_.set_dutycycle(HALF_ONE);
-    // };
 #endif
 
 
@@ -264,21 +155,10 @@ void myesc_main(){
 
     clock::delay(2ms);
 
-    auto led_blue_gpio_ = hal::PC<13>();
-    auto led_red_gpio_ = hal::PC<14>();
-    auto led_green_gpio_ = hal::PC<15>();
-
-    led_red_gpio_.outpp(); 
-    led_blue_gpio_.outpp(); 
-    led_green_gpio_.outpp();
-
-    auto en_gpio = hal::PA<11>();
-    auto slp_gpio = hal::PA<12>();
-
-    en_gpio.outpp(LOW);
-    slp_gpio.outpp(LOW);
 
     auto & timer = hal::timer1;
+
+    // #region 初始化定时器
 
     timer.init({
         .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2), 
@@ -315,6 +195,22 @@ void myesc_main(){
 
     timer.oc<4>().enable_output(EN);
 
+    auto uvw_pwmgen_ = UvwPwmgen(&pwm_u_, &pwm_v_, &pwm_w_);
+
+    // #endregion 初始化定时器
+
+
+    // #region 初始化DRV8323
+
+
+    auto drv8323_en_gpio_ = hal::PA<11>();
+    auto drv8323_slp_gpio_ = hal::PA<12>();
+    auto drv8323_nfault_gpio_ = hal::PA<6>();
+    drv8323_nfault_gpio_.inpu();
+
+    drv8323_en_gpio_.outpp(LOW);
+    drv8323_slp_gpio_.outpp(LOW);
+
     auto drv8323_mode_gpio_      = hal::PB<4>();
     auto drv8323_vds_gpio_       = hal::PB<3>();
     auto drv8323_idrive_gpio_    = hal::PB<5>();
@@ -338,6 +234,28 @@ void myesc_main(){
     drv8323_vds_gpio_.outpp(LOW);
     // drv8323_vds_gpio_.outpp(HIGH); //dangerous no ocp protect!!!!
 
+
+    // #endregion 初始化ADC
+
+    // #region 初始化ADC
+    auto soa_ = hal::ScaledAnalogInput(hal::adc1.inj<1>(), 
+        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
+    auto sob_ = hal::ScaledAnalogInput(hal::adc1.inj<2>(), 
+        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
+    auto soc_ = hal::ScaledAnalogInput(hal::adc1.inj<3>(), 
+        Rescaler<q16>::from_anti_offset(1.65_r)    * Rescaler<q16>::from_scale(1.0_r));
+
+    init_adc();
+    // #endregion 
+
+    // #region 初始化LED
+    auto led_blue_gpio_ = hal::PC<13>();
+    auto led_red_gpio_ = hal::PC<14>();
+    auto led_green_gpio_ = hal::PC<15>();
+
+    led_red_gpio_.outpp(); 
+    led_blue_gpio_.outpp(); 
+    led_green_gpio_.outpp();
     auto blink_service_poller = [&]{
 
         led_red_gpio_ = BoolLevel::from((
@@ -348,29 +266,15 @@ void myesc_main(){
             uint32_t(clock::millis().count()) % 800) > 400);
     };
 
-    init_adc();
-
-    auto soa_ = hal::ScaledAnalogInput(hal::adc1.inj<1>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
-    auto sob_ = hal::ScaledAnalogInput(hal::adc1.inj<2>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
-    auto soc_ = hal::ScaledAnalogInput(hal::adc1.inj<3>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)    * Rescaler<q16>::from_scale(1.0_r));
-
-
-    auto uvw_pwmgen_ = UvwPwmgen(&pwm_u_, &pwm_v_, &pwm_w_);
-
+    // #endregion 
+    
     Angle<q16> openloop_elecrad_ = 0_deg;
     UvwCoord<q20> uvw_curr_ = Zero;
     DqCoord<q20> dq_curr_ = Zero;
     DqCoord<q20> dq_volt_ = Zero;
     AlphaBetaCoord<q20> alphabeta_curr_ = Zero;
     AlphaBetaCoord<q20> alphabeta_volt_ = Zero;
-
-    auto nfault_gpio_ = hal::PA<6>();
-    nfault_gpio_.inpu();
-
-
+    Microseconds exe_us_ = 0us;
 
     static constexpr auto current_regulator_cfg = LrSeriesCurrentRegulatorConfig{
         .fs = FOC_FREQ,
@@ -382,6 +286,7 @@ void myesc_main(){
 
     static constexpr auto controller_coeff = current_regulator_cfg.make_coeff();
     // PANIC{controller_coeff};
+
     auto d_pi_ctrl_ = controller_coeff.to_controller();
     auto q_pi_ctrl_ = controller_coeff.to_controller();
 
@@ -395,15 +300,16 @@ void myesc_main(){
             .observer_gain = 0.1201_q20, // [rad/s]
             // .pm_flux_linkage = 0.000017_q20, // [V / (rad/s)]
             .pm_flux_linkage = 0.0003_q20, // [V / (rad/s)]
-
-    }};
+        }
+    };
 
     [[maybe_unused]] auto lbg_sensorless_ob = dsp::motor_ctl::LuenbergerObserver{
         dsp::motor_ctl::LuenbergerObserver::Config{
             .fs = FOC_FREQ,
             .phase_inductance = PHASE_INDUCTANCE,
             .phase_resistance = PHASE_RESISTANCE
-    }};
+        }
+    };
 
     [[maybe_unused]] auto smo_sensorless_ob = dsp::motor_ctl::SlideModeObserver{
         dsp::motor_ctl::SlideModeObserver::Config{
@@ -413,8 +319,6 @@ void myesc_main(){
             .kslf = 0.6_r,   
         }
     };
-
-    Microseconds exe_us_ = 0us;
 
     auto ctrl_isr = [&]{
         const auto uvw_curr = UvwCoord<q20>{
@@ -428,12 +332,14 @@ void myesc_main(){
 
         [[maybe_unused]] const auto ctime = clock::time();
 
-        // const auto openloop_manchine_angle = Angle<q16>::from_turns(10_r * ctime);
-        const auto openloop_manchine_angle = Angle<q16>::from_turns(0.2_r * ctime);
-        // const auto openloop_manchine_angle = Angle<q16>::from_turns(0);
+        // const auto openloop_manchine_angle = Angle<q16>::from_turns(0 * ctime);
+        // const auto openloop_manchine_angle = Angle<q16>::from_turns(0.2_r * ctime);
+        const auto openloop_manchine_angle = Angle<q16>::from_turns(0);
         const auto openloop_elec_angle = openloop_manchine_angle * POLE_PAIRS;
-        // const auto elec_angle = openloop_elec_angle;
 
+        #if 1
+        const auto elec_angle = openloop_elec_angle;
+        #else
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 10_deg;
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 20_deg;
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 40_deg;
@@ -448,13 +354,14 @@ void myesc_main(){
         // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle() + 90_deg);
         // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle() + 90_deg);
         // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle() + 90_deg);
+        #endif
 
         const auto elec_rotation = Rotation2<q16>::from_angle(elec_angle);
         const auto dq_curr = alphabeta_curr.to_dq(elec_rotation);
 
         [[maybe_unused]] auto forward_dq_volt_by_pi_ctrl = [&]{
-            const auto dest_q_curr = CLAMP(4 * ctime - 1, 0, 0.4_r);
-            // const auto dest_q_curr = 0.4_r + 0.2_q16 * sinpu(50 * ctime);
+            const auto dest_q_curr = CLAMP((ctime - 1), 0, 0.4_r);
+            // const auto dest_q_curr = 0.4_r + 0.2_q16 * sinpu(250 * ctime);
             // const auto dest_q_curr = 0.4_r;
             // const auto dest_q_curr = 0.4_q16;
             // const auto dest_q_curr = 0.26_q16;
@@ -577,7 +484,6 @@ void myesc_main(){
             // flux_sensorless_ob.V_alphabeta_last_
             // smo_sensorless_ob.angle().to_turns(),
             // exe_us_.count(),
-            // SVM({.alpha = 0.1_q16, .beta = 0})
 
             // flux_sensorless_ob.angle().to_turns(),
             // lbg_sensorless_ob.angle().to_turns(),
@@ -585,11 +491,7 @@ void myesc_main(){
             // uint32_t(exe_us_.count())
 
             // openloop_elecrad_.normalized().to_turns()
-            // bool(nfault_gpio_.read() == LOW),
-
-            // hal::PA<8>().read().to_bool(),
-            // hal::PA<9>().read().to_bool(),
-            // hal::PA<10>().read().to_bool(),
+            // bool(drv8323_nfault_gpio_.read() == LOW),
 
             // pwm_u_.cvr(),
             // pwm_v_.cvr(),
@@ -598,9 +500,6 @@ void myesc_main(){
             // pwm_u_.get_dutycycle(),
             // pwm_v_.get_dutycycle(),
             // pwm_w_.get_dutycycle(),
-
-            // mosdrv.get_status1().unwrap().as_bitset(),
-            // mosdrv.get_status2().unwrap().as_bitset(),
         );
 
         blink_service_poller();
