@@ -66,10 +66,11 @@ public:
 
     PMW3901(const PMW3901 & other) = delete;
     PMW3901(PMW3901 && other) = delete;
-
     ~PMW3901() = default;
-    [[nodiscard]] IResult<> validate();
+
     [[nodiscard]] IResult<> init();
+
+    [[nodiscard]] IResult<> validate();
 
     [[nodiscard]] IResult<> update();
 

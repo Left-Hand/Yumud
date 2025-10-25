@@ -45,10 +45,6 @@ public:
 private:
     GP22_Phy phy_;
 
-    static constexpr Nanoseconds value2ns(q16 tdc_value) {
-        return Nanoseconds(uint64_t(tdc_value * 500));
-    }
-
     [[nodiscard]] IResult<> soft_reset() {
         if(const auto res = phy_.write_u8(0x50);
             res.is_err()) return res;
