@@ -71,7 +71,8 @@ static constexpr auto PHASE_INDUCTANCE = 0.0007_q20;
 static constexpr auto PHASE_RESISTANCE = 0.523_q20;
 #endif
 
-static constexpr uint32_t CURRENT_CUTOFF_FREQ = 2500;
+// static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1000;
+static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1200;
 
 static constexpr auto MAX_MODU_VOLT = q16(6.5);
 
@@ -165,7 +166,7 @@ void myesc_main(){
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
-    static constexpr auto MOS_1C840L_500MA_BEST_DEADZONE = 350ns;
+    static constexpr auto MOS_1C840L_500MA_BEST_DEADZONE = 90ns;
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADZONE = 350ns;
     timer.init_bdtr(MOS_1C840L_500MA_BEST_DEADZONE);
     // timer.init_bdtr(MOS_1C840L_100MA_BEST_DEADZONE);
@@ -222,28 +223,30 @@ void myesc_main(){
 
     // drv8323_gain_gpio_.outpp(LOW);
     // drv8323_gain_gpio_.outpp(LOW);
-    drv8323_gain_gpio_.inpd();//20x
+    // drv8323_gain_gpio_.inpd();//10x
+    drv8323_gain_gpio_.inflt();//20x
     // drv8323_gain_gpio_.outpp(HIGH);//40x
 
 
-    // drv8323_idrive_gpio_.outpp(HIGH);//Sink 2A / Source1A
-    drv8323_idrive_gpio_.inflt();
+    drv8323_idrive_gpio_.outpp(HIGH);//Sink 2A / Source1A
+    // drv8323_idrive_gpio_.inflt();
     // drv8323_idrive_gpio_.outpp(LOW);
 
 
-    drv8323_vds_gpio_.outpp(LOW);
+    drv8323_vds_gpio_.outpp(LOW); //10A保护
     // drv8323_vds_gpio_.outpp(HIGH); //dangerous no ocp protect!!!!
 
 
     // #endregion 初始化ADC
 
     // #region 初始化ADC
+    static constexpr auto VOLTAGE_TO_CURRENT_RATIO = 0.5_r;
     auto soa_ = hal::ScaledAnalogInput(hal::adc1.inj<1>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
+        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
     auto sob_ = hal::ScaledAnalogInput(hal::adc1.inj<2>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(1.0_r));
+        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
     auto soc_ = hal::ScaledAnalogInput(hal::adc1.inj<3>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)    * Rescaler<q16>::from_scale(1.0_r));
+        Rescaler<q16>::from_anti_offset(1.65_r)    * Rescaler<q16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
 
     init_adc();
     // #endregion 
@@ -333,8 +336,9 @@ void myesc_main(){
         [[maybe_unused]] const auto ctime = clock::time();
 
         // const auto openloop_manchine_angle = Angle<q16>::from_turns(0 * ctime);
-        // const auto openloop_manchine_angle = Angle<q16>::from_turns(0.2_r * ctime);
-        const auto openloop_manchine_angle = Angle<q16>::from_turns(0);
+        const auto openloop_manchine_angle = Angle<q16>::from_turns(0.2_r * ctime);
+        // const auto openloop_manchine_angle = Angle<q16>::from_turns(1.2_r * ctime);
+        // const auto openloop_manchine_angle = Angle<q16>::from_turns(0);
         const auto openloop_elec_angle = openloop_manchine_angle * POLE_PAIRS;
 
         #if 1
@@ -343,7 +347,7 @@ void myesc_main(){
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 10_deg;
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 20_deg;
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 40_deg;
-        const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() - 90_deg);
+        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() - 90_deg);
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 80_deg);
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 40_deg;
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 180_deg + 30_deg);
@@ -360,8 +364,9 @@ void myesc_main(){
         const auto dq_curr = alphabeta_curr.to_dq(elec_rotation);
 
         [[maybe_unused]] auto forward_dq_volt_by_pi_ctrl = [&]{
-            const auto dest_q_curr = CLAMP((ctime - 1), 0, 0.4_r);
-            // const auto dest_q_curr = 0.4_r + 0.2_q16 * sinpu(250 * ctime);
+            const auto dest_q_curr = CLAMP((ctime - 1), 0, 0.3_r);
+            // const auto dest_q_curr = 0.3_r + 0.3_q16 * sinpu(2 * ctime);
+            // const auto dest_q_curr = 2.3_r;
             // const auto dest_q_curr = 0.4_r;
             // const auto dest_q_curr = 0.4_q16;
             // const auto dest_q_curr = 0.26_q16;
@@ -476,10 +481,12 @@ void myesc_main(){
             // alphabeta_volt_.beta / alphabeta_curr_.beta,
             dq_curr_,
             dq_volt_,
+            // alphabeta_volt_.beta / alphabeta_curr_.beta,
             // q_pi_ctrl_.err_sum_,
             // q_pi_ctrl_.kp_
             // q_pi_ctrl_.err_sum_max_
             // lbg_sensorless_ob.angle().to_turns(),
+            hal::adc1.inj<1>().get_voltage(),
             flux_sensorless_ob.angle().to_turns()
             // flux_sensorless_ob.V_alphabeta_last_
             // smo_sensorless_ob.angle().to_turns(),
@@ -492,6 +499,7 @@ void myesc_main(){
 
             // openloop_elecrad_.normalized().to_turns()
             // bool(drv8323_nfault_gpio_.read() == LOW),
+
 
             // pwm_u_.cvr(),
             // pwm_v_.cvr(),

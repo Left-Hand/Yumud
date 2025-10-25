@@ -8,6 +8,7 @@
 // 其占空比可在 0.1％ 至 100％ 的范围内编程设定。
 
 // https://github.com/adafruit/MLX90393_Library/blob/master/MLX90393.h
+// https://wiki.lckfb.com/zh-hans/lspi/module/sensor/mlx90393-3d-hall-sensor.html
 
 #include "mlx90393_prelude.hpp"
 namespace ymd::drivers{
