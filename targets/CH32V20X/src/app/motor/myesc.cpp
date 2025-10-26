@@ -34,6 +34,8 @@
 #include "hal/dma/dma.hpp"
 
 #include "linear_regression.hpp"
+#include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
+
 
 using namespace ymd;
 
@@ -71,8 +73,8 @@ static constexpr auto PHASE_INDUCTANCE = 0.0007_q20;
 static constexpr auto PHASE_RESISTANCE = 0.523_q20;
 #endif
 
-// static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1000;
-static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1200;
+static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1000;
+// static constexpr uint32_t CURRENT_CUTOFF_FREQ = 200;
 
 static constexpr auto MAX_MODU_VOLT = q16(6.5);
 
@@ -94,14 +96,11 @@ struct LrSeriesCurrentRegulatorConfig{
         const auto & self = *this;
         digipw::PiController::Cofficients coeff;
 
-        const auto norm_freq = q16(q16(TAU) * fc / self.fs);
+        const auto norm_omega = q16(q16(TAU) * fc / self.fs);
         coeff.max_out = self.max_voltage;
 
         coeff.kp = q20(self.phase_inductance * self.fc) * q16(TAU);
-        // coeff.kp = 0;
-        // coeff.kp = 1;
-
-        coeff.ki_discrete = self.phase_resistance * norm_freq;
+        coeff.ki_discrete = self.phase_resistance * norm_omega;
 
         // coeff.ki_discrete = 0;
 
@@ -200,6 +199,24 @@ void myesc_main(){
 
     // #endregion 初始化定时器
 
+    // #region 配置编码器
+    
+    auto mt6825_cs_gpio_ = hal::PB<12>();
+    mt6825_cs_gpio_.outpp();
+    auto & spi = hal::spi2;
+
+    spi.init({
+        .baudrate = 18_MHz
+    });
+
+    drivers::MT6825 mt6825_{
+        &spi,
+        spi.allocate_cs_gpio(&mt6825_cs_gpio_)
+            .unwrap()
+    };
+
+
+    // #endregion
 
     // #region 初始化DRV8323
 
@@ -271,7 +288,8 @@ void myesc_main(){
 
     // #endregion 
     
-    Angle<q16> openloop_elecrad_ = 0_deg;
+    Angle<q16> openloop_elec_angle_ = 0_deg;
+    Angle<q16> encoder_elec_angle_ = 0_deg;
     UvwCoord<q20> uvw_curr_ = Zero;
     DqCoord<q20> dq_curr_ = Zero;
     DqCoord<q20> dq_volt_ = Zero;
@@ -335,14 +353,21 @@ void myesc_main(){
 
         [[maybe_unused]] const auto ctime = clock::time();
 
-        // const auto openloop_manchine_angle = Angle<q16>::from_turns(0 * ctime);
-        const auto openloop_manchine_angle = Angle<q16>::from_turns(0.2_r * ctime);
+        const auto openloop_manchine_angle = Angle<q16>::from_turns(0 * ctime);
         // const auto openloop_manchine_angle = Angle<q16>::from_turns(1.2_r * ctime);
-        // const auto openloop_manchine_angle = Angle<q16>::from_turns(0);
+        // const auto openloop_manchine_angle = Angle<q16>::from_turns(sinpu(0.2_r * ctime));
         const auto openloop_elec_angle = openloop_manchine_angle * POLE_PAIRS;
 
+        static constexpr auto ANGLE_BASE = Angle<q16>::from_turns(-0.22_q16);
+        const auto encoder_machine_angle = Angle<q16>::from_turns(
+            frac(q16(mt6825_.get_lap_angle().examine().to_turns()))
+        );
+
+        const auto encoder_elec_angle = ((encoder_machine_angle * POLE_PAIRS) + ANGLE_BASE).normalized(); 
+
         #if 1
-        const auto elec_angle = openloop_elec_angle;
+        // const auto elec_angle = openloop_elec_angle;
+        const auto elec_angle = encoder_elec_angle;
         #else
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 10_deg;
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 20_deg;
@@ -364,7 +389,11 @@ void myesc_main(){
         const auto dq_curr = alphabeta_curr.to_dq(elec_rotation);
 
         [[maybe_unused]] auto forward_dq_volt_by_pi_ctrl = [&]{
-            const auto dest_q_curr = CLAMP((ctime - 1), 0, 0.3_r);
+            const auto dest_d_curr = 0;
+            // const auto limit_max = CLAMP((ctime - 1), 0, 0.17_r);
+            // const auto dest_q_curr = limit_max * sinpu(0.2_r * ctime);
+            const auto dest_q_curr = 0.1_r;
+
             // const auto dest_q_curr = 0.3_r + 0.3_q16 * sinpu(2 * ctime);
             // const auto dest_q_curr = 2.3_r;
             // const auto dest_q_curr = 0.4_r;
@@ -374,7 +403,7 @@ void myesc_main(){
             // const auto dest_q_curr = 0.02_q16;
 
             return DqCoord<q20>{
-                .d = d_pi_ctrl_(0 - dq_curr.d),
+                .d = d_pi_ctrl_(dest_d_curr - dq_curr.d),
                 .q = q_pi_ctrl_(dest_q_curr - dq_curr.q)
             };
         };
@@ -429,7 +458,8 @@ void myesc_main(){
         dq_curr_ = dq_curr;
         dq_volt_ = dq_volt;
         alphabeta_volt_ = alphabeta_volt;
-        openloop_elecrad_ = openloop_elec_angle;
+        openloop_elec_angle_ = openloop_elec_angle;
+        encoder_elec_angle_ = encoder_elec_angle;
     };
 
 
@@ -475,8 +505,10 @@ void myesc_main(){
 
     while(true){
         // repl_service_poller();
-        if(1) DEBUG_PRINTLN_IDLE(
-            alphabeta_curr_,
+        if(DEBUGGER.pending() != 0) continue;
+
+        DEBUG_PRINTLN(
+            // alphabeta_curr_,
             // alphabeta_volt_,
             // alphabeta_volt_.beta / alphabeta_curr_.beta,
             dq_curr_,
@@ -486,8 +518,13 @@ void myesc_main(){
             // q_pi_ctrl_.kp_
             // q_pi_ctrl_.err_sum_max_
             // lbg_sensorless_ob.angle().to_turns(),
-            hal::adc1.inj<1>().get_voltage(),
-            flux_sensorless_ob.angle().to_turns()
+            // hal::adc1.inj<1>().get_voltage(),
+            
+            // q16(lap_angle.to_turns()) * POLE_PAIRS,
+            encoder_elec_angle_.to_turns(),
+            openloop_elec_angle_.to_turns(),
+            0
+            // flux_sensorless_ob.angle().to_turns()
             // flux_sensorless_ob.V_alphabeta_last_
             // smo_sensorless_ob.angle().to_turns(),
             // exe_us_.count(),
@@ -497,7 +534,7 @@ void myesc_main(){
             // smo_sensorless_ob.angle().to_turns(),
             // uint32_t(exe_us_.count())
 
-            // openloop_elecrad_.normalized().to_turns()
+            // openloop_elec_angle_.normalized().to_turns()
             // bool(drv8323_nfault_gpio_.read() == LOW),
 
 

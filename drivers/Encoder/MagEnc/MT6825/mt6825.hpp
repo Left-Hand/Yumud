@@ -49,6 +49,7 @@ struct Packet{
             uint8_t d2;
         };
     };
+    uint8_t __padding__;
 
     [[nodiscard]] static constexpr Packet from_u24(uint32_t bits){                  
         Self ret;                
@@ -77,24 +78,26 @@ struct Packet{
     }
 
     [[nodiscard]] IResult<Angle<q31>> decode() const {
-        if(not is_overspeed) [[unlikely]] 
-            return Err(Error::OverSpeed);
-        if(not is_pc1_valid()) [[unlikely]] 
-            return Err(Error::InvalidPc);
-        if(not is_pc2_valid()) [[unlikely]] 
-            return Err(Error::InvalidPc);
-        return Ok(Angle<q31>::from_turns(q18(angle_u18())>>18));
+        
+        // if(not is_overspeed) [[unlikely]] 
+        //     return Err(Error::OverSpeed);
+        // if(not is_pc1_valid()) [[unlikely]] 
+        //     return Err(Error::InvalidPc);
+        // if(not is_pc2_valid()) [[unlikely]] 
+        //     return Err(Error::InvalidPc2);
+
+        return Ok(Angle<q31>::from_turns(q18::from_i32(angle_u18())));
     }
 
     [[nodiscard]] constexpr bool is_pc1_valid() const {
-        const uint16_t bits = d1 & 0xfffe;
-        const bool is_even = std::popcount(bits) % 2 == 0;
-        return is_even == pc1;
+        const uint16_t bits = d1 & 0xfeff;
+        const bool is_odd = std::popcount(bits) % 2 == 1;
+        return is_odd == pc1;
     }
 
     [[nodiscard]] constexpr bool is_pc2_valid() const {
         const uint8_t bits = d2 & 0xf8;
-        const bool is_odd = std::popcount(bits) % 2 == 0;
+        const bool is_odd = std::popcount(bits) % 2 == 1;
         return is_odd == pc2;
     }
 private:
@@ -103,7 +106,7 @@ private:
     }
 };
 #pragma pack(pop)
-static_assert(sizeof(Packet) == 3);
+static_assert(sizeof(Packet) == 4);
 };
 
 
@@ -120,13 +123,7 @@ struct MT6825:
         spi_drv_(std::move(spi_drv)){}
 
     [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<Angle<q31>> get_lap_angle(){
-        if(const auto res = read_packet();
-            res.is_err()) return Err(res.unwrap_err());
-        else{
-            return res.unwrap().decode();
-        }
-    }
+    [[nodiscard]] IResult<Angle<q31>> get_lap_angle();
 private:
     hal::SpiDrv spi_drv_;
 
@@ -154,21 +151,6 @@ private:
     }
 
 
-    [[nodiscard]] IResult<Packet> read_packet(){
-        #if 1
-        static constexpr std::array<uint8_t, 4> tx = {0x83, 0x00, 0x00, 0x00};
-        std::array<uint8_t, 4> rx;
-        if(const auto res = spi_drv_.transceive_burst<uint8_t>(rx, tx);
-            res.is_err()) return Err(Error(res.unwrap_err()));
-        return Ok(Packet::from_bytes(rx[1], rx[2], rx[3]));
-        #else
-        //exprimental
-        static constexpr std::array<uint16_t, 2> tx = {0x8300, 0x0000};
-        std::array<uint16_t, 2> rx;
-        if(const auto res = spi_drv_.transceive_burst<uint16_t>(rx, tx);
-            res.is_err()) return Err(Error(res.unwrap_err()));
-        return Ok(Packet::from_u24(std::bit_cast<uint32_t>(rx) >> 8));
-        #endif
-    }
+    [[nodiscard]] IResult<Packet> read_packet();
 };
 }

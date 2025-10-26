@@ -138,7 +138,7 @@ void SpiHw::set_remap(const uint8_t remap){
         #ifdef ENABLE_SPI2
         case SPI2_BASE:
             switch(remap){
-                case 0: return ; //SPI2 NO REMAP
+                case 0: return; //SPI2 NO REMAP
                 default: break;
             }
             break;

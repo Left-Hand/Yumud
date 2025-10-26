@@ -186,6 +186,10 @@ void nuedc_2025e_joint_main(){
             .unwrap()
     };
 
+    ma730_.init({
+        .direction = CW
+    }).examine();
+
     BMI160 bmi160_{
         &spi,
         spi.allocate_cs_gpio(&ma730_cs_gpio_)
@@ -205,10 +209,6 @@ void nuedc_2025e_joint_main(){
             // .gyr_fs = BMI160::GyrFs::_500deg
         }).examine();
     }
-
-    ma730_.init({
-        .direction = CW
-    }).examine();
 
     static constexpr auto mp6540_adc_scaler = MP6540::make_adc_scaler(10'000);
 
