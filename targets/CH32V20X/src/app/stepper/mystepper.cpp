@@ -90,7 +90,7 @@ public:
     Result<void, Error> resume(){
         const auto begin_u = clock::micros();
 
-        const auto meas_lap_position = ({
+        const auto meas_lap_angle = ({
             if(const auto res = retry(2, [&]{return encoder_.update();});
                 res.is_err()) return Err(Error(res.unwrap_err()));
             // execution_time_ = clock::micros() - begin_u;
@@ -145,7 +145,7 @@ public:
         if(subprogress.is_finished()){
             is_subprogress_finished_ = true;
             execution_time_ = measure_total_elapsed_us([&]{                
-                ctrl(meas_lap_position);
+                ctrl(meas_lap_angle);
             });
 
             return Ok();
@@ -155,7 +155,7 @@ public:
 
 
         const auto [a,b] = subprogress.resume(
-            Angle<q16>::from_turns(meas_lap_position.to_turns()));
+            Angle<q16>::from_turns(meas_lap_angle.to_turns()));
 
         svpwm_.set_dutycycle({a,b});
         return Ok();
@@ -166,11 +166,11 @@ public:
     }
 
 
-    void ctrl(Angle<q31> meas_lap_position){
+    void ctrl(Angle<q31> meas_lap_angle){
 
-        pos_filter_.update(meas_lap_position);
-        // const auto [a,b] = sincospu(frac(meas_lap_position - 0.009_r) * 50);
-        // const auto [s,c] = sincospu(frac(-(meas_lap_position - 0.019_r + 0.01_r)) * 50);
+        pos_filter_.update(meas_lap_angle.into<q16>());
+        // const auto [a,b] = sincospu(frac(meas_lap_angle - 0.009_r) * 50);
+        // const auto [s,c] = sincospu(frac(-(meas_lap_angle - 0.019_r + 0.01_r)) * 50);
         
         // const auto input_targ_position = 16 * sin(ctime);
         // const auto targ_speed = 6 * cos(6 * ctime);
@@ -193,7 +193,7 @@ public:
             amp * sin(ctime * omega) + 9, omega * amp * cos(ctime * omega)
             // int(ctime * omega), 0
         );
-        const auto meas_position = pos_filter_.position();
+        const auto meas_position = pos_filter_.accumulated_angle().to_turns();
         const auto meas_speed = pos_filter_.speed();
         
         static constexpr dsp::PdCtrlLaw pd_ctrl_law{
@@ -210,7 +210,7 @@ public:
         const auto tangles = (1 + MIN(ABS(meas_speed) * real_t(1.0 / 40), 0.15_r));
 
         const auto [s,c] = sincospu(
-        (pos_filter_.lap_position() + SIGN_AS(0.005_r * tangles, curr)) * 50);
+        (pos_filter_.accumulated_angle().to_turns() + SIGN_AS(0.005_r * tangles, curr)) * 50);
         
         svpwm_.set_dutycycle({c * mag,s * mag});
 
@@ -348,7 +348,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
         DEBUG_PRINTLN_IDLE(
             
-            motor_system_.pos_filter_.position() * 10,
+            motor_system_.pos_filter_.accumulated_angle().to_turns() * 10,
             motor_system_.pos_filter_.speed()
             // motor_system_.execution_time_.count(),
             // motor_system_.command_shaper_.get()

@@ -5,7 +5,7 @@
 
 namespace ymd{
 
-struct ElecradCompensator{
+struct ElecAngleCompensator{
     q20 base;
     uint32_t pole_pairs;
 

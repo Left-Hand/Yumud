@@ -35,7 +35,7 @@
 
 #include "linear_regression.hpp"
 #include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
-
+#include "dsp/motor_ctrl/position_filter.hpp"
 
 using namespace ymd;
 
@@ -62,10 +62,11 @@ static constexpr size_t POLE_PAIRS = 10u;
 // static constexpr auto PHASE_INDUCTANCE = 0.0025_q20;
 
 //100uh
-static constexpr auto PHASE_INDUCTANCE = 0.0001_q20;
+static constexpr auto PHASE_INDUCTANCE = q20(70 * 1E-6);
 
 //1ohm
-static constexpr auto PHASE_RESISTANCE = 1.123_q20;
+// static constexpr auto PHASE_RESISTANCE = 1.123_q20;
+static constexpr auto PHASE_RESISTANCE = 0.823_q20;
 #else
 static constexpr size_t POLE_PAIRS = 7u;
 static constexpr auto PHASE_INDUCTANCE = 0.0007_q20;
@@ -276,6 +277,7 @@ void myesc_main(){
     led_red_gpio_.outpp(); 
     led_blue_gpio_.outpp(); 
     led_green_gpio_.outpp();
+
     auto blink_service_poller = [&]{
 
         led_red_gpio_ = BoolLevel::from((
@@ -289,7 +291,7 @@ void myesc_main(){
     // #endregion 
     
     Angle<q16> openloop_elec_angle_ = 0_deg;
-    Angle<q16> encoder_elec_angle_ = 0_deg;
+    Angle<q16> sensored_elec_angle_ = 0_deg;
     UvwCoord<q20> uvw_curr_ = Zero;
     DqCoord<q20> dq_curr_ = Zero;
     DqCoord<q20> dq_volt_ = Zero;
@@ -341,7 +343,18 @@ void myesc_main(){
         }
     };
 
+
+    [[maybe_unused]] dsp::PositionFilter pos_filter_{
+        typename dsp::PositionFilter::Config{
+            .fs = FOC_FREQ,
+            .r = 205
+        }
+    };
+    
     auto ctrl_isr = [&]{
+        [[maybe_unused]] const auto ctime = clock::time();
+
+        //#region 电流传感
         const auto uvw_curr = UvwCoord<q20>{
             .u = soa_.get_value(),
             .v = sob_.get_value(),
@@ -349,25 +362,25 @@ void myesc_main(){
         };
 
         const auto alphabeta_curr = AlphaBetaCoord<q20>::from_uvw(uvw_curr_);
+        //#endregion
 
-
-        [[maybe_unused]] const auto ctime = clock::time();
-
+        //#region 位置提取
         const auto openloop_manchine_angle = Angle<q16>::from_turns(0 * ctime);
         // const auto openloop_manchine_angle = Angle<q16>::from_turns(1.2_r * ctime);
         // const auto openloop_manchine_angle = Angle<q16>::from_turns(sinpu(0.2_r * ctime));
         const auto openloop_elec_angle = openloop_manchine_angle * POLE_PAIRS;
 
         static constexpr auto ANGLE_BASE = Angle<q16>::from_turns(-0.22_q16);
-        const auto encoder_machine_angle = Angle<q16>::from_turns(
-            frac(q16(mt6825_.get_lap_angle().examine().to_turns()))
-        );
+        const auto encoder_angle = mt6825_.get_lap_angle().examine().into<q16>();
 
-        const auto encoder_elec_angle = ((encoder_machine_angle * POLE_PAIRS) + ANGLE_BASE).normalized(); 
+        pos_filter_.update(encoder_angle);
+        
+        const auto sensored_elec_angle = ((encoder_angle * POLE_PAIRS) + ANGLE_BASE).normalized(); 
+
 
         #if 1
         // const auto elec_angle = openloop_elec_angle;
-        const auto elec_angle = encoder_elec_angle;
+        const auto elec_angle = sensored_elec_angle;
         #else
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 10_deg;
         // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 20_deg;
@@ -386,22 +399,50 @@ void myesc_main(){
         #endif
 
         const auto elec_rotation = Rotation2<q16>::from_angle(elec_angle);
+        //#endregion
+
+        //#region 位速合成力矩
+        const auto [position_cmd, speed_cmd] = [&]{
+            const auto omega = 9_q16;
+            const auto amplitude = 7_q16;
+
+            const auto [s,c] = sincos(omega * ctime);
+            return std::make_tuple<q16, q16>(
+                amplitude * s,
+                amplitude * omega * c
+            );
+            // return std::make_tuple<q16, q16>(
+            //     amplitude * int(omega * ctime),
+            //     0
+            // );
+        }();
+
+
+        const q20 torque_cmd = [&]{ 
+            const q16 kp = 0.18_q16;
+            const q16 kd = 0.016_q16;
+
+            const q16 position_err = position_cmd - pos_filter_.accumulated_angle().to_turns();
+            const q16 speed_err = speed_cmd - pos_filter_.speed();
+
+            return (kp * position_err) + (kd * speed_err);
+        }();
+
+        //#endregion 
+
+        //#region 力矩转电流
+
+        static constexpr q20 TORQUE_2_CURR_RATIO = 1_q16;
+        static constexpr q20 MAX_CURRENT = 0.2_q16;
+
+        const q20 current_cmd = CLAMP2(torque_cmd * TORQUE_2_CURR_RATIO, MAX_CURRENT);
+        //#endregion
+
         const auto dq_curr = alphabeta_curr.to_dq(elec_rotation);
 
-        [[maybe_unused]] auto forward_dq_volt_by_pi_ctrl = [&]{
-            const auto dest_d_curr = 0;
-            // const auto limit_max = CLAMP((ctime - 1), 0, 0.17_r);
-            // const auto dest_q_curr = limit_max * sinpu(0.2_r * ctime);
-            const auto dest_q_curr = 0.1_r;
-
-            // const auto dest_q_curr = 0.3_r + 0.3_q16 * sinpu(2 * ctime);
-            // const auto dest_q_curr = 2.3_r;
-            // const auto dest_q_curr = 0.4_r;
-            // const auto dest_q_curr = 0.4_q16;
-            // const auto dest_q_curr = 0.26_q16;
-            // const auto dest_q_curr = 0.14_q16;
-            // const auto dest_q_curr = 0.02_q16;
-
+        [[maybe_unused]] auto generate_dq_volt_by_pi_ctrl = [&]{
+            const q20 dest_d_curr = 0;
+            const q20 dest_q_curr = current_cmd;
             return DqCoord<q20>{
                 .d = d_pi_ctrl_(dest_d_curr - dq_curr.d),
                 .q = q_pi_ctrl_(dest_q_curr - dq_curr.q)
@@ -409,7 +450,7 @@ void myesc_main(){
         };
 
         #if 0
-        [[maybe_unused]] auto forward_dq_volt_by_constant_voltage = [&]{
+        [[maybe_unused]] auto generate_dq_volt_by_constant_voltage = [&]{
             auto dq_volt = dq_volt_;
             dq_volt.d = 0_r;
             dq_volt.q = 0.2_r;
@@ -419,11 +460,12 @@ void myesc_main(){
 
 
 
-        // const auto dq_volt = (forward_dq_volt_by_hfi()).clamp(MAX_MODU_VOLT);
-        const auto dq_volt = (forward_dq_volt_by_pi_ctrl()).clamp(MAX_MODU_VOLT);
-        // const auto dq_volt = forward_dq_volt_by_constant_voltage().clamp(MAX_MODU_VOLT);
+        // const auto dq_volt = (generate_dq_volt_by_hfi()).clamp(MAX_MODU_VOLT);
+        const auto dq_volt = (generate_dq_volt_by_pi_ctrl()).clamp(MAX_MODU_VOLT);
+        // const auto dq_volt = generate_dq_volt_by_constant_voltage().clamp(MAX_MODU_VOLT);
 
-        [[maybe_unused]] auto forward_alpha_beta_volt_by_hfi = [&]{
+        #if 0
+        [[maybe_unused]] auto generate_alpha_beta_volt_by_hfi = [&]{
             static constexpr size_t HFI_MAX_STEPS = 4;
             static constexpr auto HFI_MAX_VOLT = 1.0_r;
             static size_t hfi_step = 0;
@@ -435,13 +477,14 @@ void myesc_main(){
                 .beta = 0_r,
             };
         };
+        #endif
 
 
         const auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation);
         // const auto alphabeta_volt = AlphaBetaCoord<q20>::ZERO;
-        // const auto alphabeta_volt = forward_alpha_beta_volt_by_hfi().clamp(MAX_MODU_VOLT);
+        // const auto alphabeta_volt = generate_alpha_beta_volt_by_hfi().clamp(MAX_MODU_VOLT);
 
-        flux_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
+        // flux_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
         // smo_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
 
         const auto uvw_dutycycle = SVM(
@@ -459,7 +502,7 @@ void myesc_main(){
         dq_volt_ = dq_volt;
         alphabeta_volt_ = alphabeta_volt;
         openloop_elec_angle_ = openloop_elec_angle;
-        encoder_elec_angle_ = encoder_elec_angle;
+        sensored_elec_angle_ = sensored_elec_angle;
     };
 
 
@@ -521,8 +564,11 @@ void myesc_main(){
             // hal::adc1.inj<1>().get_voltage(),
             
             // q16(lap_angle.to_turns()) * POLE_PAIRS,
-            encoder_elec_angle_.to_turns(),
+            sensored_elec_angle_.to_turns(),
             openloop_elec_angle_.to_turns(),
+            pos_filter_.accumulated_angle().to_turns(),
+            pos_filter_.speed(),
+            static_cast<uint32_t>(exe_us_.count()),
             0
             // flux_sensorless_ob.angle().to_turns()
             // flux_sensorless_ob.V_alphabeta_last_

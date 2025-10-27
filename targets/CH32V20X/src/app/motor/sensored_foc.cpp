@@ -228,11 +228,11 @@ void bldc_main(){
         }
     };
 
-    pos_filter_.set_base_lap_position(
-        0
+    pos_filter_.set_base_lap_angle(
+        Angle<q16>::ZERO
     );
 
-    ElecradCompensator elecrad_comp_{
+    ElecAngleCompensator elec_angle_comp_{
         .base = 0,
         .pole_pairs = 7
     };
@@ -263,17 +263,17 @@ void bldc_main(){
     auto update_sensors = [&]{ 
         ma730_.update().examine();
 
-        const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
-        pos_filter_.update(meas_lap_position);
+        const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
+        pos_filter_.update(Angle<q16>::from_turns(meas_lap_angle.to_turns()));
     };
 
     auto sensored_foc_cb = [&]{
         update_sensors();
 
-        const auto meas_lap_position = ma730_.read_lap_angle().examine(); 
-        const auto meas_elecrad = elecrad_comp_(meas_lap_position);
+        const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
+        const auto meas_elec_angle = elec_angle_comp_(meas_lap_angle);
 
-        [[maybe_unused]] const auto meas_position = pos_filter_.position();
+        [[maybe_unused]] const auto meas_position = pos_filter_.accumulated_angle().to_turns();
         [[maybe_unused]] const auto meas_speed = pos_filter_.speed();
 
         [[maybe_unused]] static constexpr q20 omega = 2;
@@ -307,7 +307,7 @@ void bldc_main(){
         [[maybe_unused]] const auto alphabeta_volt = DqCoordVoltage{
             0, 
             CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
-        }.to_alphabeta(meas_elecrad);
+        }.to_alphabeta(meas_elec_angle);
         #endif
         static constexpr auto INV_BUS_VOLT = q16(1.0/12);
 
@@ -318,7 +318,7 @@ void bldc_main(){
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
-        meas_elecrad_ = meas_elecrad;
+        meas_elecrad_ = meas_elec_angle;
     };
 
 
@@ -396,7 +396,7 @@ void bldc_main(){
             rpc::make_function("setp", [&](real_t p){axis_target_position_ = p;}),
 
             rpc::make_function("mp", [&](){
-                DEBUG_PRINTLN(axis_target_position_, pos_filter_.position());
+                DEBUG_PRINTLN(axis_target_position_, pos_filter_.accumulated_angle().to_turns());
             }),
 
 

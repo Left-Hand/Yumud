@@ -140,7 +140,7 @@ struct PwmAndDirPhy_WithFg final{
         }
     }
 
-    constexpr Angle<q31> get_position() const {
+    constexpr Angle<q31> get_angle() const {
         const auto turns = q16::from_i32((int64_t(counter_.count()) * int64_t(1 << 16)) / deducation_);
         return Angle<q31>::from_turns(turns);
         // return q16(counter_.count()) >> 6;
@@ -183,10 +183,9 @@ struct DualPwmMotorPhy_WithAbEnc final{
         encoder_.tick();
     }
 
-    constexpr Angle<q31> get_position() const {
+    constexpr Angle<q31> get_angle() const {
         const auto turns = q16::from_i32((int64_t(encoder_.count()) * int64_t(1 << 16)) / deducation_);
         return Angle<q31>::from_turns(turns);
-        // return q16(encoder_.count()) >> 6;
     }
 
     constexpr int32_t count() const {
@@ -314,7 +313,7 @@ void diffspd_vehicle_main(){
     };
 
     auto motor_ctrl_cb = [&](){
-        motor_td_.update(motor_phy.get_position());
+        motor_td_.update(motor_phy.get_angle().into<q16>());
 
         const auto ctime = clock::time();
         const auto freq = 0.2_r;
@@ -325,7 +324,7 @@ void diffspd_vehicle_main(){
             freq * amp * cospu(ctime * freq)
         );
 
-        const auto position = motor_td_.position();
+        const auto position = motor_td_.accumulated_angle().to_turns();
         const auto speed = motor_td_.speed();
 
         const auto dutycycle = CLAMP2(
@@ -340,10 +339,10 @@ void diffspd_vehicle_main(){
 
     auto report_motor_service = [&]{
 
-        const auto position = motor_td_.position();
+        const auto position = motor_td_.accumulated_angle().to_turns();
         const auto speed = motor_td_.speed();
         DEBUG_PRINTLN_IDLE(
-            motor_phy.get_position(),
+            motor_phy.get_angle(),
             motor_phy.count(),
             position, speed
         );
