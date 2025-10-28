@@ -445,6 +445,7 @@ vs HAL：
         - [x] AS5047
         - [x] AS5600
         - [x] KTH7823
+        - [x] VCE2755/VCE2758
         - [x] MA730
         - [x] MT6701
         - [x] MT6816
@@ -454,8 +455,6 @@ vs HAL：
         - [ ] TLE5012
 
     - [x] AB编码器
-    - [ ] PWM编码器
-    - [ ] 模拟编码器
 
 - [x] 栅极驱动器
     - [x] DRV8323
@@ -494,6 +493,7 @@ vs HAL：
         - [ ] BMI088  
         - [x] BMI160
         - [x] BMI270
+        - [ ] BMI323
         - [ ] ICM42605
         - [x] ICM42688
         - [ ] ICM45686
@@ -504,14 +504,12 @@ vs HAL：
         - [ ] BNO055
         - [ ] ICM20948
 
-    - [x] 角加速度计
-        - [ ] L3G4200D
-
     - [x] 地磁
         - [x] AK8963
         - [x] AK8975
         - [x] AK09911C
         - [x] BMM150
+        - [ ] BMM350
         - [x] HMC5883L
         - [x] IST8310
         - [x] MMC5603
@@ -523,6 +521,8 @@ vs HAL：
 - [x] 气压计
     - [x] BMP085/BMP180
     - [x] BMP280
+    - [x] BMP390
+    - [x] HP203B
 
 - [x] 存储器
     - [x] EEPROM(AT24)
@@ -664,8 +664,6 @@ vs HAL：
 - [ ] file 文件系统
 - [x] io
     - [x] 寄存器
-- [ ] os 操作系统
-    - [x] tasker 非抢占式任务驱动器
 
 - [x] polymorphism 多态
     - [x] proxy3
