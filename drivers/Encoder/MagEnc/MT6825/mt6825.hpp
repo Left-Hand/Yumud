@@ -3,8 +3,7 @@
 //18位磁编码器
 //已完成 已测试
 
-//评价是依托答辩
-//从没见过回程差0.003圈 再低的spi速率校验位也频繁出错的编码器
+//锐评：19年出品的依托答辩。从没见过回程差0.003圈 再低的spi速率校验位也频繁出错的编码器
 
 
 
@@ -79,7 +78,7 @@ struct Packet{
         return std::span<const uint8_t, 3>(reinterpret_cast<const uint8_t *>(this), sizeof(Self));
     }
 
-    [[nodiscard]] IResult<Angle<q31>> decode() const {
+    [[nodiscard]] IResult<Angle<q31>> parse() const {
         
         // if(not is_overspeed) [[unlikely]] 
         //     return Err(Error::OverSpeed);
@@ -93,13 +92,13 @@ struct Packet{
 
     [[nodiscard]] constexpr bool is_pc1_valid() const {
         const uint16_t bits = d1 & 0xfeff;
-        const bool is_odd = std::popcount(bits) % 2 == 1;
+        const bool is_odd = (std::popcount(bits) & 0x01);
         return is_odd == pc1;
     }
 
     [[nodiscard]] constexpr bool is_pc2_valid() const {
         const uint8_t bits = d2 & 0xf8;
-        const bool is_odd = std::popcount(bits) % 2 == 1;
+        const bool is_odd = (std::popcount(bits) & 0x01);
         return is_odd == pc2;
     }
 private:

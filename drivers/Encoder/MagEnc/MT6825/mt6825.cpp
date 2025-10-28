@@ -15,7 +15,7 @@ IResult<Angle<q31>> Self::get_lap_angle(){
     else{
         const auto & packet = res.unwrap();
         // DEBUG_PRINTLN(std::hex, packet.as_bytes());
-        return packet.decode();
+        return packet.parse();
     }
 }
 

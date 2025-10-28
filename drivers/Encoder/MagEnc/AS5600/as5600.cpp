@@ -13,43 +13,43 @@ static constexpr Angle<q31> u12_to_angle(const uint16_t data){
     return Angle<q31>::from_turns(q31(q16::from_i32(data << 4)));
 }
 
-static constexpr uint16_t angle_to_u12(const Angle<q31> pos){
-    return q16(pos.to_turns()).as_i32() >> 4; 
+static constexpr uint16_t angle_to_u12(const Angle<q31> angle){
+    return q16(angle.to_turns()).as_i32() >> 4; 
 }
 
-IResult<> AS5600::set_power_mode(const PowerMode _power_mode){
+IResult<> AS5600::set_power_mode(const PowerMode power_mode){
     auto reg = RegCopy(config_reg);
-    reg.powerMode = uint8_t(_power_mode);
+    reg.powerMode = uint8_t(power_mode);
     return write_reg(reg);
 }
 
-IResult<> AS5600::set_fast_filter(const FastFilter _fast_filter){
+IResult<> AS5600::set_fast_filter(const FastFilter fast_filter){
     auto reg = RegCopy(config_reg);
-    reg.fastFilter = uint8_t(_fast_filter);
+    reg.fastFilter = uint8_t(fast_filter);
     return write_reg(reg);
 }
 
-IResult<> AS5600::set_slow_filter(const SlowFilter _slow_filter){
+IResult<> AS5600::set_slow_filter(const SlowFilter slow_filter){
     auto reg = RegCopy(config_reg);
-    reg.slowFilter = uint8_t(_slow_filter);
+    reg.slowFilter = uint8_t(slow_filter);
     return write_reg(reg);
 }
 
-IResult<> AS5600::set_pwm_frequency(const PwmFrequency _pwm_frequency){
+IResult<> AS5600::set_pwm_frequency(const PwmFrequency pwm_frequency){
     auto reg = RegCopy(config_reg);
-    reg.pwmFrequency = uint8_t(_pwm_frequency);
+    reg.pwmFrequency = uint8_t(pwm_frequency);
     return write_reg(reg);
 }
 
-IResult<> AS5600::set_ouput_stage(const OutputStage _output_stage){
+IResult<> AS5600::set_ouput_stage(const OutputStage output_stage){
     auto reg = RegCopy(config_reg);
-    reg.outputStage = uint8_t(_output_stage);
+    reg.outputStage = uint8_t(output_stage);
     return write_reg(reg);
 }
 
-IResult<> AS5600::set_hysteresis(const Hysteresis _hysteresis){
+IResult<> AS5600::set_hysteresis(const Hysteresis hysteresis){
     auto reg = RegCopy(config_reg);
-    reg.hysteresis = uint8_t(_hysteresis);
+    reg.hysteresis = uint8_t(hysteresis);
     return write_reg(reg);
 }
 

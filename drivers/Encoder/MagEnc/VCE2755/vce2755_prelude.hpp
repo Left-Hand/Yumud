@@ -1,0 +1,339 @@
+#pragma once
+
+// 锐评：和KTH7823一样，都是和VCE2755 pin to pin的芯片
+
+// VCE2755是一款基于各向异性磁阻（AMR）技术，高度集成的旋转磁编码器芯片，它在一个小型封装内集成了AMR
+// 磁传感器和高精度CMOS处理电路，实现14bit分辨率平行于封装表面的平面360°磁场角度检测。基于AMR在饱
+// 和工作模式下对磁场强度变化不敏感的优势，VCE2755具备优异的抗震动和低温漂特性，适用于各种使用环境严
+// 苛的场合。由于使用了SAR结构的ADC，VCE2755磁编码器具备极低的信号延迟（<2μs），支持高达18000rpm
+// 的高转速，内置的校准算法能对传感器及电路的零偏、幅度和温度做实时补偿，并同时提供了不同角度信号的输出
+// 方式：SPI、SSI、ABZ、UVW和PWM，方便用户根据不同需求而选用，适用于各种典型的需要角度位置反馈和速
+// 度检测的应用场景。 
+
+#include "core/io/regs.hpp"
+#include "core/utils/Result.hpp"
+#include "core/utils/angle.hpp"
+
+#include "hal/bus/spi/spidrv.hpp"
+
+
+#include "drivers/Encoder/MagEncoder.hpp"
+
+
+namespace ymd::drivers{
+
+struct VCE2755_Prelude{
+    using Error = EncoderError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+
+    enum class Package:uint8_t{
+        SOIC8 = 0x5A,
+        TQFN3 = 0x5B
+    };
+
+    enum class PwmFreq:uint8_t{
+        _971_1Hz,_485_6Hz
+    };
+
+
+    enum class Mux:uint8_t{
+        _1,
+        _2,
+        _3,
+        _4,
+
+        TQFN_ABZ_PWM_SSI_SPI = _1,
+        TQFN_UVW_PWM_SSI_SPI = _2,
+        TQFN_ABZ_UVW_SPI = _3,
+        TQFN_ABZ_SPI = _4,
+
+        SOIC_ABZ_SPI = _1,
+        SOIC_UVW_SPI = _2,
+        SOIC_PWM_SPI = _3,
+    };
+
+    enum class Hysteresis:uint8_t{
+        _0deg = 0b000,
+        _0_011deg = 0b001,
+        _0_022deg = 0b010,
+        _0_044deg = 0b011,
+        _0_066deg = 0b100,
+        _0_088deg = 0b101,
+        _0_132deg = 0b110,
+        _0_176deg = 0b111,
+    };
+
+    enum class ZeroPulseWidth:uint8_t{
+        _1lsb   = 0b000,
+        _2lsb   = 0b001,
+        _4lsb   = 0b010,
+        _8lsb   = 0b011,
+        _12lsb  = 0b100,
+        _16lsb  = 0b101,
+        _180deg = 0b110,
+    };
+
+    enum class BandWidth:uint8_t{ 
+        _8BW0 = 0b011001,
+        _4BW0 = 0b100011,
+        _2BW0 = 0b101101,
+        _BW0  = 0b110111,
+    };
+
+
+    struct [[nodiscard]] Packet{
+        union{
+            struct {
+                uint8_t angle_17_10;
+                uint8_t angle_9_2;
+
+                // CRC0～CRC3 为 4bitCRC，系 ANGLE+SMF+BTE 共 20bit 数据的 CRC 校验值，
+                // 对应的 CRC 生成多项式为 X4+X+1，初始值=0000b，数据输入输出不取反。
+                uint8_t crc_3_0:4;
+
+                uint8_t bte:1;
+                uint8_t mag_weak:1;
+                uint8_t angle_1_0:2;
+            };
+
+            std::array<uint8_t, 3> bytes;
+        };
+        uint8_t __padding__; // to 32bit
+            
+        [[nodiscard]] static Packet from_bytes(
+            const uint8_t b1, const uint8_t b2, const uint8_t b3
+        ){
+            Packet ret;
+            ret.bytes[0] = b1;
+            ret.bytes[1] = b2;
+            ret.bytes[2] = b3;
+            return ret;
+        }
+
+        [[nodiscard]] bool is_crc_valid() const {
+            return calc_crc() == crc_3_0;
+        }
+
+        [[nodiscard]] IResult<Angle<q31>> parse() const {
+            if(!is_crc_valid()) [[unlikely]]
+                return Err(Error::InvalidCrc);
+
+            if(mag_weak) [[unlikely]]
+                return Err(Error::MagnetLow);
+
+            const auto b18 = static_cast<uint32_t>(b20() >> 2);
+            const auto turns = static_cast<q31>(q18::from_i32(b18));
+            return Ok(Angle<q31>::from_turns(turns));
+        }
+    private:
+        [[nodiscard]] constexpr uint32_t b20() const{
+            return (bytes[0] << 12) | (bytes[1] << 8) | (bytes[2] >> 4);
+        }
+
+        [[nodiscard]] constexpr uint8_t calc_crc() const {
+            // CRC0～CRC3 为 4bitCRC，系 ANGLE+SMF+BTE 共 20bit 数据的 CRC 校验值，
+            // 对应的 CRC 生成多项式为 X^4+X+1，初始值=0000b，数据输入输出不取反。
+
+            const auto data = b20();
+            
+            // CRC-4 with polynomial X^4 + X + 1 (0x13 in normal representation)
+            // But we only use the 4 MSB bits of the polynomial: 0x9 (1001)
+            uint8_t crc = 0;
+            uint32_t crc_data = data;
+            
+            // Process all 20 bits
+            for(int i = 19; i >= 0; i--) {
+                uint8_t bit = (crc_data >> i) & 1;
+                uint8_t msb = (crc >> 3) & 1;
+                
+                crc <<= 1;
+                crc |= bit;
+                
+                if(msb) {
+                    crc ^= 0x3; // 0b0011 (X + 1 part of the polynomial X^4 + X + 1)
+                }
+            }
+            
+            // Finalize CRC by processing 4 more bits
+            for(int i = 0; i < 4; i++) {
+                uint8_t msb = (crc >> 3) & 1;
+                crc <<= 1;
+                if(msb) {
+                    crc ^= 0x3; // 0b0011
+                }
+            }
+            
+            return crc & 0xF;
+        }
+    };
+
+    enum class AbzPowerOnWaveform:uint8_t{
+        // 00 脉冲序列 1（上电期间的标准脉冲输出）
+
+
+        // 01 脉冲序列 2（上电期间 Z1 脉冲从低拉高持续 5ms 后，AB 输
+        // 出上电初始位置的绝对角度脉冲信号）
+
+
+        // 11 脉冲序列 3（上电期间 Z1 脉冲从低拉高持续 10ms 后，AB
+        // 输出上电初始位置的绝对角度脉冲信号
+    };
+
+};
+
+struct VCE2755_Regset:public VCE2755_Prelude{
+    //0x00
+    struct R8_ChipId:public Reg8<>{
+        static constexpr Package KEY1 = Package::SOIC8;
+        static constexpr Package KEY2 = Package::TQFN3;
+
+        Package package;
+
+        [[nodiscard]] constexpr bool is_valid() const {
+            return package == KEY1 || package == KEY2;
+        }
+    };
+
+
+    static_assert(sizeof(Packet) == 4);
+
+    //0x40
+    struct R8_IO:public Reg8<> {
+        uint8_t spi_3wire_en:1;
+
+        //0: 2mA 
+        //1: 4mA
+        uint8_t io_strength:1;
+        Mux mux:2;
+        AbzPowerOnWaveform abz_power_on_waveform:2;
+        uint8_t :2;
+    };
+
+    //0x41
+    struct R8_AbzInvert:public Reg8<> {
+        uint8_t invert_en:1;
+        uint8_t :7;
+    };
+
+    //0x42
+    struct R8_PwmMode:public Reg8<> {
+        uint8_t :6;
+        PwmFreq pwm_mode:1;
+        uint8_t :1;
+    };
+
+    //0x43
+    struct R8_Direction:public Reg8<> {
+        uint8_t :5;
+
+        // 0:磁铁在芯片上方顺时针旋转（B 超前 A 1/4 周期），角度递增(如图 4)
+        // 磁铁在芯片上方逆时针旋转（B 滞后 A 1/4 周期），角度递减(如图 5)
+        // 1:磁铁在芯片上方逆时针旋转（B 超前 A 1/4 周期），角度递增
+        // 磁铁在芯片上方顺时针旋转（B 滞后 A 1/4 周期），角度递减
+        uint8_t is_ccw:1;
+        uint8_t :2;
+    };
+
+    //0x43,0x44,
+    
+    //0x46,0x47
+
+    //0x48
+    struct R8_Hysteresis:public Reg8<> {
+        uint8_t :5;
+        Hysteresis hysteresis:3;
+    };
+
+    //0x4a
+    //0x4c
+    //0x4d
+};
+
+
+
+
+class VCE2755 final:
+    public VCE2755_Prelude,
+    public MagEncoderIntf{
+public:
+    struct Config{
+        ClockDirection direction;
+    };
+
+    explicit VCE2755(const hal::SpiDrv & spi_drv):
+        spi_drv_(spi_drv){;}
+    explicit VCE2755(hal::SpiDrv && spi_drv):
+        spi_drv_(std::move(spi_drv)){;}
+    explicit VCE2755(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){;}
+
+
+    [[nodiscard]] IResult<> init(const Config & cfg);
+    [[nodiscard]] IResult<> update();
+
+    [[nodiscard]] IResult<> set_zero_angle(const Angle<q31> angle);
+    [[nodiscard]] IResult<Angle<q31>> read_lap_angle(){
+        return Ok(Angle<q31>::from_turns(lap_turns_));
+    }
+
+private:
+    hal::SpiDrv spi_drv_;
+    VCE2755_Regset regs_ = {};
+    q31 lap_turns_ = 0;
+
+    template<typename T>
+    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+        const auto address = T::ADDRESS;
+        const uint8_t data = reg.as_val();
+        const auto tx = uint16_t(
+            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | data);
+        if(const auto res = spi_drv_.write_single<uint16_t>(tx);
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        reg.apply();
+        return Ok();
+    }
+
+
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(T & reg){
+        uint16_t dummy;
+        const auto addr = std::bit_cast<uint8_t>(T::ADDRESS);
+        const auto tx = uint16_t(0x4000 | ((uint8_t)addr << 8));
+        if(const auto res = spi_drv_.write_single<uint16_t>(tx); 
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        if(const auto res = spi_drv_.read_single<uint16_t>(dummy);
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        if((dummy & 0xff) != 0x00) 
+            return Err(Error(Error::Kind::InvalidRxFormat));
+        reg.as_ref() = (dummy >> 8);
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<Packet> read_packet() {
+        #if 1
+        static constexpr std::array<uint8_t, 4> tx = {0x83, 0x00, 0x00, 0x00};
+        std::array<uint8_t, 4> rx;
+        if(const auto res = spi_drv_.transceive_burst<uint8_t>(rx, tx);
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        // DEBUG_PRINTLN(rx);
+        return Ok(Packet::from_bytes(rx[1], rx[2], rx[3]));
+        #else
+        //exprimental
+        static constexpr std::array<uint16_t, 2> tx = {0x8300, 0x0000};
+        std::array<uint16_t, 2> rx;
+        if(const auto res = spi_drv_.transceive_burst<uint16_t>(rx, tx);
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        return Ok(Packet::from_u24(std::bit_cast<uint32_t>(rx) >> 8));
+        #endif
+    }
+
+    
+    [[nodiscard]]
+    IResult<uint16_t> get_raw_data();
+
+};
+
+
+};

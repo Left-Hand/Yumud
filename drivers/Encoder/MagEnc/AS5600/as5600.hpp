@@ -19,17 +19,17 @@ public:
             
     [[nodiscard]] IResult<> init();
 
-    [[nodiscard]] IResult<> set_power_mode(const PowerMode _power_mode);
+    [[nodiscard]] IResult<> set_power_mode(const PowerMode power_mode);
 
-    [[nodiscard]] IResult<> set_fast_filter(const FastFilter _fast_filter);
+    [[nodiscard]] IResult<> set_fast_filter(const FastFilter fast_filter);
 
-    [[nodiscard]] IResult<> set_slow_filter(const SlowFilter _slow_filter);
+    [[nodiscard]] IResult<> set_slow_filter(const SlowFilter slow_filter);
 
-    [[nodiscard]] IResult<> set_pwm_frequency(const PwmFrequency _pwm_frequency);
+    [[nodiscard]] IResult<> set_pwm_frequency(const PwmFrequency pwm_frequency);
 
-    [[nodiscard]] IResult<> set_ouput_stage(const OutputStage _output_stage);
+    [[nodiscard]] IResult<> set_ouput_stage(const OutputStage output_stage);
 
-    [[nodiscard]] IResult<> set_hysteresis(const Hysteresis _hysteresis);
+    [[nodiscard]] IResult<> set_hysteresis(const Hysteresis hysteresis);
     
     [[nodiscard]] IResult<MagStatus> get_mag_status();
     
