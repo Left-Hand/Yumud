@@ -56,7 +56,8 @@ public:
 
 
         SERVO_PWMGEN_TIMER.init({
-            .freq = 50
+            .count_freq = hal::NearestFreq(50),
+            .count_mode = hal::TimerCountMode::Up
         }, EN);
 
         #ifndef USE_MOCK_SERVO

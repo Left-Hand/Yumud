@@ -40,19 +40,19 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 IResult<> ICM42605::init() {
-    if(const auto res = phy_.write_reg(ICM42605_BANK_SEL, 0);
+    if(const auto res = write_reg(ICM42605_BANK_SEL, 0);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = phy_.write_reg(ICM42605_BANK_SEL, 1);
+    if(const auto res = write_reg(ICM42605_BANK_SEL, 1);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = phy_.write_reg(ICM42605_INTF_CONFIG4, 0x02);
+    if(const auto res = write_reg(ICM42605_INTF_CONFIG4, 0x02);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = phy_.write_reg(ICM42605_BANK_SEL, 0);
+    if(const auto res = write_reg(ICM42605_BANK_SEL, 0);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = phy_.write_reg(ICM42605_GYR_CONFIG0, 0b00000110);
+    if(const auto res = write_reg(ICM42605_GYR_CONFIG0, 0b00000110);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = phy_.write_reg(ICM42605_ACC_CONFIG0, 0b00000011);
+    if(const auto res = write_reg(ICM42605_ACC_CONFIG0, 0b00000011);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = phy_.write_reg(ICM42605_PWR_MGMT0, 0b00011111);
+    if(const auto res = write_reg(ICM42605_PWR_MGMT0, 0b00011111);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
@@ -62,13 +62,13 @@ IResult<> ICM42605::validate(){
     static constexpr uint8_t VALID_WHO_AM_I = 0;
     TODO();
 
-    if(const auto res = phy_.write_reg(ICM42605_BANK_SEL, 0);
+    if(const auto res = write_reg(ICM42605_BANK_SEL, 0);
         res.is_err()) return Err(res.unwrap_err());
     uint8_t id = 0;
-    if(const auto res = phy_.read_reg(ICM42605_WHO_AM_I, id);
+    if(const auto res = read_reg(ICM42605_WHO_AM_I, id);
         res.is_err()) return Err(res.unwrap_err());
 
-    if(id != VALID_WHO_AM_I) return Err(Error::WrongWhoAmI);
+    if(id != VALID_WHO_AM_I) return Err(Error::InvalidChipId);
 
     return Ok();
 }

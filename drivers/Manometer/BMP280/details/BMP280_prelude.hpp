@@ -123,7 +123,7 @@ struct BMP280_Prelude{
     };
 };
 
-struct BMP280_Regset: public BMP280_Prelude {
+struct BMP280_Regset final: public BMP280_Prelude {
 
     struct R8_ChipID:public Reg8<>{
         static constexpr RegAddr ADDRESS=0xD0;

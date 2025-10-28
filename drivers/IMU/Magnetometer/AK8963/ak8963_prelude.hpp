@@ -79,7 +79,7 @@ struct AK8963_Regs:public AK8963_Prelude{
     struct R8_CNTL1:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x0A;
 
-        uint8_t mode:4;
+        Mode mode:4;
         uint8_t bit:1;
         uint8_t :3;
     } DEF_R8(cntl1_reg)

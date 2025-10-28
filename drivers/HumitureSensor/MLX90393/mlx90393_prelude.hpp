@@ -1,6 +1,7 @@
 #pragma once
 
 // https://github.com/adafruit/MLX90393_Library/blob/master/MLX90393.h
+// https://wiki.lckfb.com/zh-hans/lspi/module/sensor/mlx90393-3d-hall-sensor.html
 
 #include <tuple>
 #include <optional>

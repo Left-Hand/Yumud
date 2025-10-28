@@ -89,7 +89,8 @@ public:
         #endif
 
         hal::timer1.init({
-            .freq = SERVO_FREQ
+            .count_freq = hal::NearestFreq(SERVO_FREQ),
+            .count_mode = hal::TimerCountMode::Up
         }, EN);
     }
 

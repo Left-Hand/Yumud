@@ -18,15 +18,15 @@ IResult<> ADXL345::validate(){
         res.is_err()) return Err(res.unwrap_err());
 
     if(reg.id != VALID_DEVICE_ID)
-        return Err(Error::WrongWhoAmI);
+        return Err(Error::InvalidChipId);
 
-    if(const auto res = selftest(); 
+    if(const auto res = self_test(); 
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
-IResult<> ADXL345::selftest(){
+IResult<> ADXL345::self_test(){
     // ADXL345具备自测功能，可同时有效测试机械系统和电子
     // 系统。自测功能使能时(通过DATA_FORMAT寄存器(地址
     // 0x31)的SELF_TEST位)，有静电力施加于机械传感器之

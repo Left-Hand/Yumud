@@ -1,7 +1,7 @@
 #include "ft6336u.hpp"
 
 // https://www.iotword.com/23534.html
-// https://github.com/aselectroworks/Arduino-FT6336U/blob/master/src/FT6336U.h
+// https://github.com/aselectroworks/Arduino-Self/blob/master/src/Self.h
 
 #define FT6636_DEBUG_EN
 
@@ -18,7 +18,9 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Error = FT6336U::Error;
+using Self = FT6336U;
+
+using Error = Self::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
@@ -76,11 +78,11 @@ static constexpr uint8_t FT6336U_ADDR_RELEASE_CODE_ID    = 0xAF;
 static constexpr uint8_t FT6336U_ADDR_STATE              = 0xBC;
 
 // Function Specific Type
-IResult<> FT6336U::init(){
+IResult<> Self::init(){
     return Ok();
 }
 
-IResult<FT6336U::DeviceMode> FT6336U::get_device_mode() {
+IResult<Self::DeviceMode> Self::get_device_mode() {
     auto & reg = regs_.devmode;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
@@ -88,13 +90,13 @@ IResult<FT6336U::DeviceMode> FT6336U::get_device_mode() {
     return Ok(DeviceMode(reg.device_mode));
 }
 
-IResult<> FT6336U::set_device_mode(DeviceMode mode) {
+IResult<> Self::set_device_mode(DeviceMode mode) {
     auto reg = RegCopy(regs_.devmode);
     reg.device_mode = mode;
     return write_reg(reg);
 }
 
-IResult<FT6336U::GestureId> FT6336U::get_gesture_id() {
+IResult<Self::GestureId> Self::get_gesture_id() {
     auto & reg = regs_.gestid;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
@@ -102,14 +104,14 @@ IResult<FT6336U::GestureId> FT6336U::get_gesture_id() {
     return GestureId::from_u8(reg.gesture_id);
 }
 
-IResult<uint8_t> FT6336U::get_touch_count() {
+IResult<uint8_t> Self::get_touch_count() {
     auto & reg = regs_.td_status;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(uint8_t(reg.touch_cnt));
 }
 
-IResult<FT6336U::TouchPoints> FT6336U::get_touch_points(){
+IResult<Self::TouchPoints> Self::get_touch_points(){
     uint8_t buf[9] = {0};
     if(const auto res = read_burst(regs_.td_status.ADDRESS, std::span(buf));
         res.is_err()) return Err(res.unwrap_err());
@@ -137,7 +139,7 @@ IResult<FT6336U::TouchPoints> FT6336U::get_touch_points(){
     }
 }
 
-IResult<uint8_t> FT6336U::get_touch_event(const ChannelSelection nth) {
+IResult<uint8_t> Self::get_touch_event(const ChannelSelection nth) {
     const auto reg_addr = [&]{
         switch(nth){
             case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_EVENT;
@@ -153,7 +155,7 @@ IResult<uint8_t> FT6336U::get_touch_event(const ChannelSelection nth) {
     });
 }
 
-IResult<uint8_t> FT6336U::get_touch_id(const ChannelSelection nth) {
+IResult<uint8_t> Self::get_touch_id(const ChannelSelection nth) {
     const auto reg_addr = [&]{
         switch(nth){
             case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_ID;
@@ -170,7 +172,7 @@ IResult<uint8_t> FT6336U::get_touch_id(const ChannelSelection nth) {
 }
 
 
-IResult<uint8_t> FT6336U::get_touch_weight(const ChannelSelection nth) {
+IResult<uint8_t> Self::get_touch_weight(const ChannelSelection nth) {
     const auto reg_addr = [&]{
         switch(nth){
             case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_WEIGHT;
@@ -183,7 +185,7 @@ IResult<uint8_t> FT6336U::get_touch_weight(const ChannelSelection nth) {
 }
 
 
-IResult<uint8_t> FT6336U::get_touch_misc(const ChannelSelection nth) {
+IResult<uint8_t> Self::get_touch_misc(const ChannelSelection nth) {
     const auto reg_addr = [&]{
         switch(nth){
             case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_MISC;
@@ -200,88 +202,88 @@ IResult<uint8_t> FT6336U::get_touch_misc(const ChannelSelection nth) {
 }
 
 
-IResult<uint8_t> FT6336U::get_touch_threshold() {
+IResult<uint8_t> Self::get_touch_threshold() {
     return read_reg(FT6336U_ADDR_THRESHOLD);
 }
 
-IResult<uint8_t> FT6336U::get_filter_coefficient() {
+IResult<uint8_t> Self::get_filter_coefficient() {
     return read_reg(FT6336U_ADDR_FILTER_COE);
 }
 
-IResult<uint8_t> FT6336U::get_ctrl_mode() {
+IResult<uint8_t> Self::get_ctrl_mode() {
     return read_reg(FT6336U_ADDR_CTRL);
 }
 
-IResult<uint8_t> FT6336U::get_time_period_enter_monitor() {
+IResult<uint8_t> Self::get_time_period_enter_monitor() {
     return read_reg(FT6336U_ADDR_TIME_ENTER_MONITOR);
 }
 
-IResult<uint8_t> FT6336U::get_active_rate() {
+IResult<uint8_t> Self::get_active_rate() {
     return read_reg(FT6336U_ADDR_ACTIVE_MODE_RATE);
 }
 
-IResult<uint8_t> FT6336U::get_monitor_rate() {
+IResult<uint8_t> Self::get_monitor_rate() {
     return read_reg(FT6336U_ADDR_MONITOR_MODE_RATE);
 }
 
 
 // Gesture Parameters
-IResult<uint8_t> FT6336U::get_radian_value() {
+IResult<uint8_t> Self::get_radian_value() {
     return read_reg(FT6336U_ADDR_RADIAN_VALUE);
 }
 
-IResult<> FT6336U::set_radian_value(uint8_t val) {
+IResult<> Self::set_radian_value(uint8_t val) {
     return write_reg(FT6336U_ADDR_RADIAN_VALUE, val);
 }
 
-IResult<uint8_t> FT6336U::get_offset_left_right() {
+IResult<uint8_t> Self::get_offset_left_right() {
     return read_reg(FT6336U_ADDR_OFFSET_LEFT_RIGHT);
 }
 
-IResult<> FT6336U::set_offset_left_right(uint8_t val) {
+IResult<> Self::set_offset_left_right(uint8_t val) {
     return write_reg(FT6336U_ADDR_OFFSET_LEFT_RIGHT, val);
 }
 
-IResult<uint8_t> FT6336U::get_offset_up_down() {
+IResult<uint8_t> Self::get_offset_up_down() {
     return read_reg(FT6336U_ADDR_OFFSET_UP_DOWN);
 }
 
-IResult<> FT6336U::set_offset_up_down(uint8_t val) {
+IResult<> Self::set_offset_up_down(uint8_t val) {
     return write_reg(FT6336U_ADDR_OFFSET_UP_DOWN, val);
 }
 
-IResult<uint8_t> FT6336U::get_distance_left_right() {
+IResult<uint8_t> Self::get_distance_left_right() {
     return read_reg(FT6336U_ADDR_DISTANCE_LEFT_RIGHT);
 }
 
-IResult<> FT6336U::set_distance_left_right(uint8_t val) {
+IResult<> Self::set_distance_left_right(uint8_t val) {
     return write_reg(FT6336U_ADDR_DISTANCE_LEFT_RIGHT, val);
 }
 
-IResult<uint8_t> FT6336U::get_distance_up_down() {
+IResult<uint8_t> Self::get_distance_up_down() {
     return read_reg(FT6336U_ADDR_DISTANCE_UP_DOWN);
 }
 
-IResult<> FT6336U::set_distance_up_down(uint8_t val) {
+IResult<> Self::set_distance_up_down(uint8_t val) {
     return write_reg(FT6336U_ADDR_DISTANCE_UP_DOWN, val);
 }
 
-IResult<uint8_t> FT6336U::get_distance_zoom() {
+IResult<uint8_t> Self::get_distance_zoom() {
     return read_reg(FT6336U_ADDR_DISTANCE_ZOOM);
 }
 
-IResult<> FT6336U::set_distance_zoom(uint8_t val) {
+IResult<> Self::set_distance_zoom(uint8_t val) {
     return write_reg(FT6336U_ADDR_DISTANCE_ZOOM, val);
 }
 
 
-IResult<> FT6336U::write_reg(const uint8_t addr, const uint8_t val) {
+IResult<> Self::write_reg(const uint8_t addr, const uint8_t val) {
     if(const auto res = i2c_drv_.write_reg(addr, val);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
-IResult<uint8_t> FT6336U::read_reg(const uint8_t addr) {
+IResult<uint8_t> Self::read_reg(const uint8_t addr) {
     uint8_t val;
     if(const auto res = i2c_drv_.read_reg(addr, val);
         res.is_err()) return Err(res.unwrap_err());

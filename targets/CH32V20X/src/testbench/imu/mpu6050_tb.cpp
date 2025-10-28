@@ -95,7 +95,10 @@ using namespace ymd::drivers;
 
     auto & timer = hal::timer1;
     
-    timer.init({200}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(200),
+        .count_mode = hal::TimerCountMode::Up
+    }, EN);
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);

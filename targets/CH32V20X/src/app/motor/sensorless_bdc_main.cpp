@@ -48,23 +48,16 @@ using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
 void at8222_tb(){
 
     hal::uart2.init({4000000, CommStrategy::Nil});
-    // while(true){
-    //     // uart2.write1(0x55);
-    // }
+
     DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.no_brackets(EN);
 
-    // while(true){
-    //     DEBUG_PRINTLN('/');
-    // }
-
-    // TARG_UART.init(6_MHz);
 
     auto & timer = hal::timer3;
 
     //因为是中心对齐的顶部触发 所以频率翻�?
     timer.init({
-        .freq = ISR_FREQ * 2, 
+        .count_freq = hal::NearestFreq(ISR_FREQ * 2),
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 

@@ -167,8 +167,8 @@ struct LSM303_Prelude{
 
 
 struct LSM303_Regs : public LSM303_Prelude {
-    Vec3<int16_t> a; // accelerometer readings
-    Vec3<int16_t> m; // magnetometer readings
+    Vec3<int16_t> a = Vec3<int16_t>::ZERO; // accelerometer readings
+    Vec3<int16_t> m = Vec3<int16_t>::ZERO; // magnetometer readings
 
 };
 

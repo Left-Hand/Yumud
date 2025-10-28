@@ -49,7 +49,10 @@ static void bmi088_tb(hal::Spi & spi){
     }};
 
     auto & timer = hal::timer1;
-    timer.init({CALC_FREQ_HZ}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(CALC_FREQ_HZ),
+        .count_mode = hal::TimerCountMode::Up
+    }, EN);
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);

@@ -20,12 +20,12 @@ template<typename T = void>
 using IResult= Result<T, Error>;
 
 IResult<> MMC5603::update(){
-    auto reg = RegCopy(x_reg);
-    return read_burst(ADDRESS_X, &reg.data_h, 6);
+    auto reg = RegCopy(regs_.x_reg);
+    return read_burst(ADDRESS_X, std::span(&reg.data_h, 6));
 }
 
 IResult<> MMC5603::reset(){
-    auto reg = RegCopy(ctrl0_reg);
+    auto reg = RegCopy(regs_.ctrl0_reg);
     reg.do_reset = true;
     if(const auto res = write_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
@@ -35,11 +35,11 @@ IResult<> MMC5603::reset(){
 }
 
 IResult<> MMC5603::validate(){
-    auto reg = RegCopy(product_id_reg);
+    auto reg = RegCopy(regs_.product_id_reg);
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     
-    if(reg.id != reg.correct_id) return Err(Error::WrongWhoAmI);
+    if(reg.id != reg.correct_id) return Err(Error::InvalidChipId);
 
     if(const auto res = set_self_test_threshlds(0,0,0);//TODO change
         res.is_err()) return res;
@@ -49,14 +49,14 @@ IResult<> MMC5603::validate(){
 
 IResult<> MMC5603::set_data_rate(const DataRate dr){
     {
-        auto reg = RegCopy(odr_reg);
+        auto reg = RegCopy(regs_.odr_reg);
         reg.data_rate = dr;
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
 
     {
-        auto reg = RegCopy(ctrl2_reg);
+        auto reg = RegCopy(regs_.ctrl2_reg);
         if(reg.high_pwr != 1){
             reg.high_pwr = 1;
             if(const auto res = write_reg(reg);
@@ -64,7 +64,7 @@ IResult<> MMC5603::set_data_rate(const DataRate dr){
         }
     }
 
-    if(const auto res = enable_contious(EN);
+    if(const auto res = enable_continuous(EN);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
@@ -72,15 +72,15 @@ IResult<> MMC5603::set_data_rate(const DataRate dr){
 
 
 IResult<> MMC5603::set_band_width(const BandWidth bw){
-    auto reg = RegCopy(ctrl1_reg);
+    auto reg = RegCopy(regs_.ctrl1_reg);
     reg.bandwidth = uint8_t(bw);
     if(const auto res = write_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
-IResult<> MMC5603::enable_contious(const Enable en){
-    auto reg = RegCopy(ctrl2_reg);
+IResult<> MMC5603::enable_continuous(const Enable en){
+    auto reg = RegCopy(regs_.ctrl2_reg);
     reg.cont_en = en == EN;
     if(const auto res = write_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
@@ -89,17 +89,17 @@ IResult<> MMC5603::enable_contious(const Enable en){
 
 
 IResult<Vec3<q24>> MMC5603::read_mag(){
-    return Ok{Vec3<q24>{
-        s16_to_uni(x_reg.as_val()),
-        s16_to_uni(y_reg.as_val()),
-        s16_to_uni(z_reg.as_val())
+    return Ok{Vec3{
+        q24(s16_to_uni(regs_.x_reg.as_val())),
+        q24(s16_to_uni(regs_.y_reg.as_val())),
+        q24(s16_to_uni(regs_.z_reg.as_val()))
     }};
 }
 
 IResult<> MMC5603::set_self_test_threshlds(uint8_t x, uint8_t y, uint8_t z){
-    auto x_st_reg_copy = RegCopy(x_st_reg);
-    auto y_st_reg_copy = RegCopy(y_st_reg);
-    auto z_st_reg_copy = RegCopy(z_st_reg);
+    auto x_st_reg_copy = RegCopy(regs_.x_st_reg);
+    auto y_st_reg_copy = RegCopy(regs_.y_st_reg);
+    auto z_st_reg_copy = RegCopy(regs_.z_st_reg);
 
     if(const auto res = write_reg(x_st_reg_copy);
         res.is_err()) return Err(res.unwrap_err());
@@ -111,7 +111,7 @@ IResult<> MMC5603::set_self_test_threshlds(uint8_t x, uint8_t y, uint8_t z){
 }
 
 IResult<> MMC5603::inhibit_channels(bool x, bool y, bool z){
-    auto reg = RegCopy(ctrl1_reg);
+    auto reg = RegCopy(regs_.ctrl1_reg);
 
     reg.x_inhibit = x;
     reg.y_inhibit = y;

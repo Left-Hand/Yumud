@@ -30,18 +30,16 @@ public:
     explicit MT6816(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
 
-    explicit MT6816(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        spi_drv_(hal::SpiDrv{spi, index}){;}
+    explicit MT6816(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv{spi, rank}){;}
 
     IResult<> init(const Config & cfg);
     IResult<> reconf(const Config & cfg);
     IResult<> update();
 
     IResult<Angle<q31>> read_lap_angle() { 
-        return Ok(Angle<q31>::from_turns(lap_position_));
+        return last_packet_.parse();
     }
-
-    uint32_t get_err_cnt() const {return err_cnt_;}
 
     IResult<MagStatus> get_mag_status() {
         if(last_packet_.no_mag){
@@ -57,27 +55,32 @@ private:
         uint16_t no_mag:1;
         uint16_t data_14bit:14;
 
-        // constexpr Packet() : pc(0), no_mag(0), data_14bit(0) {}
+        [[nodiscard]] IResult<Angle<q31>> parse() const {
+            if(not is_pc_valid()) [[unlikely]]
+                return Err(EncoderError::InvalidPc);
+            
+            if(no_mag) [[unlikely]]
+                return Err(EncoderError::MagnetLost);
 
-        Packet(uint16_t data){
-            reinterpret_cast<uint16_t &>(*this) = data;
+            const auto turns = q14::from_i32(data_14bit);
+            return Ok(Angle<q31>::from_turns(turns));
         }
 
-        q16 to_position() const{
-            return q16::from_i32(data_14bit << 2);
+        [[nodiscard]] bool is_pc_valid() const {
+            //TODO;
+            return true;
         }
+    private:
+        
     };
 
     static_assert(sizeof(Packet) == 2);
 
     hal::SpiDrv spi_drv_;
 
-    real_t lap_position_ = 0;
-    size_t err_cnt_ = 0;
-    bool fast_mode_ = false;
-    Packet last_packet_ = {0};
+    Packet last_packet_ = {};
 
-    IResult<uint16_t> get_position_data();
+    IResult<Packet> get_packet();
 };
 
 };

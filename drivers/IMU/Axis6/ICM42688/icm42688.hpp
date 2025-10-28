@@ -62,6 +62,13 @@ private:
         return Ok();
     }
 
+
+    [[nodiscard]] IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
+        if(const auto res = phy_.write_reg(reg_addr, reg_val);
+            res.is_err()) return res;
+        return Ok();
+    }
+
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = switch_bank(reg.bank);

@@ -7,7 +7,7 @@ namespace ymd::drivers{
 
 class HMC5883L final:
     public MagnetometerIntf,
-    public HMC5883L_Regs{
+    public HMC5883L_Prelude{
 public:
     explicit HMC5883L(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -35,7 +35,7 @@ public:
 private:
 
     hal::I2cDrv i2c_drv_;
-
+    HMC5883L_Regset regs_ = {};
     q16 lsb_ = 0;
 
 

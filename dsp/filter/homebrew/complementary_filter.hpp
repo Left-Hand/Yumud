@@ -25,7 +25,7 @@ struct ComplementaryFilter{
         dt_ = T(1) / cfg.fs;
     }
 
-    constexpr T operator ()(const T rot, const T gyr){
+    [[nodiscard]] constexpr T operator ()(const T rot, const T gyr){
 
         if(!is_inited_){
             rot_ = rot;
@@ -51,7 +51,7 @@ struct ComplementaryFilter{
         is_inited_ = false;
     }
 
-    constexpr T get() const {
+    [[nodiscard]] constexpr T get() const {
         return rot_;
     }
 

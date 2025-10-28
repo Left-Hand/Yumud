@@ -25,7 +25,7 @@ public:
         uint32_t syncword;
         DataRate datarate;
 
-        static constexpr Config from_default(){
+        [[nodiscard]] static constexpr Config from_default(){
             return Config{
                 .tx_power = Power::_8_Db,
                 .preamble_bytes = 3,
@@ -38,7 +38,7 @@ public:
         }
     };
 
-    LT8960L(Some<hal::Gpio *> scl, Some<hal::Gpio *> sda):
+    explicit LT8960L(Some<hal::Gpio *> scl, Some<hal::Gpio *> sda):
         phy_(scl, sda){;}
 
 

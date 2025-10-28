@@ -97,11 +97,10 @@ void dshot_main(){
     DEBUGGER.set_eps(4);
     auto & timer = hal::timer1;
 
-    // timer.enableArrSync();
-    // timer.enableCvrSync();
-
-
-    timer.init({20_KHz}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(20_KHz),
+        .count_mode = hal::TimerCountMode::Up
+    }, EN);
     auto & oc = timer.oc<1>();
     auto & oc2 = timer.oc<2>();
 

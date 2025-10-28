@@ -1,4 +1,4 @@
-#include "PAW3395.hpp"
+#include "paw3395.hpp"
 
 
 // https://github.com/ttwards/motor/blob/939f1db78dcaae6eb819dcb54b6146d94db7dffc/drivers/sensor/paw3395/paw3395.h#L122
@@ -6,33 +6,76 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Error = PAW3395::Error;
+using Self = PAW3395;
+
+using Error = Self::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> PAW3395::corded_gaming(){
+
+// https://github.com/dotdotchan/bs2x_sdk/blob/main/application/samples/products/sle_mouse_with_dongle/mouse_sensor/mouse_sensor_paw3395.c
+
+#define BURST_MOTION_READ               0x16
+#define READ_LENGTH                     6
+#define POWER_UP_DELAY_MS               40
+
+#define WRITE_RESET_ADDR                0xba     // Write operation, MSB is 1.
+#define RESET_VALUE                     0x5a
+#define READ_ID_ADDR                    0x00
+#define LEN_1                           1
+#define LEN_2                           2
+#define RAW_DATA_GRAB_ADDR              0x58
+#define RAW_DATA_GRAB_STATUS_ADDR       0x59
+#define RAW_DATA_LEN                    1225
+#define PIN_MOTION                      S_MGPIO21
+#define USB_8K_MOUSE_REPORT_DELAY       125
+#define MOUSE_TO_BT_DATA_LEN            5
+#define MOUSE_3395_READ_TIMES           60
+#define MOUSE_3395_READ_REG             0x6c
+#define MOUSE_3395_READ_TARGET_VAL      0x80
+#define MOUSE_3395_READ_DELAY           1000
+
+#define BT_MOUSE_REPORT_PARAM_NUM       4
+#define SPI_NUM_5                       5
+#define XY_DATA_SHIFT_LEN               8
+#define X_LOW_8BIT                      2
+#define X_HIGH_8BIT                     3
+#define Y_LOW_8BIT                      4
+#define Y_HIGH_8BIT                     5
+#define SPI_MHZ                         4
+
+
+
+IResult<> Self::corded_gaming(){
     return write_list(std::span(INIT_GAME_TABLE));
 }
 
-IResult<> PAW3395::validate(){
-	TODO();
+IResult<> Self::validate(){
+	uint8_t reg_val;
+	if(const auto res = read_reg(PAW3395_REG_PRODUCT_ID, reg_val);
+		res.is_err()) return res;
+	if(reg_val != PAW3395_PRODUCT_ID)
+		return Err(Error::InvalidProductId);
 	return Ok();
 }
 
-IResult<> PAW3395::set_dpi(uint16_t DPI_Num){
+IResult<> Self::set_dpi(uint16_t dpi_num){
 
 	// 设置分辨率模式：X轴和Y轴分辨率均由RESOLUTION_X_LOW和RESOLUTION_X_HIGH定义
 	if(const auto res = write_reg(PAW3395_REG_MOTION, 0x00);
 		res.is_err()) return res;
 
 	// 两个8位寄存器设置X轴分辨率
-	const uint8_t temp_low = uint8_t(((DPI_Num / 50) << 8) >> 8);
+	const uint8_t temp_low = uint8_t(((dpi_num / 50) << 8) >> 8);
+	const uint8_t temp_high = uint8_t((dpi_num / 50) >> 8);
+
+	//分别写入x,y寄存器
 	if(const auto res = write_reg(PAW3395_REG_RESOLUTION_X_LOW, temp_low);
 		res.is_err()) return res;
-	if(const auto res = write_reg(PAW3395_REG_RESOLUTION_Y_LOW, temp_low);
-		res.is_err()) return res;
-	const uint8_t temp_high = (uint8_t)((DPI_Num / 50) >> 8);
 	if(const auto res = write_reg(PAW3395_REG_RESOLUTION_X_HIGH, temp_high);
+		res.is_err()) return res;
+
+	if(const auto res = write_reg(PAW3395_REG_RESOLUTION_Y_LOW, temp_low);
 		res.is_err()) return res;
 	if(const auto res = write_reg(PAW3395_REG_RESOLUTION_Y_HIGH, temp_high);
 		res.is_err()) return res;
@@ -44,7 +87,7 @@ IResult<> PAW3395::set_dpi(uint16_t DPI_Num){
 	return Ok();
 }
 
-IResult<> PAW3395::set_lift_off(bool height){
+IResult<> Self::set_lift_off(bool height){
 	// 1. 将值0x0C写入寄存器0x7F
 	if(const auto res = write_reg(0x7F, 0x0C);
 		res.is_err()) return res;
@@ -58,18 +101,14 @@ IResult<> PAW3395::set_lift_off(bool height){
 	return Ok();
 }
 
-IResult<Vec2i> PAW3395::sample_fetch(){
+IResult<bool> Self::is_motioned(){
+	uint8_t temp = 0;
+	if(const auto res = read_reg(PAW3395_REG_MOTION, temp);
+		res.is_err()) return Err(res.unwrap_err());
+	return Ok(temp != 0);
+}
 
-	const bool any_motion = ({
-		uint8_t temp = 0;
-		const auto res = read_reg(PAW3395_REG_MOTION, temp);
-		if (res.is_err()) return Err(res.unwrap_err());
-		temp == 0;
-	});
-	
-	if(any_motion == false) return
-		Ok(Vec2i(0,0));
-
+IResult<Vec2i> Self::query_xy(){
 	const int16_t x = ({
 		const auto res = read_i16(PAW3395_REG_DELTA_X_L, PAW3395_REG_DELTA_X_H);
 		if(res.is_err()) return Err(res.unwrap_err());
@@ -82,38 +121,22 @@ IResult<Vec2i> PAW3395::sample_fetch(){
 		res.unwrap();
 	});
 
-	return Ok(Vec2i{x,y});
+	return Ok(Vec2i{x, y});
 }
 
-// IResult<> paw3395_channel_get(
-// 	enum sensor_channel chan,
-// 	struct sensor_value *val)
-// {
-// 	struct paw3395_data *data = dev->data;
-// 	const struct paw3395_config *config = dev->config;
+IResult<Vec2i> Self::update(){
+	const bool any_motion = ({
+		const auto res = is_motioned();
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
+	
+	if(any_motion == false)
+		return Err(Error::DataNotReady);
+	return query_xy();
+};
 
-// 	if (chan == SENSOR_CHAN_POS_DX) {
-// 		int64_t micro = (float)data->sum_x_last * (25400000.0f / (float)config->dpi);
-
-// 		val->val1 = (int32_t)(micro / 1000000LL);
-// 		val->val2 = (int32_t)(micro % 1000000LL);
-
-// 		data->sum_x_last = 0;
-// 		return 0;
-// 	} else if (chan == SENSOR_CHAN_POS_DY) {
-// 		int64_t micro = (float)data->sum_y_last * (25400000.0f / (float)config->dpi);
-
-// 		val->val1 = (int32_t)(micro / 1000000LL);
-// 		val->val2 = (int32_t)(micro % 1000000LL);
-
-// 		data->sum_y_last = 0;
-// 		return 0;
-// 	}
-
-// 	return -ENOTSUP;
-// }
-
-IResult<> PAW3395::enable_ripple(const Enable en){
+IResult<> Self::enable_ripple(const Enable en){
 
 	uint8_t temp ;
 	if(const auto res = read_reg(PAW3395_REG_RIPPLE_CONTROL, temp);
@@ -127,7 +150,7 @@ IResult<> PAW3395::enable_ripple(const Enable en){
 	return Ok();
 }
 
-IResult<> PAW3395::powerup(){
+IResult<> Self::powerup(){
 	/* Write register and data */
 	if(const auto res = write_reg(PAW3395_REG_POWER_UP_RESET, 0x5A);
 		res.is_err()) return res;
@@ -146,24 +169,26 @@ IResult<> PAW3395::powerup(){
 	for (size_t retry = 0; retry < MAX_RETRY_TIMES; retry++) {
 		uint8_t temp;
 		const auto res = read_reg(0x6C, temp);
-		if(res.is_err()){
+		if(res.is_err())
 			return Err(res.unwrap_err());
-		}else{
-			is_susccessfully_inited = (temp == 0x80);
+
+		is_susccessfully_inited = (temp == 0x80);
+
+		if(is_susccessfully_inited){
 			break;
 		}
 		
 		clock::delay(1ms);
 	}
 
-	if(const auto res = write_reg(0x7F, 0x14);
-		res.is_err()) return res;
-	if(const auto res = write_reg(0x6C, 0x00);
-		res.is_err()) return res;
-	if(const auto res = write_reg(0x7F, 0x00);
-		res.is_err()) return res;
-
-	if(!is_susccessfully_inited) return Err(Error::InitError);
+	if(!is_susccessfully_inited){
+		if(const auto res = write_reg(0x7F, 0x14);
+			res.is_err()) return res;
+		if(const auto res = write_reg(0x6C, 0x00);
+			res.is_err()) return res;
+		if(const auto res = write_reg(0x7F, 0x00);
+			res.is_err()) return res;
+	}
 
 	// 138. 将值0x70写入寄存器0x22
 	if(const auto res = write_reg(0x22, 0x70);
@@ -189,18 +214,31 @@ IResult<> PAW3395::powerup(){
 	return Ok();
 }
 
-IResult<> PAW3395::init() {
-	// TODO();
+IResult<> Self::init(const Config & cfg) {
+
 	if(const auto res = validate();
 		res.is_err()) return res;
 
 	if(const auto res = powerup();
 		res.is_err()) return res;
+
+	if(const auto res = corded_gaming();
+		res.is_err()) return res;
+
+	if(const auto res = set_dpi(cfg.dpi_num);
+		res.is_err()) return res;
+
+	if(const auto res = set_lift_off(true);
+		res.is_err()) return res;
+
+	if(const auto res = enable_ripple(EN);
+		res.is_err()) return res;
+
 	return Ok();
 }
 
 
-IResult<> PAW3395::write_reg(const uint8_t addr, const uint8_t data){
+IResult<> Self::write_reg(const uint8_t addr, const uint8_t data){
 	const std::array<uint8_t, 2> temp = {
 		uint8_t(addr| 0x80),
 		data
@@ -211,13 +249,14 @@ IResult<> PAW3395::write_reg(const uint8_t addr, const uint8_t data){
 	return Ok();
 }
 
-IResult<> PAW3395::read_reg(const uint8_t addr, uint8_t & data){
+IResult<> Self::read_reg(const uint8_t addr, uint8_t & data){
 	const std::array<uint8_t, 2> pbuf_tx = {
 		uint8_t(addr| 0x80),
 		0x00
 	};
 
 	std::array<uint8_t, 2> pbuf_rx;
+
 	if(const auto res = spi_drv_.transceive_burst<uint8_t, 2>(
 		std::span(pbuf_rx), 
 		std::span(pbuf_tx)
@@ -227,7 +266,7 @@ IResult<> PAW3395::read_reg(const uint8_t addr, uint8_t & data){
 	return Ok();
 }
 
-IResult<int16_t> PAW3395::read_i16(const uint8_t addr1, const uint8_t addr2){
+IResult<int16_t> Self::read_i16(const uint8_t addr1, const uint8_t addr2){
 	uint8_t low_byte;
 	uint8_t high_byte;
 
@@ -241,7 +280,7 @@ IResult<int16_t> PAW3395::read_i16(const uint8_t addr1, const uint8_t addr2){
 	return Ok(int16_t((high_byte << 8) | low_byte));
 }
 
-IResult<> PAW3395::write_list(std::span<const std::pair<uint8_t, uint8_t>> list){
+IResult<> Self::write_list(std::span<const std::pair<uint8_t, uint8_t>> list){
 	for(const auto & [addr, data] : list){
 		if(const auto res = write_reg(addr, data); 
 			res.is_err()) return res;

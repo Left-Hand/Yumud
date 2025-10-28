@@ -126,7 +126,10 @@ void test_burshed_motor(){
     real_t t = 0.0_r;
 
     auto & timer = hal::timer1;
-    timer.init({ISR_FREQ}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(ISR_FREQ),
+        .count_mode = hal::TimerCountMode::Up
+    }, EN);
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);

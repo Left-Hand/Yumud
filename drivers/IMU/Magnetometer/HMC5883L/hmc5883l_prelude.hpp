@@ -30,9 +30,7 @@ struct HMC5883L_Prelude{
     };
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x3d >> 1);
-};
 
-struct HMC5883L_Regs:public HMC5883L_Prelude{
     enum class RegAddr:uint8_t{
         ConfigA = 0x00,
         ConfigB = 0x01,
@@ -45,6 +43,10 @@ struct HMC5883L_Regs:public HMC5883L_Prelude{
         IDB = 11,
         IDC = 12
     };
+
+};
+
+struct HMC5883L_Regset:public HMC5883L_Prelude{
 
 
     struct R8_ConfigA:public Reg8<>{
@@ -90,9 +92,9 @@ struct HMC5883L_Regs:public HMC5883L_Prelude{
         uint8_t data;
     }DEF_R8(id_c_reg)
 
-    int16_t magXReg = {};
-    int16_t magYReg = {};
-    int16_t magZReg = {};
+    int16_t mag_x_reg = {};
+    int16_t mag_y_reg = {};
+    int16_t mag_z_reg = {};
 };
 
 };

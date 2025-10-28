@@ -39,11 +39,11 @@ enum class Hysteresis:uint8_t{
     LSB0, LSB0_25, LSB00_5
 };
 
-enum class ZeroPulseWidth{
+enum class ZeroPulseWidth:uint8_t{
     LSB1, LSB2, LSB4, LSB8,LSB12, LSB16, HALF
 };
 
-enum class PwmFreq{
+enum class PwmFreq:uint8_t{
     _994Hz,_497Hz
 };
 
@@ -70,26 +70,17 @@ struct Packet{
     Status status;
     uint8_t crc;
 
-    std::span<uint8_t, 4> as_mut_bytes() {
+    [[nodiscard]] std::span<uint8_t, 4> as_mut_bytes() {
         return std::span<uint8_t, 4>(reinterpret_cast<uint8_t *>(this), 4);
     }
 
-    constexpr bool is_crc_valid() const {
+    [[nodiscard]] constexpr bool is_crc_valid() const {
         //TODO
         return true;
     }
 };
 static_assert(sizeof(Packet) == 4);
 
-struct Header{
-    RegAddr addr:12;
-    Command cmd:4;
-
-    constexpr uint16_t as_u16() const {
-        return std::bit_cast<uint16_t>(*this);
-    }
-};
-static_assert(sizeof(Header) == 2);
 };
 
 

@@ -1,8 +1,11 @@
-#include "ICM45686.hpp"
+#include "icm45686.hpp"
 
 using namespace ymd;
-using ICM45686 = ymd::drivers::ICM45686;
-using Error = ICM45686::Error;
+using namespace ymd::drivers;
+
+
+using Self = ICM45686;
+using Error = Self::Error;
 
 // #define ICM45686_DEBUG_EN
 
@@ -19,13 +22,13 @@ using Error = ICM45686::Error;
 #endif
 
 
-Result<void, Error> ICM45686::validate(){
+Result<void, Error> Self::validate(){
     uint8_t Product_ID = 0x00;
 
-    if(const auto res = read_reg(uint8_t(ICM45686::REGISTER::WHO_AM_I), Product_ID); res.is_err()){
-        return Err(res.unwrap_err());
-    }else{
-        if(Product_ID != 0xE9) return Err(Error(Error::WrongWhoAmI));
+    if(const auto res = read_reg(uint8_t(Self::REGISTER::WHO_AM_I), Product_ID); 
+        res.is_err()) return Err(res.unwrap_err());
+    else{
+        if(Product_ID != 0xE9) return Err(Error(Error::InvalidChipId));
         return Ok();
     }
 

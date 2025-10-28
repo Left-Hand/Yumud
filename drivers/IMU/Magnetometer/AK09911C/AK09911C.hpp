@@ -15,7 +15,7 @@ namespace ymd::drivers{
 
 class AK09911C final:
     public MagnetometerIntf, 
-    private AK09911C_Regs{
+    public AK09911C_Prelude{
 public:
 
     explicit AK09911C(const hal::I2cDrv & i2c_drv):
@@ -28,8 +28,8 @@ public:
         phy_(spi_drv){;}
     explicit AK09911C(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit AK09911C(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        phy_(hal::SpiDrv(spi, index)){;}
+    explicit AK09911C(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        phy_(hal::SpiDrv(spi, rank)){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
@@ -46,10 +46,10 @@ public:
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> set_odr(const Odr odr);
 
-    using AK09911C_Regs::Mode;
 private:
     
     AsahiKaseiSensor_Phy phy_;
+    AK09911C_Regset regs_ = {};
     Option<Vec3<q24>> scale_ = None; 
     
     [[nodiscard]] IResult<> selftest();

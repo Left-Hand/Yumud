@@ -84,7 +84,7 @@ IResult<> QMC5883L::validate(){
         res.is_err()) return res;
 
     if(chip_id_reg.as_val() != 0xFF)
-        return Err(Error::WrongWhoAmI);
+        return Err(Error::InvalidChipId);
     return Ok{};
 }
 

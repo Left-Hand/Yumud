@@ -15,11 +15,88 @@ struct MT6835_Prelude{
 
     using RegAddr = uint8_t;
 
-    enum class UVWPolePairs:uint8_t{
+    enum class UvwPolePairs:uint8_t{
         _1 = 0,
         _2, _3, _4, _5, _6, _7, _8, _9, 
         _10, _11, _12, _13, _14, _15, _16
     };
+
+    enum class Command:uint16_t{
+        Write = 0b0110,
+        Read = 0b0011,
+        Burn = 0b1100,
+        AutoSetZero = 0b0101,
+        ContinuousRead = 0b1010
+    };
+
+    struct [[nodiscard]] Packet{
+        uint8_t angle_20_13;
+        uint8_t angle_12_5;
+        uint8_t over_speed:1;
+        uint8_t mag_weak:1;
+        uint8_t under_voltage:1;
+        uint8_t angle_4_0:5;
+        uint8_t crc;
+
+        [[nodiscard]] std::span<uint8_t, 4> as_mut_bytes(){
+            return std::span<uint8_t, 4>(reinterpret_cast<uint8_t*>(this), 4);
+        }
+
+        [[nodiscard]] IResult<Angle<q31>> parse() const {
+            if(calc_crc() != crc) [[unlikely]]
+                return Err(Error::InvalidCrc);
+
+            if(over_speed) [[unlikely]]
+                return Err(Error::OverSpeed);
+
+            if(under_voltage) [[unlikely]]
+                return Err(Error::UnderVoltage);
+
+            if(mag_weak) [[unlikely]]
+                return Err(Error::MagnetLow);
+
+            const auto turns = q20::from_i32(angle_20());
+            return Ok(Angle<q31>::from_turns(turns));
+        }
+    private:
+        [[nodiscard]] constexpr uint32_t angle_20() const {
+            return (angle_20_13 << 13) | (angle_12_5 << 5) | angle_4_0;
+        }
+
+        [[nodiscard]] constexpr uint8_t calc_crc() const{
+            // CRC校验公式：x^8+x^2+x+1 angle[20]作为最高位先移位进入
+            uint8_t calculated_crc = 0;
+            uint32_t data_bits = std::bit_cast<uint32_t>(*this) & 0xFFFFFF; // Extract the 24-bit data portion (excluding CRC)
+            
+            // Calculate CRC using the polynomial x^8+x^2+x+1 (0x07)
+            for(int i = 23; i >= 0; i--) {
+                uint8_t bit = (data_bits >> i) & 1;
+                uint8_t msb = calculated_crc >> 7;
+                
+                calculated_crc <<= 1;
+                calculated_crc |= bit;
+                
+                if(msb) {
+                    calculated_crc ^= 0x07; // Apply polynomial x^8+x^2+x+1
+                }
+            }
+            
+            // Finalize CRC by shifting out the last 8 bits
+            for(int i = 0; i < 8; i++) {
+                uint8_t msb = calculated_crc >> 7;
+                calculated_crc <<= 1;
+                
+                if(msb) {
+                    calculated_crc ^= 0x07;
+                }
+            }
+            
+            return calculated_crc;
+
+        }
+    };
+
+    static_assert(sizeof(Packet) == 4);
 
 };
 

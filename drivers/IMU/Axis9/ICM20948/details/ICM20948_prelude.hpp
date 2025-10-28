@@ -173,50 +173,36 @@ struct ICM20948_Prelude{
         
 
     /* Typedefs */
-    typedef enum
-    {
-        ub_0 = 0 << 4,
-        ub_1 = 1 << 4,
-        ub_2 = 2 << 4,
-        ub_3 = 3 << 4
-    } userbank;
+    enum class BankKind:uint8_t{
+        _0 = 0 << 4,
+        _1 = 1 << 4,
+        _2 = 2 << 4,
+        _3 = 3 << 4
+    } ;
 
-    typedef enum
-    {
+    enum class GyrFs:uint8_t{
         _250dps,
         _500dps,
         _1000dps,
         _2000dps
-    } gyro_full_scale;
+    };
 
-    typedef enum
-    {
+    enum class AccFs:uint8_t{
         _2g,
         _4g,
         _8g,
         _16g
-    } accel_full_scale;
-
-    typedef struct
-    {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-    } axises;
-
-    
-
-    typedef enum
-    {
-        power_down_mode = 0,
-        single_measurement_mode = 1,
-        continuous_measurement_10hz = 2,
-        continuous_measurement_20hz = 4,
-        continuous_measurement_50hz = 6,
-        continuous_measurement_100hz = 8
-    } operation_mode;
+    };
 
 
+    enum class OperationMode:uint8_t{
+        PowerDown = 0,
+        SingleShot = 1,
+        _10hz = 2,
+        _20hz = 4,
+        _50hz = 6,
+        _100hz = 8
+    } ;
 };
 
 struct ICM20948_Regs:public ICM20948_Prelude{

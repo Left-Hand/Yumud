@@ -72,7 +72,7 @@ IResult<> MMC5983::validate(){
         res.is_err()) return CHECK_RES(res);
     
     if(reg.product_id != reg.KEY)
-        return CHECK_ERR(Err(Error::WrongWhoAmI), reg.product_id);
+        return CHECK_ERR(Err(Error::InvalidChipId), reg.product_id);
 
     return Ok();
 }

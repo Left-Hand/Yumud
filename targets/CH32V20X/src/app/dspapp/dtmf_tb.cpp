@@ -62,7 +62,8 @@ void dtmf_main(){
     auto & timer = hal::timer1;
 
     timer.init({
-        .freq = FS
+        .count_freq = hal::NearestFreq(FS),
+        .count_mode = hal::TimerCountMode::Up
     }, EN);
 
 

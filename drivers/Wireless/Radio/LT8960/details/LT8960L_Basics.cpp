@@ -6,11 +6,6 @@ using namespace ymd::drivers;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-// template<typename Fn>
-// __inline IResult<> wait(const size_t timeout, Fn && fn){
-//     return retry(timeout, std::forward<Fn>(fn), [](){clock::delay(1ms);});
-// }
-
 IResult<> LT8960L::set_pa_current(const uint8_t current){
     auto reg = RegCopy(regs_.pa_config_reg);
     reg.pa_current = current;
@@ -29,7 +24,6 @@ IResult<> LT8960L::set_brclk_sel(const BrclkSel brclk_sel){
 }
 
 IResult<> LT8960L::clear_fifo_write_ptr(){
-    // regs_.fifo_ptr_reg.clear_write_ptr = 1;
     auto reg = RegCopy(regs_.fifo_ptr_reg);
     reg.clear_write_ptr = 1;
     return write_reg(reg);

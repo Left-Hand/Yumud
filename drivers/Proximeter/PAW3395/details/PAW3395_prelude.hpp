@@ -16,7 +16,9 @@ struct PAW3395_Prelude{
     static constexpr  uint8_t PAW3395_PRODUCT_ID = 0x51; /* Verify this value with datasheet */
 
     enum class Error_Kind:uint8_t{
-        InitError
+        InvalidProductId,
+        InitTimeout,
+        DataNotReady
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)

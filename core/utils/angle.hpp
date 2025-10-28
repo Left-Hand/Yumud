@@ -6,7 +6,7 @@
 namespace ymd{
 
 template<typename T>
-struct Angle{
+struct [[nodiscard]] Angle{
 	static_assert(not std::is_integral_v<T>, "T must be not integral");
 
     static constexpr Angle<T> ZERO = 
@@ -58,28 +58,24 @@ struct Angle{
 	static constexpr Angle from_degrees(const U degrees){
 		if constexpr(is_fixed_point_v<T>){
 			constexpr U INV_360 = static_cast<U>(1.0 / 360.0);
-			// Angle ret;
 			return make_angle_from_turns(T::from(static_cast<float>(degrees * INV_360)));
-			// return ret;
 		}else{
 			constexpr U INV_360 = static_cast<U>(1.0 / 360.0);
-			// Angle ret;
-			// ret.turns_ = static_cast<T>(degrees * INV_360);
-			// return ret;
-
 			return make_angle_from_turns(static_cast<T>(degrees * INV_360));
 		}
 	}
 
 	template<typename U>
-	requires (std::is_integral_v<U> || is_fixed_point_v<U>)
+	requires (std::is_integral_v<U>)
 	static constexpr Angle from_degrees(const U degrees){
-		if constexpr(std::is_integral_v<U>){ 
-			constexpr T INV_360 = static_cast<T>(1.0 / 360.0);
-			return make_angle_from_turns(degrees * INV_360);
-		}else{
-			return make_angle_from_turns(static_cast<T>(degrees / 360));
-		}
+		constexpr T INV_360 = static_cast<T>(1.0 / 360.0);
+		return make_angle_from_turns(degrees * INV_360);
+	}
+
+	template<typename U>
+	requires (is_fixed_point_v<U>)
+	static constexpr Angle from_degrees(const U degrees){
+		return make_angle_from_turns(static_cast<T>(degrees / 360));
 	}
 
 	static constexpr Angle from_radians(const T radians){
@@ -100,19 +96,19 @@ struct Angle{
 		return Angle<T>::from_turns(static_cast<T>(rhs.turns_));
 	}
 
-	constexpr T to_degrees() const{
+	[[nodiscard]] constexpr T to_degrees() const{
 		return turns_ * 360;
 	}
 
-	constexpr T to_radians() const{
+	[[nodiscard]] constexpr T to_radians() const{
 		return turns_ * static_cast<T>(TAU);
 	}
 
-	constexpr T to_turns() const{
+	[[nodiscard]] constexpr T to_turns() const{
 		return turns_;
 	}
 
-    constexpr std::array<T, 2> sincos() const {
+    [[nodiscard]] constexpr std::array<T, 2> sincos() const {
 		if constexpr(
 			std::is_same_v<
 				std::array<T, 2>, 
@@ -125,15 +121,15 @@ struct Angle{
 		return {static_cast<T>(s), static_cast<T>(c)};
     }
 
-	constexpr T sin() const{
+	[[nodiscard]] constexpr T sin() const{
 		return sinpu(turns_ );
 	}
 
-	constexpr T cos() const{
+	[[nodiscard]] constexpr T cos() const{
 		return cospu(turns_ );
 	}
 
-	constexpr T tan() const{
+	[[nodiscard]] constexpr T tan() const{
 		return tan(to_radians());
 	}
 
@@ -221,32 +217,37 @@ struct Angle{
 
 	#undef DEF_COMPARISON_OPERATOR
 
-	constexpr Angle<T> abs() const {
+	[[nodiscard]] constexpr Angle<T> abs() const {
 		return make_angle_from_turns(ABS(turns_));
 	}
 
-	constexpr Angle<T> normalized() const {
+	[[nodiscard]] constexpr Angle<T> normalized() const {
 		return make_angle_from_turns(frac(turns_));
 	}
 
-	constexpr bool is_equal_approx(const Angle<T> & other) const {
+	[[nodiscard]] constexpr bool is_equal_approx(const Angle<T> & other) const {
 		return ymd::is_equal_approx(turns_, other.turns_);
 	}
 
-	constexpr Angle<T> lerp(const Angle<T> & other, const T ratio) const {
+	[[nodiscard]] constexpr Angle<T> lerp(const Angle<T> & other, const T ratio) const {
 		return make_angle_from_turns(ymd::lerp(turns_, other.turns_, ratio));
 	}
 
-	constexpr bool is_positive() const {
+	[[nodiscard]] constexpr bool is_positive() const {
 		return turns_ >= 0;
 	}
 
-	constexpr bool is_negative() const {
+	[[nodiscard]] constexpr bool is_negative() const {
 		return turns_ < 0;
 	}
 
-	constexpr bool is_wrapped() const {
+	[[nodiscard]] constexpr bool is_normalized() const {
 		return int(turns_) == 0;
+	}
+
+	template<typename U>
+	[[nodiscard]] Angle<U> into() const {
+		return Angle<U>::make_angle_from_turns(static_cast<U>(turns_));
 	}
 
 	friend OutputStream & operator <<(OutputStream & os, const Angle & self){
@@ -254,7 +255,6 @@ struct Angle{
 		
 		return os << static_cast<q16>(self.to_turns()) * 360 << '\'';
 	}
-// private:
 public:
 	T turns_;
 

@@ -1,5 +1,7 @@
 #pragma once
 
+//这个驱动还在开发中
+
 #include "core/io/regs.hpp"
 
 #include "drivers/IMU/IMU.hpp"
@@ -11,13 +13,8 @@
 
 namespace ymd::drivers{
 
-class LIS2DW12:public AccelerometerIntf{
-public:
-    using Error = ImuError;
 
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-    
+struct LIS2DW12_Prelude{
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000
     };
@@ -81,27 +78,29 @@ public:
     };
 
     enum class PmuType{
-        ACC,
-        GYR,
-        MAG
+        Acc,
+        Gyr,
+        Mag
     };
 
     enum class PmuMode{
-        SUSPEND,
-        NORMAL,
-        LOW_POWER,
-        FAST_SETUP
+        Suspend = 0b00,
+        Normal = 0b01,
+        LowPower = 0b10,
+        FastSetup =  0b11
     };
 
-protected:
+    using Error = ImuError;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
+    
+
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101001);
+};
 
-    using Phy = StmicroImu_Phy;
-    Phy phy_;
 
-    real_t acc_scale = 0;
-    real_t gyr_scale = 0;
-
+struct LIS2DW12_Regs:public LIS2DW12_Prelude{
     using RegAddr = uint8_t;
     struct TempOutReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x0D; uint8_t data;};
@@ -200,35 +199,85 @@ protected:
         uint8_t fifo_ovr:1;
         uint8_t fifo_fth:1;
     };
+};
 
 
-
-    static real_t calculate_acc_scale(const AccFs range);
-    static real_t calculate_gyr_scale(const GyrFs range);
+class LIS2DW12:
+    public AccelerometerIntf,
+    public LIS2DW12_Prelude{
 public:
+    explicit LIS2DW12(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+        phy_(hal::I2cDrv{i2c, i2c_addr}){;}
+    explicit LIS2DW12(const hal::I2cDrv & i2c_drv):
+        phy_(i2c_drv){;}
+    explicit LIS2DW12(hal::I2cDrv && i2c_drv):
+        phy_(std::move(i2c_drv)){;}
+    explicit LIS2DW12(const hal::SpiDrv & spi_drv):
+        phy_(spi_drv){;}
+    explicit LIS2DW12(hal::SpiDrv && spi_drv):
+        phy_(std::move(spi_drv)){;}
+    explicit LIS2DW12(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        phy_(hal::SpiDrv{spi, rank}){;}
 
-    LIS2DW12(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv{i2c, addr}){;}
-    LIS2DW12(const hal::I2cDrv & i2c_drv):phy_(i2c_drv){;}
-    LIS2DW12(hal::I2cDrv && i2c_drv):phy_(std::move(i2c_drv)){;}
-    LIS2DW12(const hal::SpiDrv & spi_drv):phy_(spi_drv){;}
-    LIS2DW12(hal::SpiDrv && spi_drv):phy_(std::move(spi_drv)){;}
-    LIS2DW12(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):phy_(hal::SpiDrv{spi, index}){;}
+    [[nodiscard]] IResult<> init();
+    [[nodiscard]] IResult<> update();
 
-    void init();
-    void update();
+    [[nodiscard]] IResult<> validate();
 
-    bool validate();
+    [[nodiscard]] IResult<> reset();
 
-    void reset();
-
-    void set_acc_odr(const AccOdr odr);
-    void set_acc_fs(const AccFs range);
-    real_t set_gyr_odr(const real_t odr);
+    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
+    [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
     
-    void set_pmu_mode(const PmuType pum, const PmuMode mode);
-    PmuMode get_pmu_mode(const PmuType pum);
-    IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<> set_pmu_mode(const PmuType pum, const PmuMode mode);
+    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+
+private:
+    using Phy = StmicroImu_Phy;
+    Phy phy_;
+
+    q16 acc_scale = 0;
+    q16 gyr_scale = 0;
+
+    [[nodiscard]] IResult<> write_reg(uint8_t reg_addr, uint8_t reg_val){
+        if(const auto res = phy_.write_reg(reg_addr, reg_val);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> read_reg(uint8_t reg_addr, uint8_t & reg_val){
+        if(const auto res = phy_.read_reg(reg_addr, reg_val);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    // [[nodiscard]] IResult<> read_burst(uint8_t reg_addr, std::span<uint8_t> pbuf){
+    //     if(const auto res = phy_.read_burst(reg_addr, pbuf, LSB);
+    //         res.is_err()) return Err(res.unwrap_err());
+    //     return Ok();
+    // }
+
+    [[nodiscard]] static constexpr q24 calc_gyr_scaler(const GyrFs fs){
+        switch(fs){
+            case GyrFs::_2000deg  :      return DEG2RAD<q24>(q24(2 * 2000   ));
+            case GyrFs::_1000deg  :      return DEG2RAD<q24>(q24(2 * 1000   ));
+            case GyrFs::_500deg   :      return DEG2RAD<q24>(q24(2 * 500    ));
+            case GyrFs::_250deg   :      return DEG2RAD<q24>(q24(2 * 250    ));
+            case GyrFs::_125deg   :      return DEG2RAD<q24>(q24(2 * 125    ));
+        }
+        __builtin_unreachable();
+    }
+
+    [[nodiscard]] static constexpr q24 calc_acc_scaler(const AccFs fs){
+        switch(fs){
+            case AccFs::_16G    :       return GRAVITY_ACC<q24> * 32;
+            case AccFs::_8G     :       return GRAVITY_ACC<q24> * 16;
+            case AccFs::_4G     :       return GRAVITY_ACC<q24> * 8;
+            case AccFs::_2G     :       return GRAVITY_ACC<q24> * 4;
+        }
+        __builtin_unreachable();
+    }
+
 };
 
 }

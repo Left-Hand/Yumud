@@ -16,6 +16,7 @@ enum class EncoderError_Kind:uint8_t{
     CantSetup,
 
     InvalidPc,
+    InvalidPc2,
     InvalidCrc,
 
     MagnetLost,

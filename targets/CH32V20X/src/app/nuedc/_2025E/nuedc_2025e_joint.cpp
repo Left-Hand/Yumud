@@ -139,7 +139,7 @@ void nuedc_2025e_joint_main(){
     auto & pwm_w = timer1.oc<3>(); 
 
     timer1.init({
-        .freq = CHOPPER_FREQ, 
+        .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2), 
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
@@ -186,6 +186,10 @@ void nuedc_2025e_joint_main(){
             .unwrap()
     };
 
+    ma730_.init({
+        .direction = CW
+    }).examine();
+
     BMI160 bmi160_{
         &spi,
         spi.allocate_cs_gpio(&ma730_cs_gpio_)
@@ -205,10 +209,6 @@ void nuedc_2025e_joint_main(){
             // .gyr_fs = BMI160::GyrFs::_500deg
         }).examine();
     }
-
-    ma730_.init({
-        .direction = CW
-    }).examine();
 
     static constexpr auto mp6540_adc_scaler = MP6540::make_adc_scaler(10'000);
 
@@ -246,8 +246,9 @@ void nuedc_2025e_joint_main(){
         }
     };
 
-    pos_filter_.set_base_lap_position(
-        [&] -> q20{
+    pos_filter_.set_base_lap_angle(
+        
+        Angle<q16>::from_turns([&] -> q16{
             switch(self_node_role_){
                 case NodeRole::YawJoint:
                     return {0.389_r + 0.5_r};
@@ -257,10 +258,10 @@ void nuedc_2025e_joint_main(){
                 default:
                     PANIC();
             }
-        }()
+        }())
     );
 
-    ElecradCompensator elecangle_comp_{
+    ElecAngleCompensator elecangle_comp_{
         .base = [&]{
             switch(self_node_role_){
                 case NodeRole::YawJoint:
@@ -321,7 +322,7 @@ void nuedc_2025e_joint_main(){
         }
 
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
-        pos_filter_.update(meas_lap_angle);
+        pos_filter_.update(Angle<q16>::from_turns(meas_lap_angle.to_turns()));
     };
 
 
@@ -337,7 +338,7 @@ void nuedc_2025e_joint_main(){
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
         const auto meas_elecangle = elecangle_comp_(meas_lap_angle);
 
-        const auto meas_position = pos_filter_.position();
+        const auto meas_position = pos_filter_.accumulated_angle().to_turns();
         const auto meas_speed = pos_filter_.speed();
 
         const auto [axis_target_position, axis_target_speed] = ({
@@ -432,7 +433,7 @@ void nuedc_2025e_joint_main(){
 
                 const auto cmd_delta_position = q20(cmd.delta_position + yaw_speed / MACHINE_CTRL_FREQ);
                 axis_target_speed_ = q20(cmd_delta_position * MACHINE_CTRL_FREQ);
-                axis_target_position_ = (pos_filter_.position() + cmd_delta_position);
+                axis_target_position_ = (pos_filter_.accumulated_angle().to_turns() + cmd_delta_position);
                 break;
             }
             case NodeRole::PitchJoint:{

@@ -30,7 +30,7 @@ public:
 
     [[nodiscard]] IResult<> set_mode(const Mode mode);
 
-    [[nodiscard]] IResult<> set_datarate(const DataRate dataRate);
+    [[nodiscard]] IResult<> set_datarate(const DataRate data_rate);
 
     [[nodiscard]] IResult<> set_filter_coefficient(const FilterCoefficient filterCoeff);
 

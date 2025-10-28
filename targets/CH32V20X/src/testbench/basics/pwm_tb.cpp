@@ -22,7 +22,8 @@ using namespace ymd;
 void pwm_tb(OutputStream & logger){
     auto & timer = hal::timer1;
     timer.init({
-        .freq = 36000
+        .count_freq = hal::NearestFreq(36000),
+        .count_mode = hal::TimerCountMode::Up
     }, EN);
     #ifdef PWM_TB_GPIO
     auto gpio = hal::PA<8>();

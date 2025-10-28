@@ -60,7 +60,8 @@ void test_sogi(){
 
 
     hal::timer1.init({
-        .freq = isr_freq
+        .count_freq = hal::NearestFreq(isr_freq),
+        .count_mode = hal::TimerCountMode::Up
     }, EN);
 
     auto run_sogi = [&](){
@@ -141,7 +142,10 @@ void digipw_main(){
 
     constexpr auto CHOPPER_FREQ = 100'000;
     auto & timer = hal::timer1;
-    timer.init({CHOPPER_FREQ}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(CHOPPER_FREQ),
+        .count_mode = hal::TimerCountMode::Up
+    }, EN);
     timer.init_bdtr(10ns);
 
     auto & pwm = timer.oc<1>();

@@ -64,8 +64,9 @@ struct LT8960L_Prelude{
     };
 
     enum class BrclkSel:uint8_t{
-        Low, Div1, Div2, Div4, Div8,
-        Mhz1, Mhz12
+        Low, 
+        _1Div, _2Div, _4Div, _8Div,
+        _1Mhz, _12Mhz
     };
 
     enum class DataRate:uint8_t{
@@ -73,7 +74,10 @@ struct LT8960L_Prelude{
     };
 
     enum class Mode:uint8_t{
-        Rx, Tx, CarrierWave, Sleep
+        Rx = 0b00, 
+        Tx = 0b01, 
+        CarrierWave = 0b10, 
+        Sleep = 0b11
     };
 
     struct States{
@@ -93,22 +97,22 @@ struct LT8960L_Prelude{
             PowerDown
         };
 
-        
-    private:
-        Kind status_ = Kind::Idle;
-
-        uint8_t timeout_ = 0;
-    public:
 
         States & operator = (const Kind status) {
             transition_to(status);
             return *this;
         }
 
-        auto kind() const {return status_;}
+        constexpr auto kind() const {return status_;}
+        constexpr auto & timeout() {return timeout_;}
 
-        auto & timeout() {return timeout_;}
+        //暂时不能为constexpr 方便调试时显示状态
         void transition_to(const Kind status);
+
+    private:
+        Kind status_ = Kind::Idle;
+
+        uint8_t timeout_ = 0;
     };
 
     class Channel{

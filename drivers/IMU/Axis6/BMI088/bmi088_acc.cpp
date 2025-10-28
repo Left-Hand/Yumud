@@ -24,10 +24,9 @@ IResult<> retry(const size_t times, Fn && fn){
 
 static constexpr auto BMI088_TEMP_FACTOR = 0_r;
 static constexpr auto BMI088_TEMP_OFFSET = 0_r;
-static constexpr auto RETRY_TIMES = 3u;
+static constexpr auto MAX_RETRY_TIMES = 3u;
 
 static constexpr uint8_t ACC_CHIP_ID = 0;
-static constexpr uint8_t GYR_CHIP_ID = 0;
 
 
 IResult<> BMI088_Acc::init(){
@@ -46,7 +45,7 @@ IResult<> BMI088_Acc::verify_chip_id(){
         res.is_err()) return res;
 
     if(reg.data != ACC_CHIP_ID)
-        Err(Error::WrongWhoAmI);
+        Err(Error::InvalidChipId);
 
     return Ok();
 }
@@ -56,29 +55,24 @@ IResult<> BMI088_Acc::validate(){
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = phy_.validate();
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = retry(RETRY_TIMES, [&]{return verify_chip_id();}, [](){clock::delay(1ms);});
+    if(const auto res = retry(MAX_RETRY_TIMES, [&]{return verify_chip_id();}, [](){clock::delay(1ms);});
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = set_acc_odr(AccOdr::_200Hz);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = set_acc_bwp(AccBwp::Normal);
         res.is_err()) return Err(res.unwrap_err());
-        // | interrupts[0].enable_output(EN)
-        // | interrupts[1].enable_output(EN)
-        // | retry(RETRY_TIMES, [&]{return verifyChipId();}, [](){clock::delay(1ms);})
+    // if(const auto res = interrupts[0].enable_output(EN);
+    //     res.is_err()) return Err(res.unwrap_err());
+    // if(const auto res = interrupts[1].enable_output(EN);
+    //     res.is_err()) return Err(res.unwrap_err());
+    // if(const auto res = retry(MAX_RETRY_TIMES, [&]{return verifyChipId();}, [](){clock::delay(1ms);});
+    //     res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
 IResult<> BMI088_Acc::update(){
     auto & reg = regs_.acc_x_reg;
-    return phy_.read_burst(
-        reg.address, 
-        std::span(&(reg.as_ref()), 3)
-    );
-}
-
-IResult<> BMI088_Gyr::update(){
-    auto & reg = regs_.gyr_x_reg;
     return phy_.read_burst(
         reg.address, 
         std::span(&(reg.as_ref()), 3)
@@ -101,14 +95,6 @@ IResult<q24> BMI088_Acc::read_temp(){
     return Ok(bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET);
 }
 
-IResult<Vec3<q24>> BMI088_Gyr::read_gyr(){
-    return Ok(Vec3<q24>(
-        regs_.gyr_x_reg.as_val() * gyr_scaler_,
-        regs_.gyr_y_reg.as_val() * gyr_scaler_,
-        regs_.gyr_z_reg.as_val() * gyr_scaler_
-    ));
-}
-
 IResult<> BMI088_Acc::set_acc_fs(const AccFs fs){
     auto & reg = regs_.acc_range_reg;
     acc_scaler_ = calculate_acc_scale(fs);
@@ -128,33 +114,4 @@ IResult<> BMI088_Acc::set_acc_odr(const AccOdr odr){
     auto & reg = regs_.acc_conf_reg;
     reg.acc_odr = uint8_t(odr);
     return phy_.write_regs(reg);
-}
-
-IResult<> BMI088_Gyr::set_gyr_fs(const GyrFs fs){
-    gyr_scaler_ = calculate_gyr_scale(fs);
-    auto & reg = regs_.gyro_range_reg;
-    reg.data = uint8_t(fs);
-    return phy_.write_regs(reg);
-}
-
-IResult<> BMI088_Gyr::set_gyr_odr(const GyrOdr odr){
-    auto & reg = regs_.gyro_bw_reg;
-    reg.data = uint8_t(odr);
-    return phy_.write_regs(reg);
-}
-
-
-IResult<> BMI088_Gyr::init(){
-    TODO();
-    return Ok();
-}
-
-IResult<> BMI088_Gyr::reset(){
-    TODO();
-    return Ok();
-}
-
-IResult<> BMI088_Gyr::validate(){
-    TODO();
-    return Ok();
 }

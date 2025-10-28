@@ -48,7 +48,7 @@ DEF_ERROR_WITH_KINDS(Error, GcodeParseError, strconv2::DestringError)
 template<typename T = void>
 using IResult = Result<T, Error>;   
 
-struct Mnemonic final{
+struct [[nodiscard]] Mnemonic final{
     enum class Kind:uint8_t {
         General = 0,
         Miscellaneous = 1,
@@ -79,7 +79,7 @@ struct Mnemonic final{
     }
 
 
-    static constexpr bool is_letter_valid(const char letter){
+    [[nodiscard]] static constexpr bool is_letter_valid(const char letter){
         switch(letter){
             case 'G':
             case 'M':
@@ -94,19 +94,19 @@ struct Mnemonic final{
     constexpr Mnemonic(const Kind kind):
         kind_(kind){;}
 
-    constexpr bool operator==(const Mnemonic & other) const{
+    [[nodiscard]] constexpr bool operator==(const Mnemonic & other) const{
         return kind_ == other.kind_;
     }
 
-    constexpr bool operator==(const Kind kind) const {
+    [[nodiscard]] constexpr bool operator==(const Kind kind) const {
         return kind_ == kind;
     }
 
-    constexpr Kind kind() const {
+    [[nodiscard]] constexpr Kind kind() const {
         return kind_;
     }
 
-    constexpr char to_letter() const {
+    [[nodiscard]] constexpr char to_letter() const {
         switch(kind_){
             case Kind::General:
                 return 'G';
@@ -133,7 +133,7 @@ public:
     }
 };
 
-struct SourceLocation{
+struct [[nodiscard]] SourceLocation{
     uint8_t start;    // Starting column
     uint8_t end;      // Ending column  
     uint16_t line;    // Line number
@@ -147,17 +147,17 @@ struct SourceLocation{
     }
 };
 
-struct Word{
+struct [[nodiscard]] Word{
     char letter;
     q16 value;
     SourceLocation source;
 };
 
-struct GcodeArg{
+struct [[nodiscard]] GcodeArg{
     char letter;
     q16 value;
 
-    static constexpr bool is_letter_valid(const char letter){
+    [[nodiscard]] static constexpr bool is_letter_valid(const char letter){
         switch(letter){
             case 'X':
             case 'Y':
@@ -178,22 +178,21 @@ struct GcodeArg{
     friend OutputStream & operator << (OutputStream & os, const GcodeArg & self){
         return os << os.brackets<'('>() 
             << self.letter << os.splitter()
-            << self.value
-        << os.brackets<')'>();
+            << self.value << os.brackets<')'>();
     }
 };
 
 
-struct GcodeArgsIter {
+struct [[nodiscard]] GcodeArgsIter {
     constexpr explicit GcodeArgsIter(StringView line)
         : arg_str_iter_(line, ' ') {}
 
-    constexpr bool has_next() const {
+    [[nodiscard]] constexpr bool has_next() const {
         // No more arguments -> return None
         return arg_str_iter_.has_next();
     }
 
-    constexpr Result<GcodeArg, Error> next() {
+    constexpr IResult<GcodeArg> next() {
         while (arg_str_iter_.has_next()) {
             const auto token_str = arg_str_iter_.next().unwrap();
             if (token_str.length() == 0) continue; // Skip empty tokens (e.g., multiple spaces)
@@ -228,7 +227,7 @@ private:
     strconv2::StringSplitIter arg_str_iter_;
 };
 
-struct GcodeLine{
+struct [[nodiscard]] GcodeLine{
     constexpr explicit GcodeLine(StringView line):
         line_(line){;}
 

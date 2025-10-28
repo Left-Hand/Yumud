@@ -62,7 +62,7 @@ Result<void, Error> LIS3DH::validate(){
         res.is_err()) return Err(res.unwrap_err());
         
     if(reg.as_val() != reg.key)
-        return Err(Error::WrongWhoAmI);
+        return Err(Error::InvalidChipId);
     
     return Ok();
 }

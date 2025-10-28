@@ -39,7 +39,7 @@ struct MMC5603_Prelude{
 };
 
 
-struct MMC5603_Regs:public MMC5603_Prelude { 
+struct MMC5603_Regset:public MMC5603_Prelude { 
 
 
 

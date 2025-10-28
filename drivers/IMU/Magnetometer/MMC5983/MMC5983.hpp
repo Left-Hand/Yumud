@@ -17,14 +17,25 @@ class MMC5983:
     public MMC5983_Prelude,
     public MagnetometerIntf{
 public:
-    struct Config{
-        PrdSet prd_set = PrdSet::_100;
-        BandWidth bandwidth = BandWidth::_200Hz;
-        Odr data_rate = Odr::_200Hz;
+    struct [[nodiscard]] Config{
+        PrdSet prd_set;
+        BandWidth bandwidth;
+        Odr data_rate;
+
+        static constexpr Config from_default() {
+            return Config{
+                .prd_set = PrdSet::_100,
+                .bandwidth = BandWidth::_200Hz,
+                .data_rate = Odr::_200Hz
+            };
+        }
     };
 
     explicit MMC5983(const hal::I2cDrv & i2c_drv):
         phy_(i2c_drv){;}
+
+    explicit MMC5983(hal::I2cDrv && i2c_drv):
+        phy_(std::move(i2c_drv)){;}
     explicit MMC5983(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, addr}){;}
     explicit MMC5983(const hal::SpiDrv & spi_drv):

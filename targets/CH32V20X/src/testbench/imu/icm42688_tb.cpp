@@ -57,7 +57,10 @@ static void icm42688_tb(ICM42688 & imu){
     Vec3<q24> acc_ = Vec3<q24>::ZERO;
 
     auto & timer = hal::timer1;
-    timer.init({ISR_FREQ}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(ISR_FREQ),
+        .count_mode = hal::TimerCountMode::Up
+    }, EN);
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);

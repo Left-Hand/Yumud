@@ -224,7 +224,7 @@ void myservo_main(){
     while(true){
 
         hal::timer3.init({
-            .freq = TIM_FREQ, 
+            .count_freq = hal::NearestFreq(TIM_FREQ * 2), 
             .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
         }, EN);
 
@@ -292,7 +292,6 @@ void myservo_main(){
         hal::adc1.enable_auto_inject(DISEN);
     };
 
-    // can.init(CanBaudrate::_1M, CanMode::Internal);
     can.init({
         .remap = CAN1_REMAP,
         .mode = hal::CanMode::Normal,
@@ -305,7 +304,7 @@ void myservo_main(){
 
 
     hal::timer3.init({
-        .freq = TIM_FREQ, 
+        .count_freq = hal::NearestFreq(TIM_FREQ), 
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 

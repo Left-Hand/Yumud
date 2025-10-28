@@ -13,8 +13,8 @@
 
 namespace ymd::drivers{
 
-class VL53L0X final{
-public:
+
+struct VL53L0X_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x52 >> 1);
 
     enum class Error_Kind:uint8_t{
@@ -26,6 +26,11 @@ public:
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+};
+
+
+class VL53L0X final:public VL53L0X_Prelude{
+public:
 
     explicit VL53L0X(hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -43,14 +48,6 @@ public:
     [[nodiscard]] IResult<> init();
 
     [[nodiscard]] IResult<> stop();
-
-    [[nodiscard]]
-    Result<real_t, Error> read_distance(){
-        if(const auto res = read_distance_mm(); 
-            res.is_err()) return Err(Error(res.unwrap_err()));
-        else
-            return Ok(res.unwrap() * real_t(0.001));
-    };
 
     [[nodiscard]] IResult<uint16_t> read_distance_mm();
 
@@ -79,11 +76,11 @@ private:
 
     [[nodiscard]] IResult<bool> is_busy();
 
-    [[nodiscard]] IResult<> read_byte_data(const uint8_t reg, uint8_t & data);
+    [[nodiscard]] IResult<> read_byte_data(const uint8_t reg_addr, uint8_t & data);
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t reg, const std::span<uint16_t> pbuf);
+    [[nodiscard]] IResult<> read_burst(const uint8_t reg_addr, const std::span<uint16_t> pbuf);
 
-    [[nodiscard]] IResult<> write_byte_data(const uint8_t reg, const uint8_t byte);
+    [[nodiscard]] IResult<> write_byte_data(const uint8_t reg_addr, const uint8_t byte);
 
 };
 

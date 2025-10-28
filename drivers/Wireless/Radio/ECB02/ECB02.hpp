@@ -6,18 +6,6 @@
 namespace ymd::drivers{
 
 
-enum class TxPower:uint8_t{
-    _n20dBm,
-    _n15dBm,
-    _n10dBm,
-    _n6dBm,
-    _n5dBm,
-    _n2dBm,
-    _0dBm,
-    _3dBm,
-    _4dBm,
-    _8dBm,
-};
 
 class AtProtocol{
 protected:
@@ -87,20 +75,32 @@ public:
         return write_keyvalue("PASSWARD", std::forward<T>(x));
     }
 
-    auto set_txpower(TxPower power){
-        return write_keyvalue("POWE", uint8_t(power));
+    auto set_txpower(uint8_t power){
+        return write_keyvalue("POWE", power);
     }
 
     auto resume(){};
 private:
     template<typename ... Ts>
     void write(Ts && ... args){
-        return; 
+        return void(); 
     }
 };
 
 
 class ECB02{
+enum class TxPower:uint8_t{
+    _n20dBm,
+    _n15dBm,
+    _n10dBm,
+    _n6dBm,
+    _n5dBm,
+    _n2dBm,
+    _0dBm,
+    _3dBm,
+    _4dBm,
+    _8dBm,
+};
 
 };
 }

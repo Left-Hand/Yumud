@@ -18,6 +18,8 @@
 #define ENABLE_SPI1
 #define SPI1_REMAP 1
 
+#define ENABLE_SPI2
+
 
 #define ENABLE_TIM1
 #define TIM1_REMAP 0

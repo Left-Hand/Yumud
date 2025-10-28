@@ -222,7 +222,10 @@ void lt8960_tb(){
 
     if (has_tx_authority()) {
         auto & timer = hal::timer1;
-        timer.init({.freq = TX_FREQ}, EN);
+        timer.init({
+            .count_freq = hal::NearestFreq(TX_FREQ),
+            .count_mode = hal::TimerCountMode::Up
+        }, EN);
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
         timer.set_event_callback([&](hal::TimerEvent ev){
@@ -240,7 +243,10 @@ void lt8960_tb(){
 
     if (has_rx_authority()) {
         auto & timer = hal::timer2;
-        timer.init({RX_FREQ}, EN);
+        timer.init({
+            .count_freq = hal::NearestFreq(RX_FREQ),
+            .count_mode = hal::TimerCountMode::Up
+        }, EN);
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
         timer.set_event_callback([&](hal::TimerEvent ev){

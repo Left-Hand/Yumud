@@ -93,13 +93,13 @@ struct AS5600_Regs:public AS5600_Prelude{
 
     struct R16_Config:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Config;
-        uint8_t powerMode :2;
+        uint8_t power_mode :2;
         uint8_t hysteresis:2;
-        uint8_t outputStage:2;
-        uint8_t pwmFrequency:2;
-        uint8_t slowFilter:2;
-        uint8_t fastFilter:3;
-        uint8_t watchDog:1;
+        uint8_t output_stage:2;
+        uint8_t pwm_frequency:2;
+        uint8_t slow_filter:2;
+        uint8_t fast_filter:3;
+        uint8_t watch_dog:1;
         uint8_t __resv__ :2;
     };
 
@@ -107,9 +107,9 @@ struct AS5600_Regs:public AS5600_Prelude{
         static constexpr auto ADDRESS = RegAddr::Status;
         
         uint8_t __resv1__ :3;
-        uint8_t magHigh:1;
-        uint8_t magLow:1;
-        uint8_t magProper:1;
+        uint8_t mag_high:1;
+        uint8_t mag_low:1;
+        uint8_t mag_proper:1;
         uint8_t __resv2__ :2;
         
     };

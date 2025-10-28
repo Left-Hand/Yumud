@@ -69,7 +69,7 @@ public:
 
     real_t get_position() {
         // return  / reduction_ratio;
-        return position_filter_.position() / reduction_ratio;
+        return position_filter_.accumulated_angle().to_turns() / reduction_ratio;
         // return 0;
     }
     real_t get_current() const {return curr;}

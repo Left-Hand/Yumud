@@ -22,9 +22,7 @@ struct GP22_Prelude{
     using IResult = Result<T, Error>;
 
     using RegAddr = uint8_t;
-};
 
-struct GP22_Regs:public GP22_Prelude{
     enum class TSTO1:uint32_t{
         // 0 = GP2 functionality, FIRE_IN input for 
         // sing-around
@@ -67,6 +65,10 @@ struct GP22_Regs:public GP22_Prelude{
         Nc,
         Clock4k
     };
+};
+
+struct GP22_Regs final:public GP22_Prelude{
+
 
     enum class MeasurementMode:uint32_t {
         MeasurementMode1 = 0,
@@ -112,5 +114,29 @@ struct GP22_Regs:public GP22_Prelude{
         uint32_t hit1:4;
         uint32_t hit2:4;
     }DEF_R32(cfg1_reg)
+};
+
+class GP22_Phy final:
+    private GP22_Prelude{
+public:
+        // TDC硬件初始化
+    IResult<> reset() {
+        if(may_nrst_gpio_.is_none()) return Ok();
+        auto & rstn_gpio = may_nrst_gpio_.unwrap();
+        rstn_gpio.set();
+        clock::delay(1us);
+        rstn_gpio.clr();
+        clock::delay(1us);
+        rstn_gpio.set();
+        clock::delay(1ms);
+        return Ok();
+    }
+
+    [[nodiscard]] IResult<> write_u8(const uint8_t data);
+    [[nodiscard]] IResult<uint8_t> transrecive_u8(const uint8_t data);
+    [[nodiscard]] IResult<> write_u32(const uint32_t data);
+    [[nodiscard]] IResult<uint32_t> trans_u8_receive_u32(const uint8_t data);
+private:
+    Option<hal::GpioIntf &> may_nrst_gpio_;
 };
 }

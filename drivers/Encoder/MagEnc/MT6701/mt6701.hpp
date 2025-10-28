@@ -62,6 +62,17 @@ private:
     real_t lap_position_ = real_t(0);
     bool fast_mode_ = true;
 
+
+    template<typename T>
+    IResult<> read_reg(T & reg){
+        return phy_.read_reg(reg);
+    }
+
+
+    template<typename T>
+    IResult<> write_reg(const RegCopy<T> & reg){
+        return phy_.write_reg(reg);
+    }
 };
 
 }
