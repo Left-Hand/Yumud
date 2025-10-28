@@ -19,20 +19,14 @@ public:
 
     [[nodiscard]] IResult<> update();
     [[nodiscard]] IResult<Angle<q31>> read_lap_angle(){
-        return Ok(Angle<q31>::from_turns(lap_position_));
+        return last_packet_.parse();
     }
-    [[nodiscard]] uint32_t get_err_cnt() const {return errcnt_;}
 private:
     hal::SpiDrv spi_drv_;
+    Packet last_packet_;
 
-    real_t lap_position_ = 0;
-    size_t errcnt_ = 0;
-    bool fast_mode_ = true;
-
-    uint16_t get_position_data();
-
-    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t data);
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & data);
+    [[nodiscard]] IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val);
+    [[nodiscard]] IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val);
 };
 
 };

@@ -18,8 +18,8 @@ public:
         spi_drv_(spi_drv){;}
     explicit AS5047(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit AS5047(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        spi_drv_(hal::SpiDrv{spi, index}){;}
+    explicit AS5047(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] IResult<> init() ;
 
@@ -32,9 +32,9 @@ private:
     using Regs = AS5047_Regs;
 
     hal::SpiDrv spi_drv_;
-    Regs regs_;
+    Regs regs_ = {};
 
-    real_t lap_position_ = 9;
+    real_t lap_position_ = 0;
     size_t crc_err_cnt_ = 0;
     bool fast_mode_ = true;
 

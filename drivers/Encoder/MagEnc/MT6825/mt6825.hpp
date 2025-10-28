@@ -70,11 +70,11 @@ struct Packet{
         return ret;
     }
 
-    std::span<uint8_t, 3> as_mut_bytes() {
+    [[nodiscard]] std::span<uint8_t, 3> as_mut_bytes() {
         return std::span<uint8_t, 3>(reinterpret_cast<uint8_t *>(this), sizeof(Self));
     }
 
-    std::span<const uint8_t> as_bytes() const {
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const {
         return std::span<const uint8_t, 3>(reinterpret_cast<const uint8_t *>(this), sizeof(Self));
     }
 

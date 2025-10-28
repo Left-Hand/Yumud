@@ -11,46 +11,47 @@ using Error = Self::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-
-IResult<> Self::init() {
-    return Ok();
-}
-
-uint16_t Self::get_position_data(){
-    return 0;
-}
-
-IResult<> Self::update() {
-    return Ok();
-}
-
-
-static constexpr uint16_t make_header(const Self::Command cmd, const Self::RegAddr reg_addr){
+[[nodiscard]] static constexpr 
+uint16_t make_header(const Self::Command cmd, const Self::RegAddr reg_addr){
     return (static_cast<uint16_t>(cmd) << 12) | static_cast<uint16_t>(reg_addr);
 }
 
-IResult<> Self::write_reg(const RegAddr addr, const uint8_t data){
+IResult<> Self::init() {
+    TODO();
+    return Ok();
+}
 
-    const auto header = make_header(Command::Write, addr);
+
+IResult<> Self::update() {
+    TODO();
+    return Ok();
+}
+
+
+
+
+IResult<> Self::write_reg(const RegAddr reg_addr, const uint8_t reg_val){
+
+    const auto header = make_header(Command::Write, reg_addr);
 
     if(const auto res = spi_drv_.write_single<uint16_t>(header, CONT);
         res.is_err()) return Err(res.unwrap_err());
 
-    if(const auto res = spi_drv_.write_single<uint8_t>(data);
+    if(const auto res = spi_drv_.write_single<uint8_t>(reg_val);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
 
-IResult<> Self::read_reg(const RegAddr addr, uint8_t & data){
+IResult<> Self::read_reg(const Self::RegAddr reg_addr, uint8_t & reg_val){
 
-    const auto header = make_header(Command::Read, addr);
+    const auto header = make_header(Command::Read, reg_addr);
 
     if(const auto res = spi_drv_.write_single<uint16_t>(header, CONT);
         res.is_err()) return Err(res.unwrap_err());
 
-    if(const auto res = spi_drv_.read_single<uint8_t>(data);
+    if(const auto res = spi_drv_.read_single<uint8_t>(reg_val);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
