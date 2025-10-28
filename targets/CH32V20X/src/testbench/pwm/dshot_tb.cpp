@@ -16,7 +16,7 @@ static constexpr size_t N = 40;
 static std::array<uint16_t, N> data;
 
 
-[[maybe_unused]] static uint16_t m_crc(uint16_t data_in){
+[[maybe_unused]] static constexpr uint16_t dshot_crc(uint16_t data_in){
 	uint16_t speed_data;
 	speed_data = data_in << 5;
 	data_in = data_in << 1;

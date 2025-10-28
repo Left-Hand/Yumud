@@ -42,9 +42,10 @@ static constexpr size_t MAX_PACKET_BYTES = 16;
 using Buf = HeaplessVector<uint8_t, MAX_PACKET_BYTES>;
 
 enum class VerifyMethod:uint8_t{
-    X6B,
-    XOR,
-    CRC8
+    X6B      = 0x00,
+    XOR      = 0x01,
+    CRC8     = 0x02,
+    Default = X6B
 };
 
 enum class FuncCode:uint8_t{
@@ -93,7 +94,6 @@ struct HommingStatus{
 
 static_assert(sizeof(HommingStatus) == 1); 
 
-static constexpr auto DEFAULT_VERIFY_METHOD = VerifyMethod::X6B;
 
 struct Bytes2CanMsgIterator{
     explicit constexpr Bytes2CanMsgIterator(

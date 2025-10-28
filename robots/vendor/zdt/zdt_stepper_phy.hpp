@@ -8,22 +8,16 @@ namespace ymd::robots::zdtmotor{
 class ZdtMotorPhy final{
 public:
     using FuncCode = prelude::FuncCode;
-    
 
     ZdtMotorPhy(Some<hal::Can *> && can) : 
-        uart_(ymd::None),
-        can_(std::move(can)
-    ){
-        // reconf(cfg);
-    }
+        may_uart_(ymd::None),
+        may_can_(std::move(can)
+    ){;}
 
     ZdtMotorPhy(Some<hal::Uart *> && uart) : 
-        uart_(std::move(uart)),
-        can_(ymd::None)
-    {
-        // reconf(cfg);
-
-    }
+        may_uart_(std::move(uart)),
+        may_can_(ymd::None)
+    {;}
 
 
     void write_bytes(
@@ -32,8 +26,8 @@ public:
         const std::span<const uint8_t> bytes
     );
 private:
-    Option<hal::Uart &> uart_;
-    Option<hal::Can &> can_;
+    Option<hal::Uart &> may_uart_;
+    Option<hal::Can &> may_can_;
 
     static void can_write_bytes(
         hal::Can & can, 
@@ -50,13 +44,6 @@ private:
     );
 };
 
-struct ZdtMotorCanSink{
-
-};
-
-struct ZdtMotorCanSource{
-
-};
 
 
 }

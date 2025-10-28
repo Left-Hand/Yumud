@@ -45,8 +45,8 @@ void zdt_main(){
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
-    ZdtStepper motor1{{.nodeid = {1}}, &COMM_CAN};
-    ZdtStepper motor2{{.nodeid = {2}}, &COMM_CAN};
+    ZdtStepper motor1{{.node_id = {1}}, &COMM_CAN};
+    ZdtStepper motor2{{.node_id = {2}}, &COMM_CAN};
     #endif
     
     clock::delay(10ms);

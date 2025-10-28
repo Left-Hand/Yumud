@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "details/zdt_stepper_utils.hpp"
+#include "zdt_stepper_phy.hpp"
 
 namespace ymd::robots::zdtmotor{
 
@@ -17,7 +17,7 @@ public:
     using IResult = prelude::IResult<T>;
 
     struct Config{
-        NodeId nodeid;
+        NodeId node_id;
     };
 
     explicit ZdtStepper(const Config & cfg, Some<hal::Can *> && can) : 
@@ -34,20 +34,20 @@ public:
 
 
     void reconf(const Config & cfg){
-        nodeid_ = cfg.nodeid;
+        node_id_ = cfg.node_id;
     }
 
-    struct PositionSetpoint{
-        Angle<real_t> position;
-        real_t speed;
+    struct PositionMsg{
+        Angle<q16> position;
+        q16 speed;
     };
 
-    struct SpeedSetpoint{
-        real_t speed;
+    struct SpeedMsg{
+        q16 speed;
     };
 
-    IResult<> set_position(const PositionSetpoint pos);
-    IResult<> set_speed(const SpeedSetpoint spd);
+    IResult<> set_position(const PositionMsg msg);
+    IResult<> set_speed(const SpeedMsg msg);
     IResult<> brake();
     IResult<> set_subdivides(const uint16_t subdivides);
     IResult<> activate(const Enable en);
@@ -59,26 +59,26 @@ private:
     Phy phy_;
 
     static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
-    NodeId nodeid_ = DEFAULT_NODE_ID;
+    NodeId node_id_ = DEFAULT_NODE_ID;
 
-    bool is_sync_ = false;
-    VerifyMethod verify_method_ = prelude::DEFAULT_VERIFY_METHOD;
+    bool is_multi_axis_sync_ = false;
+    VerifyMethod verify_method_ = VerifyMethod::Default;
 
 
 
-    template<typename Raw, typename T = std::decay_t<Raw>>
-    static constexpr Buf map_payload_to_bytes(
+    template<typename T>
+    [[nodiscard]] static constexpr Buf map_payload_to_bytes(
         const VerifyMethod verify_method,
-        Raw && obj
+        T && payload
     ){
         Buf buf;
 
-        const auto bytes = payloads::serialize(obj);
+        const auto bytes = payloads::serialize(payload);
 
         buf.append_unchecked(bytes);
         buf.append_unchecked(VerifyUtils::get_verify_code(
             verify_method,
-            T::FUNC_CODE,
+            std::decay_t<T>::FUNC_CODE,
             bytes
         ));
         
@@ -86,11 +86,11 @@ private:
     }
 
     template<typename T>
-    IResult<> write_payload(const T & obj){
-        const auto buf = map_payload_to_bytes(verify_method_, obj);
+    IResult<> write_payload(const T & payload){
+        const auto buf = map_payload_to_bytes(verify_method_, payload);
 
         phy_.write_bytes(
-            nodeid_, 
+            node_id_, 
             T::FUNC_CODE, 
             buf.iter()
         );

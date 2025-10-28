@@ -17,7 +17,7 @@
 #include "common_service.hpp"
 #include "joints.hpp"
 #include "gcode/gcode.hpp"
-#include "details/gcode_data.hpp"
+#include "details/gcode_file.hpp"
 
 #ifdef ENABLE_UART1
 using namespace ymd;
@@ -336,8 +336,8 @@ void polar_robot_main(){
         hal::CanFilterConfig::from_accept_all()
     );
 
-    ZdtStepper motor1{{.nodeid = {1}}, &COMM_CAN};
-    ZdtStepper motor2{{.nodeid = {2}}, &COMM_CAN};
+    ZdtStepper motor1{{.node_id = {1}}, &COMM_CAN};
+    ZdtStepper motor2{{.node_id = {2}}, &COMM_CAN};
 
     #endif
 

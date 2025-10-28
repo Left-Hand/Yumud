@@ -324,7 +324,10 @@ void smc2025_main(){
     };
 
     auto & timer = hal::timer1;
-    timer.init({.freq = 25}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(25),
+        .count_mode = hal::TimerCountMode::Up,
+    }, EN);
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){

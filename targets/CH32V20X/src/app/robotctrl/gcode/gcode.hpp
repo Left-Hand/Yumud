@@ -133,12 +133,12 @@ public:
     }
 };
 
-struct [[nodiscard]] SourceLocation{
+struct [[nodiscard]] TextSourceLocation{
     uint8_t start;    // Starting column
     uint8_t end;      // Ending column  
     uint16_t line;    // Line number
     
-    friend OutputStream& operator<<(OutputStream& os, const SourceLocation self) {
+    friend OutputStream& operator<<(OutputStream& os, const TextSourceLocation self) {
         return os << os.brackets<'('>() 
             << self.start << os.splitter()
             << self.end << os.splitter()
@@ -150,7 +150,7 @@ struct [[nodiscard]] SourceLocation{
 struct [[nodiscard]] Word{
     char letter;
     q16 value;
-    SourceLocation source;
+    TextSourceLocation source;
 };
 
 struct [[nodiscard]] GcodeArg{
