@@ -1,6 +1,6 @@
 #pragma once
 
-// 锐评：和KTH7823一样，都是和VCE2755 pin to pin的芯片
+// 锐评：和KTH7823一样，都是和MA730 pin to pin的芯片
 
 // VCE2755是一款基于各向异性磁阻（AMR）技术，高度集成的旋转磁编码器芯片，它在一个小型封装内集成了AMR
 // 磁传感器和高精度CMOS处理电路，实现14bit分辨率平行于封装表面的平面360°磁场角度检测。基于AMR在饱
@@ -325,7 +325,7 @@ private:
         std::array<uint16_t, 2> rx;
         if(const auto res = spi_drv_.transceive_burst<uint16_t>(rx, tx);
             res.is_err()) return Err(Error(res.unwrap_err()));
-        return Ok(Packet::from_u24(std::bit_cast<uint32_t>(rx) >> 8));
+        return Ok(Packet::from_u24(static_cast<uint32_t>(rx[0] >> 8) | static_cast<uint32_t>(rx[1] << 8)));
         #endif
     }
 

@@ -1,53 +1,39 @@
-#include "MT6835.hpp"
+#include "mt6835.hpp"
+
 
 
 using namespace ymd::drivers;
 using namespace ymd;
 
-using Error = MT6835::Error;
+using Self = MT6835;
+using Error = Self::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-IResult<> MT6835::init() {
+IResult<> Self::init() {
     return Ok();
 }
 
-uint16_t MT6835::get_position_data(){
+uint16_t Self::get_position_data(){
     return 0;
 }
 
-IResult<> MT6835::update() {
+IResult<> Self::update() {
     return Ok();
 }
 
 
-struct Frame{
-    enum class Type:uint16_t{
-        Write = 0b0110,
-        Read = 0b0011,
-    };
+static constexpr uint16_t make_header(const Self::Command cmd, const Self::RegAddr reg_addr){
+    return (static_cast<uint16_t>(cmd) << 12) | static_cast<uint16_t>(reg_addr);
+}
 
+IResult<> Self::write_reg(const RegAddr addr, const uint8_t data){
 
-    uint16_t addr:12;
-    Type type:4;
+    const auto header = make_header(Command::Write, addr);
 
-    operator uint16_t & (){return *reinterpret_cast<uint16_t *>(this);}
-    operator uint16_t () const {return *reinterpret_cast<const uint16_t *>(this);}
-};
-
-static_assert(sizeof(Frame) == 2);
-
-
-IResult<> MT6835::write_reg(const RegAddr addr, const uint8_t data){
-
-    Frame format = {
-        .addr = addr,
-        .type = Frame::Type::Write
-    };
-
-    if(const auto res = spi_drv_.write_single<uint16_t>(format, CONT);
+    if(const auto res = spi_drv_.write_single<uint16_t>(header, CONT);
         res.is_err()) return Err(res.unwrap_err());
 
     if(const auto res = spi_drv_.write_single<uint8_t>(data);
@@ -57,14 +43,11 @@ IResult<> MT6835::write_reg(const RegAddr addr, const uint8_t data){
 }
 
 
-IResult<> MT6835::read_reg(const RegAddr addr, uint8_t & data){
+IResult<> Self::read_reg(const RegAddr addr, uint8_t & data){
 
-    Frame format = {
-        .addr = addr,
-        .type = Frame::Type::Read
-    };
+    const auto header = make_header(Command::Read, addr);
 
-    if(const auto res = spi_drv_.write_single<uint16_t>(format, CONT);
+    if(const auto res = spi_drv_.write_single<uint16_t>(header, CONT);
         res.is_err()) return Err(res.unwrap_err());
 
     if(const auto res = spi_drv_.read_single<uint8_t>(data);

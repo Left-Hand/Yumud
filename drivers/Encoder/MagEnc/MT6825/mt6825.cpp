@@ -33,6 +33,8 @@ IResult<Angle<q31>> Self::get_lap_angle(){
     std::array<uint16_t, 2> rx;
     if(const auto res = spi_drv_.transceive_burst<uint16_t>(rx, tx);
         res.is_err()) return Err(Error(res.unwrap_err()));
-    return Ok(Packet::from_u24(std::bit_cast<uint32_t>(rx) >> 8));
+    return Ok(Packet::from_u24(static_cast<uint32_t>((rx[0] && 0xff)) | static_cast<uint32_t>(
+        // __bswap16(rx[1]) << 8)));
+        __bswap16(rx[1]) << 8)));
     #endif
 }
