@@ -46,42 +46,24 @@ public:
     }
 
     [[nodiscard]] IResult<> invoke_read_range(){
-        return write_reg(RegAddr::SYSRANGE__START, 0x01);
+        return write_reg<uint8_t>(RegAddr::SYSRANGE__START, 0x01);
     }
 
     [[nodiscard]] IResult<> invoke_read_ambient(){
-        return write_reg(RegAddr::SYSALS__START, 0x01);
+        return write_reg<uint8_t>(RegAddr::SYSALS__START, 0x01);
     }
 private:
-    [[nodiscard]] IResult<> write_reg(RegAddr reg, uint8_t value){
-        return phy_.write_reg<uint8_t>(std::bit_cast<uint16_t>(reg), value);
-    }
-
-    [[nodiscard]] IResult<> write_reg(uint16_t reg, uint8_t value){
-        return phy_.write_reg<uint8_t>(std::bit_cast<uint16_t>(reg), value);
-    }
-
-    [[nodiscard]] IResult<> write_reg16_bit(RegAddr reg, uint16_t value){
-        return phy_.write_reg<uint16_t>(std::bit_cast<uint16_t>(reg), value);
-    }
-    [[nodiscard]] IResult<> write_reg16_bit(const uint16_t reg, uint16_t value){
-        return phy_.write_reg<uint16_t>(reg, value);
-    }
-
-
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(uint16_t reg, T & value){
-        return phy_.read_reg<T>(std::bit_cast<uint16_t>(reg), value);
+    requires (sizeof(T) <= 2)
+    [[nodiscard]] IResult<> write_reg(RegAddr reg_addr, T reg_val){
+        return phy_.write_reg<T>(std::bit_cast<uint16_t>(reg_addr), reg_val);
     }
-
+    
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(RegAddr reg, T & value){
-        return read_reg(std::bit_cast<uint16_t>(reg), value);
+    requires (sizeof(T) <= 2)
+    [[nodiscard]] IResult<> read_reg(RegAddr reg_addr, T reg_val){
+        return phy_.read_reg<T>(std::bit_cast<uint16_t>(reg_addr), reg_val);
     }
-    [[nodiscard]] IResult<> read_reg16_bit(RegAddr reg, uint16_t & value){
-        return phy_.read_reg<uint16_t>(std::bit_cast<uint16_t>(reg), value);
-    }
-
     [[nodiscard]] IResult<uint8_t> read_range();
 private:
     VL6180X_Phy phy_;

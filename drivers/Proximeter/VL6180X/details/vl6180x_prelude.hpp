@@ -91,7 +91,7 @@ struct VL6180X_Prelude{
     };
 
     enum class Error_Kind:uint8_t{
-        WrongWhoAmI,
+        InvalidChipId,
         InvalidScaling,
         RangeDataNotReady,
         AmbientDataNotReady
