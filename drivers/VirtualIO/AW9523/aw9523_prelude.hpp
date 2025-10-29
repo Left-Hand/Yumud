@@ -61,11 +61,16 @@ struct AW9523_Prelude{
         SwRst = 0x7f
     };
 
-};
+    struct Config{
+        CurrentLimit current_limit = CurrentLimit::Low;
+    };
 
-struct AW9523_Regs:public AW9523_Prelude{
     static constexpr uint8_t VALID_CHIP_ID = 0x23;
     static constexpr size_t MAX_CHANNELS = 16;
+};
+
+struct AW9523_Regset final:public AW9523_Prelude{
+
     
     struct InputReg  : public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::In;
@@ -114,9 +119,6 @@ struct AW9523_Regs:public AW9523_Prelude{
     }DEF_R8(chip_id_reg)
 
     
-    struct Config{
-        CurrentLimit current_limit = CurrentLimit::Low;
-    };
 
 };
 

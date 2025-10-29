@@ -10,7 +10,7 @@ namespace ymd::drivers{
 
 
 class AW9523 final:
-    public AW9523_Regs{
+    public AW9523_Prelude{
 public:
 
     explicit AW9523(const hal::I2cDrv & i2c_drv):
@@ -64,6 +64,7 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
     hal::PinMask buf_mask_ = hal::PinMask::from_zero();
+    AW9523_Regset regs_ = {};
 
     [[nodiscard]] static constexpr RegAddr 
     get_dim_addr(const Nth nth){
@@ -122,9 +123,10 @@ private:
     }
 
     [[nodiscard]] IResult<hal::PinMask> read_mask() {
-        if(const auto res = read_reg(input_reg);
+        auto & reg = regs_.input_reg;
+        if(const auto res = read_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
-        return Ok(input_reg.mask);
+        return Ok(reg.mask);
     }
 };
 

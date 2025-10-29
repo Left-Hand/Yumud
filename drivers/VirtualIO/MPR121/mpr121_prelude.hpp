@@ -12,19 +12,8 @@ struct MPR121_Prelude{
     static constexpr size_t MAX_CHANNELS = 12;
 };
 
-struct MPR121_Regs:public MPR121_Prelude{
-
-struct R16_Threshold:public Reg16<>{
-    uint8_t press;
-    uint8_t release;
-};
-
-struct R16_FiltteredData:public Reg16<>{
-    uint16_t value:10;
-    uint16_t __resv__:6;
-};
-
-struct GpioCtrl{
+struct MPR121_Regset final:public MPR121_Prelude{
+struct GpioCtrlSet{
     uint8_t ctrl1;
     uint8_t ctrl2;
     uint8_t data;
@@ -35,32 +24,12 @@ struct GpioCtrl{
     uint8_t toggle;
 };
 
-struct R8_ChargeTime:public Reg8<>{
-    uint8_t cdt_a:3;
-    uint8_t __resv1__:1;
-    uint8_t cdt_b:3;
-    uint8_t __resv2__:1;
-};
-
-struct AutoConfig{
+struct AutoConfigSet{
     uint8_t ctrl1;
     uint8_t ctrl2;
     uint8_t usl;
     uint8_t lsl;
     uint8_t target_level;
-};
-
-struct R16_TouchStatus:public Reg16<>{
-    uint16_t ele:13;
-    uint16_t __resv__:2;
-    uint16_t ovcf:1;
-};
-
-struct R16_OORStatus:public Reg16<>{
-    uint16_t ele:13;
-    uint16_t __resv__:1;
-    uint16_t arff:1;
-    uint16_t acff:1;
 };
 
 
@@ -79,6 +48,42 @@ struct Misc{
 };
 
 
+struct R16_Threshold:public Reg16<>{
+    uint8_t press;
+    uint8_t release;
+};
+
+struct R16_FiltteredData:public Reg16<>{
+    uint16_t value:10;
+    uint16_t __resv__:6;
+};
+
+
+
+
+struct R8_ChargeTime:public Reg8<>{
+    uint8_t cdt_a:3;
+    uint8_t __resv1__:1;
+    uint8_t cdt_b:3;
+    uint8_t __resv2__:1;
+};
+
+
+struct R16_TouchStatus:public Reg16<>{
+    uint16_t ele:13;
+    uint16_t __resv__:2;
+    uint16_t ovcf:1;
+};
+
+struct R16_OORStatus:public Reg16<>{
+    uint16_t ele:13;
+    uint16_t __resv__:1;
+    uint16_t arff:1;
+    uint16_t acff:1;
+};
+
+
+
     R16_TouchStatus         touch_status;
     R16_OORStatus           oor_status;
     R16_FiltteredData       filtered_datas[MAX_CHANNELS];
@@ -93,8 +98,8 @@ struct Misc{
 
     uint8_t                 electrode_current[MAX_CHANNELS];
     R8_ChargeTime           charge_times[MAX_CHANNELS/2];
-    GpioCtrl                gpio_ctrl;
-    AutoConfig              auto_config;
+    GpioCtrlSet                gpio_ctrl;
+    AutoConfigSet              auto_config;
 
 };
 }

@@ -51,11 +51,12 @@ public:
     [[nodiscard]] IResult<> start_conv();
     [[nodiscard]] IResult<> update();
 
-    std::tuple<real_t, real_t, real_t, real_t> get_crgb();
+    [[nodiscard]] std::tuple<real_t, real_t, real_t, real_t> get_crgb();
 
 private:
     hal::I2cDrv i2c_drv_;
     TCS34725_Regset regs_ = {};
+
     std::array<uint16_t, 4> crgb_ = {0};
 
     template<typename T>
@@ -78,11 +79,11 @@ private:
 
     [[nodiscard]] IResult<> read_burst(const RegAddr addr, const std::span<uint16_t> pbuf);
 
-    static constexpr uint8_t conv_reg_address_norepeat(const RegAddr addr){
+    [[nodiscard]] static constexpr uint8_t conv_reg_address_norepeat(const RegAddr addr){
         return (std::bit_cast<uint8_t>(addr) | 0x80);
     }
 
-    static constexpr uint8_t conv_reg_address_repeated(const RegAddr addr){
+    [[nodiscard]] static constexpr uint8_t conv_reg_address_repeated(const RegAddr addr){
         return conv_reg_address_norepeat(addr) | (1 << 5);
     }
 

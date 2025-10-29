@@ -1,18 +1,32 @@
 #pragma once
 
+#include <type_traits>
 
+template<typename T>
 struct Fraction {
-public:
-    int numerator;
-    int denominator;
-    // Fraction(const int _numerator,const int _denominator) : numerator(_numerator), denominator(_denominator) {}
+    using num_t = decltype([] {
+        if constexpr (std::is_arithmetic_v<T>) {
+            return T{};
+        } else if constexpr (requires { typename T::num_t; }) {
+            return typename T::num_t{};
+        } else {
+            return T{};
+        }
+    }());
+    
+    using den_t = decltype([] {
+        if constexpr (std::is_arithmetic_v<T>) {
+            return T{};
+        } else if constexpr (requires { typename T::den_t; }) {
+            return typename T::den_t{};
+        } else {
+            return T{};
+        }
+    }());
 
-    int operator * (const int & value){
-        return numerator * value / denominator;
-    }
 
-    Fraction operator * (const Fraction & value){
-        return Fraction(numerator * value.numerator, denominator * value.denominator);
-    }
+
+    num_t num;
+    den_t den;
 };
 
