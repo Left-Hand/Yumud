@@ -5,7 +5,7 @@
 
 #include "_IQNsqrt.hpp"
 
-namespace __iqdetails{
+namespace ymd::iqmath::details{
 /**
  * @brief Computes the inverse sine of the IQN input.
  *
@@ -92,7 +92,7 @@ constexpr int32_t __IQNasin(int32_t iqNInput)
         uiq31Input = uiq31InputTemp >> 1;
 
         /* Calculate sqrt((1 - uiq31Input)/2) */
-        uiq31Input = std::bit_cast<int32_t>(_IQNsqrt<31>(std::bit_cast<_iq<31>>(uiq31Input)));
+        uiq31Input = _IQNsqrt<31>(iq_t<31>::from_i32(uiq31Input)).as_i32();
 
         /* Flag that the transformation was used. */
         ui8Status |= 2;
@@ -153,16 +153,16 @@ constexpr int32_t __IQNasin(int32_t iqNInput)
 
 
 template<const size_t Q>
-constexpr _iq<29> _IQNasin(_iq<Q> iqNInput){
+constexpr iq_t<29> _IQNasin(iq_t<Q> iqNInput){
     // static_assert(Q <= 29, "Input must be 29 bits or less.");
 
     if constexpr (Q > 29){
-        return std::bit_cast<_iq<29>>(
-            _IQNasin<29>(_iq<29>(_iq<29>(iqNInput).as_i32()))
+        return iq_t<29>::from_i32(
+            __IQNasin<29>(iq_t<29>(iqNInput).as_i32())
         );
     }else{
-        return std::bit_cast<_iq<29>>(
-            __IQNasin<Q>(iqNInput.as_i32())
+        return iq_t<29>::from_i32(
+            __IQNasin<Q>(iq_t<29>(iqNInput).as_i32())
         );
     }
 }

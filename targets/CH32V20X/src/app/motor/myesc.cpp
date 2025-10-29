@@ -37,6 +37,8 @@
 #include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
 #include "dsp/motor_ctrl/position_filter.hpp"
 
+//电机参数：
+// https://item.taobao.com/item.htm?id=643573104607
 using namespace ymd;
 
 using namespace ymd::drivers;
@@ -62,7 +64,7 @@ static constexpr size_t POLE_PAIRS = 10u;
 // static constexpr auto PHASE_INDUCTANCE = 0.0025_q20;
 
 //100uh
-static constexpr auto PHASE_INDUCTANCE = q20(70 * 1E-6);
+static constexpr auto PHASE_INDUCTANCE = q20(42.3 * 1E-6);
 
 //1ohm
 // static constexpr auto PHASE_RESISTANCE = 1.123_q20;
@@ -322,7 +324,7 @@ void myesc_main(){
             // .observer_gain = 0.16_q20, // [rad/s]
             .observer_gain = 0.1201_q20, // [rad/s]
             // .pm_flux_linkage = 0.000017_q20, // [V / (rad/s)]
-            .pm_flux_linkage = 0.0003_q20, // [V / (rad/s)]
+            .pm_flux_linkage = 0.00084_q20, // [V / (rad/s)]
         }
     };
 

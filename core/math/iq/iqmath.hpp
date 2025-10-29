@@ -3,15 +3,13 @@
 #include <array>
 #include "iq_t.hpp"
 
-#include "universal/_IQNdiv.hpp"
-#include "universal/_IQNatan2.hpp"
-#include "universal/_IQNtoF.hpp"
-#include "universal/_IQFtoN.hpp"
-#include "universal/_IQNsqrt.hpp"
-#include "universal/_IQNexp.hpp"
-#include "universal/_IQNasin_acos.hpp"
-#include "universal/_IQNsin_cos.hpp"
-#include "universal/_IQNlog.hpp"
+#include "_IQNdiv.hpp"
+#include "_IQNatan2.hpp"
+#include "_IQNsqrt.hpp"
+#include "_IQNexp.hpp"
+#include "_IQNasin_acos.hpp"
+#include "_IQNsin_cos.hpp"
+#include "_IQNlog.hpp"
 
 
 namespace ymd{
@@ -19,39 +17,39 @@ namespace ymd{
 
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> sinf(const iq_t<P> iq_x){
-        return iq_t<Q>(__iqdetails::__IQNgetCosSinTemplate<P>(iq_x.as_i32(), 
-            __iqdetails::__IQ31getSinDispatcher));
+        return iq_t<Q>(iqmath::details::__IQNgetCosSinTemplate<P>(iq_x.as_i32(), 
+            iqmath::details::__IQ31getSinDispatcher));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> cosf(const iq_t<P> iq_x){
-        return iq_t<Q>(__iqdetails::__IQNgetCosSinTemplate<P>(iq_x.as_i32(), 
-            __iqdetails::__IQ31getCosDispatcher));
+        return iq_t<Q>(iqmath::details::__IQNgetCosSinTemplate<P>(iq_x.as_i32(), 
+            iqmath::details::__IQ31getCosDispatcher));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr std::array<iq_t<Q>, 2> sincos(const iq_t<P> iq_x){
-        auto res = (__iqdetails::__IQNgetCosSinTemplate<Q>(iq_x.as_i32(), 
-            __iqdetails::__IQ31getSinCosDispatcher));
+        auto res = (iqmath::details::__IQNgetCosSinTemplate<Q>(iq_x.as_i32(), 
+            iqmath::details::__IQ31getSinCosDispatcher));
         return {res.sin, res.cos};
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> sinpu(const iq_t<P> iq_x){
-        return iq_t<Q>(__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), 
-            __iqdetails::__IQ31getSinDispatcher));
+        return iq_t<Q>(iqmath::details::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), 
+            iqmath::details::__IQ31getSinDispatcher));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> cospu(const iq_t<P> iq_x){
-        return iq_t<Q>(__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), 
-            __iqdetails::__IQ31getCosDispatcher));
+        return iq_t<Q>(iqmath::details::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), 
+            iqmath::details::__IQ31getCosDispatcher));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr std::array<iq_t<Q>, 2> sincospu(const iq_t<P> iq_x){
-        auto res = (__iqdetails::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), 
-            __iqdetails::__IQ31getSinCosDispatcher));
+        auto res = (iqmath::details::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), 
+            iqmath::details::__IQ31getSinCosDispatcher));
         return {res.sin, res.cos};
     }
     
@@ -69,12 +67,12 @@ namespace ymd{
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> asinf(const iq_t<P> iq) {
-        return iq_t<29>(__iqdetails::_IQNasin(iq.qvalue()));}
+        return iq_t<29>(iqmath::details::_IQNasin(iq));}
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     requires (Q < 30)
     __fast_inline constexpr iq_t<29> acosf(const iq_t<P> iq) {
-        return iq_t<29>(PI/2) - iq_t<29>(__iqdetails::_IQNasin(iq.qvalue()));
+        return iq_t<29>(PI/2) - iq_t<29>(iqmath::details::_IQNasin(iq));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
@@ -88,7 +86,7 @@ namespace ymd{
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     requires (Q < 30)
     __fast_inline constexpr iq_t<Q> atanf(const iq_t<P> iq) {
-        return iq_t<Q>(__iqdetails::_IQNatan2(iq.qvalue(), iq_t<P>(1).qvalue()));
+        return iq_t<Q>(iqmath::details::_IQNatan2(iq, iq_t<P>(1)));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
@@ -100,7 +98,7 @@ namespace ymd{
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     requires (Q < 30)
     __fast_inline constexpr iq_t<Q> atan2f(const iq_t<P> a, const iq_t<P> b) {
-        return iq_t<Q>(_iq<Q>(__iqdetails::_IQNatan2<P>(a.qvalue(),b.qvalue())));
+        return iq_t<Q>(iqmath::details::_IQNatan2<P>(a,b));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
@@ -112,12 +110,12 @@ namespace ymd{
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     requires (Q < 30)
     __fast_inline constexpr iq_t<Q> atan2pu(const iq_t<P> a, const iq_t<P> b) {
-        return iq_t<Q>(_iq<Q>(__iqdetails::_IQNatan2PU<P>(a.qvalue(),b.qvalue())));
+        return iqmath::details::_IQNatan2PU<P>(a,b);
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> sqrtf(const iq_t<P> iq){
-            return iq_t<Q>(__iqdetails::_IQNsqrt(iq.qvalue()));
+            return iq_t<Q>(iqmath::details::_IQNsqrt(iq));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
@@ -128,25 +126,25 @@ namespace ymd{
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> log10(const iq_t<P> iq) {
         #ifdef IQ_CH32_LOG
-        return iq_t(_iq<Q>(_IQlog10(iq.qvalue())));
+        return iq_t(_iq<Q>(_IQlog10(iq)));
         #else
-        return iq_t<Q>(__iqdetails::_IQNlog(iq.qvalue())) / 
-            iq_t(__iqdetails::_IQNlog<Q>(iq_t<Q>::from(10).qvalue()));
+        return iq_t<Q>(iqmath::details::_IQNlog(iq)) / 
+            iq_t(iqmath::details::_IQNlog<Q>(iq_t<Q>::from(10)));
         #endif
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> log(const iq_t<P> iq) {
         #ifdef IQ_CH32_LOG
-        return iq_t(_iq<Q>(_IQdiv(_IQlog10(iq.qvalue()), _IQlog10(_iq<Q>(M_E)))));
+        return iq_t(_iq<Q>(_IQdiv(_IQlog10(iq), _IQlog10(_iq<Q>(M_E)))));
         #else
-            return iq_t<Q>(__iqdetails::_IQNlog(iq.qvalue()));
+            return iq_t<Q>(iqmath::details::_IQNlog(iq));
         #endif
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> exp(const iq_t<P> iq) {
-        return iq_t<Q>(__iqdetails::_IQNexp<Q>(iq.qvalue()));
+        return iq_t<Q>(iqmath::details::_IQNexp<Q>(iq));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
@@ -163,17 +161,17 @@ namespace ymd{
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> isqrt(const iq_t<P> iq){
-        return iq_t<Q>(__iqdetails::_IQNisqrt<P>(iq.qvalue()));
+        return iq_t<Q>(iqmath::details::_IQNisqrt<P>(iq));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> mag(const iq_t<P> a, const iq_t<P> b){
-        return iq_t<Q>(__iqdetails::_IQNmag<P>(a.qvalue(), b.qvalue()));
+        return iq_t<Q>(iqmath::details::_IQNmag<P>(a, b));
     }
     
     template<size_t Q = IQ_DEFAULT_Q, size_t P>
     __fast_inline constexpr iq_t<Q> imag(const iq_t<P> a, const iq_t<P> b){
-        return iq_t<Q>(__iqdetails::_IQNimag<P>(a.qvalue(), a.qvalue()));
+        return iq_t<Q>(iqmath::details::_IQNimag<P>(a, a));
     }
     
     template<size_t Q>

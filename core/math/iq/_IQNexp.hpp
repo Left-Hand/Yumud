@@ -3,7 +3,7 @@
 #include "support.hpp"
 #include "_IQNtables.hpp"
 
-namespace __iqdetails{
+namespace ymd::iqmath::details{
 
 /**
  * @brief Computes the exponential of an IQN input.
@@ -119,8 +119,8 @@ constexpr int32_t __IQNexp(int32_t iqNInput){
 }
 
 template<const size_t Q>
-constexpr _iq<Q> _IQNexp(_iq<Q> input){
-    return std::bit_cast<_iq<Q>>(__IQNexp<Q>(std::bit_cast<int32_t>(input)));
+constexpr iq_t<Q> _IQNexp(iq_t<Q> input){
+    return iq_t<Q>::from_i32(__IQNexp<Q>((input).as_i32()));
 }
 
 }

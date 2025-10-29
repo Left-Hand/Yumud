@@ -13,7 +13,7 @@
 #define TYPE_RAD        (1)
 
 
-namespace __iqdetails{
+namespace ymd::iqmath::details{
 /**
  * @brief Compute the 4-quadrant arctangent of the IQN input
  *        and return the result.
@@ -92,11 +92,11 @@ constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
      */
     if (uiqNInputX < uiqNInputY) {
         status.applied = 1;
-        uiq31Input = std::bit_cast<uint32_t>(__iqdetails::_UIQdiv<31>(
-            _iq<31>::from_i32(uiqNInputX), _iq<31>::from_i32(uiqNInputY)));
+        uiq31Input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, true>(
+            uiqNInputX, uiqNInputY));
     } else if((uiqNInputX > uiqNInputY)) {
-        uiq31Input = std::bit_cast<uint32_t>(__iqdetails::_UIQdiv<31>(
-            _iq<31>::from_i32(uiqNInputY), _iq<31>::from_i32(uiqNInputX)));
+        uiq31Input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, true>(
+            uiqNInputY, uiqNInputX));
     }else{
         uiq32ResultPU = 0x20000000;
         goto end_series;
@@ -107,7 +107,7 @@ constexpr int32_t __IQNatan2_impl(int32_t iqNInputY, int32_t iqNInputX)
     ui8Index = ui8Index & 0x00fc;
 
     /* Set the coefficient pointer. */
-    piq32Coeffs = &__iqdetails::_IQ32atan_coeffs[ui8Index];
+    piq32Coeffs = &iqmath::details::_IQ32atan_coeffs[ui8Index];
 
 
     /*
@@ -156,7 +156,7 @@ end_series:
          *
          *     iq31mpy(iq32, iq28) = iq29
          */
-        iq29Result = __mpyf_l(uiq32ResultPU, __iqdetails::_iq28_twoPi);
+        iq29Result = __mpyf_l(uiq32ResultPU, iqmath::details::_iq28_twoPi);
 
         /* Only round IQ formats < 29 */
         if constexpr(Q < 29) {
@@ -180,18 +180,18 @@ end_series:
 
 
 template<const size_t Q>
-constexpr _iq<Q> _IQNatan2(_iq<Q> iqNInputY, _iq<Q> iqNInputX){
-    return _iq<Q>::from_i32(__IQNatan2_impl<Q, TYPE_RAD>(
-        std::bit_cast<int32_t>(iqNInputY), 
-        std::bit_cast<int32_t>(iqNInputX))
+constexpr iq_t<Q> _IQNatan2(iq_t<Q> iqNInputY, iq_t<Q> iqNInputX){
+    return iq_t<Q>::from_i32(__IQNatan2_impl<Q, TYPE_RAD>(
+        (iqNInputY.as_i32()), 
+        (iqNInputX.as_i32()))
     );
 }
 
 template<const size_t Q>
-constexpr _iq<Q> _IQNatan2PU(_iq<Q> iqNInputY, _iq<Q> iqNInputX){
-    return _iq<Q>::from_i32(__IQNatan2_impl<Q, TYPE_PU>(
-        std::bit_cast<int32_t>(iqNInputY), 
-        std::bit_cast<int32_t>(iqNInputX))
+constexpr iq_t<Q> _IQNatan2PU(iq_t<Q> iqNInputY, iq_t<Q> iqNInputX){
+    return iq_t<Q>::from_i32(__IQNatan2_impl<Q, TYPE_PU>(
+        (iqNInputY.as_i32()), 
+        (iqNInputX.as_i32()))
     );
 }
 

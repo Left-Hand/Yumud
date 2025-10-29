@@ -3,11 +3,8 @@
 
 #include "core/platform.hpp"
 
-#include "universal/support.hpp"
-#include "universal/_IQNtoF.hpp"
-#include "universal/_IQFtoN.hpp"
-#include "universal/_IQNdiv.hpp"
-
+#include "support.hpp"
+#include "_IQNdiv.hpp"
 
 #ifdef YUMUD_FRAMEWORK
 //引入浮点的结构模型 以方便进行和浮点数转换
@@ -30,6 +27,90 @@
 namespace ymd{
 template<size_t Q>
 struct iq_t;
+
+namespace iqmath::details{
+
+template<size_t Q>
+requires (Q < 32)
+float _IQNtoF(const int32_t iqNInput){
+    uint16_t ui16Exp;
+    uint32_t uiq23Result;
+    uint32_t uiq31Input;
+
+    /* Initialize exponent to the offset iq value. */
+    ui16Exp = 0x3f80 + ((31 - Q) * ((uint32_t) 1 << (23 - 16)));
+
+    /* Save the sign of the iqN input to the exponent construction. */
+    if (iqNInput < 0) {
+        ui16Exp |= 0x8000;
+        uiq31Input = -iqNInput;
+    } else if (iqNInput == 0) {
+        return (0);
+    } else {
+        uiq31Input = iqNInput;
+    }
+
+    /* Scale the iqN input to uiq31 by keeping track of the exponent. */
+    while ((uint16_t)(uiq31Input >> 16) < 0x8000) {
+        uiq31Input <<= 1;
+        ui16Exp -= 0x0080;
+    }
+
+    /* Round the uiq31 result and and shift to uiq23 */
+    uiq23Result = (uiq31Input + 0x0080) >> 8;
+
+    /* Remove the implied MSB bit of the mantissa. */
+    uiq23Result &= ~0x00800000;
+
+    /*
+     * Add the constructed exponent and sign bit to the mantissa. We must use
+     * an add in the case where rounding would cause the mantissa to overflow.
+     * When this happens the mantissa result is two where the MSB is zero and
+     * the LSB of the exp is set to 1 instead. Adding one to the exponent is the
+     * correct handling for a mantissa of two. It is not required to scale the
+     * mantissa since it will always be equal to zero in this scenario.
+     */
+    uiq23Result += (uint32_t) ui16Exp << 16;
+
+    /* Return the mantissa + exp + sign result as a floating point type. */
+    return std::bit_cast<float>(uiq23Result);
+}
+
+
+template<size_t Q>
+requires (Q < 32)
+__fast_inline static constexpr int32_t _IQFtoN(const float fv){
+    if(std::is_constant_evaluated()){
+        return int32_t(fv * int(1 << Q));
+    }
+
+    const int32_t d = std::bit_cast<int32_t>(fv);
+    const int32_t exponent = ((d >> 23) & 0xff);
+    const uint64_t mantissa = (exponent == 0) ? (0) : ((d & ((1 << 23) - 1)) | (1 << 23));
+
+    const uint64_t temp = [&] -> uint64_t {
+        if(exponent == 0 or exponent == 0xff){
+            return 0;
+        }else{
+            return LSHIFT(mantissa, exponent - 127);
+        }
+    }();
+
+    const uint64_t uresult = RSHIFT(temp, (23 - Q));
+    const int32_t result = d > 0 ? uresult : -uresult;
+
+    if((bool(d > 0) ^ bool(result > 0)) or (uresult > (uint64_t)0x80000000)){//OVERFLOW
+        if(d > 0){
+            return std::bit_cast<int32_t>(0x7FFFFFFF);
+        }else{
+            return std::bit_cast<int32_t>(0x80000000);
+        }
+    }else{
+        return std::bit_cast<int32_t>(result);
+    }
+
+}
+}
 }
 
 namespace std{
@@ -55,75 +136,82 @@ constexpr bool is_fixed_point_v<iq_t<Q>> = true;
 template<size_t Q>
 struct iq_t{
 public:
-    using iq_type = _iq<Q>;
 private:
     static_assert(Q < 32, "Q must be less than 32");
 
-    iq_type value_;
+    int32_t count_;
 public:
+    struct count_ctor{
+        int32_t count;
+    };
+
+    template<size_t P>
+    [[nodiscard]] __fast_inline static constexpr int32_t transform(const int32_t value){
+        if constexpr (P > Q){
+            return int32_t(int32_t(value) << (P - Q));
+        }else if constexpr (P < Q){
+            return int32_t(int32_t(value) >> (Q - P));
+        }else{
+            return int32_t(int32_t(value));
+        }
+    }
 
     static constexpr size_t q_num = Q;
 
-
     __fast_inline constexpr iq_t(){;}
 
-    template<size_t P>
-    __fast_inline constexpr iq_t(const _iq<P> otherv) : value_(otherv){;}
-
-    __fast_inline explicit constexpr operator _iq<Q>() const {return value_;}
+    __fast_inline constexpr iq_t(count_ctor ctor):
+        count_(ctor.count){;}
 
     template<size_t P>
-    __fast_inline constexpr operator iq_t<P>() const {return iq_t<P>(value_);}
+    __fast_inline constexpr operator iq_t<P>() const {return iq_t<P>::from_i32(transform<P>(count_));}
     
-    __fast_inline constexpr iq_t(const iq_t<Q> & other):value_(other.qvalue()){};
+    __fast_inline constexpr iq_t(const iq_t<Q> & other):count_(other.count_){};
+
+    __fast_inline constexpr int32_t as_i32() const {return count_;}
     
     template<size_t P>
     __fast_inline constexpr iq_t & operator = (const iq_t<P> & other){
-        value_ = _iq<Q>(other.qvalue());
+        count_ = iq_t<P>::template transform<Q>(other.as_i32());
         return *this;
     };
 
     template<size_t P>
     __fast_inline constexpr iq_t & operator = (iq_t<P> && other){
-        value_ = _iq<Q>(other.qvalue());
+        count_ = iq_t<P>::template transform<Q>(other.as_i32());
         return *this;
     };
     
-    static constexpr iq_t<Q> from_i32(const int32_t value_){
-        return iq_t<Q>(_iq<Q>::from_i32(value_));
+    static constexpr iq_t<Q> from_i32(const int32_t count){
+        return iq_t<Q>(count_ctor{count});
     };
-
-    constexpr int32_t as_i32() const{
-        return value_.as_i32();
-    };
-
-    constexpr _iq<Q> qvalue() const {
-        return value_;  
-    }
 
     template<typename T>
     requires std::is_integral_v<T>
     __fast_inline constexpr iq_t(const T iv):
-        value_(_iq<Q>::from_i32(iv << Q)) {;}
+        iq_t(count_ctor{static_cast<int32_t>(iv << Q)}){;}
 
     __fast_inline consteval explicit iq_t(const long double dv):
-        value_(_iq<Q>::from_i32(dv * static_cast<long double>(1u << Q))){};
+        iq_t(count_ctor{static_cast<int32_t>(dv * static_cast<long double>(1u << Q))}){};
 
     static __fast_inline constexpr iq_t from (const floating auto fv){
-        return iq_t{__iqdetails::_IQFtoN<Q>(fv)};}
+        return iq_t{
+            count_ctor{iqmath::details::_IQFtoN<Q>(fv)}
+        };
+    }
 
     __fast_inline constexpr iq_t operator+() const {
         return *this;
     }
 
     __fast_inline constexpr iq_t operator-() const {
-        return iq_t(_iq<Q>::from_i32(-(as_i32())));
+        return iq_t::from_i32(-(as_i32()));
     }
 
     //#region addsub
     template<size_t P>
     __fast_inline constexpr iq_t & operator +=(const iq_t<P> other) {
-        return *this = iq_t<Q>(_iq<Q>::from_i32(this->as_i32() + _iq<Q>(other.qvalue()).as_i32()));
+        return *this = iq_t<Q>::from_i32(this->as_i32() + iq_t<Q>(other).as_i32());
     }
 
     __fast_inline constexpr iq_t & operator +=(const integral auto other) {
@@ -132,7 +220,7 @@ public:
 
     template<size_t P>
     __fast_inline constexpr iq_t & operator -=(const iq_t<P> other) {
-        return *this = iq_t<Q>(_iq<Q>::from_i32(this->as_i32() - _iq<Q>(other.qvalue()).as_i32()));
+        return *this = iq_t<Q>::from_i32(this->as_i32() - iq_t<Q>(other).as_i32());
     }
 
     __fast_inline constexpr iq_t & operator -=(const integral auto other) {
@@ -144,20 +232,20 @@ public:
 
     template<size_t P>
     __fast_inline constexpr iq_t& operator *=(const iq_t<P> other) {
-        return *this = iq_t<Q>(_iq<Q>::from_i32(
+        return *this = iq_t<Q>::from_i32(
             (int64_t(this->as_i32()) * int64_t((other).as_i32())) >> (P)
-        ));
+        );
     }
 
     __fast_inline constexpr iq_t& operator *=(const integral auto other) {
-        return *this = iq_t<Q>(_iq<Q>::from_i32(this->as_i32() * other));
+        return *this = iq_t<Q>::from_i32(this->as_i32() * other);
     }
     
     //#endregion
 
     //#region division
     __fast_inline constexpr iq_t & operator/=(const integral auto other) {
-        return *this = iq_t(_iq<Q>::from_i32((as_i32() / int32_t(other))));
+        return *this = iq_t::from_i32((as_i32() / int32_t(other)));
     }
 
     template<size_t P>
@@ -165,7 +253,9 @@ public:
         if (std::is_constant_evaluated()) {
             return *this = iq_t<Q>::from(float(*this) / float(other));
         }else{
-            return *this = iq_t(__iqdetails::_IQNdiv<Q>(value_, _iq<Q>(other.qvalue())));
+            return *this = iq_t::from_i32(iqmath::details::__IQNdiv_impl<Q, false>(
+                as_i32(), other.as_i32()
+            ));
         }
     }
 
@@ -175,7 +265,7 @@ public:
     #define IQ_COMP_TEMPLATE(op)\
     template<size_t P>\
     __fast_inline constexpr bool operator op (const iq_t<P> other) const {\
-        return as_i32() op iq_type(other.qvalue()).as_i32();\
+        return as_i32() op iq_t<Q>(other).as_i32();\
     }\
     \
     template<typename T>\
@@ -202,22 +292,22 @@ public:
 
     //#region shifts
     __fast_inline constexpr iq_t operator<<(int32_t shift) const {
-        return iq_t(_iq<Q>::from_i32(as_i32() << shift));
+        return iq_t::from_i32((this->as_i32() << shift));
     }
 
     __fast_inline constexpr iq_t operator>>(int32_t shift) const {
-        return iq_t(_iq<Q>::from_i32(as_i32() >> shift));
+        return iq_t::from_i32((this->as_i32() >> shift));
     }
     //#endregion
 
     __fast_inline constexpr explicit operator bool() const {
-        return bool(as_i32());
+        return bool(this->as_i32());
     }
 
     template<typename T>
     requires std::is_integral_v<T>
     __fast_inline constexpr explicit operator T() const {
-        return as_i32() >> Q;
+        return this->as_i32() >> Q;
     }
     
 
@@ -225,9 +315,9 @@ public:
     requires std::is_floating_point_v<T>
     __inline constexpr explicit operator T() const{
         if(std::is_constant_evaluated()){
-            return float(as_i32()) / int32_t(1u << Q);
+            return float(this->as_i32()) / int32_t(1u << Q);
         }else{
-            return __iqdetails::_IQNtoF<Q>(value_);
+            return iqmath::details::_IQNtoF<Q>(this->as_i32());
         }
     }
 };
@@ -480,14 +570,14 @@ __fast_inline constexpr iq_t<Q> sign(const iq_t<P> iq){
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> fmod(const iq_t<P> a, const iq_t<P> b){
-    return iq_t<Q>(_iq<P>::from_i32(a.as_i32() % b.as_i32()));
+    return iq_t<Q>(iq_t<P>::from_i32(a.as_i32() % b.as_i32()));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> fposmod(const iq_t<P> a, const iq_t<P> b){
     const int32_t mod_result_i32 = a.as_i32() % b.as_i32();
     const int32_t is_negative = (mod_result_i32 >> 31);  // 符号位扩展（0 或 -1）
-    return iq_t<Q>(_iq<P>::from_i32(mod_result_i32 + (b.as_i32() & is_negative)));
+    return iq_t<Q>(iq_t<P>::from_i32(mod_result_i32 + (b.as_i32() & is_negative)));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
@@ -497,12 +587,12 @@ __fast_inline constexpr iq_t<Q> lerp(const iq_t<P> x, const iq_t<P> a, const iq_
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> mean(const iq_t<P> a, const iq_t<P> b){
-    return iq_t<Q>(_iq<P>::from_i32((a.as_i32() + b.as_i32()) >> 1));}
+    return iq_t<Q>(iq_t<P>::from_i32((a.as_i32() + b.as_i32()) >> 1));}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> frac(const iq_t<P> iq){
     static constexpr int32_t MASK = ((1 << P) - 1);
-    return iq_t<Q>(_iq<P>::from_i32((iq.as_i32()) & MASK));
+    return iq_t<Q>(iq_t<P>::from_i32((iq.as_i32()) & MASK));
 }
 
 
@@ -605,11 +695,11 @@ namespace std{
     template<size_t Q>
     class numeric_limits<iq_t<Q>> {
     public:
-        __fast_inline constexpr static iq_t<Q> infinity() noexcept {return iq_t<Q>(_iq<Q>::from_i32(0x7FFFFFFF));}
-        __fast_inline constexpr static iq_t<Q> lowest() noexcept {return iq_t<Q>(_iq<Q>::from_i32(0x80000000));}
+        __fast_inline constexpr static iq_t<Q> infinity() noexcept {return iq_t<Q>::from_i32(0x7FFFFFFF);}
+        __fast_inline constexpr static iq_t<Q> lowest() noexcept {return iq_t<Q>::from_i32(0x80000000);}
 
-        __fast_inline constexpr static iq_t<Q> min() noexcept {return iq_t<Q>(_iq<Q>::from_i32(0x80000000));}
-        __fast_inline constexpr static iq_t<Q> max() noexcept {return iq_t<Q>(_iq<Q>::from_i32(0x7FFFFFFF));}
+        __fast_inline constexpr static iq_t<Q> min() noexcept {return iq_t<Q>::from_i32(0x80000000);}
+        __fast_inline constexpr static iq_t<Q> max() noexcept {return iq_t<Q>::from_i32(0x7FFFFFFF);}
     };
     template<size_t Q>
     struct common_type<iq_t<Q>, float> {

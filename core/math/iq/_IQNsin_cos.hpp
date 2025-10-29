@@ -12,7 +12,7 @@
 #define TAU (2 * 3.1415926536)
 #endif
 
-namespace __iqdetails{
+namespace ymd::iqmath::details{
 
 /**
  * @brief Computes the sine of an UIQ31 input.
@@ -111,7 +111,7 @@ constexpr auto __IQNgetCosSinPUTemplate(int32_t iqn_x, Fn && fn){
 
 
     return std::forward<Fn>(fn)(iq31_x, sect, lut_index);
-    // return _iq<31>::from_i32(iq31_sin+iq31_cos);
+    // return iq_t<31>::from_i32(iq31_sin+iq31_cos);
 }
 
 
@@ -162,19 +162,19 @@ constexpr auto __IQNgetCosSinTemplate(int32_t iqn_x, Fn && fn){
 __fast_inline constexpr 
 auto __IQ31getSinDispatcher(const uint32_t iq31_x, const uint8_t sect, const uint8_t lut_index){
 
-    const int32_t iq31_sin = __iqdetails::_IQ31SinLookup[lut_index];
-    const int32_t iq31_cos = __iqdetails::_IQ31CosLookup[lut_index];
+    const int32_t iq31_sin = iqmath::details::_IQ31SinLookup[lut_index];
+    const int32_t iq31_cos = iqmath::details::_IQ31CosLookup[lut_index];
     //获取查找表的校准值
 
     switch(sect){
-        case 0: return _iq<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
-        case 1: return _iq<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
-        case 2: return _iq<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
-        case 3: return _iq<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
-        case 4: return _iq<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
-        case 5: return _iq<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
-        case 6: return _iq<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
-        case 7: return _iq<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
+        case 0: return iq_t<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
+        case 1: return iq_t<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
+        case 2: return iq_t<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
+        case 3: return iq_t<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
+        case 4: return iq_t<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
+        case 5: return iq_t<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
+        case 6: return iq_t<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
+        case 7: return iq_t<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
     }
     __builtin_unreachable();
 }
@@ -187,8 +187,8 @@ auto __IQ31getCosDispatcher(const uint32_t iq31_x, const uint8_t sect, const uin
 __fast_inline constexpr 
 auto __IQ31getSinCosDispatcher(const uint32_t iq31_x, const uint8_t sect, const uint8_t lut_index){
     struct SinCosResult{
-        _iq<31> sin;
-        _iq<31> cos;
+        iq_t<31> sin;
+        iq_t<31> cos;
     };
 
     return SinCosResult{

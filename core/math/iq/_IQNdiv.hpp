@@ -4,17 +4,10 @@
 #include "_IQNtables.hpp"
 
 
-#define TYPE_DEFAULT    (0)
-/*!
- * @brief Used to specify unsigned division on IQNdiv
- */
-#define TYPE_UNSIGNED   (1)
+namespace ymd::iqmath::details{
 
 
-namespace __iqdetails{
-
-
-template<const int8_t Q, const int32_t type>
+template<int8_t Q, bool _is_signed>
 constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
 {
     size_t ui8Index, ui8Sign = 0;
@@ -25,7 +18,7 @@ constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
     uint32_t uiqNResult;
     uint64_t uiiqNInput1;
 
-    if constexpr(type == TYPE_DEFAULT) {
+    if constexpr(_is_signed == false) {
         /* save sign of denominator */
         if (iqNInput2 <= 0) {
             /* check for divide by zero */
@@ -110,7 +103,7 @@ constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
 
 
     /* Saturate, add the sign and return. */
-    if constexpr(type == TYPE_DEFAULT) {
+    if constexpr(_is_signed == false) {
         if (uiqNResult > INT32_MAX) {
             if (ui8Sign) {
                 return INT32_MIN;
@@ -129,20 +122,4 @@ constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
     }
 }
 
-
-template<const size_t Q>
-constexpr _iq<Q> _IQNdiv(_iq<Q> a, _iq<Q> b)
-{
-    return _iq<Q>::from_i32(__IQNdiv_impl<Q, TYPE_DEFAULT>(a.as_i32(), b.as_i32()));
 }
-
-template<const size_t Q>
-constexpr _iq<Q> _UIQdiv(_iq<Q> a, _iq<Q> b)
-{
-    return _iq<Q>::from_i32(__IQNdiv_impl<Q, TYPE_UNSIGNED>(a.as_i32(), b.as_i32()));
-}
-
-}
-
-#undef TYPE_DEFAULT
-#undef TYPE_UNSIGNED

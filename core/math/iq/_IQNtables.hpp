@@ -2,10 +2,10 @@
 
 #include "rts_support.hpp"
 
-namespace __iqdetails{
+namespace ymd::iqmath::details{
 
-#define _IQ30log_order  14
-#define _IQ30exp_order  10
+static constexpr size_t _IQ30log_order = 14;
+static constexpr size_t _IQ30exp_order = 10;
 
 static constexpr int32_t _IQ31CosLookup[52] = {
     2147483647, 2147221509, 2146435157, 2145124784,

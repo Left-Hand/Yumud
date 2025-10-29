@@ -107,7 +107,7 @@ Arg make_arg_from_bytes(const std::span<const uint8_t, ArgSize> & bytes) {
         temp |= static_cast<T>(static_cast<T>(bytes[i]) << (i * 8));
     }
 
-    if constexpr (is_fixed_point_v<Arg>) return Arg(std::bit_cast<typename Arg::iq_type>(temp));
+    if constexpr (is_fixed_point_v<Arg>) return Arg::from_i32((temp));
     else return std::bit_cast<Arg>(temp);
 }
 

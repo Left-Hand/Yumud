@@ -161,11 +161,11 @@ __fast_inline constexpr real_t u16_to_uni(const uint16_t data){
     if constexpr(is_fixed_point_v<real_t>){
         constexpr size_t Q = real_t::q_num;
         if constexpr(Q > 16)
-            return real_t(_iq<Q>::from_i32(data << (Q - 16)));
+            return real_t(iq_t<Q>::from_i32(data << (Q - 16)));
         else if constexpr (Q < 16)
-            return real_t(_iq<Q>::from_i32(data >> (16 - Q)));
+            return real_t(iq_t<Q>::from_i32(data >> (16 - Q)));
         else
-            return real_t(_iq<Q>::from_i32(data));
+            return real_t(iq_t<Q>::from_i32(data));
     }else if constexpr(std::is_floating_point_v<real_t>){
         return real_t(data) / 65536;
     }

@@ -22,7 +22,7 @@
  */
 #define TYPE_IMAG    (3)
 
-namespace __iqdetails{
+namespace ymd::iqmath::details{
 
 /**
  * @brief Calculate square root, inverse square root and the magnitude of two inputs.
@@ -266,44 +266,44 @@ constexpr int32_t __IQNsqrt(int32_t iqNInputX, int32_t iqNInputY){
 }
 
 template<const size_t Q>
-constexpr _iq<Q> _IQNsqrt(const _iq<Q> iqNInputX){
-    return std::bit_cast<_iq<Q>>(
+constexpr iq_t<Q> _IQNsqrt(const iq_t<Q> iqNInputX){
+    return iq_t<Q>::from_i32(
         __IQNsqrt<Q, TYPE_SQRT>(
-            std::bit_cast<int32_t>(iqNInputX), 
-            std::bit_cast<int32_t>(0)
+            static_cast<int32_t>(iqNInputX.as_i32()), 
+            static_cast<int32_t>(0)
         )
     );
 }
 
 
 template<const size_t Q>
-constexpr _iq<Q> _IQNisqrt(const _iq<Q> iqNInputX){
-    return std::bit_cast<_iq<Q>>(
+constexpr iq_t<Q> _IQNisqrt(const iq_t<Q> iqNInputX){
+    return iq_t<Q>::from_i32(
         __IQNsqrt<Q, TYPE_ISQRT>(
-            std::bit_cast<int32_t>(iqNInputX), 
-            std::bit_cast<int32_t>(0)
+            static_cast<int32_t>(iqNInputX.as_i32()), 
+            static_cast<int32_t>(0)
         )
     );
 }
 
 
 template<const size_t Q>
-constexpr _iq<Q> _IQNmag(_iq<Q> iqNInputX, _iq<Q> iqNInputY){
-    return std::bit_cast<_iq<Q>>(
+constexpr iq_t<Q> _IQNmag(iq_t<Q> iqNInputX, iq_t<Q> iqNInputY){
+    return iq_t<Q>::from_i32(
         __IQNsqrt<Q, TYPE_MAG>(
-            std::bit_cast<int32_t>(iqNInputX), 
-            std::bit_cast<int32_t>(iqNInputY)
+            static_cast<int32_t>(iqNInputX), 
+            static_cast<int32_t>(iqNInputY)
         )
     );
 }
 
 
 template<const size_t Q>
-constexpr _iq<Q> _IQNimag(_iq<Q> iqNInputX, _iq<Q> iqNInputY){
-    return std::bit_cast<_iq<Q>>(
+constexpr iq_t<Q> _IQNimag(iq_t<Q> iqNInputX, iq_t<Q> iqNInputY){
+    return iq_t<Q>::from_i32(
         __IQNsqrt<Q, TYPE_IMAG>(
-            std::bit_cast<int32_t>(iqNInputX), 
-            std::bit_cast<int32_t>(iqNInputY)
+            static_cast<int32_t>(iqNInputX), 
+            static_cast<int32_t>(iqNInputY)
         )
     );
 }

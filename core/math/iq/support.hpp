@@ -1,14 +1,11 @@
 #pragma once
 
 #include "rts_support.hpp"
-#include "_IQN.hpp"
-#include "_IIQN.hpp"
-
 // #define __IQMATH_USE_MY_IMPL
 
 /* Common value defines. */
 
-namespace __iqdetails{
+namespace ymd::iqmath::details{
 static constexpr int16_t _q15_ln2          = 0x58b9;
 static constexpr int16_t _q13_pi           = 0x6488;
 static constexpr int16_t _q14_pi           = 0xc910;

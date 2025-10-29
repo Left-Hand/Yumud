@@ -1,18 +1,12 @@
 #pragma once
 
-#include "core/math_defs.hpp"
 #include <cstdint>
 
 #ifndef __fast_inline
 #define __fast_inline __attribute__((always_inline))
 #endif
 
-
-////////////////////////////////////////////////////////////
-//                                                        //
-//                16-bit functions                        //
-//                                                        //
-////////////////////////////////////////////////////////////
+namespace ymd::iqmath::details{
 __fast_inline constexpr int16_t __mpy_w(int16_t arg1, int16_t arg2){
     return (arg1 * arg2);
 }
@@ -56,11 +50,6 @@ __fast_inline constexpr int32_t __mpyfx_uw(uint16_t arg1, uint16_t arg2){
 }
 
 
-////////////////////////////////////////////////////////////
-//                                                        //
-//                 32-bit functions                       //
-//                                                        //
-////////////////////////////////////////////////////////////
 __fast_inline constexpr int32_t __mpy_l(int32_t arg1, int32_t arg2){
     return (arg1 * arg2);
 }
@@ -96,7 +85,6 @@ __fast_inline constexpr uint32_t __mpyf_ul32(uint32_t arg1, uint32_t arg2){
 }
 
 __fast_inline constexpr int32_t __mpyf_ul_reuse_arg1(uint32_t arg1, uint32_t arg2){
-    /* This is identical to __mpyf_ul */
     return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 31);
 }
 
@@ -106,4 +94,6 @@ __fast_inline constexpr int64_t __mpyfx(int32_t arg1, int32_t arg2){
 
 __fast_inline constexpr uint64_t __mpyfx_u(uint32_t arg1, uint32_t arg2){
     return ((uint64_t(arg1) * uint64_t(arg2)) << 1);
+}
+
 }

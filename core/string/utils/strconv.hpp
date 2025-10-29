@@ -53,7 +53,7 @@ template<size_t Q>
 iq_t<Q> atoq(const char * str, const size_t len){
     auto [int_part, frac_part, scale] = strconv::disassemble_fstr(str, len);
 	
-    return iq_t<Q>(int_part) + iq_t<Q>(_iq<Q>::from_i32((frac_part << Q) / scale));
+    return iq_t<Q>(int_part) + iq_t<Q>::from_i32((frac_part << Q) / scale);
 }
 
 size_t _qtoa_impl(const int32_t value_, char * str, uint8_t eps, const uint8_t _Q);

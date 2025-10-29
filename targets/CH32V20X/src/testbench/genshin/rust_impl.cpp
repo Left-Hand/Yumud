@@ -28,11 +28,11 @@ struct DeserializeFrom;
 
 struct RawBytes;
 
-template<std::integral I>
-struct ImplFor<SerializeAs<RawBytes>, I> {
-    static constexpr size_t N = magic::type_to_bytes_v<I>;
-    static constexpr std::array<uint8_t, N> serialize(const I obj) {
-        using Raw = magic::type_to_uint_t<I>;
+template<std::integral D>
+struct ImplFor<SerializeAs<RawBytes>, D> {
+    static constexpr size_t N = magic::type_to_bytes_v<D>;
+    static constexpr std::array<uint8_t, N> serialize(const D obj) {
+        using Raw = magic::type_to_uint_t<D>;
         const auto raw = std::bit_cast<Raw>(obj);
         using IS = std::make_index_sequence<N>;
 
@@ -42,15 +42,15 @@ struct ImplFor<SerializeAs<RawBytes>, I> {
     }
 };
 
-template<std::integral I>
-struct ImplFor<DeserializeFrom<RawBytes>, I> {
-    static constexpr size_t N = magic::type_to_bytes_v<I>;
+template<std::integral D>
+struct ImplFor<DeserializeFrom<RawBytes>, D> {
+    static constexpr size_t N = magic::type_to_bytes_v<D>;
     
-    static constexpr I deserialize(const std::span<const uint8_t, N> bytes) {
+    static constexpr D deserialize(const std::span<const uint8_t, N> bytes) {
         using IS = std::make_index_sequence<N>;
 
         auto transform = [](const uint8_t byte, const size_t idx) {
-            return static_cast<I>(byte) << (8 * idx);
+            return static_cast<D>(byte) << (8 * idx);
         };
 
         return [&]<size_t... Idx>(std::index_sequence<Idx...>) {
@@ -60,17 +60,17 @@ struct ImplFor<DeserializeFrom<RawBytes>, I> {
 };
 
 
-template<size_t N>
-struct ImplFor<SerializeAs<RawBytes>, iq_t<N>> {
-    static constexpr std::array<uint8_t, 4> serialize(const iq_t<N> obj){
+template<size_t Q>
+struct ImplFor<SerializeAs<RawBytes>, iq_t<Q>> {
+    static constexpr std::array<uint8_t, 4> serialize(const iq_t<Q> obj){
         return ImplFor<SerializeAs<RawBytes>, int32_t>::serialize(obj.as_i32());
     }
 };
 
-template<size_t N>
-struct ImplFor<DeserializeFrom<RawBytes>, iq_t<N>> {
-    static constexpr iq_t<N> deserialize(const std::span<const uint8_t, 4> bytes){
-        return iq_t<N>(_iq<N>::from_i32(ImplFor<DeserializeFrom<RawBytes>, int32_t>::deserialize(bytes)));
+template<size_t Q>
+struct ImplFor<DeserializeFrom<RawBytes>, iq_t<Q>> {
+    static constexpr iq_t<Q> deserialize(const std::span<const uint8_t, 4> bytes){
+        return iq_t<Q>::from_i32(ImplFor<DeserializeFrom<RawBytes>, int32_t>::deserialize(bytes));
     }
 };
 

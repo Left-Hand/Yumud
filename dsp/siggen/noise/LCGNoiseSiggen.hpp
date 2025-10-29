@@ -22,9 +22,9 @@ public:
     uint32_t get() const { return state_; }
 
     [[nodiscard]] constexpr __fast_inline
-    real_t get_as_01(){
+    q16 get_as_01(){
         update();
-        return real_t(std::bit_cast<_iq<16>>(get() & 0xffff));
+        return q16::from_i32((get() & 0xffff));
     }
     
     [[nodiscard]] constexpr __fast_inline
@@ -33,7 +33,7 @@ public:
         const uint32_t temp = get();
         const uint32_t u0 = temp >> 16;
         const uint32_t u1 = temp & 0xffff;
-        return {real_t(std::bit_cast<_iq<16>>(u0)), real_t(std::bit_cast<_iq<16>>(u1))};
+        return {iq_t<16>::from_i32(u0), iq_t<16>::from_i32(u1)};
     }
 
 private:
