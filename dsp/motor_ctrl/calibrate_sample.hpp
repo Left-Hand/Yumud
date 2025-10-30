@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/math/iq/iq_t.hpp"
+#include "core/math/iq/fixed_t.hpp"
 #include "core/utils/Option.hpp"
 #include "core/utils/serde.hpp"
 
@@ -91,11 +91,11 @@ private:
     uint16_t measured_packed_data_;
 
     static constexpr Option<uint16_t> real_to_packed(const q16 unpacked){
-        return Some(uint16_t(unpacked.as_i32()));
+        return Some(uint16_t(unpacked.as_bits()));
     }
 
     static constexpr q31 packed_to_real(const uint16_t packed){
-        return q16::from_i32(packed);
+        return q16::from_bits(packed);
     }
 };
 
@@ -120,11 +120,11 @@ struct CompressedInaccuracy {
     }
 
     static constexpr Raw compress(const q16 count){
-        return Raw(count.as_i32());
+        return Raw(count.as_bits());
     }
 
     static constexpr q16 decompress(const Raw raw){
-        return q16::from_i32(raw);
+        return q16::from_bits(raw);
     }
 
 private:

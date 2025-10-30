@@ -144,8 +144,8 @@ static constexpr auto make_deserialize(const auto & pbuf) {
 
 
 template<size_t Q>
-struct SerializeIter<RawBytes, iq_t<Q>>{
-    constexpr explicit SerializeIter(const iq_t<Q> num):
+struct SerializeIter<RawBytes, fixed_t<Q, int32_t>>{
+    constexpr explicit SerializeIter(const fixed_t<Q, int32_t> num):
         buf_(serialize(num)){;}
     constexpr bool has_next() const {
         return pos_ < N;
@@ -154,19 +154,19 @@ struct SerializeIter<RawBytes, iq_t<Q>>{
         return buf_[pos_++];
     }
 
-    static constexpr std::array<uint8_t, 4> serialize(const iq_t<Q> num){
-        const auto inum = num.as_i32();
+    static constexpr std::array<uint8_t, 4> serialize(const fixed_t<Q, int32_t> num){
+        const auto inum = num.as_bits();
         return std::bit_cast<std::array<uint8_t, 4>>(inum);
     } 
 private:
-    static constexpr size_t N = sizeof(decltype(serialize(std::declval<iq_t<Q>>())));
+    static constexpr size_t N = sizeof(decltype(serialize(std::declval<fixed_t<Q, int32_t>>())));
     using Buf = std::array<uint8_t, N>;
     Buf buf_;
     size_t pos_ = 0;
 };
 
 template<typename Protocol, size_t Q>
-struct serialize_iter_support_sbo<Protocol, iq_t<Q>>:std::true_type{};
+struct serialize_iter_support_sbo<Protocol, fixed_t<Q, int32_t>>:std::true_type{};
 
 
 template<typename T>
@@ -404,8 +404,8 @@ private:
 };
 
 template<size_t Q>
-struct Deserializer<RawBytes, iq_t<Q>> {
-    static constexpr size_t N = sizeof(iq_t<Q>);
+struct Deserializer<RawBytes, fixed_t<Q, int32_t>> {
+    static constexpr size_t N = sizeof(fixed_t<Q, int32_t>);
     [[nodiscard]] static constexpr size_t size(){
         return N;
     }
@@ -415,12 +415,12 @@ struct Deserializer<RawBytes, iq_t<Q>> {
         return pbuf.subspan(size());
     }
 
-    [[nodiscard]] static constexpr Result<iq_t<Q>, DeserializeError> 
+    [[nodiscard]] static constexpr Result<fixed_t<Q, int32_t>, DeserializeError> 
     deserialize(std::span<const uint8_t> pbuf) {
         if(pbuf.size() < N) return Err(DeserializeError::BytesLengthShortParsingIq);
         int32_t val = std::bit_cast<int32_t>(
             std::array<uint8_t, N>{pbuf[0], pbuf[1], pbuf[2], pbuf[3]});
-        return Ok(iq_t<Q>::from_i32(val));
+        return Ok(fixed_t<Q, int32_t>::from_bits(val));
     }
 };
 

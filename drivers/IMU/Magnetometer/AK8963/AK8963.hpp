@@ -68,9 +68,9 @@ private:
 
     static constexpr real_t conv_data_to_ut(const int16_t data, const bool is_16_bits){
         if(is_16_bits){
-            return (data * iq_t<16>(0.15));
+            return (data * q16(0.15));
         }else{
-            return (data * iq_t<16>(0.6));
+            return (data * q16(0.6));
         }
     }
 };

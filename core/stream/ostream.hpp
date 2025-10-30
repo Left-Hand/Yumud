@@ -19,7 +19,7 @@
 
 #include "core/stream/CharOpTraits.hpp"
 #include "core/utils/stdrange.hpp"
-#include "core/math/iq/iq_t.hpp"
+#include "core/math/iq/fixed_t.hpp"
 
 
 namespace std{
@@ -360,7 +360,7 @@ private:
 public:
 
     template<size_t Q>
-    OutputStream & operator<<(const iq_t<Q> & val){
+    OutputStream & operator<<(const fixed_t<Q, int32_t> & val){
         print_q16(q16(val));
         return *this;
     }

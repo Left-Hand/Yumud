@@ -1,6 +1,6 @@
 #include "core/math/real.hpp"
 #include "core/math/fast/conv.hpp"
-#include "core/math/iq/iq_t.hpp"
+#include "core/math/iq/fixed_t.hpp"
 
 
 #include "types/vectors/vector3.hpp"
@@ -28,6 +28,7 @@ void test_q14(){
     static_assert(c == 0.5_r);
 }   
 
+#if 0
 void test_norm(){
     {
         constexpr q14 a = 1_r;
@@ -74,3 +75,4 @@ void test_norm(){
         static_assert(c == a1 * b1 + a2 * b2);
     }
 }
+#endif

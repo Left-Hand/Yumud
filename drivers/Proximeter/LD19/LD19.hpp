@@ -15,9 +15,6 @@
 namespace ymd::drivers{
 
 
-
-
-
 struct LD19_Prelude{
 
     static constexpr size_t DEFAULT_UART_BAUD = 230400;
@@ -35,7 +32,7 @@ struct LD19_Prelude{
         }
     };
 
-    struct LidarSpinSpeed{
+    struct [[nodiscard]] LidarSpinSpeed{
     public:
         LidarSpinSpeed(uint16_t data):data_(data){;}
 
@@ -47,12 +44,12 @@ struct LD19_Prelude{
         uint16_t data_;
     };
 
-    struct LidarAngle{
+    struct [[nodiscard]] LidarAngle{
     public:
         LidarAngle(uint16_t data):data_(data){;}
 
         [[nodiscard]] constexpr q16 to_turns() const{
-            constexpr auto RATIO = q24(1 / 360 * 0.01);
+            constexpr auto RATIO = q24(1.0 / 360 * 0.01);
             return RATIO * data_;
         }
 
@@ -93,7 +90,7 @@ struct LD19_Prelude{
         return crc;
     }
 
-    struct LidarFrame final{
+    struct [[nodiscard]] LidarFrame final{
         using Self = LidarFrame;
 
         #pragma pack(push, 1)
@@ -116,10 +113,10 @@ struct LD19_Prelude{
     static constexpr size_t FRAME_SIZE = sizeof(LidarFrame);
 
     struct Events{
-        struct FrameReady{
+        struct [[nodiscard]] FrameReady{
             const LidarFrame & frame;
         };
-        struct InvalidCrc{
+        struct [[nodiscard]] InvalidCrc{
             uint8_t expected;
             uint8_t actual;
         };

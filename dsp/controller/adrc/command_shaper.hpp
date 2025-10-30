@@ -6,8 +6,8 @@
 
 namespace std{
     template<size_t Q, size_t Q2>
-    [[nodiscard]] __fast_inline constexpr iq_t<Q> copysign(const iq_t<Q> x, const iq_t<Q2> s){
-        // return iq_t<Q>(_iq<Q>::from_i32((
+    [[nodiscard]] __fast_inline constexpr fixed_t<Q, int32_t> copysign(const fixed_t<Q, int32_t> x, const fixed_t<Q2, int32_t> s){
+        // return fixed_t<Q, int32_t>(_iq<Q>::from_i32((
         //     (std::bit_cast<int32_t>(x.value) & 0x7fff'ffff) | 
         //     (std::bit_cast<int32_t>(s.value) & 0x8000'0000)
         // )));
@@ -217,7 +217,7 @@ public:
         const auto pos_err = u - pos;
         const auto dist = ABS(pos_err);
         // const auto expect_spd = CLAMP2(SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_);
-        // const auto expect_spd = iq_t<16>(CLAMP2(self.lpf.state()[1] + SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_));
+        // const auto expect_spd = fixed_t<16>(CLAMP2(self.lpf.state()[1] + SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_));
         // DEBUG_PRINTLN(u0, u, pos, spd, expect_spd, self.max_spd_, self.lpf.state());
         
         // DEBUG_PRINTLN(expect_spd);

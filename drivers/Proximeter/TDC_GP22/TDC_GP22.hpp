@@ -40,7 +40,7 @@ public:
     [[nodiscard]] IResult<q16> get_meas_value() {
         clock::delay(1us);
         return phy_.trans_u8_receive_u32(0xB0)
-            .transform([](const uint32_t x){return q16::from_i32(x);}); // Read REG0
+            .transform([](const uint32_t x){return q16::from_bits(x);}); // Read REG0
     }
 private:
     GP22_Phy phy_;

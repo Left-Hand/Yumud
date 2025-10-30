@@ -1,8 +1,9 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "core/math/iq/iq_t.hpp"
+#include "core/math/iq/fixed_t.hpp"
 
+#if 0
 namespace ymd{
 
 template<arithmetic T>
@@ -119,7 +120,7 @@ __inline constexpr
 Norm<T> qmux(const Norm<T> a, const Norm<T> b){
     if constexpr (ymd::is_fixed_point_v<T> and ymd::iq_num_v<T> < 15){
         constexpr size_t q_num = ymd::iq_num_v<T>;
-        return Norm(iq_t<q_num>::from_i32((
+        return Norm(fixed_t<q_num>::from_i32((
             (T(a).as_i32() * T(b).as_i32()) >> q_num)
         ));
     }else{
@@ -191,3 +192,5 @@ namespace std{
     struct is_floating_point<ymd::Norm<T>> : std::conditional_t<
         std::is_floating_point_v<T>, std::true_type, std::false_type>{};
 }
+
+#endif

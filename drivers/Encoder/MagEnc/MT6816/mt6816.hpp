@@ -62,7 +62,7 @@ private:
             if(no_mag) [[unlikely]]
                 return Err(EncoderError::MagnetLost);
 
-            const auto turns = q14::from_i32(data_14bit);
+            const auto turns = q14::from_bits(data_14bit);
             return Ok(Angle<q31>::from_turns(turns));
         }
 

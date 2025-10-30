@@ -285,7 +285,7 @@ void dsp_main(){
 
 
     // using T = float; 
-    using T = iq_t<16>; 
+    using T = q16; 
 
     [[maybe_unused]] constexpr T FREQ_LOW = T(250);
     [[maybe_unused]] constexpr T FREQ_HIGH = T(400);

@@ -266,10 +266,10 @@ constexpr int32_t __IQNsqrt(int32_t iqNInputX, int32_t iqNInputY){
 }
 
 template<const size_t Q>
-constexpr iq_t<Q> _IQNsqrt(const iq_t<Q> iqNInputX){
-    return iq_t<Q>::from_i32(
+constexpr fixed_t<Q, int32_t> _IQNsqrt(const fixed_t<Q, int32_t> iqNInputX){
+    return fixed_t<Q, int32_t>::from_bits(
         __IQNsqrt<Q, TYPE_SQRT>(
-            static_cast<int32_t>(iqNInputX.as_i32()), 
+            static_cast<int32_t>(iqNInputX.as_bits()), 
             static_cast<int32_t>(0)
         )
     );
@@ -277,10 +277,10 @@ constexpr iq_t<Q> _IQNsqrt(const iq_t<Q> iqNInputX){
 
 
 template<const size_t Q>
-constexpr iq_t<Q> _IQNisqrt(const iq_t<Q> iqNInputX){
-    return iq_t<Q>::from_i32(
+constexpr fixed_t<Q, int32_t> _IQNisqrt(const fixed_t<Q, int32_t> iqNInputX){
+    return fixed_t<Q, int32_t>::from_bits(
         __IQNsqrt<Q, TYPE_ISQRT>(
-            static_cast<int32_t>(iqNInputX.as_i32()), 
+            static_cast<int32_t>(iqNInputX.as_bits()), 
             static_cast<int32_t>(0)
         )
     );
@@ -288,8 +288,8 @@ constexpr iq_t<Q> _IQNisqrt(const iq_t<Q> iqNInputX){
 
 
 template<const size_t Q>
-constexpr iq_t<Q> _IQNmag(iq_t<Q> iqNInputX, iq_t<Q> iqNInputY){
-    return iq_t<Q>::from_i32(
+constexpr fixed_t<Q, int32_t> _IQNmag(fixed_t<Q, int32_t> iqNInputX, fixed_t<Q, int32_t> iqNInputY){
+    return fixed_t<Q, int32_t>::from_bits(
         __IQNsqrt<Q, TYPE_MAG>(
             static_cast<int32_t>(iqNInputX), 
             static_cast<int32_t>(iqNInputY)
@@ -299,8 +299,8 @@ constexpr iq_t<Q> _IQNmag(iq_t<Q> iqNInputX, iq_t<Q> iqNInputY){
 
 
 template<const size_t Q>
-constexpr iq_t<Q> _IQNimag(iq_t<Q> iqNInputX, iq_t<Q> iqNInputY){
-    return iq_t<Q>::from_i32(
+constexpr fixed_t<Q, int32_t> _IQNimag(fixed_t<Q, int32_t> iqNInputX, fixed_t<Q, int32_t> iqNInputY){
+    return fixed_t<Q, int32_t>::from_bits(
         __IQNsqrt<Q, TYPE_IMAG>(
             static_cast<int32_t>(iqNInputX), 
             static_cast<int32_t>(iqNInputY)

@@ -16,7 +16,7 @@ struct fp8_e4m3{
 		};
 	};
 
-	constexpr fp8_e4m3(iq_t qv):fp8_e4m3(float(qv)){;}
+	constexpr fp8_e4m3(fixed_t qv):fp8_e4m3(float(qv)){;}
 	constexpr fp8_e4m3(const fp8_e4m3 & other):raw(other.raw){;}
 	constexpr fp8_e4m3(int iv){
 		sign = iv < 0;
@@ -67,8 +67,8 @@ struct fp8_e4m3{
 		return std::bit_cast<float>(conversion.raw);
 	}
 
-	explicit constexpr operator iq_t() const {
-		return iq_t(float(*this));
+	explicit constexpr operator fixed_t() const {
+		return fixed_t(float(*this));
 	}
 };
 

@@ -41,18 +41,18 @@ auto pfunc(const int16_t a, const int16_t b){
 class Ball{
 public:
     int a;
-    iq_t<16> mset_xy(iq_t<16> x, iq_t<16> y){
+    q16 mset_xy(q16 x, q16 y){
         return x * x + y * y;
     }
 
-    iq_t<16> mset_xy2(iq_t<16> x, iq_t<16> y){
+    q16 mset_xy2(q16 x, q16 y){
         return x + y;
     }
 };
 
 // static constexpr bool test_if = is_functor_v<decltype(pfunc)>;
 
-auto func = [](const iq_t<30> a, iq_t<30> b){
+auto func = [](const q30 a, q30 b){
     return a * a + b * b;
     // return a;
 };
@@ -73,7 +73,7 @@ void enum_main(){
     Ball ball;
 
     while(true){
-        // auto set_xy = [](iq_t<16> x, iq_t<16> y){
+        // auto set_xy = [](q16 x, q16 y){
         //     return x * x + y * y;
         // };
 
@@ -131,29 +131,29 @@ void enum_main(){
 
     // static constexpr size_t a = tuple_bytes_v<int, int, uint8_t>;
     {
-        // using tup_t = std::tuple<int, uint16_t, uint8_t, iq_t<16>>;
+        // using tup_t = std::tuple<int, uint16_t, uint8_t, q16>;
         
         // static constexpr size_t a1 = tuple_element_bytes_v<1, tup_t>;
         // static constexpr size_t a2 = tuple_element_bytes_v<2, tup_t>;
         // static constexpr size_t a2 = tuple_element_bytes_v<2, tup_t>;
 
-        // static constexpr size_t a3 = element_bytes_v<2, int, uint16_t, uint8_t, iq_t<16>>;
-        using t0 = magic::args_element_t<0, int, uint16_t, uint8_t, iq_t<16>>;
-        using t1 = magic::args_element_t<1, int, uint16_t, uint8_t, iq_t<16>>;
+        // static constexpr size_t a3 = element_bytes_v<2, int, uint16_t, uint8_t, q16>;
+        using t0 = magic::args_element_t<0, int, uint16_t, uint8_t, q16>;
+        using t1 = magic::args_element_t<1, int, uint16_t, uint8_t, q16>;
         
-        using t3 = std::tuple_element_t<3, std::tuple<int, uint16_t, uint8_t, iq_t<16> >>;
+        using t3 = std::tuple_element_t<3, std::tuple<int, uint16_t, uint8_t, q16 >>;
 
         static_assert(std::is_same_v<t0, int>);
         static_assert(std::is_same_v<t1, uint16_t>);
-        static_assert(std::is_same_v<t3, iq_t<16>>);
+        static_assert(std::is_same_v<t3, q16>);
 
-        // static constexpr auto tup1 = std::make_tuple<int, uint16_t, uint8_t, iq_t<16> >(1, 2, 3, 4.0_r);
+        // static constexpr auto tup1 = std::make_tuple<int, uint16_t, uint8_t, q16 >(1, 2, 3, 4.0_r);
         
         // static_assert(packed_tuple_total_bytes_v<tup_t> == sizeof(tup_t));
-        // total_bytes_v<int, uint16_t, uint8_t, iq_t<16>>;
+        // total_bytes_v<int, uint16_t, uint8_t, q16>;
         // packed_tuple_total_bytes_v<tup_t>;
-        // static constexpr size_t a0 = element_bytes_v<0, int, uint16_t, uint8_t, iq_t<16>>;
-        // static constexpr size_t a1 = element_bytes_v<1, int, uint16_t, uint8_t, iq_t<16>>;
+        // static constexpr size_t a0 = element_bytes_v<0, int, uint16_t, uint8_t, q16>;
+        // static constexpr size_t a1 = element_bytes_v<1, int, uint16_t, uint8_t, q16>;
         
         // static constexpr size_t a = element_bytes_v<1, int, short>;
         // static_assert(tuple_bytes_v<tup_t> == sizeof(tup_t));
@@ -216,12 +216,12 @@ void enum_main(){
 
     {
         // constexpr 
-        auto func1 = [](const uint16_t u, const iq_t<10> q){
-            return iq_t<20>(q + u);
+        auto func1 = [](const uint16_t u, const q10 q){
+            return q20(q + u);
         };
 
         static constexpr uint16_t u1 = 10;
-        static constexpr iq_t<10> q1 = 0.1_r;
+        static constexpr q10 q1 = 0.1_r;
         static constexpr auto r1 = func1(u1, q1);
 
         static constexpr auto bytes = magic::serialize_args_to_bytes(u1, q1);
@@ -229,7 +229,7 @@ void enum_main(){
         static_assert(magic::is_functor_v<decltype(func1)>);
 
         using traits = magic::details::_functor_traits<std::decay_t<decltype(func1)>>;
-        static_assert(std::is_same_v<traits::return_type, iq_t<20>>);
+        static_assert(std::is_same_v<traits::return_type, q20>);
         static constexpr auto r2 = magic::invoke_func_by_serialzed_bytes(func1, std::span(bytes));
         static_assert(r1 == r2);
     }

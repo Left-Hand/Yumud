@@ -180,18 +180,18 @@ end_series:
 
 
 template<const size_t Q>
-constexpr iq_t<Q> _IQNatan2(iq_t<Q> iqNInputY, iq_t<Q> iqNInputX){
-    return iq_t<Q>::from_i32(__IQNatan2_impl<Q, TYPE_RAD>(
-        (iqNInputY.as_i32()), 
-        (iqNInputX.as_i32()))
+constexpr fixed_t<Q, int32_t> _IQNatan2(fixed_t<Q, int32_t> iqNInputY, fixed_t<Q, int32_t> iqNInputX){
+    return fixed_t<Q, int32_t>::from_bits(__IQNatan2_impl<Q, TYPE_RAD>(
+        (iqNInputY.as_bits()), 
+        (iqNInputX.as_bits()))
     );
 }
 
 template<const size_t Q>
-constexpr iq_t<Q> _IQNatan2PU(iq_t<Q> iqNInputY, iq_t<Q> iqNInputX){
-    return iq_t<Q>::from_i32(__IQNatan2_impl<Q, TYPE_PU>(
-        (iqNInputY.as_i32()), 
-        (iqNInputX.as_i32()))
+constexpr fixed_t<Q, int32_t> _IQNatan2PU(fixed_t<Q, int32_t> iqNInputY, fixed_t<Q, int32_t> iqNInputX){
+    return fixed_t<Q, int32_t>::from_bits(__IQNatan2_impl<Q, TYPE_PU>(
+        (iqNInputY.as_bits()), 
+        (iqNInputX.as_bits()))
     );
 }
 

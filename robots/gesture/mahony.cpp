@@ -5,6 +5,8 @@
 
 using namespace ymd;
 
+#if 0
+
 template<arithmetic T>
 __fast_inline constexpr
 auto build_norm_vec3_from_quat_xfrom_top(
@@ -104,6 +106,8 @@ void Mahony::myupdate_v2(const IV3 & gyr,const IV3 & acc) {
 	q = q.integral(gyr_hat_, dt_).slerp(IQuat::from_direction(acc), 0.017_r);
 	// q =v;
 }
+
+#endif
 
 void Mahony::update(const IV3 & gyr,const IV3 & acc) {
 	const auto v = q.xform_up();

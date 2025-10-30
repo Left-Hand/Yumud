@@ -24,16 +24,16 @@ public:
     [[nodiscard]] constexpr __fast_inline
     q16 get_as_01(){
         update();
-        return q16::from_i32((get() & 0xffff));
+        return q16::from_bits((get() & 0xffff));
     }
     
     [[nodiscard]] constexpr __fast_inline
-    std::tuple<real_t, real_t> get_as_01x2(){
+    std::tuple<q16, q16> get_as_01x2(){
         update();
         const uint32_t temp = get();
         const uint32_t u0 = temp >> 16;
         const uint32_t u1 = temp & 0xffff;
-        return {iq_t<16>::from_i32(u0), iq_t<16>::from_i32(u1)};
+        return {q16::from_bits(u0), q16::from_bits(u1)};
     }
 
 private:

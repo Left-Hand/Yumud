@@ -226,7 +226,7 @@ void fft_main(){
 
 
     using T = float; 
-    // using T = iq_t<16>; 
+    // using T = fixed_t<16>; 
 
     [[maybe_unused]]
     // constexpr size_t N = 256;

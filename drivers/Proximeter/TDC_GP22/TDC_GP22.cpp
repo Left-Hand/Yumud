@@ -69,7 +69,7 @@ IResult<bool> Self::is_measurement_done(){
     TODO();
 }
 
-IResult<iq_t<16>> Self::blocking_get_meas_value(Milliseconds timeout_ms) {
+IResult<q16> Self::blocking_get_meas_value(Milliseconds timeout_ms) {
     const auto t = clock::millis();
 
     while(true){

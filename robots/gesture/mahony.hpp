@@ -58,9 +58,13 @@ private:
 	IQuat q = IQuat::IDENTITY;
 };
 
+
+#if 0
 template<typename T>
 __fast_inline OutputStream & operator<<(OutputStream & os, const Norm<T> & value){
     return os << T(value);
 }
+
+#endif
 
 }

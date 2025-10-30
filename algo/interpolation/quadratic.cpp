@@ -16,7 +16,7 @@ real_t QuadraticInterpolation::forward(const real_t x){
     if (a == real_t(0.5)){
         a += epsilon;
     }
-    // iq_t a = 1;
+    // fixed_t a = 1;
     // solve t from x (an inverse operation)
     real_t om2a = 1 - 2*a;
     real_t k = (sqrt(a*a + om2a*x) - a)/om2a;

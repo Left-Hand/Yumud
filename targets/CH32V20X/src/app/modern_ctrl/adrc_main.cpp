@@ -21,15 +21,15 @@ static constexpr auto UART_BAUD = 576000;
 
 
 template<size_t Q>
-static constexpr iq_t<Q> sat(const iq_t<Q> x){
+static constexpr fixed_t<Q, int32_t> sat(const fixed_t<Q, int32_t> x){
     // constexpr int32_t MASK = (~((1 << Q) - 1)) & (0x7fffffff);
     // const auto x_i32 = x.as_i32();
     if(ABS(x) > 1){
         return sign(x);
         // constexpr size_t SHIFT_BITS = 32 - Q;
-        // return iq_t<Q>::from_i32(((x_i32 & (0x80000000)) >> SHIFT_BITS) | (1 << Q));
+        // return fixed_t<Q, int32_t>::from_i32(((x_i32 & (0x80000000)) >> SHIFT_BITS) | (1 << Q));
     }else{
-        // return iq_t<Q>::from_i32(x_i32);
+        // return fixed_t<Q, int32_t>::from_i32(x_i32);
         return x;
     }
 }

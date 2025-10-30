@@ -87,7 +87,7 @@ struct Packet{
         // if(not is_pc2_valid()) [[unlikely]] 
         //     return Err(Error::InvalidPc2);
 
-        return Ok(Angle<q31>::from_turns(q18::from_i32(angle_u18())));
+        return Ok(Angle<q31>::from_turns(q18::from_bits(angle_u18())));
     }
 
     [[nodiscard]] constexpr bool is_pc1_valid() const {

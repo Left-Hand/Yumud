@@ -301,7 +301,7 @@ struct PulseCnt final{
 
 
     static constexpr PulseCnt from_position(const real_t position){
-        const uint32_t frac_part = uint32_t(frac<12>(position) * SCALE);
+        const uint32_t frac_part = uint32_t(frac(position) * SCALE);
         const uint32_t int_part  = uint32_t(uint32_t(position) * SCALE);
         const uint32_t temp = uint32_t(frac_part + int_part);
         return {BSWAP_32(temp)};

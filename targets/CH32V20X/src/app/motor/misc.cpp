@@ -170,7 +170,7 @@
 
         // const auto [s,c] = sincos(mt);
 
-        // real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t<16>(TAU) + 3 * sin(40 * frac(sing_t) * iq_t<16>(TAU)));
+        // real_t sing_out = 4 * sin(2400 * frac(sing_t) * fixed_t<16>(TAU) + 3 * sin(40 * frac(sing_t) * fixed_t<16>(TAU)));
 
         // ab_volt = {sing_out * sing_c, sing_out * sing_s};
         // svpwm.set_ab_volt(ab_volt[0], ab_volt[1]);
@@ -258,8 +258,8 @@
     }};
 
     // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, FOC_FREQ);
-    // LowpassFilterD_t<iq_t<16>> speed_measurer = {
-    // LowpassFilterD_t<iq_t<16>> speed_measurer = {
+    // LowpassFilterD_t<fixed_t<16>> speed_measurer = {
+    // LowpassFilterD_t<fixed_t<16>> speed_measurer = {
 
     [[maybe_unused]] auto measure_bias = [&]{
         
@@ -615,7 +615,7 @@ class BldcMotor{
     // static constexpr real_t r_ohms = 7.1_r;
     // scepxr real_t l_mh = 1.45_r;
 
-    // static constexpr iq_t<16> pll_freq = iq_t<16>(0.2);
+    // static constexpr fixed_t<16> pll_freq = fixed_t<16>(0.2);
     [[maybe_unused]]
     LapPosPll pll = {
         {
@@ -637,7 +637,7 @@ public:
         uint32_t fs;
     };
 
-    using Lpf = LowpassFilter<iq_t<16>>;
+    using Lpf = LowpassFilter<fixed_t<16>>;
     using Lpfs = std::array<Lpf, 3>;
 
     Lpfs lpfs_ = {};

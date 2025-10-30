@@ -190,7 +190,7 @@ class AnalogJoystick{
 };
 
 // template<typename Q>
-// static constexpr iq_t<Q> stepify(const iq_t<Q> x, const auto step){
+// static constexpr fixed_t<Q, int32_t> stepify(const fixed_t<Q, int32_t> x, const auto step){
 //     return int(x / step) * step;
 // }
 
@@ -261,10 +261,10 @@ void myservo_main(){
     // auto & mode2_gpio   = hal::PA<5>();
     phase_gpio.outpp();
 
-    using ButterLpf = dsp::ButterLowpassFilter<iq_t<16>, 4>;
+    using ButterLpf = dsp::ButterLowpassFilter<q16, 4>;
     using ButterLpfConfig = typename ButterLpf::Config;
 
-    using RcLpf = dsp::FirstOrderLowpassFilter<iq_t<20>>;
+    using RcLpf = dsp::FirstOrderLowpassFilter<q20>;
     using RcLpfConfig = typename RcLpf::Config;
 
     ButterLpf curr_filter = {ButterLpfConfig{

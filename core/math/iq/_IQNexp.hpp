@@ -119,8 +119,8 @@ constexpr int32_t __IQNexp(int32_t iqNInput){
 }
 
 template<const size_t Q>
-constexpr iq_t<Q> _IQNexp(iq_t<Q> input){
-    return iq_t<Q>::from_i32(__IQNexp<Q>((input).as_i32()));
+constexpr fixed_t<Q, int32_t> _IQNexp(fixed_t<Q, int32_t> input){
+    return fixed_t<Q, int32_t>::from_bits(__IQNexp<Q>((input).as_bits()));
 }
 
 }

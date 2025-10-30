@@ -61,16 +61,16 @@ struct ImplFor<DeserializeFrom<RawBytes>, D> {
 
 
 template<size_t Q>
-struct ImplFor<SerializeAs<RawBytes>, iq_t<Q>> {
-    static constexpr std::array<uint8_t, 4> serialize(const iq_t<Q> obj){
-        return ImplFor<SerializeAs<RawBytes>, int32_t>::serialize(obj.as_i32());
+struct ImplFor<SerializeAs<RawBytes>, fixed_t<Q, int32_t>> {
+    static constexpr std::array<uint8_t, 4> serialize(const fixed_t<Q, int32_t> obj){
+        return ImplFor<SerializeAs<RawBytes>, int32_t>::serialize(obj.as_bits());
     }
 };
 
 template<size_t Q>
-struct ImplFor<DeserializeFrom<RawBytes>, iq_t<Q>> {
-    static constexpr iq_t<Q> deserialize(const std::span<const uint8_t, 4> bytes){
-        return iq_t<Q>::from_i32(ImplFor<DeserializeFrom<RawBytes>, int32_t>::deserialize(bytes));
+struct ImplFor<DeserializeFrom<RawBytes>, fixed_t<Q, int32_t>> {
+    static constexpr fixed_t<Q, int32_t> deserialize(const std::span<const uint8_t, 4> bytes){
+        return fixed_t<Q, int32_t>::from_bits(ImplFor<DeserializeFrom<RawBytes>, int32_t>::deserialize(bytes));
     }
 };
 

@@ -135,13 +135,13 @@ public:
 
 private:
 
-    __fast_inline iq_t<16> rand(){
+    __fast_inline q16 rand(){
         // return CLAMP(T(randint(65536)) / 65536, 0, 1);
         lcg_.update();
         // return CLAMP(T(randint(65535)) / 65536, 0, 1);
         // return frac(T(randint(65535)) / 65536);
-        // const auto ret = iq_t<16>(std::bit_cast<_iq<16>>(int32_t((lcg_.update() >> 16) & 0xffff)));
-        const auto ret = iq_t<16>::from_i32(int32_t((lcg_.get() >> 16)));
+        // const auto ret = q16(std::bit_cast<_iq<16>>(int32_t((lcg_.update() >> 16) & 0xffff)));
+        const auto ret = q16::from_bits(int32_t((lcg_.get() >> 16)));
         // DEBUG_PRINTLN(ret);
         // clock::delay(1ms);
         return ret;
@@ -149,12 +149,12 @@ private:
         // return rng_.
     }
 
-    __fast_inline std::tuple<iq_t<16>, iq_t<16>> rand2(){
+    __fast_inline std::tuple<q16, q16> rand2(){
 
         lcg_.update();
         const auto ra = lcg_.get();
-        const auto ret = iq_t<16>::from_i32(uint32_t(ra >> 16));
-        const auto ret2 = iq_t<16>::from_i32(uint32_t(uint16_t(ra)));
+        const auto ret = q16::from_bits(uint32_t(ra >> 16));
+        const auto ret2 = q16::from_bits(uint32_t(uint16_t(ra)));
         return {ret,ret2};
     }
 

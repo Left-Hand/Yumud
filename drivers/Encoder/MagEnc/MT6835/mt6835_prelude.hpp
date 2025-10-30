@@ -55,7 +55,7 @@ struct MT6835_Prelude{
             if(mag_weak) [[unlikely]]
                 return Err(Error::MagnetLow);
 
-            const auto turns = q20::from_i32(angle_20());
+            const auto turns = q20::from_bits(angle_20());
             return Ok(Angle<q31>::from_turns(turns));
         }
     private:

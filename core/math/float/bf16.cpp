@@ -7,7 +7,7 @@ OutputStream & operator << (OutputStream & os, const bf16 v){
     // uint16_t exp:8;
     // uint16_t sign:1;
     // return os << float(1.0);
-    return os << iq_t<16>::from(float(v));
+    return os << fixed_t<16, int32_t>::from(float(v));
     // return os << os.scoped("bf16")(
     //     os << os.field("frac")(os << v.raw.frac) 
     //     << os.field("exp")(os << v.raw.exp) 
