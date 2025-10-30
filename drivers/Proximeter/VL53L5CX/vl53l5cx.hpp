@@ -1,6 +1,10 @@
 //这个驱动还未完成
 //这个驱动还未测试
 
+//参考教程：
+// https://blog.csdn.net/qq_24312945/article/details/133848222
+// https://blog.csdn.net/qq_24312945/article/details/133722644
+
 //VL53L5X 是意法半导体的一款具有宽视野的飞行时间 (ToF) 8x8多区测距传感器
 
 // VL53L5CX是意法半导体FlightSense产品系列中最先进的飞行时间 (ToF) 多区测距传感器。
@@ -65,8 +69,7 @@ public:
      * @return (uint8_t) status : 0 if new address is OK
      */
 
-    IResult<> set_i2c_address(
-            uint16_t			i2c_address);
+    IResult<> set_i2c_address(hal::I2cSlaveAddr<7> i2c_addr);
 
     /**
      * @brief This function is used to get the current sensor power mode.
@@ -77,8 +80,7 @@ public:
      * @return (uint8_t) status : 0 if power mode is OK
      */
 
-    IResult<> get_power_mode(
-            uint8_t				*p_power_mode);
+    IResult<PowerMode> get_power_mode();
 
     /**
      * @brief This function is used to set the sensor in Low Power mode, for
@@ -92,8 +94,7 @@ public:
      * requested by user is not valid.
      */
 
-    IResult<> set_power_mode(
-            uint8_t				power_mode);
+    IResult<> set_power_mode(PowerMode power_mode);
 
     /**
      * @brief This function starts a ranging session. When the sensor streams, host
@@ -185,8 +186,7 @@ public:
      * @return (uint8_t) status : 0 if set integration time is OK.
      */
 
-    IResult<> set_integration_time_ms(
-            uint32_t			integration_time_ms);
+    IResult<> set_integration_time_ms(uint32_t integration_time_ms);
 
     /**
      * @brief This function gets the current sharpener in percent. Sharpener can be
@@ -215,8 +215,7 @@ public:
      * @return (uint8_t) status : 0 if get target order is OK.
      */
 
-    IResult<> get_target_order(
-            uint8_t				*p_target_order);
+    IResult<TargetOrder> get_target_order();
 
     /**
      * @brief This function sets a new target order. Please use macros
@@ -228,8 +227,7 @@ public:
      * order is unknown.
      */
 
-    IResult<> set_target_order(
-            uint8_t				target_order);
+    IResult<> set_target_order(TargetOrder target_order);
 
     /**
      * @brief This function is used to get the ranging mode. Two modes are
@@ -239,8 +237,7 @@ public:
      * @return (uint8_t) status : 0 if get ranging mode is OK.
      */
 
-    IResult<> get_ranging_mode(
-            uint8_t				*p_ranging_mode);
+    IResult<RangingMode> get_ranging_mode();
 
     /**
      * @brief This function is used to set the ranging mode. Two modes are
@@ -251,8 +248,7 @@ public:
      * @return (uint8_t) status : 0 if set ranging mode is OK.
      */
 
-    IResult<> set_ranging_mode(
-            uint8_t				ranging_mode);
+    IResult<> set_ranging_mode(RangingMode ranging_mode);
 
     /**
      * @brief This function can be used to read 'extra data' from DCI. Using a known
@@ -312,8 +308,7 @@ public:
             uint16_t			new_data_pos);
 
 
-    IResult<> get_detection_thresholds_enable(
-            uint8_t				*p_enabled);
+    IResult<Enable> get_detection_thresholds_enable();
 
     /**
      * @brief This function allows enable the detection thresholds.
@@ -321,8 +316,7 @@ public:
      * @return (uint8_t) status : 0 if programming is OK
      */
 
-    IResult<> set_detection_thresholds_enable(
-            uint8_t				enabled);
+    IResult<> set_detection_thresholds_enable(Enable en);
 
     /**
      * @brief This function allows getting the detection thresholds.
@@ -330,7 +324,8 @@ public:
      * @return (uint8_t) status : 0 if programming is OK
      */
 
-    IResult<> get_detection_thresholds(VL53L5CX_DetectionThresholds	*p_thresholds);
+    IResult<> get_detection_thresholds(
+        const std::span<VL53L5CX_DetectionThresholds, VL53L5CX_NB_THRESHOLDS> p_thresholds);
 
     /**
      * @brief This function allows programming the detection thresholds.
@@ -338,7 +333,8 @@ public:
      * @return (uint8_t) status : 0 if programming is OK
      */
 
-    IResult<> set_detection_thresholds(VL53L5CX_DetectionThresholds	*p_thresholds);
+    IResult<> set_detection_thresholds(
+        const std::span<const VL53L5CX_DetectionThresholds, VL53L5CX_NB_THRESHOLDS> p_thresholds);
 
 
 
@@ -352,8 +348,9 @@ public:
      * @return (uint8_t) status : 0 if OK, or 127 is the resolution is unknown.
      */
 
-    IResult<> motion_indicator_init(VL53L5CX_Motion_Configuration	*p_motion_config,
-            uint8_t				resolution);
+    IResult<> motion_indicator_init(
+        VL53L5CX_Motion_Configuration & motion_config,
+        Resolution resolution);
 
     /**
      * @brief This function can be used to change the working distance of motion
@@ -369,9 +366,10 @@ public:
      * @return (uint8_t) status : 0 if OK, or 127 if an argument is invalid.
      */
 
-    IResult<> motion_indicator_set_distance_motion(VL53L5CX_Motion_Configuration	*p_motion_config,
-            uint16_t			distance_min_mm,
-            uint16_t			distance_max_mm);
+    IResult<> motion_indicator_set_distance_motion(
+        VL53L5CX_Motion_Configuration & motion_config,
+        uint16_t			distance_min_mm,
+        uint16_t			distance_max_mm);
 
     /**
      * @brief This function is used to update the internal motion indicator map.
@@ -382,8 +380,10 @@ public:
      * @return (uint8_t) status : 0 if OK, or 127 is the resolution is unknown.
      */
 
-    IResult<> motion_indicator_set_resolution(VL53L5CX_Motion_Configuration	*p_motion_config,
-            uint8_t				resolution);
+    IResult<> motion_indicator_set_resolution(
+        VL53L5CX_Motion_Configuration & motion_config,
+        Resolution resolution
+    );
 
 
     /**
@@ -403,9 +403,9 @@ public:
      */
 
     IResult<> calibrate_xtalk(
-            uint16_t			reflectance_percent,
-            uint8_t				nb_samples,
-            uint16_t			distance_mm);
+        uint16_t			reflectance_percent,
+        uint8_t				nb_samples,
+        uint16_t			distance_mm);
 
     /**
      * @brief This function gets the Xtalk buffer. The buffer is available after
@@ -417,7 +417,7 @@ public:
      */
 
     IResult<> get_caldata_xtalk(
-            uint8_t				*p_xtalk_data);
+        uint8_t				*p_xtalk_data);
 
     /**
      * @brief This function sets the Xtalk buffer. This function can be used to
@@ -429,7 +429,7 @@ public:
      */
 
     IResult<> set_caldata_xtalk(
-            uint8_t				*p_xtalk_data);
+        uint8_t				*p_xtalk_data);
 
     /**
      * @brief This function gets the Xtalk margin. This margin is used to increase
@@ -440,7 +440,7 @@ public:
      */
 
     IResult<> get_xtalk_margin(
-            uint32_t			*p_xtalk_margin);
+        uint32_t			*p_xtalk_margin);
 
     /**
      * @brief This function sets the Xtalk margin. This margin is used to increase
@@ -453,7 +453,7 @@ public:
      */
 
     IResult<> set_xtalk_margin(
-            uint32_t			xtalk_margin);
+        uint32_t			xtalk_margin);
 
     IResult<> program_output_config();
 

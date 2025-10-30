@@ -106,6 +106,10 @@ enum class Resolution:uint8_t{
 
 static constexpr uint8_t VL53L5CX_TARGET_ORDER_CLOSEST = 1U;
 static constexpr uint8_t VL53L5CX_TARGET_ORDER_STRONGEST = 2U;
+enum class TargetOrder:uint8_t{
+	Cloest = VL53L5CX_TARGET_ORDER_CLOSEST,
+	Strongest = VL53L5CX_TARGET_ORDER_STRONGEST
+};
 
 /**
  * @brief Macro VL53L5CX_RANGING_MODE_CONTINUOUS and
@@ -117,6 +121,11 @@ static constexpr uint8_t VL53L5CX_TARGET_ORDER_STRONGEST = 2U;
 static constexpr uint8_t VL53L5CX_RANGING_MODE_CONTINUOUS = 1U;
 static constexpr uint8_t VL53L5CX_RANGING_MODE_AUTONOMOUS = 3U;
 
+enum class RangingMode:uint8_t{
+	Continuous = VL53L5CX_RANGING_MODE_CONTINUOUS,
+	Autonomous = VL53L5CX_RANGING_MODE_AUTONOMOUS
+};
+
 /**
  * @brief The default power mode is VL53L5CX_POWER_MODE_WAKEUP. User can choose
  * the mode VL53L5CX_POWER_MODE_SLEEP to save power consumption is the device
@@ -127,17 +136,11 @@ static constexpr uint8_t VL53L5CX_RANGING_MODE_AUTONOMOUS = 3U;
 static constexpr uint8_t VL53L5CX_POWER_MODE_SLEEP = 0U;
 static constexpr uint8_t VL53L5CX_POWER_MODE_WAKEUP = 1U;
 
-/**
- * @brief Macro VL53L5CX_STATUS_OK indicates that VL53L5 sensor has no error.
- * Macro VL53L5CX_STATUS_ERROR indicates that something is wrong (value,
- * I2C access, ...). Macro VL53L5CX_MCU_ERROR is used to indicate a MCU issue.
- */
+enum class PowerMode:uint8_t {
+    Sleep = VL53L5CX_POWER_MODE_SLEEP,
+    WakeUp = VL53L5CX_POWER_MODE_WAKEUP
+};
 
-static constexpr uint8_t VL53L5CX_STATUS_OK = 0U;
-static constexpr uint8_t VL53L5CX_STATUS_TIMEOUT_ERROR = 1U;
-static constexpr uint8_t VL53L5CX_MCU_ERROR = 66U;
-static constexpr uint8_t VL53L5CX_STATUS_INVALID_PARAM = 127U;
-static constexpr uint8_t VL53L5CX_STATUS_ERROR = 255U;
 
 /**
  * @brief Definitions for Range results block headers
@@ -382,7 +385,7 @@ struct VL53L5CX_Frame{
 #endif
 
 };
-struct VL53L5CX_Motion_Configuration{
+struct [[nodiscard]] VL53L5CX_Motion_Configuration{
 	int32_t  ref_bin_offset;
 	uint32_t detection_threshold;
 	uint32_t extra_noise_sigma;
@@ -402,6 +405,30 @@ struct VL53L5CX_Motion_Configuration{
 	int8_t 	 map_id[64];
 	uint8_t  indicator_format_1[32];
 	uint8_t  indicator_format_2[32];
+
+	static constexpr VL53L5CX_Motion_Configuration from_default(){
+		return VL53L5CX_Motion_Configuration{
+			.ref_bin_offset = 13633,
+			.detection_threshold = 2883584,
+			.extra_noise_sigma = 0,
+			.null_den_clip_value = 0,
+			.mem_update_mode = 6,
+			.mem_update_choice = 2,
+			.sum_span = 4,
+			.feature_length = 9,
+			.nb_of_aggregates = 16,
+			.nb_of_temporal_accumulations = 16,
+			.min_nb_for_global_detection = 1,
+			.global_indicator_format_1 = 8,
+			.global_indicator_format_2 = 0,
+			.spare_1 = 0,
+			.spare_2 = 0,
+			.spare_3 = 0,
+			.map_id = {0},
+			.indicator_format_1 = {0},
+			.indicator_format_2 = {0}
+		};
+	}
 };
 
 struct Block_header {

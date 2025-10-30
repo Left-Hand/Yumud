@@ -13,21 +13,27 @@ using Error = Self::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-
+static constexpr uint8_t VL53L5CX_STATUS_ERROR = 255U;
 static constexpr uint16_t VL53L5CX_DCI_CAL_CFG				= ((uint16_t)0x5470U);
 static constexpr uint16_t VL53L5CX_DCI_XTALK_CFG				= ((uint16_t)0xAD94U);
 
-/* Address of default configuration buffer */
-const uint8_t		        *default_configuration = 
-	vl53l5cx_details::VL53L5CX_DEFAULT_CONFIGURATION;
-/* Address of default Xtalk buffer */
-const uint8_t		        *default_xtalk = 
-	vl53l5cx_details::VL53L5CX_DEFAULT_XTALK;
+// /* Address of default configuration buffer */
+// const uint8_t		        *VL53L5CX_DEFAULT_CONFIGURATION = 
+// 	vl53l5cx_details::VL53L5CX_DEFAULT_CONFIGURATION;
+// /* Address of default Xtalk buffer */
+// const uint8_t		        *VL53L5CX_DEFAULT_XTALK = 
+// 	vl53l5cx_details::VL53L5CX_DEFAULT_XTALK;
 
 template<typename T>
 requires std::is_pointer_v<T>
-T ptr_cast(auto * obj){
+static T ptr_cast(auto * obj){
 	return reinterpret_cast<T>(obj);
+}
+
+template<typename E, typename T>
+requires (std::is_integral_v<T>)
+static constexpr IResult<E> try_into_enum(T obj){
+	return Ok(std::bit_cast<E>(obj));
 }
 
 static const uint8_t VL53L5CX_GET_XTALK_CMD[] = {
@@ -329,225 +335,225 @@ IResult<> Self::init(){
 	uint32_t single_range = 0x01;
 
 	if(const auto res = validate();
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	/* SW reboot sequence */
 	if(const auto res = write_byte(0x7fff, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x0009, 0x04); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x000F, 0x40); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x000A, 0x03); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_byte(0x7FFF, &tmp); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x000C, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = write_byte(0x0101, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x0102, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x010A, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x4002, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x4002, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x010A, 0x03); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x0103, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x000C, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x000F, 0x43); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
     clock::delay(1ms);
 
 	if(const auto res = write_byte(0x000F, 0x40); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x000A, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
     clock::delay(100ms);
 
 	/* Wait for sensor booted (several ms required to get sensor ready ) */
 	if(const auto res = write_byte(0x7fff, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_answer(1, 0, 0x06, 0xff, 1); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = write_byte(0x000E, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x02); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Enable FW access */
 	if(const auto res = write_byte(0x03, 0x0D); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_answer(1, 0, 0x21, 0x10, 0x10); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Enable host access to GO1 */
 	if(const auto res = read_byte(0x7fff, &tmp); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x0C, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Power ON status */
 	if(const auto res = write_byte(0x7fff, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x101, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x102, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x010A, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x4002, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x4002, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x010A, 0x03); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x103, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x400F, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x21A, 0x43); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x21A, 0x03); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x21A, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x21A, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x219, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x21B, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Wake up MCU */
 	if(const auto res = write_byte(0x7fff, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_byte(0x7fff, &tmp); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x0C, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x20, 0x07); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x20, 0x06); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Download FW into VL53L5 */
 	if(const auto res = write_byte(0x7fff, 0x09); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_burst(0, &VL53L5CX_FIRMWARE[0],0x8000); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x0a); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_burst(0, &VL53L5CX_FIRMWARE[0x8000],0x8000); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x0b); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_burst(0, &VL53L5CX_FIRMWARE[0x10000],0x5000); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Check if FW correctly downloaded */
 	if(const auto res = write_byte(0x7fff, 0x02); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x03, 0x0D); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_answer(1, 0, 0x21, 0x10, 0x10);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_byte(0x7fff, &tmp); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x0C, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Reset MCU and wait boot */
 	if(const auto res = write_byte(0x7FFF, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x114, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x115, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x116, 0x42); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x117, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x0B, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_byte(0x7fff, &tmp); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x0C, 0x00); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x0B, 0x01); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_mcu_boot();
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x02); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Get offset NVM data and store them into the offset buffer */
 	if(const auto res = write_burst( 0x2fd8,
 		VL53L5CX_GET_NVM_CMD, sizeof(VL53L5CX_GET_NVM_CMD));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_answer(4, 0, 
 		VL53L5CX_UI_CMD_STATUS, 0xff, 2);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = read_burst( VL53L5CX_UI_CMD_START,
 		temp_buffer, VL53L5CX_NVM_DATA_SIZE);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	(void)memcpy(offset_data, temp_buffer,
 		VL53L5CX_OFFSET_BUFFER_SIZE);
 	if(const auto res = send_offset_data(Resolution::_4x4);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Set default Xtalk shape. Send Xtalk to sensor */
 	(void)memcpy(xtalk_data, VL53L5CX_DEFAULT_XTALK,
 		VL53L5CX_XTALK_BUFFER_SIZE);
 	if(const auto res = send_xtalk_data(Resolution::_4x4);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Send default configuration to Self firmware */
 	if(const auto res = write_burst( 0x2c34,
-		default_configuration,
+		VL53L5CX_DEFAULT_CONFIGURATION,
 		sizeof(VL53L5CX_DEFAULT_CONFIGURATION));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = poll_for_answer(4, 1, 
 		VL53L5CX_UI_CMD_STATUS, 0xff, 0x03);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = dci_write_data(pipe_ctrl,
 		VL53L5CX_DCI_PIPE_CONTROL, (uint16_t)sizeof(pipe_ctrl));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if constexpr(VL53L5CX_NB_TARGET_PER_ZONE != 1){
 		tmp = VL53L5CX_NB_TARGET_PER_ZONE;
 		if(const auto res = dci_replace_data(temp_buffer,
 			VL53L5CX_DCI_FW_NB_TARGET, 16,
 			&tmp, 1, 0x0C);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 	}
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&single_range),
 		VL53L5CX_DCI_SINGLE_RANGE,
 		(uint16_t)sizeof(single_range));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -567,10 +573,10 @@ IResult<> Self::poll_for_mcu_boot()
 
    do {
 		if(const auto res = read_byte(0x06, &go2_status0);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 		if((go2_status0 & (uint8_t)0x80) != (uint8_t)0){
 			if(const auto res = read_byte(0x07, &go2_status1);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 			return Err(map_status_to_error(go2_status1));
 		}
         clock::delay(1ms);
@@ -645,10 +651,10 @@ IResult<> Self::send_offset_data(Resolution resolution)
 	(void)memcpy(&(temp_buffer[0x1E0]), footer, 8);
 	if(const auto res = write_burst(0x2e18, temp_buffer,
 		VL53L5CX_OFFSET_BUFFER_SIZE);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_answer(4, 1,
 		VL53L5CX_UI_CMD_STATUS, 0xff, 0x03);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -702,10 +708,10 @@ IResult<> Self::send_xtalk_data(Resolution resolution){
 
 	if(const auto res = write_burst(0x2cf8,
 		temp_buffer, VL53L5CX_XTALK_BUFFER_SIZE);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_answer(4, 1,
 		VL53L5CX_UI_CMD_STATUS, 0xff, 0x03);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -717,13 +723,13 @@ IResult<> Self::validate(){
 	static constexpr uint8_t CORRECT_REVISION_ID = 0x02;
 
 	if(const auto res = write_byte(0x7fff, 0x00);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = read_byte(0, &device_id);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = read_byte(1, &revision_id);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x02);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(device_id != CORRECT_DEVICE_ID)
 		return Err(Error::InvalidDeviceId);
@@ -734,75 +740,72 @@ IResult<> Self::validate(){
 }
 
 
-IResult<> Self::set_i2c_address(
-		uint16_t		        i2c_address)
-{
-
+IResult<> Self::set_i2c_address(hal::I2cSlaveAddr<7> i2c_addr){
 	if(const auto res = write_byte(0x7fff, 0x00);
-		res.is_err()) return res;
-	if(const auto res = write_byte(0x4, (uint8_t)(i2c_address >> 1));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = write_byte(0x4, i2c_addr.as_u7());
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x02);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
-IResult<> Self::get_power_mode(uint8_t				*p_power_mode)
-{
+IResult<Self::PowerMode> Self::get_power_mode(){
 	uint8_t tmp;
 
 	if(const auto res = write_byte(0x7FFF, 0x00);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = read_byte(0x009, &tmp);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
-	switch(tmp)
-	{
-		case 0x4:
-			*p_power_mode = VL53L5CX_POWER_MODE_WAKEUP;
-			break;
-		case 0x2:
-			*p_power_mode = VL53L5CX_POWER_MODE_SLEEP;
+	PowerMode power_mode;
 
-			break;
-		default:
-			*p_power_mode = 0;
-			return Err(Error::Status);
-			break;
+	switch(tmp){
+	case 0x4:
+		power_mode = PowerMode::WakeUp;
+		break;
+	case 0x2:
+		power_mode = PowerMode::Sleep;
+
+		break;
+	default:
+		return Err(Error::Status);
+		break;
 	}
 
 	if(const auto res = write_byte(0x7FFF, 0x02);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
-    return Ok();
+    return Ok(power_mode);
 }
 
-IResult<> Self::set_power_mode(
-		uint8_t			        power_mode)
+IResult<> Self::set_power_mode(PowerMode power_mode)
 {
-	uint8_t current_power_mode;
+	const PowerMode current_power_mode = ({
+		const auto res = get_power_mode();
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
 
-	if(const auto res = get_power_mode(&current_power_mode);
-		res.is_err()) return res;
 	if(power_mode != current_power_mode){
 		switch(power_mode){
-			case VL53L5CX_POWER_MODE_WAKEUP:
+			case PowerMode::WakeUp:
 				if(const auto res = write_byte(0x7FFF, 0x00);
-					res.is_err()) return res;
+					res.is_err()) return Err(res.unwrap_err());
 				if(const auto res = write_byte(0x09, 0x04);
-					res.is_err()) return res;
+					res.is_err()) return Err(res.unwrap_err());
 				if(const auto res = poll_for_answer(1, 0, 0x06, 0x01, 1);
-					res.is_err()) return res;
+					res.is_err()) return Err(res.unwrap_err());
 				break;
 
-			case VL53L5CX_POWER_MODE_SLEEP:
+			case PowerMode::Sleep:
 				if(const auto res = write_byte(0x7FFF, 0x00);
-					res.is_err()) return res;
+					res.is_err()) return Err(res.unwrap_err());
 				if(const auto res = write_byte(0x09, 0x02);
-					res.is_err()) return res;
+					res.is_err()) return Err(res.unwrap_err());
 				if(const auto res = poll_for_answer(1, 0, 0x06, 0x01, 0); 
-					res.is_err()) return res;
+					res.is_err()) return Err(res.unwrap_err());
 				break;
 
 			default:
@@ -810,7 +813,7 @@ IResult<> Self::set_power_mode(
 				break;
 		}
 		if(const auto res = write_byte(0x7FFF, 0x02);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 	}
 
     return Ok();
@@ -923,7 +926,7 @@ IResult<> Self::start_ranging()
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&(output)), VL53L5CX_DCI_OUTPUT_LIST,
 		(uint16_t)sizeof(output));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	header_config[0] = data_read_size_;
 	header_config[1] = (uint32_t)(sizeof(output)/sizeof(uint32_t)) + (uint32_t)1;
@@ -931,35 +934,35 @@ IResult<> Self::start_ranging()
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&(header_config)), VL53L5CX_DCI_OUTPUT_CONFIG,
 		(uint16_t)sizeof(header_config));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&(output_bh_enable)), VL53L5CX_DCI_OUTPUT_ENABLES,
 		(uint16_t)sizeof(output_bh_enable));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Start xshut bypass (interrupt mode) */
 	if(const auto res = write_byte(0x7fff, 0x00);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x09, 0x05);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x02);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Start ranging session */
 	if(const auto res = write_burst(
 		VL53L5CX_UI_CMD_END - (uint16_t)(4 - 1), 
 		cmd, sizeof(cmd));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = poll_for_answer(4, 1, 
 		VL53L5CX_UI_CMD_STATUS, 0xff, 0x03);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Read ui range data content and compare if data size is the correct one */
 	if(const auto res = dci_read_data(
 		temp_buffer, 0x5440, 12);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	(void)memcpy(&tmp, &(temp_buffer[0x8]), sizeof(tmp));
 
@@ -979,23 +982,23 @@ IResult<> Self::stop_ranging()
 
 	if(const auto res = read_burst(
 		0x2FFC, ptr_cast<uint8_t *>(&auto_stop_flag), 4);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(auto_stop_flag != (uint32_t)0x4FF){
 		if(const auto res = write_byte(0x7fff, 0x00);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 
 		/* Provoke MCU stop */
 		if(const auto res = write_byte(0x15, 0x16);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 		if(const auto res = write_byte(0x14, 0x01);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 
 		/* Poll for G02 status 0 MCU stop */
 		while(((tmp & (uint8_t)0x80) >> 7) == (uint8_t)0x00)
 		{
 			if(const auto res = read_byte(0x6, &tmp);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 			clock::delay(10ms);
 			timeout++;	/* Timeout reached after 5 seconds */
 
@@ -1009,11 +1012,11 @@ IResult<> Self::stop_ranging()
 
 	/* Check GO2 status 1 if status is still OK */
 	if(const auto res = read_byte(0x6, &tmp);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if((tmp & (uint8_t)0x80) != (uint8_t)0){
 		if(const auto res = read_byte(0x7, &tmp);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 		if((tmp != (uint8_t)0x84) && (tmp != (uint8_t)0x85)){
 			return Err(map_status_to_error(tmp));
 		}
@@ -1021,17 +1024,17 @@ IResult<> Self::stop_ranging()
 
 	/* Undo MCU stop */
 	if(const auto res = write_byte(0x7fff, 0x00);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x14, 0x00);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x15, 0x00);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Stop xshut bypass */
 	if(const auto res = write_byte(0x09, 0x04);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x02);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -1064,7 +1067,7 @@ IResult<> Self::get_ranging_data(
 	size_t msize;
 	if(const auto res = read_burst(0x0,
 		temp_buffer, data_read_size_);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	stream_count_ = temp_buffer[0];
 	SwapBuffer(temp_buffer, (uint16_t)data_read_size_);
@@ -1224,19 +1227,19 @@ IResult<> Self::set_resolution(Resolution resolution)
 			if(const auto res = dci_read_data(
 				temp_buffer,
 				VL53L5CX_DCI_DSS_CONFIG, 16);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 			temp_buffer[0x04] = 64;
 			temp_buffer[0x06] = 64;
 			temp_buffer[0x09] = 4;
 			if(const auto res = dci_write_data(
 				temp_buffer,
 				VL53L5CX_DCI_DSS_CONFIG, 16);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 
 			if(const auto res = dci_read_data(
 				temp_buffer,
 				VL53L5CX_DCI_ZONE_CONFIG, 8);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 
 			temp_buffer[0x00] = 4;
 			temp_buffer[0x01] = 4;
@@ -1245,26 +1248,26 @@ IResult<> Self::set_resolution(Resolution resolution)
 			if(const auto res = dci_write_data(
 				temp_buffer,
 				VL53L5CX_DCI_ZONE_CONFIG, 8);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 			break;
 
 		case Resolution::_8x8:
 			if(const auto res = dci_read_data(
 				temp_buffer,
 				VL53L5CX_DCI_DSS_CONFIG, 16);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 			temp_buffer[0x04] = 16;
 			temp_buffer[0x06] = 16;
 			temp_buffer[0x09] = 1;
 			if(const auto res = dci_write_data(
 				temp_buffer,
 				VL53L5CX_DCI_DSS_CONFIG, 16);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 
 			if(const auto res = dci_read_data(
 				temp_buffer,
 				VL53L5CX_DCI_ZONE_CONFIG, 8);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 
 			temp_buffer[0x00] = 8;
 			temp_buffer[0x01] = 8;
@@ -1273,7 +1276,7 @@ IResult<> Self::set_resolution(Resolution resolution)
 			if(const auto res = dci_write_data(
 				temp_buffer,
 				VL53L5CX_DCI_ZONE_CONFIG, 8);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 
 			break;
 
@@ -1283,9 +1286,9 @@ IResult<> Self::set_resolution(Resolution resolution)
 		}
 
 	if(const auto res = send_offset_data(resolution);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = send_xtalk_data(resolution);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -1296,7 +1299,7 @@ IResult<> Self::get_ranging_frequency_hz(
 
 	if(const auto res = dci_read_data(temp_buffer,
 		VL53L5CX_DCI_FREQ_HZ, 4);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	*p_frequency_hz = temp_buffer[0x01];
 
@@ -1310,7 +1313,7 @@ IResult<> Self::set_ranging_frequency_hz(
 	if(const auto res = dci_replace_data(temp_buffer,
 		VL53L5CX_DCI_FREQ_HZ, 4,
 		&frequency_hz, 1, 0x01);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -1321,7 +1324,7 @@ IResult<> Self::get_integration_time_ms(
 
 	if(const auto res = dci_read_data(temp_buffer,
 		VL53L5CX_DCI_INT_TIME, 20);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	(void)memcpy(p_time_ms, &(temp_buffer[0x0]), 4);
 	*p_time_ms /= (uint32_t)1000;
@@ -1346,7 +1349,7 @@ IResult<> Self::set_integration_time_ms(
 		if(const auto res = dci_replace_data(temp_buffer,
 			VL53L5CX_DCI_INT_TIME, 20,
 			ptr_cast<uint8_t *>(&integration), 4, 0x00);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 	}
 
     return Ok();
@@ -1360,7 +1363,7 @@ IResult<> Self::get_sharpener_percent(
 		temp_buffer,
 		VL53L5CX_DCI_SHARPENER, 16
 	);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	*p_sharpener_percent = (temp_buffer[0xD]
                                 *(uint8_t)100)/(uint8_t)255;
@@ -1383,79 +1386,66 @@ IResult<> Self::set_sharpener_percent(
 		if(const auto res = dci_replace_data(temp_buffer,
 			VL53L5CX_DCI_SHARPENER, 16,
 			&sharpener, 1, 0xD
-		);	res.is_err()) return res;
+		);	res.is_err()) return Err(res.unwrap_err());
 	}
 
     return Ok();
 }
 
-IResult<> Self::get_target_order(
-		uint8_t				*p_target_order)
+IResult<Self::TargetOrder> Self::get_target_order()
 {
 
 	if(const auto res = dci_read_data(temp_buffer,
 			VL53L5CX_DCI_TARGET_ORDER, 4);
-		res.is_err()) return res;
-	*p_target_order = (uint8_t)temp_buffer[0x0];
+		res.is_err()) return Err(res.unwrap_err());
 
-    return Ok();
+    return try_into_enum<Self::TargetOrder>(temp_buffer[0x0]);
 }
 
-IResult<> Self::set_target_order(
-		uint8_t				target_order)
+IResult<> Self::set_target_order(Self::TargetOrder target_order)
 {
 
-	if((target_order == (uint8_t)VL53L5CX_TARGET_ORDER_CLOSEST)
-		|| (target_order == (uint8_t)VL53L5CX_TARGET_ORDER_STRONGEST))
-	{
-		if(const auto res = dci_replace_data(temp_buffer,
-				VL53L5CX_DCI_TARGET_ORDER, 4,
-                                &target_order, 1, 0x0);
-			res.is_err()) return res;
-	}else{
+	if((std::bit_cast<uint8_t>(target_order) == (uint8_t)VL53L5CX_TARGET_ORDER_CLOSEST)
+		|| (std::bit_cast<uint8_t>(target_order) == (uint8_t)VL53L5CX_TARGET_ORDER_STRONGEST))
+	{}else{
 		return Err(Error::InvalidParam);
 	}
 
+	if(const auto res = dci_replace_data(temp_buffer,
+			VL53L5CX_DCI_TARGET_ORDER, 4,
+			ptr_cast<const uint8_t *>(&target_order), 1, 0x0);
+		res.is_err()) return Err(res.unwrap_err());
+
     return Ok();
 }
 
-IResult<> Self::get_ranging_mode(
-		uint8_t				*p_ranging_mode)
-{
-
+IResult<Self::RangingMode> Self::get_ranging_mode(){
 	if(const auto res = dci_read_data(temp_buffer,
 			VL53L5CX_DCI_RANGING_MODE, 8);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
-	if(temp_buffer[0x01] == (uint8_t)0x1)
-	{
-		*p_ranging_mode = VL53L5CX_RANGING_MODE_CONTINUOUS;
+	if(temp_buffer[0x01] == (uint8_t)0x1){
+		return Ok(RangingMode::Continuous);
+	}else{
+		return Ok(RangingMode::Autonomous);
 	}
-	else
-	{
-		*p_ranging_mode = VL53L5CX_RANGING_MODE_AUTONOMOUS;
-	}
-
-    return Ok();
 }
 
-IResult<> Self::set_ranging_mode(
-		uint8_t				ranging_mode)
-{
+IResult<> Self::set_ranging_mode(RangingMode ranging_mode){
 	uint32_t single_range = 0x00;
 
 	if(const auto res = dci_read_data(temp_buffer,
 			VL53L5CX_DCI_RANGING_MODE, 8);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	switch(ranging_mode)
 	{
-		case VL53L5CX_RANGING_MODE_CONTINUOUS:
+		case RangingMode::Continuous:
 			temp_buffer[0x01] = 0x1;
 			temp_buffer[0x03] = 0x3;
 			single_range = 0x00;
 			break;
 
-		case VL53L5CX_RANGING_MODE_AUTONOMOUS:
+		case RangingMode::Autonomous :
 			temp_buffer[0x01] = 0x3;
 			temp_buffer[0x03] = 0x2;
 			single_range = 0x01;
@@ -1470,12 +1460,12 @@ IResult<> Self::set_ranging_mode(
 		temp_buffer,
 		VL53L5CX_DCI_RANGING_MODE, (uint16_t)8
 	);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&single_range),
 		VL53L5CX_DCI_SINGLE_RANGE, (uint16_t)sizeof(single_range)
 	);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -1506,16 +1496,16 @@ IResult<> Self::dci_read_data(
 /* Request data reading from FW */
 	if(const auto res = write_burst(
 		(VL53L5CX_UI_CMD_END-(uint16_t)11),cmd, sizeof(cmd));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = poll_for_answer(4, 1, 
 		VL53L5CX_UI_CMD_STATUS,
 		0xff, 0x03);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 /* Read new data sent (4 bytes header + data_size + 8 bytes footer) */
 	if(const auto res = read_burst(VL53L5CX_UI_CMD_START,
 		temp_buffer, rd_size);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	SwapBuffer(temp_buffer, data_size + (uint16_t)12);
 
 /* Copy data from FW into input structure (-4 bytes to remove header) */
@@ -1570,11 +1560,11 @@ IResult<> Self::dci_write_data(
 	if(const auto res = write_burst(address,
 		temp_buffer,
 		(uint32_t)((uint32_t)data_size + (uint32_t)12));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = poll_for_answer(4, 1, 
 		VL53L5CX_UI_CMD_STATUS, 0xff, 0x03);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -1589,40 +1579,31 @@ IResult<> Self::dci_replace_data(
 {
 
 	if(const auto res = dci_read_data(data, index, data_size);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	(void)memcpy(&(data[new_data_pos]), new_data, new_data_size);
 	if(const auto res = dci_write_data(data, index, data_size);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
 
-IResult<> Self::get_detection_thresholds_enable(
-		uint8_t				*p_enabled)
-{
-
+IResult<Enable> Self::get_detection_thresholds_enable(){
 	if(const auto res = dci_read_data(temp_buffer,
 			VL53L5CX_DCI_DET_THRESH_GLOBAL_CONFIG, 8);
-		res.is_err()) return res;	
-	*p_enabled = temp_buffer[0x1];
-
-    return Ok();
+		res.is_err()) return Err(res.unwrap_err());	
+	return Ok(Enable::from(bool(temp_buffer[0x1])));
 }
 
-IResult<> Self::set_detection_thresholds_enable(
-		uint8_t				enabled)
+IResult<> Self::set_detection_thresholds_enable(Enable en)
 {
 	uint8_t tmp;
 	uint8_t grp_global_config[] = {0x01, 0x00, 0x01, 0x00};
 
-	if(enabled == (uint8_t)1)
-	{
+	if(en == EN){
 		grp_global_config[0x01] = 0x01;
 		tmp = 0x04;
-	}
-	else
-	{
+	}else{
 		grp_global_config[0x01] = 0x00;
 		tmp = 0x0C;
 	}
@@ -1631,27 +1612,28 @@ IResult<> Self::set_detection_thresholds_enable(
 	if(const auto res = dci_replace_data(temp_buffer,
 			VL53L5CX_DCI_DET_THRESH_GLOBAL_CONFIG, 8,
 			grp_global_config, 4, 0x00);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* Update interrupt config */
 	if(const auto res = dci_replace_data(temp_buffer,
 			VL53L5CX_DCI_DET_THRESH_CONFIG, 20,
 			&tmp, 1, 0x11);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
-IResult<> Self::get_detection_thresholds(VL53L5CX_DetectionThresholds	*p_thresholds)
-{
+IResult<> Self::get_detection_thresholds(
+	const std::span<VL53L5CX_DetectionThresholds, VL53L5CX_NB_THRESHOLDS> p_thresholds
+){
 
 	/* Get thresholds configuration */
 	if(const auto res = dci_read_data(
-		ptr_cast<uint8_t *>(p_thresholds),
+		ptr_cast<uint8_t *>(p_thresholds.data()),
 		VL53L5CX_DCI_DET_THRESH_START, 
 		(uint16_t)VL53L5CX_NB_THRESHOLDS *(uint16_t)sizeof(VL53L5CX_DetectionThresholds)
 	);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	for(uint8_t i = 0; i < (uint8_t)VL53L5CX_NB_THRESHOLDS; i++)
 	{
 		switch(p_thresholds[i].measurement)
@@ -1688,16 +1670,17 @@ IResult<> Self::get_detection_thresholds(VL53L5CX_DetectionThresholds	*p_thresho
     return Ok();
 }
 
+#if 0
 IResult<> Self::set_detection_thresholds(
-		VL53L5CX_DetectionThresholds	*p_thresholds)
-{
-	uint8_t grp_valid_target_cfg[] = {0x05, 0x05, 0x05, 0x05,
-					0x05, 0x05, 0x05, 0x05};
+	const std::span<const VL53L5CX_DetectionThresholds, VL53L5CX_NB_THRESHOLDS> p_thresholds
+){
+	static constexpr uint8_t grp_valid_target_cfg[] = {
+		0x05, 0x05, 0x05, 0x05,
+		0x05, 0x05, 0x05, 0x05
+	};
 
-	for(uint8_t i = 0; i < (uint8_t) VL53L5CX_NB_THRESHOLDS; i++)
-	{
-		switch(p_thresholds[i].measurement)
-		{
+	for(size_t i = 0; i < VL53L5CX_NB_THRESHOLDS; i++){
+		switch(p_thresholds[i].measurement){
 			case VL53L5CX_DISTANCE_MM:
 				p_thresholds[i].param_low_thresh  *= 4;
 				p_thresholds[i].param_high_thresh *= 4;
@@ -1731,50 +1714,33 @@ IResult<> Self::set_detection_thresholds(
 	if(const auto res = dci_write_data(grp_valid_target_cfg,
 			VL53L5CX_DCI_DET_THRESH_VALID_STATUS, 
 			(uint16_t)sizeof(grp_valid_target_cfg));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
+
 	/* Set thresholds configuration */
 	if(const auto res = dci_write_data(
 			ptr_cast<uint8_t *>(p_thresholds),
 			VL53L5CX_DCI_DET_THRESH_START, 
-			(uint16_t)(VL53L5CX_NB_THRESHOLDS
-			*sizeof(VL53L5CX_DetectionThresholds)));
-		res.is_err()) return res;
+			(uint16_t)(VL53L5CX_NB_THRESHOLDS *sizeof(VL53L5CX_DetectionThresholds))
+		);
+		res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
+#endif
 
 IResult<> Self::motion_indicator_init(
-		VL53L5CX_Motion_Configuration	*p_motion_config,
-		uint8_t				resolution)
-{
-
-	(void)memset(p_motion_config, 0, sizeof(VL53L5CX_Motion_Configuration));
-
-	p_motion_config->ref_bin_offset = 13633;
-	p_motion_config->detection_threshold = 2883584;
-	p_motion_config->extra_noise_sigma = 0;
-	p_motion_config->null_den_clip_value = 0;
-	p_motion_config->mem_update_mode = 6;
-	p_motion_config->mem_update_choice = 2;
-	p_motion_config->sum_span = 4;
-	p_motion_config->feature_length = 9;
-	p_motion_config->nb_of_aggregates = 16;
-	p_motion_config->nb_of_temporal_accumulations = 16;
-	p_motion_config->min_nb_for_global_detection = 1;
-	p_motion_config->global_indicator_format_1 = 8;
-	p_motion_config->global_indicator_format_2 = 0;
-	p_motion_config->spare_1 = 0;
-	p_motion_config->spare_2 = 0;
-	p_motion_config->spare_3 = 0;
+		VL53L5CX_Motion_Configuration	& motion_config,
+		Resolution resolution
+){
 
 	if(const auto res = motion_indicator_set_resolution(
-			p_motion_config, resolution);
-		res.is_err()) return res;
+			motion_config, resolution);
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
 IResult<> Self::motion_indicator_set_distance_motion(
-		VL53L5CX_Motion_Configuration	*p_motion_config,
+		VL53L5CX_Motion_Configuration	& motion_config,
 		uint16_t			distance_min_mm,
 		uint16_t			distance_max_mm)
 {
@@ -1790,39 +1756,38 @@ IResult<> Self::motion_indicator_set_distance_motion(
 	{           
 		tmp = (float)((((float)distance_min_mm/(float)37.5348)
 				-(float)4.0)*(float)2048.5);
-                p_motion_config->ref_bin_offset = (int32_t)tmp;
+                motion_config.ref_bin_offset = (int32_t)tmp;
                 
                 tmp = (float)((((((float)distance_max_mm-
 			(float)distance_min_mm)/(float)10.0)+(float)30.02784)
 			/((float)15.01392))+(float)0.5);
-		p_motion_config->feature_length = (uint8_t)tmp;
+		motion_config.feature_length = (uint8_t)tmp;
 
 		if(const auto res = dci_write_data(
-			ptr_cast<uint8_t *>(p_motion_config),
+			ptr_cast<const uint8_t *>(&motion_config),
 			VL53L5CX_DCI_MOTION_DETECTOR_CFG,
-			(uint16_t)sizeof(*p_motion_config));
-			res.is_err()) return res;
+			(uint16_t)sizeof(motion_config));
+			res.is_err()) return Err(res.unwrap_err());
 	}
 
     return Ok();
 }
 
 IResult<> Self::motion_indicator_set_resolution(
-		VL53L5CX_Motion_Configuration	*p_motion_config,
-		uint8_t				resolution)
-{
+		VL53L5CX_Motion_Configuration	& motion_config,
+		Resolution resolution){
 
 	switch(resolution){
-		case VL53L5CX_RESOLUTION_4X4:
+		case Resolution::_4x4:
 			for(uint8_t i = 0; i < (uint8_t)VL53L5CX_RESOLUTION_4X4; i++){
-				p_motion_config->map_id[i] = (int8_t)i;
+				motion_config.map_id[i] = (int8_t)i;
 			}
-			(void)memset(p_motion_config->map_id + 16, -1, 48);
+			(void)memset(motion_config.map_id + 16, -1, 48);
 			break;
 
-		case VL53L5CX_RESOLUTION_8X8:
+		case Resolution::_8x8:
 			for(uint8_t i = 0; i < (uint8_t)VL53L5CX_RESOLUTION_8X8; i++){
-				p_motion_config->map_id[i] = (int8_t)((((int8_t)
+				motion_config.map_id[i] = (int8_t)((((int8_t)
 				i % 8)/2) + (4*((int8_t)i/16)));
 			}
 			break;
@@ -1835,10 +1800,10 @@ IResult<> Self::motion_indicator_set_resolution(
 
 
 	if(const auto res = dci_write_data(
-		ptr_cast<const uint8_t *>(p_motion_config),
+		ptr_cast<const uint8_t *>(&motion_config),
 		VL53L5CX_DCI_MOTION_DETECTOR_CFG, 
-		(uint16_t)sizeof(*p_motion_config));
-		res.is_err()) return res;
+		(uint16_t)sizeof(motion_config)
+	);	res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -1856,7 +1821,7 @@ IResult<> Self::poll_for_answer(
 
 	do {
 		if(const auto res = read_burst(address, temp_buffer, 4);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 		clock::delay(10ms);
 		
 		/* 2s timeout or FW error*/
@@ -1957,7 +1922,7 @@ IResult<> Self::program_output_config()
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(output), 
 		VL53L5CX_DCI_OUTPUT_LIST, (uint16_t)sizeof(output));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
         
 	header_config =  (uint32_t)(sizeof(output)/sizeof(uint32_t)) + (uint64_t)1;
 	header_config = header_config << 32;
@@ -1967,12 +1932,12 @@ IResult<> Self::program_output_config()
 		ptr_cast<const uint8_t *>(&header_config),
 		VL53L5CX_DCI_OUTPUT_CONFIG, 
 		(uint16_t)sizeof(header_config));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&output_bh_enable),
 		VL53L5CX_DCI_OUTPUT_ENABLES, 
 		(uint16_t)sizeof(output_bh_enable));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -1982,12 +1947,12 @@ IResult<> Self::calibrate_xtalk(
 		uint8_t				nb_samples,
 		uint16_t			distance_mm)
 {
-	uint16_t timeout = 0;
 	static constexpr uint8_t cmd[] = {0x00, 0x03, 0x00, 0x00};
 	static constexpr uint8_t footer[] = {0x00, 0x00, 0x00, 0x0F, 0x00, 0x01, 0x03, 0x04};
+	uint16_t timeout = 0;
 	uint8_t continue_loop = 1;
 
-	uint8_t frequency, target_order, sharp_prct, ranging_mode;
+	uint8_t frequency, sharp_prct;
 	uint32_t integration_time_ms, xtalk_margin;
         
 	uint16_t reflectance = reflectance_percent;
@@ -2002,17 +1967,26 @@ IResult<> Self::calibrate_xtalk(
 	});
 
 	if(const auto res = get_ranging_frequency_hz(&frequency);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = get_integration_time_ms(&integration_time_ms);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = get_sharpener_percent(&sharp_prct);
-		res.is_err()) return res;
-	if(const auto res = get_target_order(&target_order);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
+	const TargetOrder target_order =({
+
+		const auto res = get_target_order();
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
+
 	if(const auto res = get_xtalk_margin(&xtalk_margin);
-		res.is_err()) return res;
-	if(const auto res = get_ranging_mode(&ranging_mode);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
+
+	const RangingMode ranging_mode = ({
+		const auto res = get_ranging_mode();
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
 
 	/* Check input arguments validity */
 	if(((reflectance < (uint16_t)1) || (reflectance > (uint16_t)99))
@@ -2023,7 +1997,7 @@ IResult<> Self::calibrate_xtalk(
 	}else{
 		if(const auto res = set_resolution(
 			Resolution::_8x8);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 
 		/* Send Xtalk calibration buffer */
 		(void)memcpy(temp_buffer, VL53L5CX_CALIBRATE_XTALK, 
@@ -2032,10 +2006,10 @@ IResult<> Self::calibrate_xtalk(
 		if(const auto res = write_burst(0x2c28,
 			temp_buffer, 
 			(uint16_t)sizeof(VL53L5CX_CALIBRATE_XTALK));
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 		if(const auto res = _poll_for_answer(
 			VL53L5CX_UI_CMD_STATUS, 0x3);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 
 		/* Format input argument */
 		reflectance = reflectance * (uint16_t)16;
@@ -2045,36 +2019,36 @@ IResult<> Self::calibrate_xtalk(
 		if(const auto res = dci_replace_data(temp_buffer,
 			VL53L5CX_DCI_CAL_CFG, 8, 
 			ptr_cast<const uint8_t *>(&distance), 2, 0x00);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 
 		if(const auto res = dci_replace_data(temp_buffer,
 			VL53L5CX_DCI_CAL_CFG, 8,
 			ptr_cast<const uint8_t *>(&reflectance), 2, 0x02);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 
 		if(const auto res = dci_replace_data(temp_buffer,
 			VL53L5CX_DCI_CAL_CFG, 8, 
 			&samples, 1, 0x04);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 
 		/* Program output for Xtalk calibration */
 		if(const auto res = program_output_config();
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 
 		/* Start ranging session */
 		if(const auto res = write_burst(
 			VL53L5CX_UI_CMD_END - (uint16_t)(4 - 1),
 			cmd, sizeof(cmd));
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 		if(const auto res = _poll_for_answer(
 			VL53L5CX_UI_CMD_STATUS, 0x3);
-			 res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 
 		/* Wait for end of calibration */
 		do {
 			if(const auto res = read_burst(
 				0x0, temp_buffer, 4);
-				res.is_err()) return res;
+				res.is_err()) return Err(res.unwrap_err());
 
 			if(temp_buffer[0] != VL53L5CX_STATUS_ERROR)
 			{
@@ -2084,7 +2058,7 @@ IResult<> Self::calibrate_xtalk(
 					(uint16_t)0x80) >> 7) == (uint16_t)1))
 				{
 					(void)memcpy(xtalk_data, 
-						default_xtalk,
+						VL53L5CX_DEFAULT_XTALK,
 						VL53L5CX_XTALK_BUFFER_SIZE);
 				}
 				continue_loop = (uint8_t)0;
@@ -2109,13 +2083,13 @@ IResult<> Self::calibrate_xtalk(
 	if(const auto res = write_burst(0x2fb8,
 		temp_buffer, 
 		(uint16_t)sizeof(VL53L5CX_GET_XTALK_CMD));
-		res.is_err()) return res;
-	if(const auto res = _poll_for_answer(VL53L5CX_UI_CMD_STATUS, 0x03); res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = _poll_for_answer(VL53L5CX_UI_CMD_STATUS, 0x03); res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = read_burst(VL53L5CX_UI_CMD_START,
 		temp_buffer, 
 		VL53L5CX_XTALK_BUFFER_SIZE + (uint16_t)4);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	(void)memcpy(&(xtalk_data[0]), &(temp_buffer[8]),
 			VL53L5CX_XTALK_BUFFER_SIZE - (uint16_t)8);
@@ -2124,28 +2098,28 @@ IResult<> Self::calibrate_xtalk(
 
 	/* Reset default buffer */
 	if(const auto res = write_burst(0x2c34,
-			default_configuration,
+			VL53L5CX_DEFAULT_CONFIGURATION,
 			VL53L5CX_CONFIGURATION_SIZE);
-        res.is_err()) return res;
+        res.is_err()) return Err(res.unwrap_err());
     
 	if(const auto res = _poll_for_answer(VL53L5CX_UI_CMD_STATUS, 0x03);
-        res.is_err()) return res;
+        res.is_err()) return Err(res.unwrap_err());
 
 	/* Reset initial configuration */
 	if(const auto res = set_resolution(resolution); 
-        res.is_err()) return res;
+        res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = set_ranging_frequency_hz(frequency); 
-        res.is_err()) return res;
+        res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = set_integration_time_ms(integration_time_ms); 
-        res.is_err()) return res;
+        res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = set_sharpener_percent(sharp_prct); 
-        res.is_err()) return res;
+        res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = set_target_order(target_order); 
-        res.is_err()) return res;
+        res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = set_xtalk_margin(xtalk_margin); 
-        res.is_err()) return res;
+        res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = set_ranging_mode(ranging_mode); 
-        res.is_err()) return res;
+        res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -2158,7 +2132,7 @@ IResult<> Self::_poll_for_answer(
 
 	do {
 		if(const auto res = read_burst(address, temp_buffer, 4);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 		clock::delay(10ms);
                 /* 2s timeout or FW error*/
 		if((timeout >= (uint8_t)200) 
@@ -2187,22 +2161,22 @@ IResult<> Self::get_caldata_xtalk(
 	});
 
 	if(const auto res = set_resolution(Resolution::_8x8);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	(void)memcpy(temp_buffer, VL53L5CX_GET_XTALK_CMD, 
 		sizeof(VL53L5CX_GET_XTALK_CMD));
 
 	if(const auto res = write_burst(0x2fb8,
 		temp_buffer,  sizeof(VL53L5CX_GET_XTALK_CMD));
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = _poll_for_answer(VL53L5CX_UI_CMD_STATUS, 0x03); 
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = read_burst(VL53L5CX_UI_CMD_START,
 		temp_buffer, 
 		VL53L5CX_XTALK_BUFFER_SIZE + (uint16_t)4);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	(void)memcpy(&(p_xtalk_data[0]), &(temp_buffer[8]),
 			VL53L5CX_XTALK_BUFFER_SIZE-(uint16_t)8);
@@ -2210,7 +2184,7 @@ IResult<> Self::get_caldata_xtalk(
 			footer, sizeof(footer));
 
 	if(const auto res = set_resolution(resolution);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -2226,7 +2200,7 @@ IResult<> Self::set_caldata_xtalk(
 
 	(void)memcpy(xtalk_data, p_xtalk_data, VL53L5CX_XTALK_BUFFER_SIZE);
 	if(const auto res = set_resolution(resolution);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -2237,7 +2211,7 @@ IResult<> Self::get_xtalk_margin(
 
 	if(const auto res = dci_read_data(temp_buffer,
 		VL53L5CX_DCI_XTALK_CFG, 16);
-		res.is_err()) return res;
+		res.is_err()) return Err(res.unwrap_err());
 
 	(void)memcpy(p_xtalk_margin, temp_buffer, 4);
 	*p_xtalk_margin = *p_xtalk_margin/(uint32_t)2048;
@@ -2245,10 +2219,9 @@ IResult<> Self::get_xtalk_margin(
     return Ok();
 }
 
-IResult<> Self::set_xtalk_margin(
-		uint32_t			xtalk_margin)
+IResult<> Self::set_xtalk_margin(uint32_t xtalk_margin)
 {
-        uint32_t margin_kcps = xtalk_margin;
+	uint32_t margin_kcps = xtalk_margin;
 
 	if(margin_kcps > (uint32_t)10000)
 	{
@@ -2260,7 +2233,7 @@ IResult<> Self::set_xtalk_margin(
 		if(const auto res = dci_replace_data(temp_buffer,
 			VL53L5CX_DCI_XTALK_CFG, 16, 
 			ptr_cast<const uint8_t *>(&margin_kcps), 4, 0x00);
-			res.is_err()) return res;
+			res.is_err()) return Err(res.unwrap_err());
 	}
 
     return Ok();
