@@ -91,8 +91,8 @@ public:
         turns_ = atan2pu(eta_mf[1], eta_mf[0]);
     }
 
-    constexpr Angle<q16> angle() const {
-        return Angle<q16>::from_turns(frac(q16(turns_)));
+    constexpr Angle<iq16> angle() const {
+        return Angle<iq16>::from_turns(frac(q16(turns_)));
     }
 // private:
 public:

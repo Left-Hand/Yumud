@@ -30,7 +30,7 @@ public:
     explicit ADXL345(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank): 
         phy_(hal::SpiDrv{spi, rank}){;}
 
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
     
     [[nodiscard]] IResult<> validate();
 
@@ -38,7 +38,7 @@ public:
 private:
     AnalogDeviceIMU_Phy phy_;
     ADXL345_Regset regs_ = {};
-    q24 acc_scaler_ = 0;
+    iq24 acc_scaler_ = 0;
 
 
     template<typename T>

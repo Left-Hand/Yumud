@@ -81,7 +81,7 @@ int32_t __IQ31getSinCosResult(int32_t iq31X, int32_t iq31Sin, int32_t iq31Cos){
 }
 
 
-template<size_t Q, typename Fn>
+template<size_t _Q, typename Fn, size_t Q = MIN(_Q, 16)>
 constexpr auto __IQNgetCosSinPUTemplate(int32_t iqn_x, Fn && fn){
     constexpr int32_t iqn_tau = (1 << Q) * (TAU);
 
@@ -116,9 +116,9 @@ constexpr auto __IQNgetCosSinPUTemplate(int32_t iqn_x, Fn && fn){
 
 
 
-template<size_t Qraw, typename Fn, size_t Q = MIN(Qraw, 16)>
+template<size_t _Q, typename Fn, size_t Q = MIN(_Q, 16)>
 constexpr auto __IQNgetCosSinTemplate(int32_t iqn_x, Fn && fn){
-    if constexpr (Qraw > 16) iqn_x = iqn_x >> (Qraw - 16);
+    if constexpr (_Q > 16) iqn_x = iqn_x >> (_Q - 16);
     constexpr int32_t iqn_tau = (1 << Q) * (TAU);
     constexpr uint32_t uiqn_inv_tau = (1 << Q) / (TAU);
 
@@ -160,7 +160,7 @@ constexpr auto __IQNgetCosSinTemplate(int32_t iqn_x, Fn && fn){
 
 
 __fast_inline constexpr 
-auto __IQ31getSinDispatcher(const uint32_t iq31_x, const uint8_t sect, const uint8_t lut_index){
+fixed_t<31, int32_t> __IQ31getSinDispatcher(const uint32_t iq31_x, const uint8_t sect, const uint8_t lut_index){
 
     const int32_t iq31_sin = iqmath::details::_IQ31SinLookup[lut_index];
     const int32_t iq31_cos = iqmath::details::_IQ31CosLookup[lut_index];
@@ -180,7 +180,7 @@ auto __IQ31getSinDispatcher(const uint32_t iq31_x, const uint8_t sect, const uin
 }
 
 __fast_inline constexpr 
-auto __IQ31getCosDispatcher(const uint32_t iq31_x, const uint8_t sect, const uint8_t lut_index){
+fixed_t<31, int32_t> __IQ31getCosDispatcher(const uint32_t iq31_x, const uint8_t sect, const uint8_t lut_index){
     return __IQ31getSinDispatcher(iq31_x, (sect + 2) & 0b111, lut_index);
 }
 

@@ -38,7 +38,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_mag() override;
+    [[nodiscard]] IResult<Vec3<iq24>> read_mag() override;
     
     [[nodiscard]] IResult<> validate();
 
@@ -52,11 +52,11 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-    static constexpr EnumArray<FullScale, q24> scaler_mapping_ = {
+    static constexpr EnumArray<FullScale, iq24> scaler_mapping_ = {
         2, 8
     };
 
-    static constexpr EnumScaler<FullScale, q24> scaler_ = {
+    static constexpr EnumScaler<FullScale, iq24> scaler_ = {
         FullScale::_2G,
         scaler_mapping_
     };

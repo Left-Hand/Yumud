@@ -51,7 +51,7 @@ public:
     [[nodiscard]] IResult<> start_conv();
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] std::tuple<real_t, real_t, real_t, real_t> get_crgb();
+    [[nodiscard]] std::tuple<uq16, uq16, uq16, uq16> get_crgb();
 
 private:
     hal::I2cDrv i2c_drv_;

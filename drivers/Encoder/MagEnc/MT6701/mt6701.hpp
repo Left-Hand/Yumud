@@ -24,7 +24,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Angle<q31>> read_lap_angle();
+    [[nodiscard]] IResult<Angle<uq32>> read_lap_angle();
     
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 
@@ -59,7 +59,7 @@ private:
 
     MT6701_Phy phy_;
     Packet packet_ = {0, 0};
-    real_t lap_position_ = real_t(0);
+    uq32 lap_position_ = 0;
     bool fast_mode_ = true;
 
 

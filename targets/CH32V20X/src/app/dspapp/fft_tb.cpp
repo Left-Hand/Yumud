@@ -235,7 +235,7 @@ void fft_main(){
 
     [[maybe_unused]] auto make_sin_samples = []() -> std::vector<T>{
         std::vector<T> ret;
-        const auto freq = q16(256.97) / N;
+        const auto freq = iq16(256.97) / N;
         for(size_t i = 0; i < N; ++i){
             ret.push_back(T(sinpu(freq * i)));
         }
@@ -244,8 +244,8 @@ void fft_main(){
 
     [[maybe_unused]] auto make_am_samples = []() -> std::vector<T>{
         std::vector<T> ret;
-        constexpr auto modu_freq = q16(8.97) / N;
-        constexpr auto carry_freq = q16(56.97) / N;
+        constexpr auto modu_freq = iq16(8.97) / N;
+        constexpr auto carry_freq = iq16(56.97) / N;
         constexpr auto modu_depth = 0.4_r;
         for(size_t i = 0; i < N; ++i){
             ret.push_back(T(sinpu(carry_freq * i) * (1 + modu_depth * sinpu(modu_freq * i))));

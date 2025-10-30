@@ -72,7 +72,7 @@ IResult<> KTH7823::update(){
     });
 
 
-    lap_turns_ = u16_to_uni(data);
+    lap_turns_ = uq16::from_bits(data);
 
     return Ok();
 }
@@ -82,8 +82,8 @@ IResult<> KTH7823::validate(){
     return Ok();
 }
 
-IResult<> KTH7823::set_zero_angle(const Angle<q31> angle){
-    const auto raw16 = uni_to_u16(q16(angle.to_turns()));
+IResult<> KTH7823::set_zero_angle(const Angle<uq32> angle){
+    const auto raw16 = (angle.to_turns().as_bits() >> 16);
 
     auto reg_low = RegCopy(zero_low_reg);
     reg_low.data = raw16 & 0xff;

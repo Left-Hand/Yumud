@@ -356,12 +356,18 @@ private:
         this->write(str, len);
     }
 
-    void print_q16(const q16 val);
+    void print_iq16(const fixed_t<16, int32_t> val);
 public:
 
     template<size_t Q>
     OutputStream & operator<<(const fixed_t<Q, int32_t> & val){
-        print_q16(q16(val));
+        print_iq16(fixed_t<16, int32_t>(val));
+        return *this;
+    }
+
+    template<size_t Q>
+    OutputStream & operator<<(const fixed_t<Q, uint32_t> & val){
+        print_iq16(static_cast<fixed_t<16, int32_t>>(val));
         return *this;
     }
 

@@ -230,14 +230,14 @@ public:
     [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
     
     [[nodiscard]] IResult<> set_pmu_mode(const PmuType pum, const PmuMode mode);
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
 
 private:
     using Phy = StmicroImu_Phy;
     Phy phy_;
 
-    q16 acc_scale = 0;
-    q16 gyr_scale = 0;
+    iq16 acc_scale = 0;
+    iq16 gyr_scale = 0;
 
     [[nodiscard]] IResult<> write_reg(uint8_t reg_addr, uint8_t reg_val){
         if(const auto res = phy_.write_reg(reg_addr, reg_val);
@@ -257,23 +257,23 @@ private:
     //     return Ok();
     // }
 
-    [[nodiscard]] static constexpr q24 calc_gyr_scaler(const GyrFs fs){
+    [[nodiscard]] static constexpr iq24 calc_gyr_scaler(const GyrFs fs){
         switch(fs){
-            case GyrFs::_2000deg  :      return DEG2RAD<q24>(q24(2 * 2000   ));
-            case GyrFs::_1000deg  :      return DEG2RAD<q24>(q24(2 * 1000   ));
-            case GyrFs::_500deg   :      return DEG2RAD<q24>(q24(2 * 500    ));
-            case GyrFs::_250deg   :      return DEG2RAD<q24>(q24(2 * 250    ));
-            case GyrFs::_125deg   :      return DEG2RAD<q24>(q24(2 * 125    ));
+            case GyrFs::_2000deg  :      return DEG2RAD<iq24>(iq24(2 * 2000   ));
+            case GyrFs::_1000deg  :      return DEG2RAD<iq24>(iq24(2 * 1000   ));
+            case GyrFs::_500deg   :      return DEG2RAD<iq24>(iq24(2 * 500    ));
+            case GyrFs::_250deg   :      return DEG2RAD<iq24>(iq24(2 * 250    ));
+            case GyrFs::_125deg   :      return DEG2RAD<iq24>(iq24(2 * 125    ));
         }
         __builtin_unreachable();
     }
 
-    [[nodiscard]] static constexpr q24 calc_acc_scaler(const AccFs fs){
+    [[nodiscard]] static constexpr iq24 calc_acc_scaler(const AccFs fs){
         switch(fs){
-            case AccFs::_16G    :       return GRAVITY_ACC<q24> * 32;
-            case AccFs::_8G     :       return GRAVITY_ACC<q24> * 16;
-            case AccFs::_4G     :       return GRAVITY_ACC<q24> * 8;
-            case AccFs::_2G     :       return GRAVITY_ACC<q24> * 4;
+            case AccFs::_16G    :       return GRAVITY_ACC<iq24> * 32;
+            case AccFs::_8G     :       return GRAVITY_ACC<iq24> * 16;
+            case AccFs::_4G     :       return GRAVITY_ACC<iq24> * 8;
+            case AccFs::_2G     :       return GRAVITY_ACC<iq24> * 4;
         }
         __builtin_unreachable();
     }

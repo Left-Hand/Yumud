@@ -211,14 +211,14 @@ struct ImplFor<int, MyStruct> {
 
 
 static constexpr auto serialized1 = serialize<RawBytes>(uint8_t(42));
-static constexpr auto serialized2 = serialize<RawBytes>(1_q16);
+static constexpr auto serialized2 = serialize<RawBytes>(1_iq16);
 static constexpr auto serialized3 = serialize<RawBytes>(1.0f);
-static constexpr auto serialized4 = serialize<RawBytes>(1.0f, 1_q16);
+static constexpr auto serialized4 = serialize<RawBytes>(1.0f, 1_iq16);
 
 static constexpr auto deserialized1 = deserialize<RawBytes, uint8_t>(std::span(serialized1));
-static constexpr auto deserialized2 = deserialize<RawBytes, q16>(std::span(serialized2));
+static constexpr auto deserialized2 = deserialize<RawBytes, iq16>(std::span(serialized2));
 static constexpr auto deserialized3 = deserialize<RawBytes, float>(std::span(serialized3));
-static constexpr auto deserialized4 = deserialize<RawBytes, float, q16>(std::span(serialized4));
+static constexpr auto deserialized4 = deserialize<RawBytes, float, iq16>(std::span(serialized4));
 static constexpr auto deserialized4f = std::get<0>(deserialized4);
 static constexpr auto deserialized4q = std::get<1>(deserialized4);
 
@@ -229,9 +229,9 @@ static constexpr auto msg_size = msg.size();
 static constexpr auto deserialized4m = deserialize<hal::CanMsg, MyStruct>(msg).unwrap();
 
 // static_assert(deserialized1 == 42, "deserialized1 != 42");
-static_assert(deserialized2 == 1_q16, "deserialized2 != 1_q16");
-static_assert(deserialized4q == 1_q16, "deserialized2 != 1_q16");
-static_assert(deserialized4f == 1.0f, "deserialized2 != 1_q16");
+static_assert(deserialized2 == 1_iq16, "deserialized2 != 1_iq16");
+static_assert(deserialized4q == 1_iq16, "deserialized2 != 1_iq16");
+static_assert(deserialized4f == 1.0f, "deserialized2 != 1_iq16");
 // static_assert(deserialized3 == 1.0f, "deserialized3 != 1.0f");
 
 

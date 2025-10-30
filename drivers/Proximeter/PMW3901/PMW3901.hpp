@@ -74,8 +74,8 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] Vec2<q16> get_position(){
-        return {x_cm * q16(0.01), y_cm * q16(0.01)};
+    [[nodiscard]] Vec2<iq16> get_position(){
+        return {x_cm * iq16(0.01), y_cm * iq16(0.01)};
     }
 
     [[nodiscard]] IResult<> set_led(bool on);
@@ -84,8 +84,8 @@ private:
     hal::SpiDrv spi_drv_;
 
     PMW3901_Data data_ = {};
-    q16 x_cm = 0;
-    q16 y_cm = 0;
+    iq16 x_cm = 0;
+    iq16 y_cm = 0;
 
     [[nodiscard]] IResult<bool> assert_reg(const uint8_t command, const uint8_t data);
     [[nodiscard]] IResult<> write_reg(const uint8_t command, const uint8_t data);

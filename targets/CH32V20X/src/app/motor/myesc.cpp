@@ -262,11 +262,11 @@ void myesc_main(){
     // #region 初始化ADC
     static constexpr auto VOLTAGE_TO_CURRENT_RATIO = 0.5_r;
     auto soa_ = hal::ScaledAnalogInput(hal::adc1.inj<1>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
+        Rescaler<iq16>::from_anti_offset(1.65_r)     * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
     auto sob_ = hal::ScaledAnalogInput(hal::adc1.inj<2>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
+        Rescaler<iq16>::from_anti_offset(1.65_r)     * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
     auto soc_ = hal::ScaledAnalogInput(hal::adc1.inj<3>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)    * Rescaler<q16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
+        Rescaler<iq16>::from_anti_offset(1.65_r)    * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
 
     init_adc();
     // #endregion 
@@ -292,8 +292,8 @@ void myesc_main(){
 
     // #endregion 
     
-    Angle<q16> openloop_elec_angle_ = 0_deg;
-    Angle<q16> sensored_elec_angle_ = 0_deg;
+    Angle<iq16> openloop_elec_angle_ = 0_deg;
+    Angle<iq16> sensored_elec_angle_ = 0_deg;
     UvwCoord<q20> uvw_curr_ = Zero;
     DqCoord<q20> dq_curr_ = Zero;
     DqCoord<q20> dq_volt_ = Zero;
@@ -367,13 +367,13 @@ void myesc_main(){
         //#endregion
 
         //#region 位置提取
-        const auto openloop_manchine_angle = Angle<q16>::from_turns(0 * ctime);
-        // const auto openloop_manchine_angle = Angle<q16>::from_turns(1.2_r * ctime);
-        // const auto openloop_manchine_angle = Angle<q16>::from_turns(sinpu(0.2_r * ctime));
+        const auto openloop_manchine_angle = Angle<iq16>::from_turns(0 * ctime);
+        // const auto openloop_manchine_angle = Angle<iq16>::from_turns(1.2_r * ctime);
+        // const auto openloop_manchine_angle = Angle<iq16>::from_turns(sinpu(0.2_r * ctime));
         const auto openloop_elec_angle = openloop_manchine_angle * POLE_PAIRS;
 
-        static constexpr auto ANGLE_BASE = Angle<q16>::from_turns(-0.22_q16);
-        const auto encoder_angle = mt6825_.get_lap_angle().examine().into<q16>();
+        static constexpr auto ANGLE_BASE = Angle<iq16>::from_turns(-0.22_iq16);
+        const auto encoder_angle = mt6825_.get_lap_angle().examine().into<iq16>();
 
         pos_filter_.update(encoder_angle);
         
@@ -384,29 +384,29 @@ void myesc_main(){
         // const auto elec_angle = openloop_elec_angle;
         const auto elec_angle = sensored_elec_angle;
         #else
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 10_deg;
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 20_deg;
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 40_deg;
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() - 90_deg);
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 80_deg);
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 40_deg;
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 180_deg + 30_deg);
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 50_deg);
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() - 22_deg);
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() - 135_deg);
-        // const auto elec_angle = Angle<q16>(lbg_sensorless_ob.angle() + 30_deg);
-        // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle() + 90_deg);
-        // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle() + 90_deg);
-        // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle() + 90_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 10_deg;
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 20_deg;
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 40_deg;
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() - 90_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() + 80_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 40_deg;
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() + 180_deg + 30_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() + 50_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() - 22_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() - 135_deg);
+        // const auto elec_angle = Angle<iq16>(lbg_sensorless_ob.angle() + 30_deg);
+        // const auto elec_angle = Angle<iq16>(smo_sensorless_ob.angle() + 90_deg);
+        // const auto elec_angle = Angle<iq16>(smo_sensorless_ob.angle() + 90_deg);
+        // const auto elec_angle = Angle<iq16>(smo_sensorless_ob.angle() + 90_deg);
         #endif
 
-        const auto elec_rotation = Rotation2<q16>::from_angle(elec_angle);
+        const auto elec_rotation = Rotation2<iq16>::from_angle(elec_angle);
         //#endregion
 
         //#region 位速合成力矩
         const auto [position_cmd, speed_cmd] = [&]{
-            const auto omega = 9_q16;
-            const auto amplitude = 0.02_q16;
+            const auto omega = 9_iq16;
+            const auto amplitude = 0.02_iq16;
 
             const auto [s,c] = sincos(omega * ctime);
             return std::make_tuple<q16, q16>(
@@ -421,8 +421,8 @@ void myesc_main(){
 
 
         const q20 torque_cmd = [&]{ 
-            const q16 kp = 0.18_q16;
-            const q16 kd = 0.016_q16;
+            const q16 kp = 0.18_iq16;
+            const q16 kd = 0.016_iq16;
 
             const q16 position_err = position_cmd - pos_filter_.accumulated_angle().to_turns();
             const q16 speed_err = speed_cmd - pos_filter_.speed();
@@ -434,8 +434,8 @@ void myesc_main(){
 
         //#region 力矩转电流
 
-        static constexpr q20 TORQUE_2_CURR_RATIO = 1_q16;
-        static constexpr q20 MAX_CURRENT = 0.2_q16;
+        static constexpr q20 TORQUE_2_CURR_RATIO = 1_iq16;
+        static constexpr q20 MAX_CURRENT = 0.2_iq16;
 
         const q20 current_cmd = CLAMP2(torque_cmd * TORQUE_2_CURR_RATIO, MAX_CURRENT);
         //#endregion
@@ -490,7 +490,7 @@ void myesc_main(){
         // smo_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
 
         const auto uvw_dutycycle = SVM(
-            AlphaBetaCoord<q16>{
+            AlphaBetaCoord<iq16>{
                 .alpha = alphabeta_volt.alpha, 
                 .beta = alphabeta_volt.beta
             } * INV_BUS_VOLT

@@ -54,7 +54,7 @@ public:
 
     }
 
-    void set_dutycycle(const AlphaBetaCoord<q16> alphabeta_dutycycle){
+    void set_dutycycle(const AlphaBetaCoord<iq16> alphabeta_dutycycle){
         channel_a_.set_dutycycle(alphabeta_dutycycle.alpha);
         channel_b_.set_dutycycle(alphabeta_dutycycle.beta);
     }

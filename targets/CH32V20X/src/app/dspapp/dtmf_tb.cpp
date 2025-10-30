@@ -20,7 +20,7 @@
 
 using namespace ymd;
 
-using Particle = dsp::Particle<q16, q16>;
+using Particle = dsp::Particle<iq16, iq16>;
 
 
 void dtmf_main(){
@@ -32,14 +32,14 @@ void dtmf_main(){
         .fs = FS
     }};
 
-    const q16 fl = dtmf.fl();
-    const q16 fh = dtmf.fh();
+    const iq16 fl = dtmf.fl();
+    const iq16 fh = dtmf.fh();
     
-    using Filter = dsp::ButterBandpassFilter<q16, 4>;
+    using Filter = dsp::ButterBandpassFilter<iq16, 4>;
 
-    static constexpr auto Qbw = q16(0.5);
+    static constexpr auto Qbw = iq16(0.5);
 
-    q16 side_bw = Qbw * (fh - fl) / 2;
+    iq16 side_bw = Qbw * (fh - fl) / 2;
 
     Filter l_filter {{
         .fs = FS,
@@ -74,7 +74,7 @@ void dtmf_main(){
         case hal::TimerEvent::Update:{
             const auto t = clock::time();
             dtmf.update(t);
-            const auto wave = q16(dtmf.result());
+            const auto wave = iq16(dtmf.result());
 
             l_filter.update(wave);
             h_filter.update(wave);

@@ -13,18 +13,18 @@ namespace ymd::nuedc_2025e{
 
 
 using Vector2u8 = Vec2<uint8_t>;
-using Vector2q20 = Vec2<q20>;
+using Vector2q20 = Vec2<iq20>;
 
 static constexpr size_t CANMSG_QUEUE_SIZE = 8;
 
-static constexpr auto MAX_STATIC_SHOT_ERR = 0.007_q20; 
-static constexpr auto PITCH_SEEKING_ANGLE = 0.012_q20;
-static constexpr q20 PITCH_MAX_POSITION = 0.06_r;
-static constexpr q20 PITCH_MIN_POSITION = -0.03_r;
+static constexpr auto MAX_STATIC_SHOT_ERR = 0.007_iq20; 
+static constexpr auto PITCH_SEEKING_ANGLE = 0.012_iq20;
+static constexpr iq20 PITCH_MAX_POSITION = 0.06_r;
+static constexpr iq20 PITCH_MIN_POSITION = -0.03_r;
 
 static constexpr size_t MACHINE_CTRL_FREQ = 200;
 static constexpr auto DELTA_TIME_MS = 1000ms / MACHINE_CTRL_FREQ;
-static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_q20;
+static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_iq20;
 
 enum class RunState:uint8_t{
     Idle,

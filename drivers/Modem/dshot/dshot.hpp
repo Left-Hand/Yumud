@@ -20,10 +20,10 @@ public:
 
 class BurstPwmIntf:public BurstChannelIntf{
 public:
-    virtual uint32_t calc_cvr_from_duty(const q31 duty) const;
-    virtual q8 get_period_us() const;
+    virtual uint32_t calc_cvr_from_duty(const uq32 duty) const;
+    virtual uq8 get_period_us() const;
 
-    uint32_t calc_cvr_from_us(const q8 us){
+    uint32_t calc_cvr_from_us(const uq8 us){
         return calc_cvr_from_duty(us / get_period_us());
     }
 };
@@ -36,8 +36,8 @@ public:
     void invoke();
     void install();
     bool is_done();
-    uint32_t calc_cvr_from_duty(const q31 duty) const;
-    q8 get_period_us() const;
+    uint32_t calc_cvr_from_duty(const uq32 duty) const;
+    uq8 get_period_us() const;
 private:
     hal::TimerOC & timer_oc_;
     hal::DmaChannel & dma_channel_;

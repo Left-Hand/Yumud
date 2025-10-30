@@ -128,7 +128,7 @@ void mlx90640_main(){
         if (const auto res = mlx.get_frame_data(Frame); res.is_err()){
             static Milliseconds last_millis_ = 0ms;
             const auto curr_millis_ = clock::millis();
-            // DEBUG_PRINTLN(res.unwrap_err(), curr_millis_ - last_millis_, q16::from(Vdd), q16::from(Ta));
+            // DEBUG_PRINTLN(res.unwrap_err(), curr_millis_ - last_millis_, iq16::from(Vdd), iq16::from(Ta));
             last_millis_ = curr_millis_;
             continue;
         }
@@ -147,12 +147,12 @@ void mlx90640_main(){
                 | std::views::filter([=](uint16_t i) {
                     return (i % 2 == j % 2);
                 })
-                | std::views::transform([=, &Temp](uint16_t i) -> q16{
-                    return static_cast<q16>(q16::from(Temp[i + j * MLX90640_COLS]));
+                | std::views::transform([=, &Temp](uint16_t i) -> iq16{
+                    return static_cast<iq16>(iq16::from(Temp[i + j * MLX90640_COLS]));
                 })
 
-                | std::views::transform([](const q16 temp) -> RGB565{
-                    const auto color = RGB<q16>::from_hsv(1 - temp / 60, 1, 1);
+                | std::views::transform([](const iq16 temp) -> RGB565{
+                    const auto color = RGB<iq16>::from_hsv(1 - temp / 60, 1, 1);
                     return RGB565::from_r5g6b5(
                         static_cast<uint8_t>(color.r * 31),
                         static_cast<uint8_t>(color.g * 63),

@@ -24,13 +24,9 @@ using real_t = ymd::fixed_t<IQ_DEFAULT_Q, int32_t>;
 // using real_t = float;
 // #endif
 
+using namespace ymd::literals;
+
 namespace ymd{
-
-static constexpr real_t pi_4 = real_t(PI/4);
-static constexpr real_t pi_2 = real_t(PI/2);
-static constexpr real_t pi = real_t(PI);
-static constexpr real_t tau = real_t(TAU);
-
 
 consteval real_t operator"" _r(long double x){
     return real_t(x);
@@ -156,24 +152,25 @@ template<integral T>
 __fast_inline constexpr T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
 
 
+#if 0
 
-__fast_inline constexpr real_t u16_to_uni(const uint16_t data){
-    if constexpr(is_fixed_point_v<real_t>){
-        constexpr size_t Q = real_t::q_num;
+__fast_inline constexpr fixed_t<Q, int32_t> u16_to_uni(const uint16_t data){
+    if constexpr(is_fixed_point_v<fixed_t<Q, int32_t>>){
+        constexpr size_t Q = fixed_t<Q, int32_t>::q_num;
         if constexpr(Q > 16)
-            return real_t(fixed_t<Q, int32_t>::from_bits(data << (Q - 16)));
+            return fixed_t<Q, int32_t>(fixed_t<Q, int32_t>::from_bits(data << (Q - 16)));
         else if constexpr (Q < 16)
-            return real_t(fixed_t<Q, int32_t>::from_bits(data >> (16 - Q)));
+            return fixed_t<Q, int32_t>(fixed_t<Q, int32_t>::from_bits(data >> (16 - Q)));
         else
-            return real_t(fixed_t<Q, int32_t>::from_bits(data));
-    }else if constexpr(std::is_floating_point_v<real_t>){
-        return real_t(data) / 65536;
+            return fixed_t<Q, int32_t>(fixed_t<Q, int32_t>::from_bits(data));
+    }else if constexpr(std::is_floating_point_v<fixed_t<Q, int32_t>>){
+        return fixed_t<Q, int32_t>(data) / 65536;
     }
 }
 
 template<size_t Q>
-__fast_inline constexpr fixed_t<Q, int32_t> u32_to_uni(const uint32_t data){
-    fixed_t<Q, int32_t> qv;
+__fast_inline constexpr fixed_t<Q, uint32_t> u32_to_uni(const uint32_t data){
+    fixed_t<Q, uint32_t> qv;
 #if Q > 16
     qv.value = data << (Q - 16);
 #elif(Q < 16)
@@ -184,15 +181,15 @@ __fast_inline constexpr fixed_t<Q, int32_t> u32_to_uni(const uint32_t data){
     return qv;
 }
 
-__fast_inline constexpr real_t s16_to_uni(const int16_t data){
-    if constexpr(is_fixed_point_v<real_t>){
+__fast_inline constexpr fixed_t<Q, int32_t> s16_to_uni(const int16_t data){
+    if constexpr(is_fixed_point_v<fixed_t<Q, int32_t>>){
         return fixed_t<16, int32_t>(data) >> 16;
     }
-    return real_t(0);
+    return fixed_t<Q, int32_t>(0);
 }
 
 template<size_t Q>
-__fast_inline constexpr uint16_t uni_to_u16(const fixed_t<Q, int32_t> qv){
+__fast_inline constexpr uint16_t uni_to_u16(const fixed_t<Q, uint32_t> qv){
     uint16_t data;
     if constexpr (Q >= 16) data = qv.as_bits() >> (Q - 16);
     else data = qv.as_bits() << (16 - Q);
@@ -211,9 +208,11 @@ __fast_inline constexpr int16_t uni_to_s16(const fixed_t<Q, int32_t> qv){
     return data;
 }
 
-__fast_inline real_t uni(const uint16_t data){return u16_to_uni(data);}
+__fast_inline fixed_t<Q, int32_t> uni(const uint16_t data){return u16_to_uni(data);}
 
-__fast_inline real_t uni(const int16_t data){return s16_to_uni(data);}
+__fast_inline fixed_t<Q, int32_t> uni(const int16_t data){return s16_to_uni(data);}
+
+#endif
 
 __fast_inline constexpr int warp_mod(const int x, const int y){
     int ret = x % y;

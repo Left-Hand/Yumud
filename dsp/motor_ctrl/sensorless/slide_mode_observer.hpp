@@ -83,7 +83,7 @@ public:
 
 
     // 获取估计的转子角度
-    Angle<q16> angle() const {return Angle<q16>::from_turns(turns_);}
+    Angle<iq16> angle() const {return Angle<iq16>::from_turns(turns_);}
 
 private:
     q16 f_para_ = 0;

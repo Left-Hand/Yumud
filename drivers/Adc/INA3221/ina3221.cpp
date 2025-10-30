@@ -192,7 +192,7 @@ IResult<int> INA3221::get_bus_volt_mv(const ChannelSelection sel){
 IResult<real_t> INA3221::get_shunt_volt(const ChannelSelection sel){
     const auto res = get_shunt_volt_uv(sel);
     if(res.is_err()) return Err(res.unwrap_err());
-    return Ok(q16(q8(res.unwrap()) / 100) / 10000);
+    return Ok(iq16(iq8(res.unwrap()) / 100) / 10000);
 }
 
 IResult<real_t> INA3221::get_bus_volt(const ChannelSelection sel){

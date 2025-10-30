@@ -24,9 +24,9 @@ public:
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> set_zero_angle(const Angle<q31> angle);
-    [[nodiscard]] IResult<Angle<q31>> read_lap_angle(){
-        return Ok(Angle<q31>::from_turns(lap_turns_));
+    [[nodiscard]] IResult<> set_zero_angle(const Angle<uq32> angle);
+    [[nodiscard]] IResult<Angle<uq32>> read_lap_angle(){
+        return Ok(Angle<uq32>::from_turns(lap_turns_));
     }
 
     [[nodiscard]] IResult<> set_trim_x(const real_t k);
@@ -49,7 +49,7 @@ public:
 private:
     hal::SpiDrv spi_drv_;
     MA730_Regset regs_ = {};
-    q31 lap_turns_ = 0;
+    uq32 lap_turns_ = 0;
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

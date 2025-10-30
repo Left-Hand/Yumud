@@ -27,7 +27,7 @@ public:
     [[nodiscard]] IResult<> set_x_average_times(const AverageTimes times);
     [[nodiscard]] IResult<> set_y_average_times(const AverageTimes times);
 
-    [[nodiscard]] IResult<q16> get_temperature();
+    [[nodiscard]] IResult<iq16> get_temperature();
 
     [[nodiscard]] IResult<bool> is_data_ready();
     [[nodiscard]] IResult<> enable_interrupt(const Enable en);
@@ -36,7 +36,7 @@ public:
 
     [[nodiscard]] IResult<> enable_sleep(const Enable en);
 
-    [[nodiscard]] IResult<Vec3<q24>> read_mag() override;
+    [[nodiscard]] IResult<Vec3<iq24>> read_mag() override;
 
 private:
     hal::I2cDrv i2c_drv_;

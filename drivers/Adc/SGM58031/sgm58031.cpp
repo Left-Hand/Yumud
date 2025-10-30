@@ -59,17 +59,17 @@ IResult<> SGM58031::set_fs(const FS fs){
 
 
 
-IResult<> SGM58031::set_fs(const q16 _fs, const q16 _vref){
-    q16 ratio = abs(_fs) / _vref;
+IResult<> SGM58031::set_fs(const iq16 _fs, const iq16 _vref){
+    iq16 ratio = abs(_fs) / _vref;
     auto reg = RegCopy(regs_.config_reg);
     reg.pga = ratio2pga(ratio);
     return write_reg(reg);
 }
 
 
-IResult<> SGM58031::set_trim(const q16 _trim){
-    q16 trim = _trim * q16(4.0f / 3.0f);
-    q16 offset = trim - q16(1.30225f);
+IResult<> SGM58031::set_trim(const iq16 _trim){
+    iq16 trim = _trim * iq16(4.0f / 3.0f);
+    iq16 offset = trim - iq16(1.30225f);
     auto reg = RegCopy(regs_.trim_reg);
     reg.gn = int(offset * 0b01111111010);
     return write_reg(reg);
@@ -105,7 +105,7 @@ IResult<int16_t> SGM58031::get_conv_data(){
     return Ok(reg.as_val());
 }
 
-IResult<q16> SGM58031::get_conv_voltage(){
+IResult<iq16> SGM58031::get_conv_voltage(){
     const auto res = get_conv_data();
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok((res.unwrap() * full_scale_) >> 15);

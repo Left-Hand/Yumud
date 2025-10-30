@@ -219,7 +219,7 @@ void bldc_main(){
 
     hal::PA<7>().inana();
 
-    AlphaBetaCoord<q16> ab_volt_;
+    AlphaBetaCoord<iq16> ab_volt_;
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -229,7 +229,7 @@ void bldc_main(){
     };
 
     pos_filter_.set_base_lap_angle(
-        Angle<q16>::ZERO
+        Angle<iq16>::ZERO
     );
 
     ElecAngleCompensator elec_angle_comp_{
@@ -264,7 +264,7 @@ void bldc_main(){
         ma730_.update().examine();
 
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
-        pos_filter_.update(Angle<q16>::from_turns(meas_lap_angle.to_turns()));
+        pos_filter_.update(Angle<iq16>::from_turns(meas_lap_angle.to_turns()));
     };
 
     auto sensored_foc_cb = [&]{
@@ -295,10 +295,10 @@ void bldc_main(){
         #if 1
         const auto q_volt = 3.3_r;
 
-        [[maybe_unused]] const auto alphabeta_volt = DqCoord<q16>{
+        [[maybe_unused]] const auto alphabeta_volt = DqCoord<iq16>{
             .d = 0, 
             .q = q_volt
-        }.to_alphabeta(Rotation2<q16>::from_angle(Angle<q16>::from_turns(ctime)));
+        }.to_alphabeta(Rotation2<iq16>::from_angle(Angle<iq16>::from_turns(ctime)));
         #else
         const auto q_volt = CLAMP2(
             pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)

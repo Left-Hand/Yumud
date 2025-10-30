@@ -285,7 +285,7 @@ void dsp_main(){
 
 
     // using T = float; 
-    using T = q16; 
+    using T = iq16; 
 
     [[maybe_unused]] constexpr T FREQ_LOW = T(250);
     [[maybe_unused]] constexpr T FREQ_HIGH = T(400);
@@ -324,18 +324,18 @@ void dsp_main(){
     auto sig_in = [](const real_t t){
         // return sinpu(75 * t);
         // return sinpu(15 * t);
-        return frac(75 * t) * 0.2_r;
+        return iq16(frac(75 * t)) * 0.2_r;
     };
 
     #endif
 
     // auto && sig_proc = make_butterworth_bandpass<q20, N>(FREQ_LOW, FREQ_HIGH, SAMPLE_FREQ);
-    auto && bpf = make_butterworth_bandpass<q16, N>(FREQ_LOW, FREQ_HIGH, SAMPLE_FREQ);
+    auto && bpf = make_butterworth_bandpass<iq16, N>(FREQ_LOW, FREQ_HIGH, SAMPLE_FREQ);
     // auto && sig_proc = make_tunning_filter<T>(1.0_r);
 
     static constexpr size_t BUFFER_SIZE = 512;
-    auto buffer = std::vector<q16>(BUFFER_SIZE);
-    auto && allpass = dsp::CombAllpass<q16>(std::span(buffer));
+    auto buffer = std::vector<iq16>(BUFFER_SIZE);
+    auto && allpass = dsp::CombAllpass<iq16>(std::span(buffer));
     allpass.set_delay_ticks(10.6_r);
     auto && sig_proc = [&](const real_t t){
         const auto bpf_out = bpf(t);

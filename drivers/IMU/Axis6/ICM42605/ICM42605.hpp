@@ -28,8 +28,8 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
-    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
 
 private:
 
@@ -37,8 +37,8 @@ private:
     InvensenseSensor_Phy phy_;
     Option<Bank> last_bank_ = None;  
 
-    q16 acc_scaler_ = 0;
-    q16 gyr_scaler_ = 0;
+    iq16 acc_scaler_ = 0;
+    iq16 gyr_scaler_ = 0;
 
     Vec3<int16_t> acc_data_ = Vec3<int16_t>::ZERO;
     Vec3<int16_t> gyr_data_ = Vec3<int16_t>::ZERO;

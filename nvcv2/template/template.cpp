@@ -19,7 +19,7 @@ using Itpair = std::pair<T, T>;
 
 namespace ymd::nvcv2::match{
 
-real_t template_match(
+iq16 template_match(
     const Image<Binary> & src, 
     const Image<Binary> & tmp,
     const Vec2u & offs){
@@ -45,7 +45,7 @@ real_t template_match(
     return score / size.area();
 }
 
-real_t template_match_ncc(
+iq16 template_match_ncc(
     const Image<Gray> & src, 
     const Image<Gray> & tmp, 
     const Vec2u & offs
@@ -85,11 +85,11 @@ real_t template_match_ncc(
     if(den_t == 0 || den_s == 0) return 0;
 
     const int64_t den = fast_sqrt_i(den_t) * fast_sqrt_i(den_s);
-    return s16_to_uni(num * 65535 / den);
+    return iq16::from_bits(num * 65535 / den);
 }
 
 
-real_t template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, const Vec2u & offs){
+iq16 template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, const Vec2u & offs){
 
     BOUNDARY_CHECK();
 
@@ -117,12 +117,12 @@ real_t template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, cons
     
     if(num == 0) return 0;
 
-    // real_t ret = 0;
+    // iq16 ret = 0;
     uint16_t res = num / area;
-    return 1 - u16_to_uni(res);
+    return 1 - iq16::from_bits(res);
 }
 
-real_t template_match(const Image<Gray> & src, const Image<Gray> & tmp, const Vec2u & offs){
+iq16 template_match(const Image<Gray> & src, const Image<Gray> & tmp, const Vec2u & offs){
     return template_match_ncc(src, tmp, offs);
     // return template_match_squ(src, tmp, offs);
 }

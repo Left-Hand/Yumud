@@ -12,20 +12,20 @@ namespace ymd::robots{
 struct EllipseCalibrator_Prelude{
 
     struct Dignosis{
-        Vec3<q24> center;
-        Vec3<q24> soft_iron;
+        Vec3<iq24> center;
+        Vec3<iq24> soft_iron;
     };
 
 
-    static constexpr Vec2<q24> project_idx_to_v2(const size_t i, const size_t n){
-        const auto r = 1 - 2 * q16(i) / (n - 1);
-        // q24 phi = std::cos(r); // 极角
-        q24 phi = r; // 极角
-        // q24 phi = 0;
-        q24 theta = q24(M_PI) * (1.0_q24 + std::sqrt(5.0_q24)) * i; // 方位角
+    static constexpr Vec2<iq24> project_idx_to_v2(const size_t i, const size_t n){
+        const auto r = 1 - 2 * iq16(i) / (n - 1);
+        // iq24 phi = std::cos(r); // 极角
+        iq24 phi = r; // 极角
+        // iq24 phi = 0;
+        iq24 theta = iq24(M_PI) * (1.0_iq24 + std::sqrt(5.0_iq24)) * i; // 方位角
         return {phi, theta};
     }
-    static constexpr Vec3<q24> project_v2_to_v3(Vec2<q24> v2){
+    static constexpr Vec3<iq24> project_v2_to_v3(Vec2<iq24> v2){
         const auto [theta, phi] = v2;
         return {
             cos(theta) * sin(phi),
@@ -34,29 +34,28 @@ struct EllipseCalibrator_Prelude{
         };
     }
 
-    static constexpr Vec2<q24> project_v3_to_v2(const Vec3<q24> v3){
-        q24 phi = std::acos(v3.z); // 极角
-        q24 theta = std::atan2(v3.y, v3.x); // 方位角
+    static constexpr Vec2<iq24> project_v3_to_v2(const Vec3<iq24> v3){
+        iq24 phi = std::acos(v3.z); // 极角
+        iq24 theta = std::atan2(v3.y, v3.x); // 方位角
         return {theta, phi};
     }
 
-    static constexpr size_t project_v2_to_idx(const Vec2<q24> v2, const size_t n){
+    static constexpr size_t project_v2_to_idx(const Vec2<iq24> v2, const size_t n){
         const auto [theta, phi] = v2;
-        q24 i = (1 - cos(phi)) * (n - 1) / 2; // 计算索引
+        iq24 i = (1 - cos(phi)) * (n - 1) / 2; // 计算索引
         return static_cast<size_t>(i);
     }
 
     static constexpr Dignosis
-    calibrate_magfield(const std::span<const Vec3<q24>> data) {
-        // // 1. 计算平均值(初始硬铁偏移估计)
+    calibrate_magfield(const std::span<const Vec3<iq24>> data) {
 
-        const q24 inv_size = 1.0_q24 / data.size();
+        const uq24 inv_size = 1.0_uq24 / data.size();
 
 
-        // const Vec3<q24> center; = std::accumulate(data.begin(), data.end(), Vec3<q24>{0, 0, 0}) / data.size();
+        // const Vec3<iq24> center; = std::accumulate(data.begin(), data.end(), Vec3<iq24>{0, 0, 0}) / data.size();
         //手动展开循环 避免溢出
         const auto center = [&]{
-            Vec3<q24> sum{0, 0, 0};
+            Vec3<iq24> sum{0, 0, 0};
             for (const auto & v : data) {
                 sum += v * inv_size;
             }
@@ -65,8 +64,8 @@ struct EllipseCalibrator_Prelude{
 
         // 3. 构建线性方程组系数(避免矩阵运算)
 
-        q24 A[6] = {0}; // 对称矩阵的上三角部分
-        q24 b[3] = {0}; // 右侧向量
+        iq24 A[6] = {0}; // 对称矩阵的上三角部分
+        iq24 b[3] = {0}; // 右侧向量
 
         for (size_t i = 0; i < data.size(); ++i) {
             const auto x = data[i].x - center.x;
@@ -96,14 +95,14 @@ struct EllipseCalibrator_Prelude{
 
 
         // 4. 解3x3线性方程组(使用克莱姆法则，避免矩阵求逆)
-        auto solve_3x3 = [&]() -> Vec3<q24> {
+        auto solve_3x3 = [&]() -> Vec3<iq24> {
             // 计算行列式
             const auto det = A[0]*(A[3]*A[5] - A[4]*A[4]) 
                             - A[1]*(A[1]*A[5] - A[4]*A[2]) 
                             + A[2]*(A[1]*A[4] - A[3]*A[2]);
 
             if (det == 0) {
-                return Vec3<q24>{1, 1, 1};
+                return Vec3<iq24>{1, 1, 1};
             }
 
             // 计算各变量的行列式
@@ -119,25 +118,25 @@ struct EllipseCalibrator_Prelude{
                                 - A[1]*(A[1]*b[2] - b[1]*A[2]) 
                                 + b[0]*(A[1]*A[4] - A[3]*A[2]);
 
-            return Vec3<q24>{
+            return Vec3<iq24>{
                 det_x / det,
                 det_y / det,
                 det_z / det
             };
         };
 
-        Vec3<q24> solution = solve_3x3();
+        Vec3<iq24> solution = solve_3x3();
 
         // 5. 计算软铁缩放因子
-        auto compute_scale_factors = [](Vec3<q24> params) {
-            return Vec3<q24>{
+        auto compute_scale_factors = [](Vec3<iq24> params) {
+            return Vec3<iq24>{
                 isqrt(MAX(params.x, 1)),
                 isqrt(MAX(params.y, 1)),
                 isqrt(MAX(params.z, 1))
             };
         };
 
-        Vec3<q24> soft_iron = compute_scale_factors(solution);
+        Vec3<iq24> soft_iron = compute_scale_factors(solution);
 
         return {
             .center = center, 
@@ -149,8 +148,8 @@ struct EllipseCalibrator_Prelude{
 class EllipseCalibrator:public EllipseCalibrator_Prelude{
 public:
     static constexpr size_t N = 48;
-    // using Data = std::array<Vec3<q24>, N>;
-    using Data = HeaplessVector<Vec3<q24>, N>;
+    // using Data = std::array<Vec3<iq24>, N>;
+    using Data = HeaplessVector<Vec3<iq24>, N>;
 
     // struct Flag{
         // Empty,
@@ -164,7 +163,7 @@ public:
         flags_.fill(0);
     }
 
-    constexpr void add_sample(const Vec3<q24> & v3){
+    constexpr void add_sample(const Vec3<iq24> & v3){
         // const auto v2 = project_v3_to_v2(v3.normalized());
         // const auto idx = project_v2_to_idx(v2, N);
 
@@ -233,7 +232,7 @@ public:
         return flags_[i] == false;
     }
 
-    std::span<const Vec3<q24>> samples() const {return samples_;}
+    std::span<const Vec3<iq24>> samples() const {return samples_;}
 private:
     Data samples_;
     Flags flags_;

@@ -34,15 +34,15 @@ public:
 
     [[nodiscard]] IResult<> set_average_times(const uint16_t times);
 
-    [[nodiscard]] IResult<q16> get_voltage();
+    [[nodiscard]] IResult<iq16> get_voltage();
 
     [[nodiscard]] IResult<int> get_shunt_voltage_uv();
 
-    [[nodiscard]] IResult<q16> get_shunt_voltage();
+    [[nodiscard]] IResult<iq16> get_shunt_voltage();
 
-    [[nodiscard]] IResult<q16> get_current();
+    [[nodiscard]] IResult<iq16> get_current();
 
-    [[nodiscard]] IResult<q16> get_power();
+    [[nodiscard]] IResult<iq16> get_power();
 
     [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
 
@@ -62,7 +62,7 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
     
-    q16 current_lsb_ma_ = q16(0.2);
+    iq16 current_lsb_ma_ = iq16(0.2);
 
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t data);

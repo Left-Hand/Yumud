@@ -242,7 +242,7 @@ IResult<> Self::set_odr(const Odr odr){
     return set_mode(static_cast<Mode>(odr));
 }
 
-IResult<Vec3<q24>> Self::read_mag(){
+IResult<Vec3<iq24>> Self::read_mag(){
     static constexpr int16_t MIN_VALUE = -8190;
     static constexpr int16_t MAX_VALUE = 8190;
 
@@ -259,8 +259,8 @@ IResult<Vec3<q24>> Self::read_mag(){
     if(not IN_RANGE(z, MIN_VALUE, MAX_VALUE))
         return CHECK_ERR(Err(Error::AxisZOverflow));
     
-    static constexpr q24 VALUE_LSB = q24(6E-5);
-    return Ok(Vec3<q24>{
+    static constexpr iq24 VALUE_LSB = iq24(6E-5);
+    return Ok(Vec3<iq24>{
         VALUE_LSB * x,
         VALUE_LSB * y,
         VALUE_LSB * z

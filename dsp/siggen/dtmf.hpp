@@ -21,7 +21,7 @@ public:
         fl_map_ = cfg.fl_map;
         fh_map_ = cfg.fh_map;
 
-        delta_ = q16(1) / cfg.fs;
+        delta_ = iq16(1) / cfg.fs;
     }
 
     constexpr void reset(){
@@ -29,11 +29,11 @@ public:
         fh_index_ = 0;
     }
 
-    constexpr void update(const q16 now_seconds){
+    constexpr void update(const iq16 now_seconds){
         const auto fl_ = fl_map_[fl_index_];
         const auto fh_ = fh_map_[fh_index_];
 
-        const auto rad = q16(TAU) * frac(now_seconds);
+        const auto rad = iq16(TAU) * iq16(frac(now_seconds));
         result_ = sin(fl_ * rad) + sin(fh_ * rad);
     }
 
@@ -59,8 +59,8 @@ private:
     std::array<uint16_t, 4> fl_map_;
     std::array<uint16_t, 4> fh_map_;
 
-    q16 delta_;
-    q16 result_;
+    iq16 delta_;
+    iq16 result_;
 };
 
 }

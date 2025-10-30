@@ -99,7 +99,7 @@ struct MT6826S:
         spi_drv_(std::move(spi_drv)){}
 
     [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<Angle<q31>> get_lap_angle();
+    [[nodiscard]] IResult<Angle<iq31>> get_lap_angle();
     [[nodiscard]] IResult<MagStatus> get_mag_status();
     // [[nodiscard]] IResult<void> update();
 

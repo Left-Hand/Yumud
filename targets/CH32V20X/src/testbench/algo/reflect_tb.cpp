@@ -29,7 +29,7 @@ REFLECT_EXPAND(REFLECT_CONCAT(REFLECT_FOREACH_, REFLECT_NARGS(__VA_ARGS__))(f, _
 struct Info{
     int a;
     char b;
-    q16 c;
+    iq16 c;
 };
 
 void reflect_main(){

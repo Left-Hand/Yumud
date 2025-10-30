@@ -34,18 +34,18 @@ using cache_of_t = CacheOf<T, bool>;
 
 
 
-using BoundingBox = Rect2<q16>;
+using BoundingBox = Rect2<iq16>;
 
 namespace ymd{
 struct RotatedZebraRect{
-    q16 width;
-    q16 height;
-    Angle<q16> rotation;
+    iq16 width;
+    iq16 height;
+    Angle<iq16> rotation;
 
 
     template<size_t I>
     requires ((0 <= I) and (I < 4))
-    constexpr Vec2<q16> get_corner() const {
+    constexpr Vec2<iq16> get_corner() const {
         switch(I){
             case 0: return {-width / 2, height / 2};
             case 1: return {width / 2, height / 2};
@@ -60,10 +60,10 @@ template<>
 struct alignas(4) CacheOf<RotatedZebraRect, bool>{
     using Self = CacheOf<RotatedZebraRect, bool>;
 
-    q16 half_width;
-    q16 half_height;
-    q16 s;
-    q16 c;
+    iq16 half_width;
+    iq16 half_height;
+    iq16 s;
+    iq16 c;
 
     static constexpr Self from(const RotatedZebraRect & obj){
         const auto [s,c] = obj.rotation.sincos();
@@ -75,12 +75,12 @@ struct alignas(4) CacheOf<RotatedZebraRect, bool>{
         };
     }
 
-    __fast_inline constexpr uint8_t color_from_point(const Vec2<q16> offset) const {
+    __fast_inline constexpr uint8_t color_from_point(const Vec2<iq16> offset) const {
         return s_color_from_point(*this, offset);
     }
 private:
     __fast_inline static constexpr uint8_t s_color_from_point(
-        const Self & self, const Vec2<q16> offset){
+        const Self & self, const Vec2<iq16> offset){
         // -s * p.x + c * p.y;
         // -c * p.x - s * p.y;
         const auto x_offset = - self.c * offset.x - self.s * offset.y;
@@ -102,8 +102,8 @@ struct BoundingBoxOf<RotatedZebraRect>{
 
 
     static constexpr BoundingBox bounding_box(const RotatedZebraRect & obj){
-        const auto rotation = Vec2<q16>::from_angle(obj.rotation);
-        const std::array<Vec2<q16>, 4> points = {
+        const auto rotation = Vec2<iq16>::from_angle(obj.rotation);
+        const std::array<Vec2<iq16>, 4> points = {
             obj.get_corner<0>().improduct(rotation),
             obj.get_corner<1>().improduct(rotation),
             obj.get_corner<2>().improduct(rotation),
@@ -119,7 +119,7 @@ struct BoundingBoxOf<RotatedZebraRect>{
 
 
 struct SpotLight final{
-    q16 radius = 1;
+    iq16 radius = 1;
 
 };
 
@@ -127,19 +127,19 @@ template<>
 struct CacheOf<SpotLight, bool>{
     using Self = CacheOf<SpotLight, bool>;
 
-    q16 squ_radius;
+    iq16 squ_radius;
 
     static constexpr auto from(const SpotLight & obj) {
         return CacheOf{obj.radius * obj.radius};
     }
 
-    __fast_inline constexpr uint8_t color_from_point(const Vec2<q16> offset) const {
+    __fast_inline constexpr uint8_t color_from_point(const Vec2<iq16> offset) const {
         return s_color_from_point(*this, offset);
     }
 private:
     __fast_inline static constexpr uint8_t s_color_from_point(
         const Self & self, 
-        const Vec2<q16> offset
+        const Vec2<iq16> offset
     ){
         const auto len_squ = offset.length_squared();
         // const auto temp = MAX(9 * len_squ, 1);
@@ -168,7 +168,7 @@ struct BoundingBoxOf<SpotLight>{
 namespace ymd::smc::sim{
 
 struct Placement{
-    Vec2<q16> translation;
+    Vec2<iq16> translation;
 };
 
 
@@ -195,40 +195,40 @@ constexpr ElementWithPlacement<T> operator | (const T & element, const Placement
 
 
 //将相机像素转换为地面坐标
-static constexpr Vec2<q16> project_pixel_to_ground(
+static constexpr Vec2<iq16> project_pixel_to_ground(
     const Vec2u pixel, 
-    const Isometry2<q16> pose, 
-    const q16 zoom
+    const Isometry2<iq16> pose, 
+    const iq16 zoom
 ) {
     const Vec2i pixel_offset = {
         int(pixel.x) - int(HALF_CAMERA_SIZE.x), 
         int(HALF_CAMERA_SIZE.y) - int(pixel.y)};
 
-    const Vec2<q16> camera_offset = Vec2<q16>(pixel_offset) * zoom;
+    const Vec2<iq16> camera_offset = Vec2<iq16>(pixel_offset) * zoom;
     const auto rotation = pose.rotation.backward_90deg();
     return pose.translation + rotation * camera_offset;
 }
 
 
 static constexpr Vec2u project_ground_to_pixel(
-    const Vec2<q16>& ground_pos,
-    const Isometry2<q16> pose,
-    const q16 zoom)
+    const Vec2<iq16>& ground_pos,
+    const Isometry2<iq16> pose,
+    const iq16 zoom)
 {
     // 1. Remove pose translation offset
-    const Vec2<q16> relative_pos = ground_pos - pose.translation;
+    const Vec2<iq16> relative_pos = ground_pos - pose.translation;
     
     // 2. Calculate inverse rotation (original rotation was pose.rotation - PI/2)
     const auto [s, c] = (-(pose.rotation.backward_90deg())).sincos();
     
     // 3. Apply inverse rotation matrix (transpose of original rotation matrix)
-    const Vec2<q16> unrotated = {
+    const Vec2<iq16> unrotated = {
         c * relative_pos.x - s * relative_pos.y,
         s * relative_pos.x + c * relative_pos.y
     };
     
     // 4. Remove scaling and convert to pixel space
-    const Vec2<q16> pixel_offset = unrotated / zoom;
+    const Vec2<iq16> pixel_offset = unrotated / zoom;
     
     // 5. Convert to camera coordinates and clamp to pixel grid
     return Vec2u{
@@ -242,7 +242,7 @@ namespace details{
 
     struct ElementFacade : pro::facade_builder
         ::support_copy<pro::constraint_level::none>
-        ::add_convention<MemIsCovered, bool(const Vec2<q16>) const>
+        ::add_convention<MemIsCovered, bool(const Vec2<iq16>) const>
         ::build {};
 }
 
@@ -255,7 +255,7 @@ public:
     SceneIntf(const SceneIntf &) = delete;
     SceneIntf(SceneIntf &&) = default;
     virtual ~SceneIntf() = default;
-    virtual Image<Gray> render(const Isometry2<q16> pose, const q16 zoom) const = 0;
+    virtual Image<Gray> render(const Isometry2<iq16> pose, const iq16 zoom) const = 0;
 };
 
 // class DynamicScene final:public SceneIntf{
@@ -270,7 +270,7 @@ public:
 //         );
 //     }
 
-//     Image<Gray> render(const Isometry2<q16> pose) const {
+//     Image<Gray> render(const Isometry2<iq16> pose) const {
 //         Image<Gray> ret{CAMERA_SIZE};
 
 //         const auto org = project_pixel_to_ground({0,0}, pose);
@@ -294,7 +294,7 @@ public:
 // private:
 //     std::vector<pro::proxy<details::ElementFacade>> elements_;
 
-//     bool color_from_point(const Vec2<q16> offset) const{
+//     bool color_from_point(const Vec2<iq16> offset) const{
 //         for(const auto & element : elements_){
 //             if(element->color_from_point(offset)){
 //                 return true;
@@ -315,14 +315,14 @@ public:
         objects_(std::make_tuple(std::forward<Objects>(objects)...)){}
 
 
-    Image<Gray> render(const Isometry2<q16> pose, const q16 zoom) const {
+    Image<Gray> render(const Isometry2<iq16> pose, const iq16 zoom) const {
         // static constexpr auto EXTENDED_BOUND_LENGTH = 1.3_r;
         const auto pbuf = std::make_shared<uint8_t[]>(CAMERA_SIZE.x * CAMERA_SIZE.y);
         const auto org =    project_pixel_to_ground({0,0}, pose, zoom);
         const auto y_step = project_pixel_to_ground({0,1}, pose, zoom) - org;
         const auto x_step = project_pixel_to_ground({1,0}, pose, zoom) - org;
 
-        const auto ground_region = Rect2<q16>::from_minimal_bounding_box({
+        const auto ground_region = Rect2<iq16>::from_minimal_bounding_box({
             org, 
             project_pixel_to_ground({CAMERA_SIZE.x,0},    pose, zoom),
             project_pixel_to_ground({0,CAMERA_SIZE.y},    pose, zoom),
@@ -354,7 +354,7 @@ public:
             (apply_render(
                 ground_region.intersects(object.bounding_box.shift(object.placement.translation)),
                 // true,
-                [&](const Vec2<q16> local_pos) { 
+                [&](const Vec2<iq16> local_pos) { 
                     return object.cache.color_from_point(local_pos - object.placement.translation); 
                 }), ...);
         }, objects_);

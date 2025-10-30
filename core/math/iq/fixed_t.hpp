@@ -36,6 +36,11 @@ namespace std{
 
     template<size_t Q, typename D>
     struct is_floating_point<ymd::fixed_t<Q, D>> : std::false_type {};
+
+    template<size_t Q, typename D>
+    struct is_signed<ymd::fixed_t<Q, D>> : std::is_signed<D> {};
+
+
 }
 
 namespace ymd{
@@ -47,12 +52,55 @@ constexpr bool is_fixed_point_v = false;
 template<size_t Q, typename D>
 constexpr bool is_fixed_point_v<fixed_t<Q, D>> = true;
 
+namespace iqmath::details{
+template<typename U>
+struct upcast_underlying_type;
+
+template<>
+struct upcast_underlying_type<uint8_t>{
+    using type = uint16_t;
+};
+
+template<>
+struct upcast_underlying_type<uint16_t>{
+    using type = uint32_t;
+};
+
+template<>
+struct upcast_underlying_type<uint32_t>{
+    using type = uint64_t;
+};
+
+template<>
+struct upcast_underlying_type<int8_t>{
+    using type = int16_t;
+};
+
+template<>
+struct upcast_underlying_type<int16_t>{
+    using type = int32_t;
+};
+
+template<>
+struct upcast_underlying_type<int32_t>{
+    using type = int64_t;
+};
+
+
+}
+
+
+
 template<size_t Q, typename D>
 struct fixed_t{
 private:
-    static_assert(Q < sizeof(D) * 8);
+    static_assert(Q <= sizeof(D) * 8);
 
     D count_;
+
+    
+    using upcast_underlying_t = typename iqmath::details::upcast_underlying_type<D>::type;
+
 public:
     struct count_ctor{
         D count;
@@ -61,11 +109,11 @@ public:
     template<size_t P>
     [[nodiscard]] __fast_inline static constexpr D transform(const D value){
         if constexpr (P > Q){
-            return D(D(value) << (P - Q));
+            return D(static_cast<upcast_underlying_t>(value) << (P - Q));
         }else if constexpr (P < Q){
-            return D(D(value) >> (Q - P));
+            return D(static_cast<upcast_underlying_t>(value) >> (Q - P));
         }else{
-            return D(D(value));
+            return value;
         }
     }
 
@@ -76,12 +124,18 @@ public:
     __fast_inline constexpr fixed_t(count_ctor ctor):
         count_(ctor.count){;}
 
-    template<size_t P>
-    __fast_inline constexpr operator fixed_t<P, D>() const {
-        return fixed_t<P, D>::from_bits(transform<P>(count_));}
+
     
     __fast_inline constexpr fixed_t(const fixed_t<Q, D> & other):
         count_(other.count_){};
+
+
+    template<size_t P, typename U>
+    requires (sizeof(D) == sizeof(U))
+    __fast_inline constexpr operator fixed_t<P, U>() const {
+        const auto bits = static_cast<U>(transform<P>(count_));
+        return fixed_t<P, U>::from_bits(bits);
+    }
 
     __fast_inline constexpr D as_bits() const {return count_;}
     
@@ -104,14 +158,14 @@ public:
     template<typename T>
     requires std::is_integral_v<T>
     __fast_inline constexpr fixed_t(const T iv):
-        fixed_t(count_ctor{static_cast<D>(iv << Q)}){;}
+        fixed_t(count_ctor{static_cast<D>(iv * static_cast<upcast_underlying_t>(uint64_t(1) << Q))}){;}
 
     __fast_inline consteval explicit fixed_t(const long double dv):
-        fixed_t(count_ctor{static_cast<D>(dv * static_cast<long double>(1u << Q))}){};
+        fixed_t(count_ctor{static_cast<D>(dv * static_cast<long double>(uint64_t(1) << Q))}){};
 
     static __fast_inline constexpr fixed_t from (const floating auto fv){
-        return fixed_t{
-            count_ctor{iqmath::details::_IQFtoN<Q>(fv)}
+        return fixed_t{count_ctor{
+            .count = static_cast<D>(iqmath::details::_IQFtoN<Q>(fv))}
         };
     }
 
@@ -149,7 +203,7 @@ public:
     template<size_t P>
     __fast_inline constexpr fixed_t& operator *=(const fixed_t<P, D> other) {
         return *this = fixed_t<Q, D>::from_bits(
-            (int64_t(this->as_bits()) * int64_t((other).as_bits())) >> (P)
+            (static_cast<upcast_underlying_t>(this->as_bits()) * static_cast<upcast_underlying_t>((other).as_bits())) >> (P)
         );
     }
 
@@ -180,20 +234,29 @@ public:
     //#region comparisons
     #define IQ_COMP_TEMPLATE(op)\
     template<size_t P>\
-    __fast_inline constexpr bool operator op (const fixed_t<P, D> other) const {\
-        return as_bits() op (fixed_t<Q, D>(other).as_bits());\
+    [[nodiscard]] __fast_inline constexpr bool operator op (const fixed_t<P, D> other) const {\
+        if constexpr(P == Q){\
+            return as_bits() op (other.as_bits());\
+        }else{\
+            return (static_cast<upcast_underlying_t>(as_bits()) << P) op (static_cast<upcast_underlying_t>(other.as_bits()) << Q);\
+        }\
     }\
     \
     template<typename T>\
     requires std::is_floating_point_v<T>\
-    __fast_inline constexpr bool operator op (const T other) const {\
+    [[nodiscard]] __fast_inline constexpr bool operator op (const T other) const {\
         return (*this op fixed_t<Q, D>(other));\
     }\
     \
     template<typename T>\
     requires std::is_integral_v<T>\
-    __fast_inline constexpr bool operator op (const T other) const {\
+    [[nodiscard]] __fast_inline constexpr bool operator op (const T other) const {\
         return (((as_bits())) op (D(other) << Q));\
+    }\
+    template<typename T>\
+    requires std::is_integral_v<T>\
+    [[nodiscard]] __fast_inline friend constexpr bool operator op (const T other, const fixed_t & self){\
+        return (((self.as_bits())) op (D(other) << Q));\
     }\
 
 
@@ -207,22 +270,22 @@ public:
     //#endregion
 
     //#region shifts
-    __fast_inline constexpr fixed_t operator<<(D shift) const {
+    [[nodiscard]] __fast_inline constexpr fixed_t operator<<(size_t shift) const {
         return fixed_t::from_bits((this->as_bits() << shift));
     }
 
-    __fast_inline constexpr fixed_t operator>>(D shift) const {
+    [[nodiscard]] __fast_inline constexpr fixed_t operator>>(size_t shift) const {
         return fixed_t::from_bits((this->as_bits() >> shift));
     }
     //#endregion
 
-    __fast_inline constexpr explicit operator bool() const {
+    [[nodiscard]] __fast_inline constexpr explicit operator bool() const {
         return bool(this->as_bits());
     }
 
     template<typename T>
     requires std::is_integral_v<T>
-    __fast_inline constexpr explicit operator T() const {
+    [[nodiscard]] __fast_inline constexpr explicit operator T() const {
         return this->as_bits() >> Q;
     }
     
@@ -324,138 +387,13 @@ __fast_inline constexpr fixed_t<Q, D> operator /(const fixed_t<Q, D> lhs, const 
     return ret;
 }
 
-template<typename T>
-concept convertible_to_iq_v = std::is_convertible_v<T, fixed_t<16, int32_t>>;
-
-template<typename T>
-concept cast_to_iq_v = (std::is_convertible_v<T, fixed_t<16, int32_t>> && (!is_fixed_point_v<T>));
-
-template<size_t Q, typename D>
-__fast_inline constexpr bool operator >(const cast_to_iq_v auto lhs, const fixed_t<Q, D> rhs) {
-	return fixed_t<Q, D>(lhs) > rhs;
-}
-
-template<size_t Q, typename D>
-__fast_inline constexpr bool operator >=(const cast_to_iq_v auto lhs, const fixed_t<Q, D> rhs) {
-	return fixed_t<Q, D>(lhs) > rhs;
-}
-
-template<size_t Q, typename D>
-__fast_inline constexpr bool operator <(const cast_to_iq_v auto lhs, const fixed_t<Q, D> rhs) {
-	return fixed_t<Q, D>(lhs) > rhs;
-}
-
-template<size_t Q, typename D>
-__fast_inline constexpr bool operator <=(const cast_to_iq_v auto lhs, const fixed_t<Q, D> rhs) {
-	return fixed_t<Q, D>(lhs) > rhs;
-}
-
-template<size_t Q, typename D>
-__fast_inline constexpr bool operator ==(const cast_to_iq_v auto lhs, const fixed_t<Q, D> rhs) {
-	return fixed_t<Q, D>(lhs) > rhs;
-}
-
-template<size_t Q, typename D>
-__fast_inline constexpr bool operator !=(const cast_to_iq_v auto lhs, const fixed_t<Q, D> rhs) {
-	return fixed_t<Q, D>(lhs) > rhs;
-}
+// template<typename T, size_t Q, typename D>
+// requires (std::is_convertible_v<T, fixed_t<Q, D>> && (!is_fixed_point_v<T>))
+// __fast_inline constexpr auto operator <=>(const T lhs, const fixed_t<Q, D> rhs) {
+// 	return fixed_t<Q, D>(lhs) <=> rhs;
+// }
 
 
-consteval fixed_t<1, int32_t> operator"" _q1(long double x) { return fixed_t<1, int32_t>(x); }
-consteval fixed_t<2, int32_t> operator"" _q2(long double x) { return fixed_t<2, int32_t>(x); }
-consteval fixed_t<3, int32_t> operator"" _q3(long double x) { return fixed_t<3, int32_t>(x); }
-consteval fixed_t<4, int32_t> operator"" _q4(long double x) { return fixed_t<4, int32_t>(x); }
-consteval fixed_t<5, int32_t> operator"" _q5(long double x) { return fixed_t<5, int32_t>(x); }
-consteval fixed_t<6, int32_t> operator"" _q6(long double x) { return fixed_t<6, int32_t>(x); }
-consteval fixed_t<7, int32_t> operator"" _q7(long double x) { return fixed_t<7, int32_t>(x); }
-consteval fixed_t<8, int32_t> operator"" _q8(long double x) { return fixed_t<8, int32_t>(x); }
-consteval fixed_t<9, int32_t> operator"" _q9(long double x) { return fixed_t<9, int32_t>(x); }
-consteval fixed_t<10, int32_t> operator"" _q10(long double x) { return fixed_t<10, int32_t>(x); }
-consteval fixed_t<11, int32_t> operator"" _q11(long double x) { return fixed_t<11, int32_t>(x); }
-consteval fixed_t<12, int32_t> operator"" _q12(long double x) { return fixed_t<12, int32_t>(x); }
-consteval fixed_t<13, int32_t> operator"" _q13(long double x) { return fixed_t<13, int32_t>(x); }
-consteval fixed_t<14, int32_t> operator"" _q14(long double x) { return fixed_t<14, int32_t>(x); }
-consteval fixed_t<15, int32_t> operator"" _q15(long double x) { return fixed_t<15, int32_t>(x); }
-consteval fixed_t<16, int32_t> operator"" _q16(long double x) { return fixed_t<16, int32_t>(x); }
-consteval fixed_t<17, int32_t> operator"" _q17(long double x) { return fixed_t<17, int32_t>(x); }
-consteval fixed_t<18, int32_t> operator"" _q18(long double x) { return fixed_t<18, int32_t>(x); }
-consteval fixed_t<19, int32_t> operator"" _q19(long double x) { return fixed_t<19, int32_t>(x); }
-consteval fixed_t<20, int32_t> operator"" _q20(long double x) { return fixed_t<20, int32_t>(x); }
-consteval fixed_t<21, int32_t> operator"" _q21(long double x) { return fixed_t<21, int32_t>(x); }
-consteval fixed_t<22, int32_t> operator"" _q22(long double x) { return fixed_t<22, int32_t>(x); }
-consteval fixed_t<23, int32_t> operator"" _q23(long double x) { return fixed_t<23, int32_t>(x); }
-consteval fixed_t<24, int32_t> operator"" _q24(long double x) { return fixed_t<24, int32_t>(x); }
-consteval fixed_t<25, int32_t> operator"" _q25(long double x) { return fixed_t<25, int32_t>(x); }
-consteval fixed_t<26, int32_t> operator"" _q26(long double x) { return fixed_t<26, int32_t>(x); }
-consteval fixed_t<27, int32_t> operator"" _q27(long double x) { return fixed_t<27, int32_t>(x); }
-consteval fixed_t<28, int32_t> operator"" _q28(long double x) { return fixed_t<28, int32_t>(x); }
-consteval fixed_t<29, int32_t> operator"" _q29(long double x) { return fixed_t<29, int32_t>(x); }
-consteval fixed_t<30, int32_t> operator"" _q30(long double x) { return fixed_t<30, int32_t>(x); }
-consteval fixed_t<31, int32_t> operator"" _q31(long double x) { return fixed_t<31, int32_t>(x); }
-
-consteval fixed_t<1, int32_t> operator"" _q1(unsigned long long x) { return fixed_t<1, int32_t>(x); }
-consteval fixed_t<2, int32_t> operator"" _q2(unsigned long long x) { return fixed_t<2, int32_t>(x); }
-consteval fixed_t<3, int32_t> operator"" _q3(unsigned long long x) { return fixed_t<3, int32_t>(x); }
-consteval fixed_t<4, int32_t> operator"" _q4(unsigned long long x) { return fixed_t<4, int32_t>(x); }
-consteval fixed_t<5, int32_t> operator"" _q5(unsigned long long x) { return fixed_t<5, int32_t>(x); }
-consteval fixed_t<6, int32_t> operator"" _q6(unsigned long long x) { return fixed_t<6, int32_t>(x); }
-consteval fixed_t<7, int32_t> operator"" _q7(unsigned long long x) { return fixed_t<7, int32_t>(x); }
-consteval fixed_t<8, int32_t> operator"" _q8(unsigned long long x) { return fixed_t<8, int32_t>(x); }
-consteval fixed_t<9, int32_t> operator"" _q9(unsigned long long x) { return fixed_t<9, int32_t>(x); }
-consteval fixed_t<10, int32_t> operator"" _q10(unsigned long long x) { return fixed_t<10, int32_t>(x); }
-consteval fixed_t<11, int32_t> operator"" _q11(unsigned long long x) { return fixed_t<11, int32_t>(x); }
-consteval fixed_t<12, int32_t> operator"" _q12(unsigned long long x) { return fixed_t<12, int32_t>(x); }
-consteval fixed_t<13, int32_t> operator"" _q13(unsigned long long x) { return fixed_t<13, int32_t>(x); }
-consteval fixed_t<14, int32_t> operator"" _q14(unsigned long long x) { return fixed_t<14, int32_t>(x); }
-consteval fixed_t<15, int32_t> operator"" _q15(unsigned long long x) { return fixed_t<15, int32_t>(x); }
-consteval fixed_t<16, int32_t> operator"" _q16(unsigned long long x) { return fixed_t<16, int32_t>(x); }
-consteval fixed_t<17, int32_t> operator"" _q17(unsigned long long x) { return fixed_t<17, int32_t>(x); }
-consteval fixed_t<18, int32_t> operator"" _q18(unsigned long long x) { return fixed_t<18, int32_t>(x); }
-consteval fixed_t<19, int32_t> operator"" _q19(unsigned long long x) { return fixed_t<19, int32_t>(x); }
-consteval fixed_t<20, int32_t> operator"" _q20(unsigned long long x) { return fixed_t<20, int32_t>(x); }
-consteval fixed_t<21, int32_t> operator"" _q21(unsigned long long x) { return fixed_t<21, int32_t>(x); }
-consteval fixed_t<22, int32_t> operator"" _q22(unsigned long long x) { return fixed_t<22, int32_t>(x); }
-consteval fixed_t<23, int32_t> operator"" _q23(unsigned long long x) { return fixed_t<23, int32_t>(x); }
-consteval fixed_t<24, int32_t> operator"" _q24(unsigned long long x) { return fixed_t<24, int32_t>(x); }
-consteval fixed_t<25, int32_t> operator"" _q25(unsigned long long x) { return fixed_t<25, int32_t>(x); }
-consteval fixed_t<26, int32_t> operator"" _q26(unsigned long long x) { return fixed_t<26, int32_t>(x); }
-consteval fixed_t<27, int32_t> operator"" _q27(unsigned long long x) { return fixed_t<27, int32_t>(x); }
-consteval fixed_t<28, int32_t> operator"" _q28(unsigned long long x) { return fixed_t<28, int32_t>(x); }
-consteval fixed_t<29, int32_t> operator"" _q29(unsigned long long x) { return fixed_t<29, int32_t>(x); }
-consteval fixed_t<30, int32_t> operator"" _q30(unsigned long long x) { return fixed_t<30, int32_t>(x); }
-consteval fixed_t<31, int32_t> operator"" _q31(unsigned long long x) { return fixed_t<31, int32_t>(x); }
-
-using q1 = fixed_t<1, int32_t>;
-using q2 = fixed_t<2, int32_t>;
-using q3 = fixed_t<3, int32_t>;
-using q4 = fixed_t<4, int32_t>;
-using q5 = fixed_t<5, int32_t>;
-using q6 = fixed_t<6, int32_t>;
-using q7 = fixed_t<7, int32_t>;
-using q8 = fixed_t<8, int32_t>;
-using q9 = fixed_t<9, int32_t>;
-using q10 = fixed_t<10, int32_t>;
-using q11 = fixed_t<11, int32_t>;
-using q12 = fixed_t<12, int32_t>;
-using q13 = fixed_t<13, int32_t>;
-using q14 = fixed_t<14, int32_t>;
-using q15 = fixed_t<15, int32_t>;
-using q16 = fixed_t<16, int32_t>;
-using q17 = fixed_t<17, int32_t>;
-using q18 = fixed_t<18, int32_t>;
-using q19 = fixed_t<19, int32_t>;
-using q20 = fixed_t<20, int32_t>;
-using q21 = fixed_t<21, int32_t>;
-using q22 = fixed_t<22, int32_t>;
-using q23 = fixed_t<23, int32_t>;
-using q24 = fixed_t<24, int32_t>;
-using q25 = fixed_t<25, int32_t>;
-using q26 = fixed_t<26, int32_t>;
-using q27 = fixed_t<27, int32_t>;
-using q28 = fixed_t<28, int32_t>;
-using q29 = fixed_t<29, int32_t>;
-using q30 = fixed_t<30, int32_t>;
-using q31 = fixed_t<31, int32_t>;
 
 template<size_t Q, typename D>
 __fast_inline constexpr fixed_t<Q, D> abs(const fixed_t<Q, D> x){
@@ -465,7 +403,8 @@ __fast_inline constexpr fixed_t<Q, D> abs(const fixed_t<Q, D> x){
 
 template<size_t Q, typename D>
 __fast_inline constexpr bool signbit(const fixed_t<Q, D> x){
-    return x.as_bits() & static_cast<D>(static_cast<D>(1) << size_t(sizeof(D) * 8 - 1));
+    constexpr D SIGN_MASK = static_cast<D>(static_cast<D>(1) << size_t(sizeof(D) * 8 - 1));
+    return static_cast<bool>(x.as_bits() & SIGN_MASK);
 }
 
 template<size_t Q, typename D>
@@ -479,11 +418,12 @@ __fast_inline constexpr fixed_t<Q, D> fmod(const fixed_t<Q, D> a, const fixed_t<
     return fixed_t<Q, D>(fixed_t<Q, D>::from_bits(a.as_bits() % b.as_bits()));
 }
 
-template<size_t Q, typename D>
-__fast_inline constexpr fixed_t<Q, D> fposmod(const fixed_t<Q, D> a, const fixed_t<Q, D> b){
-    const D mod_result = a.as_bits() % b.as_bits();
-    const D is_negative = static_cast<D>(mod_result >> size_t(sizeof(D) * 8 - 1));  // 符号位扩展（0 或 -1）
-    return fixed_t<Q, D>(fixed_t<Q, D>::from_bits(mod_result + (b.as_bits() & is_negative)));
+template<size_t Q, typename D, typename U = std::make_unsigned_t<D>>
+__fast_inline constexpr fixed_t<Q, U> fposmod(const fixed_t<Q, D> a, const fixed_t<Q, D> b){
+    constexpr size_t SHIFT = size_t(sizeof(D) * 8 - 1);
+    const U mod_result = std::bit_cast<U>(a.as_bits() % b.as_bits());
+    const U is_negative = static_cast<U>(mod_result >> SHIFT);  // 符号位扩展（0 或 -1）
+    return fixed_t<Q, U>::from_bits(static_cast<U>(mod_result + static_cast<U>(b.as_bits() & is_negative)));
 }
 
 template<size_t Q, typename D>
@@ -495,10 +435,10 @@ template<size_t Q, typename D>
 __fast_inline constexpr fixed_t<Q, D> mean(const fixed_t<Q, D> a, const fixed_t<Q, D> b){
     return fixed_t<Q, D>(fixed_t<Q, D>::from_bits((a.as_bits() + b.as_bits()) >> 1));}
 
-template<size_t Q, typename D>
-__fast_inline constexpr fixed_t<Q, D> frac(const fixed_t<Q, D> x){
-    static constexpr D MASK = ((1 << Q) - 1);
-    return fixed_t<Q, D>(fixed_t<Q, D>::from_bits((x.as_bits()) & MASK));
+template<size_t Q, typename D, typename U = std::make_unsigned_t<D>>
+__fast_inline constexpr fixed_t<Q, U> frac(const fixed_t<Q, D> x){
+    static constexpr U MASK = static_cast<U>((uint64_t(1u) << Q) - 1);
+    return fixed_t<Q, U>::from_bits(static_cast<U>(static_cast<U>(x.as_bits()) & MASK));
 }
 
 
@@ -562,20 +502,7 @@ __fast_inline constexpr fixed_t<Q, D> round(const fixed_t<Q, D> x){
 }
 
 
-template<size_t Q, typename D>
-bool not_in_one(const fixed_t<Q, D> qv){
-    // return (qv.as_bits() & (~uint32_t((1u << Q) - 1)));
-    if(qv < fixed_t<Q, D>(-0.001)) return true;
-    if(qv > fixed_t<Q, D>(1.001)) return true;
-    return false;
-}
 
-template<size_t Q, typename D>
-bool is_in_one(const fixed_t<Q, D> qv){
-    return not is_in_one(qv);
-}
-
-    
 template<size_t Q, typename D>
 __fast_inline constexpr fixed_t<Q, D> square(const fixed_t<Q, D> x) {
     return x * x;
@@ -601,12 +528,17 @@ namespace std{
     template<size_t Q, typename D>
     class numeric_limits<fixed_t<Q, D>> {
     public:
-        __fast_inline constexpr static fixed_t<Q, D> infinity() noexcept {return fixed_t<Q, D>::from_bits(0x7FFFFFFF);}
-        __fast_inline constexpr static fixed_t<Q, D> lowest() noexcept {return fixed_t<Q, D>::from_bits(0x80000000);}
+        __fast_inline constexpr static fixed_t<Q, D> infinity() noexcept {
+            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::infinity());}
+        __fast_inline constexpr static fixed_t<Q, D> lowest() noexcept {
+            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::lowest());}
 
-        __fast_inline constexpr static fixed_t<Q, D> min() noexcept {return fixed_t<Q, D>::from_bits(0x80000000);}
-        __fast_inline constexpr static fixed_t<Q, D> max() noexcept {return fixed_t<Q, D>::from_bits(0x7FFFFFFF);}
+        __fast_inline constexpr static fixed_t<Q, D> min() noexcept {
+            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::min());}
+        __fast_inline constexpr static fixed_t<Q, D> max() noexcept {
+            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::max());}
     };
+
     template<size_t Q, typename D>
     struct common_type<fixed_t<Q, D>, float> {
         using type = fixed_t<Q, D>;
@@ -639,4 +571,268 @@ namespace std{
     struct make_unsigned<fixed_t<Q, D>>{
         using type = fixed_t<Q, D>;
     };
+}
+
+
+namespace ymd::literals{ 
+using iq1 = fixed_t<1, int32_t>;
+using iq2 = fixed_t<2, int32_t>;
+using iq3 = fixed_t<3, int32_t>;
+using iq4 = fixed_t<4, int32_t>;
+using iq5 = fixed_t<5, int32_t>;
+using iq6 = fixed_t<6, int32_t>;
+using iq7 = fixed_t<7, int32_t>;
+using iq8 = fixed_t<8, int32_t>;
+using iq9 = fixed_t<9, int32_t>;
+using iq10 = fixed_t<10, int32_t>;
+using iq11 = fixed_t<11, int32_t>;
+using iq12 = fixed_t<12, int32_t>;
+using iq13 = fixed_t<13, int32_t>;
+using iq14 = fixed_t<14, int32_t>;
+using iq15 = fixed_t<15, int32_t>;
+using iq16 = fixed_t<16, int32_t>;
+using iq17 = fixed_t<17, int32_t>;
+using iq18 = fixed_t<18, int32_t>;
+using iq19 = fixed_t<19, int32_t>;
+using iq20 = fixed_t<20, int32_t>;
+using iq21 = fixed_t<21, int32_t>;
+using iq22 = fixed_t<22, int32_t>;
+using iq23 = fixed_t<23, int32_t>;
+using iq24 = fixed_t<24, int32_t>;
+using iq25 = fixed_t<25, int32_t>;
+using iq26 = fixed_t<26, int32_t>;
+using iq27 = fixed_t<27, int32_t>;
+using iq28 = fixed_t<28, int32_t>;
+using iq29 = fixed_t<29, int32_t>;
+using iq30 = fixed_t<30, int32_t>;
+using iq31 = fixed_t<31, int32_t>;
+
+using iiq1 = fixed_t<1, int64_t>;
+using iiq2 = fixed_t<2, int64_t>;
+using iiq3 = fixed_t<3, int64_t>;
+using iiq4 = fixed_t<4, int64_t>;
+using iiq5 = fixed_t<5, int64_t>;
+using iiq6 = fixed_t<6, int64_t>;
+using iiq7 = fixed_t<7, int64_t>;
+using iiq8 = fixed_t<8, int64_t>;
+using iiq9 = fixed_t<9, int64_t>;
+using iiq10 = fixed_t<10, int64_t>;
+using iiq11 = fixed_t<11, int64_t>;
+using iiq12 = fixed_t<12, int64_t>;
+using iiq13 = fixed_t<13, int64_t>;
+using iiq14 = fixed_t<14, int64_t>;
+using iiq15 = fixed_t<15, int64_t>;
+using iiq16 = fixed_t<16, int64_t>;
+using iiq17 = fixed_t<17, int64_t>;
+using iiq18 = fixed_t<18, int64_t>;
+using iiq19 = fixed_t<19, int64_t>;
+using iiq20 = fixed_t<20, int64_t>;
+using iiq21 = fixed_t<21, int64_t>;
+using iiq22 = fixed_t<22, int64_t>;
+using iiq23 = fixed_t<23, int64_t>;
+using iiq24 = fixed_t<24, int64_t>;
+using iiq25 = fixed_t<25, int64_t>;
+using iiq26 = fixed_t<26, int64_t>;
+using iiq27 = fixed_t<27, int64_t>;
+using iiq28 = fixed_t<28, int64_t>;
+using iiq29 = fixed_t<29, int64_t>;
+using iiq30 = fixed_t<30, int64_t>;
+using iiq31 = fixed_t<31, int64_t>;
+
+using uq1 = fixed_t<1, uint32_t>;
+using uq2 = fixed_t<2, uint32_t>;
+using uq3 = fixed_t<3, uint32_t>;
+using uq4 = fixed_t<4, uint32_t>;
+using uq5 = fixed_t<5, uint32_t>;
+using uq6 = fixed_t<6, uint32_t>;
+using uq7 = fixed_t<7, uint32_t>;
+using uq8 = fixed_t<8, uint32_t>;
+using uq9 = fixed_t<9, uint32_t>;
+using uq10 = fixed_t<10, uint32_t>;
+using uq11 = fixed_t<11, uint32_t>;
+using uq12 = fixed_t<12, uint32_t>;
+using uq13 = fixed_t<13, uint32_t>;
+using uq14 = fixed_t<14, uint32_t>;
+using uq15 = fixed_t<15, uint32_t>;
+using uq16 = fixed_t<16, uint32_t>;
+using uq17 = fixed_t<17, uint32_t>;
+using uq18 = fixed_t<18, uint32_t>;
+using uq19 = fixed_t<19, uint32_t>;
+using uq20 = fixed_t<20, uint32_t>;
+using uq21 = fixed_t<21, uint32_t>;
+using uq22 = fixed_t<22, uint32_t>;
+using uq23 = fixed_t<23, uint32_t>;
+using uq24 = fixed_t<24, uint32_t>;
+using uq25 = fixed_t<25, uint32_t>;
+using uq26 = fixed_t<26, uint32_t>;
+using uq27 = fixed_t<27, uint32_t>;
+using uq28 = fixed_t<28, uint32_t>;
+using uq29 = fixed_t<29, uint32_t>;
+using uq30 = fixed_t<30, uint32_t>;
+using uq31 = fixed_t<31, uint32_t>;
+using uq32 = fixed_t<32, uint32_t>;
+
+using uuq1 = fixed_t<1, uint64_t>;
+using uuq2 = fixed_t<2, uint64_t>;
+using uuq3 = fixed_t<3, uint64_t>;
+using uuq4 = fixed_t<4, uint64_t>;
+using uuq5 = fixed_t<5, uint64_t>;
+using uuq6 = fixed_t<6, uint64_t>;
+using uuq7 = fixed_t<7, uint64_t>;
+using uuq8 = fixed_t<8, uint64_t>;
+using uuq9 = fixed_t<9, uint64_t>;
+using uuq10 = fixed_t<10, uint64_t>;
+using uuq11 = fixed_t<11, uint64_t>;
+using uuq12 = fixed_t<12, uint64_t>;
+using uuq13 = fixed_t<13, uint64_t>;
+using uuq14 = fixed_t<14, uint64_t>;
+using uuq15 = fixed_t<15, uint64_t>;
+using uuq16 = fixed_t<16, uint64_t>;
+using uuq17 = fixed_t<17, uint64_t>;
+using uuq18 = fixed_t<18, uint64_t>;
+using uuq19 = fixed_t<19, uint64_t>;
+using uuq20 = fixed_t<20, uint64_t>;
+using uuq21 = fixed_t<21, uint64_t>;
+using uuq22 = fixed_t<22, uint64_t>;
+using uuq23 = fixed_t<23, uint64_t>;
+using uuq24 = fixed_t<24, uint64_t>;
+using uuq25 = fixed_t<25, uint64_t>;
+using uuq26 = fixed_t<26, uint64_t>;
+using uuq27 = fixed_t<27, uint64_t>;
+using uuq28 = fixed_t<28, uint64_t>;
+using uuq29 = fixed_t<29, uint64_t>;
+using uuq30 = fixed_t<30, uint64_t>;
+using uuq31 = fixed_t<31, uint64_t>;
+
+consteval fixed_t<1, int32_t> operator"" _iq1(long double x) { return fixed_t<1, int32_t>(x); }
+consteval fixed_t<2, int32_t> operator"" _iq2(long double x) { return fixed_t<2, int32_t>(x); }
+consteval fixed_t<3, int32_t> operator"" _iq3(long double x) { return fixed_t<3, int32_t>(x); }
+consteval fixed_t<4, int32_t> operator"" _iq4(long double x) { return fixed_t<4, int32_t>(x); }
+consteval fixed_t<5, int32_t> operator"" _iq5(long double x) { return fixed_t<5, int32_t>(x); }
+consteval fixed_t<6, int32_t> operator"" _iq6(long double x) { return fixed_t<6, int32_t>(x); }
+consteval fixed_t<7, int32_t> operator"" _iq7(long double x) { return fixed_t<7, int32_t>(x); }
+consteval fixed_t<8, int32_t> operator"" _iq8(long double x) { return fixed_t<8, int32_t>(x); }
+consteval fixed_t<9, int32_t> operator"" _iq9(long double x) { return fixed_t<9, int32_t>(x); }
+consteval fixed_t<10, int32_t> operator"" _iq10(long double x) { return fixed_t<10, int32_t>(x); }
+consteval fixed_t<11, int32_t> operator"" _iq11(long double x) { return fixed_t<11, int32_t>(x); }
+consteval fixed_t<12, int32_t> operator"" _iq12(long double x) { return fixed_t<12, int32_t>(x); }
+consteval fixed_t<13, int32_t> operator"" _iq13(long double x) { return fixed_t<13, int32_t>(x); }
+consteval fixed_t<14, int32_t> operator"" _iq14(long double x) { return fixed_t<14, int32_t>(x); }
+consteval fixed_t<15, int32_t> operator"" _iq15(long double x) { return fixed_t<15, int32_t>(x); }
+consteval fixed_t<16, int32_t> operator"" _iq16(long double x) { return fixed_t<16, int32_t>(x); }
+consteval fixed_t<17, int32_t> operator"" _iq17(long double x) { return fixed_t<17, int32_t>(x); }
+consteval fixed_t<18, int32_t> operator"" _iq18(long double x) { return fixed_t<18, int32_t>(x); }
+consteval fixed_t<19, int32_t> operator"" _iq19(long double x) { return fixed_t<19, int32_t>(x); }
+consteval fixed_t<20, int32_t> operator"" _iq20(long double x) { return fixed_t<20, int32_t>(x); }
+consteval fixed_t<21, int32_t> operator"" _iq21(long double x) { return fixed_t<21, int32_t>(x); }
+consteval fixed_t<22, int32_t> operator"" _iq22(long double x) { return fixed_t<22, int32_t>(x); }
+consteval fixed_t<23, int32_t> operator"" _iq23(long double x) { return fixed_t<23, int32_t>(x); }
+consteval fixed_t<24, int32_t> operator"" _iq24(long double x) { return fixed_t<24, int32_t>(x); }
+consteval fixed_t<25, int32_t> operator"" _iq25(long double x) { return fixed_t<25, int32_t>(x); }
+consteval fixed_t<26, int32_t> operator"" _iq26(long double x) { return fixed_t<26, int32_t>(x); }
+consteval fixed_t<27, int32_t> operator"" _iq27(long double x) { return fixed_t<27, int32_t>(x); }
+consteval fixed_t<28, int32_t> operator"" _iq28(long double x) { return fixed_t<28, int32_t>(x); }
+consteval fixed_t<29, int32_t> operator"" _iq29(long double x) { return fixed_t<29, int32_t>(x); }
+consteval fixed_t<30, int32_t> operator"" _iq30(long double x) { return fixed_t<30, int32_t>(x); }
+consteval fixed_t<31, int32_t> operator"" _iq31(long double x) { return fixed_t<31, int32_t>(x); }
+
+consteval fixed_t<1, int32_t> operator"" _iq1(unsigned long long x) { return fixed_t<1, int32_t>(x); }
+consteval fixed_t<2, int32_t> operator"" _iq2(unsigned long long x) { return fixed_t<2, int32_t>(x); }
+consteval fixed_t<3, int32_t> operator"" _iq3(unsigned long long x) { return fixed_t<3, int32_t>(x); }
+consteval fixed_t<4, int32_t> operator"" _iq4(unsigned long long x) { return fixed_t<4, int32_t>(x); }
+consteval fixed_t<5, int32_t> operator"" _iq5(unsigned long long x) { return fixed_t<5, int32_t>(x); }
+consteval fixed_t<6, int32_t> operator"" _iq6(unsigned long long x) { return fixed_t<6, int32_t>(x); }
+consteval fixed_t<7, int32_t> operator"" _iq7(unsigned long long x) { return fixed_t<7, int32_t>(x); }
+consteval fixed_t<8, int32_t> operator"" _iq8(unsigned long long x) { return fixed_t<8, int32_t>(x); }
+consteval fixed_t<9, int32_t> operator"" _iq9(unsigned long long x) { return fixed_t<9, int32_t>(x); }
+consteval fixed_t<10, int32_t> operator"" _iq10(unsigned long long x) { return fixed_t<10, int32_t>(x); }
+consteval fixed_t<11, int32_t> operator"" _iq11(unsigned long long x) { return fixed_t<11, int32_t>(x); }
+consteval fixed_t<12, int32_t> operator"" _iq12(unsigned long long x) { return fixed_t<12, int32_t>(x); }
+consteval fixed_t<13, int32_t> operator"" _iq13(unsigned long long x) { return fixed_t<13, int32_t>(x); }
+consteval fixed_t<14, int32_t> operator"" _iq14(unsigned long long x) { return fixed_t<14, int32_t>(x); }
+consteval fixed_t<15, int32_t> operator"" _iq15(unsigned long long x) { return fixed_t<15, int32_t>(x); }
+consteval fixed_t<16, int32_t> operator"" _iq16(unsigned long long x) { return fixed_t<16, int32_t>(x); }
+consteval fixed_t<17, int32_t> operator"" _iq17(unsigned long long x) { return fixed_t<17, int32_t>(x); }
+consteval fixed_t<18, int32_t> operator"" _iq18(unsigned long long x) { return fixed_t<18, int32_t>(x); }
+consteval fixed_t<19, int32_t> operator"" _iq19(unsigned long long x) { return fixed_t<19, int32_t>(x); }
+consteval fixed_t<20, int32_t> operator"" _iq20(unsigned long long x) { return fixed_t<20, int32_t>(x); }
+consteval fixed_t<21, int32_t> operator"" _iq21(unsigned long long x) { return fixed_t<21, int32_t>(x); }
+consteval fixed_t<22, int32_t> operator"" _iq22(unsigned long long x) { return fixed_t<22, int32_t>(x); }
+consteval fixed_t<23, int32_t> operator"" _iq23(unsigned long long x) { return fixed_t<23, int32_t>(x); }
+consteval fixed_t<24, int32_t> operator"" _iq24(unsigned long long x) { return fixed_t<24, int32_t>(x); }
+consteval fixed_t<25, int32_t> operator"" _iq25(unsigned long long x) { return fixed_t<25, int32_t>(x); }
+consteval fixed_t<26, int32_t> operator"" _iq26(unsigned long long x) { return fixed_t<26, int32_t>(x); }
+consteval fixed_t<27, int32_t> operator"" _iq27(unsigned long long x) { return fixed_t<27, int32_t>(x); }
+consteval fixed_t<28, int32_t> operator"" _iq28(unsigned long long x) { return fixed_t<28, int32_t>(x); }
+consteval fixed_t<29, int32_t> operator"" _iq29(unsigned long long x) { return fixed_t<29, int32_t>(x); }
+consteval fixed_t<30, int32_t> operator"" _iq30(unsigned long long x) { return fixed_t<30, int32_t>(x); }
+consteval fixed_t<31, int32_t> operator"" _iq31(unsigned long long x) { return fixed_t<31, int32_t>(x); }
+
+
+
+consteval fixed_t<1, uint32_t> operator"" _uq1(long double x) { return fixed_t<1, uint32_t>(x); }
+consteval fixed_t<2, uint32_t> operator"" _uq2(long double x) { return fixed_t<2, uint32_t>(x); }
+consteval fixed_t<3, uint32_t> operator"" _uq3(long double x) { return fixed_t<3, uint32_t>(x); }
+consteval fixed_t<4, uint32_t> operator"" _uq4(long double x) { return fixed_t<4, uint32_t>(x); }
+consteval fixed_t<5, uint32_t> operator"" _uq5(long double x) { return fixed_t<5, uint32_t>(x); }
+consteval fixed_t<6, uint32_t> operator"" _uq6(long double x) { return fixed_t<6, uint32_t>(x); }
+consteval fixed_t<7, uint32_t> operator"" _uq7(long double x) { return fixed_t<7, uint32_t>(x); }
+consteval fixed_t<8, uint32_t> operator"" _uq8(long double x) { return fixed_t<8, uint32_t>(x); }
+consteval fixed_t<9, uint32_t> operator"" _uq9(long double x) { return fixed_t<9, uint32_t>(x); }
+consteval fixed_t<10, uint32_t> operator"" _uq10(long double x) { return fixed_t<10, uint32_t>(x); }
+consteval fixed_t<11, uint32_t> operator"" _uq11(long double x) { return fixed_t<11, uint32_t>(x); }
+consteval fixed_t<12, uint32_t> operator"" _uq12(long double x) { return fixed_t<12, uint32_t>(x); }
+consteval fixed_t<13, uint32_t> operator"" _uq13(long double x) { return fixed_t<13, uint32_t>(x); }
+consteval fixed_t<14, uint32_t> operator"" _uq14(long double x) { return fixed_t<14, uint32_t>(x); }
+consteval fixed_t<15, uint32_t> operator"" _uq15(long double x) { return fixed_t<15, uint32_t>(x); }
+consteval fixed_t<16, uint32_t> operator"" _uq16(long double x) { return fixed_t<16, uint32_t>(x); }
+consteval fixed_t<17, uint32_t> operator"" _uq17(long double x) { return fixed_t<17, uint32_t>(x); }
+consteval fixed_t<18, uint32_t> operator"" _uq18(long double x) { return fixed_t<18, uint32_t>(x); }
+consteval fixed_t<19, uint32_t> operator"" _uq19(long double x) { return fixed_t<19, uint32_t>(x); }
+consteval fixed_t<20, uint32_t> operator"" _uq20(long double x) { return fixed_t<20, uint32_t>(x); }
+consteval fixed_t<21, uint32_t> operator"" _uq21(long double x) { return fixed_t<21, uint32_t>(x); }
+consteval fixed_t<22, uint32_t> operator"" _uq22(long double x) { return fixed_t<22, uint32_t>(x); }
+consteval fixed_t<23, uint32_t> operator"" _uq23(long double x) { return fixed_t<23, uint32_t>(x); }
+consteval fixed_t<24, uint32_t> operator"" _uq24(long double x) { return fixed_t<24, uint32_t>(x); }
+consteval fixed_t<25, uint32_t> operator"" _uq25(long double x) { return fixed_t<25, uint32_t>(x); }
+consteval fixed_t<26, uint32_t> operator"" _uq26(long double x) { return fixed_t<26, uint32_t>(x); }
+consteval fixed_t<27, uint32_t> operator"" _uq27(long double x) { return fixed_t<27, uint32_t>(x); }
+consteval fixed_t<28, uint32_t> operator"" _uq28(long double x) { return fixed_t<28, uint32_t>(x); }
+consteval fixed_t<29, uint32_t> operator"" _uq29(long double x) { return fixed_t<29, uint32_t>(x); }
+consteval fixed_t<30, uint32_t> operator"" _uq30(long double x) { return fixed_t<30, uint32_t>(x); }
+consteval fixed_t<31, uint32_t> operator"" _uq31(long double x) { return fixed_t<31, uint32_t>(x); }
+consteval fixed_t<32, uint32_t> operator"" _uq32(long double x) { return fixed_t<32, uint32_t>(x); }
+
+consteval fixed_t<1, uint32_t> operator"" _uq1(unsigned long long x) { return fixed_t<1, uint32_t>(x); }
+consteval fixed_t<2, uint32_t> operator"" _uq2(unsigned long long x) { return fixed_t<2, uint32_t>(x); }
+consteval fixed_t<3, uint32_t> operator"" _uq3(unsigned long long x) { return fixed_t<3, uint32_t>(x); }
+consteval fixed_t<4, uint32_t> operator"" _uq4(unsigned long long x) { return fixed_t<4, uint32_t>(x); }
+consteval fixed_t<5, uint32_t> operator"" _uq5(unsigned long long x) { return fixed_t<5, uint32_t>(x); }
+consteval fixed_t<6, uint32_t> operator"" _uq6(unsigned long long x) { return fixed_t<6, uint32_t>(x); }
+consteval fixed_t<7, uint32_t> operator"" _uq7(unsigned long long x) { return fixed_t<7, uint32_t>(x); }
+consteval fixed_t<8, uint32_t> operator"" _uq8(unsigned long long x) { return fixed_t<8, uint32_t>(x); }
+consteval fixed_t<9, uint32_t> operator"" _uq9(unsigned long long x) { return fixed_t<9, uint32_t>(x); }
+consteval fixed_t<10, uint32_t> operator"" _uq10(unsigned long long x) { return fixed_t<10, uint32_t>(x); }
+consteval fixed_t<11, uint32_t> operator"" _uq11(unsigned long long x) { return fixed_t<11, uint32_t>(x); }
+consteval fixed_t<12, uint32_t> operator"" _uq12(unsigned long long x) { return fixed_t<12, uint32_t>(x); }
+consteval fixed_t<13, uint32_t> operator"" _uq13(unsigned long long x) { return fixed_t<13, uint32_t>(x); }
+consteval fixed_t<14, uint32_t> operator"" _uq14(unsigned long long x) { return fixed_t<14, uint32_t>(x); }
+consteval fixed_t<15, uint32_t> operator"" _uq15(unsigned long long x) { return fixed_t<15, uint32_t>(x); }
+consteval fixed_t<16, uint32_t> operator"" _uq16(unsigned long long x) { return fixed_t<16, uint32_t>(x); }
+consteval fixed_t<17, uint32_t> operator"" _uq17(unsigned long long x) { return fixed_t<17, uint32_t>(x); }
+consteval fixed_t<18, uint32_t> operator"" _uq18(unsigned long long x) { return fixed_t<18, uint32_t>(x); }
+consteval fixed_t<19, uint32_t> operator"" _uq19(unsigned long long x) { return fixed_t<19, uint32_t>(x); }
+consteval fixed_t<20, uint32_t> operator"" _uq20(unsigned long long x) { return fixed_t<20, uint32_t>(x); }
+consteval fixed_t<21, uint32_t> operator"" _uq21(unsigned long long x) { return fixed_t<21, uint32_t>(x); }
+consteval fixed_t<22, uint32_t> operator"" _uq22(unsigned long long x) { return fixed_t<22, uint32_t>(x); }
+consteval fixed_t<23, uint32_t> operator"" _uq23(unsigned long long x) { return fixed_t<23, uint32_t>(x); }
+consteval fixed_t<24, uint32_t> operator"" _uq24(unsigned long long x) { return fixed_t<24, uint32_t>(x); }
+consteval fixed_t<25, uint32_t> operator"" _uq25(unsigned long long x) { return fixed_t<25, uint32_t>(x); }
+consteval fixed_t<26, uint32_t> operator"" _uq26(unsigned long long x) { return fixed_t<26, uint32_t>(x); }
+consteval fixed_t<27, uint32_t> operator"" _uq27(unsigned long long x) { return fixed_t<27, uint32_t>(x); }
+consteval fixed_t<28, uint32_t> operator"" _uq28(unsigned long long x) { return fixed_t<28, uint32_t>(x); }
+consteval fixed_t<29, uint32_t> operator"" _uq29(unsigned long long x) { return fixed_t<29, uint32_t>(x); }
+consteval fixed_t<30, uint32_t> operator"" _uq30(unsigned long long x) { return fixed_t<30, uint32_t>(x); }
+consteval fixed_t<31, uint32_t> operator"" _uq31(unsigned long long x) { return fixed_t<31, uint32_t>(x); }
+consteval fixed_t<32, uint32_t> operator"" _uq32(unsigned long long x) { return fixed_t<32, uint32_t>(x); }
 }

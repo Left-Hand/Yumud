@@ -62,7 +62,7 @@ void pwm_tb(OutputStream & logger){
     while(true){
         const auto t = clock::time();
         logger.println(t, pwm.cnt(), pwm.cvr());
-        pwm.set_dutycycle(0.5_q16 * sin(4 * t) + 0.5_q16);
+        pwm.set_dutycycle(0.5_iq16 * sin(4 * t) + 0.5_iq16);
         clock::delay(100us);
     }
 

@@ -155,7 +155,7 @@ public:
 
 
         const auto [a,b] = subprogress.resume(
-            Angle<q16>::from_turns(meas_lap_angle.to_turns()));
+            Angle<iq16>::from_turns(meas_lap_angle.to_turns()));
 
         svpwm_.set_dutycycle({a,b});
         return Ok();
@@ -168,7 +168,7 @@ public:
 
     void ctrl(Angle<q31> meas_lap_angle){
 
-        pos_filter_.update(meas_lap_angle.into<q16>());
+        pos_filter_.update(meas_lap_angle.into<iq16>());
         // const auto [a,b] = sincospu(frac(meas_lap_angle - 0.009_r) * 50);
         // const auto [s,c] = sincospu(frac(-(meas_lap_angle - 0.019_r + 0.01_r)) * 50);
         
@@ -559,11 +559,11 @@ void mystepper_main(){
 
     adc.set_injected_trigger(hal::AdcInjectedTrigger::T1TRGO);
     adc.enable_auto_inject(DISEN);
-    auto inj_a = hal::ScaledAnalogInput{adc.inj<1>(), Rescaler<q16>::from_scale(1)};
-    auto inj_b = hal::ScaledAnalogInput{adc.inj<2>(), Rescaler<q16>::from_scale(1)};
+    auto inj_a = hal::ScaledAnalogInput{adc.inj<1>(), Rescaler<iq16>::from_scale(1)};
+    auto inj_b = hal::ScaledAnalogInput{adc.inj<2>(), Rescaler<iq16>::from_scale(1)};
     auto ma730_cs_gpio_ = hal::PA<15>();
 
-    digipw::AlphaBetaCoord<q16> alphabeta_curr = {0, 0};
+    digipw::AlphaBetaCoord<iq16> alphabeta_curr = {0, 0};
 
     adc.register_nvic({0,0}, EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);

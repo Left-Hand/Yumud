@@ -53,8 +53,8 @@ public:
     [[nodiscard]] IResult<> enable_x(const Enable en);
     [[nodiscard]] IResult<> enable_yz(const Enable en);
     
-    [[nodiscard]] IResult<Vec3<q24>> read_mag();
-    [[nodiscard]] IResult<q16> read_temp();
+    [[nodiscard]] IResult<Vec3<iq24>> read_mag();
+    [[nodiscard]] IResult<iq16> read_temp();
     
     [[nodiscard]] IResult<bool> is_mag_meas_done();
     [[nodiscard]] IResult<bool> is_temp_meas_done();
@@ -62,8 +62,8 @@ public:
     [[nodiscard]] IResult<> set_prd_mag_set(const PrdSet prdset);
     [[nodiscard]] IResult<> enable_mag_set(const Enable en);
     [[nodiscard]] IResult<> enable_mag_reset(const Enable en);
-    [[nodiscard]] IResult<Vec3<q24>> do_mag_set();
-    [[nodiscard]] IResult<Vec3<q24>> do_mag_reset();
+    [[nodiscard]] IResult<Vec3<iq24>> do_mag_set();
+    [[nodiscard]] IResult<Vec3<iq24>> do_mag_reset();
     [[nodiscard]] IResult<> enable_auto_mag_sr(const Enable en);
     
     [[nodiscard]] IResult<> enable_mag_meas(const Enable en);

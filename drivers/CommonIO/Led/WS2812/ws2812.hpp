@@ -31,14 +31,14 @@ class WS2812: public RgbLedIntf{
 public:
     explicit WS2812(hal::GpioIntf & gpio):phy_(gpio){;}
     void init();
-    void set_rgb(const RGB<q16> &color);
+    void set_rgb(const RGB<iq16> &color);
 private:
     WS2812_Phy phy_;
 };
 
 class WS2812Single: public RgbLedIntf{
 public:
-    RGB<q16> color;
+    RGB<iq16> color;
     WS2812Single() = default;
 };
 

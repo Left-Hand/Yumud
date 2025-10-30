@@ -88,7 +88,7 @@ public:
     [[nodiscard]] IResult<> calibrate(uint8_t samples);
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
     [[nodiscard]] IResult<uint8_t> read_temperature();
 private:
     hal::I2cDrv i2c_drv_;

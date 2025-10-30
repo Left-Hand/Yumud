@@ -27,11 +27,11 @@ struct InvPerspectiveConfig{
     real_t H8;
 };
 
-Vec2<q16> perspective(const Vec2<q16> & v);
+Vec2<iq16> perspective(const Vec2<iq16> & v);
 
-Vec2<q16> inv_perspective(const Vec2<q16> & v);
+Vec2<iq16> inv_perspective(const Vec2<iq16> & v);
 
-Vec2<q16> inv_perspective_fast(const Vec2<q16> & v);
+Vec2<iq16> inv_perspective_fast(const Vec2<iq16> & v);
 
 void perspective(
     __restrict Image<Gray> & dst,

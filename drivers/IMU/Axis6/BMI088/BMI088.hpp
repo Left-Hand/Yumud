@@ -36,15 +36,15 @@ public:
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
-    [[nodiscard]] IResult<q24> read_temp();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<iq24> read_temp();
 
     [[nodiscard]] IResult<> set_acc_fs(const AccFs gyr_fs);
     [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
     [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
 private:
     BoschSensor_Phy phy_;
-    q20 acc_scaler_ = 0;
+    iq20 acc_scaler_ = 0;
     BMI088_AccRegs regs_ = {};
 
 
@@ -76,18 +76,18 @@ private:
     // };
     #endif
 
-    [[nodiscard]] static constexpr q20
+    [[nodiscard]] static constexpr iq20
     calculate_acc_scale(const AccFs acc_fs){
         constexpr double g = 9.806;
         switch(acc_fs){
             case AccFs::_3G:
-                return q20(g * 3);
+                return iq20(g * 3);
             case AccFs::_6G:
-                return q20(g * 6);
+                return iq20(g * 6);
             case AccFs::_12G:
-                return q20(g * 12);
+                return iq20(g * 12);
             case AccFs::_24G:
-                return q20(g * 24);
+                return iq20(g * 24);
         }
 
         __builtin_unreachable();
@@ -124,32 +124,32 @@ public:
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
+    [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
 
 
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs gyr_fs);
     [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
 private:
     BoschSensor_Phy phy_;
-    q20 gyr_scaler_ = 0;
+    iq20 gyr_scaler_ = 0;
 
     BMI088_GyrRegs regs_ = {};
 
     [[nodiscard]] IResult<> verify_chip_id();
 
-    [[nodiscard]] static constexpr q20
+    [[nodiscard]] static constexpr iq20
     calculate_gyr_scale(const GyrFs gyr_fs){
         switch(gyr_fs){
             case GyrFs::_125deg:
-                return DEG2RAD<q20>(2 * 125);
+                return DEG2RAD<iq20>(2 * 125);
             case GyrFs::_250deg:
-                return DEG2RAD<q20>(2 * 250);
+                return DEG2RAD<iq20>(2 * 250);
             case GyrFs::_500deg:
-                return DEG2RAD<q20>(2 * 500);
+                return DEG2RAD<iq20>(2 * 500);
             case GyrFs::_1000deg:
-                return DEG2RAD<q20>(2 * 1000);
+                return DEG2RAD<iq20>(2 * 1000);
             case GyrFs::_2000deg:
-                return DEG2RAD<q20>(2 * 2000);
+                return DEG2RAD<iq20>(2 * 2000);
         }
 
         __builtin_unreachable();

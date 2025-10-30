@@ -13,7 +13,7 @@ struct SetPosition{
 
 
 struct DeltaPosition{
-    q20 delta_position;
+    iq20 delta_position;
 };
 
 

@@ -22,18 +22,18 @@ public:
     uint32_t get() const { return state_; }
 
     [[nodiscard]] constexpr __fast_inline
-    q16 get_as_01(){
+    iq16 get_as_01(){
         update();
-        return q16::from_bits((get() & 0xffff));
+        return iq16::from_bits((get() & 0xffff));
     }
     
     [[nodiscard]] constexpr __fast_inline
-    std::tuple<q16, q16> get_as_01x2(){
+    std::tuple<iq16, iq16> get_as_01x2(){
         update();
         const uint32_t temp = get();
         const uint32_t u0 = temp >> 16;
         const uint32_t u1 = temp & 0xffff;
-        return {q16::from_bits(u0), q16::from_bits(u1)};
+        return {iq16::from_bits(u0), iq16::from_bits(u1)};
     }
 
 private:

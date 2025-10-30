@@ -56,8 +56,8 @@ public:
         // turns_ = frac(atan2pu(-Ealpha, Ebeta));
     }
 
-    constexpr Angle<q16> angle() const {
-        return Angle<q16>::from_turns(q16(turns_));
+    constexpr Angle<iq16> angle() const {
+        return Angle<iq16>::from_turns(q16(turns_));
     }
 
 public:

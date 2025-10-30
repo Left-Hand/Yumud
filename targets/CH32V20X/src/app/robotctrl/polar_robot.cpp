@@ -56,10 +56,10 @@ public:
     struct Config{
         q16 rho_transform_scale;
         q16 theta_transform_scale;
-        Angle<q16> center_bias;
+        Angle<iq16> center_bias;
 
-        Range2<q16> rho_range;
-        Range2<q16> theta_range;
+        Range2<iq16> rho_range;
+        Range2<iq16> theta_range;
     };
 
     struct Params{
@@ -78,9 +78,9 @@ public:
     {;}
 
 
-    void set_coord(const Polar<q16> p){
+    void set_coord(const Polar<iq16> p){
 
-        const auto rho_position = Angle<q16>::from_turns(
+        const auto rho_position = Angle<iq16>::from_turns(
             p.amplitude * cfg_.rho_transform_scale);
 
         const auto theta_position = 
@@ -136,18 +136,18 @@ private:
 
 struct Cartesian2ContinuousPolarRegulator final {
     struct State {
-        Vec2<q16> position;
-        Angle<q16> angle;  // 累积角度
+        Vec2<iq16> position;
+        Angle<iq16> angle;  // 累积角度
     };
 
-    Polar<q16> operator()(const Vec2<q16> position) {
+    Polar<iq16> operator()(const Vec2<iq16> position) {
         if (may_last_state_.is_none()) {
             // 第一次调用，初始化状态
             may_last_state_ = Some(State{
                 .position = position,
                 .angle = position.angle()  // 初始角度
             });
-            return Polar<q16>{position.length(), position.angle()};
+            return Polar<iq16>{position.length(), position.angle()};
         }
 
         // 获取上次状态
@@ -165,7 +165,7 @@ struct Cartesian2ContinuousPolarRegulator final {
             .angle = new_theta  // 存储累积角度
         });
 
-        return Polar<q16>{position.length(), new_theta};
+        return Polar<iq16>{position.length(), new_theta};
     }
 
 private:
@@ -236,8 +236,8 @@ struct GcodeStateHolder{
 
     q16 max_speed = 0.02_r;
     q16 speed;
-    unit::Meter<q16> x = unit::Meter<q16>(0);
-    unit::Meter<q16> y = unit::Meter<q16>(0);
+    unit::Meter<iq16> x = unit::Meter<iq16>(0);
+    unit::Meter<iq16> y = unit::Meter<iq16>(0);
     bool is_rapid;
 
     constexpr void set_speed(const q16 _speed){
@@ -425,10 +425,10 @@ void polar_robot_main(){
         auto parse_arg = [&](const gcode::GcodeArg & arg){
             switch(arg.letter){
             case 'X': 
-                state_.x = unit::MilliMeter<q16>(arg.value);
+                state_.x = unit::MilliMeter<iq16>(arg.value);
                 break;
             case 'Y':
-                state_.y = unit::MilliMeter<q16>(arg.value);
+                state_.y = unit::MilliMeter<iq16>(arg.value);
                 break;
             case 'F':
                 state_.set_speed(arg.value);
@@ -476,7 +476,7 @@ void polar_robot_main(){
         }),
 
         rpc::make_function("next", [&](){
-            static Vec2<q16> position = {0.1_r, 0};
+            static Vec2<iq16> position = {0.1_r, 0};
             position = position.forward_90deg();
             actuator_.set_coord(regu_(position));
         })
@@ -546,7 +546,7 @@ void polar_robot_main(){
         // const auto [s0,c0] = sincos(clock_time);
         // const auto [s,c] = std::make_tuple(s0, s0);
         // const auto vec = Vec2{s,c};
-        // DEBUG_PRINTLN(s,c, atan2(s,c), vec_angle_diff<q16>(vec, vec.rotated(1.6_r*s0)));
+        // DEBUG_PRINTLN(s,c, atan2(s,c), vec_angle_diff<iq16>(vec, vec.rotated(1.6_r*s0)));
         // clock::delay(1ms);
     }
 }

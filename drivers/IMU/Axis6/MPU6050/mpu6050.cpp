@@ -104,28 +104,28 @@ IResult<> MPU6050::update(){
     return res;
 }
 
-IResult<Vec3<q24>> MPU6050::read_acc(){
+IResult<Vec3<iq24>> MPU6050::read_acc(){
 
-    return  Ok{Vec3<q24>{
-        uni(regs_.acc_x_reg.as_val()) * acc_scaler_,
-        uni(regs_.acc_y_reg.as_val()) * acc_scaler_,
-        uni(regs_.acc_z_reg.as_val()) * acc_scaler_
+    return  Ok{Vec3<iq24>{
+        iq16::from_bits(regs_.acc_x_reg.as_val()) * acc_scaler_,
+        iq16::from_bits(regs_.acc_y_reg.as_val()) * acc_scaler_,
+        iq16::from_bits(regs_.acc_z_reg.as_val()) * acc_scaler_
     }};
 }
 
-IResult<Vec3<q24>> MPU6050::read_gyr(){
+IResult<Vec3<iq24>> MPU6050::read_gyr(){
 
-    return Ok{Vec3<q24>{
-        uni(regs_.gyr_x_reg.as_val()) * gyr_scaler_,
-        uni(regs_.gyr_y_reg.as_val()) * gyr_scaler_,
-        uni(regs_.gyr_z_reg.as_val()) * gyr_scaler_
+    return Ok{Vec3<iq24>{
+        iq16::from_bits(regs_.gyr_x_reg.as_val()) * gyr_scaler_,
+        iq16::from_bits(regs_.gyr_y_reg.as_val()) * gyr_scaler_,
+        iq16::from_bits(regs_.gyr_z_reg.as_val()) * gyr_scaler_
     }};
 }
 
-IResult<q16> MPU6050::read_temp(){
+IResult<iq16> MPU6050::read_temp(){
     auto & reg = regs_.temperature_reg;
-    static constexpr auto INV_340 = q16(1.0 / 340);
-    return Ok(q16(36.65f) + uni(reg.as_val()) * INV_340);
+    static constexpr auto INV_340 = iq16(1.0 / 340);
+    return Ok(iq16(36.65f) + iq16::from_bits(reg.as_val()) * INV_340);
 }
 
 IResult<> MPU6050::set_acc_fs(const AccFs fs){

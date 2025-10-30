@@ -39,8 +39,8 @@ IResult<> BMI088_Gyr::update(){
     );
 }
 
-IResult<Vec3<q24>> BMI088_Gyr::read_gyr(){
-    return Ok(Vec3<q24>(
+IResult<Vec3<iq24>> BMI088_Gyr::read_gyr(){
+    return Ok(Vec3<iq24>(
         regs_.gyr_x_reg.as_val() * gyr_scaler_,
         regs_.gyr_y_reg.as_val() * gyr_scaler_,
         regs_.gyr_z_reg.as_val() * gyr_scaler_

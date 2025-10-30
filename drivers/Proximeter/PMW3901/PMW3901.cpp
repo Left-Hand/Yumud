@@ -128,7 +128,7 @@ static constexpr auto INIT_LIST2 = std::to_array({
 static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
 
 
-static constexpr q16 scale = q16(13.0/2000);
+static constexpr iq16 scale = iq16(13.0/2000);
 
 IResult<> PMW3901::write_reg(const uint8_t command, const uint8_t data){
     if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT);

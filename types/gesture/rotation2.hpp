@@ -11,7 +11,7 @@ struct Rotation2 {
 
     // 从角度构造
     [[nodiscard]] static constexpr 
-    Rotation2 from_angle(Angle<T> angle) {
+    Rotation2 from_angle(auto angle) {
         const auto [s, c] = angle.sincos();
         return Rotation2{s, c};
     }

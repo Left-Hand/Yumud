@@ -9,13 +9,13 @@
 namespace ymd{
 class Mahony final{
 public:
-    using IQuat = Quat<q24>;
-    using IV3 = Vec3<q24>;
+    using IQuat = Quat<iq24>;
+    using IV3 = Vec3<iq24>;
 
 public:
     struct Config{
-        q24 kp;
-        q24 ki;
+        iq24 kp;
+        iq24 ki;
         uint fs;
     };
 
@@ -27,7 +27,7 @@ public:
     void reconf(const Config & cfg){
         ki_ = cfg.ki;
         kp_ = cfg.kp;    
-        dt_ = q24(1) / cfg.fs;
+        dt_ = iq24(1) / cfg.fs;
         fs_ = cfg.fs;
     }
 
@@ -47,11 +47,11 @@ public:
     [[nodiscard]] IQuat rotation() const {return q;}
 
 private:
-    q24 dt_ = 0;
+    iq24 dt_ = 0;
 
-    q24 ki_ = 0;
-    q24 kp_ = 0;
-    q24 kd_ = 0;
+    iq24 ki_ = 0;
+    iq24 kp_ = 0;
+    iq24 kd_ = 0;
     uint fs_ = 0;
     IV3 gyr_hat_ = IV3::ZERO;
     IV3 inte_ = IV3::ZERO;

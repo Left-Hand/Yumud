@@ -27,7 +27,7 @@ struct LD19_Prelude{
         uint16_t distance_mm;
         uint8_t intensity;
 
-        [[nodiscard]] constexpr q16 distance() const {
+        [[nodiscard]] constexpr iq16 distance() const {
             return distance_mm * 0.001_r;
         }
     };
@@ -36,8 +36,8 @@ struct LD19_Prelude{
     public:
         LidarSpinSpeed(uint16_t data):data_(data){;}
 
-        [[nodiscard]] constexpr q16 to_turns_per_secs() const{
-            constexpr q16 RATIO = q16(1.0 / 360);
+        [[nodiscard]] constexpr iq16 to_turns_per_secs() const{
+            constexpr iq16 RATIO = iq16(1.0 / 360);
             return RATIO * data_;
         }
     private:
@@ -48,8 +48,8 @@ struct LD19_Prelude{
     public:
         LidarAngle(uint16_t data):data_(data){;}
 
-        [[nodiscard]] constexpr q16 to_turns() const{
-            constexpr auto RATIO = q24(1.0 / 360 * 0.01);
+        [[nodiscard]] constexpr iq16 to_turns() const{
+            constexpr auto RATIO = iq24(1.0 / 360 * 0.01);
             return RATIO * data_;
         }
 

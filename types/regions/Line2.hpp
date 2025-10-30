@@ -56,15 +56,15 @@ public:
 
     [[nodiscard]] __fast_inline constexpr
     Line2<T> abs() const {
-        if(0_deg <= orientation and orientation < 180_deg) return *this; 
+        if(Angle<T>::ZERO <= orientation and orientation < Angle<T>::HALF_LAP) return *this; 
 
-        auto m = fposmod(orientation.to_radians(), T(TAU));
+        auto m = orientation.normalized().to_turns();
 
         if(d < 0){
-            m = m > T(PI) ? m - T(PI) : m + T(PI);
-            return {-d, Angle<T>::from_radians(m)};
+            m = (m > T(0.5)) ? m - T(0.5) : m + T(0.5);
+            return {-d, Angle<T>::from_turns(m)};
         }else{
-            return {d, Angle<T>::from_radians(m)};
+            return {d, Angle<T>::from_turns(m)};
         }
     }
 
@@ -107,7 +107,7 @@ public:
         auto regular = this->abs();
         auto other_regular = other.abs();
         return (is_equal_approx(regular.d, other_regular.d)) and 
-                is_equal_approx(fposmod((other_regular.orientation - regular.orientation).to_radians(), T(PI)), T(0));
+                is_equal_approx((2 * (other_regular.orientation - regular.orientation)).to_turns(), T(0));
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -201,10 +201,8 @@ public:
 
     //是否与另一条直线正交
     [[nodiscard]] __fast_inline constexpr
-    bool is_orthogonal_with(const Line2<T> & other) const {
-        return is_equal_approx(fposmod(
-            (other.orientation - this->orientation).to_radians()
-        , T(PI)), T(PI/2));
+    bool is_orthogonal_with(const Line2<T> & other, const auto eps) const {
+        return other.orientation.is_orthogonal_with(this->orientation, eps);
         // return fposmod(other.orientation - this->orientation, T(PI));
     }
 

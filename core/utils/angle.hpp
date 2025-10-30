@@ -9,6 +9,9 @@ template<typename T>
 struct [[nodiscard]] Angle{
 	static_assert(not std::is_integral_v<T>, "T must be not integral");
 
+	using ST = std::make_signed<T>;
+	using UT = std::make_unsigned<T>;
+
     static constexpr Angle<T> ZERO = 
 		Angle<T>::from_turns(static_cast<T>(0));
 
@@ -108,7 +111,7 @@ struct [[nodiscard]] Angle{
 		return turns_;
 	}
 
-    [[nodiscard]] constexpr std::array<T, 2> sincos() const {
+    [[nodiscard]] constexpr auto sincos() const {
 		if constexpr(
 			std::is_same_v<
 				std::array<T, 2>, 
@@ -116,20 +119,20 @@ struct [[nodiscard]] Angle{
 			>
 		){
 			return sincospu(turns_);
+		}else{
+			return sincospu(turns_);
 		}
-		const auto [s,c] = sincospu(turns_);
-		return {static_cast<T>(s), static_cast<T>(c)};
     }
 
-	[[nodiscard]] constexpr T sin() const{
-		return sinpu(turns_ );
+	[[nodiscard]] constexpr auto sin() const{
+		return sinpu(turns_);
 	}
 
-	[[nodiscard]] constexpr T cos() const{
+	[[nodiscard]] constexpr auto cos() const{
 		return cospu(turns_ );
 	}
 
-	[[nodiscard]] constexpr T tan() const{
+	[[nodiscard]] constexpr auto tan() const{
 		return tan(to_radians());
 	}
 
@@ -174,23 +177,16 @@ struct [[nodiscard]] Angle{
 		return make_angle_from_turns(+turns_);
 	}
 
-	constexpr Angle operator*(const T rhs) const{
-		return make_angle_from_turns(turns_ * rhs);
-	}
-
-	constexpr Angle operator/(const T rhs) const{
-		return make_angle_from_turns(turns_ / rhs);
-	}
-
 	template<typename U>
 	constexpr Angle operator*(const U rhs) const{
 		return make_angle_from_turns(turns_ * rhs);
 	}
-	
+
 	template<typename U>
 	constexpr Angle operator/(const U rhs) const{
 		return make_angle_from_turns(turns_ / rhs);
 	}
+
 
 	template<typename U>
 	constexpr Angle mod(const Angle<U> rhs) const{
@@ -225,6 +221,12 @@ struct [[nodiscard]] Angle{
 		return make_angle_from_turns(frac(turns_));
 	}
 
+	[[nodiscard]] constexpr bool is_orthogonal_with(const Angle<T> & other, const auto eps) const {
+		// return ABS(turns_ + other.turns_) < static_cast<T>(0.0001);
+		return ((static_cast<T>(ABS(frac(turns_ - other.turns_ - static_cast<T>(0.25)))) < static_cast<T>(eps)) ||
+			(static_cast<T>(ABS(frac(turns_ - other.turns_ - static_cast<T>(0.75)))) < static_cast<T>(eps)));
+	}
+
 	[[nodiscard]] constexpr bool is_equal_approx(const Angle<T> & other) const {
 		return ymd::is_equal_approx(turns_, other.turns_);
 	}
@@ -246,14 +248,14 @@ struct [[nodiscard]] Angle{
 	}
 
 	template<typename U>
-	[[nodiscard]] Angle<U> into() const {
+	[[nodiscard]] constexpr Angle<U> into() const {
 		return Angle<U>::make_angle_from_turns(static_cast<U>(turns_));
 	}
 
 	friend OutputStream & operator <<(OutputStream & os, const Angle & self){
 		// return os << self.to_degrees() << '\'';
 		
-		return os << static_cast<q16>(self.to_turns()) * 360 << '\'';
+		return os << static_cast<iq16>(self.to_turns()) * 360 << '\'';
 	}
 public:
 	T turns_;

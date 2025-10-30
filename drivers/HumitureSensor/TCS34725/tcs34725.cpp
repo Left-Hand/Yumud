@@ -33,12 +33,12 @@ IResult<> TCS34725::read_burst(
 }
 
 
-std::tuple<real_t, real_t, real_t, real_t> TCS34725::get_crgb(){
+std::tuple<uq16, uq16, uq16, uq16> TCS34725::get_crgb(){
     return {
-        s16_to_uni(crgb_[0]),
-        s16_to_uni(crgb_[1]),
-        s16_to_uni(crgb_[2]),
-        s16_to_uni(crgb_[3])
+        uq16::from_bits(crgb_[0]),
+        uq16::from_bits(crgb_[1]),
+        uq16::from_bits(crgb_[2]),
+        uq16::from_bits(crgb_[3])
     };
 }
 

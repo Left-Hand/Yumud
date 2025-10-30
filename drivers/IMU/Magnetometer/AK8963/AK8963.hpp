@@ -29,7 +29,7 @@ public:
     [[nodiscard]] IResult<bool> is_busy();
     [[nodiscard]] IResult<bool> is_stable();
     [[nodiscard]] IResult<> disable_i2c();
-    [[nodiscard]] IResult<Vec3<q24>> read_mag();
+    [[nodiscard]] IResult<Vec3<iq24>> read_mag();
     [[nodiscard]] IResult<> set_data_width(const uint8_t bits);
     [[nodiscard]] IResult<> set_mode(const Mode mode);
 private:
@@ -39,7 +39,7 @@ private:
     bool data_valid_ = false;
     bool data_is_16_bits_ = false;
 
-    Vec3<q24> adj_scale_ = Vec3<q24>::ZERO;
+    Vec3<iq24> adj_scale_ = Vec3<iq24>::ZERO;
 
 
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data);
@@ -68,9 +68,9 @@ private:
 
     static constexpr real_t conv_data_to_ut(const int16_t data, const bool is_16_bits){
         if(is_16_bits){
-            return (data * q16(0.15));
+            return (data * iq16(0.15));
         }else{
-            return (data * q16(0.6));
+            return (data * iq16(0.6));
         }
     }
 };

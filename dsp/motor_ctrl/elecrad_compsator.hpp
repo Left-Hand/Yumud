@@ -6,12 +6,12 @@
 namespace ymd{
 
 struct ElecAngleCompensator{
-    q20 base;
+    uq32 base;
     uint32_t pole_pairs;
 
-    constexpr Angle<q20> operator ()(const Angle<q31> lap_angle) const {
-        const auto lap_position = q16(lap_angle.to_turns());
-        return Angle<q20>::from_turns(frac(frac(lap_position + base) * pole_pairs));
+    constexpr Angle<uq32> operator ()(const Angle<uq32> machine_lap_angle) const {
+        const auto lap_turns = (machine_lap_angle.to_turns());
+        return Angle<uq32>::from_turns(frac(frac(lap_turns + base) * pole_pairs));
     }
 };
 

@@ -13,7 +13,7 @@ struct ComplementaryGestureEstimator{
         delta_time_(1_r / cfg.fs),
         comp_filter_(make_comp_filter_config(cfg.fs)){;}
 
-    constexpr void process(const Vec3<q24> & acc,const Vec3<q24> & gyr){
+    constexpr void process(const Vec3<iq24> & acc,const Vec3<iq24> & gyr){
 
         const auto len_acc = acc.length();
         const auto norm_acc = acc / len_acc;
@@ -56,7 +56,7 @@ struct ComplementaryGestureEstimator{
     }
 
 private:
-    using CompFilter = dsp::ComplementaryFilter<q20>;
+    using CompFilter = dsp::ComplementaryFilter<iq20>;
     using CompFilterConfig = typename CompFilter::Config;
 
     real_t delta_time_;

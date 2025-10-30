@@ -23,7 +23,7 @@ public:
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> exit_mode();
     
-    [[nodiscard]] IResult<Vec3<q24>> read_measurement();
+    [[nodiscard]] IResult<Vec3<iq24>> read_measurement();
     [[nodiscard]] IResult<> start_single_measurement();
     
     [[nodiscard]] IResult<> set_gain(Gain gain);
@@ -35,7 +35,7 @@ public:
     [[nodiscard]] IResult<> set_oversampling(OverSampling oversampling);
     
     [[nodiscard]] IResult<> enable_trig_interrupt(Enable en);
-    [[nodiscard]] IResult<Vec3<q24>> read_data();
+    [[nodiscard]] IResult<Vec3<iq24>> read_data();
 
     
 private:

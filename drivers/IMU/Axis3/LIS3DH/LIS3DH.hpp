@@ -171,7 +171,7 @@ public:
 
     [[nodiscard]] IResult<> clear_flag();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
     [[nodiscard]] IResult<> sleep(){
         auto reg = RegCopy(regs_.ctrl1_reg); 
         reg.norm_mod_en = false; 

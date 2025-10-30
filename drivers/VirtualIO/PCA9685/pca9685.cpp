@@ -28,7 +28,7 @@ using Vport = PCA9685::PCA9685_Vport;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
+IResult<> PCA9685::set_frequency(uint32_t freq, iq16 trim){
     if(const auto res = read_reg(regs_.mode1_reg);
         res.is_err()) return res;
     
@@ -42,7 +42,7 @@ IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
 
     {
         auto reg = RegCopy(regs_.prescale_reg);
-        reg.prescale = static_cast<uint8_t>((q16(25000000.0 / 4096) / freq - 1) * trim);
+        reg.prescale = static_cast<uint8_t>((iq16(25000000.0 / 4096) / freq - 1) * trim);
         if(const auto res = write_reg(reg); 
             res.is_err()) return res;
     }

@@ -16,54 +16,57 @@ namespace ymd{
 
 
     template<size_t Q>
-    __fast_inline constexpr fixed_t<Q, int32_t> sinf(const fixed_t<Q, int32_t> x){
-        return fixed_t<Q, int32_t>(iqmath::details::__IQNgetCosSinTemplate<Q>(x.as_bits(), 
+    __fast_inline constexpr fixed_t<31, int32_t> sinf(const fixed_t<Q, int32_t> x){
+        return fixed_t<31, int32_t>(iqmath::details::__IQNgetCosSinTemplate<Q>(x.as_bits(), 
             iqmath::details::__IQ31getSinDispatcher));
     }
     
     template<size_t Q>
-    __fast_inline constexpr fixed_t<Q, int32_t> cosf(const fixed_t<Q, int32_t> x){
-        return fixed_t<Q, int32_t>(iqmath::details::__IQNgetCosSinTemplate<Q>(x.as_bits(), 
+    __fast_inline constexpr fixed_t<31, int32_t> cosf(const fixed_t<Q, int32_t> x){
+        return fixed_t<31, int32_t>(iqmath::details::__IQNgetCosSinTemplate<Q>(x.as_bits(), 
             iqmath::details::__IQ31getCosDispatcher));
     }
     
     template<size_t Q>
-    __fast_inline constexpr std::array<fixed_t<Q, int32_t>, 2> sincos(const fixed_t<Q, int32_t> x){
+    __fast_inline constexpr std::array<fixed_t<31, int32_t>, 2> sincos(const fixed_t<Q, int32_t> x){
         auto res = (iqmath::details::__IQNgetCosSinTemplate<Q>(x.as_bits(), 
             iqmath::details::__IQ31getSinCosDispatcher));
         return {res.sin, res.cos};
     }
-    
-    template<size_t Q>
-    __fast_inline constexpr fixed_t<Q, int32_t> sinpu(const fixed_t<Q, int32_t> x){
-        return fixed_t<Q, int32_t>(iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.as_bits(), 
+
+    template<size_t Q, typename D>
+    requires (sizeof(D) == 4)
+    __fast_inline constexpr fixed_t<31, int32_t> sinpu(const fixed_t<Q, D> x){
+        return (iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.as_bits(), 
             iqmath::details::__IQ31getSinDispatcher));
     }
     
-    template<size_t Q>
-    __fast_inline constexpr fixed_t<Q, int32_t> cospu(const fixed_t<Q, int32_t> x){
-        return fixed_t<Q, int32_t>(iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.as_bits(), 
+    template<size_t Q, typename D>
+    requires (sizeof(D) == 4)
+    __fast_inline constexpr fixed_t<31, int32_t> cospu(const fixed_t<Q, D> x){
+        return (iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.as_bits(), 
             iqmath::details::__IQ31getCosDispatcher));
     }
     
-    template<size_t Q>
-    __fast_inline constexpr std::array<fixed_t<Q, int32_t>, 2> sincospu(const fixed_t<Q, int32_t> x){
+    template<size_t Q, typename D>
+    requires (sizeof(D) == 4)
+    __fast_inline constexpr std::array<fixed_t<31, int32_t>, 2> sincospu(const fixed_t<Q, D> x){
         auto res = (iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.as_bits(), 
             iqmath::details::__IQ31getSinCosDispatcher));
         return {res.sin, res.cos};
     }
     
-    template<size_t Q>
-    __fast_inline constexpr fixed_t<Q, int32_t> sin(const fixed_t<Q, int32_t> x){return sinf<Q>(x);}
+    template<size_t Q, typename D>
+    __fast_inline constexpr fixed_t<31, int32_t> sin(const fixed_t<Q, D> x){return sinf<Q>(x);}
     
-    template<size_t Q>
-    __fast_inline constexpr fixed_t<Q, int32_t> cos(const fixed_t<Q, int32_t> x){return cosf<Q>(x);}
+    template<size_t Q, typename D>
+    __fast_inline constexpr fixed_t<31, int32_t> cos(const fixed_t<Q, D> x){return cosf<Q>(x);}
     
-    template<size_t Q>
-    __fast_inline constexpr fixed_t<Q, int32_t> tanf(const fixed_t<Q, int32_t> x) {return sinf<Q>(x) / cosf<Q>(x);}
+    template<size_t Q, typename D>
+    __fast_inline constexpr fixed_t<31, int32_t> tanf(const fixed_t<Q, D> x) {return sinf<Q>(x) / cosf<Q>(x);}
     
-    template<size_t Q>
-    __fast_inline constexpr fixed_t<Q, int32_t> tan(const fixed_t<Q, int32_t> x) {return tanf<Q>(x);}
+    template<size_t Q, typename D>
+    __fast_inline constexpr fixed_t<31, int32_t> tan(const fixed_t<Q, D> x) {return tanf<Q>(x);}
     
     template<size_t Q>
     __fast_inline constexpr fixed_t<29, int32_t> asinf(const fixed_t<Q, int32_t> x) {
@@ -77,11 +80,11 @@ namespace ymd{
     
     template<size_t Q>
     requires (Q < 30)
-    __fast_inline constexpr fixed_t<Q, int32_t> asin(const fixed_t<Q, int32_t> x){return asinf(x);}
+    __fast_inline constexpr fixed_t<29, int32_t> asin(const fixed_t<Q, int32_t> x){return asinf(x);}
     
     template<size_t Q>
     requires (Q < 30)
-    __fast_inline constexpr fixed_t<Q, int32_t> acos(const fixed_t<Q, int32_t> x){return acosf(x);}
+    __fast_inline constexpr fixed_t<29, int32_t> acos(const fixed_t<Q, int32_t> x){return acosf(x);}
     
     template<size_t Q>
     requires (Q < 30)

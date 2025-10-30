@@ -47,16 +47,16 @@ IResult<> ADXL345::self_test(){
     return Ok();
 }
 
-IResult<Vec3<q24>> ADXL345::read_acc(){
+IResult<Vec3<iq24>> ADXL345::read_acc(){
     std::array<int16_t, 3> buf;
     if(const auto res = phy_.read_burst(std::bit_cast<uint8_t>(RegAddr::DeviceID), buf);
         res.is_err()) return Err(res.unwrap_err());
 
     
-    auto conv = [&](const int16_t data) -> q24{
+    auto conv = [&](const int16_t data) -> iq24{
         return data * acc_scaler_;    };
 
-    return Ok(Vec3<q24>(
+    return Ok(Vec3<iq24>(
         conv(buf[0]),
         conv(buf[1]),
         conv(buf[2])

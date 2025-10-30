@@ -33,6 +33,7 @@
 
 
 #include "core/io/regs.hpp"
+#include "core/math/realmath.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
@@ -175,7 +176,7 @@ struct INA3221_Regs:public INA3221_Prelude {
         int16_t : 16;
 
         constexpr real_t to_volt() const {
-            return q24(q16(this->as_val() >> 3) / 25) / 1000;
+            return iq24(iq16(this->as_val() >> 3) / 25) / 1000;
             // return real_t(this->as_val());
         }
 

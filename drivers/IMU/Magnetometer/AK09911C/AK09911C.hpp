@@ -38,7 +38,7 @@ public:
     [[nodiscard]] IResult<bool> is_stable();
     [[nodiscard]] IResult<> set_mode(const Mode mode);
     [[nodiscard]] IResult<> disable_i2c();
-    [[nodiscard]] IResult<Vec3<q24>> read_mag();
+    [[nodiscard]] IResult<Vec3<iq24>> read_mag();
 
     [[nodiscard]] IResult<bool> is_data_ready();
     [[nodiscard]] IResult<bool> is_data_overrun();
@@ -50,7 +50,7 @@ private:
     
     AsahiKaseiSensor_Phy phy_;
     AK09911C_Regset regs_ = {};
-    Option<Vec3<q24>> scale_ = None; 
+    Option<Vec3<iq24>> scale_ = None; 
     
     [[nodiscard]] IResult<> selftest();
     [[nodiscard]] IResult<> blocking_update();
@@ -82,9 +82,9 @@ private:
 
     [[nodiscard]] IResult<Vec3<int8_t>> get_coeff();
 
-    [[nodiscard]] static constexpr Vec3<q24> 
+    [[nodiscard]] static constexpr Vec3<iq24> 
     transform_coeff_into_scale(const Vec3<int8_t> coeff){
-        return Vec3<q24>(coeff) / 128 + Vec3<q24>(1, 1, 1); 
+        return Vec3<iq24>(coeff) / 128 + Vec3<iq24>(1, 1, 1); 
     }
     
 };

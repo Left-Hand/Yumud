@@ -10,7 +10,7 @@ void GrabModule::goHome(){
     scara_.goHome();
 }
 
-void GrabModule::rapid(const Vec3<q16> & pos){
+void GrabModule::rapid(const Vec3<iq16> & pos){
     if(config_.safe_aabb.has_point(pos) == false){
         DEBUG_PRINTLN("out of bound", pos);
         return;
@@ -43,12 +43,12 @@ void GrabModule::release(){
     self << new ReleaseAction(self);
 }
 
-void GrabModule::move(const Vec3<q16> & pos){
+void GrabModule::move(const Vec3<iq16> & pos){
     auto & self = *this;
     self << new MoveAction(self, pos);
 }
 
-void GrabModule::move_xy(const Vec2<q16> & pos){
+void GrabModule::move_xy(const Vec2<iq16> & pos){
     auto & self = *this;
     self << new MoveXYAction(self, pos);
 }
@@ -58,7 +58,7 @@ void GrabModule::move_z(const real_t z){
     self << new MoveZAction(self, z);
 }
 
-Vec3<q16> GrabModule::getPos(){
+Vec3<iq16> GrabModule::getPos(){
     auto xy = scara_.getPos();
     auto z = zaxis_.getDistance();
     return {xy.x,xy.y,z};
@@ -180,8 +180,8 @@ void GrabModule::test(){
     // self.addAction(new MoveAction{self, config_.})
     // self << new TestAction{self};
     self << new TestAction{self};
-    // self << MoveAction(self, Vec3<q16>(0, 0, 0), Vec3<q16>(1,1,1));
-    // self << new MoveAction(self, Vec3<q16>(0, 0.2_r, 0.1_r), Vec3<q16>(0.1_r,0.2_r,0.1_r));
+    // self << MoveAction(self, Vec3<iq16>(0, 0, 0), Vec3<iq16>(1,1,1));
+    // self << new MoveAction(self, Vec3<iq16>(0, 0.2_r, 0.1_r), Vec3<iq16>(0.1_r,0.2_r,0.1_r));
     // self << PressAction(self);
     // self << ReleaseAction(self);
 }
@@ -206,28 +206,28 @@ void GrabModule::init(){
 }
 
 
-// Vec2<q16> GrabModule::calculateTrayPos(TrayIndex index) const{
+// Vec2<iq16> GrabModule::calculateTrayPos(TrayIndex index) const{
 //     // return {config_.tray_xy[size_t(index)].x, 0.144_r};
 //     return {config_.tray_xy[size_t(index)]};
 //     // switch(index){
 //     //     case TrayIndex::Left :
-//     //         return (Vec2<q16>{-0.1_r, 0.2_r});  
+//     //         return (Vec2<iq16>{-0.1_r, 0.2_r});  
 //     //     case TrayIndex::Center :
-//     //         return (Vec2<q16>{0, 0.2_r});  
+//     //         return (Vec2<iq16>{0, 0.2_r});  
 //     //     case TrayIndex::Right :
-//     //         return (Vec2<q16>{0.1_r, 0.2_r});  
+//     //         return (Vec2<iq16>{0.1_r, 0.2_r});  
 //     // }
 // }
 
-// Vec2<q16> GrabModule::calculateCatchPos(TrayIndex index) const{
+// Vec2<iq16> GrabModule::calculateCatchPos(TrayIndex index) const{
 //     return {config_.catch_xy[size_t(index)]};
 //     // switch(index){
 //     //     default:
 //     //     case TrayIndex::Left :
-//     //         return (Vec2<q16>{-0.1_r, 0.24_r});  
+//     //         return (Vec2<iq16>{-0.1_r, 0.24_r});  
 //     //     case TrayIndex::Center :
-//     //         return (Vec2<q16>{0, 0.24_r});  
+//     //         return (Vec2<iq16>{0, 0.24_r});  
 //     //     case TrayIndex::Right :
-//     //         return (Vec2<q16>{0.1_r, 0.24_r});  
+//     //         return (Vec2<iq16>{0.1_r, 0.24_r});  
 //     // }
 // }

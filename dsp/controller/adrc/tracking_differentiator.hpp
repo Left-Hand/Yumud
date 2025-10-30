@@ -9,8 +9,8 @@ namespace ymd::dsp{
 class TrackingDifferentiator{
 public:
     struct Config{
-        q20 h;
-        q20 r;
+        iq20 h;
+        iq20 r;
         uint fs;
     };
 
@@ -24,7 +24,7 @@ public:
     }
 
 
-    void update(const q20 v){
+    void update(const iq20 v){
         const auto h = h_;
         const auto r = r_;
 
@@ -36,7 +36,7 @@ public:
         };
     }
 
-    void update2(const q20 v){
+    void update2(const iq20 v){
         const auto h = h_;
 
         const auto x1 = state_[0];
@@ -47,7 +47,7 @@ public:
         };
     }
     
-    static constexpr q20 fhan(q20 x1,q20 x2,q20 r,q20 h){
+    static constexpr iq20 fhan(iq20 x1,iq20 x2,iq20 r,iq20 h){
 
         const auto deltaa = r*h;
         const auto deltaa0 = deltaa*h;
@@ -62,7 +62,7 @@ public:
     }
 
     __fast_inline
-    constexpr q20 fhan2(q20 x1,q20 x2) const{
+    constexpr iq20 fhan2(iq20 x1,iq20 x2) const{
         const auto deltaa_squ = square(deltaa_);
         const auto r = r_;
         const auto inv_h = inv_h_;
@@ -92,33 +92,33 @@ public:
         // d_lmt_ = - cfg.r 
     }
 private:
-    q20 h_ = 0;
-    q20 r_ = 0;
+    iq20 h_ = 0;
+    iq20 r_ = 0;
     
-    q20 deltaa_ = 0;
-    q20 deltaa0_ = 0;
-    q20 inv_h_ = 0;
-    // q20 d_lmt_ = 0;
+    iq20 deltaa_ = 0;
+    iq20 deltaa0_ = 0;
+    iq20 inv_h_ = 0;
+    // iq20 d_lmt_ = 0;
 
-    using State = StateVector<q20, 2>;
+    using State = StateVector<iq20, 2>;
     State state_;
 };
 
 class  _TrackingDifferentiatorByOrders_Base{
 public:
     struct Config{
-        q16 r;
+        iq16 r;
         uint fs;
     };
 
     void reconf(const Config & cfg){
         r_ = cfg.r;
-        dt_ = 1_q24 / cfg.fs;
+        dt_ = 1_iq24 / cfg.fs;
     }
 
 protected:
-    q16 r_ = 0;
-    q24 dt_ = 0;
+    iq16 r_ = 0;
+    iq24 dt_ = 0;
 };
 
 template<size_t N>
@@ -136,7 +136,7 @@ public:
     }
 
 
-    constexpr void update(const q20 u){
+    constexpr void update(const iq20 u){
         const auto r = r_;
         const auto r_2 = r * r;
         const auto r_3 = r_2 * r;
@@ -180,7 +180,7 @@ public:
 
 private:
 
-    using State = StateVector<q20, N>;
+    using State = StateVector<iq20, N>;
     State state_;
 };
 
@@ -200,7 +200,7 @@ private:
 //         state_[2] = z3 + h *(-belta03*fal(e,0.25,delta));
 //     }
 // private:
-//     using State = StateVector<q20, 3>;
+//     using State = StateVector<iq20, 3>;
 //     State state_;
 // }
 
