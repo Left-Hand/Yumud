@@ -22,12 +22,12 @@ static constexpr UvwCoord<iq16> SVM(
     constexpr iq16 HALF_ONE = iq16(0.5);
 
     const auto [alpha_dutycycle, beta_dutycycle] = alphabeta_dutycycle;
-    const auto beta_by_sqrt3 = beta_dutycycle * ONE_BY_SQRT3;
+    const auto beta_dutycycle_by_sqrt3 = beta_dutycycle * ONE_BY_SQRT3;
 
     const auto sector = Sector{static_cast<uint8_t>(
-        (  static_cast<uint8_t>(std::signbit(beta_by_sqrt3 + alpha_dutycycle)) << 2)
-        | (static_cast<uint8_t>(std::signbit(beta_by_sqrt3 - alpha_dutycycle)) << 1)
-        | (static_cast<uint8_t>(std::signbit(beta_by_sqrt3)))
+        (  static_cast<uint8_t>(std::signbit(beta_dutycycle_by_sqrt3 + alpha_dutycycle)) << 2)
+        | (static_cast<uint8_t>(std::signbit(beta_dutycycle_by_sqrt3 - alpha_dutycycle)) << 1)
+        | (static_cast<uint8_t>(std::signbit(beta_dutycycle_by_sqrt3)))
     )};
 
     switch(sector){
@@ -35,8 +35,8 @@ static constexpr UvwCoord<iq16> SVM(
         case Sector::_4:
         {
 
-            const iq16 a = (alpha_dutycycle - beta_by_sqrt3) >> 1;
-            const iq16 b = beta_by_sqrt3;
+            const iq16 a = (alpha_dutycycle - beta_dutycycle_by_sqrt3) >> 1;
+            const iq16 b = beta_dutycycle_by_sqrt3;
 
             const iq16 u = (HALF_ONE + a + b);
             const iq16 v = (HALF_ONE - a + b);
@@ -49,8 +49,8 @@ static constexpr UvwCoord<iq16> SVM(
         case Sector::_5:
         {
             const iq16 u = HALF_ONE + alpha_dutycycle;
-            const iq16 v = HALF_ONE + beta_by_sqrt3;
-            const iq16 w = HALF_ONE - beta_by_sqrt3;
+            const iq16 v = HALF_ONE + beta_dutycycle_by_sqrt3;
+            const iq16 w = HALF_ONE - beta_dutycycle_by_sqrt3;
 
             return {u, v, w};
         }
@@ -58,8 +58,8 @@ static constexpr UvwCoord<iq16> SVM(
         case Sector::_3:
         case Sector::_6:
         {
-            const iq16 a = beta_by_sqrt3;
-            const iq16 b = (- alpha_dutycycle - beta_by_sqrt3) >> 1;
+            const iq16 a = beta_dutycycle_by_sqrt3;
+            const iq16 b = (- alpha_dutycycle - beta_dutycycle_by_sqrt3) >> 1;
 
             const iq16 u = (HALF_ONE - a - b);
             const iq16 v = (HALF_ONE + a + b);
@@ -71,6 +71,7 @@ static constexpr UvwCoord<iq16> SVM(
         default:
             __builtin_unreachable();
     }
+
 }
 
 

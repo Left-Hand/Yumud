@@ -248,7 +248,7 @@ void bldc_main(){
     auto pd_ctrl_law_ = PdCtrlLaw{.kp = 128.581_r, .kd = 18.7_r};
 
     iq20 q_volt_ = 0;
-    Angle<iq20> meas_elecrad_ = Angle<iq20>::ZERO;
+    Angle<iq20> meas_elec_angle_ = Angle<iq20>::ZERO;
 
     [[maybe_unused]] iq20 axis_target_position_ = 0;
     [[maybe_unused]] iq20 axis_target_speed_ = 0;
@@ -318,7 +318,7 @@ void bldc_main(){
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
-        meas_elecrad_ = meas_elec_angle;
+        meas_elec_angle_ = meas_elec_angle;
     };
 
 
@@ -429,7 +429,7 @@ void bldc_main(){
                 DEBUG_PRINTLN_IDLE(
                     // pos_filter_.cont_position(), 
                     // pos_filter_.speed(),
-                    // meas_elecrad_,
+                    // meas_elec_angle_,
                     // q_volt_,
                     pwm_u.get_dutycycle(),
                     pwm_v.get_dutycycle(),

@@ -15,30 +15,30 @@ struct [[nodiscard]] Angle{
     static constexpr Angle<T> ZERO = 
 		Angle<T>::from_turns(static_cast<T>(0));
 
-    static constexpr Angle<T> LAP = 
+    static constexpr Angle<T> ONE = 
 		Angle<T>::from_turns(static_cast<T>(1));
 
-    static constexpr Angle<T> NEG_LAP = 
+    static constexpr Angle<T> NEG_ONE = 
 		Angle<T>::from_turns(static_cast<T>(-1));
 
-    static constexpr Angle<T> HALF_LAP = 
+    static constexpr Angle<T> HALF = 
 		Angle<T>::from_turns(static_cast<T>(0.5));
 
-    static constexpr Angle<T> NEG_HALF_LAP = 
+    static constexpr Angle<T> NEG_HALF = 
 		Angle<T>::from_turns(static_cast<T>(-0.5));
 
 
-	static constexpr Angle<T> TRIS_LAP = 
+	static constexpr Angle<T> TRIS = 
 		Angle<T>::from_turns(static_cast<T>(1.0 / 3));
 
-	static constexpr Angle<T> NEG_TRIS_LAP = 
+	static constexpr Angle<T> NEG_TRIS = 
 		Angle<T>::from_turns(static_cast<T>(1.0 / 3));
 
-    static constexpr Angle<T> QUARTER_LAP = 
+    static constexpr Angle<T> QUARTER = 
 		Angle<T>::from_turns(static_cast<T>(0.25));
 
 
-    static constexpr Angle<T> NEG_QUARTER_LAP = 
+    static constexpr Angle<T> NEG_QUARTER = 
 		Angle<T>::from_turns(static_cast<T>(-0.25));
 
     static constexpr Angle<T> THREE_QUARTERS = 
@@ -95,8 +95,9 @@ struct [[nodiscard]] Angle{
 	}
 
 	template<typename U>
-	constexpr Angle<T> operator = (const Angle<U> & rhs){
-		return Angle<T>::from_turns(static_cast<T>(rhs.turns_));
+	constexpr Angle<T> & operator = (const Angle<U> & rhs){
+		*this = Angle<T>::from_turns(static_cast<T>(rhs.turns_));
+		return *this;
 	}
 
 	[[nodiscard]] constexpr T to_degrees() const{

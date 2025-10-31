@@ -56,7 +56,7 @@ public:
 
     [[nodiscard]] __fast_inline constexpr
     Line2<T> abs() const {
-        if(Angle<T>::ZERO <= orientation and orientation < Angle<T>::HALF_LAP) return *this; 
+        if(Angle<T>::ZERO <= orientation and orientation < Angle<T>::HALF) return *this; 
 
         auto m = orientation.normalized().to_turns();
 
@@ -160,7 +160,7 @@ public:
 
     [[nodiscard]] __fast_inline constexpr
     Line2<T> normal(const Vec2<T> & p){
-        const auto next_angle = this->orientation + Angle<T>::QUARTER_LAP;
+        const auto next_angle = this->orientation + Angle<T>::QUARTER;
         const auto [s,c] = next_angle.sincos();
         return {p.x * s - p.x * c, next_angle};
     }

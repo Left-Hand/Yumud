@@ -58,7 +58,7 @@ struct UvwCoord{
             return this->u;
         } else if constexpr(I == 1){
             return this->v;
-        }else if constexpr(I == 1){
+        }else if constexpr(I == 2){
             return this->w;
         }
     } 
@@ -70,7 +70,7 @@ struct UvwCoord{
             return this->u;
         } else if constexpr(I == 1){
             return this->v;
-        }else if constexpr(I == 1){
+        }else if constexpr(I == 2){
             return this->w;
         }
     }

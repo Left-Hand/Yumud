@@ -228,7 +228,7 @@ void math_main(){
 
 
     auto line = Line{Vec2<iq16>{1,0}, Vec2<iq16>{0,1}};
-    auto other = Line::from_point_and_angle(Vec2<iq16>{0,0}, Angle<iq16>::QUARTER_LAP);
+    auto other = Line::from_point_and_angle(Vec2<iq16>{0,0}, Angle<iq16>::QUARTER);
     print("line", line);
     print("other",other);
 
@@ -249,9 +249,9 @@ void math_main(){
     print("mirror", line.mirror(Vec2<iq16>{0, 0.5_r}));
     print("perpendicular", line.perpendicular(Vec2<iq16>{0, 0.5_r}));
     print("orthogonal_with", line.is_orthogonal_with(
-        Line::from_point_and_angle(Vec2<iq16>{0,0}, Angle<iq16>::QUARTER_LAP), iq16(1e-6)));
+        Line::from_point_and_angle(Vec2<iq16>{0,0}, Angle<iq16>::QUARTER), iq16(1e-6)));
     print("rebase", line.rebase(Vec2<iq16>{-1,0}));
-    print("rotated", line.rotated(Vec2<iq16>{-1,0}, Angle<iq16>::QUARTER_LAP));
+    print("rotated", line.rotated(Vec2<iq16>{-1,0}, Angle<iq16>::QUARTER));
     print("normal", line.normal(Vec2<iq16>{-1,0}));
     #endif
 
