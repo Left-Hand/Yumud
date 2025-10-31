@@ -92,13 +92,15 @@ struct upcast_underlying_type<int32_t>{
 
 
 template<size_t Q, typename D>
-struct fixed_t{
+struct [[nodiscard]] fixed_t{
 private:
-    static_assert(Q <= sizeof(D) * 8);
+    static constexpr size_t MAX_Q = std::is_unsigned_v<D> ? 
+        size_t(sizeof(D) * 8) : 
+        size_t(sizeof(D) * 8 - 1); // 为符号位预留一个bit
+    static_assert(Q <= MAX_Q);
 
     D count_;
 
-    
     using upcast_underlying_t = typename iqmath::details::upcast_underlying_type<D>::type;
 
 public:
@@ -124,8 +126,10 @@ public:
     __fast_inline constexpr fixed_t(count_ctor ctor):
         count_(ctor.count){;}
 
+    static constexpr fixed_t<Q, D> from_bits(const D count){
+        return fixed_t<Q, D>(count_ctor{count});
+    };
 
-    
     __fast_inline constexpr fixed_t(const fixed_t<Q, D> & other):
         count_(other.count_){};
 
@@ -151,9 +155,7 @@ public:
         return *this;
     };
     
-    static constexpr fixed_t<Q, D> from_bits(const D count){
-        return fixed_t<Q, D>(count_ctor{count});
-    };
+
 
     template<typename T>
     requires std::is_integral_v<T>
@@ -163,7 +165,7 @@ public:
     __fast_inline consteval explicit fixed_t(const long double dv):
         fixed_t(count_ctor{static_cast<D>(dv * static_cast<long double>(uint64_t(1) << Q))}){};
 
-    static __fast_inline constexpr fixed_t from (const floating auto fv){
+    __fast_inline static constexpr fixed_t from (const floating auto fv){
         return fixed_t{count_ctor{
             .count = static_cast<D>(iqmath::details::_IQFtoN<Q>(fv))}
         };
@@ -421,8 +423,8 @@ __fast_inline constexpr fixed_t<Q, D> fmod(const fixed_t<Q, D> a, const fixed_t<
 template<size_t Q, typename D, typename U = std::make_unsigned_t<D>>
 __fast_inline constexpr fixed_t<Q, U> fposmod(const fixed_t<Q, D> a, const fixed_t<Q, D> b){
     constexpr size_t SHIFT = size_t(sizeof(D) * 8 - 1);
-    const U mod_result = std::bit_cast<U>(a.as_bits() % b.as_bits());
-    const U is_negative = static_cast<U>(mod_result >> SHIFT);  // 符号位扩展（0 或 -1）
+    const D mod_result = std::bit_cast<D>(a.as_bits() % b.as_bits());
+    const D is_negative = static_cast<D>(mod_result >> SHIFT);  // 符号位扩展（0 或 -1）
     return fixed_t<Q, U>::from_bits(static_cast<U>(mod_result + static_cast<U>(b.as_bits() & is_negative)));
 }
 
@@ -475,6 +477,7 @@ __fast_inline constexpr T ceil_cast(const fixed_t<Q, D> x){
         return static_cast<T>(x);
     }
 }
+
 template<typename T, size_t Q, typename D>
 __fast_inline constexpr T round_cast(const fixed_t<Q, D> x){
     if constexpr(std::is_integral_v<T>){

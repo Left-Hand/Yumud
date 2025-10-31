@@ -97,7 +97,7 @@ public:
             const auto either_lap_position = encoder_.read_lap_angle();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
-            Angle<q31>::from_turns(1 - either_lap_position.unwrap().to_turns());
+            Angle<uq32>::from_turns(1 - either_lap_position.unwrap().to_turns());
         });
 
         auto & subprogress = calibrate_tasks_;
@@ -154,8 +154,7 @@ public:
         is_subprogress_finished_ = false;
 
 
-        const auto [a,b] = subprogress.resume(
-            Angle<iq16>::from_turns(meas_lap_angle.to_turns()));
+        const auto [a,b] = subprogress.resume(meas_lap_angle);
 
         svpwm_.set_dutycycle({a,b});
         return Ok();
@@ -166,7 +165,7 @@ public:
     }
 
 
-    void ctrl(Angle<q31> meas_lap_angle){
+    void ctrl(Angle<uq32> meas_lap_angle){
 
         pos_filter_.update(meas_lap_angle.into<iq16>());
         // const auto [a,b] = sincospu(frac(meas_lap_angle - 0.009_r) * 50);
@@ -175,7 +174,7 @@ public:
         // const auto input_targ_position = 16 * sin(ctime);
         // const auto targ_speed = 6 * cos(6 * ctime);
         
-        // const auto input_targ_position = 10 * real_t(int(ctime));
+        // const auto input_targ_position = 10 * iq16(int(ctime));
         const auto ctime = clock::time();
         // const auto input_targ_position = 5 * sin(ctime/2);
 
@@ -185,11 +184,11 @@ public:
         //     command_shaper_.speed()
         // );
 
-        const auto omega = 1.0_r * real_t(TAU);
+        const auto omega = 1.0_r * iq16(TAU);
         // const auto omega = 1.0_r;
         // const auto amp = 0.5_r;
         const auto amp = 0.05_r;
-        const auto [targ_position, targ_speed] = std::make_tuple<q16, q16>(
+        const auto [targ_position, targ_speed] = std::make_tuple<iq16, iq16>(
             amp * sin(ctime * omega) + 9, omega * amp * cos(ctime * omega)
             // int(ctime * omega), 0
         );
@@ -207,12 +206,12 @@ public:
         
         // const auto mag = 0.5_r * sinpu(ctime);
         const auto mag = ABS(curr);
-        const auto tangles = (1 + MIN(ABS(meas_speed) * real_t(1.0 / 40), 0.15_r));
+        const auto tangles = (1 + MIN(ABS(meas_speed) * iq16(1.0 / 40), 0.15_r));
 
         const auto [s,c] = sincospu(
         (pos_filter_.accumulated_angle().to_turns() + SIGN_AS(0.005_r * tangles, curr)) * 50);
         
-        svpwm_.set_dutycycle({c * mag,s * mag});
+        svpwm_.set_dutycycle({mag * c,mag * s});
 
 
     }
@@ -234,9 +233,9 @@ public:
 
 
         for(size_t i = 0; i < 50; i++){
-            const auto raw = real_t(i) / 50;
-            const auto corrected = corrector_.correct_raw_position(raw);
-            DEBUG_PRINTLN(raw, corrected, (corrected - raw) * 1000);
+            const auto raw_angle = Angle<uq32>::from_turns(static_cast<uq32>(iq16(i) / 50));
+            [[maybe_unused]] const auto corrected = corrector_.correct_raw_angle(raw_angle);
+            // DEBUG_PRINTLN(raw, corrected, (corrected - raw) * 1000);
             clock::delay(1ms);
         }
 
@@ -273,7 +272,7 @@ public:
 
     bool is_subprogress_finished_ = false;
 
-    static constexpr real_t MC_TAU = 80;
+    static constexpr iq16 MC_TAU = 80;
 
 
     static constexpr CommandShaperConfig CS_CONFIG{
@@ -427,7 +426,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     pwm_bp.init({});
     pwm_bn.init({});
 
-    auto convert_pair_duty = [](const real_t duty) -> std::tuple<real_t, real_t>{
+    auto convert_pair_duty = [](const iq16 duty) -> std::tuple<iq16, iq16>{
         if(duty > 0){
             return {1, 1-duty};
         }else{
@@ -435,7 +434,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
         }
     };
 
-    auto set_alphabeta_duty = [&](const real_t alpha, const real_t beta){
+    auto set_alphabeta_duty = [&](const iq16 alpha, const iq16 beta){
         {
             const auto [ap,an] = convert_pair_duty(alpha);
             pwm_ap.set_dutycycle(ap);
@@ -481,7 +480,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
         }
     );
 
-    real_t a_curr, b_curr;
+    iq16 a_curr, b_curr;
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
@@ -494,8 +493,8 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
             const auto [s,c] = sincospu(t);
             constexpr auto mag = 0.4_r;
             set_alphabeta_duty(
-                c * mag,
-                s * mag
+                mag * c,
+                mag * s
             );
             break;
         }
@@ -638,8 +637,8 @@ void mystepper_main(){
             const auto [s,c] = sincospu(10 * ctime);
             constexpr auto mag = 0.3_r;
             pwm_gen_.set_dutycycle({
-                c * mag,
-                s * mag
+                mag * c,
+                mag * s
             });
             // pwm_gen_.set_alphabeta_duty(
             //     mag,

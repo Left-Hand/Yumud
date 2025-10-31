@@ -19,8 +19,8 @@ public:
         pos_range_(cfg.pos_range)
     {}
 
-    [[nodiscard]] Result<Angle<q31>, EncoderError> read_lap_angle(){
-        return Ok(Angle<q31>::from_turns(last_pos_));
+    [[nodiscard]] Result<Angle<uq32>, EncoderError> read_lap_angle(){
+        return Ok(Angle<uq32>::from_turns(last_pos_));
     }
 
     [[nodiscard]] Result<void, EncoderError> update(){

@@ -49,7 +49,7 @@ public:
     [[nodiscard]] __fast_inline constexpr
     T y_at_x(const T x){
         const auto [s,c] = orientation.sincos();
-        auto den = c;
+        const T den = static_cast<T>(c);
         return den ? (x * s - d) / den : T{0};
     }
 
@@ -91,7 +91,7 @@ public:
     T signed_distance_to(const Vec2<T> & p) const{
         // x * -sin(orientation) + y * cos(orientation) + d = 0
         const auto [s,c] = orientation.sincos();
-        return -s * p.x + c * p.y + d;
+        return -p.x * s + p.y * c + d;
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -162,7 +162,7 @@ public:
     Line2<T> normal(const Vec2<T> & p){
         const auto next_angle = this->orientation + Angle<T>::QUARTER_LAP;
         const auto [s,c] = next_angle.sincos();
-        return {s * p.x - c * p.x, next_angle};
+        return {p.x * s - p.x * c, next_angle};
     }
 
 
@@ -195,7 +195,7 @@ public:
     [[nodiscard]] __fast_inline constexpr
     std::tuple<T, T, T> abc() const{
         const auto [s,c] = orientation.sincos();
-        return {-s, c, d};
+        return {static_cast<T>(-s), static_cast<T>(c), d};
     }
 
 
@@ -240,17 +240,17 @@ public:
         // x = + B * B * x0 - A * B * y0 - A * C
         // y = - A * B * x0 + A * A * y0 - B * C
 
-        auto [x0, y0] = p;
+        const auto [x0, y0] = p;
 
-        auto [s, c] = orientation.sincos();
+        const auto [s, c] = orientation.sincos();
 
-        auto A2 = s * s;
-        auto B2 = c * c;
-        auto AB = -s * c;
+        const auto A2 = s * s;
+        const auto B2 = c * c;
+        const auto AB = -s * c;
 
-        auto C = d;
+        const auto C = d;
 
-        return {B2 * x0 - AB * y0 + s * C, -AB * x0 + A2 * y0 - c * C};
+        return {x0 * B2 - y0 * AB + C * s, -x0 * AB + y0 * A2 - C * c};
     }
 
     [[nodiscard]] __fast_inline constexpr

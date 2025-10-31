@@ -62,7 +62,7 @@ static constexpr auto SVPWM_MAX_VOLT = 3.87_r;
 
 static constexpr size_t MACHINE_CTRL_FREQ = 200;
 static constexpr auto DELTA_TIME_MS = 1000ms / MACHINE_CTRL_FREQ;
-static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_q20;
+static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_iq20;
 
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
@@ -247,11 +247,11 @@ void bldc_main(){
 
     auto pd_ctrl_law_ = PdCtrlLaw{.kp = 128.581_r, .kd = 18.7_r};
 
-    q20 q_volt_ = 0;
-    Angle<q20> meas_elecrad_ = Angle<q20>::ZERO;
+    iq20 q_volt_ = 0;
+    Angle<iq20> meas_elecrad_ = Angle<iq20>::ZERO;
 
-    [[maybe_unused]] q20 axis_target_position_ = 0;
-    [[maybe_unused]] q20 axis_target_speed_ = 0;
+    [[maybe_unused]] iq20 axis_target_position_ = 0;
+    [[maybe_unused]] iq20 axis_target_speed_ = 0;
     
     Microseconds exe_us_ = 0us;
 
@@ -276,8 +276,8 @@ void bldc_main(){
         [[maybe_unused]] const auto meas_position = pos_filter_.accumulated_angle().to_turns();
         [[maybe_unused]] const auto meas_speed = pos_filter_.speed();
 
-        [[maybe_unused]] static constexpr q20 omega = 2;
-        [[maybe_unused]] static constexpr q20 amp = 0.300_r;
+        [[maybe_unused]] static constexpr iq20 omega = 2;
+        [[maybe_unused]] static constexpr iq20 amp = 0.300_r;
         [[maybe_unused]] const auto ctime = clock::time();
 
         const auto [axis_target_position, axis_target_speed] = ({
@@ -309,7 +309,7 @@ void bldc_main(){
             CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
         }.to_alphabeta(meas_elec_angle);
         #endif
-        static constexpr auto INV_BUS_VOLT = q16(1.0/12);
+        static constexpr auto INV_BUS_VOLT = iq16(1.0/12);
 
         uvw_pwmgen.set_dutycycle(
             SVM(alphabeta_volt * INV_BUS_VOLT)

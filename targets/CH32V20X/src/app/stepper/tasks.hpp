@@ -89,8 +89,8 @@ struct MotorTaskPrelude{
             const auto [s,c] = sincospu(targ_elec_rotation_);
 
             return digipw::AlphaBetaCoord<iq16>{
-                .alpha = c * STALL_DUTYCYCLE,
-                .beta = s * STALL_DUTYCYCLE
+                .alpha = STALL_DUTYCYCLE * c,
+                .beta = STALL_DUTYCYCLE * s
             };
         }
 
@@ -181,8 +181,8 @@ struct MotorTaskPrelude{
             const auto [s,c] = (expected_angle.into<uq16>() * MOTOR_POLE_PAIRS).sincos();
             tick_cnt_++;
             return digipw::AlphaBetaCoord<iq16>{
-                .alpha = c * STALL_DUTYCYCLE,
-                .beta = s * STALL_DUTYCYCLE
+                .alpha = STALL_DUTYCYCLE * c,
+                .beta = STALL_DUTYCYCLE * s
             };
         }
 
@@ -225,8 +225,8 @@ struct MotorTaskPrelude{
             const auto [s,c] = (expected_angle.into<uq16>() * MOTOR_POLE_PAIRS).sincos();
             tick_cnt_++;
             return digipw::AlphaBetaCoord<iq16>{
-                .alpha = c * STALL_DUTYCYCLE,
-                .beta = s * STALL_DUTYCYCLE
+                .alpha = STALL_DUTYCYCLE * c,
+                .beta = STALL_DUTYCYCLE * s
             };
         }
 
@@ -453,8 +453,8 @@ struct CalibrateRotateTask final{
 
 
         return digipw::AlphaBetaCoord<iq16>{
-            .alpha = c * CALIBRATE_DUTYCYCLE,
-            .beta = s * CALIBRATE_DUTYCYCLE
+            .alpha = CALIBRATE_DUTYCYCLE * c,
+            .beta = CALIBRATE_DUTYCYCLE * s
         };
     }
 

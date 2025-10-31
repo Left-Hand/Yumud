@@ -12,10 +12,10 @@ class SlideModeObserver{
 public:
 
     struct  Config{
-        q16 f_para;
-        q16 g_para;
-        q16 kslide;   
-        q16 kslf;   
+        iq16 f_para;
+        iq16 g_para;
+        iq16 kslide;   
+        iq16 kslf;   
     };
 
     constexpr SlideModeObserver(const Config & cfg){
@@ -86,26 +86,26 @@ public:
     Angle<iq16> angle() const {return Angle<iq16>::from_turns(turns_);}
 
 private:
-    q16 f_para_ = 0;
-    q16 g_para_ = 0;
-    q16 Kslide_ = 0;
-    q16 Kslf_ = 0;
+    iq16 f_para_ = 0;
+    iq16 g_para_ = 0;
+    iq16 Kslide_ = 0;
+    iq16 Kslf_ = 0;
 public:
-    q16 e_alpha_ = 0;
-    q16 e_beta_ = 0;
+    iq16 e_alpha_ = 0;
+    iq16 e_beta_ = 0;
 
-    q16 z_alpha_ = 0;
-    q16 z_beta_ = 0;
+    iq16 z_alpha_ = 0;
+    iq16 z_beta_ = 0;
     
-    q16 est_i_alpha_ = 0;
-    q16 est_i_beta_ = 0;
+    iq16 est_i_alpha_ = 0;
+    iq16 est_i_beta_ = 0;
 
-    q16 turns_ = 0;
+    iq16 turns_ = 0;
 
     // 滑模阈值
-    static constexpr q16 E0 = q16(1.5);
+    static constexpr iq16 E0 = iq16(1.5);
     // 滑模阈值的倒数
-    static constexpr q16 invE0 = q16(1/1.5);
+    static constexpr iq16 invE0 = iq16(1/1.5);
 };
 
 } // namespace ymd

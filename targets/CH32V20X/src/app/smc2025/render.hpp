@@ -223,8 +223,8 @@ static constexpr Vec2u project_ground_to_pixel(
     
     // 3. Apply inverse rotation matrix (transpose of original rotation matrix)
     const Vec2<iq16> unrotated = {
-        c * relative_pos.x - s * relative_pos.y,
-        s * relative_pos.x + c * relative_pos.y
+        relative_pos.x * c - relative_pos.y * s,
+        relative_pos.x * s + relative_pos.y * c
     };
     
     // 4. Remove scaling and convert to pixel space

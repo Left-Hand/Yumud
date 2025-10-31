@@ -16,8 +16,8 @@ static constexpr __fast_inline void alphabeta_to_dq(
     To & dq, const From & alphabeta, const auto & angle
 ){
     auto [s,c] = angle.sincos();
-    dq.template get<0>() = s * alphabeta.template get<1>() + c * alphabeta.template get<0>();
-    dq.template get<1>() = c * alphabeta.template get<1>() - s * alphabeta.template get<0>();
+    dq.template get<0>() = alphabeta.template get<1>() * s + alphabeta.template get<0>() * c;
+    dq.template get<1>() = alphabeta.template get<1>() * c - alphabeta.template get<0>() * s;
 };
 
 
@@ -27,13 +27,13 @@ static constexpr __fast_inline void dq_to_alphabeta(
     To & alphabeta, const From & dq, const auto & angle
 ){
     auto [s,c] = angle.sincos();
-    alphabeta.template get<0>() = c * dq.template get<0>() - s * dq.template get<1>();
-    alphabeta.template get<1>() = c * dq.template get<1>() + s * dq.template get<0>();
+    alphabeta.template get<0>() = dq.template get<0>() * c - dq.template get<1>() * s;
+    alphabeta.template get<1>() = dq.template get<1>() * c + dq.template get<0>() * s;
 };
 }
 
 template<typename T>
-struct AlphaBetaCoord final{
+struct [[nodiscard]] AlphaBetaCoord final{
     T alpha;
     T beta;
 
@@ -50,6 +50,14 @@ struct AlphaBetaCoord final{
             .beta = (uvw.v - uvw.w) * _sqrt3_by_3
         };
     };
+
+    [[nodiscard]] constexpr UvwCoord<T> to_uvw() const{
+        return UvwCoord<T>{
+            .u = alpha,
+            .v = ((beta * _sqrt3_by_2) - (alpha >> 1))
+            .w = ((-beta * _sqrt3_by_2) - (alpha >> 1))
+        };
+    }
 
     [[nodiscard]] constexpr T operator [](const size_t idx) const {
         return *(&alpha + idx);
@@ -145,11 +153,42 @@ struct AlphaBetaCoord final{
 private:
     static constexpr T _2_by_3 = static_cast<T>(2.0/3);
     static constexpr T _sqrt3_by_3 = static_cast<T>(sqrt(T(3)) / 3);
+    static constexpr T _sqrt3_by_2 = static_cast<T>(sqrt(T(3)) / 2);
+};
+
+template<typename T>
+struct [[nodiscard]] AlphaBetaZeroCoord final{
+    T alpha;
+    T beta;
+    T zero;
+
+    [[nodiscard]] static constexpr AlphaBetaZeroCoord from_uvw(const UvwCoord<T> & uvw){
+        return AlphaBetaCoord{
+            .alpha = (uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, 
+            .beta = (uvw.v - uvw.w) * _sqrt3_by_3,
+            .zero = (uvw.u + uvw.v + uvw.w) * _sqrt2_by_2
+        };
+    };
+
+    [[nodiscard]] constexpr UvwCoord<T> to_uvw() const{
+        const auto zero_sqrt2_by_2 = zero * _sqrt2_by_2;
+        return UvwCoord<T>{
+            .u = alpha + zero_sqrt2_by_2,
+            .v = ((beta * _sqrt3_by_2) + zero_sqrt2_by_2 - (alpha >> 1)),
+            .w = ((-beta * _sqrt3_by_2) + zero_sqrt2_by_2 - (alpha >> 1))
+        };
+    }
+
+private:
+    static constexpr T _2_by_3 = static_cast<T>(2.0/3);
+    static constexpr T _sqrt3_by_3 = static_cast<T>(sqrt(T(3)) / 3);
+    static constexpr T _sqrt3_by_2 = static_cast<T>(sqrt(T(3)) / 2);
+    static constexpr T _sqrt2_by_2 = static_cast<T>(sqrt(T(2)) / 2);
 };
 
 
 template<typename T>
-struct DqCoord final{
+struct [[nodiscard]] DqCoord final{
 
     T d;
     T q;

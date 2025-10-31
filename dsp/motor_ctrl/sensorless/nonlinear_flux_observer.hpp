@@ -12,10 +12,10 @@ class NonlinearFluxObserver final{
 public:
     struct Config{
         uint32_t fs;
-        q20 phase_inductance;
-        q20 phase_resistance;
-        q20 observer_gain; // [rad/s]
-        q20 pm_flux_linkage; // [V / (rad/s)]
+        iq20 phase_inductance;
+        iq20 phase_resistance;
+        iq20 observer_gain; // [rad/s]
+        iq20 pm_flux_linkage; // [V / (rad/s)]
 
     };
 
@@ -50,14 +50,14 @@ public:
         // once by final_v_alpha/final_v_beta in the current control reporting, and once by V_alphabeta_memory.
         const auto [Valpha, Vbeta] = alphabeta_volt;
         const auto [Ialpha, Ibeta] = alphabeta_curr;
-        const q20 I_alphabeta[2] = {Ialpha, Ibeta};
+        const iq20 I_alphabeta[2] = {Ialpha, Ibeta};
         // alpha-beta vector operations
-        q20 eta_mf[2];
+        iq20 eta_mf[2];
 
         #pragma GCC unroll 2
         for (size_t i = 0; i < 2; ++i) {
             // flux dynamics (prediction)
-            q20 x_dot = -phase_resistance_ * I_alphabeta[i] + V_alphabeta_last_[i];
+            iq20 x_dot = -phase_resistance_ * I_alphabeta[i] + V_alphabeta_last_[i];
             // integrate prediction to current timestep
             flux_state_mf_[i] += x_dot;
 
@@ -67,8 +67,8 @@ public:
 
         // Non-linear observer (see paper eqn 8):
 
-        q20 est_pm_flux_sqr_mf_2 = square(eta_mf[0]) + square(eta_mf[1]);
-        q20 eta_factor = temp1_ * (pm_flux_sqr_mf_2_ - est_pm_flux_sqr_mf_2) >> 1;
+        iq20 est_pm_flux_sqr_mf_2 = square(eta_mf[0]) + square(eta_mf[1]);
+        iq20 eta_factor = temp1_ * (pm_flux_sqr_mf_2_ - est_pm_flux_sqr_mf_2) >> 1;
 
 
 
@@ -76,7 +76,7 @@ public:
         #pragma GCC unroll 2
         for (size_t i = 0; i < 2; ++i) {
             // add observer action to flux estimate dynamics
-            q20 x_dot = eta_factor * eta_mf[i];
+            iq20 x_dot = eta_factor * eta_mf[i];
             // convert action to discrete-time
             flux_state_mf_[i] += x_dot;
             // update new eta
@@ -92,18 +92,18 @@ public:
     }
 
     constexpr Angle<iq16> angle() const {
-        return Angle<iq16>::from_turns(frac(q16(turns_)));
+        return Angle<iq16>::from_turns(frac(iq16(turns_)));
     }
 // private:
 public:
     // Config config_;
-    q20 phase_resistance_;
-    q20 temp1_;
-    q20 pm_flux_sqr_mf_2_;
-    q20 phase_inductance_mul_config_freq_;
-    q20 flux_state_mf_[2] = {0, 0};        // [Vs * Fs]
-    q20 V_alphabeta_last_[2] = {0, 0}; // [V]
-    q20 turns_ = 0;                   // [rad]
+    iq20 phase_resistance_;
+    iq20 temp1_;
+    iq20 pm_flux_sqr_mf_2_;
+    iq20 phase_inductance_mul_config_freq_;
+    iq20 flux_state_mf_[2] = {0, 0};        // [Vs * Fs]
+    iq20 V_alphabeta_last_[2] = {0, 0}; // [V]
+    iq20 turns_ = 0;                   // [rad]
 };
 
 
