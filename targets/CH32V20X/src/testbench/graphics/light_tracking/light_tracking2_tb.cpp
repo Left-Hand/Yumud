@@ -273,7 +273,7 @@ static Option<RGB<iq16>> sample_light(
 
 static Quat<iq16> quat_from_normal(const Vec3<iq16>& normal)
 {
-    const auto ilen = isqrt(1 + (normal.z + 2) * normal.z);
+    const auto ilen = inv_sqrt(1 + (normal.z + 2) * normal.z);
     return Quat<iq16>::from_xyzw(
         -normal.y * ilen,
         normal.x * ilen,

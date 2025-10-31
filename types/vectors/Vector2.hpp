@@ -261,7 +261,7 @@ struct Vec2{
     }
 
     [[nodiscard]] constexpr T inv_length() const {
-        return imag(x,y);
+        return inv_mag(x,y);
     }
     
     [[nodiscard]] constexpr T length_squared() const {return (x*x + y*y);}
@@ -576,7 +576,7 @@ constexpr Vec2<T> Vec2<T>::snapped(const Vec2<T> &by) const{
 template<typename T>
 constexpr __fast_inline Vec2<T> Vec2<T>::normalized() const{
     static_assert(not std::is_integral_v<T>);
-    return (*this) * isqrt(this->length_squared());
+    return (*this) * inv_sqrt(this->length_squared());
 }
 
 template<typename T>

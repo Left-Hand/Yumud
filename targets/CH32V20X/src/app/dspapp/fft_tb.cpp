@@ -23,7 +23,7 @@ namespace ymd::dsp {
 template <typename T, size_t N>
 struct TwiddleFactors {
     static_assert(std::has_single_bit(N), "N must be a power of 2");
-    static constexpr std::array<T, N/2> cos = []{
+    static constexpr std::array<T, N/2> COS_TABLE = []{
         std::array<T, N/2> ret;
         for (size_t k = 0; k < N/2; ++k) {
             const T angle = -2 * T(PI) * k / N;
@@ -32,7 +32,7 @@ struct TwiddleFactors {
         return ret;
     }();
 
-    static constexpr std::array<T, N/2> sin = []{
+    static constexpr std::array<T, N/2> SIN_TABLE = []{
         std::array<T, N/2> ret;
         for (size_t k = 0; k < N/2; ++k) {
             const T angle = -2 * T(PI) * k / N;
@@ -42,9 +42,6 @@ struct TwiddleFactors {
     }();
     
 };
-
-template <typename T, size_t N>
-constexpr auto twiddle_factors_v = TwiddleFactors<T, N>{};
 
 
 
@@ -70,21 +67,21 @@ struct FFT_Impl{
             }();
             
             for (size_t i = 0; i < N; ++i) {
-                dst[bitrev[i]].real = src[i];
-                dst[bitrev[i]].imag = T(0);
+                dst[bitrev[i]].re = src[i];
+                dst[bitrev[i]].im = T(0);
             }
         } else {
             // 大规模FFT使用运行时位反转
             for (size_t i = 0; i < N; ++i) {
-                dst[i].real = src[i];
-                dst[i].imag = T(0);
+                dst[i].re = src[i];
+                dst[i].im = T(0);
             }
             
             for (size_t i = 1, j = 0; i < N - 1; ++i) {
                 for (size_t k = N >> 1; k > (j ^= k); k >>= 1);
                 if (i < j) {
-                    std::swap(dst[i].real, dst[j].real);
-                    std::swap(dst[i].imag, dst[j].imag);
+                    std::swap(dst[i].re, dst[j].re);
+                    std::swap(dst[i].im, dst[j].im);
                 }
             }
         }
@@ -102,21 +99,21 @@ struct FFT_Impl{
                         const size_t idx2 = idx1 + half;
                         const size_t tw_idx = pair * step;
                         
-                        const T tw_cos = twiddle_factors_v<T, N>.cos[tw_idx];
-                        const T tw_sin = twiddle_factors_v<T, N>.sin[tw_idx];
+                        const T tw_cos = TwiddleFactors<T, N>::COS_TABLE[tw_idx];
+                        const T tw_sin = TwiddleFactors<T, N>::SIN_TABLE[tw_idx];
                         
-                        const T temp_real = dst[idx2].real * tw_cos - dst[idx2].imag * tw_sin;
-                        const T temp_imag = dst[idx2].real * tw_sin + dst[idx2].imag * tw_cos;
+                        const T temp_re = dst[idx2].re * tw_cos - dst[idx2].im * tw_sin;
+                        const T temp_im = dst[idx2].re * tw_sin + dst[idx2].im * tw_cos;
                         
-                        const T sum_real = dst[idx1].real + temp_real;
-                        const T sum_imag = dst[idx1].imag + temp_imag;
-                        const T diff_real = dst[idx1].real - temp_real;
-                        const T diff_imag = dst[idx1].imag - temp_imag;
+                        const T sum_re = dst[idx1].re + temp_re;
+                        const T sum_im = dst[idx1].im + temp_im;
+                        const T diff_re = dst[idx1].re - temp_re;
+                        const T diff_im = dst[idx1].im - temp_im;
                         
-                        dst[idx1].real = sum_real;
-                        dst[idx1].imag = sum_imag;
-                        dst[idx2].real = diff_real;
-                        dst[idx2].imag = diff_imag;
+                        dst[idx1].re = sum_re;
+                        dst[idx1].im = sum_im;
+                        dst[idx2].re = diff_re;
+                        dst[idx2].im = diff_im;
                     }
                 }
             } else {
@@ -127,16 +124,16 @@ struct FFT_Impl{
                         const size_t idx2 = idx1 + half;
                         const size_t tw_idx = j * step;
                         
-                        const T tw_cos = twiddle_factors_v<T, N>.cos[tw_idx];
-                        const T tw_sin = twiddle_factors_v<T, N>.sin[tw_idx];
+                        const T tw_cos = TwiddleFactors<T, N>::COS_TABLE[tw_idx];
+                        const T tw_sin = TwiddleFactors<T, N>::SIN_TABLE[tw_idx];
                         
-                        const T temp_real = dst[idx2].real * tw_cos - dst[idx2].imag * tw_sin;
-                        const T temp_imag = dst[idx2].real * tw_sin + dst[idx2].imag * tw_cos;
+                        const T temp_re = dst[idx2].re * tw_cos - dst[idx2].im * tw_sin;
+                        const T temp_im = dst[idx2].re * tw_sin + dst[idx2].im * tw_cos;
                         
-                        dst[idx2].real = dst[idx1].real - temp_real;
-                        dst[idx2].imag = dst[idx1].imag - temp_imag;
-                        dst[idx1].real += temp_real;
-                        dst[idx1].imag += temp_imag;
+                        dst[idx2].re = dst[idx1].re - temp_re;
+                        dst[idx2].im = dst[idx1].im - temp_im;
+                        dst[idx1].re += temp_re;
+                        dst[idx1].im += temp_im;
                     }
                 }
             }
@@ -146,8 +143,8 @@ struct FFT_Impl{
         if constexpr (N > 2) {
             constexpr size_t symm_point = (N >> 1) + 1;
             for (size_t k = symm_point; k < N; ++k) {
-                dst[k].real = dst[N - k].real;
-                dst[k].imag = -dst[N - k].imag;
+                dst[k].re = dst[N - k].re;
+                dst[k].im = -dst[N - k].im;
             }
         }
     }
@@ -157,9 +154,9 @@ struct FFT_Impl{
 template <typename T>
 struct FFT_Impl<T, 2>{
     static constexpr void calc(std::span<Complex<T>> dst,std::span<const T> src) noexcept {
-        dst[0].real = src[0] + src[1];
-        dst[1].real = src[0] - src[1];
-        dst[0].imag = dst[1].imag = T(0);
+        dst[0].re = src[0] + src[1];
+        dst[1].re = src[0] - src[1];
+        dst[0].im = dst[1].im = T(0);
     }
 };
 
@@ -168,41 +165,41 @@ template <typename T>
 struct FFT_Impl<T, 4>{
     static constexpr void calc(std::span<Complex<T>> dst,std::span<const T> src) noexcept {
         // 位反转排列
-        dst[0].real = src[0]; dst[0].imag = T(0);
-        dst[1].real = src[2]; dst[1].imag = T(0);
-        dst[2].real = src[1]; dst[2].imag = T(0);
-        dst[3].real = src[3]; dst[3].imag = T(0);
+        dst[0].re = src[0]; dst[0].im = T(0);
+        dst[1].re = src[2]; dst[1].im = T(0);
+        dst[2].re = src[1]; dst[2].im = T(0);
+        dst[3].re = src[3]; dst[3].im = T(0);
         
         // 第一阶段 (N=2)
         {
-            T t = dst[0].real;
-            dst[0].real += dst[1].real;
-            dst[1].real = t - dst[1].real;
+            T t = dst[0].re;
+            dst[0].re += dst[1].re;
+            dst[1].re = t - dst[1].re;
             
-            t = dst[2].real;
-            dst[2].real += dst[3].real;
-            dst[3].real = t - dst[3].real;
+            t = dst[2].re;
+            dst[2].re += dst[3].re;
+            dst[3].re = t - dst[3].re;
         }
         
         // 第二阶段 (N=4)
         {
-            constexpr T w_real = T(0);   // cos(-pi/2)
-            constexpr T w_imag = T(-1);  // sin(-pi/2)
+            constexpr T w_re = T(0);   // cos(-pi/2)
+            constexpr T w_im = T(-1);  // sin(-pi/2)
             
-            T temp_real = dst[3].real * w_real - dst[3].imag * w_imag;
-            T temp_imag = dst[3].real * w_imag + dst[3].imag * w_real;
+            T temp_re = dst[3].re * w_re - dst[3].im * w_im;
+            T temp_im = dst[3].re * w_im + dst[3].im * w_re;
             
-            dst[3].real = dst[1].real - temp_real;
-            dst[3].imag = dst[1].imag - temp_imag;
-            dst[1].real += temp_real;
-            dst[1].imag += temp_imag;
+            dst[3].re = dst[1].re - temp_re;
+            dst[3].im = dst[1].im - temp_im;
+            dst[1].re += temp_re;
+            dst[1].im += temp_im;
         }
         
         // 利用对称性
-        dst[2].real = dst[0].real;
-        dst[2].imag = -dst[0].imag;
-        dst[3].real = dst[1].real;
-        dst[3].imag = -dst[1].imag;
+        dst[2].re = dst[0].re;
+        dst[2].im = -dst[0].im;
+        dst[3].re = dst[1].re;
+        dst[3].im = -dst[1].im;
     }
 };
 
@@ -265,7 +262,7 @@ void fft_main(){
         );
     });
     // DEBUG_PRINTLN(samples);
-    // DEBUG_PRINTLN(dst.real, dst.imag);
+    // DEBUG_PRINTLN(dst.re, dst.im);
 
     for(size_t i = 0; i < N; i++){
         DEBUG_PRINTLN(

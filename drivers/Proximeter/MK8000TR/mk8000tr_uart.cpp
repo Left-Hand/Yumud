@@ -4,7 +4,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Self = MK8000TR_StreamDecoder;
+using Self = MK8000TR_StreamParser;
 
 void Self::push_byte(const uint8_t byte){
     switch(state_){

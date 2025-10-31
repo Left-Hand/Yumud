@@ -130,9 +130,9 @@ struct EllipseCalibrator_Prelude{
         // 5. 计算软铁缩放因子
         auto compute_scale_factors = [](Vec3<iq24> params) {
             return Vec3<iq24>{
-                isqrt(MAX(params.x, 1)),
-                isqrt(MAX(params.y, 1)),
-                isqrt(MAX(params.z, 1))
+                inv_sqrt(MAX(params.x, 1)),
+                inv_sqrt(MAX(params.y, 1)),
+                inv_sqrt(MAX(params.z, 1))
             };
         };
 

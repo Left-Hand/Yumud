@@ -4,7 +4,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Self = LD19_StreamDecoder;
+using Self = LD19_StreamParser;
 
 void Self::push_byte(const uint8_t byte){
     switch(state_){

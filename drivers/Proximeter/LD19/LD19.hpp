@@ -130,8 +130,8 @@ struct LD19_Prelude{
 };
 
 
-class LD19_StreamDecoder final:public LD19_Prelude{
-    explicit LD19_StreamDecoder(Callback callback):
+class LD19_StreamParser final:public LD19_Prelude{
+    explicit LD19_StreamParser(Callback callback):
         callback_(callback)
     {
         reset();

@@ -34,8 +34,8 @@ using Event = Packet;
 using Callback = std::function<void(Event)>;
 };
 
-class MK8000TR_StreamDecoder final:public MK8000TR_Prelude{
-    explicit MK8000TR_StreamDecoder(Callback callback):
+class MK8000TR_StreamParser final:public MK8000TR_Prelude{
+    explicit MK8000TR_StreamParser(Callback callback):
         callback_(callback)
     {
         reset();

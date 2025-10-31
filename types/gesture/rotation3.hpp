@@ -78,7 +78,7 @@ struct Rotation3{
 
         const Angle<T> theta_y = Angle<T>::from_atan2(
             matrix_.template at<2, 0>(),
-            imag(matrix_.template at<0, 0>(), matrix_.template at<2, 0>())
+            inv_mag(matrix_.template at<0, 0>(), matrix_.template at<2, 0>())
         );
 
         const Angle<T> theta_x = Angle<T>::from_atan2(

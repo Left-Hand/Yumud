@@ -163,7 +163,7 @@ namespace ymd{
     
     
     template<size_t Q>
-    __fast_inline constexpr fixed_t<Q, int32_t> isqrt(const fixed_t<Q, int32_t> x){
+    __fast_inline constexpr fixed_t<Q, int32_t> inv_sqrt(const fixed_t<Q, int32_t> x){
         return fixed_t<Q, int32_t>(iqmath::details::_IQNisqrt<Q>(x));
     }
     
@@ -173,7 +173,7 @@ namespace ymd{
     }
     
     template<size_t Q>
-    __fast_inline constexpr fixed_t<Q, int32_t> imag(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t> b){
+    __fast_inline constexpr fixed_t<Q, int32_t> inv_mag(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t> b){
         return fixed_t<Q, int32_t>(iqmath::details::_IQNimag<Q>(a, a));
     }
     

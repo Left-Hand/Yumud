@@ -72,7 +72,7 @@ struct [[nodiscard]] AlphaBetaCoord final{
     }
 
     [[nodiscard]] constexpr T inv_length() const {
-        return imag(alpha, beta);
+        return inv_mag(alpha, beta);
     }
 
     [[nodiscard]] constexpr T length_squared() const {
