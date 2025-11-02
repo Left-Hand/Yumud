@@ -43,18 +43,17 @@ struct PMW3901_Prelude{
     #pragma pack(pop)
     static_assert(sizeof(PMW3901_Data) == 1 + 1 + 2 + 2, "PMW3901_Data size error");
 
-};
-
-class PMW3901 final:public PMW3901_Prelude{
-public:
     enum class Error_Kind:uint8_t{
-        WrongChipId
+        InvalidChipId
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+};
+
+class PMW3901 final:public PMW3901_Prelude{
 public:
 
     explicit PMW3901(const hal::SpiDrv & spi_drv):
