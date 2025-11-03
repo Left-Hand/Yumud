@@ -12,7 +12,7 @@ public:
 
 
     // template<typename >
-    void print(const StringView & str){
+    void print(const StringView str){
         uart_.print(str);
         print_end();
     }
