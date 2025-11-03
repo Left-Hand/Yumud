@@ -109,10 +109,10 @@ IResult<> VL53L0X::start_conv(){
 }
 
 IResult<bool> VL53L0X::is_busy(){
-	uint8_t data;
-    if(const auto err = read_byte_data(VL53L0X_REG_SYSRANGE_START, data); err.is_err())
+	uint8_t val;
+    if(const auto err = read_byte_data(VL53L0X_REG_SYSRANGE_START, val); err.is_err())
 		return Err(err.unwrap_err());
-	return Ok(data & 0x01);
+	return Ok(val & 0x01);
 }
 
 IResult<> VL53L0X::flush(){
@@ -147,9 +147,13 @@ IResult<> VL53L0X::stop(){
 }
 
 IResult<> VL53L0X::update(){
-	const auto res = is_busy();
-    if(res.is_err()) return Err(res.unwrap_err());
-	if(res.unwrap() == false){
+	const bool device_is_busy = ({
+		const auto res = is_busy();
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
+
+	if(device_is_busy == false){
 		return this->flush();
 	}
 	return Ok();

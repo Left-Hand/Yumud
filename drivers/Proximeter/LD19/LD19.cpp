@@ -57,7 +57,7 @@ void Self::flush(){
         }));
     }
 
-    callback_(Event(Events::FrameReady{frame_}));
+    callback_(Event(Events::DataReady{frame_}));
 }
 
 void Self::reset(){

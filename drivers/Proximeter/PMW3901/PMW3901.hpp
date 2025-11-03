@@ -86,7 +86,8 @@ private:
     iq16 x_cm = 0;
     iq16 y_cm = 0;
 
-    [[nodiscard]] IResult<bool> assert_reg(const uint8_t command, const uint8_t data);
+    [[nodiscard]] IResult<> assert_reg(const uint8_t command, const uint8_t data, const Error & error);
+
     [[nodiscard]] IResult<> write_reg(const uint8_t command, const uint8_t data);
     [[nodiscard]] IResult<> read_reg(const uint8_t command, uint8_t & data);
     [[nodiscard]] IResult<> read_burst(const uint8_t commnad, std::span<uint8_t> pbuf);

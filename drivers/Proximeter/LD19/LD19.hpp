@@ -113,7 +113,7 @@ struct LD19_Prelude{
     static constexpr size_t FRAME_SIZE = sizeof(LidarFrame);
 
     struct Events{
-        struct [[nodiscard]] FrameReady{
+        struct [[nodiscard]] DataReady{
             const LidarFrame & frame;
         };
         struct [[nodiscard]] InvalidCrc{
@@ -122,7 +122,7 @@ struct LD19_Prelude{
         };
     };
 
-    struct Event:public Sumtype<Events::FrameReady, Events::InvalidCrc> {
+    struct Event:public Sumtype<Events::DataReady, Events::InvalidCrc> {
 
     };
 

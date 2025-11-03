@@ -26,7 +26,7 @@ protected:
         uint8_t verlen;
         uint16_t speed;
         uint16_t start_angle;
-        LidarPoint points[POINTS_PER_PACK];
+        std::array<LidarPoint, POINTS_PER_PACK> points;
         uint16_t end_angle;
         uint16_t timestamp;
         uint8_t crc8;

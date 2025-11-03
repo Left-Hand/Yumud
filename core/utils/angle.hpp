@@ -6,6 +6,10 @@
 namespace ymd{
 
 template<typename T>
+struct Rotation2;
+
+
+template<typename T>
 struct [[nodiscard]] Angle{
 	static_assert(not std::is_integral_v<T>, "T must be not integral");
 
@@ -251,6 +255,10 @@ struct [[nodiscard]] Angle{
 	template<typename U>
 	[[nodiscard]] constexpr Angle<U> into() const {
 		return Angle<U>::make_angle_from_turns(static_cast<U>(turns_));
+	}
+
+	[[nodiscard]] constexpr Rotation2<T> to_rotation() const {
+		return Rotation2<T>::from_angle(*this);
 	}
 
 	friend OutputStream & operator <<(OutputStream & os, const Angle & self){

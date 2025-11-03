@@ -239,10 +239,13 @@ IResult<> PMW3901::update(){
 
 }
 
-Result<bool, Error> PMW3901::assert_reg(const uint8_t command, const uint8_t data){
+IResult<> PMW3901::assert_reg(const uint8_t command, const uint8_t data, const Error & error){
     uint8_t temp = 0;
-    if(const auto res = read_reg(command, temp); res.is_err()) return Err(res.unwrap_err());
-    return Ok(temp == data);
+    if(const auto res = read_reg(command, temp); res.is_err())
+        return Err(res.unwrap_err());
+    if(temp != data) [[unlikely]]
+        return Err(error);
+    return Ok();
 }
 
 IResult<> PMW3901::write_list(std::span<const std::pair<uint8_t, uint8_t>> list){
@@ -253,19 +256,17 @@ IResult<> PMW3901::write_list(std::span<const std::pair<uint8_t, uint8_t>> list)
 }
 
 IResult<> PMW3901::validate(){
-    if(const auto res = assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6);
+    if(const auto res = assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6, Error::InvalidChipId);
         res.is_err()) return Err(res.unwrap_err());
-    else if(res.unwrap() == false) return Err(Error::WrongChipId);
 
-    if(const auto res = assert_reg(PMW3901_REG_Product_ID, 0x49);
+    if(const auto res = assert_reg(PMW3901_REG_Product_ID, 0x49, Error::InvalidChipId);
         res.is_err()) return Err(res.unwrap_err());
-    else if(res.unwrap() == false) return Err(Error::WrongChipId);
 
     return Ok();
 }
 
 IResult<> PMW3901::init() {
-    if(const auto res = spi_drv_.release(); res.is_err()) 
+    if(const auto res = spi_drv_.release(); res.is_err())
         return Err(res.unwrap_err());
     
     if(const auto res = write_reg(PMW3901_REG_Power_Up_Reset, 0x5A); 
