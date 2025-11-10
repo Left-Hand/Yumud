@@ -382,7 +382,7 @@ void UartHw::on_rxidle_interrupt(){
             }
 
             rx_dma_buf_index_ = next_index;
-            invoke_post_rx_callback();
+            invoke_callback(Event::RxIdle);
         }; 
             break;
 
@@ -423,8 +423,10 @@ void UartHw::enable_single_line_mode(const Enable en){
 
 void UartHw::invoke_tx_dma(){
     if(tx_dma_.remaining())    return;
+
+    // 如果发送队列为空，则说明发送完成
     if(tx_fifo_.available() == 0){
-        invoke_post_tx_callback();
+        invoke_callback(Event::TxIdle);
         return;
     }
     const size_t tx_amount = tx_fifo_.available();

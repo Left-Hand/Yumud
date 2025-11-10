@@ -3,8 +3,8 @@
 
 #include "nvcv2/pixels/pixels.hpp"
 #include <bits/stl_numeric.h>
-#include "dsp/fastmath/sqrt.hpp"
-#include "dsp/fastmath/square.hpp"
+#include "core/math/fastmath/fastsqrt.hpp"
+#include "core/math/fastmath/sqrt.hpp"
 
 
 #define BOUNDARY_CHECK()\
@@ -105,7 +105,7 @@ iq16 template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, const 
             int32_t tmp_val = p_tmp->as_u8();
             int32_t src_val = p_src->as_u8();
 
-            line_num += FAST_SQUARE8(tmp_val - src_val);
+            line_num += square(tmp_val - src_val);
 
             p_tmp++;
             p_src++;

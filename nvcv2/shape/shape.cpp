@@ -1,7 +1,7 @@
 #include "shape.hpp"
 #include "nvcv2/pixels/pixels.hpp"
-#include "dsp/fastmath/sqrt.hpp"
-#include "dsp/fastmath/square.hpp"
+#include "core/math/fastmath/fastsqrt.hpp"
+#include "core/math/fastmath/sqrt.hpp"
 #include "core/math/realmath.hpp"
 
 namespace ymd::nvcv2::shape{
