@@ -7,17 +7,32 @@ using namespace ymd::drivers;
 using Self = ALXAOA_StreamParser;
 using Error = Self::Error;
 
-template<typename T>
-[[nodiscard]] static constexpr T int_from_be_bytes(const std::span<const uint8_t, sizeof(T)> bytes){
-    T ret = 0;
-    for(size_t i = 0; i < sizeof(T); i++){
-        ret |= static_cast<T>(bytes[i]) << (8 * (sizeof(T) - 1 - i));
+[[nodiscard]] static constexpr uint8_t xor_bytes(
+    const std::span<const uint8_t> bytes
+){
+    uint8_t ret = 0;
+    for(const auto byte : bytes){
+        ret ^= byte;
     }
     return ret;
 }
 
-[[nodiscard]] static constexpr Result<Self::RequestCommand, Error> parse_command(const std::span<const uint8_t, 2> bytes){
-    const auto bits = int_from_be_bytes<uint16_t>(bytes);
+
+template<typename T>
+[[nodiscard]] static constexpr T be_bytes_to_int(
+    const std::span<const uint8_t, sizeof(T)> bytes
+){
+    T ret = 0;
+    for(size_t i = 0; i < sizeof(T); i++){
+        ret = ret | (static_cast<T>(bytes[i]) << size_t(8 * (sizeof(T) - 1 - i)));
+    }
+    return ret;
+}
+
+[[nodiscard]] static constexpr Result<Self::RequestCommand, Error> parse_command(
+    const std::span<const uint8_t, 2> bytes
+){
+    const auto bits = be_bytes_to_int<uint16_t>(bytes);
     switch(bits){
         case static_cast<uint16_t>(Self::RequestCommand::Location):
             return Ok(Self::RequestCommand::Location);
@@ -28,40 +43,43 @@ template<typename T>
     }
 }
 
-[[nodiscard]] static constexpr Result<Self::DeviceId, Error> parse_device_id(const std::span<const uint8_t, 4> bytes){
-    const auto bits = int_from_be_bytes<uint32_t>(bytes);
+[[nodiscard]] static constexpr Result<Self::DeviceId, Error> parse_device_id(
+    const std::span<const uint8_t, 4> bytes
+){
+    const auto bits = be_bytes_to_int<uint32_t>(bytes);
     return Ok(Self::DeviceId{bits});
 }
 
-[[nodiscard]] static constexpr Result<Self::TargetAngle, Error> parse_angle(const std::span<const uint8_t, 2> bytes){
-    const auto bits = int_from_be_bytes<int16_t>(bytes);
+[[nodiscard]] static constexpr Result<Self::TargetAngle, Error> parse_angle(
+    const std::span<const uint8_t, 2> bytes
+){
+    const auto bits = be_bytes_to_int<int16_t>(bytes);
     return Ok(Self::TargetAngle(bits));
 }
 
-[[nodiscard]] static constexpr Result<Self::TargetDistance, Error> parse_distance(const std::span<const uint8_t, 4> bytes){
-    const auto bits = int_from_be_bytes<uint32_t>(bytes);
+[[nodiscard]] static constexpr Result<Self::TargetDistance, Error> parse_distance(
+    const std::span<const uint8_t, 4> bytes
+){
+    const auto bits = be_bytes_to_int<uint32_t>(bytes);
     return Ok(Self::TargetDistance(bits));
 }
 
-[[nodiscard]] static constexpr Result<Self::TargetStatus, Error> parse_tag_status(const std::span<const uint8_t, 2> bytes){
-    const auto bits = int_from_be_bytes<uint16_t>(bytes);
+[[nodiscard]] static constexpr Result<Self::TargetStatus, Error> parse_tag_status(
+    const std::span<const uint8_t, 2> bytes
+){
+    const auto bits = be_bytes_to_int<uint16_t>(bytes);
     if(bits != static_cast<uint16_t>(Self::TargetStatus::Normal)) 
         return Err(Error::InvalidTagStatus);
     return Ok(Self::TargetStatus{bits});
 }
 
-[[nodiscard]] static constexpr Result<uint16_t, Error> parse_batch_sn(const std::span<const uint8_t, 2> bytes){
-    const auto bits = int_from_be_bytes<uint16_t>(bytes);
+[[nodiscard]] static constexpr Result<uint16_t, Error> parse_batch_sn(
+    const std::span<const uint8_t, 2> bytes
+){
+    const auto bits = be_bytes_to_int<uint16_t>(bytes);
     return Ok(bits);
 }
 
-[[nodiscard]] static constexpr uint8_t xor_bytes(const std::span<const uint8_t> bytes){
-    uint8_t ret = 0;
-    for(const auto byte : bytes){
-        ret ^= byte;
-    }
-    return ret;
-}
 
 static constexpr Result<Self::HeartBeat, Error> parse_heartbeat(BytesSpawner & spawner){
     const auto anchor_id = ({
@@ -230,14 +248,14 @@ void Self::flush(){
         // RequestCommand 2 unsigned Integer 命令码 
         // VersionID 2 unsigned Integer 协议版本，此版本固定 0x0100 
 
-        [[maybe_unused]] const auto seq_id = int_from_be_bytes<uint16_t>(spawner.spawn<2>());
+        [[maybe_unused]] const auto seq_id = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
         const auto req_command = ({
             const auto res = parse_command(spawner.spawn<2>());
             if(res.is_err()) return Err(res.unwrap_err());
             res.unwrap();
         });
 
-        const auto protocol_version = int_from_be_bytes<uint16_t>(spawner.spawn<2>());
+        const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
         if(protocol_version != 0x0100) return Err(Error::InvalidProtocolVersion);
 
 
