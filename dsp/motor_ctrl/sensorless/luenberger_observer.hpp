@@ -3,6 +3,8 @@
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
 
+#include "digipw/prelude/abdq.hpp"
+
 // 全面推导龙伯格观测器相关公式
 // https://zhuanlan.zhihu.com/p/960435762
 
@@ -19,6 +21,20 @@ public:
         // int32_t l2 = 64000;
         iq20 phase_inductance;
         iq20 phase_resistance;
+    };
+
+    struct State{
+        digipw::AlphaBetaCoord<iq20> i;
+        digipw::AlphaBetaCoord<iq20> e;
+
+        constexpr void reset(){
+            i = digipw::AlphaBetaCoord<iq20>(0, 0);
+            e = digipw::AlphaBetaCoord<iq20>(0, 0);
+        }
+
+        constexpr Angle<iq20> angle() const {
+            return e.angle();
+        }
     };
 
     constexpr explicit LuenbergerObserver(const Config & cfg){
@@ -40,46 +56,34 @@ public:
     }
 
     constexpr void reset(){
-        i_alpha_ = 0;
-        i_beta_ = 0;
-        e_alpha_ = 0;
-        e_beta_ = 0;
+        state_.reset();
     }
 
-    constexpr void update(auto alphabeta_volt, auto alphabeta_curr) {
-        const auto [Valpha, Vbeta] = alphabeta_volt;
-        const auto [Ialpha, Ibeta] = alphabeta_curr;
-        recalc(i_alpha_, e_alpha_, Valpha, Ialpha);
-        recalc(i_beta_, e_beta_, Vbeta, Ibeta);
 
-        turns_ = frac(atan2pu<16>(-e_alpha_, e_beta_));
-        // turns_ = frac(atan2pu(-Ealpha, Ebeta));
+    constexpr void update(const State & meas){
+        state_ = iterator_state(meas);
     }
 
-    constexpr Angle<iq16> angle() const {
-        return Angle<iq16>::from_turns(iq16(turns_));
+    constexpr const State & state() const {
+        return state_;
     }
 
 public:
-
-    iq20 i_alpha_ = 0;
-    iq20 i_beta_ = 0;
-    iq20 e_alpha_ = 0;
-    iq20 e_beta_ = 0;
+    State state_;
     iq20 turns_ = 0;
+
     iq20 Tr_L = 0;
     iq20 T_L  = 0;
     iq20 l1T  = 0;
     iq20 l2T  = 0;
 
 private:
-    __fast_inline
-    constexpr void recalc(iq20 __restrict & i, iq20 __restrict & e, const iq20 meas_volt, const iq20 meas_i){
-        const auto err_i = (i - meas_i);
-        i += Tr_L * i + T_L * (meas_volt - e) + l1T * err_i; 
-        e += l2T * err_i;
-    };
-
+    constexpr State iterator_state(const State & meas) const {
+        const auto err_i = state_.i - meas.i;
+        const auto next_i = (1 + Tr_L) * state_.i + T_L * (meas.e - state_.e) + l1T * err_i; 
+        const auto next_e = state_.e + l2T * err_i;
+        return State{next_i, next_e};
+    }
 };
 
 

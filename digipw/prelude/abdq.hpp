@@ -99,6 +99,21 @@ struct [[nodiscard]] AlphaBetaCoord final{
         return AlphaBetaCoord{alpha * rhs, beta * rhs};
     }
 
+    [[nodiscard]] constexpr friend AlphaBetaCoord operator *(const auto lhs, const AlphaBetaCoord & rhs){
+        return AlphaBetaCoord{lhs * rhs.alpha, lhs * rhs.beta};
+    }
+
+    [[nodiscard]] constexpr Angle<T> angle() const {
+        return Angle<T>::from_turns(atan2pu(beta, alpha));
+    }
+
+    template<typename Fn>
+    [[nodiscard]] constexpr AlphaBetaCoord map(Fn && fn) const {
+        return AlphaBetaCoord{
+            std::forward<Fn>(fn)(alpha), 
+            std::forward<Fn>(fn)(beta)};
+    }
+
     [[nodiscard]] constexpr AlphaBetaCoord operator /(const auto rhs) const {
         return AlphaBetaCoord{alpha / rhs, beta / rhs};
     }
