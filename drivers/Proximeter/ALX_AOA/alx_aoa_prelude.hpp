@@ -52,9 +52,11 @@ enum class RequestCommand:uint16_t{
     HeartBeat = 0x2002,
 };
 
-struct TargetDistance{
+struct [[nodiscard]] TargetDistance{
     uint16_t distance_cm;
-
+    static constexpr TargetDistance from_bits(uint16_t distance_cm){
+        return TargetDistance{distance_cm};
+    }
     [[nodiscard]] constexpr uq16 to_meters() const{
         return uq16(distance_cm) / 100;
     }
@@ -64,8 +66,12 @@ struct TargetDistance{
     }
 };
 
-struct TargetAngle{
+struct [[nodiscard]] TargetAngle{
     int8_t degrees;
+
+    static constexpr TargetAngle from_bits(int8_t degrees){
+        return TargetAngle{degrees};
+    }
     [[nodiscard]] constexpr Angle<uq16> to_angle() const{
         return Angle<uq16>::from_degrees(degrees);
     }
@@ -75,8 +81,12 @@ struct TargetAngle{
     }
 };
 
-struct DeviceId{
+struct [[nodiscard]] DeviceId{
     uint32_t count;
+
+    static constexpr DeviceId from_bits(uint32_t count){
+        return DeviceId{count};
+    }
 
     friend OutputStream & operator <<(OutputStream & os, const DeviceId & self){ 
         auto guard = os.create_guard();
@@ -85,7 +95,7 @@ struct DeviceId{
 };
 
 
-struct Location{
+struct [[nodiscard]] Location{
     DeviceId anchor_id;
     DeviceId target_id;
     TargetDistance distance;
@@ -93,26 +103,29 @@ struct Location{
     TargetAngle elevation;
 
     friend OutputStream & operator <<(OutputStream & os, const Location & self){
-        return os << self.anchor_id << "->" << self.target_id << 
+        return os << "location" << self.anchor_id << "->" << self.target_id << 
             ": " << self.distance << " " << self.azimuth << " " << self.elevation;
     }
 };
 
-struct HeartBeat{
+struct [[nodiscard]] HeartBeat{
     DeviceId anchor_id;
 
     friend OutputStream & operator <<(OutputStream & os, const HeartBeat & self){ 
-        return os << self.anchor_id;
+        return os << "heartbeat" << self.anchor_id;
     }
 };
+
+struct Event:public Sumtype<std::monostate, HeartBeat, Location>{};
+using Callback = std::function<void(Result<Event, Error>)>;
 
 struct LeaderInfo{
     uint8_t len;
     uint16_t command;
 };
 
-using Event = Sumtype<HeartBeat, Location>;
-using Callback = std::function<void(Result<Event, Error>)>;
+
+
 };
 
 class AlxAoa_StreamParser final:public AlxAoa_Prelude{
@@ -132,6 +145,7 @@ public:
 
     void push_byte(const uint8_t byte);
     void flush();
+
     void reset(){
         payload_bytes_.clear();
         byte_prog_ = ByteProg::Header0;
@@ -150,6 +164,8 @@ private:
     };
 
     friend OutputStream & operator <<(OutputStream & os, const AlxAoa_StreamParser::ByteProg & prog);
+
+    Result<Event, Error> parse();
 
     Callback callback_ = nullptr;
     ByteProg byte_prog_ = ByteProg::Header0;

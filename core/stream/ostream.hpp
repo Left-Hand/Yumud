@@ -16,6 +16,7 @@
 #include <bitset>
 #include <span>
 #include <chrono>
+#include <variant>
 
 #include "core/stream/CharOpTraits.hpp"
 #include "core/utils/stdrange.hpp"
@@ -325,6 +326,10 @@ public:
     OutputStream & operator<<(const std::optional<T> v){
         if(v.has_value()) return *this << v.value();
         else return *this << '/';
+    }
+
+    OutputStream & operator<<(const std::monostate){
+        return *this << "monostate";
     }
 
     template<size_t N>

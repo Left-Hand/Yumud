@@ -2,6 +2,7 @@
 
 #include <variant>
 #include <type_traits>
+#include <utility>
 
 #include "Option.hpp"
 
@@ -10,10 +11,30 @@
 
 namespace ymd{
 
+// Helper for overload pattern
+template<class... Fns> struct overload : Fns... { 
+    using Fns::operator()...; 
+};
+template<class... Fns> overload(Fns...) -> overload<Fns...>;
+
 template<typename ... Ts>
 class Sumtype{
+private:
+    template<typename T>
+    constexpr explicit Sumtype(std::in_place_type_t<T>, T && value):
+        value_(std::variant<Ts...>(
+            std::in_place_type_t<T>(), std::forward<T>(value))){}
 public:
     using Self = Sumtype<Ts...>;
+
+    constexpr Sumtype() = delete;
+
+    // Explicit construction from value (avoids implicit conversion issues)
+    template<typename Raw >
+    [[nodiscard]] static constexpr Sumtype from(Raw && value) {
+        using T = std::decay_t<magic::first_convertible_arg_t<Raw, Ts...>>;
+        return Sumtype(std::in_place_type<T>, std::forward<T>(value));
+    }
 
     template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
     requires (!std::is_void_v<T>)
@@ -21,10 +42,33 @@ public:
         value_(std::in_place_type<T>, static_cast<T>(val)) { // Add std::in_place_type<Raw> to specify variant type
     }
 
+    // 拷贝构造函数
+    constexpr Sumtype(const Self& other) 
+        noexcept((std::is_nothrow_copy_constructible_v<Ts> && ...))
+        = default;
     
+    // 移动构造函数
+    constexpr Sumtype(Self&& other) 
+        noexcept((std::is_nothrow_move_constructible_v<Ts> && ...))
+        = default;
+    
+    // 拷贝赋值运算符
+    constexpr Self& operator=(const Self& other) 
+        noexcept((std::is_nothrow_copy_assignable_v<Ts> && ...)) 
+        = default;
+    
+    // 移动赋值运算符
+    constexpr Self& operator=(Self&& other) 
+        noexcept((std::is_nothrow_move_assignable_v<Ts> && ...)) 
+        = default;
+    
+    // 析构函数
+    constexpr ~Sumtype() = default;
+
+
+
     template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
     requires (!std::is_void_v<T>)
-
     constexpr bool is() const{
         return std::holds_alternative<T>(value_);
     }
@@ -48,45 +92,49 @@ public:
     }
 
 
-    constexpr bool operator ==(const Self & other) const {
-        // if(this->var_index() != other.var_index()) return false;
-        // return 
-        return this->value_ == other.value_;
+    // 相等比较
+    constexpr bool operator==(const Self& other) const 
+        noexcept((noexcept(std::declval<Ts>() == std::declval<Ts>()) && ...)) 
+    {
+        return value_ == other.value_;
     }
 
-    template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
-    requires (!std::is_void_v<T>)
-    constexpr bool operator ==(const Raw &rhs) const {
-        if(not this->is<T>()) return false;
-        return this->as<T>().unwrap() == static_cast<T>(rhs);
+    template<typename Raw>
+    constexpr bool operator==(const Raw& rhs) const noexcept {
+        using T = magic::first_convertible_arg_t<Raw, Ts...>;
+        static_assert(!std::is_same_v<T, void>, 
+                      "No convertible type found for comparison");
+        
+        if (!is<T>()) return false;
+        return unwrap_as<T>() == static_cast<T>(rhs);
     }
 
-    template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
-    requires (!std::is_void_v<T>)
-    constexpr bool operator !=(const Raw &rhs) const {
-        return !(this->operator ==(rhs));
+    template<typename Raw>
+    constexpr bool operator!=(const Raw& rhs) const noexcept {
+        return !(*this == rhs);
     }
 
+    // Rust-style match functionality
+    template<typename... Fns>
+    constexpr decltype(auto) match(Fns&&... fns) const {
+        return std::visit(overload(std::forward<Fns>(fns)...), value_);
+    }
+
+    template<typename Fn>
+    constexpr decltype(auto) visit(Fn&& fn) const {
+        return std::visit(std::forward<Fn>(fn), value_);
+    }
     friend OutputStream & operator <<(OutputStream & os,const Sumtype & self){
         // 使用 std::visit 遍历 std::variant
-        std::visit([&os](const auto& value) {
-            // using T = std::decay_t<decltype(value)>;
-
-            // // 检查类型是否可被 OutputStream 打印
-            // if constexpr (requires(OutputStream& os, const T& value) {os << value;}) {
-            //     os << value; // 如果可打印，则直接打印
-            // } else {
-            //     os << os.brackets<'['>() <<  "Unprintable" << os.brackets<']'>(); // 否则打印提示信息
-            //     os << os.brackets<'<'>() <<  magic::type_name_of<T>() << os.brackets<'>'>(); // 否则打印提示信息
-            // }
-
+        self.visit([&os](const auto& value) {
             os << value;
-        }, self.value_);
+        });
 
         return os;
     }
 private:
     std::variant<Ts...> value_;
+
 
     constexpr size_t var_index() const {
         return value_.index();

@@ -34,13 +34,26 @@ void alx_aoa_main(){
     using AlxEvent = AlxAoa_Prelude::Event;
     using AlxError = AlxAoa_Prelude::Error;
 
+    using AlxLocation = drivers::AlxAoa_Prelude::Location;
+    using AlxHeartBeat = drivers::AlxAoa_Prelude::HeartBeat;
+
     auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res){ 
         if(res.is_ok()){
+
             const auto & ev = res.unwrap();
-            DEBUG_PRINTLN("alx_ev", ev);
+            if(ev.is<AlxLocation>()){
+                const AlxLocation & loc = ev.unwrap_as<AlxLocation>();
+                DEBUG_PRINTLN(
+                    loc.distance.to_meters(), 
+                    loc.azimuth.to_angle().to_degrees(), 
+                    loc.elevation.to_angle().to_degrees()
+                );
+            }else if(ev.is<AlxHeartBeat>()){
+                DEBUG_PRINTLN("alx_heartBeat", ev.unwrap_as<AlxHeartBeat>());
+            }
         }else{
-            const auto & err = res.unwrap_err();
-            DEBUG_PRINTLN("alx_err", err);
+            [[maybe_unused]] const auto & err = res.unwrap_err();
+            // DEBUG_PRINTLN("alx_err", err);
 
         }
     };
@@ -49,6 +62,7 @@ void alx_aoa_main(){
     alx_uart.init({
         AlxAoa_Prelude::DEFAULT_UART_BUAD
     });
+
 
     auto tx_led = hal::PC<13>();
     auto rx_led = hal::PC<14>();
@@ -73,6 +87,7 @@ void alx_aoa_main(){
     //     }
     // });
 
+    #if 0
     const auto bytes = std::to_array<uint8_t>({
         0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x25, 0x00, 0x0B, 
         0x20, 0x01, 0x01, 0x00, 0x00, 0x00, 0xAA, 0xA2, 
@@ -107,9 +122,14 @@ void alx_aoa_main(){
         alx_parser.push_byte(byte);
         clock::delay(1ms);
     };
-    PANIC{"done"};
+    #endif
+    // PANIC{"done"};
     while(true){
-
+        if(alx_uart.available()){
+            char chr;
+            alx_uart.read1(chr);
+            alx_parser.push_byte(chr); 
+        }
     }
 
 

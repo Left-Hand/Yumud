@@ -55,13 +55,17 @@ using Error = Self::Error;
 
 template<typename T>
 [[nodiscard]] static constexpr T be_bytes_to_int(
-    const std::span<const uint8_t, sizeof(T)> bytes
-){
-    T ret = 0;
-    for(size_t i = 0; i < sizeof(T); i++){
-        ret = ret | (static_cast<T>(bytes[i]) << size_t(8 * (sizeof(T) - 1 - i)));
+    const std::span<const uint8_t, sizeof(T)> bytes)
+{
+    using U = std::make_unsigned_t<T>;
+    static_assert(sizeof(U) == sizeof(T));
+    U ret = 0;
+    
+    // 替代方案：累积移位（可能更清晰）
+    for(size_t i = 0; i < sizeof(U); i++) {
+        ret = (ret << 8) | static_cast<U>(bytes[i]);
     }
-    return ret;
+    return std::bit_cast<T>(ret);
 }
 
 [[nodiscard]] static constexpr Result<Self::RequestCommand, Error> parse_command(
@@ -82,21 +86,21 @@ template<typename T>
     const std::span<const uint8_t, 4> bytes
 ){
     const auto bits = be_bytes_to_int<uint32_t>(bytes);
-    return Ok(Self::DeviceId{bits});
+    return Ok(Self::DeviceId::from_bits(bits));
 }
 
 [[nodiscard]] static constexpr Result<Self::TargetAngle, Error> parse_angle(
     const std::span<const uint8_t, 2> bytes
 ){
     const auto bits = be_bytes_to_int<int16_t>(bytes);
-    return Ok(Self::TargetAngle(bits));
+    return Ok(Self::TargetAngle::from_bits(bits));
 }
 
 [[nodiscard]] static constexpr Result<Self::TargetDistance, Error> parse_distance(
     const std::span<const uint8_t, 4> bytes
 ){
     const auto bits = be_bytes_to_int<uint32_t>(bytes);
-    return Ok(Self::TargetDistance(bits));
+    return Ok(Self::TargetDistance::from_bits(bits));
 }
 
 [[nodiscard]] static constexpr Result<Self::TargetStatus, Error> parse_tag_status(
@@ -116,22 +120,6 @@ template<typename T>
 }
 
 
-static constexpr Result<Self::HeartBeat, Error> parse_heartbeat(BytesSpawner & spawner){
-    if(spawner.remaining().size() < 4) return Err(Error::InvalidLength);
-    const auto anchor_id = ({
-        const auto res = parse_device_id(spawner.spawn<4>());
-        if(res.is_err()) return Err(res.unwrap_err());
-        res.unwrap();
-    });
-    // AnchorID 4 unsigned Integer ID
-
-    const Self::HeartBeat msg = {
-        // .anchor_id = Self::DeviceId(0)
-        .anchor_id = anchor_id
-    };
-
-    return Ok(msg);
-}
 
 static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
     // AnchorID 4 unsigned Integer 基站 ID 
@@ -143,8 +131,7 @@ static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
     // BatchSn 2 Byte 测距序号 
     // Reserve 4 Byte 预留 
     // XorByte 1 Byte 该字节前所有字节的异或校验
-    if(spawner.remaining().size() < 25){
-        ALXAOA_DEBUG(spawner.remaining().size());
+    if(spawner.remaining().size() != 25){
         return Err(Error::InvalidLength);
     }
 
@@ -221,7 +208,7 @@ static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
 
 void Self::push_byte(const uint8_t byte){
     auto fsm_update = [&](const auto state){ 
-        ALXAOA_DEBUG(state);
+        // ALXAOA_DEBUG(state);
         byte_prog_ = state; 
     };
     switch(byte_prog_){
@@ -245,12 +232,23 @@ void Self::push_byte(const uint8_t byte){
             if(byte != 0x00){reset(); break;}
             fsm_update(ByteProg::WaitingLen1);
             break;
-        case ByteProg::WaitingLen1:
-
-
-            leader_info_.len = static_cast<uint8_t>(byte);
+        case ByteProg::WaitingLen1:{
+            const auto len = static_cast<uint8_t>(byte);
+            const bool is_valid_len = [&]{
+                switch(len){
+                    case 16:
+                    case 37:
+                        return true;
+                    default:
+                        return false;
+                }
+            }();
+            
+            if(not is_valid_len) {reset(); break;}
+            leader_info_.len = len;
             fsm_update(ByteProg::Remaining);
             break;
+        }
         case ByteProg::Remaining:
             payload_bytes_.push_back(byte);
 
@@ -266,79 +264,105 @@ void Self::push_byte(const uint8_t byte){
 
 
 
-void Self::flush(){
-    if(callback_ == nullptr) ALXAOA_PANIC();
+Result<Self::Event, Self::Error>  Self::parse(){
+    const size_t size = payload_bytes_.size();
+    if(size < 10) ALXAOA_PANIC("size too small", size, leader_info_.len);
+
+
+    const auto context_bytes = std::span(payload_bytes_.data(), size);
+
+    // ALXAOA_DEBUG("header");
+    // for(const auto byte : header_bytes) {ALXAOA_DEBUG(std::hex, std::showbase, byte); clock::delay(1ms);}
+    // ALXAOA_DEBUG("context");
+    // for(const auto byte : context_bytes) {ALXAOA_DEBUG(std::hex, std::showbase, byte); clock::delay(1ms);}
 
 
 
-    auto parse_res = [&] -> Result<Event, Error> {
-        const size_t size = payload_bytes_.size();
-        if(size < 10) ALXAOA_PANIC();
+    BytesSpawner spawner(context_bytes);
+
+    // SequenceID 2 unsigned Integer 消息流水号 
+    // RequestCommand 2 unsigned Integer 命令码 
+    // VersionID 2 unsigned Integer 协议版本，此版本固定 0x0100 
+
+    [[maybe_unused]] const auto seq_id = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
+    const auto req_command = ({
+        const auto res = parse_command(spawner.spawn<2>());
+        if(res.is_err()) return Err(res.unwrap_err());
+        res.unwrap();
+    });
+
+    [[maybe_unused]] const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
+
+    //官方给的协议版本也不固定 不检测
+    // if(protocol_version != 0x0100){
+    //     ALXAOA_DEBUG("protocol_version", protocol_version);
+    //     return Err(Error::InvalidProtocolVersion);
+    // }
 
 
-        const auto context_bytes = std::span(payload_bytes_.data(), size);
+    switch(req_command){
 
-        // ALXAOA_DEBUG("header");
-        // for(const auto byte : header_bytes) {ALXAOA_DEBUG(std::hex, std::showbase, byte); clock::delay(1ms);}
-        // ALXAOA_DEBUG("context");
-        // for(const auto byte : context_bytes) {ALXAOA_DEBUG(std::hex, std::showbase, byte); clock::delay(1ms);}
+        case RequestCommand::Location:{
+            #if 1
+            const auto header_xor = leader_info_.len; // 0xff ^ 0xff ^ 0xff ^ 0xff ^ 0x00 ^ len = len
+            const auto context_xor = xor_bytes(std::span(context_bytes.begin(), std::prev(context_bytes.end())));
+            const auto actual_xor = header_xor ^ context_xor;
 
-
-
-        BytesSpawner spawner(context_bytes);
-
-        // SequenceID 2 unsigned Integer 消息流水号 
-        // RequestCommand 2 unsigned Integer 命令码 
-        // VersionID 2 unsigned Integer 协议版本，此版本固定 0x0100 
-
-        [[maybe_unused]] const auto seq_id = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
-        const auto req_command = ({
-            const auto res = parse_command(spawner.spawn<2>());
+            const auto expected_xor = *std::prev(context_bytes.end());
+            
+            if(actual_xor != expected_xor) {
+                return Err(Error::InvalidXor);
+            }
+            
+            const auto res = parse_location(spawner);
             if(res.is_err()) return Err(res.unwrap_err());
-            res.unwrap();
-        });
-
-        [[maybe_unused]] const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
-
-        //官方给的协议版本也不固定 不检测
-        // if(protocol_version != 0x0100){
-        //     ALXAOA_DEBUG("protocol_version", protocol_version);
-        //     return Err(Error::InvalidProtocolVersion);
-        // }
-
-
-        switch(req_command){
-            case RequestCommand::HeartBeat:{
-
-                const auto res = parse_heartbeat(spawner);
-                if(res.is_err()) return Err(res.unwrap_err());
-                return Ok(Event(res.unwrap()));
-                break;
-            }
-            case RequestCommand::Location:{
-                const auto header_xor = leader_info_.len; // 0xff ^ 0xff ^ 0xff ^ 0xff ^ 0x00 ^ len = len
-                const auto context_xor = xor_bytes(std::span(context_bytes.begin(), std::prev(context_bytes.end())));
-                const auto actual_xor = header_xor ^ context_xor;
-
-                const auto expected_xor = *std::prev(context_bytes.end());
-                
-                if(actual_xor != expected_xor) {
-                    ALXAOA_DEBUG("alxxor", header_xor, context_xor, actual_xor, expected_xor);
-                    return Err(Error::InvalidXor);
-                }
-                
-                const auto res = parse_location(spawner);
-                if(res.is_err()) return Err(res.unwrap_err());
-                ALXAOA_DEBUG("parse_location— ok");
-                return Ok(Event(res.unwrap()));
-                break;
-            }
-            default:
-                return Err(Error::InvalidRequest);
+            return Ok(Event(res.unwrap()));
+            // return Err(Error::InvalidProtocolVersion);
+            break;
+            #endif
         }
-    }();
+        case RequestCommand::HeartBeat:{
+            #if 1
+            // const auto res = parse_heartbeat(spawner);
+            // if(res.is_err()) return Err(res.unwrap_err());
+            // return Ok(Event(res.unwrap()));
 
-    callback_(parse_res);
+            if(spawner.remaining().size() != 4) return Err(Error::InvalidLength);
+            const auto anchor_id = ({
+                const auto res = parse_device_id(spawner.spawn<4>());
+                if(res.is_err()) return Err(res.unwrap_err());
+                res.unwrap();
+            });
+            // AnchorID 4 unsigned Integer ID
+
+            // Event ev = Event(parse_location(spawner).unwrap());
+            // Event ev = Event(Self::HeartBeat{
+            //     // .anchor_id = DeviceId::from_bits(0)
+            //     .anchor_id = anchor_id
+            // });
+            Event ev = Event(std::monostate{});
+            Self::HeartBeat msg{
+                .anchor_id = anchor_id
+            };
+
+            ev = Event(msg);
+            return Ok(ev);
+            #endif
+            break;
+        }
+        default:
+            return Err(Error::InvalidRequest);
+    }
+    return Err(Error::InvalidRequest);
+};
+
+
+
+void Self::flush(){
+    if(callback_ == nullptr) ALXAOA_PANIC("no callback");
+
+
+    callback_(parse());
 
 }
 
