@@ -14,7 +14,7 @@
 
 #define CHECK_ERR(e, ...) ({\
     const auto && __err_check_err = (e);\
-    PANIC{e.unwrap(), ##__VA_ARGS__};\
+    PANIC{e.get(), ##__VA_ARGS__};\
     __err_check_err;\
 })\
 

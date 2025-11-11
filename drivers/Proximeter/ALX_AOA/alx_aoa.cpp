@@ -1,11 +1,46 @@
 #include "alx_aoa_prelude.hpp"
+#include "core/magic/enum_traits.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
 
 
-using Self = ALXAOA_StreamParser;
+using Self = AlxAoa_StreamParser;
 using Error = Self::Error;
+
+#define ALXAOA_DEBUG_EN 1
+
+#if ALXAOA_DEBUG_EN == 1
+#define ALXAOA_TODO(...) TODO()
+#define ALXAOA_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define ALXAOA_PANIC(...) PANIC{__VA_ARGS__}
+#define ALXAOA_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+
+
+#define CHECK_RES(x, ...) ({\
+    const auto __res_check_res = (x);\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
+    __res_check_res;\
+})\
+
+
+#define CHECK_ERR(x, ...) ({\
+    const auto && __err_check_err = (x);\
+    ASSERT{false, #x, ##__VA_ARGS__};\
+    __err_check_err;\
+})\
+
+#else
+#define ALXAOA_DEBUG(...)
+#define ALXAOA_TODO(...) PANIC_NSRC()
+#define ALXAOA_PANIC(...)  PANIC_NSRC()
+#define ALXAOA_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
+#define CHECK_RES(x, ...) (x)
+#define CHECK_ERR(x, ...) (x)
+#endif
+
+
 
 [[nodiscard]] static constexpr uint8_t xor_bytes(
     const std::span<const uint8_t> bytes
@@ -82,6 +117,7 @@ template<typename T>
 
 
 static constexpr Result<Self::HeartBeat, Error> parse_heartbeat(BytesSpawner & spawner){
+    if(spawner.remaining().size() < 4) return Err(Error::InvalidLength);
     const auto anchor_id = ({
         const auto res = parse_device_id(spawner.spawn<4>());
         if(res.is_err()) return Err(res.unwrap_err());
@@ -90,13 +126,14 @@ static constexpr Result<Self::HeartBeat, Error> parse_heartbeat(BytesSpawner & s
     // AnchorID 4 unsigned Integer ID
 
     const Self::HeartBeat msg = {
+        // .anchor_id = Self::DeviceId(0)
         .anchor_id = anchor_id
     };
 
     return Ok(msg);
 }
 
-static constexpr Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
+static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
     // AnchorID 4 unsigned Integer 基站 ID 
     // TagID 4 unsigned Integer 标签 ID 
     // Distance 4 unsigned Integer 标签与基站间的距离，单位 cm 
@@ -106,6 +143,11 @@ static constexpr Result<Self::Location, Error> parse_location(BytesSpawner & spa
     // BatchSn 2 Byte 测距序号 
     // Reserve 4 Byte 预留 
     // XorByte 1 Byte 该字节前所有字节的异或校验
+    if(spawner.remaining().size() < 25){
+        ALXAOA_DEBUG(spawner.remaining().size());
+        return Err(Error::InvalidLength);
+    }
+
     const auto anchor_id = ({
         const auto res = parse_device_id(spawner.spawn<4>());
         if(res.is_err()) return Err(res.unwrap_err());
@@ -148,7 +190,6 @@ static constexpr Result<Self::Location, Error> parse_location(BytesSpawner & spa
         res.unwrap();
     });
 
-    if(spawner.remaining().size() != 4) __builtin_abort();
 
     const Self::Location msg = {
         .anchor_id = anchor_id,
@@ -179,32 +220,36 @@ static constexpr Result<Self::Location, Error> parse_location(BytesSpawner & spa
 
 
 void Self::push_byte(const uint8_t byte){
+    auto fsm_update = [&](const auto state){ 
+        ALXAOA_DEBUG(state);
+        byte_prog_ = state; 
+    };
     switch(byte_prog_){
         case ByteProg::Header0:
             if(byte != 0xff){reset(); break;}
-            byte_prog_ = ByteProg::Header1;
+            fsm_update(ByteProg::Header1);
             break;
         case ByteProg::Header1:
             if(byte != 0xff){reset(); break;}
-            byte_prog_ = ByteProg::Header2;
+            fsm_update(ByteProg::Header2);
             break;
         case ByteProg::Header2:
             if(byte != 0xff){reset(); break;}
-            byte_prog_ = ByteProg::Header3;
+            fsm_update(ByteProg::Header3);
             break;
         case ByteProg::Header3:
             if(byte != 0xff){reset(); break;}
-            byte_prog_ = ByteProg::WaitingLen0;
+            fsm_update(ByteProg::WaitingLen0);
             break;
         case ByteProg::WaitingLen0: 
             if(byte != 0x00){reset(); break;}
-            byte_prog_ = ByteProg::WaitingLen1;
+            fsm_update(ByteProg::WaitingLen1);
             break;
         case ByteProg::WaitingLen1:
 
 
             leader_info_.len = static_cast<uint8_t>(byte);
-            byte_prog_ = ByteProg::Remaining;
+            fsm_update(ByteProg::Remaining);
             break;
         case ByteProg::Remaining:
             payload_bytes_.push_back(byte);
@@ -222,25 +267,23 @@ void Self::push_byte(const uint8_t byte){
 
 
 void Self::flush(){
-    if(callback_ == nullptr) __builtin_abort();
+    if(callback_ == nullptr) ALXAOA_PANIC();
 
 
 
     auto parse_res = [&] -> Result<Event, Error> {
         const size_t size = payload_bytes_.size();
-        if(size <= 10) __builtin_abort();
+        if(size < 10) ALXAOA_PANIC();
 
-        const auto header_bytes = std::to_array<uint8_t>({
-            0xff, 0xff, 0xff, 0xff, 0x00, static_cast<uint8_t>(size + 5)
-        });
 
-        const auto context_bytes = std::span(payload_bytes_.data(), size - 1);
+        const auto context_bytes = std::span(payload_bytes_.data(), size);
 
-        const auto expected_crc = xor_bytes((header_bytes)) ^ xor_bytes(context_bytes);
+        // ALXAOA_DEBUG("header");
+        // for(const auto byte : header_bytes) {ALXAOA_DEBUG(std::hex, std::showbase, byte); clock::delay(1ms);}
+        // ALXAOA_DEBUG("context");
+        // for(const auto byte : context_bytes) {ALXAOA_DEBUG(std::hex, std::showbase, byte); clock::delay(1ms);}
 
-        const auto actual_crc = *payload_bytes_.end();
-    
-        if(actual_crc != expected_crc) return Err(Error::InvalidCrc);
+
 
         BytesSpawner spawner(context_bytes);
 
@@ -255,20 +298,38 @@ void Self::flush(){
             res.unwrap();
         });
 
-        const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
-        if(protocol_version != 0x0100) return Err(Error::InvalidProtocolVersion);
+        [[maybe_unused]] const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
+
+        //官方给的协议版本也不固定 不检测
+        // if(protocol_version != 0x0100){
+        //     ALXAOA_DEBUG("protocol_version", protocol_version);
+        //     return Err(Error::InvalidProtocolVersion);
+        // }
 
 
         switch(req_command){
             case RequestCommand::HeartBeat:{
+
                 const auto res = parse_heartbeat(spawner);
                 if(res.is_err()) return Err(res.unwrap_err());
                 return Ok(Event(res.unwrap()));
                 break;
             }
             case RequestCommand::Location:{
+                const auto header_xor = leader_info_.len; // 0xff ^ 0xff ^ 0xff ^ 0xff ^ 0x00 ^ len = len
+                const auto context_xor = xor_bytes(std::span(context_bytes.begin(), std::prev(context_bytes.end())));
+                const auto actual_xor = header_xor ^ context_xor;
+
+                const auto expected_xor = *std::prev(context_bytes.end());
+                
+                if(actual_xor != expected_xor) {
+                    ALXAOA_DEBUG("alxxor", header_xor, context_xor, actual_xor, expected_xor);
+                    return Err(Error::InvalidXor);
+                }
+                
                 const auto res = parse_location(spawner);
                 if(res.is_err()) return Err(res.unwrap_err());
+                ALXAOA_DEBUG("parse_location— ok");
                 return Ok(Event(res.unwrap()));
                 break;
             }
@@ -279,4 +340,17 @@ void Self::flush(){
 
     callback_(parse_res);
 
+}
+
+
+namespace ymd::drivers{
+
+OutputStream & operator <<(OutputStream & os, const AlxAoa_Prelude::Error & error){
+    DeriveDebugDispatcher<AlxAoa_Prelude::Error>::call(os, error);
+    return os;
+}
+OutputStream & operator <<(OutputStream & os, const AlxAoa_StreamParser::ByteProg & self){
+    DeriveDebugDispatcher<AlxAoa_StreamParser::ByteProg>::call(os, self);
+    return os;
+}
 }

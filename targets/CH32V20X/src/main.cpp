@@ -54,7 +54,8 @@ int main(){
     // gui_main();
     // canopen_main();
     // bldc_main();
-    myesc_main();
+    // myesc_main();
+    alx_aoa_main();
     // mystepper_main();
 
     // nuedc_2025e_main();

@@ -59,7 +59,7 @@ void mlx90640_main(){
 
 
     auto init_debugger = []{
-        auto & DBG_UART = DEBUGGER_INST;
+        auto & DBG_UART = hal::uart2;
 
         DBG_UART.init({
             .baudrate = UART_BAUD
