@@ -123,8 +123,8 @@ OutputStream & OutputStream::operator<<(const uint8_t val){
 void OutputStream::print_u32(const uint32_t val){
     PRINT_INT_TEMPLATE(12, strconv::itoa);
 }
-void OutputStream::print_i32(const uint32_t val){
-    PRINT_INT_TEMPLATE(12, strconv::iutoa);
+void OutputStream::print_i32(const int32_t val){
+    PRINT_INT_TEMPLATE(12, strconv::itoa);
 }
 void OutputStream::print_u64(const uint64_t val){
     PRINT_INT_TEMPLATE(24, strconv::iutoa);

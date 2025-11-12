@@ -352,7 +352,7 @@ public:
     //#region print integer
 private:
     void print_u32(const uint32_t val);
-    void print_i32(const uint32_t val);
+    void print_i32(const int32_t val);
     void print_u64(const uint64_t val);
     void print_i64(const int64_t val);
     

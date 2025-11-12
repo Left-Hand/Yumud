@@ -7,6 +7,7 @@
 #include "core/debug/debug.hpp"
 
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
+#include "core/sync/timer.hpp"
 
 using namespace ymd;
 using drivers::AlxAoa_Prelude;
@@ -28,8 +29,15 @@ void alx_aoa_main(){
         576000 
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
+    
 
+    #if defined(CH32V20X)
     auto & alx_uart = hal::uart1;
+    #elif defined(CH32V30X)
+    auto & alx_uart = hal::uart2;
+    #else
+    static_assert(false, "Unsupported MCU");
+    #endif
 
     using AlxEvent = AlxAoa_Prelude::Event;
     using AlxError = AlxAoa_Prelude::Error;
@@ -64,28 +72,18 @@ void alx_aoa_main(){
     });
 
 
-    auto tx_led = hal::PC<13>();
-    auto rx_led = hal::PC<14>();
-    tx_led.outpp();
-    rx_led.outpp();
+    auto red_led_gpio_ = hal::PC<13>();
+    auto blue_led_gpio_ = hal::PC<14>();
+    red_led_gpio_.outpp();
+    blue_led_gpio_.outpp();
 
-    // alx_uart.set_event_callback([&](const hal::UartEvent& ev){
-    //     switch(ev.kind()){
-    //         case hal::UartEvent::RxIdle:
-    //             rx_led.set();
-    //             clock::delay(1ms);
-    //             rx_led.clr();
-    //             break;
-    //         case hal::UartEvent::TxIdle:
-    //             tx_led.set();
-    //             clock::delay(1ms);
-    //             tx_led.clr();
-    //             break;
-    //         default:
-    //             PANIC{"Unexpected event", ev};
-    //             break;
-    //     }
-    // });
+    auto blink_service_poller = [&]{
+
+        red_led_gpio_ = BoolLevel::from((
+            uint32_t(clock::millis().count()) % 200) > 100);
+        blue_led_gpio_ = BoolLevel::from((
+            uint32_t(clock::millis().count()) % 400) > 200);
+    };
 
     #if 0
     const auto bytes = std::to_array<uint8_t>({
@@ -123,13 +121,41 @@ void alx_aoa_main(){
         clock::delay(1ms);
     };
     #endif
-    // PANIC{"done"};
+
+    uint32_t received_bytes_cnt_ = 0;
     while(true){
-        if(alx_uart.available()){
-            char chr;
-            alx_uart.read1(chr);
-            alx_parser.push_byte(chr); 
-        }
+        auto collect_bytes = []{
+            std::vector<uint8_t> bytes;
+            if(alx_uart.available()){
+                char chr;
+                alx_uart.read1(chr);
+                bytes.push_back(uint8_t(chr));
+            }
+            return bytes;
+        };
+
+        const auto bytes = collect_bytes();
+
+        alx_parser.push_bytes(std::span(bytes)); 
+        received_bytes_cnt_+=bytes.size();
+        // DEBUG_PRINTLN("alx_uart_rx", uint8_t(chr));
+
+
+        blink_service_poller();
+
+        static auto report_timer = async::RepeatTimer::from_duration(3ms);
+        
+        report_timer.invoke_if([&]{
+            // if(bytes.size() == 0) return;
+            // if(DEBUGGER.pending() != 0) return;
+            // PANIC{bytes};
+            // DEBUG_PRINTLN_IDLE(
+            //     received_bytes_cnt_
+            // );
+            // for(const auto byte : bytes){
+            //     DEBUG_PRINT(byte);
+            // }
+    });
     }
 
 

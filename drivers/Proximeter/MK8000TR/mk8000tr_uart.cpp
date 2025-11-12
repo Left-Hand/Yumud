@@ -13,7 +13,7 @@ void Self::push_byte(const uint8_t byte){
                 reset();
                 break;
             }
-            packet_.header = byte;
+            frame_.header = byte;
             bytes_count_++;
             state_ = State::WaitingLen;
             break;
@@ -22,15 +22,15 @@ void Self::push_byte(const uint8_t byte){
                 reset();
                 break;
             }
-            packet_.length = byte;
+            frame_.length = byte;
             bytes_count_ ++;
             state_ = State::Remaining;
             break;
         case State::Remaining:
             bytes_[bytes_count_] = byte;
             bytes_count_++;
-            if(bytes_count_ == size_t(sizeof(Packet))){
-                if(packet_.tail == TAIL_TOKEN)
+            if(bytes_count_ == sizeof(Frame)){
+                if(frame_.tail == TAIL_TOKEN)
                     flush();
                 reset();
             }
@@ -48,7 +48,7 @@ void Self::flush(){
     if(callback_ == nullptr) [[unlikely]]
         PANIC{"callback is null"};
 
-    callback_(packet_);
+    callback_(frame_.to_packet());
 }
 
 void Self::reset(){

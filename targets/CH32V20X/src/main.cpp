@@ -55,7 +55,8 @@ int main(){
     // canopen_main();
     // bldc_main();
     // myesc_main();
-    alx_aoa_main();
+    // alx_aoa_main();
+    mk8000tr_main();
     // mystepper_main();
 
     // nuedc_2025e_main();
@@ -155,6 +156,7 @@ int main(){
     // bldc_main();
     while(true);
     #elif defined(CH32V30X)
+    alx_aoa_main();
     // i2c_scanner_main();
     // slcan_main();
     // programmer_main();

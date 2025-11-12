@@ -13,10 +13,18 @@ struct [[nodiscard]] BytesSpawner{
         bytes_(bytes) {}
 
     template<size_t N>
-    [[nodiscard]] constexpr std::span<const uint8_t, N> spawn(){
+    [[nodiscard]] constexpr std::span<const uint8_t, N> spawn_leading(){
         // if(bytes_.size() < N) __builtin_abort();
         const auto ret = std::span<const uint8_t, N>(bytes_.data(), N);
         bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
+        return ret;
+    }
+
+    template<size_t N>
+    [[nodiscard]] constexpr std::span<const uint8_t, N> spawn_trailing(){
+        // if(bytes_.size() < N) __builtin_abort();
+        const auto ret = std::span<const uint8_t, N>(std::prev(bytes_.end(), N), bytes_.end());
+        bytes_ = std::span<const uint8_t>(bytes_.data(), bytes_.size() - N);
         return ret;
     }
 

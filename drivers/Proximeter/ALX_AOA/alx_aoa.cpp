@@ -136,43 +136,43 @@ static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
     }
 
     const auto anchor_id = ({
-        const auto res = parse_device_id(spawner.spawn<4>());
+        const auto res = parse_device_id(spawner.spawn_leading<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto target_id = ({
-        const auto res = parse_device_id(spawner.spawn<4>());
+        const auto res = parse_device_id(spawner.spawn_leading<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto distance = ({
-        const auto res = parse_distance(spawner.spawn<4>());
+        const auto res = parse_distance(spawner.spawn_leading<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto azimuth = ({
-        const auto res = parse_angle(spawner.spawn<2>());
+        const auto res = parse_angle(spawner.spawn_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto elevation = ({
-        const auto res = parse_angle(spawner.spawn<2>());
+        const auto res = parse_angle(spawner.spawn_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     [[maybe_unused]] const auto tag_status = ({
-        const auto res = parse_tag_status(spawner.spawn<2>());
+        const auto res = parse_tag_status(spawner.spawn_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     [[maybe_unused]] const auto batch_sn = ({
-        const auto res = parse_batch_sn(spawner.spawn<2>());
+        const auto res = parse_batch_sn(spawner.spawn_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
@@ -284,14 +284,14 @@ Result<Self::Event, Self::Error>  Self::parse(){
     // RequestCommand 2 unsigned Integer 命令码 
     // VersionID 2 unsigned Integer 协议版本，此版本固定 0x0100 
 
-    [[maybe_unused]] const auto seq_id = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
+    [[maybe_unused]] const auto seq_id = be_bytes_to_int<uint16_t>(spawner.spawn_leading<2>());
     const auto req_command = ({
-        const auto res = parse_command(spawner.spawn<2>());
+        const auto res = parse_command(spawner.spawn_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
-    [[maybe_unused]] const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
+    [[maybe_unused]] const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.spawn_leading<2>());
 
     //官方给的协议版本也不固定 不检测
     // if(protocol_version != 0x0100){
@@ -323,23 +323,15 @@ Result<Self::Event, Self::Error>  Self::parse(){
         }
         case RequestCommand::HeartBeat:{
             #if 1
-            // const auto res = parse_heartbeat(spawner);
-            // if(res.is_err()) return Err(res.unwrap_err());
-            // return Ok(Event(res.unwrap()));
+
 
             if(spawner.remaining().size() != 4) return Err(Error::InvalidLength);
             const auto anchor_id = ({
-                const auto res = parse_device_id(spawner.spawn<4>());
+                const auto res = parse_device_id(spawner.spawn_leading<4>());
                 if(res.is_err()) return Err(res.unwrap_err());
                 res.unwrap();
             });
-            // AnchorID 4 unsigned Integer ID
 
-            // Event ev = Event(parse_location(spawner).unwrap());
-            // Event ev = Event(Self::HeartBeat{
-            //     // .anchor_id = DeviceId::from_bits(0)
-            //     .anchor_id = anchor_id
-            // });
             Event ev = Event(std::monostate{});
             Self::HeartBeat msg{
                 .anchor_id = anchor_id
