@@ -11,21 +11,21 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define UART hal::uart2
 #define SCL_GPIO hal::PB<0>()
 #define SDA_GPIO hal::PB<1>()
 
 using drivers::VL53L5CX;
 
 void vl53l5cx_main(){
-    UART.init({576000});
-    DEBUGGER.retarget(&UART);
+    DEBUGGER_INST.init({576000});
+    DEBUGGER.retarget(&DEBUGGER_INST);
+
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();
     auto scl_gpio_ = SCL_GPIO;
     auto sda_gpio_ = SDA_GPIO;
     hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
-    i2c.init({100_KHz});
+    i2c.init({400_KHz});
 
     auto red_led_gpio_ = hal::PC<13>();
     auto blue_led_gpio_ = hal::PC<14>();
@@ -43,13 +43,24 @@ void vl53l5cx_main(){
 
     // VL6180X vl6180{i2c, I2cSlaveAddr<7>::from_u7(0)};
     VL53L5CX vl53{&i2c};
+    DEBUG_PRINTLN("start init");
 
     vl53.validate().examine();
     vl53.init().examine();
-
-
+    DEBUG_PRINTLN(vl53.get_resolution().examine());
+    vl53.set_resolution(VL53L5CX::Resolution::_4x4).examine();
+    // vl53.set_ranging_frequency_hz()
+    // vl53.start_ranging().examine();
+    
+    drivers::VL53L5CX::VL53L5CX_Frame frame;
     while(true){
         blink_service_poller();
+        clock::delay(10ms);
+        if(vl53.is_data_ready().examine() == true){
+            vl53.reflash_ranging_data(&frame).examine();
+            DEBUG_PRINTLN(frame.distance_mm);
+            vl53.start_ranging().examine();
+        } 
     }
 
 }
