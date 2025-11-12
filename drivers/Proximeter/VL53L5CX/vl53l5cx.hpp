@@ -31,17 +31,13 @@ namespace ymd::drivers{
 
 class VL53L5CX final:public VL53L5CX_Prelude{ 
 public:
-    enum class ErrorKind:uint8_t { 
-        TimeOut = 1,
-        McuError = 66,
-        InvalidParam = 127,
-        InvalidDeviceId,
-        InvalidRevisionId,
-        Status = 255,
-        
-    };
 
-    DEF_ERROR_SUMWITH_HALERROR(Error, ErrorKind)
+    explicit VL53L5CX(hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    explicit VL53L5CX(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
+    explicit VL53L5CX(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(i2c, addr){;}
 
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -460,6 +456,7 @@ public:
     IResult<> send_xtalk_data(Resolution resolution);
         
 private:
+    hal::I2cDrv i2c_drv_;
 	/* Results stream_count_, value auto-incremented at each range */
 	uint8_t		        stream_count_;
 	/* Size of data read though I2C */

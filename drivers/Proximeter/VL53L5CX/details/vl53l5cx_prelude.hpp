@@ -71,6 +71,18 @@
 namespace ymd::drivers{ 
 
 struct VL53L5CX_Prelude{
+enum class ErrorKind:uint8_t { 
+	TimeOut = 1,
+	McuError = 66,
+	InvalidParam = 127,
+	InvalidDeviceId,
+	InvalidRevisionId,
+	Status = 255,
+	
+};
+
+DEF_FRIEND_DERIVE_DEBUG(ErrorKind)
+DEF_ERROR_SUMWITH_HALERROR(Error, ErrorKind)
 /**
  * @brief Current driver version.
  */
@@ -78,12 +90,8 @@ struct VL53L5CX_Prelude{
 static constexpr auto VL53L5CX_API_REVISION			= "VL53L5CX_1.3.0";
 static constexpr uint8_t VL53L5CX_NB_TARGET_PER_ZONE = 1U;
 
-/**
- * @brief Default I2C address of VL53L5CX sensor. Can be changed using function
- * vl53l5cx_set_i2c_address() function is called.
- */
 
-static constexpr uint16_t VL53L5CX_DEFAULT_I2C_ADDRESS = 0x52;
+static constexpr hal::I2cSlaveAddr<7> DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x29);
 
 /**
  * @brief Macro VL53L5CX_RESOLUTION_4X4 or VL53L5CX_RESOLUTION_8X8 allows
