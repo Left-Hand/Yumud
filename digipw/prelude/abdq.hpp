@@ -37,12 +37,12 @@ struct [[nodiscard]] AlphaBetaCoord final{
     T alpha;
     T beta;
 
-    enum class Axis { Alpha, Beta };
-
     static constexpr AlphaBetaCoord ZERO = AlphaBetaCoord{
         static_cast<T>(0),
         static_cast<T>(0)
     };
+
+    enum class Axis { Alpha, Beta };
 
     [[nodiscard]] static constexpr AlphaBetaCoord from_uvw(const UvwCoord<T> & uvw){
         return AlphaBetaCoord{
@@ -177,6 +177,12 @@ struct [[nodiscard]] AlphaBetaZeroCoord final{
     T beta;
     T zero;
 
+    static constexpr AlphaBetaZeroCoord ZERO = AlphaBetaZeroCoord{
+        static_cast<T>(0),
+        static_cast<T>(0),
+        static_cast<T>(0)
+    };
+
     [[nodiscard]] static constexpr AlphaBetaZeroCoord from_uvw(const UvwCoord<T> & uvw){
         return AlphaBetaCoord{
             .alpha = (uvw.u - ((uvw.v + uvw.w) >> 1)) * _2_by_3, 
@@ -305,29 +311,5 @@ struct [[nodiscard]] DqCoord final{
     }
 
 };
-
-}
-
-namespace ymd{
-
-
-template<typename T>
-struct FromZeroDispatcher<digipw::AlphaBetaCoord<T>>{
-    static consteval digipw::AlphaBetaCoord<T> from_zero() {
-        return digipw::AlphaBetaCoord<T>{
-            FromZeroDispatcher<T>::from_zero(), 
-            FromZeroDispatcher<T>::from_zero()
-        };
-    }
-}; 
-template<typename T>
-struct FromZeroDispatcher<digipw::DqCoord<T>>{
-    static consteval digipw::DqCoord<T> from_zero() {
-        return digipw::DqCoord<T>{
-            FromZeroDispatcher<T>::from_zero(), 
-            FromZeroDispatcher<T>::from_zero()
-        };
-    }
-}; 
 
 }

@@ -106,17 +106,3 @@ struct UvwCoord{
 };
 
 }
-
-namespace ymd{
-template<typename T>
-struct FromZeroDispatcher<digipw::UvwCoord<T>>{
-    static consteval digipw::UvwCoord<T> from_zero() {
-        return digipw::UvwCoord<T>(
-            FromZeroDispatcher<T>::from_zero(), 
-            FromZeroDispatcher<T>::from_zero(), 
-            FromZeroDispatcher<T>::from_zero()
-        );
-    }
-}; 
-
-}

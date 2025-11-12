@@ -23,6 +23,7 @@ struct ICM42688_Prelude{
         _8G,
         _4G,
         _2G,
+        Default = _16G
     };
 
     enum class AccOdr:uint8_t{
@@ -41,6 +42,7 @@ struct ICM42688_Prelude{
         _3_125Hz,
         _1_5625Hz,
         _500Hz,
+        Default = _1000Hz
     };
 
 
@@ -53,6 +55,7 @@ struct ICM42688_Prelude{
         _62_5deg,
         _31_25deg,
         _15_625deg,
+        Default = _2000deg
     };
 
     enum class GyrOdr:uint8_t{
@@ -71,13 +74,23 @@ struct ICM42688_Prelude{
         _X1Hz,
         _X2Hz,
         _500Hz,
+        Default = _1000Hz
     };
 
-    struct Config{
-        AccOdr acc_odr = AccOdr::_1000Hz;
-        AccFs acc_fs = AccFs::_8G;
-        GyrOdr gyr_odr = GyrOdr::_1000Hz;
-        GyrFs gyr_fs = GyrFs::_1000deg;
+    struct [[nodiscard]] Config{
+        AccOdr acc_odr;
+        AccFs acc_fs;
+        GyrOdr gyr_odr;
+        GyrFs gyr_fs;
+
+        static constexpr Config from_default() {
+            return Config{
+                .acc_odr = AccOdr::Default, 
+                .acc_fs = AccFs::Default, 
+                .gyr_odr = GyrOdr::Default,
+                .gyr_fs = GyrFs::Default
+            };
+        }
     };
 
     enum class TempFiltBw:uint8_t{

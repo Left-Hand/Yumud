@@ -2,6 +2,7 @@
 
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
+#include "core/utils/default.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
@@ -26,7 +27,8 @@ using namespace ymd::drivers;
 
 [[maybe_unused]] static auto init_mpu6050(MPU6050 & mpu) -> Result<void, MPU6050::Error> {
     mpu.set_package(MPU6050::Package::MPU6050);
-    if(const auto res = mpu.init({});
+    // const auto default_config = MPU6050::Config(Default);
+    if(const auto res = mpu.init(Default);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = mpu.set_acc_fs(MPU6050::AccFs::_2G);
         res.is_err()) return Err(res.unwrap_err());

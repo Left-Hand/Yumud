@@ -292,8 +292,8 @@ void myesc_main(){
 
     // #endregion 
     
-    Angle<iq16> openloop_elec_angle_ = 0_deg;
-    Angle<iq16> sensored_elec_angle_ = 0_deg;
+    Angle<iq16> openloop_elec_angle_ = Zero;
+    Angle<iq16> sensored_elec_angle_ = Zero;
     UvwCoord<iq20> uvw_curr_ = Zero;
     DqCoord<iq20> dq_curr_ = Zero;
     DqCoord<iq20> dq_volt_ = Zero;
