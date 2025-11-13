@@ -423,10 +423,8 @@ IResult<> Self::send_offset_data(Resolution resolution)
 		(void)memcpy(range_grid,&(temp_buffer[0x140]),
 			sizeof(range_grid));
 
-		for (size_t j = 0; j < 4; j++)
-		{
-			for (size_t i = 0; i < 4 ; i++)
-			{
+		for (size_t j = 0; j < 4; j++){
+			for (size_t i = 0; i < 4 ; i++){
 				signal_grid[i+(4*j)] =
 				(signal_grid[(2*i)+(16*j)+ (int8_t)0]
 				+ signal_grid[(2*i)+(16*j)+(int8_t)1]
@@ -450,8 +448,7 @@ IResult<> Self::send_offset_data(Resolution resolution)
 		SwapBuffer(temp_buffer, VL53L5CX_OFFSET_BUFFER_SIZE);
 	}
 
-	for(uint16_t k = 0; k < (VL53L5CX_OFFSET_BUFFER_SIZE - (uint16_t)4); k++)
-	{
+	for(size_t k = 0; k < size_t(VL53L5CX_OFFSET_BUFFER_SIZE - 4); k++){
 		temp_buffer[k] = temp_buffer[k + (uint16_t)8];
 	}
 
@@ -757,8 +754,6 @@ IResult<> Self::start_ranging()
 		return CHECK_ERR(Err(Error::Status), tmp, "is not", data_read_size_);
 	}
 
-	DEBUG_PRINTLN(tmp, data_read_size_);
-
     return Ok();
 }
 
@@ -844,11 +839,11 @@ IResult<bool> Self::is_data_ready(){
         stream_count_ = temp_buffer[0];
 		return Ok(true);
 	}else{
-        // if ((temp_buffer[3] & (uint8_t)0x80) != (uint8_t)0){
-		// 	const auto bits = temp_buffer[2];
-		// 	return CHECK_ERR(Err(map_status_to_error(bits)), 
-		// 		std::hex, std::showbase, bits);	/* Return GO2 error status */
-        // }
+        if ((temp_buffer[3] & (uint8_t)0x80) != (uint8_t)0){
+			const auto bits = temp_buffer[2];
+			return CHECK_ERR(Err(map_status_to_error(bits)), 
+				std::hex, std::showbase, bits);	/* Return GO2 error status */
+        }
 
 		return Ok(false);
 	}
@@ -1132,12 +1127,12 @@ IResult<> Self::set_integration_time_ms(
 
 	/* Integration time must be between 2ms and 1000ms */
 	if((integration_time_ms < (uint32_t)2)
-           || (integration_time_ms > (uint32_t)1000))
+		|| (integration_time_ms > (uint32_t)1000))
 	{
 		return Err(Error::InvalidParam);
 	}
 
-	const uint32_t bits = integration_time_ms * (uint32_t)1000;
+	const uint32_t bits = integration_time_ms * 1000u;
 
 	if(const auto res = dci_replace_data(temp_buffer,
 		VL53L5CX_DCI_INT_TIME, 20,

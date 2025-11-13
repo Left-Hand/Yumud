@@ -45,7 +45,7 @@ public:
 
     IResult<> init();
 
-    IResult<> send_offset_data(Resolution resolution);
+
 
 
     IResult<> validate();
@@ -409,5 +409,6 @@ private:
             uint16_t			new_data_pos);
 
     IResult<> send_xtalk_data(Resolution resolution);
+    IResult<> send_offset_data(Resolution resolution);
 };
 }

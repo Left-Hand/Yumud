@@ -1,5 +1,6 @@
 #include "core/debug/debug.hpp"
 
+#include "core/utils/default.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/gpio/gpio_port.hpp"
@@ -7,6 +8,8 @@
 #include "src/testbench/tb.h"
 
 #include "drivers/Proximeter/VL53L5CX/vl53l5cx.hpp"
+
+// https://blog.csdn.net/qq_24312945/article/details/133848222
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -47,13 +50,28 @@ void vl53l5cx_main(){
     DEBUG_PRINTLN("start init");
 
     vl53.init().examine();
+    [[maybe_unused]]auto motion_config = VL53L5CX::VL53L5CX_Motion_Config(Default);
+    
+    #if 0
+    vl53.motion_indicator_init(motion_config, VL53L5CX::Resolution::_4x4).examine();
+    vl53.motion_indicator_set_distance_motion(motion_config, 1000, 2000).examine();
 
-    // vl53.set_resolution(VL53L5CX::Resolution::_4x4).examine();
+    vl53.set_resolution(VL53L5CX::Resolution::_4x4).examine();
+    vl53.set_ranging_mode(VL53L5CX::RangingMode::Autonomous).examine();
     // vl53.set_resolution(VL53L5CX::Resolution::_8x8).examine();
+    vl53.set_integration_time_ms(10).examine();
+    vl53.set_ranging_frequency_hz(5).examine();
+    #else
+    // vl53.set_resolution(VL53L5CX::Resolution::_8x8).examine();
+    vl53.set_ranging_mode(VL53L5CX::RangingMode::Continuous).examine();
+    // vl53.set_integration_time_ms(10).examine();
     vl53.set_ranging_frequency_hz(60).examine();
+    #endif
 
-    DEBUG_PRINTLN(vl53.get_resolution().examine());
-    DEBUG_PRINTLN(vl53.get_ranging_frequency_hz().examine());
+    DEBUG_PRINTLN("resolution:", vl53.get_resolution().examine());
+    DEBUG_PRINTLN("freq:", vl53.get_ranging_frequency_hz().examine());
+    DEBUG_PRINTLN("intergration time:", vl53.get_integration_time_ms().examine());
+    DEBUG_PRINTLN("ranging mode:", vl53.get_ranging_mode().examine());
 
     vl53.start_ranging().examine();
     
