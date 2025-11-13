@@ -19,6 +19,7 @@ using drivers::VL53L5CX;
 void vl53l5cx_main(){
     DEBUGGER_INST.init({576000});
     DEBUGGER.retarget(&DEBUGGER_INST);
+    DEBUGGER.no_brackets(EN);
 
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();
@@ -45,22 +46,26 @@ void vl53l5cx_main(){
     VL53L5CX vl53{&i2c};
     DEBUG_PRINTLN("start init");
 
-    vl53.validate().examine();
     vl53.init().examine();
+
+    // vl53.set_resolution(VL53L5CX::Resolution::_4x4).examine();
+    // vl53.set_resolution(VL53L5CX::Resolution::_8x8).examine();
+    vl53.set_ranging_frequency_hz(60).examine();
+
     DEBUG_PRINTLN(vl53.get_resolution().examine());
-    vl53.set_resolution(VL53L5CX::Resolution::_4x4).examine();
-    // vl53.set_ranging_frequency_hz()
-    // vl53.start_ranging().examine();
+    DEBUG_PRINTLN(vl53.get_ranging_frequency_hz().examine());
+
+    vl53.start_ranging().examine();
     
     drivers::VL53L5CX::VL53L5CX_Frame frame;
     while(true){
         blink_service_poller();
-        clock::delay(10ms);
         if(vl53.is_data_ready().examine() == true){
             vl53.reflash_ranging_data(&frame).examine();
-            DEBUG_PRINTLN(frame.distance_mm);
-            vl53.start_ranging().examine();
+            const auto distance_mm = std::span(frame.distance_mm);
+            DEBUG_PRINTLN(distance_mm.subspan(0, 16));
         } 
+        clock::delay(1ms);
     }
 
 }

@@ -11,7 +11,7 @@ using namespace ymd::hal;
 using namespace ymd::ral::CH32;
 
 
-Gpio map_uart_to_rxio(const void * inst){
+static Gpio map_uart_to_rxio(const void * inst){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_UART1
         case USART1_BASE:
@@ -49,7 +49,7 @@ Gpio map_uart_to_rxio(const void * inst){
     __builtin_trap();
 }
 
-Gpio map_uart_to_txio(const void * inst){
+static Gpio map_uart_to_txio(const void * inst){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_UART1
         case USART1_BASE:

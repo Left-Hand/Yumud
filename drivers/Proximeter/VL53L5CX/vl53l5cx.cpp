@@ -53,10 +53,10 @@ static constexpr uint8_t VL53L5CX_STATUS_ERROR = 255U;
 static constexpr uint16_t VL53L5CX_DCI_CAL_CFG				= ((uint16_t)0x5470U);
 static constexpr uint16_t VL53L5CX_DCI_XTALK_CFG				= ((uint16_t)0xAD94U);
 
-template<typename T>
-requires std::is_pointer_v<T>
-static T ptr_cast(auto * obj){
-	return reinterpret_cast<T>(obj);
+template<typename P>
+requires std::is_pointer_v<P>
+static P ptr_cast(auto * obj){
+	return reinterpret_cast<P>(obj);
 }
 
 template<typename E, typename T>
@@ -70,12 +70,24 @@ static constexpr IResult<E> try_into_enum(T obj){
 
 static void SwapBuffer(uint8_t *buffer, uint16_t size)
 {
+	VL53L5CX_ASSERT(size % 4 == 0);
     for(size_t i = 0; i < size_t(size); i = i + 4) {
 		std::swap(buffer[i], buffer[i+3]);
 		std::swap(buffer[i + 1], buffer[i + 2]);
     }
 }
 
+// 简化版本，避免复杂的索引计算
+static void simple_swap_and_copy(__restrict uint8_t* dest, __restrict const uint8_t* src, uint16_t size) {
+    // 每4字节一组进行字节序反转
+	VL53L5CX_ASSERT(size % 4 == 0);
+    for(uint16_t group = 0; group < size; group += 4) {
+        dest[group + 4] = src[group + 3];  // 字节0 ← 字节3
+        dest[group + 5] = src[group + 2];  // 字节1 ← 字节2  
+        dest[group + 6] = src[group + 1];  // 字节2 ← 字节1
+        dest[group + 7] = src[group + 0];  // 字节3 ← 字节0
+    }
+}
 
 
 
@@ -122,9 +134,13 @@ IResult<> Self::validate(){
 }
 
 IResult<> Self::init(){
+	// auto & self = *this;
+
 	uint8_t tmp;
 	uint32_t single_range = 0x01;
 
+	if(const auto res = validate();
+		res.is_err()) return Err(res.unwrap_err());
 
 	/* SW reboot sequence */
 	if(const auto res = write_byte(0x7fff, 0x00); 
@@ -427,11 +443,11 @@ IResult<> Self::send_offset_data(Resolution resolution)
 		}
 		(void)memset(&range_grid[0x10], 0, (uint16_t)96);
 		(void)memset(&signal_grid[0x10], 0, (uint16_t)192);
-            (void)memcpy(&(temp_buffer[0x3C]),
-		signal_grid, sizeof(signal_grid));
-            (void)memcpy(&(temp_buffer[0x140]),
-		range_grid, sizeof(range_grid));
-            SwapBuffer(temp_buffer, VL53L5CX_OFFSET_BUFFER_SIZE);
+		(void)memcpy(&(temp_buffer[0x3C]),
+			signal_grid, sizeof(signal_grid));
+		(void)memcpy(&(temp_buffer[0x140]),
+			range_grid, sizeof(range_grid));
+		SwapBuffer(temp_buffer, VL53L5CX_OFFSET_BUFFER_SIZE);
 	}
 
 	for(uint16_t k = 0; k < (VL53L5CX_OFFSET_BUFFER_SIZE - (uint16_t)4); k++)
@@ -592,7 +608,7 @@ IResult<> Self::set_power_mode(PowerMode power_mode)
 IResult<> Self::start_ranging()
 {
 	uint16_t tmp;
-	uint32_t header_config[2] = {0, 0};
+
 
 	auto cmd = std::to_array<uint8_t>({0x00, 0x03, 0x00, 0x00});
 
@@ -674,12 +690,13 @@ IResult<> Self::start_ranging()
 		auto& bh = output[i];  // 直接引用，修改会影响数组
 		if (((uint8_t)bh.type >= (uint8_t)0x1) 
 			&& ((uint8_t)bh.type < (uint8_t)0x0d)){
+
 			if ((bh.idx >= (uint16_t)0x54d0) 
 				&& (bh.idx < (uint16_t)(0x54d0 + 960))){
-				bh.size = static_cast<uint8_t>(resolution);
+				bh.size = std::bit_cast<uint8_t>(resolution);
 			}else{
 				bh.size = (uint8_t)(
-					static_cast<uint8_t>(resolution) * (uint8_t)VL53L5CX_NB_TARGET_PER_ZONE);
+					std::bit_cast<uint8_t>(resolution) * (uint8_t)VL53L5CX_NB_TARGET_PER_ZONE);
 			}
 			data_read_size_ += bh.type * bh.size;
 		}else{
@@ -696,8 +713,10 @@ IResult<> Self::start_ranging()
 		(uint16_t)sizeof(output));
 		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
-	header_config[0] = data_read_size_;
-	header_config[1] = output.size() + 1;  // 使用实际有效数量
+	const uint32_t header_config[2] = {
+		data_read_size_,
+		output.size() + 1  // 使用实际有效数量
+	};
 
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&(header_config)), VL53L5CX_DCI_OUTPUT_CONFIG,
@@ -737,6 +756,8 @@ IResult<> Self::start_ranging()
 	if(tmp != data_read_size_){
 		return CHECK_ERR(Err(Error::Status), tmp, "is not", data_read_size_);
 	}
+
+	DEBUG_PRINTLN(tmp, data_read_size_);
 
     return Ok();
 }
@@ -808,6 +829,8 @@ IResult<> Self::stop_ranging()
 }
 
 IResult<bool> Self::is_data_ready(){
+	// https://community.st.com/t5/imaging-sensors/vl53l5cx-check-data-ready-returns-c5-go2-error/td-p/86510
+
 	if(const auto res = read_burst(0x0, temp_buffer, 4);
 		res.is_err()) return Err(res.unwrap_err());
 
@@ -821,9 +844,11 @@ IResult<bool> Self::is_data_ready(){
         stream_count_ = temp_buffer[0];
 		return Ok(true);
 	}else{
-        if ((temp_buffer[3] & (uint8_t)0x80) != (uint8_t)0){
-        	return Err(map_status_to_error(temp_buffer[2]));	/* Return GO2 error status */
-        }
+        // if ((temp_buffer[3] & (uint8_t)0x80) != (uint8_t)0){
+		// 	const auto bits = temp_buffer[2];
+		// 	return CHECK_ERR(Err(map_status_to_error(bits)), 
+		// 		std::hex, std::showbase, bits);	/* Return GO2 error status */
+        // }
 
 		return Ok(false);
 	}
@@ -1980,12 +2005,10 @@ IResult<> Self::dci_write_data(
 
 
 
-	/* Copy data from structure to FW format (+4 bytes to add header) */
-	for(uint16_t i = 0; i < data_size; i++)
-	{
-		const auto idx = (i / 4) + (4 - (i % 4));
-		temp_buffer[i + 4] = data[idx];
-	}
+	// /* Copy data from structure to FW format (+4 bytes to add header) */
+
+	simple_swap_and_copy(temp_buffer, data, data_size);
+
 
 	/* Add headers and footer */
 	(void)memcpy(&temp_buffer[0], headers, sizeof(headers));

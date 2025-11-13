@@ -102,9 +102,10 @@ IResult<iq16> IST8310::get_temperature(){
 }
 
 IResult<bool> IST8310::is_data_ready(){
+    
     auto reg = RegCopy(regs_.status1_reg);
     if(const auto res = read_reg(reg);
-        res.is_err()) return Err(res.unwrap_err());
+        res.is_err()) return (Err(res.unwrap_err()));
     return Ok(bool(reg.drdy));
 }
 
