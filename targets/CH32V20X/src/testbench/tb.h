@@ -189,3 +189,4 @@ void script_main();
 void alx_aoa_main();
 void mk8000tr_main();
 void vl53l5cx_main();
+void ld19_main();

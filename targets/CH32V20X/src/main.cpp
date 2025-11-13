@@ -158,7 +158,8 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // alx_aoa_main();
-    vl53l5cx_main();
+    // vl53l5cx_main();
+    ld19_main();
     // i2c_scanner_main();
     // slcan_main();
     // programmer_main();
