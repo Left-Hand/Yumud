@@ -27,40 +27,43 @@ struct M10_Prelude{
 
     struct [[nodiscard]] LidarSpinSpeed{
     public:
-        constexpr explicit LidarSpinSpeed(uint16_t bits):bits_(bits){;}
+        static constexpr LidarSpinSpeed from_bits(const uint16_t bits){
+            return {bits};
+        }
 
         [[nodiscard]] constexpr iq16 to_turns_per_secs() const{
             constexpr iq16 RATIO = iq16(1.0 / 360);
-            return RATIO * bits_;
+            return RATIO * bits;
         }
-    private:
-        uint16_t bits_;
+        uint16_t bits;
     };
 
     struct [[nodiscard]] LidarAngle{
     public:
-        constexpr explicit LidarAngle(uint16_t bits):bits_(bits){;}
+        static constexpr LidarAngle from_bits(const uint16_t bits){
+            return {bits};
+        }
 
         [[nodiscard]] constexpr uq24 to_turns() const{
             constexpr auto RATIO = uq24(1.0 / 360 * 0.01);
-            return RATIO * bits_;
+            return RATIO * bits;
         }
 
-    private:
-        uint16_t bits_;
+        uint16_t bits;
     };
 
     struct [[nodiscard]] LidarDistance{
     public:
-        constexpr explicit LidarDistance(uint16_t bits):bits_(bits){;}
+        static constexpr LidarDistance from_bits(const uint16_t bits){
+            return {bits};
+        }
 
         [[nodiscard]] constexpr uq24 to_meters() const{
             constexpr auto RATIO = uq24(0.001);
-            return RATIO * bits_;
+            return RATIO * bits;
         }
 
-    private:
-        uint16_t bits_;
+        uint16_t bits;
     };
 
     struct [[nodiscard]] LidarFrame final{
