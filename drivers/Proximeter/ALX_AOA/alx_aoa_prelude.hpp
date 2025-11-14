@@ -4,36 +4,11 @@
 #include "core/math/real.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/utils/angle.hpp"
+#include "core/utils/bytes_spawner.hpp"
 #include "core/container/inline_vector.hpp"
 
 namespace ymd::drivers{
 
-struct [[nodiscard]] BytesSpawner{
-    explicit constexpr BytesSpawner(std::span<const uint8_t> bytes) : 
-        bytes_(bytes) {}
-
-    template<size_t N>
-    [[nodiscard]] constexpr std::span<const uint8_t, N> spawn_leading(){
-        // if(bytes_.size() < N) __builtin_abort();
-        const auto ret = std::span<const uint8_t, N>(bytes_.data(), N);
-        bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
-        return ret;
-    }
-
-    template<size_t N>
-    [[nodiscard]] constexpr std::span<const uint8_t, N> spawn_trailing(){
-        // if(bytes_.size() < N) __builtin_abort();
-        const auto ret = std::span<const uint8_t, N>(std::prev(bytes_.end(), N), bytes_.end());
-        bytes_ = std::span<const uint8_t>(bytes_.data(), bytes_.size() - N);
-        return ret;
-    }
-
-    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
-        return bytes_;
-    }
-private:
-    std::span<const uint8_t> bytes_;
-};
 
 struct AlxAoa_Prelude{
 
@@ -60,43 +35,43 @@ enum class RequestCommand:uint16_t{
     HeartBeat = 0x2002,
 };
 
-struct [[nodiscard]] TargetDistance{
+struct [[nodiscard]] TargetDistanceCode{
     uint16_t distance_cm;
-    static constexpr TargetDistance from_bits(uint16_t distance_cm){
-        return TargetDistance{distance_cm};
+    static constexpr TargetDistanceCode from_bits(uint32_t bits){
+        return TargetDistanceCode{static_cast<uint16_t>(bits)};
     }
     [[nodiscard]] constexpr uq16 to_meters() const{
         return uq16(distance_cm) / 100;
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const TargetDistance & self){ 
+    friend OutputStream & operator <<(OutputStream & os, const TargetDistanceCode & self){ 
         return os << self.to_meters() << "m";
     }
 };
 
-struct [[nodiscard]] TargetAngle{
+struct [[nodiscard]] TargetAngleCode{
     int8_t degrees;
 
-    static constexpr TargetAngle from_bits(int8_t degrees){
-        return TargetAngle{degrees};
+    static constexpr TargetAngleCode from_bits(int16_t bits){
+        return TargetAngleCode{static_cast<int8_t>(bits)};
     }
     [[nodiscard]] constexpr Angle<uq16> to_angle() const{
         return Angle<uq16>::from_degrees(degrees);
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const TargetAngle & self){ 
+    friend OutputStream & operator <<(OutputStream & os, const TargetAngleCode & self){ 
         return os << self.to_angle().to_degrees() << "deg";
     }
 };
 
-struct [[nodiscard]] DeviceId{
+struct [[nodiscard]] DeviceIdCode{
     uint32_t count;
 
-    static constexpr DeviceId from_bits(uint32_t count){
-        return DeviceId{count};
+    static constexpr DeviceIdCode from_bits(uint32_t count){
+        return DeviceIdCode{count};
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const DeviceId & self){ 
+    friend OutputStream & operator <<(OutputStream & os, const DeviceIdCode & self){ 
         auto guard = os.create_guard();
         return os << std::showbase << std::hex << self.count;
     }
@@ -104,11 +79,11 @@ struct [[nodiscard]] DeviceId{
 
 
 struct [[nodiscard]] Location{
-    DeviceId anchor_id;
-    DeviceId target_id;
-    TargetDistance distance;
-    TargetAngle azimuth;
-    TargetAngle elevation;
+    DeviceIdCode anchor_id;
+    DeviceIdCode target_id;
+    TargetDistanceCode distance;
+    TargetAngleCode azimuth;
+    TargetAngleCode elevation;
 
     friend OutputStream & operator <<(OutputStream & os, const Location & self){
         return os << "location" << self.anchor_id << "->" << self.target_id << 
@@ -117,7 +92,7 @@ struct [[nodiscard]] Location{
 };
 
 struct [[nodiscard]] HeartBeat{
-    DeviceId anchor_id;
+    DeviceIdCode anchor_id;
 
     friend OutputStream & operator <<(OutputStream & os, const HeartBeat & self){ 
         return os << "heartbeat" << self.anchor_id;

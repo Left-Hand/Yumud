@@ -1,5 +1,6 @@
 #include "alx_aoa_prelude.hpp"
 #include "core/magic/enum_traits.hpp"
+#include "core/utils/bits_caster.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -53,21 +54,6 @@ using Error = Self::Error;
 }
 
 
-template<typename T>
-[[nodiscard]] static constexpr T be_bytes_to_int(
-    const std::span<const uint8_t, sizeof(T)> bytes)
-{
-    using U = std::make_unsigned_t<T>;
-    static_assert(sizeof(U) == sizeof(T));
-    U ret = 0;
-    
-    // 替代方案：累积移位（可能更清晰）
-    for(size_t i = 0; i < sizeof(U); i++) {
-        ret = (ret << 8) | static_cast<U>(bytes[i]);
-    }
-    return std::bit_cast<T>(ret);
-}
-
 [[nodiscard]] static constexpr Result<Self::RequestCommand, Error> parse_command(
     const std::span<const uint8_t, 2> bytes
 ){
@@ -82,25 +68,22 @@ template<typename T>
     }
 }
 
-[[nodiscard]] static constexpr Result<Self::DeviceId, Error> parse_device_id(
+[[nodiscard]] static constexpr Result<Self::DeviceIdCode, Error> parse_device_id(
     const std::span<const uint8_t, 4> bytes
 ){
-    const auto bits = be_bytes_to_int<uint32_t>(bytes);
-    return Ok(Self::DeviceId::from_bits(bits));
+    return Ok(Self::DeviceIdCode(be_bytes_ctor_bits(bytes)));
 }
 
-[[nodiscard]] static constexpr Result<Self::TargetAngle, Error> parse_angle(
+[[nodiscard]] static constexpr Result<Self::TargetAngleCode, Error> parse_angle(
     const std::span<const uint8_t, 2> bytes
 ){
-    const auto bits = be_bytes_to_int<int16_t>(bytes);
-    return Ok(Self::TargetAngle::from_bits(bits));
+    return Ok(Self::TargetAngleCode(be_bytes_ctor_bits(bytes)));
 }
 
-[[nodiscard]] static constexpr Result<Self::TargetDistance, Error> parse_distance(
+[[nodiscard]] static constexpr Result<Self::TargetDistanceCode, Error> parse_distance(
     const std::span<const uint8_t, 4> bytes
 ){
-    const auto bits = be_bytes_to_int<uint32_t>(bytes);
-    return Ok(Self::TargetDistance::from_bits(bits));
+    return Ok(Self::TargetDistanceCode(be_bytes_ctor_bits(bytes)));
 }
 
 [[nodiscard]] static constexpr Result<Self::TargetStatus, Error> parse_tag_status(
@@ -136,43 +119,43 @@ static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
     }
 
     const auto anchor_id = ({
-        const auto res = parse_device_id(spawner.spawn_leading<4>());
+        const auto res = parse_device_id(spawner.fetch_leading<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto target_id = ({
-        const auto res = parse_device_id(spawner.spawn_leading<4>());
+        const auto res = parse_device_id(spawner.fetch_leading<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto distance = ({
-        const auto res = parse_distance(spawner.spawn_leading<4>());
+        const auto res = parse_distance(spawner.fetch_leading<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto azimuth = ({
-        const auto res = parse_angle(spawner.spawn_leading<2>());
+        const auto res = parse_angle(spawner.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto elevation = ({
-        const auto res = parse_angle(spawner.spawn_leading<2>());
+        const auto res = parse_angle(spawner.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     [[maybe_unused]] const auto tag_status = ({
-        const auto res = parse_tag_status(spawner.spawn_leading<2>());
+        const auto res = parse_tag_status(spawner.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     [[maybe_unused]] const auto batch_sn = ({
-        const auto res = parse_batch_sn(spawner.spawn_leading<2>());
+        const auto res = parse_batch_sn(spawner.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
@@ -284,14 +267,14 @@ Result<Self::Event, Self::Error>  Self::parse(){
     // RequestCommand 2 unsigned Integer 命令码 
     // VersionID 2 unsigned Integer 协议版本，此版本固定 0x0100 
 
-    [[maybe_unused]] const auto seq_id = be_bytes_to_int<uint16_t>(spawner.spawn_leading<2>());
+    [[maybe_unused]] const auto seq_id = be_bytes_to_int<uint16_t>(spawner.fetch_leading<2>());
     const auto req_command = ({
-        const auto res = parse_command(spawner.spawn_leading<2>());
+        const auto res = parse_command(spawner.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
-    [[maybe_unused]] const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.spawn_leading<2>());
+    [[maybe_unused]] const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.fetch_leading<2>());
 
     //官方给的协议版本也不固定 不检测
     // if(protocol_version != 0x0100){
@@ -327,7 +310,7 @@ Result<Self::Event, Self::Error>  Self::parse(){
 
             if(spawner.remaining().size() != 4) return Err(Error::InvalidLength);
             const auto anchor_id = ({
-                const auto res = parse_device_id(spawner.spawn_leading<4>());
+                const auto res = parse_device_id(spawner.fetch_leading<4>());
                 if(res.is_err()) return Err(res.unwrap_err());
                 res.unwrap();
             });
