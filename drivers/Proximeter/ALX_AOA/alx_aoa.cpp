@@ -9,7 +9,7 @@ using namespace ymd::drivers;
 using Self = AlxAoa_StreamParser;
 using Error = Self::Error;
 
-#define ALXAOA_DEBUG_EN 1
+#define ALXAOA_DEBUG_EN 0
 
 #if ALXAOA_DEBUG_EN == 1
 #define ALXAOA_TODO(...) TODO()
@@ -71,6 +71,7 @@ using Error = Self::Error;
 [[nodiscard]] static constexpr Result<Self::DeviceIdCode, Error> parse_device_id(
     const std::span<const uint8_t, 4> bytes
 ){
+    using D = from_bits_t<Self::DeviceIdCode>;
     return Ok(Self::DeviceIdCode(be_bytes_ctor_bits(bytes)));
 }
 
@@ -104,7 +105,7 @@ using Error = Self::Error;
 
 
 
-static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
+static Result<Self::Location, Error> parse_location(BytesProvider & provider){
     // AnchorID 4 unsigned Integer 基站 ID 
     // TagID 4 unsigned Integer 标签 ID 
     // Distance 4 unsigned Integer 标签与基站间的距离，单位 cm 
@@ -114,48 +115,48 @@ static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
     // BatchSn 2 Byte 测距序号 
     // Reserve 4 Byte 预留 
     // XorByte 1 Byte 该字节前所有字节的异或校验
-    if(spawner.remaining().size() != 25){
+    if(provider.remaining().size() != 25){
         return Err(Error::InvalidLength);
     }
 
     const auto anchor_id = ({
-        const auto res = parse_device_id(spawner.fetch_leading<4>());
+        const auto res = parse_device_id(provider.fetch_leading<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto target_id = ({
-        const auto res = parse_device_id(spawner.fetch_leading<4>());
+        const auto res = parse_device_id(provider.fetch_leading<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto distance = ({
-        const auto res = parse_distance(spawner.fetch_leading<4>());
+        const auto res = parse_distance(provider.fetch_leading<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto azimuth = ({
-        const auto res = parse_angle(spawner.fetch_leading<2>());
+        const auto res = parse_angle(provider.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto elevation = ({
-        const auto res = parse_angle(spawner.fetch_leading<2>());
+        const auto res = parse_angle(provider.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     [[maybe_unused]] const auto tag_status = ({
-        const auto res = parse_tag_status(spawner.fetch_leading<2>());
+        const auto res = parse_tag_status(provider.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     [[maybe_unused]] const auto batch_sn = ({
-        const auto res = parse_batch_sn(spawner.fetch_leading<2>());
+        const auto res = parse_batch_sn(provider.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
@@ -180,8 +181,8 @@ static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
     };
 
     constexpr auto msg = [&]{
-        auto spawner = BytesSpawner(std::span(bytes));
-        return parse_location(spawner);
+        auto provider = BytesProvider(std::span(bytes));
+        return parse_location(provider);
     }();
 
     static_assert(msg.is_ok());
@@ -261,20 +262,20 @@ Result<Self::Event, Self::Error>  Self::parse(){
 
 
 
-    BytesSpawner spawner(context_bytes);
+    BytesProvider provider(context_bytes);
 
     // SequenceID 2 unsigned Integer 消息流水号 
     // RequestCommand 2 unsigned Integer 命令码 
     // VersionID 2 unsigned Integer 协议版本，此版本固定 0x0100 
 
-    [[maybe_unused]] const auto seq_id = be_bytes_to_int<uint16_t>(spawner.fetch_leading<2>());
+    [[maybe_unused]] const uint16_t seq_id = (provider.fetch_leading_ctor_bits<MSB>());
     const auto req_command = ({
-        const auto res = parse_command(spawner.fetch_leading<2>());
+        const auto res = parse_command(provider.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
-    [[maybe_unused]] const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.fetch_leading<2>());
+    [[maybe_unused]] const uint16_t protocol_version = provider.fetch_leading_ctor_bits<MSB>();
 
     //官方给的协议版本也不固定 不检测
     // if(protocol_version != 0x0100){
@@ -297,7 +298,7 @@ Result<Self::Event, Self::Error>  Self::parse(){
                 return Err(Error::InvalidXor);
             }
             
-            const auto res = parse_location(spawner);
+            const auto res = parse_location(provider);
             if(res.is_err()) return Err(res.unwrap_err());
             return Ok(Event(res.unwrap()));
             // return Err(Error::InvalidProtocolVersion);
@@ -308,9 +309,9 @@ Result<Self::Event, Self::Error>  Self::parse(){
             #if 1
 
 
-            if(spawner.remaining().size() != 4) return Err(Error::InvalidLength);
+            if(provider.remaining().size() != 4) return Err(Error::InvalidLength);
             const auto anchor_id = ({
-                const auto res = parse_device_id(spawner.fetch_leading<4>());
+                const auto res = parse_device_id(provider.fetch_leading<4>());
                 if(res.is_err()) return Err(res.unwrap_err());
                 res.unwrap();
             });

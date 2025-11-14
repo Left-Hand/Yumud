@@ -6,19 +6,19 @@
 
 namespace ymd{
 
-class BytesSpawner;
+class BytesProvider;
 
 template<Endian::Kind E>
-struct [[nodiscard]] SpawnLeadingBytesCtorBitsProxy{
-    BytesSpawner & spawner;
+struct [[nodiscard]] FetchLeadingBytesCtorBitsProxy{
+    BytesProvider & fetcher;
 
     template<typename T>
 
     [[nodiscard]] constexpr operator T() const;
 };
 
-struct [[nodiscard]] BytesSpawner{
-    explicit constexpr BytesSpawner(std::span<const uint8_t> bytes) : 
+struct [[nodiscard]] BytesProvider{
+    explicit constexpr BytesProvider(std::span<const uint8_t> bytes) : 
         bytes_(bytes) {}
 
     template<size_t N>
@@ -38,13 +38,13 @@ struct [[nodiscard]] BytesSpawner{
     }
 
     template <Endian::Kind E>
-    [[nodiscard]] constexpr SpawnLeadingBytesCtorBitsProxy<E> fetch_leading_ctor_bits(){
-        return SpawnLeadingBytesCtorBitsProxy<E>(*this);
+    [[nodiscard]] constexpr FetchLeadingBytesCtorBitsProxy<E> fetch_leading_ctor_bits(){
+        return FetchLeadingBytesCtorBitsProxy<E>(*this);
     }
 
     template <Endian::Kind E>
-    [[nodiscard]] constexpr SpawnLeadingBytesCtorBitsProxy<E> fetch_trailing_ctor_bits(){
-        return SpawnLeadingBytesCtorBitsProxy<E>(*this);
+    [[nodiscard]] constexpr FetchLeadingBytesCtorBitsProxy<E> fetch_trailing_ctor_bits(){
+        return FetchLeadingBytesCtorBitsProxy<E>(*this);
     }
 
     [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
@@ -57,11 +57,11 @@ private:
 
 template<Endian::Kind E>
 template<typename T>
-constexpr SpawnLeadingBytesCtorBitsProxy<E>::operator T() const {
-    using D = bits_type_t<T>;
+constexpr FetchLeadingBytesCtorBitsProxy<E>::operator T() const {
+    using D = from_bits_t<T>;
     static_assert(std::is_void_v<D> == false);
     static constexpr size_t Extents = sizeof(D);
-    const D bits = bytes_to_int<E, D>(spawner.fetch_leading<Extents>());
+    const D bits = bytes_to_int<E, D>(fetcher.fetch_leading<Extents>());
     return T(IntoBitsCtor<D>(bits));
 }
 }

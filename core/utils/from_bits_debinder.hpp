@@ -58,7 +58,7 @@ private:
         typename T = std::tuple_element_t<I, Tup >
         >
     constexpr __always_inline void exact_to_element(T& element) const {
-        using D = bits_type_t<T>;
+        using D = from_bits_t<T>;
         constexpr size_t WIDTH = sizeof(D);
         constexpr size_t OFFSET = offset_of_bits_ctorable_v<I, Tup>;
 

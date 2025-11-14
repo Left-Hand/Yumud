@@ -1,30 +1,65 @@
 #pragma once
 
 #include "core/constants/enums.hpp"
+#include "core/utils/data_iter.hpp"
 #include <bit>
 #include <span>
 
 namespace ymd{
 
+template<size_t Extents>
+struct PaddingZero{
+    using Self = PaddingZero;
+    [[nodiscard]] constexpr RepeatIter<uint8_t, Extents> to_bytes() const {
+        return RepeatIter<uint8_t, Extents>(0, Extents);
+    };
+
+    [[nodiscard]] static constexpr Self from_bytes(std::span<const uint8_t, Extents>){;}
+};
+
 namespace details{
 template<typename T>
-struct _bits_type{
-    using type = void;
+struct _from_bits{
+    using obj_type = void;
 };
 
 template<typename T>
 requires requires {
     T::bits;
 }
-struct _bits_type<T>{
-    using type = decltype(T::bits);
+struct _from_bits<T>{
+    using bits_type = decltype(T::bits);
+    [[nodiscard]] static constexpr T into_obj(const bits_type bits){
+        return T{.bits = bits};
+    }
 };
 
 template<typename T>
-struct _from_bits_argu_type;
+requires (std::is_integral_v<T>)
+struct _from_bits<T>{
+    using bits_type = T;
+
+    [[nodiscard]] static constexpr T into_obj(const bits_type bits){
+        return bits;
+    }
+};
+
+template<typename T>
+requires (std::is_floating_point_v<T>)
+struct _from_bits<T>{
+    using bits_type = std::conditional_t<std::is_same_v<T, float>, uint32_t, uint64_t>;
+
+    [[nodiscard]] static constexpr T into_obj(const bits_type bits){
+        return std::bit_cast<T>(bits);
+    } 
+};
+
+
+template<typename T>
+struct _from_bits_argu_t;
 
 template<typename Ret, typename Arg>
-struct _from_bits_argu_type<Ret(*)(Arg)> {
+struct _from_bits_argu_t<Ret(*)(Arg)> {
     using type = Arg;
 };
 
@@ -32,13 +67,17 @@ template<typename T>
 requires requires {
     T::from_bits(0);
 }
-struct _bits_type<T> {
+struct _from_bits<T> {
 private:
     // 获取 from_bits 的函数类型
     using from_bits_func_type = decltype(&T::from_bits);
 public:
     // 提取参数类型
-    using type = typename _from_bits_argu_type<from_bits_func_type>::type;
+    using bits_type = typename _from_bits_argu_t<from_bits_func_type>::type;
+
+    [[nodiscard]] static constexpr T into_obj(const bits_type bits){
+        return T::from_bits(bits);
+    }
 };
 
 template<size_t I, typename Tup>
@@ -50,16 +89,63 @@ struct _accumulate_bytes_of_bits_ctorable_v{
     //其他元素之和加上这个元素的大小
     static constexpr size_t value = []{
         if constexpr (I > 0){
-            return (_accumulate_bytes_of_bits_ctorable_v<I-1, Tup>::value + sizeof(typename _bits_type<T>::type));
+            return (_accumulate_bytes_of_bits_ctorable_v<I-1, Tup>::value + sizeof(typename _from_bits<T>::bits_type));
         }else{
-            return sizeof(typename _bits_type<T>::type);
+            return sizeof(typename _from_bits<T>::bits_type);
         }
     }();
 };
 
+
+
+template<typename T>
+struct _as_bits{
+    using type = void;
 };
 
+template<typename T>
+requires requires {
+    T::bits;
+}
+struct _as_bits<T>{
+    using bits_type = decltype(T::bits);
+    [[nodiscard]] static constexpr bits_type into_bits(const T & obj){
+        return obj.bits;
+    }
+};
 
+template<typename T>
+requires (std::is_integral_v<T>)
+struct _as_bits<T>{
+    using bits_type = T;
+
+    [[nodiscard]] static constexpr bits_type into_bits(const T & obj){
+        return std::bit_cast<bits_type>(obj);
+    }
+};
+
+template<typename T>
+requires (std::is_floating_point_v<T>)
+struct _as_bits<T>{
+    using bits_type = std::conditional_t<std::is_same_v<T, float>, uint32_t, uint64_t>;
+
+    [[nodiscard]] static constexpr bits_type into_bits(const T & obj){
+        return std::bit_cast<bits_type>(obj);
+    } 
+};
+
+template<typename T>
+requires requires{
+    T::as_bits();
+}
+struct _as_bits<T>{
+    using bits_type = std::invoke_result_t<decltype(T::as_bits)>;
+    [[nodiscard]] static constexpr bits_type into_bits(const T & obj){
+        return obj.as_bits();
+    }
+};
+
+};
 
 
 template<typename Tup>
@@ -82,9 +168,22 @@ static constexpr size_t offset_of_bits_ctorable_v =[]{
     }
 }();
 
+template<typename T>
+using from_bits_t = typename details::_from_bits<T>::bits_type;
 
 template<typename T>
-using bits_type_t = typename details::_bits_type<T>::type;
+using as_bits_t = typename details::_as_bits<T>::bits_type;
+
+template<typename T, typename D = from_bits_t<T>>
+[[nodiscard]] static constexpr T obj_from_bits(const D bits){
+    return details::_from_bits<T>::into_obj(bits);
+}
+
+template<typename T, typename D = as_bits_t<T>>
+[[nodiscard]] static constexpr D obj_as_bits(T && obj){
+    return details::_as_bits<T>::into_bits(std::forward<T>(obj));
+}
+
 
 template<Endian::Kind E, typename D, size_t Extent>
 [[nodiscard]] static constexpr D bytes_to_int(const std::span<const uint8_t, Extent> bytes){
@@ -125,21 +224,9 @@ struct [[nodiscard]] IntoBitsCtor{
 
     //no explicit
     template<typename T>
-    requires (std::is_same_v<bits_type_t<T>, D>)
+    requires (std::is_same_v<from_bits_t<T>, D>)
     [[nodiscard]] constexpr operator T() const {
-        return into_obj<T>();
-    }
-private:
-    template<typename T>
-    requires requires {T::bits;}
-    [[nodiscard]] constexpr T into_obj() const {
-        return T{.bits = bits};
-    }
-
-    template<typename T>
-    requires requires {T::from_bits(0);}
-    [[nodiscard]] constexpr T into_obj() const {
-        return T::from_bits(bits);
+        return obj_from_bits<T>(bits);
     }
 };
 
@@ -158,7 +245,7 @@ struct [[nodiscard]] BytesCtorBits{
         bytes_(bytes) {}
 
     //no explicit
-    template<typename T, typename D = bits_type_t<T>>
+    template<typename T, typename D = from_bits_t<T>>
     requires (not std::is_same_v<D, void>)
     [[nodiscard]] constexpr operator T() const {
         return T(IntoBitsCtor<D>(bytes_to_int<E, D>(bytes_)));
@@ -172,7 +259,7 @@ BytesCtorBits(std::span<const uint8_t, Extents>) -> BytesCtorBits<E, Extents>;
 
 
 template<Endian::Kind E, size_t Extents>
-[[nodiscard]] static constexpr auto byte_ctor_bits(std::span<const uint8_t, Extents> bytes) {
+[[nodiscard]] static constexpr auto make_bytes_into_bits_caster(std::span<const uint8_t, Extents> bytes) {
     return BytesCtorBits<E, Extents>(bytes);
 }
 
