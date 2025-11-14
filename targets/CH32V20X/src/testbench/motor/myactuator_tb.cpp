@@ -6,16 +6,24 @@
 #include "core/utils/bits_caster.hpp"
 #include "core/utils/percentage.hpp"
 #include "core/utils/from_bits_debinder.hpp"
+#include "core/utils/strong_type_gradation.hpp"
+#include "core/string/string_view.hpp"
+
 #include "hal/timer/instance/timer_hw.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 #include "types/transforms/Basis.hpp"
 
 #include "robots/vendor/DJI/M3508/m3508.hpp"
 #include "robots/vendor/DJI/DR16/DR16.hpp"
-#include "hal/gpio/gpio_port.hpp"
 
 #if 1
 namespace ymd::drivers::myact { 
+DEF_U16_STRONG_TYPE_GRADATION(MitPosition,  from_radian, iq16, -12.5, 12.5, 25.0/65535)
+DEF_U16_STRONG_TYPE_GRADATION(MitSpeed,     from_radian, iq16, -45, 45, 90.0/4095)
+DEF_U16_STRONG_TYPE_GRADATION(MitKp,        from_val, iq16, 0, 500, 500.0/4095)
+DEF_U16_STRONG_TYPE_GRADATION(MitKd,        from_val, iq16, 0, 5, 5.0/4095)
+DEF_U16_STRONG_TYPE_GRADATION(MitTorque,    from_nm, iq16, 0, 24, 24.0/4095)
 
 struct [[nodiscard]]SpeedCode_i16{
     int16_t bits;
@@ -25,7 +33,7 @@ struct [[nodiscard]]SpeedCode_i16{
     }
 };
 
-struct [[nodiscard]]MaxSpeedCode_u16{
+struct [[nodiscard]]SpeedLimitCode_u16{
     uint16_t bits;
 
     constexpr uq8 to_dps() const {
@@ -63,6 +71,14 @@ struct [[nodiscard]] PositionCode_i16{
 
     constexpr Angle<iq16> to_angle() const {
         return Angle<iq16>::from_degrees(bits);
+    }
+};
+
+
+struct [[nodiscard]] LapPosition_u16{
+    uint16_t bits;
+    constexpr Angle<uq16> to_angle() const {
+        return Angle<uq16>::from_degrees(uq16::from_bits(bits));
     }
 };
 
@@ -147,7 +163,22 @@ enum class [[nodiscard]] Command:uint8_t{
     ShutDown = 0x80,
     Stop = 0x81,
     SetTorque = 0xa1, 
-    SetSpeed = 0xA2
+    SetSpeed = 0xA2,
+
+    BrakeOn = 0x78,
+    BrakeOff = 0x79,
+    GetRunMillis = 0xb1,
+    GetSwVersion = 0xb2,
+    SetOfflineTimeout = 0xb3,
+    SetBaudrate = 0xb4,
+    GetPackage = 0xb5
+};
+
+enum class Baudrate:uint8_t{
+    RS485_115200 = 0,
+    CAN_500K = 0,
+    RS485_500K = 1,
+    CAN_1M = 1
 };
 
 static constexpr size_t PAYLOAD_CAPACITY = 7;
@@ -243,7 +274,7 @@ static_assert(sizeof(DataField) == 1 + PayloadFiller::CAPACITY);
 namespace req_msg{
 
 #define DEF_COMMAND_ONLY_REQ_MSG(cmd)\
-struct cmd{constexpr void fill_payload(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {\
+struct cmd{constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {\
     PayloadFiller(bytes).fill_remaining(0);}};
 
 DEF_COMMAND_ONLY_REQ_MSG(GetStatus1);
@@ -253,7 +284,7 @@ DEF_COMMAND_ONLY_REQ_MSG(ShutDown);
 
 struct SetTorque{
     CurrentCode_i16 q_current;
-    constexpr void fill_payload(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = PayloadFiller(bytes);
         filler.push_zeros(3);
         filler.push_int(q_current.bits);
@@ -266,7 +297,7 @@ struct SetSpeed{
     Percentage<uint8_t> rated_current_ratio;
     SpeedCtrlCode_i32 speed;
 
-    constexpr void fill_payload(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = PayloadFiller(bytes);
         filler.push_int(rated_current_ratio.percents());
         filler.push_zeros(2);
@@ -274,33 +305,121 @@ struct SetSpeed{
     };
 };
 
+
+
 struct SetPosition{
-    MaxSpeedCode_u16 speed_limit;
-    
+    SpeedLimitCode_u16 speed_limit;
+    PositionCode_i32 abs_position;
+
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+        auto filler = PayloadFiller(bytes);
+        filler.push_zeros(1);
+        filler.push_int(speed_limit.bits);
+        filler.push_int(abs_position.bits);
+    };
 };
+
+// 1.角度控制值angleControl 为 uint16_t 类型， 数值范围0~35999, 对应实际位置为
+// 0.01degree/LSB, 即实际角度范围0°~359.99°;
+//  2.spinDirection设置电机转动的方向， 为 uint8_t类型，0x00代表顺时针，0x01代表
+// 逆时针；
+// 3.maxSpeed限制了电机转动的最大速度，为uint16_t类型，对应实际转速1dps/LSB。
+struct SetLapPosition{
+    LapPosition_u16 lap_position;
+    bool is_ccw;
+    SpeedLimitCode_u16 max_speed;
+
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+        auto filler = PayloadFiller(bytes);
+        filler.push_int(is_ccw);
+        filler.push_int(max_speed.bits);
+        filler.push_int(lap_position.bits);
+        filler.push_zeros(2);
+    };
+};
+
+// 该指令为控制指令，在电机没有故障的情况下可以运行该指令。主机发送该命令以
+// 控制电机的位置(多圈角度), 控制值angleControl为 int32t类型， 对应实际位置
+// 为0.01degree/LSB, 即 36000代表360° , 电机转动方向由目标位置和当前位置的
+// 差值决定。控制值maxSpeed限制了电机输出轴转动的最大速度，为uint16t类型，
+// 对应实际转速1dps/LSB。控制值maxTorque限制了电机输出轴的最大扭矩，为uint8_t
+// 类型，取值范围为0~255, 以额定电流的百分比为单位， 即 1%*额定电流LSB。 若
+// 给定的电流大于堵转电流， 则不开启力控模式，电机的最大转矩电流由上位机中的
+// 电机堵转电流值限制。
+struct SetTorquePosition{
+    Percentage<uint8_t> rated_current_ratio;
+    SpeedLimitCode_u16 max_speed;
+    PositionCode_i32 position;
+
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+        auto filler = PayloadFiller(bytes);
+        filler.push_int(rated_current_ratio.percents());
+        filler.push_int(max_speed.bits);
+        filler.push_int(position.bits);
+        filler.push_zeros(2);
+    };
+};
+
+
+// p_des:-12.5到 12.5, 单位rad;
+// 数据类型为uint16_t, 取值范围为0~65535, 其中0代表-12.5,65535代表 12.5,
+//  0~65535中间的所有数值，按比例映射 至-12.5~12.5。
+// v_des:-45到 45, 单位rad/s;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-45,4095代表45,
+//  0~4095 中间的所有数值，按比例映射至-45~45。
+// kp: 0到 500;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表0,4095代表500,
+//  0~4095中间的所有数值，按比例映射至0~500。
+// kd: 0到 5;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表0, 4095代表5,
+//  0~4095中间的所有数值，按比例映射至0~5。
+// t_f:-24到 24, 单位N-m;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-24,4095代表24,
+//  0~4095中间的所有数值，按比例映射至-24~24。
+
+
+struct MitParams{
+    MitPosition position;
+    MitSpeed speed;
+    MitKp kp;
+    MitKd kd;
+    MitTorque torque;
+
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+            bytes[0] = static_cast<uint8_t>(position.bits >> 8);
+            bytes[1] = static_cast<uint8_t>(position.bits & 0xff);
+            bytes[2] = static_cast<uint8_t>(speed.bits >> 4);
+            bytes[3] = static_cast<uint8_t>(((speed.bits & 0xf) << 4) | ((kp.bits >> 8)));
+            bytes[4] = static_cast<uint8_t>(kp.bits & 0xff);
+            bytes[5] = static_cast<uint8_t>(kd.bits >> 4);
+            bytes[6] = static_cast<uint8_t>(((kd.bits & 0xf) << 4) | ((torque.bits >> 8)));
+            bytes[7] = static_cast<uint8_t>(torque.bits & 0xf);
+    };
+};
+
 
 #undef DEF_COMMAND_ONLY_REQ_MSG
 };
 
 
-
+enum class LoopWiring:uint8_t{
+    Current,
+    Speed,
+    Position
+};
 
 
 namespace resp_msg{
 
 #define DEF_COMMAND_ONLY_RESP_MSG(cmd)\
 struct cmd{}
-// struct cmd{constexpr DataField fill_payload(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {return DataField::from_command(Command::cmd)};}
+// struct cmd{constexpr DataField fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {return DataField::from_command(Command::cmd)};}
 
 
 
-struct GetStatus1{
+struct GetStatus1{};
 
-};
-
-struct GetStatus2{
-
-};
+struct GetStatus2{};
 
 struct GetStatus3{
     TemperatureCode_i8 motor_temperature;
@@ -312,13 +431,12 @@ struct GetStatus3{
     }phase_current;
 };
 
-#define SPAWNER_FETCH_CTOR_BITS spn.fetch_leading_ctor_bits<LSB>()
-
-
-
-
+// 1.电机温度temperature (int8t类型，1CLSB);
+//  2.电机的转矩电流值iq (int16_t类型， 0.01A/LSB);
+//  3.电机输出轴转速speed (int16t类型， 1dps/LSB);
+//  4.电机输出轴角度 (intl6t类型，1degree/LSB,最大范围±32767degree)。
 template<typename Derived>
-struct MotorStatusResp{
+struct _MotorStatusResp{
     using Self = Derived;
     TemperatureCode_i8 motor_temperature;
     CurrentCode_i16 q_current;
@@ -333,27 +451,106 @@ struct MotorStatusResp{
     };
 };
 
-struct [[nodiscard]] SetTorque:public MotorStatusResp<SetTorque>{};
-struct [[nodiscard]] SetSpeed:public MotorStatusResp<SetSpeed>{};
-struct [[nodiscard]] SetPosition:public MotorStatusResp<SetSpeed>{};
-
-
-struct MotorStatusResp2{
-    using Self = MotorStatusResp2;
+// 1.电机温度temperature (int8t类型，1CLSB);
+//  2.电机的转矩电流值iq (int16_t类型， 0.01A/LSB);
+//  3.电机输出轴转速speed (int16t类型， 1dps/LSB);
+//  4.编码器位置值encoder(uint16 t类型，编码器的数值范围由编码器位数决定)
+template<typename Derived>
+struct _MotorStatusResp2{
+    using Self = Derived;
     TemperatureCode_i8 motor_temperature;
     CurrentCode_i16 q_current;
     SpeedCode_i16 axis_speed;
-    DegreeCode_i16 axis_degrees;
+    LapPosition_u16 axis_lap_position;
 
     static constexpr Self from_bytes(const std::span<const uint8_t, 7> bytes){
         Self ret;
         const auto exacter = make_bytes_ctor_bits_exacter<LSB>(bytes);
-        exacter.exact_to_elements(ret.motor_temperature, ret.q_current, ret.axis_speed, ret.axis_degrees);
+        exacter.exact_to_elements(ret.motor_temperature, ret.q_current, ret.axis_speed, ret.axis_lap_position);
         return ret;
     };
 };
 
+// 1.电机温度temperature (int8t类型，1CLSB);
+//  2.电机的转矩电流值iq (int16_t类型， 0.01A/LSB);
+//  3.电机输出轴转速speed (int16t类型， 1dps/LSB);
+//  4.电机输出轴角度 (intl6t类型，1degree/LSB,最大范围±32767degree)。
+
+struct [[nodiscard]] SetTorque:public _MotorStatusResp<SetTorque>{};
+// 1.电机温度temperature (int8t类型， 1°CLSB);
+//  2.电机的转矩电流值iq (intl6_t类型， 0.01A/LSB);
+//  3.电机输出轴转速speed (int16t类型， 1dps/LSB);
+//  4.电机输出轴角度 (intl6_t类型，1degree/LSB,最大范围±32767degree)。
+struct [[nodiscard]] SetSpeed:public _MotorStatusResp<SetSpeed>{};
+
+
+// 1.电机温度temperature (int8t类型， 1C/LSB);
+//  2.电机的转矩电流值iq(int16t类型， 0.01A/LSB);
+//  3.电机输出轴转速speed (int16_t类型， 1dps/LSB);
+//  4.电机输出轴角度(intl6t类型，Idegree/LSB,最大范围±32767degree)。
+struct [[nodiscard]] SetPosition:public _MotorStatusResp<SetPosition>{};
+
+
+// 1.电机温度temperature (int8t类型，1CLSB);
+//  2.电机的转矩电流值iq (int16_t类型， 0.01A/LSB);
+//  3.电机输出轴转速speed (int16t类型， 1dps/LSB);
+//  4.编码器位置值encoder(uint16 t类型，编码器的数值范围由编码器位数决定)
+struct [[nodiscard]] SetLapPosition:public _MotorStatusResp2<SetLapPosition>{};
+
+// 1.电机温度temperature (int8t类型， 1℃/LSB);
+//  2.电机的转矩电流值iq(int16_t类型， 0.01A/LSB);
+//  3.电机输出轴转速speed (int16_t类型， 1dps/LSB);
+//  4.电机输出轴角度 (intl6_t类型，1degree/LSB,最大范围±32767degree)。
+struct [[nodiscard]] DeltaPosition:public _MotorStatusResp<DeltaPosition>{};
+
+// 1.电机温度temperature (int8t类型， 1℃/LSB);
+//  2.电机的转矩电流值iq(int16_t类型， 0.01A/LSB);
+//  3.电机输出轴转速speed (int16_t类型， 1dps/LSB);
+//  4.电机输出轴角度 (intl6_t类型，1degree/LSB,最大范围±32767degree)。
+struct [[nodiscard]] SetTorquePosition:public _MotorStatusResp<SetTorquePosition>{};
+
+
+struct [[nodiscard]] GetPackage{
+    using Self = GetPackage;;
+    char str[7];
+
+    static constexpr Self from_bytes(const std::span<const uint8_t, PAYLOAD_CAPACITY> bytes){
+        Self self;
+        for(size_t i = 0; i < 7; i++){
+            self.str[i] = bytes[i];
+        }
+        return self;
+    }
+
+    friend OutputStream& operator<<(OutputStream & os, const Self & self){ 
+        return os << StringView(self.str, 7);
+    }
+};
+
 DEF_COMMAND_ONLY_RESP_MSG(ShutDown);
+
+
+enum class CanAddr:uint8_t{};
+
+struct [[nodiscard]] MitParams{
+    using Self = MitParams;
+    CanAddr can_addr;
+    MitPosition position;
+    MitSpeed speed;
+    MitTorque torque;
+
+    constexpr Self from_bytes(std::span<const uint8_t, 8> bytes) const {
+        const auto position_bits = (bytes[1] << 8) | bytes[2];
+        const auto speed_bits = (bytes[3] << 4) | (bytes[4] >> 4);
+        const auto torque_bits = ((bytes[4] & 0xff) << 8) | (bytes[5]);
+        return Self{
+            .can_addr = CanAddr(bytes[0]),
+            .position = MitPosition::from_bits(position_bits),
+            .speed = MitSpeed::from_bits(speed_bits),
+            .torque = MitTorque::from_bits(torque_bits)
+        };
+    };
+};
 
 
 };

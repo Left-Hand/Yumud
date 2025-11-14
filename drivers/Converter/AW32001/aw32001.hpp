@@ -21,7 +21,7 @@ public:
 
     IResult<> set_charge_current(const ChargeCurrent current){
         auto reg = RegCopy(regs_.charge_current_control_reg);
-        reg.ichg = current.as_u8();
+        reg.ichg = current.as_bits();
         return write_reg(reg);
     }
 
@@ -42,28 +42,28 @@ public:
     // Set charge voltage
     IResult<> set_charge_voltage(const ChargeVoltage voltage) {
         auto reg = RegCopy(regs_.charge_voltage_reg);
-        reg.vbat_reg = voltage.as_u8();
+        reg.vbat_reg = voltage.as_bits();
         return write_reg(reg);
     }
 
     // Set discharge current
     IResult<> set_discharge_current(const DischargeCurrent current) {
         auto reg = RegCopy(regs_.discharge_current_control_reg);
-        reg.idischg = current.as_u8();
+        reg.idischg = current.as_bits();
         return write_reg(reg);
     }
 
     // Set termination current
     IResult<> set_termination_current(const TerminationCurrent current) {
         auto reg = RegCopy(regs_.discharge_current_control_reg);
-        reg.iterm = current.as_u8();
+        reg.iterm = current.as_bits();
         return write_reg(reg);
     }
 
     // Set system voltage
     IResult<> set_system_voltage(const VsysReg voltage) {
         auto reg = RegCopy(regs_.system_voltage_reg);
-        reg.vsys_reg = voltage.as_u8();
+        reg.vsys_reg = voltage.as_bits();
         return write_reg(reg);
     }
 
