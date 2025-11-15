@@ -25,7 +25,7 @@ namespace ymd::ral::CH32V20x{
         uint32_t BIDIOE:1;
         uint32_t BIDIMODE:1;
 
-        uint32_t :16;
+        uint32_t __RESV__:16;
     };CHECK_R32(R32_SPI_CTLR1);
 
 

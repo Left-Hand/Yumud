@@ -291,18 +291,6 @@ HalResult SpiHw::init(const Config & cfg){
 }
 
 
-
-
-
-// static constexpr auto BIDIMODE_MASK = DEF_REG_BF_MASK(chip::R32_SPI_CTLR1, BIDIMODE);
-// constexpr uint32_t mask = []{
-//     // auto field_reg = std::bit_cast<chip::R32_SPI_CTLR1>(uint32_t(0));
-//     auto field_reg = chip::R32_SPI_CTLR1{0};
-//     field_reg.BIDIMODE = 1u;
-//     return std::bit_cast<uint32_t>(field_reg);
-// }();
-
-
 HalResult SpiHw::set_data_width(const uint8_t bits){
     inst_->enable_dualbyte((bits == 16) ? EN : DISEN);
     return HalResult::Ok();
