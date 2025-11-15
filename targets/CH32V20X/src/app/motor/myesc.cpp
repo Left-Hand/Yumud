@@ -406,7 +406,7 @@ void myesc_main(){
         //#region 位速合成力矩
         const auto [position_cmd, speed_cmd] = [&]{
             const auto omega = 9_iq16;
-            const auto amplitude = 0.02_iq16;
+            const auto amplitude = 2_iq16;
 
             const auto [s,c] = sincos(omega * ctime);
             return std::make_tuple<iq16, iq16>(
