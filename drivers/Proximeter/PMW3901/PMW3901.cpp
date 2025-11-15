@@ -217,7 +217,7 @@ IResult<> PMW3901::read_data_slow(){
         if(const auto res = read_reg(0x02 + i, buf[i]); res.is_err()) return res;
     }
 
-    data_.motion = buf[0];
+    data_.motion.as_mut_bits() = buf[0];
     data_.dx.data = (buf[2] << 8) | buf[1];
     data_.dy.data = (buf[4] << 8) | buf[3];
 
@@ -225,7 +225,7 @@ IResult<> PMW3901::read_data_slow(){
 }
 
 IResult<> PMW3901::read_data_burst(){
-    return read_burst(0x16, std::span(&data_.motion.as_ref(), 6));
+    return read_burst(0x16, std::span(&data_.motion.as_mut_bits(), 6));
 }
 
 
@@ -233,8 +233,8 @@ IResult<> PMW3901::read_data_burst(){
 IResult<> PMW3901::update(){
     return read_data()
     .if_ok([&]{
-        x_cm += int16_t(data_.dx.as_val()) * scale;
-        y_cm += int16_t(data_.dy.as_val()) * scale;
+        x_cm += int16_t(data_.dx.as_bits()) * scale;
+        y_cm += int16_t(data_.dy.as_bits()) * scale;
     });
 
 }

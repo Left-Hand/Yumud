@@ -74,7 +74,7 @@ IResult<> INA219::validate(){
 
     // return INA219_ASSERT(
     //     (chipIDReg == valid_chip_id and manufactureIDReg == valid_manu_id), 
-    //     "INA219 who am i failed", chipIDReg.as_val(), manufactureIDReg.as_val()
+    //     "INA219 who am i failed", chipIDReg.as_bits(), manufactureIDReg.as_bits()
     // );
     return Ok();
 }

@@ -54,7 +54,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         const auto address = T::ADDRESS;
-        const uint8_t data = reg.as_val();
+        const uint8_t data = reg.as_bits();
         const auto tx = uint16_t(
             0x8000 | (std::bit_cast<uint8_t>(address) << 8) | data);
         if(const auto res = spi_drv_.write_single<uint16_t>(tx);
@@ -75,7 +75,7 @@ private:
             res.is_err()) return Err(Error(res.unwrap_err()));
         if((dummy & 0xff) != 0x00) 
             return Err(Error(Error::Kind::InvalidRxFormat));
-        reg.as_ref() = (dummy >> 8);
+        reg.as_mut_bits() = (dummy >> 8);
         return Ok();
     }
 

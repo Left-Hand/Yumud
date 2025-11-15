@@ -42,14 +42,14 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = write_reg(T::ADDRESS, reg.as_val());
+        const auto res = write_reg(T::ADDRESS, reg.as_bits());
         if(res.is_ok()) reg.apply();
         return res;
     }
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(T::ADDRESS, reg.as_ref());
+        return read_reg(T::ADDRESS, reg.as_mut_bits());
     }
 
 

@@ -122,7 +122,7 @@ IResult<int16_t> Self::get_conv_data(){
     auto & reg = regs_.conv_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(reg.as_val());
+    return Ok(reg.as_bits());
 }
 
 IResult<iq16> Self::get_conv_voltage(){
@@ -145,7 +145,7 @@ IResult<> Self::set_mux(const MUX _mux){
 }
 
 
-IResult<> Self::enable_ch3_as_ref(const Enable en){
+IResult<> Self::enable_ch3_as_mut_bits(const Enable en){
     auto reg = RegCopy(regs_.config1_reg);
     reg.ext_ref = en == EN;
     return write_reg(reg);

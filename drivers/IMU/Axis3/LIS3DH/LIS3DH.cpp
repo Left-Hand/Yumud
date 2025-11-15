@@ -61,7 +61,7 @@ Result<void, Error> LIS3DH::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
         
-    if(reg.as_val() != reg.key)
+    if(reg.as_bits() != reg.key)
         return Err(Error::InvalidChipId);
     
     return Ok();

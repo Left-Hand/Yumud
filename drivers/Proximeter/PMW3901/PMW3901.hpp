@@ -18,7 +18,6 @@ namespace ymd::drivers{
 
 struct PMW3901_Prelude{
     struct MotionReg:public Reg8<>{
-        using Reg8::operator=;
 
         uint8_t frame_from0:1;
         uint8_t run_mode:2;

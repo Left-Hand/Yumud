@@ -35,7 +35,7 @@ protected:
 
 
     struct StatusReg:public Reg8<>{
-        using Reg8::operator=;
+
 
         uint8_t busy:1;
         uint8_t write_enable_latch:1;

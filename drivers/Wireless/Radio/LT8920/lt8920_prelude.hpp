@@ -226,8 +226,6 @@ struct LT8920_Regs:public LT8920_Prelude{
 
 
     struct R16_FifoPtr:public Reg16<>{
-        using Reg16::operator=;
-
         static constexpr RegAddr ADDRESS = 52;
         //FIFO 读指针
         //当使用 auto-ack 功能时，此位可以做为标志位。

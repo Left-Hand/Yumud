@@ -148,7 +148,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         uint8_t standby:1;
         uint8_t dev_reset:1;
 
-        using Reg8::operator=;
+
     };
 
     struct R8_Rtp:public Reg8<>{

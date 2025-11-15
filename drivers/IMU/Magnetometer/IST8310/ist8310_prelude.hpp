@@ -98,7 +98,7 @@ struct IST8310_Regset:public IST8310_Prelude{
         uint16_t data;
 
         constexpr iq16 to_temp() const {
-            return (this->as_val() * iq16(0.8) - 75);
+            return (this->as_bits() * iq16(0.8) - 75);
         }
     }DEF_R16(temp_reg)
 

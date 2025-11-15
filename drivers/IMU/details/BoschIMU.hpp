@@ -41,7 +41,7 @@ public:
     template<typename T>
     [[nodiscard]] __fast_inline
     Result<void, Error> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
+        if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
             res.is_err()) return res;
         reg.apply();
         return Ok();
@@ -51,7 +51,7 @@ public:
     template<typename T>
     [[nodiscard]] __fast_inline
     Result<void, Error> read_reg(T & reg){
-        if(const auto res = read_reg(T::ADDRESS, reg.as_ref());
+        if(const auto res = read_reg(T::ADDRESS, reg.as_mut_bits());
             res.is_err()) return res;
         return Ok();
     }
@@ -99,13 +99,13 @@ public:
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
     Result<void, Error> write_regs(Ts const & ... reg) {
-        return (write_reg(reg.ADDRESS, reg.as_val()) | ...);
+        return (write_reg(reg.ADDRESS, reg.as_bits()) | ...);
     }
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
     Result<void, Error> read_regs(Ts & ... reg) {
-        return (read_reg(reg.ADDRESS, reg.as_ref()) | ...);
+        return (read_reg(reg.ADDRESS, reg.as_mut_bits()) | ...);
     }
 
     [[nodiscard]] __fast_inline

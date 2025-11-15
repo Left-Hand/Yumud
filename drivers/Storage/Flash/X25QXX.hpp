@@ -38,7 +38,7 @@ struct X25QXX_Prelude:public StorageCollections{
     };
 
     struct StatusReg:public Reg8<>{
-        using Reg8::operator=;
+
         uint8_t busy:1;
         uint8_t write_enable_latch:1;
         uint8_t block_protect_bits:3;

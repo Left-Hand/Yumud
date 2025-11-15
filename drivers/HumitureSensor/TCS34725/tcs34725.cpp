@@ -131,7 +131,7 @@ IResult<uint8_t> TCS34725::get_id(){
     auto & reg = regs_.device_id_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(reg.as_val());
+    return Ok(reg.as_bits());
 }
 
 IResult<bool> TCS34725::is_idle(){

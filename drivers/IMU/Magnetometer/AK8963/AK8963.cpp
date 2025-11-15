@@ -143,7 +143,7 @@ IResult<> AK8963::update(){
     // ak8963c-datasheet 8.3.5
     // when any of measurement data is read, be sure to read 
     // ST2 register at the end. 
-    if(const auto res = this->read_burst(regs_.mag_x_reg.address, std::span(&regs_.mag_x_reg.as_ref(), 3));
+    if(const auto res = this->read_burst(regs_.mag_x_reg.address, std::span(&regs_.mag_x_reg.as_mut_bits(), 3));
         res.is_err()) return Err(res.unwrap_err());
 
     auto & reg = regs_.st2_reg;
@@ -155,9 +155,9 @@ IResult<> AK8963::update(){
 }
 IResult<Vec3<iq24>> AK8963::read_mag(){
     return Ok(Vec3<iq24>{
-        conv_data_to_ut(regs_.mag_x_reg.as_val(), data_is_16_bits_) * adj_scale_.x,
-        conv_data_to_ut(regs_.mag_y_reg.as_val(), data_is_16_bits_) * adj_scale_.y,
-        conv_data_to_ut(regs_.mag_z_reg.as_val(), data_is_16_bits_) * adj_scale_.z}
+        conv_data_to_ut(regs_.mag_x_reg.as_bits(), data_is_16_bits_) * adj_scale_.x,
+        conv_data_to_ut(regs_.mag_y_reg.as_bits(), data_is_16_bits_) * adj_scale_.y,
+        conv_data_to_ut(regs_.mag_z_reg.as_bits(), data_is_16_bits_) * adj_scale_.z}
     );
 }
 

@@ -94,7 +94,7 @@ Result<void, Error> DRV2605L::init(){
     // 2C commands.
     // 2. Assert the EN pin (logic high). The EN pin can be asserted any time during or after the 250-µs wait period.
     auto reg = RegCopy(mode_reg);
-    reg.as_ref() = 0x40;
+    reg.as_mut_bits() = 0x40;
     if(const auto res = write_reg(reg); res.is_err()) return res;
 
     clock::delay(250us);
