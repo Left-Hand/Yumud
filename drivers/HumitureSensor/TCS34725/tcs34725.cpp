@@ -27,7 +27,7 @@ IResult<> TCS34725::read_burst(
     const std::span<uint16_t> pbuf
 ){
     uint8_t address = conv_reg_address_repeated(addr);
-    if(const auto res = i2c_drv_.read_burst(address, pbuf, LSB);
+    if(const auto res = i2c_drv_.read_burst(address, pbuf, std::endian::little);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

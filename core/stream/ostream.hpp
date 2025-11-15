@@ -301,9 +301,8 @@ public:
     OutputStream & operator<<(const std::_Setprecision n){config_.eps = n._M_n; return *this;}
     OutputStream & operator<<(const std::_Setbase n){config_.radix = n._M_base; return *this;}
     OutputStream & operator<<(const Endl){this->print_endl(); return *this;}
-    
     OutputStream & operator<<(const std::nullopt_t){return *this << '/';}
-
+    OutputStream & operator<<(const std::endian endian);
 
     template<typename T>
     OutputStream & operator<<(const std::chrono::duration<T, std::milli> ms){

@@ -39,7 +39,7 @@ IResult<> VL53L0X::read_byte_data(const uint8_t reg, uint8_t & data){
 }
 
 IResult<> VL53L0X::read_burst(const uint8_t reg, const std::span<uint16_t> pbuf){
-	const auto res = i2c_drv_.read_burst(reg, pbuf, MSB);
+	const auto res = i2c_drv_.read_burst(reg, pbuf, std::endian::big);
 	if(res.is_err()) return Err(res.unwrap_err());
 	return Ok();
 }

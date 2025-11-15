@@ -44,7 +44,7 @@ private:
     template<typename T>
     requires (sizeof(T) == 2)
     [[nodiscard]] IResult<> read16(uint8_t addr, T & data) {
-        if(const auto res = i2c_drv_.read_reg(addr, data, MSB);
+        if(const auto res = i2c_drv_.read_reg(addr, data, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

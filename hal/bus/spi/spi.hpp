@@ -86,7 +86,7 @@ public:
         owner_.lend();
     }
 
-    bool is_occupied(){return owner_.is_borrowed();}
+    [[nodiscard]] bool is_occupied(){return owner_.is_borrowed();}
 
     [[nodiscard]] virtual hal::HalResult read(uint32_t & data) = 0;
     [[nodiscard]] virtual hal::HalResult write(const uint32_t data) = 0;
@@ -94,7 +94,7 @@ public:
 
     [[nodiscard]] virtual hal::HalResult set_data_width(const uint8_t bits) = 0;
     [[nodiscard]] virtual hal::HalResult set_baudrate(const uint32_t baud) = 0;
-    [[nodiscard]] virtual hal::HalResult set_bitorder(const Endian endian) = 0;
+    [[nodiscard]] virtual hal::HalResult set_bitorder(const BitOrder bitorder) = 0;
 
 
     struct Config{

@@ -124,7 +124,7 @@ IResult<> KTH7823::set_mag_threshold(const MagThreshold low, const MagThreshold 
     // return Ok();
 }
 
-IResult<> KTH7823::set_direction(const ClockDirection direction){
+IResult<> KTH7823::set_direction(const RotateDirection direction){
     TODO();
     return Ok();
 }

@@ -30,7 +30,7 @@ public:
 
     [[nodiscard]] IResult<> set_mag_threshold(const MagThreshold low, const MagThreshold high);
 
-    [[nodiscard]] IResult<> set_direction(const ClockDirection direction);
+    [[nodiscard]] IResult<> set_direction(const RotateDirection direction);
 
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 

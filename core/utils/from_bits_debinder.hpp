@@ -7,7 +7,7 @@
 
 namespace ymd{
 
-template<Endian::Kind E, size_t Extents>
+template<std::endian E, size_t Extents>
 struct [[nodiscard]] BytesCtorBitsExacter {
     static_assert(Extents != std::dynamic_extent);
     constexpr explicit BytesCtorBitsExacter(std::span<const uint8_t, Extents> bytes) : 
@@ -72,10 +72,10 @@ private:
 };
 
 
-template<Endian::Kind E, size_t Extents>
+template<std::endian E, size_t Extents>
 BytesCtorBitsExacter(std::span<const uint8_t, Extents>) -> BytesCtorBitsExacter<E, Extents>;
 
-template<Endian::Kind E, size_t N>
+template<std::endian E, size_t N>
 static constexpr auto make_bytes_ctor_bits_exacter(std::span<const uint8_t, N> bytes){
     return BytesCtorBitsExacter<E, N>(bytes);
 }

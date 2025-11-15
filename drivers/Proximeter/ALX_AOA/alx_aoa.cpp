@@ -78,12 +78,15 @@ using Error = Self::Error;
 [[nodiscard]] static constexpr Result<Self::TargetAngleCode, Error> parse_angle(
     const std::span<const uint8_t, 2> bytes
 ){
+    using D = from_bits_t<Self::TargetAngleCode>;
+    // return Ok(Self::TargetAngleCode(be_bytes_ctor_bits(bytes).try_into<D>().unwrap()));
     return Ok(Self::TargetAngleCode(be_bytes_ctor_bits(bytes)));
 }
 
 [[nodiscard]] static constexpr Result<Self::TargetDistanceCode, Error> parse_distance(
     const std::span<const uint8_t, 4> bytes
 ){
+    using D = from_bits_t<Self::TargetDistanceCode>;
     return Ok(Self::TargetDistanceCode(be_bytes_ctor_bits(bytes)));
 }
 
@@ -268,14 +271,14 @@ Result<Self::Event, Self::Error>  Self::parse(){
     // RequestCommand 2 unsigned Integer 命令码 
     // VersionID 2 unsigned Integer 协议版本，此版本固定 0x0100 
 
-    [[maybe_unused]] const uint16_t seq_id = (provider.fetch_leading_ctor_bits<MSB>());
+    [[maybe_unused]] const uint16_t seq_id = (provider.fetch_leading_ctor_bits<std::endian::big>());
     const auto req_command = ({
         const auto res = parse_command(provider.fetch_leading<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
-    [[maybe_unused]] const uint16_t protocol_version = provider.fetch_leading_ctor_bits<MSB>();
+    [[maybe_unused]] const uint16_t protocol_version = provider.fetch_leading_ctor_bits<std::endian::big>();
 
     //官方给的协议版本也不固定 不检测
     // if(protocol_version != 0x0100){

@@ -52,7 +52,7 @@ struct Plane {
 			d(p_normal.dot(p_point)) {
 	}
 
-	__fast_inline constexpr Plane(const Vec3<auto> &p_point1, const Vec3<auto> &p_point2, const Vec3<auto> &p_point3,const ClockDirection p_dir = CW) {
+	__fast_inline constexpr Plane(const Vec3<auto> &p_point1, const Vec3<auto> &p_point2, const Vec3<auto> &p_point3,const RotateDirection p_dir = CW) {
 		if (p_dir == CW) {
 			normal = (p_point1 - p_point3).cross(p_point1 - p_point2);
 		} else {

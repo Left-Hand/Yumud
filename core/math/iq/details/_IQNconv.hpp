@@ -8,8 +8,7 @@ namespace ymd{
 namespace iqmath::details{
 
 template<size_t Q>
-requires (Q < 32)
-static constexpr float _IQNtoF(const int32_t iqNInput){
+[[nodiscard]] static constexpr float _IQNtoF(const int32_t iqNInput){
     uint16_t ui16Exp;
     uint32_t uiq23Result;
     uint32_t uiq31Input;
@@ -55,8 +54,7 @@ static constexpr float _IQNtoF(const int32_t iqNInput){
 
 
 template<size_t Q>
-requires (Q < 32)
-static constexpr int32_t _IQFtoN(const float fv){
+[[nodiscard]] static constexpr int32_t _IQFtoN(const float fv){
     if(std::is_constant_evaluated()){
         return int32_t(fv * int(1 << Q));
     }

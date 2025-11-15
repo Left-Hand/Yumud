@@ -2,6 +2,7 @@
 
 #include "core/constants/enums.hpp"
 #include "core/utils/data_iter.hpp"
+#include "core/utils/Option.hpp"
 #include <bit>
 #include <span>
 
@@ -185,7 +186,8 @@ template<typename T, typename D = as_bits_t<T>>
 }
 
 
-template<Endian::Kind E, typename D, size_t Extent>
+template<std::endian E, typename D, size_t Extent>
+requires ((Extent == sizeof(D)) || (Extent == std::dynamic_extent))
 [[nodiscard]] static constexpr D bytes_to_int(const std::span<const uint8_t, Extent> bytes){
     static_assert((Extent == sizeof(D)) || (Extent == std::dynamic_extent),
         "static extent must equal to sizeof(D)"
@@ -194,8 +196,8 @@ template<Endian::Kind E, typename D, size_t Extent>
 
     UD sum = 0;
 
-    constexpr auto _LSB = Endian(Endian::LSB);
-    if constexpr (Endian(E) == _LSB){
+    constexpr auto _LSB = std::endian::little;
+    if constexpr (std::endian(E) == _LSB){
         for(auto it = bytes.begin(); it != bytes.end(); it++){
             sum = static_cast<UD>(static_cast<UD>(sum << 8) | static_cast<UD>(*it));
         }
@@ -209,12 +211,12 @@ template<Endian::Kind E, typename D, size_t Extent>
 
 template<typename D, size_t Extent>
 [[nodiscard]] static constexpr D le_bytes_to_int(const std::span<const uint8_t, Extent> bytes){
-    return bytes_to_int<LSB, D, Extent>(bytes);
+    return bytes_to_int<std::endian::little, D, Extent>(bytes);
 }
 
 template<typename D, size_t Extent>
 [[nodiscard]] static constexpr D be_bytes_to_int(const std::span<const uint8_t, Extent> bytes){
-    return bytes_to_int<MSB, D, Extent>(bytes);
+    return bytes_to_int<std::endian::big, D, Extent>(bytes);
 }
 
 //可以将整数完成bits构造
@@ -236,7 +238,7 @@ IntoBitsCtor(D) -> IntoBitsCtor<D>;
 
 
 //可以将字节片段完成从bits构造
-template<Endian::Kind E, size_t Extent>
+template<std::endian E, size_t Extent>
 struct [[nodiscard]] BytesCtorBits{
 
     constexpr explicit BytesCtorBits(
@@ -246,35 +248,57 @@ struct [[nodiscard]] BytesCtorBits{
 
     //no explicit
     template<typename T, typename D = from_bits_t<T>>
-    requires (not std::is_same_v<D, void>)
+    requires (Extent != std::dynamic_extent)
     [[nodiscard]] constexpr operator T() const {
-        return T(IntoBitsCtor<D>(bytes_to_int<E, D>(bytes_)));
+        static_assert(Extent == sizeof(D), "Extent != sizeof(D)");
+        const auto bits = bytes_to_int<E, D>(bytes_);
+        return T(IntoBitsCtor<D>(bits));
+    }
+
+    
+    //no explicit
+    template<typename T, typename D = from_bits_t<T>>
+    requires (Extent == std::dynamic_extent)
+    [[deprecated("use try_into instead for better runtime safety")]]
+    [[nodiscard]] constexpr operator T() const {
+        if(Extent != sizeof(D)) [[unlikely]] __builtin_abort();
+        const auto bits = bytes_to_int<E, D>(bytes_.template subspan<0, sizeof(D)>());
+        return T(IntoBitsCtor<D>(bits));
+    }
+
+    template<typename T, typename D = from_bits_t<T>>
+    [[nodiscard]] constexpr Option<T> try_into() const{
+        if constexpr (Extent == std::dynamic_extent){
+            if(bytes_.size() != sizeof(D)) [[unlikely]] return None;
+        }
+        const auto bits = bytes_to_int<E, T>(bytes_);
+        return Some(IntoBitsCtor<T>(bits));
     }
 private:
     std::span<const uint8_t, Extent> bytes_;
 };
 
-template<Endian::Kind E, size_t Extents>
+template<std::endian E, size_t Extents>
 BytesCtorBits(std::span<const uint8_t, Extents>) -> BytesCtorBits<E, Extents>;
 
 
-template<Endian::Kind E, size_t Extents>
+template<std::endian E, size_t Extents>
 [[nodiscard]] static constexpr auto make_bytes_into_bits_caster(std::span<const uint8_t, Extents> bytes) {
     return BytesCtorBits<E, Extents>(bytes);
 }
 
 template<size_t Extents>
-[[nodiscard]] static constexpr BytesCtorBits<Endian::LSB, Extents> le_bytes_ctor_bits(
+[[nodiscard]] static constexpr BytesCtorBits<std::endian::little, Extents> le_bytes_ctor_bits(
     const std::span<const uint8_t, Extents> bytes
 ){
-    return BytesCtorBits<Endian::LSB, Extents>(bytes);
+    return BytesCtorBits<std::endian::little, Extents>(bytes);
 }
 
 template<size_t Extents>
-[[nodiscard]] static constexpr BytesCtorBits<Endian::MSB, Extents> be_bytes_ctor_bits(
+[[nodiscard]] static constexpr BytesCtorBits<std::endian::big, Extents> be_bytes_ctor_bits(
     const std::span<const uint8_t, Extents> bytes
 ){
-    return BytesCtorBits<Endian::MSB, Extents>(bytes);
+    return BytesCtorBits<std::endian::big, Extents>(bytes);
 }
 
 

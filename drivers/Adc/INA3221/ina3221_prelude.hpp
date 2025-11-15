@@ -321,7 +321,7 @@ struct INA3221_Regs:public INA3221_Prelude {
 
 class INA3221_Phy final : public INA3221_Prelude{
 public:
-    static constexpr auto ENDIAN = MSB;
+    static constexpr auto ENDIAN = std::endian::big;
 
     INA3221_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}

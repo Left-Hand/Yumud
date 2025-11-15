@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Option.hpp"
+#include "Result.hpp"
 
 
 #define DEF_STRONG_TYPE_GRADATION(name, fn_name, D, T, start, stop, step)\
@@ -10,10 +10,13 @@ public:\
     static constexpr T MIN_VALUE = static_cast<T>(start);\
     static constexpr T STEP_VALUE = static_cast<T>(step);\
     static_assert(MIN_VALUE < MAX_VALUE);\
-    [[nodiscard]] static constexpr Option<name> fn_name(const T in) {\
-        if (in < MIN_VALUE || in > MAX_VALUE) return None;\
+    [[nodiscard]] static constexpr Result<name, std::strong_ordering> fn_name(const T in) {\
+        if (in < MIN_VALUE) [[unlikely]] \
+            return Err(std::strong_ordering::less);\
+        if (in > MAX_VALUE) [[unlikely]] \
+            return Err(std::strong_ordering::greater);\
         auto raw = static_cast<D>((in - MIN_VALUE) / STEP_VALUE);\
-        return Some(name(raw));\
+        return Ok(name(raw));\
     }\
     [[nodiscard]] constexpr D as_bits() const { return bits; }\
     [[nodiscard]] constexpr T to_original() const {\

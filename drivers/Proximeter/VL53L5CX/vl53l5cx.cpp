@@ -1912,7 +1912,7 @@ IResult<> Self::read_burst(const uint16_t addr, uint8_t *data, uint16_t size){
 	if(const auto res = i2c_drv_.read_burst(
 		addr, 
 		std::span<uint8_t>(data, static_cast<size_t>(size)),
-		MSB
+		std::endian::big
 	); res.is_err()) return Err(res.unwrap_err());
 	return Ok();
 }
@@ -1921,7 +1921,7 @@ IResult<> Self::write_burst(const uint16_t addr, const uint8_t *data, uint16_t s
 	if(const auto res = i2c_drv_.write_burst(
 		addr, 
 		std::span<const uint8_t>(data, static_cast<size_t>(size)),
-		MSB
+		std::endian::big
 	); res.is_err()) return Err(res.unwrap_err());
 	return Ok();
 }

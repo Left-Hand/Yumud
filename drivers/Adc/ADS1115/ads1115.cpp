@@ -24,13 +24,13 @@ template<typename T = void>
 using IResult = Result<T, Error>;  
 
 IResult<> ADS1115::read_reg(const RegAddr addr, uint16_t & data){
-    if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, LSB);
+    if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, std::endian::little);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
 IResult<> ADS1115::write_reg(const RegAddr addr, const uint16_t data){
-    if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, LSB);
+    if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, std::endian::little);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

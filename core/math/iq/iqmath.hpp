@@ -3,13 +3,13 @@
 #include <array>
 #include "fixed_t.hpp"
 
-#include "_IQNdiv.hpp"
-#include "_IQNatan2.hpp"
-#include "_IQNsqrt.hpp"
-#include "_IQNexp.hpp"
-#include "_IQNasin_acos.hpp"
-#include "_IQNsin_cos.hpp"
-#include "_IQNlog.hpp"
+#include "details/_IQNdiv.hpp"
+#include "details/_IQNatan2.hpp"
+#include "details/_IQNsqrt.hpp"
+#include "details/_IQNexp.hpp"
+#include "details/_IQNasin_acos.hpp"
+#include "details/_IQNsin_cos.hpp"
+#include "details/_IQNlog.hpp"
 
 
 namespace ymd{

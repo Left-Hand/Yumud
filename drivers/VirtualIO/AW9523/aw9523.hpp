@@ -112,7 +112,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(const RegAddr addr, T & data){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, LSB);
+        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

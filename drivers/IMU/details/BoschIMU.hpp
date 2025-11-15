@@ -76,7 +76,7 @@ public:
     [[nodiscard]] __fast_inline
     Result<void, Error> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
         if(i2c_drv_){
-            if(const auto res = (i2c_drv_->read_burst<int16_t>(uint8_t(addr), pbuf, LSB));
+            if(const auto res = (i2c_drv_->read_burst<int16_t>(uint8_t(addr), pbuf, std::endian::little));
                 res.is_err()) return Err(res.unwrap_err());
         }else if(spi_drv_){
             if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);

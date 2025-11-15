@@ -19,11 +19,36 @@
 
 #if 1
 namespace ymd::drivers::myact { 
-DEF_U16_STRONG_TYPE_GRADATION(MitPosition,  from_radian, iq16, -12.5, 12.5, 25.0/65535)
-DEF_U16_STRONG_TYPE_GRADATION(MitSpeed,     from_radian, iq16, -45, 45, 90.0/4095)
-DEF_U16_STRONG_TYPE_GRADATION(MitKp,        from_val, iq16, 0, 500, 500.0/4095)
-DEF_U16_STRONG_TYPE_GRADATION(MitKd,        from_val, iq16, 0, 5, 5.0/4095)
-DEF_U16_STRONG_TYPE_GRADATION(MitTorque,    from_nm, iq16, 0, 24, 24.0/4095)
+
+// p_des:-12.5到 12.5, 单位rad;
+// 数据类型为uint16_t, 取值范围为0~65535, 其中0代表-12.5,65535代表 12.5,
+//  0~65535中间的所有数值，按比例映射 至-12.5~12.5。
+DEF_U16_STRONG_TYPE_GRADATION(MitPosition,  from_radian,    
+    iq16,   -12.5,  12.5,   25.0/65535)
+
+// v_des:-45到 45, 单位rad/s;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-45,4095代表45,
+//  0~4095 中间的所有数值，按比例映射至-45~45。
+DEF_U16_STRONG_TYPE_GRADATION(MitSpeed,     from_radian,    
+    iq16,   -45,    45,     90.0/4095)
+
+// kp: 0到 500;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表0,4095代表500,
+//  0~4095中间的所有数值，按比例映射至0~500。
+DEF_U16_STRONG_TYPE_GRADATION(MitKp,        from_val,       
+    uq16,   0,      500,    500.0/4095)
+
+// kd: 0到 5;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表0, 4095代表5,
+//  0~4095中间的所有数值，按比例映射至0~5。
+DEF_U16_STRONG_TYPE_GRADATION(MitKd,        from_val,       
+    uq16,   0,      5,      5.0/4095)
+
+// t_f:-24到 24, 单位N-m;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-24,4095代表24,
+//  0~4095中间的所有数值，按比例映射至-24~24。
+DEF_U16_STRONG_TYPE_GRADATION(MitTorque,    from_nm,        
+    iq16,   -24,      24,     24.0/4095)
 
 struct [[nodiscard]]SpeedCode_i16{
     int16_t bits;
@@ -61,6 +86,19 @@ struct [[nodiscard]] SpeedCtrlCode_i32{
 struct [[nodiscard]] AccelCode_u32{
     uint32_t bits;
 
+    static constexpr uq16 MAX_DPSS = 60000;
+    static constexpr uq16 MIN_DPSS = 100;
+    [[nodiscard]] static constexpr Result<AccelCode_u32, std::strong_ordering> 
+    from_dpss(const uq16 dpss){
+        if(dpss > MAX_DPSS) [[unlikely]]
+            return Err(std::strong_ordering::greater);
+        if(dpss < MIN_DPSS) [[unlikely]]
+            return Err(std::strong_ordering::less);
+
+        //1DPSS / LSB
+        const uint32_t bits = static_cast<uint32_t>(dpss);
+        return Ok(AccelCode_u32{bits});
+    }
     [[nodiscard]] constexpr uint32_t to_dpss() const {
         return bits;
     }
@@ -423,21 +461,7 @@ struct SetTorquePosition{
 };
 
 
-// p_des:-12.5到 12.5, 单位rad;
-// 数据类型为uint16_t, 取值范围为0~65535, 其中0代表-12.5,65535代表 12.5,
-//  0~65535中间的所有数值，按比例映射 至-12.5~12.5。
-// v_des:-45到 45, 单位rad/s;
-// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-45,4095代表45,
-//  0~4095 中间的所有数值，按比例映射至-45~45。
-// kp: 0到 500;
-// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表0,4095代表500,
-//  0~4095中间的所有数值，按比例映射至0~500。
-// kd: 0到 5;
-// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表0, 4095代表5,
-//  0~4095中间的所有数值，按比例映射至0~5。
-// t_f:-24到 24, 单位N-m;
-// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-24,4095代表24,
-//  0~4095中间的所有数值，按比例映射至-24~24。
+
 
 
 struct MitParams{
@@ -474,7 +498,7 @@ enum class LoopWiring:uint8_t{
 namespace s2c_msg{
 
 #define DEF_COMMAND_ONLY_S2C_MSG(cmd)\
-struct cmd{}
+struct [[nodiscard]] cmd{};
 // struct cmd{constexpr CommandHeadedDataField fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {return CommandHeadedDataField::from_command(Command::cmd)};}
 
 struct [[nodiscard]] GetPidParameter{
@@ -483,16 +507,30 @@ struct [[nodiscard]] GetPidParameter{
     float value;
 
     [[nodiscard]] static constexpr Self from_bytes(const std::span<const uint8_t, 7> bytes){
-        Self ret;
-        ret.index = std::bit_cast<PidIndex>(bytes[0]);
-        ret.value = le_bytes_ctor_bits(bytes.subspan<3, 4>());
-        return ret;
+        return Self{
+            .index = std::bit_cast<PidIndex>(bytes[0]),
+            .value = le_bytes_ctor_bits(bytes.subspan<3, 4>())
+        };
     }
 };
 
-struct [[nodiscard]] GetStatus1{};
 
-struct [[nodiscard]] GetStatus2{};
+struct [[nodiscard]] GetPlanAccel{
+    using Self = GetPlanAccel;
+    PlanAccelKind kind;
+    AccelCode_u32 accel;
+    [[nodiscard]] static constexpr Self from_bytes(const std::span<const uint8_t, 7> bytes){
+        return Self{
+            .kind = std::bit_cast<PlanAccelKind>(bytes[0]), 
+            .accel = le_bytes_ctor_bits(bytes.subspan<3, 4>())
+        };
+    }
+};
+
+
+DEF_COMMAND_ONLY_S2C_MSG(GetStatus1);
+
+DEF_COMMAND_ONLY_S2C_MSG(GetStatus2);
 
 struct [[nodiscard]] GetStatus3{
     TemperatureCode_i8 motor_temperature;
@@ -504,9 +542,9 @@ struct [[nodiscard]] GetStatus3{
     }phase_current;
 };
 
-// 1.电机温度temperature (int8t类型，1CLSB);
-//  2.电机的转矩电流值iq (int16_t类型， 0.01A/LSB);
-//  3.电机输出轴转速speed (int16t类型， 1dps/LSB);
+// 1.电机温度temperature (int8t类型，1Cstd::endian::little
+//  2.电机的转矩电流值iq (int16_t类型， 0.01A/std::endian::little
+//  3.电机输出轴转速speed (int16t类型， 1dps/std::endian::little
 //  4.电机输出轴角度 (intl6t类型，1degree/LSB,最大范围±32767degree)。
 template<typename Derived>
 struct [[nodiscard]] _MotorStatusReport{
@@ -518,15 +556,15 @@ struct [[nodiscard]] _MotorStatusReport{
 
     [[nodiscard]] static constexpr Derived from_bytes(const std::span<const uint8_t, 7> bytes){
         Derived ret;
-        const auto exacter = make_bytes_ctor_bits_exacter<LSB>(bytes);
+        const auto exacter = make_bytes_ctor_bits_exacter<std::endian::little>(bytes);
         exacter.exact_to_elements(ret.motor_temperature, ret.q_current, ret.axis_speed, ret.axis_degrees);
         return ret;
     };
 };
 
-// 1.电机温度temperature (int8t类型，1CLSB);
-//  2.电机的转矩电流值iq (int16_t类型， 0.01A/LSB);
-//  3.电机输出轴转速speed (int16t类型， 1dps/LSB);
+// 1.电机温度temperature (int8t类型，1Cstd::endian::little
+//  2.电机的转矩电流值iq (int16_t类型， 0.01A/std::endian::little
+//  3.电机输出轴转速speed (int16t类型， 1dps/std::endian::little
 //  4.编码器位置值encoder(uint16 t类型，编码器的数值范围由编码器位数决定)
 template<typename Derived>
 struct [[nodiscard]] _MotorStatusReport2{
@@ -538,65 +576,66 @@ struct [[nodiscard]] _MotorStatusReport2{
 
     static constexpr Self from_bytes(const std::span<const uint8_t, 7> bytes){
         Self ret;
-        const auto exacter = make_bytes_ctor_bits_exacter<LSB>(bytes);
+        const auto exacter = make_bytes_ctor_bits_exacter<std::endian::little>(bytes);
         exacter.exact_to_elements(ret.motor_temperature, ret.q_current, ret.axis_speed, ret.axis_lap_position);
         return ret;
     };
 };
 
-// 1.电机温度temperature (int8t类型，1CLSB);
-//  2.电机的转矩电流值iq (int16_t类型， 0.01A/LSB);
-//  3.电机输出轴转速speed (int16t类型， 1dps/LSB);
+// 1.电机温度temperature (int8t类型，1Cstd::endian::little
+//  2.电机的转矩电流值iq (int16_t类型， 0.01A/std::endian::little
+//  3.电机输出轴转速speed (int16t类型， 1dps/std::endian::little
 //  4.电机输出轴角度 (intl6t类型，1degree/LSB,最大范围±32767degree)。
 
 struct [[nodiscard]] SetTorque:public _MotorStatusReport<SetTorque>{};
-// 1.电机温度temperature (int8t类型， 1°CLSB);
-//  2.电机的转矩电流值iq (intl6_t类型， 0.01A/LSB);
-//  3.电机输出轴转速speed (int16t类型， 1dps/LSB);
+// 1.电机温度temperature (int8t类型， 1°Cstd::endian::little
+//  2.电机的转矩电流值iq (intl6_t类型， 0.01A/std::endian::little
+//  3.电机输出轴转速speed (int16t类型， 1dps/std::endian::little
 //  4.电机输出轴角度 (intl6_t类型，1degree/LSB,最大范围±32767degree)。
 struct [[nodiscard]] SetSpeed:public _MotorStatusReport<SetSpeed>{};
 
 
-// 1.电机温度temperature (int8t类型， 1C/LSB);
-//  2.电机的转矩电流值iq(int16t类型， 0.01A/LSB);
-//  3.电机输出轴转速speed (int16_t类型， 1dps/LSB);
+// 1.电机温度temperature (int8t类型， 1C/std::endian::little
+//  2.电机的转矩电流值iq(int16t类型， 0.01A/std::endian::little
+//  3.电机输出轴转速speed (int16_t类型， 1dps/std::endian::little
 //  4.电机输出轴角度(intl6t类型，Idegree/LSB,最大范围±32767degree)。
 struct [[nodiscard]] SetPosition:public _MotorStatusReport<SetPosition>{};
 
 
-// 1.电机温度temperature (int8t类型，1CLSB);
-//  2.电机的转矩电流值iq (int16_t类型， 0.01A/LSB);
-//  3.电机输出轴转速speed (int16t类型， 1dps/LSB);
+// 1.电机温度temperature (int8t类型，1Cstd::endian::little
+//  2.电机的转矩电流值iq (int16_t类型， 0.01A/std::endian::little
+//  3.电机输出轴转速speed (int16t类型， 1dps/std::endian::little
 //  4.编码器位置值encoder(uint16 t类型，编码器的数值范围由编码器位数决定)
 struct [[nodiscard]] SetLapPosition:public _MotorStatusReport2<SetLapPosition>{};
 
-// 1.电机温度temperature (int8t类型， 1℃/LSB);
-//  2.电机的转矩电流值iq(int16_t类型， 0.01A/LSB);
-//  3.电机输出轴转速speed (int16_t类型， 1dps/LSB);
+// 1.电机温度temperature (int8t类型， 1℃/std::endian::little
+//  2.电机的转矩电流值iq(int16_t类型， 0.01A/std::endian::little
+//  3.电机输出轴转速speed (int16_t类型， 1dps/std::endian::little
 //  4.电机输出轴角度 (intl6_t类型，1degree/LSB,最大范围±32767degree)。
 struct [[nodiscard]] DeltaPosition:public _MotorStatusReport<DeltaPosition>{};
 
-// 1.电机温度temperature (int8t类型， 1℃/LSB);
-//  2.电机的转矩电流值iq(int16_t类型， 0.01A/LSB);
-//  3.电机输出轴转速speed (int16_t类型， 1dps/LSB);
+// 1.电机温度temperature (int8t类型， 1℃/std::endian::little
+//  2.电机的转矩电流值iq(int16_t类型， 0.01A/std::endian::little
+//  3.电机输出轴转速speed (int16_t类型， 1dps/std::endian::little
 //  4.电机输出轴角度 (intl6_t类型，1degree/LSB,最大范围±32767degree)。
 struct [[nodiscard]] SetTorquePosition:public _MotorStatusReport<SetTorquePosition>{};
 
 
 struct [[nodiscard]] GetPackage{
-    using Self = GetPackage;;
-    char str[7];
+    using Self = GetPackage;
+    static constexpr size_t MAX_STR_LENGTH = PAYLOAD_CAPACITY;
+    char str[MAX_STR_LENGTH];
 
     static constexpr Self from_bytes(const std::span<const uint8_t, PAYLOAD_CAPACITY> bytes){
         Self self;
-        for(size_t i = 0; i < 7; i++){
+        for(size_t i = 0; i < MAX_STR_LENGTH; i++){
             self.str[i] = bytes[i];
         }
         return self;
     }
 
     friend OutputStream& operator<<(OutputStream & os, const Self & self){ 
-        return os << StringView(self.str, 7);
+        return os << StringView(self.str, MAX_STR_LENGTH);
     }
 };
 
@@ -613,11 +652,16 @@ struct [[nodiscard]] MitParams{
     MitTorque torque;
 
     constexpr Self from_bytes(std::span<const uint8_t, 8> bytes) const {
-        const uint16_t position_bits = (bytes[1] << 8) | bytes[2];
-        const uint16_t speed_bits = (bytes[3] << 4) | (bytes[4] >> 4);
-        const uint16_t torque_bits = ((bytes[4] & 0xff) << 8) | (bytes[5]);
+        const uint8_t can_addr_bits = 
+            bytes[0];
+        const uint16_t position_bits = 
+            (bytes[1] << 8) | bytes[2];
+        const uint16_t speed_bits = 
+            (bytes[3] << 4) | (bytes[4] >> 4);
+        const uint16_t torque_bits = 
+            ((bytes[4] & 0x0f) << 8) | (bytes[5]);
         return Self{
-            .can_addr = CanAddr(bytes[0]),
+            .can_addr = CanAddr(can_addr_bits),
             .position = MitPosition::from_bits(position_bits),
             .speed = MitSpeed::from_bits(speed_bits),
             .torque = MitTorque::from_bits(torque_bits)

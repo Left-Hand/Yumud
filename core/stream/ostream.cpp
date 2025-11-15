@@ -76,6 +76,15 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     return *this;
 }
 
+OutputStream & OutputStream::operator<<(const std::endian endian){
+    auto & os = *this;
+    switch(endian){
+        case std::endian::little: return os << "little";
+        case std::endian::big: return os << "big";
+    }
+    __builtin_unreachable();
+}
+
 
 #define PRINT_FLOAT_TEMPLATE(convfunc)\
     char str[12] = {0};\

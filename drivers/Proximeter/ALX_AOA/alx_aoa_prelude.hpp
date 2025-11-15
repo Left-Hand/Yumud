@@ -36,12 +36,9 @@ enum class RequestCommand:uint16_t{
 };
 
 struct [[nodiscard]] TargetDistanceCode{
-    uint16_t distance_cm;
-    static constexpr TargetDistanceCode from_bits(uint32_t bits){
-        return TargetDistanceCode{static_cast<uint16_t>(bits)};
-    }
+    uint32_t bits;
     [[nodiscard]] constexpr uq16 to_meters() const{
-        return uq16(distance_cm) / 100;
+        return uq16(bits) / 100;
     }
 
     friend OutputStream & operator <<(OutputStream & os, const TargetDistanceCode & self){ 
@@ -50,13 +47,10 @@ struct [[nodiscard]] TargetDistanceCode{
 };
 
 struct [[nodiscard]] TargetAngleCode{
-    int8_t degrees;
+    int16_t bits;
 
-    static constexpr TargetAngleCode from_bits(int16_t bits){
-        return TargetAngleCode{static_cast<int8_t>(bits)};
-    }
     [[nodiscard]] constexpr Angle<uq16> to_angle() const{
-        return Angle<uq16>::from_degrees(degrees);
+        return Angle<uq16>::from_degrees(bits);
     }
 
     friend OutputStream & operator <<(OutputStream & os, const TargetAngleCode & self){ 
@@ -65,15 +59,12 @@ struct [[nodiscard]] TargetAngleCode{
 };
 
 struct [[nodiscard]] DeviceIdCode{
-    uint32_t count;
+    uint32_t bits;
 
-    static constexpr DeviceIdCode from_bits(uint32_t count){
-        return DeviceIdCode{count};
-    }
 
     friend OutputStream & operator <<(OutputStream & os, const DeviceIdCode & self){ 
         auto guard = os.create_guard();
-        return os << std::showbase << std::hex << self.count;
+        return os << std::showbase << std::hex << self.bits;
     }
 };
 

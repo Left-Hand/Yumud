@@ -21,7 +21,7 @@ void ad9959_main(){
     
     auto & spi = spisw;
     spi.init({100000});//maxium baud
-    spi.set_bitorder(LSB);
+    spi.set_bitorder(std::endian::little
 
     [[maybe_unused]]
     const auto spi_rank = spi.allocate_cs_gpio(&cs_gpio);

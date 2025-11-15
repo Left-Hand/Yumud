@@ -320,8 +320,8 @@ HalResult SpiHw::set_prescaler(const SpiPrescaler prescaler){
 }
 
 
-HalResult SpiHw::set_bitorder(const Endian endian){
-    inst_->set_bitorder(endian);
+HalResult SpiHw::set_bitorder(const BitOrder bitorder){
+    inst_->set_bitorder(bitorder);
     return HalResult::Ok();
 }
 

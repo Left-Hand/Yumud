@@ -108,7 +108,7 @@ private:
     }
 
     [[nodiscard]] IResult<> read_burst_u12(const uint8_t addr, std::span<uint16_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(addr, pbuf, MSB);
+        if(const auto res = i2c_drv_.read_burst(addr, pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         for(auto & item : pbuf){
             item = item & 0x0fff;

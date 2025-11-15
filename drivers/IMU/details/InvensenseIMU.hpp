@@ -44,7 +44,7 @@ public:
 
     [[nodiscard]] Result<void, Error> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
         if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_burst<int16_t>(uint8_t(addr), pbuf, MSB);
+            if(const auto res = i2c_drv_->read_burst<int16_t>(uint8_t(addr), pbuf, std::endian::big);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else if(spi_drv_){

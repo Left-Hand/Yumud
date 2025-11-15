@@ -8,7 +8,7 @@ def __mpyf_l(x:np.int32, y:np.int32) -> np.int32:
         return np.int32((x * y) >> 31)
 
 def __mpyf_u32(x:np.uint32, y:np.uint32) -> np.uint32:
-        return np.int32((x * y) >> 32)
+        return np.uint32((x * y) >> 32)
 def iq_cos(uiq31Input:np.int32) -> np.int32:
     # Calculate index for sin and cos lookup using bits 31:26
     index = (uiq31Input >> 25) & 0x003f
@@ -22,7 +22,7 @@ def iq_cos(uiq31Input:np.int32) -> np.int32:
     iq31X = np.int32(uiq31Input & 0x01ffffff)
 
     # 0.333*x*S(k)
-    iq31Res = __mpyf_l(0x2aaaaaab,iq31X)  # Simulating __mpyf_l with integer multiplication and right shift
+    iq31Res = __mpyf_l(np.int32(0x2aaaaaab),iq31X)  # Simulating __mpyf_l with integer multiplication and right shift
     iq31Res = __mpyf_l(iq31Sin,iq31Res)
 
     # -C(k) + 0.333*x*S(k)
@@ -45,42 +45,42 @@ def iq_cos(uiq31Input:np.int32) -> np.int32:
     # return np.int32(iq31Res)
 
 
-def iq_cos2(uiq31Input:np.int32) -> np.int32:
-    # Calculate index for sin and cos lookup using bits 31:26
-    index = (uiq31Input >> 25) & 0x003f
-    # Lookup S(k) and C(k) values.
-    uiq32Sin = uiq32_sin_table[index]
-    uiq32Cos = uiq32_cos_table[index]
+# def iq_cos2(uiq31Input:np.int32) -> np.uint32:
+#     # Calculate index for sin and cos lookup using bits 31:26
+#     index = (uiq31Input >> 25) & 0x003f
+#     # Lookup S(k) and C(k) values.
+#     uiq32Sin = uiq32_sin_table[index]
+#     uiq32Cos = uiq32_cos_table[index]
 
-    # Calculated x (the remainder) by subtracting the index from the unsigned
-    # iq31 input. This can be accomplished by masking out the bits used for
-    # the index.
-    uiq32X = np.uint32(uiq31Input & 0x01ffffff)
+#     # Calculated x (the remainder) by subtracting the index from the unsigned
+#     # iq31 input. This can be accomplished by masking out the bits used for
+#     # the index.
+#     uiq32X = np.uint32(uiq31Input & 0x01ffffff)
 
-    # 0.333*x*S(k)
-    uiq32Res = __mpyf_u32(0x2aaaaaab * 2,uiq32X)  # Simulating __mpyf_u32 with integer multiplication and right shift
-    uiq32Res = __mpyf_u32(uiq32Sin,uiq32Res)
+#     # 0.333*x*S(k)
+#     uiq32Res = __mpyf_u32(np.uint32(0x2aaaaaab * 2),uiq32X)  # Simulating __mpyf_u32 with integer multiplication and right shift
+#     uiq32Res = __mpyf_u32(uiq32Sin,uiq32Res)
 
-    # -C(k) + 0.333*x*S(k)
-    uiq32Res = np.uint32(uiq32Res - uiq32Cos)
+#     # -C(k) + 0.333*x*S(k)
+#     uiq32Res = np.uint32(uiq32Res - uiq32Cos)
 
-    # 0.5*x*(-C(k) + 0.333*x*S(k))
-    uiq32Res = np.uint32(uiq32Res >> 1)
-    uiq32Res = __mpyf_u32(uiq32X,uiq32Res)
+#     # 0.5*x*(-C(k) + 0.333*x*S(k))
+#     uiq32Res = np.uint32(uiq32Res >> 1)
+#     uiq32Res = __mpyf_u32(uiq32X,uiq32Res)
 
-    # -S(k) + 0.5*x*(-C(k) + 0.333*x*S(k))
-    uiq32Res = np.uint32(uiq32Res - uiq32Sin)
+#     # -S(k) + 0.5*x*(-C(k) + 0.333*x*S(k))
+#     uiq32Res = np.uint32(uiq32Res - uiq32Sin)
 
-    # x*(-S(k) + 0.5*x*(-C(k) + 0.333*x*S(k)))
-    uiq32Res = __mpyf_u32(uiq32X,uiq32Res)
+#     # x*(-S(k) + 0.5*x*(-C(k) + 0.333*x*S(k)))
+#     uiq32Res = __mpyf_u32(uiq32X,uiq32Res)
 
-    # cos(Radian) = C(k) + x*(-S(k) + 0.5*x*(-C(k) + 0.333*x*S(k)))
-    return np.uint32(uiq32Cos + uiq32Res)
-    # print(iq31X, "iq31X")
+#     # cos(Radian) = C(k) + x*(-S(k) + 0.5*x*(-C(k) + 0.333*x*S(k)))
+#     return np.uint32(uiq32Cos + uiq32Res)
+#     # print(iq31X, "iq31X")
     
-    # return np.int32(iq31Res)
+#     # return np.int32(iq31Res)
 
-def plot_array(array:np.int32):
+def plot_array(array:NDArray[np.int32]):
     x_indices = range(len(array))
         
     # 绘制图形
@@ -106,7 +106,7 @@ angles = np.linspace(0, np.pi/4, 1000)
 
 # 计算这些角度的余弦值
 cos_values = iq_cos(np.int32(angles * (2**31))) / (2**31)
-cos_values2 = iq_cos2(np.int32(angles * (2**31))) / (2**32)
+cos_values2 = iq_cos(np.int32(angles * (2**31))) / (2**32)
 
 # 绘制角度与计算的余弦值之间的关系
 plt.plot(angles, cos_values, label='iq_cos 计算的余弦值')
@@ -138,4 +138,4 @@ def print_uiq32_table(table):
     print("};")
 
 # print(uiq32_cos_table)
-print_uiq32_table(uiq32_sin_table)
+# print_uiq32_table(uiq32_sin_table)

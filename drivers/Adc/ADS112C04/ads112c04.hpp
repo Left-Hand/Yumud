@@ -41,7 +41,7 @@ private:
 
     [[nodiscard]] IResult<> read_data(uint16_t & data){
         if(const auto res = i2c_drv_.read_reg(
-                std::bit_cast<uint8_t>(Command::READ_DATA), data, LSB);
+                std::bit_cast<uint8_t>(Command::READ_DATA), data, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

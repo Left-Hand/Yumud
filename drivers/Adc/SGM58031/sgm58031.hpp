@@ -24,7 +24,7 @@ public:
     [[nodiscard]] IResult<> set_datarate(const DataRate dr);
     [[nodiscard]] IResult<> set_mux(const MUX mux);
     [[nodiscard]] IResult<> set_fs(const FS fs);
-    [[nodiscard]] IResult<> set_fs(const iq16 fs, const iq16 vref);
+    [[nodiscard]] IResult<> set_fs(const uq16 fs, const uq16 vref);
     [[nodiscard]] IResult<> set_trim(const iq16 trim);
     [[nodiscard]] IResult<> enable_ch3_as_ref(const Enable en);
 private:
@@ -35,7 +35,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(
-            uint8_t(T::ADDRESS), reg.as_val(), MSB);
+            uint8_t(T::ADDRESS), reg.as_val(), std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -44,26 +44,11 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(
-            uint8_t(T::ADDRESS), reg.as_ref(), MSB);
+            uint8_t(T::ADDRESS), reg.as_ref(), std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    static constexpr PGA ratio2pga(const iq16 ratio){
-        if(ratio >= 3){
-            return PGA::_2_3;
-        }else if(ratio >= 2){
-            return PGA::_1;
-        }else if(ratio >= 1){
-            return PGA::_2;
-        }else if(ratio >= iq16(0.5)){
-            return PGA::_4;
-        }else if(ratio >= iq16(0.25)){
-            return PGA::_8;
-        }else{
-            return PGA::_16;
-        }
-    }
 
 };
 

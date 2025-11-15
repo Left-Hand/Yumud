@@ -453,7 +453,7 @@ void light_tracking_main(void){
     spi.init({LCD_SPI_FREQ_HZ});
     // spi.init(2_MHz, CommStrategy::Blocking, CommStrategy::Nil);
     (void)spi.set_bitorder(MSB);
-    // spi.set_bitorder(LSB);
+    // spi.set_bitorder(std::endian::little
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 displayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});

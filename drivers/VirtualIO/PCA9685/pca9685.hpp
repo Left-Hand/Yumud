@@ -76,7 +76,7 @@ private:
     };
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t reg){
-        const auto res = i2c_drv_.write_reg(uint8_t(addr), reg, LSB);
+        const auto res = i2c_drv_.write_reg(uint8_t(addr), reg, std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -89,7 +89,7 @@ private:
     }
 
     [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & reg){
-        const auto res = i2c_drv_.read_reg(uint8_t(addr), reg, LSB);
+        const auto res = i2c_drv_.read_reg(uint8_t(addr), reg, std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

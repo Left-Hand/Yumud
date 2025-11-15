@@ -8,7 +8,7 @@ namespace ymd{
 
 class BytesProvider;
 
-template<Endian::Kind E>
+template<std::endian E>
 struct [[nodiscard]] FetchLeadingBytesCtorBitsProxy{
     BytesProvider & fetcher;
 
@@ -37,12 +37,12 @@ struct [[nodiscard]] BytesProvider{
         return ret;
     }
 
-    template <Endian::Kind E>
+    template <std::endian E>
     [[nodiscard]] constexpr FetchLeadingBytesCtorBitsProxy<E> fetch_leading_ctor_bits(){
         return FetchLeadingBytesCtorBitsProxy<E>(*this);
     }
 
-    template <Endian::Kind E>
+    template <std::endian E>
     [[nodiscard]] constexpr FetchLeadingBytesCtorBitsProxy<E> fetch_trailing_ctor_bits(){
         return FetchLeadingBytesCtorBitsProxy<E>(*this);
     }
@@ -55,7 +55,7 @@ private:
 };
 
 
-template<Endian::Kind E>
+template<std::endian E>
 template<typename T>
 constexpr FetchLeadingBytesCtorBitsProxy<E>::operator T() const {
     using D = from_bits_t<T>;

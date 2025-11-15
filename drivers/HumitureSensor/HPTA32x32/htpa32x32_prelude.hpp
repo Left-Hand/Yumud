@@ -176,7 +176,7 @@ hal::I2cDrv i2c_drv_;
  *******************************************************************/
 uint8_t read_EEPROM_byte(uint16_t reg_addr) {
     uint8_t ret;
-    i2c_drv_.read_reg(reg_addr, ret, MSB);
+    i2c_drv_.read_reg(reg_addr, ret, std::endian::big);
 }
 
 /********************************************************************
@@ -185,7 +185,7 @@ uint8_t read_EEPROM_byte(uint16_t reg_addr) {
    Dependencies:    register address (address)
  *******************************************************************/
 void write_EEPROM_byte(uint16_t reg_addr, uint8_t content ) {
-    i2c_drv_.write_reg(reg_addr, content, MSB);
+    i2c_drv_.write_reg(reg_addr, content, std::endian::big);
 }
 
 /********************************************************************

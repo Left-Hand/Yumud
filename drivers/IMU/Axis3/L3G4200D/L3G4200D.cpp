@@ -38,7 +38,7 @@ static constexpr uint8_t REG_CTRL_REG3 = 0x22; // [0]:FIFO Empty interrupt on DR
 static constexpr uint8_t REG_CTRL_REG4 = 0x23; // [0]:SPI Serial Interface Mode, (0: 4-wire, 1: 3-wire)
                                           // [1,2]:Self Test Enable. (00: Self Test Disabled)
                                           // [4,5]:Full Scale selection. (00: 250 dps; 01: 500 dps; 10: 2000 dps; 11: 2000 dps)
-                                          // [6]:Big/Little Endian Data Selection. (0: Data LSB @ lower address; 1: Data MSB @ lower address)
+                                          // [6]:Big/Little std::endian Data Selection. (0: Data LSB @ lower address; 1: Data MSB @ lower address)
                                           // [7]:Block Data Update. (0: continous update; 1: output registers not updated until MSB and LSB reading)
 
 static constexpr uint8_t REG_CTRL_REG5 = 0x24; // [0,1]:Out selection configuration

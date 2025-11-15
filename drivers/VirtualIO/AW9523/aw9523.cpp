@@ -149,7 +149,7 @@ IResult<> Self::validate(){
 
 IResult<> Self::write_reg(const RegAddr addr, const uint16_t data){
     // DEBUG_PRINTLN(uint8_t(addr), data);
-    if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, LSB);
+    if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, std::endian::little);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

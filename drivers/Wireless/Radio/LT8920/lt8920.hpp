@@ -107,7 +107,7 @@ protected:
                 spi_drv_->write_single<uint16_t>(reg);
                 res.is_err()) return Err(res.unwrap_err());
         }else if(i2c_drv_){
-            if(const auto res = i2c_drv_->write_reg(uint8_t(address), reg, MSB);
+            if(const auto res = i2c_drv_->write_reg(uint8_t(address), reg, std::endian::big);
                 res.is_err()) return Err(res.unwrap_err());
         }
         return Ok();
@@ -128,7 +128,7 @@ protected:
             if(const auto res = spi_drv_->read_single<uint16_t>(data);
                 res.is_err()) return Err(res.unwrap_err());
         }else if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_reg(uint8_t(address), data, MSB);
+            if(const auto res = i2c_drv_->read_reg(uint8_t(address), data, std::endian::big);
                 res.is_err()) return Err(res.unwrap_err());
         }
         return Ok();
