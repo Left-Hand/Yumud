@@ -120,7 +120,7 @@ __fast_inline static constexpr float fast_cbrtf(float x) {
 }
 
 __fast_inline static constexpr auto xyz_gamma(const real_t x) -> real_t{
-    return (x > 0.008856_r) ? q16::from(fast_cbrtf(float(x))) : ((x * 7.787037_r) + 0.137931_r);
+    return (x > 0.008856_r) ? iq16::from(fast_cbrtf(float(x))) : ((x * 7.787037_r) + 0.137931_r);
 }
 
 __fast_inline static constexpr auto inv_xyz_gamma_to8(const real_t x) -> uint8_t{
@@ -150,9 +150,9 @@ __fast_inline static constexpr std::tuple<real_t, real_t, real_t> lab888_to_xyz(
 __fast_inline static constexpr XYZ<real_t> rgb888_to_xyz(const RGB888 & rgb){
     const auto [r,g,b] = rgb;
     
-    const real_t r_lin = q16(xyz_table[r]) >> 8;
-    const real_t g_lin = q16(xyz_table[g]) >> 8;
-    const real_t b_lin = q16(xyz_table[b]) >> 8;
+    const real_t r_lin = iq16(xyz_table[r]) >> 8;
+    const real_t g_lin = iq16(xyz_table[g]) >> 8;
+    const real_t b_lin = iq16(xyz_table[b]) >> 8;
 
     const real_t x = ((r_lin * 0.4124_r) + (g_lin * 0.3576_r) + (b_lin * 0.1805_r)) * real_t(1.0f / 095.047f);
     const real_t y = ((r_lin * 0.2126_r) + (g_lin * 0.7152_r) + (b_lin * 0.0722_r)) * real_t(1.0f / 100.000f);

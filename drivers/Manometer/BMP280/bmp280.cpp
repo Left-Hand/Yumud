@@ -20,7 +20,7 @@ IResult<> Self::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
     BMP280_DEBUG("CHIP code: ", uint8_t(chip_id_reg));
-    if(reg.as_val() != VALID_CHIPID) 
+    if(reg.as_bits() != VALID_CHIPID) 
         return Err(Error::WrongChipId);
     return Ok();
 }
@@ -58,7 +58,7 @@ IResult<> Self::set_filter_coefficient(const FilterCoefficient filter_coeff){
 
 IResult<> Self::reset(){
     auto reg = RegCopy(regs_.reset_reg);
-    reg.as_ref() = RESET_KEY;
+    reg.as_mut_bits() = RESET_KEY;
     return write_reg(reg);
 }
 
@@ -122,10 +122,10 @@ IResult<uint32_t> Self::get_pressure_data(){
     uint32_t pressure_data = 0;
     if(const auto res = read_reg(regs_.pressure_reg);
         res.is_err()) return Err(res.unwrap_err());
-    pressure_data = regs_.pressure_reg.as_val() << 4;
+    pressure_data = regs_.pressure_reg.as_bits() << 4;
     if(const auto res = read_reg(regs_.pressure_x_reg);
         res.is_err()) return Err(res.unwrap_err());
-    pressure_data |= regs_.pressure_x_reg.as_val() >> 4;
+    pressure_data |= regs_.pressure_x_reg.as_bits() >> 4;
     return Ok(pressure_data);
 }
 
@@ -133,10 +133,10 @@ IResult<uint32_t> Self::read_temp_data(){
     uint32_t temperatureData = 0;
     if(const auto res = read_reg(regs_.temperature_reg);
         res.is_err()) return Err(res.unwrap_err());
-    temperatureData = regs_.temperature_reg.as_val() << 4;
+    temperatureData = regs_.temperature_reg.as_bits() << 4;
     if(const auto res = read_reg(regs_.temperature_x_reg);
         res.is_err()) return Err(res.unwrap_err());
-    temperatureData |= regs_.temperature_x_reg.as_val() >> 4;
+    temperatureData |= regs_.temperature_x_reg.as_bits() >> 4;
     // BMP280_DEBUG("TempratureData:", temperatureData);
     return Ok(temperatureData);
 }

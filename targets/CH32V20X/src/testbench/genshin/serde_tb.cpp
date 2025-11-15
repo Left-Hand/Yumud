@@ -38,7 +38,7 @@ using namespace ymd;
     }
 
     {
-        static constexpr auto iter = RepeatIter(0, 4);
+        static constexpr auto iter = RepeatIter<uint8_t, 4>(0, 4);
         static constexpr auto iter_size = count_iter_size(iter);
         static_assert(iter_size == 4);
     }

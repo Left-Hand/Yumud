@@ -82,7 +82,7 @@ void AD9833::setFreq(uint16_t freq_reg, real_t freq, bool reset) {
     } else {
         write_data(AD9833_REG_CMD | (1<<AD9833_B28)); // 选择数据一次写入，B28位为1。0x2000
     }
-    write_data(freq_LSB);
+    write_data(freq_std::endian::little
     write_data(freq_MSB);
 }
 

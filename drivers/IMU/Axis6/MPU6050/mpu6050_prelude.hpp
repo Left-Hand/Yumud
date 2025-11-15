@@ -43,10 +43,18 @@ struct MPU6050_Prelude{
 
     using RegAddr = uint8_t;   
 
-    struct Config{
-        Package packge = Package::MPU6050;
-        AccFs acc_fs = AccFs::_2G;
-        GyrFs gyr_fs = GyrFs::_1000deg;
+    struct [[nodiscard]] Config{
+        Package packge;
+        AccFs acc_fs;
+        GyrFs gyr_fs;
+
+        static constexpr Config from_default(){
+            return Config{
+                Package::MPU6050, 
+                AccFs::_2G, 
+                GyrFs::_1000deg
+            };
+        }
     };
 };
 

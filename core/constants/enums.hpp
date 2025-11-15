@@ -34,17 +34,25 @@ private:\
     Kind kind_;\
     constexpr name(){;}\
 };\
-using enum name::Kind;\
 OutputStream & operator <<(OutputStream & os, const name self);\
 
-DEF_MAKE_BINA_ENUM(Endian, MSB, LSB)
+
+DEF_MAKE_BINA_ENUM(BitOrder, MSB, LSB)
+DEF_MAKE_BINA_ENUM(Polarity, Inverted, Orignal)
 DEF_MAKE_BINA_ENUM(Continuous, CONT, DISC)
 DEF_MAKE_BINA_ENUM(Ack, ACK, NACK)
-DEF_MAKE_BINA_ENUM(ClockDirection, CW, CCW)
+DEF_MAKE_BINA_ENUM(RotateDirection, CW, CCW)
 DEF_MAKE_BINA_ENUM(BoolLevel, HIGH, LOW)
 DEF_MAKE_BINA_ENUM(Enable, EN, DISEN)
 DEF_MAKE_BINA_ENUM(TB, TOP, BOTTOM)
 DEF_MAKE_BINA_ENUM(LR, LEFT, RIGHT)
+
+using enum BitOrder::Kind;\
+using enum Ack::Kind;\
+using enum Enable::Kind;\
+using enum Continuous::Kind;\
+using enum BoolLevel::Kind;\
+using enum RotateDirection::Kind;\
 
 #undef DEF_MAKE_BINA_ENUM
 ;

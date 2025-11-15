@@ -2,6 +2,8 @@
 
 #include <type_traits>
 #include <span>
+#include <bit>
+
 #include "core/constants/enums.hpp"
 
 
@@ -9,7 +11,7 @@ namespace ymd{
 
 template<typename T, typename Fn1, typename Fn2, typename Fn3>
 [[nodiscard]] __fast_inline
-auto iterate_bytes(std::span<T> pbuf, Endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){
+auto iterate_bytes(std::span<T> pbuf, std::endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){
     using Byte = std::conditional_t<std::is_const_v<T>, const uint8_t, uint8_t>;
     constexpr size_t dsize = sizeof(T);
     
@@ -19,7 +21,7 @@ auto iterate_bytes(std::span<T> pbuf, Endian endian, Fn1 && do_fn, Fn2 && check_
     );
 
     for(size_t i = 0; i < bytes.size(); i += dsize){
-        if(endian == MSB){
+        if(endian == std::endian::big){
             for(size_t j = dsize; j > 0; j--){
                 const bool is_end = ((j == 1) && (i == bytes.size() - dsize));
                 const auto err = std::forward<Fn1>(do_fn)(bytes[i + j - 1], is_end);
@@ -39,7 +41,7 @@ auto iterate_bytes(std::span<T> pbuf, Endian endian, Fn1 && do_fn, Fn2 && check_
 
 template<typename T, typename Fn1, typename Fn2, typename Fn3>
 [[nodiscard]] __fast_inline
-auto iterate_bytes(T & data, size_t len, Endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){
+auto iterate_bytes(T & data, size_t len, std::endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){
     using Byte = std::conditional_t<std::is_const_v<T>, const uint8_t, uint8_t>;
     constexpr size_t dsize = sizeof(T);
     
@@ -49,7 +51,7 @@ auto iterate_bytes(T & data, size_t len, Endian endian, Fn1 && do_fn, Fn2 && che
     );
 
     for(size_t i = 0; i < len * dsize; i += dsize){
-        if(endian == MSB){
+        if(endian == std::endian::big){
             for(size_t j = dsize; j > 0; j--){
                 const bool is_end = ((j == 1) && (i == dsize * len - dsize));
                 const auto err = std::forward<Fn1>(do_fn)(bytes[j - 1], is_end);

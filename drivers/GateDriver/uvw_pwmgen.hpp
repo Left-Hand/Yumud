@@ -6,18 +6,23 @@ namespace ymd::drivers{
 
 template<typename U_Inst, typename V_Inst, typename W_Inst>
 struct UvwPwmgen{
-    explicit UvwPwmgen(Some<U_Inst *> u_inst, Some<V_Inst *> v_inst, Some<W_Inst *> w_inst):
-        pwm_insts_(std::make_tuple(u_inst.get(), v_inst.get(), w_inst.get())){;}
+    explicit UvwPwmgen(Some<U_Inst *> u_gen, Some<V_Inst *> v_gen, Some<W_Inst *> w_gen):
+        u_gen_(u_gen.deref()),
+        v_gen_(v_gen.deref()),
+        w_gen_(w_gen.deref())
+    {}
 
     template<typename UvwDutyCycle>
     __inline void set_dutycycle(const UvwDutyCycle dutycycle){
-        std::get<0>(pwm_insts_)->set_dutycycle((dutycycle[0]));
-        std::get<1>(pwm_insts_)->set_dutycycle((dutycycle[1]));
-        std::get<2>(pwm_insts_)->set_dutycycle((dutycycle[2]));
+        u_gen_.set_dutycycle((dutycycle.template get<0>()));
+        v_gen_.set_dutycycle((dutycycle.template get<1>()));
+        w_gen_.set_dutycycle((dutycycle.template get<2>()));
     }
 
 private:
-    std::tuple<U_Inst *, V_Inst *, W_Inst *> pwm_insts_;
+    U_Inst & u_gen_;
+    V_Inst & v_gen_;
+    W_Inst & w_gen_;
 };
 
 

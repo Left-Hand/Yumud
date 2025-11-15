@@ -51,7 +51,7 @@ public:
     [[nodiscard]] IResult<> start_conv();
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] std::tuple<real_t, real_t, real_t, real_t> get_crgb();
+    [[nodiscard]] std::tuple<uq16, uq16, uq16, uq16> get_crgb();
 
 private:
     hal::I2cDrv i2c_drv_;
@@ -63,7 +63,7 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(
             conv_reg_address_repeated(T::ADDRESS), 
-            reg.as_val(), LSB);
+            reg.as_bits(), std::endian::little);
         res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -72,7 +72,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(
-            conv_reg_address_repeated(T::ADDRESS), reg.as_ref(), LSB);
+            conv_reg_address_repeated(T::ADDRESS), reg.as_mut_bits(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

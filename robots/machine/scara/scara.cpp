@@ -7,14 +7,14 @@ void Scara::goHome(){
     joint_r.set_radian(real_t(PI/2));
 }
 
-void Scara::moveXY(const Vec2<q16> & pos){
+void Scara::moveXY(const Vec2<iq16> & pos){
     auto [a,b] = solver_.inverse(pos);
     joint_l.set_radian(a);
     joint_r.set_radian(b);
 }
 
 
-Vec2<q16> Scara::getPos(){
+Vec2<iq16> Scara::getPos(){
     return solver_.forward(joint_l.get_radian(), joint_r.get_radian());
 }
 

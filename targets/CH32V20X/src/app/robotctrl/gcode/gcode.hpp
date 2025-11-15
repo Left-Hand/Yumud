@@ -149,13 +149,13 @@ struct [[nodiscard]] TextSourceLocation{
 
 struct [[nodiscard]] Word{
     char letter;
-    q16 value;
+    iq16 value;
     TextSourceLocation source;
 };
 
 struct [[nodiscard]] GcodeArg{
     char letter;
-    q16 value;
+    iq16 value;
 
     [[nodiscard]] static constexpr bool is_letter_valid(const char letter){
         switch(letter){
@@ -207,7 +207,7 @@ struct [[nodiscard]] GcodeArgsIter {
 
             // Parse value (skip letter)
             const auto value_str = token_str.substr(1).unwrap();
-            const auto res = strconv2::defmt_str<q16>(value_str);
+            const auto res = strconv2::defmt_str<iq16>(value_str);
             if (res.is_err()) {
                 // Value parsing failed (e.g., "X1.2.3") -> return Error
                 return Err(res.unwrap_err());
@@ -268,9 +268,9 @@ struct [[nodiscard]] GcodeLine{
         });
     };
 
-    constexpr IResult<q16> query_arg_value(const char letter) const {
-        return query_tmp<q16>(letter, [](const StringView str) -> IResult<q16>{
-            const auto res = (strconv2::defmt_str<q16>(str.substr(1).unwrap()));
+    constexpr IResult<iq16> query_arg_value(const char letter) const {
+        return query_tmp<iq16>(letter, [](const StringView str) -> IResult<iq16>{
+            const auto res = (strconv2::defmt_str<iq16>(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             return Ok(res.unwrap());
         });

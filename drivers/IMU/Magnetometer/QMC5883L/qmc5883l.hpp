@@ -38,7 +38,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_mag() override;
+    [[nodiscard]] IResult<Vec3<iq24>> read_mag() override;
     
     [[nodiscard]] IResult<> validate();
 
@@ -52,11 +52,11 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-    static constexpr EnumArray<FullScale, q24> scaler_mapping_ = {
+    static constexpr EnumArray<FullScale, iq24> scaler_mapping_ = {
         2, 8
     };
 
-    static constexpr EnumScaler<FullScale, q24> scaler_ = {
+    static constexpr EnumScaler<FullScale, iq24> scaler_ = {
         FullScale::_2G,
         scaler_mapping_
     };
@@ -64,7 +64,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(T::ADDRESS), reg.as_val(), LSB);
+        if(const auto res = i2c_drv_.write_reg(uint8_t(T::ADDRESS), reg.as_bits(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -72,7 +72,7 @@ private:
     
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(T::ADDRESS), reg.as_ref(), LSB);
+        if(const auto res = i2c_drv_.read_reg(uint8_t(T::ADDRESS), reg.as_mut_bits(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
@@ -83,7 +83,7 @@ private:
         const RegAddr addr, 
         std::span<int16_t> pbuf
     ){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, LSB);
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

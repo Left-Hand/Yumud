@@ -22,7 +22,7 @@ auto build_norm_vec3_from_quat_xfrom_top(
 template<arithmetic T>
 __fast_inline constexpr
 Vec3<Norm<T>> build_norm_vec3_from_vec3(const Vec3<T> & vec){
-	const auto ilen = isqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+	const auto ilen = inv_sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
 	return Vec3<Norm<T>>(
 		Norm(vec.x * ilen),
 		Norm(vec.y * ilen),

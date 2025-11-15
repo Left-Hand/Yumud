@@ -57,8 +57,8 @@ struct CacheOf<RotatedRect<T>, bool>{
         return Self{
             .half_width = obj.width / 2,
             .half_height = obj.height / 2,
-            .s = s,
-            .c = c
+            .s = static_cast<T>(s),
+            .c = static_cast<T>(c)
         };
     }
 

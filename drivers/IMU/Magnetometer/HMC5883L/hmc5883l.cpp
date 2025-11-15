@@ -73,12 +73,12 @@ IResult<> HMC5883L::set_mode(const Mode mode){
     return write_reg(reg);
 }
 
-IResult<Vec3<q24>> HMC5883L::read_mag(){
-    real_t x = transform_raw_to_gauss(regs_.mag_x_reg, lsb_);
-    real_t y = transform_raw_to_gauss(regs_.mag_y_reg, lsb_);
-    real_t z = transform_raw_to_gauss(regs_.mag_z_reg, lsb_);
+IResult<Vec3<iq24>> HMC5883L::read_mag(){
+    iq16 x = transform_raw_to_gauss(regs_.mag_x_reg, lsb_);
+    iq16 y = transform_raw_to_gauss(regs_.mag_y_reg, lsb_);
+    iq16 z = transform_raw_to_gauss(regs_.mag_z_reg, lsb_);
 
-    return Ok(Vec3<q24>(x,y,z));
+    return Ok(Vec3<iq24>(x,y,z));
 }
 
 IResult<> HMC5883L::validate(){
@@ -89,9 +89,9 @@ IResult<> HMC5883L::validate(){
     if(const auto res = read_reg(regs_.id_c_reg);
         res.is_err()) return res;
     bool passed = (
-        regs_.id_a_reg.as_val() == 'H'
-        and regs_.id_b_reg.as_val() == '4' 
-        and regs_.id_c_reg.as_val() == '3');
+        regs_.id_a_reg.as_bits() == 'H'
+        and regs_.id_b_reg.as_bits() == '4' 
+        and regs_.id_c_reg.as_bits() == '3');
 
     if(!passed) return Err(Error::InvalidChipId);
     return Ok();

@@ -28,8 +28,8 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
-    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
 private:
     InvensenseSensor_Phy phy_;
     
@@ -39,7 +39,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
+        if(const auto res = write_reg(reg.address, reg.as_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();

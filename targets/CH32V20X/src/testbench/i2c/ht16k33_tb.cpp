@@ -31,13 +31,11 @@ using namespace ymd::drivers;
 namespace ymd::hid{
 
 template<typename T>
-class KeyBoardComponent{
-};
+class KeyBoardComponent;
 
 
 template<typename T>
-struct KeyBoardLayout{
-};
+struct KeyBoardLayout;
 
 template<>
 struct KeyBoardLayout<HT16K33> final{
@@ -51,7 +49,7 @@ static constexpr char map_place_to_char(const uint8_t x, const uint8_t y){
             case 4: return '3';
             case 5: return '2';
             case 6: return '1';
-            default: break;
+            default: __builtin_unreachable();
         }
 
         case 1: switch(x){
@@ -62,7 +60,7 @@ static constexpr char map_place_to_char(const uint8_t x, const uint8_t y){
             case 4: return '6';
             case 5: return '5';
             case 6: return '4';
-            default: break;
+            default: __builtin_unreachable();
         }
 
         case 2: switch(x){
@@ -73,11 +71,11 @@ static constexpr char map_place_to_char(const uint8_t x, const uint8_t y){
             case 4: return '9';
             case 5: return '8';
             case 6: return '7';
-            default: break;
+            default: __builtin_unreachable();
         } 
-        default: break;
+        default: __builtin_unreachable();
     }
-    return 0;
+    __builtin_unreachable();
 }
 
 static constexpr KeyCode map_wasd_to_arrow(const char chr){
@@ -120,7 +118,7 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    KeyBoardComponent(
+    explicit KeyBoardComponent(
         HT16K33 & inst):
         inst_(inst)
     {;}
@@ -497,7 +495,7 @@ static void HT16K33_tb(HT16K33 & ht16){
         // display_segcode(5, SegCode::_5);
         // display_segcode(6, SegCode::_6);
 
-        auto display_str = [&](const StringView& str) {
+        auto display_str = [&](const StringView str) {
             for(size_t i = 0; i < str.size(); i++){
                 display_segcode(i, hid::SegCode::from_char(str[i]).examine());
             }

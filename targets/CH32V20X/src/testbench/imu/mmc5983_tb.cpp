@@ -26,7 +26,7 @@ using namespace ymd::drivers;
 #define SCL_GPIO hal::PB<3>()
 #define SDA_GPIO hal::PB<5>()
 static constexpr uint FS = 100;
-static constexpr auto INV_FS = (1.0_q24 / FS);
+static constexpr auto INV_FS = (1.0_uq24 / FS);
 // #define MAG_ACTIVATED
 
 static void mmc5983_test(drivers::MMC5983 & imu){

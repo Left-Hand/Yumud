@@ -56,8 +56,8 @@ IResult<> MA730::set_zero_data(const uint16_t data){
 }
 
 
-IResult<> MA730::set_zero_angle(const Angle<q31> angle){
-    const auto data = uni_to_u16(static_cast<q16>(angle.to_turns()));
+IResult<> MA730::set_zero_angle(const Angle<uq32> angle){
+    const auto data = (angle.to_turns().as_bits() >> 16);
     return set_zero_data(data);
 }
 
@@ -80,7 +80,7 @@ IResult<> MA730::update(){
         if(unlikely(res.is_err())) return Err(res.unwrap_err());
         res.unwrap();
     });
-    lap_turns_ = u16_to_uni(data);
+    lap_turns_ = static_cast<uq32>(uq16::from_bits(data));
     return Ok();
 }
 
@@ -127,7 +127,7 @@ IResult<> MA730::set_mag_threshold(const MagThreshold low, const MagThreshold hi
     return write_reg(reg);
 }
 
-IResult<> MA730::set_direction(const ClockDirection direction){
+IResult<> MA730::set_direction(const RotateDirection direction){
     auto reg = RegCopy(regs_.direction_reg);
     reg.direction = direction == CCW;
     return write_reg(reg);

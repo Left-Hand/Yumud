@@ -7,18 +7,18 @@ namespace ymd::intp{
 
 class CubicInterpolation:public Interpolation{
 protected:
-    q16 _a;
-    q16 _b;
-    q16 _c;
-    q16 _d;
+    iq16 _a;
+    iq16 _b;
+    iq16 _c;
+    iq16 _d;
 public:
-    CubicInterpolation(const Vec2<q16> & ha,const Vec2<q16> & hb):
+    CubicInterpolation(const Vec2<iq16> & ha,const Vec2<iq16> & hb):
         _a(ha.x),_b(ha.y),_c(hb.x),_d(hb.y){
             // static constexpr double epsilon = 0.001;
-            // static constexpr q16 min_param_a = q16(0 + epsilon);
-            // static constexpr q16 max_param_a = q16(1 - epsilon);
-            // static constexpr q16 min_param_b = q16(0 + epsilon);
-            // static constexpr q16 max_param_b = q16(1 - epsilon);
+            // static constexpr iq16 min_param_a = iq16(0 + epsilon);
+            // static constexpr iq16 max_param_a = iq16(1 - epsilon);
+            // static constexpr iq16 min_param_b = iq16(0 + epsilon);
+            // static constexpr iq16 max_param_b = iq16(1 - epsilon);
             // a = CLAMP(a, min_param_a, max_param_a);
             // b = CLAMP(b, min_param_b, max_param_b);
     }
@@ -41,9 +41,9 @@ protected:
         return y;
     }
 public:
-    static q16 forward(const Vec2<q16> & a,const Vec2<q16> & b, const q16 x);
+    static iq16 forward(const Vec2<iq16> & a,const Vec2<iq16> & b, const iq16 x);
 
-    q16 forward(const q16 x) const override;
+    iq16 forward(const iq16 x) const override;
 };
 
 class NearCubicInterpolation : public CubicInterpolation{
@@ -80,8 +80,8 @@ protected:
     }
 protected:
 public:
-    static q16 forward(const Vec2<q16> & from,const Vec2<q16> & to, const q16 x);
-    q16 forward(const q16 x) const override;
+    static iq16 forward(const Vec2<iq16> & from,const Vec2<iq16> & to, const iq16 x);
+    iq16 forward(const iq16 x) const override;
 
 };
 

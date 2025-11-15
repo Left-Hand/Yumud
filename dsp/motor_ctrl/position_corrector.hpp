@@ -16,11 +16,13 @@ struct PositionCorrector{
         backward_cali_table_(cfg.backward_cali_table)
     {}
 
-    constexpr q16 correct_raw_position(const q16 raw_lap_position) const {
-        const auto corr1 = forward_cali_table_[raw_lap_position].to_inaccuracy();
-        const auto corr2 = backward_cali_table_[raw_lap_position].to_inaccuracy();
+    constexpr Angle<uq32> correct_raw_angle(const Angle<uq32> raw_angle) const {
+        const auto corr1 = forward_cali_table_[raw_angle].to_inaccuracy();
+        const auto corr2 = backward_cali_table_[raw_angle].to_inaccuracy();
 
-        return frac(raw_lap_position + ((corr1 + corr2) >> 1));
+        return Angle<uq32>::from_turns(
+            raw_angle.to_turns() + uq32::from_bits((corr1 + corr2).as_bits())
+        );
     }
 
     constexpr auto & forward(){

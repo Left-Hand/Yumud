@@ -29,19 +29,19 @@ using IResult = Result<T, Error>;
 
 
 IResult<> INA219::write_reg(const RegAddr addr, const uint16_t data){
-    if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, MSB);
+    if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, std::endian::big);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
 IResult<> INA219::read_reg(const RegAddr addr, uint16_t & data){
-    if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, MSB);
+    if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, std::endian::big);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
 IResult<> INA219::read_reg(const RegAddr addr, int16_t & data){
-    if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, MSB);
+    if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, std::endian::big);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
@@ -50,7 +50,7 @@ IResult<> INA219::read_burst(
     const RegAddr addr, 
     const std::span<uint16_t> pbuf
 ){
-    // return i2c_drv_.read_burst(uint8_t(addr), p_std::span(data, len), LSB);
+    // return i2c_drv_.read_burst(uint8_t(addr), p_std::span(data, len), std::endian::little);
     TODO();
     return Ok();
 }
@@ -74,7 +74,7 @@ IResult<> INA219::validate(){
 
     // return INA219_ASSERT(
     //     (chipIDReg == valid_chip_id and manufactureIDReg == valid_manu_id), 
-    //     "INA219 who am i failed", chipIDReg.as_val(), manufactureIDReg.as_val()
+    //     "INA219 who am i failed", chipIDReg.as_bits(), manufactureIDReg.as_bits()
     // );
     return Ok();
 }

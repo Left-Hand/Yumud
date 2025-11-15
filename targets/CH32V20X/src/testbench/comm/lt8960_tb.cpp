@@ -174,7 +174,7 @@ void lt8960_tb(){
         // if(!tx_ltr.is_pkt_ready().unwrap()) return;
         // std::array data = {uint8_t(uint8_t(64 + 64 * sin(clock::time() * 20))), uint8_t(0x34), uint8_t(0x56), uint8_t(0x78)};
         const auto t = clock::time();
-        const auto [s, c] = sincos(frac(t) * tau);
+        const auto [s, c] = sincos(iq16(frac(t)) * iq16(TAU));
         // auto [u, v, w] = SVM(s,c);
         // const auto payload = serialize_args_to_bytes(u, v, t);
         // auto copy_arr_to_span[](std::span<uint8_t> dest, const std::array<uint8_t, auto>& src){
@@ -193,18 +193,18 @@ void lt8960_tb(){
         led.toggle();
     };
     
-    // real_t mdur;
+    // iq16 mdur;
     [[maybe_unused]] auto rx_task = [&]{
         static std::array<uint8_t, 16> buf;
 
-        // const real_t mbegin = micros();
+        // const iq16 mbegin = micros();
         auto len = rx_ltr.receive_rf(buf).unwrap();
         auto data = std::span(buf).subspan(0, len);
         if(len){
             // auto mend = micros();
-            // auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const uint8_t>(buf));
-            // auto [u, v, w] = make_tuple_from_bytes<std::tuple<real_t, real_t, real_t>>(std::span<const uint8_t>(buf));
-            // auto [u] = make_tuple_from_bytes<std::tuple<real_t>>(std::span<const uint8_t>(data));
+            // auto [u, v, w] = make_tuple_from_bytes<std::tuple<iq16, iq16, iq16>>(std::span<const uint8_t>(buf));
+            // auto [u, v, w] = make_tuple_from_bytes<std::tuple<iq16, iq16, iq16>>(std::span<const uint8_t>(buf));
+            // auto [u] = make_tuple_from_bytes<std::tuple<iq16>>(std::span<const uint8_t>(data));
             auto may_res = make_tuple_from_payload<real_t, real_t>(std::span<const uint8_t>(data));
             // DEBUG_PRINTLN(u, v, w, clock::time() - tt);
             // DEBUG_PRINTLN(u, v, clock::time() - w, mend -  mbegin);

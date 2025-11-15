@@ -345,7 +345,7 @@ IResult<> LT8920::init(){
     if(const auto res = set_rf_channel(0);
         res.is_err()) return res;
 
-    fifo_ptr_reg = 0;
+    fifo_ptr_reg.as_mut_bits() = 0;
 
     // clock::delay(5ms);
     // setBrclkSel(BrclkSel::Mhz12);
@@ -440,7 +440,7 @@ IResult<> LT8920::set_sync_word(const uint64_t syncword){
         sync_word_regs[i].data = words[i];
         if(const auto res = write_reg(
                 sync_word_regs[i].head_address + i, 
-                (sync_word_regs[i].as_val()));
+                (sync_word_regs[i].as_bits()));
             res.is_err()) return res;
     }
 
@@ -485,7 +485,7 @@ IResult<> LT8920::read_fifo(std::span<uint8_t> pbuf){
 
 IResult<> LT8920::update_fifo_status(){
     if(spi_drv_){
-        // return spi_drv_->transceive_single(flag_reg.as_ref(), flag_reg.address);
+        // return spi_drv_->transceive_single(flag_reg.as_mut_bits(), flag_reg.address);
         TODO();
     } else if(i2c_drv_){
         if(const auto res = read_reg(flag_reg);

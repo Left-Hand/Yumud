@@ -14,13 +14,13 @@ public:
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] IResult<Angle<q31>> read_lap_angle(){
-        return Ok(Angle<q31>::from_turns(lap_turns_));
+    [[nodiscard]] IResult<Angle<uq32>> read_lap_angle(){
+        return Ok(Angle<uq32>::from_turns(lap_turns_));
     }
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> set_zero_angle(const Angle<q31> angle);
+    [[nodiscard]] IResult<> set_zero_angle(const Angle<uq32> angle);
 
     [[nodiscard]] IResult<> set_trim_x(const real_t k);
 
@@ -30,7 +30,7 @@ public:
 
     [[nodiscard]] IResult<> set_mag_threshold(const MagThreshold low, const MagThreshold high);
 
-    [[nodiscard]] IResult<> set_direction(const ClockDirection direction);
+    [[nodiscard]] IResult<> set_direction(const RotateDirection direction);
 
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 
@@ -41,7 +41,7 @@ public:
 private:
 
     Phy phy_;
-    real_t lap_turns_ = 0;
+    uq32 lap_turns_ = 0;
 
     [[nodiscard]]
     IResult<> write_reg(const RegAddr addr, uint8_t data);

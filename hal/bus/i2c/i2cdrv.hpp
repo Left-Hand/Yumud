@@ -35,25 +35,25 @@ private:
         const valid_i2c_regaddr auto addr, 
         const valid_i2c_data auto data, 
         const size_t len, 
-        const Endian endian){
+        const std::endian endian){
             return write_template(addr, endian, [&]() -> HalResult{return this->write_homo_payload(data, len, endian);});
         }
 
     HalResult write_burst_impl(
         const valid_i2c_regaddr auto addr, 
         std::span<const valid_i2c_data auto> pbuf, 
-        const Endian endian){
+        const std::endian endian){
             return write_template(addr, endian, [&]() -> HalResult{return this->write_payload(pbuf, endian);});}
 
     HalResult read_burst_impl(
         const valid_i2c_regaddr auto addr, 
         std::span<valid_i2c_data auto> pbuf,
-        const Endian endian){
+        const std::endian endian){
             return read_template(addr, endian, [&]() -> HalResult{return this->read_payload(pbuf, endian);});}
 
     template<typename T, typename... Ts>    //TODO 改写为Y组合子
     __fast_inline
-    HalResult write_payloads(Endian endian, const std::span<std::add_const_t<T>> first, std::span<std::add_const_t<Ts>>... rest) {
+    HalResult write_payloads(std::endian endian, const std::span<std::add_const_t<T>> first, std::span<std::add_const_t<Ts>>... rest) {
         if constexpr (sizeof...(Ts) == 0) return HalResult::Ok();
         else{HalResult res = write_payload(first, endian);
             return res.is_err() ? res : write_payloads<Ts...>(endian, rest...);}
@@ -61,14 +61,14 @@ private:
 
     template<typename T, typename... Ts>   //TODO 改写为Y组合子
     __fast_inline
-    HalResult read_payloads(Endian endian, const std::span<std::remove_const_t<T>> first, std::span<std::remove_const_t<Ts>>... rest) {
+    HalResult read_payloads(std::endian endian, const std::span<std::remove_const_t<T>> first, std::span<std::remove_const_t<Ts>>... rest) {
         if constexpr (sizeof...(Ts) == 0) return HalResult::Ok();
         else{HalResult res = read_payload(first, endian);
             return res.is_err() ? res : read_payloads<Ts...>(endian, rest...);}
     }
 
     template<valid_i2c_data T>
-    HalResult write_payload(const std::span<const T> pbuf,const Endian endian){
+    HalResult write_payload(const std::span<const T> pbuf,const std::endian endian){
         return iterate_bytes(
             pbuf, endian, 
             [&](const uint8_t byte, const bool is_end) -> HalResult{ return i2c_.write(uint32_t(byte)); },
@@ -78,7 +78,7 @@ private:
     }
 
     template<valid_i2c_data Tfirst, valid_i2c_data ... Trest>
-    HalResult operate_payloads(const std::span<Tfirst> pfirst, const std::span<Trest>... prest, const Endian endian){
+    HalResult operate_payloads(const std::span<Tfirst> pfirst, const std::span<Trest>... prest, const std::endian endian){
         if constexpr(std::is_const_v<Tfirst>) {
             if(const auto res = this->write_payload(pfirst, endian); 
                 res.is_err()) return res;
@@ -92,7 +92,7 @@ private:
 
     }
     
-    HalResult write_homo_payload(const valid_i2c_data auto data, const size_t len, const Endian endian){
+    HalResult write_homo_payload(const valid_i2c_data auto data, const size_t len, const std::endian endian){
         return iterate_bytes(
             data, len, endian, 
             [&](const uint8_t byte, const bool is_end) -> HalResult{ return i2c_.write(uint32_t(byte)); },
@@ -103,7 +103,7 @@ private:
     
     HalResult read_payload(
         const std::span<valid_i2c_data auto> pbuf,
-        const Endian endian
+        const std::endian endian
     ){
         return iterate_bytes(
             pbuf, endian, 
@@ -118,7 +118,7 @@ private:
     template<typename Fn>
     HalResult write_template(
         const valid_i2c_regaddr auto addr,
-        const Endian endian,
+        const std::endian endian,
         Fn && fn
     ){
         const auto guard = i2c_.create_guard();
@@ -130,7 +130,7 @@ private:
     template<typename Fn>
     HalResult read_template(
         const valid_i2c_regaddr auto addr,
-        const Endian endian,
+        const std::endian endian,
         Fn && fn
     ){
         return write_template(addr, endian, [&]() -> HalResult{
@@ -148,7 +148,7 @@ public:
     HalResult write_burst(
         const valid_i2c_regaddr auto addr, 
         const std::span<const T> pbuf,
-        const Endian endian = LSB
+        const std::endian endian = std::endian::little
     ){
         return write_burst_impl(addr, pbuf, endian);
     }
@@ -159,7 +159,7 @@ public:
     HalResult write_burst(
         const valid_i2c_regaddr auto addr, 
         const std::span<const T> pbuf,
-        const Endian endian
+        const std::endian endian
     ){
         return write_burst_impl(addr, pbuf, endian);
     }
@@ -170,7 +170,7 @@ public:
     HalResult read_burst(
         const valid_i2c_regaddr auto addr,
         const std::span<T> pbuf,
-        const Endian endian = LSB
+        const std::endian endian = std::endian::little
     ){
         return this->read_burst_impl(addr, pbuf, endian);
 
@@ -182,7 +182,7 @@ public:
     HalResult read_burst(
         const valid_i2c_regaddr auto addr,
         const std::span<T> pbuf,
-        const Endian endian
+        const std::endian endian
     ){
         return this->read_burst_impl(addr, pbuf, endian);
     }
@@ -192,7 +192,7 @@ public:
     HalResult write_blocks(
         const valid_i2c_regaddr auto addr, 
         const std::span<std::add_const_t<Ts>> ... args,
-        const Endian endian
+        const std::endian endian
     ){
         return write_template(addr, endian, [&]() -> HalResult{
             if constexpr(sizeof...(args)) return this->write_payloads<Ts...>(endian, args...);
@@ -205,7 +205,7 @@ public:
     HalResult read_blocks(
         const valid_i2c_regaddr auto addr, 
         const std::span<std::remove_const_t<Ts>> ... args,
-        const Endian endian
+        const std::endian endian
     ){
         return read_template(addr, endian, [&]() -> HalResult{
             if constexpr(sizeof...(args)) return this->read_payloads<Ts...>(endian, args...);
@@ -218,7 +218,7 @@ public:
     HalResult operate_blocks(
         const valid_i2c_regaddr auto addr, 
         const std::span<Trest> ... rest,
-        const Endian endian
+        const std::endian endian
     ){
         return read_template(addr, endian, [&]() -> HalResult{
             if constexpr(sizeof...(Trest)) return this->operate_payloads<Trest...>(rest..., endian);
@@ -233,7 +233,7 @@ public:
         const valid_i2c_regaddr auto addr,
         const T data, 
         const size_t len, 
-        const Endian endian
+        const std::endian endian
     ){
         return write_repeat_impl(addr, data, len, endian);
     }
@@ -245,7 +245,7 @@ public:
         const valid_i2c_regaddr auto addr, 
         const T data, 
         const size_t len,
-        const Endian endian = LSB
+        const std::endian endian = std::endian::little
     ){
         return write_repeat_impl(addr, data, len, endian);
     }
@@ -257,7 +257,7 @@ public:
     HalResult write_reg(
         const valid_i2c_regaddr auto addr, 
         const T data, 
-        const Endian endian
+        const std::endian endian
     ){
         return this->write_burst_impl(addr, std::span(&data, 1), endian);
     }
@@ -268,7 +268,7 @@ public:
     HalResult write_reg(
         const valid_i2c_regaddr auto addr, 
         const T & data,
-        const Endian endian = LSB
+        const std::endian endian = std::endian::little
     ){
         return this->write_burst_impl(addr, std::span(&data, 1), endian);
     }
@@ -279,7 +279,7 @@ public:
     HalResult read_reg(
         const valid_i2c_regaddr auto addr,
         T & data, 
-        Endian endian
+        std::endian endian
     ){
         return this->read_burst_impl(addr, std::span(&data, 1), endian);
     }
@@ -290,7 +290,7 @@ public:
     HalResult read_reg(
         const valid_i2c_regaddr auto addr,
         T & data,
-        const Endian endian = LSB
+        const std::endian endian = std::endian::little
     ){
         return this->read_burst_impl(addr, std::span(&data, 1), endian);
     }

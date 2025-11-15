@@ -229,7 +229,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
 
         uint16_t :5;
 
-        uint16_t & as_ref(){
+        uint16_t & as_mut_bits(){
             return *reinterpret_cast<uint16_t*>(this);
         }
 
@@ -255,7 +255,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
 
         uint16_t :5;
 
-        uint16_t & as_ref(){
+        uint16_t & as_mut_bits(){
             return *reinterpret_cast<uint16_t*>(this);
         }
 

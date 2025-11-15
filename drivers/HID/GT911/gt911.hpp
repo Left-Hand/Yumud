@@ -47,14 +47,14 @@ private:
     IResult<> clear_status();
 
     IResult<> write_reg(const uint16_t addr, const uint8_t val){
-        if(const auto res = i2c_drv_.write_reg(addr, val, MSB);
+        if(const auto res = i2c_drv_.write_reg(addr, val, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
 
         return Ok();
     };
 
     IResult<> read_reg(const uint16_t addr, const std::span<uint8_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(addr, pbuf, MSB);
+        if(const auto res = i2c_drv_.read_burst(addr, pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     };

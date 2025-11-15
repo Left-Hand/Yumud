@@ -14,7 +14,7 @@
 
 #define CHECK_ERR(e, ...) ({\
     const auto && __err_check_err = (e);\
-    PANIC{e.unwrap(), ##__VA_ARGS__};\
+    PANIC{e.get(), ##__VA_ARGS__};\
     __err_check_err;\
 })\
 
@@ -221,20 +221,20 @@ IResult<>  ICM42688::validate(){
 	return Ok();
 }
 
-IResult<Vec3<q24>> ICM42688::read_acc(){
-    return Ok{Vec3<q24>{
-		acc_scale_ * q24(q16(regs_.acc_data_.x) >> 16), 
-		acc_scale_ * q24(q16(regs_.acc_data_.y) >> 16), 
-		acc_scale_ * q24(q16(regs_.acc_data_.z) >> 16), 
+IResult<Vec3<iq24>> ICM42688::read_acc(){
+    return Ok{Vec3<iq24>{
+		acc_scale_ * iq24(iq16(regs_.acc_data_.x) >> 16), 
+		acc_scale_ * iq24(iq16(regs_.acc_data_.y) >> 16), 
+		acc_scale_ * iq24(iq16(regs_.acc_data_.z) >> 16), 
 	}};
 }
 
 
-IResult<Vec3<q24>> ICM42688::read_gyr(){
+IResult<Vec3<iq24>> ICM42688::read_gyr(){
 
-    return Ok{Vec3<q24>{
-		gyr_scale_ * q24(q16(regs_.gyr_data_.x) >> 16),
-		gyr_scale_ * q24(q16(regs_.gyr_data_.y) >> 16),
-		gyr_scale_ * q24(q16(regs_.gyr_data_.z) >> 16)
+    return Ok{Vec3<iq24>{
+		gyr_scale_ * iq24(iq16(regs_.gyr_data_.x) >> 16),
+		gyr_scale_ * iq24(iq16(regs_.gyr_data_.y) >> 16),
+		gyr_scale_ * iq24(iq16(regs_.gyr_data_.z) >> 16)
 	}};
 }

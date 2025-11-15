@@ -11,46 +11,46 @@ public:
 public:
 
     struct Coeff{
-        q16 osg_b0;
-        q16 osg_b2;
-        q16 osg_a1;
-        q16 osg_a2;
-        q16 osg_qb0;
-        q16 osg_qb1;
-        q16 osg_qb2;
-        q16 b1;
-        q16 b0;
+        iq16 osg_b0;
+        iq16 osg_b2;
+        iq16 osg_a1;
+        iq16 osg_a2;
+        iq16 osg_qb0;
+        iq16 osg_qb1;
+        iq16 osg_qb2;
+        iq16 b1;
+        iq16 b0;
     };
 
     struct Config{
         uint32_t fs;
-        q16 ac_freq; 
-        q16 b0_lpf ;
-        q16 b1_lpf ;
+        iq16 ac_freq; 
+        iq16 b0_lpf ;
+        iq16 b1_lpf ;
 
         constexpr Coeff to_coeff() const {
             const auto fn = ac_freq;
-            const auto delta_t_x256=(q16(256)/fs);
+            const auto delta_t_x256=(iq16(256)/fs);
 
-            const q16 delta_t = delta_t_x256 >> 8;
-            const q16 wn= fn *q16(TAU);
+            const iq16 delta_t = delta_t_x256 >> 8;
+            const iq16 wn= fn *iq16(TAU);
 
-            const q16 osgx_x256 = (q16)(wn*delta_t_x256);
-            const q16 osgx = (q16)(wn*delta_t);
+            const iq16 osgx_x256 = (iq16)(wn*delta_t_x256);
+            const iq16 osgx = (iq16)(wn*delta_t);
             
-            const q16 osgy_x256 = (q16)(wn * delta_t_x256 * wn * delta_t);
-            const q16 osgy = (q16)(wn * delta_t * wn * delta_t);
+            const iq16 osgy_x256 = (iq16)(wn * delta_t_x256 * wn * delta_t);
+            const iq16 osgy = (iq16)(wn * delta_t * wn * delta_t);
 
-            const q16 temp = (q16)(256) / (osgx_x256 + osgy_x256 + 4 * 256);
+            const iq16 temp = (iq16)(256) / (osgx_x256 + osgy_x256 + 4 * 256);
 
-            const auto osg_b0=((q16)osgx*temp);
-            const auto osg_qb0=((q16)(q16(0.5f) * osgy) * temp);
+            const auto osg_b0=((iq16)osgx*temp);
+            const auto osg_qb0=((iq16)(iq16(0.5f) * osgy) * temp);
             return Coeff{
-                .osg_b0=((q16)osgx*temp),
-                .osg_b2=((q16)(-1)*osg_b0),
-                .osg_a1=((q16)(2 * (4-osgy))*temp),
-                .osg_a2=((q16)(osgx-osgy-4)*temp),
-                .osg_qb0=((q16)(q16(0.5f) * osgy) * temp),
+                .osg_b0=((iq16)osgx*temp),
+                .osg_b2=((iq16)(-1)*osg_b0),
+                .osg_a1=((iq16)(2 * (4-osgy))*temp),
+                .osg_a2=((iq16)(osgx-osgy-4)*temp),
+                .osg_qb0=((iq16)(iq16(0.5f) * osgy) * temp),
                 .osg_qb1=(osg_qb0 * 2),
                 .osg_qb2=osg_qb0,
                 .b1 = b1_lpf,
@@ -68,7 +68,7 @@ public:
         coeff_(cfg.to_coeff())
     {
         this->fn=cfg.ac_freq;
-        this->dt_=(q16(256)/cfg.fs);
+        this->dt_=(iq16(256)/cfg.fs);
         reset();
     }
 
@@ -102,8 +102,8 @@ public:
         cosine=0;
     }
 
-    constexpr void update(const q16 u0){
-        // SPLL_1PH_SOGI_run(&spll1,(q16)u0);
+    constexpr void update(const iq16 u0){
+        // SPLL_1PH_SOGI_run(&spll1,(iq16)u0);
         // Update the u[0] with the grid value
         u[0] = u0;
 
@@ -154,37 +154,37 @@ public:
         cosine = cos_val;
     }
 
-    q16 freq() const{return this->fo;}
+    iq16 freq() const{return this->fo;}
 
-    Angle<q16> angle() const{return Angle<q16>::from_turns(static_cast<q16>(turns_));}
+    Angle<iq16> angle() const{return Angle<iq16>::from_turns(static_cast<iq16>(turns_));}
 
-    q16 ud() const{return this->u_D[0];}
+    iq16 ud() const{return this->u_D[0];}
 
-    q16 uq() const{return this->u_Q[0];}
+    iq16 uq() const{return this->u_Q[0];}
 
 
 private:
     // SPLL_1PH_SOGI spll1;
 
-    static constexpr q16 default_ac_freq = 50.0_r;
-    static constexpr q16 default_b0_lpf = 222.2862_r;
-    static constexpr q16 default_b1_lpf = -222.034_r;
+    static constexpr iq16 default_ac_freq = 50.0_r;
+    static constexpr iq16 default_b0_lpf = 222.2862_r;
+    static constexpr iq16 default_b1_lpf = -222.034_r;
     // static constexpr int volt_scale_bits = 0;
 
 
     Coeff coeff_;
-    q16   u[3] = {0,0,0};       // AC input data buffer
-    q16   osg_u[3] = {0,0,0};   // Orthogonal signal generator data buffer
-    q16   osg_qu[3] = {0,0,0};  // Orthogonal signal generator quadrature data buffer
-    q16   u_Q[2] = {0,0};     // Q-axis component
-    q16   u_D[2] = {0,0};     // D-axis component
-    q16   ylf[2] = {0,0};     // Loop filter data storage
-    q16   fn = 0;         // Nominal frequency (Hz)
-    q24   dt_ = {0};    // Inverse of the ISR rate at which module is called
-    q16   fo = {0};         // Output frequency of PLL(Hz)
-    q24   turns_ = {0};      // turns output (0-1)
-    q16   cosine = {0};     // Cosine value of the PLL angle
-    q16   sine = {0};       // Sine value of the PLL angle
+    iq16   u[3] = {0,0,0};       // AC input data buffer
+    iq16   osg_u[3] = {0,0,0};   // Orthogonal signal generator data buffer
+    iq16   osg_qu[3] = {0,0,0};  // Orthogonal signal generator quadrature data buffer
+    iq16   u_Q[2] = {0,0};     // Q-axis component
+    iq16   u_D[2] = {0,0};     // D-axis component
+    iq16   ylf[2] = {0,0};     // Loop filter data storage
+    iq16   fn = 0;         // Nominal frequency (Hz)
+    iq24   dt_ = {0};    // Inverse of the ISR rate at which module is called
+    iq16   fo = {0};         // Output frequency of PLL(Hz)
+    iq24   turns_ = {0};      // turns output (0-1)
+    iq16   cosine = {0};     // Cosine value of the PLL angle
+    iq16   sine = {0};       // Sine value of the PLL angle
 };
 
 }

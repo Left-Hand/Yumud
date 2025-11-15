@@ -24,8 +24,8 @@ public:
     [[nodiscard]] IResult<> init() ;
 
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Angle<q31>> read_lap_angle() {
-        return Ok(Angle<q31>::from_turns(lap_turns_));
+    [[nodiscard]] IResult<Angle<uq32>> read_lap_angle() {
+        return Ok(Angle<uq32>::from_turns(lap_turns_));
     }
 private:
     using Regs = AS5047_Regs;
@@ -33,7 +33,7 @@ private:
     hal::SpiDrv spi_drv_;
     Regs regs_ = {};
 
-    real_t lap_turns_ = 0;
+    uq32 lap_turns_ = 0;
 
     uint16_t get_position_data();
 

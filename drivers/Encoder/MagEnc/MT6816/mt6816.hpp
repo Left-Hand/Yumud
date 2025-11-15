@@ -37,7 +37,7 @@ public:
     IResult<> reconf(const Config & cfg);
     IResult<> update();
 
-    IResult<Angle<q31>> read_lap_angle() { 
+    IResult<Angle<uq32>> read_lap_angle() { 
         return last_packet_.parse();
     }
 
@@ -55,15 +55,15 @@ private:
         uint16_t no_mag:1;
         uint16_t data_14bit:14;
 
-        [[nodiscard]] IResult<Angle<q31>> parse() const {
+        [[nodiscard]] IResult<Angle<uq32>> parse() const {
             if(not is_pc_valid()) [[unlikely]]
                 return Err(EncoderError::InvalidPc);
             
             if(no_mag) [[unlikely]]
                 return Err(EncoderError::MagnetLost);
 
-            const auto turns = q14::from_bits(data_14bit);
-            return Ok(Angle<q31>::from_turns(turns));
+            const auto turns = static_cast<uq32>(uq14::from_bits(data_14bit));
+            return Ok(Angle<uq32>::from_turns(turns));
         }
 
         [[nodiscard]] bool is_pc_valid() const {

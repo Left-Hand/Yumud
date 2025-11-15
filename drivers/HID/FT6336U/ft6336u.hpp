@@ -81,7 +81,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        return write_reg(T::ADDRESS, reg.as_val());
+        return write_reg(T::ADDRESS, reg.as_bits());
     }
 
     [[nodiscard]] IResult<uint8_t> read_reg(const uint8_t addr);
@@ -90,7 +90,7 @@ private:
     [[nodiscard]] IResult<> read_reg(T & reg){
         const auto res = read_reg(T::ADDRESS);
         if(res.is_err()) return Err(res.unwrap_err());
-        reg.as_ref() = res.unwrap();
+        reg.as_mut_bits() = res.unwrap();
         return Ok();
     }
 
@@ -108,7 +108,7 @@ private:
     }
 
     [[nodiscard]] IResult<> read_burst_u12(const uint8_t addr, std::span<uint16_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(addr, pbuf, MSB);
+        if(const auto res = i2c_drv_.read_burst(addr, pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         for(auto & item : pbuf){
             item = item & 0x0fff;

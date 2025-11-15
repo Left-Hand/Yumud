@@ -13,21 +13,50 @@ using Error = Self::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
+
+#define VL53L5CX_DEBUG_EN 1
+
+#if VL53L5CX_DEBUG_EN == 1
+#define VL53L5CX_TODO(...) TODO()
+#define VL53L5CX_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define VL53L5CX_PANIC(...) PANIC{__VA_ARGS__}
+#define VL53L5CX_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+
+
+#define CHECK_RES(x, ...) ({\
+    const auto __res_check_res = (x);\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
+    __res_check_res;\
+})\
+
+
+#define CHECK_ERR(x, ...) ({\
+    const auto && __err_check_err = (x);\
+    ASSERT{false, #x, ##__VA_ARGS__};\
+    __err_check_err;\
+})\
+
+#else
+#define VL53L5CX_DEBUG(...)
+#define VL53L5CX_TODO(...) PANIC_NSRC()
+#define VL53L5CX_PANIC(...)  PANIC_NSRC()
+#define VL53L5CX_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
+#define CHECK_RES(x, ...) (x)
+#define CHECK_ERR(x, ...) (x)
+#endif
+
+
+
+
 static constexpr uint8_t VL53L5CX_STATUS_ERROR = 255U;
 static constexpr uint16_t VL53L5CX_DCI_CAL_CFG				= ((uint16_t)0x5470U);
 static constexpr uint16_t VL53L5CX_DCI_XTALK_CFG				= ((uint16_t)0xAD94U);
 
-// /* Address of default configuration buffer */
-// const uint8_t		        *VL53L5CX_DEFAULT_CONFIGURATION = 
-// 	vl53l5cx_details::VL53L5CX_DEFAULT_CONFIGURATION;
-// /* Address of default Xtalk buffer */
-// const uint8_t		        *VL53L5CX_DEFAULT_XTALK = 
-// 	vl53l5cx_details::VL53L5CX_DEFAULT_XTALK;
-
-template<typename T>
-requires std::is_pointer_v<T>
-static T ptr_cast(auto * obj){
-	return reinterpret_cast<T>(obj);
+template<typename P>
+requires std::is_pointer_v<P>
+static P ptr_cast(auto * obj){
+	return reinterpret_cast<P>(obj);
 }
 
 template<typename E, typename T>
@@ -36,306 +65,83 @@ static constexpr IResult<E> try_into_enum(T obj){
 	return Ok(std::bit_cast<E>(obj));
 }
 
-static const uint8_t VL53L5CX_GET_XTALK_CMD[] = {
-	0x54, 0x00, 0x00, 0x40,
-	0x9F, 0xD8, 0x00, 0xC0,
-	0x9F, 0xE4, 0x01, 0x40,
-	0x9F, 0xF8, 0x00, 0x40,
-	0x9F, 0xFC, 0x04, 0x04,
-	0xA0, 0xFC, 0x01, 0x00,
-	0xA1, 0x0C, 0x01, 0x00,
-	0xA1, 0x1C, 0x00, 0xC0,
-	0xA1, 0x28, 0x09, 0x02,
-	0xA2, 0x48, 0x00, 0x40,
-	0xA2, 0x4C, 0x00, 0x81,
-	0xA2, 0x54, 0x00, 0x81,
-	0xA2, 0x5C, 0x00, 0x81,
-	0xA2, 0x64, 0x00, 0x81,
-	0xA2, 0x6C, 0x00, 0x84,
-	0xA2, 0x8C, 0x00, 0x82,
-	0x00, 0x00, 0x00, 0x0F,
-	0x07, 0x02, 0x00, 0x44
-};
-
-/**
- * @brief Command used to get run Xtalk calibration
- */
-
-static const uint8_t VL53L5CX_CALIBRATE_XTALK[] = {
-	0x54, 0x50, 0x00, 0x80,
-	0x00, 0x04, 0x08, 0x08,
-	0x00, 0x00, 0x04, 0x04,
-	0xAD, 0x30, 0x00, 0x80,
-	0x03, 0x01, 0x06, 0x03,
-	0x00, 0x00, 0x01, 0x00,
-	0xAD, 0x38, 0x01, 0x00,
-	0x01, 0xE0, 0x01, 0x40,
-	0x00, 0x10, 0x00, 0x10,
-	0x01, 0x00, 0x01, 0x00,
-	0x00, 0x00, 0x00, 0x01,
-	0x54, 0x58, 0x00, 0x40,
-	0x04, 0x1A, 0x02, 0x00,
-	0x54, 0x5C, 0x01, 0x40,
-	0x00, 0x01, 0x00, 0x51,
-	0x00, 0x00, 0x0F, 0xA0,
-	0x0F, 0xA0, 0x03, 0xE8,
-	0x02, 0x80, 0x1F, 0x40,
-	0x00, 0x00, 0x05, 0x00,
-	0x54, 0x70, 0x00, 0x80,
-	0x03, 0x20, 0x03, 0x20,
-	0x00, 0x00, 0x00, 0x08,
-	0x54, 0x78, 0x01, 0x00,
-	0x01, 0x1B, 0x00, 0x21,
-	0x00, 0x33, 0x00, 0x00,
-	0x02, 0x00, 0x00, 0x01,
-	0x04, 0x01, 0x08, VL53L5CX_Prelude::VL53L5CX_FW_NBTAR_XTALK,
-	0x54, 0x88, 0x01, 0x40,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x08, 0x00,
-	0xAD, 0x48, 0x01, 0x00,
-	0x01, 0xF4, 0x00, 0x00,
-	0x03, 0x06, 0x00, 0x10,
-	0x08, 0x08, 0x08, 0x08,
-	0x00, 0x00, 0x00, 0x08,
-	0xAD, 0x60, 0x01, 0x00,
-	0x00, 0x00, 0x00, 0x80,
-	0x00, 0x00, 0x00, 0x00,
-	0x20, 0x1F, 0x01, 0xF4,
-	0x00, 0x00, 0x1D, 0x0A,
-	0xAD, 0x70, 0x00, 0x80,
-	0x08, 0x00, 0x1F, 0x40,
-	0x00, 0x00, 0x00, 0x01,
-	0xAD, 0x78, 0x00, 0x80,
-	0x00, 0xA0, 0x03, 0x20,
-	0x00, 0x01, 0x01, 0x90,
-	0xAD, 0x80, 0x00, 0x40,
-	0x00, 0x00, 0x28, 0x00,
-	0xAD, 0x84, 0x00, 0x80,
-	0x00, 0x00, 0x32, 0x00,
-	0x03, 0x20, 0x00, 0x00,
-	0xAD, 0x8C, 0x00, 0x80,
-	0x02, 0x58, 0xFF, 0x38,
-	0x00, 0x00, 0x00, 0x0C,
-	0xAD, 0x94, 0x01, 0x00,
-	0x00, 0x01, 0x90, 0x00,
-	0xFF, 0xFF, 0xFC, 0x00,
-	0x00, 0x00, 0x04, 0x00,
-	0x00, 0x00, 0x01, 0x00,
-	0xAD, 0xA4, 0x00, 0xC0,
-	0x04, 0x80, 0x06, 0x1A,
-	0x00, 0x80, 0x05, 0x80,
-	0x00, 0x00, 0x01, 0x06,
-	0xAD, 0xB0, 0x00, 0xC0,
-	0x04, 0x80, 0x06, 0x1A,
-	0x19, 0x00, 0x05, 0x80,
-	0x00, 0x00, 0x01, 0x90,
-	0xAD, 0xBC, 0x04, 0x40,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x12, 0x00, 0x25,
-	0x00, 0x00, 0x00, 0x06,
-	0x00, 0x00, 0x00, 0x05,
-	0x00, 0x00, 0x00, 0x05,
-	0x00, 0x00, 0x00, 0x06,
-	0x00, 0x00, 0x00, 0x04,
-	0x00, 0x00, 0x00, 0x0F,
-	0x00, 0x00, 0x00, 0x5A,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x09,
-	0x0B, 0x0C, 0x0B, 0x0B,
-	0x03, 0x03, 0x11, 0x05,
-	0x01, 0x01, 0x01, 0x01,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x0D, 0x00, 0x00,
-	0xAE, 0x00, 0x01, 0x04,
-	0x00, 0x00, 0x00, 0x04,
-	0x00, 0x00, 0x00, 0x08,
-	0x00, 0x00, 0x00, 0x0A,
-	0x00, 0x00, 0x00, 0x0C,
-	0x00, 0x00, 0x00, 0x0D,
-	0x00, 0x00, 0x00, 0x0E,
-	0x00, 0x00, 0x00, 0x08,
-	0x00, 0x00, 0x00, 0x08,
-	0x00, 0x00, 0x00, 0x10,
-	0x00, 0x00, 0x00, 0x10,
-	0x00, 0x00, 0x00, 0x20,
-	0x00, 0x00, 0x00, 0x20,
-	0x00, 0x00, 0x00, 0x06,
-	0x00, 0x00, 0x05, 0x0A,
-	0x02, 0x00, 0x0C, 0x08,
-	0x00, 0x00, 0x00, 0x00,
-	0xAE, 0x40, 0x00, 0x40,
-	0x00, 0x00, 0x00, 0xFF,
-	0xAE, 0x44, 0x00, 0x40,
-	0x00, 0x10, 0x04, 0x01,
-	0xAE, 0x48, 0x00, 0x40,
-	0x00, 0x00, 0x10, 0x00,
-	0xAE, 0x4C, 0x00, 0x40,
-	0x00, 0x00, 0x00, 0x01,
-	0xAE, 0x50, 0x01, 0x40,
-	0x00, 0x00, 0x00, 0x14,
-	0x04, 0x00, 0x28, 0x00,
-	0x03, 0x20, 0x6C, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xAE, 0x64, 0x00, 0x40,
-	0x00, 0x00, 0x00, 0x01,
-	0xAE, 0xD8, 0x01, 0x00,
-	0x00, 0xC8, 0x05, 0xDC,
-	0x00, 0x00, 0x0C, 0xCD,
-	0x01, 0x04, 0x00, 0x00,
-	0x00, 0x01, 0x26, 0x01,
-	0xB5, 0x50, 0x02, 0x82,
-	0xA3, 0xE8, 0xA3, 0xB8,
-	0xA4, 0x38, 0xA4, 0x28,
-	0xA6, 0x48, 0xA4, 0x48,
-	0xA7, 0x88, 0xA7, 0x48,
-	0xAC, 0x10, 0xA7, 0x90,
-	0x99, 0xBC, 0x99, 0xB4,
-	0x9A, 0xFC, 0x9A, 0xBC,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xB5, 0xA0, 0x02, 0x82,
-	0x00, 0x88, 0x03, 0x00,
-	0x00, 0x82, 0x00, 0x82,
-	0x04, 0x04, 0x04, 0x08,
-	0x00, 0x80, 0x04, 0x01,
-	0x09, 0x02, 0x09, 0x08,
-	0x04, 0x04, 0x00, 0x80,
-	0x04, 0x01, 0x04, 0x01,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xB5, 0xF0, 0x00, 0x40,
-	0x00, 0x04, 0x00, 0x00,
-	0xB3, 0x9C, 0x01, 0x00,
-	0x40, 0x00, 0x05, 0x1E,
-	0x02, 0x1B, 0x08, 0x7C,
-	0x80, 0x01, 0x12, 0x01,
-	0x00, 0x00, 0x08, 0x00,
-	0xB6, 0xC0, 0x00, 0xC0,
-	0x00, 0x00, 0x60, 0x00,
-	0x00, 0x00, 0x20, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xAE, 0xA8, 0x00, 0x40,
-	0x00, 0x00, 0x04, 0x05,
-	0xAE, 0xAC, 0x00, 0x80,
-	0x01, 0x00, 0x01, 0x00,
-	0x00, 0x02, 0x00, 0x00,
-	0xAE, 0xB4, 0x00, 0x40,
-	0x00, 0x00, 0x00, 0x00,
-	0xAE, 0xB8, 0x00, 0x81,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xAE, 0xC0, 0x00, 0x81,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xAE, 0xC8, 0x00, 0x81,
-	0x08, 0x01, 0x01, 0x08,
-	0x00, 0x00, 0x00, 0x08,
-	0xAE, 0xD0, 0x00, 0x81,
-	0x01, 0x08, 0x08, 0x08,
-	0x00, 0x00, 0x00, 0x01,
-	0xB5, 0xF4, 0x00, 0x80,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xB5, 0xFC, 0x00, 0x80,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xB6, 0x04, 0x00, 0x40,
-	0x00, 0x00, 0x00, 0x00,
-	0xB6, 0x08, 0x00, 0x44,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xB6, 0x18, 0x00, 0x44,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xB6, 0x28, 0x00, 0x44,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xB6, 0x38, 0x00, 0x44,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xB6, 0x48, 0x01, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xB6, 0x58, 0x01, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xB6, 0x68, 0x01, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x54, 0x70, 0x00, 0x80,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x02,
-	0x00, 0x00, 0x00, 0x0F,
-	0x00, 0x01, 0x03, 0xD4
-};
 
 
 
-void SwapBuffer(uint8_t *buffer, uint16_t size)
+static void SwapBuffer(uint8_t *buffer, uint16_t size)
 {
-    uint32_t tmp;
-    /* Example of possible implementation using <string.h> */
-    for(uint32_t i = 0; i < size; i = i + 4) {
-        tmp = (
-                buffer[i]<<24)
-            |(buffer[i+1]<<16)
-            |(buffer[i+2]<<8)
-            |(buffer[i+3]);
-
-        memcpy(&(buffer[i]), &tmp, 4);
+	VL53L5CX_ASSERT(size % 4 == 0);
+    for(size_t i = 0; i < size_t(size); i = i + 4) {
+		std::swap(buffer[i], buffer[i+3]);
+		std::swap(buffer[i + 1], buffer[i + 2]);
     }
 }
 
-#if 1
+// 简化版本，避免复杂的索引计算
+static void simple_swap_and_copy(__restrict uint8_t* dest, __restrict const uint8_t* src, uint16_t size) {
+    // 每4字节一组进行字节序反转
+	VL53L5CX_ASSERT(size % 4 == 0);
+    for(uint16_t group = 0; group < size; group += 4) {
+        dest[group + 4] = src[group + 3];  // 字节0 ← 字节3
+        dest[group + 5] = src[group + 2];  // 字节1 ← 字节2  
+        dest[group + 6] = src[group + 1];  // 字节2 ← 字节1
+        dest[group + 7] = src[group + 0];  // 字节3 ← 字节0
+    }
+}
+
+
+
+[[nodiscard]] static constexpr uint8_t percentage_to_bits(const Percentage<uint8_t> percentage){
+	return percentage.percents() * 255 / 100;
+}
+
+[[nodiscard]] static constexpr Percentage<uint8_t> bits_to_percentage(const uint8_t bits){
+	return Percentage<uint8_t>::from_percents_unchecked(bits * 100 / 255);
+}
+
+static constexpr uint8_t pipe_ctrl[] = {Self::VL53L5CX_NB_TARGET_PER_ZONE, 0x00, 0x01, 0x00};
+
+
+IResult<> Self::validate(){
+	uint8_t device_id, revision_id;
+
+	static constexpr uint8_t CORRECT_DEVICE_ID = 0xf0;
+	static constexpr uint8_t CORRECT_REVISION_ID = 0x02;
+
+	if(const auto res = write_byte(0x7fff, 0x00);
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+	// VL53L5CX_PANIC("first_ok");
+	if(const auto res = read_byte(0, &device_id);
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+	if(const auto res = read_byte(1, &revision_id);
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+	if(const auto res = write_byte(0x7fff, 0x02);
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
+
+	// VL53L5CX_DEBUG("device_id:", std::hex, device_id);
+	// VL53L5CX_DEBUG("revision_id:", std::hex, revision_id);
+	if(device_id != CORRECT_DEVICE_ID)
+		return CHECK_ERR(Err(Error::InvalidDeviceId), "invalid device id:", 
+			std::showbase, std::hex, device_id);
+		
+	if(revision_id != CORRECT_REVISION_ID)
+		return CHECK_ERR(Err(Error::InvalidRevisionId), "invalid revision id:", 
+			std::showbase, std::hex, revision_id);
+		
+	// VL53L5CX_DEBUG("validate ok");
+
+    return Ok();
+}
 
 IResult<> Self::init(){
+	// auto & self = *this;
+
 	uint8_t tmp;
-	static constexpr uint8_t pipe_ctrl[] = {VL53L5CX_NB_TARGET_PER_ZONE, 0x00, 0x01, 0x00};
 	uint32_t single_range = 0x01;
 
 	if(const auto res = validate();
 		res.is_err()) return Err(res.unwrap_err());
+
 	/* SW reboot sequence */
 	if(const auto res = write_byte(0x7fff, 0x00); 
 		res.is_err()) return Err(res.unwrap_err());
@@ -449,6 +255,7 @@ IResult<> Self::init(){
 	if(const auto res = write_byte(0x20, 0x06); 
 		res.is_err()) return Err(res.unwrap_err());
 
+	#if 1
 	/* Download FW into VL53L5 */
 	if(const auto res = write_byte(0x7fff, 0x09); 
 		res.is_err()) return Err(res.unwrap_err());
@@ -464,6 +271,7 @@ IResult<> Self::init(){
 		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x01); 
 		res.is_err()) return Err(res.unwrap_err());
+	#endif
 
 	/* Check if FW correctly downloaded */
 	if(const auto res = write_byte(0x7fff, 0x02); 
@@ -568,10 +376,10 @@ IResult<> Self::init(){
 
 IResult<> Self::poll_for_mcu_boot()
 {
-   uint8_t go2_status0, go2_status1;
-   uint16_t timeout = 0;
+	uint8_t go2_status0, go2_status1;
+	size_t timeout = 0;
 
-   do {
+	do {
 		if(const auto res = read_byte(0x06, &go2_status0);
 			res.is_err()) return Err(res.unwrap_err());
 		if((go2_status0 & (uint8_t)0x80) != (uint8_t)0){
@@ -579,16 +387,16 @@ IResult<> Self::poll_for_mcu_boot()
 				res.is_err()) return Err(res.unwrap_err());
 			return Err(map_status_to_error(go2_status1));
 		}
-        clock::delay(1ms);
+		clock::delay(1ms);
 		timeout++;
 
 		if((go2_status0 & (uint8_t)0x1) != (uint8_t)0){
 			break;
 		}
 
-	}while (timeout < (uint16_t)500);
+	}while (timeout < (size_t)500);
 
-   return Ok();
+	return Ok();
 }
 
 /**
@@ -602,7 +410,6 @@ IResult<> Self::send_offset_data(Resolution resolution)
 	int16_t range_grid[64];
 	static constexpr uint8_t dss_4x4[] = {0x0F, 0x04, 0x04, 0x00, 0x08, 0x10, 0x10, 0x07};
 	static constexpr uint8_t footer[] = {0x00, 0x00, 0x00, 0x0F, 0x03, 0x01, 0x01, 0xE4};
-	uint16_t k;
 
 	(void)memcpy(temp_buffer,
 		offset_data, VL53L5CX_OFFSET_BUFFER_SIZE);
@@ -616,16 +423,14 @@ IResult<> Self::send_offset_data(Resolution resolution)
 		(void)memcpy(range_grid,&(temp_buffer[0x140]),
 			sizeof(range_grid));
 
-		for (size_t j = 0; j < 4; j++)
-		{
-			for (size_t i = 0; i < 4 ; i++)
-			{
+		for (size_t j = 0; j < 4; j++){
+			for (size_t i = 0; i < 4 ; i++){
 				signal_grid[i+(4*j)] =
 				(signal_grid[(2*i)+(16*j)+ (int8_t)0]
 				+ signal_grid[(2*i)+(16*j)+(int8_t)1]
 				+ signal_grid[(2*i)+(16*j)+(int8_t)8]
 				+ signal_grid[(2*i)+(16*j)+(int8_t)9])
-								/(uint32_t)4;
+								/4;
 				range_grid[i+(4*j)] =
 				(range_grid[(2*i)+(16*j)]
 				+ range_grid[(2*i)+(16*j)+1]
@@ -636,15 +441,14 @@ IResult<> Self::send_offset_data(Resolution resolution)
 		}
 		(void)memset(&range_grid[0x10], 0, (uint16_t)96);
 		(void)memset(&signal_grid[0x10], 0, (uint16_t)192);
-            (void)memcpy(&(temp_buffer[0x3C]),
-		signal_grid, sizeof(signal_grid));
-            (void)memcpy(&(temp_buffer[0x140]),
-		range_grid, sizeof(range_grid));
-            SwapBuffer(temp_buffer, VL53L5CX_OFFSET_BUFFER_SIZE);
+		(void)memcpy(&(temp_buffer[0x3C]),
+			signal_grid, sizeof(signal_grid));
+		(void)memcpy(&(temp_buffer[0x140]),
+			range_grid, sizeof(range_grid));
+		SwapBuffer(temp_buffer, VL53L5CX_OFFSET_BUFFER_SIZE);
 	}
 
-	for(k = 0; k < (VL53L5CX_OFFSET_BUFFER_SIZE - (uint16_t)4); k++)
-	{
+	for(size_t k = 0; k < size_t(VL53L5CX_OFFSET_BUFFER_SIZE - 4); k++){
 		temp_buffer[k] = temp_buffer[k + (uint16_t)8];
 	}
 
@@ -693,7 +497,7 @@ IResult<> Self::send_xtalk_data(Resolution resolution){
 				(signal_grid[(2*i)+(16*j)+0]
 				+ signal_grid[(2*i)+(16*j)+1]
 				+ signal_grid[(2*i)+(16*j)+8]
-				+ signal_grid[(2*i)+(16*j)+9])/(uint32_t)4;
+				+ signal_grid[(2*i)+(16*j)+9])/4;
 			}
 		}
 		(void)memset(&signal_grid[0x10], 0, (uint32_t)192);
@@ -703,7 +507,7 @@ IResult<> Self::send_xtalk_data(Resolution resolution){
 		(void)memcpy(&(temp_buffer[0x134]),
 		profile_4x4, sizeof(profile_4x4));
 		(void)memset(&(temp_buffer[0x078]),0 ,
-			(uint32_t)4*sizeof(uint8_t));
+			4*sizeof(uint8_t));
 	}
 
 	if(const auto res = write_burst(0x2cf8,
@@ -716,28 +520,7 @@ IResult<> Self::send_xtalk_data(Resolution resolution){
     return Ok();
 }
 
-IResult<> Self::validate(){
-	uint8_t device_id, revision_id;
 
-	static constexpr uint8_t CORRECT_DEVICE_ID = 0xf0;
-	static constexpr uint8_t CORRECT_REVISION_ID = 0x02;
-
-	if(const auto res = write_byte(0x7fff, 0x00);
-		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = read_byte(0, &device_id);
-		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = read_byte(1, &revision_id);
-		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = write_byte(0x7fff, 0x02);
-		res.is_err()) return Err(res.unwrap_err());
-
-	if(device_id != CORRECT_DEVICE_ID)
-		return Err(Error::InvalidDeviceId);
-
-	if(revision_id != CORRECT_REVISION_ID)
-		return Err(Error::InvalidRevisionId);
-    return Ok();
-}
 
 
 IResult<> Self::set_i2c_address(hal::I2cSlaveAddr<7> i2c_addr){
@@ -822,13 +605,13 @@ IResult<> Self::set_power_mode(PowerMode power_mode)
 IResult<> Self::start_ranging()
 {
 	uint16_t tmp;
-	uint32_t header_config[2] = {0, 0};
 
-	uint8_t cmd[] = {0x00, 0x03, 0x00, 0x00};
+
+	auto cmd = std::to_array<uint8_t>({0x00, 0x03, 0x00, 0x00});
 
 	const auto resolution = ({
 		const auto res = get_resolution();
-		if(res.is_err()) return Err(res.unwrap_err());
+		if(res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 		res.unwrap();
 	});
 	
@@ -838,31 +621,31 @@ IResult<> Self::start_ranging()
 	/* Enable mandatory output (meta and common data) */
 	static constexpr uint32_t output_bh_enable[] = {
 		0x00000007U
-		#ifndef VL53L5CX_DISABLE_AMBIENT_PER_SPAD
+		#ifndef DEF_VL53L5CX_DISABLE_AMBIENT_PER_SPAD
 			| (uint32_t)8
 		#endif
-		#ifndef VL53L5CX_DISABLE_NB_SPADS_ENABLED
+		#ifndef DEF_VL53L5CX_DISABLE_NB_SPADS_ENABLED
 			| (uint32_t)16
 		#endif
-		#ifndef VL53L5CX_DISABLE_NB_TARGET_DETECTED
+		#ifndef DEF_VL53L5CX_DISABLE_NB_TARGET_DETECTED
 			| (uint32_t)32
 		#endif
-		#ifndef VL53L5CX_DISABLE_SIGNAL_PER_SPAD
+		#ifndef DEF_VL53L5CX_DISABLE_SIGNAL_PER_SPAD
 			| (uint32_t)64
 		#endif
-		#ifndef VL53L5CX_DISABLE_RANGE_SIGMA_MM
+		#ifndef DEF_VL53L5CX_DISABLE_RANGE_SIGMA_MM
 			| (uint32_t)128
 		#endif
-		#ifndef VL53L5CX_DISABLE_DISTANCE_MM
+		#ifndef DEF_VL53L5CX_DISABLE_DISTANCE_MM
 			| (uint32_t)256
 		#endif
-		#ifndef VL53L5CX_DISABLE_REFLECTANCE_PERCENT
+		#ifndef DEF_VL53L5CX_DISABLE_REFLECTANCE_PERCENT
 			| (uint32_t)512
 		#endif
-		#ifndef VL53L5CX_DISABLE_TARGET_STATUS
+		#ifndef DEF_VL53L5CX_DISABLE_TARGET_STATUS
 			| (uint32_t)1024
 		#endif
-		#ifndef VL53L5CX_DISABLE_MOTION_INDICATOR
+		#ifndef DEF_VL53L5CX_DISABLE_MOTION_INDICATOR
 			| (uint32_t)2048
 		#endif
 		
@@ -872,102 +655,103 @@ IResult<> Self::start_ranging()
 		0xC0000000U
 	};
 
-	/* Send addresses of possible output */
-	static constexpr uint32_t output[] ={
-		VL53L5CX_START_BH,
-		VL53L5CX_METADATA_BH,
-		VL53L5CX_COMMONDATA_BH,
-		VL53L5CX_AMBIENT_RATE_BH,
-		VL53L5CX_SPAD_COUNT_BH,
-		VL53L5CX_NB_TARGET_DETECTED_BH,
-		VL53L5CX_SIGNAL_RATE_BH,
-		VL53L5CX_RANGE_SIGMA_MM_BH,
-		VL53L5CX_DISTANCE_BH,
-		VL53L5CX_REFLECTANCE_BH,
-		VL53L5CX_TARGET_STATUS_BH,
-		VL53L5CX_MOTION_DETECT_BH};
-
-	/* Enable selected outputs in the 'platform.h' file */
+	// 需要移除constexpr或使用mutable副本，因为后面要修改
+	auto output = std::to_array<BlockHeader>({
+		std::bit_cast<BlockHeader>(VL53L5CX_START_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_METADATA_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_COMMONDATA_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_AMBIENT_RATE_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_SPAD_COUNT_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_NB_TARGET_DETECTED_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_SIGNAL_RATE_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_RANGE_SIGMA_MM_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_DISTANCE_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_REFLECTANCE_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_TARGET_STATUS_BH),
+		std::bit_cast<BlockHeader>(VL53L5CX_MOTION_DETECT_BH)
+	});
 
 	data_read_size_ = 0;
+
 	/* Update data size */
-	for (uint32_t i = 0; i < (uint32_t)(sizeof(output)/sizeof(uint32_t)); i++)
+	for (size_t i = 0; i < output.size(); i++)
 	{
-		if ((output[i] == (uint8_t)0) 
+		// 注意：这里比较的是原始的uint32_t值，不是BlockHeader字段
+		if ((std::bit_cast<uint32_t>(output[i]) == 0) 
 			|| ((output_bh_enable[i/(uint32_t)32]
 			&((uint32_t)1 << (i%(uint32_t)32))) == (uint32_t)0))
 		{
 			continue;
 		}
 
-		auto bh = std::bit_cast<Block_header>(output[i]);
+		auto& bh = output[i];  // 直接引用，修改会影响数组
 		if (((uint8_t)bh.type >= (uint8_t)0x1) 
-                    && ((uint8_t)bh.type < (uint8_t)0x0d))
-		{
+			&& ((uint8_t)bh.type < (uint8_t)0x0d)){
+
 			if ((bh.idx >= (uint16_t)0x54d0) 
-                            && (bh.idx < (uint16_t)(0x54d0 + 960)))
-			{
-				bh.size = static_cast<uint8_t>(resolution);
-			}
-			else
-			{
-				bh.size = (uint8_t)(static_cast<uint8_t>(resolution) * (uint8_t)VL53L5CX_NB_TARGET_PER_ZONE);
+				&& (bh.idx < (uint16_t)(0x54d0 + 960))){
+				bh.size = std::bit_cast<uint8_t>(resolution);
+			}else{
+				bh.size = (uint8_t)(
+					std::bit_cast<uint8_t>(resolution) * (uint8_t)VL53L5CX_NB_TARGET_PER_ZONE);
 			}
 			data_read_size_ += bh.type * bh.size;
-		}
-		else
-		{
+		}else{
 			data_read_size_ += bh.size;
 		}
-		data_read_size_ += (uint32_t)4;
+		data_read_size_ += 4;
 	}
-	data_read_size_ += (uint32_t)20;
+	data_read_size_ += 20;
 
+	// 写入修改后的mutable_output数组
 	if(const auto res = dci_write_data(
-		ptr_cast<const uint8_t *>(&(output)), VL53L5CX_DCI_OUTPUT_LIST,
+		ptr_cast<const uint8_t *>(output.data()), 
+		VL53L5CX_DCI_OUTPUT_LIST,
 		(uint16_t)sizeof(output));
-		res.is_err()) return Err(res.unwrap_err());
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
-	header_config[0] = data_read_size_;
-	header_config[1] = (uint32_t)(sizeof(output)/sizeof(uint32_t)) + (uint32_t)1;
+	const uint32_t header_config[2] = {
+		data_read_size_,
+		output.size() + 1  // 使用实际有效数量
+	};
 
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&(header_config)), VL53L5CX_DCI_OUTPUT_CONFIG,
 		(uint16_t)sizeof(header_config));
-		res.is_err()) return Err(res.unwrap_err());
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&(output_bh_enable)), VL53L5CX_DCI_OUTPUT_ENABLES,
 		(uint16_t)sizeof(output_bh_enable));
-		res.is_err()) return Err(res.unwrap_err());
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/* Start xshut bypass (interrupt mode) */
 	if(const auto res = write_byte(0x7fff, 0x00);
-		res.is_err()) return Err(res.unwrap_err());
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	if(const auto res = write_byte(0x09, 0x05);
-		res.is_err()) return Err(res.unwrap_err());
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 	if(const auto res = write_byte(0x7fff, 0x02);
-		res.is_err()) return Err(res.unwrap_err());
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/* Start ranging session */
 	if(const auto res = write_burst(
 		VL53L5CX_UI_CMD_END - (uint16_t)(4 - 1), 
-		cmd, sizeof(cmd));
-		res.is_err()) return Err(res.unwrap_err());
+		cmd.data(), sizeof(cmd));
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	if(const auto res = poll_for_answer(4, 1, 
 		VL53L5CX_UI_CMD_STATUS, 0xff, 0x03);
-		res.is_err()) return Err(res.unwrap_err());
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	/* Read ui range data content and compare if data size is the correct one */
 	if(const auto res = dci_read_data(
 		temp_buffer, 0x5440, 12);
-		res.is_err()) return Err(res.unwrap_err());
+		res.is_err()) return CHECK_ERR(Err(res.unwrap_err()));
 
 	(void)memcpy(&tmp, &(temp_buffer[0x8]), sizeof(tmp));
 
 	if(tmp != data_read_size_){
-		return Err(Error::Status);
+		return CHECK_ERR(Err(Error::Status), tmp, "is not", data_read_size_);
 	}
 
     return Ok();
@@ -1040,6 +824,8 @@ IResult<> Self::stop_ranging()
 }
 
 IResult<bool> Self::is_data_ready(){
+	// https://community.st.com/t5/imaging-sensors/vl53l5cx-check-data-ready-returns-c5-go2-error/td-p/86510
+
 	if(const auto res = read_burst(0x0, temp_buffer, 4);
 		res.is_err()) return Err(res.unwrap_err());
 
@@ -1054,14 +840,16 @@ IResult<bool> Self::is_data_ready(){
 		return Ok(true);
 	}else{
         if ((temp_buffer[3] & (uint8_t)0x80) != (uint8_t)0){
-        	return Err(map_status_to_error(temp_buffer[2]));	/* Return GO2 error status */
+			const auto bits = temp_buffer[2];
+			return CHECK_ERR(Err(map_status_to_error(bits)), 
+				std::hex, std::showbase, bits);	/* Return GO2 error status */
         }
 
 		return Ok(false);
 	}
 }
 
-IResult<> Self::get_ranging_data(
+IResult<> Self::reflash_ranging_data(
 		VL53L5CX_Frame		*p_results)
 {
 	size_t msize;
@@ -1073,8 +861,8 @@ IResult<> Self::get_ranging_data(
 	SwapBuffer(temp_buffer, (uint16_t)data_read_size_);
 
 	/* Start conversion at position 16 to avoid headers */
-	for (size_t i = (uint32_t)16; i < (uint32_t)data_read_size_; i+=(uint32_t)4){
-		Block_header & bh = *reinterpret_cast<Block_header *>(temp_buffer + i);
+	for (size_t i = (uint32_t)16; i < (uint32_t)data_read_size_; i+=4){
+		BlockHeader & bh = *reinterpret_cast<BlockHeader *>(&temp_buffer[i]);
 		if ((bh.type > (uint32_t)0x1) 
                     && (bh.type < (uint32_t)0xd)){
 			msize = bh.type * bh.size;
@@ -1088,58 +876,58 @@ IResult<> Self::get_ranging_data(
 						(int8_t)temp_buffer[i + (uint32_t)12];
 				break;
 
-#ifndef VL53L5CX_DISABLE_AMBIENT_PER_SPAD
+#ifndef DEF_VL53L5CX_DISABLE_AMBIENT_PER_SPAD
 			case VL53L5CX_AMBIENT_RATE_IDX:
 				(void)memcpy(p_results->ambient_per_spad,
-				&(temp_buffer[i + (uint32_t)4]), msize);
+				&(temp_buffer[i + 4]), msize);
 				break;
 #endif
-#ifndef VL53L5CX_DISABLE_NB_SPADS_ENABLED
+#ifndef DEF_VL53L5CX_DISABLE_NB_SPADS_ENABLED
 			case VL53L5CX_SPAD_COUNT_IDX:
 				(void)memcpy(p_results->nb_spads_enabled,
-				&(temp_buffer[i + (uint32_t)4]), msize);
+				&(temp_buffer[i + 4]), msize);
 				break;
 #endif
-#ifndef VL53L5CX_DISABLE_NB_TARGET_DETECTED
+#ifndef DEF_VL53L5CX_DISABLE_NB_TARGET_DETECTED
 			case VL53L5CX_NB_TARGET_DETECTED_IDX:
 				(void)memcpy(p_results->nb_target_detected,
-				&(temp_buffer[i + (uint32_t)4]), msize);
+				&(temp_buffer[i + 4]), msize);
 				break;
 #endif
-#ifndef VL53L5CX_DISABLE_SIGNAL_PER_SPAD
+#ifndef DEF_VL53L5CX_DISABLE_SIGNAL_PER_SPAD
 			case VL53L5CX_SIGNAL_RATE_IDX:
 				(void)memcpy(p_results->signal_per_spad,
-				&(temp_buffer[i + (uint32_t)4]), msize);
+				&(temp_buffer[i + 4]), msize);
 				break;
 #endif
-#ifndef VL53L5CX_DISABLE_RANGE_SIGMA_MM
+#ifndef DEF_VL53L5CX_DISABLE_RANGE_SIGMA_MM
 			case VL53L5CX_RANGE_SIGMA_MM_IDX:
 				(void)memcpy(p_results->range_sigma_mm,
-				&(temp_buffer[i + (uint32_t)4]), msize);
+				&(temp_buffer[i + 4]), msize);
 				break;
 #endif
-#ifndef VL53L5CX_DISABLE_DISTANCE_MM
+#ifndef DEF_VL53L5CX_DISABLE_DISTANCE_MM
 			case VL53L5CX_DISTANCE_IDX:
 				(void)memcpy(p_results->distance_mm,
-				&(temp_buffer[i + (uint32_t)4]), msize);
+				&(temp_buffer[i + 4]), msize);
 				break;
 #endif
-#ifndef VL53L5CX_DISABLE_REFLECTANCE_PERCENT
+#ifndef DEF_VL53L5CX_DISABLE_REFLECTANCE_PERCENT
 			case VL53L5CX_REFLECTANCE_EST_PC_IDX:
 				(void)memcpy(p_results->reflectance,
-				&(temp_buffer[i + (uint32_t)4]), msize);
+				&(temp_buffer[i + 4]), msize);
 				break;
 #endif
-#ifndef VL53L5CX_DISABLE_TARGET_STATUS
+#ifndef DEF_VL53L5CX_DISABLE_TARGET_STATUS
 			case VL53L5CX_TARGET_STATUS_IDX:
 				(void)memcpy(p_results->target_status,
-				&(temp_buffer[i + (uint32_t)4]), msize);
+				&(temp_buffer[i + 4]), msize);
 				break;
 #endif
-#ifndef VL53L5CX_DISABLE_MOTION_INDICATOR
+#ifndef DEF_VL53L5CX_DISABLE_MOTION_INDICATOR
 			case VL53L5CX_MOTION_DETEC_IDX:
 				(void)memcpy(&p_results->motion_indicator,
-				&(temp_buffer[i + (uint32_t)4]), msize);
+				&(temp_buffer[i + 4]), msize);
 				break;
 #endif
 			default:
@@ -1151,7 +939,7 @@ IResult<> Self::get_ranging_data(
 #ifndef VL53L5CX_USE_RAW_FORMAT
 
 	/* Convert data into their real format */
-#ifndef VL53L5CX_DISABLE_AMBIENT_PER_SPAD
+#ifndef DEF_VL53L5CX_DISABLE_AMBIENT_PER_SPAD
 	for(uint32_t i = 0; i < (uint32_t)VL53L5CX_RESOLUTION_8X8; i++)
 	{
 		p_results->ambient_per_spad[i] /= (uint32_t)2048;
@@ -1161,33 +949,33 @@ IResult<> Self::get_ranging_data(
 	for(uint32_t i = 0; i < (uint32_t)(VL53L5CX_RESOLUTION_8X8
 			*VL53L5CX_NB_TARGET_PER_ZONE); i++)
 	{
-#ifndef VL53L5CX_DISABLE_DISTANCE_MM
+#ifndef DEF_VL53L5CX_DISABLE_DISTANCE_MM
 		p_results->distance_mm[i] /= 4;
 		if(p_results->distance_mm[i] < 0)
 		{
 			p_results->distance_mm[i] = 0;
 		}
 #endif
-#ifndef VL53L5CX_DISABLE_REFLECTANCE_PERCENT
+#ifndef DEF_VL53L5CX_DISABLE_REFLECTANCE_PERCENT
 		p_results->reflectance[i] /= (uint8_t)2;
 #endif
-#ifndef VL53L5CX_DISABLE_RANGE_SIGMA_MM
+#ifndef DEF_VL53L5CX_DISABLE_RANGE_SIGMA_MM
 		p_results->range_sigma_mm[i] /= (uint16_t)128;
 #endif
-#ifndef VL53L5CX_DISABLE_SIGNAL_PER_SPAD
+#ifndef DEF_VL53L5CX_DISABLE_SIGNAL_PER_SPAD
 		p_results->signal_per_spad[i] /= (uint32_t)2048;
 #endif
 	}
 
 	/* Set target status to 255 if no target is detected for this zone */
-#ifndef VL53L5CX_DISABLE_NB_TARGET_DETECTED
+#ifndef DEF_VL53L5CX_DISABLE_NB_TARGET_DETECTED
 	for(uint32_t i = 0; i < (uint32_t)VL53L5CX_RESOLUTION_8X8; i++)
 	{
 		if(p_results->nb_target_detected[i] == (uint8_t)0){
 			for(uint32_t j = 0; j < (uint32_t)
 				VL53L5CX_NB_TARGET_PER_ZONE; j++)
 			{
-#ifndef VL53L5CX_DISABLE_TARGET_STATUS
+#ifndef DEF_VL53L5CX_DISABLE_TARGET_STATUS
 				p_results->target_status
 				[((uint32_t)VL53L5CX_NB_TARGET_PER_ZONE
 					*(uint32_t)i) + j]=(uint8_t)255;
@@ -1197,7 +985,7 @@ IResult<> Self::get_ranging_data(
 	}
 #endif
 
-#ifndef VL53L5CX_DISABLE_MOTION_INDICATOR
+#ifndef DEF_VL53L5CX_DISABLE_MOTION_INDICATOR
 	for(uint32_t i = 0; i < (uint32_t)32; i++)
 	{
 		p_results->motion_indicator.motion[i] /= (uint32_t)65535;
@@ -1214,7 +1002,9 @@ IResult<Self::Resolution> Self::get_resolution()
 	if(const auto res = dci_read_data(temp_buffer,
 		VL53L5CX_DCI_ZONE_CONFIG, 8);
 		res.is_err()) return Err(res.unwrap_err());
-	return Ok(std::bit_cast<Resolution>(uint8_t(temp_buffer[0x00]*temp_buffer[0x01])));
+
+	const uint8_t bits = uint8_t(temp_buffer[0x00]*temp_buffer[0x01]);
+	return Ok(std::bit_cast<Resolution>(bits));
 }
 
 
@@ -1223,67 +1013,67 @@ IResult<> Self::set_resolution(Resolution resolution)
 {
 
 	switch(resolution){
-		case Resolution::_4x4:
-			if(const auto res = dci_read_data(
-				temp_buffer,
-				VL53L5CX_DCI_DSS_CONFIG, 16);
-				res.is_err()) return Err(res.unwrap_err());
-			temp_buffer[0x04] = 64;
-			temp_buffer[0x06] = 64;
-			temp_buffer[0x09] = 4;
-			if(const auto res = dci_write_data(
-				temp_buffer,
-				VL53L5CX_DCI_DSS_CONFIG, 16);
-				res.is_err()) return Err(res.unwrap_err());
+	case Resolution::_4x4:
+		if(const auto res = dci_read_data(
+			temp_buffer,
+			VL53L5CX_DCI_DSS_CONFIG, 16);
+			res.is_err()) return Err(res.unwrap_err());
+		temp_buffer[0x04] = 64;
+		temp_buffer[0x06] = 64;
+		temp_buffer[0x09] = 4;
+		if(const auto res = dci_write_data(
+			temp_buffer,
+			VL53L5CX_DCI_DSS_CONFIG, 16);
+			res.is_err()) return Err(res.unwrap_err());
 
-			if(const auto res = dci_read_data(
-				temp_buffer,
-				VL53L5CX_DCI_ZONE_CONFIG, 8);
-				res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = dci_read_data(
+			temp_buffer,
+			VL53L5CX_DCI_ZONE_CONFIG, 8);
+			res.is_err()) return Err(res.unwrap_err());
 
-			temp_buffer[0x00] = 4;
-			temp_buffer[0x01] = 4;
-			temp_buffer[0x04] = 8;
-			temp_buffer[0x05] = 8;
-			if(const auto res = dci_write_data(
-				temp_buffer,
-				VL53L5CX_DCI_ZONE_CONFIG, 8);
-				res.is_err()) return Err(res.unwrap_err());
-			break;
+		temp_buffer[0x00] = 4;
+		temp_buffer[0x01] = 4;
+		temp_buffer[0x04] = 8;
+		temp_buffer[0x05] = 8;
+		if(const auto res = dci_write_data(
+			temp_buffer,
+			VL53L5CX_DCI_ZONE_CONFIG, 8);
+			res.is_err()) return Err(res.unwrap_err());
+		break;
 
-		case Resolution::_8x8:
-			if(const auto res = dci_read_data(
-				temp_buffer,
-				VL53L5CX_DCI_DSS_CONFIG, 16);
-				res.is_err()) return Err(res.unwrap_err());
-			temp_buffer[0x04] = 16;
-			temp_buffer[0x06] = 16;
-			temp_buffer[0x09] = 1;
-			if(const auto res = dci_write_data(
-				temp_buffer,
-				VL53L5CX_DCI_DSS_CONFIG, 16);
-				res.is_err()) return Err(res.unwrap_err());
+	case Resolution::_8x8:
+		if(const auto res = dci_read_data(
+			temp_buffer,
+			VL53L5CX_DCI_DSS_CONFIG, 16);
+			res.is_err()) return Err(res.unwrap_err());
+		temp_buffer[0x04] = 16;
+		temp_buffer[0x06] = 16;
+		temp_buffer[0x09] = 1;
+		if(const auto res = dci_write_data(
+			temp_buffer,
+			VL53L5CX_DCI_DSS_CONFIG, 16);
+			res.is_err()) return Err(res.unwrap_err());
 
-			if(const auto res = dci_read_data(
-				temp_buffer,
-				VL53L5CX_DCI_ZONE_CONFIG, 8);
-				res.is_err()) return Err(res.unwrap_err());
+		if(const auto res = dci_read_data(
+			temp_buffer,
+			VL53L5CX_DCI_ZONE_CONFIG, 8);
+			res.is_err()) return Err(res.unwrap_err());
 
-			temp_buffer[0x00] = 8;
-			temp_buffer[0x01] = 8;
-			temp_buffer[0x04] = 4;
-			temp_buffer[0x05] = 4;
-			if(const auto res = dci_write_data(
-				temp_buffer,
-				VL53L5CX_DCI_ZONE_CONFIG, 8);
-				res.is_err()) return Err(res.unwrap_err());
+		temp_buffer[0x00] = 8;
+		temp_buffer[0x01] = 8;
+		temp_buffer[0x04] = 4;
+		temp_buffer[0x05] = 4;
+		if(const auto res = dci_write_data(
+			temp_buffer,
+			VL53L5CX_DCI_ZONE_CONFIG, 8);
+			res.is_err()) return Err(res.unwrap_err());
 
-			break;
+		break;
 
-		default:
-			return Err(Error::InvalidParam);
-			break;
-		}
+	default:
+		return Err(Error::InvalidParam);
+		break;
+	}
 
 	if(const auto res = send_offset_data(resolution);
 		res.is_err()) return Err(res.unwrap_err());
@@ -1293,23 +1083,23 @@ IResult<> Self::set_resolution(Resolution resolution)
     return Ok();
 }
 
-IResult<> Self::get_ranging_frequency_hz(
-		uint8_t				*p_frequency_hz)
+IResult<uint8_t> Self::get_ranging_frequency_hz()
 {
 
 	if(const auto res = dci_read_data(temp_buffer,
 		VL53L5CX_DCI_FREQ_HZ, 4);
 		res.is_err()) return Err(res.unwrap_err());
 
-	*p_frequency_hz = temp_buffer[0x01];
+	const uint8_t bits = temp_buffer[0x01];
 
-    return Ok();
+    return Ok(bits);
 }
 
 IResult<> Self::set_ranging_frequency_hz(
 		uint8_t				frequency_hz)
 {
-
+	// * - For 4x4, min and max allowed values are : [1;60]
+	// * - For 8x8, min and max allowed values are : [1;15]
 	if(const auto res = dci_replace_data(temp_buffer,
 		VL53L5CX_DCI_FREQ_HZ, 4,
 		&frequency_hz, 1, 0x01);
@@ -1318,45 +1108,41 @@ IResult<> Self::set_ranging_frequency_hz(
     return Ok();
 }
 
-IResult<> Self::get_integration_time_ms(
-		uint32_t			*p_time_ms)
+IResult<uint32_t> Self::get_integration_time_ms()
 {
-
+	uint32_t bits = 0;
 	if(const auto res = dci_read_data(temp_buffer,
 		VL53L5CX_DCI_INT_TIME, 20);
 		res.is_err()) return Err(res.unwrap_err());
 
-	(void)memcpy(p_time_ms, &(temp_buffer[0x0]), 4);
-	*p_time_ms /= (uint32_t)1000;
+	(void)memcpy(&bits, &(temp_buffer[0x0]), 4);
+	const uint32_t p_time_ms = bits / (uint32_t)1000;
 
-    return Ok();
+    return Ok(p_time_ms);
 }
 
 IResult<> Self::set_integration_time_ms(
 		uint32_t			integration_time_ms)
 {
-        uint32_t integration = integration_time_ms;
 
 	/* Integration time must be between 2ms and 1000ms */
-	if((integration < (uint32_t)2)
-           || (integration > (uint32_t)1000))
+	if((integration_time_ms < (uint32_t)2)
+		|| (integration_time_ms > (uint32_t)1000))
 	{
 		return Err(Error::InvalidParam);
-	}else
-	{
-		integration *= (uint32_t)1000;
-
-		if(const auto res = dci_replace_data(temp_buffer,
-			VL53L5CX_DCI_INT_TIME, 20,
-			ptr_cast<uint8_t *>(&integration), 4, 0x00);
-			res.is_err()) return Err(res.unwrap_err());
 	}
+
+	const uint32_t bits = integration_time_ms * 1000u;
+
+	if(const auto res = dci_replace_data(temp_buffer,
+		VL53L5CX_DCI_INT_TIME, 20,
+		ptr_cast<const uint8_t *>(&bits), sizeof(bits), 0x00
+	); res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
-IResult<> Self::get_sharpener_percent(
-		uint8_t				*p_sharpener_percent)
+IResult<Percentage<uint8_t>> Self::get_sharpener_percent()
 {
 
 	if(const auto res = dci_read_data(
@@ -1365,29 +1151,18 @@ IResult<> Self::get_sharpener_percent(
 	);
 		res.is_err()) return Err(res.unwrap_err());
 
-	*p_sharpener_percent = (temp_buffer[0xD]
-                                *(uint8_t)100)/(uint8_t)255;
-
-    return Ok();
+	const uint8_t bits = temp_buffer[0xD];
+	return Ok(bits_to_percentage(bits));
 }
 
 IResult<> Self::set_sharpener_percent(
-		uint8_t				sharpener_percent)
-{
-        uint8_t sharpener;
-
-	if(sharpener_percent >= (uint8_t)100)
-	{
-		return Err(Error::InvalidParam);
-	}
-	else
-	{
-		sharpener = (sharpener_percent*(uint8_t)255)/(uint8_t)100;
-		if(const auto res = dci_replace_data(temp_buffer,
-			VL53L5CX_DCI_SHARPENER, 16,
-			&sharpener, 1, 0xD
-		);	res.is_err()) return Err(res.unwrap_err());
-	}
+	Percentage<uint8_t> sharpener_percent
+){
+	const uint8_t bits = percentage_to_bits(sharpener_percent);
+	if(const auto res = dci_replace_data(temp_buffer,
+		VL53L5CX_DCI_SHARPENER, 16,
+		&bits, sizeof(bits), 0xD
+	);	res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -1465,123 +1240,6 @@ IResult<> Self::set_ranging_mode(RangingMode ranging_mode){
 		ptr_cast<const uint8_t *>(&single_range),
 		VL53L5CX_DCI_SINGLE_RANGE, (uint16_t)sizeof(single_range)
 	);
-		res.is_err()) return Err(res.unwrap_err());
-
-    return Ok();
-}
-
-IResult<> Self::dci_read_data(
-		uint8_t				*data,
-		uint32_t			index,
-		uint16_t			data_size)
-{
-	const uint32_t rd_size = (uint32_t) data_size + (uint32_t)12;
-	/* Check if tmp buffer is large enough */
-	if((data_size + (uint16_t)12)>(uint16_t)VL53L5CX_TEMPORARY_BUFFER_SIZE){
-		return Err(Error::Status);
-	}
-
-	const uint8_t cmd[] = {
-
-		(uint8_t)(index >> 8),	
-		(uint8_t)(index & (uint32_t)0xff),			
-		(uint8_t)((data_size & (uint16_t)0xff0) >> 4),
-		(uint8_t)((data_size & (uint16_t)0xf) << 4),
-		0x00, 0x00, 0x00, 0x0f,
-		0x00, 0x02, 0x00, 0x08
-	};
-
-
-
-/* Request data reading from FW */
-	if(const auto res = write_burst(
-		(VL53L5CX_UI_CMD_END-(uint16_t)11),cmd, sizeof(cmd));
-		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = poll_for_answer(4, 1, 
-		VL53L5CX_UI_CMD_STATUS,
-		0xff, 0x03);
-		res.is_err()) return Err(res.unwrap_err());
-
-/* Read new data sent (4 bytes header + data_size + 8 bytes footer) */
-	if(const auto res = read_burst(VL53L5CX_UI_CMD_START,
-		temp_buffer, rd_size);
-		res.is_err()) return Err(res.unwrap_err());
-	SwapBuffer(temp_buffer, data_size + (uint16_t)12);
-
-/* Copy data from FW into input structure (-4 bytes to remove header) */
-	for(uint32_t i = 0 ; i < data_size;i++){
-		data[i] = temp_buffer[i + 4];
-	}
-
-    return Ok();
-}
-
-IResult<> Self::dci_write_data(
-		const uint8_t				*data,
-		uint32_t			index,
-		uint16_t			data_size)
-{
-
-	const uint8_t headers[] = {
-		(uint8_t)(index >> 8),
-		(uint8_t)(index & (uint32_t)0xff),
-		(uint8_t)(((data_size & (uint16_t)0xff0) >> 4)),
-		(uint8_t)((data_size & (uint16_t)0xf) << 4)
-	};
-
-	const uint8_t footer[] = {0x00, 0x00, 0x00, 0x0f, 0x05, 0x01,
-		(uint8_t)((data_size + (uint16_t)8) >> 8), 
-		(uint8_t)((data_size + (uint16_t)8) & (uint8_t)0xFF)
-	};
-
-	uint16_t address = (uint16_t)VL53L5CX_UI_CMD_END - 
-		(data_size + (uint16_t)12) + (uint16_t)1;
-
-	/* Check if cmd buffer is large enough */
-	if((data_size + (uint16_t)12) 
-		> (uint16_t)VL53L5CX_TEMPORARY_BUFFER_SIZE
-	)	return Err(Error::Status);
-
-
-
-/* Copy data from structure to FW format (+4 bytes to add header) */
-	for(uint16_t i = 0; i < data_size; i++)
-	{
-		const auto idx = (i / 4) + (4 - (i % 4));
-		temp_buffer[i + 4] = data[idx];
-	}
-
-	/* Add headers and footer */
-	(void)memcpy(&temp_buffer[0], headers, sizeof(headers));
-	(void)memcpy(&temp_buffer[data_size + (uint16_t)4],
-		footer, sizeof(footer));
-
-	/* Send data to FW */
-	if(const auto res = write_burst(address,
-		temp_buffer,
-		(uint32_t)((uint32_t)data_size + (uint32_t)12));
-		res.is_err()) return Err(res.unwrap_err());
-
-	if(const auto res = poll_for_answer(4, 1, 
-		VL53L5CX_UI_CMD_STATUS, 0xff, 0x03);
-		res.is_err()) return Err(res.unwrap_err());
-
-    return Ok();
-}
-
-IResult<> Self::dci_replace_data(
-		uint8_t				*data,
-		uint32_t			index,
-		uint16_t			data_size,
-		const uint8_t				*new_data,
-		uint16_t			new_data_size,
-		uint16_t			new_data_pos)
-{
-
-	if(const auto res = dci_read_data(data, index, data_size);
-		res.is_err()) return Err(res.unwrap_err());
-	(void)memcpy(&(data[new_data_pos]), new_data, new_data_size);
-	if(const auto res = dci_write_data(data, index, data_size);
 		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
@@ -1728,22 +1386,21 @@ IResult<> Self::set_detection_thresholds(
 #endif
 
 IResult<> Self::motion_indicator_init(
-		VL53L5CX_Motion_Configuration	& motion_config,
-		Resolution resolution
+	VL53L5CX_Motion_Config	& motion_config,
+	Resolution resolution
 ){
 
-	if(const auto res = motion_indicator_set_resolution(
-			motion_config, resolution);
+	if(const auto res = motion_indicator_set_resolution(motion_config, resolution);
 		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
 IResult<> Self::motion_indicator_set_distance_motion(
-		VL53L5CX_Motion_Configuration	& motion_config,
-		uint16_t			distance_min_mm,
-		uint16_t			distance_max_mm)
-{
+	VL53L5CX_Motion_Config	& motion_config,
+	uint16_t			distance_min_mm,
+	uint16_t			distance_max_mm
+){
 	float tmp;
 
 	if(((distance_max_mm - distance_min_mm) > (uint16_t)1500)
@@ -1774,9 +1431,9 @@ IResult<> Self::motion_indicator_set_distance_motion(
 }
 
 IResult<> Self::motion_indicator_set_resolution(
-		VL53L5CX_Motion_Configuration	& motion_config,
-		Resolution resolution){
-
+	VL53L5CX_Motion_Config	& motion_config,
+	Resolution resolution
+){
 	switch(resolution){
 		case Resolution::_4x4:
 			for(uint8_t i = 0; i < (uint8_t)VL53L5CX_RESOLUTION_4X4; i++){
@@ -1817,22 +1474,22 @@ IResult<> Self::poll_for_answer(
 	uint8_t					mask,
 	uint8_t					expected_value
 ){
-	uint8_t timeout = 0;
+	size_t timeout = 0;
 
 	do {
-		if(const auto res = read_burst(address, temp_buffer, 4);
+		if(const auto res = read_burst(address, temp_buffer, size);
 			res.is_err()) return Err(res.unwrap_err());
 		clock::delay(10ms);
 		
 		/* 2s timeout or FW error*/
-		if((timeout >= (uint8_t)200) || (temp_buffer[2] >= (uint8_t) 0x7f))
-		{
+		if((timeout >= 200)){
+			return Err(Error::TimeOut);
+		}else if((size >= 4) and (temp_buffer[2] >= (uint8_t) 0x7f)){
 			return Err(Error::McuError);
-			break;
-		}else{
+		}{
 			timeout++;
 		}
-	}while ((temp_buffer[0x1]) != expected_value);
+	}while ((temp_buffer[pos] & mask) != expected_value);
 
     return Ok();
 }
@@ -1844,7 +1501,6 @@ IResult<> Self::poll_for_answer(
 
 IResult<> Self::program_output_config()
 {
-	uint64_t header_config;
 
 	const auto resolution = ({
 		const auto res = get_resolution();
@@ -1863,36 +1519,37 @@ IResult<> Self::program_output_config()
 			0xC0000000U};
 
 	/* Send addresses of possible output */
-	static constexpr uint32_t output[] ={
-			0x0000000DU,
-			0x54000040U,
-			0x9FD800C0U,
-			0x9FE40140U,
-			0x9FF80040U,
-			0x9FFC0404U,
-			0xA0FC0100U,
-			0xA10C0100U,
-			0xA11C00C0U,
-			0xA1280902U,
-			0xA2480040U,
-			0xA24C0081U,
-			0xA2540081U,
-			0xA25C0081U,
-			0xA2640081U,
-			0xA26C0084U,
-			0xA28C0082U};
+	auto output = std::to_array<BlockHeader>({
+			std::bit_cast<BlockHeader>(uint32_t(0x0000000DU)),
+			std::bit_cast<BlockHeader>(uint32_t(0x54000040U)),
+			std::bit_cast<BlockHeader>(uint32_t(0x9FD800C0U)),
+			std::bit_cast<BlockHeader>(uint32_t(0x9FE40140U)),
+			std::bit_cast<BlockHeader>(uint32_t(0x9FF80040U)),
+			std::bit_cast<BlockHeader>(uint32_t(0x9FFC0404U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA0FC0100U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA10C0100U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA11C00C0U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA1280902U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA2480040U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA24C0081U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA2540081U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA25C0081U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA2640081U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA26C0084U)),
+			std::bit_cast<BlockHeader>(uint32_t(0xA28C0082U))
+		});
 
 	/* Update data size */
-	for (uint32_t i = 0; i < (uint32_t)(sizeof(output)/sizeof(uint32_t)); i++)
+	for (size_t i = 0; i < output.size(); i++)
 	{
-		if ((output[i] == (uint8_t)0) 
+		if ((std::bit_cast<uint32_t>(output[i]) == 0) 
 			|| ((output_bh_enable[i/(uint32_t)32]
 			&((uint32_t)1 << (i%(uint32_t)32))) == (uint32_t)0))
 		{
 			continue;
 		}
 
-		auto bh = std::bit_cast<Block_header>(output[i]);
+		auto & bh = (output[i]);
 		if (((uint8_t)bh.type >= (uint8_t)0x1) 
                     && ((uint8_t)bh.type < (uint8_t)0x0d))
 		{
@@ -1904,60 +1561,52 @@ IResult<> Self::program_output_config()
 			else 
 			{
 				bh.size = (uint8_t)(static_cast<uint8_t>(resolution) 
-                                  * (uint8_t)VL53L5CX_NB_TARGET_PER_ZONE);
+					* (uint8_t)VL53L5CX_NB_TARGET_PER_ZONE);
 			}
-
-                        
 			data_read_size_ += bh.type * bh.size;
 		}
-		else
-		{
+		else{
 			data_read_size_ += bh.size;
 		}
-
-		data_read_size_ += (uint32_t)4;
+		data_read_size_ += 4;
 	}
-	data_read_size_ += (uint32_t)20;
+	data_read_size_ += 20;
 
 	if(const auto res = dci_write_data(
-		ptr_cast<const uint8_t *>(output), 
+		ptr_cast<const uint8_t *>(output.data()), 
 		VL53L5CX_DCI_OUTPUT_LIST, (uint16_t)sizeof(output));
 		res.is_err()) return Err(res.unwrap_err());
         
-	header_config =  (uint32_t)(sizeof(output)/sizeof(uint32_t)) + (uint64_t)1;
-	header_config = header_config << 32;
-	header_config += (uint64_t)data_read_size_;
+	const auto header_config = std::to_array<uint32_t>({
+		data_read_size_,
+		output.size() + 1
+	});
 
 	if(const auto res = dci_write_data(
-		ptr_cast<const uint8_t *>(&header_config),
+		ptr_cast<const uint8_t *>(header_config.data()),
 		VL53L5CX_DCI_OUTPUT_CONFIG, 
-		(uint16_t)sizeof(header_config));
-		res.is_err()) return Err(res.unwrap_err());
+		(uint16_t)sizeof(header_config)
+	);	res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = dci_write_data(
 		ptr_cast<const uint8_t *>(&output_bh_enable),
 		VL53L5CX_DCI_OUTPUT_ENABLES, 
-		(uint16_t)sizeof(output_bh_enable));
-		res.is_err()) return Err(res.unwrap_err());
+		(uint16_t)sizeof(output_bh_enable)
+	);	res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
+
+
 IResult<> Self::calibrate_xtalk(
-		uint16_t			reflectance_percent,
-		uint8_t				nb_samples,
-		uint16_t			distance_mm)
-{
+	Percentage<uint8_t> reflectance_percentage,
+	uint8_t				nb_samples,
+	uint16_t			distance_mm
+){
 	static constexpr uint8_t cmd[] = {0x00, 0x03, 0x00, 0x00};
 	static constexpr uint8_t footer[] = {0x00, 0x00, 0x00, 0x0F, 0x00, 0x01, 0x03, 0x04};
 	uint16_t timeout = 0;
 	uint8_t continue_loop = 1;
-
-	uint8_t frequency, sharp_prct;
-	uint32_t integration_time_ms, xtalk_margin;
-        
-	uint16_t reflectance = reflectance_percent;
-	uint8_t	samples = nb_samples;
-	uint16_t distance = distance_mm;
 
 	/* Get initial configuration */
 	const auto resolution = ({
@@ -1966,12 +1615,25 @@ IResult<> Self::calibrate_xtalk(
 		res.unwrap();
 	});
 
-	if(const auto res = get_ranging_frequency_hz(&frequency);
-		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = get_integration_time_ms(&integration_time_ms);
-		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = get_sharpener_percent(&sharp_prct);
-		res.is_err()) return Err(res.unwrap_err());
+
+	const auto frequency = ({
+		const auto res = get_ranging_frequency_hz();
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
+
+	const auto integration_time_ms = ({
+		const auto res = get_integration_time_ms();
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
+
+	const auto sharp_prct = ({
+		const auto res = get_sharpener_percent();
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
+
 	const TargetOrder target_order =({
 
 		const auto res = get_target_order();
@@ -1979,8 +1641,11 @@ IResult<> Self::calibrate_xtalk(
 		res.unwrap();
 	});
 
-	if(const auto res = get_xtalk_margin(&xtalk_margin);
-		res.is_err()) return Err(res.unwrap_err());
+	const auto xtalk_margin = ({
+		const auto res = get_xtalk_margin();
+		if(res.is_err()) return Err(res.unwrap_err());
+		res.unwrap();
+	});
 
 	const RangingMode ranging_mode = ({
 		const auto res = get_ranging_mode();
@@ -1989,102 +1654,101 @@ IResult<> Self::calibrate_xtalk(
 	});
 
 	/* Check input arguments validity */
-	if(((reflectance < (uint16_t)1) || (reflectance > (uint16_t)99))
-		|| ((distance < (uint16_t)600) || (distance > (uint16_t)3000))
-		|| ((samples < (uint8_t)1) || (samples > (uint8_t)16)))
+	if(
+		((distance_mm < (uint16_t)600) || (distance_mm > (uint16_t)3000))
+		|| ((nb_samples < (uint8_t)1) || (nb_samples > (uint8_t)16)))
 	{
 		return Err(Error::InvalidParam);
-	}else{
-		if(const auto res = set_resolution(
-			Resolution::_8x8);
-			res.is_err()) return Err(res.unwrap_err());
-
-		/* Send Xtalk calibration buffer */
-		(void)memcpy(temp_buffer, VL53L5CX_CALIBRATE_XTALK, 
-				sizeof(VL53L5CX_CALIBRATE_XTALK));
-
-		if(const auto res = write_burst(0x2c28,
-			temp_buffer, 
-			(uint16_t)sizeof(VL53L5CX_CALIBRATE_XTALK));
-			res.is_err()) return Err(res.unwrap_err());
-		if(const auto res = _poll_for_answer(
-			VL53L5CX_UI_CMD_STATUS, 0x3);
-			res.is_err()) return Err(res.unwrap_err());
-
-		/* Format input argument */
-		reflectance = reflectance * (uint16_t)16;
-		distance = distance * (uint16_t)4;
-
-		/* Update required fields */
-		if(const auto res = dci_replace_data(temp_buffer,
-			VL53L5CX_DCI_CAL_CFG, 8, 
-			ptr_cast<const uint8_t *>(&distance), 2, 0x00);
-			res.is_err()) return Err(res.unwrap_err());
-
-		if(const auto res = dci_replace_data(temp_buffer,
-			VL53L5CX_DCI_CAL_CFG, 8,
-			ptr_cast<const uint8_t *>(&reflectance), 2, 0x02);
-			res.is_err()) return Err(res.unwrap_err());
-
-		if(const auto res = dci_replace_data(temp_buffer,
-			VL53L5CX_DCI_CAL_CFG, 8, 
-			&samples, 1, 0x04);
-			res.is_err()) return Err(res.unwrap_err());
-
-		/* Program output for Xtalk calibration */
-		if(const auto res = program_output_config();
-			res.is_err()) return Err(res.unwrap_err());
-
-		/* Start ranging session */
-		if(const auto res = write_burst(
-			VL53L5CX_UI_CMD_END - (uint16_t)(4 - 1),
-			cmd, sizeof(cmd));
-			res.is_err()) return Err(res.unwrap_err());
-		if(const auto res = _poll_for_answer(
-			VL53L5CX_UI_CMD_STATUS, 0x3);
-			res.is_err()) return Err(res.unwrap_err());
-
-		/* Wait for end of calibration */
-		do {
-			if(const auto res = read_burst(
-				0x0, temp_buffer, 4);
-				res.is_err()) return Err(res.unwrap_err());
-
-			if(temp_buffer[0] != VL53L5CX_STATUS_ERROR)
-			{
-				/* Coverglass too good for Xtalk calibration */
-				if((temp_buffer[2] >= (uint8_t)0x7f) &&
-					(((uint16_t)(temp_buffer[3] & 
-					(uint16_t)0x80) >> 7) == (uint16_t)1))
-				{
-					(void)memcpy(xtalk_data, 
-						VL53L5CX_DEFAULT_XTALK,
-						VL53L5CX_XTALK_BUFFER_SIZE);
-				}
-				continue_loop = (uint8_t)0;
-			}
-			else if(timeout >= (uint16_t)400)
-			{
-				return Err(Error::Status);
-				continue_loop = (uint8_t)0;
-			}
-			else
-			{
-				timeout++;
-				clock::delay(50ms);
-			}
-
-		}while (continue_loop == (uint8_t)1);
 	}
 
+	if(const auto res = set_resolution(
+		Resolution::_8x8);
+		res.is_err()) return Err(res.unwrap_err());
+
+	/* Send Xtalk calibration buffer */
+	(void)memcpy(temp_buffer, VL53L5CX_CALIBRATE_XTALK, 
+			sizeof(VL53L5CX_CALIBRATE_XTALK));
+
+	if(const auto res = write_burst(0x2c28,
+		temp_buffer, 
+		(uint16_t)sizeof(VL53L5CX_CALIBRATE_XTALK));
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = _poll_for_answer(
+		VL53L5CX_UI_CMD_STATUS, 0x3);
+		res.is_err()) return Err(res.unwrap_err());
+
+	/* Format input argument */
+	const uint16_t reflectance_bits = reflectance_percentage.percents() * (uint16_t)16;
+	const uint16_t distance_bits = distance_mm * (uint16_t)4;
+
+	/* Update required fields */
+	if(const auto res = dci_replace_data(temp_buffer,
+		VL53L5CX_DCI_CAL_CFG, 8, 
+		ptr_cast<const uint8_t *>(&distance_bits), 2, 0x00);
+		res.is_err()) return Err(res.unwrap_err());
+
+	if(const auto res = dci_replace_data(temp_buffer,
+		VL53L5CX_DCI_CAL_CFG, 8,
+		ptr_cast<const uint8_t *>(&reflectance_bits), 2, 0x02);
+		res.is_err()) return Err(res.unwrap_err());
+
+	if(const auto res = dci_replace_data(temp_buffer,
+		VL53L5CX_DCI_CAL_CFG, 8, 
+		&nb_samples, 1, 0x04);
+		res.is_err()) return Err(res.unwrap_err());
+
+	/* Program output for Xtalk calibration */
+	if(const auto res = program_output_config();
+		res.is_err()) return Err(res.unwrap_err());
+
+	/* Start ranging session */
+	if(const auto res = write_burst(
+		VL53L5CX_UI_CMD_END - (uint16_t)(4 - 1),
+		cmd, sizeof(cmd));
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = _poll_for_answer(
+		VL53L5CX_UI_CMD_STATUS, 0x3);
+		res.is_err()) return Err(res.unwrap_err());
+
+	/* Wait for end of calibration */
+	do {
+		if(const auto res = read_burst(
+			0x0, temp_buffer, 4
+		);	res.is_err()) return Err(res.unwrap_err());
+
+		if(temp_buffer[0] != VL53L5CX_STATUS_ERROR)
+		{
+			/* Coverglass too good for Xtalk calibration */
+			if((temp_buffer[2] >= (uint8_t)0x7f) &&
+				(((uint16_t)(temp_buffer[3] & 
+				(uint16_t)0x80) >> 7) == (uint16_t)1))
+			{
+				(void)memcpy(xtalk_data, 
+					VL53L5CX_DEFAULT_XTALK,
+					VL53L5CX_XTALK_BUFFER_SIZE);
+			}
+			continue_loop = (uint8_t)0;
+		}
+		else if(timeout >= (uint16_t)400){
+			return Err(Error::Status);
+			continue_loop = (uint8_t)0;
+		}else{
+			timeout++;
+			clock::delay(50ms);
+		}
+
+	}while (continue_loop == (uint8_t)1);
+
+
 	/* Save Xtalk data into the Xtalk buffer */
-        (void)memcpy(temp_buffer, VL53L5CX_GET_XTALK_CMD, 
-			sizeof(VL53L5CX_GET_XTALK_CMD));
+	(void)memcpy(temp_buffer, VL53L5CX_GET_XTALK_CMD, 
+		sizeof(VL53L5CX_GET_XTALK_CMD));
 	if(const auto res = write_burst(0x2fb8,
 		temp_buffer, 
 		(uint16_t)sizeof(VL53L5CX_GET_XTALK_CMD));
 		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = _poll_for_answer(VL53L5CX_UI_CMD_STATUS, 0x03); res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = _poll_for_answer(VL53L5CX_UI_CMD_STATUS, 0x03); 
+		res.is_err()) return Err(res.unwrap_err());
 
 	if(const auto res = read_burst(VL53L5CX_UI_CMD_START,
 		temp_buffer, 
@@ -2125,16 +1789,16 @@ IResult<> Self::calibrate_xtalk(
 }
 
 IResult<> Self::_poll_for_answer(
-		uint16_t 				address,
-		uint8_t 				expected_value)
-{
+	uint16_t 				address,
+	uint8_t 				expected_value
+){
 	uint8_t timeout = 0;
 
 	do {
 		if(const auto res = read_burst(address, temp_buffer, 4);
 			res.is_err()) return Err(res.unwrap_err());
 		clock::delay(10ms);
-                /* 2s timeout or FW error*/
+		/* 2s timeout or FW error*/
 		if((timeout >= (uint8_t)200) 
 				|| (temp_buffer[2] >= (uint8_t) 0x7f))
 		{
@@ -2142,17 +1806,16 @@ IResult<> Self::_poll_for_answer(
 			break;
 		}else{
 			timeout++;
-			}
+		}
 
 	}while ((temp_buffer[0x1]) != expected_value);
         
 	return Ok();
 }
 
-IResult<> Self::get_caldata_xtalk(
-		uint8_t				*p_xtalk_data)
+IResult<> Self::get_caldata_xtalk(std::span<uint8_t, VL53L5CX_XTALK_BUFFER_SIZE> p_xtalk_data)
 {
-	uint8_t footer[] = {0x00, 0x00, 0x00, 0x0F, 0x00, 0x01, 0x03, 0x04};
+	static constexpr uint8_t footer[] = {0x00, 0x00, 0x00, 0x0F, 0x00, 0x01, 0x03, 0x04};
 
 	const auto resolution = ({
 		const auto res = get_resolution();
@@ -2190,7 +1853,7 @@ IResult<> Self::get_caldata_xtalk(
 }
 
 IResult<> Self::set_caldata_xtalk(
-		uint8_t				*p_xtalk_data)
+	std::span<const uint8_t, VL53L5CX_XTALK_BUFFER_SIZE> p_xtalk_data)
 {
 	const auto resolution = ({
 		const auto res = get_resolution();
@@ -2198,43 +1861,39 @@ IResult<> Self::set_caldata_xtalk(
 		res.unwrap();
 	});
 
-	(void)memcpy(xtalk_data, p_xtalk_data, VL53L5CX_XTALK_BUFFER_SIZE);
+	(void)memcpy(xtalk_data, p_xtalk_data.data(), VL53L5CX_XTALK_BUFFER_SIZE);
 	if(const auto res = set_resolution(resolution);
 		res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
-IResult<> Self::get_xtalk_margin(
-		uint32_t			*p_xtalk_margin)
+IResult<uint32_t> Self::get_xtalk_margin()
 {
-
+	uint32_t bits = 0;
 	if(const auto res = dci_read_data(temp_buffer,
 		VL53L5CX_DCI_XTALK_CFG, 16);
 		res.is_err()) return Err(res.unwrap_err());
 
-	(void)memcpy(p_xtalk_margin, temp_buffer, 4);
-	*p_xtalk_margin = *p_xtalk_margin/(uint32_t)2048;
+	(void)memcpy(&bits, temp_buffer, sizeof(bits));
+	const uint32_t xtalk_margin = bits /(uint32_t)2048;
 
-    return Ok();
+    return Ok(xtalk_margin);
 }
 
-IResult<> Self::set_xtalk_margin(uint32_t xtalk_margin)
-{
-	uint32_t margin_kcps = xtalk_margin;
-
-	if(margin_kcps > (uint32_t)10000)
+IResult<> Self::set_xtalk_margin(uint32_t xtalk_margin){
+	if(xtalk_margin > (uint32_t)10000)
 	{
 		return Err(Error::InvalidParam);
 	}
-	else
-	{
-		margin_kcps = margin_kcps*(uint32_t)2048;
-		if(const auto res = dci_replace_data(temp_buffer,
-			VL53L5CX_DCI_XTALK_CFG, 16, 
-			ptr_cast<const uint8_t *>(&margin_kcps), 4, 0x00);
-			res.is_err()) return Err(res.unwrap_err());
-	}
+
+	const uint32_t margin_bits = xtalk_margin*(uint32_t)2048;
+
+	if(const auto res = dci_replace_data(temp_buffer,
+		VL53L5CX_DCI_XTALK_CFG, 16, 
+		ptr_cast<const uint8_t *>(&margin_bits), 4, 0x00);
+		res.is_err()
+	) return Err(res.unwrap_err());
 
     return Ok();
 }
@@ -2242,18 +1901,142 @@ IResult<> Self::set_xtalk_margin(uint32_t xtalk_margin)
 
 
 IResult<> Self::read_byte(const uint16_t addr, uint8_t *data){
-	return Ok();
+	return read_burst(addr, data, 1);
 }
 
 IResult<> Self::write_byte(const uint16_t addr, uint8_t data){
-	return Ok();
+	return write_burst(addr, &data, 1);
 }
 
 IResult<> Self::read_burst(const uint16_t addr, uint8_t *data, uint16_t size){
+	if(const auto res = i2c_drv_.read_burst(
+		addr, 
+		std::span<uint8_t>(data, static_cast<size_t>(size)),
+		std::endian::big
+	); res.is_err()) return Err(res.unwrap_err());
 	return Ok();
 }
 
 IResult<> Self::write_burst(const uint16_t addr, const uint8_t *data, uint16_t size){
+	if(const auto res = i2c_drv_.write_burst(
+		addr, 
+		std::span<const uint8_t>(data, static_cast<size_t>(size)),
+		std::endian::big
+	); res.is_err()) return Err(res.unwrap_err());
 	return Ok();
 }
-#endif
+
+IResult<> Self::dci_read_data(
+	uint8_t				*data,
+	uint32_t			index,
+	uint16_t			data_size
+){
+	const uint32_t rd_size = (uint32_t) data_size + (uint32_t)12;
+	/* Check if tmp buffer is large enough */
+	if((data_size + (uint16_t)12)>(uint16_t)VL53L5CX_TEMPORARY_BUFFER_SIZE){
+		return Err(Error::Status);
+	}
+
+	const auto cmd = std::to_array<uint8_t>({
+		(uint8_t)(index >> 8),	
+		(uint8_t)(index & (uint32_t)0xff),			
+		(uint8_t)((data_size & (uint16_t)0xff0) >> 4),
+		(uint8_t)((data_size & (uint16_t)0xf) << 4),
+		0x00, 0x00, 0x00, 0x0f,
+		0x00, 0x02, 0x00, 0x08
+	});
+
+
+
+/* Request data reading from FW */
+	if(const auto res = write_burst(
+		(VL53L5CX_UI_CMD_END-(uint16_t)11),
+		cmd.data(), sizeof(cmd)
+	);
+		res.is_err()) return Err(res.unwrap_err());
+	if(const auto res = poll_for_answer(4, 1, 
+		VL53L5CX_UI_CMD_STATUS,
+		0xff, 0x03);
+		res.is_err()) return Err(res.unwrap_err());
+
+/* Read new data sent (4 bytes header + data_size + 8 bytes footer) */
+	if(const auto res = read_burst(VL53L5CX_UI_CMD_START,
+		temp_buffer, rd_size);
+		res.is_err()) return Err(res.unwrap_err());
+	SwapBuffer(temp_buffer, data_size + 12);
+
+/* Copy data from FW into input structure (-4 bytes to remove header) */
+	for(uint32_t i = 0 ; i < data_size;i++){
+		data[i] = temp_buffer[i + 4];
+	}
+
+    return Ok();
+}
+
+IResult<> Self::dci_write_data(
+		const uint8_t				*data,
+		uint32_t			index,
+		uint16_t			data_size)
+{
+
+	const uint8_t headers[] = {
+		(uint8_t)(index >> 8),
+		(uint8_t)(index & (uint32_t)0xff),
+		(uint8_t)(((data_size & (uint16_t)0xff0) >> 4)),
+		(uint8_t)((data_size & (uint16_t)0xf) << 4)
+	};
+
+	const uint8_t footer[] = {0x00, 0x00, 0x00, 0x0f, 0x05, 0x01,
+		(uint8_t)((data_size + (uint16_t)8) >> 8), 
+		(uint8_t)((data_size + (uint16_t)8) & (uint8_t)0xFF)
+	};
+
+	uint16_t address = (uint16_t)VL53L5CX_UI_CMD_END - 
+		(data_size + (uint16_t)12) + (uint16_t)1;
+
+	/* Check if cmd buffer is large enough */
+	if((data_size + (uint16_t)12) > (uint16_t)VL53L5CX_TEMPORARY_BUFFER_SIZE)
+		return Err(Error::Status);
+
+
+
+	// /* Copy data from structure to FW format (+4 bytes to add header) */
+
+	simple_swap_and_copy(temp_buffer, data, data_size);
+
+
+	/* Add headers and footer */
+	(void)memcpy(&temp_buffer[0], headers, sizeof(headers));
+	(void)memcpy(&temp_buffer[data_size + (uint16_t)4],
+		footer, sizeof(footer));
+
+	/* Send data to FW */
+	if(const auto res = write_burst(address,
+		temp_buffer,
+		data_size + 12
+	);	res.is_err()) return Err(res.unwrap_err());
+
+	if(const auto res = poll_for_answer(4, 1, 
+		VL53L5CX_UI_CMD_STATUS, 0xff, 0x03
+	);	res.is_err()) return Err(res.unwrap_err());
+
+    return Ok();
+}
+
+IResult<> Self::dci_replace_data(
+	uint8_t				*data,
+	uint32_t			index,
+	uint16_t			data_size,
+	const uint8_t				*new_data,
+	uint16_t			new_data_size,
+	uint16_t			new_data_pos
+){
+
+	if(const auto res = dci_read_data(data, index, data_size);
+		res.is_err()) return Err(res.unwrap_err());
+	(void)memcpy(&(data[new_data_pos]), new_data, new_data_size);
+	if(const auto res = dci_write_data(data, index, data_size);
+		res.is_err()) return Err(res.unwrap_err());
+
+    return Ok();
+}

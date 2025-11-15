@@ -75,19 +75,19 @@ IResult<> BMI088_Acc::update(){
     auto & reg = regs_.acc_x_reg;
     return phy_.read_burst(
         reg.address, 
-        std::span(&(reg.as_ref()), 3)
+        std::span(&(reg.as_mut_bits()), 3)
     );
 }
 
 
-IResult<Vec3<q24>> BMI088_Acc::read_acc(){
-    return Ok(Vec3<q24>(
-        regs_.acc_x_reg.as_val() * acc_scaler_,
-        regs_.acc_y_reg.as_val() * acc_scaler_,
-        regs_.acc_z_reg.as_val() * acc_scaler_
+IResult<Vec3<iq24>> BMI088_Acc::read_acc(){
+    return Ok(Vec3<iq24>(
+        regs_.acc_x_reg.as_bits() * acc_scaler_,
+        regs_.acc_y_reg.as_bits() * acc_scaler_,
+        regs_.acc_z_reg.as_bits() * acc_scaler_
     ));
 }
-IResult<q24> BMI088_Acc::read_temp(){
+IResult<iq24> BMI088_Acc::read_temp(){
     auto & reg = regs_.temp_reg;
     auto bytes = reg.as_bytes();
 	auto bmi088_raw_temp = int16_t((bytes[0] << 3) | (bytes[1] >> 5));

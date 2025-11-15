@@ -246,7 +246,7 @@ template<typename Fn>
 void test_func(Fn && fn, const Milliseconds dur){
     while(true){
         const auto t = clock::time();
-        const auto x = 2 * frac(t * 2) * real_t(TAU) -  1000 * real_t(TAU);
+        const auto x = 2 * iq16(frac(t * 2)) * iq16(TAU) -  1000 * iq16(TAU);
         // const auto x = 6 * frac(t * 2) - 3;
         auto y = std::forward<Fn>(fn)(x);
         DEBUG_PRINTLN(x, y, dur);
@@ -258,10 +258,10 @@ void test_func(Fn && fn, const Milliseconds dur){
 
 
 
-__no_inline auto func(const real_t x){
+__no_inline auto func(const iq16 x){
     // return std::make_tuple(sin(x), cos(x));
     // return mysin(x);
-    // return fposmod(x, real_t(TAU));
+    // return fposmod(x, iq16(TAU));
     // return dump_tau(fixed_t<16>(x));
     // return std::make_tuple(mysin(x), mycos(x));
     // return mysincos(x);

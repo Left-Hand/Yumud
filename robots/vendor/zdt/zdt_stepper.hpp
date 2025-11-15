@@ -38,12 +38,12 @@ public:
     }
 
     struct PositionMsg{
-        Angle<q16> position;
-        q16 speed;
+        Angle<iq16> position;
+        iq16 speed;
     };
 
     struct SpeedMsg{
-        q16 speed;
+        iq16 speed;
     };
 
     IResult<> set_position(const PositionMsg msg);

@@ -224,11 +224,11 @@ void nuedc_2025e_joint_main(){
     mp6540_en_gpio_.outpp(HIGH);
     mp6540_nslp_gpio_.outpp(HIGH);
 
-    q20 q_volt_ = 0;
-    Angle<q20> meas_elecangle_ = Angle<q20>::ZERO;
+    iq20 q_volt_ = 0;
+    Angle<uq32> meas_elec_angle_ = Angle<uq32>::ZERO;
 
-    q20 axis_target_position_ = 0;
-    q20 axis_target_speed_ = 0;
+    iq20 axis_target_position_ = 0;
+    iq20 axis_target_speed_ = 0;
 
     Microseconds exe_us_ = 0us;
 
@@ -237,7 +237,7 @@ void nuedc_2025e_joint_main(){
 
     RingBuf<hal::CanMsg, CANMSG_QUEUE_SIZE> msg_queue_;
 
-    AlphaBetaCoord<q16> ab_volt_;
+    AlphaBetaCoord<iq16> ab_volt_;
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -248,7 +248,7 @@ void nuedc_2025e_joint_main(){
 
     pos_filter_.set_base_lap_angle(
         
-        Angle<q16>::from_turns([&] -> q16{
+        Angle<iq16>::from_turns([&] -> iq16{
             switch(self_node_role_){
                 case NodeRole::YawJoint:
                     return {0.389_r + 0.5_r};
@@ -265,9 +265,9 @@ void nuedc_2025e_joint_main(){
         .base = [&]{
             switch(self_node_role_){
                 case NodeRole::YawJoint:
-                    return -0.211_r;
+                    return -0.211_uq32;
                 case NodeRole::PitchJoint:
-                    return -0.244_r;
+                    return -0.244_uq32;
                 default:
                     PANIC();
             }
@@ -322,7 +322,7 @@ void nuedc_2025e_joint_main(){
         }
 
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
-        pos_filter_.update(Angle<q16>::from_turns(meas_lap_angle.to_turns()));
+        pos_filter_.update(Angle<iq16>::from_turns(meas_lap_angle.to_turns()));
     };
 
 
@@ -330,13 +330,13 @@ void nuedc_2025e_joint_main(){
         update_sensors();
 
         if(run_status_.state == RunState::Idle){
-            uvw_pwmgen.set_dutycycle(UvwCoord<q16>::ZERO);
+            uvw_pwmgen.set_dutycycle(UvwCoord<iq16>::ZERO);
             leso_.reset();
             return;
         }
 
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
-        const auto meas_elecangle = elecangle_comp_(meas_lap_angle);
+        const auto meas_elec_angle = elecangle_comp_(meas_lap_angle);
 
         const auto meas_position = pos_filter_.accumulated_angle().to_turns();
         const auto meas_speed = pos_filter_.speed();
@@ -356,14 +356,14 @@ void nuedc_2025e_joint_main(){
             pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)
         , SVPWM_MAX_VOLT);
 
-        [[maybe_unused]] const auto alphabeta_volt = DqCoord<q16>{
+        [[maybe_unused]] const auto alphabeta_volt = DqCoord<iq16>{
             .d = 0, 
             .q = CLAMP2(q_volt - leso_.disturbance(), SVPWM_MAX_VOLT)
             // CLAMP2(q_volt, SVPWM_MAX_VOLT)
-        }.to_alphabeta(Rotation2<q20>::from_angle(meas_elecangle));
+        }.to_alphabeta(Rotation2<iq20>::from_angle(meas_elec_angle));
 
 
-        static constexpr auto INV_BUS_VOLT = q16(1.0/12);
+        static constexpr auto INV_BUS_VOLT = iq16(1.0/12);
 
         uvw_pwmgen.set_dutycycle(
             SVM(alphabeta_volt * INV_BUS_VOLT)
@@ -372,7 +372,7 @@ void nuedc_2025e_joint_main(){
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
-        meas_elecangle_ = meas_elecangle;
+        meas_elec_angle_ = meas_elec_angle;
     };
 
     adc.register_nvic({0,0}, EN);
@@ -422,23 +422,23 @@ void nuedc_2025e_joint_main(){
         [&](const commands::DeltaPosition & cmd){
         switch(self_node_role_){
             case NodeRole::YawJoint:{
-                static constexpr auto THIS_BMI160_YAW_GYR_BIAS = 0.0020_q24;
+                static constexpr auto THIS_BMI160_YAW_GYR_BIAS = 0.0020_iq24;
 
                 // imu补偿
                 const auto yaw_gyr = -(
                     bmi160_.read_gyr().examine().z + 
                     THIS_BMI160_YAW_GYR_BIAS);
 
-                const auto yaw_speed = yaw_gyr * q20(1 / TAU);
+                const auto yaw_speed = yaw_gyr * iq20(1 / TAU);
 
-                const auto cmd_delta_position = q20(cmd.delta_position + yaw_speed / MACHINE_CTRL_FREQ);
-                axis_target_speed_ = q20(cmd_delta_position * MACHINE_CTRL_FREQ);
+                const auto cmd_delta_position = iq20(cmd.delta_position + yaw_speed / MACHINE_CTRL_FREQ);
+                axis_target_speed_ = iq20(cmd_delta_position * MACHINE_CTRL_FREQ);
                 axis_target_position_ = (pos_filter_.accumulated_angle().to_turns() + cmd_delta_position);
                 break;
             }
             case NodeRole::PitchJoint:{
-                const auto cmd_delta_position = q20(cmd.delta_position);
-                axis_target_speed_ = q20(cmd_delta_position * MACHINE_CTRL_FREQ);
+                const auto cmd_delta_position = iq20(cmd.delta_position);
+                axis_target_speed_ = iq20(cmd_delta_position * MACHINE_CTRL_FREQ);
                 axis_target_position_ = CLAMP(
                     axis_target_position_ + cmd_delta_position,
                     PITCH_MIN_POSITION, PITCH_MAX_POSITION
@@ -455,13 +455,13 @@ void nuedc_2025e_joint_main(){
         switch(self_node_role_){
             case NodeRole::YawJoint:{
                 axis_target_speed_ = 0;
-                axis_target_position_ = q20(cmd.position);
+                axis_target_position_ = iq20(cmd.position);
                 break;
             }
             case NodeRole::PitchJoint:{
                 axis_target_speed_ = 0;
                 axis_target_position_ = CLAMP(
-                    q20(cmd.position),
+                    iq20(cmd.position),
                     PITCH_MIN_POSITION, 
                     PITCH_MAX_POSITION
                 );
@@ -581,7 +581,7 @@ void nuedc_2025e_joint_main(){
             DEBUG_PRINTLN_IDLE(
                 // pos_filter_.cont_position(), 
                 // pos_filter_.speed(),
-                // meas_elecangle_,
+                // meas_elec_angle_,
                 // q_volt_,
                 // pos_filter_.position(),
                 // pos_filter_.speed(),

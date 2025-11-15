@@ -61,7 +61,7 @@ Result<void, Error> LIS3DH::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
         
-    if(reg.as_val() != reg.key)
+    if(reg.as_bits() != reg.key)
         return Err(Error::InvalidChipId);
     
     return Ok();
@@ -78,8 +78,8 @@ Result<void, Error> LIS3DH::reset(){
 
 
 
-IResult<Vec3<q24>> LIS3DH::read_acc(){
-    return Ok(Vec3<q24>::ZERO);
+IResult<Vec3<iq24>> LIS3DH::read_acc(){
+    return Ok(Vec3<iq24>::ZERO);
 
 }
 

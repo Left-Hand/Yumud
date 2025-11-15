@@ -106,7 +106,7 @@ public:
     [[nodiscard]] HalResult set_data_width(const uint8_t len);
     [[nodiscard]] HalResult set_baudrate(const uint32_t baudrate);
     [[nodiscard]] HalResult set_prescaler(const SpiPrescaler prescaler);
-    [[nodiscard]] HalResult set_bitorder(const Endian endian);
+    [[nodiscard]] HalResult set_bitorder(const BitOrder bitorder);
 
     template<typename Fn>
     void set_event_callback(Fn && fn){

@@ -125,7 +125,7 @@ IResult<bool> AK8975::is_stable(){
     });
 
     const auto [a, b, c] = mag;
-    if(ABS(a) + ABS(b) + ABS(c) > q16(2.4)) 
+    if(ABS(a) + ABS(b) + ABS(c) > iq16(2.4)) 
         return Ok(false);
 
     return Ok(true);
@@ -140,9 +140,9 @@ IResult<> AK8975::disable_i2c(){
     return phy_.write_reg(0x0F, 0x01);
 }
 
-IResult<Vec3<q24>> AK8975::read_mag(){
-    static constexpr q16 max_mT = q16(1.229);
-    #define CONV(n) ((n * max_mT) / 4095) * ((q16(n##_adj - 128) >> 8) + 1)
-    return Ok{Vec3<q24>{CONV(x), CONV(y), CONV(z)}};
+IResult<Vec3<iq24>> AK8975::read_mag(){
+    static constexpr iq16 max_mT = iq16(1.229);
+    #define CONV(n) ((n * max_mT) / 4095) * ((iq16(n##_adj - 128) >> 8) + 1)
+    return Ok{Vec3<iq24>{CONV(x), CONV(y), CONV(z)}};
     #undef CONV
 }

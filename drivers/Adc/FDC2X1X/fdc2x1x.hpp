@@ -29,20 +29,20 @@ private:
     hal::I2cDrv i2c_drv_;
 
     IResult<> read_reg(const RegAddr addr, uint16_t & data){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, MSB);
+        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> write_reg(const RegAddr addr, const uint16_t data){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, MSB);
+        if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
+        if(const auto res = write_reg(reg.address, reg.as_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();

@@ -9,24 +9,24 @@ namespace ymd::drivers{
 
 struct KeyPlacement{
     constexpr Option<uint8_t> row() const {
-        if(row_ > 0) return Some(row_);
+        if(may_row_ > 0) return Some(may_row_);
         else return None;
     }
     constexpr Option<uint8_t> col() const {
-        if(row_ > 0) return Some(row_);
+        if(may_col_ > 0) return Some(may_col_);
         else return None;
     }
 
-    constexpr KeyPlacement(
+    constexpr explicit KeyPlacement(
         Option<uint8_t> row, 
         Option<uint8_t> col
     ):
-        row_(row.is_some() ? row.unwrap() : -1),
-        col_(col.is_some() ? col.unwrap() : -1)
+        may_row_(row.is_some() ? row.unwrap() : -1),
+        may_col_(col.is_some() ? col.unwrap() : -1)
     {;}
 private:
-    int8_t row_;
-    int8_t col_;
+    int8_t may_row_;
+    int8_t may_col_;
 };
 
 struct KeyEvent{

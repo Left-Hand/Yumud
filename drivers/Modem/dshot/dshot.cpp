@@ -34,12 +34,12 @@ bool BurstDmaPwm::is_done(){
     return dma_channel_.remaining() == 0;
 }
 
-uint32_t BurstDmaPwm::calc_cvr_from_duty(const q31 duty) const {
-    return uint32_t(uint32_t(timer_oc_.arr()) * duty);
+uint32_t BurstDmaPwm::calc_cvr_from_duty(const uq32 duty) const {
+    return uint32_t((uint64_t(timer_oc_.arr()) * duty.as_bits()) >> 32);
 }
 
-q8 BurstDmaPwm::get_period_us() const{
-    // return q8(timer_oc_.arr() / 1000);
+uq8 BurstDmaPwm::get_period_us() const{
+    // return iq8(timer_oc_.arr() / 1000);
     
     return 0;
 }
@@ -68,8 +68,8 @@ void WS2812_Phy_of_BurstPwm::apply_mono_to_buf(
     const std::span<uint16_t, 8> buf, 
     uint8_t mono
 ) const{
-    uint16_t HIGH_CVR = burst_dma_pwm_.calc_cvr_from_duty(q31(0.85 / 1.25));
-    uint16_t LOW_CVR = burst_dma_pwm_.calc_cvr_from_duty(q31(0.4 / 1.25));
+    uint16_t HIGH_CVR = burst_dma_pwm_.calc_cvr_from_duty(uq32(0.85 / 1.25));
+    uint16_t LOW_CVR = burst_dma_pwm_.calc_cvr_from_duty(uq32(0.4 / 1.25));
 
     for(size_t i = 0; i < 8; i++){
         buf[i] = (mono & 0x80) ? HIGH_CVR : LOW_CVR;

@@ -76,7 +76,7 @@ private:
     };
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t reg){
-        const auto res = i2c_drv_.write_reg(uint8_t(addr), reg, LSB);
+        const auto res = i2c_drv_.write_reg(uint8_t(addr), reg, std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -89,14 +89,14 @@ private:
     }
 
     [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & reg){
-        const auto res = i2c_drv_.read_reg(uint8_t(addr), reg, LSB);
+        const auto res = i2c_drv_.read_reg(uint8_t(addr), reg, std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_val()); 
+        if(const auto res = write_reg(T::ADDRESS, reg.as_bits()); 
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -104,7 +104,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        if(const auto res = read_reg(T::ADDRESS, reg.as_ref()); 
+        if(const auto res = read_reg(T::ADDRESS, reg.as_mut_bits()); 
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     };

@@ -61,7 +61,7 @@ static void filter(const std::span<RGB565> row) {
 }
 #endif
 
-static std::tuple<real_t, real_t> rand01_2(){
+static std::tuple<iq16, iq16> rand01_2(){
     static dsp::LcgNoiseSiggen noise;
     noise.update();
     // hal::rng.update();
@@ -69,33 +69,33 @@ static std::tuple<real_t, real_t> rand01_2(){
     // const uint32_t temp = rng.update();
     // const uint32_t u0 = temp >> 16;
     // const uint32_t u1 = temp & 0xffff;
-    // return {real_t(std::bit_cast<_iq<16>>(u0)), real_t(std::bit_cast<_iq<16>>(u1))};
+    // return {iq16(std::bit_cast<_iq<16>>(u0)), iq16(std::bit_cast<_iq<16>>(u1))};
     // return {0,0};
 }
 
 [[nodiscard]]
-static constexpr RGB<q16> get_relect_color(const int8_t i){
+static constexpr RGB<iq16> get_relect_color(const int8_t i){
     switch(i){
         case 8:
         case 9:
-            return RGB<q16>(0.05_r, 0.65_r, 0.05_r);
+            return RGB<iq16>(0.05_r, 0.65_r, 0.05_r);
         case 10:
         case 11:
-            return RGB<q16>(0.65_r, 0.05_r, 0.05_r);
+            return RGB<iq16>(0.65_r, 0.05_r, 0.05_r);
         default:
-            return RGB<q16>{0.65_r, 0.65_r, 0.65_r};
+            return RGB<iq16>{0.65_r, 0.65_r, 0.65_r};
     }
 }
 
 
 [[nodiscard]]
-static Interaction_t<real_t> make_interaction(
-    const Intersection_t<real_t> & intersection, 
-    const Ray3<real_t> & ray, 
-    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+static Interaction_t<iq16> make_interaction(
+    const Intersection_t<iq16> & intersection, 
+    const Ray3<iq16> & ray, 
+    std::span<const TriangleSurfaceCache_t<iq16>> co_triangles
 ){
     const auto & surface = co_triangles[intersection.i];
-    return Interaction_t<real_t>{
+    return Interaction_t<iq16>{
         intersection.i,
         intersection.t,
         surface,
@@ -104,10 +104,15 @@ static Interaction_t<real_t> make_interaction(
     };
 }
 
+template<size_t Q, typename D>
+static constexpr bool not_in_one(const fixed_t<Q, D> & d){
+    return (d < -1 or d > 1);
+};
+
 [[nodiscard]]
-static __fast_inline real_t tt_intersect(
-    const Ray3<real_t> & ray, 
-    const TriangleSurfaceCache_t<real_t> & surface
+static __fast_inline iq16 tt_intersect(
+    const Ray3<iq16> & ray, 
+    const TriangleSurfaceCache_t<iq16> & surface
 ){
     const auto & E1 = surface.v1 - surface.v0;  // E1 = v1 - v0
     const auto & E2 = surface.v2 - surface.v0;  // E2 = v2 - v0
@@ -131,31 +136,31 @@ static __fast_inline real_t tt_intersect(
 };
 
 [[nodiscard]]
-static __fast_inline bool bb_intersect_impl(const Vec3<real_t> & t0, const Vec3<real_t> & t1){
+static __fast_inline bool bb_intersect_impl(const Vec3<iq16> & t0, const Vec3<iq16> & t1){
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
 
 [[nodiscard]]
-static __fast_inline bool tb_intersect_impl (const Vec3<real_t> & t0, const Vec3<real_t> & t1){
+static __fast_inline bool tb_intersect_impl (const Vec3<iq16> & t0, const Vec3<iq16> & t1){
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
 
 
 [[nodiscard]] __pure
-static Intersection_t<real_t> intersect(
-    const Ray3<real_t> & ray, 
-    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+static Intersection_t<iq16> intersect(
+    const Ray3<iq16> & ray, 
+    std::span<const TriangleSurfaceCache_t<iq16>> co_triangles
 ){
-    Intersection_t<real_t> intersection = {
+    Intersection_t<iq16> intersection = {
         -1,
-        std::numeric_limits<real_t>::max()
+        std::numeric_limits<iq16>::max()
     };
 
     const auto & base = ray.base;
-    const auto inv_dir = Vec3<real_t>::from_rcp(ray.direction);
+    const auto inv_dir = Vec3<iq16>::from_rcp(ray.direction);
 
-    const Vec3<real_t> t0 = (bbmin - base) * inv_dir;
-    const Vec3<real_t> t1 = (bbmax - base) * inv_dir;
+    const Vec3<iq16> t0 = (bbmin - base) * inv_dir;
+    const Vec3<iq16> t1 = (bbmax - base) * inv_dir;
 
     
     if ((vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0))){
@@ -174,16 +179,16 @@ static Intersection_t<real_t> intersect(
 
 [[nodiscard]] __pure
 __fast_inline
-static Option<std::pair<RGB<q16>, real_t>> sample_bsdf(
-    const Interaction_t<real_t> & interaction, 
-    const Ray3<real_t> & ray, 
-    const Quat<real_t> & rotation
+static Option<std::pair<RGB<iq16>, iq16>> sample_bsdf(
+    const Interaction_t<iq16> & interaction, 
+    const Ray3<iq16> & ray, 
+    const Quat<iq16> & rotation
 ){
     const auto wi_z = rotation.xform_up().dot(ray.direction);
 
     if (wi_z <= 0) return None;
 
-    static constexpr auto inv_pi = real_t(INV_PI);
+    static constexpr auto inv_pi = iq16(INV_PI);
     const auto bsdf_pdf = wi_z * inv_pi;
     if(bsdf_pdf == 0) return None;
 
@@ -194,33 +199,33 @@ static Option<std::pair<RGB<q16>, real_t>> sample_bsdf(
 }
 
 [[nodiscard]] __pure
-static Ray3<real_t> cos_weighted_hemi(
-    const __restrict Interaction_t<real_t> & interaction, 
-    const __restrict Quat<real_t> & rotation
+static Ray3<iq16> cos_weighted_hemi(
+    const __restrict Interaction_t<iq16> & interaction, 
+    const __restrict Quat<iq16> & rotation
 ){
     const auto [u0, u1] = rand01_2();
 
     const auto r = sqrtf(u0);
-    const auto azimuth = u1 * real_t(TAU);
+    const auto azimuth = u1 * iq16(TAU);
     const auto [sin_a, cos_a] = sincos(azimuth);
 
-    const auto v = Vec3<real_t>(
-        real_t((r * cos_a)), 
-        real_t((r * sin_a)), 
-        real_t((sqrtf(1 - u0)))
+    const auto v = Vec3<iq16>(
+        iq16((r * cos_a)), 
+        iq16((r * sin_a)), 
+        iq16((sqrtf(1 - u0)))
     );
 
-    return Ray3<real_t>::from_base_and_dir(
+    return Ray3<iq16>::from_base_and_dir(
         interaction.position + interaction.normal * EPSILON,
         rotation.xform(v)
     );
 }
 
 [[nodiscard]]
-static Option<RGB<q16>> sample_light(
-    const __restrict Interaction_t<real_t> & interaction, 
-    const __restrict Quat<real_t> & rotation, 
-    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+static Option<RGB<iq16>> sample_light(
+    const __restrict Interaction_t<iq16> & interaction, 
+    const __restrict Quat<iq16> & rotation, 
+    std::span<const TriangleSurfaceCache_t<iq16>> co_triangles
 ){
     const auto [u0, u1] = rand01_2();
 
@@ -242,15 +247,15 @@ static Option<RGB<q16>> sample_light(
         Vec3(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
     };
 
-    const auto ray = Ray3<real_t>::from_start_and_stop(
+    const auto ray = Ray3<iq16>::from_start_and_stop(
         interaction.position + interaction.normal * EPSILON,
         light_pos
     );
 
-    const real_t cos_light_theta = -ray.direction.dot(light.normal);
+    const iq16 cos_light_theta = -ray.direction.dot(light.normal);
     if (cos_light_theta <= 0) return None;
 
-    const real_t cos_theta = ray.direction.dot(interaction.normal);
+    const iq16 cos_theta = ray.direction.dot(interaction.normal);
     if (cos_theta <= 0) return None;
 
     const auto intersection = intersect(ray, co_triangles);
@@ -260,16 +265,16 @@ static Option<RGB<q16>> sample_light(
     if (sample_opt.is_none()) return None;
     const auto & [sample, bsdf_pdf] = sample_opt.unwrap();
 
-    const real_t light_pdf = (intersection.t * intersection.t) / (real_t(light_area) * cos_light_theta);
-    const real_t mis_weight = light_pdf / (light_pdf + bsdf_pdf);
+    const iq16 light_pdf = (intersection.t * intersection.t) / (iq16(light_area) * cos_light_theta);
+    const iq16 mis_weight = light_pdf / (light_pdf + bsdf_pdf);
     return Some((sample * lightColor * mis_weight * 2) / light_pdf);
 }
 
 
-static Quat<real_t> quat_from_normal(const Vec3<real_t>& normal)
+static Quat<iq16> quat_from_normal(const Vec3<iq16>& normal)
 {
-    const auto ilen = isqrt(1 + (normal.z + 2) * normal.z);
-    return Quat<real_t>::from_xyzw(
+    const auto ilen = inv_sqrt(1 + (normal.z + 2) * normal.z);
+    return Quat<iq16>::from_xyzw(
         -normal.y * ilen,
         normal.x * ilen,
         0,
@@ -278,12 +283,12 @@ static Quat<real_t> quat_from_normal(const Vec3<real_t>& normal)
 }
 
 [[maybe_unused]]
-static RGB<q16> sampleRay(
-    RGB<q16> sample, 
-    Ray3<real_t> ray, 
-    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+static RGB<iq16> sampleRay(
+    RGB<iq16> sample, 
+    Ray3<iq16> ray, 
+    std::span<const TriangleSurfaceCache_t<iq16>> co_triangles
 ){
-    auto throughput = RGB<q16>{1,1,1};
+    auto throughput = RGB<iq16>{1,1,1};
     uint16_t depth = 0;
     while (1){
         const auto intersection = intersect(ray, co_triangles);
@@ -319,25 +324,25 @@ static RGB<q16> sampleRay(
 
 
 [[maybe_unused]]
-static RGB<q16> samplePixel(
+static RGB<iq16> samplePixel(
     const uint x, 
     const uint y,
-    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+    std::span<const TriangleSurfaceCache_t<iq16>> co_triangles
 ){
-    auto sample = RGB<q16>::from_uninitialized();
+    auto sample = RGB<iq16>::from_uninitialized();
 
-    [[maybe_unused]] static constexpr auto uz = - real_t(0.5) / 
-        tanf(real_t((alpha * TAU / 360) * 0.5f));
+    [[maybe_unused]] static constexpr auto uz = - iq16(0.5) / 
+        tanf(iq16((alpha * TAU / 360) * 0.5f));
 
     for (size_t i = 0; i < spp; i++){
 
-        const real_t ux = x * INV_LCD_H;
-        const real_t uy = y * INV_LCD_H;
+        const iq16 ux = x * INV_LCD_H;
+        const iq16 uy = y * INV_LCD_H;
 
         sample += 
         sampleRay(
             sample,
-            Ray3<real_t>::from_base_and_dir(eye,Vec3<real_t>(ux - 0.5_r, 0.5_r - uy, uz)),
+            Ray3<iq16>::from_base_and_dir(eye,Vec3<iq16>(ux - 0.5_r, 0.5_r - uy, uz)),
             co_triangles
         )
         // RGB(ux, uy, CLAMP(ux + uy, 0, 1))
@@ -346,10 +351,10 @@ static RGB<q16> samplePixel(
     }
 
     return sample;
-    return RGB<q16>{
-        real_t(sample.r / (1 + sample.r)),
-        real_t(sample.g / (1 + sample.g)),
-        real_t(sample.b / (1 + sample.b))
+    return RGB<iq16>{
+        iq16(sample.r / (1 + sample.r)),
+        iq16(sample.g / (1 + sample.g)),
+        iq16(sample.b / (1 + sample.b))
     };
 }
 
@@ -357,12 +362,12 @@ __no_inline
 static RGB565 draw3drt(
     const uint x, 
     const uint y,
-    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+    std::span<const TriangleSurfaceCache_t<iq16>> co_triangles
 ){
     const auto sample = samplePixel(x, y, co_triangles);
 
-    // const real_t ux = x * INV_LCD_H;
-    // const real_t uy = y * INV_LCD_H;
+    // const iq16 ux = x * INV_LCD_H;
+    // const iq16 uy = y * INV_LCD_H;
     // const auto sample = RGB(ux, uy, CLAMP(ux + uy + param, 0, 1)) * inv_spp;
 
     return RGB565::from_r5g6b5(uint8_t(sample.r * 31), uint8_t(sample.g * 63), uint8_t(sample.b * 31));
@@ -375,7 +380,7 @@ __no_inline
 static void render_row(
     const __restrict std::span<RGB565> row, 
     const uint y, 
-    std::span<const TriangleSurfaceCache_t<real_t>> co_triangles
+    std::span<const TriangleSurfaceCache_t<iq16>> co_triangles
 ){
     // ASSERT(row.size() == LCD_W);
     // const auto s = sin(8 * clock::time());
@@ -448,7 +453,7 @@ void light_tracking_main(void){
     spi.init({LCD_SPI_FREQ_HZ});
     // spi.init(2_MHz, CommStrategy::Blocking, CommStrategy::Nil);
     (void)spi.set_bitorder(MSB);
-    // spi.set_bitorder(LSB);
+    // spi.set_bitorder(std::endian::little
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 displayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
@@ -477,22 +482,22 @@ void light_tracking_main(void){
         displayer.setarea_unchecked({Vec2u16{0,0}, Vec2u16{LCD_W, LCD_H}}).examine();
         for (uint y = 0; y < LCD_H; y++){
             std::array<RGB565, LCD_W> row;
-            // row.fill(RGB565(Color<real_t>(0,int(y==0),0,0)));
+            // row.fill(RGB565(Color<iq16>(0,int(y==0),0,0)));
             // row[0] = 
             for(size_t x = 0; x < row.size(); x++){
                 auto & item = row[x];
 
-                // constexpr auto c = Color<real_t>(1,1,0,0);
+                // constexpr auto c = Color<iq16>(1,1,0,0);
                 // constexpr auto r8 = RGB888(c);
                 // // constexpr auto r = RGB565(c); 
                 // constexpr auto r = RGB565(r8); 
 
-                // item = RGB565(Color<real_t>(real_t(y) / LCD_H, st, 0));
+                // item = RGB565(Color<iq16>(iq16(y) / LCD_H, st, 0));
                 // item = RGB565::from_u16(0x003f);
                 // item = RGB565::from_u16(0xff00);
                 // item = RGB565::from_r5g6b5(y, x, uint8_t(31 * st));
                 item = RGB565::from_r5g6b5(y, x, uint8_t(31 * st));
-                    // real_t(x) * INV_LCD_W,
+                    // iq16(x) * INV_LCD_W,
                     // x % 2,
                     // 1,
                     
@@ -518,9 +523,9 @@ void light_tracking_main(void){
     //     fill();
     // }
 
-    std::vector<TriangleSurfaceCache_t<real_t>> co_triangles(triangles.begin(), triangles.end());
+    std::vector<TriangleSurfaceCache_t<iq16>> co_triangles(triangles.begin(), triangles.end());
     // for(uint i = 0; i < co_triangles.size(); i++) 
-    //     co_triangles[i] = TriangleSurfaceCache_t<real_t>(triangles[i]);
+    //     co_triangles[i] = TriangleSurfaceCache_t<iq16>(triangles[i]);
     DEBUG_PRINTLN(clock::millis());
 
 

@@ -286,7 +286,7 @@ private:
 
 struct Rpm final{
     static constexpr Rpm from_speed(const real_t speed){
-        const uint16_t temp = uint16_t(q16(speed) * 600);
+        const uint16_t temp = uint16_t(iq16(speed) * 600);
         return {BSWAP_16(temp)};
     }
     constexpr uint16_t as_u16() const {

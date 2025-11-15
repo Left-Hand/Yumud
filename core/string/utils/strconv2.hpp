@@ -380,7 +380,7 @@ __fast_inline static constexpr std::tuple<uint32_t, uint8_t> fast_div(uint32_t x
 		constexpr size_t mask = N - 1;
 		return {x >> shift, uint8_t(x & mask)};
 	}else{
-		const auto q = q16(1.0 / N);
+		const auto q = iq16(1.0 / N);
 		const auto r = uint32_t(x * q);
 		return {r, uint8_t(x - r * N)};
 	}

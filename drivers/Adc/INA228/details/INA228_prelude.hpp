@@ -414,7 +414,8 @@ struct INA228_Regs:public INA228_Prelude{
         uint16_t BUVL:15;
         uint16_t __RESV__:1;
     };
-    
+
+
     struct R16_TempLimit:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x10;  // 16 bit,  temp over
 

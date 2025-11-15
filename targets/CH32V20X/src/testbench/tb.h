@@ -186,3 +186,8 @@ void mlx90640_main();
 void adrc_main();
 void svd_main();
 void script_main();
+void alx_aoa_main();
+void mk8000tr_main();
+void vl53l5cx_main();
+void ld19_main();
+void m10_main();

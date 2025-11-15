@@ -11,7 +11,7 @@
 namespace ymd{
 
 template<typename T, size_t N>
-class HeaplessVector {
+class [[nodiscard]] HeaplessVector {
 public:
     // 构造函数 - constexpr
     constexpr HeaplessVector() noexcept : size_(0) {}
@@ -78,52 +78,52 @@ public:
     }
 
     // 元素访问 - constexpr
-    constexpr T& operator[](size_t index) {
+    [[nodiscard]] constexpr T& operator[](size_t index) {
         return data_[index];
     }
 
-    constexpr const T& operator[](size_t index) const {
+    [[nodiscard]] constexpr const T& operator[](size_t index) const {
         return data_[index];
     }
 
-    constexpr T& front() {
+    [[nodiscard]] constexpr T& front() {
         return data_[0];
     }
 
-    constexpr const T& front() const {
+    [[nodiscard]] constexpr const T& front() const {
         return data_[0];
     }
 
-    constexpr T& back() {
+    [[nodiscard]] constexpr T& back() {
         return data_[size_ - 1];
     }
 
-    constexpr const T& back() const {
+    [[nodiscard]] constexpr const T& back() const {
         return data_[size_ - 1];
     }
 
-    constexpr T * data() noexcept{
+    [[nodiscard]] constexpr T * data() noexcept{
         return data_;
     }
-    constexpr const T * data() const noexcept{
+    [[nodiscard]] constexpr const T * data() const noexcept{
         return data_;
     }
 
 
     // 容量相关 - constexpr
-    constexpr size_t size() const noexcept {
+    [[nodiscard]] constexpr size_t size() const noexcept {
         return size_;
     }
 
-    constexpr size_t capacity() const noexcept {
+    [[nodiscard]] constexpr size_t capacity() const noexcept {
         return N;
     }
 
-    constexpr bool empty() const noexcept {
+    [[nodiscard]] constexpr bool empty() const noexcept {
         return size_ == 0;
     }
 
-    constexpr bool full() const noexcept {
+    [[nodiscard]] constexpr bool full() const noexcept {
         return size_ == N;
     }
 
@@ -155,14 +155,14 @@ public:
         size_ += pbuf.size();
     }
 
-    constexpr Result<void, void> append(const T data){
+    [[nodiscard]] constexpr Result<void, void> append(const T data){
         if(size_ + 1 > N) return Err();
         data_[size_] = data;
         size_ = size_ + 1;
         return Ok();
     }
 
-    constexpr Result<void, void> append(const std::span<const T> pbuf){
+    [[nodiscard]] constexpr Result<void, void> append(const std::span<const T> pbuf){
         if(size_ + pbuf.size() > N) return Err();
         for(size_t i = 0; i < pbuf.size(); i++){
             data_[size_ + i] = pbuf[i];
@@ -173,7 +173,7 @@ public:
 
     template<typename Iter>
     requires (is_std_iter_v<Iter>)
-    constexpr Result<void, void> append(Iter && iter){ 
+    [[nodiscard]] constexpr Result<void, void> append(Iter && iter){ 
         while(iter.has_next()){
             if(size_ + 1 > N) return Err();
             append_unchecked(iter.next());
@@ -181,7 +181,7 @@ public:
         return Ok();
     }
 
-    constexpr std::span<const T> iter() const {
+    [[nodiscard]] constexpr std::span<const T> iter() const {
         return std::span(data_, size_);
     }
 
@@ -196,20 +196,24 @@ public:
     }
 
     // 迭代器 - constexpr
-    constexpr T* begin() noexcept {
+    [[nodiscard]] constexpr T* begin() noexcept {
         return data_;
     }
 
-    constexpr const T* begin() const noexcept {
+    [[nodiscard]] constexpr const T* begin() const noexcept {
         return data_;
     }
 
-    constexpr T* end() noexcept {
+    [[nodiscard]] constexpr T* end() noexcept {
         return data_ + size_;
     }
 
-    constexpr const T* end() const noexcept {
+    [[nodiscard]] constexpr const T* end() const noexcept {
         return data_ + size_;
+    }
+
+    [[nodiscard]] constexpr std::span<const T> view() const {
+        return std::span(data_, size_);
     }
 
 private:

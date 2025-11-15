@@ -37,15 +37,15 @@ public:
     
     [[nodiscard]] IResult<uint16_t> get_magnitude();
     
-    [[nodiscard]] IResult<Angle<q31>> get_raw_angle();
+    [[nodiscard]] IResult<Angle<uq32>> get_raw_angle();
     
-    [[nodiscard]] IResult<Angle<q31>> get_angle();
+    [[nodiscard]] IResult<Angle<uq32>> get_angle();
     
-    [[nodiscard]] IResult<> set_start_angle(const Angle<q31> angle);
+    [[nodiscard]] IResult<> set_start_angle(const Angle<uq32> angle);
     
-    [[nodiscard]] IResult<> set_end_angle(const Angle<q31> angle);
+    [[nodiscard]] IResult<> set_end_angle(const Angle<uq32> angle);
     
-    [[nodiscard]] IResult<> set_amount_angle(const Angle<q31> angle);
+    [[nodiscard]] IResult<> set_amount_angle(const Angle<uq32> angle);
     
     [[nodiscard]] IResult<uint8_t> get_program_times();
     
@@ -60,7 +60,7 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto err = i2c_drv_.write_reg(
             std::bit_cast<uint8_t>(T::ADDRESS), 
-            reg.as_val(), LSB); 
+            reg.as_bits(), std::endian::little); 
             err.is_err()) return Err(err.unwrap_err());
         reg.apply();
         return Ok();
@@ -70,7 +70,7 @@ private:
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto err = i2c_drv_.read_reg(
             std::bit_cast<uint8_t>(T::ADDRESS), 
-            reg.as_ref(), LSB); 
+            reg.as_mut_bits(), std::endian::little); 
             err.is_err()) return Err(err.unwrap_err());
         return Ok();
     }

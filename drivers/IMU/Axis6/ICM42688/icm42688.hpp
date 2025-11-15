@@ -27,8 +27,8 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
-    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
 
     [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
@@ -40,8 +40,8 @@ private:
     Option<Bank> last_bank_ = None;
     ICM42688_Regset regs_ = {};
 
-    q24 acc_scale_ = 0;
-    q24 gyr_scale_ = 0;
+    iq24 acc_scale_ = 0;
+    iq24 gyr_scale_ = 0;
 
 
     [[nodiscard]] IResult<> switch_bank(const Bank bank){
@@ -56,7 +56,7 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        if(const auto res = phy_.write_reg(T::ADDRESS, reg.as_val());
+        if(const auto res = phy_.write_reg(T::ADDRESS, reg.as_bits());
             res.is_err()) return res;
         reg.apply();
         return Ok();
@@ -73,29 +73,29 @@ private:
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        return phy_.read_reg(T::ADDRESS, reg.as_ref());
+        return phy_.read_reg(T::ADDRESS, reg.as_mut_bits());
     };
 
-    [[nodiscard]] static constexpr q24 calc_gyr_scale(const GyrFs fs){
+    [[nodiscard]] static constexpr iq24 calc_gyr_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_2000deg  :      return DEG2RAD<q24>(q24(2 * 2000   ));
-            case GyrFs::_1000deg  :      return DEG2RAD<q24>(q24(2 * 1000   ));
-            case GyrFs::_500deg   :      return DEG2RAD<q24>(q24(2 * 500    ));
-            case GyrFs::_250deg   :      return DEG2RAD<q24>(q24(2 * 250    ));
-            case GyrFs::_125deg   :      return DEG2RAD<q24>(q24(2 * 125    ));
-            case GyrFs::_62_5deg  :      return DEG2RAD<q24>(q24(2 * 62.5   ));
-            case GyrFs::_31_25deg :      return DEG2RAD<q24>(q24(2 * 31.25  ));
-            case GyrFs::_15_625deg:      return DEG2RAD<q24>(q24(2 * 15.625 ));
+            case GyrFs::_2000deg  :      return DEG2RAD<iq24>(iq24(2 * 2000   ));
+            case GyrFs::_1000deg  :      return DEG2RAD<iq24>(iq24(2 * 1000   ));
+            case GyrFs::_500deg   :      return DEG2RAD<iq24>(iq24(2 * 500    ));
+            case GyrFs::_250deg   :      return DEG2RAD<iq24>(iq24(2 * 250    ));
+            case GyrFs::_125deg   :      return DEG2RAD<iq24>(iq24(2 * 125    ));
+            case GyrFs::_62_5deg  :      return DEG2RAD<iq24>(iq24(2 * 62.5   ));
+            case GyrFs::_31_25deg :      return DEG2RAD<iq24>(iq24(2 * 31.25  ));
+            case GyrFs::_15_625deg:      return DEG2RAD<iq24>(iq24(2 * 15.625 ));
         }
         __builtin_unreachable();
     }
 
-    [[nodiscard]] static constexpr q24 calc_acc_scale(const AccFs fs){
+    [[nodiscard]] static constexpr iq24 calc_acc_scale(const AccFs fs){
         switch(fs){
-            case AccFs::_16G    :       return GRAVITY_ACC<q24> * 32;
-            case AccFs::_8G     :       return GRAVITY_ACC<q24> * 16;
-            case AccFs::_4G     :       return GRAVITY_ACC<q24> * 8;
-            case AccFs::_2G     :       return GRAVITY_ACC<q24> * 4;
+            case AccFs::_16G    :       return GRAVITY_ACC<iq24> * 32;
+            case AccFs::_8G     :       return GRAVITY_ACC<iq24> * 16;
+            case AccFs::_4G     :       return GRAVITY_ACC<iq24> * 8;
+            case AccFs::_2G     :       return GRAVITY_ACC<iq24> * 4;
         }
         __builtin_unreachable();
     }

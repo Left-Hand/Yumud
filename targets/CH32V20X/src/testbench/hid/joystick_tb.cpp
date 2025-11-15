@@ -41,7 +41,7 @@ void joystick_main(){
     // auto & spi = hal::spi1;
 
     spi.init({100000});//maxium baud
-    if(const auto res = spi.set_bitorder(LSB);  
+    if(const auto res = spi.set_bitorder(LSB);
         res.is_err()) PANIC(res.unwrap_err());
 
     auto spi_cs_gpio_ = hal::PA<15>();

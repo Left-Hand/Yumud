@@ -97,8 +97,8 @@ struct IST8310_Regset:public IST8310_Prelude{
         static constexpr RegAddr ADDRESS = 0x1C;
         uint16_t data;
 
-        constexpr q16 to_temp() const {
-            return (this->as_val() * q16(0.8) - 75);
+        constexpr iq16 to_temp() const {
+            return (this->as_bits() * iq16(0.8) - 75);
         }
     }DEF_R16(temp_reg)
 

@@ -40,9 +40,9 @@ real_t volt_2_current(real_t volt){
 }
 
 
-using LowpassFilter = dsp::ButterLowpassFilter<q16, 2>;
-using HighpassFilter = dsp::ButterHighpassFilter<q16, 2>;
-using BandpassFilter = dsp::ButterBandpassFilter<q16, 4>;
+using LowpassFilter = dsp::ButterLowpassFilter<iq16, 2>;
+using HighpassFilter = dsp::ButterHighpassFilter<iq16, 2>;
+using BandpassFilter = dsp::ButterBandpassFilter<iq16, 4>;
 
 [[maybe_unused]] static 
 void at8222_tb(){

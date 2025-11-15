@@ -6,6 +6,7 @@
 #include "core/utils/angle.hpp"
 #include "core/utils/Errno.hpp"
 
+
 #include "hal/hal_result.hpp"
 
 
@@ -49,7 +50,7 @@ OutputStream& operator << (OutputStream& os, const drivers::details::EncoderErro
 namespace ymd::drivers{
 class EncoderIntf{
 public:
-    virtual Result<Angle<q31>, EncoderError> read_lap_angle() = 0;
+    virtual Result<Angle<uq32>, EncoderError> read_lap_angle() = 0;
     virtual Result<void, EncoderError> update() = 0;
     virtual ~EncoderIntf() = default;
 };

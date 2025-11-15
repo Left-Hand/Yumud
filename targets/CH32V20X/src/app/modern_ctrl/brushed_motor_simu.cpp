@@ -16,7 +16,7 @@ using namespace ymd;
 using namespace ymd::robots;
 
 void test_burshed_motor(){
-
+    const auto tau = 80.0_r;
     dsp::TdVec2 td{{
         .kp = tau * tau,
         .kd = 2 * tau,
@@ -29,17 +29,17 @@ void test_burshed_motor(){
 
     [[maybe_unused]]
     auto test_td = [&](const auto t){
-        // const auto u = 6 * Vec2<q16>::RIGHT.rotated(real_t(TAU) * t);
+        // const auto u = 6 * Vec2<iq16>::RIGHT.rotated(real_t(TAU) * t);
         // const auto [x,y] = sincos(real_t(TAU) * t);
         // const auto m = sin(3 * real_t(TAU) * t);
         // const auto [x,y] = sincos(ret);
-        // const auto u = Vec2<q16>{CLAMP(70 * x, -30, 30), 6 * y};
-        // const auto u = Vec2<q16>{CLAMP(70 * x, -5, 5) + m, 0};
-        // const auto u = Vec2<q16>{10 * frac(t * 3), 0};
-        const auto u = Vec2<q16>{10 * frac(t), 0};
+        // const auto u = Vec2<iq16>{CLAMP(70 * x, -30, 30), 6 * y};
+        // const auto u = Vec2<iq16>{CLAMP(70 * x, -5, 5) + m, 0};
+        // const auto u = Vec2<iq16>{10 * frac(t * 3), 0};
+        const auto u = Vec2<iq16>{10 * frac(t), 0};
         
-        // const auto u = Vec2<q16>{CLAMP(70 * x, -30, 30), 0};
-        // const auto u = Vec2<q16>{6 * x, 0};
+        // const auto u = Vec2<iq16>{CLAMP(70 * x, -30, 30), 0};
+        // const auto u = Vec2<iq16>{6 * x, 0};
 
         const auto u0 = clock::micros();
         td.update(u);
@@ -50,7 +50,7 @@ void test_burshed_motor(){
 
     static constexpr uint ISR_FREQ = 20000;
 
-    static constexpr auto mc_w = 20.8_q12;
+    static constexpr auto mc_w = 20.8_iq12;
     static dsp::CommandShaper1 cs{{
         .kp = mc_w * mc_w,
         .kd = 2 * mc_w,

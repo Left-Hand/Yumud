@@ -18,7 +18,6 @@ namespace ymd::drivers{
 
 struct PMW3901_Prelude{
     struct MotionReg:public Reg8<>{
-        using Reg8::operator=;
 
         uint8_t frame_from0:1;
         uint8_t run_mode:2;
@@ -43,18 +42,17 @@ struct PMW3901_Prelude{
     #pragma pack(pop)
     static_assert(sizeof(PMW3901_Data) == 1 + 1 + 2 + 2, "PMW3901_Data size error");
 
-};
-
-class PMW3901 final:public PMW3901_Prelude{
-public:
     enum class Error_Kind:uint8_t{
-        WrongChipId
+        InvalidChipId
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+};
+
+class PMW3901 final:public PMW3901_Prelude{
 public:
 
     explicit PMW3901(const hal::SpiDrv & spi_drv):
@@ -74,8 +72,8 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] Vec2<q16> get_position(){
-        return {x_cm * q16(0.01), y_cm * q16(0.01)};
+    [[nodiscard]] Vec2<iq16> get_position(){
+        return {x_cm * iq16(0.01), y_cm * iq16(0.01)};
     }
 
     [[nodiscard]] IResult<> set_led(bool on);
@@ -84,10 +82,11 @@ private:
     hal::SpiDrv spi_drv_;
 
     PMW3901_Data data_ = {};
-    q16 x_cm = 0;
-    q16 y_cm = 0;
+    iq16 x_cm = 0;
+    iq16 y_cm = 0;
 
-    [[nodiscard]] IResult<bool> assert_reg(const uint8_t command, const uint8_t data);
+    [[nodiscard]] IResult<> assert_reg(const uint8_t command, const uint8_t data, const Error & error);
+
     [[nodiscard]] IResult<> write_reg(const uint8_t command, const uint8_t data);
     [[nodiscard]] IResult<> read_reg(const uint8_t command, uint8_t & data);
     [[nodiscard]] IResult<> read_burst(const uint8_t commnad, std::span<uint8_t> pbuf);

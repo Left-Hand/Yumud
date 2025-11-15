@@ -114,20 +114,20 @@ IResult<> MMC5983::enable_yz(const Enable en){
     return write_reg(reg);
 }
 
-IResult<Vec3<q24>> MMC5983::read_mag(){
-    static constexpr auto LSB_18BIT = 0.0000625_q24;
+IResult<Vec3<iq24>> MMC5983::read_mag(){
+    static constexpr auto LSB_18BIT = 0.0000625_iq24;
 
     const auto mag3i = regs_.data_packet_.to_vec3();
     
-    return Ok(Vec3<q24>{
+    return Ok(Vec3<iq24>{
         LSB_18BIT * mag3i.x,
         LSB_18BIT * mag3i.y,
         LSB_18BIT * mag3i.z
     });
 }
 
-IResult<q16> MMC5983::read_temp(){
-    const q16 temp = regs_.data_packet_.to_temp();
+IResult<iq16> MMC5983::read_temp(){
+    const iq16 temp = regs_.data_packet_.to_temp();
     return Ok(temp);
 }
 
@@ -210,11 +210,11 @@ static auto do_set_reset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
 };
 
 
-MMC5983::IResult<Vec3<q24>> MMC5983::do_mag_set(){
+MMC5983::IResult<Vec3<iq24>> MMC5983::do_mag_set(){
     return do_set_reset(*this, [this](Enable en){return enable_mag_set(en);});
 }
 
-MMC5983::IResult<Vec3<q24>> MMC5983::do_mag_reset(){
+MMC5983::IResult<Vec3<iq24>> MMC5983::do_mag_reset(){
     return do_set_reset(*this, [this](Enable en){return enable_mag_reset(en);});
 }
 

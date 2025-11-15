@@ -123,7 +123,7 @@ struct Vec2{
     [[nodiscard]] __fast_inline static constexpr Vec2<T> from_angle_and_length(
         const Angle<U> angle, const T length){
         const auto [s,c] = angle.sincos();
-        return {static_cast<T>(c * length), static_cast<T>(s * length)};
+        return {static_cast<T>(length * c), static_cast<T>(length * s)};
     }
 
     [[nodiscard]] constexpr T & operator [](const size_t idx) { 
@@ -261,7 +261,7 @@ struct Vec2{
     }
 
     [[nodiscard]] constexpr T inv_length() const {
-        return imag(x,y);
+        return inv_mag(x,y);
     }
     
     [[nodiscard]] constexpr T length_squared() const {return (x*x + y*y);}
@@ -526,7 +526,7 @@ constexpr Vec2<T> Vec2<T>::project(const Vec2<T> & b) const{
 
 template<typename T>
 constexpr T Vec2<T>::project(const T & rad) const{
-    auto [s,c] = sincos(rad);
+    const auto [s,c] = sincos(rad);
     return (this->x) * c + (this->y) * s;
 
 }
@@ -576,7 +576,7 @@ constexpr Vec2<T> Vec2<T>::snapped(const Vec2<T> &by) const{
 template<typename T>
 constexpr __fast_inline Vec2<T> Vec2<T>::normalized() const{
     static_assert(not std::is_integral_v<T>);
-    return (*this) * isqrt(this->length_squared());
+    return (*this) * inv_sqrt(this->length_squared());
 }
 
 template<typename T>

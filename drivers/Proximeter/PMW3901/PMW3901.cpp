@@ -128,7 +128,7 @@ static constexpr auto INIT_LIST2 = std::to_array({
 static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
 
 
-static constexpr q16 scale = q16(13.0/2000);
+static constexpr iq16 scale = iq16(13.0/2000);
 
 IResult<> PMW3901::write_reg(const uint8_t command, const uint8_t data){
     if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT);
@@ -217,7 +217,7 @@ IResult<> PMW3901::read_data_slow(){
         if(const auto res = read_reg(0x02 + i, buf[i]); res.is_err()) return res;
     }
 
-    data_.motion = buf[0];
+    data_.motion.as_mut_bits() = buf[0];
     data_.dx.data = (buf[2] << 8) | buf[1];
     data_.dy.data = (buf[4] << 8) | buf[3];
 
@@ -225,7 +225,7 @@ IResult<> PMW3901::read_data_slow(){
 }
 
 IResult<> PMW3901::read_data_burst(){
-    return read_burst(0x16, std::span(&data_.motion.as_ref(), 6));
+    return read_burst(0x16, std::span(&data_.motion.as_mut_bits(), 6));
 }
 
 
@@ -233,16 +233,19 @@ IResult<> PMW3901::read_data_burst(){
 IResult<> PMW3901::update(){
     return read_data()
     .if_ok([&]{
-        x_cm += int16_t(data_.dx.as_val()) * scale;
-        y_cm += int16_t(data_.dy.as_val()) * scale;
+        x_cm += int16_t(data_.dx.as_bits()) * scale;
+        y_cm += int16_t(data_.dy.as_bits()) * scale;
     });
 
 }
 
-Result<bool, Error> PMW3901::assert_reg(const uint8_t command, const uint8_t data){
+IResult<> PMW3901::assert_reg(const uint8_t command, const uint8_t data, const Error & error){
     uint8_t temp = 0;
-    if(const auto res = read_reg(command, temp); res.is_err()) return Err(res.unwrap_err());
-    return Ok(temp == data);
+    if(const auto res = read_reg(command, temp); res.is_err())
+        return Err(res.unwrap_err());
+    if(temp != data) [[unlikely]]
+        return Err(error);
+    return Ok();
 }
 
 IResult<> PMW3901::write_list(std::span<const std::pair<uint8_t, uint8_t>> list){
@@ -253,19 +256,17 @@ IResult<> PMW3901::write_list(std::span<const std::pair<uint8_t, uint8_t>> list)
 }
 
 IResult<> PMW3901::validate(){
-    if(const auto res = assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6);
+    if(const auto res = assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6, Error::InvalidChipId);
         res.is_err()) return Err(res.unwrap_err());
-    else if(res.unwrap() == false) return Err(Error::WrongChipId);
 
-    if(const auto res = assert_reg(PMW3901_REG_Product_ID, 0x49);
+    if(const auto res = assert_reg(PMW3901_REG_Product_ID, 0x49, Error::InvalidChipId);
         res.is_err()) return Err(res.unwrap_err());
-    else if(res.unwrap() == false) return Err(Error::WrongChipId);
 
     return Ok();
 }
 
 IResult<> PMW3901::init() {
-    if(const auto res = spi_drv_.release(); res.is_err()) 
+    if(const auto res = spi_drv_.release(); res.is_err())
         return Err(res.unwrap_err());
     
     if(const auto res = write_reg(PMW3901_REG_Power_Up_Reset, 0x5A); 

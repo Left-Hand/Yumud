@@ -69,9 +69,9 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
             return {x,y,z};
         }
 
-        constexpr q16 to_temp() const {
+        constexpr iq16 to_temp() const {
             // Temperature output, unsigned format. The range is -75~125°C, about 0.8°C/LSB, 00000000 stands for -75°C
-            // return q16(buf_[7] * 0.8_q16 - 75);
+            // return iq16(buf_[7] * 0.8_iq16 - 75);
             return buf_[7];
         }
         constexpr std::span<uint8_t> as_bytes() {return std::span(buf_);}

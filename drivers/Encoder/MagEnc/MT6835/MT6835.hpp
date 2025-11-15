@@ -18,7 +18,7 @@ public:
     [[nodiscard]] IResult<> init();
 
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Angle<q31>> read_lap_angle(){
+    [[nodiscard]] IResult<Angle<uq32>> read_lap_angle(){
         return last_packet_.parse();
     }
 private:

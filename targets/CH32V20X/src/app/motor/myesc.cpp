@@ -52,41 +52,41 @@ using namespace ymd::dsp;
 static constexpr uint32_t CHOPPER_FREQ = 32_KHz;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
-// static constexpr auto phase_inductance = 0.00275_q20;
-// static constexpr auto phase_resistance = 10_q20;
-static constexpr auto INV_BUS_VOLT = q16(1 / 12.0);
+// static constexpr auto phase_inductance = 0.00275_iq20;
+// static constexpr auto phase_resistance = 10_iq20;
+static constexpr auto INV_BUS_VOLT = iq16(1 / 12.0);
 static constexpr size_t HFI_FREQ = 1000;
 
 #if 1
 static constexpr size_t POLE_PAIRS = 10u;
-// static constexpr auto PHASE_INDUCTANCE = 0.0085_q20;
-// static constexpr auto PHASE_INDUCTANCE = 0.00245_q20;
-// static constexpr auto PHASE_INDUCTANCE = 0.0025_q20;
+// static constexpr auto PHASE_INDUCTANCE = 0.0085_iq20;
+// static constexpr auto PHASE_INDUCTANCE = 0.00245_iq20;
+// static constexpr auto PHASE_INDUCTANCE = 0.0025_iq20;
 
 //100uh
-static constexpr auto PHASE_INDUCTANCE = q20(42.3 * 1E-6);
+static constexpr auto PHASE_INDUCTANCE = iq20(42.3 * 1E-6);
 
 //1ohm
-// static constexpr auto PHASE_RESISTANCE = 1.123_q20;
-static constexpr auto PHASE_RESISTANCE = 0.823_q20;
+// static constexpr auto PHASE_RESISTANCE = 1.123_iq20;
+static constexpr auto PHASE_RESISTANCE = 0.823_iq20;
 #else
 static constexpr size_t POLE_PAIRS = 7u;
-static constexpr auto PHASE_INDUCTANCE = 0.0007_q20;
-// static constexpr auto PHASE_INDUCTANCE = 0.00325_q20;
-static constexpr auto PHASE_RESISTANCE = 0.523_q20;
+static constexpr auto PHASE_INDUCTANCE = 0.0007_iq20;
+// static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
+static constexpr auto PHASE_RESISTANCE = 0.523_iq20;
 #endif
 
 static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1000;
 // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 200;
 
-static constexpr auto MAX_MODU_VOLT = q16(6.5);
+static constexpr auto MAX_MODU_VOLT = iq16(6.5);
 
 struct LrSeriesCurrentRegulatorConfig{
     uint32_t fs;                 // 采样频率 (Hz)
     uint32_t fc;                 // 截止频率/带宽 (Hz)
-    q16 phase_inductance;        // 相电感 (H)
-    q16 phase_resistance;        // 相电阻 (Ω)
-    q16 max_voltage;                // 最大电压 (V)
+    iq16 phase_inductance;        // 相电感 (H)
+    iq16 phase_resistance;        // 相电阻 (Ω)
+    iq16 max_voltage;                // 最大电压 (V)
 
     [[nodiscard]] constexpr digipw::PiController::Cofficients make_coeff() const {
         //U(s) = I(s) * R + s * I(s) * L
@@ -99,15 +99,15 @@ struct LrSeriesCurrentRegulatorConfig{
         const auto & self = *this;
         digipw::PiController::Cofficients coeff;
 
-        const auto norm_omega = q16(q16(TAU) * fc / self.fs);
+        const auto norm_omega = iq16(iq16(TAU) * fc / self.fs);
         coeff.max_out = self.max_voltage;
 
-        coeff.kp = q20(self.phase_inductance * self.fc) * q16(TAU);
+        coeff.kp = iq20(self.phase_inductance * self.fc) * iq16(TAU);
         coeff.ki_discrete = self.phase_resistance * norm_omega;
 
         // coeff.ki_discrete = 0;
 
-        coeff.err_sum_max = self.max_voltage / q16(coeff.ki_discrete);
+        coeff.err_sum_max = self.max_voltage / iq16(coeff.ki_discrete);
         return coeff;
     }
 };
@@ -116,10 +116,10 @@ struct LrSeriesCurrentRegulatorConfig{
 #if 0
 [[maybe_unused]] auto speed_compansate_dq_volt = [&]{
     auto dq_volt = dq_volt_;
-    dq_volt.d = 0.0_q20;
-    // dq_volt.d = 0.0005_q20 * linear_speed;
-    // dq_volt.d = 0.0005_q20 * linear_speed;
-    dq_volt.q = 0.0_q20;
+    dq_volt.d = 0.0_iq20;
+    // dq_volt.d = 0.0005_iq20 * linear_speed;
+    // dq_volt.d = 0.0005_iq20 * linear_speed;
+    dq_volt.q = 0.0_iq20;
     return dq_volt;
 };
 
@@ -262,11 +262,11 @@ void myesc_main(){
     // #region 初始化ADC
     static constexpr auto VOLTAGE_TO_CURRENT_RATIO = 0.5_r;
     auto soa_ = hal::ScaledAnalogInput(hal::adc1.inj<1>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
+        Rescaler<iq16>::from_anti_offset(1.65_r)     * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
     auto sob_ = hal::ScaledAnalogInput(hal::adc1.inj<2>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)     * Rescaler<q16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
+        Rescaler<iq16>::from_anti_offset(1.65_r)     * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
     auto soc_ = hal::ScaledAnalogInput(hal::adc1.inj<3>(), 
-        Rescaler<q16>::from_anti_offset(1.65_r)    * Rescaler<q16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
+        Rescaler<iq16>::from_anti_offset(1.65_r)    * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
 
     init_adc();
     // #endregion 
@@ -292,13 +292,13 @@ void myesc_main(){
 
     // #endregion 
     
-    Angle<q16> openloop_elec_angle_ = 0_deg;
-    Angle<q16> sensored_elec_angle_ = 0_deg;
-    UvwCoord<q20> uvw_curr_ = Zero;
-    DqCoord<q20> dq_curr_ = Zero;
-    DqCoord<q20> dq_volt_ = Zero;
-    AlphaBetaCoord<q20> alphabeta_curr_ = Zero;
-    AlphaBetaCoord<q20> alphabeta_volt_ = Zero;
+    Angle<iq16> openloop_elec_angle_ = Zero;
+    Angle<iq16> sensored_elec_angle_ = Zero;
+    UvwCoord<iq20> uvw_curr_ = Zero;
+    DqCoord<iq20> dq_curr_ = Zero;
+    DqCoord<iq20> dq_volt_ = Zero;
+    AlphaBetaCoord<iq20> alphabeta_curr_ = Zero;
+    AlphaBetaCoord<iq20> alphabeta_volt_ = Zero;
     Microseconds exe_us_ = 0us;
 
     static constexpr auto current_regulator_cfg = LrSeriesCurrentRegulatorConfig{
@@ -321,10 +321,10 @@ void myesc_main(){
             .phase_inductance = PHASE_INDUCTANCE,
             .phase_resistance = PHASE_RESISTANCE,
 
-            // .observer_gain = 0.16_q20, // [rad/s]
-            .observer_gain = 0.1201_q20, // [rad/s]
-            // .pm_flux_linkage = 0.000017_q20, // [V / (rad/s)]
-            .pm_flux_linkage = 0.00084_q20, // [V / (rad/s)]
+            // .observer_gain = 0.16_iq20, // [rad/s]
+            .observer_gain = 0.1201_iq20, // [rad/s]
+            // .pm_flux_linkage = 0.000017_iq20, // [V / (rad/s)]
+            .pm_flux_linkage = 0.00084_iq20, // [V / (rad/s)]
         }
     };
 
@@ -357,23 +357,23 @@ void myesc_main(){
         [[maybe_unused]] const auto ctime = clock::time();
 
         //#region 电流传感
-        const auto uvw_curr = UvwCoord<q20>{
+        const auto uvw_curr = UvwCoord<iq20>{
             .u = soa_.get_value(),
             .v = sob_.get_value(),
             .w = soc_.get_value(),
         };
 
-        const auto alphabeta_curr = AlphaBetaCoord<q20>::from_uvw(uvw_curr_);
+        const auto alphabeta_curr = AlphaBetaCoord<iq20>::from_uvw(uvw_curr_);
         //#endregion
 
         //#region 位置提取
-        const auto openloop_manchine_angle = Angle<q16>::from_turns(0 * ctime);
-        // const auto openloop_manchine_angle = Angle<q16>::from_turns(1.2_r * ctime);
-        // const auto openloop_manchine_angle = Angle<q16>::from_turns(sinpu(0.2_r * ctime));
+        const auto openloop_manchine_angle = Angle<iq16>::from_turns(0 * ctime);
+        // const auto openloop_manchine_angle = Angle<iq16>::from_turns(1.2_r * ctime);
+        // const auto openloop_manchine_angle = Angle<iq16>::from_turns(sinpu(0.2_r * ctime));
         const auto openloop_elec_angle = openloop_manchine_angle * POLE_PAIRS;
 
-        static constexpr auto ANGLE_BASE = Angle<q16>::from_turns(-0.22_q16);
-        const auto encoder_angle = mt6825_.get_lap_angle().examine().into<q16>();
+        static constexpr auto ANGLE_BASE = Angle<iq16>::from_turns(-0.22_iq16);
+        const auto encoder_angle = mt6825_.get_lap_angle().examine().into<iq16>();
 
         pos_filter_.update(encoder_angle);
         
@@ -384,48 +384,48 @@ void myesc_main(){
         // const auto elec_angle = openloop_elec_angle;
         const auto elec_angle = sensored_elec_angle;
         #else
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 10_deg;
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 20_deg;
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 40_deg;
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() - 90_deg);
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 80_deg);
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle()) - 40_deg;
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 180_deg + 30_deg);
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() + 50_deg);
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() - 22_deg);
-        // const auto elec_angle = Angle<q16>(flux_sensorless_ob.angle() - 135_deg);
-        // const auto elec_angle = Angle<q16>(lbg_sensorless_ob.angle() + 30_deg);
-        // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle() + 90_deg);
-        // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle() + 90_deg);
-        // const auto elec_angle = Angle<q16>(smo_sensorless_ob.angle() + 90_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 10_deg;
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 20_deg;
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 40_deg;
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() - 90_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() + 80_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 40_deg;
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() + 180_deg + 30_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() + 50_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() - 22_deg);
+        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() - 135_deg);
+        // const auto elec_angle = Angle<iq16>(lbg_sensorless_ob.angle() + 30_deg);
+        // const auto elec_angle = Angle<iq16>(smo_sensorless_ob.angle() + 90_deg);
+        // const auto elec_angle = Angle<iq16>(smo_sensorless_ob.angle() + 90_deg);
+        // const auto elec_angle = Angle<iq16>(smo_sensorless_ob.angle() + 90_deg);
         #endif
 
-        const auto elec_rotation = Rotation2<q16>::from_angle(elec_angle);
+        const auto elec_rotation = Rotation2<iq16>::from_angle(elec_angle);
         //#endregion
 
         //#region 位速合成力矩
         const auto [position_cmd, speed_cmd] = [&]{
-            const auto omega = 9_q16;
-            const auto amplitude = 0.02_q16;
+            const auto omega = 9_iq16;
+            const auto amplitude = 2_iq16;
 
             const auto [s,c] = sincos(omega * ctime);
-            return std::make_tuple<q16, q16>(
+            return std::make_tuple<iq16, iq16>(
                 amplitude * s,
                 amplitude * omega * c
             );
-            // return std::make_tuple<q16, q16>(
+            // return std::make_tuple<iq16, iq16>(
             //     amplitude * int(omega * ctime),
             //     0
             // );
         }();
 
 
-        const q20 torque_cmd = [&]{ 
-            const q16 kp = 0.18_q16;
-            const q16 kd = 0.016_q16;
+        const iq20 torque_cmd = [&]{ 
+            const iq16 kp = 0.18_iq16;
+            const iq16 kd = 0.016_iq16;
 
-            const q16 position_err = position_cmd - pos_filter_.accumulated_angle().to_turns();
-            const q16 speed_err = speed_cmd - pos_filter_.speed();
+            const iq16 position_err = position_cmd - pos_filter_.accumulated_angle().to_turns();
+            const iq16 speed_err = speed_cmd - pos_filter_.speed();
 
             return (kp * position_err) + (kd * speed_err);
         }();
@@ -434,18 +434,18 @@ void myesc_main(){
 
         //#region 力矩转电流
 
-        static constexpr q20 TORQUE_2_CURR_RATIO = 1_q16;
-        static constexpr q20 MAX_CURRENT = 0.2_q16;
+        static constexpr iq20 TORQUE_2_CURR_RATIO = 1_iq16;
+        static constexpr iq20 MAX_CURRENT = 0.2_iq16;
 
-        const q20 current_cmd = CLAMP2(torque_cmd * TORQUE_2_CURR_RATIO, MAX_CURRENT);
+        const iq20 current_cmd = CLAMP2(torque_cmd * TORQUE_2_CURR_RATIO, MAX_CURRENT);
         //#endregion
 
         const auto dq_curr = alphabeta_curr.to_dq(elec_rotation);
 
         [[maybe_unused]] auto generate_dq_volt_by_pi_ctrl = [&]{
-            const q20 dest_d_curr = 0;
-            const q20 dest_q_curr = current_cmd;
-            return DqCoord<q20>{
+            const iq20 dest_d_curr = 0;
+            const iq20 dest_q_curr = current_cmd;
+            return DqCoord<iq20>{
                 .d = d_pi_ctrl_(dest_d_curr - dq_curr.d),
                 .q = q_pi_ctrl_(dest_q_curr - dq_curr.q)
             };
@@ -473,8 +473,8 @@ void myesc_main(){
             static size_t hfi_step = 0;
             hfi_step = (hfi_step + 1) % HFI_MAX_STEPS;
             
-            return AlphaBetaCoord<q20>{
-                .alpha = HFI_MAX_VOLT * sinpu(q16(hfi_step) / (HFI_MAX_STEPS)),
+            return AlphaBetaCoord<iq20>{
+                .alpha = HFI_MAX_VOLT * sinpu(iq16(hfi_step) / (HFI_MAX_STEPS)),
                 // .alpha = HFI_MAX_VOLT,
                 .beta = 0_r,
             };
@@ -483,14 +483,14 @@ void myesc_main(){
 
 
         const auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation);
-        // const auto alphabeta_volt = AlphaBetaCoord<q20>::ZERO;
+        // const auto alphabeta_volt = AlphaBetaCoord<iq20>::ZERO;
         // const auto alphabeta_volt = generate_alpha_beta_volt_by_hfi().clamp(MAX_MODU_VOLT);
 
         // flux_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
         // smo_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
 
         const auto uvw_dutycycle = SVM(
-            AlphaBetaCoord<q16>{
+            AlphaBetaCoord<iq16>{
                 .alpha = alphabeta_volt.alpha, 
                 .beta = alphabeta_volt.beta
             } * INV_BUS_VOLT
@@ -565,7 +565,7 @@ void myesc_main(){
             // lbg_sensorless_ob.angle().to_turns(),
             // hal::adc1.inj<1>().get_voltage(),
             
-            // q16(lap_angle.to_turns()) * POLE_PAIRS,
+            // iq16(lap_angle.to_turns()) * POLE_PAIRS,
             sensored_elec_angle_.to_turns(),
             openloop_elec_angle_.to_turns(),
             pos_filter_.accumulated_angle().to_turns(),

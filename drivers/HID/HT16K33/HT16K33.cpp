@@ -31,6 +31,9 @@ using IResult = Result<T, Error>;
 #define CHECK_ERR(x, ...) (x)
 #endif
 
+static constexpr uint8_t KEY0_REGADDR = 0x40;
+static constexpr uint8_t DISPLAYER_ADDR_BASE = 0x00;
+
 IResult<bool> HT16K33::is_any_key_pressed(){
     if(phy_.has_int_io()){
         return Ok(phy_.is_int_io_active());
@@ -54,7 +57,7 @@ IResult<> HT16K33::setup_system(const Enable en){
 }
 
 IResult<HT16K33::KeyData> HT16K33::get_key_data(){
-    static constexpr auto KEY0_REGADDR = 0x40;
+
     KeyData ret;
     if(const auto res = phy_.read_burst(KEY0_REGADDR, ret.as_bytes());
         res.is_err()) return Err(res.unwrap_err());
@@ -101,15 +104,14 @@ IResult<> HT16K33::init(const Config & cfg){
 }
 
 IResult<> HT16K33::validate(){
+    TODO();
     return Ok();
 }
 
 IResult<> HT16K33::update_displayer(
     const size_t offset, std::span<const uint8_t> pbuf){
 
-    static constexpr uint8_t ADDR_BASE = 0x00;
-
-    const auto start_addr = offset + ADDR_BASE;
+    const auto start_addr = offset + DISPLAYER_ADDR_BASE;
     const auto stop_addr = start_addr + pbuf.size();
 
     if(stop_addr > GC_RAM_SIZE)

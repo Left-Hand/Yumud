@@ -145,7 +145,7 @@ namespace ymd::nvcv2::pixels{
 
     // constexpr uint64_t sum(const Rect2u & roi) const;
     // constexpr uint64_t sum() const{return sum(this->size().to_rect());}
-    // constexpr ColorType bilinear_interpol(const Vec2<q16> & pos) const;
+    // constexpr ColorType bilinear_interpol(const Vec2<iq16> & pos) const;
 
 
 
@@ -182,11 +182,11 @@ namespace ymd::nvcv2::pixels{
 
 
 // template<typename ColorType>
-// constexpr ColorType Image<ColorType>::bilinear_interpol(const Vec2<q16> & pos) const {
+// constexpr ColorType Image<ColorType>::bilinear_interpol(const Vec2<iq16> & pos) const {
 //     Vec2u pos_i = {uint(pos.x), uint(pos.y)};
 //     // return img(pos_i);
 //     if(!this->size().has_point(pos_i) || !this->size().has_point(pos_i + Vec2u{1,1})) return ColorType();
-//     Vec2<q16> pos_frac = {frac(pos.x), frac(pos.y)};
+//     Vec2<iq16> pos_frac = {frac(pos.x), frac(pos.y)};
     
 //     const auto & self = *this;
 //     if(pos_frac.x){
@@ -239,24 +239,24 @@ namespace ymd::nvcv2::pixels{
 //     //         LERP(pos_frac.x, operator()(pos_i + Vec2u(0, 1)), operator()(pos_i + Vec2u(1, 1))));
 // }
 
-    __inline Vec2u uv2pixel(const Vec2u size, const Vec2<q16> & uv){
+    __inline Vec2u uv2pixel(const Vec2u size, const Vec2<iq16> & uv){
         return Vec2u(
             uint(LERP(0u, size.x, ((uv.x + 1) / 2))), 
             uint(LERP(0u, size.y, (uv.y + 1)/2)));
     }
 
-    __inline Vec2<q16> uv2aero(const Vec2u size, const Vec2<q16> & uv){
-        return Vec2<q16>(((uv.x + 1) * (size.x / 2)), (uv.y + 1) * (size.y / 2));
+    __inline Vec2<iq16> uv2aero(const Vec2u size, const Vec2<iq16> & uv){
+        return Vec2<iq16>(((uv.x + 1) * (size.x / 2)), (uv.y + 1) * (size.y / 2));
     }
 
-    __inline Vec2<q16> pixel2uv(const Vec2u size,const Vec2u & pixel){
-        return Vec2<q16>(
+    __inline Vec2<iq16> pixel2uv(const Vec2u size,const Vec2u & pixel){
+        return Vec2<iq16>(
             INVLERP(size.x / 2, size.x, real_t(pixel.x)), 
             INVLERP(size.y / 2, size.y, real_t(pixel.y)));
     }
 
-    __inline Vec2<q16> uvstep(const Vec2u size){
-        return Vec2<q16>(real_t(2) / size.x, real_t(2) / size.y);
+    __inline Vec2<iq16> uvstep(const Vec2u size){
+        return Vec2<iq16>(real_t(2) / size.x, real_t(2) / size.y);
     }
 }
 

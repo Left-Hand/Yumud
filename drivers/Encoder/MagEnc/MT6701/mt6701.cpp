@@ -41,7 +41,7 @@ IResult<> MT6701::init(){
 
 IResult<> MT6701::update(){
     const auto res = read_reg(raw_angle_reg);
-    lap_position_ = u16_to_uni(raw_angle_reg.angle);
+    lap_position_ = uq32::from_bits(raw_angle_reg.angle);
     return res;
     // else if(spi_drv){
 
@@ -64,8 +64,8 @@ IResult<> MT6701::update(){
     // }
 }
 
-IResult<Angle<q31>> MT6701::read_lap_angle(){
-    return Ok(Angle<q31>::from_turns(lap_position_));
+IResult<Angle<uq32>> MT6701::read_lap_angle(){
+    return Ok(Angle<uq32>::from_turns(lap_position_));
 }
 
 

@@ -43,7 +43,7 @@ namespace ymd{
     }
     
     template<floating T>
-    __fast_inline constexpr T isqrt(const T val){
+    __fast_inline constexpr T inv_sqrt(const T val){
         if(std::is_constant_evaluated()) return 1 /ConstexprMath::sqrt(val);
         else return 1 / std::sqrt(val);
     }

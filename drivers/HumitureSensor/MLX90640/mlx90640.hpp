@@ -56,13 +56,13 @@ private:
 
     IResult<> read_burst(uint16_t startAddress, std::span<uint16_t> pbuf){
 
-        if(const auto res = i2c_drv_.read_burst<uint16_t>(startAddress, pbuf, MSB);
+        if(const auto res = i2c_drv_.read_burst<uint16_t>(startAddress, pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     IResult<> write_reg(uint16_t writeAddress, uint16_t data){
-        if(const auto res = i2c_drv_.write_reg<uint16_t>(writeAddress, data, MSB);
+        if(const auto res = i2c_drv_.write_reg<uint16_t>(writeAddress, data, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

@@ -41,14 +41,14 @@ IResult<> IST8310::init(){
 }
 IResult<> IST8310::update(){
     auto & reg = regs_.axis_x_reg;
-    return read_burst(reg.ADDRESS, &reg.as_ref(), 3);
+    return read_burst(reg.ADDRESS, &reg.as_mut_bits(), 3);
 }
 
 IResult<> IST8310::validate(){
     auto reg = RegCopy(regs_.whoami_reg);
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
-    if(reg.as_val() != reg.expected_value)
+    if(reg.as_bits() != reg.expected_value)
         return Err(Error::InvalidChipId);
     return Ok();
 }
@@ -85,26 +85,27 @@ IResult<> IST8310::set_y_average_times(const AverageTimes times){
 
 
 
-IResult<Vec3<q24>> IST8310::read_mag(){
+IResult<Vec3<iq24>> IST8310::read_mag(){
     auto conv = [](const int16_t data) -> real_t{
         return data * real_t(0.3);
     };
 
-    return Ok{Vec3<q24>{
-        conv(regs_.axis_x_reg.as_val()),
-        conv(regs_.axis_y_reg.as_val()),
-        conv(regs_.axis_z_reg.as_val())
+    return Ok{Vec3<iq24>{
+        conv(regs_.axis_x_reg.as_bits()),
+        conv(regs_.axis_y_reg.as_bits()),
+        conv(regs_.axis_z_reg.as_bits())
     }};
 }
 
-IResult<q16> IST8310::get_temperature(){
+IResult<iq16> IST8310::get_temperature(){
     return Ok(regs_.temp_reg.to_temp());
 }
 
 IResult<bool> IST8310::is_data_ready(){
+    
     auto reg = RegCopy(regs_.status1_reg);
     if(const auto res = read_reg(reg);
-        res.is_err()) return Err(res.unwrap_err());
+        res.is_err()) return (Err(res.unwrap_err()));
     return Ok(bool(reg.drdy));
 }
 

@@ -21,7 +21,7 @@ using namespace ymd::drivers;
 #define SDA_GPIO hal::PB<5>()
 
 static constexpr uint ISR_FREQ = 500;
-static constexpr auto INV_FS = (1.0_q24 / ISR_FREQ);
+static constexpr auto INV_FS = (1.0_iq24 / ISR_FREQ);
 
 #define PHY_SEL_I2C 0
 #define PHY_SEL_SPI 1
@@ -42,7 +42,7 @@ static void icm42688_tb(ICM42688 & imu){
         .gyr_fs = ICM42688::GyrFs::_1000deg
     }).examine();
 
-    q24 z = 0;
+    iq24 z = 0;
     Microseconds exe = 0us;
 
     const real_t tau = 1.3_r;
@@ -53,8 +53,8 @@ static void icm42688_tb(ICM42688 & imu){
         .fs = ISR_FREQ
     }};
 
-    Vec3<q24> gyr_ = Vec3<q24>::ZERO;
-    Vec3<q24> acc_ = Vec3<q24>::ZERO;
+    Vec3<iq24> gyr_ = Vec3<iq24>::ZERO;
+    Vec3<iq24> acc_ = Vec3<iq24>::ZERO;
 
     auto & timer = hal::timer1;
     timer.init({

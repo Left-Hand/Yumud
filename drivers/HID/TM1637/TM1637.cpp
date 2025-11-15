@@ -98,7 +98,8 @@ IResult<> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf){
     }.as_u8();
 
     
-    if(const auto res = iic_start(command2); res.is_err()) return res;
+    if(const auto res = iic_start(command2);
+        res.is_err()) return res;
     for(size_t i = 0; i < pbuf.size(); i++){
         if(const auto res = write_byte(pbuf[i]);
             res.is_err()) return res;

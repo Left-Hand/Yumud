@@ -22,15 +22,15 @@ namespace ymd::dsp{
 class TdVec2{
 public:
     struct Config{
-        q12 kp;
-        q12 kd;
-        q16 max_spd;
-        q16 max_acc;
+        iq12 kp;
+        iq12 kd;
+        iq16 max_spd;
+        iq16 max_acc;
         uint32_t fs;
     };
 
-    using E = q16;
-    using T = Vec2<q16>;
+    using E = iq16;
+    using T = Vec2<iq16>;
 
     using State = std::array<T, 3>;
     using Self = TdVec2;
@@ -54,7 +54,7 @@ public:
     constexpr void reconf(const Config & cfg){
         kp_ = cfg.kp;
         kd_ = cfg.kd;
-        dt_ = 1_q16 / cfg.fs;
+        dt_ = 1_iq16 / cfg.fs;
         max_spd_ = cfg.max_spd;
         max_acc_ = cfg.max_acc;
     }
@@ -65,11 +65,11 @@ public:
         return state_;
     }
 private:
-    q12 kp_;
-    q12 kd_;
-    q16 dt_;
-    q16 max_spd_;
-    q16 max_acc_;
+    iq12 kp_;
+    iq12 kd_;
+    iq16 dt_;
+    iq16 max_spd_;
+    iq16 max_acc_;
     State state_ {T::ZERO, T::ZERO, T::ZERO};
 
     //pure fn
@@ -86,11 +86,11 @@ private:
         const auto spd = state[1];
         // const auto acc = state[2];
 
-        // const auto raw_a = ((q12(self.kp_) * (Vec2<q12>(u - pos)))
+        // const auto raw_a = ((iq12(self.kp_) * (Vec2<iq12>(u - pos)))
         //      - (self.kd_ * spd));
         // DEBUG_PRINTLN(raw_a, self.max_acc_);
 
-        const auto pos_err = Vec2<q12>(u - pos);
+        const auto pos_err = Vec2<iq12>(u - pos);
         const auto dist = pos_err.length();
         const auto norm_pos_err = pos_err / dist;
         const auto expect_spd = std::sqrt(2 * self.max_acc_ * dist);
@@ -125,17 +125,17 @@ public:
     using Self = CommandShaper1;
 
     struct Config{
-        q12 kp;
-        q12 kd;
-        q16 max_spd;
-        q16 max_acc;
+        iq12 kp;
+        iq12 kd;
+        iq16 max_spd;
+        iq16 max_acc;
         uint32_t fs;
     };
 
-    using E = q16;
-    using T = q16;
+    using E = iq16;
+    using T = iq16;
 
-    using State = std::array<q20, 2>;
+    using State = std::array<iq20, 2>;
 
     
     CommandShaper1(const Config & cfg){
@@ -158,7 +158,7 @@ public:
     constexpr void reconf(const Config & cfg){
         kp_ = cfg.kp;
         kd_ = cfg.kd;
-        dt_ = 1_q16 / cfg.fs;
+        dt_ = 1_iq16 / cfg.fs;
         max_spd_ = cfg.max_spd;
         max_acc_ = cfg.max_acc;
     }
@@ -174,11 +174,11 @@ public:
     }
 // private:
 public:
-    q20 kp_;
-    q20 kd_;
-    q20 dt_;
-    q20 max_spd_;
-    q20 max_acc_;
+    iq20 kp_;
+    iq20 kd_;
+    iq20 dt_;
+    iq20 max_spd_;
+    iq20 max_acc_;
     State state_ {};
 
     dsp::TrackingDifferentiatorByOrders<2> lpf = {dsp::TrackingDifferentiatorByOrders<2>::Config{
@@ -200,7 +200,7 @@ public:
         const auto spd = state[1];
         // const auto acc = state[2];
 
-        // const auto raw_a = ((q12(self.kp_) * (<q12>(u0 - pos)))
+        // const auto raw_a = ((iq12(self.kp_) * (<iq12>(u0 - pos)))
         //      - (self.kd_ * spd));
         // DEBUG_PRINTLN(raw_a, self.max_acc_);
 
@@ -226,15 +226,15 @@ public:
             auto expect_spd = std::copysign(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err);
             // auto expect_spd = std::copysign(std::sqrt(1.57_r * self.max_acc_ * dist), pos_err);
             if(spd * self.lpf.state()[1] < 0) expect_spd += self.lpf.state()[1];
-            const auto spd_cmd = q20(CLAMP2(expect_spd, self.max_spd_));
+            const auto spd_cmd = iq20(CLAMP2(expect_spd, self.max_spd_));
             return {
                 pos + spd * dt, 
-                STEP_TO(spd, spd_cmd, q20((self.max_acc_)* self.dt_)),
+                STEP_TO(spd, spd_cmd, iq20((self.max_acc_)* self.dt_)),
             };
         }else{
             return {
                 pos + spd * dt, 
-                // STEP_TO(spd, q16(0), q16()),
+                // STEP_TO(spd, iq16(0), iq16()),
                 CLAMP2(spd + CLAMP2( -self.kd_ * spd + self.kp_ * pos_err, self.max_acc_) * dt, self.max_spd_),
             };
         }

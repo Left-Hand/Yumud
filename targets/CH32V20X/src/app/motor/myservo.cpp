@@ -24,7 +24,7 @@ namespace ymd::motorctl{
 class ServoElectrics{
 public:
     struct State{
-        q24 duty;
+        iq24 duty;
 
         void reset(){
             duty = 0;
@@ -32,19 +32,19 @@ public:
     };
 
     struct Params{
-        q24 curr_meas_raw;
-        q24 curr_targ;
+        iq24 curr_meas_raw;
+        iq24 curr_targ;
     };
 
     struct SenseConfig{
-        q16 base;
-        q16 gain;
+        iq16 base;
+        iq16 gain;
     };
 
     struct Config{
         // SenseConfig sense_config;
         uint fc;
-        q8 kp;
+        iq8 kp;
         uint fs;
     };
 
@@ -70,15 +70,15 @@ public:
 
     const State & get() const {return state_;}
 private:
-    using Lpf = dsp::FirstOrderLowpassFilter<q24>;
+    using Lpf = dsp::FirstOrderLowpassFilter<iq24>;
     // SenseConfig sense_cfg_;
     Lpf curr_lpf_;
-    q8 kp_;
+    iq8 kp_;
 
 
     State state_ = {};
 
-    constexpr State forward_state(const State & state, const q24 err) const {
+    constexpr State forward_state(const State & state, const iq24 err) const {
         return State{
             .duty = state.duty + (err) * kp_
         };
@@ -89,19 +89,19 @@ private:
 class ServoDynamics{
 public:
     struct State{
-        q24 torque;
+        iq24 torque;
     };
 
     struct Params{
-        q24 pos_meas;
-        q24 spd_meas;
-        q24 pos_ref;
-        q24 spd_ref;
+        iq24 pos_meas;
+        iq24 spd_meas;
+        iq24 pos_ref;
+        iq24 spd_ref;
     };
 
     struct Config{
-        q24 kp;
-        q24 kd;
+        iq24 kp;
+        iq24 kd;
         uint fs;
     };
 
@@ -123,8 +123,8 @@ public:
 
     const State & state() const {return state_;}
 private:
-    q24 kp_;
-    q24 kd_;
+    iq24 kp_;
+    iq24 kd_;
 
     State state_;
 };
@@ -261,10 +261,10 @@ void myservo_main(){
     // auto & mode2_gpio   = hal::PA<5>();
     phase_gpio.outpp();
 
-    using ButterLpf = dsp::ButterLowpassFilter<q16, 4>;
+    using ButterLpf = dsp::ButterLowpassFilter<iq16, 4>;
     using ButterLpfConfig = typename ButterLpf::Config;
 
-    using RcLpf = dsp::FirstOrderLowpassFilter<q20>;
+    using RcLpf = dsp::FirstOrderLowpassFilter<iq20>;
     using RcLpfConfig = typename RcLpf::Config;
 
     ButterLpf curr_filter = {ButterLpfConfig{

@@ -32,8 +32,8 @@ void m2006_main(){
     while(true){
         const auto ctime = clock::time();
         const auto [s, c] = sincospu(0.7_r * ctime);
-        int16_t d = int16_t(s * 32768 * real_t(0.0014));
-        int16_t d2 = int16_t(c * 32768 * real_t(0.0014));
+        int16_t d = int16_t(32768 * real_t(0.0014) * s);
+        int16_t d2 = int16_t(32768 * real_t(0.0014) * c);
 
         struct Payload{
             int16_t d;

@@ -29,9 +29,9 @@ public:
     
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
-    [[nodiscard]] IResult<Vec3<q24>> read_gyr();
-    [[nodiscard]] IResult<q16> read_temp();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
+    [[nodiscard]] IResult<iq16> read_temp();
 
     [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
@@ -50,8 +50,8 @@ private:
     using Phy = InvensenseSensor_Phy;
     Phy phy_;
     MPU6050_Regset regs_ = {};
-    q16 acc_scaler_ = 0;
-    q16 gyr_scaler_ = 0;
+    iq16 acc_scaler_ = 0;
+    iq16 gyr_scaler_ = 0;
 
     bool is_data_valid_ = false;
     Package package_ = Package::MPU6050;
@@ -64,7 +64,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
+        if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -80,26 +80,26 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(T::ADDRESS, reg.as_ref());
+        return read_reg(T::ADDRESS, reg.as_mut_bits());
     }
 
-    static constexpr q16 calculate_acc_scaler(const AccFs fs){
+    static constexpr iq16 calculate_acc_scaler(const AccFs fs){
         constexpr double g = 9.806;
         switch(fs){
-            case AccFs::_2G: return q16(g * 4);
-            case AccFs::_4G: return q16(g * 8);
-            case AccFs::_8G: return q16(g * 16);
-            case AccFs::_16G: return q16(g * 32);
+            case AccFs::_2G: return iq16(g * 4);
+            case AccFs::_4G: return iq16(g * 8);
+            case AccFs::_8G: return iq16(g * 16);
+            case AccFs::_16G: return iq16(g * 32);
         }
         __builtin_unreachable();
     }
 
-    static constexpr q16 calculate_gyr_scaler(const GyrFs fs){
+    static constexpr iq16 calculate_gyr_scaler(const GyrFs fs){
         switch(fs){
-            case GyrFs::_250deg: return DEG2RAD<q16>(500);
-            case GyrFs::_500deg: return DEG2RAD<q16>(1000);
-            case GyrFs::_1000deg: return DEG2RAD<q16>(2000);
-            case GyrFs::_2000deg: return DEG2RAD<q16>(4000);
+            case GyrFs::_250deg: return DEG2RAD<iq16>(500);
+            case GyrFs::_500deg: return DEG2RAD<iq16>(1000);
+            case GyrFs::_1000deg: return DEG2RAD<iq16>(2000);
+            case GyrFs::_2000deg: return DEG2RAD<iq16>(4000);
         }
         __builtin_unreachable();
     }

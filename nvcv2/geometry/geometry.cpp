@@ -22,51 +22,51 @@ namespace ymd::nvcv2::geometry{
 
 
 static constexpr PerspectiveConfig perspective_config{
-    .H1 = q16(1.0),
-    .H2 = q16(3.433333333333334),
-    .H3 = q16(0.0),
-    .H4 = q16(-7.21363183512792e-17),
-    .H5 = q16(3.191489361702128),
-    .H6 = q16(-8.30478318108259e-15),
-    .H7 = q16(-0.0),
-    .H8 = q16(0.036524822695035465),
+    .H1 = iq16(1.0),
+    .H2 = iq16(3.433333333333334),
+    .H3 = iq16(0.0),
+    .H4 = iq16(-7.21363183512792e-17),
+    .H5 = iq16(3.191489361702128),
+    .H6 = iq16(-8.30478318108259e-15),
+    .H7 = iq16(-0.0),
+    .H8 = iq16(0.036524822695035465),
 };
 static constexpr InvPerspectiveConfig inv_perspective_config{
-    .H1 = q16(1.00000),
-    .H2 = q16(-0.28200),
-    .H3 = q16(0.00000),
-    .H4 = q16(0.00000),
-    .H5 = q16(0.64000),
-    .H6 = q16(0.00000),
-    .H7 = q16(0.00000),
-    .H8 = q16(-0.00600),
+    .H1 = iq16(1.00000),
+    .H2 = iq16(-0.28200),
+    .H3 = iq16(0.00000),
+    .H4 = iq16(0.00000),
+    .H5 = iq16(0.64000),
+    .H6 = iq16(0.00000),
+    .H7 = iq16(0.00000),
+    .H8 = iq16(-0.00600),
 };
 
-Vec2<q16> perspective(const Vec2<q16> & v){
+Vec2<iq16> perspective(const Vec2<iq16> & v){
     auto [x,y] = v;
-    q16 inv_s = q16(1) / (perspective_config.H8*y+q16(1));
-    q16 _x = (perspective_config.H1 * x + perspective_config.H2 * y + perspective_config.H3)*inv_s;
-    q16 _y = (perspective_config.H4 * x + perspective_config.H5 * y + perspective_config.H6)*inv_s;
-    Vec2<q16> ret = {_x,_y};
+    iq16 inv_s = iq16(1) / (perspective_config.H8*y+iq16(1));
+    iq16 _x = (perspective_config.H1 * x + perspective_config.H2 * y + perspective_config.H3)*inv_s;
+    iq16 _y = (perspective_config.H4 * x + perspective_config.H5 * y + perspective_config.H6)*inv_s;
+    Vec2<iq16> ret = {_x,_y};
     return ret;
 }
 
 
-Vec2<q16> inv_perspective(const Vec2<q16> & v){
+Vec2<iq16> inv_perspective(const Vec2<iq16> & v){
     auto [x,y] = v;
-    q16 inv_s = q16(1) / (inv_perspective_config.H8*y+q16(1));
-    q16 _x = (inv_perspective_config.H1 * x + inv_perspective_config.H2 * y + inv_perspective_config.H3)*inv_s;
-    q16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y + inv_perspective_config.H6)*inv_s;
-    Vec2<q16> ret = {_x,_y};
+    iq16 inv_s = iq16(1) / (inv_perspective_config.H8*y+iq16(1));
+    iq16 _x = (inv_perspective_config.H1 * x + inv_perspective_config.H2 * y + inv_perspective_config.H3)*inv_s;
+    iq16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y + inv_perspective_config.H6)*inv_s;
+    Vec2<iq16> ret = {_x,_y};
     return ret;
 }
 
-Vec2<q16> inv_perspective_fast(const Vec2<q16> & v){
+Vec2<iq16> inv_perspective_fast(const Vec2<iq16> & v){
     auto [x,y] = v;
-    q16 inv_s = q16(1) / (inv_perspective_config.H8*y+q16(1));
-    q16 _x = (x + inv_perspective_config.H2 * y)*inv_s;
-    q16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y)*inv_s;
-    Vec2<q16> ret = {_x,_y};
+    iq16 inv_s = iq16(1) / (inv_perspective_config.H8*y+iq16(1));
+    iq16 _x = (x + inv_perspective_config.H2 * y)*inv_s;
+    iq16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y)*inv_s;
+    Vec2<iq16> ret = {_x,_y};
 
     return ret;
 }

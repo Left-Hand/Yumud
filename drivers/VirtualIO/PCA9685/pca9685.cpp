@@ -28,7 +28,7 @@ using Vport = PCA9685::PCA9685_Vport;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
+IResult<> PCA9685::set_frequency(uint32_t freq, iq16 trim){
     if(const auto res = read_reg(regs_.mode1_reg);
         res.is_err()) return res;
     
@@ -42,7 +42,7 @@ IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
 
     {
         auto reg = RegCopy(regs_.prescale_reg);
-        reg.prescale = static_cast<uint8_t>((q16(25000000.0 / 4096) / freq - 1) * trim);
+        reg.prescale = static_cast<uint8_t>((iq16(25000000.0 / 4096) / freq - 1) * trim);
         if(const auto res = write_reg(reg); 
             res.is_err()) return res;
     }
@@ -54,7 +54,7 @@ IResult<> PCA9685::set_frequency(uint32_t freq, q16 trim){
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
 
-        reg.as_ref() = uint8_t(reg.as_val() | uint8_t(0xa1));
+        reg.as_mut_bits() = uint8_t(reg.as_bits() | uint8_t(0xa1));
         clock::delay(5ms);
         return write_reg(reg);
     }
@@ -86,7 +86,7 @@ IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
         reg.full = false;
         reg.cvr = off;
         const auto address = RegAddr(uint8_t(RegAddr::LED0_OFF_L) + 4 * nth.count());
-        if(const auto res = write_reg(address, reg.as_val());
+        if(const auto res = write_reg(address, reg.as_bits());
             res.is_err()) return res;
     }
 

@@ -22,16 +22,22 @@ using namespace ymd;
     tx_led.outpp();
     rx_led.outpp();
 
-    uart.set_post_tx_callback([&](){
-        tx_led.set();
-        clock::delay(1ms);
-        tx_led.clr();
-    });
-
-    uart.set_post_rx_callback([&](){
-        rx_led.set();
-        clock::delay(1ms);
-        rx_led.clr();
+    uart.set_event_callback([&](const hal::UartEvent& ev){
+        switch(ev.kind()){
+            case hal::UartEvent::RxIdle:
+                rx_led.set();
+                clock::delay(1ms);
+                rx_led.clr();
+                break;
+            case hal::UartEvent::TxIdle:
+                tx_led.set();
+                clock::delay(1ms);
+                tx_led.clr();
+                break;
+            default:
+                PANIC{"Unexpected event", ev};
+                break;
+        }
     });
 
     while(true){

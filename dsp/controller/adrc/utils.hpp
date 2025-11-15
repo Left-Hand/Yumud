@@ -8,9 +8,9 @@
 namespace ymd::dsp::adrc{
 
 static constexpr 
-real_t fal(const real_t e, const real_t alpha, const real_t delta){
+iq16 fal(const iq16 e, const iq16 alpha, const iq16 delta){
 
-    const auto fabsf_e = abs(e);
+    const auto fabsf_e = std::abs(e);
     
     if(delta>=fabsf_e)
         return e/pow(delta,1-alpha);
@@ -19,8 +19,8 @@ real_t fal(const real_t e, const real_t alpha, const real_t delta){
 }
 
 static constexpr 
-real_t ssqrt(real_t x){
-    return sign(x) * sqrt(ABS(x));
+iq16 ssqrt(iq16 x){
+    return sign(x) * sqrt(std::abs(x));
 }
 
 

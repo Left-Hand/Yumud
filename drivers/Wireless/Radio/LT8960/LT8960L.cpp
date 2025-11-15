@@ -236,11 +236,13 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> IResult<size_t>{
             return Ok(size);
         })
         .inspect_err([](const Error err){
-            MATCH{err}(
-                Error::ReceiveTimeout, []{LT8960L_PANIC("ble timeout");},
-                Error::PacketOverlength, []{LT8960L_PANIC("ble overlen");},
-                None , []{LT8960L_PANIC("unknown");}
-            );
+            if(err == Error::ReceiveTimeout){
+                LT8960L_DEBUG("ble timeout");
+            }else if(err == Error::PacketOverlength){
+                LT8960L_DEBUG("ble overlen");
+            }else{
+                LT8960L_DEBUG("ble unknown error");
+            }
         })
     ;
     

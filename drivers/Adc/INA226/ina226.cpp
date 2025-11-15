@@ -70,19 +70,19 @@ IResult<> INA226::update(){
 
 
 IResult<> INA226::write_reg(const RegAddr addr, const uint16_t data){
-    if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, MSB);
+    if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, std::endian::big);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
 IResult<> INA226::read_reg(const RegAddr addr, uint16_t & data){
-    if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, MSB);
+    if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, std::endian::big);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
 IResult<> INA226::read_reg(const RegAddr addr, int16_t & data){
-    if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, MSB);
+    if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, std::endian::big);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
@@ -116,13 +116,13 @@ IResult<> INA226::init(const Config & cfg){
 IResult<> INA226::set_scale(const uint32_t sample_res_mohms, const uint32_t max_current_a){
     INA226_DEBUG(sample_res_mohms, max_current_a);
     
-    current_lsb_ma_ = q16(int(max_current_a) * 1000) >> 15;
+    current_lsb_ma_ = iq16(int(max_current_a) * 1000) >> 15;
     // INA226_DEBUG(current_lsb_ma_, sample_res_mohms * max_current_a);
     const auto val = int(0.00512 * 32768 * 1000) / (sample_res_mohms * max_current_a);
-    // PANIC(calibration_reg.as_val());
+    // PANIC(calibration_reg.as_bits());
     auto reg = RegCopy(calibration_reg);
-    reg.as_ref() = int16_t(val);
-    // PANIC(reg.as_val(), val);
+    reg.as_mut_bits() = int16_t(val);
+    // PANIC(reg.as_bits(), val);
     return write_reg(reg);
 }
 
@@ -131,34 +131,34 @@ IResult<> INA226::set_average_times(const uint16_t times){
     return set_average_times(times_to_avtimes(times));
 }
 
-IResult<q16> INA226::get_voltage(){
-    return Ok(bus_volt_reg.as_val() * VOLTAGE_LSB_MV / 1000);
-    // return bus_voltage_reg.as_val();
+IResult<iq16> INA226::get_voltage(){
+    return Ok(bus_volt_reg.as_bits() * VOLTAGE_LSB_MV / 1000);
+    // return bus_voltage_reg.as_bits();
 }
 
 IResult<int> INA226::get_shunt_voltage_uv(){
-    const auto val = shunt_volt_reg.as_val();
+    const auto val = shunt_volt_reg.as_bits();
     //val * 2.5
     return Ok((val << 1) + (val >> 1));
 }
 
-IResult<q16> INA226::get_shunt_voltage(){
+IResult<iq16> INA226::get_shunt_voltage(){
     const int uv = ({
         const auto res = get_shunt_voltage_uv();
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
-    return Ok(q16(uv / 100) / 10000);
+    return Ok(iq16(uv / 100) / 10000);
 }
 
-IResult<q16> INA226::get_current(){
-    return Ok(current_reg.as_val() * current_lsb_ma_ / 1000);
-    // return current_reg.as_val() ;
+IResult<iq16> INA226::get_current(){
+    return Ok(current_reg.as_bits() * current_lsb_ma_ / 1000);
+    // return current_reg.as_bits() ;
 }
 
-IResult<q16> INA226::get_power(){
-    return Ok(power_reg.as_val() * current_lsb_ma_ / 40);
-    // return power_reg.as_val();
+IResult<iq16> INA226::get_power(){
+    return Ok(power_reg.as_bits() * current_lsb_ma_ / 40);
+    // return power_reg.as_bits();
 }
 
 IResult<> INA226::set_average_times(const AverageTimes times){
@@ -219,9 +219,9 @@ IResult<> INA226::validate(){
     if(const auto res = this->read_reg(manufacture_reg);
         res.is_err()) return res;
 
-    if((chip_id_reg.as_val() != VALID_CHIP_ID)) 
+    if((chip_id_reg.as_bits() != VALID_CHIP_ID)) 
         return CHECK_ERR(Err(Error::ChipIdVerifyFailed));
-    if((manufacture_reg.as_val() != VALID_MANU_ID)) 
+    if((manufacture_reg.as_bits() != VALID_MANU_ID)) 
         return CHECK_ERR(Err(Error::ManuIdVerifyFailed));
 
     return Ok();

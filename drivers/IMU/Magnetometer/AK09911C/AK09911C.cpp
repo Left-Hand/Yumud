@@ -60,7 +60,7 @@ IResult<> Self::init(){
 
 IResult<> Self::update(){
     if(const auto res = read_burst(
-        regs_.mag_x_reg.address, std::span(&regs_.mag_x_reg.as_ref(), 3));
+        regs_.mag_x_reg.address, std::span(&regs_.mag_x_reg.as_mut_bits(), 3));
         res.is_err()) return res;
     auto & reg = regs_.st2_reg;
     if(const auto res = read_reg(reg);
@@ -101,7 +101,7 @@ IResult<> Self::blocking_update(){
         clock::delay(100us);
     }
 
-    if(const auto res = read_burst(regs_.mag_x_reg.address, std::span(&regs_.mag_x_reg.as_ref(), 3));
+    if(const auto res = read_burst(regs_.mag_x_reg.address, std::span(&regs_.mag_x_reg.as_mut_bits(), 3));
         res.is_err()) return res;
 
     auto & reg = regs_.st2_reg;
@@ -150,9 +150,9 @@ IResult<> Self::selftest(){
         // Criteria -30 ≤ HX ≤ +30 -30 ≤ HY ≤ +30 -400 ≤ HZ ≤ -50
 
 
-        const auto x = regs_.mag_x_reg.as_val();
-        const auto y = regs_.mag_y_reg.as_val();
-        const auto z = regs_.mag_z_reg.as_val();
+        const auto x = regs_.mag_x_reg.as_bits();
+        const auto y = regs_.mag_y_reg.as_bits();
+        const auto z = regs_.mag_z_reg.as_bits();
 
         if(not IN_RANGE(x, -30, 30)) return CHECK_ERR(Err(Error::AxisXOverflow), x,);
         if(not IN_RANGE(y, -30, 30)) return CHECK_ERR(Err(Error::AxisYOverflow), y);
@@ -185,11 +185,11 @@ IResult<> Self::validate(){
                 "failed to read reg when validate, check RSTN pin is HIGH",
                 "error is", res.unwrap_err());
 
-        if(wia1_reg.as_val() != wia1_reg.KEY) return CHECK_ERR(Err(Error::WrongCompanyId),  
-            "wrong company id, correct is", wia1_reg.KEY, "but read is", wia1_reg.as_val());
+        if(wia1_reg.as_bits() != wia1_reg.KEY) return CHECK_ERR(Err(Error::WrongCompanyId),  
+            "wrong company id, correct is", wia1_reg.KEY, "but read is", wia1_reg.as_bits());
 
-        if(wia2_reg.as_val() != wia2_reg.KEY) return CHECK_ERR(Err(Error::InvalidChipId), 
-            "wrong device id, correct is", wia2_reg.KEY, "but read is", wia2_reg.as_val());
+        if(wia2_reg.as_bits() != wia2_reg.KEY) return CHECK_ERR(Err(Error::InvalidChipId), 
+            "wrong device id, correct is", wia2_reg.KEY, "but read is", wia2_reg.as_bits());
 
         return Ok();
     };
@@ -242,13 +242,13 @@ IResult<> Self::set_odr(const Odr odr){
     return set_mode(static_cast<Mode>(odr));
 }
 
-IResult<Vec3<q24>> Self::read_mag(){
+IResult<Vec3<iq24>> Self::read_mag(){
     static constexpr int16_t MIN_VALUE = -8190;
     static constexpr int16_t MAX_VALUE = 8190;
 
-    const auto x = regs_.mag_x_reg.as_val();
-    const auto y = regs_.mag_y_reg.as_val();
-    const auto z = regs_.mag_z_reg.as_val();
+    const auto x = regs_.mag_x_reg.as_bits();
+    const auto y = regs_.mag_y_reg.as_bits();
+    const auto z = regs_.mag_z_reg.as_bits();
 
     if(not IN_RANGE(x, MIN_VALUE, MAX_VALUE)) 
         return CHECK_ERR(Err(Error::AxisXOverflow));
@@ -259,8 +259,8 @@ IResult<Vec3<q24>> Self::read_mag(){
     if(not IN_RANGE(z, MIN_VALUE, MAX_VALUE))
         return CHECK_ERR(Err(Error::AxisZOverflow));
     
-    static constexpr q24 VALUE_LSB = q24(6E-5);
-    return Ok(Vec3<q24>{
+    static constexpr iq24 VALUE_LSB = iq24(6E-5);
+    return Ok(Vec3<iq24>{
         VALUE_LSB * x,
         VALUE_LSB * y,
         VALUE_LSB * z

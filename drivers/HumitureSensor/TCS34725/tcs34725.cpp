@@ -27,18 +27,18 @@ IResult<> TCS34725::read_burst(
     const std::span<uint16_t> pbuf
 ){
     uint8_t address = conv_reg_address_repeated(addr);
-    if(const auto res = i2c_drv_.read_burst(address, pbuf, LSB);
+    if(const auto res = i2c_drv_.read_burst(address, pbuf, std::endian::little);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
 
-std::tuple<real_t, real_t, real_t, real_t> TCS34725::get_crgb(){
+std::tuple<uq16, uq16, uq16, uq16> TCS34725::get_crgb(){
     return {
-        s16_to_uni(crgb_[0]),
-        s16_to_uni(crgb_[1]),
-        s16_to_uni(crgb_[2]),
-        s16_to_uni(crgb_[3])
+        uq16::from_bits(crgb_[0]),
+        uq16::from_bits(crgb_[1]),
+        uq16::from_bits(crgb_[2]),
+        uq16::from_bits(crgb_[3])
     };
 }
 
@@ -131,7 +131,7 @@ IResult<uint8_t> TCS34725::get_id(){
     auto & reg = regs_.device_id_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(reg.as_val());
+    return Ok(reg.as_bits());
 }
 
 IResult<bool> TCS34725::is_idle(){

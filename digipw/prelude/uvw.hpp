@@ -58,7 +58,7 @@ struct UvwCoord{
             return this->u;
         } else if constexpr(I == 1){
             return this->v;
-        }else if constexpr(I == 1){
+        }else if constexpr(I == 2){
             return this->w;
         }
     } 
@@ -70,7 +70,7 @@ struct UvwCoord{
             return this->u;
         } else if constexpr(I == 1){
             return this->v;
-        }else if constexpr(I == 1){
+        }else if constexpr(I == 2){
             return this->w;
         }
     }
@@ -104,19 +104,5 @@ struct UvwCoord{
             self.w << os.brackets<')'>();
     }
 };
-
-}
-
-namespace ymd{
-template<typename T>
-struct FromZeroDispatcher<digipw::UvwCoord<T>>{
-    static consteval digipw::UvwCoord<T> from_zero() {
-        return digipw::UvwCoord<T>(
-            FromZeroDispatcher<T>::from_zero(), 
-            FromZeroDispatcher<T>::from_zero(), 
-            FromZeroDispatcher<T>::from_zero()
-        );
-    }
-}; 
 
 }
