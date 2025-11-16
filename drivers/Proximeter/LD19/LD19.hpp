@@ -74,9 +74,6 @@ struct LD19_Prelude{
         uint16_t bits;
     };
 
-
-
-
     struct [[nodiscard]] LidarFrame final{
         using Self = LidarFrame;
 

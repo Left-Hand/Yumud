@@ -4,7 +4,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "core/clock/time_stamp.hpp"
 
-#include "robots/cannet/slcan/slcan.hpp"
+#include "robots/protocols/cannet/slcan/slcan.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
 

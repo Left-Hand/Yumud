@@ -18,18 +18,18 @@ protected:
     };
 
     const T _norm;
-    real_t abs_acc_;
-    real_t abs_spd_;
-    real_t s_;
+    iq16 abs_acc_;
+    iq16 abs_spd_;
+    iq16 s_;
 
-    real_t t1;
-    real_t t2;
-    real_t t_all;
-    real_t s1;
+    iq16 t1;
+    iq16 t2;
+    iq16 t_all;
+    iq16 s1;
     bool peaked;
     bool inversed;
 
-    real_t s_forward(const real_t t) const{
+    iq16 s_forward(const iq16 t) const{
         if(peaked){
             if(t < t1){
                 return (abs_acc_ * square(t)) >> 1;
@@ -98,11 +98,11 @@ public:
         }   
     }
 
-    T forward(const real_t t) const override{
+    T forward(const iq16 t) const override{
         return this->_from + s_forward(t) * this->_norm;
     }
 
-    real_t period() const override{
+    iq16 elapsed() const override{
         return t_all;
     }
 

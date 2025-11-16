@@ -28,7 +28,7 @@
 #include "robots/gesture/comp_est.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
-#include "robots/cannet/can_chain.hpp"
+#include "robots/protocols/cannet/can_chain.hpp"
 
 #include "robots/commands/joint_commands.hpp"
 #include "robots/commands/machine_commands.hpp"
