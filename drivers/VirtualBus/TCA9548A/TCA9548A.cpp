@@ -7,7 +7,7 @@ using namespace ymd::drivers;
 hal::HalResult TCA9548A::switch_vbus(const uint8_t ch){
     if((last_ch_.is_some()) and (last_ch_.unwrap() == ch)) return hal::HalResult::OccuipedByOther;
     const uint8_t temp = 1 << ch;
-    return self_i2c_drv_.write_blocks<>(temp, LSB);
+    return self_i2c_drv_.write_blocks<>(temp, std::endian::little);
 }
 
 hal::HalResult TCA9548A::lead(const hal::I2cSlaveAddrWithRw addr, const uint8_t ch){

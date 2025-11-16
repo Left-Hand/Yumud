@@ -18,13 +18,7 @@ protected:
 public:
     virtual ~AnalogOutIntf() = default;
 
-    AnalogOutIntf & operator = (const real_t value){
-        write(uni_to_u16(value));
-        return *this;
-    }
-
     void set_voltage(const real_t volt){
-        *this = volt;
     }
 };
 

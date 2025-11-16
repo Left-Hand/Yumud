@@ -1,6 +1,7 @@
 #pragma once
 
 #include "keycode.hpp"
+#include "core/string/string_view.hpp"
 
 namespace ymd::hid{
 
@@ -13,9 +14,7 @@ struct SingleKeyCodeStorage{
 
     [[nodiscard]] constexpr bool has_any(const std::initializer_list<KeyCode> codes){
         for(const auto& c : codes){
-            if(kind_ == c.kind()){
-                return true;
-            }
+            if(kind_ == c.kind()) return true;
         }
         return false;
     }
@@ -48,9 +47,7 @@ struct SingleKeyCodeStorage{
 
     friend OutputStream & operator << (
             OutputStream & os, const SingleKeyCodeStorage & self){
-        return os << self.first_code()
-            .map([](const KeyCode code){return code.to_char();})
-            .flatten();
+        return os << self.first_code();
     }
 private:
     KeyCode_Kind kind_;
@@ -62,12 +59,10 @@ private:
 
 
 template<typename T>
-class ButtonInput final{
-    //empty unspecialized
-};
+struct ButtonInput;
 
 template<>
-class ButtonInput<KeyCode>{
+struct [[nodiscard]] ButtonInput<KeyCode>{
 public:
 
     using KeyCodes = details::SingleKeyCodeStorage;
@@ -131,7 +126,7 @@ public:
     friend OutputStream & operator << (
         OutputStream & os, const ButtonInput<KeyCode> & self
     ){
-        auto print_item = [&os](const char * str, const KeyCodes & codes){
+        auto print_item = [&os](const StringView str, const KeyCodes & codes){
             os << str << codes;
         };
 

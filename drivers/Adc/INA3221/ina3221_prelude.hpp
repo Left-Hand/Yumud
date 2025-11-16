@@ -33,6 +33,7 @@
 
 
 #include "core/io/regs.hpp"
+#include "core/math/realmath.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
@@ -175,13 +176,13 @@ struct INA3221_Regs:public INA3221_Prelude {
         int16_t : 16;
 
         constexpr real_t to_volt() const {
-            return iq_t<24>(iq_t<16>(this->as_val() >> 3) / 25) / 1000;
-            // return real_t(this->as_val());
+            return iq24(iq16(this->as_bits() >> 3) / 25) / 1000;
+            // return real_t(this->as_bits());
         }
 
         constexpr int to_uv() const {
-            return ((this->as_val() >> 3) * 40);
-            // return (this->as_val());
+            return ((this->as_bits() >> 3) * 40);
+            // return (this->as_bits());
         }
 
         static constexpr int16_t to_i16(const real_t volt){
@@ -205,11 +206,11 @@ struct INA3221_Regs:public INA3221_Prelude {
         int16_t : 16;
 
         constexpr real_t to_volt() const {
-            return real_t((int16_t(this->as_val()) >> 3) * 8) / 1000;
+            return real_t((int16_t(this->as_bits()) >> 3) * 8) / 1000;
         }
 
         constexpr int to_mv() const {
-            return int16_t((int16_t(this->as_val()) >> 3) * 8);
+            return int16_t((int16_t(this->as_bits()) >> 3) * 8);
         }
 
         static constexpr int16_t to_i16(const real_t volt){
@@ -320,7 +321,7 @@ struct INA3221_Regs:public INA3221_Prelude {
 
 class INA3221_Phy final : public INA3221_Prelude{
 public:
-    static constexpr auto ENDIAN = MSB;
+    static constexpr auto ENDIAN = std::endian::big;
 
     INA3221_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}

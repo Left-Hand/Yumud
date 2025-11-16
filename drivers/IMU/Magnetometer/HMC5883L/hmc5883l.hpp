@@ -25,7 +25,7 @@ public:
     [[nodiscard]] IResult<> set_gain(const Gain gain);
     [[nodiscard]] IResult<> set_mode(const Mode mode);
 
-    [[nodiscard]] IResult<Vec3<q24>> read_mag();
+    [[nodiscard]] IResult<Vec3<iq24>> read_mag();
 
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();
@@ -36,12 +36,12 @@ private:
 
     hal::I2cDrv i2c_drv_;
     HMC5883L_Regset regs_ = {};
-    q16 lsb_ = 0;
+    iq16 lsb_ = 0;
 
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(T::ADDRESS), reg.as_val(), MSB);
+        if(const auto res = i2c_drv_.write_reg(uint8_t(T::ADDRESS), reg.as_bits(), std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -49,13 +49,13 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(T::ADDRESS), reg.as_ref(), MSB);
+        if(const auto res = i2c_drv_.read_reg(uint8_t(T::ADDRESS), reg.as_mut_bits(), std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     [[nodiscard]] IResult<> read_burst(const RegAddr addr, std::span<int16_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, MSB);
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -64,30 +64,30 @@ private:
         lsb_ = transfrom_gain_into_lsb(gain);
     }
 
-    static constexpr q24 transfrom_gain_into_lsb(const Gain gain){
+    static constexpr iq24 transfrom_gain_into_lsb(const Gain gain){
         switch(gain){
         case Gain::GL0_73:
-            return q24(0.73);
+            return iq24(0.73);
         case Gain::GL0_92:
-            return q24(0.92);
+            return iq24(0.92);
         case Gain::GL1_22:
-            return q24(1.22);
+            return iq24(1.22);
         case Gain::GL1_52:
-            return q24(1.52);
+            return iq24(1.52);
         case Gain::GL2_27:
-            return q24(2.27);
+            return iq24(2.27);
         case Gain::GL2_56:
-            return q24(2.56);
+            return iq24(2.56);
         case Gain::GL3_03:
-            return q24(3.03);
+            return iq24(3.03);
         case Gain::GL4_35:
-            return q24(4.35);
+            return iq24(4.35);
         default: __builtin_unreachable();
         }
     }
 
-    static constexpr q16 transform_raw_to_gauss(const uint16_t data, const q24 lsb){
-        return s16_to_uni(data & 0x8fff) * lsb;
+    static constexpr iq16 transform_raw_to_gauss(const uint16_t data, const iq24 lsb){
+        return iq16::from_bits(data & 0x8fff) * lsb;
     }
 };
 

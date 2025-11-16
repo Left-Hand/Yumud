@@ -116,7 +116,7 @@ struct VCE2755_Prelude{
             return calc_crc() == crc_3_0;
         }
 
-        [[nodiscard]] IResult<Angle<q31>> parse() const {
+        [[nodiscard]] IResult<Angle<uq32>> parse() const {
             if(!is_crc_valid()) [[unlikely]]
                 return Err(Error::InvalidCrc);
 
@@ -124,8 +124,8 @@ struct VCE2755_Prelude{
                 return Err(Error::MagnetLow);
 
             const auto b18 = static_cast<uint32_t>(b20() >> 2);
-            const auto turns = static_cast<q31>(q18::from_i32(b18));
-            return Ok(Angle<q31>::from_turns(turns));
+            const auto turns = static_cast<uq32>(uq18::from_bits(b18));
+            return Ok(Angle<uq32>::from_turns(turns));
         }
     private:
         [[nodiscard]] constexpr uint32_t b20() const{

@@ -16,10 +16,11 @@
 #include <bitset>
 #include <span>
 #include <chrono>
+#include <variant>
 
 #include "core/stream/CharOpTraits.hpp"
 #include "core/utils/stdrange.hpp"
-#include "core/math/iq/iq_t.hpp"
+#include "core/math/iq/fixed_t.hpp"
 
 
 namespace std{
@@ -300,9 +301,8 @@ public:
     OutputStream & operator<<(const std::_Setprecision n){config_.eps = n._M_n; return *this;}
     OutputStream & operator<<(const std::_Setbase n){config_.radix = n._M_base; return *this;}
     OutputStream & operator<<(const Endl){this->print_endl(); return *this;}
-    
     OutputStream & operator<<(const std::nullopt_t){return *this << '/';}
-
+    OutputStream & operator<<(const std::endian endian);
 
     template<typename T>
     OutputStream & operator<<(const std::chrono::duration<T, std::milli> ms){
@@ -327,6 +327,10 @@ public:
         else return *this << '/';
     }
 
+    OutputStream & operator<<(const std::monostate){
+        return *this << "monostate";
+    }
+
     template<size_t N>
     OutputStream & operator<<(const std::bitset<N> bs){
         char str[N + 1];
@@ -347,7 +351,7 @@ public:
     //#region print integer
 private:
     void print_u32(const uint32_t val);
-    void print_i32(const uint32_t val);
+    void print_i32(const int32_t val);
     void print_u64(const uint64_t val);
     void print_i64(const int64_t val);
     
@@ -356,12 +360,18 @@ private:
         this->write(str, len);
     }
 
-    void print_q16(const q16 val);
+    void print_iq16(const fixed_t<16, int32_t> val);
 public:
 
     template<size_t Q>
-    OutputStream & operator<<(const iq_t<Q> & val){
-        print_q16(q16(val));
+    OutputStream & operator<<(const fixed_t<Q, int32_t> & val){
+        print_iq16(fixed_t<16, int32_t>(val));
+        return *this;
+    }
+
+    template<size_t Q>
+    OutputStream & operator<<(const fixed_t<Q, uint32_t> & val){
+        print_iq16(static_cast<fixed_t<16, int32_t>>(val));
         return *this;
     }
 

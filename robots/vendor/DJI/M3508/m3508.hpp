@@ -5,16 +5,11 @@
 #include "dsp/controller/pid_ctrl.hpp"
 #include "dsp/motor_ctrl/position_filter.hpp"
 
-#include "robots/foc/stepper/observer/observer.hpp"
-
 #include <bitset>
 
 #include "drivers/Encoder/Encoder.hpp"
 
 namespace ymd::robots{
-using namespace ymd::foc;
-
-
 
 
 class M3508Port{
@@ -30,8 +25,8 @@ public:
             //pass
             return Ok();
         }
-        Result<Angle<q31>, Error> read_lap_angle() {
-            return Ok(Angle<q31>::from_turns(owner_.lap_position));
+        Result<Angle<uq32>, Error> read_lap_angle() {
+            return Ok(Angle<uq32>::from_turns(owner_.lap_turns_));
         }
 
     private:
@@ -56,25 +51,26 @@ public:
     friend class M3508Port;
     friend class M3508Encoder;
 
-    void apply_target_current(const real_t _curr){port.set_target_current(_curr, index);}
+    void apply_target_current(const iq16 _curr){port.set_target_current(_curr, index);}
 
-    void update_measurements(const real_t _lap_position, const real_t _curr, const real_t _spd, const real_t _temp);
+    void update_measurements(
+        const uq32 lap_position, const iq16 curr, const iq16 spd, const iq16 temp);
 public:
     void init();
     void tick();
     void reset();
-    void set_target_current(const real_t curr);
-    void set_target_speed(const real_t spd);
-    void set_target_position(const real_t pos);
+    void set_target_current(const iq16 curr_);
+    void set_target_speed(const iq16 spd_);
+    void set_target_position(const iq16 pos_);
 
-    real_t get_position() {
+    iq16 get_position() {
         // return  / reduction_ratio;
         return position_filter_.accumulated_angle().to_turns() / reduction_ratio;
         // return 0;
     }
-    real_t get_current() const {return curr;}
-    real_t get_speed() const {return speed / reduction_ratio * real_t(2.5);}
-    real_t read_temp() const {return temperature;}
+    iq16 get_current() const {return curr_;}
+    iq16 get_speed() const {return speed_ / reduction_ratio * iq16(2.5);}
+    iq16 read_temp() const {return temperature_;}
     auto delta(){return micros_delta;}
     auto & enc() {return enc_;}
 private:
@@ -82,15 +78,15 @@ private:
     const size_t index;
     static constexpr int reduction_ratio = 19;
     
-    real_t lap_position = 0;
-    real_t curr = 0;
-    real_t speed = 0;
-    real_t temperature = 0;
-    real_t curr_limit = 10;
+    uq32 lap_turns_ = 0;
+    iq16 curr_ = 0;
+    iq16 speed_ = 0;
+    iq16 temperature_ = 0;
+    iq16 curr_limit_ = 10;
 
 
-    PID<real_t> spd_pid = {3, 0, 0};
-    PID<real_t> pos_pid = {3, 0, 0};
+    PID<iq16> spd_pid = {3, 0, 0};
+    PID<iq16> pos_pid = {3, 0, 0};
 
     enum class CtrlMethod:uint8_t{
         NONE,
@@ -102,14 +98,14 @@ private:
 
     CtrlMethod ctrl_method = CtrlMethod::NONE;
     
-    real_t targ_curr = 0;
-    real_t targ_spd = 0;
-    real_t targ_pos = 0;
+    iq16 targ_curr = 0;
+    iq16 targ_spd = 0;
+    iq16 targ_pos = 0;
 
-    real_t curr_delta = real_t(0.02);
-    real_t curr_setpoint = 0;
+    iq16 curr_delta = iq16(0.02);
+    iq16 curr_setpoint = 0;
 
-    real_t last_t = 0;
+    iq16 last_t = 0;
 
     Microseconds last_micros;
     Microseconds micros_delta;
@@ -174,7 +170,7 @@ private:
     };
     
 
-    void set_target_current(const real_t curr, const size_t index);
+    void set_target_current(const iq16 curr_, const size_t index);
 
     void update_slave(const hal::CanMsg & msg, const size_t index);
 

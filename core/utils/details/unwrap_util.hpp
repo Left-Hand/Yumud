@@ -120,34 +120,69 @@ template<typename T, typename E>
 class Result;
 
 template<typename T = void>
-struct Ok{
+struct Ok {
 public:
-    using TDecay = std::decay_t<T>;
-
-    template<typename T2>
-    requires (std::is_convertible_v<T2, TDecay>) and (not std::is_trivially_copy_assignable_v<TDecay>)
-    constexpr Ok(T2 && val):val_(std::forward<std::decay_t<T2>>(val)){}
-
-    template<typename T2>
-    requires (std::is_convertible_v<T2, TDecay>) and (std::is_trivially_copy_assignable_v<TDecay>)
-    constexpr Ok(T2 && val):val_(static_cast<std::decay_t<T2>>(val)){}
-
-    template<typename T2>
-    requires (std::is_convertible_v<T2, TDecay>)
-    constexpr Ok(const Ok<T2> & ok_val):val_(static_cast<TDecay>(ok_val.unwrap())){;}
-
-    constexpr const TDecay & unwrap() const{
-        return val_;
+    using value_type = std::decay_t<T>;
+    
+    // 主构造函数 - 使用完美转发
+    template<typename U>
+    requires (std::is_constructible_v<value_type, U&&> && 
+             !std::is_same_v<std::remove_cvref_t<U>, Ok>)
+    constexpr explicit(!std::is_convertible_v<U&&, value_type>) 
+    Ok(U&& value) 
+        noexcept(std::is_nothrow_constructible_v<value_type, U&&>)
+        : value_(std::forward<U>(value)) {}
+    
+    // 拷贝构造函数
+    template<typename U>
+    requires (std::is_constructible_v<value_type, const U&> && 
+             std::is_convertible_v<const U&, value_type>)
+    constexpr Ok(const Ok<U>& other)
+        noexcept(std::is_nothrow_constructible_v<value_type, const U&>)
+        : value_(other.value_) {}
+    
+    // 移动构造函数  
+    template<typename U>
+    requires (std::is_constructible_v<value_type, U&&> && 
+             std::is_convertible_v<U&&, value_type>)
+    constexpr Ok(Ok<U>&& other)
+        noexcept(std::is_nothrow_constructible_v<value_type, U&&>)
+        : value_(std::move(other).get()) {}
+    
+    // 默认构造函数 (仅当 T 可默认构造时)
+    constexpr Ok() requires std::is_default_constructible_v<value_type>
+        : value_() {}
+    
+    // 访问器
+    [[nodiscard]] constexpr const value_type& get() const & noexcept {
+        return value_;
+    }
+    
+    [[nodiscard]] constexpr value_type& get() & noexcept {
+        return value_;
+    }
+    
+    [[nodiscard]] constexpr value_type&& get() && noexcept {
+        return std::move(value_);
+    }
+    
+    [[nodiscard]] constexpr const value_type&& get() const && noexcept {
+        return std::move(value_);
     }
 
 private:
-    TDecay val_;
+    value_type value_;
 };
 
+// void 特化版本
 template<>
-struct Ok<void>{
-public:
+struct Ok<void> {
     constexpr Ok() = default;
+    
+    template<typename U>
+    constexpr Ok(U&&) = delete; // 防止误用
+    
+    constexpr void get() const noexcept {}
 };
 
 
@@ -159,42 +194,99 @@ namespace custom{
 }
 
 
-template<typename E>
-struct Err{
+template<typename E = void>
+struct Err {
 public:
-    using EDecay = std::decay_t<E>;
-
+    using error_type = std::decay_t<E>;
+    
+    // 主构造函数 - 完美转发
+    template<typename U>
+    requires (std::is_constructible_v<error_type, U&&> && 
+             !std::is_same_v<std::remove_cvref_t<U>, Err>)
+    constexpr explicit(!std::is_convertible_v<U&&, error_type>)
+    Err(U&& error) 
+        noexcept(std::is_nothrow_constructible_v<error_type, U&&>)
+        : value_(std::forward<U>(error)) {}
+    
+    // 自定义转换器构造函数
     template<typename From>
-    requires requires(From raw) {
-        { custom::err_converter<Err<From>, Err<EDecay>>::convert(raw) } -> std::convertible_to<EDecay>;
+    requires requires(const Err<From>& raw) {
+        { custom::err_converter<Err<From>, Err<error_type>>::convert(raw) } 
+            -> std::convertible_to<error_type>;
+        requires custom::err_converter<Err<From>, Err<error_type>>::is_specialized;
     }
-    [[nodiscard]] __fast_inline constexpr Err(const Err<From> & raw):
-        val_(custom::err_converter<Err<From>, Err<EDecay>>::convert(raw)){}
-
-
-    template<typename E2>
-    requires (std::is_convertible_v<E2, EDecay>)
-    constexpr Err(const Err<E2> & err):val_(static_cast<EDecay>(err.unwrap())){}
+    [[nodiscard]] constexpr Err(const Err<From>& other)
+        noexcept(noexcept(custom::err_converter<Err<From>, Err<error_type>>::convert(other)))
+        : value_(custom::err_converter<Err<From>, Err<error_type>>::convert(other)) {}
     
-
+    // 拷贝构造函数 - 同类型
+    template<typename U = E>
+    requires (std::is_constructible_v<error_type, const U&>)
+    constexpr Err(const Err& other)
+        noexcept(std::is_nothrow_constructible_v<error_type, const U&>)
+        : value_(other.value_) {}
     
-    template<typename E2>
-    requires (std::is_convertible_v<E2, EDecay>)
-    constexpr Err(E2 && err):val_(static_cast<EDecay>(err)){}
-
-    constexpr const EDecay & unwrap() const{
-        return val_;
+    // 移动构造函数 - 同类型  
+    template<typename U = E>
+    requires (std::is_constructible_v<error_type, U&&>)
+    constexpr Err(Err&& other)
+        noexcept(std::is_nothrow_constructible_v<error_type, U&&>)
+        : value_(std::move(other.value_)) {}
+    
+    // 跨类型拷贝构造函数
+    template<typename U>
+    requires (std::is_constructible_v<error_type, const U&> && 
+             std::is_convertible_v<const U&, error_type> &&
+             !std::is_same_v<U, E>)
+    constexpr Err(const Err<U>& other)
+        noexcept(std::is_nothrow_constructible_v<error_type, const U&>)
+        : value_(other.get()) {}
+    
+    // 跨类型移动构造函数
+    template<typename U>
+    requires (std::is_constructible_v<error_type, U&&> && 
+             std::is_convertible_v<U&&, error_type> &&
+             !std::is_same_v<U, E>)
+    constexpr Err(Err<U>&& other)
+        noexcept(std::is_nothrow_constructible_v<error_type, U&&>)
+        : value_(std::move(other).get()) {}
+    
+    // 默认构造函数 (仅当 E 可默认构造时)
+    constexpr Err() requires std::is_default_constructible_v<error_type>
+        : value_() {}
+    
+    // 访问器 - 完整的值类别支持
+    [[nodiscard]] constexpr const error_type& get() const & noexcept {
+        return value_;
     }
+    
+    [[nodiscard]] constexpr error_type& get() & noexcept {
+        return value_;
+    }
+    
+    [[nodiscard]] constexpr error_type&& get() && noexcept {
+        return std::move(value_);
+    }
+    
+    [[nodiscard]] constexpr const error_type&& get() const && noexcept {
+        return std::move(value_);
+    }
+
 private:
-    EDecay val_;
+    error_type value_;
 };
 
-
+// void 特化版本
 template<>
-struct Err<void>{
-public:
+struct Err<void> {
     constexpr Err() = default;
+    
+    template<typename U>
+    constexpr Err(U&&) = delete; // 防止误用
+    
+    constexpr void get() const noexcept {}
 };
+
 
 
 template<typename T>

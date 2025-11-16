@@ -15,7 +15,7 @@
 #include "details/PCA9685_Prelude.hpp"
 
 namespace ymd::drivers{
-class PCA9685 final:public PCA9685_Regs{
+class PCA9685 final:public PCA9685_Prelude{
 public:
     class PCA9685Channel;
     class PCA9685_Vport;
@@ -52,66 +52,22 @@ public:
     [[nodiscard]] IResult<> enable_sleep(const Enable en);
 
 
-
-
     template<typename ...Args>
     requires (std::is_integral_v<Args> && ...)
     constexpr std::array<uint16_t, sizeof...(Args)> dump_cvr(Args ...args){
         auto dump_one = [&](const uint idx) -> uint16_t{
             if(idx >= CHANNELS_COUNT) sys::abort();
-            return sub_channels[idx].off.cvr;
+            return regs_.sub_channels[idx].off.cvr;
         };
 
         return {dump_one(args)...};
     }
     
-    // PCA9685Channel & operator [](const size_t index){
-    //     if(index >= CHANNELS_COUNT) sys::abort();
-    //     return channels[index];
-    // }
-
-    class PCA9685_Vport final: public hal::VGpioPortIntf<16>{ 
-        void write_mask(const hal::PinMask mask);
-        hal::PinMask read_mask();
-
-        void set_by_mask(const hal::PinMask mask);
-
-        void clr_by_mask(const hal::PinMask mask);
-    
-        void write_by_mask(const hal::PinMask mask);
-        
-        void write_nth(const size_t index, const BoolLevel data);
-    
-        BoolLevel read_nth(const size_t index);
-    
-        void set_mode(const size_t index, const hal::GpioMode mode);
-    };
-
 
 private:
-    static constexpr uint8_t VALID_CHIP_ID = 0x23;
 
     hal::I2cDrv i2c_drv_;
-
-    // std::array<PCA9685Channel, 16> channels ={
-    //     PCA9685Channel{*this, 0_nth},
-    //     PCA9685Channel{*this, 1_nth},
-    //     PCA9685Channel{*this, 2_nth},
-    //     PCA9685Channel{*this, 3_nth},
-    //     PCA9685Channel{*this, 4_nth},
-    //     PCA9685Channel{*this, 5_nth},
-    //     PCA9685Channel{*this, 6_nth},
-    //     PCA9685Channel{*this, 7_nth},
-    //     PCA9685Channel{*this, 8_nth},
-    //     PCA9685Channel{*this, 9_nth},
-    //     PCA9685Channel{*this, 10_nth},
-    //     PCA9685Channel{*this, 11_nth},
-    //     PCA9685Channel{*this, 12_nth},
-    //     PCA9685Channel{*this, 13_nth},
-    //     PCA9685Channel{*this, 14_nth},
-    //     PCA9685Channel{*this, 15_nth},
-    // };
-
+    PCA9685_Regset regs_ = {};
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t reg){
         const auto res = i2c_drv_.write_reg(uint8_t(addr), reg);
@@ -120,7 +76,7 @@ private:
     };
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t reg){
-        const auto res = i2c_drv_.write_reg(uint8_t(addr), reg, LSB);
+        const auto res = i2c_drv_.write_reg(uint8_t(addr), reg, std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -133,14 +89,14 @@ private:
     }
 
     [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & reg){
-        const auto res = i2c_drv_.read_reg(uint8_t(addr), reg, LSB);
+        const auto res = i2c_drv_.read_reg(uint8_t(addr), reg, std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_val()); 
+        if(const auto res = write_reg(T::ADDRESS, reg.as_bits()); 
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -148,7 +104,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        if(const auto res = read_reg(T::ADDRESS, reg.as_ref()); 
+        if(const auto res = read_reg(T::ADDRESS, reg.as_mut_bits()); 
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     };

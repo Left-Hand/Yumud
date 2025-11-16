@@ -33,7 +33,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = _write_reg(T::ADDRESS, reg.as_val());
+        if(const auto res = _write_reg(T::ADDRESS, reg.as_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -41,7 +41,7 @@ private:
     
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        if(const auto res = _read_reg(reg.address, reg.as_val());
+        if(const auto res = _read_reg(reg.address, reg.as_bits());
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

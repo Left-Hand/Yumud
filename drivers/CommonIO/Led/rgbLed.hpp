@@ -9,7 +9,7 @@ class GpioIntf;
 
 namespace ymd::drivers{
 class RgbLedIntf{
-    virtual void set_rgb(const RGB<q16> & rgb) = 0;
+    virtual void set_rgb(const RGB<iq16> & rgb) = 0;
 };
 
 class DigitalRgbLed final{
@@ -29,10 +29,10 @@ public:
         blue_gpio_.outpp();
     }
 
-    void set_rgb(const RGB<q16> & color){
-        red_gpio_ = BoolLevel::from(color.r > q16(0.5));
-        green_gpio_ = BoolLevel::from(color.g > q16(0.5));
-        blue_gpio_ = BoolLevel::from(color.b > q16(0.5));
+    void set_rgb(const RGB<iq16> & color){
+        red_gpio_ = BoolLevel::from(color.r > iq16(0.5));
+        green_gpio_ = BoolLevel::from(color.g > iq16(0.5));
+        blue_gpio_ = BoolLevel::from(color.b > iq16(0.5));
     }
 private:
     hal::GpioIntf & red_gpio_;
@@ -53,7 +53,7 @@ public:
         green_ch_(_green_ch), 
         blue_ch_(_blue_ch){;}
 
-    void set_rgb(const RGB<q16> & color){
+    void set_rgb(const RGB<iq16> & color){
         red_ch_.set_dutycycle(color.r);    
         green_ch_.set_dutycycle(color.g);    
         blue_ch_.set_dutycycle(color.b);    

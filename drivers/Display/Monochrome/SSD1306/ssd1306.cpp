@@ -37,7 +37,7 @@ template<is_stdlayout T>
 IResult<> SSD1306_Phy::write_burst(const std::span<const T> pbuf){
     if(p_i2c_drv_.has_value()){
         if constexpr(sizeof(T) != 1){
-            if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf, LSB);
+            if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf, std::endian::little);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else {
@@ -60,14 +60,14 @@ template<is_stdlayout T>
 IResult<> SSD1306_Phy::write_repeat(const T data, size_t len){
     if(p_i2c_drv_.has_value()){
         if constexpr(sizeof(data) != 1){
-            return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len, LSB));
+            return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len, std::endian::little));
         }else {
             return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len));
         }
     }else if(p_spi_drv_.has_value()){
         TODO();
         // if constexpr(sizeof(data) != 1){
-        //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len, LSB));
+        //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len, std::endian::little));
         // }else {
         //     return IResult<>(p_spi_drv_->write_repeat<T>(data, len));
         // }

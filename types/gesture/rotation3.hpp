@@ -21,8 +21,8 @@ struct Rotation3{
         const auto [s, c] = angle.sincos();
         return Rotation3(Matrix<T, 3, 3>(
             T(1), T(0), T(0),
-            T(0), c,    -s,
-            T(0), s,    c
+            T(0), T(c), T(-s),
+            T(0), T(s), T(c)
         ));
     }
 
@@ -30,9 +30,9 @@ struct Rotation3{
     [[nodiscard]] static constexpr Rotation3 from_rotation_y(const Angle<T> angle) {
         const auto [s, c] = angle.sincos();
         return Rotation3(Matrix<T, 3, 3>(
-            c,    T(0), s,
+            T(c),    T(0), T(s),
             T(0), T(1), T(0),
-            -s,   T(0), c
+            T(-s),   T(0), T(c)
         ));
     }
 
@@ -40,9 +40,9 @@ struct Rotation3{
     [[nodiscard]] static constexpr Rotation3 from_rotation_z(const Angle<T> angle) {
         const auto [s, c] = angle.sincos();
         return Rotation3(Matrix<T, 3, 3>(
-            c,    -s,   T(0),
-            s,    c,    T(0),
-            T(0), T(0), T(1)
+            T(c), T(-s), T(0),
+            T(s), T(c),  T(0),
+            T(0), T(0),  T(1)
         ));
     }
 
@@ -78,7 +78,7 @@ struct Rotation3{
 
         const Angle<T> theta_y = Angle<T>::from_atan2(
             matrix_.template at<2, 0>(),
-            imag(matrix_.template at<0, 0>(), matrix_.template at<2, 0>())
+            inv_mag(matrix_.template at<0, 0>(), matrix_.template at<2, 0>())
         );
 
         const Angle<T> theta_x = Angle<T>::from_atan2(

@@ -501,10 +501,6 @@ void Can::accept_rx_msg_interrupt(const CanFifoNth fifo_num){
     if(CAN_MessagePending(inst_, std::bit_cast<uint8_t>(fifo_num)) == 0) return;
     
     rx_fifo_.push(receive(fifo_num));
-    
-    // if(callback_){
-    //     pass
-    // }
 }
 
 void Can::accept_sce_interrupt(){

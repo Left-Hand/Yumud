@@ -37,7 +37,9 @@ using namespace ymd::drivers;
 #define CHECK_ERR(x, ...) (x)
 #endif
 
-using Error = AW9523::Error;
+using Self = AW9523;
+
+using Error = Self::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
@@ -46,7 +48,7 @@ using IResult = Result<T, Error>;
 if(not is_index_valid(nth.count()))\
     return Err(Error::IndexOutOfRange);\
 
-IResult<> AW9523::init(const Config & cfg){
+IResult<> Self::init(const Config & cfg){
     if(const auto res = reset();
         res.is_err()) return res;
     if(const auto res = validate();
@@ -54,40 +56,37 @@ IResult<> AW9523::init(const Config & cfg){
     clock::delay(2ms);
     if(const auto res = set_led_current_limit(cfg.current_limit);
         res.is_err()) return res;
-    auto clear_output = [this]()-> IResult<>{
-        for(size_t i = 0; i < MAX_CHANNELS; i++){
-            if(const auto res = set_led_current_dutycycle(std::bit_cast<hal::PinNth>(
-                hal::PinMask::from_nth(Nth(i)).as_u16()), 
-                0); res.is_err()) return Err(res.unwrap_err());
-            }
-        led_mode_reg.mask = hal::PinMask::from_u16(0xffff);
-        return Ok();
-    };
 
-    if(const auto res = clear_output(); 
-        res.is_err()) return res;
+    for(size_t i = 0; i < MAX_CHANNELS; i++){
+        const auto res = set_led_current_dutycycle(std::bit_cast<hal::PinNth>(
+            hal::PinMask::from_nth(Nth(i)).as_u16()), 0);
+
+        if(res.is_err()) [[unlikely]]
+            return Err(res.unwrap_err());
+    }
+    regs_.led_mode_reg.mask = hal::PinMask::from_u16(0xffff);
     return Ok();
 }
 
 
-IResult<> AW9523::write_nth(const Nth nth, const BoolLevel data){
+IResult<> Self::write_nth(const Nth nth, const BoolLevel data){
     GUARD_NTH(nth);
     buf_mask_ = buf_mask_.modify(nth, data);
     return write_by_mask(hal::PinMask(buf_mask_));
 }
 
-IResult<BoolLevel> AW9523::read_nth(const Nth nth){
+IResult<BoolLevel> Self::read_nth(const Nth nth){
     GUARD_NTH(nth);
     if(const auto res = read_mask();
         res.is_err()) return Err(res.unwrap_err());
     return Ok(BoolLevel::from(buf_mask_.test(nth)));
 }
 
-IResult<> AW9523::set_mode(const Nth nth, const hal::GpioMode mode){
+IResult<> Self::set_mode(const Nth nth, const hal::GpioMode mode){
     GUARD_NTH(nth);
 
     {
-        auto reg = RegCopy(dir_reg);
+        auto reg = RegCopy(regs_.dir_reg);
         reg.mask = reg.mask.modify(nth, BoolLevel::from(mode.is_input()));
         
         if(const auto res = write_reg(reg);
@@ -95,7 +94,7 @@ IResult<> AW9523::set_mode(const Nth nth, const hal::GpioMode mode){
     }
 
     if(nth.count() < 8){
-        auto reg = RegCopy(ctl_reg);
+        auto reg = RegCopy(regs_.ctl_reg);
         reg.p0mod = mode.is_outpp();
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
@@ -104,26 +103,26 @@ IResult<> AW9523::set_mode(const Nth nth, const hal::GpioMode mode){
     return Ok();
 }
 
-IResult<> AW9523::enable_irq(const Nth nth, const Enable en ){
+IResult<> Self::enable_irq(const Nth nth, const Enable en ){
     GUARD_NTH(nth);
-    auto reg = RegCopy(inten_reg);
+    auto reg = RegCopy(regs_.inten_reg);
     reg.mask = reg.mask.modify(nth, BoolLevel::from(en == EN));
     return write_reg(reg);
 }
 
-IResult<> AW9523::enable_led_mode(const hal::PinMask pin_mask){
-    auto reg = RegCopy(led_mode_reg);
+IResult<> Self::enable_led_mode(const hal::PinMask pin_mask){
+    auto reg = RegCopy(regs_.led_mode_reg);
     reg.mask = reg.mask | pin_mask;
     return write_reg(reg);
 }
 
-IResult<> AW9523::set_led_current_limit(const CurrentLimit limit){
-    auto reg = RegCopy(ctl_reg);
+IResult<> Self::set_led_current_limit(const CurrentLimit limit){
+    auto reg = RegCopy(regs_.ctl_reg);
     reg.isel = (uint8_t)limit;
     return write_reg(reg);
 }
 
-IResult<> AW9523::set_led_current_dutycycle(
+IResult<> Self::set_led_current_dutycycle(
     const hal::PinMask pin_mask, 
     const real_t dutycycle
 ){
@@ -138,18 +137,19 @@ IResult<> AW9523::set_led_current_dutycycle(
 }
 
 
-IResult<> AW9523::validate(){
-    if(const auto res = read_reg(chip_id_reg);
+IResult<> Self::validate(){
+    auto & reg = regs_.chip_id_reg;
+    if(const auto res = read_reg(reg);
         res.is_err()) return res;
-    if(chip_id_reg.id != VALID_CHIP_ID)
-        return CHECK_ERR(Err(Error::WrongChipId), chip_id_reg.id);
+    if(reg.id != VALID_CHIP_ID)
+        return CHECK_ERR(Err(Error::WrongChipId), reg.id);
     return Ok();
 }
 
 
-IResult<> AW9523::write_reg(const RegAddr addr, const uint16_t data){
+IResult<> Self::write_reg(const RegAddr addr, const uint16_t data){
     // DEBUG_PRINTLN(uint8_t(addr), data);
-    if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, LSB);
+    if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, std::endian::little);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

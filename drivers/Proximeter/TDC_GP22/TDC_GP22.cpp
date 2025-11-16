@@ -11,7 +11,7 @@ using Error = Self::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-static constexpr Nanoseconds value2ns(q16 tdc_value) {
+static constexpr Nanoseconds value2ns(iq16 tdc_value) {
     return Nanoseconds(uint64_t(tdc_value * 500));
 }
 
@@ -69,7 +69,7 @@ IResult<bool> Self::is_measurement_done(){
     TODO();
 }
 
-IResult<iq_t<16>> Self::blocking_get_meas_value(Milliseconds timeout_ms) {
+IResult<iq16> Self::blocking_get_meas_value(Milliseconds timeout_ms) {
     const auto t = clock::millis();
 
     while(true){

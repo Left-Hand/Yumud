@@ -14,12 +14,12 @@ public:
 	constexpr RegCopy(T & owner)
 		:owner_(owner){
         T & self = *this;
-        self.as_ref() = owner_.as_val();
+        self.as_mut_bits() = owner_.as_bits();
     }
 
     constexpr void apply() const {
         const T & self = *this;
-        owner_.as_ref() = self.as_val();
+        owner_.as_mut_bits() = self.as_bits();
     }
 
     // constexpr ~RegCopy(){
@@ -38,83 +38,53 @@ struct __RegBase{
     friend class RegCopy;
 };
 
-template<typename T, typename D = T>
-struct alignas(sizeof(T)) __RegC_t:public __RegBase{
-protected:
-
-    // static_assert(is_non_crtp or std::has_unique_object_representations_v<D>, "data must have unique object representation");
-    // static_assert(is_non_crtp or (sizeof(T) == sizeof(D)), "data must keep the same size");
-    using TReg = T;
-    __RegC_t() = default;
-public:
-    __RegC_t(const std::span<const uint8_t> pbuf){
-        *(reinterpret_cast<T *>(this)) = *(reinterpret_cast<const T *>(pbuf.data()));
-    };
-    using value_type = T;
-
-    
-    // constexpr T operator &(const T data) const {return T(*this) & data;}
-    // constexpr T operator |(const T data) const {return T(*this) | data;}
-    // constexpr const T * operator &() const {return (reinterpret_cast<const T *>(this));}
-    
-    constexpr std::span<const uint8_t> as_bytes() const {
-        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
-    
-    constexpr const T & as_ref() const {return (reinterpret_cast<const T &>(this));}
-    constexpr T as_val() const {return (std::bit_cast<T>(*this));}
-    constexpr std::span<const T, 1> as_span() const {return std::span(reinterpret_cast<const T *>(*this), 1);}
-};
 
 
 template<typename T, typename D = T>
-struct __Reg_t:public __RegC_t<T, D>{
-protected:
-    constexpr __Reg_t<T> & operator = (const __Reg_t<T, D> & other) = default;
-    constexpr __Reg_t<T> & operator = (__Reg_t<T, D> && other) = default;
-    constexpr __Reg_t(const T & data){*this = data;};
-    constexpr __Reg_t(T && data){*this = data;};
-    
+struct __Reg_t:public __RegBase{
 public:
+    using underly_type = T;
     using value_type = T;
     
-    using __RegC_t<T>::__RegC_t;
-    using __RegC_t<T>::as_bytes;
-    using TReg = __RegC_t<T>::TReg;
+    [[nodiscard]] constexpr std::span<uint8_t> as_mut_bytes() {
+        return std::span<uint8_t>(reinterpret_cast<uint8_t *>(this), sizeof(T));}
+    [[nodiscard]] constexpr std::span<const uint8_t> as_bytes() const {
+        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(T));}
     
-    // constexpr RegCopy<__Reg_t<T>> copy() const{return RegCopy(*this);}
-    constexpr __Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
-    // constexpr T * operator &() {return (reinterpret_cast<T *>(this));}
-    constexpr std::span<uint8_t> as_bytes() {
-        return std::span<uint8_t>(reinterpret_cast<uint8_t *>(this), sizeof(TReg));}
-    constexpr std::span<const uint8_t> as_bytes() const {
-        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
+    constexpr __Reg_t<T> & set_bits(T bits) {
+        this->as_mut_bits() = static_cast<T>(this->as_bits() | static_cast<T>(bits)); 
+        return *this;
+    }
+    constexpr __Reg_t<T> & clr_bits(T bits) {
+        this->as_mut_bits() = static_cast<T>(this->as_bits() & ~static_cast<T>(bits)); 
+        return *this;
+    }
+    constexpr __Reg_t<T> & reconf_bits(T bits) {
+        this->as_mut_bits() = static_cast<T>(static_cast<T>(bits)); 
+        return *this;
+    }
     
-    constexpr __Reg_t<T> & set_bits(const T data) {
-        static_cast<T &>(*this) = static_cast<T>(*this) | static_cast<T>(data); return *this;}
-    constexpr __Reg_t<T> & clr_bits(const T data) {
-        static_cast<T &>(*this) = static_cast<T>(*this) & ~static_cast<T>(data); return *this;}
-    constexpr __Reg_t<T> & reconf_bits(const T data) {
-        static_cast<T &>(*this) = static_cast<T>(data); return *this;}
-    
-    constexpr T & as_ref() {return (reinterpret_cast<T &>(*this));}
-    constexpr const T & as_ref() const {return (reinterpret_cast<const T &>(this));}
-    constexpr T as_val() const {return (reinterpret_cast<const T &>(*this));}
-    constexpr std::span<T, 1> as_span() {return std::span(reinterpret_cast<T *>(*this), 1);}
+    [[nodiscard]] constexpr T & as_mut_bits()
+    requires (std::is_const_v<T> == false)
+    {
+        return (reinterpret_cast<T &>(*this));
+    }
+
+
+    [[nodiscard]] constexpr T as_bits() const 
+    {return (reinterpret_cast<const T &>(*this));}
+
 };
 
 #define DEF_REG_TEMPLATE(name, T, as_fn)\
 template<typename D = T>\
 struct name:public __Reg_t<T, D>{\
-using __Reg_t<T, D>::__Reg_t;\
-using __Reg_t<T, D>::operator =;\
-constexpr T as_fn() const {return std::bit_cast<T>(*this);}\
+constexpr T as_fn() const {return std::bit_cast<T>(this->as_bits());}\
 };\
 
 #define DEF_REGC_TEMPLATE(name, T, as_fn)\
 template<typename D = T>\
-struct name:public __RegC_t<T, D>{\
-using __RegC_t<T, D>::__RegC_t;\
-using __RegC_t<T, D>::operator =;\
+struct name:public __Reg_t<const T, D>{\
 constexpr T as_fn() const {return T(*this);}\
 };\
 

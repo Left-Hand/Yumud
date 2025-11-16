@@ -3,6 +3,8 @@
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
 
+#include "digipw/prelude/abdq.hpp"
+
 // 全面推导龙伯格观测器相关公式
 // https://zhuanlan.zhihu.com/p/960435762
 
@@ -13,12 +15,26 @@ public:
 
     struct Config{
         uint32_t fs;
-        // q20 R = 10.0;
-        // q20 L = 2.64E-3;
+        // iq20 R = 10.0;
+        // iq20 L = 2.64E-3;
         // int32_t l1 = -22000;
         // int32_t l2 = 64000;
-        q20 phase_inductance;
-        q20 phase_resistance;
+        iq20 phase_inductance;
+        iq20 phase_resistance;
+    };
+
+    struct State{
+        digipw::AlphaBetaCoord<iq20> i;
+        digipw::AlphaBetaCoord<iq20> e;
+
+        constexpr void reset(){
+            i = digipw::AlphaBetaCoord<iq20>(0, 0);
+            e = digipw::AlphaBetaCoord<iq20>(0, 0);
+        }
+
+        constexpr Angle<iq20> angle() const {
+            return e.angle();
+        }
     };
 
     constexpr explicit LuenbergerObserver(const Config & cfg){
@@ -31,78 +47,66 @@ public:
         auto & self = *this;
         const auto R = cfg.phase_resistance;
         const auto L = cfg.phase_inductance;
-        const auto dt = q20(1) / cfg.fs;
+        const auto dt = iq20(1) / cfg.fs;
 
-        self.Tr_L = q20(- dt * R / L);
-        self.T_L  = q20(dt / L);
-        self.l1T  = q20(dt * R / L - 2);
-        self.l2T  = q20(L * cfg.fs);
+        self.Tr_L = iq20(- dt * R / L);
+        self.T_L  = iq20(dt / L);
+        self.l1T  = iq20(dt * R / L - 2);
+        self.l2T  = iq20(L * cfg.fs);
     }
 
     constexpr void reset(){
-        i_alpha_ = 0;
-        i_beta_ = 0;
-        e_alpha_ = 0;
-        e_beta_ = 0;
+        state_.reset();
     }
 
-    constexpr void update(auto alphabeta_volt, auto alphabeta_curr) {
-        const auto [Valpha, Vbeta] = alphabeta_volt;
-        const auto [Ialpha, Ibeta] = alphabeta_curr;
-        recalc(i_alpha_, e_alpha_, Valpha, Ialpha);
-        recalc(i_beta_, e_beta_, Vbeta, Ibeta);
 
-        turns_ = frac(atan2pu<16>(-e_alpha_, e_beta_));
-        // turns_ = frac(atan2pu(-Ealpha, Ebeta));
+    constexpr void update(const State & meas){
+        state_ = iterator_state(meas);
     }
 
-    constexpr Angle<q16> angle() const {
-        return Angle<q16>::from_turns(q16(turns_));
+    constexpr const State & state() const {
+        return state_;
     }
 
 public:
+    State state_;
+    iq20 turns_ = 0;
 
-    q20 i_alpha_ = 0;
-    q20 i_beta_ = 0;
-    q20 e_alpha_ = 0;
-    q20 e_beta_ = 0;
-    q20 turns_ = 0;
-    q20 Tr_L = 0;
-    q20 T_L  = 0;
-    q20 l1T  = 0;
-    q20 l2T  = 0;
+    iq20 Tr_L = 0;
+    iq20 T_L  = 0;
+    iq20 l1T  = 0;
+    iq20 l2T  = 0;
 
 private:
-    __fast_inline
-    constexpr void recalc(q20 __restrict & i, q20 __restrict & e, const q20 meas_volt, const q20 meas_i){
-        const auto err_i = (i - meas_i);
-        i += Tr_L * i + T_L * (meas_volt - e) + l1T * err_i; 
-        e += l2T * err_i;
-    };
-
+    constexpr State iterator_state(const State & meas) const {
+        const auto err_i = state_.i - meas.i;
+        const auto next_i = (1 + Tr_L) * state_.i + T_L * (meas.e - state_.e) + l1T * err_i; 
+        const auto next_e = state_.e + l2T * err_i;
+        return State{next_i, next_e};
+    }
 };
 
 
 // class LesObserver{
 // public:
-//     LesObserver(const uint fc, const q20 b0, const q20 wc):
+//     LesObserver(const uint fc, const iq20 b0, const iq20 wc):
 //         fc_(fc), b0_(b0), wo_(3 * wc){;}
 
-//     void update(const q20 w_meas, const q20 qcurr_ref){
-//         const q20 err = w_hat_ - w_meas;
+//     void update(const iq20 w_meas, const iq20 qcurr_ref){
+//         const iq20 err = w_hat_ - w_meas;
 
-//         const q20 last_f_ = f_;
+//         const iq20 last_f_ = f_;
 
 //         w_hat_ += last_f_ - 2 * wo_ * err + b0_ * qcurr_ref / fc_;
 //         f_ += - (wo_ * wo_) * err / fc_;
 //     }
 // private:
 //     uint fc_;
-//     q20 b0_;
-//     q20 wo_;
+//     iq20 b0_;
+//     iq20 wo_;
 
-//     q20 w_hat_ = 0;
-//     q20 f_ = 0;
+//     iq20 w_hat_ = 0;
+//     iq20 f_ = 0;
 // };
 
 

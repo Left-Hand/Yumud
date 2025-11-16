@@ -63,7 +63,7 @@ private:
 };
 
 void test(Myclass obj){
-    obj.area();
+    DEBUG_PRINTLN(obj.area());
 }
 
 

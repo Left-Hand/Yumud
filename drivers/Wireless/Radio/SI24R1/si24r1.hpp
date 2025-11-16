@@ -21,14 +21,14 @@ private:
     IResult<> write_reg(RegAddr addr, const auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
-        spi_drv_.transceive_single(regs_.status_reg.as_ref(), (addr), CONT);
+        spi_drv_.transceive_single(regs_.status_reg.as_mut_bits(), (addr), CONT);
         return spi_drv_.write_burst(&(value), sizeof(value));
     }
 
     IResult<> read_reg(RegAddr addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
-        if(const auto res = spi_drv_.transceive_single(regs_.status_reg.as_ref(), uint8_t(addr), CONT);
+        if(const auto res = spi_drv_.transceive_single(regs_.status_reg.as_mut_bits(), uint8_t(addr), CONT);
             res.is_err()) return Err(res.unwrap_err());
         
         if(const auto res = spi_drv_.read_burst(&(value), sizeof(value));
@@ -40,7 +40,7 @@ private:
     IResult<> read_fifo(const std::span<uint8_t> pbuf){
         if(pbuf.size() == 0) return Ok();
         const uint8_t size = MIN(pbuf.size(), 32);
-        if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_ref(), 
+        if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_mut_bits(), 
             uint8_t(Command::R_RX_PAYLOAD), CONT); res.is_err()) return Err(res.unwrap_err());
         
         if(const auto res = spi_drv_.read_burst<uint8_t>(std::span(pbuf.data(), size));
@@ -53,7 +53,7 @@ private:
     IResult<> write_fifo(const std::span<const uint8_t> pbuf){
         if(pbuf.size() == 0) return Ok();
         const uint8_t size = MIN(pbuf.size(), 32);
-        if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_ref(), 
+        if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_mut_bits(), 
             uint8_t(Command::W_TX_PAYLOAD), CONT); res.is_err()) return Err(res.unwrap_err());
 
         if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(pbuf.data(), size));
@@ -66,7 +66,7 @@ private:
     IResult<> write_fifo_no_ack(const std::span<const uint8_t> pbuf){
         if(pbuf.size() == 0) return Ok();
         const uint8_t size = MIN(pbuf.size(), 32);
-        if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_ref(), 
+        if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_mut_bits(), 
             uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT); res.is_err()) return Err(res.unwrap_err());
     
         if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(pbuf.data(), size));

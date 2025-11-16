@@ -41,7 +41,7 @@ private:
 
     [[nodiscard]] IResult<> read_data(uint16_t & data){
         if(const auto res = i2c_drv_.read_reg(
-                std::bit_cast<uint8_t>(Command::READ_DATA), data, LSB);
+                std::bit_cast<uint8_t>(Command::READ_DATA), data, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -62,7 +62,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
+        if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -70,7 +70,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(T::ADDRESS, reg.as_ref());
+        return read_reg(T::ADDRESS, reg.as_mut_bits());
     }
 };
 

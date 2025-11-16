@@ -84,7 +84,7 @@ struct RxFrame{
 
 hal::HalResult MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data){
     if(i2c_drv_){
-        return i2c_drv_->write_reg(reg_addr, data, MSB);
+        return i2c_drv_->write_reg(reg_addr, data, std::endian::big);
     }else if(spi_drv_){
 
         const TxFrame frame = {TxFrame::WriteConfig{
@@ -105,7 +105,7 @@ hal::HalResult MP6570_Phy::write_reg(const uint8_t reg_addr, const uint16_t data
 
 hal::HalResult MP6570_Phy::read_reg(const uint8_t reg_addr, uint16_t & data){
     if(i2c_drv_){
-        return i2c_drv_->read_reg(reg_addr, data, MSB);
+        return i2c_drv_->read_reg(reg_addr, data, std::endian::big);
     }else if(spi_drv_){
         const TxFrame frame = {TxFrame::ReadConfig{
             .slave_addr = spi_slave_addr_,

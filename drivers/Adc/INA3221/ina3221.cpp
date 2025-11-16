@@ -80,8 +80,8 @@ IResult<> INA3221::validate(){
     if(const auto res = read_reg(chip_id_reg); res.is_err()) return CHECKRES(res);
     if(const auto res = read_reg(manu_id_reg); res.is_err()) return CHECKRES(res);
 
-    if(chip_id_reg.key != chip_id_reg.as_val()) return CHECKERR(Err(Error::WrongChipId));
-    if(manu_id_reg.key != manu_id_reg.as_val()) return CHECKERR(Err(Error::WrongManuId));
+    if(chip_id_reg.key != chip_id_reg.as_bits()) return CHECKERR(Err(Error::WrongChipId));
+    if(manu_id_reg.key != manu_id_reg.as_bits()) return CHECKERR(Err(Error::WrongManuId));
 
     return Ok();
 }
@@ -164,7 +164,7 @@ IResult<int> INA3221::get_shunt_volt_uv(const ChannelSelection sel){
         }
     }();
 
-    // const auto res = read_reg(addr, reg.as_ref());
+    // const auto res = read_reg(addr, reg.as_mut_bits());
     // if(res.is_err()) return Err(res.unwrap_err());
     return Ok(reg.to_uv());
 }
@@ -182,7 +182,7 @@ IResult<int> INA3221::get_bus_volt_mv(const ChannelSelection sel){
         }
     }();
 
-    // if(const auto res = read_reg(addr, reg.as_ref()); res.is_err())
+    // if(const auto res = read_reg(addr, reg.as_mut_bits()); res.is_err())
     //     return Err(res.unwrap_err());
 
     return Ok(reg.to_mv());
@@ -192,7 +192,7 @@ IResult<int> INA3221::get_bus_volt_mv(const ChannelSelection sel){
 IResult<real_t> INA3221::get_shunt_volt(const ChannelSelection sel){
     const auto res = get_shunt_volt_uv(sel);
     if(res.is_err()) return Err(res.unwrap_err());
-    return Ok(iq_t<16>(iq_t<8>(res.unwrap()) / 100) / 10000);
+    return Ok(iq16(iq8(res.unwrap()) / 100) / 10000);
 }
 
 IResult<real_t> INA3221::get_bus_volt(const ChannelSelection sel){

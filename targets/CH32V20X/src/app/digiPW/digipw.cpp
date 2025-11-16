@@ -55,8 +55,8 @@ void test_sogi(){
         }
     };
 
-    q16 raw_theta;
-    q16 u0;
+    Angle<uq32> raw_angle;
+    iq16 u0;
 
 
     hal::timer1.init({
@@ -75,20 +75,20 @@ void test_sogi(){
         DEBUG_PRINTLN("start");
 
         const auto micros_begin = clock::micros();
-        q16 tm = 0;
+        iq16 tm = 0;
 
         for(size_t i = 0; i < times; i++){
-            static constexpr q16 dt = q16(1) / isr_freq;
+            static constexpr iq16 dt = iq16(1) / isr_freq;
             tm += dt;
     
-            raw_theta = q16(TAU) * frac(ac_freq * tm);
-            // raw_theta = q16(TAU) * frac((ac_freq-4.2_r) * tm);
-            u0 = 32.0_r * sin(raw_theta) * (0.05_r * sin(8 * tm) + 1);
+            raw_angle = Angle<uq32>::from_turns(frac(ac_freq * tm));
+            // raw_angle = iq16(TAU) * frac((ac_freq-4.2_r) * tm);
+            u0 = 32.0_r * raw_angle.sin() * (0.05_r * sin(8 * tm) + 1);
             spll.update(u0);
         }
 
         const auto micros_end = clock::micros();
-        DEBUG_PRINT(q16((micros_end - micros_begin).count()) / times,"us per call");
+        DEBUG_PRINT(iq16((micros_end - micros_begin).count()) / times,"us per call");
         DEBUG_PRINTLN(micros_begin, micros_end);
         while(true);
     }
@@ -110,8 +110,8 @@ void test_sogi(){
     });
 
     while(true){
-        // DEBUG_PRINTLN_IDLE(raw_theta, spll.theta(), dm);
-        DEBUG_PRINTLN(u0, raw_theta, spll.angle().to_degrees());
+        // DEBUG_PRINTLN_IDLE(raw_angle, spll.theta(), dm);
+        DEBUG_PRINTLN(u0, raw_angle, spll.angle().to_degrees());
         clock::delay(1ms);
     }
 }
@@ -169,7 +169,7 @@ void digipw_main(){
     // BuckConverter buck{curr_ch, volt_ch, mp1907};
     // buck.init();
 
-    // iq_t<24> duty = 0.5_r;
+    // fixed_t<24> duty = 0.5_r;
 
     // size_t a;
     // DEBUG_PRINTLN(a);
@@ -181,11 +181,11 @@ void digipw_main(){
     timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
             case hal::TimerEvent::Update:{
-                static q20 mt = 0;
-                static constexpr q20 dt = 1_q20 / CHOPPER_FREQ;
+                static iq20 mt = 0;
+                static constexpr iq20 dt = 1_iq20 / CHOPPER_FREQ;
                 mt += dt;
-                // mp1907 = q16(0.5) + 0.1_r * sinpu(50 * time());
-                pwm.set_dutycycle(q16(0.5) + 0.1_r * sinpu(50 * q16(mt)));
+                // mp1907 = iq16(0.5) + 0.1_r * sinpu(50 * time());
+                pwm.set_dutycycle(iq16(0.5) + 0.1_r * sinpu(50 * iq16(mt)));
                 // const auto duty = 0.3_r;
                 // mp1907 = CLAMP(duty, 0, 0.4_r);
                 break;
@@ -200,21 +200,21 @@ void digipw_main(){
         
         // const auto t = 6 * time();
         // const auto s = sinpu<31>(t);
-        // DEBUG_PRINTLN_IDLE(q16(curr_ch), q16(volt_ch));
-        // DEBUG_PRINTLN_IDLE(q16(curr_ch), q16(volt_ch), sin(t), sqrt(t), atan2(cos(t), sin(t)));
+        // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch));
+        // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch), sin(t), sqrt(t), atan2(cos(t), sin(t)));
 
-        // const auto curr_meas = iq_t<24>(q16(curr_ch));
+        // const auto curr_meas = fixed_t<24>(iq16(curr_ch));
         // const auto curr_targ = 0.04_q24;
         // const auto curr_err = curr_targ - curr_meas;
         // const auto delta = (curr_err * 0.007_r);
         // duty = duty + delta;
-        // DEBUG_PRINTLN_IDLE(q16(curr_ch), q16(volt_ch), q16(power_ch), duty, pwm.cvr());
-        // DEBUG_PRINTLN_IDLE(q16(curr_ch), q16(volt_ch), q16(power_ch));
-        // DEBUG_PRINTLN_IDLE(q16(volt_ch), q16(curr_ch));
+        // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch), iq16(power_ch), duty, pwm.cvr());
+        // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch), iq16(power_ch));
+        // DEBUG_PRINTLN_IDLE(iq16(volt_ch), iq16(curr_ch));
 
-        // mp1907 = q16(0.5) + q16(0.4) * sin(t);
+        // mp1907 = iq16(0.5) + iq16(0.4) * sin(t);
 
-        //  + q16(0.4) * sin(t);
+        //  + iq16(0.4) * sin(t);
         // mp1907 = duty;
         led.toggle();
     }

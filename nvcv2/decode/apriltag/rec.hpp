@@ -34,7 +34,7 @@ public:
 
     static constexpr Gray get_vertex_val(
         const Vertexs & _vertexs, 
-        const Vec2<q16> & _grid_pos, 
+        const Vec2<iq16> & _grid_pos, 
         const Image<Gray> & gs
     ){
         // TODO();
@@ -43,19 +43,19 @@ public:
         // return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
     };
 
-    static constexpr Vec2<q16> get_vertex(const Vertexs & __vertexs, const Vec2<q16> & __grid_pos){
-        const Vec2<q16> grid_scale = (__grid_pos + Vec2<q16>{1,1}) / (APRILTAG_SIDE_COUNTS + 2);
+    static constexpr Vec2<iq16> get_vertex(const Vertexs & __vertexs, const Vec2<iq16> & __grid_pos){
+        const Vec2<iq16> grid_scale = (__grid_pos + Vec2<iq16>{1,1}) / (APRILTAG_SIDE_COUNTS + 2);
 
-        const Vec2<q16> upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
-        const Vec2<q16> lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
+        const Vec2<iq16> upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
+        const Vec2<iq16> lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
 
         return upper_x.lerp(lower_x, grid_scale.y);
     };
 
 
-    static constexpr Vec2<q16> get_vertex_grid(const Vertexs & __vertexs, const Vec2<q16> & __grid_pos){
-        // return get_vertex(__vertexs, __grid_pos + Vec2<q16>{0.5, 0.5});
-        return Vec2<q16>(0,0);
+    static constexpr Vec2<iq16> get_vertex_grid(const Vertexs & __vertexs, const Vec2<iq16> & __grid_pos){
+        // return get_vertex(__vertexs, __grid_pos + Vec2<iq16>{0.5, 0.5});
+        return Vec2<iq16>(0,0);
     };
 
 
@@ -72,19 +72,16 @@ public:
             center, center, center, center
         };
 
-        #define COMP(s1, s2, i)\
-        if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))\
-        ret[i] = Vec2u(x,y);\
 
         for(auto y = y_range.start; y < y_range.stop; ++y){
             for(auto x = x_range.start; x < x_range.stop; ++x){
                 const auto color = __map[{x,y}];
                 if(color != match) continue;
 
-                COMP(-1, -1, 0)
-                COMP(+1, -1, 1)
-                COMP(+1, +1, 2)
-                COMP(-1, +1, 3)
+                if(static_cast<iq16>(-(x)) + (+(y)) < (-(ret[0].x)) + (-(ret[0].y))) ret[0] = Vec2u(x,y);
+                if(static_cast<iq16>(-(x)) + (-(y)) < (-(ret[1].x)) + (+(ret[1].y))) ret[1] = Vec2u(x,y);
+                if(static_cast<iq16>(+(x)) + (+(y)) < (+(ret[2].x)) + (-(ret[2].y))) ret[2] = Vec2u(x,y);
+                if(static_cast<iq16>(+(x)) + (-(y)) < (+(ret[3].x)) + (+(ret[3].y))) ret[3] = Vec2u(x,y);
             }
         }
 

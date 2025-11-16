@@ -7,16 +7,16 @@ namespace ymd{
 
 
 template<typename T>
-struct OnceIter{
+struct [[nodiscard]] OnceIter{
     constexpr explicit OnceIter(const T value):
         value_(value){;}
-    constexpr T next(){
+    [[nodiscard]] __always_inline constexpr T next(){
         const auto ret = value_;
         is_done_ = true;
         return ret;
     }
 
-    constexpr bool has_next() const{
+    [[nodiscard]] __always_inline constexpr bool has_next() const{
         return is_done_ == false;
     }
 private:
@@ -28,17 +28,39 @@ private:
 template<typename T>
 OnceIter(T) -> OnceIter<T>;
 
-template<typename T>
-struct RepeatIter{
-    constexpr explicit RepeatIter(const T value, size_t size):
-        value_(value), size_(size){;}
+template<typename T, size_t Extents>
+struct [[nodiscard]] RepeatIter{
+    constexpr explicit RepeatIter(const T value, size_t size = Extents):
+        value_(value){;}
 
-    constexpr T next(){
+    [[nodiscard]] __always_inline constexpr T next(){
         const auto ret = value_;
         index_ ++;
         return ret;
     }
-    constexpr bool has_next() const {
+
+    [[nodiscard]] __always_inline constexpr bool has_next() const {
+        return index_ < size_;
+    }
+private:
+    T value_;
+    static constexpr size_t size_ = Extents;
+    size_t index_ = 0;
+};
+
+
+template<typename T>
+struct [[nodiscard]] RepeatIter<T, std::dynamic_extent>{
+    constexpr explicit RepeatIter(const T value, size_t size):
+        value_(value), size_(size){;}
+
+    [[nodiscard]] __always_inline constexpr T next(){
+        const auto ret = value_;
+        index_ ++;
+        return ret;
+    }
+
+    [[nodiscard]] __always_inline constexpr bool has_next() const {
         return index_ < size_;
     }
 private:
@@ -47,22 +69,19 @@ private:
     size_t index_ = 0;
 };
 
-//ctad
-template<typename T>
-RepeatIter(T, size_t) -> RepeatIter<T>;
 
 template<typename T>
-struct BurstIter{
+struct [[nodiscard]] BurstIter{
     constexpr explicit BurstIter(const std::span<const T> pbuf):
         pbuf_(pbuf){;}
 
-    constexpr T next(){
+    [[nodiscard]] __always_inline constexpr T next(){
         const auto ret = pbuf_[index_];
         index_ ++;
         return ret;
     }
     
-    constexpr bool has_next() const {
+    [[nodiscard]] __always_inline constexpr bool has_next() const {
         return index_ + 1 >= pbuf_.size();
     }
 private:

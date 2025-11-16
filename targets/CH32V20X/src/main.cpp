@@ -54,6 +54,10 @@ int main(){
     // gui_main();
     // canopen_main();
     // bldc_main();
+    // myesc_main();
+    // alx_aoa_main();
+    // mk8000tr_main();
+    // vl53l5cx_main();
     myesc_main();
     // mystepper_main();
 
@@ -154,6 +158,9 @@ int main(){
     // bldc_main();
     while(true);
     #elif defined(CH32V30X)
+    // alx_aoa_main();
+    vl53l5cx_main();
+    // ld19_main();
     // i2c_scanner_main();
     // slcan_main();
     // programmer_main();
@@ -186,8 +193,8 @@ int main(){
     // pmw3901_main();
     // ch9141_tb(logger, uart7);
     // st7789_main();
-    smc2025_main();
-    // mlx90640_main();
+    // smc2025_main();
+    mlx90640_main();
     // fft_main();
     // adrc_main();
     // render_main();

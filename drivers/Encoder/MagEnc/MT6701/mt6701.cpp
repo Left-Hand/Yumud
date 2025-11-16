@@ -41,7 +41,7 @@ IResult<> MT6701::init(){
 
 IResult<> MT6701::update(){
     const auto res = read_reg(raw_angle_reg);
-    lap_position_ = u16_to_uni(raw_angle_reg.angle);
+    lap_position_ = uq32::from_bits(raw_angle_reg.angle);
     return res;
     // else if(spi_drv){
 
@@ -55,7 +55,7 @@ IResult<> MT6701::update(){
 
     //     semantic = Semantic{data8, data16};
     //     if(semantic.valid(fast_mode)){
-    //         lap_position = real_t(iq_t<16>(semantic.data_14bit << 2) >> 16);
+    //         lap_position = real_t(fixed_t<16>(semantic.data_14bit << 2) >> 16);
     //     } 
     // }
     // else{
@@ -64,8 +64,8 @@ IResult<> MT6701::update(){
     // }
 }
 
-IResult<Angle<q31>> MT6701::read_lap_angle(){
-    return Ok(Angle<q31>::from_turns(lap_position_));
+IResult<Angle<uq32>> MT6701::read_lap_angle(){
+    return Ok(Angle<uq32>::from_turns(lap_position_));
 }
 
 

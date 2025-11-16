@@ -13,6 +13,7 @@
 namespace ymd::drivers{
 struct PCA9685_Prelude{
 public:
+    static constexpr uint8_t VALID_CHIP_ID = 0x23;
 
     enum class RegAddr:uint8_t{
         Mode1,
@@ -43,7 +44,7 @@ public:
     };
 };
 
-struct PCA9685_Regs :public PCA9685_Prelude{
+struct PCA9685_Regset :public PCA9685_Prelude{
 
     struct Mode1Reg:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Mode1;

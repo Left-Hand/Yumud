@@ -90,13 +90,13 @@ void ft6336_main(){
     while(true){
         DEBUG_PRINTLN(
             // ft6336.get_gesture_id().examine(),
-            ft6336.get_touch_points().examine().iter(),
-            std::hex, 
-            std::showbase,
+            ft6336.get_touch_points().examine().iter()
+            // std::hex, 
+            // std::showbase,
             // RepeatIter<uint16_t>{0X5555, 3}
             // OnceIter(0X5555)
             // RepeatIter<uint16_t>{0X5555, 3},
-            MyU18BurstPixelDataIter<uint16_t, RepeatIter<uint16_t>>(RepeatIter<uint16_t>{0X5555, 2})
+            // MyU18BurstPixelDataIter<uint16_t, RepeatIter<uint16_t>>(RepeatIter<uint16_t, 2>{0X5555, 2})
         );
 
         clock::delay(5ms);

@@ -28,22 +28,22 @@
 using namespace ymd;
 
 namespace PhysicalConstants {
-    static constexpr real_t L_s = 0.098_r;
-    static constexpr real_t L = 0.679_r;
-    static constexpr real_t G = 9.8_r;
-    static constexpr real_t h = 0.038_r;
-    static constexpr real_t H = L + h;
-    static constexpr real_t W = L + h;
-    static constexpr real_t M1 = 0.07_r;
-    static constexpr real_t M2 = 0.05_r;
-    static constexpr real_t M = M1+M2;
-    static constexpr real_t x = (M1 + 2*M2)/(2*M1 + 2*M2)*L;
-    static constexpr real_t J = M1*L*L/3 + M2*L*L;
+    static constexpr iq16 L_s = 0.098_iq16;
+    static constexpr iq16 L = 0.679_iq16;
+    static constexpr iq16 G = 9.8_iq16;
+    static constexpr iq16 h = 0.038_iq16;
+    static constexpr iq16 H = L + h;
+    static constexpr iq16 W = L + h;
+    static constexpr iq16 M1 = 0.07_iq16;
+    static constexpr iq16 M2 = 0.05_iq16;
+    static constexpr iq16 M = M1+M2;
+    static constexpr iq16 x = (M1 + 2*M2)/(2*M1 + 2*M2)*L;
+    static constexpr iq16 J = M1*L*L/3 + M2*L*L;
 }
 
-static constexpr real_t cali_r(const real_t _x){
-    real_t x = CLAMP2(_x, 1.0_r);
-    return sign(x)*(pow(abs(x), 1.5_r)+0.022_r);
+static constexpr iq16 cali_iq16(const iq16 _x){
+    iq16 x = CLAMP2(_x, 1.0_iq16);
+    return sign(x)*(pow(abs(x), 1.5_iq16)+0.022_iq16);
 }
 
 
@@ -80,7 +80,7 @@ public:
 
     }
 
-    void set_dutycycle(const real_t duty_a, const real_t duty_b){
+    void set_dutycycle(const iq16 duty_a, const iq16 duty_b){
         channel_a_.set_dutycycle(duty_a);
         channel_b_.set_dutycycle(duty_b);
     }
@@ -92,35 +92,35 @@ private:
 
 class RobotDynamics{
 
-    void move(const Vec2<real_t> dir){
-        static real_t left = 0;
-        static real_t right = 0;
+    void move(const Vec2<iq16> dir){
+        static iq16 left = 0;
+        static iq16 right = 0;
 
-        left = (left*0.2_r + CLAMP2(-dir.y,0.19_r)*0.8_r);
-        right = (right*0.2_r + CLAMP2(dir.x,0.19_r)*0.8_r);
+        left = (left*0.2_iq16 + CLAMP2(-dir.y,0.19_iq16)*0.8_iq16);
+        right = (right*0.2_iq16 + CLAMP2(dir.x,0.19_iq16)*0.8_iq16);
         jetpwm_.set_dutycycle(left,right);
     }
 private:
     JetPwm jetpwm_;
 };
 
-static constexpr real_t DELTA = 0.01_r;
+static constexpr iq16 DELTA = 0.01_iq16;
 
 
 template<typename Derived>
 struct TaskBase{
     struct Measurements{
-        Vec2<real_t> angular_accel;
-        Vec2<real_t> omega;
-        Vec2<real_t> orientation;
+        Vec2<iq16> angular_accel;
+        Vec2<iq16> omega;
+        Vec2<iq16> orientation;
     };
 
-    using Output = Vec2<real_t>;
+    using Output = Vec2<iq16>;
 };
 
 struct TaskCenter:public TaskBase<TaskCenter>{
-    static constexpr real_t Kp = 0.017_r;
-    static constexpr real_t Kd = 0.42_r;
+    static constexpr iq16 Kp = 0.017_iq16;
+    static constexpr iq16 Kd = 0.42_iq16;
     constexpr Output calc(const Measurements meas) const {
         return Kp*(-meas.angular_accel)+ Kd*(-meas.omega);
     }
@@ -128,25 +128,25 @@ struct TaskCenter:public TaskBase<TaskCenter>{
 
 
 struct TaskCircle:public TaskBase<TaskCircle>{
-    static constexpr real_t K_tan = 0.23_r;
-    static constexpr real_t Kp_norm = 2.2_r;
-    static constexpr real_t Kd_norm = 0.07_r;
+    static constexpr iq16 K_tan = 0.23_iq16;
+    static constexpr iq16 Kp_norm = 2.2_iq16;
+    static constexpr iq16 Kd_norm = 0.07_iq16;
 
-    real_t expected_radius;
+    iq16 expected_iq16adius;
     constexpr Output calc(const Measurements meas) const {
         using namespace PhysicalConstants;
 
         const auto vec_norm = meas.orientation.normalized();//计算当前摆杆姿态的法向量
         const auto vec_tan = vec_norm.rotated(90_deg);//计算当前摆杆姿态的切向量
         
-        const real_t cmd_theta = std::atan2(W, H);
-        const real_t meas_theta = std::acos( //计算摆杆与铅垂线的角度
+        const iq16 cmd_theta = std::atan2(W, H);
+        const iq16 meas_theta = std::acos( //计算摆杆与铅垂线的角度
             std::cos(meas.orientation.x) * std::cos(meas.orientation.y));
-        const real_t theta_err = cmd_theta - meas_theta;
+        const iq16 theta_err = cmd_theta - meas_theta;
 
-        const real_t cmd_omega = std::sin(cmd_theta) * //期望的公转角速度
+        const iq16 cmd_omega = std::sin(cmd_theta) * //期望的公转角速度
             std::sqrt(G / (x * std::cos(cmd_theta)));
-        const real_t omega_err = cmd_omega - std::abs(meas.omega.dot(vec_tan));
+        const iq16 omega_err = cmd_omega - std::abs(meas.omega.dot(vec_tan));
 
         const auto out_tan = K_tan * omega_err * vec_tan * //切向控制器输出
             sign(meas.omega.dot(vec_tan));
@@ -160,27 +160,27 @@ struct TaskCircle:public TaskBase<TaskCircle>{
 };
 
 struct TaskLine:public TaskBase<TaskLine>{
-    constexpr Output calc(const Measurements meas, const Angle<real_t> theta){
+    constexpr Output calc(const Measurements meas, const Angle<iq16> theta){
         using namespace PhysicalConstants;
 
         const auto orientation = meas.orientation;
         const auto angular_accel = meas.angular_accel; 
         const auto omega = meas.omega;
 
-        const Vec2 vec_norm = Vec2(0.0_r, 1.0_r).rotated(theta);
-        const Vec2 vec_tan = Vec2(1.0_r, 0.0_r).rotated(theta);
+        const Vec2 vec_norm = Vec2(0.0_iq16, 1.0_iq16).rotated(theta);
+        const Vec2 vec_tan = Vec2(1.0_iq16, 0.0_iq16).rotated(theta);
         
-        const real_t d1 = meas.omega.cross(vec_tan);
-        const real_t d2 = meas.angular_accel.cross(vec_tan);
-        const Vec2 out_norm = (0.027_r*d2 + 0.37_r*d1)*vec_norm;
+        const iq16 d1 = meas.omega.cross(vec_tan);
+        const iq16 d2 = meas.angular_accel.cross(vec_tan);
+        const Vec2 out_norm = (0.027_iq16*d2 + 0.37_iq16*d1)*vec_norm;
 
-        const real_t E_targ = M * G * x * (1.0_r - H / sqrt(H*H + W*W));
+        const iq16 E_targ = M * G * x * (1.0_iq16 - H / sqrt(H*H + W*W));
         
-        const real_t E_p = M * G * x * (1.0_r - cos(orientation.x)*cos(orientation.y));
-        const real_t E_k = 0.5_r * J * (omega.project(vec_tan)).length_squared();
-        const real_t E = E_p + E_k;
+        const iq16 E_p = M * G * x * (1.0_iq16 - cos(orientation.x)*cos(orientation.y));
+        const iq16 E_k = 0.5_iq16 * J * (omega.project(vec_tan)).length_squared();
+        const iq16 E = E_p + E_k;
 
-        const Vec2 out_tan = 15_r*(E_targ - E + 0.00037_r*abs(angular_accel.dot(vec_tan))) 
+        const Vec2 out_tan = 15_iq16*(E_targ - E + 0.00037_iq16*abs(angular_accel.dot(vec_tan))) 
             * vec_tan * sign(omega.dot(vec_tan));
 
         return out_norm + out_tan;

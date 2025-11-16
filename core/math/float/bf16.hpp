@@ -57,7 +57,7 @@ struct bf16 {
     constexpr bf16(T fv) : raw(std::bit_cast<uint32_t>(float(fv)) >> 16) {}
 
     template<size_t Q>
-    constexpr bf16(iq_t<Q> qv) : bf16(float(qv)) {}
+    constexpr bf16(fixed_t<Q, int32_t> qv) : bf16(float(qv)) {}
     constexpr bf16(int iv) : bf16(float(iv)) {}
     constexpr bf16 operator -() const{
         return from_u16(raw.as_u16() ^ 0x8000);
@@ -74,8 +74,8 @@ struct bf16 {
     }
 
     template <size_t Q>
-    explicit constexpr operator iq_t<Q>() const{
-        return iq_t<Q>::from(float(*this));
+    explicit constexpr operator fixed_t<Q, int32_t>() const{
+        return fixed_t<Q, int32_t>::from(float(*this));
     }
 
     friend OutputStream & operator << (OutputStream & os, const bf16 v);

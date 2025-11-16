@@ -1,6 +1,7 @@
 import numpy as np
+from numpy.typing import NDArray
 
-iq31_sin_table:np.int32 = np.int32([
+iq31_sin_table:NDArray[np.int32] = np.array([
     0,   33553067,   67097942,  100626436,
     134130364,  167601545,  201031810,  234412995,
     267736951,  300995544,  334180652,  367284176,
@@ -14,9 +15,9 @@ iq31_sin_table:np.int32 = np.int32([
     1256486826, 1283543749, 1310287313, 1336710990,
     1362808327, 1388572955, 1413998582, 1439079002,
     1463808091, 1488179813, 1512188216, 1535827441
-])
+], dtype=np.int32)
 
-iq31_cos_table:np.int32 = np.int32([
+iq31_cos_table:NDArray[np.int32] = np.array([
     2147483647, 2147221509, 2146435157, 2145124784,
     2143290709, 2140933381, 2138053374, 2134651392,
     2130728266, 2126284953, 2121322538, 2115842232,
@@ -30,7 +31,7 @@ iq31_cos_table:np.int32 = np.int32([
     1741530038, 1721685646, 1701420928, 1680740833,
     1659650409, 1638154806, 1616259270, 1593969148,
     1571289881, 1548227007, 1524786154, 1500973048
-])
+], dtype=np.int32)
 
-uiq32_sin_table:np.uint32 = np.uint32(iq31_sin_table * 2)
-uiq32_cos_table:np.uint32 = np.uint32(iq31_cos_table * 2)
+# uiq32_sin_table:NDArray[np.uint32] = NDArray[np.uint32](iq31_sin_table * 2)
+# uiq32_cos_table:NDArray[np.uint32] = NDArray[np.uint32](iq31_cos_table * 2)

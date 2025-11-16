@@ -56,8 +56,6 @@ void pfm_zvs_main(){
     auto & pwm_p = timer.oc<1>();
     auto & pwm_n = timer.ocn<1>();
 
-    // timer.init(CHOP_FREQ);
-    // timer.init(2_KHz);
     timer.init({
         .count_freq = hal::NearestFreq(20_KHz),
         .count_mode = hal::TimerCountMode::Up
@@ -66,9 +64,8 @@ void pfm_zvs_main(){
     pwm_p.init({
         // .valid_level = LOW
     });
+
     pwm_n.init({});
-
-
 
     while(true){
         const auto t = clock::time();

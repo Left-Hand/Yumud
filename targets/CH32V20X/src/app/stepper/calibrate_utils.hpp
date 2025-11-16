@@ -12,11 +12,4 @@
 
 namespace ymd{
 
-
-struct Elecrad{
-    real_t elecrad;
-};
-
-
-
 }

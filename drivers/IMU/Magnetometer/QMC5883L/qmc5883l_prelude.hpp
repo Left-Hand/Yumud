@@ -105,7 +105,7 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
 
     struct ResetPeriodReg:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ResetPeriod;
-        using Reg8::operator=;
+
         uint8_t data;
     };
 

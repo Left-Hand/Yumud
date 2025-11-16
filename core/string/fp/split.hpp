@@ -90,7 +90,7 @@ class SplitIterator {
 public:
     using value_type = StringView;
 
-    constexpr SplitIterator(const StringView& str, char delimiter, size_t max_pieces = 0)
+    constexpr SplitIterator(const StringView str, char delimiter, size_t max_pieces = 0)
         : data_{str.data()}, size_{str.size()}, delimiter_{delimiter}, max_pieces_{max_pieces}, remaining_{str.size_} {}
 
     constexpr std::optional<StringView> next() {

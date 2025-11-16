@@ -1,7 +1,7 @@
 
 #include "core/math/real.hpp"
 #include "core/math/fast/conv.hpp"
-#include "core/math/iq/iq_t.hpp"
+#include "core/math/iq/fixed_t.hpp"
 
 
 #include "types/vectors/vector3.hpp"
@@ -45,6 +45,7 @@ using namespace ymd;
 
 
 namespace expeprimental{
+using namespace iqmath::details;
 static constexpr __fast_inline 
 int32_t __IQ31getSinCosResult(int32_t iq31X, int32_t iq31Sin, int32_t iq31Cos){
     int32_t iq31Res;
@@ -104,7 +105,7 @@ constexpr auto __IQNgetCosSinPUTemplate(int32_t iqn_x, Fn && fn){
 
 
     return std::forward<Fn>(fn)(iq31_x, sect, lut_index);
-    // return _iq<31>::from_i32(iq31_sin+iq31_cos);
+    // return _iq<31>::from_bits(iq31_sin+iq31_cos);
 }
 
 
@@ -153,21 +154,21 @@ constexpr auto __IQNgetCosSinTemplate(int32_t iqn_x, Fn && fn){
 
 
 __fast_inline constexpr 
-auto __IQ31getSinDispatcher(const uint32_t iq31_x, const uint8_t sect, const uint8_t lut_index){
+fixed_t<31, int32_t> __IQ31getSinDispatcher(const uint32_t iq31_x, const uint8_t sect, const uint8_t lut_index){
 
-    const int32_t iq31_sin = __iqdetails::_IQ31SinLookup[lut_index];
-    const int32_t iq31_cos = __iqdetails::_IQ31CosLookup[lut_index];
+    const int32_t iq31_sin = iqmath::details::_IQ31SinLookup[lut_index];
+    const int32_t iq31_cos = iqmath::details::_IQ31CosLookup[lut_index];
     //获取查找表的校准�?
 
     switch(sect){
-        case 0: return _iq<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
-        case 1: return _iq<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
-        case 2: return _iq<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
-        case 3: return _iq<31>::from_i32(  __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
-        case 4: return _iq<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
-        case 5: return _iq<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
-        case 6: return _iq<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
-        case 7: return _iq<31>::from_i32(- __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
+        case 0: return fixed_t<31, int32_t>::from_bits(  __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
+        case 1: return fixed_t<31, int32_t>::from_bits(  __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
+        case 2: return fixed_t<31, int32_t>::from_bits(  __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
+        case 3: return fixed_t<31, int32_t>::from_bits(  __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
+        case 4: return fixed_t<31, int32_t>::from_bits(- __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
+        case 5: return fixed_t<31, int32_t>::from_bits(- __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
+        case 6: return fixed_t<31, int32_t>::from_bits(- __IQ31getSinCosResult(iq31_x, iq31_cos, -iq31_sin));
+        case 7: return fixed_t<31, int32_t>::from_bits(- __IQ31getSinCosResult(iq31_x, iq31_sin,  iq31_cos));
     }
     __builtin_unreachable();
 }
@@ -179,7 +180,7 @@ auto __IQ31getCosDispatcher(const uint32_t iq31_x, const uint8_t sect, const uin
 
 __fast_inline constexpr 
 auto __IQ31getSinCosDispatcher(const uint32_t iq31_x, const uint8_t sect, const uint8_t lut_index){
-    return std::array<_iq<31>, 2>{
+    return std::array<fixed_t<31, int32_t>, 2>{
         __IQ31getSinDispatcher(iq31_x, sect, lut_index),
         __IQ31getCosDispatcher(iq31_x, sect, lut_index)
     };
@@ -188,34 +189,34 @@ auto __IQ31getSinCosDispatcher(const uint32_t iq31_x, const uint8_t sect, const 
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> mysin(const iq_t<P> iq_x){
-    return iq_t<Q>(expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.as_i32(), expeprimental::__IQ31getSinDispatcher));
+__fast_inline constexpr fixed_t<Q, int32_t> mysin(const fixed_t<P, int32_t> iq_x){
+    return fixed_t<Q, int32_t>(expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.as_i32(), expeprimental::__IQ31getSinDispatcher));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> mycos(const iq_t<P> iq_x){
-    return iq_t<Q>(expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.as_i32(), expeprimental::__IQ31getCosDispatcher));
+__fast_inline constexpr fixed_t<Q, int32_t> mycos(const fixed_t<P, int32_t> iq_x){
+    return fixed_t<Q, int32_t>(expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.as_i32(), expeprimental::__IQ31getCosDispatcher));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr std::array<iq_t<Q>, 2> mysincos(const iq_t<P> iq_x){
+__fast_inline constexpr std::array<fixed_t<Q, int32_t>, 2> mysincos(const fixed_t<P, int32_t> iq_x){
     auto res = (expeprimental::__IQNgetCosSinTemplate<Q>(iq_x.as_i32(), expeprimental::__IQ31getSinCosDispatcher));
     return {res[0], res[1]};
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> mysinpu(const iq_t<P> iq_x){
-    return iq_t<Q>(expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), expeprimental::__IQ31getSinDispatcher));
+__fast_inline constexpr fixed_t<Q, int32_t> mysinpu(const fixed_t<P, int32_t> iq_x){
+    return fixed_t<Q, int32_t>(expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), expeprimental::__IQ31getSinDispatcher));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> mycospu(const iq_t<P> iq_x){
-    return iq_t<Q>(expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), expeprimental::__IQ31getCosDispatcher));
+__fast_inline constexpr fixed_t<Q, int32_t> mycospu(const fixed_t<P, int32_t> iq_x){
+    return fixed_t<Q, int32_t>(expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), expeprimental::__IQ31getCosDispatcher));
 }
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr std::array<iq_t<Q>, 2> mysincospu(const iq_t<P> iq_x){
-    auto res = (expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.as_i32(), expeprimental::__IQ31getSinCosDispatcher));
+__fast_inline constexpr std::array<fixed_t<Q, int32_t>, 2> mysincospu(const fixed_t<P, int32_t> iq_x){
+    auto res = (expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.as_bits(), expeprimental::__IQ31getSinCosDispatcher));
     return {res[0], res[1]};
 }
 
@@ -245,7 +246,7 @@ template<typename Fn>
 void test_func(Fn && fn, const Milliseconds dur){
     while(true){
         const auto t = clock::time();
-        const auto x = 2 * frac(t * 2) * real_t(TAU) -  1000 * real_t(TAU);
+        const auto x = 2 * iq16(frac(t * 2)) * iq16(TAU) -  1000 * iq16(TAU);
         // const auto x = 6 * frac(t * 2) - 3;
         auto y = std::forward<Fn>(fn)(x);
         DEBUG_PRINTLN(x, y, dur);
@@ -257,11 +258,11 @@ void test_func(Fn && fn, const Milliseconds dur){
 
 
 
-__no_inline auto func(const real_t x){
+__no_inline auto func(const iq16 x){
     // return std::make_tuple(sin(x), cos(x));
     // return mysin(x);
-    // return fposmod(x, real_t(TAU));
-    // return dump_tau(iq_t<16>(x));
+    // return fposmod(x, iq16(TAU));
+    // return dump_tau(fixed_t<16>(x));
     // return std::make_tuple(mysin(x), mycos(x));
     // return mysincos(x);
     return mysincospu(x);

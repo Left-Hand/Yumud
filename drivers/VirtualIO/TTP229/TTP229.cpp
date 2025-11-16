@@ -27,4 +27,5 @@ void TTP229::update(){
 }
 
 bool TTP229::is_idle(){
-    return sdo_gpio_.read() == LOW;}
+    return sdo_gpio_.read() == LOW;
+}

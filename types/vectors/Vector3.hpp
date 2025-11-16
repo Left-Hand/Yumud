@@ -342,7 +342,7 @@ public:
         if (unlikely(squ_len == 0)) {
             x = y = z = 0;
         } else{
-            T inv_len = isqrt(squ_len);
+            T inv_len = inv_sqrt(squ_len);
             x *= inv_len;
             y *= inv_len;
             z *= inv_len;

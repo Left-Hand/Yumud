@@ -8,7 +8,8 @@
 
 namespace ymd::drivers{
 
-class BH1750 final{
+
+struct BH1750_Prelude{
 public:
     enum class Mode:uint8_t{
         HMode = 0,
@@ -24,15 +25,18 @@ public:
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+};
+
+class BH1750 final:public BH1750_Prelude{
 public:
     explicit BH1750(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     explicit BH1750(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
 
-    IResult<> power_down(){
+    [[nodiscard]] IResult<> power_down(){
         return send_command(Command::PowerDown);
     }
 
-    IResult<> reset(){
+    [[nodiscard]] IResult<> reset(){
         return send_command(Command::Reset);
     }
 
@@ -44,11 +48,11 @@ public:
         cont_en_ = en == EN;
     }
 
-    IResult<> start_conv();
+    [[nodiscard]] IResult<> start_conv();
 
-    IResult<> change_measure_time(const uint16_t ms);
+    [[nodiscard]] IResult<> change_measure_time(const uint16_t ms);
 
-    IResult<uint32_t> get_lx();
+    [[nodiscard]] IResult<uint32_t> get_lx();
 
 private:
     hal::I2cDrv i2c_drv_;
@@ -61,9 +65,9 @@ private:
         ChangeMeasureTimeL = 0x60,
     };
 
-    Fraction lsb = {
-        .numerator = 69,
-        .denominator = 69
+    Fraction<int> lsb = {
+        .num = 69,
+        .den = 69
     };
 
     Mode current_mode_ = Mode::LMode;

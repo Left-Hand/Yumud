@@ -97,14 +97,24 @@
 
 namespace ymd::drivers{
 
-struct SwVersion{
+struct VL53L1X_Prelude{
+struct [[nodiscard]] SwVersion{
     uint8_t major;
     uint8_t minor;
     uint8_t build;
     uint32_t revision;
+
+    static constexpr SwVersion from_default(){ 
+        return{
+            .major = 3,
+            .minor = 5,
+            .build = 1,
+            .revision = 0,
+        };
+    }
 };
 
-class Window{
+class [[nodiscard]] Window{
     enum Kind:uint8_t{
         Below,
         Above,
@@ -128,7 +138,7 @@ private:
 };
 
 
-struct Threshold{
+struct [[nodiscard] ]Threshold{
     uint16_t low;
     uint16_t high;
     Window window;
@@ -165,8 +175,8 @@ enum class DistanceMode:uint8_t{
     Long = 2,
 };
 
-class RangeStatus{
-    enum Kind:uint8_t{
+struct RangeStatus{
+    enum class Kind:uint8_t{
         /// Valid measurement.
         Valid = 0,
         /// Sigma is above threshold (possibly valid measurement).
@@ -247,11 +257,11 @@ struct ROICenter{
     uint8_t spad;
 
     constexpr ROICenter(const uint8_t x, const uint8_t y):
-        spd(y > 7 ? (128 + (x << 3) + (15 - y)) : ((15-x) << 3) + y){}
+        spad(y > 7 ? (128 + (x << 3) + (15 - y)) : ((15-x) << 3) + y){}
 };
 
 
-struct MeasureResult{
+struct [[nodiscard]] MeasureResult{
     RangeStatue status;
     uint16_t distance_mm;
     uint16_t ambient;
@@ -260,7 +270,7 @@ struct MeasureResult{
 };
 
 /// Default I2C address for VL53L1X.
-static constexpr uint8_t DEFAULT_I2C_ADDR= 0x29;
+static constexpr hal::I2cSlaveAddr<7> DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x29);
 
 /// The ID of the sensor as returned by the device when querying [`VL53L1X::get_sensor_id`].
 static constexpr uint16_t SENSOR_ID = 0xEACC;
@@ -359,34 +369,11 @@ static constexpr uint8_t DEFAULT_CONFIG[] = {
 
 // pub use vl53l1_reg::Index as Register;
 
-class VL53L1X{
+};
+
+class VL53L1X:public VL53L1X_Prelude{
     using Error = VL53L1X_Error;
     using Self = VL53L1X;
-
-    /// Get the driver version.
-    SwVersion sw_version() const {
-        return{
-            .major = 3,
-            .minor = 5,
-            .build = 1,
-            .revision = 0,
-        };
-    }
-
-
-    IResult<void> write_bytes(uint8_t address, const std::array<uint8_t, 2> bytes){
-        // this->i2c
-        //     .write_registers(this->address, address.into(), bytes);
-
-        return Ok();
-    }
-
-    IResult<void> read_bytes(uint8_t address, const std::span<uint8_t, 2> bytes){
-        // this->i2c
-        //     .write_registers(this->address, address.into(), bytes);
-
-        return Ok();
-    }
 
 
     /// Set the I2C address of the current device in case multiple devices with the same address exists on the same bus.
@@ -394,7 +381,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `new_address` - The new address to set for the current device.
-    auto set_address(uint8_t new_address) -> IResult<void> {
+    IResult<> set_address(uint8_t new_address){
         this->write_bytes(VL53L1_I2C_SLAVE__DEVICE_ADDRESS, {new_address, 0});
 
         this->address = new_address;
@@ -407,7 +394,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `io_config` - The io voltage that will be configured for the device.
-    auto init(IoVoltage io_config) -> IResult<void> {
+    IResult<> init(IoVoltage io_config){
         this->write_bytes(VL53L1_PAD_I2C_HV__CONFIG, {0, 0});
 
         const uint8_t io = (io_config == IoVoltage::Volt2_8) ? 1 : 0;
@@ -441,7 +428,7 @@ class VL53L1X{
 
     /// Clear the interrupt flag on the device.
     /// Should be called after reading ranging data from the device to start the next measurement.
-    auto clear_interrupt() -> IResult<void> {
+    IResult<> clear_interrupt(){
         return this->write_bytes(VL53L1_SYSTEM__INTERRUPT_CLEAR, {0x01, 0});
     }
 
@@ -450,7 +437,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `polarity` - The polarity to set.
-    auto set_interrupt_polarity(Polarity polarity) -> IResult<void> {
+    IResult<> set_interrupt_polarity(Polarity polarity){
         auto gpio_mux_hv = std::array<uint8_t, 2>{0, 0};
 
         this->read_bytes(VL53L1_GPIO_HV_MUX__CTRL, gpio_mux_hv);
@@ -463,7 +450,7 @@ class VL53L1X{
     }
 
     /// Get the currently set interrupt polarity.
-    auto get_interrupt_polarity() -> IResult<Polarity> {
+    IResult<Polarity> get_interrupt_polarity(){
         auto gpio_mux_hv = std::array<uint8_t, 2>{0, 0};
 
         this->read_bytes(VL53L1_GPIO_HV_MUX__CTRL, gpio_mux_hv);
@@ -473,17 +460,17 @@ class VL53L1X{
 
     /// Start a distance ranging operation.
     /// This operation is continuous, the interrupt flag should be cleared between each interrupt to start a new distance measurement.
-    auto start_ranging() -> IResult<void> {
+    IResult<> start_ranging(){
         return this->write_bytes(VL53L1_SYSTEM__MODE_START, {0x40, 0});
     }
 
     /// Stop an ongoing ranging operation.
-    auto stop_ranging() -> IResult<void> {
+    IResult<> stop_ranging(){
         return this->write_bytes(VL53L1_SYSTEM__MODE_START, {0x00, 0});
     }
 
     /// Check if new ranging data is available by polling the device.
-    auto is_data_ready() -> IResult<bool> {
+    IResult<bool> is_data_ready(){
         const auto polarity = uint8_t(this->get_interrupt_polarity().unwrap());
 
         auto state = std::array<uint8_t, 2>{0, 0};
@@ -502,7 +489,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `milliseconds` - One of the following values = 15, 20, 33, 50, 100(default), 200, 500.
-    auto set_timing_budget_ms(uint16_t milliseconds) -> IResult<void> {
+    IResult<> set_timing_budget_ms(uint16_t milliseconds){
         const auto mode = this->get_distance_mode();
 
         const auto (a, b) = match mode {
@@ -540,7 +527,7 @@ class VL53L1X{
     }
 
     /// Get the currently set timing budget of the device.
-    auto get_timing_budget_ms() -> IResult<uint16_t> {
+    IResult<uint16_t> get_timing_budget_ms() {
         auto a = std::array<uint8_t, 2>{0, 0};
 
         this->read_bytes(VL53L1_RANGE_CONFIG__TIMEOUT_MACROP_A_HI, a);
@@ -562,7 +549,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `mode` - The distance mode to use.
-    auto set_distance_mode(DistanceMode mode) -> IResult<void> {
+    IResult<> set_distance_mode(DistanceMode mode){
         const auto tb = this->get_timing_budget_ms();
 
         TODO();
@@ -618,7 +605,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `milliseconds` - The number of milliseconds used for the inter measurement period.
-    auto set_inter_measurement_period_ms(uint16_t milliseconds) -> IResult<void> {
+    IResult<> set_inter_measurement_period_ms(uint16_t milliseconds){
         auto clock_pll = [0u8, 0];
 
         this->read_bytes(VL53L1_RESULT__OSC_CALIBRATE_VAL, &mut clock_pll);
@@ -636,7 +623,7 @@ class VL53L1X{
     }
 
     /// Get the currently set inter measurement period in milliseconds.
-    auto get_inter_measurement_period_ms() -> IResult<uint16_t> {
+    IResult<uint16_t> get_inter_measurement_period_ms() {
         auto clock_pll = [0u8, 0];
         auto period = [0u8, 0, 0, 0];
 
@@ -660,7 +647,7 @@ class VL53L1X{
     }
 
     /// Get the sensor id of the sensor. This id must be equivalent to [`SENSOR_ID`].
-    auto get_sensor_id() -> IResult<uint16_t> {
+    IResult<uint16_t> get_sensor_id() {
         auto id = [0u8, 0];
 
         this->read_bytes(VL53L1_IDENTIFICATION__MODEL_ID, &mut id);
@@ -669,7 +656,7 @@ class VL53L1X{
     }
 
     /// Get the distance measured in millimeters.
-    auto get_distance() -> IResult<uint16_t> {
+    IResult<uint16_t> get_distance() {
         auto distance = [0u8, 0];
 
         this->read_bytes(
@@ -681,7 +668,7 @@ class VL53L1X{
     }
 
     /// Get the returned signal per SPAD in kcps/SPAD where kcps stands for Kilo Count Per Second.
-    auto get_signal_per_spad() -> IResult<uint16_t> {
+    IResult<uint16_t> get_signal_per_spad() {
         auto signal = std::array<uint8_t, 2>{0, 0};
         auto spad_count = std::array<uint8_t, 2>{0, 0};
 
@@ -701,7 +688,7 @@ class VL53L1X{
     }
 
     /// Get the ambient signal per SPAD in kcps/SPAD where kcps stands for Kilo Count Per Second.
-    auto get_ambient_per_spad() -> IResult<uint16_t> {
+    IResult<uint16_t> get_ambient_per_spad() {
         auto spad_count = std::array<uint8_t, 2>{0, 0};
         auto ambient = std::array<uint8_t, 2>{0, 0};
 
@@ -718,7 +705,7 @@ class VL53L1X{
     }
 
     /// Get the returned signal in kcps (Kilo Count Per Second).
-    auto get_signal_rate() -> IResult<uint16_t> {
+    IResult<uint16_t> get_signal_rate() {
         auto signal = std::array<uint8_t, 2>{0, 0};
 
         this->read_bytes(
@@ -730,7 +717,7 @@ class VL53L1X{
     }
 
     /// Get the count of currently enabled SPADs.
-    auto get_spad_count() -> IResult<uint16_t> {
+    IResult<uint16_t> get_spad_count() {
         auto spad_count = std::array<uint8_t, 2>{0, 0};
 
         this->read_bytes(
@@ -742,7 +729,7 @@ class VL53L1X{
     }
 
     /// Get the ambient signal in kcps (Kilo Count Per Second).
-    auto get_ambient_rate() -> IResult<uint16_t> {
+    IResult<uint16_t> get_ambient_rate() {
         auto ambient = std::array<uint8_t, 2>{0, 0};
 
         this->read_bytes(VL53L1_RESULT__AMBIENT_COUNT_RATE_MCPS_SD0, &mut ambient);
@@ -751,7 +738,7 @@ class VL53L1X{
     }
 
     /// Get the ranging status.
-    auto get_range_status() -> IResult<RangeStatus> {
+    IResult<RangeStatus>  get_range_status(){
         auto status = [0];
 
         this->read_bytes(VL53L1_RESULT__RANGE_STATUS, &mut status);
@@ -762,7 +749,7 @@ class VL53L1X{
     }
 
     /// Get a measurement result object which is read in a single access.
-    auto get_result() -> IResult<MeasureResult> {
+    IResult<MeasureResult> get_result(){
         auto result = [0; 17];
 
         this->read_bytes(VL53L1_RESULT__RANGE_STATUS, &mut result);
@@ -781,7 +768,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `offset` - The offset in millimeters.
-    auto set_offset(int16_t offset) -> IResult<void> {
+    IResult<> set_offset(int16_t offset){
         this->write_bytes(
             VL53L1_ALGO__PART_TO_PART_RANGE_OFFSET_MM,
             &(offset.saturating_mul(4)).to_be_bytes(),
@@ -794,7 +781,7 @@ class VL53L1X{
     }
 
     /// Get the current offset in millimeters.
-    auto get_offset() -> IResult<i16> {
+    IResult<int16_t> get_offset() {
         auto offset = std::array<uint8_t, 2>{0, 0};
 
         this->read_bytes(VL53L1_ALGO__PART_TO_PART_RANGE_OFFSET_MM, &mut offset);
@@ -811,7 +798,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `correction` - The number of photons reflected back from the cover glass in cps.
-    auto set_cross_talk(uint16_t correction) -> IResult<void> {
+    IResult<> set_cross_talk(uint16_t correction){
         this->write_bytes(
             VL53L1_ALGO__CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS,
             &std::array<uint8_t, 2>{0, 0},
@@ -832,7 +819,7 @@ class VL53L1X{
     }
 
     /// Get the crosstalk correction value in cps.
-    auto get_cross_talk() -> IResult<uint16_t> {
+    IResult<uint16_t> get_cross_talk() {
         auto correction = std::array<uint8_t, 2>{0, 0};
 
         this->read_bytes(
@@ -851,7 +838,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `threshold` - The threshold to apply.
-    auto set_distance_threshold(threshold: Threshold) -> IResult<void> {
+    IResult<> set_distance_threshold(threshold: Threshold){
         auto config = [0];
 
         this->read_bytes(VL53L1_SYSTEM__INTERRUPT_CONFIG_GPIO, &mut config);
@@ -866,7 +853,7 @@ class VL53L1X{
     }
 
     /// Get the currently set distance threshold.
-    auto get_distance_threshold() -> IResult<Threshold> {
+    IResult<Threshold>  get_distance_threshold(){
         auto config = [0];
 
         this->read_bytes(VL53L1_SYSTEM__INTERRUPT_CONFIG_GPIO, &mut config);
@@ -892,7 +879,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `roi` - The ROI to apply.
-    auto set_roi(mut roi: ROI) -> IResult<void> {
+    IResult<> set_roi(mut roi: ROI){
         debug_assert!(roi.width >= 4);
         debug_assert!(roi.height >= 4);
 
@@ -927,7 +914,7 @@ class VL53L1X{
     ///
     /// # Arguments
     ///
-    auto get_roi() -> IResult<ROI> {
+    IResult<ROI> get_roi(){
         auto config = [0];
 
         this->read_bytes(
@@ -948,12 +935,12 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `center` - Tne ROI center to apply.
-    auto set_roi_center(center: ROICenter) -> IResult<void> {
+    IResult<> set_roi_center(center: ROICenter){
         this->write_bytes(VL53L1_ROI_CONFIG__USER_ROI_CENTRE_SPAD, &[center.spad])
     }
 
     /// Get the current ROI center.
-    auto get_roi_center() -> IResult<ROICenter> {
+    IResult<ROICenter> get_roi_center(){
         auto center = [0];
 
         this->read_bytes(VL53L1_ROI_CONFIG__MODE_ROI_CENTRE_SPAD, &mut center);
@@ -966,7 +953,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `threshold` - The signal threshold.
-    auto set_signal_threshold(uint16_t threshold) -> IResult<void> {
+    IResult<> set_signal_threshold(uint16_t threshold){
         this->write_bytes(
             VL53L1_RANGE_CONFIG__MIN_COUNT_RATE_RTN_LIMIT_MCPS,
             &(threshold >> 3).to_be_bytes(),
@@ -974,7 +961,7 @@ class VL53L1X{
     }
 
     /// Get the currently set signal threshold.
-    auto get_signal_threshold() -> IResult<uint16_t> {
+    IResult<uint16_t> get_signal_threshold() {
         auto threshold = std::array<uint8_t, 2>{0, 0};
 
         this->read_bytes(
@@ -990,7 +977,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `threshold` - The sigma threshold.
-    auto set_sigma_threshold(uint16_t threshold) -> IResult<void> {
+    IResult<> set_sigma_threshold(uint16_t threshold){
         if threshold > (0xFFFF >> 2) {
             return Err(Error::InvalidSigmaThreshold);
         }
@@ -1002,7 +989,7 @@ class VL53L1X{
     }
 
     /// Get the currently set sigma threshold.
-    auto get_sigma_threshold() -> IResult<uint16_t> {
+    IResult<uint16_t> get_sigma_threshold() {
         auto threshold = std::array<uint8_t, 2>{0, 0};
 
         this->read_bytes(VL53L1_RANGE_CONFIG__SIGMA_THRESH, &mut threshold);
@@ -1013,7 +1000,7 @@ class VL53L1X{
     /// Perform temperature calibration of the sensor.
     /// It is recommended to call this function any time the temperature might have changed by more than 8 degrees Celsius
     /// without sensor ranging activity for an extended period.
-    auto calibrate_temperature() -> IResult<void> {
+    IResult<> calibrate_temperature(){
         this->write_bytes(
             VL53L1_VHV_CONFIG__TIMEOUT_MACROP_LOOP_BOUND,
             &0x81uint16_t.to_be_bytes(),
@@ -1043,7 +1030,7 @@ class VL53L1X{
     /// # Arguments
     ///
     /// * `target_distance_mm` - Distance to the target in millimeters, ST recommends 100 mm.
-    auto calibrate_offset(uint16_t target_distance_mm) -> IResult<i16> {
+    IResult<int16_t> calibrate_offset(uint16_t target_distance_mm) {
         this->write_bytes(
             VL53L1_ALGO__PART_TO_PART_RANGE_OFFSET_MM,
             &0uint16_t.to_be_bytes(),
@@ -1082,7 +1069,7 @@ class VL53L1X{
     ///  Arguments
     ///
     /// * `target_distance_mm` - Distance to the target in millimeters, ST recommends 100 mm.
-    auto calibrate_cross_talk(uint16_t target_distance_mm) -> IResult<uint16_t> {
+    IResult<uint16_t> calibrate_cross_talk(uint16_t target_distance_mm) {
         this->write_bytes(
             VL53L1_ALGO__CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS,
             &0uint16_t.to_be_bytes(),
@@ -1129,6 +1116,22 @@ class VL53L1X{
 
         Ok(0)
     }
+
+private:
+    IResult<> write_bytes(uint8_t address, const std::array<uint8_t, 2> bytes){
+        // this->i2c
+        //     .write_registers(this->address, address.into(), bytes);
+
+        return Ok();
+    }
+
+    IResult<> read_bytes(uint8_t address, const std::span<uint8_t, 2> bytes){
+        // this->i2c
+        //     .write_registers(this->address, address.into(), bytes);
+
+        return Ok();
+    }
+
 }
 
 }

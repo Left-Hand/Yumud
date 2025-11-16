@@ -56,7 +56,7 @@ void WS2812_Phy::init(){
     gpio_.outpp();
 }
 
-void WS2812::set_rgb(const RGB<q16> &color){
+void WS2812::set_rgb(const RGB<iq16> &color){
     uint8_t g = uint8_t(CLAMP(int(color.g * 256), 0, 255));
     uint8_t r = uint8_t(CLAMP(int(color.r * 256), 0, 255));
     uint8_t b = uint8_t(CLAMP(int(color.b * 256), 0, 255));

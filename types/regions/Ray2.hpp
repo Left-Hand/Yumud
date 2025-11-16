@@ -92,7 +92,10 @@ public:
 
         const auto [s, c] = sincos(this->orientation);
 
-        return {-s, c, - c * org.y + s * org.x};
+        return {
+            static_cast<T>(-s)  , 
+            static_cast<T>(c )  , 
+            static_cast<T>(-org.y * c + org.x * s)};
     }
 
     [[nodiscard]] __fast_inline constexpr Line2<T> to_line() const{

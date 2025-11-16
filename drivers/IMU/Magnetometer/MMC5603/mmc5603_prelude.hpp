@@ -78,7 +78,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
     };
 
     struct OdrReg:public Reg8<>{
-        using Reg8::operator=;
+
 
         static constexpr RegAddr ADDRESS = 0x1a;
         DataRate data_rate;
@@ -128,19 +128,19 @@ struct MMC5603_Regset:public MMC5603_Prelude {
     };
 
     struct AxisSelfTestXReg:public Reg8<>{
-        using Reg8::operator=;
+
         static constexpr RegAddr ADDRESS = 0x1e;
         uint8_t :8;
     };
 
     struct AxisSelfTestYReg:public Reg8<>{
-        using Reg8::operator=;
+
         static constexpr RegAddr ADDRESS = 0x1f;
         uint8_t :8;
     };
 
     struct AxisSelfTestZReg:public Reg8<>{
-        using Reg8::operator=;
+
         static constexpr RegAddr ADDRESS = 0x20;
         uint8_t :8;
     };

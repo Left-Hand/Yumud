@@ -34,7 +34,7 @@ private:
         // const auto distrb_of_damp = DAMPING * x[1];
         // const auto distrb_of_partial = sinpu(x[0]);
         // const auto u = u_in + distrb_of_partial - distrb_of_damp;
-        // const auto u = STEP_TO(u_in + distrb_of_partial - distrb_of_damp, q16(0), 100_q16);
+        // const auto u = STEP_TO(u_in + distrb_of_partial - distrb_of_damp, q16(0), 100_iq16);
         // const auto u = STEP_TO(u_in + distrb_of_partial - distrb_of_damp, q16(0;
         const auto u = u_in;
         return {

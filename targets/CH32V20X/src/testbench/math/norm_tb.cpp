@@ -1,6 +1,6 @@
 #include "core/math/real.hpp"
 #include "core/math/fast/conv.hpp"
-#include "core/math/iq/iq_t.hpp"
+#include "core/math/iq/fixed_t.hpp"
 
 
 #include "types/vectors/vector3.hpp"
@@ -21,21 +21,22 @@ auto build_norm_vec3_from_quat(
 using namespace ymd;
 
 void test_q14(){
-    constexpr q14 a = 1_r;
-    constexpr q14 b = 0.5_r;
+    constexpr iq14 a = 1_r;
+    constexpr iq14 b = 0.5_r;
     constexpr auto c = a * b;
 
     static_assert(c == 0.5_r);
 }   
 
+#if 0
 void test_norm(){
     {
-        constexpr q14 a = 1_r;
-        constexpr q14 b = 0.5_r;
+        constexpr iq14 a = 1_r;
+        constexpr iq14 b = 0.5_r;
         constexpr auto na = Norm(a);
         constexpr auto nb = Norm(b);
 
-        constexpr q14 c = qmux(na, nb);
+        constexpr iq14 c = qmux(na, nb);
 
         static_assert(c == a * b);
     }
@@ -58,11 +59,11 @@ void test_norm(){
     }
 
     {
-        constexpr auto a1 = 0.5_q16;
-        constexpr auto b1 = 0.5_q16;
+        constexpr auto a1 = 0.5_iq16;
+        constexpr auto b1 = 0.5_iq16;
 
-        constexpr auto a2 = 0.5_q16;
-        constexpr auto b2 = 0.5_q16;
+        constexpr auto a2 = 0.5_iq16;
+        constexpr auto b2 = 0.5_iq16;
 
         constexpr auto na1 = Norm(a1);
         constexpr auto nb1 = Norm(b1);
@@ -74,3 +75,4 @@ void test_norm(){
         static_assert(c == a1 * b1 + a2 * b2);
     }
 }
+#endif

@@ -1,7 +1,7 @@
 #include "clock.hpp"
 #include "time.hpp"
 
-#include "core/math/iq/iq_t.hpp"
+#include "core/math/iq/fixed_t.hpp"
 #include <functional>
 
 #include "core/sdk.hpp"
@@ -159,7 +159,7 @@ real_t time(){
         const Depart microsec = std::bit_cast<Depart>(uint64_t(micros().count()));
 
         return 
-            + real_t{_iq<16>::from_i32((int(microsec.l15) << 16) / 1000000)} 
+            + real_t{fixed_t<16, int32_t>::from_bits((int(microsec.l15) << 16) / 1000000)} 
             + real_t{int(microsec.m15)} * real_t(sepow(2, 15) / sepow(10, 6))
             + real_t{int(microsec.h31)} * real_t(sepow(2, 30) / sepow(10, 6))
             ;

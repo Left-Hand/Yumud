@@ -231,7 +231,7 @@ struct Quat{
 
     [[nodiscard]]
     constexpr T inv_length() const {
-        return T(isqrt(x * x + y * y + z * z + w * w));
+        return T(inv_sqrt(x * x + y * y + z * z + w * w));
     }
 
     constexpr void operator*=(const Quat<T> &p_q) {

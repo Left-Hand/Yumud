@@ -38,7 +38,7 @@ struct PwmAndDirPhy final{
             dir_gpio_(cfg.dir_gpio.deref())
         {;}
 
-    void set_dutycycle(const q31 dutycycle){
+    void set_dutycycle(const iq31 dutycycle){
         if(dutycycle > 0){
             dir_gpio_.set();
             pwm_.set_dutycycle(dutycycle);
@@ -63,7 +63,7 @@ struct DualPwmPhy final{
             pwm_neg_(cfg.pwm_neg.deref())
         {;}
 
-    void set_dutycycle(const q31 dutycycle){
+    void set_dutycycle(const iq31 dutycycle){
         if(dutycycle > 0){
             pwm_pos_.set_dutycycle(dutycycle);
             pwm_neg_.set_dutycycle(0);
@@ -127,7 +127,7 @@ struct PwmAndDirPhy_WithFg final{
         fg_gpio_(cfg.fg_gpio.deref())
     {}
 
-    void set_dutycycle(const q31 dutycycle){ 
+    void set_dutycycle(const iq31 dutycycle){ 
         phy_.set_dutycycle(dutycycle);
         last_duty_ = dutycycle;
     }
@@ -140,10 +140,10 @@ struct PwmAndDirPhy_WithFg final{
         }
     }
 
-    constexpr Angle<q31> get_angle() const {
-        const auto turns = q16::from_i32((int64_t(counter_.count()) * int64_t(1 << 16)) / deducation_);
-        return Angle<q31>::from_turns(turns);
-        // return q16(counter_.count()) >> 6;
+    constexpr Angle<iq31> get_angle() const {
+        const auto turns = iq16::from_bits((int64_t(counter_.count()) * int64_t(1 << 16)) / deducation_);
+        return Angle<iq31>::from_turns(turns);
+        // return iq16(counter_.count()) >> 6;
     }
 
     constexpr int32_t count() const {
@@ -174,7 +174,7 @@ struct DualPwmMotorPhy_WithAbEnc final{
                 drivers::AbEncoderByGpio::Config{cfg.line_a, cfg.line_b}})
     {}
 
-    void set_dutycycle(const q31 dutycycle){ 
+    void set_dutycycle(const iq31 dutycycle){ 
         phy_.set_dutycycle(dutycycle);
         last_duty_ = dutycycle;
     }
@@ -183,9 +183,9 @@ struct DualPwmMotorPhy_WithAbEnc final{
         encoder_.tick();
     }
 
-    constexpr Angle<q31> get_angle() const {
-        const auto turns = q16::from_i32((int64_t(encoder_.count()) * int64_t(1 << 16)) / deducation_);
-        return Angle<q31>::from_turns(turns);
+    constexpr Angle<iq31> get_angle() const {
+        const auto turns = iq16::from_bits((int64_t(encoder_.count()) * int64_t(1 << 16)) / deducation_);
+        return Angle<iq31>::from_turns(turns);
     }
 
     constexpr int32_t count() const {
@@ -313,7 +313,7 @@ void diffspd_vehicle_main(){
     };
 
     auto motor_ctrl_cb = [&](){
-        motor_td_.update(motor_phy.get_angle().into<q16>());
+        motor_td_.update(motor_phy.get_angle().into<iq16>());
 
         const auto ctime = clock::time();
         const auto freq = 0.2_r;

@@ -51,18 +51,19 @@ public:
     [[nodiscard]] IResult<> start_conv();
     [[nodiscard]] IResult<> update();
 
-    std::tuple<real_t, real_t, real_t, real_t> get_crgb();
+    [[nodiscard]] std::tuple<uq16, uq16, uq16, uq16> get_crgb();
 
 private:
     hal::I2cDrv i2c_drv_;
     TCS34725_Regset regs_ = {};
+
     std::array<uint16_t, 4> crgb_ = {0};
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(
             conv_reg_address_repeated(T::ADDRESS), 
-            reg.as_val(), LSB);
+            reg.as_bits(), std::endian::little);
         res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -71,18 +72,18 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(
-            conv_reg_address_repeated(T::ADDRESS), reg.as_ref(), LSB);
+            conv_reg_address_repeated(T::ADDRESS), reg.as_mut_bits(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     [[nodiscard]] IResult<> read_burst(const RegAddr addr, const std::span<uint16_t> pbuf);
 
-    static constexpr uint8_t conv_reg_address_norepeat(const RegAddr addr){
+    [[nodiscard]] static constexpr uint8_t conv_reg_address_norepeat(const RegAddr addr){
         return (std::bit_cast<uint8_t>(addr) | 0x80);
     }
 
-    static constexpr uint8_t conv_reg_address_repeated(const RegAddr addr){
+    [[nodiscard]] static constexpr uint8_t conv_reg_address_repeated(const RegAddr addr){
         return conv_reg_address_norepeat(addr) | (1 << 5);
     }
 

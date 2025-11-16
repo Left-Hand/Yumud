@@ -5,6 +5,8 @@
 
 using namespace ymd;
 
+#if 0
+
 template<arithmetic T>
 __fast_inline constexpr
 auto build_norm_vec3_from_quat_xfrom_top(
@@ -20,7 +22,7 @@ auto build_norm_vec3_from_quat_xfrom_top(
 template<arithmetic T>
 __fast_inline constexpr
 Vec3<Norm<T>> build_norm_vec3_from_vec3(const Vec3<T> & vec){
-	const auto ilen = isqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+	const auto ilen = inv_sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
 	return Vec3<Norm<T>>(
 		Norm(vec.x * ilen),
 		Norm(vec.y * ilen),
@@ -104,6 +106,8 @@ void Mahony::myupdate_v2(const IV3 & gyr,const IV3 & acc) {
 	q = q.integral(gyr_hat_, dt_).slerp(IQuat::from_direction(acc), 0.017_r);
 	// q =v;
 }
+
+#endif
 
 void Mahony::update(const IV3 & gyr,const IV3 & acc) {
 	const auto v = q.xform_up();

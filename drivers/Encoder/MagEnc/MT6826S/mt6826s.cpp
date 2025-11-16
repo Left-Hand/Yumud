@@ -22,9 +22,9 @@ IResult<> Self::init(){
     return Ok();
 }
 
-IResult<Angle<q31>> Self::get_lap_angle(){
+IResult<Angle<iq31>> Self::get_lap_angle(){
     TODO();
-    return Ok(Angle<q31>::ZERO);
+    return Ok(Angle<iq31>::ZERO);
 }
 
 IResult<MagStatus> Self::get_mag_status(){

@@ -60,7 +60,7 @@ struct TransferSysEvaluator{
     void set_sample_freq(const uint32_t fs){
         fs_ = Some(fs);
         time_ = 0;
-        delta_ = 1_q24 / fs;
+        delta_ = 1_iq24 / fs;
     }
 
     auto time() const {
@@ -73,11 +73,11 @@ struct TransferSysEvaluator{
 
 private:
     Option<uint32_t> fs_ = None;
-    q24 time_ = 0;
-    q24 delta_ = 0;
+    iq24 time_ = 0;
+    iq24 delta_ = 0;
 
-    q16 input_;
-    q16 output_;
+    iq16 input_;
+    iq16 output_;
 
     // Microseconds delta_;
 };

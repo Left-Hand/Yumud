@@ -88,7 +88,7 @@ public:
     [[nodiscard]] IResult<> calibrate(uint8_t samples);
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
     [[nodiscard]] IResult<uint8_t> read_temperature();
 private:
     hal::I2cDrv i2c_drv_;
@@ -107,7 +107,7 @@ private:
     }
 
     [[nodiscard]] IResult<> read_burst(uint8_t reg, std::span<uint8_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(reg, pbuf, LSB);
+        if(const auto res = i2c_drv_.read_burst(reg, pbuf, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

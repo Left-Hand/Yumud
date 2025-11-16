@@ -40,7 +40,7 @@ enum class StrokeAlignment:uint8_t{
 struct PrimitiveStyle{
     Option<RGB888> fill_color;
     Option<RGB888> stroke_color;
-    q16 stroke_width;
+    iq16 stroke_width;
     StrokeAlignment stroke_alignment;
 };
 
@@ -49,7 +49,7 @@ template<typename Shape>
 requires (is_placed_t<Shape>::value == false)
 struct WithPosition final{
     Shape shape;
-    Vec2<q16> position;
+    Vec2<iq16> position;
 };
 
 
@@ -73,7 +73,7 @@ template<typename Shape>
 struct is_placed_t<WithPosition<Shape>>:std::true_type{};
 
 struct AddPosition{
-    Vec2<q16> position;
+    Vec2<iq16> position;
 };
 
 struct AddStyle{

@@ -171,7 +171,7 @@ public:
 
     [[nodiscard]] IResult<> clear_flag();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
     [[nodiscard]] IResult<> sleep(){
         auto reg = RegCopy(regs_.ctrl1_reg); 
         reg.norm_mod_en = false; 
@@ -247,7 +247,7 @@ namespace ymd::drivers{
 
 template<typename T>
 LIS3DH::IResult<> LIS3DH::write_reg(const RegCopy<T> & reg){
-    const auto res = phy_.write_reg(T::ADDRESS, reg.as_val());
+    const auto res = phy_.write_reg(T::ADDRESS, reg.as_bits());
     if(res.is_err()) return res;
     reg.apply();
     return Ok();
@@ -255,7 +255,7 @@ LIS3DH::IResult<> LIS3DH::write_reg(const RegCopy<T> & reg){
 
 template<typename T>    
 LIS3DH::IResult<> LIS3DH::read_reg(T & reg){
-    return LIS3DH::IResult<>(phy_.read_reg(T::ADDRESS, reg.as_ref()));
+    return LIS3DH::IResult<>(phy_.read_reg(T::ADDRESS, reg.as_mut_bits()));
 }
 
 LIS3DH::IResult<> LIS3DH::verify_phy(){

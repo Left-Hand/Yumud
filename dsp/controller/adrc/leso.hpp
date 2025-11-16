@@ -23,8 +23,8 @@ namespace ymd::dsp{
 class Leso{
 public:
     struct Config{
-        q8 b0;
-        q16 w;
+        iq8 b0;
+        iq16 w;
         uint32_t fs;
     };
 
@@ -32,12 +32,12 @@ public:
 
     constexpr void reconf(const Config & cfg){
         b0_ = cfg.b0;
-        delta_ = 1_q20 / cfg.fs;
+        delta_ = 1_iq20 / cfg.fs;
         g1_ = 2 * cfg.w;
         g2_ = cfg.w * cfg.w;
     }
 
-    constexpr void update(const q16 y, const q16 u){
+    constexpr void update(const iq16 y, const iq16 u){
         this->state_ = forward(*this, y, u, this->state_);
     }
 
@@ -49,15 +49,15 @@ public:
     constexpr auto disturbance() const {return this->state_[1];}
 private:
     using Self = Leso;
-    using State = StateVector<q20, 2>;
+    using State = StateVector<iq20, 2>;
 
     State state_;
-    q8 b0_;
-    q20 delta_;
-    q20 g1_;
-    q20 g2_;
+    iq8 b0_;
+    iq20 delta_;
+    iq20 g1_;
+    iq20 g2_;
 
-    static constexpr State forward(const Self & self, const q16 y, const q16 u, const State x){
+    static constexpr State forward(const Self & self, const iq16 y, const iq16 u, const State x){
         return {
             x[0] + (x[1] + self.b0_ * u + self.g1_ * (y - x[0])) * self.delta_,
             x[1] + self.g2_ * (y - x[0]) * self.delta_

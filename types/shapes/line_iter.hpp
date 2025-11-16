@@ -104,7 +104,7 @@ struct LineDDAIterator{
         auto & self = *this;
         const auto fixed_segment = segment.swap_if_inverted();
 
-        self.x_step_ = Segment2<q16>(fixed_segment).x_delta_per_y(1);
+        self.x_step_ = Segment2<iq16>(fixed_segment).x_delta_per_y(1);
         self.current_x_ = fixed_segment.start.x;
         self.current_y_ = fixed_segment.start.y;
         self.stop_y_ = fixed_segment.stop.y;
@@ -114,13 +114,13 @@ struct LineDDAIterator{
         return current_y_ < stop_y_;
     }
 
-    __fast_inline constexpr q16 x() const {
+    __fast_inline constexpr iq16 x() const {
         return current_x_;
     }
 
     __fast_inline constexpr Range2u16 x_range() const{
-        const q16 a = x();
-        const q16 b = a + x_step();
+        const iq16 a = x();
+        const iq16 b = a + x_step();
         if(a < b){
             return Range2u16::from_start_and_stop_unchecked(
                 floor_cast<uint16_t>(a), 
@@ -139,12 +139,12 @@ struct LineDDAIterator{
         current_x_ += x_step_;
     }
 
-    __fast_inline constexpr q16 x_step() const {
+    __fast_inline constexpr iq16 x_step() const {
         return x_step_;
     }
 private:
-    q16 x_step_;
-    q16 current_x_;
+    iq16 x_step_;
+    iq16 current_x_;
     uint16_t current_y_;
     uint16_t stop_y_;
 };

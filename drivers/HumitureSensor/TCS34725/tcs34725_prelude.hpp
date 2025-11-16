@@ -71,7 +71,7 @@ struct TCS34725_Regset final:public TCS34725_Prelude{
 
     struct R8_IntPersistence:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::IntPersistence;
-        using Reg8::operator=;
+
         uint8_t __resv__ :4;
         uint8_t apers   :4;
     }DEF_R8(int_persistence_reg)
@@ -85,7 +85,7 @@ struct TCS34725_Regset final:public TCS34725_Prelude{
 
     struct R8_Gain:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Gain;
-        using Reg8::operator=;
+
         Gain gain        :2;
         uint8_t __resv2__   :6;
     }DEF_R8(gain_reg)

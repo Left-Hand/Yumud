@@ -6,19 +6,22 @@
 #include "types/vectors/Vector2.hpp"
 
 namespace ymd{
-template <arithmetic T>
+template <typename T>
 struct UnitComplex {
+private:
+    
+    __fast_inline constexpr UnitComplex(const T _re, const T _im)
+        : re(_re), im(_im) {;}
+
 public:
-    T real;
-    T imag;
+    T re;
+    T im;
 
 
     __fast_inline static constexpr UnitComplex from_uninitialized(){
         return UnitComplex();
     }
 
-    
-    __fast_inline constexpr UnitComplex(const T re, const T im) : real(re), imag(im) {;}
 
     [[nodiscard]] __fast_inline static constexpr 
     UnitComplex from_matrix(const Matrix<T, 2, 2> & m){
@@ -69,17 +72,17 @@ public:
     }
 
 
-    [[nodiscard]] constexpr T sine() const {return imag;}
-    [[nodiscard]] constexpr T cosine() const {return real;}
+    [[nodiscard]] constexpr T sine() const {return im;}
+    [[nodiscard]] constexpr T cosine() const {return re;}
 
     [[nodiscard]] constexpr std::array<T, 2> sincos() const {
         return {sine(), cosine()};
     }
 
-    [[nodiscard]] __fast_inline constexpr T arg() const {return std::atan2(imag, real);}
+    [[nodiscard]] __fast_inline constexpr T arg() const {return std::atan2(im, re);}
 
     __fast_inline constexpr UnitComplex operator-() {
-        return UnitComplex(-real, -imag);
+        return UnitComplex(-re, -im);
     }
 
     template<size_t I>
@@ -93,15 +96,15 @@ public:
     }
 
     [[nodiscard]] constexpr Angle<T> to_angle() const {
-        return Angle<T>::from_turns(atan2pu(imag, real));
+        return Angle<T>::from_turns(atan2pu(im, re));
     }
 
     [[nodiscard]] constexpr Vec2<T> to_vec2(const T length) const {
-        return Vec2<T>(real * length, imag * length);
+        return Vec2<T>(re * length, im * length);
     }
 
     [[nodiscard]] constexpr Vec2<T> to_unit_vec2() const {
-        return Vec2<T>(real, imag);
+        return Vec2<T>(re, im);
     }
 
 
@@ -110,26 +113,27 @@ private:
 
     template<size_t I>
     [[nodiscard]] static constexpr auto & get_element(auto & self){
-        if constexpr(I == 0){ return self.real; }
-        else if constexpr(I == 1){ return self.imag; }
+        if constexpr(I == 0){ return self.re; }
+        else if constexpr(I == 1){ return self.im; }
     }
 };
 
 template<typename T>
 struct Complex{
 public:
-    T real;
-    T imag;
+    T re;
+    T im;
 
+
+
+    __fast_inline constexpr Complex(const T _re, const T _im) : re(_re), im(_im) {;}
 
     __fast_inline static constexpr Complex from_uninitialized(){
         return Complex();
     }
 
     __fast_inline static constexpr Complex from_zero() {return Complex(T(0), T(0));} 
-    __fast_inline constexpr Complex(const T & re, const T & im) : real(re), imag(im) {;}
-
-
+    
     __fast_inline static constexpr 
     Complex from_imag(const T val) {return Complex(T(0), val);}
 
@@ -140,87 +144,87 @@ public:
     //     return {ret;
     // }
 
-    [[nodiscard]] __fast_inline constexpr T real_squared() const {return real * real;}
-    [[nodiscard]] __fast_inline constexpr T imag_squared() const {return imag * imag;}
+    [[nodiscard]] __fast_inline constexpr T real_squared() const {return re * re;}
+    [[nodiscard]] __fast_inline constexpr T imag_squared() const {return im * im;}
 
     [[nodiscard]] __fast_inline constexpr T length() const {
-        return mag(real, imag);
+        return mag(re, im);
     }
 
     [[nodiscard]] __fast_inline constexpr T inv_length() const {
-        return imag(real, imag);
+        return im(re, im);
     }
 
 
     [[nodiscard]] constexpr Angle<T> to_angle() const {
-        return Angle<T>::from_turns(atan2pu(imag, real));
+        return Angle<T>::from_turns(atan2pu(im, re));
     }
 
     template <typename U>
     __fast_inline constexpr Complex& operator=(const Complex<U>& other) {
         if (this != &other) {
-            real = static_cast<T>(other.real);
-            imag = static_cast<T>(other.imag);
+            re = static_cast<T>(other.re);
+            im = static_cast<T>(other.im);
         }
         return *this;
     }
 
     template <typename U>
     __fast_inline constexpr Complex& operator+=(const Complex<U>& other) {
-        real += static_cast<T>(other.real);
-        imag += static_cast<T>(other.imag);
+        re += static_cast<T>(other.re);
+        im += static_cast<T>(other.im);
         return *this;
     }
 
     template <typename U>
     __fast_inline constexpr Complex& operator+=(const U & other) {
-        real += static_cast<T>(other);
+        re += static_cast<T>(other);
         return *this;
     }
 
     template <typename U>
     __fast_inline constexpr Complex& operator-=(const Complex<U>& other) {
-        real -= static_cast<T>(other.real);
-        imag -= static_cast<T>(other.imag);
+        re -= static_cast<T>(other.re);
+        im -= static_cast<T>(other.im);
         return *this;
     }
 
     template <typename U>
     __fast_inline constexpr Complex& operator-=(const U & other) {
-        real -= static_cast<T>(other);
+        re -= static_cast<T>(other);
         return *this;
     }
 
     template <typename U>
     __fast_inline constexpr Complex& operator*=(const U & other) {
-        real *= other;
-        imag *= other;
+        re *= other;
+        im *= other;
         return *this;
     }
 
     template <typename U>
     __fast_inline constexpr Complex& operator/=(const U & other) {
-        real /= other;
-        imag /= other;
+        re /= other;
+        im /= other;
         return *this;
     }
 
     template <typename U>
     __fast_inline constexpr Complex& operator*=(const Complex<U>& other) {
-        const auto p_real = real;
-        const auto p_imag = imag;
-        real = static_cast<T>(static_cast<U>(p_real) * other.real - static_cast<U>(p_imag) * other.imag);
-        imag = static_cast<T>(static_cast<U>(p_real) * other.imag + static_cast<U>(p_imag) * other.real);
+        const auto p_real = re;
+        const auto p_imag = im;
+        re = static_cast<T>(static_cast<U>(p_real) * other.re - static_cast<U>(p_imag) * other.im);
+        im = static_cast<T>(static_cast<U>(p_real) * other.im + static_cast<U>(p_imag) * other.re);
         return *this;
     }
 
     template <typename U>
     __fast_inline constexpr Complex& operator/=(const Complex<U>& other) {
         U denominator = other.norm();
-        const auto p_real = real;
-        const auto p_imag = imag;
-        real = static_cast<T>((static_cast<U>(p_real) * other.real + static_cast<U>(p_imag) * other.imag) / denominator);
-        imag = static_cast<T>((static_cast<U>(p_imag) * other.real - static_cast<U>(p_real) * other.imag) / denominator);
+        const auto p_real = re;
+        const auto p_imag = im;
+        re = static_cast<T>((static_cast<U>(p_real) * other.re + static_cast<U>(p_imag) * other.im) / denominator);
+        im = static_cast<T>((static_cast<U>(p_imag) * other.re - static_cast<U>(p_real) * other.im) / denominator);
         return *this;
     }
 
@@ -231,25 +235,25 @@ private:
 
     template<size_t I>
     [[nodiscard]] static constexpr auto & get_element(auto & self){
-        if constexpr(I == 0){ return self.real; }
-        else if constexpr(I == 1){ return self.imag; }
+        if constexpr(I == 0){ return self.re; }
+        else if constexpr(I == 1){ return self.im; }
     }
 };
 #define COMPLEX_ARITHMETIC_OPERATOR(op)\
 \
-template <typename T, arithmetic U>\
+template <typename T, typename U>\
 __fast_inline Complex<T> operator op (Complex<T> lhs, const Complex<U>& rhs) {\
     lhs op##= rhs;\
     return lhs;\
 }\
 \
-template <typename T, arithmetic U>\
+template <typename T, typename U>\
 __fast_inline Complex<T> operator op (Complex<T> lhs, const U & rhs) {\
     lhs op##= static_cast<T>(rhs);\
     return lhs;\
 }\
 \
-template <typename T, arithmetic U>\
+template <typename T, typename U>\
 __fast_inline Complex<T> operator op (const U & lhs, Complex<T> rhs) {\
     Complex<T>(static_cast<T>(lhs), T(0)) op##= rhs;\
     return lhs;\
@@ -261,9 +265,9 @@ COMPLEX_ARITHMETIC_OPERATOR(*)
 COMPLEX_ARITHMETIC_OPERATOR(/)
 
 
-template <typename T, arithmetic U>
+template <typename T, typename U>
 __fast_inline bool operator==(const Complex<T>& lhs, const Complex<U>& rhs) {
-    return lhs.real == static_cast<T>(rhs.real) && lhs.imag == static_cast<T>(rhs.imag);
+    return lhs.re == static_cast<T>(rhs.re) && lhs.im == static_cast<T>(rhs.im);
 }
 
 template <typename T>
@@ -273,13 +277,13 @@ __fast_inline bool operator!=(const Complex<T>& lhs, const Complex<T>& rhs) {
 
 #define DEF_COMPLEX_COMPARE_IM_OPERATOR(op) \
 \
-template <typename T, arithmetic U> \
+template <typename T, typename U> \
 __fast_inline bool operator op (const Complex<T>& lhs, const U& rhs) { \
     T absrhs = static_cast<T>(length(rhs)); \
     return lhs.norm() op (absrhs * absrhs); \
 } \
 \
-template <typename T, arithmetic U> \
+template <typename T, typename U> \
 __fast_inline bool operator op (const U& lhs, const Complex<T>& rhs) { \
     T abslhs = static_cast<T>(length(lhs)); \
     return (abslhs * abslhs) op (rhs.norm()); \
@@ -296,14 +300,14 @@ DEF_COMPLEX_COMPARE_IM_OPERATOR(!=)
 
 template <typename T>
 __fast_inline Complex<T> proj(const Complex<T> & m){
-    if (std::isinf(m.real) || std::isinf(m.imag)) {
+    if (std::isinf(m.re) || std::isinf(m.im)) {
         return Complex<T>(std::numeric_limits<T>::infinity(), T(0));
     }else return *m;
 }
 
 template <typename T>
 __fast_inline Complex<T> conj(const Complex<T> & m){
-    return Complex(m.real, -m.imag);
+    return Complex(m.re, -m.im);
 }
 
 
@@ -313,14 +317,14 @@ __fast_inline Complex<T> conj(const Complex<T> & m){
 namespace ymd{
     template<typename T>
     __no_inline OutputStream & operator << (OutputStream & os , const UnitComplex<T> & c){
-        // return os << c.real << os.splitter() << c.imag << 'i';
-        return os << c.real << os.splitter() << c.imag;
+        // return os << c.re << os.splitter() << c.im << 'i';
+        return os << c.re << os.splitter() << c.im;
     }
 
     template<typename T>
     __no_inline OutputStream & operator << (OutputStream & os , const Complex<T> & c){
-        // return os << c.real << os.splitter() << c.imag << 'i';
-        return os << c.real << os.splitter() << c.imag;
+        // return os << c.re << os.splitter() << c.im << 'i';
+        return os << c.re << os.splitter() << c.im;
     }
 }
 

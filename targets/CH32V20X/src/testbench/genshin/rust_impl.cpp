@@ -28,11 +28,11 @@ struct DeserializeFrom;
 
 struct RawBytes;
 
-template<std::integral I>
-struct ImplFor<SerializeAs<RawBytes>, I> {
-    static constexpr size_t N = magic::type_to_bytes_v<I>;
-    static constexpr std::array<uint8_t, N> serialize(const I obj) {
-        using Raw = magic::type_to_uint_t<I>;
+template<std::integral D>
+struct ImplFor<SerializeAs<RawBytes>, D> {
+    static constexpr size_t N = magic::type_to_bytes_v<D>;
+    static constexpr std::array<uint8_t, N> serialize(const D obj) {
+        using Raw = magic::type_to_uint_t<D>;
         const auto raw = std::bit_cast<Raw>(obj);
         using IS = std::make_index_sequence<N>;
 
@@ -42,15 +42,15 @@ struct ImplFor<SerializeAs<RawBytes>, I> {
     }
 };
 
-template<std::integral I>
-struct ImplFor<DeserializeFrom<RawBytes>, I> {
-    static constexpr size_t N = magic::type_to_bytes_v<I>;
+template<std::integral D>
+struct ImplFor<DeserializeFrom<RawBytes>, D> {
+    static constexpr size_t N = magic::type_to_bytes_v<D>;
     
-    static constexpr I deserialize(const std::span<const uint8_t, N> bytes) {
+    static constexpr D deserialize(const std::span<const uint8_t, N> bytes) {
         using IS = std::make_index_sequence<N>;
 
         auto transform = [](const uint8_t byte, const size_t idx) {
-            return static_cast<I>(byte) << (8 * idx);
+            return static_cast<D>(byte) << (8 * idx);
         };
 
         return [&]<size_t... Idx>(std::index_sequence<Idx...>) {
@@ -60,17 +60,17 @@ struct ImplFor<DeserializeFrom<RawBytes>, I> {
 };
 
 
-template<size_t N>
-struct ImplFor<SerializeAs<RawBytes>, iq_t<N>> {
-    static constexpr std::array<uint8_t, 4> serialize(const iq_t<N> obj){
-        return ImplFor<SerializeAs<RawBytes>, int32_t>::serialize(obj.as_i32());
+template<size_t Q>
+struct ImplFor<SerializeAs<RawBytes>, fixed_t<Q, int32_t>> {
+    static constexpr std::array<uint8_t, 4> serialize(const fixed_t<Q, int32_t> obj){
+        return ImplFor<SerializeAs<RawBytes>, int32_t>::serialize(obj.as_bits());
     }
 };
 
-template<size_t N>
-struct ImplFor<DeserializeFrom<RawBytes>, iq_t<N>> {
-    static constexpr iq_t<N> deserialize(const std::span<const uint8_t, 4> bytes){
-        return iq_t<N>(_iq<N>::from_i32(ImplFor<DeserializeFrom<RawBytes>, int32_t>::deserialize(bytes)));
+template<size_t Q>
+struct ImplFor<DeserializeFrom<RawBytes>, fixed_t<Q, int32_t>> {
+    static constexpr fixed_t<Q, int32_t> deserialize(const std::span<const uint8_t, 4> bytes){
+        return fixed_t<Q, int32_t>::from_bits(ImplFor<DeserializeFrom<RawBytes>, int32_t>::deserialize(bytes));
     }
 };
 
@@ -211,14 +211,14 @@ struct ImplFor<int, MyStruct> {
 
 
 static constexpr auto serialized1 = serialize<RawBytes>(uint8_t(42));
-static constexpr auto serialized2 = serialize<RawBytes>(1_q16);
+static constexpr auto serialized2 = serialize<RawBytes>(1_iq16);
 static constexpr auto serialized3 = serialize<RawBytes>(1.0f);
-static constexpr auto serialized4 = serialize<RawBytes>(1.0f, 1_q16);
+static constexpr auto serialized4 = serialize<RawBytes>(1.0f, 1_iq16);
 
 static constexpr auto deserialized1 = deserialize<RawBytes, uint8_t>(std::span(serialized1));
-static constexpr auto deserialized2 = deserialize<RawBytes, q16>(std::span(serialized2));
+static constexpr auto deserialized2 = deserialize<RawBytes, iq16>(std::span(serialized2));
 static constexpr auto deserialized3 = deserialize<RawBytes, float>(std::span(serialized3));
-static constexpr auto deserialized4 = deserialize<RawBytes, float, q16>(std::span(serialized4));
+static constexpr auto deserialized4 = deserialize<RawBytes, float, iq16>(std::span(serialized4));
 static constexpr auto deserialized4f = std::get<0>(deserialized4);
 static constexpr auto deserialized4q = std::get<1>(deserialized4);
 
@@ -229,9 +229,9 @@ static constexpr auto msg_size = msg.size();
 static constexpr auto deserialized4m = deserialize<hal::CanMsg, MyStruct>(msg).unwrap();
 
 // static_assert(deserialized1 == 42, "deserialized1 != 42");
-static_assert(deserialized2 == 1_q16, "deserialized2 != 1_q16");
-static_assert(deserialized4q == 1_q16, "deserialized2 != 1_q16");
-static_assert(deserialized4f == 1.0f, "deserialized2 != 1_q16");
+static_assert(deserialized2 == 1_iq16, "deserialized2 != 1_iq16");
+static_assert(deserialized4q == 1_iq16, "deserialized2 != 1_iq16");
+static_assert(deserialized4f == 1.0f, "deserialized2 != 1_iq16");
 // static_assert(deserialized3 == 1.0f, "deserialized3 != 1.0f");
 
 

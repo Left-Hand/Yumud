@@ -21,15 +21,15 @@ static constexpr auto UART_BAUD = 576000;
 
 
 template<size_t Q>
-static constexpr iq_t<Q> sat(const iq_t<Q> x){
+static constexpr fixed_t<Q, int32_t> sat(const fixed_t<Q, int32_t> x){
     // constexpr int32_t MASK = (~((1 << Q) - 1)) & (0x7fffffff);
     // const auto x_i32 = x.as_i32();
     if(ABS(x) > 1){
         return sign(x);
         // constexpr size_t SHIFT_BITS = 32 - Q;
-        // return iq_t<Q>::from_i32(((x_i32 & (0x80000000)) >> SHIFT_BITS) | (1 << Q));
+        // return fixed_t<Q, int32_t>::from_i32(((x_i32 & (0x80000000)) >> SHIFT_BITS) | (1 << Q));
     }else{
-        // return iq_t<Q>::from_i32(x_i32);
+        // return fixed_t<Q, int32_t>::from_i32(x_i32);
         return x;
     }
 }
@@ -38,18 +38,18 @@ static constexpr iq_t<Q> sat(const iq_t<Q> x){
 constexpr int32_t MASK = (~((1 << 16) - 1)) & (0x7fffffff);
 
 
-static constexpr inline q16 fhan(
-    const q16 v, 
-    const q16 z1, 
-    const q16 z2, 
-    const q10 r,
-    const q10 h
+static constexpr inline iq16 fhan(
+    const iq16 v, 
+    const iq16 z1, 
+    const iq16 z2, 
+    const iq10 r,
+    const iq10 h
 ){
-    const q10 d = r * h;//const
-    const q10 d0 = d * h;//const
-    const q16 y = z1 - v + z2 * h;//var
-    const q16 abs_y = ABS(y);
-    const q16 a0 = sqrt(square(q13(d)) + q13(8 * r * abs_y));//var
+    const iq10 d = r * h;//const
+    const iq10 d0 = d * h;//const
+    const iq16 y = z1 - v + z2 * h;//var
+    const iq16 abs_y = ABS(y);
+    const iq16 a0 = sqrt(square(iq13(d)) + iq13(8 * r * abs_y));//var
     const auto a = [&]{
         if(abs_y > d0){
             return z2 + ((a0 - d) >> 1) * sign(y);//var
@@ -70,32 +70,32 @@ static constexpr inline q16 fhan(
 
 struct FhanPrecomputed{
     struct Config{
-        q10 r;
-        q10 h;
+        iq10 r;
+        iq10 h;
     };
 
     constexpr explicit FhanPrecomputed(const Config & cfg):
         r_(cfg.r),
         h_(cfg.h),
         d_(cfg.r * cfg.h),
-        d0_(q10(cfg.r * cfg.h) * cfg.h),
+        d0_(iq10(cfg.r * cfg.h) * cfg.h),
         inv_h_(1 / cfg.h),
-        inv_d_(1 / q10(cfg.r * cfg.h)){;}
+        inv_d_(1 / iq10(cfg.r * cfg.h)){;}
 
-    [[nodiscard]] constexpr q16 operator()(
-        const q16 v, 
-        const q16 z1, 
-        const q16 z2
+    [[nodiscard]] constexpr iq16 operator()(
+        const iq16 v, 
+        const iq16 z1, 
+        const iq16 z2
     ) const{
         // return fhan(v, z1, z2, r_, h_);
 
         // const auto r = r_;
         // const auto h = h_;
-        // const q10 d = r_ * h_;//const
-        // const q10 d0 = d * h_;//const
-        const q16 y = z1 - v + z2 * h_;//var
-        const q16 abs_y = ABS(y);
-        const q16 a0 = sqrt(square(q13(d_)) + q13(8 * r_ * abs_y));//var
+        // const iq10 d = r_ * h_;//const
+        // const iq10 d0 = d * h_;//const
+        const iq16 y = z1 - v + z2 * h_;//var
+        const iq16 abs_y = ABS(y);
+        const iq16 a0 = sqrt(square(iq13(d_)) + iq13(8 * r_ * abs_y));//var
         const auto a = [&]{
             if(abs_y > d0_){
                 return z2 + ((a0 - d_) >> 1) * sign(y);//var
@@ -116,12 +116,12 @@ struct FhanPrecomputed{
 
     }
 private:
-    q10 r_;
-    q10 h_;
-    q10 d_;
-    q10 d0_;
-    q16 inv_h_;
-    q16 inv_d_;
+    iq10 r_;
+    iq10 h_;
+    iq10 d_;
+    iq10 d0_;
+    iq16 inv_h_;
+    iq16 inv_d_;
 };
 
 #if 0
@@ -129,58 +129,58 @@ private:
 struct NonlinearTrackingDifferentor{
     struct Config{
         uint32_t fs;
-        q16 r;
-        q16 h;
+        iq16 r;
+        iq16 h;
     };
 
     constexpr explicit NonlinearTrackingDifferentor(const Config & cfg):
         dt_(1_q24 / cfg.fs), r_(cfg.r), h_(cfg.h){;}
     
 
-    constexpr void update(const q16 v){
+    constexpr void update(const iq16 v){
         const auto u = fhan(v, z_[0], z_[1], r_, h_);
         const auto next_z1 = z_[0] + dt_ * z_[1];
         const auto next_z2 = z_[1] + dt_ * u;
         z_ = std::array{next_z1, next_z2};
     }
 
-    constexpr std::array<q16, 2> state(){
+    constexpr std::array<iq16, 2> state(){
         return {z_[0], z_[1]};
     }
 private:
     q24 dt_;
-    q16 r_;
-    q16 h_;
-    std::array<q16, 2> z_ = {0, 0};
+    iq16 r_;
+    iq16 h_;
+    std::array<iq16, 2> z_ = {0, 0};
 };
 #else
 struct NonlinearTrackingDifferentor{
     struct Config{
         uint32_t fs;
-        q16 r;
-        q16 h;
+        iq16 r;
+        iq16 h;
     };
 
     constexpr explicit NonlinearTrackingDifferentor(const Config & cfg):
-        dt_(1_q24 / cfg.fs), 
+        dt_(1_iq24 / cfg.fs), 
         fhan_(FhanPrecomputed(FhanPrecomputed::Config{.r = cfg.r, .h = cfg.h}))
         {;}
     
 
-    constexpr void update(const q16 v){
+    constexpr void update(const iq16 v){
         const auto u = fhan_(v, z_[0], z_[1]);
         const auto next_z1 = z_[0] + dt_ * z_[1];
         const auto next_z2 = z_[1] + dt_ * u;
         z_ = std::array{next_z1, next_z2};
     }
 
-    constexpr std::array<q16, 2> state(){
+    constexpr std::array<iq16, 2> state(){
         return {z_[0], z_[1]};
     }
 private:
-    q24 dt_;
+    iq24 dt_;
     FhanPrecomputed fhan_;
-    std::array<q16, 2> z_ = {0, 0};
+    std::array<iq16, 2> z_ = {0, 0};
 };
 #endif
 
@@ -224,11 +224,11 @@ void adrc_main(){
         .fs = 20000,
         // .r = 30.5_q24,
         // .h = 2.5_q24
-        .r = 252.5_q10,
-        .h = 0.012_q10
+        .r = 252.5_iq10,
+        .h = 0.012_iq10
     }};
 
-    q16 u = 0;
+    iq16 u = 0;
     Microseconds elapsed_micros = 0us;
 
 

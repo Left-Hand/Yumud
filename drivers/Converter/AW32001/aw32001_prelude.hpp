@@ -28,6 +28,7 @@
 // 则电池到系统的供电路径将完全导通以为系统负载供电，这称为补充模式。
 
 #include "core/io/regs.hpp"
+#include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
@@ -167,9 +168,9 @@ struct AW32001_Prelude{
     DEF_U8_STRONG_TYPE_GRADATION(PrechargeCurrent, 
         from_ma, uint32_t, 1, 31, 2);
     DEF_U8_STRONG_TYPE_GRADATION(ChargeVoltage, 
-        from_volt, q16, 3.600, 4.545, 0.015);
+        from_volt, iq16, 3.600, 4.545, 0.015);
     DEF_U8_STRONG_TYPE_GRADATION(VsysReg, 
-        from_volt, q16, 4.200, 4.95, 0.05);
+        from_volt, iq16, 4.200, 4.95, 0.05);
 
 
     enum class RegAddr:uint8_t{

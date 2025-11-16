@@ -51,7 +51,7 @@ public:
         else return hal::HalResult::Ok();
     }
 
-    void set_endian(const Endian endian){endian_ = endian;}
+    void set_endian(const std::endian endian){bytes_order_ = endian;}
     void set_baudrate(const uint32_t baud){baudrate_ = baud;}
 
 public:
@@ -121,7 +121,7 @@ public:
 private:
     Spi & spi_;
     SpiSlaveRank rank_;
-    Endian endian_ = LSB;  
+    std::endian bytes_order_ = std::endian::little;  
     uint32_t baudrate_ = 1000000;
     uint8_t last_width_ = -1;
 

@@ -378,7 +378,7 @@ private:
 template<std::integral T, typename D>
 struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
     using Shape = HorizonSpectrum<T, D>;
-    using Transformer = Rescaler<q16>;
+    using Transformer = Rescaler<iq16>;
     constexpr DrawDispatchIterator(const Shape & shape)
         : shape_(shape),
             transformer_(Transformer::from_input_and_inverted_output(
@@ -602,8 +602,8 @@ void render_main(){
 
 
         const auto ctime = clock::time();
-        // const auto dest_angle = Angle<q16>::from_turns(ctime * 0.3_r);
-        const auto dest_angle = Angle<q16>::from_turns(ctime * 0.1_r);
+        // const auto dest_angle = Angle<iq16>::from_turns(ctime * 0.3_r);
+        const auto dest_angle = Angle<iq16>::from_turns(ctime * 0.1_r);
         // [[maybe_unused]] const auto [s,c] = sincospu(ctime * 0.3_r);
         [[maybe_unused]] const auto [s, c] = dest_angle.sincos();
         [[maybe_unused]] const auto [shape_x, shape_y] = std::make_tuple(
@@ -611,10 +611,10 @@ void render_main(){
 
         [[maybe_unused]] const auto samples = [&]{
             static constexpr auto LEN = 20;
-            std::array<q16, LEN> ret;
+            std::array<iq16, LEN> ret;
             for(size_t i = 0; i < LEN; i++){
-                // ret[i] = 0.8_q16 * sin(7 * ctime + i * 0.15_r);
-                ret[i] = 0.8_q16 * sinpu(ctime + i * 0.1_r);
+                // ret[i] = 0.8_iq16 * sin(7 * ctime + i * 0.15_r);
+                ret[i] = 0.8_iq16 * sinpu(ctime + i * 0.1_r);
             }
             return ret;
         } ();
@@ -709,7 +709,7 @@ void render_main(){
         #endif
         
         #if 0
-        auto shape = HorizonSpectrum<uint16_t, q16>{
+        auto shape = HorizonSpectrum<uint16_t, iq16>{
             .top_left = {20, 20},
             .cell_size = {8, 140},
             .spacing = 3,
@@ -758,47 +758,47 @@ void render_main(){
         #endif
 
         #if 0
-        const auto shape = AnnularSector<uint16_t, q16>{
+        const auto shape = AnnularSector<uint16_t, iq16>{
             .center = {uint16_t(160 + 79.2_r * sinpu(ctime * 0.2_r)), 80},
             .radius_range = {8, 12},
             // .radius_range = {10, 14},
             // .radius_range = {47, 53},
             // .radius_range = {40, 60},
             .angle_range = {
-                Angle<q16>::from_degrees(60 + ctime * 120), 
-                // Angle<q16>::from_degrees(123)
-                Angle<q16>::from_degrees(LERP(
+                Angle<iq16>::from_degrees(60 + ctime * 120), 
+                // Angle<iq16>::from_degrees(123)
+                Angle<iq16>::from_degrees(LERP(
                     50, 310, 
-                    sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16
+                    sinpu(ctime * 0.4_r) * 0.5_iq16 + 0.5_iq16
                 ))
             }
         };
 
-        // const auto shape = AnnularSector<uint16_t, q16>{
+        // const auto shape = AnnularSector<uint16_t, iq16>{
         //     .center = {160, 160},
         //     // .radius_range = {8, 12},
         //     // .radius_range = {10, 14},
         //     // .radius_range = {47, 53},
         //     .radius_range = {130, 150},
         //     .angle_range = {
-        //         Angle<q16>::from_degrees(0), 
-        //         // Angle<q16>::from_degrees(123)
-        //         Angle<q16>::from_degrees(180)
+        //         Angle<iq16>::from_degrees(0), 
+        //         // Angle<iq16>::from_degrees(123)
+        //         Angle<iq16>::from_degrees(180)
         //     }
         // };
 
         #endif
 
         #if 0
-        const auto shape = Sector<uint16_t, q16>{
+        const auto shape = Sector<uint16_t, iq16>{
             .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
             // .radius = 23,
             .radius = 12,
             // .radius = 53,
             .angle_range = {
-                Angle<q16>::from_degrees(60 + ctime * 120), 
-                // Angle<q16>::from_degrees(123)
-                Angle<q16>::from_degrees(LERP(50, 310, sinpu(ctime * 0.4_r) * 0.5_q16 + 0.5_q16))
+                Angle<iq16>::from_degrees(60 + ctime * 120), 
+                // Angle<iq16>::from_degrees(123)
+                Angle<iq16>::from_degrees(LERP(50, 310, sinpu(ctime * 0.4_r) * 0.5_iq16 + 0.5_iq16))
             }
         };
 

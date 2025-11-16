@@ -88,7 +88,7 @@ protected:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
+        if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -107,7 +107,7 @@ protected:
                 spi_drv_->write_single<uint16_t>(reg);
                 res.is_err()) return Err(res.unwrap_err());
         }else if(i2c_drv_){
-            if(const auto res = i2c_drv_->write_reg(uint8_t(address), reg, MSB);
+            if(const auto res = i2c_drv_->write_reg(uint8_t(address), reg, std::endian::big);
                 res.is_err()) return Err(res.unwrap_err());
         }
         return Ok();
@@ -115,20 +115,20 @@ protected:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(uint8_t(T::ADDRESS), reg.as_ref());
+        return read_reg(uint8_t(T::ADDRESS), reg.as_mut_bits());
     }
 
 
     [[nodiscard]] IResult<> read_reg(const uint8_t address, uint16_t & data){
         if(spi_drv_){
             if(const auto res = spi_drv_->transceive_single(
-                reinterpret_cast<uint8_t &>(flag_reg.as_bytes()[0]), 
+                (flag_reg.as_mut_bytes()[0]), 
                 uint8_t(address | 0x80), CONT); 
             res.is_err()) return Err(res.unwrap_err());
             if(const auto res = spi_drv_->read_single<uint16_t>(data);
                 res.is_err()) return Err(res.unwrap_err());
         }else if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_reg(uint8_t(address), data, MSB);
+            if(const auto res = i2c_drv_->read_reg(uint8_t(address), data, std::endian::big);
                 res.is_err()) return Err(res.unwrap_err());
         }
         return Ok();

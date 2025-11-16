@@ -32,15 +32,15 @@ public:
 
     [[nodiscard]] IResult<bool> is_measurement_done();
 
-    [[nodiscard]] IResult<q16> blocking_get_meas_value(Milliseconds timeout_ms);
+    [[nodiscard]] IResult<iq16> blocking_get_meas_value(Milliseconds timeout_ms);
     
 
     // 等待读取TDC测量结果，需要先启动TDC测量，超时返回0xFFFFFFFF
     // 测量模式1下最大时间差：2*Tref*DIV_CLKHS=1us，超时TDC读出的数据为0xFFFFFFFF
-    [[nodiscard]] IResult<q16> get_meas_value() {
+    [[nodiscard]] IResult<iq16> get_meas_value() {
         clock::delay(1us);
         return phy_.trans_u8_receive_u32(0xB0)
-            .transform([](const uint32_t x){return q16::from_i32(x);}); // Read REG0
+            .transform([](const uint32_t x){return iq16::from_bits(x);}); // Read REG0
     }
 private:
     GP22_Phy phy_;

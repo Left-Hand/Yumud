@@ -62,7 +62,7 @@ static constexpr auto SVPWM_MAX_VOLT = 3.87_r;
 
 static constexpr size_t MACHINE_CTRL_FREQ = 200;
 static constexpr auto DELTA_TIME_MS = 1000ms / MACHINE_CTRL_FREQ;
-static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_q20;
+static constexpr auto DELTA_TIME = DELTA_TIME_MS.count() * 0.001_iq20;
 
 static constexpr uint32_t CHOPPER_FREQ = 25000;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
@@ -219,7 +219,7 @@ void bldc_main(){
 
     hal::PA<7>().inana();
 
-    AlphaBetaCoord<q16> ab_volt_;
+    AlphaBetaCoord<iq16> ab_volt_;
     
     dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -229,7 +229,7 @@ void bldc_main(){
     };
 
     pos_filter_.set_base_lap_angle(
-        Angle<q16>::ZERO
+        Angle<iq16>::ZERO
     );
 
     ElecAngleCompensator elec_angle_comp_{
@@ -247,11 +247,11 @@ void bldc_main(){
 
     auto pd_ctrl_law_ = PdCtrlLaw{.kp = 128.581_r, .kd = 18.7_r};
 
-    q20 q_volt_ = 0;
-    Angle<q20> meas_elecrad_ = Angle<q20>::ZERO;
+    iq20 q_volt_ = 0;
+    Angle<iq20> meas_elec_angle_ = Angle<iq20>::ZERO;
 
-    [[maybe_unused]] q20 axis_target_position_ = 0;
-    [[maybe_unused]] q20 axis_target_speed_ = 0;
+    [[maybe_unused]] iq20 axis_target_position_ = 0;
+    [[maybe_unused]] iq20 axis_target_speed_ = 0;
     
     Microseconds exe_us_ = 0us;
 
@@ -264,7 +264,7 @@ void bldc_main(){
         ma730_.update().examine();
 
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
-        pos_filter_.update(Angle<q16>::from_turns(meas_lap_angle.to_turns()));
+        pos_filter_.update(Angle<iq16>::from_turns(meas_lap_angle.to_turns()));
     };
 
     auto sensored_foc_cb = [&]{
@@ -276,8 +276,8 @@ void bldc_main(){
         [[maybe_unused]] const auto meas_position = pos_filter_.accumulated_angle().to_turns();
         [[maybe_unused]] const auto meas_speed = pos_filter_.speed();
 
-        [[maybe_unused]] static constexpr q20 omega = 2;
-        [[maybe_unused]] static constexpr q20 amp = 0.300_r;
+        [[maybe_unused]] static constexpr iq20 omega = 2;
+        [[maybe_unused]] static constexpr iq20 amp = 0.300_r;
         [[maybe_unused]] const auto ctime = clock::time();
 
         const auto [axis_target_position, axis_target_speed] = ({
@@ -295,10 +295,10 @@ void bldc_main(){
         #if 1
         const auto q_volt = 3.3_r;
 
-        [[maybe_unused]] const auto alphabeta_volt = DqCoord<q16>{
+        [[maybe_unused]] const auto alphabeta_volt = DqCoord<iq16>{
             .d = 0, 
             .q = q_volt
-        }.to_alphabeta(Rotation2<q16>::from_angle(Angle<q16>::from_turns(ctime)));
+        }.to_alphabeta(Rotation2<iq16>::from_angle(Angle<iq16>::from_turns(ctime)));
         #else
         const auto q_volt = CLAMP2(
             pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)
@@ -309,7 +309,7 @@ void bldc_main(){
             CLAMP2(q_volt - leso_.get_disturbance(), SVPWM_MAX_VOLT)
         }.to_alphabeta(meas_elec_angle);
         #endif
-        static constexpr auto INV_BUS_VOLT = q16(1.0/12);
+        static constexpr auto INV_BUS_VOLT = iq16(1.0/12);
 
         uvw_pwmgen.set_dutycycle(
             SVM(alphabeta_volt * INV_BUS_VOLT)
@@ -318,7 +318,7 @@ void bldc_main(){
         leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
-        meas_elecrad_ = meas_elec_angle;
+        meas_elec_angle_ = meas_elec_angle;
     };
 
 
@@ -429,7 +429,7 @@ void bldc_main(){
                 DEBUG_PRINTLN_IDLE(
                     // pos_filter_.cont_position(), 
                     // pos_filter_.speed(),
-                    // meas_elecrad_,
+                    // meas_elec_angle_,
                     // q_volt_,
                     pwm_u.get_dutycycle(),
                     pwm_v.get_dutycycle(),

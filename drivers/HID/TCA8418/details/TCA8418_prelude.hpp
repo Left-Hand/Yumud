@@ -15,7 +15,7 @@ struct TCA8418_Prelude{
 
     enum class Error_Kind:uint8_t{
         VerifyFailed,
-        WrongWhoAmI
+        InvalidChipId
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)

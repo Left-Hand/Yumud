@@ -10,7 +10,7 @@ namespace ymd::drivers{
 
 
 class AW9523 final:
-    public AW9523_Regs{
+    public AW9523_Prelude{
 public:
 
     explicit AW9523(const hal::I2cDrv & i2c_drv):
@@ -64,6 +64,7 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
     hal::PinMask buf_mask_ = hal::PinMask::from_zero();
+    AW9523_Regset regs_ = {};
 
     [[nodiscard]] static constexpr RegAddr 
     get_dim_addr(const Nth nth){
@@ -96,7 +97,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_val());
+        if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -104,14 +105,14 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(T::ADDRESS, reg.as_ref());
+        return read_reg(T::ADDRESS, reg.as_mut_bits());
     }
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t data);
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(const RegAddr addr, T & data){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, LSB);
+        if(const auto res = i2c_drv_.read_reg(uint8_t(addr), data, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -122,9 +123,10 @@ private:
     }
 
     [[nodiscard]] IResult<hal::PinMask> read_mask() {
-        if(const auto res = read_reg(input_reg);
+        auto & reg = regs_.input_reg;
+        if(const auto res = read_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
-        return Ok(input_reg.mask);
+        return Ok(reg.mask);
     }
 };
 

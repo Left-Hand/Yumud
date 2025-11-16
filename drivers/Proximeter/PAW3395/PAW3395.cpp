@@ -66,8 +66,8 @@ IResult<> Self::set_dpi(uint16_t dpi_num){
 		res.is_err()) return res;
 
 	// 两个8位寄存器设置X轴分辨率
-	const uint8_t temp_low = uint8_t(((dpi_num / 50) << 8) >> 8);
-	const uint8_t temp_high = uint8_t((dpi_num / 50) >> 8);
+	const auto [temp_low, temp_high] = std::bit_cast<std::array<uint8_t, 2>>(
+		static_cast<uint16_t>((dpi_num / 50)));
 
 	//分别写入x,y寄存器
 	if(const auto res = write_reg(PAW3395_REG_RESOLUTION_X_LOW, temp_low);

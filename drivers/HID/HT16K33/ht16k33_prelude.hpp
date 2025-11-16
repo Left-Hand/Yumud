@@ -311,7 +311,7 @@ public:
         int_input_(int_input){;}
 
     [[nodiscard]] IResult<> write_command(const Command cmd){
-        if(const auto res = i2c_drv_.write_blocks<>(cmd.as_u8(), LSB);
+        if(const auto res = i2c_drv_.write_blocks<>(cmd.as_u8(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

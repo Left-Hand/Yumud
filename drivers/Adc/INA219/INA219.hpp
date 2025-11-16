@@ -27,7 +27,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.as_val());
+        if(const auto res = write_reg(reg.address, reg.as_bits());
             res.is_err()) return res;
         reg.apply();
         return Ok();

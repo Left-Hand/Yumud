@@ -67,20 +67,20 @@ namespace details{
         // Constructor for Ok case - copy if trivially copyable
         template<typename U = T, std::enable_if_t<std::is_trivially_copy_assignable_v<U>, int> = 0>
         __fast_inline constexpr _Storage_Diff(const Ok<T>& okay)
-            : data_(Data{std::in_place_index<0>, okay.unwrap()}) {}
+            : data_(Data{std::in_place_index<0>, okay.get()}) {}
 
         // Constructor for Ok case - move otherwise
         template<typename U = T, std::enable_if_t<!std::is_trivially_copy_assignable_v<U>, int> = 0>
         __fast_inline constexpr _Storage_Diff(Ok<T>&& okay)
-            : data_(Data{std::in_place_index<0>, std::move(okay).unwrap()}) {}
+            : data_(Data{std::in_place_index<0>, std::move(okay).get()}) {}
 
         // Constructor for Err case - const reference
         __fast_inline constexpr _Storage_Diff(const Err<E>& error)
-            : data_(Data{std::in_place_index<1>, error.unwrap()}) {}
+            : data_(Data{std::in_place_index<1>, error.get()}) {}
 
         // Constructor for Err case - rvalue reference
         __fast_inline constexpr _Storage_Diff(Err<E>&& error)
-            : data_(Data{std::in_place_index<1>, std::move(error).unwrap()}) {}
+            : data_(Data{std::in_place_index<1>, std::move(error).get()}) {}
 
         // Copy/move constructors
         __fast_inline constexpr _Storage_Diff(const _Storage_Diff&) = default;
@@ -174,10 +174,7 @@ namespace details{
             data_(std::nullopt){;}
     
         __fast_inline constexpr _Storage_ErrorOnly(const Err<E> & val):
-            data_(val.unwrap()){;}
-    
-        __fast_inline constexpr _Storage_ErrorOnly(const _Storage_ErrorOnly &) = default;
-        // __fast_inline constexpr _Storage_ErrorOnly(_Storage_ErrorOnly &&) = default;
+            data_(val.get()){;}
     
         __fast_inline constexpr bool is_ok() const{return !data_.has_value();}
         __fast_inline constexpr bool is_err() const{return data_.has_value();}
@@ -194,7 +191,7 @@ namespace details{
         using err_type = void;
         using Data = std::optional<T>;
         __fast_inline constexpr _Storage_OkOnly(const Ok<T> & val):
-            data_(val.unwrap()){;}
+            data_(val.get()){;}
     
         __fast_inline constexpr _Storage_OkOnly(const Err<void> &):
             data_(std::nullopt){;}
@@ -314,24 +311,33 @@ public:
 
     template<typename T2>
     requires ((not std::is_void_v<T2>) and std::is_convertible_v<Ok<T2>, Ok<T>>)
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & okay) : storage_(okay){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & okay) : 
+        storage_(okay){}
 
     template<typename T2>
     requires ((not std::is_void_v<T2>) and std::is_convertible_v<Ok<T2>, Ok<T>>)
-    [[nodiscard]] __fast_inline constexpr Result(Ok<T2> && okay) : storage_(std::move(okay)){}
+    [[nodiscard]] __fast_inline constexpr Result(Ok<T2> && okay) : 
+        storage_(std::move(okay)){}
 
     template<typename T2 = T>
     requires (std::is_void_v<T2>)
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & okay) : storage_(Ok<void>()){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & okay) : 
+        storage_(Ok<void>()){}
     
     template<typename E2>
     requires ((not std::is_void_v<E2>) and std::is_convertible_v<Err<E2>, Err<E>>)
-    [[nodiscard]] __fast_inline constexpr Result(const Err<E2> & error) : storage_(error){}
+    [[nodiscard]] __fast_inline constexpr Result(const Err<E2> & error) : 
+        storage_(Err<E>(static_cast<E>(error.get()))){}
+
+    template<typename E2>
+    requires ((not std::is_void_v<E2>) and std::is_convertible_v<Err<E2>, Err<E>>)
+    [[nodiscard]] __fast_inline constexpr Result(Err<E2> && error) : 
+        storage_(Err<E>(static_cast<E>(std::move(error).get()))){}
 
     template<typename E2 = E>
     requires (std::is_void_v<E2>)
-
-    [[nodiscard]] __fast_inline constexpr Result(const Err<E2> & value) : storage_(Err<void>()){}
+    [[nodiscard]] __fast_inline constexpr Result(const Err<E2> & value) : 
+        storage_(Err<void>()){}
 
 
     template<typename S>

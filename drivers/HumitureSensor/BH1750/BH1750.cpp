@@ -12,15 +12,15 @@ IResult<> BH1750::change_measure_time(const uint16_t ms){
     uint8_t x;
     if(current_mode_ == Mode::HMode || current_mode_ == Mode::HMode2){
         x = CLAMP(ms * 69 / 120, 31, 254);
-        lsb.numerator = 5 * 69;
-        lsb.denominator = 6 * x;
+        lsb.num = 5 * 69;
+        lsb.den = 6 * x;
         if(current_mode_ == Mode::HMode2){
-            lsb.denominator *= 2;
+            lsb.den *= 2;
         }
     }else{
         x = CLAMP(ms * 69 / 16, 31, 254);
-        lsb.numerator = 5 * 69 * 4;
-        lsb.denominator = 6 * x;
+        lsb.num = 5 * 69 * 4;
+        lsb.den = 6 * x;
     }
 
     if(const auto res = send_command(
@@ -53,5 +53,5 @@ IResult<uint32_t> BH1750::get_lx(){
     uint8_t data[2] = {0};
     // i2c_drv.read(data, 2);
     TODO();
-    return Ok(int(lsb * (int)((data[0] << 8) | data[1])));
+    return Ok(int(lsb.num * static_cast<int>((data[0] << 8) | data[1])) / lsb.den);
 }

@@ -68,39 +68,63 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-namespace ymd::drivers::vl53l5cx_details{ 
+namespace ymd::drivers{ 
 
-/**
- * @brief Current driver version.
- */
+struct VL53L5CX_Prelude{
+enum class ErrorKind:uint8_t { 
+	TimeOut = 1,
+	McuError = 66,
+	InvalidParam = 127,
+	InvalidDeviceId,
+	InvalidRevisionId,
+	Status = 255,
+	
+};
+
+DEF_FRIEND_DERIVE_DEBUG(ErrorKind)
+DEF_ERROR_SUMWITH_HALERROR(Error, ErrorKind)
+
 
 static constexpr auto VL53L5CX_API_REVISION			= "VL53L5CX_1.3.0";
-static constexpr size_t VL53L5CX_NB_TARGET_PER_ZONE = 1U;
+static constexpr uint8_t VL53L5CX_NB_TARGET_PER_ZONE = 1U;
 
-/**
- * @brief Default I2C address of VL53L5CX sensor. Can be changed using function
- * vl53l5cx_set_i2c_address() function is called.
- */
 
-static constexpr uint16_t VL53L5CX_DEFAULT_I2C_ADDRESS = 0x52;
+static constexpr hal::I2cSlaveAddr<7> DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x29);
 
-/**
- * @brief Macro VL53L5CX_RESOLUTION_4X4 or VL53L5CX_RESOLUTION_8X8 allows
- * setting sensor in 4x4 mode or 8x8 mode, using function
- * vl53l5cx_set_resolution().
- */
 
 static constexpr uint8_t VL53L5CX_RESOLUTION_4X4 = 16U;
 static constexpr uint8_t VL53L5CX_RESOLUTION_8X8 = 64U;
 
+enum class Resolution:uint8_t{
+	_4x4 = VL53L5CX_RESOLUTION_4X4,
+	_8x8 = VL53L5CX_RESOLUTION_8X8
+};
 
-/**
- * @brief Macro VL53L5CX_TARGET_ORDER_STRONGEST or VL53L5CX_TARGET_ORDER_CLOSEST
- *	are used to select the target order for data output.
- */
+friend OutputStream & operator<<(OutputStream & os, Resolution const & self){ 
+	switch(self){
+		case Resolution::_4x4: return os << "4x4";
+		case Resolution::_8x8: return os << "8x8";
+	}
+	return os << "unknown" << os.brackets<'('>() 
+		<< std::bit_cast<uint8_t>(self) << os.brackets<')'>();
+}
 
 static constexpr uint8_t VL53L5CX_TARGET_ORDER_CLOSEST = 1U;
 static constexpr uint8_t VL53L5CX_TARGET_ORDER_STRONGEST = 2U;
+enum class TargetOrder:uint8_t{
+	Cloest = VL53L5CX_TARGET_ORDER_CLOSEST,
+	Strongest = VL53L5CX_TARGET_ORDER_STRONGEST
+};
+
+friend OutputStream & operator<<(OutputStream & os, TargetOrder const self){
+	switch(self){
+		case TargetOrder::Cloest: 	return os << "Cloest";
+		case TargetOrder::Strongest: return os << "Strongest";
+	}
+
+	return os << "unknown" << os.brackets<'('>() 
+		<< std::bit_cast<uint8_t>(self) << os.brackets<')'>();
+}
 
 /**
  * @brief Macro VL53L5CX_RANGING_MODE_CONTINUOUS and
@@ -112,6 +136,11 @@ static constexpr uint8_t VL53L5CX_TARGET_ORDER_STRONGEST = 2U;
 static constexpr uint8_t VL53L5CX_RANGING_MODE_CONTINUOUS = 1U;
 static constexpr uint8_t VL53L5CX_RANGING_MODE_AUTONOMOUS = 3U;
 
+enum class RangingMode:uint8_t{
+	Continuous = VL53L5CX_RANGING_MODE_CONTINUOUS,
+	Autonomous = VL53L5CX_RANGING_MODE_AUTONOMOUS
+};
+
 /**
  * @brief The default power mode is VL53L5CX_POWER_MODE_WAKEUP. User can choose
  * the mode VL53L5CX_POWER_MODE_SLEEP to save power consumption is the device
@@ -122,78 +151,61 @@ static constexpr uint8_t VL53L5CX_RANGING_MODE_AUTONOMOUS = 3U;
 static constexpr uint8_t VL53L5CX_POWER_MODE_SLEEP = 0U;
 static constexpr uint8_t VL53L5CX_POWER_MODE_WAKEUP = 1U;
 
-/**
- * @brief Macro VL53L5CX_STATUS_OK indicates that VL53L5 sensor has no error.
- * Macro VL53L5CX_STATUS_ERROR indicates that something is wrong (value,
- * I2C access, ...). Macro VL53L5CX_MCU_ERROR is used to indicate a MCU issue.
- */
+enum class PowerMode:uint8_t {
+    Sleep = VL53L5CX_POWER_MODE_SLEEP,
+    WakeUp = VL53L5CX_POWER_MODE_WAKEUP
+};
 
-static constexpr uint8_t VL53L5CX_STATUS_OK = 0U;
-static constexpr uint8_t VL53L5CX_STATUS_TIMEOUT_ERROR = 1U;
-static constexpr uint8_t VL53L5CX_MCU_ERROR = 66U;
-static constexpr uint8_t VL53L5CX_STATUS_INVALID_PARAM = 127U;
-static constexpr uint8_t VL53L5CX_STATUS_ERROR = 255U;
 
 /**
  * @brief Definitions for Range results block headers
  */
 
-#if VL53L5CX_NB_TARGET_PER_ZONE == 1
 
-static constexpr uint32_t VL53L5CX_START_BH = 0x0000000DU;
-static constexpr uint32_t VL53L5CX_METADATA_BH = 0x54B400C0U;
-static constexpr uint32_t VL53L5CX_COMMONDATA_BH = 0x54C00040U;
-static constexpr uint32_t VL53L5CX_AMBIENT_RATE_BH = 0x54D00104U;
-static constexpr uint32_t VL53L5CX_SPAD_COUNT_BH = 0x55D00404U;
-static constexpr uint32_t VL53L5CX_NB_TARGET_DETECTED_BH = 0xCF7C0401U;
-static constexpr uint32_t VL53L5CX_SIGNAL_RATE_BH = 0xCFBC0404U;
-static constexpr uint32_t VL53L5CX_RANGE_SIGMA_MM_BH = 0xD2BC0402U;
-static constexpr uint32_t VL53L5CX_DISTANCE_BH = 0xD33C0402U;
-static constexpr uint32_t VL53L5CX_REFLECTANCE_BH = 0xD43C0401U;
-static constexpr uint32_t VL53L5CX_TARGET_STATUS_BH = 0xD47C0401U;
-static constexpr uint32_t VL53L5CX_MOTION_DETECT_BH = 0xCC5008C0U;
-
-static constexpr uint16_t VL53L5CX_METADATA_IDX = 0x54B4U;
-static constexpr uint16_t VL53L5CX_SPAD_COUNT_IDX = 0x55D0U;
-static constexpr uint16_t VL53L5CX_AMBIENT_RATE_IDX = 0x54D0U;
-static constexpr uint16_t VL53L5CX_NB_TARGET_DETECTED_IDX = 0xCF7CU;
-static constexpr uint16_t VL53L5CX_SIGNAL_RATE_IDX = 0xCFBCU;
-static constexpr uint16_t VL53L5CX_RANGE_SIGMA_MM_IDX = 0xD2BCU;
-static constexpr uint16_t VL53L5CX_DISTANCE_IDX = 0xD33CU;
-static constexpr uint16_t VL53L5CX_REFLECTANCE_EST_PC_IDX = 0xD43CU;
-static constexpr uint16_t VL53L5CX_TARGET_STATUS_IDX = 0xD47CU;
-static constexpr uint16_t VL53L5CX_MOTION_DETEC_IDX = 0xCC50U;
-
-#else
-static constexpr uint32_t VL53L5CX_START_BH = 0x0000000DU;
-static constexpr uint32_t VL53L5CX_METADATA_BH = 0x54B400C0U;
-static constexpr uint32_t VL53L5CX_COMMONDATA_BH = 0x54C00040U;
-static constexpr uint32_t VL53L5CX_AMBIENT_RATE_BH = 0x54D00104U;
-static constexpr uint32_t VL53L5CX_NB_TARGET_DETECTED_BH = 0x57D00401U;
-static constexpr uint32_t VL53L5CX_SPAD_COUNT_BH = 0x55D00404U;
-static constexpr uint32_t VL53L5CX_SIGNAL_RATE_BH = 0x58900404U;
-static constexpr uint32_t VL53L5CX_RANGE_SIGMA_MM_BH = 0x64900402U;
-static constexpr uint32_t VL53L5CX_DISTANCE_BH = 0x66900402U;
-static constexpr uint32_t VL53L5CX_REFLECTANCE_BH = 0x6A900401U;
-static constexpr uint32_t VL53L5CX_TARGET_STATUS_BH = 0x6B900401U;
-static constexpr uint32_t VL53L5CX_MOTION_DETECT_BH = 0xCC5008C0U;
-
-static constexpr uint16_t VL53L5CX_METADATA_IDX = 0x54B4U;
-static constexpr uint16_t VL53L5CX_SPAD_COUNT_IDX = 0x55D0U;
-static constexpr uint16_t VL53L5CX_AMBIENT_RATE_IDX = 0x54D0U;
-static constexpr uint16_t VL53L5CX_NB_TARGET_DETECTED_IDX = 0x57D0U;
-static constexpr uint16_t VL53L5CX_SIGNAL_RATE_IDX = 0x5890U;
-static constexpr uint16_t VL53L5CX_RANGE_SIGMA_MM_IDX = 0x6490U;
-static constexpr uint16_t VL53L5CX_DISTANCE_IDX = 0x6690U;
-static constexpr uint16_t VL53L5CX_REFLECTANCE_EST_PC_IDX = 0x6A90U;
-static constexpr uint16_t VL53L5CX_TARGET_STATUS_IDX = 0x6B90U;
-static constexpr uint16_t VL53L5CX_MOTION_DETEC_IDX = 0xCC50U;
-#endif
-
-
-/**
- * @brief Inner Macro for API. Not for user, only for development.
- */
+static constexpr uint32_t VL53L5CX_START_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0x0000000DU : 0x0000000DU;
+static constexpr uint32_t VL53L5CX_METADATA_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0x54B400C0U : 0x54B400C0U;
+static constexpr uint32_t VL53L5CX_COMMONDATA_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0x54C00040U : 0x54C00040U;
+static constexpr uint32_t VL53L5CX_AMBIENT_RATE_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0x54D00104U : 0x54D00104U;
+static constexpr uint32_t VL53L5CX_SPAD_COUNT_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0x55D00404U : 0x57D00401U;
+static constexpr uint32_t VL53L5CX_NB_TARGET_DETECTED_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xCF7C0401U : 0x55D00404U;
+static constexpr uint32_t VL53L5CX_SIGNAL_RATE_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xCFBC0404U : 0x58900404U;
+static constexpr uint32_t VL53L5CX_RANGE_SIGMA_MM_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xD2BC0402U : 0x64900402U;
+static constexpr uint32_t VL53L5CX_DISTANCE_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xD33C0402U : 0x66900402U;
+static constexpr uint32_t VL53L5CX_REFLECTANCE_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xD43C0401U : 0x6A900401U;
+static constexpr uint32_t VL53L5CX_TARGET_STATUS_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xD47C0401U : 0x6B900401U;
+static constexpr uint32_t VL53L5CX_MOTION_DETECT_BH = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xCC5008C0U : 0xCC5008C0U;
+static constexpr uint16_t VL53L5CX_METADATA_IDX = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0x54B4U : 0x54B4U;
+static constexpr uint16_t VL53L5CX_SPAD_COUNT_IDX = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0x55D0U : 0x55D0U;
+static constexpr uint16_t VL53L5CX_AMBIENT_RATE_IDX = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0x54D0U : 0x54D0U;
+static constexpr uint16_t VL53L5CX_NB_TARGET_DETECTED_IDX = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xCF7CU : 0x57D0U;
+static constexpr uint16_t VL53L5CX_SIGNAL_RATE_IDX = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xCFBCU : 0x5890U;
+static constexpr uint16_t VL53L5CX_RANGE_SIGMA_MM_IDX = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xD2BCU : 0x6490U;
+static constexpr uint16_t VL53L5CX_DISTANCE_IDX = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xD33CU : 0x6690U;
+static constexpr uint16_t VL53L5CX_REFLECTANCE_EST_PC_IDX = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xD43CU : 0x6A90U;
+static constexpr uint16_t VL53L5CX_TARGET_STATUS_IDX = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xD47CU : 0x6B90U;
+static constexpr uint16_t VL53L5CX_MOTION_DETEC_IDX = 
+	(VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 0xCC50U : 0xCC50U;
 
 static constexpr uint16_t VL53L5CX_NVM_DATA_SIZE = 492U;
 static constexpr uint16_t VL53L5CX_CONFIGURATION_SIZE = 972U;
@@ -218,60 +230,59 @@ static constexpr uint16_t VL53L5CX_DCI_PIPE_CONTROL = 0xCF78U;
 static constexpr uint16_t VL53L5CX_UI_CMD_STATUS = 0x2C00U;
 static constexpr uint16_t VL53L5CX_UI_CMD_START = 0x2C04U;
 static constexpr uint16_t VL53L5CX_UI_CMD_END = 0x2FFFU;
-
 /**
  * @brief Inner values for API. Max buffer size depends of the selected output.
  */
 
-#ifndef VL53L5CX_DISABLE_AMBIENT_PER_SPAD
+#ifndef DEF_VL53L5CX_DISABLE_AMBIENT_PER_SPAD
 static constexpr size_t  L5CX_AMB_SIZE	= 260U;
 #else
 static constexpr size_t  L5CX_AMB_SIZE	= 0U;
 #endif
 
-#ifndef VL53L5CX_DISABLE_NB_SPADS_ENABLED
+#ifndef DEF_VL53L5CX_DISABLE_NB_SPADS_ENABLED
 static constexpr size_t  L5CX_SPAD_SIZE	= 260U;
 #else
 static constexpr size_t  L5CX_SPAD_SIZE	= 0U;
 #endif
 
-#ifndef VL53L5CX_DISABLE_NB_TARGET_DETECTED
+#ifndef DEF_VL53L5CX_DISABLE_NB_TARGET_DETECTED
 static constexpr size_t  L5CX_NTAR_SIZE	= 68U;
 #else
 static constexpr size_t  L5CX_NTAR_SIZE	= 0U;
 #endif
 
-#ifndef VL53L5CX_DISABLE_SIGNAL_PER_SPAD
+#ifndef DEF_VL53L5CX_DISABLE_SIGNAL_PER_SPAD
 static constexpr size_t  L5CX_SPS_SIZE = ((256U * VL53L5CX_NB_TARGET_PER_ZONE) + 4U);
 #else
 static constexpr size_t  L5CX_SPS_SIZE	= 0U;
 #endif
 
-#ifndef VL53L5CX_DISABLE_RANGE_SIGMA_MM
+#ifndef DEF_VL53L5CX_DISABLE_RANGE_SIGMA_MM
 static constexpr size_t  L5CX_SIGR_SIZE = ((128U * VL53L5CX_NB_TARGET_PER_ZONE) + 4U);
 #else
 static constexpr size_t  L5CX_SIGR_SIZE	= 0U;
 #endif
 
-#ifndef VL53L5CX_DISABLE_DISTANCE_MM
+#ifndef DEF_VL53L5CX_DISABLE_DISTANCE_MM
 static constexpr size_t  L5CX_DIST_SIZE = ((128U * VL53L5CX_NB_TARGET_PER_ZONE) + 4U);
 #else
 static constexpr size_t  L5CX_DIST_SIZE	= 0U;
 #endif
 
-#ifndef VL53L5CX_DISABLE_REFLECTANCE_PERCENT
+#ifndef DEF_VL53L5CX_DISABLE_REFLECTANCE_PERCENT
 static constexpr size_t  L5CX_RFLEST_SIZE = ((64U *VL53L5CX_NB_TARGET_PER_ZONE) + 4U);
 #else
 static constexpr size_t  L5CX_RFLEST_SIZE	= 0U;
 #endif
 
-#ifndef VL53L5CX_DISABLE_TARGET_STATUS
+#ifndef DEF_VL53L5CX_DISABLE_TARGET_STATUS
 static constexpr size_t  L5CX_STA_SIZE = ((64U  *VL53L5CX_NB_TARGET_PER_ZONE) + 4U);
 #else
 static constexpr size_t  L5CX_STA_SIZE	= 0U;
 #endif
 
-#ifndef VL53L5CX_DISABLE_MOTION_INDICATOR
+#ifndef DEF_VL53L5CX_DISABLE_MOTION_INDICATOR
 static constexpr size_t  L5CX_MOT_SIZE	= 144U;
 #else
 static constexpr size_t  L5CX_MOT_SIZE	= 0U;
@@ -294,7 +305,7 @@ static constexpr size_t VL53L5CX_MAX_RESULTS_SIZE = ( 40U
  * the output configuration.
  */
 
-static constexpr size_t VL53L5CX_TEMPORARY_BUFFER_SIZE = MIN(1024U, VL53L5CX_MAX_RESULTS_SIZE);
+static constexpr size_t VL53L5CX_TEMPORARY_BUFFER_SIZE = MAX(1024U, VL53L5CX_MAX_RESULTS_SIZE);
 
 /**
  * @brief Structure VL53L5CX_Configuration contains the sensor configuration.
@@ -302,7 +313,7 @@ static constexpr size_t VL53L5CX_TEMPORARY_BUFFER_SIZE = MIN(1024U, VL53L5CX_MAX
  */
 
 /**
- * @brief Structure VL53L5CX_ResultsData contains the ranging results of
+ * @brief Structure VL53L5CX_Frame contains the ranging results of
  * VL53L5CX. If user wants more than 1 target per zone, the results can be split
  * into 2 sub-groups :
  * - Per zone results. These results are common to all targets (ambient_per_spad
@@ -312,58 +323,58 @@ static constexpr size_t VL53L5CX_TEMPORARY_BUFFER_SIZE = MIN(1024U, VL53L5CX_MAX
  * target_status).
  */
 
-struct VL53L5CX_ResultsData{
+struct [[nodiscard]] VL53L5CX_Frame{
 	/* Internal sensor silicon temperature */
 	int8_t silicon_temp_degc;
 
 	/* Ambient noise in kcps/spads */
-#ifndef VL53L5CX_DISABLE_AMBIENT_PER_SPAD
+#ifndef DEF_VL53L5CX_DISABLE_AMBIENT_PER_SPAD
 	uint32_t ambient_per_spad[VL53L5CX_RESOLUTION_8X8];
 #endif
 
 	/* Number of valid target detected for 1 zone */
-#ifndef VL53L5CX_DISABLE_NB_TARGET_DETECTED
+#ifndef DEF_VL53L5CX_DISABLE_NB_TARGET_DETECTED
 	uint8_t nb_target_detected[VL53L5CX_RESOLUTION_8X8];
 #endif
 
 	/* Number of spads enabled for this ranging */
-#ifndef VL53L5CX_DISABLE_NB_SPADS_ENABLED
+#ifndef DEF_VL53L5CX_DISABLE_NB_SPADS_ENABLED
 	uint32_t nb_spads_enabled[VL53L5CX_RESOLUTION_8X8];
 #endif
 
 	/* Signal returned to the sensor in kcps/spads */
-#ifndef VL53L5CX_DISABLE_SIGNAL_PER_SPAD
+#ifndef DEF_VL53L5CX_DISABLE_SIGNAL_PER_SPAD
 	uint32_t signal_per_spad[(VL53L5CX_RESOLUTION_8X8
 					*VL53L5CX_NB_TARGET_PER_ZONE)];
 #endif
 
 	/* Sigma of the current distance in mm */
-#ifndef VL53L5CX_DISABLE_RANGE_SIGMA_MM
+#ifndef DEF_VL53L5CX_DISABLE_RANGE_SIGMA_MM
 	uint16_t range_sigma_mm[(VL53L5CX_RESOLUTION_8X8
 					*VL53L5CX_NB_TARGET_PER_ZONE)];
 #endif
 
 	/* Measured distance in mm */
-#ifndef VL53L5CX_DISABLE_DISTANCE_MM
+#ifndef DEF_VL53L5CX_DISABLE_DISTANCE_MM
 	int16_t distance_mm[(VL53L5CX_RESOLUTION_8X8
 					*VL53L5CX_NB_TARGET_PER_ZONE)];
 #endif
 
 	/* Estimated reflectance in percent */
-#ifndef VL53L5CX_DISABLE_REFLECTANCE_PERCENT
+#ifndef DEF_VL53L5CX_DISABLE_REFLECTANCE_PERCENT
 	uint8_t reflectance[(VL53L5CX_RESOLUTION_8X8
 					*VL53L5CX_NB_TARGET_PER_ZONE)];
 #endif
 
 	/* Status indicating the measurement validity (5 & 9 means ranging OK)*/
-#ifndef VL53L5CX_DISABLE_TARGET_STATUS
+#ifndef DEF_VL53L5CX_DISABLE_TARGET_STATUS
 	uint8_t target_status[(VL53L5CX_RESOLUTION_8X8
 					*VL53L5CX_NB_TARGET_PER_ZONE)];
 #endif
 
 	/* Motion detector results */
-#ifndef VL53L5CX_DISABLE_MOTION_INDICATOR
-	struct
+#ifndef DEF_VL53L5CX_DISABLE_MOTION_INDICATOR
+	struct MotionIndicator
 	{
 		uint32_t global_indicator_1;
 		uint32_t global_indicator_2;
@@ -372,15 +383,69 @@ struct VL53L5CX_ResultsData{
 		uint8_t	 nb_of_aggregates;
 		uint8_t	 spare;
 		uint32_t motion[32];
-	} motion_indicator;
+	};
+	MotionIndicator motion_indicator;
 #endif
 
 };
+struct [[nodiscard]] VL53L5CX_Motion_Config{
+	int32_t  ref_bin_offset;
+	uint32_t detection_threshold;
+	uint32_t extra_noise_sigma;
+	uint32_t null_den_clip_value;
+	uint8_t  mem_update_mode;
+	uint8_t  mem_update_choice;
+	uint8_t  sum_span;
+	uint8_t  feature_length;
+	uint8_t  nb_of_aggregates;
+	uint8_t  nb_of_temporal_accumulations;
+	uint8_t  min_nb_for_global_detection;
+	uint8_t  global_indicator_format_1;
+	uint8_t  global_indicator_format_2;
+	uint8_t  spare_1;
+	uint8_t  spare_2;
+	uint8_t  spare_3;
+	int8_t 	 map_id[64];
+	uint8_t  indicator_format_1[32];
+	uint8_t  indicator_format_2[32];
 
-struct Block_header {
-    uint32_t type : 4;
-    uint32_t size : 12;
-    uint32_t idx : 16;
+	static constexpr VL53L5CX_Motion_Config from_default(){
+		return VL53L5CX_Motion_Config{
+			.ref_bin_offset = 13633,
+			.detection_threshold = 2883584,
+			.extra_noise_sigma = 0,
+			.null_den_clip_value = 0,
+			.mem_update_mode = 6,
+			.mem_update_choice = 2,
+			.sum_span = 4,
+			.feature_length = 9,
+			.nb_of_aggregates = 16,
+			.nb_of_temporal_accumulations = 16,
+			.min_nb_for_global_detection = 1,
+			.global_indicator_format_1 = 8,
+			.global_indicator_format_2 = 0,
+			.spare_1 = 0,
+			.spare_2 = 0,
+			.spare_3 = 0,
+			.map_id = {0},
+			.indicator_format_1 = {0},
+			.indicator_format_2 = {0}
+		};
+	}
+};
+
+struct [[nodiscard]] BlockHeader {
+	uint32_t type : 4;
+	uint32_t size : 12;
+	uint32_t idx : 16;
+
+	[[nodiscard]] std::span<const uint8_t, 4> as_bytes() const {
+		return std::span<const uint8_t, 4>(reinterpret_cast<const uint8_t*>(this), 4);
+	} 
+
+	[[nodiscard]] std::span<uint8_t, 4> as_mut_bytes() {
+		return std::span<uint8_t, 4>(reinterpret_cast<uint8_t*>(this), 4);
+	} 
 };
 
 
@@ -444,6 +509,11 @@ static constexpr uint8_t VL53L5CX_OPERATION_NONE = 0U;
 static constexpr uint8_t VL53L5CX_OPERATION_OR = 0U;
 static constexpr uint8_t VL53L5CX_OPERATION_AND = 2U;
 
+static constexpr uint8_t VL53L5CX_FW_NBTAR_XTALK = (VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 
+	2 : VL53L5CX_NB_TARGET_PER_ZONE;
+
+static constexpr size_t  VL53L5CX_FW_NBTAR_RANGING	= 
+    (VL53L5CX_NB_TARGET_PER_ZONE == 1) ? 2 : VL53L5CX_NB_TARGET_PER_ZONE;
 /**
  * @brief Structure VL53L5CX_DetectionThresholds contains a single threshold.
  * This structure  is never used alone, it must be used as an array of 64
@@ -467,5 +537,6 @@ struct VL53L5CX_DetectionThresholds{
 	uint8_t		mathematic_operation;
 };
 
+};
 
 }

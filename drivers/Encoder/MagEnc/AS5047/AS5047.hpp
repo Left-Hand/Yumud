@@ -24,19 +24,16 @@ public:
     [[nodiscard]] IResult<> init() ;
 
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Angle<q31>> read_lap_angle() {
-        return Ok(Angle<q31>::from_turns(lap_position_));
+    [[nodiscard]] IResult<Angle<uq32>> read_lap_angle() {
+        return Ok(Angle<uq32>::from_turns(lap_turns_));
     }
-    [[nodiscard]] uint32_t get_err_cnt() const {return crc_err_cnt_;}
 private:
     using Regs = AS5047_Regs;
 
     hal::SpiDrv spi_drv_;
     Regs regs_ = {};
 
-    real_t lap_position_ = 0;
-    size_t crc_err_cnt_ = 0;
-    bool fast_mode_ = true;
+    uq32 lap_turns_ = 0;
 
     uint16_t get_position_data();
 

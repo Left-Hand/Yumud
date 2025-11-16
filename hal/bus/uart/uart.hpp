@@ -7,7 +7,7 @@
 #include "hal/bus/bus_enums.hpp"
 #include "hal/hal_result.hpp"
 
-#include "uart_utils.hpp"
+#include "uart_primitive.hpp"
 
 #include "core/container/ringbuf.hpp"
 
@@ -37,8 +37,12 @@ class Uart{
 
 public:
     using Mode = CommDirection;
-    using Callback = std::function<void(void)>;
+    using Event = UartEvent;
     using Parity = UartParity;
+
+
+
+    using Callback = std::function<void(Event)>;
 
     struct Config{
         uint32_t baudrate;
@@ -51,18 +55,15 @@ public:
 
     virtual void init(const Config & cfg) = 0;
 
-    size_t available() const {return rx_fifo_.available();}
-    size_t pending() const {return tx_fifo_.available();}
-    size_t remain() const {return tx_fifo_.size() - tx_fifo_.available();}
+    [[nodiscard]] size_t available() const {return rx_fifo_.available();}
+    [[nodiscard]] size_t pending() const {return tx_fifo_.available();}
+    [[nodiscard]] size_t remain() const {return tx_fifo_.size() - tx_fifo_.available();}
 
-    virtual void set_tx_strategy(const CommStrategy _tx_strategy) = 0;
-    virtual void set_rx_strategy(const CommStrategy _rx_strategy) = 0;
-
-    template<typename Fn>
-    void set_post_tx_callback(Fn && cb){post_tx_cb_ = std::forward<Fn>(cb);}
+    virtual void set_tx_strategy(const CommStrategy tx_strategy) = 0;
+    virtual void set_rx_strategy(const CommStrategy rx_strategy) = 0;
 
     template<typename Fn>
-    void set_post_rx_callback(Fn && cb){post_rx_cb_ = std::forward<Fn>(cb);}
+    void set_event_callback(Fn && cb){callback_ = std::forward<Fn>(cb);}
 
     HalResult read(uint32_t & data) {
         char _;read1(_);data = _;return HalResult::Ok();};
@@ -80,8 +81,8 @@ public:
     auto & tx_fifo(){return tx_fifo_;}
     auto & rx_fifo(){return rx_fifo_;}
 private:
-    Callback post_tx_cb_;
-    Callback post_rx_cb_;
+    Callback callback_;
+
 
 protected:
     CommStrategy tx_strategy_;
@@ -90,11 +91,12 @@ protected:
 
     RingBuf<char, UART_FIFO_BUF_SIZE> tx_fifo_;
     RingBuf<char, UART_FIFO_BUF_SIZE> rx_fifo_;
-
+    void invoke_callback(const Event event){
+        if(callback_ == nullptr) return;
+        callback_(event);
+    }
     Uart(){;}
 
-    __fast_inline void invoke_post_tx_callback(){EXECUTE(post_tx_cb_);}
-    __fast_inline void invoke_post_rx_callback(){EXECUTE(post_rx_cb_);}
 };
 
 

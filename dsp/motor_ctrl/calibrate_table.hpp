@@ -18,9 +18,12 @@ struct CalibrateTable{
             reset();
         }
 
-    [[nodiscard]] constexpr Result<void, Error> push_back(const q31 expected, const q31 measured){
+    [[nodiscard]] constexpr Result<void, Error> push_back(
+        const Angle<uq32> expected, 
+        const Angle<uq32> measured
+    ){
         //确定原始数据的扇区
-        const auto index = position_to_index(measured);
+        const auto index = angle_to_index(measured);
         if(index >= capacity_) 
             return Err(Error::SampleIndexOutOfRange);//unreachable
 
@@ -46,8 +49,8 @@ struct CalibrateTable{
         return block_[idx];
     }
 
-    [[nodiscard]] constexpr PackedCalibrateSample operator[](const q31 raw_position) const {
-        return block_[position_to_index(raw_position)];
+    [[nodiscard]] constexpr PackedCalibrateSample operator[](const Angle<uq32> raw_angle) const {
+        return block_[angle_to_index(raw_angle)];
     }
 
     constexpr void reset(){
@@ -62,8 +65,8 @@ struct CalibrateTable{
     [[nodiscard]] constexpr std::span<const PackedCalibrateSample>
     iter() const {return std::span(block_);}
 
-    [[nodiscard]] constexpr size_t position_to_index(const q31 position) const{
-        return size_t(q24(position) * capacity_);
+    [[nodiscard]] constexpr size_t angle_to_index(const Angle<uq32> angle) const{
+        return size_t(uq24(angle.to_turns()) * capacity_);
     }
 private:
     using Block = std::array<PackedCalibrateSample, MAX_MOTOR_POLE_PAIRS_CNT>;

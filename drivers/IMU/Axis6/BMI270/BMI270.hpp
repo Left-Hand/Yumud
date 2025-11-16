@@ -39,7 +39,7 @@ public:
 
     [[nodiscard]] IResult<> set_pmu_mode(const PmuType pmu, const PmuMode mode);
     [[nodiscard]] PmuMode get_pmu_mode(const PmuType pmu);
-    [[nodiscard]] IResult<Vec3<q24>> read_acc();
+    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
 private:
     BoschSensor_Phy phy_;
     BMI270_Regset regs_ = {};

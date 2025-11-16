@@ -78,7 +78,7 @@ struct Packet{
         return std::span<const uint8_t, 3>(reinterpret_cast<const uint8_t *>(this), sizeof(Self));
     }
 
-    [[nodiscard]] IResult<Angle<q31>> parse() const {
+    [[nodiscard]] IResult<Angle<uq32>> parse() const {
         
         // if(not is_overspeed) [[unlikely]] 
         //     return Err(Error::OverSpeed);
@@ -87,7 +87,7 @@ struct Packet{
         // if(not is_pc2_valid()) [[unlikely]] 
         //     return Err(Error::InvalidPc2);
 
-        return Ok(Angle<q31>::from_turns(q18::from_i32(angle_u18())));
+        return Ok(Angle<uq32>::from_turns(uq18::from_bits(angle_u18())));
     }
 
     [[nodiscard]] constexpr bool is_pc1_valid() const {
@@ -124,7 +124,7 @@ struct MT6825:
         spi_drv_(std::move(spi_drv)){}
 
     [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<Angle<q31>> get_lap_angle();
+    [[nodiscard]] IResult<Angle<uq32>> get_lap_angle();
 private:
     hal::SpiDrv spi_drv_;
 
@@ -132,7 +132,7 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         const auto address = T::ADDRESS;
         const auto tx = uint16_t(
-            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | std::bit_cast<uint8_t>(reg.as_val()));
+            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | std::bit_cast<uint8_t>(reg.as_bits()));
         if(const auto res = spi_drv_.write_single<uint16_t>(tx);
             res.is_err()) return Err(Error(res.unwrap_err()));
         reg.apply();
@@ -143,11 +143,11 @@ private:
     [[nodiscard]] IResult<> read_reg(const T & reg){
         const auto address = T::ADDRESS;
         const auto tx = uint16_t(
-            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | std::bit_cast<uint8_t>(reg.as_val()));
+            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | std::bit_cast<uint8_t>(reg.as_bits()));
         uint16_t rx;
         if(const auto res = spi_drv_.transceive_single<uint16_t>(rx, tx);
             res.is_err()) return Err(Error(res.unwrap_err()));
-        reg.as_ref() = rx;
+        reg.as_mut_bits() = rx;
         return Ok();
     }
 

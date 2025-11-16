@@ -140,10 +140,10 @@ IResult<> CyberGear::on_ctrl2_feed_back(const uint32_t id, const uint64_t data, 
 
     const CgPayload payload = {data};
 
-    feedback_.rad =         payload.rad().as_val().to<real_t>();
-    feedback_.omega =       payload.omega().as_val().to<real_t>();
-    feedback_.torque =      payload.torque().as_val().to<real_t>();
-    feedback_.temperature = static_cast<real_t>(payload.temperature().as_val());
+    feedback_.rad =         payload.rad().as_bits().to<real_t>();
+    feedback_.omega =       payload.omega().as_bits().to<real_t>();
+    feedback_.torque =      payload.torque().as_bits().to<real_t>();
+    feedback_.temperature = static_cast<real_t>(payload.temperature().as_bits());
 
     return Ok();
 }
@@ -209,7 +209,7 @@ IResult<> CyberGear::transmit(const uint32_t id, const uint64_t payload, const u
 IResult<> CyberGear::on_receive(const CanMsg & msg){
     const auto id = msg.stdid().unwrap().to_u11();
     const auto cgid = CgId{id};
-    const auto cmd = cgid.cmd().as_val();
+    const auto cmd = cgid.cmd().as_bits();
 
     const uint64_t data = msg.payload_as_u64();
     const uint8_t dlc = msg.size();

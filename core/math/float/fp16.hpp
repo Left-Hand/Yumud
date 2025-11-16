@@ -13,7 +13,7 @@ struct fp16{
         }__packed;
     }__packed;
 
-    constexpr fp16(iq_t qv):fp16(float(qv)){;}
+    constexpr fp16(fixed_t qv):fp16(float(qv)){;}
     constexpr fp16(const fp16& other):raw(other.raw){;}
     constexpr fp16(float value) {
 
@@ -144,7 +144,7 @@ struct fp16{
         return value;
     }
 
-    constexpr operator iq_t() const{
-        return iq_t(float(*this));
+    constexpr operator fixed_t() const{
+        return fixed_t(float(*this));
     }
 }__packed;

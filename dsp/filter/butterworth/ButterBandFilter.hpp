@@ -3,7 +3,7 @@
 #include "core/math/realmath.hpp"
 
 namespace ymd::dsp{
-
+#if 0
 namespace details{
 template<size_t N>
 __inline constexpr
@@ -29,11 +29,11 @@ int64_t _conv(const _iq<N> x, const _iq<N> h, auto&& ... rest){
 
 template<size_t N>
 __inline constexpr
-iq_t<N> conv(auto&& ... args){
-    return iq_t<N>(_iq<N>::from_i32(details::_conv((args.value)...) >> N));
+fixed_t<N> conv(auto&& ... args){
+    return fixed_t<N>(_iq<N>::from_i32(details::_conv((args.value)...) >> N));
 }
 
-
+#endif
 
 namespace details{
 template<arithmetic T, size_t N>

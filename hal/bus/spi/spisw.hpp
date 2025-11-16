@@ -88,8 +88,8 @@ public:
         return HalResult::Ok();
     }
 
-    hal::HalResult set_bitorder(const Endian endian)  {
-        is_msb_ = (endian == MSB);
+    hal::HalResult set_bitorder(const BitOrder bit_order)  {
+        is_msb_ = (bit_order == MSB);
         return HalResult::Ok();
     }
 };

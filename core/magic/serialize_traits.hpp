@@ -23,12 +23,12 @@ uint8_t get_byte_from_arg(const size_t idx, Arg && arg){
     return uint8_t{uint8_t(raw >> (idx * 8))};
 }
 
-//由于未知原因 iq_t不支持平凡复制 故需要额外进行特化
+//由于未知原因 fixed_t不支持平凡复制 故需要额外进行特化
 template<size_t Q>
 __fast_inline constexpr 
-uint8_t get_byte_from_arg(const size_t idx, const ymd::iq_t<Q> & arg){
-    static_assert(sizeof(ymd::iq_t<Q>) <= 8, "Size of iq_t<Q> must be less than 8");
-    const auto raw = arg.as_i32();
+uint8_t get_byte_from_arg(const size_t idx, const ymd::fixed_t<Q, int32_t> & arg){
+    static_assert(sizeof(ymd::fixed_t<Q, int32_t>) <= 8, "Size of fixed_t<Q, int32_t> must be less than 8");
+    const auto raw = arg.as_bits();
     return uint8_t{uint8_t(raw >> (idx * 8))};
 }
 
@@ -107,7 +107,7 @@ Arg make_arg_from_bytes(const std::span<const uint8_t, ArgSize> & bytes) {
         temp |= static_cast<T>(static_cast<T>(bytes[i]) << (i * 8));
     }
 
-    if constexpr (is_fixed_point_v<Arg>) return Arg(std::bit_cast<typename Arg::iq_type>(temp));
+    if constexpr (is_fixed_point_v<Arg>) return Arg::from_bits((temp));
     else return std::bit_cast<Arg>(temp);
 }
 

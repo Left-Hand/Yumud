@@ -33,7 +33,7 @@ public:
 
 
     [[nodiscard]] __inline constexpr 
-    I as_val() const{
+    I as_bits() const{
         return std::bit_cast<I>(static_cast<magic::type_to_uint_t<I>>((data_ & mask) >> (b_bits)));
     }
 

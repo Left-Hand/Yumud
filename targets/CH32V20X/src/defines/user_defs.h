@@ -3,7 +3,7 @@
 #ifdef CH32V20X
 #define STRICT_IQ
 #define UART_FIFO_BUF_SIZE 256
-#define UART_DMA_BUF_SIZE 64
+#define UART_DMA_BUF_SIZE 256
 
 #define DEBUGGER_INST hal::uart2
 #define DEBUG_UART_BAUD 576000

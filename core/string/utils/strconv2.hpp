@@ -8,7 +8,7 @@
 #include "prelude.hpp"
 
 #include "core/utils/Errno.hpp"
-#include "core/math/iq/iq_t.hpp"
+#include "core/math/iq/fixed_t.hpp"
 #include "core/string/string_ref.hpp"
 #include "core/string/string_view.hpp"
 #include "core/utils/Result.hpp"
@@ -363,7 +363,7 @@ struct IqDeformatter{
 		
 		const IQ frac_part = [&] -> IQ{
 			if (dump.scale == 0) return 0; 
-			return IQ::from_i32(
+			return IQ::from_bits(
 				(int32_t(dump.frac_part) * int32_t(1 << Q)) / int32_t(dump.scale)
 			);
 		}();
@@ -380,7 +380,7 @@ __fast_inline static constexpr std::tuple<uint32_t, uint8_t> fast_div(uint32_t x
 		constexpr size_t mask = N - 1;
 		return {x >> shift, uint8_t(x & mask)};
 	}else{
-		const auto q = iq_t<16>(1.0 / N);
+		const auto q = iq16(1.0 / N);
 		const auto r = uint32_t(x * q);
 		return {r, uint8_t(x - r * N)};
 	}
@@ -513,15 +513,15 @@ struct Iq16Formatter{
 	//TODO eps为5时计算会溢出 暂时限制eps=5的情况
 	//TODO 支持除了Q16格式外其他格式转换到字符串的函数 
 
-	static constexpr TostringResult<size_t> fmt(StringRef str, iq_t<16> value, const Eps eps_){
+	static constexpr TostringResult<size_t> fmt(StringRef str, fixed_t<16, int32_t> value, const Eps eps_){
 		if(str.length() == 0) return Err(TostringError::OutOfMemory);
 		
 		constexpr size_t Q = 16;
 
-		const auto value_i32 = value.as_i32();
+		const auto value_i32 = value.as_bits();
 		const auto eps = MIN(eps_.count(), 4);
 
-		const bool is_negtive = value_i32 < 0;
+		const bool is_negative = value_i32 < 0;
 		const uint32_t abs_value = ABS(value_i32);
 		constexpr uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
 
@@ -538,7 +538,7 @@ struct Iq16Formatter{
 
 		size_t len_acc = 0;
 
-		if(is_negtive){
+		if(is_negative){
 			str[0] = '-';
 			len_acc += 1;
 		}
@@ -583,9 +583,9 @@ struct DefmtStrDispatcher<StringView>{
 };
 
 template<size_t Q>
-struct DefmtStrDispatcher<iq_t<Q>>{
-	static constexpr DestringResult<iq_t<Q>> from_str(StringView str){
-		return details::IqDeformatter<iq_t<Q>>::defmt(str);
+struct DefmtStrDispatcher<fixed_t<Q, int32_t>>{
+	static constexpr DestringResult<fixed_t<Q, int32_t>> from_str(StringView str){
+		return details::IqDeformatter<fixed_t<Q, int32_t>>::defmt(str);
 	}
 };
 
@@ -624,7 +624,7 @@ static constexpr TostringResult<size_t> to_str(
 }
 
 template<size_t Q>
-static constexpr TostringResult<size_t> to_str(StringRef str, iq_t<Q> value, const Eps eps = Eps(3)){
+static constexpr TostringResult<size_t> to_str(StringRef str, fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
 	return details::Iq16Formatter::fmt(str, value, eps);
 }
 

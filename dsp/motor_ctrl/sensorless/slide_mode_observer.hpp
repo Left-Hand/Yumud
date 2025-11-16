@@ -5,17 +5,42 @@
 
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
+#include "digipw/prelude/abdq.hpp"
 
 namespace ymd::dsp::motor_ctl{
 
 class SlideModeObserver{
 public:
+    struct Meas{
+        digipw::AlphaBetaCoord<iq20> i;
+        digipw::AlphaBetaCoord<iq20> e;
 
+
+        constexpr void reset(){
+            i = digipw::AlphaBetaCoord<iq20>(0, 0);
+            e = digipw::AlphaBetaCoord<iq20>(0, 0);
+
+        }
+    };
+    struct State{
+        digipw::AlphaBetaCoord<iq20> i;
+        digipw::AlphaBetaCoord<iq20> e;
+        digipw::AlphaBetaCoord<iq20> z;
+        constexpr void reset(){
+            i = digipw::AlphaBetaCoord<iq20>(0, 0);
+            e = digipw::AlphaBetaCoord<iq20>(0, 0);
+            z = digipw::AlphaBetaCoord<iq20>(0, 0);
+        }
+
+        constexpr Angle<iq20> angle() const {
+            return e.angle();
+        }
+    };
     struct  Config{
-        q16 f_para;
-        q16 g_para;
-        q16 kslide;   
-        q16 kslf;   
+        iq16 f_para;
+        iq16 g_para;
+        iq16 kslide;   
+        iq16 kslf;   
     };
 
     constexpr SlideModeObserver(const Config & cfg){
@@ -24,54 +49,25 @@ public:
     }
 
     constexpr void reset(){
-        e_alpha_ = 0;
-        e_beta_ = 0;
-        z_alpha_ = 0;
-        z_beta_ = 0;
-        est_i_alpha_ = 0;
-        est_i_beta_ = 0;
+        state_.reset();
         turns_ = 0;
     }
 
 
 
     // 更新函数
-    constexpr void update(auto alphabeta_volt, auto alphabeta_curr){
+    constexpr void update(const Meas & meas){
 
-        const auto [Valpha, Vbeta] = alphabeta_volt;
-        const auto [Ialpha, Ibeta] = alphabeta_curr;
-
-        // 滑模电流观测器
-        est_i_alpha_ = (f_para_ * est_i_alpha_) + (g_para_ * (Valpha - e_alpha_ - z_alpha_));
-        est_i_beta_ = (f_para_ * est_i_beta_) + (g_para_ * (Vbeta - e_beta_ - z_beta_));
+        const auto est_i = (f_para_ * state_.i) + (g_para_ * (meas.e - state_.e - state_.z));
 
         // 当前电流误差
-        auto i_alpha_err = est_i_alpha_ - Ialpha;
-        auto i_beta_err = est_i_beta_ - Ibeta;
+        const auto i_err = est_i - meas.i;
 
-        // 滑模控制计算器
-        if (abs(i_alpha_err) < E0) {
-            z_alpha_ = (Kslide_ * i_alpha_err * invE0);  // (Kslide_ * (i_alpha_err) / E0)
-        } else if (i_alpha_err >= E0) {
-            z_alpha_ = Kslide_;
-        } else if (i_alpha_err <= -E0) {
-            z_alpha_ = -Kslide_;
-        }
+        state_.z = i_err.map([this](auto x){return sat(x);});
 
-        if (abs(i_beta_err) < E0) {
-            z_beta_ = (Kslide_ * i_beta_err * invE0);  // (Kslide_ * (i_beta_err) / E0)
-        } else if (i_beta_err >= E0) {
-            z_beta_ = Kslide_;
-        } else if (i_beta_err <= -E0) {
-            z_beta_ = -Kslide_;
-        }
+        state_.e = state_.e + (Kslf_ * (state_.z - state_.e));
 
-        // 滑模控制滤波器 -> 反电动势计算器
-        e_alpha_ = e_alpha_ + (Kslf_ * (z_alpha_ - e_alpha_));
-        e_beta_ = e_beta_ + (Kslf_ * (z_beta_ - e_beta_));
-
-        // 转子角度计算器 -> turns_ = atan(-e_alpha_, e_beta_)
-        turns_ = frac(atan2pu(-e_alpha_, e_beta_));
+        turns_ = frac(atan2pu(-state_.e.alpha, state_.e.beta));
     }
 
     constexpr void reconf(const Config & cfg){
@@ -83,29 +79,28 @@ public:
 
 
     // 获取估计的转子角度
-    Angle<q16> angle() const {return Angle<q16>::from_turns(turns_);}
+    Angle<iq16> angle() const {return Angle<iq16>::from_turns(turns_);}
 
 private:
-    q16 f_para_ = 0;
-    q16 g_para_ = 0;
-    q16 Kslide_ = 0;
-    q16 Kslf_ = 0;
+    iq16 f_para_ = 0;
+    iq16 g_para_ = 0;
+    iq16 Kslide_ = 0;
+    iq16 Kslf_ = 0;
 public:
-    q16 e_alpha_ = 0;
-    q16 e_beta_ = 0;
+    State state_;
 
-    q16 z_alpha_ = 0;
-    q16 z_beta_ = 0;
-    
-    q16 est_i_alpha_ = 0;
-    q16 est_i_beta_ = 0;
-
-    q16 turns_ = 0;
+    iq16 turns_ = 0;
 
     // 滑模阈值
-    static constexpr q16 E0 = q16(1.5);
+    static constexpr iq16 E0 = iq16(1.5);
     // 滑模阈值的倒数
-    static constexpr q16 invE0 = q16(1/1.5);
+    static constexpr iq16 invE0 = iq16(1/1.5);
+
+    constexpr iq16 sat(const iq16 x) const {
+        if(x > E0) return Kslide_;
+        else if (x < -E0) return -Kslide_;
+        else return Kslide_ * x * invE0;
+    }
 };
 
 } // namespace ymd

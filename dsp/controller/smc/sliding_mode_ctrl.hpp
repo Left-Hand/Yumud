@@ -1,17 +1,17 @@
 #pragma once
 
-#include "core/math/iq/iq_t.hpp"
+#include "core/math/iq/fixed_t.hpp"
 
 namespace ymd::dsp{
 
 class SlideModeController {
 public:
     struct Config{
-        q20 c;
-        q20 q;
+        iq20 c;
+        iq20 q;
 
-        q20 out_min;
-        q20 out_max;
+        iq20 out_min;
+        iq20 out_max;
 
         uint32_t fs;
 
@@ -35,35 +35,35 @@ public:
         output_ = out_min_;
     }
 
-    constexpr void update(const q20 targ,const q20 meas) {
+    constexpr void update(const iq20 targ,const iq20 meas) {
         const auto c = c_;
         const auto q = q_;
         // const auto fs = fs_;
 
-        const q20 x1 = targ - meas;
-        const q20 x2 = (x1 - err_prev_);
+        const iq20 x1 = targ - meas;
+        const iq20 x2 = (x1 - err_prev_);
         err_prev_ = x1;
 
-        const q20 s = c * x1 + x2;
-        const q20 delta = c * x2 + q * s;
+        const iq20 s = c * x1 + x2;
+        const iq20 delta = c * x2 + q * s;
 
         output_ = CLAMP(output_ + delta, out_min_, out_max_);
     }
 
-    constexpr auto get() const {return output_;}
+    constexpr auto output() const {return output_;}
 
 private:
 
-    q20 c_ = 0;
-    q20 q_ = 0;
+    iq20 c_ = 0;
+    iq20 q_ = 0;
     
-    q20 out_min_ = 0;
-    q20 out_max_ = 0;
+    iq20 out_min_ = 0;
+    iq20 out_max_ = 0;
 
     uint32_t fs_ = 0;
 
-    q20 output_  = 0;
+    iq20 output_  = 0;
 
-    q20 err_prev_ = 0;
+    iq20 err_prev_ = 0;
 };
 }

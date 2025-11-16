@@ -37,24 +37,24 @@ struct AnnularSector final{
         const bool y_reached_bottom = self.angle_range.
             contains_angle(Angle<D>::NEG_QUARTER_LAP);
 
-        const Vec2<q16> n1 = Vec2<q16>::from_angle(self.angle_range.start);
-        const Vec2<q16> n2 = Vec2<q16>::from_angle(self.angle_range.stop());
+        const Vec2<iq16> n1 = Vec2<iq16>::from_angle(self.angle_range.start);
+        const Vec2<iq16> n2 = Vec2<iq16>::from_angle(self.angle_range.stop());
 
-        const Vec2<q16> p1 = (n1).flip_y() * self.radius_range.stop;
-        const Vec2<q16> p2 = (n2).flip_y() * self.radius_range.stop;
+        const Vec2<iq16> p1 = (n1).flip_y() * self.radius_range.stop;
+        const Vec2<iq16> p2 = (n2).flip_y() * self.radius_range.stop;
 
-        const Vec2<q16> p3 = (n1).flip_y() * self.radius_range.start;
-        const Vec2<q16> p4 = (n2).flip_y() * self.radius_range.start;
+        const Vec2<iq16> p3 = (n1).flip_y() * self.radius_range.start;
+        const Vec2<iq16> p4 = (n2).flip_y() * self.radius_range.start;
 
         const T x_min = floor_cast<T>(self.center.x + (x_reached_left ?     
-            static_cast<q16>(-self.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x)));
+            static_cast<iq16>(-self.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x)));
         const T y_min = floor_cast<T>(self.center.y + (y_reached_top ?      
-            static_cast<q16>(-self.radius_range.stop) : MIN(p1.y, p2.y, p3.y, p4.y)));
+            static_cast<iq16>(-self.radius_range.stop) : MIN(p1.y, p2.y, p3.y, p4.y)));
 
         const T x_max = ceil_cast<T>(self.center.x + (x_reached_right ?    
-            static_cast<q16>(self.radius_range.stop) : MAX(p1.x, p2.x, p3.x, p4.x)));
+            static_cast<iq16>(self.radius_range.stop) : MAX(p1.x, p2.x, p3.x, p4.x)));
         const T y_max = ceil_cast<T>(self.center.y + (y_reached_bottom ?   
-            static_cast<q16>(self.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y)));
+            static_cast<iq16>(self.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y)));
 
         return Rect2<T>(
             Vec2<T>{
@@ -143,24 +143,24 @@ struct RoundedAnnularSector final{
         const bool y_reached_bottom = self.angle_range.
             contains_angle(Angle<D>::NEG_QUARTER_LAP);
 
-        const Vec2<q16> n1 = Vec2<q16>::from_angle(self.angle_range.start);
-        const Vec2<q16> n2 = Vec2<q16>::from_angle(self.angle_range.stop());
+        const Vec2<iq16> n1 = Vec2<iq16>::from_angle(self.angle_range.start);
+        const Vec2<iq16> n2 = Vec2<iq16>::from_angle(self.angle_range.stop());
 
-        const Vec2<q16> p1 = (n1).flip_y() * self.radius_range.stop;
-        const Vec2<q16> p2 = (n2).flip_y() * self.radius_range.stop;
+        const Vec2<iq16> p1 = (n1).flip_y() * self.radius_range.stop;
+        const Vec2<iq16> p2 = (n2).flip_y() * self.radius_range.stop;
 
-        const Vec2<q16> p3 = (n1).flip_y()* self.radius_range.start;
-        const Vec2<q16> p4 = (n2).flip_y() * self.radius_range.start;
+        const Vec2<iq16> p3 = (n1).flip_y()* self.radius_range.start;
+        const Vec2<iq16> p4 = (n2).flip_y() * self.radius_range.start;
 
         const T x_min = floor_cast<T>(self.center.x + (x_reached_left ?     
-            static_cast<q16>(-self.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x)));
+            static_cast<iq16>(-self.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x)));
         const T y_min = floor_cast<T>(self.center.y + (y_reached_top ?      
-            static_cast<q16>(-self.radius_range.stop) : MIN(p1.y, p2.y, p3.y, p4.y)));
+            static_cast<iq16>(-self.radius_range.stop) : MIN(p1.y, p2.y, p3.y, p4.y)));
 
         const T x_max = ceil_cast<T>(self.center.x + (x_reached_right ?    
-            static_cast<q16>(self.radius_range.stop) : MAX(p1.x, p2.x, p3.x, p4.x)));
+            static_cast<iq16>(self.radius_range.stop) : MAX(p1.x, p2.x, p3.x, p4.x)));
         const T y_max = ceil_cast<T>(self.center.y + (y_reached_bottom ?   
-            static_cast<q16>(self.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y)));
+            static_cast<iq16>(self.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y)));
 
         return Rect2<T>(
             Vec2<T>{
@@ -259,20 +259,20 @@ struct Sector final{
         const bool y_reached_bottom = 
             self.angle_range.contains_angle(Angle<D>::NEG_QUARTER_LAP);
 
-        const Vec2<q16> p1 = Vec2<q16>::from_angle(self.angle_range.start)
+        const Vec2<iq16> p1 = Vec2<iq16>::from_angle(self.angle_range.start)
             .flip_y() * self.radius;
-        const Vec2<q16> p2 = Vec2<q16>::from_angle(self.angle_range.stop())
+        const Vec2<iq16> p2 = Vec2<iq16>::from_angle(self.angle_range.stop())
             .flip_y() * self.radius;
 
         const T x_min = floor_cast<T>(self.center.x + (x_reached_left ?     
-            static_cast<q16>(-self.radius) : MIN(p1.x, p2.x, 0)));
+            static_cast<iq16>(-self.radius) : MIN(p1.x, p2.x, 0)));
         const T y_min = floor_cast<T>(self.center.y + (y_reached_top ?      
-            static_cast<q16>(-self.radius) : MIN(p1.y, p2.y, 0)));
+            static_cast<iq16>(-self.radius) : MIN(p1.y, p2.y, 0)));
 
         const T x_max = ceil_cast<T>(self.center.x + (x_reached_right ?    
-            static_cast<q16>(self.radius) : MAX(p1.x, p2.x, 0)));
+            static_cast<iq16>(self.radius) : MAX(p1.x, p2.x, 0)));
         const T y_max = ceil_cast<T>(self.center.y + (y_reached_bottom ?   
-            static_cast<q16>(self.radius) : MAX(p1.y, p2.y, 0)));
+            static_cast<iq16>(self.radius) : MAX(p1.y, p2.y, 0)));
 
         return Rect2<T>(
             Vec2<T>{
@@ -349,8 +349,8 @@ struct DrawDispatchIterator<Sector<T, D>> {
     struct CtorHelper{
         Range2<T> y_range;
         Range2<T> x_range;
-        Vec2<q16> v1;
-        Vec2<q16> v2;
+        Vec2<iq16> v1;
+        Vec2<iq16> v2;
 
         static constexpr CtorHelper from(const Shape & shape){
             const auto angle_range = shape.angle_range;
@@ -358,9 +358,9 @@ struct DrawDispatchIterator<Sector<T, D>> {
             return {                
                 .y_range = bb.y_range(),
                 .x_range = bb.x_range(),
-                .v1 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                .v1 = Vec2<iq16>::from_angle(Angle<iq16>::from_turns(
                     angle_range.start.to_turns())),
-                .v2 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                .v2 = Vec2<iq16>::from_angle(Angle<iq16>::from_turns(
                     angle_range.stop().to_turns()))
             };
         }
@@ -409,8 +409,8 @@ private:
     Range2<T> x_range_;
     Vec2<T> center_;
     uint32_t squ_outer_radius_;
-    Vec2<q16> start_norm_vec_;
-    Vec2<q16> stop_norm_vec_;
+    Vec2<iq16> start_norm_vec_;
+    Vec2<iq16> stop_norm_vec_;
     bool is_minor_;
 
     using ST = std::make_signed_t<T>;
@@ -435,7 +435,7 @@ private:
         x_range_(helper.x_range),
         center_(shape.center),
         squ_outer_radius_(static_cast<uint32_t>(
-            square(static_cast<q12>(shape.radius)))),
+            square(static_cast<iq12>(shape.radius)))),
         start_norm_vec_(helper.v1),
         stop_norm_vec_(helper.v2),
         is_minor_(helper.v2.is_counter_clockwise_to(helper.v1))
@@ -452,8 +452,8 @@ struct DrawDispatchIterator<AnnularSector<T, D>> {
     struct CtorHelper{
         Range2<T> y_range;
         Range2<T> x_range;
-        Vec2<q16> v1;
-        Vec2<q16> v2;
+        Vec2<iq16> v1;
+        Vec2<iq16> v2;
 
         static constexpr CtorHelper from(const Shape & shape){
             const auto angle_range = shape.angle_range;
@@ -461,9 +461,9 @@ struct DrawDispatchIterator<AnnularSector<T, D>> {
             return {                
                 .y_range = bb.y_range(),
                 .x_range = bb.x_range(),
-                .v1 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                .v1 = Vec2<iq16>::from_angle(Angle<iq16>::from_turns(
                     angle_range.start.to_turns())),
-                .v2 = Vec2<q16>::from_angle(Angle<q16>::from_turns(
+                .v2 = Vec2<iq16>::from_angle(Angle<iq16>::from_turns(
                     angle_range.stop().to_turns()))
             };
         }
@@ -515,8 +515,8 @@ private:
     Vec2<uint16_t> center_;
     uint32_t squ_inner_radius_;
     uint32_t squ_outer_radius_;
-    Vec2<q16> start_norm_vec_;
-    Vec2<q16> stop_norm_vec_;
+    Vec2<iq16> start_norm_vec_;
+    Vec2<iq16> stop_norm_vec_;
     bool is_minor_;
 
     using ST = std::make_signed_t<T>;
@@ -552,9 +552,9 @@ private:
         return is_minor_ ? (b1 && b2) : (b1 || b2);
 
         #else
-        // if(Vec2<q16>(offset).angle()
-        //     .mod(Angle<q16>::from_degrees(10)) > 
-        //     Angle<q16>::from_degrees(2)) return false;
+        // if(Vec2<iq16>(offset).angle()
+        //     .mod(Angle<iq16>::from_degrees(10)) > 
+        //     Angle<iq16>::from_degrees(2)) return false;
         const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
         const auto b2 = offset.is_clockwise_to(stop_norm_vec_);
 
@@ -572,9 +572,9 @@ private:
         x_range_(helper.x_range),
         center_(shape.center),
         squ_inner_radius_(static_cast<uint32_t>(
-            square(static_cast<q12>(shape.radius_range.start)))),
+            square(static_cast<iq12>(shape.radius_range.start)))),
         squ_outer_radius_(static_cast<uint32_t>(
-            square(static_cast<q12>(shape.radius_range.stop)))),
+            square(static_cast<iq12>(shape.radius_range.stop)))),
         start_norm_vec_(helper.v1),
         stop_norm_vec_(helper.v2),
         is_minor_(helper.v2.is_counter_clockwise_to(helper.v1))

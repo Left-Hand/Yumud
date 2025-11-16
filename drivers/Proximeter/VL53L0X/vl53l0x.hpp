@@ -19,7 +19,8 @@ struct VL53L0X_Prelude{
 
     enum class Error_Kind:uint8_t{
         VerifyFailed,
-        LightTooWeak
+        LightTooWeak,
+        DataNotReady
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)

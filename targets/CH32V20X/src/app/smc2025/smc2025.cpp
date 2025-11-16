@@ -113,29 +113,29 @@ class Plotter{
     };
 
 
-    IResult<> plot_vec3(const Vec3<q16> & vec3,  const Vec2u pos){
+    IResult<> plot_vec3(const Vec3<iq16> & vec3,  const Vec2u pos){
         static constexpr auto WINDOW_LENGTH = 50u;
         static constexpr auto ARROW_RADIUS = 3u;
-        static constexpr auto X_UNIT = Vec2<q16>::RIGHT;
-        static constexpr auto Y_UNIT = Vec2<q16>::RIGHT.rotated(60_deg);
-        static constexpr auto Z_UNIT = Vec2<q16>::DOWN;
+        static constexpr auto X_UNIT = Vec2<iq16>::RIGHT;
+        static constexpr auto Y_UNIT = Vec2<iq16>::RIGHT.rotated(60_deg);
+        static constexpr auto Z_UNIT = Vec2<iq16>::DOWN;
         
         static constexpr RGB565 X_COLOR = color_cast<RGB565>(ColorEnum::RED);
         static constexpr RGB565 Y_COLOR = color_cast<RGB565>(ColorEnum::GREEN);
         static constexpr RGB565 Z_COLOR = color_cast<RGB565>(ColorEnum::BLUE);
         
         const auto arm_length = vec3.length();
-        const auto x_axis = Vec3<q16>::from_x00(arm_length);
-        const auto y_axis = Vec3<q16>::from_0y0(arm_length);
-        const auto z_axis = Vec3<q16>::from_00z(arm_length);
+        const auto x_axis = Vec3<iq16>::from_x00(arm_length);
+        const auto y_axis = Vec3<iq16>::from_0y0(arm_length);
+        const auto z_axis = Vec3<iq16>::from_00z(arm_length);
 
-        const auto rot = Quat<q16>::from_direction(vec3);
+        const auto rot = Quat<iq16>::from_direction(vec3);
         const Vec2u center_point = pos + Vec2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
 
         auto plot_vec3_to_plane = [&](
-            const Vec3<q16> & axis, const char chr, const RGB565 color)
+            const Vec3<iq16> & axis, const char chr, const RGB565 color)
         -> IResult<>{
-            const Vec3<q16> end = rot.xform(axis);
+            const Vec3<iq16> end = rot.xform(axis);
             const Vec2u end_point = center_point + (X_UNIT * end.x + Y_UNIT * end.y + Z_UNIT * end.z);
             painter_.set_color(color);
             if(const auto res = painter_.draw_line(center_point, end_point);
@@ -223,7 +223,7 @@ void smc2025_main(){
 
     init_mpu6050(mpu).examine();
 
-    auto yaw_angle = Angle<q16>::ZERO; 
+    auto yaw_angle = Angle<iq16>::ZERO; 
 
     [[maybe_unused]] auto plot_gray = [&](
         const Image<Gray> & src, 
@@ -258,11 +258,11 @@ void smc2025_main(){
     [[maybe_unused]] auto test_render = [&]{
     
         [[maybe_unused]]const auto ctime = clock::time();
-        const auto pose = Isometry2<q16>{
-            // .rotation = UnitComplex<q16>::from_radians(ctime + q16(1 / TAU) * sinpu(ctime)),
-            // .translation = Vec2<q16>(0, -1.5_r) + Vec2<q16>(-1.9_r, 0).rotated(Angle<q16>::from_radians(ctime)), 
-            .rotation = UnitComplex<q16>::from_angle(yaw_angle),
-            .translation = Vec2<q16>(0, -1.5_r), 
+        const auto pose = Isometry2<iq16>{
+            // .rotation = UnitComplex<iq16>::from_radians(ctime + q16(1 / TAU) * sinpu(ctime)),
+            // .translation = Vec2<iq16>(0, -1.5_r) + Vec2<iq16>(-1.9_r, 0).rotated(Angle<iq16>::from_radians(ctime)), 
+            .rotation = UnitComplex<iq16>::from_angle(yaw_angle),
+            .translation = Vec2<iq16>(0, -1.5_r), 
         };
             // {1.0_r, -0.5_r}, 0.0_r};
             // {-1.0_r, -1.81_r}, 1.57_r};
@@ -324,7 +324,10 @@ void smc2025_main(){
     };
 
     auto & timer = hal::timer1;
-    timer.init({.freq = 25}, EN);
+    timer.init({
+        .count_freq = hal::NearestFreq(25),
+        .count_mode = hal::TimerCountMode::Up,
+    }, EN);
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_callback([&](hal::TimerEvent ev){
@@ -334,7 +337,7 @@ void smc2025_main(){
             qmc.update().examine();
             const auto gyr = mpu.read_gyr().examine();
             // const auto dir = qmc.read_mag().examine();
-            yaw_angle = (yaw_angle + Angle<q16>::from_radians(gyr.z) * 0.04_q16).normalized();
+            yaw_angle = (yaw_angle + Angle<iq16>::from_radians(gyr.z) * 0.04_iq16).normalized();
             break;
         }
         default: break;
@@ -346,7 +349,7 @@ void smc2025_main(){
         test_render();
 
 
-        // yaw_angle = Angle<q16>::from_radians(atan2pu(dir.x, dir.y));
+        // yaw_angle = Angle<iq16>::from_radians(atan2pu(dir.x, dir.y));
         // DEBUG_PRINTLN_IDLE(gyr.z);
         DEBUG_PRINTLN_IDLE(yaw_angle.to_degrees(), mpu.read_acc().examine());
         //     mpu.read_acc().examine(),

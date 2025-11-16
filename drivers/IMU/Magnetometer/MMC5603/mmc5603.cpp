@@ -88,11 +88,11 @@ IResult<> MMC5603::enable_continuous(const Enable en){
 }
 
 
-IResult<Vec3<q24>> MMC5603::read_mag(){
+IResult<Vec3<iq24>> MMC5603::read_mag(){
     return Ok{Vec3{
-        q24(s16_to_uni(regs_.x_reg.as_val())),
-        q24(s16_to_uni(regs_.y_reg.as_val())),
-        q24(s16_to_uni(regs_.z_reg.as_val()))
+        iq24(iq16::from_bits(regs_.x_reg.as_bits())),
+        iq24(iq16::from_bits(regs_.y_reg.as_bits())),
+        iq24(iq16::from_bits(regs_.z_reg.as_bits()))
     }};
 }
 

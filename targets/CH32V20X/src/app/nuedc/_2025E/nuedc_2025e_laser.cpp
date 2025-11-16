@@ -32,7 +32,7 @@ static constexpr uint32_t ISR_FREQ = PWM_FREQ / 2;
 
 
 
-static constexpr q20 PITCH_JOINT_POSITION_LIMIT = 0.2_r;
+static constexpr iq20 PITCH_JOINT_POSITION_LIMIT = 0.2_r;
 
 
 static constexpr auto ADVANCED_BLINK_PERIOD_MS = 7000ms;
@@ -228,10 +228,10 @@ void nuedc_2025e_laser_main(){
             }),
             rpc::make_function("dty", set_laser_dutycycle),
             rpc::make_function("errp", [&](
-                const q16 px, 
-                const q16 py,
-                const q16 z, 
-                const q16 e
+                const iq16 px, 
+                const iq16 py,
+                const iq16 z, 
+                const iq16 e
             ){
                 may_err_position_ = Some(ErrPosition{
                     .px = px,
@@ -356,8 +356,8 @@ void nuedc_2025e_laser_main(){
 
         {
             const auto ctime = clock::time();
-            auto hesitate_spin_curve = [&](const q16 t){
-                return (- 0.3_q20 * (1.25_r + sinpu(3.0_r * t)) / MACHINE_CTRL_FREQ);
+            auto hesitate_spin_curve = [&](const iq16 t){
+                return (- 0.3_iq20 * (1.25_r + sinpu(3.0_r * t)) / MACHINE_CTRL_FREQ);
             };
 
             const auto command = commands::DeltaPosition{
@@ -369,15 +369,15 @@ void nuedc_2025e_laser_main(){
     };
 
     
-    [[maybe_unused]] auto joint_tracking_ctl = [&](const Vec2<q20> err){
+    [[maybe_unused]] auto joint_tracking_ctl = [&](const Vec2<iq20> err){
         //pitch P控制
         //yaw P控制
 
-        static constexpr auto YAW_KP = 1.85_q20;
-        static constexpr auto PITCH_KP = 0.65_q20;
+        static constexpr auto YAW_KP = 1.85_iq20;
+        static constexpr auto PITCH_KP = 0.65_iq20;
 
         {
-            const auto kp_contri = PITCH_KP * q20(-err.y);
+            const auto kp_contri = PITCH_KP * iq20(-err.y);
 
             const auto command = commands::DeltaPosition{
                 .delta_position = kp_contri / MACHINE_CTRL_FREQ
@@ -387,7 +387,7 @@ void nuedc_2025e_laser_main(){
         }
 
         {
-            const auto kp_contri = CLAMP2(YAW_KP * q20(-err.x), 0.12_q20);
+            const auto kp_contri = CLAMP2(YAW_KP * iq20(-err.x), 0.12_iq20);
             const auto command = commands::DeltaPosition{
                 .delta_position = kp_contri / MACHINE_CTRL_FREQ
             };
@@ -405,7 +405,7 @@ void nuedc_2025e_laser_main(){
                 break;
             case RunState::Tracking:{
                 auto e_info = may_err_position_.unwrap();
-                joint_tracking_ctl(Vec2{q20(e_info.px), q20(e_info.py)});
+                joint_tracking_ctl(Vec2{iq20(e_info.px), iq20(e_info.py)});
                 break;
             }
             
