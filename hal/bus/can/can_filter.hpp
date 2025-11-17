@@ -3,6 +3,7 @@
 #include <initializer_list>
 #include <bitset>
 
+#include "core/sdk.hpp"
 #include "core/io/regs.hpp"
 #include "can_utils.hpp"
 #include "can_id.hpp"
@@ -16,19 +17,19 @@ namespace ymd::hal{
 
 class Can;
 
-enum class CanRtrSpecfier:uint8_t{
+enum class [[nodiscard]] CanRtrSpecfier:uint8_t{
     Discard,
     RemoteOnly,
     DataOnly
 };
 
 namespace details{
-struct SXX32_CanStdIdMask final{
+struct [[nodiscard]] SXX32_CanStdIdMask final{
     using id_type = CanStdId;
 
     #pragma pack(push, 1)
     const uint16_t __resv1__:3 = 0;
-    const uint16_t __wired_ide:1 = 0;
+    const uint16_t __hw_wired_ide__:1 = 0;
     uint16_t is_remote:1;
     uint16_t id_u11:11;
     #pragma pack(pop)
@@ -49,7 +50,7 @@ struct SXX32_CanStdIdMask final{
         return {CanStdId(uint16_t(~(uint16_t(1 << len) - 1))), rtr};
     }
 
-    constexpr uint16_t as_u16() const{
+    [[nodiscard]] constexpr uint16_t as_bits() const{
         return std::bit_cast<uint16_t>(*this);
     }
 
@@ -64,13 +65,13 @@ private:
 
 static_assert(sizeof(SXX32_CanStdIdMask) == 2);
 
-struct SXX32_CanExtIdMask final{
+struct [[nodiscard]] SXX32_CanExtIdMask final{
     using id_type = CanExtId;
 
     #pragma pack(push, 1)
     const uint32_t __resv1__:1 = 0;
     uint32_t is_remote:1;
-    const uint32_t __wired_ide:1 = 1;
+    const uint32_t __hw_wired_ide__:1 = 1;
     uint32_t id_u29:29;
     #pragma pack(pop)
 
@@ -90,7 +91,7 @@ struct SXX32_CanExtIdMask final{
         return {CanExtId(~uint32_t(uint32_t(1 << len) - 1)), rtr};
     }
 
-    constexpr uint32_t as_u32() const{
+    [[nodiscard]] constexpr uint32_t as_bits() const{
         return std::bit_cast<uint32_t>(*this);
     }
     constexpr SXX32_CanExtIdMask(const CanExtId _id, const CanRtr rtr):
@@ -105,7 +106,7 @@ static_assert(sizeof(SXX32_CanExtIdMask) == 4);
 }
 
 template<typename T>
-struct _CanIdMaskPair final{
+struct [[nodiscard]] _CanIdMaskPair final{
     using id_type = typename T::id_type;
     static constexpr size_t ID_LEN = id_type::LENGTH;
 
@@ -207,7 +208,7 @@ using CanExtIdMaskPair = _CanIdMaskPair<details::SXX32_CanExtIdMask>;
 
 class CanFilter;
 
-struct CanFilterConfig final{ 
+struct [[nodiscard]] CanFilterConfig final{ 
 public:
     friend class CanFilter;
 
@@ -225,10 +226,10 @@ public:
                 HALT;
                 break;
             case 2:
-                ret.id16[0] =       std::next(list.begin(), 0) -> as_u16();
-                ret.id16[1] =       std::next(list.begin(), 1) -> as_u16();
-                ret.mask16[0] =     std::next(list.begin(), 2) -> as_u16();
-                ret.mask16[1] =     std::next(list.begin(), 3) -> as_u16();
+                ret.id16[0] =       std::next(list.begin(), 0) -> as_bits();
+                ret.id16[1] =       std::next(list.begin(), 1) -> as_bits();
+                ret.mask16[0] =     std::next(list.begin(), 2) -> as_bits();
+                ret.mask16[1] =     std::next(list.begin(), 3) -> as_bits();
 
                 break;
         }
@@ -250,10 +251,10 @@ public:
     ){
         CanFilterConfig ret;
 
-        ret.id16[0] = pair1.id.as_u16();
-        ret.id16[1] = pair2.id.as_u16();
-        ret.mask16[0] = pair1.mask.as_u16();
-        ret.mask16[1] = pair2.mask.as_u16();
+        ret.id16[0] = pair1.id.as_bits();
+        ret.id16[1] = pair2.id.as_bits();
+        ret.mask16[0] = pair1.mask.as_bits();
+        ret.mask16[1] = pair2.mask.as_bits();
 
         ret.is_32_ = false;
         ret.is_list_mode_ = false;
@@ -266,8 +267,8 @@ public:
     ){
         CanFilterConfig ret;
 
-        ret.id32 = pair.id.as_u32();
-        ret.mask32 = pair.mask.as_u32();
+        ret.id32 = pair.id.as_bits();
+        ret.mask32 = pair.mask.as_bits();
 
         ret.is_32_ = true;
         ret.is_list_mode_ = false;
@@ -292,7 +293,7 @@ private:
     bool is_list_mode_;
 };
 
-class CanFilter final{
+class [[nodiscard]] CanFilter final{
 public:
 
     void deinit();

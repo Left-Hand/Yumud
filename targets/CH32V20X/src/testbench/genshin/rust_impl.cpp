@@ -124,15 +124,6 @@ static constexpr auto _deserialize(const std::span<const uint8_t, N> bytes){
     return ImplFor<DeserializeFrom<Protocol>, T>::deserialize(bytes);
 }
 
-// template<
-//     typename Protocol, 
-//     typename T,
-//     size_t N = magic::type_to_bytes_v<T>>
-// requires (std::is_same_v<Protocol, RawBytes>)
-// static constexpr auto _deserialize(T && bytes){
-//     return ImplFor<DeserializeFrom<Protocol>, T>::deserialize(std::span<const T >(&bytes, 1));
-// }
-
 
 template<typename Protocol, typename... Args,
     size_t N = magic::total_bytes_of_args_v<std::decay_t<Args>...>>
@@ -191,7 +182,7 @@ struct ImplFor<DeserializeFrom<hal::CanMsg>, MyStruct> {
 
             case 4: 
             case 8: {
-                const auto bytes = msg.to_span_with_length<4>();
+                const auto bytes = msg.payload_bytes_with_length<4>();
                 return Some(MyStruct{
                     .private_data = ::deserialize<RawBytes, uint32_t>(bytes)
                 });

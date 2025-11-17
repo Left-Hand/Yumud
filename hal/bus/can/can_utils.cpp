@@ -3,21 +3,21 @@
 
 using namespace ymd;
 namespace ymd::hal{
-OutputStream & operator<<(OutputStream & os, const CanFault & fault){
+OutputStream & operator<<(OutputStream & os, const CanException & fault){
     switch(fault){
-        case CanFault::Stuff: 
+        case CanException::Stuff: 
             return os << "Stuff";
-        case CanFault::Form: 
+        case CanException::Form: 
             return os << "Form";
-        case CanFault::Acknowledge: 
+        case CanException::Acknowledge: 
             return os << "Acknowledge";
-        case CanFault::BitRecessive: 
+        case CanException::BitRecessive: 
             return os << "BitRecessive";
-        case CanFault::BitDominant: 
+        case CanException::BitDominant: 
             return os << "BitDominant";
-        case CanFault::Crc: 
+        case CanException::Crc: 
             return os << "Crc";
-        case CanFault::SoftwareSet:
+        case CanException::SoftwareSet:
             return os << "SoftwareSet";
     }
     __builtin_unreachable();

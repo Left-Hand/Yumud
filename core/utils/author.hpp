@@ -39,9 +39,9 @@ constexpr Hasher<S> & operator << (Hasher<S> & hs, const Author & self){
 }
 
 template<>
-struct serde::SerializeIterMaker<serde::RawBytes, Author>{
-    static constexpr auto make(const Author & author){
-        return make_serialize_iter<serde::RawBytes>(author.name());
+struct serde::SerializeGeneratorFactory<serde::RawLeBytes, Author>{
+    static constexpr auto from(const Author & author){
+        return make_serialize_generator<serde::RawLeBytes>(author.name());
     }
 };
 }

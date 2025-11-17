@@ -1,9 +1,9 @@
 #pragma once
 
+#include "core/sdk.hpp"
 #include "core/utils/Result.hpp"
 #include "core/container/ringbuf.hpp"
 #include "ral/chip.hpp"
-#include "can_utils.hpp"
 #include "can_msg.hpp"
 
 #include "can_trait.hpp"
@@ -64,7 +64,7 @@ class Can final{
 public:
     using BaudRate = CanBaudrate;
     using Mode = CanMode;
-    using Fault = CanFault;
+    using Exception = CanException;
     using Error = CanError;
 
     using Callback = std::function<void(CanEvent)>;
@@ -99,7 +99,7 @@ public:
     void enable_index_priority(const Enable en);
     [[nodiscard]] uint8_t get_tx_errcnt();
     [[nodiscard]] uint8_t get_rx_errcnt();
-    [[nodiscard]] Option<CanFault> last_fault();
+    [[nodiscard]] Option<CanException> last_exception();
     [[nodiscard]] bool is_busoff();
 
     template<typename Fn>

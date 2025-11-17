@@ -481,14 +481,14 @@ void nuedc_2025e_joint_main(){
                 break;
 
             case CommandKind::DeltaPosition:{
-                const auto may_cmd = serde::make_deserialize<serde::RawBytes,
+                const auto may_cmd = serde::deserialize<serde::RawLeBytes,
                     commands::DeltaPosition>(payload);
                 if(may_cmd.is_ok()) delta_target_position_by_command(may_cmd.unwrap());
             }
                 break;
 
             case CommandKind::SetPosition:{
-                const auto may_cmd = serde::make_deserialize<serde::RawBytes,
+                const auto may_cmd = serde::deserialize<serde::RawLeBytes,
                     commands::SetPosition>(payload);
                 if(may_cmd.is_ok()) set_target_position_by_command(may_cmd.unwrap());
                 break;
@@ -516,7 +516,7 @@ void nuedc_2025e_joint_main(){
             const auto id = msg.stdid().unwrap();
             const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(id);
             if(msg_role != self_node_role_) return;
-            dispatch_msg(msg_cmd, msg.iter_payload());
+            dispatch_msg(msg_cmd, msg.payload_bytes());
         };
 
         while(true){

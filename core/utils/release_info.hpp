@@ -37,9 +37,9 @@ constexpr Hasher<S> & operator << (Hasher<S> & hs, const ReleaseVersion & self){
 }
 
 template<>
-struct serde::SerializeIterMaker<serde::RawBytes, ReleaseVersion>{
-    static constexpr auto make(const ReleaseVersion & version){
-        return make_serialize_iter<serde::RawBytes>(
+struct serde::SerializeGeneratorFactory<serde::RawLeBytes, ReleaseVersion>{
+    static constexpr auto from(const ReleaseVersion & version){
+        return make_serialize_generator<serde::RawLeBytes>(
             std::make_tuple(version.major, version.minor));
     }
 };
@@ -86,9 +86,9 @@ constexpr Hasher<S> & operator << (Hasher<S> & hs, const ReleaseInfo & self){
 
 
 template<>
-struct serde::SerializeIterMaker<serde::RawBytes, ReleaseInfo>{
-    static constexpr auto make(const ReleaseInfo & info){
-        return serde::make_serialize_iter<serde::RawBytes>(
+struct serde::SerializeGeneratorFactory<serde::RawLeBytes, ReleaseInfo>{
+    static constexpr auto from(const ReleaseInfo & info){
+        return serde::make_serialize_generator<serde::RawLeBytes>(
             std::make_tuple(info.author, info.version, info.date, info.time));
     }
 };

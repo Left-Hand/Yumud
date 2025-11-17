@@ -4,7 +4,7 @@
 #include "core/math/real.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/utils/angle.hpp"
-#include "core/utils/bytes_spawner.hpp"
+#include "core/utils/bytes_provider.hpp"
 #include "core/container/inline_vector.hpp"
 
 namespace ymd::drivers{

@@ -14,7 +14,7 @@ using namespace operations;
 #define constexpr
 #define RETURN_ERR(e, ...) {DEBUG_PRINTLN(__VA_ARGS__); return Err(e);}
 #else
-#define RETURN_ERR(e, ...) {return Err(e);}
+#define RETURN_ERR(e, ...) ({return Err(e);})
 #endif
 
 using Error = SlcanParser::Error;
@@ -24,8 +24,8 @@ using Error = SlcanParser::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-[[nodiscard]] static constexpr Option<uint8_t> 
-hex2digit(char c){
+[[nodiscard]] static constexpr 
+Option<uint8_t> hex2digit(char c){
     switch(c){
         case '0' ... '9':
             return Some(c - '0');
@@ -38,8 +38,8 @@ hex2digit(char c){
     }
 }
 
-[[nodiscard]] static constexpr char 
-digit2hex(const uint8_t digit){
+[[nodiscard]] static constexpr 
+char digit2hex(const uint8_t digit){
     switch(digit){
         case 0 ... 9:
             return digit + '0';
@@ -51,8 +51,8 @@ digit2hex(const uint8_t digit){
 }
 
 
-[[nodiscard]] static constexpr IResult<uint32_t> 
-parse_hex(const StringView str){
+[[nodiscard]] static constexpr 
+IResult<uint32_t> parse_hex(const StringView str){
     if(str.length() == 0)
         RETURN_ERR(Error::NoArg);
 
@@ -71,8 +71,8 @@ parse_hex(const StringView str){
     return Ok(ret);
 }
 
-[[nodiscard]] static constexpr IResult<uint32_t> 
-parse_hex(const char c1, const char c2){
+[[nodiscard]] static constexpr 
+IResult<uint32_t> parse_hex(const char c1, const char c2){
 
     const auto d1 = ({
         const auto may_digit = hex2digit(c1);
@@ -91,13 +91,17 @@ parse_hex(const char c1, const char c2){
     return Ok(static_cast<uint32_t>(d1 << 4 | d2));
 }
 
-[[nodiscard]] static constexpr IResult<hal::CanStdId> 
-parse_std_id(const StringView str){
+static constexpr size_t STD_ID_STR_LEN = 3;
+static constexpr size_t EXT_ID_STR_LEN = 8;
+static constexpr size_t NUM_PAYLOAD_MAX_BYTES = 8;
+
+[[nodiscard]] static constexpr 
+IResult<hal::CanStdId> parse_std_id(const StringView str){
     if(str.length() == 0)
         RETURN_ERR(Error::NoArg);
-    if(str.length() > 3)
+    if(str.length() > STD_ID_STR_LEN)
         RETURN_ERR(Error::StdIdTooLong);
-    if(str.length() < 3)
+    if(str.length() < STD_ID_STR_LEN)
         RETURN_ERR(Error::StdIdTooShort);
 
     const auto either_id = parse_hex(str);
@@ -120,13 +124,13 @@ static_assert(parse_std_id("9scd").unwrap_err() == Error::StdIdTooLong);
 static_assert(parse_std_id("9sc").unwrap_err() == Error::UnsupportedHexChar);
 #endif
 
-[[nodiscard]] static constexpr IResult<hal::CanExtId> 
-parse_ext_id(const StringView str){
+[[nodiscard]] static constexpr 
+IResult<hal::CanExtId> parse_ext_id(const StringView str){
     if(str.length() == 0) 
         RETURN_ERR(Error::NoArg);
-    if(str.length() > 8)
+    if(str.length() > EXT_ID_STR_LEN)
         RETURN_ERR(Error::ExtIdTooLong);
-    if(str.length() < 8)
+    if(str.length() < EXT_ID_STR_LEN)
         RETURN_ERR(Error::ExtIdTooShort);
 
 
@@ -143,23 +147,25 @@ parse_ext_id(const StringView str){
     return Ok(hal::CanExtId(id));
 }
 
-[[nodiscard]] static constexpr IResult<std::array<uint8_t, 8>> parse_payload(
+[[nodiscard]] static constexpr 
+IResult<std::array<uint8_t, NUM_PAYLOAD_MAX_BYTES>> parse_payload(
     const StringView str, 
     const size_t dlc
 ){
     if(str.size() != dlc * 2) 
         RETURN_ERR(Error::PayloadLengthMismatch, str.size(), dlc, str);
 
-    std::array<uint8_t, 8> buf;
+    std::array<uint8_t, NUM_PAYLOAD_MAX_BYTES> buf;
 
+    #pragma GCC unroll 8
     for(size_t i = 0; i < dlc; i++){
-        const auto either_data8 = parse_hex(
-            str[i * 2], str[i * 2 + 1]
-        );
-        if(either_data8.is_err())
-            RETURN_ERR(either_data8.unwrap_err());
-
-        buf[i] = either_data8.unwrap();
+        buf[i] = ({
+            const auto res = parse_hex(
+                str[i * 2], str[i * 2 + 1]
+            );
+            if(res.is_err()) RETURN_ERR(res.unwrap_err());
+            res.unwrap();
+        });
     }
 
     return Ok{buf};
@@ -180,23 +186,23 @@ IResult<size_t> parse_len(const StringView str){
         RETURN_ERR(Error::PayloadLengthMismatch, str.length());
 
     const auto len = ({
-        const auto either_len = parse_hex(str);
+        const auto res = parse_hex(str);
         
-        if(either_len.is_err()) 
-            RETURN_ERR(either_len.unwrap_err());
-        either_len.unwrap();
+        if(res.is_err()) 
+            RETURN_ERR(res.unwrap_err());
+        res.unwrap();
     });
 
-    if(len > 8) 
+    if(len > NUM_PAYLOAD_MAX_BYTES)
         RETURN_ERR(Error::PayloadLengthOverflow, len);
 
     return Ok(len);
 }
 
-template<bool is_ext>
-[[nodiscard]] static constexpr auto 
-parse_id_as_u32(const StringView str) -> IResult<uint32_t>{
-    if constexpr(is_ext){
+template<bool IS_EXTENDED>
+[[nodiscard]] static constexpr 
+IResult<uint32_t> parse_id_as_u32(const StringView str){
+    if constexpr(IS_EXTENDED){
         return parse_ext_id(str).
             map([](const hal::CanExtId id) -> uint32_t{return id.to_u29();}); 
     } else {
@@ -205,51 +211,55 @@ parse_id_as_u32(const StringView str) -> IResult<uint32_t>{
     }
 };
 
-template<bool is_ext>
-[[nodiscard]] static constexpr IResult<hal::CanMsg> 
-parse_msg(const StringView str, bool is_rmt){
+template<bool IS_EXTENDED>
+[[nodiscard]] static constexpr
+IResult<hal::CanMsg> parse_msg(const StringView str, hal::CanRtr can_rtr){
     if(str.size() == 0) 
         RETURN_ERR(Error::NoArg);
 
-    constexpr size_t ID_LEN = is_ext ? 8 : 3;
+    constexpr size_t ID_LEN = IS_EXTENDED ? 8 : 3;
     constexpr size_t DLC_LEN = 1;
+    using ID = std::conditional_t<IS_EXTENDED, hal::CanExtId, hal::CanStdId>;
 
     if(str.length() < 4)
         RETURN_ERR(Error::ArgTooShort, str.length());
 
-    auto cutter = StringCutter{str};
+    auto provider = StrProvider{str};
 
     const uint32_t id_u32_checked = ({
-        const auto res = parse_id_as_u32<is_ext>(cutter.fetch_next(ID_LEN).unwrap());
+        const auto res = parse_id_as_u32<IS_EXTENDED>(provider.fetch_leading(ID_LEN).unwrap());
         if(res.is_err()) RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });
 
     const size_t dlc = ({
-        const auto res = parse_len(cutter.fetch_next(DLC_LEN).unwrap());
+        const auto res = parse_len(provider.fetch_leading(DLC_LEN).unwrap());
         if(res.is_err()) RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });
 
-    const StringView payload_str = cutter.fetch_remaining().unwrap();
+    const StringView payload_str = provider.fetch_remaining().unwrap();
     
-    using ID = std::conditional_t<is_ext, hal::CanExtId, hal::CanStdId>;
-    if(not is_rmt){
-        const auto payload = ({
-            const auto res = parse_payload(payload_str, dlc);
-            if(res.is_err()) RETURN_ERR(res.unwrap_err());
-            res.unwrap();
-        });
 
-        const auto bytes = std::span(payload.data(), dlc);
-        
-        return Ok(hal::CanMsg::from_bytes(ID(id_u32_checked), bytes));
+    switch(can_rtr){
+        case hal::CanRtr::Data:{
+            const auto payload = ({
+                const auto res = parse_payload(payload_str, dlc);
+                if(res.is_err()) RETURN_ERR(res.unwrap_err());
+                res.unwrap();
+            });
 
-    }else{
-        if(payload_str.size()) 
-            RETURN_ERR(Error::InvalidFieldInRemoteMsg);
-        return Ok(hal::CanMsg::from_remote(ID(id_u32_checked)));
+            const auto bytes = std::span(payload.data(), dlc);
+            
+            return Ok(hal::CanMsg::from_bytes(ID(id_u32_checked), bytes));
+        }
+        case hal::CanRtr::Remote:{
+            if(payload_str.size() != 0) 
+                RETURN_ERR(Error::InvalidFieldInRemoteMsg);
+            return Ok(hal::CanMsg::from_remote(ID(id_u32_checked)));
+        }
     }
+    __builtin_unreachable();
 }
 
 // static_assert(int(parse_msg("0C34567F20102", true).unwrap_err()) == 0);
@@ -272,7 +282,8 @@ parse_msg(const StringView str, bool is_rmt){
 #endif
 
 
-auto map_chr_to_buad = [](char chr) -> hal::CanBaudrate{ 
+[[nodiscard]] static constexpr 
+hal::CanBaudrate map_chr_to_buad(char chr){ 
     switch(chr){
         case '0': return hal::CanBaudrate::_10K;
         case '1': return hal::CanBaudrate::_20K;
@@ -290,8 +301,7 @@ auto map_chr_to_buad = [](char chr) -> hal::CanBaudrate{
 auto map_msg_to_operation = [](const hal::CanMsg & msg) { return Operation(SendCanMsg{msg}); };
 
 IResult<Operation> SlcanParser::handle_line(const StringView str) const {
-    static constexpr bool REMOTE = true;
-
+    static constexpr bool IS_EXTENDED = true;
     const StringView line = str.trim();
     // DEBUG_PRINTLN(line, line.length());
     if(line.size() == 0){
@@ -312,7 +322,8 @@ IResult<Operation> SlcanParser::handle_line(const StringView str) const {
         RETURN_ERR(Error::UnknownCommand);
     }else{
         const auto cmd_line = line.substr(1).unwrap();
-
+        if(cmd_line.size() == 0) [[unlikely]]
+            RETURN_ERR(Error::NoArg);
         switch(line[0]){
             case 'S': {
                 if(cmd_line.size() == 0) 
@@ -331,14 +342,14 @@ IResult<Operation> SlcanParser::handle_line(const StringView str) const {
                 return Ok(Operation(SetSerialBaud{.baudrate = 0}));
             }
 
-            case 't': return parse_msg<false>(cmd_line, not REMOTE)
+            case 't': return parse_msg<not IS_EXTENDED>(cmd_line, hal::CanRtr::Data)
                 .map(map_msg_to_operation);
-            case 'r': return parse_msg<false>(cmd_line, REMOTE)
+            case 'r': return parse_msg<not IS_EXTENDED>(cmd_line, hal::CanRtr::Remote)
                 .map(map_msg_to_operation);
 
-            case 'T': return parse_msg<true>(cmd_line, not REMOTE)
+            case 'T': return parse_msg<IS_EXTENDED>(cmd_line, hal::CanRtr::Data)
                 .map(map_msg_to_operation);
-            case 'R': return parse_msg<true>(cmd_line, REMOTE)
+            case 'R': return parse_msg<IS_EXTENDED>(cmd_line, hal::CanRtr::Remote)
                 .map(map_msg_to_operation);
 
         }
@@ -361,8 +372,9 @@ SlcanParser::Flags SlcanParser::get_flag() const {
 }
 
 SendText SlcanParser::response_flag() const{
+    const auto flag = get_flag();
     const char str[2] = {
-        char(get_flag()), 'r'
+        static_cast<char>(static_cast<char>(flag) + '0'), 'r'
     };
 
     return SendText::from_str(StringView(str, 2));

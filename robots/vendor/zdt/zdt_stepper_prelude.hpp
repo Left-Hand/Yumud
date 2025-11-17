@@ -196,11 +196,11 @@ struct CanMsg2BytesDumper{
 
         info.func_code = ({
             if(msgs[0].size() == 0) return Err(Error::RxMsgNoPayload);
-            const auto func_code0 = std::bit_cast<FuncCode>(msgs[0].iter_payload()[0]);
+            const auto func_code0 = std::bit_cast<FuncCode>(msgs[0].payload_bytes()[0]);
             for(size_t i = 0; i < msgs.size(); i++){
                 const auto & msg = msgs[i];
                 if(msg.size() == 0) return Err(Error::RxMsgNoPayload);
-                const auto func_code = std::bit_cast<FuncCode>(msg.iter_payload()[0]);
+                const auto func_code = std::bit_cast<FuncCode>(msg.payload_bytes()[0]);
                 if(func_code != func_code0)
                     return Err(Error::RxMsgFuncCodeNotTheSame);
             }
@@ -209,7 +209,7 @@ struct CanMsg2BytesDumper{
 
         for(size_t i = 0; i < msgs.size(); i++){
             const auto & msg = msgs[i];
-            const auto msg_bytes = msg.iter_payload()
+            const auto msg_bytes = msg.payload_bytes()
                 .subspan(1);
             info.payload.append_unchecked(msg_bytes);
         }

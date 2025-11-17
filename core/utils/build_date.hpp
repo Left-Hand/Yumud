@@ -77,9 +77,9 @@ private:
 
 
 template<>
-struct serde::SerializeIterMaker<serde::RawBytes, Month>{
-    static constexpr auto make(const Month & month){
-        return make_serialize_iter<serde::RawBytes>(
+struct serde::SerializeGeneratorFactory<serde::RawLeBytes, Month>{
+    static constexpr auto from(const Month & month){
+        return make_serialize_generator<serde::RawLeBytes>(
             month.kind);
     }
 };
@@ -160,9 +160,9 @@ constexpr Hasher<S> & operator << (Hasher<S> & hs, const Date & self){
 }
 
 template<>
-struct serde::SerializeIterMaker<serde::RawBytes, Date>{
-    static constexpr auto make(const Date & date){
-        return make_serialize_iter<serde::RawBytes>(std::make_tuple(date.year, date.month, date.day));
+struct serde::SerializeGeneratorFactory<serde::RawLeBytes, Date>{
+    static constexpr auto from(const Date & date){
+        return make_serialize_generator<serde::RawLeBytes>(std::make_tuple(date.year, date.month, date.day));
     }
 };
 
@@ -224,9 +224,9 @@ struct Time final{
 
 
 template<>
-struct serde::SerializeIterMaker<serde::RawBytes, Time>{
-    static constexpr auto make(const Time time){
-        return make_serialize_iter<serde::RawBytes>(std::make_tuple(
+struct serde::SerializeGeneratorFactory<serde::RawLeBytes, Time>{
+    static constexpr auto from(const Time time){
+        return make_serialize_generator<serde::RawLeBytes>(std::make_tuple(
             time.hour, time.minute, time.seconds
         ));
     }

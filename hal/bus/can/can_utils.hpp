@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/sdk.hpp"
+
 #include "core/utils/Option.hpp"
 #include "core/utils/sumtype.hpp"
 #include <memory>
@@ -11,18 +11,18 @@ namespace ymd{
 }
 namespace ymd::hal{
 
-enum class CanFifoNth:uint8_t{
+enum class [[nodiscard]] CanFifoNth:uint8_t{
     _0 = 0,
     _1 = 1
 };
 
-enum class CanMailboxNth:uint8_t{
+enum class [[nodiscard]] CanMailboxNth:uint8_t{
     _0 = 0,
     _1 = 1,
     _2 = 2
 };
 
-enum class CanIT:uint16_t{
+enum class [[nodiscard]] CanIT:uint16_t{
     TME = (1u << 0),
 
     FMP0 = (1u << 1),
@@ -42,8 +42,28 @@ enum class CanIT:uint16_t{
     ERR = (1u << 13),
 };
 
+struct [[nodiscard]] CanTq{
+    using Self = CanTq;
+    static constexpr Self from_count(const uint8_t count){
+        if(count == 0) __builtin_abort();
+        return Self{static_cast<uint8_t>(count - 1)};
+    }
+
+    static constexpr Self from_bits(const uint8_t bits){
+        return Self{static_cast<uint8_t>(bits)};
+    }
+
+    [[nodiscard]] constexpr uint8_t as_bits() const {return bits_;}
+    [[nodiscard]] constexpr uint8_t count() const {return static_cast<uint8_t>(bits_ + 1);}
+
+private:
+    uint8_t bits_;
+
+    constexpr CanTq(const uint8_t bits):bits_{bits}{}
+};
+
 /// @brief CAN Swj时间长度
-enum class CanSwj:uint8_t{
+enum class [[nodiscard]] CanSwj:uint8_t{
     _1tq = 0x00,
     _2tq = 0x01,
     _3tq = 0x02,
@@ -51,7 +71,7 @@ enum class CanSwj:uint8_t{
 };
 
 /// @brief CAN Bs1时间长度
-enum class CanBs1:uint8_t{
+enum class [[nodiscard]] CanBs1:uint8_t{
     _1tq = 0x00,
     _2tq = 0x01,
     _3tq = 0x02,
@@ -72,7 +92,7 @@ enum class CanBs1:uint8_t{
 
 
 /// @brief CAN Bs2时间长度
-enum class CanBs2:uint8_t{
+enum class [[nodiscard]] CanBs2:uint8_t{
     _1tq = 0x00,
     _2tq = 0x01,
     _3tq = 0x02,
@@ -85,13 +105,13 @@ enum class CanBs2:uint8_t{
 
 
 /// @brief CAN发送事件
-enum class CanTransmitEvent:uint8_t{
+enum class [[nodiscard]] CanTransmitEvent:uint8_t{
     Failed,
     Success
 };
 
 /// @brief CAN接收事件
-enum class CanReceiveEvent:uint8_t{
+enum class [[nodiscard]] CanReceiveEvent:uint8_t{
     Fifo0Pending,
     Fifo0Full,
     Fifo0Overrun,
@@ -101,7 +121,7 @@ enum class CanReceiveEvent:uint8_t{
 };
 
 /// @brief CAN状态事件
-enum class CanStatusEvent:uint8_t{
+enum class [[nodiscard]] CanStatusEvent:uint8_t{
     Wakeup,
     SleepAcknowledge,
     ErrorWarninh,
@@ -111,9 +131,9 @@ enum class CanStatusEvent:uint8_t{
     Error
 };
 
-struct CanEvent:public Sumtype<CanTransmitEvent, CanReceiveEvent, CanStatusEvent>{};
+struct [[nodiscard]] CanEvent:public Sumtype<CanTransmitEvent, CanReceiveEvent, CanStatusEvent>{};
 
-struct CanBitTimmingCoeffs{
+struct [[nodiscard]] CanBitTimmingCoeffs{
     uint16_t prescale;
     CanSwj swj;
     CanBs1 bs1;
@@ -121,9 +141,9 @@ struct CanBitTimmingCoeffs{
 };
 
 
-class CanBaudrate{
+class [[nodiscard]] CanBaudrate{
 public:
-    enum class Kind:uint8_t{
+    enum class [[nodiscard]] Kind:uint8_t{
         _10K,
         _20K,
         _50K,
@@ -143,23 +163,23 @@ public:
         return Some(CanBaudrate(may_kind.unwrap()));
     }
 
-    constexpr Kind kind() const{return kind_;}
-    constexpr CanBitTimmingCoeffs to_coeffs() const{
+    [[nodiscard]] constexpr Kind kind() const{return kind_;}
+    [[nodiscard]] constexpr CanBitTimmingCoeffs to_coeffs() const{
         //works only at 144mhz pclk1 freq
         switch(kind_){
-            case Kind::_10K:    return {900,  CanSwj::_1tq,     CanBs1::_12tq,     CanBs2::_3tq};
-            case Kind::_20K:    return {450,  CanSwj::_1tq,     CanBs1::_12tq,     CanBs2::_3tq};
-            case Kind::_50K:    return {180,  CanSwj::_1tq,     CanBs1::_12tq,     CanBs2::_3tq};
-            case Kind::_100K:   return {90,   CanSwj::_1tq,     CanBs1::_12tq,     CanBs2::_3tq};
-            case Kind::_125K:   return {72,   CanSwj::_1tq,     CanBs1::_12tq,     CanBs2::_3tq};
-            case Kind::_250K:   return {36,   CanSwj::_1tq,     CanBs1::_12tq,     CanBs2::_3tq};
-            case Kind::_500K:   return {18,   CanSwj::_1tq,     CanBs1::_12tq,     CanBs2::_3tq};
+            case Kind::_10K:    return {.prescale = 900,  .swj = CanSwj::_1tq,     .bs1 = CanBs1::_12tq,     .bs2 = CanBs2::_3tq};
+            case Kind::_20K:    return {.prescale = 450,  .swj = CanSwj::_1tq,     .bs1 = CanBs1::_12tq,     .bs2 = CanBs2::_3tq};
+            case Kind::_50K:    return {.prescale = 180,  .swj = CanSwj::_1tq,     .bs1 = CanBs1::_12tq,     .bs2 = CanBs2::_3tq};
+            case Kind::_100K:   return {.prescale = 90,   .swj = CanSwj::_1tq,     .bs1 = CanBs1::_12tq,     .bs2 = CanBs2::_3tq};
+            case Kind::_125K:   return {.prescale = 72,   .swj = CanSwj::_1tq,     .bs1 = CanBs1::_12tq,     .bs2 = CanBs2::_3tq};
+            case Kind::_250K:   return {.prescale = 36,   .swj = CanSwj::_1tq,     .bs1 = CanBs1::_12tq,     .bs2 = CanBs2::_3tq};
+            case Kind::_500K:   return {.prescale = 18,   .swj = CanSwj::_1tq,     .bs1 = CanBs1::_12tq,     .bs2 = CanBs2::_3tq};
 
             // datasheet(V2.7) @page 37
             // 4.3.6 内部时钟源特性 ~~~ HSI(RC) 1.6% 
             // use higher swj for stable
-            case Kind::_800K:   return {9,    CanSwj::_2tq,     CanBs1::_15tq,     CanBs2::_4tq};
-            case Kind::_1M:     return {9,    CanSwj::_2tq,     CanBs1::_12tq,     CanBs2::_3tq};
+            case Kind::_800K:   return {.prescale = 9,    .swj = CanSwj::_2tq,     .bs1 = CanBs1::_15tq,     .bs2 = CanBs2::_4tq};
+            case Kind::_1M:     return {.prescale = 9,    .swj = CanSwj::_2tq,     .bs1 = CanBs1::_12tq,     .bs2 = CanBs2::_3tq};
 
             default: __builtin_unreachable();
         };
@@ -167,7 +187,7 @@ public:
 private:
     Kind kind_;
 
-    static constexpr Option<Kind> freq2kind(uint32_t freq){
+    [[nodiscard]] static constexpr Option<Kind> freq2kind(uint32_t freq){
         switch(freq){
             default: return None;
             case 10'000: return Some(Kind::_10K);
@@ -181,7 +201,7 @@ private:
             case 1000'000: return Some(Kind::_1M);
         }
     }
-    static constexpr uint32_t kind2freq(const Kind kind){
+    [[nodiscard]] static constexpr uint32_t kind2freq(const Kind kind){
         switch(kind){
             case Kind::_10K: return 10'000;
             case Kind::_20K: return 20'000;
@@ -211,14 +231,14 @@ private:
     }
 };
 
-enum class CanMode:uint8_t{
-    Normal = CAN_Mode_Normal,
-    Silent = CAN_Mode_Silent,
-    SilentLoopback = CAN_Mode_Silent_LoopBack,
-    Loopback = CAN_Mode_LoopBack
+enum class [[nodiscard]] CanMode:uint8_t{
+    Normal = 0b00,
+    Silent = 0b10,
+    SilentLoopback = 0b11,
+    Loopback = 0b01
 };
 
-enum class CanFault:uint8_t{
+enum class [[nodiscard]] CanException:uint8_t{
     Stuff = 0x10,
     Form = 0x20,
     Acknowledge = 0x30,
@@ -228,9 +248,9 @@ enum class CanFault:uint8_t{
     SoftwareSet = 0x70,
 };
 
-OutputStream & operator<<(OutputStream & os, const CanFault & fault);
+OutputStream & operator<<(OutputStream & os, const CanException & fault);
 
-enum class CanError:uint8_t{
+enum class [[nodiscard]] CanError:uint8_t{
     BlockingTransmitTimeout,
     NoMailboxAvailable,
     SoftFifoOverflow
@@ -240,7 +260,7 @@ OutputStream & operator<<(OutputStream & os, const CanError & error);
 
 
 
-enum class CanRtr:uint8_t{
+enum class [[nodiscard]] CanRtr:uint8_t{
     Data = 0,
     Remote = 1,
 };  

@@ -18,7 +18,7 @@ OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg){
 
     if(not msg.is_remote()){
         os << " | buf[" << std::dec << msg.size() << "]=" 
-            << std::hex << msg.iter_payload();
+            << std::hex << msg.payload_bytes();
     }
 
     return os << os.brackets<'}'>();

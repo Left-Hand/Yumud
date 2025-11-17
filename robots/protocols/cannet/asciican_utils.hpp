@@ -40,12 +40,12 @@ enum class AsciiCanError:uint8_t{
 
 ::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const AsciiCanError & value);
 
-class StringCutter{
+class [[nodiscard]] StrProvider{
 public:
-    constexpr StringCutter(const StringView str): 
+    explicit constexpr StrProvider(const StringView str): 
         str_(str){}
 
-    constexpr Option<StringView> fetch_next(const size_t len){
+    constexpr Option<StringView> fetch_leading(const size_t len){
         const auto next_pos = MIN(pos_ + len, str_.length());
         const auto guard = make_scope_guard([&]{pos_ = next_pos;});
         return str_.substr_by_range(pos_, next_pos);

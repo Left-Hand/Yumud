@@ -1,34 +1,12 @@
 #pragma once
 
-#include <span>
 
-#include "core/math/real.hpp"
+#include "mavlink_prelude.hpp"
+
 
 namespace ymd::mavlink{
 
-template<typename T>
-class Sink;
 
-template<typename T>
-class Source;
-
-template<>
-class Sink<uint8_t>{
-public:
-    size_t write(std::span<const uint8_t> pbuf);
-    size_t pending() const;
-};
-
-using BytesSink = Sink<uint8_t>;
-
-template<>
-class Source<uint8_t>{
-public:
-    size_t read(std::span<uint8_t> pbuf);
-    size_t available() const;
-};
-
-using BytesSource = Source<uint8_t>;
 
 struct MavlinkHeaderV1{
     const uint8_t header = 0xFE;
@@ -38,7 +16,7 @@ struct MavlinkHeaderV1{
     uint8_t compid;
     uint8_t msgid;
 
-    std::span<const uint8_t> as_span() const{
+    std::span<const uint8_t> as_bytes() const{
         return std::span<const uint8_t>(
             reinterpret_cast<const uint8_t *>(&header), 6);
     }
@@ -70,7 +48,7 @@ struct MavlinkTrailerV1{
         return crc;
     }
 
-    std::span<const uint8_t> as_span() const{
+    std::span<const uint8_t> as_bytes() const{
         return std::span<const uint8_t>(
             reinterpret_cast<const uint8_t *>(&crc_low), 2);
     }
@@ -83,17 +61,13 @@ struct MavlinkFrame{
 };
 
 BytesSink & operator << (BytesSink & sink, const MavlinkFrame & frame){
-    sink.write(frame.header.as_span());
+    sink.write(frame.header.as_bytes());
     sink.write(frame.payload);
-    sink.write(frame.trailer.as_span());
+    sink.write(frame.trailer.as_bytes());
     return sink;
 }
 
-template<typename TProtocol>
-class Sender;
 
-template<typename TProtocol>
-class Receiver;
 
 struct MavlinkProtocol;
 

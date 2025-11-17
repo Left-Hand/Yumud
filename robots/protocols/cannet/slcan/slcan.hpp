@@ -17,86 +17,115 @@
 //          -F          (stay in foreground; no daemonize)
 
 namespace ymd::robots::slcan{
+struct [[nodiscard]] CharsFiller{
+    constexpr explicit CharsFiller(std::span<char> chars):
+        chars_(chars){;}
+
+    constexpr void push_char(const char chr){
+        if(pos_ >= chars_.size()) [[unlikely]]
+            on_overflow();
+
+        chars_[pos_++] = chr;
+    }
+
+    constexpr void push_str(const StringView str){
+        const auto len = str.size();
+        if(pos_ + len >= chars_.size()) [[unlikely]]
+            on_overflow();
+
+        std::copy_n(str.begin(), len, chars_.begin() + pos_);
+    }
+
+    constexpr void push_hex(const uint32_t int_val, const size_t length){
+        for (int32_t i = static_cast<int32_t>(length) - 1; i >= 0; i--) {
+            // 每次提取4位（一个十六进制字符）
+            uint8_t nibble = (int_val >> (i * 4)) & 0xF;
+            
+            // 转换为ASCII字符
+            if (nibble < 10) {
+                push_char('0' + nibble);
+            } else {
+                push_char('A' + (nibble - 10));
+            }
+        }
+    }
+private:
+    std::span<char> chars_;
+    size_t pos_ = 0;
+
+    __always_inline void on_overflow(){
+        __builtin_abort();
+    }
+};
 
 
 namespace operations{
-    struct SendCanMsg{
+    struct [[nodiscard]] SendCanMsg{
         hal::CanMsg msg;
 
         friend OutputStream & operator<<(OutputStream & os, const SendCanMsg & self){ 
-            return os << os.scoped("SendCanMsg")(os 
-                << os.field("msg")(os << self.msg)
-            );
+            return os << os.field("msg")(os << self.msg);
         }
     };
 
-    struct SendText{
+    struct [[nodiscard]] SendText{
         static constexpr size_t MAX_TEXT_LEN = 16;
 
-        char str[MAX_TEXT_LEN];
+        using String = FixedString<MAX_TEXT_LEN> ;
+        String str;
 
-        static constexpr SendText from_str(const StringView strv){
-            SendText ret;
-            if(strv.size() > MAX_TEXT_LEN) 
+        static constexpr SendText from_str(const StringView str){
+            if(str.size() > MAX_TEXT_LEN) 
                 __builtin_trap();
 
-            for(size_t i = 0; i < strv.size(); i++){
-                ret.str[i] = strv[i];
-            }
-            return ret;
+            return SendText{
+                .str = String::from_str(str)
+            };
         }
 
         friend OutputStream & operator<<(OutputStream & os, const SendText & self){ 
-            return os << os.scoped("SendText")(os 
-                << os.field("str")(os << StringView(self.str))
-            );
+            return os << os.field("str")(os << self.str.view());
         }
     };
 
-    struct SetSerialBaud{
+    struct [[nodiscard]] SetSerialBaud{
         uint32_t baudrate;
 
         friend OutputStream & operator<<(OutputStream & os, const SetSerialBaud & self){ 
-            return os << os.scoped("SetSerialBaud")(os 
-                << os.field("baudrate")(os << self.baudrate)
-            );
+            return os << os.field("baudrate")(os << self.baudrate);
         }
     };
 
-    struct SetCanBaud{
+    struct [[nodiscard]] SetCanBaud{
         hal::CanBaudrate baudrate;
 
         friend OutputStream & operator<<(OutputStream & os, const SetCanBaud & self){ 
-            return os << os.scoped("SetCanBaud")(os 
-                << os.field("baudrate")(os << self.baudrate)
-            );
+            return os << os.field("baudrate")(os << self.baudrate);
         }
     };
 
-    struct Open{
+    struct [[nodiscard]] Open{
         friend OutputStream & operator<<(OutputStream & os, const Open & self){ 
-            return os << os.scoped("Open")(os);
+            return os;
         }
     };
 
-    struct Close{
+    struct [[nodiscard]] Close{
         friend OutputStream & operator<<(OutputStream & os, const Close & self){ 
-            return os << os.scoped("Close")(os);
+            return os;
         }
     };
 
-    struct SetTimestamp{
+    struct [[nodiscard]] SetTimestamp{
         Enable enabled;
         friend OutputStream & operator<<(OutputStream & os, const SetTimestamp & self){ 
-            return os << os.scoped("SetTimestamp")(os 
-                << os.field("enabled")(os << self.enabled)
-            );
+            return os << os.field("enabled")(os << self.enabled);
         }
     };
 }
 
 
-struct Operation:public Sumtype<
+struct [[nodiscard]] Operation:public Sumtype<
     operations::SendCanMsg, 
     operations::SendText,
     operations::SetSerialBaud,
@@ -108,7 +137,7 @@ struct Operation:public Sumtype<
 
 };
 
-class SlcanParser final{
+class [[nodiscard]] SlcanParser final{
 public:
     using Msg = asciican::AsciiCanPhy::Msg;
     using Error = asciican::AsciiCanPhy::Error;
@@ -131,7 +160,7 @@ private:
 };
 
 
-struct SlcanEncoder{
+struct SlcanResponseFormatter{
     using Msg = asciican::AsciiCanPhy::Msg;
     using Error = asciican::AsciiCanPhy::Error;
     using Flags = asciican::AsciiCanPhy::Flags;
@@ -142,16 +171,16 @@ struct SlcanEncoder{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using Str = FixedString<32>; 
+    using String = FixedString<32>; 
 
     struct [[nodiscard]] Response{
-        Str str;
-        static constexpr Response from_str(const char * str){
-            return Response{Str::from_str(str)};
+        String str;
+        static constexpr Response from_str(const StringView str){
+            return Response{String::from_str(str)};
         }
 
         static constexpr Response from_empty(){
-            return Response{Str::from_empty()};
+            return Response{String::from_empty()};
         }
 
         friend OutputStream& operator<<(OutputStream & os, const Response & self){ 
@@ -167,58 +196,46 @@ struct SlcanEncoder{
         }
     }
 
+
     static constexpr Response fmt_canmsg(const hal::CanMsg & msg){
-        Str str;
+        String str;
+        auto filler = CharsFiller{str.mut_chars()};
+        const auto header_char = msg_to_header_char(msg);
+        filler.push_char(header_char);
 
-        auto get_header = [&]() -> char{
-            if(msg.is_remote()){
-                return msg.is_extended() ? 'R' : 'r';
-            }else{
-                return msg.is_extended() ? 'T' : 't';
-            }
-        };
-
-        auto add_hex = [&str](const uint32_t value, const size_t length) {
-            // 从最高位开始处理，填充到指定长度
-            for (int32_t i = static_cast<int32_t>(length) - 1; i >= 0; i--) {
-                // 每次提取4位（一个十六进制字符）
-                uint8_t nibble = (value >> (i * 4)) & 0xF;
-                
-                // 转换为ASCII字符
-                if (nibble < 10) {
-                    str.push_back_unchecked('0' + nibble);
-                } else {
-                    str.push_back_unchecked('A' + (nibble - 10));
-                }
-            }
-        };
-
-        auto add_id = [&](){
+        auto push_id = [&](){
             const size_t len = msg.is_extended() ? 8 : 3;
             const auto id_u32 = msg.id_as_u32();
-            add_hex(id_u32, len);
+            filler.push_hex(id_u32, len);
         };
 
-        auto add_dlc = [&]() {
+        auto push_dlc = [&]() {
             const size_t dlc = msg.dlc();
-            add_hex(dlc, 1);  // DLC 是1个十六进制字符
+            filler.push_hex(dlc, 1);  // DLC 是1个十六进制字符
         };
 
-        auto add_data = [&](){ 
+        auto push_data = [&](){ 
             const size_t dlc = msg.dlc();
-            const auto payload_bytes = msg.iter_payload();
+            const auto payload_bytes = msg.payload_bytes();
             for(size_t i = 0; i < dlc; i++){
-                add_hex(payload_bytes[i], 2);
+                filler.push_hex(payload_bytes[i], 2);
             }
         };
 
-        str.push_back_unchecked(get_header());
-        add_id();
-        add_dlc();
-        add_data();
+        push_id();
+        push_dlc();
+        push_data();
 
         return Response{str};
     }
+private:
+    [[nodiscard]] static constexpr char msg_to_header_char(const hal::CanMsg & msg){
+        if(msg.is_remote()){
+            return msg.is_extended() ? 'R' : 'r';
+        }else{
+            return msg.is_extended() ? 'T' : 't';
+        }
+    };
 };
 
 }

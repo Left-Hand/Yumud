@@ -19,21 +19,23 @@ struct [[nodiscard]] FetchLeadingBytesCtorBitsProxy{
 
 struct [[nodiscard]] BytesProvider{
     explicit constexpr BytesProvider(std::span<const uint8_t> bytes) : 
-        bytes_(bytes) {}
+        remaining_bytes_(bytes) {}
 
     template<size_t N>
     [[nodiscard]] constexpr std::span<const uint8_t, N> fetch_leading(){
-        if(bytes_.size() < N) __builtin_abort();
-        const auto ret = std::span<const uint8_t, N>(bytes_.data(), N);
-        bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
+        if(remaining_bytes_.size() < N) [[unlikely]]
+            on_overflow();
+        const auto ret = std::span<const uint8_t, N>(remaining_bytes_.data(), N);
+        remaining_bytes_ = std::span<const uint8_t>(remaining_bytes_.data() + N, remaining_bytes_.size() - N);
         return ret;
     }
 
     template<size_t N>
     [[nodiscard]] constexpr std::span<const uint8_t, N> fetch_trailing(){
-        if(bytes_.size() < N) __builtin_abort();
-        const auto ret = std::span<const uint8_t, N>(std::prev(bytes_.end(), N), bytes_.end());
-        bytes_ = std::span<const uint8_t>(bytes_.data(), bytes_.size() - N);
+        if(remaining_bytes_.size() < N) [[unlikely]]
+            on_overflow();
+        const auto ret = std::span<const uint8_t, N>(std::prev(remaining_bytes_.end(), N), remaining_bytes_.end());
+        remaining_bytes_ = std::span<const uint8_t>(remaining_bytes_.data(), remaining_bytes_.size() - N);
         return ret;
     }
 
@@ -48,10 +50,14 @@ struct [[nodiscard]] BytesProvider{
     }
 
     [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
-        return bytes_;
+        return remaining_bytes_;
     }
 private:
-    std::span<const uint8_t> bytes_;
+    std::span<const uint8_t> remaining_bytes_;
+
+    constexpr void on_overflow(){
+        __builtin_abort();
+    }
 };
 
 

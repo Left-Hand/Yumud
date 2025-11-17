@@ -24,6 +24,8 @@ struct ExampleReg{
     uint32_t __RESV__:16;
 };
 
+static constexpr auto spi_reg = ExampleReg{0};
+
 template<typename T>
 struct bitfield_reflecter{
 private:
@@ -52,14 +54,15 @@ public:
     // static constexpr size_t offset_v = _offset<P>::value;
 };
 
-// static constexpr auto BIDIMODE_MASK = DEF_REG_BF_MASK(chip::ExampleReg, BIDIMODE);
-static constexpr auto k_field_reg = std::bit_cast<ExampleReg>(uint32_t(0));
-constexpr uint32_t mask = []{
-    // auto k_field_reg = chip::ExampleReg{0};
-    auto field_reg = k_field_reg;
-    field_reg.BIDIMODE = 1u;
-    return std::bit_cast<uint32_t>(field_reg);
-}();
+#define DEF_REG_FIELD_MASK(reg_name, field_name)\
+[] -> uint32_t{\
+    constexpr auto k_field_reg = std::bit_cast<reg_name>(uint32_t(0));\
+    auto field_reg = k_field_reg;\
+    field_reg.field_name = 1u;\
+    return std::bit_cast<uint32_t>(field_reg);\
+}();\
+
+static constexpr auto mask = DEF_REG_FIELD_MASK(ExampleReg, BIDIMODE);
 static_assert(mask == 0x008000);
 
 // constexpr uint32_t m2 = bitfield_reflecter<ExampleReg>::template mask<&ExampleReg::BIDIMODE>::value;

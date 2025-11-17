@@ -5,67 +5,65 @@
 
 #include <cstdint>
 #include <bit>
+#include <array>
 
 namespace ymd{
 
 class OutputStream;
 
-struct bf16 {
-    struct Storage{
+struct [[nodiscard]] bf16 {
+    struct [[nodiscard]] Storage{
         uint16_t frac:7;
         uint16_t exp:8;
         uint16_t sign:1;
 
-        constexpr Storage(){;}
-        
-        constexpr explicit Storage(const uint16_t val):
-            frac(val & 0x7F),
-            exp((val >> 7) & 0xFF),
-            sign(val >> 15){;}
+        static constexpr Storage from_bits(const uint16_t bits){
+            return Storage{
+                .frac = static_cast<uint16_t>(bits & 0x7F),
+                .exp = static_cast<uint16_t>((bits >> 7) & 0xFF),
+                .sign = static_cast<uint16_t>(bits >> 15)
+            };
+        }
 
-
-        constexpr uint16_t as_u16() const{
+        [[nodiscard]] constexpr uint16_t as_bits() const{
             return std::bit_cast<uint16_t>(*this);
         }
 
-        constexpr Storage & operator =(const uint16_t _raw){
-            *this = std::bit_cast<Storage>(_raw);
-            return *this;
-        }
     };
 
     static_assert(sizeof(Storage) == 2);
 
-    Storage raw;
+
 
     constexpr bf16(){;}
 
     constexpr bf16 & operator = (const bf16 & other){
-        raw = other.raw;
+        storage_ = other.storage_;
         return *this;
     }
 
-    constexpr bf16(const bf16 & other):raw(other.raw){;}
-    constexpr bf16(bf16 && other):raw(other.raw){;}
+    constexpr bf16(const bf16 & other):storage_(other.storage_){;}
+    constexpr bf16(bf16 && other):storage_(other.storage_){;}
 
-    constexpr uint16_t frac() const {return raw.frac;};
-    constexpr uint16_t exp() const {return raw.exp;};
-    constexpr uint16_t sign() const {return raw.sign;};
+    [[nodiscard]] constexpr uint16_t frac() const {return storage_.frac;};
+    [[nodiscard]] constexpr uint16_t exp() const {return storage_.exp;};
+    [[nodiscard]] constexpr uint16_t sign() const {return storage_.sign;};
 
     template<typename T>
     requires(std::is_floating_point_v<T>)
-    constexpr bf16(T fv) : raw(std::bit_cast<uint32_t>(float(fv)) >> 16) {}
+    constexpr bf16(T fv) : storage_(Storage::from_bits(
+        static_cast<uint16_t>(std::bit_cast<uint32_t>(float(fv)) >> 16))){}
 
     template<size_t Q>
     constexpr bf16(fixed_t<Q, int32_t> qv) : bf16(float(qv)) {}
     constexpr bf16(int iv) : bf16(float(iv)) {}
     constexpr bf16 operator -() const{
-        return from_u16(raw.as_u16() ^ 0x8000);
+        return from_bits(storage_.as_bits() ^ 0x8000);
     }
 
     // bf16 -> float
     explicit constexpr operator float() const {
-        uint32_t f32_bits = uint32_t(raw.as_u16()) << 16;
+        uint32_t f32_bits = uint32_t(storage_.as_bits()) << 16;
         return std::bit_cast<float>(f32_bits);
     }
 
@@ -80,16 +78,26 @@ struct bf16 {
 
     friend OutputStream & operator << (OutputStream & os, const bf16 v);
 
-    constexpr uint16_t as_u16() const {
-        return raw.as_u16();
+    [[nodiscard]] constexpr uint16_t as_bits() const {
+        return storage_.as_bits();
     }
 
-    static constexpr bf16 from_u16(const uint16_t _raw){
-        bf16 ret;
-        ret.raw = _raw;
-        return ret;
+    [[nodiscard]] constexpr std::array<uint8_t, 2> to_le_bytes() const {
+        const uint16_t bits = as_bits();
+        return std::array<uint8_t, 2>{
+            static_cast<uint8_t>(bits & 0xff),
+            static_cast<uint8_t>(bits >> 8),
+        };
+    }
+
+    static constexpr bf16 from_bits(const uint16_t bits){
+        return bf16(Storage::from_bits(bits));
     }
 private:
+    Storage storage_;
+
+    constexpr explicit bf16(const Storage & sto):
+        storage_(sto){;}
 };
 
 consteval bf16 operator"" _bf16(long double x){

@@ -393,10 +393,10 @@ uint8_t Can::get_tx_errcnt(){
     return inst_->ERRSR >> 16;
 }
 
-Option<Can::Fault> Can::last_fault(){
-    const auto code = CAN_GetLastErrorCode(inst_);
-    if(code == 0) return None;
-    return Some(std::bit_cast<Can::Fault>(code));
+Option<Can::Exception> Can::last_exception(){
+    const uint8_t bits = CAN_GetLastErrorCode(inst_);
+    if(bits == 0) return None;
+    return Some(std::bit_cast<Can::Exception>(bits));
 }
 
 bool Can::is_tranmitting(){

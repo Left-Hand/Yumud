@@ -10,41 +10,41 @@ struct [[nodiscard]] CanStdId{
     static constexpr uint16_t MAX_VALUE = 0x7ff;
     static constexpr size_t LENGTH = 11;
 
-    explicit constexpr CanStdId(const uint16_t raw):raw_(raw){;}
+    explicit constexpr CanStdId(const uint16_t bits):bits_(bits){;}
 
     constexpr CanStdId(const CanStdId & other) = default;
     constexpr CanStdId(CanStdId && other) = default;
 
-    static constexpr Option<CanStdId> from_u11(const uint16_t raw){
-        if(raw > 0x7ff) return None;
-        return Some(CanStdId(raw));
+    static constexpr Option<CanStdId> from_u11(const uint16_t bits){
+        if(bits > 0x7ff) return None;
+        return Some(CanStdId(bits));
     }
 
     constexpr auto operator<=>(const CanStdId& other) const = default;
 
-    constexpr uint16_t to_u11() const {return raw_;}
+    [[nodiscard]] constexpr uint16_t to_u11() const {return bits_;}
 private:
-    uint16_t raw_;
+    uint16_t bits_;
 };
 
 struct [[nodiscard]] CanExtId{
     static constexpr uint32_t MAX_VALUE = 0x1fffffff;
     static constexpr size_t LENGTH = 29;
 
-    explicit constexpr CanExtId(const uint32_t raw):raw_(raw){;}
+    explicit constexpr CanExtId(const uint32_t bits):bits_(bits){;}
 
     constexpr CanExtId(const CanExtId & other) = default;
     constexpr CanExtId(CanExtId && other) = default;
-    static constexpr Option<CanExtId> from_u29(const uint32_t raw){
-        if(raw > 0x1fffffff) return None;
-        return Some(CanExtId(raw));
+    static constexpr Option<CanExtId> from_u29(const uint32_t bits){
+        if(bits > 0x1fffffff) return None;
+        return Some(CanExtId(bits));
     }
 
     constexpr auto operator<=>(const CanExtId& other) const = default;
 
-    constexpr uint32_t to_u29() const {return raw_;}
+    [[nodiscard]] constexpr uint32_t to_u29() const {return bits_;}
 private:
-    uint32_t raw_;
+    uint32_t bits_;
 };
 
 
