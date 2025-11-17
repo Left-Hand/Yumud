@@ -22,13 +22,13 @@
 
 
 
-#include "types/image/painter/painter.hpp"
-#include "types/colors/rgb/rgb.hpp"
+#include "primitive/image/painter/painter.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
 #include "types/regions/rect2.hpp"
 
 #include "types/vectors/quat.hpp"
-#include "types/image/image.hpp"
-#include "types/image/font/font.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/font/font.hpp"
 
 #include "types/shapes/bresenham_iter.hpp"
 #include "types/shapes/rotated_rect.hpp"

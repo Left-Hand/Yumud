@@ -3,7 +3,7 @@
 #include "hal/bus/spi/spi.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
-#include "types/image/image.hpp"
+#include "primitive/image/image.hpp"
 
 #include "drivers/Display/prelude/prelude.hpp"
 

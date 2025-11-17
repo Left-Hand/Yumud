@@ -33,7 +33,7 @@
 
 #include "core/math/real.hpp"
 #include "core/stream/ostream.hpp"
-#include "types/colors/rgb/rgb.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
 
 // https://zhuanlan.zhihu.com/p/659818064 色彩空间学习笔记——关于RGB/sRGB/XYZ/Lab/Luv那点事儿（一）
 

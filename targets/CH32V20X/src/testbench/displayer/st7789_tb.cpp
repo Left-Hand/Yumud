@@ -8,7 +8,7 @@
 #include "hal/bus/spi/spihw.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
-#include "types/image/painter/painter_base.hpp"
+#include "primitive/image/painter/painter_base.hpp"
 
 
 using namespace ymd;

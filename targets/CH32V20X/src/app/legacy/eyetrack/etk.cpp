@@ -6,9 +6,9 @@
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "types/image/image.hpp"
-#include "types/image/font/font.hpp"
-#include "types/image/painter.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/font/font.hpp"
+#include "primitive/image/painter.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 

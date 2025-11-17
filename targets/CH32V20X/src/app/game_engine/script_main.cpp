@@ -13,13 +13,13 @@
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
-#include "types/image/painter/painter.hpp"
-#include "types/colors/rgb/rgb.hpp"
+#include "primitive/image/painter/painter.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
 #include "types/regions/rect2.hpp"
 
 #include "types/vectors/quat.hpp"
-#include "types/image/image.hpp"
-#include "types/image/font/font.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/font/font.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"

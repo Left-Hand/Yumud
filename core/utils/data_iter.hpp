@@ -30,21 +30,20 @@ OnceIter(T) -> OnceIter<T>;
 
 template<typename T, size_t Extents>
 struct [[nodiscard]] RepeatIter{
-    constexpr explicit RepeatIter(const T value, size_t size = Extents):
-        value_(value){;}
+    constexpr explicit RepeatIter(const T && value, size_t size = Extents):
+        value_(std::move(value)){;}
 
-    [[nodiscard]] __always_inline constexpr T next(){
-        const auto ret = value_;
+    [[nodiscard]] __always_inline constexpr const T & next(){
+        const auto & ret = value_;
         index_ ++;
         return ret;
     }
 
     [[nodiscard]] __always_inline constexpr bool has_next() const {
-        return index_ < size_;
+        return index_ < Extents;
     }
 private:
     T value_;
-    static constexpr size_t size_ = Extents;
     size_t index_ = 0;
 };
 
@@ -54,7 +53,7 @@ struct [[nodiscard]] RepeatIter<T, std::dynamic_extent>{
     constexpr explicit RepeatIter(const T value, size_t size):
         value_(value), size_(size){;}
 
-    [[nodiscard]] __always_inline constexpr T next(){
+    [[nodiscard]] __always_inline constexpr const T & next(){
         const auto ret = value_;
         index_ ++;
         return ret;
@@ -72,24 +71,24 @@ private:
 
 template<typename T>
 struct [[nodiscard]] BurstIter{
-    constexpr explicit BurstIter(const std::span<const T> pbuf):
+    constexpr explicit BurstIter(const std::span<T> pbuf):
         pbuf_(pbuf){;}
 
-    [[nodiscard]] __always_inline constexpr T next(){
-        const auto ret = pbuf_[index_];
+    [[nodiscard]] __always_inline constexpr T & next(){
+        auto & ret = pbuf_[index_];
         index_ ++;
         return ret;
     }
     
     [[nodiscard]] __always_inline constexpr bool has_next() const {
-        return index_ + 1 >= pbuf_.size();
+        return index_ < pbuf_.size();
     }
 private:
-    const std::span<const T> pbuf_;
+    const std::span<T> pbuf_;
     size_t index_ = 0;
 };
 
 //ctad
 template<typename T>
-BurstIter(const std::span<const T>) -> BurstIter<T>;
+BurstIter(const std::span<T>) -> BurstIter<T>;
 }

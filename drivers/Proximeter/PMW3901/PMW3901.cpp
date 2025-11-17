@@ -1,5 +1,5 @@
 #include "PMW3901.hpp"
-#include "types/image/image.hpp"
+#include "primitive/image/image.hpp"
 #include "core/debug/debug.hpp"
 
 #include "core/math/realmath.hpp"

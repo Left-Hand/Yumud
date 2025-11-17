@@ -7,8 +7,8 @@
 
 #include "types/vectors/vector2.hpp"
 #include "types/regions/rect2.hpp"
-#include "types/colors/color/color.hpp"
-#include "types/colors/rgb/rgb.hpp"
+#include "primitive/colors/color/color.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
 
 
 

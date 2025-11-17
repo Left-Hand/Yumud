@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "types/image/image.hpp"
+#include "primitive/image/image.hpp"
 
 #include "core/string/string_view.hpp"
 #include "core/utils/Result.hpp"
@@ -9,10 +9,10 @@
 #include "core/utils/scope_guard.hpp"
 
 #include "types/regions/rect2.hpp"
-#include "types/colors/color/color.hpp"
-#include "types/colors/rgb/rgb.hpp"
+#include "primitive/colors/color/color.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
 
-#include "types/image/font/font.hpp"
+#include "primitive/image/font/font.hpp"
 
 namespace ymd{
 

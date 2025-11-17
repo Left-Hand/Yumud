@@ -43,7 +43,7 @@ struct ST7789V3_Phy final:
         };
     private:
         Iter iter_;
-        BitQueue queue_;
+        BitQueue<64> queue_;
         bool is_runout_ = false;
     };
 

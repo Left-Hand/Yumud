@@ -6,7 +6,7 @@
 #include "hal/bus/sccb/sccb_drv.hpp"
 
 #include "hal/bus/dvp/dvp.hpp"
-#include "types/image/image.hpp"
+#include "primitive/image/image.hpp"
 
 namespace ymd::drivers{
 struct MT9V034_Prelude{

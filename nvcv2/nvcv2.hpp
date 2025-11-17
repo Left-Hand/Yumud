@@ -3,9 +3,9 @@
 #include "core/platform.hpp"
 #include "core/debug/debug.hpp"
 
-#include "types/colors/color/color.hpp"
-#include "types/image/image.hpp"
-#include "types/image/packed_image.hpp"
+#include "primitive/colors/color/color.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/packed_image.hpp"
 #include "types/regions/rect2.hpp"
 
 #include "thirdparty/sstl/include/sstl/vector.h" 

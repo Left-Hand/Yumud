@@ -3,9 +3,9 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "types/image/image.hpp"
-#include "types/image/font/font.hpp"
-#include "types/image/painter/painter.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/font/font.hpp"
+#include "primitive/image/painter/painter.hpp"
 #include "types/shapes/box_rect.hpp"
 #include "types/shapes/annular_sector.hpp"
 #include "types/shapes/rotated_rect.hpp"

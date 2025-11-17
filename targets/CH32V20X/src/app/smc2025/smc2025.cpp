@@ -14,9 +14,9 @@
 #include "hal/timer/instance/timer_hw.hpp"
 
 #include "types/vectors/quat.hpp"
-#include "types/image/image.hpp"
-#include "types/image/font/font.hpp"
-#include "types/image/painter/painter.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/font/font.hpp"
+#include "primitive/image/painter/painter.hpp"
 
 #include "nvcv2/shape/shape.hpp"
 #include "nvcv2/pixels/pixels.hpp"
