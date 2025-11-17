@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/container/ringbuf.hpp"
 #include "ral/chip.hpp"
-#include "can_msg.hpp"
+#include "primitive/can/can_msg.hpp"
 
 #include "can_trait.hpp"
 #include "can_filter.hpp"

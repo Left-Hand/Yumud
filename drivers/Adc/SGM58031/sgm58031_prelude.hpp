@@ -6,7 +6,7 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "concept/analog_channel.hpp"
+#include "primitive/analog_channel.hpp"
 
 
 namespace ymd::drivers{

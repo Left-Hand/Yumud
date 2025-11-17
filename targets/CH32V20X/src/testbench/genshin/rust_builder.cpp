@@ -4,7 +4,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "hal/bus/can/can_msg.hpp"
+#include "primitive/can/can_msg.hpp"
 
 #include "core/magic/size_traits.hpp"
 #include "core/magic/function_traits.hpp"

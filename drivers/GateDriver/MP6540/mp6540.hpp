@@ -1,6 +1,6 @@
 #pragma once
 
-#include "concept/analog_channel.hpp"
+#include "primitive/analog_channel.hpp"
 #include "drivers/GateDriver/uvw_pwmgen.hpp"
 
 

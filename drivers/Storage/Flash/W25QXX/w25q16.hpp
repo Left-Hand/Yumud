@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "concept/memory.hpp"
+#include "primitive/memory.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 

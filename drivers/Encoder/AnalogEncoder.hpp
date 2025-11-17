@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Encoder.hpp"
-#include "concept/analog_channel.hpp"
+#include "primitive/analog_channel.hpp"
 #include "types/regions/range2.hpp"
 
 namespace ymd::drivers{

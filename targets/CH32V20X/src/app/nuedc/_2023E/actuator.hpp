@@ -7,7 +7,7 @@
 #include "core/clock/time.hpp"
 
 
-#include "concept/pwm_channel.hpp"
+#include "primitive/pwm_channel.hpp"
 #include "types/vectors/vector2.hpp"
 #include "types/vectors/vector2.hpp"
 #include "dsp/filter/firstorder/lpf.hpp"

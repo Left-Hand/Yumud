@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/system.hpp"
-#include "concept/storage.hpp"
-#include "concept/memory.hpp"
+#include "primitive/storage.hpp"
+#include "primitive/memory.hpp"
 
 
 #if 0

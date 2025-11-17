@@ -2,7 +2,7 @@
 
 
 #include "hal/timer/timer_utils.hpp"
-#include "concept/pwm_channel.hpp"
+#include "primitive/pwm_channel.hpp"
 
 
 namespace ymd::hal{

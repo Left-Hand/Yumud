@@ -1,7 +1,7 @@
 #pragma once
 
 #include "node_role.hpp"
-#include "hal/bus/can/can_msg.hpp"
+#include "primitive/can/can_msg.hpp"
 #include "core/utils/serde.hpp"
 
 

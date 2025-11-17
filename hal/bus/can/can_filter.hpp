@@ -5,8 +5,8 @@
 
 #include "core/sdk.hpp"
 #include "core/io/regs.hpp"
-#include "can_utils.hpp"
-#include "can_id.hpp"
+#include "primitive/can/can_enum.hpp"
+#include "primitive/can/can_id.hpp"
 #include "core/utils/nth.hpp"
 
 namespace ymd{

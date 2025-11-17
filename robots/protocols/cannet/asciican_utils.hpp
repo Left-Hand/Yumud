@@ -6,7 +6,7 @@
 #include "core/utils/scope_guard.hpp"
 
 
-#include "hal/bus/can/can_msg.hpp"
+#include "primitive/can/can_msg.hpp"
 #include "hal/bus/can/can.hpp"
 
 #include <variant>

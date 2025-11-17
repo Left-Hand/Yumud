@@ -14,8 +14,8 @@
 #include "core/utils/result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "concept/pwm_channel.hpp"
-#include "concept/analog_channel.hpp"
+#include "primitive/pwm_channel.hpp"
+#include "primitive/analog_channel.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 

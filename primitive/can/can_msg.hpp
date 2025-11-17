@@ -1,6 +1,6 @@
 #pragma once
 
-#include "can_utils.hpp"
+#include "can_enum.hpp"
 #include "can_id.hpp"
 
 #include <span>

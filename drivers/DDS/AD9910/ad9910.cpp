@@ -1,6 +1,6 @@
 #include "ad9910.hpp"
 #include "core/clock/clock.hpp"
-#include "concept/analog_channel.hpp"
+#include "primitive/analog_channel.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 #include "hal/gpio/gpio_port.hpp"

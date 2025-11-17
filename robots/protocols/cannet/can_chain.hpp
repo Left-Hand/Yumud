@@ -2,7 +2,7 @@
 
 #include "core/utils/Option.hpp"
 #include "core/utils/handle_status.hpp"
-#include "hal/bus/can/can_msg.hpp"
+#include "primitive/can/can_msg.hpp"
 
 namespace ymd::robots{
 

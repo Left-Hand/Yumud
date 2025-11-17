@@ -46,7 +46,7 @@
 #include "digipw/prelude/abdq.hpp"
 
 
-#include "concept/analog_channel.hpp"
+#include "primitive/analog_channel.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
