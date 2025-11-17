@@ -49,7 +49,7 @@ enum class MotionMode : uint8_t {
 
 // class CanopenNode {
 // private:
-//     void handleFrame(const CanMsg& frame) {
+//     void handleFrame(const CanClassicMsg& frame) {
 //         // 处理接收到的CAN帧
 //         // 这里可以根据CANopen协议解析帧并更新对象字典或状态机
 //     }
@@ -61,14 +61,14 @@ enum class MotionMode : uint8_t {
 //     CanopenNode(CanDriver& driver, uint8_t nodeId) : driver_(driver), nodeId_(nodeId) {}
 
 //     void process() {
-//         // CanMsg frame;
+//         // CanClassicMsg frame;
 //         // while (driver.receive(frame)) {
 //         //     handleFrame(frame);
 //         // }
 //     }
 
 //     void sendHeartbeat() {
-//         // CanMsg frame;
+//         // CanClassicMsg frame;
 //         // frame.id = 0x700 + nodeId;
 //         // frame.data[0] = state;
 //         // frame.len = 1;

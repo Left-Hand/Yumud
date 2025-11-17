@@ -49,10 +49,10 @@ struct MsgFactory{
     const NodeRole role;
 
     template<typename T>
-    constexpr hal::CanMsg operator()(const T cmd) const {
+    constexpr hal::CanClassicMsg operator()(const T cmd) const {
         const auto id = comb_role_and_cmd(role, command_to_kind_v<CommandKind, T>);
         const auto generator = serde::make_serialize_generator<serde::RawLeBytes>(cmd);
-        return hal::CanMsg::from_iter(id, generator).unwrap();
+        return hal::CanClassicMsg::from_iter(id, generator).unwrap();
     };
 };
 

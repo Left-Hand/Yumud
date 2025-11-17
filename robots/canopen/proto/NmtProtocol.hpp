@@ -44,7 +44,7 @@ public:
         RESET_COMM = 130
     };
 
-    bool processMessage(const CanMsg& msg) override;
+    bool processMessage(const CanClassicMsg& msg) override;
 
 };
 
@@ -57,7 +57,7 @@ public:
 
     // void sendSync() {
     //     int id = int(getSubEntry(0x1005, 1).value());
-    //     CanMsg msg(id);
+    //     CanClassicMsg msg(id);
     //     sendMessage(msg);
     // }
 
@@ -73,7 +73,7 @@ public:
 
     void sendBootUp();
     void sendHeartBeat();
-    bool processStateSwitchRequest(const CanMsg & msg);
+    bool processStateSwitchRequest(const CanClassicMsg & msg);
 };
 
 

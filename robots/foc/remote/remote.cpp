@@ -8,7 +8,7 @@ using namespace ymd::foc;
 using Command = MotorUtils::Command;
 using RunStatus = MotorUtils::RunStatus;
 
-#define MSG(cmd, payload) CanMsg::from_tuple(\
+#define MSG(cmd, payload) CanClassicMsg::from_tuple(\
     CanStdId(((uint32_t)(node_id) << 7) | (uint8_t)(cmd)), \
     payload);\
 
@@ -63,7 +63,7 @@ volatile RunStatus & RemoteFOCMotor::status(){POST(Command::STAT); return run_st
 #endif
 
 #if 0
-void RemoteFOCMotor::parseCanmsg(const CanMsg &msg){
+void RemoteFOCMotor::parseCanmsg(const CanClassicMsg &msg){
     Command cmd = Command(msg.id() & 0x7F);
     switch(cmd){
         case Command::GET_POS:

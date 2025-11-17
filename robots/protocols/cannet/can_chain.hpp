@@ -9,7 +9,7 @@ namespace ymd::robots{
 
 class CanMsgHandlerIntf{ 
 public:
-    virtual HandleStatus handle(const hal::CanMsg & msg) = 0;
+    virtual HandleStatus handle(const hal::CanClassicMsg & msg) = 0;
 };
 
 
@@ -22,7 +22,7 @@ public:
         curr_handler_(*curr.get()),
         next_handler_(next){;}
 
-    HandleStatus handle(const hal::CanMsg & msg){ 
+    HandleStatus handle(const hal::CanClassicMsg & msg){ 
         HandleStatus res = curr_handler_.handle(msg);
         if(next_handler_.is_none()) return res;
         return next_handler_.unwrap().handle(msg);
@@ -36,7 +36,7 @@ private:
 
 class CanHandlerTerminator final: 
 public CanMsgHandlerIntf{ 
-    HandleStatus handle(const hal::CanMsg & msg){ 
+    HandleStatus handle(const hal::CanClassicMsg & msg){ 
         return HandleStatus::from_handled();
     }
 };

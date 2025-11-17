@@ -1,10 +1,10 @@
-#include "can_utils.hpp"
+#include "can_enum.hpp"
 #include "core/stream/ostream.hpp"
 
 using namespace ymd;
 namespace ymd::hal{
-OutputStream & operator<<(OutputStream & os, const CanException & fault){
-    switch(fault){
+OutputStream & operator<<(OutputStream & os, const CanException & exception){
+    switch(exception){
         case CanException::Stuff: 
             return os << "Stuff";
         case CanException::Form: 

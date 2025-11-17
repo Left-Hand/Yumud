@@ -3,7 +3,7 @@
 #include "hal/bus/uart/uart.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/sumtype.hpp"
-#include "primitive/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 #include "core/utils/bytes/bytes_provider.hpp"
 #include "core/container/inline_vector.hpp"
 

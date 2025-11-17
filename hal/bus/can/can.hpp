@@ -85,8 +85,8 @@ public:
 
     void init(const Config & cfg);
 
-    [[nodiscard]] Result<void, CanError> write(const CanMsg & msg);
-    [[nodiscard]] CanMsg read();
+    [[nodiscard]] Result<void, CanError> write(const CanClassicMsg & msg);
+    [[nodiscard]] CanClassicMsg read();
     [[nodiscard]] size_t pending();
     [[nodiscard]] size_t available();
 
@@ -121,8 +121,8 @@ private:
     static constexpr size_t CAN_SOFTFIFO_SIZE = 8;
     #endif
 
-    RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
-    RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
+    RingBuf<CanClassicMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
+    RingBuf<CanClassicMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
 
     Callback callback_ = nullptr;
 
@@ -143,8 +143,8 @@ private:
     void accept_rx_msg_interrupt(const CanFifoNth fifo_num);
     void accept_sce_interrupt();
 
-    [[nodiscard]] Option<CanMailboxNth> transmit(const CanMsg & msg);
-    [[nodiscard]] CanMsg receive(const CanFifoNth fifo_num);
+    [[nodiscard]] Option<CanMailboxNth> transmit(const CanClassicMsg & msg);
+    [[nodiscard]] CanClassicMsg receive(const CanFifoNth fifo_num);
 
     friend class CanFilter;
 

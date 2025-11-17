@@ -9,7 +9,7 @@ namespace ymd::robots::asciican{
 
 class AsciiCanPhy final{
 public:
-    using Msg = hal::CanMsg;
+    using Msg = hal::CanClassicMsg;
     using Error = asciican::Error;
 
     template<typename T = void>

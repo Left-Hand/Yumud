@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/utils/Result.hpp"
-#include "primitive/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 
 #include "core/math/realmath.hpp"
 #include "core/container/inline_vector.hpp"
@@ -120,7 +120,7 @@ struct [[nodiscard]] Bytes2CanMsgIterator{
     constexpr bool has_next(){
         return payload_.size() - offset_;
     }
-    constexpr hal::CanMsg next(){
+    constexpr hal::CanClassicMsg next(){
         constexpr size_t MAX_PAYLOAD_LENGTH = 7;
         const auto msg_len = MIN(
             payload_.size() - offset_, 
@@ -137,7 +137,7 @@ struct [[nodiscard]] Bytes2CanMsgIterator{
         return msg;
     }
 private:
-    static constexpr hal::CanMsg make_canmsg(
+    static constexpr hal::CanClassicMsg make_canmsg(
         const NodeId nodeid,
         const FuncCode func_code,
         const uint8_t piece_cnt,
@@ -148,7 +148,7 @@ private:
         buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
         buf.append_unchecked(bytes);
 
-        return hal::CanMsg::from_bytes(
+        return hal::CanClassicMsg::from_bytes(
             map_nodeid_and_piececnt_to_canid(nodeid, piece_cnt),
             buf.iter()
         );
@@ -181,7 +181,7 @@ struct [[nodiscard]] CanMsg2BytesDumper{
     };
 
     static constexpr IResult<DumpInfo> dump(
-        std::span<const hal::CanMsg> msgs
+        std::span<const hal::CanClassicMsg> msgs
     ) {
         if(msgs.size() == 0)
             return Err(Error::RxNoMsgToDump);
@@ -206,11 +206,11 @@ struct [[nodiscard]] CanMsg2BytesDumper{
         }
 
         info.func_code = ({
-            if(msgs[0].size() == 0) return Err(Error::RxMsgNoPayload);
+            if(msgs[0].length() == 0) return Err(Error::RxMsgNoPayload);
             const auto func_code0 = std::bit_cast<FuncCode>(msgs[0].payload_bytes()[0]);
             for(size_t i = 0; i < msgs.size(); i++){
                 const auto & msg = msgs[i];
-                if(msg.size() == 0) return Err(Error::RxMsgNoPayload);
+                if(msg.length() == 0) return Err(Error::RxMsgNoPayload);
                 const auto func_code = std::bit_cast<FuncCode>(msg.payload_bytes()[0]);
                 if(func_code != func_code0)
                     return Err(Error::RxMsgFuncCodeNotTheSame);
@@ -231,13 +231,13 @@ struct [[nodiscard]] CanMsg2BytesDumper{
     }
 
     static inline constexpr uint8_t map_msg_to_nodeid(
-        const hal::CanMsg & msg
+        const hal::CanClassicMsg & msg
     ){
         return msg.extid().unwrap().to_u29() >> 8;
     }
 
     static inline constexpr uint8_t map_msg_to_piececnt(
-        const hal::CanMsg & msg
+        const hal::CanClassicMsg & msg
     ){
         return msg.extid().unwrap().to_u29() & 0xff;
     }

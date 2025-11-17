@@ -2,7 +2,7 @@
 
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
-#include "primitive/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 
 namespace ymd::digipw{
 class Spll{

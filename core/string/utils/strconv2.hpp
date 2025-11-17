@@ -14,7 +14,7 @@
 #include "core/utils/Result.hpp"
 #include "core/magic/enum_traits.hpp"
 #include "core/stream/ostream.hpp"
-#include "primitive/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 
 namespace ymd::strconv2 {
 
@@ -132,24 +132,24 @@ struct FstrDump final{
 };
 
 //是否为0~9的ascii字符
-[[nodiscard]] __fast_inline static constexpr 
+[[nodiscard]] __always_inline static constexpr 
 bool is_digit(const char chr){
 		return chr >= '0' && chr <= '9';}
 
 ///是否为a~z, A~Z的ascii字符
-[[nodiscard]] __fast_inline static constexpr 
+[[nodiscard]] __always_inline static constexpr 
 bool is_alpha(const char chr) {
     return (chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z');
 }
 
 //数字转ascii字符
-[[nodiscard]] __fast_inline static constexpr 
+[[nodiscard]] __always_inline static constexpr 
 char digit2char(uint8_t digit) noexcept {
 	return digit + ((digit > 9) ? ('A' - 10) : '0');
 }
 
 //是否为整数或小数
-static constexpr bool is_numeric(const StringView str) {
+[[nodiscard]] __always_inline static constexpr bool is_numeric(const StringView str) {
 	const auto len = str.length();
 	bool has_digit = false;
 	bool has_dot = false;
@@ -180,7 +180,7 @@ static constexpr bool is_numeric(const StringView str) {
 
 
 //是否为不含符号的整数
-static constexpr bool is_digit(const StringView str){
+[[nodiscard]] __always_inline static constexpr bool is_digit(const StringView str){
 	const auto len = str.length();
     for(size_t i = 0; i < len; i++){
 		char chr = str[i];
@@ -204,14 +204,14 @@ static constexpr inline uint32_t FAST_EXP10_TABLE[] = {
 };
 
 template<typename T>
-__fast_inline constexpr T fast_div_5(T x){return (((int64_t)x*0x66666667L) >> 33);}
+__always_inline constexpr T fast_div_5(T x){return (((int64_t)x*0x66666667L) >> 33);}
 
 template<typename T>
-__fast_inline constexpr T fast_div_10(T x){(((int64_t)x*0x66666667L) >> 34);}
+__always_inline constexpr T fast_div_10(T x){(((int64_t)x*0x66666667L) >> 34);}
 
 template<typename T>
 requires(std::is_unsigned_v<T>)
-__fast_inline constexpr size_t uint_to_num_chars(T value, const Radix radix) {
+__always_inline constexpr size_t uint_to_num_chars(T value, const Radix radix) {
     if (value == 0) return 1;
 
     const auto radix_count = radix.count();
@@ -234,24 +234,38 @@ __fast_inline constexpr size_t uint_to_num_chars(T value, const Radix radix) {
     return length;
 }
 
-__fast_inline constexpr uint32_t fast_exp10(const size_t n){
+__always_inline constexpr uint32_t fast_exp10(const size_t n){
 	return FAST_EXP10_TABLE[n];
 }
 
 template<typename T>
-struct extended_unsigned;
+struct _extended_unsigned;
 
 
-template<> struct extended_unsigned<uint8_t>{using type = uint32_t;};
-template<> struct extended_unsigned<uint16_t>{using type = uint32_t;};
-template<> struct extended_unsigned<uint32_t>{using type = uint64_t;};
-template<> struct extended_unsigned<int8_t>{using type = uint32_t;};
-template<> struct extended_unsigned<int16_t>{using type = uint32_t;};
-template<> struct extended_unsigned<int32_t>{using type = uint32_t;};
-template<> struct extended_unsigned<int>{using type = uint32_t;};
+template<> struct _extended_unsigned<uint8_t>{
+	using type = uint32_t;
+};
+template<> struct _extended_unsigned<uint16_t>{
+	using type = uint32_t;
+};
+template<> struct _extended_unsigned<uint32_t>{
+	using type = uint64_t;
+};
+template<> struct _extended_unsigned<int8_t>{
+	using type = uint32_t;
+};
+template<> struct _extended_unsigned<int16_t>{
+	using type = uint32_t;
+};
+template<> struct _extended_unsigned<int32_t>{
+	using type = uint32_t;
+};
+template<> struct _extended_unsigned<int>{
+	using type = uint32_t;
+};
 
 template<typename T>
-using extended_unsigned_t = typename extended_unsigned<T>::type;
+using extended_unsigned_t = typename _extended_unsigned<T>::type;
 
 template<integral T>
 struct IntDeformatter{
@@ -374,7 +388,7 @@ struct IqDeformatter{
 
 
 template<size_t N>
-__fast_inline static constexpr std::tuple<uint32_t, uint8_t> fast_div(uint32_t x){
+__always_inline static constexpr std::tuple<uint32_t, uint8_t> fast_div(uint32_t x){
 	if constexpr (std::has_single_bit(N)){
 		constexpr size_t shift = __builtin_ctz(N);
 		constexpr size_t mask = N - 1;
@@ -394,7 +408,7 @@ enum class PaddingStrategy:uint8_t{
 
 //格式化u32到字符串(静态派发进制)
 template<size_t Radix, PaddingStrategy S>
-__fast_inline static constexpr void static_fmt_u32(
+__always_inline static constexpr void static_fmt_u32(
 	StringRef str, 
 	uint32_t value
 ){
@@ -414,7 +428,7 @@ __fast_inline static constexpr void static_fmt_u32(
 
 //格式化u32到字符串(动态派发进制)
 template<PaddingStrategy S>
-__fast_inline static constexpr void dyn_fmt_u32(
+__always_inline static constexpr void dyn_fmt_u32(
 	StringRef str, 
 	uint32_t value, 
 	const uint8_t radix_count

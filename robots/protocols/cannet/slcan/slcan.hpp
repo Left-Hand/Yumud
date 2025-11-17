@@ -22,7 +22,7 @@ namespace ymd::robots::slcan{
 
 class [[nodiscard]] SlcanParser final{
 public:
-    using Msg = hal::CanMsg;
+    using Msg = hal::CanClassicMsg;
     using Error = asciican::Error;
     using Flags = asciican::Flags;
 
@@ -81,7 +81,7 @@ struct SlcanResponseFormatter{
     }
 
 
-    static constexpr Response fmt_canmsg(const hal::CanMsg & msg){
+    static constexpr Response fmt_canmsg(const hal::CanClassicMsg & msg){
         String str;
         auto filler = CharsFiller{str.mut_chars()};
         const auto header_char = msg_to_header_char(msg);
@@ -94,14 +94,14 @@ struct SlcanResponseFormatter{
         };
 
         auto push_dlc = [&]() {
-            const size_t dlc = msg.dlc();
-            filler.push_hex(dlc, 1);  // DLC 是1个十六进制字符
+            const size_t length = msg.length();
+            filler.push_hex(length, 1);  // DLC 是1个十六进制字符
         };
 
         auto push_data = [&](){ 
-            const size_t dlc = msg.dlc();
+            const size_t length = msg.length();
             const auto payload_bytes = msg.payload_bytes();
-            for(size_t i = 0; i < dlc; i++){
+            for(size_t i = 0; i < length; i++){
                 filler.push_hex(payload_bytes[i], 2);
             }
         };
@@ -113,7 +113,7 @@ struct SlcanResponseFormatter{
         return Response{str};
     }
 private:
-    [[nodiscard]] static constexpr char msg_to_header_char(const hal::CanMsg & msg){
+    [[nodiscard]] static constexpr char msg_to_header_char(const hal::CanClassicMsg & msg){
         if(msg.is_remote()){
             return msg.is_extended() ? 'R' : 'r';
         }else{

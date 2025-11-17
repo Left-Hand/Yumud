@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types/vectors/vector3.hpp"
-#include "primitive/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 
 namespace ymd {
 

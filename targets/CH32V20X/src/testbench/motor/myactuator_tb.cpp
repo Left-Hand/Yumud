@@ -1,13 +1,15 @@
 #include "src/testbench/tb.h"
 
+#include "primitive/arithmetic/percentage.hpp"
+
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/utils/bytes/bytes_provider.hpp"
 #include "core/utils/bits/bits_caster.hpp"
-#include "primitive/percentage.hpp"
 #include "core/utils/bits/from_bits_debinder.hpp"
 #include "core/utils/enum/strong_type_gradation.hpp"
 #include "core/string/string_view.hpp"
+#include "core/math/float/fp32.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
@@ -549,7 +551,7 @@ struct [[nodiscard]] cmd{};
 struct [[nodiscard]] GetPidParameter{
     using Self = GetPidParameter;
     PidIndex index;
-    float value;
+    fp32 value;
 
     [[nodiscard]] static constexpr Self from_bytes(const std::span<const uint8_t, 7> bytes){
         return Self{

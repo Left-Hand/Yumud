@@ -2,189 +2,82 @@
 
 #include "can_enum.hpp"
 #include "can_id.hpp"
-
-#include <span>
-#include <memory.h>
-#include <tuple>
-#include <ranges>
+#include "can_dlc.hpp"
+#include "platform_spec/can_identifier.hpp"
 
 #include "core/utils/Option.hpp"
 
+
+//这个文件描述了CanClassicMsg类 表示标准Can2.0(bxcan)的消息
+
 namespace ymd::hal{
 
-namespace details{
-
-template<typename T>
-concept is_canid = 
-    (std::is_same_v<std::decay_t<T>, CanStdId> 
-    || std::is_same_v<std::decay_t<T>, CanExtId>)
-;
-
-
-struct [[nodiscard]]SXX32_CanIdentifier{
-
-    template<details::is_canid ID>
-    static constexpr SXX32_CanIdentifier from(
-        const ID id,
-        const CanRtr rmt
-    ){
-        if constexpr(std::is_same_v<ID, CanStdId>){
-            return from_std_id(id, rmt);
-        }else{
-            return from_ext_id(id, rmt);
-        }
-    }
-
-    static constexpr SXX32_CanIdentifier from_bits(uint32_t id_bits){
-        return std::bit_cast<SXX32_CanIdentifier>(id_bits);
-    }
-
-    [[nodiscard]] __always_inline constexpr uint32_t as_bits() const{
-        return std::bit_cast<uint32_t>(*this);
-    }
-
-    [[nodiscard]] __always_inline constexpr bool is_extended() const{
-        return is_ext_;
-    }
-
-    [[nodiscard]] __always_inline constexpr bool is_standard() const{
-        return !is_extended();
-    }
-
-    [[nodiscard]] __always_inline constexpr bool is_remote() const {
-        return is_remote_;
-    }
-
-    [[nodiscard]] __always_inline constexpr uint32_t id_u32() const {
-        if(is_ext_)
-            return ext_id_;
-        else
-            return ext_id_ >> (29-11);
-    }
-
-    const uint32_t __resv__:1 = 1;
-    
-    //是否为远程帧
-    uint32_t is_remote_:1;
-    
-    //是否为扩展帧
-    uint32_t is_ext_:1;
-    uint32_t ext_id_:29;
-private:
-    static constexpr SXX32_CanIdentifier from_std_id(
-        const CanStdId id, 
-        const CanRtr is_remote
-    ){
-        return SXX32_CanIdentifier{
-            .is_remote_ = (is_remote == CanRtr::Remote), 
-            .is_ext_ = false, 
-            .ext_id_ = uint32_t(id.to_u11()) << 18
-        };
-    }
-
-    static constexpr SXX32_CanIdentifier from_ext_id(
-        const CanExtId id, 
-        const CanRtr rtr
-    ){
-        return SXX32_CanIdentifier{
-            .is_remote_ = (rtr == CanRtr::Remote), 
-            .is_ext_ = true, 
-            .ext_id_ = id.to_u29()
-        };
-    }
-};
-static_assert(sizeof(SXX32_CanIdentifier) == 4);
-
-#if 0
-struct [[nodiscard]] Can2B_Payload{
+struct alignas(16) [[nodiscard]] CanClassicMsg{
 public:
-    [[nodiscard]] __fast_inline constexpr uint8_t * data() {return buf_.data();}
-    [[nodiscard]] __fast_inline constexpr uint8_t * begin() {return buf_.begin();}
+    constexpr CanClassicMsg() = default;
 
-    [[nodiscard]] __fast_inline constexpr const uint8_t * data() const {return buf_.data();}
-    [[nodiscard]] __fast_inline constexpr const uint8_t * begin() const {return buf_.begin();}
+    constexpr CanClassicMsg(const CanClassicMsg & other) = default;
+    
+    constexpr CanClassicMsg & operator = (const CanClassicMsg & other) = default;
+    constexpr CanClassicMsg(CanClassicMsg && other) = default;
+    constexpr CanClassicMsg & operator = (CanClassicMsg && other) = default;
 
-    [[nodiscard]] __fast_inline constexpr uint8_t size() const {return length_;}
-    [[nodiscard]] __fast_inline constexpr uint8_t operator[](uint8_t i) const {return buf_[i];}
-private:
-    std::array<uint8_t, 8> buf_;
-    uint8_t length_;
 
-    static constexpr Can2B_Payload from_bytes(const std::span<const uint8_t> pbuf){
-        Can2B_Payload ret;
-        std::copy(pbuf.begin(), pbuf.end(), ret.begin());
-        ret.length_ = pbuf.size();
-        return ret;
+    template<details::is_canid ID>
+    __always_inline static constexpr CanClassicMsg from_empty(ID id){
+        return from_unitialized(id, CanClassicDlc::from_zero());
     }
 
-    friend class CanMsg;
-};
 
-static_assert(sizeof(Can2B_Payload) == 8);
-
-#endif
-
-}
-
-
-struct alignas(16) [[nodiscard]] CanMsg{
-public:
-    constexpr CanMsg() = default;
-
-    constexpr CanMsg(const CanMsg & other) = default;
-    constexpr CanMsg(CanMsg && other) = default;
-
-    constexpr CanMsg & operator = (const CanMsg & other) = default;
-    constexpr CanMsg & operator = (CanMsg && other) = default;
+    template<details::is_canid ID>
+    __always_inline static constexpr CanClassicMsg from_unitialized(ID id, const CanClassicDlc dlc){
+        return CanClassicMsg(id, dlc);
+    }
 
 
     template<details::is_canid ID>
-    static constexpr CanMsg from_empty(ID id){
-        return CanMsg(id, CanRtr::Data);}
+    __always_inline static constexpr CanClassicMsg from_remote(ID id){
+        return CanClassicMsg(id, CanRtr::Remote);}
 
     template<details::is_canid ID>
-    static constexpr CanMsg from_remote(ID id){
-        return CanMsg(id, CanRtr::Remote);}
-
-    template<details::is_canid ID>
-    static constexpr CanMsg from_bytes(ID id, 
-        const std::span<const uint8_t> pbuf)
-        {return CanMsg(id, pbuf);}
+    static constexpr CanClassicMsg from_bytes(ID id, 
+        const std::span<const uint8_t> bytes)
+        {return CanClassicMsg(id, bytes);}
 
 
     template<details::is_canid ID, size_t N>
     requires (N <= 8)
-    static constexpr CanMsg from_bytes(
+    static constexpr CanClassicMsg from_bytes(
         ID id, 
-        const std::span<const uint8_t, N> pbuf
+        const std::span<const uint8_t, N> bytes
     ){
-        return CanMsg(id, pbuf);
+        return CanClassicMsg(id, bytes);
     }
 
 
     template<details::is_canid ID, std::ranges::range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, uint8_t>
-    static constexpr CanMsg from_bytes(ID id, R && range){
+    static constexpr CanClassicMsg from_bytes(ID id, R && range){
         std::array<uint8_t, 8> buf;
         uint8_t len = 0;
         for(auto && val : range){
             buf[len] = (static_cast<uint8_t>(val));
             len++;
         }
-        return CanMsg(id, std::span(buf.data(), len));
+        return CanClassicMsg(id, std::span(buf.data(), len));
     }
 
     template<details::is_canid ID>
-    static constexpr CanMsg from_list(
+    static constexpr CanClassicMsg from_list(
         ID id, 
-        const std::initializer_list<uint8_t> pbuf
+        const std::initializer_list<uint8_t> bytes
     ){
-        return CanMsg(id, std::span<const uint8_t>(pbuf.begin(), pbuf.size()));
+        return CanClassicMsg(id, std::span<const uint8_t>(bytes.begin(), bytes.size()));
     }
 
     template<details::is_canid ID, typename Iter>
     requires is_next_based_iter_v<Iter>
-    static constexpr Option<CanMsg> from_iter(ID id, Iter iter) {
+    static constexpr Option<CanClassicMsg> from_iter(ID id, Iter iter) {
         std::array<uint8_t, 8> buf{};
         size_t len = 0;
         
@@ -199,12 +92,12 @@ public:
         }
         
         // 使用数组视图构造CanMsg
-        return Some(CanMsg::from_bytes(id, std::span{buf.data(), len}));
+        return Some(CanClassicMsg::from_bytes(id, std::span{buf.data(), len}));
     }
 
     template<details::is_canid ID, typename Iter>
     requires is_next_based_iter_v<Iter>
-    static constexpr CanMsg from_iter_unchecked(ID id, Iter iter) {
+    static constexpr CanClassicMsg from_iter_unchecked(ID id, Iter iter) {
         std::array<uint8_t, 8> buf{};
         size_t len = 0;
         
@@ -214,41 +107,63 @@ public:
         }
 
         // 使用unsafe方式构造CanMsg（假设调用者保证有效性）
-        return CanMsg::from_bytes(id, std::span{buf.data(), len});
+        return CanClassicMsg::from_bytes(id, std::span{buf.data(), len});
     }
 
-    static constexpr CanMsg from_sxx32_regs(uint32_t id_bits, uint64_t payload, uint8_t len){
-        return CanMsg(id_bits, payload, len);}
+    static constexpr __always_inline CanClassicMsg from_sxx32_regs(
+        uint32_t id_bits, 
+        uint64_t payload, 
+        uint8_t len
+    ){
+        return CanClassicMsg(id_bits, payload, len);}
 
-    [[nodiscard]] constexpr size_t size() const {return dlc_;}
-    [[nodiscard]] constexpr size_t dlc() const {return dlc_;}
+    [[nodiscard]] __always_inline constexpr size_t length() const {return dlc().length();}
+    [[nodiscard]] __always_inline constexpr CanClassicDlc dlc() const {
+        return CanClassicDlc::from_bits(dlc_);}
 
-    [[nodiscard]] constexpr CanMsg clone(){
+    [[nodiscard]] constexpr CanClassicMsg clone(){
         return *this;
     }
 
-    [[nodiscard]] constexpr std::span<const uint8_t> payload_bytes() const{
-        return std::span(payload_bytes_.begin(), size());
+    [[nodiscard]] __always_inline constexpr std::span<const uint8_t> payload_bytes() const{
+        return std::span(payload_bytes_.data(), length());
+    }
+
+    [[nodiscard]] __always_inline constexpr std::span<uint8_t> mut_payload_bytes() {
+        return std::span(payload_bytes_.data(), length());
     }
 
     template<size_t N>
     requires (N <= 8)
-    [[nodiscard]] constexpr std::span<const uint8_t, N> payload_bytes_with_length() const{
-        if(N > size())
+    [[nodiscard]] __always_inline constexpr std::span<const uint8_t, N> payload_bytes_sized() const{
+        if(N > length())
             __builtin_abort();
         return std::span<const uint8_t, N>(payload_bytes_.data(), N);
     }
 
-    [[nodiscard]] constexpr bool is_standard() const {return identifier_.is_standard();}
-    [[nodiscard]] constexpr bool is_extended() const {return identifier_.is_extended();}
-    [[nodiscard]] constexpr bool is_remote() const {return identifier_.is_remote();}
-    [[nodiscard]] constexpr uint8_t mailbox() const {return mbox_;}
+    /// @brief 是否为标准帧 
+    [[nodiscard]] __always_inline constexpr bool is_standard() const {
+        return identifier_.is_standard();
+    }
 
-    [[nodiscard]] constexpr uint32_t id_as_u32() const {
+    /// @brief 是否为拓展帧 
+    [[nodiscard]] __always_inline constexpr bool is_extended() const {
+        return identifier_.is_extended();
+    }
+
+    /// @brief 是否为远程帧 
+    [[nodiscard]] __always_inline constexpr bool is_remote() const {
+        return identifier_.is_remote();
+    }
+    [[nodiscard]] __always_inline constexpr uint8_t mailbox() const {
+        return mbox_;
+    }
+
+    [[nodiscard]] __always_inline constexpr uint32_t id_as_u32() const {
         return identifier_.id_u32();
     }
 
-    [[nodiscard]] constexpr uint32_t sxx32_identifier_as_u32() const {
+    [[nodiscard]] __always_inline constexpr uint32_t sxx32_identifier_as_u32() const {
         return identifier_.as_bits();
     }
 
@@ -262,7 +177,7 @@ public:
         return Some(hal::CanExtId(identifier_.id_u32()));
     }
 
-    [[nodiscard]] constexpr uint64_t payload_as_u64() const {
+    [[nodiscard]] __always_inline constexpr uint64_t payload_as_u64() const {
         return std::bit_cast<uint64_t>(payload_bytes_);
     }
 
@@ -270,43 +185,61 @@ public:
 
 private:
     template<details::is_canid ID>
-    __fast_inline constexpr CanMsg(const ID id, const CanRtr remote):
-        identifier_(details::SXX32_CanIdentifier::from(id, remote))
+    __always_inline constexpr CanClassicMsg(
+        const ID id, 
+        const CanRtr rtr
+    ):
+        identifier_(details::SXX32_CanIdentifier::from(id, rtr))
     {
         dlc_ = 0;
     }
 
     template<details::is_canid ID>
-    __fast_inline constexpr CanMsg(
-            const ID id, 
-            const std::span<const uint8_t> pbuf
-    ) : 
-        CanMsg(id, CanRtr::Data)
+    __always_inline constexpr CanClassicMsg(
+        const ID id, 
+        const CanClassicDlc _dlc
+    ):
+        identifier_(details::SXX32_CanIdentifier::from(id, CanRtr::Data))
     {
-        dlc_ = std::min(pbuf.size(), size_t(8));
+        dlc_ = _dlc.length();
+    }
 
+
+    template<details::is_canid ID>
+    __always_inline constexpr CanClassicMsg(
+        const ID id, 
+        const std::span<const uint8_t> bytes
+    ) : 
+        CanClassicMsg(id, CanRtr::Data)
+    {
+        dlc_ = std::min(bytes.size(), size_t(8));
+
+        #pragma GCC unroll 4
         for(size_t i = 0; i < dlc_ ; i++){
-            payload_bytes_[i] = (pbuf[i]);
+            payload_bytes_[i] = (bytes[i]);
         }
 
+        #pragma GCC unroll 4
         for(size_t i = dlc_; i < 8; i++){
             payload_bytes_[i] = 0;
         }
     }
 
-    __fast_inline constexpr CanMsg(const uint32_t id_bits, const uint64_t data, const uint8_t dlc):
+    __always_inline constexpr CanClassicMsg(const uint32_t id_bits, const uint64_t data, const uint8_t dlc):
         identifier_(details::SXX32_CanIdentifier::from_bits(id_bits))
     {
         const auto buf = std::bit_cast<std::array<uint8_t, 8>>(data);
+
+        #pragma GCC unroll 4
         for(size_t i = 0; i < dlc; i++){
             payload_bytes_[i] = buf[i];
         }
         dlc_ = dlc;
     }
 
-    details::SXX32_CanIdentifier identifier_;
-    std::array<uint8_t, 8> payload_bytes_;
 
+    alignas(4) CanIdentifier identifier_;
+    alignas(4) std::array<uint8_t, 8> payload_bytes_;
     uint8_t dlc_:4;     
     /* Specifies the length of the frame that will be received.
     This parameter can be a value between 0 to 8 */
@@ -324,5 +257,5 @@ private:
 
 namespace ymd{
     class OutputStream;
-    OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg);
+    OutputStream & operator<<(OutputStream & os, const hal::CanClassicMsg & msg);
 }

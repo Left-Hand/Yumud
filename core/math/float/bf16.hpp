@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <bit>
 #include <array>
+#include <span>
 
 namespace ymd{
 
@@ -33,13 +34,19 @@ struct [[nodiscard]] bf16 {
 
     static_assert(sizeof(Storage) == 2);
 
-
-
     constexpr bf16(){;}
 
     constexpr bf16 & operator = (const bf16 & other){
         storage_ = other.storage_;
         return *this;
+    }
+
+    static constexpr bf16 from_bits(const uint16_t bits){
+        return bf16(Storage::from_bits(bits));
+    }
+    
+    [[nodiscard]] constexpr uint16_t as_bits() const {
+        return storage_.as_bits();
     }
 
     constexpr bf16(const bf16 & other):storage_(other.storage_){;}
@@ -62,43 +69,40 @@ struct [[nodiscard]] bf16 {
     }
 
     // bf16 -> float
-    explicit constexpr operator float() const {
+    [[nodiscard]] explicit constexpr operator float() const {
         uint32_t f32_bits = uint32_t(storage_.as_bits()) << 16;
         return std::bit_cast<float>(f32_bits);
     }
 
-    explicit constexpr operator int() const {
+    [[nodiscard]] explicit constexpr operator int() const {
         return int(float(*this));
     }
 
     template <size_t Q>
-    explicit constexpr operator fixed_t<Q, int32_t>() const{
+    [[nodiscard]] explicit constexpr operator fixed_t<Q, int32_t>() const{
         return fixed_t<Q, int32_t>::from(float(*this));
     }
 
-    friend OutputStream & operator << (OutputStream & os, const bf16 v);
-
-    [[nodiscard]] constexpr uint16_t as_bits() const {
-        return storage_.as_bits();
-    }
-
-    [[nodiscard]] constexpr std::array<uint8_t, 2> to_le_bytes() const {
+    [[nodiscard]] constexpr std::array<uint8_t, 2> to_bytes() const {
         const uint16_t bits = as_bits();
-        return std::array<uint8_t, 2>{
-            static_cast<uint8_t>(bits & 0xff),
-            static_cast<uint8_t>(bits >> 8),
-        };
+        return std::bit_cast<std::array<uint8_t, 2>>(bits);
     }
 
-    static constexpr bf16 from_bits(const uint16_t bits){
-        return bf16(Storage::from_bits(bits));
+    [[nodiscard]] std::span<const uint8_t, 2> as_bytes() const {
+        return std::span<const uint8_t, 2>(
+            reinterpret_cast<const uint8_t *>(this), 2
+        );
     }
+
+    friend OutputStream & operator << (OutputStream & os, const bf16 v);
 private:
     Storage storage_;
 
     constexpr explicit bf16(const Storage & sto):
         storage_(sto){;}
 };
+
+static_assert(sizeof(bf16) == 2);
 
 consteval bf16 operator"" _bf16(long double x){
     return bf16(x);

@@ -389,7 +389,7 @@ void myservo_main(){
         // DEBUG_PRINTLN("after", can.pending());
         // clock::delay(2ms);
 
-        // constexpr auto msg = CanMsg::from_remote(CanStdId(0xff));
+        // constexpr auto msg = CanClassicMsg::from_remote(CanStdId(0xff));
         // can.write(msg);
         const auto curr = duty_is_forward ? curr_filter.get() : -curr_filter.get();
         DEBUG_PRINTLN_IDLE(

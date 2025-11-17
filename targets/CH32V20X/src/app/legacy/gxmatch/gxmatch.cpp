@@ -1462,8 +1462,8 @@ void host_main(){
             // stp.setTargetSpeed(targ);
             stp.getPosition();
             // stp.setTargetPosition(targ);
-            // can.write(CanMsg{0b0010'00000010, std::make_tuple(targ)});
-            // can.write(CanMsg{0b0010'00000010, std::make_tuple(targ)});
+            // can.write(CanClassicMsg{0b0010'00000010, std::make_tuple(targ)});
+            // can.write(CanClassicMsg{0b0010'00000010, std::make_tuple(targ)});
 
             led.toggle();
             clock::delay(19ms);

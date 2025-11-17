@@ -15,7 +15,7 @@ namespace ymd::robots::asciican{
 
 namespace operations{
     struct [[nodiscard]] SendCanMsg{
-        hal::CanMsg msg;
+        hal::CanClassicMsg msg;
 
         friend OutputStream & operator<<(OutputStream & os, const SendCanMsg & self){ 
             return os << os.field("msg")(os << self.msg);
@@ -91,7 +91,7 @@ struct [[nodiscard]] Operation:public Sumtype<
 
 };
 
-using Msg = hal::CanMsg;
+using Msg = hal::CanClassicMsg;
 
 enum class Error:uint8_t{
     NoInput,

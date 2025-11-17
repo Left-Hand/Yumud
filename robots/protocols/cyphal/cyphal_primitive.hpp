@@ -1,7 +1,6 @@
 #pragma once
 
-#include <cstdint>
-#include <bits>
+#include "primitive/can/can_id.hpp"
 
 namespace ymd::cyphal{
 
@@ -68,8 +67,8 @@ public:
         return std::bit_cast<uint32_t>(*this);
     }
 
-    [[nodiscard]] constexpr TransferPriority priority_() const{
-        return static_cast<TransferPriority>(priority_bits_);
+    [[nodiscard]] constexpr TransferPriority priority() const{
+        return std::bit_cast<TransferPriority>(static_cast<uint8_t>(priority_));
     }
 
     [[nodiscard]] constexpr NodeId source_id() const{
@@ -87,7 +86,7 @@ public:
 private:
     uint32_t source_node_id_:7;
     const uint32_t __hw_0:1 = 0;
-    uint32_t subject_id_:16;
+    uint32_t subject_id_:13;
     const uint32_t __hw_1:3 = 0b011;
     uint32_t anonymous_:1;
     const uint32_t __hw_2:1 = 0b0;
@@ -137,6 +136,28 @@ private:
     uint32_t priority_:3;
     uint32_t __resv__:3;
 };
+
+struct [[nodiscard]] TailByte{
+    using Self = TailByte;
+    uint8_t transfer_id:5;
+    uint8_t toggle:1;
+    uint8_t is_end_of_transfer:1;
+    uint8_t is_start_of_transfer:1;
+
+    static constexpr TailByte from_bits(uint8_t bits) {
+        return std::bit_cast<TailByte>(bits);
+    }
+    [[nodiscard]] static constexpr Self from_bits(const uint8_t bits){
+        return std::bit_cast<Self>(bits);
+    }
+
+    [[nodiscard]] constexpr uint8_t as_bits() const {
+        return std::bit_cast<uint8_t>(*this);
+    }
+};
+
+static_assert(sizeof(TailByte) == 1);
+
 
 
 }

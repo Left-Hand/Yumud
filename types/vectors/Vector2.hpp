@@ -34,7 +34,7 @@
 
 #include "core/stream/ostream.hpp"
 #include "core/math/real.hpp"
-#include "primitive/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 #include "core/math/matrix/static_matrix.hpp"
 
 namespace ymd{

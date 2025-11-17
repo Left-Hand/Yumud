@@ -8,7 +8,7 @@ using namespace ymd::canopen;
 
 
 //从当前pdo的参数构造一个报文
-CanMsg PdoTxSession::buildMessage() const {
+CanClassicMsg PdoTxSession::buildMessage() const {
     //mapping条目0项对应映射项数目
     //mapping条目s剩余子项按照Packet映射
 
@@ -48,7 +48,7 @@ CanMsg PdoTxSession::buildMessage() const {
 
     numBytes = std::min(numBytes, 8);
 
-    return CanMsg::from_bytes(
+    return CanClassicMsg::from_bytes(
         cobId.to_stdid(), 
         std::span(data)
     );
@@ -56,7 +56,7 @@ CanMsg PdoTxSession::buildMessage() const {
 
 #if 0
 //将收到的pdo报文写入字典
-bool PdoRxSession::processMessage(const CanMsg& msg){
+bool PdoRxSession::processMessage(const CanClassicMsg& msg){
     const CobId cobId = CobId::from_u16(int(params_[1].unwrap()));
 
     if (cobId.to_stdid() != hal::CanStdId(msg.id())) {

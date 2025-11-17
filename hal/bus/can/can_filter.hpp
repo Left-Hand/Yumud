@@ -108,7 +108,7 @@ static_assert(sizeof(SXX32_CanExtIdMask) == 4);
 template<typename T>
 struct [[nodiscard]] _CanIdMaskPair final{
     using id_type = typename T::id_type;
-    static constexpr size_t ID_LEN = id_type::LENGTH;
+    static constexpr size_t ID_NUM_BITS = id_type::NUM_BITS;
 
     T id;
     T mask;
@@ -140,25 +140,25 @@ struct [[nodiscard]] _CanIdMaskPair final{
     }
 
     static constexpr Option<_CanIdMaskPair> from_str(
-        const char (&str)[ID_LEN + 1],
+        const char (&str)[ID_NUM_BITS + 1],
         CanRtrSpecfier spec
     ){
-        return from_str(std::span<const char, ID_LEN>(
-            static_cast<const char *>(str), ID_LEN), 
+        return from_str(std::span<const char, ID_NUM_BITS>(
+            static_cast<const char *>(str), ID_NUM_BITS), 
             spec
         );
     }
 
     static constexpr Option<_CanIdMaskPair> from_str(
-        std::span<const char, ID_LEN> str,
+        std::span<const char, ID_NUM_BITS> str,
         CanRtrSpecfier spec
     ){
         // valid token: 0/1/X
         uint32_t id = 0;
         uint32_t mask = 0;
-        for(size_t i = 0; i < ID_LEN; i++){
+        for(size_t i = 0; i < ID_NUM_BITS; i++){
             const auto chr = str[i];
-            const size_t bit_pos = ID_LEN - 1 - i; // Correct bit position mapping
+            const size_t bit_pos = ID_NUM_BITS - 1 - i; // Correct bit position mapping
             switch(chr){
                 // Correct approach would be:
                 case '0':

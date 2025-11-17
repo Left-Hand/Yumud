@@ -4,10 +4,8 @@
 
 namespace ymd{
 
-OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg){
+OutputStream & operator<<(OutputStream & os, const hal::CanClassicMsg & msg){
     const auto guard = os.create_guard();
-    
-    os << os.brackets<'{'>();
 
     os << '<'
         << ((msg.is_standard()) ? 'S' : 'E')
@@ -17,11 +15,11 @@ OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg){
     os << "id=" << std::hex << std::showbase << msg.id_as_u32();
 
     if(not msg.is_remote()){
-        os << " | buf[" << std::dec << msg.size() << "]=" 
+        os << " | buf[" << std::dec << msg.length() << "]=" 
             << std::hex << msg.payload_bytes();
     }
 
-    return os << os.brackets<'}'>();
+    return os;
 }
 
 }

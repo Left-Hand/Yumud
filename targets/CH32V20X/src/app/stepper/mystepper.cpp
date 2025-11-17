@@ -9,7 +9,7 @@
 #include "core/utils/release_info.hpp"
 #include "core/utils/bits/bitflag.hpp"
 #include "core/string/string_view.hpp"
-#include "primitive/build_date.hpp"
+#include "primitive/misc/build_date.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/analog/adc/adcs/adc1.hpp"
@@ -36,7 +36,7 @@
 #include "robots/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/pwmgen/stepper_pwmgen.hpp"
-#include "primitive/progress.hpp"
+#include "primitive/arithmetic/progress.hpp"
 
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/calibrate_table.hpp"
@@ -58,8 +58,6 @@ using digipw::AlphaBetaCoord;
 struct PreoperateTasks{
 
 };
-
-
 
 
 class MotorFibre{

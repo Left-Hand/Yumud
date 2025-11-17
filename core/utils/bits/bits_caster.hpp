@@ -45,13 +45,23 @@ struct _from_bits<T>{
     }
 };
 
-template<typename T>
-requires (std::is_floating_point_v<T>)
-struct _from_bits<T>{
-    using bits_type = std::conditional_t<std::is_same_v<T, float>, uint32_t, uint64_t>;
+template<>
+struct _from_bits<float>{
+    static_assert(sizeof(float) == 4);
+    using bits_type = uint32_t;
 
-    [[nodiscard]] static constexpr T into_obj(const bits_type bits){
-        return std::bit_cast<T>(bits);
+    [[nodiscard]] static constexpr float into_obj(const bits_type bits){
+        return std::bit_cast<float>(bits);
+    } 
+};
+
+template<>
+struct _from_bits<double>{
+    static_assert(sizeof(double) == 8);
+    using bits_type = uint64_t;
+
+    [[nodiscard]] static constexpr double into_obj(const bits_type bits){
+        return std::bit_cast<double>(bits);
     } 
 };
 

@@ -73,7 +73,7 @@ void m3508_main(){
         // port.tick();
 
         // DEBUGGER.println(port[1].getCurrent(), port[2].getCurrent(), port[3].getCurrent(), port[4].getCurrent(), can1.read()); 
-        // auto msg = CanMsg{0x1ff, std::tuple<int16_t, int16_t, int16_t, int16_t>(data, data, data, data)};
+        // auto msg = CanClassicMsg{0x1ff, std::tuple<int16_t, int16_t, int16_t, int16_t>(data, data, data, data)};
         // can1.write(msg);
         // can1.write({0x2fe, std::tuple<int16_t, int16_t, int16_t, int16_t>(5000, 5000, 5000, 5000)});
         // clock::delay(3ms);

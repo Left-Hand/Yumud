@@ -1,7 +1,7 @@
 #pragma once
 
 #include "uvw.hpp"
-#include "primitive/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 #include "types/gesture/rotation2.hpp"
 
 namespace ymd::digipw{

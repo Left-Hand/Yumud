@@ -235,7 +235,7 @@ void nuedc_2025e_joint_main(){
     RunStatus run_status_;
     run_status_.state = RunState::Idle;
 
-    RingBuf<hal::CanMsg, CANMSG_QUEUE_SIZE> msg_queue_;
+    RingBuf<hal::CanClassicMsg, CANMSG_QUEUE_SIZE> msg_queue_;
 
     AlphaBetaCoord<iq16> ab_volt_;
     
@@ -405,7 +405,7 @@ void nuedc_2025e_joint_main(){
     };
 
 
-    auto read_can_msg = [&] -> Option<hal::CanMsg>{
+    auto read_can_msg = [&] -> Option<hal::CanClassicMsg>{
         while(can.available()){
             auto msg = can.read();
             if(msg.is_extended()) continue;
@@ -512,7 +512,7 @@ void nuedc_2025e_joint_main(){
             }
         };
 
-        auto handle_msg = [&](const hal::CanMsg & msg){
+        auto handle_msg = [&](const hal::CanClassicMsg & msg){
             const auto id = msg.stdid().unwrap();
             const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(id);
             if(msg_role != self_node_role_) return;

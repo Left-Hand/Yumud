@@ -2,7 +2,7 @@
 
 #include "details/ICM42688_Prelude.hpp"
 #include "core/utils/enum/enum_array.hpp"
-#include "primitive/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 
 namespace ymd::drivers{
 

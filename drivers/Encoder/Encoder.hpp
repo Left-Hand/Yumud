@@ -3,7 +3,7 @@
 
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
-#include "primitive/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 #include "core/utils/Errno.hpp"
 
 

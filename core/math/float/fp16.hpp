@@ -3,7 +3,8 @@
 #include "../real.hpp"
 #include <cstdint>
 
-struct fp16{
+namespace ymd{
+struct [[nodiscard]] fp16{
     union{
         uint16_t raw;
         struct{
@@ -148,3 +149,7 @@ struct fp16{
         return fixed_t(float(*this));
     }
 }__packed;
+
+static_assert(sizeof(fp16) == 2);
+
+}

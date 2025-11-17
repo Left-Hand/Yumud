@@ -40,7 +40,7 @@ void m2006_main(){
             int16_t d2;
         };
 
-        hal::CanMsg msg = hal::CanMsg::from_bytes(
+        hal::CanClassicMsg msg = hal::CanClassicMsg::from_bytes(
             hal::CanStdId(0x200), 
             std::bit_cast<std::array<uint8_t, 4>>(
                 Payload{BSWAP_16(d), BSWAP_16(d2)}
