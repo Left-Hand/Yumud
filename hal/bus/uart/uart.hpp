@@ -57,7 +57,7 @@ public:
 
     [[nodiscard]] size_t available() const {return rx_fifo_.available();}
     [[nodiscard]] size_t pending() const {return tx_fifo_.available();}
-    [[nodiscard]] size_t remain() const {return tx_fifo_.size() - tx_fifo_.available();}
+    [[nodiscard]] size_t remain() const {return tx_fifo_.capacity() - tx_fifo_.available();}
 
     virtual void set_tx_strategy(const CommStrategy tx_strategy) = 0;
     virtual void set_rx_strategy(const CommStrategy rx_strategy) = 0;

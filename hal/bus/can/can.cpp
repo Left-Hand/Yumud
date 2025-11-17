@@ -361,7 +361,7 @@ void Can::enable_hw_retransmit(const Enable en){
 
 Result<void, CanError> Can::write(const CanMsg & msg){
     auto push_buf = [this, &msg]() -> Result<void, CanError>{ 
-        if(tx_fifo_.writable_capacity() > 0){
+        if(tx_fifo_.writable_size() > 0){
             tx_fifo_.push(msg);
             return Ok();
         }

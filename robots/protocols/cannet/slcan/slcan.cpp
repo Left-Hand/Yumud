@@ -30,9 +30,9 @@ Option<uint8_t> hex2digit(char c){
         case '0' ... '9':
             return Some(c - '0');
         case 'a' ... 'f':
-            return Some(c - 'a' + 10);
+            return Some((c - 'a') + 10);
         case 'A' ... 'F':
-            return Some(c - 'A' + 10);
+            return Some((c - 'A') + 10);
         default:
             return None;
     }
@@ -44,7 +44,7 @@ char digit2hex(const uint8_t digit){
         case 0 ... 9:
             return digit + '0';
         case 10 ... 15:
-            return digit - 10 + 'a';
+            return (digit - 10) + 'a';
         default:
             return 0;
     }
@@ -58,6 +58,7 @@ IResult<uint32_t> parse_hex(const StringView str){
 
     uint32_t ret = 0;
 
+    #pragma GCC unroll 8
     for(size_t i = 0; i < str.length(); i++){
         const auto chr = str[i];
         const auto may_digit = hex2digit(chr);
