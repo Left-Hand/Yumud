@@ -44,7 +44,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
 
     timer.register_nvic<hal::TimerIT::CC4>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::CC4>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             pwm_gen.on_update_isr();

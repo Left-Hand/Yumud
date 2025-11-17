@@ -81,6 +81,7 @@ struct [[nodiscard]] CanFdDlc{
             case 14:    return 48;
             case 15:    return 64;
         }
+        __builtin_unreachable();
     };
 
     [[nodiscard]] constexpr uint8_t as_bits() const {

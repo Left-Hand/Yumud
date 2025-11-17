@@ -24,7 +24,6 @@ struct ExampleReg{
     uint32_t __RESV__:16;
 };
 
-static constexpr auto spi_reg = ExampleReg{0};
 
 template<typename T>
 struct bitfield_reflecter{

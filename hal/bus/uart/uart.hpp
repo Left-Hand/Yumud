@@ -63,7 +63,7 @@ public:
     virtual void set_rx_strategy(const CommStrategy rx_strategy) = 0;
 
     template<typename Fn>
-    void set_event_callback(Fn && cb){callback_ = std::forward<Fn>(cb);}
+    void set_event_handler(Fn && cb){callback_ = std::forward<Fn>(cb);}
 
     HalResult read(uint32_t & data) {
         char _;read1(_);data = _;return HalResult::Ok();};

@@ -1,7 +1,7 @@
 #include "m3508.hpp"
 #include "core/math/realmath.hpp"
 
-using namespace ymd::robots;
+using namespace ymd::robots::dji::m3508;
 
 using M3508 = M3508Port::M3508;
 #define LIMIT 1000

@@ -109,7 +109,7 @@ public:
     [[nodiscard]] HalResult set_bitorder(const BitOrder bitorder);
 
     template<typename Fn>
-    void set_event_callback(Fn && fn){
+    void set_event_handler(Fn && fn){
         callback_ = std::forward<Fn>(fn);
     }
 
