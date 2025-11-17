@@ -1,6 +1,6 @@
 #include "MotorCyberGear.hpp"
 
-#include "core/utils/BitField.hpp"
+#include "core/utils/bits/BitField.hpp"
 
 #define MOTOR_DEBUG_EN
 

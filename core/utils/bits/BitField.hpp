@@ -7,7 +7,7 @@ template<typename D,
 	size_t b_bits, size_t e_bits,
     typename I = D>
 
-struct BitField{
+struct BitFieldRef{
 private:    
     using T = std::decay_t<D>;
     D & data_;
@@ -21,7 +21,7 @@ public:
     using data_type = D;
 
     [[nodiscard]] __inline constexpr
-    explicit BitField(D & data):data_(data){;}
+    explicit BitFieldRef(D & data):data_(data){;}
 
     __inline constexpr 
     auto & operator =(const I & in){
@@ -77,7 +77,7 @@ template<size_t b_bits, size_t e_bits, typename I>
 [[nodiscard]] __inline static constexpr
 auto _make_bitfield(auto && data){
     using D = typename std::remove_reference_t<decltype(data)>;
-    return BitField<D, b_bits, e_bits, I>(data);
+    return BitFieldRef<D, b_bits, e_bits, I>(data);
 }
 
 template<typename T>
@@ -114,7 +114,7 @@ public:
     [[nodiscard]] __inline constexpr 
     auto get() const {
         static_assert(idx < cnt, "index out of range");
-        return BitField<T, b_bits + per_len * idx, b_bits + per_len * (idx + 1)>(data_);
+        return BitFieldRef<T, b_bits + per_len * idx, b_bits + per_len * (idx + 1)>(data_);
     }
 };
 
@@ -167,17 +167,17 @@ BitFieldArray<D, b_bits, per_len, cnt> make_bfarray(D & data){
 // };
 
 // template<typename TDummy>
-// struct BitField{};
+// struct BitFieldRef{};
 
 
 
 
 
 // template<auto ... Args>
-// using BitField_u16 = BitField<const uint16_t, Args...>;
+// using BitField_u16 = BitFieldRef<const uint16_t, Args...>;
 
 // template<auto ... Args>
-// using BitField_mu16 = BitField<uint16_t, Args...>;
+// using BitField_mu16 = BitFieldRef<uint16_t, Args...>;
 
 
 
@@ -190,12 +190,12 @@ BitFieldArray<D, b_bits, per_len, cnt> make_bfarray(D & data){
 //     // using T = std::remove_pointer_t<decltype(obj)>;
 //     using D = typename std::remove_const_t<reg_data_type_t<T>>;
     
-//     return BitField<D, b_bits, e_bits>(*reinterpret_cast<D *>(obj));
+//     return BitFieldRef<D, b_bits, e_bits>(*reinterpret_cast<D *>(obj));
 // }
 
 
 // template<size_t b_bits, size_t e_bits, typename I>
-// BitField(auto && data) -> BitField<decltype(data), b_bits, e_bits, I>;
+// BitFieldRef(auto && data) -> BitFieldRef<decltype(data), b_bits, e_bits, I>;
 
 
 
@@ -203,7 +203,7 @@ BitFieldArray<D, b_bits, per_len, cnt> make_bfarray(D & data){
 // template<size_t b_bits, size_t e_bits, typename D, typename I = D>
 // __inline static constexpr
 // auto make_mut_bitfield(D & data){
-//     return BitField<D, b_bits, e_bits, I>(data);
+//     return BitFieldRef<D, b_bits, e_bits, I>(data);
 // }
 
 
@@ -218,6 +218,6 @@ BitFieldArray<D, b_bits, per_len, cnt> make_bfarray(D & data){
 //         reg_data_type_t<T>
 //     >;
     
-//     return BitField<reg_data_type, b_bits, e_bits>(reinterpret_cast<reg_data_type &>(*obj));
+//     return BitFieldRef<reg_data_type, b_bits, e_bits>(reinterpret_cast<reg_data_type &>(*obj));
 // }
 }

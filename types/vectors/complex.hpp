@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/platform.hpp"
-#include "core/utils/angle.hpp"
+#include "primitive/angle.hpp"
 #include "core/math/realmath.hpp"
 #include "types/vectors/Vector2.hpp"
 

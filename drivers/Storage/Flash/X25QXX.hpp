@@ -5,7 +5,7 @@
 #include "core/clock/clock.hpp"
 
 #include "primitive/storage.hpp"
-#include "primitive/jedec.hpp"
+#include "primitive/storage/jedec.hpp"
 
 
 #include "hal/bus/i2c/i2cdrv.hpp"

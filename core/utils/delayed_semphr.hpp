@@ -4,7 +4,7 @@
 
 namespace ymd{
 
-class DelayedSemphr final{
+class [[nodiscard]] DelayedSemphr final{
 public:
     DelayedSemphr(const Milliseconds delay_ms):
         delay_ms_(delay_ms){;}
@@ -17,7 +17,7 @@ public:
         last_millis_ = Milliseconds(clock::millis());
     }
 
-    bool take(){
+    [[nodiscard]] bool take(){
         if(last_millis_.has_value() and last_millis_.value() + delay_ms_ < clock::millis()){
             last_millis_ = std::nullopt;
             return true;

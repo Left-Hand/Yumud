@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "core/utils/rescaler.hpp"
+#include "primitive/rescaler.hpp"
 
 namespace ymd::hal{
 

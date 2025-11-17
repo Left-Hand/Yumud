@@ -12,7 +12,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
-#include "core/utils/angle.hpp"
+#include "primitive/angle.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -250,11 +250,6 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x4c
     //0x4d
 };
-
-
-
-
-
 
 
 };

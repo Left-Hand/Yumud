@@ -38,7 +38,7 @@ struct MyU18BurstPixelDataIter{
 
     constexpr uint16_t next() {
         const bool iter_has_next = iter_.has_next();
-        if((queue_.writable_capacity() > 18) and iter_has_next){
+        if((queue_.writable_size() > 18) and iter_has_next){
             const uint16_t next_u16 = iter_.next();
             queue_.push_bit(DATA_BIT);
             queue_.push_bits<8>(next_u16 >> 8);
@@ -59,7 +59,7 @@ struct MyU18BurstPixelDataIter{
     };
 private:
     Iter iter_;
-    BitsQueue queue_;
+    BitQueue queue_;
     bool is_runout_ = false;
 };
 

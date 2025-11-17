@@ -14,7 +14,7 @@
 #include "core/utils/Result.hpp"
 #include "core/magic/enum_traits.hpp"
 #include "core/stream/ostream.hpp"
-#include "core/utils/angle.hpp"
+#include "primitive/angle.hpp"
 
 namespace ymd::strconv2 {
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Result.hpp"
+#include "core/utils/Result.hpp"
 
 
 #define DEF_STRONG_TYPE_GRADATION(name, fn_name, D, T, start, stop, step)\

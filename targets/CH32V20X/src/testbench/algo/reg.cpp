@@ -1,7 +1,7 @@
 #include "../tb.h"
 
 #include "core/magic/size_traits.hpp"
-#include "core/utils/BitField.hpp"
+#include "core/utils/bits/BitField.hpp"
 
 using namespace ymd;
 

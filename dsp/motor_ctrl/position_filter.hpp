@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tracking_differentiator.hpp"
-#include "core/utils/angle.hpp"
+#include "primitive/angle.hpp"
 
 namespace ymd::dsp{
 

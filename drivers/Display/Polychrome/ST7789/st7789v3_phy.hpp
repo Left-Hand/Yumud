@@ -1,7 +1,7 @@
 #pragma once 
 
 #include "st7789_prelude.hpp"
-#include "core/utils/bitsqueue.hpp"
+#include "core/utils/bits/bitsqueue.hpp"
 #include "core/utils/data_iter.hpp"
 
 
@@ -24,7 +24,7 @@ struct ST7789V3_Phy final:
         };
 
         constexpr uint16_t next() {
-            if((queue_.writable_capacity() > 18) and iter_.has_next()){
+            if((queue_.writable_size() > 18) and iter_.has_next()){
                 const uint16_t next = iter_.next();
                 queue_.push_bit(DATA_BIT);
                 queue_.push_bits<8>(next >> 8);
@@ -43,7 +43,7 @@ struct ST7789V3_Phy final:
         };
     private:
         Iter iter_;
-        BitsQueue queue_;
+        BitQueue queue_;
         bool is_runout_ = false;
     };
 

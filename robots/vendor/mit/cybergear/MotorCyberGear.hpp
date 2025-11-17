@@ -5,7 +5,7 @@
 
 #include "core/utils/Option.hpp"
 #include "core/utils/Result.hpp"
-#include "core/utils/PerUnit.hpp"
+#include "primitive/PerUnit.hpp"
 
 #include "core/math/real.hpp"
 

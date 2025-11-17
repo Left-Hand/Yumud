@@ -1,6 +1,6 @@
 #include "alx_aoa_prelude.hpp"
 #include "core/magic/enum_traits.hpp"
-#include "core/utils/bits_caster.hpp"
+#include "core/utils/bits/bits_caster.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;

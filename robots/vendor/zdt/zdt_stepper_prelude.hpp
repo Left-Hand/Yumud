@@ -1,8 +1,7 @@
 #pragma once
 
 #include "core/utils/Result.hpp"
-#include "core/utils/nodeid.hpp"
-#include "core/utils/angle.hpp"
+#include "primitive/angle.hpp"
 
 #include "core/math/realmath.hpp"
 #include "core/container/inline_vector.hpp"
@@ -18,6 +17,18 @@ namespace ymd::robots{
 
 
 namespace zdtmotor{
+
+struct [[nodiscard]] NodeId{
+    using Self = NodeId;
+    uint8_t count;
+
+    static constexpr NodeId from_u8(uint8_t bits) {
+        return NodeId{bits};
+    }
+    [[nodiscard]] constexpr uint8_t as_u8() const {
+        return count;
+    }
+};
 
 namespace prelude{
 enum class Error:uint8_t{
@@ -41,14 +52,14 @@ static constexpr size_t MAX_PACKET_BYTES = 16;
 
 using Buf = HeaplessVector<uint8_t, MAX_PACKET_BYTES>;
 
-enum class VerifyMethod:uint8_t{
+enum class [[nodiscard]] VerifyMethod:uint8_t{
     X6B      = 0x00,
     XOR      = 0x01,
     CRC8     = 0x02,
     Default = X6B
 };
 
-enum class FuncCode:uint8_t{
+enum class [[nodiscard]] FuncCode:uint8_t{
     TrigCali = 0x06,
     QueryHommingParaments = 0x22,
     QueryHommingStatus = 0x3B,
@@ -67,7 +78,7 @@ enum class FuncCode:uint8_t{
     MultiAxisSync = 0xff
 };
 
-enum class HommingMode:uint8_t{
+enum class [[nodiscard]] HommingMode:uint8_t{
     // 00表示触发单圈就近回
     // 01表示触发单圈方向回零
     // 02表示触发多圈无限位碰撞回零
@@ -79,7 +90,7 @@ enum class HommingMode:uint8_t{
     LapsEndstop = 0x03
 };
 
-struct HommingStatus{
+struct [[nodiscard]] HommingStatus{
     // 编码器就绪状态标志位     = 0x03 & 0x01 = 0x01
     // 校准表就绪状态标志位     = 0x03 & 0x02 = 0x01
     // 正在回零标志位            = 0x03 & 0x04 = 0x00
@@ -95,7 +106,7 @@ struct HommingStatus{
 static_assert(sizeof(HommingStatus) == 1); 
 
 
-struct Bytes2CanMsgIterator{
+struct [[nodiscard]] Bytes2CanMsgIterator{
     explicit constexpr Bytes2CanMsgIterator(
         const NodeId nodeid, 
         const FuncCode func_code,
@@ -162,8 +173,8 @@ private:
 };
 
 
-struct CanMsg2BytesDumper{
-    struct DumpInfo{
+struct [[nodiscard]] CanMsg2BytesDumper{
+    struct [[nodiscard]] DumpInfo{
         NodeId nodeid;
         FuncCode func_code;
         Buf payload;
@@ -234,7 +245,7 @@ struct CanMsg2BytesDumper{
 };
 
 
-struct VerifyUtils final{
+struct [[nodiscard]] VerifyUtils final{
     static constexpr uint8_t get_verify_code(
         const VerifyMethod method, 
         const FuncCode func_code,
@@ -284,7 +295,7 @@ private:
 
 };
 
-struct Rpm final{
+struct [[nodiscard]] Rpm final{
     static constexpr Rpm from_speed(const real_t speed){
         const uint16_t temp = uint16_t(iq16(speed) * 600);
         return {BSWAP_16(temp)};
@@ -296,7 +307,7 @@ struct Rpm final{
     uint16_t raw_;
 }__packed;
 
-struct PulseCnt final{
+struct [[nodiscard]] PulseCnt final{
     static constexpr uint32_t SCALE = 3200 * (256/16);
 
 
@@ -318,7 +329,7 @@ struct PulseCnt final{
     uint32_t raw_;
 }__packed;
 
-struct AcclerationLevel{
+struct [[nodiscard]] AcclerationLevel{
     static constexpr AcclerationLevel from(const real_t acc_per_second){
         // TODO
         return AcclerationLevel{10};
@@ -339,7 +350,7 @@ struct AcclerationLevel{
 namespace payloads{
     using namespace prelude;
     // 地址 + 0xF3 + 0xAB + 使能状态 + 多机同步标志 + 校验字节
-    struct Actvation final{
+    struct [[nodiscard]] Actvation final{
         static constexpr FuncCode FUNC_CODE = FuncCode::Activation;
         //0
         const uint8_t _0 = 0xab;
@@ -347,7 +358,7 @@ namespace payloads{
         const bool is_sync;
     }__packed;
 
-    struct SetPosition final{
+    struct [[nodiscard]] SetPosition final{
         static constexpr FuncCode FUNC_CODE = FuncCode::SetPosition;
         bool is_ccw;
         Rpm rpm;
@@ -357,7 +368,7 @@ namespace payloads{
         bool is_sync;
     }__packed;
 
-    struct SetSpeed final{
+    struct [[nodiscard]] SetSpeed final{
         static constexpr FuncCode FUNC_CODE = FuncCode::SetSpeed;
 
         bool is_ccw;//2
@@ -367,7 +378,7 @@ namespace payloads{
         bool is_sync; //10
     }__packed;
 
-    struct SetSubDivides{
+    struct [[nodiscard]] SetSubDivides{
         // 01 84 8A 01 07 6B
         //  0x84 + 0x8A + 是否存储标志 + 细分值 + 校验字节
 
@@ -378,13 +389,13 @@ namespace payloads{
         uint8_t subdivides;
     }__packed;
 
-    struct Brake final{
+    struct [[nodiscard]] Brake final{
         static constexpr FuncCode FUNC_CODE = FuncCode::Brake;
         const uint8_t _0 = 0x98;
         const bool is_sync;
     }__packed;
 
-    struct TrigCali final{
+    struct [[nodiscard]] TrigCali final{
         static constexpr FuncCode FUNC_CODE = FuncCode::TrigCali;
         const uint8_t _1 = 0x45;
 
@@ -393,7 +404,7 @@ namespace payloads{
         }
     }__packed;
 
-    struct SetCurrent{
+    struct [[nodiscard]] SetCurrent{
         static constexpr FuncCode FUNC_CODE = FuncCode::SetCurrent;//1
 
         bool is_ccw;//2
@@ -403,25 +414,25 @@ namespace payloads{
         bool is_sync; //10
     }__packed;
 
-    struct TrigHomming final{
+    struct [[nodiscard]] TrigHomming final{
         static constexpr FuncCode FUNC_CODE = FuncCode::TrigHomming;
 
         HommingMode homming_mode;
         bool is_sync;
     }__packed;
 
-    struct QueryHommingParaments final{
+    struct [[nodiscard]] QueryHommingParaments final{
         static constexpr FuncCode FUNC_CODE = FuncCode::QueryHommingParaments;
     }__packed;
     
 
-    struct QueryHommingStatus final{
+    struct [[nodiscard]] QueryHommingStatus final{
         static constexpr FuncCode FUNC_CODE = FuncCode::QueryHommingParaments;
     }__packed;
     
 
     template<typename Raw, typename T = std::decay_t<Raw>>
-    static std::span<const uint8_t> serialize(
+    [[nodiscard]] static std::span<const uint8_t> serialize(
         Raw && obj
     ){
         return std::span(

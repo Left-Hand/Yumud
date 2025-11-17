@@ -6,7 +6,7 @@
 #include "core/utils/nth.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
-#include "core/utils/rescaler.hpp"
+#include "primitive/rescaler.hpp"
 #include "core/stream/fixed_string_stream.hpp"
 
 #include "hal/gpio/gpio_port.hpp"

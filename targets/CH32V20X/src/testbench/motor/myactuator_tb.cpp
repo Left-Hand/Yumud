@@ -2,11 +2,11 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/utils/bytes_provider.hpp"
-#include "core/utils/bits_caster.hpp"
-#include "core/utils/percentage.hpp"
-#include "core/utils/from_bits_debinder.hpp"
-#include "core/utils/strong_type_gradation.hpp"
+#include "core/utils/bytes/bytes_provider.hpp"
+#include "core/utils/bits/bits_caster.hpp"
+#include "primitive/percentage.hpp"
+#include "core/utils/bits/from_bits_debinder.hpp"
+#include "core/utils/enum/strong_type_gradation.hpp"
 #include "core/string/string_view.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
@@ -773,6 +773,8 @@ void myactuator_main(){
 
     DEBUG_PRINTLN(make_bytes1());
     DEBUG_PRINTLN(make_bytes2());
+    auto & os = DEBUGGER;
+    os.field("enabled")(os << make_bytes2());
     PANIC{};
     while(true);
 }

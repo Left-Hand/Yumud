@@ -4,7 +4,7 @@
 #include "core/utils/nth.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
-#include "core/utils/rescaler.hpp"
+#include "primitive/rescaler.hpp"
 #include "core/string/fixed_string.hpp"
 
 #include "hal/gpio/gpio_port.hpp"

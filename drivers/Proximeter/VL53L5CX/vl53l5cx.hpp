@@ -26,7 +26,7 @@
 
 #include "details/vl53l5cx_prelude.hpp"
 #include "details/vl53l5cx_buffers.hpp"
-#include "core/utils/percentage.hpp"
+#include "primitive/percentage.hpp"
 
 namespace ymd::drivers{
 

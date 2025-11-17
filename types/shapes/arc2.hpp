@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/utils/angle_range.hpp"
+#include "primitive/angle_range.hpp"
 
 #include "types/regions/range2.hpp"
 #include "types/shapes/Circle2.hpp"

@@ -4,8 +4,8 @@
 
 namespace ymd{
 
-struct BitsQueue{
-    constexpr explicit BitsQueue() = default;
+struct BitQueue{
+    constexpr explicit BitQueue() = default;
     constexpr bool pop_bit(){
         const auto ret = buf_ & 0x01;
         length_ -= 1;
@@ -44,7 +44,7 @@ struct BitsQueue{
         return length_;
     }
 
-    constexpr size_t writable_capacity() const {
+    constexpr size_t writable_size() const {
         return 32 - length_;
     }
 private:
@@ -54,7 +54,7 @@ private:
     static void static_test(){
         {
             constexpr auto queue = []{
-                auto q = BitsQueue{};
+                auto q = BitQueue{};
                 q.push_bits<5>(0b10111);
                 q.pop_bits<2>();
                 return q;

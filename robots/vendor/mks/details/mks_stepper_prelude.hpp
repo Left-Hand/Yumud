@@ -3,7 +3,6 @@
 #include "core/math/realmath.hpp"
 #include "core/utils/Result.hpp"
 #include "core/container/inline_vector.hpp"
-#include "core/utils/nodeid.hpp"
 #include "core/magic/enum_traits.hpp"
 
 #include "hal/bus/can/can.hpp"
@@ -15,6 +14,18 @@ namespace ymd::robots{
 
 
 namespace mksmotor{
+
+struct [[nodiscard]] NodeId{
+    using Self = NodeId;
+    uint8_t count;
+
+    static constexpr NodeId from_u8(uint8_t bits) {
+        return NodeId{bits};
+    }
+    [[nodiscard]] constexpr uint8_t as_u8() const {
+        return count;
+    }
+};
 
 namespace prelude{
 
@@ -38,40 +49,40 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-enum class HommingMode:uint8_t{ 
+enum class [[nodiscard]] HommingMode:uint8_t{ 
     Disabled = 0,
     Dir = 1,
     Nearest = 2,
 };
 
-enum class SetHommingParaStatus:uint8_t{ 
+enum class [[nodiscard]] SetHommingParaStatus:uint8_t{ 
     Failed = 0,
     Success = 1
 };
 
-enum class HommingSpeed:uint8_t{
+enum class [[nodiscard]] HommingSpeed:uint8_t{
     _0, _1, _2, _3, _4
 };
 
-enum class HommingDirection:uint8_t{
+enum class [[nodiscard]] HommingDirection:uint8_t{
     Clockwise = 0,
     CounterClockwise = 1
 };
 
 
-enum class PositionCtrlStatus:uint8_t{
+enum class [[nodiscard]] PositionCtrlStatus:uint8_t{
     Failed,
     Started,
     Completed
 };
 
-enum class EndstopHomingStatus:uint8_t{ 
+enum class [[nodiscard]] EndstopHomingStatus:uint8_t{ 
     Failed = 0,
     Started = 1,
     Completed = 2
 };
 
-enum class MotivationState:uint8_t{
+enum class [[nodiscard]] MotivationState:uint8_t{
     Failed,
     Stopped,
     Acc,
@@ -80,7 +91,7 @@ enum class MotivationState:uint8_t{
     Zero
 };
 
-enum class WorkMode:uint8_t{
+enum class [[nodiscard]] WorkMode:uint8_t{
     PulseOpenloop,
     PulseCloseloop,
     PulseFoc,
@@ -89,14 +100,14 @@ enum class WorkMode:uint8_t{
     SerialFoc,
 };
 
-enum class CanBitrate:uint8_t{
+enum class [[nodiscard]] CanBitrate:uint8_t{
     _125K,
     _250K,
     _500K
 };
 
 
-enum class FuncCode:uint8_t{
+enum class [[nodiscard]] FuncCode:uint8_t{
     GetMultiLapEncoderValue = 0x30,
     // GetMultiLEncoderValue = 0x31,
     GetRealtimeSpeed = 0x32,
@@ -207,14 +218,14 @@ namespace payloads{
     using namespace prelude;
 
 
-    struct SetPositionMode3 final{
+    struct [[nodiscard]] SetPositionMode3 final{
         static constexpr FuncCode FUNC_CODE = FuncCode::PositionCtrl3;
         Rpm rpm;
         AcclerationLevel acc_level;
         PulseCnt abs_pulse_cnt;
     }__packed;
 
-    struct StopPositionMode3 final{
+    struct [[nodiscard]] StopPositionMode3 final{
         static constexpr FuncCode FUNC_CODE = FuncCode::PositionCtrl3;
 
         const Rpm rpm = Rpm::from_speed(0);
@@ -222,31 +233,31 @@ namespace payloads{
         const PulseCnt abs_pulse_cnt = PulseCnt::from_pulses(0);
     }__packed;
 
-    struct SetSpeed final{
+    struct [[nodiscard]] SetSpeed final{
         static constexpr FuncCode FUNC_CODE = FuncCode::SpeedCtrl;
         iRpm rpm;
         AcclerationLevel acc_level;
     }__packed;
 
-    struct SetEnableStatus final{
+    struct [[nodiscard]] SetEnableStatus final{
         static constexpr FuncCode FUNC_CODE = FuncCode::SetEnableStatus;
         bool enable;
     }__packed;
 
 
-    struct SetSubdivides final{
+    struct [[nodiscard]] SetSubdivides final{
         static constexpr FuncCode FUNC_CODE = FuncCode::SetSubdivides;
         uint8_t subdivides;
     }__packed;
 
-    struct SetEndstopParaments final{
+    struct [[nodiscard]] SetEndstopParaments final{
         static constexpr FuncCode FUNC_CODE = FuncCode::SetEndstopParaments;
         bool is_high;
         bool is_ccw;
         Rpm rpm;
     };
 
-    struct EndstopHomming final{
+    struct [[nodiscard]] EndstopHomming final{
         static constexpr FuncCode FUNC_CODE = FuncCode::EndstopHomming;
     }__packed;
 
