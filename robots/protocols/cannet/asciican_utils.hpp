@@ -1,13 +1,6 @@
 #pragma once
 
-#include "core/string/string_view.hpp"
-#include "core/utils/Result.hpp"
-#include "core/utils/Errno.hpp"
-#include "core/utils/scope_guard.hpp"
-
-#include "primitive/can/can_msg.hpp"
-
-#include <variant>
+#include "asciican_primitive.hpp"
 
 namespace ymd{
 class [[nodiscard]] StrProvider{
@@ -71,44 +64,3 @@ private:
 };
 
 }
-
-namespace ymd::robots::asciican{
-using Msg = hal::CanMsg;
-
-enum class Error:uint8_t{
-    NoInput,
-    NoArg,
-    PayloadLengthMismatch,
-    PayloadLengthOverflow,
-    InvalidCommand,
-    UnknownCommand,
-    InvalidCanBaudrate,
-    InvalidSerialBaudrate,
-    StdIdOverflow,
-    ExtIdOverflow,
-    ArgTooLong,
-    ArgTooShort,
-    
-    StdIdTooLong,
-    StdIdTooShort,
-
-    ExtIdTooLong,
-    ExtIdTooShort,
-
-    UnsupportedHexChar,
-    InvalidFieldInRemoteMsg,
-    NotImplemented
-};
-
-enum class Flags:uint8_t{
-    RxFifoFull,
-    TxFifoFull,
-    ErrorWaring,
-};
-
-::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const Error & value);
-
-
-
-
-}    

@@ -19,83 +19,6 @@
 namespace ymd::robots::slcan{
 
 
-namespace operations{
-    struct [[nodiscard]] SendCanMsg{
-        hal::CanMsg msg;
-
-        friend OutputStream & operator<<(OutputStream & os, const SendCanMsg & self){ 
-            return os << os.field("msg")(os << self.msg);
-        }
-    };
-
-    struct [[nodiscard]] SendText{
-        static constexpr size_t MAX_TEXT_LEN = 16;
-
-        using String = FixedString<MAX_TEXT_LEN> ;
-        String str;
-
-        static constexpr SendText from_str(const StringView str){
-            if(str.size() > MAX_TEXT_LEN) 
-                __builtin_trap();
-
-            return SendText{
-                .str = String::from_str(str)
-            };
-        }
-
-        friend OutputStream & operator<<(OutputStream & os, const SendText & self){ 
-            return os << os.field("str")(os << self.str.view());
-        }
-    };
-
-    struct [[nodiscard]] SetSerialBaud{
-        uint32_t baudrate;
-
-        friend OutputStream & operator<<(OutputStream & os, const SetSerialBaud & self){ 
-            return os << os.field("baudrate")(os << self.baudrate);
-        }
-    };
-
-    struct [[nodiscard]] SetCanBaud{
-        hal::CanBaudrate baudrate;
-
-        friend OutputStream & operator<<(OutputStream & os, const SetCanBaud & self){ 
-            return os << os.field("baudrate")(os << self.baudrate);
-        }
-    };
-
-    struct [[nodiscard]] Open{
-        friend OutputStream & operator<<(OutputStream & os, const Open & self){ 
-            return os;
-        }
-    };
-
-    struct [[nodiscard]] Close{
-        friend OutputStream & operator<<(OutputStream & os, const Close & self){ 
-            return os;
-        }
-    };
-
-    struct [[nodiscard]] SetTimestamp{
-        Enable enabled;
-        friend OutputStream & operator<<(OutputStream & os, const SetTimestamp & self){ 
-            return os << os.field("enabled")(os << self.enabled);
-        }
-    };
-}
-
-
-struct [[nodiscard]] Operation:public Sumtype<
-    operations::SendCanMsg, 
-    operations::SendText,
-    operations::SetSerialBaud,
-    operations::SetCanBaud,
-    operations::Open,
-    operations::Close
->
-{    
-
-};
 
 class [[nodiscard]] SlcanParser final{
 public:
@@ -111,13 +34,13 @@ public:
 
 
 
-    [[nodiscard]] IResult<Operation> handle_line(const StringView str) const;
+    [[nodiscard]] IResult<asciican::Operation> handle_line(const StringView str) const;
 private:
 
-    [[nodiscard]] operations::SendText response_version() const ;
-    [[nodiscard]] operations::SendText response_serial_idx() const ;
+    [[nodiscard]] asciican::operations::SendText response_version() const ;
+    [[nodiscard]] asciican::operations::SendText response_serial_idx() const ;
     [[nodiscard]] Flags get_flag() const;
-    [[nodiscard]] operations::SendText response_flag() const ;
+    [[nodiscard]] asciican::operations::SendText response_flag() const ;
 };
 
 
@@ -149,7 +72,7 @@ struct SlcanResponseFormatter{
         }
     };
 
-    static constexpr Response fmt_operation(const IResult<Operation> & res){
+    static constexpr Response fmt_operation(const IResult<asciican::Operation> & res){
         if(res.is_err()){
             return Response::from_str("Z");
         }else{
