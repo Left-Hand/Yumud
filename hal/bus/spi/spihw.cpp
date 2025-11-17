@@ -219,13 +219,13 @@ uint32_t SpiHw::get_bus_freq() const {
     switch(reinterpret_cast<size_t>(inst_)) {
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
-            return sys::clock::get_apb1_freq();
+            return sys::clock::get_apb1_clk_freq();
             break;
         #endif
 
         #ifdef ENABLE_SPI2
         case SPI2_BASE:
-            return sys::clock::get_apb2_freq();
+            return sys::clock::get_apb2_clk_freq();
             break;
         #endif
 

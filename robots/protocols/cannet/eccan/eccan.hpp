@@ -1,14 +1,15 @@
 #pragma once
 
 #include "../asciican_utils.hpp"
+#include "../asciican_phy.hpp"
 
 namespace ymd::robots::asciican{
 
 class EcCan final{
 public:
-    using Msg = AsciiCanPhy::Msg;
-    using Error = AsciiCanPhy::Error;
-    using Flags = AsciiCanPhy::Flags;
+    using Msg = asciican::Msg;
+    using Error = asciican::Error;
+    using Flags = asciican::Flags;
 
     template<typename T = void>
     using IResult = Result<T, Error>;

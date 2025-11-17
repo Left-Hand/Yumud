@@ -139,15 +139,16 @@ struct [[nodiscard]] Operation:public Sumtype<
 
 class [[nodiscard]] SlcanParser final{
 public:
-    using Msg = asciican::AsciiCanPhy::Msg;
-    using Error = asciican::AsciiCanPhy::Error;
-    using Flags = asciican::AsciiCanPhy::Flags;
+    using Msg = hal::CanMsg;
+    using Error = asciican::Error;
+    using Flags = asciican::Flags;
+
+    template<typename T = void>
+    using IResult = Result<T, Error>;
 
     using StdId = hal::CanStdId;
     using ExtId = hal::CanExtId;
 
-    template<typename T = void>
-    using IResult = Result<T, Error>;
 
 
     [[nodiscard]] IResult<Operation> handle_line(const StringView str) const;
@@ -161,9 +162,9 @@ private:
 
 
 struct SlcanResponseFormatter{
-    using Msg = asciican::AsciiCanPhy::Msg;
-    using Error = asciican::AsciiCanPhy::Error;
-    using Flags = asciican::AsciiCanPhy::Flags;
+    using Msg = asciican::Msg;
+    using Error = asciican::Error;
+    using Flags = asciican::Flags;
 
     using StdId = hal::CanStdId;
     using ExtId = hal::CanExtId;

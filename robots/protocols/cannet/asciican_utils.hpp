@@ -5,15 +5,14 @@
 #include "core/utils/Errno.hpp"
 #include "core/utils/scope_guard.hpp"
 
-
 #include "primitive/can/can_msg.hpp"
-#include "hal/bus/can/can.hpp"
 
 #include <variant>
 
 namespace ymd::robots::asciican{
+using Msg = hal::CanMsg;
 
-enum class AsciiCanError:uint8_t{
+enum class Error:uint8_t{
     NoInput,
     NoArg,
     PayloadLengthMismatch,
@@ -38,7 +37,13 @@ enum class AsciiCanError:uint8_t{
     NotImplemented
 };
 
-::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const AsciiCanError & value);
+enum class Flags:uint8_t{
+    RxFifoFull,
+    TxFifoFull,
+    ErrorWaring,
+};
+
+::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const Error & value);
 
 class [[nodiscard]] StrProvider{
 public:
@@ -61,39 +66,4 @@ private:
 
 
 
-
-
-class AsciiCanPhy final{
-public:
-    using Msg = hal::CanMsg;
-    using Error = AsciiCanError;
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    enum class Flags:uint8_t{
-        RxFifoFull,
-        TxFifoFull,
-        ErrorWaring,
-    };
-public:
-    AsciiCanPhy(hal::Can & can):
-        can_(can){;}
-
-    [[nodiscard]] IResult<> send_can_msg(const Msg && msg);
-
-    [[nodiscard]] IResult<> send_str(const StringView str);
-
-    [[nodiscard]] IResult<> set_stream_baud(const uint32_t baud);
-
-    [[nodiscard]] IResult<> set_can_baud(const uint32_t baud);
-
-    [[nodiscard]] IResult<> open();
-
-    [[nodiscard]] IResult<> close();
-
-
-
-    hal::Can & can_;
-};
 }    

@@ -177,17 +177,29 @@ uint64_t sys::chip::get_mac_address(){
 
 
 
-uint32_t sys::clock::get_system_freq(){
+uint32_t sys::clock::get_sys_clk_freq(){
     M_CLOCK_TYPEDEF RCC_CLK;
     M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_SYSCLK(RCC_CLK);
 }
 
 
-uint32_t sys::clock::get_apb1_freq(){
+uint32_t sys::clock::get_apb1_clk_freq(){
     M_CLOCK_TYPEDEF RCC_CLK;
     M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_PCLK1(RCC_CLK);
+}
+
+uint32_t sys::clock::get_apb2_clk_freq(){
+    M_CLOCK_TYPEDEF RCC_CLK;
+    M_RCC_CLK_GETTER(&RCC_CLK);
+    return M_RCC_PCLK2(RCC_CLK);
+}
+
+uint32_t sys::clock::get_ahb_clk_freq(){
+    M_CLOCK_TYPEDEF RCC_CLK;
+    M_RCC_CLK_GETTER(&RCC_CLK);
+    return M_RCC_HCLK(RCC_CLK);
 }
 
 
@@ -197,7 +209,6 @@ void sys::clock::set_ahb_div(const uint8_t _div){
     switch(div){
         case 1:
             M_RCC_CONFIGER(RCC_SYSCLK_Div1);
-            
             break;
         case 2:
             M_RCC_CONFIGER(RCC_SYSCLK_Div2);
@@ -258,28 +269,17 @@ uint32_t sys::chip::get_rev_id(){
     return DBGMCU_GetREVID();
 }
 
-uint32_t sys::clock::get_apb2_freq(){
-    M_CLOCK_TYPEDEF RCC_CLK;
-    M_RCC_CLK_GETTER(&RCC_CLK);
-    return M_RCC_PCLK2(RCC_CLK);
+
+void sys::clock::set_ahb_clk_freq(const uint32_t freq){
+    set_ahb_div(get_ahb_clk_freq() / freq);
 }
 
-uint32_t sys::clock::get_ahb_freq(){
-    M_CLOCK_TYPEDEF RCC_CLK;
-    M_RCC_CLK_GETTER(&RCC_CLK);
-    return M_RCC_HCLK(RCC_CLK);
+void sys::clock::set_apb1_clk_freq(const uint32_t freq){
+    set_apb1_div(get_apb1_clk_freq() / freq);
 }
 
-void sys::clock::set_ahb_freq(const uint32_t freq){
-    set_ahb_div(get_ahb_freq() / freq);
-}
-
-void sys::clock::set_apb1_freq(const uint32_t freq){
-    set_apb1_div(get_apb1_freq() / freq);
-}
-
-void sys::clock::set_apb2_freq(const uint32_t freq){
-    set_apb2_div(get_apb2_freq() / freq);
+void sys::clock::set_apb2_clk_freq(const uint32_t freq){
+    set_apb2_div(get_apb2_clk_freq() / freq);
 }
 
 
