@@ -26,39 +26,6 @@ class Gpio;
 
 
 
-struct SpiPrescaler{
-    enum class Kind:uint8_t{
-        _2 = 0b000,
-        _4 = 0b001,
-        _8 = 0b010,
-        _16 = 0b011,
-        _32 = 0b100,
-        _64 = 0b101,
-        _128 = 0b110,
-        _256 = 0b111
-    };
-
-    using enum Kind;
-
-    #ifdef __YMD_HAL_CH32_FEATURE_HSSPI
-    enum class HsKind{
-        // _2 = 0b000,
-        _3 = 0b001,
-        // _4 = 0b010,
-        _5 = 0b011,
-        _6 = 0b100,
-        _7 = 0b101,
-        // _8 = 0b110,
-        _9 = 0b111
-    };
-
-    using enum HsKind;
-    #endif
-    constexpr SpiPrescaler(const Kind kind):kind_(kind){;}
-    [[nodiscard]] constexpr Kind kind() const {return kind_;}
-private:
-    Kind kind_;
-};
 
 class SpiHw final:public Spi{
 public:
@@ -70,6 +37,7 @@ public:
     SpiHw(SpiHw && other) = delete;
 
     HalResult init(const Config & cfg);
+    void deinit();
 
     void enable_hw_cs(const Enable en);
 
@@ -109,7 +77,7 @@ public:
     [[nodiscard]] HalResult set_bitorder(const BitOrder bitorder);
 
     template<typename Fn>
-    void set_event_callback(Fn && fn){
+    void set_event_handler(Fn && fn){
         callback_ = std::forward<Fn>(fn);
     }
 
@@ -130,21 +98,21 @@ private:
     Callback callback_ = nullptr;
     bool hw_cs_enabled_ = false;
 
-    Gpio get_mosi_gpio();
-    Gpio get_miso_gpio();
-    Gpio get_sclk_gpio();
-    Gpio get_hw_cs_gpio();
+    [[nodiscard]] Gpio get_mosi_gpio(const uint8_t remap);
+    [[nodiscard]] Gpio get_miso_gpio(const uint8_t remap);
+    [[nodiscard]] Gpio get_sclk_gpio(const uint8_t remap);
+    [[nodiscard]] Gpio get_hw_cs_gpio(const uint8_t remap);
 
     uint32_t get_bus_freq() const;
 
     void enable_rcc(const Enable en);
     void set_remap(const uint8_t remap);
-    void plant_gpio();
+    void plant_gpio(const uint8_t remap);
     
     void enable_rx_it(const Enable en);
     void enable_tx_it(const Enable en);
 
-    void accept_interrupt(const SpiI2sIT);
+    void accept_interrupt(const SpiI2sIT it);
 
     #ifdef ENABLE_SPI1
     friend void ::SPI1_IRQHandler(void);

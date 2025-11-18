@@ -21,11 +21,11 @@
 // public:
 //     CanDrv(hal::Can & can):can_(can){;}
 
-//     void write(const hal::CanMsg & msg){
+//     void write(const hal::CanClassicMsg & msg){
 //         can_.write(msg);
 //     }
 
-//     void read(hal::CanMsg & msg){
+//     void read(hal::CanClassicMsg & msg){
 //         msg = can_.read();
 //     }
 
@@ -34,7 +34,7 @@
 // };
 
 // class CanActor{
-//     void send(const hal::CanMsg& msg) {
+//     void send(const hal::CanClassicMsg& msg) {
 //         // 封装发送操作为异步任务
 //         co_await [this, msg]() -> std::future<void> {
 //             std::promise<void> p;

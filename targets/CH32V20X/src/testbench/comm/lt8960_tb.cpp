@@ -228,7 +228,7 @@ void lt8960_tb(){
         }, EN);
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
-        timer.set_event_callback([&](hal::TimerEvent ev){
+        timer.set_event_handler([&](hal::TimerEvent ev){
             switch(ev){
             case hal::TimerEvent::Update:{
                 tx_task();
@@ -249,7 +249,7 @@ void lt8960_tb(){
         }, EN);
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
-        timer.set_event_callback([&](hal::TimerEvent ev){
+        timer.set_event_handler([&](hal::TimerEvent ev){
             switch(ev){
             case hal::TimerEvent::Update:{
                 rx_task();

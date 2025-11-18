@@ -28,7 +28,7 @@
 #include "robots/gesture/comp_est.hpp"
 #include "robots/rpc/rpc.hpp"
 #include "robots/repl/repl_service.hpp"
-#include "robots/cannet/can_chain.hpp"
+#include "robots/protocols/cannet/can_chain.hpp"
 
 #include "robots/commands/joint_commands.hpp"
 #include "robots/commands/machine_commands.hpp"
@@ -46,7 +46,7 @@
 #include "digipw/prelude/abdq.hpp"
 
 
-#include "concept/analog_channel.hpp"
+#include "primitive/analog_channel.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -324,7 +324,7 @@ void bldc_main(){
 
     adc.register_nvic({0,0}, EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    adc.set_event_callback(
+    adc.set_event_handler(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{

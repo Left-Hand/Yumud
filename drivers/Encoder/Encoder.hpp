@@ -3,11 +3,11 @@
 
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
-#include "core/utils/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 #include "core/utils/Errno.hpp"
 
 
-#include "hal/hal_result.hpp"
+#include "primitive/hal_result.hpp"
 
 
 namespace ymd::drivers{

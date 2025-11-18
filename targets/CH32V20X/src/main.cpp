@@ -10,6 +10,7 @@
 int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
+    myactuator_main();
     // eeprom_main();
     // while(true);
     //  uart_main();
@@ -164,7 +165,6 @@ int main(){
     // i2c_scanner_main();
     // slcan_main();
     // programmer_main();
-    // DEBUG_PRINTLN("??");
     // gui_main();
     // math_tb(uart2);
 

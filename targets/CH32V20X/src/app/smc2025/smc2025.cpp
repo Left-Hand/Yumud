@@ -14,9 +14,9 @@
 #include "hal/timer/instance/timer_hw.hpp"
 
 #include "types/vectors/quat.hpp"
-#include "types/image/image.hpp"
-#include "types/image/font/font.hpp"
-#include "types/image/painter/painter.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/font/font.hpp"
+#include "primitive/image/painter/painter.hpp"
 
 #include "nvcv2/shape/shape.hpp"
 #include "nvcv2/pixels/pixels.hpp"
@@ -330,7 +330,7 @@ void smc2025_main(){
     }, EN);
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             mpu.update().examine();

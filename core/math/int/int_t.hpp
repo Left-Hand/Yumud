@@ -1,11 +1,12 @@
 #pragma once
 
-#include "core/platform.hpp"
+#include <cstdint>
+#include <type_traits>
 
 
 template<typename T>
 requires std::is_integral_v<T>
-class int_t{
+class [[nodiscard]] int_t{
 private:
     T value;
 public:
@@ -19,17 +20,17 @@ public:
 
     __fast_inline constexpr int_t & operator=(const int_t & v){ value = v.value; return *this; }
     __fast_inline constexpr int_t & operator=(const T v){ value = v; return *this; }
-    explicit constexpr operator T(){ return value; }
-    explicit constexpr operator bool(){ return value; }
+    [[nodiscard]] explicit constexpr operator T(){ return value; }
+    [[nodiscard]] explicit constexpr operator bool(){ return value; }
 
-    __fast_inline constexpr int_t operator++(){ ++value; return *this; }
-    __fast_inline constexpr int_t operator--(){ --value; return *this;}
+    __fast_inline constexpr int_t & operator++(){ ++value; return *this; }
+    __fast_inline constexpr int_t & operator--(){ --value; return *this;}
 
-    __fast_inline constexpr int_t operator+() const {return *this; }
-    __fast_inline constexpr int_t operator-(){ value = -value; return *this;}
+    [[nodiscard]] __always_inline constexpr int_t operator+() const {return *this; }
+    [[nodiscard]] __always_inline constexpr int_t operator-(){ value = -value; return *this;}
 
-    __fast_inline constexpr int_t operator<<(const size_t bits){ return int_t(value << bits);}
-    __fast_inline constexpr int_t operator>>(const size_t bits){ return int_t(value >> bits);}
+    [[nodiscard]] __always_inline constexpr int_t operator<<(const size_t bits){ return int_t(value << bits);}
+    [[nodiscard]] __always_inline constexpr int_t operator>>(const size_t bits){ return int_t(value >> bits);}
 
 
     //#region compare
@@ -49,7 +50,7 @@ public:
 
     //#region op
     #define INT_OP_TEMPLATE(op)\
-    __inline constexpr int_t operator op(int_t other) const { return int_t(value op other.value);}\
+    [[nodiscard]] __inline constexpr int_t operator op(int_t other) const { return int_t(value op other.value);}\
 
     INT_OP_TEMPLATE(+)
     INT_OP_TEMPLATE(-)
@@ -76,12 +77,12 @@ public:
 
 
 
-using u8 = int_t<unsigned char>;
-using u16 = int_t<unsigned short>;
-using u32 = int_t<unsigned int>;
-using u64 = int_t<unsigned long int>;
+using u8 = int_t<uint8_t>;
+using u16 = int_t<uint16_t>;
+using u32 = int_t<uint32_t>;
+using u64 = int_t<uint64_t>;
 
-using i8 = int_t<char>;
-using i16 = int_t<short>;
-using i32 = int_t<int>;
-using i64 = int_t<long int>;
+using i8 = int_t<int8_t>;
+using i16 = int_t<int16_t>;
+using i32 = int_t<int32_t>;
+using i64 = int_t<int64_t>;

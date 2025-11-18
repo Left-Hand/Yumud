@@ -23,7 +23,7 @@ static constexpr SpiPrescaler calculate_prescaler(
 
 }
 
-static Gpio map_inst_to_mosi_gpio(const void * inst){
+static Gpio map_inst_to_mosi_gpio(const void * inst, const uint8_t remap){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
@@ -43,7 +43,7 @@ static Gpio map_inst_to_mosi_gpio(const void * inst){
     __builtin_trap();
 }
 
-static Gpio map_inst_to_miso_gpio(const void * inst){
+static Gpio map_inst_to_miso_gpio(const void * inst, const uint8_t remap){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
@@ -63,7 +63,7 @@ static Gpio map_inst_to_miso_gpio(const void * inst){
     __builtin_trap();
 }
 
-static Gpio map_inst_to_sclk_gpio(const void * inst){
+static Gpio map_inst_to_sclk_gpio(const void * inst, const uint8_t remap){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
@@ -83,7 +83,7 @@ static Gpio map_inst_to_sclk_gpio(const void * inst){
     __builtin_trap();
 }
 
-static Gpio map_inst_to_hw_cs_gpio(const void * inst){
+static Gpio map_inst_to_hw_cs_gpio(const void * inst, const uint8_t remap){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
@@ -143,13 +143,21 @@ void SpiHw::set_remap(const uint8_t remap){
             }
             break;
         #endif
+        #ifdef ENABLE_SPI3
+        case SPI3_BASE:
+            //TODO
+            switch(remap){
+                default: break;
+            }
+            break;
+        #endif
     }
     __builtin_trap();
 }
 
 
-static constexpr uint8_t get_default_remap(const void * inst_){
-    switch(reinterpret_cast<size_t>(inst_)){
+static constexpr uint8_t get_default_remap(const void * inst){
+    switch(reinterpret_cast<size_t>(inst)){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_REMAP;
@@ -159,43 +167,50 @@ static constexpr uint8_t get_default_remap(const void * inst_){
             //SPI2 NO REMAP
             return 0;
         #endif
+        #ifdef ENABLE_SPI3
+        case SPI3_BASE:
+            //SPI2 NO REMAP
+            //TODO
+            __builtin_trap();
+        #endif
     }
     __builtin_trap();
 }
 
 
-Gpio SpiHw::get_mosi_gpio(){
-    return map_inst_to_mosi_gpio(inst_);
+Gpio SpiHw::get_mosi_gpio(const uint8_t remap){
+    return map_inst_to_mosi_gpio(inst_, remap);
 }
 
-Gpio SpiHw::get_miso_gpio(){
-    return map_inst_to_miso_gpio(inst_);
+Gpio SpiHw::get_miso_gpio(const uint8_t remap){
+    return map_inst_to_miso_gpio(inst_, remap);
 }
 
-Gpio SpiHw::get_sclk_gpio(){
-    return map_inst_to_sclk_gpio(inst_);
+Gpio SpiHw::get_sclk_gpio(const uint8_t remap){
+    return map_inst_to_sclk_gpio(inst_, remap);
 }
 
-Gpio SpiHw::get_hw_cs_gpio(){
-    return map_inst_to_hw_cs_gpio(inst_);
+Gpio SpiHw::get_hw_cs_gpio(const uint8_t remap){
+    return map_inst_to_hw_cs_gpio(inst_, remap);
 }
 
-void SpiHw::plant_gpio(){
+void SpiHw::plant_gpio(const uint8_t remap){
     if(tx_strategy_ != CommStrategy::Nil){
-        get_mosi_gpio().afpp();
+        get_mosi_gpio(remap).afpp();
     }
 
     if(rx_strategy_ != CommStrategy::Nil){
-        get_miso_gpio().inflt();
+        get_miso_gpio(remap).inflt();
     }
 
     {
-        get_sclk_gpio().afpp();
+        get_sclk_gpio(remap).afpp();
     }
 }
 
 void SpiHw::enable_hw_cs(const Enable en){
-    auto cs_gpio = get_hw_cs_gpio();
+    const auto remap = get_default_remap(inst_);
+    auto && cs_gpio = get_hw_cs_gpio(remap);
     cs_gpio.set();
 
     if(en == EN){
@@ -208,24 +223,26 @@ void SpiHw::enable_hw_cs(const Enable en){
 }
 
 void SpiHw::enable_rx_it(const Enable en){
-
+    //TODO
+    __builtin_trap();
 }
 
 void SpiHw::enable_tx_it(const Enable en){
-
+    //TODO
+    __builtin_trap();
 }
 
 uint32_t SpiHw::get_bus_freq() const {
     switch(reinterpret_cast<size_t>(inst_)) {
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
-            return sys::clock::get_apb1_freq();
+            return sys::clock::get_apb1_clk_freq();
             break;
         #endif
 
         #ifdef ENABLE_SPI2
         case SPI2_BASE:
-            return sys::clock::get_apb2_freq();
+            return sys::clock::get_apb2_clk_freq();
             break;
         #endif
 
@@ -243,8 +260,10 @@ HalResult SpiHw::init(const Config & cfg){
     tx_strategy_ = cfg.tx_strategy;
     rx_strategy_ = cfg.rx_strategy;
 	enable_rcc(EN);
-    set_remap(get_default_remap(inst_));
-    plant_gpio();
+    const auto remap = get_default_remap(inst_);
+
+    set_remap(remap);
+    plant_gpio(remap);
 
 
     #if 1
@@ -315,6 +334,10 @@ HalResult SpiHw::set_bitorder(const BitOrder bitorder){
 
 void SpiHw::accept_interrupt(const SpiI2sIT it){
 
+}
+
+void SpiHw::deinit(){
+	enable_rcc(DISEN);
 }
 
 namespace ymd::hal{

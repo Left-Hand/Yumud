@@ -221,8 +221,8 @@ void BasicTimer::set_remap(const uint8_t rm){
 
 uint32_t BasicTimer::get_bus_freq(){
     return details::is_advanced_timer(inst_) ? 
-        sys::clock::get_apb2_freq() : 
-        sys::clock::get_apb1_freq();
+        sys::clock::get_apb2_clk_freq() : 
+        sys::clock::get_apb1_clk_freq();
 }
 
 void BasicTimer::set_psc(const uint16_t psc){

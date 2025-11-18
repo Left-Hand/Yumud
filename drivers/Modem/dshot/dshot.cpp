@@ -49,7 +49,7 @@ DShotChannel::DShotChannel(hal::TimerOC & oc):
 
 BurstDmaPwm::BurstDmaPwm(hal::TimerOC & timer_oc):
     timer_oc_(timer_oc), 
-    dma_channel_(timer_oc.dma()){;}
+    dma_channel_(timer_oc.dma().unwrap()){;}
 
 
 void DShotChannel::update(const std::span<uint16_t, DSHOT_LEN> buf, const uint16_t data){

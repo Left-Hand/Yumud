@@ -26,7 +26,7 @@ volatile uint16_t & TimerChannel::from_channel_to_cvr(
 }
 
 
-TimerChannel & TimerChannel::enable_dma(const Enable en){
+void TimerChannel::enable_dma(const Enable en){
 
     const uint16_t source = [&] -> uint16_t{
         switch(ch_sel_.kind()){
@@ -44,26 +44,21 @@ TimerChannel & TimerChannel::enable_dma(const Enable en){
     }();
 
     TIM_DMACmd(inst_, source, en == EN);
-
-    return *this;
 }
 
 
-DmaChannel & TimerChannel::dma() const {
-
-    #define DMA_NULL dma1_ch1
-
+Option<DmaChannel &> TimerChannel::dma() const {
     #define FULL_DMA_CASE(x)\
         case TIM##x##_BASE:\
         switch(ch_sel_.kind()){\
             case ChannelSelection::CH1:\
-                return TIM##x##_CH1_DMA_CH;\
+                return Some(&TIM##x##_CH1_DMA_CH);\
             case ChannelSelection::CH2:\
-                return TIM##x##_CH2_DMA_CH;\
+                return Some(&TIM##x##_CH2_DMA_CH);\
             case ChannelSelection::CH3:\
-                return TIM##x##_CH3_DMA_CH;\
+                return Some(&TIM##x##_CH3_DMA_CH);\
             case ChannelSelection::CH4:\
-                return TIM##x##_CH4_DMA_CH;\
+                return Some(&TIM##x##_CH4_DMA_CH);\
             default:\
                 break;\
         }\
@@ -82,11 +77,11 @@ DmaChannel & TimerChannel::dma() const {
         case TIM3_BASE:
         switch(ch_sel_.kind()){
             case ChannelSelection::CH1:
-                return TIM3_CH1_DMA_CH;
+                return Some(&TIM3_CH1_DMA_CH);
             case ChannelSelection::CH3:
-                return TIM3_CH3_DMA_CH;
+                return Some(&TIM3_CH3_DMA_CH);
             case ChannelSelection::CH4:
-                return TIM3_CH4_DMA_CH;
+                return Some(&TIM3_CH4_DMA_CH);
             default:
                 break;
         }
@@ -97,11 +92,11 @@ DmaChannel & TimerChannel::dma() const {
         case TIM4_BASE:
         switch(ch_sel_.kind()){
             case ChannelSelection::CH1:
-                return TIM4_CH1_DMA_CH;
+                return Some(&TIM4_CH1_DMA_CH);
             case ChannelSelection::CH2:
-                return TIM4_CH2_DMA_CH;
+                return Some(&TIM4_CH2_DMA_CH);
             case ChannelSelection::CH3:
-                return TIM4_CH3_DMA_CH;
+                return Some(&TIM4_CH3_DMA_CH);
             default:
                 break;
         }
@@ -122,8 +117,7 @@ DmaChannel & TimerChannel::dma() const {
         #endif
     }
 
-    return DMA_NULL;
-    #undef DMA_NULL
+    return None;
     #undef FULL_DMA_CASE
 }
 

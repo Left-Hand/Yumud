@@ -40,7 +40,7 @@ struct TransferSysEvaluator{
 
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
-        timer.set_event_callback([&](hal::TimerEvent ev){
+        timer.set_event_handler([&](hal::TimerEvent ev){
             switch(ev){
             case hal::TimerEvent::Update:{
                 input_ = std::forward<FnIn>(fn_in)(time_);

@@ -7,15 +7,15 @@
 // 可为主机设备扩展CAN功能，连接到外部CAN总线。 
 
 #include "details/CH9431_phy.hpp"
-#include "hal/bus/can/can_msg.hpp"
+#include "primitive/can/can_msg.hpp"
 
 namespace ymd::drivers{
 
 class CH9431 final:public CH9431_Prelude{
 public:
 
-    IResult<> write(const hal::CanMsg & msg);
-    IResult<hal::CanMsg> read();
+    IResult<> write(const hal::CanClassicMsg & msg);
+    IResult<hal::CanClassicMsg> read();
     IResult<> reset(){
         return phy_.reset_device();
     }

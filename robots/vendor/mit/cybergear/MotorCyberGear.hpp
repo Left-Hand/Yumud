@@ -5,37 +5,32 @@
 
 #include "core/utils/Option.hpp"
 #include "core/utils/Result.hpp"
-#include "core/utils/PerUnit.hpp"
+#include "primitive/PerUnit.hpp"
 
 #include "core/math/real.hpp"
 
 
-namespace ymd::robots{
+namespace ymd::robots::cybergear{
 
-struct CyberGear_Fault{
+struct Fault{
+    using Self = Fault;
+    uint16_t can_id:8;
+    uint16_t under_voltage:1;
+    uint16_t over_current:1;
+    uint16_t over_temp:1;
+    uint16_t mag_enc_err:1;
+    uint16_t hall_enc_err:1;
+    uint16_t uncalibrated:1;
+    uint16_t mode:2;
 
-    union{
-        uint16_t raw;
-        struct{
-            uint16_t can_id:8;
-            uint16_t under_voltage:1;
-            uint16_t over_current:1;
-            uint16_t over_temp:1;
-            uint16_t mag_enc_err:1;
-            uint16_t hall_enc_err:1;
-            uint16_t uncalibrated:1;
-            uint16_t mode:2;
-        };
-    };
-
-    void update(const uint16_t data){raw = data;}
-    bool is_running(){return mode == 2;}
-    bool is_reset(){return mode == 0;}
-    bool is_calibrating(){return mode == 1;}
-};static_assert(sizeof(CyberGear_Fault) == 2);
+    void update(const uint16_t bits){*this = std::bit_cast<Self>(bits);}
+    [[nodiscard]] constexpr bool is_running() const {return mode == 2;}
+    [[nodiscard]] constexpr bool is_reset() const {return mode == 0;}
+    [[nodiscard]] constexpr bool is_calibrating() const {return mode == 1;}
+};static_assert(sizeof(Fault) == 2);
 
 
-enum class CyberGear_Error:uint8_t{
+enum class Error:uint8_t{
     PRAGRAM_UNHANDLED,
     PRAGRAM_TODO,
     RET_DLC_SHORTER,
@@ -47,7 +42,7 @@ enum class CyberGear_Error:uint8_t{
     MOTOR_NOT_INITED,
 };
 
-enum class CyberGear_Command:uint8_t{
+enum class Command:uint8_t{
     GET_DEVICE_ID = 0,
     SEND_CTRL1 = 1,
     FBK_CTRL1 = 2,
@@ -62,11 +57,11 @@ enum class CyberGear_Command:uint8_t{
 
 
 template<typename T = void>
-using CyberGear_Result = Result<T, CyberGear_Error>;
+using IResult = Result<T, Error>;
 
 namespace details{
 
-    struct CyberGear_Temperature{
+    struct Temperature{
         uint16_t data;
 
         constexpr explicit operator real_t() const {
@@ -74,14 +69,14 @@ namespace details{
         }
     };
 
-    DEF_PER_UNIT(CyberGear_CmdRad, uint16_t, -2 * TAU, 2 * TAU)
-    DEF_PER_UNIT(CyberGear_CmdOmega, uint16_t, -30 * TAU, 30 * TAU)
-    DEF_PER_UNIT(CyberGear_CmdTorque, uint16_t, -12, 12)
-    DEF_PER_UNIT(CyberGear_CmdKp, uint16_t, 0, 500)
-    DEF_PER_UNIT(CyberGear_CmdKd, uint16_t, 0, 5)
+    DEF_PER_UNIT(CmdRad, uint16_t, -2 * TAU, 2 * TAU)
+    DEF_PER_UNIT(CmdOmega, uint16_t, -30 * TAU, 30 * TAU)
+    DEF_PER_UNIT(CmdTorque, uint16_t, -12, 12)
+    DEF_PER_UNIT(CmdKp, uint16_t, 0, 500)
+    DEF_PER_UNIT(CmdKd, uint16_t, 0, 5)
     
 
-    struct CyberGear_Feedback{
+    struct Feedback{
         real_t rad = {};
         real_t omega = {};
         real_t torque = {};
@@ -95,30 +90,30 @@ class CyberGear{
 public:
 
 
-    // using CyberGear_Error = details::CyberGear_Error;
-    // using CyberGear_Result = details::CyberGear_Result;
+    // using Error = details::Error;
+    // using IResult = details::IResult;
 
-    using CanMsg = hal::CanMsg; 
+    using CanMsg = hal::CanClassicMsg; 
 
-    using Feedback = details::CyberGear_Feedback;
-    using Temperature = details::CyberGear_Temperature;
-    using CmdRad = details::CyberGear_CmdRad;
-    using CmdOmega = details::CyberGear_CmdOmega;
-    using CmdTorque = details::CyberGear_CmdTorque;
-    using CmdKp = details::CyberGear_CmdKp;
-    using CmdKd = details::CyberGear_CmdKd;
+    using Feedback = details::Feedback;
+    using Temperature = details::Temperature;
+    using CmdRad = details::CmdRad;
+    using CmdOmega = details::CmdOmega;
+    using CmdTorque = details::CmdTorque;
+    using CmdKp = details::CmdKp;
+    using CmdKd = details::CmdKd;
 
 
     CyberGear(hal::Can & can, uint8_t host_id, uint8_t node_id):
         can_drv_(can), host_id_(host_id), node_id_(node_id){;}
 
-    [[nodiscard]] CyberGear_Result<> init();
+    [[nodiscard]] IResult<> init();
 
-    [[nodiscard]] CyberGear_Result<> transmit(const CanMsg & msg);
+    [[nodiscard]] IResult<> transmit(const CanMsg & msg);
 
-    [[nodiscard]] CyberGear_Result<> transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc);
+    [[nodiscard]] IResult<> transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc);
 
-    [[nodiscard]] CyberGear_Result<> request_mcu_id();
+    [[nodiscard]] IResult<> request_mcu_id();
 
     struct MitParams{
         real_t torque;
@@ -128,20 +123,20 @@ public:
         real_t kd;
     };
 
-    [[nodiscard]] CyberGear_Result<> ctrl(const MitParams & params);
+    [[nodiscard]] IResult<> ctrl(const MitParams & params);
 
     
-    [[nodiscard]] CyberGear_Result<> on_receive(const CanMsg & msg);
+    [[nodiscard]] IResult<> on_receive(const CanMsg & msg);
 
-    [[nodiscard]] CyberGear_Result<> enable(const Enable en, const bool clear_fault = true);
+    [[nodiscard]] IResult<> enable(const Enable en, const bool clear_fault = true);
 
-    [[nodiscard]] CyberGear_Result<> set_current_as_machine_home();
+    [[nodiscard]] IResult<> set_current_as_machine_home();
 
-    [[nodiscard]] CyberGear_Result<> change_can_id(const uint8_t id);
+    [[nodiscard]] IResult<> change_can_id(const uint8_t id);
 
-    [[nodiscard]] CyberGear_Result<> request_read_para(const uint16_t idx);
+    [[nodiscard]] IResult<> request_read_para(const uint16_t idx);
 
-    [[nodiscard]] CyberGear_Result<> request_write_para(const uint16_t idx, const uint32_t data);
+    [[nodiscard]] IResult<> request_write_para(const uint16_t idx, const uint32_t data);
 
     [[nodiscard]] Option<uint64_t> get_device_mcu_id() const {return device_mcu_id_;}
 
@@ -150,15 +145,15 @@ private:
     const uint8_t host_id_;
     uint8_t node_id_;
     
-    CyberGear_Fault fault_ = {};
+    Fault fault_ = {};
     Option<uint64_t> device_mcu_id_ = None;
 
 
     Feedback feedback_ = {};
 
-    [[nodiscard]] CyberGear_Result<> on_mcu_id_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
-    [[nodiscard]] CyberGear_Result<> on_ctrl2_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
-    [[nodiscard]] CyberGear_Result<> on_read_para_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    [[nodiscard]] IResult<> on_mcu_id_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    [[nodiscard]] IResult<> on_ctrl2_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
+    [[nodiscard]] IResult<> on_read_para_feed_back(const uint32_t id, const uint64_t data, const uint8_t dlc);
 };
 
 }

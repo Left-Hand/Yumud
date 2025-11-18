@@ -13,7 +13,7 @@
 
 using namespace ymd;
 
-using namespace ymd::robots;
+using namespace ymd::robots::dji::m3508;
 
 void m3508_main(){
     static constexpr size_t CB_FREQ = 200;
@@ -39,7 +39,7 @@ void m3508_main(){
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             port.tick();
@@ -73,7 +73,7 @@ void m3508_main(){
         // port.tick();
 
         // DEBUGGER.println(port[1].getCurrent(), port[2].getCurrent(), port[3].getCurrent(), port[4].getCurrent(), can1.read()); 
-        // auto msg = CanMsg{0x1ff, std::tuple<int16_t, int16_t, int16_t, int16_t>(data, data, data, data)};
+        // auto msg = CanClassicMsg{0x1ff, std::tuple<int16_t, int16_t, int16_t, int16_t>(data, data, data, data)};
         // can1.write(msg);
         // can1.write({0x2fe, std::tuple<int16_t, int16_t, int16_t, int16_t>(5000, 5000, 5000, 5000)});
         // clock::delay(3ms);

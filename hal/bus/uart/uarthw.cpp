@@ -582,7 +582,7 @@ void UartHw::enable_tx_dma(const Enable en){
 
         tx_dma_.register_nvic(NVIC_PRIORITY, EN);
         tx_dma_.enable_interrupt<DmaIT::Done>(EN);
-        tx_dma_.set_event_callback(
+        tx_dma_.set_event_handler(
             [this](const DmaEvent event){
                 switch(event){
                     case DmaEvent::TransferComplete:
@@ -594,7 +594,7 @@ void UartHw::enable_tx_dma(const Enable en){
             }
         );
     }else{
-        tx_dma_.set_event_callback(nullptr);
+        tx_dma_.set_event_handler(nullptr);
     }
 }
 
@@ -607,7 +607,7 @@ void UartHw::enable_rx_dma(const Enable en){
         rx_dma_.register_nvic(NVIC_PRIORITY, EN);
         rx_dma_.enable_interrupt<DmaIT::Done>(EN);
         rx_dma_.enable_interrupt<DmaIT::Half>(EN);
-        rx_dma_.set_event_callback(
+        rx_dma_.set_event_handler(
 
             [this](const DmaEvent event) -> void{
                 switch(event){
@@ -629,7 +629,7 @@ void UartHw::enable_rx_dma(const Enable en){
             UART_RX_DMA_BUF_SIZE
         );
     }else{
-        rx_dma_.set_event_callback(nullptr);
+        rx_dma_.set_event_handler(nullptr);
     }
 }
 

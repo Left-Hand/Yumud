@@ -7,7 +7,6 @@
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
 #include "core/string/string_view.hpp"
-#include "core/utils/bitflag.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/analog/adc/adcs/adc1.hpp"

@@ -3,7 +3,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "hal/bus/can/can_msg.hpp"
+#include "primitive/can/can_msg.hpp"
 
 #include "core/magic/size_traits.hpp"
 #include "core/magic/function_traits.hpp"
@@ -124,15 +124,6 @@ static constexpr auto _deserialize(const std::span<const uint8_t, N> bytes){
     return ImplFor<DeserializeFrom<Protocol>, T>::deserialize(bytes);
 }
 
-// template<
-//     typename Protocol, 
-//     typename T,
-//     size_t N = magic::type_to_bytes_v<T>>
-// requires (std::is_same_v<Protocol, RawBytes>)
-// static constexpr auto _deserialize(T && bytes){
-//     return ImplFor<DeserializeFrom<Protocol>, T>::deserialize(std::span<const T >(&bytes, 1));
-// }
-
 
 template<typename Protocol, typename... Args,
     size_t N = magic::total_bytes_of_args_v<std::decay_t<Args>...>>
@@ -161,9 +152,9 @@ template<
     typename T, 
     size_t N = magic::type_to_bytes_v<T>
 >
-requires (std::is_same_v<Protocol, hal::CanMsg>)
-static constexpr auto deserialize(const hal::CanMsg msg){
-    return ImplFor<DeserializeFrom<hal::CanMsg>, T>::deserialize(msg);
+requires (std::is_same_v<Protocol, hal::CanClassicMsg>)
+static constexpr auto deserialize(const hal::CanClassicMsg msg){
+    return ImplFor<DeserializeFrom<hal::CanClassicMsg>, T>::deserialize(msg);
 }
 
 }
@@ -182,16 +173,16 @@ struct MyStruct {
 
 
 template<>
-struct ImplFor<DeserializeFrom<hal::CanMsg>, MyStruct> {
-    static constexpr Option<MyStruct> deserialize(const hal::CanMsg & msg){
+struct ImplFor<DeserializeFrom<hal::CanClassicMsg>, MyStruct> {
+    static constexpr Option<MyStruct> deserialize(const hal::CanClassicMsg & msg){
 
         
-        switch(msg.size()){
+        switch(msg.length()){
             default: return None;
 
             case 4: 
             case 8: {
-                const auto bytes = msg.to_span_with_length<4>();
+                const auto bytes = msg.payload_bytes_sized<4>();
                 return Some(MyStruct{
                     .private_data = ::deserialize<RawBytes, uint32_t>(bytes)
                 });
@@ -222,11 +213,11 @@ static constexpr auto deserialized4 = deserialize<RawBytes, float, iq16>(std::sp
 static constexpr auto deserialized4f = std::get<0>(deserialized4);
 static constexpr auto deserialized4q = std::get<1>(deserialized4);
 
-// static constexpr auto msg = hal::CanMsg::from_bytes(CanStdId(0x123), std::span(serialized2));
-static constexpr auto msg = hal::CanMsg::from_bytes(hal::CanStdId(0x123), std::span(serialized2));
-// static constexpr auto deserialized4m = deserialize<CanMsg, MyStruct>(msg);
-static constexpr auto msg_size = msg.size();
-static constexpr auto deserialized4m = deserialize<hal::CanMsg, MyStruct>(msg).unwrap();
+// static constexpr auto msg = hal::CanClassicMsg::from_bytes(CanStdId(0x123), std::span(serialized2));
+static constexpr auto msg = hal::CanClassicMsg::from_bytes(hal::CanStdId(0x123), std::span(serialized2));
+// static constexpr auto deserialized4m = deserialize<CanClassicMsg, MyStruct>(msg);
+static constexpr auto msg_size = msg.length();
+static constexpr auto deserialized4m = deserialize<hal::CanClassicMsg, MyStruct>(msg).unwrap();
 
 // static_assert(deserialized1 == 42, "deserialized1 != 42");
 static_assert(deserialized2 == 1_iq16, "deserialized2 != 1_iq16");

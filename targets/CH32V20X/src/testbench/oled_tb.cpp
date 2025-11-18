@@ -12,7 +12,7 @@
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
 #include "drivers/CommonIO/Key/Key.hpp"
 
-#include "types/image/painter/painter.hpp"
+#include "primitive/image/painter/painter.hpp"
 
 #if 0
 

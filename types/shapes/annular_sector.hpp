@@ -2,7 +2,7 @@
 
 #include "types/shapes/prelude.hpp"
 #include "types/regions/rect2.hpp"
-#include "core/utils/angle_range.hpp"
+#include "primitive/arithmetic/angle_range.hpp"
 
 namespace ymd{
 

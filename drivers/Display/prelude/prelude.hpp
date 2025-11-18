@@ -11,7 +11,7 @@
 #include "hal/bus/spi/spidrv.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "types/colors/rgb/rgb.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
 
 
 namespace ymd::drivers{

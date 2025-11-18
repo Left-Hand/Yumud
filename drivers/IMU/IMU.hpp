@@ -8,7 +8,7 @@
 
 
 #include "types/vectors/vector3.hpp"
-#include "hal/hal_result.hpp"
+#include "primitive/hal_result.hpp"
 
 namespace ymd::drivers{
 

@@ -4,8 +4,8 @@
 #include "core/io/regs.hpp"
 #include "core/clock/clock.hpp"
 
-#include "concept/storage.hpp"
-#include "concept/jedec.hpp"
+#include "primitive/storage.hpp"
+#include "primitive/storage/jedec.hpp"
 
 
 #include "hal/bus/i2c/i2cdrv.hpp"

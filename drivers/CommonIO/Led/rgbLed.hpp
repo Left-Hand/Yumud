@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Led.hpp"
-#include "types/colors/color/color.hpp"
-#include "concept/pwm_channel.hpp"
+#include "primitive/colors/color/color.hpp"
+#include "primitive/pwm_channel.hpp"
 #include "hal/gpio/gpio_intf.hpp"
 
 class GpioIntf;

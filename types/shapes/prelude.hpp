@@ -3,7 +3,7 @@
 #include "core/stream/ostream.hpp"
 #include "types/vectors/Vector2.hpp"
 #include "types/regions/Rect2.hpp"
-#include "types/colors/rgb/rgb.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
 
 namespace ymd{
 

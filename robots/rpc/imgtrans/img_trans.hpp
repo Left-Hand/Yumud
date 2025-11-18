@@ -2,7 +2,7 @@
 
 
 #include "core/stream/ostream.hpp"
-#include "types/image/image.hpp"
+#include "primitive/image/image.hpp"
 
 namespace ymd{
 struct TransType{

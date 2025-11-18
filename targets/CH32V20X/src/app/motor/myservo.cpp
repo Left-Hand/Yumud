@@ -330,7 +330,7 @@ void myservo_main(){
 
     hal::adc1.register_nvic({0,0}, EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    hal::adc1.set_event_callback(
+    hal::adc1.set_event_handler(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
@@ -389,7 +389,7 @@ void myservo_main(){
         // DEBUG_PRINTLN("after", can.pending());
         // clock::delay(2ms);
 
-        // constexpr auto msg = CanMsg::from_remote(CanStdId(0xff));
+        // constexpr auto msg = CanClassicMsg::from_remote(CanStdId(0xff));
         // can.write(msg);
         const auto curr = duty_is_forward ? curr_filter.get() : -curr_filter.get();
         DEBUG_PRINTLN_IDLE(

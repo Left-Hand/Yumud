@@ -3,7 +3,6 @@
 #include "core/platform.hpp"
 #include "core/debug/debug.hpp"
 #include "core/math/real.hpp"
-#include "core/stream/StringStream.hpp"
 
 #include <functional>
 #include <queue>
@@ -105,36 +104,6 @@ public:
     // DelayAction(const real-t):ActionBase(dur, nullptr){}
     ACTION_NAME(delay)
 };
-
-// struct DebugAction:public ActionBase{
-// protected:
-//     // String str_;
-//     void execute() override {
-//         DEBUG_PRINTLN(String(ss_));
-//     }
-
-//     StringStream ss_;
-// public:
-//     DebugAction(const char * str):
-//         ActionBase(1, nullptr){
-//             ss_ << str;
-//         }
-
-//     DebugAction(const String & str):
-//         ActionBase(1, nullptr){
-//             ss_ << str;
-//         }
-
-//     template <typename... Args>
-//     DebugAction(Args&&... args):
-//         ActionBase(1, nullptr){
-//         (this->ss_ << ... << args);
-//     }
-
-//     ACTION_NAME(debug)
-// };
-
-
 
 
 }

@@ -112,7 +112,7 @@ public:
         return *this;
     }
 
-    constexpr bool operator==(const StringView & other) const { 
+    [[nodiscard]] constexpr bool operator==(const StringView & other) const { 
 
         if(size_ != other.size_) return false;
 
@@ -124,16 +124,16 @@ public:
         return true;
     }
 
-    constexpr const char * begin() const {return data_;}
-    constexpr const char * c_str() const {return data_;}
-    constexpr const char * end() const {return data_ + size_;}
+    [[nodiscard]] constexpr const char * begin() const {return data_;}
+    [[nodiscard]] constexpr const char * c_str() const {return data_;}
+    [[nodiscard]] constexpr const char * end() const {return data_ + size_;}
 
-    constexpr size_t size() const { return size_; }
-    constexpr size_t length() const {return size_;}
+    [[nodiscard]] constexpr size_t size() const { return size_; }
+    [[nodiscard]] constexpr size_t length() const {return size_;}
 
-    constexpr const char* data() const { return data_; }
+    [[nodiscard]] constexpr const char* data() const { return data_; }
 
-    constexpr char operator [](const size_t index) const {return data_[index];}
+    [[nodiscard]] constexpr char operator [](const size_t index) const {return data_[index];}
 	__fast_inline constexpr Option<StringView> substr(size_t left) const {
         return substr_by_range(left, size_);};
 	__fast_inline constexpr Option<StringView> substr_by_range(size_t left, size_t right) const {
@@ -153,11 +153,11 @@ public:
         return Some(StringView(this->data_ + left, len));
     }
     
-    constexpr Option<size_t> find(char c) const{
+    [[nodiscard]] constexpr Option<size_t> find(char c) const{
         return find_from(c, 0);
     }
 
-    constexpr Option<size_t> find_from(char ch, size_t from) const{
+    [[nodiscard]] constexpr Option<size_t> find_from(char ch, size_t from) const{
         if (from >= size_) return None;
         for(size_t i = from; i < size_; i++){
             if(data_[i] == ch) return Some(i);
@@ -166,9 +166,9 @@ public:
     }
 
 
-    constexpr uint32_t hash() const {return ymd::hash(*this);}
+    [[nodiscard]] constexpr uint32_t hash() const {return ymd::hash(*this);}
 
-    constexpr StringView trim() const {
+    [[nodiscard]] constexpr StringView trim() const {
         auto & self = *this;
         auto is_whitespace = [](char c) {
             return c == ' ' || c == '\t' || c == '\n' || c == '\r';
@@ -192,15 +192,15 @@ public:
         );
     }
 
-    constexpr operator std::string_view() const {
+    [[nodiscard]] constexpr operator std::string_view() const {
         return std::string_view(data_, size_);
     }
 
-    std::span<const uint8_t> as_bytes() const {
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const {
         return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(data_), size_);
     }
 
-    constexpr std::span<const char> as_chars() const {
+    [[nodiscard]] constexpr std::span<const char> chars() const {
         return std::span<const char>(data_, size_);
     }
 private:

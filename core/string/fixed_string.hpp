@@ -22,13 +22,16 @@ struct [[nodiscard]] FixedString{
         }
     }
 
-    [[nodiscard]] static constexpr FixedString<N> from_str(const char * str){
+    [[nodiscard]] static constexpr FixedString<N> from_str(const StringView str){
         return FixedString<N>(str);
     } 
 
     [[nodiscard]] static constexpr FixedString<N> from_empty(){
         return FixedString<N>();
     } 
+
+    [[nodiscard]] constexpr char operator [](const size_t idx) const {return buf_[idx];}
+    [[nodiscard]] constexpr char & operator [](const size_t idx){return buf_[idx];}
 
 
     [[nodiscard]] constexpr StringView view() const {
@@ -109,7 +112,15 @@ struct [[nodiscard]] FixedString{
         len_ = 0;
     }
 
-    [[nodiscard]]constexpr bool operator==(const StringView & other) const {
+    [[nodiscard]] constexpr std::span<char> mut_chars() noexcept{
+        return std::span<char>(buf_, len_);
+    }
+
+    [[nodiscard]] constexpr std::span<const char> chars() const noexcept{
+        return std::span<char>(buf_, len_);
+    }
+
+    [[nodiscard]] constexpr bool operator==(const StringView & other) const {
         return this->str() == other;
     } 
 

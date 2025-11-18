@@ -1,5 +1,5 @@
 #include "scenes.hpp"
-#include "core/utils/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 
 namespace ymd::smc::sim{
 

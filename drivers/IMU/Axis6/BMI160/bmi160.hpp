@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bmi160_prelude.hpp"
-#include "core/utils/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 
 namespace ymd::drivers{
 class BMI160 final:

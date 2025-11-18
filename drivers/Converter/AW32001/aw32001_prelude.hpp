@@ -33,7 +33,7 @@
 #include "core/utils/Errno.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "core/utils/strong_type_gradation.hpp"
+#include "core/utils/enum/strong_type_gradation.hpp"
 
 namespace ymd::drivers{
 

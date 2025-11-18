@@ -1,13 +1,17 @@
 #include <atomic>
+#include <barrier>
+
+#include "src/testbench/tb.h"
+
 #include "core/sync/spinlock.hpp"
 #include "core/sync/barrier.hpp"
-#include <barrier>
+#include "core/debug/debug.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "src/testbench/tb.h"
+
 
 #include "drivers/HID/prelude/keycode.hpp"
 #include "drivers/HID/prelude/axis_input.hpp"
@@ -15,7 +19,7 @@
 #include "drivers/HID/prelude/button_input.hpp"
 #include "drivers/HID/ft6336u/ft6336u.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789v3_phy.hpp"
-#include "core/debug/debug.hpp"
+
 
 using namespace ymd;
 using drivers::FT6336U;
@@ -38,7 +42,7 @@ struct MyU18BurstPixelDataIter{
 
     constexpr uint16_t next() {
         const bool iter_has_next = iter_.has_next();
-        if((queue_.writable_capacity() > 18) and iter_has_next){
+        if((queue_.writable_size() > 18) and iter_has_next){
             const uint16_t next_u16 = iter_.next();
             queue_.push_bit(DATA_BIT);
             queue_.push_bits<8>(next_u16 >> 8);
@@ -59,7 +63,7 @@ struct MyU18BurstPixelDataIter{
     };
 private:
     Iter iter_;
-    BitsQueue queue_;
+    BitQueue<64> queue_;
     bool is_runout_ = false;
 };
 

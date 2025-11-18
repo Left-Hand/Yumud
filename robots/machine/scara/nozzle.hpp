@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/gpio/gpio.hpp"
-#include "concept/pwm_channel.hpp"
+#include "primitive/pwm_channel.hpp"
 
 namespace ymd::robots{
     

@@ -10,7 +10,7 @@
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
-#include "concept/pwm_channel.hpp"
+#include "primitive/pwm_channel.hpp"
 #include "hal/timer/capture/capture_channel.hpp"
 #include "hal/timer/timer_oc.hpp"
 
@@ -97,7 +97,7 @@ void test_sogi(){
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
             case hal::TimerEvent::Update:{
                 const auto m = clock::micros();
@@ -178,7 +178,7 @@ void digipw_main(){
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
             case hal::TimerEvent::Update:{
                 static iq20 mt = 0;

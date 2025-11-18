@@ -363,7 +363,7 @@
             // DEBUG_PRINTLN_IDLE(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dt > 100 ? 1000 + dt : dt);
             // Sys::Clock::reCalculateTime();
             
-        // CanMsg msg = {0x11, std::make_tuple<uint8_t, uint8_t>(0x55, 0xAA)};
+        // CanClassicMsg msg = {0x11, std::make_tuple<uint8_t, uint8_t>(0x55, 0xAA)};
         // if(can1.pending() == 0 and can_en) can1.write(msg);
 
         

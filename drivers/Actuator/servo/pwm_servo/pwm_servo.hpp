@@ -2,7 +2,7 @@
 
 #include "drivers/Actuator/servo/servo.hpp"
 #include "types/regions/range2.hpp"
-#include "concept/pwm_channel.hpp"
+#include "primitive/pwm_channel.hpp"
 
 namespace ymd::drivers{
 

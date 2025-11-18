@@ -2,19 +2,45 @@
 
 #include <cstdint>
 #include <bit>
+#include <compare>
 
-struct fp32{
+static_assert(sizeof(float) == 4);
+
+
+namespace ymd{
+struct [[nodiscard]] fp32{
 	uint32_t frac:23;
 	uint32_t exp:8;
 	uint32_t sign:1;
 
+    constexpr fp32(float fv){
+		*this = std::bit_cast<fp32>(fv);
+	}
 
-    constexpr fp32(float fv): 
-		frac(std::bit_cast<uint32_t>(fv)),
-		exp(std::bit_cast<uint32_t>(fv)>>23 & 0xff),
-		sign(std::bit_cast<uint32_t>(fv)>>31){;}
+	static constexpr fp32 from_bits(const uint32_t bits){
+		return fp32(std::bit_cast<float>(bits));
+	}
 
-    constexpr operator float() const {
+	constexpr uint32_t as_bits() const {
+		return std::bit_cast<uint32_t>(*this);
+	}
+
+    [[nodiscard]] constexpr operator float() const {
         return std::bit_cast<float>(*this);
     }
+
+	[[nodiscard]] constexpr auto operator <=>(const fp32 & other){
+		return float(*this) <=> float(other);
+	}
 };
+}
+
+namespace std{
+
+    template<>
+    struct is_arithmetic<ymd::fp32> : std::true_type {};
+    template<>
+    struct is_floating_point<ymd::fp32> : std::true_type {};
+    template<>
+    struct is_signed<ymd::fp32> : std::true_type {};
+}

@@ -99,7 +99,7 @@ public:
         auto & timer = hal::timer1;
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
-        timer.set_event_callback(std::forward<Fn>(fn));
+        timer.set_event_handler(std::forward<Fn>(fn));
     }
 
 

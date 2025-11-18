@@ -8,7 +8,7 @@
 #include "core/clock/time.hpp"
 #include "core/clock/clock.hpp"
 
-#include "core/utils/enum_dict.hpp"
+#include "core/utils/enum/enum_dict.hpp"
 #include "core/utils/Option.hpp"
 
 

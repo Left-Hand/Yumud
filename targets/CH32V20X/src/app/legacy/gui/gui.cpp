@@ -10,8 +10,8 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
-#include "types/image/image.hpp"
-#include "types/image/font/font.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/font/font.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"

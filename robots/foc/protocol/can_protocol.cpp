@@ -8,7 +8,7 @@ using namespace ymd::foc::MotorUtils;
 
 #if 0
 
-void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
+void FOCMotor::CanProtocol::parseCanmsg(const CanClassicMsg & msg){
     #define EXECUTER_BIND(cmd, method, ...)\
     case cmd:\
         method(__VA_ARGS__);\
@@ -34,7 +34,7 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
     #define GETTER_BIND(cmd, ...)\
     case cmd:\
         if(msg.is_remote()){\
-            can_.write(CanMsg::from_tuple(CanStdId(tx_id), std::make_tuple(__VA_ARGS__)));\
+            can_.write(CanClassicMsg::from_tuple(CanStdId(tx_id), std::make_tuple(__VA_ARGS__)));\
         }\
         break;\
     

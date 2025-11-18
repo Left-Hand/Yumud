@@ -2,11 +2,11 @@
 
 #include "core/utils/Errno.hpp"
 #include "core/utils/Result.hpp"
-#include "core/utils/enum_array.hpp"
+#include "core/utils/enum/enum_array.hpp"
 #include "hal/bus/sccb/sccb_drv.hpp"
 
 #include "hal/bus/dvp/dvp.hpp"
-#include "types/image/image.hpp"
+#include "primitive/image/image.hpp"
 
 namespace ymd::drivers{
 struct MT9V034_Prelude{

@@ -191,3 +191,4 @@ void mk8000tr_main();
 void vl53l5cx_main();
 void ld19_main();
 void m10_main();
+void myactuator_main();

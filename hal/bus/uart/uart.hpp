@@ -5,7 +5,7 @@
 #include "core/sdk.hpp"
 
 #include "hal/bus/bus_enums.hpp"
-#include "hal/hal_result.hpp"
+#include "primitive/hal_result.hpp"
 
 #include "uart_primitive.hpp"
 
@@ -57,13 +57,13 @@ public:
 
     [[nodiscard]] size_t available() const {return rx_fifo_.available();}
     [[nodiscard]] size_t pending() const {return tx_fifo_.available();}
-    [[nodiscard]] size_t remain() const {return tx_fifo_.size() - tx_fifo_.available();}
+    [[nodiscard]] size_t remain() const {return tx_fifo_.capacity() - tx_fifo_.available();}
 
     virtual void set_tx_strategy(const CommStrategy tx_strategy) = 0;
     virtual void set_rx_strategy(const CommStrategy rx_strategy) = 0;
 
     template<typename Fn>
-    void set_event_callback(Fn && cb){callback_ = std::forward<Fn>(cb);}
+    void set_event_handler(Fn && cb){callback_ = std::forward<Fn>(cb);}
 
     HalResult read(uint32_t & data) {
         char _;read1(_);data = _;return HalResult::Ok();};

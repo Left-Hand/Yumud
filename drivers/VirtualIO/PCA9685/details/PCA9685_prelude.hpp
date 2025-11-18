@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/errno.hpp"
 
-#include "concept/pwm_channel.hpp"
+#include "primitive/pwm_channel.hpp"
 
 #include "hal/gpio/vport.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"

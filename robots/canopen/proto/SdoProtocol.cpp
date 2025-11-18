@@ -4,14 +4,14 @@
 using namespace ymd::canopen;
 
 
-bool SdoProtocol::processMessage(const CanMsg & msg) {
+bool SdoProtocol::processMessage(const CanClassicMsg & msg) {
     // int index = 0;
     // int subIndex = 0;
     if (!ProtocolBase::processMessage(msg)) {
         return false;
     }
 
-    if (msg.size() != 8) {
+    if (msg.length() != 8) {
         send_abort(0, 0, SdoAbortCode::GeneralError);
         return false;
     }

@@ -1,10 +1,10 @@
 #pragma once
 
+#include "core/sdk.hpp"
 #include "core/utils/Result.hpp"
 #include "core/container/ringbuf.hpp"
 #include "ral/chip.hpp"
-#include "can_utils.hpp"
-#include "can_msg.hpp"
+#include "primitive/can/can_msg.hpp"
 
 #include "can_trait.hpp"
 #include "can_filter.hpp"
@@ -64,7 +64,7 @@ class Can final{
 public:
     using BaudRate = CanBaudrate;
     using Mode = CanMode;
-    using Fault = CanFault;
+    using Exception = CanException;
     using Error = CanError;
 
     using Callback = std::function<void(CanEvent)>;
@@ -85,8 +85,8 @@ public:
 
     void init(const Config & cfg);
 
-    [[nodiscard]] Result<void, CanError> write(const CanMsg & msg);
-    [[nodiscard]] CanMsg read();
+    [[nodiscard]] Result<void, CanError> write(const CanClassicMsg & msg);
+    [[nodiscard]] CanClassicMsg read();
     [[nodiscard]] size_t pending();
     [[nodiscard]] size_t available();
 
@@ -99,7 +99,7 @@ public:
     void enable_index_priority(const Enable en);
     [[nodiscard]] uint8_t get_tx_errcnt();
     [[nodiscard]] uint8_t get_rx_errcnt();
-    [[nodiscard]] Option<CanFault> last_fault();
+    [[nodiscard]] Option<CanException> last_exception();
     [[nodiscard]] bool is_busoff();
 
     template<typename Fn>
@@ -121,8 +121,8 @@ private:
     static constexpr size_t CAN_SOFTFIFO_SIZE = 8;
     #endif
 
-    RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
-    RingBuf<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
+    RingBuf<CanClassicMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
+    RingBuf<CanClassicMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
 
     Callback callback_ = nullptr;
 
@@ -143,8 +143,8 @@ private:
     void accept_rx_msg_interrupt(const CanFifoNth fifo_num);
     void accept_sce_interrupt();
 
-    [[nodiscard]] Option<CanMailboxNth> transmit(const CanMsg & msg);
-    [[nodiscard]] CanMsg receive(const CanFifoNth fifo_num);
+    [[nodiscard]] Option<CanMailboxNth> transmit(const CanClassicMsg & msg);
+    [[nodiscard]] CanClassicMsg receive(const CanFifoNth fifo_num);
 
     friend class CanFilter;
 

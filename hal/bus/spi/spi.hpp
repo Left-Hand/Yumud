@@ -6,55 +6,12 @@
 #include "hal/gpio/vport.hpp"
 #include "hal/bus/bus_base.hpp"
 #include "hal/bus/bus_enums.hpp"
-#include "hal/hal_result.hpp"
-
+#include "primitive/hal_result.hpp"
+#include "spi_primitive.hpp"
 #include "core/sdk.hpp"
 
 namespace ymd::hal{
 
-enum class SpiI2sIT:uint8_t{
-    TXE = ((uint8_t)0x71),
-    RXNE = ((uint8_t)0x60),
-    ERR = ((uint8_t)0x50),
-    OVR = ((uint8_t)0x56),
-    MODF = ((uint8_t)0x55),
-    CRCERR = ((uint8_t)0x54),
-    UDR = ((uint8_t)0x53)
-};
-
-enum class SpiEvent:uint8_t{
-    TransmitBufferEmpty,
-    ReceiveBufferNotEmpty
-};
-
-class SpiSlaveRank{
-public:
-    explicit constexpr SpiSlaveRank(const uint8_t rank):
-        rank_(rank){}
-
-    uint8_t count() const {return rank_;}
-    uint16_t as_unique_id() const {return static_cast<uint16_t>(rank_);}
-
-private:
-    uint8_t rank_;
-};
-
-enum class SpiMode:uint8_t{
-    _0,
-    _1,
-    _2,
-    _3
-};
-
-enum class SpiClockPolarity:uint8_t{
-    IdleLow = 0,
-    IdleHigh = 1
-};
-
-enum class SpiClockPhase:uint8_t{
-    CaptureOnFirst = 0,
-    CaptureOnSecond = 1
-};
 
 class Spi{
 public:

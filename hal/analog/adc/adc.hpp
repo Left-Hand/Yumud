@@ -18,11 +18,7 @@ namespace ymd::hal{
 
 class DmaChannel;
 
-enum class AdcEvent:uint8_t{
-    EndOfConversion,
-    EndOfInjectedConversion,
-    AnalogWatchdog
-};
+
 
 struct Adc_Prelude{
     using Callback = std::function<void(AdcEvent)>;
@@ -92,7 +88,7 @@ struct Adc_Prelude{
     using IT = AdcIT;
 };
 
-struct AdcChannelConfig{
+struct [[nodiscard]] AdcChannelConfig{
     using ChannelSelection = AdcChannelSelection;
     using SampleCycles = AdcSampleCycles;
 
@@ -132,7 +128,7 @@ public:
 
 
     template<typename Fn>
-    void set_event_callback(Fn && cb){
+    void set_event_handler(Fn && cb){
         callback_ = std::forward<Fn>(cb);
     }
 

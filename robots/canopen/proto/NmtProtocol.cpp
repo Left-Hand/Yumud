@@ -19,7 +19,7 @@ using namespace ymd::canopen;
 void NmtMasterProtocol::requestStateSwitch(const uint8_t node_id, const NmtCmd cmd){
     const std::array payload = {uint8_t(cmd), uint8_t(node_id)};
     sendMessage(
-        CanMsg::from_bytes(
+        CanClassicMsg::from_bytes(
             hal::CanStdId(0x000),
             std::span(payload)
         )
@@ -28,7 +28,7 @@ void NmtMasterProtocol::requestStateSwitch(const uint8_t node_id, const NmtCmd c
 
 
 #if 0
-bool NmtSlaveProtocol::processStateSwitchRequest(const CanMsg & msg){
+bool NmtSlaveProtocol::processStateSwitchRequest(const CanClassicMsg & msg){
     if (!ProtocolBase::processMessage(msg) && (msg.id() != 0)) {
         return false;
     }
@@ -80,7 +80,7 @@ void NmtSlaveProtocol::sendBootUp() {
     const auto cobid = CobId::from_u16(0x700 | dev_.NMT_getNodeId());
     const std::array payload = {uint8_t(0)};
     sendMessage(
-        CanMsg::from_bytes(
+        CanClassicMsg::from_bytes(
             cobid.to_stdid(),
             std::span(payload)
         )
@@ -91,7 +91,7 @@ void NmtSlaveProtocol::sendHeartBeat() {
     const auto cobid =  CobId::from_u16(0x700 | dev_.NMT_getNodeId());
     const std::array payload = {std::bit_cast<uint8_t>(dev_.NMT_getState())};
     sendMessage(
-        CanMsg::from_bytes(
+        CanClassicMsg::from_bytes(
             cobid.to_stdid(),
             std::span(payload)
         )

@@ -6,7 +6,7 @@
 #include "core/utils/nth.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
-#include "core/utils/rescaler.hpp"
+#include "primitive/arithmetic/rescaler.hpp"
 #include "core/stream/fixed_string_stream.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
@@ -22,13 +22,13 @@
 
 
 
-#include "types/image/painter/painter.hpp"
-#include "types/colors/rgb/rgb.hpp"
+#include "primitive/image/painter/painter.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
 #include "types/regions/rect2.hpp"
 
 #include "types/vectors/quat.hpp"
-#include "types/image/image.hpp"
-#include "types/image/font/font.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/font/font.hpp"
 
 #include "types/shapes/bresenham_iter.hpp"
 #include "types/shapes/rotated_rect.hpp"

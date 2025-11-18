@@ -5,7 +5,7 @@ using namespace ymd::canopen;
 
 
 
-bool SdoServerSession::processMessage(const CanMsg & msg) {
+bool SdoServerSession::processMessage(const CanClassicMsg & msg) {
     const auto cmd = SdoCommand(msg).type();
     switch(cmd) {
         case SdoCommandType::DownloadSegment:  // 下载段
@@ -30,7 +30,7 @@ bool SdoServerSession::processMessage(const CanMsg & msg) {
 }
 
 
-bool SdoClientSession::processMessage(const CanMsg & msg) {
+bool SdoClientSession::processMessage(const CanClassicMsg & msg) {
     const auto cmd = SdoCommand(msg).type();
     switch(cmd) {
         case SdoCommandType::DownloadSegment:  // 下载段
@@ -62,13 +62,13 @@ struct SdoPacket{
     uint8_t subidx;
     uint32_t data;
 
-    static constexpr SdoPacket from(const CanMsg & msg){
+    static constexpr SdoPacket from(const CanClassicMsg & msg){
         return std::bit_cast<SdoPacket>(msg.payload_as_u64());
     }
 
-    constexpr CanMsg to_canmsg(const CobId id){
+    constexpr CanClassicMsg to_canmsg(const CobId id){
         const auto payload = std::bit_cast<std::array<uint8_t, 8>>(*this);
-        return CanMsg::from_bytes(
+        return CanClassicMsg::from_bytes(
             id.to_stdid(), 
             std::span(std::move(payload))
         );
@@ -111,17 +111,17 @@ void SdoClientSession::requestRead(const OdIndex idx, const OdSubIndex subidx, S
     );
 }
 
-void SdoClientSession::handleWriteResponse(const CanMsg & msg){
+void SdoClientSession::handleWriteResponse(const CanClassicMsg & msg){
 
 }
 
 
-void SdoClientSession::handleReadResponse(const CanMsg & msg){
+void SdoClientSession::handleReadResponse(const CanClassicMsg & msg){
 
 }
 
 
-void SdoServerSession::processWriteRequest(const CanMsg & msg) {
+void SdoServerSession::processWriteRequest(const CanClassicMsg & msg) {
     // 解析接收到的SDO写请求
     const auto sdo_packet = SdoPacket::from(msg);
     const auto idx = sdo_packet.idx;
@@ -177,7 +177,7 @@ void SdoServerSession::processWriteRequest(const CanMsg & msg) {
 }
 
 
-void SdoServerSession::processReadRequest(const CanMsg & msg) {
+void SdoServerSession::processReadRequest(const CanClassicMsg & msg) {
     // 解析接收到的SDO写请求
     const auto sdo_packet = SdoPacket::from(msg);
     const auto idx = sdo_packet.idx;

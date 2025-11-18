@@ -4,7 +4,7 @@
 #include "core/clock/clock.hpp"
 #include "core/utils/Option.hpp"
 
-#include "concept/memory.hpp"
+#include "primitive/memory.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 

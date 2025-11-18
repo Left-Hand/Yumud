@@ -7,7 +7,7 @@
 #include "types/vectors/vector2.hpp"
 
 #include "core/sync/timer.hpp"
-#include "types/colors/color/color.hpp"
+#include "primitive/colors/color/color.hpp"
 
 
 #ifdef ENABLE_UART1

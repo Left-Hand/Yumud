@@ -5,8 +5,12 @@
 
 namespace ymd{
 
+namespace details{
 
-template<size_t N>
+template <size_t NUM_BITS>
+struct [[nodiscard]] _BitArray_Storage;
+}
+template<size_t NUM_BITS>
 struct [[nodiscard]] BitArray {
 private:
     struct [[nodiscard]] MutBitProxy {
@@ -58,8 +62,8 @@ private:
     };
 
 public:
-    static_assert(N % 8 == 0);
-    static constexpr size_t NUM_BYTES = N / 8;
+    static_assert(NUM_BITS % 8 == 0);
+    static constexpr size_t NUM_BYTES = NUM_BITS / 8;
 
     static constexpr BitArray from_zero() {
         auto ret = BitArray();
@@ -81,22 +85,21 @@ public:
 
     // 可修改的位访问操作符 []
     [[nodiscard]] constexpr MutBitProxy operator[](size_t index) {
+        if(index >= NUM_BITS) [[unlikely]]
+            on_out_of_range();
         return MutBitProxy(flag_[index / 8], index % 8);
     }
 
     // 只读的位访问操作符 []
     [[nodiscard]] constexpr BitProxy operator[](size_t index) const {
+        if(index >= NUM_BITS) [[unlikely]]
+            on_out_of_range();
         return BitProxy(flag_[index / 8], index % 8);
     }
 
     // 获取位总数
     [[nodiscard]] constexpr size_t size() const {
-        return N;
-    }
-
-    // 获取字节总数
-    [[nodiscard]] constexpr size_t byte_size() const {
-        return NUM_BYTES;
+        return NUM_BITS;
     }
 
     // 检查是否所有位都是 0
@@ -127,5 +130,9 @@ private:
     }
 
     std::array<uint8_t, NUM_BYTES> flag_ = {};
+
+    void on_out_of_range(){
+        __builtin_abort();
+    }
 };
 }

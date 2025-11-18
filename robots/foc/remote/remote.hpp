@@ -18,7 +18,7 @@ protected:
 
 protected:
 
-    void parseCanmsg(const CanMsg & msg) override;
+    void parseCanmsg(const CanClassicMsg & msg) override;
     
     hal::UartHw & logger;
     
@@ -64,8 +64,8 @@ public:
     void setAccLimit(const real_t max_acc);
     void reset();
     void triggerCali();
-    // void parseCan(const CanMsg & msg);
-    // void parseCommand(const NodeId id, const Command cmd, const CanMsg &msg);
+    // void parseCan(const CanClassicMsg & msg);
+    // void parseCommand(const NodeId id, const Command cmd, const CanClassicMsg &msg);
 
     uint8_t getNodeId() {return 0;}
     bool stable() const {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/debug/debug.hpp"
-#include "types/image/image.hpp"
+#include "primitive/image/image.hpp"
 #include "nvcv2/nvcv2.hpp"
 #include <array>
 #include <cstdint>

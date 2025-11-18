@@ -9,8 +9,23 @@
 
 #include "drivers/Encoder/Encoder.hpp"
 
-namespace ymd::robots{
+namespace ymd::robots::dji::m3508{
 
+struct TxData{
+    uint16_t curr_data_msb[4];  
+}__packed;
+
+static_assert(sizeof(TxData) == 8);
+
+struct RxData{
+    uint16_t angle_8192_msb;
+    uint16_t curr_data_msb;
+    uint16_t speed_rpm_msb;
+    uint8_t temp;
+    uint8_t __resv__;
+}__packed;
+
+static_assert(sizeof(RxData) == 8);
 
 class M3508Port{
 public:
@@ -134,21 +149,7 @@ private:
     size_t size_ = MAX_SLAVES_COUNT;
     std::bitset<MAX_SLAVES_COUNT> connected_flags_;
 
-    struct TxData{
-        uint16_t curr_data_msb[4];  
-    }__packed;
 
-    static_assert(sizeof(TxData) == 8);
-
-    struct RxData{
-        uint16_t angle_8192_msb;
-        uint16_t curr_data_msb;
-        uint16_t speed_rpm_msb;
-        uint8_t temp;
-        uint8_t __resv__;
-    }__packed;
-
-    static_assert(sizeof(RxData) == 8);
 
 
     std::array<M3508, MAX_SLAVES_COUNT> slaves_ = {
@@ -172,7 +173,7 @@ private:
 
     void set_target_current(const iq16 curr_, const size_t index);
 
-    void update_slave(const hal::CanMsg & msg, const size_t index);
+    void update_slave(const hal::CanClassicMsg & msg, const size_t index);
 
 };
 

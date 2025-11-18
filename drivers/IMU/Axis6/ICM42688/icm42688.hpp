@@ -1,8 +1,8 @@
 #pragma once
 
 #include "details/ICM42688_Prelude.hpp"
-#include "core/utils/enum_array.hpp"
-#include "core/utils/angle.hpp"
+#include "core/utils/enum/enum_array.hpp"
+#include "primitive/arithmetic/angle.hpp"
 
 namespace ymd::drivers{
 

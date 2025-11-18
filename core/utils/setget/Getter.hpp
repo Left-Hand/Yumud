@@ -6,14 +6,14 @@
 namespace ymd::utils{
 
 template<typename T>
-class GetterIntf_t{
+class GetterIntf{
 public:
-    GetterIntf_t(const GetterIntf_t & other) = delete;
-    GetterIntf_t(GetterIntf_t && other) = default;
+    GetterIntf(const GetterIntf & other) = delete;
+    GetterIntf(GetterIntf && other) = default;
 
-    GetterIntf_t() = default;
+    GetterIntf() = default;
 
-    virtual ~GetterIntf_t() = default;
+    virtual ~GetterIntf() = default;
 
     virtual T operator()() = 0;
 
@@ -24,14 +24,14 @@ public:
 
 
 template<typename T>
-class LambdaGetter_t: public GetterIntf_t<T>{
+class LambdaGetter: public GetterIntf<T>{
 public:
     using Getter = std::function<T(void)>;
 protected:
     Getter _getter;
 public:
     template<typename F>
-    LambdaGetter_t(F && getter)
+    LambdaGetter(F && getter)
         : _getter(std::forward<F>(getter)) {}
 
     T operator ()() override {
@@ -41,7 +41,7 @@ public:
 
 template<typename ValueType>
 auto make_getter(auto & obj, ValueType(std::remove_reference_t<decltype(obj)>::*member_func_ptr)()) {
-    return LambdaGetter_t<ValueType>(
+    return LambdaGetter<ValueType>(
         [&obj, member_func_ptr]() {
             return (obj.*member_func_ptr)();
         });
@@ -49,7 +49,7 @@ auto make_getter(auto & obj, ValueType(std::remove_reference_t<decltype(obj)>::*
 
 template<typename ValueType, typename Func>
 auto make_getter(Func && func) {
-    return LambdaGetter_t<ValueType>(
+    return LambdaGetter<ValueType>(
         [func = std::forward<Func>(func)]() -> ValueType {
             return func();
         }

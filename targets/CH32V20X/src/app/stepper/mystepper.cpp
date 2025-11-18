@@ -1,3 +1,5 @@
+#include "src/testbench/tb.h"
+
 #include <atomic>
 #include <array>
 
@@ -6,10 +8,12 @@
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
 #include "core/utils/data_iter.hpp"
-#include "core/utils/release_info.hpp"
-#include "core/utils/bitflag.hpp"
+#include "core/utils/bits/bitflag.hpp"
 #include "core/string/string_view.hpp"
-#include "core/utils/build_date.hpp"
+
+#include "primitive/misc/release_info.hpp"
+#include "primitive/misc/build_date.hpp"
+#include "primitive/arithmetic/progress.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/analog/adc/adcs/adc1.hpp"
@@ -23,8 +27,6 @@
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 
-#include "src/testbench/tb.h"
-
 #include "types/regions/range2.hpp"
 
 #include "meta_utils.hpp"
@@ -36,7 +38,7 @@
 #include "robots/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/pwmgen/stepper_pwmgen.hpp"
-#include "core/utils/progress.hpp"
+
 
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/calibrate_table.hpp"
@@ -58,8 +60,6 @@ using digipw::AlphaBetaCoord;
 struct PreoperateTasks{
 
 };
-
-
 
 
 class MotorFibre{
@@ -303,7 +303,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             motor_system_.resume().examine();
@@ -469,7 +469,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     adc.register_nvic({0,0}, EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    adc.set_event_callback(
+    adc.set_event_handler(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
@@ -484,7 +484,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             b_curr = inj_b.get_voltage();
@@ -566,7 +566,7 @@ void mystepper_main(){
 
     adc.register_nvic({0,0}, EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    adc.set_event_callback(
+    adc.set_event_handler(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
@@ -630,7 +630,7 @@ void mystepper_main(){
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_callback([&](hal::TimerEvent ev){
+    timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             [[maybe_unused]] const auto ctime = clock::time();

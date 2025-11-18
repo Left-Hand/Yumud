@@ -166,7 +166,7 @@ void nuedc_2025e_joint_main(){
 
     can.filters<0>() 
         .apply(hal::CanFilterConfig::from_pair(
-            hal::CanStdIdMaskPair::from_id_and_mask(
+            hal::CanStdIdMaskPair::from_parts(
                 comb_role_and_cmd(self_node_role_, uint8_t(0x00)), 
                 hal::CanStdId(0b1111'000'0000), hal::CanRtrSpecfier::Discard
             ))
@@ -235,7 +235,7 @@ void nuedc_2025e_joint_main(){
     RunStatus run_status_;
     run_status_.state = RunState::Idle;
 
-    RingBuf<hal::CanMsg, CANMSG_QUEUE_SIZE> msg_queue_;
+    RingBuf<hal::CanClassicMsg, CANMSG_QUEUE_SIZE> msg_queue_;
 
     AlphaBetaCoord<iq16> ab_volt_;
     
@@ -377,7 +377,7 @@ void nuedc_2025e_joint_main(){
 
     adc.register_nvic({0,0}, EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    adc.set_event_callback(
+    adc.set_event_handler(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
@@ -405,7 +405,7 @@ void nuedc_2025e_joint_main(){
     };
 
 
-    auto read_can_msg = [&] -> Option<hal::CanMsg>{
+    auto read_can_msg = [&] -> Option<hal::CanClassicMsg>{
         while(can.available()){
             auto msg = can.read();
             if(msg.is_extended()) continue;
@@ -481,14 +481,14 @@ void nuedc_2025e_joint_main(){
                 break;
 
             case CommandKind::DeltaPosition:{
-                const auto may_cmd = serde::make_deserialize<serde::RawBytes,
+                const auto may_cmd = serde::deserialize<serde::RawLeBytes,
                     commands::DeltaPosition>(payload);
                 if(may_cmd.is_ok()) delta_target_position_by_command(may_cmd.unwrap());
             }
                 break;
 
             case CommandKind::SetPosition:{
-                const auto may_cmd = serde::make_deserialize<serde::RawBytes,
+                const auto may_cmd = serde::deserialize<serde::RawLeBytes,
                     commands::SetPosition>(payload);
                 if(may_cmd.is_ok()) set_target_position_by_command(may_cmd.unwrap());
                 break;
@@ -512,11 +512,11 @@ void nuedc_2025e_joint_main(){
             }
         };
 
-        auto handle_msg = [&](const hal::CanMsg & msg){
+        auto handle_msg = [&](const hal::CanClassicMsg & msg){
             const auto id = msg.stdid().unwrap();
             const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(id);
             if(msg_role != self_node_role_) return;
-            dispatch_msg(msg_cmd, msg.iter_payload());
+            dispatch_msg(msg_cmd, msg.payload_bytes());
         };
 
         while(true){

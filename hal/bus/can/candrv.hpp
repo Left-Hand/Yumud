@@ -6,11 +6,11 @@
 namespace ymd::hal{
 class CanDrv{
     public:
-        using CanMsg = hal::CanMsg; 
+        using CanClassicMsg = hal::CanClassicMsg; 
 
         CanDrv(hal::Can & can):can_(can){;}
     
-        Result<void, CanError> transmit(const CanMsg & msg){
+        Result<void, CanError> transmit(const CanClassicMsg & msg){
             return can_.write(msg);
         }
     

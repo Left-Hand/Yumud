@@ -2,8 +2,8 @@
 
 #include "core/debug/debug.hpp"
 
-#include "concept/pwm_channel.hpp"
-#include "concept/analog_channel.hpp"
+#include "primitive/pwm_channel.hpp"
+#include "primitive/analog_channel.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd::hal;

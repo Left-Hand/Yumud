@@ -140,7 +140,7 @@ void nuedc_2025e_laser_main(){
     };
 
 
-    auto write_can_msg = [&](const hal::CanMsg & msg){
+    auto write_can_msg = [&](const hal::CanClassicMsg & msg){
         if(msg.is_extended()) PANIC();
         can.write(msg).examine();
     };

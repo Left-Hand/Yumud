@@ -129,7 +129,7 @@ public:
     }
 
     template<typename Fn>
-    void set_event_callback(Fn && cb){
+    void set_event_handler(Fn && cb){
         callback_ = std::forward<Fn>(cb);
     }
 

@@ -6,7 +6,7 @@
 #include <span>
 #include <bitset>
 
-#include "core/utils/BytesIterator.hpp"
+#include "core/utils/bytes/BytesIterator.hpp"
 #include "core/utils/Result.hpp"
 
 #include "i2c.hpp"

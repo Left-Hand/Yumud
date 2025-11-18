@@ -22,7 +22,7 @@ using namespace ymd;
     tx_led.outpp();
     rx_led.outpp();
 
-    uart.set_event_callback([&](const hal::UartEvent& ev){
+    uart.set_event_handler([&](const hal::UartEvent& ev){
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:
                 rx_led.set();

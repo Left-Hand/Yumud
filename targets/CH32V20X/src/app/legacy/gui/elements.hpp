@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/colors/rgb/rgb.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
 #include "core/string/string.hpp"
 
 

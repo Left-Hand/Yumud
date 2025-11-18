@@ -89,7 +89,7 @@ public:
 
         SERVO_PWMGEN_TIMER.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         SERVO_PWMGEN_TIMER.enable_interrupt<hal::TimerIT::Update>(EN);
-        SERVO_PWMGEN_TIMER.set_event_callback(std::forward<Fn>(callback));
+        SERVO_PWMGEN_TIMER.set_event_handler(std::forward<Fn>(callback));
     }
 private:
 

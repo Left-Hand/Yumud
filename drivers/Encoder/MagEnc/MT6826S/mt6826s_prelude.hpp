@@ -4,7 +4,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
-#include "core/utils/angle.hpp"
+#include "primitive/arithmetic/angle.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 

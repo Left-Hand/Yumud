@@ -5,7 +5,7 @@
 #include "core/clock/time.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "hal/bus/can/can_msg.hpp" 
+#include "primitive/can/can_msg.hpp" 
 #include "hal/bus/uart/uarthw.hpp" 
 
 #include "core/magic/size_traits.hpp"
