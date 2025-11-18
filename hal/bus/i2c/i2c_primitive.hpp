@@ -2,7 +2,8 @@
 
 #include "core/platform.hpp"
 #include "hal/bus/bus_base.hpp"
-#include "hal/hal_result.hpp"
+#include "primitive/hal_result.hpp"
+#include "core/utils/sumtype.hpp"
 #include <bitset>
 
 namespace ymd::hal{
@@ -12,14 +13,14 @@ concept valid_i2c_regaddr = std::integral<T> and (sizeof(T) <= 2) and std::is_un
 template <typename T>
 concept valid_i2c_data = std::is_standard_layout_v<T> and (sizeof(T) <= 4);
 
-enum class I2cRole:uint8_t{
+enum class [[nodiscard]] [[nodiscard]] I2cRole:uint8_t{
     Master,
     Slave
 };
 
 
 template<I2cRole R>
-struct I2cAddrWithRw{
+struct [[nodiscard]] I2cAddrWithRw{
 public:
     static constexpr uint16_t LSB_READ = 0x01;
     static constexpr uint16_t LSB_WRITE = 0x00;
@@ -73,13 +74,13 @@ private:
 };
 
 template<size_t N, I2cRole R>
-struct I2cAddr;
+struct [[nodiscard]] I2cAddr;
 
 template<size_t N, I2cRole R>
-struct I2cAddr;
+struct [[nodiscard]] I2cAddr;
 
 template<I2cRole R>
-struct I2cAddr<7, R>{
+struct [[nodiscard]] I2cAddr<7, R>{
 public:
     static constexpr I2cAddr<7, R> from_u7(const uint16_t i2c_addr){
         return I2cAddr<7, R>{uint16_t(i2c_addr)};
@@ -106,7 +107,7 @@ private:
 
 
 template<I2cRole R>
-struct I2cAddr<10, R>{
+struct [[nodiscard]] I2cAddr<10, R>{
 public:
     static constexpr I2cAddr<10, R> from_u10(const uint16_t i2c_addr){
         return I2cAddr<10, R>{uint16_t(i2c_addr)};
@@ -131,5 +132,51 @@ template<size_t N>
 using I2cMasterAddr = I2cAddr<N, I2cRole::Master>;
 
 using I2cSlaveAddrWithRw = I2cAddrWithRw<I2cRole::Slave>;
+
+enum class [[nodiscard]] I2cError:uint8_t{
+
+};
+
+enum class [[nodiscard]] I2cMasterEvent:uint8_t{
+    // BUSY, MSL and SB flag */
+    ModeSelect,
+    // BUSY, MSL, ADDR, TXE and TRA flags */
+    TransmitterModeSelected,
+    // BUSY, MSL and ADDR flags */
+    ReceiverModeSelected,
+    // BUSY, MSL and ADD10 flags */
+    ModeAddress10,
+    // BUSY, MSL and RXNE flags */
+    ByteReceived,
+    // TRA, BUSY, MSL, TXE flags */
+    ByteTransmitting,
+    // TRA, BUSY, MSL, TXE and BTF flags */
+    ByteTransmitted
+};
+
+enum class [[nodiscard]] I2cSlaveEvent:uint8_t{
+    // BUSY and ADDR flags */
+    ReceiverAddressMatched,
+    // TRA, BUSY, TXE and ADDR flags */
+    TransmitterAddressMatched,
+    // DUALF and BUSY flags */
+    ReceiverSecondAddressMatched,
+    // DUALF, TRA, BUSY and TXE flags */
+    TransmitterSecondAddressMatched,
+    // GENCALL and BUSY flags */
+    GeneralCallAddressMatched,
+    // BUSY and RXNE flags */
+    ByteReceived,
+    // STOPF flag */
+    StopDetected,
+    // TRA, BUSY, TXE and BTF flags */
+    ByteTransmitted,
+    // TRA, BUSY and TXE flags */
+    ByteTransmitting,
+    // AF flag */
+    AckFailure
+};
+
+struct I2cEvent:public Sumtype<I2cMasterEvent, I2cSlaveEvent>{};
 
 }

@@ -7,7 +7,7 @@
 #include "core/utils/Errno.hpp"
 
 
-#include "hal/hal_result.hpp"
+#include "primitive/hal_result.hpp"
 
 
 namespace ymd::drivers{

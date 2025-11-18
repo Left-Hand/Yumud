@@ -5,7 +5,7 @@
 #include "core/sdk.hpp"
 
 #include "hal/bus/bus_enums.hpp"
-#include "hal/hal_result.hpp"
+#include "primitive/hal_result.hpp"
 
 #include "uart_primitive.hpp"
 

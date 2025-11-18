@@ -3,6 +3,7 @@
 
 #include "hal/timer/timer_utils.hpp"
 #include "primitive/pwm_channel.hpp"
+#include "core/utils/Option.hpp"
 
 
 namespace ymd::hal{
@@ -16,9 +17,9 @@ public:
     TimerChannel(const TimerChannel & other) = delete;
     TimerChannel(TimerChannel && other) = delete;
 
-    TimerChannel & enable_dma(const Enable en);
+    void enable_dma(const Enable en);
 
-    DmaChannel & dma() const;
+    Option<DmaChannel &> dma() const;
 
 protected:
     TIM_TypeDef * inst_;

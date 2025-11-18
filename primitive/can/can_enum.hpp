@@ -157,13 +157,14 @@ public:
 
     using enum Kind;
     constexpr CanBaudrate(Kind kind):kind_(kind){}
+    [[nodiscard]] constexpr Kind kind() const{return kind_;}
     static constexpr Option<CanBaudrate> from_freq(const uint32_t freq){
         const auto may_kind = freq2kind(freq);
         if(may_kind.is_none()) return None;
         return Some(CanBaudrate(may_kind.unwrap()));
     }
 
-    [[nodiscard]] constexpr Kind kind() const{return kind_;}
+
     [[nodiscard]] constexpr CanBitTimmingCoeffs to_coeffs() const{
         //works only at 144mhz pclk1 freq
         switch(kind_){
@@ -231,12 +232,43 @@ private:
     }
 };
 
-enum class [[nodiscard]] CanMode:uint8_t{
-    Normal = 0b00,
-    Silent = 0b10,
-    SilentLoopback = 0b11,
-    Loopback = 0b01
+struct [[nodiscard]] CanMode{
+    using Self = CanMode;
+    enum class [[nodiscard]] Kind:uint8_t {
+        Normal = 0b00,
+        Silent = 0b10,
+        SilentLoopback = 0b11,
+        Loopback = 0b01
+    };
+
+    constexpr CanMode(Kind kind):kind_(kind){}
+    [[nodiscard]] constexpr Kind kind() const{return kind_;}
+
+    [[nodiscard]] constexpr bool is_loopback() const{
+        switch(kind_){
+            case Kind::Normal: return false;
+            case Kind::Silent: return false;
+            case Kind::SilentLoopback: return true;
+            case Kind::Loopback: return true; 
+            default:__builtin_unreachable();
+        }
+    }
+    [[nodiscard]] constexpr bool is_slient() const {
+        switch(kind_){
+            case Kind::Normal: return false;
+            case Kind::Silent: return true;
+            case Kind::SilentLoopback: return true;
+            case Kind::Loopback: return false; 
+            default:__builtin_unreachable();
+        }
+    }
+
+    using enum Kind;
+private:
+    Kind kind_;
 };
+
+
 
 enum class [[nodiscard]] CanException:uint8_t{
     Stuff = 0x10,
@@ -258,7 +290,11 @@ enum class [[nodiscard]] CanError:uint8_t{
 
 OutputStream & operator<<(OutputStream & os, const CanError & error);
 
-
+enum class [[nodiscard]] CanRtrSpecfier:uint8_t{
+    Discard,
+    RemoteOnly,
+    DataOnly
+};
 
 enum class [[nodiscard]] CanRtr:uint8_t{
     Data = 0,

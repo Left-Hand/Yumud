@@ -3,7 +3,7 @@
 #include "can_enum.hpp"
 #include "can_id.hpp"
 #include "can_dlc.hpp"
-#include "platform_spec/can_identifier.hpp"
+#include "can_identifier.hpp"
 
 #include "core/utils/Option.hpp"
 
@@ -160,7 +160,7 @@ public:
     }
 
     [[nodiscard]] __always_inline constexpr uint32_t id_as_u32() const {
-        return identifier_.id_u32();
+        return identifier_.id_as_u32();
     }
 
     [[nodiscard]] __always_inline constexpr uint32_t sxx32_identifier_as_u32() const {
@@ -169,12 +169,12 @@ public:
 
     [[nodiscard]] constexpr Option<hal::CanStdId> stdid() const {
         if(not identifier_.is_standard()) return None;
-        return Some(hal::CanStdId(identifier_.id_u32()));
+        return Some(hal::CanStdId(identifier_.id_as_u32()));
     }
 
     [[nodiscard]] constexpr Option<hal::CanExtId> extid() const {
         if(not identifier_.is_extended()) return None;
-        return Some(hal::CanExtId(identifier_.id_u32()));
+        return Some(hal::CanExtId(identifier_.id_as_u32()));
     }
 
     [[nodiscard]] __always_inline constexpr uint64_t payload_as_u64() const {

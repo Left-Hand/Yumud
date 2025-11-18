@@ -7,7 +7,7 @@
 namespace ymd::hal{
 class Gpio;
 
-class TimerOutBase: public TimerChannel{
+class [[nodiscard]] TimerOutBase: public TimerChannel{
 protected:
     TimerOutBase(TIM_TypeDef * inst, const ChannelSelection nth):
         TimerChannel(inst, nth){;}
@@ -19,7 +19,7 @@ public:
 
 };
 
-struct TimerOcPwmConfig final{
+struct [[nodiscard]] TimerOcPwmConfig final{
     TimerOcMode oc_mode = TimerOcMode::ActiveBelowCvr;
     Enable cvr_sync_en = EN;
     BoolLevel valid_level = HIGH;
@@ -27,12 +27,12 @@ struct TimerOcPwmConfig final{
     Enable plant_en = EN;
 };
 
-struct TimerOcnPwmConfig final{
+struct [[nodiscard]] TimerOcnPwmConfig final{
     Enable out_en = EN;
     Enable plant_en = EN;
 };
 
-class TimerOC final:public PwmIntf, public TimerOutBase{
+class [[nodiscard]] TimerOC final:public PwmIntf, public TimerOutBase{
 public:
     using Mode = TimerOcMode;
 protected:
@@ -64,7 +64,7 @@ public:
 
 };
 
-class TimerOCN final:public TimerOutBase{
+class [[nodiscard]] TimerOCN final:public TimerOutBase{
 public:
     TimerOCN(
         TIM_TypeDef * _base, 
@@ -81,7 +81,7 @@ public:
 //将输出通道和互补输出通道作为一个双极性pwm物理层的两个通道
 //当输入为正时 原始输出通道作业 互补输出通道关闭
 //当输入为负时 原始输出通道关闭 互补输出通道作业
-class TimerOcMirror final:public PwmIntf{
+class [[nodiscard]] TimerOcMirror final:public PwmIntf{
 public:
     TimerOcMirror(
         TimerOC & oc, 
@@ -112,7 +112,7 @@ private:
 //将两个输出通道作为一个双极性pwm物理层的两个通道
 //当输入为正时 高端输出通道作业 低端输出通道关闭
 //当输入为负时 高端输出通道关闭 低端输出通道作业
-class TimerOcPair final:public PwmIntf{
+class [[nodiscard]] TimerOcPair final:public PwmIntf{
 public:
     TimerOcPair(TimerOC & pos_oc, TimerOC & neg_oc):
         pos_oc_(pos_oc),

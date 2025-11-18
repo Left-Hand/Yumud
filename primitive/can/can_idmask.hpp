@@ -1,0 +1,105 @@
+#pragma once
+
+#include "platform_spec/sxx32_can_idmask.hpp"
+
+namespace ymd::hal{
+
+template<typename T>
+struct [[nodiscard]] _CanIdMaskPair final{
+    using id_type = typename T::id_type;
+    static constexpr size_t ID_NUM_BITS = id_type::NUM_BITS;
+
+    T id;
+    T mask;
+
+    static constexpr _CanIdMaskPair from_accept_all(){
+        return _CanIdMaskPair{
+            .id = T::from_zero(), 
+            .mask = T::from_zero()
+        };
+    }
+
+    static constexpr _CanIdMaskPair from_reject_all(){
+        return _CanIdMaskPair{
+            .id = T::from_full(), 
+            .mask = T::from_full()
+        };
+    }
+
+    static constexpr _CanIdMaskPair from_parts(
+        id_type id, 
+        id_type mask, 
+        CanRtrSpecfier spec
+    ){
+
+        return _CanIdMaskPair{
+            .id = T(id, map_specifier_to_id_rtr(spec)), 
+            .mask = T(mask, map_specifier_to_mask_rtr(spec))
+        };
+    }
+
+    static constexpr Option<_CanIdMaskPair> from_str(
+        const char (&str)[ID_NUM_BITS + 1],
+        CanRtrSpecfier spec
+    ){
+        return from_str(std::span<const char, ID_NUM_BITS>(
+            static_cast<const char *>(str), ID_NUM_BITS), 
+            spec
+        );
+    }
+
+    static constexpr Option<_CanIdMaskPair> from_str(
+        std::span<const char, ID_NUM_BITS> chars,
+        CanRtrSpecfier spec
+    ){
+        // valid token: 0/1/X
+        uint32_t id = 0;
+        uint32_t mask = 0;
+        for(size_t i = 0; i < ID_NUM_BITS; i++){
+            const char chr = chars[i];
+            const size_t bit_pos = ID_NUM_BITS - 1 - i; // Correct bit position mapping
+            switch(chr){
+                // Correct approach would be:
+                case '0':
+                    // id bit remains 0 (no action needed if id is initialized to 0)
+                    mask |= (1U << bit_pos);  // Set mask bit
+                    break;
+                case '1':
+                    id |= (1U << bit_pos);    // Set id bit
+                    mask |= (1U << bit_pos);  // Set mask bit
+                    break;
+                case 'x':
+                case 'X':
+                    // Don't set either id or mask bits (wildcard)
+                    break;
+                default:
+                    return None;
+            }
+        }
+        return Some(from_parts(
+            id_type(id),
+            id_type(mask),
+            spec
+        ));
+    }
+
+private:
+    static constexpr CanRtr map_specifier_to_id_rtr(CanRtrSpecfier spec){
+        switch(spec){
+            case CanRtrSpecfier::RemoteOnly: return CanRtr::Remote;
+            default: return CanRtr::Data;
+        };
+    }
+
+    static constexpr CanRtr map_specifier_to_mask_rtr(CanRtrSpecfier spec){
+        switch(spec){
+            case CanRtrSpecfier::Discard: return CanRtr::Data;
+            default: return CanRtr::Remote;
+        };
+    }
+};
+
+using CanStdIdMaskPair = _CanIdMaskPair<details::SXX32_CanStdIdMask>;
+using CanExtIdMaskPair = _CanIdMaskPair<details::SXX32_CanExtIdMask>;
+
+}

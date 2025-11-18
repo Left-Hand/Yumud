@@ -9,7 +9,7 @@
 namespace ymd::hal{
 class Gpio;
 
-// enum class TimerCountMode:uint8_t{
+// enum class [[nodiscard]] TimerCountMode:uint8_t{
 //     Up                      = 0x00,
 //     Down                    = 0x01,
 //     CenterAlignedDownTrig   = 0x02,
@@ -17,7 +17,7 @@ class Gpio;
 //     CenterAlignedDualTrig   = 0x06
 // };
 
-enum class TimerCountMode:uint8_t{
+enum class [[nodiscard]] TimerCountMode:uint8_t{
     Up                      = TIM_CounterMode_Up,
     Down                    = TIM_CounterMode_Down,
     CenterAlignedDownTrig   = TIM_CounterMode_CenterAligned1,
@@ -27,7 +27,7 @@ enum class TimerCountMode:uint8_t{
 
 
 struct [[nodiscard]] TimerChannelSelection{
-    enum class Kind:uint8_t{
+    enum class [[nodiscard]] Kind:uint8_t{
         CH1     =   0b000,
         CH1N    =   0b001,
         CH2     =   0b010,
@@ -58,7 +58,7 @@ private:
 
 
 
-enum class TimerTrgoSource:uint8_t{
+enum class [[nodiscard]] TimerTrgoSource:uint8_t{
     Reset   =  TIM_TRGOSource_Reset,             
     Enable  = TIM_TRGOSource_Enable,           
     Update  = TIM_TRGOSource_Update,           
@@ -70,7 +70,7 @@ enum class TimerTrgoSource:uint8_t{
 };
 
 
-// enum class TimerTrgoSource:uint8_t{
+// enum class [[nodiscard]] TimerTrgoSource:uint8_t{
 //     Reset   = 0x000,             
 //     Enable  = 0x001,           
 //     Update  = 0x002,           
@@ -82,7 +82,7 @@ enum class TimerTrgoSource:uint8_t{
 // };
 
 
-enum class TimerIT:uint8_t{
+enum class [[nodiscard]] TimerIT:uint8_t{
     Update  = TIM_IT_Update,
     CC1     = TIM_IT_CC1,
     CC2     = TIM_IT_CC2,
@@ -93,7 +93,7 @@ enum class TimerIT:uint8_t{
     Break   = TIM_IT_Break,
 };
 
-// enum class TimerIT:uint8_t{
+// enum class [[nodiscard]] TimerIT:uint8_t{
 //     Update  = 0x01,
 //     CC1     = 0x02,
 //     CC2     = 0x04,
@@ -104,21 +104,21 @@ enum class TimerIT:uint8_t{
 //     Break   = 0x80,
 // };
 
-enum class TimerBdtrLockLevel:uint16_t{
+enum class [[nodiscard]] TimerBdtrLockLevel:uint16_t{
     Off     = TIM_LOCKLevel_OFF,
     Low     = TIM_LOCKLevel_1,
     Medium  = TIM_LOCKLevel_2,
     High    = TIM_LOCKLevel_3
 };
 
-// enum class TimerBdtrLockLevel:uint8_t{
+// enum class [[nodiscard]] TimerBdtrLockLevel:uint8_t{
 //     Off     = 0x00,
 //     Low     = 0x01,
 //     Medium  = 0x02,
 //     High    = 0x03
 // };
 
-enum class TimerOcMode:uint8_t{
+enum class [[nodiscard]] TimerOcMode:uint8_t{
     Freeze              = 0b000,
     ActiveUnlessCvr     = 0b001,
     InactiveUnlessCvr   = 0b010,
@@ -130,11 +130,11 @@ enum class TimerOcMode:uint8_t{
 };
 
 namespace details{
-bool is_basic_timer(const void * inst);
+[[nodiscard]] bool is_basic_timer(const void * inst);
 
-bool is_generic_timer(const void * inst);
+[[nodiscard]] bool is_generic_timer(const void * inst);
 
-bool is_advanced_timer(const void * inst);
+[[nodiscard]] bool is_advanced_timer(const void * inst);
 
 IRQn it_to_irq(const void * inst, const TimerIT it);
 
