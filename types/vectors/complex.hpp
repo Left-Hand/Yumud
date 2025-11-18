@@ -6,13 +6,15 @@
 
 namespace ymd{
 template <typename T>
-struct UnitComplex {
+struct [[nodiscard]] UnitComplex {
 private:
     
     __fast_inline constexpr UnitComplex(const T _re, const T _im)
         : re(_re), im(_im) {;}
 
 public:
+    using Self = UnitComplex;
+
     T re;
     T im;
 
@@ -37,7 +39,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline static constexpr 
-    UnitComplex from_radians(const T radians) {
+    UnitComplex from_radian(const T radians) {
         const auto [s,c] = ymd::sincos(radians);
         return UnitComplex(c, s);
     }
@@ -115,17 +117,21 @@ private:
         if constexpr(I == 0){ return self.re; }
         else if constexpr(I == 1){ return self.im; }
     }
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os    
+            << os.field("re")(self.re) << os.splitter()
+            << os.field("im")(self.im)
+        ;
+    }
 };
 
 template<typename T>
-struct Complex{
+struct [[nodiscard]] Complex{
 public:
+    using Self = Complex;
     T re;
     T im;
-
-
-
-    __fast_inline constexpr Complex(const T _re, const T _im) : re(_re), im(_im) {;}
 
     __fast_inline static constexpr Complex from_uninitialized(){
         return Complex();
@@ -236,6 +242,13 @@ private:
     [[nodiscard]] static constexpr auto & get_element(auto & self){
         if constexpr(I == 0){ return self.re; }
         else if constexpr(I == 1){ return self.im; }
+    }
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os    
+            << os.field("re")(self.re) << os.splitter()
+            << os.field("im")(self.im)
+        ;
     }
 };
 #define COMPLEX_ARITHMETIC_OPERATOR(op)\

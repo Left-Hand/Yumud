@@ -1,6 +1,7 @@
 #pragma once
 
 #include "magic_details.hpp"
+#include "core/tmp/container/static_string.hpp"
 
 // #include <functional>
 // #include <type_traits>
@@ -118,7 +119,7 @@ constexpr auto type_name_of(){
 	constexpr auto indices=std::make_index_sequence<type_name_view.size()>();
 	static constexpr auto type_name=[&]<std::size_t...indices>(std::integer_sequence<std::size_t,indices...>)
 	{
-		constexpr auto str = details::__static_string<type_name_view[indices]...,'\0'>();
+		constexpr auto str = tmp::static_string<type_name_view[indices]...,'\0'>();
 		return str;
 	}(indices);
 	return std::string_view(type_name);

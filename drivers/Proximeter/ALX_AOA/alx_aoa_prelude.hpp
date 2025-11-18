@@ -4,7 +4,6 @@
 #include "core/math/real.hpp"
 #include "core/utils/sumtype.hpp"
 #include "primitive/arithmetic/angle.hpp"
-#include "core/utils/bytes/bytes_provider.hpp"
 #include "core/container/inline_vector.hpp"
 
 namespace ymd::drivers{
@@ -36,32 +35,41 @@ enum class RequestCommand:uint16_t{
 };
 
 struct [[nodiscard]] TargetDistanceCode{
+    using Self = TargetDistanceCode;
     uint32_t bits;
     [[nodiscard]] constexpr uq16 to_meters() const{
         return uq16(bits) / 100;
     }
-
+    static constexpr Self from_bits(const uint32_t bits){
+        return Self{bits};
+    }
     friend OutputStream & operator <<(OutputStream & os, const TargetDistanceCode & self){ 
         return os << self.to_meters() << "m";
     }
 };
 
 struct [[nodiscard]] TargetAngleCode{
+    using Self = TargetAngleCode;
     int16_t bits;
 
     [[nodiscard]] constexpr Angle<uq16> to_angle() const{
         return Angle<uq16>::from_degrees(bits);
     }
-
+    static constexpr Self from_bits(const int16_t bits){
+        return Self{bits};
+    }
     friend OutputStream & operator <<(OutputStream & os, const TargetAngleCode & self){ 
         return os << self.to_angle().to_degrees() << "deg";
     }
 };
 
 struct [[nodiscard]] DeviceIdCode{
+    using Self = DeviceIdCode;
     uint32_t bits;
 
-
+    static constexpr Self from_bits(const uint32_t bits){
+        return Self{bits};
+    }
     friend OutputStream & operator <<(OutputStream & os, const DeviceIdCode & self){ 
         auto guard = os.create_guard();
         return os << std::showbase << std::hex << self.bits;

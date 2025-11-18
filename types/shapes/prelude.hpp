@@ -187,21 +187,19 @@ inline OutputStream & operator<<(OutputStream & os, const PrimitiveStyle & self)
     const auto _ = os.create_guard();
     os.no_brackets(DISEN);
 
-    return os << os.scoped("Stroke")(os 
-        << os.field("fill_color")(os << self.fill_color << os.splitter()) 
-        << os.field("stroke_color")(os << self.stroke_color << os.splitter())
-        << os.field("stroke_width")(os << self.stroke_width << os.splitter())
-        << os.field("stroke_alignment")(os << self.stroke_alignment)
-    );
+    return os << os.field("fill_color")(self.fill_color) 
+        << os.splitter() << os.field("stroke_color")(self.stroke_color) 
+        << os.splitter() << os.field("stroke_width")(self.stroke_width) 
+        << os.splitter() << os.field("stroke_alignment")(self.stroke_alignment)
+    ;
 }
 
 inline OutputStream & operator <<(OutputStream & os, const CornerRadii radii){
-    return os << os.scoped("CornerRadii")(os
-        << os.field("top_left")(os << radii.top_left << os.splitter())
-        << os.field("top_right")(os << radii.top_right << os.splitter())
-        << os.field("bottom_right")(os << radii.bottom_right << os.splitter())
-        << os.field("bottom_left")(os << radii.bottom_left)
-    );
+    return os << os.field("top_left")(radii.top_left) 
+        << os.splitter() << os.field("top_right")(radii.top_right) 
+        << os.splitter() << os.field("bottom_right")(radii.bottom_right) 
+        << os.splitter() << os.field("bottom_left")(radii.bottom_left)
+    ;
 }
 
 }

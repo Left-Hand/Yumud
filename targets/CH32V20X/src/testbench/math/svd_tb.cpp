@@ -132,8 +132,8 @@ namespace experimental{
         const auto a1 = std::atan2(g, f);
         const auto a2 = std::atan2(h, e);
 
-        const auto theta_angle = Angle<T>::from_radians(static_cast<T>(0.5f) * (a2 - a1));
-        const auto phi_angle = Angle<T>::from_radians(static_cast<T>(0.5f) * (a2 + a1));
+        const auto theta_angle = Angle<T>::from_radian(static_cast<T>(0.5f) * (a2 - a1));
+        const auto phi_angle = Angle<T>::from_radian(static_cast<T>(0.5f) * (a2 + a1));
 
         // return Rotation2<T>::from_angle(theta_angle - phi_angle);
 
@@ -313,12 +313,12 @@ static void point_cloud_demo(){
     static constexpr size_t MAX_ITERATIONS = 100;
 
     auto lambda1 = [](size_t i){ 
-        return Vec2<T>::from_angle(Angle<T>::from_radians(i * static_cast<T>(0.1)));
+        return Vec2<T>::from_angle(Angle<T>::from_radian(i * static_cast<T>(0.1)));
     };
 
     auto lambda2 = [](size_t i){ 
-        const auto angle = Angle<T>::from_radians(i * static_cast<T>(0.1) + 
-            Angle<T>::from_degrees(10).to_radians());
+        const auto angle = Angle<T>::from_radian(i * static_cast<T>(0.1) + 
+            Angle<T>::from_degrees(10).to_radian());
         return Vec2<T>::from_angle(angle) + Vec2<T>(40, 50);
     };
 

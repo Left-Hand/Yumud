@@ -776,7 +776,7 @@ void myactuator_main(){
     DEBUG_PRINTLN(make_bytes1());
     DEBUG_PRINTLN(make_bytes2());
     auto & os = DEBUGGER;
-    os.field("enabled")(os << make_bytes2());
+    os.field("enabled")(make_bytes2());
     PANIC{};
     while(true);
 }

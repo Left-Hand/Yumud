@@ -10,7 +10,7 @@
 
 #define EXTRA_IQ
 
-// #define ENABLE_UART1
+#define ENABLE_UART1
 #define ENABLE_UART2
 // #define ENABLE_UART3
 // #define ENABLE_UART4

@@ -1,6 +1,5 @@
 #include "alx_aoa_prelude.hpp"
 #include "core/magic/enum_traits.hpp"
-#include "core/utils/bits/bits_caster.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -42,6 +41,24 @@ using Error = Self::Error;
 #endif
 
 
+struct [[nodiscard]] BytesSpawner{
+    explicit constexpr BytesSpawner(std::span<const uint8_t> bytes) : 
+        bytes_(bytes) {}
+
+    template<size_t N>
+    [[nodiscard]] constexpr std::span<const uint8_t, N> spawn(){
+        // if(bytes_.size() < N) __builtin_abort();
+        const auto ret = std::span<const uint8_t, N>(bytes_.data(), N);
+        bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
+        return ret;
+    }
+
+    [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
+        return bytes_;
+    }
+private:
+    std::span<const uint8_t> bytes_;
+};
 
 [[nodiscard]] static constexpr uint8_t xor_bytes(
     const std::span<const uint8_t> bytes
@@ -53,6 +70,21 @@ using Error = Self::Error;
     return ret;
 }
 
+
+template<typename T>
+[[nodiscard]] static constexpr T be_bytes_to_int(
+    const std::span<const uint8_t, sizeof(T)> bytes)
+{
+    using U = std::make_unsigned_t<T>;
+    static_assert(sizeof(U) == sizeof(T));
+    U ret = 0;
+    
+    // 替代方案：累积移位（可能更清晰）
+    for(size_t i = 0; i < sizeof(U); i++) {
+        ret = (ret << 8) | static_cast<U>(bytes[i]);
+    }
+    return std::bit_cast<T>(ret);
+}
 
 [[nodiscard]] static constexpr Result<Self::RequestCommand, Error> parse_command(
     const std::span<const uint8_t, 2> bytes
@@ -71,23 +103,22 @@ using Error = Self::Error;
 [[nodiscard]] static constexpr Result<Self::DeviceIdCode, Error> parse_device_id(
     const std::span<const uint8_t, 4> bytes
 ){
-    using D = from_bits_t<Self::DeviceIdCode>;
-    return Ok(Self::DeviceIdCode(be_bytes_ctor_bits(bytes)));
+    const auto bits = be_bytes_to_int<uint32_t>(bytes);
+    return Ok(Self::DeviceIdCode::from_bits(bits));
 }
 
 [[nodiscard]] static constexpr Result<Self::TargetAngleCode, Error> parse_angle(
     const std::span<const uint8_t, 2> bytes
 ){
-    using D = from_bits_t<Self::TargetAngleCode>;
-    // return Ok(Self::TargetAngleCode(be_bytes_ctor_bits(bytes).try_into<D>().unwrap()));
-    return Ok(Self::TargetAngleCode(be_bytes_ctor_bits(bytes)));
+    const auto bits = be_bytes_to_int<int16_t>(bytes);
+    return Ok(Self::TargetAngleCode::from_bits(bits));
 }
 
 [[nodiscard]] static constexpr Result<Self::TargetDistanceCode, Error> parse_distance(
     const std::span<const uint8_t, 4> bytes
 ){
-    using D = from_bits_t<Self::TargetDistanceCode>;
-    return Ok(Self::TargetDistanceCode(be_bytes_ctor_bits(bytes)));
+    const auto bits = be_bytes_to_int<uint32_t>(bytes);
+    return Ok(Self::TargetDistanceCode::from_bits(bits));
 }
 
 [[nodiscard]] static constexpr Result<Self::TargetStatus, Error> parse_tag_status(
@@ -108,7 +139,7 @@ using Error = Self::Error;
 
 
 
-static Result<Self::Location, Error> parse_location(BytesProvider & provider){
+static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
     // AnchorID 4 unsigned Integer 基站 ID 
     // TagID 4 unsigned Integer 标签 ID 
     // Distance 4 unsigned Integer 标签与基站间的距离，单位 cm 
@@ -118,48 +149,48 @@ static Result<Self::Location, Error> parse_location(BytesProvider & provider){
     // BatchSn 2 Byte 测距序号 
     // Reserve 4 Byte 预留 
     // XorByte 1 Byte 该字节前所有字节的异或校验
-    if(provider.remaining().size() != 25){
+    if(spawner.remaining().size() != 25){
         return Err(Error::InvalidLength);
     }
 
     const auto anchor_id = ({
-        const auto res = parse_device_id(provider.fetch_leading<4>());
+        const auto res = parse_device_id(spawner.spawn<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto target_id = ({
-        const auto res = parse_device_id(provider.fetch_leading<4>());
+        const auto res = parse_device_id(spawner.spawn<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto distance = ({
-        const auto res = parse_distance(provider.fetch_leading<4>());
+        const auto res = parse_distance(spawner.spawn<4>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto azimuth = ({
-        const auto res = parse_angle(provider.fetch_leading<2>());
+        const auto res = parse_angle(spawner.spawn<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     const auto elevation = ({
-        const auto res = parse_angle(provider.fetch_leading<2>());
+        const auto res = parse_angle(spawner.spawn<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     [[maybe_unused]] const auto tag_status = ({
-        const auto res = parse_tag_status(provider.fetch_leading<2>());
+        const auto res = parse_tag_status(spawner.spawn<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
     [[maybe_unused]] const auto batch_sn = ({
-        const auto res = parse_batch_sn(provider.fetch_leading<2>());
+        const auto res = parse_batch_sn(spawner.spawn<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
@@ -184,8 +215,8 @@ static Result<Self::Location, Error> parse_location(BytesProvider & provider){
     };
 
     constexpr auto msg = [&]{
-        auto provider = BytesProvider(std::span(bytes));
-        return parse_location(provider);
+        auto spawner = BytesSpawner(std::span(bytes));
+        return parse_location(spawner);
     }();
 
     static_assert(msg.is_ok());
@@ -265,20 +296,20 @@ Result<Self::Event, Self::Error>  Self::parse(){
 
 
 
-    BytesProvider provider(context_bytes);
+    BytesSpawner spawner(context_bytes);
 
     // SequenceID 2 unsigned Integer 消息流水号 
     // RequestCommand 2 unsigned Integer 命令码 
     // VersionID 2 unsigned Integer 协议版本，此版本固定 0x0100 
 
-    [[maybe_unused]] const uint16_t seq_id = (provider.fetch_leading_ctor_bits<std::endian::big>());
+    [[maybe_unused]] const auto seq_id = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
     const auto req_command = ({
-        const auto res = parse_command(provider.fetch_leading<2>());
+        const auto res = parse_command(spawner.spawn<2>());
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
 
-    [[maybe_unused]] const uint16_t protocol_version = provider.fetch_leading_ctor_bits<std::endian::big>();
+    [[maybe_unused]] const auto protocol_version = be_bytes_to_int<uint16_t>(spawner.spawn<2>());
 
     //官方给的协议版本也不固定 不检测
     // if(protocol_version != 0x0100){
@@ -301,7 +332,7 @@ Result<Self::Event, Self::Error>  Self::parse(){
                 return Err(Error::InvalidXor);
             }
             
-            const auto res = parse_location(provider);
+            const auto res = parse_location(spawner);
             if(res.is_err()) return Err(res.unwrap_err());
             return Ok(Event(res.unwrap()));
             // return Err(Error::InvalidProtocolVersion);
@@ -310,15 +341,23 @@ Result<Self::Event, Self::Error>  Self::parse(){
         }
         case RequestCommand::HeartBeat:{
             #if 1
+            // const auto res = parse_heartbeat(spawner);
+            // if(res.is_err()) return Err(res.unwrap_err());
+            // return Ok(Event(res.unwrap()));
 
-
-            if(provider.remaining().size() != 4) return Err(Error::InvalidLength);
+            if(spawner.remaining().size() != 4) return Err(Error::InvalidLength);
             const auto anchor_id = ({
-                const auto res = parse_device_id(provider.fetch_leading<4>());
+                const auto res = parse_device_id(spawner.spawn<4>());
                 if(res.is_err()) return Err(res.unwrap_err());
                 res.unwrap();
             });
+            // AnchorID 4 unsigned Integer ID
 
+            // Event ev = Event(parse_location(spawner).unwrap());
+            // Event ev = Event(Self::HeartBeat{
+            //     // .anchor_id = DeviceIdCode::from_bits(0)
+            //     .anchor_id = anchor_id
+            // });
             Event ev = Event(std::monostate{});
             Self::HeartBeat msg{
                 .anchor_id = anchor_id

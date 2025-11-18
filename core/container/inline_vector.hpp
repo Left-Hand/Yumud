@@ -19,9 +19,10 @@ public:
     constexpr HeaplessVector(const std::initializer_list<T> & list) noexcept : 
         size_(list.size()
     ){
-        if(list.size() > N) __builtin_trap();
+        if(list.size() > N) [[unlikely]]
+            __builtin_trap();
 
-        for (auto & elem : list) {
+        for (const auto & elem : list) {
             push_back(elem);
         }
     }

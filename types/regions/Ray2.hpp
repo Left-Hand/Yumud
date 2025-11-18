@@ -52,11 +52,11 @@ public:
 
 
 
-    [[nodiscard]] __fast_inline constexpr bool has_point(const Vec2<T> & pt) const{
+    [[nodiscard]] __fast_inline constexpr bool contains_point(const Vec2<T> & pt) const{
         return is_equal_approx(distance_to(pt), 0);
     }
 
-    [[nodiscard]] __fast_inline constexpr bool parallel_with(const Ray2 & other) const{
+    [[nodiscard]] __fast_inline constexpr bool is_parallel_with(const Ray2 & other) const{
         return is_equal_approx(this->orientation, other.orientation);
     }
 
@@ -65,7 +65,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr Line2<T> normal() const{
-        return Line2<T>::from_point_and_angle(this->org, this->orientation + Angle<T>::from_radians(T(PI/2)));
+        return Line2<T>::from_point_and_angle(this->org, this->orientation + Angle<T>::from_radian(T(PI/2)));
     }
 
     [[nodiscard]] __fast_inline constexpr Ray2<T> rotated(const Angle<T> angle) const{

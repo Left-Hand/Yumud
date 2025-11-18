@@ -17,7 +17,7 @@ struct Rotation2 {
     }
 
     [[nodiscard]] static constexpr 
-    Rotation2 from_radians(const T radians) {
+    Rotation2 from_radian(const T radians) {
         const auto [s, c] = ymd::sincos(radians);
         return Rotation2{s, c};
     }

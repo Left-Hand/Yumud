@@ -74,11 +74,11 @@ template <arithmetic T, EulerAnglePolicy P>
 using EulerAngles = _EulerAngleStorage<T, P>;
 
 template <arithmetic T, EulerAnglePolicy P>
-__fast_inline OutputStream & operator<<(OutputStream & os, const EulerAngles<T, P> & value){
-    return os << os.brackets<'('>()
-        << value.x << os.splitter()
-        << value.y << os.splitter()
-        << value.z << os.brackets<')'>();
+__fast_inline OutputStream & operator<<(OutputStream & os, const EulerAngles<T, P> & self){
+    return os << os.field("x")(self.x) 
+        << os.splitter() << os.field("y")(self.y) 
+        << os.splitter() << os.field("z")(self.z) 
+    ;
 }
 
 }

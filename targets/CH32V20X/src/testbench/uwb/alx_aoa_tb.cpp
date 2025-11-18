@@ -5,57 +5,72 @@
 
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
+#include "core/sync/timer.hpp"
+#include "core/utils/zero.hpp"
+#include "core/utils/bits/atomic_bitset.hpp"
+#include "types/vectors/Vector2.hpp"
+#include "types/vectors/Vector3.hpp"
+#include "types/vectors/polar.hpp"
+#include "types/vectors/spherical_coordinates.hpp"
+#include "types/shapes/circle2.hpp"
 
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
-#include "core/sync/timer.hpp"
 
 using namespace ymd;
 using drivers::AlxAoa_Prelude;
 
 // #define DEBUGGER_INST hal::uart2
-[[nodiscard]] static constexpr uint8_t xor_bytes(
-    const std::span<const uint8_t> bytes
-){
-    uint8_t ret = 0;
-    for(const auto byte : bytes){
-        ret ^= byte;
-    }
-    return ret;
+
+using AlxEvent = AlxAoa_Prelude::Event;
+using AlxError = AlxAoa_Prelude::Error;
+
+using AlxLocation = drivers::AlxAoa_Prelude::Location;
+using AlxHeartBeat = drivers::AlxAoa_Prelude::HeartBeat;
+
+
+using Measurement = SphericalCoordinates<float>;
+static constexpr Measurement loc_to_meas (const AlxLocation & loc){
+    return Measurement{
+        .distance = static_cast<float>(loc.distance.to_meters()),
+        .azimuth = loc.azimuth.to_angle().into<float>(),
+        .elevation = loc.elevation.to_angle().into<float>(),
+    };
 }
 
+template<typename V, typename T>
+struct PointWithDistance{
+    V point;
+    T distance;
+};
+
+// template<typename T>
+// static constexpr HeaplessVector<T, 2> compute_interscet_points()
 
 void alx_aoa_main(){
+
+    #if defined(CH32V30X)
     DEBUGGER_INST.init({
         576000 
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
-    
+    // DEBUGGER.no_brackets(EN);
+    DEBUGGER.no_brackets(DISEN);
+    DEBUGGER.no_fieldname(DISEN);
 
-    #if defined(CH32V20X)
-    auto & alx_uart = hal::uart1;
-    #elif defined(CH32V30X)
-    auto & alx_uart = hal::uart2;
-    #else
-    static_assert(false, "Unsupported MCU");
-    #endif
+    // using SensorMeasurementsBarrier = MeasurementBarrier<Measurement, 2>;
+    using SensorMeasurements = std::array<Measurement, 2>;
+    SensorMeasurements measurements_ = {Zero, Zero};
 
-    using AlxEvent = AlxAoa_Prelude::Event;
-    using AlxError = AlxAoa_Prelude::Error;
-
-    using AlxLocation = drivers::AlxAoa_Prelude::Location;
-    using AlxHeartBeat = drivers::AlxAoa_Prelude::HeartBeat;
-
-    auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res){ 
+    auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res, const size_t idx){ 
+        // PANIC{nth.count()};
+        // DEBUG_PRINTLN(nth.count());
         if(res.is_ok()){
-
             const auto & ev = res.unwrap();
             if(ev.is<AlxLocation>()){
                 const AlxLocation & loc = ev.unwrap_as<AlxLocation>();
-                DEBUG_PRINTLN(
-                    loc.distance.to_meters(), 
-                    loc.azimuth.to_angle().to_degrees(), 
-                    loc.elevation.to_angle().to_degrees()
-                );
+                const auto && measurement = loc_to_meas(loc);
+                measurements_.at(idx) = measurement;
+
             }else if(ev.is<AlxHeartBeat>()){
                 DEBUG_PRINTLN("alx_heartBeat", ev.unwrap_as<AlxHeartBeat>());
             }
@@ -66,8 +81,30 @@ void alx_aoa_main(){
         }
     };
 
-    auto alx_parser = drivers::AlxAoa_StreamParser(alx_ev_handler);
-    alx_uart.init({
+
+
+
+
+    auto alx_parser1 = drivers::AlxAoa_StreamParser(
+        [&](const Result<AlxEvent, AlxError> & res){
+            alx_ev_handler(res, 0);
+        }
+    );
+
+    auto alx_parser2 = drivers::AlxAoa_StreamParser(
+        [&](const Result<AlxEvent, AlxError> & res){
+            alx_ev_handler(res, 1);
+        }
+    );
+
+    auto & alx_uart1 = hal::uart1;
+    auto & alx_uart2 = hal::uart2;
+
+    alx_uart1.init({
+        AlxAoa_Prelude::DEFAULT_UART_BUAD
+    });
+
+    alx_uart2.init({
         AlxAoa_Prelude::DEFAULT_UART_BUAD
     });
 
@@ -76,76 +113,88 @@ void alx_aoa_main(){
     auto blue_led_gpio_ = hal::PC<14>();
     red_led_gpio_.outpp();
     blue_led_gpio_.outpp();
-
-    auto blink_service_poller = [&]{
-
-        red_led_gpio_ = BoolLevel::from((
-            uint32_t(clock::millis().count()) % 200) > 100);
-        blue_led_gpio_ = BoolLevel::from((
-            uint32_t(clock::millis().count()) % 400) > 200);
-    };
-
-    #if 0
-    const auto bytes = std::to_array<uint8_t>({
-        0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x25, 0x00, 0x0B, 
-        0x20, 0x01, 0x01, 0x00, 0x00, 0x00, 0xAA, 0xA2, 
-        0x00, 0x00, 0xAA, 0xA1, 0x00, 0x00, 0x00, 0x19, 
-        0x00, 0x12, 0xFF, 0xCA, 0x12, 0x34, 0x00, 0x0B, 
-        0x00, 0x00, 0x00, 0x00, 0x1E,
-    });
-
-    const auto header_bytes = std::span(bytes.data(), 6);
-    const auto body_bytes = std::span(bytes.data() + 6, std::prev(bytes.end()));
-    DEBUG_PRINTLN(
-        "xor_acc", 
-        xor_bytes(header_bytes), 
-        xor_bytes(body_bytes),
-        xor_bytes(header_bytes) ^ xor_bytes(body_bytes),
-        0x1e
-    );
-    clock::delay(1ms);
     
-    for(const auto byte : bytes){
-        alx_parser.push_byte(byte);
-        clock::delay(1ms);
-    }
+    struct BlinkProcedure{
+        hal::Gpio & red_led_gpio_;
+        hal::Gpio & blue_led_gpio_;
 
-    const auto bytes2 = std::to_array<uint8_t>({
-        0xFF, 0xFF, 0xFF, 0xFF, 0x00, 
-        0x10, 0x00, 0x0B, 0x20, 0x02, 
-        0x01, 0x01, 0x00, 0x00, 0xAA, 0xA1
-    });
-
-    for(const auto byte : bytes2){
-        alx_parser.push_byte(byte);
-        clock::delay(1ms);
+        void resume(){
+            red_led_gpio_ = BoolLevel::from((
+                uint32_t(clock::millis().count()) % 200) > 100);
+            blue_led_gpio_ = BoolLevel::from((
+                uint32_t(clock::millis().count()) % 400) > 200);
+        }
     };
-    #endif
 
-    uint32_t received_bytes_cnt_ = 0;
-    while(true){
-        auto collect_bytes = []{
-            std::vector<uint8_t> bytes;
-            if(alx_uart.available()){
+    struct AlxProcedure{
+        hal::UartHw & alx_uart_;
+        drivers::AlxAoa_StreamParser & alx_parser_;
+        uint32_t received_bytes_cnt_ = 0;
+
+        void resume(){
+            if(alx_uart_.available() == 0) return;
+            while(alx_uart_.available()){
                 char chr;
-                alx_uart.read1(chr);
-                bytes.push_back(uint8_t(chr));
+                alx_uart_.read1(chr);
+                // _bytes.push_back(uint8_t(chr));
+                alx_parser_.push_byte(static_cast<uint8_t>(chr)); 
+                received_bytes_cnt_++;
             }
-            return bytes;
-        };
+        }
+    };
 
-        const auto bytes = collect_bytes();
+    BlinkProcedure blink_procedure_{
+        .red_led_gpio_ = red_led_gpio_,
+        .blue_led_gpio_ = blue_led_gpio_
+    };
 
-        alx_parser.push_bytes(std::span(bytes)); 
-        received_bytes_cnt_+=bytes.size();
+    AlxProcedure alx_procedure1_{
+        .alx_uart_ = alx_uart1,
+        .alx_parser_ = alx_parser1
+    };
+
+    AlxProcedure alx_procedure2_{
+        .alx_uart_ = alx_uart2,
+        .alx_parser_ = alx_parser2
+    };
+
+    DEBUG_PRINTLN("setup done");
+    while(true){
+
         // DEBUG_PRINTLN("alx_uart_rx", uint8_t(chr));
+        alx_procedure1_.resume();
+        alx_procedure2_.resume();
 
 
-        blink_service_poller();
+        blink_procedure_.resume();
 
         static auto report_timer = async::RepeatTimer::from_duration(3ms);
         
         report_timer.invoke_if([&]{
+            const auto & measurement = measurements_[0];
+            // const auto [s,c] = measurement.azimuth.sincos(); 
+            // const auto [x,y] = Vector2<float>::from_length_and_
+            const auto vec3 = measurement.to_vec3();
+            const auto [x,y,z] = vec3;
+            // const auto polar = Polar<float>{
+            //     .amplitude = measurement.distance,
+            //     .phase = measurement.azimuth
+            // };
+
+            // const auto [x,y] = polar.to_vec2();
+            DEBUG_PRINTLN(
+                // measuremen/ts_
+                // x,y,z
+                // DEBUGGER.config().no_fieldname, 
+                // DEBUGGER.field("distance")(1),
+                // DEBUGGER.field("distanc")(2),
+                // DEBUGGER.field("distane")(3)
+                // DEBUGGER.scoped("meas")(measurement), 
+                // DEBUGGER.scoped("xyz")(x, y, z)
+                DEBUGGER.scoped("xyz")(vec3),
+                DEBUGGER.scoped("abc")(vec3),
+                DEBUGGER.scoped("uvw")(std::ignore)
+            );
             // if(bytes.size() == 0) return;
             // if(DEBUGGER.pending() != 0) return;
             // PANIC{bytes};
@@ -158,5 +207,9 @@ void alx_aoa_main(){
     });
     }
 
+    #else
 
+    PANIC{"not supported"}
+
+    #endif
 }

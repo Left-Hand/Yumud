@@ -4,6 +4,7 @@
 #include "core/math_defs.hpp"
 
 #include <cmath>
+#include <numbers>
 #include "dsp/constexprmath/ConstexprMath.hpp"
 
 #include "iq/iqmath.hpp"
@@ -34,28 +35,33 @@ namespace ymd{
     
     template<floating T>
     __fast_inline constexpr T sinpu(const T val){
-        return std::sin(T(val * T(TAU)));
+        constexpr T tau = static_cast<T>(M_TWOPI);
+        return std::sin(static_cast<T>(val * tau));
     }
     
     template<floating T>
     __fast_inline constexpr T cospu(const T val){
-        return cos(val * (1 / TAU));
+        constexpr T tau = static_cast<T>(M_TWOPI);
+        return std::cos(static_cast<T>(val * tau));
     }
     
     template<floating T>
     __fast_inline constexpr T inv_sqrt(const T val){
-        if(std::is_constant_evaluated()) return 1 /ConstexprMath::sqrt(val);
+        if(std::is_constant_evaluated()) return 1 / ConstexprMath::sqrt(val);
         else return 1 / std::sqrt(val);
     }
     
-    template<floating T>
-    __fast_inline constexpr T imag(const T a, const T b){
-        return 1 / mag(a,b);
-    }
+
     
     template<floating T>
     __fast_inline constexpr  T mag(const T a, const T b){
         return std::sqrt(a * a + b * b);
+        // return std::hypot(a, b);
+    }
+
+    template<floating T>
+    __fast_inline constexpr T inv_mag(const T a, const T b){
+        return 1 / mag(a,b);
     }
 
     
@@ -77,13 +83,13 @@ namespace ymd{
 
     template<floating T>
     std::array<T, 2> sincospu(const T turns){
-        const auto theta = turns * static_cast<T>(TAU);
-        return {std::sin(theta), std::cos(theta)};
+        const auto radian = turns * static_cast<T>(TAU);
+        return {std::sin(radian), std::cos(radian)};
     }
 
     template<floating T>
-    std::array<T, 2> sincos(const T theta){
-        return {std::sin(theta), std::cos(theta)};
+    std::array<T, 2> sincos(const T radian){
+        return {std::sin(radian), std::cos(radian)};
     }
 
     template<floating T>

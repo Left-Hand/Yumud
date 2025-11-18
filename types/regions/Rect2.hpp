@@ -12,6 +12,7 @@ namespace ymd{
 template<typename T>
 class [[nodiscard]] Rect2{
 public:
+    using Self = Rect2;
     using Tsigned = std::make_signed_t<T>;
 
     Vec2<T> top_left;
@@ -373,6 +374,15 @@ private:
                 Vec2<T>{next_size_x, next_size_y}});
         }
     }
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os    
+            << os.field("x")(self.top_left.x) << os.splitter()
+            << os.field("y")(self.top_left.y) << os.splitter()
+            << os.field("w")(self.size.x) << os.splitter()
+            << os.field("h")(self.size.y)
+        ;
+    }
 };
 
 using Rect2i = Rect2<int>;
@@ -382,10 +392,4 @@ using Rect2u = Rect2<uint>;
 using Rect2u8 = Rect2<uint8_t>;
 using Rect2u16 = Rect2<uint16_t>;
 
-template<typename T>
-__fast_inline OutputStream & operator<<(OutputStream & os, const Rect2<T> & value){
-    return os << os.brackets<'('>() 
-        << value.top_left << os.splitter() << 
-        value.size << os.brackets<')'>();
-}
 };

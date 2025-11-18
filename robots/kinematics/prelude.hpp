@@ -12,12 +12,12 @@ DEF_ERROR_WITH_KIND(Error, Error_Kind)
 template<arithmetic T>
 struct Degrees final{
 public:
-    static constexpr Degrees<T> from_radians(T rad){
+    static constexpr Degrees<T> from_radian(T rad){
         Degrees<T> self;
         self.value_ = (rad * T(180.0 / PI));
         return self;
     }
-    constexpr T to_radians() const { return value_ * T(PI / 180.0); }
+    constexpr T to_radian() const { return value_ * T(PI / 180.0); }
 
     friend OutputStream & operator<<(OutputStream & os, const Degrees<T>& self){
         // return os << self.value_ << "'C";
@@ -31,7 +31,7 @@ private:
 
 template<arithmetic T>
 static constexpr Degrees<T> to_degrees(const T rad){
-    return Degrees<T>::from_radians(rad);
+    return Degrees<T>::from_radian(rad);
 }
 
 }

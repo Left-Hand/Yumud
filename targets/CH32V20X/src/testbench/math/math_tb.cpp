@@ -242,7 +242,7 @@ void math_main(){
     print("intersection", line.intersection(
         Line::from_point_and_angle(
             Vec2<iq16>{0,0}, 
-            Angle<iq16>::from_radians(atan(iq16(0.3333_r)))
+            Angle<iq16>::from_radian(atan(iq16(0.3333_r)))
         )
     ));
     print("foot", line.foot_of(Vec2<iq16>{0, 0.5_r}));

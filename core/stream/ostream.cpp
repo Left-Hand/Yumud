@@ -4,6 +4,7 @@
 #include "core/string/string_view.hpp"
 #include "core/string/string_ref.hpp"
 
+
 // #include "core/string/utils/strconv2.hpp"
 
 #include <source_location>
@@ -107,11 +108,11 @@ void OutputStream::print_source_loc(const std::source_location & loc){
 
 
 OutputStream & OutputStream::operator<<(const float value){
-    return (*this) << fixed_t<16, int32_t>::from(value);
+    return (*this) << literals::iq16::from(value);
 }
 
 OutputStream & OutputStream::operator<<(const double value){
-    return (*this) << fixed_t<16, int32_t>::from(value);
+    return (*this) << literals::iq16::from(value);
 }
 
 #define PRINT_INT_TEMPLATE(blen, convfunc)\

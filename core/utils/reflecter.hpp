@@ -71,14 +71,15 @@ struct Displayer{
 
         if constexpr (N == 0) return os << os.scoped(NAME);
         else {
-            os.scoped(NAME)([&]<size_t... Is>(std::index_sequence<Is...>) -> OutputStream& {
+            os.scoped(NAME)([&]<size_t... Is>(std::index_sequence<Is...>){
                 // Fold expression with conditional splitter insertion
                 bool first = true;
-                return(..., [&](const auto& field) -> OutputStream& {
+                (..., [&](const auto& field) -> void{
                     if (!first) os << os.splitter();
                     first = false;
-                    return os << os.field(reflect::member_name<Is>(value))(os << reflect::get<Is>(value));
+                    os.field(reflect::member_name<Is>(value))(reflect::get<Is>(value));
                 }(reflect::get<Is>(value)));
+                return std::ignore;
             }(std::make_index_sequence<N>{}));
         }
         
@@ -156,6 +157,146 @@ struct reflecter::MemberPtrReflecter<T> { \
         else if constexpr (N == 2) return &T::m2; \
         else if constexpr (N == 3) return &T::m3; \
         else static_assert(N < 4, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_5(T, m0, m1, m2, m3, m4) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else if constexpr (N == 2) return &T::m2; \
+        else if constexpr (N == 3) return &T::m3; \
+        else if constexpr (N == 4) return &T::m4; \
+        else static_assert(N < 5, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_6(T, m0, m1, m2, m3, m4, m5) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else if constexpr (N == 2) return &T::m2; \
+        else if constexpr (N == 3) return &T::m3; \
+        else if constexpr (N == 4) return &T::m4; \
+        else if constexpr (N == 5) return &T::m5; \
+        else static_assert(N < 6, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_7(T, m0, m1, m2, m3, m4, m5, m6) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else if constexpr (N == 2) return &T::m2; \
+        else if constexpr (N == 3) return &T::m3; \
+        else if constexpr (N == 4) return &T::m4; \
+        else if constexpr (N == 5) return &T::m5; \
+        else if constexpr (N == 6) return &T::m6; \
+        else static_assert(N < 7, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_8(T, m0, m1, m2, m3, m4, m5, m6, m7) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else if constexpr (N == 2) return &T::m2; \
+        else if constexpr (N == 3) return &T::m3; \
+        else if constexpr (N == 4) return &T::m4; \
+        else if constexpr (N == 5) return &T::m5; \
+        else if constexpr (N == 6) return &T::m6; \
+        else if constexpr (N == 7) return &T::m7; \
+        else static_assert(N < 8, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_9(T, m0, m1, m2, m3, m4, m5, m6, m7, m8) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else if constexpr (N == 2) return &T::m2; \
+        else if constexpr (N == 3) return &T::m3; \
+        else if constexpr (N == 4) return &T::m4; \
+        else if constexpr (N == 5) return &T::m5; \
+        else if constexpr (N == 6) return &T::m6; \
+        else if constexpr (N == 7) return &T::m7; \
+        else if constexpr (N == 8) return &T::m8; \
+        else static_assert(N < 9, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_10(T, m0, m1, m2, m3, m4, m5, m6, m7, m8, m9) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else if constexpr (N == 2) return &T::m2; \
+        else if constexpr (N == 3) return &T::m3; \
+        else if constexpr (N == 4) return &T::m4; \
+        else if constexpr (N == 5) return &T::m5; \
+        else if constexpr (N == 6) return &T::m6; \
+        else if constexpr (N == 7) return &T::m7; \
+        else if constexpr (N == 8) return &T::m8; \
+        else if constexpr (N == 9) return &T::m9; \
+        else static_assert(N < 10, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_11(T, m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else if constexpr (N == 2) return &T::m2; \
+        else if constexpr (N == 3) return &T::m3; \
+        else if constexpr (N == 4) return &T::m4; \
+        else if constexpr (N == 5) return &T::m5; \
+        else if constexpr (N == 6) return &T::m6; \
+        else if constexpr (N == 7) return &T::m7; \
+        else if constexpr (N == 8) return &T::m8; \
+        else if constexpr (N == 9) return &T::m9; \
+        else if constexpr (N == 10) return &T::m10; \
+        else static_assert(N < 11, "Index out of bounds"); \
+    }(); \
+};
+
+#define DEF_DERIVE_MEM_REFLECTER_12(T, m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11) \
+template<> \
+struct reflecter::MemberPtrReflecter<T> { \
+    template<size_t N> \
+    static constexpr auto member_ptr_v = [] { \
+        if constexpr (N == 0) return &T::m0; \
+        else if constexpr (N == 1) return &T::m1; \
+        else if constexpr (N == 2) return &T::m2; \
+        else if constexpr (N == 3) return &T::m3; \
+        else if constexpr (N == 4) return &T::m4; \
+        else if constexpr (N == 5) return &T::m5; \
+        else if constexpr (N == 6) return &T::m6; \
+        else if constexpr (N == 7) return &T::m7; \
+        else if constexpr (N == 8) return &T::m8; \
+        else if constexpr (N == 9) return &T::m9; \
+        else if constexpr (N == 10) return &T::m10; \
+        else if constexpr (N == 11) return &T::m11; \
+        else static_assert(N < 12, "Index out of bounds"); \
     }(); \
 };
 }

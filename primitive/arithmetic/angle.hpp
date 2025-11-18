@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/math/real.hpp"
+#include "core/math/realmath.hpp"
 #include "core/stream/ostream.hpp"
 
 namespace ymd{
@@ -85,9 +85,9 @@ struct [[nodiscard]] Angle{
 		return make_angle_from_turns(static_cast<T>(degrees / 360));
 	}
 
-	static constexpr Angle from_radians(const T radians){
+	static constexpr Angle from_radian(const T radian){
 		constexpr T INV_TAU = static_cast<T>(1.0 / (2.0 * 3.1415926535897932384626433832795));
-		return make_angle_from_turns(radians * INV_TAU);
+		return make_angle_from_turns(radian * INV_TAU);
 	}
 
 	static constexpr Angle from_turns(const T turns){
@@ -108,7 +108,7 @@ struct [[nodiscard]] Angle{
 		return turns_ * 360;
 	}
 
-	[[nodiscard]] constexpr T to_radians() const{
+	[[nodiscard]] constexpr T to_radian() const{
 		return turns_ * static_cast<T>(TAU);
 	}
 
@@ -138,7 +138,7 @@ struct [[nodiscard]] Angle{
 	}
 
 	[[nodiscard]] constexpr auto tan() const{
-		return tan(to_radians());
+		return tan(to_radian());
 	}
 
 	constexpr Angle forward_angle_to(const Angle& target) const {
@@ -263,8 +263,10 @@ struct [[nodiscard]] Angle{
 
 	friend OutputStream & operator <<(OutputStream & os, const Angle & self){
 		// return os << self.to_degrees() << '\'';
-		
-		return os << static_cast<iq16>(self.to_turns()) * 360 << '\'';
+		if constexpr (is_fixed_point_v<T>)
+			return os << static_cast<iq16>(self.to_turns()) * 360 << '\'';
+		else
+			return os << self.to_turns() * 360 << '\'';
 	}
 public:
 	T turns_;
@@ -288,11 +290,11 @@ consteval Angle<real_t> operator"" _deg(uint64_t x){
 }
 
 consteval Angle<real_t> operator"" _rad(long double x){
-    return Angle<real_t>::from_radians(static_cast<real_t>(x));
+    return Angle<real_t>::from_radian(static_cast<real_t>(x));
 }
 
 consteval Angle<real_t> operator"" _rad(uint64_t x){
-    return Angle<real_t>::from_radians(static_cast<real_t>(x));
+    return Angle<real_t>::from_radian(static_cast<real_t>(x));
 }
 
 consteval Angle<real_t> operator"" _turn(long double x){

@@ -2,16 +2,17 @@
 #include "core/stream/ostream.hpp"
 
 namespace ymd{
-OutputStream & operator << (OutputStream & os, const bf16 v){
+OutputStream & operator << (OutputStream & os, const bf16 f_val){
     // uint16_t frac:7;
     // uint16_t exp:8;
     // uint16_t sign:1;
     // return os << float(1.0);
-    return os << fixed_t<16, int32_t>::from(float(v));
+    // return os << fixed_t<16, int32_t>::from(float(f_val));
+    return os << float(f_val);
     // return os << os.scoped("bf16")(
-    //     os << os.field("frac")(os << v.raw.frac) 
-    //     << os.field("exp")(os << v.raw.exp) 
-    //     << os.field("sign")(os << v.raw.sign) << os.endl()
+    //     os << os.field("frac")(f_val.raw.frac) 
+    //     << os.field("exp")(f_val.raw.exp) 
+    //     << os.field("sign")(f_val.raw.sign) << os.endl()
     // );
 }
 

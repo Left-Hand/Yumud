@@ -21,6 +21,7 @@
 #include "core/stream/CharOpTraits.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/math/iq/fixed_t.hpp"
+#include "core/magic/magic_details.hpp"
 
 
 namespace std{
@@ -33,6 +34,7 @@ class String;
 class StringView;
 class StringRef;
 class StringStream;
+class OutputStream;
 
 template<typename T>
 struct DeriveDebugDispatcher {};
@@ -63,20 +65,23 @@ struct Endl{};
 
 
 template <typename T>
-struct _need_display{static constexpr bool value = true;};
+struct _need_insert_splitter_before{static constexpr bool value = true;};
 
 template <>
-struct _need_display<std::ios_base& (*)(std::ios_base&)>
+struct _need_insert_splitter_before<std::ios_base& (*)(std::ios_base&)>
     :std::false_type{};
 
-template<> struct _need_display<std::_Setprecision>:std::false_type{};
+template<> struct _need_insert_splitter_before<std::_Setprecision>:std::false_type{};
 
-template<> struct _need_display<std::_Setbase>:std::false_type{};
+template<> struct _need_insert_splitter_before<std::_Setbase>:std::false_type{};
 
-template<> struct _need_display<Splitter>:std::false_type{};
+template<> struct _need_insert_splitter_before<Splitter>:std::false_type{};
+
+template<> struct _need_insert_splitter_before<std::_Swallow_assign>:std::false_type{};
 
 template<typename T>
-static constexpr bool need_display_v = details::_need_display<std::decay_t<T>>::value;
+static constexpr bool need_insert_splitter_before_v = 
+    details::_need_insert_splitter_before<std::decay_t<T>>::value;
 
 template<char c>
 struct Brackets{
@@ -156,9 +161,9 @@ public:
     virtual void sendout(const std::span<const char>) = 0;
 };
 
-class OutputStream:public OutputStreamIntf{
+class [[nodiscard]] OutputStream:public OutputStreamIntf{
 public:
-    struct Config{
+    struct [[nodiscard]] Config{
         char splitter[4];
 
         uint8_t radix:5;
@@ -233,7 +238,7 @@ public:
         return *this;
     }
 
-    uint8_t indent() const{
+    [[nodiscard]] uint8_t indent() const{
         return config_.indent;
     }
 
@@ -331,6 +336,10 @@ public:
         return *this << "monostate";
     }
 
+    OutputStream & operator<<(const std::_Swallow_assign){
+        return *this;
+    }
+
     template<size_t N>
     OutputStream & operator<<(const std::bitset<N> bs){
         char str[N + 1];
@@ -348,35 +357,47 @@ public:
         return *this;
     }
 
+    // template<typename T>
+    // OutputStream & operator<<(T && val){
+    //     static_assert(magic::false_v<T>, "unsupported type");
+    //     return *this;
+    // }
+
     //#region print integer
 private:
-    void print_u32(const uint32_t val);
-    void print_i32(const int32_t val);
-    void print_u64(const uint64_t val);
-    void print_i64(const int64_t val);
+    void print_u32(const uint32_t i_val);
+    void print_i32(const int32_t i_val);
+    void print_u64(const uint64_t i_val);
+    void print_i64(const int64_t i_val);
     
     __inline void print_numeric(const char * str, const size_t len, const bool pos){
         if(config_.showpos and pos) *this << '+';
         this->write(str, len);
     }
 
-    void print_iq16(const fixed_t<16, int32_t> val);
+    void print_iq16(const fixed_t<16, int32_t> q_val);
 public:
 
     template<size_t Q>
-    OutputStream & operator<<(const fixed_t<Q, int32_t> & val){
-        print_iq16(fixed_t<16, int32_t>(val));
+    OutputStream & operator<<(const fixed_t<Q, int32_t> & q_val){
+        print_iq16(fixed_t<16, int32_t>(q_val));
         return *this;
     }
 
     template<size_t Q>
-    OutputStream & operator<<(const fixed_t<Q, uint32_t> & val){
-        print_iq16(static_cast<fixed_t<16, int32_t>>(val));
+    OutputStream & operator<<(const fixed_t<Q, uint32_t> & q_val){
+        print_iq16(static_cast<fixed_t<16, int32_t>>(q_val));
         return *this;
     }
 
+    // template<size_t Q, typename D>
+    // OutputStream & operator<<(const fixed_t<Q, D> & q_val){
+    //     static_assert(magic::false_v<fixed_t<Q, D>>, "unsportted");
+    //     return *this;
+    // }
+
     template<typename T>
-    requires std::is_integral_v<T>
+    requires (std::is_integral_v<T> and (sizeof(T) <= 8))
     OutputStream & operator<<(const T val){
         if constexpr(sizeof(T) <= 4){
             if constexpr (std::is_signed_v<T>){
@@ -384,7 +405,7 @@ public:
             }else{
                 print_u32(uint32_t(val));
             }
-        }else{
+        }else if constexpr(sizeof(T) <= 8){
             if constexpr (std::is_signed_v<T>){
                 print_i64(int64_t(val));
             }else{
@@ -553,10 +574,10 @@ public:
         print_indent();
         *this << std::forward<First>(first);
 
-        if constexpr(false == details::need_display_v<First>){
+        if constexpr(false == details::need_insert_splitter_before_v<First>){
             return prints(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
-            (print_splt_then_entity(' ', std::forward<Args>(args)), ...);
+            (print_given_splt_then_entity(' ', std::forward<Args>(args)), ...);
         }
         return prints();
     }
@@ -570,10 +591,10 @@ public:
     OutputStream & printt(First && first, Args&&... args){
         print_indent();
         *this << std::forward<First>(first);
-        if constexpr(false == details::need_display_v<First>){
+        if constexpr(false == details::need_insert_splitter_before_v<First>){
             return printt(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
-            (print_splt_then_entity('\t', std::forward<Args>(args)), ...);
+            (print_given_splt_then_entity('\t', std::forward<Args>(args)), ...);
         }
         return printt();
     }
@@ -583,11 +604,12 @@ public:
         return *this;
     }
 
+
     template <typename First, typename ... Args>
     OutputStream & println(First && first, Args&&... args){
         print_indent();
         *this << std::forward<First>(first);
-        if constexpr(false == details::need_display_v<First>){
+        if constexpr(false == details::need_insert_splitter_before_v<First>){
             return println(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
             (print_splt_then_entity(std::forward<Args>(args)), ...);
@@ -614,19 +636,26 @@ public:
     [[nodiscard]] __attribute__((const)) 
     static constexpr Brackets<chr> brackets(){return {};}
 
-    struct FieldName final{
+    struct [[nodiscard]] FieldName final{
 
-        explicit FieldName(OutputStream & os, const std::string_view name):
+        __inline explicit FieldName(OutputStream & os, const std::string_view name):
             os_(os){
             if(not os.config().no_fieldname)
                 os << name << ':';
         }
 
-        FieldName & operator()(OutputStream & os){
+        FieldName(const FieldName &) = delete;
+        FieldName(FieldName &&) = delete;
+
+        template<typename ... Args>
+        __inline FieldName & operator()(Args&& ... args){
+            if constexpr (sizeof...(args)) {
+                ((os_ << std::forward<Args>(args)), ...);
+            }
             return *this;
         }
 
-        __fast_inline friend OutputStream & operator<<(OutputStream & os, const FieldName & fn){ 
+        __inline friend OutputStream & operator<<(OutputStream & os, const FieldName & self){ 
             return os;
         }
     private:
@@ -636,8 +665,8 @@ public:
     friend struct FieldName;
 
 
-    struct ScopedInfo{
-        explicit ScopedInfo(OutputStream & os, const std::string_view name):
+    struct [[nodiscard]] ScopedInfo{
+        __inline explicit ScopedInfo(OutputStream & os, const std::string_view name):
             os_(os){
             if(not os.config().no_scoped){
                 os << name << ':';
@@ -648,13 +677,17 @@ public:
         ScopedInfo(const ScopedInfo &) = delete;
         ScopedInfo(ScopedInfo &&) = delete;
 
-        ScopedInfo & operator()(OutputStream & os){
+        template<typename ... Args>
+        __inline ScopedInfo & operator()(Args&& ... args){
+            if constexpr (sizeof...(args)) {
+                ((os_ << std::forward<Args>(args)), ...);
+            }
+            if(not os_.config().no_scoped) 
+                os_ << os_.brackets<'}'>();
             return *this;
         }
 
         friend OutputStream & operator<<(OutputStream & os, const ScopedInfo & info){ 
-            if(not os.config().no_scoped) 
-                os << os.brackets<'}'>();
             return os;
         }
     private:
@@ -679,19 +712,19 @@ public:
 
     Config config() const {return config_;}
 
-    class __Guard{
+    class [[nodiscard]] ConfigGuard{
         OutputStream & os_;
         const Config config_;
     public:
-        __Guard(OutputStream & os) : os_(os), config_(os.config()){}
+        ConfigGuard(OutputStream & os) : os_(os), config_(os.config()){}
 
-        ~__Guard(){
+        ~ConfigGuard(){
             os_.reconf(config_);
         }
     };
 
-    [[nodiscard]] __Guard create_guard(){
-        return __Guard(*this);
+    [[nodiscard]] ConfigGuard create_guard(){
+        return ConfigGuard(*this);
     }
 
 private:
@@ -714,15 +747,15 @@ private:
 
     template<typename T>
     __fast_inline void print_splt_then_entity(T && any){
-        if constexpr(details::need_display_v<T>){
+        if constexpr(details::need_insert_splitter_before_v<T>){
             print_splt();
         }
         *this << std::forward<T>(any);
     }
 
     template<typename T>
-    __fast_inline void print_splt_then_entity(const char splt, T && any){
-        if constexpr(details::need_display_v<T>){
+    __fast_inline void print_given_splt_then_entity(const char splt, T && any){
+        if constexpr(details::need_insert_splitter_before_v<T>){
             write(splt);
         }
         *this << std::forward<T>(any);

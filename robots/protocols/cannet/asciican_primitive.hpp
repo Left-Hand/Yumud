@@ -18,7 +18,7 @@ namespace operations{
         hal::CanClassicMsg msg;
 
         friend OutputStream & operator<<(OutputStream & os, const SendCanMsg & self){ 
-            return os << os.field("msg")(os << self.msg);
+            return os << os.field("msg")(self.msg);
         }
     };
 
@@ -38,7 +38,7 @@ namespace operations{
         }
 
         friend OutputStream & operator<<(OutputStream & os, const SendText & self){ 
-            return os << os.field("str")(os << self.str.view());
+            return os << os.field("str")(self.str.view());
         }
     };
 
@@ -46,7 +46,7 @@ namespace operations{
         uint32_t baudrate;
 
         friend OutputStream & operator<<(OutputStream & os, const SetSerialBaud & self){ 
-            return os << os.field("baudrate")(os << self.baudrate);
+            return os << os.field("baudrate")(self.baudrate);
         }
     };
 
@@ -54,7 +54,7 @@ namespace operations{
         hal::CanBaudrate baudrate;
 
         friend OutputStream & operator<<(OutputStream & os, const SetCanBaud & self){ 
-            return os << os.field("baudrate")(os << self.baudrate);
+            return os << os.field("baudrate")(self.baudrate);
         }
     };
 
@@ -73,7 +73,7 @@ namespace operations{
     struct [[nodiscard]] SetTimestamp{
         Enable enabled;
         friend OutputStream & operator<<(OutputStream & os, const SetTimestamp & self){ 
-            return os << os.field("enabled")(os << self.enabled);
+            return os << os.field("enabled")(self.enabled);
         }
     };
 }

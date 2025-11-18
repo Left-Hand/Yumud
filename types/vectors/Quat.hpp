@@ -63,7 +63,9 @@ static constexpr Matrix3x3<T> quat_to_mat3x3(const auto q){
 
 template <arithmetic T>
 
-struct Quat{
+struct [[nodiscard]] Quat{
+    using Self = Quat;
+
     T x;
     T y;
     T z;
@@ -167,7 +169,7 @@ struct Quat{
         Vec3<T> axis = default_dir.cross(normalized_dir);
         
         // Calculate the angle between the vectors
-        const auto angle = Angle<T>::from_radians(std::acos(dot_product));
+        const auto angle = Angle<T>::from_radian(std::acos(dot_product));
         
         // Create and return the quaternion representing the rotation
         return from_axis_angle(axis, angle);
@@ -195,28 +197,28 @@ struct Quat{
     [[nodiscard]]
     consteval size_t size() const {return 4;}
 
-    [[nodiscard]]
-    __fast_inline constexpr T * begin(){return &x;}
+    [[nodiscard]] __fast_inline constexpr 
+    T * begin(){return &x;}
 
-    [[nodiscard]]
-    __fast_inline constexpr const T * begin() const {return &x;}
+    [[nodiscard]] __fast_inline constexpr 
+    const T * begin() const {return &x;}
 
-    [[nodiscard]]
-    __fast_inline constexpr T * end(){return &x + 4;}
+    [[nodiscard]] __fast_inline constexpr 
+    T * end(){return &x + 4;}
 
-    [[nodiscard]]
-    __fast_inline constexpr const T * end() const {return &x + 4;}
+    [[nodiscard]] __fast_inline constexpr 
+    const T * end() const {return &x + 4;}
 
-    [[nodiscard]]
-    __fast_inline constexpr  T & operator [](const size_t idx){return (&x)[idx];}
+    [[nodiscard]] __fast_inline constexpr 
+    T & operator [](const size_t idx){return (&x)[idx];}
 
-    [[nodiscard]]
-    __fast_inline constexpr const T  operator [](const size_t idx) const {return (&x)[idx];}
+    [[nodiscard]] __fast_inline constexpr 
+    const T  operator [](const size_t idx) const {return (&x)[idx];}
 
     [[nodiscard]]
     constexpr Angle<T> angle_to(const Quat<T> &p_to) const {
         T d = std::abs(dot(p_to));
-        return Angle<T>::from_radians(2 * std::acos(CLAMP(d, -1, 1)));
+        return Angle<T>::from_radian(2 * std::acos(CLAMP(d, -1, 1)));
     }
 
     [[nodiscard]]
@@ -525,6 +527,14 @@ private:
         }
     }
 
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os    
+            << os.field("x")(self.x) << os.splitter()
+            << os.field("y")(self.y) << os.splitter()
+            << os.field("z")(self.z) << os.splitter()
+            << os.field("w")(self.w)
+        ;
+    }
 };
 
 
@@ -536,13 +546,6 @@ private:
     return a.slerp(b, t);
 }
 
-__fast_inline OutputStream & operator<<(OutputStream & os, const ymd::Quat<auto> & value){
-    return os << os.brackets<'('>()
-        << value.x << os.splitter()
-        << value.y << os.splitter()
-        << value.z << os.splitter()
-        << value.w << os.brackets<')'>();
-}
 
 template<arithmetic T>
 Quat() -> Quat<T>;

@@ -69,12 +69,10 @@ struct ReleaseInfo{
 };
 
 OutputStream & operator <<(OutputStream & os, const ReleaseInfo & self){
-    os << os.scoped("release")(
-        os 
-        << os.field("author")(os << self.author)
-        << os.field("version")(os << self.version)
-        << os.field("date")(os << self.date)
-        << os.field("time")(os << self.time)
+    os << os.scoped("release")(os.field("author")(self.author)
+        ,os.field("version")(self.version)
+        ,os.field("date")(self.date)
+        ,os.field("time")(self.time)
     );
     return os;
 }
