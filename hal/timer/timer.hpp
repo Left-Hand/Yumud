@@ -221,9 +221,23 @@ public:
 
 };
 
+struct [[nodiscard]] TimerBdtr{
+    TIM_TypeDef * inst_;
+    uint32_t bus_freq;
+    struct Config{
+        Nanoseconds ns;
+        TimerBdtrLockLevel level = TimerBdtrLockLevel::Off;
+    };
+
+    void init(const Config &config);
+    void set_deadzone(const Nanoseconds ns);
+private:
+    uint8_t calculate_deadzone_code(const Nanoseconds deadzone_ns);
+};
+
 class AdvancedTimer:public GenericTimer{
 protected:
-    uint8_t calculate_deadzone(const Nanoseconds deadzone_ns);
+
 
     TimerOCN n_channels[3];
 
@@ -238,9 +252,10 @@ public:
                 TimerOCN(inst_, TimerChannel::ChannelSelection::CH3N),
             }{;}
 
-    void init_bdtr(const Nanoseconds ns, const LockLevel level = LockLevel::Off);
-
-    void set_deadzone_ns(const Nanoseconds ns);
+    TimerBdtr bdtr(){return TimerBdtr{
+        .inst_ = inst_,
+        .bus_freq = this->get_bus_freq()
+    };}
     void set_repeat_times(const uint8_t rep){inst_->RPTCR = rep;}
 
     template<size_t I>

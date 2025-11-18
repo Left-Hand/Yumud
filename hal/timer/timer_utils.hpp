@@ -18,11 +18,6 @@ IRQn it_to_irq(const void * inst, const TimerIT it);
 
 Gpio get_pin(const void * inst, const TimerChannelSelection channel);
 
-constexpr bool is_aligned_count_mode(const TimerCountMode mode){
-    return  (mode == TimerCountMode::CenterAlignedDownTrig) ||
-            (mode == TimerCountMode::CenterAlignedUpTrig) ||
-            (mode == TimerCountMode::CenterAlignedDualTrig);
-}
 }
 
 };

@@ -157,7 +157,7 @@ public:
             .count_mode = hal::TimerCountMode::CenterAlignedDualTrig, 
         }, DISEN
     );
-        timer_.set_deadzone_ns(cfg.deadzone_ns);
+        timer_.bdtr().set_deadzone(cfg.deadzone_ns);
         timer_.enable_cc_ctrl_sync(DISEN);
 
         pwm_u_.init({
@@ -205,8 +205,8 @@ public:
         timer_.set_freq(hal::TimerCountFreq(hal::NearestFreq(freq)));
     }
 
-    void set_deadzone_ns(const Nanoseconds ns){
-        timer_.set_deadzone_ns(ns);
+    void set_deadzone(const Nanoseconds ns){
+        timer_.bdtr().set_deadzone(ns);
     }
 
     void static_test();

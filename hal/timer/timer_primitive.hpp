@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/utils/sumtype.hpp"
+#include "primitive/nearest_freq.hpp"
 
 namespace ymd{
 class OutputStream;
@@ -95,12 +96,6 @@ struct [[nodiscard]] ArrAndPsc{
     friend OutputStream & operator <<(OutputStream & os, const Self & self);
 };
 
-struct [[nodiscard]] NearestFreq{
-    using Self = NearestFreq;
-    uint32_t count;
-
-    friend OutputStream & operator <<(OutputStream & os, const Self & self);
-};
 
 struct [[nodiscard]] TimerCountFreq:
     public Sumtype<ArrAndPsc, NearestFreq>{
@@ -117,12 +112,39 @@ struct [[nodiscard]] TimerCountFreq:
 //     CenterAlignedDualTrig   = 0x06
 // };
 
-enum class [[nodiscard]] TimerCountMode:uint8_t{
-    Up                      = 0x0000,
-    Down                    = 0x0010,
-    CenterAlignedDownTrig   = 0x0020,
-    CenterAlignedUpTrig     = 0x0040,
-    CenterAlignedDualTrig   = 0x0060
+
+
+struct [[nodiscard]] TimerCountMode{
+    enum class [[nodiscard]] Kind:uint8_t{
+        Up                      = 0x00,
+        Down                    = 0x01,
+        CenterAlignedDownTrig   = 0x02,
+        CenterAlignedUpTrig     = 0x04,
+        CenterAlignedDualTrig   = 0x06
+    };
+
+    using enum Kind;
+
+    constexpr TimerCountMode(Kind kind):kind_(kind){}
+    constexpr TimerCountMode(const TimerCountMode &) = default;
+    [[nodiscard]] constexpr Kind kind() const {return kind_;}
+
+    [[nodiscard]] constexpr uint32_t as_bits() const {return static_cast<uint32_t>(kind_);}
+
+    [[nodiscard]] constexpr bool is_center_aligned() const {
+        switch(kind()){
+            case CenterAlignedDownTrig:
+            case CenterAlignedUpTrig:
+            case CenterAlignedDualTrig:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+
+private:
+    Kind kind_;
 };
 
 
@@ -139,16 +161,16 @@ struct [[nodiscard]] TimerChannelSelection{
 
     using enum Kind;
 
-    TimerChannelSelection(const TimerChannelSelection::Kind kind):
+    constexpr TimerChannelSelection(const TimerChannelSelection::Kind kind):
         kind_(kind){}
 
     [[nodiscard]] constexpr Kind kind() const{ return kind_; }
 
-    [[nodiscard]] size_t index() const {
+    [[nodiscard]] constexpr size_t index() const {
         return (std::bit_cast<uint8_t>(kind_) >> 1);
     }
 
-    [[nodiscard]] bool is_co() const {
+    [[nodiscard]] constexpr bool is_co() const {
         return (std::bit_cast<uint8_t>(kind_)) & 0x01;
     }
 private:
@@ -204,11 +226,11 @@ enum class [[nodiscard]] TimerIT:uint8_t{
 //     Break   = 0x80,
 // };
 
-enum class [[nodiscard]] TimerBdtrLockLevel:uint16_t{
-    Off     = 0x0000,
-    Low     = 0x0100,
-    Medium  = 0x0200,
-    High    = 0x0300
+enum class [[nodiscard]] TimerBdtrLockLevel:uint8_t{
+    Off     = 0x00,
+    Low     = 0x01,
+    Medium  = 0x02,
+    High    = 0x03
 };
 
 // enum class [[nodiscard]] TimerBdtrLockLevel:uint8_t{

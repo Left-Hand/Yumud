@@ -236,7 +236,7 @@ void BasicTimer::set_count_mode(const TimerCountMode mode){
     auto tmpcr1 = inst_->CTLR1;
 
     tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_DIR | TIM_CMS)));
-    tmpcr1 |= (uint32_t)mode;
+    tmpcr1 |= (mode.as_bits() << 4);
 
     tmpcr1 &= (uint16_t)(~((uint16_t)TIM_CTLR1_CKD));
     tmpcr1 |= (uint32_t)TIM_CKD_DIV1;
@@ -308,7 +308,7 @@ void GenericTimer::init_as_encoder(const CountMode mode){
     {
         const TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
             .TIM_Prescaler = 0,
-            .TIM_CounterMode = (uint16_t)mode,
+            .TIM_CounterMode = static_cast<uint16_t>(mode.as_bits() << 4),
             .TIM_Period = 65535,
             .TIM_ClockDivision = TIM_CKD_DIV1,
             .TIM_RepetitionCounter = 0,
@@ -350,13 +350,13 @@ void GenericTimer::set_trgo_source(const TrgoSource source){
     TIM_SelectOutputTrigger(inst_, uint8_t(source));
 }
 
-void AdvancedTimer::init_bdtr(const Nanoseconds ns, const LockLevel level){
+void TimerBdtr::init(const Config & cfg){
 
     const TIM_BDTRInitTypeDef TIM_BDTRInitStructure{
         .TIM_OSSRState = TIM_OSSRState_Disable,
         .TIM_OSSIState = TIM_OSSIState_Disable,
-        .TIM_LOCKLevel = (uint16_t)level,
-        .TIM_DeadTime = this->calculate_deadzone(ns),
+        .TIM_LOCKLevel = static_cast<uint16_t>(std::bit_cast<uint8_t>(cfg.level) << 8),
+        .TIM_DeadTime = calculate_deadzone_code(cfg.ns),
         .TIM_Break = TIM_Break_Disable,
         .TIM_BreakPolarity = TIM_BreakPolarity_Low,
         .TIM_AutomaticOutput = TIM_AutomaticOutput_Enable
@@ -365,8 +365,8 @@ void AdvancedTimer::init_bdtr(const Nanoseconds ns, const LockLevel level){
     TIM_BDTRConfig(inst_, &TIM_BDTRInitStructure);
 }
 
-void AdvancedTimer::set_deadzone_ns(const Nanoseconds ns){
-    uint8_t dead = this->calculate_deadzone(ns);
+void TimerBdtr::set_deadzone(const Nanoseconds ns){
+    uint8_t dead = this->calculate_deadzone_code(ns);
 
     uint16_t tempreg = inst_->BDTR;
     tempreg &= 0xff00;
@@ -374,9 +374,9 @@ void AdvancedTimer::set_deadzone_ns(const Nanoseconds ns){
     inst_->BDTR = tempreg;
 }
 
-uint8_t AdvancedTimer::calculate_deadzone(const Nanoseconds ns){
+uint8_t TimerBdtr::calculate_deadzone_code(const Nanoseconds ns){
     return calculate_deadzone_code_from_ns(
-        this->get_bus_freq(),
+        this->bus_freq,
         ns
     );
 }
