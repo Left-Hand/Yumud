@@ -134,17 +134,32 @@ public:
         return std::span(payload_bytes_.data(), length());
     }
 
+    __always_inline constexpr void set_payload_bytes(
+        std::span<const uint8_t> bytes
+    ) {
+        if(bytes.size() > 8)
+            __builtin_trap();
+        dlc_ = bytes.size();
+        std::copy(bytes.begin(), bytes.end(), payload_bytes_.begin());
+    }
+
+    __always_inline constexpr void set_payload_u64(
+        uint64_t int_val
+    ) {
+        payload_bytes_ = std::bit_cast<std::array<uint8_t, 8>>(int_val);
+    }
+
     [[nodiscard]] __always_inline constexpr std::span<uint8_t> mut_payload_bytes() {
         return std::span(payload_bytes_.data(), length());
     }
 
-    template<size_t N>
-    requires (N <= 8)
-    [[nodiscard]] __always_inline constexpr std::span<const uint8_t, N> payload_bytes_sized() const{
-        if(N > length())
-            __builtin_abort();
-        return std::span<const uint8_t, N>(payload_bytes_.data(), N);
-    }
+    // template<size_t N>
+    // requires (N <= 8)
+    // [[nodiscard]] __always_inline constexpr std::span<const uint8_t, N> payload_bytes_sized() const{
+    //     if(N > length())
+    //         __builtin_abort();
+    //     return std::span<const uint8_t, N>(payload_bytes_.data(), N);
+    // }
 
     /// @brief 是否为标准帧 
     [[nodiscard]] __always_inline constexpr bool is_standard() const {
@@ -168,8 +183,12 @@ public:
         return identifier_.id_as_u32();
     }
 
-    [[nodiscard]] __always_inline constexpr uint32_t sxx32_identifier_as_u32() const {
-        return identifier_.as_bits();
+    [[nodiscard]] __always_inline constexpr uint64_t payload_as_u64() const {
+        return std::bit_cast<uint64_t>(payload_bytes_);
+    }
+
+    [[nodiscard]] __always_inline constexpr auto sxx32_identifier() const {
+        return identifier_;
     }
 
     [[nodiscard]] constexpr Option<hal::CanStdId> stdid() const {
@@ -180,10 +199,6 @@ public:
     [[nodiscard]] constexpr Option<hal::CanExtId> extid() const {
         if(not identifier_.is_extended()) return None;
         return Some(hal::CanExtId(identifier_.id_as_u32()));
-    }
-
-    [[nodiscard]] __always_inline constexpr uint64_t payload_as_u64() const {
-        return std::bit_cast<uint64_t>(payload_bytes_);
     }
 
 
@@ -217,14 +232,17 @@ private:
     ) : 
         CanClassicMsg(id, CanRtr::Data)
     {
-        dlc_ = std::min(bytes.size(), size_t(8));
+        if(bytes.size() > 8) [[unlikely]]
+            __builtin_trap();
 
-        #pragma GCC unroll 4
+        dlc_ = bytes.size();
+
+        #pragma GCC unroll 8
         for(size_t i = 0; i < dlc_ ; i++){
             payload_bytes_[i] = (bytes[i]);
         }
 
-        #pragma GCC unroll 4
+        #pragma GCC unroll 8
         for(size_t i = dlc_; i < 8; i++){
             payload_bytes_[i] = 0;
         }
@@ -246,7 +264,7 @@ private:
     {
         const auto buf = std::bit_cast<std::array<uint8_t, 8>>(data);
 
-        #pragma GCC unroll 4
+        #pragma GCC unroll 8
         for(size_t i = 0; i < dlc; i++){
             payload_bytes_[i] = buf[i];
         }

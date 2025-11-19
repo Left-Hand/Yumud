@@ -337,7 +337,7 @@ Option<CanMailboxNth> Can::transmit(const CanClassicMsg & msg){
 
     if(transmit_mailbox < 0) return None;
 
-    const uint32_t tempmir = msg.sxx32_identifier_as_u32();
+    const uint32_t tempmir = msg.sxx32_identifier().as_bits();
     const uint64_t data = msg.payload_as_u64();
     auto & mailbox_setting = inst_->sTxMailBox[
         static_cast<size_t>(transmit_mailbox)];

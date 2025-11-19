@@ -3,61 +3,70 @@
 namespace ymd::canopen::primitive{
 //不要在外部使用这个函数 因为它有可能返回空指针
 static constexpr const char * err_to_str(const SdoAbortError err){
+    using Kind = SdoAbortError;
     switch(err){
-        case SdoAbortError::ToggleBitNotAlternated      :
+        case Kind::ToggleBitNotAlternated:
             return "ToggleBitNotAlternated";
-        case SdoAbortError::SdoProtocolTimedOut         :
+        case Kind::SdoProtocolTimedOut:
             return "SdoProtocolTimedOut";
-        case SdoAbortError::CommandSpecifierNotValid    :
-            return "CommandSpecifierNotValid";
-        case SdoAbortError::InvalidBlockSize            :
+        case Kind::InvalidClientServerCommandSpecifier:
+            return "InvalidClientServerCommandSpecifier";
+        case Kind::InvalidBlockSize:
             return "InvalidBlockSize";
-        case SdoAbortError::InvalidSequenceNumber       :
+        case Kind::InvalidSequenceNumber:
             return "InvalidSequenceNumber";
-        case SdoAbortError::CRCError                    :
-            return "CRCError";
-        case SdoAbortError::OutOfMemory                 :
+        case Kind::CrcError:
+            return "CrcError";
+        case Kind::OutOfMemory:
             return "OutOfMemory";
-        case SdoAbortError::UnsupportedAccess           :
-            return "UnsupportedAccess";
-        case SdoAbortError::ReadOnlyAccess              :
-            return "ReadOnlyAccess";
-        case SdoAbortError::WriteOnlyAccess             :
-            return "WriteOnlyAccess";
-        case SdoAbortError::ObjectDoesNotExist          :
-            return "ObjectDoesNotExist";
-        case SdoAbortError::ObjectCannotBeMapped        :
-            return "ObjectCannotBeMapped";
-        case SdoAbortError::PdoLengthExceeded           :
-            return "PdoLengthExceeded";
-        case SdoAbortError::ParameterIncompatibility    :
-            return "ParameterIncompatibility";
-        case SdoAbortError::InternalIncompatibility     :
-            return "InternalIncompatibility";
-        case SdoAbortError::HardwareError               :
+        case Kind::UnsupportedAccessToObject:
+            return "UnsupportedAccessToObject";
+        case Kind::AttemptToReadWriteOnlyObject:
+            return "AttemptToReadWriteOnlyObject";
+        case Kind::AttemptToWriteReadOnlyObject:
+            return "AttemptToWriteReadOnlyObject";
+        case Kind::ObjectNotInDictionary:
+            return "ObjectNotInDictionary";
+        case Kind::ObjectCannotBeMappedToPdo:
+            return "ObjectCannotBeMappedToPdo";
+        case Kind::ExceedPdoLength:
+            return "ExceedPdoLength";
+        case Kind::GeneralParameterIncompatibility:
+            return "GeneralParameterIncompatibility";
+        case Kind::GeneralInternalIncompatibility:
+            return "GeneralInternalIncompatibility";
+        case Kind::HardwareError:
             return "HardwareError";
-        case SdoAbortError::ServiceParameterIncorrect   :
-            return "ServiceParameterIncorrect";
-        case SdoAbortError::ServiceParameterTooLong     :
-            return "ServiceParameterTooLong";
-        case SdoAbortError::ServiceParameterTooShort    :
-            return "ServiceParameterTooShort";
-        case SdoAbortError::SubIndexDoesNotExist        :
+        case Kind::DataTypeMismatchLengthMismatch:
+            return "DataTypeMismatchLengthMismatch";
+        case Kind::DataTypeMismatchLengthTooHigh:
+            return "DataTypeMismatchLengthTooHigh";
+        case Kind::DataTypeMismatchLengthTooLow:
+            return "DataTypeMismatchLengthTooLow";
+        case Kind::SubIndexDoesNotExist:
             return "SubIndexDoesNotExist";
-        case SdoAbortError::InvalidValue                :
-            return "InvalidValue";
-        case SdoAbortError::ValueTooHigh                :
+        case Kind::InvalidValueForParameter:
+            return "InvalidValueForParameter";
+        case Kind::ValueTooHigh:
             return "ValueTooHigh";
-        case SdoAbortError::ValueTooLow                 :
+        case Kind::ValueTooLow:
             return "ValueTooLow";
-        case SdoAbortError::MaxLessThanMin              :
+        case Kind::MaxLessThanMin:
             return "MaxLessThanMin";
-        case SdoAbortError::ResourceNotAvailable        :
+        case Kind::ResourceNotAvailable:
             return "ResourceNotAvailable";
-        case SdoAbortError::GeneralError                :
-            return "GeneralError"; 
-        case SdoAbortError::NoValidData                 :
-            return "NoValidData";         // 无可用数据  
+        case Kind::GeneralError:
+            return "GeneralError";
+        case Kind::DataTransferOrStorageFailed:
+            return "DataTransferOrStorageFailed";
+        case Kind::LocalControlPreventsDataTransfer:
+            return "LocalControlPreventsDataTransfer";
+        case Kind::DeviceStatePreventsDataTransfer:
+            return "DeviceStatePreventsDataTransfer";
+        case Kind::ObjectDictionaryGenerationFailed:
+            return "ObjectDictionaryGenerationFailed";
+        case Kind::NoDataAvailable:
+            return "NoDataAvailable";
         default:
             return nullptr;
     }

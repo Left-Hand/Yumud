@@ -216,43 +216,84 @@ struct [[nodiscard]] SdoExpeditedLayout{
 
 static_assert(sizeof(SdoExpeditedLayout) == 8);
 
-
-
 enum class SdoAbortError : uint32_t {
-    ToggleBitNotAlternated      = 0x05030000,          // 切换位未交替
-    SdoProtocolTimedOut         = 0x05040000,          // SDO 协议超时
-    CommandSpecifierNotValid    = 0x05040001,          // 命令指定符无效
-    InvalidBlockSize            = 0x05040002,          // 无效的块大小
-    InvalidSequenceNumber       = 0x05040003,          // 无效的序列号
-    CRCError                    = 0x05040004,          // CRC 错误
-    OutOfMemory                 = 0x05040005,          // 内存不足
-    UnsupportedAccess           = 0x06010000,          // 不支持的访问类型
-    ReadOnlyAccess              = 0x06010001,          // 只读访问
-    WriteOnlyAccess             = 0x06010002,          // 只写访问
-    ObjectDoesNotExist          = 0x06020000,          // 对象不存在
-    ObjectCannotBeMapped        = 0x06040041,          // 对象无法映射
-    PdoLengthExceeded           = 0x06040042,          // PDO 长度超出
-    ParameterIncompatibility    = 0x06040043,          // 参数不兼容
-    InternalIncompatibility     = 0x06040047,          // 内部不兼容
-    HardwareError               = 0x06060000,          // 硬件错误
-    ServiceParameterIncorrect   = 0x06070010,          // 服务参数不正确
-    ServiceParameterTooLong     = 0x06070012,          // 服务参数过长
-    ServiceParameterTooShort    = 0x06070013,          // 服务参数过短
-    SubIndexDoesNotExist        = 0x06090011,          // 子索引不存在
-    InvalidValue                = 0x06090030,          // 无效的值
-    ValueTooHigh                = 0x06090031,          // 值过高
-    ValueTooLow                 = 0x06090032,          // 值过低
-    MaxLessThanMin              = 0x06090036,          // 最大值小于最小值
-    ResourceNotAvailable        = 0x060A0023,          // 资源不可用
-    GeneralError                = 0x08000000,           // 一般错误
-    NoValidData                 = 0x08000024          // 无可用数据  
+    ToggleBitNotAlternated                 = 0x05030000,  // 切换位未交替
+    SdoProtocolTimedOut                    = 0x05040000,  // SDO 协议超时
+    InvalidClientServerCommandSpecifier    = 0x05040001,  // 无效的客户端/服务器命令指定符
+    InvalidBlockSize                       = 0x05040002,  // 无效的块大小
+    InvalidSequenceNumber                  = 0x05040003,  // 无效的序列号
+    CrcError                              = 0x05040004,  // CRC 错误
+    OutOfMemory                           = 0x05040005,  // 内存不足
+    UnsupportedAccessToObject              = 0x06010000,  // 不支持的访问类型
+    AttemptToReadWriteOnlyObject           = 0x06010001,  // 尝试读取只写对象
+    AttemptToWriteReadOnlyObject           = 0x06010002,  // 尝试写入只读对象
+    ObjectNotInDictionary                  = 0x06020000,  // 对象不存在于字典中
+    ObjectCannotBeMappedToPdo              = 0x06040041,  // 对象无法映射到 PDO
+    ExceedPdoLength                       = 0x06040042,  // 超出 PDO 长度
+    GeneralParameterIncompatibility        = 0x06040043,  // 通用参数不兼容
+    GeneralInternalIncompatibility         = 0x06040047,  // 通用内部不兼容
+    HardwareError                         = 0x06060000,  // 硬件错误
+    DataTypeMismatchLengthMismatch         = 0x06070010,  // 数据类型不匹配，长度不匹配
+    DataTypeMismatchLengthTooHigh          = 0x06070012,  // 数据类型不匹配，长度过高
+    DataTypeMismatchLengthTooLow           = 0x06070013,  // 数据类型不匹配，长度过低
+    SubIndexDoesNotExist                   = 0x06090011,  // 子索引不存在
+    InvalidValueForParameter               = 0x06090030,  // 参数值无效
+    ValueTooHigh                          = 0x06090031,  // 值过高
+    ValueTooLow                           = 0x06090032,  // 值过低
+    MaxLessThanMin                        = 0x06090036,  // 最大值小于最小值
+    ResourceNotAvailable                  = 0x060A0023,  // 资源不可用
+    GeneralError                          = 0x08000000,  // 一般错误
+    DataTransferOrStorageFailed           = 0x08000020,  // 数据传输或存储失败
+    LocalControlPreventsDataTransfer      = 0x08000021,  // 本地控制阻止数据传输
+    DeviceStatePreventsDataTransfer       = 0x08000022,  // 设备状态阻止数据传输
+    ObjectDictionaryGenerationFailed      = 0x08000023,  // 对象字典生成失败
+    NoDataAvailable                       = 0x08000024,  // 无可用数据
 };
 
 class [[nodiscard]] SdoAbortCode {
 public:
     using enum SdoAbortError;
+    using Kind = SdoAbortError;
     static constexpr uint32_t NO_ERROR = (0x00000000ul);
     constexpr SdoAbortCode(const SdoAbortError err) : bits_(static_cast<uint32_t>(err)) {;}
+    
+    // https://docs.rs/canopeners/latest/src/canopeners/enums.rs.html#267-301
+    constexpr Option<SdoAbortCode> from_bits(const uint32_t bits){
+        switch(bits){
+            case 0x0503'0000: return Some(Kind::ToggleBitNotAlternated);
+            case 0x0504'0000: return Some(Kind::SdoProtocolTimedOut);
+            case 0x0504'0001: return Some(Kind::InvalidClientServerCommandSpecifier);
+            case 0x0504'0002: return Some(Kind::InvalidBlockSize);
+            case 0x0504'0003: return Some(Kind::InvalidSequenceNumber);
+            case 0x0504'0004: return Some(Kind::CrcError);
+            case 0x0504'0005: return Some(Kind::OutOfMemory);
+            case 0x0601'0000: return Some(Kind::UnsupportedAccessToObject);
+            case 0x0601'0001: return Some(Kind::AttemptToReadWriteOnlyObject);
+            case 0x0601'0002: return Some(Kind::AttemptToWriteReadOnlyObject);
+            case 0x0602'0000: return Some(Kind::ObjectNotInDictionary);
+            case 0x0604'0041: return Some(Kind::ObjectCannotBeMappedToPdo);
+            case 0x0604'0042: return Some(Kind::ExceedPdoLength);
+            case 0x0604'0043: return Some(Kind::GeneralParameterIncompatibility);
+            case 0x0604'0047: return Some(Kind::GeneralInternalIncompatibility);
+            case 0x0606'0000: return Some(Kind::HardwareError);
+            case 0x0607'0010: return Some(Kind::DataTypeMismatchLengthMismatch);
+            case 0x0607'0012: return Some(Kind::DataTypeMismatchLengthTooHigh);
+            case 0x0607'0013: return Some(Kind::DataTypeMismatchLengthTooLow);
+            case 0x0609'0011: return Some(Kind::SubIndexDoesNotExist);
+            case 0x0609'0030: return Some(Kind::InvalidValueForParameter);
+            case 0x0609'0031: return Some(Kind::ValueTooHigh);
+            case 0x0609'0032: return Some(Kind::ValueTooLow);
+            case 0x0609'0036: return Some(Kind::MaxLessThanMin);
+            case 0x060A'0023: return Some(Kind::ResourceNotAvailable);
+            case 0x0800'0000: return Some(Kind::GeneralError);
+            case 0x0800'0020: return Some(Kind::DataTransferOrStorageFailed);
+            case 0x0800'0021: return Some(Kind::LocalControlPreventsDataTransfer);
+            case 0x0800'0022: return Some(Kind::DeviceStatePreventsDataTransfer);
+            case 0x0800'0023: return Some(Kind::ObjectDictionaryGenerationFailed);
+            case 0x0800'0024: return Some(Kind::NoDataAvailable);
+            default: return None;
+        }
+    }
     constexpr SdoAbortCode(Ok<void>) : bits_(NO_ERROR) {;}
 
     [[nodiscard]] constexpr Option<SdoAbortError> err() const {

@@ -182,7 +182,7 @@ struct ImplFor<DeserializeFrom<hal::CanClassicMsg>, MyStruct> {
 
             case 4: 
             case 8: {
-                const auto bytes = msg.payload_bytes_sized<4>();
+                const auto bytes = msg.payload_bytes().template subspan<0, 4>();
                 return Some(MyStruct{
                     .private_data = ::deserialize<RawBytes, uint32_t>(bytes)
                 });
