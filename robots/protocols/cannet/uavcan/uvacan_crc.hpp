@@ -5,7 +5,7 @@
 
 namespace ymd::uavcan{
 
-namespace crc_func{
+namespace crc{
 constexpr uint16_t crc_addbyte(uint16_t crc_val, uint8_t byte){
     crc_val ^= (uint16_t) ((uint16_t) (byte) << 8);
     for (uint8_t j= 0; j < 8; j++){
@@ -31,7 +31,7 @@ struct CrcBuilder{
     uint16_t val;
 
     constexpr void add_byte(const uint8_t byte){
-        val = crc_func::crc_addbyte(val, byte);
+        val = crc::crc_addbyte(val, byte);
     }
 
     constexpr void add_bytes(const std::span<const uint8_t> bytes){
@@ -41,7 +41,7 @@ struct CrcBuilder{
     }
 
     constexpr void add_signature(const uint64_t signature){
-        val = crc_func::crc_add_signature(val, signature);
+        val = crc::crc_add_signature(val, signature);
     }
 
     constexpr uint16_t build() const{

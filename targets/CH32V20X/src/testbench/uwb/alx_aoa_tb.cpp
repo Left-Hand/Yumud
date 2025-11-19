@@ -43,8 +43,62 @@ struct PointWithDistance{
     T distance;
 };
 
-// template<typename T>
-// static constexpr HeaplessVector<T, 2> compute_interscet_points()
+
+template<typename T>
+constexpr HeaplessVector<Vec2<T>, 2> compute_intersection_points(
+    const Circle2<T>& circle_a, 
+    const Circle2<T>& circle_b
+) {
+
+    // d = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+    // if d > r1 + r2 or d < abs(r1 - r2):
+    // return None # 圆不相交
+
+
+    using Container = HeaplessVector<Vec2<T>, 2>;
+    // 卫语句1: 半径检查
+    if (circle_a.radius < T(0) || circle_b.radius < T(0)) [[unlikely]] 
+        return Container::from_empty();
+        // PANIC();
+    
+    const Vec2<T>& p1 = circle_a.center;
+    const Vec2<T>& p2 = circle_b.center;
+    const T & r1 = circle_a.radius;
+    const T & r2 = circle_b.radius;
+    
+    const Vec2<T> delta = p2 - p1;
+    const T & dx = delta.x;
+    const T & dy = delta.y;
+    const T distance_squ = dx * dx + dy * dy;
+    
+    if(distance_squ > square(r1 + r2))
+        return Container::from_empty();
+
+    if(distance_squ < square(r1 - r2))
+        return Container::from_empty();
+    
+    // a = (r1**2 - r2**2 + d**2) / (2 * d)
+    const T d = std::sqrt(distance_squ);
+    const T inv_d = T(1) / d;
+    const T a = (r1 * r1 - r2 * r2 + distance_squ) * T(0.5) * inv_d;
+    // h = math.sqrt(r1**2 - a**2)
+    const T h = std::sqrt(r1 * r1 - a * a);
+    // x0 = x1 + a * (x2 - x1) / d
+    // y0 = y1 + a * (y2 - y1) / d
+    const T x0 = p1.x + a * dx * inv_d;
+    const T y0 = p1.y + a * dy * inv_d;
+    // rx = -(y2 - y1) * (h / d)
+    // ry = (x2 - x1) * (h / d)
+    const T rx = -(dy) * (h * inv_d);
+    const T ry = (dx) * (h * inv_d);
+    // intersection1 = (x0 + rx, y0 + ry)
+    // intersection2 = (x0 - rx, y0 - ry)
+    // return intersection1, intersection2
+    return Container(
+        Vec2<T>(x0 + rx, y0 + ry),
+        Vec2<T>(x0 - rx, y0 - ry)
+    );
+}
 
 void alx_aoa_main(){
 
@@ -55,7 +109,7 @@ void alx_aoa_main(){
     DEBUGGER.retarget(&DEBUGGER_INST);
     // DEBUGGER.no_brackets(EN);
     DEBUGGER.no_brackets(DISEN);
-    DEBUGGER.no_fieldname(DISEN);
+    DEBUGGER.no_fieldname(EN);
 
     // using SensorMeasurementsBarrier = MeasurementBarrier<Measurement, 2>;
     using SensorMeasurements = std::array<Measurement, 2>;
@@ -174,16 +228,41 @@ void alx_aoa_main(){
             const auto & measurement = measurements_[0];
             // const auto [s,c] = measurement.azimuth.sincos(); 
             // const auto [x,y] = Vector2<float>::from_length_and_
-            const auto vec3 = measurement.to_vec3();
-            const auto [x,y,z] = vec3;
+            [[maybe_unused]] const auto vec3 = measurement.to_vec3();
+            [[maybe_unused]] const auto [x,y,z] = vec3;
+            [[maybe_unused]] const auto o1 = Vec2<float>(0.1, 0);
+            [[maybe_unused]] const auto o2 = Vec2<float>(-0.1, 0);
+            
+            [[maybe_unused]] const auto circle_a = Circle2<float>{o1, measurements_[0].to_polar().amplitude};
+            [[maybe_unused]] const auto circle_b = Circle2<float>{o2, measurements_[1].to_polar().amplitude};
+            // [[maybe_unused]] const auto [x,y,z] = vec3;
             // const auto polar = Polar<float>{
             //     .amplitude = measurement.distance,
             //     .phase = measurement.azimuth
             // };
 
             // const auto [x,y] = polar.to_vec2();
+            // const auto points = compute_intersection_points(circle_a, circle_b);
+            const auto points = compute_intersection_points(
+                Circle2<float>{Vec2<float>{-1,0}, 1.4141f}, 
+                // Circle2<float>{Vec2<float>{1,0}, 1.4f}
+                Circle2<float>{Vec2<float>{1,0}, 1.0f}
+            );
+            const auto p = points.at_or(0, Zero);
+            // const auto p = [&] -> Vec2<float>{
+            //     if(may_p.is_some()){
+            //         // DEBUG_PRINTLN(may_p.unwrap());
+            //         return may_p.unwrap();
+            //     }else{ 
+            //         return Vec2<float>(0,0);
+            //     }
+            // }();
             DEBUG_PRINTLN(
                 // measuremen/ts_
+                bool(measurements_[0].distance > measurements_[1].distance)
+                // ,measurements_[0].distance, measurements_[1].distance
+                // ,measurements_[0].azimuth.to_radian(), measurements_[1].azimuth.to_radian()
+                ,p, points.size()
                 // x,y,z
                 // DEBUGGER.config().no_fieldname, 
                 // DEBUGGER.field("distance")(1),
@@ -191,9 +270,9 @@ void alx_aoa_main(){
                 // DEBUGGER.field("distane")(3)
                 // DEBUGGER.scoped("meas")(measurement), 
                 // DEBUGGER.scoped("xyz")(x, y, z)
-                DEBUGGER.scoped("xyz")(vec3),
-                DEBUGGER.scoped("abc")(vec3),
-                DEBUGGER.scoped("uvw")(std::ignore)
+                // DEBUGGER.scoped("xyz")(vec3),
+                // DEBUGGER.scoped("abc")(vec3),
+                // DEBUGGER.scoped("uvw")(std::ignore)
             );
             // if(bytes.size() == 0) return;
             // if(DEBUGGER.pending() != 0) return;

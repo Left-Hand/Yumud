@@ -17,14 +17,15 @@
 //          -F          (stay in foreground; no daemonize)
 
 namespace ymd::robots::slcan{
-
-
-
+using namespace asciican;
+using namespace asciican::primitive;
+using Error = asciican::primitive::Error;
+using Flags = asciican::primitive::Flags;
+using Msg = asciican::primitive::Msg;
 class [[nodiscard]] SlcanParser final{
 public:
     using Msg = hal::CanClassicMsg;
-    using Error = asciican::Error;
-    using Flags = asciican::Flags;
+
 
     template<typename T = void>
     using IResult = Result<T, Error>;
@@ -34,20 +35,17 @@ public:
 
 
 
-    [[nodiscard]] IResult<asciican::Operation> handle_line(const StringView str) const;
+    [[nodiscard]] IResult<Operation> handle_line(const StringView str) const;
 private:
 
-    [[nodiscard]] asciican::operations::SendText response_version() const ;
-    [[nodiscard]] asciican::operations::SendText response_serial_idx() const ;
+    [[nodiscard]] operations::SendText response_version() const ;
+    [[nodiscard]] operations::SendText response_serial_idx() const ;
     [[nodiscard]] Flags get_flag() const;
-    [[nodiscard]] asciican::operations::SendText response_flag() const ;
+    [[nodiscard]] operations::SendText response_flag() const ;
 };
 
 
 struct SlcanResponseFormatter{
-    using Msg = asciican::Msg;
-    using Error = asciican::Error;
-    using Flags = asciican::Flags;
 
     using StdId = hal::CanStdId;
     using ExtId = hal::CanExtId;
@@ -72,7 +70,7 @@ struct SlcanResponseFormatter{
         }
     };
 
-    static constexpr Response fmt_operation(const IResult<asciican::Operation> & res){
+    static constexpr Response fmt_operation(const IResult<Operation> & res){
         if(res.is_err()){
             return Response::from_str("Z");
         }else{

@@ -27,7 +27,7 @@ void slcan_main(){
         .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
-    // robots::asciican::AsciiCanPhy phy{can};
+    // asciican::AsciiCanPhy phy{can};
     [[maybe_unused]] robots::slcan::SlcanParser slcan_parser;
     // auto list = rpc::make_list(
     //     "slcan",

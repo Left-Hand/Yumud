@@ -10,7 +10,7 @@
 
 #include <variant>
 
-namespace ymd::robots::asciican{
+namespace ymd::asciican::primitive{
 
 
 namespace operations{

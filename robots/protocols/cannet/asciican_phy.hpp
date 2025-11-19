@@ -3,8 +3,8 @@
 #include "asciican_utils.hpp"
 #include "hal/bus/can/can.hpp"
 
-namespace ymd::robots::asciican{
-
+namespace ymd::asciican{
+using namespace ymd::asciican::primitive;
 
 
 class AsciiCanPhy final{

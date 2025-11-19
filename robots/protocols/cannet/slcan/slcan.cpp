@@ -2,8 +2,8 @@
 
 using namespace ymd;
 using namespace ymd::robots::slcan;
-using namespace ymd::robots::asciican;
-using namespace operations;
+using namespace ymd::asciican;
+using namespace asciican::primitive::operations;
 
 // #define SLCAN_DEBUG_EN 1
 #define SLCAN_DEBUG_EN 0
@@ -16,10 +16,6 @@ using namespace operations;
 #else
 #define RETURN_ERR(e, ...) ({return Err(e);})
 #endif
-
-using Error = SlcanParser::Error;
-
-
 
 template<typename T = void>
 using IResult = Result<T, Error>;
@@ -367,8 +363,7 @@ SendText SlcanParser::response_version() const{
 SendText SlcanParser::response_serial_idx() const{
     return SendText::from_str("NA123\r");
 }
-
-SlcanParser::Flags SlcanParser::get_flag() const {
+Flags SlcanParser::get_flag() const {
     return Flags::RxFifoFull;
 }
 

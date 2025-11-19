@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "primitive/can/can_id.hpp"
 
-namespace ymd::robots::uavcan{
+namespace ymd::uavcan::primitive{
 
 
 struct Header;

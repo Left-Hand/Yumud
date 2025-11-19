@@ -2,7 +2,8 @@
 #include "core/debug/debug.hpp"
 
 using namespace ymd;
-using namespace ymd::robots::asciican;
+using namespace ymd::asciican;
+using namespace ymd::asciican::primitive;
 
 
 template<typename T = void>
@@ -40,7 +41,7 @@ IResult<> AsciiCanPhy::close(){
     return Ok();
 }
 
-namespace ymd::robots::asciican{
+namespace ymd::asciican{
 ::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const Error & value){
     DeriveDebugDispatcher<Error>::call(os, value);
     return os;

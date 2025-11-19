@@ -3,7 +3,7 @@
 #include "../asciican_utils.hpp"
 #include "../asciican_phy.hpp"
 
-namespace ymd::robots::asciican{
+namespace ymd::asciican{
 
 class EcCan final{
 public:
