@@ -24,7 +24,7 @@ enum class FunctionCodeKind:uint8_t{
     Heartbeat = 0x0e,
 };
 
-enum class PdoFunctionCodeKind:uint8_t{
+enum class PdoOnlyFunctionCodeKind:uint8_t{
     TxPdo1 = 0x04,
     RxPdo1 = 0x05,
     TxPdo2 = 0x06,
@@ -35,40 +35,40 @@ enum class PdoFunctionCodeKind:uint8_t{
     RxPdo4 = 0x0b,
 };
 
-struct [[nodiscard]] PdoFunctionCode{
-    using Self = PdoFunctionCode;
-    using Kind = PdoFunctionCodeKind;
+struct [[nodiscard]] PdoOnlyFunctionCode{
+    using Self = PdoOnlyFunctionCode;
+    using Kind = PdoOnlyFunctionCodeKind;
 
     [[nodiscard]] __always_inline constexpr 
-    PdoFunctionCode(const PdoFunctionCodeKind kind):
+    PdoOnlyFunctionCode(const PdoOnlyFunctionCodeKind kind):
         bits_(std::bit_cast<uint8_t>(kind)){
     }
 
     [[nodiscard]] __always_inline static constexpr 
-    PdoFunctionCode from_bits_unchecked(const uint8_t bits){
+    PdoOnlyFunctionCode from_bits_unchecked(const uint8_t bits){
         #ifndef NDEBUG
         if(bits > static_cast<uint8_t>(FunctionCodeKind::RxPdo4))
             __builtin_trap();
         if(bits < static_cast<uint8_t>(FunctionCodeKind::TxPdo1))
             __builtin_trap();
         #endif
-        return std::bit_cast<PdoFunctionCode>(bits);
+        return std::bit_cast<PdoOnlyFunctionCode>(bits);
     }
 
     [[nodiscard]] __always_inline static constexpr 
-    Option<PdoFunctionCode> from_fc_kind(const FunctionCodeKind fc){
+    Option<PdoOnlyFunctionCode> from_fc_kind(const FunctionCodeKind fc){
         return from_bits(std::bit_cast<uint8_t>(fc));
     }
 
     [[nodiscard]] __always_inline static constexpr 
-    Option<PdoFunctionCode> from_bits(const uint8_t bits){
+    Option<PdoOnlyFunctionCode> from_bits(const uint8_t bits){
         #ifndef NDEBUG
         if(bits > static_cast<uint8_t>(FunctionCodeKind::RxPdo4))
             return None;
         if(bits < static_cast<uint8_t>(FunctionCodeKind::TxPdo1))
             return None;
         #endif
-        return Some(PdoFunctionCode(std::bit_cast<PdoFunctionCodeKind>(bits)));
+        return Some(PdoOnlyFunctionCode(std::bit_cast<PdoOnlyFunctionCodeKind>(bits)));
     }
 
     [[nodiscard]] __always_inline constexpr 
@@ -95,21 +95,21 @@ struct [[nodiscard]] PdoFunctionCode{
     Option<Self> conj() const {
         switch(bits_){
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo1):
-                return Some<Self>(Self(PdoFunctionCodeKind::RxPdo1));
+                return Some<Self>(Self(PdoOnlyFunctionCodeKind::RxPdo1));
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo1):
-                return Some<Self>(Self(PdoFunctionCodeKind::TxPdo1));
+                return Some<Self>(Self(PdoOnlyFunctionCodeKind::TxPdo1));
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo2):
-                return Some<Self>(Self(PdoFunctionCodeKind::RxPdo2));
+                return Some<Self>(Self(PdoOnlyFunctionCodeKind::RxPdo2));
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo2):
-                return Some<Self>(Self(PdoFunctionCodeKind::TxPdo2));
+                return Some<Self>(Self(PdoOnlyFunctionCodeKind::TxPdo2));
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo3):
-                return Some<Self>(Self(PdoFunctionCodeKind::RxPdo3));
+                return Some<Self>(Self(PdoOnlyFunctionCodeKind::RxPdo3));
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo3):
-                return Some<Self>(Self(PdoFunctionCodeKind::TxPdo3));
+                return Some<Self>(Self(PdoOnlyFunctionCodeKind::TxPdo3));
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo4):
-                return Some<Self>(Self(PdoFunctionCodeKind::RxPdo4));
+                return Some<Self>(Self(PdoOnlyFunctionCodeKind::RxPdo4));
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo4):
-                return Some<Self>(Self(PdoFunctionCodeKind::TxPdo4));
+                return Some<Self>(Self(PdoOnlyFunctionCodeKind::TxPdo4));
             default:
                 __builtin_trap();
         }
@@ -130,7 +130,7 @@ struct [[nodiscard]] FunctionCode{
         return FunctionCode(static_cast<Kind>(bits));
     }
 
-    [[nodiscard]] constexpr uint8_t as_u4() const {
+    [[nodiscard]] constexpr uint8_t to_u4() const {
         return static_cast<uint8_t>(kind_);
     }
 
@@ -189,8 +189,8 @@ struct [[nodiscard]] FunctionCode{
         }
     }
 
-    [[nodiscard]] __always_inline constexpr Option<PdoFunctionCode> to_pdo_fc() const {
-        return PdoFunctionCode::from_fc_kind(kind_);
+    [[nodiscard]] __always_inline constexpr Option<PdoOnlyFunctionCode> to_pdo_fc() const {
+        return PdoOnlyFunctionCode::from_fc_kind(kind_);
     }
 
     using enum Kind;

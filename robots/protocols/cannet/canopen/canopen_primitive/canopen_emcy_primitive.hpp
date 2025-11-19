@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <span>
 
-namespace ymd::canopen{
+namespace ymd::canopen::primitive{
 
 // 同步报文是不带数据的，但是紧急报文是带8个字节的数据的，8个字节拉满
 

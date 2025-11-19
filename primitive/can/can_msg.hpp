@@ -45,14 +45,14 @@ public:
         return CanClassicMsg(id, CanRtr::Remote);}
 
     template<details::is_canid ID>
-    static constexpr CanClassicMsg from_bytes(ID id, 
+    __always_inline static constexpr CanClassicMsg from_bytes(ID id, 
         const std::span<const uint8_t> bytes)
         {return CanClassicMsg(id, bytes);}
 
 
     template<details::is_canid ID, size_t N>
     requires (N <= 8)
-    static constexpr CanClassicMsg from_bytes(
+    __always_inline static constexpr CanClassicMsg from_bytes(
         ID id, 
         const std::span<const uint8_t, N> bytes
     ){
@@ -62,7 +62,7 @@ public:
 
     template<details::is_canid ID, std::ranges::range R>
         requires std::convertible_to<std::ranges::range_value_t<R>, uint8_t>
-    static constexpr CanClassicMsg from_bytes(ID id, R && range){
+    __always_inline static constexpr CanClassicMsg from_bytes(ID id, R && range){
         std::array<uint8_t, 8> buf;
         uint8_t len = 0;
         for(auto && val : range){
@@ -73,7 +73,7 @@ public:
     }
 
     template<details::is_canid ID>
-    static constexpr CanClassicMsg from_list(
+    __always_inline static constexpr CanClassicMsg from_list(
         ID id, 
         const std::initializer_list<uint8_t> bytes
     ){
@@ -102,7 +102,7 @@ public:
 
     template<details::is_canid ID, typename Iter>
     requires is_next_based_iter_v<Iter>
-    static constexpr CanClassicMsg from_iter_unchecked(ID id, Iter iter) {
+    __always_inline static constexpr CanClassicMsg from_iter_unchecked(ID id, Iter iter) {
         std::array<uint8_t, 8> buf{};
         size_t len = 0;
         
@@ -115,7 +115,7 @@ public:
         return CanClassicMsg::from_bytes(id, std::span{buf.data(), len});
     }
 
-    static constexpr __always_inline CanClassicMsg from_sxx32_regs(
+    __always_inline static constexpr CanClassicMsg from_sxx32_regs(
         uint32_t id_bits, 
         uint64_t payload, 
         uint8_t len
@@ -128,6 +128,17 @@ public:
 
     [[nodiscard]] constexpr CanClassicMsg clone(){
         return *this;
+    }
+
+    [[nodiscard]] __always_inline constexpr uint8_t operator[](size_t idx) const {return payload_bytes_[idx];}
+    [[nodiscard]] __always_inline constexpr uint8_t & operator[](size_t idx) {return payload_bytes_[idx];}
+    [[nodiscard]] __always_inline constexpr uint8_t at(size_t idx) const {
+        if(idx >= length()) __builtin_trap();
+        return payload_bytes_[idx];
+    }
+    [[nodiscard]] __always_inline constexpr uint8_t & at(size_t idx) {
+        if(idx >= length()) __builtin_trap();
+        return payload_bytes_[idx];
     }
 
     [[nodiscard]] __always_inline constexpr std::span<const uint8_t> payload_bytes() const{

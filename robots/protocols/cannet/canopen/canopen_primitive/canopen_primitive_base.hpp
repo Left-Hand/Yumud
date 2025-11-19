@@ -4,7 +4,7 @@
 
 namespace ymd::canopen::primitive{
 
-using Msg = hal::CanClassicMsg;
+using CanMsg = hal::CanClassicMsg;
 
 class SubEntry;
 
@@ -30,7 +30,11 @@ struct [[nodiscard]] NodeId{
         return from_u7(bits);
     }
 
-    [[nodiscard]] constexpr uint8_t as_u7() const{
+    static constexpr NodeId from_boardcast(){
+        return from_u7(0);
+    }
+
+    [[nodiscard]] constexpr uint8_t to_u7() const{
         return bits;
     }
 
@@ -40,6 +44,10 @@ struct [[nodiscard]] NodeId{
 
     [[nodiscard]] constexpr bool test(const NodeId & other){
         return other.is_boardcast() || bits == other.bits;
+    }
+
+    [[nodiscard]] constexpr bool operator==(const NodeId & other) const{
+        return bits == other.bits;
     }
 };
 
@@ -52,8 +60,8 @@ struct [[nodiscard]] CobId{
         const FunctionCode _fcode
     ){
         const uint16_t bits = static_cast<uint16_t>(
-            _nodeid.as_u7() | 
-            static_cast<uint16_t>(_fcode.as_u4() << 7));
+            _nodeid.to_u7() | 
+            static_cast<uint16_t>(_fcode.to_u4() << 7));
 
         return from_bits(bits);
     }

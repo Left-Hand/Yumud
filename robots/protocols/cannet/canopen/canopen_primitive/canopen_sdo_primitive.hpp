@@ -134,8 +134,8 @@ struct SdoHeader {
 static_assert(sizeof(SdoHeader) == 4);
 
 
-struct [[nodiscard]] SdoExpeditedLayout{
-    using Self = SdoExpeditedLayout;
+struct [[nodiscard]] SdoExpeditedMsg{
+    using Self = SdoExpeditedMsg;
     using Header = SdoHeader;
     Header header;
     uint32_t payload_bits;
@@ -205,16 +205,16 @@ struct [[nodiscard]] SdoExpeditedLayout{
     [[nodiscard]] std::span<const uint8_t, 8> as_bytes() const {
         return std::span<const uint8_t, 8>(
             reinterpret_cast<const uint8_t*>(this),
-            sizeof(SdoExpeditedLayout)
+            sizeof(SdoExpeditedMsg)
         );
     }
 
-    [[nodiscard]] hal::CanClassicMsg with_cobid(const CobId cobid){
-        return hal::CanClassicMsg::from_id_and_u64(cobid.to_stdid(), as_u64());
+    [[nodiscard]] CanMsg to_canmsg(const CobId cobid){
+        return CanMsg::from_id_and_u64(cobid.to_stdid(), as_u64());
     }
 };
 
-static_assert(sizeof(SdoExpeditedLayout) == 8);
+static_assert(sizeof(SdoExpeditedMsg) == 8);
 
 enum class SdoAbortError : uint32_t {
     ToggleBitNotAlternated                 = 0x05030000,  // 切换位未交替
@@ -256,7 +256,7 @@ public:
     using Kind = SdoAbortError;
     static constexpr uint32_t NO_ERROR = (0x00000000ul);
     constexpr SdoAbortCode(const SdoAbortError err) : bits_(static_cast<uint32_t>(err)) {;}
-    
+
     // https://docs.rs/canopeners/latest/src/canopeners/enums.rs.html#267-301
     constexpr Option<SdoAbortCode> from_bits(const uint32_t bits){
         switch(bits){
