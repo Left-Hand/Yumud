@@ -34,6 +34,11 @@ public:
         return CanClassicMsg(id, dlc);
     }
 
+    template<details::is_canid ID>
+    __always_inline static constexpr CanClassicMsg from_id_and_u64(ID id, const uint64_t payload_bits){
+        return CanClassicMsg(id, payload_bits);
+    }
+
 
     template<details::is_canid ID>
     __always_inline static constexpr CanClassicMsg from_remote(ID id){
@@ -223,6 +228,17 @@ private:
         for(size_t i = dlc_; i < 8; i++){
             payload_bytes_[i] = 0;
         }
+    }
+
+    template<details::is_canid ID>
+    __always_inline constexpr CanClassicMsg(
+        const ID id, 
+        const uint64_t u64_val
+    ) : 
+        CanClassicMsg(id, CanRtr::Data)
+    {
+        dlc_ = 8;
+        payload_bytes_ = std::bit_cast<std::array<uint8_t, 8>>(u64_val);
     }
 
     __always_inline constexpr CanClassicMsg(const uint32_t id_bits, const uint64_t data, const uint8_t dlc):
