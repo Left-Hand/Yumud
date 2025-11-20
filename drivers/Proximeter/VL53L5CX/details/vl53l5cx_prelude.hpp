@@ -443,7 +443,7 @@ struct [[nodiscard]] BlockHeader {
 		return std::span<const uint8_t, 4>(reinterpret_cast<const uint8_t*>(this), 4);
 	} 
 
-	[[nodiscard]] std::span<uint8_t, 4> as_mut_bytes() {
+	[[nodiscard]] std::span<uint8_t, 4> as_bytes_mut() {
 		return std::span<uint8_t, 4>(reinterpret_cast<uint8_t*>(this), 4);
 	} 
 };

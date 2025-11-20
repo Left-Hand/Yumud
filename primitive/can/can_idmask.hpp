@@ -12,14 +12,14 @@ struct [[nodiscard]] _CanIdMaskPair final{
     T id;
     T mask;
 
-    static constexpr _CanIdMaskPair from_accept_all(){
+    static constexpr _CanIdMaskPair accept_all(){
         return _CanIdMaskPair{
             .id = T::from_zero(), 
             .mask = T::from_zero()
         };
     }
 
-    static constexpr _CanIdMaskPair from_reject_all(){
+    static constexpr _CanIdMaskPair reject_all(){
         return _CanIdMaskPair{
             .id = T::from_full(), 
             .mask = T::from_full()

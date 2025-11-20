@@ -25,7 +25,7 @@ void ZdtMotorPhy::uart_write_bytes(
     const std::span<const uint8_t> bytes
 ){
     Buf buf;
-    buf.append_unchecked(id.as_u8());
+    buf.append_unchecked(id.to_u8());
     buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
     buf.append_unchecked(bytes);
 

@@ -54,7 +54,7 @@ IResult<> PCA9685::set_frequency(uint32_t freq, iq16 trim){
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
 
-        reg.as_mut_bits() = uint8_t(reg.as_bits() | uint8_t(0xa1));
+        reg.as_bits_mut() = uint8_t(reg.to_bits() | uint8_t(0xa1));
         clock::delay(5ms);
         return write_reg(reg);
     }
@@ -86,7 +86,7 @@ IResult<> PCA9685::set_pwm(const Nth nth, uint16_t on, uint16_t off){
         reg.full = false;
         reg.cvr = off;
         const auto address = RegAddr(uint8_t(RegAddr::LED0_OFF_L) + 4 * nth.count());
-        if(const auto res = write_reg(address, reg.as_bits());
+        if(const auto res = write_reg(address, reg.to_bits());
             res.is_err()) return res;
     }
 

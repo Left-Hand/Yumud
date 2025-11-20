@@ -70,11 +70,11 @@ struct [[nodiscard]] MessageFrameHeader final{
     [[nodiscard]] constexpr Priority priority() const {
         return Priority(priority_);
     }
-    [[nodiscard]] constexpr uint32_t as_bits() const {
+    [[nodiscard]] constexpr uint32_t to_bits() const {
         return std::bit_cast<uint32_t>(*this);
     }
     constexpr hal::CanExtId to_can_id() const {
-        return hal::CanExtId(as_bits());
+        return hal::CanExtId(to_bits());
     }
 
     [[nodiscard]] NodeId source_id() const {
@@ -103,11 +103,11 @@ struct [[nodiscard]] AnonymousFrameHeader final{
     [[nodiscard]] constexpr Priority priority() const {
         return Priority(priority_);
     }
-    [[nodiscard]] constexpr uint32_t as_bits() const {
+    [[nodiscard]] constexpr uint32_t to_bits() const {
         return std::bit_cast<uint32_t>(*this);
     }
     constexpr hal::CanExtId to_can_id() const {
-        return hal::CanExtId(as_bits());
+        return hal::CanExtId(to_bits());
     }
 
     [[nodiscard]] NodeId source_id() const {
@@ -131,11 +131,11 @@ struct [[nodiscard]] ServiceFrameHeader final{
     [[nodiscard]] constexpr Priority priority() const {
         return Priority(priority_);
     }
-    [[nodiscard]] constexpr uint32_t as_bits() const {
+    [[nodiscard]] constexpr uint32_t to_bits() const {
         return std::bit_cast<uint32_t>(*this);
     }
     constexpr hal::CanExtId to_can_id() const {
-        return hal::CanExtId(as_bits());
+        return hal::CanExtId(to_bits());
     }
 
     constexpr NodeId dest_id() const {
@@ -179,7 +179,7 @@ struct [[nodiscard]] TailByte{
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint8_t as_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const {
         return std::bit_cast<uint8_t>(*this);
     }
 };
@@ -195,7 +195,7 @@ struct Header{
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint32_t as_bits() const {
+    [[nodiscard]] constexpr uint32_t to_bits() const {
         return std::bit_cast<uint32_t>(*this);
     }
 
@@ -210,14 +210,14 @@ struct Header{
         std::is_same_v<T, ServiceFrameHeader>
     )
     [[nodiscard]] constexpr T to_header() const {
-        return T::from_bits(this->as_bits());
+        return T::from_bits(this->to_bits());
     }
     [[nodiscard]] constexpr hal::CanExtId to_can_id() const {
-        return hal::CanExtId(this->as_bits());
+        return hal::CanExtId(this->to_bits());
     }
 
     [[nodiscard]] NodeId source_id() const {
-        return NodeId::from_bits(static_cast<uint8_t>(as_bits() & 0b1111111));
+        return NodeId::from_bits(static_cast<uint8_t>(to_bits() & 0b1111111));
     }
     [[nodiscard]] constexpr Priority priority() const {
         return Priority((bits >> 24) & 0b11111);

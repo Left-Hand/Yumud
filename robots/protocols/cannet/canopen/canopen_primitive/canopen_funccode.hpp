@@ -134,7 +134,7 @@ struct [[nodiscard]] FunctionCode{
         return static_cast<uint8_t>(kind_);
     }
 
-    [[nodiscard]] constexpr uint8_t as_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const {
         return static_cast<uint8_t>(kind_);
     }
 

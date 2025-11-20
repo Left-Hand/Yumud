@@ -182,16 +182,16 @@ end_series:
 template<const size_t Q>
 constexpr fixed_t<Q, int32_t> _IQNatan2(fixed_t<Q, int32_t> iqNInputY, fixed_t<Q, int32_t> iqNInputX){
     return fixed_t<Q, int32_t>::from_bits(__IQNatan2_impl<Q, TYPE_RAD>(
-        (iqNInputY.as_bits()), 
-        (iqNInputX.as_bits()))
+        (iqNInputY.to_bits()), 
+        (iqNInputX.to_bits()))
     );
 }
 
 template<const size_t Q>
 constexpr fixed_t<Q, int32_t> _IQNatan2PU(fixed_t<Q, int32_t> iqNInputY, fixed_t<Q, int32_t> iqNInputX){
     return fixed_t<Q, int32_t>::from_bits(__IQNatan2_impl<Q, TYPE_PU>(
-        (iqNInputY.as_bits()), 
-        (iqNInputX.as_bits()))
+        (iqNInputY.to_bits()), 
+        (iqNInputX.to_bits()))
     );
 }
 

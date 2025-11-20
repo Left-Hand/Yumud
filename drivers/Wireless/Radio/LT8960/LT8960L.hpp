@@ -140,7 +140,7 @@ private:
     template<typename T>
     [[nodiscard]] __fast_inline
     IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
+        if(const auto res = write_reg(T::ADDRESS, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -156,13 +156,13 @@ private:
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
     IResult<> read_regs(Ts & ... reg) {
-        return (phy_.read_reg(reg.ADDRESS, reg.as_mut_bits()) | ...);
+        return (phy_.read_reg(reg.ADDRESS, reg.as_bits_mut()) | ...);
     }
 
     template<typename T>
     [[nodiscard]] __fast_inline
     IResult<> read_reg(T & reg){
-        return phy_.read_reg(reg.ADDRESS, reg.as_mut_bits());
+        return phy_.read_reg(reg.ADDRESS, reg.as_bits_mut());
     }
 
 

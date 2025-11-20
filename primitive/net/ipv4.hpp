@@ -49,9 +49,9 @@ struct [[nodsicard]] Ipv4{
     [[nodiscard]] constexpr std::span<const uint8_t, 4> bytes() const {return std::span(bytes_);}
     [[nodiscard]] constexpr std::span<uint8_t, 4> mut_bytes() {return std::span(bytes_);}
 
-    [[nodiscard]] constexpr uint32_t as_u32() const {return std::bit_cast<uint32_t>(bytes_);}
+    [[nodiscard]] constexpr uint32_t to_u32() const {return std::bit_cast<uint32_t>(bytes_);}
 
-    [[nodiscard]] constexpr bool operator ==(const Self & other){return as_u32() == other.as_u32();}
+    [[nodiscard]] constexpr bool operator ==(const Self & other){return to_u32() == other.to_u32();}
 private:
     alignas(4) std::array<uint8_t, 4> bytes_;
 

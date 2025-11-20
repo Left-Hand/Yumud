@@ -24,8 +24,8 @@ struct [[nodiscard]] CanFilterConfig final{
 public:
     friend class CanFilter;
 
-    static constexpr CanFilterConfig from_accept_all(){
-        return from_pair(CanStdIdMaskPair::from_accept_all());
+    static constexpr CanFilterConfig accept_all(){
+        return from_pair(CanStdIdMaskPair::accept_all());
     }
 
     static constexpr CanFilterConfig from_whitelist(
@@ -38,10 +38,10 @@ public:
                 HALT;
                 break;
             case 2:
-                ret.id16[0] =       std::next(list.begin(), 0) -> as_bits();
-                ret.id16[1] =       std::next(list.begin(), 1) -> as_bits();
-                ret.mask16[0] =     std::next(list.begin(), 2) -> as_bits();
-                ret.mask16[1] =     std::next(list.begin(), 3) -> as_bits();
+                ret.id16[0] =       std::next(list.begin(), 0) -> to_bits();
+                ret.id16[1] =       std::next(list.begin(), 1) -> to_bits();
+                ret.mask16[0] =     std::next(list.begin(), 2) -> to_bits();
+                ret.mask16[1] =     std::next(list.begin(), 3) -> to_bits();
 
                 break;
         }
@@ -54,7 +54,7 @@ public:
     static constexpr CanFilterConfig from_pair(
         const CanStdIdMaskPair & pair
     ){
-        return from_pairs(pair, CanStdIdMaskPair::from_reject_all());
+        return from_pairs(pair, CanStdIdMaskPair::reject_all());
     }
 
     static constexpr CanFilterConfig from_pairs(
@@ -63,10 +63,10 @@ public:
     ){
         CanFilterConfig ret;
 
-        ret.id16[0] = pair1.id.as_bits();
-        ret.id16[1] = pair2.id.as_bits();
-        ret.mask16[0] = pair1.mask.as_bits();
-        ret.mask16[1] = pair2.mask.as_bits();
+        ret.id16[0] = pair1.id.to_bits();
+        ret.id16[1] = pair2.id.to_bits();
+        ret.mask16[0] = pair1.mask.to_bits();
+        ret.mask16[1] = pair2.mask.to_bits();
 
         ret.is_32_ = false;
         ret.is_list_mode_ = false;
@@ -79,8 +79,8 @@ public:
     ){
         CanFilterConfig ret;
 
-        ret.id32 = pair.id.as_bits();
-        ret.mask32 = pair.mask.as_bits();
+        ret.id32 = pair.id.to_bits();
+        ret.mask32 = pair.mask.to_bits();
 
         ret.is_32_ = true;
         ret.is_list_mode_ = false;

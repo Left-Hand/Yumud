@@ -91,7 +91,7 @@ constexpr int32_t __IQNlog(int32_t iqNInput, const int32_t iqNMin)
 
 template<size_t Q>
 constexpr fixed_t<30, int32_t> _IQNlog(fixed_t<Q, int32_t> a){
-    return fixed_t<30, int32_t>::from_bits(__IQNlog<Q>(a.as_bits(), ((Q >= 27) ? _IQNlog_min[Q - 27] : 1)));
+    return fixed_t<30, int32_t>::from_bits(__IQNlog<Q>(a.to_bits(), ((Q >= 27) ? _IQNlog_min[Q - 27] : 1)));
 }
 
 }

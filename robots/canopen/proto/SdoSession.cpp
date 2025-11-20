@@ -63,7 +63,7 @@ struct SdoPacket{
     uint32_t data;
 
     static constexpr SdoPacket from(const CanClassicMsg & msg){
-        return std::bit_cast<SdoPacket>(msg.payload_as_u64());
+        return std::bit_cast<SdoPacket>(msg.payload_u64());
     }
 
     constexpr CanClassicMsg to_canmsg(const CobId id){

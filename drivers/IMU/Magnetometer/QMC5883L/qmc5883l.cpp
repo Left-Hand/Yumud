@@ -68,14 +68,14 @@ IResult<> QMC5883L::set_over_sample_ratio(const OverSampleRatio ratio){
 }
 
 IResult<> QMC5883L::update(){
-    return read_burst(mag_x_reg.ADDRESS, std::span(&mag_x_reg.as_mut_bits(), 3));
+    return read_burst(mag_x_reg.ADDRESS, std::span(&mag_x_reg.as_bits_mut(), 3));
 }
 
 IResult<Vec3<iq24>> QMC5883L::read_mag(){
     return Ok{Vec3<iq24>{
-        iq16::from_bits(mag_x_reg.as_bits()) * scaler_.to_fullscale(),
-        iq16::from_bits(mag_y_reg.as_bits()) * scaler_.to_fullscale(),
-        iq16::from_bits(mag_z_reg.as_bits()) * scaler_.to_fullscale()
+        iq16::from_bits(mag_x_reg.to_bits()) * scaler_.to_fullscale(),
+        iq16::from_bits(mag_y_reg.to_bits()) * scaler_.to_fullscale(),
+        iq16::from_bits(mag_z_reg.to_bits()) * scaler_.to_fullscale()
     }};
 }
 
@@ -83,7 +83,7 @@ IResult<> QMC5883L::validate(){
     if(const auto res = read_reg(chip_id_reg);
         res.is_err()) return res;
 
-    if(chip_id_reg.as_bits() != 0xFF)
+    if(chip_id_reg.to_bits() != 0xFF)
         return Err(Error::InvalidChipId);
     return Ok{};
 }

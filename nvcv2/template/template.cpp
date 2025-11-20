@@ -52,8 +52,8 @@ iq16 template_match_ncc(
 ){
     BOUNDARY_CHECK()
 
-    int32_t t_mean = pixels::mean(tmp).as_u8();
-    int32_t s_mean = pixels::mean(src, Rect2u(offs, tmp.size())).as_u8();
+    int32_t t_mean = pixels::mean(tmp).to_u8();
+    int32_t s_mean = pixels::mean(src, Rect2u(offs, tmp.size())).to_u8();
 
     int64_t num = 0;
     uint64_t den_t = 0;
@@ -66,8 +66,8 @@ iq16 template_match_ncc(
         int32_t line_num = 0;
 
         for(auto x = 0u; x < tmp.size().x; x++){
-            int32_t tmp_val = int32_t(p_tmp->as_u8()) - t_mean;
-            int32_t src_val = int32_t(p_src->as_u8()) - s_mean;
+            int32_t tmp_val = int32_t(p_tmp->to_u8()) - t_mean;
+            int32_t src_val = int32_t(p_src->to_u8()) - s_mean;
 
             line_num += ((tmp_val * src_val));
             den_t += square(tmp_val);
@@ -102,8 +102,8 @@ iq16 template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, const 
 
         uint32_t line_num = 0;
         for(auto x = 0u; x < tmp.size().x; x++){
-            int32_t tmp_val = p_tmp->as_u8();
-            int32_t src_val = p_src->as_u8();
+            int32_t tmp_val = p_tmp->to_u8();
+            int32_t src_val = p_src->to_u8();
 
             line_num += square(tmp_val - src_val);
 

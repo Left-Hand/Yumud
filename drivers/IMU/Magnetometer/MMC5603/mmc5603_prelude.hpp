@@ -43,13 +43,13 @@ struct MMC5603_Regset:public MMC5603_Prelude {
 
 
 
-    struct AxisReg:public Reg16<>{
+    struct R16_Axis:public Reg16<>{
 
         uint8_t data_h;
         uint8_t data_l;
     };
 
-    struct ExtAxisReg:public Reg8<>{
+    struct R8_ExtAxis:public Reg8<>{
         static constexpr RegAddr ADDRESS_x = 0x06;
         static constexpr RegAddr ADDRESS_y = 0x07;
         static constexpr RegAddr ADDRESS_z = 0x08;
@@ -58,7 +58,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t data:4;
     };
 
-    struct TempReg:public Reg8<>{
+    struct R8_Temp:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x09;
         uint8_t :8;
         operator int() const {
@@ -66,7 +66,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         }
     };
 
-    struct Status1Reg:public Reg8<>{
+    struct R8_Status1:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x18;
 
         uint8_t:4;
@@ -77,14 +77,14 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t temp_measure_done:1;
     };
 
-    struct OdrReg:public Reg8<>{
+    struct R8_Odr:public Reg8<>{
 
 
         static constexpr RegAddr ADDRESS = 0x1a;
         DataRate data_rate;
     };
 
-    struct Ctrl0Reg:public Reg8<>{
+    struct R8_Ctrl0:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x1B;
 
         uint8_t do_mag_measure:1;
@@ -98,7 +98,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t cmm_freq_en:1;
     };
 
-    struct Ctrl1Reg:public Reg8<>{
+    struct R8_Ctrl1:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x1C;
 
         uint8_t bandwidth:2;
@@ -111,7 +111,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t sw_reset:1;
     };
 
-    struct Ctrl2Reg:public Reg8<>{
+    struct R8_Ctrl2:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x1D;
 
         //These bits determine how many measurements are done before a set is executed, when the 
@@ -127,48 +127,46 @@ struct MMC5603_Regset:public MMC5603_Prelude {
         uint8_t high_pwr:1;
     };
 
-    struct AxisSelfTestXReg:public Reg8<>{
+    struct R8_AxisSelfTestX:public Reg8<>{
 
         static constexpr RegAddr ADDRESS = 0x1e;
         uint8_t :8;
     };
 
-    struct AxisSelfTestYReg:public Reg8<>{
+    struct R8_AxisSelfTestY:public Reg8<>{
 
         static constexpr RegAddr ADDRESS = 0x1f;
         uint8_t :8;
     };
 
-    struct AxisSelfTestZReg:public Reg8<>{
+    struct R8_AxisSelfTestZ:public Reg8<>{
 
         static constexpr RegAddr ADDRESS = 0x20;
         uint8_t :8;
     };
-    struct ProductIdReg:public Reg8<>{
+    struct R8_ProductId:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x39;
         static constexpr uint8_t correct_id = 0b00010000;
         
         uint8_t id;
     };
 
-    AxisReg x_reg;
-    AxisReg y_reg;
-    AxisReg z_reg;
-    ExtAxisReg x_ext_reg;
-    ExtAxisReg y_ext_reg;
-    ExtAxisReg z_ext_reg;
-    TempReg temp_reg;
-    Status1Reg stat_reg;
-
-    OdrReg odr_reg;
-    Ctrl0Reg ctrl0_reg;
-    Ctrl1Reg ctrl1_reg;
-    Ctrl2Reg ctrl2_reg;
-
-    AxisSelfTestXReg x_st_reg;
-    AxisSelfTestYReg y_st_reg;
-    AxisSelfTestZReg z_st_reg;
-    ProductIdReg product_id_reg;
+    R16_Axis x_reg;
+    R16_Axis y_reg;
+    R16_Axis z_reg;
+    R8_ExtAxis x_ext_reg;
+    R8_ExtAxis y_ext_reg;
+    R8_ExtAxis z_ext_reg;
+    R8_Temp temp_reg;
+    R8_Status1 stat_reg;
+    R8_Odr odr_reg;
+    R8_Ctrl0 ctrl0_reg;
+    R8_Ctrl1 ctrl1_reg;
+    R8_Ctrl2 ctrl2_reg;
+    R8_AxisSelfTestX x_st_reg;
+    R8_AxisSelfTestY y_st_reg;
+    R8_AxisSelfTestZ z_st_reg;
+    R8_ProductId product_id_reg;
 
 };
 

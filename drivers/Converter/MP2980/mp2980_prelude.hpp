@@ -89,8 +89,8 @@ struct MP2980_Regs:public MP2980_Prelude{
 
         RefReg & set(const uint16_t _data){
             auto & self = *this;
-            self.as_mut_bytes()[0] = uint8_t(_data & 0b111);
-            self.as_mut_bytes()[1] = uint8_t(_data >> 3);
+            self.as_bytes_mut()[0] = uint8_t(_data & 0b111);
+            self.as_bytes_mut()[1] = uint8_t(_data >> 3);
 
             return *this;
         }

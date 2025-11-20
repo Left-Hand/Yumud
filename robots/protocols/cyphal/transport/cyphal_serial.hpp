@@ -60,13 +60,13 @@ alignas(4) struct [[nodiscard]]Header{
         return std::span<const uint8_t, 24>(reinterpret_cast<const uint8_t *>(this), 24);
     }
 
-    [[nodiscard]] constexpr std::span<uint8_t, 24> as_mut_bytes() {
+    [[nodiscard]] constexpr std::span<uint8_t, 24> as_bytes_mut() {
         return std::span<uint8_t, 24>(reinterpret_cast<uint8_t *>(this), 24);
     }
 
     constexpr Self from_bytes(const std::span<const uint8_t, 24> bytes){
         for(size_t i = 0; i < 24; i++){
-            as_mut_bytes()[i] = bytes[i];
+            as_bytes_mut()[i] = bytes[i];
         }
     }
 

@@ -158,7 +158,7 @@ struct ADS7830_Prelude{
         const PowerDownSel pd:2;
         const PairSelection::Kind sel:4;
 
-        [[nodiscard]] constexpr uint8_t as_u8() const {
+        [[nodiscard]] constexpr uint8_t to_u8() const {
             return std::bit_cast<uint8_t>(*this);
         }
     };
@@ -180,7 +180,7 @@ public:
     IResult<ConvData> fs_read(const CommandByte cmd){
         ConvData ret;
         if(const auto res = i2c_drv_.read_reg(
-            cmd.as_u8(),
+            cmd.to_u8(),
             ret 
         ); res.is_err()) return Err(res.unwrap_err());
 

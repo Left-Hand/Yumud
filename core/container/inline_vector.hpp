@@ -40,7 +40,7 @@ public:
     {
         // Use an index sequence to properly forward each argument to the corresponding element
         [&]<size_t... Is>(std::index_sequence<Is...>) {
-            ((new (&buf_[Is]) T(std::forward<Ts>(args))), ...);
+            ((buf_[Is] =  T(std::forward<Ts>(args))), ...);
         }(std::make_index_sequence<N>{});
     }
 
@@ -146,7 +146,7 @@ public:
         return N;
     }
 
-    [[nodiscard]] constexpr bool empty() const noexcept {
+    [[nodiscard]] constexpr bool is_empty() const noexcept {
         return size_ == 0;
     }
 
@@ -219,13 +219,14 @@ public:
     }
 
     constexpr void pop_back() {
+        if(size_ == 0) [[unlikely]]
+            __builtin_trap();
         buf_[--size_].~T();
     }
 
     constexpr void clear() {
-        while (size_ > 0) {
-            pop_back();
-        }
+        std::destroy_n(buf_, size_);
+        size_ = 0;
     }
 
     // 迭代器 - constexpr

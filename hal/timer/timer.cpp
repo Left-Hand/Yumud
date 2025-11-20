@@ -236,7 +236,7 @@ void BasicTimer::set_count_mode(const TimerCountMode mode){
     auto tmpcr1 = inst_->CTLR1;
 
     tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_DIR | TIM_CMS)));
-    tmpcr1 |= (mode.as_bits() << 4);
+    tmpcr1 |= (mode.to_bits() << 4);
 
     tmpcr1 &= (uint16_t)(~((uint16_t)TIM_CTLR1_CKD));
     tmpcr1 |= (uint32_t)TIM_CKD_DIV1;
@@ -308,7 +308,7 @@ void GenericTimer::init_as_encoder(const CountMode mode){
     {
         const TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
             .TIM_Prescaler = 0,
-            .TIM_CounterMode = static_cast<uint16_t>(mode.as_bits() << 4),
+            .TIM_CounterMode = static_cast<uint16_t>(mode.to_bits() << 4),
             .TIM_Period = 65535,
             .TIM_ClockDivision = TIM_CKD_DIV1,
             .TIM_RepetitionCounter = 0,

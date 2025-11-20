@@ -81,7 +81,7 @@ struct TM1650_Prelude{
             return {uint8_t(0x68 + (idx << 1))};
         }
 
-        constexpr uint8_t as_bits() const {return addr;}
+        constexpr uint8_t to_bits() const {return addr;}
         const uint8_t addr;
     };
 
@@ -94,7 +94,7 @@ struct TM1650_Prelude{
         uint8_t lim:3;
         const uint8_t __resv2__:1 = 0b0;
 
-        constexpr uint8_t as_bits() const {return *reinterpret_cast<const uint8_t *>(this);}
+        constexpr uint8_t to_bits() const {return *reinterpret_cast<const uint8_t *>(this);}
     };
 
     static_assert(sizeof(DisplayCommand) == 1);
@@ -127,7 +127,7 @@ public:
 
         for(size_t i = 0; i < pbuf.size(); i++){
             if(const auto res = write_u8x2(
-                AddressCommand::from_idx(i).as_bits(),
+                AddressCommand::from_idx(i).to_bits(),
                 pbuf[i]
             ); res.is_err()) return Err(res.unwrap_err());
         }
@@ -153,7 +153,7 @@ public:
     }
 private:
     [[nodiscard]] IResult<> write_display_cmd(const DisplayCommand cmd){
-        return write_u8x2(uint8_t(DataCommand::MODE_CMD), cmd.as_bits());
+        return write_u8x2(uint8_t(DataCommand::MODE_CMD), cmd.to_bits());
     }
 
     [[nodiscard]] IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){

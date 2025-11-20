@@ -41,8 +41,8 @@ struct [[nodiscard]] SphericalCoordinates{
         
         return Self{
             .distance = length,
-            .azimuth = Angle<T>::from_radian(azimuth_rad),
-            .elevation = Angle<T>::from_radian(elevation_rad)
+            .azimuth = Angle<T>::from_radians(azimuth_rad),
+            .elevation = Angle<T>::from_radians(elevation_rad)
         };
     }
 
@@ -64,8 +64,8 @@ struct [[nodiscard]] SphericalCoordinates{
     friend OutputStream & operator <<(OutputStream & os, const Self & self){
         return os    
             << os.field("distance")(self.distance) << os.splitter()
-            << os.field("azimuth")(self.azimuth.to_radian()) << os.splitter()
-            << os.field("elevation")(self.elevation.to_radian())
+            << os.field("azimuth")(self.azimuth.to_radians()) << os.splitter()
+            << os.field("elevation")(self.elevation.to_radians())
         ;
     }
 };

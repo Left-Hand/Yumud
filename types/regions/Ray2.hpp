@@ -65,7 +65,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr Line2<T> normal() const{
-        return Line2<T>::from_point_and_angle(this->org, this->orientation + Angle<T>::from_radian(T(PI/2)));
+        return Line2<T>::from_point_and_angle(this->org, this->orientation + Angle<T>::from_radians(T(PI/2)));
     }
 
     [[nodiscard]] __fast_inline constexpr Ray2<T> rotated(const Angle<T> angle) const{

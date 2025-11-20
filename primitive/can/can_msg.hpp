@@ -25,17 +25,23 @@ public:
 
     template<details::is_canid ID>
     __always_inline static constexpr CanClassicMsg from_empty(ID id){
-        return from_unitialized(id, CanClassicDlc::from_zero());
+        return from_uninitialized(id, CanClassicDlc::from_zero());
     }
 
 
     template<details::is_canid ID>
-    __always_inline static constexpr CanClassicMsg from_unitialized(ID id, const CanClassicDlc dlc){
+    __always_inline static constexpr CanClassicMsg from_uninitialized(
+        ID id, 
+        const CanClassicDlc dlc
+    ){
         return CanClassicMsg(id, dlc);
     }
 
     template<details::is_canid ID>
-    __always_inline static constexpr CanClassicMsg from_id_and_u64(ID id, const uint64_t payload_bits){
+    __always_inline static constexpr CanClassicMsg from_id_and_payload_u64(
+        ID id, 
+        const uint64_t payload_bits
+    ){
         return CanClassicMsg(id, payload_bits);
     }
 
@@ -82,18 +88,14 @@ public:
 
     template<details::is_canid ID, typename Iter>
     requires is_next_based_iter_v<Iter>
-    static constexpr Option<CanClassicMsg> from_iter(ID id, Iter iter) {
+    static constexpr Option<CanClassicMsg> try_from_iter(ID id, Iter iter) {
         std::array<uint8_t, 8> buf{};
         size_t len = 0;
         
-        while(iter.has_next() && len < buf.size()) {
+        while(iter.has_next()) {
             buf[len] = iter.next();
             len++;
-        }
-        
-        // 检查是否还有剩余数据未读取
-        if(iter.has_next()) {
-            return None;  // 数据太长，无法放入8字节缓冲区
+            if(len >= 8) return None;
         }
         
         // 使用数组视图构造CanMsg
@@ -102,7 +104,7 @@ public:
 
     template<details::is_canid ID, typename Iter>
     requires is_next_based_iter_v<Iter>
-    __always_inline static constexpr CanClassicMsg from_iter_unchecked(ID id, Iter iter) {
+    __always_inline static constexpr CanClassicMsg from_iter(ID id, Iter iter) {
         std::array<uint8_t, 8> buf{};
         size_t len = 0;
         
@@ -115,6 +117,8 @@ public:
         return CanClassicMsg::from_bytes(id, std::span{buf.data(), len});
     }
 
+
+    /// \brief (SXX32专属)直接获取载荷的数据长度
     __always_inline static constexpr CanClassicMsg from_sxx32_regs(
         uint32_t id_bits, 
         uint64_t payload, 
@@ -122,6 +126,7 @@ public:
     ){
         return CanClassicMsg(id_bits, payload, len);}
 
+    /// \brief 直接获取载荷的数据长度
     [[nodiscard]] __always_inline constexpr size_t length() const {return dlc().length();}
     [[nodiscard]] __always_inline constexpr CanClassicDlc dlc() const {
         return CanClassicDlc::from_bits(dlc_);}
@@ -130,25 +135,49 @@ public:
         return *this;
     }
 
+    /// \brief 直接获取载荷的数据而不检查
     [[nodiscard]] __always_inline constexpr uint8_t operator[](size_t idx) const {return payload_bytes_[idx];}
+
+    /// \brief 直接获取载荷的可变数据而不检查
     [[nodiscard]] __always_inline constexpr uint8_t & operator[](size_t idx) {return payload_bytes_[idx];}
+
+    /// \brief 获取载荷的数据 如超界则立即终止
     [[nodiscard]] __always_inline constexpr uint8_t at(size_t idx) const {
-        if(idx >= length()) __builtin_trap();
-        return payload_bytes_[idx];
-    }
-    [[nodiscard]] __always_inline constexpr uint8_t & at(size_t idx) {
-        if(idx >= length()) __builtin_trap();
+        if(idx >= length()) [[unlikely]]
+            __builtin_trap();
         return payload_bytes_[idx];
     }
 
+    /// \brief 获取载荷的可变数据 如超界则立即终止
+    [[nodiscard]] __always_inline constexpr uint8_t & at(size_t idx) {
+        if(idx >= length()) [[unlikely]]
+            __builtin_trap();
+        return payload_bytes_[idx];
+    }
+
+
+    /// \brief 获取载荷的可变数据 如超界则使使用备选值
+    [[nodiscard]] __always_inline constexpr uint8_t at_or(size_t idx, uint8_t other) const {
+        if(idx >= length()) [[unlikely]]
+            return other;
+        return payload_bytes_[idx];
+    }
+
+    /// \brief 获取载荷的切片
     [[nodiscard]] __always_inline constexpr std::span<const uint8_t> payload_bytes() const{
         return std::span(payload_bytes_.data(), length());
     }
 
+    /// \brief 获取载荷的可变切片
+    [[nodiscard]] __always_inline constexpr std::span<uint8_t> payload_bytes_mut() {
+        return std::span(payload_bytes_.data(), length());
+    }
+
+    /// @brief 设置载荷数据，同时修改报文长度。如果数据超长立即终止
     __always_inline constexpr void set_payload_bytes(
         std::span<const uint8_t> bytes
     ) {
-        if(bytes.size() > 8)
+        if(bytes.size() > 8) [[unlikely]]
             __builtin_trap();
         dlc_ = bytes.size();
         std::copy(bytes.begin(), bytes.end(), payload_bytes_.begin());
@@ -160,17 +189,6 @@ public:
         payload_bytes_ = std::bit_cast<std::array<uint8_t, 8>>(int_val);
     }
 
-    [[nodiscard]] __always_inline constexpr std::span<uint8_t> mut_payload_bytes() {
-        return std::span(payload_bytes_.data(), length());
-    }
-
-    // template<size_t N>
-    // requires (N <= 8)
-    // [[nodiscard]] __always_inline constexpr std::span<const uint8_t, N> payload_bytes_sized() const{
-    //     if(N > length())
-    //         __builtin_abort();
-    //     return std::span<const uint8_t, N>(payload_bytes_.data(), N);
-    // }
 
     /// @brief 是否为标准帧 
     [[nodiscard]] __always_inline constexpr bool is_standard() const {
@@ -186,34 +204,26 @@ public:
     [[nodiscard]] __always_inline constexpr bool is_remote() const {
         return identifier_.is_remote();
     }
+
+    /// @brief 邮箱编号
     [[nodiscard]] __always_inline constexpr uint8_t mailbox() const {
         return mbox_;
     }
 
-    [[nodiscard]] __always_inline constexpr uint32_t id_as_u32() const {
-        return identifier_.id_as_u32();
+    /// @brief 不顾帧格式直接获取id的数据大小
+    [[nodiscard]] __always_inline constexpr uint32_t id_u32() const {
+        return identifier_.id_u32();
     }
 
-    [[nodiscard]] __always_inline constexpr uint64_t payload_as_u64() const {
+    /// @brief 不顾帧长度直接获取载荷的64位数据
+    [[nodiscard]] __always_inline constexpr uint64_t payload_u64() const {
         return std::bit_cast<uint64_t>(payload_bytes_);
     }
 
-    [[nodiscard]] __always_inline constexpr auto sxx32_identifier() const {
+    /// @brief 获取首部标识符
+    [[nodiscard]] __always_inline constexpr auto identifier() const {
         return identifier_;
     }
-
-    [[nodiscard]] constexpr Option<hal::CanStdId> stdid() const {
-        if(not identifier_.is_standard()) return None;
-        return Some(hal::CanStdId(identifier_.id_as_u32()));
-    }
-
-    [[nodiscard]] constexpr Option<hal::CanExtId> extid() const {
-        if(not identifier_.is_extended()) return None;
-        return Some(hal::CanExtId(identifier_.id_as_u32()));
-    }
-
-
-
 private:
     template<details::is_canid ID>
     __always_inline constexpr CanClassicMsg(

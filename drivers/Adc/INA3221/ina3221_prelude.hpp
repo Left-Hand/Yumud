@@ -176,13 +176,13 @@ struct INA3221_Regs:public INA3221_Prelude {
         int16_t : 16;
 
         constexpr real_t to_volt() const {
-            return iq24(iq16(this->as_bits() >> 3) / 25) / 1000;
-            // return real_t(this->as_bits());
+            return iq24(iq16(this->to_bits() >> 3) / 25) / 1000;
+            // return real_t(this->to_bits());
         }
 
         constexpr int to_uv() const {
-            return ((this->as_bits() >> 3) * 40);
-            // return (this->as_bits());
+            return ((this->to_bits() >> 3) * 40);
+            // return (this->to_bits());
         }
 
         static constexpr int16_t to_i16(const real_t volt){
@@ -206,11 +206,11 @@ struct INA3221_Regs:public INA3221_Prelude {
         int16_t : 16;
 
         constexpr real_t to_volt() const {
-            return real_t((int16_t(this->as_bits()) >> 3) * 8) / 1000;
+            return real_t((int16_t(this->to_bits()) >> 3) * 8) / 1000;
         }
 
         constexpr int to_mv() const {
-            return int16_t((int16_t(this->as_bits()) >> 3) * 8);
+            return int16_t((int16_t(this->to_bits()) >> 3) * 8);
         }
 
         static constexpr int16_t to_i16(const real_t volt){

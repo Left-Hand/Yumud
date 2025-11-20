@@ -10,15 +10,15 @@
 
 #include "core/magic/serialize_traits.hpp"
 #include "core/magic/enum_traits.hpp"
-#include "rust_enum.hpp"
+#include "core/tmp/implfor.hpp"
 
+#include "rust_enum.hpp"
 
 using namespace ymd;
 
 
 namespace ymd{
-template<typename Trait, typename Obj>
-struct ImplFor{};
+
 
 template<typename Protocol>
 struct SerializeAs;
@@ -63,7 +63,7 @@ struct ImplFor<DeserializeFrom<RawBytes>, D> {
 template<size_t Q>
 struct ImplFor<SerializeAs<RawBytes>, fixed_t<Q, int32_t>> {
     static constexpr std::array<uint8_t, 4> serialize(const fixed_t<Q, int32_t> obj){
-        return ImplFor<SerializeAs<RawBytes>, int32_t>::serialize(obj.as_bits());
+        return ImplFor<SerializeAs<RawBytes>, int32_t>::serialize(obj.to_bits());
     }
 };
 

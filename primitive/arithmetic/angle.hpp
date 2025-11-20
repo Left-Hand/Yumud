@@ -85,7 +85,7 @@ struct [[nodiscard]] Angle{
 		return make_angle_from_turns(static_cast<T>(degrees / 360));
 	}
 
-	static constexpr Angle from_radian(const T radian){
+	static constexpr Angle from_radians(const T radian){
 		constexpr T INV_TAU = static_cast<T>(1.0 / (2.0 * 3.1415926535897932384626433832795));
 		return make_angle_from_turns(radian * INV_TAU);
 	}
@@ -108,7 +108,7 @@ struct [[nodiscard]] Angle{
 		return turns_ * 360;
 	}
 
-	[[nodiscard]] constexpr T to_radian() const{
+	[[nodiscard]] constexpr T to_radians() const{
 		return turns_ * static_cast<T>(TAU);
 	}
 
@@ -138,7 +138,7 @@ struct [[nodiscard]] Angle{
 	}
 
 	[[nodiscard]] constexpr auto tan() const{
-		return tan(to_radian());
+		return tan(to_radians());
 	}
 
 	constexpr Angle forward_angle_to(const Angle& target) const {
@@ -290,11 +290,11 @@ consteval Angle<real_t> operator"" _deg(uint64_t x){
 }
 
 consteval Angle<real_t> operator"" _rad(long double x){
-    return Angle<real_t>::from_radian(static_cast<real_t>(x));
+    return Angle<real_t>::from_radians(static_cast<real_t>(x));
 }
 
 consteval Angle<real_t> operator"" _rad(uint64_t x){
-    return Angle<real_t>::from_radian(static_cast<real_t>(x));
+    return Angle<real_t>::from_radians(static_cast<real_t>(x));
 }
 
 consteval Angle<real_t> operator"" _turn(long double x){

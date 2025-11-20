@@ -12,7 +12,7 @@ void Sequencer::rotate(Curve & curve, const Ray2<iq16> & from, const Angle<iq16>
     const TrapezoidSolver<iq16> solver{
         {limits_.max_agr, 
         limits_.max_gyr}, 
-        (end_angle - from.orientation).abs().to_radian() 
+        (end_angle - from.orientation).abs().to_radians() 
     };
 
     const bool inv = end_angle < from.orientation;
@@ -23,7 +23,7 @@ void Sequencer::rotate(Curve & curve, const Ray2<iq16> & from, const Angle<iq16>
     
     for(size_t i = 0; i < n; i++){
         const auto t_val = iq16(i) / freq;
-        const auto orientation = Angle<iq16>::from_radian(solver.forward(t_val));
+        const auto orientation = Angle<iq16>::from_radians(solver.forward(t_val));
         curve.emplace_back(from.rotated(inv ? -orientation : orientation));
     }
 }

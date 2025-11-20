@@ -27,7 +27,7 @@ struct [[nodiscard]] Polar{
     friend OutputStream & operator <<(OutputStream & os, const Self & self){
         return os    
             << os.field("amplitude")(self.amplitude) << os.splitter()
-            << os.field("phase")(self.phase.to_radian())
+            << os.field("phase")(self.phase.to_radians())
         ;
     }
 };

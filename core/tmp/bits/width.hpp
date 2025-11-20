@@ -1,8 +1,6 @@
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
-#include <type_traits>
+#include "../tmp_primitive.hpp"
 
 namespace ymd::tmp{
 

@@ -97,7 +97,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
+        if(const auto res = write_reg(T::ADDRESS, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -105,7 +105,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(T::ADDRESS, reg.as_mut_bits());
+        return read_reg(T::ADDRESS, reg.as_bits_mut());
     }
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t data);
@@ -119,7 +119,7 @@ private:
 
     [[nodiscard]] IResult<> write_by_mask(const hal::PinMask mask) {
         buf_mask_ = mask;
-        return write_reg(RegAddr::Out, buf_mask_.as_u16());
+        return write_reg(RegAddr::Out, buf_mask_.to_u16());
     }
 
     [[nodiscard]] IResult<hal::PinMask> read_mask() {

@@ -75,7 +75,7 @@ IResult<> LT8960L::enable_autoack(const Enable en){
 IResult<> LT8960L::wake(){
     // 第二步：写0x38寄存器0xBFFE//唤醒射频防止射频正处在SLEEP状态。
     // 第三步：写0x38寄存器0xBFFD//执行复位操作
-    regs_.i2c_oper_reg.as_mut_bits() = 0xBFFE;
+    regs_.i2c_oper_reg.as_bits_mut() = 0xBFFE;
     if(const auto res = write_reg(0x38, 0xBFFE);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = write_reg(0x38, 0xBFFD);
@@ -102,7 +102,7 @@ IResult<> LT8960L::set_tx_power(const LT8960L::Power power){
     }(power);
 
     auto reg = RegCopy(regs_.pa_config_reg);
-    reg.as_mut_bits() = code;
+    reg.as_bits_mut() = code;
     return write_reg(reg);
 }
 
@@ -298,10 +298,10 @@ IResult<> LT8960L::enable_gain_weaken(const Enable en){
 IResult<> LT8960L::ensure_correct_0x08(){
 auto reg = RegCopy(regs_.reg8);
     if((!on_ble_) and datarate_ == DataRate::_62_5K){
-        if(reg.as_bits() != 0x6c50) reg.as_mut_bits() = 0x6c50;
+        if(reg.to_bits() != 0x6c50) reg.as_bits_mut() = 0x6c50;
         return write_reg(reg);
     }else{
-        if(reg.as_bits() != 0x6c90) reg.as_mut_bits() = 0x6c90;
+        if(reg.to_bits() != 0x6c90) reg.as_bits_mut() = 0x6c90;
         return write_reg(reg);
     }
 }
@@ -440,7 +440,7 @@ IResult<> LT8960L::set_rf_channel(const Channel ch, const bool tx, const bool rx
 auto reg = RegCopy(regs_.rf_config_reg);
     reg.tx_en = tx;
     reg.rx_en = rx;
-    reg.rf_channel_no = ch.as_u8();
+    reg.rf_channel_no = ch.to_u8();
     return write_reg(reg);
 }
 

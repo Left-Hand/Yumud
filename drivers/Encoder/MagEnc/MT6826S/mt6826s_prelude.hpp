@@ -70,7 +70,7 @@ struct Packet{
     Status status;
     uint8_t crc;
 
-    [[nodiscard]] std::span<uint8_t, 4> as_mut_bytes() {
+    [[nodiscard]] std::span<uint8_t, 4> as_bytes_mut() {
         return std::span<uint8_t, 4>(reinterpret_cast<uint8_t *>(this), 4);
     }
 
@@ -110,7 +110,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         const auto address = T::ADDRESS;
-        const uint8_t data = reg.as_bits();
+        const uint8_t data = reg.to_bits();
         const auto tx = uint16_t(
             0x8000 | (std::bit_cast<uint8_t>(address) << 8) | data);
         if(const auto res = spi_drv_.write_single<uint16_t>(tx);

@@ -16,7 +16,7 @@ static constexpr Angle<uq32> u12_to_angle(const uint16_t data){
 }
 
 static constexpr uint16_t angle_to_u12(const Angle<uq32> angle){
-    return uq16(angle.to_turns()).as_bits() >> 4; 
+    return uq16(angle.to_turns()).to_bits() >> 4; 
 }
 
 IResult<> Self::set_power_mode(const PowerMode power_mode){

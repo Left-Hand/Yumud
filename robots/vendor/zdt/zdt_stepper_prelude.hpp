@@ -25,7 +25,7 @@ struct [[nodiscard]] NodeId{
     static constexpr NodeId from_u8(uint8_t bits) {
         return NodeId{bits};
     }
-    [[nodiscard]] constexpr uint8_t as_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const {
         return count;
     }
 };
@@ -160,7 +160,7 @@ private:
         const uint8_t piece
     ){
         return hal::CanExtId(
-            uint32_t(nodeid.as_u8() << 8) | 
+            uint32_t(nodeid.to_u8() << 8) | 
             (piece)
         );
     }
@@ -233,13 +233,13 @@ struct [[nodiscard]] CanMsg2BytesDumper{
     static inline constexpr uint8_t map_msg_to_nodeid(
         const hal::CanClassicMsg & msg
     ){
-        return msg.extid().unwrap().to_u29() >> 8;
+        return msg.identifier().try_to_extid().unwrap().to_u29() >> 8;
     }
 
     static inline constexpr uint8_t map_msg_to_piececnt(
         const hal::CanClassicMsg & msg
     ){
-        return msg.extid().unwrap().to_u29() & 0xff;
+        return msg.identifier().try_to_extid().unwrap().to_u29() & 0xff;
     }
 
 };
@@ -300,7 +300,7 @@ struct [[nodiscard]] Rpm final{
         const uint16_t temp = uint16_t(iq16(speed) * 600);
         return {BSWAP_16(temp)};
     }
-    constexpr uint16_t as_u16() const {
+    constexpr uint16_t to_u16() const {
         return raw_;
     }
 
@@ -322,7 +322,7 @@ struct [[nodiscard]] PulseCnt final{
         return from_position(angle.to_turns());
     }
 
-    constexpr uint32_t as_u32() const {
+    constexpr uint32_t to_u32() const {
         return raw_;
     }
 

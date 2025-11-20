@@ -266,7 +266,7 @@ private:
         ){
             if(not is_idle(now)) 
                 return Err(map_currtask_to_err(may_tasks_.value()));
-            may_tasks_.emplace(Tasks(StoreTask(begin.as_u32(), pbuf, gsize.as_u32())));
+            may_tasks_.emplace(Tasks(StoreTask(begin.to_u32(), pbuf, gsize.to_u32())));
             return Ok();
         }
 
@@ -279,7 +279,7 @@ private:
         ){
             if(not is_idle(now)) 
                 return Err(map_currtask_to_err(may_tasks_.value()));
-            may_tasks_.emplace(Tasks(LoadTask(begin.as_u32(), pbuf, gsize.as_u32())));
+            may_tasks_.emplace(Tasks(LoadTask(begin.to_u32(), pbuf, gsize.to_u32())));
             return Ok();
         }
 

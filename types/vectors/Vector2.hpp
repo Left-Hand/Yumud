@@ -207,7 +207,7 @@ struct [[nodiscard]] Vec2{
         while (diff > T(PI)) diff -= T(2 * PI);
         while (diff <= -T(PI)) diff += T(2 * PI);
         
-        return Angle<T>::from_radian(diff);
+        return Angle<T>::from_radians(diff);
     }
 
     [[nodiscard]] constexpr T aspect() const {return (!!y) ? x/y : T(0);}

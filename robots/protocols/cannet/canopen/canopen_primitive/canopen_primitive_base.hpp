@@ -26,11 +26,12 @@ struct [[nodiscard]] NodeId{
         return NodeId{static_cast<uint8_t>(bits & 0b1111111)};
     }
 
-    static constexpr NodeId from_bits(const uint8_t bits){
-        return from_u7(bits);
+    static constexpr Option<NodeId> try_from_bits(const uint8_t bits){
+        if(bits & 0b10000000) return None;
+        return Some(from_u7(bits));
     }
 
-    static constexpr NodeId from_boardcast(){
+    static constexpr NodeId boardcast(){
         return from_u7(0);
     }
 
@@ -78,7 +79,11 @@ struct [[nodiscard]] CobId{
         return CobId(bits);
     }
 
-    [[nodiscard]] constexpr uint16_t as_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const {
+        return std::bit_cast<uint16_t>(*this);
+    }
+
+    [[nodiscard]] constexpr uint16_t to_u11() const {
         return std::bit_cast<uint16_t>(*this);
     }
 
@@ -87,7 +92,7 @@ struct [[nodiscard]] CobId{
     }
 
     constexpr NodeId node_id() const {
-        return NodeId::from_bits(nodeid_);
+        return NodeId::from_u7(nodeid_);
     }
 
 
@@ -136,7 +141,7 @@ struct OdPreIndex{
         return Self{bits};
     }
 
-    [[nodiscard]] constexpr uint16_t as_bits() const{
+    [[nodiscard]] constexpr uint16_t to_bits() const{
         return count;
     }
 
@@ -155,7 +160,7 @@ struct OdSubIndex{
         return Self{bits};
     }
 
-    [[nodiscard]] constexpr uint8_t as_bits() const{
+    [[nodiscard]] constexpr uint8_t to_bits() const{
         return count;
     }
 

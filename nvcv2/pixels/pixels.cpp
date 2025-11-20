@@ -61,13 +61,13 @@ namespace ymd::nvcv2::pixels{
     void dyeing(Image<Gray>& dst, const Image<Gray>& src){
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = Gray::from_u8(lcg[src[Vec2u{x, y}].as_u8()]);
+                dst[Vec2u{x, y}] = Gray::from_u8(lcg[src[Vec2u{x, y}].to_u8()]);
             }
         }
     }
 
     Gray dyeing(const Gray in){
-        return Gray::from_u8(lcg[in.as_u8()]);
+        return Gray::from_u8(lcg[in.to_u8()]);
     }
 
     auto dyeing(const Image<Gray>& src){
@@ -102,7 +102,7 @@ namespace ymd::nvcv2::pixels{
         cnt_map.fill(0);
         
         for(auto cnt = 0u; cnt < size.x * size.y; cnt++){
-            statics[src[cnt].as_u8()]++;
+            statics[src[cnt].to_u8()]++;
             cnt++;
         }
         
@@ -165,7 +165,7 @@ namespace ymd::nvcv2::pixels{
         cnt_map.fill(0);
         
         for(auto cnt = 0u; cnt < size.x * size.y; cnt++){
-            statics[src[cnt].as_u8()]++;
+            statics[src[cnt].to_u8()]++;
             cnt++;
         }
         
@@ -215,7 +215,7 @@ namespace ymd::nvcv2::pixels{
         Histogram hist;
 
         for(uint cnt = 0; cnt < size.x * size.y; cnt++){
-            hist[src[cnt].as_u8()]++;
+            hist[src[cnt].to_u8()]++;
             cnt++;
         }
 
@@ -328,7 +328,7 @@ namespace ymd::nvcv2::pixels{
             // DEBUG_VALUE(size);
         for(size_t i = 0u; i < size.x * size.y; i++){
             // DEBUG_VALUE(src[i]);
-            hist[src[i].as_u8()]++;
+            hist[src[i].to_u8()]++;
         }
         // for(size_t i = 0; i < 256; i++){
             // DEBUG_PRINT(i, hist[i]);
@@ -339,7 +339,7 @@ namespace ymd::nvcv2::pixels{
 
     void inverse(Image<Gray>& src) {
         for (size_t i = 0u; i < src.size().x_mul_y(); i++) {
-            src[i] = Gray::from_u8(~src[i].as_u8());
+            src[i] = Gray::from_u8(~src[i].to_u8());
         }
     }
 
@@ -360,7 +360,7 @@ namespace ymd::nvcv2::pixels{
         }
 
         for (size_t i = 0u; i < src.size().x_mul_y(); i++) {
-            src[i] = lut[src[i].as_u8()];
+            src[i] = lut[src[i].to_u8()];
         }
     }
 
@@ -368,13 +368,13 @@ namespace ymd::nvcv2::pixels{
 
     void sum_with(Image<Gray> & src, Image<Gray>& op) {
         for (size_t i = 0u; i < src.size().x_mul_y(); i++) {
-            src[i] = Gray::from_u8(MIN(src[i].as_u8() + op[i].as_u8(), 255));
+            src[i] = Gray::from_u8(MIN(src[i].to_u8() + op[i].to_u8(), 255));
         }
     }
 
     void sub_with(Image<Gray> & src, Image<Gray>& op) {
         for (size_t i = 0u; i < src.size().x_mul_y(); i++) {
-            src[i] = Gray::from_u8(MAX(src[i].as_u8() - op[i].as_u8(), 0));
+            src[i] = Gray::from_u8(MAX(src[i].to_u8() - op[i].to_u8(), 0));
         }
     }
 

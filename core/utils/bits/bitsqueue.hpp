@@ -37,7 +37,7 @@ struct BitQueue{
         return buf_;
     }
 
-    [[nodiscard]] constexpr uint64_t as_u64() const {
+    [[nodiscard]] constexpr uint64_t to_u64() const {
         return buf_;
     }
 
@@ -60,7 +60,7 @@ private:
                 q.pop_bits<2>();
                 return q;
             }();
-            static_assert(queue.as_u64() == 0b101);
+            static_assert(queue.to_u64() == 0b101);
         }
     }
 };

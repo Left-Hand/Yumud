@@ -513,8 +513,8 @@ void nuedc_2025e_joint_main(){
         };
 
         auto handle_msg = [&](const hal::CanClassicMsg & msg){
-            const auto id = msg.stdid().unwrap();
-            const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(id);
+            const auto stdid = msg.identifier().try_to_stdid().examine();
+            const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(stdid);
             if(msg_role != self_node_role_) return;
             dispatch_msg(msg_cmd, msg.payload_bytes());
         };

@@ -124,7 +124,7 @@ struct LT8960L_Prelude{
         constexpr Channel & operator = (const Channel & other) = default;
         constexpr Channel & operator = (Channel && other) = default;
 
-        constexpr auto as_u8() const {
+        constexpr auto to_u8() const {
             return ch_;
         }
     private:    

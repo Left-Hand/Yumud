@@ -216,7 +216,7 @@ __fast_inline constexpr fixed_t<Q, int32_t> mycospu(const fixed_t<P, int32_t> iq
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr std::array<fixed_t<Q, int32_t>, 2> mysincospu(const fixed_t<P, int32_t> iq_x){
-    auto res = (expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.as_bits(), expeprimental::__IQ31getSinCosDispatcher));
+    auto res = (expeprimental::__IQNgetCosSinPUTemplate<Q>(iq_x.to_bits(), expeprimental::__IQ31getSinCosDispatcher));
     return {res[0], res[1]};
 }
 

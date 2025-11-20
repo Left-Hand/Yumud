@@ -39,9 +39,9 @@ namespace ymd::nvcv2::pixels{
         const auto window = may_window.unwrap();
         for (auto y = window.y(); y < window.y() + window.h(); y++) {
             for (auto x = window.x(); x < window.x() + window.w(); x++) {
-                const uint8_t a = src[Vec2u{x,y}].as_u8();
-                const uint8_t b = src[Vec2u{x+1,y}].as_u8();
-                const uint8_t c = src[Vec2u{x,y+1}].as_u8();
+                const uint8_t a = src[Vec2u{x,y}].to_u8();
+                const uint8_t b = src[Vec2u{x+1,y}].to_u8();
+                const uint8_t c = src[Vec2u{x,y+1}].to_u8();
                 dst[{x,y}] = Gray::from_u8(uint8_t(CLAMP(std::max(
                     (ABS(a - c)) * 255 / (a + c),
                     (ABS(a - b) * 255 / (a + b))
@@ -157,7 +157,7 @@ namespace ymd::nvcv2::pixels{
         for(uint j = y_range.start; j < y_range.stop; ++j){
             const auto * ptr = &(image[Vec2u{x_range.start, j}]);
             for(uint i = 0; i < x_range.length(); ++i){
-                sum += ptr[i].as_u8();
+                sum += ptr[i].to_u8();
             }
         }
         return sum;

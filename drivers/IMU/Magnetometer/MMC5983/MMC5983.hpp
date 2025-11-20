@@ -75,7 +75,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = phy_.write_reg(T::ADDRESS, reg.as_bits());
+        const auto res = phy_.write_reg(T::ADDRESS, reg.to_bits());
         if(res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return res;
@@ -83,7 +83,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return phy_.read_reg(T::ADDRESS, reg.as_mut_bits());
+        return phy_.read_reg(T::ADDRESS, reg.as_bits_mut());
     }
 
     [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){

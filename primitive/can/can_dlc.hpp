@@ -35,7 +35,7 @@ struct [[nodiscard]] CanClassicDlc{
         return bits_;
     };
 
-    [[nodiscard]] constexpr uint8_t as_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const {
         return bits_;
     }
 private:
@@ -53,7 +53,7 @@ struct [[nodiscard]] CanFdDlc{
 
     //canfd的dlc向下兼容传统can 不要求explicit
     constexpr CanFdDlc(const CanClassicDlc & classic_dlc):    
-        bits_(classic_dlc.as_bits()){;}
+        bits_(classic_dlc.to_bits()){;}
 
     /// @brief 从零长开始构造
     /// @return CANFD帧的DLC
@@ -132,7 +132,7 @@ struct [[nodiscard]] CanFdDlc{
         __builtin_unreachable();
     };
 
-    [[nodiscard]] constexpr uint8_t as_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const {
         return bits_;
     }
 private:

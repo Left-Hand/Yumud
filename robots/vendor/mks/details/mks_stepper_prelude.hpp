@@ -22,7 +22,7 @@ struct [[nodiscard]] NodeId{
     static constexpr NodeId from_u8(uint8_t bits) {
         return NodeId{bits};
     }
-    [[nodiscard]] constexpr uint8_t as_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const {
         return count;
     }
 };
@@ -136,7 +136,7 @@ struct VerifyUtils final{
         const FuncCode funccode,
         std::span<const uint8_t> bytes 
     ){
-        uint32_t sum = nodeid.as_u8();
+        uint32_t sum = nodeid.to_u8();
         sum += std::bit_cast<uint8_t>(funccode);
         for(const auto byte: bytes){
             sum += byte;

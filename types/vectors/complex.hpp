@@ -39,7 +39,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline static constexpr 
-    UnitComplex from_radian(const T radians) {
+    UnitComplex from_radians(const T radians) {
         const auto [s,c] = ymd::sincos(radians);
         return UnitComplex(c, s);
     }

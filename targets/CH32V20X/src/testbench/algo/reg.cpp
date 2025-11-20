@@ -40,7 +40,7 @@ void test() {
         // static constexpr BitField_u16<8, 10> bf1(temp);
 
         // static_assert(bf1.len() == 2, "bitfield length error");
-        // static_assert(bf1.as_bits() == 0b11, "bitfield data error");
+        // static_assert(bf1.to_bits() == 0b11, "bitfield data error");
 
     }
     
@@ -55,23 +55,23 @@ void test() {
         static constexpr auto en1 = temp.enum1();
 
         static_assert(bf1.len() == 2, "bitfield length error");
-        static_assert(bf1.as_bits() == 0x02, "bitfield data error");
+        static_assert(bf1.to_bits() == 0x02, "bitfield data error");
         static_assert(sizeof(temp) == 0x02, "reg size error");
 
-        static_assert(en1.as_bits() == Num::_2, "reg size error");
+        static_assert(en1.to_bits() == Num::_2, "reg size error");
 
         static_assert(std::is_const_v<bitfield_data_type_t<decltype(bf1)>>, "const bitfield data is mutable");
         // static_assert(!std::is_const_v<bitfield_data_type_t<decltype(bf2)>>, "mutable bitfield data is const");
         
-        static_assert(arr1.get<0>().as_bits() == 0x04, "bitfield data error");
-        static_assert(arr1.get<1>().as_bits() == 0x03, "bitfield data error");
-        static_assert(arr1.get<2>().as_bits() == 0x02, "bitfield data error");
-        static_assert(arr1.get<3>().as_bits() == 0x01, "bitfield data error");
+        static_assert(arr1.get<0>().to_bits() == 0x04, "bitfield data error");
+        static_assert(arr1.get<1>().to_bits() == 0x03, "bitfield data error");
+        static_assert(arr1.get<2>().to_bits() == 0x02, "bitfield data error");
+        static_assert(arr1.get<3>().to_bits() == 0x01, "bitfield data error");
 
-        static_assert(arr1[0].as_bits() == 0x04, "bitfield data error");
-        static_assert(arr1[1].as_bits() == 0x03, "bitfield data error");
-        static_assert(arr1[2].as_bits() == 0x02, "bitfield data error");
-        static_assert(arr1[3].as_bits() == 0x01, "bitfield data error");
+        static_assert(arr1[0].to_bits() == 0x04, "bitfield data error");
+        static_assert(arr1[1].to_bits() == 0x03, "bitfield data error");
+        static_assert(arr1[2].to_bits() == 0x02, "bitfield data error");
+        static_assert(arr1[3].to_bits() == 0x01, "bitfield data error");
     }
 
     {

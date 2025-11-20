@@ -59,7 +59,7 @@ IResult<> Self::init(const Config & cfg){
 
     for(size_t i = 0; i < MAX_CHANNELS; i++){
         const auto res = set_led_current_dutycycle(std::bit_cast<hal::PinNth>(
-            hal::PinMask::from_nth(Nth(i)).as_u16()), 0);
+            hal::PinMask::from_nth(Nth(i)).to_u16()), 0);
 
         if(res.is_err()) [[unlikely]]
             return Err(res.unwrap_err());

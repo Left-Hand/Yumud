@@ -259,8 +259,8 @@ void smc2025_main(){
     
         [[maybe_unused]]const auto ctime = clock::time();
         const auto pose = Isometry2<iq16>{
-            // .rotation = UnitComplex<iq16>::from_radian(ctime + q16(1 / TAU) * sinpu(ctime)),
-            // .translation = Vec2<iq16>(0, -1.5_r) + Vec2<iq16>(-1.9_r, 0).rotated(Angle<iq16>::from_radian(ctime)), 
+            // .rotation = UnitComplex<iq16>::from_radians(ctime + q16(1 / TAU) * sinpu(ctime)),
+            // .translation = Vec2<iq16>(0, -1.5_r) + Vec2<iq16>(-1.9_r, 0).rotated(Angle<iq16>::from_radians(ctime)), 
             .rotation = UnitComplex<iq16>::from_angle(yaw_angle),
             .translation = Vec2<iq16>(0, -1.5_r), 
         };
@@ -337,7 +337,7 @@ void smc2025_main(){
             qmc.update().examine();
             const auto gyr = mpu.read_gyr().examine();
             // const auto dir = qmc.read_mag().examine();
-            yaw_angle = (yaw_angle + Angle<iq16>::from_radian(gyr.z) * 0.04_iq16).normalized();
+            yaw_angle = (yaw_angle + Angle<iq16>::from_radians(gyr.z) * 0.04_iq16).normalized();
             break;
         }
         default: break;
@@ -349,7 +349,7 @@ void smc2025_main(){
         test_render();
 
 
-        // yaw_angle = Angle<iq16>::from_radian(atan2pu(dir.x, dir.y));
+        // yaw_angle = Angle<iq16>::from_radians(atan2pu(dir.x, dir.y));
         // DEBUG_PRINTLN_IDLE(gyr.z);
         DEBUG_PRINTLN_IDLE(yaw_angle.to_degrees(), mpu.read_acc().examine());
         //     mpu.read_acc().examine(),

@@ -40,7 +40,7 @@ struct MAX31855_Prelude{
             return is_negative ? (-uns_junc_temp) : uns_junc_temp;
         }
 
-        std::span<uint16_t, 2> as_u16_slice(){
+        std::span<uint16_t, 2> to_u16_slice(){
             static_assert(sizeof(MAX31855_Payload) == 4);
             return std::span<uint16_t, 2>(reinterpret_cast<uint16_t *>(this), 2);
         }

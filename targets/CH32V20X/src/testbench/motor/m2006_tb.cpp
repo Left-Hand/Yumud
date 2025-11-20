@@ -26,7 +26,7 @@ void m2006_main(){
     });
 
     can.filters<0>().apply(
-        hal::CanFilterConfig::from_accept_all()
+        hal::CanFilterConfig::accept_all()
     );
 
     while(true){

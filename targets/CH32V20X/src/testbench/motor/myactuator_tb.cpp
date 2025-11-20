@@ -26,13 +26,13 @@ namespace ymd::drivers::myact {
 // p_des:-12.5到 12.5, 单位rad;
 // 数据类型为uint16_t, 取值范围为0~65535, 其中0代表-12.5,65535代表 12.5,
 //  0~65535中间的所有数值，按比例映射 至-12.5~12.5。
-DEF_U16_STRONG_TYPE_GRADATION(MitPositionCode_u16,  from_radian,    
+DEF_U16_STRONG_TYPE_GRADATION(MitPositionCode_u16,  from_radians,    
     iq16,   -12.5,  12.5,   25.0/65535)
 
 // v_des:-45到 45, 单位rad/s;
 // 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-45,4095代表45,
 //  0~4095 中间的所有数值，按比例映射至-45~45。
-DEF_U16_STRONG_TYPE_GRADATION(MitSpeedCode_u12,     from_radian,    
+DEF_U16_STRONG_TYPE_GRADATION(MitSpeedCode_u12,     from_radians,    
     iq16,   -45,    45,     90.0/4095)
 
 // kp: 0到 500;
@@ -199,12 +199,12 @@ struct [[nodiscard]] FaultStatus{
     uint16_t encoder_data_incorrect:1;
     uint16_t :1;
 
-    [[nodiscard]] constexpr uint16_t as_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const {
         return std::bit_cast<uint16_t>(*this);
     }
 
     [[nodiscard]] constexpr bool is_ok() const {
-        return as_bits() == 0;
+        return to_bits() == 0;
     }
 };
 

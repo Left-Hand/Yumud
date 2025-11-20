@@ -87,7 +87,7 @@ struct SlcanResponseFormatter{
 
         auto push_id = [&](){
             const size_t len = msg.is_extended() ? 8 : 3;
-            const auto id_u32 = msg.id_as_u32();
+            const auto id_u32 = msg.id_u32();
             filler.push_hex(id_u32, len);
         };
 

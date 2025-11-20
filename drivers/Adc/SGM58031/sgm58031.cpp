@@ -50,7 +50,7 @@ IResult<> Self::validate(){
     auto & reg = regs_.device_id_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
-    if(reg.as_u16() != reg.KEY) 
+    if(reg.to_u16() != reg.KEY) 
         return Err(Error::WrongChipId);
     return Ok();
 }
@@ -122,7 +122,7 @@ IResult<int16_t> Self::get_conv_data(){
     auto & reg = regs_.conv_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(reg.as_bits());
+    return Ok(reg.to_bits());
 }
 
 IResult<iq16> Self::get_conv_voltage(){
@@ -145,7 +145,7 @@ IResult<> Self::set_mux(const MUX _mux){
 }
 
 
-IResult<> Self::enable_ch3_as_mut_bits(const Enable en){
+IResult<> Self::enable_ch3_as_bits_mut(const Enable en){
     auto reg = RegCopy(regs_.config1_reg);
     reg.ext_ref = en == EN;
     return write_reg(reg);

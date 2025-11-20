@@ -198,7 +198,7 @@ IResult<size_t> parse_len(const StringView str){
 
 template<bool IS_EXTENDED>
 [[nodiscard]] static constexpr 
-IResult<uint32_t> parse_id_as_u32(const StringView str){
+IResult<uint32_t> parse_id_u32(const StringView str){
     if constexpr(IS_EXTENDED){
         return parse_ext_id(str).
             map([](const hal::CanExtId id) -> uint32_t{return id.to_u29();}); 
@@ -224,7 +224,7 @@ IResult<hal::CanClassicMsg> parse_msg(const StringView str, hal::CanRtr can_rtr)
     auto provider = StrProvider{str};
 
     const uint32_t id_u32_checked = ({
-        const auto res = parse_id_as_u32<IS_EXTENDED>(provider.fetch_leading(ID_LEN).unwrap());
+        const auto res = parse_id_u32<IS_EXTENDED>(provider.fetch_leading(ID_LEN).unwrap());
         if(res.is_err()) RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });

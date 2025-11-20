@@ -21,7 +21,7 @@ struct [[nodiscard]] fp32{
 		return fp32(std::bit_cast<float>(bits));
 	}
 
-	constexpr uint32_t as_bits() const {
+	constexpr uint32_t to_bits() const {
 		return std::bit_cast<uint32_t>(*this);
 	}
 

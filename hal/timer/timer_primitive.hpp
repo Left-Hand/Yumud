@@ -129,7 +129,7 @@ struct [[nodiscard]] TimerCountMode{
     constexpr TimerCountMode(const TimerCountMode &) = default;
     [[nodiscard]] constexpr Kind kind() const {return kind_;}
 
-    [[nodiscard]] constexpr uint32_t as_bits() const {return static_cast<uint32_t>(kind_);}
+    [[nodiscard]] constexpr uint32_t to_bits() const {return static_cast<uint32_t>(kind_);}
 
     [[nodiscard]] constexpr bool is_center_aligned() const {
         switch(kind()){

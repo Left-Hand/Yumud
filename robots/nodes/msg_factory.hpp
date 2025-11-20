@@ -52,7 +52,7 @@ struct MsgFactory{
     constexpr hal::CanClassicMsg operator()(const T cmd) const {
         const auto id = comb_role_and_cmd(role, command_to_kind_v<CommandKind, T>);
         const auto generator = serde::make_serialize_generator<serde::RawLeBytes>(cmd);
-        return hal::CanClassicMsg::from_iter(id, generator).unwrap();
+        return hal::CanClassicMsg::try_from_iter(id, generator).unwrap();
     };
 };
 

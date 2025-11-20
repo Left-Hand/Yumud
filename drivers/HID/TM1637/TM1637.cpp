@@ -95,7 +95,7 @@ IResult<> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf){
 
     const auto command2 = AddressCommand{
         .addr = CGRAM_BEGIN_ADDR
-    }.as_u8();
+    }.to_u8();
 
     
     if(const auto res = iic_start(command2);
@@ -109,7 +109,7 @@ IResult<> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf){
 
 
 IResult<> TM1637_Phy::set_display(const DisplayCommand command){
-    if(const auto res = iic_start(command.as_u8());
+    if(const auto res = iic_start(command.to_u8());
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = iic_stop();
         res.is_err()) return Err(res.unwrap_err());
@@ -124,7 +124,7 @@ Result<uint8_t, Error> TM1637_Phy::read_key(){
 
     uint8_t data;
 
-    if(const auto res = iic_start(command1.as_u8());
+    if(const auto res = iic_start(command1.to_u8());
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_byte(data);
         res.is_err()) return Err(res.unwrap_err());
@@ -136,7 +136,7 @@ Result<uint8_t, Error> TM1637_Phy::read_key(){
 
 IResult<> TM1637_Phy::set_data_mode(const DataCommand command1){
 
-    if(const auto res = iic_start(command1.as_u8());
+    if(const auto res = iic_start(command1.to_u8());
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = iic_stop();
         res.is_err()) return Err(res.unwrap_err());

@@ -209,7 +209,7 @@ void M3508Port::set_target_current(const iq16 curr, const size_t index){
 
 void M3508Port::update_slave(const hal::CanClassicMsg & msg, const size_t index){
     M3508_CHECK_INDEX
-    const auto rx_data = std::bit_cast<RxData>(msg.payload_as_u64());
+    const auto rx_data = std::bit_cast<RxData>(msg.payload_u64());
     auto & slave = slaves_[index - 1];
 
     const auto angle_u13 = uint16_t(BSWAP_16(rx_data.angle_8192_msb));

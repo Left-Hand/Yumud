@@ -14,7 +14,7 @@ public:
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint32_t as_bits() const{
+    [[nodiscard]] constexpr uint32_t to_bits() const{
         return std::bit_cast<uint32_t>(*this);
     }
 
@@ -54,7 +54,7 @@ public:
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint32_t as_bits() const{
+    [[nodiscard]] constexpr uint32_t to_bits() const{
         return std::bit_cast<uint32_t>(*this);
     }
 
@@ -107,7 +107,7 @@ struct [[nodiscard]] TailByte{
         return std::bit_cast<Self>(bits);
     }
 
-    [[nodiscard]] constexpr uint8_t as_bits() const {
+    [[nodiscard]] constexpr uint8_t to_bits() const {
         return std::bit_cast<uint8_t>(*this);
     }
 };

@@ -57,7 +57,7 @@ IResult<> MA730::set_zero_data(const uint16_t data){
 
 
 IResult<> MA730::set_zero_angle(const Angle<uq32> angle){
-    const auto data = (angle.to_turns().as_bits() >> 16);
+    const auto data = (angle.to_turns().to_bits() >> 16);
     return set_zero_data(data);
 }
 

@@ -229,11 +229,11 @@ struct DRV832X_Regs:public DRV832X_Prelude{
 
         uint16_t :5;
 
-        uint16_t & as_mut_bits(){
+        uint16_t & as_bits_mut(){
             return *reinterpret_cast<uint16_t*>(this);
         }
 
-        std::bitset<11> as_bitset() const {
+        std::bitset<11> to_bitset() const {
             return std::bitset<11>(*reinterpret_cast<const uint16_t*>(this));
         }
     }DEF_R16(status1_reg)
@@ -255,11 +255,11 @@ struct DRV832X_Regs:public DRV832X_Prelude{
 
         uint16_t :5;
 
-        uint16_t & as_mut_bits(){
+        uint16_t & as_bits_mut(){
             return *reinterpret_cast<uint16_t*>(this);
         }
 
-        std::bitset<11> as_bitset() const {
+        std::bitset<11> to_bitset() const {
             return std::bitset<11>(*reinterpret_cast<const uint16_t*>(this));
         }
     }DEF_R16(status2_reg)

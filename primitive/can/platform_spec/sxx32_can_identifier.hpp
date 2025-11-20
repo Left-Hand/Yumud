@@ -19,6 +19,11 @@ namespace details{
 struct [[nodiscard]]SXX32_CanIdentifier{
     using Self = SXX32_CanIdentifier;
 
+
+    /// @brief  构造函数
+    /// @tparam ID id 类型(CanStdId/CanExtId)
+    /// @param id id对象
+    /// @param rmt remote标识符(Data/Remote)
     template<details::is_canid ID>
     __attribute__((always_inline)) 
     static constexpr Self from(
@@ -32,37 +37,69 @@ struct [[nodiscard]]SXX32_CanIdentifier{
         }
     }
 
+    /// @brief 从原始32位bit构造
     __attribute__((always_inline)) 
     static constexpr Self from_bits(uint32_t id_bits){
         return std::bit_cast<Self>(id_bits);
     }
 
+    /// @brief 转换为原始32位bit
     [[nodiscard]] __attribute__((always_inline)) 
-    constexpr uint32_t as_bits() const{
+    constexpr uint32_t to_bits() const{
         return std::bit_cast<uint32_t>(*this);
     }
 
+    /// @brief 是否为拓展帧
     [[nodiscard]] __attribute__((always_inline)) 
     constexpr bool is_extended() const{
         return is_extended_;
     }
 
+    /// @brief 是否为标准帧
     [[nodiscard]] __attribute__((always_inline)) 
     constexpr bool is_standard() const{
         return !is_extended();
     }
 
+    /// @brief 是否为远程帧
     [[nodiscard]] __attribute__((always_inline)) 
     constexpr bool is_remote() const {
         return is_remote_;
     }
 
+    /// @brief 不顾帧格式，直接获取帧ID大小
     [[nodiscard]] __attribute__((always_inline)) 
-    constexpr uint32_t id_as_u32() const {
+    constexpr uint32_t id_u32() const {
         if(is_extended_)
             return full_id_;
         else
             return full_id_ >> (29-11);
+    }
+
+    /// @brief 尝试将帧ID转为标准帧ID
+    [[nodiscard]] constexpr Option<CanStdId> try_to_stdid() const {
+        if(is_extended_ == true) [[unlikely]]
+            return None;
+        return Some(CanStdId(full_id_ >> (29-11)));
+    }
+
+    /// @brief 尝试将帧ID转为 帧ID
+    [[nodiscard]] constexpr Option<CanExtId> try_to_extid() const {
+        if(is_extended_ == false) [[unlikely]]
+            return None;
+        return Some(CanExtId(full_id_));
+    }
+
+    [[nodiscard]] constexpr CanStdId to_stdid() const {
+        if(is_extended_ == true) [[unlikely]]
+            __builtin_trap();
+        return CanStdId((full_id_ >> (29-11)));
+    }
+
+    [[nodiscard]] constexpr CanExtId to_extid() const {
+        if(is_extended_ == false) [[unlikely]]
+            __builtin_trap();
+        return CanExtId((full_id_ ));
     }
 
     const uint32_t __resv__:1 = 1;
@@ -74,6 +111,8 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     uint32_t is_extended_:1;
     uint32_t full_id_:29;
 private:
+
+
     __attribute__((always_inline)) 
     static constexpr Self from_std_id(
         const CanStdId id, 

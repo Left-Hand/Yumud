@@ -76,7 +76,7 @@ struct SGM58031_Prelude{
             }
         }
 
-        constexpr uint8_t as_u8() const {
+        constexpr uint8_t to_u8() const {
             return uint8_t(kind_);
         }
 

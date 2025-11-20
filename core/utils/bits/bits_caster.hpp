@@ -110,7 +110,7 @@ struct _accumulate_bytes_of_bits_ctorable_v{
 
 
 template<typename T>
-struct _as_bits{
+struct _to_bits{
     using type = void;
 };
 
@@ -118,7 +118,7 @@ template<typename T>
 requires requires {
     T::bits;
 }
-struct _as_bits<T>{
+struct _to_bits<T>{
     using bits_type = decltype(T::bits);
     [[nodiscard]] static constexpr bits_type into_bits(const T & obj){
         return obj.bits;
@@ -127,7 +127,7 @@ struct _as_bits<T>{
 
 template<typename T>
 requires (std::is_integral_v<T>)
-struct _as_bits<T>{
+struct _to_bits<T>{
     using bits_type = T;
 
     [[nodiscard]] static constexpr bits_type into_bits(const T & obj){
@@ -137,7 +137,7 @@ struct _as_bits<T>{
 
 template<typename T>
 requires (std::is_floating_point_v<T>)
-struct _as_bits<T>{
+struct _to_bits<T>{
     using bits_type = std::conditional_t<std::is_same_v<T, float>, uint32_t, uint64_t>;
 
     [[nodiscard]] static constexpr bits_type into_bits(const T & obj){
@@ -147,12 +147,12 @@ struct _as_bits<T>{
 
 template<typename T>
 requires requires{
-    T::as_bits();
+    T::to_bits();
 }
-struct _as_bits<T>{
-    using bits_type = std::invoke_result_t<decltype(T::as_bits)>;
+struct _to_bits<T>{
+    using bits_type = std::invoke_result_t<decltype(T::to_bits)>;
     [[nodiscard]] static constexpr bits_type into_bits(const T & obj){
-        return obj.as_bits();
+        return obj.to_bits();
     }
 };
 
@@ -183,16 +183,16 @@ template<typename T>
 using from_bits_t = typename details::_from_bits<T>::bits_type;
 
 template<typename T>
-using as_bits_t = typename details::_as_bits<T>::bits_type;
+using to_bits_t = typename details::_to_bits<T>::bits_type;
 
 template<typename T, typename D = from_bits_t<T>>
 [[nodiscard]] static constexpr T obj_from_bits(const D bits){
     return details::_from_bits<T>::into_obj(bits);
 }
 
-template<typename T, typename D = as_bits_t<T>>
-[[nodiscard]] static constexpr D obj_as_bits(T && obj){
-    return details::_as_bits<T>::into_bits(std::forward<T>(obj));
+template<typename T, typename D = to_bits_t<T>>
+[[nodiscard]] static constexpr D obj_to_bits(T && obj){
+    return details::_to_bits<T>::into_bits(std::forward<T>(obj));
 }
 
 

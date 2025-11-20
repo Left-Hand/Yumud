@@ -108,7 +108,7 @@ public:
         if(i2c_drv_){
             if(const auto res = i2c_drv_->write_reg(
                     std::bit_cast<uint8_t>(T::ADDRESS), 
-                    reg.as_bits(), 
+                    reg.to_bits(), 
                     std::endian::big
                 );
                 res.is_err()) return Err(res.unwrap_err());
@@ -124,7 +124,7 @@ public:
         if(i2c_drv_){
             if(const auto res = i2c_drv_->read_reg(
                     std::bit_cast<uint8_t>(T::ADDRESS), 
-                    reg.as_mut_bits(), 
+                    reg.as_bits_mut(), 
                     std::endian::big);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();

@@ -34,8 +34,8 @@ enum class [[nodiscard]] SdoCommandSpecifierKind:uint8_t{
     ExpeditedRead3B = 0x47,
     ExpeditedRead4B = 0x43,
 
-    ReadOk = 0x40,
-    WriteOk = 0x60,
+    ReadSucceed = 0x40,
+    WriteSucceed = 0x60,
     Exception = 0x80
 };
 
@@ -85,7 +85,7 @@ struct [[nodiscard]] SdoCommandSpecifier {
     }
 
 
-    [[nodiscard]] constexpr uint8_t as_bits() const{return static_cast<uint8_t>(kind_);}
+    [[nodiscard]] constexpr uint8_t to_bits() const{return static_cast<uint8_t>(kind_);}
     constexpr Kind kind() const{return kind_;}
     [[nodiscard]] constexpr bool operator ==(const Self & other) const{return kind_ == other.kind_;}
 
@@ -110,13 +110,13 @@ struct SdoHeader {
     ) {
         //fuck 1-2-1 没有对齐
         return Self{
-            .bits = (static_cast<uint32_t>(_cmd_spec.as_bits()) << 24) |      // 高8位
-                    (static_cast<uint32_t>(_pre_idx.as_bits()) << 8) | // 中间16位
-                    (static_cast<uint32_t>(_sub_idx.as_bits()))        // 低8位
+            .bits = (static_cast<uint32_t>(_cmd_spec.to_bits()) << 24) |      // 高8位
+                    (static_cast<uint32_t>(_pre_idx.to_bits()) << 8) | // 中间16位
+                    (static_cast<uint32_t>(_sub_idx.to_bits()))        // 低8位
         };
     }
 
-    constexpr uint32_t as_bits() const { return bits; }
+    constexpr uint32_t to_bits() const { return bits; }
 
     constexpr SdoCommandSpecifier cmd_spec() const {
         return SdoCommandSpecifier::from_bits((bits >> 24) & 0xFF);  // 取高8位
@@ -154,11 +154,11 @@ struct [[nodiscard]] SdoExpeditedMsg{
 
 
     [[nodiscard]] __always_inline static constexpr 
-    Self from_write_ok(
+    Self from_write_succeed(
         const OdPreIndex _pre_idx, 
         const OdSubIndex _sub_idx
     ){
-        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::WriteOk);
+        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::WriteSucceed);
         return Self{Header::from_parts(SPEC, _pre_idx, _sub_idx), static_cast<uint32_t>(0)};
     }
 
@@ -175,11 +175,11 @@ struct [[nodiscard]] SdoExpeditedMsg{
     }
 
     [[nodiscard]] __always_inline static constexpr 
-    Self from_read_ok(
+    Self from_read_succeed(
         const OdPreIndex _pre_idx, 
         const OdSubIndex _sub_idx
     ){
-        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::ReadOk);
+        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::ReadSucceed);
         return Self{Header::from_parts(SPEC, _pre_idx, _sub_idx), static_cast<uint32_t>(0)};
     }
 
@@ -198,7 +198,7 @@ struct [[nodiscard]] SdoExpeditedMsg{
     }
 
     [[nodiscard]] __always_inline constexpr 
-    uint64_t as_u64() const {
+    uint64_t to_u64() const {
         return std::bit_cast<uint64_t>(*this);
     }
 
@@ -210,7 +210,7 @@ struct [[nodiscard]] SdoExpeditedMsg{
     }
 
     [[nodiscard]] CanMsg to_canmsg(const CobId cobid){
-        return CanMsg::from_id_and_u64(cobid.to_stdid(), as_u64());
+        return CanMsg::from_id_and_payload_u64(cobid.to_stdid(), to_u64());
     }
 };
 
@@ -301,7 +301,7 @@ public:
         return Some(std::bit_cast<SdoAbortError>(bits_));
     }
     [[nodiscard]] constexpr uint32_t to_u32() const { return std::bit_cast<uint32_t>(bits_); }
-    [[nodiscard]] constexpr uint32_t as_bits() const { return to_u32();}
+    [[nodiscard]] constexpr uint32_t to_bits() const { return to_u32();}
     [[nodiscard]] constexpr bool is_ok() const { return bits_ == NO_ERROR; }
     [[nodiscard]] constexpr bool is_err() const { return bits_ != NO_ERROR; }
 private:
@@ -311,7 +311,7 @@ private:
 
     friend OutputStream & operator<<(OutputStream & os, const SdoAbortCode & code) {
         if(code.is_err()) [[unlikely]]
-            return os << std::bit_cast<SdoAbortCode>(code.as_bits());
+            return os << std::bit_cast<SdoAbortCode>(code.to_bits());
         return os << "None";
     }
 };

@@ -14,7 +14,7 @@ class Memory;
 
 struct AddressDiff{
     [[nodiscard]] constexpr explicit AddressDiff(const uint32_t diff):value_(diff){;}
-    [[nodiscard]] constexpr uint32_t as_u32() const {return value_;}
+    [[nodiscard]] constexpr uint32_t to_u32() const {return value_;}
     [[nodiscard]] constexpr auto operator<=>(const AddressDiff &) const = default;
 private:
     uint32_t value_;
@@ -25,12 +25,12 @@ using Capacity = AddressDiff;
 
 struct Address{
     [[nodiscard]] constexpr explicit Address(const uint32_t addr):addr_(addr){;}
-    [[nodiscard]] constexpr uint32_t as_u32() const {return addr_;}
+    [[nodiscard]] constexpr uint32_t to_u32() const {return addr_;}
 
     [[nodiscard]] constexpr auto operator<=>(const Address &) const = default;
     [[nodiscard]] constexpr AddressDiff operator - (const Address &rhs) const {return AddressDiff(addr_ - rhs.addr_);}
-    [[nodiscard]] constexpr Address operator - (const AddressDiff &rhs) const {return Address(addr_ - rhs.as_u32());}
-    [[nodiscard]] constexpr Address operator + (const AddressDiff &rhs) const {return Address(addr_ + rhs.as_u32());}
+    [[nodiscard]] constexpr Address operator - (const AddressDiff &rhs) const {return Address(addr_ - rhs.to_u32());}
+    [[nodiscard]] constexpr Address operator + (const AddressDiff &rhs) const {return Address(addr_ + rhs.to_u32());}
 private:
     uint32_t addr_;
 };
@@ -42,7 +42,7 @@ consteval Address operator"" _addr(unsigned long long  x){
 
 inline OutputStream &operator << (OutputStream &os, const Address &addr){
     const auto guard = os.create_guard();
-    os << std::hex << std::showbase << addr.as_u32();
+    os << std::hex << std::showbase << addr.to_u32();
     return os;
 }
 

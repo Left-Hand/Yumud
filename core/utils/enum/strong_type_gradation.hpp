@@ -18,7 +18,7 @@ public:\
         auto raw = static_cast<D>((in - MIN_VALUE) / STEP_VALUE);\
         return Ok(name(raw));\
     }\
-    [[nodiscard]] constexpr D as_bits() const { return bits; }\
+    [[nodiscard]] constexpr D to_bits() const { return bits; }\
     [[nodiscard]] constexpr T to_original() const {\
         return MIN_VALUE + static_cast<T>(bits) * STEP_VALUE;\
     }\

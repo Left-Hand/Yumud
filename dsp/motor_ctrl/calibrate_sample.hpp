@@ -91,7 +91,7 @@ private:
     uint16_t measured_packed_data_;
 
     static constexpr Option<uint16_t> real_to_packed(const Angle<uq32> unpacked){
-        return Some(uint16_t(unpacked.to_turns().as_bits() >> 16));
+        return Some(uint16_t(unpacked.to_turns().to_bits() >> 16));
     }
 
     static constexpr iq31 packed_to_real(const uint16_t packed){
@@ -120,7 +120,7 @@ struct CompressedInaccuracy {
     }
 
     static constexpr Raw compress(const iq16 count){
-        return Raw(count.as_bits());
+        return Raw(count.to_bits());
     }
 
     static constexpr iq16 decompress(const Raw raw){

@@ -32,7 +32,7 @@ public:
 
 
     [[nodiscard]] __inline constexpr 
-    T as_bits() const{
+    T to_bits() const{
         return std::bit_cast<T>(static_cast<magic::type_to_uint_t<T>>((pdata_ & mask) >> (b_bits)));
     }
 
@@ -87,11 +87,12 @@ using bitfield_data_type_t = typename T::data_type;
 
 
 template<typename D, size_t b_bits, size_t e_bits, size_t cnt>
-struct ArrayBitFieldRef{
+struct BitFieldArrayRef{
 private:    
     static constexpr size_t data_len = magic::type_to_bits_v<D>;
     static constexpr size_t len = e_bits - b_bits;
     static constexpr size_t per_len = (len / cnt);
+    static_assert(len % cnt == 0, "bitfield array is not aligned with reg data");
     // static constexpr size_t len = ()
 
     static_assert(b_bits + len <= data_len, "bitfield array is longer than reg data");
@@ -100,7 +101,7 @@ private:
     D & pdata_;
 public:
     constexpr 
-    explicit ArrayBitFieldRef(D & data):pdata_(data){;}
+    explicit BitFieldArrayRef(D & data):pdata_(data){;}
 
     [[nodiscard]] __inline constexpr 
     BitFieldDyn<D> operator [](const size_t idx) const {
@@ -135,8 +136,8 @@ auto make_bitfield(auto & data){
 
 template<size_t b_bits, size_t per_len, size_t cnt, typename D>
 [[nodiscard]] __fast_inline static constexpr
-ArrayBitFieldRef<D, b_bits, per_len, cnt> make_bfarray(D & data){
-    return ArrayBitFieldRef<D, b_bits, per_len, cnt>(data);
+BitFieldArrayRef<D, b_bits, per_len, cnt> make_bfarray(D & data){
+    return BitFieldArrayRef<D, b_bits, per_len, cnt>(data);
 }
 
 }

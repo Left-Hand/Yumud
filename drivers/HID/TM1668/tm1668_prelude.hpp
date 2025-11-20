@@ -56,7 +56,7 @@ public:
             return {uint8_t(0xC0 | idx)};
         }
 
-        constexpr uint8_t as_u8() const {return addr;}
+        constexpr uint8_t to_u8() const {return addr;}
         const uint8_t addr;
     };
 
@@ -67,7 +67,7 @@ public:
         uint8_t display_on:1;
         const uint8_t __resv2__:4 = 0b1000;
 
-        constexpr uint8_t as_u8() const {return std::bit_cast<uint8_t>(*this);}
+        constexpr uint8_t to_u8() const {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(DisplayCommand) == 1);
@@ -102,7 +102,7 @@ public:
 
         for(size_t i = 0; i < pbuf.size(); i++){
             if(const auto res = write_u8x2(
-                AddressCommand::from_idx(i).as_u8(),
+                AddressCommand::from_idx(i).to_u8(),
                 pbuf[i]
             ); res.is_err()) return Err(res.unwrap_err());
         }
@@ -126,7 +126,7 @@ public:
     }
 private:
     IResult<> write_display_cmd(const DisplayCommand cmd){
-        // return write_u8x2(uint8_t(DataCommand::MODE_CMD), cmd.as_u8());
+        // return write_u8x2(uint8_t(DataCommand::MODE_CMD), cmd.to_u8());
         return Ok();
     }
 private:

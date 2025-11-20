@@ -169,7 +169,7 @@ struct [[nodiscard]] Quat{
         Vec3<T> axis = default_dir.cross(normalized_dir);
         
         // Calculate the angle between the vectors
-        const auto angle = Angle<T>::from_radian(std::acos(dot_product));
+        const auto angle = Angle<T>::from_radians(std::acos(dot_product));
         
         // Create and return the quaternion representing the rotation
         return from_axis_angle(axis, angle);
@@ -218,7 +218,7 @@ struct [[nodiscard]] Quat{
     [[nodiscard]]
     constexpr Angle<T> angle_to(const Quat<T> &p_to) const {
         T d = std::abs(dot(p_to));
-        return Angle<T>::from_radian(2 * std::acos(CLAMP(d, -1, 1)));
+        return Angle<T>::from_radians(2 * std::acos(CLAMP(d, -1, 1)));
     }
 
     [[nodiscard]]

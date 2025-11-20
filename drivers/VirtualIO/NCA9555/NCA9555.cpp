@@ -35,7 +35,7 @@ IResult<uint16_t> NCA9555::read_port(){
     auto & reg = input_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(reg.mask.as_u16());
+    return Ok(reg.mask.to_u16());
 }
 
 

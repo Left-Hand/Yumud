@@ -195,7 +195,7 @@ OutputStream & operator<<(OutputStream & os, const Binary & bn){
 }
 
 OutputStream & operator<<(OutputStream & os, const Gray & gs){
-    return os << '(' << gs.as_u8() << ')';
+    return os << '(' << gs.to_u8() << ')';
 }
 
 OutputStream & operator<<(OutputStream & os, const IGray & sgs){

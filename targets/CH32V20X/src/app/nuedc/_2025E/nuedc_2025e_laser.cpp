@@ -119,7 +119,7 @@ void nuedc_2025e_laser_main(){
 
 
     can.filters<0>().apply(
-        hal::CanFilterConfig::from_accept_all()
+        hal::CanFilterConfig::accept_all()
     );
 
 

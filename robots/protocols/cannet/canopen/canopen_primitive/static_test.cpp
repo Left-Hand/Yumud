@@ -15,6 +15,6 @@ static_assert(PdoOnlyFunctionCode::from_bits(4).is_some());
         OdSubIndex::from_bits(0)
     );
 
-    static_assert(layout1.header.as_bits() == 0x80'0000'00);
+    static_assert(layout1.header.to_bits() == 0x80'0000'00);
 }
 

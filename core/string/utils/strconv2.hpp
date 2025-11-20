@@ -532,7 +532,7 @@ struct Iq16Formatter{
 		
 		constexpr size_t Q = 16;
 
-		const auto value_i32 = value.as_bits();
+		const auto value_i32 = value.to_bits();
 		const auto eps = MIN(eps_.count(), 4);
 
 		const bool is_negative = value_i32 < 0;

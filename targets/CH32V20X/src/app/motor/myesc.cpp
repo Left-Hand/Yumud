@@ -170,7 +170,7 @@ void myesc_main(){
 
     static constexpr auto MOS_1C840L_500MA_BEST_DEADZONE = 90ns;
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADZONE = 350ns;
-    timer.init_bdtr(MOS_1C840L_500MA_BEST_DEADZONE);
+    timer.bdtr().init({MOS_1C840L_500MA_BEST_DEADZONE});
     // timer.init_bdtr(MOS_1C840L_100MA_BEST_DEADZONE);
     timer.set_remap(1);
 

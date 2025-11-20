@@ -160,7 +160,7 @@ void bldc_main(){
         .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
-    can.filters<0>().apply(hal::CanFilterConfig::from_accept_all());
+    can.filters<0>().apply(hal::CanFilterConfig::accept_all());
 
     spi.init({
         .baudrate = 18_MHz

@@ -119,7 +119,7 @@ struct HT16K33_Prelude{
         constexpr Command(const T cmd):
             raw_(std::bit_cast<uint8_t>(cmd)){;}
 
-        uint8_t as_u8() const{
+        uint8_t to_u8() const{
             return raw_;
         }
     private:
@@ -173,7 +173,7 @@ struct HT16K33_Prelude{
 
         template<size_t R>
         requires (R < 3)
-        constexpr std::bitset<13> row_as_bitset() const {
+        constexpr std::bitset<13> row_to_bitset() const {
             const auto low_byte = buf_[R * 2];
             const auto high_byte = buf_[R * 2 + 1];
             return std::bitset<13>((high_byte << 8) | low_byte);
@@ -189,9 +189,9 @@ struct HT16K33_Prelude{
 
         friend OutputStream & operator <<(OutputStream & os, const KeyData & self){
             const auto b3 = std::to_array<std::bitset<13>>({
-                self.row_as_bitset<0>(),
-                self.row_as_bitset<1>(),
-                self.row_as_bitset<2>()
+                self.row_to_bitset<0>(),
+                self.row_to_bitset<1>(),
+                self.row_to_bitset<2>()
             });
 
             return os << b3;
@@ -311,7 +311,7 @@ public:
         int_input_(int_input){;}
 
     [[nodiscard]] IResult<> write_command(const Command cmd){
-        if(const auto res = i2c_drv_.write_blocks<>(cmd.as_u8(), std::endian::little);
+        if(const auto res = i2c_drv_.write_blocks<>(cmd.to_u8(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

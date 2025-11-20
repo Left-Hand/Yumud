@@ -333,7 +333,7 @@ void polar_robot_main(){
     can.enable_hw_retransmit(DISEN);
 
     can.filters<0>().apply(
-        hal::CanFilterConfig::from_accept_all()
+        hal::CanFilterConfig::accept_all()
     );
 
     ZdtStepper motor1{{.node_id = {1}}, &COMM_CAN};
