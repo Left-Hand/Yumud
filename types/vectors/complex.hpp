@@ -137,7 +137,7 @@ public:
         return Complex();
     }
 
-    __fast_inline static constexpr Complex from_zero() {return Complex(T(0), T(0));} 
+    __fast_inline static constexpr Complex zero() {return Complex(T(0), T(0));} 
     
     __fast_inline static constexpr 
     Complex from_imag(const T val) {return Complex(T(0), val);}

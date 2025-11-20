@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector2.hpp"
+#include "vector3.hpp"
 #include "polar.hpp"
 
 namespace ymd{
@@ -12,7 +12,7 @@ struct [[nodiscard]] SphericalCoordinates{
     Angle<T> azimuth;
     Angle<T> elevation;
 
-    static constexpr Self from_zero(){
+    static constexpr Self zero(){
         return Self{
             .distance = static_cast<T>(0),
             .azimuth = Angle<T>::ZERO,
@@ -34,7 +34,7 @@ struct [[nodiscard]] SphericalCoordinates{
     static constexpr Self from_vec3(const Vec3<T> & vec) {
         const T length_squared = vec.length_squared();
         if (length_squared == static_cast<T>(0)) [[unlikely]]
-            return from_zero();
+            return zero();
         const T length = std::sqrt(length_squared);
         const T azimuth_rad = std::atan2(vec.y, vec.x);
         const T elevation_rad = std::asin(vec.z / length);

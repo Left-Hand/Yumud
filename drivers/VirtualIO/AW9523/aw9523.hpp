@@ -63,7 +63,7 @@ public:
 
 private:
     hal::I2cDrv i2c_drv_;
-    hal::PinMask buf_mask_ = hal::PinMask::from_zero();
+    hal::PinMask buf_mask_ = hal::PinMask::zero();
     AW9523_Regset regs_ = {};
 
     [[nodiscard]] static constexpr RegAddr 

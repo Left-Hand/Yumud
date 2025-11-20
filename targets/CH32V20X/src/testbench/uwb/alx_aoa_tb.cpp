@@ -9,36 +9,120 @@
 #include "core/utils/zero.hpp"
 #include "core/utils/bits/atomic_bitset.hpp"
 #include "geometry.hpp"
-
+#include "drivers/Proximeter/MK8000TR/mk8000tr_uart.hpp"
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
 
+
 using namespace ymd;
+using drivers::MK8000TR_Prelude;
 using drivers::AlxAoa_Prelude;
 
 // #define DEBUGGER_INST hal::uart2
 
-using AlxEvent = AlxAoa_Prelude::Event;
-using AlxError = AlxAoa_Prelude::Error;
+using AlxEvent = drivers::AlxAoa_Prelude::Event;
+using AlxError = drivers::AlxAoa_Prelude::Error;
 
 using AlxLocation = drivers::AlxAoa_Prelude::Location;
 using AlxHeartBeat = drivers::AlxAoa_Prelude::HeartBeat;
+using MkEvent = drivers::MK8000TR_Prelude::Event;
+
+using AlxMeasurement = SphericalCoordinates<float>;
+using Mk8Measurement = float;
 
 
-using Measurement = SphericalCoordinates<float>;
-static constexpr Measurement loc_to_meas (const AlxLocation & loc){
-    return Measurement{
-        .distance = static_cast<float>(loc.distance.to_meters()),
-        .azimuth = loc.azimuth.to_angle().into<float>(),
-        .elevation = loc.elevation.to_angle().into<float>(),
-    };
-}
+struct BlinkProcedure{
+    hal::Gpio & red_led_gpio_;
+    hal::Gpio & blue_led_gpio_;
 
-template<typename V, typename T>
-struct PointWithDistance{
-    V point;
-    T distance;
+    void resume(){
+        red_led_gpio_ = BoolLevel::from((
+            uint32_t(clock::millis().count()) % 200) > 100);
+        blue_led_gpio_ = BoolLevel::from((
+            uint32_t(clock::millis().count()) % 400) > 200);
+    }
 };
 
+struct AlxProcedure{
+    hal::UartHw & uart_;
+    drivers::AlxAoa_StreamParser & parser_;
+    uint32_t received_bytes_cnt_ = 0;
+
+    void init(){
+        uart_.init({
+            AlxAoa_Prelude::DEFAULT_UART_BUAD
+        });
+    }
+    void resume(){
+        if(uart_.available() == 0) return;
+        while(uart_.available()){
+            char chr;
+            uart_.read1(chr);
+            // _bytes.push_back(uint8_t(chr));
+            parser_.push_byte(static_cast<uint8_t>(chr)); 
+            received_bytes_cnt_++;
+        }
+    }
+};
+
+struct MK8000Procedure{
+    hal::UartHw & uart_;
+    drivers::MK8000TR_StreamParser& parser_;
+    uint32_t received_bytes_cnt_ = 0;
+    void init(){
+        uart_.init({
+            115200 * 2
+        });
+    }
+    void resume(){
+        if(uart_.available() == 0) return;
+        // DEBUG_PRINTLN(received_bytes_cnt_);
+        while(uart_.available()){
+            char chr;
+            uart_.read1(chr);
+            // _bytes.push_back(uint8_t(chr));
+            parser_.push_byte(static_cast<uint8_t>(chr)); 
+            received_bytes_cnt_++;
+        }
+    }
+};
+
+
+
+template<typename ... Ts>
+struct ProcedureGroup{ 
+    using procedures_type = std::tuple<std::reference_wrapper<Ts>...>;
+    
+    ProcedureGroup(Ts& ... args): 
+        procedures_{std::ref(args)...} 
+    {}
+
+    void resume_all(){
+        // 方法1：使用 std::apply 和折叠表达式
+        std::apply([](auto&... procedures) {
+            (procedures.get().resume(), ...);
+        }, procedures_);
+        
+        // 或者方法2：使用索引序列（备选方案）
+        // resume_all_impl(std::index_sequence_for<Ts...>{});
+    }
+
+    void init_all(){
+        // 方法1：使用 std::apply 和折叠表达式
+        std::apply([](auto&... procedures) {
+            (procedures.get().init(), ...);
+        }, procedures_);
+        
+        // 或者方法2：使用索引序列（备选方案）
+        // resume_all_impl(std::index_sequence_for<Ts...>{});
+    }
+
+private:
+    procedures_type procedures_;
+};
+
+// CTAD 指南
+template<typename ... Ts>
+ProcedureGroup(Ts& ... args) -> ProcedureGroup<Ts...>;
 void alx_aoa_main(){
 
     #if defined(CH32V30X)
@@ -46,13 +130,27 @@ void alx_aoa_main(){
         576000 
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
-    // DEBUGGER.no_brackets(EN);
     DEBUGGER.no_brackets(DISEN);
     DEBUGGER.no_fieldname(EN);
 
-    // using SensorMeasurementsBarrier = MeasurementBarrier<Measurement, 2>;
-    using SensorMeasurements = std::array<Measurement, 2>;
-    SensorMeasurements measurements_ = {Zero, Zero};
+    using AlxMeasurements = std::array<AlxMeasurement, 2>;
+    AlxMeasurements alx_measurements_ = {Zero, Zero};
+
+    using Mk8Measurements = std::array<Mk8Measurement, 2>;
+    Mk8Measurements mk8_measurements_ = {Zero, Zero};
+
+    auto mk8_ev_handler = [&](const MkEvent & ev, const size_t idx){ 
+        switch(idx){
+            default:
+                PANIC("mk8_ev_handler");
+            case 0:
+                mk8_measurements_[0] = static_cast<float>(ev.dist_cm) / 100;
+                break;
+            case 1:
+                mk8_measurements_[1] = static_cast<float>(ev.dist_cm) / 100;
+                break;
+        }
+    };
 
     auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res, const size_t idx){ 
         // PANIC{nth.count()};
@@ -61,11 +159,11 @@ void alx_aoa_main(){
             const auto & ev = res.unwrap();
             if(ev.is<AlxLocation>()){
                 const AlxLocation & loc = ev.unwrap_as<AlxLocation>();
-                const auto && measurement = loc_to_meas(loc);
-                measurements_.at(idx) = measurement;
+                const auto && measurement = loc.to_spherical_coordinates<float>();
+                alx_measurements_.at(idx) = measurement;
 
             }else if(ev.is<AlxHeartBeat>()){
-                DEBUG_PRINTLN("alx_heartBeat", ev.unwrap_as<AlxHeartBeat>());
+                // DEBUG_PRINTLN("alx_heartBeat", ev.unwrap_as<AlxHeartBeat>());
             }
         }else{
             [[maybe_unused]] const auto & err = res.unwrap_err();
@@ -74,97 +172,87 @@ void alx_aoa_main(){
         }
     };
 
-
-
-
-
-    auto alx_parser1 = drivers::AlxAoa_StreamParser(
+    auto alx_1_parser_ = drivers::AlxAoa_StreamParser(
         [&](const Result<AlxEvent, AlxError> & res){
             alx_ev_handler(res, 0);
         }
     );
 
-    auto alx_parser2 = drivers::AlxAoa_StreamParser(
+    auto alx_2_parser_ = drivers::AlxAoa_StreamParser(
         [&](const Result<AlxEvent, AlxError> & res){
             alx_ev_handler(res, 1);
         }
     );
 
-    auto & alx_uart1 = hal::uart1;
-    auto & alx_uart2 = hal::uart2;
+    auto mk8_1_parser_ = drivers::MK8000TR_StreamParser(
+        [&](const MkEvent & ev){
+            mk8_ev_handler(ev, 0);
+        }
+    );
 
-    alx_uart1.init({
-        AlxAoa_Prelude::DEFAULT_UART_BUAD
-    });
+    auto mk8_2_parser_ = drivers::MK8000TR_StreamParser(
+        [&](const MkEvent & ev){
+            mk8_ev_handler(ev, 1);
+        }
+    );
 
-    alx_uart2.init({
-        AlxAoa_Prelude::DEFAULT_UART_BUAD
-    });
 
+    [[maybe_unused]] auto & alx_1_uart_ = hal::uart1;
+    [[maybe_unused]] auto & alx_2_uart_ = hal::uart2;
+    [[maybe_unused]] auto & mk8_1_uart_ = hal::uart1;
+    [[maybe_unused]] auto & mk8_2_uart_ = hal::uart2;
 
     auto red_led_gpio_ = hal::PC<13>();
     auto blue_led_gpio_ = hal::PC<14>();
     red_led_gpio_.outpp();
     blue_led_gpio_.outpp();
     
-    struct BlinkProcedure{
-        hal::Gpio & red_led_gpio_;
-        hal::Gpio & blue_led_gpio_;
 
-        void resume(){
-            red_led_gpio_ = BoolLevel::from((
-                uint32_t(clock::millis().count()) % 200) > 100);
-            blue_led_gpio_ = BoolLevel::from((
-                uint32_t(clock::millis().count()) % 400) > 200);
-        }
-    };
-
-    struct AlxProcedure{
-        hal::UartHw & alx_uart_;
-        drivers::AlxAoa_StreamParser & alx_parser_;
-        uint32_t received_bytes_cnt_ = 0;
-
-        void resume(){
-            if(alx_uart_.available() == 0) return;
-            while(alx_uart_.available()){
-                char chr;
-                alx_uart_.read1(chr);
-                // _bytes.push_back(uint8_t(chr));
-                alx_parser_.push_byte(static_cast<uint8_t>(chr)); 
-                received_bytes_cnt_++;
-            }
-        }
-    };
 
     BlinkProcedure blink_procedure_{
         .red_led_gpio_ = red_led_gpio_,
         .blue_led_gpio_ = blue_led_gpio_
     };
 
-    AlxProcedure alx_procedure1_{
-        .alx_uart_ = alx_uart1,
-        .alx_parser_ = alx_parser1
+    [[maybe_unused]] AlxProcedure alx_1_procedure_{
+        .uart_ = alx_1_uart_,
+        .parser_ = alx_1_parser_
     };
 
-    AlxProcedure alx_procedure2_{
-        .alx_uart_ = alx_uart2,
-        .alx_parser_ = alx_parser2
+    [[maybe_unused]] AlxProcedure alx_procedure2_{
+        .uart_ = alx_2_uart_,
+        .parser_ = alx_2_parser_
     };
+
+    [[maybe_unused]] MK8000Procedure mk8_1_procedure_{
+        .uart_ = mk8_1_uart_,
+        .parser_ = mk8_1_parser_
+    };
+
+    [[maybe_unused]] MK8000Procedure mk8_2_procedure_{
+        .uart_ = mk8_2_uart_,
+        .parser_ = mk8_2_parser_
+    };
+    ProcedureGroup group_(alx_1_procedure_, alx_procedure2_);
+    // ProcedureGroup group_(mk8_1_procedure_, mk8_2_procedure_);
 
     DEBUG_PRINTLN("setup done");
+
+    group_.init_all();
     while(true){
 
-        // DEBUG_PRINTLN("alx_uart_rx", uint8_t(chr));
-        alx_procedure1_.resume();
-        alx_procedure2_.resume();
-
+        // DEBUG_PRINTLN("uart_rx", uint8_t(chr));
+        // alx_1_procedure_.resume();
+        // alx_procedure2_.resume();
+        // mk8_1_procedure_.resume();
+        group_.resume_all();
 
         blink_procedure_.resume();
 
         static auto report_timer = async::RepeatTimer::from_duration(3ms);
         
         report_timer.invoke_if([&]{
-            const auto & measurement = measurements_[0];
+            const auto & measurement = alx_measurements_[0];
             // const auto [s,c] = measurement.azimuth.sincos(); 
             // const auto [x,y] = Vector2<float>::from_length_and_
             [[maybe_unused]] const auto vec3 = measurement.to_vec3();
@@ -172,8 +260,8 @@ void alx_aoa_main(){
             [[maybe_unused]] const auto o1 = Vec2<float>(0.1, 0);
             [[maybe_unused]] const auto o2 = Vec2<float>(-0.1, 0);
             
-            [[maybe_unused]] const auto circle_a = Circle2<float>{o1, measurements_[0].to_polar().amplitude};
-            [[maybe_unused]] const auto circle_b = Circle2<float>{o2, measurements_[1].to_polar().amplitude};
+            [[maybe_unused]] const auto circle_a = Circle2<float>{o1, alx_measurements_[0].to_polar().amplitude};
+            [[maybe_unused]] const auto circle_b = Circle2<float>{o2, alx_measurements_[1].to_polar().amplitude};
             // [[maybe_unused]] const auto [x,y,z] = vec3;
             // const auto polar = Polar<float>{
             //     .amplitude = measurement.distance,
@@ -188,20 +276,13 @@ void alx_aoa_main(){
                 Circle2<float>{Vec2<float>{1,0}, 1.0f}
             );
             const auto p = points.at_or(0, Zero);
-            // const auto p = [&] -> Vec2<float>{
-            //     if(may_p.is_some()){
-            //         // DEBUG_PRINTLN(may_p.unwrap());
-            //         return may_p.unwrap();
-            //     }else{ 
-            //         return Vec2<float>(0,0);
-            //     }
-            // }();
             DEBUG_PRINTLN(
                 // measuremen/ts_
-                bool(measurements_[0].distance > measurements_[1].distance)
-                // ,measurements_[0].distance, measurements_[1].distance
-                // ,measurements_[0].azimuth.to_radians(), measurements_[1].azimuth.to_radians()
-                ,p, points.size()
+                0
+                // bool(alx_measurements_[0].distance > alx_measurements_[1].distance)
+                ,alx_measurements_[0].distance, alx_measurements_[1].distance
+                // ,alx_measurements_[0].azimuth.to_radians(), alx_measurements_[1].azimuth.to_radians()
+                ,p, points.size(), mk8_measurements_[0]
                 // x,y,z
                 // DEBUGGER.config().no_fieldname, 
                 // DEBUGGER.field("distance")(1),
@@ -213,15 +294,6 @@ void alx_aoa_main(){
                 // DEBUGGER.scoped("abc")(vec3),
                 // DEBUGGER.scoped("uvw")(std::ignore)
             );
-            // if(bytes.size() == 0) return;
-            // if(DEBUGGER.pending() != 0) return;
-            // PANIC{bytes};
-            // DEBUG_PRINTLN_IDLE(
-            //     received_bytes_cnt_
-            // );
-            // for(const auto byte : bytes){
-            //     DEBUG_PRINT(byte);
-            // }
     });
     }
 

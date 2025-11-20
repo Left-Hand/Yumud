@@ -65,7 +65,7 @@ public:
     static_assert(NUM_BITS % 8 == 0);
     static constexpr size_t NUM_BYTES = NUM_BITS / 8;
 
-    static constexpr BitArray from_zero() {
+    static constexpr BitArray zero() {
         auto ret = BitArray();
         ret.fill(0);
         return ret;

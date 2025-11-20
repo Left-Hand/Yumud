@@ -25,7 +25,7 @@ public:
 
     template<details::is_canid ID>
     __always_inline static constexpr CanClassicMsg from_empty(ID id){
-        return from_uninitialized(id, CanClassicDlc::from_zero());
+        return from_uninitialized(id, CanClassicDlc::zero());
     }
 
 

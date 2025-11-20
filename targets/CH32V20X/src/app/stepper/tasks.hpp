@@ -178,7 +178,7 @@ struct MotorTaskPrelude{
 
         constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> meas_angle){
             const auto expected_angle = SIGN_AS(ticks_to_linear_angle(tick_cnt_), delta_);
-            const auto [s,c] = (expected_angle.into<uq16>() * MOTOR_POLE_PAIRS).sincos();
+            const auto [s,c] = (expected_angle.cast_inner<uq16>() * MOTOR_POLE_PAIRS).sincos();
             tick_cnt_++;
             return digipw::AlphaBetaCoord<iq16>{
                 .alpha = STALL_DUTYCYCLE * c,
@@ -222,7 +222,7 @@ struct MotorTaskPrelude{
 
         constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> meas_angle){
             const auto expected_angle = SIGN_AS(ticks_to_linear_angle(tick_cnt_), delta_);
-            const auto [s,c] = (expected_angle.into<uq16>() * MOTOR_POLE_PAIRS).sincos();
+            const auto [s,c] = (expected_angle.cast_inner<uq16>() * MOTOR_POLE_PAIRS).sincos();
             tick_cnt_++;
             return digipw::AlphaBetaCoord<iq16>{
                 .alpha = STALL_DUTYCYCLE * c,
@@ -439,7 +439,7 @@ struct CalibrateRotateTask final{
 
     constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> meas_angle){
         const auto expected_angle = SIGN_AS(ticks_to_linear_angle(tick_cnt_), delta_turns_);
-        const auto [s,c] = (expected_angle.into<uq16>() * MOTOR_POLE_PAIRS).sincos();
+        const auto [s,c] = (expected_angle.cast_inner<uq16>() * MOTOR_POLE_PAIRS).sincos();
         
         tick_cnt_++;
 

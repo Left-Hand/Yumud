@@ -11,7 +11,7 @@ struct [[nodiscard]] Polar{
 
     T amplitude;
     Angle<T> phase;
-    static constexpr Polar<T> from_zero(){
+    static constexpr Polar<T> zero(){
         return Polar<T>{
             T(0), 
             Angle<T>::ZERO

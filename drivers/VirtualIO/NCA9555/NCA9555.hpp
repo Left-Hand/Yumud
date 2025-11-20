@@ -31,22 +31,22 @@ struct NCA9555_Prelude{
 struct NCA9555_Regs:public NCA9555_Prelude{
     struct R16_Input:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x00;
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     };
 
     struct R16_Output:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x02;
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     };
 
     struct R16_Inversion:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x04;
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     };
 
     struct R16_Config:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x06;
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     };
 
     R16_Input input_reg = {};

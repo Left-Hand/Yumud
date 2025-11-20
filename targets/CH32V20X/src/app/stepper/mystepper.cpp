@@ -167,7 +167,7 @@ public:
 
     void ctrl(Angle<uq32> meas_lap_angle){
 
-        pos_filter_.update(meas_lap_angle.into<iq16>());
+        pos_filter_.update(meas_lap_angle.cast_inner<iq16>());
         // const auto [a,b] = sincospu(frac(meas_lap_angle - 0.009_r) * 50);
         // const auto [s,c] = sincospu(frac(-(meas_lap_angle - 0.019_r + 0.01_r)) * 50);
         

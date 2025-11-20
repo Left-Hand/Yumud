@@ -17,7 +17,7 @@ struct [[nodiscard]] SXX32_CanStdIdMask final{
     uint16_t id_u11:11;
     #pragma pack(pop)
 
-    static constexpr SXX32_CanStdIdMask from_zero(){
+    static constexpr SXX32_CanStdIdMask zero(){
         return {CanStdId(0), CanRtr::Data}; // data == 0
     }
 
@@ -58,7 +58,7 @@ struct [[nodiscard]] SXX32_CanExtIdMask final{
     uint32_t id_u29:29;
     #pragma pack(pop)
 
-    static constexpr SXX32_CanExtIdMask from_zero(){
+    static constexpr SXX32_CanExtIdMask zero(){
         return {CanExtId(0), CanRtr::Data}; // data == 0
     }
 

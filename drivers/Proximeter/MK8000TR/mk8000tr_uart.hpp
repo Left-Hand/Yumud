@@ -40,11 +40,16 @@ struct [[nodiscard]] Packet{
     SignalStrength signal_strength;
 
     friend OutputStream & operator<<(OutputStream & os, const Self & self){
-        return os << "Packet{" <<
-            "sender_addr: " << self.sender_addr << os.splitter() <<
-            "dist_cm: " << self.dist_cm << os.splitter() <<
-            "signal_strength: " << self.signal_strength <<
-            "}";
+        // return os << "Packet{" <<
+        //     "sender_addr: " << self.sender_addr << os.splitter() <<
+        //     "dist_cm: " << self.dist_cm << os.splitter() <<
+        //     "signal_strength: " << self.signal_strength <<
+        //     "}";
+        return os 
+            << os.field("sender_addr")(self.sender_addr) << os.splitter()
+            << os.field("dist_cm")(self.dist_cm) << os.splitter()
+            << os.field("signal_strength")(self.signal_strength)
+        ;
     }
 };
 

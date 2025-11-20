@@ -17,7 +17,7 @@ struct [[nodiscard]] CanClassicDlc{
     static constexpr size_t NUM_BITS = 4;
     using Self = CanClassicDlc;
 
-    static constexpr Self from_zero(){
+    static constexpr Self zero(){
         return Self(static_cast<uint8_t>(0));
     }
 
@@ -63,7 +63,7 @@ struct [[nodiscard]] CanFdDlc{
 
     /// @brief 从零长开始构造
     /// @return CANFD帧的DLC
-    static constexpr Self from_zero(){
+    static constexpr Self zero(){
         return Self(static_cast<uint8_t>(0));
     }
 

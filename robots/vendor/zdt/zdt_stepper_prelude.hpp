@@ -335,7 +335,7 @@ struct [[nodiscard]] AcclerationLevel{
         return AcclerationLevel{10};
     }
 
-    static constexpr AcclerationLevel from_zero(){
+    static constexpr AcclerationLevel zero(){
         return AcclerationLevel{0};
     }
 

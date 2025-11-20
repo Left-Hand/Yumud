@@ -253,7 +253,7 @@ struct [[nodiscard]] Angle{
 	}
 
 	template<typename U>
-	[[nodiscard]] constexpr Angle<U> into() const {
+	[[nodiscard]] constexpr Angle<U> cast_inner() const {
 		return Angle<U>::make_angle_from_turns(static_cast<U>(turns_));
 	}
 

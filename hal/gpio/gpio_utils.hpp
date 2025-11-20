@@ -31,7 +31,7 @@ public:
     [[nodiscard]] constexpr PinMask(const PinNth nth):
         raw_(std::bit_cast<uint16_t>(nth)){;}
 
-    [[nodiscard]] static constexpr PinMask from_zero(){
+    [[nodiscard]] static constexpr PinMask zero(){
         return PinMask(0);
     }
     [[nodiscard]] static constexpr PinMask from_u16(const uint16_t raw){
