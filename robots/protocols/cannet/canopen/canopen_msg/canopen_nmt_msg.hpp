@@ -73,7 +73,7 @@ struct MsgSerde<nmt_msg::NetManage>{
     [[nodiscard]] static constexpr CanMsg to_canmsg(const Self & self){
         std::array<uint8_t, 2> bytes;
         self.fill_bytes(bytes);
-        return CanMsg::from_bytes(Self::COBID.to_stdid(), bytes);
+        return CanMsg::from_bytes(Self::COBID.to_stdid(), std::span(bytes));
     }
 
     template<AssertLevel assert_level>
@@ -122,9 +122,9 @@ template<>
 struct MsgSerde<nmt_msg::Heartbeat>{
     using Self = nmt_msg::Heartbeat;
     [[nodiscard]] static constexpr CanMsg to_canmsg(const Self & self){
-        const auto canid = hal::CanStdId(0x700 | self.station_nodeid.to_u7());
+        const auto canid = hal::CanStdId::from_bits(0x700 | self.station_nodeid.to_u7());
         const std::array<uint8_t, 1> bytes = {static_cast<uint8_t>(self.station_state)};
-        return CanMsg::from_bytes(canid, std::move(bytes));
+        return CanMsg::from_bytes(canid, std::span(bytes));
     }
 
     template<AssertLevel assert_level>

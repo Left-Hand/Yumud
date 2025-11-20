@@ -214,7 +214,7 @@ static constexpr auto deserialized4f = std::get<0>(deserialized4);
 static constexpr auto deserialized4q = std::get<1>(deserialized4);
 
 // static constexpr auto msg = hal::CanClassicMsg::from_bytes(CanStdId(0x123), std::span(serialized2));
-static constexpr auto msg = hal::CanClassicMsg::from_bytes(hal::CanStdId(0x123), std::span(serialized2));
+static constexpr auto msg = hal::CanClassicMsg::from_bytes(hal::CanStdId::from_bits(0x123), std::span(serialized2));
 // static constexpr auto deserialized4m = deserialize<CanClassicMsg, MyStruct>(msg);
 static constexpr auto msg_size = msg.length();
 static constexpr auto deserialized4m = deserialize<hal::CanClassicMsg, MyStruct>(msg).unwrap();

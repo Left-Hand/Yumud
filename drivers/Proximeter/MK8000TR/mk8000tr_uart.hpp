@@ -20,14 +20,14 @@ struct [[nodiscard]] SignalStrength{
     static constexpr SignalStrength from_bits(const uint8_t bits) {
         return SignalStrength{bits};
     }
-    constexpr int32_t to_dbm() const {
-        return static_cast<int32_t>(bits) - 256;
+
+    template<typename T = int16_t>
+    constexpr T to_dbm() const {
+        return static_cast<T>(bits) - 256;
     }
 
     friend OutputStream & operator<<(OutputStream & os, const Self & self){
         return os << self.to_dbm() << "dBm";
-        // return os << (self.bits - 256) << "dBm";
-        // return os << (self.bits ) << "dBm";
     }
 };
 
@@ -40,11 +40,6 @@ struct [[nodiscard]] Packet{
     SignalStrength signal_strength;
 
     friend OutputStream & operator<<(OutputStream & os, const Self & self){
-        // return os << "Packet{" <<
-        //     "sender_addr: " << self.sender_addr << os.splitter() <<
-        //     "dist_cm: " << self.dist_cm << os.splitter() <<
-        //     "signal_strength: " << self.signal_strength <<
-        //     "}";
         return os 
             << os.field("sender_addr")(self.sender_addr) << os.splitter()
             << os.field("dist_cm")(self.dist_cm) << os.splitter()

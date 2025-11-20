@@ -24,16 +24,42 @@ using AlxError = drivers::AlxAoa_Prelude::Error;
 
 using AlxLocation = drivers::AlxAoa_Prelude::Location;
 using AlxHeartBeat = drivers::AlxAoa_Prelude::HeartBeat;
-using MkEvent = drivers::MK8000TR_Prelude::Event;
+using Mk8Event = drivers::MK8000TR_Prelude::Event;
 
 using AlxMeasurement = SphericalCoordinates<float>;
-using Mk8Measurement = float;
+
+
+struct [[nodiscard]] Mk8Measurement{
+    using Self = Mk8Measurement;
+
+    float distance;
+    float strength;
+
+    static constexpr Self zero(){
+        return Self{
+            .distance = 0,
+            .strength = 0
+        };
+    }
+
+    friend OutputStream & operator << (OutputStream & os, const Self & self){
+        return os
+            << os.field("distance")(self.distance) << os.splitter()
+            << os.field("strength")(self.strength)
+        ;
+    }
+};
 
 
 struct BlinkProcedure{
     hal::Gpio & red_led_gpio_;
     hal::Gpio & blue_led_gpio_;
 
+    void init(){
+
+        red_led_gpio_.outpp();
+        blue_led_gpio_.outpp();
+    }
     void resume(){
         red_led_gpio_ = BoolLevel::from((
             uint32_t(clock::millis().count()) % 200) > 100);
@@ -139,15 +165,16 @@ void alx_aoa_main(){
     using Mk8Measurements = std::array<Mk8Measurement, 2>;
     Mk8Measurements mk8_measurements_ = {Zero, Zero};
 
-    auto mk8_ev_handler = [&](const MkEvent & ev, const size_t idx){ 
+    auto mk8_ev_handler = [&](const Mk8Event & ev, const size_t idx){ 
         switch(idx){
             default:
                 PANIC("mk8_ev_handler");
             case 0:
-                mk8_measurements_[0] = static_cast<float>(ev.dist_cm) / 100;
-                break;
             case 1:
-                mk8_measurements_[1] = static_cast<float>(ev.dist_cm) / 100;
+                mk8_measurements_[idx] = Mk8Measurement{
+                    .distance = static_cast<float>(ev.dist_cm) / 100,
+                    .strength = ev.signal_strength.to_dbm<float>()
+                };
                 break;
         }
     };
@@ -185,13 +212,13 @@ void alx_aoa_main(){
     );
 
     auto mk8_1_parser_ = drivers::MK8000TR_StreamParser(
-        [&](const MkEvent & ev){
+        [&](const Mk8Event & ev){
             mk8_ev_handler(ev, 0);
         }
     );
 
     auto mk8_2_parser_ = drivers::MK8000TR_StreamParser(
-        [&](const MkEvent & ev){
+        [&](const Mk8Event & ev){
             mk8_ev_handler(ev, 1);
         }
     );
@@ -204,10 +231,6 @@ void alx_aoa_main(){
 
     auto red_led_gpio_ = hal::PC<13>();
     auto blue_led_gpio_ = hal::PC<14>();
-    red_led_gpio_.outpp();
-    blue_led_gpio_.outpp();
-    
-
 
     BlinkProcedure blink_procedure_{
         .red_led_gpio_ = red_led_gpio_,
@@ -219,7 +242,7 @@ void alx_aoa_main(){
         .parser_ = alx_1_parser_
     };
 
-    [[maybe_unused]] AlxProcedure alx_procedure2_{
+    [[maybe_unused]] AlxProcedure alx_2_procedure_{
         .uart_ = alx_2_uart_,
         .parser_ = alx_2_parser_
     };
@@ -233,18 +256,21 @@ void alx_aoa_main(){
         .uart_ = mk8_2_uart_,
         .parser_ = mk8_2_parser_
     };
-    ProcedureGroup group_(alx_1_procedure_, alx_procedure2_);
-    // ProcedureGroup group_(mk8_1_procedure_, mk8_2_procedure_);
+
+
+    ProcedureGroup group_(
+        blink_procedure_, 
+        // alx_1_procedure_, 
+        // alx_2_procedure_
+        mk8_1_procedure_, 
+        mk8_2_procedure_
+    );
 
     DEBUG_PRINTLN("setup done");
 
     group_.init_all();
-    while(true){
 
-        // DEBUG_PRINTLN("uart_rx", uint8_t(chr));
-        // alx_1_procedure_.resume();
-        // alx_procedure2_.resume();
-        // mk8_1_procedure_.resume();
+    while(true){
         group_.resume_all();
 
         blink_procedure_.resume();
@@ -257,11 +283,16 @@ void alx_aoa_main(){
             // const auto [x,y] = Vector2<float>::from_length_and_
             [[maybe_unused]] const auto vec3 = measurement.to_vec3();
             [[maybe_unused]] const auto [x,y,z] = vec3;
-            [[maybe_unused]] const auto o1 = Vec2<float>(0.1, 0);
-            [[maybe_unused]] const auto o2 = Vec2<float>(-0.1, 0);
+            [[maybe_unused]] const auto o1 = Vec2<float>(0.20, 0);
+            [[maybe_unused]] const auto o2 = Vec2<float>(-0.20, 0);
             
-            [[maybe_unused]] const auto circle_a = Circle2<float>{o1, alx_measurements_[0].to_polar().amplitude};
-            [[maybe_unused]] const auto circle_b = Circle2<float>{o2, alx_measurements_[1].to_polar().amplitude};
+            // [[maybe_unused]] const auto circle_a = Circle2<float>{o1, alx_measurements_[0].to_polar().amplitude};
+            // [[maybe_unused]] const auto circle_b = Circle2<float>{o2, alx_measurements_[1].to_polar().amplitude};
+
+            [[maybe_unused]] const auto circle_a = Circle2<float>{o1, mk8_measurements_[0].distance};
+            [[maybe_unused]] const auto circle_b = Circle2<float>{o2, mk8_measurements_[1].distance};
+
+
             // [[maybe_unused]] const auto [x,y,z] = vec3;
             // const auto polar = Polar<float>{
             //     .amplitude = measurement.distance,
@@ -269,20 +300,19 @@ void alx_aoa_main(){
             // };
 
             // const auto [x,y] = polar.to_vec2();
-            // const auto points = compute_intersection_points(circle_a, circle_b);
-            const auto points = geometry::compute_intersection_points(
-                Circle2<float>{Vec2<float>{-1,0}, 1.4141f}, 
-                // Circle2<float>{Vec2<float>{1,0}, 1.4f}
-                Circle2<float>{Vec2<float>{1,0}, 1.0f}
-            );
+            const auto points = geometry::compute_intersection_points(circle_a, circle_b);
             const auto p = points.at_or(0, Zero);
             DEBUG_PRINTLN(
                 // measuremen/ts_
-                0
+                // 0
+
                 // bool(alx_measurements_[0].distance > alx_measurements_[1].distance)
-                ,alx_measurements_[0].distance, alx_measurements_[1].distance
+                // ,alx_measurements_[0].distance, alx_measurements_[1].distance
+                mk8_measurements_[0].distance, 
+                mk8_measurements_[1].distance,
+                p.x, p.y
                 // ,alx_measurements_[0].azimuth.to_radians(), alx_measurements_[1].azimuth.to_radians()
-                ,p, points.size(), mk8_measurements_[0]
+                // ,p, points.size()
                 // x,y,z
                 // DEBUGGER.config().no_fieldname, 
                 // DEBUGGER.field("distance")(1),

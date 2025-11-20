@@ -16,12 +16,6 @@ constexpr HeaplessVector<Vec2<T>, 2> compute_intersection_points(
     const Circle2<T>& circle_a, 
     const Circle2<T>& circle_b
 ) {
-
-    // d = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-    // if d > r1 + r2 or d < abs(r1 - r2):
-    // return None # 圆不相交
-
-
     using Container = HeaplessVector<Vec2<T>, 2>;
     // 卫语句1: 半径检查
     if (circle_a.radius < T(0) || circle_b.radius < T(0)) [[unlikely]] 

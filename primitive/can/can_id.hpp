@@ -15,9 +15,18 @@ struct [[nodiscard]] CanStdId{
     static constexpr uint16_t MAX_VALUE = 0x7ff;
     static constexpr size_t NUM_BITS = 11;
 
-    //make CanStdId without checking 11bits
-    explicit constexpr CanStdId(const uint16_t bits):bits_(bits){;}
-    static constexpr Option<CanStdId> from_u11(const uint16_t bits){
+    //从比特位构造id
+    static constexpr CanStdId from_bits(const uint16_t bits){
+        return CanStdId(bits);
+    }
+
+    //从比特位构造id 超限时立即终止
+    static constexpr CanStdId from_u11(const uint16_t bits){
+        if(bits > MAX_VALUE) [[unlikely]]
+            __builtin_trap();
+        return CanStdId(bits & MAX_VALUE);
+    }
+    static constexpr Option<CanStdId> try_from_u11(const uint16_t bits){
         if(bits > 0x7ff) return None;
         return Some(CanStdId(bits));
     }
@@ -36,6 +45,8 @@ struct [[nodiscard]] CanStdId{
     friend OutputStream & operator << (OutputStream & os, const Self & self);
 private:
     uint16_t bits_;
+
+    explicit constexpr CanStdId(const uint16_t bits):bits_(bits){;}
 };
 
 struct [[nodiscard]] CanExtId{
@@ -43,10 +54,18 @@ struct [[nodiscard]] CanExtId{
     static constexpr uint32_t MAX_VALUE = 0x1fffffff;
     static constexpr size_t NUM_BITS = 29;
 
-    //make CanStdId without checking 29bits
-    explicit constexpr CanExtId(const uint32_t bits):bits_(bits){;}
+    //从比特位构造id
+    static constexpr CanExtId from_bits(const uint32_t bits){
+        return CanExtId(bits);
+    }
 
-    static constexpr Option<CanExtId> from_u29(const uint32_t bits){
+    //从比特位构造id 超限时立即终止
+    static constexpr CanExtId from_u29(const uint32_t bits){
+        if(bits > MAX_VALUE) [[unlikely]]
+            __builtin_trap();
+        return CanExtId(bits & MAX_VALUE);
+    }
+    static constexpr Option<CanExtId> try_from_u29(const uint32_t bits){
         if(bits > 0x1fffffff) return None;
         return Some(CanExtId(bits));
     }
@@ -65,6 +84,7 @@ struct [[nodiscard]] CanExtId{
     friend OutputStream & operator << (OutputStream & os, const Self & self);
 private:
     uint32_t bits_;
+    explicit constexpr CanExtId(const uint32_t bits):bits_(bits){;}
 };
 
 namespace details{

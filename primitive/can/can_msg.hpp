@@ -6,6 +6,7 @@
 #include "can_identifier.hpp"
 
 #include "core/utils/Option.hpp"
+#include "core/utils/Result.hpp"
 
 
 //这个文件描述了CanClassicMsg类 表示标准Can2.0(bxcan)的消息
@@ -14,124 +15,220 @@ namespace ymd::hal{
 
 struct alignas(16) [[nodiscard]] CanClassicMsg{
 public:
-    constexpr CanClassicMsg() = default;
+    using U8X8 = std::array<uint8_t, 8>;
+    //这里并没有用零拷贝，原因是对齐排列的uint64比零拷贝效率更高
+    static constexpr U8X8 ZERO_U8X8 = std::bit_cast<U8X8>(uint64_t(0));
 
+    using Self = CanClassicMsg;
     constexpr CanClassicMsg(const CanClassicMsg & other) = default;
-    
     constexpr CanClassicMsg & operator = (const CanClassicMsg & other) = default;
     constexpr CanClassicMsg(CanClassicMsg && other) = default;
     constexpr CanClassicMsg & operator = (CanClassicMsg && other) = default;
+    // constexpr Self() = default;
 
-
-    template<details::is_canid ID>
-    __always_inline static constexpr CanClassicMsg from_empty(ID id){
-        return from_uninitialized(id, CanClassicDlc::zero());
-    }
-
-
-    template<details::is_canid ID>
-    __always_inline static constexpr CanClassicMsg from_uninitialized(
-        ID id, 
-        const CanClassicDlc dlc
+    /// \brief 从给定的id创建一个远程帧
+    __always_inline static constexpr Self from_remote(
+        details::is_canid auto id
     ){
-        return CanClassicMsg(id, dlc);
+        return Self(
+            CanIdentifier::from_parts(id, CanRtr::Remote), 
+            ZERO_U8X8, 
+            CanClassicDlc::from_bits(0)
+        );
     }
 
-    template<details::is_canid ID>
-    __always_inline static constexpr CanClassicMsg from_id_and_payload_u64(
-        ID id, 
+    /// \brief 从给定的id创建一个空的数据帧
+
+    __always_inline static constexpr Self from_empty(
+        details::is_canid auto id
+    ){
+        return Self(
+            CanIdentifier::from_parts(id, CanRtr::Data), 
+            ZERO_U8X8, 
+            CanClassicDlc::from_bits(0)
+        );
+    }
+
+
+
+    /// \brief 从给定的id和长度为8的u64创建一个填满的消息，其中u64为小端序
+    __always_inline static constexpr Self from_id_and_payload_u64(
+        details::is_canid auto id, 
         const uint64_t payload_bits
     ){
-        return CanClassicMsg(id, payload_bits);
+        return Self(
+            CanIdentifier::from_parts(id, CanRtr::Data), 
+            std::bit_cast<U8X8>(payload_bits), 
+            CanClassicDlc::from_bits(8)
+        );
     }
 
 
-    template<details::is_canid ID>
-    __always_inline static constexpr CanClassicMsg from_remote(ID id){
-        return CanClassicMsg(id, CanRtr::Remote);}
 
-    template<details::is_canid ID>
-    __always_inline static constexpr CanClassicMsg from_bytes(ID id, 
-        const std::span<const uint8_t> bytes)
-        {return CanClassicMsg(id, bytes);}
-
-
-    template<details::is_canid ID, size_t N>
-    requires (N <= 8)
-    __always_inline static constexpr CanClassicMsg from_bytes(
-        ID id, 
-        const std::span<const uint8_t, N> bytes
+    /// \brief 从给定的id和连续数据切片创建一个数据帧 当数据超长时立即终止程序
+    template<std::ranges::input_range R>
+    requires (std::same_as<std::ranges::range_value_t<R>, uint8_t>)
+    __always_inline static constexpr Self from_bytes(
+        details::is_canid auto id, 
+        R&& bytes
     ){
-        return CanClassicMsg(id, bytes);
-    }
-
-
-    template<details::is_canid ID, std::ranges::range R>
-        requires std::convertible_to<std::ranges::range_value_t<R>, uint8_t>
-    __always_inline static constexpr CanClassicMsg from_bytes(ID id, R && range){
-        std::array<uint8_t, 8> buf;
-        uint8_t len = 0;
-        for(auto && val : range){
-            buf[len] = (static_cast<uint8_t>(val));
-            len++;
+        // 检查是否在编译期可以获取大小
+        if constexpr (std::ranges::sized_range<R> && 
+                    requires { std::ranges::size(bytes); } &&
+                    requires { std::bool_constant<(std::ranges::size(bytes) <= 8)>{}; }) {
+            // 编译期大小检查
+            constexpr size_t size = std::ranges::size(bytes);
+            static_assert(size <= 8, "Range size must be <= 8 at compile time");
+        } else {
+            // 运行时大小检查
+            if (std::ranges::size(bytes) > 8) [[unlikely]]
+                __builtin_trap();
         }
-        return CanClassicMsg(id, std::span(buf.data(), len));
+        U8X8 buf = ZERO_U8X8;
+        std::ranges::copy(bytes, buf.begin());
+        return Self(
+            CanIdentifier::from_parts(id, CanRtr::Data), 
+            buf, 
+            CanClassicDlc::from_bits(std::ranges::size(bytes))
+        );
     }
 
-    template<details::is_canid ID>
-    __always_inline static constexpr CanClassicMsg from_list(
-        ID id, 
+
+    /// \brief 从给定的id和连续数据切片创建一个数据帧 当数据超长时返回空
+    template<std::ranges::input_range R>
+    requires (std::same_as<std::ranges::range_value_t<R>, uint8_t>)
+    __always_inline static constexpr Option<Self> try_from_bytes(
+        details::is_canid auto id, 
+        R&& bytes
+    ){
+        // 检查是否在编译期可以获取大小
+        if constexpr (std::ranges::sized_range<R> && 
+                    requires { std::ranges::size(bytes); } &&
+                    requires { std::bool_constant<(std::ranges::size(bytes) <= 8)>{}; }) {
+            // 编译期大小检查
+            constexpr size_t size = std::ranges::size(bytes);
+            static_assert(size <= 8, "Range size must be <= 8 at compile time");
+        } else {
+            // 运行时大小检查
+            if (std::ranges::size(bytes) > 8) [[unlikely]]
+                return None;
+        }
+        U8X8 buf = ZERO_U8X8;
+        std::ranges::copy(bytes, buf.begin());
+        return Some(Self(
+            CanIdentifier::from_parts(id, CanRtr::Data), 
+            buf, 
+            CanClassicDlc::from_bits(std::ranges::size(bytes))
+        ));
+    }
+
+
+    /// \brief 从给定的id和迭代器创建一个数据帧 当数据超长时立即终止程序
+    template<typename Iter>
+    requires (is_next_based_iter_v<Iter>)
+    __always_inline static constexpr Self from_iter(details::is_canid auto id, Iter iter) {
+        U8X8 buf = ZERO_U8X8;
+        size_t len = 0;
+        
+        #pragma GCC unroll 8
+        for(;len < 8; len++) {
+            if(not iter.has_next()) break;
+            buf[len] = iter.next();
+        }
+        if(iter.has_next()) [[unlikely]]
+            __builtin_trap();
+        #pragma GCC unroll 8
+        for(;len < 8; len++){
+            buf[len] = 0;
+        }
+
+        return Some(Self(
+            CanIdentifier::from_parts(id, CanRtr::Data), 
+            buf, 
+            CanClassicDlc::from_bits(len)
+        ));
+    }
+
+    /// \brief 尝试从给定的id和迭代器创建一个数据帧 当数据超长时返回空
+    template<typename Iter>
+    requires (is_next_based_iter_v<Iter>)
+    static constexpr Option<Self> try_from_iter(details::is_canid auto id, Iter iter) {
+        U8X8 buf = ZERO_U8X8;
+        size_t len = 0;
+        #pragma GCC unroll 8
+        for(;len < 8; len++) {
+            if(not iter.has_next()) break;
+            buf[len] = iter.next();
+        }
+        if(iter.has_next()) [[unlikely]]
+            return None;
+        #pragma GCC unroll 8
+        for(;len < 8; len++){
+            buf[len] = 0;
+        }
+        // 使用数组视图构造CanMsg
+        return Some(Self(
+            CanIdentifier::from_parts(id, CanRtr::Data), 
+            buf, 
+            CanClassicDlc::from_bits(len)
+        ));
+    }
+
+
+    /// \brief 尝试从给定的id和初始化列表创建一个数据帧 当数据超长时立即终止
+    __always_inline static constexpr Self from_list(
+        details::is_canid auto id, 
         const std::initializer_list<uint8_t> bytes
     ){
-        return CanClassicMsg(id, std::span<const uint8_t>(bytes.begin(), bytes.size()));
+        if(bytes.size() > 8) [[unlikely]]
+            __builtin_trap();
+        U8X8 buf = ZERO_U8X8;
+        std::copy(bytes.begin(), bytes.end(), buf.begin());
+        return Self(
+            CanIdentifier::from_parts(id, CanRtr::Data), 
+            buf, 
+            CanClassicDlc::from_bits(bytes.size())
+        );
     }
 
-    template<details::is_canid ID, typename Iter>
-    requires is_next_based_iter_v<Iter>
-    static constexpr Option<CanClassicMsg> try_from_iter(ID id, Iter iter) {
-        std::array<uint8_t, 8> buf{};
-        size_t len = 0;
-        
-        while(iter.has_next()) {
-            buf[len] = iter.next();
-            len++;
-            if(len >= 8) return None;
-        }
-        
-        // 使用数组视图构造CanMsg
-        return Some(CanClassicMsg::from_bytes(id, std::span{buf.data(), len}));
-    }
-
-    template<details::is_canid ID, typename Iter>
-    requires is_next_based_iter_v<Iter>
-    __always_inline static constexpr CanClassicMsg from_iter(ID id, Iter iter) {
-        std::array<uint8_t, 8> buf{};
-        size_t len = 0;
-        
-        // 无条件读取最多8个字节
-        while(len < buf.size() && iter.has_next()) {
-            buf[len++] = iter.next();
-        }
-
-        // 使用unsafe方式构造CanMsg（假设调用者保证有效性）
-        return CanClassicMsg::from_bytes(id, std::span{buf.data(), len});
+    /// \brief 尝试从给定的id和初始化列表创建一个数据帧 当数据超长时返回空
+    __always_inline static constexpr Option<Self> try_from_list(
+        details::is_canid auto id, 
+        const std::initializer_list<uint8_t> bytes
+    ){
+        if(bytes.size() > 8) [[unlikely]]
+            return None;
+        U8X8 buf = ZERO_U8X8;
+        std::copy(bytes.begin(), bytes.end(), buf.begin());
+        return Some(Self(
+            CanIdentifier::from_parts(id, CanRtr::Data), 
+            buf, 
+            CanClassicDlc::from_bits(bytes.size())
+        ));
     }
 
 
-    /// \brief (SXX32专属)直接获取载荷的数据长度
-    __always_inline static constexpr CanClassicMsg from_sxx32_regs(
+    /// \brief (SXX32专属)从寄存器值构造报文 不对比特做任何检查
+    __always_inline static constexpr Self from_sxx32_regs(
         uint32_t id_bits, 
         uint64_t payload, 
         uint8_t len
     ){
-        return CanClassicMsg(id_bits, payload, len);}
+        return Self(
+            CanIdentifier::from_bits(id_bits), 
+            std::bit_cast<U8X8>(payload), 
+            CanClassicDlc::from_bits(len)
+        );
+    }
 
-    /// \brief 直接获取载荷的数据长度
+    /// \brief 获取载荷的数据长度
     [[nodiscard]] __always_inline constexpr size_t length() const {return dlc().length();}
+
+    /// \brief 获取dlc标识符
     [[nodiscard]] __always_inline constexpr CanClassicDlc dlc() const {
         return CanClassicDlc::from_bits(dlc_);}
 
-    [[nodiscard]] constexpr CanClassicMsg clone(){
+    [[nodiscard]] constexpr Self clone() const {
         return *this;
     }
 
@@ -155,6 +252,19 @@ public:
         return payload_bytes_[idx];
     }
 
+    /// \brief 获取载荷的数据 如超界则返回空
+    [[nodiscard]] __always_inline constexpr Option<uint8_t> try_at(size_t idx) const {
+        if(idx >= length()) [[unlikely]]
+            return None;
+        return Some(static_cast<uint8_t>(payload_bytes_.at(idx)));
+    }
+
+    /// \brief 获取载荷的可变数据 如超界则返回空
+    [[nodiscard]] __always_inline constexpr Option<uint8_t &> try_at(size_t idx) {
+        if(idx >= length()) [[unlikely]]
+            return None;
+        return Some(payload_bytes_.begin() + idx);
+    }
 
     /// \brief 获取载荷的可变数据 如超界则使使用备选值
     [[nodiscard]] __always_inline constexpr uint8_t at_or(size_t idx, uint8_t other) const {
@@ -174,19 +284,37 @@ public:
     }
 
     /// @brief 设置载荷数据，同时修改报文长度。如果数据超长立即终止
+    template<size_t Extents>
+    requires (Extents <= 8 || Extents == std::dynamic_extent)
     __always_inline constexpr void set_payload_bytes(
-        std::span<const uint8_t> bytes
+        std::span<const uint8_t, Extents> bytes
     ) {
-        if(bytes.size() > 8) [[unlikely]]
-            __builtin_trap();
+        if constexpr(Extents == std::dynamic_extent)
+            if(bytes.size() > 8) [[unlikely]]
+                __builtin_trap();
         dlc_ = bytes.size();
         std::copy(bytes.begin(), bytes.end(), payload_bytes_.begin());
+    }
+
+    /// @brief 设置载荷数据，同时修改报文长度。如果数据超长返回错误
+    template<size_t Extents>
+    requires (Extents <= 8 || Extents == std::dynamic_extent)
+    __always_inline constexpr Result<void, void> try_set_payload_bytes(
+        std::span<const uint8_t, Extents> bytes
+    ) {
+        if constexpr(Extents == std::dynamic_extent)
+            if(bytes.size() > 8) [[unlikely]]
+                return Err();
+        dlc_ = bytes.size();
+        std::copy(bytes.begin(), bytes.end(), payload_bytes_.begin());
+        return Ok();
     }
 
     __always_inline constexpr void set_payload_u64(
         uint64_t int_val
     ) {
-        payload_bytes_ = std::bit_cast<std::array<uint8_t, 8>>(int_val);
+        dlc_ = 8;
+        payload_bytes_ = std::bit_cast<U8X8>(int_val);
     }
 
 
@@ -205,11 +333,6 @@ public:
         return identifier_.is_remote();
     }
 
-    /// @brief 邮箱编号
-    [[nodiscard]] __always_inline constexpr uint8_t mailbox() const {
-        return mbox_;
-    }
-
     /// @brief 不顾帧格式直接获取id的数据大小
     [[nodiscard]] __always_inline constexpr uint32_t id_u32() const {
         return identifier_.id_u32();
@@ -225,86 +348,32 @@ public:
         return identifier_;
     }
 private:
-    template<details::is_canid ID>
+
     __always_inline constexpr CanClassicMsg(
-        const ID id, 
-        const CanRtr rtr
+        const CanIdentifier identifier, 
+        const U8X8 bytes,
+        const CanClassicDlc dlc
     ):
-        identifier_(details::SXX32_CanIdentifier::from(id, rtr))
-    {
-        dlc_ = 0;
-    }
+        payload_bytes_ (bytes),
+        identifier_(identifier),
+        dlc_(dlc.to_bits()){}
 
-    template<details::is_canid ID>
-    __always_inline constexpr CanClassicMsg(
-        const ID id, 
-        const CanClassicDlc _dlc
-    ):
-        identifier_(details::SXX32_CanIdentifier::from(id, CanRtr::Data))
-    {
-        dlc_ = _dlc.length();
-    }
-
-
-    template<details::is_canid ID>
-    __always_inline constexpr CanClassicMsg(
-        const ID id, 
-        const std::span<const uint8_t> bytes
-    ) : 
-        CanClassicMsg(id, CanRtr::Data)
-    {
-        if(bytes.size() > 8) [[unlikely]]
-            __builtin_trap();
-
-        dlc_ = bytes.size();
-
-        #pragma GCC unroll 8
-        for(size_t i = 0; i < dlc_ ; i++){
-            payload_bytes_[i] = (bytes[i]);
-        }
-
-        #pragma GCC unroll 8
-        for(size_t i = dlc_; i < 8; i++){
-            payload_bytes_[i] = 0;
-        }
-    }
-
-    template<details::is_canid ID>
-    __always_inline constexpr CanClassicMsg(
-        const ID id, 
-        const uint64_t u64_val
-    ) : 
-        CanClassicMsg(id, CanRtr::Data)
-    {
-        dlc_ = 8;
-        payload_bytes_ = std::bit_cast<std::array<uint8_t, 8>>(u64_val);
-    }
-
-    __always_inline constexpr CanClassicMsg(const uint32_t id_bits, const uint64_t data, const uint8_t dlc):
-        identifier_(details::SXX32_CanIdentifier::from_bits(id_bits))
-    {
-        const auto buf = std::bit_cast<std::array<uint8_t, 8>>(data);
-
-        #pragma GCC unroll 8
-        for(size_t i = 0; i < dlc; i++){
-            payload_bytes_[i] = buf[i];
-        }
-        dlc_ = dlc;
-    }
-
-
+    alignas(4) U8X8 payload_bytes_;
     alignas(4) CanIdentifier identifier_;
-    alignas(4) std::array<uint8_t, 8> payload_bytes_;
-    uint8_t dlc_:4;     
+    uint8_t dlc_;     
     /* Specifies the length of the frame that will be received.
     This parameter can be a value between 0 to 8 */
     
-    uint8_t mbox_:4;
+    // uint8_t mbox_:4;
     
-    uint8_t fmi_;     
+    // uint8_t fmi_;     
     /* Specifies the index of the filter the message stored in 
     the mailbox passes through. This parameter can be a 
     value between 0 to 0xFF */
+
+
+
+
 };
 
 

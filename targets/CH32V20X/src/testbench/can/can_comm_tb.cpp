@@ -21,7 +21,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
     {
         const uint32_t id = 0x1314;
         hal::CanClassicMsg msg = hal::CanClassicMsg::from_list(
-            hal::CanStdId(id), {3,4});
+            hal::CanStdId::from_bits(id), {3,4});
 
         // constexpr auto a = sizeof(msg);
         auto payload = msg.payload_bytes();
@@ -34,7 +34,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
         real_t data2 = 0.99_r;
         uint32_t id = 0x5678;
         const auto msg = hal::CanClassicMsg::from_bytes(
-            hal::CanExtId(id), 
+            hal::CanExtId::from_bits(id), 
             std::bit_cast<std::array<uint8_t, 4>>(data.to_bits())
         );
         // msg.load(data);
@@ -44,7 +44,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
         // auto read2 = msg.to_vector();
         // auto read2 = msg.to_array<8>();
         const auto msg2 = hal::CanClassicMsg::from_bytes(
-            hal::CanStdId(id), 
+            hal::CanStdId::from_bits(id), 
             std::bit_cast<std::array<uint8_t, 4>>(data2.to_bits())
         );
         logger.println(id, msg2.length(), msg2.payload_bytes());
@@ -59,7 +59,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
         if(is_tx){
             static uint8_t cnt = 0;
             const auto msg = hal::CanClassicMsg::from_list(
-                hal::CanStdId(1), 
+                hal::CanStdId::from_bits(1), 
                 {0x34, 0x37}
             );
             can.write(msg).examine();
@@ -90,7 +90,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
             }
 
             const auto msg = hal::CanClassicMsg::from_list(
-                hal::CanStdId(0), 
+                hal::CanStdId::from_bits(0), 
                 {0x13,0x14}
             );
 

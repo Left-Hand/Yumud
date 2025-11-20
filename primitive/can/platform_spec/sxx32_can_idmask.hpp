@@ -18,19 +18,19 @@ struct [[nodiscard]] SXX32_CanStdIdMask final{
     #pragma pack(pop)
 
     static constexpr SXX32_CanStdIdMask zero(){
-        return {CanStdId(0), CanRtr::Data}; // data == 0
+        return {CanStdId::from_bits(0), CanRtr::Data}; // data == 0
     }
 
-    static constexpr  SXX32_CanStdIdMask from_full(){
-        return {CanStdId(CanStdId::MAX_VALUE), CanRtr::Remote}; // remote == 1
+    static constexpr  SXX32_CanStdIdMask full(){
+        return {CanStdId::from_bits(CanStdId::MAX_VALUE), CanRtr::Remote}; // remote == 1
     }
 
     static constexpr SXX32_CanStdIdMask from_lower_mask(const size_t len, const CanRtr rtr){
-        return {CanStdId(uint16_t((1 << len) - 1)), rtr};
+        return {CanStdId::from_bits(uint16_t((1 << len) - 1)), rtr};
     }
 
     static constexpr SXX32_CanStdIdMask from_higher_mask(const size_t len, const CanRtr rtr){
-        return {CanStdId(uint16_t(~(uint16_t(1 << len) - 1))), rtr};
+        return {CanStdId::from_bits(uint16_t(~(uint16_t(1 << len) - 1))), rtr};
     }
 
     [[nodiscard]] constexpr uint16_t to_bits() const{
@@ -59,19 +59,19 @@ struct [[nodiscard]] SXX32_CanExtIdMask final{
     #pragma pack(pop)
 
     static constexpr SXX32_CanExtIdMask zero(){
-        return {CanExtId(0), CanRtr::Data}; // data == 0
+        return {CanExtId::from_bits(0), CanRtr::Data}; // data == 0
     }
 
-    static constexpr SXX32_CanExtIdMask from_full(){
-        return {CanExtId(CanExtId::MAX_VALUE), CanRtr::Remote}; // remote == 1
+    static constexpr SXX32_CanExtIdMask full(){
+        return {CanExtId::from_bits(CanExtId::MAX_VALUE), CanRtr::Remote}; // remote == 1
     }
 
     static constexpr SXX32_CanExtIdMask from_lower_mask(const size_t len, const CanRtr rtr){
-        return {CanExtId(uint32_t((1 << len) - 1)), rtr};
+        return {CanExtId::from_bits(uint32_t((1 << len) - 1)), rtr};
     }
 
     static constexpr SXX32_CanExtIdMask from_higher_mask(const size_t len, const CanRtr rtr){
-        return {CanExtId(~uint32_t(uint32_t(1 << len) - 1)), rtr};
+        return {CanExtId::from_bits(~uint32_t(uint32_t(1 << len) - 1)), rtr};
     }
 
     [[nodiscard]] constexpr uint32_t to_bits() const{

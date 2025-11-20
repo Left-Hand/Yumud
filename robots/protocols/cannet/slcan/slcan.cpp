@@ -111,7 +111,7 @@ IResult<hal::CanStdId> parse_std_id(const StringView str){
     if(id > 0x7ff)
         RETURN_ERR(Error::StdIdOverflow);
 
-    return Ok(hal::CanStdId(id));
+    return Ok(hal::CanStdId::from_bits(id));
 }
 
 #if SLCAN_STATIC_TEST_EN == 1
@@ -141,7 +141,7 @@ IResult<hal::CanExtId> parse_ext_id(const StringView str){
     if(id > ((1u << 29) - 1))
         RETURN_ERR(Error::ExtIdOverflow);
 
-    return Ok(hal::CanExtId(id));
+    return Ok(hal::CanExtId::from_bits(id));
 }
 
 [[nodiscard]] static constexpr 
@@ -248,12 +248,12 @@ IResult<hal::CanClassicMsg> parse_msg(const StringView str, hal::CanRtr can_rtr)
 
             const auto bytes = std::span(payload.data(), dlc);
             
-            return Ok(hal::CanClassicMsg::from_bytes(ID(id_u32_checked), bytes));
+            return Ok(hal::CanClassicMsg::from_bytes(ID::from_bits(id_u32_checked), bytes));
         }
         case hal::CanRtr::Remote:{
             if(payload_str.size() != 0) 
                 RETURN_ERR(Error::InvalidFieldInRemoteMsg);
-            return Ok(hal::CanClassicMsg::from_remote(ID(id_u32_checked)));
+            return Ok(hal::CanClassicMsg::from_remote(ID::from_bits(id_u32_checked)));
         }
     }
     __builtin_unreachable();

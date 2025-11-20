@@ -21,8 +21,8 @@ struct [[nodiscard]] _CanIdMaskPair final{
 
     static constexpr _CanIdMaskPair reject_all(){
         return _CanIdMaskPair{
-            .id = T::from_full(), 
-            .mask = T::from_full()
+            .id = T::full(), 
+            .mask = T::full()
         };
     }
 

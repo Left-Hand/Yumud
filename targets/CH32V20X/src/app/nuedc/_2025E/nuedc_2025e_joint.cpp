@@ -168,7 +168,7 @@ void nuedc_2025e_joint_main(){
         .apply(hal::CanFilterConfig::from_pair(
             hal::CanStdIdMaskPair::from_parts(
                 comb_role_and_cmd(self_node_role_, uint8_t(0x00)), 
-                hal::CanStdId(0b1111'000'0000), hal::CanRtrSpecfier::Discard
+                hal::CanStdId::from_bits(0b1111'000'0000), hal::CanRtrSpecfier::Discard
             ))
         )
     ;

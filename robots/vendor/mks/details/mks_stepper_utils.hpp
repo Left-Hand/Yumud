@@ -49,7 +49,7 @@ private:
     static constexpr hal::CanStdId map_nodeid_to_canid(
         const NodeId nodeid
     ){
-        return hal::CanStdId(nodeid.to_u8());
+        return hal::CanStdId::from_bits(nodeid.to_u8());
     }
 };
 

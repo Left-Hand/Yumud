@@ -159,7 +159,7 @@ private:
         const NodeId nodeid, 
         const uint8_t piece
     ){
-        return hal::CanExtId(
+        return hal::CanExtId::from_bits(
             uint32_t(nodeid.to_u8() << 8) | 
             (piece)
         );

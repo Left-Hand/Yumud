@@ -25,10 +25,16 @@ struct [[nodiscard]] CanClassicDlc{
         return Self(bits);
     }
 
-    static constexpr Option<Self> from_length(const size_t length){
+    static constexpr Option<Self> try_from_length(const size_t length){
         if(length > 8) [[unlikely]]
             return None;
         return Some(Self::from_bits(static_cast<uint8_t>(length)));
+    }
+
+    static constexpr Self from_length(const size_t length){
+        if(length > 8) [[unlikely]]
+            __builtin_trap();
+        return Self::from_bits(static_cast<uint8_t>(length));
     }
 
     [[nodiscard]] constexpr size_t length() const {

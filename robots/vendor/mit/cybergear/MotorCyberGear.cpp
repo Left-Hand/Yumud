@@ -209,7 +209,7 @@ IResult<> Self::transmit(const uint32_t bits, const uint64_t payload, const uint
 
     const auto buf = std::bit_cast<std::array<uint8_t, 8>>(payload);
     const auto msg = CanClassicMsg::from_bytes(
-        hal::CanStdId(bits), 
+        hal::CanStdId::from_bits(bits), 
         std::span(buf.data(), dlc)
     );
     return this->transmit(msg);

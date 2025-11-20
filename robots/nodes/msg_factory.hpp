@@ -41,7 +41,7 @@ static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind c
     const auto id_u11 = uint16_t(
         uint16_t(uint16_t(std::bit_cast<uint8_t>(role)) << 7) 
         | uint16_t(std::bit_cast<uint8_t>(cmd) & 0x7f));
-    return hal::CanStdId(id_u11);
+    return hal::CanStdId::from_bits(id_u11);
 };
 
 template<typename CommandKind>

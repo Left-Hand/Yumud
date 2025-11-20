@@ -26,7 +26,7 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     /// @param rmt remote标识符(Data/Remote)
     template<details::is_canid ID>
     __attribute__((always_inline)) 
-    static constexpr Self from(
+    static constexpr Self from_parts(
         const ID id,
         const CanRtr rmt
     ){
@@ -80,26 +80,26 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     [[nodiscard]] constexpr Option<CanStdId> try_to_stdid() const {
         if(is_extended_ == true) [[unlikely]]
             return None;
-        return Some(CanStdId(full_id_ >> (29-11)));
+        return Some(CanStdId::from_bits(full_id_ >> (29-11)));
     }
 
     /// @brief 尝试将帧ID转为 帧ID
     [[nodiscard]] constexpr Option<CanExtId> try_to_extid() const {
         if(is_extended_ == false) [[unlikely]]
             return None;
-        return Some(CanExtId(full_id_));
+        return Some(CanExtId::from_bits(full_id_));
     }
 
     [[nodiscard]] constexpr CanStdId to_stdid() const {
         if(is_extended_ == true) [[unlikely]]
             __builtin_trap();
-        return CanStdId((full_id_ >> (29-11)));
+        return CanStdId::from_bits((full_id_ >> (29-11)));
     }
 
     [[nodiscard]] constexpr CanExtId to_extid() const {
         if(is_extended_ == false) [[unlikely]]
             __builtin_trap();
-        return CanExtId((full_id_ ));
+        return CanExtId::from_bits((full_id_ ));
     }
 
     const uint32_t __resv__:1 = 1;

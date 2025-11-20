@@ -68,7 +68,7 @@ struct [[nodiscard]] CobId{
     }
 
     constexpr hal::CanStdId to_stdid() const {
-        return hal::CanStdId(nodeid_ | fcode_ << 7);
+        return hal::CanStdId::from_bits(nodeid_ | fcode_ << 7);
     }
 
     constexpr FunctionCode func_code() const {
