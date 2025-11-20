@@ -177,16 +177,16 @@ void M3508Port::tick(){
 
 
     if((connected_flags_ & std::bitset<8>(0x0f)).any()){
-        write_can_msg(hal::CanClassicMsg::from_bytes(
+        write_can_msg(hal::CanClassicMsg(
             hal::CanStdId::from_bits(HIGHER_ADDRESS), 
-            std::bit_cast<std::array<uint8_t, 8>>(tx_datas[0])
+            hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(tx_datas[0]))
         )).examine();
     }
 
     if((connected_flags_ & std::bitset<8>(0xf0)).any()){
-        write_can_msg(hal::CanClassicMsg::from_bytes(
+        write_can_msg(hal::CanClassicMsg(
             hal::CanStdId::from_bits(LOWER_ADDRESS), 
-            std::bit_cast<std::array<uint8_t, 8>>(tx_datas[1])
+            hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(tx_datas[1]))
         )).examine();
     }
 

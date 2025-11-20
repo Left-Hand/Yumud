@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <compare>
 #include "core/utils/Option.hpp"
 
 //这个类与平台无关 相关标准在CanFD的官方文档中定义
@@ -19,6 +20,10 @@ struct [[nodiscard]] CanClassicDlc{
 
     static constexpr Self zero(){
         return Self(static_cast<uint8_t>(0));
+    }
+
+    static constexpr Self full(){
+        return Self(static_cast<uint8_t>(8));
     }
 
     static constexpr Self from_bits(const uint8_t bits){
@@ -44,6 +49,8 @@ struct [[nodiscard]] CanClassicDlc{
     [[nodiscard]] constexpr uint8_t to_bits() const {
         return bits_;
     }
+
+    [[nodiscard]] constexpr auto operator <=>(const Self & other) const = default;
 private:
     uint8_t bits_;
 

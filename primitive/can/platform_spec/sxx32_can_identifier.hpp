@@ -116,10 +116,10 @@ private:
     __attribute__((always_inline)) 
     static constexpr Self from_std_id(
         const CanStdId id, 
-        const CanRtr is_remote
+        const CanRtr rtr
     ){
         return Self{
-            .is_remote_ = (is_remote == CanRtr::Remote), 
+            .is_remote_ = (rtr == CanRtr::Remote), 
             .is_extended_ = false, 
             .full_id_ = static_cast<uint32_t>(id.to_u11()) << 18
         };

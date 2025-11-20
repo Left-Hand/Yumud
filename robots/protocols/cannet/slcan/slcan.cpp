@@ -248,7 +248,7 @@ IResult<hal::CanClassicMsg> parse_msg(const StringView str, hal::CanRtr can_rtr)
 
             const auto bytes = std::span(payload.data(), dlc);
             
-            return Ok(hal::CanClassicMsg::from_bytes(ID::from_bits(id_u32_checked), bytes));
+            return Ok(hal::CanClassicMsg(ID::from_bits(id_u32_checked), hal::BxCanPayload::from_bytes(bytes)));
         }
         case hal::CanRtr::Remote:{
             if(payload_str.size() != 0) 

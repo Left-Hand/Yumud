@@ -27,9 +27,9 @@ public:
 
 
     void write_can_msg(const NodeId nodeid, const std::span<const uint8_t> bytes) {
-        const auto msg = hal::CanClassicMsg::from_bytes(
+        const auto msg = hal::CanClassicMsg(
             map_nodeid_to_canid(nodeid),
-            bytes
+            hal::CanClassicPayload::from_bytes(bytes)
         );
 
         if(can_.is_some()){

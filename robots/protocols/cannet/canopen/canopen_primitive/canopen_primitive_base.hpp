@@ -5,9 +5,10 @@
 namespace ymd::canopen::primitive{
 
 using CanMsg = hal::CanClassicMsg;
+using CanPayload = hal::BxCanPayload;
 
-class SubEntry;
-
+struct SubEntry;
+struct CobId;
 
 struct [[nodiscard]] NodeId{
 
@@ -23,11 +24,14 @@ struct [[nodiscard]] NodeId{
     uint8_t bits;
 
     static constexpr NodeId from_u7(const uint8_t bits){
+        if(bits & 0b10000000) [[unlikely]] 
+            __builtin_trap();
         return NodeId{static_cast<uint8_t>(bits & 0b1111111)};
     }
 
     static constexpr Option<NodeId> try_from_bits(const uint8_t bits){
-        if(bits & 0b10000000) return None;
+        if(bits & 0b10000000) [[unlikely]]
+            return None;
         return Some(from_u7(bits));
     }
 
@@ -43,9 +47,15 @@ struct [[nodiscard]] NodeId{
         return bits == 0;
     }
 
+    [[nodiscard]] constexpr bool is_preserved() const{
+        return bits == 244 || bits == 255;
+    }
+
     [[nodiscard]] constexpr bool test(const NodeId & other){
         return other.is_boardcast() || bits == other.bits;
     }
+
+    [[nodiscard]] constexpr CobId with_func_code(const FunctionCode fcode) const;
 
     [[nodiscard]] constexpr bool operator==(const NodeId & other) const{
         return bits == other.bits;
@@ -174,8 +184,13 @@ static_assert(sizeof(OdSubIndex) == sizeof(uint8_t));
 // enum class [[nodiscard]] OdSubIndex:uint8_t{};
 
 struct [[nodiscard]] OdIndex{
+    using Self = OdIndex;
     OdPreIndex pre;
     OdSubIndex sub;
+
+    static constexpr Self from_parts(const OdPreIndex _pre, const OdSubIndex _sub){
+        return Self{_pre, _sub};
+    }
     constexpr bool operator==(const OdIndex& other) const = default;
 };
 
@@ -197,6 +212,9 @@ struct [[nodiscard]] OdIndex{
 //     CommandSpecifier specifier;
 // };
 
+[[nodiscard]] constexpr CobId NodeId::with_func_code(const FunctionCode fcode) const{
+    return CobId::from_parts(*this, fcode);
+}
 
 
 }

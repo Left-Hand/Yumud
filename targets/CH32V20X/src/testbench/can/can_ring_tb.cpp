@@ -36,14 +36,29 @@ void can_ring_main(){
     };
 
     static constexpr auto UNREACHABLE_MSGS = std::to_array({
-        hal::CanClassicMsg::from_list(hal::CanStdId::from_bits(0x100), {0, 1, 3}),
-        hal::CanClassicMsg::from_bytes(hal::CanStdId::from_bits(0x300), std::bit_cast<std::array<uint8_t, 4>>(0x12345678)),
-        hal::CanClassicMsg::from_bytes(hal::CanExtId::from_bits(0x400), std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+        hal::CanClassicMsg(
+            hal::CanStdId::from_bits(0x100), 
+            hal::CanClassicPayload::from_list({0, 1, 3})
+        ),
+        hal::CanClassicMsg(
+            hal::CanStdId::from_bits(0x300), 
+            hal::CanClassicPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+        ),
+        hal::CanClassicMsg(
+            hal::CanExtId::from_bits(0x400), 
+            hal::CanClassicPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+        )
     });
 
     static constexpr auto REACHABLE_MSGS = std::to_array({
-        hal::CanClassicMsg::from_list(hal::CanStdId::from_bits(0x200), {0, 1, 2}),
-        hal::CanClassicMsg::from_bytes(hal::CanStdId::from_bits(0x200), std::bit_cast<std::array<uint8_t, 4>>(0x12345678)),
+        hal::CanClassicMsg(
+            hal::CanStdId::from_bits(0x200), 
+            hal::CanClassicPayload::from_list({0, 1, 2})
+        ),
+        hal::CanClassicMsg(
+            hal::CanStdId::from_bits(0x200), 
+            hal::CanClassicPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+        ),
     });
 
     while(true){

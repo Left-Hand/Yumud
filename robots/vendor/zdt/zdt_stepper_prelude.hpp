@@ -148,9 +148,9 @@ private:
         buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
         buf.append_unchecked(bytes);
 
-        return hal::CanClassicMsg::from_bytes(
+        return hal::CanClassicMsg(
             map_nodeid_and_piececnt_to_canid(nodeid, piece_cnt),
-            buf.iter()
+            hal::CanClassicPayload::from_bytes(buf.as_slice())
         );
     }
 

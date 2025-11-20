@@ -2,6 +2,7 @@
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
+#include "hal/bus/can/can.hpp"
 
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"

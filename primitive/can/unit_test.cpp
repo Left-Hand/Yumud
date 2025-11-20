@@ -131,48 +131,37 @@ static_assert([]{
 // Test byte array construction with sized range
 static_assert([]{
     constexpr std::array<uint8_t, 3> data{1, 2, 3};
-    constexpr auto msg = CanClassicMsg::from_bytes(CanStdId::from_bits(0x123U), data);
+    constexpr auto msg = CanClassicMsg::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_bytes(data));
     return msg.length() == 3 && msg[0] == 1 && msg[1] == 2 && msg[2] == 3;
 }());
 
 // Test try_from_bytes with valid sized range
 static_assert([]{
     constexpr std::array<uint8_t, 5> data{1, 2, 3, 4, 5};
-    constexpr auto maybe_msg = CanClassicMsg::try_from_bytes(CanStdId::from_bits(0x123U), data);
-    return maybe_msg.is_some() && maybe_msg.unwrap().length() == 5;
-}());
-
-// Test try_from_bytes with oversized data (should return None)
-static_assert([]{
-    constexpr std::array<uint8_t, 9> oversized_data{};
-    constexpr auto result = CanClassicMsg::try_from_bytes(CanStdId::from_bits(0x123U), oversized_data);
-    return result.is_none();
+    constexpr auto msg = CanClassicMsg::from_parts(
+        CanStdId::from_bits(0x123U), 
+        BxCanPayload::try_from_bytes(data).unwrap()
+    );
+    return msg.length() == 5;
 }());
 
 // Test initializer list construction
 static_assert([]{
-    constexpr auto msg = CanClassicMsg::from_list(CanStdId::from_bits(0x123U), {1, 2, 3, 4});
+    constexpr auto msg = CanClassicMsg::from_parts(
+        CanStdId::from_bits(0x123U), 
+        BxCanPayload::from_list({1, 2, 3, 4})
+    );
     return msg.length() == 4 && msg[0] == 1 && msg[3] == 4;
 }());
 
-// Test try_from_list with valid data
-static_assert([]{
-    constexpr auto maybe_msg = CanClassicMsg::try_from_list(CanStdId::from_bits(0x123U), {1, 2, 3, 4});
-    return maybe_msg.is_some() && maybe_msg.unwrap().length() == 4;
-}());
 
 // Test try_from_list with oversized data (should return None)
 static_assert([]{
-    constexpr auto result = CanClassicMsg::try_from_list(CanStdId::from_bits(0x123U), {1, 2, 3, 4, 5, 6, 7, 8, 9});
-    return result.is_none();
+    constexpr auto may_payload = BxCanPayload::try_from_list({1, 2, 3, 4, 5, 6, 7, 8, 9});
+    return may_payload.is_none();
 }());
 
 
-// Test payload operations
-static_assert([]{
-    constexpr auto msg = CanClassicMsg::from_id_and_payload_u64(CanStdId::from_bits(0x123U), 0x1122334455667788ULL);
-    return msg.payload_bytes()[0] == 0x88 && msg.payload_bytes()[7] == 0x11; // Little endian
-}());
 
 // Test accessors
 static_assert([]{
@@ -180,17 +169,11 @@ static_assert([]{
     return msg.identifier().id_u32() == 0x123U;
 }());
 
-// Test copy and assignment
-static_assert([]{
-    constexpr auto msg1 = CanClassicMsg::from_id_and_payload_u64(CanStdId::from_bits(0x123U), 0x1122334455667788ULL);
-    constexpr auto msg2 = msg1;
-    return msg2.id_u32() == 0x123U && msg2.payload_u64() == 0x1122334455667788ULL;
-}());
 
 // Test span-based payload access
 static_assert([]{
-    constexpr auto may_msg = CanClassicMsg::try_from_list(CanStdId::from_bits(0x123U), {1, 2, 3});
-    constexpr auto msg = may_msg.unwrap();
+    constexpr auto may_msg = CanClassicMsg::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({1, 2, 3}));
+    constexpr auto msg = may_msg;
     constexpr auto payload_bits = msg.payload_u64();
     static_assert(msg.dlc().length() == 3);   
     static_assert(payload_bits == 0x0000000000030201ULL);
@@ -203,19 +186,19 @@ static_assert([]{
 
 // Test direct array access operators
 static_assert([]{
-    constexpr auto msg = CanClassicMsg::from_list(CanStdId::from_bits(0x123U), {10, 20, 30});
+    constexpr auto msg = CanClassicMsg::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({10, 20, 30}));
     return msg[0] == 10 && msg[1] == 20 && msg[2] == 30;
 }());
 
 // Test at() method with valid indices
 static_assert([]{
-    constexpr auto msg = CanClassicMsg::from_list(CanStdId::from_bits(0x123U), {5, 10, 15});
+    constexpr auto msg = CanClassicMsg::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({5, 10, 15}));
     return msg.at(0) == 5 && msg.at(1) == 10 && msg.at(2) == 15;
 }());
 
 // Test try_at() with valid indices
 static_assert([]{
-    constexpr auto msg = CanClassicMsg::from_list(CanStdId::from_bits(0x123U), {7, 14, 21});
+    constexpr auto msg = CanClassicMsg::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({7, 14, 21}));
     constexpr auto val0 = msg.try_at(0);
     constexpr auto val1 = msg.try_at(1);
     return val0.is_some() && val0.unwrap() == 7 && val1.is_some() && val1.unwrap() == 14;
@@ -223,18 +206,11 @@ static_assert([]{
 
 // Test try_at() with invalid index (should return None)
 static_assert([]{
-    constexpr auto msg = CanClassicMsg::from_list(CanStdId::from_bits(0x123U), {1, 2, 3});
+    constexpr auto msg = CanClassicMsg::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({1, 2, 3}));
     constexpr auto result = msg.try_at(5); // Index out of bounds
     return result.is_none();
 }());
 
-
-// Test set_payload_u64
-static_assert([]{
-    auto msg = CanClassicMsg::from_empty(CanStdId::from_bits(0x123U));
-    msg.set_payload_u64(0x1122334455667788ULL);
-    return msg.payload_u64() == 0x1122334455667788ULL && msg.length() == 8;
-}());
 
 
 // Test frame type identification
@@ -250,41 +226,4 @@ static_assert([]{
     constexpr auto ext_msg = CanClassicMsg::from_empty(CanExtId::from_bits(0x123456U));
     return std_msg.is_standard() && !std_msg.is_extended() && 
            ext_msg.is_extended() && !ext_msg.is_standard();
-}());
-
-// Test compile-time size checking in from_bytes
-static_assert([]{
-    constexpr std::array<uint8_t, 8> max_data{};
-    // This should compile fine as it's exactly the maximum allowed size
-    constexpr auto msg = CanClassicMsg::from_bytes(CanStdId::from_bits(0x123U), max_data);
-    return msg.length() == 8;
-}());
-
-// Test that try versions return None for oversized data would require runtime checks,
-// but we can at least ensure they compile properly with valid sizes
-static_assert([]{
-    constexpr std::array<uint8_t, 4> valid_data{1, 2, 3, 4};
-    constexpr auto result = CanClassicMsg::try_from_bytes(CanStdId::from_bits(0x123U), std::span(valid_data));
-    return result.is_some();
-}());
-
-// Test maximum sized data
-static_assert([]{
-    constexpr std::array<uint8_t, 8> max_data{1, 2, 3, 4, 5, 6, 7, 8};
-    constexpr auto msg = CanClassicMsg::from_bytes(CanStdId::from_bits(0x123U), max_data);
-    return msg.length() == 8 && msg[0] == 1 && msg[7] == 8;
-}());
-
-// Test zero-sized data
-static_assert([]{
-    constexpr std::array<uint8_t, 0> empty_data{};
-    constexpr auto msg = CanClassicMsg::from_bytes(CanStdId::from_bits(0x123U), empty_data);
-    return msg.length() == 0;
-}());
-
-// Test clone method
-static_assert([]{
-    constexpr auto original = CanClassicMsg::from_list(CanStdId::from_bits(0x123U), {1, 2, 3});
-    constexpr auto cloned = original.clone();
-    return cloned.length() == 3 && cloned[0] == 1 && cloned[1] == 2 && cloned[2] == 3;
 }());

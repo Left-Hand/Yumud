@@ -8,31 +8,31 @@ namespace ymd::canopen{
 
 enum class FunctionCodeKind:uint8_t{
     Nmt = 0x00,
-    Sync = 0x01,
-    Emergency = 0x02,
-    Time = 0x03,
-    TxPdo1 = 0x04,
-    RxPdo1 = 0x05,
-    TxPdo2 = 0x06,
-    RxPdo2 = 0x07,
-    TxPdo3 = 0x08,
-    RxPdo3 = 0x09,
-    TxPdo4 = 0x0a,
-    RxPdo4 = 0x0b,
-    TxSdo = 0x0c,
-    RxSdo = 0x0d,
-    Heartbeat = 0x0e,
+    Sync = 0x01,//0x080 + NodeId
+    Emergency = 0x02,//0x100 + NodeId
+    // Time = 0x03,//0x180 + NodeId
+    TxPdo1 = 0x180 >> 7,//0x200 + NodeId
+    RxPdo1 = 0x200 >> 7,//0x280 + NodeId
+    TxPdo2 = 0x280 >> 7,//0x300 + NodeId
+    RxPdo2 = 0x300 >> 7,//0x380 + NodeId
+    TxPdo3 = 0x380 >> 7,//0x400 + NodeId
+    RxPdo3 = 0x400 >> 7,//0x480 + NodeId
+    TxPdo4 = 0x480 >> 7,//0x500 + NodeId
+    RxPdo4 = 0x500 >> 7,//0x580 + NodeId
+    TxSdo = 0x580 >> 7,//0x600 + NodeId
+    RxSdo = 0x600 >> 7,//0x680 + NodeId
+    Heartbeat = 0x0e,//0x700 + NodeId
 };
 
 enum class PdoOnlyFunctionCodeKind:uint8_t{
-    TxPdo1 = 0x04,
-    RxPdo1 = 0x05,
-    TxPdo2 = 0x06,
-    RxPdo2 = 0x07,
-    TxPdo3 = 0x08,
-    RxPdo3 = 0x09,
-    TxPdo4 = 0x0a,
-    RxPdo4 = 0x0b,
+    TxPdo1 = 3,
+    RxPdo1,
+    TxPdo2,
+    RxPdo2,
+    TxPdo3,
+    RxPdo3,
+    TxPdo4,
+    RxPdo4,
 };
 
 struct [[nodiscard]] PdoOnlyFunctionCode{
@@ -138,19 +138,36 @@ struct [[nodiscard]] FunctionCode{
         return static_cast<uint8_t>(kind_);
     }
 
-    [[nodiscard]] __always_inline constexpr bool is_nmt() const {
-        return kind_ == Kind::Nmt;}
-    [[nodiscard]] __always_inline constexpr bool is_sync() const {
-        return kind_ == Kind::Sync;}
-    [[nodiscard]] __always_inline constexpr bool is_energency() const {
-        return kind_ == Kind::Emergency;}
-    [[nodiscard]] __always_inline constexpr bool is_time() const {
-        return kind_ == Kind::Time;}
-    [[nodiscard]] __always_inline constexpr bool is_heartbeat() const {
-        return kind_ == Kind::Heartbeat;}
-    [[nodiscard]] __always_inline constexpr bool is_sdo() const {
-        return (kind_ == Kind::TxSdo) or (kind_ == Kind::RxSdo);}
-    [[nodiscard]] __always_inline constexpr bool is_tx_pdo() const {
+    [[nodiscard]] constexpr bool operator ==(const FunctionCode &other) const {
+        return kind_ == other.kind_;
+    }
+
+    [[nodiscard]] constexpr bool operator ==(const FunctionCodeKind &kind) const {
+        return kind_ == kind;
+    }
+    [[nodiscard]] __always_inline constexpr 
+    bool is_nmt() const {return kind_ == Kind::Nmt;}
+
+    [[nodiscard]] __always_inline constexpr 
+    bool is_sync() const {return kind_ == Kind::Sync;}
+
+    [[nodiscard]] __always_inline constexpr 
+    bool is_energency() const {return kind_ == Kind::Emergency;}
+
+    // [[nodiscard]] __always_inline constexpr 
+    // bool is_time() const {return kind_ == Kind::Time;}
+    
+    [[nodiscard]] __always_inline constexpr 
+    bool is_heartbeat() const {return kind_ == Kind::Heartbeat;}
+
+    [[nodiscard]] __always_inline constexpr 
+    bool is_rx_sdo() const { return (kind_ == Kind::RxSdo);}
+
+    [[nodiscard]] __always_inline constexpr 
+    bool is_tx_sdo() const { return (kind_ == Kind::TxSdo);}
+
+    [[nodiscard]] __always_inline constexpr 
+    bool is_tx_pdo() const {
         switch(kind_){
             case Kind::TxPdo1:
             case Kind::TxPdo2:
@@ -162,7 +179,8 @@ struct [[nodiscard]] FunctionCode{
         }
     }
 
-    [[nodiscard]] __always_inline constexpr bool is_rx_pdo() const {
+    [[nodiscard]] __always_inline constexpr 
+    bool is_rx_pdo() const {
         switch(kind_){
             case Kind::RxPdo1:
             case Kind::RxPdo2:
@@ -174,7 +192,8 @@ struct [[nodiscard]] FunctionCode{
         }
     }
 
-    [[nodiscard]] __always_inline constexpr Option<uint8_t> pdo_rank() const {
+    [[nodiscard]] __always_inline constexpr 
+    Option<uint8_t> pdo_rank() const {
         switch(kind_){
             case Kind::RxPdo1:
                 return Some<uint8_t>(1);
@@ -189,7 +208,8 @@ struct [[nodiscard]] FunctionCode{
         }
     }
 
-    [[nodiscard]] __always_inline constexpr Option<PdoOnlyFunctionCode> to_pdo_fc() const {
+    [[nodiscard]] __always_inline constexpr 
+    Option<PdoOnlyFunctionCode> to_pdo_fc() const {
         return PdoOnlyFunctionCode::from_fc_kind(kind_);
     }
 

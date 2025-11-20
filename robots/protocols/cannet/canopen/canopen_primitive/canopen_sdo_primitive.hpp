@@ -133,9 +133,8 @@ struct SdoHeader {
 
 static_assert(sizeof(SdoHeader) == 4);
 
-
-struct [[nodiscard]] SdoExpeditedMsg{
-    using Self = SdoExpeditedMsg;
+struct [[nodiscard]] ExpeditedPayload{
+    using Self = ExpeditedPayload;
     using Header = SdoHeader;
     Header header;
     uint32_t payload_bits;
@@ -144,55 +143,54 @@ struct [[nodiscard]] SdoExpeditedMsg{
     requires (sizeof(T) <= 4)
     [[nodiscard]] __always_inline static constexpr 
     Self from_expedited_write(
-        const OdPreIndex _pre_idx, 
-        const OdSubIndex _sub_idx, 
+        const OdIndex idx,
         const auto val
     ){
+        static_assert(std::is_same_v<std::decay_t<decltype(val)>, T>);
         constexpr auto SPEC = SdoCommandSpecifier::from_expedited_write_length(sizeof(T));
-        return Self{Header::from_parts(SPEC, _pre_idx, _sub_idx), static_cast<uint32_t>(std::bit_cast<D>(val))};
+        return Self{Header::from_parts(SPEC, idx.pre, idx.sub), static_cast<uint32_t>(std::bit_cast<D>(val))};
     }
 
 
     [[nodiscard]] __always_inline static constexpr 
     Self from_write_succeed(
-        const OdPreIndex _pre_idx, 
-        const OdSubIndex _sub_idx
+        const OdIndex idx
     ){
         constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::WriteSucceed);
-        return Self{Header::from_parts(SPEC, _pre_idx, _sub_idx), static_cast<uint32_t>(0)};
+        return Self{Header::from_parts(SPEC, idx.pre, idx.sub), static_cast<uint32_t>(0)};
     }
 
     template <typename T, typename D = tmp::type_to_uint_t<T>>
     requires (sizeof(T) <= 4)
     [[nodiscard]] __always_inline static constexpr 
     Self from_expedited_read(
-        const OdPreIndex _pre_idx, 
-        const OdSubIndex _sub_idx, 
+        const OdIndex idx,
         const auto val
     ){
+        static_assert(std::is_same_v<std::decay_t<decltype(val)>, T>);
         constexpr auto SPEC = SdoCommandSpecifier::from_expedited_read_length(sizeof(T));
-        return Self{Header::from_parts(SPEC, _pre_idx, _sub_idx), static_cast<uint32_t>(std::bit_cast<D>(val))};
+        return Self{Header::from_parts(SPEC, idx.pre, idx.sub), 
+                static_cast<uint32_t>(std::bit_cast<D>(val))
+            };
     }
 
     [[nodiscard]] __always_inline static constexpr 
     Self from_read_succeed(
-        const OdPreIndex _pre_idx, 
-        const OdSubIndex _sub_idx
+        const OdIndex idx
     ){
         constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::ReadSucceed);
-        return Self{Header::from_parts(SPEC, _pre_idx, _sub_idx), static_cast<uint32_t>(0)};
+        return Self{Header::from_parts(SPEC, idx.pre, idx.sub), static_cast<uint32_t>(0)};
     }
 
     [[nodiscard]] __always_inline static constexpr 
     Self from_exception(
-        const OdPreIndex _pre_idx, 
-        const OdSubIndex _sub_idx
+        const OdIndex idx
     ){
         constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::Exception);
-        return Self{Header::from_parts(SPEC, _pre_idx, _sub_idx), static_cast<uint32_t>(0)};
+        return Self{Header::from_parts(SPEC, idx.pre, idx.sub), static_cast<uint32_t>(0)};
     }
 
-    [[nodiscard]] __always_inline constexpr 
+    [[nodiscard]] __always_inline static constexpr 
     Self from_u64(const uint64_t int_val){
         return std::bit_cast<Self>(int_val);
     }
@@ -205,16 +203,16 @@ struct [[nodiscard]] SdoExpeditedMsg{
     [[nodiscard]] std::span<const uint8_t, 8> as_bytes() const {
         return std::span<const uint8_t, 8>(
             reinterpret_cast<const uint8_t*>(this),
-            sizeof(SdoExpeditedMsg)
+            sizeof(ExpeditedPayload)
         );
     }
 
-    [[nodiscard]] CanMsg to_canmsg(const CobId cobid){
-        return CanMsg::from_id_and_payload_u64(cobid.to_stdid(), to_u64());
+    [[nodiscard]] constexpr 
+    CanMsg to_canmsg(const CobId cobid) const {
+        return CanMsg(cobid.to_stdid(), CanPayload::from_u64(this->to_u64()));
     }
 };
 
-static_assert(sizeof(SdoExpeditedMsg) == 8);
 
 enum class SdoAbortError : uint32_t {
     ToggleBitNotAlternated                 = 0x05030000,  // 切换位未交替
@@ -259,40 +257,10 @@ public:
 
     // https://docs.rs/canopeners/latest/src/canopeners/enums.rs.html#267-301
     constexpr Option<SdoAbortCode> from_bits(const uint32_t bits){
-        switch(bits){
-            case 0x0503'0000: return Some(Kind::ToggleBitNotAlternated);
-            case 0x0504'0000: return Some(Kind::SdoProtocolTimedOut);
-            case 0x0504'0001: return Some(Kind::InvalidClientServerCommandSpecifier);
-            case 0x0504'0002: return Some(Kind::InvalidBlockSize);
-            case 0x0504'0003: return Some(Kind::InvalidSequenceNumber);
-            case 0x0504'0004: return Some(Kind::CrcError);
-            case 0x0504'0005: return Some(Kind::OutOfMemory);
-            case 0x0601'0000: return Some(Kind::UnsupportedAccessToObject);
-            case 0x0601'0001: return Some(Kind::AttemptToReadWriteOnlyObject);
-            case 0x0601'0002: return Some(Kind::AttemptToWriteReadOnlyObject);
-            case 0x0602'0000: return Some(Kind::ObjectNotInDictionary);
-            case 0x0604'0041: return Some(Kind::ObjectCannotBeMappedToPdo);
-            case 0x0604'0042: return Some(Kind::ExceedPdoLength);
-            case 0x0604'0043: return Some(Kind::GeneralParameterIncompatibility);
-            case 0x0604'0047: return Some(Kind::GeneralInternalIncompatibility);
-            case 0x0606'0000: return Some(Kind::HardwareError);
-            case 0x0607'0010: return Some(Kind::DataTypeMismatchLengthMismatch);
-            case 0x0607'0012: return Some(Kind::DataTypeMismatchLengthTooHigh);
-            case 0x0607'0013: return Some(Kind::DataTypeMismatchLengthTooLow);
-            case 0x0609'0011: return Some(Kind::SubIndexDoesNotExist);
-            case 0x0609'0030: return Some(Kind::InvalidValueForParameter);
-            case 0x0609'0031: return Some(Kind::ValueTooHigh);
-            case 0x0609'0032: return Some(Kind::ValueTooLow);
-            case 0x0609'0036: return Some(Kind::MaxLessThanMin);
-            case 0x060A'0023: return Some(Kind::ResourceNotAvailable);
-            case 0x0800'0000: return Some(Kind::GeneralError);
-            case 0x0800'0020: return Some(Kind::DataTransferOrStorageFailed);
-            case 0x0800'0021: return Some(Kind::LocalControlPreventsDataTransfer);
-            case 0x0800'0022: return Some(Kind::DeviceStatePreventsDataTransfer);
-            case 0x0800'0023: return Some(Kind::ObjectDictionaryGenerationFailed);
-            case 0x0800'0024: return Some(Kind::NoDataAvailable);
-            default: return None;
-        }
+        if(const auto * str = err_to_str(static_cast<SdoAbortError>(bits)); str != nullptr)
+            return Some(SdoAbortCode(static_cast<SdoAbortError>(bits)));
+        else
+            return None;
     }
     constexpr SdoAbortCode(Ok<void>) : bits_(NO_ERROR) {;}
 
@@ -304,10 +272,91 @@ public:
     [[nodiscard]] constexpr uint32_t to_bits() const { return to_u32();}
     [[nodiscard]] constexpr bool is_ok() const { return bits_ == NO_ERROR; }
     [[nodiscard]] constexpr bool is_err() const { return bits_ != NO_ERROR; }
+
+    //不要在外部使用这个函数 因为它有可能返回空指针
+    static constexpr const char * err_to_str(const SdoAbortError err){
+        using Kind = SdoAbortError;
+        switch(err){
+            case Kind::ToggleBitNotAlternated:
+                return "ToggleBitNotAlternated";
+            case Kind::SdoProtocolTimedOut:
+                return "SdoProtocolTimedOut";
+            case Kind::InvalidClientServerCommandSpecifier:
+                return "InvalidClientServerCommandSpecifier";
+            case Kind::InvalidBlockSize:
+                return "InvalidBlockSize";
+            case Kind::InvalidSequenceNumber:
+                return "InvalidSequenceNumber";
+            case Kind::CrcError:
+                return "CrcError";
+            case Kind::OutOfMemory:
+                return "OutOfMemory";
+            case Kind::UnsupportedAccessToObject:
+                return "UnsupportedAccessToObject";
+            case Kind::AttemptToReadWriteOnlyObject:
+                return "AttemptToReadWriteOnlyObject";
+            case Kind::AttemptToWriteReadOnlyObject:
+                return "AttemptToWriteReadOnlyObject";
+            case Kind::ObjectNotInDictionary:
+                return "ObjectNotInDictionary";
+            case Kind::ObjectCannotBeMappedToPdo:
+                return "ObjectCannotBeMappedToPdo";
+            case Kind::ExceedPdoLength:
+                return "ExceedPdoLength";
+            case Kind::GeneralParameterIncompatibility:
+                return "GeneralParameterIncompatibility";
+            case Kind::GeneralInternalIncompatibility:
+                return "GeneralInternalIncompatibility";
+            case Kind::HardwareError:
+                return "HardwareError";
+            case Kind::DataTypeMismatchLengthMismatch:
+                return "DataTypeMismatchLengthMismatch";
+            case Kind::DataTypeMismatchLengthTooHigh:
+                return "DataTypeMismatchLengthTooHigh";
+            case Kind::DataTypeMismatchLengthTooLow:
+                return "DataTypeMismatchLengthTooLow";
+            case Kind::SubIndexDoesNotExist:
+                return "SubIndexDoesNotExist";
+            case Kind::InvalidValueForParameter:
+                return "InvalidValueForParameter";
+            case Kind::ValueTooHigh:
+                return "ValueTooHigh";
+            case Kind::ValueTooLow:
+                return "ValueTooLow";
+            case Kind::MaxLessThanMin:
+                return "MaxLessThanMin";
+            case Kind::ResourceNotAvailable:
+                return "ResourceNotAvailable";
+            case Kind::GeneralError:
+                return "GeneralError";
+            case Kind::DataTransferOrStorageFailed:
+                return "DataTransferOrStorageFailed";
+            case Kind::LocalControlPreventsDataTransfer:
+                return "LocalControlPreventsDataTransfer";
+            case Kind::DeviceStatePreventsDataTransfer:
+                return "DeviceStatePreventsDataTransfer";
+            case Kind::ObjectDictionaryGenerationFailed:
+                return "ObjectDictionaryGenerationFailed";
+            case Kind::NoDataAvailable:
+                return "NoDataAvailable";
+            default:
+                return nullptr;
+        }
+    }
 private:
     uint32_t bits_;
 
-    friend OutputStream & operator<<(OutputStream & os, const SdoAbortError err);
+    friend OutputStream & operator<<(OutputStream & os, const SdoAbortError err){
+        if(const auto str = err_to_str(err); str != nullptr)
+            return os << str;
+
+        {
+            const auto err_bits = static_cast<uint32_t>(err);
+            const auto gaurd = os.create_guard();
+            return os << std::hex << std::showbase
+                << os.field("Unknown")(err_bits);
+        }
+    }
 
     friend OutputStream & operator<<(OutputStream & os, const SdoAbortCode & code) {
         if(code.is_err()) [[unlikely]]

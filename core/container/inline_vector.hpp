@@ -214,7 +214,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] constexpr std::span<const T> iter() const {
+    [[nodiscard]] constexpr std::span<const T> as_slice() const {
         return std::span(buf_, size_);
     }
 

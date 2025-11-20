@@ -102,7 +102,7 @@ std::conditional_t<assert_level == AssertLevel::Propagate , Result<obj_type, err
 ({\
     const auto && _either = (either);\
     if(_either.is_err()) [[unlikely]]\
-        {FLEX_HANDLE_NONE(__VA_ARGS__)}\
+        {FLEX_HANDLE_ERR(__VA_ARGS__)}\
     _either.unwrap();\
 })\
 
@@ -110,7 +110,7 @@ std::conditional_t<assert_level == AssertLevel::Propagate , Result<obj_type, err
 ({\
     const auto && _either = (either);\
     if(_either.is_err()) [[unlikely]]\
-        {FLEX_HANDLE_ERR(_either.unwrap_err(), __VA_ARGS__)}\
+        {FLEX_HANDLE_NONE(__VA_ARGS__)}\
     _either.unwrap();\
 })\
 

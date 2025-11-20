@@ -92,7 +92,7 @@ private:
         phy_.write_bytes(
             node_id_, 
             T::FUNC_CODE, 
-            buf.iter()
+            buf.as_slice()
         );
 
         return Ok();

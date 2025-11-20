@@ -208,9 +208,9 @@ IResult<> Self::transmit(const uint32_t bits, const uint64_t payload, const uint
         return Err(Error::RET_DLC_LONGER);
 
     const auto buf = std::bit_cast<std::array<uint8_t, 8>>(payload);
-    const auto msg = CanClassicMsg::from_bytes(
+    const auto msg = CanClassicMsg(
         hal::CanStdId::from_bits(bits), 
-        std::span(buf.data(), dlc)
+        hal::CanClassicPayload::from_bytes(std::span(buf.data(), dlc))
     );
     return this->transmit(msg);
 }
