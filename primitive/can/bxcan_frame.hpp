@@ -84,7 +84,7 @@ public:
         return payload_.dlc_;}
 
     /// \brief 获取dlc标识符
-    [[nodiscard]] __always_inline constexpr Payload payload() const {
+    [[nodiscard]] __always_inline constexpr const Payload & payload() const {
         return payload_;}
 
     [[nodiscard]] constexpr Self clone() const {

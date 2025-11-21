@@ -217,6 +217,9 @@ public:
     template<size_t I>
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     uint8_t & get() {return get_element<I>(*this);}
+
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    const U8X8 & u8x8() const {return bytes_;}
 private:
     alignas(4) U8X8 bytes_;
     CanClassicDlc dlc_;

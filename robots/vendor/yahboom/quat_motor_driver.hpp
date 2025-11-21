@@ -6,7 +6,6 @@
 #include "core/utils/Errno.hpp"
 #include "core/magic/enum_traits.hpp"
 
-#include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
@@ -14,7 +13,7 @@
 
 
 
-namespace ymd::robots{
+namespace ymd::robots::yahboom{
 
 struct YahboomQuatMotorDriver_Prelude{
     enum class Error_Kind{

@@ -6,24 +6,79 @@
 #include "primitive/can/bxcan_frame.hpp"
 #include "core/utils/bits/bits_caster.hpp"
 #include "core/math/float/fp32.hpp"
+#include "core/utils/enum/strong_type_gradation.hpp"
+#include "core/math/iq/fixed_t.hpp"
 
-// https://docs.rs/odrive-cansimple/latest/src/odrive_cansimple/enumerations/error.rs.html
+// 伺泰威对Odrive通讯消息进行了魔改 不能直接等效于Odrive
+// 参考Odrive的源码，所有Can报文的数据载荷都是8字节
+// https://docs.rs/odrive-cansimple/latest/src/odrive_cansimple/enumerations/axis_error.rs.html
 
-namespace ymd::robots::odrive::can_simple::primitive{
+namespace ymd::robots::steadywin::can_simple{
+
+namespace primitive{
 using namespace ymd::hal;
 
-struct AxisId{
+namespace mit{
+
+#if 0
+// p_des:-12.5到 12.5, 单位rad;
+// 数据类型为uint16_t, 取值范围为0~65535, 其中0代表-12.5,65535代表 12.5,
+//  0~65535中间的所有数值，按比例映射 至-12.5~12.5。
+DEF_U16_STRONG_TYPE_GRADATION(MitPositionCode_u16,  from_radians,    
+    iq16,   -12.5,  12.5,   25.0/65535)
+
+// v_des:-45到 45, 单位rad/s;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-45,4095代表45,
+//  0~4095 中间的所有数值，按比例映射至-45~45。
+DEF_U16_STRONG_TYPE_GRADATION(MitSpeedCode_u12,     from_radians,    
+    iq16,   -45,    45,     90.0/4095)
+
+// kp: 0到 500;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表0,4095代表500,
+//  0~4095中间的所有数值，按比例映射至0~500。
+DEF_U16_STRONG_TYPE_GRADATION(MitKpCode_u12,        from_val,       
+    uq16,   0,      500,    500.0/4095)
+
+// kd: 0到 5;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表0, 4095代表5,
+//  0~4095中间的所有数值，按比例映射至0~5。
+DEF_U16_STRONG_TYPE_GRADATION(MitKdCode_u12,        from_val,       
+    uq16,   0,      5,      5.0/4095)
+
+// t_f:-24到 24, 单位N-m;
+// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-24,4095代表24,
+//  0~4095中间的所有数值，按比例映射至-24~24。
+DEF_U16_STRONG_TYPE_GRADATION(MitTorqueCode_u12,    from_nm,        
+    iq16,   -24,      24,     24.0/4095)
+
+#endif
+}
+
+struct [[nodiscard]] AxisId{
     using Self = AxisId;
-    uint8_t bits;
 
     static constexpr Self from_bits(const uint8_t bits){
         return std::bit_cast<Self>(bits);
     }
+
+    static constexpr Self from_b6(const literals::Bs6 bs){
+        return from_bits(bs.to_bits());
+    }
+
+    [[nodiscard]] constexpr uint8_t to_bits() const {
+        return bits_;
+    }
+
+    constexpr literals::Bs6 to_b6() const {
+        return literals::Bs6::from_bits(to_bits());
+    }
+private:
+    uint8_t bits_;
 };
 
 
-struct AxisError{
-    using Self = AxisError; 
+struct [[nodiscard]] AxisErrorFlags{
+    using Self = AxisErrorFlags; 
     uint32_t invalid_state:1;
     uint32_t under_voltage:1;
     uint32_t over_voltage:1;
@@ -53,10 +108,23 @@ struct AxisError{
 };
 
 
-static_assert(sizeof(AxisError) == 4);  
+static_assert(sizeof(AxisErrorFlags) == 4); 
 
-struct EncoderError{
-    using Self = EncoderError;
+struct Flags{
+    uint8_t motor_error:1;
+    uint8_t axis_error:1;
+    uint8_t ctrl_error:1;
+    uint8_t sys_error:1;
+
+    uint8_t __resv__:3;
+    uint8_t trajectory_done:1;
+};
+
+static_assert(sizeof(Flags) == 1);  
+
+
+struct [[nodiscard]] EncoderErrorFlags{
+    using Self = EncoderErrorFlags;
     uint32_t unstable_gain:1;
     uint32_t cpr_out_of_range:1;
     uint32_t no_response:1;
@@ -69,10 +137,13 @@ struct EncoderError{
     } 
 };
 
-static_assert(sizeof(EncoderError) == 4);
+static_assert(sizeof(EncoderErrorFlags) == 4);
 
-struct MotorError{
-    using Self = MotorError;
+enum class [[nodiscard]] ErrorType:uint8_t{ 
+};
+
+struct [[nodiscard]] MotorErrorFlags{
+    using Self = MotorErrorFlags;
     uint32_t phase_resistance_out_of_range:1;
     uint32_t phase_inductance_out_of_range:1;
     uint32_t adc_failed:1;
@@ -92,9 +163,9 @@ struct MotorError{
     }
 };
 
-static_assert(sizeof(MotorError) == 4); 
+static_assert(sizeof(MotorErrorFlags) == 4); 
 
-enum class AxisState:uint8_t{
+enum class [[nodiscard]] AxisState:uint8_t{
     Undefined = 0,
     Idle = 1,
     StartupSequence = 2,
@@ -109,7 +180,7 @@ enum class AxisState:uint8_t{
     Homing = 11,
 };
 
-enum class CommandKind:uint8_t{
+enum class [[nodiscard]] CommandKind:uint8_t{
     Undefined,
     OdriveHeartbeat = 1,
     OdriveEstop,
@@ -137,14 +208,14 @@ enum class CommandKind:uint8_t{
     ClearErrors,
 };
 
-enum class ControlMode:uint8_t {
+enum class [[nodiscard]] ControlMode:uint8_t {
     VoltageControl = 0,
     CurrentControl = 1,
     VelocityControl = 2,
     PositionControl = 3,
 };
 
-enum class InputMode:uint8_t{
+enum class [[nodiscard]] InputMode:uint8_t{
     Inactive,
     PassThrough,
     VelocityRamp,
@@ -155,9 +226,22 @@ enum class InputMode:uint8_t{
     Mirror,
 };
 
-struct Command{
+
+namespace details{
+
+}
+
+struct [[nodiscard]] Command{
     using Kind = CommandKind;
     constexpr Command(const Kind kind) : kind_(kind){;}
+
+    static constexpr Command from_b5(literals::Bs5 bs){
+        return from_bits(bs.to_bits());
+    }
+
+    constexpr literals::Bs5 to_b5() const {
+        return literals::Bs5::from_bits_bounded(static_cast<uint8_t>(kind_));
+    }
 
     static constexpr Command from_bits(const uint8_t bits){
         return static_cast<Kind>(bits);
@@ -212,41 +296,115 @@ private:
     }
 };
 
-namespace msgs{
-struct Heartbeat{
-    AxisError error;
-    AxisState state;
-    // bool motor_on_exception;
-    // bool encoder_on_exception;
-    // bool is_done;
+struct [[nodiscard]] FrameId {
+    AxisId axis_id;
+    Command command;
+
+    static constexpr FrameId from_stdid(const hal::CanStdId & stdid){
+        const auto id_u11 = stdid.to_u11();
+        return {
+            AxisId::from_bits(static_cast<uint8_t>((id_u11 >> 5) & 0b111111)),
+            Command::from_bits(id_u11 & 0b11111)
+        };
+    }
+
+    constexpr hal::CanStdId to_stdid() const { 
+        // return hal::CanStdId::from_u11(
+        //     static_cast<uint16_t>((axis_id.to_bits() & 0b111111) << 5) | 
+        //     (static_cast<uint16_t>(command.kind()) & 0b11111))
+        // ;
+
+        return hal::CanStdId::from_u11(
+            axis_id.to_b6().connect(command.to_b5()).to_bits()
+        );
+    }  
 };
 
-// static_assert(sizeof(Heartbeat) == 8);
+}
 
-struct EncoderCount{
+
+using namespace primitive;
+
+namespace msgs{
+struct [[nodiscard]] Heartbeat{
+    using Self = Heartbeat;
+    static constexpr CommandKind command =  Command::OdriveHeartbeat;
+    AxisErrorFlags axis_error;
+    AxisState axis_state;
+
+    // bit0：电机异常位（odrv0.axis0.motor.error 是否
+    // 为 0）
+    // bit1：编码器异常位（odrv0.axis0.encoder.error
+    // 是否为 0）
+    // bit2：控制异常位（odrv0.axis0.controller.error
+    // 是否为 0）
+    // bit3：系统异常位（odrv0.error 是否为 0）
+    // bit7：odrv0.axis0.controller.trajectory_done，即
+    // 位置曲线是否执行完毕
+    Flags flags;
+    uint8_t __resv__;
+
+    // 周期消息的生命值，每一个⼼跳消息加 1，范围
+    // 0-255，如果此生命值不连续，表示⼼跳消息丢
+    // 失，即通信不稳
+    uint8_t life;
+
+    static constexpr Self from_u8x8(const std::array<uint8_t, 8> bytes){
+        return std::bit_cast<Self>(bytes);;
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+static_assert(sizeof(Heartbeat) == 8);
+
+struct [[nodiscard]] Estop{
+    static constexpr CommandKind command = Command::OdriveEstop;
+};
+
+struct [[nodiscard]] GetError{
+};
+
+struct [[nodiscard]] GetErrorReq{
+    using Self = GetErrorReq;
+    static constexpr CommandKind command = Command::GetMotorError;
+    ErrorType type;
+};
+
+
+
+struct [[nodiscard]] GetErrorResp{
+    using Self = GetErrorResp;
+    static constexpr CommandKind command = Command::GetMotorError;
+    Flags flags;
+};
+
+struct [[nodiscard]] EncoderCount{
     int32_t shadow_count;
     int32_t cpr_count;
 };
 
-struct EncoderEstimates{
+struct [[nodiscard]] EncoderEstimates{
     fp32 position;
     fp32 velocity;
 };
 
 
 
-struct MotorCurrent{
+struct [[nodiscard]] MotorCurrent{
     fp32 setpoint;
     fp32 measurement;
 };
 
 
-struct VbusVoltage{
+struct [[nodiscard]] VbusVoltage{
     fp32 voltage;
 };
 
-using EncoderError = primitive::EncoderError;
-using MotorError = primitive::MotorError;
+using EncoderErrorFlags = primitive::EncoderErrorFlags;
+using MotorErrorFlags = primitive::MotorErrorFlags;
 }
 
 struct [[nodiscard]] Msg:public Sumtype<
@@ -255,16 +413,16 @@ struct [[nodiscard]] Msg:public Sumtype<
     msgs::Heartbeat,
     msgs::MotorCurrent,
     msgs::VbusVoltage,
-    EncoderError,
-    MotorError
+    EncoderErrorFlags,
+    MotorErrorFlags
 >{
     using EncoderCount = msgs::EncoderCount;
     using EncoderEstimates = msgs::EncoderEstimates;
     using Heartbeat = msgs::Heartbeat;
     using MotorCurrent = msgs::MotorCurrent;
     using VbusVoltage = msgs::VbusVoltage;
-    using EncoderError = msgs::EncoderError;
-    using MotorError = msgs::MotorError;
+    using EncoderErrorFlags = msgs::EncoderErrorFlags;
+    using MotorErrorFlags = msgs::MotorErrorFlags;
 };
 
 struct [[nodiscard]] Event{
@@ -272,30 +430,7 @@ struct [[nodiscard]] Event{
     Msg signal;
 };
 
-
-
-
-struct [[nodiscard]] FrameId {
-    AxisId axis_id;
-    Command command;
-
-    static constexpr FrameId from_stdid(const hal::CanStdId & stdid){
-        const auto id_u11 = stdid.to_u11();
-        return {
-            AxisId{static_cast<uint8_t>((id_u11 >> 5) & 0b111111)},
-            Command::from_bits(id_u11 & 0b11111)
-        };
-    }
-
-    constexpr hal::CanStdId to_stdid() const { 
-        return hal::CanStdId::from_u11(
-            static_cast<uint16_t>((axis_id.bits & 0b111111) << 5) | 
-            (static_cast<uint16_t>(command.kind()) & 0b11111))
-        ;
-    }  
-};
-
-struct FrameSerializer{
+struct [[nodiscard]] FrameSerializer{
     using Error = Infallible;
 
     template<typename T = void>
@@ -362,15 +497,15 @@ struct FrameSerializer{
     static constexpr CanResult set_axis_node_id(AxisId id, AxisId new_id) {
         return make_msg(
             FrameId{id, Command::SetAxisNodeId}, 
-            static_cast<uint32_t>(new_id.bits)
+            static_cast<uint32_t>(new_id.to_bits())
         );
     }
 
 
-    static constexpr CanResult set_axis_requested_state(AxisId id, AxisState state) {
+    static constexpr CanResult set_axis_requested_state(AxisId id, AxisState axis_state) {
         return make_msg(
             FrameId{id, Command::SetAxisRequestedState}, 
-            static_cast<uint32_t>(state)
+            static_cast<uint32_t>(axis_state)
         );
     }
 
@@ -435,11 +570,8 @@ struct FrameSerializer{
 
 };
 
-
-
-
-struct FrameDeserializer{
-    enum class Error:uint8_t{
+struct [[nodiscard]] FrameDeserializer{
+    enum class [[nodiscard]] Error:uint8_t{
         FrameIsNotStd,
         PayloadTooShort,
         NotImplemented
@@ -515,12 +647,12 @@ public:
             
             case Command::GetEncoderError:{
                 const auto error_bits = UNWRAP_PAYLOAD(reader.fetch_u32());
-                // Note: In your C++ code there's no EncoderError::from_bits method shown,
+                // Note: In your C++ code there's no EncoderErrorFlags::from_bits method shown,
                 // so assuming direct bit interpretation or you'll need to implement that conversion
-                const EncoderError error = EncoderError::from_bits(error_bits);
+                const EncoderErrorFlags axis_error = EncoderErrorFlags::from_bits(error_bits);
                 return Ok(Event{
                     .axis_id = axis_id,
-                    .signal = Msg::EncoderError{error}
+                    .signal = Msg::EncoderErrorFlags{axis_error}
                 });
             }
             
@@ -537,18 +669,12 @@ public:
             }
             
             case Command::OdriveHeartbeat:{
-                const auto error_bits = UNWRAP_PAYLOAD(reader.fetch_u32());
-                // Similar to EncoderError, mapping bits to AxisError fields
-                const auto error = AxisError::from_bits(error_bits);
-                const auto state_value = UNWRAP_PAYLOAD(reader.fetch_u32());
-                const AxisState state = static_cast<AxisState>(state_value);
-                return Ok(Event{
-                    .axis_id = axis_id,
-                    .signal = Msg::Heartbeat{
-                        error: error,
-                        state: state,
+                return Ok(
+                    Event{
+                        .axis_id = axis_id,
+                        .signal = msgs::Heartbeat::from_u8x8(frame.payload().u8x8())
                     }
-                });
+                );
             }
             
             case Command::GetIq:{
@@ -565,11 +691,11 @@ public:
             
             case Command::GetMotorError:{
                 const auto error_bits = UNWRAP_PAYLOAD(reader.fetch_u32());
-                // Similar bit mapping for MotorError
-                const MotorError error = MotorError::from_bits(error_bits);
+                // Similar bit mapping for MotorErrorFlags
+                const MotorErrorFlags axis_error = MotorErrorFlags::from_bits(error_bits);
                 return Ok(Event{
                     .axis_id = axis_id,
-                    .signal = Msg::MotorError{error}
+                    .signal = Msg::MotorErrorFlags{axis_error}
                 });
             }
             

@@ -10,10 +10,7 @@
 
 #include "types/regions/range2.hpp"
 
-namespace ymd::robots{
-
-
-namespace mksmotor{
+namespace ymd::robots::mksmotor{
 
 struct [[nodiscard]] NodeId{
     using Self = NodeId;
@@ -271,6 +268,4 @@ namespace payloads{
         );
     }
 }
-}
-
 }

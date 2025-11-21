@@ -102,7 +102,7 @@ public:
 #pragma pack(pop)
 
 
-using namespace ymd::robots;
+using namespace ymd::robots::lobot;
 
 #define CREATE_FRAME(command, ...) FrameWapper(this->id_, command, std::make_tuple(__VA_ARGS__))
 #define WRITE_FRAME(command, ...) this->write_frame(CREATE_FRAME(command, __VA_ARGS__));
