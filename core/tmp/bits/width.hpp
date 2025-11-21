@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../tmp_primitive.hpp"
+#include <bit>
 
 namespace ymd::tmp{
 
@@ -53,11 +54,11 @@ namespace details{
 }
 
 
-template<size_t Bytes>
-using bytes_to_uint_t = typename details::_bytes_to_uint<Bytes>::type;
+template<size_t N>
+using bytes_to_uint_t = typename details::_bytes_to_uint<std::bit_ceil(N)>::type;
 
-template<size_t Bits>
-using bits_to_uint_t = typename details::_bytes_to_uint<(Bits + 7) / 8>::type;
+template<size_t N>
+using bits_to_uint_t = typename details::_bytes_to_uint<std::bit_ceil((N + 7) / 8)>::type;
 
 template<typename T>
 using type_to_uint_t = typename details::_bytes_to_uint<sizeof(std::decay_t<T>)>::type;
