@@ -6,6 +6,7 @@ namespace ymd::canopen::primitive{
 
 using CanMsg = hal::CanClassicMsg;
 using CanPayload = hal::BxCanPayload;
+using hal::CanStdId;
 
 struct SubEntry;
 struct CobId;
@@ -23,16 +24,20 @@ struct [[nodiscard]] NodeId{
 
     uint8_t bits;
 
+    static constexpr NodeId from_bits(const uint8_t bits){
+        return NodeId{bits};
+    }
+
     static constexpr NodeId from_u7(const uint8_t bits){
         if(bits & 0b10000000) [[unlikely]] 
             __builtin_trap();
         return NodeId{static_cast<uint8_t>(bits & 0b1111111)};
     }
 
-    static constexpr Option<NodeId> try_from_bits(const uint8_t bits){
+    static constexpr Option<NodeId> try_from_u7(const uint8_t bits){
         if(bits & 0b10000000) [[unlikely]]
             return None;
-        return Some(from_u7(bits));
+        return Some(NodeId{static_cast<uint8_t>(bits & 0b1111111)});
     }
 
     static constexpr NodeId boardcast(){
@@ -40,7 +45,7 @@ struct [[nodiscard]] NodeId{
     }
 
     [[nodiscard]] constexpr uint8_t to_u7() const{
-        return bits;
+        return static_cast<uint8_t>(bits & 0x7f);
     }
 
     [[nodiscard]] constexpr bool is_boardcast() const {
@@ -51,7 +56,7 @@ struct [[nodiscard]] NodeId{
         return bits == 244 || bits == 255;
     }
 
-    [[nodiscard]] constexpr bool test(const NodeId & other){
+    [[nodiscard]] constexpr bool acceptable_with(const NodeId & other) const {
         return other.is_boardcast() || bits == other.bits;
     }
 
@@ -65,6 +70,9 @@ struct [[nodiscard]] NodeId{
 
 
 struct [[nodiscard]] CobId{
+    constexpr explicit CobId(const hal::CanStdId stdid){
+        (*this) = std::bit_cast<CobId>(stdid.to_u11());
+    }
 
     static constexpr CobId from_parts(
         const NodeId _nodeid, 
@@ -78,7 +86,7 @@ struct [[nodiscard]] CobId{
     }
 
     constexpr hal::CanStdId to_stdid() const {
-        return hal::CanStdId::from_bits(nodeid_ | fcode_ << 7);
+        return hal::CanStdId::from_bits(to_bits());
     }
 
     constexpr FunctionCode func_code() const {
@@ -86,35 +94,31 @@ struct [[nodiscard]] CobId{
     }
 
     static constexpr CobId from_bits(const uint16_t bits){
-        return CobId(bits);
+        return std::bit_cast<CobId>(bits);
     }
 
     [[nodiscard]] constexpr uint16_t to_bits() const {
         return std::bit_cast<uint16_t>(*this);
     }
 
-    [[nodiscard]] constexpr uint16_t to_u11() const {
-        return std::bit_cast<uint16_t>(*this);
+    static constexpr CobId from_u11(const uint16_t bits){
+        if(bits & static_cast<uint16_t>(~CanStdId::MAX_VALUE)) [[unlikely]]
+            __builtin_trap();
+        return from_bits(bits);
     }
 
-    static constexpr CobId from_stdid(const hal::CanStdId id){
-        return CobId(id.to_u11());
+    [[nodiscard]] constexpr uint16_t to_u11() const {
+        return std::bit_cast<uint16_t>(*this);
     }
 
     constexpr NodeId node_id() const {
         return NodeId::from_u7(nodeid_);
     }
 
-
-
 private:
     uint16_t nodeid_:7;
     uint16_t fcode_:4;
     uint16_t __resv__ : 5;
-
-    constexpr CobId(const uint16_t bits){
-        (*this) = std::bit_cast<CobId>(bits);
-    }
 };
 
 // static constexpr CobId SYNC_COBID = CobId::from_bits(0x080);
@@ -191,7 +195,9 @@ struct [[nodiscard]] OdIndex{
     static constexpr Self from_parts(const OdPreIndex _pre, const OdSubIndex _sub){
         return Self{_pre, _sub};
     }
-    constexpr bool operator==(const OdIndex& other) const = default;
+    constexpr bool operator==(const OdIndex& other) const{
+        return pre == other.pre and sub == other.sub;
+    }
 };
 
 

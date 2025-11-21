@@ -125,7 +125,7 @@ struct MsgSerde<nmt_msg::NetManage>{
         );
     }
 
-    template<AssertLevel assert_level>
+    template<VerifyLevel verify_level>
     [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
     -> FLEX_OPTION(Self){
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
@@ -151,7 +151,7 @@ struct MsgSerde<nmt_msg::Sync>{
         return CanMsg::from_empty(Self::COBID.to_stdid());
     }
 
-    template<AssertLevel assert_level>
+    template<VerifyLevel verify_level>
     [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
     -> FLEX_OPTION(Self){
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
@@ -176,7 +176,7 @@ struct MsgSerde<nmt_msg::Heartbeat>{
         return CanMsg(canid, CanPayload::from_bytes(std::span(bytes)));
     }
 
-    template<AssertLevel assert_level>
+    template<VerifyLevel verify_level>
     [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
     -> FLEX_OPTION(Self){
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
@@ -201,7 +201,7 @@ struct MsgSerde<nmt_msg::NodeGuardingRequest> {
         return CanMsg::from_empty(self.cobid().to_stdid());
     }
 
-    template<AssertLevel assert_level>
+    template<VerifyLevel verify_level>
     [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
         -> FLEX_OPTION(Self) {
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
@@ -226,7 +226,7 @@ struct MsgSerde<nmt_msg::NodeGuardingResponse> {
         return CanMsg(canid, CanPayload::from_bytes(std::span(bytes)));
     }
 
-    template<AssertLevel assert_level>
+    template<VerifyLevel verify_level>
     [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
         -> FLEX_OPTION(Self) {
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
@@ -253,7 +253,7 @@ struct MsgSerde<nmt_msg::Emergency> {
         return CanMsg(canid, CanPayload::from_bytes(std::span(bytes)));
     }
 
-    template<AssertLevel assert_level>
+    template<VerifyLevel verify_level>
     [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
         -> FLEX_OPTION(Self) {
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());

@@ -16,11 +16,11 @@ using namespace ymd::canopen::nmt_msg;
     static_assert(canmsg.is_standard());
     static_assert(canmsg.length() == 1);
     static_assert(canmsg.payload_bytes()[0] == static_cast<uint8_t>(NodeState::Operating));
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(canmsg)
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(canmsg)
         .station_nodeid == NodeId::from_u7(5));
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(canmsg)
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(canmsg)
         .station_state == NodeState::Operating);
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::Propagate>(canmsg).unwrap()
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::Propagate>(canmsg).unwrap()
         .station_nodeid == NodeId::from_u7(5));
 }
 
@@ -34,9 +34,9 @@ using namespace ymd::canopen::nmt_msg;
     static_assert(canmsg.length() == 0);
     static_assert(canmsg.id_u32() == 0x703); // 0x700 | 3
     
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(canmsg)
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(canmsg)
         .target_nodeid == NodeId::from_u7(3));
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::Propagate>(canmsg).unwrap()
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::Propagate>(canmsg).unwrap()
         .target_nodeid == NodeId::from_u7(3));
 }
 
@@ -52,11 +52,11 @@ using namespace ymd::canopen::nmt_msg;
     static_assert(canmsg.id_u32() == 0x707); // 0x700 | 7
     static_assert(canmsg.payload_bytes()[0] == static_cast<uint8_t>(NodeState::PreOperational));
     
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(canmsg)
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(canmsg)
         .station_nodeid == NodeId::from_u7(7));
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(canmsg)
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(canmsg)
         .station_state == NodeState::PreOperational);
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::Propagate>(canmsg).unwrap()
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::Propagate>(canmsg).unwrap()
         .station_nodeid == NodeId::from_u7(7));
 }
 
@@ -82,12 +82,12 @@ using namespace ymd::canopen::nmt_msg;
     static_assert(canmsg.payload_bytes()[6] == 0x44); // manufacturer_specific[3]
     static_assert(canmsg.payload_bytes()[7] == 0x55); // manufacturer_specific[4]
     
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(canmsg)
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(canmsg)
         .station_nodeid == NodeId::from_u7(5));
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(canmsg)
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(canmsg)
         .error_code == EmcyErrorCode::Communication);
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(canmsg)
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(canmsg)
         .error_register == 0x08);
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::Propagate>(canmsg).unwrap()
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::Propagate>(canmsg).unwrap()
         .station_nodeid == NodeId::from_u7(5));
 }

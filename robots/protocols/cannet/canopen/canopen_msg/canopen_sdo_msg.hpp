@@ -9,16 +9,12 @@ namespace ymd::canopen::sdo_msg{
 using namespace canopen::primitive;
 
 
-
-static_assert(sizeof(ExpeditedPayload) == 8);
-
-
 struct [[nodiscard]] ExpeditedRequest{
     NodeId client_nodeid;
     ExpeditedPayload payload;
 
     [[nodiscard]] constexpr CanMsg to_canmsg() const {
-        return payload.to_canmsg(client_nodeid.with_func_code(FunctionCode::TxSdo));
+        return payload.to_canmsg(client_nodeid.with_func_code(FunctionCode::ReqSdo));
     }
 };
 
@@ -27,7 +23,7 @@ struct [[nodiscard]] ExpeditedResponse{
     ExpeditedPayload payload;
 
     [[nodiscard]] constexpr CanMsg to_canmsg() const {
-        return payload.to_canmsg(server_nodeid.with_func_code(FunctionCode::RxSdo));
+        return payload.to_canmsg(server_nodeid.with_func_code(FunctionCode::RespSdo));
     }
 };
 }
@@ -42,7 +38,7 @@ struct MsgSerde<sdo_msg::ExpeditedResponse>{
         return self.to_canmsg();
     }
 
-    template<AssertLevel assert_level>
+    template<VerifyLevel verify_level>
     [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
     -> FLEX_OPTION(Self){
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
@@ -52,7 +48,7 @@ struct MsgSerde<sdo_msg::ExpeditedResponse>{
         const auto cobid = CobId::from_bits(canid_u32);
         
         // 验证这是 RxSDO (0x580 + NodeID)
-        FLEX_EXTERNAL_ASSERT_NONE(cobid.func_code().is_rx_sdo());
+        FLEX_EXTERNAL_ASSERT_NONE(cobid.func_code().is_resp_sdo());
 
         const auto self = Self{
             .server_nodeid = cobid.node_id(),
@@ -69,7 +65,7 @@ struct MsgSerde<sdo_msg::ExpeditedRequest>{
         return self.to_canmsg();
     }
 
-    template<AssertLevel assert_level>
+    template<VerifyLevel verify_level>
     [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
     -> FLEX_OPTION(Self){
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
@@ -79,7 +75,7 @@ struct MsgSerde<sdo_msg::ExpeditedRequest>{
         const auto cobid = CobId::from_bits(canid_u32);
 
         // 验证这是 TxSDO (0x600 + NodeID)
-        FLEX_EXTERNAL_ASSERT_NONE(cobid.func_code().is_tx_sdo());
+        FLEX_EXTERNAL_ASSERT_NONE(cobid.func_code().is_req_sdo());
 
         const auto self = Self{
             .client_nodeid = cobid.node_id(),

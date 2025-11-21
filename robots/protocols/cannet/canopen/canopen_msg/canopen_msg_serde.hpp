@@ -15,8 +15,8 @@ static constexpr auto to_canmsg(const T& self){
     return MsgSerde<T>::to_canmsg(self);
 }
 
-template<typename T, AssertLevel assert_level = AssertLevel::Propagate>
+template<typename T, VerifyLevel verify_level = VerifyLevel::Propagate>
 static constexpr auto from_canmsg(const hal::CanClassicMsg & msg){
-    return MsgSerde<T>::template from_canmsg<assert_level>(msg);
+    return MsgSerde<T>::template from_canmsg<verify_level>(msg);
 }
 }

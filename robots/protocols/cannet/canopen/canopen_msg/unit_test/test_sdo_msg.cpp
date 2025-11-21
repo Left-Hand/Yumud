@@ -15,7 +15,8 @@ static_assert(PdoOnlyFunctionCode::from_bits(4).is_some());
         OdIndex::from_parts(
             OdPreIndex::from_bits(0),
             OdSubIndex::from_bits(0)
-        )
+        ),
+        SdoAbortCode::DataTransferOrStorageFailed
     );
 
     static_assert(layout1.header.to_bits() == 0x80'0000'00);
@@ -29,7 +30,7 @@ static_assert(PdoOnlyFunctionCode::from_bits(4).is_some());
     // 测试写请求
     static constexpr auto write_request = Msg{
         .client_nodeid = NodeId::from_u7(5),
-        .payload = ExpeditedPayload::from_expedited_write<uint32_t>(
+        .payload = ExpeditedPayload::from_write_req<uint32_t>(
             OdIndex{OdPreIndex::from_bits(0x1000), OdSubIndex::from_bits(0)},
             uint32_t(0x12345678u)
         )
@@ -38,28 +39,25 @@ static_assert(PdoOnlyFunctionCode::from_bits(4).is_some());
     static constexpr auto write_canmsg = msg_serde::to_canmsg(write_request);
     static_assert(write_canmsg.is_standard());
     static_assert(write_canmsg.length() == 8);
-    static_assert(write_canmsg.id_u32() == 0x585); // 0x580 + 5 (TxSDO for node 5)
-    static_assert(CobId::from_stdid(write_canmsg.identifier().to_stdid()).func_code().is_tx_sdo());
+    static_assert(write_canmsg.id_u32() == 0x605); // 0x600 + 5 (TxSDO for node 5)
+    static_assert(CobId(write_canmsg.identifier().to_stdid()).func_code().is_req_sdo());
     static constexpr auto de_write_request = 
-        msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(write_canmsg);
-    static_assert(de_write_request
-        .client_nodeid.to_u7() == 5);
-        
+        msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(write_canmsg);
+    static_assert(de_write_request.client_nodeid.to_u7() == 5);
+    static constexpr auto payload = ExpeditedPayload::from_read_req(
+        OdIndex{OdPreIndex::from_bits(0x1001), OdSubIndex::from_bits(1)});
     // 测试读请求
     static constexpr auto read_request = Msg{
         .client_nodeid = NodeId::from_u7(3),
-        .payload = ExpeditedPayload::from_expedited_read<uint16_t>(
-            OdIndex{OdPreIndex::from_bits(0x1001), OdSubIndex::from_bits(1)},
-            uint16_t(0x0000u) // 读请求中这个值通常为0
-        )
+        .payload = payload
     };
     
     static constexpr auto read_canmsg = msg_serde::to_canmsg(read_request);
     static_assert(read_canmsg.is_standard());
     static_assert(read_canmsg.length() == 8);
-    static_assert(read_canmsg.id_u32() == 0x583); // 0x580 + 3 (TxSDO for node 3)
+    static_assert(read_canmsg.id_u32() == 0x603); // 0x600 + 3 (TxSDO for node 3)
     
-    static constexpr auto de_read_req = msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(read_canmsg);
+    static constexpr auto de_read_req = msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(read_canmsg);
     static_assert(de_read_req.client_nodeid.to_u7() == 3);
 }
 
@@ -80,27 +78,26 @@ static_assert(PdoOnlyFunctionCode::from_bits(4).is_some());
     static constexpr auto write_resp_canmsg = msg_serde::to_canmsg(write_response);
     static_assert(write_resp_canmsg.is_standard());
     static_assert(write_resp_canmsg.length() == 8);
-    static_assert(write_resp_canmsg.id_u32() == 0x605); // 0x600 + 5 (RxSDO for node 5)
+    static_assert(write_resp_canmsg.id_u32() == 0x585); // 0x580 + 5 (RxSDO for node 5)
     
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(write_resp_canmsg)
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(write_resp_canmsg)
         .server_nodeid == NodeId::from_u7(5));
         
     // 测试读响应
     static constexpr auto read_response = Msg{
         .server_nodeid = NodeId::from_u7(3),
-        .payload = ExpeditedPayload::from_expedited_read<uint32_t>(
-            OdIndex{OdPreIndex::from_bits(0x1001), OdSubIndex::from_bits(1)},
-            uint32_t(0xAABBCCDDu)
+        .payload = ExpeditedPayload::from_read_req(
+            OdIndex{OdPreIndex::from_bits(0x1001), OdSubIndex::from_bits(1)}
         )
     };
     
     static constexpr auto read_resp_canmsg = msg_serde::to_canmsg(read_response);
     static_assert(read_resp_canmsg.is_standard());
     static_assert(read_resp_canmsg.length() == 8);
-    static_assert(read_resp_canmsg.id_u32() == 0x603); // 0x600 + 3 (RxSDO for node 3)
+    static_assert(read_resp_canmsg.id_u32() == 0x583); // 0x580 + 3 (RxSDO for node 3)
     static_assert(read_resp_canmsg.payload_u64() != 0); // 确保有效载荷不为0
     
-    static_assert(msg_serde::from_canmsg<Msg, AssertLevel::NoCheck>(read_resp_canmsg)
+    static_assert(msg_serde::from_canmsg<Msg, VerifyLevel::NoCheck>(read_resp_canmsg)
         .server_nodeid == NodeId::from_u7(3));
 }
 #if 0
@@ -110,13 +107,13 @@ static_assert(PdoOnlyFunctionCode::from_bits(4).is_some());
     // 测试 ExpeditedPayload 的各种构建方法
     
     // 测试写请求构建
-    static constexpr auto write_payload = ExpeditedPayload::from_expedited_write<uint16_t>(
+    static constexpr auto write_payload = ExpeditedPayload::from_write_req<uint16_t>(
         OdIndex{OdPreIndex::from_bits(0x1002), OdSubIndex::from_bits(0)},
         0xABCDu
     );
     
     // 测试读请求构建
-    static constexpr auto read_payload = ExpeditedPayload::from_expedited_read<uint8_t>(
+    static constexpr auto read_payload = ExpeditedPayload::from_read_req<uint8_t>(
         OdIndex{OdPreIndex::from_bits(0x1003), OdSubIndex::from_bits(2)},
         0x00u
     );

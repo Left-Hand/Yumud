@@ -2,26 +2,25 @@
 
 #include "canopen_primitive_base.hpp"
 #include "core/tmp/bits/width.hpp"
+#include "core/tmp/implfor.hpp"
+#include "core/utils/Option.hpp"
+#include "core/utils/Result.hpp"
+#include "cast.hpp"
+
 
 namespace ymd::canopen::primitive{
 
-enum class [[nodiscard]] SdoCommandKind : uint8_t {
-    DownloadSegment = 0x00,  // 下载段
-    InitiateDownload = 0x01,  // 初始化下载
-    InitiateUpload = 0x02,  // 初始化上传
-    UploadSegment = 0x03,  // 上传段
-    AbortTransfer = 0x04,  // 中止传输
-    BlockDownload = 0x05,  // 块下载
-    BlockUpload = 0x06,  // 块上传
-    BlockEnd = 0x07  // 块结束
-};
-
-// struct SdoCommandSpecifier {
-//     SdoCommandKind command : 3;  // 命令类型，占3位
-//     uint8_t size_indicator : 1;  // 大小指示位，占1位
-//     uint8_t is_expedited : 1;  // 快速传输指示位，占1位
-//     uint8_t __resv__ : 3;  // 保留位，占3位
+// enum class [[nodiscard]] SdoCommandKind : uint8_t {
+//     DownloadSegment = 0x00,  // 下载段
+//     InitiateDownload = 0x01,  // 初始化下载
+//     InitiateUpload = 0x02,  // 初始化上传
+//     UploadSegment = 0x03,  // 上传段
+//     AbortTransfer = 0x04,  // 中止传输
+//     BlockDownload = 0x05,  // 块下载
+//     BlockUpload = 0x06,  // 块上传
+//     BlockEnd = 0x07  // 块结束
 // };
+
 
 enum class [[nodiscard]] SdoCommandSpecifierKind:uint8_t{
     ExpeditedWrite1B = 0x2f,
@@ -39,16 +38,23 @@ enum class [[nodiscard]] SdoCommandSpecifierKind:uint8_t{
     Exception = 0x80
 };
 
+static_assert(sizeof(SdoCommandSpecifierKind) == 1);
+
 struct [[nodiscard]] SdoCommandSpecifier { 
     using Self = SdoCommandSpecifier;
     using Kind = SdoCommandSpecifierKind;
 
     constexpr SdoCommandSpecifier(const Kind kind) : kind_(kind) {}
+
+    static constexpr Option<Self> try_from_bits(const uint8_t bits){
+        return Some(Self(static_cast<Kind>(bits)));
+    }
+
     static constexpr Self from_bits(const uint8_t bits){
         return Self(static_cast<Kind>(bits));
     }
 
-    static constexpr Self from_expedited_write_length(const size_t size){
+    static constexpr Self from_num_write(const size_t size){
         switch(size){
             case 1: return Self(Kind::ExpeditedWrite1B);
             case 2: return Self(Kind::ExpeditedWrite2B);
@@ -58,7 +64,7 @@ struct [[nodiscard]] SdoCommandSpecifier {
         __builtin_trap();
     }
 
-    static constexpr Self from_expedited_read_length(const size_t size){
+    static constexpr Self from_num_read(const size_t size){
         switch(size){
             case 1: return Self(Kind::ExpeditedRead1B);
             case 2: return Self(Kind::ExpeditedRead2B);
@@ -86,7 +92,7 @@ struct [[nodiscard]] SdoCommandSpecifier {
 
 
     [[nodiscard]] constexpr uint8_t to_bits() const{return static_cast<uint8_t>(kind_);}
-    constexpr Kind kind() const{return kind_;}
+    [[nodiscard]] constexpr Kind kind() const{return kind_;}
     [[nodiscard]] constexpr bool operator ==(const Self & other) const{return kind_ == other.kind_;}
 
     using enum Kind;
@@ -98,28 +104,34 @@ static_assert(sizeof(SdoCommandSpecifier) == 1);
 
 
 
-struct SdoHeader {
+struct [[nodiscard]] SdoHeader {
     using Self = SdoHeader;
 
     uint32_t bits;
 
     static constexpr Self from_parts(
         SdoCommandSpecifier _cmd_spec,
-        OdPreIndex _pre_idx,
-        OdSubIndex _sub_idx
+        OdIndex _idx
     ) {
         //fuck 1-2-1 没有对齐
         return Self{
             .bits = (static_cast<uint32_t>(_cmd_spec.to_bits()) << 24) |      // 高8位
-                    (static_cast<uint32_t>(_pre_idx.to_bits()) << 8) | // 中间16位
-                    (static_cast<uint32_t>(_sub_idx.to_bits()))        // 低8位
+                    (static_cast<uint32_t>(_idx.pre.to_bits()) << 8) | // 中间16位
+                    (static_cast<uint32_t>(_idx.sub.to_bits()))        // 低8位
         };
     }
 
-    constexpr uint32_t to_bits() const { return bits; }
+    [[nodiscard]] constexpr uint32_t to_bits() const { return bits; }
 
     constexpr SdoCommandSpecifier cmd_spec() const {
         return SdoCommandSpecifier::from_bits((bits >> 24) & 0xFF);  // 取高8位
+    }
+
+    constexpr OdIndex idx() const {
+        return OdIndex{
+            pre_idx(),
+            sub_idx()
+        };
     }
     
     constexpr OdPreIndex pre_idx() const {
@@ -129,91 +141,18 @@ struct SdoHeader {
     constexpr OdSubIndex sub_idx() const {
         return OdSubIndex::from_bits(bits & 0xFF);  // 取低8位
     }
+
+    constexpr void fill_byte(const std::span<uint8_t, 4> bytes){
+        bytes[0] = static_cast<uint8_t>(bits >> 0 );
+        bytes[1] = static_cast<uint8_t>(bits >> 8 );
+        bytes[2] = static_cast<uint8_t>(bits >> 16);
+        bytes[3] = static_cast<uint8_t>(bits >> 24);
+    }
 };
 
 static_assert(sizeof(SdoHeader) == 4);
 
-struct [[nodiscard]] ExpeditedPayload{
-    using Self = ExpeditedPayload;
-    using Header = SdoHeader;
-    Header header;
-    uint32_t payload_bits;
-
-    template <typename T, typename D = tmp::type_to_uint_t<T>>
-    requires (sizeof(T) <= 4)
-    [[nodiscard]] __always_inline static constexpr 
-    Self from_expedited_write(
-        const OdIndex idx,
-        const auto val
-    ){
-        static_assert(std::is_same_v<std::decay_t<decltype(val)>, T>);
-        constexpr auto SPEC = SdoCommandSpecifier::from_expedited_write_length(sizeof(T));
-        return Self{Header::from_parts(SPEC, idx.pre, idx.sub), static_cast<uint32_t>(std::bit_cast<D>(val))};
-    }
-
-
-    [[nodiscard]] __always_inline static constexpr 
-    Self from_write_succeed(
-        const OdIndex idx
-    ){
-        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::WriteSucceed);
-        return Self{Header::from_parts(SPEC, idx.pre, idx.sub), static_cast<uint32_t>(0)};
-    }
-
-    template <typename T, typename D = tmp::type_to_uint_t<T>>
-    requires (sizeof(T) <= 4)
-    [[nodiscard]] __always_inline static constexpr 
-    Self from_expedited_read(
-        const OdIndex idx,
-        const auto val
-    ){
-        static_assert(std::is_same_v<std::decay_t<decltype(val)>, T>);
-        constexpr auto SPEC = SdoCommandSpecifier::from_expedited_read_length(sizeof(T));
-        return Self{Header::from_parts(SPEC, idx.pre, idx.sub), 
-                static_cast<uint32_t>(std::bit_cast<D>(val))
-            };
-    }
-
-    [[nodiscard]] __always_inline static constexpr 
-    Self from_read_succeed(
-        const OdIndex idx
-    ){
-        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::ReadSucceed);
-        return Self{Header::from_parts(SPEC, idx.pre, idx.sub), static_cast<uint32_t>(0)};
-    }
-
-    [[nodiscard]] __always_inline static constexpr 
-    Self from_exception(
-        const OdIndex idx
-    ){
-        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::Exception);
-        return Self{Header::from_parts(SPEC, idx.pre, idx.sub), static_cast<uint32_t>(0)};
-    }
-
-    [[nodiscard]] __always_inline static constexpr 
-    Self from_u64(const uint64_t int_val){
-        return std::bit_cast<Self>(int_val);
-    }
-
-    [[nodiscard]] __always_inline constexpr 
-    uint64_t to_u64() const {
-        return std::bit_cast<uint64_t>(*this);
-    }
-
-    [[nodiscard]] std::span<const uint8_t, 8> as_bytes() const {
-        return std::span<const uint8_t, 8>(
-            reinterpret_cast<const uint8_t*>(this),
-            sizeof(ExpeditedPayload)
-        );
-    }
-
-    [[nodiscard]] constexpr 
-    CanMsg to_canmsg(const CobId cobid) const {
-        return CanMsg(cobid.to_stdid(), CanPayload::from_u64(this->to_u64()));
-    }
-};
-
-
+// https://docs.rs/canopeners/latest/src/canopeners/enums.rs.html#267-301
 enum class SdoAbortError : uint32_t {
     ToggleBitNotAlternated                 = 0x05030000,  // 切换位未交替
     SdoProtocolTimedOut                    = 0x05040000,  // SDO 协议超时
@@ -255,8 +194,7 @@ public:
     static constexpr uint32_t NO_ERROR = (0x00000000ul);
     constexpr SdoAbortCode(const SdoAbortError err) : bits_(static_cast<uint32_t>(err)) {;}
 
-    // https://docs.rs/canopeners/latest/src/canopeners/enums.rs.html#267-301
-    constexpr Option<SdoAbortCode> from_bits(const uint32_t bits){
+    static constexpr Option<SdoAbortCode> try_from_bits(const uint32_t bits){
         if(const auto * str = err_to_str(static_cast<SdoAbortError>(bits)); str != nullptr)
             return Some(SdoAbortCode(static_cast<SdoAbortError>(bits)));
         else
@@ -366,6 +304,120 @@ private:
 };
 
 
+static_assert(sizeof(SdoAbortCode) == 4);
+struct [[nodiscard]] ExpeditedPayload{
+    using Self = ExpeditedPayload;
+    using Header = SdoHeader;
+    Header header;
+    uint32_t payload_bits;
+
+    template <typename T, typename D = tmp::type_to_uint_t<T>>
+    requires (sizeof(T) <= 4)
+    [[nodiscard]] __always_inline static constexpr 
+    Self from_write_req(
+        const OdIndex idx,
+        const auto int_val
+    ){
+        static_assert(std::is_same_v<std::decay_t<decltype(int_val)>, T>);
+        constexpr auto SPEC = SdoCommandSpecifier::from_num_write(sizeof(T));
+        return Self{Header::from_parts(SPEC, idx), 
+            static_cast<uint32_t>(std::bit_cast<D>(int_val))};
+    }
+
+    [[nodiscard]] __always_inline static constexpr 
+    Self from_write_succeed(
+        const OdIndex idx
+    ){
+        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::WriteSucceed);
+        return Self{Header::from_parts(SPEC, idx), static_cast<uint32_t>(0)};
+    }
+
+
+    [[nodiscard]] __always_inline static constexpr 
+    Self from_read_req(
+        const OdIndex idx
+    ){
+        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::ReadSucceed);
+        return Self{Header::from_parts(SPEC, idx), static_cast<uint32_t>(0)};
+    }
+
+    template <typename T, typename D = tmp::type_to_uint_t<T>>
+    requires (sizeof(T) <= 4)
+    [[nodiscard]] __always_inline static constexpr 
+    Self from_read_succeed(
+        const OdIndex idx,
+        const auto int_val
+    ){
+        static_assert(std::is_same_v<std::decay_t<decltype(int_val)>, T>);
+        constexpr auto SPEC = SdoCommandSpecifier::from_num_read(sizeof(T));
+        return Self{
+            Header::from_parts(SPEC, idx), 
+            static_cast<uint32_t>(std::bit_cast<D>(int_val))
+        };
+    }
+
+    [[nodiscard]] __always_inline static constexpr 
+    Self from_exception(
+        const OdIndex idx,
+        const SdoAbortCode code
+    ){
+        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::Exception);
+        return Self{Header::from_parts(SPEC, idx), code.to_u32()};
+    }
+
+    [[nodiscard]] __always_inline static constexpr 
+    Self from_u64(const uint64_t int_val){
+        return std::bit_cast<Self>(int_val);
+    }
+
+    [[nodiscard]] __always_inline constexpr 
+    uint64_t to_u64() const {
+        return std::bit_cast<uint64_t>(*this);
+    }
+
+    [[nodiscard]] std::span<const uint8_t, 8> as_bytes() const {
+        return std::span<const uint8_t, 8>(
+            reinterpret_cast<const uint8_t*>(this),
+            sizeof(ExpeditedPayload)
+        );
+    }
+
+    [[nodiscard]] constexpr 
+    CanMsg to_canmsg(const CobId cobid) const {
+        return CanMsg(cobid.to_stdid(), CanPayload::from_u64(this->to_u64()));
+    }
+};
+static_assert(sizeof(ExpeditedPayload) == 8);
+
+
+}
+
+
+namespace ymd{
+
+template<>
+struct ImplFor<convert::TryFrom<uint32_t>, canopen::primitive::SdoAbortError>{
+    using Self = canopen::primitive::SdoAbortError;
+    using Error = void;
+    static constexpr Result<Self, Error> try_from(uint32_t int_val){
+        if(canopen::primitive::SdoAbortCode::err_to_str(
+            static_cast<Self>(int_val))
+        )
+            return Ok(static_cast<Self>(int_val));
+        return Err();
+    }
+};
+
+template<>
+struct ImplFor<convert::TryFrom<uint32_t>, canopen::primitive::SdoAbortCode>{
+    using Self = canopen::primitive::SdoAbortCode;
+    using Error = void;
+    static constexpr Result<Self, Error> try_from(uint32_t int_val){
+        const auto may_code = Self::try_from_bits(int_val);
+        if(may_code.is_none()) return Err();
+        return Ok(may_code.unwrap());
+    }
+};
 
 
 }

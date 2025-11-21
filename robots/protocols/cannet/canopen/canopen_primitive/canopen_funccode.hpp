@@ -11,17 +11,17 @@ enum class FunctionCodeKind:uint8_t{
     Sync = 0x01,//0x080 + NodeId
     Emergency = 0x02,//0x100 + NodeId
     // Time = 0x03,//0x180 + NodeId
-    TxPdo1 = 0x180 >> 7,//0x200 + NodeId
-    RxPdo1 = 0x200 >> 7,//0x280 + NodeId
-    TxPdo2 = 0x280 >> 7,//0x300 + NodeId
-    RxPdo2 = 0x300 >> 7,//0x380 + NodeId
-    TxPdo3 = 0x380 >> 7,//0x400 + NodeId
-    RxPdo3 = 0x400 >> 7,//0x480 + NodeId
-    TxPdo4 = 0x480 >> 7,//0x500 + NodeId
-    RxPdo4 = 0x500 >> 7,//0x580 + NodeId
-    TxSdo = 0x580 >> 7,//0x600 + NodeId
-    RxSdo = 0x600 >> 7,//0x680 + NodeId
-    Heartbeat = 0x0e,//0x700 + NodeId
+    TxPdo1 = 0x180 >> 7,
+    RxPdo1 = 0x200 >> 7,
+    TxPdo2 = 0x280 >> 7,
+    RxPdo2 = 0x300 >> 7,
+    TxPdo3 = 0x380 >> 7,
+    RxPdo3 = 0x400 >> 7,
+    TxPdo4 = 0x480 >> 7,
+    RxPdo4 = 0x500 >> 7,
+    RespSdo = 0x580 >> 7,
+    ReqSdo = 0x600 >> 7,
+    Heartbeat = 0x0e,
 };
 
 enum class PdoOnlyFunctionCodeKind:uint8_t{
@@ -131,7 +131,7 @@ struct [[nodiscard]] FunctionCode{
     }
 
     [[nodiscard]] constexpr uint8_t to_u4() const {
-        return static_cast<uint8_t>(kind_);
+        return static_cast<uint8_t>(static_cast<uint8_t>(kind_) & 0x0f);
     }
 
     [[nodiscard]] constexpr uint8_t to_bits() const {
@@ -154,17 +154,15 @@ struct [[nodiscard]] FunctionCode{
     [[nodiscard]] __always_inline constexpr 
     bool is_energency() const {return kind_ == Kind::Emergency;}
 
-    // [[nodiscard]] __always_inline constexpr 
-    // bool is_time() const {return kind_ == Kind::Time;}
     
     [[nodiscard]] __always_inline constexpr 
     bool is_heartbeat() const {return kind_ == Kind::Heartbeat;}
 
     [[nodiscard]] __always_inline constexpr 
-    bool is_rx_sdo() const { return (kind_ == Kind::RxSdo);}
+    bool is_resp_sdo() const { return (kind_ == Kind::RespSdo);}
 
     [[nodiscard]] __always_inline constexpr 
-    bool is_tx_sdo() const { return (kind_ == Kind::TxSdo);}
+    bool is_req_sdo() const { return (kind_ == Kind::ReqSdo);}
 
     [[nodiscard]] __always_inline constexpr 
     bool is_tx_pdo() const {
