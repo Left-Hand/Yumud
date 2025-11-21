@@ -22,20 +22,130 @@ namespace ymd::canopen::primitive{
 // };
 
 
+// 2.2.2.1、分段传输的读操作1、分段读初始报文：获取从站（服务器）指定索引对象的读取数据长度，
+// 与快速传输的读指令一致使用0x40指令（这里同时也就说明分段读取是由从设备的返回数据所决定的，
+// 这里返回的是0x41指令而不是快速传输中的0x43、47等指令）：
+
 enum struct [[nodiscard]] SdoCommandSpecifierKind:uint8_t{
-    ExpeditedWrite1B = 0x2f,
-    ExpeditedWrite2B = 0x2b,
-    ExpeditedWrite3B = 0x27,
-    ExpeditedWrite4B = 0x23,
+    //服务端响应连续读
+    //每次触发后翻转到0x10
 
-    ExpeditedRead1B = 0x4f,
-    ExpeditedRead2B = 0x4b,
-    ExpeditedRead3B = 0x47,
-    ExpeditedRead4B = 0x43,
+    //  C <-- S | 0x00/0x10 | 数据长度(u8[8])                                                    |
+    ServerSentenceReadSucceed = 0x00,
+    ClientPollSentenceWrite = 0x00,
 
-    ReadSucceed = 0x40,
-    WriteSucceed = 0x60,
-    Exception = 0x80
+    //          | 0         | 1                 | 2     | 3     | 4     | 5     | 6     | 7     |
+    //  C <-- S | 0x01/0x11 | 数据长度(u8[7])                                                    |
+    //  C <-- S | 0x03/0x13 | 数据长度(u8[6])                                            | ----- |
+    //  C <-- S | 0x05/0x15 | 数据长度(u8[5])                                    | ------------- |
+    //  C <-- S | 0x07/0x17 | 数据长度(u8[4])                            | --------------------- |
+    //  C <-- S | 0x09/0x19 | 数据长度(u8[3])                    | ----------------------------- |
+    //  C <-- S | 0x0b/0x1b | 数据长度(u8[2])            | ------------------------------------- |
+    //  C <-- S | 0x0d/0x1d | 数据长度(u8[1])    | --------------------------------------------- |
+
+    //  C --> S | 0x01/0x11 | 数据长度(u8[7])                                                    |
+    //  C --> S | 0x03/0x13 | 数据长度(u8[6])                                            | ----- |
+    //  C --> S | 0x05/0x15 | 数据长度(u8[5])                                    | ------------- |
+    //  C --> S | 0x07/0x17 | 数据长度(u8[4])                            | --------------------- |
+    //  C --> S | 0x09/0x19 | 数据长度(u8[3])                    | ----------------------------- |
+    //  C --> S | 0x0b/0x1b | 数据长度(u8[2])            | ------------------------------------- |
+    //  C --> S | 0x0d/0x1d | 数据长度(u8[1])    | --------------------------------------------- |
+
+    //服务端响应连续读位反转
+    ServerTraillingReadSucceed7B = 0x01,
+    ClientTraillingWrite7B = 0x01,
+
+    ServerTraillingReadSucceed6B = 0x03,
+    ClientTraillingWrite6B = 0x03,
+
+    ServerTraillingReadSucceed5B = 0x05,
+    ClientTraillingWrite5B = 0x05,
+
+    ServerTraillingReadSucceed4B = 0x06,
+    ClientTraillingWrite4B = 0x06,
+
+    ServerTraillingReadSucceed3B = 0x09,
+    ClientTraillingWrite3B = 0x09,
+
+    ServerTraillingReadSucceed2B = 0x0b,
+    ClientTraillingWrite2B = 0x0b,
+
+    ServerTraillingReadSucceed1B = 0x0d,
+    ClientTraillingWrite1B = 0x0d,
+
+    //服务端响应连续读位反转
+    ServerSentenceReadSucceedToggled = 0x10,
+    ClientPollSentenceWriteToggled = 0x10,
+
+    ServerTraillingReadSucceedToggled7B = 0x11,
+    ClientTraillingWriteToggled7B = 0x11,
+
+    ServerTraillingReadSucceedToggled6B = 0x13,
+    ClientTraillingWriteToggled6B = 0x13,
+
+    ServerTraillingReadSucceedToggled5B = 0x15,
+    ClientTraillingWriteToggled5B = 0x15,
+
+    ServerTraillingReadSucceedToggled4B = 0x16,
+    ClientTraillingWriteToggled4B = 0x16,
+
+    ServerTraillingReadSucceedToggled3B = 0x19,
+    ClientTraillingWriteToggled3B = 0x19,
+
+    ServerTraillingReadSucceedToggled2B = 0x1b,
+    ClientTraillingWriteToggled2B = 0x1b,
+
+    ServerTraillingReadSucceedToggled1B = 0x1d,
+    ClientTraillingWriteToggled1B = 0x1d,
+
+    ServerSentenceWriteSucceed = 0x20,
+    //客户端请求读取初始化
+    //          | 0     | 1     | 2     | 3     | 4     | 5     | 6     | 7   |
+    //  C <-- S | 0x21  | 主索引        | 子索引 | 数据长度(u32)                |
+    ClientInitSentenceWrite = 0x21,
+
+    //客户端请求快速写入
+    //          | 0     | 1     | 2     | 3     | 4             | 5     | 6     | 7     |
+    //  C --> S | 0x23  | 主索引        | 子索引 | 数据(u8[4])                            |
+    //  C --> S | 0x27  | 主索引        | 子索引 | 数据(u8[3])                    | ----- |
+    //  C --> S | 0x2b  | 主索引        | 子索引 | 数据(u8[2])            | ------------- |
+    //  C --> S | 0x2f  | 主索引        | 子索引 | 数据(u8[1])    | --------------------- |
+    ClientExpeditedWrite4B = 0x23,
+    ClientExpeditedWrite3B = 0x27,
+    ClientExpeditedWrite2B = 0x2b,
+    ClientExpeditedWrite1B = 0x2f,
+    
+    ServerSentenceWriteSucceedToggled = 0x30,
+
+    //客户端请求读取初始化(快速读/分段读)
+    ClientInitRead = 0x40,
+
+    //服务端返回需要读取字段长度
+    ServerSentenceReadEstablished = 0x41,
+
+    //服务端返回快速读取
+    //          | 0     | 1     | 2     | 3     | 4             | 5     | 6     | 7     |
+    //  C <-- S | 0x43  | 主索引        | 子索引 | 数据(u8[4])                            |
+    //  C <-- S | 0x47  | 主索引        | 子索引 | 数据(u8[3])                    | ----- |
+    //  C <-- S | 0x4b  | 主索引        | 子索引 | 数据(u8[2])            | ------------- |
+    //  C <-- S | 0x4f  | 主索引        | 子索引 | 数据(u8[1])    | --------------------- |
+    ServerExpeditedRead4B = 0x43,
+    ServerExpeditedRead3B = 0x47,
+    ServerExpeditedRead2B = 0x4b,
+    ServerExpeditedRead1B = 0x4f,
+
+    // 服务端正常写入数据/用户端请求开始连续读
+    ServerExpeditedWriteSucceed = 0x60,
+    ServerSentenceWriteEstablished = 0x60,
+    ClientPollSentenceRead = 0x60,
+
+    //用户端进行连续读位反转
+    ClientPollSentenceReadToggled = 0x70,
+
+    //服务端异常
+    //          | 1     | 2     | 3     | 4     | 5     | 6     | 7   |
+    //  | 0x80  | 主索引        | 子索引 | SDO错误码(u32)              |
+    ServerException = 0x80
 };
 
 static_assert(sizeof(SdoCommandSpecifierKind) == 1);
@@ -56,35 +166,35 @@ struct [[nodiscard]] SdoCommandSpecifier {
 
     static constexpr Self from_num_write(const size_t size){
         switch(size){
-            case 1: return Self(Kind::ExpeditedWrite1B);
-            case 2: return Self(Kind::ExpeditedWrite2B);
-            case 3: return Self(Kind::ExpeditedWrite3B);
-            case 4: return Self(Kind::ExpeditedWrite4B);
+            case 1: return Self(Kind::ClientExpeditedWrite1B);
+            case 2: return Self(Kind::ClientExpeditedWrite2B);
+            case 3: return Self(Kind::ClientExpeditedWrite3B);
+            case 4: return Self(Kind::ClientExpeditedWrite4B);
         }
         __builtin_trap();
     }
 
     static constexpr Self from_num_read(const size_t size){
         switch(size){
-            case 1: return Self(Kind::ExpeditedRead1B);
-            case 2: return Self(Kind::ExpeditedRead2B);
-            case 3: return Self(Kind::ExpeditedRead3B);
-            case 4: return Self(Kind::ExpeditedRead4B);
+            case 1: return Self(Kind::ServerExpeditedRead1B);
+            case 2: return Self(Kind::ServerExpeditedRead2B);
+            case 3: return Self(Kind::ServerExpeditedRead3B);
+            case 4: return Self(Kind::ServerExpeditedRead4B);
         }
         __builtin_trap();
     }
 
-    [[nodiscard]] constexpr size_t length() const{
+    [[nodiscard]] constexpr size_t length() const {
         switch(kind_){
-            case Kind::ExpeditedRead1B: return 1;
-            case Kind::ExpeditedRead2B: return 2;
-            case Kind::ExpeditedRead3B: return 3;
-            case Kind::ExpeditedRead4B: return 4;
+            case Kind::ServerExpeditedRead1B: return 1;
+            case Kind::ServerExpeditedRead2B: return 2;
+            case Kind::ServerExpeditedRead3B: return 3;
+            case Kind::ServerExpeditedRead4B: return 4;
 
-            case Kind::ExpeditedWrite1B: return 1;
-            case Kind::ExpeditedWrite2B: return 2;
-            case Kind::ExpeditedWrite3B: return 3;
-            case Kind::ExpeditedWrite4B: return 4;
+            case Kind::ClientExpeditedWrite1B: return 1;
+            case Kind::ClientExpeditedWrite2B: return 2;
+            case Kind::ClientExpeditedWrite3B: return 3;
+            case Kind::ClientExpeditedWrite4B: return 4;
             default: break;
         }
         __builtin_trap();
@@ -105,8 +215,8 @@ static_assert(sizeof(SdoCommandSpecifier) == 1);
 
 
 
-struct [[nodiscard]] SdoHeader {
-    using Self = SdoHeader;
+struct [[nodiscard]] SdoExpeditedHeader {
+    using Self = SdoExpeditedHeader;
 
     uint32_t bits;
 
@@ -151,7 +261,7 @@ struct [[nodiscard]] SdoHeader {
     }
 };
 
-static_assert(sizeof(SdoHeader) == 4);
+static_assert(sizeof(SdoExpeditedHeader) == 4);
 
 // https://docs.rs/canopeners/latest/src/canopeners/enums.rs.html#267-301
 enum struct SdoAbortError : uint32_t {
@@ -312,7 +422,7 @@ private:
 static_assert(sizeof(SdoAbortCode) == 4);
 struct [[nodiscard]] ExpeditedContext{
     using Self = ExpeditedContext;
-    using Header = SdoHeader;
+    using Header = SdoExpeditedHeader;
     using U8X4 = std::array<uint8_t, 4>;
 
     alignas(4) Header header;
@@ -351,7 +461,7 @@ struct [[nodiscard]] ExpeditedContext{
     Self from_write_succeed(
         const OdIndex idx
     ){
-        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::WriteSucceed);
+        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::ServerExpeditedWriteSucceed);
         return Self{
             Header::from_parts(SPEC, idx), 
             std::bit_cast<U8X4>(0)
@@ -363,7 +473,7 @@ struct [[nodiscard]] ExpeditedContext{
     Self from_read_req(
         const OdIndex idx
     ){
-        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::ReadSucceed);
+        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::ClientInitRead);
         return Self{
             Header::from_parts(SPEC, idx), 
             std::bit_cast<U8X4>(0)
@@ -404,7 +514,7 @@ struct [[nodiscard]] ExpeditedContext{
         const OdIndex idx,
         const SdoAbortCode code
     ){
-        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::Exception);
+        constexpr auto SPEC = SdoCommandSpecifier(SdoCommandSpecifier::Kind::ServerException);
         return Self{
             Header::from_parts(SPEC, idx), 
             std::bit_cast<U8X4>(code.to_u32())
@@ -434,8 +544,8 @@ struct [[nodiscard]] ExpeditedContext{
     }
 
     [[nodiscard]] constexpr 
-    CanMsg to_canmsg(const CobId cobid) const {
-        return CanMsg(cobid.to_stdid(), CanPayload::from_u64(this->to_u64()));
+    CanFrame to_canmsg(const CobId cobid) const {
+        return CanFrame(cobid.to_stdid(), CanPayload::from_u64(this->to_u64()));
     }
 
 private:

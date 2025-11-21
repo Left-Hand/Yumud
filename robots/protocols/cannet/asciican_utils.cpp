@@ -9,7 +9,7 @@ using namespace ymd::asciican::primitive;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> AsciiCanPhy::send_can_msg(const Msg && msg){
+IResult<> AsciiCanPhy::send_can_frame(const Msg && msg){
     // DEBUG_PRINTLN("send can msg", msg);
     can_.write(msg).examine();
     return Ok();

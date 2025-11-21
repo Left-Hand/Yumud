@@ -3,7 +3,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "primitive/can/can_msg.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 
 #include "core/magic/size_traits.hpp"
 #include "core/magic/function_traits.hpp"
@@ -152,9 +152,9 @@ template<
     typename T, 
     size_t N = magic::type_to_bytes_v<T>
 >
-requires (std::is_same_v<Protocol, hal::CanClassicMsg>)
-static constexpr auto deserialize(const hal::CanClassicMsg msg){
-    return ImplFor<DeserializeFrom<hal::CanClassicMsg>, T>::deserialize(msg);
+requires (std::is_same_v<Protocol, hal::CanClassicFrame>)
+static constexpr auto deserialize(const hal::CanClassicFrame frame){
+    return ImplFor<DeserializeFrom<hal::CanClassicFrame>, T>::deserialize(frame);
 }
 
 }
@@ -173,16 +173,16 @@ struct MyStruct {
 
 
 template<>
-struct ImplFor<DeserializeFrom<hal::CanClassicMsg>, MyStruct> {
-    static constexpr Option<MyStruct> deserialize(const hal::CanClassicMsg & msg){
+struct ImplFor<DeserializeFrom<hal::CanClassicFrame>, MyStruct> {
+    static constexpr Option<MyStruct> deserialize(const hal::CanClassicFrame & frame){
 
         
-        switch(msg.length()){
+        switch(frame.length()){
             default: return None;
 
             case 4: 
             case 8: {
-                const auto bytes = msg.payload_bytes().template subspan<0, 4>();
+                const auto bytes = frame.payload_bytes().template subspan<0, 4>();
                 return Some(MyStruct{
                     .private_data = ::deserialize<RawBytes, uint32_t>(bytes)
                 });
@@ -213,13 +213,13 @@ static constexpr auto deserialized4 = deserialize<RawBytes, float, iq16>(std::sp
 static constexpr auto deserialized4f = std::get<0>(deserialized4);
 static constexpr auto deserialized4q = std::get<1>(deserialized4);
 
-static constexpr auto msg = hal::CanClassicMsg(
+static constexpr auto frame = hal::CanClassicFrame(
     hal::CanStdId::from_bits(0x123), 
     hal::CanClassicPayload::from_bytes(std::span(serialized2))
 );
-// static constexpr auto deserialized4m = deserialize<CanClassicMsg, MyStruct>(msg);
-static constexpr auto msg_size = msg.length();
-static constexpr auto deserialized4m = deserialize<hal::CanClassicMsg, MyStruct>(msg).unwrap();
+// static constexpr auto deserialized4m = deserialize<CanClassicFrame, MyStruct>(frame);
+static constexpr auto msg_size = frame.length();
+static constexpr auto deserialized4m = deserialize<hal::CanClassicFrame, MyStruct>(frame).unwrap();
 
 // static_assert(deserialized1 == 42, "deserialized1 != 42");
 static_assert(deserialized2 == 1_iq16, "deserialized2 != 1_iq16");

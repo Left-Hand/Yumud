@@ -41,10 +41,10 @@ public:
 
 
     virtual Option<SubEntry> get_sub_entry(const uint16_t, const uint8_t) = 0;
-    virtual bool processMessage(const CanClassicMsg& msg){return true;}
+    virtual bool processMessage(const CanClassicFrame& msg){return true;}
 
     StringView name() const{return StringView(name_);}
-    void sendMessage(const CanClassicMsg& msg) {
+    void sendMessage(const CanClassicFrame& msg) {
         driver_.write(msg);
     }
 

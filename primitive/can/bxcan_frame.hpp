@@ -10,11 +10,11 @@
 #include "core/utils/Result.hpp"
 
 
-//这个文件描述了CanClassicMsg类 表示标准Can2.0(bxcan)的消息
+//这个文件描述了CanClassicFrame类 表示标准Can2.0(bxcan)的消息
 
 namespace ymd::hal{
 
-struct alignas(16) [[nodiscard]] CanClassicMsg{
+struct alignas(16) [[nodiscard]] CanClassicFrame{
 public:
     using Payload = BxCanPayload;
 
@@ -22,11 +22,11 @@ public:
     //这里并没有用零拷贝，原因是对齐排列的uint64比零拷贝效率更高
     static constexpr U8X8 ZERO_U8X8 = std::bit_cast<U8X8>(uint64_t(0));
 
-    using Self = CanClassicMsg;
-    constexpr CanClassicMsg(const CanClassicMsg & other) = default;
-    constexpr CanClassicMsg & operator = (const CanClassicMsg & other) = default;
-    constexpr CanClassicMsg(CanClassicMsg && other) = default;
-    constexpr CanClassicMsg & operator = (CanClassicMsg && other) = default;
+    using Self = CanClassicFrame;
+    constexpr CanClassicFrame(const CanClassicFrame & other) = default;
+    constexpr CanClassicFrame & operator = (const CanClassicFrame & other) = default;
+    constexpr CanClassicFrame(CanClassicFrame && other) = default;
+    constexpr CanClassicFrame & operator = (CanClassicFrame && other) = default;
     // constexpr Self() = default;
 
     /// \brief 从给定的id创建一个远程帧
@@ -55,7 +55,7 @@ public:
         return Self(CanIdentifier::from_parts(id, CanRtr::Data), payload);
     }
 
-    __always_inline constexpr CanClassicMsg(
+    __always_inline constexpr CanClassicFrame(
         details::is_canid auto id,
         const Payload payload
     ):
@@ -215,7 +215,7 @@ private:
     the mailbox passes through. This parameter can be a 
     value between 0 to 0xFF */
 
-    __always_inline constexpr CanClassicMsg(
+    __always_inline constexpr CanClassicFrame(
         CanIdentifier id,
         const Payload payload
     ):
@@ -225,12 +225,12 @@ private:
 
 };
 
-static_assert(sizeof(CanClassicMsg) == 16);
+static_assert(sizeof(CanClassicFrame) == 16);
 
 
 }
 
 namespace ymd{
     class OutputStream;
-    OutputStream & operator<<(OutputStream & os, const hal::CanClassicMsg & msg);
+    OutputStream & operator<<(OutputStream & os, const hal::CanClassicFrame & frame);
 }

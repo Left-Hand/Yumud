@@ -26,8 +26,8 @@ public:
     }
 
 
-    void write_can_msg(const NodeId nodeid, const std::span<const uint8_t> bytes) {
-        const auto msg = hal::CanClassicMsg(
+    void write_can_frame(const NodeId nodeid, const std::span<const uint8_t> bytes) {
+        const auto msg = hal::CanClassicFrame(
             map_nodeid_to_canid(nodeid),
             hal::CanClassicPayload::from_bytes(bytes)
         );

@@ -56,7 +56,7 @@ public:
             const NodeId id, 
             const SpdCtrlParams & p
         ){
-            return hal::CanClassicMsg::from_tuple(
+            return hal::CanClassicFrame::from_tuple(
                 CanStdId(0x100 | id), 
                 std::make_tuple(
                     float(p.spd)
@@ -68,7 +68,7 @@ public:
             const NodeId id, 
             const PosSpdCtrlParams & p
         ){
-            return hal::CanClassicMsg::from_tuple(
+            return hal::CanClassicFrame::from_tuple(
                 CanStdId(0x200 | id), 
                 std::make_tuple(
                     float(p.pos),

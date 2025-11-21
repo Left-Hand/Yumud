@@ -326,7 +326,7 @@ size_t Can::pending(){
     else return 3;
 }
 
-Option<CanMailboxNth> Can::transmit(const CanClassicMsg & msg){
+Option<CanMailboxNth> Can::transmit(const CanClassicFrame & frame){
     const auto transmit_mailbox = [this] -> int32_t{
         const uint32_t tempreg = inst_->TSTATR;
         if((tempreg & CAN_TSTATR_TME0)) return 0;
@@ -337,15 +337,15 @@ Option<CanMailboxNth> Can::transmit(const CanClassicMsg & msg){
 
     if(transmit_mailbox < 0) return None;
 
-    const uint32_t tempmir = msg.identifier().to_bits();
-    const uint64_t data = msg.payload_u64();
+    const uint32_t tempmir = frame.identifier().to_bits();
+    const uint64_t data = frame.payload_u64();
     auto & mailbox_setting = inst_->sTxMailBox[
         static_cast<size_t>(transmit_mailbox)];
 
     mailbox_setting.TXMDLR = data & UINT32_MAX;
     mailbox_setting.TXMDHR = data >> 32;
 
-    mailbox_setting.TXMDTR = uint32_t(0xFFFF0000 | msg.length());
+    mailbox_setting.TXMDTR = uint32_t(0xFFFF0000 | frame.length());
     mailbox_setting.TXMIR = tempmir;
 
     return Some(
@@ -359,10 +359,10 @@ void Can::enable_hw_retransmit(const Enable en){
     else    inst_->CTLR |=  CAN_CTLR_NART;
 }
 
-Result<void, CanError> Can::write(const CanClassicMsg & msg){
-    auto push_buf = [this, &msg]() -> Result<void, CanError>{ 
+Result<void, CanError> Can::write(const CanClassicFrame & frame){
+    auto push_buf = [this, &frame]() -> Result<void, CanError>{ 
         if(tx_fifo_.writable_size() > 0){
-            tx_fifo_.push(msg);
+            tx_fifo_.push(frame);
             return Ok();
         }
         return Err(CanError::SoftFifoOverflow);
@@ -371,13 +371,13 @@ Result<void, CanError> Can::write(const CanClassicMsg & msg){
     if(pending() >= 3)
         return push_buf();
     
-    if(transmit(msg).is_none())
+    if(transmit(frame).is_none())
         return push_buf();
 
     return Ok();
 }
 
-CanClassicMsg Can::read(){
+CanClassicFrame Can::read(){
     return std::move(rx_fifo_.pop());
 }
 
@@ -436,7 +436,7 @@ void Can::set_baudrate(const uint32_t baudrate){
     //TODO
 }
 
-CanClassicMsg Can::receive(const CanFifoNth fifo_num){
+CanClassicFrame Can::receive(const CanFifoNth fifo_num){
     const size_t index = std::bit_cast<uint8_t>(fifo_num);
     auto & mailbox = inst_->sFIFOMailBox[index];
     const uint32_t rxmir = mailbox.RXMIR;
@@ -457,7 +457,7 @@ CanClassicMsg Can::receive(const CanFifoNth fifo_num){
             break;
     }
 
-    return CanClassicMsg::from_sxx32_regs(rxmir, data, dlc);
+    return CanClassicFrame::from_sxx32_regs(rxmir, data, dlc);
 }
 
 

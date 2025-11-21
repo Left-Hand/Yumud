@@ -13,7 +13,7 @@ struct [[nodiscard]] ExpeditedRequest{
     NodeId client_nodeid;
     ExpeditedContext context;
 
-    [[nodiscard]] constexpr CanMsg to_canmsg() const {
+    [[nodiscard]] constexpr CanFrame to_canmsg() const {
         return context.to_canmsg(client_nodeid.with_func_code(FunctionCode::ReqSdo));
     }
 };
@@ -22,7 +22,7 @@ struct [[nodiscard]] ExpeditedResponse{
     NodeId server_nodeid;
     ExpeditedContext context;
 
-    [[nodiscard]] constexpr CanMsg to_canmsg() const {
+    [[nodiscard]] constexpr CanFrame to_canmsg() const {
         return context.to_canmsg(server_nodeid.with_func_code(FunctionCode::RespSdo));
     }
 };
@@ -34,12 +34,12 @@ namespace ymd::canopen::msg_serde{
 template<>
 struct MsgSerde<sdo_msg::ExpeditedResponse>{
     using Self = sdo_msg::ExpeditedResponse;
-    [[nodiscard]] static constexpr CanMsg to_canmsg(const Self & self){
+    [[nodiscard]] static constexpr CanFrame to_canmsg(const Self & self){
         return self.to_canmsg();
     }
 
     template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
+    [[nodiscard]] static constexpr auto from_canmsg(const CanFrame& msg)
     -> FLEX_OPTION(Self){
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
         FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 8);
@@ -61,12 +61,12 @@ struct MsgSerde<sdo_msg::ExpeditedResponse>{
 template<>
 struct MsgSerde<sdo_msg::ExpeditedRequest>{
     using Self = sdo_msg::ExpeditedRequest;
-    [[nodiscard]] static constexpr CanMsg to_canmsg(const Self & self){
+    [[nodiscard]] static constexpr CanFrame to_canmsg(const Self & self){
         return self.to_canmsg();
     }
 
     template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
+    [[nodiscard]] static constexpr auto from_canmsg(const CanFrame& msg)
     -> FLEX_OPTION(Self){
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
         FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 8);

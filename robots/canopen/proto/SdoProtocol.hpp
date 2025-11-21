@@ -35,21 +35,21 @@ public:
         const auto cobid = CobId::from_u16(int(se));
 
         sendMessage(
-            CanClassicMsg::from_bytes(
+            CanClassicFrame::from_bytes(
                 cobid.to_stdid(), 
                 std::span(can_data, 8)
             )
         );
     }
 
-    bool processMessage(const CanClassicMsg & msg);
+    bool processMessage(const CanClassicFrame & frame);
 
-    static constexpr OdIndex extractIndex(const CanClassicMsg & msg) {
+    static constexpr OdIndex extractIndex(const CanClassicFrame & frame) {
         const auto payload = msg.payload_bytes();
         return (payload[2] << 8) | payload[1] ;
     }
 
-    static constexpr OdSubIndex extractSubIndex(const CanClassicMsg& msg) {
+    static constexpr OdSubIndex extractSubIndex(const CanClassicFrame& msg) {
         return msg.payload_bytes()[3];
     }
 

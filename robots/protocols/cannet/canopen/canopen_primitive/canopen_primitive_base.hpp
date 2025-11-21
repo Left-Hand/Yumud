@@ -5,7 +5,7 @@
 
 namespace ymd::canopen::primitive{
 
-using CanMsg = hal::CanClassicMsg;
+using CanFrame = hal::CanClassicFrame;
 using CanPayload = hal::BxCanPayload;
 using hal::CanStdId;
 using namespace ymd::literals;
@@ -226,7 +226,7 @@ struct [[nodiscard]] OdIndex{
 //     // 位域结构体
 //     using CommandSpecifier = SdoCommandSpecifier;
 //     // 构造函数
-//     SdoCommand(const hal::CanClassicMsg & msg) {
+//     SdoCommand(const hal::CanClassicFrame & frame) {
 //         specifier = std::bit_cast<CommandSpecifier>(msg.payload_bytes()[0]);
 //     }
 

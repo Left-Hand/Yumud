@@ -140,9 +140,9 @@ void nuedc_2025e_laser_main(){
     };
 
 
-    auto write_can_msg = [&](const hal::CanClassicMsg & msg){
-        if(msg.is_extended()) PANIC();
-        can.write(msg).examine();
+    auto write_can_frame = [&](const hal::CanClassicFrame & frame){
+        if(frame.is_extended()) PANIC();
+        can.write(frame).examine();
     };
 
 
@@ -150,12 +150,12 @@ void nuedc_2025e_laser_main(){
     auto publish_to_both_joints = [&]<typename T>
     (const T & cmd){
         {
-            const auto msg = MsgFactory<CommandKind>{NodeRole::PitchJoint}(cmd);
-            write_can_msg(msg);
+            const auto frame = MsgFactory<CommandKind>{NodeRole::PitchJoint}(cmd);
+            write_can_frame(frame);
         }
         {
-            const auto msg = MsgFactory<CommandKind>{NodeRole::YawJoint}(cmd);
-            write_can_msg(msg);
+            const auto frame = MsgFactory<CommandKind>{NodeRole::YawJoint}(cmd);
+            write_can_frame(frame);
         }
     };
 
@@ -273,16 +273,16 @@ void nuedc_2025e_laser_main(){
         const NodeRole node_role, 
         const commands::DeltaPosition & cmd
     ){
-        const auto msg = MsgFactory<CommandKind>{node_role}(cmd);
-        write_can_msg(msg);
+        const auto frame = MsgFactory<CommandKind>{node_role}(cmd);
+        write_can_frame(frame);
     };
 
     [[maybe_unused]] auto publish_joint_position = [&](
         const NodeRole node_role, 
         const commands::SetPosition & cmd
     ){
-        const auto msg = MsgFactory<CommandKind>{node_role}(cmd);
-        write_can_msg(msg);
+        const auto frame = MsgFactory<CommandKind>{node_role}(cmd);
+        write_can_frame(frame);
     };
 
     [[maybe_unused]] auto handle_gimbal_idle = [&]{

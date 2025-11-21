@@ -6,7 +6,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/utils/scope_guard.hpp"
 
-#include "primitive/can/can_msg.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 
 #include <variant>
 
@@ -14,10 +14,10 @@ namespace ymd::asciican::primitive{
 
 
 namespace operations{
-    struct [[nodiscard]] SendCanMsg{
-        hal::CanClassicMsg msg;
+    struct [[nodiscard]] SendCanFrame{
+        hal::CanClassicFrame msg;
 
-        friend OutputStream & operator<<(OutputStream & os, const SendCanMsg & self){ 
+        friend OutputStream & operator<<(OutputStream & os, const SendCanFrame & self){ 
             return os << os.field("msg")(self.msg);
         }
     };
@@ -80,7 +80,7 @@ namespace operations{
 
 
 struct [[nodiscard]] Operation:public Sumtype<
-    operations::SendCanMsg, 
+    operations::SendCanFrame, 
     operations::SendText,
     operations::SetSerialBaud,
     operations::SetCanBaud,
@@ -91,7 +91,7 @@ struct [[nodiscard]] Operation:public Sumtype<
 
 };
 
-using Msg = hal::CanClassicMsg;
+using Frame = hal::CanClassicFrame;
 
 enum class Error:uint8_t{
     NoInput,

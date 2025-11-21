@@ -110,7 +110,7 @@ public:
         for(;len < 8; len++){
             buf[len] = 0;
         }
-        // 使用数组视图构造CanMsg
+        // 使用数组视图构造CanFrame
         return Some(Self(
             buf, 
             CanClassicDlc::from_bits(len)
@@ -225,7 +225,7 @@ private:
     BxCanPayload(const U8X8 bytes, const CanClassicDlc dlc):
         bytes_(bytes), dlc_(dlc){;}
 
-    friend class CanClassicMsg;
+    friend class CanClassicFrame;
 
     template<size_t I>
     [[nodiscard]] static __attribute__((always_inline)) constexpr 

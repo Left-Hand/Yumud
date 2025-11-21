@@ -21,10 +21,10 @@ using namespace asciican;
 using namespace asciican::primitive;
 using Error = asciican::primitive::Error;
 using Flags = asciican::primitive::Flags;
-using Msg = asciican::primitive::Msg;
+using Frame = asciican::primitive::Frame;
 class [[nodiscard]] SlcanParser final{
 public:
-    using Msg = hal::CanClassicMsg;
+    using Frame = hal::CanClassicFrame;
 
 
     template<typename T = void>
@@ -79,26 +79,26 @@ struct SlcanResponseFormatter{
     }
 
 
-    static constexpr Response fmt_canmsg(const hal::CanClassicMsg & msg){
+    static constexpr Response fmt_canmsg(const hal::CanClassicFrame & frame){
         String str;
         auto filler = CharsFiller{str.mut_chars()};
-        const auto header_char = msg_to_header_char(msg);
+        const auto header_char = msg_to_header_char(frame);
         filler.push_char(header_char);
 
         auto push_id = [&](){
-            const size_t len = msg.is_extended() ? 8 : 3;
-            const auto id_u32 = msg.id_u32();
+            const size_t len = frame.is_extended() ? 8 : 3;
+            const auto id_u32 = frame.id_u32();
             filler.push_hex(id_u32, len);
         };
 
         auto push_dlc = [&]() {
-            const size_t length = msg.length();
+            const size_t length = frame.length();
             filler.push_hex(length, 1);  // DLC 是1个十六进制字符
         };
 
         auto push_data = [&](){ 
-            const size_t length = msg.length();
-            const auto payload_bytes = msg.payload_bytes();
+            const size_t length = frame.length();
+            const auto payload_bytes = frame.payload_bytes();
             for(size_t i = 0; i < length; i++){
                 filler.push_hex(payload_bytes[i], 2);
             }
@@ -111,11 +111,11 @@ struct SlcanResponseFormatter{
         return Response{str};
     }
 private:
-    [[nodiscard]] static constexpr char msg_to_header_char(const hal::CanClassicMsg & msg){
-        if(msg.is_remote()){
-            return msg.is_extended() ? 'R' : 'r';
+    [[nodiscard]] static constexpr char msg_to_header_char(const hal::CanClassicFrame & frame){
+        if(frame.is_remote()){
+            return frame.is_extended() ? 'R' : 'r';
         }else{
-            return msg.is_extended() ? 'T' : 't';
+            return frame.is_extended() ? 'T' : 't';
         }
     };
 };

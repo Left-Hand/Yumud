@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <compare>
 #include "core/utils/Option.hpp"
+#include "core/utils/bits/bits_set.hpp"
 
 namespace ymd{
 class OutputStream;
@@ -41,6 +42,8 @@ struct [[nodiscard]] CanStdId{
     }
 
     [[nodiscard]] constexpr uint16_t to_u11() const {return bits_;}
+    [[nodiscard]] constexpr literals::Bs11 to_b11() const {
+        return literals::Bs11::from_bits_unchecked(bits_);}
 
     friend OutputStream & operator << (OutputStream & os, const Self & self);
 private:

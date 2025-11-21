@@ -173,7 +173,7 @@ private:
 
     void set_target_current(const iq16 curr_, const size_t index);
 
-    void update_slave(const hal::CanClassicMsg & msg, const size_t index);
+    void update_slave(const hal::CanClassicFrame & frame, const size_t index);
 
 };
 

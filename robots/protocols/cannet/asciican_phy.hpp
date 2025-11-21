@@ -9,7 +9,7 @@ using namespace ymd::asciican::primitive;
 
 class AsciiCanPhy final{
 public:
-    using Msg = hal::CanClassicMsg;
+    using Msg = hal::CanClassicFrame;
     using Error = asciican::Error;
 
     template<typename T = void>
@@ -19,7 +19,7 @@ public:
     AsciiCanPhy(hal::Can & can):
         can_(can){;}
 
-    [[nodiscard]] IResult<> send_can_msg(const Msg && msg);
+    [[nodiscard]] IResult<> send_can_frame(const Msg && msg);
 
     [[nodiscard]] IResult<> send_str(const StringView str);
 

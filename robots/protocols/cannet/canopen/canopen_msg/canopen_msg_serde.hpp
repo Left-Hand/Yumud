@@ -1,7 +1,7 @@
 #pragma once
 
 #include "flex_assert.hpp"
-#include "primitive/can/can_msg.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 
 namespace ymd::canopen::msg_serde{
 using namespace primitive;
@@ -16,7 +16,7 @@ static constexpr auto to_canmsg(const T& self){
 }
 
 template<typename T, VerifyLevel verify_level = VerifyLevel::Propagate>
-static constexpr auto from_canmsg(const hal::CanClassicMsg & msg){
-    return MsgSerde<T>::template from_canmsg<verify_level>(msg);
+static constexpr auto from_canmsg(const hal::CanClassicFrame & frame){
+    return MsgSerde<T>::template from_canmsg<verify_level>(frame);
 }
 }

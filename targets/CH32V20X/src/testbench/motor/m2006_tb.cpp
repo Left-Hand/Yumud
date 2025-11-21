@@ -40,7 +40,7 @@ void m2006_main(){
             int16_t d2;
         };
 
-        hal::CanClassicMsg msg = hal::CanClassicMsg(
+        hal::CanClassicFrame msg = hal::CanClassicFrame(
             hal::CanStdId::from_bits(0x200), 
             hal::CanClassicPayload::from_bytes(
                 std::bit_cast<std::array<uint8_t, 4>>(

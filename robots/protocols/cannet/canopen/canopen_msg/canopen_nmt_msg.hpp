@@ -116,17 +116,17 @@ namespace ymd::canopen::msg_serde{
 template<>
 struct MsgSerde<nmt_msg::NetManage>{
     using Self = nmt_msg::NetManage;
-    [[nodiscard]] static constexpr CanMsg to_canmsg(const Self & self){
+    [[nodiscard]] static constexpr CanFrame to_canmsg(const Self & self){
         std::array<uint8_t, 2> bytes;
         self.fill_bytes(bytes);
-        return CanMsg(
+        return CanFrame(
             Self::COBID.to_stdid(), 
             hal::CanClassicPayload::from_bytes(std::span(bytes))
         );
     }
 
     template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
+    [[nodiscard]] static constexpr auto from_canmsg(const CanFrame& msg)
     -> FLEX_OPTION(Self){
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
         FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 0);
@@ -147,12 +147,12 @@ struct MsgSerde<nmt_msg::NetManage>{
 template<>
 struct MsgSerde<nmt_msg::Sync>{
     using Self = nmt_msg::Sync;
-    [[nodiscard]] static constexpr CanMsg to_canmsg(const Self & self){
-        return CanMsg::from_empty(Self::COBID.to_stdid());
+    [[nodiscard]] static constexpr CanFrame to_canmsg(const Self & self){
+        return CanFrame::from_empty(Self::COBID.to_stdid());
     }
 
     template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
+    [[nodiscard]] static constexpr auto from_canmsg(const CanFrame& msg)
     -> FLEX_OPTION(Self){
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
         FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 0);
@@ -170,14 +170,14 @@ struct MsgSerde<nmt_msg::Sync>{
 template<>
 struct MsgSerde<nmt_msg::Heartbeat>{
     using Self = nmt_msg::Heartbeat;
-    [[nodiscard]] static constexpr CanMsg to_canmsg(const Self & self){
+    [[nodiscard]] static constexpr CanFrame to_canmsg(const Self & self){
         const auto canid = hal::CanStdId::from_bits(0x700 | self.station_nodeid.to_u7());
         const std::array<uint8_t, 1> bytes = {static_cast<uint8_t>(self.station_state)};
-        return CanMsg(canid, CanPayload::from_bytes(std::span(bytes)));
+        return CanFrame(canid, CanPayload::from_bytes(std::span(bytes)));
     }
 
     template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
+    [[nodiscard]] static constexpr auto from_canmsg(const CanFrame& msg)
     -> FLEX_OPTION(Self){
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
         FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 1);
@@ -197,12 +197,12 @@ struct MsgSerde<nmt_msg::Heartbeat>{
 template<>
 struct MsgSerde<nmt_msg::NodeGuardingRequest> {
     using Self = nmt_msg::NodeGuardingRequest;
-    [[nodiscard]] static constexpr CanMsg to_canmsg(const Self& self) {
-        return CanMsg::from_empty(self.cobid().to_stdid());
+    [[nodiscard]] static constexpr CanFrame to_canmsg(const Self& self) {
+        return CanFrame::from_empty(self.cobid().to_stdid());
     }
 
     template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
+    [[nodiscard]] static constexpr auto from_canmsg(const CanFrame& msg)
         -> FLEX_OPTION(Self) {
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
         FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 0);
@@ -220,14 +220,14 @@ struct MsgSerde<nmt_msg::NodeGuardingRequest> {
 template<>
 struct MsgSerde<nmt_msg::NodeGuardingResponse> {
     using Self = nmt_msg::NodeGuardingResponse;
-    [[nodiscard]] static constexpr CanMsg to_canmsg(const Self& self) {
+    [[nodiscard]] static constexpr CanFrame to_canmsg(const Self& self) {
         const auto canid = self.cobid().to_stdid();
         const std::array<uint8_t, 1> bytes = {static_cast<uint8_t>(self.station_state)};
-        return CanMsg(canid, CanPayload::from_bytes(std::span(bytes)));
+        return CanFrame(canid, CanPayload::from_bytes(std::span(bytes)));
     }
 
     template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
+    [[nodiscard]] static constexpr auto from_canmsg(const CanFrame& msg)
         -> FLEX_OPTION(Self) {
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
         FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 1);
@@ -246,15 +246,15 @@ struct MsgSerde<nmt_msg::NodeGuardingResponse> {
 template<>
 struct MsgSerde<nmt_msg::Emergency> {
     using Self = nmt_msg::Emergency;
-    [[nodiscard]] static constexpr CanMsg to_canmsg(const Self& self) {
+    [[nodiscard]] static constexpr CanFrame to_canmsg(const Self& self) {
         const auto canid = self.cobid().to_stdid();
         std::array<uint8_t, 8> bytes{};
         self.fill_bytes(bytes);
-        return CanMsg(canid, CanPayload::from_bytes(std::span(bytes)));
+        return CanFrame(canid, CanPayload::from_bytes(std::span(bytes)));
     }
 
     template<VerifyLevel verify_level>
-    [[nodiscard]] static constexpr auto from_canmsg(const CanMsg& msg)
+    [[nodiscard]] static constexpr auto from_canmsg(const CanFrame& msg)
         -> FLEX_OPTION(Self) {
         FLEX_EXTERNAL_ASSERT_NONE(msg.is_standard());
         FLEX_EXTERNAL_ASSERT_NONE(msg.length() == 8);

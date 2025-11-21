@@ -20,7 +20,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
 
     {
         const uint32_t id = 0x1314;
-        hal::CanClassicMsg msg = hal::CanClassicMsg(
+        hal::CanClassicFrame msg = hal::CanClassicFrame(
             hal::CanStdId::from_bits(id), 
             hal::CanClassicPayload::from_list({3,4})
         );
@@ -35,7 +35,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
         real_t data = 0.09_r;
         real_t data2 = 0.99_r;
         uint32_t id = 0x5678;
-        const auto msg = hal::CanClassicMsg(
+        const auto msg = hal::CanClassicFrame(
             hal::CanExtId::from_bits(id), 
             hal::CanClassicPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(data.to_bits()))
         );
@@ -45,7 +45,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
 
         // auto read2 = msg.to_vector();
         // auto read2 = msg.to_array<8>();
-        const auto msg2 = hal::CanClassicMsg(
+        const auto msg2 = hal::CanClassicFrame(
             hal::CanExtId::from_bits(id), 
             hal::CanClassicPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(data2.to_bits()))
         );
@@ -60,7 +60,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
     while(1){
         if(is_tx){
             static uint8_t cnt = 0;
-            const auto msg = hal::CanClassicMsg(
+            const auto msg = hal::CanClassicFrame(
                 hal::CanStdId::from_bits(1), 
                 hal::CanClassicPayload::from_list({0x34, 0x37})
             );
@@ -77,7 +77,7 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
             }
 
             while(can.available()){
-                hal::CanClassicMsg msg_r = can.read();
+                hal::CanClassicFrame msg_r = can.read();
                 logger.println("rx", msg_r);
             }
 
@@ -87,11 +87,11 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
         }else{
             logger.println("ava", can.available());
             while(can.available()){
-                const hal::CanClassicMsg msg_r = can.read();
+                const hal::CanClassicFrame msg_r = can.read();
                 logger.println("rx", msg_r);
             }
 
-            const auto msg = hal::CanClassicMsg(
+            const auto msg = hal::CanClassicFrame(
                 hal::CanStdId::from_bits(0), 
                 hal::CanClassicPayload::from_list({0x13,0x14})
             );

@@ -1,16 +1,16 @@
 #pragma once
 
 #include "primitive/can/can_id.hpp"
-#include "primitive/can/can_msg.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 
 
 namespace ymd::canopen{
 
 enum class [[nodiscard]] FunctionCodeKind:uint8_t{
     Nmt = 0x00,
-    Sync = 0x01,//0x080 + NodeId
-    Emergency = 0x02,//0x100 + NodeId
-    // Time = 0x03,//0x180 + NodeId
+    Sync = 0x01,
+    Emergency = 0x01,
+    TimeStamp = 0x02,
     TxPdo1 = 0x180 >> 7,
     RxPdo1 = 0x200 >> 7,
     TxPdo2 = 0x280 >> 7,

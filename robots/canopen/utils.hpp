@@ -9,13 +9,13 @@
 namespace ymd::canopen{
 
 using Can = hal::Can;
-using CanClassicMsg = hal::CanClassicMsg;
+using CanClassicFrame = hal::CanClassicFrame;
 
 class CanDriver {
 public:
     virtual ~CanDriver() = default;
-    virtual bool write(const CanClassicMsg & frame) = 0;
-    virtual bool read(CanClassicMsg & frame) = 0;
+    virtual bool write(const CanClassicFrame & frame) = 0;
+    virtual bool read(CanClassicFrame & frame) = 0;
 };
 
 
@@ -24,7 +24,7 @@ class SubEntry;
 class CanOpenListener {
 public:
     virtual void onObjDictChange(SubEntry & subEntry) = 0;
-    virtual void onMessage(const CanClassicMsg & msg) = 0;
+    virtual void onMessage(const CanClassicFrame & frame) = 0;
     virtual ~CanOpenListener() = default;
 };
 
@@ -188,7 +188,7 @@ public:
     // 位域结构体
     using CommandSpecifier = SdoCommandSpecifier;
     // 构造函数
-    SdoCommand(const CanClassicMsg & msg) {
+    SdoCommand(const CanClassicFrame & frame) {
         specifier = std::bit_cast<CommandSpecifier>(msg.payload_bytes()[0]);
     }
 

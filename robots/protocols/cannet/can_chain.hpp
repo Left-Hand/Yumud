@@ -2,41 +2,41 @@
 
 #include "core/utils/Option.hpp"
 #include "core/utils/handle_status.hpp"
-#include "primitive/can/can_msg.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 
 namespace ymd::robots{
 
 
-class CanMsgHandlerIntf{ 
+class CanFrameHandlerIntf{ 
 public:
-    virtual HandleStatus handle(const hal::CanClassicMsg & msg) = 0;
+    virtual HandleStatus handle(const hal::CanClassicFrame & frame) = 0;
 };
 
 
-class CanMsgHandlerChainlink final: public CanMsgHandlerIntf{ 
+class CanFrameHandlerChainlink final: public CanFrameHandlerIntf{ 
 public:
-    CanMsgHandlerChainlink(
-        Some<CanMsgHandlerIntf *> curr, 
-        Option<CanMsgHandlerIntf &> next
+    CanFrameHandlerChainlink(
+        Some<CanFrameHandlerIntf *> curr, 
+        Option<CanFrameHandlerIntf &> next
     ):
         curr_handler_(*curr.get()),
         next_handler_(next){;}
 
-    HandleStatus handle(const hal::CanClassicMsg & msg){ 
+    HandleStatus handle(const hal::CanClassicFrame & frame){ 
         HandleStatus res = curr_handler_.handle(msg);
         if(next_handler_.is_none()) return res;
         return next_handler_.unwrap().handle(msg);
     }
 private:
-    CanMsgHandlerIntf & curr_handler_;
-    Option<CanMsgHandlerIntf &> next_handler_ = None;
+    CanFrameHandlerIntf & curr_handler_;
+    Option<CanFrameHandlerIntf &> next_handler_ = None;
 };
 
 
 
 class CanHandlerTerminator final: 
-public CanMsgHandlerIntf{ 
-    HandleStatus handle(const hal::CanClassicMsg & msg){ 
+public CanFrameHandlerIntf{ 
+    HandleStatus handle(const hal::CanClassicFrame & frame){ 
         return HandleStatus::from_handled();
     }
 };

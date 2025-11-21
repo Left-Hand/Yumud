@@ -3,7 +3,7 @@
 #include "../canopen_primitive/canopen_primitive.hpp"
 #include "core/string/string_view.hpp"
 #include "core/container/ringbuf.hpp"
-
+// https://winshton.gitbooks.io/canopen-ds301-cn/content/chapter7.5.html
 namespace ymd::canopen{
 
 #ifndef CANOPEN_MAX_PERDEF_ERROR
@@ -17,7 +17,73 @@ struct _ob_t{
 
 
 struct PredefinedError{
-    uint32_t bits;
+    uint16_t additive_error;
+};
+// 一个内部使用环形缓冲区，能不断插入新数据同时挤出末尾数据的容器
+// 保障了右值安全
+template<typename T, size_t N>
+requires (std::has_single_bit(N))
+struct [[nodiscard]] RingMemento {
+    constexpr RingMemento() {
+        // 默认构造data_中的元素
+        for (size_t i = 0; i < N; ++i) {
+            new (&data_[i]) T();
+        }
+    }
+    
+    ~ constexpr RingMemento() {
+        // 显式析构union中的元素
+        for (size_t i = 0; i < N; ++i) {
+            data_[i].~T();
+        }
+    }
+
+    // 在首位插入数据
+    constexpr void push_front(const T& item) {
+        if (is_full()) {
+            // 缓冲区已满，需要挤出末尾数据
+            read_idx_ = (read_idx_ + 1) % N;
+        }
+        
+        write_idx_ = (write_idx_ + N - 1) % N; // 向前移动
+        data_[write_idx_] = item;
+        
+        if (!is_full() && size() == 0) {
+            // 第一次插入时，read_idx_应该指向同一个位置
+            read_idx_ = write_idx_;
+        }
+    }
+
+    constexpr [[nodiscard]] size_t size() const {
+        if (is_full()) {
+            return N;
+        }
+        return (write_idx_ + N - read_idx_) % N;
+    }
+
+    constexpr [[nodiscard]] bool is_full() const {
+        return (write_idx_ + 1) % N == read_idx_;
+    }
+
+    constexpr [[nodiscard]] bool is_empty() const {
+        return write_idx_ == read_idx_;
+    }
+
+    Option<T> at(const size_t idx) const {
+        if (idx >= size()) {
+            return None;
+        }
+        
+        size_t actual_idx = (read_idx_ + idx) % N;
+        return Some<T>(data_[actual_idx]); // 拷贝构造
+    }
+
+private:
+    union {
+        T data_[N];
+    };
+    size_t write_idx_ = 0;
+    size_t read_idx_ = 0;
 };
 
 };
@@ -37,6 +103,14 @@ std::span<uint8_t, sizeof(T)> as_mut_le_bytes(T * p_obj){
     return std::span(reinterpret_cast<uint8_t *>(p_obj), sizeof(T));
 }
 
+
+// 此对象提供有关设备类型的信息。该对象描述了逻辑设备类型及其功能。它由两个16位域组成，一个描述所用设备协议或应用协议，
+// 另一个给出逻辑设备的附加功能信息。附加的信息参数为设备协议和应用协议所指定。其说明不属于本文范围，定义于相应的设备协议和应用协议。
+// 值定义
+// 该值为0000h表示逻辑设备不遵守标准设备协议。在这种情况下附加的信息应为0000h(如果没有更多的逻辑设备)或FFFFh(如果还有其它逻辑设备)。
+// 多逻辑设备其附加信息应为FFFFh且其设备协议应为对象字典中第一逻辑设备。
+// 所有其他逻辑设备模块的协议标识于对象67FFh + x * 800h且x = 逻辑设备内部编号(从1到8)减去1。这些对象将描述逻辑设备的设备类型，
+// 与对象1000h具有相同的值定义。
 struct ControlWordReg{
     //控制字寄存器 只读32位
     static constexpr uint16_t NUM_PRE_IDX = 0x1000;
@@ -46,6 +120,7 @@ struct ControlWordReg{
     uint16_t extra_msg;
 };
 
+// 此对象提供错误信息记录，CANopen设备将内部错误记录映射到该对象，此为应急对象的一部分。
 struct ErrorReg{
     //错误寄存器 只读8位
     static constexpr uint16_t NUM_PRE_IDX = 0x1001;
@@ -67,16 +142,24 @@ struct ManufacturerStatusReg{
     static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
     
     uint32_t manufacturer_id;
+
 };
 
-// struct Ringlist
 struct PerdefErrFieldReg{
     static constexpr uint16_t NUM_PRE_IDX = 0x1003;
     static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
 
-    SdoAbortCode push_error(const PredefinedError & error){
-        if(error_queue_.writable_size() <= 0) 
-            return SdoAbortCode(SdoAbortError::OutOfMemory);
+    constexpr void push_error(const PredefinedError & error){
+        error_queue_.push_front(error);
+    }
+    
+    [[nodiscard]] constexpr size_t get_error_count(){
+        return error_queue_.size();
+    }
+
+    constexpr Result<PredefinedError, SdoAbortCode> get_error(size_t idx){
+        if(idx >= error_queue_.size())
+            return Err(SdoAbortCode::NoDataAvailable);
         return Ok();
     }
 
@@ -102,7 +185,8 @@ struct PerdefErrFieldReg{
     }
     #endif
 private:
-    RingBuf<PredefinedError, NUM_CANOPEN_MAX_PERDEF_ERROR> error_queue_;
+    // RingBuf<PredefinedError, NUM_CANOPEN_MAX_PERDEF_ERROR> error_queue_;
+    RingMemento<PredefinedError, NUM_CANOPEN_MAX_PERDEF_ERROR> error_queue_;
 };
 
 struct CobidSyncMsgReg{

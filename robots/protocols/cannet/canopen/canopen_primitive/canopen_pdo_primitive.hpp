@@ -4,7 +4,7 @@
 
 namespace ymd::canopen::primitive{
 
-struct PdoMapping{
+struct [[nodiscard]] PdoMapping{
     uint8_t bits;
     uint8_t subindex;
     uint8_t index;

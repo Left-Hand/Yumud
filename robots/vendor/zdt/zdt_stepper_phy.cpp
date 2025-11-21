@@ -11,7 +11,7 @@ void ZdtMotorPhy::can_write_bytes(
     const FuncCode func_code,
     const std::span<const uint8_t> bytes
 ){
-    auto iter = Bytes2CanMsgIterator(id, func_code, bytes);
+    auto iter = Bytes2CanFrameIterator(id, func_code, bytes);
     while(iter.has_next()){
         const auto msg = iter.next();
         can.write(msg).examine();

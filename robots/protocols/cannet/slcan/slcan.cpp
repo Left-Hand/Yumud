@@ -196,7 +196,7 @@ IResult<uint32_t> parse_id_u32(const StringView str){
 
 template<bool IS_EXTENDED>
 [[nodiscard]] static constexpr
-IResult<hal::CanClassicMsg> parse_msg(const StringView str, hal::CanRtr can_rtr){
+IResult<hal::CanClassicFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
     if(str.length() == 0) 
         RETURN_ERR(Error::NoArg);
 
@@ -234,7 +234,7 @@ IResult<hal::CanClassicMsg> parse_msg(const StringView str, hal::CanRtr can_rtr)
 
             const auto bytes = std::span(payload.data(), dlc);
             
-            return Ok(hal::CanClassicMsg(
+            return Ok(hal::CanClassicFrame(
                 ID::from_bits(id_u32_checked), 
                 hal::BxCanPayload::from_bytes(bytes))
             );
@@ -242,7 +242,7 @@ IResult<hal::CanClassicMsg> parse_msg(const StringView str, hal::CanRtr can_rtr)
         case hal::CanRtr::Remote:{
             if(payload_str.length() != 0) 
                 RETURN_ERR(Error::InvalidFieldInRemoteMsg);
-            return Ok(hal::CanClassicMsg::from_remote(ID::from_bits(id_u32_checked)));
+            return Ok(hal::CanClassicFrame::from_remote(ID::from_bits(id_u32_checked)));
         }
     }
     __builtin_unreachable();
@@ -267,8 +267,8 @@ hal::CanBaudrate map_chr_to_buad(char chr){
     __builtin_unreachable();
 };
 
-auto map_msg_to_operation = [](const hal::CanClassicMsg & msg) { 
-    return Operation(SendCanMsg{msg}); };
+auto map_msg_to_operation = [](const hal::CanClassicFrame & frame) { 
+    return Operation(SendCanFrame{frame}); };
 
 IResult<Operation> SlcanParser::process_line(const StringView str) const {
     static constexpr bool IS_EXTENDED = true;
