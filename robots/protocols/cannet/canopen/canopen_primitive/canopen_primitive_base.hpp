@@ -1,12 +1,14 @@
 #pragma once
 
 #include "canopen_funccode.hpp"
+#include "core/utils/bits/bits_set.hpp"
 
 namespace ymd::canopen::primitive{
 
 using CanMsg = hal::CanClassicMsg;
 using CanPayload = hal::BxCanPayload;
 using hal::CanStdId;
+using namespace ymd::literals;
 
 struct SubEntry;
 struct CobId;
@@ -28,6 +30,10 @@ struct [[nodiscard]] NodeId{
         return NodeId{bits};
     }
 
+    static constexpr NodeId from_b7(const Bs7 bs){
+        return NodeId{bs.to_bits()};
+    }
+
     static constexpr NodeId from_u7(const uint8_t bits){
         if(bits & 0b10000000) [[unlikely]] 
             __builtin_trap();
@@ -46,6 +52,10 @@ struct [[nodiscard]] NodeId{
 
     [[nodiscard]] constexpr uint8_t to_u7() const{
         return static_cast<uint8_t>(bits & 0x7f);
+    }
+
+    [[nodiscard]] constexpr Bs7 to_b7() const{
+        return Bs7::from_bits_unchecked(bits);
     }
 
     [[nodiscard]] constexpr bool is_boardcast() const {
@@ -147,10 +157,12 @@ static_assert(sizeof(CobId) == sizeof(uint16_t));
 // A000h to AFFFh Network variables网络变量（符合IEC61131-3） 
 // B000h to BFFFh System variables用于路由网关的系统变量 
 // C000h to FFFFh Reserved保留
-struct OdPreIndex{
+struct [[nodiscard]] OdPreIndex{
     using Self = OdPreIndex;
     uint16_t count;
 
+    /// @brief 从比特位构造主序列，无任何检查
+    /// @param bits 
     static constexpr Self from_bits(const uint16_t bits){
         return Self{bits};
     }
@@ -166,10 +178,12 @@ struct OdPreIndex{
 
 static_assert(sizeof(OdPreIndex) == sizeof(uint16_t));
 
-struct OdSubIndex{
+struct [[nodiscard]] OdSubIndex{
     using Self = OdSubIndex;
     uint8_t count;
 
+    /// @brief 从比特位构造次序列，无任何检查
+    /// @param bits 
     static constexpr Self from_bits(const uint8_t bits){
         return Self{bits};
     }
@@ -192,8 +206,12 @@ struct [[nodiscard]] OdIndex{
     OdPreIndex pre;
     OdSubIndex sub;
 
+    constexpr explicit OdIndex(const uint16_t _pre, const uint8_t _sub):
+        pre(OdPreIndex::from_bits(_pre)),
+        sub(OdSubIndex::from_bits(_sub)){;}
+
     static constexpr Self from_parts(const OdPreIndex _pre, const OdSubIndex _sub){
-        return Self{_pre, _sub};
+        return Self(_pre.to_bits(), _sub.to_bits());
     }
     constexpr bool operator==(const OdIndex& other) const{
         return pre == other.pre and sub == other.sub;

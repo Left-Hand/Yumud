@@ -11,19 +11,19 @@ using namespace canopen::primitive;
 
 struct [[nodiscard]] ExpeditedRequest{
     NodeId client_nodeid;
-    ExpeditedPayload payload;
+    ExpeditedContext context;
 
     [[nodiscard]] constexpr CanMsg to_canmsg() const {
-        return payload.to_canmsg(client_nodeid.with_func_code(FunctionCode::ReqSdo));
+        return context.to_canmsg(client_nodeid.with_func_code(FunctionCode::ReqSdo));
     }
 };
 
 struct [[nodiscard]] ExpeditedResponse{
     NodeId server_nodeid;
-    ExpeditedPayload payload;
+    ExpeditedContext context;
 
     [[nodiscard]] constexpr CanMsg to_canmsg() const {
-        return payload.to_canmsg(server_nodeid.with_func_code(FunctionCode::RespSdo));
+        return context.to_canmsg(server_nodeid.with_func_code(FunctionCode::RespSdo));
     }
 };
 }
@@ -52,7 +52,7 @@ struct MsgSerde<sdo_msg::ExpeditedResponse>{
 
         const auto self = Self{
             .server_nodeid = cobid.node_id(),
-            .payload = ExpeditedPayload::from_u64(msg.payload_u64())
+            .context = ExpeditedContext::from_u64(msg.payload_u64())
         };
         FLEX_RETURN_SOME(self);
     }
@@ -79,7 +79,7 @@ struct MsgSerde<sdo_msg::ExpeditedRequest>{
 
         const auto self = Self{
             .client_nodeid = cobid.node_id(),
-            .payload = ExpeditedPayload::from_u64(msg.payload_u64())
+            .context = ExpeditedContext::from_u64(msg.payload_u64())
         };
         FLEX_RETURN_SOME(self);
     }

@@ -6,7 +6,7 @@
 
 namespace ymd::canopen{
 
-enum class FunctionCodeKind:uint8_t{
+enum class [[nodiscard]] FunctionCodeKind:uint8_t{
     Nmt = 0x00,
     Sync = 0x01,//0x080 + NodeId
     Emergency = 0x02,//0x100 + NodeId
@@ -24,7 +24,7 @@ enum class FunctionCodeKind:uint8_t{
     Heartbeat = 0x0e,
 };
 
-enum class PdoOnlyFunctionCodeKind:uint8_t{
+enum class [[nodiscard]] PdoOnlyFunctionCodeKind:uint8_t{
     TxPdo1 = 3,
     RxPdo1,
     TxPdo2,

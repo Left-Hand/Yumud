@@ -12,7 +12,7 @@
 
 namespace ymd::canopen::primitive{
 
-enum class NodeState:uint8_t{
+enum class [[nodiscard]] NodeState:uint8_t{
     BootUp = 0x00,
     Stopped = 0x04,
     PreOperational = 0x05,
@@ -20,7 +20,7 @@ enum class NodeState:uint8_t{
 };
 
 
-enum class NmtCommand:uint8_t{
+enum class [[nodiscard]] NmtCommand:uint8_t{
     StartRemoteNode = 0x01,
     StopRemoteNode = 0x02,
     EnterPreOperational = 0x80,

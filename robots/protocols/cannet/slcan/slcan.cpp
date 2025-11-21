@@ -8,7 +8,6 @@ using namespace asciican::primitive::operations;
 // #define SLCAN_DEBUG_EN 1
 #define SLCAN_DEBUG_EN 0
 
-#define SLCAN_STATIC_TEST_EN 1
 
 #if SLCAN_DEBUG_EN
 #define constexpr
@@ -21,7 +20,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 [[nodiscard]] static constexpr 
-Option<uint8_t> hex2digit(char c){
+Option<uint8_t> char2digit(char c){
     switch(c){
         case '0' ... '9':
             return Some(c - '0');
@@ -35,7 +34,7 @@ Option<uint8_t> hex2digit(char c){
 }
 
 [[nodiscard]] static constexpr 
-char digit2hex(const uint8_t digit){
+char digit2char(const uint8_t digit){
     switch(digit){
         case 0 ... 9:
             return digit + '0';
@@ -48,7 +47,7 @@ char digit2hex(const uint8_t digit){
 
 
 [[nodiscard]] static constexpr 
-IResult<uint32_t> parse_hex(const StringView str){
+IResult<uint32_t> parse_hex_str(const StringView str){
     if(str.length() == 0)
         RETURN_ERR(Error::NoArg);
 
@@ -57,7 +56,7 @@ IResult<uint32_t> parse_hex(const StringView str){
     #pragma GCC unroll 8
     for(size_t i = 0; i < str.length(); i++){
         const auto chr = str[i];
-        const auto may_digit = hex2digit(chr);
+        const auto may_digit = char2digit(chr);
 
         if(may_digit.is_none())
             RETURN_ERR(Error::UnsupportedHexChar, chr);
@@ -69,17 +68,17 @@ IResult<uint32_t> parse_hex(const StringView str){
 }
 
 [[nodiscard]] static constexpr 
-IResult<uint32_t> parse_hex(const char c1, const char c2){
+IResult<uint32_t> parse_dual_char(const char c1, const char c2){
 
     const auto d1 = ({
-        const auto may_digit = hex2digit(c1);
+        const auto may_digit = char2digit(c1);
         if(may_digit.is_none()) return Err(Error::UnsupportedHexChar);
         may_digit.unwrap();
     });
 
 
     const auto d2 = ({
-        const auto may_digit = hex2digit(c2);
+        const auto may_digit = char2digit(c2);
         if(may_digit.is_none()) return Err(Error::UnsupportedHexChar);
         may_digit.unwrap();
     });
@@ -90,7 +89,7 @@ IResult<uint32_t> parse_hex(const char c1, const char c2){
 
 static constexpr size_t STD_ID_STR_LEN = 3;
 static constexpr size_t EXT_ID_STR_LEN = 8;
-static constexpr size_t NUM_PAYLOAD_MAX_BYTES = 8;
+static constexpr size_t NUM_MAX_CAN_DLC = 8;
 
 [[nodiscard]] static constexpr 
 IResult<hal::CanStdId> parse_std_id(const StringView str){
@@ -101,7 +100,7 @@ IResult<hal::CanStdId> parse_std_id(const StringView str){
     if(str.length() < STD_ID_STR_LEN)
         RETURN_ERR(Error::StdIdTooShort);
 
-    const auto either_id = parse_hex(str);
+    const auto either_id = parse_hex_str(str);
     
     if(either_id.is_err())
         RETURN_ERR(either_id.unwrap_err());
@@ -114,12 +113,6 @@ IResult<hal::CanStdId> parse_std_id(const StringView str){
     return Ok(hal::CanStdId::from_bits(id));
 }
 
-#if SLCAN_STATIC_TEST_EN == 1
-static_assert(parse_std_id("123").unwrap().to_u11() == 0x123);
-static_assert(parse_std_id("923").unwrap_err() == Error::StdIdOverflow);
-static_assert(parse_std_id("9scd").unwrap_err() == Error::StdIdTooLong);
-static_assert(parse_std_id("9sc").unwrap_err() == Error::UnsupportedHexChar);
-#endif
 
 [[nodiscard]] static constexpr 
 IResult<hal::CanExtId> parse_ext_id(const StringView str){
@@ -131,7 +124,7 @@ IResult<hal::CanExtId> parse_ext_id(const StringView str){
         RETURN_ERR(Error::ExtIdTooShort);
 
 
-    const auto either_id = parse_hex(str);
+    const auto either_id = parse_hex_str(str);
     
     if(either_id.is_err())
         RETURN_ERR(either_id.unwrap_err());
@@ -145,55 +138,48 @@ IResult<hal::CanExtId> parse_ext_id(const StringView str){
 }
 
 [[nodiscard]] static constexpr 
-IResult<std::array<uint8_t, NUM_PAYLOAD_MAX_BYTES>> parse_payload(
+IResult<std::array<uint8_t, NUM_MAX_CAN_DLC>> parse_payload(
     const StringView str, 
     const size_t dlc
 ){
-    if(str.size() != dlc * 2) 
-        RETURN_ERR(Error::PayloadLengthMismatch, str.size(), dlc, str);
+    if(str.length() != dlc * 2) 
+        RETURN_ERR(Error::PayloadLengthMismatch, str.length(), dlc, str);
 
-    std::array<uint8_t, NUM_PAYLOAD_MAX_BYTES> buf;
+    alignas(8) std::array<uint8_t, NUM_MAX_CAN_DLC> buf;
 
     #pragma GCC unroll 8
     for(size_t i = 0; i < dlc; i++){
         buf[i] = ({
-            const auto res = parse_hex(
+            const auto res = parse_dual_char(
                 str[i * 2], str[i * 2 + 1]
             );
             if(res.is_err()) RETURN_ERR(res.unwrap_err());
             res.unwrap();
         });
     }
-
     return Ok{buf};
 }
 
 
-#if SLCAN_STATIC_TEST_EN == 0
-static_assert(parse_payload("11x", 1).unwrap_err() == Error::PayloadLengthMismatch);
-static_assert(parse_payload("11", 1).unwrap()[0] == 0x11);
-static_assert(parse_payload("1122334455667788", 8).unwrap()[7] == 0x88);
-#endif
-
 [[nodiscard]] static constexpr 
-IResult<size_t> parse_len(const StringView str){
+IResult<size_t> parse_dlc(const StringView str){
     if(str.length() == 0) 
         RETURN_ERR(Error::NoArg);
     if(str.length() != 1) 
         RETURN_ERR(Error::PayloadLengthMismatch, str.length());
 
-    const auto len = ({
-        const auto res = parse_hex(str);
+    const auto dlc = ({
+        const auto res = parse_hex_str(str);
         
         if(res.is_err()) 
             RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });
 
-    if(len > NUM_PAYLOAD_MAX_BYTES)
-        RETURN_ERR(Error::PayloadLengthOverflow, len);
+    if(dlc > NUM_MAX_CAN_DLC)
+        RETURN_ERR(Error::PayloadLengthOverflow, dlc);
 
-    return Ok(len);
+    return Ok(dlc);
 }
 
 template<bool IS_EXTENDED>
@@ -211,7 +197,7 @@ IResult<uint32_t> parse_id_u32(const StringView str){
 template<bool IS_EXTENDED>
 [[nodiscard]] static constexpr
 IResult<hal::CanClassicMsg> parse_msg(const StringView str, hal::CanRtr can_rtr){
-    if(str.size() == 0) 
+    if(str.length() == 0) 
         RETURN_ERR(Error::NoArg);
 
     constexpr size_t ID_LEN = IS_EXTENDED ? 8 : 3;
@@ -230,7 +216,7 @@ IResult<hal::CanClassicMsg> parse_msg(const StringView str, hal::CanRtr can_rtr)
     });
 
     const size_t dlc = ({
-        const auto res = parse_len(provider.fetch_leading(DLC_LEN).unwrap());
+        const auto res = parse_dlc(provider.fetch_leading(DLC_LEN).unwrap());
         if(res.is_err()) RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });
@@ -248,10 +234,13 @@ IResult<hal::CanClassicMsg> parse_msg(const StringView str, hal::CanRtr can_rtr)
 
             const auto bytes = std::span(payload.data(), dlc);
             
-            return Ok(hal::CanClassicMsg(ID::from_bits(id_u32_checked), hal::BxCanPayload::from_bytes(bytes)));
+            return Ok(hal::CanClassicMsg(
+                ID::from_bits(id_u32_checked), 
+                hal::BxCanPayload::from_bytes(bytes))
+            );
         }
         case hal::CanRtr::Remote:{
-            if(payload_str.size() != 0) 
+            if(payload_str.length() != 0) 
                 RETURN_ERR(Error::InvalidFieldInRemoteMsg);
             return Ok(hal::CanClassicMsg::from_remote(ID::from_bits(id_u32_checked)));
         }
@@ -259,24 +248,7 @@ IResult<hal::CanClassicMsg> parse_msg(const StringView str, hal::CanRtr can_rtr)
     __builtin_unreachable();
 }
 
-// static_assert(int(parse_msg("0C34567F20102", true).unwrap_err()) == 0);
-// static constexpr auto l = parse_msg("0A70", true).unwrap().size();
 
-
-#if 0
-[[nodiscard]] static void static_test(){
-
-    // static constexpr auto msg = parse_msg("0A7111", true).unwrap();
-    // static constexpr auto msg = parse_msg("0A70", true).unwrap();
-    static_assert(msg.size() == 0);
-    static_assert(msg.id() == 0x0a7);
-    // static_assert(parse_std_id("0A7111", true).unwrap();
-    // static_assert(parse_std_id("0A7").unwrap() == 0x0a7);
-    // static_assert(parse_std_id("123").unwrap() == 0x123);
-    // static_assert(parse_len("7").unwrap() == 7);
-    // static_assert(parse_msg("0A70", true).unwrap().size() == 0);
-}
-#endif
 
 
 [[nodiscard]] static constexpr 
@@ -295,9 +267,10 @@ hal::CanBaudrate map_chr_to_buad(char chr){
     __builtin_unreachable();
 };
 
-auto map_msg_to_operation = [](const hal::CanClassicMsg & msg) { return Operation(SendCanMsg{msg}); };
+auto map_msg_to_operation = [](const hal::CanClassicMsg & msg) { 
+    return Operation(SendCanMsg{msg}); };
 
-IResult<Operation> SlcanParser::handle_line(const StringView str) const {
+IResult<Operation> SlcanParser::process_line(const StringView str) const {
     static constexpr bool IS_EXTENDED = true;
     const StringView line = str.trim();
     // DEBUG_PRINTLN(line, line.length());
@@ -363,15 +336,83 @@ SendText SlcanParser::response_version() const{
 SendText SlcanParser::response_serial_idx() const{
     return SendText::from_str("NA123\r");
 }
+
 Flags SlcanParser::get_flag() const {
     return Flags::RxFifoFull;
 }
 
 SendText SlcanParser::response_flag() const{
-    const auto flag = get_flag();
+    const auto flags = get_flag();
     const char str[2] = {
-        static_cast<char>(static_cast<char>(flag) + '0'), 'r'
+        static_cast<char>(std::bit_cast<char>(flags) + '0'), 'r'
     };
 
     return SendText::from_str(StringView(str, 2));
+}
+
+namespace unit_test{
+static_assert(parse_payload("11x", 1).unwrap_err() == Error::PayloadLengthMismatch);
+static_assert(parse_payload("11", 1).unwrap()[0] == 0x11);
+static_assert(parse_payload("1122334455667788", 8).unwrap()[7] == 0x88);
+static_assert(parse_std_id("123").unwrap().to_u11() == 0x123);
+static_assert(parse_std_id("923").unwrap_err() == Error::StdIdOverflow);
+static_assert(parse_std_id("9scd").unwrap_err() == Error::StdIdTooLong);
+static_assert(parse_std_id("9sc").unwrap_err() == Error::UnsupportedHexChar);
+
+// Additional tests for hex conversion functions
+static_assert(char2digit('0').unwrap() == 0);
+static_assert(char2digit('9').unwrap() == 9);
+static_assert(char2digit('a').unwrap() == 10);
+static_assert(char2digit('f').unwrap() == 15);
+static_assert(char2digit('A').unwrap() == 10);
+static_assert(char2digit('F').unwrap() == 15);
+static_assert(char2digit('g').is_none());
+static_assert(char2digit('G').is_none());
+static_assert(char2digit('-').is_none());
+
+static_assert(digit2char(0) == '0');
+static_assert(digit2char(9) == '9');
+static_assert(digit2char(10) == 'a');
+static_assert(digit2char(15) == 'f');
+static_assert(digit2char(16) == 0); // Invalid input
+
+// Additional tests for parse_hex_str
+static_assert(parse_hex_str("").unwrap_err() == Error::NoArg);
+static_assert(parse_hex_str("12").unwrap() == 0x12);
+static_assert(parse_hex_str("AB").unwrap() == 0xAB);
+static_assert(parse_hex_str("ff").unwrap() == 0xFF);
+static_assert(parse_hex_str("xyz").unwrap_err() == Error::UnsupportedHexChar);
+static_assert(parse_dual_char('1', '0').unwrap() == 0x10);
+static_assert(parse_dual_char('f', 'f').unwrap() == 0xFF);
+
+
+// Additional tests for extended ID parsing
+static_assert(parse_ext_id("00000000").unwrap().to_u29() == 0);
+static_assert(parse_ext_id("1FFFFFFF").unwrap().to_u29() == 0x1FFFFFFF);
+static_assert(parse_ext_id("20000000").unwrap_err() == Error::ExtIdOverflow);
+static_assert(parse_ext_id("1234567").unwrap_err() == Error::ExtIdTooShort);
+static_assert(parse_ext_id("123456789").unwrap_err() == Error::ExtIdTooLong);
+static_assert(parse_ext_id("1234567G").unwrap_err() == Error::UnsupportedHexChar);
+
+// Additional tests for length parsing
+static_assert(parse_dlc("0").unwrap() == 0);
+static_assert(parse_dlc("8").unwrap() == 8);
+static_assert(parse_dlc("9").unwrap_err() == Error::PayloadLengthOverflow);
+static_assert(parse_dlc("").unwrap_err() == Error::NoArg);
+static_assert(parse_dlc("12").unwrap_err() == Error::PayloadLengthMismatch);
+
+// Tests for parse_id_u32
+static_assert(parse_id_u32<false>("000").unwrap() == 0);
+static_assert(parse_id_u32<false>("7FF").unwrap() == 0x7FF);
+static_assert(parse_id_u32<true>("00000000").unwrap() == 0);
+static_assert(parse_id_u32<true>("1FFFFFFF").unwrap() == 0x1FFFFFFF);
+
+// Tests for baudrate mapping
+static_assert(map_chr_to_buad('0').kind() == hal::CanBaudrate::_10K);
+static_assert(map_chr_to_buad('8').kind() == hal::CanBaudrate::_1M);
+
+// Test edge cases for payload parsing
+static_assert(parse_payload("", 0).unwrap()[0] == 0); // Empty payload
+static_assert(parse_payload("00", 1).unwrap()[0] == 0x00); // Zero byte
+static_assert(parse_payload("ff", 1).unwrap()[0] == 0xff); // Max byte
 }

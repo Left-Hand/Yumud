@@ -35,7 +35,7 @@ public:
 
 
 
-    [[nodiscard]] IResult<Operation> handle_line(const StringView str) const;
+    [[nodiscard]] IResult<Operation> process_line(const StringView str) const;
 private:
 
     [[nodiscard]] operations::SendText response_version() const ;

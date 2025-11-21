@@ -7,9 +7,6 @@
 
 namespace ymd{
 
-
-
-
 template<size_t N>
 requires (N <= 32 and N > 0)
 struct [[nodiscard]] BitsSet {
@@ -220,42 +217,42 @@ private:
     }
 };
 
-
-namespace literals { 
-using Bs1 = BitsSet<1>;
-using Bs2 = BitsSet<2>;
-using Bs3 = BitsSet<3>;
-using Bs4 = BitsSet<4>;
-using Bs5 = BitsSet<5>;
-using Bs6 = BitsSet<6>;
-using Bs7 = BitsSet<7>;
-using Bs8 = BitsSet<8>;
-using Bs9 = BitsSet<9>;
-
-using Bs10 = BitsSet<10>;
-using Bs11 = BitsSet<11>;
-using Bs12 = BitsSet<12>;
-using Bs13 = BitsSet<13>;
-using Bs14 = BitsSet<14>;
-using Bs15 = BitsSet<15>;
-using Bs16 = BitsSet<16>;
-using Bs17 = BitsSet<17>;
-using Bs18 = BitsSet<18>;
-using Bs19 = BitsSet<19>;
-
-using Bs20 = BitsSet<20>;
-using Bs21 = BitsSet<21>;
-using Bs22 = BitsSet<22>;
-using Bs23 = BitsSet<23>;
-using Bs24 = BitsSet<24>;
-using Bs25 = BitsSet<25>;
-using Bs26 = BitsSet<26>;
-using Bs27 = BitsSet<27>;
-using Bs28 = BitsSet<28>;
-using Bs29 = BitsSet<29>;
-
-using Bs30 = BitsSet<30>;
-using Bs31 = BitsSet<31>;
-using Bs32 = BitsSet<32>;
 }
+
+namespace ymd::literals { 
+using Bs1 = ymd::BitsSet<1>;
+using Bs2 = ymd::BitsSet<2>;
+using Bs3 = ymd::BitsSet<3>;
+using Bs4 = ymd::BitsSet<4>;
+using Bs5 = ymd::BitsSet<5>;
+using Bs6 = ymd::BitsSet<6>;
+using Bs7 = ymd::BitsSet<7>;
+using Bs8 = ymd::BitsSet<8>;
+using Bs9 = ymd::BitsSet<9>;
+
+using Bs10 = ymd::BitsSet<10>;
+using Bs11 = ymd::BitsSet<11>;
+using Bs12 = ymd::BitsSet<12>;
+using Bs13 = ymd::BitsSet<13>;
+using Bs14 = ymd::BitsSet<14>;
+using Bs15 = ymd::BitsSet<15>;
+using Bs16 = ymd::BitsSet<16>;
+using Bs17 = ymd::BitsSet<17>;
+using Bs18 = ymd::BitsSet<18>;
+using Bs19 = ymd::BitsSet<19>;
+
+using Bs20 = ymd::BitsSet<20>;
+using Bs21 = ymd::BitsSet<21>;
+using Bs22 = ymd::BitsSet<22>;
+using Bs23 = ymd::BitsSet<23>;
+using Bs24 = ymd::BitsSet<24>;
+using Bs25 = ymd::BitsSet<25>;
+using Bs26 = ymd::BitsSet<26>;
+using Bs27 = ymd::BitsSet<27>;
+using Bs28 = ymd::BitsSet<28>;
+using Bs29 = ymd::BitsSet<29>;
+
+using Bs30 = ymd::BitsSet<30>;
+using Bs31 = ymd::BitsSet<31>;
+using Bs32 = ymd::BitsSet<32>;
 }
