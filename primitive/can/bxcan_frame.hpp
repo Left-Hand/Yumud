@@ -136,6 +136,14 @@ public:
     [[nodiscard]] __always_inline constexpr std::span<const uint8_t> payload_bytes() const{
         return std::span(payload_.data(), length());
     }
+    /// \brief 获取载荷的定长切片
+    template<size_t Extents>
+    requires (Extents <= 8)
+    [[nodiscard]] __always_inline constexpr std::span<const uint8_t> payload_bytes_fixed() const{
+        if(Extents != length()) [[unlikely]]
+            __builtin_trap();
+        return std::span(payload_.data(), Extents);
+    }
 
     /// \brief 获取载荷的可变切片
     [[nodiscard]] __always_inline constexpr std::span<uint8_t> payload_bytes_mut() {

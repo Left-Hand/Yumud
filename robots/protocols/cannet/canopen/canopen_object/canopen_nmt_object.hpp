@@ -2,7 +2,7 @@
 
 #include "../canopen_primitive/canopen_primitive.hpp"
 #include "core/string/string_view.hpp"
-#include "core/container/ringbuf.hpp"
+#include "core/container/ring_memento.hpp"
 // https://winshton.gitbooks.io/canopen-ds301-cn/content/chapter7.5.html
 namespace ymd::canopen{
 
@@ -19,72 +19,7 @@ struct _ob_t{
 struct PredefinedError{
     uint16_t additive_error;
 };
-// 一个内部使用环形缓冲区，能不断插入新数据同时挤出末尾数据的容器
-// 保障了右值安全
-template<typename T, size_t N>
-requires (std::has_single_bit(N))
-struct [[nodiscard]] RingMemento {
-    constexpr RingMemento() {
-        // 默认构造data_中的元素
-        for (size_t i = 0; i < N; ++i) {
-            new (&data_[i]) T();
-        }
-    }
-    
-    constexpr ~RingMemento() {
-        // 显式析构union中的元素
-        for (size_t i = 0; i < N; ++i) {
-            data_[i].~T();
-        }
-    }
 
-    // 在首位插入数据
-    constexpr void push_front(const T& item) {
-        if (is_full()) {
-            // 缓冲区已满，需要挤出末尾数据
-            read_idx_ = (read_idx_ + 1) % N;
-        }
-        
-        write_idx_ = (write_idx_ + N - 1) % N; // 向前移动
-        data_[write_idx_] = item;
-        
-        if (!is_full() && size() == 0) {
-            // 第一次插入时，read_idx_应该指向同一个位置
-            read_idx_ = write_idx_;
-        }
-    }
-
-    [[nodiscard]] constexpr size_t size() const {
-        if (is_full()) {
-            return N;
-        }
-        return (write_idx_ + N - read_idx_) % N;
-    }
-
-    [[nodiscard]] constexpr bool is_full() const {
-        return (write_idx_ + 1) % N == read_idx_;
-    }
-
-    [[nodiscard]] constexpr bool is_empty() const {
-        return write_idx_ == read_idx_;
-    }
-
-    Option<T> at(const size_t idx) const {
-        if (idx >= size()) {
-            return None;
-        }
-        
-        size_t actual_idx = (read_idx_ + idx) % N;
-        return Some<T>(data_[actual_idx]); // 拷贝构造
-    }
-
-private:
-    union {
-        T data_[N];
-    };
-    size_t write_idx_ = 0;
-    size_t read_idx_ = 0;
-};
 
 };
 
@@ -110,6 +45,7 @@ struct ControlWordReg{
 };
 
 // 此对象提供错误信息记录，CANopen设备将内部错误记录映射到该对象，此为应急对象的一部分。
+// https://blog.csdn.net/qq_15181569/article/details/106191562
 struct ErrorReg{
     //错误寄存器 只读8位
     static constexpr uint16_t NUM_PRE_IDX = 0x1001;
@@ -136,13 +72,16 @@ struct ManufacturerStatusReg{
 
 struct PerdefErrFieldReg{
     static constexpr uint16_t NUM_PRE_IDX = 0x1003;
-    static constexpr uint8_t NUM_UNIQUE_SUB_IDX = 0x0;
 
     constexpr void push_error(const PredefinedError & error){
         error_queue_.push_front(error);
     }
     
     [[nodiscard]] constexpr size_t get_error_count(){
+        return error_queue_.size();
+    }
+
+    [[nodiscard]] constexpr size_t get_subentries_count(){
         return error_queue_.size();
     }
 
