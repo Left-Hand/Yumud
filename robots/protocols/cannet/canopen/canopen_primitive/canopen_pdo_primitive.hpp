@@ -21,4 +21,14 @@ struct [[nodiscard]] PdoMapping{
     }
 
 };
+
+struct [[nodiscard]] PdoParaments{
+    OdPreIndex idx;
+    CobId cob_id;
+    uint8_t transmission_type;
+    uint8_t inhibit_time;
+    uint16_t event_timer;
+    PdoMapping mapping;
+};
+
 }

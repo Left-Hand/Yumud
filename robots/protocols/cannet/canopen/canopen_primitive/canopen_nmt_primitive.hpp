@@ -19,7 +19,7 @@ enum class [[nodiscard]] NodeState:uint8_t{
     Operating = 0x07,
 };
 
-
+// https://docs.rs/canopeners/latest/canopeners/enum.NmtFunction.html
 enum class [[nodiscard]] NmtCommand:uint8_t{
     StartRemoteNode = 0x01,
     StopRemoteNode = 0x02,

@@ -31,7 +31,7 @@ struct [[nodiscard]] RingMemento {
         }
     }
     
-    ~ constexpr RingMemento() {
+    constexpr ~RingMemento() {
         // 显式析构union中的元素
         for (size_t i = 0; i < N; ++i) {
             data_[i].~T();
@@ -54,18 +54,18 @@ struct [[nodiscard]] RingMemento {
         }
     }
 
-    constexpr [[nodiscard]] size_t size() const {
+    [[nodiscard]] constexpr size_t size() const {
         if (is_full()) {
             return N;
         }
         return (write_idx_ + N - read_idx_) % N;
     }
 
-    constexpr [[nodiscard]] bool is_full() const {
+    [[nodiscard]] constexpr bool is_full() const {
         return (write_idx_ + 1) % N == read_idx_;
     }
 
-    constexpr [[nodiscard]] bool is_empty() const {
+    [[nodiscard]] constexpr bool is_empty() const {
         return write_idx_ == read_idx_;
     }
 
@@ -91,17 +91,6 @@ private:
 namespace ymd::canopen::basic{
 using namespace canopen;
 using namespace canopen::primitive;
-
-
-template<typename T>
-std::span<const uint8_t, sizeof(T)> as_le_bytes(const T * p_obj){
-    return std::span(reinterpret_cast<const uint8_t *>(p_obj), sizeof(T));
-}
-
-template<typename T>
-std::span<uint8_t, sizeof(T)> as_mut_le_bytes(T * p_obj){
-    return std::span(reinterpret_cast<uint8_t *>(p_obj), sizeof(T));
-}
 
 
 // 此对象提供有关设备类型的信息。该对象描述了逻辑设备类型及其功能。它由两个16位域组成，一个描述所用设备协议或应用协议，
