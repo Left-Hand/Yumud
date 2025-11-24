@@ -69,7 +69,7 @@ private:
     ){
         Buf buf;
 
-        const auto bytes = payloads::serialize(obj);
+        const auto bytes = msgs::serialize(obj);
 
         buf.append_unchecked(std::bit_cast<uint8_t>(T::FUNC_CODE));
         buf.append_unchecked(bytes);
@@ -86,7 +86,7 @@ private:
     IResult<> write_payload(const T & obj){
         const auto buf = map_payload_to_bytes(nodeid_, obj);
 
-        phy_.write_can_msg(nodeid_, buf.iter());
+        phy_.write_can_frame(nodeid_, buf.as_slice());
 
         return Ok();
     }

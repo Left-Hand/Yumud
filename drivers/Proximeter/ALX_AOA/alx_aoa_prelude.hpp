@@ -3,9 +3,10 @@
 #include "hal/bus/uart/uart.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/sumtype.hpp"
-#include "primitive/arithmetic/angle.hpp"
-#include "core/utils/bytes/bytes_provider.hpp"
 #include "core/container/inline_vector.hpp"
+
+#include "primitive/arithmetic/angle.hpp"
+#include "types/vectors/spherical_coordinates.hpp"
 
 namespace ymd::drivers{
 
@@ -36,32 +37,44 @@ enum class RequestCommand:uint16_t{
 };
 
 struct [[nodiscard]] TargetDistanceCode{
+    using Self = TargetDistanceCode;
     uint32_t bits;
-    [[nodiscard]] constexpr uq16 to_meters() const{
-        return uq16(bits) / 100;
-    }
 
+    template<typename T = uq16> 
+    [[nodiscard]] constexpr T to_meters() const{
+        return T(bits) / 100;
+    }
+    static constexpr Self from_bits(const uint32_t bits){
+        return Self{bits};
+    }
     friend OutputStream & operator <<(OutputStream & os, const TargetDistanceCode & self){ 
         return os << self.to_meters() << "m";
     }
 };
 
 struct [[nodiscard]] TargetAngleCode{
+    using Self = TargetAngleCode;
     int16_t bits;
 
-    [[nodiscard]] constexpr Angle<uq16> to_angle() const{
-        return Angle<uq16>::from_degrees(bits);
+    template<typename T = uq16>
+    [[nodiscard]] constexpr Angle<T> to_angle() const{
+        return Angle<T>::from_degrees(bits);
     }
-
+    static constexpr Self from_bits(const int16_t bits){
+        return Self{bits};
+    }
     friend OutputStream & operator <<(OutputStream & os, const TargetAngleCode & self){ 
         return os << self.to_angle().to_degrees() << "deg";
     }
 };
 
 struct [[nodiscard]] DeviceIdCode{
+    using Self = DeviceIdCode;
     uint32_t bits;
 
-
+    static constexpr Self from_bits(const uint32_t bits){
+        return Self{bits};
+    }
     friend OutputStream & operator <<(OutputStream & os, const DeviceIdCode & self){ 
         auto guard = os.create_guard();
         return os << std::showbase << std::hex << self.bits;
@@ -76,9 +89,23 @@ struct [[nodiscard]] Location{
     TargetAngleCode azimuth;
     TargetAngleCode elevation;
 
+    template<typename T>
+    constexpr SphericalCoordinates<T> to_spherical_coordinates() const{
+        return SphericalCoordinates<T>{
+            distance.to_meters<T>(),
+            azimuth.to_angle<T>(), 
+            elevation.to_angle<T>() 
+        };
+    };
+
     friend OutputStream & operator <<(OutputStream & os, const Location & self){
-        return os << "location" << self.anchor_id << "->" << self.target_id << 
-            ": " << self.distance << " " << self.azimuth << " " << self.elevation;
+        return os
+            << os.field("anchor_id")(self.anchor_id) << os.splitter()
+            << os.field("target_id")(self.target_id) << os.splitter()
+            << os.field("distance")(self.distance) << os.splitter()
+            << os.field("azimuth")(self.azimuth) << os.splitter()
+            << os.field("elevation")(self.elevation)
+        ;
     }
 };
 

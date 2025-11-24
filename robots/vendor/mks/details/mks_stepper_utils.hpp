@@ -26,10 +26,10 @@ public:
     }
 
 
-    void write_can_msg(const NodeId nodeid, const std::span<const uint8_t> bytes) {
-        const auto msg = hal::CanClassicMsg::from_bytes(
+    void write_can_frame(const NodeId nodeid, const std::span<const uint8_t> bytes) {
+        const auto msg = hal::CanClassicFrame(
             map_nodeid_to_canid(nodeid),
-            bytes
+            hal::CanClassicPayload::from_bytes(bytes)
         );
 
         if(can_.is_some()){
@@ -49,7 +49,7 @@ private:
     static constexpr hal::CanStdId map_nodeid_to_canid(
         const NodeId nodeid
     ){
-        return hal::CanStdId(nodeid.as_u8());
+        return hal::CanStdId::from_bits(nodeid.to_u8());
     }
 };
 

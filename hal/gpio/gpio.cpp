@@ -28,7 +28,7 @@ void Gpio::set_mode(const GpioMode mode){
     uint32_t tempreg = pin_cfg;
     const auto shifts = ((ctz_pin % 8) * 4);
     tempreg &= (~(0xf << shifts));
-    tempreg |= (mode.as_u8() << shifts);
+    tempreg |= (mode.to_u8() << shifts);
     pin_cfg = tempreg;
 
     if(mode == GpioMode::InPullUP){

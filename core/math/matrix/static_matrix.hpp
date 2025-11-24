@@ -16,7 +16,7 @@ public:
         return Matrix();
     }
 
-    [[nodiscard]] __fast_inline static constexpr Matrix from_zero(){
+    [[nodiscard]] __fast_inline static constexpr Matrix zero(){
         Matrix ret = Matrix::from_uninitialized();
         ret.fill(0);
         return ret;
@@ -26,7 +26,7 @@ public:
     [[nodiscard]] __fast_inline static constexpr Matrix<T, R, C> from_identity(){
         static_assert(R == C, "Identity matrix must be square.");
 
-        Matrix<T, R, C> ret = Matrix<T, R, C>::from_zero();
+        Matrix<T, R, C> ret = Matrix<T, R, C>::zero();
         auto * pdata = ret.data();
         for(size_t i = 0; i < R * R; i += R + 1){
             pdata[i] = static_cast<T>(1);

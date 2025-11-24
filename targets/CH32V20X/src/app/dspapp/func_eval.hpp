@@ -17,7 +17,7 @@ struct TransferSysEvaluator{
         
         const auto begin_m = clock::micros();
 
-        #pragma GCC unroll 20
+        #pragma GCC unroll 32
         for(size_t i = 0; i < times; ++i){
             const auto x = real_t(i) / times;
             std::forward<FnProc>(fn_proc)(x);
@@ -35,7 +35,7 @@ struct TransferSysEvaluator{
         auto & timer = hal::timer1;
         timer.init({
             .count_freq = hal::NearestFreq(f_isr),
-            .count_mode = hal::TimerCountMode::Up
+            .count_mode = hal::TimerCountMode::Kind::Up
         }, EN);
 
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);

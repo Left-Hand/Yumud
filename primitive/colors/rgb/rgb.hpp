@@ -136,7 +136,7 @@ struct RGB332{
         return RGB332(r,g,b);
     } 
 
-    __fast_inline constexpr uint8_t as_u8() const {return data;}
+    __fast_inline constexpr uint8_t to_u8() const {return data;}
 
 private:
     __fast_inline constexpr explicit RGB332(const uint8_t _r, const uint8_t _g, const uint8_t _b): 
@@ -163,7 +163,7 @@ struct RGB565{
     RGB565 from_u16(const uint16_t raw){
         return std::bit_cast<RGB565>(raw);
     }
-    __fast_inline constexpr uint16_t as_u16() const {
+    __fast_inline constexpr uint16_t to_u16() const {
         return std::bit_cast<uint16_t>(*this);
     }
 private:
@@ -223,7 +223,7 @@ struct ARGB32{
             };
         }
 
-    __fast_inline constexpr uint32_t as_u32() const {
+    __fast_inline constexpr uint32_t to_u32() const {
         return std::bit_cast<uint32_t>(*this);
     }
 
@@ -279,7 +279,7 @@ struct Binary{
         return Binary(uint8_t(ret));
     }
 
-    [[nodiscard]] __fast_inline constexpr uint8_t as_u8() const {return data;}
+    [[nodiscard]] __fast_inline constexpr uint8_t to_u8() const {return data;}
 
 
 private:
@@ -325,7 +325,7 @@ struct Gray{
 
     __fast_inline constexpr bool is_black() const {return data == uint8_t(0x00);}
 
-    __fast_inline constexpr uint8_t as_u8() const {return data;}
+    __fast_inline constexpr uint8_t to_u8() const {return data;}
 
     __fast_inline constexpr Gray flip() const {
         const uint8_t ret = ~data;
@@ -333,7 +333,7 @@ struct Gray{
     }
 
     __fast_inline constexpr Binary to_binary(const Gray threshold) const 
-        {return Binary::from_bool(data > threshold.as_u8());}
+        {return Binary::from_bool(data > threshold.to_u8());}
 private:
     uint8_t data;
     __fast_inline constexpr explicit Gray(const uint8_t cu8) : data(cu8){;}
@@ -360,7 +360,7 @@ struct IGray{
         return data <=> other.data;}
 
     __fast_inline constexpr Binary to_binary(const Gray threshold){
-        return Binary::from_bool(ABS(data) > threshold.as_u8());}
+        return Binary::from_bool(ABS(data) > threshold.to_u8());}
 
     __fast_inline constexpr Binary to_binary_signed(const IGray threshold){
         return Binary::from_bool(data > threshold.as_i8());}
@@ -402,7 +402,7 @@ struct ColorCaster<RGB565, Binary> {
 template<>
 struct ColorCaster<RGB565, Gray> {
     static constexpr RGB565 cast(const Gray & color){
-        const auto cu8 = color.as_u8();
+        const auto cu8 = color.to_u8();
         return RGB565::from_r5g6b5(
             static_cast<uint8_t>(cu8 >> 3), 
             static_cast<uint8_t>(cu8 >> 2), 
@@ -442,7 +442,7 @@ struct ColorCaster<RGB888, Binary> {
 template<>
 struct ColorCaster<RGB888, Gray> {
     static constexpr RGB888 cast(const Gray & color){
-        const auto cu8 = color.as_u8();
+        const auto cu8 = color.to_u8();
         return RGB888::from_r8g8b8(cu8, cu8, cu8);
     }
 };

@@ -21,7 +21,7 @@ struct PositionCorrector{
         const auto corr2 = backward_cali_table_[raw_angle].to_inaccuracy();
 
         return Angle<uq32>::from_turns(
-            raw_angle.to_turns() + uq32::from_bits((corr1 + corr2).as_bits())
+            raw_angle.to_turns() + uq32::from_bits((corr1 + corr2).to_bits())
         );
     }
 

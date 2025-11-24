@@ -269,7 +269,7 @@ template<const size_t Q>
 constexpr fixed_t<Q, int32_t> _IQNsqrt(const fixed_t<Q, int32_t> iqNInputX){
     return fixed_t<Q, int32_t>::from_bits(
         __IQNsqrt<Q, TYPE_SQRT>(
-            static_cast<int32_t>(iqNInputX.as_bits()), 
+            static_cast<int32_t>(iqNInputX.to_bits()), 
             static_cast<int32_t>(0)
         )
     );
@@ -280,7 +280,7 @@ template<const size_t Q>
 constexpr fixed_t<Q, int32_t> _IQNisqrt(const fixed_t<Q, int32_t> iqNInputX){
     return fixed_t<Q, int32_t>::from_bits(
         __IQNsqrt<Q, TYPE_ISQRT>(
-            static_cast<int32_t>(iqNInputX.as_bits()), 
+            static_cast<int32_t>(iqNInputX.to_bits()), 
             static_cast<int32_t>(0)
         )
     );

@@ -88,7 +88,7 @@ struct _TM1637_Prelude{
         uint8_t addr_inc_disen:1;
         const uint8_t __resv2__:5 = 0b01000;
 
-        constexpr uint8_t as_u8() const {return std::bit_cast<uint8_t>(*this);}
+        constexpr uint8_t to_u8() const {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(DataCommand) == 1);
@@ -97,7 +97,7 @@ struct _TM1637_Prelude{
         uint8_t addr:3;
         const uint8_t __resv2__:5 = 0b11000;
 
-        constexpr uint8_t as_u8() const {return std::bit_cast<uint8_t>(*this);}
+        constexpr uint8_t to_u8() const {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(AddressCommand) == 1);
@@ -107,7 +107,7 @@ struct _TM1637_Prelude{
         uint8_t display_en:1;
         const uint8_t __resv2__:4 = 0b1000;
 
-        constexpr uint8_t as_u8() const {return std::bit_cast<uint8_t>(*this);}
+        constexpr uint8_t to_u8() const {return std::bit_cast<uint8_t>(*this);}
     };
 
     static_assert(sizeof(DisplayCommand) == 1);

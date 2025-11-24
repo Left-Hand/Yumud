@@ -1,6 +1,6 @@
 #pragma once
 
-#include "can_msg.hpp"
+#include "bxcan_frame.hpp"
 
 //这个文件描述了canfd的消息 canfd移除了远程帧
 

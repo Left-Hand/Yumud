@@ -43,7 +43,8 @@ template<typename T>
 struct Rect2;
 
 template<typename T>
-struct Vec2{
+struct [[nodiscard]] Vec2{
+    using Self = Vec2;
     static constexpr Vec2<T> ZERO = Vec2<T>(0, 0);
     static constexpr Vec2<T> ONE = Vec2<T>(1, 1);
     static constexpr Vec2<T> NEG_ONE = Vec2<T>(-1, -1);
@@ -187,7 +188,7 @@ struct Vec2{
     }
 
     [[nodiscard]] constexpr Angle<T> angle() const {
-            return Angle<T>::from_radians(atan2(y, x));}
+            return Angle<T>::from_turns(atan2pu(y, x));}
 	[[nodiscard]] constexpr Angle<T> angle_between(const Vec2<T> & b) const {
         const auto & a = *this;
         // const T cross_z = a.x * b.y - a.y * b.x;
@@ -414,6 +415,13 @@ struct Vec2{
     }
 private:
     constexpr Vec2(){;}
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os    
+            << os.field("x")(self.x) << os.splitter()
+            << os.field("y")(self.y)
+        ;
+    }
 };
 
 template<typename T>
@@ -434,10 +442,6 @@ template<typename T>
 template<typename T>
 [[nodiscard]] __fast_inline constexpr auto normal(const Vec2<T> & from, const Vec2<T> & to){
     return (to - from).normalized();
-}
-
-__fast_inline OutputStream & operator<<(OutputStream & os, const Vec2<auto> & value){
-    return os << os.brackets<'('>() << value.x << os.splitter() << value.y << os.brackets<')'>();
 }
 
 using Vec2f = Vec2<float>;

@@ -28,32 +28,32 @@ using namespace ymd::literals;
 
 namespace ymd{
 
-consteval real_t operator"" _r(long double x){
+[[nodiscard]] consteval real_t operator"" _r(long double x){
     return real_t(x);
 }
 
-consteval real_t operator"" _r(unsigned long long x){
+[[nodiscard]] consteval real_t operator"" _r(unsigned long long x){
     return real_t(x);
 }
 
 
 template<integral T>
-__fast_inline constexpr T mean(const T a, const T b){
+[[nodiscard]] __fast_inline constexpr T mean(const T a, const T b){
     return static_cast<T>((a+b) >> 1);
 }
 
 template<floating T>
-__fast_inline constexpr T mean(const T & a, const T & b){
+[[nodiscard]] __fast_inline constexpr T mean(const T & a, const T & b){
     return (a+b) / 2.0f;
 }
 
 template<typename T>
-__fast_inline constexpr T frac(const T fv){
+[[nodiscard]] __fast_inline constexpr T frac(const T fv){
     return (fv - T(int(fv)));
 }
 
 template<floating T>
-__fast_inline constexpr T round(const T x)
+[[nodiscard]] __fast_inline constexpr T round(const T x)
 {
     return int(x+0.5f);
 }
@@ -62,23 +62,23 @@ __fast_inline constexpr T round(const T x)
 
 
 template<typename T, integral From>
-__fast_inline constexpr T floor_cast(From value){
+[[nodiscard]] __fast_inline constexpr T floor_cast(From value){
     return static_cast<T>(value);
 }
 
 template<typename T, integral From>
-__fast_inline constexpr T ceil_cast(From value){
+[[nodiscard]] __fast_inline constexpr T ceil_cast(From value){
     return static_cast<T>(value);
 }
 
 template<typename T, integral From>
-__fast_inline constexpr T round_cast(From value){
+[[nodiscard]] __fast_inline constexpr T round_cast(From value){
     return static_cast<T>(value);
 }
 
 
 template<floating T>
-__fast_inline constexpr bool is_equal_approx(const T a, const T b) {
+[[nodiscard]] __fast_inline constexpr bool is_equal_approx(const T a, const T b) {
     // Check for exact equality first, required to handle "infinity" values.
     if (a == b) {
         return true;
@@ -93,7 +93,7 @@ __fast_inline constexpr bool is_equal_approx(const T a, const T b) {
 
 
 template<floating T>
-__fast_inline constexpr bool is_equal_approx_ratio(const T a, const T b, const T epsilon, const T min_epsilon){
+[[nodiscard]] __fast_inline constexpr bool is_equal_approx_ratio(const T a, const T b, const T epsilon, const T min_epsilon){
     auto diff = ABS(a - b);
     if (diff == 0.0 || diff < min_epsilon) {
         return true;
@@ -104,7 +104,7 @@ __fast_inline constexpr bool is_equal_approx_ratio(const T a, const T b, const T
 }
 
 template<size_t Q>
-bool is_equal_approx(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t> b) {
+[[nodiscard]] bool is_equal_approx(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t> b) {
     // Check for exact equality first, required to handle "infinity" values.
     if (a == b) {
         return true;
@@ -118,7 +118,7 @@ bool is_equal_approx(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t> b) {
 }
 
 template<size_t Q>
-bool is_equal_approx_ratio(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t> b, fixed_t<Q, int32_t> epsilon, fixed_t<Q, int32_t> min_epsilon){
+[[nodiscard]] bool is_equal_approx_ratio(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t> b, fixed_t<Q, int32_t> epsilon, fixed_t<Q, int32_t> min_epsilon){
 
     fixed_t<Q, int32_t> diff = std::abs(a - b);
     if (diff == 0 || diff < min_epsilon) {
@@ -132,7 +132,7 @@ bool is_equal_approx_ratio(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t
 
 
 template<floating T>
-__fast_inline constexpr T sign(const T fv){
+[[nodiscard]] __fast_inline constexpr T sign(const T fv){
     if(fv > 0.0f) return 1.0f;
     else if(fv < 0.0f) return -1.0f;
     return 0.0f;
@@ -140,7 +140,7 @@ __fast_inline constexpr T sign(const T fv){
 
 
 template<arithmetic T>
-__fast_inline constexpr T fposmod(T p_x, T p_y) {
+[[nodiscard]] __fast_inline constexpr T fposmod(T p_x, T p_y) {
     T value = fmod(p_x, p_y);
     if (value < 0) {
         value += p_y;
@@ -149,12 +149,12 @@ __fast_inline constexpr T fposmod(T p_x, T p_y) {
 }
 
 template<integral T>
-__fast_inline constexpr T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
+[[nodiscard]] __fast_inline constexpr T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
 
 
 #if 0
 
-__fast_inline constexpr fixed_t<Q, int32_t> u16_to_uni(const uint16_t data){
+[[nodiscard]] __fast_inline constexpr fixed_t<Q, int32_t> u16_to_uni(const uint16_t data){
     if constexpr(is_fixed_point_v<fixed_t<Q, int32_t>>){
         constexpr size_t Q = fixed_t<Q, int32_t>::q_num;
         if constexpr(Q > 16)
@@ -169,7 +169,7 @@ __fast_inline constexpr fixed_t<Q, int32_t> u16_to_uni(const uint16_t data){
 }
 
 template<size_t Q>
-__fast_inline constexpr fixed_t<Q, uint32_t> u32_to_uni(const uint32_t data){
+[[nodiscard]] __fast_inline constexpr fixed_t<Q, uint32_t> u32_to_uni(const uint32_t data){
     fixed_t<Q, uint32_t> qv;
 #if Q > 16
     qv.value = data << (Q - 16);
@@ -181,7 +181,7 @@ __fast_inline constexpr fixed_t<Q, uint32_t> u32_to_uni(const uint32_t data){
     return qv;
 }
 
-__fast_inline constexpr fixed_t<Q, int32_t> s16_to_uni(const int16_t data){
+[[nodiscard]] __fast_inline constexpr fixed_t<Q, int32_t> s16_to_uni(const int16_t data){
     if constexpr(is_fixed_point_v<fixed_t<Q, int32_t>>){
         return fixed_t<16, int32_t>(data) >> 16;
     }
@@ -189,16 +189,16 @@ __fast_inline constexpr fixed_t<Q, int32_t> s16_to_uni(const int16_t data){
 }
 
 template<size_t Q>
-__fast_inline constexpr uint16_t uni_to_u16(const fixed_t<Q, uint32_t> qv){
+[[nodiscard]] __fast_inline constexpr uint16_t uni_to_u16(const fixed_t<Q, uint32_t> qv){
     uint16_t data;
-    if constexpr (Q >= 16) data = qv.as_bits() >> (Q - 16);
-    else data = qv.as_bits() << (16 - Q);
-    if(data == 0 && (qv.as_bits() != 0)) data = 0xffff;
+    if constexpr (Q >= 16) data = qv.to_bits() >> (Q - 16);
+    else data = qv.to_bits() << (16 - Q);
+    if(data == 0 && (qv.to_bits() != 0)) data = 0xffff;
     return data;
 }
 
 template<size_t Q>
-__fast_inline constexpr int16_t uni_to_s16(const fixed_t<Q, int32_t> qv){
+[[nodiscard]] __fast_inline constexpr int16_t uni_to_s16(const fixed_t<Q, int32_t> qv){
     int16_t data;
 #if Q >= 16
     data = qv.value >> (Q - 16);
@@ -208,13 +208,13 @@ __fast_inline constexpr int16_t uni_to_s16(const fixed_t<Q, int32_t> qv){
     return data;
 }
 
-__fast_inline fixed_t<Q, int32_t> uni(const uint16_t data){return u16_to_uni(data);}
+[[nodiscard]] __fast_inline fixed_t<Q, int32_t> uni(const uint16_t data){return u16_to_uni(data);}
 
-__fast_inline fixed_t<Q, int32_t> uni(const int16_t data){return s16_to_uni(data);}
+[[nodiscard]] __fast_inline fixed_t<Q, int32_t> uni(const int16_t data){return s16_to_uni(data);}
 
 #endif
 
-__fast_inline constexpr int warp_mod(const int x, const int y){
+[[nodiscard]] __fast_inline constexpr int warp_mod(const int x, const int y){
     int ret = x % y;
     if(ret < 0) ret += y;
     return ret;

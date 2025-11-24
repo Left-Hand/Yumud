@@ -89,9 +89,9 @@ IResult<> HMC5883L::validate(){
     if(const auto res = read_reg(regs_.id_c_reg);
         res.is_err()) return res;
     bool passed = (
-        regs_.id_a_reg.as_bits() == 'H'
-        and regs_.id_b_reg.as_bits() == '4' 
-        and regs_.id_c_reg.as_bits() == '3');
+        regs_.id_a_reg.to_bits() == 'H'
+        and regs_.id_b_reg.to_bits() == '4' 
+        and regs_.id_c_reg.to_bits() == '3');
 
     if(!passed) return Err(Error::InvalidChipId);
     return Ok();

@@ -83,7 +83,7 @@ IResult<> KTH7823::validate(){
 }
 
 IResult<> KTH7823::set_zero_angle(const Angle<uq32> angle){
-    const auto raw16 = (angle.to_turns().as_bits() >> 16);
+    const auto raw16 = (angle.to_turns().to_bits() >> 16);
 
     auto reg_low = RegCopy(zero_low_reg);
     reg_low.data = raw16 & 0xff;

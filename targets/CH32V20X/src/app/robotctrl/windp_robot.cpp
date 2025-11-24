@@ -9,11 +9,9 @@
 #include "core/string/string_view.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/timer/bipolarity_abstract.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
-#include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/spi/spihw.hpp"
 #include "hal/gpio/gpio.hpp"
 
 #include "types/regions/range2.hpp"
@@ -85,8 +83,8 @@ public:
     }
 private:
 
-    hal::TimerOcPair channel_a_;
-    hal::TimerOcPair channel_b_;
+    hal::BipolarityTimerOcPair channel_a_;
+    hal::BipolarityTimerOcPair channel_b_;
 };
 
 class RobotDynamics{

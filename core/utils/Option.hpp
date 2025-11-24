@@ -292,15 +292,22 @@ public:
     bool is_none() const {return pobj_ == nullptr;}
     
     [[nodiscard]] constexpr 
-    T & unwrap(){
-        if(unlikely(pobj_ == nullptr)){sys::abort();}
+    T & unwrap() const {
+        if(pobj_ == nullptr) [[unlikely]]
+            {__builtin_abort();}
         return *pobj_;
     }
 
-    // T * operator->(){
-    //     if(unlikely(pobj_ == nullptr)){sys::abort();}
-    //     return pobj_;
-    // }
+    template<
+        typename Arg, 
+        typename Ret = std::conditional_t<std::is_const_v<Arg>, const T &, T &>
+    >
+    [[nodiscard]] constexpr 
+    Ret unwrap_or(Arg && other) const {
+        if(pobj_ == nullptr) [[unlikely]]
+            return other;
+        return *pobj_;
+    }
 private:
     T * pobj_;
 };

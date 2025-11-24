@@ -77,7 +77,7 @@ void pfm_zvs_main(){
         timer.set_arr(arr);
 
         const auto dead_zone_ns = Nanoseconds(uint16_t(1000 * (1 + 0.5_r * st)));
-        timer.set_deadzone_ns(dead_zone_ns);
+        timer.bdtr().set_deadzone(dead_zone_ns);
         DEBUG_PRINTLN(arr);
 
         clock::delay(300us);

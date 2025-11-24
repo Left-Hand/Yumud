@@ -37,7 +37,7 @@ struct Isometry2 {
     }
 
 private:
-    static constexpr auto ZERO_1x2 = Matrix<T, 1, 2>::from_zero();
+    static constexpr auto ZERO_1x2 = Matrix<T, 1, 2>::zero();
     static constexpr auto ONE_1x1 = Matrix<T, 1, 1>::from_identity();
 
 };

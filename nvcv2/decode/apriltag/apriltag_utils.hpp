@@ -19,7 +19,7 @@ public:
         return {raw};
     }
 
-    constexpr uint64_t as_u64() const{
+    constexpr uint64_t to_u64() const{
         return code_;
     }
 private:
@@ -34,7 +34,7 @@ public:
         return {raw};
     }
 
-    constexpr uint16_t as_u16() const{
+    constexpr uint16_t to_u16() const{
         return index_;
     }
 private:
@@ -64,7 +64,7 @@ public:
         return ApriltagDirection(static_cast<Kind>(raw));
     }
 
-    constexpr uint8_t as_u8() const {return static_cast<uint8_t>(kind_);}
+    constexpr uint8_t to_u8() const {return static_cast<uint8_t>(kind_);}
 private:
     Kind kind_;
 };
@@ -130,7 +130,7 @@ static constexpr uint16_t get_rcr_code_16h5(const uint16_t code, const ApriltagD
 
 template<typename T, size_t N, typename Fn>
 static constexpr std::optional<ApriltagResult> find_code(const std::span<const T, N> code_table, Fn && fn, const ApriltagPattern pattern){
-    const auto dst_code = pattern.as_u64();
+    const auto dst_code = pattern.to_u64();
 
     for(size_t i = 0; i < N; i++){
         const auto raw_code = uint64_t(code_table[i]);

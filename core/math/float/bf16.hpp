@@ -26,7 +26,7 @@ struct [[nodiscard]] bf16 {
             };
         }
 
-        [[nodiscard]] constexpr uint16_t as_bits() const{
+        [[nodiscard]] constexpr uint16_t to_bits() const{
             return std::bit_cast<uint16_t>(*this);
         }
 
@@ -45,8 +45,8 @@ struct [[nodiscard]] bf16 {
         return bf16(Storage::from_bits(bits));
     }
     
-    [[nodiscard]] constexpr uint16_t as_bits() const {
-        return storage_.as_bits();
+    [[nodiscard]] constexpr uint16_t to_bits() const {
+        return storage_.to_bits();
     }
 
     constexpr bf16(const bf16 & other):storage_(other.storage_){;}
@@ -65,12 +65,12 @@ struct [[nodiscard]] bf16 {
     constexpr bf16(fixed_t<Q, int32_t> qv) : bf16(float(qv)) {}
     constexpr bf16(int iv) : bf16(float(iv)) {}
     constexpr bf16 operator -() const{
-        return from_bits(storage_.as_bits() ^ 0x8000);
+        return from_bits(storage_.to_bits() ^ 0x8000);
     }
 
     // bf16 -> float
     [[nodiscard]] explicit constexpr operator float() const {
-        uint32_t f32_bits = uint32_t(storage_.as_bits()) << 16;
+        uint32_t f32_bits = uint32_t(storage_.to_bits()) << 16;
         return std::bit_cast<float>(f32_bits);
     }
 
@@ -84,7 +84,7 @@ struct [[nodiscard]] bf16 {
     }
 
     [[nodiscard]] constexpr std::array<uint8_t, 2> to_bytes() const {
-        const uint16_t bits = as_bits();
+        const uint16_t bits = to_bits();
         return std::bit_cast<std::array<uint8_t, 2>>(bits);
     }
 

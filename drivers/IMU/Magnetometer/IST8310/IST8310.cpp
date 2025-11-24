@@ -41,14 +41,14 @@ IResult<> IST8310::init(){
 }
 IResult<> IST8310::update(){
     auto & reg = regs_.axis_x_reg;
-    return read_burst(reg.ADDRESS, &reg.as_mut_bits(), 3);
+    return read_burst(reg.ADDRESS, &reg.as_bits_mut(), 3);
 }
 
 IResult<> IST8310::validate(){
     auto reg = RegCopy(regs_.whoami_reg);
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
-    if(reg.as_bits() != reg.expected_value)
+    if(reg.to_bits() != reg.expected_value)
         return Err(Error::InvalidChipId);
     return Ok();
 }
@@ -91,9 +91,9 @@ IResult<Vec3<iq24>> IST8310::read_mag(){
     };
 
     return Ok{Vec3<iq24>{
-        conv(regs_.axis_x_reg.as_bits()),
-        conv(regs_.axis_y_reg.as_bits()),
-        conv(regs_.axis_z_reg.as_bits())
+        conv(regs_.axis_x_reg.to_bits()),
+        conv(regs_.axis_y_reg.to_bits()),
+        conv(regs_.axis_z_reg.to_bits())
     }};
 }
 

@@ -73,7 +73,7 @@ private:
     ){
         Buf buf;
 
-        const auto bytes = payloads::serialize(payload);
+        const auto bytes = msgs::serialize(payload);
 
         buf.append_unchecked(bytes);
         buf.append_unchecked(VerifyUtils::get_verify_code(
@@ -92,7 +92,7 @@ private:
         phy_.write_bytes(
             node_id_, 
             T::FUNC_CODE, 
-            buf.iter()
+            buf.as_slice()
         );
 
         return Ok();

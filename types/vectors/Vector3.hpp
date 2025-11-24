@@ -37,8 +37,10 @@
 
 namespace ymd{
 template <arithmetic T>
-struct Vec3{
+struct [[nodiscard]] Vec3{
 public:
+    using Self = Vec3;
+
     T x;
     T y;
     T z;
@@ -416,6 +418,14 @@ public:
         else if constexpr (I == 1) return y;
         else if constexpr (I == 2) return z;
     }
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os    
+            << os.field("x")(self.x) << os.splitter()
+            << os.field("y")(self.y) << os.splitter()
+            << os.field("z")(self.z)
+        ;
+    }
 };
 
 template<arithmetic T>
@@ -447,13 +457,6 @@ template<arithmetic T>
     const Vec3<arithmetic auto> & to
 ){
     return (to - from).normalized();
-}
-
-__fast_inline OutputStream & operator<<(OutputStream & os, const Vec3<auto> & value){
-    return os << os.brackets<'('>() << value.x 
-        << os.splitter() << value.y 
-        << os.splitter() << value.z
-        << os.brackets<')'>();
 }
 
 

@@ -44,7 +44,7 @@ struct IsometryMatrix3 {
     using Rotation = Rotation3<T>;
     using Vec = Vec3<T>;
 
-    static constexpr auto ZERO_1x3 = Matrix<T, 1, 3>::from_zero();
+    static constexpr auto ZERO_1x3 = Matrix<T, 1, 3>::zero();
     static constexpr auto ONE_1x1 = Matrix<T, 1, 1>::from_identity();
 
     Rotation3<T> rotation;
@@ -131,7 +131,7 @@ struct Isometry3 {
     using Rotation = Rotation3<T>;
     using Vec = Vec3<T>;
 
-    static constexpr auto ZERO_1x3 = Matrix<T, 1, 3>::from_zero();
+    static constexpr auto ZERO_1x3 = Matrix<T, 1, 3>::zero();
     static constexpr auto ONE_1x1 = Matrix<T, 1, 1>::from_identity();
 
     Quat<T> rotation;

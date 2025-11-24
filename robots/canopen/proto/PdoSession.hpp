@@ -71,7 +71,7 @@ protected:
 
 class PdoTxSession:public PdoSessionBase{
 private:
-    CanClassicMsg buildMessage() const ;
+    CanClassicFrame buildMessage() const ;
     int transSyncCount = 0;
 public:
     // PdoTxSession(PdoProtocol & pdo, OdEntry && params, OdEntry && mapping)
@@ -92,7 +92,7 @@ public:
         : PdoSessionBase(pdo, std::move(params), std::move(mapping)) {
     }
     
-    bool processMessage(const CanClassicMsg& msg);
+    bool processMessage(const CanClassicFrame& msg);
 };
 
 }

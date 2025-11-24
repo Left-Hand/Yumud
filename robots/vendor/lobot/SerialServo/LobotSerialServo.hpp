@@ -4,7 +4,7 @@
 
 #include "hal/bus/uart/uart.hpp"
 
-namespace ymd::robots{
+namespace ymd::robots::lobot{
 
 class LobotSerialServo{
 protected:

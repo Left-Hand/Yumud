@@ -239,7 +239,7 @@ private:
 
 private:
     Matrix<T, R, R> U_          = Matrix<T, R, R>::from_identity();      // 左奇异向量矩阵
-    Matrix<T, K, 1> sigma_      = Matrix<T, K, 1>::from_zero();  // 奇异值向量
+    Matrix<T, K, 1> sigma_      = Matrix<T, K, 1>::zero();  // 奇异值向量
     Matrix<T, C, C> V_          = Matrix<T, C, C>::from_identity();      // 右奇异向量矩阵
 
 

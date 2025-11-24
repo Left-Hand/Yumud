@@ -5,9 +5,9 @@
 
 namespace ymd::robots{
 
-struct DM9008_Fault{
+struct [[nodiscard]] DM9008_Fault{
 
-    enum Kind:uint8_t{
+    enum class [[nodiscard]] Kind:uint8_t{
         // 驱动过温防护，防护温度：120℃，过温电机将退出
         // “使能模式”
         // 电机过温防护，根据使用需求设定，建议不超过
@@ -30,14 +30,15 @@ struct DM9008_Fault{
         Overload = 14
     };
 
-    DM9008_Fault(const Kind kind):kind_(kind){}
+    constexpr DM9008_Fault(const Kind kind):
+        kind_(kind){}
 private:
     Kind kind_;
 };
 
 static_assert(sizeof(DM9008_Fault) == 1);
 
-class DM9008{
+class [[nodiscard] ]DM9008{
 public:
     struct SpdCtrlParams{real_t spd;};
     struct PosSpdCtrlParams{real_t pos, spd;};
@@ -56,7 +57,7 @@ public:
             const NodeId id, 
             const SpdCtrlParams & p
         ){
-            return hal::CanClassicMsg::from_tuple(
+            return hal::CanClassicFrame::from_tuple(
                 CanStdId(0x100 | id), 
                 std::make_tuple(
                     float(p.spd)
@@ -68,7 +69,7 @@ public:
             const NodeId id, 
             const PosSpdCtrlParams & p
         ){
-            return hal::CanClassicMsg::from_tuple(
+            return hal::CanClassicFrame::from_tuple(
                 CanStdId(0x200 | id), 
                 std::make_tuple(
                     float(p.pos),

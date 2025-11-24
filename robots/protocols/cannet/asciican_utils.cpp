@@ -2,13 +2,14 @@
 #include "core/debug/debug.hpp"
 
 using namespace ymd;
-using namespace ymd::robots::asciican;
+using namespace ymd::asciican;
+using namespace ymd::asciican::primitive;
 
 
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> AsciiCanPhy::send_can_msg(const Msg && msg){
+IResult<> AsciiCanPhy::send_can_frame(const Msg && msg){
     // DEBUG_PRINTLN("send can msg", msg);
     can_.write(msg).examine();
     return Ok();
@@ -40,7 +41,7 @@ IResult<> AsciiCanPhy::close(){
     return Ok();
 }
 
-namespace ymd::robots::asciican{
+namespace ymd::asciican{
 ::ymd::OutputStream& operator<<(::ymd::OutputStream& os,const Error & value){
     DeriveDebugDispatcher<Error>::call(os, value);
     return os;

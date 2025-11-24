@@ -55,7 +55,7 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        if(const auto res = phy_.write_reg(T::ADDRESS, reg.as_bits());
+        if(const auto res = phy_.write_reg(T::ADDRESS, reg.to_bits());
             res.is_err()) return res;
         reg.apply();
         return Ok();
@@ -71,7 +71,7 @@ private:
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        return phy_.read_reg(T::ADDRESS, reg.as_mut_bits());
+        return phy_.read_reg(T::ADDRESS, reg.as_bits_mut());
     };
 
     [[nodiscard]] IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){

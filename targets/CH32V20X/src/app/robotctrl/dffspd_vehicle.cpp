@@ -313,7 +313,7 @@ void diffspd_vehicle_main(){
     };
 
     auto motor_ctrl_cb = [&](){
-        motor_td_.update(motor_phy.get_angle().into<iq16>());
+        motor_td_.update(motor_phy.get_angle().cast_inner<iq16>());
 
         const auto ctime = clock::time();
         const auto freq = 0.2_r;

@@ -31,22 +31,22 @@ struct NCA9555_Prelude{
 struct NCA9555_Regs:public NCA9555_Prelude{
     struct R16_Input:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x00;
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     };
 
     struct R16_Output:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x02;
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     };
 
     struct R16_Inversion:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x04;
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     };
 
     struct R16_Config:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x06;
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     };
 
     R16_Input input_reg = {};
@@ -79,7 +79,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = i2c_drv_.write_reg(std::bit_cast<uint8_t>(T::ADDRESS), reg.as_bits(), std::endian::little);
+        if(const auto res = i2c_drv_.write_reg(std::bit_cast<uint8_t>(T::ADDRESS), reg.to_bits(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -87,7 +87,7 @@ private:
     
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        if(const auto res = i2c_drv_.read_reg(std::bit_cast<uint8_t>(T::ADDRESS), reg.as_mut_bits(), std::endian::little);
+        if(const auto res = i2c_drv_.read_reg(std::bit_cast<uint8_t>(T::ADDRESS), reg.as_bits_mut(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

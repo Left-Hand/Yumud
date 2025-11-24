@@ -3,11 +3,11 @@
 #include "../asciican_utils.hpp"
 #include "../asciican_phy.hpp"
 
-namespace ymd::robots::asciican{
+namespace ymd::asciican{
 
 class EcCan final{
 public:
-    using Msg = asciican::Msg;
+    using Frame = asciican::Frame;
     using Error = asciican::Error;
     using Flags = asciican::Flags;
 

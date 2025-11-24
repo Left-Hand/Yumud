@@ -88,7 +88,7 @@ protected:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
+        if(const auto res = write_reg(T::ADDRESS, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -115,14 +115,14 @@ protected:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(uint8_t(T::ADDRESS), reg.as_mut_bits());
+        return read_reg(uint8_t(T::ADDRESS), reg.as_bits_mut());
     }
 
 
     [[nodiscard]] IResult<> read_reg(const uint8_t address, uint16_t & data){
         if(spi_drv_){
             if(const auto res = spi_drv_->transceive_single(
-                (flag_reg.as_mut_bytes()[0]), 
+                (flag_reg.as_bytes_mut()[0]), 
                 uint8_t(address | 0x80), CONT); 
             res.is_err()) return Err(res.unwrap_err());
             if(const auto res = spi_drv_->read_single<uint16_t>(data);

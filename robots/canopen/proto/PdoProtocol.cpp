@@ -10,7 +10,7 @@ PdoProtocol::PdoProtocol(Driver& driver, ObjectDict & od1)
 }
 
 
-bool PdoProtocol::processMessage(const CanClassicMsg& msg) {
+bool PdoProtocol::processMessage(const CanClassicFrame& msg) {
     // auto & ps = (msg.isRemote() == 0) ? rpdos_ : tpdos_;
 
     // for (auto & pdoSession : ps) {

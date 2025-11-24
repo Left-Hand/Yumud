@@ -35,15 +35,15 @@ IResult<> BMI088_Gyr::update(){
     auto & reg = regs_.gyr_x_reg;
     return phy_.read_burst(
         reg.address, 
-        std::span(&(reg.as_mut_bits()), 3)
+        std::span(&(reg.as_bits_mut()), 3)
     );
 }
 
 IResult<Vec3<iq24>> BMI088_Gyr::read_gyr(){
     return Ok(Vec3<iq24>(
-        regs_.gyr_x_reg.as_bits() * gyr_scaler_,
-        regs_.gyr_y_reg.as_bits() * gyr_scaler_,
-        regs_.gyr_z_reg.as_bits() * gyr_scaler_
+        regs_.gyr_x_reg.to_bits() * gyr_scaler_,
+        regs_.gyr_y_reg.to_bits() * gyr_scaler_,
+        regs_.gyr_z_reg.to_bits() * gyr_scaler_
     ));
 }
 

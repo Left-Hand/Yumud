@@ -75,19 +75,19 @@ struct AW9523_Regset final:public AW9523_Prelude{
     struct InputReg  : public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::In;
 
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(input_reg)
 
     struct OutputReg  : public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Out;
 
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(output_reg)
 
     struct DirReg:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Dir;
 
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(dir_reg)
 
     struct CtlReg:Reg8<>{
@@ -101,14 +101,14 @@ struct AW9523_Regset final:public AW9523_Prelude{
     struct IntEnReg:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Inten;
 
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(inten_reg)
 
 
     struct LedModeReg:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::LedMode;
 
-        hal::PinMask mask = hal::PinMask::from_zero();
+        hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(led_mode_reg);
 
 

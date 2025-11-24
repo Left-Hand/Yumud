@@ -99,7 +99,7 @@ struct Packet{
         return std::bit_cast<uint16_t>(*this);
     }
 
-    uint16_t & as_mut_bits(){
+    uint16_t & as_bits_mut(){
         return *reinterpret_cast<uint16_t *>(this);
     }
 };

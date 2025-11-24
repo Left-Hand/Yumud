@@ -146,7 +146,7 @@ void digipw_main(){
         .count_freq = hal::NearestFreq(CHOPPER_FREQ),
         .count_mode = hal::TimerCountMode::Up
     }, EN);
-    timer.init_bdtr(10ns);
+    timer.bdtr().init({10ns});
 
     auto & pwm = timer.oc<1>();
     auto & pwmn = timer.ocn<1>();

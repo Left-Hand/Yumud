@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <bit>
 #include <compare>
+#include <span>
+#include <array>
 
 static_assert(sizeof(float) == 4);
 
@@ -21,8 +23,18 @@ struct [[nodiscard]] fp32{
 		return fp32(std::bit_cast<float>(bits));
 	}
 
-	constexpr uint32_t as_bits() const {
+	static constexpr fp32 from_le_bytes(const std::span<const uint8_t, 4> bytes){
+		std::array<uint8_t, 4> bytes_arr;
+		std::copy(bytes.begin(), bytes.end(), bytes_arr.begin());
+		return fp32::from_bits(std::bit_cast<uint32_t>(bytes_arr));
+	}
+
+	[[nodiscard]] constexpr uint32_t to_bits() const {
 		return std::bit_cast<uint32_t>(*this);
+	}
+
+	[[nodiscard]] constexpr std::array<uint8_t, 4> to_le_bytes() const {
+		return std::bit_cast<std::array<uint8_t, 4>>(*this);
 	}
 
     [[nodiscard]] constexpr operator float() const {

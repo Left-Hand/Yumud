@@ -31,7 +31,7 @@ public:
     [[nodiscard]] constexpr PinMask(const PinNth nth):
         raw_(std::bit_cast<uint16_t>(nth)){;}
 
-    [[nodiscard]] static constexpr PinMask from_zero(){
+    [[nodiscard]] static constexpr PinMask zero(){
         return PinMask(0);
     }
     [[nodiscard]] static constexpr PinMask from_u16(const uint16_t raw){
@@ -41,7 +41,7 @@ public:
     [[nodiscard]] static constexpr PinMask from_nth(const Nth nth){
         return PinMask::from_u16(uint16_t(1 << nth.count()));
     }
-    [[nodiscard]] constexpr uint16_t as_u16() const {return raw_;}
+    [[nodiscard]] constexpr uint16_t to_u16() const {return raw_;}
 
     [[nodiscard]] constexpr bool test(Nth nth) const {
         return raw_ & (1 << nth.count());
@@ -218,7 +218,7 @@ public:
         || (kind_ == OutAfOD);
     }
 
-    [[nodiscard]] constexpr uint8_t as_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const {
         return std::bit_cast<uint8_t>(kind_);
     }
 private:

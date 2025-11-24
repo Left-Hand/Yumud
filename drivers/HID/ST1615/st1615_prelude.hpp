@@ -110,11 +110,11 @@ struct ST1615_Prelude{
         }
 
         friend OutputStream & operator<<(OutputStream & os, const Capabilities & self){ 
-            return os << os.scoped("Capabilities")(os 
-                << os.field("max_touches")(os << self.max_touches) << os.splitter()
-                << os.field("max_x")(os << self.max_x) << os.splitter()
-                << os.field("max_y")(os << self.max_y)
-            );
+            return os
+                << os.field("max_touches")(self.max_touches) << os.splitter()
+                << os.field("max_x")(self.max_x) << os.splitter()
+                << os.field("max_y")(self.max_y)
+            ;
         }
     };
 
@@ -125,11 +125,11 @@ struct ST1615_Prelude{
         bool water;
 
         friend OutputStream & operator<<(OutputStream & os, const GestureInfo & self){ 
-            return os << os.scoped("GestureId")(os 
-                << os.field("gesture_id")(os << self.gesture_id) << os.splitter()
-                << os.field("proximity")(os << self.proximity) << os.splitter()
-                << os.field("water")(os << self.water)
-            );
+            return os 
+                << os.field("gesture_id")(self.gesture_id) << os.splitter()
+                << os.field("proximity")(self.proximity) << os.splitter()
+                << os.field("water")(self.water)
+            ;
         }
     };
 

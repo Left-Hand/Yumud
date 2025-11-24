@@ -27,7 +27,7 @@ void slcan_main(){
         .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
     });
 
-    // robots::asciican::AsciiCanPhy phy{can};
+    // asciican::AsciiCanPhy phy{can};
     [[maybe_unused]] robots::slcan::SlcanParser slcan_parser;
     // auto list = rpc::make_list(
     //     "slcan",
@@ -94,13 +94,13 @@ void slcan_main(){
     // DEBUG_PRINTLN(slcan.handle_line("C"));
     const auto used = measure_total_elapsed_us([&]{
         for(const auto line: lines){
-            (void)slcan_parser.handle_line(line);
+            (void)slcan_parser.process_line(line);
         }
     });
 
 
     for(const auto line: lines){
-        DEBUG_PRINTS(line,"->",slcan_parser.handle_line(line));
+        DEBUG_PRINTS(line,"->",slcan_parser.process_line(line));
     }
 
     DEBUG_PRINTS("parse lines totally used:", used);

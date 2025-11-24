@@ -70,7 +70,7 @@ struct Packet{
         return ret;
     }
 
-    [[nodiscard]] std::span<uint8_t, 3> as_mut_bytes() {
+    [[nodiscard]] std::span<uint8_t, 3> as_bytes_mut() {
         return std::span<uint8_t, 3>(reinterpret_cast<uint8_t *>(this), sizeof(Self));
     }
 
@@ -132,7 +132,7 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         const auto address = T::ADDRESS;
         const auto tx = uint16_t(
-            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | std::bit_cast<uint8_t>(reg.as_bits()));
+            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | std::bit_cast<uint8_t>(reg.to_bits()));
         if(const auto res = spi_drv_.write_single<uint16_t>(tx);
             res.is_err()) return Err(Error(res.unwrap_err()));
         reg.apply();
@@ -143,11 +143,11 @@ private:
     [[nodiscard]] IResult<> read_reg(const T & reg){
         const auto address = T::ADDRESS;
         const auto tx = uint16_t(
-            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | std::bit_cast<uint8_t>(reg.as_bits()));
+            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | std::bit_cast<uint8_t>(reg.to_bits()));
         uint16_t rx;
         if(const auto res = spi_drv_.transceive_single<uint16_t>(rx, tx);
             res.is_err()) return Err(Error(res.unwrap_err()));
-        reg.as_mut_bits() = rx;
+        reg.as_bits_mut() = rx;
         return Ok();
     }
 

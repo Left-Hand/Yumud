@@ -6,19 +6,19 @@
 #include "core/utils/Errno.hpp"
 #include "core/utils/scope_guard.hpp"
 
-#include "primitive/can/can_msg.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 
 #include <variant>
 
-namespace ymd::robots::asciican{
+namespace ymd::asciican::primitive{
 
 
 namespace operations{
-    struct [[nodiscard]] SendCanMsg{
-        hal::CanClassicMsg msg;
+    struct [[nodiscard]] SendCanFrame{
+        hal::CanClassicFrame msg;
 
-        friend OutputStream & operator<<(OutputStream & os, const SendCanMsg & self){ 
-            return os << os.field("msg")(os << self.msg);
+        friend OutputStream & operator<<(OutputStream & os, const SendCanFrame & self){ 
+            return os << os.field("msg")(self.msg);
         }
     };
 
@@ -38,7 +38,7 @@ namespace operations{
         }
 
         friend OutputStream & operator<<(OutputStream & os, const SendText & self){ 
-            return os << os.field("str")(os << self.str.view());
+            return os << os.field("str")(self.str.view());
         }
     };
 
@@ -46,7 +46,7 @@ namespace operations{
         uint32_t baudrate;
 
         friend OutputStream & operator<<(OutputStream & os, const SetSerialBaud & self){ 
-            return os << os.field("baudrate")(os << self.baudrate);
+            return os << os.field("baudrate")(self.baudrate);
         }
     };
 
@@ -54,7 +54,7 @@ namespace operations{
         hal::CanBaudrate baudrate;
 
         friend OutputStream & operator<<(OutputStream & os, const SetCanBaud & self){ 
-            return os << os.field("baudrate")(os << self.baudrate);
+            return os << os.field("baudrate")(self.baudrate);
         }
     };
 
@@ -73,14 +73,14 @@ namespace operations{
     struct [[nodiscard]] SetTimestamp{
         Enable enabled;
         friend OutputStream & operator<<(OutputStream & os, const SetTimestamp & self){ 
-            return os << os.field("enabled")(os << self.enabled);
+            return os << os.field("enabled")(self.enabled);
         }
     };
 }
 
 
 struct [[nodiscard]] Operation:public Sumtype<
-    operations::SendCanMsg, 
+    operations::SendCanFrame, 
     operations::SendText,
     operations::SetSerialBaud,
     operations::SetCanBaud,
@@ -91,7 +91,7 @@ struct [[nodiscard]] Operation:public Sumtype<
 
 };
 
-using Msg = hal::CanClassicMsg;
+using Frame = hal::CanClassicFrame;
 
 enum class Error:uint8_t{
     NoInput,

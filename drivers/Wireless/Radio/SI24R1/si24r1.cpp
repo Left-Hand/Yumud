@@ -17,7 +17,7 @@ using IResult = Result<T, Error>;
 
 IResult<size_t> Si24R1::available(){
     uint8_t size;
-    if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_mut_bits(), 
+    if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_bits_mut(), 
         uint8_t(Command::R_RX_PL_WID), CONT); res.is_err()) 
         return Err(res.unwrap_err());
     if(const auto res = spi_drv_.read_single<uint8_t>(size); 
@@ -27,21 +27,21 @@ IResult<size_t> Si24R1::available(){
 }
 
 IResult<> Si24R1::clear_tx_fifo(){
-    const auto res = spi_drv_.transceive_single(regs_.status_reg.as_mut_bits(), 
+    const auto res = spi_drv_.transceive_single(regs_.status_reg.as_bits_mut(), 
         uint8_t(Command::FLUSH_TX));
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok();    
 }
 
 IResult<> Si24R1::clear_rx_fifo(){
-    const auto res = spi_drv_.transceive_single(regs_.status_reg.as_mut_bits(), 
+    const auto res = spi_drv_.transceive_single(regs_.status_reg.as_bits_mut(), 
         uint8_t(Command::FLUSH_RX));
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok();   
 }
 
 IResult<> Si24R1::update_status(){
-    const auto res = spi_drv_.transceive_single(regs_.status_reg.as_mut_bits(), uint8_t(Command::NOP));
+    const auto res = spi_drv_.transceive_single(regs_.status_reg.as_bits_mut(), uint8_t(Command::NOP));
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok();   
 }

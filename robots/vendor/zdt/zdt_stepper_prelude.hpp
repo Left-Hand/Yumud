@@ -25,7 +25,7 @@ struct [[nodiscard]] NodeId{
     static constexpr NodeId from_u8(uint8_t bits) {
         return NodeId{bits};
     }
-    [[nodiscard]] constexpr uint8_t as_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const {
         return count;
     }
 };
@@ -106,8 +106,8 @@ struct [[nodiscard]] HommingStatus{
 static_assert(sizeof(HommingStatus) == 1); 
 
 
-struct [[nodiscard]] Bytes2CanMsgIterator{
-    explicit constexpr Bytes2CanMsgIterator(
+struct [[nodiscard]] Bytes2CanFrameIterator{
+    explicit constexpr Bytes2CanFrameIterator(
         const NodeId nodeid, 
         const FuncCode func_code,
         const std::span<const uint8_t> payload
@@ -120,13 +120,13 @@ struct [[nodiscard]] Bytes2CanMsgIterator{
     constexpr bool has_next(){
         return payload_.size() - offset_;
     }
-    constexpr hal::CanClassicMsg next(){
+    constexpr hal::CanClassicFrame next(){
         constexpr size_t MAX_PAYLOAD_LENGTH = 7;
         const auto msg_len = MIN(
             payload_.size() - offset_, 
             MAX_PAYLOAD_LENGTH);
 
-        const auto msg = make_canmsg(
+        const auto frame = make_canmsg(
             nodeid_, func_code_, 
             offset_ / MAX_PAYLOAD_LENGTH,
             payload_.subspan(offset_, msg_len)
@@ -134,10 +134,10 @@ struct [[nodiscard]] Bytes2CanMsgIterator{
 
         offset_ += msg_len;
 
-        return msg;
+        return frame;
     }
 private:
-    static constexpr hal::CanClassicMsg make_canmsg(
+    static constexpr hal::CanClassicFrame make_canmsg(
         const NodeId nodeid,
         const FuncCode func_code,
         const uint8_t piece_cnt,
@@ -148,9 +148,9 @@ private:
         buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
         buf.append_unchecked(bytes);
 
-        return hal::CanClassicMsg::from_bytes(
+        return hal::CanClassicFrame(
             map_nodeid_and_piececnt_to_canid(nodeid, piece_cnt),
-            buf.iter()
+            hal::CanClassicPayload::from_bytes(buf.as_slice())
         );
     }
 
@@ -159,8 +159,8 @@ private:
         const NodeId nodeid, 
         const uint8_t piece
     ){
-        return hal::CanExtId(
-            uint32_t(nodeid.as_u8() << 8) | 
+        return hal::CanExtId::from_bits(
+            uint32_t(nodeid.to_u8() << 8) | 
             (piece)
         );
     }
@@ -173,7 +173,7 @@ private:
 };
 
 
-struct [[nodiscard]] CanMsg2BytesDumper{
+struct [[nodiscard]] CanFrame2BytesDumper{
     struct [[nodiscard]] DumpInfo{
         NodeId nodeid;
         FuncCode func_code;
@@ -181,7 +181,7 @@ struct [[nodiscard]] CanMsg2BytesDumper{
     };
 
     static constexpr IResult<DumpInfo> dump(
-        std::span<const hal::CanClassicMsg> msgs
+        std::span<const hal::CanClassicFrame> msgs
     ) {
         if(msgs.size() == 0)
             return Err(Error::RxNoMsgToDump);
@@ -209,9 +209,9 @@ struct [[nodiscard]] CanMsg2BytesDumper{
             if(msgs[0].length() == 0) return Err(Error::RxMsgNoPayload);
             const auto func_code0 = std::bit_cast<FuncCode>(msgs[0].payload_bytes()[0]);
             for(size_t i = 0; i < msgs.size(); i++){
-                const auto & msg = msgs[i];
-                if(msg.length() == 0) return Err(Error::RxMsgNoPayload);
-                const auto func_code = std::bit_cast<FuncCode>(msg.payload_bytes()[0]);
+                const auto & frame = msgs[i];
+                if(frame.length() == 0) return Err(Error::RxMsgNoPayload);
+                const auto func_code = std::bit_cast<FuncCode>(frame.payload_bytes()[0]);
                 if(func_code != func_code0)
                     return Err(Error::RxMsgFuncCodeNotTheSame);
             }
@@ -219,8 +219,8 @@ struct [[nodiscard]] CanMsg2BytesDumper{
         });
 
         for(size_t i = 0; i < msgs.size(); i++){
-            const auto & msg = msgs[i];
-            const auto msg_bytes = msg.payload_bytes()
+            const auto & frame = msgs[i];
+            const auto msg_bytes = frame.payload_bytes()
                 .subspan(1);
             info.payload.append_unchecked(msg_bytes);
         }
@@ -231,15 +231,15 @@ struct [[nodiscard]] CanMsg2BytesDumper{
     }
 
     static inline constexpr uint8_t map_msg_to_nodeid(
-        const hal::CanClassicMsg & msg
+        const hal::CanClassicFrame & frame
     ){
-        return msg.extid().unwrap().to_u29() >> 8;
+        return frame.identifier().try_to_extid().unwrap().to_u29() >> 8;
     }
 
     static inline constexpr uint8_t map_msg_to_piececnt(
-        const hal::CanClassicMsg & msg
+        const hal::CanClassicFrame & frame
     ){
-        return msg.extid().unwrap().to_u29() & 0xff;
+        return frame.identifier().try_to_extid().unwrap().to_u29() & 0xff;
     }
 
 };
@@ -300,7 +300,7 @@ struct [[nodiscard]] Rpm final{
         const uint16_t temp = uint16_t(iq16(speed) * 600);
         return {BSWAP_16(temp)};
     }
-    constexpr uint16_t as_u16() const {
+    constexpr uint16_t to_u16() const {
         return raw_;
     }
 
@@ -322,7 +322,7 @@ struct [[nodiscard]] PulseCnt final{
         return from_position(angle.to_turns());
     }
 
-    constexpr uint32_t as_u32() const {
+    constexpr uint32_t to_u32() const {
         return raw_;
     }
 
@@ -335,7 +335,7 @@ struct [[nodiscard]] AcclerationLevel{
         return AcclerationLevel{10};
     }
 
-    static constexpr AcclerationLevel from_zero(){
+    static constexpr AcclerationLevel zero(){
         return AcclerationLevel{0};
     }
 
@@ -347,7 +347,7 @@ struct [[nodiscard]] AcclerationLevel{
 
 }
 
-namespace payloads{
+namespace msgs{
     using namespace prelude;
     // 地址 + 0xF3 + 0xAB + 使能状态 + 多机同步标志 + 校验字节
     struct [[nodiscard]] Actvation final{

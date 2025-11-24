@@ -14,12 +14,12 @@ public:
 	constexpr RegCopy(T & owner)
 		:owner_(owner){
         T & self = *this;
-        self.as_mut_bits() = owner_.as_bits();
+        self.as_bits_mut() = owner_.to_bits();
     }
 
     constexpr void apply() const {
         const T & self = *this;
-        owner_.as_mut_bits() = self.as_bits();
+        owner_.as_bits_mut() = self.to_bits();
     }
 
     // constexpr ~RegCopy(){
@@ -33,78 +33,72 @@ template<typename T>
 RegCopy(T) -> RegCopy<T>;
 
 
-struct __RegBase{
-    template<typename T>
-    friend class RegCopy;
-};
-
-
-
 template<typename T, typename D = T>
-struct __Reg_t:public __RegBase{
+struct RegBase{
 public:
     using underly_type = T;
     using value_type = T;
     
-    [[nodiscard]] constexpr std::span<uint8_t> as_mut_bytes() {
+    [[nodiscard]] constexpr std::span<uint8_t> as_bytes_mut() {
         return std::span<uint8_t>(reinterpret_cast<uint8_t *>(this), sizeof(T));}
     [[nodiscard]] constexpr std::span<const uint8_t> as_bytes() const {
         return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(T));}
     
-    constexpr __Reg_t<T> & set_bits(T bits) {
-        this->as_mut_bits() = static_cast<T>(this->as_bits() | static_cast<T>(bits)); 
+    constexpr RegBase<T> & set_bits(T bits) {
+        this->as_bits_mut() = static_cast<T>(this->to_bits() | static_cast<T>(bits)); 
         return *this;
     }
-    constexpr __Reg_t<T> & clr_bits(T bits) {
-        this->as_mut_bits() = static_cast<T>(this->as_bits() & ~static_cast<T>(bits)); 
+    constexpr RegBase<T> & unset_bits(T bits) {
+        this->as_bits_mut() = static_cast<T>(this->to_bits() & ~static_cast<T>(bits)); 
         return *this;
     }
-    constexpr __Reg_t<T> & reconf_bits(T bits) {
-        this->as_mut_bits() = static_cast<T>(static_cast<T>(bits)); 
+    constexpr RegBase<T> & write_bits(T bits) {
+        this->as_bits_mut() = static_cast<T>(static_cast<T>(bits)); 
         return *this;
     }
     
-    [[nodiscard]] constexpr T & as_mut_bits()
+    [[nodiscard]] constexpr T & as_bits_mut()
     requires (std::is_const_v<T> == false)
     {
         return (reinterpret_cast<T &>(*this));
     }
 
-
-    [[nodiscard]] constexpr T as_bits() const 
+    [[nodiscard]] constexpr T to_bits() const 
     {return (reinterpret_cast<const T &>(*this));}
 
+    template<typename TOther>
+    friend class RegCopy;
 };
 
 #define DEF_REG_TEMPLATE(name, T, as_fn)\
 template<typename D = T>\
-struct name:public __Reg_t<T, D>{\
-constexpr T as_fn() const {return std::bit_cast<T>(this->as_bits());}\
+struct name:public RegBase<T, D>{\
+constexpr T as_fn() const {return std::bit_cast<T>(this->to_bits());}\
 };\
 
 #define DEF_REGC_TEMPLATE(name, T, as_fn)\
 template<typename D = T>\
-struct name:public __Reg_t<const T, D>{\
+struct name:public RegBase<const T, D>{\
 constexpr T as_fn() const {return T(*this);}\
 };\
 
 
-DEF_REG_TEMPLATE(Reg8, uint8_t, as_u8)
-DEF_REG_TEMPLATE(Reg16, uint16_t, as_u16)
+DEF_REG_TEMPLATE(Reg8, uint8_t, to_u8)
+DEF_REG_TEMPLATE(Reg16, uint16_t, to_u16)
 DEF_REG_TEMPLATE(Reg24, uint24_t, as_u24)
-DEF_REG_TEMPLATE(Reg32, uint32_t, as_u32)
-DEF_REG_TEMPLATE(Reg64, uint64_t, as_u64)
+DEF_REG_TEMPLATE(Reg32, uint32_t, to_u32)
+DEF_REG_TEMPLATE(Reg64, uint64_t, to_u64)
 
 DEF_REG_TEMPLATE(Reg8i, int8_t, as_i8)
 DEF_REG_TEMPLATE(Reg16i, int16_t, as_i16)
 DEF_REG_TEMPLATE(Reg32i, int32_t, as_i32)
 DEF_REG_TEMPLATE(Reg64i, int64_t, as_i64)
 
-DEF_REGC_TEMPLATE(RegC8, uint8_t, as_u8)
-DEF_REGC_TEMPLATE(RegC16, uint16_t, as_u16)
+DEF_REGC_TEMPLATE(RegC8, uint8_t, to_u8)
+DEF_REGC_TEMPLATE(RegC16, uint16_t, to_u16)
 DEF_REGC_TEMPLATE(RegC24, uint24_t, as_u24)
-DEF_REGC_TEMPLATE(RegC32, uint32_t, as_u32)
-DEF_REGC_TEMPLATE(RegC64, uint64_t, as_u64)
+DEF_REGC_TEMPLATE(RegC32, uint32_t, to_u32)
+DEF_REGC_TEMPLATE(RegC64, uint64_t, to_u64)
 
 DEF_REGC_TEMPLATE(RegC8i, int8_t, as_i8)
 DEF_REGC_TEMPLATE(RegC16i, int16_t, as_i16)
@@ -151,7 +145,7 @@ struct type :public Reg16<>{static constexpr RegAddr ADDRESS = addr; uint16_t da
 struct type :public Reg8<>{static constexpr RegAddr ADDRESS = addr; uint8_t data;} DEF_R8(name)
 
 
-
+#if 0
 
 template<typename T>
 struct reg_decay{
@@ -167,5 +161,5 @@ struct reg_decay<T>{
 
 template<typename T>
 using reg_decay_t = typename reg_decay<T>::type;
-
+#endif
 }

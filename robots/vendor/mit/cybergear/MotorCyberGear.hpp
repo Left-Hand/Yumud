@@ -93,7 +93,7 @@ public:
     // using Error = details::Error;
     // using IResult = details::IResult;
 
-    using CanMsg = hal::CanClassicMsg; 
+    using CanFrame = hal::CanClassicFrame; 
 
     using Feedback = details::Feedback;
     using Temperature = details::Temperature;
@@ -109,7 +109,7 @@ public:
 
     [[nodiscard]] IResult<> init();
 
-    [[nodiscard]] IResult<> transmit(const CanMsg & msg);
+    [[nodiscard]] IResult<> transmit(const CanFrame & msg);
 
     [[nodiscard]] IResult<> transmit(const uint32_t id, const uint64_t payload, const uint8_t dlc);
 
@@ -126,7 +126,7 @@ public:
     [[nodiscard]] IResult<> ctrl(const MitParams & params);
 
     
-    [[nodiscard]] IResult<> on_receive(const CanMsg & msg);
+    [[nodiscard]] IResult<> on_receive(const CanFrame & msg);
 
     [[nodiscard]] IResult<> enable(const Enable en, const bool clear_fault = true);
 

@@ -10,10 +10,7 @@
 
 #include "types/regions/range2.hpp"
 
-namespace ymd::robots{
-
-
-namespace mksmotor{
+namespace ymd::robots::mksmotor{
 
 struct [[nodiscard]] NodeId{
     using Self = NodeId;
@@ -22,7 +19,7 @@ struct [[nodiscard]] NodeId{
     static constexpr NodeId from_u8(uint8_t bits) {
         return NodeId{bits};
     }
-    [[nodiscard]] constexpr uint8_t as_u8() const {
+    [[nodiscard]] constexpr uint8_t to_u8() const {
         return count;
     }
 };
@@ -136,7 +133,7 @@ struct VerifyUtils final{
         const FuncCode funccode,
         std::span<const uint8_t> bytes 
     ){
-        uint32_t sum = nodeid.as_u8();
+        uint32_t sum = nodeid.to_u8();
         sum += std::bit_cast<uint8_t>(funccode);
         for(const auto byte: bytes){
             sum += byte;
@@ -152,14 +149,14 @@ struct Rpm final{
         return {int16_t(speed * 60)};
     }
     constexpr int16_t as_i16() const {
-        return raw_;
+        return bits_;
     }
 
     constexpr real_t to_speed() const {
-        return real_t(raw_) / 60;
+        return real_t(bits_) / 60;
     }
 
-    int16_t raw_;
+    int16_t bits_;
 }__packed;
 
 struct iRpm final{
@@ -167,14 +164,14 @@ struct iRpm final{
         return {int16_t(int16_t(speed * 60) & int16_t(0x8fff))};
     }
     constexpr int16_t as_i16() const {
-        return raw_;
+        return bits_;
     }
 
     constexpr real_t to_speed() const {
-        return real_t(raw_) / 60;
+        return real_t(bits_) / 60;
     }
 
-    int16_t raw_;
+    int16_t bits_;
 }__packed;
 
 static_assert(sizeof(Rpm) == 2);
@@ -185,7 +182,7 @@ struct AcclerationLevel{
         return AcclerationLevel{uint8_t(acc_per_second)};
     }
 
-    uint8_t raw_;
+    uint8_t bits_;
 }__packed;
 
 static_assert(sizeof(AcclerationLevel) == 1);
@@ -214,7 +211,7 @@ struct PulseCnt final{
 
 }
 
-namespace payloads{
+namespace msgs{
     using namespace prelude;
 
 
@@ -271,6 +268,4 @@ namespace payloads{
         );
     }
 }
-}
-
 }

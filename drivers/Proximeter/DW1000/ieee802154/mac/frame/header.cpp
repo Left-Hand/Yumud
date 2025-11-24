@@ -11,7 +11,7 @@ struct [[nodiscard]] PanId{
         return PanId{PanId::BROADCAST};
     }
 
-    std::span<uint8_t, 2> as_mut_bytes(){
+    std::span<uint8_t, 2> as_bytes_mut(){
         return std::span<uint8_t, 2>(reinterpret_cast<uint8_t*>(this), 2);
     }
 
@@ -30,7 +30,7 @@ struct [[nodiscard]] ShortAddress{
         return ShortAddress{ShortAddress::BROADCAST};
     }
 
-    std::span<uint8_t, 2> as_mut_bytes(){
+    std::span<uint8_t, 2> as_bytes_mut(){
         return std::span<uint8_t, 2>(reinterpret_cast<uint8_t*>(this), 2);
     }
 
@@ -49,7 +49,7 @@ struct [[nodiscard]] ExtendedAddress{
         return ExtendedAddress{ExtendedAddress::BROADCAST};
     }
 
-    std::span<uint8_t, 8> as_mut_bytes(){
+    std::span<uint8_t, 8> as_bytes_mut(){
         return std::span<uint8_t, 8>(reinterpret_cast<uint8_t*>(this), 8);
     }
 

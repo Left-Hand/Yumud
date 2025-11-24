@@ -4,6 +4,7 @@
 #include "core/clock/time.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/bipolarity_abstract.hpp"
 #include "core/math/realmath.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
@@ -54,7 +55,7 @@ void co_ab_main(){
     pwm_p.init({});
     pwm_n.init({});
 
-    hal::TimerOcMirror pwm_mirror{pwm_p, pwm_n};
+    hal::BipolarityTimerOcConjugate pwm_mirror{pwm_p, pwm_n};
 
     while(true){
         DEBUG_PRINTLN(clock::millis());

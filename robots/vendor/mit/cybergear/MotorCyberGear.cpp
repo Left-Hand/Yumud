@@ -18,7 +18,7 @@ using namespace ymd;
 using namespace ymd::robots;
 using namespace ymd::robots::cybergear::details;
 
-using CanClassicMsg = hal::CanClassicMsg;
+using CanClassicFrame = hal::CanClassicFrame;
 using Temperature = cybergear::details::Temperature;
 using CmdRad = cybergear::details::CmdRad;
 using CmdOmega = cybergear::details::CmdOmega;
@@ -69,7 +69,7 @@ struct [[nodiscard]] CgId final{
         return self;
     }
 
-    [[nodiscard]] constexpr uint32_t as_bits() const {return bits_;}
+    [[nodiscard]] constexpr uint32_t to_bits() const {return bits_;}
 
 private:
     uint32_t bits_;
@@ -83,7 +83,7 @@ IResult<> Self::init(){
 }
 
 IResult<> Self::request_mcu_id(){
-    const auto bits = CgId::from_parts(cybergear::Command::GET_DEVICE_ID, host_id_, node_id_).as_bits();
+    const auto bits = CgId::from_parts(cybergear::Command::GET_DEVICE_ID, host_id_, node_id_).to_bits();
     return this->transmit(bits, 0, 0);
 }
 
@@ -113,7 +113,7 @@ IResult<> Self::ctrl(const MitParams & params){
 
     return this->transmit(
         CgId::from_parts(cybergear::Command::SEND_CTRL1, 
-        CmdTorque(params.torque).count(), node_id_).as_bits(),
+        CmdTorque(params.torque).count(), node_id_).to_bits(),
         payload.data, sizeof(payload)
     );
 }
@@ -149,10 +149,10 @@ IResult<> Self::on_ctrl2_feed_back(const uint32_t bits, const uint64_t data, con
 
     const CgPayload payload = {data};
 
-    feedback_.rad =         payload.rad().as_bits().to<real_t>();
-    feedback_.omega =       payload.omega().as_bits().to<real_t>();
-    feedback_.torque =      payload.torque().as_bits().to<real_t>();
-    feedback_.temperature = static_cast<real_t>(payload.temperature().as_bits());
+    feedback_.rad =         payload.rad().to_bits().to<real_t>();
+    feedback_.omega =       payload.omega().to_bits().to<real_t>();
+    feedback_.torque =      payload.torque().to_bits().to<real_t>();
+    feedback_.temperature = static_cast<real_t>(payload.temperature().to_bits());
 
     return Ok();
 }
@@ -160,12 +160,12 @@ IResult<> Self::on_ctrl2_feed_back(const uint32_t bits, const uint64_t data, con
 IResult<> Self::enable(const Enable en, const bool clear_fault){
     if(en == EN){
         return this->transmit(
-            CgId::from_parts(cybergear::Command::EN_MOT, host_id_, node_id_).as_bits(), 0, 0);
+            CgId::from_parts(cybergear::Command::EN_MOT, host_id_, node_id_).to_bits(), 0, 0);
     }else{
         // 正常运行时，data区需清0；
         // byte[0]=1 时：清故障；
         return this->transmit(
-            CgId::from_parts(cybergear::Command::DISEN_MOT, host_id_, node_id_).as_bits(), 
+            CgId::from_parts(cybergear::Command::DISEN_MOT, host_id_, node_id_).to_bits(), 
             uint64_t(clear_fault), 8);
     }
 }
@@ -173,31 +173,31 @@ IResult<> Self::enable(const Enable en, const bool clear_fault){
 
 IResult<> Self::set_current_as_machine_home(){
     return this->transmit(
-        CgId::from_parts(cybergear::Command::SET_MACHINE_HOME, host_id_, node_id_).as_bits(), 1, 0);
+        CgId::from_parts(cybergear::Command::SET_MACHINE_HOME, host_id_, node_id_).to_bits(), 1, 0);
 }
 
-IResult<> Self::transmit(const CanClassicMsg & msg){
-    MOTOR_DEBUG("write_msg", msg);
-    // can_drv_.transmit(msg);
+IResult<> Self::transmit(const CanClassicFrame & frame){
+    MOTOR_DEBUG("write_msg", frame);
+    // can_drv_.transmit(frame);
     return Ok{};
 }
 
 IResult<> Self::change_can_id(const uint8_t can_id){
     node_id_ = can_id;
     return this->transmit(
-        CgId::from_parts(cybergear::Command::SET_CAN_ID, host_id_, node_id_).as_bits(),
+        CgId::from_parts(cybergear::Command::SET_CAN_ID, host_id_, node_id_).to_bits(),
             0, 0);
 }
 
 IResult<> Self::request_read_para(const uint16_t idx){
     return this->transmit(
-        CgId::from_parts(cybergear::Command::READ_PARA, host_id_, node_id_).as_bits(), 
+        CgId::from_parts(cybergear::Command::READ_PARA, host_id_, node_id_).to_bits(), 
             uint64_t(idx), 8);
 }
 
 IResult<> Self::request_write_para(const uint16_t idx, const uint32_t data){
     return this->transmit(
-        CgId::from_parts(cybergear::Command::WRITE_PARA, host_id_, node_id_).as_bits(), 
+        CgId::from_parts(cybergear::Command::WRITE_PARA, host_id_, node_id_).to_bits(), 
         uint64_t(idx) | (uint64_t(data) << 32), 
         8
     );
@@ -208,20 +208,22 @@ IResult<> Self::transmit(const uint32_t bits, const uint64_t payload, const uint
         return Err(Error::RET_DLC_LONGER);
 
     const auto buf = std::bit_cast<std::array<uint8_t, 8>>(payload);
-    const auto msg = CanClassicMsg::from_bytes(
-        hal::CanStdId(bits), 
-        std::span(buf.data(), dlc)
+    const auto frame = CanClassicFrame(
+        hal::CanStdId::from_bits(bits), 
+        hal::CanClassicPayload::from_bytes(std::span(buf.data(), dlc))
     );
-    return this->transmit(msg);
+    return this->transmit(frame);
 }
 
-IResult<> Self::on_receive(const CanClassicMsg & msg){
-    const auto bits = msg.stdid().unwrap().to_u11();
+IResult<> Self::on_receive(const CanClassicFrame & frame){
+    if(!frame.is_extended())
+        __builtin_trap();
+    const auto bits = frame.identifier().to_bits();
     const auto cgid = CgId::from_bits(bits);
-    const auto cmd = cgid.cmd().as_bits();
+    const auto cmd = cgid.cmd().to_bits();
 
-    const uint64_t data = msg.payload_as_u64();
-    const uint8_t dlc = msg.length();
+    const uint64_t data = frame.payload_u64();
+    const uint8_t dlc = frame.length();
 
     switch(cmd){
         case cybergear::Command::GET_DEVICE_ID:

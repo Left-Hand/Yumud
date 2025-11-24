@@ -21,7 +21,7 @@ public:
     __inline void set_by_mask(const PinMask mask);
     __inline void clr_by_mask(const PinMask mask);
     __inline void write_by_mask(const PinMask mask){
-        inst_->OUTDR = mask.as_u16();}
+        inst_->OUTDR = mask.to_u16();}
     __inline PinMask read_mask(){
         return PinMask::from_u16(inst_->INDR);}
 
@@ -39,11 +39,11 @@ __inline void GpioPort::write_nth(const Nth nth, const BoolLevel data){
 }
 
 __inline void GpioPort::set_by_mask(const PinMask mask){
-    inst_->BSHR = mask.as_u16();
+    inst_->BSHR = mask.to_u16();
 }
 
 __inline void GpioPort::clr_by_mask(const PinMask mask){
-    inst_->BCR = mask.as_u16();
+    inst_->BCR = mask.to_u16();
 }
 
 

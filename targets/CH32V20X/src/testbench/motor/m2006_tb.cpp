@@ -26,7 +26,7 @@ void m2006_main(){
     });
 
     can.filters<0>().apply(
-        hal::CanFilterConfig::from_accept_all()
+        hal::CanFilterConfig::accept_all()
     );
 
     while(true){
@@ -40,10 +40,11 @@ void m2006_main(){
             int16_t d2;
         };
 
-        hal::CanClassicMsg msg = hal::CanClassicMsg::from_bytes(
-            hal::CanStdId(0x200), 
-            std::bit_cast<std::array<uint8_t, 4>>(
-                Payload{BSWAP_16(d), BSWAP_16(d2)}
+        hal::CanClassicFrame msg = hal::CanClassicFrame(
+            hal::CanStdId::from_bits(0x200), 
+            hal::CanClassicPayload::from_bytes(
+                std::bit_cast<std::array<uint8_t, 4>>(
+                Payload{BSWAP_16(d), BSWAP_16(d2)})
             )
         );
         DEBUG_PRINTLN(can.read());

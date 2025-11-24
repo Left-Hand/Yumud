@@ -14,11 +14,11 @@ public:
     Result<void, Error> read_reg(const uint8_t addr, uint8_t & data);
 
     Result<void, Error> write_reg(const auto & reg){
-        return write_reg(reg.address, reg.as_bits());
+        return write_reg(reg.address, reg.to_bits());
     }
 
     Result<void, Error> read_reg(auto & reg){
-        return read_reg(reg.address, reg.as_mut_bits());
+        return read_reg(reg.address, reg.as_bits_mut());
     }
 private:
     hal::I2cDrv i2c_drv_;

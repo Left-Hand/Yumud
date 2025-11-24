@@ -168,7 +168,7 @@ void nuedc_2025e_joint_main(){
         .apply(hal::CanFilterConfig::from_pair(
             hal::CanStdIdMaskPair::from_parts(
                 comb_role_and_cmd(self_node_role_, uint8_t(0x00)), 
-                hal::CanStdId(0b1111'000'0000), hal::CanRtrSpecfier::Discard
+                hal::CanStdId::from_bits(0b1111'000'0000), hal::CanRtrSpecfier::Discard
             ))
         )
     ;
@@ -235,7 +235,7 @@ void nuedc_2025e_joint_main(){
     RunStatus run_status_;
     run_status_.state = RunState::Idle;
 
-    RingBuf<hal::CanClassicMsg, CANMSG_QUEUE_SIZE> msg_queue_;
+    RingBuf<hal::CanClassicFrame, CANMSG_QUEUE_SIZE> msg_queue_;
 
     AlphaBetaCoord<iq16> ab_volt_;
     
@@ -405,11 +405,11 @@ void nuedc_2025e_joint_main(){
     };
 
 
-    auto read_can_msg = [&] -> Option<hal::CanClassicMsg>{
+    auto read_can_frame = [&] -> Option<hal::CanClassicFrame>{
         while(can.available()){
-            auto msg = can.read();
-            if(msg.is_extended()) continue;
-            msg_queue_.push(msg);
+            auto frame = can.read();
+            if(frame.is_extended()) continue;
+            msg_queue_.push(frame);
         }
 
         if(not msg_queue_.available())
@@ -512,18 +512,18 @@ void nuedc_2025e_joint_main(){
             }
         };
 
-        auto handle_msg = [&](const hal::CanClassicMsg & msg){
-            const auto id = msg.stdid().unwrap();
-            const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(id);
+        auto handle_msg = [&](const hal::CanClassicFrame & frame){
+            const auto stdid = frame.identifier().try_to_stdid().examine();
+            const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(stdid);
             if(msg_role != self_node_role_) return;
-            dispatch_msg(msg_cmd, msg.payload_bytes());
+            dispatch_msg(msg_cmd, frame.payload_bytes());
         };
 
         while(true){
-            const auto may_msg = read_can_msg();
+            const auto may_msg = read_can_frame();
             if(may_msg.is_none()) break;
-            const auto & msg = may_msg.unwrap();
-            handle_msg(msg);
+            const auto & frame = may_msg.unwrap();
+            handle_msg(frame);
         }
     };
 

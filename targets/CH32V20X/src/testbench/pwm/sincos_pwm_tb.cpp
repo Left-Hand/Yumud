@@ -7,6 +7,7 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/bipolarity_abstract.hpp"
 #include "hal/analog/adc/adcs/adc1.hpp"
 
 using namespace ymd;
@@ -104,8 +105,12 @@ void sincos_pwm_main(){
     pwm_bp.init(pwm_inv_cfg);
     pwm_bn.init(pwm_inv_cfg);
 
-    auto pwm_a = hal::TimerOcPair{pwm_ap, pwm_an};
-    auto pwm_b = hal::TimerOcPair{pwm_bp, pwm_bn};
+    auto pwm_a = hal::BipolarityTimerOcPair{
+        pwm_ap, pwm_an
+    };
+    auto pwm_b = hal::BipolarityTimerOcPair{
+        pwm_bp, pwm_bn
+    };
 
     pwm_b.inverse(EN);
 

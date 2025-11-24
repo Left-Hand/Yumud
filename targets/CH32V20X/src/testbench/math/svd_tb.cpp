@@ -54,7 +54,7 @@ static constexpr Matrix<T, 3, 9> jacobian_so3(const Matrix3x3<T> & m){
     const auto trace = m.trace();
     const auto c = sqrt(trace - 1) * static_cast<T>(0.5);
     if(c > static_cast<T>(0.999999))
-        return Matrix<T, 3, 9>::from_zero();
+        return Matrix<T, 3, 9>::zero();
     const auto s = sqrt(1 - square(c));
 
     const auto theta = atan2(s, c);
@@ -205,7 +205,7 @@ namespace experimental{
         const std::span<const Vec2<T>> pts2,
         const int16_t * cor
     ) {
-        Matrix2x2<T> cov = Matrix2x2<T>::from_zero(); 
+        Matrix2x2<T> cov = Matrix2x2<T>::zero(); 
         for (size_t i = 0; i < pts1.size(); i++) {
             const auto j = cor[i];
             if (j < 0) continue;
@@ -252,7 +252,7 @@ static constexpr Result<Isometry, SlamErrorKind> pose_estimation(
     // 计算协方差矩阵 W
     const W_Matrix W = std::transform_reduce(
         pts1.begin(), pts1.end(), pts2.begin(),
-        Matrix<T, D, D>::from_zero(),
+        Matrix<T, D, D>::zero(),
         
         std::plus<>(),
         [&](const Vec& p1, const Vec& p2) {

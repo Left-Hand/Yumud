@@ -35,7 +35,7 @@ bool BurstDmaPwm::is_done(){
 }
 
 uint32_t BurstDmaPwm::calc_cvr_from_duty(const uq32 duty) const {
-    return uint32_t((uint64_t(timer_oc_.arr()) * duty.as_bits()) >> 32);
+    return uint32_t((uint64_t(timer_oc_.arr()) * duty.to_bits()) >> 32);
 }
 
 uq8 BurstDmaPwm::get_period_us() const{

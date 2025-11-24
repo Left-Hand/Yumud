@@ -4,7 +4,7 @@
 using namespace ymd::canopen;
 
 
-bool SdoProtocol::processMessage(const CanClassicMsg & msg) {
+bool SdoProtocol::processMessage(const CanClassicFrame & frame) {
     // int index = 0;
     // int subIndex = 0;
     if (!ProtocolBase::processMessage(msg)) {

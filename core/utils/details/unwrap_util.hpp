@@ -69,7 +69,7 @@ struct _None_t{
 // [[maybe_unused]] static inline _None_t _ = {};
 
 template<typename T>
-struct Some{
+struct [[nodiscard]] Some{
 public:
     constexpr Some(const T & val):val_(val){}
     constexpr Some(T && val):val_(std::move(val)){;}
@@ -88,7 +88,7 @@ private:
 };
 
 template<>
-struct Some<void>{
+struct [[nodiscard]] Some<void>{
 public:
 };
 
@@ -120,7 +120,7 @@ template<typename T, typename E>
 class Result;
 
 template<typename T = void>
-struct Ok {
+struct [[nodiscard]] Ok {
 public:
     using value_type = std::decay_t<T>;
     
@@ -176,7 +176,7 @@ private:
 
 // void 特化版本
 template<>
-struct Ok<void> {
+struct [[nodiscard]] Ok<void> {
     constexpr Ok() = default;
     
     template<typename U>
@@ -195,7 +195,7 @@ namespace custom{
 
 
 template<typename E = void>
-struct Err {
+struct [[nodiscard]] Err {
 public:
     using error_type = std::decay_t<E>;
     
@@ -278,7 +278,7 @@ private:
 
 // void 特化版本
 template<>
-struct Err<void> {
+struct [[nodiscard]] Err<void> {
     constexpr Err() = default;
     
     template<typename U>
@@ -325,7 +325,6 @@ template<typename T>
 MATCH() -> MATCH<T>;
 
 
-#define UNWRAP_OR_RETURN(x) if(const auto res = x; res.is_err()) return res;
-#define UNWRAP_OR_RETURN_ERR(x) if(const auto res = x; res.is_err()) return Err(Error(res.unwrap_err()));
+#define UNWRAP_OR_RETURN_ERR(x) ({if(const auto res = x; res.is_err()) return Err(res.unwrap_err());})
 
 } // namespace ymd

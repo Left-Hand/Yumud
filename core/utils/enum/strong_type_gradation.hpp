@@ -15,19 +15,18 @@ public:\
             return Err(std::strong_ordering::less);\
         if (in > MAX_VALUE) [[unlikely]] \
             return Err(std::strong_ordering::greater);\
-        auto raw = static_cast<D>((in - MIN_VALUE) / STEP_VALUE);\
-        return Ok(name(raw));\
+        auto bits = static_cast<D>((in - MIN_VALUE) / STEP_VALUE);\
+        return Ok(name::from_bits(bits));\
     }\
-    [[nodiscard]] constexpr D as_bits() const { return bits; }\
+    [[nodiscard]] constexpr D to_bits() const { return bits_; }\
     [[nodiscard]] constexpr T to_original() const {\
-        return MIN_VALUE + static_cast<T>(bits) * STEP_VALUE;\
+        return MIN_VALUE + static_cast<T>(bits_) * STEP_VALUE;\
     }\
-    D bits;\
     static constexpr name from_bits(D bits) {\
-        name ret;\
-        ret.bits = bits;\
-        return ret;\
+        return std::bit_cast<name>(bits);\
     }\
+private:\
+    D bits_;\
 };\
 
 #define DEF_U8_STRONG_TYPE_GRADATION(name, fn_name, T, start, stop, step) DEF_STRONG_TYPE_GRADATION(name, fn_name, uint8_t, T, start, stop, step)

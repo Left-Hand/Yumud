@@ -1304,7 +1304,7 @@ IResult<> NmbsServer::handle_read_device_identification() {
     if (msg_status_.broadcast == false) {
         char str[NMBS_DEVICE_IDENTIFICATION_STRING_LENGTH];
 
-        nmbs_bitfield_256 map = nmbs_bitfield_256::from_zero();
+        nmbs_bitfield_256 map = nmbs_bitfield_256::zero();
 
         res = callback(NmbsEvents::ReadDeviceIdentificationMap{
             .map = map}

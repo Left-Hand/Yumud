@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/timer/timer_oc.hpp"
+#include "hal/timer/bipolarity_abstract.hpp"
 #include "digipw/prelude/abdq.hpp"
 
 namespace ymd::digipw{
@@ -60,8 +60,8 @@ public:
     }
 private:
 
-    hal::TimerOcPair channel_a_;
-    hal::TimerOcPair channel_b_;
+    hal::BipolarityTimerOcPair channel_a_;
+    hal::BipolarityTimerOcPair channel_b_;
 };
 
 }

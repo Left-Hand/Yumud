@@ -93,7 +93,7 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         const auto res = i2c_drv_.write_reg(
             uint8_t(T::REG_ADDR), 
-            reg.as_bits(), std::endian::little);
+            reg.to_bits(), std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -103,7 +103,7 @@ private:
     [[nodiscard]] IResult<> read_reg(T & reg){
         const auto res = i2c_drv_.read_reg(
             uint8_t(T::REG_ADDR), 
-            reg.as_mut_bits(), std::endian::little);
+            reg.as_bits_mut(), std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

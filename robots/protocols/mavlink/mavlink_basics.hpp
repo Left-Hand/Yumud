@@ -8,7 +8,7 @@ namespace ymd::mavlink{
 
 
 
-struct MavlinkHeaderV1{
+struct [[nodiscard]] MavlinkHeaderV1{
     const uint8_t header = 0xFE;
     uint8_t len;
     uint8_t seq;
@@ -16,24 +16,24 @@ struct MavlinkHeaderV1{
     uint8_t compid;
     uint8_t msgid;
 
-    std::span<const uint8_t> as_bytes() const{
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const{
         return std::span<const uint8_t>(
             reinterpret_cast<const uint8_t *>(&header), 6);
     }
 };
 
-struct MavlinkTrailerV1{
+struct [[nodiscard]] MavlinkTrailerV1{
     uint8_t crc_low;
     uint8_t crc_high;
 
-    static MavlinkTrailerV1 from_buf(std::span<const uint8_t> buf){
+    static constexpr MavlinkTrailerV1 from_bytes(std::span<const uint8_t> buf){
         const auto crc = calc_crc(buf);
         const uint8_t low = crc & 0xFF;
         const uint8_t high = (crc >> 8) & 0xFF;
         return MavlinkTrailerV1{low, high};
     }
 
-    static uint16_t calc_crc(std::span<const uint8_t> buf) {
+    [[nodiscard]] static constexpr uint16_t calc_crc(std::span<const uint8_t> buf) {
         uint16_t crc = 0xFFFF; // 初始值为 0xFFFF
         for (auto b : buf) {
             crc ^= static_cast<uint16_t>(b) << 8;
@@ -48,13 +48,13 @@ struct MavlinkTrailerV1{
         return crc;
     }
 
-    std::span<const uint8_t> as_bytes() const{
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const{
         return std::span<const uint8_t>(
             reinterpret_cast<const uint8_t *>(&crc_low), 2);
     }
 };
 
-struct MavlinkFrame{
+struct [[nodiscrad]] MavlinkFrame{
     MavlinkHeaderV1 header;
     std::span<const uint8_t> payload;
     MavlinkTrailerV1 trailer;

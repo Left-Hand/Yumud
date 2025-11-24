@@ -144,7 +144,7 @@ public:
             CanProtocolIntf(_can, _motor.id()),
             motor(_motor){;}
 
-        void parseCanmsg(const CanClassicMsg & msg) override;
+        void parseCanmsg(const CanClassicFrame & frame) override;
     };
 
     friend class CanProtocol;

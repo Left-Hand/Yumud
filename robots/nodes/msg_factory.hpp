@@ -1,7 +1,7 @@
 #pragma once
 
 #include "node_role.hpp"
-#include "primitive/can/can_msg.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 #include "core/utils/serde.hpp"
 
 
@@ -41,7 +41,7 @@ static constexpr auto comb_role_and_cmd(const NodeRole role, const CommandKind c
     const auto id_u11 = uint16_t(
         uint16_t(uint16_t(std::bit_cast<uint8_t>(role)) << 7) 
         | uint16_t(std::bit_cast<uint8_t>(cmd) & 0x7f));
-    return hal::CanStdId(id_u11);
+    return hal::CanStdId::from_bits(id_u11);
 };
 
 template<typename CommandKind>
@@ -49,10 +49,13 @@ struct MsgFactory{
     const NodeRole role;
 
     template<typename T>
-    constexpr hal::CanClassicMsg operator()(const T cmd) const {
+    constexpr hal::CanClassicFrame operator()(const T cmd) const {
         const auto id = comb_role_and_cmd(role, command_to_kind_v<CommandKind, T>);
         const auto generator = serde::make_serialize_generator<serde::RawLeBytes>(cmd);
-        return hal::CanClassicMsg::from_iter(id, generator).unwrap();
+        return hal::CanClassicFrame(
+            id, 
+            hal::CanClassicPayload::try_from_iter(generator).unwrap()
+        );
     };
 };
 

@@ -38,7 +38,7 @@ struct MT6835_Prelude{
         uint8_t angle_4_0:5;
         uint8_t crc;
 
-        [[nodiscard]] std::span<uint8_t, 4> as_mut_bytes(){
+        [[nodiscard]] std::span<uint8_t, 4> as_bytes_mut(){
             return std::span<uint8_t, 4>(reinterpret_cast<uint8_t*>(this), 4);
         }
 

@@ -52,11 +52,11 @@ public:
 
 
 
-    [[nodiscard]] __fast_inline constexpr bool has_point(const Vec2<T> & pt) const{
+    [[nodiscard]] __fast_inline constexpr bool contains_point(const Vec2<T> & pt) const{
         return is_equal_approx(distance_to(pt), 0);
     }
 
-    [[nodiscard]] __fast_inline constexpr bool parallel_with(const Ray2 & other) const{
+    [[nodiscard]] __fast_inline constexpr bool is_parallel_with(const Ray2 & other) const{
         return is_equal_approx(this->orientation, other.orientation);
     }
 

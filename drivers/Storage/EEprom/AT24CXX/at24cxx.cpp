@@ -25,11 +25,11 @@ IResult<> AT24CXX::write_burst(const Address addr, const std::span<const uint8_t
     // DEBUG_PRINTLN(addr, pbuf);
     // return Ok();
     if (is_small_chip()){
-        if(const auto res = i2c_drv_.write_burst(uint8_t(addr.as_u32()), pbuf);
+        if(const auto res = i2c_drv_.write_burst(uint8_t(addr.to_u32()), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else{
-        if(const auto res = i2c_drv_.write_burst(uint16_t(addr.as_u32()), pbuf);
+        if(const auto res = i2c_drv_.write_burst(uint16_t(addr.to_u32()), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -39,11 +39,11 @@ IResult<> AT24CXX::read_burst(const Address addr, const std::span<uint8_t> pbuf)
     // DEBUG_PRINTLN(addr, pbuf);
     // return Ok();
     if (is_small_chip()){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr.as_u32()), pbuf);
+        if(const auto res = i2c_drv_.read_burst(uint8_t(addr.to_u32()), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else{
-        if(const auto res = i2c_drv_.read_burst(uint16_t(addr.as_u32()), pbuf);
+        if(const auto res = i2c_drv_.read_burst(uint16_t(addr.to_u32()), pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

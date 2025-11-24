@@ -164,7 +164,7 @@ struct SerializeGenerator<RawLeBytes, fixed_t<Q, D>>{
     }
 
     [[nodiscard]] static constexpr std::array<Item, sizeof(D)> serialize(const fixed_t<Q, D> num){
-        const auto inum = num.as_bits();
+        const auto inum = num.to_bits();
         return std::bit_cast<std::array<Item, sizeof(D)>>(inum);
     } 
 private:
@@ -215,7 +215,7 @@ struct SerializeGenerator<RawLeBytes, bf16>{
     }
 
     static constexpr std::array<uint8_t, N> serialize(const bf16 num){
-        return std::bit_cast<std::array<uint8_t, N>>(num.as_bits());
+        return std::bit_cast<std::array<uint8_t, N>>(num.to_bits());
     } 
 private:
     using Buf = std::array<uint8_t, N>;

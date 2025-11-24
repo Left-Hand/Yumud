@@ -124,7 +124,7 @@ IResult<real_t> SC8815::get_bus_volt(){
     auto & reg = regs_.vbus_fb_value_reg;
     if(const auto res = read_reg(reg); 
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(inv_b10(reg.as_bits(), 1) * ratio / 1000);
+    return Ok(inv_b10(reg.to_bits(), 1) * ratio / 1000);
 }
 
 IResult<real_t> SC8815::get_bus_curr(){
@@ -133,7 +133,7 @@ IResult<real_t> SC8815::get_bus_curr(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
 
-    return Ok(0.05_r * ratio * inv_b10(uint16_t(reg.as_bits()), 1) / 
+    return Ok(0.05_r * ratio * inv_b10(uint16_t(reg.to_bits()), 1) / 
         (3 * bus_shunt_res_mohms_));
 }
 
@@ -142,7 +142,7 @@ IResult<real_t> SC8815::get_bat_volt(){
     auto & reg = regs_.vbat_fb_value_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(inv_b10(reg.as_bits(), 1) * ratio * 2 / 1000);
+    return Ok(inv_b10(reg.to_bits(), 1) * ratio * 2 / 1000);
 }
 
 IResult<real_t> SC8815::get_bat_curr(){
@@ -150,7 +150,7 @@ IResult<real_t> SC8815::get_bat_curr(){
     auto & reg = regs_.ibat_value_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok((0.05_r * ratio * inv_b10(reg.as_bits(), 1) / 
+    return Ok((0.05_r * ratio * inv_b10(reg.to_bits(), 1) / 
         (3 * bus_shunt_res_mohms_)));
 }
 
@@ -159,13 +159,13 @@ IResult<real_t> SC8815::get_adin_volt(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
 
-    return Ok(real_t(inv_b10(reg.as_bits(), 1)) / 1000);
+    return Ok(real_t(inv_b10(reg.to_bits(), 1)) / 1000);
 }
 
 IResult<> SC8815::set_bus_curr_limit(const real_t limit_ma){
     const auto ratio = to_num(regs_.ratio_reg.ibus_ratio);
     auto reg = RegCopy(regs_.ibus_lim_set_reg);
-    reg.as_mut_bits() = uint16_t(
+    reg.as_bits_mut() = uint16_t(
         16 * (limit_ma * 1000) * bus_shunt_res_mohms_ / (625 * ratio) - 1
     );
 
@@ -175,7 +175,7 @@ IResult<> SC8815::set_bus_curr_limit(const real_t limit_ma){
 IResult<> SC8815::set_bat_curr_limit(const real_t limit_ma){
     const auto ratio = to_num(regs_.ratio_reg.ibat_ratio);
     auto reg = RegCopy(regs_.ibat_lim_set_reg);
-    reg.as_mut_bits() = uint16_t(
+    reg.as_bits_mut() = uint16_t(
         16 * (limit_ma * 1000) * bus_shunt_res_mohms_ / (625 * ratio) - 1
     );
 
@@ -205,7 +205,7 @@ IResult<> SC8815::set_output_volt(const real_t volt){
         //写入到 SC8815 VBUSREF_E_SET 寄存器
 
         auto reg = RegCopy(regs_.vbus_ref_e_set_reg);
-        reg.as_mut_bits() = uint16_t(tmp1 | (tmp2 << 14));
+        reg.as_bits_mut() = uint16_t(tmp1 | (tmp2 << 14));
         return write_reg(reg);
     }else{
         const auto ratio = to_num(regs_.ratio_reg.vbus_ratio); //取得 VBUS 电压的比率
@@ -222,7 +222,7 @@ IResult<> SC8815::set_output_volt(const real_t volt){
         //得到 VBUSREF 寄存器 1 的值
         const uint16_t tmp1 = (tmp1 - tmp2 - 1) / 4;
         auto reg = RegCopy(regs_.vbus_ref_i_set_reg);
-        reg.as_mut_bits() = uint16_t(tmp1 | (tmp2 << 14));
+        reg.as_bits_mut() = uint16_t(tmp1 | (tmp2 << 14));
 
         return write_reg(reg);
     }
@@ -232,14 +232,14 @@ IResult<> SC8815::set_output_volt(const real_t volt){
 
 IResult<> SC8815::set_internal_vbus_ref(const real_t volt){
     auto reg = RegCopy(regs_.vbus_ref_i_set_reg);
-    reg.as_mut_bits() = b10(int(volt * 1000), 2);
+    reg.as_bits_mut() = b10(int(volt * 1000), 2);
     return write_reg(reg);
 
 }
 
 IResult<> SC8815::set_external_vbus_ref(const real_t volt){
     auto reg = RegCopy(regs_.vbus_ref_e_set_reg);
-    reg.as_mut_bits() = b10(int(volt * 1000), 2);
+    reg.as_bits_mut() = b10(int(volt * 1000), 2);
     return write_reg(reg);
 
 }
@@ -333,7 +333,7 @@ IResult<SC8815::Interrupts> SC8815::interrupts(){
 
 IResult<> SC8815::reconf_interrupt_mask(const Interrupts mask){
     auto reg = RegCopy(regs_.mask_reg);
-    reg.as_mut_bits() = std::bit_cast<uint8_t>(mask);
+    reg.as_bits_mut() = std::bit_cast<uint8_t>(mask);
     return write_reg(reg);
 }
 

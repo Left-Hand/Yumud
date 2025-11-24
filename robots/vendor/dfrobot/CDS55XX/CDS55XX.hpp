@@ -68,7 +68,7 @@ struct CDS55XX_Prelude {
 
         constexpr Command(Kind kind):kind_(kind){}
 
-        constexpr uint8_t as_u8() const {return static_cast<uint8_t>(kind_);}
+        constexpr uint8_t to_u8() const {return static_cast<uint8_t>(kind_);}
     private:
         Kind kind_;
     };
@@ -78,7 +78,7 @@ struct CDS55XX_Prelude {
     class ServoId{
     public:
         explicit constexpr ServoId(uint8_t id):id_(id){}
-        constexpr uint8_t as_u8() const {return id_;}
+        constexpr uint8_t to_u8() const {return id_;}
     private:
         uint8_t id_;
     };
@@ -164,7 +164,7 @@ public:
 private:
     static constexpr uint8_t calc_checksum(const ServoId id, std::span<const uint8_t> pbuf){
         const size_t len = pbuf.size() + 1;
-        const uint32_t sum = id.as_u8() + len + std::accumulate(pbuf.begin(), pbuf.end(), 0);
+        const uint32_t sum = id.to_u8() + len + std::accumulate(pbuf.begin(), pbuf.end(), 0);
         return uint8_t(~sum);
     }
 
@@ -174,7 +174,7 @@ private:
     static constexpr std::array<uint8_t, N + 5> assembly_payload(const ServoId id, std::span<const uint8_t, N> payload){
         VectorOnArray<uint8_t, N + 5> ret;
         ret.insert(ret.begin(), CDS55XX_Prelude::HEADER.begin(), CDS55XX_Prelude::HEADER.end());
-        ret.push_back(id.as_u8());
+        ret.push_back(id.to_u8());
         const auto len = payload.size() + 1;
         ret.push_back(len);
         ret.insert(ret.end(), payload.begin(), payload.end());
@@ -192,7 +192,7 @@ private:
     template<size_t N>
     static constexpr std::array<uint8_t, N + 2> make_write_data_payload(const uint8_t addr, std::span<const uint8_t, N> data){
         VectorOnArray<uint8_t, N + 2> ret;
-        ret.push_back(Command(Command::Kind::WriteData).as_u8());
+        ret.push_back(Command(Command::Kind::WriteData).to_u8());
         ret.push_back(addr);
         ret.insert(ret.end(), data.begin(), data.end());
         return ret.get();
@@ -201,7 +201,7 @@ private:
     template<size_t N>
     static constexpr std::array<uint8_t, N + 2> make_sync_write_payload(const uint8_t addr, std::span<const uint8_t, N> data){
         VectorOnArray<uint8_t, N + 2> ret;
-        ret.push_back(Command(Command::Kind::WriteData).as_u8());
+        ret.push_back(Command(Command::Kind::WriteData).to_u8());
         ret.push_back(addr);
         ret.insert(ret.end(), data.begin(), data.end());
         return ret.get();
@@ -209,7 +209,7 @@ private:
 
     static constexpr std::array<uint8_t, 3> make_read_data_payload(const uint8_t addr, const uint8_t len){
         VectorOnArray<uint8_t, 3> ret;
-        ret.push_back(Command(Command::Kind::ReadData).as_u8());
+        ret.push_back(Command(Command::Kind::ReadData).to_u8());
         ret.push_back(addr);
         ret.push_back(len);
         return ret.get();
@@ -218,7 +218,7 @@ private:
     template<size_t N>
     static constexpr std::array<uint8_t, N + 2> make_async_write_data_payload(const uint8_t addr, std::span<const uint8_t, N> data){
         VectorOnArray<uint8_t, N + 2> ret;
-        ret.push_back(Command(Command::Kind::AsyncWrite).as_u8());
+        ret.push_back(Command(Command::Kind::AsyncWrite).to_u8());
         ret.push_back(addr);
         ret.insert(ret.end(), data.begin(), data.end());
         return ret.get();
@@ -226,19 +226,19 @@ private:
 
     static constexpr std::array<uint8_t, 1> make_invoke_async_payload(){
         VectorOnArray<uint8_t, 1> ret;
-        ret.push_back(Command(Command::Kind::InvokeAsync).as_u8());
+        ret.push_back(Command(Command::Kind::InvokeAsync).to_u8());
         return ret.get();
     }
 
     static constexpr std::array<uint8_t, 1> make_ping_payload(){
         VectorOnArray<uint8_t, 1> ret;
-        ret.push_back(Command(Command::Kind::Ping).as_u8());
+        ret.push_back(Command(Command::Kind::Ping).to_u8());
         return ret.get();
     }
 
     static constexpr std::array<uint8_t, 1> make_reset_payload(){
         VectorOnArray<uint8_t, 1> ret;
-        ret.push_back(Command(Command::Kind::Reset).as_u8());
+        ret.push_back(Command(Command::Kind::Reset).to_u8());
         return ret.get();
     }
     // static constexpr void static_test(){

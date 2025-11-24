@@ -53,7 +53,7 @@ struct [[nodiscard]] CanTq{
         return Self{static_cast<uint8_t>(bits)};
     }
 
-    [[nodiscard]] constexpr uint8_t as_bits() const {return bits_;}
+    [[nodiscard]] constexpr uint8_t to_bits() const {return bits_;}
     [[nodiscard]] constexpr uint8_t count() const {return static_cast<uint8_t>(bits_ + 1);}
 
 private:

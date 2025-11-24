@@ -93,7 +93,7 @@ private:
         const auto len = pbuf.size();
         // DEBUG_PRINTLN(len, pbuf[0], static_cast<T>(pbuf[0]));
         for (size_t i = 0; i < len; i++){
-            (void)spi_.fast_write(color_cast<RGB565>(pbuf[i]).as_u16());
+            (void)spi_.fast_write(color_cast<RGB565>(pbuf[i]).to_u16());
             // (void)spi_.write(static_cast<uint32_t>(p[i]));
         } 
 
@@ -121,7 +121,7 @@ private:
             return Err(res.unwrap_err());
         }
         for (size_t i = 0; i < len; i++){
-            if(const auto res = spi_.write((data).as_u16());
+            if(const auto res = spi_.write((data).to_u16());
                 res.is_err()) 
                 return Err(res.unwrap_err());
         } 

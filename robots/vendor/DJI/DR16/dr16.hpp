@@ -39,12 +39,12 @@ struct Frame{
         return {reinterpret_cast<const uint8_t*>(this), sizeof(Self)};
     }
 
-    [[nodiscard]] std::span<uint8_t> as_mut_bytes() {
+    [[nodiscard]] std::span<uint8_t> as_bytes_mut() {
         return {reinterpret_cast<uint8_t*>(this), sizeof(Self)};
     }
 
     void reset(){
-        std::fill(as_mut_bytes().begin(), as_mut_bytes().end(), 0x00);
+        std::fill(as_bytes_mut().begin(), as_bytes_mut().end(), 0x00);
     }
 }__packed;
 

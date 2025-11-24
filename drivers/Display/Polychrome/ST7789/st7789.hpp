@@ -89,7 +89,7 @@ public:
     ){
         if(const auto res = setpos_unchecked(pos);
             res.is_err()) return res;
-        if(const auto res = phy_.write_data16(color.as_u16());
+        if(const auto res = phy_.write_data16(color.to_u16());
             res.is_err()) return res;
         return Ok();
     }

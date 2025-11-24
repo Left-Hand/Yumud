@@ -325,17 +325,17 @@ class AXP192 final: public AXP192_Prelude{
 
     IResult<> set_dcdc1_voltage(const DcdcVoltage voltage){
         auto reg = RegCopy(pw_regs_.dcdc1_voltage_setting_reg);
-        reg.dcdc1_voltage_setting = voltage.as_u8();
+        reg.dcdc1_voltage_setting = voltage.to_u8();
         return write_reg(reg);
     }
     IResult<> set_dcdc2_voltage(const DcdcVoltage voltage){
         auto reg = RegCopy(pw_regs_.dcdc2_voltage_setting_reg);
-        reg.dcdc2_voltage_setting = voltage.as_u8();
+        reg.dcdc2_voltage_setting = voltage.to_u8();
         return write_reg(reg);
     }
     IResult<> set_dcdc3_voltage(const DcdcVoltage voltage){
         auto reg = RegCopy(pw_regs_.dcdc3_voltage_setting_reg);
-        reg.dcdc3_voltage_setting = voltage.as_u8();
+        reg.dcdc3_voltage_setting = voltage.to_u8();
         return write_reg(reg);
     }
 private:
@@ -363,7 +363,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
+        if(const auto res = write_reg(T::ADDRESS, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -371,7 +371,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(T::ADDRESS, reg.as_mut_bits());
+        return read_reg(T::ADDRESS, reg.as_bits_mut());
     }
 };
 

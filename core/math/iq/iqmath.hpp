@@ -17,19 +17,19 @@ namespace ymd{
 
     template<size_t Q>
     __fast_inline constexpr fixed_t<31, int32_t> sinf(const fixed_t<Q, int32_t> x){
-        return fixed_t<31, int32_t>(iqmath::details::__IQNgetCosSinTemplate<Q>(x.as_bits(), 
+        return fixed_t<31, int32_t>(iqmath::details::__IQNgetCosSinTemplate<Q>(x.to_bits(), 
             iqmath::details::__IQ31getSinDispatcher));
     }
     
     template<size_t Q>
     __fast_inline constexpr fixed_t<31, int32_t> cosf(const fixed_t<Q, int32_t> x){
-        return fixed_t<31, int32_t>(iqmath::details::__IQNgetCosSinTemplate<Q>(x.as_bits(), 
+        return fixed_t<31, int32_t>(iqmath::details::__IQNgetCosSinTemplate<Q>(x.to_bits(), 
             iqmath::details::__IQ31getCosDispatcher));
     }
     
     template<size_t Q>
     __fast_inline constexpr std::array<fixed_t<31, int32_t>, 2> sincos(const fixed_t<Q, int32_t> x){
-        auto res = (iqmath::details::__IQNgetCosSinTemplate<Q>(x.as_bits(), 
+        auto res = (iqmath::details::__IQNgetCosSinTemplate<Q>(x.to_bits(), 
             iqmath::details::__IQ31getSinCosDispatcher));
         return {res.sin, res.cos};
     }
@@ -37,21 +37,21 @@ namespace ymd{
     template<size_t Q, typename D>
     requires (sizeof(D) == 4)
     __fast_inline constexpr fixed_t<31, int32_t> sinpu(const fixed_t<Q, D> x){
-        return (iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.as_bits(), 
+        return (iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.to_bits(), 
             iqmath::details::__IQ31getSinDispatcher));
     }
     
     template<size_t Q, typename D>
     requires (sizeof(D) == 4)
     __fast_inline constexpr fixed_t<31, int32_t> cospu(const fixed_t<Q, D> x){
-        return (iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.as_bits(), 
+        return (iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.to_bits(), 
             iqmath::details::__IQ31getCosDispatcher));
     }
     
     template<size_t Q, typename D>
     requires (sizeof(D) == 4)
     __fast_inline constexpr std::array<fixed_t<31, int32_t>, 2> sincospu(const fixed_t<Q, D> x){
-        auto res = (iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.as_bits(), 
+        auto res = (iqmath::details::__IQNgetCosSinPUTemplate<Q>(x.to_bits(), 
             iqmath::details::__IQ31getSinCosDispatcher));
         return {res.sin, res.cos};
     }

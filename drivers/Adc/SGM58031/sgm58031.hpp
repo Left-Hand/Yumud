@@ -26,7 +26,7 @@ public:
     [[nodiscard]] IResult<> set_fs(const FS fs);
     [[nodiscard]] IResult<> set_fs(const uq16 fs, const uq16 vref);
     [[nodiscard]] IResult<> set_trim(const iq16 trim);
-    [[nodiscard]] IResult<> enable_ch3_as_mut_bits(const Enable en);
+    [[nodiscard]] IResult<> enable_ch3_as_bits_mut(const Enable en);
 private:
     hal::I2cDrv i2c_drv_;
     SGM58031_Regset regs_ = {};
@@ -35,7 +35,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(
-            uint8_t(T::ADDRESS), reg.as_bits(), std::endian::big);
+            uint8_t(T::ADDRESS), reg.to_bits(), std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -44,7 +44,7 @@ private:
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(
-            uint8_t(T::ADDRESS), reg.as_mut_bits(), std::endian::big);
+            uint8_t(T::ADDRESS), reg.as_bits_mut(), std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
