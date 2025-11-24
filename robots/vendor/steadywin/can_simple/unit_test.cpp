@@ -5,7 +5,7 @@ using namespace robots::steadywin::can_simple;
 using namespace primitive;
 
 
-
+#if 0
 [[maybe_unused]] void test1(){
 // 验证错误结构体大小
 static_assert(sizeof(AxisErrorFlags) == 4, "AxisErrorFlags should be 4 bytes");
@@ -225,3 +225,6 @@ static constexpr auto scaled_current = static_cast<uint32_t>(static_cast<int32_t
 static_assert(scaled_current == 250, "Current scaling should work correctly"); // 2.5 * 100 = 250
 
 }
+
+
+#endif

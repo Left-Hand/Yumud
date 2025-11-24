@@ -7,7 +7,7 @@
 #include "core/utils/bits/bits_caster.hpp"
 #include "core/math/float/fp32.hpp"
 #include "core/utils/enum/strong_type_gradation.hpp"
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/real.hpp"
 
 // 伺泰威对Odrive通讯消息进行了魔改 不能直接等效于Odrive
 // 参考Odrive的源码，所有Can报文的数据载荷都是8字节
@@ -20,7 +20,7 @@ using namespace ymd::hal;
 
 namespace mit{
 
-#if 0
+#if 1
 // p_des:-12.5到 12.5, 单位rad;
 // 数据类型为uint16_t, 取值范围为0~65535, 其中0代表-12.5,65535代表 12.5,
 //  0~65535中间的所有数值，按比例映射 至-12.5~12.5。
@@ -140,6 +140,10 @@ struct [[nodiscard]] EncoderErrorFlags{
 static_assert(sizeof(EncoderErrorFlags) == 4);
 
 enum class [[nodiscard]] ErrorType:uint8_t{ 
+    Motor = 0,
+    Encoder = 1,
+    Controller = 3,
+    System = 4,
 };
 
 static_assert(sizeof(ErrorType) == 1);
@@ -183,31 +187,31 @@ enum class [[nodiscard]] AxisState:uint8_t{
 };
 
 enum class [[nodiscard]] CommandKind:uint8_t{
-    Undefined,
-    OdriveHeartbeat = 1,
-    OdriveEstop,
-    GetMotorError,
-    GetEncoderError,
-    GetSensorlessError,
-    SetAxisNodeId,
-    SetAxisRequestedState,
-    SetAxisStartupConfig,
-    GetEncoderEstimates,
-    GetEncoderCount,
-    SetControllerModes,
-    SetInputPos,
-    SetInputVel,
-    SetInputCurrent,
-    SetVelLimit,
-    StartAnticogging,
-    SetTrajVelLimit,
-    SetTrajAccelLimits,
-    SetTrajAPerCss,
-    GetIq,
-    GetSensorlessEstimates,
-    ResetOdrive,
-    GetVbusVoltage,
-    ClearErrors,
+    Undefined = 0,
+    Heartbeat = 1,
+    Estop = 2,
+    GetMotorError = 3,
+    RxSdo = 4,
+    TxSdo = 5,
+    SetAxisNodeId = 6,
+    SetAxisState = 7,
+    MitControl = 8,
+    GetEncoderEstimates = 9,
+    GetMotorCurrent = 10,
+    SetControllerMode = 11,
+    SetInputPosition = 12,
+    SetInputVelocity = 13,
+    SetInputCurrent = 14,
+    SetVelLimit = 15,
+    StartAnticogging = 16,
+    SetTrajVelLimit = 17,
+    SetTrajAccelLimits = 18,
+    SetTrajAPerCss = 19,
+    GetIq = 20,
+    GetSensorlessEstimates = 21,
+    ResetOdrive = 22,
+    GetVbusVoltage = 23,
+    ClearErrors = 24,
 };
 
 enum class [[nodiscard]] ControlMode:uint8_t {
@@ -251,21 +255,22 @@ struct [[nodiscard]] Command{
 
     constexpr CommandKind kind() const{ return kind_; }
     static constexpr const char * err_to_str(const Kind kind){
+        #if 0
         switch(kind){
             case Kind::Undefined:return "Undefined";
-            case Kind::OdriveHeartbeat:return "OdriveHeartbeat";
-            case Kind::OdriveEstop:return "OdriveEstop";
+            case Kind::Heartbeat:return "Heartbeat";
+            case Kind::Estop:return "Estop";
             case Kind::GetMotorError:return "GetMotorError";
-            case Kind::GetEncoderError:return "GetEncoderError";
-            case Kind::GetSensorlessError:return "GetSensorlessError";
+            case Kind::RxSdo:return "RxSdo";
+            case Kind::TxSdo:return "TxSdo";
             case Kind::SetAxisNodeId:return "SetAxisNodeId";
             case Kind::SetAxisRequestedState:return "SetAxisRequestedState";
             case Kind::SetAxisStartupConfig:return "SetAxisStartupConfig";
             case Kind::GetEncoderEstimates:return "GetEncoderEstimates";
             case Kind::GetEncoderCount:return "GetEncoderCount";
-            case Kind::SetControllerModes:return "SetControllerModes";
-            case Kind::SetInputPos:return "SetInputPos";
-            case Kind::SetInputVel:return "SetInputVel";
+            case Kind::SetControllerMode:return "SetControllerMode";
+            case Kind::SetInputPosition:return "SetInputPosition";
+            case Kind::SetInputVelocity:return "SetInputVelocity";
             case Kind::SetInputCurrent:return "SetInputCurrent";
             case Kind::SetVelLimit:return "SetVelLimit";
             case Kind::StartAnticogging:return "StartAnticogging";
@@ -278,6 +283,7 @@ struct [[nodiscard]] Command{
             case Kind::GetVbusVoltage:return "GetVbusVoltage";
             case Kind::ClearErrors:return "ClearErrors";
         }
+        #endif
         return nullptr;
     }
 
@@ -330,7 +336,7 @@ using namespace primitive;
 namespace msgs{
 struct [[nodiscard]] Heartbeat{
     using Self = Heartbeat;
-    static constexpr CommandKind command =  Command::OdriveHeartbeat;
+    static constexpr CommandKind command =  Command::Heartbeat;
     AxisErrorFlags axis_error;
     AxisState axis_state;
 
@@ -351,8 +357,8 @@ struct [[nodiscard]] Heartbeat{
     // 失，即通信不稳
     uint8_t life;
 
-    static constexpr Self from_u8x8(const std::array<uint8_t, 8> bytes){
-        return std::bit_cast<Self>(bytes);;
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
     }
 
     constexpr hal::CanClassicPayload to_payload() const {
@@ -362,357 +368,457 @@ struct [[nodiscard]] Heartbeat{
 
 static_assert(sizeof(Heartbeat) == 8);
 
+// CMD ID: 0x002（主机→电机）⽆参数⽆数据。
+// 此指令会导致电机紧急停机，并报 ESTOP_REQUESTED 异常
 struct [[nodiscard]] Estop{
-    static constexpr CommandKind command = Command::OdriveEstop;
+    static constexpr CommandKind command = Command::Estop;
 };
 
 struct [[nodiscard]] GetError{
+    static constexpr CommandKind command = Command::GetMotorError;
 };
 
+// CMD ID: 0x003（电机→主机）
 struct [[nodiscard]] GetErrorReq{
     using Self = GetErrorReq;
     static constexpr CommandKind command = Command::GetMotorError;
     ErrorType type;
 };
 
+// CMD ID: 0x003（电机←主机）
 struct [[nodiscard]] GetErrorResp{
     using Self = GetErrorResp;
     static constexpr CommandKind command = Command::GetMotorError;
-    Flags flags;
+    union{
+        uint64_t motor_exception;
+        uint32_t encoder_exception;
+        uint32_t controller_exception;
+        uint32_t system_exception;
+    };
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
 };
 
-struct [[nodiscard]] EncoderCount{
-    int32_t shadow_count;
-    int32_t cpr_count;
+static_assert(sizeof(GetErrorResp) == 8);   
+
+
+// struct [[nodiscard]] EncoderCount{
+//     static constexpr CommandKind command = Command::GetEncoderCount;
+//     int32_t shadow_count;
+//     int32_t cpr_count;
+// };
+struct [[nodiscard]] RxSdo{
+    using Self = RxSdo;
+    static constexpr CommandKind command = Command::RxSdo;
+    bool is_read;
+    uint32_t endpoint_id;
+    uint8_t __resv__;
+    uint32_t value;
 };
 
-struct [[nodiscard]] EncoderEstimates{
+struct [[nodiscard]] TxSdo{
+    using Self = RxSdo;
+    static constexpr CommandKind command = Command::TxSdo;
+    bool is_read;
+    uint32_t endpoint_id;
+    uint8_t __resv__;
+    uint32_t value;
+};
+
+// CMD ID: 0x006（主机→电机）
+struct [[nodiscard]] SetAxisNodeId{
+    using Self = SetAxisNodeId;
+    static constexpr CommandKind command = Command::SetAxisNodeId;
+    uint32_t node_id;
+};
+
+
+// CMD ID: 0x007（主机→电机）
+struct [[nodiscard]] SetAxisState{
+    using Self = SetAxisState;
+    static constexpr CommandKind command = Command::SetAxisState;
+    AxisState state;
+};
+
+
+struct [[nodiscard]] MitControl{
+    
+    using Self = MitControl;
+    static constexpr CommandKind command = Command::MitControl;
+
+    mit::MitPositionCode_u16 position;
+    mit::MitSpeedCode_u12 speed;
+    mit::MitKpCode_u12 kp;
+    mit::MitKdCode_u12 kd;
+    mit::MitTorqueCode_u12 torque;
+
+    constexpr hal::CanClassicPayload to_payload(){
+        std::array<uint8_t, 8> bytes;
+        bytes[0] = static_cast<uint8_t>(position.to_bits() >> 8);
+        bytes[1] = static_cast<uint8_t>(position.to_bits() & 0xff);
+        bytes[2] = static_cast<uint8_t>(speed.to_bits() >> 4);
+        bytes[3] = static_cast<uint8_t>(((speed.to_bits() & 0xf) << 4) | ((kp.to_bits() >> 8)));
+        bytes[4] = static_cast<uint8_t>(kp.to_bits() & 0xff);
+        bytes[5] = static_cast<uint8_t>(kd.to_bits() >> 4);
+        bytes[6] = static_cast<uint8_t>(((kd.to_bits() & 0xf) << 4) | ((torque.to_bits() >> 8)));
+        bytes[7] = static_cast<uint8_t>(torque.to_bits() & 0xf);
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(bytes));
+    }
+
+    constexpr Self from_bytes(std::span<const uint8_t, 8> bytes) const {
+        const uint16_t position_bits = 
+            (bytes[0] << 8) | bytes[1];
+        const uint16_t speed_bits = 
+            (bytes[2] << 4) | (bytes[3] >> 4);
+        const uint16_t kp_bits = 
+            ((bytes[3] & 0x0f) << 8) | (bytes[4]);
+        const uint16_t kd_bits = 
+            (bytes[5] << 4) | (bytes[6] >> 4);
+        const uint16_t torque_bits = 
+            ((bytes[6] & 0x0f) << 8) | (bytes[7]);
+        return Self{
+            .position = mit::MitPositionCode_u16::from_bits(position_bits),
+            .speed = mit::MitSpeedCode_u12::from_bits(speed_bits),
+            .kp = mit::MitKpCode_u12::from_bits(kp_bits),
+            .kd = mit::MitKdCode_u12::from_bits(kd_bits),
+            .torque = mit::MitTorqueCode_u12::from_bits(torque_bits)
+        };
+    };
+};
+
+//ID 0x009
+struct [[nodiscard]] GetEncoderEstimates{
+    using Self = GetEncoderEstimates;
+    static constexpr CommandKind command = Command::GetEncoderEstimates;
     fp32 position;
     fp32 velocity;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
 };
 
-struct [[nodiscard]] MotorCurrent{
-    fp32 setpoint;
-    fp32 measurement;
+//ID 0x00A
+struct [[nodiscard]] GetMotorCurrent{
+    using Self = GetMotorCurrent;
+    static constexpr CommandKind command = Command::GetMotorCurrent;
+    int32_t shadow_count;
+    int32_t count_n_cpr;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
 };
 
-struct [[nodiscard]] VbusVoltage{
-    fp32 voltage;
+//ID 0x00B
+struct [[nodiscard]] SetCotrollerMode{
+    using Self = SetCotrollerMode;
+    static constexpr CommandKind command = Command::SetControllerMode;
+    ControlMode control_mode;
+    InputMode input_mode;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return Self {
+            .control_mode = std::bit_cast<ControlMode>(payload[0]),
+            .input_mode = std::bit_cast<InputMode>(payload[4])
+        };
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        //stupid padding
+        std::array<uint8_t, 8> bytes = {
+            std::bit_cast<uint8_t>(control_mode),
+            0, 0, 0,
+            std::bit_cast<uint8_t>(input_mode),
+            0, 0, 0
+        };
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(bytes));
+    }
 };
 
-using EncoderErrorFlags = primitive::EncoderErrorFlags;
-using MotorErrorFlags = primitive::MotorErrorFlags;
+//ID 0x00C
+struct [[nodiscard]] SetInputPosition{ 
+    using Self = SetInputPosition;
+    static constexpr auto command = CommandKind{0x00c};
+
+    fp32 input_position;
+    int16_t vel_ff;
+    int16_t torque_ff;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+struct [[nodiscard]] SetInputVelocity{ 
+    using Self = SetInputVelocity;
+    static constexpr auto command = CommandKind{0x00d};
+
+    fp32 vel_ff;
+    fp32 torque_ff;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+struct [[nodiscard]] SetInputTorque{ 
+    using Self = SetInputTorque;
+    static constexpr auto command = CommandKind{0x00e};
+
+    fp32 torque_ff;
+    uint32_t __padding__ = 0;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+
+struct [[nodiscard]] SetLimits{
+    using Self = SetInputTorque;
+    static constexpr auto command = CommandKind{0x00f};
+
+    fp32 velocity_limit;
+    fp32 current_limit;
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+struct [[nodiscard]] StartAntiCogging{
+    using Self = StartAntiCogging;
+    static constexpr auto command = CommandKind{0x010};
+};
+
+struct [[nodiscard]] SetTrajVelLimit{
+    using Self = SetTrajVelLimit;
+    static constexpr auto command = CommandKind{0x011};
+
+    fp32 traj_vel_limit;
+    uint32_t __padding__ = 0;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+struct [[nodiscard]] SetTrajAccelLimit{ 
+    using Self = SetTrajAccelLimit;
+    static constexpr auto command = CommandKind{0x012};
+
+    fp32 traj_accel_limit;
+    fp32 traj_decel_limit;
+    
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+struct [[nodiscard]] SetTrajInertia{
+    using Self = SetTrajInertia;
+    static constexpr auto command = CommandKind{0x013};
+    fp32 traj_inertia;//惯量
+    uint32_t __padding__ = 0;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+struct [[nodiscard]] GetIq{ 
+    using Self = GetIq;
+    static constexpr auto command = CommandKind{0x014};
+    fp32 id_setpoint;
+    fp32 iq_measured;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+struct [[nodiscard]] Reboot{ 
+    using Self = Reboot;
+    static constexpr auto command = CommandKind{0x016};
+};
+
+struct [[nodiscard]] GetBusVoltageCurrent{
+    using Self = GetBusVoltageCurrent;
+    static constexpr auto command = CommandKind{0x017};
+    fp32 bus_voltage;
+    fp32 bus_current;
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+
+struct [[nodiscard]] ClearErrors{ 
+    using Self = ClearErrors;
+    static constexpr auto command = CommandKind{0x018};
+};
+
+struct [[nodiscard]] SetLinearCount{
+    using Self = SetLinearCount;
+    static constexpr auto command = CommandKind{0x019};
+    int32_t linear_count;
+    uint32_t __padding__ = 0;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+
+struct [[nodiscard]] SetPosGain{
+    using Self = SetPosGain;
+    static constexpr auto command = CommandKind{0x01a};
+    fp32 pos_gain;
+    uint32_t __padding__ = 0;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+
+struct [[nodiscard]] SetVelGain{
+    using Self = SetVelGain;
+    static constexpr auto command = CommandKind{0x01b};
+    fp32 vel_gain;
+    fp32 vel_integrator_gain;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+struct [[nodiscard]] SetTorques{
+    using Self = SetTorques;
+    static constexpr auto command = CommandKind{0x01c};
+    fp32 torque_setpoint;
+    fp32 torque;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+struct [[nodiscard]] GetPowers{
+    using Self = GetPowers;
+    static constexpr auto command = CommandKind{0x01d};
+    fp32 electrical_power;
+    fp32 mechanical_power;
+
+    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+
+    constexpr hal::CanClassicPayload to_payload() const {
+        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+};
+
+struct [[nodiscard]] DisableCan{
+    using Self = DisableCan;
+    static constexpr auto command = CommandKind{0x01e};
+};
+
+struct [[nodiscard]] SaveConfig{
+    using Self = SaveConfig;
+    static constexpr auto command = CommandKind{0x01f};
+};
+
+
+
 }
 
-struct [[nodiscard]] Msg:public Sumtype<
-    msgs::EncoderCount,
-    msgs::EncoderEstimates,
-    msgs::Heartbeat,
-    msgs::MotorCurrent,
-    msgs::VbusVoltage,
-    EncoderErrorFlags,
-    MotorErrorFlags
+struct [[nodiscard]] Signal:public Sumtype<
+    // msgs::EncoderCount,
+    // msgs::GetEncoderEstimates,
+    msgs::Heartbeat
+    // msgs::GetMotorCurrent,
+    // msgs::VbusVoltage,
+    // EncoderErrorFlags,
+    // MotorErrorFlags
 >{
-    using EncoderCount = msgs::EncoderCount;
-    using EncoderEstimates = msgs::EncoderEstimates;
-    using Heartbeat = msgs::Heartbeat;
-    using MotorCurrent = msgs::MotorCurrent;
-    using VbusVoltage = msgs::VbusVoltage;
-    using EncoderErrorFlags = msgs::EncoderErrorFlags;
-    using MotorErrorFlags = msgs::MotorErrorFlags;
+    // using EncoderCount = msgs::EncoderCount;
+    // using GetEncoderEstimates = msgs::GetEncoderEstimates;
+    // using Heartbeat = msgs::Heartbeat;
+    // using GetMotorCurrent = msgs::GetMotorCurrent;
+    // using VbusVoltage = msgs::VbusVoltage;
+    // using EncoderErrorFlags = msgs::EncoderErrorFlags;
+    // using MotorErrorFlags = msgs::MotorErrorFlags;
 };
 
 struct [[nodiscard]] Event{
     AxisId axis_id;
-    Msg signal;
+    Signal signal;
 };
 
-struct [[nodiscard]] FrameSerializer{
-    using Error = Infallible;
 
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    using CanResult = Result<hal::CanClassicFrame, Error>;
-
-    static constexpr CanResult get_motor_error(AxisId axis_id){
-        return request(axis_id, Command::GetMotorError);
-    }
-
-    static constexpr CanResult get_encoder_error(AxisId axis_id){
-        return request(axis_id, Command::GetEncoderError);
-    }
-
-    static constexpr CanResult get_sensorless_error(AxisId axis_id){
-        return request(axis_id, Command::GetSensorlessError);
-    }
-
-    static constexpr CanResult get_encoder_estimates(AxisId axis_id){
-        return request(axis_id, Command::GetEncoderEstimates);
-    }
-
-    static constexpr CanResult get_encoder_count(AxisId axis_id){
-        return request(axis_id, Command::GetEncoderCount);
-    }
-
-    static constexpr CanResult get_iq(AxisId axis_id){
-        return request(axis_id, Command::GetIq);
-    }
-
-    static constexpr CanResult get_sensorless_estimate(AxisId axis_id){
-        return request(axis_id, Command::GetSensorlessEstimates);
-    }
-
-    static constexpr CanResult get_vbus_voltage(AxisId axis_id){
-        return request(axis_id, Command::GetVbusVoltage);
-    }
-
-    static constexpr CanResult request(AxisId axis_id, Command cmd){ 
-        return Ok(hal::CanClassicFrame::from_remote(encode_id(axis_id, cmd)));
-    }
-
-
-    static constexpr CanResult emergency_stop(AxisId id) {
-        return make_msg(FrameId{id, Command::OdriveEstop});
-    }
-
-    static constexpr CanResult reboot(AxisId id) {
-        return make_msg(FrameId{id, Command::ResetOdrive});
-    }
-
-
-    static constexpr CanResult clear_errors(AxisId id) {
-        return make_msg(FrameId{id, Command::ClearErrors});
-    }
-
-
-    static constexpr CanResult start_anticogging(AxisId id) {
-        return make_msg(FrameId{id, Command::StartAnticogging});
-    }
-
-
-    static constexpr CanResult set_axis_node_id(AxisId id, AxisId new_id) {
-        return make_msg(
-            FrameId{id, Command::SetAxisNodeId}, 
-            static_cast<uint32_t>(new_id.to_bits())
-        );
-    }
-
-
-    static constexpr CanResult set_axis_requested_state(AxisId id, AxisState axis_state) {
-        return make_msg(
-            FrameId{id, Command::SetAxisRequestedState}, 
-            static_cast<uint32_t>(axis_state)
-        );
-    }
-
-    static constexpr CanResult set_input_current(AxisId id, float value) {
-        const auto scaled_value = static_cast<uint32_t>(static_cast<int32_t>(
-            100.0f * value + 0.5f)
-        );
-        return make_msg(
-            FrameId{id, Command::SetInputCurrent}, 
-            scaled_value
-        );
-    }
-
-
-    static constexpr CanResult set_velocity_limit(AxisId id, fp32 value) {
-        const auto value_bits = std::bit_cast<uint32_t>(value);
-        return make_msg(
-            FrameId{id, Command::SetVelLimit}, 
-            value_bits
-        );
-    }
-
-    static constexpr CanResult set_controller_modes(AxisId id, ControlMode control_mode) {
-        return make_msg(
-            FrameId{id, Command::SetControllerModes}, 
-            static_cast<uint32_t>(control_mode),
-            static_cast<uint32_t>(InputMode::PassThrough)
-        );
-    }
-
-// private:
-    static constexpr hal::CanStdId encode_id(const AxisId axis_id, const Command cmd){
-        return FrameId{axis_id, cmd}.to_stdid();
-    }
-
-    static constexpr CanResult make_msg(FrameId frame_id){
-        return Ok(hal::CanClassicFrame::from_empty(frame_id.to_stdid()));
-    }
-
-    static constexpr CanResult make_msg(FrameId frame_id, const uint32_t arg1){
-        return Ok(
-            hal::CanClassicFrame::from_parts(
-                frame_id.to_stdid(),
-                hal::CanClassicPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(arg1))
-            )
-        );
-    }
-
-    static constexpr CanResult make_msg(FrameId frame_id, const uint32_t arg1, const uint32_t arg2){
-        std::array<uint8_t, 8> bytes;
-        const auto arr1 = std::bit_cast<std::array<uint8_t, 4>>(arg1);
-        const auto arr2 = std::bit_cast<std::array<uint8_t, 4>>(arg2);
-        std::copy(arr1.begin(), arr1.end(), bytes.begin());
-        std::copy(arr2.begin(), arr2.end(), bytes.begin() + 4);
-        return Ok(
-            hal::CanClassicFrame::from_parts(
-                frame_id.to_stdid(), 
-                hal::CanClassicPayload::from_bytes(bytes)
-            )
-        );
-    }
-
-};
-
-struct [[nodiscard]] FrameDeserializer{
-    enum class [[nodiscard]] Error:uint8_t{
-        FrameIsNotStd,
-        PayloadTooShort,
-        NotImplemented
-    };
-
-private:
-    struct [[nodiscard]] BytesReader{
-        explicit constexpr BytesReader(std::span<const uint8_t> bytes) : 
-            bytes_(bytes) {}
-
-        [[nodiscard]] constexpr Option<int32_t> fetch_i32(){
-            if(remaining().size() < 4)
-                return None;
-            return Some(le_bytes_to_int<int32_t>(fetch_bytes<4>()));
-        }
-        
-        [[nodiscard]] constexpr Option<uint32_t> fetch_u32(){
-            if(remaining().size() < 4)
-                return None;
-            return Some(le_bytes_to_int<uint32_t>(fetch_bytes<4>()));
-        }
-
-
-        [[nodiscard]] constexpr Option<fp32> fetch_f32(){
-            if(remaining().size() < 4)
-                return None;
-            return Some(fp32::from_bits(le_bytes_to_int<int32_t>(fetch_bytes<4>())));
-        }
-    private:
-        std::span<const uint8_t> bytes_;
-
-        template<size_t N>
-        [[nodiscard]] constexpr std::span<const uint8_t, N> fetch_bytes(){
-            const auto ret = std::span<const uint8_t, N>(bytes_.data(), N);
-            bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
-            return ret;
-        }
-
-        [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
-            return bytes_;
-        }
-    };
-public:
-    static constexpr auto map_frame_to_event(const hal::CanClassicFrame & frame) -> Result<Event, Error> {
-        if(not frame.is_standard())
-            return Err(Error::FrameIsNotStd);
-
-        const auto frame_id = FrameId::from_stdid(frame.identifier().to_stdid());
-        const auto axis_id = frame_id.axis_id;
-        const auto command = frame_id.command;
-        BytesReader reader(frame.payload_bytes());
-
-        #define UNWRAP_PAYLOAD(expr) \
-        ({\
-            const auto may = (expr);\
-            if(may.is_none())\
-                return Err(Error::PayloadTooShort);\
-            may.unwrap();\
-        });\
-
-        switch(command.kind()){
-            case Command::GetEncoderCount:{
-                const auto shadow_count = UNWRAP_PAYLOAD(reader.fetch_i32());
-                const auto cpr_count = UNWRAP_PAYLOAD(reader.fetch_i32());
-                return Ok(Event{
-                    .axis_id = axis_id,
-                    .signal = Msg::EncoderCount{
-                        shadow_count: shadow_count,
-                        cpr_count: cpr_count,
-                    }
-                });
-            }
-            
-            case Command::GetEncoderError:{
-                const auto error_bits = UNWRAP_PAYLOAD(reader.fetch_u32());
-                // Note: In your C++ code there's no EncoderErrorFlags::from_bits method shown,
-                // so assuming direct bit interpretation or you'll need to implement that conversion
-                const EncoderErrorFlags axis_error = EncoderErrorFlags::from_bits(error_bits);
-                return Ok(Event{
-                    .axis_id = axis_id,
-                    .signal = Msg::EncoderErrorFlags{axis_error}
-                });
-            }
-            
-            case Command::GetEncoderEstimates:{
-                const auto position = UNWRAP_PAYLOAD(reader.fetch_f32());
-                const auto velocity = UNWRAP_PAYLOAD(reader.fetch_f32());
-                return Ok(Event{
-                    .axis_id = axis_id,
-                    .signal = Msg::EncoderEstimates{
-                        position: position,
-                        velocity: velocity,
-                    }
-                });
-            }
-            
-            case Command::OdriveHeartbeat:{
-                return Ok(
-                    Event{
-                        .axis_id = axis_id,
-                        .signal = msgs::Heartbeat::from_u8x8(frame.payload().u8x8())
-                    }
-                );
-            }
-            
-            case Command::GetIq:{
-                const auto setpoint = UNWRAP_PAYLOAD(reader.fetch_f32());
-                const auto measurement = UNWRAP_PAYLOAD(reader.fetch_f32());
-                return Ok(Event{
-                    .axis_id = axis_id,
-                    .signal = Msg::MotorCurrent{
-                        setpoint: setpoint,
-                        measurement: measurement,
-                    }
-                });
-            }
-            
-            case Command::GetMotorError:{
-                const auto error_bits = UNWRAP_PAYLOAD(reader.fetch_u32());
-                // Similar bit mapping for MotorErrorFlags
-                const MotorErrorFlags axis_error = MotorErrorFlags::from_bits(error_bits);
-                return Ok(Event{
-                    .axis_id = axis_id,
-                    .signal = Msg::MotorErrorFlags{axis_error}
-                });
-            }
-            
-            case Command::GetVbusVoltage:{
-                const auto voltage = UNWRAP_PAYLOAD(reader.fetch_f32());
-                return Ok(Event{
-                    .axis_id = axis_id,
-                    .signal = Msg::VbusVoltage{
-                        voltage: voltage,
-                    }
-                });
-            }
-            default:
-                return Err(Error::NotImplemented);
-        }
-
-        #undef UNWRAP_PAYLOAD
-    }
-
-};
 
 
 }

@@ -519,14 +519,14 @@ struct MitParams{
     MitTorqueCode_u12 torque;
 
     __always_inline constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
-        bytes[0] = static_cast<uint8_t>(position.bits >> 8);
-        bytes[1] = static_cast<uint8_t>(position.bits & 0xff);
-        bytes[2] = static_cast<uint8_t>(speed.bits >> 4);
-        bytes[3] = static_cast<uint8_t>(((speed.bits & 0xf) << 4) | ((kp.bits >> 8)));
-        bytes[4] = static_cast<uint8_t>(kp.bits & 0xff);
-        bytes[5] = static_cast<uint8_t>(kd.bits >> 4);
-        bytes[6] = static_cast<uint8_t>(((kd.bits & 0xf) << 4) | ((torque.bits >> 8)));
-        bytes[7] = static_cast<uint8_t>(torque.bits & 0xf);
+        bytes[0] = static_cast<uint8_t>(position.to_bits() >> 8);
+        bytes[1] = static_cast<uint8_t>(position.to_bits() & 0xff);
+        bytes[2] = static_cast<uint8_t>(speed.to_bits() >> 4);
+        bytes[3] = static_cast<uint8_t>(((speed.to_bits() & 0xf) << 4) | ((kp.to_bits() >> 8)));
+        bytes[4] = static_cast<uint8_t>(kp.to_bits() & 0xff);
+        bytes[5] = static_cast<uint8_t>(kd.to_bits() >> 4);
+        bytes[6] = static_cast<uint8_t>(((kd.to_bits() & 0xf) << 4) | ((torque.to_bits() >> 8)));
+        bytes[7] = static_cast<uint8_t>(torque.to_bits() & 0xf);
     };
 };
 
