@@ -10,7 +10,7 @@
 int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
-    myactuator_main();
+    // myactuator_main();
     // eeprom_main();
     // while(true);
     //  uart_main();

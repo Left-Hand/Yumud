@@ -20,12 +20,12 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
     const uint32_t target_div = periph_freq / count_freq;
     
     auto calc_psc_from_arr = [target_div](const uint16_t arr) -> uint16_t {
-        return std::clamp<uint16_t>(int(target_div) / (int(arr) + 1) - 1, 0, 0xFFFF);
+        return CLAMP(int(target_div) / (int(arr) + 1) - 1, 0, 0xFFFF);
     };
 
     [[maybe_unused]]
     auto calc_arr_from_psc = [target_div](const uint16_t psc) -> uint16_t {
-        return std::clamp<uint16_t>(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF);
+        return CLAMP(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF);
     };
     
     auto calc_freq_from_arr_and_psc = [periph_freq](const uint16_t arr, const uint16_t psc) -> uint32_t {
@@ -50,11 +50,6 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
         
         std::optional<uint32_t> last_freq_;
 
-        // const int psc_start = MAX(min_psc, expect_psc - 5);
-        // const int psc_stop = MIN(max_psc, expect_psc + 5);
-        // if(psc_start >= psc_stop) continue;
-
-        // for(int psc = psc_start; psc < psc_stop; psc++){
         for(int psc = expect_psc - 2; psc < expect_psc + 2; psc++){
             const auto freq = calc_freq_from_arr_and_psc(arr, psc);
             if(last_freq_.has_value()){
@@ -62,9 +57,7 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
             }else{
                 last_freq_ = freq;
             }
-            const auto freq_err = static_cast<uint32_t>(
-                std::abs(int(freq) - int(count_freq))
-            );
+            const auto freq_err = uint32_t(ABS(int(freq) - int(count_freq)));
             if(freq_err < best.freq_err){
                 if(freq_err == 0) return {uint16_t(arr), psc};
                 best = {uint16_t(arr), uint16_t(psc), freq_err};
