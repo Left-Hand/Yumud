@@ -72,6 +72,11 @@ struct upcast_underlying_type<uint32_t>{
 };
 
 template<>
+struct upcast_underlying_type<uint64_t>{
+    using type = uint64_t;
+};
+
+template<>
 struct upcast_underlying_type<int8_t>{
     using type = int16_t;
 };
@@ -86,6 +91,10 @@ struct upcast_underlying_type<int32_t>{
     using type = int64_t;
 };
 
+template<>
+struct upcast_underlying_type<int64_t>{
+    using type = int64_t;
+};
 
 }
 
@@ -422,6 +431,7 @@ constexpr bool signbit(const fixed_t<Q, D> x){
 template<size_t Q, typename D>
 [[nodiscard]] __fast_inline
 constexpr fixed_t<Q, D> sign(const fixed_t<Q, D> x){
+    static_assert(fixed_t<Q, D>(-1) != fixed_t<Q, D>(1));
     if(likely(x)) return fixed_t<Q, D>(x > 0 ? 1 : -1);
     else return fixed_t<Q, D>(0);
 }

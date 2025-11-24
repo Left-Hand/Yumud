@@ -88,7 +88,7 @@ struct LrSeriesCurrentRegulatorConfig{
     iq16 phase_resistance;        // 相电阻 (Ω)
     iq16 max_voltage;                // 最大电压 (V)
 
-    [[nodiscard]] constexpr digipw::PiController::Cofficients make_coeff() const {
+    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, const char *> try_to_coeff() const {
         //U(s) = I(s) * R + s * I(s) * L
         //I(s) / U(s) = 1 / (R + sL)
         //G_open(s) = (Ki / s + Kp) / s(R / s + L)
@@ -108,7 +108,7 @@ struct LrSeriesCurrentRegulatorConfig{
         // coeff.ki_discrete = 0;
 
         coeff.err_sum_max = self.max_voltage / iq16(coeff.ki_discrete);
-        return coeff;
+        return Ok(coeff);
     }
 };
 
@@ -124,6 +124,132 @@ struct LrSeriesCurrentRegulatorConfig{
 };
 
 #endif
+
+
+
+
+
+
+
+template<typename T>
+struct FhanPrecomputed{
+    struct Config{
+        iq10 r;
+        iq10 h;
+    };
+
+    constexpr explicit FhanPrecomputed(const Config & cfg):
+        r_(cfg.r),
+        h_(cfg.h),
+        d_(cfg.r * cfg.h),
+        d0_(iq10(cfg.r * cfg.h) * cfg.h),
+        inv_h_(1 / cfg.h),
+        inv_d_(1 / iq10(cfg.r * cfg.h)){;}
+
+    [[nodiscard]] constexpr iq16 operator()(
+        const iq16 v, 
+        const iq16 z1, 
+        const iq16 z2
+    ) const{
+        const iq16 y = z1 - v + z2 * h_;//var
+        const iq16 abs_y = ABS(y);
+        const iq16 a0 = sqrt(square(iq8(d_)) + iq8(8 * r_) * iq8(abs_y));//var
+        const iq16 a = [&]{
+            if(abs_y > d0_){
+                // return z2 + ((a0 - d_) >> 1) * sign(y);//var
+                if(y > 0)
+                    return z2 + ((a0 - d_) >> 1);//var
+                else 
+                    return z2 - ((a0 - d_) >> 1);//var
+            }else{
+                return z2 + y * inv_h_;//var
+            }
+        }();
+
+
+        if(ABS(a) > d_){
+            if(a > 0) 
+                return  -r_;//var
+            else 
+                return r_;//var
+        }else{
+            return -r_ * (a * inv_d_);//var
+        }
+
+    }
+private:
+    iq10 r_;
+    iq10 h_;
+    iq10 d_;
+    iq10 d0_;
+    iq16 inv_h_;
+    iq16 inv_d_;
+};
+
+
+
+struct NonlinearTrackingDifferentor{
+    using fhan_type = FhanPrecomputed<iq16>;
+    struct Coeffs{
+        iq30 dt;
+        fhan_type fhan;
+    };
+
+    struct Config{
+        uint32_t fs;
+        iq16 r;
+        iq16 h;
+
+        constexpr Result<Coeffs, const char *> try_to_coeffs() const {
+            const auto & self = *this;
+            return Ok(Coeffs{
+                .dt = (1_iq24 / fs), 
+                .fhan = (fhan_type(fhan_type::Config{.r = self.r, .h = self.h}))
+            });
+        }
+    };
+
+    struct State{
+        fixed_t<32, int64_t> z1;
+        fixed_t<32, int64_t> z2;
+    };
+
+    constexpr explicit NonlinearTrackingDifferentor(const Coeffs & coeffs):
+        coeffs_(coeffs)
+        {;}
+    
+
+    constexpr void update(const iq16 v){
+        const iq16 z1 = iq16::from_bits(static_cast<int32_t>(state_.z1.to_bits() >> 16));
+        const iq16 z2 = iq16::from_bits(static_cast<int32_t>(state_.z2.to_bits() >> 16));
+        
+        const auto u = coeffs_.fhan(v, z1, z2);
+        // const auto u = iq16(10);
+        const auto next_z1 = state_.z1 + long_fixed_mul_fixed(state_.z2, coeffs_.dt);
+        const auto next_z2 = CLAMP2(state_.z2 + fixed_t<32, int64_t>::from_bits(
+            static_cast<int64_t>(u.to_bits()) * static_cast<int64_t>(coeffs_.dt.to_bits()) >> 14
+        ), 80);
+        state_ = {
+            next_z1,
+            next_z2
+        };
+    }
+
+    constexpr const State & state() const{
+        return state_;
+    }
+private:
+    Coeffs coeffs_;
+    State state_ = {0, 0};
+
+    template<size_t Q1, size_t Q2>
+    static constexpr fixed_t<Q1, int64_t> long_fixed_mul_fixed(const fixed_t<Q1, int64_t> x1, const fixed_t<Q2, int32_t> x2){
+        const int64_t bits = (x1.to_bits() * int64_t(x2.to_bits())) >> Q2;
+        return fixed_t<Q1, int64_t>::from_bits(bits);
+    }
+};
+
+
 
 
 static void init_adc(){
@@ -309,11 +435,11 @@ void myesc_main(){
         .max_voltage = MAX_MODU_VOLT,
     };
 
-    static constexpr auto controller_coeff = current_regulator_cfg.make_coeff();
+    static constexpr auto controller_coeff = current_regulator_cfg.try_to_coeff().unwrap();
     // PANIC{controller_coeff};
 
-    auto d_pi_ctrl_ = controller_coeff.to_controller();
-    auto q_pi_ctrl_ = controller_coeff.to_controller();
+    auto d_pi_ctrl_ = controller_coeff.to_pi_controller();
+    auto q_pi_ctrl_ = controller_coeff.to_pi_controller();
 
     [[maybe_unused]] auto flux_sensorless_ob = dsp::motor_ctl::NonlinearFluxObserver{
         dsp::motor_ctl::NonlinearFluxObserver::Config{
@@ -345,6 +471,18 @@ void myesc_main(){
         }
     };
 
+    static constexpr auto coeffs = typename NonlinearTrackingDifferentor::Config{
+        .fs = FOC_FREQ,
+        // .r = 30.5_q24,
+        // .h = 2.5_q24
+        // .r = 252.5_iq10,
+        // .r = 152.5_iq10,
+        .r = 242.5_iq10,
+        .h = 0.012_iq10
+    }.try_to_coeffs().unwrap();
+    static NonlinearTrackingDifferentor command_shaper_{
+        coeffs
+    };
 
     [[maybe_unused]] dsp::PositionFilter pos_filter_{
         typename dsp::PositionFilter::Config{
@@ -405,6 +543,17 @@ void myesc_main(){
 
         //#region 位速合成力矩
         const auto [position_cmd, speed_cmd] = [&]{
+            if constexpr(1){
+                // command_shaper_.update(10 + 12 * sign(iq16(sinpu(ctime * 0.5_r))));
+                // const auto s = iq16(sinpu(ctime * 0.7_r));
+                // const auto s = iq16(sinpu(ctime * 0.16_r));
+                // command_shaper_.update(100 + 6 * (int(s * 8) / 8));
+                command_shaper_.update(ymd::floor(ctime * 3) * 4);
+                return std::make_tuple(
+                    iq16::from_bits(command_shaper_.state().z1.to_bits() >> 16),
+                    iq16::from_bits(command_shaper_.state().z2.to_bits() >> 16)
+                );
+            }
             const auto omega = 9_iq16;
             const auto amplitude = 2_iq16;
 
@@ -422,7 +571,7 @@ void myesc_main(){
 
         const iq20 torque_cmd = [&]{ 
             const iq16 kp = 0.18_iq16;
-            const iq16 kd = 0.016_iq16;
+            const iq16 kd = 0.022_iq16;
 
             const iq16 position_err = position_cmd - pos_filter_.accumulated_angle().to_turns();
             const iq16 speed_err = speed_cmd - pos_filter_.speed();
@@ -556,8 +705,8 @@ void myesc_main(){
             // alphabeta_curr_,
             // alphabeta_volt_,
             // alphabeta_volt_.beta / alphabeta_curr_.beta,
-            dq_curr_,
-            dq_volt_,
+            // dq_curr_,
+            // dq_volt_,
             // alphabeta_volt_.beta / alphabeta_curr_.beta,
             // q_pi_ctrl_.err_sum_,
             // q_pi_ctrl_.kp_
@@ -566,11 +715,10 @@ void myesc_main(){
             // hal::adc1.inj<1>().get_voltage(),
             
             // iq16(lap_angle.to_turns()) * POLE_PAIRS,
-            sensored_elec_angle_.to_turns(),
-            openloop_elec_angle_.to_turns(),
+            // sensored_elec_angle_.to_turns(),
+            // openloop_elec_angle_.to_turns(),
             pos_filter_.accumulated_angle().to_turns(),
             pos_filter_.speed(),
-            static_cast<uint32_t>(exe_us_.count()),
             0
             // flux_sensorless_ob.angle().to_turns()
             // flux_sensorless_ob.V_alphabeta_last_
