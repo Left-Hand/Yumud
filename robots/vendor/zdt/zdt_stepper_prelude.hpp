@@ -347,7 +347,7 @@ struct [[nodiscard]] AcclerationLevel{
 
 }
 
-namespace payloads{
+namespace msgs{
     using namespace prelude;
     // 地址 + 0xF3 + 0xAB + 使能状态 + 多机同步标志 + 校验字节
     struct [[nodiscard]] Actvation final{

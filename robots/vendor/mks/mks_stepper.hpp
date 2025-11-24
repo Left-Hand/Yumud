@@ -69,7 +69,7 @@ private:
     ){
         Buf buf;
 
-        const auto bytes = payloads::serialize(obj);
+        const auto bytes = msgs::serialize(obj);
 
         buf.append_unchecked(std::bit_cast<uint8_t>(T::FUNC_CODE));
         buf.append_unchecked(bytes);

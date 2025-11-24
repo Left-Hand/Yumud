@@ -40,7 +40,7 @@ enum class [[nodiscard]] FunctionCode:uint8_t{
     WriteMultipleRegisters = 16,
     ReadFileRecord = 20,
     WriteFileRecord = 21,
-    ReadWriteRegisters = 23,
+    ReadWriteMultipleRegisters = 23,
     ReadDeviceIdentification = 43
 };
 
@@ -64,6 +64,28 @@ struct [[nodiscard]] ModbusError:public Sumtype<LibError,ModbusException>{
 static constexpr Err<ModbusError> make_err(auto err){
     return Err<ModbusError>(err);
 }
+
+struct [[nodiscard]] Address{
+    using Self = Address;
+
+    static constexpr Self from_bits(const uint8_t bits){
+        return std::bit_cast<Self>(bits);
+    } 
+
+    [[nodiscard]] constexpr uint8_t to_bits() const {
+        return bits_;
+    }
+
+    [[nodiscard]] constexpr bool is_boardcast() const{
+        return bits_ == 0;
+    }
+
+    [[nodiscard]] constexpr bool is_preserved() const {
+        return bits_ >= 248;
+    }
+private:
+    uint8_t bits_;
+};  
 
 
 template<typename T = void>

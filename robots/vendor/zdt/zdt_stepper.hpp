@@ -73,7 +73,7 @@ private:
     ){
         Buf buf;
 
-        const auto bytes = payloads::serialize(payload);
+        const auto bytes = msgs::serialize(payload);
 
         buf.append_unchecked(bytes);
         buf.append_unchecked(VerifyUtils::get_verify_code(

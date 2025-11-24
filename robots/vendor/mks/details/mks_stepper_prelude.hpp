@@ -149,14 +149,14 @@ struct Rpm final{
         return {int16_t(speed * 60)};
     }
     constexpr int16_t as_i16() const {
-        return raw_;
+        return bits_;
     }
 
     constexpr real_t to_speed() const {
-        return real_t(raw_) / 60;
+        return real_t(bits_) / 60;
     }
 
-    int16_t raw_;
+    int16_t bits_;
 }__packed;
 
 struct iRpm final{
@@ -164,14 +164,14 @@ struct iRpm final{
         return {int16_t(int16_t(speed * 60) & int16_t(0x8fff))};
     }
     constexpr int16_t as_i16() const {
-        return raw_;
+        return bits_;
     }
 
     constexpr real_t to_speed() const {
-        return real_t(raw_) / 60;
+        return real_t(bits_) / 60;
     }
 
-    int16_t raw_;
+    int16_t bits_;
 }__packed;
 
 static_assert(sizeof(Rpm) == 2);
@@ -182,7 +182,7 @@ struct AcclerationLevel{
         return AcclerationLevel{uint8_t(acc_per_second)};
     }
 
-    uint8_t raw_;
+    uint8_t bits_;
 }__packed;
 
 static_assert(sizeof(AcclerationLevel) == 1);
@@ -211,7 +211,7 @@ struct PulseCnt final{
 
 }
 
-namespace payloads{
+namespace msgs{
     using namespace prelude;
 
 

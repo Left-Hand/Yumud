@@ -5,7 +5,7 @@ using namespace ymd::robots::zdtmotor;
 using namespace ymd::robots::zdtmotor::prelude;
 
 IResult<> ZdtStepper::set_position(ZdtStepper::PositionMsg msg){
-    return write_payload(payloads::SetPosition{
+    return write_payload(msgs::SetPosition{
         .is_ccw = (msg.position.is_negative()),
         .rpm = Rpm::from_speed(msg.speed),
         .acc_level = AcclerationLevel::from_u8(0),
@@ -16,7 +16,7 @@ IResult<> ZdtStepper::set_position(ZdtStepper::PositionMsg msg){
 }
 
 IResult<> ZdtStepper::set_speed(ZdtStepper::SpeedMsg msg){
-    return write_payload(payloads::SetSpeed{
+    return write_payload(msgs::SetSpeed{
         .is_ccw = msg.speed < 0,
         .rpm = Rpm::from_speed(ABS(msg.speed)),
         .acc_level = AcclerationLevel::from(0),
@@ -26,7 +26,7 @@ IResult<> ZdtStepper::set_speed(ZdtStepper::SpeedMsg msg){
 }
 
 IResult<> ZdtStepper::brake(){
-    return write_payload(payloads::Brake{
+    return write_payload(msgs::Brake{
         .is_sync = is_multi_axis_sync_
     });
 }
@@ -34,13 +34,13 @@ IResult<> ZdtStepper::brake(){
 IResult<> ZdtStepper::set_subdivides(const uint16_t subdivides){
     if(subdivides > 256) 
         return Err(Error::SubDivideOverflow);
-    return write_payload(payloads::SetSubDivides{
+    return write_payload(msgs::SetSubDivides{
         .subdivides = uint8_t(subdivides & 0xff)
     });
 }
 
 IResult<> ZdtStepper::activate(const Enable en){
-    return write_payload(payloads::Actvation{
+    return write_payload(msgs::Actvation{
         .en = en == EN,
         .is_sync = is_multi_axis_sync_
     });
@@ -48,15 +48,15 @@ IResult<> ZdtStepper::activate(const Enable en){
 
 
 IResult<> ZdtStepper::trig_cali(){
-    return write_payload(payloads::TrigCali::from_default());  
+    return write_payload(msgs::TrigCali::from_default());  
 }
 
 IResult<> ZdtStepper::query_homming_paraments(){
-    return write_payload(payloads::QueryHommingParaments{});
+    return write_payload(msgs::QueryHommingParaments{});
 }
 
 IResult<> ZdtStepper::trig_homming(const HommingMode mode){
-    return write_payload(payloads::TrigHomming{
+    return write_payload(msgs::TrigHomming{
         .homming_mode = mode,
         .is_sync = is_multi_axis_sync_
     });

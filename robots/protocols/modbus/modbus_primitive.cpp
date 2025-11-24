@@ -6,8 +6,6 @@ namespace ymd::modbus::primitive{
 
 static constexpr const char * liberr_to_str(const LibError err){
     switch(err){
-        default:
-            return nullptr;
         case LibError::InvalidRequst:
             return "InvalidRequst";
         case LibError::InvalidUnitId:
@@ -25,12 +23,11 @@ static constexpr const char * liberr_to_str(const LibError err){
         case LibError::InvalidArgument:
             return "InvalidArgument";
     }
+    return nullptr;
 }
 
 static constexpr const char * modbus_exception_to_str(const ModbusException err){
     switch (err) {
-        default:
-            return nullptr;
         case ModbusException::IllegalFunction:
             return "IllegalFunction";
         case ModbusException::IllegalDataAddress:
@@ -40,12 +37,11 @@ static constexpr const char * modbus_exception_to_str(const ModbusException err)
         case ModbusException::ServerDeviceFailure:
             return "ServerDeviceFailure";
     }
+    return nullptr;
 }
 
 static constexpr const char * function_code_to_str(const FunctionCode fc){
     switch (fc) {
-        default:
-            return nullptr;
         case FunctionCode::None:
             return "None";
         case FunctionCode::ReadCoils:
@@ -68,11 +64,12 @@ static constexpr const char * function_code_to_str(const FunctionCode fc){
             return "ReadFileRecord";
         case FunctionCode::WriteFileRecord:
             return "WriteFileRecord";
-        case FunctionCode::ReadWriteRegisters:
-            return "ReadWriteRegisters";
+        case FunctionCode::ReadWriteMultipleRegisters:
+            return "ReadWriteMultipleRegisters";
         case FunctionCode::ReadDeviceIdentification:
             return "ReadDeviceIdentification";
     }
+    return nullptr;
 }
 
 __always_inline OutputStream & print_unkown_u8(OutputStream & os, uint8_t int_val){
@@ -104,3 +101,21 @@ OutputStream & operator<<(OutputStream & os, const FunctionCode & fc){
 }
 
 }
+
+[[nodiscard]] static constexpr uint16_t crc16(std::span<const uint8_t> bytes) {
+    uint16_t crc = 0xFFFF;
+    for (size_t i = 0; i < bytes.size(); i++) {
+        crc ^= (uint16_t) bytes[i];
+        for (int j = 8; j != 0; j--) {
+            if ((crc & 0x0001) != 0) {
+                crc >>= 1;
+                crc ^= 0xA001;
+            }
+            else
+                crc >>= 1;
+        }
+    }
+
+    return (uint16_t) (crc << 8) | (uint16_t) (crc >> 8);
+}
+
