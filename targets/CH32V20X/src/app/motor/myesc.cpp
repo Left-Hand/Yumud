@@ -373,7 +373,7 @@ void myesc_main(){
         const auto openloop_elec_angle = openloop_manchine_angle * POLE_PAIRS;
 
         static constexpr auto ANGLE_BASE = Angle<iq16>::from_turns(-0.22_iq16);
-        const auto encoder_angle = mt6825_.get_lap_angle().examine().into<iq16>();
+        const auto encoder_angle = mt6825_.get_lap_angle().examine().cast_inner<iq16>();
 
         pos_filter_.update(encoder_angle);
         

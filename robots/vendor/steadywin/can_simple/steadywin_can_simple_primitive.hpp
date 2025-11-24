@@ -142,6 +142,8 @@ static_assert(sizeof(EncoderErrorFlags) == 4);
 enum class [[nodiscard]] ErrorType:uint8_t{ 
 };
 
+static_assert(sizeof(ErrorType) == 1);
+
 struct [[nodiscard]] MotorErrorFlags{
     using Self = MotorErrorFlags;
     uint32_t phase_resistance_out_of_range:1;
@@ -373,8 +375,6 @@ struct [[nodiscard]] GetErrorReq{
     ErrorType type;
 };
 
-
-
 struct [[nodiscard]] GetErrorResp{
     using Self = GetErrorResp;
     static constexpr CommandKind command = Command::GetMotorError;
@@ -391,13 +391,10 @@ struct [[nodiscard]] EncoderEstimates{
     fp32 velocity;
 };
 
-
-
 struct [[nodiscard]] MotorCurrent{
     fp32 setpoint;
     fp32 measurement;
 };
-
 
 struct [[nodiscard]] VbusVoltage{
     fp32 voltage;

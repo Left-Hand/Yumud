@@ -4,7 +4,7 @@
 
 namespace ymd::mavlink::msgs{
     
-struct Heartbeat {
+struct Heartbeat final {
     uint8_t type;
     uint8_t autopilot;
     uint8_t base_mode;
@@ -13,7 +13,7 @@ struct Heartbeat {
     uint8_t mavlink_version;
 };
 
-struct SysTime{
+struct SysTime final {
     uint64_t time_unix_usec;
     uint32_t time_boot_ms;
     uint16_t time_offset;
@@ -26,38 +26,38 @@ struct SysTime{
 };
 
 
-struct SetPositionTargetLocalNed {
+struct SetPositionTargetLocalNed final {
     uint32_t time_boot_ms;
     uint32_t target_system;
     uint32_t target_component;
     uint32_t coordinate_frame;
     uint16_t type_mask;
-    float x;
-    float y;
-    float z;
-    float vx;
-    float vy;
-    float vz;
-    float afx;
-    float afy;
-    float afz;
-    float yaw;
-    float yaw_rate;
+    fp32 x;
+    fp32 y;
+    fp32 z;
+    fp32 vx;
+    fp32 vy;
+    fp32 vz;
+    fp32 afx;
+    fp32 afy;
+    fp32 afz;
+    fp32 yaw;
+    fp32 yaw_rate;
 };
 
-struct SetAttitudeTarget {
+struct SetAttitudeTarget final {
     uint32_t time_boot_ms;
     uint8_t target_system;
     uint8_t target_component;
     uint8_t type_mask;
-    float q[4]; // Quaternion
-    float body_roll_rate;
-    float body_pitch_rate;
-    float body_yaw_rate;
-    float thrust;
+    fp32 q[4]; // Quaternion
+    fp32 body_roll_rate;
+    fp32 body_pitch_rate;
+    fp32 body_yaw_rate;
+    fp32 thrust;
 };
 
-struct RcChannelsOverride {
+struct RcChannelsOverride final {
     uint8_t target_system;
     uint8_t target_component;
     uint16_t chan1_raw;
@@ -70,17 +70,17 @@ struct RcChannelsOverride {
     uint16_t chan8_raw;
 };
 
-struct LocalPositionNed {
+struct LocalPositionNed final {
     uint32_t time_boot_ms;
-    float x;
-    float y;
-    float z;
-    float vx;
-    float vy;
-    float vz;
+    fp32 x;
+    fp32 y;
+    fp32 z;
+    fp32 vx;
+    fp32 vy;
+    fp32 vz;
 };
 
-struct GlobalPositionInt {
+struct GlobalPositionInt final {
     uint32_t time_boot_ms;
     int32_t lat; // Latitude in degrees * 1E7
     int32_t lon; // Longitude in degrees * 1E7
@@ -92,17 +92,17 @@ struct GlobalPositionInt {
     uint16_t hdg; // Compass heading in degrees * 100
 };
 
-struct Attitude {
+struct Attitude final {
     uint32_t time_boot_ms;
-    float roll;
-    float pitch;
-    float yaw;
-    float rollspeed;
-    float pitchspeed;
-    float yawspeed;
+    fp32 roll;
+    fp32 pitch;
+    fp32 yaw;
+    fp32 rollspeed;
+    fp32 pitchspeed;
+    fp32 yawspeed;
 };
 
-struct RawImu {
+struct RawImu final {
     uint64_t time_usec;
     int16_t xacc;
     int16_t yacc;
@@ -115,7 +115,7 @@ struct RawImu {
     int16_t zmag;
 };
 
-struct GpsRawInt {
+struct GpsRawInt final {
     uint64_t time_usec;
     uint8_t fix_type;
     int32_t lat;
@@ -128,7 +128,7 @@ struct GpsRawInt {
     uint8_t satellites_visible;
 };
 
-struct BatteryStatus {
+struct BatteryStatus final {
     uint32_t time_boot_ms;
     uint16_t voltage;
     int16_t current;
@@ -136,21 +136,21 @@ struct BatteryStatus {
     int16_t battery_remaining;
 };
 
-struct CommandLong {
+struct CommandLong final {
     uint8_t target_system;
     uint8_t target_component;
     uint16_t command;
     uint8_t confirmation;
-    float param1;
-    float param2;
-    float param3;
-    float param4;
-    float param5;
-    float param6;
-    float param7;
+    fp32 param1;
+    fp32 param2;
+    fp32 param3;
+    fp32 param4;
+    fp32 param5;
+    fp32 param6;
+    fp32 param7;
 };
 
-struct CommandAck {
+struct CommandAck final {
     uint16_t command;
     uint8_t result;
 };

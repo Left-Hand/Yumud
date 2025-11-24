@@ -23,9 +23,9 @@ public:
         next_handler_(next){;}
 
     HandleStatus handle(const hal::CanClassicFrame & frame){ 
-        HandleStatus res = curr_handler_.handle(msg);
+        HandleStatus res = curr_handler_.handle(frame);
         if(next_handler_.is_none()) return res;
-        return next_handler_.unwrap().handle(msg);
+        return next_handler_.unwrap().handle(frame);
     }
 private:
     CanFrameHandlerIntf & curr_handler_;

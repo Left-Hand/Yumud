@@ -4,7 +4,7 @@ using namespace ymd;
 
 namespace ymd::modbus::primitive{
 
-static constexpr const char * liberr_to_str(const LibError & err){
+static constexpr const char * liberr_to_str(const LibError err){
     switch(err){
         default:
             return nullptr;

@@ -5,7 +5,7 @@
 namespace ymd::mavlink {
 
 
-enum class MAV_TYPE:uint8_t{
+enum class [[nodiscard]] MAV_TYPE:uint8_t{
     GENERIC = 0,
     FIXED_WING = 1,
     QUADROTOR = 2,
@@ -18,7 +18,7 @@ enum class MAV_TYPE:uint8_t{
 
 }
 
-enum class MavlinkMessageId : uint16_t {
+enum class [[nodiscard]] MavlinkMessageId : uint16_t {
     HEARTBEAT = 0,
     SYS_STATUS = 1,
     SYSTEM_TIME = 2,
@@ -177,7 +177,7 @@ enum class MavlinkMessageId : uint16_t {
     MAV_CMD_DO_SET_CAM_TRIGG_COUNT = 222,
 };
 
-enum class MavlinkMessageType : uint8_t {
+enum class [[nodiscard]] MavlinkMessageType : uint8_t {
     HEARTBEAT = 0,
     SYS_STATUS = 1,
     SYSTEM_TIME = 2,
@@ -267,7 +267,7 @@ enum class MavlinkMessageType : uint8_t {
     RAW_PRESSURE2 = 137,
 };
 
-enum class MavlinkSystemId : uint8_t {
+enum class [[nodiscard]] MavlinkSystemId : uint8_t {
     MAV_COMP_ID_ALL = 0,
     MAV_COMP_ID_AUTOPILOT1 = 1,
     MAV_COMP_ID_CAMERA = 100,
@@ -349,7 +349,7 @@ enum class MavlinkSystemId : uint8_t {
     MAV_COMP_ID_USER4 = 255,
 };
 
-enum class MavlinkComponentId : uint8_t {
+enum class [[nodiscard]] MavlinkComponentId : uint8_t {
     MAV_COMP_ID_ALL = 0,
     MAV_COMP_ID_AUTOPILOT1 = 1,
     MAV_COMP_ID_CAMERA = 100,

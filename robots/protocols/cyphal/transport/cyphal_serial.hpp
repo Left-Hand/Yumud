@@ -22,7 +22,7 @@ namespace ymd::cyphal::transport::serial{
 using namespace cyphal::primitive;
 
 
-alignas(4) struct [[nodiscard]]Header{
+alignas(4) struct [[nodiscard]] Header{
     using Self = Header;
 
     //offset 0
@@ -54,7 +54,7 @@ alignas(4) struct [[nodiscard]]Header{
     uint16_t user_data;
 
     //offset 22
-    uint16_t header_crc16_big_endian;
+    uint16_t header_crc16_be;
 
     [[nodiscard]] constexpr std::span<const uint8_t, 24> as_bytes() const {
         return std::span<const uint8_t, 24>(reinterpret_cast<const uint8_t *>(this), 24);
@@ -71,10 +71,11 @@ alignas(4) struct [[nodiscard]]Header{
     }
 
     constexpr Self from_aligned_bytes(const std::span<const uint8_t, 24> bytes){
-        for(size_t i = 0; i < 24; i++){
+        for(size_t i = 0; i < 24 / sizeof(size_t); i++){
             reinterpret_cast<size_t *>(this)[i] = reinterpret_cast<const size_t *>(bytes.data())[i];
         }
     }
+
     constexpr void fill_bytes(const std::span<uint8_t, 24> bytes) const {
         for(size_t i = 0; i < 24; i++){
             bytes[i] = as_bytes()[i];
@@ -93,7 +94,7 @@ alignas(4) struct [[nodiscard]]Header{
     }
 
     [[nodiscard]] constexpr bool is_crc_valid() const {
-        return __builtin_bswap16(calc_crc() == header_crc16_big_endian);
+        return __builtin_bswap16(calc_crc() == header_crc16_be);
     }
 };
 
