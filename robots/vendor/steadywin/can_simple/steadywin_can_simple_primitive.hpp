@@ -201,17 +201,23 @@ enum class [[nodiscard]] CommandKind:uint8_t{
     SetControllerMode = 11,
     SetInputPosition = 12,
     SetInputVelocity = 13,
-    SetInputCurrent = 14,
-    SetVelLimit = 15,
+    SetInputTorque = 14,
+    SetLimits = 15,
     StartAnticogging = 16,
     SetTrajVelLimit = 17,
     SetTrajAccelLimits = 18,
-    SetTrajAPerCss = 19,
+    SetTrajInertia = 19,
     GetIq = 20,
-    GetSensorlessEstimates = 21,
-    ResetOdrive = 22,
-    GetVbusVoltage = 23,
-    ClearErrors = 24,
+    Reboot = 0x16,
+    GetBusVoltageCurrent = 0x17,
+    ClearErrors = 0x18,
+    SetLinearCount = 0x19,
+    SetPosGain = 0x1a,
+    SetVelGain = 0x1b,
+    SetTorques = 0x1c,
+    GetPowers = 0x1d,
+    DisableCan = 0x1e,
+    SaveConfig = 0x1f,
 };
 
 enum class [[nodiscard]] ControlMode:uint8_t {
@@ -255,35 +261,70 @@ struct [[nodiscard]] Command{
 
     constexpr CommandKind kind() const{ return kind_; }
     static constexpr const char * err_to_str(const Kind kind){
-        #if 0
         switch(kind){
-            case Kind::Undefined:return "Undefined";
-            case Kind::Heartbeat:return "Heartbeat";
-            case Kind::Estop:return "Estop";
-            case Kind::GetMotorError:return "GetMotorError";
-            case Kind::RxSdo:return "RxSdo";
-            case Kind::TxSdo:return "TxSdo";
-            case Kind::SetAxisNodeId:return "SetAxisNodeId";
-            case Kind::SetAxisRequestedState:return "SetAxisRequestedState";
-            case Kind::SetAxisStartupConfig:return "SetAxisStartupConfig";
-            case Kind::GetEncoderEstimates:return "GetEncoderEstimates";
-            case Kind::GetEncoderCount:return "GetEncoderCount";
-            case Kind::SetControllerMode:return "SetControllerMode";
-            case Kind::SetInputPosition:return "SetInputPosition";
-            case Kind::SetInputVelocity:return "SetInputVelocity";
-            case Kind::SetInputCurrent:return "SetInputCurrent";
-            case Kind::SetVelLimit:return "SetVelLimit";
-            case Kind::StartAnticogging:return "StartAnticogging";
-            case Kind::SetTrajVelLimit:return "SetTrajVelLimit";
-            case Kind::SetTrajAccelLimits:return "SetTrajAccelLimits";
-            case Kind::SetTrajAPerCss:return "SetTrajAPerCss";
-            case Kind::GetIq:return "GetIq";
-            case Kind::GetSensorlessEstimates:return "GetSensorlessEstimates";
-            case Kind::ResetOdrive:return "ResetOdrive";
-            case Kind::GetVbusVoltage:return "GetVbusVoltage";
-            case Kind::ClearErrors:return "ClearErrors";
+            case Kind::Undefined:
+                return "Undefined";
+            case Kind::Heartbeat:
+                return "Heartbeat";
+            case Kind::Estop:
+                return "Estop";
+            case Kind::GetMotorError:
+                return "GetMotorError";
+            case Kind::RxSdo:
+                return "RxSdo";
+            case Kind::TxSdo:
+                return "TxSdo";
+            case Kind::SetAxisNodeId:
+                return "SetAxisNodeId";
+            case Kind::SetAxisState:
+                return "SetAxisState";
+            case Kind::MitControl:
+                return "MitControl";
+            case Kind::GetEncoderEstimates:
+                return "GetEncoderEstimates";
+            case Kind::GetMotorCurrent:
+                return "GetMotorCurrent";
+            case Kind::SetControllerMode:
+                return "SetControllerMode";
+            case Kind::SetInputPosition:
+                return "SetInputPosition";
+            case Kind::SetInputVelocity:
+                return "SetInputVelocity";
+            case Kind::SetInputTorque:
+                return "SetInputTorque";
+            case Kind::SetLimits:
+                return "SetLimits";
+            case Kind::StartAnticogging:
+                return "StartAnticogging";
+            case Kind::SetTrajVelLimit:
+                return "SetTrajVelLimit";
+            case Kind::SetTrajAccelLimits:
+                return "SetTrajAccelLimits";
+            case Kind::SetTrajInertia:
+                return "SetTrajInertia";
+            case Kind::GetIq:
+                return "GetIq";
+            case Kind::Reboot:
+                return "Reboot";
+            case Kind::GetBusVoltageCurrent:
+                return "GetBusVoltageCurrent";
+            case Kind::ClearErrors:
+                return "ClearErrors";
+            case Kind::SetLinearCount:
+                return "SetLinearCount";
+            case Kind::SetPosGain:
+                return "SetPosGain";
+            case Kind::SetVelGain:
+                return "SetVelGain";
+            case Kind::SetTorques:
+                return "SetTorques";
+            case Kind::GetPowers:
+                return "GetPowers";
+            case Kind::DisableCan:
+                return "DisableCan";
+            case Kind::SaveConfig:
+                return "SaveConfig";
         }
-        #endif
         return nullptr;
     }
 
@@ -597,7 +638,7 @@ struct [[nodiscard]] SetInputTorque{
 
 
 struct [[nodiscard]] SetLimits{
-    using Self = SetInputTorque;
+    using Self = SetLimits;
     static constexpr auto command = CommandKind{0x00f};
 
     fp32 velocity_limit;
