@@ -106,7 +106,7 @@ template<floating T>
 template<size_t Q>
 [[nodiscard]] bool is_equal_approx(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t> b) {
     // Check for exact equality first, required to handle "infinity" values.
-    if (a == b) {
+    if (a - b == int32_t(0)) {
         return true;
     }
     // Then check for approximate equality.

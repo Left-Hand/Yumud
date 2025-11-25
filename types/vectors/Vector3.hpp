@@ -338,25 +338,16 @@ public:
         return x * x + y * y + z * z;
     }
 
-    constexpr void normalize() {
-        static_assert(not std::is_integral_v<T>);
-        T squ_len = length_squared();
-        if (unlikely(squ_len == 0)) {
-            x = y = z = 0;
-        } else{
-            T inv_len = inv_sqrt(squ_len);
-            x *= inv_len;
-            y *= inv_len;
-            z *= inv_len;
-        }
-    }
 
     [[nodiscard]] constexpr 
     Vec3 normalized() const {
         static_assert(not std::is_integral_v<T>);
-        Vec3 v = *this;
-        v.normalize();
-        return v;
+        T inv_len = inv_sqrt(this->length_squared());
+        return {
+            this->x * inv_len,
+            this->y * inv_len,
+            this->z * inv_len
+        };
     }
     [[nodiscard]] Vec3<T> get_any_perpendicular() const {
         // Return the any perpendicular vector by cross product with the Vec3.RIGHT or Vec3.UP,

@@ -4,7 +4,7 @@
 namespace ymd::drivers{
 
 
-class SC8721 final:public SC8721_Regs{
+class SC8721 final:public SC8721_Prelude{
 public:
     explicit SC8721(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -32,7 +32,7 @@ public:
     [[nodiscard]] IResult<> set_slope_comp(const SlopComp sc);
 private:
     hal::I2cDrv i2c_drv_;
-
+    SC8721_Regs regs_;
     [[nodiscard]] IResult<> write_reg(const RegAddr address, const uint8_t reg){
         if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
             res.is_err()) return Err(res.unwrap_err());

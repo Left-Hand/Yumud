@@ -60,8 +60,8 @@ IResult<> SC8721::reset(){
 IResult<> SC8721::set_target_voltage(const real_t volt){
     uint16_t data = int(volt * 50);
 
-    auto vout_set_msb_reg_copy = RegCopy(vout_set_msb_reg);
-    auto vout_set_lsb_reg_copy = RegCopy(vout_set_lsb_reg);
+    auto vout_set_msb_reg_copy = RegCopy(regs_.vout_set_msb_reg);
+    auto vout_set_lsb_reg_copy = RegCopy(regs_.vout_set_lsb_reg);
     vout_set_msb_reg_copy.vout_set_msb = data >> 2;
     vout_set_lsb_reg_copy.vout_set_lsb = data & 0b11;
 
@@ -73,7 +73,7 @@ IResult<> SC8721::set_target_voltage(const real_t volt){
 }
 
 IResult<> SC8721::enable_external_fb(const Enable en){
-    auto reg = RegCopy(vout_set_lsb_reg);
+    auto reg = RegCopy(regs_.vout_set_lsb_reg);
 
     reg.fb_sel = en == EN;
     if(en == EN){
@@ -87,37 +87,37 @@ IResult<> SC8721::enable_external_fb(const Enable en){
 }
 
 IResult<> SC8721::set_dead_zone(const DeadZone dz){
-    auto reg = RegCopy(sys_set_reg);
+    auto reg = RegCopy(regs_.sys_set_reg);
     reg.ext_dt = bool(dz);
     return write_reg(reg);
 }
 
 
 IResult<> SC8721::set_switch_freq(const SwitchFreq freq){
-    auto reg = RegCopy(freq_set_reg);
+    auto reg = RegCopy(regs_.freq_set_reg);
     reg.freq_set = uint8_t(freq);
     return write_reg(reg);
 }
 
 IResult<SC8721::Status> SC8721::get_status(){
-    if(const auto res = read_reg(status1_reg);
+    if(const auto res = read_reg(regs_.status1_reg);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = read_reg(status2_reg);
+    if(const auto res = read_reg(regs_.status2_reg);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok(Status{
-        .short_circuit = status1_reg.vout_short,
-        .vout_vin_h = status1_reg.vout_vin_h,
-        .thermal_shutdown = status1_reg.thd,
-        .ocp = status1_reg.ocp,
-        .vin_ovp = status2_reg.vinovp,
-        .on_cv = status2_reg.vinreg_flag,
-        .on_cc = status2_reg.ibus_flag
+        .short_circuit =        regs_.status1_reg.vout_short,
+        .vout_vin_h =           regs_.status1_reg.vout_vin_h,
+        .thermal_shutdown =     regs_.status1_reg.thd,
+        .ocp =                  regs_.status1_reg.ocp,
+        .vin_ovp =              regs_.status2_reg.vinovp,
+        .on_cv =                regs_.status2_reg.vinreg_flag,
+        .on_cc =                regs_.status2_reg.ibus_flag
     });
 }
 
 IResult<> SC8721::set_slope_comp(const SlopComp sc){
-    auto reg = RegCopy(slope_comp_reg);
+    auto reg = RegCopy(regs_.slope_comp_reg);
     reg.slop_comp = uint8_t(sc);
 
     return write_reg(reg);

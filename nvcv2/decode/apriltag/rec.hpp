@@ -4,6 +4,8 @@
 #include "apriltag.hpp"
 #include "dec_16h5.hpp"
 
+#if 0
+
 namespace ymd::nvcv2{
 class Apriltag16H5Recognizer final :public ApriltagRecognizerIntf{
 protected:
@@ -92,3 +94,5 @@ public:
 };
 
 }
+
+#endif

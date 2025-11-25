@@ -176,7 +176,8 @@ public:
                 }
                 // 单点→双点：尝试恢复第二个点
                 const TouchPoint nearest = find_nearest(points_[0], next);
-                const TouchPoint second = (next.points_[0] == nearest) ? next.points_[1] : next.points_[0];
+                const TouchPoint second = (next.points_[0].x == nearest.x and next.points_[0].y == nearest.y) 
+                    ? next.points_[1] : next.points_[0];
                 return TouchPoints(nearest, second);
             }
 

@@ -121,11 +121,11 @@ static constexpr Vec3<float> up = {0,1,0};
 { \
 	Vec3<float> zaxis = Vec3<float>::ZERO; \
 	zaxis = (eye - center); \
-	zaxis.normalize(); \
+	zaxis = zaxis.normalized(); \
  \
 	Vec3<float> xaxis = Vec3<float>::ZERO; \
 	xaxis = up.cross(zaxis); \
-	xaxis.normalize(); \
+	xaxis = xaxis.normalized(); \
  \
 	Vec3<float> yaxis = Vec3<float>::ZERO; \
 	yaxis = zaxis.cross(xaxis); \

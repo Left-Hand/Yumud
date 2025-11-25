@@ -33,7 +33,7 @@ public:
     __fast_inline void set() {this->set_dutycycle(real_t(1));}
     __fast_inline void clr() {this->set_dutycycle(real_t(0));}
     __fast_inline void write(const BoolLevel val){
-        this->set_dutycycle(real_t((val.to_bool())));
+        this->set_dutycycle(real_t(int(val.to_bool())));
     }
 
     BoolLevel read() const;

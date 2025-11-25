@@ -504,7 +504,7 @@ constexpr Vec2<T> Vec2<T>::bounce(const Vec2<T> & n) const {
 template<typename T>
 constexpr Vec2<T> Vec2<T>::lerp(const Vec2<T> & b, const T _t) const{
     static_assert(not std::is_integral_v<T>);
-    return *this * (1-_t)+b * _t;
+    return *this * (static_cast<T>(1)-_t)+b * _t;
 }
 
 template<typename T>
@@ -594,7 +594,7 @@ constexpr __fast_inline T Vec2<T>::cross(const Vec2<T> & with) const{
 }
 
 
-
+#if 1
 #define VECTOR2_COMPARE_IM_OPERATOR(op) \
 \
 template <typename T, typename U> \
@@ -614,12 +614,15 @@ constexpr __fast_inline bool operator op (const Vec2<T>& lhs, const Vec2<U>& rhs
 }\
 
 
+
 VECTOR2_COMPARE_IM_OPERATOR(<)
 VECTOR2_COMPARE_IM_OPERATOR(<=)
 VECTOR2_COMPARE_IM_OPERATOR(>)
 VECTOR2_COMPARE_IM_OPERATOR(>=)
 VECTOR2_COMPARE_IM_OPERATOR(==)
 VECTOR2_COMPARE_IM_OPERATOR(!=)
+
+#endif
 
 template <typename T, typename U = T>
 constexpr __fast_inline Vec2<T> operator +(const Vec2<T> &p_vector2, const Vec2<U> &d_vector2){

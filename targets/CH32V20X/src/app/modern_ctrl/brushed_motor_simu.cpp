@@ -73,7 +73,7 @@ void test_burshed_motor(){
     // uint32_t exe;
     auto watch_gpio = hal::PC<13>();
     watch_gpio.outpp();
-    auto test_leso = [&](const auto t){
+    auto test_leso = [&](const iq16 t){
         // const auto tau = 80.0_r;
 
         // const auto p0 = 12 * sign(sin(2 * t));
