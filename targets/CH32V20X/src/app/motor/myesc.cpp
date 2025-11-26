@@ -76,7 +76,7 @@ static constexpr auto PHASE_INDUCTANCE = 0.0007_iq20;
 static constexpr auto PHASE_RESISTANCE = 0.523_iq20;
 #endif
 
-static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1000;
+static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1200;
 // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 200;
 
 static constexpr auto MAX_MODU_VOLT = iq16(6.5);
@@ -359,7 +359,7 @@ void myesc_main(){
         // .h = 2.5_q24
         // .r = 252.5_iq10,
         // .r = 152.5_iq10,
-        .r = 142.5_iq10,
+        .r = 242.5_iq10,
         .h = 0.005_iq10,
         .x2_limit = 240
     }.try_to_coeffs().unwrap();
@@ -447,7 +447,7 @@ void myesc_main(){
                 // const auto s = iq16(sinpu(ctime * 0.7_r));
                 // const auto s = iq16(sinpu(ctime * 0.16_r));
                 // command_shaper_.update(100 + 6 * (int(s * 8) / 8));
-                track_ref_ = command_shaper_.update(track_ref_, ymd::floor(ctime * 3) * 3);
+                track_ref_ = command_shaper_.update(track_ref_, floor(ctime * 3) * 4);
                 return std::make_tuple(
                     iq16::from_bits(track_ref_.x1.to_bits() >> 16),
                     track_ref_.x2
@@ -485,7 +485,7 @@ void myesc_main(){
         //#region 力矩转电流
 
         static constexpr iq20 TORQUE_2_CURR_RATIO = 1_iq16;
-        static constexpr iq20 MAX_CURRENT = 0.2_iq16;
+        static constexpr iq20 MAX_CURRENT = 0.4_iq16;
 
         const iq20 current_cmd = CLAMP2(torque_cmd * TORQUE_2_CURR_RATIO, MAX_CURRENT);
         //#endregion
