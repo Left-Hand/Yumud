@@ -18,11 +18,11 @@ struct [[nodiscard]] CanClassicDlc{
     static constexpr size_t NUM_BITS = 4;
     using Self = CanClassicDlc;
 
-    static constexpr Self zero(){
+    static consteval Self zero(){
         return Self(static_cast<uint8_t>(0));
     }
 
-    static constexpr Self full(){
+    static consteval Self full(){
         return Self(static_cast<uint8_t>(8));
     }
 

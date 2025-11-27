@@ -1,0 +1,262 @@
+#pragma once
+
+#include <cstdint>
+// #include "hal/bus/can/can.hpp"
+#include "primitive/can/bxcan_frame.hpp"
+#include "primitive/arithmetic/angle.hpp"
+#include "core/math/realmath.hpp"
+#include "core/utils/nth.hpp"
+
+
+namespace ymd::robots::bmkj::m1502e::primitive{
+
+static constexpr hal::CanBaudrate DEFAULT_CAN_BAUD = hal::CanBaudrate::_500K;
+
+
+using CanFrame = hal::CanClassicFrame;
+using CanId = hal::CanStdId;
+using CanPayload = hal::CanClassicPayload;
+
+static constexpr size_t NUM_MAX_MOTORS = 8; 
+static constexpr uint16_t NUM_GENERIC_FEEDBACK_CANID_BASE = 0x96;
+static constexpr uint8_t CUSTOM_MAGIC_KEY = 0xaa;
+
+
+//请求的CANID       响应的CANID
+//  0x32             0x96   +MOTOR_ID           设置低四个电机的参数
+//  0x33             0x96   +MOTOR_ID           设置高四个电机的参数
+//  0x105            0x200  +MOTOR_ID           设置环路模式
+//  0x106            0x264  +MOTOR_ID           设置反馈策略
+//  0x107            0x96   +MOTOR_ID           查询三项内容
+//  0x108            0x96   +MOTOR_ID           设置MOTOR_ID
+//  0x109            0x390  +MOTOR_ID           设置CAN终端电阻
+//  0x10A            0x2C8  +MOTOR_ID           设置通信超时读写操作
+//  0x10A            0x32C  +MOTOR_ID           查询固件版本
+
+//可用的ID为(0, 8]分布 
+struct [[nodiscard]] MotorId{
+    using Self = MotorId;
+
+    static constexpr Self from_bits(const uint8_t bits){
+        return std::bit_cast<Self>(bits);
+    }
+
+    static constexpr Option<Self> try_from_nth(const Nth nth){
+        if(nth.count() > NUM_MAX_MOTORS)
+            return None;
+        if(nth.count() <= 0)
+            return None;
+        return Some(from_bits(static_cast<uint8_t>(nth.count())));
+    }
+
+    constexpr uint8_t bits() const{
+        return bits_;
+    }
+
+    constexpr bool operator==(const MotorId& rhs) const{
+        return bits_ == rhs.bits_;
+    }
+
+    constexpr Nth nth() const {
+        return Nth(bits_);
+    }
+private:
+    uint8_t bits_;
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self){
+        return os << self.nth().count();
+    }
+};
+
+enum class [[nodiscard]] Exception:uint8_t{
+    None = 0x00,
+    UnderVoltage2 = 0x01, // 电压小于17V
+    UnderVoltage1 = 0x02, // 17V - 22V
+    OverVoltage = 0x03, // 36V +
+    OverCurrent = 0x0A, // 15A +
+    OverSpeed = 0x14, //250RPM +
+    OverHeat2 = 0x1F, // 120C +
+    OverHeat1 = 0x20, // 80C +
+    EncoderError = 0x2A,
+    EncoderSingalCorrupted = 0x2B,
+    CommunicationTimeout = 0x3c,
+    Stall = 0x62,
+};
+
+enum class [[nodiscard]] LoopMode:uint8_t{
+    OpenloopVoltage = 0,
+    CloseloopCurrent =0x01,
+    CloseloopSpeed = 0x02,
+    CloseloopPosition = 0x03,
+    Disable = 0x09,
+    Enable = 0x0A
+};
+
+enum class [[nodiscard]] QueryKind:uint8_t{
+    Speed = 0x01,
+    TorqueCurrent = 0x02,
+    Temperature = 0x03,
+    Position = 0x04,
+    Exception = 0x05,
+    NowMode = 0x06
+};
+
+
+enum class [[nodiscard]] DeMsgError:uint8_t{
+    ExtendedFrame,
+    RemoteFrame,
+    DlcTooShort,
+    DlcTooLong,
+    SetLoopModeNot_0xffx7,
+};
+
+struct [[nodiscard]] FeedbackStrategy{
+    using Self = FeedbackStrategy;
+
+    uint8_t duration_ms:7;
+    uint8_t is_continuous:1;
+
+    static constexpr Self from_bits(uint8_t bits){
+        return std::bit_cast<Self>(bits);
+    }
+
+    static constexpr Self from_continuous(uint8_t duration_ms){
+        return Self{
+            .duration_ms = duration_ms, 
+            .is_continuous = 0
+        };
+    }
+};
+
+struct [[nodiscard]] SetPoint{
+    uint16_t bits;
+};
+
+struct [[nodiscard]] CurrentCode{
+    using Self = CurrentCode;
+    uint16_t bits;
+
+    static constexpr Self from_bits(const uint16_t bits){
+        return Self{bits};
+    }
+
+    static constexpr Self from_be_bytes(const uint8_t b0, const uint8_t b1){
+        const auto bits = (uint16_t(b0) << 8) | uint16_t(b1);
+        return Self::from_bits(bits);
+    }
+
+    static constexpr Result<Self, std::weak_ordering> from_amps(const iq16 amps){
+        if(amps > 33) return Err(std::weak_ordering::greater);
+        else if (amps < -33) return Err(std::weak_ordering::less);
+        const uint16_t bits = std::bit_cast<uint16_t>(int16_t((amps / 33).to_bits()));
+        return Ok(from_bits(bits));
+    }
+
+    constexpr iq16 to_amps() const {
+        const auto i32_bits = int32_t(bits);
+        return iq16::from_bits(i32_bits * 33);
+    }
+};
+
+//每LSB 0.01RPm
+struct [[nodiscard]] SpeedCode{
+    using Self = SpeedCode;
+    uint16_t bits;
+
+    static constexpr Self from_bits(const uint16_t bits){
+        return Self{bits};
+    }
+
+    static constexpr Self from_be_bytes(const uint8_t b0, const uint8_t b1){
+        const auto bits = (uint16_t(b0) << 8) | uint16_t(b1);
+        return Self::from_bits(bits);
+    }
+
+    static constexpr Result<Self, std::weak_ordering> from_rpm(const iq16 rpm){
+        if(rpm > 210) return Err(std::weak_ordering::greater);
+        else if (rpm < -210) return Err(std::weak_ordering::less);
+        const uint16_t bits = std::bit_cast<uint16_t>(int16_t((rpm * 100)));
+        return Ok(from_bits(bits));
+    }
+
+    constexpr iq16 to_rpm() const {
+        return iq16(bits) * uq16(0.01);
+    }
+};
+
+struct [[nodiscard]] PositionCode{ 
+    using Self = PositionCode;  
+    uint16_t bits;
+
+    static constexpr Self from_bits(const uint16_t bits){
+        return Self{bits};
+    }
+
+    static constexpr Self from_be_bytes(const uint8_t b0, const uint8_t b1){
+        const auto bits = (uint16_t(b0) << 8) | uint16_t(b1);
+        return Self::from_bits(bits);
+    }
+
+    static constexpr Result<Self, std::weak_ordering> from_angle(const Angle<uq32> angle){
+        const uint16_t bits = std::bit_cast<uint16_t>(int16_t(angle.to_turns().to_bits() >> (16u + 1u)));
+        return Ok(from_bits(bits));
+    }
+
+    constexpr Angle<uq32> to_angle() const {
+        const auto turns = uq32::from_bits(bits << 1);
+        return Angle<uq32>::from_turns(turns);
+    }
+};
+
+
+
+
+namespace details{
+[[nodiscard]] static constexpr const char * exception_to_str(const Exception e){
+    switch(e){
+        case Exception::None: return "None";
+        case Exception::UnderVoltage2: return "UnderVoltage2";
+        case Exception::UnderVoltage1: return "UnderVoltage1";
+        case Exception::OverVoltage: return "OverVoltage";
+        case Exception::OverCurrent: return "OverCurrent";
+        case Exception::OverSpeed: return "OverSpeed";
+        case Exception::OverHeat2: return "OverHeat2";
+        case Exception::OverHeat1: return "OverHeat1";
+        case Exception::EncoderError: return "EncoderError";
+        case Exception::EncoderSingalCorrupted: return "EncoderSingalCorrupted";
+        case Exception::CommunicationTimeout: return "CommunicationTimeout";
+        case Exception::Stall: return "Stall";
+    }
+    return nullptr;
+};
+
+[[nodiscard]] static constexpr const char * loopmode_to_str(const LoopMode loop_mode){
+    switch(loop_mode){
+        case LoopMode::OpenloopVoltage: return "OpenloopVoltage";
+        case LoopMode::CloseloopCurrent: return "CloseloopCurrent";
+        case LoopMode::CloseloopSpeed: return "CloseloopSpeed";
+        case LoopMode::CloseloopPosition: return "CloseloopPosition";
+        case LoopMode::Disable: return "Disable";
+        case LoopMode::Enable: return "Enable";
+    }
+    return nullptr;
+};
+
+[[nodiscard]] static constexpr const char * querykind_from_str(const QueryKind query_kind){
+    switch(query_kind){
+        case QueryKind::Exception: return "Exception";
+        case QueryKind::NowMode: return "NowMode";
+        case QueryKind::Position: return "Position";
+        case QueryKind::Speed: return "Speed";
+        case QueryKind::Temperature: return "Temperature";
+        case QueryKind::TorqueCurrent: return "TorqueCurrent";
+    }
+    return nullptr;
+}
+}
+
+
+
+
+
+}
