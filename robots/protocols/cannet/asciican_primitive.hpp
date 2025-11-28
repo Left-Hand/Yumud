@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/string/string_view.hpp"
-#include "core/string/fixed_string.hpp"
+#include "core/string/heapless_string.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "core/utils/scope_guard.hpp"
@@ -25,7 +25,7 @@ namespace operations{
     struct [[nodiscard]] SendText{
         static constexpr size_t MAX_TEXT_LEN = 16;
 
-        using String = FixedString<MAX_TEXT_LEN> ;
+        using String = HeaplessString<MAX_TEXT_LEN> ;
         String str;
 
         static constexpr SendText from_str(const StringView str){

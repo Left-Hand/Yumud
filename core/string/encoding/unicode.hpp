@@ -7,7 +7,7 @@ namespace ymd {
 class UnicodeIterator final{
 
 public:
-    constexpr UnicodeIterator(const char* _utf8String) : 
+    constexpr UnicodeIterator(const char * _utf8String) : 
         utf8String(_utf8String), 
         currentIndex(0) {
         length = 0;

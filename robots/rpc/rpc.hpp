@@ -78,8 +78,52 @@ private:
 };
 
 using Param = ParamFromString;
-using Params = std::span<const ParamFromString>;
 
+
+// class AccessProvider_BySubSpan final{
+// public:
+//     constexpr AccessProvider_BySubSpan(
+//         const AccessProviderIntf & provider, 
+//         size_t offset, 
+//         size_t end
+//     ): 
+//         provider_(provider), 
+//         offset_(offset), 
+//         end_(end){;}
+
+//     constexpr size_t size() const {return end_ - offset_;}
+
+//     constexpr ParamFromString operator[](size_t idx) const{
+//         if(idx >= size()) __builtin_trap();
+//         return ParamFromString(provider_[offset_ + idx]);
+//     }
+// private:
+//     const AccessProviderIntf & provider_;
+//     const size_t offset_;
+//     const size_t end_;
+// };
+
+class AccessProvider_ByStringViews final{
+public: 
+    AccessProvider_ByStringViews(const std::span<const StringView> views):
+        views_(views){;}
+
+    size_t size() const{
+        return views_.size();
+    }
+
+    ParamFromString operator [](const size_t idx) const {
+        return ParamFromString(views_[idx]);
+    }
+
+    AccessProvider_ByStringViews subspan(const size_t idx) const {
+        return AccessProvider_ByStringViews(views_.subspan(1));
+    }
+private:    
+    std::span<const StringView> views_;
+};
+
+#if 0
 
 class AccessProviderIntf{
 public:
@@ -88,28 +132,6 @@ public:
 };
 
 // 先定义 SubHelper（不依赖 AccessProviderIntf 的完整定义）
-class AccessProvider_BySubSpan final : public AccessProviderIntf {
-public:
-    constexpr AccessProvider_BySubSpan(
-        const AccessProviderIntf & provider, 
-        size_t offset, 
-        size_t end
-    ): 
-        provider_(provider), 
-        offset_(offset), 
-        end_(end){;}
-
-    constexpr size_t size() const {return end_ - offset_;}
-
-    constexpr ParamFromString operator[](size_t idx) const{
-        if(idx >= size()) __builtin_unreachable();
-        return ParamFromString(provider_[offset_ + idx]);
-    }
-private:
-    const AccessProviderIntf & provider_;
-    const size_t offset_;
-    const size_t end_;
-};
 
 static constexpr AccessProvider_BySubSpan make_sub_provider(
     const AccessProviderIntf & owner, 
@@ -126,24 +148,11 @@ static constexpr AccessProvider_BySubSpan make_sub_provider(
     return AccessProvider_BySubSpan(owner, offset, owner.size());
 }
 
-class AccessProvider_ByStringViews final: public AccessProviderIntf{
-public: 
-    AccessProvider_ByStringViews(const std::span<const StringView> views):
-        views_(views){;}
 
-    size_t size() const{
-        return views_.size();
-    }
-
-    ParamFromString operator [](const size_t idx) const {
-        return ParamFromString(views_[idx]);
-    }
-private:    
-    std::span<const StringView> views_;
-};
 
 using AccessReponserIntf = OutputStream;
 
+#endif
 
 template<typename T>
 struct Property{
@@ -387,8 +396,8 @@ template <typename T>
 struct EntryVisitor<const Property<T>, void> {
     static IResult<> visit(
         const Property<T> & self, 
-        AccessReponserIntf & ar,     
-        const AccessProviderIntf & ap
+        auto & ar,     
+        auto && ap
     ) {
         if (ap.size()) 
             return Err(EntryAccessError::CantModifyReadOnly);
@@ -530,7 +539,7 @@ struct EntryVisitor<List<Entries...>> final{
                     auto ent_hash = entry.name().hash();
                     if (head_hash == ent_hash) {
                         res = EntryVisitor<std::decay_t<decltype(entry)>>::visit(
-                            entry, ar, make_sub_provider(ap, 1));
+                            entry, ar, ap.subspan(1));
                     }
                 }(), ...
             );
@@ -558,81 +567,81 @@ struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lamb
 }
 
 template<typename Lambda>
-auto make_function(const StringView name, Lambda&& lambda) {
+auto make_function(const StringView func_name, Lambda && lambda) {
     using DecayedLambda = typename std::decay<Lambda>::type;
 
     using Ret = typename magic::functor_ret_t<DecayedLambda>;
     using ArgsTuple = typename magic::functor_args_tuple_t<DecayedLambda>;
 
     return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
-        name,
+        func_name,
         std::forward<Lambda>(lambda)
     );
 }
 
 
 template<typename Ret, typename ... Args>
-auto make_function(const StringView name, Ret(*callback)(Args...)) {
+auto make_function(const StringView func_name, Ret(*callback)(Args...)) {
     return MethodByLambda<Ret, Args...>(
-        name,
+        func_name,
         static_cast<Ret(*)(Args...)>(callback)
     );
 }
 
 template<typename Ret, typename ... Args, typename TObj>
 auto make_memfunc(
-    const StringView name, 
+    const StringView func_name, 
     TObj * pobj, 
     Ret(TObj::*member_func_ptr)(Args...)
 ) {
     return MethodByMemFunc<TObj, Ret, Args...>(
-        name,
+        func_name,
         pobj,
         member_func_ptr
     );
 }
 
 template<typename T>
-auto make_property(const StringView name, T * val){
+auto make_property(const StringView prop_name, T * val){
     return Property<T>(
-        name, 
+        prop_name, 
         val
     );
 }
 
 template<typename T>
 requires (not std::is_const_v<T>)
-auto make_property_with_limit(const StringView name, T * val, auto min, auto max){
+auto make_property_with_limit(const StringView prop_name, T * val, auto min, auto max){
     return PropertyWithLimit<T>(
-        name, 
+        prop_name, 
         val,
         std::make_pair(static_cast<T>(min), static_cast<T>(max))
     );
 }
 
 template<typename T>
-auto make_ro_property(const StringView name, const T * val){
+auto make_ro_property(const StringView prop_name, const T * val){
     return Property<const T>(
-        name, 
+        prop_name, 
         val
     );
 }
 
 
 template<typename ... Args>
-auto make_list(const StringView name, Args && ... entries){
+auto make_list(const StringView list_name, Args && ... entries){
     return List<Args...>(
-        name, 
-        // std::forward<Args>(entries)...
-        entries...
+        list_name, 
+        std::forward<Args>(entries)...
+        // entries...
     );
 }
 
 
 // 统一访问接口
 template <typename T>
-IResult<> visit(T&& self, AccessReponserIntf & ar, const AccessProviderIntf & ap) {
-    return EntryVisitor<std::remove_cvref_t<T>>::visit(
+IResult<> visit(T&& self, auto & ar, auto && ap) {
+    return EntryVisitor<std::decay_t<T>>::visit(
         std::forward<T>(self), ar, ap);
 }
 

@@ -405,13 +405,8 @@ void myesc_main(){
         diff_angle = (next_encoder_lap_angle.cast_inner<iq16>() 
             - encoder_lap_angle_.cast_inner<iq16>()).normalized();
 
-        // if(diff_angle.abs().to_turns() > 0.1_r){
-        //     PANIC{};
-        // }
-
         encoder_lap_angle_ = next_encoder_lap_angle;
         encoder_multi_angle_ = encoder_multi_angle_ + diff_angle;
-        // pos_filter_.update(next_encoder_lap_angle);
         feedback_state_ = feedback_differ_.update(feedback_state_, encoder_multi_angle_.to_turns());
         
         const auto sensored_elec_angle = ((next_encoder_lap_angle * POLE_PAIRS) + ANGLE_BASE).normalized(); 

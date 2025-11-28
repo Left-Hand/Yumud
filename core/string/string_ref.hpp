@@ -9,7 +9,7 @@
 
 namespace ymd{
 
-struct StringRef{
+struct [[nodiscard]] StringRef{
     constexpr StringRef(const StringRef & other): data_(other.data_), size_(other.size_){;}
     constexpr StringRef(StringRef && other): data_(other.data_), size_(other.size_) {}
     constexpr explicit StringRef(char* str, size_t size) : data_(str), size_(size) {}

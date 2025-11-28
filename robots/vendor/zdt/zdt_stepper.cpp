@@ -4,12 +4,12 @@ using namespace ymd;
 using namespace ymd::robots::zdtmotor;
 using namespace ymd::robots::zdtmotor::prelude;
 
-IResult<> ZdtStepper::set_position(ZdtStepper::PositionMsg msg){
+IResult<> ZdtStepper::set_angle(ZdtStepper::PositionMsg msg){
     return write_payload(msgs::SetPosition{
-        .is_ccw = (msg.position.is_negative()),
+        .is_ccw = (msg.angle.is_negative()),
         .rpm = Rpm::from_speed(msg.speed),
         .acc_level = AcclerationLevel::from_u8(0),
-        .pulse_cnt = PulseCnt::from_position(msg.position.abs()),
+        .pulse_cnt = PulseCnt::from_position(msg.angle.abs()),
         .is_absolute = true,
         .is_sync = is_multi_axis_sync_
     });

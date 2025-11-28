@@ -11,8 +11,8 @@ class JointMotorActuatorIntf{
 public:
     virtual void activate() = 0;
     virtual void deactivate() = 0;
-    virtual void set_position(Angle<real_t> position) = 0;
-    virtual Angle<real_t> get_last_position() = 0;
+    virtual void set_angle(Angle<real_t> angle) = 0;
+    virtual Angle<real_t> last_angle() = 0;
     virtual void trig_homing() = 0;
     virtual void trig_cali() = 0;
     virtual bool is_homing_done() = 0;
@@ -24,7 +24,8 @@ public:
             DEF_RPC_MEMFUNC(is_homing_done),
             DEF_RPC_MEMFUNC(deactivate),
             DEF_RPC_MEMFUNC(activate),
-            DEF_RPC_MEMFUNC(set_position),
+            // DEF_RPC_MEMFUNC(set_angle),
+            // rpc::make_memfunc("trig_homing", this, &std::decay_t<decltype(*this)>::trig_homing)
             DEF_RPC_MEMFUNC(trig_cali)
         );
     }
@@ -36,13 +37,13 @@ class MockJointMotorActuator final:
 public:
     void activate() {}
     void deactivate() {}
-    void set_position(Angle<real_t> position) {
-        position = position_;
+    void set_angle(Angle<real_t> angle) {
+        angle = position_;
     }
     void trig_homing() {}
     void trig_cali() {}
     bool is_homing_done() {return true;}
-    Angle<real_t> get_last_position(){return 0_deg;}
+    Angle<real_t> last_angle(){return 0_deg;}
 private:
     Angle<real_t> position_ = 0_deg;
 };
@@ -71,16 +72,16 @@ public:
         stepper_.activate(DISEN).unwrap();;
     }
 
-    void set_position(Angle<real_t> position){
-        last_position_ = position;
-        stepper_.set_position({
-            .position = position,
+    void set_angle(Angle<real_t> angle){
+        last_angle_ = angle;
+        stepper_.set_angle({
+            .angle = angle,
             .speed = 0.47_r
         }).unwrap();
     }
 
-    Angle<real_t> get_last_position(){
-        return last_position_ ;
+    Angle<real_t> last_angle(){
+        return last_angle_ ;
     }
 
     void trig_homing(){
@@ -108,7 +109,7 @@ private:
     Config cfg_;
     ZdtStepper & stepper_;
 
-    Angle<real_t> last_position_;
+    Angle<real_t> last_angle_;
     Option<Milliseconds> homing_begin_ = None;
     std::atomic<bool> is_homed_ = false;
 

@@ -19,10 +19,19 @@
 namespace ymd::strconv2 {
 
 
-struct FstrDump final{
+struct [[nodiscard]] FstrDump final{
     int32_t digit_part;
 	int32_t frac_part;
 	uint32_t scale;
+
+
+	struct ParsingStatus{
+		uint8_t passed_dot:1 = false;
+		uint8_t contains_pre_dot_digits:1 = false;
+		uint8_t contains_post_dot_digits:1 = false;
+		uint8_t is_negative:1 = false;
+	};
+
 
 	static constexpr DestringResult<FstrDump> from_str(const StringView str) {
 		if (str.length() == 0) {	
@@ -33,46 +42,42 @@ struct FstrDump final{
 		int32_t frac_part = 0;
 		uint32_t scale = 1;
 
-		struct Status{
-			uint8_t passed_dot:1 = false;
-			uint8_t has_pre_dot_digits:1 = false;
-			uint8_t has_post_dot_digits:1 = false;
-			uint8_t is_negative:1 = false;
-		};
-
-		Status status;
-		const auto len = str.length();
+		ParsingStatus status;
+		const auto length = str.length();
 		size_t index = 0;
 
 		// 处理符号
 		if (str[index] == '+' || str[index] == '-') {
+			//如果字符串首字符为负号 说明这个数字是负数
 			status.is_negative = (str[0] == '-');
 			++ index;
-			if (len == 1) {
+			if (length == 1) {
 				return Err(DestringError::OnlySignFounded);  // 只有符号没有数字
 			}
 		}
 
-		while (index < len) {
+		while (index < length) {
 			const char chr = str[index];
 			
 			switch (chr) {
+				case 0:
+					return Err(DestringError::UnexpectedZero);
 				case '0' ... '9':{  // Digit case (GCC/Clang extension)
 
 					const uint8_t digit = chr - '0';
 					
 					constexpr int32_t MAX_INT_NUM = (std::numeric_limits<int32_t>::max() - 9) / 10;
-					if (!status.passed_dot) {
-						status.has_pre_dot_digits = true;
+					if (status.passed_dot == false) {
+						status.contains_pre_dot_digits = true;
 						// Check integer part overflow
 						if (digit_part > MAX_INT_NUM) {
 							return Err(DestringError::DigitOverflow);
 						}
 						digit_part = digit_part * 10 + digit;
 					} else {
-						status.has_post_dot_digits = true;
+						status.contains_post_dot_digits = true;
 						// Check fractional part overflow
-						if (scale > MAX_INT_NUM) {
+						if (frac_part > MAX_INT_NUM) {
 							return Err(DestringError::FracOverflow);
 						}
 						frac_part = frac_part * 10 + digit;
@@ -87,9 +92,8 @@ struct FstrDump final{
 				case '-':
 					return Err(DestringError::UnexpectedNegative);
 				case '.':  // Handle decimal dot
-					if (status.passed_dot) {
+					if (status.passed_dot) [[unlikely]]
 						return Err(DestringError::MultipleDot);  // Multiple decimal dots
-					}
 					status.passed_dot = true;
 					++index;
 					break;
@@ -104,13 +108,13 @@ struct FstrDump final{
 			}
 		}
 
-		if(status.passed_dot){//有小数的情况
-			if((!status.has_post_dot_digits))
+		if(status.passed_dot){
+			//有小数点的情况
+			if((status.contains_post_dot_digits == false)) [[unlikely]]
 				return Err(DestringError::NoDigitsAfterDot);
-		}else{//只有整数的情况
-			if (!status.has_pre_dot_digits) {
-				return Err(DestringError::NoDigitsAfterSign);  // 没有有效数字
-			}
+		}else{
+			if (status.contains_pre_dot_digits == false) [[unlikely]]
+				return Err(DestringError::NoDigitsAfterSign);  // 符号位和小数点之间没有有效数字
 		}
 
 		if(status.is_negative){
@@ -121,74 +125,83 @@ struct FstrDump final{
 		return Ok(FstrDump{
 			.digit_part = digit_part,
 			.frac_part = frac_part,
-			.scale = (status.has_post_dot_digits ? scale : 0)
+			.scale = (status.contains_post_dot_digits ? scale : 0)
 		});
 	}
 
 	friend OutputStream & operator<<(OutputStream & os, const FstrDump & dump) {
-		os << dump.digit_part << os.splitter() << dump.frac_part << os.splitter() << dump.scale;
-		return os;
+		return os << dump.digit_part << os.splitter() 
+			<< dump.frac_part << os.splitter() 
+			<< dump.scale
+		;
 	}
 };
 
 //是否为0~9的ascii字符
 [[nodiscard]] __always_inline static constexpr 
-bool is_digit(const char chr){
+bool is_digit_ascii(const char chr){
 		return chr >= '0' && chr <= '9';}
 
 ///是否为a~z, A~Z的ascii字符
 [[nodiscard]] __always_inline static constexpr 
-bool is_alpha(const char chr) {
+bool is_alpha_ascii(const char chr) {
     return (chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z');
 }
 
 //数字转ascii字符
 [[nodiscard]] __always_inline static constexpr 
 char digit2char(uint8_t digit) noexcept {
-	return digit + ((digit > 9) ? ('A' - 10) : '0');
+	if (digit > 9) [[unlikely]]
+		return digit + ('A' - 10);
+	else 
+		return digit + '0';
 }
 
+#if 0
 //是否为整数或小数
-[[nodiscard]] __always_inline static constexpr bool is_numeric(const StringView str) {
-	const auto len = str.length();
-	bool has_digit = false;
-	bool has_dot = false;
-	bool has_sign = false;
+[[nodiscard]] __always_inline static constexpr 
+bool is_numeric(const StringView str) {
+	const auto length = str.length();
+	bool contains_digit = false;
+	bool contains_dot = false;
+	bool contains_sign = false;
 
-	for (size_t i = 0; i < len; i++) {
+	for (size_t i = 0; i < length; i++) {
 		char chr = str[i];
 		if(chr == '\0'){
 			break;
-		} else if (is_digit(chr)) {
-			has_digit = true;
+		} else if (is_digit_ascii(chr)) {
+			contains_digit = true;
 		} else if (chr == '.') {
-			if (has_dot || !has_digit) {
+			if (contains_dot || !contains_digit) {
 				return false;
 			}
-			has_dot = true;
+			contains_dot = true;
 		} else if (chr == '+' || chr == '-') {
-			if (has_sign || has_digit || has_dot) {
+			if (contains_sign || contains_digit || contains_dot) {
 				return false;
 			}
-			has_sign = true;
+			contains_sign = true;
 		} else {
 			return false;
 		}
 	}
-	return has_digit;
+	return contains_digit;
 }
 
 
 //是否为不含符号的整数
-[[nodiscard]] __always_inline static constexpr bool is_digit(const StringView str){
-	const auto len = str.length();
-    for(size_t i = 0; i < len; i++){
+[[nodiscard]] __always_inline static constexpr 
+bool is_digit_ascii(const StringView str){
+	const auto length = str.length();
+    for(size_t i = 0; i < length; i++){
 		char chr = str[i];
-        if(!is_digit(chr)) return false;
+        if(!is_digit_ascii(chr)) return false;
 		if(chr == '\0') break;
     }
     return true;
 }
+#endif
 
 namespace details{
 
@@ -268,12 +281,12 @@ template<typename T>
 using extended_unsigned_t = typename _extended_unsigned<T>::type;
 
 template<integral T>
-struct IntDeformatter{
+struct [[nodiscard]] IntDeformatter{
 	using U = extended_unsigned_t<T>;
 	static constexpr DestringResult<T> defmt(const StringView str) {
 
-		const auto len = str.length();
-		if(len == 0) return Err(DestringError::EmptyString);
+		const auto length = str.length();
+		if(length == 0) return Err(DestringError::EmptyString);
 
 		U unsigned_ret = 0;
 		char existing_sign = '\0';
@@ -295,7 +308,7 @@ struct IntDeformatter{
 				return Err(DestringError::InvalidChar);
 		}
 
-		for(size_t i = size_t(bool(existing_sign)); i < len; i++){
+		for(size_t i = size_t(bool(existing_sign)); i < length; i++){
 			char chr = str[i];
 
 			switch(chr){
@@ -331,14 +344,12 @@ struct IntDeformatter{
 };
 
 template<>
-struct IntDeformatter<bool>{
+struct [[nodiscard]] IntDeformatter<bool>{
 	static constexpr StringView TRUE_STR = StringView("true");
 	static constexpr StringView FALSE_STR = StringView("false");
 	static constexpr DestringResult<bool> defmt(const StringView str) {
-		const auto len = str.length();
-		switch(len){
-			default:
-				return Err(DestringError::InvalidBooleanLength);
+		const auto length = str.length();
+		switch(length){
 			case 1:
 				switch(str[0]){
 					case '0':
@@ -361,28 +372,28 @@ struct IntDeformatter<bool>{
 					return Err(DestringError::InvalidBooleanAlpha);
 				return Ok(false);
 		}
-		__builtin_unreachable();
+		return Err(DestringError::InvalidBooleanLength);
 	}
 };
 
-template<typename IQ>
-struct IqDeformatter{
-	static constexpr size_t Q = IQ::q_num;
-	static constexpr DestringResult<IQ> defmt(const StringView str){
+template<typename Fixed>
+struct [[nodiscard]] FixedPointDeformatter{
+	static constexpr size_t NUM_Q = Fixed::q_num;
+	static constexpr DestringResult<Fixed> defmt(const StringView str){
 		const auto dump = ({
 			const auto res = FstrDump::from_str(str);
 			if(res.is_err()) return Err(res.unwrap_err());
 			res.unwrap();
 		});
 		
-		const IQ frac_part = [&] -> IQ{
+		const Fixed frac_part = [&] -> Fixed{
 			if (dump.scale == 0) return 0; 
-			return IQ::from_bits(
-				(int32_t(dump.frac_part) * int32_t(1 << Q)) / int32_t(dump.scale)
+			return Fixed::from_bits(
+				(int32_t(dump.frac_part) * int32_t(1 << NUM_Q)) / int32_t(dump.scale)
 			);
 		}();
 
-		return Ok(frac_part + IQ(dump.digit_part));
+		return Ok(frac_part + Fixed(dump.digit_part));
 	}
 };
 
@@ -400,14 +411,14 @@ __always_inline static constexpr std::tuple<uint32_t, uint8_t> fast_div(uint32_t
 	}
 }
 
-enum class PaddingStrategy:uint8_t{
+enum class DigitPaddingStrategy:uint8_t{
 	NoPadding,
 	PaddingZero
 };
 
 
 //格式化u32到字符串(静态派发进制)
-template<size_t Radix, PaddingStrategy S>
+template<size_t Radix, DigitPaddingStrategy S>
 __always_inline static constexpr void static_fmt_u32(
 	StringRef str, 
 	uint32_t value
@@ -419,7 +430,7 @@ __always_inline static constexpr void static_fmt_u32(
 		value = q;
 	} while (i > 0 && value >= 0);
 
-	if constexpr(S == PaddingStrategy::PaddingZero){
+	if constexpr(S == DigitPaddingStrategy::PaddingZero){
 		while (i > 0) {
 			str[--i] = '0';
 		}
@@ -427,27 +438,27 @@ __always_inline static constexpr void static_fmt_u32(
 }
 
 //格式化u32到字符串(动态派发进制)
-template<PaddingStrategy S>
+template<DigitPaddingStrategy S>
 __always_inline static constexpr void dyn_fmt_u32(
 	StringRef str, 
-	uint32_t value, 
+	uint32_t int_val, 
 	const uint8_t radix_count
 ){
 	switch(radix_count){
-		case 2: static_fmt_u32<2, S>(str, value); break;
-		case 8: static_fmt_u32<8, S>(str, value); break;
-		// case 10: static_fmt_u32<10, S>(str, value); break;
-		case 16: static_fmt_u32<16, S>(str, value); break;
+		case 2: static_fmt_u32<2, S>(str, int_val); break;
+		case 8: static_fmt_u32<8, S>(str, int_val); break;
+		// case 10: static_fmt_u32<10, S>(str, int_val); break;
+		case 16: static_fmt_u32<16, S>(str, int_val); break;
 		
 		default:{
 			size_t i = str.length();
 			do {
-				uint8_t digit = value % radix_count;
+				uint8_t digit = int_val % radix_count;
 				str[--i] = digit2char(digit);
-				value /= radix_count;
-			} while (i > 0 && value >= 0);
+				int_val /= radix_count;
+			} while (i > 0 && int_val >= 0);
 
-			if constexpr( S == PaddingStrategy::PaddingZero){
+			if constexpr( S == DigitPaddingStrategy::PaddingZero){
 				while (i > 0) {
 					str[--i] = '0';
 				}
@@ -461,12 +472,12 @@ __always_inline static constexpr void dyn_fmt_u32(
 template<integral T>
 struct IntFormatter{
 	[[nodiscard]] static constexpr 
-	TostringResult<size_t> fmt(StringRef str, T value, Radix radix){
+	SerStringResult<size_t> fmt(StringRef str, const T int_val, const Radix radix){
 		if (str.length() == 0)
-			return Err(TostringError::OutOfMemory);
+			return Err(SerStringError::OutOfMemory);
 			
 		// Handle zero explicitly
-		if (unlikely(value == 0)) {
+		if ((int_val == 0)) [[unlikely]] {
 			str[0] = '0';
 			return Ok(1);
 		}
@@ -474,33 +485,33 @@ struct IntFormatter{
 		const auto radix_count = radix.count();
 		
 		if constexpr (std::is_signed_v<T>){
-			const bool is_negative = value < 0;
+			const bool is_negative = int_val < 0;
 			if (is_negative) {
 				str[0] = '-';
 			}
 
-			// Make value positive
+			// Make int_val positive
 			using U = std::make_unsigned_t<T>;
 			U uvalue = is_negative ? 
-				static_cast<U>(-(value + 1)) + 1u : 
-				static_cast<U>(value);
+				static_cast<U>(-(int_val + 1)) + 1u : 
+				static_cast<U>(int_val);
 
 			// Compute length safely
 			const size_t uint_length = uint_to_num_chars(uvalue, radix);
 			const size_t total_length = uint_length + (is_negative ? 1 : 0);
-			if (str.length() < total_length) return Err(TostringError::OutOfMemory);
+			if (str.length() < total_length) return Err(SerStringError::OutOfMemory);
 
-			dyn_fmt_u32<PaddingStrategy::NoPadding>(
+			dyn_fmt_u32<DigitPaddingStrategy::NoPadding>(
 				StringRef(str.data() + is_negative, uint_length), 
 			uvalue, radix_count);
 
 			return Ok(total_length);
 		}else{
-			const size_t total_length = uint_to_num_chars(value, radix);
-			if (str.length() < total_length) return Err(TostringError::OutOfMemory);
-			dyn_fmt_u32<PaddingStrategy::NoPadding>(
+			const size_t total_length = uint_to_num_chars(int_val, radix);
+			if (str.length() < total_length) return Err(SerStringError::OutOfMemory);
+			dyn_fmt_u32<DigitPaddingStrategy::NoPadding>(
 				StringRef(str.data(), total_length), 
-			value, radix_count);
+			int_val, radix_count);
 			return Ok(total_length);
 		}
 	}
@@ -508,13 +519,13 @@ struct IntFormatter{
 
 };
 
-struct FixedU32Formatter{
+struct PaddingZeroU32Formatter{
 	[[nodiscard]] static constexpr 
-	TostringResult<size_t> fmt(StringRef str, uint32_t value, Radix radix){
+	SerStringResult<size_t> fmt(StringRef str, const uint32_t int_val, const Radix radix){
 		const auto radix_count = radix.count();
 	
-		dyn_fmt_u32<PaddingStrategy::PaddingZero>(
-			str, value, radix_count);
+		dyn_fmt_u32<DigitPaddingStrategy::PaddingZero>(
+			str, int_val, radix_count);
 
 		return Ok(str.length());
 	}
@@ -526,22 +537,27 @@ private:
 struct Iq16Formatter{
 	//TODO eps为5时计算会溢出 暂时限制eps=5的情况
 	//TODO 支持除了Q16格式外其他格式转换到字符串的函数 
-
-	static constexpr TostringResult<size_t> fmt(StringRef str, fixed_t<16, int32_t> value, const Eps eps_){
-		if(str.length() == 0) return Err(TostringError::OutOfMemory);
 		
-		constexpr size_t Q = 16;
+	static constexpr size_t Q = 16;
+	static constexpr uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
+	static constexpr SerStringResult<size_t> fmt(
+		StringRef str,
+		const fixed_t<16, int32_t> value, 
+		const Eps eps
+	){
+		if(str.length() == 0) return Err(SerStringError::OutOfMemory);
+
 
 		const auto value_i32 = value.to_bits();
-		const auto eps = MIN(eps_.count(), 4);
+		const auto eps_count = MIN(eps.count(), 4);
 
 		const bool is_negative = value_i32 < 0;
 		const uint32_t abs_value = ABS(value_i32);
-		constexpr uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
+
 
 		const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
 
-		const uint32_t scale = fast_exp10(eps);
+		const uint32_t scale = fast_exp10(eps_count);
 
 		const uint32_t fs = frac_part * scale;
 		
@@ -550,35 +566,35 @@ struct Iq16Formatter{
 		const uint32_t frac_int = (fs >> Q) + upper_round;
 		const uint32_t digit_part = (uint32_t(abs_value) >> Q) + bool(frac_int >= scale);
 
-		size_t len_acc = 0;
+		size_t pos = 0;
 
 		if(is_negative){
 			str[0] = '-';
-			len_acc += 1;
+			pos += 1;
 		}
 
 		const auto digit_len = ({
 			const auto res = IntFormatter<int>::fmt(
-				str.substr_unchecked(len_acc), digit_part, Radix::Dec);
+				str.substr_unchecked(pos), digit_part, Radix::Dec);
 			if(res.is_err()) return Err(res.unwrap_err());
 			res.unwrap();
 		});
 
-		len_acc += digit_len;
+		pos += digit_len;
 
 		//对小数点及后续的小数位格式化
-		if(str.length() < size_t(len_acc + 1 + eps))
-			return Err(TostringError::OutOfMemory);
+		if(str.length() < size_t(pos + 1 + eps_count))
+			return Err(SerStringError::OutOfMemory);
 
-		str[len_acc] = '.';
-		len_acc += 1;
+		str[pos] = '.';
+		pos += 1;
 
 		//忽略返回的长度 因为它就是eps
-		if(const auto res = FixedU32Formatter::fmt( 
-			StringRef(str.data() + len_acc, eps), frac_int, Radix::Dec
+		if(const auto res = PaddingZeroU32Formatter::fmt( 
+			StringRef(str.data() + pos, eps_count), frac_int, Radix::Dec
 		); res.is_err()) return Err(res.unwrap_err());
 		
-		return Ok(size_t(len_acc + eps));
+		return Ok(size_t(pos + eps_count));
 	}
 };
 
@@ -599,7 +615,7 @@ struct DefmtStrDispatcher<StringView>{
 template<size_t Q>
 struct DefmtStrDispatcher<fixed_t<Q, int32_t>>{
 	static constexpr DestringResult<fixed_t<Q, int32_t>> from_str(StringView str){
-		return details::IqDeformatter<fixed_t<Q, int32_t>>::defmt(str);
+		return details::FixedPointDeformatter<fixed_t<Q, int32_t>>::defmt(str);
 	}
 };
 
@@ -611,16 +627,6 @@ struct DefmtStrDispatcher<T>{
 	}
 };
 
-#if 1
-template<typename T>
-struct DefmtStrDispatcher<Angle<T>>{
-	static constexpr DestringResult<Angle<T>> from_str(StringView str){
-		if(const auto res = DefmtStrDispatcher<T>::from_str(str);
-			res.is_err()) return Err(res.unwrap_err());
-		else return Ok(Angle<T>::from_turns(res.unwrap()));
-	}
-};
-#endif
 
 template<typename T>
 static constexpr DestringResult<T> defmt_str(StringView str){
@@ -629,7 +635,7 @@ static constexpr DestringResult<T> defmt_str(StringView str){
 
 
 template<integral T>
-static constexpr TostringResult<size_t> to_str(
+static constexpr SerStringResult<size_t> to_str(
 	StringRef str, 
 	T value, 
 	Radix radix_count = Radix(Radix::Kind::Dec)
@@ -638,7 +644,7 @@ static constexpr TostringResult<size_t> to_str(
 }
 
 template<size_t Q>
-static constexpr TostringResult<size_t> to_str(StringRef str, fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
+static constexpr SerStringResult<size_t> to_str(StringRef str, fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
 	return details::Iq16Formatter::fmt(str, value, eps);
 }
 

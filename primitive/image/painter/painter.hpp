@@ -227,7 +227,7 @@ public:
         const Vec2u & pos, 
         const StringView str)
     {
-        GBKIterator iter(str);
+        GbkIterator iter(str);
 
         if(may_src_image_.is_none())
             return Err(Error(Error::Kind::ImageNotSet));

@@ -22,6 +22,7 @@ enum class DestringError:uint8_t{
 
 	MultipleDot,
 
+	UnexpectedZero,
 	UnexpectedSpace,
 	UnexpectedChar,
 	UnexpectedAlpha,
@@ -47,20 +48,20 @@ enum class DestringError:uint8_t{
 
 DEF_DERIVE_DEBUG(DestringError)
 
-enum class TostringError:uint8_t{
+enum class SerStringError:uint8_t{
 	OutOfMemory
 };
 
-DEF_DERIVE_DEBUG(TostringError)
+DEF_DERIVE_DEBUG(SerStringError)
 
 template<typename T = void>
 using DestringResult = Result<T,DestringError>;
 
 template<typename T = void>
-using TostringResult = Result<T,TostringError>;
+using SerStringResult = Result<T,SerStringError>;
 
 
-struct Radix final{
+struct [[nodiscard]] Radix final{
 	enum class Kind:uint8_t{
 		Dec = 10,
 		Hex = 16,
@@ -70,85 +71,105 @@ struct Radix final{
 
 	using enum Kind;
 
-	constexpr Radix(const Kind kind):
+	[[nodiscard]] constexpr Radix(const Kind kind):
 		count_(static_cast<uint8_t>(kind)){;}
 
-	constexpr explicit Radix(const uint8_t count):
+	[[nodiscard]] constexpr explicit Radix(const uint8_t count):
 		count_(count){;}
 
-	constexpr uint8_t count() const{
+	[[nodiscard]] constexpr uint8_t count() const{
 		return count_;
 	}
 
-	constexpr bool is_dec() const{
+	[[nodiscard]] constexpr bool is_dec() const{
 		return static_cast<Kind>(count_) == Dec;
 	}
 
-	constexpr bool is_hex() const{
+	[[nodiscard]] constexpr bool is_hex() const{
 		return static_cast<Kind>(count_) == Hex;
 	}
 
-	constexpr bool is_bin() const{
+	[[nodiscard]] constexpr bool is_bin() const{
 		return static_cast<Kind>(count_) == Bin;
 	}
 
-    constexpr auto operator<=>(const Radix & other) const = default;
+    [[nodiscard]] constexpr auto operator<=>(const Radix & other) const = default;
 
 private:
 	uint8_t count_;
 };
 
-struct Eps final{
+struct [[nodiscard]] Eps final{
+	uint8_t count_;
+
 	constexpr explicit Eps(const uint8_t count):
 		count_(count){;}
 
-	constexpr uint8_t count() const{
+	[[nodiscard]] constexpr uint8_t count() const{
 		return count_;
 	}
 
-    constexpr auto operator<=>(const Eps & other) const = default;
+    [[nodiscard]] constexpr auto operator<=>(const Eps & other) const = default;
 private:
-	uint8_t count_;
+
 };
 
-template<typename T>
-struct str_buffer_capacity{
-	
-};
+namespace details{
 
 template<typename T>
-requires(std::is_integral_v<T>)
-struct str_buffer_capacity<T>{
-    // 计算有符号类型需要的字符数（包括符号位）
-    static constexpr size_t for_signed() {
-        using limits = std::numeric_limits<T>;
-        return 1 + // 符号位
-               static_cast<size_t>(digits10(limits::max())) + 1; // 数字位数
-    }
+struct chars_capacity_for_int;
 
-    // 计算无符号类型需要的字符数
-    static constexpr size_t for_unsigned() {
-        using limits = std::numeric_limits<T>;
-        return static_cast<size_t>(digits10(limits::max())) + 1;
-    }
-
-    static constexpr auto value = 
-        std::numeric_limits<T>::is_signed ? for_signed() : for_unsigned();
+template<typename T>
+requires(std::is_integral_v<T> and (not std::is_same_v<T, bool>))
+struct [[nodiscard]] chars_capacity_for_int<T>{
 private:
     // 计算无符号整数类型的十进制位数
-    static constexpr size_t digits10() noexcept {
+    [[nodiscard]] static consteval size_t num_digits(const Eps eps) {
         size_t digits = 0;
-        T value = std::numeric_limits<T>::max();
+		using limits = std::numeric_limits<T>;
+        T value = limits::max();
         do {
             ++digits;
-            value /= 10;
+            value /= eps.count();
         } while (value != 0);
         return digits;
     }
 
+    // 计算有符号类型需要的字符数（包括符号位）
+    [[nodiscard]] static consteval size_t from_signed(const Eps eps) {
+        return 1 + // 符号位
+			static_cast<size_t>(num_digits(eps)) + 1; // 数字位数
+    }
+
+    // 计算无符号类型需要的字符数
+    [[nodiscard]] static consteval size_t from_unsigned(const Eps eps) {
+
+        return 0 + //符号位
+			static_cast<size_t>(num_digits(eps)) + 1;
+    }
+public:
+	[[nodiscard]] static constexpr size_t value(const Eps eps){
+		if constexpr(std::is_signed_v<T>) 
+			return from_signed(eps);
+		else 
+			return from_unsigned(eps);
+	}
 };
 
+template<>
+struct [[nodiscard]] chars_capacity_for_int<bool>{
+	static constexpr size_t NUM_FALSE_STR_LENGTH = 5;
+
+	[[nodiscard]] static constexpr size_t value(const Eps eps){
+		return NUM_FALSE_STR_LENGTH;
+	}
+};
+}
+
+
 template<typename T>
-static constexpr size_t str_buffer_capacity_v = str_buffer_capacity<T>::value; 
+[[nodiscard]] static constexpr size_t chars_capacity_for_int_v(const Eps eps){
+	return details::chars_capacity_for_int<T>::value(eps); 
+}
 
 }
