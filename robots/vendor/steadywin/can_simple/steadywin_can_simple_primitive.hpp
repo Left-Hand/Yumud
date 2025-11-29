@@ -532,8 +532,8 @@ struct [[nodiscard]] MitControl{
 struct [[nodiscard]] GetEncoderEstimates{
     using Self = GetEncoderEstimates;
     static constexpr CommandKind command = Command::GetEncoderEstimates;
-    fp32 position;
-    fp32 velocity;
+    math::fp32 position;
+    math::fp32 velocity;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
@@ -591,7 +591,7 @@ struct [[nodiscard]] SetInputPosition{
     using Self = SetInputPosition;
     static constexpr auto command = CommandKind{0x00c};
 
-    fp32 input_position;
+    math::fp32 input_position;
     int16_t vel_ff;
     int16_t torque_ff;
 
@@ -608,8 +608,8 @@ struct [[nodiscard]] SetInputVelocity{
     using Self = SetInputVelocity;
     static constexpr auto command = CommandKind{0x00d};
 
-    fp32 vel_ff;
-    fp32 torque_ff;
+    math::fp32 vel_ff;
+    math::fp32 torque_ff;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
@@ -624,7 +624,7 @@ struct [[nodiscard]] SetInputTorque{
     using Self = SetInputTorque;
     static constexpr auto command = CommandKind{0x00e};
 
-    fp32 torque_ff;
+    math::fp32 torque_ff;
     uint32_t __padding__ = 0;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
@@ -641,8 +641,8 @@ struct [[nodiscard]] SetLimits{
     using Self = SetLimits;
     static constexpr auto command = CommandKind{0x00f};
 
-    fp32 velocity_limit;
-    fp32 current_limit;
+    math::fp32 velocity_limit;
+    math::fp32 current_limit;
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
@@ -661,7 +661,7 @@ struct [[nodiscard]] SetTrajVelLimit{
     using Self = SetTrajVelLimit;
     static constexpr auto command = CommandKind{0x011};
 
-    fp32 traj_vel_limit;
+    math::fp32 traj_vel_limit;
     uint32_t __padding__ = 0;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
@@ -677,8 +677,8 @@ struct [[nodiscard]] SetTrajAccelLimit{
     using Self = SetTrajAccelLimit;
     static constexpr auto command = CommandKind{0x012};
 
-    fp32 traj_accel_limit;
-    fp32 traj_decel_limit;
+    math::fp32 traj_accel_limit;
+    math::fp32 traj_decel_limit;
     
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
@@ -693,7 +693,7 @@ struct [[nodiscard]] SetTrajAccelLimit{
 struct [[nodiscard]] SetTrajInertia{
     using Self = SetTrajInertia;
     static constexpr auto command = CommandKind{0x013};
-    fp32 traj_inertia;//惯量
+    math::fp32 traj_inertia;//惯量
     uint32_t __padding__ = 0;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
@@ -708,8 +708,8 @@ struct [[nodiscard]] SetTrajInertia{
 struct [[nodiscard]] GetIq{ 
     using Self = GetIq;
     static constexpr auto command = CommandKind{0x014};
-    fp32 id_setpoint;
-    fp32 iq_measured;
+    math::fp32 id_setpoint;
+    math::fp32 iq_measured;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
@@ -728,8 +728,8 @@ struct [[nodiscard]] Reboot{
 struct [[nodiscard]] GetBusVoltageCurrent{
     using Self = GetBusVoltageCurrent;
     static constexpr auto command = CommandKind{0x017};
-    fp32 bus_voltage;
-    fp32 bus_current;
+    math::fp32 bus_voltage;
+    math::fp32 bus_current;
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
@@ -764,7 +764,7 @@ struct [[nodiscard]] SetLinearCount{
 struct [[nodiscard]] SetPosGain{
     using Self = SetPosGain;
     static constexpr auto command = CommandKind{0x01a};
-    fp32 pos_gain;
+    math::fp32 pos_gain;
     uint32_t __padding__ = 0;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
@@ -780,8 +780,8 @@ struct [[nodiscard]] SetPosGain{
 struct [[nodiscard]] SetVelGain{
     using Self = SetVelGain;
     static constexpr auto command = CommandKind{0x01b};
-    fp32 vel_gain;
-    fp32 vel_integrator_gain;
+    math::fp32 vel_gain;
+    math::fp32 vel_integrator_gain;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
@@ -795,8 +795,8 @@ struct [[nodiscard]] SetVelGain{
 struct [[nodiscard]] SetTorques{
     using Self = SetTorques;
     static constexpr auto command = CommandKind{0x01c};
-    fp32 torque_setpoint;
-    fp32 torque;
+    math::fp32 torque_setpoint;
+    math::fp32 torque;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
@@ -810,8 +810,8 @@ struct [[nodiscard]] SetTorques{
 struct [[nodiscard]] GetPowers{
     using Self = GetPowers;
     static constexpr auto command = CommandKind{0x01d};
-    fp32 electrical_power;
-    fp32 mechanical_power;
+    math::fp32 electrical_power;
+    math::fp32 mechanical_power;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());

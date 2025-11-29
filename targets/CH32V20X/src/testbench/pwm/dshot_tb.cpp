@@ -49,8 +49,8 @@ static std::array<uint16_t, N> data;
     while(clock::millis() - entry_t < 3000ms){
         // ch1.enable();
         // ch2.enable();
-        ch1 = 0;
-        ch2 = 0;
+        ch1.set_dutycycle(0);
+        ch2.set_dutycycle(0);
 
         clock::delay(20ms);
     }

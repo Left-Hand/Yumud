@@ -18,7 +18,8 @@
 #include "dsp/filter/butterworth/ButterBandFilter.hpp"
 
 #include "dsp/filter/homebrew/debounce_filter.hpp"
-#include "dsp/controller/adrc/tracking_differentiator.hpp"
+#include "dsp/controller/adrc/nltd2o.hpp"
+#include "dsp/controller/adrc/ltd2o.hpp"
 #include "dsp/homebrew/edge_counter.hpp"
 #include "dsp/controller/smc/sliding_mode_ctrl.hpp"
 
@@ -154,6 +155,7 @@ void at8222_tb(){
     //     .out_max = 0.97_r,
     // }};
 
+    #if 0
     dsp::TrackingDifferentiatorByOrders<2> td{{
         // .r = 14.96_r,
         // .r = 7.9_r,
@@ -164,6 +166,8 @@ void at8222_tb(){
         // .r = 6.5_r,
         .fs = ISR_FREQ
     }};
+
+    #endif
 
     // volatile uint32_t exe_micros = 0;
     real_t spd_targ = 0;
@@ -198,9 +202,7 @@ void at8222_tb(){
 
                 ect.update(bool(bpf.output() > 0));
 
-                const auto pos = ect.count() * 0.01_r;
-                td.update(pos);
-                [[maybe_unused]] const auto spd = td.state()[1];
+                [[maybe_unused]] const auto pos = ect.count() * 0.01_r;
 
                 // static constexpr auto kp = 267.0_r;
                 // static constexpr auto kd = 0.0_r;

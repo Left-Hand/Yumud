@@ -12,7 +12,7 @@
 
 #include "core/math/realmath.hpp"
 #include "core/sync/timer.hpp"
-#include "robots/repl/repl_service.hpp"
+#include "middlewares/repl/repl_service.hpp"
 #include "robots/nodes/msg_factory.hpp"
 #include "robots/nodes/node_role.hpp"
 

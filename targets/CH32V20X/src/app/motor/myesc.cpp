@@ -11,31 +11,31 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/analog/opa/opa.hpp"
+#include "hal/dma/dma.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
-#include "drivers/GateDriver/DRV832X/DRV832X.hpp"
-
-#include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
-
-
-#include "dsp/filter/firstorder/lpf.hpp"
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
-
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/ctrl/pi_controller.hpp"
+
+#include "drivers/GateDriver/DRV832X/DRV832X.hpp"
+#include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
 #include "drivers/GateDriver/uvw_pwmgen.hpp"
 
 
 #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
-#include "robots/rpc/rpc.hpp"
-#include "robots/repl/repl_service.hpp"
-#include "hal/dma/dma.hpp"
+#include "dsp/controller/adrc/nltd2o.hpp"
+#include "dsp/motor_ctrl/position_filter.hpp"
+#include "dsp/filter/firstorder/lpf.hpp"
+#include "dsp/filter/butterworth/ButterBandFilter.hpp"
+
+#include "middlewares/rpc/rpc.hpp"
+#include "middlewares/repl/repl_service.hpp"
+
 
 #include "linear_regression.hpp"
-#include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
-#include "dsp/motor_ctrl/position_filter.hpp"
+
 
 //电机参数：
 // https://item.taobao.com/item.htm?id=643573104607
@@ -442,7 +442,7 @@ void myesc_main(){
                 // const auto s = iq16(sinpu(ctime * 0.7_r));
                 // const auto s = iq16(sinpu(ctime * 0.16_r));
                 // command_shaper_.update(100 + 6 * (int(s * 8) / 8));
-                track_ref_ = command_shaper_.update(track_ref_, floor(ctime * 3) * 4);
+                track_ref_ = command_shaper_.update(track_ref_, floor(ctime * 3) * 4, 0);
                 return std::make_tuple(
                     iq16::from_bits(track_ref_.x1.to_bits() >> 16),
                     track_ref_.x2

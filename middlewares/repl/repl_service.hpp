@@ -5,7 +5,7 @@
 #include "core/string/heapless_string.hpp"
 #include "core/string/utils/streamed_string_splitter.hpp"
 
-#include "robots/rpc/rpc.hpp"
+#include "middlewares/rpc/rpc.hpp"
 
 namespace ymd::robots{
 

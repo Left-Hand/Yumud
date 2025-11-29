@@ -4,8 +4,8 @@
 
 #include "service.hpp"
 
-#include "robots/rpc/rpc.hpp"
-#include "robots/repl/repl_service.hpp"
+#include "middlewares/rpc/rpc.hpp"
+#include "middlewares/repl/repl_service.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "hal/gpio/gpio_port.hpp"

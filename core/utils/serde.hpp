@@ -202,9 +202,9 @@ private:
 };
 
 template<>
-struct SerializeGenerator<RawLeBytes, bf16>{
-    static constexpr size_t N = sizeof(bf16);
-    constexpr explicit SerializeGenerator(const bf16 num):
+struct SerializeGenerator<RawLeBytes, math::bf16>{
+    static constexpr size_t N = sizeof(math::bf16);
+    constexpr explicit SerializeGenerator(const math::bf16 num):
         buf_(serialize(num)){;}
 
     [[nodiscard]] constexpr bool has_next() const {
@@ -214,7 +214,7 @@ struct SerializeGenerator<RawLeBytes, bf16>{
         return buf_[pos_++];
     }
 
-    static constexpr std::array<uint8_t, N> serialize(const bf16 num){
+    static constexpr std::array<uint8_t, N> serialize(const math::bf16 num){
         return std::bit_cast<std::array<uint8_t, N>>(num.to_bits());
     } 
 private:
@@ -463,8 +463,8 @@ struct Deserializer<RawLeBytes, T> {
 };
 
 template<>
-struct Deserializer<RawLeBytes, bf16> {
-    static constexpr size_t N = sizeof(bf16);
+struct Deserializer<RawLeBytes, math::bf16> {
+    static constexpr size_t N = sizeof(math::bf16);
     [[nodiscard]] static constexpr size_t size(){
         return N;
     }
@@ -474,7 +474,7 @@ struct Deserializer<RawLeBytes, bf16> {
         return pbuf.subspan(size());
     }
 
-    [[nodiscard]] static constexpr Result<bf16, DeserializeError> 
+    [[nodiscard]] static constexpr Result<math::bf16, DeserializeError> 
     deserialize(std::span<const uint8_t> pbuf) {
         if (pbuf.size() < N) {
             return Err(DeserializeError::ShortParsingBf16);
@@ -482,7 +482,7 @@ struct Deserializer<RawLeBytes, bf16> {
 
         std::array<uint8_t, N> bytes{};
         std::copy_n(pbuf.data(), N, bytes.begin());
-        return Ok(bf16::from_bits(std::bit_cast<uint16_t>(bytes)));
+        return Ok(math::bf16::from_bits(std::bit_cast<uint16_t>(bytes)));
     }
 };
 

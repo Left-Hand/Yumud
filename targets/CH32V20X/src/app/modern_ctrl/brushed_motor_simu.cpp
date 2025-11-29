@@ -2,7 +2,7 @@
 #include "dsp/controller/adrc/leso.hpp"
 #include "dsp/controller/adrc/command_shaper.hpp"
 
-#include "robots/repl/repl_service.hpp"
+#include "middlewares/repl/repl_service.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "hal/gpio/gpio_port.hpp"

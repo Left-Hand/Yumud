@@ -243,7 +243,8 @@ void math_main(){
         Line::from_point_and_angle(
             Vec2<iq16>{0,0}, 
             Angle<iq16>::from_radians(atan(iq16(0.3333_r)))
-        )
+        ),
+        0.00001_iq16
     ));
     print("foot", line.foot_of(Vec2<iq16>{0, 0.5_r}));
     print("mirror", line.mirror(Vec2<iq16>{0, 0.5_r}));

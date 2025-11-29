@@ -7,8 +7,10 @@
 #include "core/string/string_view.hpp"
 #include "core/string/utils/multiline_split.hpp"
 #include "robots/vendor/zdt/zdt_stepper.hpp"
-#include "robots/rpc/rpc.hpp"
-#include "robots/repl/repl_service.hpp"
+
+#include "middlewares/rpc/rpc.hpp"
+#include "middlewares/repl/repl_service.hpp"
+
 #include "types/vectors/polar.hpp"
 #include "types/vectors/vector2.hpp"
 
@@ -205,7 +207,7 @@ struct StepPointIterator{
 
     [[nodiscard]] constexpr bool has_next() const {
         return may_end_coord_.is_some() and 
-            (not now_coord_.is_equal_approx(may_end_coord_.unwrap()));
+            (not now_coord_.is_equal_approx(may_end_coord_.unwrap(), 0.001_iq16));
     }
 private:
     Vec2<iq24> now_coord_ = Vec2<iq24>::ZERO;

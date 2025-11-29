@@ -35,14 +35,14 @@
 
 #include "calibrate_utils.hpp"
 
-#include "robots/repl/repl_service.hpp"
+#include "middlewares/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/pwmgen/stepper_pwmgen.hpp"
 
 
 #include "dsp/motor_ctrl/position_filter.hpp"
-#include "dsp/motor_ctrl/calibrate_table.hpp"
-#include "dsp/motor_ctrl/position_corrector.hpp"
+#include "dsp/motor_ctrl/sensored/calibrate_table.hpp"
+#include "dsp/motor_ctrl/sensored/position_corrector.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 
 

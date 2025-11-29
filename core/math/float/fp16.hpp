@@ -3,7 +3,7 @@
 #include "../real.hpp"
 #include <cstdint>
 
-namespace ymd{
+namespace ymd::math{
 struct [[nodiscard]] fp16{
     union{
         uint16_t raw;

@@ -12,11 +12,9 @@
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
-#include "robots/repl/repl_service.hpp"
 #include "types/transforms/euler.hpp"
 
 #include "dsp/filter/homebrew/debounce_filter.hpp"
-#include "dsp/motor_ctrl/tracking_differentiator.hpp"
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "drivers/Encoder/ABEncoder.hpp"

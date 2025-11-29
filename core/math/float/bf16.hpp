@@ -9,8 +9,10 @@
 #include <span>
 
 namespace ymd{
-
 class OutputStream;
+    
+namespace math{
+
 
 struct [[nodiscard]] bf16 {
     struct [[nodiscard]] Storage{
@@ -94,7 +96,6 @@ struct [[nodiscard]] bf16 {
         );
     }
 
-    friend OutputStream & operator << (OutputStream & os, const bf16 v);
 private:
     Storage storage_;
 
@@ -112,15 +113,18 @@ consteval bf16 operator"" _bf16(unsigned long long x){
     return bf16(x);
 }
 
-
 }
+
+OutputStream & operator << (OutputStream & os, const math::bf16 v);
+}
+
 
 namespace std{
 
     template<>
-    struct is_arithmetic<ymd::bf16> : std::true_type {};
+    struct is_arithmetic<ymd::math::bf16> : std::true_type {};
     template<>
-    struct is_floating_point<ymd::bf16> : std::true_type {};
+    struct is_floating_point<ymd::math::bf16> : std::true_type {};
     template<>
-    struct is_signed<ymd::bf16> : std::true_type {};
+    struct is_signed<ymd::math::bf16> : std::true_type {};
 }

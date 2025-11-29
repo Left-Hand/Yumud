@@ -8,9 +8,9 @@ class Integrator{
 public:
     struct Config{
         uint32_t fs;
-        q20 ki;
-        q20 out_min;
-        q20 out_max;
+        iq20 ki;
+        iq20 out_min;
+        iq20 out_max;
     };
     constexpr Integrator(const Config & cfg){
         reconf(cfg);
@@ -26,26 +26,26 @@ public:
         out_max_ = cfg.out_max;
     }
 
-    constexpr void update(const q20 err){
+    constexpr void update(const iq20 err){
 
         const auto temp_output = output_ + ki_by_fs_ * err;
         output_ = CLAMP(temp_output, out_min_, out_max_);
     }
 
-    [[nodiscard]] constexpr q20 output() const {
+    [[nodiscard]] constexpr iq20 output() const {
         return output_;
     }
 
-    [[nodiscard]] constexpr q20 operator ()(const q20 err){
+    [[nodiscard]] constexpr iq20 operator ()(const iq20 err){
         update(err);
         return output_;
     }
 
 private:
-    q20 ki_by_fs_;
-    q20 out_min_;
-    q20 out_max_;
-    q20 output_;
+    iq20 ki_by_fs_;
+    iq20 out_min_;
+    iq20 out_max_;
+    iq20 output_;
 };
 
         

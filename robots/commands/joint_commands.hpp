@@ -8,7 +8,7 @@ namespace ymd{
 namespace robots::joint_commands{
 
 struct SetPosition{
-    bf16 position;
+    math::bf16 position;
 };
 
 
@@ -18,34 +18,34 @@ struct DeltaPosition{
 
 
 struct SetSpeed{
-    bf16 speed;
+    math::bf16 speed;
 };
 
 
 struct SetPositionWithFwdSpeed{
-    bf16 position;
-    bf16 speed;
+    math::bf16 position;
+    math::bf16 speed;
 };
 
 
 struct SetTrapzoid{
-    bf16 position;
-    bf16 speed;
-    bf16 acceleration;
-    bf16 deceleration;
+    math::bf16 position;
+    math::bf16 speed;
+    math::bf16 acceleration;
+    math::bf16 deceleration;
 };
 
 
 struct SetKpKd{
-    bf16 kp;
-    bf16 kd;
+    math::bf16 kp;
+    math::bf16 kd;
 };
 
 
 struct SetKpKiKd{
-    bf16 kp;
-    bf16 ki;
-    bf16 kd;
+    math::bf16 kp;
+    math::bf16 ki;
+    math::bf16 kd;
 };
 
 struct Deactivate{
@@ -81,13 +81,13 @@ struct PerspectiveRectInfo{
 
 
 struct ErrXY{
-    bf16 px;
-    bf16 py;
+    math::bf16 px;
+    math::bf16 py;
 };
 
 struct FwdXY{
-    bf16 fx;
-    bf16 fy;
+    math::bf16 fx;
+    math::bf16 fy;
 };
 
 

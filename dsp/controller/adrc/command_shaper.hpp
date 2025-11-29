@@ -2,20 +2,7 @@
 
 #include "utils.hpp"
 #include "types/vectors/vector2.hpp"
-#include "tracking_differentiator.hpp"
 
-namespace std{
-    template<size_t Q, size_t Q2>
-    [[nodiscard]] __fast_inline constexpr fixed_t<Q, int32_t> copysign(const fixed_t<Q, int32_t> x, const fixed_t<Q2, int32_t> s){
-        // return fixed_t<Q, int32_t>(_iq<Q>::from_i32((
-        //     (std::bit_cast<int32_t>(x.value) & 0x7fff'ffff) | 
-        //     (std::bit_cast<int32_t>(s.value) & 0x8000'0000)
-        // )));
-
-        return s > 0 ? x : -x;
-        // return SIGN_AS(x,s);
-    }
-}
 namespace ymd::dsp{
 
 //跟踪微分器 用于平滑输入

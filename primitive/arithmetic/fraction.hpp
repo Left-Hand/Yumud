@@ -2,8 +2,10 @@
 
 #include <type_traits>
 
+
+namespace ymd{
 template<typename T>
-struct Fraction {
+struct [[nodiscard]] Fraction {
     using num_t = decltype([] {
         if constexpr (std::is_arithmetic_v<T>) {
             return T{};
@@ -30,3 +32,4 @@ struct Fraction {
     den_t den;
 };
 
+}

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/platform.hpp"
 #include <cstdint>
 
 #include <concepts>

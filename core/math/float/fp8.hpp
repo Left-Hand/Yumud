@@ -5,7 +5,7 @@
 
 #include "core/math/real.hpp"
 
-
+namespace ymd::math{
 struct fp8_e4m3{
 	union{
 		uint8_t raw;
@@ -91,3 +91,6 @@ struct fp8_e5m2{
 #else
     #error "Please define FP8_USE_E4M3 or FP8_USE_E5M2"
 #endif
+
+
+}

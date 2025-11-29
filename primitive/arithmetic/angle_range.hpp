@@ -26,7 +26,7 @@ namespace ymd{
 // 正角（positive angle）：逆时针旋转的角为正角。
 
 template<typename T>
-struct AngleRange{
+struct [[nodiscard]] AngleRange{
     Angle<T> start;
     Angle<T> interval;
 

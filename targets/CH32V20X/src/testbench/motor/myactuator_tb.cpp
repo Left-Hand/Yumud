@@ -551,7 +551,7 @@ struct [[nodiscard]] cmd{};
 struct [[nodiscard]] GetPidParameter{
     using Self = GetPidParameter;
     PidIndex index;
-    fp32 value;
+    math::fp32 value;
 
     [[nodiscard]] static constexpr Self from_bytes(const std::span<const uint8_t, 7> bytes){
         return Self{

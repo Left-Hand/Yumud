@@ -1,11 +1,10 @@
 #pragma once
 
+#include "core/platform.hpp"
 
 #include <bits/ios_base.h>
 #include <iomanip>
 
-#include <vector>
-#include <array>
 #include <cstdint>
 #include <string>
 #include <string_view>

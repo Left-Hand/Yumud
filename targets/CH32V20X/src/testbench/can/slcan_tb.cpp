@@ -5,8 +5,8 @@
 #include "core/clock/time_stamp.hpp"
 
 #include "robots/protocols/cannet/slcan/slcan.hpp"
-#include "robots/rpc/rpc.hpp"
-#include "robots/repl/repl_service.hpp"
+#include "middlewares/rpc/rpc.hpp"
+#include "middlewares/repl/repl_service.hpp"
 
 using namespace ymd;
 

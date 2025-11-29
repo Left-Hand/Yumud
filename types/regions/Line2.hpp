@@ -8,7 +8,7 @@
 namespace ymd{
 
 template<arithmetic T>
-struct Line2{
+struct [[nodiscard]] Line2{
 public:
     T d;
     Angle<T> orientation; 
@@ -70,11 +70,11 @@ public:
 
 
 	[[nodiscard]] __fast_inline constexpr
-    bool operator==(const Line2 & other) const{
+    bool is_equal_approx(const Line2 & other, const T epsilon) const{
         auto regular = this->abs();
         auto other_regular = other.abs();
-        return is_equal_approx(regular.d, other_regular.d) 
-        and is_equal_approx(regular.orientation, other_regular.orientation);
+        return ymd::is_equal_approx(regular.d, other_regular.d, epsilon) 
+        and ymd::is_equal_approx(regular.orientation.to_turns(), other_regular.orientation.to_turns(), epsilon);
     }
 
 	[[nodiscard]] __fast_inline constexpr
@@ -103,11 +103,11 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    bool parallel_with(const Line2 & other) const{
+    bool is_parallel_with(const Line2 & other, const T epsilon) const{
         auto regular = this->abs();
         auto other_regular = other.abs();
-        return (is_equal_approx(regular.d, other_regular.d)) and 
-                is_equal_approx((2 * (other_regular.orientation - regular.orientation)).to_turns(), T(0));
+        return (ymd::is_equal_approx(regular.d, other_regular.d, epsilon)) and 
+        ymd::is_equal_approx((2 * (other_regular.orientation - regular.orientation)).to_turns(), T(0), epsilon);
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -117,15 +117,15 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    bool intersects(const Line2<T> & other) const{
-        if(this->parallel_with(other)) return false;
-        else if(this->operator==(other)) return false;
+    bool intersects(const Line2<T> & other, const T epsilon) const{
+        if(this->is_parallel_with(other, epsilon)) return false;
+        else if(this->is_equal_approx(other, epsilon)) return false;
         return true;
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Option<Vec2<T>> intersection(const Line2<T> & other) const{
-        if(unlikely(false == this->intersects(other))) return None;
+    Option<Vec2<T>> intersection(const Line2<T> & other, const T epsilon) const{
+        if(unlikely(false == this->intersects(other, epsilon))) return None;
         
 
         //https://www.cnblogs.com/junlin623/p/17640554.html
@@ -149,13 +149,13 @@ public:
 
     [[nodiscard]] __fast_inline constexpr
     Line2<T> rotated(const Vec2<T> & p, const Angle<T> angle){
-        if(this->has_point(p)) return Line2::from_point_and_angle(p, this->orientation + angle);
-        else{
-            //FIXME optimize
-            auto rebased = this->rebase(p);
-            rebased.orientation = rebased.orientation + angle;
-            return rebased;
-        }
+        // if(this->has_point(p)) return Line2::from_point_and_angle(p, this->orientation + angle);
+        // else{
+        //FIXME optimize
+        auto rebased = this->rebase(p);
+        rebased.orientation = rebased.orientation + angle;
+        return rebased;
+        // }
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -182,8 +182,8 @@ public:
     }
     
     [[nodiscard]] __fast_inline constexpr
-    bool has_point(const Vec2<T> & p) const{
-        return is_equal_approx(distance_to(p), T(0));
+    bool has_point(const Vec2<T> & p, const T epsilon) const{
+        return ymd::is_equal_approx(distance_to(p), T(0), epsilon);
     }
 
     [[nodiscard]] __fast_inline constexpr
@@ -201,8 +201,8 @@ public:
 
     //是否与另一条直线正交
     [[nodiscard]] __fast_inline constexpr
-    bool is_orthogonal_with(const Line2<T> & other, const auto eps) const {
-        return other.orientation.is_orthogonal_with(this->orientation, eps);
+    bool is_orthogonal_with(const Line2<T> & other, const T epsilon) const {
+        return other.orientation.is_orthogonal_with(this->orientation, epsilon);
         // return fposmod(other.orientation - this->orientation, T(PI));
     }
 
