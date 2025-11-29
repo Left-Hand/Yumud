@@ -246,8 +246,8 @@ public:
     Microseconds execution_time_ = 0us;
 // private:
 public:
-    using CommandShaper = dsp::CommandShaper1;
-    using CommandShaperConfig = CommandShaper::Config;
+    // using CommandShaper = dsp::CommandShaper1;
+    // using CommandShaperConfig = CommandShaper::Config;
 
     drivers::EncoderIntf & encoder_;
     digipw::StepperPwmGen & svpwm_;
@@ -275,15 +275,15 @@ public:
     static constexpr iq16 MC_TAU = 80;
 
 
-    static constexpr CommandShaperConfig CS_CONFIG{
-            .kp = MC_TAU * MC_TAU,
-            .kd = 2 * MC_TAU,
-            .max_spd = 30.0_r,
-            .max_acc = 140.0_r,
-            .fs = ISR_FREQ
-    };
+    // static constexpr CommandShaperConfig CS_CONFIG{
+    //         .kp = MC_TAU * MC_TAU,
+    //         .kd = 2 * MC_TAU,
+    //         .max_spd = 30.0_r,
+    //         .max_acc = 140.0_r,
+    //         .fs = ISR_FREQ
+    // };
 
-    CommandShaper command_shaper_{CS_CONFIG};
+    // CommandShaper command_shaper_{CS_CONFIG};
 
 
     CalibrateTasks calibrate_tasks_{

@@ -2,6 +2,7 @@
 
 #include "primitive/arithmetic/angle.hpp"
 #include "core/math/iq/fixed_t.hpp"
+#include "core/utils/zero.hpp"
 
 
 namespace ymd::reactive{
@@ -118,11 +119,11 @@ private:
 template<typename T>
 struct [[nodiscard]] CellBase<Angle<T>> {
     void set(const Angle<T>& val) {
-        inner_.store(val.to_turns(), std::memory_order_release);
+        inner_.set(val.to_turns());
     }
     
     Angle<T> get() const {
-        return Angle<T>::from_turns(inner_.load(std::memory_order_acquire));
+        return Angle<T>::from_turns(inner_.get());
     }
 
     auto & inner() {
@@ -130,7 +131,7 @@ struct [[nodiscard]] CellBase<Angle<T>> {
     }
     
 private:
-    CellBase<T> inner_{static_cast<T>(0)};
+    CellBase<T> inner_;
 };
 
 template<typename T>
@@ -193,26 +194,37 @@ template<typename T>
 struct [[nodiscard]] Probe {
     using Self = Probe;
 
-    explicit Probe(Some<const Cell<T> *> cell) : 
-        cell_(cell.get()) {}
-    
+    static Probe zero(){
+        return Self(nullptr);
+    }
+
     [[nodiscard]] T get() const {
+        if(cell_ == nullptr) [[unlikely]]
+            __builtin_trap();
         return cell_->get();
+            // return Zero
     }
 
     [[nodiscard]] Self clone() const {
         return Self(cell_);
     }
-private:
-    const Cell<T>* cell_;
+
 
     // 复制构造和赋值
     Probe(const Probe&) = default;
     Probe& operator=(const Probe&) = default;
+private:
+    const Cell<T>* cell_;
+
+
+    explicit Probe(const Cell<T> * cell) : 
+        cell_(cell) {}
 
     friend OutputStream & operator <<(OutputStream & os, const Probe & self){
         return os << self.get();
     }
+
+    friend class Cell<T>;
 };
 
 //CTAD
@@ -221,5 +233,14 @@ Cell(T) -> Cell<T>;
 
 template<typename T>
 Probe(T *) -> Probe<T>;
+
+
+template<typename T>
+struct Mailbox{
+    using Self = Mailbox;
+
+private:
+
+};  
 
 }

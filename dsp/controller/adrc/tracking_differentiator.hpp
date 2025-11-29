@@ -5,7 +5,7 @@
 
 namespace ymd::dsp{
 
-
+#if 0
 class TrackingDifferentiator{
 public:
     struct Config{
@@ -183,6 +183,8 @@ private:
     using State = StateVector<iq20, N>;
     State state_;
 };
+
+#endif
 
 
 // class ExtendedStateObserver{

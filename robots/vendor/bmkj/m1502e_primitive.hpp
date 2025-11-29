@@ -93,6 +93,9 @@ struct [[nodiscard]] ExceptionCode{
     constexpr ExceptionCode(const Exception exception) 
         : bits(std::bit_cast<uint8_t>(exception)){;}
 
+    constexpr ExceptionCode(const _None_t) 
+        : bits(NONE){;}
+
     [[nodiscard]] static constexpr Self 
     from_bits(const uint8_t bits){
         return std::bit_cast<Self>(bits);
@@ -107,6 +110,7 @@ struct [[nodiscard]] ExceptionCode{
             __builtin_trap();
         return std::bit_cast<Exception>(bits);
     }
+
 
     [[nodiscard]] constexpr uint8_t to_bits() const {
         return bits;
@@ -230,6 +234,10 @@ struct [[nodiscard]] SpeedCode{
 
     constexpr iq16 to_rpm() const {
         return iq16(std::bit_cast<int16_t>(bits)) * uq16(0.01);
+    }
+
+    constexpr iq16 to_rps() const {
+        return iq16(std::bit_cast<int16_t>(bits)) * uq32(0.01 / 60);
     }
 };
 

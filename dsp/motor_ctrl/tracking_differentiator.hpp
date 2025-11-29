@@ -119,11 +119,13 @@ struct NonlinearTrackingDifferentor{
         {;}
     
 
-    constexpr SecondOrderState update(const SecondOrderState & state, const iq16 v) const {
-        const iq16 x1 = iq16::from_bits(static_cast<int32_t>(state.x1.to_bits() >> 16));
-        const iq16 x2 = state.x2;
+    constexpr SecondOrderState update(const SecondOrderState & state, const iq16 x1, const iq16 x2) const {
+        const iq16 x1_now = iq16::from_bits(static_cast<int32_t>(state.x1.to_bits() >> 16));
+        const iq16 x2_now = state.x2;
         
-        const auto u = coeffs_.fhan(v, x1, x2);
+        const iq16 e1 = x1 - x1_now;
+        const iq16 e2 = x2 - x2_now;
+        const auto u = coeffs_.fhan(e1, e2);
         const auto next_x1 = state.x1 + extended_mul(state.x2, coeffs_.dt);
         const auto next_x2 = CLAMP2(state.x2 + u * coeffs_.dt, coeffs_.x2_limit);
         return {

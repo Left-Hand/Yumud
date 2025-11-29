@@ -19,22 +19,21 @@ struct FhanPrecomputed{
         inv_d_(1 / iq16(cfg.r * cfg.h)){;}
 
     [[nodiscard]] constexpr iq16 operator()(
-        const iq16 v, 
-        const iq16 x1, 
-        const iq16 x2
+        const iq16 e1, 
+        const iq16 e2
     ) const{
-        const iq16 y = x1 - v + x2 * h_;//var
+        const iq16 y = -e1 - e2 * h_;//var
         const iq16 abs_y = ABS(y);
         const iq16 a0 = sat_sqrt(iq8(d_), iq8(8 * r_), abs_y);//var
         
         const iq16 a = [&]{
             if(abs_y > d0_){
                 if(y > 0)
-                    return x2 + ((a0 - d_) >> 1);//var
+                    return -e2 + ((a0 - d_) >> 1);//var
                 else 
-                    return x2 - ((a0 - d_) >> 1);//var
+                    return -e2 - ((a0 - d_) >> 1);//var
             }else{
-                return x2 + y * inv_h_;//var
+                return -e2 + y * inv_h_;//var
             }
         }();
 
