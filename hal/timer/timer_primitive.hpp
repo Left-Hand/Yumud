@@ -86,7 +86,10 @@ struct [[nodiscard]] ArrAndPsc{
         return ret;
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self);
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os << os.field("arr")(self.arr) << os.splitter() 
+            << os.field("psc")(self.psc);
+    }
 };
 
 
@@ -177,7 +180,7 @@ enum class [[nodiscard]] TimerTrgoSource:uint8_t{
     Reset   = 0x0000,             
     Enable  = 0x0010,           
     Update  = 0x0020,           
-    OC1     = 0x0030   ,            
+    OC1     = 0x0030,            
     OC1R    = 0x0040,            
     OC2R    = 0x0050,            
     OC3R    = 0x0060,            
@@ -197,7 +200,7 @@ enum class [[nodiscard]] TimerTrgoSource:uint8_t{
 // };
 
 
-enum class [[nodiscard]] TimerIT:uint8_t{
+enum class [[nodiscard]] TimerIT:uint16_t{
     Update  = 0x0001,
     CC1     = 0x0002,
     CC2     = 0x0004,
@@ -208,30 +211,12 @@ enum class [[nodiscard]] TimerIT:uint8_t{
     Break   = 0x0080,
 };
 
-// enum class [[nodiscard]] TimerIT:uint8_t{
-//     Update  = 0x01,
-//     CC1     = 0x02,
-//     CC2     = 0x04,
-//     CC3     = 0x08,
-//     CC4     = 0x10,
-//     COM     = 0x20,
-//     Trigger = 0x40,
-//     Break   = 0x80,
-// };
-
 enum class [[nodiscard]] TimerBdtrLockLevel:uint8_t{
     Off     = 0x00,
     Low     = 0x01,
     Medium  = 0x02,
     High    = 0x03
 };
-
-// enum class [[nodiscard]] TimerBdtrLockLevel:uint8_t{
-//     Off     = 0x00,
-//     Low     = 0x01,
-//     Medium  = 0x02,
-//     High    = 0x03
-// };
 
 enum class [[nodiscard]] TimerOcMode:uint8_t{
     Freeze              = 0b000,

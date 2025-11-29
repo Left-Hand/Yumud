@@ -133,7 +133,7 @@ public:
 
     template<IT I>
     void enable_interrupt(const Enable en){
-        TIM_ITConfig(inst_, std::bit_cast<uint8_t>(I), en == EN);
+        TIM_ITConfig(inst_, std::bit_cast<uint16_t>(I), en == EN);
     }
 
     template<IT I>

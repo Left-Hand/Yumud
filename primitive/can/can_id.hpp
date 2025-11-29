@@ -25,10 +25,10 @@ struct [[nodiscard]] CanStdId{
     static constexpr CanStdId from_u11(const uint16_t bits){
         if(bits > MAX_VALUE) [[unlikely]]
             __builtin_trap();
-        return CanStdId(bits & MAX_VALUE);
+        return CanStdId(bits);
     }
     static constexpr Option<CanStdId> try_from_u11(const uint16_t bits){
-        if(bits > 0x7ff) return None;
+        if(bits > MAX_VALUE) return None;
         return Some(CanStdId(bits));
     }
     constexpr CanStdId(const CanStdId & other) = default;
@@ -66,10 +66,10 @@ struct [[nodiscard]] CanExtId{
     static constexpr CanExtId from_u29(const uint32_t bits){
         if(bits > MAX_VALUE) [[unlikely]]
             __builtin_trap();
-        return CanExtId(bits & MAX_VALUE);
+        return CanExtId(bits);
     }
     static constexpr Option<CanExtId> try_from_u29(const uint32_t bits){
-        if(bits > 0x1fffffff) return None;
+        if(bits > MAX_VALUE) return None;
         return Some(CanExtId(bits));
     }
 
@@ -82,6 +82,7 @@ struct [[nodiscard]] CanExtId{
         //less id means higher priority
         return bits_ < other.bits_;
     }
+
     [[nodiscard]] constexpr uint32_t to_u29() const {return bits_;}
 
     friend OutputStream & operator << (OutputStream & os, const Self & self);
