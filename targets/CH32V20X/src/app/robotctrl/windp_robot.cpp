@@ -19,7 +19,6 @@
 #include "types/vectors/vector3.hpp"
 #include "types/vectors/quat.hpp"
 
-#include "robots/repl/repl_service.hpp"
 #include "digipw/prelude/abdq.hpp"
 
 using namespace ymd;

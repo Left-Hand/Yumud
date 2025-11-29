@@ -67,7 +67,11 @@ template<size_t Q>
         if(exponent == 0 or exponent == 0xff){
             return 0;
         }else{
-            return LSHIFT(mantissa, exponent - 127);
+            // return LSHIFT(mantissa, exponent - 127);
+            if(exponent < 127)
+                return mantissa >> size_t(127 - exponent);
+            else
+                return mantissa << size_t(exponent - 127);
         }
     }();
 

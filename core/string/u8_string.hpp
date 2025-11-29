@@ -66,7 +66,7 @@ namespace utf8 {
     }
 }
 
-class U8String {
+class Utf8String {
 public:
     // UTF-8字符视图（代码点）
     class CodePoint {
@@ -103,7 +103,7 @@ public:
         using pointer = CodePoint*;
         using reference = CodePoint&;
 
-        constexpr iterator(const U8String* str, size_t pos) 
+        constexpr iterator(const Utf8String* str, size_t pos) 
             : parent_(str), current_pos_(pos) {}
         
         constexpr CodePoint operator*() const {
@@ -130,7 +130,7 @@ public:
         }
         
     private:
-        const U8String* parent_;
+        const Utf8String* parent_;
         size_t current_pos_;
     };
 
@@ -142,7 +142,7 @@ public:
         using pointer = const CodePoint*;
         using reference = const CodePoint&;
 
-        constexpr const_iterator(const U8String* str, size_t pos) 
+        constexpr const_iterator(const Utf8String* str, size_t pos) 
             : parent_(str), current_pos_(pos) {}
         
         constexpr CodePoint operator*() const {
@@ -169,32 +169,32 @@ public:
         }
         
     private:
-        const U8String* parent_;
+        const Utf8String* parent_;
         size_t current_pos_;
     };
 
     // 构造函数
-    constexpr explicit U8String() noexcept : ascii_str_() {}
+    constexpr explicit Utf8String() noexcept : ascii_str_() {}
     
-    static constexpr Option<U8String> from_str(std::string_view sv) noexcept {
+    static constexpr Option<Utf8String> from_str(std::string_view sv) noexcept {
         if (!utf8::is_valid_utf8(sv.data(), sv.size())) {
-            return Option<U8String>{};
+            return Option<Utf8String>{};
         }
-        return Option<U8String>{U8String(sv)};
+        return Option<Utf8String>{Utf8String(sv)};
     }
 
     
     // 拷贝构造函数
-    constexpr U8String(const U8String& other) = default;
+    constexpr Utf8String(const Utf8String& other) = default;
     
     // 移动构造函数
-    constexpr U8String(U8String&& other) noexcept = default;
+    constexpr Utf8String(Utf8String&& other) noexcept = default;
     
-    ~U8String() = default;
+    ~Utf8String() = default;
 
     // 赋值运算符
-    constexpr U8String& operator=(const U8String& other) = default;
-    constexpr U8String& operator=(U8String&& other) noexcept = default;
+    constexpr Utf8String& operator=(const Utf8String& other) = default;
+    constexpr Utf8String& operator=(Utf8String&& other) noexcept = default;
 
     // 访问方法
     constexpr const char* data() const noexcept { return ascii_str_.c_str(); }
@@ -254,33 +254,33 @@ public:
     constexpr const_iterator cend() const { return const_iterator(this, ascii_str_.size()); }
 
     // 比较操作
-    constexpr bool operator==(const U8String& other) const noexcept {
+    constexpr bool operator==(const Utf8String& other) const noexcept {
         return ascii_str_ == other.ascii_str_;
     }
     
-    constexpr bool operator!=(const U8String& other) const noexcept {
+    constexpr bool operator!=(const Utf8String& other) const noexcept {
         return !(*this == other);
     }
     
-    constexpr bool operator<(const U8String& other) const noexcept {
+    constexpr bool operator<(const Utf8String& other) const noexcept {
         return std::strcmp(ascii_str_.c_str(), other.ascii_str_.c_str()) < 0;
     }
     
-    constexpr bool operator>(const U8String& other) const noexcept {
+    constexpr bool operator>(const Utf8String& other) const noexcept {
         return other < *this;
     }
     
-    constexpr bool operator<=(const U8String& other) const noexcept {
+    constexpr bool operator<=(const Utf8String& other) const noexcept {
         return !(other < *this);
     }
     
-    constexpr bool operator>=(const U8String& other) const noexcept {
+    constexpr bool operator>=(const Utf8String& other) const noexcept {
         return !(*this < other);
     }
 
     // 子字符串操作（返回Option确保安全）
-    constexpr Option<U8String> substr(size_t pos, size_t count = std::string_view::npos) const noexcept {
-        if (pos > ascii_str_.size()) return Option<U8String>{};
+    constexpr Option<Utf8String> substr(size_t pos, size_t count = std::string_view::npos) const noexcept {
+        if (pos > ascii_str_.size()) return Option<Utf8String>{};
         
         size_t actual_count = std::min(count, ascii_str_.size() - pos);
         std::string_view sv(ascii_str_.c_str() + pos, actual_count);
@@ -288,15 +288,15 @@ public:
         // 确保子字符串从有效的UTF-8边界开始
         if (pos > 0 && utf8::is_continuation_byte(
             static_cast<uint8_t>(ascii_str_.c_str()[pos]))) {
-            return Option<U8String>{};
+            return Option<Utf8String>{};
         }
         
         // 验证子字符串是有效的UTF-8
         if (!utf8::is_valid_utf8(sv.data(), sv.size())) {
-            return Option<U8String>{};
+            return Option<Utf8String>{};
         }
         
-        return Option<U8String>{U8String(sv)};
+        return Option<Utf8String>{Utf8String(sv)};
     }
 
     // 查找操作

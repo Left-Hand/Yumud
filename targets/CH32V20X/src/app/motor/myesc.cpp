@@ -11,31 +11,31 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/analog/opa/opa.hpp"
+#include "hal/dma/dma.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
-#include "drivers/GateDriver/DRV832X/DRV832X.hpp"
-
-#include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
-
-
-#include "dsp/filter/firstorder/lpf.hpp"
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
-
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/ctrl/pi_controller.hpp"
+
+#include "drivers/GateDriver/DRV832X/DRV832X.hpp"
+#include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
 #include "drivers/GateDriver/uvw_pwmgen.hpp"
 
 
 #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
-#include "robots/rpc/rpc.hpp"
-#include "robots/repl/repl_service.hpp"
-#include "hal/dma/dma.hpp"
+#include "dsp/controller/adrc/nltd2o.hpp"
+#include "dsp/motor_ctrl/position_filter.hpp"
+#include "dsp/filter/firstorder/lpf.hpp"
+#include "dsp/filter/butterworth/ButterBandFilter.hpp"
+
+#include "middlewares/rpc/rpc.hpp"
+#include "middlewares/repl/repl_service.hpp"
+
 
 #include "linear_regression.hpp"
-#include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
-#include "dsp/motor_ctrl/position_filter.hpp"
+
 
 //电机参数：
 // https://item.taobao.com/item.htm?id=643573104607
@@ -76,7 +76,7 @@ static constexpr auto PHASE_INDUCTANCE = 0.0007_iq20;
 static constexpr auto PHASE_RESISTANCE = 0.523_iq20;
 #endif
 
-static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1000;
+static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1200;
 // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 200;
 
 static constexpr auto MAX_MODU_VOLT = iq16(6.5);
@@ -88,7 +88,7 @@ struct LrSeriesCurrentRegulatorConfig{
     iq16 phase_resistance;        // 相电阻 (Ω)
     iq16 max_voltage;                // 最大电压 (V)
 
-    [[nodiscard]] constexpr digipw::PiController::Cofficients make_coeff() const {
+    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, const char *> try_to_coeff() const {
         //U(s) = I(s) * R + s * I(s) * L
         //I(s) / U(s) = 1 / (R + sL)
         //G_open(s) = (Ki / s + Kp) / s(R / s + L)
@@ -108,7 +108,7 @@ struct LrSeriesCurrentRegulatorConfig{
         // coeff.ki_discrete = 0;
 
         coeff.err_sum_max = self.max_voltage / iq16(coeff.ki_discrete);
-        return coeff;
+        return Ok(coeff);
     }
 };
 
@@ -124,6 +124,17 @@ struct LrSeriesCurrentRegulatorConfig{
 };
 
 #endif
+
+
+static constexpr auto current_regulator_cfg = LrSeriesCurrentRegulatorConfig{
+    .fs = FOC_FREQ,
+    .fc = CURRENT_CUTOFF_FREQ,
+    .phase_inductance = PHASE_INDUCTANCE,
+    .phase_resistance = PHASE_RESISTANCE,
+    .max_voltage = MAX_MODU_VOLT,
+};
+
+
 
 
 static void init_adc(){
@@ -292,8 +303,11 @@ void myesc_main(){
 
     // #endregion 
     
-    Angle<iq16> openloop_elec_angle_ = Zero;
-    Angle<iq16> sensored_elec_angle_ = Zero;
+    Angle<uq16> openloop_elec_angle_ = Zero;
+    Angle<uq16> sensored_elec_angle_ = Zero;
+    Angle<uq16> encoder_lap_angle_ = Zero;
+    Angle<iq16> encoder_multi_angle_ = Zero;
+    Angle<iq16> diff_angle = Zero;
     UvwCoord<iq20> uvw_curr_ = Zero;
     DqCoord<iq20> dq_curr_ = Zero;
     DqCoord<iq20> dq_volt_ = Zero;
@@ -301,19 +315,13 @@ void myesc_main(){
     AlphaBetaCoord<iq20> alphabeta_volt_ = Zero;
     Microseconds exe_us_ = 0us;
 
-    static constexpr auto current_regulator_cfg = LrSeriesCurrentRegulatorConfig{
-        .fs = FOC_FREQ,
-        .fc = CURRENT_CUTOFF_FREQ,
-        .phase_inductance = PHASE_INDUCTANCE,
-        .phase_resistance = PHASE_RESISTANCE,
-        .max_voltage = MAX_MODU_VOLT,
-    };
 
-    static constexpr auto controller_coeff = current_regulator_cfg.make_coeff();
+
+    static constexpr auto controller_coeff = current_regulator_cfg.try_to_coeff().unwrap();
     // PANIC{controller_coeff};
 
-    auto d_pi_ctrl_ = controller_coeff.to_controller();
-    auto q_pi_ctrl_ = controller_coeff.to_controller();
+    auto d_pi_ctrl_ = controller_coeff.to_pi_controller();
+    auto q_pi_ctrl_ = controller_coeff.to_pi_controller();
 
     [[maybe_unused]] auto flux_sensorless_ob = dsp::motor_ctl::NonlinearFluxObserver{
         dsp::motor_ctl::NonlinearFluxObserver::Config{
@@ -345,12 +353,30 @@ void myesc_main(){
         }
     };
 
+    static constexpr auto coeffs = typename NonlinearTrackingDifferentor::Config{
+        .fs = FOC_FREQ,
+        // .r = 30.5_q24,
+        // .h = 2.5_q24
+        // .r = 252.5_iq10,
+        // .r = 152.5_iq10,
+        .r = 242.5_iq10,
+        .h = 0.005_iq10,
+        .x2_limit = 240
+    }.try_to_coeffs().unwrap();
 
-    [[maybe_unused]] dsp::PositionFilter pos_filter_{
-        typename dsp::PositionFilter::Config{
-            .fs = FOC_FREQ,
-            .r = 205
-        }
+    static NonlinearTrackingDifferentor command_shaper_{
+        coeffs
+    };
+
+    SecondOrderState track_ref_;
+    SecondOrderState feedback_state_;
+
+    static constexpr auto feedback_coeffs = LinearTrackingDifferentiator<iq16, 2>::Config{
+        .fs = FOC_FREQ, .r = 350
+    }.try_to_coeffs().unwrap();
+
+    [[maybe_unused]] LinearTrackingDifferentiator<iq16, 2> feedback_differ_{
+        feedback_coeffs
     };
     
     auto ctrl_isr = [&]{
@@ -372,12 +398,18 @@ void myesc_main(){
         // const auto openloop_manchine_angle = Angle<iq16>::from_turns(sinpu(0.2_r * ctime));
         const auto openloop_elec_angle = openloop_manchine_angle * POLE_PAIRS;
 
-        static constexpr auto ANGLE_BASE = Angle<iq16>::from_turns(-0.22_iq16);
-        const auto encoder_angle = mt6825_.get_lap_angle().examine().cast_inner<iq16>();
+        static constexpr auto ANGLE_BASE = Angle<uq16>::from_turns(0.78_uq16);
+        const auto next_encoder_lap_angle = mt6825_.get_lap_angle().examine().cast_inner<uq16>();
 
-        pos_filter_.update(encoder_angle);
+        // const auto diff_angle = (next_encoder_lap_angle.cast_inner<iq16>() 
+        diff_angle = (next_encoder_lap_angle.cast_inner<iq16>() 
+            - encoder_lap_angle_.cast_inner<iq16>()).normalized();
+
+        encoder_lap_angle_ = next_encoder_lap_angle;
+        encoder_multi_angle_ = encoder_multi_angle_ + diff_angle;
+        feedback_state_ = feedback_differ_.update(feedback_state_, encoder_multi_angle_.to_turns());
         
-        const auto sensored_elec_angle = ((encoder_angle * POLE_PAIRS) + ANGLE_BASE).normalized(); 
+        const auto sensored_elec_angle = ((next_encoder_lap_angle * POLE_PAIRS) + ANGLE_BASE).normalized(); 
 
 
         #if 1
@@ -405,6 +437,17 @@ void myesc_main(){
 
         //#region 位速合成力矩
         const auto [position_cmd, speed_cmd] = [&]{
+            if constexpr(1){
+                // command_shaper_.update(10 + 12 * sign(iq16(sinpu(ctime * 0.5_r))));
+                // const auto s = iq16(sinpu(ctime * 0.7_r));
+                // const auto s = iq16(sinpu(ctime * 0.16_r));
+                // command_shaper_.update(100 + 6 * (int(s * 8) / 8));
+                track_ref_ = command_shaper_.update(track_ref_, floor(ctime * 3) * 4, 0);
+                return std::make_tuple(
+                    iq16::from_bits(track_ref_.x1.to_bits() >> 16),
+                    track_ref_.x2
+                );
+            }
             const auto omega = 9_iq16;
             const auto amplitude = 2_iq16;
 
@@ -421,11 +464,13 @@ void myesc_main(){
 
 
         const iq20 torque_cmd = [&]{ 
-            const iq16 kp = 0.18_iq16;
-            const iq16 kd = 0.016_iq16;
+            const iq16 kp = 0.23_iq16;
+            const iq16 kd = 0.035_iq16;
 
-            const iq16 position_err = position_cmd - pos_filter_.accumulated_angle().to_turns();
-            const iq16 speed_err = speed_cmd - pos_filter_.speed();
+            // const iq16 position_err = position_cmd - pos_filter_.accumulated_angle().to_turns();
+            // const iq16 speed_err = speed_cmd - pos_filter_.speed();
+            const iq16 position_err = position_cmd - iq16::from_bits(feedback_state_.x1.to_bits() >> 16);
+            const iq16 speed_err = speed_cmd - feedback_state_.x2;
 
             return (kp * position_err) + (kd * speed_err);
         }();
@@ -435,7 +480,7 @@ void myesc_main(){
         //#region 力矩转电流
 
         static constexpr iq20 TORQUE_2_CURR_RATIO = 1_iq16;
-        static constexpr iq20 MAX_CURRENT = 0.2_iq16;
+        static constexpr iq20 MAX_CURRENT = 0.4_iq16;
 
         const iq20 current_cmd = CLAMP2(torque_cmd * TORQUE_2_CURR_RATIO, MAX_CURRENT);
         //#endregion
@@ -497,7 +542,6 @@ void myesc_main(){
         );
 
         uvw_pwmgen_.set_dutycycle(uvw_dutycycle);
-
         uvw_curr_ = uvw_curr;
         alphabeta_curr_ = alphabeta_curr;
         dq_curr_ = dq_curr;
@@ -556,8 +600,8 @@ void myesc_main(){
             // alphabeta_curr_,
             // alphabeta_volt_,
             // alphabeta_volt_.beta / alphabeta_curr_.beta,
-            dq_curr_,
-            dq_volt_,
+            // dq_curr_,
+            // dq_volt_,
             // alphabeta_volt_.beta / alphabeta_curr_.beta,
             // q_pi_ctrl_.err_sum_,
             // q_pi_ctrl_.kp_
@@ -566,11 +610,18 @@ void myesc_main(){
             // hal::adc1.inj<1>().get_voltage(),
             
             // iq16(lap_angle.to_turns()) * POLE_PAIRS,
-            sensored_elec_angle_.to_turns(),
-            openloop_elec_angle_.to_turns(),
-            pos_filter_.accumulated_angle().to_turns(),
-            pos_filter_.speed(),
-            static_cast<uint32_t>(exe_us_.count()),
+            // sensored_elec_angle_.to_turns(),
+            // openloop_elec_angle_.to_turns(),
+            iq16::from_bits(track_ref_.x1.to_bits() >> 16),
+            track_ref_.x2,
+
+            iq16::from_bits(feedback_state_.x1.to_bits() >> 16),
+            feedback_state_.x2,
+            // pos_filter_.accumulated_angle().to_turns(),
+            // pos_filter_.speed(),
+            // sensored_elec_angle_.to_turns(),
+            encoder_multi_angle_.to_turns(),
+            diff_angle.to_turns(),
             0
             // flux_sensorless_ob.angle().to_turns()
             // flux_sensorless_ob.V_alphabeta_last_

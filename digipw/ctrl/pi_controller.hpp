@@ -15,7 +15,7 @@ struct [[nodiscard]] PiController {
         iq16 max_out;          // 最大输出电压限制
         iq16 err_sum_max;       // 积分项最大限制（抗饱和）
 
-        constexpr PiController to_controller() const {
+        constexpr PiController to_pi_controller() const {
             return PiController(*this);
         }
         friend OutputStream & operator << (OutputStream & os, const Cofficients & self){

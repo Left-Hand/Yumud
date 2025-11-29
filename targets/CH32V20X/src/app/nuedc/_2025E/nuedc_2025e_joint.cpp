@@ -23,11 +23,11 @@
 #include "types/vectors/quat.hpp"
 
 #include "robots/gesture/comp_est.hpp"
-#include "robots/rpc/rpc.hpp"
-#include "robots/repl/repl_service.hpp"
+#include "middlewares/rpc/rpc.hpp"
+#include "middlewares/repl/repl_service.hpp"
 
 #include "dsp/motor_ctrl/position_filter.hpp"
-#include "dsp/motor_ctrl/calibrate_table.hpp"
+#include "dsp/motor_ctrl/sensored/calibrate_table.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/motor_ctrl/elecrad_compsator.hpp"
 #include "dsp/controller/adrc/leso.hpp"

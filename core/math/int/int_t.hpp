@@ -18,19 +18,27 @@ public:
     constexpr int_t(const int_t & v) : int_t(v.value){}
     constexpr int_t(int_t && v) : int_t(v.value){}
 
-    __fast_inline constexpr int_t & operator=(const int_t & v){ value = v.value; return *this; }
-    __fast_inline constexpr int_t & operator=(const T v){ value = v; return *this; }
+    __attribute__((always_inline)) constexpr 
+    int_t & operator=(const int_t & v){ value = v.value; return *this; }
+    __attribute__((always_inline)) constexpr 
+    int_t & operator=(const T v){ value = v; return *this; }
     [[nodiscard]] explicit constexpr operator T(){ return value; }
     [[nodiscard]] explicit constexpr operator bool(){ return value; }
 
-    __fast_inline constexpr int_t & operator++(){ ++value; return *this; }
-    __fast_inline constexpr int_t & operator--(){ --value; return *this;}
+    __attribute__((always_inline)) constexpr 
+    int_t & operator++(){ ++value; return *this; }
+    __attribute__((always_inline)) constexpr 
+    int_t & operator--(){ --value; return *this;}
 
-    [[nodiscard]] __always_inline constexpr int_t operator+() const {return *this; }
-    [[nodiscard]] __always_inline constexpr int_t operator-(){ value = -value; return *this;}
+    [[nodiscard]] __always_inline constexpr 
+    int_t operator+() const {return *this; }
+    [[nodiscard]] __always_inline constexpr 
+    int_t operator-(){ value = -value; return *this;}
 
-    [[nodiscard]] __always_inline constexpr int_t operator<<(const size_t bits){ return int_t(value << bits);}
-    [[nodiscard]] __always_inline constexpr int_t operator>>(const size_t bits){ return int_t(value >> bits);}
+    [[nodiscard]] __always_inline constexpr 
+    int_t operator<<(const size_t bits){ return int_t(value << bits);}
+    [[nodiscard]] __always_inline constexpr 
+    int_t operator>>(const size_t bits){ return int_t(value >> bits);}
 
 
     //#region compare

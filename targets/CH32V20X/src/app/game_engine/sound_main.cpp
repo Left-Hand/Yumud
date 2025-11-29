@@ -5,7 +5,7 @@
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
 #include "primitive/arithmetic/rescaler.hpp"
-#include "core/string/fixed_string.hpp"
+#include "core/string/heapless_string.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -14,6 +14,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 #include "dsp/z_transformation.hpp"
+#include "primitive/arithmetic/db.hpp"
 
 namespace ymd{
 
@@ -22,58 +23,6 @@ static constexpr T rem_euclid(T a, T num){
     return fposmod(a, num);
 }
 
-
-template<typename T>
-struct dB{
-    constexpr explicit dB(T value):
-        value_(value){}
-
-    [[nodiscard]] static constexpr dB from_nonscale(){
-        return dB(0);
-    }
-
-    [[nodiscard]] constexpr T to_linear() const{
-        return pow(10, value_/10);
-    }
-
-    [[nodiscard]] constexpr dB operator -() const {
-        return dB(-value_);
-    }
-
-    [[nodiscard]] constexpr dB operator +() const {
-        return dB(value_);
-    }
-
-    constexpr dB & operator +=(const dB & rhs) {
-        return dB(value_ + rhs.value_);
-    }
-
-    constexpr dB & operator -=(const dB & rhs) {
-        return dB(value_ + rhs.value_);
-    }
-
-    [[nodiscard]] constexpr dB operator +(const dB & rhs) const {
-        const auto ret = *this;
-        ret += rhs;
-        return ret;
-    }
-
-    [[nodiscard]] constexpr dB operator -(const dB & rhs) const {
-        const auto ret = *this;
-        ret -= rhs;
-        return ret;
-    }
-
-    [[nodiscard]] constexpr dB scale(const T rhs){
-        return dB(value_ * rhs);
-    }
-
-    [[nodiscard]] constexpr T operator *(const T rhs){
-        return to_linear() * rhs;
-    }
-private:
-    T value_;
-};
 }
 
 

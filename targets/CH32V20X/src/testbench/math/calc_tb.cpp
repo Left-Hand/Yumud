@@ -363,7 +363,7 @@ class
 							base /= real_t(10.0);
 						}
 						else
-							tres = tres * 10 + expr[addr] - '0';
+							tres = tres * 10 + int(expr[addr] - '0');
 					else
 						break;
 					// if (abs(tres) >= 1.7976931348623157E+308)
@@ -695,22 +695,22 @@ class
 													tc = pow(ta,tb);
 												}
 												else if (temp.sym == "=="){
-													tc = ta == tb;
+													tc = int(bool(ta == tb));
 												}
 												else if (temp.sym == "!="){
-													tc = ta != tb;
+													tc = int(bool(ta != tb));
 												}
 												else if (temp.sym == ">="){
-													tc = ta >= tb;
+													tc = int(bool(ta >= tb));
 												}
 												else if (temp.sym == "<="){
-													tc = ta <= tb;
+													tc = int(bool(ta <= tb));
 												}
 												else if (temp.sym == ">"){
-													tc = ta > tb;
+													tc = int(bool(ta > tb));
 												}
 												else if (temp.sym == "<"){
-													tc = ta < tb;
+													tc = int(bool(ta < tb));
 												}
 												else if (temp.sym == "=" || temp.sym == ":="){
 													if (b[ib].typ == 0 || b[ib].typ == 4 || b[ib].typ == 5){
@@ -736,27 +736,27 @@ class
 													sc = sa + sb;
 												else if (temp.sym == "=="){
 													flag = 1;
-													ta = sa == sb;
+													ta = int(bool(sa == sb));
 												}
 												else if (temp.sym == "!="){
 													flag = 1;
-													ta = sa != sb;
+													ta = int(bool(sa != sb));
 												}
 												else if (temp.sym == ">="){
 													flag = 1;
-													ta = sa >= sb;
+													ta = int(bool(sa >= sb));
 												}
 												else if (temp.sym == "<="){
 													flag = 1;
-													ta = sa <= sb;
+													ta = int(bool(sa <= sb));
 												}
 												else if (temp.sym == ">"){
 													flag = 1;
-													ta = sa > sb;
+													ta = int(bool(sa > sb));
 												}
 												else if (temp.sym == "<"){
 													flag = 1;
-													ta = sa < sb;
+													ta = int(bool(sa < sb));
 												}
 												else
 													err_msg.push_back(make_pair(temp.pos,"Error : " + temp.sym + " : Unknow symbol."));
@@ -1156,7 +1156,7 @@ class
 												flag = 0;
 											}
 										a.clear();
-										a.push_back(make_symb("$number",0,-1,-1,flag));
+										a.push_back(make_symb("$number",0,-1,-1,int(flag)));
 									}
 									else if (temp.sym == "Clear"){
 										a.clear();

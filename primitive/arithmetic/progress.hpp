@@ -4,7 +4,7 @@
 #include "core/stream/ostream.hpp"
 
 namespace ymd{
-struct Progress{
+struct [[nodiscard]]Progress{
     size_t current;
     size_t total;
 

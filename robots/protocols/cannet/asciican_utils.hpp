@@ -41,8 +41,8 @@ struct [[nodiscard]] CharsFiller{
         std::copy_n(str.begin(), len, chars_.begin() + pos_);
     }
 
-    constexpr void push_hex(const uint32_t int_val, const size_t length){
-        for (int32_t i = static_cast<int32_t>(length) - 1; i >= 0; i--) {
+    constexpr void push_hex(const uint32_t int_val, const size_t num_chars){
+        for (int32_t i = static_cast<int32_t>(num_chars) - 1; i >= 0; i--) {
             // 每次提取4位（一个十六进制字符）
             uint8_t nibble = (int_val >> (i * 4)) & 0xF;
             

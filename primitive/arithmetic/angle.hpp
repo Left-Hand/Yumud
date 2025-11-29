@@ -72,11 +72,13 @@ struct [[nodiscard]] Angle{
 		}
 	}
 
-	template<typename U>
-	requires (std::is_integral_v<U>)
-	static constexpr Angle from_degrees(const U degrees){
+	template<typename D>
+	requires (std::is_integral_v<D>)
+	static constexpr Angle from_degrees(const D degrees){
+		static_assert(std::is_integral_v<T> == false);
 		constexpr T INV_360 = static_cast<T>(1.0 / 360.0);
-		return make_angle_from_turns(degrees * INV_360);
+		// static_assert(std::is_same_v<std::decay_t<decltype(degrees * INV_360)>, T>);
+		return make_angle_from_turns(INV_360 * degrees);
 	}
 
 	template<typename U>
@@ -223,7 +225,13 @@ struct [[nodiscard]] Angle{
 	}
 
 	[[nodiscard]] constexpr Angle<T> normalized() const {
-		return make_angle_from_turns(frac(turns_));
+		if constexpr (std::is_signed_v<T>){
+			//归一化到[-0.5, 0.5)之间
+			return make_angle_from_turns(turns_ - int(ymd::floor(turns_ + static_cast<T>(0.5))));
+		}else{
+			//归一化到[0, 1)之间
+			return make_angle_from_turns(frac(turns_));
+		}
 	}
 
 	[[nodiscard]] constexpr bool is_orthogonal_with(const Angle<T> & other, const auto eps) const {
@@ -272,7 +280,8 @@ public:
 	T turns_;
 
 	static constexpr Angle make_angle_from_turns(auto turns){
-		return Angle{.turns_ = turns};
+		return Angle{.turns_ = static_cast<T>(turns)};
+		// return Angle{.turns_ = 0};
 	}
 };
 

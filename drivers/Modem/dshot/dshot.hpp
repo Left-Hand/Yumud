@@ -118,7 +118,7 @@ public:
 
     void init();
 
-    DShotChannel & operator = (const real_t duty);
+    void set_dutycycle(const real_t duty);
 
 private:
 
@@ -129,7 +129,6 @@ private:
     std::array<uint16_t, DSHOT_LEN> buf_ = {0};
     BurstDmaPwm burst_dma_pwm_;
 
-    __pure
     static uint16_t calculate_crc(uint16_t data_in);
 
     static void update(std::span<uint16_t, DSHOT_LEN> buf, uint16_t data);

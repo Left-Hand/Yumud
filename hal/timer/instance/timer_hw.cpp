@@ -36,7 +36,27 @@ void TIM##x##_IRQHandler(void){\
 
 
 #ifdef ENABLE_TIM1
-ADVANCED_TIMER_IT_TEMPLATE(1)
+void TIM1_BRK_IRQHandler(void){
+    timer1.invoke_callback<IT::Break>();
+    TIM_ClearFlag(TIM1, TIM_IT_Break);
+}
+void TIM1_UP_IRQHandler(void){
+    timer1.invoke_callback<IT::Update>();
+    TIM_ClearFlag(TIM1, TIM_IT_Update);
+}
+void TIM1_TRG_COM_IRQHandler(void){
+    if(TIM_GetITStatus(TIM1, TIM_IT_Trigger)){
+        timer1.invoke_callback<IT::Trigger>();
+        TIM_ClearFlag(TIM1, TIM_IT_Trigger);
+    }else if(TIM_GetITStatus(TIM1, TIM_IT_COM)){
+        timer1.invoke_callback<IT::COM>();
+        TIM_ClearFlag(TIM1, TIM_IT_COM);
+    }
+}
+void TIM1_CC_IRQHandler(void){
+    timer1.on_cc_interrupt();
+}
+
 #endif
 
 #ifdef ENABLE_TIM2

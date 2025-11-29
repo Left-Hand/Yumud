@@ -88,10 +88,10 @@ namespace commands{
 
 struct ErrPosition{
     // std::array<Vec2<uint8_t>, 4> points;
-    bf16 px;
-    bf16 py;
-    bf16 z;
-    bf16 e;
+    math::bf16 px;
+    math::bf16 py;
+    math::bf16 z;
+    math::bf16 e;
 
     friend OutputStream & operator << (OutputStream & os, const ErrPosition self){
         return os << os.brackets<'('>() 

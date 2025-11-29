@@ -2,7 +2,7 @@
 
 #include "delay.hpp"
 
-//可实现整数群延迟和小数群延迟的全通滤波器
+//可同时实现整数小数群延迟的全通滤波器
 
 namespace ymd::dsp{
 

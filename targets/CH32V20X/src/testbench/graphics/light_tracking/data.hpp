@@ -4,6 +4,8 @@
 
 using namespace ymd;
 
+using namespace ymd::math;
+
 static constexpr std::array<TriangleSurface<bf16>,32> triangles =
 {
     TriangleSurface<bf16>{Vec3<bf16>{	-0.2400_r,	1.9800_r,	-0.2200_r},	Vec3<bf16>{	0.2300_r,	1.9800_r,	0.1600_r},	Vec3<bf16>{	-0.2400_r,	1.9800_r,	0.1600_r}},

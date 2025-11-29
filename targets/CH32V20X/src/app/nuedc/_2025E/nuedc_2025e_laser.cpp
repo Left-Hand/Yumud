@@ -12,7 +12,7 @@
 
 #include "core/math/realmath.hpp"
 #include "core/sync/timer.hpp"
-#include "robots/repl/repl_service.hpp"
+#include "middlewares/repl/repl_service.hpp"
 #include "robots/nodes/msg_factory.hpp"
 #include "robots/nodes/node_role.hpp"
 
@@ -286,7 +286,7 @@ void nuedc_2025e_laser_main(){
     };
 
     [[maybe_unused]] auto handle_gimbal_idle = [&]{
-        set_laser_dutycycle(false);
+        set_laser_dutycycle(0);
     };
 
     [[maybe_unused]] auto handle_gimbal_seeking = [&]{
@@ -299,7 +299,7 @@ void nuedc_2025e_laser_main(){
         if(may_advanced_start_tick_.is_some()){
             const auto delta_ms = clock::millis() - may_advanced_start_tick_.unwrap();
             if(delta_ms < ADVANCED_BLINK_PERIOD_MS){
-                set_laser_dutycycle(uint32_t(delta_ms.count()) % 100 <= 6);
+                set_laser_dutycycle((uint32_t(delta_ms.count()) % 100 <= 6 ? 1 : 0));
             }else{
                 set_laser_dutycycle(1);
             }
@@ -338,7 +338,7 @@ void nuedc_2025e_laser_main(){
         if(may_last_shot_tick_.is_some() and 
             clock::millis() - may_last_shot_tick_.unwrap() > STATIC_SHOT_FIRE_MS
         ){
-            set_laser_dutycycle(false);
+            set_laser_dutycycle(0);
         }
     };
 

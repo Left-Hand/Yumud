@@ -11,6 +11,10 @@ struct PolySynth final{
 public:
     static constexpr uint32_t POLYONIC_MAX_COUNT = 8;
 
+    struct Config{
+        uint32_t fs;
+    };
+
     void init(uint32_t sampleRate) {
         for (auto& note : notes_) {
             note.init(sampleRate);

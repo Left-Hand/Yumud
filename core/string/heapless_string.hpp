@@ -9,11 +9,11 @@
 namespace ymd{
 
 template<size_t N>
-struct [[nodiscard]] FixedString{
-    constexpr FixedString():
+struct [[nodiscard]] HeaplessString{
+    constexpr HeaplessString():
         len_(0){;}
 
-    constexpr FixedString(const StringView str):
+    constexpr HeaplessString(const StringView str):
         len_(MIN(str.length(), N))
     {
         // memcpy(buf_, str.data(), len_);
@@ -22,12 +22,12 @@ struct [[nodiscard]] FixedString{
         }
     }
 
-    [[nodiscard]] static constexpr FixedString<N> from_str(const StringView str){
-        return FixedString<N>(str);
+    [[nodiscard]] static constexpr HeaplessString<N> from_str(const StringView str){
+        return HeaplessString<N>(str);
     } 
 
-    [[nodiscard]] static constexpr FixedString<N> from_empty(){
-        return FixedString<N>();
+    [[nodiscard]] static constexpr HeaplessString<N> from_empty(){
+        return HeaplessString<N>();
     } 
 
     [[nodiscard]] constexpr char operator [](const size_t idx) const {return buf_[idx];}
@@ -124,7 +124,7 @@ struct [[nodiscard]] FixedString{
         return this->str() == other;
     } 
 
-    friend OutputStream & operator<<(OutputStream & os, const FixedString<N> self) {
+    friend OutputStream & operator<<(OutputStream & os, const HeaplessString<N> self) {
         return os << self.view();
     }
 
@@ -135,21 +135,21 @@ private:
 
     #if 0
     static consteval void static_test(){
-        constexpr auto str = FixedString<10>("Hello");
+        constexpr auto str = HeaplessString<10>("Hello");
         constexpr auto str2 = []{
-            auto _str = FixedString<10>("Hello");
+            auto _str = HeaplessString<10>("Hello");
             _str.push_back('!');
             return _str;
         }();
 
         constexpr auto str3 = []{
-            auto _str = FixedString<10>("Hello");
+            auto _str = HeaplessString<10>("Hello");
             _str.insert(0, '!');
             return _str;
         }();
 
         constexpr auto str4 = []{
-            auto _str = FixedString<10>("Hello");
+            auto _str = HeaplessString<10>("Hello");
             _str.erase(4);
             return _str;
         }();
@@ -163,14 +163,14 @@ private:
 
         // 测试越界插入
         static_assert([]{
-            auto str = FixedString<5>("Hi");
+            auto str = HeaplessString<5>("Hi");
             str.insert(3, '!');  // 允许在 len_=2 的索引3插入
             return str == StringView("Hi!");  // ✅ 应成功
         }());
 
         // 测试无效插入返回错误
         static_assert(
-            FixedString<3>("A").insert(5, 'X').is_err()  // ✅ 应返回错误
+            HeaplessString<3>("A").insert(5, 'X').is_err()  // ✅ 应返回错误
         );
     }
     #endif

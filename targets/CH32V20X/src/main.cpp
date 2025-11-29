@@ -10,7 +10,7 @@
 int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
-    myactuator_main();
+    // myactuator_main();
     // eeprom_main();
     // while(true);
     //  uart_main();
@@ -60,6 +60,7 @@ int main(){
     // mk8000tr_main();
     // vl53l5cx_main();
     myesc_main();
+    // adrc_main();
     // mystepper_main();
 
     // nuedc_2025e_main();
@@ -159,8 +160,10 @@ int main(){
     // bldc_main();
     while(true);
     #elif defined(CH32V30X)
-    alx_aoa_main();
-    vl53l5cx_main();
+    // alx_aoa_main();
+    // vl53l5cx_main();
+    // smc2025_main();
+    m1502e_main();
     // ld19_main();
     // i2c_scanner_main();
     // slcan_main();

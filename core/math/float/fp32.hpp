@@ -9,7 +9,7 @@
 static_assert(sizeof(float) == 4);
 
 
-namespace ymd{
+namespace ymd::math{
 struct [[nodiscard]] fp32{
 	uint32_t frac:23;
 	uint32_t exp:8;
@@ -50,9 +50,9 @@ struct [[nodiscard]] fp32{
 namespace std{
 
     template<>
-    struct is_arithmetic<ymd::fp32> : std::true_type {};
+    struct is_arithmetic<ymd::math::fp32> : std::true_type {};
     template<>
-    struct is_floating_point<ymd::fp32> : std::true_type {};
+    struct is_floating_point<ymd::math::fp32> : std::true_type {};
     template<>
-    struct is_signed<ymd::fp32> : std::true_type {};
+    struct is_signed<ymd::math::fp32> : std::true_type {};
 }

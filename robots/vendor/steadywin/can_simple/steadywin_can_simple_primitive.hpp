@@ -201,17 +201,23 @@ enum class [[nodiscard]] CommandKind:uint8_t{
     SetControllerMode = 11,
     SetInputPosition = 12,
     SetInputVelocity = 13,
-    SetInputCurrent = 14,
-    SetVelLimit = 15,
+    SetInputTorque = 14,
+    SetLimits = 15,
     StartAnticogging = 16,
     SetTrajVelLimit = 17,
     SetTrajAccelLimits = 18,
-    SetTrajAPerCss = 19,
+    SetTrajInertia = 19,
     GetIq = 20,
-    GetSensorlessEstimates = 21,
-    ResetOdrive = 22,
-    GetVbusVoltage = 23,
-    ClearErrors = 24,
+    Reboot = 0x16,
+    GetBusVoltageCurrent = 0x17,
+    ClearErrors = 0x18,
+    SetLinearCount = 0x19,
+    SetPosGain = 0x1a,
+    SetVelGain = 0x1b,
+    SetTorques = 0x1c,
+    GetPowers = 0x1d,
+    DisableCan = 0x1e,
+    SaveConfig = 0x1f,
 };
 
 enum class [[nodiscard]] ControlMode:uint8_t {
@@ -255,35 +261,70 @@ struct [[nodiscard]] Command{
 
     constexpr CommandKind kind() const{ return kind_; }
     static constexpr const char * err_to_str(const Kind kind){
-        #if 0
         switch(kind){
-            case Kind::Undefined:return "Undefined";
-            case Kind::Heartbeat:return "Heartbeat";
-            case Kind::Estop:return "Estop";
-            case Kind::GetMotorError:return "GetMotorError";
-            case Kind::RxSdo:return "RxSdo";
-            case Kind::TxSdo:return "TxSdo";
-            case Kind::SetAxisNodeId:return "SetAxisNodeId";
-            case Kind::SetAxisRequestedState:return "SetAxisRequestedState";
-            case Kind::SetAxisStartupConfig:return "SetAxisStartupConfig";
-            case Kind::GetEncoderEstimates:return "GetEncoderEstimates";
-            case Kind::GetEncoderCount:return "GetEncoderCount";
-            case Kind::SetControllerMode:return "SetControllerMode";
-            case Kind::SetInputPosition:return "SetInputPosition";
-            case Kind::SetInputVelocity:return "SetInputVelocity";
-            case Kind::SetInputCurrent:return "SetInputCurrent";
-            case Kind::SetVelLimit:return "SetVelLimit";
-            case Kind::StartAnticogging:return "StartAnticogging";
-            case Kind::SetTrajVelLimit:return "SetTrajVelLimit";
-            case Kind::SetTrajAccelLimits:return "SetTrajAccelLimits";
-            case Kind::SetTrajAPerCss:return "SetTrajAPerCss";
-            case Kind::GetIq:return "GetIq";
-            case Kind::GetSensorlessEstimates:return "GetSensorlessEstimates";
-            case Kind::ResetOdrive:return "ResetOdrive";
-            case Kind::GetVbusVoltage:return "GetVbusVoltage";
-            case Kind::ClearErrors:return "ClearErrors";
+            case Kind::Undefined:
+                return "Undefined";
+            case Kind::Heartbeat:
+                return "Heartbeat";
+            case Kind::Estop:
+                return "Estop";
+            case Kind::GetMotorError:
+                return "GetMotorError";
+            case Kind::RxSdo:
+                return "RxSdo";
+            case Kind::TxSdo:
+                return "TxSdo";
+            case Kind::SetAxisNodeId:
+                return "SetAxisNodeId";
+            case Kind::SetAxisState:
+                return "SetAxisState";
+            case Kind::MitControl:
+                return "MitControl";
+            case Kind::GetEncoderEstimates:
+                return "GetEncoderEstimates";
+            case Kind::GetMotorCurrent:
+                return "GetMotorCurrent";
+            case Kind::SetControllerMode:
+                return "SetControllerMode";
+            case Kind::SetInputPosition:
+                return "SetInputPosition";
+            case Kind::SetInputVelocity:
+                return "SetInputVelocity";
+            case Kind::SetInputTorque:
+                return "SetInputTorque";
+            case Kind::SetLimits:
+                return "SetLimits";
+            case Kind::StartAnticogging:
+                return "StartAnticogging";
+            case Kind::SetTrajVelLimit:
+                return "SetTrajVelLimit";
+            case Kind::SetTrajAccelLimits:
+                return "SetTrajAccelLimits";
+            case Kind::SetTrajInertia:
+                return "SetTrajInertia";
+            case Kind::GetIq:
+                return "GetIq";
+            case Kind::Reboot:
+                return "Reboot";
+            case Kind::GetBusVoltageCurrent:
+                return "GetBusVoltageCurrent";
+            case Kind::ClearErrors:
+                return "ClearErrors";
+            case Kind::SetLinearCount:
+                return "SetLinearCount";
+            case Kind::SetPosGain:
+                return "SetPosGain";
+            case Kind::SetVelGain:
+                return "SetVelGain";
+            case Kind::SetTorques:
+                return "SetTorques";
+            case Kind::GetPowers:
+                return "GetPowers";
+            case Kind::DisableCan:
+                return "DisableCan";
+            case Kind::SaveConfig:
+                return "SaveConfig";
         }
-        #endif
         return nullptr;
     }
 
@@ -491,8 +532,8 @@ struct [[nodiscard]] MitControl{
 struct [[nodiscard]] GetEncoderEstimates{
     using Self = GetEncoderEstimates;
     static constexpr CommandKind command = Command::GetEncoderEstimates;
-    fp32 position;
-    fp32 velocity;
+    math::fp32 position;
+    math::fp32 velocity;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
@@ -550,7 +591,7 @@ struct [[nodiscard]] SetInputPosition{
     using Self = SetInputPosition;
     static constexpr auto command = CommandKind{0x00c};
 
-    fp32 input_position;
+    math::fp32 input_position;
     int16_t vel_ff;
     int16_t torque_ff;
 
@@ -567,8 +608,8 @@ struct [[nodiscard]] SetInputVelocity{
     using Self = SetInputVelocity;
     static constexpr auto command = CommandKind{0x00d};
 
-    fp32 vel_ff;
-    fp32 torque_ff;
+    math::fp32 vel_ff;
+    math::fp32 torque_ff;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
@@ -583,7 +624,7 @@ struct [[nodiscard]] SetInputTorque{
     using Self = SetInputTorque;
     static constexpr auto command = CommandKind{0x00e};
 
-    fp32 torque_ff;
+    math::fp32 torque_ff;
     uint32_t __padding__ = 0;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
@@ -597,11 +638,11 @@ struct [[nodiscard]] SetInputTorque{
 
 
 struct [[nodiscard]] SetLimits{
-    using Self = SetInputTorque;
+    using Self = SetLimits;
     static constexpr auto command = CommandKind{0x00f};
 
-    fp32 velocity_limit;
-    fp32 current_limit;
+    math::fp32 velocity_limit;
+    math::fp32 current_limit;
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
@@ -620,7 +661,7 @@ struct [[nodiscard]] SetTrajVelLimit{
     using Self = SetTrajVelLimit;
     static constexpr auto command = CommandKind{0x011};
 
-    fp32 traj_vel_limit;
+    math::fp32 traj_vel_limit;
     uint32_t __padding__ = 0;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
@@ -636,8 +677,8 @@ struct [[nodiscard]] SetTrajAccelLimit{
     using Self = SetTrajAccelLimit;
     static constexpr auto command = CommandKind{0x012};
 
-    fp32 traj_accel_limit;
-    fp32 traj_decel_limit;
+    math::fp32 traj_accel_limit;
+    math::fp32 traj_decel_limit;
     
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
@@ -652,7 +693,7 @@ struct [[nodiscard]] SetTrajAccelLimit{
 struct [[nodiscard]] SetTrajInertia{
     using Self = SetTrajInertia;
     static constexpr auto command = CommandKind{0x013};
-    fp32 traj_inertia;//惯量
+    math::fp32 traj_inertia;//惯量
     uint32_t __padding__ = 0;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
@@ -667,8 +708,8 @@ struct [[nodiscard]] SetTrajInertia{
 struct [[nodiscard]] GetIq{ 
     using Self = GetIq;
     static constexpr auto command = CommandKind{0x014};
-    fp32 id_setpoint;
-    fp32 iq_measured;
+    math::fp32 id_setpoint;
+    math::fp32 iq_measured;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
@@ -687,8 +728,8 @@ struct [[nodiscard]] Reboot{
 struct [[nodiscard]] GetBusVoltageCurrent{
     using Self = GetBusVoltageCurrent;
     static constexpr auto command = CommandKind{0x017};
-    fp32 bus_voltage;
-    fp32 bus_current;
+    math::fp32 bus_voltage;
+    math::fp32 bus_current;
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
@@ -723,7 +764,7 @@ struct [[nodiscard]] SetLinearCount{
 struct [[nodiscard]] SetPosGain{
     using Self = SetPosGain;
     static constexpr auto command = CommandKind{0x01a};
-    fp32 pos_gain;
+    math::fp32 pos_gain;
     uint32_t __padding__ = 0;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
@@ -739,8 +780,8 @@ struct [[nodiscard]] SetPosGain{
 struct [[nodiscard]] SetVelGain{
     using Self = SetVelGain;
     static constexpr auto command = CommandKind{0x01b};
-    fp32 vel_gain;
-    fp32 vel_integrator_gain;
+    math::fp32 vel_gain;
+    math::fp32 vel_integrator_gain;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
@@ -754,8 +795,8 @@ struct [[nodiscard]] SetVelGain{
 struct [[nodiscard]] SetTorques{
     using Self = SetTorques;
     static constexpr auto command = CommandKind{0x01c};
-    fp32 torque_setpoint;
-    fp32 torque;
+    math::fp32 torque_setpoint;
+    math::fp32 torque;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
@@ -769,8 +810,8 @@ struct [[nodiscard]] SetTorques{
 struct [[nodiscard]] GetPowers{
     using Self = GetPowers;
     static constexpr auto command = CommandKind{0x01d};
-    fp32 electrical_power;
-    fp32 mechanical_power;
+    math::fp32 electrical_power;
+    math::fp32 mechanical_power;
 
     static constexpr Self form_payload(const hal::CanClassicPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());

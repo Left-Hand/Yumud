@@ -7,8 +7,10 @@
 #include "core/string/string_view.hpp"
 #include "core/string/utils/multiline_split.hpp"
 #include "robots/vendor/zdt/zdt_stepper.hpp"
-#include "robots/rpc/rpc.hpp"
-#include "robots/repl/repl_service.hpp"
+
+#include "middlewares/rpc/rpc.hpp"
+#include "middlewares/repl/repl_service.hpp"
+
 #include "types/vectors/polar.hpp"
 #include "types/vectors/vector2.hpp"
 
@@ -48,8 +50,6 @@ struct kind_to_command<CommandKind, K>{ \
 };
 
 
-#define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, commands::NAME)
-
 
 class PolarRobotActuator{
 public:
@@ -80,14 +80,14 @@ public:
 
     void set_coord(const Polar<iq16> p){
 
-        const auto rho_position = Angle<iq16>::from_turns(
+        const auto rho_angle = Angle<iq16>::from_turns(
             p.amplitude * cfg_.rho_transform_scale);
 
-        const auto theta_position = 
+        const auto theta_angle = 
             p.phase * cfg_.theta_transform_scale;
 
-        joint_rho_.set_position(rho_position - cfg_.center_bias);
-        joint_theta_.set_position(-theta_position);
+        joint_rho_.set_angle(rho_angle - cfg_.center_bias);
+        joint_theta_.set_angle(-theta_angle);
     }
 
     void activate(){
@@ -136,36 +136,36 @@ private:
 
 struct Cartesian2ContinuousPolarRegulator final {
     struct State {
-        Vec2<iq16> position;
+        Vec2<iq16> coord;
         Angle<iq16> angle;  // 累积角度
     };
 
-    Polar<iq16> operator()(const Vec2<iq16> position) {
+    Polar<iq16> operator()(const Vec2<iq16> coord) {
         if (may_last_state_.is_none()) {
             // 第一次调用，初始化状态
             may_last_state_ = Some(State{
-                .position = position,
-                .angle = position.angle()  // 初始角度
+                .coord = coord,
+                .angle = coord.angle()  // 初始角度
             });
-            return Polar<iq16>{position.length(), position.angle()};
+            return Polar<iq16>{coord.length(), coord.angle()};
         }
 
         // 获取上次状态
         const auto last_state = may_last_state_.unwrap();
         
         // 计算角度变化
-        const auto delta_theta = last_state.position.angle_between(position);
+        const auto delta_theta = last_state.coord.angle_between(coord);
         const auto new_theta = last_state.angle + delta_theta;
 
-        // DEBUG_PRINTLN(last_state.position, position, delta_theta);
+        // DEBUG_PRINTLN(last_state.coord, coord, delta_theta);
 
         // 更新状态
         may_last_state_ = Some(State{
-            .position = position,
+            .coord = coord,
             .angle = new_theta  // 存储累积角度
         });
 
-        return Polar<iq16>{position.length(), new_theta};
+        return Polar<iq16>{coord.length(), new_theta};
     }
 
 private:
@@ -181,52 +181,37 @@ constexpr Vec2<T> vec_step_to(const Vec2<T> from, const Vec2<T> to, T step){
     return from + delta * (step / distance);  // 按比例移动
 }
 
-// template<typename T>
-// constexpr Vec2<T> vec_step_to(const Vec2<T> from, const Vec2<T> to, T step) {
-//     const Vec2<T> delta = to - from;
-//     const T distance_sq = delta.length_squared();  // 避免开平方
-//     const T step_sq = step * step;
-    
-//     if (distance_sq <= step_sq || distance_sq == T(0)) {
-//         return to;
-//     }
-    
-//     // 计算 sqrt(distance_sq) 并执行比例步长
-//     const T distance = sqrt(distance_sq);  // 或使用定点数优化的快速开方
-//     return from + delta * (step / distance);
-// }
-
 
 
 struct StepPointIterator{
     struct Config{
-        Vec2<iq24> initial_position;
+        Vec2<iq24> initial_coord;
     };
 
     explicit constexpr StepPointIterator(
         const Config & cfg
     ):
-        current_position_(cfg.initial_position){;}
+        now_coord_(cfg.initial_coord){;}
 
-    constexpr void set_target_position(
-        const Vec2<iq24> target_position
+    constexpr void set_target_coord(
+        const Vec2<iq24> target_coord
     ) {
-        may_end_position_ = Some(target_position);
+        may_end_coord_ = Some(target_coord);
     }
 
     [[nodiscard]] constexpr Vec2<iq24> next(const iq24 step){
-        if(may_end_position_.is_none()) return current_position_;
-        current_position_ = vec_step_to(current_position_, may_end_position_.unwrap(), step);
-        return current_position_;
+        if(may_end_coord_.is_none()) return now_coord_;
+        now_coord_ = vec_step_to(now_coord_, may_end_coord_.unwrap(), step);
+        return now_coord_;
     }
 
     [[nodiscard]] constexpr bool has_next() const {
-        return may_end_position_.is_some() and 
-            (not current_position_.is_equal_approx(may_end_position_.unwrap()));
+        return may_end_coord_.is_some() and 
+            (not now_coord_.is_equal_approx(may_end_coord_.unwrap(), 0.001_iq16));
     }
 private:
-    Vec2<iq24> current_position_ = Vec2<iq24>::ZERO;
-    Option<Vec2<iq24>> may_end_position_ = None;
+    Vec2<iq24> now_coord_ = Vec2<iq24>::ZERO;
+    Option<Vec2<iq24>> may_end_coord_ = None;
 };
 
 
@@ -257,18 +242,18 @@ struct PolarRobotCurveGenerator{
     struct Config{
         uint32_t fs;
         iq16 speed;
-        Vec2<iq24> initial_position = {0,0};
+        Vec2<iq24> initial_coord = {0,0};
     };
 
     explicit constexpr PolarRobotCurveGenerator(const Config & cfg):
         fs_(cfg.fs),
         delta_dist_(cfg.speed / cfg.fs),
         step_iter_(StepPointIterator{StepPointIterator::Config{
-            .initial_position = cfg.initial_position
+            .initial_coord = cfg.initial_coord
         }}){;}
 
-    constexpr void add_end_position(const Vec2<iq24> position){
-        step_iter_.set_target_position(position.flip_y());
+    constexpr void add_end_coord(const Vec2<iq24> coord){
+        step_iter_.set_target_coord(coord.flip_y());
     }
 
     constexpr void set_move_speed(const iq24 speed){
@@ -280,17 +265,17 @@ struct PolarRobotCurveGenerator{
     }
 
     constexpr Vec2<iq24> next(){
-        position_ = step_iter_.next(delta_dist_);
-        return position_;
+        coord_ = step_iter_.next(delta_dist_);
+        return coord_;
     }
 
-    constexpr Vec2<iq24> last_position() const {
-        return position_;
+    constexpr Vec2<iq24> last_coord() const {
+        return coord_;
     }
 private:    
     uint32_t fs_;
     iq24 delta_dist_;
-    Vec2<iq24> position_ = Vec2<iq24>::ZERO;
+    Vec2<iq24> coord_ = Vec2<iq24>::ZERO;
     StepPointIterator step_iter_;
 };
 
@@ -404,17 +389,17 @@ void polar_robot_main(){
             switch(major){
             case 0://rapid move
                 curve_gen_.set_move_speed(state_.max_speed);
-                curve_gen_.add_end_position({state_.x.count(), state_.y.count()});
+                curve_gen_.add_end_coord({state_.x.count(), state_.y.count()});
                 break;
             case 1://linear move
                 curve_gen_.set_move_speed(state_.speed);
-                curve_gen_.add_end_position({state_.x.count(), state_.y.count()});
+                curve_gen_.add_end_coord({state_.x.count(), state_.y.count()});
                 break;
             case 4:
                 break;
             case 21://UseMillimetersUnits
                 break;
-            case 90://Use abs position
+            case 90://Use abs coord
                 break;
             default:
                 PANIC("not impleted gcode", major);
@@ -469,16 +454,16 @@ void polar_robot_main(){
         theta_joint_.make_rpc_list("theta_joint"),
 
         rpc::make_function("pxy", [&](const iq16 x, const iq16 y){
-            curve_gen_.add_end_position({
+            curve_gen_.add_end_coord({
                 CLAMP2(x, 0.14_r),
                 CLAMP2(y, 0.14_r)
             });
         }),
 
         rpc::make_function("next", [&](){
-            static Vec2<iq16> position = {0.1_r, 0};
-            position = position.forward_90deg();
-            actuator_.set_coord(regu_(position));
+            static Vec2<iq16> coord = {0.1_r, 0};
+            coord = coord.forward_90deg();
+            actuator_.set_coord(regu_(coord));
         })
     );
 
@@ -520,20 +505,18 @@ void polar_robot_main(){
             ::from_duration(POINT_GEN_DURATION_MS);
 
         timer.invoke_if([&]{
+            const auto coord = curve_gen_.next();
 
-
-            const auto position = curve_gen_.next();
-
-            actuator_.set_coord(regu_(position));
+            actuator_.set_coord(regu_(coord));
         });
 
         repl_service();
         // report_service();
 
         DEBUG_PRINTLN_IDLE(
-            curve_gen_.last_position(), 
-            radius_joint_.get_last_position(), 
-            theta_joint_.get_last_position()
+            curve_gen_.last_coord(), 
+            radius_joint_.last_angle().to_turns(), 
+            theta_joint_.last_angle().to_turns()
             // COMM_CAN.available(),
             // COMM_CAN.get_last_fault(),
             // COMM_CAN.get_rx_errcnt(),

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <bit>
 
+namespace ymd::math{
 struct fp64{
 	uint64_t frac:52;
 	uint64_t exp:11;
@@ -17,3 +18,4 @@ struct fp64{
         return std::bit_cast<double>(*this);
     }
 };
+}

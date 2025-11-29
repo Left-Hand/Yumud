@@ -1,11 +1,10 @@
 #pragma once
 
+#include "core/platform.hpp"
 
 #include <bits/ios_base.h>
 #include <iomanip>
 
-#include <vector>
-#include <array>
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -378,17 +377,12 @@ private:
     void print_iq16(const fixed_t<16, int32_t> q_val);
 public:
 
-    template<size_t Q>
-    OutputStream & operator<<(const fixed_t<Q, int32_t> & q_val){
+    template<size_t Q, typename D>
+    OutputStream & operator<<(const fixed_t<Q, D> & q_val){
         print_iq16(fixed_t<16, int32_t>(q_val));
         return *this;
     }
 
-    template<size_t Q>
-    OutputStream & operator<<(const fixed_t<Q, uint32_t> & q_val){
-        print_iq16(static_cast<fixed_t<16, int32_t>>(q_val));
-        return *this;
-    }
 
     // template<size_t Q, typename D>
     // OutputStream & operator<<(const fixed_t<Q, D> & q_val){

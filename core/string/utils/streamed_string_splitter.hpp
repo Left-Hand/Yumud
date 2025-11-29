@@ -2,7 +2,7 @@
 
 #include "core/string/string_view.hpp"
 #include "core/utils/Option.hpp"
-#include "core/string/fixed_string.hpp"
+#include "core/string/heapless_string.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "thirdparty/sstl/include/sstl/vector.h"
@@ -44,7 +44,7 @@ private:
     static constexpr size_t STR_MAX_LENGTH = 64;
     static constexpr size_t STR_MAX_PIECES = 16;
 
-    FixedString<STR_MAX_LENGTH> temp_str_;
+    HeaplessString<STR_MAX_LENGTH> temp_str_;
     char delimiter_ = ' ';
 
     template<typename Fn>

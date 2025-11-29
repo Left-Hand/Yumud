@@ -7,7 +7,7 @@
 namespace ymd{
 
 template<arithmetic T>
-struct Ray2{
+struct [[nodiscard]] Ray2{
 public:
     Vec2<T> org;
     Angle<T> orientation;

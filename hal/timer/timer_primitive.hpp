@@ -20,12 +20,12 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
     const uint32_t target_div = periph_freq / count_freq;
     
     auto calc_psc_from_arr = [target_div](const uint16_t arr) -> uint16_t {
-        return std::clamp<uint16_t>(int(target_div) / (int(arr) + 1) - 1, 0, 0xFFFF);
+        return CLAMP(int(target_div) / (int(arr) + 1) - 1, 0, 0xFFFF);
     };
 
     [[maybe_unused]]
     auto calc_arr_from_psc = [target_div](const uint16_t psc) -> uint16_t {
-        return std::clamp<uint16_t>(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF);
+        return CLAMP(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF);
     };
     
     auto calc_freq_from_arr_and_psc = [periph_freq](const uint16_t arr, const uint16_t psc) -> uint32_t {
@@ -50,11 +50,6 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
         
         std::optional<uint32_t> last_freq_;
 
-        // const int psc_start = MAX(min_psc, expect_psc - 5);
-        // const int psc_stop = MIN(max_psc, expect_psc + 5);
-        // if(psc_start >= psc_stop) continue;
-
-        // for(int psc = psc_start; psc < psc_stop; psc++){
         for(int psc = expect_psc - 2; psc < expect_psc + 2; psc++){
             const auto freq = calc_freq_from_arr_and_psc(arr, psc);
             if(last_freq_.has_value()){
@@ -62,9 +57,7 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
             }else{
                 last_freq_ = freq;
             }
-            const auto freq_err = static_cast<uint32_t>(
-                std::abs(int(freq) - int(count_freq))
-            );
+            const auto freq_err = uint32_t(ABS(int(freq) - int(count_freq)));
             if(freq_err < best.freq_err){
                 if(freq_err == 0) return {uint16_t(arr), psc};
                 best = {uint16_t(arr), uint16_t(psc), freq_err};
@@ -93,7 +86,10 @@ struct [[nodiscard]] ArrAndPsc{
         return ret;
     }
 
-    friend OutputStream & operator <<(OutputStream & os, const Self & self);
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os << os.field("arr")(self.arr) << os.splitter() 
+            << os.field("psc")(self.psc);
+    }
 };
 
 
@@ -184,7 +180,7 @@ enum class [[nodiscard]] TimerTrgoSource:uint8_t{
     Reset   = 0x0000,             
     Enable  = 0x0010,           
     Update  = 0x0020,           
-    OC1     = 0x0030   ,            
+    OC1     = 0x0030,            
     OC1R    = 0x0040,            
     OC2R    = 0x0050,            
     OC3R    = 0x0060,            
@@ -204,7 +200,7 @@ enum class [[nodiscard]] TimerTrgoSource:uint8_t{
 // };
 
 
-enum class [[nodiscard]] TimerIT:uint8_t{
+enum class [[nodiscard]] TimerIT:uint16_t{
     Update  = 0x0001,
     CC1     = 0x0002,
     CC2     = 0x0004,
@@ -215,30 +211,12 @@ enum class [[nodiscard]] TimerIT:uint8_t{
     Break   = 0x0080,
 };
 
-// enum class [[nodiscard]] TimerIT:uint8_t{
-//     Update  = 0x01,
-//     CC1     = 0x02,
-//     CC2     = 0x04,
-//     CC3     = 0x08,
-//     CC4     = 0x10,
-//     COM     = 0x20,
-//     Trigger = 0x40,
-//     Break   = 0x80,
-// };
-
 enum class [[nodiscard]] TimerBdtrLockLevel:uint8_t{
     Off     = 0x00,
     Low     = 0x01,
     Medium  = 0x02,
     High    = 0x03
 };
-
-// enum class [[nodiscard]] TimerBdtrLockLevel:uint8_t{
-//     Off     = 0x00,
-//     Low     = 0x01,
-//     Medium  = 0x02,
-//     High    = 0x03
-// };
 
 enum class [[nodiscard]] TimerOcMode:uint8_t{
     Freeze              = 0b000,

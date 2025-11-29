@@ -209,10 +209,8 @@ public:
     }
 private:
 
-
-
     alignas(4) CanIdentifier identifier_;
-    Payload payload_;
+    alignas(4) Payload payload_;
     /* Specifies the length of the frame that will be received.
     This parameter can be a value between 0 to 8 */
     
@@ -224,13 +222,11 @@ private:
     value between 0 to 0xFF */
 
     __always_inline constexpr CanClassicFrame(
-        CanIdentifier id,
+        const CanIdentifier identifier,
         const Payload payload
     ):
-        identifier_(id),
+        identifier_(identifier),
         payload_(payload){}
-
-
 };
 
 static_assert(sizeof(CanClassicFrame) == 16);

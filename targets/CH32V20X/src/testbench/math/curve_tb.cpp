@@ -16,7 +16,6 @@
 #include "robots/curve/CurveConcept_t.hpp"
 #include "robots/curve/CurveTrapezoid_t.hpp"
 
-#include "robots/tween/Tween.hpp"
 #include "core/math/realmath.hpp"
 
 #if 0

@@ -34,8 +34,8 @@ bool BurstDmaPwm::is_done(){
     return dma_channel_.remaining() == 0;
 }
 
-uint32_t BurstDmaPwm::calc_cvr_from_duty(const uq32 duty) const {
-    return uint32_t((uint64_t(timer_oc_.arr()) * duty.to_bits()) >> 32);
+uint32_t BurstDmaPwm::calc_cvr_from_duty(const uq32 dutycycle) const {
+    return uint32_t((uint64_t(timer_oc_.arr()) * dutycycle.to_bits()) >> 32);
 }
 
 uq8 BurstDmaPwm::get_period_us() const{
@@ -105,15 +105,13 @@ void DShotChannel::invoke(){
 void DShotChannel::init(){
     burst_dma_pwm_.install();
 }
-
-DShotChannel & DShotChannel::operator = (const real_t duty){
-    if(duty){
-        auto crc = calculate_crc(MAX(int(duty * 2047), 48));
+void DShotChannel::set_dutycycle(const real_t dutycycle){
+    if(dutycycle){
+        auto crc = calculate_crc(MAX(int(dutycycle * 2047), 48));
         update(std::span(buf_), crc);
     }else{
         clear(std::span(buf_));
     }
 
     invoke();
-    return *this;
 }

@@ -146,8 +146,8 @@ static consteval double sepow(const double base, const size_t times){
     return ret;
 }
 
-real_t time(){
-    if constexpr(is_fixed_point_v<real_t>){
+iq16 time(){
+    if constexpr(is_fixed_point_v<iq16>){
         struct Depart{
             uint64_t l15:15;
             uint64_t m15:15;
@@ -159,9 +159,9 @@ real_t time(){
         const Depart microsec = std::bit_cast<Depart>(uint64_t(micros().count()));
 
         return 
-            + real_t{fixed_t<16, int32_t>::from_bits((int(microsec.l15) << 16) / 1000000)} 
-            + real_t{int(microsec.m15)} * real_t(sepow(2, 15) / sepow(10, 6))
-            + real_t{int(microsec.h31)} * real_t(sepow(2, 30) / sepow(10, 6))
+            + iq16{fixed_t<16, int32_t>::from_bits((int(microsec.l15) << 16) / 1000000)} 
+            + iq16{int(microsec.m15)} * iq16(sepow(2, 15) / sepow(10, 6))
+            + iq16{int(microsec.h31)} * iq16(sepow(2, 30) / sepow(10, 6))
             ;
     }else{
 

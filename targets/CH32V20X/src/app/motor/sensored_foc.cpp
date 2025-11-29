@@ -24,10 +24,10 @@
 
 #include "types/vectors/quat.hpp"
 
+#include "middlewares/rpc/rpc.hpp"
+#include "middlewares/repl/repl_service.hpp"
 
 #include "robots/gesture/comp_est.hpp"
-#include "robots/rpc/rpc.hpp"
-#include "robots/repl/repl_service.hpp"
 #include "robots/protocols/cannet/can_chain.hpp"
 
 #include "robots/commands/joint_commands.hpp"

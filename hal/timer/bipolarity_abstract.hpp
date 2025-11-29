@@ -15,7 +15,7 @@ public:
         TimerOCN & ocn
     ):
         oc_(oc), ocn_(ocn){;}
-    void set_dutycycle(const real_t value){
+    void set_dutycycle(const iq16 value){
         const bool polar = value > 0;
         if(last_polar_ != polar){
             last_polar_ = polar;
@@ -46,10 +46,10 @@ public:
         pos_oc_(pos_oc),
         neg_oc_(neg_oc){;}
 
-    __fast_inline void set_dutycycle(const real_t value){
+    __fast_inline void set_dutycycle(const iq16 value){
         const bool is_negative = signbit(value);
-        const auto zero_value = real_t(is_inversed_);
-        const auto abs_value = is_inversed_ ? (1 - ABS(value)) : ABS(value);
+        const iq16 zero_value = is_inversed_ ? 1 : 0;
+        const auto abs_value = (is_inversed_) ? (1 - ABS(value)) : ABS(value);
 
         if(is_negative){
             pos_oc_.set_dutycycle(zero_value);

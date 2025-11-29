@@ -53,11 +53,7 @@ void bmi160_main(){
 
         clock::delay(20ms);
         bmi.update().examine();
-        Vec3<real_t> acc = bmi.read_acc().unwrap();
-        acc.x = acc.x >> 10;
-        acc.y = acc.y >> 10;
-        acc.z = acc.z >> 10;
-        acc.normalize();
+        const auto  acc = bmi.read_acc().unwrap();
         Quat gest = Quat::from_shortest_arc({0,0,1}, acc);
         DEBUG_PRINTLN(gest);
     }

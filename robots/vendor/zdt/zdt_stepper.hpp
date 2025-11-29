@@ -38,7 +38,7 @@ public:
     }
 
     struct PositionMsg{
-        Angle<iq16> position;
+        Angle<iq16> angle;
         iq16 speed;
     };
 
@@ -46,7 +46,7 @@ public:
         iq16 speed;
     };
 
-    IResult<> set_position(const PositionMsg msg);
+    IResult<> set_angle(const PositionMsg msg);
     IResult<> set_speed(const SpeedMsg msg);
     IResult<> brake();
     IResult<> set_subdivides(const uint16_t subdivides);

@@ -1,7 +1,7 @@
 #include "core/debug/debug.hpp"
 #include "core/sync/spinlock.hpp"
 #include "core/sync/barrier.hpp"
-#include "core/string/fixed_string.hpp"
+#include "core/string/heapless_string.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
@@ -302,7 +302,7 @@ public:
 
 private:
     static constexpr size_t MAX_LENGTH = 7;
-    FixedString<MAX_LENGTH> str_;
+    HeaplessString<MAX_LENGTH> str_;
 
     Cursor cursor_;
 

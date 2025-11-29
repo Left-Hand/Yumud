@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/math/iq/fixed_t.hpp"
+
 namespace ymd::dsp{
 
 template<typename T, size_t N>
@@ -49,4 +51,17 @@ public:
 private:    
     std::array<T, N> data_;
 };
+
+
+struct [[nodiscard]] SecondOrderState{
+    using Self = SecondOrderState;
+    fixed_t<32, int64_t> x1 = 0;
+    fixed_t<16, int32_t> x2 = 0;
+
+    static constexpr Self zero(){
+        return Self{0, 0};
+    }
+};
+
+
 }

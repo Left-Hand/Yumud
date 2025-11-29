@@ -139,6 +139,7 @@ void Can::init_interrupts(){
         #endif
         
         default:
+            __builtin_trap();
             break;
     }
 }
@@ -157,10 +158,8 @@ void Can::clear_mailbox(const CanMailboxNth mbox){
 }
 
 
-Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
+static Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
     switch(reinterpret_cast<size_t>(inst)){
-        default:
-            __builtin_unreachable();
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             switch(remap){
@@ -173,8 +172,6 @@ Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
                     return CAN1_RM1_TX_GPIO;
                 case 3:
                     return CAN1_RM3_TX_GPIO;
-                default:
-                    __builtin_unreachable();
             }
         #endif
 
@@ -183,13 +180,12 @@ Gpio map_inst_to_tx_gpio(const void * inst, const uint8_t remap){
             return CAN2_TX_GPIO;
         #endif
     }
+    __builtin_trap();
 }
 
 
-Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
+static Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
     switch(reinterpret_cast<size_t>(inst)){
-        default:
-            __builtin_unreachable();
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             // return CAN1_RX_GPIO;
@@ -203,8 +199,6 @@ Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
                     return CAN1_RM1_RX_GPIO;
                 case 3:
                     return CAN1_RM3_RX_GPIO;
-                default:
-                    __builtin_unreachable();
             }
         #endif
 
@@ -213,6 +207,7 @@ Gpio map_inst_to_rx_gpio(const void * inst, const uint8_t remap){
             return CAN2_RX_GPIO;
         #endif
     }
+    __builtin_trap();
 }
 
 
@@ -434,6 +429,7 @@ void Can::enable_index_priority(const Enable en){
 
 void Can::set_baudrate(const uint32_t baudrate){
     //TODO
+    __builtin_trap();
 }
 
 CanClassicFrame Can::receive(const CanFifoNth fifo_num){
@@ -484,7 +480,7 @@ void Can::accept_tx_interrupt(){
                     callback_(CanEvent(CanTransmitEvent::Success));
                 break;
             default:
-                __builtin_unreachable();
+                __builtin_trap();
         }
 
         clear_mailbox(std::bit_cast<CanMailboxNth>(mbox));

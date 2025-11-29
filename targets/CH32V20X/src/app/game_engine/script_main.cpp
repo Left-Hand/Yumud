@@ -5,7 +5,7 @@
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
 #include "primitive/arithmetic/rescaler.hpp"
-#include "core/string/fixed_string.hpp"
+#include "core/string/heapless_string.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -25,8 +25,8 @@
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
 
-#include "robots/rpc/rpc.hpp"
-#include "robots/repl/repl_service.hpp"
+#include "middlewares/rpc/rpc.hpp"
+#include "middlewares/repl/repl_service.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "frame_buffer.hpp"

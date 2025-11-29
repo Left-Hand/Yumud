@@ -91,14 +91,14 @@ void zdt_main(){
         // motor.activate();
         const auto d1 = sin(clock::time()*0.7_r);
         const auto d2 = tpzpu(clock::time()*0.2_r);
-        motor1.set_position({
-            .position = Angle<real_t>::from_turns(d1), 
+        motor1.set_angle({
+            .angle = Angle<real_t>::from_turns(d1), 
             .speed = 0
         }).examine();
 
         clock::delay(5ms);
-        motor2.set_position({
-            .position = Angle<real_t>::from_turns(d2), 
+        motor2.set_angle({
+            .angle = Angle<real_t>::from_turns(d2), 
             .speed = 0
         }).examine();
         clock::delay(5ms);

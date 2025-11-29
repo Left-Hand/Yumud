@@ -7,6 +7,9 @@ using namespace ymd::geometry;
 using namespace ymd::robots;
 
 
+#if 0
+
+static constexpr iq16 EPSILON = 0.001_iq16;
 void Sequencer::rotate(Curve & curve, const Ray2<iq16> & from, const Angle<iq16> end_angle){
 
     const TrapezoidSolver<iq16> solver{
@@ -86,7 +89,7 @@ void Sequencer::sideways(Curve & curve, const Ray2<iq16> & from, const Ray2<iq16
     auto from_norm_line = from.normal();
     auto to_norm_line = to.normal();
 
-    if(from_norm_line.parallel_with(to_norm_line)){
+    if(from_norm_line.is_parallel_with(to_norm_line, EPSILON)){
         this->linear(curve, from, to.org);
         return;
     }
@@ -105,7 +108,7 @@ void Sequencer::follow(Curve & curve, const Ray2<iq16> & from, const Ray2<iq16> 
     const auto from_line = from.to_line();
     const auto to_line = to.to_line();
 
-    if(from_line.parallel_with(to_line)){
+    if(from_line.is_parallel_with(to_line, EPSILON)){
         this->linear(curve, from, to.org);
         return;
     }
@@ -141,3 +144,5 @@ void Sequencer::wait(Curve & curve, const Ray2<iq16> & from, const iq16 dur){
         curve.emplace_back(from);
     }
 }
+
+#endif

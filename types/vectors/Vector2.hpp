@@ -191,13 +191,6 @@ struct [[nodiscard]] Vec2{
             return Angle<T>::from_turns(atan2pu(y, x));}
 	[[nodiscard]] constexpr Angle<T> angle_between(const Vec2<T> & b) const {
         const auto & a = *this;
-        // const T cross_z = a.x * b.y - a.y * b.x;
-        // // 点积（cosθ）
-        // const T dot = a.x * b.x + a.y * b.y;
-        // if(ymd::is_equal_approx(dot, T(0))){
-        //     return (dot >= 0) ? T(0) : T(PI);
-        // }
-        // return atan2(cross_z, dot);
 
         const T angle_a = atan2(a.y, a.x);
         const T angle_b = atan2(b.y, b.x);
@@ -249,7 +242,9 @@ struct [[nodiscard]] Vec2{
     [[nodiscard]] constexpr T dist_to(const Vec2<T> & b) const;
     [[nodiscard]] constexpr T dist_squared_to(const Vec2<T> & b) const;
 
-    [[nodiscard]] constexpr bool is_equal_approx(const Vec2<T> & v) const;
+    [[nodiscard]] constexpr bool is_equal_approx(const Vec2<T> & other, const T epsilon) const{
+        return ymd::is_equal_approx(x, other.x, epsilon) && ymd::is_equal_approx(y, other.y, epsilon);
+    }
     [[nodiscard]] constexpr T manhattan_distance()const{
         return ABS(x) + ABS(y);
     }
@@ -353,12 +348,12 @@ struct [[nodiscard]] Vec2{
         return ret /= n;
     }
 
-    [[nodiscard]] constexpr bool is_zero() const {
-        if constexpr(std::is_integral<T>::value){
-            return x == 0 and y == 0;
-        }else{
-            return is_equal_approx(x, T(0)) and is_equal_approx(y, T(0));
-        }
+    [[nodiscard]] constexpr bool is_zero() const requires (std::is_integral_v<T>){
+        return x == 0 and y == 0;
+    }
+
+    [[nodiscard]] constexpr bool is_zero(const T epsilon) const requires (not std::is_integral_v<T>){
+        return is_equal_approx(x, T(0), epsilon) and is_equal_approx(y, T(0), epsilon);
     }
 
 
@@ -504,7 +499,7 @@ constexpr Vec2<T> Vec2<T>::bounce(const Vec2<T> & n) const {
 template<typename T>
 constexpr Vec2<T> Vec2<T>::lerp(const Vec2<T> & b, const T _t) const{
     static_assert(not std::is_integral_v<T>);
-    return *this * (1-_t)+b * _t;
+    return *this * (static_cast<T>(1)-_t)+b * _t;
 }
 
 template<typename T>
@@ -535,10 +530,6 @@ constexpr T Vec2<T>::project(const T & rad) const{
 
 }
 
-template<typename T>
-constexpr bool Vec2<T>::is_equal_approx(const Vec2<T> & b) const{
-    return ymd::is_equal_approx(x, b.x) && ymd::is_equal_approx(y, b.y);
-}
 
 template<typename T>
 constexpr bool Vec2<T>::has_point(const Vec2<auto> & _v) const{
@@ -555,7 +546,7 @@ constexpr bool Vec2<T>::has_point(const Vec2<auto> & _v) const{
 
 template<typename T>
 constexpr Vec2<T> Vec2<T>::move_toward(const Vec2<T> & b, const T delta) const{
-    if (!is_equal_approx(b)){
+    if (!is_equal_approx(b, static_cast<T>(0.0001))){
         Vec2<T> d = b - *this;
         return *this + d.clampmax(delta);
     }
@@ -594,7 +585,7 @@ constexpr __fast_inline T Vec2<T>::cross(const Vec2<T> & with) const{
 }
 
 
-
+#if 1
 #define VECTOR2_COMPARE_IM_OPERATOR(op) \
 \
 template <typename T, typename U> \
@@ -614,12 +605,15 @@ constexpr __fast_inline bool operator op (const Vec2<T>& lhs, const Vec2<U>& rhs
 }\
 
 
+
 VECTOR2_COMPARE_IM_OPERATOR(<)
 VECTOR2_COMPARE_IM_OPERATOR(<=)
 VECTOR2_COMPARE_IM_OPERATOR(>)
 VECTOR2_COMPARE_IM_OPERATOR(>=)
 VECTOR2_COMPARE_IM_OPERATOR(==)
 VECTOR2_COMPARE_IM_OPERATOR(!=)
+
+#endif
 
 template <typename T, typename U = T>
 constexpr __fast_inline Vec2<T> operator +(const Vec2<T> &p_vector2, const Vec2<U> &d_vector2){

@@ -4,7 +4,7 @@
 
 namespace ymd{
 template<typename D>
-struct Rescaler { 
+struct [[nodiscard]] Rescaler { 
     D scale;
     D offset;
 

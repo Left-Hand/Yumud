@@ -1,8 +1,9 @@
 #pragma once
 
+#include "primitive/arithmetic/fraction.hpp"
+
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-#include "core/math/fraction.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 

@@ -3,9 +3,9 @@
 #include "core/string/string_view.hpp"
 namespace ymd{
 
-class GBKIterator final {
+class GbkIterator final {
 public:
-    constexpr explicit GBKIterator(const StringView str) : 
+    constexpr explicit GbkIterator(const StringView str) : 
         str_(str), 
         current_index_(0) {}
     
