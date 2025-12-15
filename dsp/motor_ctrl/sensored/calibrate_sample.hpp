@@ -27,7 +27,7 @@ struct CalibrateSample{
 
 
     constexpr iq31 to_inaccuracy() const {
-        return errmod(iq20(expected() - measured()), 0.02_iq20);
+        return math::errmod(iq20(expected() - measured()), 0.02_iq20);
     }
 private:
     uq32 expected_;
@@ -48,7 +48,7 @@ public:
         measured_packed_data_(0){;}
 
     static constexpr Option<PackedCalibrateSample> 
-    from_expected_and_measure(const Angle<uq32> expected, const Angle<uq32> measured){
+    from_expected_and_measure(const Angular<uq32> expected, const Angular<uq32> measured){
         const auto expected_packed_data = ({
             const auto may = real_to_packed(expected);
             if(may.is_none()) return None;
@@ -76,7 +76,7 @@ public:
     }
 
     constexpr iq31 to_inaccuracy() const {
-        return errmod(iq20(expected() - measured()), 0.02_iq20);
+        return math::errmod(iq20(expected() - measured()), 0.02_iq20);
     }
 
 private:
@@ -90,7 +90,7 @@ private:
     uint16_t expected_packed_data_;
     uint16_t measured_packed_data_;
 
-    static constexpr Option<uint16_t> real_to_packed(const Angle<uq32> unpacked){
+    static constexpr Option<uint16_t> real_to_packed(const Angular<uq32> unpacked){
         return Some(uint16_t(unpacked.to_turns().to_bits() >> 16));
     }
 

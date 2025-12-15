@@ -30,7 +30,7 @@
 //         //打印神经网络输出的结果，调试用的
 //         public static void DebugNetRes(NeuralNet net, float[][] testInput)
 //         {
-//             for(int i = 0; i < testInput.GetLength(0); ++i)
+//             for(size_t i = 0; i < testInput.GetLength(0); ++i)
 //             {
 //                 var res = net.CalcNet(testInput[i]);
 //                 for(int j = 0; j < res.Length; ++j)

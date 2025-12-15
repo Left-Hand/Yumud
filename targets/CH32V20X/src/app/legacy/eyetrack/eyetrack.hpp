@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/regions/rect2.hpp"
+#include "algebra/regions/rect2.hpp"
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
 namespace etk{

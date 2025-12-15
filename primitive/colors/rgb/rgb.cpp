@@ -6,14 +6,14 @@
 
 //https://www.zhihu.com/question/27417946/answer/1253126563
 
-static inline int32_t clamp_to_0(int32_t x) { 
+static constexpr int32_t clamp_to_0(int32_t x) { 
 	return ((-x) >> 31) & x; 
 }
-static inline int32_t clamp_to_255(int32_t x) {
+static constexpr int32_t clamp_to_255(int32_t x) {
 	return (((255 - x) >> 31) | x) & 255;
 }
 
-static inline uint32_t next_power_of_2(uint32_t x) {
+static constexpr uint32_t next_power_of_2(uint32_t x) {
 	x--;
 	x |= x >> 1; 
 	x |= x >> 2; 
@@ -99,7 +99,7 @@ static constexpr uint16_t xyz_table[256] = {
 
 namespace ymd{
 template<arithmetic T>
-struct XYZ{
+struct [[nodiscard]] XYZ{
     T x,y,z;
 };
 
@@ -125,7 +125,7 @@ __fast_inline static constexpr auto xyz_gamma(const real_t x) -> real_t{
 
 __fast_inline static constexpr auto inv_xyz_gamma_to8(const real_t x) -> uint8_t{
     if((x > 0.0031308_r)) 
-        return __USAT8(uint8_t(((1.055_r * 255) * pow(x, 0.416666_r)) - (0.055_r * 255)));
+        return __USAT8(uint8_t(((1.055_r * 255) * math::pow(x, 0.416666_r)) - (0.055_r * 255)));
     else
         return __USAT8(uint8_t(x * 12.92_r * 255));
 }
@@ -202,19 +202,19 @@ OutputStream & operator<<(OutputStream & os, const IGray & sgs){
     return os << '(' << sgs.as_i8() << ')';
 }
 
-#define OS_RGB    return os << '(' << uint8_t(rgb.r) << os.splitter() << uint8_t(rgb.g) << os.splitter() << uint8_t(rgb.b) << ')';
-#define OS_XXX(u,v,w)    return os << '(' << uint8_t(u) << os.splitter() << uint8_t(v) << os.splitter() << uint8_t(w) << ')';
+#define DERIVE_DEBUG_RGB    return os << '(' << uint8_t(rgb.r) << os.splitter() << uint8_t(rgb.g) << os.splitter() << uint8_t(rgb.b) << ')';
+#define DERIVE_DEBUG_XXX(u,v,w)    return os << '(' << uint8_t(u) << os.splitter() << uint8_t(v) << os.splitter() << uint8_t(w) << ')';
 
-OutputStream & operator<<(OutputStream & os, const RGB565 & rgb){OS_RGB}
+OutputStream & operator<<(OutputStream & os, const RGB565 & rgb){DERIVE_DEBUG_RGB}
 
-OutputStream & operator<<(OutputStream & os, const RGB888 & rgb){OS_RGB}
+OutputStream & operator<<(OutputStream & os, const RGB888 & rgb){DERIVE_DEBUG_RGB}
 
-OutputStream & operator<<(OutputStream & os, const LAB888 & lab){{OS_XXX(lab.l, lab.a, lab.b)};}
+OutputStream & operator<<(OutputStream & os, const LAB888 & lab){{DERIVE_DEBUG_XXX(lab.l, lab.a, lab.b)};}
 
-OutputStream & operator<<(OutputStream & os, const HSV888 & hsv){{OS_XXX(hsv.h, hsv.s, hsv.v)};}
+OutputStream & operator<<(OutputStream & os, const HSV888 & hsv){{DERIVE_DEBUG_XXX(hsv.h, hsv.s, hsv.v)};}
 
-#undef OS_RGB
-#undef OS_XXX
+#undef DERIVE_DEBUG_RGB
+#undef DERIVE_DEBUG_XXX
 
 
 // LAB888::LAB888(const RGB888 & rgb){

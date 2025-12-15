@@ -15,9 +15,9 @@
 
 #include "primitive/image/painter/painter.hpp"
 #include "primitive/colors/rgb/rgb.hpp"
-#include "types/regions/rect2.hpp"
+#include "algebra/regions/rect2.hpp"
 
-#include "types/vectors/quat.hpp"
+#include "algebra/vectors/quat.hpp"
 #include "primitive/image/image.hpp"
 #include "primitive/image/font/font.hpp"
 
@@ -26,7 +26,7 @@
 #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
 
 #include "middlewares/rpc/rpc.hpp"
-#include "middlewares/repl/repl_service.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "frame_buffer.hpp"
@@ -163,7 +163,7 @@ public:
     void invoke(T && obj){
         while(is_->available()){
             char chr;
-            is_->read1(chr);
+            is_->try_read_char(chr);
             if(not is_visible_char(chr)) continue;
             DEBUG_PRINTLN(chr);
         }
@@ -237,6 +237,7 @@ void script_main(){
     auto init_debugger = []{
 
         DBG_UART.init({
+            .remap = hal::UART2_REMAP_PA2_PA3,
             .baudrate = UART_BAUD
         });
 
@@ -271,8 +272,9 @@ void script_main(){
         };
 
         while(DBG_UART.available()){
-            uint32_t chr;
-            DBG_UART.read(chr);
+            char chr;
+            const auto len = DBG_UART.try_read_char(chr);
+            if(len == 0) break;
             DEBUG_PRINTLN(static_cast<char>(chr));
         } 
         if(0) DEBUG_PRINTLN(

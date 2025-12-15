@@ -2,16 +2,16 @@
 
 #include <cstdint>
 
-namespace CH32V30X{
+namespace ymd::ral::ch32::ch32v30x_rng{
 
-struct R32_RNG_CR{
+struct [[nodiscard]] R32_RNG_CR{
     uint32_t :1;
     uint32_t RNGEN:1;
     uint32_t IE:1;
     uint32_t :28;
 };
 
-struct R32_RNG_SR{
+struct [[nodiscard]] R32_RNG_SR{
     uint32_t DRDY:1;
     uint32_t CECS:1;
     uint32_t SECS:1;
@@ -21,11 +21,11 @@ struct R32_RNG_SR{
     uint32_t :25;
 };
 
-struct R32_RNG_DR{
+struct [[nodiscard]] R32_RNG_DR{
     uint32_t DATA;   
 };
 
-struct RNG_Def{
+struct [[nodiscard]] RNG_Def{
     volatile R32_RNG_CR CR;
     volatile R32_RNG_SR SR;
     volatile R32_RNG_DR DR;

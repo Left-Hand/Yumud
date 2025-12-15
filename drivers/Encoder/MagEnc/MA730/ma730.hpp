@@ -24,9 +24,9 @@ public:
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> set_zero_angle(const Angle<uq32> angle);
-    [[nodiscard]] IResult<Angle<uq32>> read_lap_angle(){
-        return Ok(Angle<uq32>::from_turns(lap_turns_));
+    [[nodiscard]] IResult<> set_zero_angle(const Angular<uq32> angle);
+    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle(){
+        return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 
     [[nodiscard]] IResult<> set_trim_x(const real_t k);

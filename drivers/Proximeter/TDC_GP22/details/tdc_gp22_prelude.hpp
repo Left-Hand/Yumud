@@ -121,13 +121,13 @@ class GP22_Phy final:
 public:
         // TDC硬件初始化
     IResult<> reset() {
-        if(may_nrst_gpio_.is_none()) return Ok();
-        auto & rstn_gpio = may_nrst_gpio_.unwrap();
-        rstn_gpio.set();
+        if(may_nrst_pin_.is_none()) return Ok();
+        auto & rstn_gpio = may_nrst_pin_.unwrap();
+        rstn_gpio.set_high();
         clock::delay(1us);
-        rstn_gpio.clr();
+        rstn_gpio.set_low();
         clock::delay(1us);
-        rstn_gpio.set();
+        rstn_gpio.set_high();
         clock::delay(1ms);
         return Ok();
     }
@@ -137,6 +137,6 @@ public:
     [[nodiscard]] IResult<> write_u32(const uint32_t data);
     [[nodiscard]] IResult<uint32_t> trans_u8_receive_u32(const uint8_t data);
 private:
-    Option<hal::GpioIntf &> may_nrst_gpio_;
+    Option<hal::GpioIntf &> may_nrst_pin_;
 };
 }

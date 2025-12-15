@@ -11,7 +11,7 @@
 
 
 #include "hal/bus/spi/spidrv.hpp"
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 
 namespace ymd::drivers{

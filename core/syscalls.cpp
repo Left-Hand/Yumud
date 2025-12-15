@@ -27,7 +27,7 @@ void *_sbrk(ptrdiff_t incr){
 }
 
 void _exit(int status){
-    while(true);
+    __builtin_trap();
 }
 
 ssize_t _read(int fd, void *buf, size_t count){
@@ -40,8 +40,9 @@ void _fini(void) {}
 void _kill(int pid, int sig) {
     // 空实现
 }
+
 pid_t _getpid(){
-  return 0;
+    return 0;
 }
 
 int raise(int sig) {
@@ -55,102 +56,91 @@ void abort(void){
 
 void *__dso_handle = nullptr;
 void __cxa_atexit(void (*func)(void), void *objptr, void *dso_handle) {}
-// void * __cxa_atexit =0;
-
-// FILE *__sf_fake_stderr(void) {
-//     return NULL;
-// }
-// FILE *__sf_fake_stdout(void) {
-//     return NULL;
-// }
-// FILE *__sf_fake_stdin(void) {
-//     return NULL;
-// }
 
 }
 
-// https://github.com/esp8266/Arduino/blob/master/cores/esp8266/libc_replacements.cpp
 extern "C" {
 
-int _open_r (struct _reent* unused, const char *ptr, int mode) {
-    (void)unused;
-    (void)ptr;
-    (void)mode;
+
+// ------------------------------------------------------------
+// 文件系统桩函数实现
+// 在无文件系统环境下，所有操作均成功但不执行实际操作
+// ------------------------------------------------------------
+
+// 打开文件 - 桩实现
+int _open_r(struct _reent* reent_ptr, const char* filename, int open_flags) {
+    // 消除未使用参数警告，使用不同变量名和顺序
+    (void)reent_ptr;
+    (void)filename;
+    (void)open_flags;
+    
+    // 桩实现总是返回成功
+    // 注意：实际无文件系统环境中，可以返回0表示成功
     return 0;
 }
 
-int _close_r(struct _reent* unused, int file) {
-    (void)unused;
-    (void)file;
+// 关闭文件 - 桩实现  
+int _close_r(struct _reent* reent_ptr, int file_descriptor) {
+    (void)reent_ptr;
+    (void)file_descriptor;
+    
+    // 关闭操作总是成功
     return 0;
 }
 
-// int _fstat_r(struct _reent* unused, int file, struct stat *st) {
-//     (void)unused;
-//     (void)file;
-//     st->st_mode = S_IFCHR;
-//     return 0;
-// }
-
-int _lseek_r(struct _reent* unused, int file, int ptr, int dir) {
-    (void)unused;
-    (void)file;
-    (void)ptr;
-    (void)dir;
+// 文件定位 - 桩实现
+int _lseek_r(struct _reent* reent_ptr, int fd, int offset, int whence) {
+    // 参数处理使用不同命名
+    struct _reent* unused_reent = reent_ptr;
+    int unused_fd = fd;
+    int unused_offset = offset;
+    int unused_whence = whence;
+    
+    (void)unused_reent;
+    (void)unused_fd;
+    (void)unused_offset;
+    (void)unused_whence;
+    
+    // 定位操作总是成功，返回当前位置0
     return 0;
 }
 
-int _read_r(struct _reent* unused, int file, char *ptr, int len) {
-    (void)unused;
+// 读取文件 - 桩实现
+int _read_r(struct _reent* reent_ptr, int fd, char* buffer, size_t count) {
+    // 不同参数处理方式：赋值给临时变量
+    struct _reent* r = reent_ptr;
+    int file = fd;
+    char* buf = buffer;
+    size_t len = count;
+    
+    (void)r;
     (void)file;
-    (void)ptr;
+    (void)buf;
     (void)len;
+    
+    // 读取0字节表示文件结束
     return 0;
 }
 
-// int _write_r(struct _reent* r, int file, char *ptr, int len) {
-//     (void) r;
-//     int pos = len;
-//     if (file == STDOUT_FILENO) {
-//         while(pos--) {
-//             ets_putc(*ptr);
-//             ++ptr;
-//         }
-//     }
-//     return len;
-// }
 
-int _putc_r(struct _reent* r, int c, FILE* file) __attribute__((weak));
+int _putc_r(struct _reent*, int, FILE*) __attribute__((weak));
 
-// int _putc_r(struct _reent* r, int c, FILE* file) {
-//     (void) r;
-//     if (file->_file == STDOUT_FILENO) {
-//       ets_putc(c);
-//       return c;
-//     }
-//     return EOF;
-// }
 
-// int puts(const char * str) {
-//     char c;
-//     while((c = *str) != 0) {
-//         ets_putc(c);
-//         ++str;
-//     }
-//     ets_putc('\n');
-//     return true;
-// }
+// ------------------------------------------------------------
+// 程序终止处理函数
+// ------------------------------------------------------------
 
-// #undef putchar
-// int putchar(int c) {
-//     ets_putc(c);
-//     return c;
-// }
-
-int atexit(void (*func)()) __attribute__((weak));
-int atexit(void (*func)()) {
-    (void) func;
-    return 0;
+// 程序退出处理注册 - 桩实现
+// 在资源受限环境中，退出处理通常不可用
+int atexit(void (*exit_handler)(void)) {
+    // 消除未使用参数警告
+    void (*handler)(void) = exit_handler;
+    (void)handler;
+    
+    // 桩实现不支持退出处理，返回失败
+    // 注意：这里选择返回-1表示不支持，与原始可能不同
+    return -1;
 }
+
 
 };

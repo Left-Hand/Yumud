@@ -23,7 +23,7 @@ void FOCStepper::invoke_selfcheck_task(){
 }
 
 void FOCStepper::tick(){
-    const auto begin_micros = clock::micros();
+    const auto begin_msicros = clock::micros();
     RunStatus exe_status;
 
     switch(run_status){

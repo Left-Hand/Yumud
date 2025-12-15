@@ -58,6 +58,9 @@ template<size_t N>
 using bytes_to_uint_t = typename details::_bytes_to_uint<std::bit_ceil(N)>::type;
 
 template<size_t N>
+using bytes_to_sint_t = typename details::_bytes_to_sint<std::bit_ceil(N)>::type;
+
+template<size_t N>
 using bits_to_uint_t = typename details::_bytes_to_uint<std::bit_ceil((N + 7) / 8)>::type;
 
 template<typename T>

@@ -6,14 +6,14 @@
 #include <utility>
 #include <type_traits>
 
-#include "core/magic/function_traits.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/functor.hpp"
+#include "core/tmp/reflect/enum.hpp"
 #include "core/utils/Result.hpp"
 #include "core/string/string_view.hpp"
 #include "core/string/utils/strconv2.hpp"
 #include "core/stream/ostream.hpp"
 
-namespace ymd::magic{
+namespace ymd::tmp{
 // 辅助类型特征检测
 template <template<typename...> class, typename...>
 struct is_instantiation_of : std::false_type {};
@@ -55,8 +55,6 @@ using IResult = Result<T, Error>;
 
 
 struct ParamFromString final{
-    constexpr explicit ParamFromString(const char * str):
-        str_(str){;}
 
     constexpr explicit ParamFromString(const StringView str):
         str_(str){;}
@@ -417,7 +415,7 @@ struct EntryVisitor<PropertyWithLimit<T>, std::enable_if_t<!std::is_const_v<T>>>
         if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
         const auto val = ({
             const auto res = ap[0].template defmt_to<std::decay_t<T>>();
-            if(unlikely(res.is_err())) return Err(res.unwrap_err());
+            if(res.is_err()) return Err(res.unwrap_err());
             res.unwrap();
         });
         if(unlikely(val < self.min()))
@@ -570,8 +568,8 @@ template<typename Lambda>
 auto make_function(const StringView func_name, Lambda && lambda) {
     using DecayedLambda = typename std::decay<Lambda>::type;
 
-    using Ret = typename magic::functor_ret_t<DecayedLambda>;
-    using ArgsTuple = typename magic::functor_args_tuple_t<DecayedLambda>;
+    using Ret = typename tmp::functor_ret_t<DecayedLambda>;
+    using ArgsTuple = typename tmp::functor_args_tuple_t<DecayedLambda>;
 
     return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
         func_name,

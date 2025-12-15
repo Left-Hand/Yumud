@@ -9,7 +9,7 @@
 
 namespace ymd{
 template<arithmetic T, size_t R, size_t C>
-class Matrix{
+struct [[nodiscard]] Matrix{
 
 public:
     [[nodiscard]] __fast_inline static constexpr Matrix from_uninitialized(){
@@ -23,7 +23,7 @@ public:
     }
 
     // 单位矩阵生成函数
-    [[nodiscard]] __fast_inline static constexpr Matrix<T, R, C> from_identity(){
+    [[nodiscard]] __fast_inline static constexpr Matrix<T, R, C> identity(){
         static_assert(R == C, "Identity matrix must be square.");
 
         Matrix<T, R, C> ret = Matrix<T, R, C>::zero();
@@ -527,7 +527,7 @@ public:
             
             if (abs(b) < 1e-10) {
                 // Already diagonal
-                solution.vectors = Matrix<T, 2, 2>::from_identity();
+                solution.vectors = Matrix<T, 2, 2>::identity();
             } else {
                 // Calculate eigenvectors
                 const T lambda1 = solution.values.at(0, 0);
@@ -548,7 +548,7 @@ public:
         } else {
             // For larger matrices, use iterative Jacobi method
             EigenSolution solution;
-            solution.vectors = Matrix<T, R, R>::from_identity();
+            solution.vectors = Matrix<T, R, R>::identity();
             Matrix<T, R, R> A = *this;
             
             constexpr int max_iterations = 100;

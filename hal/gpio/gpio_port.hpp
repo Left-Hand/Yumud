@@ -6,90 +6,67 @@
 namespace ymd::hal{
 class GpioPort final: public GpioPortIntf{
 protected:
-    GPIO_TypeDef * inst_;
+    void * inst_;
 
     friend class Gpio;
 public:
-    GpioPort(GPIO_TypeDef * inst):
+    GpioPort(void * inst):
         inst_(inst){;}
 
     void init();
     void enable_rcc(const Enable en);
 
 
-    __inline void write_nth(const Nth nth, const BoolLevel data);
-    __inline void set_by_mask(const PinMask mask);
-    __inline void clr_by_mask(const PinMask mask);
-    __inline void write_by_mask(const PinMask mask){
-        inst_->OUTDR = mask.to_u16();}
-    __inline PinMask read_mask(){
-        return PinMask::from_u16(inst_->INDR);}
+    void write_nth(const Nth nth, const BoolLevel data);
+    void set_by_mask(const PinMask mask);
+    void clr_by_mask(const PinMask mask);
+    void write_by_mask(const PinMask mask);
+    PinMask read_mask();
 
 
     void set_mode(const Nth nth, const GpioMode mode);
 };
 
-__inline void GpioPort::write_nth(const Nth nth, const BoolLevel data){
-    const auto mask = PinMask::from_nth(nth);
-    if(data == HIGH){
-        set_by_mask(mask);
-    }else{
-        clr_by_mask(mask);
-    }
-}
-
-__inline void GpioPort::set_by_mask(const PinMask mask){
-    inst_->BSHR = mask.to_u16();
-}
-
-__inline void GpioPort::clr_by_mask(const PinMask mask){
-    inst_->BCR = mask.to_u16();
-}
 
 
 
-#ifdef ENABLE_GPIOA
-// extern GpioPort portA;
+#ifdef GPIOA_PRESENT
 template<size_t I>
 requires (I < 16)
 static constexpr Gpio PA(){
-    return make_gpio(GPIOA, Nth(I));
+    return make_gpio(PortSource::PA, Nth(I));
 }
 #endif
 
-#ifdef ENABLE_GPIOB
-// extern GpioPort portB;
+#ifdef GPIOB_PRESENT
 template<size_t I>
 requires (I < 16)
 static constexpr Gpio PB(){
-    return make_gpio(GPIOB, Nth(I));
+    return make_gpio(PortSource::PB, Nth(I));
 }
 #endif
 
-#ifdef ENABLE_GPIOC
-// extern GpioPort portC;
+#ifdef GPIOC_PRESENT
 template<size_t I>
 requires (I < 16)
 static constexpr Gpio PC(){
-    return make_gpio(GPIOC, Nth(I));
+    return make_gpio(PortSource::PC, Nth(I));
 }
 #endif
 
-#ifdef ENABLE_GPIOD
-// extern GpioPort portD;
+#ifdef GPIOD_PRESENT
 template<size_t I>
 requires (I < 16)
 static constexpr Gpio PD(){
-    return make_gpio(GPIOD, Nth(I));
+    return make_gpio(PortSource::PD, Nth(I));
 }
 #endif
 
-#ifdef ENABLE_GPIOE
-// extern GpioPort portE;
+#ifdef GPIOE_PRESENT
 template<size_t I>
 requires (I < 16)
 static constexpr Gpio PE(){
-    return make_gpio(GPIOE, Nth(I));
+    return make_gpio(PortSource::PE, Nth(I));
 }
 #endif
 

@@ -20,7 +20,6 @@
 #include "core/stream/CharOpTraits.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/math/iq/fixed_t.hpp"
-#include "core/magic/magic_details.hpp"
 
 
 namespace std{
@@ -155,7 +154,7 @@ struct Brackets{
 
 class OutputStreamIntf{
 public:
-    virtual size_t pending() const = 0;
+    virtual size_t free_capacity() const = 0;
 
     virtual void sendout(const std::span<const char>) = 0;
 };
@@ -202,14 +201,14 @@ public:
     void write(const char data) {
         buf_.push(data, 
         [this](const std::span<const char> pbuf){
-            this->blocking_until_less_than(OSTREAM_BUF_SIZE - MIN(pbuf.size(), OSTREAM_BUF_SIZE));
+            this->block_util_least_free_capacity(pbuf.size());
             this->sendout(pbuf);
         });
     }
     void write(const char * pbuf, const size_t len){
         buf_.push(std::span<const char>(pbuf, len),  
         [this](const std::span<const char> _pbuf){
-            this->blocking_until_less_than(OSTREAM_BUF_SIZE - MIN(_pbuf.size(), OSTREAM_BUF_SIZE));
+            this->block_util_least_free_capacity(_pbuf.size());
             this->sendout(_pbuf);
         });
 	}
@@ -283,7 +282,7 @@ public:
     __inline OutputStream & operator<<(const char* str){ 
         write_checked(str, strlen(str)); return *this;}
     __inline OutputStream & operator<<(const std::string & str){
-        write_checked(str.c_str(),str.length()); return *this;}
+        write_checked(str.data(),str.length()); return *this;}
     __inline OutputStream & operator<<(const std::string_view str){
         write_checked(str.data(),str.length()); return *this;}
 
@@ -335,10 +334,8 @@ public:
         return *this << "monostate";
     }
 
-    OutputStream & operator<<(const std::_Swallow_assign){
-        return *this;
-    }
-
+    OutputStream & operator<<(const std::_Swallow_assign);
+    OutputStream & operator<<(const std::_Setw);
     template<size_t N>
     OutputStream & operator<<(const std::bitset<N> bs){
         char str[N + 1];
@@ -525,19 +522,19 @@ public:
         auto & self = *this;
         self << brackets<'['>();
         
-        bool first = true;
+        bool is_first = true;
         auto temp_iter = iter; // 创建副本以避免修改原迭代器
         
         while (temp_iter.has_next()) {
-            if (!first) {
+            if (!is_first) {
                 self << ',';
             }
             self << temp_iter.next();
-            first = false;
+            is_first = false;
         }
         
         // 如果没有任何元素，可以输出特定标记（如原代码中的'\'）
-        if (first) {
+        if (is_first) {
             self << '\\';
         }
         
@@ -758,12 +755,12 @@ private:
     __fast_inline void print_end(){
         flush();
         if(unlikely(config_.force_sync)){
-            blocking_until_less_than(0);
+            block_util_least_free_capacity(0);
         }
     }
 
-    __fast_inline void blocking_until_less_than(size_t n){
-        while(pending() > n) __nopn(1);
+    __fast_inline void block_util_least_free_capacity(size_t n){
+        while(free_capacity() > n) __nopn(1);
     }
 
     __fast_inline void print_indent(){
@@ -869,7 +866,7 @@ private:
 
 class OutputStreamByRoute final: public OutputStream{
 private:
-    using Traits = WriteCharTraits;
+    using Traits = WriteCharFacade;
     using Route = pro::proxy<Traits>;
     Route p_route_;
 
@@ -881,9 +878,10 @@ public:
         p_route_(std::move(route)){;}
 
 
-    size_t pending() const {
-        if(unlikely(!p_route_)) while(true);
-        return p_route_->pending();
+    [[nodiscard]] size_t free_capacity() const {
+        if(p_route_ == nullptr) [[unlikely]] 
+            __builtin_trap();
+        return p_route_->free_capacity();
     }
 
     void retarget(Route && p_route){
@@ -891,7 +889,8 @@ public:
     }
 
     Route & route() {
-        if(unlikely(!p_route_)) while(true);
+        if(p_route_ == nullptr) [[unlikely]] 
+            __builtin_trap();
         return p_route_;
     }
 };

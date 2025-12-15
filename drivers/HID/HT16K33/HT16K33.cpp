@@ -59,9 +59,9 @@ IResult<> HT16K33::setup_system(const Enable en){
 IResult<HT16K33::KeyData> HT16K33::get_key_data(){
 
     KeyData ret;
-    if(const auto res = phy_.read_burst(KEY0_REGADDR, ret.as_bytes());
+    if(const auto res = phy_.read_burst(KEY0_REGADDR, ret.as_bytes_mut());
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(std::move(ret));
+    return Ok(ret);
 }
 
 IResult<> HT16K33::set_int_pin_func(const IntPinFunc func){
@@ -109,12 +109,14 @@ IResult<> HT16K33::validate(){
 }
 
 IResult<> HT16K33::update_displayer(
-    const size_t offset, std::span<const uint8_t> pbuf){
+    const size_t offset, 
+    std::span<const uint8_t> pbuf
+){
 
     const auto start_addr = offset + DISPLAYER_ADDR_BASE;
     const auto stop_addr = start_addr + pbuf.size();
 
-    if(stop_addr > GC_RAM_SIZE)
+    if(stop_addr > DISPLAYER_ADDR_BASE + NUM_GC_RAM_BYTES)
         return Err(Error::DisplayPayloadOversize);
 
     return phy_.write_burst(start_addr, pbuf);

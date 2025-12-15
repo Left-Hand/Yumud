@@ -341,11 +341,11 @@ public:
     }
 
     void lower(hal::GpioIntf & gpio){
-        gpio.clr();
+        gpio.set_low();
     }
 
     void raise(hal::GpioIntf & gpio){
-        gpio.set();
+        gpio.set_high();
     }
     uint32_t write(Register reg, uint32_t value);
 

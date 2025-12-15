@@ -41,7 +41,7 @@ struct INA219_Prelude{
         _140us = 0, _204us, _332us, _588us, _1_1ms, _2_116_ms, _4_156ms, _8_244ms
     };
 
-    static constexpr real_t VOLTAGE_LSB_MV = real_t(1.25);
+    static constexpr iq16 VOLTAGE_LSB_MV = iq16(1.25);
 
 };
 

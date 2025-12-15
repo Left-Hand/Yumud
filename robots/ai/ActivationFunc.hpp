@@ -30,7 +30,7 @@
 //                     Type.LeakyReLU => LeakyReLU_Calc,
 //                     _ => Identify_Calc,
 //                 };
-//                 for(int i = 0; i < layer.Neurons.Length; ++i)
+//                 for(size_t i = 0; i < layer.Neurons.Length; ++i)
 //                 {
 //                     layer.Output[i] = curAcFunc(layer.Neurons[i].Sum);
 //                 }
@@ -66,12 +66,12 @@
 //         {
 //             var neurons = layer.Neurons;
 //             var expSum = 0.0f;
-//             for(int i = 0; i < neurons.Length; ++i)
+//             for(size_t i = 0; i < neurons.Length; ++i)
 //             {
 //                 layer.Output[i] = MathF.Exp(neurons[i].Sum);
 //                 expSum += layer.Output[i];
 //             }
-//             for(int i = 0; i < neurons.Length; ++i)
+//             for(size_t i = 0; i < neurons.Length; ++i)
 //             {
 //                 layer.Output[i] /= expSum;
 //             }

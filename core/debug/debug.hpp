@@ -20,7 +20,7 @@ __fast_inline void DEBUG_PRINTLN(Args&&... args) {
 
 template<typename ... Args>
 __fast_inline void DEBUG_PRINTLN_IDLE(Args&&... args) {
-    if(ymd::DEBUGGER.pending() == 0) ymd::DEBUGGER.println(std::forward<Args>(args)...);
+    if(ymd::DEBUGGER.free_capacity() > 0) ymd::DEBUGGER.println(std::forward<Args>(args)...);
 }
 
 template<typename ... Args>

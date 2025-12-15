@@ -1,5 +1,5 @@
 #include "imu.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/reflect/enum.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;

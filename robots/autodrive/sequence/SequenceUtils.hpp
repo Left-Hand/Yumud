@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "types/regions/ray2.hpp"
+#include "algebra/regions/ray2.hpp"
 
 namespace ymd::robots{
 
@@ -29,10 +29,10 @@ protected:
     uint32_t y_:11;
     uint32_t rad_:10;
 public:
-    constexpr CurvePoint(const iq16 x, const iq16 y, const Angle<iq16> orientation):
+    constexpr CurvePoint(const iq16 x, const iq16 y, const Angular<iq16> orientation):
         x_(x << XY_SHIFT_BITS), y_(y << XY_SHIFT_BITS), rad_(orientation.to_radians() * RAD_SCALE){;}
 
-    constexpr CurvePoint(const Vec2<iq16> & pos, const Angle<iq16> orientation):
+    constexpr CurvePoint(const Vec2<iq16> & pos, const Angular<iq16> orientation):
         CurvePoint(pos.x, pos.y, orientation){;}
         
     constexpr CurvePoint(const Ray2<iq16> & ray):
@@ -43,7 +43,7 @@ public:
             Vec2<iq16>(
                 iq16(x_) >> XY_SHIFT_BITS, 
                 iq16(y_) >> XY_SHIFT_BITS), 
-            Angle<iq16>::from_radians(rad_ * INV_RAD_SCALE)
+            Angular<iq16>::from_radians(rad_ * INV_RAD_SCALE)
         );
     }
 };

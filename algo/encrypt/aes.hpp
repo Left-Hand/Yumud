@@ -1,6 +1,7 @@
 #pragma once
 
-// https://github.com/matrixcascade/PainterEngine/blob/master/core/AES.h
+// MIT LICENISE
+// https://github.com/matrixcascade/PainterEngine/blob/master/core/PX_AES.h
 
 #include "core/utils/Result.hpp"
 

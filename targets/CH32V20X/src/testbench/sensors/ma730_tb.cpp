@@ -14,16 +14,22 @@ using namespace ymd::drivers;
 
 void ma730_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
-    DEBUGGER_INST.init({576_KHz});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
     auto & spi = hal::spi1;
-    spi.init({9_MHz});
-    auto spi_cs_gpio_ = hal::PA<15>();
-    MA730 ma730{&spi, spi.allocate_cs_gpio(&spi_cs_gpio_).examine()};
+    spi.init({
+        .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
+        .baudrate = hal::NearestFreq(9_MHz)
+    });
+    auto spi_cs_pin_ = hal::PA<15>();
+    MA730 ma730{&spi, spi.allocate_cs_pin(&spi_cs_pin_).examine()};
     ma730.init({
         .direction = CW
     }).examine();

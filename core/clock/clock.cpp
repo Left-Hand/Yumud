@@ -1,122 +1,129 @@
+#include <functional>
+#include <atomic>
+
+#include "core/math/iq/fixed_t.hpp"
+#include "core/sdk.hpp"
+
+
 #include "clock.hpp"
 #include "time.hpp"
 
-#include "core/math/iq/fixed_t.hpp"
-#include <functional>
 
-#include "core/sdk.hpp"
-
-static constexpr size_t TICKS_PER_MS = (F_CPU / 1000);
-static constexpr size_t TICKS_PER_US = (TICKS_PER_MS / 1000);
+static constexpr size_t TICKS_PER_MS = (size_t(F_CPU) / 1000);
+static constexpr size_t TICKS_CNTS_PER_US = (TICKS_PER_MS / 1000);
 
 static constexpr size_t MICRO_TRIM = 0;
 static constexpr size_t NANO_TRIM = 300;
 
-#ifdef N32G45X
-#define M_SYSTICK_CNT SysTick->VAL
-#else
-#define M_SYSTICK_CNT SysTick->CNT
+
+
 #define M_SYSTICK_DISER    NVIC_DisableIRQ(SysTicK_IRQn);
 #define M_SYSTICK_ENER    NVIC_EnableIRQ(SysTicK_IRQn);
-#endif
-
-#define NANO_MUT(x) (((x) * 1000) / TICKS_PER_US)
 
 
-static volatile uint32_t msTick = 0;
-static volatile uint64_t micros_base = 0;
-
-
-static __fast_inline uint32_t millis_impl(void){
-    return msTick;
+[[nodiscard]] static __fast_inline constexpr 
+uint32_t ticks_to_nanos(const uint32_t num_ticks){
+    return (((num_ticks) * 1000) / TICKS_CNTS_PER_US);
+}
+[[nodiscard]] static __fast_inline
+uint32_t get_systick_cnt(){
+    return SysTick->CNT;
 }
 
-static __fast_inline uint64_t micros_impl(void){
-    M_SYSTICK_DISER;
-    const uint32_t base = micros_base;
-    const uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
-    M_SYSTICK_ENER;
-
-    return (base + (ticks / TICKS_PER_US));
-    // return base * 10;
+[[nodiscard]] static __fast_inline
+uint32_t get_systick_cmp(){
+    return SysTick->CMP;
 }
 
-static __fast_inline uint64_t nanos_impl(void){
+
+static std::function<void(void)> systick_handler;
+static volatile std::atomic<uint32_t> MILLIS_CNT = 0;
+
+
+static __fast_inline uint32_t millis_cnt(void){
+    return MILLIS_CNT.load(std::memory_order_relaxed);
+}
+
+static __fast_inline uint64_t micros_cnt(void){
     M_SYSTICK_DISER;
-    const uint32_t base = micros_base;
-    const uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
+    const uint64_t base = static_cast<uint64_t>(millis_cnt()) * 1000u;
+    const uint32_t systick_cnt = static_cast<uint32_t>(get_systick_cnt());
     M_SYSTICK_ENER;
 
-    return (base + NANO_MUT(ticks));
+    return (base + static_cast<uint32_t>(systick_cnt / TICKS_CNTS_PER_US));
+}
+
+static __fast_inline uint64_t nanos_cnt(void){
+    M_SYSTICK_DISER;
+    const uint64_t base = static_cast<uint64_t>(millis_cnt()) * 1000u;
+    const uint32_t systick_cnt = static_cast<uint32_t>(get_systick_cnt());
+    M_SYSTICK_ENER;
+
+    return (base + ticks_to_nanos(systick_cnt));
 }
 
 
 
 static __fast_inline void delay_us(const uint32_t us){
-    uint32_t currentTicks = SysTick->CNT;
-    /* Number of ticks per millisecond */
-    uint32_t tickPerMs = SysTick->CMP + 1;
-    /* Number of ticks to count */
-    // uint64_t nbTicks = MAX(us - MICRO_TRIM, 0) * TICKS_PER_US;
-    uint32_t nbTicks = us * TICKS_PER_US;
-    /* Number of elapsed ticks */
-    uint32_t elapsedTicks = 0;
-    uint32_t oldTicks = currentTicks;
+    uint32_t current_ticks = get_systick_cnt();
+    /* Number of systick_cnt per millisecond */
+    uint32_t ticks_per_ms = get_systick_cmp() + 1;
+    /* Number of systick_cnt to count */
+    // uint64_t num_ticks = MAX(us - MICRO_TRIM, 0) * TICKS_CNTS_PER_US;
+    uint32_t num_ticks = us * TICKS_CNTS_PER_US;
+    /* Number of elapsed systick_cnt */
+    uint32_t elapsed_ticks = 0;
+    uint32_t old_ticks = current_ticks;
     do {
-        currentTicks = SysTick->CNT;
-        // elapsedTicks += (oldTicks < currentTicks) ? tickPerMs + oldTicks - currentTicks :
-        //                 oldTicks - currentTicks;
+        current_ticks = get_systick_cnt();
+        // elapsed_ticks += (old_ticks < current_ticks) ? ticks_per_ms + old_ticks - current_ticks :
+        //                 old_ticks - current_ticks;
 
     //increment
-    elapsedTicks += (oldTicks <= currentTicks) ? currentTicks - oldTicks :
-                    tickPerMs - oldTicks + currentTicks;
+    elapsed_ticks += (old_ticks <= current_ticks) ? current_ticks - old_ticks :
+                    ticks_per_ms - old_ticks + current_ticks;
 
-    oldTicks = currentTicks;
-    } while (nbTicks > elapsedTicks);
+    old_ticks = current_ticks;
+    } while (num_ticks > elapsed_ticks);
 }
 
 static __fast_inline void delay_ns(uint32_t ns) {
-    volatile uint64_t currentTicks = SysTick->CNT;
-    /* Number of ticks per millisecond */
-    uint64_t tickPerMs = SysTick->CMP + 1;
-    /* Number of ticks to count */
-    uint64_t nbTicks = NANO_MUT(MAX(ns - NANO_TRIM, 0));
-    /* Number of elapsed ticks */
-    uint64_t elapsedTicks = 0;
-    volatile uint64_t oldTicks = currentTicks;
+    volatile uint64_t current_ticks = get_systick_cnt();
+    /* Number of systick_cnt per millisecond */
+    uint64_t ticks_per_ms = get_systick_cmp() + 1;
+    /* Number of systick_cnt to count */
+    uint64_t num_ticks = ticks_to_nanos(MAX(ns - NANO_TRIM, 0));
+    /* Number of elapsed systick_cnt */
+    uint64_t elapsed_ticks = 0;
+    volatile uint64_t old_ticks = current_ticks;
     do {
-        currentTicks = SysTick->CNT;
-        // elapsedTicks += (oldTicks < currentTicks) ? tickPerMs + oldTicks - currentTicks :
-        //                 oldTicks - currentTicks;
+        current_ticks = get_systick_cnt();
+        // elapsed_ticks += (old_ticks < current_ticks) ? ticks_per_ms + old_ticks - current_ticks :
+        //                 old_ticks - current_ticks;
 
         //increment
-        elapsedTicks += (oldTicks <= currentTicks) ? currentTicks - oldTicks :
-                        tickPerMs - oldTicks + currentTicks;
+        elapsed_ticks += (old_ticks <= current_ticks) ? current_ticks - old_ticks :
+                        ticks_per_ms - old_ticks + current_ticks;
 
-        oldTicks = currentTicks;
-    } while (nbTicks > elapsedTicks);
+        old_ticks = current_ticks;
+    } while (num_ticks > elapsed_ticks);
 }
 
 static void delay_ms(const uint32_t ms){
     delay_us(ms * 1000);
 }
 
-
-static std::function<void(void)> systick_cb;
-
 namespace ymd::clock{
 
-
-
 Milliseconds millis(void){
-    return Milliseconds(millis_impl());
+    return Milliseconds(millis_cnt());
 }
 
 Microseconds micros(void){
-    return Microseconds(micros_impl());
+    return Microseconds(micros_cnt());
 }
 Nanoseconds nanos(void){
-    return Nanoseconds(nanos_impl());
+    return Nanoseconds(nanos_cnt());
 }
 
 void delay(Milliseconds ms){
@@ -132,8 +139,8 @@ void delay(Nanoseconds ns){
 }
 
 
-void bindSystickCb(std::function<void(void)> && cb){
-    systick_cb = std::move(cb);
+void set_systick_handler(std::function<void(void)> && cb){
+    systick_handler = std::move(cb);
 }
 
 
@@ -146,34 +153,27 @@ static consteval double sepow(const double base, const size_t times){
     return ret;
 }
 
-iq16 time(){
-    if constexpr(is_fixed_point_v<iq16>){
-        struct Depart{
-            uint64_t l15:15;
-            uint64_t m15:15;
-            uint64_t h31:31;
-            uint64_t unused:3;//精度足以万年 可以舍弃3位
-        };
+uq16 time(){
 
-        // const Depart microsec = Depart{.res64 = uint64_t(micros().count())};
-        const Depart microsec = std::bit_cast<Depart>(uint64_t(micros().count()));
+    struct Dump{
+        uint64_t l15:15;
+        uint64_t m15:15;
+        uint64_t h31:31;
+        uint64_t unused:3;//精度足以万年 可以舍弃3位
+    };
 
-        return 
-            + iq16{fixed_t<16, int32_t>::from_bits((int(microsec.l15) << 16) / 1000000)} 
-            + iq16{int(microsec.m15)} * iq16(sepow(2, 15) / sepow(10, 6))
-            + iq16{int(microsec.h31)} * iq16(sepow(2, 30) / sepow(10, 6))
-            ;
-    }else{
+    static_assert(sizeof(Dump) == sizeof(uint64_t));
 
-        HALT;
-        return 0;
-    }
+    const Dump dump = std::bit_cast<Dump>(uint64_t(micros().count()));
 
+    return 
+        + uq16::from_bits((static_cast<uint32_t>(dump.l15) << 16) / 1000000)
+        + uq16((1 << 15) / 1e6) * static_cast<uint32_t>(dump.m15)
+        + uq16((1 << 30) / 1e6) * static_cast<uint32_t>(dump.h31)
+        ;
 }
 
 }
-
-
 
 void Systick_Init(){
     SysTick->SR  = 0;
@@ -187,9 +187,8 @@ void Systick_Init(){
 }
 
 void SysTick_Handler(void){
-    msTick += 1;
-    micros_base += 1000;
+    MILLIS_CNT.fetch_add(1);
 
     SysTick->SR = 0;
-    EXECUTE(systick_cb);
+    EXECUTE(systick_handler);
 }

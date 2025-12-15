@@ -18,7 +18,9 @@ namespace details{
 
 struct [[nodiscard]]SXX32_CanIdentifier{
     using Self = SXX32_CanIdentifier;
-
+    static Self from_uninitialized() {
+        return Self{};
+    }
 
     /// @brief  构造函数
     /// @tparam ID id 类型(CanStdId/CanExtId)
@@ -102,7 +104,8 @@ struct [[nodiscard]]SXX32_CanIdentifier{
         return CanExtId::from_bits((full_id_ ));
     }
 
-    const uint32_t __resv__:1 = 1;
+    //此位置1 启动发送请求
+    const uint32_t __txrq__:1 = 1;
     
     //是否为远程帧
     uint32_t is_remote_:1;

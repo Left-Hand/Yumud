@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace ymd::ral::py32{
+namespace ymd::ral::py32::py32f003{
 
 struct R16_STATR{
     uint32_t PE:1;

@@ -2,9 +2,9 @@
 
 #include <cstdint> 
 
-namespace ymd::ral::CH32V00x::SLTM_Regs{
+namespace ymd::ral::ch32::ch32v00x_sltm{
 
-struct CLTR_Reg{
+struct [[nodiscard]] R32_CLTR{
     uint32_t CEN:1;
     uint32_t UDIS:1;
     uint32_t :2;
@@ -16,7 +16,7 @@ struct CLTR_Reg{
 };
 
 
-struct DMAINTENR_Reg{
+struct [[nodiscard]] R32_DMAINTENR{
     uint32_t OC1PE:1;
     uint32_t OC2PE:1;
     uint32_t OC3PE:1;
@@ -27,9 +27,9 @@ struct DMAINTENR_Reg{
     uint32_t :19;
 };
 
-struct SLTM_Def{
-    volatile CLTR_Reg CLTR;
-    volatile DMAINTENR_Reg DMAINTENR;
+struct [[nodiscard]] SLTM_Def{
+    volatile R32_CLTR CLTR;
+    volatile R32_DMAINTENR DMAINTENR;
     volatile uint16_t CNT;
     uint16_t :16;
     volatile uint16_t ARR;

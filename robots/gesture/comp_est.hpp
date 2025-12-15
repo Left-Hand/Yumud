@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/vectors/vector3.hpp"
+#include "algebra/vectors/vec3.hpp"
 #include "dsp/filter/homebrew/complementary_filter.hpp"
 
 namespace ymd::robots{
@@ -13,12 +13,12 @@ struct ComplementaryGestureEstimator{
         delta_time_(1_r / cfg.fs),
         comp_filter_(make_comp_filter_config(cfg.fs)){;}
 
-    constexpr void process(const Vec3<iq24> & acc,const Vec3<iq24> & gyr){
+    constexpr void process(const Vec3<iq24> & x3,const Vec3<iq24> & x2){
 
-        const auto len_acc = acc.length();
-        const auto norm_acc = acc / len_acc;
-        const auto axis_theta_raw = atan2(norm_acc.x, norm_acc.y) + real_t(PI/2);
-        const auto axis_omega_raw = gyr.z;
+        const auto len_x3 = x3.length();
+        const auto norm_x3 = x3 / len_x3;
+        const auto axis_theta_raw = math::atan2(norm_x3.x, norm_x3.y) + real_t(PI/2);
+        const auto axis_omega_raw = x2.z;
 
         if(is_inited_ == false){
             theta_ = axis_theta_raw;
@@ -27,25 +27,9 @@ struct ComplementaryGestureEstimator{
             return;
         }
 
-        // const auto base_roll = comp_filter(axis_theta_raw, axis_omega_raw);
-        // DEBUG_PRINTLN_IDLE(
-        //     // norm_acc.x, norm_acc.y,
-        //     // axis_theta_raw,
-        //     // axis_omega_raw,
-        //     // base_roll,
-        //     // pos_filter_.position(),
-        //     // pos_filter_.lap_position(),
-        //     // pos_filter_.speed(),
-        //     ma730_.read_lap_angle().examine(),
-        //     meas_elecrad_
-        //     // exe_us_
-        //     // // leso_.get_disturbance(),
-        //     // meas_elecrad_
-        // );
+        const auto alpha_sqrt = (len_x3 - 9.8_r) * 0.8_r;
 
-        const auto alpha_sqrt = (len_acc - 9.8_r) * 0.8_r;
-
-        const auto alpha = MAX(1 - square(alpha_sqrt), 0) * 0.04_r;
+        const auto alpha = MAX(1 - math::square(alpha_sqrt), 0) * 0.04_r;
 
         theta_ += (axis_theta_raw - theta_) * alpha + (axis_omega_raw * delta_time_) * (1 - alpha);
         omega_ = axis_omega_raw;

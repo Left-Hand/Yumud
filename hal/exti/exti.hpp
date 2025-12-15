@@ -10,18 +10,21 @@ namespace ymd::hal{
 
 class Gpio;
 
-enum class ExtiTrigEdge:uint8_t{
-    Rising = EXTI_Trigger_Rising,
-    Falling = EXTI_Trigger_Falling,
-    Dual = EXTI_Trigger_Rising_Falling
+enum class [[nodiscard]] ExtiTrigEdge:uint8_t{
+    Rising = 0x08,
+    Falling = 0x0c,
+    Dual = 0x10
+//   EXTI_Trigger_Rising = 0x08,
+//   EXTI_Trigger_Falling = 0x0C,  
+//   EXTI_Trigger_Rising_Falling = 0x10
 };
 
-enum class ExtiTrigMode:uint8_t{
-    Interrupt = EXTI_Mode_Interrupt,
-    Event = EXTI_Mode_Event
+enum class [[nodiscard]] ExtiTrigMode:uint8_t{
+    Interrupt = 0x00,
+    Event = 0x04
 };
 
-enum class ExtiTrigSource:uint32_t{
+enum class [[nodiscard]] ExtiTrigSource:uint32_t{
     _0 = static_cast<uint32_t>(1u << 0),
     _1 = static_cast<uint32_t>(1u << 1),
     _2 = static_cast<uint32_t>(1u << 2),
@@ -53,7 +56,7 @@ enum class ExtiTrigSource:uint32_t{
     #endif
 };
 
-class ExtiChannel final{
+class [[nodiscard]] ExtiChannel final{
 public:
     using TrigEdge = ExtiTrigEdge;
     using TrigMode = ExtiTrigMode;
@@ -61,7 +64,7 @@ public:
 private:
     const TrigSource source_;
 
-    Gpio * const p_gpio_;
+    Gpio * const p_pin_;
     const GpioMode gpio_mode_;
     const NvicPriority priority_;
     const TrigEdge edge_;
@@ -69,21 +72,21 @@ private:
 
     friend class CaptureChannelExti;
 public:
-    ExtiChannel(
+    explicit ExtiChannel(
         const TrigSource line, 
         const NvicPriority priority,
         const TrigEdge edge = TrigEdge::Rising, 
         const TrigMode _mode = TrigMode::Interrupt);
 
-    ExtiChannel(
-        Gpio & _gpio, 
-        const NvicPriority _priority,
+    explicit ExtiChannel(
+        Gpio & gpio, 
+        const NvicPriority priority,
         const TrigEdge edge = TrigEdge::Rising, 
         const TrigMode _mode = TrigMode::Interrupt);
 
 
     void init();
-    void bind_cb(auto && func){
+    void set_event_handler(auto && func){
         // getCallback = std::move(func);
     }
 
@@ -113,7 +116,7 @@ public:
         }
     }
 
-    static constexpr TrigSource map_PinNth_to_trigsource(const PinNth source){
+    static constexpr TrigSource map_PinSource_to_trigsource(const PinSource source){
         return std::bit_cast<TrigSource>(
             uint32_t(uint16_t(source))
         );

@@ -1,5 +1,7 @@
 #pragma once
 
+
+// MIT LICENISE
 // https://github.com/matrixcascade/PainterEngine/blob/master/core/PX_Sha256.c
 
 //  Implementation of SHA256 hash function.

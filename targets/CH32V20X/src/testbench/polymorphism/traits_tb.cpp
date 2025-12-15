@@ -111,7 +111,10 @@ void area(AreaTrait obj){
 }
 
 void traits_tb(){
-    hal::uart2.init({576000});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&hal::uart2);
 
     Rectangle rect = {1,1};

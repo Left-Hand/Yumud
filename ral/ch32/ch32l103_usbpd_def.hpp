@@ -2,9 +2,9 @@
 
 #include <core/io/regs.hpp>
 
-namespace ymd::ral::CH32L103::USBPD_Defs{
+namespace ymd::ral::ch32::ch32l103_usbpd{
 
-struct R16_CONFIG{
+struct [[nodiscard]] R16_CONFIG{
     static constexpr uint32_t offset = 0x00;
 
     uint16_t :1;
@@ -25,14 +25,14 @@ struct R16_CONFIG{
     uint16_t IE_TX_END:1;
 };
 
-struct R16_BMC_CLK{
+struct [[nodiscard]] R16_BMC_CLK{
     static constexpr uint32_t offset = 0x02;
 
     uint16_t BMC_CLK_CNT:9;
     uint16_t :7;
 };
 
-struct R8_CONTROL{
+struct [[nodiscard]] R8_CONTROL{
     static constexpr uint32_t offset = 0x04;
 
     uint8_t PD_TX_EN:1;
@@ -43,7 +43,7 @@ struct R8_CONTROL{
     uint8_t RX_ST_H:1;
 };
 
-struct R8_TX_SEL{
+struct [[nodiscard]] R8_TX_SEL{
     static constexpr uint32_t offset = 0x05;
     uint8_t TX_SEL1:1;
     uint8_t :1;
@@ -52,7 +52,7 @@ struct R8_TX_SEL{
     uint8_t TX_SEL4:2;
 };
 
-struct R16_BMC_TX_SZ{
+struct [[nodiscard]] R16_BMC_TX_SZ{
     static constexpr uint32_t offset = 0x06;
 
     uint16_t BMC_TX_SZ:9;
@@ -60,13 +60,13 @@ struct R16_BMC_TX_SZ{
 };
 
 
-struct R8_DATA_BUF{
+struct [[nodiscard]] R8_DATA_BUF{
     static constexpr uint32_t offset = 0x09;
 
     uint8_t DATA_BUF:8;
 };
 
-struct R8_STATUS{
+struct [[nodiscard]] R8_STATUS{
     static constexpr uint32_t offset = 0x09;
 
     uint8_t BMC_AUX:2;
@@ -78,14 +78,14 @@ struct R8_STATUS{
     uint8_t IF_TX_END:1;
 };
 
-struct R16_BMC_BYTE_CNT{
+struct [[nodiscard]] R16_BMC_BYTE_CNT{
     static constexpr uint32_t offset = 0x0A;
 
     uint16_t BMC_BYTE_CNT:9;
     uint16_t :7;
 };
 
-struct __R16_PORT_CC{
+struct [[nodiscard]] __R16_PORT_CC{
     uint16_t CC_AI:1;
     uint16_t CC_PD:1;
     uint16_t CC_PU:2;
@@ -94,21 +94,21 @@ struct __R16_PORT_CC{
     uint16_t :8;
 };
 
-struct R16_PORT_CC1:public __R16_PORT_CC{
+struct [[nodiscard]] R16_PORT_CC1:public __R16_PORT_CC{
     static constexpr uint32_t offset = 0x0C;
 };
 
-struct R16_PORT_CC2:public __R16_PORT_CC{
+struct [[nodiscard]] R16_PORT_CC2:public __R16_PORT_CC{
     static constexpr uint32_t offset = 0x0E;
 };
 
-struct R16_DMA{
+struct [[nodiscard]] R16_DMA{
     static constexpr uint32_t offset = 0x10;
     uint16_t DMA_ADDR:15;
 };
 
 
-struct USBPD_Def{
+struct [[nodiscard]] USBPD_Def{
     volatile R16_CONFIG CONFIG;
     volatile R16_BMC_CLK BMC_CLK_CNT;
     volatile R8_CONTROL CONTROL;

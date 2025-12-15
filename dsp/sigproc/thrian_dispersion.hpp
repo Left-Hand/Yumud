@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "types/points/complex/complex.hpp"
+#include "algebra/points/complex/complex.hpp"
 
 namespace ymd::dsp {
 

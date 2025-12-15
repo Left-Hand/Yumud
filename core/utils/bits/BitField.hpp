@@ -1,18 +1,18 @@
 #pragma once
 
-#include "core/magic/size_traits.hpp"
+#include "core/tmp/bits/width.hpp"
 
 namespace ymd{
 template<typename D,
 	size_t b_bits, size_t e_bits,
     typename T = D>
 
-struct BitFieldRef{
+struct [[nodiscard]] BitFieldRef{
 private:    
     D & pdata_;
 
-    static constexpr D lower_mask = magic::lower_mask_of<D>(b_bits);
-	static constexpr D mask = magic::mask_of<D>(b_bits, e_bits);
+    static constexpr D lower_mask = tmp::mask_calculator::lower_mask_of<D>(b_bits);
+	static constexpr D mask = tmp::mask_calculator::mask_of<D>(b_bits, e_bits);
 
     static constexpr size_t bits_len = e_bits - b_bits;
 
@@ -26,14 +26,14 @@ public:
     auto & operator =(const T & in){
         static_assert(!std::is_const_v<D>, "cannot assign to const");
         pdata_ = (static_cast<D>(
-            std::bit_cast<magic::type_to_uint_t<decltype(in)>>(in)) << b_bits) | (pdata_ & ~mask);
+            std::bit_cast<tmp::type_to_uint_t<decltype(in)>>(in)) << b_bits) | (pdata_ & ~mask);
         return *this;
     }
 
 
     [[nodiscard]] __inline constexpr 
     T to_bits() const{
-        return std::bit_cast<T>(static_cast<magic::type_to_uint_t<T>>((pdata_ & mask) >> (b_bits)));
+        return std::bit_cast<T>(static_cast<tmp::type_to_uint_t<T>>((pdata_ & mask) >> (b_bits)));
     }
 
     [[nodiscard]] __inline consteval
@@ -44,7 +44,7 @@ public:
 
 template<typename D, typename T = D>
 
-struct BitFieldDyn{
+struct [[nodiscard]] BitFieldDyn{
 private:    
     D & pdata_;
     const size_t b_bits_;
@@ -55,7 +55,7 @@ public:
 
     [[nodiscard]] __inline constexpr
     explicit BitFieldDyn(D & data, const size_t b_bits, const size_t e_bits):
-        pdata_(data), b_bits_(b_bits), mask_(magic::mask_of<D>(b_bits, e_bits)){;}
+        pdata_(data), b_bits_(b_bits), mask_(tmp::mask_calculator::mask_of<D>(b_bits, e_bits)){;}
 
     [[nodiscard]] __inline constexpr 
     auto & operator =(T && in){
@@ -79,7 +79,7 @@ auto _make_bitfield(auto && data){
 }
 
 template<typename T>
-struct _bitfield_data_type{};
+struct [[nodiscard]] _bitfield_data_type{};
 }
 
 template<typename T>
@@ -87,9 +87,9 @@ using bitfield_data_type_t = typename T::data_type;
 
 
 template<typename D, size_t b_bits, size_t e_bits, size_t cnt>
-struct BitFieldArrayRef{
+struct [[nodiscard]] BitFieldArrayRef{
 private:    
-    static constexpr size_t data_len = magic::type_to_bits_v<D>;
+    static constexpr size_t data_len = tmp::type_to_bitswidth_v<D>;
     static constexpr size_t len = e_bits - b_bits;
     static constexpr size_t per_len = (len / cnt);
     static_assert(len % cnt == 0, "bitfield array is not aligned with reg data");

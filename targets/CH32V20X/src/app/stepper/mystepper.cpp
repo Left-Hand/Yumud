@@ -10,13 +10,14 @@
 #include "core/utils/data_iter.hpp"
 #include "core/utils/bits/bitflag.hpp"
 #include "core/string/string_view.hpp"
+#include "core/utils/default.hpp"
 
 #include "primitive/misc/release_info.hpp"
 #include "primitive/misc/build_date.hpp"
 #include "primitive/arithmetic/progress.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/timer/hw_singleton.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -27,7 +28,7 @@
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
 
-#include "types/regions/range2.hpp"
+#include "algebra/regions/range2.hpp"
 
 #include "meta_utils.hpp"
 #include "tasks.hpp"
@@ -35,7 +36,7 @@
 
 #include "calibrate_utils.hpp"
 
-#include "middlewares/repl/repl_service.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/pwmgen/stepper_pwmgen.hpp"
 
@@ -49,7 +50,7 @@
 
 using namespace ymd;
 
-#ifdef ENABLE_UART1
+#ifdef UART1_PRESENT
 
 #define UART hal::uart1
 
@@ -88,7 +89,7 @@ public:
     };
 
     Result<void, Error> resume(){
-        const auto begin_u = clock::micros();
+        const auto begin_us = clock::micros();
 
         const auto meas_lap_angle = ({
             if(const auto res = retry(2, [&]{return encoder_.update();});
@@ -97,7 +98,7 @@ public:
             const auto either_lap_position = encoder_.read_lap_angle();
             if(either_lap_position.is_err())
                 return Err(Error(either_lap_position.unwrap_err()));
-            Angle<uq32>::from_turns(1 - either_lap_position.unwrap().to_turns());
+            Angular<uq32>::from_turns(1 - either_lap_position.unwrap().to_turns());
         });
 
         auto & subprogress = calibrate_tasks_;
@@ -165,18 +166,18 @@ public:
     }
 
 
-    void ctrl(Angle<uq32> meas_lap_angle){
+    void ctrl(Angular<uq32> meas_lap_angle){
 
         pos_filter_.update(meas_lap_angle.cast_inner<iq16>());
-        // const auto [a,b] = sincospu(frac(meas_lap_angle - 0.009_r) * 50);
-        // const auto [s,c] = sincospu(frac(-(meas_lap_angle - 0.019_r + 0.01_r)) * 50);
+        // const auto [a,b] = math::sincospu(frac(meas_lap_angle - 0.009_r) * 50);
+        // const auto [s,c] = math::sincospu(frac(-(meas_lap_angle - 0.019_r + 0.01_r)) * 50);
         
-        // const auto input_targ_position = 16 * sin(ctime);
-        // const auto targ_speed = 6 * cos(6 * ctime);
+        // const auto input_targ_position = 16 * math::sin(now_secs);
+        // const auto targ_speed = 6 * math::cos(6 * now_secs);
         
-        // const auto input_targ_position = 10 * iq16(int(ctime));
-        const auto ctime = clock::time();
-        // const auto input_targ_position = 5 * sin(ctime/2);
+        // const auto input_targ_position = 10 * iq16(int(now_secs));
+        const auto now_secs = clock::time();
+        // const auto input_targ_position = 5 * math::sin(now_secs/2);
 
         // command_shaper_.update(input_targ_position);
         // auto [targ_position, targ_speed] = std::make_tuple(
@@ -189,8 +190,8 @@ public:
         // const auto amp = 0.5_r;
         const auto amp = 0.05_r;
         const auto [targ_position, targ_speed] = std::make_tuple<iq16, iq16>(
-            amp * sin(ctime * omega) + 9, omega * amp * cos(ctime * omega)
-            // int(ctime * omega), 0
+            amp * math::sin(now_secs * omega) + 9, omega * amp * math::cos(now_secs * omega)
+            // int(now_secs * omega), 0
         );
         const auto meas_position = pos_filter_.accumulated_angle().to_turns();
         const auto meas_speed = pos_filter_.speed();
@@ -204,11 +205,11 @@ public:
             targ_speed - meas_speed
         ), 0.5_r);
         
-        // const auto mag = 0.5_r * sinpu(ctime);
+        // const auto mag = 0.5_r * math::sinpu(now_secs);
         const auto mag = ABS(curr);
         const auto tangles = (1 + MIN(ABS(meas_speed) * iq16(1.0 / 40), 0.15_r));
 
-        const auto [s,c] = sincospu(
+        const auto [s,c] = math::sincospu(
         (pos_filter_.accumulated_angle().to_turns() + SIGN_AS(0.005_r * tangles, curr)) * 50);
         
         svpwm_.set_dutycycle({mag * c,mag * s});
@@ -233,7 +234,7 @@ public:
 
 
         for(size_t i = 0; i < 50; i++){
-            const auto raw_angle = Angle<uq32>::from_turns(static_cast<uq32>(iq16(i) / 50));
+            const auto raw_angle = Angular<uq32>::from_turns(static_cast<uq32>(iq16(i) / 50));
             [[maybe_unused]] const auto corrected = corrector_.correct_raw_angle(raw_angle);
             // DEBUG_PRINTLN(raw, corrected, (corrected - raw) * 1000);
             clock::delay(1ms);
@@ -362,13 +363,13 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 }
 
 [[maybe_unused]] static void eeprom_tb(){
-    auto scl_gpio = hal::PD<1>();
-    auto sda_gpio = hal::PD<0>();
-    hal::I2cSw i2c_sw{&scl_gpio, &sda_gpio};
+    auto scl_pin = hal::PD<1>();
+    auto sda_pin = hal::PD<0>();
+    hal::I2cSw i2c_sw{&scl_pin, &sda_pin};
     i2c_sw.init({800_KHz});
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 
-    const auto begin_u = clock::micros();
+    const auto begin_us = clock::micros();
     const auto elapsed = measure_total_elapsed_us(
         [&]{
             uint8_t rdata[3] = {0};
@@ -392,8 +393,11 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
 
 [[maybe_unused]] static void currentloop_tb(){
-    UART.init({576000});
-    DEBUGGER.retarget(&UART);
+    hal::uart1.init({
+        .remap = hal::UART1_REMAP_PA9_PA10,
+        .baudrate = 576000
+    });
+    DEBUGGER.retarget(&hal::uart1);
     // DEBUG_PRINTLN(hash(.unwrap()));
     clock::delay(400ms);
 
@@ -407,13 +411,23 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     auto & timer = hal::timer1;
 
     timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
         .count_freq = hal::NearestFreq(CHOP_FREQ),
         // .mode = hal::TimerCountMode::CenterAlignedDualTrig
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
-    }, EN);
+    })
+            .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
 
     timer.enable_arr_sync(EN);
     timer.set_trgo_source(hal::TimerTrgoSource::Update);
+
+    timer.start();
 
 
     auto & pwm_ap = timer.oc<1>();
@@ -421,10 +435,10 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     auto & pwm_bp = timer.oc<3>();
     auto & pwm_bn = timer.oc<4>();
 
-    pwm_ap.init({});
-    pwm_an.init({});
-    pwm_bp.init({});
-    pwm_bn.init({});
+    pwm_ap.init(Default);
+    pwm_an.init(Default);
+    pwm_bp.init(Default);
+    pwm_bn.init(Default);
 
     auto convert_pair_duty = [](const iq16 duty) -> std::tuple<iq16, iq16>{
         if(duty > 0){
@@ -490,7 +504,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
             b_curr = inj_b.get_voltage();
             a_curr = inj_a.get_voltage();
             const auto t = clock::time();
-            const auto [s,c] = sincospu(t);
+            const auto [s,c] = math::sincospu(t);
             constexpr auto mag = 0.4_r;
             set_alphabeta_duty(
                 mag * c,
@@ -515,7 +529,10 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
 void mystepper_main(){
 
-    UART.init({576000});
+    UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);
     // DEBUG_PRINTLN(hash(.unwrap()));
@@ -529,12 +546,21 @@ void mystepper_main(){
     auto & timer = hal::timer1;
 
     timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
         .count_freq = hal::NearestFreq(CHOP_FREQ),
         .count_mode = hal::TimerCountMode::CenterAlignedDualTrig
-    }, EN);
+    })        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
 
     timer.enable_arr_sync(EN);
     timer.set_trgo_source(hal::TimerTrgoSource::Update);
+
+    timer.start();
 
     digipw::StepperPwmGen pwm_gen_{
         timer.oc<1>(),
@@ -560,7 +586,7 @@ void mystepper_main(){
     adc.enable_auto_inject(DISEN);
     auto inj_a = hal::ScaledAnalogInput{adc.inj<1>(), Rescaler<iq16>::from_scale(1)};
     auto inj_b = hal::ScaledAnalogInput{adc.inj<2>(), Rescaler<iq16>::from_scale(1)};
-    auto ma730_cs_gpio_ = hal::PA<15>();
+    auto ma730_cs_pin_ = hal::PA<15>();
 
     digipw::AlphaBetaCoord<iq16> alphabeta_curr = {0, 0};
 
@@ -612,11 +638,14 @@ void mystepper_main(){
     isr_trig_gpio.outpp();
 
     auto & spi = hal::spi1;
-    spi.init({18_MHz});
+    spi.init({
+        .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
+        .baudrate = hal::NearestFreq(18_MHz)
+    });
 
     drivers::MT6816 encoder{
         &spi, 
-        spi.allocate_cs_gpio(&ma730_cs_gpio_).unwrap()
+        spi.allocate_cs_pin(&ma730_cs_pin_).unwrap()
     };
 
 
@@ -633,8 +662,8 @@ void mystepper_main(){
     timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
-            [[maybe_unused]] const auto ctime = clock::time();
-            const auto [s,c] = sincospu(10 * ctime);
+            [[maybe_unused]] const auto now_secs = clock::time();
+            const auto [s,c] = math::sincospu(10 * now_secs);
             constexpr auto mag = 0.3_r;
             pwm_gen_.set_dutycycle({
                 mag * c,

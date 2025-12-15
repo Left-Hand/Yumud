@@ -23,13 +23,13 @@ OutputStream & operator<<(OutputStream & os, const CanException & exception){
     __builtin_unreachable();
 }
 
-OutputStream & operator<<(OutputStream & os, const CanError & error){
+OutputStream & operator<<(OutputStream & os, const CanLibError & error){
     switch(error){
-        case CanError::BlockingTransmitTimeout: 
+        case CanLibError::BlockingTransmitTimeout: 
             return os << "BlockingTransmitTimeout";
-        case CanError::NoMailboxAvailable: 
+        case CanLibError::NoMailboxAvailable: 
             return os << "NoMailboxAvailable";
-        case CanError::SoftFifoOverflow: 
+        case CanLibError::SoftFifoOverflow: 
             return os << "SoftFifoOverflow";
     }
     __builtin_unreachable();

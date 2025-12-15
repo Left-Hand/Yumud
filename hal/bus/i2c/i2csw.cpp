@@ -19,10 +19,10 @@ void I2cSw::delay_dur(){
 HalResult I2cSw::wait_ack(){
 
     delay_dur();
-    sda().set();
+    sda().set_high();
     sda().inpu();
     delay_dur();
-    scl().set();
+    scl().set_high();
     // TimeStamp delta;
 
     bool ovt = false;
@@ -47,7 +47,7 @@ HalResult I2cSw::wait_ack(){
     #endif
 
     delay_dur();
-    scl().clr();
+    scl().set_low();
     // delay_dur();
     sda().outod();
     
@@ -78,12 +78,12 @@ HalResult I2cSw::lead(const I2cSlaveAddrWithRw req){
     scl().outod();
     #endif
     sda().outod();
-    sda().set();
-    scl().set();
+    sda().set_high();
+    scl().set_high();
     delay_dur();
-    sda().clr();
+    sda().set_low();
     delay_dur();
-    scl().clr();
+    scl().set_low();
     delay_dur();
 
     constexpr auto header_err_transform = [](const HalResult res) -> HalResult{
@@ -102,13 +102,13 @@ HalResult I2cSw::lead(const I2cSlaveAddrWithRw req){
 }
 
 void I2cSw::trail(){
-    scl().clr();
+    scl().set_low();
     sda().outod();
-    sda().clr();
+    sda().set_low();
     delay_dur();
-    scl().set();
+    scl().set_high();
     delay_dur();
-    sda().set();
+    sda().set_high();
     delay_dur();
 }
 
@@ -120,9 +120,9 @@ HalResult I2cSw::write(const uint32_t data){
     for(uint8_t mask = 0x80; mask; mask >>= 1){
         sda().write(BoolLevel::from(mask & data));
         delay_dur();
-        scl().set();
+        scl().set_high();
         delay_dur();
-        scl().clr();
+        scl().set_low();
     }
 
     return wait_ack();
@@ -131,24 +131,24 @@ HalResult I2cSw::write(const uint32_t data){
 HalResult I2cSw::read(uint8_t & data, const Ack ack){
     uint8_t ret = 0;
 
-    sda().set();
+    sda().set_high();
     sda().inpu();
     delay_dur();
 
     for(uint8_t i = 0; i < 8; i++){
-        scl().set();
+        scl().set_high();
         ret <<= 1; ret |= sda().read().to_bool();
         delay_dur();
-        scl().clr();
+        scl().set_low();
         delay_dur();
     }
 
     sda().write((ack == ACK) ? LOW : HIGH);
     sda().outod();
-    scl().set();
+    scl().set_high();
     delay_dur();
 
-    scl().clr();
+    scl().set_low();
     sda().inpu();
 
     data = ret;
@@ -157,9 +157,9 @@ HalResult I2cSw::read(uint8_t & data, const Ack ack){
 
 void I2cSw::init(const Config & cfg){
 
-    sda().set();
+    sda().set_high();
     sda().outod();
-    scl().set();
+    scl().set_high();
 
     #ifdef I2CSW_SCL_USE_PP_THAN_OD
     scl().outpp();

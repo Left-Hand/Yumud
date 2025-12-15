@@ -14,33 +14,36 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define SCL_GPIO hal::PB<0>()
-#define SDA_GPIO hal::PB<1>()
+#define SCL_PIN hal::PB<0>()
+#define SDA_PIN hal::PB<1>()
 
 using drivers::VL53L5CX;
 
 void vl53l5cx_main(){
-    DEBUGGER_INST.init({576000});
+    DEBUGGER_INST.init({
+        hal::UART2_REMAP_PA2_PA3,
+        576000
+    });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.no_brackets(EN);
 
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;
-    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;
+    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
     i2c.init({400_KHz});
 
-    auto red_led_gpio_ = hal::PC<13>();
-    auto blue_led_gpio_ = hal::PC<14>();
-    red_led_gpio_.outpp();
-    blue_led_gpio_.outpp();
+    auto red_led_pin_ = hal::PC<13>();
+    auto blue_led_pin_ = hal::PC<14>();
+    red_led_pin_.outpp();
+    blue_led_pin_.outpp();
 
     auto blink_service_poller = [&]{
 
-        red_led_gpio_ = BoolLevel::from((
+        red_led_pin_ = BoolLevel::from((
             uint32_t(clock::millis().count()) % 200) > 100);
-        blue_led_gpio_ = BoolLevel::from((
+        blue_led_pin_ = BoolLevel::from((
             uint32_t(clock::millis().count()) % 400) > 200);
     };
 

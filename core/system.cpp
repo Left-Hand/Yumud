@@ -5,7 +5,7 @@
 #include "core/arch.hpp"
 
 #include "hal/crc/crc.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "core/clock/clock.hpp"
 
@@ -62,7 +62,7 @@ void sys::preinit(){
     RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_GPIOC, ENABLE);
     RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_GPIOA | RCC_APB2_PERIPH_GPIOB | RCC_APB2_PERIPH_AFIO, ENABLE);
 
-    #ifdef ENABLE_GPIOD
+    #ifdef GPIOD_PRESENT
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
     GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
     #endif
@@ -80,14 +80,14 @@ void sys::preinit(){
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
 
-    #ifdef ENABLE_GPIOD
+    #ifdef GPIOD_PRESENT
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
 
     //invalid for ch32v307vct6
     GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
     #endif
 
-    #ifdef ENABLE_GPIOE
+    #ifdef GPIOE_PRESENT
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
     #endif
     PWR_BackupAccessCmd( ENABLE );
@@ -138,13 +138,12 @@ uint32_t sys::chip::get_flash_size(){
 
 uint32_t sys::chip::get_chip_id_crc(){
 
-    using ymd::hal::crc;
     
     static const uint32_t chip_id_crc = [&](){
-        crc.init();
-        crc.clear();
+        hal::crc.init();
+        hal::crc.clear();
         uint64_t chip_id = get_chip_id();
-        return crc.update({(uint32_t)chip_id, (uint32_t)(chip_id >> 32)});
+        return hal::crc.update({(uint32_t)chip_id, (uint32_t)(chip_id >> 32)});
     }();
     
     return chip_id_crc;
@@ -352,16 +351,16 @@ void sys::dump() {
 
 //跳闸 第一时间关闭功率输出
 void sys::trip(){
-    #ifdef ENABLE_TIM1
+    #ifdef TIM1_PRESENT
     hal::timer1.deinit();
     #endif
-    #ifdef ENABLE_TIM2
+    #ifdef TIM2_PRESENT
     hal::timer2.deinit();
     #endif
-    #ifdef ENABLE_TIM3
+    #ifdef TIM3_PRESENT
     hal::timer3.deinit();
     #endif
-    #ifdef ENABLE_TIM4
+    #ifdef TIM4_PRESENT
     hal::timer4.deinit();
     #endif
 }

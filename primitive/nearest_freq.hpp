@@ -9,4 +9,11 @@ struct [[nodiscard]] NearestFreq{
 
     friend OutputStream & operator <<(OutputStream & os, const Self & self);
 };
+
+struct [[nodiscard]] LeastFreq{
+    using Self = LeastFreq;
+    uint32_t count;
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self);
+};
 }

@@ -26,6 +26,7 @@ public:
     using IResult = Result<T, Error>;
 
     static constexpr uint8_t CORRECT_CHIP_ID = 0x48;
+    static constexpr  auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
 };
 
 
@@ -34,7 +35,7 @@ class AK8975 final:
     public AK8975_Prelude{
 public:
 public:
-    static constexpr  auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
+
     explicit AK8975(const hal::I2cDrv & i2c_drv):
         phy_(i2c_drv){;}
     explicit AK8975(hal::I2cDrv && i2c_drv):
@@ -57,7 +58,7 @@ public:
     [[nodiscard]] IResult<> disable_i2c();
     [[nodiscard]] IResult<Vec3<iq24>> read_mag() ;
 private:
-    AsahiKaseiSensor_Phy phy_;
+    AsahiKaseiImu_Phy phy_;
     struct{
         int16_t x;
         int16_t y;

@@ -6,8 +6,6 @@
 #include <type_traits>
 #include <array>
 
-#include "core/platform.hpp"
-
 #include "hal/nvic/nvic.hpp"
 
 #include "dma_utils.hpp"
@@ -15,7 +13,7 @@
 
 
 extern"C"{
-#ifdef ENABLE_DMA1
+#ifdef DMA1_PRESENT
     __interrupt void DMA1_Channel1_IRQHandler(void);
     __interrupt void DMA1_Channel2_IRQHandler(void);
     __interrupt void DMA1_Channel3_IRQHandler(void);
@@ -25,7 +23,7 @@ extern"C"{
     __interrupt void DMA1_Channel7_IRQHandler(void);
 #endif
 
-#ifdef ENABLE_DMA2
+#ifdef DMA2_PRESENT
     __interrupt void DMA2_Channel1_IRQHandler(void);
     __interrupt void DMA2_Channel2_IRQHandler(void);
     __interrupt void DMA2_Channel3_IRQHandler(void);
@@ -42,30 +40,13 @@ extern"C"{
 
 namespace ymd::hal{
 
-enum class DmaIT:uint8_t{
-    Done,
-    Half
-};
-
-enum class DmaEvent:uint8_t{
-    TransferComplete,
-    HalfTransfer,
-    TransferError
-};
-
 struct DmaChannel final{
 public:
     using Callback = std::function<void(DmaEvent)>;
     using Mode = DmaMode;
     using Priority = DmaPriority;
 
-    explicit DmaChannel(DMA_Channel_TypeDef * inst):
-        inst_(inst), 
-        done_mask_(dma_details::calculate_done_mask(inst)),
-        half_mask_(dma_details::calculate_half_mask(inst)),
-        dma_index_(dma_details::calculate_dma_index(inst)),
-        channel_index_(dma_details::calculate_channel_index(inst)){;}
-
+    explicit DmaChannel(void * inst);
     DmaChannel() = delete;
 
     DmaChannel(const DmaChannel & other) = delete;
@@ -133,9 +114,7 @@ public:
         callback_ = std::forward<Fn>(cb);
     }
 
-    [[nodiscard]] bool is_done(){
-        return DMA_GetFlagStatus(done_mask_);
-    }
+    [[nodiscard]] bool is_done();
 
 private:
     void * inst_;
@@ -176,7 +155,7 @@ private:
     }
     
 
-    #ifdef ENABLE_DMA1
+    #ifdef DMA1_PRESENT
         friend void ::DMA1_Channel1_IRQHandler(void);
         friend void ::DMA1_Channel2_IRQHandler(void);
         friend void ::DMA1_Channel3_IRQHandler(void);
@@ -186,7 +165,7 @@ private:
         friend void ::DMA1_Channel7_IRQHandler(void);
     #endif
 
-    #ifdef ENABLE_DMA2
+    #ifdef DMA2_PRESENT
         friend void ::DMA2_Channel1_IRQHandler(void);
         friend void ::DMA2_Channel2_IRQHandler(void);
         friend void ::DMA2_Channel3_IRQHandler(void);
@@ -203,7 +182,7 @@ private:
     void start_transfer(size_t dst, const size_t src, size_t size);
 };
 
-#ifdef ENABLE_DMA1
+#ifdef DMA1_PRESENT
     extern DmaChannel dma1_ch1;
     extern DmaChannel dma1_ch2;
     extern DmaChannel dma1_ch3;
@@ -213,7 +192,7 @@ private:
     extern DmaChannel dma1_ch7;
 #endif
 
-#ifdef ENABLE_DMA2
+#ifdef DMA2_PRESENT
     extern DmaChannel dma2_ch1;
     extern DmaChannel dma2_ch2;
     extern DmaChannel dma2_ch3;

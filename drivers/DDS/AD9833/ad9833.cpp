@@ -8,7 +8,7 @@ using namespace ymd;
 
 #define AD9833_Delay __nopn(4)
 
-#define AD9833_FSYNC(x)             fsync_gpio_ = x;
+#define AD9833_FSYNC(x)             fsync_pin_ = x;
 
 
 // WaveMode

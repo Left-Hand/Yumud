@@ -9,8 +9,12 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 
-
+// 参考来源
+// MIT-licensed
 // https://github.com/adafruit/Adafruit-BMP085-Library/blob/master/BMP085.cpp
+
+//  * 注意：本实现为完全原创，未使用上述项目的任何代码。
+//  * 参考仅用于理解问题领域，未复制任何具体实现。
 
 namespace ymd::drivers{
 
@@ -24,42 +28,45 @@ enum class Mode:uint8_t{
     UltraHighRes = 3
 };
 
-static constexpr uint8_t BMP085_CAL_AC1 = 0xAA;    // R   Calibration data (16 bits)
-static constexpr uint8_t BMP085_CAL_AC2 = 0xAC;    // R   Calibration data (16 bits)
-static constexpr uint8_t BMP085_CAL_AC3 = 0xAE;    // R   Calibration data (16 bits)
-static constexpr uint8_t BMP085_CAL_AC4 = 0xB0;    // R   Calibration data (16 bits)
-static constexpr uint8_t BMP085_CAL_AC5 = 0xB2;    // R   Calibration data (16 bits)
-static constexpr uint8_t BMP085_CAL_AC6 = 0xB4;    // R   Calibration data (16 bits)
-static constexpr uint8_t BMP085_CAL_B1 = 0xB6;     // R   Calibration data (16 bits)
-static constexpr uint8_t BMP085_CAL_B2 = 0xB8;     // R   Calibration data (16 bits)
-static constexpr uint8_t BMP085_CAL_MB = 0xBA;     // R   Calibration data (16 bits)
-static constexpr uint8_t BMP085_CAL_MC = 0xBC;     // R   Calibration data (16 bits)
-static constexpr uint8_t BMP085_CAL_MD = 0xBE;     // R   Calibration data (16 bits)
+enum class RegAddr:uint8_t{
+    WHO_AM_I = 0x0d,
+    CAL_AC1 = 0xAA,    // R   Calibration data (16 bits)
+    CAL_AC2 = 0xAC,    // R   Calibration data (16 bits)
+    CAL_AC3 = 0xAE,    // R   Calibration data (16 bits)
+    CAL_AC4 = 0xB0,    // R   Calibration data (16 bits)
+    CAL_AC5 = 0xB2,    // R   Calibration data (16 bits)
+    CAL_AC6 = 0xB4,    // R   Calibration data (16 bits)
+    CAL_B1 = 0xB6,     // R   Calibration data (16 bits)
+    CAL_B2 = 0xB8,     // R   Calibration data (16 bits)
+    CAL_MB = 0xBA,     // R   Calibration data (16 bits)
+    CAL_MC = 0xBC,     // R   Calibration data (16 bits)
+    CAL_MD = 0xBE,     // R   Calibration data (16 bits)
 
-static constexpr uint8_t BMP085_CONTROL = 0xF4;         // Control register
-static constexpr uint8_t BMP085_TEMPDATA = 0xF6;        // Temperature data register
-static constexpr uint8_t BMP085_PRESSUREDATA = 0xF6;    // Pressure data register
-static constexpr uint8_t BMP085_READTEMPCMD = 0x2E;     // Read temperature control register value
-static constexpr uint8_t BMP085_READPRESSURECMD = 0x34; // Read pressure control register value
+    CONTROL = 0xF4,         // Control register
+    TEMPDATA = 0xF6,        // Temperature data register
+    PRESSUREDATA_HIGH = 0xF6,    // Pressure data register
+    PRESSUREDATA_LOW = 0xF8,    // Pressure data register
 
+};
 
-struct Coeffs{
+struct [[nodiscard]] Coeffs{
     int16_t ac1, ac2, ac3, b1, b2, mb, mc, md;
     uint16_t ac4, ac5, ac6;
 
     static constexpr Coeffs from_default(){
-        Coeffs ret;
-        ret.ac6 = 23153;
-        ret.ac5 = 32757;
-        ret.mc = -8711;
-        ret.md = 2868;
-        ret.b1 = 6190;
-        ret.b2 = 4;
-        ret.ac3 = -14383;
-        ret.ac2 = -72;
-        ret.ac1 = 408;
-        ret.ac4 = 32741;
-        return ret;
+        return Coeffs {
+            .ac1 = 408,
+            .ac2 = -72,
+            .ac3 = -14383,
+            .b1 = 6190,
+            .b2 = 4,
+            .mb = 0,
+            .mc = -8711,
+            .md = 2868,
+            .ac4 = 32741,
+            .ac5 = 32757,
+            .ac6 = 23153,
+        };
     }
 
     constexpr int32_t computeB5(int32_t UT) const {
@@ -68,7 +75,7 @@ struct Coeffs{
         return X1 + X2;
     }
 
-    struct SeaLevelPresure{
+    struct [[nodiscard]] SeaLevelPresure{
         int32_t sealevel_pressure;
 
         constexpr float to_altitude(const float pressure) const{

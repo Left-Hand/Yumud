@@ -6,7 +6,7 @@
 // 统扩展异步串口。CH9434 包含四个兼容 16C550 的异步串口，最高支持 4Mbps 波特率通讯。最多支持
 // 25 路 GPIO，提供半双工收发自动切换引脚 TNOW。
 
-// https://github.com/WCHSoftGroup/ch9434ser_linux/blob/main/driver/ch9434.c
+
 
 #include "details/CH9431_phy.hpp"
 

@@ -6,8 +6,10 @@
 
 namespace ymd::dsp{
 
+// CC 4.0 BY-SA版权
 // https://blog.csdn.net/gophae/article/details/104429209
 
+// MIT license
 // https://github.com/jgsimard/RustRobotics/blob/main/src/control/lqr.rs
 
 

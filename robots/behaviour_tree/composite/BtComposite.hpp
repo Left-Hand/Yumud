@@ -19,7 +19,7 @@ protected:
 public:
     size_t idx_ = 0;
 
-	BtComposite(const char* name) : BtNode(name){}
+	BtComposite(StringView name) : BtNode(name){}
 
     void addChild(Wrapper child){
         children_.push_back(Wrapper(child));

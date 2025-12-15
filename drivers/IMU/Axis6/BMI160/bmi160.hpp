@@ -1,20 +1,24 @@
 #pragma once
 
 #include "bmi160_prelude.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "primitive/arithmetic/angular.hpp"
 
-namespace ymd::drivers{
-class BMI160 final:
-    public BMI160_Prelude,
-    public AccelerometerIntf, 
-    public GyroscopeIntf{
+namespace ymd::drivers::bmi160{
+class BMI160 final{
 public:
+    using Self = BMI160;
+    using Error = bmi160::Error;
+
+
     explicit BMI160(const hal::SpiDrv & spi_drv):
         phy_(spi_drv){;}
     explicit BMI160(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit BMI160(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        phy_(hal::SpiDrv(spi, index)){;}
+    explicit BMI160(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        phy_(hal::SpiDrv(spi, rank)){;}
+
+    explicit BMI160(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+        phy_(i2c, i2c_addr){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> update();
@@ -22,9 +26,9 @@ public:
     [[nodiscard]] IResult<> reset();
     
     [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
+    [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
     [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
-    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs range);
+    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
     [[nodiscard]] IResult<> set_pmu_mode(const PmuType pmu, const PmuMode mode);
 
     [[nodiscard]] IResult<PmuMode> get_pmu_mode(const PmuType pmu);
@@ -33,9 +37,8 @@ public:
     [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
 
 private:
-    using  Regs = BMI160_Regs;
-    BoschSensor_Phy phy_;
-    Regs regs_;
+    BoschImu_Phy phy_;
+    Regset regs_;
 
     iq20 acc_scale_ = 0;
     iq20 gyr_scale_ = 0;
@@ -64,10 +67,10 @@ private:
     [[nodiscard]] static constexpr 
     iq20 accfs_to_scale(const AccFs fs){
         switch(fs){
-            case AccFs::_2G:    return GRAVITY_ACC<iq20> * 4;
-            case AccFs::_4G:    return GRAVITY_ACC<iq20> * 8;
-            case AccFs::_8G:    return GRAVITY_ACC<iq20> * 16;
-            case AccFs::_16G:   return GRAVITY_ACC<iq20> * 32;
+            case AccFs::_2G:    return iq20(9.80665 * 4);
+            case AccFs::_4G:    return iq20(9.80665 * 8);
+            case AccFs::_8G:    return iq20(9.80665 * 16);
+            case AccFs::_16G:   return iq20(9.80665 * 32);
         }
         __builtin_unreachable();
     }
@@ -75,11 +78,11 @@ private:
     [[nodiscard]] static constexpr 
     iq20 gyrfs_to_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_125deg:    return DEG2RAD<iq20>(2 * 125);
-            case GyrFs::_250deg:    return DEG2RAD<iq20>(2 * 250);
-            case GyrFs::_500deg:    return DEG2RAD<iq20>(2 * 500);
-            case GyrFs::_1000deg:   return DEG2RAD<iq20>(2 * 1000);
-            case GyrFs::_2000deg:   return DEG2RAD<iq20>(2 * 2000);
+            case GyrFs::_125deg:    return iq20(2 * 125 * PI / 180);
+            case GyrFs::_250deg:    return iq20(2 * 250 * PI / 180);
+            case GyrFs::_500deg:    return iq20(2 * 500 * PI / 180);
+            case GyrFs::_1000deg:   return iq20(2 * 1000 * PI / 180);
+            case GyrFs::_2000deg:   return iq20(2 * 2000 * PI / 180);
         }
         __builtin_unreachable();
     }

@@ -3,97 +3,79 @@
 #include <cstdint>
 #include "core/platform.hpp"
 #include "core/utils/nth.hpp"
+#include "primitive/gpio/pin_source.hpp"
 
 namespace ymd::hal{
 
 
-enum class PinNth:uint16_t{
-    _0 = 1 << 0,
-    _1 = 1 << 1,
-    _2 = 1 << 2,
-    _3 = 1 << 3,
-    _4 = 1 << 4,
-    _5 = 1 << 5,
-    _6 = 1 << 6,
-    _7 = 1 << 7,
-    _8 = 1 << 8,
-    _9 = 1 << 9,
-    _10 = 1 << 10,
-    _11 = 1 << 11,
-    _12 = 1 << 12,
-    _13 = 1 << 13,
-    _14 = 1 << 14,
-    _15 = 1 << 15,
-};
-
-class PinMask{
+struct [[nodiscard]] PinMask{
 public:
-    [[nodiscard]] constexpr PinMask(const PinNth nth):
-        raw_(std::bit_cast<uint16_t>(nth)){;}
+    [[nodiscard]] constexpr PinMask(const PinSource nth):
+        bits_(std::bit_cast<uint16_t>(nth)){;}
 
     [[nodiscard]] static constexpr PinMask zero(){
         return PinMask(0);
     }
-    [[nodiscard]] static constexpr PinMask from_u16(const uint16_t raw){
-        return PinMask(raw);
+    [[nodiscard]] static constexpr PinMask from_u16(const uint16_t bits){
+        return PinMask(bits);
     }
 
     [[nodiscard]] static constexpr PinMask from_nth(const Nth nth){
         return PinMask::from_u16(uint16_t(1 << nth.count()));
     }
-    [[nodiscard]] constexpr uint16_t to_u16() const {return raw_;}
+    [[nodiscard]] constexpr uint16_t to_u16() const {return bits_;}
 
     [[nodiscard]] constexpr bool test(Nth nth) const {
-        return raw_ & (1 << nth.count());
+        return bits_ & (1 << nth.count());
     }
 
     [[nodiscard]] constexpr PinMask modify(Nth nth, const BoolLevel level) const {
-        if(level == HIGH) return PinMask(raw_ | (1 << nth.count()));
-        else return PinMask(raw_ & (~(1 << nth.count())));
+        if(level == HIGH) return PinMask(bits_ | (1 << nth.count()));
+        else return PinMask(bits_ & (~(1 << nth.count())));
     }
 
     [[nodiscard]] constexpr PinMask set_bit(Nth nth) const {
-        return PinMask(raw_ | (1 << nth.count()));
+        return PinMask(bits_ | (1 << nth.count()));
     }
 
     [[nodiscard]] constexpr PinMask clr_bit(Nth nth) const {
-        return PinMask(raw_ & (~(1 << nth.count())));
+        return PinMask(bits_ & (~(1 << nth.count())));
     }
 
     [[nodiscard]] constexpr PinMask operator | (const PinMask other) const {
-        return PinMask(raw_ | other.raw_);
+        return PinMask(bits_ | other.bits_);
     }
 
     [[nodiscard]] constexpr PinMask operator & (const PinMask other) const {
-        return PinMask(raw_ & other.raw_);
+        return PinMask(bits_ & other.bits_);
     }
 
     [[nodiscard]] constexpr PinMask operator ~() const {
-        return PinMask(~raw_);
+        return PinMask(~bits_);
     }
 
     [[nodiscard]] constexpr bool operator == (const PinMask & other) const{
-        return  raw_ == other.raw_;
+        return  bits_ == other.bits_;
     }
 
     [[nodiscard]] explicit constexpr operator bool() const {
-        return raw_;
+        return bits_;
     }
 
     [[nodiscard]] constexpr bool any() const {
-        return raw_;
+        return bits_;
     }
 
-    struct Iterator final{
+    struct [[nodiscard]] Iterator final{
     public:
         constexpr Iterator(uint16_t mask) : 
             mask_(mask), 
             pos_(next_set_bit(mask_, 0)) {}
         [[nodiscard]] constexpr bool has_next() const {return pos_ < 16;}
-        constexpr hal::PinNth next(){
+        constexpr hal::PinSource next(){
             const uint16_t ret = 1 << pos_;
             pos_ = next_set_bit(mask_, pos_ + 1);
-            return std::bit_cast<hal::PinNth>(ret);
+            return std::bit_cast<hal::PinSource>(ret);
         }
 
         [[nodiscard]] constexpr size_t index() const {
@@ -111,64 +93,55 @@ public:
         }
     };
 
-    [[nodiscard]] Iterator iter() const {
-        return Iterator{raw_};
+    [[nodiscard]] constexpr Iterator iter() const {
+        return Iterator{bits_};
     }
 private:
-    uint16_t raw_;
+    uint16_t bits_;
 
-    [[nodiscard]] explicit constexpr PinMask(const uint16_t raw):
-        raw_(raw){;}
+    [[nodiscard]] explicit constexpr PinMask(const uint16_t bits):
+        bits_(bits){;}
 
 };
 
 
-enum class PortSource:uint8_t{
-    PA,
-    PB,
-    PC,
-    PD,
-    PE,
-    PF
-};
-
-enum class PinName:uint8_t{
+enum class [[nodiscard]] PinName:uint8_t{
     #define PINNAME_CREATE_TEMPLATE(x, n)\
     P##x##0 = n | 0b00000, P##x##1, P##x##2, P##x##3, P##x##4, P##x##5, P##x##6, P##x##7,\
     P##x##8, P##x##9, P##x##10, P##x##11, P##x##12, P##x##13, P##x##14, P##x##15,\
     P##x##16, P##x##17, P##x##18, P##x##19, P##x##20, P##x##21, P##x##22, P##x##23,\
     P##x##24, P##x##25, P##x##26, P##x##27, P##x##28, P##x##29, P##x##30, P##x##31\
 
-    #ifdef ENABLE_GPIOA
+    #ifdef GPIOA_PRESENT
     PINNAME_CREATE_TEMPLATE(A, 0)
     #endif
 
-    #ifdef ENABLE_GPIOB
+    #ifdef GPIOB_PRESENT
     ,
     PINNAME_CREATE_TEMPLATE(B, 1)
     #endif
 
-    #ifdef ENABLE_GPIOC
+    #ifdef GPIOC_PRESENT
     ,
     PINNAME_CREATE_TEMPLATE(C, 2)
     #endif
 
-    #ifdef ENABLE_GPIOD
+    #ifdef GPIOD_PRESENT
     ,
     PINNAME_CREATE_TEMPLATE(D, 3)
     #endif
 
-    #ifdef ENABLE_GPIOE
+    #ifdef GPIOE_PRESENT
     ,
     PINNAME_CREATE_TEMPLATE(E, 4)
     #endif
 
-    #ifdef ENABLE_GPIOF
+    #ifdef GPIOF_PRESENT
     ,
     PINNAME_CREATE_TEMPLATE(F, 5)
     #endif
 
-    #ifdef ENABLE_GPIOG
+    #ifdef GPIOG_PRESENT
     ,
     PINNAME_CREATE_TEMPLATE(G, 6)
     #endif
@@ -176,7 +149,7 @@ enum class PinName:uint8_t{
 
 class [[nodiscard]] GpioMode{
 public:
-    enum class Kind:uint8_t{
+    enum class [[nodiscard]] Kind:uint8_t{
         InAnalog = 0b0000,
         InFloating = 0b0100,
         InPullUP = 0b1000,

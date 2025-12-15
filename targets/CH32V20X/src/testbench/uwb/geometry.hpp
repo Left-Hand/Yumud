@@ -1,10 +1,10 @@
 #pragma once
 
-#include "types/vectors/Vector2.hpp"
-#include "types/vectors/Vector3.hpp"
-#include "types/vectors/polar.hpp"
-#include "types/vectors/spherical_coordinates.hpp"
-#include "types/shapes/circle2.hpp"
+#include "algebra/vectors/vec2.hpp"
+#include "algebra/vectors/vec3.hpp"
+#include "algebra/vectors/polar.hpp"
+#include "algebra/vectors/spherical_coordinates.hpp"
+#include "algebra/shapes/circle2.hpp"
 
 namespace ymd::geometry { 
 
@@ -32,10 +32,10 @@ constexpr HeaplessVector<Vec2<T>, 2> compute_intersection_points(
     const T & dy = delta.y;
     const T distance_squ = dx * dx + dy * dy;
     
-    if(distance_squ > square(r1 + r2))
+    if(distance_squ > math::square(r1 + r2))
         return Container::from_empty();
 
-    if(distance_squ < square(r1 - r2))
+    if(distance_squ < math::square(r1 - r2))
         return Container::from_empty();
     
     // a = (r1**2 - r2**2 + d**2) / (2 * d)

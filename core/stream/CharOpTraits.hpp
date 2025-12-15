@@ -3,30 +3,32 @@
 #include "core/polymorphism/proxy.hpp"
 
 namespace ymd{
-PRO_DEF_MEM_DISPATCH(_Memfunc_WriteChar, write1);
-PRO_DEF_MEM_DISPATCH(_Memfunc_WriteChars, writeN);
-PRO_DEF_MEM_DISPATCH(_Memfunc_Pending, pending);
 
-PRO_DEF_MEM_DISPATCH(_Memfunc_ReadChar, read1);
-PRO_DEF_MEM_DISPATCH(_Memfunc_ReadChars, readN);
+namespace details{
+PRO_DEF_MEM_DISPATCH(_Memfunc_TryWriteChar, try_write_char);
+PRO_DEF_MEM_DISPATCH(_Memfunc_TryWriteChars, try_write_chars);
+PRO_DEF_MEM_DISPATCH(_Memfunc_FreeCapacity, free_capacity);
+
+PRO_DEF_MEM_DISPATCH(_Memfunc_TryReadChar, try_read_char);
+PRO_DEF_MEM_DISPATCH(_Memfunc_TryReadChars, try_read_chars);
 PRO_DEF_MEM_DISPATCH(_Memfunc_Available, available);
+}
 
-struct WriteCharTraits : pro::facade_builder
-    // ::support_copy<pro::constraint_level::trivial>
-    ::add_convention<_Memfunc_WriteChar, void(const char)>
-    ::add_convention<_Memfunc_WriteChars, void(const char *, size_t)>
-    ::add_convention<_Memfunc_Pending, size_t(void) const>
+struct WriteCharFacade : pro::facade_builder
+    ::add_convention<details::_Memfunc_TryWriteChar, size_t(const char)>
+    ::add_convention<details::_Memfunc_TryWriteChars, size_t(const char *, size_t)>
+    ::add_convention<details::_Memfunc_FreeCapacity, size_t(void) const>
     ::build {};
     
-struct ReadCharTraits : pro::facade_builder
+struct ReadCharFacade : pro::facade_builder
     // ::support_copy<pro::constraint_level::trivial>
-    ::add_convention<_Memfunc_ReadChar, void(char &)>
-    ::add_convention<_Memfunc_ReadChars, void(char *, size_t)>
-    ::add_convention<_Memfunc_Available, size_t(void) const>
+    ::add_convention<details::_Memfunc_TryReadChar, size_t(char &)>
+    ::add_convention<details::_Memfunc_TryReadChars, size_t(char *, size_t)>
+    ::add_convention<details::_Memfunc_Available, size_t(void) const>
     ::build {};
 
 
-using WriteCharProxy = pro::proxy<WriteCharTraits>;
-using ReadCharProxy = pro::proxy<ReadCharTraits>;
+using WriteCharProxy = pro::proxy<WriteCharFacade>;
+using ReadCharProxy = pro::proxy<ReadCharFacade>;
 
 }

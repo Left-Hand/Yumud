@@ -2,7 +2,9 @@
 
 #include <cstdint>
 
-struct R32_ETH_MACCR{
+
+namespace ymd::ral::ch32::ch32v30x_eth{ 
+struct [[nodiscard]] R32_ETH_MACCR{
     uint32_t :1;
     uint32_t TCF:1;
     uint32_t RE:1;
@@ -25,7 +27,7 @@ struct R32_ETH_MACCR{
     uint32_t TCD:3;
 };
 
-struct R32_ETH_MACFFR{
+struct [[nodiscard]] R32_ETH_MACFFR{
     uint32_t PM:1;
     uint32_t HU:1;
     uint32_t HM:1;
@@ -44,7 +46,7 @@ struct R32_ETH_MACFFR{
 using R32_ETH_MACHTHR = uint32_t;
 using R32_ETH_MACHTLR = uint32_t;
 
-struct R32_ETH_MACMIIAR{
+struct [[nodiscard]] R32_ETH_MACMIIAR{
     uint32_t MB:1;
     uint32_t MW:1;
     uint32_t CR:3;
@@ -54,12 +56,12 @@ struct R32_ETH_MACMIIAR{
     uint32_t :16;
 };
 
-struct R32_ETH_MACMIIDR{
+struct [[nodiscard]] R32_ETH_MACMIIDR{
     uint32_t MD:16;
     uint32_t :16;
 };
 
-struct R32_ETH_MACFCR{
+struct [[nodiscard]] R32_ETH_MACFCR{
     uint32_t FCB:1;
     uint32_t TFCE:1;
     uint32_t RFCE:1;
@@ -68,12 +70,12 @@ struct R32_ETH_MACFCR{
     uint32_t PT:16;
 };
 
-struct R32_ETH_MACVLAN{
+struct [[nodiscard]] R32_ETH_MACVLAN{
     uint32_t VLANT:17;
     uint32_t :15;
 };
 
-struct R32_ETH_MACPMTCSR{
+struct [[nodiscard]] R32_ETH_MACPMTCSR{
     uint32_t PD:1;
     uint32_t MPE:1;
     uint32_t WFE:1;
@@ -86,7 +88,7 @@ struct R32_ETH_MACPMTCSR{
     uint32_t WFFRP:1;
 };
 
-struct R32_ETH_MACSR{
+struct [[nodiscard]] R32_ETH_MACSR{
     uint32_t :3;
     uint32_t PMTS:1;
     uint32_t MMCS:1;
@@ -98,7 +100,7 @@ struct R32_ETH_MACSR{
 };
 
 
-struct R32_ETH_MACIMR{
+struct [[nodiscard]] R32_ETH_MACIMR{
     uint32_t :3;
     uint32_t PMTIM:1;
     uint32_t :5;
@@ -106,15 +108,17 @@ struct R32_ETH_MACIMR{
     uint32_t :22;
 };
 
-struct R32_ETH_MACA0HR{
+struct [[nodiscard]] R32_ETH_MACA0HR{
     uint32_t MACAOH:16;
     uint32_t :15;
     uint32_t M0:1;
 };
 
-struct ETH_Def{
+struct [[nodiscard]] ETH_Def{
     volatile R32_ETH_MACCR MACCR;
     volatile R32_ETH_MACFFR MACFFR;
     volatile R32_ETH_MACHTHR MACHTHR;
     volatile R32_ETH_MACHTLR MACHTLR;
 };
+
+}

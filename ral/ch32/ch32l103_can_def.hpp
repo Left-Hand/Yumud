@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-namespace CH32L103{
+namespace ymd::ral::ch32::ch32l103_can{
 
-struct R32_CAN_CTLR{
+struct [[nodiscard]] R32_CAN_CTLR{
     static constexpr uint32_t offset = 0;
 
     // 初始化模式请求位
@@ -80,7 +80,7 @@ struct R32_CAN_CTLR{
     uint32_t :15;
 };
 
-struct R32_CAN_STATR{
+struct [[nodiscard]] R32_CAN_STATR{
     static constexpr uint32_t offset = 4;
 
     // 初始化模式指示位。
@@ -132,7 +132,7 @@ struct R32_CAN_STATR{
 
 };
 
-struct R32_CAN_TSTATR{
+struct [[nodiscard]] R32_CAN_TSTATR{
     static constexpr uint32_t offset = 8;
 
     uint32_t RQCP0:1;
@@ -172,7 +172,7 @@ struct R32_CAN_TSTATR{
     uint32_t LOW2:1;
 };
 
-struct R32_CAN_RFIFO{
+struct [[nodiscard]] R32_CAN_RFIFO{
     uint32_t FMP:2;
     uint32_t :1;
     uint32_t FULL:1;
@@ -181,7 +181,7 @@ struct R32_CAN_RFIFO{
     uint32_t :26;
 };
 
-struct R32_CAN_INTEN{
+struct [[nodiscard]] R32_CAN_INTEN{
     static constexpr uint32_t offset = 0x14;
 
     uint32_t TMEIE:1;
@@ -209,7 +209,7 @@ struct R32_CAN_INTEN{
 };
 
 
-struct R32_CAN_ERRSR{
+struct [[nodiscard]] R32_CAN_ERRSR{
     static constexpr uint32_t offset = 0x18;
 
     // 错误警告标志位。
@@ -261,7 +261,7 @@ struct R32_CAN_ERRSR{
 };
 
 
-struct R32_CAN_BTIMR{
+struct [[nodiscard]] R32_CAN_BTIMR{
     static constexpr uint32_t offset = 0x1c;
 
     // 最小时间单元长度设置值
@@ -300,7 +300,7 @@ struct R32_CAN_BTIMR{
     uint32_t SILM:1;
 };
 
-struct R32_CAN_TTCTLR{
+struct [[nodiscard]] R32_CAN_TTCTLR{
     static constexpr uint32_t offset = 0x20;
 
     // 内部计数器计数终值
@@ -317,14 +317,14 @@ struct R32_CAN_TTCTLR{
     uint32_t :14;
 };
 
-struct R32_CAN_TTCNT{
+struct [[nodiscard]] R32_CAN_TTCNT{
     static constexpr uint32_t offset = 0x24;
     // 时间触发计数值
     uint32_t TIMCNT:16;
     uint32_t :16;
 };
 
-struct R32_CAN_TERR_CNT{
+struct [[nodiscard]] R32_CAN_TERR_CNT{
     static constexpr uint32_t offset = 0x28;
     // 当前离线恢复错误计数值，修改该计数值可
     // 从离线立即恢复
@@ -332,7 +332,7 @@ struct R32_CAN_TERR_CNT{
     uint32_t :24;
 };
 
-struct R32_CANFD_CR{
+struct [[nodiscard]] R32_CANFD_CR{
     static constexpr uint32_t offset = 0x2c;
     uint32_t TX_FD:1;
     uint32_t TX_BRS_B:1;
@@ -343,7 +343,7 @@ struct R32_CANFD_CR{
     uint32_t :22;
 };
 
-struct R32_CANFD_BTR{
+struct [[nodiscard]] R32_CANFD_BTR{
     static constexpr uint32_t offset = 0x30;
     uint32_t BTR_SJW_FD:4;
     uint32_t BTR_TS2_FD:4;
@@ -355,7 +355,7 @@ struct R32_CANFD_BTR{
     uint32_t TDCE:8;
 };
 
-struct R32_CANFD_TDCT{
+struct [[nodiscard]] R32_CANFD_TDCT{
     static constexpr uint32_t offset = 0x34;
 
     uint32_t TDC0:6;
@@ -365,7 +365,7 @@ struct R32_CANFD_TDCT{
     uint32_t :2;
 };
 
-struct R32_CANFD_PSR{
+struct [[nodiscard]] R32_CANFD_PSR{
     static constexpr uint32_t offset = 0x38;
     
     uint32_t :16;
@@ -373,42 +373,42 @@ struct R32_CANFD_PSR{
     uint32_t :8;
 };
 
-struct __FD_DMA{
+struct [[nodiscard]] __FD_DMA{
     uint32_t DMA_ADDR:15;
     uint32_t :17;
 };
 
-struct R32_CANFD_DMA_T0:public __FD_DMA{
+struct [[nodiscard]] R32_CANFD_DMA_T0:public __FD_DMA{
     static constexpr uint32_t offset = 0x3c;
 };
 
-struct R32_CANFD_DMA_T1:public __FD_DMA{
+struct [[nodiscard]] R32_CANFD_DMA_T1:public __FD_DMA{
     static constexpr uint32_t offset = 0x40;
 };
 
-struct R32_CANFD_DMA_T2:public __FD_DMA{
+struct [[nodiscard]] R32_CANFD_DMA_T2:public __FD_DMA{
     static constexpr uint32_t offset = 0x44;
 };
 
-struct R32_CANFD_DMA_R0:public __FD_DMA{
+struct [[nodiscard]] R32_CANFD_DMA_R0:public __FD_DMA{
     static constexpr uint32_t offset = 0x48;
 };
 
-struct R32_CANFD_DMA_R1:public __FD_DMA{
+struct [[nodiscard]] R32_CANFD_DMA_R1:public __FD_DMA{
     static constexpr uint32_t offset = 0x4c;
 };
 
-struct R32_CANFD_DMA_R2:public __FD_DMA{
+struct [[nodiscard]] R32_CANFD_DMA_R2:public __FD_DMA{
     static constexpr uint32_t offset = 0x50;
 };
 
-struct R32_CAN_TXMIR{
+struct [[nodiscard]] R32_CAN_TXMIR{
     uint32_t TXRQ:1;
     uint32_t RTR:1;
     uint32_t IDE:1;
     union{
         uint32_t EXID:29;
-        struct{
+        struct{[[nodiscard]] 
             uint32_t :18;
             uint32_t STID:11;
         };
@@ -416,7 +416,7 @@ struct R32_CAN_TXMIR{
 };
 
 
-struct R32_CAN_TXMDTR{
+struct [[nodiscard]] R32_CAN_TXMDTR{
     uint32_t DLC:4;
     uint32_t :4;
 
@@ -425,25 +425,25 @@ struct R32_CAN_TXMDTR{
     uint32_t TIME:16;
 };
 
-struct R64_CAN_TXMDR{
+struct [[nodiscard]] R64_CAN_TXMDR{
     uint8_t DATA[8];
 };
 
 
-struct R32_CAN_RXMIR{
+struct [[nodiscard]] R32_CAN_RXMIR{
     uint32_t :1;
     uint32_t RTR:1;
     uint32_t IDE:1;
     union{
         uint32_t EXID:29;
-        struct{
+        struct{[[nodiscard]] 
             uint32_t :18;
             uint32_t STID:11;
         };
     };
 };
 
-struct R32_CAN_RXMDTR{
+struct [[nodiscard]] R32_CAN_RXMDTR{
     uint32_t DLC:4;
     uint32_t :4;
     uint32_t FMI:8;
@@ -451,11 +451,11 @@ struct R32_CAN_RXMDTR{
 };
 
 
-struct R64_CAN_RXMDR{
+struct [[nodiscard]] R64_CAN_RXMDR{
     uint8_t DATA[8];
 };
 
-struct R32_CAN_FCTLR{
+struct [[nodiscard]] R32_CAN_FCTLR{
     static constexpr uint32_t offset = 0x200;
     // 过滤器初始化模式使能标志位。
     // 1：过滤器组为初始化模式；
@@ -464,7 +464,7 @@ struct R32_CAN_FCTLR{
     uint32_t :31;
 };
 
-struct R32_CAN_FMCFGR{
+struct [[nodiscard]] R32_CAN_FMCFGR{
     static constexpr uint32_t offset = 0x204;
 
     uint32_t FBM0:1;
@@ -501,7 +501,7 @@ struct R32_CAN_FMCFGR{
     uint32_t :4;
 };
 
-struct R32_CAN_FSCFGR{
+struct [[nodiscard]] R32_CAN_FSCFGR{
     static constexpr uint32_t offset = 0x20C;
 
     uint32_t FSC0:1;
@@ -538,7 +538,7 @@ struct R32_CAN_FSCFGR{
     uint32_t :4;
 };
 
-struct R32_CAN_FAFIFOR{
+struct [[nodiscard]] R32_CAN_FAFIFOR{
     static constexpr uint32_t offset = 0x214;
 
     uint32_t FFA0:1;
@@ -575,7 +575,7 @@ struct R32_CAN_FAFIFOR{
     uint32_t :4;
 };
 
-struct R32_CAN_FWR{
+struct [[nodiscard]] R32_CAN_FWR{
     static constexpr uint32_t offset = 0x21C;
 
     uint32_t FACT0:1;
@@ -612,7 +612,7 @@ struct R32_CAN_FWR{
     uint32_t :4;
 };
 
-struct FR32_CAN_iR{
+struct [[nodiscard]] FR32_CAN_iR{
     uint32_t FB0:1;
     uint32_t FB1:1;
     uint32_t FB2:1;
@@ -651,7 +651,7 @@ struct FR32_CAN_iR{
 
 };
 
-struct CAN_Def{
+struct [[nodiscard]] CAN_Def{
     R32_CAN_CTLR CTLR;
     R32_CAN_STATR STATR;
     R32_CAN_TSTATR TSTATR;
@@ -664,16 +664,16 @@ struct CAN_Def{
 
     uint32_t __RESV1__[0x40006580 - (0x40006424+4)];
 
-    struct TxMailBox{
+    struct [[nodiscard]] TxMailBox{
         volatile R32_CAN_TXMIR  TXMIR;
         volatile R32_CAN_TXMDTR  TXMDTR;
         volatile R64_CAN_TXMDR  TXMDR;
     };
 };
 
-// struct CAN_Filt_Def{
+// struct [[nodiscard]] CAN_Filt_Def{
 // private:
-//     struct CAN_Filt_Pair{
+//     struct [[nodiscard]] CAN_Filt_Pair{
 //         FiR FIR[2];
 //     };
 // public:

@@ -33,8 +33,8 @@ public:
         const auto fl_ = fl_map_[fl_index_];
         const auto fh_ = fh_map_[fh_index_];
 
-        const auto rad = iq16(TAU) * iq16(frac(now_seconds));
-        result_ = sin(fl_ * rad) + sin(fh_ * rad);
+        const auto rad = iq16(TAU) * iq16(math::frac(now_seconds));
+        result_ = math::sin(fl_ * rad) + math::sin(fh_ * rad);
     }
 
     constexpr auto fl() const{

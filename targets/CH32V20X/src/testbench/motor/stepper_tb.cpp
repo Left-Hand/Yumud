@@ -128,7 +128,7 @@ void stepper_tb(UartHw & logger_inst){
     spi1.init(18_MHz);
     
 
-    MT6816 encoder{{spi1, spi1.allocate_cs_gpio(hal::PA<15>()).value()}};
+    MT6816 encoder{{spi1, spi1.allocate_cs_pin(hal::PA<15>()).value()}};
     // MT6701 encoder{{spi1, 0}};
 
     I2cSw i2cSw{hal::PD<1>(), hal::PD<0>()};

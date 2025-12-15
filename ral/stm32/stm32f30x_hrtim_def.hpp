@@ -2,10 +2,9 @@
 
 #include <cstdint>
 
-#define __IO volatile
-namespace ymd::ral::STM32F30x::HRTIM_Regs{
+namespace ymd::ral::stm32::stm32f30x_hrtim{
 
-struct MCR_Reg{
+struct [[nodiscard]] R32_MCR{
     uint32_t CKPSC:3;//0~2
     uint32_t CONT:1;//3
 
@@ -55,7 +54,7 @@ struct MCR_Reg{
 
 };
 
-struct MISR_Reg{
+struct [[nodiscard]] R32_MISR{
     uint32_t MCMP1:1;
     uint32_t MCMP2:1;
     uint32_t MCMP3:1;
@@ -67,7 +66,7 @@ struct MISR_Reg{
     uint32_t :29;
 };
 
-struct MICR_Reg{
+struct [[nodiscard]] R32_MICR{
     uint32_t MCMP1C:1;
     uint32_t MCMP2C:1;
     uint32_t MCMP3C:1;
@@ -80,7 +79,7 @@ struct MICR_Reg{
     uint32_t :29;
 };
 
-struct MDIER_Reg{
+struct [[nodiscard]] R32_MDIER{
     uint32_t MCMP1IE:1;
     uint32_t MCMP2IE:1;
     uint32_t MCMP3IE:1;
@@ -103,27 +102,27 @@ struct MDIER_Reg{
     uint32_t :10;
 };
 
-// struct MCNTR_Reg{
+// struct [[nodiscard]] R32_MCNTR{
 //     uint32_t MCNT:16;
 //     uint32_t :16;
 // };
 
-// struct MPER_Reg{
+// struct [[nodiscard]] R32_MPER{
 //     uint32_t MPER:16;
 //     uint32_t :16;
 // };
 
-// struct MREP_Reg{
+// struct [[nodiscard]] R32_MREP{
 //     uint32_t MREP:16;
 //     uint32_t :16;
 // };
 
 
-struct HRTIM_Master_Def{
-    volatile MCR_Reg MCR;            /*!< HRTIM Master Timer control register,                     Address offset: 0x00 */
-    volatile MISR_Reg MISR;           /*!< HRTIM Master Timer interrupt status register,            Address offset: 0x04 */
-    volatile MICR_Reg MICR;           /*!< HRTIM Master Timer interupt clear register,              Address offset: 0x08 */
-    volatile MDIER_Reg MDIER;          /*!< HRTIM Master Timer DMA/interrupt enable register         Address offset: 0x0C */
+struct [[nodiscard]] HRTIM_Master_Def{
+    volatile R32_MCR MCR;            /*!< HRTIM Master Timer control register,                     Address offset: 0x00 */
+    volatile R32_MISR MISR;           /*!< HRTIM Master Timer interrupt status register,            Address offset: 0x04 */
+    volatile R32_MICR MICR;           /*!< HRTIM Master Timer interupt clear register,              Address offset: 0x08 */
+    volatile R32_MDIER MDIER;          /*!< HRTIM Master Timer DMA/interrupt enable register         Address offset: 0x0C */
     volatile uint32_t MCNTR;          /*!< HRTIM Master Timer counter register,                     Address offset: 0x10 */
     volatile uint32_t MPER;           /*!< HRTIM Master Timer period register,                      Address offset: 0x14 */
     volatile uint32_t MREP;           /*!< HRTIM Master Timer repetition register,                  Address offset: 0x18 */
@@ -135,7 +134,7 @@ struct HRTIM_Master_Def{
     uint32_t      RESERVED1[20];  /*!< Reserved,                                                          0x30..0x7C */
 }; 
 
-struct TIMxCR_Reg{
+struct [[nodiscard]] R32_TIMxCR{
     uint32_t :3;
     uint32_t CONT:1;
     uint32_t RETRIG:1;
@@ -161,7 +160,7 @@ struct TIMxCR_Reg{
     uint32_t UPDGAT:4;
 };
 
-struct TIMxISR_Reg{
+struct [[nodiscard]] R32_TIMxISR{
     uint32_t CMP1:1;
     uint32_t CMP2:1;
     uint32_t CMP3:1;
@@ -190,7 +189,7 @@ struct TIMxISR_Reg{
     uint32_t :10;
 };
 
-struct TIMxICR_Reg{
+struct [[nodiscard]] R32_TIMxICR{
     uint32_t CMP1C:1;
     uint32_t CMP2C:1;
     uint32_t CMP3C:1;
@@ -209,7 +208,7 @@ struct TIMxICR_Reg{
     uint32_t :17;
 };
 
-struct TIMxDIER_Reg{
+struct [[nodiscard]] R32_TIMxDIER{
     uint32_t CMP1IE:1;
     uint32_t CMP2IE:1;
     uint32_t CMP3IE:1;
@@ -245,7 +244,7 @@ struct TIMxDIER_Reg{
     uint32_t :1;
 };
 
-struct DTxR_Reg{
+struct [[nodiscard]] R32_DTxR{
     uint32_t :9;
     uint32_t SDTRx:1;
     uint32_t DTPRSC:3;
@@ -259,7 +258,7 @@ struct DTxR_Reg{
     uint32_t DTFLKx:1;
 };
 
-struct SETx1_2R_Reg{
+struct [[nodiscard]] R32_SETx1_2R{
     uint32_t SST:1;
     uint32_t RESYNC:1;
     uint32_t PER:1;
@@ -299,7 +298,7 @@ struct SETx1_2R_Reg{
     uint32_t UPDATE:1;
 };
 
-struct RSTx1_2R_Reg{
+struct [[nodiscard]] R32_RSTx1_2R{
     uint32_t SRT:1;
     uint32_t RESYNC:1;
     uint32_t PER:1;
@@ -339,7 +338,7 @@ struct RSTx1_2R_Reg{
     uint32_t UPDATE:1;
 };
 
-struct EEFxR1_Reg{
+struct [[nodiscard]] R32_EEFxR1{
     uint32_t EE1LTCH:1;
     uint32_t EE1FLTR:4;
     uint32_t :1;
@@ -361,7 +360,7 @@ struct EEFxR1_Reg{
     uint32_t :3;
 };
 
-struct EEFxR2_Reg{
+struct [[nodiscard]] R32_EEFxR2{
     uint32_t EE6LTCH:1;
     uint32_t EE6FLTR:4;
     uint32_t :1;
@@ -383,7 +382,7 @@ struct EEFxR2_Reg{
     uint32_t :3;
 };
 
-struct RSTAR_Reg{
+struct [[nodiscard]] R32_RSTAR{
     uint32_t :1;
     uint32_t UPDT:1;
     uint32_t CMP2:1;
@@ -423,7 +422,7 @@ struct RSTAR_Reg{
     uint32_t :1;
 };
 
-struct RSTBR_Reg{
+struct [[nodiscard]] R32_RSTBR{
     uint32_t :1;
     uint32_t UPDT:1;
     uint32_t CMP2:1;
@@ -463,7 +462,7 @@ struct RSTBR_Reg{
     uint32_t :1;
 };
 
-struct RSTCR_Reg{
+struct [[nodiscard]] R32_RSTCR{
     uint32_t :1;
     uint32_t UPDT:1;
     uint32_t CMP2:1;
@@ -503,7 +502,7 @@ struct RSTCR_Reg{
     uint32_t :1;
 };
 
-struct RSTDR_Reg{
+struct [[nodiscard]] R32_RSTDR{
     uint32_t :1;
     uint32_t UPDT:1;
     uint32_t CMP2:1;
@@ -544,13 +543,13 @@ struct RSTDR_Reg{
     uint32_t :1;
 };
 
-struct CHPxR_Reg{
+struct [[nodiscard]] R32_CHPxR{
     uint32_t CARFRQ:4;
     uint32_t CARDTY:3;
     uint32_t STRTPW:4;
 };
 
-struct CPTnxCR{
+struct [[nodiscard]] CPTnxCR{
     uint32_t SWCPT:1;
     uint32_t UPDCPT:1;
     uint32_t EXEV1CPT:1;
@@ -591,7 +590,7 @@ struct CPTnxCR{
     uint32_t TE1CMP2:1;
 };
 
-struct OUTxR{
+struct [[nodiscard]] OUTxR{
     uint32_t :1;
     uint32_t POL1:1;
     uint32_t IDLEM1:1;
@@ -613,7 +612,7 @@ struct OUTxR{
     uint32_t DIDL:1;
 };
 
-struct CR1_Reg{
+struct [[nodiscard]] R32_CR1{
     uint32_t MUDIS:1;
     uint32_t TAUDIS:1;
     uint32_t TBUDIS:1;
@@ -629,7 +628,7 @@ struct CR1_Reg{
 };
 
 
-struct CR2_Reg{
+struct [[nodiscard]] R32_CR2{
     uint32_t MSWU:1;
     uint32_t TASWU:1;
     uint32_t TBSWU:1;
@@ -646,7 +645,7 @@ struct CR2_Reg{
     uint32_t :18;
 };
 
-struct ISR_Reg{
+struct [[nodiscard]] R32_ISR{
     uint32_t FLT1:1;
     uint32_t FLT2:1;
     uint32_t FLT3:1;
@@ -659,7 +658,7 @@ struct ISR_Reg{
     uint32_t :14;
 };
 
-struct ICR_Reg{
+struct [[nodiscard]] R32_ICR{
     uint32_t FLT1C:1;
     uint32_t FLT2C:1;
     uint32_t FLT3C:1;
@@ -673,7 +672,7 @@ struct ICR_Reg{
 };
 
 
-struct IER_Reg{
+struct [[nodiscard]] R32_IER{
     uint32_t FLT1IE:1;
     uint32_t FLT2IE:1;
     uint32_t FLT3IE:1;
@@ -686,7 +685,7 @@ struct IER_Reg{
     uint32_t :14;
 };
 
-struct OENR_Reg{
+struct [[nodiscard]] R32_OENR{
     uint32_t TA1OEN:1;
     uint32_t TA2OEN:1;
     uint32_t TB1OEN:1;
@@ -700,7 +699,7 @@ struct OENR_Reg{
     uint32_t :22;
 };
 
-struct ODISR_Reg{
+struct [[nodiscard]] R32_ODISR{
     uint32_t TA1ODIS:1;
     uint32_t TA2ODIS:1;
     uint32_t TB1ODIS:1;
@@ -713,7 +712,7 @@ struct ODISR_Reg{
     uint32_t TE2ODIS:1;
 };
 
-struct ODSR_Reg{
+struct [[nodiscard]] R32_ODSR{
     uint32_t TA1ODS:1;
     uint32_t TA2ODS:1;
     uint32_t TB1ODS:1;
@@ -726,7 +725,7 @@ struct ODSR_Reg{
     uint32_t TE2ODS:1;
 };
 
-struct BMCR_Reg{
+struct [[nodiscard]] R32_BMCR{
     uint32_t BME:1;
     uint32_t BMOM:1;
     uint32_t BMCLK:4;
@@ -743,7 +742,7 @@ struct BMCR_Reg{
     uint32_t BMSTAT:1;
 };
 
-struct BMTRGR_Reg{
+struct [[nodiscard]] R32_BMTRGR{
     uint32_t SW:1;
     uint32_t MSTRST:1;
     uint32_t MSTREP:1;
@@ -785,7 +784,7 @@ struct BMTRGR_Reg{
     uint32_t OCHPEV:1;
 };
 
-struct EECR1_Reg{
+struct [[nodiscard]] R32_EECR1{
     uint32_t EE1SRC:2;
     uint32_t EE1POL:1;
     uint32_t EE1SNS:2;
@@ -814,7 +813,7 @@ struct EECR1_Reg{
     uint32_t :2;
 };
 
-struct EECR2_Reg{
+struct [[nodiscard]] R32_EECR2{
     uint32_t EE6SRC:1;
     uint32_t EE6POL:1;
     uint32_t EE6SNS:2;
@@ -842,7 +841,7 @@ struct EECR2_Reg{
 };
 
 
-struct EECR3_Reg{
+struct [[nodiscard]] R32_EECR3{
     uint32_t EE6F:4;
     uint32_t :2;
     uint32_t EE7F:4;
@@ -856,7 +855,7 @@ struct EECR3_Reg{
     uint32_t EEVSD:2;
 };
 
-struct ADC1R_Reg{
+struct [[nodiscard]] R32_ADC1R{
     uint32_t AD1MC1:1;
     uint32_t AD1MC2:1;
     uint32_t AD1MC3:1;
@@ -891,7 +890,7 @@ struct ADC1R_Reg{
     uint32_t AD1TEPER:1;
 };
 
-struct ADC2R_Reg{
+struct [[nodiscard]] R32_ADC2R{
     uint32_t AD2MC1:1;
     uint32_t AD2MC2:1;
     uint32_t AD2MC3:1;
@@ -928,7 +927,7 @@ struct ADC2R_Reg{
 };
 
 
-struct ADC3R_Reg{
+struct [[nodiscard]] R32_ADC3R{
     uint32_t AD3MC1:1;
     uint32_t AD3MC2:1;
     uint32_t AD3MC3:1;
@@ -963,7 +962,7 @@ struct ADC3R_Reg{
     uint32_t AD3TEPER:1;
 };
 
-struct ADC4R_Reg{
+struct [[nodiscard]] R32_ADC4R{
     uint32_t AD4MC1:1;
     uint32_t AD4MC2:1;
     uint32_t AD4MC3:1;
@@ -999,13 +998,13 @@ struct ADC4R_Reg{
     uint32_t ADC4TERST:1;
 };
 
-struct DLLCR_Reg{
+struct [[nodiscard]] R32_DLLCR{
     uint32_t CAL:1;
     uint32_t CALEN:1;
     uint32_t CALRTE:2;
 };
 
-struct FLTINR1{
+struct [[nodiscard]] FLTINR1{
     uint32_t FLT1E:1;
     uint32_t FLT1P:1;
     uint32_t FLT1SRC:1;
@@ -1031,7 +1030,7 @@ struct FLTINR1{
     uint32_t FLT4LCK:1;
 };
 
-struct FLTINR2{
+struct [[nodiscard]] FLTINR2{
     uint32_t FLT5E:1;
     uint32_t FLT5P:1;
     uint32_t FLT5SRC:1;
@@ -1042,7 +1041,7 @@ struct FLTINR2{
     uint32_t :6;
 };
 
-struct BDMUPR_Reg{
+struct [[nodiscard]] R32_BDMUPR{
     uint32_t MCR:1;
     uint32_t MICR:1;
     uint32_t MDIER:1;
@@ -1056,7 +1055,7 @@ struct BDMUPR_Reg{
     uint32_t :22;
 };
 
-struct BDTxUPR_Reg{
+struct [[nodiscard]] R32_BDTxUPR{
     uint32_t TIMxCR:1;
     uint32_t TIMxICR:1;
     uint32_t TIMxDIER:1;
@@ -1083,7 +1082,7 @@ struct BDTxUPR_Reg{
     uint32_t :11;
 };
 
-struct FLTxR{
+struct [[nodiscard]] FLTxR{
     uint32_t FLT1EN:1;
     uint32_t FLT2EN:1;
     uint32_t FLT3EN:1;
@@ -1093,11 +1092,11 @@ struct FLTxR{
 };
 
 
-typedef struct{
-    __IO TIMxCR_Reg TIMxCR;     /*!< HRTIM Timerx control register,                              Address offset: 0x00  */
-    __IO TIMxISR_Reg TIMxISR;    /*!< HRTIM Timerx interrupt status register,                     Address offset: 0x04  */
-    __IO TIMxICR_Reg TIMxICR;    /*!< HRTIM Timerx interrupt clear register,                      Address offset: 0x08  */
-    __IO TIMxDIER_Reg TIMxDIER;   /*!< HRTIM Timerx DMA/interrupt enable register,                 Address offset: 0x0C  */
+typedef struct{[[nodiscard]] 
+    __IO R32_TIMxCR TIMxCR;     /*!< HRTIM Timerx control register,                              Address offset: 0x00  */
+    __IO R32_TIMxISR TIMxISR;    /*!< HRTIM Timerx interrupt status register,                     Address offset: 0x04  */
+    __IO R32_TIMxICR TIMxICR;    /*!< HRTIM Timerx interrupt clear register,                      Address offset: 0x08  */
+    __IO R32_TIMxDIER TIMxDIER;   /*!< HRTIM Timerx DMA/interrupt enable register,                 Address offset: 0x0C  */
     __IO uint32_t CNTxR;      /*!< HRTIM Timerx counter register,                              Address offset: 0x10  */
     __IO uint32_t PERxR;      /*!< HRTIM Timerx period register,                               Address offset: 0x14  */
     __IO uint32_t REPxR;      /*!< HRTIM Timerx repetition register,                           Address offset: 0x18  */
@@ -1108,13 +1107,13 @@ typedef struct{
     __IO uint32_t CMP4xR;     /*!< HRTIM Timerx compare 4 register,                            Address offset: 0x2C  */
     __IO uint32_t CPT1xR;     /*!< HRTIM Timerx capture 1 register,                            Address offset: 0x30  */
     __IO uint32_t CPT2xR;     /*!< HRTIM Timerx capture 2 register,                            Address offset: 0x34 */
-    __IO DTxR_Reg DTxR;       /*!< HRTIM Timerx dead time register,                            Address offset: 0x38 */
-    __IO SETx1_2R_Reg SETx1R;     /*!< HRTIM Timerx output 1 set register,                         Address offset: 0x3C */
-    __IO RSTx1_2R_Reg RSTx1R;     /*!< HRTIM Timerx output 1 reset register,                       Address offset: 0x40 */
-    __IO SETx1_2R_Reg SETx2R;     /*!< HRTIM Timerx output 2 set register,                         Address offset: 0x44 */
-    __IO RSTx1_2R_Reg RSTx2R;     /*!< HRTIM Timerx output 2 reset register,                       Address offset: 0x48 */
-    __IO EEFxR1_Reg EEFxR1;     /*!< HRTIM Timerx external event filtering 1 register,           Address offset: 0x4C */
-    __IO EEFxR2_Reg EEFxR2;     /*!< HRTIM Timerx external event filtering 2 register,           Address offset: 0x50 */
+    __IO R32_DTxR DTxR;       /*!< HRTIM Timerx dead time register,                            Address offset: 0x38 */
+    __IO R32_SETx1_2R SETx1R;     /*!< HRTIM Timerx output 1 set register,                         Address offset: 0x3C */
+    __IO R32_RSTx1_2R RSTx1R;     /*!< HRTIM Timerx output 1 reset register,                       Address offset: 0x40 */
+    __IO R32_SETx1_2R SETx2R;     /*!< HRTIM Timerx output 2 set register,                         Address offset: 0x44 */
+    __IO R32_RSTx1_2R RSTx2R;     /*!< HRTIM Timerx output 2 reset register,                       Address offset: 0x48 */
+    __IO R32_EEFxR1 EEFxR1;     /*!< HRTIM Timerx external event filtering 1 register,           Address offset: 0x4C */
+    __IO R32_EEFxR2 EEFxR2;     /*!< HRTIM Timerx external event filtering 2 register,           Address offset: 0x50 */
     __IO uint32_t RSTxR;      /*!< HRTIM Timerx Reset register,                                Address offset: 0x54 */
     __IO uint32_t CHPxR;      /*!< HRTIM Timerx Chopper register,                              Address offset: 0x58 */
     __IO uint32_t CPT1xCR;    /*!< HRTIM Timerx Capture 1 register,                            Address offset: 0x5C */
@@ -1155,9 +1154,9 @@ typedef struct
   __IO uint32_t BDTDUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x68 */  
   __IO uint32_t BDTEUPR;    /*!< HRTIM Burst DMA Timerx update register,                     Address offset: 0x6C */  
   __IO uint32_t BDMADR;     /*!< HRTIM Burst DMA Master Data register,                       Address offset: 0x70 */
-}HRTIM_Common_TypeDef;
+[[nodiscard]] }HRTIM_Common_TypeDef;
 
-typedef struct {
+typedef struct [[nodiscard]] {
   HRTIM_Master_Def sMasterRegs;
   HRTIM_Timerx_TypeDef sTimerxRegs[5];
   uint32_t             RESERVED0[32];

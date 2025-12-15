@@ -3,11 +3,12 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/math/realmath.hpp"
+#include "core/utils/default.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/timer/hw_singleton.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
 
@@ -29,7 +30,11 @@ static constexpr size_t CHOP_FREQ = 40_KHz;
 // #define TIM1_USE_CC4 1
 
 void svpwm3_main(){
-    UART.init({576000});
+    UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
+
     DEBUGGER.retarget(&UART);
 
     
@@ -49,9 +54,17 @@ void svpwm3_main(){
 
 
     timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
         .count_freq = hal::NearestFreq(CHOP_FREQ * 2), 
         .count_mode = hal::TimerCountMode::CenterAlignedDualTrig
-    }, EN);
+    })  
+        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
     timer.enable_arr_sync(EN);
 
     #if TIM_INDEX == 1
@@ -82,18 +95,28 @@ void svpwm3_main(){
     timer.set_trgo_source(TimerTrgoSource::Update);
     #endif
 
-    const auto pwm_noinv_cfg = hal::TimerOcPwmConfig{
-        .cvr_sync_en = EN,
-        .valid_level = HIGH
-    };
+    static constexpr hal::TimerOcPwmConfig pwm_noinv_cfg = []{
+        auto config = hal::TimerOcPwmConfig::from_default();
+        config.cvr_sync_en = EN;
+        config.valid_level = HIGH;
+        return config;
+    }();
+
 
     // timer.init(CHOP_FREQ, TimerCountMode::CenterAlignedUpTrig);
     timer.init({
+        .remap = hal::TimerRemap::_0,
         .count_freq = hal::NearestFreq(20000), 
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
-    }, EN);
+    }).unwrap().alter_to_pins({
+        hal::TimerChannelSelection::CH1,
+        hal::TimerChannelSelection::CH2,
+        hal::TimerChannelSelection::CH3,
+    }).unwrap();
 
-    timer.oc<4>().init({});
+    timer.start();
+
+    timer.oc<4>().init(Default);
     timer.oc<4>().enable_output(EN);
     timer.oc<4>().cvr() = timer.arr() - 1;
 
@@ -139,7 +162,7 @@ void svpwm3_main(){
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
-                trig_gpio.toggle();
+                trig_gpio.write(~trig_gpio.read());
                 break;}
             default: break;
             }
@@ -150,9 +173,9 @@ void svpwm3_main(){
 
     while(true){
         
-        const auto ctime = clock::time() * real_t(5 * TAU);
-        const auto [st,ct] = sincos(ctime);
-        const auto [u, v, w] = digipw::SVM({st * 0.5_r, ct * 0.5_r});
+        const auto now_secs = clock::time() * real_t(5 * TAU);
+        const auto [st,ct] = math::sincos(now_secs);
+        const auto [u, v, w] = digipw::SVM({iq16(st) * 0.5_r, iq16(ct) * 0.5_r});
 
         pwm_u.set_dutycycle(u);
         pwm_v.set_dutycycle(v);

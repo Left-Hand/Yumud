@@ -6,7 +6,7 @@
 namespace ymd{
 
 
-enum class JedecManufacturer:uint8_t{
+enum class [[nodiscard]] JedecManufacturer:uint8_t{
     Cypress = 0x01,
     Fujitsu = 0x04,
     Eon = 0x1C,
@@ -27,7 +27,7 @@ enum class JedecManufacturer:uint8_t{
     Puya = 0x85
 };
 
-enum class JedecStorageType:uint8_t{
+enum class [[nodiscard]] JedecStorageType:uint8_t{
     SRAM = 0x01,
     NOR_Flash = 0x02,
     NAND_Flash = 0x04,
@@ -42,5 +42,3 @@ class OutputStream;
 OutputStream & operator<<(OutputStream & os, const JedecManufacturer man);
 OutputStream & operator<<(OutputStream & os, const JedecStorageType type);
 }
-// ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::JedecManufacturer man);
-// ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::JedecStorageType type);

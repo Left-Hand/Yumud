@@ -79,18 +79,18 @@ public:
     };
 
     TM7705_Phy(const Config & cfg) :
-        sclk_gpio_{cfg.sclk_gpio.unwrap()},
-        dout_gpio_{cfg.dout_gpio.unwrap()},
-        din_gpio_{cfg.din_gpio.unwrap()},
-        cs_gpio_{cfg.cs_gpio.unwrap()},
-        drdy_gpio_{cfg.drdy_gpio.unwrap()}
+        sclk_pin_{cfg.sclk_gpio.unwrap()},
+        dout_pin_{cfg.dout_gpio.unwrap()},
+        din_pin_{cfg.din_gpio.unwrap()},
+        cs_pin_{cfg.cs_gpio.unwrap()},
+        drdy_pin_{cfg.drdy_gpio.unwrap()}
         {;}
 private:
-    hal::Gpio & sclk_gpio_;
-    hal::Gpio & dout_gpio_;
-    hal::Gpio & din_gpio_;
-    hal::Gpio & cs_gpio_;
-    hal::Gpio & drdy_gpio_;
+    hal::Gpio & sclk_pin_;
+    hal::Gpio & dout_pin_;
+    hal::Gpio & din_pin_;
+    hal::Gpio & cs_pin_;
+    hal::Gpio & drdy_pin_;
 
     IResult<> write_byte(uint8_t dat1);
     IResult<> read_byte(uint8_t & ret);

@@ -3,8 +3,8 @@
 #include "core/math/real.hpp"
 #include "float.h"
 
-#include "types/vectors/vector3.hpp"
-#include "types/regions/ray3.hpp"
+#include "algebra/vectors/vec3.hpp"
+#include "algebra/regions/ray3.hpp"
 
 using namespace ymd;
 
@@ -60,16 +60,16 @@ private:
 };
 
 template<typename T>
-using TriangleSurfaceCache_t = CacheOf<TriangleSurface<T>>;
+using TriangleSurfaceCache = CacheOf<TriangleSurface<T>>;
 
 template<typename T>
-struct Intersection_t{
+struct Intersection{
     int i;
     T t;
 };
 
 template<typename T>
-struct Interaction_t{
+struct Interaction{
     int i;
     T t;
     const TriangleSurface<T> & surface;

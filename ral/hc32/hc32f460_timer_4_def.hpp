@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <bit>
 
-namespace ymd::ral::hc32f460{
+namespace ymd::ral::hc32::hc32f460{
 
 struct TMR4_CCSR{
     // 该位指示基本计数器的计数时钟分频

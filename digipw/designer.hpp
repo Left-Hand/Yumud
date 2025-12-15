@@ -3,7 +3,7 @@
 #include "ctrl/pi_controller.hpp"
 
 namespace ymd::digipw{
-struct BuckCurrentRegulatorConfig {
+struct [[nodiscard]] BuckCurrentRegulatorConfig {
     uint32_t fs;                 // 采样频率 (Hz)
     uint32_t fc;                 // 电流环截止频率 (Hz)
     q20 inductance;              // 输出电感 (H)
@@ -36,7 +36,7 @@ struct BuckCurrentRegulatorConfig {
     }
 };
 
-struct BoostPfcVoltageRegulatorConfig {
+struct [[nodiscard]] BoostPfcVoltageRegulatorConfig {
     uint32_t fs;                 // 采样频率 (Hz)
     uint32_t fc;                 // 电压环带宽 (Hz)，通常为10-20Hz
     q20 output_capacitance;      // 输出电容 (F)
@@ -68,7 +68,7 @@ struct BoostPfcVoltageRegulatorConfig {
     }
 };
 
-struct GridTieInverterConfig {
+struct [[nodiscard]] GridTieInverterConfig {
     uint32_t fs;                 // 采样频率 (Hz)
     uint32_t fc_current;         // 电流环带宽 (Hz)，通常500-2000Hz
     uint32_t fc_voltage;         // 电压环带宽 (Hz)，通常20-100Hz
@@ -109,7 +109,7 @@ struct GridTieInverterConfig {
     }
 };
 
-struct LlcFrequencyRegulatorConfig {
+struct [[nodiscard]] LlcFrequencyRegulatorConfig {
     uint32_t fs;                 // 采样频率 (Hz)  
     uint32_t fc;                 // 控制带宽 (Hz)，通常100-500Hz
     q20 min_frequency;           // 最小开关频率 (Hz)
@@ -136,7 +136,7 @@ struct LlcFrequencyRegulatorConfig {
 };
 
 
-struct BatteryChargerConfig {
+struct [[nodiscard]] BatteryChargerConfig {
     uint32_t fs;
     uint32_t fc_current;         // 恒流环带宽
     uint32_t fc_voltage;         // 恒压环带宽  

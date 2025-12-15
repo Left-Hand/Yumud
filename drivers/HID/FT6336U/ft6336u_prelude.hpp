@@ -6,19 +6,19 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 
 namespace ymd::drivers{
 
-struct FT6336_Prelude{
+struct [[nodiscard]] FT6336_Prelude{
 public:
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x38);
     static constexpr auto MAX_I2C_BAUDRATE = 200000;
     static constexpr uint8_t PANEL_ID = 0x11;
     static constexpr size_t FT6336_MAX_POINTS_COUNT = 2;
     
-    enum class ErrorKind:uint8_t{
+    enum class [[nodiscard]] ErrorKind:uint8_t{
         Unspecified,
         InvalidGestureId,
         // PointsCountGreatThan2,
@@ -34,24 +34,24 @@ public:
     using RegAddr = uint8_t;
 
 
-    enum class DeviceMode:uint8_t{
+    enum class [[nodiscard]] DeviceMode:uint8_t{
         Working = 0b000,
         Factory = 0b100,
     } ;
 
 
-    enum class GMode:uint8_t{
+    enum class [[nodiscard]] GMode:uint8_t{
         Polling = 0b0,
         Trigger = 0b1,
     } ;
 
 
-    enum class CtrlMode:uint8_t{
+    enum class [[nodiscard]] CtrlMode:uint8_t{
         KeepActive = 0b0,
         ToMonitor = 0b1,
     } ;
 
-    enum class TouchStatus:uint8_t{
+    enum class [[nodiscard]] TouchStatus:uint8_t{
         Touch = 0,
         Stream,
         Release,
@@ -60,8 +60,8 @@ public:
     using TouchPoint = Vec2<uint16_t>;
 
 
-    struct GestureId{
-        enum class Kind:uint8_t{
+    struct [[nodiscard]] GestureId{
+        enum class [[nodiscard]] Kind:uint8_t{
             Up = 0x10,
             Right = 0x14,
             Down = 0x18,
@@ -110,12 +110,12 @@ public:
         uint8_t kind_;
     };
 
-    enum class ChannelSelection:uint8_t{
+    enum class [[nodiscard]] ChannelSelection:uint8_t{
         _1,
         _2
     };
 
-    struct TouchPoints{
+    struct [[nodiscard]] TouchPoints{
         static constexpr TouchPoints from_none(){
             return TouchPoints{};
         }
@@ -225,133 +225,133 @@ public:
 
 };
 
-struct FT6336_Regs:public FT6336_Prelude{
+struct [[nodiscard]] FT6336_Regs:public FT6336_Prelude{
 
-    struct R8_DevMode:public Reg8<>{
+    struct [[nodiscard]] R8_DevMode:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x00;
         uint8_t :4;
         DeviceMode device_mode:3;
         uint8_t :1;
     }DEF_R8(devmode)
 
-    struct R8_GestId:public Reg8<>{
+    struct [[nodiscard]] R8_GestId:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x01;
         uint8_t gesture_id;
     }DEF_R8(gestid)
 
-    struct R8_TdStatus:public Reg8<>{
+    struct [[nodiscard]] R8_TdStatus:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x02;
         uint8_t touch_cnt:4;
         uint8_t :4;
     }DEF_R8(td_status)
 
-    struct R8_P1xh:public Reg8<>{
+    struct [[nodiscard]] R8_P1xh:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x03;
         uint8_t p1xh:4;
         uint8_t :2;
         uint8_t p1ev:2;
     }DEF_R8(p1xh)
 
-    struct R8_P1xl:public Reg8<>{
+    struct [[nodiscard]] R8_P1xl:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x04;
         uint8_t p1xl;
     }DEF_R8(p1xl)
 
-    struct R8_P1yh:public Reg8<>{
+    struct [[nodiscard]] R8_P1yh:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x05;
         uint8_t p1yh:4;
         uint8_t :2;
         uint8_t p1id:2;
     }DEF_R8(p1yh)
 
-    struct R8_P1yl:public Reg8<>{
+    struct [[nodiscard]] R8_P1yl:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x06;
         uint8_t p1yl;
     }DEF_R8(p1yl)
 
-    struct R8_P1Weight:public Reg8<>{
+    struct [[nodiscard]] R8_P1Weight:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x07;
         uint8_t p1weight;
     }DEF_R8(p1weight)
 
-    struct R8_P1Misc:public Reg8<>{
+    struct [[nodiscard]] R8_P1Misc:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x08;
         uint8_t touch_area:4;
         uint8_t :4;
     }DEF_R8(p1misc)
 
-    struct R8_P2xh:public Reg8<>{
+    struct [[nodiscard]] R8_P2xh:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x09;
         uint8_t p2xh:4;
         uint8_t :2;
         uint8_t p2ev:2;
     }DEF_R8(p2xh)
 
-    struct R8_P2xl:public Reg8<>{
+    struct [[nodiscard]] R8_P2xl:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x0a;
         uint8_t p2xl;
     }DEF_R8(p2xl)
 
-    struct R8_P2yh:public Reg8<>{
+    struct [[nodiscard]] R8_P2yh:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x0b;
         uint8_t p2yh:4;
         uint8_t :2;
         uint8_t p2id:2;
     }DEF_R8(p2yh)
 
-    struct R8_P2yl:public Reg8<>{
+    struct [[nodiscard]] R8_P2yl:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x0c;
         uint8_t p2yl;
     }DEF_R8(p2yl)
 
-    struct R8_P2Weight:public Reg8<>{
+    struct [[nodiscard]] R8_P2Weight:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x0d;
         uint8_t p2weight;
     }DEF_R8(p2weight)
 
-    struct R8_P2Misc:public Reg8<>{
+    struct [[nodiscard]] R8_P2Misc:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x0e;
         uint8_t touch_area:4;
         uint8_t :4;
     }DEF_R8(p2misc)
 
-    struct R8_ThGroup:public Reg8<>{
+    struct [[nodiscard]] R8_ThGroup:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x80;
         uint8_t touch_threshold;
     }DEF_R8(th_group)
 
-    struct R8_ThDiff:public Reg8<>{
+    struct [[nodiscard]] R8_ThDiff:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x85;
         uint8_t touch_threshold;
     }DEF_R8(th_diff)
 
-    struct R8_Ctrl:public Reg8<>{
+    struct [[nodiscard]] R8_Ctrl:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x86;
         uint8_t enable_touch_detect:1;
         uint8_t :7;
     }DEF_R8(ctrl)
 
-    struct R8_TimeEnterMonnitor:public Reg8<>{
+    struct [[nodiscard]] R8_TimeEnterMonnitor:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x87;
         uint8_t time_enter_monitor;
     }DEF_R8(time_enter)
 
-    struct R8_PeriodActive:public Reg8<>{
+    struct [[nodiscard]] R8_PeriodActive:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x88;
         uint8_t report_rate_when_active;
     }DEF_R8(period_active)
 
-    struct R8_PeriodMonitor:public Reg8<>{
+    struct [[nodiscard]] R8_PeriodMonitor:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x89;
         uint8_t report_rate_when_monitor;
     }DEF_R8(period_monitor)
 
-    struct R8_RadianValue:public Reg8<>{
+    struct [[nodiscard]] R8_RadianValue:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x91;
         uint8_t minimal_allowed_angle;
     }DEF_R8(radian_value)
 
-    struct R8_OffsetLeftReight:public Reg8<>{
+    struct [[nodiscard]] R8_OffsetLeftReight:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x92;
         uint8_t maxmimul_offset;
     }DEF_R8(offset_left)

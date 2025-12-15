@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_gpio.h"
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_gpio.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 
 /* MASK */
 #define ECR_PORTPINCONFIG_MASK    ((uint16_t)0xFF80)

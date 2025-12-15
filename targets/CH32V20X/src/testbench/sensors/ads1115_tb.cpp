@@ -11,8 +11,8 @@
 
 using namespace ymd;
 
-#define SCL_GPIO hal::PA<12>();
-#define SDA_GPIO hal::PA<15>();
+#define SCL_PIN hal::PA<12>();
+#define SDA_PIN hal::PA<15>();
 
 struct ConfigBuilder:public drivers::ADS111X_Prelude{
 
@@ -69,14 +69,17 @@ struct ConfigBuilder:public drivers::ADS111X_Prelude{
 void ads1115_main()
 {
 
-    hal::uart2.init({576000});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;
-    auto i2c = hal::I2cSw(&scl_gpio_, &sda_gpio_);
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;
+    auto i2c = hal::I2cSw(&scl_pin_, &sda_pin_);
     i2c.init({400_KHz});
 
     drivers::ADS1115 ads{&i2c};

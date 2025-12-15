@@ -4,26 +4,34 @@
 
 namespace ymd::hal{
 
-class AdcInjectedChannel: public AdcChannelOnChip{
-protected:
-    uint8_t mask;
-
-    void set_cali_data(const uint16_t _cali_data){
-        ADC_SetInjectedOffset(inst_, mask, _cali_data);
-    }
-
-    friend class AdcOnChip;
-    friend class AdcPrimary;
-    friend class AdcCompanion;
+class AdcInjectedChannel final:  public AdcChannelOnChip{
 public:
-    explicit AdcInjectedChannel(ADC_TypeDef * _instance, const AdcChannelSelection nth, const uint8_t _rank);
+    explicit AdcInjectedChannel(
+        void * inst, 
+        const AdcChannelSelection sel, 
+        const uint8_t rank
+    );
 
     AdcInjectedChannel(const AdcInjectedChannel & other) = delete;
     AdcInjectedChannel(AdcInjectedChannel && other) = delete;
 
     void set_sample_cycles(const AdcSampleCycles cycles);
     
-    uint16_t get_raw();
+    [[nodiscard]] uint16_t read_u16();
+
+    [[nodiscard]] iq16 get_voltage() {
+        //assume right aligned 12 bit resolution
+        return uq16::from_bits(static_cast<uint32_t>(read_u16()) << 4) * 3.3_iq16;
+    }
+
+private:
+    uint8_t mask_;
+
+    void set_cali_data(const uint16_t bits);
+
+    friend class AdcOnChip;
+    friend class AdcPrimary;
+    friend class AdcCompanion;
 };
 
 };

@@ -50,9 +50,9 @@ public:
 
     void enable(const Enable en){
         enabled = en;
-        left_fan.enable(en);
-        right_fan.enable(en);
-        hri_fan.enable(en);
+        left_fan.start();
+        right_fan.start();
+        hri_fan.start();
         if(enabled == false){
             setds(0);
         }

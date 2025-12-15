@@ -6,7 +6,7 @@
 #include "core/clock/time.hpp"
 #include "core/clock/clock.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "robots/vendor/mit/cybergear/MotorCyberGear.hpp"
 

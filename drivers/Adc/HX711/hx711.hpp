@@ -22,8 +22,8 @@ public:
         hal::GpioIntf & sck_gpio, 
         hal::GpioIntf & sdo_gpio
     ):
-        sck_gpio_(sck_gpio), 
-        sdo_gpio_(sdo_gpio){;}
+        sck_pin_(sck_gpio), 
+        sdo_pin_(sdo_gpio){;}
     ~HX711(){;}
     void init();
     bool is_idle();
@@ -50,8 +50,8 @@ public:
         conv_type = convtype;
     }
 private:
-    hal::GpioIntf & sck_gpio_;
-    hal::GpioIntf & sdo_gpio_;
+    hal::GpioIntf & sck_pin_;
+    hal::GpioIntf & sdo_pin_;
     ConvType conv_type = ConvType::A128;
 
     uint32_t last_data;

@@ -4,7 +4,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "primitive/arithmetic/angular.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -99,7 +99,7 @@ struct MT6826S:
         spi_drv_(std::move(spi_drv)){}
 
     [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<Angle<iq31>> get_lap_angle();
+    [[nodiscard]] IResult<Angular<iq31>> get_lap_angle();
     [[nodiscard]] IResult<MagStatus> get_mag_status();
     // [[nodiscard]] IResult<void> update();
 

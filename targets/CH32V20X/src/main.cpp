@@ -10,6 +10,7 @@
 int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
+    myesc_main();
     // myactuator_main();
     // eeprom_main();
     // while(true);
@@ -59,7 +60,7 @@ int main(){
     // alx_aoa_main();
     // mk8000tr_main();
     // vl53l5cx_main();
-    myesc_main();
+
     // adrc_main();
     // mystepper_main();
 
@@ -111,7 +112,7 @@ int main(){
     // pmw3901_main();
     // light_tracking_main();
     // coro_main();
-    // sincos_main();
+
     // i2c_scanner_main();
 
 
@@ -160,10 +161,20 @@ int main(){
     // bldc_main();
     while(true);
     #elif defined(CH32V30X)
-    // alx_aoa_main();
+    // sincos_main();
+    // myesc_main();
+    // s21c_main();
+    smc2025_main();
     // vl53l5cx_main();
     // smc2025_main();
-    m1502e_main();
+    // m1502e_main();
+
+    // m10_main();
+    // alx_aoa_main();
+
+    // icm42688_main();
+    // bmi160_main();
+    // i2c_scanner_main();
     // ld19_main();
     // i2c_scanner_main();
     // slcan_main();

@@ -3,20 +3,21 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
-#include "core/string/utils/streamed_string_splitter.hpp"
+#include "core/string/split_iter.hpp"
+#include "core/utils/default.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/analog/opa/opa.hpp"
 
 #include "core/math/realmath.hpp"
-#include "core/sync/timer.hpp"
-#include "middlewares/repl/repl_service.hpp"
+#include "core/async/timer.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 #include "robots/nodes/msg_factory.hpp"
 #include "robots/nodes/node_role.hpp"
 
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 #include "nuedc_2025e_common.hpp"
 
@@ -81,6 +82,7 @@ struct Task{
 
 void nuedc_2025e_laser_main(){
     DBG_UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000
     });
     
@@ -96,14 +98,22 @@ void nuedc_2025e_laser_main(){
 
     hal::timer3.init(
         {
+            .remap = hal::TIM3_REMAP_B4_B5_B0_B1,
             .count_freq = hal::NearestFreq(PWM_FREQ * 2), 
             .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
-        },  
-        EN
-    );
+        }
+    )
+            .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+    hal::timer3.start();
 
     auto & laser_pwm = hal::timer3.oc<1>();
-    laser_pwm.init({});
+    laser_pwm.init(Default);
 
     auto led = hal::PB<8>();
     led.outpp(HIGH);
@@ -112,9 +122,9 @@ void nuedc_2025e_laser_main(){
     auto & can = hal::can1;
 
     can.init({
-        .remap = CAN1_REMAP,
-        .mode = hal::CanMode::Normal,
-        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
+        .remap = hal::CAN1_REMAP_PA12_PA11,
+        .wiring_mode = hal::CanWiringMode::Normal,
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
     });
 
 
@@ -140,9 +150,9 @@ void nuedc_2025e_laser_main(){
     };
 
 
-    auto write_can_frame = [&](const hal::CanClassicFrame & frame){
+    auto write_can_frame = [&](const hal::BxCanFrame & frame){
         if(frame.is_extended()) PANIC();
-        can.write(frame).examine();
+        can.try_write(frame).examine();
     };
 
 
@@ -355,13 +365,13 @@ void nuedc_2025e_laser_main(){
         }
 
         {
-            const auto ctime = clock::time();
+            const auto now_secs = clock::time();
             auto hesitate_spin_curve = [&](const iq16 t){
-                return (- 0.3_iq20 * (1.25_r + sinpu(3.0_r * t)) / MACHINE_CTRL_FREQ);
+                return (- 0.3_iq20 * (1.25_r + math::sinpu(3.0_r * t)) / MACHINE_CTRL_FREQ);
             };
 
             const auto command = commands::DeltaPosition{
-                .delta_position = hesitate_spin_curve(ctime)
+                .delta_position = hesitate_spin_curve(now_secs)
             };
 
             publish_joint_delta_position(NodeRole::YawJoint, command);
@@ -452,7 +462,7 @@ void nuedc_2025e_laser_main(){
                     // axis_target_position_,
                     // axis_target_speed_,
                     may_err_position_
-                    // sinpu(ctime) / MACHINE_CTRL_FREQ * 0.2_r
+                    // math::sinpu(now_secs) / MACHINE_CTRL_FREQ * 0.2_r
                     // yaw_angle_,
                     // pos_filter_.lap_position(),
                     // run_status_.state

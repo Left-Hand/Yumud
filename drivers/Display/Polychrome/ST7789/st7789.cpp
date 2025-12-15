@@ -2,7 +2,7 @@
 
 
 #include "st7789.hpp"
-#include "types/regions/range2.hpp"
+#include "algebra/regions/range2.hpp"
 #include "core/debug/debug.hpp"
 
 using namespace ymd;

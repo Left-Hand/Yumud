@@ -13,7 +13,7 @@ protected:
 
     template<typename T>
     void write_frame(const T & data){
-        uart_.writeN(reinterpret_cast<const char *>(&data), sizeof(data));
+        uart_.try_write_chars(reinterpret_cast<const char *>(&data), sizeof(data));
     };
 
 public:

@@ -4,7 +4,7 @@
     {
       "cwd": "${workspaceRoot}",
       "executable": "build\\CH32V203F8P6\\LearnADC.elf",
-      "name": "Debug V20X",
+      "name": "Debug V203F8P6",
       "request": "launch",
       "type": "cortex-debug",
       "servertype": "openocd",
@@ -39,8 +39,26 @@
     },
     {
       "cwd": "${workspaceRoot}",
-      "executable": "build\\CH32V30X\\LearnADC.elf",
-      "name": "Debug V30X",
+      "executable": "build\\CH32V303RCT6\\LearnADC.elf",
+      "name": "Debug V303RCT6",
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+      "searchDir": [],
+      "runToEntryPoint": "main",
+      "showDevDebugOutput": "none",
+      "device": "CH32V303",
+      "svdFile": "D:/MounRiver/MounRiver_Studio/template/wizard/WCH/RISC-V/CH32V307/NoneOS/CH32V303xx.svd",
+      "toolchainPrefix": "riscv-none-embed",
+      "configFiles": [
+        "${workspaceFolder}/tools/wch-interface.cfg",
+        "${workspaceFolder}/tools/wch-target.cfg"
+      ]
+    },
+    {
+      "cwd": "${workspaceRoot}",
+      "executable": "build\\CH32V307VCT6\\LearnADC.elf",
+      "name": "Debug V307VCT6",
       "request": "launch",
       "type": "cortex-debug",
       "servertype": "openocd",

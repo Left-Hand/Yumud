@@ -5,5 +5,5 @@
 #include "core/math/real.hpp"
 
 namespace ymd::clock{
-real_t time();
+uq16 time();
 }

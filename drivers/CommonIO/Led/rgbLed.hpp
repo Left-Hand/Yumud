@@ -15,29 +15,29 @@ class RgbLedIntf{
 class DigitalRgbLed final{
 public:
     DigitalRgbLed(
-        hal::GpioIntf & _red_gpio_, 
-        hal::GpioIntf & _green_gpio_, 
-        hal::GpioIntf & _blue_gpio_
+        hal::GpioIntf & _red_pin_, 
+        hal::GpioIntf & _green_pin_, 
+        hal::GpioIntf & _blue_pin_
     ):
-        red_gpio_(_red_gpio_), 
-        green_gpio_(_green_gpio_), 
-        blue_gpio_(_blue_gpio_){;}
+        red_pin_(_red_pin_), 
+        green_pin_(_green_pin_), 
+        blue_pin_(_blue_pin_){;}
     
     void init(){
-        red_gpio_.outpp();
-        green_gpio_.outpp();
-        blue_gpio_.outpp();
+        red_pin_.outpp();
+        green_pin_.outpp();
+        blue_pin_.outpp();
     }
 
     void set_rgb(const RGB<iq16> & color){
-        red_gpio_ = BoolLevel::from(color.r > iq16(0.5));
-        green_gpio_ = BoolLevel::from(color.g > iq16(0.5));
-        blue_gpio_ = BoolLevel::from(color.b > iq16(0.5));
+        red_pin_.write(BoolLevel::from(color.r > iq16(0.5)));
+        green_pin_.write(BoolLevel::from(color.g > iq16(0.5)));
+        blue_pin_.write(BoolLevel::from(color.b > iq16(0.5)));
     }
 private:
-    hal::GpioIntf & red_gpio_;
-    hal::GpioIntf & green_gpio_;
-    hal::GpioIntf & blue_gpio_;
+    hal::GpioIntf & red_pin_;
+    hal::GpioIntf & green_pin_;
+    hal::GpioIntf & blue_pin_;
 };
 
 

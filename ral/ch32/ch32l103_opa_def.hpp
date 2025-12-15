@@ -4,7 +4,7 @@
 
 namespace CH32L103{
 
-struct R16_OPA_CFGR1{
+struct [[nodiscard]] R16_OPA_CFGR1{
     uint16_t POLL_EN:1;
     uint16_t :1;
     uint16_t BKIN_EN:1;
@@ -22,14 +22,14 @@ struct R16_OPA_CFGR1{
     uint16_t :1;
 };
 
-struct R16_OPA_CFGR2{
+struct [[nodiscard]] R16_OPA_CFGR2{
     uint16_t POLL_VLU:8;
     uint16_t POLL1_NUM:3;
     uint16_t POLL1_CNT:3;
     uint16_t :1;
 };
 
-struct R32_OPA_CTLR1{
+struct [[nodiscard]] R32_OPA_CTLR1{
     uint32_t EN1:1;
     uint32_t MODE1:3;
     uint32_t PSEL1:3;
@@ -44,7 +44,7 @@ struct R32_OPA_CTLR1{
     uint32_t :2;
 };
 
-struct R32_OPA_CTLR2{
+struct [[nodiscard]] R32_OPA_CTLR2{
     uint32_t EN1:1;
     uint32_t MODE1:2;
     uint32_t NSEL1:1;
@@ -75,7 +75,7 @@ struct R32_OPA_CTLR2{
 
 using R32_OPCM_KEY = uint32_t;
 
-struct OPA_Def{
+struct [[nodiscard]] OPA_Def{
     volatile R16_OPA_CFGR1 CFGR1;
     volatile R16_OPA_CFGR2 CFGR2;
     volatile R32_OPA_CTLR1 CTLR1;

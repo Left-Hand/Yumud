@@ -3,7 +3,7 @@
 #include "core/debug/debug.hpp"
 
 #include "hal/bus/can/can.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -12,6 +12,7 @@ using namespace ymd;
 
 void can_ring_main(){
     DEBUGGER_INST.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000, 
         .tx_strategy = CommStrategy::Blocking
     });
@@ -25,39 +26,39 @@ void can_ring_main(){
 
     auto & can = hal::can1;
     can.init({
-        .remap = CAN1_REMAP,
-        .mode = hal::Can::Mode::Loopback,
-        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
+        .remap = hal::CAN1_REMAP_PA12_PA11,
+        .wiring_mode = hal::CanWiringMode::Loopback,
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
     });
 
-    auto write_msg = [&](const hal::CanClassicFrame & frame){
+    auto write_msg = [&](const hal::BxCanFrame & frame){
         DEBUG_PRINTLN("tx", frame);
-        return can.write(frame);
+        return can.try_write(frame);
     };
 
     static constexpr auto UNREACHABLE_MSGS = std::to_array({
-        hal::CanClassicFrame(
+        hal::BxCanFrame(
             hal::CanStdId::from_bits(0x100), 
-            hal::CanClassicPayload::from_list({0, 1, 3})
+            hal::BxCanPayload::from_list({0, 1, 3})
         ),
-        hal::CanClassicFrame(
+        hal::BxCanFrame(
             hal::CanStdId::from_bits(0x300), 
-            hal::CanClassicPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+            hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         ),
-        hal::CanClassicFrame(
+        hal::BxCanFrame(
             hal::CanExtId::from_bits(0x400), 
-            hal::CanClassicPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+            hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         )
     });
 
     static constexpr auto REACHABLE_MSGS = std::to_array({
-        hal::CanClassicFrame(
+        hal::BxCanFrame(
             hal::CanStdId::from_bits(0x200), 
-            hal::CanClassicPayload::from_list({0, 1, 2})
+            hal::BxCanPayload::from_list({0, 1, 2})
         ),
-        hal::CanClassicFrame(
+        hal::BxCanFrame(
             hal::CanStdId::from_bits(0x200), 
-            hal::CanClassicPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
+            hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         ),
     });
 

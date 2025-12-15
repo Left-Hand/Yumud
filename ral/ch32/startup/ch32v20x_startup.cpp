@@ -1,5 +1,3 @@
-#pragma once
-
 #ifdef STM32F30x
 
 __attribute__ ((section(".co_stack")))

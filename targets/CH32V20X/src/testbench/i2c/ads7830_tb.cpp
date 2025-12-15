@@ -5,7 +5,7 @@
 #include "hal/gpio/gpio_port.hpp"
 
 #include "src/testbench/tb.h"
-#include "types/vectors/vectorx.hpp"
+#include "algebra/vectors/vectorx.hpp"
 
 #include "drivers/Adc/ADS7830/ads7830.hpp"
 
@@ -13,22 +13,25 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 #define DBG_UART hal::uart2
-#define SCL_GPIO hal::PB<0>()
-#define SDA_GPIO hal::PB<1>()
+#define SCL_PIN hal::PB<0>()
+#define SDA_PIN hal::PB<1>()
 
 using drivers::ADS7830;
 
 
 
 void ads7830_main(){
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.no_brackets(EN);
 
-    auto scl_gpio = SCL_GPIO;
-    auto sda_gpio = SDA_GPIO;
-    hal::I2cSw i2c = hal::I2cSw{&scl_gpio, &sda_gpio};
+    auto scl_pin = SCL_PIN;
+    auto sda_pin = SDA_PIN;
+    hal::I2cSw i2c = hal::I2cSw{&scl_pin, &sda_pin};
     i2c.init({400_KHz});
 
     ADS7830 ads7830{&i2c, hal::I2cSlaveAddr<7>::from_u7(0b10010110 >> 1)};

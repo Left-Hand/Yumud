@@ -27,8 +27,11 @@ struct AW9523_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class CurrentLimit{
-        Max, High, Medium, Low
+    enum class CurrentLimit:uint8_t{
+        Max = 0b00, 
+        High  = 0b01, 
+        Medium = 0b10, 
+        Low = 0b11
     };
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
@@ -61,8 +64,14 @@ struct AW9523_Prelude{
         SwRst = 0x7f
     };
 
-    struct Config{
-        CurrentLimit current_limit = CurrentLimit::Low;
+    struct [[nodiscard]] Config{
+        CurrentLimit current_limit;
+
+        static constexpr Config from_default(){
+            return Config{
+                .current_limit = CurrentLimit::Medium
+            };
+        }
     };
 
     static constexpr uint8_t VALID_CHIP_ID = 0x23;
@@ -92,7 +101,7 @@ struct AW9523_Regset final:public AW9523_Prelude{
 
     struct CtlReg:Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Ctl;
-        uint8_t isel:2;
+        CurrentLimit isel:2;
         uint8_t __resv1__:2;
         uint8_t p0mod:1;
         uint8_t __resv2__:3;

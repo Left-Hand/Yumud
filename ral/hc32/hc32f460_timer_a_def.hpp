@@ -3,6 +3,6 @@
 #include <cstdint>
 #include <bit>
 
-namespace ymd::ral::hc32f460{
+namespace ymd::ral::hc32::hc32f460{
 
 }

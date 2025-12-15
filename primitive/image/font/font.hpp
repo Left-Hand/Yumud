@@ -1,11 +1,11 @@
 #pragma once
 
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 #include "font_res.hpp"
 
 namespace ymd{
 
-class Font{
+struct [[nodiscard]] Font{
 protected:
 
     Vec2<uint8_t> size;
@@ -21,7 +21,7 @@ protected:
 
 
 
-class Font8x5:public Font{
+struct [[nodiscard]] Font8x5:public Font{
     bool get_pixel(const wchar_t token, const Vec2<uint8_t> offset) const {
         if (!size.has_point(offset)) return false;
         return font_res::enfont_8x5[MAX(token - ' ', 0)][offset.x + 1] & (1 << offset.y);
@@ -32,7 +32,7 @@ public:
 
 
 
-class Font7x7 final:public Font{
+struct [[nodiscard]] Font7x7 final:public Font{
     using font_item_t = font_res::chfont_7x7_item_t;
 
 public:
@@ -91,7 +91,7 @@ private:
     }
 };
 
-class Font16x8:public Font{
+struct [[nodiscard]] Font16x8:public Font{
 public:
     static constexpr auto & RES = font_res::enfont_16x8;
     constexpr Font16x8():Font(Vec2<uint8_t>(8,16)){;}

@@ -10,7 +10,7 @@
 
 namespace ymd::ral::CH32{
 
-struct R32_QSPIx_CR{
+struct [[nodiscard]] R32_QSPIx_CR{
     uint32_t EN:1;
     uint32_t ABORT:1;
     uint32_t DMAEN:1;
@@ -80,7 +80,7 @@ struct R32_QSPIx_CR{
     uint32_t PRESCALER:8;
 };
 
-struct R32_QSPIx_DCR{
+struct [[nodiscard]] R32_QSPIx_DCR{
     uint32_t CKMODE:1;
     uint32_t :7;
     uint32_t CSHT:3;
@@ -89,7 +89,7 @@ struct R32_QSPIx_DCR{
     uint32_t :11;
 };
 
-struct R32_QSPIx_SR{
+struct [[nodiscard]] R32_QSPIx_SR{
     uint32_t TEF:1;
     uint32_t TCF:1;
     uint32_t FTF:1;
@@ -101,7 +101,7 @@ struct R32_QSPIx_SR{
     uint32_t :18;
 };
 
-struct R32_QSPIx_FCR{
+struct [[nodiscard]] R32_QSPIx_FCR{
     uint32_t CTEF:1;
     uint32_t CTCF:1;
     uint32_t :1;
@@ -110,7 +110,7 @@ struct R32_QSPIx_FCR{
     uint32_t :27;
 };
 
-struct R32_QSPIx_DLR{
+struct [[nodiscard]] R32_QSPIx_DLR{
     // 数据长度：
     // 在间接模式和状态轮询模式下待检索的数据数量
     // （值+1）。对状态轮询模式应使用不大于 3 的值
@@ -138,7 +138,7 @@ struct R32_QSPIx_DLR{
     uint32_t DL;
 };
 
-struct R32_QSPIx_CCR{
+struct [[nodiscard]] R32_QSPIx_CCR{
     uint32_t INSTRUCTION:8;
     uint32_t IMODE:2;
 
@@ -174,21 +174,21 @@ struct R32_QSPIx_CCR{
 };
 
 
-struct R32_QSPIx_AR{
+struct [[nodiscard]] R32_QSPIx_AR{
     uint32_t ADDR;
 };
 
 
-struct R32_QSPIx_ABR{
+struct [[nodiscard]] R32_QSPIx_ABR{
     uint32_t ALTERNATE;
 };
 
-struct R32_QSPIx_DR{
+struct [[nodiscard]] R32_QSPIx_DR{
     uint32_t DATA;
 };
 
 
-struct R32_QSPIx_PSMKR{
+struct [[nodiscard]] R32_QSPIx_PSMKR{
     // 数据：
     // 指定要与外部 SPI 设备交换的数据。
     // 在间接写入模式下，写入该寄存器的数据在数据
@@ -214,17 +214,17 @@ struct R32_QSPIx_PSMKR{
     uint32_t MASK;
 };
 
-struct R32_QSPIx_PSMAR{
+struct [[nodiscard]] R32_QSPIx_PSMAR{
     uint32_t MATCH;
 };
 
-struct R32_QSPIx_PIR{
+struct [[nodiscard]] R32_QSPIx_PIR{
     uint32_t INTERVAL:16;
     uint32_t :16;
 };
 
 
-struct R32_QSPIx_LPTR{
+struct [[nodiscard]] R32_QSPIx_LPTR{
     uint32_t TIMEOUT:16;
     uint32_t :16;
 };

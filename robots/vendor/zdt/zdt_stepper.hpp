@@ -38,7 +38,7 @@ public:
     }
 
     struct PositionMsg{
-        Angle<iq16> angle;
+        Angular<iq16> angle;
         iq16 speed;
     };
 

@@ -53,11 +53,11 @@ protected:
     };
 
     hal::Uart & uart_;
-    Option<hal::GpioIntf &> at_gpio_;
-    Option<hal::GpioIntf &> slp_gpio_;
+    Option<hal::GpioIntf &> at_pin_;
+    Option<hal::GpioIntf &> slp_pin_;
 
     bool sendAtCommand(const char * token){
-        SetKeeper{at_gpio_};
+        SetKeeper{at_pin_};
 
         write("AT");
         if(token[0] != '.'){// string command
@@ -86,7 +86,7 @@ protected:
 
 
         clock::delay(1us);
-        // at_gpio_.set();
+        // at_pin_.set_high();
         return is_valid;
     }
 
@@ -99,18 +99,18 @@ public:
         hal::Uart & uart, 
         Option<hal::GpioIntf &> set_gpio = None, 
         Option<hal::GpioIntf &> slp_gpio = None)
-    :uart_(uart), at_gpio_(set_gpio), slp_gpio_(slp_gpio){;}
+    :uart_(uart), at_pin_(set_gpio), slp_pin_(slp_gpio){;}
 
     void write(const char data){
         uart_.write(data);
     }
 
     void write(const char * data){
-        uart_.writeN(data, strlen(data));
+        uart_.write_chars(data, strlen(data));
     }
 
     void read(char & data){
-        uart_.read1(data);
+        uart_.read_char(data);
     }
 
     size_t available() const {
@@ -122,8 +122,8 @@ public:
     }
 
     void init(){
-        // at_gpio_.inspect((auto & io){io.outpp(HIGH);});
-        // slp_gpio_.inspect((auto & io){io.outpp(HIGH);});
+        // at_pin_.inspect((auto & io){io.outpp(HIGH);});
+        // slp_pin_.inspect((auto & io){io.outpp(HIGH);});
     }
 
     void reset(){sendAtCommand("RESET");}
@@ -131,7 +131,6 @@ public:
     void chipInfo(){sendAtCommand("SHOW");}
     void save(){sendAtCommand("SAVE");}
     void exit(){sendAtCommand("EXIT");}
-    // void setChannel(const uint16_t _channel) override {sendAtCommand(("BCCH=" + String((uint8_t)_channel)).c_str());}
     void setChannel(const uint16_t _channel) override {}
 
     // void setMac(){}

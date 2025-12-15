@@ -3,8 +3,8 @@
 
 #include "core/stream/ostream.hpp"
 #include "core/utils/result.hpp"
-#include "types/regions/Rect2.hpp"
-#include "types/shapes/prelude.hpp"
+#include "algebra/regions/Rect2.hpp"
+#include "algebra/shapes/prelude.hpp"
 
 namespace ymd{
 

@@ -15,11 +15,11 @@
 #include "hal/bus/uart/uarthw.hpp"
 
 #include "robots/slam/svd.hpp"
-#include "types/vectors/vector3.hpp"
-#include "types/vectors/quat.hpp"
+#include "algebra/vectors/vec3.hpp"
+#include "algebra/vectors/quat.hpp"
 
-#include "types/gesture/isometry2.hpp"
-#include "types/gesture/isometry3.hpp"
+#include "algebra/gesture/isometry2.hpp"
+#include "algebra/gesture/isometry3.hpp"
 
 #include "core/string/string_view.hpp"
 
@@ -44,7 +44,7 @@ OutputStream & operator<<(OutputStream & os, const SlamErrorKind & error){
     }
 }
 
-
+// MIT license
 // https://github.com/jgsimard/RustRobotics/blob/main/src/mapping/se2_se3.rs
 
 namespace ymd::slam{
@@ -55,7 +55,7 @@ static constexpr Matrix<T, 3, 9> jacobian_so3(const Matrix3x3<T> & m){
     const auto c = sqrt(trace - 1) * static_cast<T>(0.5);
     if(c > static_cast<T>(0.999999))
         return Matrix<T, 3, 9>::zero();
-    const auto s = sqrt(1 - square(c));
+    const auto s = sqrt(1 - math::square(c));
 
     const auto theta = atan2(s, c);
     const auto factor = (theta * c - s) / (4  * s * s * s);
@@ -99,12 +99,12 @@ namespace experimental{
         const T rotation_angle = atan2pu(off_diag, diff);
         
         
-        return Rotation2<T>::from_angle(Angle<T>::from_turns(0.5f * rotation_angle));
+        return Rotation2<T>::from_angle(Angular<T>::from_turns(0.5f * rotation_angle));
 
         // // 直接计算旋转角度，忽略次要项
         // const auto rotation_angle = atan2pu(b + c, a - d);  // atan2(g, f)的2倍简化
         
-        // return Rotation2<T>::from_angle(Angle<T>::from_turns(static_cast<T>(0.5f) * rotation_angle));
+        // return Rotation2<T>::from_angle(Angular<T>::from_turns(static_cast<T>(0.5f) * rotation_angle));
 
         const T e = static_cast<T>(0.5f) * (a + d);
         const T f = static_cast<T>(0.5f) * (a - d);
@@ -114,8 +114,8 @@ namespace experimental{
         // const T a1 = atan2pu(g, f);
         // const T a2 = atan2pu(h, e);
 
-        // const auto theta_angle = Angle<T>::from_turns(static_cast<T>(0.5f) * (a2 - a1));
-        // const auto phi_angle = Angle<T>::from_turns(static_cast<T>(0.5f) * (a2 + a1));
+        // const auto theta_angle = Angular<T>::from_turns(static_cast<T>(0.5f) * (a2 - a1));
+        // const auto phi_angle = Angular<T>::from_turns(static_cast<T>(0.5f) * (a2 + a1));
 
         // return Rotation2<T>::from_angle(theta_angle - phi_angle);  // ❌ 这里错了！
         // const T q = mag(e, h);
@@ -132,8 +132,8 @@ namespace experimental{
         const auto a1 = std::atan2(g, f);
         const auto a2 = std::atan2(h, e);
 
-        const auto theta_angle = Angle<T>::from_radians(static_cast<T>(0.5f) * (a2 - a1));
-        const auto phi_angle = Angle<T>::from_radians(static_cast<T>(0.5f) * (a2 + a1));
+        const auto theta_angle = Angular<T>::from_radians(static_cast<T>(0.5f) * (a2 - a1));
+        const auto phi_angle = Angular<T>::from_radians(static_cast<T>(0.5f) * (a2 + a1));
 
         // return Rotation2<T>::from_angle(theta_angle - phi_angle);
 
@@ -201,16 +201,16 @@ namespace experimental{
 
     template<typename T>
     static constexpr Matrix2x2<T> compute_cross_variance_2x2(
-        const std::span<const Vec2<T>> pts1, 
-        const std::span<const Vec2<T>> pts2,
+        const std::span<const Vec2<T>> points1, 
+        const std::span<const Vec2<T>> points2,
         const int16_t * cor
     ) {
         Matrix2x2<T> cov = Matrix2x2<T>::zero(); 
-        for (size_t i = 0; i < pts1.size(); i++) {
+        for (size_t i = 0; i < points1.size(); i++) {
             const auto j = cor[i];
             if (j < 0) continue;
-            const auto p = pts1[i];
-            const auto q = pts2[j];
+            const auto p = points1[i];
+            const auto q = points2[j];
             cov.template at<0, 0>() += p.x * q.x;
             cov.template at<0, 1>() += p.y * q.x;
             cov.template at<1, 0>() += p.x * q.y;
@@ -227,8 +227,8 @@ template<typename T, size_t D,
     typename Vec = std::conditional_t<D == 2, Vec2<T>, Vec3<T>>
 >
 static constexpr Result<Isometry, SlamErrorKind> pose_estimation(
-    const std::span<const Vec> pts1,
-    const std::span<const Vec> pts2,
+    const std::span<const Vec> points1,
+    const std::span<const Vec> points2,
     size_t max_iterations
 ){
 
@@ -237,21 +237,21 @@ static constexpr Result<Isometry, SlamErrorKind> pose_estimation(
     using Rotation = typename Isometry::Rotation;
     using W_Matrix = Matrix<T, D, D>;
 
-    if(pts1.size() != pts2.size())
+    if(points1.size() != points2.size())
         return Err(SlamErrorKind::PointsCntNotMatch);
     
-    if(pts1.size() < D)
+    if(points1.size() < D)
         return Err(SlamErrorKind::InsufficientPoints);
 
-    const auto n = pts1.size();
+    const auto n = points1.size();
 
     // 计算质心
-    const auto centroid1 = std::reduce(pts1.begin(), pts1.end(), Vec::ZERO) / n;
-    const auto centroid2 = std::reduce(pts2.begin(), pts2.end(), Vec::ZERO) / n;
+    const auto centroid1 = std::reduce(points1.begin(), points1.end(), Vec::ZERO) / n;
+    const auto centroid2 = std::reduce(points2.begin(), points2.end(), Vec::ZERO) / n;
 
     // 计算协方差矩阵 W
     const W_Matrix W = std::transform_reduce(
-        pts1.begin(), pts1.end(), pts2.begin(),
+        points1.begin(), points1.end(), points2.begin(),
         Matrix<T, D, D>::zero(),
         
         std::plus<>(),
@@ -313,30 +313,35 @@ static void point_cloud_demo(){
     static constexpr size_t MAX_ITERATIONS = 100;
 
     auto lambda1 = [](size_t i){ 
-        return Vec2<T>::from_angle(Angle<T>::from_radians(i * static_cast<T>(0.1)));
+        return Vec2<T>::from_angle(Angular<T>::from_radians(i * static_cast<T>(0.1)));
     };
 
     auto lambda2 = [](size_t i){ 
-        const auto angle = Angle<T>::from_radians(i * static_cast<T>(0.1) + 
-            Angle<T>::from_degrees(10).to_radians());
+        const auto angle = Angular<T>::from_radians(i * static_cast<T>(0.1) + 
+            Angular<T>::from_degrees(10).to_radians());
         return Vec2<T>::from_angle(angle) + Vec2<T>(40, 50);
     };
 
-    const auto pts1 = make_points2d_from_lambda<T>(lambda1,NUM_POINTS);
-    const auto pts2 = make_points2d_from_lambda<T>(lambda2,NUM_POINTS);
+    const auto points1 = make_points2d_from_lambda<T>(lambda1, NUM_POINTS);
+    const auto points2 = make_points2d_from_lambda<T>(lambda2, NUM_POINTS);
 
-    const auto begin_micros = clock::micros();
-    const auto res = pose_estimation<T, 2>(std::span(pts1), std::span(pts2), MAX_ITERATIONS);
+    const auto begin_us = clock::micros();
+    const auto res = pose_estimation<T, 2>(
+        std::span(points1), 
+        std::span(points2), 
+        MAX_ITERATIONS
+    );
     if(res.is_err()) PANIC(res.unwrap_err());
-    DEBUG_PRINTLN(res.unwrap(), clock::micros() - begin_micros);
+    DEBUG_PRINTLN(res.unwrap(), clock::micros() - begin_us);
 }
 
 void svd_main(){
     auto init_debugger = []{
         auto & DBG_UART = DEBUGGER_INST;
 
-        DBG_UART.init({
-            .baudrate = UART_BAUD
+        DEBUGGER_INST.init({
+            .remap = hal::UART2_REMAP_PA2_PA3,
+            .baudrate = 576000 
         });
 
         DEBUGGER.retarget(&DBG_UART);
@@ -355,18 +360,17 @@ void svd_main(){
 [[maybe_unused]] static void misc(){
 
     // Create a test matrix (3x2)
-    const auto begin_micros = clock::micros();
+    const auto begin_us = clock::micros();
     auto A = Matrix<float, 3, 2>::from_uninitialized();
     A(0, 0) = 1.0; A(0, 1) = 2.0;
     A(1, 0) = 3.0; A(1, 1) = 4.0;
     A(2, 0) = 5.0; A(2, 1) = 6.0;
 
-    // PANIC{A};
     
     // Compute SVD
     details::JacobiSVD<float, 3, 2> svd_solver(A, 100);  // 100 max iterations
 
-    DEBUG_PRINTLN(clock::micros() - begin_micros);
+    DEBUG_PRINTLN(clock::micros() - begin_us);
     
     // Get SVD components
     const auto sol = svd_solver.solution().expect();
@@ -386,7 +390,7 @@ void svd_main(){
     for (size_t i = 0; i < 3; i++) {
         for (size_t j = 0; j < 3; j++) {
             float expected = (i == j) ? 1.0 : 0.0;
-            u_error += square(U_orthogonality_check(i, j) - expected);
+            u_error += math::square(U_orthogonality_check(i, j) - expected);
         }
     }
     
@@ -396,7 +400,7 @@ void svd_main(){
     for (size_t i = 0; i < 2; i++) {
         for (size_t j = 0; j < 2; j++) {
             float expected = (i == j) ? 1.0 : 0.0;
-            v_error += square(V_orthogonality_check(i, j) - expected);
+            v_error += math::square(V_orthogonality_check(i, j) - expected);
         }
     }
     

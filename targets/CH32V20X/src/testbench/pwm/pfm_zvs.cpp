@@ -4,9 +4,10 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/math/realmath.hpp"
+#include "core/utils/default.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/timer/hw_singleton.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
@@ -39,7 +40,10 @@ static constexpr size_t MODU_FREQ = 10;
 void pfm_zvs_main(){
 
 
-    UART.init({576000});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&UART);
 
     #if TIM_INDEX == 1
@@ -57,19 +61,26 @@ void pfm_zvs_main(){
     auto & pwm_n = timer.ocn<1>();
 
     timer.init({
+        .remap = hal::TimerRemap::_0,
         .count_freq = hal::NearestFreq(20_KHz),
         .count_mode = hal::TimerCountMode::Up
-    }, EN);
+    })        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
     
-    pwm_p.init({
-        // .valid_level = LOW
-    });
+    pwm_p.init(Default);
 
-    pwm_n.init({});
+    pwm_n.init(Default);
+
+    timer.start();
 
     while(true){
         const auto t = clock::time();
-        const auto st = sinpu(t * 100);
+        const auto st = math::sinpu(t * 100);
         pwm_p.set_dutycycle(st * 0.4_r + 0.5_r);
 
         static constexpr auto arr_base = 144_MHz / 20_KHz;

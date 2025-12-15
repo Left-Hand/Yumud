@@ -10,8 +10,8 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "algo/interpolation/Polynomial.hpp"
 #include "algo/interpolation/Linear.hpp"
-#include "types/vectors/vector2.hpp"
-#include "types/vectors/vector3.hpp"
+#include "algebra/vectors/vec2.hpp"
+#include "algebra/vectors/vec3.hpp"
 
 #include "robots/curve/CurveConcept_t.hpp"
 #include "robots/curve/CurveTrapezoid_t.hpp"

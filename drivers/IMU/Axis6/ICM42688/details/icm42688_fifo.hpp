@@ -3,12 +3,18 @@
 #include <cstdint>
 #include <cstddef>
 
+// 参考来源：
+
+// 无许可证
 // https://github.com/ProfFan/icm426xx/blob/main/src/fifo.rs
+
+//  * 注意：本实现为完全原创，未使用上述项目的任何代码。
+//  * 参考仅用于理解问题领域，未复制任何具体实现。
 
 namespace ymd::drivers::icm42688::details{
 
 // FifoHeader: 8位bitfield结构体
-struct FifoHeader {
+struct [[nodiscard]] FifoHeader {
     uint8_t odr_changed_gyro : 1;      // 1: The ODR for gyro is different for this gyro data packet compared to the previous gyro packet
     uint8_t odr_changed_accel : 1;     // 1: The ODR for accel is different for this accel data packet compared to the previous accel packet
     uint8_t has_timestamp_fsync : 2;   // 10: Packet contains ODR Timestamp
@@ -21,7 +27,7 @@ struct FifoHeader {
 static_assert(sizeof(FifoHeader) == 1);
 
 // FifoPacket4: 数据包结构体，共20字节
-struct FifoPacket4 {
+struct [[nodiscard]] FifoPacket4 {
     FifoHeader fifo_header;
     uint8_t accel_data_x1;      // Accel X [19:12]
     uint8_t accel_data_x0;      // Accel X [11:4]

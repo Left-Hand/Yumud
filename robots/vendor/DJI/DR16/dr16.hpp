@@ -6,20 +6,22 @@
 
 namespace ymd::robots::dji::dr16{
 
-struct Frame{
-    using Self =  Frame;
+#pragma pack(push, 1)
+struct FrameContext{
+    using Self =  FrameContext;
 
-    uint16_t ch0:11;
-    uint16_t ch1:11;
-    uint16_t ch2:11;
-    uint16_t ch3:11;
-    uint16_t s1:2;
-    uint16_t s2:2;
-    uint16_t mouse_x:16;
-    uint16_t mouse_y:16;
-    uint16_t mouse_z:16;
-    uint16_t mouse_l:8;
-    uint16_t mouse_r:8;
+    uint16_t ch0:11; //[11 : 0]
+    uint16_t ch1:11; //[22 : 11]
+    uint16_t ch2:11; //[33 : 22]
+    uint16_t ch3:11; //[44 : 33]
+    uint16_t s1:2;  //[46 : 44]
+    uint16_t s2:2;  //[48 : 46]
+
+    uint16_t mouse_x:16; //[64 : 48]
+    uint16_t mouse_y:16; //[80 : 64]
+    uint16_t mouse_z:16; //[96 : 80]
+    uint16_t mouse_l:8; //[104 : 96]
+    uint16_t mouse_r:8; //[112 : 104]
     union{
         struct{
             uint16_t key_w:1;      
@@ -46,12 +48,13 @@ struct Frame{
     void reset(){
         std::fill(as_bytes_mut().begin(), as_bytes_mut().end(), 0x00);
     }
-}__packed;
+};
+#pragma pack(pop)
 
-static_assert(sizeof(Frame) == 18);
+static_assert(sizeof(FrameContext) == 18);
 
 
-struct Dr16_StreamParser{
+struct Dr16_ParserSink{
 
 };
 

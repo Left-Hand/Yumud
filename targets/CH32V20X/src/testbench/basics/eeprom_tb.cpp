@@ -307,16 +307,19 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
 
 void eeprom_main(){
-    hal::uart2.init({576000, CommStrategy::Blocking});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(2);
     DEBUGGER.set_radix(10);
     DEBUGGER.set_splitter("\t");
 
-    auto scl_gpio = hal::PB<13>();
-    auto sda_gpio = hal::PB<12>();
+    auto scl_pin = hal::PB<13>();
+    auto sda_pin = hal::PB<12>();
 
-    hal::I2cSw i2csw = hal::I2cSw{&scl_gpio, &sda_gpio};
+    hal::I2cSw i2csw = hal::I2cSw{&scl_pin, &sda_pin};
     i2csw.init({400000});
 
     

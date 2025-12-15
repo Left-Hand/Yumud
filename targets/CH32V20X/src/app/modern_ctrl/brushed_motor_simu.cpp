@@ -1,19 +1,19 @@
 #include "src/testbench/tb.h"
-#include "dsp/controller/adrc/leso.hpp"
-#include "dsp/controller/adrc/command_shaper.hpp"
+#include "dsp/controller/adrc/linear/leso2o.hpp"
 
-#include "middlewares/repl/repl_service.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/uart/uartsw.hpp"
 
 using namespace ymd;
 using namespace ymd::robots;
+using namespace ymd::dsp;
 
 #if 0
 
@@ -114,17 +114,17 @@ public:
         self.lpf.update(u0);
         const auto u = self.lpf.state()[0];
         // const auto u = u0;
-        const auto pos_err = u - pos;
-        const auto dist = ABS(pos_err);
-        // const auto expect_spd = CLAMP2(SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_);
-        // const auto expect_spd = fixed_t<16>(CLAMP2(self.lpf.state()[1] + SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err), self.max_spd_));
+        const auto e1 = u - pos;
+        const auto dist = ABS(e1);
+        // const auto expect_spd = CLAMP2(SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), e1), self.max_spd_);
+        // const auto expect_spd = fixed_t<16>(CLAMP2(self.lpf.state()[1] + SIGN_AS(std::sqrt(2.0_r * self.max_acc_ * dist), e1), self.max_spd_));
         // DEBUG_PRINTLN(u0, u, pos, spd, expect_spd, self.max_spd_, self.lpf.state());
         
         // DEBUG_PRINTLN(expect_spd);
         // if(dist > 0.1_r){
         if(true){
-            auto expect_spd = std::copysign(std::sqrt(2.0_r * self.max_acc_ * dist), pos_err);
-            // auto expect_spd = std::copysign(std::sqrt(1.57_r * self.max_acc_ * dist), pos_err);
+            auto expect_spd = std::copysign(std::sqrt(2.0_r * self.max_acc_ * dist), e1);
+            // auto expect_spd = std::copysign(std::sqrt(1.57_r * self.max_acc_ * dist), e1);
             if(spd * self.lpf.state()[1] < 0) expect_spd += self.lpf.state()[1];
             const auto spd_cmd = iq20(CLAMP2(expect_spd, self.max_spd_));
             return {
@@ -135,7 +135,7 @@ public:
             return {
                 pos + spd * dt, 
                 // STEP_TO(spd, iq16(0), iq16()),
-                CLAMP2(spd + CLAMP2( -self.kd_ * spd + self.kp_ * pos_err, self.max_acc_) * dt, self.max_spd_),
+                CLAMP2(spd + CLAMP2( -self.kd_ * spd + self.kp_ * e1, self.max_acc_) * dt, self.max_spd_),
             };
         }
 
@@ -146,15 +146,15 @@ public:
 
 }
 
-#endif
+
 
 void test_burshed_motor(){
     const auto tau = 80.0_r;
     dsp::TdVec2 td{{
         .kp = tau * tau,
         .kd = 2 * tau,
-        .max_spd = 60.0_r,
-        .max_acc = 1000.0_r,
+        .x2_limit = 60.0_r,
+        .x3_limit = 1000.0_r,
         .fs = 1000
     }};
 
@@ -199,11 +199,13 @@ void test_burshed_motor(){
     }};
     #endif
 
-    static dsp::Leso leso{dsp::Leso::Config{
-        .b0 = 1,
-        .w = mc_w / 3,
-        .fs = ISR_FREQ
-    }};
+    static adrc::LinearExtendedStateObserver leso{
+        adrc::LinearExtendedStateObserver::Config{
+            .b0 = 1,
+            .w = mc_w / 3,
+            .fs = ISR_FREQ
+        }
+    };
 
     static mock::MockBrushedMotor motor{{.fs = ISR_FREQ}};
     // uint32_t exe;
@@ -236,7 +238,7 @@ void test_burshed_motor(){
         // const auto u = kd * dsp::adrc::ssqrt(p - motor.state()[0]) + kd * (v - motor.state()[1]);
         // const auto u = kp * (p - motor.state()[0]) + kd * (v - motor.state()[1]);
         const auto u = CLAMP2(kp * (p - motor.state()[0]) + kd * (v - motor.state()[1]), 89);
-        // const auto dist_inj = + 0.1_r* sinpu(3 * t);
+        // const auto dist_inj = + 0.1_r* math::sinpu(3 * t);
         // const auto dist_inj = 80 + 30.1_r * sin(10 * t);
         const auto dist_inj = d;
         
@@ -272,10 +274,10 @@ void test_burshed_motor(){
     timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
-            watch_gpio.clr();
+            watch_gpio.set_low();
             t += (1.0_r / ISR_FREQ);
             test_leso(t);
-            watch_gpio.set();
+            watch_gpio.set_high();
             break;
         }
         default: break;
@@ -294,3 +296,5 @@ void test_burshed_motor(){
         );
     }
 }
+
+#endif

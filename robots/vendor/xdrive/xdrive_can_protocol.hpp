@@ -40,8 +40,8 @@ enum class [[nodiscard]] DeserialzeError:uint8_t{
     DlcTooLong
 };
 
-using CanFrame = hal::CanClassicFrame;
-using CanPayload = hal::CanClassicPayload;
+using CanFrame = hal::BxCanFrame;
+using CanPayload = hal::BxCanPayload;
 
 
 struct [[nodiscard]] BytesReader{

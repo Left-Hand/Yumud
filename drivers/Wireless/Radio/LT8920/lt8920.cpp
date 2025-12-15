@@ -326,7 +326,7 @@ IResult<> LT8920::reset(){
     if(nrst_gpio){
         nrst_gpio->outpp(LOW);
         clock::delay(20ms);
-        nrst_gpio->set();
+        nrst_gpio->set_high();
         clock::delay(20ms);
     }
     return Ok();

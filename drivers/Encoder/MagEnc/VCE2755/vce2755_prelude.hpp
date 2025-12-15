@@ -12,7 +12,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "primitive/arithmetic/angular.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -116,7 +116,7 @@ struct VCE2755_Prelude{
             return calc_crc() == crc_3_0;
         }
 
-        [[nodiscard]] IResult<Angle<uq32>> parse() const {
+        [[nodiscard]] IResult<Angular<uq32>> parse() const {
             if(!is_crc_valid()) [[unlikely]]
                 return Err(Error::InvalidCrc);
 
@@ -125,7 +125,7 @@ struct VCE2755_Prelude{
 
             const auto b18 = static_cast<uint32_t>(b20() >> 2);
             const auto turns = static_cast<uq32>(uq18::from_bits(b18));
-            return Ok(Angle<uq32>::from_turns(turns));
+            return Ok(Angular<uq32>::from_turns(turns));
         }
     private:
         [[nodiscard]] constexpr uint32_t b20() const{
@@ -157,7 +157,7 @@ struct VCE2755_Prelude{
             }
             
             // Finalize CRC by processing 4 more bits
-            for(int i = 0; i < 4; i++) {
+            for(size_t i = 0; i < 4; i++) {
                 uint8_t msb = (crc >> 3) & 1;
                 crc <<= 1;
                 if(msb) {
@@ -185,7 +185,7 @@ struct VCE2755_Prelude{
 
 struct VCE2755_Regset:public VCE2755_Prelude{
     //0x00
-    struct R8_ChipId:public Reg8<>{
+    struct [[nodiscard]] R8_ChipId:public Reg8<>{
         static constexpr Package KEY1 = Package::SOIC8;
         static constexpr Package KEY2 = Package::TQFN3;
 
@@ -200,7 +200,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     static_assert(sizeof(Packet) == 4);
 
     //0x40
-    struct R8_IO:public Reg8<> {
+    struct [[nodiscard]] R8_IO:public Reg8<> {
         uint8_t spi_3wire_en:1;
 
         //0: 2mA 
@@ -212,20 +212,20 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     };
 
     //0x41
-    struct R8_AbzInvert:public Reg8<> {
+    struct [[nodiscard]] R8_AbzInvert:public Reg8<> {
         uint8_t invert_en:1;
         uint8_t :7;
     };
 
     //0x42
-    struct R8_PwmMode:public Reg8<> {
+    struct [[nodiscard]] R8_PwmMode:public Reg8<> {
         uint8_t :6;
         PwmFreq pwm_mode:1;
         uint8_t :1;
     };
 
     //0x43
-    struct R8_Direction:public Reg8<> {
+    struct [[nodiscard]] R8_Direction:public Reg8<> {
         uint8_t :5;
 
         // 0:磁铁在芯片上方顺时针旋转（B 超前 A 1/4 周期），角度递增(如图 4)
@@ -241,7 +241,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
     //0x46,0x47
 
     //0x48
-    struct R8_Hysteresis:public Reg8<> {
+    struct [[nodiscard]] R8_Hysteresis:public Reg8<> {
         uint8_t :5;
         Hysteresis hysteresis:3;
     };

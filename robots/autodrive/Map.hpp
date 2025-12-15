@@ -66,7 +66,7 @@ public:
         }
     }
 
-    [[nodiscard]] Angle<real_t> to_angle(const Map & map) const {
+    [[nodiscard]] Angular<real_t> to_angle(const Map & map) const {
         switch(kind_){
             default:
                 HALT;

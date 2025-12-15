@@ -24,7 +24,7 @@ using namespace ymd::drivers;
 // void U13T::lineCb(){
 //     if(recv.size() == 12){
 //         constexpr auto cmds = std::to_array<char>({0x7f, 0x04, 0x00, 0x11, 0x04, 0x11});
-//         uart_.writeN((const char *)cmds.begin(), (size_t)cmds.size());
+//         uart_.write_chars((const char *)cmds.begin(), (size_t)cmds.size());
 //     }else{
 //         uint8_t id = matcher.matchID(&recv[11]);
 
@@ -53,7 +53,7 @@ using namespace ymd::drivers;
 // void U13T::update(){
 //     if(uart_.available()){
 //         char chr;
-//         uart_.read1(chr);
+//         uart_.read_char(chr);
 //         buffer.push_back(chr);
 //         dead_ticks = dead_limit;
 //     }

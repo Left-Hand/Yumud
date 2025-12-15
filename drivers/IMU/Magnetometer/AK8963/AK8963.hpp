@@ -33,7 +33,7 @@ public:
     [[nodiscard]] IResult<> set_data_width(const uint8_t bits);
     [[nodiscard]] IResult<> set_mode(const Mode mode);
 private:
-    AsahiKaseiSensor_Phy phy_;
+    AsahiKaseiImu_Phy phy_;
     AK8963_Regs regs_ = {};
 
     bool data_valid_ = false;
@@ -66,12 +66,6 @@ private:
 
     [[nodiscard]] IResult<Vec3<uint8_t>> get_coeff();
 
-    static constexpr real_t conv_data_to_ut(const int16_t data, const bool is_16_bits){
-        if(is_16_bits){
-            return (data * iq16(0.15));
-        }else{
-            return (data * iq16(0.6));
-        }
-    }
+
 };
 };

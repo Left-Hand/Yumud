@@ -1,7 +1,7 @@
 #pragma once
 
-#include "types/vectors/complex.hpp"
-#include "types/vectors/polar.hpp"
+#include "algebra/vectors/complex.hpp"
+#include "algebra/vectors/polar.hpp"
 
 namespace ymd::dsp{
 

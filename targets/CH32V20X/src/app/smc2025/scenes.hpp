@@ -1,7 +1,7 @@
 #pragma once
 
 #include "render.hpp"
-#include "types/gesture/camview2.hpp"
+#include "algebra/gesture/camview2.hpp"
 
 
 static constexpr real_t PIXELS_PER_METER = 10;
@@ -29,7 +29,7 @@ template<typename T>
 }
 template<typename T>
 [[nodiscard]] constexpr Isometry2<T> revolve_by_radius_and_rotation(
-        const Isometry2<T> iso, const T radius, const Angle<T> angle)  {
+        const Isometry2<T> iso, const T radius, const Angular<T> angle)  {
 
     const auto v2 = iso.rotation.to_vec2(radius);
     const auto ar = angle.is_positive() ? v2.forward_90deg() : v2.backward_90deg();
@@ -58,14 +58,14 @@ public:
         road_width_ = cfg.road_width;
     }
     [[nodiscard]] constexpr ElementWithPlacement<AnnularSector<iq16, iq16>> spawn_annular_sector(
-        const real_t radius, const Angle<real_t> angle){
+        const real_t radius, const Angular<real_t> angle){
         ASSERT(radius > 0);
         const auto v_angle = viewpoint_.rotation.to_angle();
-        const Angle<real_t> start_angle = (((angle > 0_deg) ? 
+        const Angular<real_t> start_angle = (((angle > 0_deg) ? 
                 (v_angle - 90_deg)
                 : (v_angle + angle + 90_deg)));
 
-        const Angle<real_t> stop_angle = ((angle > 0_deg) ? 
+        const Angular<real_t> stop_angle = ((angle > 0_deg) ? 
                 (v_angle + angle - 90_deg)
                 : (v_angle + 90_deg));
 
@@ -76,7 +76,7 @@ public:
             .radius_range = Range2<iq16>::from_center_and_half_length(
                 radius, road_width_ / 2),
             
-            .angle_range = AngleRange<iq16>::from_start_and_stop(start_angle, stop_angle)
+            .angle_range = AngularRange<iq16>::from_start_and_stop(start_angle, stop_angle)
         }; 
         
         const auto place = Placement{

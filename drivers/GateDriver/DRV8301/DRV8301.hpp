@@ -1,6 +1,7 @@
 #pragma once
 
 #include "drv8301_prelude.hpp"
+#include "core/io/regs.hpp"
 
 namespace ymd::drivers{
 

@@ -14,7 +14,7 @@ void ZdtMotorPhy::can_write_bytes(
     auto iter = Bytes2CanFrameIterator(id, func_code, bytes);
     while(iter.has_next()){
         const auto msg = iter.next();
-        can.write(msg).examine();
+        can.try_write(msg).examine();
     }
 }
 
@@ -29,7 +29,7 @@ void ZdtMotorPhy::uart_write_bytes(
     buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
     buf.append_unchecked(bytes);
 
-    uart.writeN(
+    uart.try_write_chars(
         reinterpret_cast<const char *>(buf.data()),
         buf.size()
     );

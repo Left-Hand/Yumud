@@ -3,7 +3,7 @@
 
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "primitive/arithmetic/angular.hpp"
 #include "core/utils/Errno.hpp"
 
 
@@ -50,7 +50,7 @@ OutputStream& operator << (OutputStream& os, const drivers::details::EncoderErro
 namespace ymd::drivers{
 class EncoderIntf{
 public:
-    virtual Result<Angle<uq32>, EncoderError> read_lap_angle() = 0;
+    virtual Result<Angular<uq32>, EncoderError> read_lap_angle() = 0;
     virtual Result<void, EncoderError> update() = 0;
     virtual ~EncoderIntf() = default;
 };

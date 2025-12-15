@@ -1,10 +1,10 @@
 #include "paw3395.hpp"
 
 
-// https://github.com/ttwards/motor/blob/939f1db78dcaae6eb819dcb54b6146d94db7dffc/drivers/sensor/paw3395/paw3395.h#L122
+
 
 using namespace ymd;
-using namespace ymd::drivers;
+using namespace ymd::drivers::paw3395;
 
 using Self = PAW3395;
 
@@ -12,7 +12,7 @@ using Error = Self::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-
+// https://github.com/ttwards/motor/blob/939f1db78dcaae6eb819dcb54b6146d94db7dffc/drivers/sensor/paw3395/paw3395.h#L122
 // https://github.com/dotdotchan/bs2x_sdk/blob/main/application/samples/products/sle_mouse_with_dongle/mouse_sensor/mouse_sensor_paw3395.c
 
 #define BURST_MOTION_READ               0x16
@@ -52,7 +52,7 @@ IResult<> Self::corded_gaming(){
 
 IResult<> Self::validate(){
 	uint8_t reg_val;
-	if(const auto res = read_reg(PAW3395_REG_PRODUCT_ID, reg_val);
+	if(const auto res = read_reg(RegAddr::PRODUCT_ID, reg_val);
 		res.is_err()) return res;
 	if(reg_val != PAW3395_PRODUCT_ID)
 		return Err(Error::InvalidProductId);
@@ -62,7 +62,7 @@ IResult<> Self::validate(){
 IResult<> Self::set_dpi(uint16_t dpi_num){
 
 	// 设置分辨率模式：X轴和Y轴分辨率均由RESOLUTION_X_LOW和RESOLUTION_X_HIGH定义
-	if(const auto res = write_reg(PAW3395_REG_MOTION, 0x00);
+	if(const auto res = write_reg(RegAddr::MOTION, 0x00);
 		res.is_err()) return res;
 
 	// 两个8位寄存器设置X轴分辨率
@@ -70,18 +70,18 @@ IResult<> Self::set_dpi(uint16_t dpi_num){
 		static_cast<uint16_t>((dpi_num / 50)));
 
 	//分别写入x,y寄存器
-	if(const auto res = write_reg(PAW3395_REG_RESOLUTION_X_LOW, temp_low);
+	if(const auto res = write_reg(RegAddr::RESOLUTION_X_LOW, temp_low);
 		res.is_err()) return res;
-	if(const auto res = write_reg(PAW3395_REG_RESOLUTION_X_HIGH, temp_high);
+	if(const auto res = write_reg(RegAddr::RESOLUTION_X_HIGH, temp_high);
 		res.is_err()) return res;
 
-	if(const auto res = write_reg(PAW3395_REG_RESOLUTION_Y_LOW, temp_low);
+	if(const auto res = write_reg(RegAddr::RESOLUTION_Y_LOW, temp_low);
 		res.is_err()) return res;
-	if(const auto res = write_reg(PAW3395_REG_RESOLUTION_Y_HIGH, temp_high);
+	if(const auto res = write_reg(RegAddr::RESOLUTION_Y_HIGH, temp_high);
 		res.is_err()) return res;
 
 	// 更新分辨率
-	if(const auto res = write_reg(PAW3395_REG_SET_RESOLUTION, 0x01);
+	if(const auto res = write_reg(RegAddr::SET_RESOLUTION, 0x01);
 		res.is_err()) return res;
 
 	return Ok();
@@ -89,13 +89,13 @@ IResult<> Self::set_dpi(uint16_t dpi_num){
 
 IResult<> Self::set_lift_off(bool height){
 	// 1. 将值0x0C写入寄存器0x7F
-	if(const auto res = write_reg(0x7F, 0x0C);
+	if(const auto res = write_reg(static_cast<RegAddr>(0x7F), 0x0C);
 		res.is_err()) return res;
 	// 2. 将值0x01写入寄存器0x4E
-	if(const auto res = write_reg(0x4E, height ? 0x01 : 0x00); // 0x4E 未定义
+	if(const auto res = write_reg(static_cast<RegAddr>(0x4E), height ? 0x01 : 0x00); // 0x4E 未定义
 		res.is_err()) return res;
 	// 3. 将值0x00写入寄存器0x7F
-	if(const auto res = write_reg(0x7F, 0x00);
+	if(const auto res = write_reg(static_cast<RegAddr>(0x7F), 0x00);
 		res.is_err()) return res;
 
 	return Ok();
@@ -103,20 +103,20 @@ IResult<> Self::set_lift_off(bool height){
 
 IResult<bool> Self::is_motioned(){
 	uint8_t temp = 0;
-	if(const auto res = read_reg(PAW3395_REG_MOTION, temp);
+	if(const auto res = read_reg(RegAddr::MOTION, temp);
 		res.is_err()) return Err(res.unwrap_err());
 	return Ok(temp != 0);
 }
 
 IResult<Vec2i> Self::query_xy(){
 	const int16_t x = ({
-		const auto res = read_i16(PAW3395_REG_DELTA_X_L, PAW3395_REG_DELTA_X_H);
+		const auto res = read_i16(RegAddr::DELTA_X_L, RegAddr::DELTA_X_H);
 		if(res.is_err()) return Err(res.unwrap_err());
 		res.unwrap();
 	});
 
 	const int16_t y = ({
-		const auto res = read_i16(PAW3395_REG_DELTA_Y_L, PAW3395_REG_DELTA_Y_H);
+		const auto res = read_i16(RegAddr::DELTA_Y_L, RegAddr::DELTA_Y_H);
 		if(res.is_err()) return Err(res.unwrap_err());
 		res.unwrap();
 	});
@@ -139,12 +139,12 @@ IResult<Vec2i> Self::update(){
 IResult<> Self::enable_ripple(const Enable en){
 
 	uint8_t temp ;
-	if(const auto res = read_reg(PAW3395_REG_RIPPLE_CONTROL, temp);
+	if(const auto res = read_reg(RegAddr::RIPPLE_CONTROL, temp);
 		res.is_err()) return res;
 	
 	const auto temp2 = en == EN ? 
 		(temp | 0x80) : temp & (~0x80);
-	if(const auto res = write_reg(PAW3395_REG_RIPPLE_CONTROL, temp2);
+	if(const auto res = write_reg(RegAddr::RIPPLE_CONTROL, temp2);
 		res.is_err()) return res;
 
 	return Ok();
@@ -152,7 +152,7 @@ IResult<> Self::enable_ripple(const Enable en){
 
 IResult<> Self::powerup(){
 	/* Write register and data */
-	if(const auto res = write_reg(PAW3395_REG_POWER_UP_RESET, 0x5A);
+	if(const auto res = write_reg(RegAddr::POWER_UP_RESET, 0x5A);
 		res.is_err()) return res;
 
 	clock::delay(5ms);
@@ -168,7 +168,7 @@ IResult<> Self::powerup(){
 
 	for (size_t retry = 0; retry < MAX_RETRY_TIMES; retry++) {
 		uint8_t temp;
-		const auto res = read_reg(0x6C, temp);
+		const auto res = read_reg(static_cast<RegAddr>(0x6C), temp);
 		if(res.is_err())
 			return Err(res.unwrap_err());
 
@@ -182,34 +182,34 @@ IResult<> Self::powerup(){
 	}
 
 	if(!is_susccessfully_inited){
-		if(const auto res = write_reg(0x7F, 0x14);
+		if(const auto res = write_reg(static_cast<RegAddr>(0x7F), 0x14);
 			res.is_err()) return res;
-		if(const auto res = write_reg(0x6C, 0x00);
+		if(const auto res = write_reg(static_cast<RegAddr>(0x6C), 0x00);
 			res.is_err()) return res;
-		if(const auto res = write_reg(0x7F, 0x00);
+		if(const auto res = write_reg(static_cast<RegAddr>(0x7F), 0x00);
 			res.is_err()) return res;
 	}
 
 	// 138. 将值0x70写入寄存器0x22
-	if(const auto res = write_reg(0x22, 0x70);
+	if(const auto res = write_reg(static_cast<RegAddr>(0x22), 0x70);
 		res.is_err()) return res; // 0x22 未定义
 	// 139. 将值0x01写入寄存器0x22
-	if(const auto res = write_reg(0x22, 0x01);
+	if(const auto res = write_reg(static_cast<RegAddr>(0x22), 0x01);
 		res.is_err()) return res; // 0x22 未定义
 	// 140. 将值0x00写入寄存器0x22
-	if(const auto res = write_reg(0x22, 0x00);
+	if(const auto res = write_reg(static_cast<RegAddr>(0x22), 0x00);
 		res.is_err()) return res; // 0x22 未定义
 	// 141. 将值0x00写入寄存器0x55
-	if(const auto res = write_reg(0x55, 0x00);
+	if(const auto res = write_reg(static_cast<RegAddr>(0x55), 0x00);
 		res.is_err()) return res; // 0x55 未定义
 	// 142. 将值0x07写入寄存器0x7F
-	if(const auto res = write_reg(0x7F, 0x07);
+	if(const auto res = write_reg(static_cast<RegAddr>(0x7F), 0x07);
 		res.is_err()) return res;
 	// 143. 将值0x40写入寄存器0x40
-	if(const auto res = write_reg(0x40, 0x40);
+	if(const auto res = write_reg(static_cast<RegAddr>(0x40), 0x40);
 		res.is_err()) return res; // 0x40 未定义
 	// 144. 将值0x00写入寄存器0x7F
-	if(const auto res = write_reg(0x7F, 0x00);
+	if(const auto res = write_reg(static_cast<RegAddr>(0x7F), 0x00);
 		res.is_err()) return res;
 	return Ok();
 }
@@ -238,9 +238,9 @@ IResult<> Self::init(const Config & cfg) {
 }
 
 
-IResult<> Self::write_reg(const uint8_t addr, const uint8_t data){
+IResult<> Self::write_reg(const RegAddr addr, const uint8_t data){
 	const std::array<uint8_t, 2> temp = {
-		uint8_t(addr| 0x80),
+		uint8_t(std::bit_cast<uint8_t>(addr) | 0x80),
 		data
 	};
 
@@ -249,9 +249,9 @@ IResult<> Self::write_reg(const uint8_t addr, const uint8_t data){
 	return Ok();
 }
 
-IResult<> Self::read_reg(const uint8_t addr, uint8_t & data){
+IResult<> Self::read_reg(const RegAddr addr, uint8_t & data){
 	const std::array<uint8_t, 2> pbuf_tx = {
-		uint8_t(addr| 0x80),
+		uint8_t(std::bit_cast<uint8_t>(addr) | 0x80),
 		0x00
 	};
 
@@ -266,7 +266,7 @@ IResult<> Self::read_reg(const uint8_t addr, uint8_t & data){
 	return Ok();
 }
 
-IResult<int16_t> Self::read_i16(const uint8_t addr1, const uint8_t addr2){
+IResult<int16_t> Self::read_i16(const RegAddr addr1, const RegAddr addr2){
 	uint8_t low_byte;
 	uint8_t high_byte;
 
@@ -282,7 +282,7 @@ IResult<int16_t> Self::read_i16(const uint8_t addr1, const uint8_t addr2){
 
 IResult<> Self::write_list(std::span<const std::pair<uint8_t, uint8_t>> list){
 	for(const auto & [addr, data] : list){
-		if(const auto res = write_reg(addr, data); 
+		if(const auto res = write_reg(std::bit_cast<RegAddr>(addr), data); 
 			res.is_err()) return res;
 	}
 	return Ok();

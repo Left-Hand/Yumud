@@ -66,28 +66,7 @@ private:
     hal::PinMask buf_mask_ = hal::PinMask::zero();
     AW9523_Regset regs_ = {};
 
-    [[nodiscard]] static constexpr RegAddr 
-    get_dim_addr(const Nth nth){
-        switch(nth.count()){
-            case 0:  return RegAddr::DimP00;
-            case 1:  return RegAddr::DimP01;
-            case 2:  return RegAddr::DimP02;
-            case 3:  return RegAddr::DimP03;
-            case 4:  return RegAddr::DimP04;
-            case 5:  return RegAddr::DimP05;
-            case 6:  return RegAddr::DimP06;
-            case 7:  return RegAddr::DimP07;
-            case 8:  return RegAddr::DimP10;
-            case 9:  return RegAddr::DimP11;
-            case 10: return RegAddr::DimP12;
-            case 11: return RegAddr::DimP13;
-            case 12: return RegAddr::DimP14;
-            case 13: return RegAddr::DimP15;
-            case 14: return RegAddr::DimP16;
-            case 15: return RegAddr::DimP17;
-            default: __builtin_unreachable();
-        }
-    }
+
 
     [[nodiscard]] static constexpr bool 
     is_index_valid(const size_t idx){

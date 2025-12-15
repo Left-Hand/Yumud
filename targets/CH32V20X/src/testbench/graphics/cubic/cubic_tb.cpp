@@ -14,7 +14,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
 
-#include "types/vectors/vector3.hpp"
+#include "algebra/vectors/vec3.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
@@ -419,7 +419,10 @@ static void precompute_2(const float angle)
 
 void cubic_main(void){
 
-    UART.init({576000});
+    DEBUGGER_INST.init({
+        hal::UART2_REMAP_PA2_PA3,
+        576000
+    });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();
@@ -445,14 +448,15 @@ void cubic_main(void){
     lcd_blk.outpp(HIGH);
     #endif
 
-    spi.init({144_MHz});
-    // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
+    spi.init({
+		.remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
+		.baudrate = hal::NearestFreq(144_MHz)
+	});
 
-    // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     drivers::ST7789 tft{
 		drivers::ST7789_Phy{
 			&spi, 
-			spi.allocate_cs_gpio(&lcd_cs).unwrap(), 
+			spi.allocate_cs_pin(&lcd_cs).unwrap(), 
 			&lcd_dc, 
 			&dev_rst
 		},

@@ -9,11 +9,5 @@
 namespace ymd{
 
 template<size_t N>
-struct CharArray{
-
-
-
-private:
-    std::array<char, N> chars_;
-};
+using CharArray = std::array<char, N>;
 }

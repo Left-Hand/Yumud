@@ -1,17 +1,20 @@
 #pragma once
 
+
+// 参考来源
 // https://github.com/hnguy169/RM3100-Arduino
 // https://github.com/lmnop100/RM3100-Driver/blob/master/RM3100.h
+
+//  * 注意：本实现为完全原创，未使用上述项目的任何代码。
+//  * 参考仅用于理解问题领域，未复制任何具体实现。
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "hal/gpio/vport.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "primitive/pwm_channel.hpp"
-#include "types/vectors/vector3.hpp"
+#include "algebra/vectors/vec3.hpp"
 
 
 namespace ymd::drivers{

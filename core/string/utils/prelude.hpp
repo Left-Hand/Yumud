@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
-#include <type_traits>
+#include "core/utils/Errno.hpp"
+#include "core/stream/ostream.hpp"
 
 namespace ymd::strconv2{
 

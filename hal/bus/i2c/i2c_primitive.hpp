@@ -94,7 +94,7 @@ public:
         return I2cAddrWithRw<R>::from_7bits_write(i2c_addr_);
     }
 
-    [[nodiscard]] constexpr uint16_t as_u7() const {return i2c_addr_;}
+    [[nodiscard]] constexpr uint16_t to_u7() const {return i2c_addr_;}
 
 
     constexpr I2cAddr(const I2cAddr<7, R> & other) = default;
@@ -113,7 +113,7 @@ public:
         return I2cAddr<10, R>{uint16_t(i2c_addr)};
     }
 
-    [[nodiscard]] constexpr uint16_t as_u10() const {return i2c_addr_;}
+    [[nodiscard]] constexpr uint16_t to_u10() const {return i2c_addr_;}
 
     constexpr I2cAddr(const I2cAddr<10, R> & other) = default;
     constexpr I2cAddr(I2cAddr<10, R> && other) = default;

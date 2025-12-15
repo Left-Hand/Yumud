@@ -526,7 +526,7 @@ IResult<> Self::send_xtalk_data(Resolution resolution){
 IResult<> Self::set_i2c_address(hal::I2cSlaveAddr<7> i2c_addr){
 	if(const auto res = write_byte(0x7fff, 0x00);
 		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = write_byte(0x4, i2c_addr.as_u7());
+	if(const auto res = write_byte(0x4, i2c_addr.to_u7());
 		res.is_err()) return Err(res.unwrap_err());
 	if(const auto res = write_byte(0x7fff, 0x02);
 		res.is_err()) return Err(res.unwrap_err());

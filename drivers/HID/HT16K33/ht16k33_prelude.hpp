@@ -39,8 +39,8 @@ private:
 
 namespace ymd::drivers{
 
-struct HT16K33_Prelude{
-    enum class Error_Kind:uint8_t{
+struct [[nodiscard]] HT16K33_Prelude{
+    enum class [[nodiscard]]  Error_Kind:uint8_t{
         DisplayBitIndexOutOfRange,
         DisplayByteIndexOutOfRange,
         DisplayPayloadOversize,
@@ -60,7 +60,7 @@ struct HT16K33_Prelude{
     using RegAddr = uint8_t;
 
 
-    //  1 1 1 0 A2 A1 A0 0
+    //  1 1 1 0 A2 A1 A0
     static constexpr auto DEFAULT_I2C_ADDR = 
         hal::I2cSlaveAddr<7>::from_u7(0b1110000);
 
@@ -69,7 +69,7 @@ struct HT16K33_Prelude{
         const BoolLevel A1,
         const BoolLevel A0
     ){
-        return hal::I2cSlaveAddr<7>::from_u7(0b1110000
+        return hal::I2cSlaveAddr<7>::from_u7(DEFAULT_I2C_ADDR.to_u7()
             | ((A2 == HIGH) ? 0b100 : 0)
             | ((A1 == HIGH) ? 0b010 : 0)
             | ((A0 == HIGH) ? 0b001 : 0)
@@ -85,33 +85,33 @@ struct HT16K33_Prelude{
         );
     }
 
-    enum class Package:uint8_t{
+    enum class [[nodiscard]] Package:uint8_t{
         SOP20,
         SOP24,
         SOP28
     };
 
-    enum class PulseDuty:uint8_t{
+    enum class [[nodiscard]] PulseDuty:uint8_t{
         _1_16, _2_16, _3_16, _4_16,
         _5_16, _6_16, _7_16, _8_16,
         _9_16, _10_16, _11_16, _12_16,
         _13_16, _14_16, _15_16, _16_16
     };
 
-    enum class BlinkFreq:uint8_t{
+    enum class [[nodiscard]] BlinkFreq:uint8_t{
         OFF = 0b00,
         _2HZ = 0b01,
         _1HZ = 0b01,
         _0_5HZ = 0b01,
     };
 
-    enum class IntPinFunc:uint8_t{
+    enum class [[nodiscard]] IntPinFunc:uint8_t{
         AsRowDriver,
         InterruptActiveLow,
         InterruptActiveHigh
     };
 
-    struct Command{
+    struct [[nodiscard]] Command final{
 
     public:
         template<typename T>
@@ -126,17 +126,17 @@ struct HT16K33_Prelude{
         uint8_t raw_;
     };
 
-    struct Settings{
-        struct SOP28Settings{
+    struct [[nodiscard]] Settings final{
+        struct [[nodiscard]] SOP28Settings final{
             static constexpr Package PACKAGE = Package::SOP28;
         };
 
-        struct SOP20Settings{
+        struct [[nodiscard]] SOP20Settings final{
             static constexpr Package PACKAGE = Package::SOP20;
         };
     };
 
-    struct Config{
+    struct [[nodiscard]] Config final{
         IntPinFunc int_pin_func = IntPinFunc::InterruptActiveLow;
         PulseDuty pulse_duty = PulseDuty::_10_16;
         BlinkFreq blink_freq = BlinkFreq::OFF;
@@ -150,14 +150,14 @@ struct HT16K33_Prelude{
         // }
     };
 
-    struct KeyData{
-        constexpr bool test(const uint8_t x ,const uint8_t y) const {
+    struct [[nodiscard]] KeyData final{
+        [[nodiscard]] constexpr bool test(const uint8_t x ,const uint8_t y) const {
             const bool is_high_byte = x >= 8;
             const auto byte = buf_[y * 2 + is_high_byte];
             return byte & (1 << (x % 8));
         }
 
-        constexpr Option<std::tuple<uint8_t, uint8_t>> to_first_xy() const {
+        constexpr Option<std::tuple<uint8_t, uint8_t>> first_xy() const {
             const auto it = std::find_if(buf_.begin(), buf_.end(), 
                 [](const uint8_t data){return data != 0x00;}
             );
@@ -179,7 +179,7 @@ struct HT16K33_Prelude{
             return std::bitset<13>((high_byte << 8) | low_byte);
         }
 
-        constexpr std::span<uint8_t> as_bytes(){
+        constexpr std::span<uint8_t> as_bytes_mut(){
             return std::span(buf_);
         }
 
@@ -275,11 +275,11 @@ struct HT16K33_Regs:public HT16K33_Prelude{
     // };
 
 
-    static constexpr size_t GC_RAM_SIZE = 16;
-    static constexpr size_t KEY_RAM_SIZE = 3;
+    static constexpr size_t NUM_GC_RAM_BYTES = 16;
+    static constexpr size_t NUM_KEY_RAM_SIZE = 3;
 
     struct GcRam final{
-        std::array<uint8_t, GC_RAM_SIZE> bytes;
+        std::array<uint8_t, NUM_GC_RAM_BYTES> bytes;
 
         GcRam() = default;
 
@@ -296,7 +296,7 @@ struct HT16K33_Regs:public HT16K33_Prelude{
         }
     };
     
-    using KeyRam = std::array<uint8_t, KEY_RAM_SIZE>;
+    using KeyRam = std::array<uint8_t, NUM_KEY_RAM_SIZE>;
     
     GcRam gc_ram_;
 };

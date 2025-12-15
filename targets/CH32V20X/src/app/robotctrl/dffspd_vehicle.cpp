@@ -1,18 +1,20 @@
 #include "src/testbench/tb.h"
 
 #include "core/clock/time.hpp"
+#include "core/string/string_view.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
+
 
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
-#include "types/transforms/euler.hpp"
+#include "algebra/transforms/euler.hpp"
 
 #include "dsp/filter/homebrew/debounce_filter.hpp"
 #include "dsp/motor_ctrl/position_filter.hpp"
@@ -33,21 +35,21 @@ struct PwmAndDirPhy final{
 
     explicit PwmAndDirPhy(const Config & cfg):
             pwm_(cfg.pwm.deref()),
-            dir_gpio_(cfg.dir_gpio.deref())
+            dir_pin_(cfg.dir_gpio.deref())
         {;}
 
     void set_dutycycle(const iq31 dutycycle){
         if(dutycycle > 0){
-            dir_gpio_.set();
+            dir_pin_.set_high();
             pwm_.set_dutycycle(dutycycle);
         }else{
-            dir_gpio_.clr();
+            dir_pin_.set_low();
             pwm_.set_dutycycle(-dutycycle);
         }
     }
 private:
     hal::TimerOC & pwm_;
-    hal::GpioIntf & dir_gpio_;
+    hal::GpioIntf & dir_pin_;
 };
 
 struct DualPwmPhy final{
@@ -93,7 +95,6 @@ private:
     static constexpr dsp::DebounceFilter::Config DEBOUNCE_CONFIG{
         .pipe_length = 8,
         .threshold = 2,
-        .polarity = true
     };
 
     bool last_state_ = false;
@@ -122,7 +123,7 @@ struct PwmAndDirPhy_WithFg final{
     explicit PwmAndDirPhy_WithFg(const Config & cfg):
         deducation_(cfg.deduction),
         phy_(PwmAndDirPhy{{cfg.pwm, cfg.dir_gpio}}),
-        fg_gpio_(cfg.fg_gpio.deref())
+        fg_pin_(cfg.fg_gpio.deref())
     {}
 
     void set_dutycycle(const iq31 dutycycle){ 
@@ -132,15 +133,15 @@ struct PwmAndDirPhy_WithFg final{
 
     void tick_10khz(){
         if(last_duty_ > 0){
-            counter_.forward_update(fg_gpio_.read());
+            counter_.forward_update(fg_pin_.read());
         }else if(last_duty_ < 0) {
-            counter_.backward_update(fg_gpio_.read());
+            counter_.backward_update(fg_pin_.read());
         }
     }
 
-    constexpr Angle<iq31> get_angle() const {
+    constexpr Angular<iq31> get_angle() const {
         const auto turns = iq16::from_bits((int64_t(counter_.count()) * int64_t(1 << 16)) / deducation_);
-        return Angle<iq31>::from_turns(turns);
+        return Angular<iq31>::from_turns(turns);
         // return iq16(counter_.count()) >> 6;
     }
 
@@ -150,7 +151,7 @@ struct PwmAndDirPhy_WithFg final{
 private:
     uint32_t deducation_;
     PwmAndDirPhy phy_;
-    hal::GpioIntf & fg_gpio_;
+    hal::GpioIntf & fg_pin_;
     DirAndPulseCounter counter_;
     real_t last_duty_ = 0;
 };
@@ -181,9 +182,9 @@ struct DualPwmMotorPhy_WithAbEnc final{
         encoder_.tick();
     }
 
-    constexpr Angle<iq31> get_angle() const {
+    constexpr Angular<iq31> get_angle() const {
         const auto turns = iq16::from_bits((int64_t(encoder_.count()) * int64_t(1 << 16)) / deducation_);
-        return Angle<iq31>::from_turns(turns);
+        return Angular<iq31>::from_turns(turns);
     }
 
     constexpr int32_t count() const {
@@ -209,6 +210,7 @@ void diffspd_vehicle_main(){
     auto & DBG_UART = hal::uart2;
 
     DBG_UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = UART_BAUD
     });
 
@@ -220,15 +222,28 @@ void diffspd_vehicle_main(){
     auto & timer = hal::timer3;
 
     timer.init({
+        .remap = hal::TIM3_REMAP_B4_B5_B0_B1,
         .count_freq = hal::NearestFreq(PWM_FREQ),
         .count_mode = hal::TimerCountMode::Up
-    }, EN);
+    })
+            .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+    timer.start();
 
     timer.enable_arr_sync(EN);
 
 
     auto init_pwm = [](hal::TimerOC & pwm){
-        pwm.init({.valid_level = LOW});
+        pwm.init([]{
+            auto config = timer.oc<4>().default_config();
+            config.valid_level = LOW;
+            return config;
+        }());
     };
 
     auto init_fg_gpio = [](hal::GpioIntf & gpio){
@@ -313,13 +328,13 @@ void diffspd_vehicle_main(){
     auto motor_ctrl_cb = [&](){
         motor_td_.update(motor_phy.get_angle().cast_inner<iq16>());
 
-        const auto ctime = clock::time();
+        const auto now_secs = clock::time();
         const auto freq = 0.2_r;
         // const auto amp = 0.5_r;
         const auto amp = 1.0_r;
         const auto [targ_position, targ_speed] = std::make_tuple(
-            amp * sinpu(ctime * freq) + 9,
-            freq * amp * cospu(ctime * freq)
+            amp * math::sinpu(now_secs * freq) + 9,
+            freq * amp * math::cospu(now_secs * freq)
         );
 
         const auto position = motor_td_.accumulated_angle().to_turns();
@@ -330,7 +345,7 @@ void diffspd_vehicle_main(){
             0.97_r
         );
         motor_phy.set_dutycycle(dutycycle);
-        // motor_phy.set_dutycycle(amp * sinpu(ctime * freq));
+        // motor_phy.set_dutycycle(amp * math::sinpu(now_secs * freq));
     };
 
 

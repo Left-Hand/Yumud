@@ -1,6 +1,9 @@
 //这个驱动尚未完成
 
-//这段代码基于 https://github.com/TomSievers/vl53l1x-rs/blob/master/src/lib.rs 改编
+//参考资料：
+//MIT license 
+// https://github.com/TomSievers/vl53l1x-rs/blob/master/src/lib.rs
+
 //基本与rust代码保持一致
 
 //! Port of the STM IMG009 Ultra Lite Driver for the VL53L1X.
@@ -95,7 +98,7 @@
 #include "core/utils/Result.hpp"
 #include "details/reg_map.hpp"
 
-namespace ymd::drivers{
+namespace ymd::drivers::vl53l1x{
 
 struct VL53L1X_Prelude{
 struct [[nodiscard]] SwVersion{
@@ -138,7 +141,7 @@ private:
 };
 
 
-struct [[nodiscard] ]Threshold{
+struct [[nodiscard]] Threshold{
     uint16_t low;
     uint16_t high;
     Window window;

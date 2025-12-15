@@ -12,9 +12,9 @@ public:
     virtual void set_nth(const Nth nth);
     virtual void clr_nth(const Nth nth);
 
-    void set_pin(const PinNth pin){
+    void set_pin(const PinSource pin){
         set_by_mask(PinMask(pin));}
-    void clr_pin(const PinNth pin){
+    void clr_pin(const PinSource pin){
         clr_by_mask(PinMask(pin));}
 
     virtual void set_by_mask(const PinMask mask) = 0;

@@ -45,7 +45,10 @@ DEF_ERROR_WITH_KINDS(MyError, ST7789::Error, PainterBase::Error)
 
 void st7789_main(void){
 
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        hal::UART2_REMAP_PA2_PA3,
+        576000
+    });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();
@@ -71,14 +74,17 @@ void st7789_main(void){
     lcd_blk.outpp(HIGH);
     #endif
 
-    spi.init({144_MHz});
+    spi.init({
+        hal::SPI1_REMAP_PB3_PB4_PB5_PA15,
+        hal::NearestFreq(144_MHz)
+    });
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     drivers::ST7789 tft(
 		drivers::ST7789_Phy{
 			&spi, 
-			spi.allocate_cs_gpio(&lcd_cs).unwrap(), 
+			spi.allocate_cs_pin(&lcd_cs).unwrap(), 
 			&lcd_dc, 
 			&dev_rst
 		}, 

@@ -22,17 +22,17 @@ using IResult = typename MA730::IResult<T>;
 
 IResult<> MA730::init(const Config & cfg){
     if(const auto res = set_direction(cfg.direction);
-        unlikely(res.is_err())) return Err(res.unwrap_err());
+        res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_lap_angle();
-        unlikely(res.is_err())) return Err(res.unwrap_err());
+        res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
 IResult<uint16_t> MA730::direct_read(){
-    uint16_t data;
-    const auto res = spi_drv_.read_single<uint16_t>(data);
-    if(unlikely(res.is_err())) return Err(Error(res.unwrap_err()));
-    return Ok(data);
+    uint16_t bits;
+    const auto res = spi_drv_.read_single<uint16_t>(bits);
+    if(res.is_err()) return Err(Error(res.unwrap_err()));
+    return Ok(bits);
 }
 
 
@@ -56,7 +56,7 @@ IResult<> MA730::set_zero_data(const uint16_t data){
 }
 
 
-IResult<> MA730::set_zero_angle(const Angle<uq32> angle){
+IResult<> MA730::set_zero_angle(const Angular<uq32> angle){
     const auto data = (angle.to_turns().to_bits() >> 16);
     return set_zero_data(data);
 }
@@ -64,7 +64,7 @@ IResult<> MA730::set_zero_angle(const Angle<uq32> angle){
 IResult<MagStatus> MA730::get_mag_status(){
     auto & reg = regs_.magnitude_reg;
     const auto res = read_reg(reg);
-    if(unlikely(res.is_err())) return Err(res.unwrap_err());
+    if(res.is_err()) return Err(res.unwrap_err());
 
     const bool mgl = !(reg.mgl1 | reg.mgl2);
     const bool mgh = reg.magnitude_high;
@@ -77,7 +77,7 @@ IResult<MagStatus> MA730::get_mag_status(){
 IResult<> MA730::update(){
     const uint16_t data = ({
         const auto res = direct_read();
-        if(unlikely(res.is_err())) return Err(res.unwrap_err());
+        if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
     });
     lap_turns_ = static_cast<uq32>(uq16::from_bits(data));
@@ -151,7 +151,7 @@ IResult<> MA730::set_pulse_per_turn(uint16_t ppt){
         reg.ppt = ppt_l;
 
         if(const auto res = (write_reg(reg));
-            unlikely(res.is_err())) return Err(res.unwrap_err()); 
+            res.is_err()) return Err(res.unwrap_err()); 
     }
 
     {
@@ -161,7 +161,7 @@ IResult<> MA730::set_pulse_per_turn(uint16_t ppt){
         reg.data = ppt_h;
 
         if(const auto res = (write_reg(reg));
-            unlikely(res.is_err())) return Err(res.unwrap_err());
+            res.is_err()) return Err(res.unwrap_err());
     }
 
     return Ok();

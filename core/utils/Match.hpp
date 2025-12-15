@@ -2,6 +2,7 @@
 
 #include <tuple>
 #include "core/utils/sumtype.hpp"
+#include "core/tmp/bits/width.hpp"
 
 namespace ymd::fp{
 
@@ -51,14 +52,14 @@ public:
     constexpr PatternEquation(Pattern const &pattern, Rhs const &rhs)
         : pattern_{pattern}, rhs_{rhs} {}
 
-    static constexpr bool rhs_is_functor = magic::is_functor_v<Rhs>;
-    // static_assert(magic::is_functor_v<int> == false);
+    static constexpr bool rhs_is_functor = tmp::is_functor_v<Rhs>;
+    // static_assert(tmp::is_functor_v<int> == false);
     // using rhs_args_tuple = std::conditional_t<
     //     // rhs_is_functor,
-    //     magic::is_functor_v<Rhs>,
-    //     tuple_decay_t<magic::functor_args_tuple_t<Rhs>>,
+    //     tmp::is_functor_v<Rhs>,
+    //     tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>,
     //     // Rhs,
-    //     // tuple_decay_t<magic::functor_args_tuple_t<Rhs>>
+    //     // tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>
     //     Rhs
     //     // Rhs
     //     // void
@@ -74,35 +75,35 @@ public:
     // template<typename Obj>
     // requires (rhs_is_functor)
     // constexpr auto execute(Obj && obj) const { 
-    //     using Params = tuple_decay_t<magic::functor_args_tuple_t<Rhs>>;
+    //     using Params = tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>;
     //     if constexpr (std::is_same_v<Params, std::tuple<void>>) return rhs_();
     //     else if constexpr (std::is_same_v<Params, std::tuple<std::decay_t<Obj>>>) 
     //         return rhs_(std::forward<Obj>(obj));
     //     else {
     //         __builtin_abort();
-    //         // static_assert(magic::false_v<std::pair<Obj, Params>>);
-    //         // static_assert(magic::false_v<Params>);
+    //         // static_assert(tmp::false_v<std::pair<Obj, Params>>);
+    //         // static_assert(tmp::false_v<Params>);
     //         return None;
     //     }
     // }
     template<typename Obj>
     requires (rhs_is_functor 
-        and (not std::is_same_v<tuple_decay_t<magic::functor_args_tuple_t<Rhs>>, std::tuple<void>>) 
-        and (not std::is_same_v<tuple_decay_t<magic::functor_args_tuple_t<Rhs>>, std::tuple<std::decay_t<Obj>>>))
+        and (not std::is_same_v<tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>, std::tuple<void>>) 
+        and (not std::is_same_v<tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>, std::tuple<std::decay_t<Obj>>>))
     constexpr auto execute(Obj && obj) const { 
-        // static_assert(magic::false_v<std::pair<std::decay_t<Obj>, tuple_decay_t<magic::functor_args_tuple_t<Rhs>>>>, "unsupported para")
-        return magic::functor_ret_t<Rhs>();
+        // static_assert(tmp::false_v<std::pair<std::decay_t<Obj>, tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>>>, "unsupported para")
+        return tmp::functor_ret_t<Rhs>();
     }
 
     template<typename Obj>
-    requires (rhs_is_functor and (std::is_same_v<tuple_decay_t<magic::functor_args_tuple_t<Rhs>>, std::tuple<void>>))
+    requires (rhs_is_functor and (std::is_same_v<tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>, std::tuple<void>>))
     constexpr auto execute(Obj && obj) const { 
         return rhs_();
     }
 
 
     template<typename Obj>
-    requires (rhs_is_functor and (std::is_same_v<tuple_decay_t<magic::functor_args_tuple_t<Rhs>>, std::tuple<std::decay_t<Obj>>>))
+    requires (rhs_is_functor and (std::is_same_v<tuple_decay_t<tmp::functor_args_tuple_t<Rhs>>, std::tuple<std::decay_t<Obj>>>))
     constexpr auto execute(Obj && obj) const { 
         return rhs_(std::forward<Obj>(obj));
         // return rhs_(obj);
@@ -169,9 +170,9 @@ constexpr PatternLhs<std::decay_t<T>> operator |(PatternKeyword, T && other){
 }
 
 template<typename T>
-requires magic::is_functor_v<T>
+requires tmp::is_functor_v<T>
 constexpr PatternLhs<std::decay_t<T>> operator |(PatternKeyword, T && other){
-    static_assert(magic::false_v<T>);
+    static_assert(tmp::false_v<T>);
     return PatternLhs<std::decay_t<T>>(std::forward<T>(other));
 }
 

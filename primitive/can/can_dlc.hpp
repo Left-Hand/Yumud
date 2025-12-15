@@ -11,12 +11,17 @@ namespace ymd{
 class OutputStream;
 }
 
+// 不论是bxcan还是fdcan都至少需要四个比特才能表述
 namespace ymd::hal{
 
-//传统CAN的dlc字段
-struct [[nodiscard]] CanClassicDlc{
+//bxcan的dlc字段  至少需要四个比特才能表述
+struct [[nodiscard]] BxCanDlc{
     static constexpr size_t NUM_BITS = 4;
-    using Self = CanClassicDlc;
+    using Self = BxCanDlc;
+
+    static Self from_uninitialized(){
+        return Self();
+    }
 
     static consteval Self zero(){
         return Self(static_cast<uint8_t>(0));
@@ -54,21 +59,25 @@ struct [[nodiscard]] CanClassicDlc{
 private:
     uint8_t bits_;
 
-    constexpr explicit CanClassicDlc(const uint8_t bits):
+    constexpr explicit BxCanDlc(const uint8_t bits):
         bits_(bits){;}
+
+    constexpr explicit BxCanDlc(){;}
 
     friend OutputStream & operator <<(OutputStream & os, const Self & self);
 };
 
-struct [[nodiscard]] CanFdDlc{
+
+//fdcan的dlc字段 至少需要四个比特才能表述
+struct [[nodiscard]] FdCanDlc{
     static constexpr size_t NUM_BITS = 4;
-    using Self = CanFdDlc;
+    using Self = FdCanDlc;
 
     //canfd的dlc向下兼容传统can 不要求explicit
-    constexpr CanFdDlc(const CanClassicDlc & classic_dlc):    
+    constexpr FdCanDlc(const BxCanDlc & classic_dlc):    
         bits_(classic_dlc.to_bits()){;}
 
-    /// @brief 从零长开始构造
+    /// @brief 从比特位开始构造
     /// @return CANFD帧的DLC
     static constexpr Self from_bits(const uint8_t bits){
         return Self(bits);
@@ -80,10 +89,10 @@ struct [[nodiscard]] CanFdDlc{
         return Self(static_cast<uint8_t>(0));
     }
 
-    static constexpr Option<Self> from_length(const size_t length){
+    static constexpr Option<Self> try_from_length(const size_t length){
         if(length > 64) [[unlikely]]
             return None;
-        if(length <= 8) 
+        if(length <= 8) [[likely]]
             return Some(Self::from_bits(static_cast<uint8_t>(length)));
         switch(length){
             case 12:    return Some(Self::from_bits(9));
@@ -94,15 +103,15 @@ struct [[nodiscard]] CanFdDlc{
             case 48:    return Some(Self::from_bits(14));
             case 64:    return Some(Self::from_bits(15));
         }
-        __builtin_trap();
+        return None;
     }
 
     /// @brief 从不少于指定长度构造
     /// @return CANFD帧的DLC
-    static constexpr Option<Self> from_ceil_length(const size_t length){
+    static constexpr Option<Self> try_from_least_length(const size_t length){
         if(length > 64) [[unlikely]]
             return None;
-        if(length <= 8) 
+        if(length <= 8) [[likely]]
             return Some(Self::from_bits(static_cast<uint8_t>(length)));
         switch(length){
             case 9 ... 12:      return Some(Self::from_bits(9));
@@ -116,7 +125,7 @@ struct [[nodiscard]] CanFdDlc{
         return None;
     }
 
-    static constexpr Self from_length_unchecked(const size_t length){
+    static constexpr Self from_length(const size_t length){
         if(length <= 8) [[likely]]
             return Self::from_bits(static_cast<uint8_t>(length));
         switch(length){
@@ -128,19 +137,19 @@ struct [[nodiscard]] CanFdDlc{
             case 48:    return Self::from_bits(14);
             case 64:    return Self::from_bits(15);
         }
-        __builtin_unreachable();
+        __builtin_trap();
     }
 
     [[nodiscard]] constexpr size_t length() const {
         if(bits_ <= 8) [[likely]] return bits_;
         switch(bits_){
-            case 9:     return 12;
-            case 10:    return 16;
-            case 11:    return 20;
-            case 12:    return 24;
-            case 13:    return 32;
-            case 14:    return 48;
-            case 15:    return 64;
+            case 9:     return 12u;
+            case 10:    return 16u;
+            case 11:    return 20u;
+            case 12:    return 24u;
+            case 13:    return 32u;
+            case 14:    return 48u;
+            case 15:    return 64u;
         }
         __builtin_unreachable();
     };
@@ -151,7 +160,7 @@ struct [[nodiscard]] CanFdDlc{
 private:
     uint8_t bits_;
 
-    constexpr explicit CanFdDlc(const uint8_t bits):
+    constexpr explicit FdCanDlc(const uint8_t bits):
         bits_(bits){;}
 
     friend OutputStream & operator <<(OutputStream & os, const Self & self);

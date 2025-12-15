@@ -2,7 +2,7 @@
 
 #include "odrive_can_simple_primitive.hpp"
 
-namespace ymd::robots::odrive::can_simple{
+namespace ymd::robots::steadywin::can_simple{
 
 using namespace primitive;
 
@@ -15,7 +15,7 @@ struct [[nodiscard]] FrameSerializer{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using CanResult = Result<hal::CanClassicFrame, Error>;
+    using CanResult = Result<hal::BxCanFrame, Error>;
 
     static constexpr CanResult get_motor_error(AxisId axis_id){
         return request(axis_id, Command::GetMotorError);
@@ -42,7 +42,7 @@ struct [[nodiscard]] FrameSerializer{
     }
 
     static constexpr CanResult request(AxisId axis_id, Command cmd){ 
-        return Ok(hal::CanClassicFrame::from_remote(encode_id(axis_id, cmd)));
+        return Ok(hal::BxCanFrame::from_remote(encode_id(axis_id, cmd)));
     }
 
 
@@ -113,14 +113,14 @@ private:
     }
 
     static constexpr CanResult make_msg(FrameId frame_id){
-        return Ok(hal::CanClassicFrame::from_empty(frame_id.to_stdid()));
+        return Ok(hal::BxCanFrame::from_empty(frame_id.to_stdid()));
     }
 
     static constexpr CanResult make_msg(FrameId frame_id, const uint32_t arg1){
         return Ok(
-            hal::CanClassicFrame::from_parts(
+            hal::BxCanFrame::from_parts(
                 frame_id.to_stdid(),
-                hal::CanClassicPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(arg1))
+                hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(arg1))
             )
         );
     }
@@ -132,9 +132,9 @@ private:
         std::copy(arr1.begin(), arr1.end(), bytes.begin());
         std::copy(arr2.begin(), arr2.end(), bytes.begin() + 4);
         return Ok(
-            hal::CanClassicFrame::from_parts(
+            hal::BxCanFrame::from_parts(
                 frame_id.to_stdid(), 
-                hal::CanClassicPayload::from_bytes(bytes)
+                hal::BxCanPayload::from_bytes(bytes)
             )
         );
     }

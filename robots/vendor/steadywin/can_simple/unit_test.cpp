@@ -154,9 +154,9 @@ static constexpr std::array<uint8_t, 8> payload_bytes = {
     0x00, 0x00, 0x80, 0x3F, // 1.0f as little-endian bytes
     0x00, 0x00, 0x00, 0x40  // 2.0f as little-endian bytes
 };
-static constexpr auto test_frame = hal::CanClassicFrame::from_parts(
+static constexpr auto test_frame = hal::BxCanFrame::from_parts(
     stdid,
-    hal::CanClassicPayload::from_bytes(payload_bytes)
+    hal::BxCanPayload::from_bytes(payload_bytes)
 );
 
 // 测试反序列化
@@ -191,7 +191,7 @@ static_assert(set_axis_id_result.unwrap().length() == 4, "Set axis node ID paylo
 [[maybe_unused]] void test_err(){
     // 测试扩展帧被拒绝
 static constexpr auto extended_id = hal::CanExtId::from_u29(0x12345678);
-static constexpr auto extended_frame = hal::CanClassicFrame::from_remote(extended_id);
+static constexpr auto extended_frame = hal::BxCanFrame::from_remote(extended_id);
 static constexpr auto ext_frame_result = FrameDeserializer::map_frame_to_event(extended_frame);
 static_assert(ext_frame_result.is_err(), "Extended frame should result in error");
 static_assert(ext_frame_result.unwrap_err() == FrameDeserializer::Error::FrameIsNotStd, "Error should be FrameIsNotStd");
@@ -200,9 +200,9 @@ static_assert(ext_frame_result.unwrap_err() == FrameDeserializer::Error::FrameIs
 
 // 测试负载太短的情况
 static constexpr std::array<uint8_t, 3> short_payload = {0x01, 0x02, 0x03};
-static constexpr auto short_frame = hal::CanClassicFrame::from_parts(
+static constexpr auto short_frame = hal::BxCanFrame::from_parts(
     FrameId{AxisId{.bits = 1}, Command(Command::GetEncoderCount)}.to_stdid(),
-    hal::CanClassicPayload::from_bytes(short_payload)
+    hal::BxCanPayload::from_bytes(short_payload)
 );
 
 

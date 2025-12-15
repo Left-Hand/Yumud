@@ -1,5 +1,6 @@
 #pragma once
 
+// Apache-2.0 license
 // https://github.com/openrr/k/blob/main/src/ik.rs
 
 namespace ymd::kinematics{

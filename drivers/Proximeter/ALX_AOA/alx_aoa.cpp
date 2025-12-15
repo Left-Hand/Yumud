@@ -1,12 +1,12 @@
 #include "alx_aoa_prelude.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/reflect/enum.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
+using namespace ymd::drivers::alx_aoa;
 
 
-using Self = AlxAoa_StreamParser;
-using Error = Self::Error;
+using Self = AlxAoa_ParserSink;
 
 #define ALXAOA_DEBUG_EN 0
 
@@ -86,48 +86,48 @@ template<typename T>
     return std::bit_cast<T>(ret);
 }
 
-[[nodiscard]] static constexpr Result<Self::RequestCommand, Error> parse_command(
+[[nodiscard]] static constexpr Result<RequestCommand, Error> parse_command(
     const std::span<const uint8_t, 2> bytes
 ){
     const auto bits = be_bytes_to_int<uint16_t>(bytes);
     switch(bits){
-        case static_cast<uint16_t>(Self::RequestCommand::Location):
-            return Ok(Self::RequestCommand::Location);
-        case static_cast<uint16_t>(Self::RequestCommand::HeartBeat):
-            return Ok(Self::RequestCommand::HeartBeat);
+        case static_cast<uint16_t>(RequestCommand::Location):
+            return Ok(RequestCommand::Location);
+        case static_cast<uint16_t>(RequestCommand::HeartBeat):
+            return Ok(RequestCommand::HeartBeat);
         default:
             return Err(Error::InvalidCommand);
     }
 }
 
-[[nodiscard]] static constexpr Result<Self::DeviceIdCode, Error> parse_device_id(
+[[nodiscard]] static constexpr Result<DeviceIdCode, Error> parse_device_id(
     const std::span<const uint8_t, 4> bytes
 ){
     const auto bits = be_bytes_to_int<uint32_t>(bytes);
-    return Ok(Self::DeviceIdCode::from_bits(bits));
+    return Ok(DeviceIdCode::from_bits(bits));
 }
 
-[[nodiscard]] static constexpr Result<Self::TargetAngleCode, Error> parse_angle(
+[[nodiscard]] static constexpr Result<TargetAngleCode, Error> parse_angle(
     const std::span<const uint8_t, 2> bytes
 ){
     const auto bits = be_bytes_to_int<int16_t>(bytes);
-    return Ok(Self::TargetAngleCode::from_bits(bits));
+    return Ok(TargetAngleCode::from_bits(bits));
 }
 
-[[nodiscard]] static constexpr Result<Self::TargetDistanceCode, Error> parse_distance(
+[[nodiscard]] static constexpr Result<TargetDistanceCode, Error> parse_distance(
     const std::span<const uint8_t, 4> bytes
 ){
     const auto bits = be_bytes_to_int<uint32_t>(bytes);
-    return Ok(Self::TargetDistanceCode::from_bits(bits));
+    return Ok(TargetDistanceCode::from_bits(bits));
 }
 
-[[nodiscard]] static constexpr Result<Self::TargetStatus, Error> parse_tag_status(
+[[nodiscard]] static constexpr Result<TargetStatus, Error> parse_tag_status(
     const std::span<const uint8_t, 2> bytes
 ){
     const auto bits = be_bytes_to_int<uint16_t>(bytes);
-    if(bits != static_cast<uint16_t>(Self::TargetStatus::Normal)) 
+    if(bits != static_cast<uint16_t>(TargetStatus::Normal)) 
         return Err(Error::InvalidTagStatus);
-    return Ok(Self::TargetStatus{bits});
+    return Ok(TargetStatus{bits});
 }
 
 [[nodiscard]] static constexpr Result<uint16_t, Error> parse_batch_sn(
@@ -139,7 +139,7 @@ template<typename T>
 
 
 
-static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
+static Result<Location, Error> parse_location(BytesSpawner & spawner){
     // AnchorID 4 unsigned Integer 基站 ID 
     // TagID 4 unsigned Integer 标签 ID 
     // Distance 4 unsigned Integer 标签与基站间的距离，单位 cm 
@@ -196,7 +196,7 @@ static Result<Self::Location, Error> parse_location(BytesSpawner & spawner){
     });
 
 
-    const Self::Location msg = {
+    const Location msg = {
         .anchor_id = anchor_id,
         .target_id = target_id,
         .distance = distance,
@@ -282,7 +282,7 @@ void Self::push_byte(const uint8_t byte){
 
 
 
-Result<Self::Event, Self::Error>  Self::parse(){
+Result<Event, Error>  Self::parse(){
     const size_t size = payload_bytes_.size();
     if(size < 10) ALXAOA_PANIC("size too small", size, leader_info_.len);
 
@@ -359,7 +359,7 @@ Result<Self::Event, Self::Error>  Self::parse(){
             //     .anchor_id = anchor_id
             // });
             Event ev = Event(std::monostate{});
-            Self::HeartBeat msg{
+            HeartBeat msg{
                 .anchor_id = anchor_id
             };
 
@@ -385,14 +385,12 @@ void Self::flush(){
 }
 
 
-namespace ymd::drivers{
 
-OutputStream & operator <<(OutputStream & os, const AlxAoa_Prelude::Error & error){
-    DeriveDebugDispatcher<AlxAoa_Prelude::Error>::call(os, error);
+OutputStream & operator <<(OutputStream & os, const Error & error){
+    DeriveDebugDispatcher<Error>::call(os, error);
     return os;
 }
-OutputStream & operator <<(OutputStream & os, const AlxAoa_StreamParser::ByteProg & self){
-    DeriveDebugDispatcher<AlxAoa_StreamParser::ByteProg>::call(os, self);
+OutputStream & operator <<(OutputStream & os, const AlxAoa_ParserSink::ByteProg & self){
+    DeriveDebugDispatcher<AlxAoa_ParserSink::ByteProg>::call(os, self);
     return os;
-}
 }

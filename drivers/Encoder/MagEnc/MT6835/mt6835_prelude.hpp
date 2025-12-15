@@ -42,7 +42,7 @@ struct MT6835_Prelude{
             return std::span<uint8_t, 4>(reinterpret_cast<uint8_t*>(this), 4);
         }
 
-        [[nodiscard]] IResult<Angle<uq32>> parse() const {
+        [[nodiscard]] IResult<Angular<uq32>> parse() const {
             if(calc_crc() != crc) [[unlikely]]
                 return Err(Error::InvalidCrc);
 
@@ -56,7 +56,7 @@ struct MT6835_Prelude{
                 return Err(Error::MagnetLow);
 
             const auto turns = uq20::from_bits(angle_20());
-            return Ok(Angle<uq32>::from_turns(turns));
+            return Ok(Angular<uq32>::from_turns(turns));
         }
     private:
         [[nodiscard]] constexpr uint32_t angle_20() const {
@@ -82,7 +82,7 @@ struct MT6835_Prelude{
             }
             
             // Finalize CRC by shifting out the last 8 bits
-            for(int i = 0; i < 8; i++) {
+            for(size_t i = 0; i < 8; i++) {
                 uint8_t msb = calculated_crc >> 7;
                 calculated_crc <<= 1;
                 

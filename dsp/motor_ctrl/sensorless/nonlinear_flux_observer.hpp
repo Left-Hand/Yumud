@@ -27,7 +27,7 @@ public:
 
     constexpr void reconf(const Config & cfg){
         phase_resistance_ = cfg.phase_resistance;
-        pm_flux_sqr_mf_2_ = square(cfg.pm_flux_linkage * cfg.fs);
+        pm_flux_sqr_mf_2_ = math::square(cfg.pm_flux_linkage * cfg.fs);
         temp1_ = (cfg.observer_gain / pm_flux_sqr_mf_2_);
         phase_inductance_mul_config_freq_ = (cfg.phase_inductance * cfg.fs);
     }
@@ -67,7 +67,7 @@ public:
 
         // Non-linear observer (see paper eqn 8):
 
-        iq20 est_pm_flux_sqr_mf_2 = square(eta_mf[0]) + square(eta_mf[1]);
+        iq20 est_pm_flux_sqr_mf_2 = math::square(eta_mf[0]) + math::square(eta_mf[1]);
         iq20 eta_factor = temp1_ * (pm_flux_sqr_mf_2_ - est_pm_flux_sqr_mf_2) >> 1;
 
 
@@ -88,11 +88,11 @@ public:
         V_alphabeta_last_[1] = Vbeta;
 
         // phase_ = atan2(eta_mf[1], eta_mf[0]);
-        turns_ = atan2pu(eta_mf[1], eta_mf[0]);
+        turns_ = math::atan2pu(eta_mf[1], eta_mf[0]);
     }
 
-    constexpr Angle<iq16> angle() const {
-        return Angle<iq16>::from_turns(frac(iq16(turns_)));
+    constexpr Angular<iq16> angle() const {
+        return Angular<iq16>::from_turns(math::frac(iq16(turns_)));
     }
 // private:
 public:

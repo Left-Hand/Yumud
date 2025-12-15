@@ -3,8 +3,11 @@
 #include "core/math/real.hpp"
 
 namespace ymd::digipw{
+template<typename T>
+struct MpptIncc;
 
-class MpptIncc{
+template<>
+struct MpptIncc<iq16> final{
 public:
     constexpr MpptIncc(){
         reset();
@@ -79,23 +82,23 @@ public:
 	}
 
 private:
-	real_t  Ipv = 0;
-	real_t  Vpv = 0;
-	real_t  IpvH = 0;
-	real_t  IpvL = 0;
-	real_t  VpvH = 0;
-	real_t  VpvL = 0;
-	real_t  MaxVolt = 0;
-	real_t  MinVolt = 0;
-	real_t  Stepsize = 0;
-	real_t  VmppOut = 0;
-	real_t  Cond = 0;
-	real_t  IncCond = 0;
-	real_t  DeltaV = 0;
-	real_t  DeltaI = 0;
-	real_t  VpvOld = 0;
-	real_t  IpvOld = 0;
-	real_t  StepFirst = 0;
+	iq16  Ipv = 0;
+	iq16  Vpv = 0;
+	iq16  IpvH = 0;
+	iq16  IpvL = 0;
+	iq16  VpvH = 0;
+	iq16  VpvL = 0;
+	iq16  MaxVolt = 0;
+	iq16  MinVolt = 0;
+	iq16  Stepsize = 0;
+	iq16  VmppOut = 0;
+	iq16  Cond = 0;
+	iq16  IncCond = 0;
+	iq16  DeltaV = 0;
+	iq16  DeltaI = 0;
+	iq16  VpvOld = 0;
+	iq16  IpvOld = 0;
+	iq16  StepFirst = 0;
 	bool inited = false;
 } ;
 

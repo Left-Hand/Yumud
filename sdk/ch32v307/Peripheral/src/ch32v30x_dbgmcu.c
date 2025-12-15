@@ -7,7 +7,7 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 ****************************************************************************************/
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_dbgmcu.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_dbgmcu.h"
 
 #define IDCODE_DEVID_MASK    ((uint32_t)0x0000FFFF)
 

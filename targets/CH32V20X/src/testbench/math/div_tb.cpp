@@ -4,7 +4,7 @@
 
 #include "../tb.h"
 
-#include "core/math/int/int_t.hpp"
+#include "core/int/int_t.hpp"
 #include "core/debug/debug.hpp"
 
 
@@ -12,20 +12,20 @@
 
 using namespace ymd;
 
-static inline constexpr auto get_m_a_s_udiv32(uint32_t Divisor){
-    const uint32_t n = std::countr_zero(Divisor);
-    const uint32_t _t = Divisor >> n;
+static inline constexpr auto get_m_a_s_udiv32(uint32_t divisor){
+    const uint32_t n = std::countr_zero(divisor);
+    const uint32_t _t = divisor >> n;
     struct
     {
         uint32_t a;
         uint32_t m;
         uint32_t s;
     } ret{};
-    if (Divisor >= uint(1 << 31))
+    if (divisor >= uint(1 << 31))
     {
         ret.m = 1;
         ret.s = 32;
-        ret.a = uint32_t() - Divisor;
+        ret.a = uint32_t() - divisor;
     }
     else if (_t == 1)
     {
@@ -110,15 +110,18 @@ static inline constexpr auto get_m_a_s_udiv32(uint32_t Divisor){
     return ret;
 };
 
-static inline constexpr auto udivc(uint32_t Divisor){
-     return [m_a_s = get_m_a_s_udiv32(Divisor)](uint32_t dividend) -> uint32_t
+static inline constexpr auto udivc(uint32_t divisor){
+     return [m_a_s = get_m_a_s_udiv32(divisor)](uint32_t dividend) -> uint32_t
      {
        return ((uint64_t(dividend) + m_a_s.a) * m_a_s.m) >> (m_a_s.s);
      };
 }
 
 void div_tb() {
-    DEBUGGER_INST.init({576000});
+    DEBUGGER_INST.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000 
+    });
 
     // i8 a = {0};
 

@@ -18,7 +18,7 @@ static constexpr UvwCoord<iq16> SVM(
         _6 = 0b011
     };
 
-    constexpr iq16 ONE_BY_SQRT3 = 1 / sqrt(3_iq16);
+    constexpr iq16 ONE_BY_SQRT3 = math::inv_sqrt(3_iq16);
     constexpr iq16 HALF_ONE = iq16(0.5);
 
     const auto [alpha_dutycycle, beta_dutycycle] = alphabeta_dutycycle;

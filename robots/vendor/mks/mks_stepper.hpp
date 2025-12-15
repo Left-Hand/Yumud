@@ -9,7 +9,6 @@ class MksStepper final{
 public:
     using HommingMode = prelude::HommingMode;
     using Error = prelude::Error;
-    using VerifyUtils = prelude::VerifyUtils;
     using Buf = prelude::Buf;
 
     template<typename T = void>
@@ -70,15 +69,14 @@ private:
         Buf buf;
 
         const auto bytes = msgs::serialize(obj);
-
-        buf.append_unchecked(std::bit_cast<uint8_t>(T::FUNC_CODE));
-        buf.append_unchecked(bytes);
-        buf.append_unchecked(VerifyUtils::get_verify_code(
+        const auto verify_code = get_verify_code(
             nodeid,
             T::FUNC_CODE,
             bytes
-        ));
-        // buf.append_unchecked(0x34);
+        );
+        buf.append_unchecked(std::bit_cast<uint8_t>(T::FUNC_CODE));
+        buf.append_unchecked(bytes);
+        buf.append_unchecked(verify_code);
         return buf;
     }
 

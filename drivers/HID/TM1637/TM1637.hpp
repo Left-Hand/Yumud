@@ -17,8 +17,8 @@ class TM1637 final:public _TM1637_Prelude{
 public:
     using Phy = TM1637_Phy;
 
-    TM1637(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio): 
-        phy_(TM1637_Phy(scl_gpio, sda_gpio)){;}
+    TM1637(hal::Gpio & scl_pin, hal::Gpio & sda_pin): 
+        phy_(TM1637_Phy(scl_pin, sda_pin)){;}
 
 
     [[nodiscard]]
@@ -35,7 +35,7 @@ public:
 
 
     [[nodiscard]]
-    IResult<> set_display_duty(const real_t duty);
+    IResult<> set_display_dutycycle(const real_t dutycycle);
     
 private:
     using Buf = DisplayBuf<uint8_t, CGRAM_MAX_LEN>;

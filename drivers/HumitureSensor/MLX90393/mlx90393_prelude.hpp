@@ -1,6 +1,9 @@
 #pragma once
 
+// MIT license
 // https://github.com/adafruit/MLX90393_Library/blob/master/MLX90393.h
+
+
 // https://wiki.lckfb.com/zh-hans/lspi/module/sensor/mlx90393-3d-hall-sensor.html
 
 #include <tuple>
@@ -8,7 +11,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/math/real.hpp"
-#include "types/vectors/vector3.hpp"
+#include "algebra/vectors/vec3.hpp"
 
 #include "core/utils/result.hpp"
 #include "core/utils/errno.hpp"

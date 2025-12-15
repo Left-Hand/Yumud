@@ -2,7 +2,7 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "primitive/arithmetic/angular.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 

@@ -18,13 +18,13 @@ public:
     real_t voltComm;
     real_t voltDiff_2;
 
-    __fast_inline int16_t VoltageToData(real_t volt){
+    static constexpr int16_t voltage_to_data(real_t volt){
         volt = CLAMP(volt, voltL, voltH);
         real_t k = ((volt - voltComm) / voltDiff_2);
         return (int16_t)(k * 0x7FFF);
     }
 
-    __fast_inline int16_t DutyToData(real_t duty){
+    static constexpr int16_t duty_to_data(real_t duty){
         duty = CLAMP(duty, real_t(0), real_t(1));
         real_t k = (duty - 0.5) / 0.5;
         return (int16_t)(k * 0x7FFF);
@@ -40,13 +40,13 @@ public:
     TM8211(I2sDrv & i2c_drv):i2s_drv_(i2c_drv){
         setRail(real_t(3.3 * 0.25f), real_t(3.3 * 0.75f)); 
     }
-    void setChData(const uint8_t index,const uint16_t data){
+    void set_ch_data(const uint8_t index,const uint16_t data){
         if(index) right_data = data;
         else left_data = data;
 
         write(((left_data << 16) | right_data) & distort_mask);
     }
-    void setRail(const real_t _voltL, const real_t _voltH){
+    void set_rail(const real_t _voltL, const real_t _voltH){
         voltL = _voltL;
         voltH = _voltH;
         voltComm = (voltL + voltH) / 2;
@@ -55,22 +55,22 @@ public:
 
 
 
-    void setChVoltage(const uint8_t index, const real_t volt){
+    void set_ch_voltage(const uint8_t index, const real_t volt){
         setChData(index, VoltageToData(volt));
     }
 
-    void setDistort(uint8_t level){
+    void set_distort(uint8_t level){
         uint16_t mask_16 = ~((1 << level) - 1);
         distort_mask = (mask_16 << 16) | mask_16;
     }
-    void setVoltage(const real_t left_volt, const real_t right_volt){
+    void set_voltage(const real_t left_volt, const real_t right_volt){
         left_data = VoltageToData(left_volt);
         right_data = VoltageToData(right_volt);
 
         write(((left_data << 16) | right_data) & distort_mask);
     }
 
-    // void setChDuty(const real_t duty){
+    // void setChDuty(const real_t dutycycle{
 
     // }
 };

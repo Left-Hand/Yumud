@@ -1,17 +1,15 @@
 #include "src/testbench/tb.h"
-#include "dsp/controller/adrc/leso.hpp"
-#include "dsp/controller/adrc/nltd2o.hpp"
-#include "dsp/controller/adrc/ltd2o.hpp"
-#include "dsp/controller/adrc/command_shaper.hpp"
+#include "dsp/controller/adrc/linear/leso2o.hpp"
+#include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
+#include "dsp/controller/adrc/linear/ltd2o.hpp"
 
-#include "middlewares/repl/repl_service.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
-#include "hal/analog/adc/adcs/adc1.hpp"
 #include "hal/bus/uart/uartsw.hpp"
 
 #include "core/clock/time.hpp"
@@ -19,6 +17,7 @@
 
 using namespace ymd;
 using namespace ymd::dsp;
+using namespace ymd::dsp::adrc;
 
 static constexpr auto UART_BAUD = 576000;
 
@@ -30,6 +29,7 @@ void adrc_main(){
         auto & DBG_UART = DEBUGGER_INST;
 
         DBG_UART.init({
+            .remap = hal::UART2_REMAP_PA2_PA3,
             .baudrate = UART_BAUD
         });
 
@@ -43,11 +43,6 @@ void adrc_main(){
 
     // const auto tau = 80.0_r;
 
-    // static dsp::Leso leso{dsp::Leso::Config{
-    //     .b0 = 1,
-    //     .w = 17.8_r,
-    //     .fs = 1000
-    // }};
 
     // static dsp::CommandShaper1 command_shaper_{{
     //     .kp = tau * tau,
@@ -59,7 +54,7 @@ void adrc_main(){
     //     .fs = 1000
     // }};
 
-    static constexpr auto coeffs = typename NonlinearTrackingDifferentor::Config{
+    static constexpr auto coeffs = typename NonlinearTrackingDifferentiator<iq16, 2>::Config{
         .fs = ISR_FREQ ,
         // .r = 30.5_q24,
         // .h = 2.5_q24
@@ -68,17 +63,17 @@ void adrc_main(){
         .h = 0.01_iq10,
         .x2_limit = 200
     }.try_to_coeffs().unwrap();
-    static NonlinearTrackingDifferentor command_shaper_{
+    static NonlinearTrackingDifferentiator<iq16, 2> command_shaper_{
         coeffs
     };
 
     iq16 u = 0;
     Microseconds elapsed_micros = 0us;
-    SecondOrderState shaped_track_state_;
-    SecondOrderState feedback_track_;
+    SecondOrderState<iq16> shaped_track_state_;
+    SecondOrderState<iq16> feedback_track_;
 
 
-    static constexpr auto track_coeffs = LinearTrackingDifferentiator<iq16, 2>::Config{
+    static constexpr auto track_coeffs = typename LinearTrackingDifferentiator<iq16, 2>::Config{
         .fs = ISR_FREQ , .r = 140
     }.try_to_coeffs().unwrap();
 
@@ -88,12 +83,12 @@ void adrc_main(){
 
     [[maybe_unused]]
     auto command_shaper_poller = [&](){
-        const auto ctime = clock::time();
+        const auto now_secs = clock::time();
         const auto t0 = clock::micros();
-        shaped_track_state_ = command_shaper_.update(shaped_track_state_, u, 0);
+        shaped_track_state_ = command_shaper_.update(shaped_track_state_, {u, 0});
         // feedback_track_ = feedback_differ_.update(feedback_track_, iq16::from_bits(shaped_track_state_.x1.to_bits() >> 16));
-        // feedback_track_ = feedback_differ_.update(feedback_track_, sin(ctime * 140));
-        feedback_track_ = feedback_differ_.update(feedback_track_, frac(ctime));
+        // feedback_track_ = feedback_differ_.update(feedback_track_, sin(now_secs * 140));
+        feedback_track_ = feedback_differ_.update(feedback_track_, {math::frac(now_secs), 1});
         // feedback_track_ = feedback_differ_.update(feedback_track_, u);
         const auto t1 = clock::micros();
         elapsed_micros = t1 - t0;
@@ -104,9 +99,17 @@ void adrc_main(){
 
     auto & timer = hal::timer1;
     timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
         .count_freq = hal::NearestFreq(ISR_FREQ ),
         .count_mode = hal::TimerCountMode::Up
-    }, EN);
+    })
+            .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
 
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
@@ -121,11 +124,12 @@ void adrc_main(){
         }
     });
 
+    timer.start();
     while(true){
-        const auto ctime = clock::time();
-        // u = -180 + 10 * sign(iq16(sinpu(ctime * 0.5_r)));
-        u = -180 + 10 * iq16(sinpu(ctime * 0.5_r));
-        // u = 10 * sign(iq16(sinpu(ctime * 0.5_r)));
+        const auto now_secs = clock::time();
+        // u = -180 + 10 * sign(iq16(math::sinpu(now_secs * 0.5_r)));
+        u = -180 + 10 * iq16(math::sinpu(now_secs * 0.5_r));
+        // u = 10 * sign(iq16(math::sinpu(now_secs * 0.5_r)));
 
         DEBUG_PRINTLN(
             u,

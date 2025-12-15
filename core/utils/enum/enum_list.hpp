@@ -3,7 +3,7 @@
 #include <atomic>
 #include <algorithm>
 #include <array>
-#include "core/magic/size_traits.hpp"
+#include "core/tmp/bits/width.hpp"
 
 namespace ymd{
 

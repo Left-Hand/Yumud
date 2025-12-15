@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace CH32L103{
+namespace ymd::ral::ch32::common_crc{
 struct CRC_Def{
     volatile uint32_t DATAR;
     volatile uint8_t IDATAR;

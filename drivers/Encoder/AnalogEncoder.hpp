@@ -2,8 +2,9 @@
 
 #include "Encoder.hpp"
 #include "primitive/analog_channel.hpp"
-#include "types/regions/range2.hpp"
+#include "algebra/regions/range2.hpp"
 
+#if 0
 namespace ymd::drivers{
 class AnalogEncoder final:public EncoderIntf{
 public:
@@ -19,8 +20,8 @@ public:
         pos_range_(cfg.pos_range)
     {}
 
-    [[nodiscard]] Result<Angle<uq32>, EncoderError> read_lap_angle(){
-        return Ok(Angle<uq32>::from_turns(last_pos_));
+    [[nodiscard]] Result<Angular<uq32>, EncoderError> read_lap_angle(){
+        return Ok(Angular<uq32>::from_turns(last_pos_));
     }
 
     [[nodiscard]] Result<void, EncoderError> update(){
@@ -39,3 +40,4 @@ private:
 };
 
 };
+#endif

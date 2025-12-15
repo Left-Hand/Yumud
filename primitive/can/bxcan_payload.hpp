@@ -6,7 +6,7 @@
 
 namespace ymd::hal{
 
-struct alignas(4) [[nodiscard]] BxCanPayload{
+struct [[nodiscard]] BxCanPayload{
 public:    
     using Self = BxCanPayload;
 
@@ -36,12 +36,19 @@ public:
         std::ranges::copy(bytes, buf.begin());
         return Self(
             buf, 
-            CanClassicDlc::from_bits(std::ranges::size(bytes))
+            BxCanDlc::from_bits(std::ranges::size(bytes))
+        );
+    }
+
+    static Self from_uninitialized(){
+        return Self(
+            ZERO_U8X8,
+            BxCanDlc::from_bits(0)
         );
     }
 
     __attribute__((always_inline)) static constexpr Self from_u8x8(std::array<uint8_t, 8> array){
-        return Self(std::move(array), CanClassicDlc::full());
+        return Self(std::move(array), BxCanDlc::full());
     }
 
 
@@ -67,7 +74,7 @@ public:
         std::ranges::copy(bytes, buf.begin());
         return Some(Self(
             buf, 
-            CanClassicDlc::from_bits(std::ranges::size(bytes))
+            BxCanDlc::from_bits(std::ranges::size(bytes))
         ));
     }
 
@@ -93,7 +100,7 @@ public:
 
         return Some(Self(
             buf, 
-            CanClassicDlc::from_bits(len)
+            BxCanDlc::from_bits(len)
         ));
     }
 
@@ -117,7 +124,7 @@ public:
         // 使用数组视图构造CanFrame
         return Some(Self(
             buf, 
-            CanClassicDlc::from_bits(len)
+            BxCanDlc::from_bits(len)
         ));
     }
 
@@ -132,7 +139,7 @@ public:
         std::copy(bytes.begin(), bytes.end(), buf.begin());
         return Self(
             buf, 
-            CanClassicDlc::from_bits(bytes.size())
+            BxCanDlc::from_bits(bytes.size())
         );
     }
 
@@ -146,14 +153,14 @@ public:
         std::copy(bytes.begin(), bytes.end(), buf.begin());
         return Some(Self(
             buf, 
-            CanClassicDlc::from_bits(bytes.size())
+            BxCanDlc::from_bits(bytes.size())
         ));
     }
 
     /// \brief 
     __attribute__((always_inline)) static constexpr Self from_u64_and_dlc(
         const uint64_t int_val,
-        const CanClassicDlc dlc
+        const BxCanDlc dlc
     ){
         return Self(std::bit_cast<U8X8>(int_val),dlc);
     }
@@ -162,13 +169,13 @@ public:
     __attribute__((always_inline)) static constexpr Self from_u64(
         const uint64_t int_val
     ){
-        return Self(std::bit_cast<U8X8>(int_val), CanClassicDlc::full());
+        return Self(std::bit_cast<U8X8>(int_val), BxCanDlc::full());
     }
 
     /// \brief 
     __attribute__((always_inline)) static constexpr Self from_parts(
         const U8X8 arr,
-        const CanClassicDlc dlc
+        const BxCanDlc dlc
     ){
         return Self(arr,dlc);
     }
@@ -176,7 +183,7 @@ public:
     /// \brief 
     __attribute__((always_inline)) static constexpr Self zero(
     ){
-        return Self(ZERO_U8X8, CanClassicDlc::zero());
+        return Self(ZERO_U8X8, BxCanDlc::zero());
     }
 
 
@@ -224,15 +231,18 @@ public:
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     const U8X8 & u8x8() const {return bytes_;}
-private:
-    alignas(4) U8X8 bytes_;
-    CanClassicDlc dlc_;
 
+    alignas(4) U8X8 bytes_;
+    BxCanDlc dlc_;
+private:
     [[nodiscard]] __attribute__((always_inline)) constexpr explicit
-    BxCanPayload(const U8X8 bytes, const CanClassicDlc dlc):
+    BxCanPayload(const U8X8 bytes, const BxCanDlc dlc):
         bytes_(bytes), dlc_(dlc){;}
 
-    friend class CanClassicFrame;
+    // [[nodiscard]] __attribute__((always_inline)) constexpr explicit
+    // BxCanPayload(){;}
+
+    friend class BxCanFrame;
 
     template<size_t I>
     [[nodiscard]] static __attribute__((always_inline)) constexpr 
@@ -241,7 +251,6 @@ private:
     }
 };
 
-static_assert(sizeof(BxCanPayload) == 12);
-using CanClassicPayload = BxCanPayload;
+using BxCanPayload = BxCanPayload;
 
 }

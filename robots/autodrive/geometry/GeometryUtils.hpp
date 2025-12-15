@@ -1,13 +1,13 @@
 #pragma once
 
-#include "types/vectors/vector3.hpp"
-#include "types/vectors/vector2.hpp"
-#include "types/regions/rect2.hpp"
-#include "types/regions/ray2.hpp"
-#include "types/vectors/quat.hpp"
-#include "types/transforms/basis.hpp"
-#include "types/regions/line2.hpp"
-#include "core/container/inline_vector.hpp"
+#include "algebra/vectors/vec3.hpp"
+#include "algebra/vectors/vec2.hpp"
+#include "algebra/regions/rect2.hpp"
+#include "algebra/regions/ray2.hpp"
+#include "algebra/vectors/quat.hpp"
+#include "algebra/transforms/basis.hpp"
+#include "algebra/regions/line2.hpp"
+#include "core/container/heapless_vector.hpp"
 
 #include "core/utils/Option.hpp"
 

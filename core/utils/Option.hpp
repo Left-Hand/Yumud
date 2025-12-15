@@ -2,7 +2,7 @@
 
 #include "core/platform.hpp"
 #include "core/debug/debug.hpp"
-#include "core/magic/function_traits.hpp"
+#include "core/tmp/functor.hpp"
 
 #include "details/unwrap_util.hpp"
 #include <variant>
@@ -150,6 +150,12 @@ public:
     [[nodiscard]] __fast_inline constexpr bool 
     is_none() const{ return !exists_; }
 
+    [[nodiscard]] __fast_inline constexpr bool 
+    is_value(const T value) const{
+        if(not exists_) return false;
+        return value == unwrap();
+    }
+
     [[nodiscard]] __fast_inline constexpr const T & 
     value_or(const T & default_value) const{
         return exists_ ? get() : default_value;
@@ -218,7 +224,7 @@ public:
     // 函数式映射 (Monadic map)
     template<
         typename Fn,
-        typename TIResult = magic::functor_ret_t<Fn>
+        typename TIResult = tmp::functor_ret_t<Fn>
     >
     constexpr auto map(Fn&& fn) const& -> Option<TIResult> {
         if (is_some()) 

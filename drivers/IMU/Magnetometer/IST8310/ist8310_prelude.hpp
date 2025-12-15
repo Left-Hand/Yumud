@@ -16,7 +16,7 @@ struct IST8310_Prelude{
     template<typename T = void>
     using IResult= Result<T, Error>;
 
-    enum class AverageTimes:uint8_t{
+    enum class [[nodiscard]] AverageTimes:uint8_t{
         _1 = 0b000,
         _2 = 0b001,
         _4 = 0b010,

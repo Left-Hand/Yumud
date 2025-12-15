@@ -1,7 +1,9 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "types/regions/range2.hpp"
+#include "algebra/regions/range2.hpp"
+#include "primitive/arithmetic/angular.hpp"
+#include "primitive/arithmetic/angle_range.hpp"
 
 namespace ymd::drivers{
 
@@ -9,21 +11,22 @@ namespace ymd::drivers{
 
 class ServoBase{
 private:
-    Range2<real_t> angle_range_ = {0, real_t(PI)};
+    AngularRange<real_t> angle_range_ = AngularRange<real_t>::STRAIGHT;
 protected:
     
-    virtual void set_global_angle(const real_t rad) = 0;
-    virtual real_t get_global_angle() = 0;
+    virtual void set_global_angle(const Angular<real_t> angle) = 0;
+    virtual Angular<real_t> get_global_angle() = 0;
 public:
-    void set_range(const Range2<real_t> & range){
+    void set_range(const AngularRange<real_t> & range){
         angle_range_ = range;
     }
     
-    void set_angle(const real_t rad){
-        set_global_angle(real_t(PI) - angle_range_.clamp(rad));
+    void set_angle(const Angular<real_t> angle){
+        TODO();
+        // set_global_angle(Angular<real_t>::HALF - angle_range_.clamp(angle));
     }
 
-    real_t get_angle(){
+    Angular<real_t> get_angle(){
         return get_global_angle();
     }
 

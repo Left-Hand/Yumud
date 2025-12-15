@@ -10,7 +10,7 @@ namespace ymd{
 class OutputStream;
 
 #define DEF_MAKE_BINA_ENUM(name, u, l)\
-struct name {\
+struct [[nodiscard]] name {\
 public:\
     enum class Kind:uint8_t{l, u};\
     using enum Kind;\

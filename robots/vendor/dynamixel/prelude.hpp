@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+// MIT license
 // https://github.com/orcahand/orca_core/blob/main/orca_core/hardware/dynamixel_client.py
 
 namespace ymd::robots::dynamixel{
@@ -37,7 +38,7 @@ static constexpr size_t LEN_MOVING_STATUS = 1;
 static constexpr size_t LEN_PRESENT_TEMPERATURE = 1;
 
 
-enum class UartBuadrate:uint8_t{
+enum class UartBaudrate:uint8_t{
     // 2.4.4 Baud Rate(8)
     // The Baud Rate(8) determines serial communication speed between a controller and DYNAMIXEL.
 

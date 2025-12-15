@@ -2,13 +2,13 @@
 
 #include "core/math/realmath.hpp"
 #include "core/utils/Result.hpp"
-#include "core/container/inline_vector.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/container/heapless_vector.hpp"
+#include "core/tmp/reflect/enum.hpp"
 
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
-#include "types/regions/range2.hpp"
+#include "algebra/regions/range2.hpp"
 
 namespace ymd::robots::mksmotor{
 
@@ -27,7 +27,7 @@ struct [[nodiscard]] NodeId{
 namespace prelude{
 
 
-enum class Error:uint8_t{
+enum class [[nodiscard]] Error:uint8_t{
     SubDivideOverflow,
     RxNoMsgToDump,
     RxMsgIdTypeNotMatch,
@@ -58,7 +58,8 @@ enum class [[nodiscard]] SetHommingParaStatus:uint8_t{
 };
 
 enum class [[nodiscard]] HommingSpeed:uint8_t{
-    _0, _1, _2, _3, _4
+    _0 = 0, 
+    _1, _2, _3, _4
 };
 
 enum class [[nodiscard]] HommingDirection:uint8_t{
@@ -68,7 +69,7 @@ enum class [[nodiscard]] HommingDirection:uint8_t{
 
 
 enum class [[nodiscard]] PositionCtrlStatus:uint8_t{
-    Failed,
+    Failed = 0,
     Started,
     Completed
 };
@@ -80,7 +81,7 @@ enum class [[nodiscard]] EndstopHomingStatus:uint8_t{
 };
 
 enum class [[nodiscard]] MotivationState:uint8_t{
-    Failed,
+    Failed = 0,
     Stopped,
     Acc,
     Deacc,
@@ -89,18 +90,18 @@ enum class [[nodiscard]] MotivationState:uint8_t{
 };
 
 enum class [[nodiscard]] WorkMode:uint8_t{
-    PulseOpenloop,
-    PulseCloseloop,
-    PulseFoc,
-    SerialOpenloop,
-    SerialCloseloop,
-    SerialFoc,
+    PulseOpenloop = 0,
+    PulseCloseloop = 1,
+    PulseFoc = 2,
+    SerialOpenloop = 3,
+    SerialCloseloop = 4,
+    SerialFoc = 5,
 };
 
 enum class [[nodiscard]] CanBitrate:uint8_t{
-    _125K,
-    _250K,
-    _500K
+    _125K = 0,
+    _250K = 1,
+    _500K = 2
 };
 
 
@@ -127,84 +128,83 @@ enum class [[nodiscard]] FuncCode:uint8_t{
 };
 
 
-struct VerifyUtils final{
-    static constexpr uint8_t get_verify_code(
-        const NodeId nodeid,
-        const FuncCode funccode,
-        std::span<const uint8_t> bytes 
-    ){
-        uint32_t sum = nodeid.to_u8();
-        sum += std::bit_cast<uint8_t>(funccode);
-        for(const auto byte: bytes){
-            sum += byte;
-        }
 
-        return static_cast<uint8_t>(sum);
+static constexpr uint8_t get_verify_code(
+    const NodeId nodeid,
+    const FuncCode func_code,
+    std::span<const uint8_t> bytes 
+){
+    uint32_t sum = nodeid.to_u8();
+    sum += std::bit_cast<uint8_t>(func_code);
+    for(const auto byte: bytes){
+        sum += byte;
     }
 
-};
+    return static_cast<uint8_t>(sum);
+}
 
-struct Rpm final{
-    static constexpr Rpm from_speed(const real_t speed){
-        return {int16_t(speed * 60)};
-    }
-    constexpr int16_t as_i16() const {
-        return bits_;
-    }
 
-    constexpr real_t to_speed() const {
-        return real_t(bits_) / 60;
+struct [[nodiscard]] Rpm final{
+    static constexpr Rpm from_tps(const iq16 tps){
+        return {int16_t(tps * 60)};
+    }
+    constexpr int16_t to_bits() const {
+        return bits;
     }
 
-    int16_t bits_;
+    constexpr iq16 to_tps() const {
+        return iq16(bits) / 60;
+    }
+
+    int16_t bits;
 }__packed;
 
-struct iRpm final{
-    static constexpr iRpm from_speed(const real_t speed){
-        return {int16_t(int16_t(speed * 60) & int16_t(0x8fff))};
+struct [[nodiscard]] iRpm final{
+    static constexpr iRpm from_tps(const iq16 tps){
+        return {int16_t(int16_t(tps * 60) & int16_t(0x8fff))};
     }
-    constexpr int16_t as_i16() const {
-        return bits_;
-    }
-
-    constexpr real_t to_speed() const {
-        return real_t(bits_) / 60;
+    constexpr int16_t to_bits() const {
+        return bits;
     }
 
-    int16_t bits_;
+    constexpr iq16 to_tps() const {
+        return iq16(bits) / 60;
+    }
+
+    int16_t bits;
 }__packed;
 
 static_assert(sizeof(Rpm) == 2);
 
-struct AcclerationLevel{
-    static constexpr AcclerationLevel from(const real_t acc_per_second){
+struct [[nodiscard]] AcclerationLevel{
+    static constexpr AcclerationLevel from_tpss(const iq16 tpss){
         // TODO
-        return AcclerationLevel{uint8_t(acc_per_second)};
+        return AcclerationLevel{uint8_t(tpss)};
     }
 
-    uint8_t bits_;
+    uint8_t bits;
 }__packed;
 
 static_assert(sizeof(AcclerationLevel) == 1);
 
 
-struct PulseCnt final{
-    static constexpr uint32_t SCALE = 3200 * (256/16);
-    static constexpr PulseCnt from_position(const real_t position){
-        return from_pulses(uint32_t(position * SCALE));
+struct [[nodiscard]] PulseCnt final{
+    static constexpr uint32_t PULSES_PER_TURN = 3200 * (256/16);
+    static constexpr PulseCnt from_turns(const iq16 turns){
+        return from_pulses(uint32_t(turns * PULSES_PER_TURN));
     }
 
     static constexpr PulseCnt from_pulses(const uint32_t pulses){
         return PulseCnt{
-            .buf_ = {uint8_t(pulses >> 16), uint8_t(pulses >> 8), uint8_t(pulses)}
+            .bytes = {uint8_t(pulses >> 16), uint8_t(pulses >> 8), uint8_t(pulses)}
         };
     }
 
     constexpr uint32_t as_u24() const {
-        return (buf_[0] << 16) | (buf_[1] << 8) | buf_[2];
+        return (bytes[0] << 16) | (bytes[1] << 8) | bytes[2];
     }
 
-    uint8_t buf_[3];
+    uint8_t bytes[3];
 }__packed;
 
 
@@ -225,7 +225,7 @@ namespace msgs{
     struct [[nodiscard]] StopPositionMode3 final{
         static constexpr FuncCode FUNC_CODE = FuncCode::PositionCtrl3;
 
-        const Rpm rpm = Rpm::from_speed(0);
+        const Rpm rpm = Rpm::from_tps(0);
         AcclerationLevel acc_level;
         const PulseCnt abs_pulse_cnt = PulseCnt::from_pulses(0);
     }__packed;
@@ -238,7 +238,7 @@ namespace msgs{
 
     struct [[nodiscard]] SetEnableStatus final{
         static constexpr FuncCode FUNC_CODE = FuncCode::SetEnableStatus;
-        bool enable;
+        bool is_enabled;
     }__packed;
 
 
@@ -264,7 +264,7 @@ namespace msgs{
     ){
         return std::span(
             reinterpret_cast<const uint8_t *>(&obj),
-            magic::pure_sizeof_v<T>
+            tmp::pure_sizeof_v<T>
         );
     }
 }

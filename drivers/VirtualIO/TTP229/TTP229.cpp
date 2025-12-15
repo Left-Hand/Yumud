@@ -5,13 +5,13 @@ using namespace ymd::drivers;
 
 void TTP229::update(){
     uint16_t new_map = 0;
-    sck_gpio_.clr();
+    sck_pin_.set_low();
 
     for (size_t i = 0; i < 16; i++){
-        sck_gpio_.set();
-        sck_gpio_.clr();
+        sck_pin_.set_high();
+        sck_pin_.set_low();
         new_map <<= 1; 
-        new_map |= sdo_gpio_.read().to_bool();
+        new_map |= sdo_pin_.read().to_bool();
     }
 
     map_ = new_map;
@@ -27,5 +27,5 @@ void TTP229::update(){
 }
 
 bool TTP229::is_idle(){
-    return sdo_gpio_.read() == LOW;
+    return sdo_pin_.read() == LOW;
 }

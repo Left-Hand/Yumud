@@ -1,132 +1,248 @@
 #pragma once
 
-namespace ymd::drivers::ch9434_details{
+#include <cstdint>
+#include "core/io/regs.hpp"
 
-static constexpr auto GPIO_NUMBER 0
 
-static constexpr auto IOCTL_CMD_GPIOENABLE    = _IOW(IOCTL_MAGIC, 0x80, u16);
-static constexpr auto IOCTL_CMD_GPIODIR       = _IOW(IOCTL_MAGIC, 0x81, u16);
-static constexpr auto IOCTL_CMD_GPIOPULLUP    = _IOW(IOCTL_MAGIC, 0x82, u16);
-static constexpr auto IOCTL_CMD_GPIOPULLDOWN  = _IOW(IOCTL_MAGIC, 0x83, u16);
-static constexpr auto IOCTL_CMD_GPIOSET       = _IOW(IOCTL_MAGIC, 0x84, u16);
-static constexpr auto IOCTL_CMD_GPIOGET       = _IOWR(IOCTL_MAGIC, 0x85, u16);
-static constexpr auto IOCTL_CMD_GRS485        = _IOR(IOCTL_MAGIC, 0x86, u16);
-static constexpr auto IOCTL_CMD_SRS485        = _IOW(IOCTL_MAGIC, 0x87, u16);
 
-/* CH943X register definitions */
-static constexpr uint8_t CH943X_RHR_REG = (0x00); /* RX FIFO */
-static constexpr uint8_t CH943X_THR_REG = (0x00); /* TX FIFO */
-static constexpr uint8_t CH943X_IER_REG = (0x01); /* Interrupt enable */
-static constexpr uint8_t CH943X_IIR_REG = (0x02); /* Interrupt Identification */
-static constexpr uint8_t CH943X_FCR_REG = (0x02); /* FIFO control */
-static constexpr uint8_t CH943X_LCR_REG = (0x03); /* Line Control */
-static constexpr uint8_t CH943X_MCR_REG = (0x04); /* Modem Control */
-static constexpr uint8_t CH943X_LSR_REG = (0x05); /* Line Status */
-static constexpr uint8_t CH943X_MSR_REG = (0x06); /* Modem Status */
-static constexpr uint8_t CH943X_SPR_REG = (0x07); /* Scratch Pad */
+namespace ymd::drivers::ch9434::details{
 
-static constexpr uint8_t CH943X_CLK_REG	=   (0x48); /* Clock Set */
-static constexpr uint8_t CH943X_RS485_REG =  (0x41); /* RS485 Control */
-static constexpr uint8_t CH943X_FIFO_REG	=   (0x42); /* FIFO Control */
-static constexpr uint8_t CH943X_FIFOCL_REG = (0x43); /* FIFO Count Low */
-static constexpr uint8_t CH943X_FIFOCH_REG = (0x44); /* FIFO Count High */
+enum class RegAddr:uint8_t{
+    RHR = 0x00,
+    THR = 0x00,
+    IER = 0x01,
+    IIR = 0x02,
+    FCR = 0x02,
+    LCR = 0x03,
+    MCR = 0x04,
+    LSR = 0x05,
+    MSR = 0x06,
+    SPR = 0x07,
+    CLK = 0x48,
+    RS485 = 0x41,
+    FIFO = 0x42,
+    FIFOCL = 0x43,
+    FIFOCH = 0x44,
 
-static constexpr uint8_t CH943X_GPIOEN_REG =  (0x50); /* GPIO Enable Set */
-static constexpr uint8_t CH943X_GPIODIR_REG = (0x54); /* GPIO Direction Set */
-static constexpr uint8_t CH943X_GPIOPU_REG =  (0x58); /* GPIO PullUp Set */
-static constexpr uint8_t CH943X_GPIOPD_REG =  (0x5C); /* GPIO PullDown Set */
-static constexpr uint8_t CH943X_GPIOVAL_REG = (0x60); /* GPIO Value Set */
+    GPIO_EN_0 = 0x50,
+    GPIO_EN_1 = 0x51,
+    GPIO_EN_2 = 0x52,
+    GPIO_EN_3 = 0x53,
 
-static constexpr uint8_t CH943X_SPI_CONT_MODE_REG = (0x64); /* SPI transfer mode Set */
-static constexpr uint8_t CH943X_CHIP_VER_REG	=  (0x65); /* Firmware Version */
+    
+    GPIO_DIR_0 = 0x54,
+    GPIO_DIR_1,
+    GPIO_DIR_2,
+    GPIO_DIR_3,
 
-/* Special Register set: Only if (LCR[7] == 1) */
-static constexpr uint8_t CH943X_DLL_REG = (0x00); /* Divisor Latch Low */
-static constexpr uint8_t CH943X_DLH_REG = (0x01); /* Divisor Latch High */
+    GPIO_PU_0 = 0x58,
+    GPIO_PU_1,
+    GPIO_PU_2,
+    GPIO_PU_3,
 
-/* IER register bits */
-static constexpr uint8_t CH943X_IER_RDI_BIT =  (1 << 0); /* Enable RX data interrupt */
-static constexpr uint8_t CH943X_IER_THRI_BIT = (1 << 1); /* Enable TX holding register interrupt */
-static constexpr uint8_t CH943X_IER_RLSI_BIT = (1 << 2); /* Enable RX line status interrupt */
-static constexpr uint8_t CH943X_IER_MSI_BIT =  (1 << 3); /* Enable Modem status interrupt */
+    GPIO_PD_0 = 0x5c,
+    GPIO_PD_1,
+    GPIO_PD_2,
+    GPIO_PD_3,
 
-/* IER enhanced register bits */
-static constexpr uint8_t CH943X_IER_RESET_BIT	= (1 << 7); /* Enable Soft reset */
-static constexpr uint8_t CH943X_IER_LOWPOWER_BIT = (1 << 6); /* Enable low power mode */
-static constexpr uint8_t CH943X_IER_SLEEP_BIT	= (1 << 5); /* Enable sleep mode */
+    GPIO_VAL_0 = 0x5c,
+    GPIO_VAL_1,
+    GPIO_VAL_2,
+    GPIO_VAL_3,
+
+    SPI_CONT_MODE = 0x64,
+    CHIP_VER = 0x65,
+
+    DLL = 0x00,
+    DLH = 0x01
+};
+
+struct R8_IER:public Reg8<>{
+    /* Enable RX data interrupt */
+    uint8_t rdi  :1; 
+    /* Enable TX holding register interrupt */
+    uint8_t thri :1; 
+    /* Enable RX line status interrupt */
+    uint8_t rlsi :1; 
+    /* Enable Modem status interrupt */
+    uint8_t msi  :1; 
+    uint8_t :1;
+
+    /* IER enhanced register bits */
+
+    /* Enable sleep mode */
+    uint8_t sleep:1;
+
+    /* Enable low power mode */
+    uint8_t low_power:1;
+
+    /* Enable Soft reset */
+    uint8_t reset:1;
+};
+
+
+
 
 /* FCR register bits */
-static constexpr uint8_t CH943X_FCR_FIFO_BIT =    (1 << 0); /* Enable FIFO */
-static constexpr uint8_t CH943X_FCR_RXRESET_BIT = (1 << 1); /* Reset RX FIFO */
-static constexpr uint8_t CH943X_FCR_TXRESET_BIT = (1 << 2); /* Reset TX FIFO */
-static constexpr uint8_t CH943X_FCR_RXLVLL_BIT =  (1 << 6); /* RX Trigger level LSB */
-static constexpr uint8_t CH943X_FCR_RXLVLH_BIT =  (1 << 7); /* RX Trigger level MSB */
 
-/* IIR register bits */
-static constexpr uint8_t CH943X_IIR_NO_INT_BIT = (1 << 0); /* No interrupts pending */
-static constexpr uint8_t CH943X_IIR_ID_MASK    = 0x0e;     /* Mask for the interrupt ID */
-static constexpr uint8_t CH943X_IIR_THRI_SRC   = 0x02;     /* TX holding register empty */
-static constexpr uint8_t CH943X_IIR_RDI_SRC    = 0x04;     /* RX data interrupt */
-static constexpr uint8_t CH943X_IIR_RLSE_SRC   = 0x06;     /* RX line status error */
-static constexpr uint8_t CH943X_IIR_RTOI_SRC   = 0x0c;     /* RX time-out interrupt */
-static constexpr uint8_t CH943X_IIR_MSI_SRC    = 0x00;     /* Modem status interrupt */
 
-static constexpr uint8_t CH943X_LCR_PARITY_BIT	    = (1 << 3); /* Parity bit enable */
-static constexpr uint8_t CH943X_LCR_ODDPARITY_BIT   = (0);	    /* Odd parity bit enable */
-static constexpr uint8_t CH943X_LCR_EVENPARITY_BIT  = (1 << 4); /* Even parity bit enable */
-static constexpr uint8_t CH943X_LCR_MARKPARITY_BIT  = (1 << 5); /* Mark parity bit enable */
-static constexpr uint8_t CH943X_LCR_SPACEPARITY_BIT = (3 << 4); /* Space parity bit enable */
+struct R8_FCR:public Reg8<>{
+    uint8_t FIFO : 1; /* Enable FIFO */
+    uint8_t RXRESET: 1; /* Reset RX FIFO */
+    uint8_t TXRESET: 1; /* Reset TX FIFO */
+    uint8_t :3;
+    uint8_t RXLVLL : 1; /* RX Trigger level LSB */
+    uint8_t RXLVLH : 1; /* RX Trigger level MSB */
+};
 
-static constexpr uint8_t CH943X_LCR_TXBREAK_BIT = (1 << 6); /* TX break enable */
-static constexpr uint8_t CH943X_LCR_DLAB_BIT    = (1 << 7); /* Divisor Latch enable */
-static constexpr uint8_t CH943X_LCR_WORD_LEN_5  = (0x00);
-static constexpr uint8_t CH943X_LCR_WORD_LEN_6  = (0x01);
-static constexpr uint8_t CH943X_LCR_WORD_LEN_7  = (0x02);
-static constexpr uint8_t CH943X_LCR_WORD_LEN_8  = (0x03);
+struct R8_IIR:public Reg8<>{
+    uint8_t noint:1;
+    uint8_t iid1:1;
+    uint8_t iid2:1;
+    uint8_t iid3:1;
+    uint8_t :2;
+    uint8_t fifo_ens:1;
+    uint8_t fifo_ens2:1;
+};
 
-/* MCR register bits */
-static constexpr uint8_t CH943X_MCR_DTR_BIT  = (1 << 0); /* DTR complement */
-static constexpr uint8_t CH943X_MCR_RTS_BIT  = (1 << 1); /* RTS complement */
-static constexpr uint8_t CH943X_MCR_OUT1	  =   (1 << 2); /* OUT1 */
-static constexpr uint8_t CH943X_MCR_OUT2	  =   (1 << 3); /* OUT2 */
-static constexpr uint8_t CH943X_MCR_LOOP_BIT = (1 << 4); /* Enable loopback test mode */
-static constexpr uint8_t CH943X_MCR_AFE	  =   (1 << 5); /* Enable Hardware Flow control */
+enum class WordSize:uint8_t{
+    _5 = 0x00,
+    _6 = 0x01,
+    _7 = 0x02,
+    _8 = 0x03
+};
 
-/* LSR register bits */
-static constexpr uint8_t CH943X_LSR_DR_BIT	 = (1 << 0); /* Receiver data ready */
-static constexpr uint8_t CH943X_LSR_OE_BIT	 = (1 << 1); /* Overrun Error */
-static constexpr uint8_t CH943X_LSR_PE_BIT	 = (1 << 2); /* Parity Error */
-static constexpr uint8_t CH943X_LSR_FE_BIT	 = (1 << 3); /* Frame Error */
-static constexpr uint8_t CH943X_LSR_BI_BIT	 = (1 << 4); /* Break Interrupt */
-static constexpr uint8_t CH943X_LSR_BRK_ERROR_MASK = 0x1E;	   /* BI, FE, PE, OE bits */
-static constexpr uint8_t CH943X_LSR_THRE_BIT	 = (1 << 5); /* TX holding register empty */
-static constexpr uint8_t CH943X_LSR_TEMT_BIT	 = (1 << 6); /* Transmitter empty */
-static constexpr uint8_t CH943X_LSR_FIFOE_BIT	 = (1 << 7); /* Fifo Error */
+enum class ParityMode:uint8_t{
+
+};
+struct R8_LCR:public Reg8<>{
+    WordSize word_size:2;
+    uint8_t stop_bit:1;
+    uint8_t paren:1;
+    ParityMode par_mode:2;
+    uint8_t breaken:1;
+    uint8_t dlab:1;
+};
+
+struct R8_MCR:public Reg8<>{
+    /* DTR complement */
+    uint8_t dtr:1;
+    /* RTS complement */
+    uint8_t rts:1;
+    /* OUT1 */
+    uint8_t out1:1;
+    /* OUT2 */
+    uint8_t out2:1;
+    /* Enable loopback test mode */
+    uint8_t loop:1;
+    /* Enable Hardware Flow control */
+    uint8_t afe:1;
+    uint8_t :2;
+};
+
+struct R8_LSR:public Reg8<>{
+    /* BI, FE, PE, OE bits */
+    static constexpr uint8_t ERROR_MASK = 0x1e;
+
+     /* Receiver data ready */
+    uint8_t dr:1;
+    /* Overrun Error */
+    uint8_t oe:1;
+    /* Parity Error */
+    uint8_t pe:1;
+    /* Frame Error */
+    uint8_t fe:1;
+
+    /* Break Interrupt */
+    uint8_t bi:1;
+
+     /* TX holding register empty */
+    uint8_t thre:1;
+
+     /* Transmitter empty */
+    uint8_t txemt:1;
+    /* Fifo Error */
+    uint8_t fifoe:1;
+};
 
 /* MSR register bits */
-static constexpr uint8_t CH943X_MSR_DCTS_BIT   = (1 << 0); /* Delta CTS Clear To Send */
-static constexpr uint8_t CH943X_MSR_DDSR_BIT   = (1 << 1); /* Delta DSR Data Set Ready */
-static constexpr uint8_t CH943X_MSR_DRI_BIT    = (1 << 2); /* Delta RI Ring Indicator */
-static constexpr uint8_t CH943X_MSR_DCD_BIT    = (1 << 3); /* Delta CD Carrier Detect */
-static constexpr uint8_t CH943X_MSR_CTS_BIT    = (1 << 4); /* CTS */
-static constexpr uint8_t CH943X_MSR_DSR_BIT    = (1 << 5); /* DSR */
-static constexpr uint8_t CH943X_MSR_RI_BIT     = (1 << 6); /* RI */
-static constexpr uint8_t CH943X_MSR_CD_BIT     = (1 << 7); /* CD */
-static constexpr uint8_t CH943X_MSR_DELTA_MASK = 0x0F;     /* Any of the delta bits! */
 
-/* Clock Set */
-static constexpr uint8_t CH943X_CLK_PLL_BIT = (1 << 7); /* PLL Enable */
-static constexpr uint8_t CH943X_CLK_EXT_BIT = (1 << 6); /* Extenal Clock Enable */
 
-/* FIFO */
-static constexpr uint8_t CH943X_FIFO_RD_BIT = (0 << 4); /* Receive FIFO */
-static constexpr uint8_t CH943X_FIFO_WR_BIT = (1 << 4); /* Receive FIFO */
 
-/* SPI Cont Mode Set */
-static constexpr uint8_t CH943X_SPI_CONTE_BIT = (1 << 0); /* SPI Cont Enable */
+struct R8_MSR:public Reg8<>{
+    static constexpr uint8_t DELTA_MASK = 0x0F;     /* Any of the delta bits! */
+    /* Delta CTS Clear To Send */
+    uint8_t dcts   :1; 
 
-/* Misc definitions */
-static constexpr uint8_t CH943X_FIFO_SIZE = (1536);
-static constexpr uint8_t CH943X_CMD_DELAY 3
+    /* Delta DSR Data Set Ready */
+    uint8_t ddsr   :1; 
+
+    /* Delta RI Ring Indicator */
+    uint8_t dri    :1; 
+
+    /* Delta CD Carrier Detect */
+    uint8_t dcd    :1; 
+
+    /* CTS */
+    uint8_t cts    :1; 
+
+    /* DSR */
+    uint8_t dsr    :1; 
+
+    /* RI */
+    uint8_t ri     :1; 
+
+    /* CD */
+    uint8_t cd     :1; 
+};
+
+struct R8_TNOW_CFG{
+    static constexpr uint8_t ADDRESS = 0x41;
+    uint8_t tnow_func:4;
+    uint8_t tnow_level:4;
+};
+
+struct R8_FIFO_CTRL{
+    static constexpr uint8_t ADDRESS = 0x42;
+    uint8_t uart_num:4;
+    uint8_t is_tx:1;
+    uint8_t :3;
+};
+
+struct R8_FIFO_CNT_L{
+    static constexpr uint8_t ADDRESS = 0x43;
+    uint8_t bits;
+};
+
+struct R8_FIFO_CNT_H{
+    static constexpr uint8_t ADDRESS = 0x44;
+    uint8_t bits;
+};
+
+struct R8_CLK_CTRL{
+    static constexpr uint8_t ADDRESS = 0x48;
+    uint8_t div:5;
+    uint8_t ext_power:1;
+    uint8_t ext_en:1;
+    uint8_t pll_en:1;
+};
+
+struct R8_CLK_CTRL{
+    static constexpr uint8_t ADDRESS = 0x48;
+    uint8_t div:5;
+    uint8_t ext_power:1;
+    uint8_t ext_en:1;
+    uint8_t pll_en:1;
+};
+
+struct R8_SLEEP_CFG{
+    static constexpr uint8_t ADDRESS = 0x4a;
+    uint8_t lp_setting:3;
+    uint8_t :5;
+};
+
+
+static constexpr size_t FIFO_SIZE = (1536);
+static constexpr uint8_t CMD_DELAY = 3;
 
 }

@@ -7,7 +7,7 @@
 #include "injected_channel.hpp"
 #include "adc_utils.hpp"
 
-#if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
+#if defined(ADC1_PRESENT) || defined(ADC2_PRESENT)
 extern "C"{
 __interrupt void ADC1_2_IRQHandler(void);
 }
@@ -50,31 +50,26 @@ struct Adc_Prelude{
 
 
     struct CTLR2{
-        union{
-            struct{
-                uint32_t ADON:1;
-                uint32_t CONT:1;
-                uint32_t CAL:1;
-                uint32_t RSTCAL:1;
-                uint32_t __RESV1__:4;
+        uint32_t ADON:1;
+        uint32_t CONT:1;
+        uint32_t CAL:1;
+        uint32_t RSTCAL:1;
+        uint32_t __RESV1__:4;
 
-                uint32_t DMA:1;
-                uint32_t __RESV2__:2;
-                uint32_t ALIGN:1;
-                uint32_t JEXTSEL:3;
-                uint32_t JEXTTRIG:1;
+        uint32_t DMA:1;
+        uint32_t __RESV2__:2;
+        uint32_t ALIGN:1;
+        uint32_t JEXTSEL:3;
+        uint32_t JEXTTRIG:1;
 
-                uint32_t __RESV3__:1;
-                uint32_t EXTSEL:3;
-                uint32_t EXTTRIG:1;
-                uint32_t JSWSTART:1;
-                uint32_t SWSTART:1;
-                uint32_t TSVREFE:1;
+        uint32_t __RESV3__:1;
+        uint32_t EXTSEL:3;
+        uint32_t EXTTRIG:1;
+        uint32_t JSWSTART:1;
+        uint32_t SWSTART:1;
+        uint32_t TSVREFE:1;
 
-                uint32_t __RESV4__:8;
-            };
-            uint32_t data;
-        };
+        uint32_t __RESV4__:8;
     };
 
 
@@ -92,7 +87,7 @@ struct [[nodiscard]] AdcChannelConfig{
     using ChannelSelection = AdcChannelSelection;
     using SampleCycles = AdcSampleCycles;
 
-    ChannelSelection nth;
+    ChannelSelection sel;
     SampleCycles cycles;
 };
 
@@ -101,9 +96,9 @@ struct [[nodiscard]] AdcChannelConfig{
 
 class AdcPrimary: public Adc_Prelude{
 public:
-    explicit AdcPrimary(ADC_TypeDef * inst):
+    explicit AdcPrimary(void * inst):
         inst_(inst),
-        injected_channels{
+        injected_channels_{
             AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 1),
             AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 2),
             AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 3),
@@ -123,7 +118,19 @@ public:
     template<size_t I>
     requires ((I >= 1) and (I <= 4))
     AdcInjectedChannel & inj(){
-        return injected_channels[I - 1];
+        return injected_channels_[I - 1];
+    }
+
+
+    void set_regular_channels(const std::initializer_list<AdcChannelConfig> & regular_list);
+    void set_injected_channels(const std::initializer_list<AdcChannelConfig> & injected_list);
+
+    void set_trigger(
+        const RegularTrigger r_trigger, 
+        const InjectedTrigger j_trigger
+    ){
+        set_regular_trigger(r_trigger);
+        set_injected_trigger(j_trigger);
     }
 
 
@@ -138,188 +145,85 @@ public:
 
     template<IT I>
     void enable_interrupt(const Enable en){
-        ADC_ITConfig(inst_, std::bit_cast<uint16_t>(I), en == EN);
+        dyn_enable_interrupt(I, en);
     }
 
 
-    void set_mode(const Mode mode){
-        auto tempreg = std::bit_cast<CTLR1>(inst_->CTLR1);
-        tempreg.DUALMOD = std::bit_cast<uint8_t>(mode);
-        inst_->CTLR1 = std::bit_cast<uint32_t>(tempreg);
-    };
+    void set_mode(const Mode mode);
 
-    void set_pga(const Pga pga){
-        auto tempreg = std::bit_cast<CTLR1>(inst_->CTLR1);
-        tempreg.PGA = std::bit_cast<uint8_t>(pga);
-        inst_->CTLR1 = std::bit_cast<uint32_t>(tempreg);
-    }
+    void set_pga(const Pga pga);
 
-    void enable_continous(const Enable en){
-        auto tempreg = std::bit_cast<CTLR2>(inst_->CTLR2);
-        tempreg.CONT = en == EN;
-        inst_->CTLR2 = std::bit_cast<uint32_t>(tempreg);
-    }
+    void enable_continous(const Enable en);
 
-    void enable_auto_inject(const Enable en){
-        ADC_AutoInjectedConvCmd(inst_, en == EN);
-    }
+    void enable_auto_inject(const Enable en);
 
 
-    void set_regular_channels(const std::initializer_list<AdcChannelConfig> & regular_list);
-    void set_injected_channels(const std::initializer_list<AdcChannelConfig> & injected_list);
+    void enable_right_align(const Enable en);
 
-    void enable_right_align(const Enable en){
-        CTLR2 tempreg;
-        tempreg.data = inst_->CTLR2;
-        tempreg.ALIGN = en == DISEN;
-        inst_->CTLR2 = tempreg.data;
-        right_align = en == EN;
-    }
+    void set_regular_trigger(const RegularTrigger trigger);
 
-    void set_regular_trigger(const RegularTrigger trigger){
-        CTLR2 tempreg;
-        tempreg.data = inst_->CTLR2;
-        tempreg.EXTSEL = static_cast<uint8_t>(trigger);
-        tempreg.EXTTRIG = (trigger != RegularTrigger::SW);
-        inst_->CTLR2 = tempreg.data;
-    }
+    void set_injected_trigger(const InjectedTrigger trigger);
 
-    void set_injected_trigger(const InjectedTrigger trigger){
-        CTLR2 tempreg;
-        tempreg.data = inst_->CTLR2;
-        tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
-        tempreg.JEXTTRIG = (trigger != InjectedTrigger::SW);
-        inst_->CTLR2 = tempreg.data;
-    }
-
-    void set_wdt_threshold(const uint16_t low,const uint16_t high){
-        inst_->WDHTR = CLAMP(low, 0, get_max_value());
-        inst_->WDLTR = CLAMP(high, 0, get_max_value());
-    }
+    void set_wdt_threshold(const uint16_t low,const uint16_t high);
 
 
-    void set_trigger(
-        const RegularTrigger r_trigger, 
-        const InjectedTrigger j_trigger
-    ){
-        set_regular_trigger(r_trigger);
-        set_injected_trigger(j_trigger);
-    }
+    void sw_start_regular(const bool force = false);
 
-    void sw_start_regular(const bool force = false){
-        if(force) set_regular_trigger(RegularTrigger::SW);
-        ADC_SoftwareStartConvCmd(inst_, true);
-    }
+    void sw_start_injected(const bool force = false);
 
-    void sw_start_injected(const bool force = false){
-        if(force) set_injected_trigger(InjectedTrigger::SW);
-        ADC_SoftwareStartInjectedConvCmd(inst_, true);
-    }
+    [[nodiscard]] bool is_regular_idle();
 
-    [[nodiscard]] bool is_regular_idle(){
-        return ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC);
-    }
+    [[nodiscard]] bool is_injected_idle();
 
-    [[nodiscard]] bool is_injected_idle(){
-        return ADC_GetFlagStatus(ADC1, ADC_FLAG_JEOC);
-    }
+    [[nodiscard]] bool is_idle();
 
-    [[nodiscard]] bool is_idle(){
-        return (is_regular_idle() && is_injected_idle());
-    }
+    void enable_dma(const Enable en);
 
-    void enable_dma(const Enable en){
-        ADC_DMACmd(inst_, en == EN);
-    }
-
-    uint16_t get_conv_result(){
-        return inst_->RDATAR;
-    }
+    uint16_t get_conv_result();
 
 protected:
-    ADC_TypeDef * inst_;
+    void * inst_;
     Callback callback_;
 
-    bool right_align = true;
+    bool right_align_ = true;
 
-    int16_t cali_data;
+    int16_t cali_data_;
 
-    uint8_t regular_cnt = 0;
-    uint8_t injected_cnt = 0;
+    uint8_t regular_cnt_ = 0;
+    uint8_t injected_cnt_ = 0;
 
-    uint16_t regular_data_cache[16] = {0};
-
-    AdcInjectedChannel injected_channels[4];
+    AdcInjectedChannel injected_channels_[4];
 
 
-    uint32_t get_max_value() const {
-        return ((1 << 12) - 1) << (right_align ? 0 : 4);
-    }
+    uint32_t get_max_value() const;
+    void set_regular_count(const uint8_t cnt);
 
-    void set_regular_count(const uint8_t cnt){
-        auto tempreg = std::bit_cast<CTLR1>(inst_->CTLR1);
-        tempreg.DISCNUM = cnt;
-        inst_->CTLR1 = std::bit_cast<uint32_t>(tempreg);
-        regular_cnt = cnt;
-    }
+    void set_injected_count(const uint8_t cnt);
 
-    void set_injected_count(const uint8_t cnt){
-        ADC_InjectedSequencerLengthConfig(inst_, cnt);
-        injected_cnt = cnt;
-    }
+    void set_regular_sample_cycles(const ChannelSelection sel,  const SampleCycles sample_cycles);
+    void enable_singleshot(const Enable en);
+    void enable_scan(const Enable en);
 
-    void set_regular_sample_time(const ChannelSelection nth,  const SampleCycles _sample_time){
-        auto sample_time = _sample_time;
-        uint8_t ch = std::bit_cast<uint8_t>(nth);
-        uint8_t offset = ch % 10;
-        offset *= 3;
+    void enable_temp_vref(const Enable en);
 
-        if(ch < 10){
-            uint32_t tempreg = inst_->SAMPTR1;
-            tempreg &= ~(0xb111 << offset);
-            tempreg |= (uint8_t)sample_time << offset;
-            inst_->SAMPTR1 = tempreg;
-        }else{
-            uint32_t tempreg = inst_->SAMPTR2;
-            tempreg &= ~(0xb111 << offset);
-            tempreg |= (uint8_t)sample_time << offset;
-            inst_->SAMPTR2 = tempreg;
-        }
-    }
+    void dyn_enable_interrupt(const AdcIT I, const Enable en);
 
-    void enable_singleshot(const Enable en){
-        auto tempreg = std::bit_cast<CTLR1>(inst_->CTLR1);
-        tempreg.DISCEN = en == EN;
-        inst_->CTLR1 = std::bit_cast<uint32_t>(tempreg);
-    }
 
-    void enable_scan(const Enable en){
-        auto tempreg = std::bit_cast<CTLR1>(inst_->CTLR1);
-        tempreg.SCAN = en == EN;
-        inst_->CTLR1 = std::bit_cast<uint32_t>(tempreg);
-    }
-
-    void enable_temp_vref(const Enable en){
-        CTLR2 tempreg;
-        tempreg.data = inst_->CTLR2;
-        tempreg.TSVREFE = en == EN;
-        inst_->CTLR2 = tempreg.data;
-    }
-
-    #if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
+    #if defined(ADC1_PRESENT) || defined(ADC2_PRESENT)
     friend void ::ADC1_2_IRQHandler(void);
     #endif
 
-    __fast_inline void accept_jeoc_interrupt(){
-        EXECUTE(callback_, AdcEvent::EndOfInjectedConversion);
-    }
-
-    __fast_inline void accept_eoc_interrupt(){
-        EXECUTE(callback_, AdcEvent::EndOfConversion);
-    }
-
-    __fast_inline void accept_awd_interrupt(){
-        EXECUTE(callback_, AdcEvent::AnalogWatchdog);
+    __fast_inline void accept_interrupt(const AdcIT it){
+        if(callback_ == nullptr) return;
+        switch(it){
+            case AdcIT::EOC: 
+                return callback_(AdcEvent::EndOfInjectedConversion);
+            case AdcIT::JEOC: 
+                return callback_(AdcEvent::EndOfInjectedConversion);
+            case AdcIT::AWD: 
+                return callback_(AdcEvent::AnalogWatchdog);
+        }
+        __builtin_unreachable();
     }
 };
 

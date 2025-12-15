@@ -6,51 +6,53 @@
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 
-#include "drivers/Proximeter/MK8000TR/mk8000tr_uart.hpp"
-#include "core/sync/timer.hpp"
+#include "drivers/Proximeter/MK8000TR/mk8000tr_stream.hpp"
+#include "core/async/timer.hpp"
 
 using namespace ymd;
-using drivers::MK8000TR_Prelude;
 
+using drivers::mk8000tr::MK8000TR_ParserSink;
 
 void mk8000tr_main(){
     DEBUGGER_INST.init({
-        576000 
+        .remap = hal::UartRemap::_0,
+        .baudrate = 576000 
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     
 
     #if defined(CH32V20X)
-    auto & mk8000tr_uart = hal::uart1;
+    auto & mk8000tr_uart_ = hal::uart1;
     #elif defined(CH32V30X)
-    auto & mk8000tr_uart = hal::uart2;
+    auto & mk8000tr_uart_ = hal::uart2;
     #else
     static_assert(false, "Unsupported MCU");
     #endif
 
-    using MkEvent = MK8000TR_Prelude::Event;
+    using MkEvent = drivers::mk8000tr::Event;
 
 
     auto mk8000tr_ev_handler = [&](const MkEvent & ev){ 
         DEBUG_PRINTLN(ev.dist_cm, ev.signal_strength.to_dbm());
     };
 
-    auto mk8000tr_parser = drivers::MK8000TR_StreamParser(mk8000tr_ev_handler);
-    mk8000tr_uart.init({
-        115200u * 2
+    auto mk8000tr_parser = MK8000TR_ParserSink(mk8000tr_ev_handler);
+    mk8000tr_uart_.init({
+        .remap = hal::UartRemap::_0,
+        .baudrate = 576000 
     });
 
 
-    auto red_led_gpio_ = hal::PC<13>();
-    auto blue_led_gpio_ = hal::PC<14>();
-    red_led_gpio_.outpp();
-    blue_led_gpio_.outpp();
+    auto red_led_pin_ = hal::PC<13>();
+    auto blue_led_pin_ = hal::PC<14>();
+    red_led_pin_.outpp();
+    blue_led_pin_.outpp();
 
     auto blink_service_poller = [&]{
 
-        red_led_gpio_ = BoolLevel::from((
+        red_led_pin_ = BoolLevel::from((
             uint32_t(clock::millis().count()) % 200) > 100);
-        blue_led_gpio_ = BoolLevel::from((
+        blue_led_pin_ = BoolLevel::from((
             uint32_t(clock::millis().count()) % 400) > 200);
     };
 
@@ -61,9 +63,10 @@ void mk8000tr_main(){
             std::vector<uint8_t> bytes(8);
 
             #if 1
-            while(mk8000tr_uart.available()){
+            while(mk8000tr_uart_.available()){
                 char chr;
-                mk8000tr_uart.read1(chr);
+                const auto read_len =  mk8000tr_uart_.try_read_char(chr);
+                if(read_len == 0) break;
                 bytes.push_back(uint8_t(chr));
             }
             // DEBUG_PRINTLN_IDLE(
@@ -84,7 +87,7 @@ void mk8000tr_main(){
             return bytes;
         };
 
-        if(mk8000tr_uart.available()){
+        if(mk8000tr_uart_.available()){
             // const auto u_begin = clock::micros();
             const auto bytes = collect_bytes();
             mk8000tr_parser.push_bytes(std::span(bytes)); 

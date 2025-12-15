@@ -43,7 +43,7 @@ public:
     [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
     [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
 private:
-    BoschSensor_Phy phy_;
+    BoschImu_Phy phy_;
     iq20 acc_scaler_ = 0;
     BMI088_AccRegs regs_ = {};
 
@@ -130,7 +130,7 @@ public:
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs gyr_fs);
     [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
 private:
-    BoschSensor_Phy phy_;
+    BoschImu_Phy phy_;
     iq20 gyr_scaler_ = 0;
 
     BMI088_GyrRegs regs_ = {};
@@ -141,15 +141,15 @@ private:
     calculate_gyr_scale(const GyrFs gyr_fs){
         switch(gyr_fs){
             case GyrFs::_125deg:
-                return DEG2RAD<iq20>(2 * 125);
+                return iq24(2 * 125 * PI / 180);
             case GyrFs::_250deg:
-                return DEG2RAD<iq20>(2 * 250);
+                return iq24(2 * 250 * PI / 180);
             case GyrFs::_500deg:
-                return DEG2RAD<iq20>(2 * 500);
+                return iq24(2 * 500 * PI / 180);
             case GyrFs::_1000deg:
-                return DEG2RAD<iq20>(2 * 1000);
+                return iq24(2 * 1000 * PI / 180);
             case GyrFs::_2000deg:
-                return DEG2RAD<iq20>(2 * 2000);
+                return iq24(2 * 2000 * PI / 180);
         }
 
         __builtin_unreachable();

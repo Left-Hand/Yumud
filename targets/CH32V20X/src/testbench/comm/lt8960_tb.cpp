@@ -2,15 +2,16 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/magic/size_traits.hpp"
-#include "core/magic/function_traits.hpp"
-#include "core/magic/serialize_traits.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/bits/width.hpp"
+#include "core/tmp/functor.hpp"
 
+#include "core/tmp/reflect/enum.hpp"
+
+#include "core/tmp/serialize_traits.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
@@ -98,10 +99,10 @@ static constexpr uint8_t calc_crc(const std::span<const uint8_t> pbuf){
 
 template<typename ... Ts>
 static constexpr auto make_payload_from_args(Ts && ... args){
-    const auto body = magic::serialize_args_to_bytes(args...);
+    const auto body = tmp::serialize_args_to_bytes(args...);
     const auto crc = calc_crc(std::span(body));
 
-    constexpr size_t size = magic::total_bytes_of_args_v<std::decay_t<Ts> ... > + 1;
+    constexpr size_t size = tmp::total_bytes_of_args_v<std::decay_t<Ts> ... > + 1;
     std::array<uint8_t, size> payload;
     std::copy(body.begin(), body.end(), payload.begin());
     payload[body.size()] = uint8_t{crc};
@@ -116,7 +117,7 @@ static constexpr Option<std::tuple<Ts...>> make_tuple_from_payload(std::span<con
         return None;
     }
 
-    return Some(magic::make_tuple_from_bytes<std::tuple<Ts...>>(
+    return Some(tmp::make_tuple_from_bytes<std::tuple<Ts...>>(
         pbuf.subspan(0, pbuf.size() - 1)));
 }
 
@@ -174,7 +175,7 @@ void lt8960_tb(){
         // if(!tx_ltr.is_pkt_ready().unwrap()) return;
         // std::array data = {uint8_t(uint8_t(64 + 64 * sin(clock::time() * 20))), uint8_t(0x34), uint8_t(0x56), uint8_t(0x78)};
         const auto t = clock::time();
-        const auto [s, c] = sincos(iq16(frac(t)) * iq16(TAU));
+        const auto [s, c] = math::sincos(iq16(math::frac(t)) * iq16(TAU));
         // auto [u, v, w] = SVM(s,c);
         // const auto payload = serialize_args_to_bytes(u, v, t);
         // auto copy_arr_to_span[](std::span<uint8_t> dest, const std::array<uint8_t, auto>& src){
@@ -223,9 +224,16 @@ void lt8960_tb(){
     if (has_tx_authority()) {
         auto & timer = hal::timer1;
         timer.init({
+            .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
             .count_freq = hal::NearestFreq(TX_FREQ),
             .count_mode = hal::TimerCountMode::Up
-        }, EN);
+        })        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
         timer.set_event_handler([&](hal::TimerEvent ev){
@@ -237,6 +245,7 @@ void lt8960_tb(){
             default: break;
             }
         });
+        timer.start();
     }
 
     clock::delay(5ms);
@@ -244,9 +253,14 @@ void lt8960_tb(){
     if (has_rx_authority()) {
         auto & timer = hal::timer2;
         timer.init({
+            .remap = hal::TIM2_REMAP_A0_A1_B10_B11,
             .count_freq = hal::NearestFreq(RX_FREQ),
             .count_mode = hal::TimerCountMode::Up
-        }, EN);
+        }).unwrap().alter_to_pins({
+            // hal::TimerChannelSelection::CH1,
+            // hal::TimerChannelSelection::CH2,
+            // hal::TimerChannelSelection::CH3
+        }).unwrap();
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
         timer.set_event_handler([&](hal::TimerEvent ev){
@@ -258,10 +272,11 @@ void lt8960_tb(){
             default: break;
             }
         });
+        timer.start();
     }
 
     while(true){
-        __WFI();
+
         // DEBUG_PRINT(".");
         // for(auto i : std::views::iota(0, 2)){
         //     DEBUG_PRINTLN(i);
@@ -271,10 +286,11 @@ void lt8960_tb(){
 }
 
 void lt8960_main(){
-    // DBG_UART.init({576_KHz});
-    // DBG_UART.init(1152_KHz);
-    DBG_UART.init({6_MHz});
-    DEBUGGER.retarget(&DBG_UART);
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.no_brackets(EN);
 
     lt8960_tb();

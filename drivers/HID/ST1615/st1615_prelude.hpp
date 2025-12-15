@@ -1,5 +1,6 @@
 #pragma once
 
+// Apache-2.0 license
 // https://github.com/embedded-drivers/sitronix-touch
 
 #include "core/io/regs.hpp"
@@ -7,7 +8,7 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 namespace ymd::drivers{
 

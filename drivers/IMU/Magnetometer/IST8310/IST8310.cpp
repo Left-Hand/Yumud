@@ -29,19 +29,22 @@ IResult<> IST8310::init(){
     if(const auto res = validate();
         res.is_err()) return res;
 
-    if(const auto res = enable_contious(DISEN);
+    if(const auto res = enable_continous(DISEN);
         res.is_err()) return res;
+
     if(const auto res = set_x_average_times(AverageTimes::_4);
         res.is_err()) return res;
+
     if(const auto res = set_y_average_times(AverageTimes::_4);
         res.is_err()) return res;
+
     if(const auto res = update();
         res.is_err()) return res;
     return Ok();
 }
 IResult<> IST8310::update(){
     auto & reg = regs_.axis_x_reg;
-    return read_burst(reg.ADDRESS, &reg.as_bits_mut(), 3);
+    return read_burst(reg.ADDRESS, std::span(&reg.as_bits_mut(), 3));
 }
 
 IResult<> IST8310::validate(){
@@ -56,11 +59,12 @@ IResult<> IST8310::validate(){
 IResult<> IST8310::reset(){
     auto reg = RegCopy(regs_.ctrl2_reg);
     reg.reset = 1;
-    return write_reg(reg);
+    const auto res = write_reg(reg);
     reg.reset = 0;
+    return res;
 }
 
-IResult<> IST8310::enable_contious(const Enable en){
+IResult<> IST8310::enable_continous(const Enable en){
     auto reg = RegCopy(regs_.ctrl1_reg);
     reg.cont = en == EN;
     return write_reg(reg);;

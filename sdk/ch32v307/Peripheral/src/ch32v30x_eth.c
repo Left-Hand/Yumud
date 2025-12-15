@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_eth.h"
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_eth.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 
 ETH_DMADESCTypeDef *DMATxDescToSet;
 ETH_DMADESCTypeDef *DMARxDescToGet;

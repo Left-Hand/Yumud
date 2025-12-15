@@ -1,8 +1,8 @@
 #pragma once
 
 #include "uvw.hpp"
-#include "primitive/arithmetic/angle.hpp"
-#include "types/gesture/rotation2.hpp"
+#include "primitive/arithmetic/angular.hpp"
+#include "algebra/gesture/rotation2.hpp"
 
 namespace ymd::digipw{
 
@@ -34,6 +34,8 @@ static constexpr __fast_inline void dq_to_alphabeta(
 
 template<typename T>
 struct [[nodiscard]] AlphaBetaCoord final{
+    static_assert(std::is_signed_v<T>);
+
     T alpha;
     T beta;
 
@@ -103,8 +105,8 @@ struct [[nodiscard]] AlphaBetaCoord final{
         return AlphaBetaCoord{lhs * rhs.alpha, lhs * rhs.beta};
     }
 
-    [[nodiscard]] constexpr Angle<T> angle() const {
-        return Angle<T>::from_turns(atan2pu(beta, alpha));
+    [[nodiscard]] constexpr Angular<T> angle() const {
+        return Angular<T>::from_turns(math::atan2pu(beta, alpha));
     }
 
     template<typename Fn>
@@ -167,12 +169,14 @@ struct [[nodiscard]] AlphaBetaCoord final{
 
 private:
     static constexpr T _2_by_3 = static_cast<T>(2.0/3);
-    static constexpr T _sqrt3_by_3 = static_cast<T>(sqrt(T(3)) / 3);
-    static constexpr T _sqrt3_by_2 = static_cast<T>(sqrt(T(3)) / 2);
+    static constexpr T _sqrt3_by_3 = static_cast<T>(math::sqrt(T(3)) / 3);
+    static constexpr T _sqrt3_by_2 = static_cast<T>(math::sqrt(T(3)) / 2);
 };
 
 template<typename T>
 struct [[nodiscard]] AlphaBetaZeroCoord final{
+    static_assert(std::is_signed_v<T>);
+
     T alpha;
     T beta;
     T zero;
@@ -210,7 +214,8 @@ private:
 
 template<typename T>
 struct [[nodiscard]] DqCoord final{
-
+    static_assert(std::is_signed_v<T>);
+    
     T d;
     T q;
 

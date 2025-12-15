@@ -13,9 +13,9 @@
 #include "../targets/CH32V20X/src/testbench/tb.h"
 #include "../hal/bkp/bkp.hpp"
 
-#include "types/vectors/quat.hpp"
-#include "types/vectors/vector2.hpp"
-#include "types/vectors/vector3.hpp"
+#include "algebra/vectors/quat.hpp"
+#include "algebra/vectors/vec2.hpp"
+#include "algebra/vectors/vec3.hpp"
 
 #include "ctrl.hpp"
 #include "body.hpp"
@@ -201,7 +201,7 @@ public:
         Vec3 temp_gyr_offs = Vec3();
         Vec3 temp_magent = Vec3();
         
-        for(int i = 0; i < cali_times; ++i){
+        for(size_t i = 0; i < cali_times; ++i){
             temp_gravity += Vec3(mpu.read_acc());
             temp_gyr_offs += Vec3(mpu.read_gyr());    
             temp_magent += Vec3(qml.read_mag());

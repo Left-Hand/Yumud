@@ -3,14 +3,15 @@
 #include <atomic>
 
 #include "core/debug/debug.hpp"
-#include "core/sync/timer.hpp"
+#include "core/async/timer.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/string/utils/strconv2.hpp"
 #include "core/utils/combo_counter.hpp"
-#include "core/utils/delayed_semphr.hpp"
+#include "core/utils/default.hpp"
+#include "core/async/delayed_semphr.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/timer/hw_singleton.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
@@ -20,17 +21,17 @@
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/GateDriver/MP6540/mp6540.hpp"
 
-#include "types/vectors/quat.hpp"
+#include "algebra/vectors/quat.hpp"
 
 #include "robots/gesture/comp_est.hpp"
 #include "middlewares/rpc/rpc.hpp"
-#include "middlewares/repl/repl_service.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/sensored/calibrate_table.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/motor_ctrl/elecrad_compsator.hpp"
-#include "dsp/controller/adrc/leso.hpp"
+#include "dsp/controller/adrc/linear/leso2o.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
@@ -109,6 +110,7 @@ void nuedc_2025e_joint_main(){
     auto & DBG_UART = hal::uart2;
 
     DBG_UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = UART_BAUD
     });
 
@@ -124,14 +126,14 @@ void nuedc_2025e_joint_main(){
     auto & can = hal::can1;
     auto & adc = hal::adc1;
 
-    auto led_blue_gpio_ = hal::PC<13>();
-    auto led_red_gpio_ = hal::PC<14>();
-    auto led_green_gpio_ = hal::PC<15>();
+    auto led_blue_pin_ = hal::PC<13>();
+    auto led_red_pin_ = hal::PC<14>();
+    auto led_green_pin_ = hal::PC<15>();
 
-    auto mp6540_en_gpio_ = hal::PB<15>();
-    auto mp6540_nslp_gpio_ = hal::PB<14>();
-    auto mp6540_nfault_gpio_ = hal::PA<7>();
-    auto ma730_cs_gpio_ = hal::PA<0>();
+    auto mp6540_en_pin_ = hal::PB<15>();
+    auto mp6540_nslp_pin_ = hal::PB<14>();
+    auto mp6540_nfault_pin_ = hal::PA<7>();
+    auto ma730_cs_pin_ = hal::PA<0>();
 
     
     auto & pwm_u = timer1.oc<1>();
@@ -139,29 +141,42 @@ void nuedc_2025e_joint_main(){
     auto & pwm_w = timer1.oc<3>(); 
 
     timer1.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
         .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2), 
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
-    }, EN);
+    })
+        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+    timer1.start();
 
-    timer1.oc<4>().init({.plant_en = DISEN});
+    timer1.oc<4>().init([&]{
+        auto config = timer1.oc<4>().default_config();
+        return config;
+    }());
+
     timer1.oc<4>().cvr() = timer1.arr() - 1;
 
-    pwm_u.init({});
-    pwm_v.init({});
-    pwm_w.init({});
+    pwm_u.init(Default);
+    pwm_v.init(Default);
+    pwm_w.init(Default);
 
-    led_red_gpio_.outpp(); 
-    led_blue_gpio_.outpp(); 
-    led_green_gpio_.outpp();
-    mp6540_nfault_gpio_.inana();
+    led_red_pin_.outpp(); 
+    led_blue_pin_.outpp(); 
+    led_green_pin_.outpp();
+    mp6540_nfault_pin_.inana();
 
     const auto self_node_role_ = get_node_role(chip_id_crc_)
         .expect(chip_id_crc_);
 
     can.init({
-        .remap = CAN1_REMAP,
-        .mode = hal::CanMode::Normal,
-        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs(), 
+        .remap = hal::CAN1_REMAP_PA12_PA11,
+        .wiring_mode = hal::CanWiringMode::Normal,
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
     });
 
     can.filters<0>() 
@@ -174,7 +189,8 @@ void nuedc_2025e_joint_main(){
     ;
 
     spi.init({
-        .baudrate = 18_MHz
+        .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
+        .baudrate = hal::NearestFreq(18_MHz)
     });
 
 
@@ -182,7 +198,7 @@ void nuedc_2025e_joint_main(){
 
     MA730 ma730_{
         &spi,
-        spi.allocate_cs_gpio(&ma730_cs_gpio_)
+        spi.allocate_cs_pin(&ma730_cs_pin_)
             .unwrap()
     };
 
@@ -190,18 +206,18 @@ void nuedc_2025e_joint_main(){
         .direction = CW
     }).examine();
 
-    BMI160 bmi160_{
+    bmi160::BMI160 bmi160_{
         &spi,
-        spi.allocate_cs_gpio(&ma730_cs_gpio_)
+        spi.allocate_cs_pin(&ma730_cs_pin_)
             .unwrap()
     };
 
     if(self_node_role_ == NodeRole::YawJoint){
         bmi160_.init({
-            .acc_odr = BMI160::AccOdr::_200Hz,
-            .acc_fs = BMI160::AccFs::_16G,
-            .gyr_odr = BMI160::GyrOdr::_200Hz,
-            .gyr_fs = BMI160::GyrFs::_500deg
+            .acc_odr = bmi160::AccOdr::_200Hz,
+            .acc_fs = bmi160::AccFs::_16G,
+            .gyr_odr = bmi160::GyrOdr::_200Hz,
+            .gyr_fs = bmi160::GyrFs::_500deg
 
             // .acc_odr = BMI160::AccOdr::_400Hz,
             // .acc_fs = BMI160::AccFs::_16G,
@@ -221,11 +237,11 @@ void nuedc_2025e_joint_main(){
     init_adc(adc);
     hal::PA<7>().inana();
 
-    mp6540_en_gpio_.outpp(HIGH);
-    mp6540_nslp_gpio_.outpp(HIGH);
+    mp6540_en_pin_.outpp(HIGH);
+    mp6540_nslp_pin_.outpp(HIGH);
 
     iq20 q_volt_ = 0;
-    Angle<uq32> meas_elec_angle_ = Angle<uq32>::ZERO;
+    Angular<uq32> meas_elec_angle_ = Angular<uq32>::ZERO;
 
     iq20 axis_target_position_ = 0;
     iq20 axis_target_speed_ = 0;
@@ -235,7 +251,7 @@ void nuedc_2025e_joint_main(){
     RunStatus run_status_;
     run_status_.state = RunState::Idle;
 
-    RingBuf<hal::CanClassicFrame, CANMSG_QUEUE_SIZE> msg_queue_;
+    RingBuf<hal::BxCanFrame, CANMSG_QUEUE_SIZE> msg_queue_;
 
     AlphaBetaCoord<iq16> ab_volt_;
     
@@ -248,7 +264,7 @@ void nuedc_2025e_joint_main(){
 
     pos_filter_.set_base_lap_angle(
         
-        Angle<iq16>::from_turns([&] -> iq16{
+        Angular<iq16>::from_turns([&] -> iq16{
             switch(self_node_role_){
                 case NodeRole::YawJoint:
                     return {0.389_r + 0.5_r};
@@ -265,9 +281,9 @@ void nuedc_2025e_joint_main(){
         .base = [&]{
             switch(self_node_role_){
                 case NodeRole::YawJoint:
-                    return -0.211_uq32;
+                    return uq32(1-0.211);
                 case NodeRole::PitchJoint:
-                    return -0.244_uq32;
+                    return uq32(1-0.244);
                 default:
                     PANIC();
             }
@@ -277,20 +293,21 @@ void nuedc_2025e_joint_main(){
         }(),
     };
 
-    dsp::Leso leso_{
+    using Leso = adrc::LinearExtendedStateObserver<iq20, 2>;
+    Leso leso_{
         [&]{
             switch(self_node_role_){
                 case NodeRole::YawJoint:
-                    return dsp::Leso::Config{
+                    return Leso::Config{
+                        .fs = FOC_FREQ,
                         .b0 = 0.5_r,
-                        .w = 0.4_r,
-                        .fs = FOC_FREQ
+                        .w = 0.4_r
                     };
                 case NodeRole::PitchJoint:
-                    return dsp::Leso::Config{
+                    return Leso::Config{
+                        .fs = FOC_FREQ,
                         .b0 = 1.4_r,
-                        .w = 0.2_r,
-                        .fs = FOC_FREQ
+                        .w = 0.2_r
                     };
 
                 default:
@@ -322,7 +339,7 @@ void nuedc_2025e_joint_main(){
         }
 
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
-        pos_filter_.update(Angle<iq16>::from_turns(meas_lap_angle.to_turns()));
+        pos_filter_.update(Angular<iq16>::from_turns(meas_lap_angle.to_turns()));
     };
 
 
@@ -331,7 +348,7 @@ void nuedc_2025e_joint_main(){
 
         if(run_status_.state == RunState::Idle){
             uvw_pwmgen.set_dutycycle(UvwCoord<iq16>::ZERO);
-            leso_.reset();
+            // leso_.reset();
             return;
         }
 
@@ -358,7 +375,7 @@ void nuedc_2025e_joint_main(){
 
         [[maybe_unused]] const auto alphabeta_volt = DqCoord<iq16>{
             .d = 0, 
-            .q = CLAMP2(q_volt - leso_.disturbance(), SVPWM_MAX_VOLT)
+            .q = CLAMP2(q_volt, SVPWM_MAX_VOLT)
             // CLAMP2(q_volt, SVPWM_MAX_VOLT)
         }.to_alphabeta(Rotation2<iq20>::from_angle(meas_elec_angle));
 
@@ -369,7 +386,7 @@ void nuedc_2025e_joint_main(){
             SVM(alphabeta_volt * INV_BUS_VOLT)
         );
 
-        leso_.update(meas_speed, q_volt);
+        // leso_.update(meas_speed, q_volt);
 
         q_volt_ = q_volt;
         meas_elec_angle_ = meas_elec_angle;
@@ -405,17 +422,20 @@ void nuedc_2025e_joint_main(){
     };
 
 
-    auto read_can_frame = [&] -> Option<hal::CanClassicFrame>{
+    auto read_can_frame = [&] -> Option<hal::BxCanFrame>{
         while(can.available()){
             auto frame = can.read();
             if(frame.is_extended()) continue;
-            msg_queue_.push(frame);
+            (void)msg_queue_.try_push(frame);
         }
 
-        if(not msg_queue_.available())
+        if(not msg_queue_.length())
             return None;
 
-        return Some(msg_queue_.pop());
+        hal::BxCanFrame frame = hal::BxCanFrame::from_uninitialized();
+        if(msg_queue_.try_pop(frame) == 0)
+            return None;
+        return Some(frame);
     };
 
     [[maybe_unused]] auto delta_target_position_by_command = 
@@ -512,7 +532,7 @@ void nuedc_2025e_joint_main(){
             }
         };
 
-        auto handle_msg = [&](const hal::CanClassicFrame & frame){
+        auto handle_msg = [&](const hal::BxCanFrame & frame){
             const auto stdid = frame.identifier().try_to_stdid().examine();
             const auto [msg_role, msg_cmd] = dump_role_and_cmd<CommandKind>(stdid);
             if(msg_role != self_node_role_) return;
@@ -546,24 +566,24 @@ void nuedc_2025e_joint_main(){
 
         switch(blink_pattern){
             case BlinkPattern::RED:
-                led_red_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
-                led_blue_gpio_ = LOW;
-                led_green_gpio_ = LOW;
+                led_red_pin_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+                led_blue_pin_ = LOW;
+                led_green_pin_ = LOW;
                 break;
             case BlinkPattern::BLUE:
-                led_red_gpio_ = LOW;
-                led_blue_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
-                led_green_gpio_ = LOW;
+                led_red_pin_ = LOW;
+                led_blue_pin_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+                led_green_pin_ = LOW;
                 break;
             case BlinkPattern::GREEN:
-                led_red_gpio_ = LOW;
-                led_blue_gpio_ = LOW;
-                led_green_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+                led_red_pin_ = LOW;
+                led_blue_pin_ = LOW;
+                led_green_pin_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
                 break;
             case BlinkPattern::RGB:
-                led_red_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
-                led_blue_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
-                led_green_gpio_ = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
+                led_red_pin_ = BoolLevel::from((uint32_t(clock::millis().count()) % 200) > 100);
+                led_blue_pin_ = BoolLevel::from((uint32_t(clock::millis().count()) % 400) > 200);
+                led_green_pin_ = BoolLevel::from((uint32_t(clock::millis().count()) % 800) > 400);
                 break;
         }
     };
@@ -587,7 +607,7 @@ void nuedc_2025e_joint_main(){
                 // pos_filter_.speed(),
                 axis_target_position_
                 // axis_target_speed_,
-                // sinpu(ctime) / MACHINE_CTRL_FREQ * 0.2_r
+                // math::sinpu(now_secs) / MACHINE_CTRL_FREQ * 0.2_r
                 // yaw_angle_,
                 // pos_filter_.lap_position(),
                 // run_status_.state

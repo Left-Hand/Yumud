@@ -5,7 +5,7 @@ using namespace ymd::hal;
 
 
 
-Option<SpiSlaveRank> Spi::allocate_cs_gpio(Some<hal::GpioIntf *> p_io){
+Option<SpiSlaveRank> Spi::allocate_cs_pin(Some<hal::GpioIntf *> p_io){
     auto & io = p_io.deref();
     for(size_t i = 0; i < cs_port_.size(); i++){
         const auto nth = Nth(i);

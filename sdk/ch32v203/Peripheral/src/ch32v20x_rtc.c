@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 // #include "ch32v20x_rtc.h"
-#include "../sdk/ch32v203/Peripheral/inc/ch32v20x_rtc.h"
+#include "sdk/ch32v203/Peripheral/inc/ch32v20x_rtc.h"
 
 /* RTC_Private_Defines */
 #define RTC_LSB_MASK     ((uint32_t)0x0000FFFF) /* RTC LSB Mask */

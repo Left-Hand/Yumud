@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include "sdk/ch32v203/ch32v20x_irqn.h"
 
 /* IO definitions */
 #ifdef __cplusplus

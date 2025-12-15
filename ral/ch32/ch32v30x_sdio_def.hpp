@@ -2,14 +2,14 @@
 
 #include <cstdint>
 
-namespace ymd::ral::CH32V30x::SDIO_Regs{
+namespace ymd::ral::ch32::ch32v30x_sdio{
 
-struct POWER_Reg{
+struct R32_POWER{
     uint32_t PWRCTRL:2;
     uint32_t :30;
 };
 
-struct CLKCR_Reg{
+struct R32_CLKCR{
     uint32_t CLKDIV:8;
     uint32_t CLKEN:1;
     uint32_t PWRSAV:1;
@@ -20,11 +20,11 @@ struct CLKCR_Reg{
     uint32_t :17;
 };
 
-struct ARG_Reg{
+struct R32_ARG{
     uint32_t CMDARG;
 }; 
 
-struct CMD_Reg{
+struct R32_CMD{
     uint32_t CMDINDEX:6;
     uint32_t WAITRESP:2;
     uint32_t WAITINT:1;
@@ -37,7 +37,7 @@ struct CMD_Reg{
     uint32_t :17;
 };
 
-struct RESPCMD_Reg{
+struct R32_RESPCMD{
     uint32_t RESPCMD:6;
     uint32_t :26;
 };

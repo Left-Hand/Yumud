@@ -47,7 +47,7 @@ public:
     [[nodiscard]] IResult<> enable_direct_mode(const Enable en);
 private:
 
-    using Phy = InvensenseSensor_Phy;
+    using Phy = InvensenseImu_Phy;
     Phy phy_;
     MPU6050_Regset regs_ = {};
     iq16 acc_scaler_ = 0;
@@ -96,10 +96,10 @@ private:
 
     static constexpr iq16 calculate_gyr_scaler(const GyrFs fs){
         switch(fs){
-            case GyrFs::_250deg: return DEG2RAD<iq16>(500);
-            case GyrFs::_500deg: return DEG2RAD<iq16>(1000);
-            case GyrFs::_1000deg: return DEG2RAD<iq16>(2000);
-            case GyrFs::_2000deg: return DEG2RAD<iq16>(4000);
+            case GyrFs::_250deg: return iq16(500 * PI / 180);
+            case GyrFs::_500deg: return iq16(1000 * PI / 180);
+            case GyrFs::_1000deg: return iq16(2000 * PI / 180);
+            case GyrFs::_2000deg: return iq16(4000 * PI / 180);
         }
         __builtin_unreachable();
     }

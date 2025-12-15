@@ -144,44 +144,46 @@ IResult<> LT8960L::init_ble(const Power power){
 
     // return IResult<>(Ok())
 
-    //     // 基础寄存器配置
-    //     // REG 0x01 写入0x5781：配置通用模式寄存器（启用射频校准和时钟模式）
+    // 基础寄存器配置
+    // REG 0x01 写入0x5781：配置通用模式寄存器（启用射频校准和时钟模式）
     //     | write_reg(0x01, 0x5781)
         
-    //     // REG 0x08 写入0x6C90：射频配置寄存器（2.4G模式下建议使用0x6c50）
-    //     // 注：此处按注释中的0x6C90配置，但需注意与文档建议值的差异
+    // REG 0x08 写入0x6C90：射频配置寄存器（2.4G模式下建议使用0x6c50）
+    // 注：此处按注释中的0x6C90配置，但需注意与文档建议值的差异
     //     | write_reg(0x08, 0x6C90)
 
-    //     // REG 0x09 写入0x7830：PA配置寄存器（设置发射功率和PA电流增益）
+    // REG 0x09 写入0x7830：PA配置寄存器（设置发射功率和PA电流增益）
     //     | write_reg(0x09, 0x7830)
 
-    //     // REG 0x26 写入0x3A00：调制幅度控制寄存器（设置调制信号幅度）
+    // REG 0x26 写入0x3A00：调制幅度控制寄存器（设置调制信号幅度）
     //     | write_reg(0x26, 0x3A00)
 
-    //     // 启用BLE功能
-    //     // REG 0x20 写入0x4A00：配置1寄存器（设置BLE数据包格式）
-    //     // - 启用Manchester编码、同步字长度为32bit、尾缀码为4bit
+    // 启用BLE功能
+    // REG 0x20 写入0x4A00：配置1寄存器（设置BLE数据包格式）
+    // - 启用Manchester编码、同步字长度为32bit、尾缀码为4bit
     //     | write_reg(0x20, 0x4A00)
 
-    //     // REG 0x24 写入0xBED6：同步字0寄存器（设置BLE接入地址低16bit）
+    // REG 0x24 写入0xBED6：同步字0寄存器（设置BLE接入地址低16bit）
     //     | write_reg(0x24, 0xBED6)
 
-    //     // REG 0x27 写入0x8E89：同步字1寄存器（设置BLE接入地址高16bit）
+    // REG 0x27 写入0x8E89：同步字1寄存器（设置BLE接入地址高16bit）
     //     | write_reg(0x27, 0x8E89)
 
-    //     // REG 0x2C 写入0x0101：数据速率寄存器（设置BLE传输速率为1Mbps）
+    // REG 0x2C 写入0x0101：数据速率寄存器（设置BLE传输速率为1Mbps）
     //     | write_reg(0x2C, 0x0101)
 
-    //     // REG 0x2D 写入0x0080：调制选项寄存器（配置BLE调制参数）
-    //     // - 设置GFSK调制、1Mbps速率、1/3 FEC编码
+    // REG 0x2D 写入0x0080：调制选项寄存器（配置BLE调制参数）
+    // - 设置GFSK调制、1Mbps速率、1/3 FEC编码
     //     | write_reg(0x2D, 0x0080)
 
-    //     // REG 0x0F 写入0xEDCC：功能配置寄存器（启用BLE模式）
+    // REG 0x0F 写入0xEDCC：功能配置寄存器（启用BLE模式）
 
-    //     // 注：0xEDCC 是示例值，实际需参考数据手册具体配置
+    // 注：0xEDCC 是示例值，实际需参考数据手册具体配置
     //     | write_reg(0x0F, 0xEDCC)
 
+    // 参考来源
 
+    // 无许可证声明
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
     if(const auto res = validate();
         res.is_err()) return Err(res.unwrap_err());
@@ -304,11 +306,11 @@ IResult<size_t> LT8960L::receive_ble(std::span<uint8_t> buf){
 
     // if (len > 37)
     // {
-    //     // DataOK_flag=2;
-    //     // printf("Fifo overflow");
+    // DataOK_flag=2;
+    // printf("Fifo overflow");
     //     len = 0; // error
     //     goto RxExit;
-    //     // len=37;
+    // len=37;
     // }
 
     // for (i = 2; i < len + 2; i++)
@@ -327,6 +329,9 @@ IResult<size_t> LT8960L::receive_ble(std::span<uint8_t> buf){
 
 
 IResult<> LT8960L::init(const Config & cfg){
+    // 参考来源
+
+    // 无许可证声明
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
 
     if(const auto res = phy_.init();

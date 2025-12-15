@@ -1,8 +1,8 @@
 
-#include "../nvcv2/flood_fill.hpp"
-#include "../nvcv2/geometry/geometry.hpp"
-#include "../nvcv2/pixels/pixels.hpp"
-#include "../nvcv2/shape/shape.hpp"
+#include "nvcv2/flood_fill.hpp"
+#include "nvcv2/geometry/geometry.hpp"
+#include "nvcv2/pixels/pixels.hpp"
+#include "nvcv2/shape/shape.hpp"
 
 #include <vector>
 #include <map>

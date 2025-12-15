@@ -9,9 +9,8 @@ class Gpio;
 
 class [[nodiscard]] TimerOutBase: public TimerChannel{
 protected:
-    TimerOutBase(TIM_TypeDef * inst, const ChannelSelection nth):
-        TimerChannel(inst, nth){;}
-    void plant_to_pin(const Enable en);
+    TimerOutBase(void * inst, const ChannelSelection sel):
+        TimerChannel(inst, sel){;}
 public:
     void set_valid_level(const BoolLevel level);
     void enable_output(const Enable en);
@@ -20,59 +19,81 @@ public:
 };
 
 struct [[nodiscard]] TimerOcPwmConfig final{
-    TimerOcMode oc_mode = TimerOcMode::ActiveBelowCvr;
-    Enable cvr_sync_en = EN;
-    BoolLevel valid_level = HIGH;
-    Enable out_en = EN;
-    Enable plant_en = EN;
+    TimerOcMode oc_mode;
+    Enable cvr_sync_en;
+    BoolLevel valid_level;
+    Enable out_en;
+
+    using Self = TimerOcPwmConfig;
+    static constexpr Self from_default() {
+        return Self{
+            .oc_mode = TimerOcMode::ActiveBelowCvr,
+            .cvr_sync_en = EN,
+            .valid_level = HIGH,
+            .out_en = EN,
+            // .plant_en = EN,
+        };
+    }
 };
 
 struct [[nodiscard]] TimerOcnPwmConfig final{
-    Enable out_en = EN;
-    Enable plant_en = EN;
+    using Self = TimerOcnPwmConfig;
+    Enable out_en;
+
+    static constexpr Self from_default() {
+        return Self{
+            .out_en = EN,
+        };
+    }
 };
 
 class [[nodiscard]] TimerOC final:public PwmIntf, public TimerOutBase{
 public:
     using Mode = TimerOcMode;
-protected:
-    volatile uint16_t & cvr_;
-    volatile uint16_t & arr_;
+    using Config = TimerOcPwmConfig;
 public:
-    TimerOC(TIM_TypeDef * inst, const ChannelSelection nth):
-        TimerOutBase(inst, nth), 
-            cvr_(from_channel_to_cvr(inst, nth)), 
-            arr_(inst_->ATRLR){;}
+    TimerOC(void * inst, const ChannelSelection sel);
+    void init(const Config & config);
 
-    void init(const TimerOcPwmConfig & config);
+    static constexpr Config default_config(){
+        return Config::from_default();
+    }
 
     void set_oc_mode(const Mode mode);
     void enable_cvr_sync(const Enable en);
     
     Gpio io();
 
-    __fast_inline volatile uint16_t & cvr() {return cvr_;}
-    __fast_inline volatile uint16_t & arr() {return arr_;}
+    [[nodiscard]] __fast_inline volatile uint16_t & cvr() {return cvr_;}
+    [[nodiscard]] __fast_inline volatile uint16_t & arr() {return arr_;}
 
-    __fast_inline volatile uint16_t cvr() const {return cvr_;}
-    __fast_inline volatile uint16_t arr() const {return arr_;}
+    [[nodiscard]] __fast_inline volatile uint16_t cvr() const {return cvr_;}
+    [[nodiscard]] __fast_inline volatile uint16_t arr() const {return arr_;}
 
-    __fast_inline void set_dutycycle(const real_t duty){cvr_ = int(duty * arr_);}
+    __fast_inline void set_dutycycle(const uq16 dutycycle){
+        cvr_ = static_cast<uint16_t>(dutycycle * arr_);
+    }
     __fast_inline void set_cvr(const uint cvr){cvr_ = cvr;}
-    __fast_inline fixed_t<16, int32_t> get_dutycycle(){return fixed_t<16, int32_t>(cvr_) / uint32_t(arr_);}
-
+    __fast_inline uq16 get_dutycycle(){return uq16(cvr_) / uint32_t(arr_);}
+protected:
+    volatile uint16_t & cvr_;
+    volatile uint16_t & arr_;
 
 };
 
 class [[nodiscard]] TimerOCN final:public TimerOutBase{
 public:
+    using Config = TimerOcnPwmConfig;
     TimerOCN(
-        TIM_TypeDef * _base, 
-        const ChannelSelection nth):
-        TimerOutBase(_base, nth)
+        void * inst, 
+        const ChannelSelection sel):
+        TimerOutBase(inst, sel)
         {;}
 
-    void init(const TimerOcnPwmConfig & cfg);
+    void init(const Config & cfg);
+    static constexpr Config default_config(){
+        return Config::from_default();
+    }
 
     Gpio io();
 };

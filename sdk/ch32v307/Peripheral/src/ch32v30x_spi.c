@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 *********************************************************************************/
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_spi.h"
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_spi.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 
 /* SPI SPE mask */
 #define CTLR1_SPE_Set         ((uint16_t)0x0040)

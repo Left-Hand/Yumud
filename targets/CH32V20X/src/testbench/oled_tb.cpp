@@ -7,7 +7,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
 #include "drivers/CommonIO/Key/Key.hpp"
@@ -113,8 +113,8 @@ public:
 };
 
 static void oled_tb(){
-    auto & SCL_GPIO = hal::PB<0>();
-    auto & SDA_GPIO = hal::PB<1>();
+    auto & SCL_PIN = hal::PB<0>();
+    auto & SDA_PIN = hal::PB<1>();
     static constexpr auto I2C_BAUD = 2'000'000;
     // static constexpr auto MONITOR_HZ = 5000;
 
@@ -132,7 +132,7 @@ static void oled_tb(){
     clock::delay(100ms);
 
     // I2cSw i2c{hal::PB<13>(), hal::PB<15>()};
-    hal::I2cSw i2c{SCL_GPIO, SDA_GPIO};
+    hal::I2cSw i2c{SCL_PIN, SDA_PIN};
     // i2c.init(0);
     i2c.init(I2C_BAUD);
 
@@ -150,7 +150,7 @@ static void oled_tb(){
 
     // hal::timer1.init(MONITOR_HZ);
     // hal::timer1.attach(TimerIT::Update,{0,0},[&]{
-    //     DEBUG_PRINTLN(bool(SCL_GPIO.read()), ',', bool(SDA_GPIO.read()));
+    //     DEBUG_PRINTLN(bool(SCL_PIN.read()), ',', bool(SDA_PIN.read()));
     // });
 
     oled.init().unwrap();
@@ -173,7 +173,7 @@ static void oled_tb(){
         painter.draw_fx(
             view.shrink(6).unwrap(), 
             [&](const real_t x){
-                return sinpu(4 * x + clock::time()) * 0.5_r + 0.5_r;
+                return math::sinpu(4 * x + clock::time()) * 0.5_r + 0.5_r;
             }
         ).unwrap();
 

@@ -319,6 +319,7 @@ constexpr __fast_inline T RSHIFT(const T x, const int s){
 #ifdef __cplusplus
 #define CTZ(x) __ymd_ctz_impl(x)
 __fast_inline constexpr uint32_t __ymd_ctz_impl(uint32_t x) {
+    // under both the University of Illinois "BSD-Like" license and the MIT license
     //https://github.com/microsoft/compiler-rt/blob/master/lib/builtins/ctzsi2.c
 
     int32_t t = ((x & 0x0000FFFF) == 0) << 4;  /* if (x has no small bits) t = 16 else 0 */
@@ -351,6 +352,7 @@ __fast_inline constexpr uint32_t __ymd_ctz_impl(uint32_t x) {
 #define CLZ(x) __ymd_clz_impl(x)
 
 __fast_inline constexpr uint32_t  __ymd_clz_impl(uint32_t x){
+    // under both the University of Illinois "BSD-Like" license and the MIT license
     // https://github.com/m-labs/compiler-rt-lm32/blob/master/lib/clzsi2.c
 
     int32_t t = ((x & 0xFFFF0000) == 0) << 4;  /* if (x is small) t = 16 else 0 */

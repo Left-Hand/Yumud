@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../core/system.hpp"
+#include "core/system.hpp"
 
 #include "core/math/real.hpp"
-#include "types/regions/rect2.hpp"
-#include "types/rgb.h"
+#include "algebra/regions/rect2.hpp"
+#include "algebra/rgb.h"
 #include "body.hpp"
 
 

@@ -1,7 +1,7 @@
 // #include "core/debug/debug.hpp"
 
 // #include "hal/bus/can/can.hpp"
-// #include "hal/timer/instance/timer_hw.hpp"
+// #include "hal/timer/hw_singleton.hpp"
 
 // #include "coroutine"
 
@@ -21,11 +21,11 @@
 // public:
 //     CanDrv(hal::Can & can):can_(can){;}
 
-//     void write(const hal::CanClassicFrame & frame){
+//     void write(const hal::BxCanFrame & frame){
 //         can_.write(msg);
 //     }
 
-//     void read(hal::CanClassicFrame & frame){
+//     void read(hal::BxCanFrame & frame){
 //         msg = can_.read();
 //     }
 
@@ -34,7 +34,7 @@
 // };
 
 // class CanActor{
-//     void send(const hal::CanClassicFrame& msg) {
+//     void send(const hal::BxCanFrame& msg) {
 //         // 封装发送操作为异步任务
 //         co_await [this, msg]() -> std::future<void> {
 //             std::promise<void> p;

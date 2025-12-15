@@ -21,7 +21,7 @@
 
 
 #include "details/CH455_Prelude.hpp"
-#include "drivers/HID/Event.hpp"
+#include "primitive/hid_input/keyevent.hpp"
 
 
 namespace ymd::drivers{
@@ -29,17 +29,17 @@ namespace ymd::drivers{
 class CH455 final:public CH455_Prelude{
 public:
     struct Config{
-        Some<hal::Gpio *> scl_gpio;
-        Some<hal::Gpio *> sda_gpio;
+        Some<hal::Gpio *> scl_pin;
+        Some<hal::Gpio *> sda_pin;
         Option<hal::Gpio &> int_gpio;
     };
 
-    CH455(const Config & cfg)
-        : phy_(cfg.scl_gpio, cfg.sda_gpio){;}
+    explicit CH455(const Config & cfg)
+        : phy_(cfg.scl_pin, cfg.sda_pin){;}
 
     IResult<> init();
 
-    IResult<> enable_seg7_mode(Enable en = EN);
+    IResult<> enable_seg7_mode(Enable en);
 
     IResult<> set_digit(const uint8_t digit, const uint8_t code);
 

@@ -4,10 +4,6 @@
 
 namespace ymd::dsp{
 
-    
-// QPR控制器
-// https://github.com/SSC202/Three_Port_ACDC_Converter/blob/main/Software/Controller/my_math.c
-
 template<typename T>
 class SecondOrderSystem {
 public:

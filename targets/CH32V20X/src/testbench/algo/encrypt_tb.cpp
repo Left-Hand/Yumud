@@ -27,6 +27,7 @@ void encrypt_main(){
         auto & DBG_UART = DEBUGGER_INST;
 
         DBG_UART.init({
+            .remap = hal::UartRemap::_0,
             .baudrate = UART_BAUD
         });
 

@@ -3,12 +3,12 @@
 #include "core/platform.hpp"
 
 namespace ymd::hal{
-struct Rng{
+struct [[nodiscard]] Rng{
 public:
     Rng(){};
 
     void init();
-    int32_t update();
+    [[nodiscard]] int32_t update();
 private:
     bool inited_ = false;
 };

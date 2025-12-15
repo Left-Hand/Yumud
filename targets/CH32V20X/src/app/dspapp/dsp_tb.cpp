@@ -2,13 +2,12 @@
 #include "core/clock/time.hpp"
 #include "core/debug/debug.hpp"
 #include "core/utils/Option.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "FFT.hpp"
-#include "liir.hpp"
 
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
-#include "dsp/filter/butterworth/ButterSideFilter.hpp"
+#include "dsp/filter/butterworth/band.hpp"
+#include "dsp/filter/butterworth/side.hpp"
 #include "dsp/filter/butterworth/Order4ZeroPhaseShiftButterWothLowpassFilter.hpp"
 #include "dsp/filter/firstorder/lpf.hpp"
 
@@ -140,7 +139,7 @@ private:
 
 
 
-
+#if 0
 template<typename T, size_t n>
 static void butterworth_bandpass_coeff_tb(const T f1f, const T f2f, const bool scale_en = false){
 
@@ -165,6 +164,7 @@ static void butterworth_bandpass_coeff_tb(const T f1f, const T f2f, const bool s
 
     std::terminate();
 }
+#endif
 
 template<typename T, size_t n>
 static auto make_butterworth_bandpass(const T fl, const T fh, const uint fs){
@@ -278,7 +278,10 @@ static auto make_tunning_filter(const T delay){
 #define DBG_UART hal::uart2
 void dsp_main(){
     // uart2.init(576000, CommStrategy::Blocking);
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
@@ -322,9 +325,9 @@ void dsp_main(){
     };
     #else
     auto sig_in = [](const real_t t){
-        // return sinpu(75 * t);
-        // return sinpu(15 * t);
-        return iq16(frac(75 * t)) * 0.2_r;
+        // return math::sinpu(75 * t);
+        // return math::sinpu(15 * t);
+        return iq16(math::frac(75 * t)) * 0.2_r;
     };
 
     #endif

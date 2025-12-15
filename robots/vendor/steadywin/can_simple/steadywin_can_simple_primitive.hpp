@@ -398,12 +398,12 @@ struct [[nodiscard]] Heartbeat{
     // 失，即通信不稳
     uint8_t life;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -436,7 +436,7 @@ struct [[nodiscard]] GetErrorResp{
         uint32_t controller_exception;
         uint32_t system_exception;
     };
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 };
@@ -494,7 +494,7 @@ struct [[nodiscard]] MitControl{
     mit::MitKdCode_u12 kd;
     mit::MitTorqueCode_u12 torque;
 
-    constexpr hal::CanClassicPayload to_payload(){
+    constexpr hal::BxCanPayload to_payload(){
         std::array<uint8_t, 8> bytes;
         bytes[0] = static_cast<uint8_t>(position.to_bits() >> 8);
         bytes[1] = static_cast<uint8_t>(position.to_bits() & 0xff);
@@ -504,7 +504,7 @@ struct [[nodiscard]] MitControl{
         bytes[5] = static_cast<uint8_t>(kd.to_bits() >> 4);
         bytes[6] = static_cast<uint8_t>(((kd.to_bits() & 0xf) << 4) | ((torque.to_bits() >> 8)));
         bytes[7] = static_cast<uint8_t>(torque.to_bits() & 0xf);
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(bytes));
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(bytes));
     }
 
     constexpr Self from_bytes(std::span<const uint8_t, 8> bytes) const {
@@ -535,12 +535,12 @@ struct [[nodiscard]] GetEncoderEstimates{
     math::fp32 position;
     math::fp32 velocity;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -551,12 +551,12 @@ struct [[nodiscard]] GetMotorCurrent{
     int32_t shadow_count;
     int32_t count_n_cpr;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -567,14 +567,14 @@ struct [[nodiscard]] SetCotrollerMode{
     ControlMode control_mode;
     InputMode input_mode;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return Self {
             .control_mode = std::bit_cast<ControlMode>(payload[0]),
             .input_mode = std::bit_cast<InputMode>(payload[4])
         };
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
+    constexpr hal::BxCanPayload to_payload() const {
         //stupid padding
         std::array<uint8_t, 8> bytes = {
             std::bit_cast<uint8_t>(control_mode),
@@ -582,7 +582,7 @@ struct [[nodiscard]] SetCotrollerMode{
             std::bit_cast<uint8_t>(input_mode),
             0, 0, 0
         };
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(bytes));
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(bytes));
     }
 };
 
@@ -595,12 +595,12 @@ struct [[nodiscard]] SetInputPosition{
     int16_t vel_ff;
     int16_t torque_ff;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -611,12 +611,12 @@ struct [[nodiscard]] SetInputVelocity{
     math::fp32 vel_ff;
     math::fp32 torque_ff;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -627,12 +627,12 @@ struct [[nodiscard]] SetInputTorque{
     math::fp32 torque_ff;
     uint32_t __padding__ = 0;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -643,12 +643,12 @@ struct [[nodiscard]] SetLimits{
 
     math::fp32 velocity_limit;
     math::fp32 current_limit;
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -664,12 +664,12 @@ struct [[nodiscard]] SetTrajVelLimit{
     math::fp32 traj_vel_limit;
     uint32_t __padding__ = 0;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -681,12 +681,12 @@ struct [[nodiscard]] SetTrajAccelLimit{
     math::fp32 traj_decel_limit;
     
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -696,12 +696,12 @@ struct [[nodiscard]] SetTrajInertia{
     math::fp32 traj_inertia;//惯量
     uint32_t __padding__ = 0;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -711,12 +711,12 @@ struct [[nodiscard]] GetIq{
     math::fp32 id_setpoint;
     math::fp32 iq_measured;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -730,12 +730,12 @@ struct [[nodiscard]] GetBusVoltageCurrent{
     static constexpr auto command = CommandKind{0x017};
     math::fp32 bus_voltage;
     math::fp32 bus_current;
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -751,12 +751,12 @@ struct [[nodiscard]] SetLinearCount{
     int32_t linear_count;
     uint32_t __padding__ = 0;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -767,12 +767,12 @@ struct [[nodiscard]] SetPosGain{
     math::fp32 pos_gain;
     uint32_t __padding__ = 0;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -783,12 +783,12 @@ struct [[nodiscard]] SetVelGain{
     math::fp32 vel_gain;
     math::fp32 vel_integrator_gain;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -798,12 +798,12 @@ struct [[nodiscard]] SetTorques{
     math::fp32 torque_setpoint;
     math::fp32 torque;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
@@ -813,12 +813,12 @@ struct [[nodiscard]] GetPowers{
     math::fp32 electrical_power;
     math::fp32 mechanical_power;
 
-    static constexpr Self form_payload(const hal::CanClassicPayload & payload){
+    static constexpr Self form_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::CanClassicPayload to_payload() const {
-        return hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr hal::BxCanPayload to_payload() const {
+        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 

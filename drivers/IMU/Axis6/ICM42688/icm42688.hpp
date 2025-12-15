@@ -2,17 +2,18 @@
 
 #include "details/ICM42688_Prelude.hpp"
 #include "core/utils/enum/enum_array.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "primitive/arithmetic/angular.hpp"
 
-namespace ymd::drivers{
+namespace ymd::drivers::icm42688{
 
-class ICM42688:
-    public ICM42688_Prelude,
-    public AccelerometerIntf, 
-    public GyroscopeIntf
-{
+class ICM42688 final{
 public:
-    explicit ICM42688(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
+    using Self = ICM42688;
+
+    explicit ICM42688(
+        Some<hal::I2c *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
         phy_(i2c, i2c_addr){;}
     explicit ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         phy_(spi, rank){;}
@@ -36,20 +37,22 @@ public:
     [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
     
 private:
-    InvensenseSensor_Phy phy_;
+    Regset regs_ = {};
+    InvensenseImu_Phy phy_;
     Option<Bank> last_bank_ = None;
-    ICM42688_Regset regs_ = {};
 
-    iq24 acc_scale_ = 0;
-    iq24 gyr_scale_ = 0;
+    iq16 acc_scale_ = 0;
+    iq16 gyr_scale_ = 0;
 
 
     [[nodiscard]] IResult<> switch_bank(const Bank bank){
         static constexpr uint8_t SWITCH_BANK_COMMAND = 0x76; 
         if(last_bank_.is_some() and (last_bank_.unwrap() == bank))
             return Ok();
+        if(const auto res = phy_.write_reg(SWITCH_BANK_COMMAND, static_cast<uint8_t>(bank));
+            res.is_err()) return Err(res.unwrap_err());
         last_bank_ = Some(bank);
-        return phy_.write_reg(SWITCH_BANK_COMMAND, static_cast<uint8_t>(bank));
+        return Ok();
     }
 
     template<typename T>
@@ -76,26 +79,26 @@ private:
         return phy_.read_reg(T::ADDRESS, reg.as_bits_mut());
     };
 
-    [[nodiscard]] static constexpr iq24 calc_gyr_scale(const GyrFs fs){
+    [[nodiscard]] static constexpr iq16 calc_gyr_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_2000deg  :      return DEG2RAD<iq24>(iq24(2 * 2000   ));
-            case GyrFs::_1000deg  :      return DEG2RAD<iq24>(iq24(2 * 1000   ));
-            case GyrFs::_500deg   :      return DEG2RAD<iq24>(iq24(2 * 500    ));
-            case GyrFs::_250deg   :      return DEG2RAD<iq24>(iq24(2 * 250    ));
-            case GyrFs::_125deg   :      return DEG2RAD<iq24>(iq24(2 * 125    ));
-            case GyrFs::_62_5deg  :      return DEG2RAD<iq24>(iq24(2 * 62.5   ));
-            case GyrFs::_31_25deg :      return DEG2RAD<iq24>(iq24(2 * 31.25  ));
-            case GyrFs::_15_625deg:      return DEG2RAD<iq24>(iq24(2 * 15.625 ));
+            case GyrFs::_2000deg  :      return iq16(2 * 2000   * PI / 180);
+            case GyrFs::_1000deg  :      return iq16(2 * 1000   * PI / 180);
+            case GyrFs::_500deg   :      return iq16(2 * 500    * PI / 180);
+            case GyrFs::_250deg   :      return iq16(2 * 250    * PI / 180);
+            case GyrFs::_125deg   :      return iq16(2 * 125    * PI / 180);
+            case GyrFs::_62_5deg  :      return iq16(2 * 62.5   * PI / 180);
+            case GyrFs::_31_25deg :      return iq16(2 * 31.25  * PI / 180);
+            case GyrFs::_15_625deg:      return iq16(2 * 15.625 * PI / 180);
         }
         __builtin_unreachable();
     }
 
-    [[nodiscard]] static constexpr iq24 calc_acc_scale(const AccFs fs){
+    [[nodiscard]] static constexpr iq16 calc_acc_scale(const AccFs fs){
         switch(fs){
-            case AccFs::_16G    :       return GRAVITY_ACC<iq24> * 32;
-            case AccFs::_8G     :       return GRAVITY_ACC<iq24> * 16;
-            case AccFs::_4G     :       return GRAVITY_ACC<iq24> * 8;
-            case AccFs::_2G     :       return GRAVITY_ACC<iq24> * 4;
+            case AccFs::_16G    :       return iq16(9.80665 * 32);
+            case AccFs::_8G     :       return iq16(9.80665 * 16);
+            case AccFs::_4G     :       return iq16(9.80665 * 8);
+            case AccFs::_2G     :       return iq16(9.80665 * 4);
         }
         __builtin_unreachable();
     }

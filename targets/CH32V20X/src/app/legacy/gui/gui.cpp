@@ -16,7 +16,7 @@
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 
-#include "nvcv2/shape/shape.hpp"
+#include "middlewares/nvcv2/shape/shape.hpp"
 #include "image/font/instance.hpp"
 
 #include "elements.hpp"
@@ -117,8 +117,8 @@ void gui_main(){
     #endif
 
 
-    const auto spi_rank = spi.allocate_cs_gpio(lcd_cs).unwrap();
-    spi.init({144_MHz});
+    const auto spi_rank = spi.allocate_cs_pin(lcd_cs).unwrap();
+    spi.init({hal::NearestFreq(144_MHz)});
     // spi.init(36_MHz, CommStrategy::Blocking, CommStrategy::None);
 
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
@@ -184,7 +184,7 @@ void gui_main(){
     #if 0
     while(true){
         painter.bind_image(img);
-        painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
+        painter.set_color(HSV888{0, int(100 + 100 * math::sinpu(clock::time())), 255});
         painter.draw_pixel(Vec2u(0, 0));
         painter.draw_hollow_rect(Rect2u(20, 0, 20, 40)).examine();
 

@@ -3,15 +3,9 @@
 #include "core/math/realmath.hpp"
 
 using namespace ymd;
-using namespace ymd::drivers;
+using namespace ymd::drivers::kth7823;
 
-using Error = KTH7823::Error;
-
-template<typename T = void>
-using IResult =  Result<T, Error>;
-
-
-IResult<uint16_t> KTH7823_Phy::direct_read(){
+IResult<uint16_t> Phy::direct_read(){
     uint16_t rx;
     if(const auto res = transceive_u16(rx, 0);
         res.is_err()) return Err(res.unwrap_err());
@@ -19,7 +13,7 @@ IResult<uint16_t> KTH7823_Phy::direct_read(){
     return Ok(rx);
 }
 
-IResult<uint8_t> KTH7823_Phy::read_reg(const uint8_t addr){
+IResult<uint8_t> Phy::read_reg(const uint8_t addr){
     const uint16_t tx = (uint16_t((addr & 0b00'111111) | 0b01'000000) << 8);
     uint16_t rx;
     const auto res = transceive_u16(rx, tx);
@@ -27,7 +21,7 @@ IResult<uint8_t> KTH7823_Phy::read_reg(const uint8_t addr){
     return Ok(rx >> 8);
 }
 
-IResult<> KTH7823_Phy::burn_reg(const uint8_t addr, const uint8_t data){
+IResult<> Phy::burn_reg(const uint8_t addr, const uint8_t data){
     const uint16_t tx = (uint16_t((addr & 0b00'111111) | 0b10'000000) << 8) | data;
     uint16_t rx;
     if(const auto res = transceive_u16(rx, tx);
@@ -41,17 +35,17 @@ IResult<> KTH7823_Phy::burn_reg(const uint8_t addr, const uint8_t data){
     return Ok();
 }
 
-IResult<> KTH7823_Phy::disable_reg_oper(){
+IResult<> Phy::disable_reg_oper(){
     uint16_t dummy;
     return transceive_u16(dummy, 0b1110'1000'0000'0010);
 }
 
-IResult<> KTH7823_Phy::enable_reg_oper(){
+IResult<> Phy::enable_reg_oper(){
     uint16_t dummy;
     return transceive_u16(dummy, 0b1110'1000'0000'0000);
 }
 
-IResult<> KTH7823_Phy::transceive_u16(uint16_t & rx, const uint16_t tx){
+IResult<> Phy::transceive_u16(uint16_t & rx, const uint16_t tx){
     uint16_t dummy = 0;
     if(const auto res = spi_drv_.transceive_single<uint16_t>(dummy, tx);
         res.is_err()) return Err(res.unwrap_err());
@@ -82,13 +76,13 @@ IResult<> KTH7823::validate(){
     return Ok();
 }
 
-IResult<> KTH7823::set_zero_angle(const Angle<uq32> angle){
+IResult<> KTH7823::set_zero_angle(const Angular<uq32> angle){
     const auto raw16 = (angle.to_turns().to_bits() >> 16);
 
-    auto reg_low = RegCopy(zero_low_reg);
+    auto reg_low = RegCopy(regset_.zero_low_reg);
     reg_low.data = raw16 & 0xff;
 
-    auto reg_high = RegCopy(zero_high_reg);
+    auto reg_high = RegCopy(regset_.zero_high_reg);
     reg_high.data = raw16 >> 8;
 
     // return Ok();
@@ -110,13 +104,13 @@ IResult<> KTH7823::set_trim_y(const real_t k){
 }
 
 IResult<> KTH7823::set_trim(const real_t am, const real_t e){
-    real_t k = std::tan(am + e) / std::tan(am);
+    real_t k = math::tan(am + e) / math::tan(am);
     if(k > real_t(1)) return set_trim_x(k);
     else return set_trim_y(k);
 }
 
 IResult<> KTH7823::set_mag_threshold(const MagThreshold low, const MagThreshold high){
-    auto reg = RegCopy(mag_alert_reg);
+    auto reg = RegCopy(regset_.mag_alert_reg);
     reg.mag_high = high;
     reg.mag_low = low;
 
@@ -127,11 +121,6 @@ IResult<> KTH7823::set_mag_threshold(const MagThreshold low, const MagThreshold 
 IResult<> KTH7823::set_direction(const RotateDirection direction){
     TODO();
     return Ok();
-}
-
-IResult<MagStatus> KTH7823::get_mag_status(){
-    TODO();
-    return Ok(MagStatus::from_proper());
 }
 
 IResult<> KTH7823::set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase){

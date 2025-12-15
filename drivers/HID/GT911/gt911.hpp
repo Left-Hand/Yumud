@@ -8,7 +8,7 @@
 // https://aitendo3.sakura.ne.jp/aitendo_data/product_img/ic/touch/GT911/GT911%20Datasheet_20130319.pdf
 
 #include "gt911_prelude.hpp"
-#include "core/container/inline_vector.hpp"
+#include "core/container/heapless_vector.hpp"
 
 
 namespace ymd::drivers{

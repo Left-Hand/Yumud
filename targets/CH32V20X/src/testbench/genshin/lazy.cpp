@@ -8,11 +8,11 @@
 #include "primitive/can/bxcan_frame.hpp" 
 #include "hal/bus/uart/uarthw.hpp" 
 
-#include "core/magic/size_traits.hpp"
-#include "core/magic/function_traits.hpp"
+#include "core/tmp/bits/width.hpp"
+#include "core/tmp/functor.hpp"
 // #include "core/magic/magic_details.hpp"
-#include "core/magic/serialize_traits.hpp"
-#include "core/magic/enum_traits.hpp"
+
+#include "core/tmp/reflect/enum.hpp"
 // #include "rust_enum.hpp"
 #include <coroutine>
 #include <vector>
@@ -554,7 +554,10 @@ void test_pipeline() {
 
 void lazy_main() {
 
-    UART.init({576000});
+    DEBUGGER_INST.init({
+        hal::UART2_REMAP_PA2_PA3,
+        576000
+    });
     // UART.enable_single_line_mode(false);
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
@@ -572,7 +575,7 @@ void lazy_main() {
         DEBUG_PRINTLN(UART.available());
         // while(UART.available()){
         //     char chr;
-        //     UART.read1(chr);
+        //     UART.read_char(chr);
         //     DEBUG_PRINTLN(chr);
         // }
     }

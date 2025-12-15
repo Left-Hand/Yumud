@@ -1,10 +1,10 @@
 #include "core/math/real.hpp"
-#include "core/math/batch/conv.hpp"
+#include "core/math/intrinsics/batch/conv.hpp"
 #include "core/math/iq/fixed_t.hpp"
 
 
-#include "types/vectors/vector3.hpp"
-#include "types/vectors/quat.hpp"
+#include "algebra/vectors/vec3.hpp"
+#include "algebra/vectors/quat.hpp"
 
 template<arithmetic T>
 constexpr

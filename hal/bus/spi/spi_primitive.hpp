@@ -1,9 +1,11 @@
 #pragma once
 
-#include <cstdint>
+#include "primitive/nearest_freq.hpp"
+#include "core/utils/sumtype.hpp"
+#include "spi_layout.hpp"
 
-namespace ymd::hal{
-enum class [[nodiscard]] SpiI2sIT:uint8_t{
+namespace ymd::hal::spi{
+enum class [[nodiscard]] IT:uint8_t{
     TXE =       ((uint8_t)0x71),
     RXNE =      ((uint8_t)0x60),
     ERR =       ((uint8_t)0x50),
@@ -13,41 +15,36 @@ enum class [[nodiscard]] SpiI2sIT:uint8_t{
     UDR =       ((uint8_t)0x53)
 };
 
-enum class [[nodiscard]] SpiEvent:uint8_t{
+enum class [[nodiscard]] Event:uint8_t{
     TransmitBufferEmpty,
     ReceiveBufferNotEmpty
 };
 
-class [[nodiscard]] SpiSlaveRank{
+struct [[nodiscard]] SlaveRank{
 public:
-    explicit constexpr SpiSlaveRank(const uint8_t rank):
-        rank_(rank){}
+    explicit constexpr SlaveRank(const uint8_t count):
+        count_(count){}
 
-    [[nodiscard]] uint8_t count() const {return rank_;}
-    [[nodiscard]] uint16_t as_unique_id() const {return static_cast<uint16_t>(rank_);}
+    [[nodiscard]] uint8_t count() const {return count_;}
+    [[nodiscard]] uint16_t as_unique_id() const {return static_cast<uint16_t>(count_);}
 
 private:
-    uint8_t rank_;
+    uint8_t count_;
 };
 
-enum class [[nodiscard]] SpiMode:uint8_t{
-    _0,
-    _1,
-    _2,
-    _3
-};
-
-enum class [[nodiscard]] SpiClockPolarity:uint8_t{
+//CPOL
+enum class [[nodiscard]] ClockPolarity:uint8_t{
     IdleLow = 0,
     IdleHigh = 1
 };
 
-enum class [[nodiscard]] SpiClockPhase:uint8_t{
+//CPHA
+enum class [[nodiscard]] ClockPhase:uint8_t{
     CaptureOnFirst = 0,
     CaptureOnSecond = 1
 };
 
-struct [[nodiscard]] SpiPrescaler{
+struct [[nodiscard]] Prescaler{
     enum class [[nodiscard]] Kind:uint8_t{
         _2 = 0b000,
         _4 = 0b001,
@@ -61,23 +58,67 @@ struct [[nodiscard]] SpiPrescaler{
 
     using enum Kind;
 
-    #ifdef __YMD_HAL_CH32_FEATURE_HSSPI
+    #ifdef __YMD_FEATURE_CH32_HSSPI
     enum class [[nodiscard]] HsKind{
-        // _2 = 0b000,
         _3 = 0b001,
-        // _4 = 0b010,
         _5 = 0b011,
         _6 = 0b100,
         _7 = 0b101,
-        // _8 = 0b110,
         _9 = 0b111
     };
 
     using enum HsKind;
     #endif
-    constexpr SpiPrescaler(const Kind kind):kind_(kind){;}
+    constexpr Prescaler(const Kind kind):kind_(kind){;}
     [[nodiscard]] constexpr Kind kind() const {return kind_;}
 private:
     Kind kind_;
 };
+
+
+struct [[nodiscard]] Mode{
+
+    enum class [[nodiscard]] Kind:uint8_t{
+        _0,
+        _1,
+        _2,
+        _3
+    };
+
+    using enum Kind;
+
+    constexpr Mode(const Kind kind):kind_(kind){;}
+    constexpr Mode(const ClockPolarity cpol, const ClockPhase cpoa):
+        kind_([&]{
+            return std::bit_cast<Kind>(uint8_t(
+                (cpol == ClockPolarity::IdleHigh ? 0b10 : 0b00) | 
+                (cpoa == ClockPhase::CaptureOnSecond ? 0b01 : 0b00))
+            );
+        }()){;}
+    [[nodiscard]] constexpr Kind kind() const {return kind_;}
+private:
+    Kind kind_;
+};
+
+using Baudrate = Sumtype<Prescaler, NearestFreq, LeastFreq>;
+
+    
+struct Config{
+    SpiRemap remap;
+    Baudrate baudrate;
+    Mode mode = Mode::_3;
+};
+
+}
+
+namespace ymd::hal{
+using SpiI2sIT = spi::IT;
+using SpiEvent = spi::Event;
+using SpiSlaveRank = spi::SlaveRank;
+using SpiMode = spi::Mode;
+using SpiClockPolarity = spi::ClockPolarity;
+using SpiClockPhase = spi::ClockPhase;
+using SpiPrescaler = spi::Prescaler;
+using SpiBaudrate = spi::Baudrate;
+using SpiConfig = spi::Config;
 }

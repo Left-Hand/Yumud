@@ -6,30 +6,31 @@
 
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
-#include "core/sync/timer.hpp"
+#include "core/async/timer.hpp"
 #include "core/utils/zero.hpp"
 #include "core/utils/bits/atomic_bitset.hpp"
 #include "geometry.hpp"
-#include "drivers/Proximeter/MK8000TR/mk8000tr_uart.hpp"
+#include "drivers/Proximeter/MK8000TR/mk8000tr_stream.hpp"
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
 
 
 using namespace ymd;
-using drivers::MK8000TR_Prelude;
-using drivers::AlxAoa_Prelude;
+using namespace ymd::drivers;
 
 // #define DEBUGGER_INST hal::uart2
 
-using AlxEvent = drivers::AlxAoa_Prelude::Event;
-using AlxError = drivers::AlxAoa_Prelude::Error;
+using AlxEvent = drivers::alx_aoa::Event;
+using AlxError = drivers::alx_aoa::Error;
 
-using AlxLocation = drivers::AlxAoa_Prelude::Location;
-using AlxHeartBeat = drivers::AlxAoa_Prelude::HeartBeat;
-using Mk8Event = drivers::MK8000TR_Prelude::Event;
+using AlxLocation = drivers::alx_aoa::Location;
+using AlxHeartBeat = drivers::alx_aoa::HeartBeat;
+using drivers::mk8000tr::MK8000TR_ParserSink;
+using drivers::alx_aoa::AlxAoa_ParserSink;
+using Mk8Event = drivers::mk8000tr::Event;
 
 using AlxMeasurement = SphericalCoordinates<float>;
 
-
+namespace alx_aoa_tb{
 struct [[nodiscard]] Mk8Measurement{
     using Self = Mk8Measurement;
 
@@ -52,111 +53,49 @@ struct [[nodiscard]] Mk8Measurement{
 };
 
 
-struct BlinkProcedure{
-    hal::Gpio & red_led_gpio_;
-    hal::Gpio & blue_led_gpio_;
-
-    void init(){
-
-        red_led_gpio_.outpp();
-        blue_led_gpio_.outpp();
-    }
+struct BlinkActivity{
+    hal::Gpio & blue_led_pin_;
     void resume(){
-        red_led_gpio_ = BoolLevel::from((
-            uint32_t(clock::millis().count()) % 200) > 100);
-        blue_led_gpio_ = BoolLevel::from((
+        blue_led_pin_ = BoolLevel::from((
             uint32_t(clock::millis().count()) % 400) > 200);
     }
 };
 
-struct AlxProcedure{
+struct AlxActivity{
     hal::UartHw & uart_;
-    drivers::AlxAoa_StreamParser & parser_;
+    drivers::alx_aoa::AlxAoa_ParserSink & parser_;
     uint32_t received_bytes_cnt_ = 0;
 
-    void init(){
-        uart_.init({
-            AlxAoa_Prelude::DEFAULT_UART_BUAD
-        });
-    }
     void resume(){
         if(uart_.available() == 0) return;
         while(uart_.available()){
             char chr;
-            uart_.read1(chr);
+            const auto len = uart_.try_read_char(chr);
+            if(len == 0) break;
             // _bytes.push_back(uint8_t(chr));
             parser_.push_byte(static_cast<uint8_t>(chr)); 
             received_bytes_cnt_++;
         }
     }
 };
+}
 
-struct MK8000Procedure{
-    hal::UartHw & uart_;
-    drivers::MK8000TR_StreamParser& parser_;
-    uint32_t received_bytes_cnt_ = 0;
-    void init(){
-        uart_.init({
-            115200 * 2
-        });
-    }
-    void resume(){
-        if(uart_.available() == 0) return;
-        // DEBUG_PRINTLN(received_bytes_cnt_);
-        while(uart_.available()){
-            char chr;
-            uart_.read1(chr);
-            // _bytes.push_back(uint8_t(chr));
-            parser_.push_byte(static_cast<uint8_t>(chr)); 
-            received_bytes_cnt_++;
-        }
-    }
-};
+using namespace alx_aoa_tb;
 
 
-
-template<typename ... Ts>
-struct ProcedureGroup{ 
-    using procedures_type = std::tuple<std::reference_wrapper<Ts>...>;
-    
-    ProcedureGroup(Ts& ... args): 
-        procedures_{std::ref(args)...} 
-    {}
-
-    void resume_all(){
-        // 方法1：使用 std::apply 和折叠表达式
-        std::apply([](auto&... procedures) {
-            (procedures.get().resume(), ...);
-        }, procedures_);
-        
-        // 或者方法2：使用索引序列（备选方案）
-        // resume_all_impl(std::index_sequence_for<Ts...>{});
-    }
-
-    void init_all(){
-        // 方法1：使用 std::apply 和折叠表达式
-        std::apply([](auto&... procedures) {
-            (procedures.get().init(), ...);
-        }, procedures_);
-        
-        // 或者方法2：使用索引序列（备选方案）
-        // resume_all_impl(std::index_sequence_for<Ts...>{});
-    }
-
-private:
-    procedures_type procedures_;
-};
-
-// CTAD 指南
-template<typename ... Ts>
-ProcedureGroup(Ts& ... args) -> ProcedureGroup<Ts...>;
 void alx_aoa_main(){
 
     #if defined(CH32V30X)
-    DEBUGGER_INST.init({
-        576000 
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000 ,
+        .tx_strategy = CommStrategy::Blocking
+        // 115200
     });
-    DEBUGGER.retarget(&DEBUGGER_INST);
+
+
+
+    DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.no_brackets(DISEN);
     DEBUGGER.no_fieldname(EN);
 
@@ -164,125 +103,108 @@ void alx_aoa_main(){
     AlxMeasurements alx_measurements_ = {Zero, Zero};
 
     using Mk8Measurements = std::array<Mk8Measurement, 2>;
-    Mk8Measurements mk8_measurements_ = {Zero, Zero};
 
-    auto mk8_ev_handler = [&](const Mk8Event & ev, const size_t idx){ 
-        switch(idx){
-            default:
-                PANIC("mk8_ev_handler");
-            case 0:
-            case 1:
-                mk8_measurements_[idx] = Mk8Measurement{
-                    .distance = static_cast<float>(ev.dist_cm) / 100,
-                    .strength = ev.signal_strength.to_dbm<float>()
-                };
-                break;
-        }
-    };
+    [[maybe_unused]] auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res, const size_t idx){ 
 
-    auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res, const size_t idx){ 
-        // PANIC{nth.count()};
-        // DEBUG_PRINTLN(nth.count());
         if(res.is_ok()){
             const auto & ev = res.unwrap();
             if(ev.is<AlxLocation>()){
                 const AlxLocation & loc = ev.unwrap_as<AlxLocation>();
                 const auto && measurement = loc.to_spherical_coordinates<float>();
                 alx_measurements_.at(idx) = measurement;
-
+                // if(idx == 1)PANIC{idx};
             }else if(ev.is<AlxHeartBeat>()){
-                // DEBUG_PRINTLN("alx_heartBeat", ev.unwrap_as<AlxHeartBeat>());
             }
         }else{
             [[maybe_unused]] const auto & err = res.unwrap_err();
-            // DEBUG_PRINTLN("alx_err", err);
-
+            // PANIC{uint8_t(err)};
         }
     };
 
-    auto alx_1_parser_ = drivers::AlxAoa_StreamParser(
+    auto alx_1_parser_ = AlxAoa_ParserSink(
         [&](const Result<AlxEvent, AlxError> & res){
+
             alx_ev_handler(res, 0);
         }
     );
 
-    auto alx_2_parser_ = drivers::AlxAoa_StreamParser(
+    auto alx_2_parser_ = AlxAoa_ParserSink(
         [&](const Result<AlxEvent, AlxError> & res){
             alx_ev_handler(res, 1);
         }
     );
 
-    auto mk8_1_parser_ = drivers::MK8000TR_StreamParser(
-        [&](const Mk8Event & ev){
-            mk8_ev_handler(ev, 0);
+    
+    hal::uart3.init({
+        .remap = hal::UART3_REMAP_PB10_PB11,
+        .baudrate = alx_aoa::DEFAULT_UART_BAUD,
+    });
+
+    hal::uart4.init({
+        .remap = hal::UART4_REMAP_PC10_PC11,
+        .baudrate = alx_aoa::DEFAULT_UART_BAUD,
+    });
+
+
+    [[maybe_unused]] auto & alx_1_uart_ = hal::uart3;
+    [[maybe_unused]] auto & alx_2_uart_ = hal::uart4;
+
+    alx_1_uart_.set_event_handler([&](const hal::UartEvent & ev){
+
+        switch(ev.kind()){
+            case hal::UartEvent::RxIdle:
+
+                while(alx_1_uart_.available()){
+                    char chr;
+                    const auto read_len = alx_1_uart_.try_read_char(chr);
+                    if(read_len == 0) break;
+                    alx_1_parser_.push_byte(static_cast<uint8_t>(chr)); 
+                }
+                break;
+            default:
+                break;
         }
-    );
+    });
 
-    auto mk8_2_parser_ = drivers::MK8000TR_StreamParser(
-        [&](const Mk8Event & ev){
-            mk8_ev_handler(ev, 1);
+
+    alx_2_uart_.set_event_handler([&](const hal::UartEvent & ev){
+        switch(ev.kind()){
+            case hal::UartEvent::RxIdle:
+                while(alx_2_uart_.available()){
+                    char chr;
+                    const auto read_len = alx_2_uart_.try_read_char(chr);
+                    if(read_len == 0) break;
+                    alx_2_parser_.push_byte(static_cast<uint8_t>(chr)); 
+                }
+                break;
+            default:
+                break;
         }
-    );
+    });
 
 
-    [[maybe_unused]] auto & alx_1_uart_ = hal::uart1;
-    [[maybe_unused]] auto & alx_2_uart_ = hal::uart2;
-    [[maybe_unused]] auto & mk8_1_uart_ = hal::uart1;
-    [[maybe_unused]] auto & mk8_2_uart_ = hal::uart2;
 
-    auto red_led_gpio_ = hal::PC<13>();
-    auto blue_led_gpio_ = hal::PC<14>();
+    auto blue_led_pin_ = hal::PC<13>();
 
-    BlinkProcedure blink_procedure_{
-        .red_led_gpio_ = red_led_gpio_,
-        .blue_led_gpio_ = blue_led_gpio_
+    blue_led_pin_.outpp();
+
+    BlinkActivity blink_activity_{
+        .blue_led_pin_ = blue_led_pin_
     };
 
-    [[maybe_unused]] AlxProcedure alx_1_procedure_{
-        .uart_ = alx_1_uart_,
-        .parser_ = alx_1_parser_
-    };
-
-    [[maybe_unused]] AlxProcedure alx_2_procedure_{
-        .uart_ = alx_2_uart_,
-        .parser_ = alx_2_parser_
-    };
-
-    [[maybe_unused]] MK8000Procedure mk8_1_procedure_{
-        .uart_ = mk8_1_uart_,
-        .parser_ = mk8_1_parser_
-    };
-
-    [[maybe_unused]] MK8000Procedure mk8_2_procedure_{
-        .uart_ = mk8_2_uart_,
-        .parser_ = mk8_2_parser_
-    };
-
-
-    ProcedureGroup group_(
-        blink_procedure_, 
-        // alx_1_procedure_, 
-        // alx_2_procedure_
-        mk8_1_procedure_, 
-        mk8_2_procedure_
-    );
-
-    DEBUG_PRINTLN("setup done");
-
-    group_.init_all();
 
     while(true){
-        group_.resume_all();
 
-        blink_procedure_.resume();
+        blink_activity_.resume();
 
         static auto report_timer = async::RepeatTimer::from_duration(3ms);
         
         report_timer.invoke_if([&]{
-            const auto & measurement = alx_measurements_[0];
-            // const auto [s,c] = measurement.azimuth.sincos(); 
+            #if 0
+            const auto & alx_measurement = alx_measurements_[0];
+            // const auto [s,c] = alx_measurement.azimuth.sincos(); 
             // const auto [x,y] = Vector2<float>::from_length_and_
-            [[maybe_unused]] const auto vec3 = measurement.to_vec3();
+            [[maybe_unused]] const auto vec3 = alx_measurement.to_vec3();
             [[maybe_unused]] const auto [x,y,z] = vec3;
             [[maybe_unused]] const auto o1 = Vec2<float>(0.20, 0);
             [[maybe_unused]] const auto o2 = Vec2<float>(-0.20, 0);
@@ -296,8 +218,8 @@ void alx_aoa_main(){
 
             // [[maybe_unused]] const auto [x,y,z] = vec3;
             // const auto polar = Polar<float>{
-            //     .amplitude = measurement.distance,
-            //     .phase = measurement.azimuth
+            //     .amplitude = alx_measurement.distance,
+            //     .phase = alx_measurement.azimuth
             // };
 
             // const auto [x,y] = polar.to_vec2();
@@ -319,12 +241,22 @@ void alx_aoa_main(){
                 // DEBUGGER.field("distance")(1),
                 // DEBUGGER.field("distanc")(2),
                 // DEBUGGER.field("distane")(3)
-                // DEBUGGER.scoped("meas")(measurement), 
+                // DEBUGGER.scoped("meas")(alx_measurement), 
                 // DEBUGGER.scoped("xyz")(x, y, z)
                 // DEBUGGER.scoped("xyz")(vec3),
                 // DEBUGGER.scoped("abc")(vec3),
                 // DEBUGGER.scoped("uvw")(std::ignore)
             );
+        #else
+            [[maybe_unused]] const auto & alx_measurement = alx_measurements_[0];
+
+            DEBUG_PRINTLN(
+                // alx_measurement.distance,
+                // alx_measurement.azimuth.to_radians()
+                alx_measurements_[0],
+                alx_measurements_[1]
+            );
+        #endif
     });
     }
 

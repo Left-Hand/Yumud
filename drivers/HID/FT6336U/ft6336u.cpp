@@ -1,7 +1,6 @@
 #include "ft6336u.hpp"
 
 // https://www.iotword.com/23534.html
-// https://github.com/aselectroworks/Arduino-Self/blob/master/src/Self.h
 
 #define FT6636_DEBUG_EN
 

@@ -81,7 +81,7 @@ inline auto now(){
 }
 
 namespace ymd{
-void bindSystickCb(std::function<void(void)> && cb);
+void set_systick_handler(std::function<void(void)> && cb);
 
 
 

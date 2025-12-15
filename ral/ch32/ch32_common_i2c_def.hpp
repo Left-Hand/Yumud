@@ -7,10 +7,10 @@
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
 #endif
 
-namespace ymd::ral::CH32V203{
+namespace ymd::ral::ch32::common_i2c{
 
 
-struct R16_I2C_CTLR1{
+struct [[nodiscard]] R16_I2C_CTLR1{
     uint16_t PE:1;
     uint16_t SMBUS:1;
     uint16_t :1;
@@ -33,7 +33,7 @@ struct R16_I2C_CTLR1{
 };
 
 
-struct R16_I2C_CTLR2{
+struct [[nodiscard]] R16_I2C_CTLR2{
     uint16_t FREQ:5;
     uint16_t :2;
     uint16_t ITERREN:1;
@@ -46,7 +46,7 @@ struct R16_I2C_CTLR2{
 };
 
 //I2C 地址寄存器 1
-struct R16_I2C_OADDR1{
+struct [[nodiscard]] R16_I2C_OADDR1{
     uint16_t ADD0:1;
     uint16_t ADD:9;
     uint16_t :5;
@@ -54,20 +54,20 @@ struct R16_I2C_OADDR1{
 };
 
 //I2C 地址寄存器 2
-struct R16_I2C_OADDR2{
+struct [[nodiscard]] R16_I2C_OADDR2{
     uint16_t ENDUAL:1;
     uint16_t ADD2:7;
     uint16_t :8;
 };
 
 //I2C 数据寄存器
-struct R16_I2C_DATAR{
+struct [[nodiscard]] R16_I2C_DATAR{
     uint8_t DR;
     uint8_t __resv__;
 };
 
 //I2C 状态寄存器1
-struct R16_I2C_STAR1{
+struct [[nodiscard]] R16_I2C_STAR1{
     uint16_t SB:1;
     uint16_t ADDR:1;
     uint16_t BTF:1;
@@ -87,7 +87,7 @@ struct R16_I2C_STAR1{
 };
 
 //I2C 状态寄存器2
-struct R16_I2C_STAR2{
+struct [[nodiscard]] R16_I2C_STAR2{
     uint8_t MSL:1;
     uint8_t BUSY:1;
     uint8_t TRA:1;
@@ -104,7 +104,7 @@ struct R16_I2C_STAR2{
 
 
 //I2C 时钟寄存器
-struct R16_I2C_CKCFRG{
+struct [[nodiscard]] R16_I2C_CKCFRG{
     uint16_t CCR:12;
     uint16_t :2;
     uint16_t DUTY:1;
@@ -112,7 +112,7 @@ struct R16_I2C_CKCFRG{
 };
 
 //I2C 上升时间寄存器
-struct R16_I2C_RTR{
+struct [[nodiscard]] R16_I2C_RTR{
     // 最大上升时间域。这个位设置主模式的 SCL 的
     // 上升时间。最大的上升沿时间等于 TRISE-1 个
     // 时钟周期。此位只能在 PE 清零下设置。比如如
@@ -123,7 +123,7 @@ struct R16_I2C_RTR{
     uint16_t :10;
 };
 
-struct I2C_Def{
+struct [[nodiscard]] I2C_Def{
     volatile R16_I2C_CTLR1 CTLR1;
     uint16_t :16;
     volatile R16_I2C_CTLR2 CTLR2;
@@ -251,7 +251,7 @@ struct I2C_Def{
         CKCFRG.DUTY = set;
     }
 
-    struct Events{
+    struct [[nodiscard]] Events{
         uint32_t SB:1;
         uint32_t ADDR:1;
         uint32_t BTF:1;

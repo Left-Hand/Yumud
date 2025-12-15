@@ -8,7 +8,7 @@
 
 #include "core/utils/Result.hpp"
 #include "core/utils/errno.hpp"
-
+#include "core/io/regs.hpp"
 
 namespace ymd::drivers{
 

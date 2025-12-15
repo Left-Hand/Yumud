@@ -10,7 +10,7 @@ public:
     static constexpr uint8_t WRITE_CMD = 0x03;
     static constexpr uint8_t READ_CMD = 0x02;
 
-    enum class ReadNmBits:uint8_t{
+    enum class [[nodiscard]] ReadNmBits:uint8_t{
         RXB0SIDL_5 = 0b00,
         RXB0DO_8 = 0b01,
         RXB1SIDL_5 = 0b00,
@@ -22,7 +22,7 @@ public:
     }
     
 
-    enum class LoadTxBits:uint8_t{
+    enum class [[nodiscard]] LoadTxBits:uint8_t{
         TXB0SIDL_5 = 0b00,
         TXB0DO_8 = 0b01,
         TXB1SIDL_5 = 0b00,
@@ -31,7 +31,7 @@ public:
         TXB2DO_8 = 0b11,
     };
 
-    enum class FilterMatch:uint8_t{
+    enum class [[nodiscard]] FilterMatch:uint8_t{
         RXF0 = 0b000,
         RXF1 = 0b001,
         RXF2 = 0b010,
@@ -42,7 +42,7 @@ public:
         // RXB1 = 0b111,
     };
 
-    struct RxStatusRetBits{
+    struct [[nodiscard]] RxStatusRetBits{
         FilterMatch filter_match:3;
         uint8_t is_rtr:1;
         uint8_t is_ext:1;
@@ -51,7 +51,7 @@ public:
         uint8_t rx1i:1;
     };
 
-    struct ReadStatusBits{
+    struct [[nodiscard]] ReadStatusBits{
         uint8_t rx0i:1;
         uint8_t rx1i:1;
         uint8_t txreq:1;
@@ -67,7 +67,7 @@ public:
         return (std::bit_cast<uint8_t>(bits)) | 0b01000000;
     }
     
-    struct RequestSendKmnBits{
+    struct [[nodiscard]] RequestSendKmnBits{
         uint8_t  CTRL0:1;
         uint8_t  CTRL1:1;
         uint8_t  CTRL2:1;

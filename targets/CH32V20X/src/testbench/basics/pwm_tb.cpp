@@ -7,7 +7,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/timer/pwm/gpio_pwm.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 
 
@@ -22,12 +22,20 @@ using namespace ymd;
 void pwm_tb(OutputStream & logger){
     auto & timer = hal::timer1;
     timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
         .count_freq = hal::NearestFreq(36000),
         .count_mode = hal::TimerCountMode::Up
-    }, EN);
+    })        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+    timer.start();
     #ifdef PWM_TB_GPIO
-    auto gpio = hal::PA<8>();
-    hal::GpioPwm pwm{gpio};
+    auto pin = hal::PA<8>();
+    hal::GpioPwm pwm{pin};
     pwm.init(32);
 
 
@@ -62,7 +70,7 @@ void pwm_tb(OutputStream & logger){
     while(true){
         const auto t = clock::time();
         logger.println(t, pwm.cnt(), pwm.cvr());
-        pwm.set_dutycycle(0.5_iq16 * sin(4 * t) + 0.5_iq16);
+        pwm.set_dutycycle(0.5_iq16 * iq16(math::sin(4 * t)) + 0.5_iq16);
         clock::delay(100us);
     }
 

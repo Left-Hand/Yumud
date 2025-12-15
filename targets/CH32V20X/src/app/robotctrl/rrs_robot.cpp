@@ -6,14 +6,14 @@
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
-#include "middlewares/repl/repl_service.hpp"
-#include "types/transforms/euler.hpp"
+#include "middlewares/rpc/repl_server.hpp"
+#include "algebra/transforms/euler.hpp"
 
 #define MOCK_TEST_ALL
 
@@ -23,8 +23,8 @@ using namespace ymd::drivers;
 
 #define DBG_UART DEBUGGER_INST
 static constexpr uint SERVO_FREQ = 50;
-#define SCL_GPIO hal::PB<0>()
-#define SDA_GPIO hal::PB<1>()
+#define SCL_PIN hal::PB<0>()
+#define SDA_PIN hal::PB<1>()
 
 
 
@@ -41,12 +41,12 @@ static constexpr uint SERVO_FREQ = 50;
 
 class MockServo{
 protected:
-    real_t curr_angle_;
+    Angular<real_t> curr_angle_;
 public:
-    void set_angle(const real_t angle){
+    void set_angle(const Angular<real_t> angle){
         curr_angle_ = angle;
     }
-    real_t get_angle(){
+    Angular<real_t> get_angle(){
         return curr_angle_;
     }
 };
@@ -54,9 +54,9 @@ public:
 
 class Environment{
 public:
-    hal::Gpio scl_gpio = SCL_GPIO;
-    hal::Gpio sda_gpio = SDA_GPIO;
-    hal::I2cSw i2c = hal::I2cSw{&scl_gpio, &sda_gpio};
+    hal::Gpio scl_pin = SCL_PIN;
+    hal::Gpio sda_pin = SDA_PIN;
+    hal::I2cSw i2c = hal::I2cSw{&scl_pin, &sda_pin};
     PCA9685 pca{&i2c};
 
 
@@ -74,7 +74,11 @@ public:
     void setup(){
         // #ifdef USE_MOCK_SERVO
 
-        DBG_UART.init({576000});
+        DBG_UART.init({
+            .remap = hal::UART2_REMAP_PA2_PA3,
+            .baudrate = 576000
+        });
+
         DEBUGGER.retarget(&DBG_UART);
         // DEBUGGER.no_brackets();
         DEBUGGER.force_sync(EN);
@@ -89,9 +93,18 @@ public:
         #endif
 
         hal::timer1.init({
+            .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
             .count_freq = hal::NearestFreq(SERVO_FREQ),
             .count_mode = hal::TimerCountMode::Up
-        }, EN);
+        })
+                .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+        hal::timer1.start();
     }
 
     template<typename Fn>
@@ -114,7 +127,8 @@ public:
     using Gesture = typename RRS3_Kinematics::Gesture;
     using Config = typename RRS3_Kinematics::Config;
 
-    using ServoSetter = std::function<void(real_t, real_t, real_t)>;
+    using ServoSetter = std::function<
+        void(Angular<real_t>, Angular<real_t>, Angular<real_t>)>;
 
     template<typename T>
     using IResult = RRS3_Kinematics::IResult<T>;
@@ -132,24 +146,24 @@ public:
         if(const auto may_solu = rrs3_kine_.inverse(gest); may_solu.is_some()){
             const auto solu = may_solu.unwrap();
 
-            const std::array<real_t, 3> r = {
-                solu[0].to_absolute().j1_abs_rad,
-                solu[1].to_absolute().j1_abs_rad,
-                solu[2].to_absolute().j1_abs_rad
-            };
-
-            apply_radians_to_servos(r);
+            apply_angles_to_servos({
+                solu[0].to_absolute().j1_abs,
+                solu[1].to_absolute().j1_abs,
+                solu[2].to_absolute().j1_abs
+            });
         }else{
             DEBUG_PRINTLN("no solution");
         }
     };
 
     constexpr void set_bias(const real_t a, const real_t b, const real_t c){
-        r_bias_ = {a,b,c};
+        r_bias_[0].set_radians(a);
+        r_bias_[1].set_radians(b);
+        r_bias_[2].set_radians(c);
     }
 
     void go_idle(){
-        apply_radians_to_servos({0,0,0});
+        apply_angles_to_servos({0,0,0});
     }
 
     auto make_rpc_list(const StringView name){
@@ -168,17 +182,19 @@ public:
 private:
     RRS3_Kinematics rrs3_kine_;
 
-    std::array<real_t,3> r_bias_ = {
-        1.15_r,0.99_r,1.25_r
+    std::array<Angular<real_t>,3> r_bias_ = {
+        Angular<real_t>::from_radians(1.15_r),
+        Angular<real_t>::from_radians(0.99_r),
+        Angular<real_t>::from_radians(1.25_r)
     };
 
     ServoSetter servo_setter_;
 
-    void apply_radians_to_servos(const std::array<real_t,3> rads){
+    void apply_angles_to_servos(const std::array<Angular<real_t>,3> angles){
         servo_setter_(
-            rads[0] + r_bias_[0], 
-            rads[1] + r_bias_[1], 
-            rads[2] + r_bias_[2]
+            angles[0] + r_bias_[0], 
+            angles[1] + r_bias_[1], 
+            angles[2] + r_bias_[2]
         );
     }
 };
@@ -202,7 +218,7 @@ void rrs3_robot_main(){
     auto & servo_b = env.servo_b;
     auto & servo_c = env.servo_c;
 
-    RRS3_RobotActuator actuator_{cfg, [&](real_t r1, real_t r2, real_t r3){
+    RRS3_RobotActuator actuator_{cfg, [&](Angular<real_t> r1, Angular<real_t> r2, Angular<real_t> r3){
         servo_a.set_angle(r1);
         servo_b.set_angle(r2);
         servo_c.set_angle(r3);
@@ -226,12 +242,12 @@ void rrs3_robot_main(){
 
     auto ctrl = [&]{
         const auto t = clock::time();
-        const auto [s,c] = sincospu(0.7_r * t);
+        const auto [s,c] = math::sincospu(0.7_r * t);
         
         actuator_.set_gest(
             RRS3_RobotActuator::Gesture::from({
-                .yaw = DEG2RAD<real_t>(3.0_r * s), 
-                .pitch = DEG2RAD<real_t>(3.0_r * c), 
+                .yaw = Angular<real_t>::from_radians(3.0_r * s), 
+                .pitch = Angular<real_t>::from_radians(3.0_r * c), 
                 .height = 0.14_r
             })
         );

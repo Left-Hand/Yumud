@@ -255,7 +255,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
 
         void set_double_click_latency_ms(const iq16 ms){
             static constexpr iq16 LSB_PER_MS = iq16(1 / 1.25);
-            data = ceil_cast<uint8_t>(ms * LSB_PER_MS);
+            data = math::ceil_cast<uint8_t>(ms * LSB_PER_MS);
         }
 
         void disable_double_click(){

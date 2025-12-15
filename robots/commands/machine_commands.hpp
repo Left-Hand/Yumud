@@ -5,47 +5,47 @@
 namespace ymd{
 namespace robots::machine_commands{
 
-struct RapidMoveXy{
+struct [[nodiscard]] RapidMoveXy{
     math::bf16 x;
     math::bf16 y;
 };
 
-struct RapidMoveXyz{
-    math::bf16 x;
-    math::bf16 y;
-    math::bf16 z;
-};
-
-struct LinearMoveXy{
-    math::bf16 x;
-    math::bf16 y;
-};
-
-struct LinearMoveXyz{
+struct [[nodiscard]] RapidMoveXyz{
     math::bf16 x;
     math::bf16 y;
     math::bf16 z;
 };
 
-struct Dwell{
+struct [[nodiscard]] LinearMoveXy{
+    math::bf16 x;
+    math::bf16 y;
+};
+
+struct [[nodiscard]] LinearMoveXyz{
+    math::bf16 x;
+    math::bf16 y;
+    math::bf16 z;
+};
+
+struct [[nodiscard]] Dwell{
     uint16_t dwell_ms;
 };
 
-struct Replace{
+struct [[nodiscard]] Replace{
     math::bf16 x1, y1;
     math::bf16 x2, y2;
 };
 
 
-struct SpinAroundCenter{
+struct [[nodiscard]] SpinAroundCenter{
     math::bf16 theta;
 };
 
-struct RotateAroundCenter{
+struct [[nodiscard]] RotateAroundCenter{
     math::bf16 orientation;
 };
 
-struct Abort{
+struct [[nodiscard]] Abort{
 };
 }
 

@@ -2,13 +2,94 @@
 #include "ral/ch32/ch32_common_dma_def.hpp"
 #include "core/sdk.hpp"
 
+using namespace ymd;
 using namespace ymd::hal;
-using namespace ymd::ral::CH32;
+
+
+namespace dma_details{
+static constexpr uint8_t calculate_dma_index(const void * inst){
+    #ifdef DMA2_PRESENT
+    return inst < DMA2_Channel1 ? 1 : 2;
+    #else
+    return 1;
+    #endif
+}
+
+static constexpr uint8_t calculate_channel_index(const void * inst){
+    uint8_t dma_nth = calculate_dma_index(inst);
+    switch(dma_nth){
+        #ifdef DMA1_PRESENT
+        case 1:
+            return (reinterpret_cast<uint32_t>(inst) - DMA1_Channel1_BASE) / 
+                (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
+        #endif
+
+        #ifdef DMA2_PRESENT
+        case 2:
+            if(reinterpret_cast<uint32_t>(inst) < DMA2_Channel7_BASE){ 
+                return ((reinterpret_cast<uint32_t>(inst) - DMA2_Channel1_BASE) / 
+                    (DMA2_Channel2_BASE - DMA2_Channel1_BASE)) + 1;
+            }else{
+                return ((reinterpret_cast<uint32_t>(inst) - DMA2_Channel7_BASE) / 
+                    (DMA2_Channel8_BASE - DMA2_Channel7_BASE)) + 7;
+            }
+        #endif
+        default:
+            __builtin_trap();
+    }
+}
+
+
+static constexpr uint32_t calculate_done_mask(const void * inst){
+    uint8_t dma_nth = calculate_dma_index(inst);
+    uint8_t channel_index = calculate_channel_index(inst);
+    switch(dma_nth){
+        #ifdef DMA1_PRESENT
+        case 1:
+            return (DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (channel_index - 1)));
+        #endif
+        #ifdef DMA2_PRESENT
+        case 2:
+            if(reinterpret_cast<uint32_t>(inst) <= DMA2_Channel7_BASE){ 
+                return ((uint32_t)(DMA2_IT_TC1 & 0xff) << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
+            }else{
+                return ((uint32_t)(DMA2_IT_TC8 & 0xff) << ((CTZ(DMA2_IT_TC9) - CTZ(DMA2_IT_TC8)) * (channel_index - 8))) | (uint32_t)(0x20000000);
+            }
+        #endif
+        default:
+            break;
+    }
+    return 0;
+}
+
+
+static constexpr uint32_t calculate_half_mask(const void * inst){
+    uint8_t dma_nth = calculate_dma_index(inst);
+    uint8_t channel_index = calculate_channel_index(inst);
+    switch(dma_nth){
+        #ifdef DMA1_PRESENT
+        case 1:
+            return (DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (channel_index - 1)));
+        #endif
+        #ifdef DMA2_PRESENT
+        case 2:
+            if(reinterpret_cast<uint32_t>(inst) <= DMA2_Channel7_BASE){ 
+                return ((uint32_t)(DMA2_IT_HT1 & 0xff) << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
+            }else{
+                return ((uint32_t)(DMA2_IT_HT8 & 0xff) << ((CTZ(DMA2_IT_HT9) - CTZ(DMA2_IT_HT8)) * (channel_index - 8))) | (uint32_t)(0x20000000);
+            }
+        #endif
+        default:
+            break;
+    }
+    return 0;
+}
+}
 
 namespace ymd::hal{
 
 
-#ifdef ENABLE_DMA1
+#ifdef DMA1_PRESENT
 DmaChannel dma1_ch1{DMA1_Channel1};
 DmaChannel dma1_ch2{DMA1_Channel2};
 DmaChannel dma1_ch3{DMA1_Channel3};
@@ -18,7 +99,7 @@ DmaChannel dma1_ch6{DMA1_Channel6};
 DmaChannel dma1_ch7{DMA1_Channel7};
 #endif
 
-#ifdef ENABLE_DMA2
+#ifdef DMA2_PRESENT
 DmaChannel dma2_ch1{DMA2_Channel1};
 DmaChannel dma2_ch2{DMA2_Channel2};
 DmaChannel dma2_ch3{DMA2_Channel3};
@@ -36,8 +117,8 @@ DmaChannel dma2_ch11{DMA2_Channel11};
 
 #define NAME_OF_DMA_XY(x,y) dma##x##_ch##y
 
-#ifdef ENABLE_DMA1
-#define DMA1_Inst reinterpret_cast<DMA1_Def *>(DMA1)
+#ifdef DMA1_PRESENT
+#define DMA1_Inst reinterpret_cast<ral::DMA1_Def *>(DMA1)
 #define DMA1_IT_TEMPLATE(y)\
 __interrupt void DMA1##_Channel##y##_IRQHandler(void){\
     if(DMA1_Inst->get_transfer_done_flag(y)){\
@@ -58,8 +139,8 @@ DMA1_IT_TEMPLATE(6);
 DMA1_IT_TEMPLATE(7);
 #endif
 
-#ifdef ENABLE_DMA2
-#define DMA2_Inst reinterpret_cast<DMA2_Def *>(DMA2)
+#ifdef DMA2_PRESENT
+#define DMA2_Inst reinterpret_cast<ral::DMA2_Def *>(DMA2)
 #define DMA2_IT_TEMPLATE(y)\
 __interrupt void DMA2##_Channel##y##_IRQHandler(void){\
     if(DMA2_Inst->get_transfer_done_flag(y)){\
@@ -92,8 +173,15 @@ DMA2_IT_TEMPLATE(11);
 #define SDK_INST(x) (reinterpret_cast<COPY_CONST(inst_,DMA_Channel_TypeDef)>(x))
 
 
+DmaChannel::DmaChannel(void * inst):
+    inst_(inst), 
+    done_mask_(dma_details::calculate_done_mask(inst)),
+    half_mask_(dma_details::calculate_half_mask(inst)),
+    dma_index_(dma_details::calculate_dma_index(inst)),
+    channel_index_(dma_details::calculate_channel_index(inst)){;}
+    
 void DmaChannel::enable_rcc(Enable en){
-    #ifdef ENABLE_DMA2
+    #ifdef DMA2_PRESENT
     if(inst_ < DMA2_Channel1){
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en == EN);
     }else{
@@ -109,13 +197,13 @@ void DmaChannel::enable_rcc(Enable en){
 void DmaChannel::start_transfer(size_t dst_addr, size_t src_addr, const size_t size){
 
     if(mode_.dst_is_periph()){
-        reinterpret_cast<DMA_CH_Def *>(inst_) -> PADDR = dst_addr;
-        reinterpret_cast<DMA_CH_Def *>(inst_) -> MADDR = src_addr;
+        reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> PADDR = dst_addr;
+        reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> MADDR = src_addr;
     }else{
-        reinterpret_cast<DMA_CH_Def *>(inst_) -> PADDR = src_addr;
-        reinterpret_cast<DMA_CH_Def *>(inst_) -> MADDR = dst_addr;
+        reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> PADDR = src_addr;
+        reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> MADDR = dst_addr;
     }
-    reinterpret_cast<DMA_CH_Def *>(inst_) -> CNTR = size;
+    reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> CNTR = size;
     resume();
 }
 
@@ -175,9 +263,9 @@ void DmaChannel::init(const Config & cfg){
     DMA_Init(SDK_INST(inst_), &DMA_InitStructure);
 }
 
-static constexpr IRQn map_inst_to_irq(const uint8_t dma_index, const uint8_t channel_index){
-    switch(dma_index){
-        #ifdef ENABLE_DMA1
+static constexpr IRQn map_inst_to_irq(const uint8_t dma_nth, const uint8_t channel_index){
+    switch(dma_nth){
+        #ifdef DMA1_PRESENT
         case 1:
             switch(channel_index){
                 case 1: return DMA1_Channel1_IRQn;
@@ -190,7 +278,7 @@ static constexpr IRQn map_inst_to_irq(const uint8_t dma_index, const uint8_t cha
                 default: __builtin_unreachable();
             }
         #endif
-        #ifdef ENABLE_DMA2
+        #ifdef DMA2_PRESENT
         case 2:
             switch(channel_index){
                 case 1: return DMA2_Channel1_IRQn;
@@ -212,7 +300,7 @@ static constexpr IRQn map_inst_to_irq(const uint8_t dma_index, const uint8_t cha
 
 }
 void DmaChannel::register_nvic(const NvicPriority priority, const Enable en){
-    const IRQn irq = map_inst_to_irq(dma_index_, channel_index_);
+    const auto irq = map_inst_to_irq(dma_index_, channel_index_);
     priority.with_irqn(irq).enable(en);
 }
 
@@ -250,14 +338,18 @@ static inline void modify_reg(volatile T* reg, Fn&& fn) {
 //     ));
 // }
 
+[[nodiscard]] bool DmaChannel::is_done(){
+    return DMA_GetFlagStatus(done_mask_);
+}
+
 void DmaChannel::set_mem_and_periph_bytes(
     const size_t mem_bytes, 
     const size_t periph_bytes
 ){ 
     // reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.MSIZE = (mem_bytes) - 1;
     // reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.PSIZE = (periph_bytes) - 1;
-    auto * dma_ch = reinterpret_cast<DMA_CH_Def *>(inst_);
-    modify_reg(&dma_ch->CFGR, [&](ymd::ral::CH32::R32_DMA_CFGR reg){
+    auto * dma_ch = reinterpret_cast<ral::DMA_CH_Def *>(inst_);
+    modify_reg(&dma_ch->CFGR, [&](auto reg){
         reg.MSIZE = (mem_bytes) - 1;
         reg.PSIZE = (periph_bytes) - 1;
         return reg;
@@ -272,7 +364,7 @@ void DmaChannel::resume(){
 }
 
 size_t DmaChannel::remaining(){
-    return reinterpret_cast<DMA_CH_Def *>(inst_) -> CNTR;
+    return reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> CNTR;
 }
 
 void DmaChannel::enable_done_it(const Enable en){

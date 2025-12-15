@@ -9,7 +9,7 @@ IResult<> ZdtStepper::set_angle(ZdtStepper::PositionMsg msg){
         .is_ccw = (msg.angle.is_negative()),
         .rpm = Rpm::from_speed(msg.speed),
         .acc_level = AcclerationLevel::from_u8(0),
-        .pulse_cnt = PulseCnt::from_position(msg.angle.abs()),
+        .pulse_cnt = PulseCnt::from_angle(msg.angle.abs().cast_inner<uq16>()).unwrap(),
         .is_absolute = true,
         .is_sync = is_multi_axis_sync_
     });

@@ -1,34 +1,38 @@
-#include "core/utils/cpp_stl/mdspan/mdspan.hpp"
 #include <atomic>
+#include <barrier>
+
+#include "src/testbench/tb.h"
+
+#include "core/utils/cpp_stl/mdspan/mdspan.hpp"
+#include "core/debug/debug.hpp"
 #include "core/sync/spinlock.hpp"
 #include "core/sync/barrier.hpp"
-#include <barrier>
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "src/testbench/tb.h"
+#include "primitive/hid_input/keycode.hpp"
+#include "primitive/hid_input/axis_input.hpp"
+#include "primitive/hid_input/segcode.hpp"
+#include "primitive/hid_input/button_input.hpp"
 
-#include "drivers/HID/prelude/keycode.hpp"
-#include "drivers/HID/prelude/axis_input.hpp"
-#include "drivers/HID/prelude/segcode.hpp"
-#include "drivers/HID/prelude/button_input.hpp"
 #include "drivers/HID/ST1615/ST1615.hpp"
 
-#include "core/debug/debug.hpp"
+
 
 using namespace ymd;
 using drivers::ST1615;
 
 #define UART hal::uart2
 // #define UART hal::uart6
-#define SCL_GPIO hal::PB<3>()
-#define SDA_GPIO hal::PB<5>()
+#define SCL_PIN hal::PB<3>()
+#define SDA_PIN hal::PB<5>()
 
 void st1615_main(){
     // UART.init({576_KHz});
     UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000,
         .tx_strategy = CommStrategy::Dma
     });
@@ -38,17 +42,17 @@ void st1615_main(){
     auto led = hal::PA<15>();
     led.outpp();
 
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;
 
-    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
     i2c.init({ST1615::MAX_I2C_BAUDRATE});
 
     auto nrst_gpio = hal::PB<0>();
     nrst_gpio.set_mode(hal::GpioMode::OutPP);
-    nrst_gpio.clr();
+    nrst_gpio.set_low();
     clock::delay(1ms);
-    nrst_gpio.set();
+    nrst_gpio.set_high();
     clock::delay(100ms);
 
     ST1615 st1615{&i2c};

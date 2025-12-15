@@ -2,10 +2,10 @@
 
 #include <cstdint>
 
-namespace ymd::ral::CH32V00x::AFIO_Regs{
+namespace ymd::ral::ch32::ch32v00x_afio{
 
 
-struct EXTICR_Reg{
+struct [[nodiscard]] R32_EXTICR{
     uint32_t EXTI0:2;
     uint32_t EXTI1:2;
     uint32_t EXTI2:2;
@@ -17,7 +17,7 @@ struct EXTICR_Reg{
     uint32_t :16;
 };
 
-struct PCFR1_Reg{
+struct [[nodiscard]] R32_PCFR1{
     uint32_t SPI1_RM:3;
     uint32_t I2C1_RM:3;
     uint32_t USART1_RM:4;

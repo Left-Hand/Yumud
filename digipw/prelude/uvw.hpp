@@ -10,6 +10,8 @@ namespace ymd::digipw{
 
 template<typename T>
 struct UvwCoord{
+    static_assert(std::is_signed_v<T>);
+    
     T u;
     T v;
     T w;

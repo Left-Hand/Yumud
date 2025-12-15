@@ -11,8 +11,10 @@
 #define UART hal::uart2
 void ekf_main(){
 
-    
-    UART.init({576_KHz});
+    DEBUGGER_INST.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000 
+    });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);
     

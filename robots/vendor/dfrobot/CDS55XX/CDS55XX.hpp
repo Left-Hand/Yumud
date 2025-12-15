@@ -101,7 +101,7 @@ struct CDS55XX_Regs:public CDS55XX_Prelude{
     struct R8_Baudrate:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x04;
         uint8_t baud;
-    }DEF_R8(buad_reg)
+    }DEF_R8(baud_reg)
 };
 
 

@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-namespace ymd::ral::CH32V20x::I2C_Regs{
+namespace ymd::ral::ch32::ch32x035_i2c{
 
-struct CTLR1_Reg{
+struct R32_CTLR1{
     uint16_t PE:1;
     uint16_t :3;
 
@@ -24,7 +24,7 @@ struct CTLR1_Reg{
 };
 
 
-struct CTLR2_Reg{
+struct R32_CTLR2{
     uint16_t FREQ:5;
     uint16_t :2;
     uint16_t ITERREN:1;
@@ -36,7 +36,7 @@ struct CTLR2_Reg{
 };
 
 //I2C 地址寄存器 1
-struct OADDR1_Reg{
+struct R32_OADDR1{
     uint16_t ADD0:8;
     uint16_t ADD:2;
     uint16_t :5;
@@ -44,20 +44,20 @@ struct OADDR1_Reg{
 };
 
 //I2C 地址寄存器 2
-struct OADDR2_Reg{
+struct R32_OADDR2{
     uint16_t ENDUAL:1;
     uint16_t ADD2:7;
     uint16_t :8;
 };
 
 //I2C 数据寄存器
-struct DATAR_Reg{
+struct R32_DATAR{
     uint16_t DR:8;
     uint16_t :8;
 };
 
 //I2C 状态寄存器1
-struct STAR1_Reg{
+struct R32_STAR1{
     uint16_t SB:1;
     uint16_t ADDR:1;
     uint16_t BTF:1;
@@ -77,7 +77,7 @@ struct STAR1_Reg{
 };
 
 //I2C 状态寄存器2
-struct STAR2_Reg{
+struct R32_STAR2{
     uint16_t MSL:1;
     uint16_t BUSY:1;
     uint16_t TRA:1;
@@ -92,7 +92,7 @@ struct STAR2_Reg{
 };
 
 //I2C 时钟寄存器
-struct CKCFRG_Reg{
+struct R32_CKCFRG{
     uint16_t CCR:12;
     uint16_t :2;
     uint16_t DUTY:1;
@@ -100,7 +100,7 @@ struct CKCFRG_Reg{
 };
 
 //I2C 上升时间寄存器
-struct RTR_Reg{
+struct R32_RTR{
     // 最大上升时间域。这个位设置主模式的 SCL 的
     // 上升时间。最大的上升沿时间等于 TRISE-1 个
     // 时钟周期。此位只能在 PE 清零下设置。比如如
@@ -112,14 +112,14 @@ struct RTR_Reg{
 };
 
 struct I2C_Def{
-    volatile CTLR1_Reg CTLR1;
-    volatile CTLR2_Reg CTLR2;
-    volatile OADDR1_Reg OADDR1;
-    volatile OADDR2_Reg OADDR2;
-    volatile DATAR_Reg DATAR;
-    volatile STAR1_Reg STAR1;
-    volatile STAR2_Reg STAR2;
-    volatile CKCFRG_Reg CKCFRG;
+    volatile R32_CTLR1 CTLR1;
+    volatile R32_CTLR2 CTLR2;
+    volatile R32_OADDR1 OADDR1;
+    volatile R32_OADDR2 OADDR2;
+    volatile R32_DATAR DATAR;
+    volatile R32_STAR1 STAR1;
+    volatile R32_STAR2 STAR2;
+    volatile R32_CKCFRG CKCFRG;
 };
 
 

@@ -6,22 +6,6 @@
 namespace ymd::hal{
 
 
-class AnalogInIntf{
-public:
-    virtual real_t get_voltage() = 0;
-    virtual ~ AnalogInIntf() = default;
-};
-
-class AnalogOutIntf{
-protected:
-    virtual void write(const uint32_t data) = 0;
-public:
-    virtual ~AnalogOutIntf() = default;
-
-    void set_voltage(const real_t volt){
-    }
-};
-
 template<typename Inst, typename T>
 struct ScaledAnalogInput{
     constexpr ScaledAnalogInput(

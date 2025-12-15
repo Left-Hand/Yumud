@@ -1,6 +1,11 @@
 #pragma once
 
+// 参考来源：
+
+// 无许可证
 // https://github.com/mokhwasomssi/stm32_hal_icm20948/blob/master/stm32f411_fw_icm20948/ICM20948/icm20948.h
+//  * 注意：本实现为完全原创，未使用上述项目的任何代码。
+//  * 参考仅用于理解问题领域，未复制任何具体实现。
 
 #include "core/io/regs.hpp"
 #include "core/utils/Errno.hpp"

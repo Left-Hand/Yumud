@@ -18,7 +18,7 @@ public:
     };
 protected:
     hal::SpiDrv spi_drv_;
-    hal::GpioIntf & fsync_gpio_;
+    hal::GpioIntf & fsync_pin_;
     void write_data(uint16_t data); 
 public:
     AD9833(
@@ -26,7 +26,7 @@ public:
         hal::GpioIntf & fsync_gpio
     ):
         spi_drv_(spi_drv),
-        fsync_gpio_(fsync_gpio){;
+        fsync_pin_(fsync_gpio){;
     }
 
     AD9833(
@@ -34,7 +34,7 @@ public:
         hal::GpioIntf & fsync_gpio
     ):
         spi_drv_(std::move(spi_drv)),
-        fsync_gpio_(fsync_gpio){;
+        fsync_pin_(fsync_gpio){;
     }
 
     void init(uint16_t freq_reg, real_t freq, uint16_t phase_reg, uint16_t phase, WaveMode wave_mode);

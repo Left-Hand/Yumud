@@ -32,17 +32,17 @@ protected:
     iq16 s_forward(const iq16 t) const{
         if(peaked){
             if(t < t1){
-                return (abs_acc_ * square(t)) >> 1;
+                return (abs_acc_ * math::square(t)) >> 1;
             }else if(t < t2){
                 return s1 + abs_spd_ * (t - t1);
             }else if(t < t_all){
-                return s_ - ((abs_acc_ * square(t - t_all)) >> 1);
+                return s_ - ((abs_acc_ * math::square(t - t_all)) >> 1);
             }
         }else{
             if(t < t1){
-                return abs_acc_ * square(t) >> 1;
+                return abs_acc_ * math::square(t) >> 1;
             }else if(t < t_all){
-                return s_ - ((abs_acc_ * square(t - t_all)) >> 1);
+                return s_ - ((abs_acc_ * math::square(t - t_all)) >> 1);
             }
         }
         return s_;
@@ -81,7 +81,7 @@ public:
         if(peaked == false){
 
             //v ^ 2 = a * x
-            const auto real_max_spd = sqrt(a * s);
+            const auto real_max_spd = math::sqrt(a * s);
             
             t1 = real_max_spd / a;
             t2 = t1;

@@ -10,7 +10,7 @@ namespace ymd{
 using Year = uint8_t;
 // using Month = uint8_t;
 
-struct Month final{
+struct [[nodiscard]] Month final{
     enum class Kind:uint8_t{
         Jan = 1,
         Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
@@ -77,7 +77,7 @@ private:
 
 
 template<>
-struct serde::SerializeGeneratorFactory<serde::RawLeBytes, Month>{
+struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, Month>{
     static constexpr auto from(const Month & month){
         return make_serialize_generator<serde::RawLeBytes>(
             month.kind);
@@ -90,7 +90,7 @@ using Hour = uint8_t;
 using Minute = uint8_t;
 using Seconds = uint8_t;
 
-struct Date final{
+struct [[nodiscard]] Date final{
     Year year;
     Month month;
     Day day;
@@ -160,13 +160,13 @@ constexpr Hasher<S> & operator << (Hasher<S> & hs, const Date & self){
 }
 
 template<>
-struct serde::SerializeGeneratorFactory<serde::RawLeBytes, Date>{
+struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, Date>{
     static constexpr auto from(const Date & date){
         return make_serialize_generator<serde::RawLeBytes>(std::make_tuple(date.year, date.month, date.day));
     }
 };
 
-struct Time final{
+struct [[nodiscard]] Time final{
 
     Hour hour;
     Minute minute;
@@ -224,7 +224,7 @@ struct Time final{
 
 
 template<>
-struct serde::SerializeGeneratorFactory<serde::RawLeBytes, Time>{
+struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, Time>{
     static constexpr auto from(const Time time){
         return make_serialize_generator<serde::RawLeBytes>(std::make_tuple(
             time.hour, time.minute, time.seconds

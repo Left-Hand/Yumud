@@ -141,18 +141,18 @@ public:
     };
 
     AbEncoderByGpio(const Config & cfg):
-        a_gpio_(cfg.a_gpio.deref()), 
-        b_gpio_(cfg.b_gpio.deref()){;}
+        a_pin_(cfg.a_gpio.deref()), 
+        b_pin_(cfg.b_gpio.deref()){;}
 
     void init(){
-        a_gpio_.inpu();
-        b_gpio_.inpu();    
+        a_pin_.inpu();
+        b_pin_.inpu();    
     }
 
     uint8_t get_code() const {
 
-        const auto a = a_gpio_.read().to_bool(); 
-        const auto b = b_gpio_.read().to_bool(); 
+        const auto a = a_pin_.read().to_bool(); 
+        const auto b = b_pin_.read().to_bool(); 
 
         return uint8_t(uint8_t(b) << 1) | uint8_t(a);
     }
@@ -197,8 +197,8 @@ public:
 
 private:
     static constexpr uint8_t UNSET = 0xFF;
-    hal::Gpio & a_gpio_;
-    hal::Gpio & b_gpio_;
+    hal::Gpio & a_pin_;
+    hal::Gpio & b_pin_;
     uint8_t last_code_ = UNSET;
     int32_t cnt_ = 0;
     uint32_t err_cnt_ = 0;

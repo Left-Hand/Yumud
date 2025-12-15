@@ -60,9 +60,9 @@ real_t SeatOddInterpolation::forward(const real_t x) const {
     // int p = 2*n + 1;
     real_t y = 0;
     if (x <= a){
-        y = b - b*ymd::powfi(1-x/a, p);
+        y = b - b*math::powfi(1-x/a, p);
     } else {
-        y = b + (1-b)*ymd::powfi((x-a)/(1-a), p);
+        y = b + (1-b)*math::powfi((x-a)/(1-a), p);
     }
     return y;
 }
@@ -72,19 +72,19 @@ real_t SymmetricInterpolation::forward(const real_t x) const {
     if (+_n%2 == 0){ 
         // even polynomial
         if (x<=real_t(0.5)){
-        y = ymd::powfi(2*x, _n)/2;
+        y = math::powfi(2*x, _n)/2;
         } else {
-        y = 1 - ymd::powfi(2*(x-1), _n)/2;
+        y = 1 - math::powfi(2*(x-1), _n)/2;
         }
     } 
     
     else { 
         // odd polynomial
         if (x<=real_t(0.5)){
-        y = ymd::powfi(2*x, _n)/2;
+        y = math::powfi(2*x, _n)/2;
         // y = (2*x, _n)/2;
         } else {
-        y = 1 + ymd::powfi(2*(x-1), _n)/2;
+        y = 1 + math::powfi(2*(x-1), _n)/2;
         }
     }
 

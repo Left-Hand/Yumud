@@ -22,20 +22,20 @@ using hal::HalError;
 #define UART hal::uart2
 
 #if 0
-#define SCL_GPIO hal::PD<1>()
-#define SDA_GPIO hal::PD<0>()
+#define SCL_PIN hal::PD<1>()
+#define SDA_PIN hal::PD<0>()
 #else
-// #define SCL_GPIO hal::PB<6>()
-// #define SDA_GPIO hal::PB<7>()
-// #define SCL_GPIO hal::PB<3>()
-// #define SDA_GPIO hal::PB<5>()
-// #define SCL_GPIO hal::PD<2>()
-// #define SDA_GPIO hal::PC<12>()
+// #define SCL_PIN hal::PB<6>()
+// #define SDA_PIN hal::PB<7>()
+// #define SCL_PIN hal::PB<3>()
+// #define SDA_PIN hal::PB<5>()
+// #define SCL_PIN hal::PD<2>()
+// #define SDA_PIN hal::PC<12>()
 
-#define SCL_GPIO hal::PB<3>()
-#define SDA_GPIO hal::PB<5>()
-// #define SCL_GPIO hal::PC<12>()
-// #define SDA_GPIO hal::PD<2>()
+#define SCL_PIN hal::PB<3>()
+#define SDA_PIN hal::PB<5>()
+// #define SCL_PIN hal::PC<12>()
+// #define SDA_PIN hal::PD<2>()
 #endif
 struct FoundInfo{
     uint8_t addr;
@@ -80,14 +80,15 @@ struct I2cTester{
 
 
 void i2c_scanner_main(){
-    UART.init({
+    DEBUGGER_INST.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576_KHz,
     });
-    DEBUGGER.retarget(&UART);
+    DEBUGGER.retarget(&DEBUGGER_INST);
     // DEBUGGER.force_sync();
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;
-    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;
+    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
     i2c.init({100_KHz});
 
 
@@ -105,7 +106,7 @@ void i2c_scanner_main(){
             (void)res.inspect([&]{
                 const auto baud_res = I2cTester::get_max_baudrate(i2c, read_addr);
                 if(baud_res.is_err()){
-                    PANIC("addr buad can't be measured");
+                    PANIC("addr baud can't be measured");
                 }
 
                 founded_devices.emplace_back(

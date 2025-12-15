@@ -4,43 +4,43 @@
 
 namespace ymd::hal{
 
-#ifdef ENABLE_TIM1
+#ifdef TIM1_PRESENT
 extern AdvancedTimer timer1;
 #endif
 
-#ifdef ENABLE_TIM2
+#ifdef TIM2_PRESENT
 extern GenericTimer timer2;
 #endif
 
-#ifdef ENABLE_TIM3
+#ifdef TIM3_PRESENT
 extern GenericTimer timer3;
 #endif
 
-#ifdef ENABLE_TIM4
+#ifdef TIM4_PRESENT
 extern GenericTimer timer4;
 #endif
 
-#ifdef ENABLE_TIM5
+#ifdef TIM5_PRESENT
 extern GenericTimer timer5;
 #endif
 
-#ifdef ENABLE_TIM6
+#ifdef TIM6_PRESENT
 extern BasicTimer timer6;
 #endif
 
-#ifdef ENABLE_TIM7
+#ifdef TIM7_PRESENT
 extern BasicTimer timer7;
 #endif
 
-#ifdef ENABLE_TIM8
+#ifdef TIM8_PRESENT
 extern AdvancedTimer timer8;
 #endif
 
-#ifdef ENABLE_TIM9
+#ifdef TIM9_PRESENT
 extern AdvancedTimer timer9;
 #endif
 
-#ifdef ENABLE_TIM10
+#ifdef TIM10_PRESENT
 extern AdvancedTimer timer10;
 #endif
 }

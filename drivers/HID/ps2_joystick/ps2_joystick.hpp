@@ -3,7 +3,7 @@
 
 #include "core/io/regs.hpp"
 #include "hal/bus/spi/spidrv.hpp"
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 #include "core/utils/result.hpp"
 #include "core/utils/Errno.hpp"
@@ -23,23 +23,23 @@ struct Ps2Joystick_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class JoyStickChannel:uint8_t{
-        SELECT,
+    enum class [[nodiscard]] JoyStickChannel:uint8_t{
+        Select,
         L3,
         R3,
-        START,
-        UP,
-        RIGHT,
-        DOWN,
-        LEFT,
+        Start,
+        Up,
+        Right,
+        Down,
+        Left,
         L2, 
         R2, 
         L1, 
         R1, 
-        DELTA, 
-        CIRC, 
-        CROSS, 
-        SQU,
+        Delta, 
+        Circle, 
+        Cross, 
+        Square,
         RX, 
         RY, 
         LX, 
@@ -47,13 +47,13 @@ struct Ps2Joystick_Prelude{
     };
 
 
-    enum class DevId:uint8_t{
+    enum class [[nodiscard]] DevId:uint8_t{
         UNINIT = 0,
         NONE = 0x01,
         DIGIT = 0x41,
         NEGCON = 0x23,
-        ANARED = 0x73,
-        ANAGREEN = 0x53
+        AnalogRed = 0x73,
+        AnalogGreen = 0x53
     };
 
     friend OutputStream & operator<<(OutputStream & os, const DevId dev_id){
@@ -67,10 +67,10 @@ struct Ps2Joystick_Prelude{
                     return "DIGIT";
                 case DevId::NEGCON:
                     return "NEGCON";
-                case DevId::ANARED:
-                    return "ANARED";
-                case DevId::ANAGREEN:
-                    return "ANAGREEN";
+                case DevId::AnalogRed:
+                    return "AnalogRed";
+                case DevId::AnalogGreen:
+                    return "AnalogGreen";
                 default:
                     return nullptr;
             }
@@ -82,100 +82,100 @@ struct Ps2Joystick_Prelude{
         return os << pstr;
     }
 
-    enum class PressLevel:uint8_t{
+    enum class [[nodiscard]] PressLevel:uint8_t{
         Pressed = 0,
         UnPress = 1
     };
 
-    struct RxPayload{
+    struct [[nodiscard]] Modifiers{
+        PressLevel select:1;
+        PressLevel l3:1;
+        PressLevel r3:1;
+        PressLevel start:1;
+        PressLevel up:1;
+        PressLevel right:1;
+        PressLevel down:1;
+        PressLevel left:1;
+
+
+        PressLevel l2:1;
+        PressLevel r2:1;
+        PressLevel l1:1;
+        PressLevel r1:1;
+        PressLevel delta:1;
+        PressLevel circ:1;
+        PressLevel cross:1;
+        PressLevel squ:1;
+
+        [[nodiscard]] constexpr Vec2i left_direction() const{
+            auto & self =  *this;
+            return Vec2i(
+                int(PressLevel::Pressed == self.right) - int(PressLevel::Pressed == self.left), 
+                int(PressLevel::Pressed == self.up) - int(PressLevel::Pressed == self.down)
+            );
+        }
+
+        [[nodiscard]] constexpr std::bitset<16> to_bitset() const {
+            return std::bitset<16>(std::bit_cast<uint16_t>(*this));
+        }
+    };
+
+    static_assert(sizeof(Modifiers) == 2);
+    struct [[nodiscard]] JoystickPosition{
+        uint8_t x;
+        uint8_t y;
+
+        constexpr Vec2<real_t> to_vec2() const{
+            constexpr auto SCALE = real_t(1.0/510);
+            return {SCALE * (int(x * 4)) - 1, SCALE * (-int(y * 4)) + 1};
+        }
+    };
+
+    struct [[nodiscard]] RxFrame{
         #pragma pack(push, 1)
-
-        struct Modifiers{
-            PressLevel select:1;
-            PressLevel l3:1;
-            PressLevel r3:1;
-            PressLevel start:1;
-            PressLevel up:1;
-            PressLevel right:1;
-            PressLevel down:1;
-            PressLevel left:1;
-
-
-            PressLevel l2:1;
-            PressLevel r2:1;
-            PressLevel l1:1;
-            PressLevel r1:1;
-            PressLevel delta:1;
-            PressLevel circ:1;
-            PressLevel cross:1;
-            PressLevel squ:1;
-
-            constexpr std::bitset<16> to_bitset() const {
-                return std::bitset<16>(std::bit_cast<uint16_t>(*this));
-            }
-        };
-
-        static_assert(sizeof(Modifiers) == 2);
-
         Modifiers modifiers;
-
-        // uint8_t rx;
-        // uint8_t ry;
-        // uint8_t lx;
-        // uint8_t ly;
-
-        struct JoystickPosition{
-            uint8_t x;
-            uint8_t y;
-
-            constexpr Vec2<real_t> to_position() const{
-                constexpr auto SCALE = real_t(1.0/510);
-                return {SCALE * (int(x * 4)) - 1, SCALE * (-int(y * 4)) + 1};
-                // return {x,y};
-            }
-        };
 
         JoystickPosition right_joystick;
         JoystickPosition left_joystick;
 
         #pragma pack(pop)
 
-        constexpr uint8_t query_channel(const JoyStickChannel event) const {
+        [[nodiscard]] constexpr uint8_t query_channel(const JoyStickChannel event) const {
             switch(event){
-                case JoyStickChannel::SELECT:
-                    return bool(PressLevel::Pressed == modifiers.select);
+                case JoyStickChannel::Select:
+                    return (PressLevel::Pressed == modifiers.select);
                 case JoyStickChannel::L3:
-                    return bool(PressLevel::Pressed == modifiers.l3);
+                    return (PressLevel::Pressed == modifiers.l3);
                 case JoyStickChannel::R3:
-                    return bool(PressLevel::Pressed == modifiers.r3);
-                case JoyStickChannel::START:
-                    return bool(PressLevel::Pressed == modifiers.start);
-                case JoyStickChannel::UP:
-                    return bool(PressLevel::Pressed == modifiers.up);
-                case JoyStickChannel::RIGHT:
-                    return bool(PressLevel::Pressed == modifiers.right);
-                case JoyStickChannel::DOWN:
-                    return bool(PressLevel::Pressed == modifiers.down);
-                case JoyStickChannel::LEFT:
-                    return bool(PressLevel::Pressed == modifiers.left);
+                    return (PressLevel::Pressed == modifiers.r3);
+                case JoyStickChannel::Start:
+                    return (PressLevel::Pressed == modifiers.start);
+                case JoyStickChannel::Up:
+                    return (PressLevel::Pressed == modifiers.up);
+                case JoyStickChannel::Right:
+                    return (PressLevel::Pressed == modifiers.right);
+                case JoyStickChannel::Down:
+                    return (PressLevel::Pressed == modifiers.down);
+                case JoyStickChannel::Left:
+                    return (PressLevel::Pressed == modifiers.left);
 
 
                 case JoyStickChannel::L2:
-                    return bool(PressLevel::Pressed == modifiers.l2);
+                    return (PressLevel::Pressed == modifiers.l2);
                 case JoyStickChannel::R2:
-                    return bool(PressLevel::Pressed == modifiers.r2);
+                    return (PressLevel::Pressed == modifiers.r2);
                 case JoyStickChannel::L1:
-                    return bool(PressLevel::Pressed == modifiers.l1);
+                    return (PressLevel::Pressed == modifiers.l1);
                 case JoyStickChannel::R1:
-                    return bool(PressLevel::Pressed == modifiers.r1);
-                case JoyStickChannel::DELTA:
-                    return bool(PressLevel::Pressed == modifiers.delta);
-                case JoyStickChannel::CIRC:
-                    return bool(PressLevel::Pressed == modifiers.circ);
-                case JoyStickChannel::CROSS:
-                    return bool(PressLevel::Pressed == modifiers.cross);
-                case JoyStickChannel::SQU:
-                    return bool(PressLevel::Pressed == modifiers.squ);
+                    return (PressLevel::Pressed == modifiers.r1);
+                case JoyStickChannel::Delta:
+                    return (PressLevel::Pressed == modifiers.delta);
+                case JoyStickChannel::Circle:
+                    return (PressLevel::Pressed == modifiers.circ);
+                case JoyStickChannel::Cross:
+                    return (PressLevel::Pressed == modifiers.cross);
+                case JoyStickChannel::Square:
+                    return (PressLevel::Pressed == modifiers.squ);
 
 
                 case JoyStickChannel::RX:
@@ -192,38 +192,34 @@ struct Ps2Joystick_Prelude{
             }
         }
 
-        constexpr Vec2i left_direction() const{
-            Vec2i dir = Vec2i(0, 0);
-
-            if(PressLevel::Pressed == modifiers.left) 
-                dir += Vec2i::LEFT;
-            if(PressLevel::Pressed == modifiers.right) 
-                dir += Vec2i::RIGHT;
-            if(PressLevel::Pressed == modifiers.up) 
-                dir += Vec2i::UP;
-            if(PressLevel::Pressed == modifiers.down) 
-                dir += Vec2i::DOWN;
-
-            return dir;
-        }
-
-        std::span<uint8_t> as_bytes() {
+        [[nodiscard]] std::span<uint8_t> as_bytes_mut() {
             return std::span<uint8_t>(reinterpret_cast<uint8_t *>(this), sizeof(*this));
         }
 
     };
 
-
-
-    static constexpr size_t FRAME_SIZE = sizeof(RxPayload);
+    static constexpr size_t FRAME_SIZE = sizeof(RxFrame);
     static_assert(FRAME_SIZE == 6);
+
+    struct TxFrame{
+        uint8_t right_vibration_strength;
+        uint8_t left_vibration_strength;
+        uint8_t __resv__[4];
+
+        static constexpr TxFrame from_parts(const uint8_t left, const uint8_t right){
+            return {left, right, {}};
+        }
+
+        std::span<const uint8_t> as_bytes() const {
+            return std::span<const uint8_t>{reinterpret_cast<const uint8_t*>(this), sizeof(*this)};
+        }
+    };
+
+    static_assert(sizeof(TxFrame) == 6);
+
+
 };
 
-struct Ps2Joystick_Phy:public Ps2Joystick_Prelude{
-    #if 0
-
-    #endif
-};
 
 class Ps2Joystick final:public Ps2Joystick_Prelude{
 public:
@@ -238,11 +234,11 @@ public:
         return Ok(dev_id_);
     }
 
-    IResult<RxPayload> read_info() const;
+    IResult<RxFrame> read_info() const;
 private:
     hal::SpiDrv spi_drv_;
     DevId dev_id_ = DevId::NONE;
-    RxPayload rx_payload_;
+    RxFrame rx_frame_;
 };
 
 }

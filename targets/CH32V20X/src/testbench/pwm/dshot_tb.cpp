@@ -3,7 +3,7 @@
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "hal/timer/timer_oc.hpp"
 
 #include "drivers/Modem/dshot/dshot.hpp"
@@ -98,9 +98,18 @@ void dshot_main(){
     auto & timer = hal::timer1;
 
     timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
         .count_freq = hal::NearestFreq(20_KHz),
         .count_mode = hal::TimerCountMode::Up
-    }, EN);
+    })        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+
+    timer.start();
     auto & oc = timer.oc<1>();
     auto & oc2 = timer.oc<2>();
 

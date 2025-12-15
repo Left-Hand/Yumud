@@ -19,8 +19,8 @@ struct CalibrateTable{
         }
 
     [[nodiscard]] constexpr Result<void, Error> push_back(
-        const Angle<uq32> expected, 
-        const Angle<uq32> measured
+        const Angular<uq32> expected, 
+        const Angular<uq32> measured
     ){
         //确定原始数据的扇区
         const auto index = angle_to_index(measured);
@@ -49,7 +49,7 @@ struct CalibrateTable{
         return block_[idx];
     }
 
-    [[nodiscard]] constexpr PackedCalibrateSample operator[](const Angle<uq32> raw_angle) const {
+    [[nodiscard]] constexpr PackedCalibrateSample operator[](const Angular<uq32> raw_angle) const {
         return block_[angle_to_index(raw_angle)];
     }
 
@@ -65,7 +65,7 @@ struct CalibrateTable{
     [[nodiscard]] constexpr std::span<const PackedCalibrateSample>
     iter() const {return std::span(block_);}
 
-    [[nodiscard]] constexpr size_t angle_to_index(const Angle<uq32> angle) const{
+    [[nodiscard]] constexpr size_t angle_to_index(const Angular<uq32> angle) const{
         return size_t(uq24(angle.to_turns()) * capacity_);
     }
 private:

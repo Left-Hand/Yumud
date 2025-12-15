@@ -3,7 +3,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/math/realmath.hpp"
 
-#include "types/regions/range2.hpp"
+#include "algebra/regions/range2.hpp"
 
 #include "meta_utils.hpp"
 #include "calibrate_utils.hpp"
@@ -52,8 +52,8 @@ struct MotorTaskPrelude{
         return size_t(seconds * ISR_FREQ);
     }
 
-    static constexpr Angle<uq32> ticks_to_linear_angle(const size_t ticks){
-        return Angle<uq32>(frac(iq16(ticks) / MICROSTEPS_PER_SECTOR / MOTOR_POLE_PAIRS / 4));
+    static constexpr Angular<uq32> ticks_to_linear_angle(const size_t ticks){
+        return Angular<uq32>(math::frac(iq16(ticks) / MICROSTEPS_PER_SECTOR / MOTOR_POLE_PAIRS / 4));
     }
 
     static constexpr size_t linear_position_to_ticks(const iq16 rotations){
@@ -83,10 +83,10 @@ struct MotorTaskPrelude{
             ticks_ = cfg.timeout_ticks;
         } 
 
-        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> lappos){
+        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> lappos){
             tick_cnt_++;
 
-            const auto [s,c] = sincospu(targ_elec_rotation_);
+            const auto [s,c] = math::sincospu(targ_elec_rotation_);
 
             return digipw::AlphaBetaCoord<iq16>{
                 .alpha = STALL_DUTYCYCLE * c,
@@ -131,10 +131,10 @@ struct MotorTaskPrelude{
             ;
         }
 
-        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> meas_angle){
+        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> meas_angle){
             tick_cnt_++;
             const auto expected_angle = ticks_to_linear_angle(tick_cnt_);
-            const auto [s,c] = sincospu(0.25_r * sinpu(expected_angle.to_turns() * freq_));
+            const auto [s,c] = math::sincospu(0.25_r * math::sinpu(expected_angle.to_turns() * freq_));
             return digipw::AlphaBetaCoord<iq16>{
                 .alpha = BEEP_DUTYCYCLE * 2,
                 .beta = s * BEEP_DUTYCYCLE * 2
@@ -176,14 +176,16 @@ struct MotorTaskPrelude{
             ;
         } 
 
-        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> meas_angle){
-            const auto expected_angle = SIGN_AS(ticks_to_linear_angle(tick_cnt_), delta_);
-            const auto [s,c] = (expected_angle.cast_inner<uq16>() * MOTOR_POLE_PAIRS).sincos();
-            tick_cnt_++;
-            return digipw::AlphaBetaCoord<iq16>{
-                .alpha = STALL_DUTYCYCLE * c,
-                .beta = STALL_DUTYCYCLE * s
-            };
+        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> meas_angle){
+            // TODO();
+            return digipw::AlphaBetaCoord<iq16>::ZERO;
+            // const auto expected_angle = SIGN_AS(ticks_to_linear_angle(tick_cnt_).cast_inner<iq16>, delta_);
+            // const auto [s,c] = (expected_angle.cast_inner<uq16>() * MOTOR_POLE_PAIRS).sincos();
+            // tick_cnt_++;
+            // return digipw::AlphaBetaCoord<iq16>{
+            //     .alpha = STALL_DUTYCYCLE * c,
+            //     .beta = STALL_DUTYCYCLE * s
+            // };
         }
 
         constexpr bool is_finished(){
@@ -220,7 +222,8 @@ struct MotorTaskPrelude{
             ;
         } 
 
-        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> meas_angle){
+        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> meas_angle){
+            #if 0
             const auto expected_angle = SIGN_AS(ticks_to_linear_angle(tick_cnt_), delta_);
             const auto [s,c] = (expected_angle.cast_inner<uq16>() * MOTOR_POLE_PAIRS).sincos();
             tick_cnt_++;
@@ -228,6 +231,8 @@ struct MotorTaskPrelude{
                 .alpha = STALL_DUTYCYCLE * c,
                 .beta = STALL_DUTYCYCLE * s
             };
+            #endif
+            return digipw::AlphaBetaCoord<iq16>::ZERO;
         }
 
         constexpr bool is_finished(){
@@ -273,7 +278,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
         
         constexpr CheckStallTask(const Config & cfg){;} 
 
-        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> cont_position){
+        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> cont_position){
 
             if(may_move_range_.is_none())
                 may_move_range_ = Some(Range2<iq16>::from_center(cont_position.to_turns()));
@@ -327,14 +332,14 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
             is_beta_ = cfg.is_beta;
         };
 
-        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> cont_position){
+        constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> cont_position){
 
             if(may_move_range_.is_none())
                 may_move_range_ = Some(Range2<iq16>::from_center(cont_position.to_turns()));
             else 
                 may_move_range_ = Some(may_move_range_.unwrap().merge(cont_position.to_turns()));
 
-            const auto duty = sinpu(LERP(
+            const auto duty = math::sinpu(LERP(
                 iq16(tick_cnt_) / MOVE_CHECK_TICKS,
                 -0.5_r, 0.5_r
             )) * STALL_DUTYCYCLE;
@@ -437,7 +442,8 @@ struct CalibrateRotateTask final{
     constexpr CalibrateRotateTask & operator = (const CalibrateRotateTask & ) = default;
     constexpr CalibrateRotateTask & operator = (CalibrateRotateTask &&) = default;
 
-    constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> meas_angle){
+    constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> meas_angle){
+        #if 0
         const auto expected_angle = SIGN_AS(ticks_to_linear_angle(tick_cnt_), delta_turns_);
         const auto [s,c] = (expected_angle.cast_inner<uq16>() * MOTOR_POLE_PAIRS).sincos();
         
@@ -456,6 +462,9 @@ struct CalibrateRotateTask final{
             .alpha = CALIBRATE_DUTYCYCLE * c,
             .beta = CALIBRATE_DUTYCYCLE * s
         };
+        #endif
+
+        return digipw::AlphaBetaCoord<iq16>::ZERO;
     }
 
     constexpr bool is_finished(){
@@ -470,8 +479,8 @@ struct CalibrateRotateTask final{
 
 private:
     constexpr Result<void, Error> push_data(
-        const Angle<uq32> expected_lap_angle,
-        const Angle<uq32> meas_angle
+        const Angular<uq32> expected_lap_angle,
+        const Angular<uq32> meas_angle
     ){
         return table_.get().push_back(expected_lap_angle, meas_angle);
     }
@@ -640,7 +649,7 @@ public:
         );
     }
 
-    using IConfigs = magic::functor_ret_t<decltype(make_calibrate_configs)>;
+    using IConfigs = tmp::functor_ret_t<decltype(make_calibrate_configs)>;
 
     IConfigs configs_;
 
@@ -648,7 +657,7 @@ public:
     struct Settings{
         using Configs = IConfigs;
         using Error = TaskError;
-        using Args = Angle<uq32>;
+        using Args = Angular<uq32>;
         using Ret = digipw::AlphaBetaCoord<iq16>;
     };
     TaskSequence<Settings> task_sequence_ = {configs_};
@@ -662,7 +671,7 @@ public:
             backward_calibrate_table
         )){;}
 
-    constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> lap_position){
+    constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> lap_position){
         return task_sequence_.resume(lap_position);
     }
 
@@ -736,7 +745,7 @@ public:
         }
     );
 
-    constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> lap_position){
+    constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> lap_position){
         return task_sequence_.resume(lap_position);
     }
 
@@ -756,7 +765,7 @@ private:
     struct Settings{
         using Configs = std::decay_t<decltype(CONFIGS_QUEUE)>;
         using Error = TaskError;
-        using Args = Angle<uq32>;
+        using Args = Angular<uq32>;
         using Ret = digipw::AlphaBetaCoord<iq16>;
     };
 
@@ -795,7 +804,7 @@ public:
         }
     );
 
-    constexpr digipw::AlphaBetaCoord<iq16> resume(const Angle<uq32> lap_position){
+    constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> lap_position){
         return task_sequence_.resume(lap_position);
     }
 
@@ -815,7 +824,7 @@ private:
     struct Settings{
         using Configs = std::decay_t<decltype(CONFIGS_QUEUE)>;
         using Error = TaskError;
-        using Args = Angle<uq32>;
+        using Args = Angular<uq32>;
         using Ret = digipw::AlphaBetaCoord<iq16>;
     };
 

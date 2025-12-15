@@ -3,18 +3,19 @@
 #include "core/system.hpp"
 #include "core/clock/time.hpp"
 #include "core/debug/debug.hpp"
-
+#include "core/utils/default.hpp"
+#include "core/math/realmath.hpp"
 
 #include "hal/gpio/vport.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "primitive/pwm_channel.hpp"
 #include "hal/timer/capture/capture_channel.hpp"
 #include "hal/timer/timer_oc.hpp"
 
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 
 #include "drivers/Adc/INA226/ina226.hpp"
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
@@ -27,7 +28,7 @@
 #include "digipw/spll/spll_1ph_sogi_iq.hpp"
 
 
-#include "core/math/realmath.hpp"
+
 
 
 using namespace ymd;
@@ -55,14 +56,24 @@ void test_sogi(){
         }
     };
 
-    Angle<uq32> raw_angle;
+    Angular<uq32> raw_angle;
     iq16 u0;
 
 
     hal::timer1.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
         .count_freq = hal::NearestFreq(isr_freq),
         .count_mode = hal::TimerCountMode::Up
-    }, EN);
+    })
+        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+
+    hal::timer1.start();
 
     auto run_sogi = [&](){
 
@@ -81,9 +92,9 @@ void test_sogi(){
             static constexpr iq16 dt = iq16(1) / isr_freq;
             tm += dt;
     
-            raw_angle = Angle<uq32>::from_turns(frac(ac_freq * tm));
-            // raw_angle = iq16(TAU) * frac((ac_freq-4.2_r) * tm);
-            u0 = 32.0_r * raw_angle.sin() * (0.05_r * sin(8 * tm) + 1);
+            raw_angle = Angular<uq32>::from_turns(math::frac(ac_freq * tm));
+            // raw_angle = iq16(TAU) * math::frac((ac_freq-4.2_r) * tm);
+            u0 = 32.0_r * raw_angle.sin() * (0.05_r * math::sin(8 * tm) + 1);
             spll.update(u0);
         }
 
@@ -116,7 +127,10 @@ void test_sogi(){
     }
 }
 void digipw_main(){
-    DEBUGGER_INST.init({6_MHz});
+    DEBUGGER_INST.init({
+        .remap = hal::UART1_REMAP_PA9_PA10,
+        .baudrate = 6_MHz
+    });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
@@ -124,10 +138,10 @@ void digipw_main(){
     /*-----------------------*/
 
     // test_sogi();
-    auto scl_gpio = hal::PB<15>();
-    auto sda_gpio = hal::PB<14>();
+    auto scl_pin = hal::PB<15>();
+    auto sda_pin = hal::PB<14>();
     
-    hal::I2cSw i2csw{&scl_gpio, &sda_gpio};
+    hal::I2cSw i2csw{&scl_pin, &sda_pin};
     i2csw.init({1000000});
     
     // INA226 ina226{i2csw};
@@ -143,16 +157,22 @@ void digipw_main(){
     constexpr auto CHOPPER_FREQ = 100'000;
     auto & timer = hal::timer1;
     timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
         .count_freq = hal::NearestFreq(CHOPPER_FREQ),
         .count_mode = hal::TimerCountMode::Up
-    }, EN);
+    }).unwrap().alter_to_pins({
+        hal::TimerChannelSelection::CH1,
+        hal::TimerChannelSelection::CH2,
+        hal::TimerChannelSelection::CH3,
+    }).unwrap();
+    timer.start();
     timer.bdtr().init({10ns});
 
     auto & pwm = timer.oc<1>();
     auto & pwmn = timer.ocn<1>();
 
-    pwm.init({});
-    pwmn.init({});
+    pwm.init(Default);
+    pwmn.init(Default);
 
     pwm.enable_cvr_sync(EN);
     auto en_gpio = hal::PB<0>();
@@ -162,7 +182,7 @@ void digipw_main(){
     led.outpp();
 
     // mp1907.enable();
-    en_gpio.clr();
+    en_gpio.set_low();
 
     /*-----------------------*/
 
@@ -184,8 +204,8 @@ void digipw_main(){
                 static iq20 mt = 0;
                 static constexpr iq20 dt = 1_iq20 / CHOPPER_FREQ;
                 mt += dt;
-                // mp1907 = iq16(0.5) + 0.1_r * sinpu(50 * time());
-                pwm.set_dutycycle(iq16(0.5) + 0.1_r * sinpu(50 * iq16(mt)));
+                // mp1907 = iq16(0.5) + 0.1_r * math::sinpu(50 * time());
+                pwm.set_dutycycle(iq16(0.5) + 0.1_r * math::sinpu(50 * iq16(mt)));
                 // const auto duty = 0.3_r;
                 // mp1907 = CLAMP(duty, 0, 0.4_r);
                 break;
@@ -201,7 +221,7 @@ void digipw_main(){
         // const auto t = 6 * time();
         // const auto s = sinpu<31>(t);
         // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch));
-        // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch), sin(t), sqrt(t), atan2(cos(t), sin(t)));
+        // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch), math::sin(t), sqrt(t), atan2(cos(t), math::sin(t)));
 
         // const auto curr_meas = fixed_t<24>(iq16(curr_ch));
         // const auto curr_targ = 0.04_q24;
@@ -212,10 +232,10 @@ void digipw_main(){
         // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch), iq16(power_ch));
         // DEBUG_PRINTLN_IDLE(iq16(volt_ch), iq16(curr_ch));
 
-        // mp1907 = iq16(0.5) + iq16(0.4) * sin(t);
+        // mp1907 = iq16(0.5) + iq16(0.4) * math::sin(t);
 
-        //  + iq16(0.4) * sin(t);
+        //  + iq16(0.4) * math::sin(t);
         // mp1907 = duty;
-        led.toggle();
+        led.write(~led.read());
     }
 }

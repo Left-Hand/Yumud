@@ -37,15 +37,15 @@ public:
     
     [[nodiscard]] IResult<uint16_t> get_magnitude();
     
-    [[nodiscard]] IResult<Angle<uq32>> get_raw_angle();
+    [[nodiscard]] IResult<Angular<uq32>> get_raw_angle();
     
-    [[nodiscard]] IResult<Angle<uq32>> get_angle();
+    [[nodiscard]] IResult<Angular<uq32>> get_angle();
     
-    [[nodiscard]] IResult<> set_start_angle(const Angle<uq32> angle);
+    [[nodiscard]] IResult<> set_start_angle(const Angular<uq32> angle);
     
-    [[nodiscard]] IResult<> set_end_angle(const Angle<uq32> angle);
+    [[nodiscard]] IResult<> set_end_angle(const Angular<uq32> angle);
     
-    [[nodiscard]] IResult<> set_amount_angle(const Angle<uq32> angle);
+    [[nodiscard]] IResult<> set_amount_angle(const Angular<uq32> angle);
     
     [[nodiscard]] IResult<uint8_t> get_program_times();
     

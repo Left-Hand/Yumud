@@ -10,7 +10,7 @@ using namespace ymd::robots;
 #if 0
 
 static constexpr iq16 EPSILON = 0.001_iq16;
-void Sequencer::rotate(Curve & curve, const Ray2<iq16> & from, const Angle<iq16> end_angle){
+void Sequencer::rotate(Curve & curve, const Ray2<iq16> & from, const Angular<iq16> end_angle){
 
     const TrapezoidSolver<iq16> solver{
         {limits_.max_agr, 
@@ -26,7 +26,7 @@ void Sequencer::rotate(Curve & curve, const Ray2<iq16> & from, const Angle<iq16>
     
     for(size_t i = 0; i < n; i++){
         const auto t_val = iq16(i) / freq;
-        const auto orientation = Angle<iq16>::from_radians(solver.forward(t_val));
+        const auto orientation = Angular<iq16>::from_radians(solver.forward(t_val));
         curve.emplace_back(from.rotated(inv ? -orientation : orientation));
     }
 }

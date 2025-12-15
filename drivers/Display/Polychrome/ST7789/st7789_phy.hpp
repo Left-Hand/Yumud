@@ -1,6 +1,7 @@
 #pragma once
 
 #include "st7789_prelude.hpp"
+#include "hal/bus/spi/spihw.hpp"
 
 namespace ymd::drivers{
 
@@ -22,59 +23,59 @@ public:
     ):  
         spi_(spi.deref()), 
         rank_(rank), 
-        dc_gpio_(dc_gpio.deref()), 
-        res_gpio_(res_gpio)
+        dc_pin_(dc_gpio.deref()), 
+        res_pin_(res_gpio)
         {};
 
     [[nodiscard]] IResult<> init(){
-        dc_gpio_.outpp();
-        if(res_gpio_.is_some())
-            res_gpio_.unwrap().outpp(HIGH);
+        dc_pin_.outpp();
+        if(res_pin_.is_some())
+            res_pin_.unwrap().outpp(HIGH);
 
         return reset();
     }
 
     [[nodiscard]] IResult<> reset(){
-        if(res_gpio_.is_none()) return Ok();
-        auto & res_gpio = res_gpio_.unwrap();
+        if(res_pin_.is_none()) return Ok();
+        auto & res_gpio = res_pin_.unwrap();
         clock::delay(10ms);
-        res_gpio.clr();
+        res_gpio.set_low();
         clock::delay(10ms);
-        res_gpio.set();
+        res_gpio.set_high();
         return Ok();
     }
 
     [[nodiscard]] IResult<> write_command(const uint8_t cmd){
-        dc_gpio_.clr();
+        dc_pin_.set_low();
         return phy_write_single<uint8_t>(cmd);
     }
 
     [[nodiscard]] IResult<> write_data8(const uint8_t data){
-        dc_gpio_.set();
+        dc_pin_.set_high();
         return phy_write_single<uint8_t>(data);
     }
 
     [[nodiscard]] IResult<> write_data16(const uint16_t data){
-        dc_gpio_.set();
+        dc_pin_.set_high();
         return phy_write_single<uint16_t>(data);
     }
 
     template<typename T>
     [[nodiscard]] IResult<> write_burst_pixels(std::span<const T> pbuf){
-        dc_gpio_.set();
+        dc_pin_.set_high();
         return spi_fast_write_burst<uint16_t>(pbuf);
     }
 
     [[nodiscard]] IResult<> write_repeat_pixels(const auto & data, size_t len){
-        dc_gpio_.set();
+        dc_pin_.set_high();
         return spi_fast_write_repeat<uint16_t>(data, len);
     }
 private:
     hal::SpiHw & spi_;
     hal::SpiSlaveRank rank_;
 
-    hal::Gpio & dc_gpio_;
-    Option<hal::Gpio &>res_gpio_;
+    hal::Gpio & dc_pin_;
+    Option<hal::Gpio &>res_pin_;
 
     template <hal::valid_spi_data T>
     [[nodiscard]] IResult<> spi_fast_write_burst(
@@ -85,7 +86,7 @@ private:
                 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
+            if(const auto res = spi_.set_word_width(tmp::type_to_bitswidth_v<T>); res.is_err())
                 
             return Err(res.unwrap_err());
         }
@@ -93,14 +94,14 @@ private:
         const auto len = pbuf.size();
         // DEBUG_PRINTLN(len, pbuf[0], static_cast<T>(pbuf[0]));
         for (size_t i = 0; i < len; i++){
-            (void)spi_.fast_write(color_cast<RGB565>(pbuf[i]).to_u16());
-            // (void)spi_.write(static_cast<uint32_t>(p[i]));
+            (void)spi_.fast_blocking_write(color_cast<RGB565>(pbuf[i]).to_u16());
+            // (void)spi_.blocking_write(static_cast<uint32_t>(p[i]));
         } 
 
         if (cont == DISC) spi_.lend();
 
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) 
+            if(const auto res = spi_.set_word_width(8); res.is_err()) 
             return Err(res.unwrap_err());
         }
 
@@ -116,18 +117,18 @@ private:
         if (const auto res = spi_.borrow(rank_); res.is_err()) 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
+            if(const auto res = spi_.set_word_width(sizeof(T) * 8); res.is_err())
                 
             return Err(res.unwrap_err());
         }
         for (size_t i = 0; i < len; i++){
-            if(const auto res = spi_.write((data).to_u16());
+            if(const auto res = spi_.blocking_write((data).to_u16());
                 res.is_err()) 
                 return Err(res.unwrap_err());
         } 
         if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) 
+            if(const auto res = spi_.set_word_width(8); res.is_err()) 
             return Err(res.unwrap_err());
         }
         return Ok();
@@ -142,22 +143,22 @@ private:
         if(const auto res = spi_.borrow(rank_); res.is_err()) 
             return Err(res.unwrap_err());
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
+            if(const auto res = spi_.set_word_width(sizeof(T) * 8); res.is_err())
                 
             return Err(res.unwrap_err());
         }
 
         if constexpr (sizeof(T) == 1) {
-            if(const auto res = spi_.write(uint8_t(data)); res.is_err()) 
+            if(const auto res = spi_.blocking_write(uint8_t(data)); res.is_err()) 
             return Err(res.unwrap_err());
         } else if constexpr (sizeof(T) == 2) {
-            if(const auto res = spi_.write(uint16_t(data)); res.is_err()) 
+            if(const auto res = spi_.blocking_write(uint16_t(data)); res.is_err()) 
             return Err(res.unwrap_err());
         }
 
         if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) 
+            if(const auto res = spi_.set_word_width(8); res.is_err()) 
             return Err(res.unwrap_err());
         }
 

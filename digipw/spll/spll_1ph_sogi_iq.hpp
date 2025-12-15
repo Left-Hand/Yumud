@@ -2,7 +2,7 @@
 
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "primitive/arithmetic/angular.hpp"
 
 namespace ymd::digipw{
 class Spll{
@@ -147,16 +147,16 @@ public:
 
         fo = fn + ylf[0];
 
-        turns_ = frac(turns_ + (dt_ * fo));
+        turns_ = math::frac(turns_ + (dt_ * fo));
 
-        auto [sin_val, cos_val] = sincospu(turns_);
+        auto [sin_val, cos_val] = math::sincospu(turns_);
         sine = sin_val;
         cosine = cos_val;
     }
 
     iq16 freq() const{return this->fo;}
 
-    Angle<iq16> angle() const{return Angle<iq16>::from_turns(static_cast<iq16>(turns_));}
+    Angular<iq16> angle() const{return Angular<iq16>::from_turns(static_cast<iq16>(turns_));}
 
     iq16 ud() const{return this->u_D[0];}
 

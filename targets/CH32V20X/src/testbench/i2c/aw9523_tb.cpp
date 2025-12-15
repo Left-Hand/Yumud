@@ -15,20 +15,23 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 #define DBG_UART hal::uart2
-#define SCL_GPIO hal::PB<0>()
-#define SDA_GPIO hal::PB<1>()
+#define SCL_PIN hal::PB<0>()
+#define SDA_PIN hal::PB<1>()
 
 using drivers::AW9523;
 
 void aw9523_main(){
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.no_brackets(EN);
 
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;  
-    hal::I2cSw i2c = hal::I2cSw{&scl_gpio_, &sda_gpio_};
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;  
+    hal::I2cSw i2c = hal::I2cSw{&scl_pin_, &sda_pin_};
     i2c.init({200_KHz});
 
     AW9523 aw9523{&i2c};
@@ -41,7 +44,7 @@ void aw9523_main(){
         .examine();
 
     while(true){
-        const auto dutycycle = (0.5_r + 0.5_r * sin(clock::time()));
+        const auto dutycycle = (0.5_r + 0.5_r * math::sin(clock::time()));
         aw9523.set_led_current_dutycycle(
             hal::PinMask::from_u16(0xffff),
             dutycycle

@@ -1,121 +1,159 @@
 #include "spihw.hpp"
-
+#include "core/sdk.hpp"
 #include "core/system.hpp"
 #include "core/debug/debug.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
+
+#include "spi_layout.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 
 
 static constexpr SpiPrescaler calculate_prescaler(
-        const uint32_t apb_freq, const uint32_t baudrate){
+    const uint32_t aligned_bus_clk_freq, 
+    const uint32_t baudrate
+){
     uint32_t real_div = 2;
     uint8_t i = 0;
 
-    while(real_div * baudrate < apb_freq){
+    while(real_div * baudrate < aligned_bus_clk_freq){
         real_div <<= 1;
         i++;
     }
 
     return SpiPrescaler(std::bit_cast<SpiPrescaler::Kind>(static_cast<uint8_t>(i & 0b111)));
-
 }
 
-static Gpio map_inst_to_mosi_gpio(const void * inst, const uint8_t remap){
+[[maybe_unused]] static Nth _spi_to_nth(const void * inst){
     switch(reinterpret_cast<size_t>(inst)){
-        #ifdef ENABLE_SPI1
+        #ifdef SPI1_PRESENT
         case SPI1_BASE:
-            return SPI1_MOSI_GPIO;
+            return Nth(1);
         #endif
-
-        #ifdef ENABLE_SPI2
+        #ifdef SPI2_PRESENT
         case SPI2_BASE:
-            return SPI2_MOSI_GPIO;
+            return Nth(2);
         #endif
-
-        #ifdef ENABLE_SPI3
+        #ifdef SPI3_PRESENT
         case SPI3_BASE:
-            return SPI3_MOSI_GPIO;
+            return Nth(3);
         #endif
     }
     __builtin_trap();
 }
 
-static Gpio map_inst_to_miso_gpio(const void * inst, const uint8_t remap){
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef ENABLE_SPI1
-        case SPI1_BASE:
-            return SPI1_MISO_GPIO;
+template<SpiRemap REMAP>
+[[maybe_unused]] static Gpio _spi_to_miso_gpio(const void * inst){
+    const auto nth = _spi_to_nth(inst);
+    switch(nth.count()){
+        #ifdef SPI1_PRESENT
+        case 1:
+            return pintag_to_pin<spi::miso_pin_t<1, REMAP>>();
         #endif
-
-        #ifdef ENABLE_SPI2
-        case SPI2_BASE:
-            return SPI2_MISO_GPIO;
+        #ifdef SPI2_PRESENT
+        case 2:
+            return pintag_to_pin<spi::miso_pin_t<2, REMAP>>();
         #endif
-
-        #ifdef ENABLE_SPI3
-        case SPI3_BASE:
-            return SPI3_MISO_GPIO;
-        #endif
-    }
-    __builtin_trap();
-}
-
-static Gpio map_inst_to_sclk_gpio(const void * inst, const uint8_t remap){
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef ENABLE_SPI1
-        case SPI1_BASE:
-            return SPI1_SCLK_GPIO;
-        #endif
-
-        #ifdef ENABLE_SPI2
-        case SPI2_BASE:
-            return SPI2_SCLK_GPIO;
-        #endif
-
-        #ifdef ENABLE_SPI3
-        case SPI3_BASE:
-            return SPI3_SCLK_GPIO;
+        #ifdef SPI3_PRESENT
+        case 3:
+            return pintag_to_pin<spi::miso_pin_t<3, REMAP>>();
         #endif
     }
     __builtin_trap();
 }
 
-static Gpio map_inst_to_hw_cs_gpio(const void * inst, const uint8_t remap){
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef ENABLE_SPI1
-        case SPI1_BASE:
-            return SPI1_CS_GPIO;
+template<SpiRemap REMAP>
+[[maybe_unused]] static Gpio _spi_to_mosi_gpio(const void * inst){
+    const auto nth = _spi_to_nth(inst);
+    switch(nth.count()){
+        #ifdef SPI1_PRESENT
+        case 1:
+            return pintag_to_pin<spi::mosi_pin_t<1, REMAP>>();
         #endif
-
-        #ifdef ENABLE_SPI2
-        case SPI2_BASE:
-            return SPI2_CS_GPIO;
+        #ifdef SPI2_PRESENT
+        case 2:
+            return pintag_to_pin<spi::mosi_pin_t<2, REMAP>>();
         #endif
-
-        #ifdef ENABLE_SPI3
-        case SPI3_BASE:
-            return SPI3_CS_GPIO;
+        #ifdef SPI3_PRESENT
+        case 3:
+            return pintag_to_pin<spi::mosi_pin_t<3, REMAP>>();
         #endif
     }
     __builtin_trap();
 }
+
+template<SpiRemap REMAP>
+[[maybe_unused]] static Gpio _spi_to_sclk_gpio(const void * inst){
+    const auto nth = _spi_to_nth(inst);
+    switch(nth.count()){
+        #ifdef SPI1_PRESENT
+        case 1:
+            return pintag_to_pin<spi::sclk_pin_t<1, REMAP>>();
+        #endif
+        #ifdef SPI2_PRESENT
+        case 2:
+            return pintag_to_pin<spi::sclk_pin_t<2, REMAP>>();
+        #endif
+        #ifdef SPI3_PRESENT
+        case 3:
+            return pintag_to_pin<spi::sclk_pin_t<3, REMAP>>();
+        #endif
+    }
+    __builtin_trap();
+}
+
+template<SpiRemap REMAP>
+[[maybe_unused]] static Gpio _spi_to_hwcs_gpio(const void * inst){
+    const auto nth = _spi_to_nth(inst);
+    switch(nth.count()){
+        #ifdef SPI1_PRESENT
+        case 1:
+            return pintag_to_pin<spi::hwcs_pin_t<1, REMAP>>();
+        #endif
+        #ifdef SPI2_PRESENT
+        case 2:
+            return pintag_to_pin<spi::hwcs_pin_t<2, REMAP>>();
+        #endif
+        #ifdef SPI3_PRESENT
+        case 3:
+            return pintag_to_pin<spi::hwcs_pin_t<3, REMAP>>();
+        #endif
+    }
+    __builtin_trap();
+}
+
+
+#define DEF_SPI_BIND_PIN_LAYOUTER(name)\
+[[maybe_unused]] static Gpio spi_to_##name##_gpio(const void * inst, const SpiRemap remap){\
+    switch(remap){\
+        case SpiRemap::_0: return _spi_to_##name##_gpio<SpiRemap::_0>(inst);\
+        case SpiRemap::_1: return _spi_to_##name##_gpio<SpiRemap::_1>(inst);\
+        case SpiRemap::_2: return _spi_to_##name##_gpio<SpiRemap::_2>(inst);\
+        case SpiRemap::_3: return _spi_to_##name##_gpio<SpiRemap::_3>(inst);\
+    }\
+    __builtin_trap();\
+}\
+
+DEF_SPI_BIND_PIN_LAYOUTER(miso)
+DEF_SPI_BIND_PIN_LAYOUTER(mosi)
+DEF_SPI_BIND_PIN_LAYOUTER(sclk)
+DEF_SPI_BIND_PIN_LAYOUTER(hwcs)
 
 void SpiHw::enable_rcc(const Enable en){
     switch(reinterpret_cast<size_t>(inst_)){
-        #ifdef ENABLE_SPI1
+        #ifdef SPI1_PRESENT
         case SPI1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en == EN);
             return;
         #endif
-        #ifdef ENABLE_SPI2
+        #ifdef SPI2_PRESENT
         case SPI2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, en == EN);
             return;
         #endif
-        #ifdef ENABLE_SPI3
+        #ifdef SPI3_PRESENT
         case SPI3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, en == EN);
             return;
@@ -124,26 +162,26 @@ void SpiHw::enable_rcc(const Enable en){
     __builtin_trap();
 }
 
-void SpiHw::set_remap(const uint8_t remap){
+void SpiHw::set_remap(const SpiRemap remap){
     switch(reinterpret_cast<size_t>(inst_)){
-        #ifdef ENABLE_SPI1
+        #ifdef SPI1_PRESENT
         case SPI1_BASE:
             switch(remap){
-                case 0: return GPIO_PinRemapConfig(GPIO_Remap_SPI1, DISABLE);
-                case 1: return GPIO_PinRemapConfig(GPIO_Remap_SPI1, ENABLE);
+                case SpiRemap::_0: return GPIO_PinRemapConfig(GPIO_Remap_SPI1, DISABLE);
+                case SpiRemap::_1: return GPIO_PinRemapConfig(GPIO_Remap_SPI1, ENABLE);
                 default: break;
             }
             break;
         #endif
-        #ifdef ENABLE_SPI2
+        #ifdef SPI2_PRESENT
         case SPI2_BASE:
             switch(remap){
-                case 0: return; //SPI2 NO REMAP
+                case SpiRemap::_0: return; //SPI2 NO REMAP
                 default: break;
             }
             break;
         #endif
-        #ifdef ENABLE_SPI3
+        #ifdef SPI3_PRESENT
         case SPI3_BASE:
             //TODO
             switch(remap){
@@ -156,62 +194,24 @@ void SpiHw::set_remap(const uint8_t remap){
 }
 
 
-static constexpr uint8_t get_default_remap(const void * inst){
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef ENABLE_SPI1
-        case SPI1_BASE:
-            return SPI1_REMAP;
-        #endif
-        #ifdef ENABLE_SPI2
-        case SPI2_BASE:
-            //SPI2 NO REMAP
-            return 0;
-        #endif
-        #ifdef ENABLE_SPI3
-        case SPI3_BASE:
-            //SPI2 NO REMAP
-            //TODO
-            __builtin_trap();
-        #endif
-    }
-    __builtin_trap();
-}
 
 
-Gpio SpiHw::get_mosi_gpio(const uint8_t remap){
-    return map_inst_to_mosi_gpio(inst_, remap);
-}
+void SpiHw::alter_to_pins(const SpiRemap remap){
+    spi_to_mosi_gpio(inst_, remap).afpp();
 
-Gpio SpiHw::get_miso_gpio(const uint8_t remap){
-    return map_inst_to_miso_gpio(inst_, remap);
-}
+    spi_to_miso_gpio(inst_, remap).inflt();
 
-Gpio SpiHw::get_sclk_gpio(const uint8_t remap){
-    return map_inst_to_sclk_gpio(inst_, remap);
-}
-
-Gpio SpiHw::get_hw_cs_gpio(const uint8_t remap){
-    return map_inst_to_hw_cs_gpio(inst_, remap);
-}
-
-void SpiHw::plant_gpio(const uint8_t remap){
-    if(tx_strategy_ != CommStrategy::Nil){
-        get_mosi_gpio(remap).afpp();
-    }
-
-    if(rx_strategy_ != CommStrategy::Nil){
-        get_miso_gpio(remap).inflt();
-    }
-
-    {
-        get_sclk_gpio(remap).afpp();
+    spi_to_sclk_gpio(inst_, remap).afpp();
+    
+    if(hw_cs_enabled_){
+        spi_to_hwcs_gpio(inst_, remap).afpp();
     }
 }
 
 void SpiHw::enable_hw_cs(const Enable en){
-    const auto remap = get_default_remap(inst_);
-    auto && cs_gpio = get_hw_cs_gpio(remap);
-    cs_gpio.set();
+    #if 0
+    auto && cs_gpio = spi_to_hwcs_gpio(inst_, remap);
+    cs_gpio.set_high();
 
     if(en == EN){
         cs_gpio.afpp();
@@ -220,33 +220,26 @@ void SpiHw::enable_hw_cs(const Enable en){
     }
 
     inst_->enable_soft_cs(!en);
-}
-
-void SpiHw::enable_rx_it(const Enable en){
-    //TODO
+    #else
     __builtin_trap();
+    #endif
 }
 
-void SpiHw::enable_tx_it(const Enable en){
-    //TODO
-    __builtin_trap();
-}
-
-uint32_t SpiHw::get_bus_freq() const {
+uint32_t SpiHw::get_periph_clk_freq() const {
     switch(reinterpret_cast<size_t>(inst_)) {
-        #ifdef ENABLE_SPI1
+        #ifdef SPI1_PRESENT
         case SPI1_BASE:
             return sys::clock::get_apb1_clk_freq();
             break;
         #endif
 
-        #ifdef ENABLE_SPI2
+        #ifdef SPI2_PRESENT
         case SPI2_BASE:
             return sys::clock::get_apb2_clk_freq();
             break;
         #endif
 
-        #ifdef ENABLE_SPI3
+        #ifdef SPI3_PRESENT
         case SPI3_BASE:
             return sys::clock::get_apb2_freq();
             break;
@@ -255,15 +248,12 @@ uint32_t SpiHw::get_bus_freq() const {
     __builtin_trap();
 }
 
-HalResult SpiHw::init(const Config & cfg){
-
-    tx_strategy_ = cfg.tx_strategy;
-    rx_strategy_ = cfg.rx_strategy;
+HalResult SpiHw::init(const SpiConfig & cfg){
 	enable_rcc(EN);
-    const auto remap = get_default_remap(inst_);
+    const auto remap = cfg.remap;
 
     set_remap(remap);
-    plant_gpio(remap);
+    alter_to_pins(remap);
 
 
     #if 1
@@ -310,15 +300,30 @@ HalResult SpiHw::init(const Config & cfg){
 }
 
 
-HalResult SpiHw::set_data_width(const uint8_t bits){
+HalResult SpiHw::set_word_width(const uint8_t bits){
     inst_->enable_dualbyte((bits == 16) ? EN : DISEN);
     return HalResult::Ok();
 }
 
 
 
-HalResult SpiHw::set_baudrate(const uint32_t baudrate){
-    return set_prescaler(calculate_prescaler(get_bus_freq(), baudrate));
+HalResult SpiHw::set_baudrate(const SpiBaudrate baud){
+    if(baud.is<SpiPrescaler>()){
+        return set_prescaler(baud.unwrap_as<SpiPrescaler>());
+    }else if(baud.is<LeastFreq>()){
+        return set_prescaler(
+            calculate_prescaler(get_periph_clk_freq(), 
+            baud.unwrap_as<LeastFreq>().count
+        ));
+    }else if(baud.is<NearestFreq>()){
+        return set_prescaler(
+            calculate_prescaler(get_periph_clk_freq(), 
+            baud.unwrap_as<NearestFreq>().count
+        ));
+    }
+
+    //should not reach here
+    __builtin_trap();
 }
 
 HalResult SpiHw::set_prescaler(const SpiPrescaler prescaler){
@@ -341,28 +346,34 @@ void SpiHw::deinit(){
 }
 
 namespace ymd::hal{
-#ifdef ENABLE_SPI1
-SpiHw spi1{chip::SPI1_Inst};
+#ifdef SPI1_PRESENT
+SpiHw spi1{ral::SPI1_Inst};
 #endif
 
-#ifdef ENABLE_SPI2
-SpiHw spi2{chip::SPI2_Inst};
+#ifdef SPI2_PRESENT
+SpiHw spi2{ral::SPI2_Inst};
 #endif
 
-#ifdef ENABLE_SPI3
-SpiHw spi3{chip::SPI3_Inst};
+#ifdef SPI3_PRESENT
+SpiHw spi3{ral::SPI3_Inst};
 #endif
 }
 
-#ifdef ENABLE_SPI1
+#ifdef SPI1_PRESENT
 void SPI1_IRQHandler(void){
     
 }
 
 #endif
 
-#ifdef ENABLE_SPI2
+#ifdef SPI2_PRESENT
 void SPI2_IRQHandler(void){
+    
+}
+#endif
+
+#ifdef SPI3_PRESENT
+void SPI3_IRQHandler(void){
     
 }
 #endif

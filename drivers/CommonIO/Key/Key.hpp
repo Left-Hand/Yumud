@@ -5,49 +5,49 @@
 
 namespace ymd::drivers{
 
-class Key final:public KeyIntf{
+struct Key final{
 
 public:
-    Key(
-        hal::GpioIntf & gpio, 
-        const BoolLevel level
-    ):gpio_(gpio), level_(level){;}
+    struct Config{
+        hal::Gpio & gpio;
+        BoolLevel act_level;
+		uint8_t threshold = 2;
+		uint8_t pipe_length = 8;
+    };
 
-    void init(){
-        init(level_);
-    }
+    explicit Key(
+        const Config & cfg
+    ):
+        gpio_(cfg.gpio), 
+        level_(cfg.act_level),
+        filter_(typename dsp::DebounceFilter::Config{
+            .pipe_length = cfg.pipe_length,
+            .threshold = cfg.threshold
+        }){;}
 
-    void init(const BoolLevel level){
-        if(level == HIGH){
-            gpio_.inpd();
-        }else{
-            gpio_.inpu();
-        }
-    }
 
     void update() {
         last_state = now_state;
-        filter_.update(gpio_.read().to_bool());
-        now_state = filter_.is_high();
+        filter_.update(gpio_.read() == level_);
+        now_state = filter_.is_active();
     }
 
-    bool just_pressed() const {
+    [[nodiscard]] bool just_pressed() const {
         return last_state == false and now_state == true;
     }
 
-    bool is_pressed() const {
+    [[nodiscard]] bool is_pressed() const {
         return now_state == true;
     }
 
-    hal::GpioIntf & io(){
+    hal::Gpio & io(){
         return gpio_;
     }
 
 private:
-    hal::GpioIntf & gpio_;
-
-    dsp::DebounceFilter filter_{dsp::DebounceFilter::Config{}};
-    const BoolLevel level_= LOW;
+    hal::Gpio & gpio_;
+    BoolLevel level_;
+    dsp::DebounceFilter filter_;
 
     bool last_state = false;
     bool now_state = false;

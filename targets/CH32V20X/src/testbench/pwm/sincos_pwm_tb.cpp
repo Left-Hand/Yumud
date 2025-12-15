@@ -6,9 +6,9 @@
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "hal/timer/bipolarity_abstract.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 
 using namespace ymd;
 
@@ -36,7 +36,10 @@ static constexpr size_t FREQ = 2_KHz;
 // #define TIM1_USE_CC4 1
 
 void sincos_pwm_main(){
-    UART.init({576000});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&UART);
 
     
@@ -57,9 +60,16 @@ void sincos_pwm_main(){
 
 
     timer.init({
+        .remap = hal::TimerRemap::_0,
         .count_freq = hal::NearestFreq(FREQ * 2),
         .count_mode = hal::TimerCountMode::CenterAlignedDualTrig
-    }, EN);
+    })        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
     timer.enable_arr_sync(EN);
 
     #if TIM_INDEX == 1
@@ -91,13 +101,17 @@ void sincos_pwm_main(){
     #endif
 
     const hal::TimerOcPwmConfig pwm_noinv_cfg = {
+        .oc_mode = hal::TimerOcMode::ActiveBelowCvr,
         .cvr_sync_en = EN,
-        .valid_level = HIGH
+        .valid_level = HIGH,
+        .out_en = EN,
     };
 
     const hal::TimerOcPwmConfig pwm_inv_cfg = {
+        .oc_mode = hal::TimerOcMode::ActiveBelowCvr,
         .cvr_sync_en = EN,
         .valid_level = LOW,
+        .out_en = EN,
     };
     
     pwm_ap.init(pwm_noinv_cfg);
@@ -112,6 +126,7 @@ void sincos_pwm_main(){
         pwm_bp, pwm_bn
     };
 
+    timer.start();
     pwm_b.inverse(EN);
 
     auto & adc = hal::adc1;
@@ -152,7 +167,7 @@ void sincos_pwm_main(){
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
-                trig_gpio.toggle();
+                trig_gpio.write(trig_gpio.read());
                 break;}
             default: break;
             }
@@ -167,7 +182,7 @@ void sincos_pwm_main(){
     while(true){
         
         const auto t = clock::time() * real_t(3 * TAU);
-        const auto [st, ct] = sincospu(t);
+        const auto [st, ct] = math::sincospu(t);
         
         pwm_a.set_dutycycle(st);
         pwm_b.set_dutycycle(ct);

@@ -3,18 +3,20 @@
 
 using namespace ymd::robots::dji::m3508;
 
-using M3508 = M3508Port::M3508;
+
+
+#if 0
 #define LIMIT 1000
 
 #define M3508_CHECK_INDEX if(index > size_ or index == 0) PANIC(); 
 
-static constexpr uint16_t curr_to_currdata(const iq16 curr){
-    int16_t temp = int16_t((curr / 20)* 16384);
+static constexpr uint16_t curr_to_currdata(const iq16 current){
+    int16_t temp = int16_t((current / 20)* 16384);
     return BSWAP_16(temp);
 }
 
-static constexpr iq16 currdata_to_curr(const uint16_t currdata_msb){
-    int16_t currdata = BSWAP_16(currdata_msb);
+static constexpr iq16 currdata_to_curr(const uint16_t currdata_be){
+    int16_t currdata = BSWAP_16(currdata_be);
     return (iq16(currdata) / 16384) * 20;
 };
 
@@ -61,20 +63,20 @@ void M3508::tick(){
             // // expect_curr = spd_pid.update(targ_spd, getSpeed());
             //             // expect_curr = pos_pid.update(targ_pos, getPosition());
             // static constexpr iq16 targ_spd = 4;
-            // iq16 pos_err = targ_pos - getPosition();
-            // iq16 spd_err = targ_spd - getSpeed();
+            // iq16 e1 = targ_pos - getPosition();
+            // iq16 e2 = targ_spd - getSpeed();
 
             // static constexpr iq16 kp = iq16(30); 
             // static constexpr iq16 kd = iq16(7);
             
-            // expect_curr = sqrt(ABS(pos_err)) * sign(pos_err) * kp + spd_err * kd;  
-            // // expect_curr = (pos_err) * kp + spd_err * kd;  
+            // expect_curr = sqrt(ABS(e1)) * sign(e1) * kp + e2 * kd;  
+            // // expect_curr = (e1) * kp + e2 * kd;  
             // break;
             break;
         case CtrlMethod::POS:{
             targ_spd = position_filter_.speed();
-            iq16 pos_err = targ_pos - get_position();
-            iq16 spd_err = targ_spd - get_speed();
+            iq16 e1 = targ_pos - get_position();
+            iq16 e2 = targ_spd - get_speed();
 
             // static constexpr iq16 kp = iq16(2.35); 
             // static constexpr iq16 kd = iq16(0.85);
@@ -105,15 +107,15 @@ void M3508::tick(){
             // static constexpr real_t ki = real_t(0.066);
             // static constexpr real_t ki = real_t(0.0);
             // static real_t ci = 0;
-            // ci += (ki * (delta()>>4) * pos_err) >> 12;
+            // ci += (ki * (delta()>>4) * e1) >> 12;
             // ci = CLAMP2(ci, curr_limit_ * 0.1);
 
-            // if(SIGN_DIFF(pos_err, spd_err)) ci = SIGN_AS(curr_limit_, pos_err);
+            // if(SIGN_DIFF(e1, e2)) ci = SIGN_AS(curr_limit_, e1);
             // static constexpr real_t kd = real_t(13);
             // static constexpr real_t kd = real_t(-20);
             
-            expect_curr = sqrt(ABS(pos_err)) * sign(pos_err) * kp + spd_err * kd;  
-            // expect_curr = (pos_err) * kp + spd_err * kd;  
+            expect_curr = sqrt(ABS(e1)) * sign(e1) * kp + e2 * kd;  
+            // expect_curr = (e1) * kp + e2 * kd;  
             break;
         }
     }
@@ -143,12 +145,12 @@ void M3508::set_target_position(const real_t _pos){
 
 void M3508::update_measurements(
     const uq32 lap_position, 
-    const iq16 curr, 
+    const iq16 current, 
     const iq16 spd, 
     const iq16 temp
 ){
     lap_turns_ = lap_position;
-    curr_ = curr;
+    curr_ = current;
     speed_ = spd; 
     temperature_ = temp;
 }
@@ -169,24 +171,23 @@ void M3508Port::reset(){
 void M3508Port::tick(){
     TODO();
 
-    static constexpr uint16_t HIGHER_ADDRESS = 0x200;
-    static constexpr uint16_t LOWER_ADDRESS = 0x1ff;
-    auto write_can_frame = [&](const hal::CanClassicFrame & frame) {
+
+    auto write_can_frame = [&](const hal::BxCanFrame & frame) {
         return can_.write(frame);
     };
 
 
     if((connected_flags_ & std::bitset<8>(0x0f)).any()){
-        write_can_frame(hal::CanClassicFrame(
+        write_can_frame(hal::BxCanFrame(
             hal::CanStdId::from_bits(HIGHER_ADDRESS), 
-            hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(tx_datas[0]))
+            hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(tx_datum[0]))
         )).examine();
     }
 
     if((connected_flags_ & std::bitset<8>(0xf0)).any()){
-        write_can_frame(hal::CanClassicFrame(
+        write_can_frame(hal::BxCanFrame(
             hal::CanStdId::from_bits(LOWER_ADDRESS), 
-            hal::CanClassicPayload::from_u64(std::bit_cast<uint64_t>(tx_datas[1]))
+            hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(tx_datum[1]))
         )).examine();
     }
 
@@ -202,21 +203,22 @@ M3508 & M3508Port::operator[](const size_t index){
     return slaves_[index - 1];
 }
 
-void M3508Port::set_target_current(const iq16 curr, const size_t index){
+void M3508Port::set_target_current(const iq16 current, const size_t index){
     M3508_CHECK_INDEX
-    curr_cache[index - 1] = curr_to_currdata(curr);
+    curr_cache[index - 1] = curr_to_currdata(current);
 }
 
-void M3508Port::update_slave(const hal::CanClassicFrame & frame, const size_t index){
+void M3508Port::update_slave(const hal::BxCanFrame & frame, const size_t index){
     M3508_CHECK_INDEX
-    const auto rx_data = std::bit_cast<RxData>(frame.payload_u64());
+    const auto rx_context = std::bit_cast<RxContext>(frame.payload_u64());
     auto & slave = slaves_[index - 1];
 
-    const auto angle_u13 = uint16_t(BSWAP_16(rx_data.angle_8192_msb));
+    const auto angle_u13 = uint16_t(BSWAP_16(rx_context.angle_8192_be));
     slave.update_measurements(
         (uq32::from_bits(static_cast<uint32_t>(angle_u13) << (32 - 13))),
-        currdata_to_curr(rx_data.curr_data_msb),
-        iq16(int16_t(BSWAP_16(rx_data.speed_rpm_msb))) / 60,
-        rx_data.temp
+        currdata_to_curr(rx_context.current_be),
+        iq16(int16_t(BSWAP_16(rx_context.speed_rpm_be))) / 60,
+        rx_context.temp
     );
 }
+#endif

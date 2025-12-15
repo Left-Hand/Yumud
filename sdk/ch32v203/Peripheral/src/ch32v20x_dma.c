@@ -9,8 +9,8 @@
  *******************************************************************************/
 // #include "ch32v20x_dma.h"
 // #include "ch32v20x_rcc.h"
-#include "../sdk/ch32v203/Peripheral/inc/ch32v20x_dma.h"
-#include "../sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
+#include "sdk/ch32v203/Peripheral/inc/ch32v20x_dma.h"
+#include "sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
 
 /* DMA1 Channelx interrupt pending bit masks */
 #define DMA1_Channel1_IT_Mask    ((uint32_t)(DMA_GIF1 | DMA_TCIF1 | DMA_HTIF1 | DMA_TEIF1))

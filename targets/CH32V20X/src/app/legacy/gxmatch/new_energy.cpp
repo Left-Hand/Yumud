@@ -13,7 +13,7 @@
 #include "hal/timer/timer.hpp"
 #include "hal/bus/uart/uartsw.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 
 #include "drivers/CommonIO/Led/WS2812/ws2812.hpp"
 #include "drivers/GateDriver/AT8222/at8222.hpp"
@@ -130,7 +130,7 @@ public:
     }
 
 private:
-    void set_dutycycle(const real_t duty){
+    void set_dutycycle(const real_t dutycycle){
         drv_ = CLAMP(duty, MIN_DUTY, MAX_DUTY);
     }
 
@@ -422,7 +422,7 @@ public:
 
     void play_disc(const StationName sta){
         const auto str = sta.to_gbk_str();
-        uart_.writeN(str.data(), str.size());
+        uart_.write_chars(str.data(), str.size());
     }
 
     void set_volume(const size_t vol){
@@ -432,7 +432,7 @@ private:
     hal::Uart & uart_;
 
     void play_gbk_str(const StringView str){
-        uart_.writeN(str.data(), str.size());
+        uart_.write_chars(str.data(), str.size());
     }
 };
 class BoardcastService final{
@@ -575,7 +575,7 @@ private:
     void update_decoder(){
         while(uart_.available()){
             char chr;
-            uart_.read1(chr);
+            uart_.read_char(chr);
             frame_decoder_.feed(chr);
         }
     }
@@ -606,7 +606,7 @@ public:
         if(semphr_.take()){
             static constexpr auto cmds = 
                 std::to_array<char>({0x7f, 0x04, 0x00, 0x11, 0x04, 0x11});
-            uart_.writeN(cmds.begin(), cmds.size());
+            uart_.write_chars(cmds.begin(), cmds.size());
         }
 
         if(!uart_.available()) return;
@@ -657,11 +657,11 @@ public:
     }
 
     void on(){
-        gpio_.set();
+        gpio_.set_high();
     }
 
     void off(){
-        gpio_.clr();
+        gpio_.set_low();
     }
 
 private:

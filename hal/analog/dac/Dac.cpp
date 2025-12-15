@@ -2,7 +2,7 @@
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd::hal;
-using namespace ymd::hal::DacUtils;
+using namespace ymd::hal::dac;
 
 #ifdef ENABLE_DAC
 
@@ -19,7 +19,7 @@ void DacChannel::init(){
 
 
 
-    settle();
+    plant();
 }
 
 DacChannel &ymd::hal::DacChannel::operator=(const real_t value){
@@ -40,18 +40,18 @@ DacChannel &ymd::hal::DacChannel::operator=(const real_t value){
 
 
 
-uint32_t DacChannel::get_channel_mask(const ChannelSelection nth){
-    switch(idx){
-        default:
+uint32_t DacChannel::get_channel_mask(const ChannelSelection sel){
+    switch(sel){
         case ChannelSelection::_1:
             return DAC_Channel_1;
         case ChannelSelection::_2:  
             return DAC_Channel_2;
     }
+    default:
 }
 
 
-void DacChannel::settle(){
+void DacChannel::plant(){
     auto & io = [this]() -> Gpio & {
         switch(idx_){
             default:

@@ -10,25 +10,25 @@ void UartSw::init(const Config & cfg){
 }
 
 void UartSw::tick(){
-    // tx_gpio_.toggle();
+    // tx_pin_.toggle();
     switch(prog_){
         case ByteProg::START:
-            tx_gpio_.clr();
+            tx_pin_.set_low();
             prog_ = ByteProg::D0;
             break;
 
         case ByteProg::D0 ... ByteProg::D7:
-            tx_gpio_.write(BoolLevel::from(current_char & (1 << (uint8_t)prog_)));
+            tx_pin_.write(BoolLevel::from(current_char & (1 << (uint8_t)prog_)));
             prog_ = (prog_ == ByteProg::D7) ? ByteProg::STOP : ByteProg((int8_t)prog_ + 1);
             break;
             
         case ByteProg::STOP:
-            tx_gpio_.set();
+            tx_pin_.set_high();
             prog_ = ByteProg::IDLE;
             break;
         case ByteProg::IDLE:
-            tx_gpio_.set();
-            if(tx_fifo_.available()){
+            tx_pin_.set_high();
+            if(tx_fifo_.length()){
                 current_char = fetch_next();
                 // current_char = 0x55;
                 prog_ = ByteProg::START;
@@ -39,9 +39,9 @@ void UartSw::tick(){
 }
 
 void UartSw::set_tx_strategy(const CommStrategy tx_strategy){
-    tx_gpio_.outpp(HIGH);
+    tx_pin_.outpp(HIGH);
 }
 
 void UartSw::set_rx_strategy(const CommStrategy rx_strategy){
-    rx_gpio_.inpu();
+    rx_pin_.inpu();
 }

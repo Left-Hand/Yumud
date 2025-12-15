@@ -3,138 +3,138 @@
 #include "core/io/regs.hpp"
 #include "drivers/IMU/details/BoschIMU.hpp"
 
+// 参考实现
+
+// 无许可证
 // https://github.com/hanyazou/BMI160-Arduino/blob/master/BMI160.cpp#L88
 
-namespace ymd::drivers{
+//  * 注意：本实现为完全原创，未使用上述项目的任何代码。
+//  * 参考仅用于理解问题领域，未复制任何具体实现。
 
-struct BMI160_Prelude{
-    using Error = ImuError;
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
+namespace ymd::drivers::bmi160{
 
 
+using Error = ImuError;
 
-    enum class DPS:uint8_t{
-        _250, _500, _1000, _2000
-    };
+template<typename T = void>
+using IResult = Result<T, Error>;
 
-    enum class G:uint8_t{
-        _2, _4, _8, _16
-    };
 
-    //  * <pre>
-    // * ODR     | 3dB cut-off
-    // * --------+--------------
-    // *  12.5Hz |  5.06Hz
-    // *    25Hz | 10.12Hz
-    // *    50Hz | 20.25Hz
-    // *   100Hz | 40.5Hz
-    // *   200Hz | 80Hz
-    // *   400Hz | 162Hz (155Hz for Z axis)
-    // *   800Hz | 324Hz (262Hz for Z axis)
-    // *  1600Hz | 684Hz (353Hz for Z axis)
-    // * </pre>
-    enum class AccOdr:uint8_t{
 
-        _25_32Hz = 0b0001,
-        _25_16Hz,
-        _25_8Hz,
-        _25_4Hz,
-        _25_2Hz,
-        _25Hz,
-        
-        _50Hz,
-        _100Hz,
-        _200Hz,
-        _400Hz,
-        _800Hz,
-        _1600Hz
-    };
+enum class [[nodiscard]] DPS:uint8_t{
+    _250, _500, _1000, _2000
+};
 
-    // *
-    // * <pre>
-    // * ODR     | 3dB cut-off
-    // * --------+------------
-    // *    25Hz | 10.7Hz
-    // *    50Hz | 20.8Hz
-    // *   100Hz | 39.9Hz
-    // *   200Hz | 74.6Hz
-    // *   400Hz | 136.6Hz
-    // *   800Hz | 254.6Hz
-    // *  1600Hz | 523.9Hz
-    // *  3200Hz | 890Hz
-    // * </pre>
-    enum class GyrOdr:uint8_t{
-        _25Hz = 0b0110,
-        
-        _50Hz,
-        _100Hz,
-        _200Hz,
-        _400Hz,
-        _800Hz,
-        _1600Hz,
-        _3200Hz
-    };
-    
-    enum class AccFs:uint8_t{
-        _2G     =   0b0011,
-        _4G     =   0b0101,
-        _8G     =   0b1000,
-        _16G    =   0b1100
-    };
+enum class [[nodiscard]] G:uint8_t{
+    _2, _4, _8, _16
+};
 
-    enum class GyrFs:uint8_t{
-        _2000deg = 0b0000,
-        _1000deg,
-        _500deg,
-        _250deg,
-        _125deg
-    };
+enum class [[nodiscard]] AccOdr:uint8_t{
 
-    enum class Command:uint8_t{
-        START_FOC = 0x04,
-        ACC_SET_PMU = 0b0001'0000,
-        GYR_SET_PMU = 0b0001'0100,
-        MAG_SET_PMU = 0b0001'1000,
-        FIFO_FLUSH = 0xB0,
-        RESET_INTERRUPT =0xB1,
-        SOFT_RESET = 0xB1,
-        STEP_CNT_CLR = 0xB2
-    };
+    _25_32Hz = 0b0001,
+    _25_16Hz,
+    _25_8Hz,
+    _25_4Hz,
+    _25_2Hz,
+    _25Hz,
+    _50Hz,
+    _100Hz,
+    _200Hz,
+    // 400Hz | 3dB cut-off:162Hz (155Hz for Z axis)
+    _400Hz,
+    // 800Hz | 3dB cut-off:324Hz (262Hz for Z axis)
+    _800Hz,
+    // 1600Hz | 3dB cut-off:684Hz (353Hz for Z axis)
+    _1600Hz
+};
 
-    enum class PmuType:uint8_t{
-        ACC,
-        GYR,
-        MAG
-    };
+enum class [[nodiscard]] GyrOdr:uint8_t{
+    // Odr : Fc
+    // 25Hz | 10.7Hz
+    _25Hz = 0b0110,
+    // 50Hz | 20.8Hz
+    _50Hz,
+    // 100Hz | 39.9Hz
+    _100Hz,
+    // 200Hz | 74.6Hz
+    _200Hz,
+    // 400Hz | 136.6Hz
+    _400Hz,
+    // 800Hz | 254.6Hz
+    _800Hz,
+    // 1600Hz | 523.9Hz
+    _1600Hz,
+    // 3200Hz | 890Hz
+    _3200Hz
+};
 
-    enum class PmuMode:uint8_t{
-        SUSPEND         = 0b00,
-        NORMAL          = 0b01,
-        LOW_POWER       = 0b10,
-        FAST_SETUP      = 0b11
-    };
+enum class [[nodiscard]] AccFs:uint8_t{
+    _2G     =   0b0011,
+    _4G     =   0b0101,
+    _8G     =   0b1000,
+    _16G    =   0b1100
+};
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101001);
+enum class [[nodiscard]] GyrFs:uint8_t{
+    _2000deg = 0b0000,
+    _1000deg,
+    _500deg,
+    _250deg,
+    _125deg
+};
 
-    struct Config{
-        AccOdr acc_odr = AccOdr::_800Hz;
-        AccFs acc_fs = AccFs::_8G;
-        GyrOdr gyr_odr = GyrOdr::_800Hz;
-        GyrFs gyr_fs = GyrFs::_1000deg;
-    };
+enum class [[nodiscard]] Command:uint8_t{
+    START_FOC = 0x04,
+    ACC_SET_PMU = 0b0001'0000,
+    GYR_SET_PMU = 0b0001'0100,
+    MAG_SET_PMU = 0b0001'1000,
+    FIFO_FLUSH = 0xB0,
+    RESET_INTERRUPT =0xB1,
+    SOFT_RESET = 0xB1,
+    STEP_CNT_CLR = 0xB2
+};
+
+enum class [[nodiscard]] PmuType:uint8_t{
+    ACC,
+    GYR,
+    MAG
+};
+
+enum class [[nodiscard]] PmuMode:uint8_t{
+    SUSPEND         = 0b00,
+    NORMAL          = 0b01,
+    LOW_POWER       = 0b10,
+    FAST_SETUP      = 0b11
+};
+
+static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101001);
+
+struct [[nodiscard]] Config{
+    AccOdr acc_odr;
+    AccFs acc_fs;
+    GyrOdr gyr_odr;
+    GyrFs gyr_fs;
+
+    static constexpr Config from_default(){
+        return Config{
+            .acc_odr = AccOdr::_800Hz,
+            .acc_fs = AccFs::_8G,
+            .gyr_odr = GyrOdr::_800Hz,
+            .gyr_fs = GyrFs::_1000deg
+        };
+    }
 };
 
 
-struct BMI160_Regs:public BMI160_Prelude{
+
+struct Regset final{
 
     using RegAddr = uint8_t;
 
     struct R8_ChipId:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x00;
         static constexpr uint8_t CORRECT_ID = 0xD1;
-        uint8_t data;
+        uint8_t bits;
     }DEF_R8(chip_id)
 
     struct R8_Err:public Reg8<>{
@@ -160,20 +160,6 @@ struct BMI160_Regs:public BMI160_Prelude{
 
     static constexpr RegAddr GYR_ADDRESS = 0x0c;
 
-    // static constexpr RegAddr mag_address = 0x04;
-    // static constexpr RegAddr mag_x_address = 0x04;
-    // static constexpr RegAddr mag_y_address = 0x06;
-    // static constexpr RegAddr mag_z_address = 0x08;
-    
-
-    // static constexpr RegAddr gyr_x_address = 0x0c;
-    // static constexpr RegAddr gyr_y_address = 0x0e;
-    // static constexpr RegAddr gyr_z_address = 0x10;
-
-    // static constexpr RegAddr acc_address = 0x12;
-    // static constexpr RegAddr acc_x_address = 0x12;
-    // static constexpr RegAddr acc_y_address = 0x14;
-    // static constexpr RegAddr acc_z_address = 0x16;
 
     struct R8_SensorTime:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x18; // SENSOR_TIME_2
@@ -255,7 +241,7 @@ struct BMI160_Regs:public BMI160_Prelude{
     
     struct R8_FifoData:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x25;
-        uint8_t data;
+        uint8_t bits;
     };
 
     struct R8_AccConf:public Reg8<>{

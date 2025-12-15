@@ -1,16 +1,16 @@
 #pragma once
 
 #include "core/utils/Result.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "primitive/arithmetic/angular.hpp"
 
 #include "core/math/realmath.hpp"
-#include "core/container/inline_vector.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/container/heapless_vector.hpp"
+#include "core/tmp/reflect/enum.hpp"
 
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
-#include "types/regions/range2.hpp"
+#include "algebra/regions/range2.hpp"
 
 
 namespace ymd::robots{
@@ -120,7 +120,7 @@ struct [[nodiscard]] Bytes2CanFrameIterator{
     constexpr bool has_next(){
         return payload_.size() - offset_;
     }
-    constexpr hal::CanClassicFrame next(){
+    constexpr hal::BxCanFrame next(){
         constexpr size_t MAX_PAYLOAD_LENGTH = 7;
         const auto msg_len = MIN(
             payload_.size() - offset_, 
@@ -137,7 +137,7 @@ struct [[nodiscard]] Bytes2CanFrameIterator{
         return frame;
     }
 private:
-    static constexpr hal::CanClassicFrame make_canmsg(
+    static constexpr hal::BxCanFrame make_canmsg(
         const NodeId nodeid,
         const FuncCode func_code,
         const uint8_t piece_cnt,
@@ -148,9 +148,9 @@ private:
         buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
         buf.append_unchecked(bytes);
 
-        return hal::CanClassicFrame(
+        return hal::BxCanFrame(
             map_nodeid_and_piececnt_to_canid(nodeid, piece_cnt),
-            hal::CanClassicPayload::from_bytes(buf.as_slice())
+            hal::BxCanPayload::from_bytes(buf.as_slice())
         );
     }
 
@@ -181,7 +181,7 @@ struct [[nodiscard]] CanFrame2BytesDumper{
     };
 
     static constexpr IResult<DumpInfo> dump(
-        std::span<const hal::CanClassicFrame> msgs
+        std::span<const hal::BxCanFrame> msgs
     ) {
         if(msgs.size() == 0)
             return Err(Error::RxNoMsgToDump);
@@ -231,13 +231,13 @@ struct [[nodiscard]] CanFrame2BytesDumper{
     }
 
     static inline constexpr uint8_t map_msg_to_nodeid(
-        const hal::CanClassicFrame & frame
+        const hal::BxCanFrame & frame
     ){
         return frame.identifier().try_to_extid().unwrap().to_u29() >> 8;
     }
 
     static inline constexpr uint8_t map_msg_to_piececnt(
-        const hal::CanClassicFrame & frame
+        const hal::BxCanFrame & frame
     ){
         return frame.identifier().try_to_extid().unwrap().to_u29() & 0xff;
     }
@@ -310,16 +310,16 @@ struct [[nodiscard]] Rpm final{
 struct [[nodiscard]] PulseCnt final{
     static constexpr uint32_t SCALE = 3200 * (256/16);
 
-
-    static constexpr PulseCnt from_position(const real_t position){
-        const uint32_t frac_part = uint32_t(frac(position) * SCALE);
-        const uint32_t int_part  = uint32_t(uint32_t(position) * SCALE);
-        const uint32_t temp = uint32_t(frac_part + int_part);
-        return {BSWAP_32(temp)};
+    static constexpr PulseCnt from_pulses(const uint32_t pulses){
+        return {BSWAP_32(pulses)};
     }
 
-    static constexpr PulseCnt from_position(const Angle<real_t> angle){
-        return from_position(angle.to_turns());
+    static constexpr Option<PulseCnt> from_angle(const Angular<uq16> angle){
+        const uq16 turns = (angle.to_turns());
+        const uint32_t frac_part = uint32_t(math::frac(turns) * SCALE);
+        const uint32_t int_part  = uint32_t(uint32_t(turns) * SCALE);
+        const uint32_t pulses = uint32_t(frac_part + int_part);
+        return Some(from_pulses(pulses));
     }
 
     constexpr uint32_t to_u32() const {
@@ -437,7 +437,7 @@ namespace msgs{
     ){
         return std::span(
             reinterpret_cast<const uint8_t *>(&obj),
-            magic::pure_sizeof_v<T>
+            tmp::pure_sizeof_v<T>
         );
     }
 }

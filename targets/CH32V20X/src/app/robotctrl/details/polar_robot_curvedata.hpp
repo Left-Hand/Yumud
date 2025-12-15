@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 #include "core/math/float/bf16.hpp"
 using namespace ymd;
 

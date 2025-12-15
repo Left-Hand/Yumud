@@ -1,7 +1,7 @@
 #pragma once
 
-#include "dsp/controller/adrc/ltd2o.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "dsp/controller/adrc/linear/ltd2o.hpp"
+#include "primitive/arithmetic/angular.hpp"
 
 namespace ymd::dsp{
 
@@ -86,11 +86,11 @@ struct PositionFilter{
         });
     }
 
-    constexpr void update(const Angle<iq16> next_lap_angle){
+    constexpr void update(const Angular<iq16> next_lap_angle){
         const iq16 next_lap_turns = next_lap_angle.to_turns();
         if(inited_ == false) [[unlikely]] {
             angle_offset_ = map_lap_turns_to_nearest(
-                frac(next_lap_turns - base_lap_turns_));
+                math::frac(next_lap_turns - base_lap_turns_));
             inited_ = true;
         }
 
@@ -102,16 +102,16 @@ struct PositionFilter{
         td_.update(cont_turns_ + angle_offset_);
     }
 
-    constexpr void set_base_lap_angle(const Angle<iq16> base_lap_angle){
+    constexpr void set_base_lap_angle(const Angular<iq16> base_lap_angle){
         base_lap_turns_ = base_lap_angle.to_turns();
     }
 
-    constexpr Angle<iq16> lap_angle() const{
-        return Angle<iq16>::from_turns(lap_turns_);
+    constexpr Angular<iq16> lap_angle() const{
+        return Angular<iq16>::from_turns(lap_turns_);
     }
 
-    constexpr Angle<iq20> accumulated_angle() const{
-        return Angle<iq20>::from_turns(td_.state().position);
+    constexpr Angular<iq20> accumulated_angle() const{
+        return Angular<iq20>::from_turns(td_.state().position);
     }
 
     constexpr iq20 speed() const {

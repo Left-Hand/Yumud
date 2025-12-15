@@ -5,12 +5,110 @@
 
 using namespace ymd;
 namespace nuedc::_2023E{
+//跟踪微分器 用于平滑输入
+class [[nodiscard]] TdVec2{
+public:
+    struct Config{
+        iq12 kp;
+        iq12 kd;
+        iq16 x2_limit;
+        iq16 x3_limit;
+        uint32_t fs;
+    };
+
+    using E = iq16;
+    using T = Vec2<iq16>;
+
+    using State = std::array<T, 3>;
+    using Self = TdVec2;
+    
+    constexpr TdVec2(const Config & cfg){
+        reset();
+        reconf(cfg);
+    }
+
+    //impure fn
+    constexpr void update(const T targ){
+        state_ = forward(*this, state_, targ);
+    }
+
+    //impure fn
+    constexpr void reset(){
+        // pass
+    }
+
+    //impure fn
+    constexpr void reconf(const Config & cfg){
+        kp_ = cfg.kp;
+        kd_ = cfg.kd;
+        dt_ = 1_iq16 / cfg.fs;
+        max_x2_ = cfg.x2_limit;
+        max_x3_ = cfg.x3_limit;
+    }
+    
+    //impure fn
+    [[nodiscard]]
+    constexpr const auto & state() const {
+        return state_;
+    }
+private:
+    iq12 kp_;
+    iq12 kd_;
+    iq16 dt_;
+    iq16 max_x2_;
+    iq16 max_x3_;
+    State state_ {T::ZERO, T::ZERO, T::ZERO};
+
+    //pure fn
+    [[nodiscard]]
+    // static constexpr State 
+    static constexpr State 
+    forward(const Self & self, const State state, const T u){
+        // const auto r_3 = r_2 * r;
+        const auto dt = self.dt_;
+        // const auto x2_limit = self.max_x2_;
+        // const auto x3_limit = self.max_x3_;
+
+        const auto pos = state[0];
+        const auto spd = state[1];
+        // const auto acc = state[2];
+
+        // const auto raw_a = ((iq12(self.kp_) * (Vec2<iq12>(u - pos)))
+        //      - (self.kd_ * spd));
+        // DEBUG_PRINTLN(raw_a, self.max_x3_);
+
+        const auto e1 = Vec2<iq12>(u - pos);
+        const auto dist = e1.length();
+        const auto norm_e1 = e1 / dist;
+        const auto expect_spd = std::sqrt(2 * self.max_x3_ * dist);
+
+        // DEBUG_PRINTLN(spd.normalized() * expect_spd);
+        return {
+            pos + spd * dt, 
+            spd.move_toward(norm_e1 * expect_spd, self.max_x3_ * self.dt_)
+            .clampmax(self.max_x2_)
+            ,
+            norm_e1 * expect_spd
+            // raw_a
+            // {CLAMP2(raw_a.x, self.max_x3_), CLAMP2(raw_a.y, self.max_x3_)}
+            // .clampmax(self.max_x3_)
+            // .clampmax(10.0_r)
+            // (spd + acc * dt).clampmax(x2_limit),
+            // (acc + (-self.kd * spd, -self.x3_limit * (pos - u)))
+            // (state[1] + (- 2 * r * spd - r_2 * (pos - u)) * dt)
+        };
+
+
+    }
+
+    
+};
 
 
 //动力学 用于快速追踪目标关节角
 class GimbalDynamics final{
 public:
-    using Config = dsp::TdVec2::Config;
+    using Config = TdVec2::Config;
 
     bool done(){
         TODO();
@@ -28,8 +126,8 @@ public:
         td_.reconf({
             .kp          = cfg.kp,
             .kd          = cfg.kd,
-            .max_spd    = cfg.max_spd,
-            .max_acc    = cfg.max_acc,
+            .x2_limit     = cfg.x2_limit,
+            .x3_limit     = cfg.x3_limit,
             .fs         = cfg.fs
         });
     }
@@ -52,7 +150,7 @@ public:
     }
 private:
     GimbalActuatorIntf & actuator_;
-    dsp::TdVec2 td_;
+    TdVec2 td_;
     GimbalSolution targ_;
     GimbalSolution ref_;
 };

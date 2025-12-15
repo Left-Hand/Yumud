@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 ****************************************************************************************/
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_dac.h"
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_dac.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 
 /* CTLR register Mask */
 #define CTLR_CLEAR_MASK    ((uint32_t)0x00000FFE)

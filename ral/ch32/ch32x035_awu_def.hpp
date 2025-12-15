@@ -2,24 +2,24 @@
 
 #include <cstdint>
 
-struct R16_AWU_CSR{
+struct [[nodiscard]] R16_AWU_CSR{
     uint16_t :1;
     uint16_t AWUEN:1;
     uint16_t :14;
 };
 
-struct R16_AWU_WR{
+struct [[nodiscard]] R16_AWU_WR{
     uint16_t APR:6;
     uint16_t :9;
 };
 
-struct R16_AWU_PSC{
+struct [[nodiscard]] R16_AWU_PSC{
     uint16_t TBR:4;
     uint16_t :12;
 };
 
 
-struct AWU_Def{
+struct [[nodiscard]] AWU_Def{
     volatile R16_AWU_CSR CSR;
     volatile R16_AWU_WR WR;
     volatile R16_AWU_PSC PSC;

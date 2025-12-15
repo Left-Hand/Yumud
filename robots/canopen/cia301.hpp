@@ -142,11 +142,6 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
 
         StringView str;
         CoStringObj(StringView && _str):str(_str){}
-
-        auto * c_str(){
-            return str.c_str();
-        }
-
         SdoAbortCode write(const std::span<const uint8_t> pbuf){
             if(unlikely(str.length() != pbuf.size())) return SdoAbortCode::MaxLessThanMin;
 
@@ -159,7 +154,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         SdoAbortCode read(const std::span<uint8_t> pbuf) const {
             if(unlikely(str.length() != pbuf.size())) return SdoAbortCode::MaxLessThanMin;
 
-            memcpy(pbuf.data(), str.c_str(), pbuf.size());
+            memcpy(pbuf.data(), str.data(), pbuf.size());
             return SdoAbortCode::OK;
         }
     };

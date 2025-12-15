@@ -8,9 +8,9 @@
 #define ASSERT_REG_IS_32BIT(name) static_assert((sizeof(name) == 4),  #name " is not 4 bytes"); 
 #endif
 
-namespace ymd::ral::CH32{
+namespace ymd::ral::ch32::common_dma{
 
-struct R32_DMA_INTFR{
+struct [[nodiscard]] R32_DMA_INTFR{
     uint32_t DATA;
 
     // constexpr bool get_global_flag(const uint8_t index){
@@ -37,7 +37,7 @@ struct R32_DMA_INTFR{
     // }
 };ASSERT_REG_IS_32BIT(R32_DMA_INTFR)
 
-struct R32_DMA_INTFCR{
+struct [[nodiscard]] R32_DMA_INTFCR{
     uint32_t DATA;
 
     // constexpr void clear_global_flag(const uint8_t index){
@@ -57,7 +57,7 @@ struct R32_DMA_INTFCR{
 
 };ASSERT_REG_IS_32BIT(R32_DMA_INTFCR)
 
-struct R32_DMA_CFGR{
+struct [[nodiscard]] R32_DMA_CFGR{
     uint32_t EN:1;
     uint32_t TCIE:1;
     uint32_t HTIE:1;
@@ -79,11 +79,11 @@ using R32_DMA_CNTR = uint32_t;
 using R32_DMA_PADDR = uint32_t;
 using R32_DMA_MADDR = uint32_t;
 
-struct R32_DMA2_EXTEM_INTFR{
+struct [[nodiscard]] R32_DMA2_EXTEM_INTFR{
     volatile uint32_t DATA;
 };
 
-struct DMA_CH_Def{
+struct [[nodiscard]] DMA_CH_Def{
     volatile R32_DMA_CFGR CFGR;
     volatile R32_DMA_CNTR CNTR;
     volatile R32_DMA_PADDR PADDR;
@@ -142,7 +142,7 @@ struct DMA_CH_Def{
     }
 };static_assert((sizeof(DMA_CH_Def) == 16)); 
 
-struct DMA1_Def{
+struct [[nodiscard]] DMA1_Def{
     volatile R32_DMA_INTFR INTFR;
     volatile R32_DMA_INTFCR INTFCR;
     DMA_CH_Def CH[8];
@@ -179,7 +179,7 @@ struct DMA1_Def{
     }
 };
 
-struct DMA2_Def{
+struct [[nodiscard]] DMA2_Def{
     volatile R32_DMA_INTFR INTFR;
     volatile R32_DMA_INTFCR INTFCR;
     volatile DMA_CH_Def CH[12];
@@ -225,4 +225,8 @@ struct DMA2_Def{
     }
 };
 
+}
+
+namespace ymd::ral{
+using namespace ch32::common_dma;
 }

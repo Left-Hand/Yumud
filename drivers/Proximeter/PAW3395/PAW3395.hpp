@@ -5,11 +5,10 @@
 
 //PAW3395 是原相科技的一款游戏级顶配鼠标光流传感器
 
-// https://github.com/ttwards/motor/blob/939f1db78dcaae6eb819dcb54b6146d94db7dffc/drivers/sensor/paw3395/paw3395.h#L122
 
 #include "details/PAW3395_Prelude.hpp"
 
-namespace ymd::drivers{
+namespace ymd::drivers::paw3395{
 
 class PAW3395 final:
     public PAW3395_Prelude{
@@ -50,11 +49,11 @@ private:
     hal::SpiDrv spi_drv_;
 
     [[nodiscard]] IResult<Vec2i> query_xy();
-    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data);
+    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t RegAddr);
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data);
+    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & data);
 
-    [[nodiscard]] IResult<int16_t> read_i16(const uint8_t low_addr, const uint8_t high_addr);
+    [[nodiscard]] IResult<int16_t> read_i16(const RegAddr low_addr, const RegAddr high_addr);
 
     [[nodiscard]] IResult<> write_list(
         std::span<const std::pair<uint8_t, uint8_t>> list);

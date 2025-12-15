@@ -4,7 +4,7 @@
 
 namespace ymd::ral::CH32X035::OPA{
 
-struct CFGR1_Reg{
+struct [[nodiscard]] R32_CFGR1{
     uint16_t POLL_EN1:1;
     uint16_t POLL_EN2:1;
     uint16_t BKIN_EN1:1;
@@ -25,14 +25,14 @@ struct CFGR1_Reg{
     uint16_t :1;
 };
 
-struct CFGR2_Reg{
+struct [[nodiscard]] R32_CFGR2{
     uint16_t POLL_VLU:9;
     uint16_t POLL1_NUM:1;
     uint16_t POLL2_NUM:1;
     uint16_t :3;
 };
 
-struct CTLR1_Reg{
+struct [[nodiscard]] R32_CTLR1{
     uint32_t  EN1:1;
     uint32_t  MODE1:1;
     uint32_t  :1;
@@ -52,7 +52,7 @@ struct CTLR1_Reg{
     uint32_t OPA_LOCK:1;
 };
 
-struct CTLR2_Reg{
+struct [[nodiscard]] R32_CTLR2{
     uint32_t EN1:1;
     uint32_t MODE1:1;
     uint32_t NSEL1:1;
@@ -76,27 +76,27 @@ struct CTLR2_Reg{
 };
 
 
-struct KEY_Reg{
+struct [[nodiscard]] R32_KEY{
     uint32_t KEY:32;
 };
 
-struct CMPKEY_Reg{
+struct [[nodiscard]] R32_CMPKEY{
     uint32_t KEY:32;
 };
 
-struct POLLKEY_Reg{
+struct [[nodiscard]] R32_POLLKEY{
     uint32_t KEY:32;
 };
 
-struct OPA_Def{
-    volatile CFGR1_Reg CFGR1;
-    volatile CFGR2_Reg CFGR2;
-    volatile CTLR1_Reg CTLR1;
-    volatile CTLR2_Reg CTLR2;
+struct [[nodiscard]] OPA_Def{
+    volatile R32_CFGR1 CFGR1;
+    volatile R32_CFGR2 CFGR2;
+    volatile R32_CTLR1 CTLR1;
+    volatile R32_CTLR2 CTLR2;
 
-    volatile KEY_Reg KEY;
-    volatile CMPKEY_Reg CMPKEY;
-    volatile POLLKEY_Reg POLLKEY;
+    volatile R32_KEY KEY;
+    volatile R32_CMPKEY CMPKEY;
+    volatile R32_POLLKEY POLLKEY;
 };
 
 }

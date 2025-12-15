@@ -7,7 +7,7 @@ namespace ymd{
 class OutputStream;
 }
 
-namespace ymd::hal{
+namespace ymd::hal::timer{
 
 namespace details{
 //pure function, easy test
@@ -93,24 +93,12 @@ struct [[nodiscard]] ArrAndPsc{
 };
 
 
-struct [[nodiscard]] TimerCountFreq:
+struct [[nodiscard]] CountFreq:
     public Sumtype<ArrAndPsc, NearestFreq>{
 };
 
 
-
-
-// enum class [[nodiscard]] TimerCountMode:uint8_t{
-//     Up                      = 0x00,
-//     Down                    = 0x01,
-//     CenterAlignedDownTrig   = 0x02,
-//     CenterAlignedUpTrig     = 0x04,
-//     CenterAlignedDualTrig   = 0x06
-// };
-
-
-
-struct [[nodiscard]] TimerCountMode{
+struct [[nodiscard]] CountMode{
     enum class [[nodiscard]] Kind:uint8_t{
         Up                      = 0x00,
         Down                    = 0x01,
@@ -121,8 +109,8 @@ struct [[nodiscard]] TimerCountMode{
 
     using enum Kind;
 
-    constexpr TimerCountMode(Kind kind):kind_(kind){}
-    constexpr TimerCountMode(const TimerCountMode &) = default;
+    constexpr CountMode(Kind kind):kind_(kind){}
+    constexpr CountMode(const CountMode &) = default;
     [[nodiscard]] constexpr Kind kind() const {return kind_;}
 
     [[nodiscard]] constexpr uint32_t to_bits() const {return static_cast<uint32_t>(kind_);}
@@ -144,7 +132,7 @@ private:
 };
 
 
-struct [[nodiscard]] TimerChannelSelection{
+struct [[nodiscard]] ChannelSelection{
     enum class [[nodiscard]] Kind:uint8_t{
         CH1     =   0b000,
         CH1N    =   0b001,
@@ -157,7 +145,7 @@ struct [[nodiscard]] TimerChannelSelection{
 
     using enum Kind;
 
-    constexpr TimerChannelSelection(const TimerChannelSelection::Kind kind):
+    constexpr ChannelSelection(const Kind kind):
         kind_(kind){}
 
     [[nodiscard]] constexpr Kind kind() const{ return kind_; }
@@ -174,33 +162,52 @@ private:
 };
 
 
-
-
-enum class [[nodiscard]] TimerTrgoSource:uint8_t{
-    Reset   = 0x0000,             
-    Enable  = 0x0010,           
-    Update  = 0x0020,           
-    OC1     = 0x0030,            
-    OC1R    = 0x0040,            
-    OC2R    = 0x0050,            
-    OC3R    = 0x0060,            
-    OC4R    = 0x0070            
+enum class [[nodiscard]] SlaveMode:uint8_t{
+    Reset = 0x04,
+    Gated = 0x05,
+    Trigger = 0x06,
+    External1 = 0x07
 };
 
+enum class [[nodiscard]] TrgoSource:uint8_t{
+    Reset   = 0x00,             
+    Enable  = 0x01,           
+    Update  = 0x02,           
+    OC1     = 0x03,            
+    OC1R    = 0x04,            
+    OC2R    = 0x05,            
+    OC3R    = 0x06,            
+    OC4R    = 0x07            
+};
 
-// enum class [[nodiscard]] TimerTrgoSource:uint8_t{
-//     Reset   = 0x000,             
-//     Enable  = 0x001,           
-//     Update  = 0x002,           
-//     OC1     = 0x003,            
-//     OC1R    = 0x004,            
-//     OC2R    = 0x005,            
-//     OC3R    = 0x006,            
-//     OC4R    = 0x007            
-// };
+enum class [[nodiscard]] TrgiSource:uint8_t{
+    ITR0   = 0x00,             
+    ITR1   = 0x01,
+    ITR2   = 0x02,
+    ITR3   = 0x03,
+    TI1F_ED = 0x04,
+    TI1FP1 = 0x05,
+    TI2FP2 = 0x06,
+    ETRF   = 0x07
+};
 
+enum class [[nodiscard]] DmaSource:uint8_t{
+    Update = 0x01,
+    CC1     = 0x02,
+    CC2     = 0x04,
+    CC3     = 0x08,
+    CC4     = 0x10,
+    COM     = 0x20,
+    Trigger = 0x40,
+};
 
-enum class [[nodiscard]] TimerIT:uint16_t{
+enum class [[nodiscard]] ExternalClkSource:uint8_t{
+    TI1 = 0x0050,
+    TI2 = 0x0060,
+    TI1ED = 0x0040,
+};
+
+enum class [[nodiscard]] IT:uint16_t{
     Update  = 0x0001,
     CC1     = 0x0002,
     CC2     = 0x0004,
@@ -211,14 +218,14 @@ enum class [[nodiscard]] TimerIT:uint16_t{
     Break   = 0x0080,
 };
 
-enum class [[nodiscard]] TimerBdtrLockLevel:uint8_t{
+enum class [[nodiscard]] BdtrLockLevel:uint8_t{
     Off     = 0x00,
     Low     = 0x01,
     Medium  = 0x02,
     High    = 0x03
 };
 
-enum class [[nodiscard]] TimerOcMode:uint8_t{
+enum class [[nodiscard]] OcMode:uint8_t{
     Freeze              = 0b000,
     ActiveUnlessCvr     = 0b001,
     InactiveUnlessCvr   = 0b010,
@@ -229,5 +236,56 @@ enum class [[nodiscard]] TimerOcMode:uint8_t{
     ActiveAboveCvr      = 0b111,
 };
 
-using TimerEvent = TimerIT;
+using Event = IT;
+
+struct [[nodiscard]] DeadzoneCode{
+    using Self = DeadzoneCode;
+    uint8_t bits;
+
+    static constexpr DeadzoneCode from_ns(
+        const uint32_t aligned_bus_clk_freq, 
+        const ymd::Nanoseconds ns
+    ){
+        const auto bits = [&] -> uint8_t{
+            const auto clk_freq_mhz = (aligned_bus_clk_freq / 1000000);
+            const uint16_t scale = ((static_cast<uint32_t>(ns.count()) * clk_freq_mhz) / 1000);
+            if(scale < 128){
+                return scale;
+            }else if(scale < 256){
+                constexpr uint8_t head = 0b10000000;
+                constexpr uint8_t mask = 0b00111111;
+
+                return static_cast<uint8_t>(((((MIN(scale, 254) >> 1) - 64) & mask) | head));
+            }else if(scale < 509){
+                constexpr uint8_t head = 0b11000000;
+                constexpr uint8_t mask = 0b00011111;
+
+                return static_cast<uint8_t>(((((MIN(scale, 504) >> 1) - 32) & mask) | head));
+            }else if(scale < 1009){
+                constexpr uint8_t head = 0b11100000;
+                constexpr uint8_t mask = 0b00011111;
+
+                return static_cast<uint8_t>((((MIN(scale, 1008) >> 4) - 32) & mask) | head);
+            }else{
+                return static_cast<uint8_t>(0xff);
+            }
+        }();
+
+        return DeadzoneCode{bits};
+    }
+};
+}
+
+namespace ymd::hal{
+using TimerCountMode = timer::CountMode;
+using TimerCountFreq = timer::CountFreq;
+using TimerDeadzoneCode = timer::DeadzoneCode;
+using TimerIT = timer::IT;
+using TimerEvent = timer::Event;
+using TimerTrgoSource = timer::TrgoSource;
+using TimerTrgiSource = timer::TrgiSource;
+using TimerSlaveMode = timer::SlaveMode;
+using TimerOcMode = timer::OcMode;
+using TimerChannelSelection = timer::ChannelSelection;
+using TimerBdtrLockLevel = timer::BdtrLockLevel;
 }

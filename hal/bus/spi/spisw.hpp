@@ -8,9 +8,9 @@ namespace ymd::hal{
 class SpiSw final: public Spi{
 protected:
     volatile int8_t occupied = -1;
-    hal::GpioIntf & sclk_gpio_;
-    hal::GpioIntf & mosi_gpio_;
-    hal::GpioIntf & miso_gpio_;
+    hal::GpioIntf & sclk_pin_;
+    hal::GpioIntf & mosi_pin_;
+    hal::GpioIntf & miso_pin_;
 
     uint16_t delays = 100;
     uint8_t width_ = 8;
@@ -26,7 +26,7 @@ protected:
     }
 
     void trail() {
-        sclk_gpio_.set();
+        sclk_pin_.set_high();
         delay_dur();
         Spi::trail();
     }
@@ -38,9 +38,9 @@ public:
         Some<hal::GpioIntf *> mosi_gpio,
         Some<hal::GpioIntf *> miso_gpio
     ):
-        sclk_gpio_(sclk_gpio.deref()),
-        mosi_gpio_(mosi_gpio.deref()), 
-        miso_gpio_(miso_gpio.deref()){;}
+        sclk_pin_(sclk_gpio.deref()),
+        mosi_pin_(mosi_gpio.deref()), 
+        miso_pin_(miso_gpio.deref()){;}
 
     SpiSw(
         Some<hal::GpioIntf *> sclk_gpio,
@@ -50,40 +50,31 @@ public:
     ):
         SpiSw(sclk_gpio, mosi_gpio, miso_gpio)
     {
-        bind_cs_gpio(cs_gpio, 0_nth);
+        bind_cs_pin(cs_gpio, 0_nth);
     }
 
     SpiSw(const SpiSw &) = delete;
     SpiSw(SpiSw &&) = delete;
 
-    void init(const Config & cfg) ;
+    void init(const SpiConfig & cfg) ;
 
-    hal::HalResult write(const uint32_t data) {
+    hal::HalResult blocking_write(const uint32_t data) {
         uint32_t dummy;
-        transceive(dummy, data);
+        blocking_transceive(dummy, data);
         return hal::HalResult::Ok();
     }
 
-    hal::HalResult read(uint32_t & data) {
+    hal::HalResult blocking_read(uint32_t & data) {
         uint32_t ret;
         static constexpr uint32_t dummy = 0;
-        transceive(ret, dummy); 
+        blocking_transceive(ret, dummy); 
         return hal::HalResult::Ok();
     }
 
-    hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx)  ;
+    hal::HalResult blocking_transceive(uint32_t & data_rx, const uint32_t data_tx)  ;
 
-    hal::HalResult set_baudrate(const uint32_t baudrate) {
-        if(baudrate == 0){
-            delays = 0;
-        }else{
-            uint32_t b = baudrate / 1000;
-            delays = 200 / b;
-        }
-        return HalResult::Ok();
-    }
-
-    hal::HalResult set_data_width(const uint8_t bits)  {
+    hal::HalResult set_baudrate(const SpiBaudrate baud);
+    hal::HalResult set_word_width(const uint8_t bits)  {
         width_ = bits;
         return HalResult::Ok();
     }

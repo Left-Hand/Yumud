@@ -6,7 +6,7 @@
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "drivers/IMU/Magnetometer/AK8963/AK8963.hpp"
@@ -21,8 +21,8 @@ using namespace ymd::drivers;
 
 // #define UART uart2
 #define UART hal::uart2
-#define SCL_GPIO hal::PB<0>()
-#define SDA_GPIO hal::PB<1>()
+#define SCL_PIN hal::PB<0>()
+#define SDA_PIN hal::PB<1>()
 #define MAG_ACTIVATED
 
 [[maybe_unused]] static auto init_mpu6050(MPU6050 & mpu) -> Result<void, MPU6050::Error> {
@@ -86,9 +86,6 @@ using namespace ymd::drivers;
         aku.init().examine();
     #endif
 
-    // ImuFusion fusion;
-
-    // const real_t mahony_tau = 10.5_r;
     Mahony mahony{{
         .kp = 2,
         .ki = 0.3_r,
@@ -98,9 +95,16 @@ using namespace ymd::drivers;
     auto & timer = hal::timer1;
     
     timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
         .count_freq = hal::NearestFreq(200),
         .count_mode = hal::TimerCountMode::Up
-    }, EN);
+    })        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
@@ -125,7 +129,7 @@ using namespace ymd::drivers;
             //     aku.read_mag().examine()
             // );
 
-            const auto begin_m = clock::micros();
+            const auto begin_us = clock::micros();
 
             // mahony.update(
             //     mpu.read_gyr().examine(), 
@@ -139,14 +143,14 @@ using namespace ymd::drivers;
                 mpu.read_acc().examine()
             );
                 
-            const auto end_m = clock::micros();
+            const auto end_us = clock::micros();
             // DEBUG_PRINTLN(fusion.quat());
-            // DEBUG_PRINTLN(Basis<real_t>(mahony.result()).get_euler_xyz(), end_m - begin_m);
+            // DEBUG_PRINTLN(Basis<real_t>(mahony.result()).get_euler_xyz(), end_us - begin_us);
             // DEBUG_PRINTLN(mahony.result());
             DEBUG_PRINTLN(
                 mahony.rotation(), 
                 // Quat<real_t>(Vec3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
-                end_m - begin_m
+                end_us - begin_us
             );
             break;
         }
@@ -154,17 +158,21 @@ using namespace ymd::drivers;
         }
     });
 
+    timer.start();
     while(true);
 }
 
 
 void mpu6050_main(){
-    UART.init({576_KHz});
+    DEBUGGER_INST.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000 
+    });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;
-    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;
+    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
     // i2c.init(400_KHz);
     i2c.init({400_KHz});
     // i2c.init();

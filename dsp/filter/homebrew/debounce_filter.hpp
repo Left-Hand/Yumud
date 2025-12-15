@@ -8,19 +8,17 @@ class DebounceFilter{
 public:
 
 	struct Config{
-		const uint8_t pipe_length = 8;
-		const uint8_t threshold = 2;
-		const bool polarity = true;
+		uint8_t pipe_length = 8;
+		uint8_t threshold = 2;
 	};
 
 	constexpr explicit DebounceFilter(const Config & cfg):
 		pipe_length(cfg.pipe_length), 
-		threshold(cfg.threshold), 
-		polarity(cfg.polarity){
+		threshold(cfg.threshold){
 	}
 
 	constexpr void update(const bool input){
-		bool valid = (input == polarity);
+		bool valid = (input == true);
 		bool shift_out = bool(data & (1 << (pipe_length - 1)));
 
 		valid_cnts += valid - shift_out;
@@ -44,7 +42,7 @@ public:
 		// resu = (uint8_t)state & 0x01;
 	}
 
-	[[nodiscard]] constexpr bool is_high(){
+	[[nodiscard]] constexpr bool is_active(){
 		return std::bit_cast<uint8_t>(state) & 0x01;
 	}
 
@@ -57,7 +55,6 @@ private:
 		Low, High, MayLow, MayHigh
 	};
 	State state = State::Low;
-	bool polarity;
 
 	uint8_t valid_cnts = 0;
 };

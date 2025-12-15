@@ -12,9 +12,9 @@
 #include "core/string/string_ref.hpp"
 #include "core/string/string_view.hpp"
 #include "core/utils/Result.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/reflect/enum.hpp"
 #include "core/stream/ostream.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "primitive/arithmetic/angular.hpp"
 
 namespace ymd::strconv2 {
 

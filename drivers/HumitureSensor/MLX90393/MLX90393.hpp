@@ -7,12 +7,16 @@
 // 此外，这款磁场传感器 IC 专为微功率应用而设计，
 // 其占空比可在 0.1％ 至 100％ 的范围内编程设定。
 
+// MIT license
 // https://github.com/adafruit/MLX90393_Library/blob/master/MLX90393.h
+
+
 // https://wiki.lckfb.com/zh-hans/lspi/module/sensor/mlx90393-3d-hall-sensor.html
 
 #include "mlx90393_prelude.hpp"
-namespace ymd::drivers{
 
+
+namespace ymd::drivers{
 
 class MLX90393 final: public MLX90393_Prelude{
 public:
@@ -40,8 +44,8 @@ public:
     
 private:
     MLX90393_Phy phy_;
-    [[nodiscard]] IResult<> read_reg(uint8_t reg, uint16_t & data);
-    [[nodiscard]] IResult<> write_reg(uint8_t reg, uint16_t data);
+    [[nodiscard]] IResult<> read_reg(uint8_t reg_addr, uint16_t & data);
+    [[nodiscard]] IResult<> write_reg(uint8_t reg_addr, uint16_t data);
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

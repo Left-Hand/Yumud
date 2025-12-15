@@ -31,7 +31,6 @@ void SelfCheckTasker::run(){
             
             if(cnt > subdivide_micros * check_times){
                 if(move_range.length() < minimal_motion){
-                    // THROW_ERROR(ErrorCode::COIL_A_DISCONNECTED, ("coil a connection failed" + String(move_range)).c_str());
                     // return RunStatus::ERROR;
                 }else{
                     move_range = Range2<real_t>::from_center_and_length(odo_.getPosition(), 0);
@@ -48,7 +47,6 @@ void SelfCheckTasker::run(){
 
             if(cnt > subdivide_micros * check_times){
                 if(move_range.length() < minimal_motion){
-                    // THROW_ERROR(ErrorCode::COIL_B_DISCONNECTED, ("coil b connection failed" + (move_range).toString()).c_str());
                     // return RunStatus::ERROR;
                 }else{
                     move_range = Range2<real_t>::from_center_and_length(odo_.getPosition(), 0);

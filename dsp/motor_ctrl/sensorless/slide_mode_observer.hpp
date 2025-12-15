@@ -32,7 +32,7 @@ public:
             z = digipw::AlphaBetaCoord<iq20>(0, 0);
         }
 
-        constexpr Angle<iq20> angle() const {
+        constexpr Angular<iq20> angle() const {
             return e.angle();
         }
     };
@@ -67,7 +67,7 @@ public:
 
         state_.e = state_.e + (Kslf_ * (state_.z - state_.e));
 
-        turns_ = frac(atan2pu(-state_.e.alpha, state_.e.beta));
+        turns_ = math::frac(math::atan2pu(-state_.e.alpha, state_.e.beta));
     }
 
     constexpr void reconf(const Config & cfg){
@@ -79,7 +79,7 @@ public:
 
 
     // 获取估计的转子角度
-    Angle<iq16> angle() const {return Angle<iq16>::from_turns(turns_);}
+    Angular<iq16> angle() const {return Angular<iq16>::from_turns(turns_);}
 
 private:
     iq16 f_para_ = 0;

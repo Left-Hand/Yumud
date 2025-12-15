@@ -12,7 +12,7 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/timer.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/uart/uartsw.hpp"
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
@@ -24,31 +24,31 @@
 
 #include "primitive/image/painter/painter.hpp"
 #include "primitive/colors/rgb/rgb.hpp"
-#include "types/regions/rect2.hpp"
+#include "algebra/regions/rect2.hpp"
 
-#include "types/vectors/quat.hpp"
+#include "algebra/vectors/quat.hpp"
 #include "primitive/image/image.hpp"
 #include "primitive/image/font/font.hpp"
 
-#include "types/shapes/bresenham_iter.hpp"
-#include "types/shapes/rotated_rect.hpp"
-#include "types/shapes/box_rect.hpp"
-#include "types/regions/Segment2.hpp"
-#include "types/shapes/triangle2.hpp"  
-#include "types/shapes/line_iter.hpp"
-#include "types/shapes/annular_sector.hpp"
-#include "types/shapes/horizon_spectrum.hpp"
-#include "types/shapes/triangle2.hpp"
-#include "types/shapes/oval2.hpp"
-#include "types/shapes/gridmap2.hpp"
-#include "types/shapes/rounded_rect2.hpp"
+#include "algebra/shapes/bresenham_iter.hpp"
+#include "algebra/shapes/rotated_rect.hpp"
+#include "algebra/shapes/box_rect.hpp"
+#include "algebra/regions/Segment2.hpp"
+#include "algebra/shapes/triangle2.hpp"  
+#include "algebra/shapes/line_iter.hpp"
+#include "algebra/shapes/annular_sector.hpp"
+#include "algebra/shapes/horizon_spectrum.hpp"
+#include "algebra/shapes/triangle2.hpp"
+#include "algebra/shapes/oval2.hpp"
+#include "algebra/shapes/gridmap2.hpp"
+#include "algebra/shapes/rounded_rect2.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
 
 #include "middlewares/rpc/rpc.hpp"
-#include "middlewares/repl/repl_service.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "frame_buffer.hpp"
@@ -530,6 +530,7 @@ void render_main(){
     auto init_debugger = []{
 
         DBG_UART.init({
+            .remap = hal::UART2_REMAP_PA2_PA3,
             .baudrate = UART_BAUD
         });
 
@@ -549,12 +550,15 @@ void render_main(){
     auto & spi = hal::spi1;
     #endif
 
-    spi.init({144_MHz});
+    spi.init({
+        .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
+        .baudrate = hal::NearestFreq(144_MHz)
+    });
     
-    auto scl_gpio = hal::PB<3>();
-    auto sda_gpio = hal::PB<5>();
+    auto scl_pin = hal::PB<3>();
+    auto sda_pin = hal::PB<5>();
     
-    hal::I2cSw i2c{&scl_gpio, &sda_gpio};
+    hal::I2cSw i2c{&scl_pin, &sda_pin};
     i2c.init({400_KHz});
 
     drivers::QMC5883L qmc{&i2c};
@@ -570,7 +574,7 @@ void render_main(){
     auto dev_rst = hal::PB<7>();
     auto lcd_cs = hal::PD<4>();
 
-    const auto spi_rank = spi.allocate_cs_gpio(&lcd_cs).unwrap();
+    const auto spi_rank = spi.allocate_cs_pin(&lcd_cs).unwrap();
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_rank, &lcd_dc, &dev_rst}, 
@@ -601,10 +605,10 @@ void render_main(){
     while(true){
 
 
-        const auto ctime = clock::time();
-        // const auto dest_angle = Angle<iq16>::from_turns(ctime * 0.3_r);
-        const auto dest_angle = Angle<iq16>::from_turns(ctime * 0.1_r);
-        // [[maybe_unused]] const auto [s,c] = sincospu(ctime * 0.3_r);
+        const auto now_secs = clock::time();
+        // const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.3_r);
+        const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.1_r);
+        // [[maybe_unused]] const auto [s,c] = math::sincospu(now_secs * 0.3_r);
         [[maybe_unused]] const auto [s, c] = dest_angle.sincos();
         [[maybe_unused]] const auto [shape_x, shape_y] = std::make_tuple(
             uint16_t(30 + 20 * c), uint16_t(30 + 20 * s));
@@ -613,8 +617,8 @@ void render_main(){
             static constexpr auto LEN = 20;
             std::array<iq16, LEN> ret;
             for(size_t i = 0; i < LEN; i++){
-                // ret[i] = 0.8_iq16 * sin(7 * ctime + i * 0.15_r);
-                ret[i] = 0.8_iq16 * sinpu(ctime + i * 0.1_r);
+                // ret[i] = 0.8_iq16 * sin(7 * now_secs + i * 0.15_r);
+                ret[i] = 0.8_iq16 * math::sinpu(now_secs + i * 0.1_r);
             }
             return ret;
         } ();
@@ -664,7 +668,6 @@ void render_main(){
         qmc.update().examine();
         ss.print(qmc.read_mag().examine());
         ss.flush();
-        DEBUG_PRINTLN(ss.c_str());
         auto shape = LineText<void, MonoFont8x5>{
             .left_top = {20,20},
             .spacing = 2,
@@ -674,7 +677,6 @@ void render_main(){
             // .str = "明白了您只需要编码值而不是以下是修复后的代码",
             .str = "0123456789abcdef",
             // .str = "a",
-            // .str = ss.c_str(),
             // .str = "(0.001, 0.040, -0.367)",
             // .str = "widget",
             .font = en_font
@@ -684,12 +686,12 @@ void render_main(){
 
         #if 0
         auto shape =  Circle2<uint16_t>{
-            Vec2u16{uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80}, 6};
+            Vec2u16{uint16_t(160 + 80 * math::sinpu(now_secs * 0.2_r)), 80}, 6};
         #endif
 
         #if 0
         // auto shape = HorizonOval2<uint16_t>{
-        //     .left_center = Vec2u16{uint16_t(130 + 80 * sinpu(ctime * 0.2_r)), 80}, 
+        //     .left_center = Vec2u16{uint16_t(130 + 80 * math::sinpu(now_secs * 0.2_r)), 80}, 
         //     .radius = 20, 
         //     .length = 80
         // };
@@ -702,7 +704,7 @@ void render_main(){
         
         #if 0
         auto shape =  RoundedRect2<uint16_t>{
-            .bounding_rect = Rect2u{Vec2u16{uint16_t(115 + 80 * sinpu(ctime * 0.2_r)), 
+            .bounding_rect = Rect2u{Vec2u16{uint16_t(115 + 80 * math::sinpu(now_secs * 0.2_r)), 
                 80}, Vec2u16{90, 30}}, 
             .radius = 8
         };
@@ -759,17 +761,17 @@ void render_main(){
 
         #if 0
         const auto shape = AnnularSector<uint16_t, iq16>{
-            .center = {uint16_t(160 + 79.2_r * sinpu(ctime * 0.2_r)), 80},
+            .center = {uint16_t(160 + 79.2_r * math::sinpu(now_secs * 0.2_r)), 80},
             .radius_range = {8, 12},
             // .radius_range = {10, 14},
             // .radius_range = {47, 53},
             // .radius_range = {40, 60},
             .angle_range = {
-                Angle<iq16>::from_degrees(60 + ctime * 120), 
-                // Angle<iq16>::from_degrees(123)
-                Angle<iq16>::from_degrees(LERP(
+                Angular<iq16>::from_degrees(60 + now_secs * 120), 
+                // Angular<iq16>::from_degrees(123)
+                Angular<iq16>::from_degrees(LERP(
                     50, 310, 
-                    sinpu(ctime * 0.4_r) * 0.5_iq16 + 0.5_iq16
+                    math::sinpu(now_secs * 0.4_r) * 0.5_iq16 + 0.5_iq16
                 ))
             }
         };
@@ -781,9 +783,9 @@ void render_main(){
         //     // .radius_range = {47, 53},
         //     .radius_range = {130, 150},
         //     .angle_range = {
-        //         Angle<iq16>::from_degrees(0), 
-        //         // Angle<iq16>::from_degrees(123)
-        //         Angle<iq16>::from_degrees(180)
+        //         Angular<iq16>::from_degrees(0), 
+        //         // Angular<iq16>::from_degrees(123)
+        //         Angular<iq16>::from_degrees(180)
         //     }
         // };
 
@@ -791,14 +793,14 @@ void render_main(){
 
         #if 0
         const auto shape = Sector<uint16_t, iq16>{
-            .center = {uint16_t(160 + 80 * sinpu(ctime * 0.2_r)), 80},
+            .center = {uint16_t(160 + 80 * math::sinpu(now_secs * 0.2_r)), 80},
             // .radius = 23,
             .radius = 12,
             // .radius = 53,
             .angle_range = {
-                Angle<iq16>::from_degrees(60 + ctime * 120), 
-                // Angle<iq16>::from_degrees(123)
-                Angle<iq16>::from_degrees(LERP(50, 310, sinpu(ctime * 0.4_r) * 0.5_iq16 + 0.5_iq16))
+                Angular<iq16>::from_degrees(60 + now_secs * 120), 
+                // Angular<iq16>::from_degrees(123)
+                Angular<iq16>::from_degrees(LERP(50, 310, math::sinpu(now_secs * 0.4_r) * 0.5_iq16 + 0.5_iq16))
             }
         };
 

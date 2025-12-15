@@ -7,7 +7,7 @@
 #include "core/clock/clock.hpp"
 
 #include "core/utils/cpp_stl/hive.hpp"
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 
 #include "hal/bus/uart/uarthw.hpp"
@@ -16,7 +16,10 @@ using namespace ymd;
 
 
 void hive_main(){
-    hal::uart2.init({576000});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
@@ -34,7 +37,7 @@ void hive_main(){
         i_hive.insert(num_type(i));
     }
 
-    const auto begin_m = clock::micros();
+    const auto begin_ms = clock::micros();
     // for(size_t i = 0; i != 300; ++i)
     {
     
@@ -51,7 +54,7 @@ void hive_main(){
         }
     }
 
-    DEBUG_PRINTLN(total, clock::micros() - begin_m);
+    DEBUG_PRINTLN(total, clock::micros() - begin_ms);
 
     // DEBUG_PRINTLN(Vec2(1,2));
     std::terminate();

@@ -6,12 +6,17 @@
 
 #include "primitive/can/bxcan_frame.hpp"
 
-#include "core/magic/size_traits.hpp"
-#include "core/magic/function_traits.hpp"
-#include "core/magic/serialize_traits.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/bits/width.hpp"
+#include "core/tmp/functor.hpp"
+
+#include "core/tmp/reflect/enum.hpp"
 #include "rust_enum.hpp"
+
+
+// MIT license
 // https://github.com/SephDB/tmp-builder-pattern/tree/master
+
+
 using namespace ymd;
 
 namespace ymd::builder{

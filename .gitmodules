@@ -1,16 +1,6 @@
-[submodule "thirdparty/sstl"]
-	path = thirdparty/sstl
-	url = https://github.com/rukkal/static-stl.git
-[submodule "thirdparty/enums"]
-	path = thirdparty/enums
-	url = https://github.com/aantron/better-enums
 [submodule "thirdparty/json"]
 	path = thirdparty/json
 	url = https://github.com/nlohmann/json
-[submodule "thirdparty/lua"]
-	path = thirdparty/lua
-	url = https://github.com/lua/lua.git
-	branch = v5.4.6
 [submodule "thirdparty/lodepng"]
 	path = thirdparty/lodepng
 	url = https://gitee.com/mirrors/LodePNG.git

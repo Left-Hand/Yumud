@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/string/utils/strconv.hpp"
 #include "core/utils/hash_func.hpp"
 #include "core/utils/option.hpp"
 
@@ -83,36 +82,44 @@ private:
 class [[nodiscard]] StringView {
 public:
     // 构造函数 从容器构造必须为显式 避免调用者没注意到生命周期
-    constexpr explicit StringView(const std::string & str): 
-        data_(str.c_str()), size_(str.length()) {}
-    constexpr StringView(const std::string_view str): 
+    constexpr explicit StringView(const std::string & str) noexcept: 
         data_(str.data()), size_(str.length()) {}
-    constexpr StringView(const char* str) : 
-        data_(str), size_(str ? strlen(str) : 0) {}
-    constexpr StringView(const char* str, size_t size) : 
-        data_(str), size_(size) {}
+    constexpr StringView(const std::string_view str) noexcept: 
+        data_(str.data()), size_(str.length()) {}
+
+
+    //从不原始c字符串构造考虑到不带尾0的攻击 只能在编译期使用 运行期使用from_cstr
+    consteval StringView(const char * c_str) noexcept: 
+        data_(c_str), size_((c_str != nullptr) ? strlen(c_str) : 0) {}
+    constexpr StringView(const char * c_str, size_t size) noexcept: 
+        data_(c_str), size_(size) {}
+
+    static constexpr StringView from_cstr(const char * c_str, size_t size = std::dynamic_extent) noexcept{
+        size = (c_str != nullptr) ? strnlen(c_str, size) : 0;
+        return StringView(c_str, size);
+    }
 
     template<size_t N>
-    constexpr StringView(const char (&str)[N]):
+    constexpr StringView(const char (&str)[N]) noexcept:
         data_(str), size_(strnlen(str, N)){}
-    constexpr StringView(const StringView & other): 
+    constexpr StringView(const StringView & other) noexcept: 
         data_(other.data_), size_(other.size_){;}
-    constexpr StringView(StringView && other): 
+    constexpr StringView(StringView && other) noexcept: 
         data_(other.data_), size_(other.size_){;}
 
-    constexpr StringView& operator=(const StringView & other) {
+    constexpr StringView& operator=(const StringView & other) noexcept{
         data_ = other.data_;
         size_ = other.size_;
         return *this;
     }
 
-    constexpr StringView& operator=(StringView && other) {
+    constexpr StringView& operator=(StringView && other) noexcept{
         data_ = std::move(other.data_);
         size_ = std::move(other.size_);
         return *this;
     }
 
-    [[nodiscard]] constexpr bool operator==(const StringView & other) const { 
+    [[nodiscard]] constexpr bool operator==(const StringView & other) const noexcept{ 
 
         if(size_ != other.size_) return false;
 
@@ -124,19 +131,18 @@ public:
         return true;
     }
 
-    [[nodiscard]] constexpr const char * begin() const {return data_;}
-    [[nodiscard]] constexpr const char * c_str() const {return data_;}
-    [[nodiscard]] constexpr const char * end() const {return data_ + size_;}
+    [[nodiscard]] constexpr const char * begin() const noexcept{return data_;}
+    [[nodiscard]] constexpr const char * end() const noexcept{return data_ + size_;}
 
-    [[nodiscard]] constexpr size_t size() const { return size_; }
-    [[nodiscard]] constexpr size_t length() const {return size_;}
+    [[nodiscard]] constexpr size_t size() const noexcept{ return size_; }
+    [[nodiscard]] constexpr size_t length() const noexcept{return size_;}
 
-    [[nodiscard]] constexpr const char* data() const { return data_; }
+    [[nodiscard]] constexpr const char* data() const noexcept{ return data_; }
 
-    [[nodiscard]] constexpr char operator [](const size_t index) const {return data_[index];}
-	__fast_inline constexpr Option<StringView> substr(size_t left) const {
+    [[nodiscard]] constexpr char operator [](const size_t index) const noexcept{return data_[index];}
+	__fast_inline constexpr Option<StringView> substr(size_t left) const noexcept{
         return substr_by_range(left, size_);};
-	__fast_inline constexpr Option<StringView> substr_by_range(size_t left, size_t right) const {
+	__fast_inline constexpr Option<StringView> substr_by_range(size_t left, size_t right) const noexcept{
         if (unlikely(left > right)) 
             return None;
         
@@ -146,18 +152,18 @@ public:
         return Some(StringView(this->data_ + left, right - left));
     }
 
-	__fast_inline constexpr Option<StringView> substr_by_len(size_t left, size_t len) const {
+	__fast_inline constexpr Option<StringView> substr_by_len(size_t left, size_t len) const noexcept{
         if (left + len > size_) 
             return None;
 
         return Some(StringView(this->data_ + left, len));
     }
     
-    [[nodiscard]] constexpr Option<size_t> find(char c) const{
+    [[nodiscard]] constexpr Option<size_t> find(char c) const noexcept{
         return find_from(c, 0);
     }
 
-    [[nodiscard]] constexpr Option<size_t> find_from(char ch, size_t from) const{
+    [[nodiscard]] constexpr Option<size_t> find_from(char ch, size_t from) const noexcept{
         if (from >= size_) return None;
         for(size_t i = from; i < size_; i++){
             if(data_[i] == ch) return Some(i);
@@ -166,9 +172,9 @@ public:
     }
 
 
-    [[nodiscard]] constexpr uint32_t hash() const {return ymd::hash(*this);}
+    [[nodiscard]] constexpr uint32_t hash() const noexcept{return ymd::hash(*this);}
 
-    [[nodiscard]] constexpr StringView trim() const {
+    [[nodiscard]] constexpr StringView trim() const noexcept{
         auto & self = *this;
         auto is_whitespace = [](char c) {
             return c == ' ' || c == '\t' || c == '\n' || c == '\r';
@@ -192,15 +198,15 @@ public:
         );
     }
 
-    [[nodiscard]] constexpr operator std::string_view() const {
+    [[nodiscard]] constexpr operator std::string_view() const noexcept{
         return std::string_view(data_, size_);
     }
 
-    [[nodiscard]] std::span<const uint8_t> as_bytes() const {
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const noexcept{
         return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(data_), size_);
     }
 
-    [[nodiscard]] constexpr std::span<const char> chars() const {
+    [[nodiscard]] constexpr std::span<const char> chars() const noexcept{
         return std::span<const char>(data_, size_);
     }
 private:

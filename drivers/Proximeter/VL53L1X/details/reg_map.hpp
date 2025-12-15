@@ -70,7 +70,7 @@
 #pragma once
 
 
-namespace ymd::drivers::vl53l1x_details{
+namespace ymd::drivers::vl53l1x::details{
 
 /** @defgroup VL53L1_register_DefineRegisters_group Define Registers *  @brief List of all the defined registers
  *  @{
@@ -2068,7 +2068,7 @@ static constexpr uint16_t VL53L1_RESULT__INTERRUPT_STATUS = 0x0088;
     fields: \n
         - [2:0] = int_status
         - [4:3] = int_error_status
-        -   [5] = gph_id_gpio_status
+        -   [5] = gph_id_pin_status
 */
 static constexpr uint16_t VL53L1_RESULT__RANGE_STATUS = 0x0089;
 /*!<
@@ -8204,7 +8204,7 @@ static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__INTERRUPT_STATUS = 0x0ED0;
     fields: \n
         - [2:0] = prev_shadow_int_status
         - [4:3] = prev_shadow_int_error_status
-        -   [5] = prev_shadow_gph_id_gpio_status
+        -   [5] = prev_shadow_gph_id_pin_status
 */
 static constexpr uint16_t VL53L1_PREV_SHADOW_RESULT__RANGE_STATUS = 0x0ED1;
 /*!<
@@ -10870,7 +10870,7 @@ static constexpr uint16_t VL53L1_SHADOW_RESULT__INTERRUPT_STATUS = 0x0FB0;
     fields: \n
         - [2:0] = shadow_int_status
         - [4:3] = shadow_int_error_status
-        -   [5] = shadow_gph_id_gpio_status
+        -   [5] = shadow_gph_id_pin_status
 */
 static constexpr uint16_t VL53L1_SHADOW_RESULT__RANGE_STATUS = 0x0FB1;
 /*!<

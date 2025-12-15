@@ -8,8 +8,8 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 // #include "ch32v20x_adc.h"
-#include "../sdk/ch32v203/Peripheral/inc/ch32v20x_adc.h"
-#include "../sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
+#include "sdk/ch32v203/Peripheral/inc/ch32v20x_adc.h"
+#include "sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
 
 /* ADC DISCNUM mask */
 #define CTLR1_DISCNUM_Reset              ((uint32_t)0xFFFF1FFF)

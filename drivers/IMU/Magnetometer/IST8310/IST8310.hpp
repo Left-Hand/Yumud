@@ -22,7 +22,7 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<> enable_contious(const Enable en);
+    [[nodiscard]] IResult<> enable_continous(const Enable en);
 
     [[nodiscard]] IResult<> set_x_average_times(const AverageTimes times);
     [[nodiscard]] IResult<> set_y_average_times(const AverageTimes times);
@@ -57,8 +57,8 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddr addr, int16_t * pbuf, size_t len){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(pbuf, len), std::endian::big);
+    [[nodiscard]] IResult<> read_burst(const RegAddr addr, std::span<int16_t> pbuf){
+        if(const auto res = i2c_drv_.read_burst(std::bit_cast<uint8_t>(addr), pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

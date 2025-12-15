@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 **********************************************************************************/
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_wwdg.h"
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_wwdg.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 
 /* CTLR register bit mask */
 #define CTLR_WDGA_Set      ((uint32_t)0x00000080)

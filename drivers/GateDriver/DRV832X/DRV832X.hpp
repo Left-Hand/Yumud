@@ -61,10 +61,10 @@ public:
     };
 
     DRV8323H_Phy(const Params & params):
-        gain_gpio_(params.gain_gpio),
-        vds_gpio_(params.vds_gpio),
-        idrive_gpio_(params.idrive_gpio),
-        mode_gpio_(params.mode_gpio){;}
+        gain_pin_(params.gain_gpio),
+        vds_pin_(params.vds_gpio),
+        idrive_pin_(params.idrive_gpio),
+        mode_pin_(params.mode_gpio){;}
 
     void set_pwm_mode(const PwmMode mode){
         // _6x = GND,
@@ -74,18 +74,18 @@ public:
 
         switch(mode){
             case PwmMode::_6x:
-                mode_gpio_.outpp(LOW);
+                mode_pin_.outpp(LOW);
                 break;
             case PwmMode::_3x:
-                mode_gpio_.inpd();
+                mode_pin_.inpd();
                 break;
             case PwmMode::_1x:
-                mode_gpio_.inflt();
+                mode_pin_.inflt();
                 break;
-                // mode_gpio_.outpp(HIGH);
+                // mode_pin_.outpp(HIGH);
                 break;
             case  PwmMode::Independent:
-                mode_gpio_.outpp(HIGH);
+                mode_pin_.outpp(HIGH);
                 break;
         }
     }
@@ -94,14 +94,14 @@ public:
         // switch(drive){
         //     case IDriveP::
         // }
-        idrive_gpio_.inflt();
+        idrive_pin_.inflt();
     }
 
 private:
-    hal::Gpio & gain_gpio_;
-    hal::Gpio & vds_gpio_;
-    hal::Gpio & idrive_gpio_;
-    hal::Gpio & mode_gpio_;
+    hal::Gpio & gain_pin_;
+    hal::Gpio & vds_pin_;
+    hal::Gpio & idrive_pin_;
+    hal::Gpio & mode_pin_;
 };
 
 

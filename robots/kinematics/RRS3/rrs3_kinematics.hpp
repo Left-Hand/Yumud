@@ -5,85 +5,100 @@
 #include <cmath>
 #include <array>
 
-#include "types/regions/ray2.hpp"
-#include "types/vectors/vector3.hpp"
-#include "types/vectors/quat.hpp"
-#include "types/regions/plane.hpp"
-
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "core/utils/nth.hpp"
 
+
+#include "algebra/regions/ray2.hpp"
+#include "algebra/vectors/vec3.hpp"
+#include "algebra/vectors/quat.hpp"
+#include "algebra/regions/plane.hpp"
+#include "algebra/shapes/sphere.hpp"
+
 namespace ymd::robots{
 
 
+template<typename T>
+struct [[nodiscard]] CirclePassZAxis{
+    //这个圆所在的平面包含z轴 自由度特殊化
+    Vec3<T> org;
+    T radius;
 
+    friend OutputStream & operator << (OutputStream & os, const CirclePassZAxis & self){
+        return os << os.brackets<'{'>() << 
+            self.org << os.splitter() << self.radius << 
+            os.brackets<'}'>();
+    }
+};
 
 template<arithmetic T>
-class RR2_Kinematics final{
+struct [[nodiscard]] RR2_Kinematics final{
 public:
 
-    struct Config{
+    struct [[nodiscard]] Config{
         T base_length;
         T link_length;
     };
 
-    struct Gesture{
+    struct [[nodiscard]] Gesture{
         const Vec2<T> shift_position;
     };
 
-    struct Solution{
-        struct Absolute{
-            T j1_abs_rad;
-            T j2_abs_rad;
+    struct [[nodiscard]] Solution{
+        struct [[nodiscard]] Absolute{
+            Angular<T> j1_abs;
+            Angular<T> j2_abs;
 
-            friend OutputStream & operator<<(OutputStream & os, Absolute const & self){
-                return os << "j1_abs_rad: " << self.j1_abs_rad << ", j2_abs_rad: " << self.j2_abs_rad;
+            friend OutputStream & operator<<(OutputStream & os, const Absolute & self){
+                return os << os.field("j1_abs")(self.j1_abs.to_degrees()) 
+                        << os.field("j2_abs")(self.j2_abs.to_degrees());
             }
         };
 
-        struct Relative{
-            T j1_rel_rad;
-            T j2_rel_rad;
+        struct [[nodiscard]] Relative{
+            Angular<T> j1_rel;
+            Angular<T> j2_rel;
 
             friend OutputStream & operator<<(OutputStream & os, Relative const & self){
-                return os << "j1_rel_rad: " << self.j1_rel_rad << ", j2_rel_rad: " << self.j2_rel_rad;
+                return os << os.field("j1_rel")(self.j1_rel.to_degrees()) 
+                        << os.field("j2_rel")(self.j2_rel.to_degrees());
             }
         };
 
         constexpr Absolute to_absolute() const {
-            return {j1_abs_rad_, j2_abs_rad_};
+            return {j1_abs_, j2_abs_};
         }
 
         constexpr Relative to_relative() const {
-            return {j1_abs_rad_, j2_abs_rad_ - j1_abs_rad_};
+            return {j1_abs_, j2_abs_ - j1_abs_};
         }
 
 
         static constexpr Solution from_absolute(const Absolute & solu){
             Solution self;
-            self.j1_abs_rad_ = solu.j1_abs_rad; 
-            self.j2_abs_rad_ = solu.j2_abs_rad;
+            self.j1_abs_ = solu.j1_abs; 
+            self.j2_abs_ = solu.j2_abs;
             return self;
         }
         static constexpr Solution from_relative(const Relative & solu){
             Solution self;
-            self.j1_abs_rad_ = solu.j1_abs_rad; 
-            self.j2_abs_rad_ = solu.j2_abs_rad + solu.j1_abs_rad;
+            self.j1_abs_ = solu.j1_abs; 
+            self.j2_abs_ = solu.j2_abs + solu.j1_abs;
             return self;
         }
 
     private:
-        T j1_abs_rad_{};
-        T j2_abs_rad_{};
+        Angular<T> j1_abs_{};
+        Angular<T> j2_abs_{};
     };
 
 
     static constexpr Gesture forward(const Config & cfg, const Solution & solu){
         const auto B = cfg.base_length;
         const auto L = cfg.link_length;
-        const auto R1 = solu.to_absolute().j1_abs_rad;
-        const auto R2 = solu.to_absolute().j2_abs_rad;
+        const auto R1 = solu.to_absolute().j1_abs;
+        const auto R2 = solu.to_absolute().j2_abs;
         return {Vec2<T>(B, 0).rotated(R1) + Vec2<T>(L, 0).rotated(R2)};
     }
 
@@ -92,18 +107,18 @@ public:
         const T L_squ = pos.length_squared();
         const T L = std::sqrt(L_squ);
         //关节活动超出约束空间(远区)
-        if(L_squ > square(cfg.base_length + cfg.link_length)) 
+        if(L_squ > math::square(cfg.base_length + cfg.link_length)) 
             return None;
 
         //关节活动超出约束空间(近死区)
-        if(L_squ < square(cfg.base_length - cfg.link_length)) 
+        if(L_squ < math::square(cfg.base_length - cfg.link_length)) 
             return None;
 
         //TODO 减少超越函数计算量
         const T L1 = cfg.base_length;
         const T L2 = cfg.link_length;
-        const T L1_squ = square(L1);
-        const T L2_squ = square(L2);
+        const T L1_squ = math::square(L1);
+        const T L2_squ = math::square(L2);
 
 
         const T phi = std::atan2(pos.y, pos.x);
@@ -119,31 +134,27 @@ public:
     }
 };
 
-
-
-
-
 template<arithmetic T>
-class RRS_Kinematics final{
+struct [[nodiscard]] RRS_Kinematics final{
 public:
     using Error = kinematics::prelude::Error;
     template<typename U = void>
     using IResult = Result<U, Error>;
 
-    struct Config{
+    struct [[nodiscard]] Config{
         T base_length;//基座摇臂长度(米)
         T link_length;///上摇臂长度(米)
         T base_plate_radius;//基座中心轴到关节的距离(米)
         T top_plate_radius;///顶座中心轴到关节的距离(米)
     };
 
-    struct Gesture{
+    struct [[nodiscard]] Gesture{
         Quat<T> orientation;
         T z;
 
-        struct Initializer{
-            real_t yaw;
-            real_t pitch;
+        struct [[nodiscard]] Initializer{
+            Angular<real_t> yaw;
+            Angular<real_t> pitch;
             real_t height;
         };
 
@@ -237,40 +248,19 @@ private:
         return gest.orientation.xform(Vec3<T>{top_point_2.x, top_point_2.y, 0}) + Vec3<T>(0, 0, gest.z);
     }
 
-    struct Sphere{
-        Vec3<T> org;
-        T radius;
 
-        friend OutputStream & operator << (OutputStream & os, const Sphere & self){
-            return os << os.brackets<'{'>() << 
-                self.org << os.splitter() << self.radius << 
-                os.brackets<'}'>();
-        }
-    };
-
-    struct CirclePassZAxis{
-        //这个圆所在的平面包含z轴 自由度特殊化
-        Vec3<T> org;
-        T radius;
-
-        friend OutputStream & operator << (OutputStream & os, const CirclePassZAxis & self){
-            return os << os.brackets<'{'>() << 
-                self.org << os.splitter() << self.radius << 
-                os.brackets<'}'>();
-        }
-    };
 
     //pure fn
     //输入关节的方位单位向量(寻找对应的铰链)以及姿态 
     //获取顶部铰链的活动球面
-    static constexpr Sphere get_top_sphere(const Config & cfg, const Vec2<T> xy_norm, const Gesture & gest){
+    static constexpr Sphere<T> get_top_sphere(const Config & cfg, const Vec2<T> xy_norm, const Gesture & gest){
         return Sphere{get_top_point(cfg, xy_norm, gest), cfg.link_length};
     }
 
     //pure fn
     //输入活动球面和方位单位向量
     //获取切片圆
-    static constexpr Option<CirclePassZAxis> project_sphere_to_circle(const Sphere & sphere, const Vec2<T> xy_norm){
+    static constexpr Option<CirclePassZAxis<T>> project_sphere_to_circle(const Sphere<T> & sphere, const Vec2<T> xy_norm){
         // 方位单位向量的结构体绑定
         // [x', y'] = xy_norm
 
@@ -285,9 +275,9 @@ private:
         // 当圆未与平面相交时 返回None
         
         const T xy_dist = std::abs(xy_norm.x * sphere.org.y - xy_norm.y * sphere.org.x);
-        if(const auto temp = square(sphere.radius) - square(xy_dist); temp >= 0){
+        if(const auto temp = math::square(sphere.radius) - math::square(xy_dist); temp >= 0){
             const T circle_radius = std::sqrt(temp);
-            return Some(CirclePassZAxis{
+            return Some(CirclePassZAxis<T>{
                 .org = sphere.org, 
                 .radius = circle_radius
             });

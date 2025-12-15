@@ -14,9 +14,9 @@
 #include "core/stream/ostream.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "drivers/HID/Event.hpp"
+#include "primitive/hid_input/keyevent.hpp"
 
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/reflect/enum.hpp"
 
 namespace ymd::drivers{
 
@@ -55,9 +55,9 @@ struct _TM1637_Prelude{
         constexpr PulseWidth(const Kind kind):kind_(kind){;}
 
         using enum Kind;
-        static constexpr Option<PulseWidth> from_duty(const real_t duty){
-            if(duty < DUTY_TABLE[0]) return None;
-            else return Some(PulseWidth(duty2kind(duty)));
+        static constexpr Option<PulseWidth> from_dutycycle(const real_t dutycycle){
+            if(dutycycle < DUTY_TABLE[0]) return None;
+            else return Some(PulseWidth(duty2kind(dutycycle)));
         }
 
         constexpr auto kind() const { return kind_; }
@@ -75,8 +75,8 @@ struct _TM1637_Prelude{
             real_t(14.0 / 16)
         };
 
-        static constexpr Kind duty2kind(const real_t duty){
-            const auto it = std::lower_bound(DUTY_TABLE.begin(), DUTY_TABLE.end(), duty);
+        static constexpr Kind duty2kind(const real_t dutycycle){
+            const auto it = std::lower_bound(DUTY_TABLE.begin(), DUTY_TABLE.end(), dutycycle);
             const auto idx = std::distance(DUTY_TABLE.begin(), it);
             return std::bit_cast<Kind>(uint8_t(idx));
         }
@@ -193,9 +193,9 @@ private:
 //由于TM1637使用了另类的I2C接口 故特化
 class TM1637_Phy final:public _TM1637_Prelude{
 public:
-    TM1637_Phy(hal::Gpio & scl_gpio, hal::Gpio & sda_gpio):
-        scl_gpio_(scl_gpio),
-        sda_gpio_(sda_gpio)
+    TM1637_Phy(hal::Gpio & scl_pin, hal::Gpio & sda_pin):
+        scl_pin_(scl_pin),
+        sda_pin_(sda_pin)
     {;}
 
 
@@ -210,8 +210,8 @@ private:
     IResult<> wait_ack();
     IResult<> iic_start(const uint8_t data);
     IResult<> iic_stop();
-    hal::Gpio & scl_gpio_;
-    hal::Gpio & sda_gpio_;
+    hal::Gpio & scl_pin_;
+    hal::Gpio & sda_pin_;
 };
 
 

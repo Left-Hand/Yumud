@@ -5,149 +5,146 @@
 #include "drivers/IMU/details/InvensenseIMU.hpp"
 #include "core/io/regs.hpp"
 
-namespace ymd::drivers{
+namespace ymd::drivers::icm42688{
 
-struct ICM42688_Prelude{
-    static constexpr auto ICM42688_WHO_AM_I = 0x75;
+static constexpr auto WHO_AM_I = 0x75;
+static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101000);
+struct [[nodiscard]] I2cAddrBuilder{
+    BoolLevel ad0_level;
 
-    struct I2cSlaveAddrMaker{
-        BoolLevel ad0_level;
+    constexpr hal::I2cSlaveAddr<7> to_i2c_addr() const {
+        return hal::I2cSlaveAddr<7>::from_u7(0b1101000 | (ad0_level == HIGH));
+    }
+};
 
-        constexpr hal::I2cSlaveAddr<7> to_i2c_addr() const {
-            return hal::I2cSlaveAddr<7>::from_u7(0b1101000 | (ad0_level == HIGH));
-        }
-    };
+enum class AccFs:uint8_t{
+    _16G,// default
+    _8G,
+    _4G,
+    _2G,
+    Default = _16G
+};
 
-    enum class AccFs:uint8_t{
-        _16G,// default
-        _8G,
-        _4G,
-        _2G,
-        Default = _16G
-    };
-
-    enum class AccOdr:uint8_t{
-        _32000Hz = 1,
-        _16000Hz,
-        _8000Hz,
-        _4000Hz,
-        _2000Hz,
-        _1000Hz,// default
-        _200Hz,
-        _100Hz,
-        _50Hz,
-        _25Hz,
-        _12_5Hz,
-        _6_25Hz,
-        _3_125Hz,
-        _1_5625Hz,
-        _500Hz,
-        Default = _1000Hz
-    };
+enum class AccOdr:uint8_t{
+    _32000Hz = 1,
+    _16000Hz,
+    _8000Hz,
+    _4000Hz,
+    _2000Hz,
+    _1000Hz,// default
+    _200Hz,
+    _100Hz,
+    _50Hz,
+    _25Hz,
+    _12_5Hz,
+    _6_25Hz,
+    _3_125Hz,
+    _1_5625Hz,
+    _500Hz,
+    Default = _1000Hz
+};
 
 
-    enum class GyrFs:uint8_t{
-        _2000deg,// default
-        _1000deg,
-        _500deg,
-        _250deg,
-        _125deg,
-        _62_5deg,
-        _31_25deg,
-        _15_625deg,
-        Default = _2000deg
-    };
+enum class GyrFs:uint8_t{
+    _2000deg,// default
+    _1000deg,
+    _500deg,
+    _250deg,
+    _125deg,
+    _62_5deg,
+    _31_25deg,
+    _15_625deg,
+    Default = _2000deg
+};
 
-    enum class GyrOdr:uint8_t{
-        _32000Hz,
-        _16000Hz,
-        _8000Hz,
-        _4000Hz,
-        _2000Hz,
-        _1000Hz,// default
-        _200Hz,
-        _100Hz,
-        _50Hz,
-        _25Hz,
-        _12_5Hz,
-        _X0Hz,
-        _X1Hz,
-        _X2Hz,
-        _500Hz,
-        Default = _1000Hz
-    };
+enum class GyrOdr:uint8_t{
+    _32000Hz,
+    _16000Hz,
+    _8000Hz,
+    _4000Hz,
+    _2000Hz,
+    _1000Hz,// default
+    _200Hz,
+    _100Hz,
+    _50Hz,
+    _25Hz,
+    _12_5Hz,
+    _X0Hz,
+    _X1Hz,
+    _X2Hz,
+    _500Hz,
+    Default = _1000Hz
+};
 
-    struct [[nodiscard]] Config{
-        AccOdr acc_odr;
-        AccFs acc_fs;
-        GyrOdr gyr_odr;
-        GyrFs gyr_fs;
+struct [[nodiscard]] Config{
+    AccOdr acc_odr;
+    AccFs acc_fs;
+    GyrOdr gyr_odr;
+    GyrFs gyr_fs;
 
-        static constexpr Config from_default() {
-            return Config{
-                .acc_odr = AccOdr::Default, 
-                .acc_fs = AccFs::Default, 
-                .gyr_odr = GyrOdr::Default,
-                .gyr_fs = GyrFs::Default
-            };
-        }
-    };
-
-    enum class TempFiltBw:uint8_t{
-        _4000Hz = 0,
-        _170Hz,
-        _82Hz,
-        _40Hz,
-        _20Hz,
-        _10Hz,
-        _5Hz = 6
-    };
-
-    struct Coeff{
-        enum class GyrUiFilterOrder{
-            _1,
-            _2,
-            _3,
+    static constexpr Config from_default() {
+        return Config{
+            .acc_odr = AccOdr::Default, 
+            .acc_fs = AccFs::Default, 
+            .gyr_odr = GyrOdr::Default,
+            .gyr_fs = GyrFs::Default
         };
+    }
+};
 
-        enum class DEC2_M2_Order{
-            _3 = 0b10
-        };
+enum class TempFiltBw:uint8_t{
+    _4000Hz = 0,
+    _170Hz,
+    _82Hz,
+    _40Hz,
+    _20Hz,
+    _10Hz,
+    _5Hz = 6
+};
 
-        enum class AccUiFilterBandwidth{
-            //TODO
-            
-            
-        };
-
-        enum class GyroUiFIlterBandwidth{
-            //TODO
-            
-            
-        };
-    };
-    
-    using Error = ImuError;
-
-    template<typename T = void>
-    using IResult = Result<T, Error>;
-
-    using RegAddr = uint8_t;
-
-    enum class Bank{
-        _0 = 0,
+struct Coeff{
+    enum class GyrUiFilterOrder{
         _1,
         _2,
         _3,
-        _4
+    };
+
+    enum class DEC2_M2_Order{
+        _3 = 0b10
+    };
+
+    enum class AccUiFilterBandwidth{
+        //TODO
+        
+        
+    };
+
+    enum class GyroUiFIlterBandwidth{
+        //TODO
+        
+        
     };
 };
 
-struct ICM42688_Regset:public ICM42688_Prelude{
+using Error = ImuError;
+
+template<typename T = void>
+using IResult = Result<T, Error>;
+
+using RegAddr = uint8_t;
+
+enum class Bank{
+    _0 = 0,
+    _1,
+    _2,
+    _3,
+    _4
+};
+struct Regset{
     struct R8_DEVICE_CONFIG:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x11;
         static constexpr Bank bank = Bank::_0;
-        uint8_t soft_reset_config:1;
+        uint8_t soft_reset:1;
         uint8_t __resv1__:3;
         uint8_t spi_mode:1;
         uint8_t __resv2__:3;
@@ -180,7 +177,7 @@ struct ICM42688_Regset:public ICM42688_Prelude{
 
     struct R16_TEMpbuf:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x1D;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(tempbuf_reg)
 
     Vec3<int16_t> acc_data_ = Vec3<int16_t>::ZERO;
@@ -188,7 +185,7 @@ struct ICM42688_Regset:public ICM42688_Prelude{
     
     struct R16_TMST_FSYNC:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x2B;
-        int16_t data;
+        int16_t bits;
     }DEF_R16(tmst_fsync_reg)
 
     struct R8_INT_STATUS1:public Reg8<>{
@@ -216,7 +213,7 @@ struct ICM42688_Regset:public ICM42688_Prelude{
 
     struct R16_APEX_DATA0:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x31;
-        // uint8_t data;
+        // uint8_t bits;
         uint16_t step_cnt;
     }DEF_R16(apex_data0_reg)
 
@@ -295,7 +292,7 @@ struct ICM42688_Regset:public ICM42688_Prelude{
         static constexpr Bank bank = Bank::_0;
 
         static constexpr uint8_t KEY = 0x47;
-        uint8_t data;
+        uint8_t bits;
     }DEF_R8(who_am_i_reg)
 };
 

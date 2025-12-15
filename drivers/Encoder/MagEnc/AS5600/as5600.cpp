@@ -11,11 +11,11 @@ template<typename T = void>
 using IResult = Self::IResult<T>;
 
 
-static constexpr Angle<uq32> u12_to_angle(const uint16_t data){
-    return Angle<uq32>::from_turns(uq32(uq16::from_bits(data << 4)));
+static constexpr Angular<uq32> u12_to_angle(const uint16_t data){
+    return Angular<uq32>::from_turns(uq32(uq16::from_bits(data << 4)));
 }
 
-static constexpr uint16_t angle_to_u12(const Angle<uq32> angle){
+static constexpr uint16_t angle_to_u12(const Angular<uq32> angle){
     return uq16(angle.to_turns()).to_bits() >> 4; 
 }
 
@@ -76,31 +76,31 @@ IResult<uint16_t> Self::get_magnitude(){
     return Ok((magnitude_reg.data) & 0xFFF);
 }
 
-IResult<Angle<uq32>> Self::get_raw_angle(){
+IResult<Angular<uq32>> Self::get_raw_angle(){
     if(const auto res = read_reg(raw_angle_reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(u12_to_angle(raw_angle_reg.data));
 }
 
-IResult<Angle<uq32>> Self::get_angle(){
+IResult<Angular<uq32>> Self::get_angle(){
     if(const auto res = read_reg(angle_reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(u12_to_angle(angle_reg.data));
 }
 
-IResult<> Self::set_start_angle(const Angle<uq32> angle){
+IResult<> Self::set_start_angle(const Angular<uq32> angle){
     auto reg = RegCopy(start_angle_reg);
     reg.data = angle_to_u12(angle);
     return write_reg(reg);
 }
 
-IResult<> Self::set_end_angle(const Angle<uq32> angle){
+IResult<> Self::set_end_angle(const Angular<uq32> angle){
     auto reg = RegCopy(end_angle_reg);
     reg.data = angle_to_u12(angle);
     return write_reg(reg);
 }
 
-IResult<> Self::set_amount_angle(const Angle<uq32> angle){
+IResult<> Self::set_amount_angle(const Angular<uq32> angle){
     auto reg = RegCopy(amount_angle_reg);
     reg.data = angle_to_u12(angle);
     return write_reg(reg);

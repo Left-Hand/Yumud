@@ -2,7 +2,7 @@
 
 #include "odrive_can_simple_primitive.hpp"
 
-namespace ymd::robots::odrive::can_simple{
+namespace ymd::robots::steadywin::can_simple{
 
 using namespace primitive;
 
@@ -51,7 +51,7 @@ private:
         }
     };
 public:
-    static constexpr auto map_frame_to_event(const hal::CanClassicFrame & frame) -> Result<Event, Error> {
+    static constexpr auto map_frame_to_event(const hal::BxCanFrame & frame) -> Result<Event, Error> {
         if(not frame.is_standard())
             return Err(Error::FrameIsNotStd);
 

@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_i2c.h"
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_i2c.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 /* I2C SPE mask */
 #define CTLR1_PE_Set             ((uint16_t)0x0001)
 #define CTLR1_PE_Reset           ((uint16_t)0xFFFE)

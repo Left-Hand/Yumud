@@ -24,8 +24,8 @@ public:
     [[nodiscard]] IResult<> init() ;
 
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Angle<uq32>> read_lap_angle() {
-        return Ok(Angle<uq32>::from_turns(lap_turns_));
+    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle() {
+        return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 private:
     using Regs = AS5047_Regs;

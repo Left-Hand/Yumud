@@ -10,7 +10,7 @@
 
 namespace ymd::ral::CH32{
 
-struct R32_SERDES_CTRL{
+struct [[nodiscard]] R32_SERDES_CTRL{
     uint32_t CLR_ALL:1;
     uint32_t RESET_LINK:1;
     uint32_t RESET_PHY:1;
@@ -28,7 +28,7 @@ struct R32_SERDES_CTRL{
     uint32_t :13;
 };ASSERT_REG_IS_32BIT(R32_SERDES_CTRL)
 
-struct R32_SERDES_INT_EN{
+struct [[nodiscard]] R32_SERDES_INT_EN{
 
     uint32_t PHYTDY_IE:1;
     uint32_t TRAN_DONE_IE:1;
@@ -40,7 +40,7 @@ struct R32_SERDES_INT_EN{
     uint32_t COMINIT_IT:26;
 };ASSERT_REG_IS_32BIT(R32_SERDES_INT_EN)
 
-struct R32_SERDES_INT_FS{
+struct [[nodiscard]] R32_SERDES_INT_FS{
     //物理层 READY 中断标志位
     uint32_t PHYTDY_IF:1;
 
@@ -70,7 +70,7 @@ struct R32_SERDES_INT_FS{
 };ASSERT_REG_IS_32BIT(R32_SERDES_INT_FS)
 
 
-struct R32_SERDESx_RTX_CTRL{
+struct [[nodiscard]] R32_SERDESx_RTX_CTRL{
     uint32_t SERDES_TX_LEN:16;
     uint32_t LINK_INIT:1;
     uint32_t TX_VLD:1;
@@ -78,34 +78,34 @@ struct R32_SERDESx_RTX_CTRL{
     uint32_t :13;
 };ASSERT_REG_IS_32BIT(R32_SERDESx_RTX_CTRL)
 
-struct R32_SERDES_RX_LEN0{
+struct [[nodiscard]] R32_SERDES_RX_LEN0{
     uint32_t LEN:16;
     uint32_t :16;
 };ASSERT_REG_IS_32BIT(R32_SERDES_RX_LEN0)
 
 
-struct R32_SERDES_DATA0{
+struct [[nodiscard]] R32_SERDES_DATA0{
     uint32_t DATA;
 };ASSERT_REG_IS_32BIT(R32_SERDES_DATA0)
 
-struct R32_SERDES_DMA0{
+struct [[nodiscard]] R32_SERDES_DMA0{
     uint32_t ADDR;
 };ASSERT_REG_IS_32BIT(R32_SERDES_RX_DMA0)
 
-struct R32_SERDES_RX_LEN1{
+struct [[nodiscard]] R32_SERDES_RX_LEN1{
     uint32_t LEN:16;
     uint32_t :16;
 };ASSERT_REG_IS_32BIT(R32_SERDES_RX_LEN1)
 
-struct R32_SERDES_DATA1{
+struct [[nodiscard]] R32_SERDES_DATA1{
     uint32_t DATA;
 };ASSERT_REG_IS_32BIT(R32_SERDES_DATA1)
 
-struct R32_SERDES_DMA1{
+struct [[nodiscard]] R32_SERDES_DMA1{
     uint32_t ADDR;
 };ASSERT_REG_IS_32BIT(R32_SERDES_RX_DMA1)
 
-struct R32_SERDES_SYS_CFGR{
+struct [[nodiscard]] R32_SERDES_SYS_CFGR{
     uint32_t :3;
     uint32_t TX_OUTPUT_SWING:2;
     uint32_t TX_DE_EMPHASIS:2;

@@ -3,11 +3,8 @@
 #include <cstdint>
 #include "core/io/regs.hpp"
 
-#ifndef BIT_CAST
-#define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
-#endif
 
-namespace ymd::ral::py32f003{
+namespace ymd::ral::py32::py32f003{
 
 struct R16_I2C_CTLR1{
     uint16_t PE:1;

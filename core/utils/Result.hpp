@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Option.hpp"
-#include "core/magic/size_traits.hpp"
+#include "core/tmp/bits/width.hpp"
 
 
 namespace ymd{
@@ -50,15 +50,15 @@ struct _result_type<Result<T, E>>{
 }
 
 template<typename TResult>
-using result_ok_type_t = details::_result_type<TResult>::ok_type;
+using result_ok_t = details::_result_type<TResult>::ok_type;
 
 template<typename TResult>
-using result_err_type_t = details::_result_type<TResult>::err_type;
+using result_err_t = details::_result_type<TResult>::err_type;
 
 
 namespace details{
     template<typename T, typename E>
-    struct _Storage_Diff {
+    struct _Result_Storage_Diff {
     public:
         using Data = std::variant<T, E>;
         using ok_type = T;
@@ -66,29 +66,29 @@ namespace details{
 
         // Constructor for Ok case - copy if trivially copyable
         template<typename U = T, std::enable_if_t<std::is_trivially_copy_assignable_v<U>, int> = 0>
-        __fast_inline constexpr _Storage_Diff(const Ok<T>& okay)
+        __fast_inline constexpr _Result_Storage_Diff(const Ok<T>& okay)
             : data_(Data{std::in_place_index<0>, okay.get()}) {}
 
         // Constructor for Ok case - move otherwise
         template<typename U = T, std::enable_if_t<!std::is_trivially_copy_assignable_v<U>, int> = 0>
-        __fast_inline constexpr _Storage_Diff(Ok<T>&& okay)
+        __fast_inline constexpr _Result_Storage_Diff(Ok<T>&& okay)
             : data_(Data{std::in_place_index<0>, std::move(okay).get()}) {}
 
         // Constructor for Err case - const reference
-        __fast_inline constexpr _Storage_Diff(const Err<E>& error)
+        __fast_inline constexpr _Result_Storage_Diff(const Err<E>& error)
             : data_(Data{std::in_place_index<1>, error.get()}) {}
 
         // Constructor for Err case - rvalue reference
-        __fast_inline constexpr _Storage_Diff(Err<E>&& error)
+        __fast_inline constexpr _Result_Storage_Diff(Err<E>&& error)
             : data_(Data{std::in_place_index<1>, std::move(error).get()}) {}
 
         // Copy/move constructors
-        __fast_inline constexpr _Storage_Diff(const _Storage_Diff&) = default;
-        __fast_inline constexpr _Storage_Diff(_Storage_Diff&&) = default;
+        __fast_inline constexpr _Result_Storage_Diff(const _Result_Storage_Diff&) = default;
+        __fast_inline constexpr _Result_Storage_Diff(_Result_Storage_Diff&&) = default;
 
         // Assignment operators
-        __fast_inline constexpr _Storage_Diff& operator=(const _Storage_Diff&) = default;
-        __fast_inline constexpr _Storage_Diff& operator=(_Storage_Diff&&) = default;
+        __fast_inline constexpr _Result_Storage_Diff& operator=(const _Result_Storage_Diff&) = default;
+        __fast_inline constexpr _Result_Storage_Diff& operator=(_Result_Storage_Diff&&) = default;
 
         // State checks
         __fast_inline constexpr bool is_ok() const noexcept { return data_.index() == 0; }
@@ -106,47 +106,19 @@ namespace details{
         Data data_;
     };
     
-    template<typename T, typename E>
-    struct _Storage_Uint{
-    private:
-        static constexpr size_t ok_size = sizeof(T);
-        static constexpr size_t err_size = sizeof(E);
-        static constexpr size_t max_size = std::max(ok_size,err_size);
-        using data_type = magic::size_to_int_t<max_size>;
-
-    public:
-        using ok_type = T;
-        using err_type = E;
-    
-        __fast_inline constexpr _Storage_Uint(const Ok<T> & val):
-            data_(static_cast<data_type>(T(val))){;}
-        __fast_inline constexpr _Storage_Uint(const Err<E> & val):
-            data_(static_cast<data_type>(- E(val)) - 1){;}
-    
-        __fast_inline constexpr _Storage_Uint(const _Storage_Uint &) = default;
-        __fast_inline constexpr _Storage_Uint(_Storage_Uint &&) = default;
-    
-        __fast_inline constexpr bool is_ok() const{return data_ >= 0;}
-        __fast_inline constexpr bool is_err() const{return data_ < 0;}
-    
-        __fast_inline constexpr T unwrap() const{return static_cast<T>(data_);}
-        __fast_inline constexpr E unwrap_err() const{return static_cast<E>(- data_ - 1);}
-    private:
-        data_type data_;
-    };
 
     template<typename T>
-    struct _Storage_Same{
+    struct _Result_Storage_Same{
     public:
         using ok_type = T;
         using err_type = T;
-        __fast_inline constexpr _Storage_Same(const Ok<T> & val):
+        __fast_inline constexpr _Result_Storage_Same(const Ok<T> & val):
             ok_data_(T(val)), is_ok_(true){;}    
-        __fast_inline constexpr _Storage_Same(const Err<T> & val):
+        __fast_inline constexpr _Result_Storage_Same(const Err<T> & val):
             err_data_(T(val)), is_ok_(false){;}
     
-        __fast_inline constexpr _Storage_Same(const _Storage_Same &) = default;
-        __fast_inline constexpr _Storage_Same(_Storage_Same &&) = default;
+        __fast_inline constexpr _Result_Storage_Same(const _Result_Storage_Same &) = default;
+        __fast_inline constexpr _Result_Storage_Same(_Result_Storage_Same &&) = default;
     
         __fast_inline constexpr bool is_ok() const{return is_ok_;}
         __fast_inline constexpr bool is_err() const{return !is_ok_;}
@@ -163,17 +135,17 @@ namespace details{
     };
     
     template<typename E>
-    struct _Storage_ErrorOnly{
+    struct _Result_Storage_ErrorOnly{
         using ok_type = void;
         using err_type = E;
         using Data = std::optional<E>;
-        __fast_inline constexpr _Storage_ErrorOnly(Ok<void> &&):
+        __fast_inline constexpr _Result_Storage_ErrorOnly(Ok<void> &&):
             data_(std::nullopt){;}
     
-        __fast_inline constexpr _Storage_ErrorOnly(const Ok<void> &):
+        __fast_inline constexpr _Result_Storage_ErrorOnly(const Ok<void> &):
             data_(std::nullopt){;}
     
-        __fast_inline constexpr _Storage_ErrorOnly(const Err<E> & val):
+        __fast_inline constexpr _Result_Storage_ErrorOnly(const Err<E> & val):
             data_(val.get()){;}
     
         __fast_inline constexpr bool is_ok() const{return !data_.has_value();}
@@ -186,18 +158,18 @@ namespace details{
     };
 
     template<typename T>
-    struct _Storage_OkOnly{
+    struct _Result_Storage_OkOnly{
         using ok_type = T;
         using err_type = void;
         using Data = std::optional<T>;
-        __fast_inline constexpr _Storage_OkOnly(const Ok<T> & val):
+        __fast_inline constexpr _Result_Storage_OkOnly(const Ok<T> & val):
             data_(val.get()){;}
     
-        __fast_inline constexpr _Storage_OkOnly(const Err<void> &):
+        __fast_inline constexpr _Result_Storage_OkOnly(const Err<void> &):
             data_(std::nullopt){;}
     
-        __fast_inline constexpr _Storage_OkOnly(const _Storage_OkOnly &) = default;
-        __fast_inline constexpr _Storage_OkOnly(_Storage_OkOnly &&) = default;
+        __fast_inline constexpr _Result_Storage_OkOnly(const _Result_Storage_OkOnly &) = default;
+        __fast_inline constexpr _Result_Storage_OkOnly(_Result_Storage_OkOnly &&) = default;
     
         __fast_inline constexpr bool is_ok() const{return data_.has_value();}
         __fast_inline constexpr bool is_err() const{return !data_.has_value();}
@@ -208,20 +180,20 @@ namespace details{
         Data data_;
     };
     
-    struct _Storage_VoidOnly {
+    struct _Result_Storage_VoidOnly {
         using ok_type = void;
         using err_type = void;
 
-        __fast_inline constexpr _Storage_VoidOnly(const Ok<void> &):
+        __fast_inline constexpr _Result_Storage_VoidOnly(const Ok<void> &):
             is_ok_(true){}
-        __fast_inline constexpr _Storage_VoidOnly(const Err<void> &):
+        __fast_inline constexpr _Result_Storage_VoidOnly(const Err<void> &):
             is_ok_(false){}
 
-        __fast_inline constexpr _Storage_VoidOnly(const _Storage_VoidOnly &) = default;
-        __fast_inline constexpr _Storage_VoidOnly(_Storage_VoidOnly &&) = default;
+        __fast_inline constexpr _Result_Storage_VoidOnly(const _Result_Storage_VoidOnly &) = default;
+        __fast_inline constexpr _Result_Storage_VoidOnly(_Result_Storage_VoidOnly &&) = default;
         
-        __fast_inline constexpr _Storage_VoidOnly& operator=(const _Storage_VoidOnly &) = default;
-        __fast_inline constexpr _Storage_VoidOnly& operator=(_Storage_VoidOnly &&) = default;
+        __fast_inline constexpr _Result_Storage_VoidOnly& operator=(const _Result_Storage_VoidOnly &) = default;
+        __fast_inline constexpr _Result_Storage_VoidOnly& operator=(_Result_Storage_VoidOnly &&) = default;
 
         __fast_inline constexpr bool is_ok() const{return is_ok_;}
         __fast_inline constexpr bool is_err() const{return !is_ok_;}
@@ -235,18 +207,18 @@ namespace details{
     template<typename T>
     using storage_same_type_t = std::conditional_t<
         std::is_same_v<T, void>,
-        _Storage_VoidOnly,
-        _Storage_Same<T>
+        _Result_Storage_VoidOnly,
+        _Result_Storage_Same<T>
     >;
 
     template<typename T, typename E>
     using storage_diff_type_t = std::conditional_t<
         std::is_same_v<T, void>,
-        _Storage_ErrorOnly<E>,
+        _Result_Storage_ErrorOnly<E>,
         std::conditional_t<
             std::is_same_v<E, void>,
-            _Storage_OkOnly<T>,
-            _Storage_Diff<T, E>
+            _Result_Storage_OkOnly<T>,
+            _Result_Storage_Diff<T, E>
         >
     >;
 
@@ -258,11 +230,7 @@ namespace details{
     >;
 
     template<typename T, typename E>
-    using storage_t = std::conditional_t<
-        (std::is_unsigned_v<T> && std::is_unsigned_v<E>),
-        _Storage_Uint<T, E>,
-        storage_not_int_t<T, E>
-    >;
+    using storage_t = storage_not_int_t<T, E>;
 }
 
 
@@ -352,7 +320,7 @@ public:
         typename Fn,
         typename FDecay = std::decay_t<Fn>,
 
-        typename TFReturn = magic::functor_ret_t<FDecay>
+        typename TFReturn = tmp::functor_ret_t<FDecay>
     >
     [[nodiscard]] __fast_inline constexpr auto map(Fn && fn) const -> Result<TFReturn, E>{
         if (is_ok()) {
@@ -375,11 +343,11 @@ public:
     template<
         typename F,//函数的类型
         typename FDecay = std::decay_t<F>,
-        typename TFReturn = magic::functor_ret_t<FDecay>,
+        typename TFReturn = tmp::functor_ret_t<FDecay>,
         typename TFReturnIsResult = is_result_t<TFReturn>,
         typename TOk = std::conditional_t<
             is_result_v<TFReturn>,
-            result_ok_type_t<TFReturn>, 
+            result_ok_t<TFReturn>, 
             TFReturn
         >
         // 如果返回值本身是Result 那么返回它的解包类型，否则返回原类型
@@ -457,7 +425,7 @@ public:
     }
 
     template<typename Fn,
-        typename TRet = magic::functor_ret_t<Fn>
+        typename TRet = tmp::functor_ret_t<Fn>
     >
     [[nodiscard]]__fast_inline constexpr Result<TRet, E> transform(Fn&& fn) const & {
         if(is_ok()) return Ok<TRet>(std::forward<Fn>(fn)(unwrap()));
@@ -605,8 +573,8 @@ public:
     template<
         typename FnOk,
         typename FnErr,
-        typename TOkReturn = magic::functor_ret_t<FnOk>,//函数返回值的类型
-        typename TErrReturn = magic::functor_ret_t<FnErr>//函数返回值的类型
+        typename TOkReturn = tmp::functor_ret_t<FnOk>,//函数返回值的类型
+        typename TErrReturn = tmp::functor_ret_t<FnErr>//函数返回值的类型
     >
     __fast_inline constexpr auto match(FnOk && fn_ok, FnErr && fn_err) const 
     -> Result<TOkReturn, TErrReturn>{

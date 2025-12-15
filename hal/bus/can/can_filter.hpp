@@ -3,7 +3,6 @@
 #include <initializer_list>
 #include <bitset>
 
-#include "core/sdk.hpp"
 #include "core/io/regs.hpp"
 #include "primitive/can/can_enum.hpp"
 #include "primitive/can/can_id.hpp"
@@ -112,10 +111,10 @@ public:
 
     void apply(const CanFilterConfig & cfg);
 private:
-    CAN_TypeDef * can_;
+    void * inst_;
     uint8_t nth_count_;
-    CanFilter(CAN_TypeDef * can, const Nth nth):
-        can_(can), nth_count_(nth.count()){};
+    CanFilter(void * inst, const Nth nth):
+        inst_(inst), nth_count_(nth.count()){};
 
     CanFilter(const CanFilter & other) = delete;
     CanFilter(CanFilter && other) = delete;

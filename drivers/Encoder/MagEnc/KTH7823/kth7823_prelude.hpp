@@ -7,31 +7,28 @@
 
 #include "hal/bus/spi/spidrv.hpp"
 
-namespace ymd::drivers{
+namespace ymd::drivers::kth7823{
 
-struct KTH7823_Prelude{
-    using Error = EncoderError;
+using Error = EncoderError;
 
-    template<typename T = void>
-    using IResult = Result<T, Error>;
+template<typename T = void>
+using IResult = Result<T, Error>;
 
-    enum class ZeroPulseWidth:uint8_t{
-        _90deg, _180deg, _270deg, _360deg
-    };
-
-    enum class ZeroPulsePhase:uint8_t{
-        _0deg, _90deg, _180deg, _270deg
-    };
-
-    enum class MagThreshold:uint8_t{
-        mT23, mT38, mT53, mT67, mT81, mT95, mT109, mT123
-    };
-
-    using RegAddr = uint8_t;
-
+enum class [[nodiscard]] ZeroPulseWidth:uint8_t{
+    _90deg, _180deg, _270deg, _360deg
 };
 
-struct KTH7823_Regs:public KTH7823_Prelude{
+enum class [[nodiscard]] ZeroPulsePhase:uint8_t{
+    _0deg, _90deg, _180deg, _270deg
+};
+
+enum class [[nodiscard]] MagThreshold:uint8_t{
+    mT23, mT38, mT53, mT67, mT81, mT95, mT109, mT123
+};
+
+using RegAddr = uint8_t;
+
+struct Regset final{
 
     struct R8_Zero_low:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x00;
@@ -93,10 +90,10 @@ struct KTH7823_Regs:public KTH7823_Prelude{
     }DEF_R8(rd_reg)
 };
 
-class KTH7823_Phy final:public KTH7823_Prelude{ 
+class [[nodiscard]] Phy final{ 
 public:
-    KTH7823_Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){}
-    KTH7823_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
+    Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){}
+    Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
         spi_drv_(hal::SpiDrv(spi, idx)){}
 
     [[nodiscard]] IResult<uint16_t> direct_read();

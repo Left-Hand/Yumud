@@ -307,11 +307,11 @@ def plot_results(
         est_y = [state[1] for state in estimated_states]
         color = colors[i % len(colors)]
         
-        pos_errors = [
+        e1ors = [
             np.sqrt((true_x[i]-est_x[i])**2 + (true_y[i]-est_y[i])**2)
             for i in range(len(true_x))
         ]
-        axes[1, 1].plot(time_steps, pos_errors, color=color, linestyle='-', label=title, linewidth=2)
+        axes[1, 1].plot(time_steps, e1ors, color=color, linestyle='-', label=title, linewidth=2)
     
     axes[1, 1].set_xlabel('time(s)')
     axes[1, 1].set_ylabel('position error')

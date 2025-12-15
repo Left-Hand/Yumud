@@ -9,7 +9,7 @@
 #include "core/utils/hash_func.hpp"
 #include "core/clock/time.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 
 #include "primitive/memory.hpp"

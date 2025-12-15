@@ -2,7 +2,7 @@
 
 #include "hal/timer/timer_oc.hpp"
 #include "hal/dma/dma.hpp"
-
+#include "core/utils/default.hpp"
 #include <ranges>
 
 
@@ -25,8 +25,12 @@ void BurstDmaPwm::invoke(){
 }
 
 void BurstDmaPwm::install(){
-    dma_channel_.init({DmaMode::ToPeriph, DmaPriority::Ultra});
-    timer_oc_.init({});
+    dma_channel_.init({
+        .mode = DmaMode::ToPeriph, 
+        .priority = DmaPriority::Ultra
+    });
+    
+    timer_oc_.init(Default);
     timer_oc_.enable_cvr_sync(EN);
 }
 

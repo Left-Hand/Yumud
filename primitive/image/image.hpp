@@ -6,9 +6,9 @@
 namespace ymd{
 
 template<typename T>
-class Image final{
+class [[nodiscard]] Image final{
 public:
-    enum class Error{
+    enum class [[nodiscard]] Error{
         OutOfMemory,
         EmptySize,
         LoadFromNull,
@@ -20,7 +20,7 @@ public:
 
     explicit Image(const Vec2u size):
         size_(size),
-        data_(std::make_shared<T[]>(size.x * size.y)){
+        resource_(std::make_shared<T[]>(size.x * size.y)){
             ASSERT(not size.is_zero());
         }
 
@@ -37,7 +37,7 @@ public:
 
     explicit Image(std::shared_ptr<T[]> data, const Vec2u size):
         size_(size),
-        data_(data){
+        resource_(data){
             ASSERT(not size.is_zero());
         }
 
@@ -55,27 +55,27 @@ public:
     Image& operator=(Image&& other) noexcept {
         if (not this->is_shared_with(other)) {
             this->size_ = std::move(other.size_);
-            this->data_ = std::move(other.data_);
+            this->resource_ = std::move(other.resource_);
             other.size_ = Vec2u{0,0};
-            other.data_ = nullptr;
+            other.resource_ = nullptr;
         }
         return *this;
     }
     
     Image(Image && other){
         this->size_ = other.size_;
-        this->data_ = std::move(other.data_);
+        this->resource_ = std::move(other.resource_);
     }
 
     Image & operator=(const Image& other) = delete;
-
     bool operator ==(const Image & other) const = delete;
+
     [[nodiscard]] Image<T> clone() const {
         const auto img_size = this->size();
         auto temp = Image<T>(img_size);
 
         for(size_t i = 0; i < img_size.x * img_size.y; i++){
-            temp.data()[i] = this->data()[i];
+            temp.head_ptr()[i] = this->head_ptr()[i];
         }
         return temp;
     }
@@ -92,14 +92,14 @@ public:
 
     template<typename ColorType2> 
     requires (sizeof(T) == sizeof(ColorType2))
-    [[nodiscard]] Image<ColorType2> make_mirror(){
+    [[nodiscard]] Image<ColorType2> shallow_copy(){
         return Image<ColorType2>(
-            std::reinterpret_pointer_cast<T[]>(this->ptr()),
+            std::reinterpret_pointer_cast<T[]>(this->resource()),
             this->size());
     }
 
     [[nodiscard]] constexpr bool is_shared_with(const Image<auto> & other) const {
-        return data_ == other.data_;
+        return resource_ == other.resource_;
     }
 
     void putpixel(const Vec2u pos, const T color) {
@@ -108,54 +108,54 @@ public:
     }
 
     [[nodiscard]] __fast_inline const T & operator[](const size_t index) const { 
-        return data_[index];
+        return resource_[index];
     }
 
     [[nodiscard]] __fast_inline T & operator[](const size_t index) {
-        return data_[index]; }
+        return resource_[index]; }
 
     [[nodiscard]] __fast_inline T & operator[](const Vec2u pos) {
-        return data_[pos.x + pos.y * this->size().x]; }
+        return resource_[pos.x + pos.y * this->size().x]; }
 
     [[nodiscard]] __fast_inline const T & operator[](const Vec2u pos) const {
-        return data_[pos.x + pos.y * this->size().x]; }
+        return resource_[pos.x + pos.y * this->size().x]; }
 
 
     template<typename ToColorType>
     [[nodiscard]] __fast_inline ToColorType at(const Vec2u pos) const {
         assert_position_is_inrange(pos);
-        return data_[pos.x + pos.y * this->size().x]; }
+        return resource_[pos.x + pos.y * this->size().x]; }
 
     [[nodiscard]] __fast_inline T & at(const Vec2u pos){
         assert_position_is_inrange(pos);
-        return data_[pos.x + pos.y * this->size().x]; }
+        return resource_[pos.x + pos.y * this->size().x]; }
 
     [[nodiscard]] __fast_inline const T & at(const Vec2u pos)const{
         assert_position_is_inrange(pos);
-        return data_[pos.x + pos.y * this->size().x]; }
+        return resource_[pos.x + pos.y * this->size().x]; }
 
     void putpixel_unchecked(const Vec2u pos, const T color) 
-        { data_[this->size().x * pos.y + pos.x] = color; }
+        { resource_[this->size().x * pos.y + pos.x] = color; }
     void getpixel_unchecked(const Vec2u pos, T & color) const 
-        { color = data_[this->size().x * pos.y + pos.x]; }
+        { color = resource_[this->size().x * pos.y + pos.x]; }
 
 private:
 
 
     Vec2u size_ = Vec2u::ZERO;
 
-    std::shared_ptr<T[]> data_;
+    std::shared_ptr<T[]> resource_;
 
     __fast_inline void assert_position_is_inrange(const Vec2u pos){
         ASSERT(size_.x > pos.x and size_.y > pos.y);
     }
 
 public:
-    constexpr Vec2u size() const { return size_; }
+    [[nodiscard]] constexpr Vec2u size() const { return size_; }
 
-    constexpr const T * data() const {return this->data_.get();}
-    constexpr T * data() {return this->data_.get();}
-    constexpr std::shared_ptr<T[]> ptr() const {return this->data_;}
+    [[nodiscard]] constexpr const T * head_ptr() const {return this->resource_.get();}
+    [[nodiscard]] constexpr T * head_ptr() {return this->resource_.get();}
+    [[nodiscard]] constexpr std::shared_ptr<T[]> resource() const {return this->resource_;}
 };
 
 
@@ -170,6 +170,4 @@ __inline auto make_bina_image(const Vec2u size){return make_image<Binary>(size);
 
 
 }
-
-#include "image.tpp"
 

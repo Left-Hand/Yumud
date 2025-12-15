@@ -2,25 +2,22 @@
 
 #include "kth7823_prelude.hpp"
 
-namespace ymd::drivers{
-class KTH7823 final:
-    public MagEncoderIntf, 
-    public KTH7823_Regs{
+namespace ymd::drivers::kth7823{
+class KTH7823 final{
 public:
-    using Phy = KTH7823_Phy;
     explicit KTH7823(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         phy_(Phy{spi, rank}){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] IResult<Angle<uq32>> read_lap_angle(){
-        return Ok(Angle<uq32>::from_turns(lap_turns_));
+    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle(){
+        return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> set_zero_angle(const Angle<uq32> angle);
+    [[nodiscard]] IResult<> set_zero_angle(const Angular<uq32> angle);
 
     [[nodiscard]] IResult<> set_trim_x(const real_t k);
 
@@ -32,14 +29,13 @@ public:
 
     [[nodiscard]] IResult<> set_direction(const RotateDirection direction);
 
-    [[nodiscard]] IResult<MagStatus> get_mag_status();
 
     [[nodiscard]] IResult<> set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase);
 
     [[nodiscard]] IResult<> set_pulse_per_turn(const uint16_t ppt);
 
 private:
-
+    Regset regset_ = {};
     Phy phy_;
     uq32 lap_turns_ = 0;
 

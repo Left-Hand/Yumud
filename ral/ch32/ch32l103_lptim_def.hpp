@@ -9,7 +9,7 @@
 
 namespace CH32L103{
 
-#define LPTIM_EVENTS\
+#define DEF_LPTIM_FLAGS\
     uint32_t CMPM:1;\
     uint32_t ARRM:1;\
     uint32_t EXTTRIG:1;\
@@ -21,7 +21,7 @@ namespace CH32L103{
 struct R32_LPTIM_ISR{
     static constexpr uint32_t offset = 0x00;
 
-    LPTIM_EVENTS;
+    DEF_LPTIM_FLAGS;
     uint32_t DIR_SYNC:1;
     uint32_t :24;
 };
@@ -29,7 +29,7 @@ struct R32_LPTIM_ISR{
 struct R32_LPTIM_ICR{
     static constexpr uint32_t offset = 04;
 
-    LPTIM_EVENTS;
+    DEF_LPTIM_FLAGS;
     uint32_t :25;
 };
 
@@ -37,7 +37,7 @@ struct R32_LPTIM_ICR{
 struct R32_LPTIM_IER{
     static constexpr uint32_t offset = 0x08;
 
-    LPTIM_EVENTS;
+    DEF_LPTIM_FLAGS;
 };
 
 struct R32_LPTIM_CFGR{
@@ -109,7 +109,7 @@ struct LPTIM_Def{
     volatile R32_LPTIM_CNT CNT;
 
     struct Events{
-        LPTIM_EVENTS;
+        DEF_LPTIM_FLAGS;
     };
 
     bool is_cnt_matched(){
@@ -267,5 +267,5 @@ struct LPTIM_Def{
 static constexpr LPTIM_Def * LPTIM1 = reinterpret_cast<LPTIM_Def *>(0x40007C00);
 
 
-#undef LPTIM_EVENTS
+#undef DEF_LPTIM_FLAGS
 }

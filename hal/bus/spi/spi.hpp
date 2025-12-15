@@ -8,12 +8,11 @@
 #include "hal/bus/bus_enums.hpp"
 #include "primitive/hal_result.hpp"
 #include "spi_primitive.hpp"
-#include "core/sdk.hpp"
 
 namespace ymd::hal{
 
 
-class Spi{
+class [[nodiscard]] Spi{
 public:
 
     #ifndef SPI_MAX_PINS
@@ -25,7 +24,7 @@ public:
     Spi(const hal::Spi &) = delete;
     Spi(hal::Spi &&) = delete;
 
-    
+
     HalResult borrow(const SpiSlaveRank rank){
         if(false == owner_.is_borrowed()){
             owner_.borrow(rank);
@@ -45,30 +44,20 @@ public:
 
     [[nodiscard]] bool is_occupied(){return owner_.is_borrowed();}
 
-    [[nodiscard]] virtual hal::HalResult read(uint32_t & data) = 0;
-    [[nodiscard]] virtual hal::HalResult write(const uint32_t data) = 0;
-    [[nodiscard]] virtual hal::HalResult transceive(uint32_t & data_rx, const uint32_t data_tx) = 0;
+    [[nodiscard]] virtual hal::HalResult blocking_read(uint32_t & data) = 0;
+    [[nodiscard]] virtual hal::HalResult blocking_write(const uint32_t data) = 0;
+    [[nodiscard]] virtual hal::HalResult blocking_transceive(uint32_t & data_rx, const uint32_t data_tx) = 0;
 
-    [[nodiscard]] virtual hal::HalResult set_data_width(const uint8_t bits) = 0;
-    [[nodiscard]] virtual hal::HalResult set_baudrate(const uint32_t baud) = 0;
+    [[nodiscard]] virtual hal::HalResult set_word_width(const uint8_t bits) = 0;
+    [[nodiscard]] virtual hal::HalResult set_baudrate(const SpiBaudrate baud) = 0;
     [[nodiscard]] virtual hal::HalResult set_bitorder(const BitOrder bitorder) = 0;
 
 
-    struct Config{
-        uint32_t baudrate;
-        SpiMode mode = SpiMode::_3;
-        CommStrategy tx_strategy = CommStrategy::Blocking;
-        CommStrategy rx_strategy = CommStrategy::Blocking;
-    };
-
-
     [[nodiscard]]
-    Option<SpiSlaveRank> allocate_cs_gpio(Some<hal::GpioIntf *> io);
+    Option<SpiSlaveRank> allocate_cs_pin(Some<hal::GpioIntf *> io);
 
 protected:
     VGpioPort <SPI_MAX_PINS> cs_port_ = VGpioPort<SPI_MAX_PINS>();
-    CommStrategy tx_strategy_ = CommStrategy::Nil;
-    CommStrategy rx_strategy_ = CommStrategy::Nil;
     PeripheralOwnershipTracker owner_ = {};
     Option<Nth> last_nth_ = None;
 
@@ -76,18 +65,18 @@ protected:
         const auto nth = Nth(rank.count());
         if(not cs_port_.is_nth_valid(nth))
             return hal::HalResult::NoSelecter;
-        cs_port_[nth].clr();
+        cs_port_[nth].set_low();
         last_nth_ = Some(nth);
         return hal::HalResult::Ok();
     }
 
     __fast_inline void trail(){
         const auto nth = last_nth_.unwrap();
-        cs_port_[nth].set();
+        cs_port_[nth].set_high();
         last_nth_ = None;
     }
 
-    void bind_cs_gpio(
+    void bind_cs_pin(
         Some<hal::GpioIntf *> gpio, 
         const Nth nth
     ){

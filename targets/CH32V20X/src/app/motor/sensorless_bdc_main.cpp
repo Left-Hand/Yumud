@@ -5,21 +5,22 @@
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
+#include "core/utils/default.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/bipolarity_abstract.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/timer/hw_singleton.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/uart/uartsw.hpp"
 
 
-#include "dsp/filter/butterworth/ButterSideFilter.hpp"
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
+#include "dsp/filter/butterworth/side.hpp"
+#include "dsp/filter/butterworth/band.hpp"
 
 #include "dsp/filter/homebrew/debounce_filter.hpp"
-#include "dsp/controller/adrc/nltd2o.hpp"
-#include "dsp/controller/adrc/ltd2o.hpp"
+#include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
+#include "dsp/controller/adrc/linear/ltd2o.hpp"
 #include "dsp/homebrew/edge_counter.hpp"
 #include "dsp/controller/smc/sliding_mode_ctrl.hpp"
 
@@ -48,7 +49,11 @@ using BandpassFilter = dsp::ButterBandpassFilter<iq16, 4>;
 [[maybe_unused]] static 
 void at8222_tb(){
 
-    hal::uart2.init({4000000, CommStrategy::Nil});
+    hal::uart2.init({
+        hal::UART2_REMAP_PA2_PA3,
+        4000000, 
+        CommStrategy::Nil
+    });
 
     DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.no_brackets(EN);
@@ -58,16 +63,25 @@ void at8222_tb(){
 
     //因为是中心对齐的顶部触发 所以频率翻�?
     timer.init({
+        .remap = hal::TIM3_REMAP_B4_B5_B0_B1,
         .count_freq = hal::NearestFreq(ISR_FREQ * 2),
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
-    }, EN);
+    })
+            .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+    timer.start();
 
     auto & pwm_pos = timer.oc<1>();
     auto & pwm_neg = timer.oc<2>();
 
     
-    pwm_pos.init({});
-    pwm_neg.init({});
+    pwm_pos.init(Default);
+    pwm_neg.init(Default);
 
 
     hal::adc1.init(
@@ -85,7 +99,10 @@ void at8222_tb(){
 
     timer.set_trgo_source(hal::TimerTrgoSource::OC4R);
 
-    timer.oc<4>().init({.plant_en = DISEN});
+    timer.oc<4>().init([]{
+        auto config = timer.oc<4>().default_config();
+        return config;
+    }());
 
     // timer.oc(4).cvr() = timer.arr() - 1; 
     // timer.oc(4).cvr() = int(timer.arr() * 0.1_r); 
@@ -186,7 +203,7 @@ void at8222_tb(){
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
-                watch_gpio.toggle();
+                watch_gpio.write(~watch_gpio.read());
                 volt = hal::adc1.inj<1>().get_voltage();
                 const auto curr_raw = volt_2_current(volt);
 
@@ -194,7 +211,7 @@ void at8222_tb(){
                 lpf_mid.update(curr_raw);
                 // curr = lpf.get();
                 curr = curr_raw;
-                watch_gpio.toggle();
+                watch_gpio.write(~watch_gpio.read());
                 // bpf.update(curr_raw);
 
                 bpf.update(curr_raw);
@@ -209,9 +226,9 @@ void at8222_tb(){
                 // const auto spd_cmd = kp * (pos_targ - pos) + kd * (spd_targ - spd);
                 // pi_ctrl.update(spd_targ, spd);
                 // pwm_pos = pi_ctrl.get();
-                // pwm_pos = 0.87_r * abs(sinpu(time()));
-                // pwm_pos = 0.7_r + 0.17_r * abs(sinpu(time()));
-                // pwm_pos = 0.13_r + 0.817_r * abs(sinpu(time()));
+                // pwm_pos = 0.87_r * abs(math::sinpu(time()));
+                // pwm_pos = 0.7_r + 0.17_r * abs(math::sinpu(time()));
+                // pwm_pos = 0.13_r + 0.817_r * abs(math::sinpu(time()));
                 pwm_pos.set_dutycycle(0_r);
                 // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
                 // pwm_neg = LERP(0.32_r, 0.32_r, sin(time()) * 0.5_r + 0.5_r);
@@ -238,27 +255,27 @@ void at8222_tb(){
         // pwm_pos = 0.9_r + 0.1_r * sin(5 * time());
         // spd_targ = 7.0_r + 3 * sin(5 * time());
         // spd_targ = 8.0_r + 1.0_r * ((sin(2.0_r * time())) > 0 ? 1 : -1);
-        // spd_targ = 8.0_r + 1.0_r * sinpu(2.0_r * time());
-        const auto ctime = clock::time();
+        // spd_targ = 8.0_r + 1.0_r * math::sinpu(2.0_r * time());
+        const auto now_secs = clock::time();
 
         #define TEST_MODE 1
 
         #if TEST_MODE == 0
         spd_targ = 12;
-        pos_targ = 10.0_r * ctime + 2*frac(ctime);
+        pos_targ = 10.0_r * now_secs + 2*frac(now_secs);
         #elif TEST_MODE == 1
-        spd_targ = 7.0_r + 1.0_r * sinpu(1.3_r * ctime);
-        pos_targ = 7.0_r * ctime + real_t(-1.0/6) * cospu(1.3_r * ctime);
+        spd_targ = 7.0_r + 1.0_r * math::sinpu(1.3_r * now_secs);
+        pos_targ = 7.0_r * now_secs + real_t(-1.0/6) * math::cospu(1.3_r * now_secs);
         #endif
         // spd_targ = 9.0_r + 1.0_r * ((sin(1.0_r * time())) > 0 ? 1 : ;
         // spd_targ = 9.0_r + 1.0_r * -1;
         // spd_targ = 16.57_r;
-        // trackin_sig = sign(sin(ctime * 3));
-        // trackin_sig = real_t(int(sin(ctime * 3) * 32)) / 32;
-        // trackin_sig = real_t(int(0.2_r * sin(ctime * 3) * 32)) / 32;
-        // trackin_sig = real_t(int(0.2_r * ctime * 32)) / 32;
-        // trackin_sig = 1/(1 + exp(4 * tpzpu(3 * ctime)));
-        trackin_sig = 10 * CLAMP2(sinpu(7 * ctime), 0.5_r);
+        // trackin_sig = sign(sin(now_secs * 3));
+        // trackin_sig = real_t(int(sin(now_secs * 3) * 32)) / 32;
+        // trackin_sig = real_t(int(0.2_r * sin(now_secs * 3) * 32)) / 32;
+        // trackin_sig = real_t(int(0.2_r * now_secs * 32)) / 32;
+        // trackin_sig = 1/(1 + exp(4 * tpzpu(3 * now_secs)));
+        trackin_sig = 10 * CLAMP2(math::sinpu(7 * now_secs), 0.5_r);
         // trackin_sig = tpzpu(t);
         
         // DEBUG_PRINTLN_IDLE(pos_targ, spd_targ, bpf.get(), volt, pi_ctrl.get(), bpf.get(), , exe_micros);

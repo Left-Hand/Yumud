@@ -3,7 +3,14 @@
 #include "drivers/IMU/details/InvensenseIMU.hpp"
 
 
+// 参考来源：
+
+// 无许可证
 // https://github.com/NOKOLat/STM32_ICM45686/blob/master/ICM45686.h
+
+//  * 注意：本实现为完全原创，未使用上述项目的任何代码。
+//  * 参考仅用于理解问题领域，未复制任何具体实现。
+
 
 namespace ymd::drivers{
 

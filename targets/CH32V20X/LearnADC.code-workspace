@@ -73,7 +73,7 @@
             "condition_variable": "cpp",
             "csetjmp": "cpp",
             "csignal": "cpp",
-            "ctime": "cpp",
+            "now_secs": "cpp",
             "cuchar": "cpp",
             "forward_list": "cpp",
             "list": "cpp",

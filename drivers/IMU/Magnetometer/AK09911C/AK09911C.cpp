@@ -83,16 +83,16 @@ IResult<Vec3<int8_t>> Self::get_coeff(){
         res.is_err()) return Err(res.unwrap_err());
     
     return Ok(Vec3<uint8_t>{
-        regs_.asax_reg.data, 
-        regs_.asay_reg.data, 
-        regs_.asaz_reg.data
+        regs_.asax_reg.bits, 
+        regs_.asay_reg.bits, 
+        regs_.asaz_reg.bits
     });
 }
 IResult<> Self::blocking_update(){
     static constexpr auto READ_TIMEOUT_MS = 10ms;
-    const auto begin_u = clock::millis();
+    const auto begin_ms = clock::millis();
 
-    while(clock::millis() - begin_u < READ_TIMEOUT_MS) {
+    while(clock::millis() - begin_ms < READ_TIMEOUT_MS) {
         if(const auto res = is_data_ready(); res.is_err()){
             return CHECK_ERR(Err(res.unwrap_err()));
         }else {

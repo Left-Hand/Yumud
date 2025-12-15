@@ -9,7 +9,7 @@
 
 #include "iq/iqmath.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
     
 template<typename T>
@@ -23,11 +23,11 @@ __attribute__((always_inline)) constexpr T powfi(const T base, const size_t expo
         T ret = 0;
         if(1 < exponent){
             for(size_t i = 1; i < exponent; ++i){
-                ret *= base;
+                ret = ret * base;
             }
         }else{
             for(size_t i = 1; i < -exponent; ++i){
-                ret /= base;
+                ret = ret / base;
             }
         }
         return ret;
@@ -35,7 +35,7 @@ __attribute__((always_inline)) constexpr T powfi(const T base, const size_t expo
 }
 
 template<std::floating_point T>
-__attribute__((always_inline)) constexpr T sinpu(const T val){
+__attribute__((always_inline)) constexpr T math::sinpu(const T val){
     constexpr T tau = static_cast<T>(M_TWOPI);
     return std::sin(static_cast<T>(val * tau));
 }
@@ -86,7 +86,7 @@ __attribute__((always_inline)) constexpr T normal(const T a, const T b){
 
 
 template<std::floating_point T>
-std::array<T, 2> sincospu(const T turns){
+std::array<T, 2> math::sincospu(const T turns){
     const auto radian = turns * static_cast<T>(TAU);
     return {std::sin(radian), std::cos(radian)};
 }

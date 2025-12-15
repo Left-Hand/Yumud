@@ -2,7 +2,10 @@
 
 //这个驱动还未实现
 
+// MIT license
 // https://github.com/pololu/lsm303-arduino/blob/master/LSM303.h
+
+// CC 4.0 BY-SA版权
 // https://blog.csdn.net/cp1300/article/details/86997168
 
 #include "details/LSM303_Prelude.hpp"

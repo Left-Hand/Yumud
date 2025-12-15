@@ -16,16 +16,18 @@ using namespace ymd::drivers;
 #define UART_DEST UART_DEST_PC
 // #define UART_DEST UART_DEST_FPGA
 
-#define SCL_GPIO hal::PD<2>()
-#define SDA_GPIO hal::PC<12>()
+#define SCL_PIN hal::PD<2>()
+#define SDA_PIN hal::PC<12>()
 void paj7620_main(){
-    auto & logger = DEBUGGER_INST;
-    logger.init({576000});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;  
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;  
 
-    hal::I2cSw i2c = hal::I2cSw{&scl_gpio_, &sda_gpio_};
+    hal::I2cSw i2c = hal::I2cSw{&scl_pin_, &sda_pin_};
     i2c.init({400_KHz});
 
 

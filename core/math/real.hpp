@@ -24,10 +24,7 @@ using real_t = ymd::fixed_t<IQ_DEFAULT_Q, int32_t>;
 // using real_t = float;
 // #endif
 
-using namespace ymd::literals;
-
-namespace ymd{
-
+namespace ymd::literals{
 [[nodiscard]] consteval real_t operator"" _r(long double x){
     return real_t(x);
 }
@@ -36,6 +33,12 @@ namespace ymd{
     return real_t(x);
 }
 
+}
+
+using namespace ymd::literals;
+
+namespace ymd::math{
+    
 
 template<std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -115,42 +118,6 @@ bool is_equal_approx_ratio(const T a, const T b, const T epsilon, const T min_ep
     diff /= avg_size;
     return diff < epsilon;
 }
-
-template<size_t Q>
-[[nodiscard]] bool is_equal_approx(
-    const fixed_t<Q, int32_t> a, 
-    const fixed_t<Q, int32_t> b,
-    const fixed_t<Q, int32_t> epsilon
-) {
-    // Check for exact equality first, required to handle "infinity" values.
-    if (a - b == int32_t(0)) {
-        return true;
-    }
-    // Then check for approximate equality.
-    fixed_t<Q, int32_t> tolerance = fixed_t<Q, int32_t>() * (a < 0 ? -a : a);
-    if (tolerance < fixed_t<Q, int32_t>(epsilon)) {
-        tolerance = fixed_t<Q, int32_t>(epsilon);
-    }
-    return ((a - b < 0) ? b - a : a - b) < tolerance;
-}
-
-template<size_t Q>
-[[nodiscard]] bool is_equal_approx_ratio(
-    const fixed_t<Q, int32_t> a, 
-    const fixed_t<Q, int32_t> b, 
-    fixed_t<Q, int32_t> epsilon, 
-    fixed_t<Q, int32_t> min_epsilon
-){
-
-    fixed_t<Q, int32_t> diff = ymd::abs(a - b);
-    if (diff == 0 || diff < min_epsilon) {
-        return true;
-    }
-    fixed_t<Q, int32_t> avg_size = (ymd::abs(a) + ymd::abs(b)) >> 1;
-    diff /= avg_size;
-    return diff < epsilon;
-}
-
 
 
 template<std::floating_point T>

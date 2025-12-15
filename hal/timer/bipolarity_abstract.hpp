@@ -8,7 +8,7 @@ namespace ymd::hal{
 //将输出通道和互补输出通道(共轭通道)作为一个双极性pwm物理层的两个通道
 //当输入为正时 原始输出通道作业 互补输出通道关闭
 //当输入为负时 原始输出通道关闭 互补输出通道作业
-class [[nodiscard]] BipolarityTimerOcConjugate final:public PwmIntf{
+class [[nodiscard]] BipolarityTimerOcConjugate final{
 public:
     BipolarityTimerOcConjugate(
         TimerOC & oc, 
@@ -28,7 +28,7 @@ public:
                 ocn_.enable_output(EN);
             }
         }
-        oc_.set_dutycycle(abs(value));
+        oc_.set_dutycycle(math::abs(value));
     }
 private:
     TimerOC & oc_;
@@ -40,14 +40,14 @@ private:
 //将两个输出通道作为一个双极性pwm物理层的两个通道
 //当输入为正时 高端输出通道作业 低端输出通道关闭
 //当输入为负时 高端输出通道关闭 低端输出通道作业
-class [[nodiscard]] BipolarityTimerOcPair final:public PwmIntf{
+class [[nodiscard]] BipolarityTimerOcPair final{
 public:
     BipolarityTimerOcPair(TimerOC & pos_oc, TimerOC & neg_oc):
         pos_oc_(pos_oc),
         neg_oc_(neg_oc){;}
 
     __fast_inline void set_dutycycle(const iq16 value){
-        const bool is_negative = signbit(value);
+        const bool is_negative = math::signbit(value);
         const iq16 zero_value = is_inversed_ ? 1 : 0;
         const auto abs_value = (is_inversed_) ? (1 - ABS(value)) : ABS(value);
 

@@ -8,7 +8,7 @@
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
 #endif
 
-namespace ymd::ral::CH32{
+namespace ymd::ral::ch32::common_uart{
 
 struct R16_STATR{
     uint16_t PE:1;

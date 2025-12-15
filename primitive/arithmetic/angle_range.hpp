@@ -1,6 +1,6 @@
 #pragma once
 
-#include "angle.hpp"
+#include "angular.hpp"
 
 namespace ymd{
 // https://zhuanlan.zhihu.com/p/576032998
@@ -26,32 +26,34 @@ namespace ymd{
 // 正角（positive angle）：逆时针旋转的角为正角。
 
 template<typename T>
-struct [[nodiscard]] AngleRange{
-    Angle<T> start;
-    Angle<T> interval;
+struct [[nodiscard]] AngularRange{
+    Angular<T> start;
+    Angular<T> interval;
 
-    static constexpr AngleRange from_uninitialized(){
-        return AngleRange();
+    static constexpr AngularRange STRAIGHT = AngularRange(Angular<T>::ZERO, Angular<T>::HALF);
+
+    static constexpr AngularRange from_uninitialized(){
+        return AngularRange();
     }
 
-    static constexpr AngleRange from_start_and_stop(
-        Angle<T> _start, Angle<T> _stop
+    static constexpr AngularRange from_start_and_stop(
+        Angular<T> _start, Angular<T> _stop
     ){
-        return AngleRange{_start, _stop - _start};
+        return AngularRange{_start, _stop - _start};
     }
 
 
-    static constexpr AngleRange from_start_and_interval(
-        Angle<T> _start, Angle<T> _interval
+    static constexpr AngularRange from_start_and_interval(
+        Angular<T> _start, Angular<T> _interval
     ){
-        return AngleRange{_start, _interval};
+        return AngularRange{_start, _interval};
     }
 
-    constexpr std::tuple<Angle<T>, Angle<T>> start_and_stop() const {
+    constexpr std::tuple<Angular<T>, Angular<T>> start_and_stop() const {
         return {start, start + interval};
     }
 
-    constexpr Angle<T> stop() const {
+    constexpr Angular<T> stop() const {
         return start + interval;
     }
 
@@ -63,70 +65,71 @@ struct [[nodiscard]] AngleRange{
         return interval.is_negative();
     }
 
-    constexpr AngleRange<T> swapped() const {
+    constexpr AngularRange<T> swapped() const {
         return {start - interval, -interval};
     }
 
-    constexpr AngleRange<T> clockwised() const {
+    constexpr AngularRange<T> clockwised() const {
         if(is_clockwise()) return *this;
         return swapped();
     }
 
-    constexpr AngleRange<T> counter_clockwised() const {
+    constexpr AngularRange<T> counter_clockwised() const {
         if(is_counter_clockwise()) return *this;
         return swapped();
     }
 
-
-    constexpr AngleRange<T> normalize_counter_clockwised() const {
+    #if 0
+    constexpr AngularRange<T> normalize_counter_clockwised() const {
         if(is_counter_clockwise()) {
             // Already counter-clockwise, just normalize the start angle
-            Angle<T> normalized_start = start.normalized();
+            Angular<T> normalized_start = start.normalized();
             return {normalized_start, interval};
         }
         
         // Convert clockwise to counter-clockwise
         // For counter-clockwise representation of a clockwise range,
         // we need to adjust the start angle
-        Angle<T> new_start = (start + interval).normalized();
-        Angle<T> new_interval = -interval;
+        Angular<T> new_start = (start + interval).normalized();
+        Angular<T> new_interval = -interval;
         
         // Ensure the new start is within [0, 1) range
-        Angle<T> normalized_start = new_start.normalized();
+        Angular<T> normalized_start = new_start.normalized();
         
         return {normalized_start, new_interval};
     }
 
-    constexpr bool is_major() const {
-        return interval.abs() > Angle<T>::HALF_LAP;
+
+    [[nodiscard]] constexpr bool is_major() const {
+        return interval.abs() > Angular<T>::HALF_LAP;
     }
 
-    constexpr bool is_minor() const {
-        return interval.abs() < Angle<T>::HALF_LAP;
+    [[nodiscard]] constexpr bool is_minor() const {
+        return interval.abs() < Angular<T>::HALF_LAP;
     }
 
-    constexpr bool is_straight() const {
-        return interval.abs() == Angle<T>::HALF_LAP;
+    [[nodiscard]] constexpr bool is_straight() const {
+        return interval.abs() == Angular<T>::HALF_LAP;
     }
 
-    constexpr bool is_full() const {
-        return interval.abs() >= Angle<T>::LAP;
+    [[nodiscard]] constexpr bool is_full() const {
+        return interval.abs() >= Angular<T>::LAP;
     }
 
-    constexpr Angle<T> sweep() const {
+    constexpr Angular<T> sweep() const {
         return interval.abs();
     }
 
-    constexpr Angle<T> bisector() const {
+    constexpr Angular<T> bisector() const {
         return start + interval / T(2);
     }
 
     // 改进的包含性检查 - 考虑逆时针为正的约定
-    constexpr bool contains_angle(Angle<T> angle) const {
+    [[nodiscard]] constexpr bool contains_angle(Angular<T> angle) const {
         // Normalize all angles to [0, 1) range for comparison
-        Angle<T> norm_start = start.normalized();
-        Angle<T> norm_stop = stop().normalized();
-        Angle<T> norm_angle = angle.normalized();
+        Angular<T> norm_start = start.unsigned_normalized();
+        Angular<T> norm_stop = stop().unsigned_normalized();
+        Angular<T> norm_angle = angle.unsigned_normalized();
         
         if (interval.is_positive()) {
             // Counter-clockwise direction (positive interval)
@@ -150,7 +153,7 @@ struct [[nodiscard]] AngleRange{
     }
 
     // 检查是否包含另一个范围
-    constexpr bool contains_range(const AngleRange& other) const {
+    [[nodiscard]] constexpr bool contains_range(const AngularRange& other) const {
         auto norm_this = normalize_counter_clockwised();
         auto norm_other = other.normalize_counter_clockwised();
         
@@ -177,7 +180,7 @@ struct [[nodiscard]] AngleRange{
     }
 
     // 检查两个范围是否重叠
-    constexpr bool overlaps_with(const AngleRange& other) const {
+    [[nodiscard]] constexpr bool overlaps_with(const AngularRange& other) const {
         auto norm_this = normalize_counter_clockwised();
         auto norm_other = other.normalize_counter_clockwised();
         
@@ -189,7 +192,7 @@ struct [[nodiscard]] AngleRange{
     }
 
     // 获取重叠部分（返回逆时针方向的范围）
-    constexpr Option<AngleRange> intersection_with(const AngleRange& other) const {
+    constexpr Option<AngularRange> intersection_with(const AngularRange& other) const {
         if (!overlaps(other)) {
             return None;
         }
@@ -197,51 +200,52 @@ struct [[nodiscard]] AngleRange{
         auto norm_this = normalize_counter_clockwised();
         auto norm_other = other.normalize_counter_clockwised();
         
-        Angle<T> overlap_start = std::max(norm_this.start, norm_other.start);
-        Angle<T> overlap_stop = std::min(norm_this.stop(), norm_other.stop());
+        Angular<T> overlap_start = std::max(norm_this.start, norm_other.start);
+        Angular<T> overlap_stop = std::min(norm_this.stop(), norm_other.stop());
         
         if (overlap_start > overlap_stop) {
             // 处理跨360°的重叠
-            overlap_stop = overlap_stop + Angle<T>::FULL_LAP;
+            overlap_stop = overlap_stop + Angular<T>::FULL_LAP;
         }
         
         return Some(from_start_and_stop(overlap_start, overlap_stop));
     }
 
-    // 将角度限制在此范围内（保持原始方向）
-    constexpr Angle<T> clamp_angle(Angle<T> angle) const {
+
+    constexpr Angular<T> clamp(Angular<T> angle) const {
         if (contains_angle(angle)) return angle;
         
         auto norm_range = normalize_counter_clockwised();
-        Angle<T> norm_angle = angle.normalized();
+        Angular<T> norm_angle = angle.normalized();
         
         // 计算到两个边界的距离（考虑圆的周期性）
-        Angle<T> dist_to_start = (norm_angle - norm_range.start).normalized();
-        Angle<T> dist_to_stop = (norm_range.stop() - norm_angle).normalized();
+        Angular<T> dist_to_start = (norm_angle - norm_range.start).normalized();
+        Angular<T> dist_to_stop = (norm_range.stop() - norm_angle).normalized();
         
         // 返回较近的边界
         return (dist_to_start < dist_to_stop) ? norm_range.start : norm_range.stop();
     }
+    #endif
 
     // 运算符重载
-    constexpr bool operator==(const AngleRange& other) const {
+    [[nodiscard]] constexpr bool operator==(const AngularRange& other) const {
         return start == other.start && interval == other.interval;
     }
 
-    constexpr bool operator!=(const AngleRange& other) const {
+    [[nodiscard]] constexpr bool operator!=(const AngularRange& other) const {
         return !(*this == other);
     }
 
     // 流输出支持
-    friend OutputStream & operator<<(OutputStream & os, const AngleRange & self) {
+    friend OutputStream & operator<<(OutputStream & os, const AngularRange & self) {
         return os << os.brackets<'('>() << self.start << "->" 
             << self.stop() << os.brackets<')'>(); 
     }
 
 private:
-    constexpr AngleRange() = default;
+    constexpr AngularRange() = default;
 
-    constexpr AngleRange(const Angle<T> _start, const Angle<T> _interval):
+    constexpr AngularRange(const Angular<T> _start, const Angular<T> _interval):
         start(_start), interval(_interval){;}
 };
 

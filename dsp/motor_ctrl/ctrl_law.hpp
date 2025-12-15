@@ -19,8 +19,8 @@ struct SqrtKpCtrlLaw final{
 
     constexpr iq16 operator()(const iq16 p_err) const {
         const bool is_neg = p_err < 0;
-        const auto abs_p_err = ABS(p_err);
-        const auto abs_ret = MIN(kp * abs_p_err, ks * sqrt(abs_p_err));
+        const auto abs_p_err = math::abs(p_err);
+        const auto abs_ret = MIN(kp * abs_p_err, ks * math::sqrt(abs_p_err));
         return is_neg ? -abs_ret : abs_ret;
     } 
 };

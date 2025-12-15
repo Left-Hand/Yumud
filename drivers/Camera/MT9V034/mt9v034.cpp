@@ -124,9 +124,13 @@ IResult<> MT9V034::init(){
 
     #ifdef ENABLE_DVP
     const auto size = this->size();
+    const auto address = reinterpret_cast<uint32_t>(frame_.head_ptr());
+    if(address & 0b11)
+        __builtin_trap();
+
     dvp.init({
-        .image0_addr = reinterpret_cast<uint32_t *>(frame_.data()), 
-        .image1_addr = reinterpret_cast<uint32_t *>(frame_.data()), 
+        .image0_addr = address, 
+        .image1_addr = address, 
         .num_col = size.x * size.y, 
         .num_row = size.y
     });

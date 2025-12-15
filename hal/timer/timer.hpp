@@ -3,6 +3,8 @@
 #include "timer_oc.hpp"
 #include "timer_utils.hpp"
 #include "hal/nvic/nvic.hpp"
+#include "core/utils/result.hpp"
+
 
 #ifdef HDW_SXX32
 
@@ -27,43 +29,43 @@ __interrupt void TIM##x##_IRQHandler(void);\
 }\
 
 
-#ifdef ENABLE_TIM1
+#ifdef TIM1_PRESENT
 DEF_ADVANCED_TIMER_IT_FORWARD_DECL(1)
 #endif
 
-#ifdef ENABLE_TIM2
+#ifdef TIM2_PRESENT
 DEF_GENERIC_TIMER_IT_FORWARD_DECL(2)
 #endif
 
-#ifdef ENABLE_TIM3
+#ifdef TIM3_PRESENT
 DEF_GENERIC_TIMER_IT_FORWARD_DECL(3)
 #endif
 
-#ifdef ENABLE_TIM4
+#ifdef TIM4_PRESENT
 DEF_GENERIC_TIMER_IT_FORWARD_DECL(4)
 #endif
 
-#ifdef ENABLE_TIM5
+#ifdef TIM5_PRESENT
 DEF_GENERIC_TIMER_IT_FORWARD_DECL(5)
 #endif
 
-#ifdef ENABLE_TIM6
+#ifdef TIM6_PRESENT
 DEF_BASIC_TIMER_IT_FORWARD_DECL(6)
 #endif
 
-#ifdef ENABLE_TIM7
+#ifdef TIM7_PRESENT
 DEF_BASIC_TIMER_IT_FORWARD_DECL(7)
 #endif
 
-#ifdef ENABLE_TIM8
+#ifdef TIM8_PRESENT
 DEF_ADVANCED_TIMER_IT_FORWARD_DECL(8)
 #endif
 
-#ifdef ENABLE_TIM9
+#ifdef TIM9_PRESENT
 DEF_ADVANCED_TIMER_IT_FORWARD_DECL(9)
 #endif
 
-#ifdef ENABLE_TIM10
+#ifdef TIM10_PRESENT
 DEF_ADVANCED_TIMER_IT_FORWARD_DECL(10)
 #endif
 
@@ -91,89 +93,146 @@ friend void ::TIM##x##_IRQHandler(void);\
 namespace ymd::hal{
 
 
-class BasicTimer{
+struct [[nodiscard]] TimerBdtr final{
+    void * inst_;
+    uint32_t bus_freq;
+
+    struct [[nodiscard]] Config{
+        Nanoseconds deadzone_ns;
+        TimerBdtrLockLevel level = TimerBdtrLockLevel::Off;
+    };
+
+    void init(const Config &config);
+    void set_deadzone(const Nanoseconds ns);
+};
+
+
+using TimerLibError = Infallible;
+
+struct [[nodiscard]] TimerPinSetuper final{
+    using Error = TimerLibError;
+    using Next = void;
+
+    explicit TimerPinSetuper(void * inst, const TimerRemap remap) : 
+        inst_(inst),
+        remap_(remap){}
+
+    Result<Next, Error> alter_to_pins(const std::initializer_list<TimerChannelSelection> list);
+    Next dont_alter_to_pins();
+private:
+    void * inst_;
+    TimerRemap remap_;
+};
+
+
+
+
+class [[nodiscard]] BasicTimer{
 public:
+    using Error = TimerLibError;
     using IT = TimerIT;
     using CountMode = TimerCountMode;
     using TrgoSource = TimerTrgoSource;
     using Callback = std::function<void(TimerEvent)>;
 private:
     Callback callback_ = nullptr;
-protected:
-    TIM_TypeDef * inst_;
-
-    [[nodiscard]] uint32_t get_bus_freq();
-    void enable_rcc(const Enable en);
-
-
-    template<IT I>
-    __fast_inline void invoke_callback(){
-        EXECUTE(callback_, I);
-    }
-
+    void enable(const Enable en);
 public:
-    explicit BasicTimer(TIM_TypeDef * _base):inst_(_base){;}
+    explicit BasicTimer(void * inst):inst_(inst){;}
 
     struct [[nodiscard]] Config{
+        TimerRemap remap;
         TimerCountFreq count_freq;
         const CountMode count_mode;
     };
 
-    void init(const Config & cfg, const Enable en);
-    void set_remap(const uint8_t rm);
+    Result<TimerPinSetuper, Error> init(const Config & cfg);
+
     void deinit();
 
-    void enable(const Enable en);
+
+
+    //启动定时器
+    void start();
+
+    //停止定时器
+    void stop();
+    
+    //设置psc（SXX32专有）
+    void set_psc(const uint16_t psc);
+
+    //设置arr（SXX32专有）
+    void set_arr(const uint16_t arr);
+    
+    //设置计数频率
+    void set_count_freq(const TimerCountFreq freq);
+
+    //设置计数模式
     void set_count_mode(const TimerCountMode mode);
 
-    void set_psc(const uint16_t psc);
-    void set_arr(const uint16_t arr);
-
-    void set_freq(const TimerCountFreq freq);
-
+    //使能中断
     template<IT I>
     void enable_interrupt(const Enable en){
-        TIM_ITConfig(inst_, std::bit_cast<uint16_t>(I), en == EN);
+        dyn_enable_interrupt(I, en);
     }
 
+    //将中断优先级注册到NVIC
     template<IT I>
-    void register_nvic(const NvicPriority request, const Enable en){
-        request.with_irqn(details::it_to_irq(inst_, I)).enable(en);
+    void register_nvic(const NvicPriority priority, const Enable en){
+        priority.with_irqn(timer::details::it_to_irq(inst_, I)).enable(en);
     }
 
+    //使能ARR同步更新（shadow）
     void enable_arr_sync(const Enable en);
+
+    //使能PSC同步更新（shadow）
     void enable_psc_sync(const Enable en);
     void enable_cc_ctrl_sync(const Enable en);
-    auto & inst() {return inst_;}
 
-    volatile uint16_t & cnt(){return inst_->CNT;}
-    volatile uint16_t & arr(){return inst_->ATRLR;}
+    volatile uint16_t & cnt();
+    volatile uint16_t & arr();
 
+    //设置事件处理函数
     template<typename Fn>
     void set_event_handler(Fn && cb){
         callback_ = std::forward<Fn>(cb);
     }
 
-    #ifdef ENABLE_TIM6
+protected:
+    void * inst_;
+
+    [[nodiscard]] uint32_t get_periph_clk_freq();
+    void enable_rcc(const Enable en);
+
+    //处理中断响应
+    void accept_interrupt(const IT I){
+        if(callback_ == nullptr) [[unlikely]]
+            return;
+        callback_(I);
+    }
+
+    void dyn_enable_interrupt(IT I,Enable en);
+
+    void set_remap(const TimerRemap rm);
+
+    #ifdef TIM6_PRESENT
     DEF_BASIC_TIMER_FRIEND_DECL(6)
     #endif
 
-    #ifdef ENABLE_TIM7
+    #ifdef TIM7_PRESENT
     DEF_BASIC_TIMER_FRIEND_DECL(7)
     #endif
 };
 
-class GenericTimer:public BasicTimer{
+class [[nodiscard]] GenericTimer:public BasicTimer{
 protected:
-    TimerOC channels[4];
-
-    void on_cc_interrupt();
+    TimerOC channels_[4];
 private:
-    void on_it_interrupt();
+    void on_interrupt();
 public:
-    explicit GenericTimer(TIM_TypeDef * _base):
-        BasicTimer(_base),
-        channels{
+    explicit GenericTimer(void * inst):
+        BasicTimer(inst),
+        channels_{
             TimerOC(inst_, TimerChannel::ChannelSelection::CH1),
             TimerOC(inst_, TimerChannel::ChannelSelection::CH2),
             TimerOC(inst_, TimerChannel::ChannelSelection::CH3),
@@ -181,100 +240,75 @@ public:
         }{;}
 
     void init_as_encoder(const CountMode mode = CountMode::Up);
-    void enable_single(const Enable en);
-    void set_trgo_source(const TrgoSource source);
-
-    template<size_t I>
-    requires(I >= 1 and I <= 4)
-    volatile uint16_t & cvr(){
-        switch(I){
-            case 1: return inst_->CH1CVR;
-            case 2: return inst_->CH2CVR;
-            case 3: return inst_->CH3CVR;
-            case 4: return inst_->CH4CVR;
-            default: __builtin_unreachable();
-        }
-    }
+    void enable_single_shot(const Enable en);
+    void set_trgo_source(const TimerTrgoSource source);
+    void set_trgi_source(const TimerTrgiSource source);
+    void set_slave_mode(const TimerSlaveMode mode);
+    void enable_master_slave_mode(const Enable en);
 
     template<size_t I>
     requires(I >= 1 and I <= 4)
     TimerOC & oc(){
-        return channels[I - 1];
+        return channels_[I - 1];
     }
 
-    #ifdef ENABLE_TIM2
+    #ifdef TIM2_PRESENT
     DEF_GENERIC_TIMER_FRIEND_DECL(2)
     #endif
 
-    #ifdef ENABLE_TIM3
+    #ifdef TIM3_PRESENT
     DEF_GENERIC_TIMER_FRIEND_DECL(3)
     #endif
 
-    #ifdef ENABLE_TIM4
+    #ifdef TIM4_PRESENT
     DEF_GENERIC_TIMER_FRIEND_DECL(4)
     #endif
 
-    #ifdef ENABLE_TIM5
+    #ifdef TIM5_PRESENT
     DEF_GENERIC_TIMER_FRIEND_DECL(5)
     #endif
-
-
 };
 
-struct [[nodiscard]] TimerBdtr{
-    TIM_TypeDef * inst_;
-    uint32_t bus_freq;
-    struct Config{
-        Nanoseconds ns;
-        TimerBdtrLockLevel level = TimerBdtrLockLevel::Off;
-    };
 
-    void init(const Config &config);
-    void set_deadzone(const Nanoseconds ns);
-private:
-    uint8_t calculate_deadzone_code(const Nanoseconds deadzone_ns);
-};
 
-class AdvancedTimer:public GenericTimer{
+class [[nodiscard]] AdvancedTimer:public GenericTimer{
 protected:
-
-
-    TimerOCN n_channels[3];
-
+    TimerOCN n_channels_[3];
 public:
     using LockLevel = TimerBdtrLockLevel;
 
-    explicit AdvancedTimer(TIM_TypeDef * _base):
-            GenericTimer(_base),
-            n_channels{
+    explicit AdvancedTimer(void * inst):
+            GenericTimer(inst),
+            n_channels_{
                 TimerOCN(inst_, TimerChannel::ChannelSelection::CH1N),
                 TimerOCN(inst_, TimerChannel::ChannelSelection::CH2N),
                 TimerOCN(inst_, TimerChannel::ChannelSelection::CH3N),
             }{;}
 
+    void on_cc_interrupt();
     TimerBdtr bdtr(){return TimerBdtr{
         .inst_ = inst_,
-        .bus_freq = this->get_bus_freq()
+        .bus_freq = this->get_periph_clk_freq()
     };}
-    void set_repeat_times(const uint8_t rep){inst_->RPTCR = rep;}
+    void set_repeat_times(const uint8_t rep);
 
     template<size_t I>
     requires(I >= 1 and I <= 4)
-    TimerOCN & ocn(){return n_channels[I - 1];}
+    TimerOCN & ocn(){return n_channels_[I - 1];}
 
-    #ifdef ENABLE_TIM1
+    #ifdef TIM1_PRESENT
     DEF_ADVANCED_TIMER_FRIEND_DECL(1);
     #endif
 
-    #ifdef ENABLE_TIM8
+    #ifdef TIM8_PRESENT
     DEF_ADVANCED_TIMER_FRIEND_DECL(8);
     #endif
 
-    #ifdef ENABLE_TIM9
+    #ifdef TIM9_PRESENT
     DEF_ADVANCED_TIMER_FRIEND_DECL(9);
     #endif
 
-    #ifdef ENABLE_TIM10
+    #ifdef TIM10_PRESENT
     DEF_ADVANCED_TIMER_FRIEND_DECL(10);
     #endif
 

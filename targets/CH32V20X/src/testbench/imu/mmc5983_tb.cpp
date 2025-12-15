@@ -5,7 +5,7 @@
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
@@ -14,7 +14,7 @@
 #include "robots/gesture/mag_cali.hpp"
 
 #include "drivers/IMU/Magnetometer/MMC5983/MMC5983.hpp"
-#include "thirdparty/sstl/include/sstl/vector.h"
+#include "core/container/heapless_vector.hpp"
 
 
 using namespace ymd;
@@ -23,8 +23,8 @@ using namespace ymd::drivers;
 
 // #define UART uart2
 #define UART hal::uart2
-#define SCL_GPIO hal::PB<3>()
-#define SDA_GPIO hal::PB<5>()
+#define SCL_PIN hal::PB<3>()
+#define SDA_PIN hal::PB<5>()
 static constexpr uint FS = 100;
 static constexpr auto INV_FS = (1.0_uq24 / FS);
 // #define MAG_ACTIVATED
@@ -109,8 +109,9 @@ static void mmc5983_test(drivers::MMC5983 & imu){
 }
 
 void mmc5983_main(){
-    UART.init({
-        .baudrate = 576_KHz
+    DEBUGGER_INST.init({
+        hal::UART2_REMAP_PA2_PA3,
+        576000
     });
 
     DEBUGGER.retarget(&UART);
@@ -119,9 +120,9 @@ void mmc5983_main(){
     DEBUGGER.force_sync(EN);
 
     // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;
-    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;
+    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
     // i2c.init(400_KHz);
     // i2c.init();
     
@@ -133,7 +134,7 @@ void mmc5983_main(){
 
     // auto & spi = spi1;
     // spi.init(18_MHz);
-    // MMC5983 imu = {SpiDrv(spi, spi.allocate_cs_gpio(hal::PA<15>()).value())};
+    // MMC5983 imu = {SpiDrv(spi, spi.allocate_cs_pin(hal::PA<15>()).value())};
 
     mmc5983_test(imu);
 }

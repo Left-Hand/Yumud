@@ -10,7 +10,7 @@ namespace ymd::hal{
 
 class DmaChannel;
 
-class TimerChannel{
+class [[nodiscard]] TimerChannel{
 public:
     using ChannelSelection = TimerChannelSelection;
 
@@ -22,16 +22,16 @@ public:
     Option<DmaChannel &> dma() const;
 
 protected:
-    TIM_TypeDef * inst_;
+    void * inst_;
 
-    const ChannelSelection ch_sel_;
+    const ChannelSelection sel_;
 
     static volatile uint16_t & from_channel_to_cvr(
-        TIM_TypeDef * timer, const ChannelSelection ch_sel);
+        void * timer, const ChannelSelection sel);
 
-    TimerChannel(TIM_TypeDef * inst, const ChannelSelection ch_sel):
+    TimerChannel(void * inst, const ChannelSelection sel):
         inst_(inst), 
-        ch_sel_(ch_sel){;}
+        sel_(sel){;}
 };
 
 }

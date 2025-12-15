@@ -2,7 +2,7 @@
 
 #include "core/io/regs.hpp"
 #include "hal/timer/timer_oc.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "core/math/real.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"

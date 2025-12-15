@@ -217,7 +217,7 @@ public:
         return available_internal(old_write_idx, old_write_idx);
     }
 
-    [[nodiscard]] size_t writable_size() const noexcept {
+    [[nodiscard]] size_t free_capacity() const noexcept {
         size_t avail = available();
         return (avail < N) ? N - avail - 1 : 0; // 留一个空位
     }
@@ -242,7 +242,7 @@ public:
 
     // 检查队列是否已满（线程安全）
     [[nodiscard]] bool full() const noexcept {
-        return writable_size() == 0;
+        return free_capacity() == 0;
     }
 
 private:

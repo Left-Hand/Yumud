@@ -10,23 +10,61 @@
 #include "drivers/Encoder/Encoder.hpp"
 
 namespace ymd::robots::dji::m3508{
+static constexpr uint16_t NUM_HIGHER_QUAD_CAN_ID = 0x200;
+static constexpr uint16_t NUM_LOWER_QUAD_CAN_ID = 0x1ff;
+static constexpr size_t NUM_MAX_SLAVES = 8;
 
-struct TxData{
-    uint16_t curr_data_msb[4];  
-}__packed;
+struct [[nodiscard]] CurrentCode{
+    using Self = CurrentCode;
+    uint16_t bits;
+    static constexpr Self from_amps(const iq16 amps){
+        int16_t temp = int16_t((amps / 20)* 16384);
+        return Self{
+            .bits = std::bit_cast<uint16_t>(BSWAP_16(temp))
+        };
+    }
+    constexpr iq16 to_amps() const {
+        return (iq16(bits) / 16384) * 20;
+    }
+};
 
-static_assert(sizeof(TxData) == 8);
+struct [[nodiscard]] AngleCode{
+    uint16_t bits;
 
-struct RxData{
-    uint16_t angle_8192_msb;
-    uint16_t curr_data_msb;
-    uint16_t speed_rpm_msb;
+    constexpr Angular<uq32> to_angle() const {
+        const auto angle_u13 = uint16_t(BSWAP_16(bits));
+        const auto turns = uq32::from_bits(angle_u13 << (32u - 13u));
+        return Angular<uq32>::from_turns(turns);
+    }
+};
+
+struct [[nodiscard]] SpeedCode{
+    uint16_t bits;
+
+    constexpr iq16 to_tps() const {
+        return iq16(int16_t(BSWAP_16(bits))) / 60;
+    }
+};
+
+
+struct [[nodiscard]] TxContext{
+    std::array<CurrentCode, 4> current_codes;  
+};
+
+static_assert(sizeof(TxContext) == 8);
+
+struct [[nodiscard]] RxContext{
+    AngleCode angle_code;
+    CurrentCode current_code;
+    SpeedCode speed_code;
     uint8_t temp;
     uint8_t __resv__;
-}__packed;
+};
 
-static_assert(sizeof(RxData) == 8);
+static_assert(sizeof(RxContext) == 8);
 
+
+#if 0
 class M3508Port{
 public:
 class M3508{
@@ -40,8 +78,8 @@ public:
             //pass
             return Ok();
         }
-        Result<Angle<uq32>, Error> read_lap_angle() {
-            return Ok(Angle<uq32>::from_turns(owner_.lap_turns_));
+        Result<Angular<uq32>, Error> read_lap_angle() {
+            return Ok(Angular<uq32>::from_turns(owner_.lap_turns_));
         }
 
     private:
@@ -143,7 +181,7 @@ private:
 
 private:
 
-    static constexpr size_t MAX_SLAVES_COUNT = 8;
+
     
     hal::Can & can_;
     size_t size_ = MAX_SLAVES_COUNT;
@@ -166,15 +204,15 @@ private:
     union{
         uint16_t curr_cache[8];
         struct{
-            TxData tx_datas[2];
+            TxContext tx_datum[2];
         };
     };
     
 
     void set_target_current(const iq16 curr_, const size_t index);
 
-    void update_slave(const hal::CanClassicFrame & frame, const size_t index);
+    void update_slave(const hal::BxCanFrame & frame, const size_t index);
 
 };
-
+#endif
 };

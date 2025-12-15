@@ -7,13 +7,14 @@
 
 namespace ymd::hal{
 
+
 class DacChannel{
 public:
     using ChannelSelection = DacUtils::ChannelSelection;
     using Alignment = DacUtils::Alignment;
 protected:
     DAC_TypeDef * instance_;
-    const ChannelSelection nth;
+    const ChannelSelection sel_;
     const uint32_t channel_mask_;
     Alignment align_ = Alignment::R12;
 
@@ -28,8 +29,8 @@ protected:
 
     void settle();
 
-    static uint32_t get_channel_mask(const ChannelSelection nth);
-    // static uint32_t get_channel_mask(const ChannelSelection nth);
+    static uint32_t get_channel_mask(const ChannelSelection sel);
+    // static uint32_t get_channel_mask(const ChannelSelection sel_);
 
 public:
     void init();

@@ -6,8 +6,8 @@
 #include "primitive/analog_channel.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 
-#include "types/regions/range2.hpp"
-
+#include "algebra/regions/range2.hpp"
+#include "core/io/regs.hpp"
 
 
 namespace ymd::drivers{

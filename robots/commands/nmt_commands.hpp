@@ -5,42 +5,42 @@
 namespace ymd{
 namespace robots::nmt_commands{
 
-enum class NodeState:uint8_t{
+enum class [[nodiscard]] NodeState:uint8_t{
     Reset = 0x00,
     Initialization = 0x01,
     PreOperational = 0x02,
     Stopped = 0x03
 };
 
-struct ResetNode{
+struct [[nodiscard]] ResetNode{
     uint16_t timeout;
 };
 
-struct PreOperationalNode{
+struct [[nodiscard]] PreOperationalNode{
 };
 
-struct StartNode{
+struct [[nodiscard]] StartNode{
 };
 
-struct StopNode{
+struct [[nodiscard]] StopNode{
 };
 
-struct BroadcastBootUp{
+struct [[nodiscard]] BroadcastBootUp{
 };
 
-struct BroadcastHeartBeat{
+struct [[nodiscard]] BroadcastHeartBeat{
     uint16_t since_last_heartbeat_ms;
 };
 
-struct SetHeartBeatDuration{
+struct [[nodiscard]] SetHeartBeatDuration{
     uint16_t target_duration_ms;
 };
 
-struct RequestNodeState{
+struct [[nodiscard]] RequestNodeState{
 
 };
 
-struct ResponseNodeState{
+struct [[nodiscard]] ResponseNodeState{
     NodeState node_state;
 };
 

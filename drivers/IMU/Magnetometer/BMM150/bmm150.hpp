@@ -18,47 +18,27 @@ public:
 
     };
 
-    [[nodiscard]] IResult<> init(const Config & cfg){
-        if(const auto res = validate();
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
+    [[nodiscard]] IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<> update(){
-        return Ok();
-    }
+    [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> validate(){
-        auto & reg = regs_.chipid_reg;
-        if(const auto res = read_reg(reg);
-            res.is_err()) return Err(res.unwrap_err());
-        if(reg.chipid != reg.KEY);
-        return Err(Error::UnknownDevice);
-    }
+    [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] IResult<> reset(){
-        auto reg = RegCopy(regs_.power_control_reg);
-        reg.soft_reset = 1;
-        if(const auto res = write_reg(reg);
-            res.is_err()) return Err(res.unwrap_err());
-        reg.soft_reset = 0;
-        reg.apply();
-        return Ok();
-    }
+    [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<Vec3<q24>> read_mag(){
-        return Ok(Vec3<q24>{0,0,0});
-    }
-
+    [[nodiscard]] IResult<Vec3<iq24>> read_mag();
 private:
 
-    BoschSensor_Phy phy_;
+    BoschImu_Phy phy_;
     BMM150_Regset regs_ = {};
 
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = phy_.write_reg(T::ADDRESS, reg.to_bits());
+        const auto res = phy_.write_reg(
+            std::bit_cast<uint8_t>(T::ADDRESS), 
+            reg.to_bits()
+        );
         if(res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return res;
@@ -66,10 +46,13 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return phy_.read_reg(T::ADDRESS, reg.as_bits_mut());
+        return phy_.read_reg(
+            std::bit_cast<uint8_t>(T::ADDRESS), 
+            reg.as_bits_mut()
+        );
     }
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
+    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
         return phy_.read_burst(addr, pbuf);
     }
 };

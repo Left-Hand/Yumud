@@ -4,11 +4,12 @@
 #include "hal/bus/can/can.hpp"
 #include "core/math/realmath.hpp"
 
+// Apache-2.0 license
 // https://github.com/enactic/openarm_can/tree/main/include/openarm/damiao_motor
 
 namespace ymd::robots::damiao{
 
-enum class MotorKind : uint8_t {
+enum class [[nodiscard]] MotorKind : uint8_t {
     DM3507 = 0,
     DM4310 = 1,
     DM4310_48V = 2,
@@ -24,7 +25,7 @@ enum class MotorKind : uint8_t {
     DMG6220 = 12,
 };
 
-enum class RID : uint8_t {
+enum class [[nodiscard]] RID : uint8_t {
     UV_Value = 0,
     KT_Value = 1,
     OT_Value = 2,
@@ -75,9 +76,9 @@ enum class RID : uint8_t {
 
 // Limit parameters structure for different motor types
 struct LimitParam {
-    real_t max_position;  // Position limit (rad)
-    real_t max_speed;  // Velocity limit (rad/s)
-    real_t max_torque;  // Torque limit (Nm)
+    iq16 max_position;  // Position limit (rad)
+    iq16 max_speed;  // Velocity limit (rad/s)
+    iq16 max_torque;  // Torque limit (Nm)
 };
 
 
@@ -85,52 +86,52 @@ namespace details{
 template<MotorKind K>
 struct LimitParamTable;
 
-#define DEF_MOTOR_LIMIT_PARAM(K, pMax, vMax, tMax) \
+#define DEF_DAMIAO_MOTOR_LIMIT_TABLE(K, pMax, vMax, tMax) \
 template<> \
 struct LimitParamTable<K> { \
-    static constexpr LimitParam table = {real_t(pMax), real_t(vMax), real_t(tMax)}; \
+    static constexpr LimitParam table = {iq16(pMax), iq16(vMax), iq16(tMax)}; \
 };
 
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DM3507, 12.5, 50, 5)
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DM4310, 12.5, 30, 10) 
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DM4310_48V, 12.5, 50, 10) 
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DM4340, 12.5, 8, 28)  
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DM4340_48V, 12.5, 10, 28) 
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DM6006, 12.5, 45, 20) 
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DM8006, 12.5, 45, 40) 
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DM8009, 12.5, 45, 54) 
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DM10010L, 12.5, 25, 200)
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DM10010, 12.5, 20, 200)
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DMH3510, 12.5, 280, 1) 
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DMH6215, 12.5, 45, 10) 
-DEF_MOTOR_LIMIT_PARAM(MotorKind::DMG6220, 12.5, 45, 10) 
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM3507, 12.5, 50, 5)
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM4310, 12.5, 30, 10) 
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM4310_48V, 12.5, 50, 10) 
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM4340, 12.5, 8, 28)  
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM4340_48V, 12.5, 10, 28) 
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM6006, 12.5, 45, 20) 
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM8006, 12.5, 45, 40) 
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM8009, 12.5, 45, 54) 
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM10010L, 12.5, 25, 200)
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DM10010, 12.5, 20, 200)
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DMH3510, 12.5, 280, 1) 
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DMH6215, 12.5, 45, 10) 
+DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DMG6220, 12.5, 45, 10) 
 
-#undef DEF_MOTOR_LIMIT_PARAM
+#undef DEF_DAMIAO_MOTOR_LIMIT_TABLE
 }
 
 
 namespace msgs{
 struct ParamResult {
     int rid;
-    real_t value;
+    iq16 value;
     bool valid;
 };
 
 struct StateResult {
-    real_t position;
-    real_t speed;
-    real_t torque;
+    iq16 position;
+    iq16 speed;
+    iq16 torque;
     int t_mos;
     int t_rotor;
     bool valid;
 };
 
-struct MITParam {
-    real_t kp;
-    real_t kd;
-    real_t q;
-    real_t dq;
-    real_t tau;
+struct MitParams {
+    iq16 kp;
+    iq16 kd;
+    iq16 q;
+    iq16 dq;
+    iq16 tau;
 };
 }
 }

@@ -10,14 +10,14 @@
 
 namespace ymd::ral::CH32{
 
-struct R32_LTDC_SSCR{
+struct [[nodiscard]] R32_LTDC_SSCR{
     uint32_t VSH:11;
     uint32_t :5;
     uint32_t HSW:12;
     uint32_t :4;
 };
 
-struct R32_LTDC_BPCR{
+struct [[nodiscard]] R32_LTDC_BPCR{
     uint32_t AVBP:11;
     uint32_t :5;
     uint32_t AHBP:12;

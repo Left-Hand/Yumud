@@ -2,9 +2,9 @@
 
 #include <cstdint> 
 
-namespace ymd::ral::CH32V20x::USBPD_Regs{
+namespace ymd::ral::ch32::ch32v035_usbpd{
 
-struct CONFIG_Reg{
+struct [[nodiscard]] R32_CONFIG{
     uint32_t PD_FILT_EN:1;
     uint32_t PD_ALL_CLR:1;
     uint32_t CC_SEL:1;
@@ -22,7 +22,7 @@ struct CONFIG_Reg{
     uint32_t :7;
 };
 
-struct CONTROL_Reg{
+struct [[nodiscard]] R32_CONTROL{
     uint32_t PD_TX_EN:1;
     uint32_t BMC_START:1;
     uint32_t RX_STATE:2;
@@ -40,7 +40,7 @@ struct CONTROL_Reg{
     uint32_t :7;
 };
 
-struct STATUS_Reg{
+struct [[nodiscard]] R32_STATUS{
     uint32_t DATA_BUF:8;
     uint32_t BMC_AUX:2;
     uint32_t BUF_ERR:1;
@@ -53,7 +53,7 @@ struct STATUS_Reg{
     uint32_t :7;
 };
 
-struct PORT_Reg{
+struct [[nodiscard]] R32_PORT{
     uint16_t PA_CC2_AI:1;
     uint16_t :1;
     uint16_t CC2_PU:2;
@@ -62,16 +62,16 @@ struct PORT_Reg{
     uint16_t :7;
 };
 
-struct DMA_Reg{
+struct [[nodiscard]] R32_DMA{
     uint16_t DMA_ADDR;
 };
 
-struct USBPD_Def{
-    volatile CONFIG_Reg CONFIG;
-    volatile CONTROL_Reg CONTROL;
-    volatile STATUS_Reg STATUS;
-    volatile PORT_Reg PORT;
-    volatile DMA_Reg DMA;
+struct [[nodiscard]] USBPD_Def{
+    volatile R32_CONFIG CONFIG;
+    volatile R32_CONTROL CONTROL;
+    volatile R32_STATUS STATUS;
+    volatile R32_PORT PORT;
+    volatile R32_DMA DMA;
 };
 
 }

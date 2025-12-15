@@ -13,26 +13,31 @@ using namespace ymd::drivers;
 
 
 void kth7823_main(){
-    DEBUGGER_INST.init({576_KHz});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
-    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     auto & spi = hal::spi1;
-    spi.init({9_MHz});
+    spi.init({
+        .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
+        .baudrate = hal::NearestFreq(9_MHz)
+    });
 
     auto spi_cs_gpio = hal::PA<15>();
 
-    KTH7823 kth7823{
+    kth7823::KTH7823 mag_enc{
         &spi, 
-        spi.allocate_cs_gpio(&spi_cs_gpio).examine()
+        spi.allocate_cs_pin(&spi_cs_gpio).examine()
     };
 
     while(true){
-        kth7823.update().examine();
-        DEBUG_PRINTLN(kth7823.read_lap_angle().examine());
+        mag_enc.update().examine();
+        DEBUG_PRINTLN(mag_enc.read_lap_angle().examine());
         clock::delay(10ms);
     }
 }

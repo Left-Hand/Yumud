@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-namespace ymd::ral::CH32V20x::AFIO_Regs{
+namespace ymd::ral::ch32::ch32x035_afio{
 
-struct PCFR1_Reg{
+struct [[nodiscard]] R32_PCFR1{
     // SPI1 的重映射。该位可由用户读写。它控制 SPI1
     // 的 NSS、CK、MISO 和 MOSI 复用功能在 GPIO 端口
     // 的映射：
@@ -39,7 +39,7 @@ struct PCFR1_Reg{
     uint32_t :5;
 };
 
-struct EXTICR1_Reg{
+struct [[nodiscard]] R32_EXTICR1{
     uint32_t EXTI0:2;
     uint32_t EXTI1:2;
     uint32_t EXTI2:2;
@@ -61,7 +61,7 @@ struct EXTICR1_Reg{
     uint32_t EXTI15:2;    
 };
 
-struct EXTICR2_Reg{
+struct [[nodiscard]] R32_EXTICR2{
     uint32_t EXTI16:2;
     uint32_t EXTI17:2;
     
@@ -75,7 +75,7 @@ struct EXTICR2_Reg{
     uint32_t :16;
 };
 
-struct CTLR_Reg{
+struct [[nodiscard]] R32_CTLR{
     uint32_t UDM_PUE:2;
     uint32_t UDP_PUE:2;
     uint32_t :2;
@@ -96,11 +96,11 @@ struct CTLR_Reg{
     uint32_t :4;
 };
 
-struct AFIO_Def{
-    volatile PCFR1_Reg PCFR1;
-    volatile EXTICR1_Reg EXTICR1;
-    volatile EXTICR2_Reg EXTICR2;
-    volatile CTLR_Reg CTLR;
+struct [[nodiscard]] AFIO_Def{
+    volatile R32_PCFR1 PCFR1;
+    volatile R32_EXTICR1 EXTICR1;
+    volatile R32_EXTICR2 EXTICR2;
+    volatile R32_CTLR CTLR;
 
     void set_spi1_remap(const uint8_t remap){
         PCFR1.SPI1_RM = remap;
@@ -160,8 +160,8 @@ struct AFIO_Def{
         }
     }
 
-    void set_exti_source(const uint8_t port, const uint8_t pin){
-        switch(pin & 0x0f){
+    void set_exti_source(const uint8_t port, const uint8_t pin_index){
+        switch(pin_index & 0x0f){
             case 0: EXTICR1.EXTI0 = port; return;
             case 1: EXTICR1.EXTI1 = port; return;
             case 2: EXTICR1.EXTI2 = port; return;

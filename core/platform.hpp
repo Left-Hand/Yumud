@@ -14,5 +14,3 @@
 
 #include "core/math_defs.hpp"
 #include "core/sys_defs.hpp"
-
-#include "targets/CH32V20X/src/defines/defs.h"

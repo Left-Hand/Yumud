@@ -1,5 +1,5 @@
 #include "ostream.hpp"
-
+#include "core/string/legacy/strconv.hpp"
 #include "core/clock/clock.hpp"
 #include "core/string/string_view.hpp"
 #include "core/string/string_ref.hpp"
@@ -14,44 +14,45 @@ using namespace ymd;
 OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     do{
         if (func == &std::oct) {set_radix(8);break;}
-        if (func == &std::dec) {set_radix(10);break;}
-        if (func == &std::hex) {set_radix(16);break;}
-        if (func == &std::fixed) {
+        else if (func == &std::dec) {set_radix(10);break;}
+        else if (func == &std::hex) {set_radix(16);break;}
+        else if (func == &std::fixed) {
+            //TODO
+            break;
+        }
+
+        
+        else if (func == &std::scientific) {
             //TODO
             break;
         }
         
-        if (func == &std::scientific) {
-            //TODO
-            break;
-        }
-        
-        if (func == &std::boolalpha){
+        else if (func == &std::boolalpha){
             config_.boolalpha = true;
             break;
         }
 
-        if (func == &std::noboolalpha){
+        else if (func == &std::noboolalpha){
             config_.boolalpha = false;
             break;
         }
 
-        if (func == &std::showpos){
+        else if (func == &std::showpos){
             config_.showpos = true;
             break;
         }
         
-        if (func == &std::noshowpos){
+        else if (func == &std::noshowpos){
             config_.showpos = false;
             break;
         }
 
-        if (func == &std::showbase){
+        else if (func == &std::showbase){
             config_.showbase = true;
             break;
         }
         
-        if (func == &std::noshowbase){
+        else if (func == &std::noshowbase){
             config_.showbase = false;
             break;
         }
@@ -86,6 +87,13 @@ OutputStream & OutputStream::operator<<(const std::endian endian){
     __builtin_unreachable();
 }
 
+OutputStream & OutputStream::operator<<(const std::_Swallow_assign){
+    return *this;
+}
+
+OutputStream & OutputStream::operator<<(const std::_Setw){
+    return *this;
+}
 
 #define PRINT_FLOAT_TEMPLATE(convfunc)\
     char str[12] = {0};\
@@ -160,14 +168,9 @@ OutputStream & OutputStream::flush(){
 }
 
 void OutputStreamByRoute::sendout(const std::span<const char> pbuf){
-    if(!p_route_.has_value()) while(true);
-    p_route_->writeN(pbuf.data(), pbuf.size());
+    if(!p_route_.has_value()) __builtin_trap();
+    p_route_->try_write_chars(pbuf.data(), pbuf.size());
 }
-
-#if 0
-OutputStream & OutputStream::operator<<(const String & str){
-    write_checked(str.c_str(), str.length()); return * this;}
-#endif
 
 OutputStream & OutputStream::operator<<(const StringView str){
     write_checked(str.data(), str.length()); return * this;}

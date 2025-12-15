@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/utils/Option.hpp"
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 using namespace ymd;
 

@@ -3,9 +3,9 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
-#include "types/transforms/Basis.hpp"
+#include "algebra/transforms/Basis.hpp"
 
 #include "robots/vendor/DJI/M3508/m3508.hpp"
 #include "robots/vendor/DJI/DR16/DR16.hpp"
@@ -15,6 +15,7 @@ using namespace ymd;
 
 using namespace ymd::robots::dji::m3508;
 
+#if 0
 void m3508_main(){
     static constexpr size_t CB_FREQ = 200;
 
@@ -25,8 +26,8 @@ void m3508_main(){
 
     hal::can1.init({
         .remap = 0,
-        .mode = hal::CanMode::Normal,
-        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
+        .wiring_mode = hal::CanWiringMode::Normal,
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
     });
 
     M3508Port port{hal::can1};
@@ -73,7 +74,7 @@ void m3508_main(){
         // port.tick();
 
         // DEBUGGER.println(port[1].getCurrent(), port[2].getCurrent(), port[3].getCurrent(), port[4].getCurrent(), can1.read()); 
-        // auto msg = CanClassicFrame{0x1ff, std::tuple<int16_t, int16_t, int16_t, int16_t>(data, data, data, data)};
+        // auto msg = BxCanFrame{0x1ff, std::tuple<int16_t, int16_t, int16_t, int16_t>(data, data, data, data)};
         // can1.write(msg);
         // can1.write({0x2fe, std::tuple<int16_t, int16_t, int16_t, int16_t>(5000, 5000, 5000, 5000)});
         // clock::delay(3ms);
@@ -86,3 +87,5 @@ void m3508_main(){
         // last_pos = motor.getPosition();
     }
 }
+
+#endif

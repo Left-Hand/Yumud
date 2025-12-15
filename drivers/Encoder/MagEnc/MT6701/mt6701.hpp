@@ -24,7 +24,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Angle<uq32>> read_lap_angle();
+    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle();
     
     [[nodiscard]] IResult<MagStatus> get_mag_status();
 

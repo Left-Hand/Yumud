@@ -3,12 +3,8 @@
 #include "core/clock/time.hpp"
 #include "core/debug/debug.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
-#include "FFT.hpp"
-#include "liir.hpp"
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
-#include "dsp/filter/butterworth/ButterSideFilter.hpp"
 #include "dsp/filter/butterworth/Order4ZeroPhaseShiftButterWothLowpassFilter.hpp"
 #include "dsp/filter/firstorder/lpf.hpp"
 
@@ -70,7 +66,7 @@ void pso_tb(){
 
     constexpr size_t loops = 200;
 
-    const auto begin_m = clock::micros();
+    const auto begin_ms = clock::micros();
 
 
     for(size_t i = 0; i < loops; i++){
@@ -86,5 +82,5 @@ void pso_tb(){
         // clock::delay(1ms);
         // DEBUG_PRINTLN(pso.gbest(), pso.geval());
     }
-    DEBUG_PRINTLN(pso.gbest(), pso.geval(), clock::micros() - begin_m);
+    DEBUG_PRINTLN(pso.gbest(), pso.geval(), clock::micros() - begin_ms);
 }

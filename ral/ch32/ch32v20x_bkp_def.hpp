@@ -12,12 +12,12 @@
 
 namespace CH32V20x{
 
-struct R32_BKP_DATAR{
+struct [[nodiscard]] R32_BKP_DATAR{
     uint32_t DATA:16;
     uint32_t :16;
 };
 
-struct R16_BKP_OCTLR{
+struct [[nodiscard]] R16_BKP_OCTLR{
     uint16_t CAL:7;
     uint16_t CCO:1;
     uint16_t ASOE:1;
@@ -25,13 +25,13 @@ struct R16_BKP_OCTLR{
     uint16_t :6;
 };
 
-struct R16_BKP_TPCTLR{
+struct [[nodiscard]] R16_BKP_TPCTLR{
     uint16_t TPE:1;;
     uint16_t TPAL:1;;
     uint16_t :14;
 };
 
-struct R16_BKP_TPCSR{
+struct [[nodiscard]] R16_BKP_TPCSR{
     uint16_t CTE:1;
     uint16_t CTI:1;
     uint16_t TPIE:1;
@@ -42,7 +42,7 @@ struct R16_BKP_TPCSR{
     uint16_t :6;
 };
 
-struct BKP_Def {
+struct [[nodiscard]] BKP_Def {
     volatile R32_BKP_DATAR DATA1_10[10];
     volatile R16_BKP_OCTLR OCTLR;
     uint16_t :16;

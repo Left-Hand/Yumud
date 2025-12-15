@@ -1,10 +1,9 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
-#include "core/string/utils/streamed_string_splitter.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/timer/hw_singleton.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
@@ -13,14 +12,16 @@
 #include "src/testbench/tb.h"
 
 #include "dsp/filter/firstorder/lpf.hpp"
-#include "dsp/filter/butterworth/ButterSideFilter.hpp"
-#include "dsp/controller/adrc/nltd2o.hpp"
+#include "dsp/filter/butterworth/side.hpp"
+#include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
 #include "dsp/controller/adrc/utils.hpp"
 
 #include "drivers/Encoder/Encoder.hpp"
 #include "drivers/Encoder/AnalogEncoder.hpp"
 
 using namespace ymd;
+
+#if 0
 
 namespace ymd::motorctl{
 class ServoElectrics{
@@ -214,10 +215,10 @@ void myservo_main(){
     led.outpp(HIGH);
 
     // {
-    //     auto & ledr = hal::PC<13>();
-    //     ledr.outpp(HIGH);
+    //     auto & red_led_pin_ = hal::PC<13>();
+    //     red_led_pin_.outpp(HIGH);
     //     while(true){
-    //         ledr.toggle();
+    //         red_led_pin_.toggle();
     //         clock::delay(200ms);
     //         DEBUG_PRINTLN(clock::millis().count());
     //     }
@@ -296,8 +297,8 @@ void myservo_main(){
 
     can.init({
         .remap = CAN1_REMAP,
-        .mode = hal::CanMode::Normal,
-        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
+        .wiring_mode = hal::CanWiringMode::Normal,
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
     });
     init_adc();
 
@@ -350,7 +351,7 @@ void myservo_main(){
             // auto pwm = hal::
         mode1_gpio.outpp(HIGH);
         // slp_gpio
-        // const auto duty = 0.6_r * sinpu(clock::time());
+        // const auto duty = 0.6_r * math::sinpu(clock::time());
 
 
         // curr_cmd = ABS(0.035_r * sin(clock::time() * 4))+ 0.035_r;
@@ -359,7 +360,7 @@ void myservo_main(){
         // const auto pos_cmd = int(sin(clock::time()/3) * 5) * 0.2_r;
         const auto pos_cmd = 0.81_r * sin(clock::time() * 3);
         const auto duty_cmd = 0.4_r * dsp::adrc::ssqrt(1.65_r + pos_cmd - spin_filter.get());
-        // const auto duty_cmd = 0.4_r * sign(sinpu(clock::time() * 10));
+        // const auto duty_cmd = 0.4_r * sign(math::sinpu(clock::time() * 10));
         set_dutycycle(duty_cmd);
         // curr_cmd = ain2.get_voltage() / 3.3_r * 0.015_r + 0.015_r;
         // phase_gpio = BoolLevel::from((clock::millis() % 400).count() > 200);
@@ -382,17 +383,13 @@ void myservo_main(){
         // DEBUG_PRINTLN(UART.available());
         // while(UART.available()){
         //     char chr;
-        //     UART.read1(chr);
+        //     UART.read_char(chr);
         //     DEBUG_PRINTLN(chr);
         // }
-        // DEBUG_PRINTLN(msg);
-        // DEBUG_PRINTLN("before", can.pending());
-        // clock::delay(200ms);
-        // DEBUG_PRINTLN("after", can.pending());
-        // clock::delay(2ms);
 
-        // constexpr auto msg = CanClassicFrame::from_remote(CanStdId(0xff));
-        // can.write(msg);
+
+        // constexpr auto msg = BxCanFrame::from_remote(CanStdId(0xff));
+        // can.try_write(msg);
         const auto curr = duty_is_forward ? curr_filter.get() : -curr_filter.get();
         DEBUG_PRINTLN_IDLE(
             duty_cmd,
@@ -407,3 +404,5 @@ void myservo_main(){
     }
 
 }
+
+#endif

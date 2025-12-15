@@ -4,9 +4,8 @@
 #include "core/constants/enums.hpp"
 
 namespace ymd::hal{
-namespace adc_details{
-    void install_pin(const AdcChannelSelection channel, const Enable en);
-    real_t read_temp();
+namespace adc::details{
+void install_pin(const AdcChannelSelection sel);
 }
 
 }

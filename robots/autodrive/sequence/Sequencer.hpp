@@ -10,7 +10,7 @@ protected:
     const SequenceLimits & limits_;
     const SequenceParas & paras_;
 
-    void rotate(Curve & curve, const Ray2<iq16> & from, const Angle<iq16> end_angle);
+    void rotate(Curve & curve, const Ray2<iq16> & from, const Angular<iq16> end_angle);
 
     void linear(Curve & curve, const Ray2<iq16> & from, const Vec2<iq16> & end_pos);
 public:

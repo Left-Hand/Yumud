@@ -12,7 +12,7 @@ class PdoProtocol : public ProtocolBase {
 public:
     PdoProtocol(Driver& driver, ObjectDictIntf & od1);
 
-    bool processMessage(const CanClassicFrame& msg) override;
+    bool processMessage(const BxCanFrame& msg) override;
 private:
     ObjectDictIntf & od1_;
     std::array<PdoRxSession, 4> rpdos_ = {

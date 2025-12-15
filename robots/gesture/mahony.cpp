@@ -68,12 +68,12 @@ void Mahony::myupdate(const IV3 & gyr,const IV3 & acc) {
 	// const auto err = acc.cross(v);
 	// const auto delta = gyr + (kp_ * err) + ki_ * (inte_ += gyr * dt_);
 	// const auto delta = IV3<real_t>(0,0,real_t(2 * TAU));
-	const auto pos_err = IQuat::from_direction(acc) * q.inverse();
+	const auto e1 = IQuat::from_direction(acc) * q.inverse();
 	// q = q.integral(gyr_hat_, dt_).slerp(v, 1);
-	// const auto pos_err_euler = pos_err.to_euler();
+	// const auto e1_euler = e1.to_euler();
 	gyr_hat_ = LERP(gyr_hat_, gyr, 0.5_r);
-	//  + IV3(pos_err_euler.x, pos_err_euler.y, pos_err_euler.z) * 5000 * dt_;
-	q = q.integral(gyr_hat_, dt_).slerp(pos_err, 0.1_r);
+	//  + IV3(e1_euler.x, e1_euler.y, e1_euler.z) * 5000 * dt_;
+	q = q.integral(gyr_hat_, dt_).slerp(e1, 0.1_r);
 	// q =v;
 }
 
@@ -92,17 +92,17 @@ void Mahony::myupdate_v2(const IV3 & gyr,const IV3 & acc) {
 	// const auto err = acc.cross(v);
 	// const auto delta = gyr + (kp_ * err) + ki_ * (inte_ += gyr * dt_);
 	// const auto delta = IV3<real_t>(0,0,real_t(2 * TAU));
-	// const auto pos_err =  * q.inverse();
+	// const auto e1 =  * q.inverse();
 	// q = q.integral(gyr_hat_, dt_).slerp(v, 1);
-	// const auto pos_err_euler = pos_err.to_euler();
+	// const auto e1_euler = e1.to_euler();
 	static constexpr auto tau = 0.7_r;
-	// const auto euler = pos_err.to_euler();
+	// const auto euler = e1.to_euler();
 	// const auto gyr_hat_d = tau * tau * IV3{euler.x, euler.y, euler.z} + 2 * tau * (kd_ * (gyr - gyr_hat_));
 	const auto gyr_hat_d = 2 * tau * (gyr - gyr_hat_);
 	// const auto gyr_hat_d = tau * tau * IV3{euler.x, euler.y, euler.z};
 	//  + 2 * tau * (gyr - gyr_hat_);
 	gyr_hat_ += gyr_hat_d * dt_;
-	//  + IV3(pos_err_euler.x, pos_err_euler.y, pos_err_euler.z) * 5000 * dt_;
+	//  + IV3(e1_euler.x, e1_euler.y, e1_euler.z) * 5000 * dt_;
 	q = q.integral(gyr_hat_, dt_).slerp(IQuat::from_direction(acc), 0.017_r);
 	// q =v;
 }

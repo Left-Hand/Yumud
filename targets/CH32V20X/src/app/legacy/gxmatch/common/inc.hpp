@@ -1,14 +1,14 @@
 #pragma once
 
-#include "types/vectors/vector3.hpp"
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec3.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 #include "robots/kinematics/Scara5/scara5_solver.hpp"
 #include "robots/kinematics/Cross/CrossSolver_t.hpp"
 
-#include "types/ray2.hpp"
-#include "types/aabb.hpp"
+#include "algebra/ray2.hpp"
+#include "algebra/aabb.hpp"
 
 
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"

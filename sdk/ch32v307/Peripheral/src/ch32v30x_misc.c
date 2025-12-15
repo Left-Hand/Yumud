@@ -7,7 +7,7 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 *********************************************************************************/
-#include "../sdk/ch32v307/Peripheral/inc/ch32v30x_misc.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_misc.h"
 
 __IO uint32_t NVIC_Priority_Group = 0;
 

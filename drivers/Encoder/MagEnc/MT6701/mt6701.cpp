@@ -64,8 +64,8 @@ IResult<> MT6701::update(){
     // }
 }
 
-IResult<Angle<uq32>> MT6701::read_lap_angle(){
-    return Ok(Angle<uq32>::from_turns(lap_position_));
+IResult<Angular<uq32>> MT6701::read_lap_angle(){
+    return Ok(Angular<uq32>::from_turns(lap_position_));
 }
 
 

@@ -49,12 +49,12 @@ struct MsgFactory{
     const NodeRole role;
 
     template<typename T>
-    constexpr hal::CanClassicFrame operator()(const T cmd) const {
+    constexpr hal::BxCanFrame operator()(const T cmd) const {
         const auto id = comb_role_and_cmd(role, command_to_kind_v<CommandKind, T>);
         const auto generator = serde::make_serialize_generator<serde::RawLeBytes>(cmd);
-        return hal::CanClassicFrame(
+        return hal::BxCanFrame(
             id, 
-            hal::CanClassicPayload::try_from_iter(generator).unwrap()
+            hal::BxCanPayload::try_from_iter(generator).unwrap()
         );
     };
 };

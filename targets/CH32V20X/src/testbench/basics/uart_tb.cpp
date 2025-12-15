@@ -11,8 +11,6 @@ using namespace ymd;
 
 #define UART_TB_ECHO
 
-#define TARG_UART hal::uart2
-
 using namespace ymd;
 [[maybe_unused]] static void uart_tb(hal::Uart & uart){
     #ifdef UART_TB_ECHO
@@ -25,14 +23,14 @@ using namespace ymd;
     uart.set_event_handler([&](const hal::UartEvent& ev){
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:
-                rx_led.set();
+                rx_led.set_high();
                 clock::delay(1ms);
-                rx_led.clr();
+                rx_led.set_low();
                 break;
             case hal::UartEvent::TxIdle:
-                tx_led.set();
+                tx_led.set_high();
                 clock::delay(1ms);
-                tx_led.clr();
+                tx_led.set_low();
                 break;
             default:
                 PANIC{"Unexpected event", ev};
@@ -44,14 +42,15 @@ using namespace ymd;
         // size_t size = uart.available();
         while(uart.available()){
             char chr;
-            uart.read1(chr);
-            uart.write1(chr);
+            const auto len = uart.try_read_char(chr);
+            if(len)
+            uart.try_write_char(chr);
             clock::delay(1ms);
         }
         clock::delay(300ms);
-        tx_led.clr();
+        tx_led.set_low();
         DEBUG_PRINTLN("noth", uart.available());
-        tx_led.set();
+        tx_led.set_high();
     }
     #endif
 }
@@ -59,16 +58,17 @@ using namespace ymd;
 void uart_main(){
     // uart_tb_old();
     //uart1 passed
-    //TARG_UART passed
+    //uart2 passed
     //uart3 passed
     //uart5 passed
     //uart6 passed
     //uart8 passed
 
-    TARG_UART.init({
-        576000, CommStrategy::Dma, 
-        CommStrategy::Interrupt});
-    DEBUGGER.retarget(&TARG_UART);
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
+    DEBUGGER.retarget(&hal::uart2);
     // DEBUGGER.init(DEBUG_UART_BAUD, CommStrategy::Dma, CommStrategy::None);
-    uart_tb(TARG_UART);
+    uart_tb(hal::uart2);
 }

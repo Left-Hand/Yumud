@@ -2,10 +2,11 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-
-#include "hal/timer/instance/timer_hw.hpp"
-#include "hal/timer/bipolarity_abstract.hpp"
+#include "core/utils/default.hpp"
 #include "core/math/realmath.hpp"
+
+#include "hal/timer/bipolarity_abstract.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 
@@ -31,7 +32,10 @@ static constexpr size_t CHOP_FREQ = 40_KHz;
 
 
 void co_ab_main(){
-    hal::uart2.init({576000});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&hal::uart2);
 
     #if TIM_INDEX == 1
@@ -48,18 +52,27 @@ void co_ab_main(){
     auto & pwm_n = timer.ocn<1>();
 
     timer.init({
+        .remap = hal::TimerRemap::_0,
         .count_freq = hal::NearestFreq(CHOP_FREQ),
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
-    }, EN);
+    })        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
 
-    pwm_p.init({});
-    pwm_n.init({});
+    timer.start();
+
+    pwm_p.init(Default);
+    pwm_n.init(Default);
 
     hal::BipolarityTimerOcConjugate pwm_mirror{pwm_p, pwm_n};
 
     while(true){
         DEBUG_PRINTLN(clock::millis());
-        auto dutycycle = sin(6 * clock::time());
+        auto dutycycle = math::sin(6 * clock::time());
         pwm_mirror.set_dutycycle(dutycycle);
     }    
 }

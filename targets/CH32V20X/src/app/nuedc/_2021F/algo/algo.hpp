@@ -4,9 +4,9 @@
 
 using namespace ymd;
 namespace nuedc::_2021F{
-class PlaceName{
+struct [[nodiscard]] PlaceName{
 public:
-    enum class Kind{
+    enum struct [[nodiscard]] Kind{
         O, 
         A, AL, AR,
         B, BL, BR,
@@ -42,7 +42,7 @@ private:
     Kind kind_;
 };
 
-class PlaceIndex{
+struct [[nodiscard]] PlaceIndex{
 public:
     constexpr explicit PlaceIndex(const uint8_t index):
         index_(index){
@@ -60,22 +60,22 @@ private:
     uint8_t index_;
 }
 
-struct LeadResult{
+struct [[nodiscard]] LeadResult{
     Option<PlaceName> next;
     Option<PlaceIndex> seek;
 };
 
-struct GuideBoard{
+struct [[nodiscard]] GuideBoard{
     Option<PlaceIndex> left;
     Option<PlaceIndex> right;
 };
 
-struct GuideBoard4{
+struct [[nodiscard]] GuideBoard4{
     std::array<Option<PlaceIndex>, 2> left;
     std::array<Option<PlaceIndex>, 2> right;
 };
 
-struct CircumStance{
+struct [[nodiscard]] CircumStance{
     GuideBoard a;
     GuideBoard b;
     GuideBoard4 c;

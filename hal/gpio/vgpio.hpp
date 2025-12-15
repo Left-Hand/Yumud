@@ -7,14 +7,14 @@ namespace ymd::hal{
 class Gpio;
 
 
-class VGpio final :public GpioIntf{
+class [[nodiscard]] VGpio final :public GpioIntf{
 protected:
     GpioPortIntf & port_;
     Nth nth_;
 public:
     VGpio(const VGpio &) = delete;
     VGpio(VGpio &&) = delete;
-    VGpio(GpioPortIntf & port, const PinNth pin_nth):
+    VGpio(GpioPortIntf & port, const PinSource pin_nth):
         port_(port), nth_(Nth(CTZ(uint16_t(pin_nth)))){;}
 
     __fast_inline void set() {port_.set_nth(nth_);}

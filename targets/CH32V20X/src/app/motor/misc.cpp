@@ -192,7 +192,7 @@
         // auto & ob = nlr_ob;
         // const auto max_amp = real_t(8.7);
 
-        const auto begin_m = clock::micros();
+        const auto begin_ms = clock::micros();
         // const auto max_amp = real_t(2.8) + sin(t);
         // auto theta = omega * t + real_t(12) * sin(2 * real_t(TAU) * t);
         // auto theta = omega * clock::time();
@@ -363,7 +363,7 @@
             // DEBUG_PRINTLN_IDLE(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dt > 100 ? 1000 + dt : dt);
             // Sys::Clock::reCalculateTime();
             
-        // CanClassicFrame msg = {0x11, std::make_tuple<uint8_t, uint8_t>(0x55, 0xAA)};
+        // BxCanFrame msg = {0x11, std::make_tuple<uint8_t, uint8_t>(0x55, 0xAA)};
         // if(can1.pending() == 0 and can_en) can1.write(msg);
 
         

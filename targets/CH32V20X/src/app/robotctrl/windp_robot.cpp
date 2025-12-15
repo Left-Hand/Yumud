@@ -8,16 +8,16 @@
 #include "core/system.hpp"
 #include "core/string/string_view.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "hal/timer/bipolarity_abstract.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio.hpp"
 
-#include "types/regions/range2.hpp"
-#include "types/vectors/vector2.hpp"
-#include "types/vectors/vector3.hpp"
-#include "types/vectors/quat.hpp"
+#include "algebra/regions/range2.hpp"
+#include "algebra/vectors/vec2.hpp"
+#include "algebra/vectors/vec3.hpp"
+#include "algebra/vectors/quat.hpp"
 
 #include "digipw/prelude/abdq.hpp"
 
@@ -39,7 +39,7 @@ namespace PhysicalConstants {
 
 static constexpr iq16 cali_iq16(const iq16 _x){
     iq16 x = CLAMP2(_x, 1.0_iq16);
-    return sign(x)*(pow(abs(x), 1.5_iq16)+0.022_iq16);
+    return math::sign(x)*(math::pow(math::abs(x), 1.5_iq16)+0.022_iq16);
 }
 
 
@@ -55,20 +55,25 @@ public:
         channel_b_(pwm_bp, pwm_bn)
     {;}
 
+    static constexpr hal::TimerOcPwmConfig pwm_noinv_cfg = []{
+        auto config = hal::TimerOcPwmConfig::from_default();
+        config.cvr_sync_en = EN;
+        config.valid_level = HIGH;
+        return config;
+    }();
+
+    static constexpr hal::TimerOcPwmConfig pwm_inv_cfg = []{
+        auto config = hal::TimerOcPwmConfig::from_default();
+        config.cvr_sync_en = EN;
+        config.valid_level = LOW;
+        return config;
+    }();
+
     void init_channels(){
         channel_a_.inverse(EN);
         channel_b_.inverse(DISEN);
 
-        static constexpr hal::TimerOcPwmConfig pwm_noinv_cfg = {
-            .cvr_sync_en = EN,
-            .valid_level = HIGH
-        };
 
-        static constexpr hal::TimerOcPwmConfig pwm_inv_cfg = {
-            .cvr_sync_en = EN,
-            .valid_level = LOW,
-        };
-        
         channel_a_.pos_channel().init(pwm_noinv_cfg);
         channel_a_.neg_channel().init(pwm_noinv_cfg);
         channel_b_.pos_channel().init(pwm_inv_cfg);
@@ -135,28 +140,28 @@ struct TaskCircle:public TaskBase<TaskCircle>{
         const auto vec_norm = meas.orientation.normalized();//计算当前摆杆姿态的法向量
         const auto vec_tan = vec_norm.rotated(90_deg);//计算当前摆杆姿态的切向量
         
-        const iq16 cmd_theta = std::atan2(W, H);
-        const iq16 meas_theta = std::acos( //计算摆杆与铅垂线的角度
-            std::cos(meas.orientation.x) * std::cos(meas.orientation.y));
+        const iq16 cmd_theta = math::atan2(W, H);
+        const iq16 meas_theta = math::acos( //计算摆杆与铅垂线的角度
+            iq16(math::cos(meas.orientation.x) * math::cos(meas.orientation.y)));
         const iq16 theta_err = cmd_theta - meas_theta;
 
-        const iq16 cmd_omega = std::sin(cmd_theta) * //期望的公转角速度
-            std::sqrt(G / (x * std::cos(cmd_theta)));
-        const iq16 omega_err = cmd_omega - std::abs(meas.omega.dot(vec_tan));
+        const iq16 cmd_omega = math::sin(cmd_theta) * //期望的公转角速度
+            math::sqrt(G / (x * math::cos(cmd_theta)));
+        const iq16 omega_err = cmd_omega - math::abs(meas.omega.dot(vec_tan));
 
         const auto out_tan = K_tan * omega_err * vec_tan * //切向控制器输出
-            sign(meas.omega.dot(vec_tan));
+            math::sign(meas.omega.dot(vec_tan));
 
         const auto out_norm = //法向控制器输出
             (Kp_norm * theta_err - Kd_norm * meas.angular_accel.dot(vec_norm))
-            * vec_norm * std::abs(theta_err);
+            * vec_norm * math::abs(theta_err);
 
         return out_norm + out_tan;
     }
 };
 
 struct TaskLine:public TaskBase<TaskLine>{
-    constexpr Output calc(const Measurements meas, const Angle<iq16> theta){
+    constexpr Output calc(const Measurements meas, const Angular<iq16> theta){
         using namespace PhysicalConstants;
 
         const auto orientation = meas.orientation;
@@ -170,14 +175,14 @@ struct TaskLine:public TaskBase<TaskLine>{
         const iq16 d2 = meas.angular_accel.cross(vec_tan);
         const Vec2 out_norm = (0.027_iq16*d2 + 0.37_iq16*d1)*vec_norm;
 
-        const iq16 E_targ = M * G * x * (1.0_iq16 - H / sqrt(H*H + W*W));
+        const iq16 E_targ = M * G * x * (1.0_iq16 - H / math::sqrt(H*H + W*W));
         
-        const iq16 E_p = M * G * x * (1.0_iq16 - cos(orientation.x)*cos(orientation.y));
+        const iq16 E_p = M * G * x * (1.0_iq16 - math::cos(orientation.x)*math::cos(orientation.y));
         const iq16 E_k = 0.5_iq16 * J * (omega.project(vec_tan)).length_squared();
         const iq16 E = E_p + E_k;
 
-        const Vec2 out_tan = 15_iq16*(E_targ - E + 0.00037_iq16*abs(angular_accel.dot(vec_tan))) 
-            * vec_tan * sign(omega.dot(vec_tan));
+        const Vec2 out_tan = 15_iq16*(E_targ - E + 0.00037_iq16*math::abs(angular_accel.dot(vec_tan))) 
+            * vec_tan * math::sign(omega.dot(vec_tan));
 
         return out_norm + out_tan;
     }

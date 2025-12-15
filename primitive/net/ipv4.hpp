@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <array>
 #include <span>
+#include <bit>
 
 //描述了一个Ipv4地址
 
@@ -11,7 +12,9 @@ namespace ymd{
 }
 
 namespace ymd{
-struct [[nodsicard]] Ipv4{
+struct [[nodiscard]] Ipv4{
+    static_assert(std::endian::native == std::endian::little);
+
     using Self = Ipv4;
     inline constexpr explicit Ipv4(
         const uint8_t b1,
@@ -32,26 +35,32 @@ struct [[nodsicard]] Ipv4{
     template<size_t I> requires(I < 4)
     [[nodiscard]] constexpr uint8_t & get() {return get_element<I>(*this);}
 
-    [[nodiscard]] constexpr uint8_t operator [](const size_t idx) const{return bytes_[idx];}
+    [[nodiscard]] constexpr uint8_t operator [](const size_t idx) const{
+        return bytes_[idx];
+    }
 
-    [[nodiscard]] constexpr uint8_t & operator [](const size_t idx) {return bytes_[idx];}
+    [[nodiscard]] constexpr uint8_t & operator [](const size_t idx) {
+        return bytes_[idx];
+    }
 
     [[nodiscard]] constexpr uint8_t at(const size_t idx) const{
-        if(idx >= 4) [[unlikely]] __builtin_abort();
-        bytes_[idx];
+        if(idx >= 4) [[unlikely]] __builtin_trap();
+        return bytes_[idx];
     }
 
     [[nodiscard]] constexpr uint8_t & at(const size_t idx) {
-        if(idx >= 4) [[unlikely]] __builtin_abort();
-        bytes_[idx];
+        if(idx >= 4) [[unlikely]] __builtin_trap();
+        return bytes_[idx];
     }
 
     [[nodiscard]] constexpr std::span<const uint8_t, 4> bytes() const {return std::span(bytes_);}
-    [[nodiscard]] constexpr std::span<uint8_t, 4> mut_bytes() {return std::span(bytes_);}
+    [[nodiscard]] constexpr std::span<uint8_t, 4> bytes_mut() {return std::span(bytes_);}
 
     [[nodiscard]] constexpr uint32_t to_u32() const {return std::bit_cast<uint32_t>(bytes_);}
 
-    [[nodiscard]] constexpr bool operator ==(const Self & other){return to_u32() == other.to_u32();}
+    [[nodiscard]] constexpr bool operator ==(const Self & other) const {
+        return to_u32() == other.to_u32();
+    }
 private:
     alignas(4) std::array<uint8_t, 4> bytes_;
 

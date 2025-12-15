@@ -24,7 +24,7 @@ void ad9959_main(){
     spi.set_bitorder(std::endian::little
 
     [[maybe_unused]]
-    const auto spi_rank = spi.allocate_cs_gpio(&cs_gpio);
+    const auto spi_rank = spi.allocate_cs_pin(&cs_gpio);
 
     // timer1.init(1);
     // SpiDrv ad9959_drv{spi, 0};

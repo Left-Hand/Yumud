@@ -51,7 +51,7 @@ constexpr void set_hsv(Obj & obj, const T p_h,const T p_s, const T p_v){
         return;
     }
 
-    const T p_h_temp = frac(p_h) * 6;
+    const T p_h_temp = math::frac(p_h) * 6;
     const size_t i = static_cast<size_t>(p_h_temp);
 
     const T f = p_h_temp - i;
@@ -135,7 +135,7 @@ constexpr void srgb2rgb(Dst& rgb, const Src& srgb) {
 
 template <typename T>
 requires std::is_arithmetic_v<T>
-struct RGBA {
+struct [[nodiscard]] RGBA {
 public:
     T r;
     T g;
@@ -396,7 +396,7 @@ private:
 };
 
 template<typename T>
-struct RGB{
+struct [[nodiscard]] RGB{
     T r, g, b;
 
     [[nodiscard]] constexpr static RGB from_hsv(const T p_h, const T p_s, const T p_v){
@@ -412,26 +412,26 @@ struct RGB{
     constexpr RGB(const T p_r, const T p_g, const T p_b) : r(p_r), g(p_g), b(p_b) {}
 
     constexpr RGB & operator *= (const T val){
-        r *= val;
-        g *= val;
-        b *= val;
+        r = r * val;
+        g = g * val;
+        b = b * val;
 
         return *this;
     }
 
     constexpr RGB & operator *= (const RGB & val){
-        r *= val.r;
-        g *= val.g;
-        b *= val.b;
+        r = r * val.r;
+        g = g * val.g;
+        b = b * val.b;
 
         return *this;
     }
 
     constexpr RGB & operator /= (const T val){
         const auto inv_val = 1 / val;
-        r *= inv_val;
-        g *= inv_val;
-        b *= inv_val;
+        r = r * inv_val;
+        g = g * inv_val;
+        b = b * inv_val;
 
         return *this;
     }
@@ -501,7 +501,7 @@ private:
 
 
 template<typename T>
-struct sRGB{
+struct [[nodiscard]] sRGB{
     T r, g, b;
 
     static constexpr sRGB<T> from_uninitialized() {

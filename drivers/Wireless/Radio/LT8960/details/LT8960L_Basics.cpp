@@ -112,9 +112,13 @@ IResult<> trasmit_rf(const std::span<uint8_t> buf){
 }
 
 IResult<> LT8960L::set_datarate(LT8960L::DataRate rate){
-    // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
+    // 参考来源
 
-    //确保链式调用顺利完成才改变速率
+    // 无许可证声明
+    // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
+    
+
+
     auto change_datarate = [this](DataRate rate_){
         this->datarate_ = rate_;
         return IResult<>(Ok());
@@ -480,7 +484,7 @@ IResult<> LT8960L::validate(){
 
 IResult<bool> LT8960L_Phy::check_and_skip_hw_listen_pkt(){
     bool is_completed = i2c_.sda().read() == HIGH;
-    if(is_completed) i2c_.sda().set();
+    if(is_completed) i2c_.sda().set_high();
     return Ok(is_completed);
 }
 
@@ -495,8 +499,8 @@ IResult<bool> LT8960L::is_receiving(){
 }
 
 IResult<> LT8960L_Phy::start_hw_listen_pkt(){
-    i2c_.scl().clr(); 
-    i2c_.sda().set(); 
+    i2c_.scl().set_low(); 
+    i2c_.sda().set_high(); 
     i2c_.sda().inpu();
 
     return Ok();

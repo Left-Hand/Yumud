@@ -8,18 +8,18 @@
 
 namespace ymd::serde{
 template<std::endian Endian>
-struct RawBytes{
+struct [[nodiscard]] RawBytes{
     using item_type = uint8_t;
 };
 
 using RawLeBytes = RawBytes<std::endian::little>;
 
-struct ReadableAscii{
+struct [[nodiscard]] ReadableAscii{
     using item_type = char;
 };
 
 template<typename Protocol, typename T>
-struct SerializeGenerator{};
+struct [[nodiscard]] SerializeGenerator{};
 
 
 enum class DeserializeError:uint8_t{
@@ -35,10 +35,10 @@ enum class DeserializeError:uint8_t{
 
 template<typename Protocol, typename T>
 requires std::is_aggregate_v<std::decay_t<T>>
-struct StructDeserializer;
+struct [[nodiscard]] StructDeserializer;
 
 template<typename Protocol, typename T>
-struct Deserializer {
+struct [[nodiscard]] Deserializer {
     static constexpr Result<T, DeserializeError>
     deserialize(std::span<const uint8_t> pbuf){
         return StructDeserializer<Protocol, T>().template deserialize(pbuf);
@@ -47,7 +47,7 @@ struct Deserializer {
 
 template<typename T>
 requires std::is_aggregate_v<std::decay_t<T>>
-struct StructDeserializer<RawLeBytes, T>{
+struct [[nodiscard]] StructDeserializer<RawLeBytes, T>{
     static constexpr Result<T, DeserializeError> 
     deserialize(std::span<const uint8_t> pbuf) {
         return deserialize_struct(pbuf);
@@ -107,7 +107,7 @@ struct StructDeserializer<RawLeBytes, T>{
 
 
 template<typename Protocol, typename T>
-struct SerializeGeneratorFactory{
+struct [[nodiscard]] SerializeGeneratorFactory{
     static constexpr auto from(const T & obj){
         return SerializeGenerator<Protocol, T>(obj);
     }
@@ -115,7 +115,7 @@ struct SerializeGeneratorFactory{
 
 
 template<typename Protocol, typename T>
-struct DeserializerFactory{
+struct [[nodiscard]] DeserializerFactory{
     static constexpr auto from(){
         return Deserializer<Protocol, T>{};
     }
@@ -123,7 +123,7 @@ struct DeserializerFactory{
 
 
 template<typename Protocol, typename T>
-struct serialize_generator_support_sbo:std::false_type{};
+struct [[nodiscard]] serialize_generator_support_sbo:std::false_type{};
 
 template<typename Protocol, typename T>
 static constexpr bool serialize_generator_support_sbo_v = 
@@ -151,7 +151,7 @@ static constexpr auto deserialize(const auto & pbuf) {
 
 
 template<size_t Q, typename D>
-struct SerializeGenerator<RawLeBytes, fixed_t<Q, D>>{
+struct [[nodiscard]] SerializeGenerator<RawLeBytes, fixed_t<Q, D>>{
     using Item = typename RawLeBytes::item_type;
     static constexpr size_t N = sizeof(D);
     constexpr explicit SerializeGenerator(const fixed_t<Q, D> num):
@@ -175,12 +175,12 @@ private:
 };
 
 template<typename Protocol, size_t Q, typename D>
-struct serialize_generator_support_sbo<Protocol, fixed_t<Q, D>>:std::true_type{};
+struct [[nodiscard]] serialize_generator_support_sbo<Protocol, fixed_t<Q, D>>:std::true_type{};
 
 
 template<typename T>
 requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
-struct SerializeGenerator<RawLeBytes, T>{
+struct [[nodiscard]] SerializeGenerator<RawLeBytes, T>{
     static constexpr size_t N = sizeof(T);
     constexpr explicit SerializeGenerator(const T num):
         buf_(serialize(num)){;}
@@ -202,7 +202,7 @@ private:
 };
 
 template<>
-struct SerializeGenerator<RawLeBytes, math::bf16>{
+struct [[nodiscard]] SerializeGenerator<RawLeBytes, math::bf16>{
     static constexpr size_t N = sizeof(math::bf16);
     constexpr explicit SerializeGenerator(const math::bf16 num):
         buf_(serialize(num)){;}
@@ -226,13 +226,13 @@ private:
 
 template<typename Protocol, typename T>
 requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
-struct serialize_generator_support_sbo<Protocol, T>:std::true_type{;};
+struct [[nodiscard]] serialize_generator_support_sbo<Protocol, T>:std::true_type{;};
 
 
 // 枚举类型特化
 template<typename T>
 requires std::is_enum_v<T>
-struct SerializeGenerator<RawLeBytes, T> {
+struct [[nodiscard]] SerializeGenerator<RawLeBytes, T> {
     using UnderlyingType = std::underlying_type_t<T>;
     static constexpr size_t N = sizeof(UnderlyingType);
     
@@ -256,10 +256,10 @@ private:
 
 template<typename Protocol, typename T>
 requires(std::is_enum_v<T>)
-struct serialize_generator_support_sbo<Protocol, T>:std::true_type{;};
+struct [[nodiscard]] serialize_generator_support_sbo<Protocol, T>:std::true_type{;};
 
 template <typename T>
-struct SerializeGenerator<RawLeBytes, std::span<const T>> {
+struct [[nodiscard]] SerializeGenerator<RawLeBytes, std::span<const T>> {
     using ElementIter = SerializeGenerator<RawLeBytes, T>;
     
     constexpr explicit SerializeGenerator(const std::span<const T> pbuf)
@@ -305,35 +305,35 @@ private:
     };
 };
 template<typename Protocol, typename T, size_t N>
-struct SerializeGeneratorFactory<Protocol, std::span<const T, N>>{
+struct [[nodiscard]] SerializeGeneratorFactory<Protocol, std::span<const T, N>>{
     static constexpr auto from(const std::span<const T, N> obj){
         return SerializeGenerator<Protocol, std::span<const T>>(std::span<const T>(obj));
     }
 };
 
 template<typename Protocol, typename T, size_t N>
-struct SerializeGeneratorFactory<Protocol, std::array<T, N>>{
+struct [[nodiscard]] SerializeGeneratorFactory<Protocol, std::array<T, N>>{
     static constexpr auto from(const std::array<T, N> & obj){
         return SerializeGenerator<Protocol, std::span<const T>>(std::span<const T>(obj));
     }
 };
 
 template<typename Protocol, typename T, size_t N>
-struct SerializeGeneratorFactory<Protocol, T[N]>{
+struct [[nodiscard]] SerializeGeneratorFactory<Protocol, T[N]>{
     static constexpr auto from(const T (&obj)[N]) {
         return SerializeGenerator<Protocol, std::span<const T>>(std::span<const T>(obj));
     }
 };
 
 template<typename Protocol>
-struct SerializeGeneratorFactory<Protocol, StringView>{
+struct [[nodiscard]] SerializeGeneratorFactory<Protocol, StringView>{
     static constexpr auto from(const StringView str) {
         return SerializeGenerator<Protocol, std::span<const char>>(str.chars());
     }
 };
 
 template<typename Protocol, typename T>
-struct SerializeGeneratorFactory<Protocol, std::initializer_list<T>> {
+struct [[nodiscard]] SerializeGeneratorFactory<Protocol, std::initializer_list<T>> {
     static constexpr auto from(std::initializer_list<T> list) {
         return SerializeGenerator<Protocol, std::span<const T>>(
             std::span<const T>(list.begin(), list.size())
@@ -342,7 +342,7 @@ struct SerializeGeneratorFactory<Protocol, std::initializer_list<T>> {
 };
 
 template<typename Protocol, typename ... Ts>
-struct SerializeGenerator<Protocol, std::tuple<Ts ... >> {
+struct [[nodiscard]] SerializeGenerator<Protocol, std::tuple<Ts ... >> {
     static constexpr size_t N = sizeof...(Ts);
     
     constexpr explicit SerializeGenerator(const std::tuple<Ts...> & tup)
@@ -411,8 +411,26 @@ private:
     size_t pos_ = 0;
 };
 
+
+template<typename Protocol, typename T>
+struct [[nodiscard]] SerializeGenerator<Protocol, Option<T>> {
+    using InnerSerializeGenerator = SerializeGenerator<Protocol, T>;
+    constexpr explicit SerializeGenerator(const Option<T> & may_value)
+        : 
+        inner_serialize_iter_(InnerSerializeGenerator(may_value)),
+        is_some_(may_value.is_some()){;}
+
+    constexpr bool has_next() const { return is_some_ && inner_serialize_iter_.has_next();}
+    
+    constexpr uint8_t next() { return is_some_ ? inner_serialize_iter_.next() : 0;}
+
+private:
+    InnerSerializeGenerator inner_serialize_iter_;
+    bool is_some_;
+};
+
 template<size_t Q, typename D>
-struct Deserializer<RawLeBytes, fixed_t<Q, D>> {
+struct [[nodiscard]] Deserializer<RawLeBytes, fixed_t<Q, D>> {
     static constexpr size_t N = sizeof(D);
     [[nodiscard]] static constexpr size_t size(){
         return N;
@@ -436,7 +454,7 @@ struct Deserializer<RawLeBytes, fixed_t<Q, D>> {
 
 template<typename T>
 requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
-struct Deserializer<RawLeBytes, T> {
+struct [[nodiscard]] Deserializer<RawLeBytes, T> {
     static constexpr size_t N = sizeof(T);
     [[nodiscard]] static constexpr size_t size(){
         return N;
@@ -463,7 +481,7 @@ struct Deserializer<RawLeBytes, T> {
 };
 
 template<>
-struct Deserializer<RawLeBytes, math::bf16> {
+struct [[nodiscard]] Deserializer<RawLeBytes, math::bf16> {
     static constexpr size_t N = sizeof(math::bf16);
     [[nodiscard]] static constexpr size_t size(){
         return N;
@@ -487,7 +505,7 @@ struct Deserializer<RawLeBytes, math::bf16> {
 };
 
 template<typename Protocol, typename... Ts>
-struct Deserializer<Protocol, std::tuple<Ts...>> {
+struct [[nodiscard]] Deserializer<Protocol, std::tuple<Ts...>> {
     static constexpr size_t N = (sizeof(Ts) + ...);
 
     [[nodiscard]] static constexpr size_t size() {
@@ -539,7 +557,7 @@ private:
 
 #define DEF_DERIVE_SERIALIZE_AS_TUPLE(T)\
 template<typename Protocol>\
-struct serde::SerializeGeneratorFactory<Protocol, T>{\
+struct [[nodiscard]] serde::SerializeGeneratorFactory<Protocol, T>{\
     static constexpr auto from(T obj){\
         return make_serialize_generator<Protocol>(reflect::to<std::tuple>(obj));\
     }\
@@ -547,7 +565,7 @@ struct serde::SerializeGeneratorFactory<Protocol, T>{\
 
 #define DEF_DERIVE_RAW_BYTES_DESERIALIZER(T) \
 template<> \
-struct serde::DeserializerFactory<serde::RawLeBytes, T> { \
+struct [[nodiscard]] serde::DeserializerFactory<serde::RawLeBytes, T> { \
     static constexpr serde::Deserializer<RawLeBytes, T> \
     from() { \
         return serde::Deserializer<RawLeBytes, T>(); \

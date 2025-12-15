@@ -28,14 +28,14 @@ void WS2812_Phy::delay_short(){
 void WS2812_Phy::send_bit(const bool state){
     // __disable_irq();
     if(state){
-        gpio_.set();
+        gpio_.set_high();
         delay_long();
-        gpio_.clr();
+        gpio_.set_low();
         delay_short();
     }else{
-        gpio_.set();
+        gpio_.set_high();
         delay_short();
-        gpio_.clr();
+        gpio_.set_low();
         delay_long();
     }
     // __enable_irq();
@@ -48,7 +48,7 @@ void WS2812_Phy::send_byte(const uint8_t data){
 }
 
 void WS2812_Phy::send_reset(){
-    gpio_.clr();
+    gpio_.set_low();
     clock::delay(60us);
 }
 

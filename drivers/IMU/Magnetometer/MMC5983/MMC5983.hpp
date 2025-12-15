@@ -5,10 +5,20 @@
 // 这个驱动已经完成编写
 // 这个驱动已经完成测试
 
+// 参考来源：
 // https://www.memsic.com/Public/Uploads/uploadfile/files/20220119/MMC5983MADatasheetRevA.pdf
 // https://github.com/kriswiner/MMC5983MA/blob/master/LSM6DSM_MMC5983MA_LPS22HB_Dragonfly/MMC5983MA.cpp
 
+//  * 注意：本实现为完全原创，未使用上述项目的任何代码。
+//  * 参考仅用于理解问题领域，未复制任何具体实现。
+
 #include "mmc5983_prelude.hpp"
+
+
+// The MMC5983MA is an AEC-Q100 qualified complete 3-axis magnetic sensor with on-chip 
+// signal processing and integrated I2C/SPI bus suitable for use in automotive applications.
+// Couple with the LSM6DSM accel/gyro and LPS22HB barometer the system provides a compact and
+// accurate absolute orientation estimation engine.
 
 namespace ymd::drivers{
 

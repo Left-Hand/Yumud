@@ -52,7 +52,7 @@ struct BMM150_Prelude{
         ChipId = 0x40,
         X = 0x42,
         Y = 0x44,
-        Y = 0x46,
+        Z = 0x46,
         Rhall = 0x48,
         InterruptStatus = 0x4a,
         PowerControl = 0x4b,
@@ -70,14 +70,14 @@ struct BMM150_Prelude{
 struct BMM150_Regset:public BMM150_Prelude{
 
 // 0x40
-struct R8_ChipId{
+struct R8_ChipId:public Reg8<>{
     static constexpr auto ADDRESS = RegAddr::ChipId;
     static constexpr uint8_t KEY = 0b00110010;
 
     uint8_t chipid;
 }DEF_R8(chipid_reg)
 
-struct _R16_MagField{
+struct _R16_MagField:public Reg16<>{
     
     uint16_t selftest:1;
     uint16_t :2;
@@ -100,7 +100,7 @@ struct R16_Z:public _R16_MagField{
 }DEF_R16(z_reg)
 
 //0x48
-struct R16_Rhall{
+struct R16_Rhall:public Reg16<>{
     static constexpr auto ADDRESS = RegAddr::Rhall;
     uint16_t data_ready:1;
     uint16_t :1;
@@ -111,10 +111,10 @@ struct R16_Rhall{
 //0x4a
 struct R8_InterruptStatus:public InterruptMask{
     static constexpr auto ADDRESS = RegAddr::InterruptStatus;
-}DEF_R16(interrupt_status_reg)
+}DEF_R8(interrupt_status_reg)
 
 //0x4b
-struct R8_PowerControl{
+struct R8_PowerControl:public Reg8<>{
     static constexpr auto ADDRESS = RegAddr::PowerControl;
     uint8_t not_suspend:1;
     uint8_t soft_reset:1;
@@ -124,7 +124,7 @@ struct R8_PowerControl{
 }DEF_R8(power_control_reg)
 
 //0x4c
-struct R8_Control{
+struct R8_Control:public Reg8<>{
     static constexpr auto ADDRESS = RegAddr::Control;
     uint8_t self_test:1;
     OperationMode opmode:2;
@@ -140,7 +140,7 @@ struct R8_InterruptEnable:public InterruptMask{
 }DEF_R8(interrupt_enable_reg)
 
 //0x4e
-struct R8_AxisEnable{
+struct R8_AxisEnable:public Reg8<>{
     static constexpr auto ADDRESS = RegAddr::AxisEnable;
     uint8_t interrupt_polarity:1;
     uint8_t interrupt_latch:1;
@@ -154,7 +154,7 @@ struct R8_AxisEnable{
 }DEF_R8(axis_enable_reg)
 
 //0x4f
-struct R8_LowThresholdSetting{
+struct R8_LowThresholdSetting:public Reg8<>{
     static constexpr auto ADDRESS = RegAddr::LowThresholdSetting;
     uint8_t _0:1;
     uint8_t _1:1;
@@ -168,7 +168,7 @@ struct R8_LowThresholdSetting{
 }DEF_R8(low_threshold_setting)
 
 //0x50
-struct R8_HighThresholdSetting{
+struct R8_HighThresholdSetting:public Reg8<>{
     static constexpr auto ADDRESS = RegAddr::HighThresholdSetting;
     uint8_t _0:1;
     uint8_t _1:1;
@@ -184,7 +184,7 @@ struct R8_HighThresholdSetting{
 
 
 //0x51
-struct R8_XyRepetitions{
+struct R8_XyRepetitions:public Reg8<>{
     static constexpr auto ADDRESS = RegAddr::XyRepetitions;
     uint8_t data;
 
@@ -196,7 +196,7 @@ struct R8_XyRepetitions{
 }DEF_R8(xy_repetitions_reg)
 
 //0x52
-struct R8_ZRepetitions{
+struct R8_ZRepetitions:public Reg8<>{
     static constexpr auto ADDRESS = RegAddr::ZRepetitions;
     uint8_t data;
 

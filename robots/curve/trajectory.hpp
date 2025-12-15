@@ -2,7 +2,7 @@
 
 #include "core/platform.hpp"
 #include "core/clock/clock.hpp"
-#include "thirdparty/sstl/include/sstl/vector.h"
+#include "core/container/heapless_vector.hpp"
 
 
 namespace ymd{
@@ -45,30 +45,30 @@ public:
     // }
 
     // TrajectoryIterator end() const{
-    //     return TrajectoryIterator(*this, data.size());
+    //     return TrajectoryIterator(*this, buf.size());
     // }
     E * begin(){
-        return &data[0];
+        return &buf[0];
     }
 
     E * end(){
-        return &data[data.size()];
+        return &buf[buf.size()];
     }
 
     auto size() const {
-        return data.size();
+        return buf.size();
     }
 
     bool is_full() const {
-        return data.size() == data.capacity();
+        return buf.size() == buf.capacity();
     }
 
     void clear(){
-        data.clear();
+        buf.clear();
     }
 
     auto capacity() const {
-        return data.capacity();
+        return buf.capacity();
     }
     void push(const uint x, const uint y, const uint z, const bool nz){
         PackedTrajectoryPoint item;
@@ -76,17 +76,17 @@ public:
         item.y = y;
         item.z = z;
         item.nz = nz;
-        if(data.size() < RECORD_LENGTH) data.push_back(item);
+        if(buf.size() < RECORD_LENGTH) buf.push_back(item);
     }
 
     const E & operator[](uint index) const {
-        return data[MIN(index, RECORD_LENGTH - 1)];
+        return buf[MIN(index, RECORD_LENGTH - 1)];
     }
 private:
 
-    using Container = sstl::vector<E, RECORD_LENGTH>;
+    using Container = HeaplessVector<E, RECORD_LENGTH>;
     
-    Container data;
+    Container buf;
 
 };
 

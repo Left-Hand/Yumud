@@ -9,7 +9,7 @@
 namespace ymd::hal{
 
 template<size_t N>
-class VGpioPortIntf : public GpioPortIntf{
+class [[nodiscard]] VGpioPortIntf : public GpioPortIntf{
 public:
     constexpr size_t size(){
         return N;
@@ -28,7 +28,7 @@ public:
 };
 
 template<size_t N>
-class VGpioPort final: public VGpioPortIntf<N>{
+class [[nodiscard]] VGpioPort final: public VGpioPortIntf<N>{
 protected:
     using E = hal::GpioIntf;
     std::array<E *, N> p_pins_ = {nullptr};
@@ -68,13 +68,13 @@ public:
 
     __fast_inline void set_by_mask(const PinMask mask) {
         for(uint8_t i = 0; i < 16; i++){
-            if(mask.test(Nth(i))) p_pins_[i]->set();
+            if(mask.test(Nth(i))) p_pins_[i]->set_high();
         }
     }
 
     __fast_inline void clr_by_mask(const PinMask mask) {
         for(uint8_t i = 0; i < 16; i++){
-            if(mask.test(Nth(i))) p_pins_[i]->clr();
+            if(mask.test(Nth(i))) p_pins_[i]->set_low();
         }
     }
 

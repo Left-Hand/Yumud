@@ -3,12 +3,11 @@
 #include "core/clock/time.hpp"
 #include "core/debug/debug.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "FFT.hpp"
-#include "liir.hpp"
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
-#include "dsp/filter/butterworth/ButterSideFilter.hpp"
+#include "dsp/filter/butterworth/band.hpp"
+#include "dsp/filter/butterworth/side.hpp"
 #include "dsp/filter/butterworth/Order4ZeroPhaseShiftButterWothLowpassFilter.hpp"
 #include "dsp/siggen/dtmf.hpp"
 
@@ -62,9 +61,19 @@ void dtmf_main(){
     auto & timer = hal::timer1;
 
     timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
         .count_freq = hal::NearestFreq(FS),
         .count_mode = hal::TimerCountMode::Up
-    }, EN);
+    })            
+        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+
+    timer.start();
 
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);

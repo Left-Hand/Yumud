@@ -1,17 +1,16 @@
 #include "src/testbench/tb.h"
-#include "dsp/controller/adrc/leso.hpp"
-#include "dsp/controller/adrc/command_shaper.hpp"
+#include "dsp/controller/adrc/linear/leso2o.hpp"
 
 #include "service.hpp"
 
 #include "middlewares/rpc/rpc.hpp"
-#include "middlewares/repl/repl_service.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/timer/hw_singleton.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/uart/uartsw.hpp"
 
 
@@ -56,9 +55,18 @@ public:
 
 
         SERVO_PWMGEN_TIMER.init({
+            .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
             .count_freq = hal::NearestFreq(50),
             .count_mode = hal::TimerCountMode::Up
-        }, EN);
+        })
+                .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+        SERVO_PWMGEN_TIMER.start();
 
         #ifndef USE_MOCK_SERVO
 
@@ -120,19 +128,19 @@ struct Factory{
 static constexpr auto make_cfg(){
     return AppConfig{
         .yaw_cfg = ServoConfig{
-            .min_angle = -0.5_r,
-            .max_angle = 0.5_r
+            .min_angle = Angular<iq16>::from_radians(-0.5_r),
+            .max_angle = Angular<iq16>::from_radians(0.5_r)
         },
         .pitch_cfg = ServoConfig{
-            .min_angle = -0.5_r,
-            .max_angle = 0.5_r
+            .min_angle = Angular<iq16>::from_radians(-0.5_r),
+            .max_angle = Angular<iq16>::from_radians(0.5_r)
         },
         .gimbal_planner_cfg = {
             .dyna_cfg = {
                 .kp = 2.0_r,
                 .kd = 2.0_r,
-                .max_spd = 1_r,
-                .max_acc = 1_r,
+                .x2_limit = 1_r,
+                .x3_limit = 1_r,
                 .fs = CTRL_FREQ
             },
             .kine_cfg = {
@@ -152,7 +160,10 @@ static constexpr auto make_cfg(){
 
 void nuedc_2023e_main(){
     using namespace nuedc::_2023E;
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.no_brackets(EN);
     DEBUGGER.force_sync(EN);

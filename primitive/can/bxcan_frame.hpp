@@ -10,11 +10,11 @@
 #include "core/utils/Result.hpp"
 
 
-//这个文件描述了CanClassicFrame类 表示标准Can2.0(bxcan)的消息
+//这个文件描述了BxCanFrame类 表示标准Can2.0(bxcan)的消息
 
 namespace ymd::hal{
 
-struct alignas(16) [[nodiscard]] CanClassicFrame{
+struct alignas(16) [[nodiscard]] BxCanFrame{
 public:
     using Payload = BxCanPayload;
 
@@ -22,13 +22,18 @@ public:
     //这里并没有用零拷贝，原因是对齐排列的uint64比零拷贝效率更高
     static constexpr U8X8 ZERO_U8X8 = std::bit_cast<U8X8>(uint64_t(0));
 
-    using Self = CanClassicFrame;
-    constexpr CanClassicFrame(const CanClassicFrame & other) = default;
-    constexpr CanClassicFrame & operator = (const CanClassicFrame & other) = default;
-    constexpr CanClassicFrame(CanClassicFrame && other) = default;
-    constexpr CanClassicFrame & operator = (CanClassicFrame && other) = default;
-    // constexpr Self() = default;
+    using Self = BxCanFrame;
+    constexpr BxCanFrame(const BxCanFrame & other) = default;
+    constexpr BxCanFrame & operator = (const BxCanFrame & other) = default;
+    constexpr BxCanFrame(BxCanFrame && other) = default;
+    constexpr BxCanFrame & operator = (BxCanFrame && other) = default;
 
+
+    /// \brief 从创建一个未初始化的帧
+
+    __always_inline static Self from_uninitialized(){
+        return Self{};
+    }
     /// \brief 从给定的id创建一个远程帧
     __always_inline static constexpr Self from_remote(
         details::is_canid auto id
@@ -55,7 +60,7 @@ public:
         return Self(CanIdentifier::from_parts(id, CanRtr::Data), payload);
     }
 
-    __always_inline constexpr CanClassicFrame(
+    __always_inline constexpr BxCanFrame(
         details::is_canid auto id,
         const Payload payload
     ):
@@ -70,7 +75,7 @@ public:
     ){
         return Self(
             CanIdentifier::from_bits(id_bits), 
-            Payload::from_u64_and_dlc(int_val, CanClassicDlc::from_bits(len))
+            Payload::from_u64_and_dlc(int_val, BxCanDlc::from_bits(len))
         );
     }
 
@@ -80,7 +85,7 @@ public:
     [[nodiscard]] __always_inline constexpr size_t length() const {return dlc().length();}
 
     /// \brief 获取dlc标识符
-    [[nodiscard]] __always_inline constexpr CanClassicDlc dlc() const {
+    [[nodiscard]] __always_inline constexpr BxCanDlc dlc() const {
         return payload_.dlc_;}
 
     /// \brief 获取dlc标识符
@@ -211,30 +216,26 @@ private:
 
     alignas(4) CanIdentifier identifier_;
     alignas(4) Payload payload_;
-    /* Specifies the length of the frame that will be received.
-    This parameter can be a value between 0 to 8 */
-    
-    // uint8_t mbox_:4;
-    
-    // uint8_t fmi_;     
-    /* Specifies the index of the filter the message stored in 
-    the mailbox passes through. This parameter can be a 
-    value between 0 to 0xFF */
 
-    __always_inline constexpr CanClassicFrame(
+
+    __always_inline constexpr BxCanFrame(
         const CanIdentifier identifier,
         const Payload payload
     ):
         identifier_(identifier),
         payload_(payload){}
+
+    __always_inline BxCanFrame():
+        identifier_(CanIdentifier::from_uninitialized()),
+        payload_(Payload::from_uninitialized()){;}
 };
 
-static_assert(sizeof(CanClassicFrame) == 16);
+static_assert(sizeof(BxCanFrame) == 16);
 
 
 }
 
 namespace ymd{
     class OutputStream;
-    OutputStream & operator<<(OutputStream & os, const hal::CanClassicFrame & frame);
+    OutputStream & operator<<(OutputStream & os, const hal::BxCanFrame & frame);
 }

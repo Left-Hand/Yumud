@@ -166,7 +166,7 @@ public:
         x_ = x_ + K * innovation;
         
         // 协方差更新: P = (I - K * H) * P
-        const auto I = Matrix<T, N_STATES, N_STATES>::from_identity();
+        const auto I = Matrix<T, N_STATES, N_STATES>::identity();
         P_ = (I - K * H_) * P_;
     }
     

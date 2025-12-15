@@ -193,3 +193,4 @@ void ld19_main();
 void m10_main();
 void myactuator_main();
 void m1502e_main();
+void s21c_main();

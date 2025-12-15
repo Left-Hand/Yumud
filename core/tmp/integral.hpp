@@ -5,89 +5,85 @@
 #include <concepts>
 #include <cstddef>
 
-namespace ymd::tmp{
+#include "core/tmp/bits/width.hpp"
 
+namespace ymd::tmp{
+namespace details{
 template<typename U>
-struct extended_underlying_type;
+struct _extended_underlying;
 
 template<>
-struct extended_underlying_type<uint8_t>{
+struct _extended_underlying<uint8_t>{
     using type = uint16_t;
 };
 
 template<>
-struct extended_underlying_type<uint16_t>{
+struct _extended_underlying<uint16_t>{
     using type = uint32_t;
 };
 
 template<>
-struct extended_underlying_type<uint32_t>{
+struct _extended_underlying<uint32_t>{
     using type = uint64_t;
 };
 
 template<>
-struct extended_underlying_type<size_t>{
+struct _extended_underlying<size_t>{
     using type = uint64_t;
 };
 
 template<>
-struct extended_underlying_type<uint64_t>{
+struct _extended_underlying<uint64_t>{
     using type = uint64_t;
 };
 
 template<>
-struct extended_underlying_type<int8_t>{
+struct _extended_underlying<int8_t>{
     using type = int16_t;
 };
 
 template<>
-struct extended_underlying_type<int16_t>{
+struct _extended_underlying<int16_t>{
     using type = int32_t;
 };
 
 template<>
-struct extended_underlying_type<int32_t>{
+struct _extended_underlying<int32_t>{
     using type = int64_t;
 };
 
 template<>
-struct extended_underlying_type<int>{
+struct _extended_underlying<int>{
     using type = int64_t;
 };
 
 template<>
-struct extended_underlying_type<int64_t>{
+struct _extended_underlying<int64_t>{
     using type = int64_t;
 };
 
 template<std::integral T1, std::integral T2>
-struct mul_underlying_type{
+struct _mul_underlying{
     static constexpr bool is_signed = std::is_signed_v<T1> || std::is_signed_v<T2>;
-    using unsigned_t1_type = std::make_unsigned_t<T1>;
-    using unsigned_t2_type = std::make_unsigned_t<T2>;
 
-    using bigger_uint_type = std::conditional_t<
-        (sizeof(unsigned_t1_type) > sizeof(unsigned_t2_type)),
-        unsigned_t1_type, unsigned_t2_type
-    >;
+    static constexpr size_t max_size = 
+        (sizeof(T1) > sizeof(T2) ? sizeof(T1) : sizeof(T2));
 
     using type = std::conditional_t<
         is_signed,
-        std::make_signed_t<bigger_uint_type>,
-        bigger_uint_type
+        bytes_to_sint_t<max_size>,
+        bytes_to_uint_t<max_size>
     >;
 };
 
 template<std::integral T1, std::integral T2>
 struct sum_underlying_type{
     static constexpr bool is_signed = std::is_signed_v<T1> || std::is_signed_v<T2>;
-    using unsigned_t1_type = std::make_unsigned_t<T1>;
-    using unsigned_t2_type = std::make_unsigned_t<T2>;
 
-    using bigger_uint_type = std::conditional_t<
-        (sizeof(unsigned_t1_type) > sizeof(unsigned_t2_type)),
-        unsigned_t1_type, unsigned_t2_type
-    >;
+    static constexpr size_t max_size = 
+        (sizeof(T1) > sizeof(T2) ? sizeof(T1) : sizeof(T2));
+
+    using bigger_uint_type = bytes_to_uint_t<max_size>;
 
     using type = std::conditional_t<
         is_signed,
@@ -97,21 +93,16 @@ struct sum_underlying_type{
 };
 
 
-static_assert(std::is_same_v<typename mul_underlying_type<int32_t, int32_t>::type, int32_t>);
-static_assert(std::is_same_v<typename mul_underlying_type<long int, long int>::type, long int>);
-
 template<std::integral T1, std::integral T2>
-struct extended_mul_underlying_type{
+struct _extended_mul_underlying{
     static constexpr bool is_signed = std::is_signed_v<T1> || std::is_signed_v<T2>;
-    using unsigned_t1_type = std::make_unsigned_t<T1>;
-    using unsigned_t2_type = std::make_unsigned_t<T2>;
 
-    using bigger_uint_type = std::conditional_t<
-        (sizeof(unsigned_t1_type) > sizeof(unsigned_t2_type)),
-        unsigned_t1_type, unsigned_t2_type
-    >;
+    static constexpr size_t max_size = 
+        (sizeof(T1) > sizeof(T2) ? sizeof(T1) : sizeof(T2));
 
-    using extended_bigger_uint_type = typename extended_underlying_type<bigger_uint_type>::type;
+    using bigger_uint_type = bytes_to_uint_t<max_size>;
+
+    using extended_bigger_uint_type = typename _extended_underlying<bigger_uint_type>::type;
 
     using type = std::conditional_t<
         is_signed,
@@ -119,17 +110,28 @@ struct extended_mul_underlying_type{
         extended_bigger_uint_type
     >;
 };
+}
 
 template<std::integral T1, std::integral T2>
-using extended_mul_underlying_t = typename extended_mul_underlying_type<T1, T2>::type;
+using extended_mul_underlying_t = typename details::_extended_mul_underlying<T1, T2>::type;
 
 template<typename T>
-using extended_underlying_t = typename extended_underlying_type<T>::type;
+using extended_underlying_t = typename details::_extended_underlying<T>::type;
 
 template<std::integral T1, std::integral T2>
-using mul_underlying_t = typename mul_underlying_type<T1, T2>::type;
+using mul_underlying_t = typename details::_mul_underlying<T1, T2>::type;
 
 template<std::integral T1, std::integral T2>
-using sum_underlying_t = typename sum_underlying_type<T1, T2>::type;
+using sum_underlying_t = typename details::sum_underlying_type<T1, T2>::type;
+
+
+
+static_assert(std::is_same_v<mul_underlying_t<int32_t, int32_t>, int32_t>);
+static_assert(std::is_same_v<mul_underlying_t<uint32_t, int32_t>, int32_t>);
+static_assert(std::is_same_v<mul_underlying_t<int16_t, uint8_t>, int16_t>);
+static_assert(std::is_same_v<mul_underlying_t<long int, long int>, long int>);
+static_assert(std::is_same_v<mul_underlying_t<int, int32_t>, int32_t>);
+static_assert(std::is_same_v<mul_underlying_t<int, int>, int32_t>);
+
 
 }

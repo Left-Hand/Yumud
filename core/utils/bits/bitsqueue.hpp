@@ -45,7 +45,7 @@ struct BitQueue{
         return length_;
     }
 
-    [[nodiscard]] constexpr size_t writable_size() const {
+    [[nodiscard]] constexpr size_t free_capacity() const {
         return 32 - length_;
     }
 private:

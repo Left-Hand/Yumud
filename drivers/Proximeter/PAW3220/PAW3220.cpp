@@ -1,3 +1,4 @@
+// Apache-2.0 license
 // https://github.com/dotdotchan/bs2x_sdk/blob/94121aa562f8f012d4194cb79f24ecd4665ae029/application/samples/products/ble_mouse/mouse_sensor/mouse_sensor_paw3220.c
 
 // /**

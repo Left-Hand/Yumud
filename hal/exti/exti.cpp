@@ -1,5 +1,6 @@
 #include "exti.hpp"
-#include "gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "core/sdk.hpp"
 
 using namespace ymd::hal;
 
@@ -15,7 +16,7 @@ ExtiChannel::ExtiChannel(
 ):
 
     source_(source), 
-    p_gpio_(nullptr), 
+    p_pin_(nullptr), 
     gpio_mode_(GpioMode::InAnalog),
     priority_(priority), 
     edge_(edge), 
@@ -28,8 +29,8 @@ ExtiChannel::ExtiChannel(
     const TrigEdge edge,
     const TrigMode mode
 ):
-    source_(map_PinNth_to_trigsource(gpio.pin_nth())), 
-    p_gpio_(&gpio),
+    source_(map_PinSource_to_trigsource(gpio.pin_nth())), 
+    p_pin_(&gpio),
     gpio_mode_(map_edge_to_gpiomode(edge)),
     priority_(priority), 
     edge_(edge),
@@ -37,11 +38,11 @@ ExtiChannel::ExtiChannel(
 
 
 void ExtiChannel::init(){
-    if(p_gpio_){
-        p_gpio_->set_mode(gpio_mode_);
+    if(p_pin_){
+        p_pin_->set_mode(gpio_mode_);
         GPIO_EXTILineConfig(
-            std::bit_cast<uint8_t>(p_gpio_->port()), 
-            static_cast<uint8_t>(p_gpio_->nth().count())
+            std::bit_cast<uint8_t>(p_pin_->port()), 
+            static_cast<uint8_t>(p_pin_->nth().count())
         );
     }
 

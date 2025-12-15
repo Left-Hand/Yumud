@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-namespace ymd::ral::CH32V30x::FSMC_Regs{
+namespace ymd::ral::ch32::ch32v30x_fsmc{
 
-struct BCR1_Reg {
+struct [[nodiscard]] R32_BCR1 {
     uint32_t MBKEN:1;
     uint32_t MUXEN:1;
     uint32_t MTYP:2;
@@ -23,7 +23,7 @@ struct BCR1_Reg {
     uint32_t :12;
 };
 
-struct BTR1_Reg {
+struct [[nodiscard]] R32_BTR1 {
     uint32_t ADDSET:4;
     uint32_t ADDHLD:4;
     uint32_t DATAST:8;
@@ -35,7 +35,7 @@ struct BTR1_Reg {
     uint32_t:2;
 };
 
-struct PCR2_Reg{
+struct [[nodiscard]] R32_PCR2{
     uint32_t :1;
     uint32_t PWAITEN:1;
     uint32_t PBKEN:1;
@@ -49,13 +49,13 @@ struct PCR2_Reg{
     uint32_t :13;
 };
 
-struct SR2_Reg{
+struct [[nodiscard]] R32_SR2{
     uint32_t :6;
     uint32_t FEMPT:1;
     uint32_t :25;
 };
 
-struct PMEM2_Reg{
+struct [[nodiscard]] R32_PMEM2{
     uint32_t MEMSETx:8;
     uint32_t MEMWAITx:8;
     uint32_t MEMHOLDx:8;
@@ -63,18 +63,18 @@ struct PMEM2_Reg{
 };
 
 
-struct PATT2_Reg{
+struct [[nodiscard]] R32_PATT2{
     uint32_t ATTSETx:8;
     uint32_t ATTWAITx:8;
     uint32_t ATTHOLDx:8;
     uint32_t ATTHIZx:8;
 };
 
-struct ECCR2_Reg{
+struct [[nodiscard]] R32_ECCR2{
     uint32_t ECC;
 };
 
-struct BWTR1_Reg{
+struct [[nodiscard]] R32_BWTR1{
     uint32_t ADDSET:4;
     uint32_t ADDHLD:4;
     uint32_t DATAST:8;

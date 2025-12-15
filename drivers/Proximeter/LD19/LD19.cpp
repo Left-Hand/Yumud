@@ -2,9 +2,9 @@
 #include <span>
 
 using namespace ymd;
-using namespace ymd::drivers;
+using namespace ymd::drivers::ld19;
 
-using Self = LD19_StreamParser;
+using Self = LD19_ParserSink;
 
 static constexpr std::array<uint8_t, 256> CRC8_TABLE= {
 0x00,0x4d,0x9a,0xd7,0x79,0x34,0xe3,
@@ -59,8 +59,8 @@ static constexpr uint8_t calc_crc8(const std::span<const uint8_t> pbuf){
     static_assert(actual_crc == 0x50);
 }
 
-[[nodiscard]] static uint8_t calc_crc(const Self::LidarFrame & frame){
-    constexpr size_t PAYLOAD_LEN = 46;
+[[nodiscard]] static uint8_t calc_crc(const LidarSectorPacket & frame){
+    constexpr size_t PAYLOAD_LEN = 44;
     return calc_crc8(std::span(reinterpret_cast<const uint8_t *>(&frame), PAYLOAD_LEN));
 }
 
@@ -71,7 +71,6 @@ void Self::push_byte(const uint8_t byte){
                 reset();
                 break;
             }
-            frame_.header = byte;
             bytes_count_++;
             state_ = State::WaitingVerlen;
             break;
@@ -80,7 +79,6 @@ void Self::push_byte(const uint8_t byte){
                 reset();
                 break;
             }
-            frame_.verlen = byte;
             bytes_count_ ++;
             state_ = State::Remaining;
             break;
@@ -91,6 +89,9 @@ void Self::push_byte(const uint8_t byte){
                 flush();
                 reset();
             }
+            break;
+        case State::Emitting:
+            PANIC{"racing condition is happening!!!"};
             break;
     }
 }
@@ -105,19 +106,24 @@ void Self::flush(){
     if(callback_ == nullptr) [[unlikely]]
         PANIC{"callback is null"};
 
-    const auto expected_crc = frame_.crc8;
+    state_ = State::Emitting;
+
+    const uint8_t * begin = bytes_.data();
+    const uint8_t * end = begin + bytes_count_;
+
+    //尾元素本身指向crc8校验
+    const uint8_t expected_crc = *end;
+
     const auto actual_crc = calc_crc(frame_);
 
-    // DEBUG_PRINTLN(actual_crc, expected_crc);
-
     if((expected_crc != actual_crc)) [[unlikely]] {
-        callback_(Event(Events::InvalidCrc{
+        return callback_(Event(Event::InvalidCrc{
             .expected = expected_crc,
             .actual = actual_crc
         }));
     }
 
-    callback_(Event(Events::DataReady{frame_}));
+    return callback_(Event(Event::DataReady{frame_}));
 }
 
 void Self::reset(){

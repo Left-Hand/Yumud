@@ -8,11 +8,7 @@ namespace ymd{
 
 
 template<size_t N>
-class FixedStringStream:public OutputStream{
-protected:
-    char buf_[N];
-    size_t length_ = 0;
-    
+class FixedStringStream final:public OutputStream{
 public:
     FixedStringStream() {
         if (N > 0) {
@@ -21,8 +17,8 @@ public:
         this->force_sync(EN);
     }
 
-    size_t pending() const {
-        return 0;
+    size_t free_capacity() const {
+        return N - length_;
     }
 
     void sendout(const std::span<const char> pbuf) {
@@ -32,11 +28,11 @@ public:
             // For now, we'll truncate to fit available space
             size_t available = N - 1 - length_;  // -1 for null terminator
             if (available > 0) {
-                std::copy(pbuf.begin(), pbuf.begin() + available, buf_ + length_);
+                std::copy(pbuf.begin(), pbuf.begin() + available, buf_.data() + length_);
                 length_ += available;
             }
         } else {
-            std::copy(pbuf.begin(), pbuf.end(), buf_ + length_);
+            std::copy(pbuf.begin(), pbuf.end(), buf_.data() + length_);
             length_ += pbuf.size();
         }
         
@@ -46,17 +42,18 @@ public:
         }
     }
 
-    const char* c_str() const {
-        return buf_;
-    }
 
-    constexpr size_t length() const {
+    [[nodiscard]] constexpr size_t length() const {
         return length_;
     }
 
-    explicit constexpr operator StringView() const {
-        return StringView(c_str(), length());
+    [[nodiscard]] constexpr StringView str() const {
+        return StringView(buf_.data(), length_);
     }
+
+private:
+    std::array<char, N> buf_;
+    size_t length_ = 0;
 };
 
 };

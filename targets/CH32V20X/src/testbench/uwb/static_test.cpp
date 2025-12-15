@@ -39,13 +39,13 @@ constexpr auto test_exact_intersection_int = []->bool  {
     
     // 检查第一个交点 (3,4)
     // if ( || result[0].y != 4) return false;
-    static_assert(is_equal_approx(result[0].x, 3.0f, 0.00001f), "浮点数测试失败");
-    static_assert(is_equal_approx(result[0].y, 4.0f, 0.00001f), "浮点数测试失败");
+    static_assert(math::is_equal_approx(result[0].x, 3.0f, 0.00001f), "浮点数测试失败");
+    static_assert(math::is_equal_approx(result[0].y, 4.0f, 0.00001f), "浮点数测试失败");
     
     // 检查第二个交点 (3,-4)  
     // if (result[1].x != 3 || result[1].y != -4) return false;
-    static_assert(is_equal_approx(result[1].x, 3.0f, 0.00001f), "浮点数测试失败");
-    static_assert(is_equal_approx(result[1].y, -4.0f, 0.00001f), "浮点数测试失败");
+    static_assert(math::is_equal_approx(result[1].x, 3.0f, 0.00001f), "浮点数测试失败");
+    static_assert(math::is_equal_approx(result[1].y, -4.0f, 0.00001f), "浮点数测试失败");
     
     return true;
 };

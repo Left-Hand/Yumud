@@ -4,9 +4,9 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "core/clock/time_stamp.hpp"
 
-#include "robots/protocols/cannet/slcan/slcan.hpp"
+#include "middlewares/protocols/cannet/slcan/slcan.hpp"
 #include "middlewares/rpc/rpc.hpp"
-#include "middlewares/repl/repl_service.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 
 using namespace ymd;
 
@@ -14,7 +14,10 @@ using namespace ymd;
 
 void slcan_main(){
     auto & DBG_UART = DEBUGGER_INST;
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        hal::UART2_REMAP_PA2_PA3,
+        576000
+    });
 
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
@@ -22,9 +25,9 @@ void slcan_main(){
 
     auto & can = hal::can1;
     can.init({
-        .remap = CAN1_REMAP,
-        .mode = hal::CanMode::Normal,
-        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
+        .remap = hal::CAN1_REMAP_PA12_PA11,
+        .wiring_mode = hal::CanWiringMode::Normal,
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
     });
 
     // asciican::AsciiCanPhy phy{can};
@@ -93,14 +96,14 @@ void slcan_main(){
 
     // DEBUG_PRINTLN(slcan.handle_line("C"));
     const auto used = measure_total_elapsed_us([&]{
-        for(const auto line: lines){
-            (void)slcan_parser.process_line(line);
+        for(const auto line_cstr: lines){
+            (void)slcan_parser.process_line(StringView::from_cstr(line_cstr));
         }
     });
 
 
-    for(const auto line: lines){
-        DEBUG_PRINTS(line,"->",slcan_parser.process_line(line));
+    for(const auto line_cstr: lines){
+        DEBUG_PRINTS(line_cstr,"->",slcan_parser.process_line(StringView::from_cstr(line_cstr)));
     }
 
     DEBUG_PRINTS("parse lines totally used:", used);

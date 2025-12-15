@@ -9,6 +9,7 @@ using iq6 = fixed_t<6, int32_t>;
 using iq7 = fixed_t<7, int32_t>;
 using iq8 = fixed_t<8, int32_t>;
 using iq9 = fixed_t<9, int32_t>;
+
 using iq10 = fixed_t<10, int32_t>;
 using iq11 = fixed_t<11, int32_t>;
 using iq12 = fixed_t<12, int32_t>;
@@ -19,6 +20,7 @@ using iq16 = fixed_t<16, int32_t>;
 using iq17 = fixed_t<17, int32_t>;
 using iq18 = fixed_t<18, int32_t>;
 using iq19 = fixed_t<19, int32_t>;
+
 using iq20 = fixed_t<20, int32_t>;
 using iq21 = fixed_t<21, int32_t>;
 using iq22 = fixed_t<22, int32_t>;
@@ -29,6 +31,7 @@ using iq26 = fixed_t<26, int32_t>;
 using iq27 = fixed_t<27, int32_t>;
 using iq28 = fixed_t<28, int32_t>;
 using iq29 = fixed_t<29, int32_t>;
+
 using iq30 = fixed_t<30, int32_t>;
 using iq31 = fixed_t<31, int32_t>;
 
@@ -41,6 +44,7 @@ using iiq6 = fixed_t<6, int64_t>;
 using iiq7 = fixed_t<7, int64_t>;
 using iiq8 = fixed_t<8, int64_t>;
 using iiq9 = fixed_t<9, int64_t>;
+
 using iiq10 = fixed_t<10, int64_t>;
 using iiq11 = fixed_t<11, int64_t>;
 using iiq12 = fixed_t<12, int64_t>;
@@ -51,6 +55,7 @@ using iiq16 = fixed_t<16, int64_t>;
 using iiq17 = fixed_t<17, int64_t>;
 using iiq18 = fixed_t<18, int64_t>;
 using iiq19 = fixed_t<19, int64_t>;
+
 using iiq20 = fixed_t<20, int64_t>;
 using iiq21 = fixed_t<21, int64_t>;
 using iiq22 = fixed_t<22, int64_t>;
@@ -61,8 +66,44 @@ using iiq26 = fixed_t<26, int64_t>;
 using iiq27 = fixed_t<27, int64_t>;
 using iiq28 = fixed_t<28, int64_t>;
 using iiq29 = fixed_t<29, int64_t>;
+
 using iiq30 = fixed_t<30, int64_t>;
 using iiq31 = fixed_t<31, int64_t>;
+using iiq32 = fixed_t<32, int64_t>;
+using iiq33 = fixed_t<33, int64_t>;
+using iiq34 = fixed_t<34, int64_t>;
+using iiq35 = fixed_t<35, int64_t>;
+using iiq36 = fixed_t<36, int64_t>;
+using iiq37 = fixed_t<37, int64_t>;
+using iiq38 = fixed_t<38, int64_t>;
+using iiq39 = fixed_t<39, int64_t>;
+
+using iiq40 = fixed_t<40, int64_t>;
+using iiq41 = fixed_t<41, int64_t>;
+using iiq42 = fixed_t<42, int64_t>;
+using iiq43 = fixed_t<43, int64_t>;
+using iiq44 = fixed_t<44, int64_t>;
+using iiq45 = fixed_t<45, int64_t>;
+using iiq46 = fixed_t<46, int64_t>;
+using iiq47 = fixed_t<47, int64_t>;
+using iiq48 = fixed_t<48, int64_t>;
+using iiq49 = fixed_t<49, int64_t>;
+
+using iiq50 = fixed_t<50, int64_t>;
+using iiq51 = fixed_t<51, int64_t>;
+using iiq52 = fixed_t<52, int64_t>;
+using iiq53 = fixed_t<53, int64_t>;
+using iiq54 = fixed_t<54, int64_t>;
+using iiq55 = fixed_t<55, int64_t>;
+using iiq56 = fixed_t<56, int64_t>;
+using iiq57 = fixed_t<57, int64_t>;
+using iiq58 = fixed_t<58, int64_t>;
+using iiq59 = fixed_t<59, int64_t>;
+
+using iiq60 = fixed_t<60, int64_t>;
+using iiq61 = fixed_t<61, int64_t>;
+using iiq62 = fixed_t<62, int64_t>;
+using iiq63 = fixed_t<63, int64_t>;
 
 using uq1 = fixed_t<1, uint32_t>;
 using uq2 = fixed_t<2, uint32_t>;
@@ -73,6 +114,7 @@ using uq6 = fixed_t<6, uint32_t>;
 using uq7 = fixed_t<7, uint32_t>;
 using uq8 = fixed_t<8, uint32_t>;
 using uq9 = fixed_t<9, uint32_t>;
+
 using uq10 = fixed_t<10, uint32_t>;
 using uq11 = fixed_t<11, uint32_t>;
 using uq12 = fixed_t<12, uint32_t>;
@@ -83,6 +125,7 @@ using uq16 = fixed_t<16, uint32_t>;
 using uq17 = fixed_t<17, uint32_t>;
 using uq18 = fixed_t<18, uint32_t>;
 using uq19 = fixed_t<19, uint32_t>;
+
 using uq20 = fixed_t<20, uint32_t>;
 using uq21 = fixed_t<21, uint32_t>;
 using uq22 = fixed_t<22, uint32_t>;
@@ -106,6 +149,7 @@ using uuq6 = fixed_t<6, uint64_t>;
 using uuq7 = fixed_t<7, uint64_t>;
 using uuq8 = fixed_t<8, uint64_t>;
 using uuq9 = fixed_t<9, uint64_t>;
+
 using uuq10 = fixed_t<10, uint64_t>;
 using uuq11 = fixed_t<11, uint64_t>;
 using uuq12 = fixed_t<12, uint64_t>;
@@ -116,6 +160,7 @@ using uuq16 = fixed_t<16, uint64_t>;
 using uuq17 = fixed_t<17, uint64_t>;
 using uuq18 = fixed_t<18, uint64_t>;
 using uuq19 = fixed_t<19, uint64_t>;
+
 using uuq20 = fixed_t<20, uint64_t>;
 using uuq21 = fixed_t<21, uint64_t>;
 using uuq22 = fixed_t<22, uint64_t>;
@@ -126,8 +171,48 @@ using uuq26 = fixed_t<26, uint64_t>;
 using uuq27 = fixed_t<27, uint64_t>;
 using uuq28 = fixed_t<28, uint64_t>;
 using uuq29 = fixed_t<29, uint64_t>;
+
 using uuq30 = fixed_t<30, uint64_t>;
 using uuq31 = fixed_t<31, uint64_t>;
+using uuq32 = fixed_t<32, uint64_t>;
+using uuq33 = fixed_t<33, uint64_t>;
+using uuq34 = fixed_t<34, uint64_t>;
+using uuq35 = fixed_t<35, uint64_t>;
+using uuq36 = fixed_t<36, uint64_t>;
+using uuq37 = fixed_t<37, uint64_t>;
+using uuq38 = fixed_t<38, uint64_t>;
+using uuq39 = fixed_t<39, uint64_t>;
+
+using uuq40 = fixed_t<40, uint64_t>;
+using uuq41 = fixed_t<41, uint64_t>;
+using uuq42 = fixed_t<42, uint64_t>;
+using uuq43 = fixed_t<43, uint64_t>;
+using uuq44 = fixed_t<44, uint64_t>;
+using uuq45 = fixed_t<45, uint64_t>;
+using uuq46 = fixed_t<46, uint64_t>;
+using uuq47 = fixed_t<47, uint64_t>;
+using uuq48 = fixed_t<48, uint64_t>;
+using uuq49 = fixed_t<49, uint64_t>;
+
+using uuq50 = fixed_t<50, uint64_t>;
+using uuq51 = fixed_t<51, uint64_t>;
+using uuq52 = fixed_t<52, uint64_t>;
+using uuq53 = fixed_t<53, uint64_t>;
+using uuq54 = fixed_t<54, uint64_t>;
+using uuq55 = fixed_t<55, uint64_t>;
+using uuq56 = fixed_t<56, uint64_t>;
+using uuq57 = fixed_t<57, uint64_t>;
+using uuq58 = fixed_t<58, uint64_t>;
+using uuq59 = fixed_t<59, uint64_t>;
+using uuq60 = fixed_t<60, uint64_t>;
+
+using uuq61 = fixed_t<61, uint64_t>;
+using uuq62 = fixed_t<62, uint64_t>;
+using uuq63 = fixed_t<63, uint64_t>;
+using uuq64 = fixed_t<64, uint64_t>;
+
+
+
 
 [[nodiscard]] consteval iq1 operator"" _iq1(long double x) { return iq1(x); }
 [[nodiscard]] consteval iq2 operator"" _iq2(long double x) { return iq2(x); }

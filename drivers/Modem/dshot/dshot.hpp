@@ -112,13 +112,13 @@ public:
     };
 
 
-    DShotChannel(hal::TimerOC & oc);
-    DShotChannel(const DShotChannel & other) = delete;
-    DShotChannel(DShotChannel && other) = delete;
+    explicit DShotChannel(hal::TimerOC & oc);
+    explicit DShotChannel(const DShotChannel & other) = delete;
+    explicit DShotChannel(DShotChannel && other) = delete;
 
     void init();
 
-    void set_dutycycle(const real_t duty);
+    void set_dutycycle(const real_t dutycycle);
 
 private:
 

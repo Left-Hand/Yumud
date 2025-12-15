@@ -5,11 +5,11 @@
 
 #include "primitive/can/bxcan_frame.hpp"
 
-#include "core/magic/size_traits.hpp"
-#include "core/magic/function_traits.hpp"
+#include "core/tmp/bits/width.hpp"
+#include "core/tmp/functor.hpp"
 
-#include "core/magic/serialize_traits.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/serialize_traits.hpp"
+#include "core/tmp/reflect/enum.hpp"
 #include "core/tmp/implfor.hpp"
 
 #include "rust_enum.hpp"
@@ -30,9 +30,9 @@ struct RawBytes;
 
 template<std::integral D>
 struct ImplFor<SerializeAs<RawBytes>, D> {
-    static constexpr size_t N = magic::type_to_bytes_v<D>;
+    static constexpr size_t N = tmp::type_to_bytes_v<D>;
     static constexpr std::array<uint8_t, N> serialize(const D obj) {
-        using Raw = magic::type_to_uint_t<D>;
+        using Raw = tmp::type_to_uint_t<D>;
         const auto raw = std::bit_cast<Raw>(obj);
         using IS = std::make_index_sequence<N>;
 
@@ -44,7 +44,7 @@ struct ImplFor<SerializeAs<RawBytes>, D> {
 
 template<std::integral D>
 struct ImplFor<DeserializeFrom<RawBytes>, D> {
-    static constexpr size_t N = magic::type_to_bytes_v<D>;
+    static constexpr size_t N = tmp::type_to_bytes_v<D>;
     
     static constexpr D deserialize(const std::span<const uint8_t, N> bytes) {
         using IS = std::make_index_sequence<N>;
@@ -76,8 +76,8 @@ struct ImplFor<DeserializeFrom<RawBytes>, fixed_t<Q, int32_t>> {
 
 template<std::floating_point F>
 struct ImplFor<SerializeAs<RawBytes>, F> {
-    static constexpr size_t N = magic::type_to_bytes_v<F>;
-    using Raw = magic::type_to_uint_t<F>;
+    static constexpr size_t N = tmp::type_to_bytes_v<F>;
+    using Raw = tmp::type_to_uint_t<F>;
     static constexpr std::array<uint8_t, N> serialize(const F obj){
         return ImplFor<SerializeAs<RawBytes>, Raw>::serialize(std::bit_cast<Raw>(obj));
     }
@@ -85,8 +85,8 @@ struct ImplFor<SerializeAs<RawBytes>, F> {
 
 template<std::floating_point F>
 struct ImplFor<DeserializeFrom<RawBytes>, F> {
-    static constexpr size_t N = magic::type_to_bytes_v<F>;
-    using Raw = magic::type_to_uint_t<F>;
+    static constexpr size_t N = tmp::type_to_bytes_v<F>;
+    using Raw = tmp::type_to_uint_t<F>;
 
     static constexpr F deserialize(const std::span<const uint8_t, N> bytes){
         return std::bit_cast<F>(ImplFor<DeserializeFrom<RawBytes>, Raw>::deserialize(bytes));
@@ -100,7 +100,7 @@ static constexpr auto serialize(T && obj){
 
 template<typename Protocol, typename ... Args>
 static constexpr auto serialize(Args && ... args){
-    constexpr size_t N = magic::total_bytes_of_args_v<std::decay_t<Args> ... >;
+    constexpr size_t N = tmp::total_bytes_of_args_v<std::decay_t<Args> ... >;
 
     std::array<uint8_t, N> result;
     size_t offset = 0;
@@ -117,7 +117,7 @@ static constexpr auto serialize(Args && ... args){
 template<
     typename Protocol, 
     typename T, 
-    size_t N = magic::type_to_bytes_v<T>
+    size_t N = tmp::type_to_bytes_v<T>
 >
 requires (std::is_same_v<Protocol, RawBytes>)
 static constexpr auto _deserialize(const std::span<const uint8_t, N> bytes){
@@ -126,7 +126,7 @@ static constexpr auto _deserialize(const std::span<const uint8_t, N> bytes){
 
 
 template<typename Protocol, typename... Args,
-    size_t N = magic::total_bytes_of_args_v<std::decay_t<Args>...>>
+    size_t N = tmp::total_bytes_of_args_v<std::decay_t<Args>...>>
 requires (std::is_same_v<Protocol, RawBytes>)
 static constexpr auto deserialize(const std::span<const uint8_t, N> bytes) {
     // 逐个处理参数（避免递归展开）
@@ -139,7 +139,7 @@ static constexpr auto deserialize(const std::span<const uint8_t, N> bytes) {
 
         // 根据索引序列展开并构造元组
         auto construct_tuple = [&bytes]<std::size_t... Indices>(std::index_sequence<Indices...>) {
-            return std::make_tuple(magic::fetch_arg_from_bytes<Indices, Tup>(bytes)...);
+            return std::make_tuple(tmp::fetch_arg_from_bytes<Indices, Tup>(bytes)...);
         };
 
         // 使用索引序列调用辅助函数
@@ -150,11 +150,11 @@ static constexpr auto deserialize(const std::span<const uint8_t, N> bytes) {
 template<
     typename Protocol, 
     typename T, 
-    size_t N = magic::type_to_bytes_v<T>
+    size_t N = tmp::type_to_bytes_v<T>
 >
-requires (std::is_same_v<Protocol, hal::CanClassicFrame>)
-static constexpr auto deserialize(const hal::CanClassicFrame frame){
-    return ImplFor<DeserializeFrom<hal::CanClassicFrame>, T>::deserialize(frame);
+requires (std::is_same_v<Protocol, hal::BxCanFrame>)
+static constexpr auto deserialize(const hal::BxCanFrame frame){
+    return ImplFor<DeserializeFrom<hal::BxCanFrame>, T>::deserialize(frame);
 }
 
 }
@@ -173,8 +173,8 @@ struct MyStruct {
 
 
 template<>
-struct ImplFor<DeserializeFrom<hal::CanClassicFrame>, MyStruct> {
-    static constexpr Option<MyStruct> deserialize(const hal::CanClassicFrame & frame){
+struct ImplFor<DeserializeFrom<hal::BxCanFrame>, MyStruct> {
+    static constexpr Option<MyStruct> deserialize(const hal::BxCanFrame & frame){
 
         
         switch(frame.length()){
@@ -213,13 +213,13 @@ static constexpr auto deserialized4 = deserialize<RawBytes, float, iq16>(std::sp
 static constexpr auto deserialized4f = std::get<0>(deserialized4);
 static constexpr auto deserialized4q = std::get<1>(deserialized4);
 
-static constexpr auto frame = hal::CanClassicFrame(
+static constexpr auto frame = hal::BxCanFrame(
     hal::CanStdId::from_bits(0x123), 
-    hal::CanClassicPayload::from_bytes(std::span(serialized2))
+    hal::BxCanPayload::from_bytes(std::span(serialized2))
 );
-// static constexpr auto deserialized4m = deserialize<CanClassicFrame, MyStruct>(frame);
+// static constexpr auto deserialized4m = deserialize<BxCanFrame, MyStruct>(frame);
 static constexpr auto msg_size = frame.length();
-static constexpr auto deserialized4m = deserialize<hal::CanClassicFrame, MyStruct>(frame).unwrap();
+static constexpr auto deserialized4m = deserialize<hal::BxCanFrame, MyStruct>(frame).unwrap();
 
 // static_assert(deserialized1 == 42, "deserialized1 != 42");
 static_assert(deserialized2 == 1_iq16, "deserialized2 != 1_iq16");
@@ -243,7 +243,7 @@ struct ImplFor<SerializeAs<uint8_t>, MyStruct> {
 template<>
 struct ImplFor<real_t, MyStruct> {
     static auto method(const MyStruct & obj) {
-        // return magic::make_bytes_from_tuple(std::make_tu)
+        // return tmp::make_bytes_from_tuple(std::make_tu)
     }
 };
 

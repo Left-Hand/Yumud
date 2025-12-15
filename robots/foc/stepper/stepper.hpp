@@ -186,7 +186,7 @@ public:
 
     void rework(){
         run_status = RunStatus::ACTIVE;
-        svpwm.enable(EN);
+        svpwm.start();
     }
 
     real_t getRaddiff() const {

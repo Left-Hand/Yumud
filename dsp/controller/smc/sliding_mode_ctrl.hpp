@@ -4,9 +4,9 @@
 
 namespace ymd::dsp{
 
-class SlideModeController {
+struct [[nodiscard]] SlideModeController {
 public:
-    struct Config{
+    struct [[nodiscard]] Config{
         iq20 c;
         iq20 q;
 

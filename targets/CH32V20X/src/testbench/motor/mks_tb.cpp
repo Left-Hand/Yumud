@@ -2,15 +2,17 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "robots/vendor/mks/mks_stepper.hpp"
+#include "core/async/timer.hpp"
 #include "core/string/string_view.hpp"
-#include "types/vectors/vector2.hpp"
 
-#include "core/sync/timer.hpp"
+#include "algebra/vectors/vec2.hpp"
 #include "primitive/colors/color/color.hpp"
 
 
-#ifdef ENABLE_UART1
+#include "robots/vendor/mks/mks_stepper.hpp"
+
+
+#ifdef UART1_PRESENT
 using namespace ymd;
 
 using namespace ymd::robots;
@@ -28,7 +30,10 @@ using robots::mksmotor::MksStepper;
 
 void mks_stepper_main(){
     // slcan_test();
-    DBG_UART.init({576000});
+    DEBUGGER_INST.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000 
+    });
 
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
@@ -39,9 +44,9 @@ void mks_stepper_main(){
     MksStepper motor{{.nodeid = {1}}, &COMM_UART};
     #else
     COMM_CAN.init({
-        .remap = 0,
-        .mode = hal::CanMode::Normal,
-        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
+        .remap = hal::CanRemap::_0,
+        .wiring_mode = hal::CanWiringMode::Normal,
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
@@ -61,7 +66,7 @@ void mks_stepper_main(){
             std::vector<uint8_t> recv;
             while(COMM_UART.available()){
                 char chr;
-                COMM_UART.read1(chr);
+                COMM_UART.read_char(chr);
                 recv.push_back(chr);
             }
 
@@ -81,8 +86,8 @@ void mks_stepper_main(){
 
         // clock::delay(200ms);
         // motor.activate();
-        const auto d1 = sin(clock::time()*0.7_r);
-        const auto d2 = tpzpu(clock::time()*0.2_r);
+        const auto d1 = math::sin(clock::time()*0.7_r);
+        const auto d2 = math::sin(clock::time()*0.2_r);
         // motor1.set_position({.position = d1, .speed = 0}).unwrap();
         clock::delay(5ms);
         motor2.set_position({.position = 0, .speed = 0}).unwrap();

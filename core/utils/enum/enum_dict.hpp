@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/reflect/enum.hpp"
 #include "core/utils/Option.hpp"
 
 namespace ymd{
@@ -13,7 +13,7 @@ template<typename E, typename T>
 requires std::is_enum_v<E>
 class EnumDict{
 public:
-    using Dump = magic::enum_dump<E>;
+    using Dump = tmp::enum_dump<E>;
     static constexpr size_t COUNT = Dump::COUNT;
 
     constexpr EnumDict() = default;

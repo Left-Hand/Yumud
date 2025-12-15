@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 
+// MIT license
 // https://github.com/F-Army/arduino-dw1000-ng/blob/master/src/DW1000NgConstants.hpp
 
 namespace ymd::drivers{

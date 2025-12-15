@@ -16,7 +16,7 @@ namespace ymd::drivers{
 class LedIntf{
 public:
     virtual void toggle() = 0;
-    virtual void set_dutycycle(const real_t duty) = 0;
+    virtual void set_dutycycle(const real_t dutycycle) = 0;
 };
 
 class LedGpio final:public LedIntf{
@@ -26,7 +26,7 @@ public:
 
     void toggle();
 
-    void set_dutycycle(const real_t duty);
+    void set_dutycycle(const real_t dutycycle);
 private:
     hal::GpioIntf & inst_;
     bool state = false;
@@ -50,7 +50,7 @@ public:
         this->set_dutycycle(last_duty_);
     }
 
-    void set_dutycycle(const real_t duty){
+    void set_dutycycle(const real_t dutycycle{
         last_duty_ = inversed ? 1 - duty : duty;
         inst.set_dutycycle(last_duty_);
     }

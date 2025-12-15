@@ -80,7 +80,7 @@ IResult<> Self::set_fs(const FS fs){
 
 
 IResult<> Self::set_fs(const uq16 _fs, const uq16 _vref){
-    const auto ratio = abs(_fs) / _vref;
+    const auto ratio = math::abs(_fs) / _vref;
     auto reg = RegCopy(regs_.config_reg);
     reg.pga = ratio2pga(ratio);
     return write_reg(reg);

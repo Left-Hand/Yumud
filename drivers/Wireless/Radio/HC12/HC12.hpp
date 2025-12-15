@@ -28,12 +28,6 @@ protected:
     hal::GpioIntf & set_pin;
     uint16_t timeout = 5;
 
-    void write(const char data){
-        uart.write(data);
-    }
-    void read(char & data){
-        uart.read1(data);
-    }
     size_t available() const{
         return uart.available();
     }
@@ -44,12 +38,12 @@ protected:
     bool sendAtCommand(const String & token){
         set_pin.clr();
         clock::delay(1us);
-        uart.writeN("AT", 2);
+        uart.write_chars("AT", 2);
         if(token.length()){
-            uart.write1('+');
-            // uart.write1(token);
+            uart.write_char('+');
+            // uart.write_char(token);
         }
-        uart.writeN("\r\n", 2);
+        uart.write_chars("\r\n", 2);
 
         String recv = "";
         recv.reserve(3);

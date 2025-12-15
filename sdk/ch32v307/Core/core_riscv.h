@@ -10,11 +10,13 @@
 #ifndef __CORE_RISCV_H__
 #define __CORE_RISCV_H__
 
+#include <stdbool.h>
+#include "sdk/ch32v307/ch32v30x_irqn.h"
+
 #ifdef __cplusplus
  extern "C" {
 #endif
 
-#include <stdbool.h>
 
 /* IO definitions */
 #ifdef __cplusplus

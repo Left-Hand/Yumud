@@ -1,7 +1,13 @@
 #pragma once
 
 #include <cstdint>
+
+// 参考来源
+
 // https://github.com/jkelleyrtp/dw1000-rs/blob/master/dw1000/src/hl/ready.rs
+// * BSD 3-Clause License
+// * Copyright (c) Hanno Braun hanno@braun-embedded.com and contributors
+// * Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted.
 
 namespace ymd::drivers{
 

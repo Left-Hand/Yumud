@@ -4,22 +4,7 @@
 
 #include "mp6570_prelude.hpp"
 
-namespace ymd::drivers{
+namespace ymd::drivers::mp6570{
 
-
-class MP6570 {
-public:
-
-
-
-private:
-    using Phy = MP6570_Phy;
-    Phy phy_;
-
-public:
-
-
-
-};
 
 }

@@ -4,20 +4,20 @@
 
 namespace ymd::encrypt::lz77{
     
-// LZ77压缩参数
-static constexpr size_t WINDOW_SIZE = 4096;     // 滑动窗口大小
-static constexpr size_t LOOKAHEAD_SIZE = 18;    // 前向缓冲区大小
-static constexpr size_t MIN_MATCH_LENGTH = 3;   // 最小匹配长度
-static constexpr size_t MAX_MATCH_LENGTH = 258; // 最大匹配长度
+// LZ77 compression parameters
+static constexpr size_t WINDOW_SIZE = 4096;     // Sliding window size
+static constexpr size_t LOOKAHEAD_SIZE = 18;    // Lookahead buffer size
+static constexpr size_t MIN_MATCH_LENGTH = 3;   // Minimum match length
+static constexpr size_t MAX_MATCH_LENGTH = 258; // Maximum match length
 
-// LZ77令牌格式
-// 使用一种简单的编码方式:
-// 字面量: 0x00 + 1字节数据 (2字节)
-// 匹配:   0x01 + 长度(1字节) + 距离(2字节) (4字节)
-struct LZ77Token {
+// LZ77 token format
+// Using a simple encoding method:
+// Literal: 0x00 + 1 byte data (2 bytes)
+// Match:   0x01 + length(1 byte) + distance(2 bytes) (4 bytes)
+struct Token {
     enum Type : uint8_t {
-        LITERAL = 0x00,
-        MATCH = 0x01
+        Literal = 0x00,
+        Match = 0x01
     };
     
     Type type;
@@ -27,13 +27,13 @@ struct LZ77Token {
         } literal_data;
         
         struct {
-            uint8_t length;    // 实际长度-3存储，范围3-258
-            uint16_t distance; // 距离
+            uint8_t length;    // Actual length-3 stored, range 3-258
+            uint16_t distance; // Distance
         } match_data;
     };
 };
 
-enum class LZ77Error:uint8_t{
+enum class Error:uint8_t{
     OutOfMemory,
     InvalidToken,
     InvalidData,
@@ -41,11 +41,12 @@ enum class LZ77Error:uint8_t{
     Unreachable
 };
 
-// 压缩函数
-// 返回实际写入dst的字节数，如果dst空间不足则返回std::nullopt
-[[nodiscard]] constexpr Result<size_t, LZ77Error> compress(
+// Compression function
+// Returns the number of bytes actually written to dst, returns std::nullopt if dst space is insufficient
+[[nodiscard]] constexpr Result<size_t, Error> compress(
     std::span<uint8_t> dst, 
-    std::span<const uint8_t> src) {
+    std::span<const uint8_t> src
+) {
     
     size_t dst_pos = 0;
     size_t src_pos = 0;
@@ -55,10 +56,10 @@ enum class LZ77Error:uint8_t{
         size_t best_length = 0;
         size_t best_distance = 0;
         
-        // 搜索窗口起始位置
+        // Search window start position
         const size_t window_start = (src_pos > WINDOW_SIZE) ? src_pos - WINDOW_SIZE : 0;
         
-        // 在滑动窗口中寻找最长匹配
+        // Find longest match in sliding window
         for (size_t i = window_start; i < src_pos; ++i) {
             size_t length = 0;
             const size_t max_length = std::min({
@@ -67,40 +68,40 @@ enum class LZ77Error:uint8_t{
                 LOOKAHEAD_SIZE
             });
             
-            // 计算从位置i开始的匹配长度
+            // Calculate matching length from position i
             while (length < max_length && src[i + length] == src[src_pos + length]) {
                 length++;
             }
             
-            // 如果找到更长的有效匹配
+            // If we found a longer valid match
             if (length >= MIN_MATCH_LENGTH && length > best_length) {
                 best_length = length;
                 best_distance = src_pos - i;
             }
         }
         
-        // 检查是否有足够空间写入令牌
+        // Check if there's enough space to write token
         if (best_length >= MIN_MATCH_LENGTH) {
-            // 匹配令牌需要4字节
+            // Match token requires 4 bytes
             if (dst_pos + 4 > dst.size()) {
-                return Err(LZ77Error::OutOfMemory); // 空间不足
+                return Err(Error::OutOfMemory); // Insufficient space
             }
             
-            // 写入匹配令牌
-            dst[dst_pos++] = LZ77Token::MATCH;
+            // Write match token
+            dst[dst_pos++] = Token::Match;
             dst[dst_pos++] = static_cast<uint8_t>(best_length - MIN_MATCH_LENGTH);
             dst[dst_pos++] = static_cast<uint8_t>(best_distance & 0xFF);
             dst[dst_pos++] = static_cast<uint8_t>((best_distance >> 8) & 0xFF);
             
             src_pos += best_length;
         } else {
-            // 字面量令牌需要2字节
+            // Literal token requires 2 bytes
             if (dst_pos + 2 > dst.size()) {
-                return Err(LZ77Error::OutOfMemory); // 空间不足
+                return Err(Error::OutOfMemory); // Insufficient space
             }
             
-            // 写入字面量令牌
-            dst[dst_pos++] = LZ77Token::LITERAL;
+            // Write literal token
+            dst[dst_pos++] = Token::Literal;
             dst[dst_pos++] = src[src_pos];
             src_pos++;
         }
@@ -109,35 +110,37 @@ enum class LZ77Error:uint8_t{
     return Ok(dst_pos);
 }
 
-// 解压缩函数
-// 返回实际写入dst的字节数，如果dst空间不足或数据格式错误则返回std::nullopt
-[[nodiscard]] constexpr Result<size_t, LZ77Error> decompress(
+// Decompression function
+// Returns the number of bytes actually written to dst, returns std::nullopt if dst space is insufficient or data format error
+[[nodiscard]] constexpr Result<size_t, Error> decompress(
     std::span<uint8_t> dst, 
-    std::span<const uint8_t> src) {
+    std::span<const uint8_t> src
+) {
     
     size_t dst_pos = 0;
     size_t src_pos = 0;
     
     while (src_pos < src.size() && dst_pos < dst.size()) {
-        if (src_pos >= src.size()) {
-            return Err(LZ77Error::InvalidData); // 数据不完整
-        }
+        // This check is redundant as it's already checked in the while condition
+        // if (src_pos >= src.size()) {
+        //     return Err(Error::InvalidData); // Incomplete data
+        // }
         
         const uint8_t token_type = src[src_pos++];
         
         switch (token_type) {
-            case LZ77Token::LITERAL: {
+            case Token::Literal: {
                 if (src_pos >= src.size() || dst_pos >= dst.size()) {
-                    return Err(LZ77Error::InvalidData); // 数据不完整或空间不足
+                    return Err(Error::InvalidData); // Incomplete data or insufficient space
                 }
                 
                 dst[dst_pos++] = src[src_pos++];
                 break;
             }
             
-            case LZ77Token::MATCH: {
+            case Token::Match: {
                 if (src_pos + 2 >= src.size()) {
-                    return Err(LZ77Error::InvalidData); // 数据不完整
+                    return Err(Error::InvalidData); // Incomplete data
                 }
                 
                 const uint8_t length_code = src[src_pos++];
@@ -146,30 +149,32 @@ enum class LZ77Error:uint8_t{
                 
                 const size_t length = static_cast<size_t>(length_code) + MIN_MATCH_LENGTH;
                 
-                // 检查距离有效性
+                // Check distance validity
                 if (distance > dst_pos || distance == 0) {
-                    return Err(LZ77Error::InvalidDistance); // 无效距离
+                    return Err(Error::InvalidDistance); // Invalid distance
                 }
                 
-                // 检查是否有足够空间
+                // Check if there's enough space
                 if (dst_pos + length > dst.size()) {
-                    return Err(LZ77Error::OutOfMemory); // 空间不足
+                    return Err(Error::OutOfMemory); // Insufficient space
                 }
                 
-                // 复制匹配数据（处理重叠情况）
+                // Copy matched data (handle overlapping cases)
                 const size_t source_pos = dst_pos - distance;
                 for (size_t i = 0; i < length; ++i) {
+                    // More precise boundary checking
                     if (source_pos + i < dst.size() && dst_pos < dst.size()) {
                         dst[dst_pos] = dst[source_pos + i];
                         dst_pos++;
                     } else {
-                        return Err(LZ77Error::InvalidData); // 错误
+                        return Err(Error::InvalidData); // Error
                     }
                 }
                 break;
             }
             default:
-                return Err(LZ77Error::Unreachable);
+                // Return InvalidToken instead of Unreachable for unknown token types
+                return Err(Error::InvalidToken);
         }
     }
     

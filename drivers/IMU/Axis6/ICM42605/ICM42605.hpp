@@ -34,7 +34,7 @@ public:
 private:
 
 
-    InvensenseSensor_Phy phy_;
+    InvensenseImu_Phy phy_;
     Option<Bank> last_bank_ = None;  
 
     iq16 acc_scaler_ = 0;

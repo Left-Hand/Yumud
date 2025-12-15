@@ -24,18 +24,21 @@ void lt8920_main(){
     // auto & spi = spisw;
 
 
-    spi.init({2_MHz});
-    auto spi_cs_gpio_ = hal::PA<0>();
+    spi.init({
+        hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
+        hal::NearestFreq(2_MHz)
+    });
+    auto spi_cs_pin_ = hal::PA<0>();
 
-    LT8920 lt{&spi, spi.allocate_cs_gpio(&spi_cs_gpio_).unwrap()};
-    bindSystickCb([&](){
+    LT8920 lt{&spi, spi.allocate_cs_pin(&spi_cs_pin_).unwrap()};
+    set_systick_handler([&](){
         lt.tick().examine();
     });
 
 
-    auto nrst_gpio_ = hal::PB<0>();
+    auto nrst_pin_ = hal::PB<0>();
     
-    lt.bind_nrst_gpio(nrst_gpio_).examine();
+    lt.bind_nrst_gpio(nrst_pin_).examine();
     lt.init().examine();
     lt.set_data_rate(1_MHz).examine();
 

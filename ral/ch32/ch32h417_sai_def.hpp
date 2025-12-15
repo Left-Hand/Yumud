@@ -10,7 +10,7 @@
 
 namespace ymd::ral::CH32{
 
-struct R32_SAI_xCFGR1{
+struct [[nodiscard]] R32_SAI_xCFGR1{
     // SAIx 音频模块模式：
     // 00：主发送器；
     // 01：主接收器；
@@ -57,7 +57,7 @@ struct R32_SAI_xCFGR1{
     uint32_t :5;
 };
 
-struct R32_SAI_xCFGR2{
+struct [[nodiscard]] R32_SAI_xCFGR2{
     // 000：FIFO 为空；
     // 001：1/4
     // 010：1/2
@@ -114,7 +114,7 @@ struct R32_SAI_xCFGR2{
     uint32_t :16; 
 };
 
-struct R32_SAI_xFRCR{
+struct [[nodiscard]] R32_SAI_xFRCR{
     // 定义以 SCK 时钟周期数表示的音频帧长度：帧中
     // 的位数等于 FRL[7:0] + 1。
     // 音频帧中发送的位数必须大于或等于 8，否则音频
@@ -155,7 +155,7 @@ struct R32_SAI_xFRCR{
     uint32_t :13;
 };
 
-struct R32_SAI_xSLOTR{
+struct [[nodiscard]] R32_SAI_xSLOTR{
     uint32_t FBOFF:5;
     uint32_t :1;
     uint32_t SOLTSSZ:1;
@@ -164,7 +164,7 @@ struct R32_SAI_xSLOTR{
     uint32_t SLOTEN:16;
 };
 
-struct R32_SAI_xINTENR{
+struct [[nodiscard]] R32_SAI_xINTENR{
     uint32_t OVRUDRIE:1;
     uint32_t MUTEDETIE:1;
     uint32_t WCKCFGIE:1;
@@ -175,7 +175,7 @@ struct R32_SAI_xINTENR{
     uint32_t :25;
 };
 
-struct R32_SAI_xSR{
+struct [[nodiscard]] R32_SAI_xSR{
     uint32_t OVRUDR:1;
     uint32_t MUTEDET:1;
     uint32_t WCKCFG:1;
@@ -224,7 +224,7 @@ struct R32_SAI_xSR{
     uint32_t :13;
 };
 
-struct R32_SAI_DATAR{
+struct [[nodiscard]] R32_SAI_DATAR{
     uint32_t DATA;
 };
 

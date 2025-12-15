@@ -7,16 +7,15 @@
 #include "core/sync/barrier.hpp"
 #include "core/debug/debug.hpp"
 
+#include "primitive/hid_input/keycode.hpp"
+#include "primitive/hid_input/axis_input.hpp"
+#include "primitive/hid_input/segcode.hpp"
+#include "primitive/hid_input/button_input.hpp"
+
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-
-
-#include "drivers/HID/prelude/keycode.hpp"
-#include "drivers/HID/prelude/axis_input.hpp"
-#include "drivers/HID/prelude/segcode.hpp"
-#include "drivers/HID/prelude/button_input.hpp"
 #include "drivers/HID/ft6336u/ft6336u.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789v3_phy.hpp"
 
@@ -26,11 +25,11 @@ using drivers::FT6336U;
 
 #define UART hal::uart2
 
-#define SCL_GPIO hal::PB<0>()
-#define SDA_GPIO hal::PB<1>()
+#define SCL_PIN hal::PB<0>()
+#define SDA_PIN hal::PB<1>()
 
 template<typename T, typename Iter>
-struct MyU18BurstPixelDataIter{
+struct [[nodiscard]] MyU18BurstPixelDataIter{
     static constexpr bool DATA_BIT = 1;
 
     constexpr explicit MyU18BurstPixelDataIter(const Iter iter):
@@ -42,7 +41,7 @@ struct MyU18BurstPixelDataIter{
 
     constexpr uint16_t next() {
         const bool iter_has_next = iter_.has_next();
-        if((queue_.writable_size() > 18) and iter_has_next){
+        if((queue_.free_capacity() > 18) and iter_has_next){
             const uint16_t next_u16 = iter_.next();
             queue_.push_bit(DATA_BIT);
             queue_.push_bits<8>(next_u16 >> 8);
@@ -70,6 +69,7 @@ private:
 void ft6336_main(){
     // UART.init({576_KHz});
     UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000,
         .tx_strategy = CommStrategy::Dma
     });
@@ -80,9 +80,9 @@ void ft6336_main(){
     auto led = hal::PA<15>();
     led.outpp();
 
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;
-    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;
+    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
     i2c.init({200_KHz});
 
     clock::delay(1ms);

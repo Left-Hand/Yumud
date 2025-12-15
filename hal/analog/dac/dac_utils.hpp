@@ -1,9 +1,8 @@
 #pragma once
 
-#include "core/platform.hpp"
-#include "core/sdk.hpp"
+#include <cstdint>
 
-namespace ymd::hal::DacUtils{
+namespace ymd::hal::dac{
 
 enum class ChannelSelection:uint8_t{
     _1,

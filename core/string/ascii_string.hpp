@@ -138,8 +138,9 @@ public:
 
     // Example additions:
     constexpr bool operator==(const AsciiString& other) const {
-        return length_ == other.length_ && 
-            std::memcmp(c_str(), other.c_str(), length_) == 0;
+        if(length_ != other.length_) [[likely]] 
+            return false;
+        return std::memcmp(c_str(), other.c_str(), length_) == 0;
     }
 
     

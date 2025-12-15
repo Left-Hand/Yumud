@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/container/inline_vector.hpp"
+#include "core/container/heapless_vector.hpp"
 
-#include "types/vectors/vector3.hpp"
-#include "types/vectors/quat.hpp"
+#include "algebra/vectors/vec3.hpp"
+#include "algebra/vectors/quat.hpp"
 
 namespace ymd::robots{
 
@@ -28,9 +28,9 @@ struct EllipseCalibrator_Prelude{
     static constexpr Vec3<iq24> project_v2_to_v3(Vec2<iq24> v2){
         const auto [theta, phi] = v2;
         return {
-            cos(theta) * sin(phi),
-            sin(theta) * sin(phi),
-            cos(phi)
+            math::cos(theta) * math::sin(phi),
+            math::sin(theta) * math::sin(phi),
+            math::cos(phi)
         };
     }
 
@@ -42,7 +42,7 @@ struct EllipseCalibrator_Prelude{
 
     static constexpr size_t project_v2_to_idx(const Vec2<iq24> v2, const size_t n){
         const auto [theta, phi] = v2;
-        iq24 i = (1 - cos(phi)) * (n - 1) / 2; // 计算索引
+        iq24 i = (1 - math::cos(phi)) * (n - 1) / 2; // 计算索引
         return static_cast<size_t>(i);
     }
 
@@ -130,9 +130,9 @@ struct EllipseCalibrator_Prelude{
         // 5. 计算软铁缩放因子
         auto compute_scale_factors = [](Vec3<iq24> params) {
             return Vec3<iq24>{
-                inv_sqrt(MAX(params.x, 1)),
-                inv_sqrt(MAX(params.y, 1)),
-                inv_sqrt(MAX(params.z, 1))
+                math::inv_sqrt(MAX(params.x, 1)),
+                math::inv_sqrt(MAX(params.y, 1)),
+                math::inv_sqrt(MAX(params.z, 1))
             };
         };
 

@@ -11,29 +11,29 @@
 #define ASSERT_REG_IS_16BIT(name) static_assert((sizeof(name) == 2),  #name " is not 2 bytes"); 
 #endif
 
-namespace CH32V20x{
+namespace ymd::ral::ch32::ch32v20x_iwdg{
 
-struct R16_IWDG_CTLR {
+struct [[nodiscard]] R16_IWDG_CTLR {
     uint16_t KEY:16;
 };
 
-struct R16_IWDG_PSCR{
+struct [[nodiscard]] R16_IWDG_PSCR{
     uint16_t PR:3;
     uint16_t :13;
 };
 
-struct R16_IWDG_RLDR{
+struct [[nodiscard]] R16_IWDG_RLDR{
     uint16_t RL:12;
     uint16_t :4;
 };
 
-struct R16_IWDG_STATR{
+struct [[nodiscard]] R16_IWDG_STATR{
     uint16_t PVU:1;
     uint16_t RVU:1;
     uint16_t :14;
 };
 
-struct IWDG_Def {
+struct [[nodiscard]] IWDG_Def {
     volatile R16_IWDG_CTLR CTLR;
     uint16_t :16;
     volatile R16_IWDG_PSCR PSCR;

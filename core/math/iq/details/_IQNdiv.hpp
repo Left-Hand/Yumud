@@ -18,7 +18,7 @@ constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
     uint32_t uiqNResult;
     uint64_t uiiqNInput1;
 
-    if constexpr(_is_signed == false) {
+    if constexpr(_is_signed == true) {
         /* save sign of denominator */
         if (iqNInput2 <= 0) {
             /* check for divide by zero */
@@ -103,7 +103,7 @@ constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
 
 
     /* Saturate, add the sign and return. */
-    if constexpr(_is_signed == false) {
+    if constexpr(_is_signed == true) {
         if (uiqNResult > INT32_MAX) {
             if (ui8Sign) {
                 return INT32_MIN;

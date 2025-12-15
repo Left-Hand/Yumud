@@ -22,6 +22,14 @@ using Error = AK8963::Error;
 
 using Error = ImuError;
 
+static constexpr real_t conv_data_to_ut(const int16_t bits, const bool is_16_bits){
+    if(is_16_bits){
+        return (bits * iq16(0.15));
+    }else{
+        return (bits * iq16(0.6));
+    }
+}
+
 template<typename T = void>
 using IResult= Result<T, Error>;
 IResult<> AK8963::write_reg(const uint8_t addr, const uint8_t data){

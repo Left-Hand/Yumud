@@ -2,7 +2,6 @@
 
 #include <functional>
 
-#include "core/sdk.hpp"
 
 #include "hal/bus/bus_enums.hpp"
 #include "primitive/hal_result.hpp"
@@ -10,6 +9,7 @@
 #include "uart_primitive.hpp"
 
 #include "core/container/ringbuf.hpp"
+#include "uart_layout.hpp"
 
 
 namespace ymd::hal{
@@ -45,6 +45,7 @@ public:
     using Callback = std::function<void(Event)>;
 
     struct Config{
+        UartRemap remap;
         uint32_t baudrate;
         CommStrategy rx_strategy = CommStrategy::Dma;
         CommStrategy tx_strategy = CommStrategy::Dma;
@@ -55,9 +56,8 @@ public:
 
     virtual void init(const Config & cfg) = 0;
 
-    [[nodiscard]] size_t available() const {return rx_fifo_.available();}
-    [[nodiscard]] size_t pending() const {return tx_fifo_.available();}
-    [[nodiscard]] size_t remain() const {return tx_fifo_.capacity() - tx_fifo_.available();}
+    [[nodiscard]] __fast_inline size_t available() const {return rx_fifo_.length();}
+    [[nodiscard]] __fast_inline size_t free_capacity() const {return tx_fifo_.free_capacity();}
 
     virtual void set_tx_strategy(const CommStrategy tx_strategy) = 0;
     virtual void set_rx_strategy(const CommStrategy rx_strategy) = 0;
@@ -65,18 +65,12 @@ public:
     template<typename Fn>
     void set_event_handler(Fn && cb){callback_ = std::forward<Fn>(cb);}
 
-    HalResult read(uint32_t & data) {
-        char _;read1(_);data = _;return HalResult::Ok();};
+    [[nodiscard]] virtual size_t try_write_chars(const char * pdata, const size_t len) = 0;
 
-    HalResult write(const uint32_t data) {
-        write1(char(data)); return HalResult::Ok();};
+    [[nodiscard]] virtual size_t try_write_char(const char data) = 0;
 
-    virtual void writeN(const char * pdata, const size_t len) = 0;
-
-    virtual void write1(const char data) = 0;
-
-    void read1(char & data);
-    void readN(char * pbuf, const size_t len);
+    [[nodiscard]] size_t try_read_char(char & data);
+    [[nodiscard]] size_t try_read_chars(char * pbuf, const size_t len);
 
     auto & tx_fifo(){return tx_fifo_;}
     auto & rx_fifo(){return rx_fifo_;}
@@ -92,7 +86,8 @@ protected:
     RingBuf<char, UART_FIFO_BUF_SIZE> tx_fifo_;
     RingBuf<char, UART_FIFO_BUF_SIZE> rx_fifo_;
     void invoke_callback(const Event event){
-        if(callback_ == nullptr) return;
+        if(callback_ == nullptr) [[unlikely]]
+            return;
         callback_(event);
     }
     Uart(){;}

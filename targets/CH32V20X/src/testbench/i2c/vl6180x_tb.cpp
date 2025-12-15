@@ -12,8 +12,8 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 #define UART hal::uart2
-#define SCL_GPIO hal::PB<0>()
-#define SDA_GPIO hal::PB<1>()
+#define SCL_PIN hal::PB<0>()
+#define SDA_PIN hal::PB<1>()
 
 using drivers::VL6180X;
 
@@ -87,13 +87,16 @@ static void vl6180x_range_interleaved_continuous_tb(VL6180X & vl6180){
 }
 
 void vl6180x_main(){
-    UART.init({576000});
+    DEBUGGER_INST.init({
+        hal::UART2_REMAP_PA2_PA3,
+        576000
+    });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.no_brackets();
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;
-    hal::I2cSw i2c{&scl_gpio_, &sda_gpio_};
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;
+    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
     i2c.init({400_KHz});
 
     // VL6180X vl6180{i2c, I2cSlaveAddr<7>::from_u7(0)};

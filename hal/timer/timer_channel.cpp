@@ -1,27 +1,38 @@
 #include "timer_channel.hpp"
 #include "hal/dma/dma.hpp"
+#include "timer_layout.hpp"
+#include "core/sdk.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 
+#define COPY_CONST(a,b) std::conditional_t<\
+    std::is_const_v<std::decay_t<decltype(a)>>,\
+    std::add_const_t<b *>,\
+    std::remove_const_t<b *>>\
+
+#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
+#define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
+
+
 volatile uint16_t & TimerChannel::from_channel_to_cvr(
-    TIM_TypeDef * timer, 
-    const ChannelSelection ch_sel
+    void * inst, 
+    const ChannelSelection sel
 ){
 
-    switch(ch_sel.kind()){
+    switch(sel.kind()){
         default: __builtin_trap();
         case ChannelSelection::CH1:
         case ChannelSelection::CH1N:
-            return (timer->CH1CVR);
+            return (SDK_INST(inst)->CH1CVR);
         case ChannelSelection::CH2:
         case ChannelSelection::CH2N:
-            return (timer->CH2CVR);
+            return (SDK_INST(inst)->CH2CVR);
         case ChannelSelection::CH3:
         case ChannelSelection::CH3N:
-            return (timer->CH3CVR);
+            return (SDK_INST(inst)->CH3CVR);
         case ChannelSelection::CH4:
-            return (timer->CH4CVR);
+            return (SDK_INST(inst)->CH4CVR);
     }
 }
 
@@ -29,7 +40,7 @@ volatile uint16_t & TimerChannel::from_channel_to_cvr(
 void TimerChannel::enable_dma(const Enable en){
 
     const uint16_t source = [&] -> uint16_t{
-        switch(ch_sel_.kind()){
+        switch(sel_.kind()){
         case ChannelSelection::CH1:
             return TIM_DMA_CC1;
         case ChannelSelection::CH2:
@@ -43,14 +54,14 @@ void TimerChannel::enable_dma(const Enable en){
         }
     }();
 
-    TIM_DMACmd(inst_, source, en == EN);
+    TIM_DMACmd(SDK_INST(inst_), source, en == EN);
 }
 
 
 Option<DmaChannel &> TimerChannel::dma() const {
     #define FULL_DMA_CASE(x)\
         case TIM##x##_BASE:\
-        switch(ch_sel_.kind()){\
+        switch(sel_.kind()){\
             case ChannelSelection::CH1:\
                 return Some(&TIM##x##_CH1_DMA_CH);\
             case ChannelSelection::CH2:\
@@ -64,18 +75,18 @@ Option<DmaChannel &> TimerChannel::dma() const {
         }\
         break;\
         
-    switch(reinterpret_cast<uint32_t>(inst_)){
-        #ifdef ENABLE_TIM1
+    switch(reinterpret_cast<uint32_t>(SDK_INST(inst_))){
+        #ifdef TIM1_PRESENT
         FULL_DMA_CASE(1)
         #endif
 
-        #ifdef ENABLE_TIM2
+        #ifdef TIM2_PRESENT
         FULL_DMA_CASE(2)
         #endif
 
-        #ifdef ENABLE_TIM3
+        #ifdef TIM3_PRESENT
         case TIM3_BASE:
-        switch(ch_sel_.kind()){
+        switch(sel_.kind()){
             case ChannelSelection::CH1:
                 return Some(&TIM3_CH1_DMA_CH);
             case ChannelSelection::CH3:
@@ -88,9 +99,9 @@ Option<DmaChannel &> TimerChannel::dma() const {
         break;
         #endif
 
-        #ifdef ENABLE_TIM4
+        #ifdef TIM4_PRESENT
         case TIM4_BASE:
-        switch(ch_sel_.kind()){
+        switch(sel_.kind()){
             case ChannelSelection::CH1:
                 return Some(&TIM4_CH1_DMA_CH);
             case ChannelSelection::CH2:
@@ -103,16 +114,16 @@ Option<DmaChannel &> TimerChannel::dma() const {
         break;
         #endif
 
-        #ifdef ENABLE_TIM5
+        #ifdef TIM5_PRESENT
         FULL_DMA_CASE(5)
         #endif
-        #ifdef ENABLE_TIM8
+        #ifdef TIM8_PRESENT
         FULL_DMA_CASE(8)
         #endif
-        #ifdef ENABLE_TIM9
+        #ifdef TIM9_PRESENT
         FULL_DMA_CASE(9)
         #endif
-        #ifdef ENABLE_TIM10
+        #ifdef TIM10_PRESENT
         FULL_DMA_CASE(10)
         #endif
     }

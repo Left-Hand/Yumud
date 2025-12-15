@@ -6,15 +6,15 @@
 #include "primitive/image/image.hpp"
 #include "primitive/image/font/font.hpp"
 #include "primitive/image/painter/painter.hpp"
-#include "types/shapes/box_rect.hpp"
-#include "types/shapes/annular_sector.hpp"
-#include "types/shapes/rotated_rect.hpp"
+#include "algebra/shapes/box_rect.hpp"
+#include "algebra/shapes/annular_sector.hpp"
+#include "algebra/shapes/rotated_rect.hpp"
 
-#include "nvcv2/shape/shape.hpp"
+#include "middlewares/nvcv2/shape/shape.hpp"
 
-#include "types/regions/ray2.hpp"
-#include "types/regions/line2.hpp"
-#include "types/gesture/isometry2.hpp"
+#include "algebra/regions/ray2.hpp"
+#include "algebra/regions/line2.hpp"
+#include "algebra/gesture/isometry2.hpp"
 
 // static constexpr Vec2u CAMERA_SIZE = {94/2, 60/2};
 // static constexpr Vec2u CAMERA_SIZE = {94, 60};
@@ -40,7 +40,7 @@ namespace ymd{
 struct RotatedZebraRect{
     iq16 width;
     iq16 height;
-    Angle<iq16> rotation;
+    Angular<iq16> rotation;
 
 
     template<size_t I>
@@ -86,12 +86,12 @@ private:
         const auto x_offset = - self.c * offset.x - self.s * offset.y;
         
         return 
-            ((abs(-self.s * offset.x + self.c * offset.y)
+            ((math::abs(-self.s * offset.x + self.c * offset.y)
                 <= self.half_height) and
-            (abs(x_offset) 
+            (math::abs(x_offset) 
                 <= self.half_width))
                 
-            // ? (static_cast<uint8_t>(CLAMP(sinpu(x_offset * 15) * 3 + 1, 0, 2) * WHITE_COLOR / 2)) : 0
+            // ? (static_cast<uint8_t>(CLAMP(math::sinpu(x_offset * 15) * 3 + 1, 0, 2) * WHITE_COLOR / 2)) : 0
             ? (WHITE_COLOR) : 0
         ;
     }
@@ -116,12 +116,10 @@ struct BoundingBoxOf<RotatedZebraRect>{
 };
 
 
-
-
 struct SpotLight final{
     iq16 radius = 1;
-
 };
+
 
 template<>
 struct CacheOf<SpotLight, bool>{
@@ -144,7 +142,7 @@ private:
         const auto len_squ = offset.length_squared();
         // const auto temp = MAX(9 * len_squ, 1);
         // return uint8_t(130 / temp);
-        const auto temp = CLAMP(2 - 3 * len_squ,0, 1);
+        const auto temp = CLAMP(2 - 3 * static_cast<iq16>(math::sqrt(static_cast<uq16>(len_squ))),0, 1);
         return uint8_t(130 * temp);
     }
 };
@@ -232,8 +230,8 @@ static constexpr Vec2u project_ground_to_pixel(
     
     // 5. Convert to camera coordinates and clamp to pixel grid
     return Vec2u{
-        static_cast<uint>(round(pixel_offset.x + HALF_CAMERA_SIZE.x)),
-        static_cast<uint>(round(HALF_CAMERA_SIZE.y - pixel_offset.y))
+        math::round_cast<uint>(pixel_offset.x + HALF_CAMERA_SIZE.x),
+        math::round_cast<uint>(HALF_CAMERA_SIZE.y - pixel_offset.y)
     };
 }
 

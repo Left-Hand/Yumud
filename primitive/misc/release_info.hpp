@@ -9,7 +9,7 @@ namespace ymd{
 
 // DERIVE_SERIALIZE_AS_TUPLE(Author)
 
-struct ReleaseVersion final{
+struct [[nodiscard]] ReleaseVersion final{
     uint8_t major;
     uint8_t minor;
 
@@ -37,35 +37,19 @@ constexpr Hasher<S> & operator << (Hasher<S> & hs, const ReleaseVersion & self){
 }
 
 template<>
-struct serde::SerializeGeneratorFactory<serde::RawLeBytes, ReleaseVersion>{
+struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, ReleaseVersion>{
     static constexpr auto from(const ReleaseVersion & version){
         return make_serialize_generator<serde::RawLeBytes>(
             std::make_tuple(version.major, version.minor));
     }
 };
 
-struct ReleaseInfo{
+struct [[nodiscard]] ReleaseInfo{
     Author author;
     ReleaseVersion version;
-    Date date;
-    Time time;
+    Date date = Date::from_compiler();
+    Time time = Time::from_compiler();
 
-    // Compile-time creation with validation
-    static constexpr Option<ReleaseInfo> from(
-        const char* author_name,
-        ReleaseVersion version,
-        Date date = Date::from_compiler(),
-        Time time = Time::from_compiler()
-    ) {
-        const auto may_author = Author::from(author_name);
-        if(may_author.is_none()) return None;
-        return Some(ReleaseInfo{
-            may_author.unwrap(), 
-            version, 
-            date, 
-            time
-        });
-    }
 };
 
 OutputStream & operator <<(OutputStream & os, const ReleaseInfo & self){
@@ -84,7 +68,7 @@ constexpr Hasher<S> & operator << (Hasher<S> & hs, const ReleaseInfo & self){
 
 
 template<>
-struct serde::SerializeGeneratorFactory<serde::RawLeBytes, ReleaseInfo>{
+struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, ReleaseInfo>{
     static constexpr auto from(const ReleaseInfo & info){
         return serde::make_serialize_generator<serde::RawLeBytes>(
             std::make_tuple(info.author, info.version, info.date, info.time));

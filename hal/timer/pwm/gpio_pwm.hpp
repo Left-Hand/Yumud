@@ -5,9 +5,7 @@
 
 
 namespace ymd::hal{
-class GpioPwm final:
-    public PwmIntf, 
-    public CountableIntf<uint16_t>
+class GpioPwm final
 {
 
 public:
@@ -22,19 +20,22 @@ public:
         arr_ = _arr;
     }
 
-    __fast_inline volatile uint16_t & cnt() override {return cnt_;}
-    __fast_inline volatile uint16_t & cvr() override {return cvr_;}
-    __fast_inline volatile uint16_t & arr() override {return arr_;}
+    __fast_inline volatile uint16_t & cnt()  {return cnt_;}
+    __fast_inline volatile uint16_t & cvr()  {return cvr_;}
+    __fast_inline volatile uint16_t & arr()  {return arr_;}
     
-    __fast_inline void tick(){gpio_ = BoolLevel::from(cnt_ < cvr_); cnt_ = (cnt_ + 1)% arr_;}
+    __fast_inline void tick(){
+        gpio_.write(BoolLevel::from(cnt_ < cvr_)); 
+        cnt_ = (cnt_ + 1)% arr_;
+    }
 
     __inline void set_threshold(const uint16_t val){cvr_ = val - 1;}
     __inline void set_period(const uint16_t val){arr_ = val - 1;}
 
-    void set_dutycycle(const real_t duty) override{
-        if(duty == real_t(0)) {cvr_ = 0;}
-        else if(duty == real_t(1)) {cvr_ = arr_ - 1;}
-        else {cvr_ = int(duty * arr_);}
+    void set_dutycycle(const real_t dutycycle){
+        if(dutycycle == real_t(0)) {cvr_ = 0;}
+        else if(dutycycle == real_t(1)) {cvr_ = arr_ - 1;}
+        else {cvr_ = int(dutycycle * arr_);}
     }
 
     [[nodiscard]] real_t get_dutyscale(){return real_t(cvr_) / real_t(arr_);}

@@ -3,25 +3,25 @@
 #include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
-#include "core/math/int/int_t.hpp"
+#include "core/int/int_t.hpp"
 #include "core/math/realmath.hpp"
 #include "core/math/matrix/static_matrix.hpp"
 #include "core/math/matrix/ceres/ceres.hpp"
 
 #include "hal/bus/sdi/sdi.hpp"
 
-#include "types/regions/plane.hpp"
-#include "types/regions/aabb.hpp"
-#include "types/regions/segment2.hpp"
-#include "types/regions/line2.hpp"
-#include "types/regions/ray2.hpp"
+#include "algebra/regions/plane.hpp"
+#include "algebra/regions/aabb.hpp"
+#include "algebra/regions/segment2.hpp"
+#include "algebra/regions/line2.hpp"
+#include "algebra/regions/ray2.hpp"
 
-#include "types/transforms/transform3d.hpp"
-#include "types/transforms/transform2d.hpp"
+#include "algebra/transforms/transform3d.hpp"
+#include "algebra/transforms/transform2d.hpp"
 
-#include "types/shapes/Arc2.hpp"
-#include "types/shapes/Bezier2.hpp"
-#include "types/regions/perspective_rect.hpp"
+#include "algebra/shapes/Arc2.hpp"
+#include "algebra/shapes/Bezier2.hpp"
+#include "algebra/regions/perspective_rect.hpp"
 
 
 #include "robots/kinematics/Scara5/scara5_kinematics.hpp"
@@ -56,7 +56,10 @@ DEBUGGER.println(__VA_ARGS__);\
 
 
 void math_main(){
-    DEBUGGER_INST.init({576000});
+    DEBUGGER_INST.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000 
+    });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
@@ -76,11 +79,7 @@ void math_main(){
     //     cnts.clear();
     //     print(millis());
         
-    //     for(size_t i = 0; i < cnt; i++){
-    //         cnts.push_back(DEBUGGER.pending());
-    //         clock::delay(1ms);
-    //     }
-        
+
     //     print(cnts);
 
     //     clock::delay(200ms);
@@ -103,9 +102,10 @@ void math_main(){
         std::span(dst));
 
     const auto elapsed = measure_total_elapsed_us([&]{
-        compute_homography_from_unit_rect(
+        const auto mat = compute_homography_from_unit_rect(
             std::span(dst)
         );
+        (void)mat;
         n++;
     }, 10000);
 
@@ -228,7 +228,7 @@ void math_main(){
 
 
     auto line = Line{Vec2<iq16>{1,0}, Vec2<iq16>{0,1}};
-    auto other = Line::from_point_and_angle(Vec2<iq16>{0,0}, Angle<iq16>::QUARTER);
+    auto other = Line::from_point_and_angle(Vec2<iq16>{0,0}, Angular<iq16>::QUARTER);
     print("line", line);
     print("other",other);
 
@@ -242,7 +242,7 @@ void math_main(){
     print("intersection", line.intersection(
         Line::from_point_and_angle(
             Vec2<iq16>{0,0}, 
-            Angle<iq16>::from_radians(atan(iq16(0.3333_r)))
+            Angular<iq16>::from_radians(math::atan(iq16(0.3333_r)))
         ),
         0.00001_iq16
     ));
@@ -250,9 +250,10 @@ void math_main(){
     print("mirror", line.mirror(Vec2<iq16>{0, 0.5_r}));
     print("perpendicular", line.perpendicular(Vec2<iq16>{0, 0.5_r}));
     print("orthogonal_with", line.is_orthogonal_with(
-        Line::from_point_and_angle(Vec2<iq16>{0,0}, Angle<iq16>::QUARTER), iq16(1e-6)));
+        Line::from_point_and_angle(Vec2<iq16>{0,0}, Angular<iq16>::QUARTER), 
+        Angular<iq16>::from_turns(iq16(1e-6))));
     print("rebase", line.rebase(Vec2<iq16>{-1,0}));
-    print("rotated", line.rotated(Vec2<iq16>{-1,0}, Angle<iq16>::QUARTER));
+    print("rotated", line.rotated(Vec2<iq16>{-1,0}, Angular<iq16>::QUARTER));
     print("normal", line.normal(Vec2<iq16>{-1,0}));
     #endif
 

@@ -22,15 +22,19 @@ public:
         channel_a_.inverse(EN);
         channel_b_.inverse(DISEN);
 
-        static constexpr hal::TimerOcPwmConfig pwm_noinv_cfg = {
-            .cvr_sync_en = EN,
-            .valid_level = HIGH
-        };
+        static constexpr hal::TimerOcPwmConfig pwm_noinv_cfg = []{
+            auto config = hal::TimerOcPwmConfig::from_default();
+            config.cvr_sync_en = EN;
+            config.valid_level = HIGH;
+            return config;
+        }();
 
-        static constexpr hal::TimerOcPwmConfig pwm_inv_cfg = {
-            .cvr_sync_en = EN,
-            .valid_level = LOW,
-        };
+        static constexpr hal::TimerOcPwmConfig pwm_inv_cfg = []{
+            auto config = hal::TimerOcPwmConfig::from_default();
+            config.cvr_sync_en = EN;
+            config.valid_level = LOW;
+            return config;
+        }();
 
         // static constexpr hal::TimerOcPwmConfig pwm_noinv_cfg = {
         //     .cvr_sync_en = EN,

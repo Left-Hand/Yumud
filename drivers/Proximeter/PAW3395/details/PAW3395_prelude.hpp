@@ -6,9 +6,12 @@
 #include "core/utils/Errno.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
-#include "types/vectors/Vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 
-namespace ymd::drivers{
+// https://github.com/ttwards/motor/blob/939f1db78dcaae6eb819dcb54b6146d94db7dffc/drivers/sensor/paw3395/paw3395.h#L122
+// https://github.com/dotdotchan/bs2x_sdk/blob/main/application/samples/products/sle_mouse_with_dongle/mouse_sensor/mouse_sensor_paw3395.c
+
+namespace ymd::drivers::paw3395{
 
 
 struct PAW3395_Prelude{
@@ -26,47 +29,128 @@ struct PAW3395_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    static constexpr uint8_t PAW3395_REG_PRODUCT_ID = 0x00;   // 产品ID，RO，Default：0x51
-    static constexpr uint8_t PAW3395_REG_REVISION_ID = 0x01;   // 修订版本ID，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_MOTION = 0x02;   // 运动状态，R/W，Default：0x00
-    static constexpr uint8_t PAW3395_REG_DELTA_X_L = 0x03;   // X轴低位增量，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_DELTA_X_H = 0x04;   // X轴高位增量，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_DELTA_Y_L = 0x05;   // Y轴低位增量，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_DELTA_Y_H = 0x06;   // Y轴高位增量，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_SQUAL = 0x07;   // 表面质量指标，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_RAWDATA_SUM = 0x08;   // 原始数据和，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_MAXIMUM_RAWDATA = 0x09;   // 最大原始数据，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_MINIMUM_RAWDATA = 0x0A;   // 最小原始数据，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_SHUTTER_LOWER = 0x0B;   // 快门下限，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_SHUTTER_UPPER = 0x0C;   // 快门上限，RO，Default：0x01
-    static constexpr uint8_t PAW3395_REG_OBSERVATION = 0x15;   // 观测值，R/W，Default：0x80
-    static constexpr uint8_t PAW3395_REG_MOTION_BURST = 0x16;   // 运动突发，R/W，Default：0x00
-    static constexpr uint8_t PAW3395_REG_POWER_UP_RESET = 0x3A;   // 上电复位，WO，No default
-    static constexpr uint8_t PAW3395_REG_SHUTDOWN = 0x3B;   // 关闭，WO，No default
-    static constexpr uint8_t PAW3395_REG_PERFORMANCE = 0x40;   // 性能配置，R/W，Default：0x00
-    static constexpr uint8_t PAW3395_REG_SET_RESOLUTION = 0x47;   // 设置分辨率(更新CPI)，WO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_RESOLUTION_X_LOW = 0x48;   // X轴低分辨率，R/W，Default：0x63
-    static constexpr uint8_t PAW3395_REG_RESOLUTION_X_HIGH = 0x49;   // X轴高分辨率，R/W，Default：0x00
-    static constexpr uint8_t PAW3395_REG_RESOLUTION_Y_LOW = 0x4A;   // Y轴低分辨率，R/W，Default：0x63
-    static constexpr uint8_t PAW3395_REG_RESOLUTION_Y_HIGH = 0x4B;   // Y轴高分辨率，R/W，Default：0x00
-    static constexpr uint8_t PAW3395_REG_ANGLE_SNAP = 0x56;   // 角度捕捉，R/W，Default：0x0D
-    static constexpr uint8_t PAW3395_REG_RAWDATA_OUTPUT = 0x58;   // 原始数据输出，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_RAWDATA_STATUS = 0x59;   // 原始数据状态，RO，Default：0x00
-    static constexpr uint8_t PAW3395_REG_RIPPLE_CONTROL = 0x5A;   // 纹波控制，R/W，Default：0x00
-    static constexpr uint8_t PAW3395_REG_AXIS_CONTROL = 0x5B;   // 坐标系翻转，R/W，Default：0x60
-    static constexpr uint8_t PAW3395_REG_MOTION_CTRL = 0x5C;   // 运动控制，R/W，Default：0x02
-    static constexpr uint8_t PAW3395_REG_INV_PRODUCT_ID = 0x5F;   // 反向产品ID，RO，Default：0xAE
-    static constexpr uint8_t PAW3395_REG_RUN_DOWNSHIFT = 0x77;   // 运行下移，R/W，Default：0x14
-    static constexpr uint8_t PAW3395_REG_REST1_PERIOD = 0x78;   // 休息1周期，R/W，Default：0x01
-    static constexpr uint8_t PAW3395_REG_REST1_DOWNSHIFT = 0x79;   // 休息1下移，R/W，Default：0x90
-    static constexpr uint8_t PAW3395_REG_REST2_PERIOD = 0x7A;   // 休息2周期，R/W，Default：0x19
-    static constexpr uint8_t PAW3395_REG_REST2_DOWNSHIFT = 0x7B;   // 休息2下移，R/W，Default：0x5E
-    static constexpr uint8_t PAW3395_REG_REST3_PERIOD = 0x7C;   // 休息3周期，R/W，Default：0x3F
-    static constexpr uint8_t PAW3395_REG_RUN_DOWNSHIFT_MULT = 0x7D;   // 运行下移倍数，R/W，Default：0x07
-    static constexpr uint8_t PAW3395_REG_REST_DOWNSHIFT_MULT = 0x7E;   // 休息下移倍数，R/W，Default：0x55
-    static constexpr uint16_t PAW3395_REG_ANGLE_TUNE1 = 0x0577; // 角度调整1，R/W，Default：0x00
-    static constexpr uint16_t PAW3395_REG_ANGLE_TUNE2 = 0x0578; // 角度调整2使能，R/W，Default：0x00
-    static constexpr uint16_t PAW3395_REG_LIFT_CONFIG = 0x0C4E; // 抬起配置，R/W，Default：0x08
+    enum class RegAddr:uint8_t{
+
+        // 产品ID，RO，Default：0x51
+        PRODUCT_ID = 0x00,   
+
+        // 修订版本ID，RO，Default：0x00
+        REVISION_ID = 0x01,   
+
+        // 运动状态，R/W，Default：0x00
+        MOTION = 0x02,   
+
+        // X轴低位增量，RO，Default：0x00
+        DELTA_X_L = 0x03,   
+
+        // X轴高位增量，RO，Default：0x00
+        DELTA_X_H = 0x04,   
+
+        // Y轴低位增量，RO，Default：0x00
+        DELTA_Y_L = 0x05,   
+
+        // Y轴高位增量，RO，Default：0x00
+        DELTA_Y_H = 0x06,   
+
+        // 表面质量指标，RO，Default：0x00
+        SQUAL = 0x07,   
+
+        // 原始数据和，RO，Default：0x00
+        RAWDATA_SUM = 0x08,   
+
+        // 最大原始数据，RO，Default：0x00
+        MAXIMUM_RAWDATA = 0x09,   
+
+        // 最小原始数据，RO，Default：0x00
+        MINIMUM_RAWDATA = 0x0A,   
+
+        // 快门下限，RO，Default：0x00
+        SHUTTER_LOWER = 0x0B,   
+
+        // 快门上限，RO，Default：0x01
+        SHUTTER_UPPER = 0x0C,   
+
+        // 观测值，R/W，Default：0x80
+        OBSERVATION = 0x15,   
+
+        // 运动突发，R/W，Default：0x00
+        MOTION_BURST = 0x16,   
+
+        // 上电复位，WO，No default
+        POWER_UP_RESET = 0x3A,   
+
+        // 关闭，WO，No default
+        SHUTDOWN = 0x3B,   
+
+        // 性能配置，R/W，Default：0x00
+        PERFORMANCE = 0x40,   
+
+        // 设置分辨率(更新CPI)，WO，Default：0x00
+        SET_RESOLUTION = 0x47,   
+
+        // X轴低分辨率，R/W，Default：0x63
+        RESOLUTION_X_LOW = 0x48,   
+
+        // X轴高分辨率，R/W，Default：0x00
+        RESOLUTION_X_HIGH = 0x49,   
+
+        // Y轴低分辨率，R/W，Default：0x63
+        RESOLUTION_Y_LOW = 0x4A,   
+
+        // Y轴高分辨率，R/W，Default：0x00
+        RESOLUTION_Y_HIGH = 0x4B,   
+
+        // 角度捕捉，R/W，Default：0x0D
+        ANGLE_SNAP = 0x56,   
+
+        // 原始数据输出，RO，Default：0x00
+        RAWDATA_OUTPUT = 0x58,   
+
+        // 原始数据状态，RO，Default：0x00
+        RAWDATA_STATUS = 0x59,   
+
+        // 纹波控制，R/W，Default：0x00
+        RIPPLE_CONTROL = 0x5A,   
+
+        // 坐标系翻转，R/W，Default：0x60
+        AXIS_CONTROL = 0x5B,   
+
+        // 运动控制，R/W，Default：0x02
+        MOTION_CTRL = 0x5C,   
+
+        // 反向产品ID，RO，Default：0xAE
+        INV_PRODUCT_ID = 0x5F,   
+
+        // 运行下移，R/W，Default：0x14
+        RUN_DOWNSHIFT = 0x77,   
+
+        // 休息1周期，R/W，Default：0x01
+        REST1_PERIOD = 0x78,   
+
+        // 休息1下移，R/W，Default：0x90
+        REST1_DOWNSHIFT = 0x79,   
+
+        // 休息2周期，R/W，Default：0x19
+        REST2_PERIOD = 0x7A,   
+
+        // 休息2下移，R/W，Default：0x5E
+        REST2_DOWNSHIFT = 0x7B,   
+
+        // 休息3周期，R/W，Default：0x3F
+        REST3_PERIOD = 0x7C,   
+
+        // 运行下移倍数，R/W，Default：0x07
+        RUN_DOWNSHIFT_MULT = 0x7D,   
+
+        // 休息下移倍数，R/W，Default：0x55
+        REST_DOWNSHIFT_MULT = 0x7E,   
+
+    };
+    // ANGLE_TUNE1 = 0x0577, // 角度调整1，R/W，Default：0x00
+    // ANGLE_TUNE2 = 0x0578, // 角度调整2使能，R/W，Default：0x00
+    // LIFT_CONFIG = 0x0C4E, // 抬起配置，R/W，Default：0x08
+
+
     
     static constexpr auto INIT_GAME_TABLE = std::to_array<std::pair<uint8_t, uint8_t>>({
         	// 1. 将值0x05写入寄存器0x7F
@@ -115,20 +199,20 @@ struct PAW3395_Prelude{
             // 1. 将值0x07写入寄存器0x7F (Bank Select or similar?)
             {0x7F, 0x0},
             // 2. 将值0x41写入寄存器0x40 (PAW3395_REG_PERFORMANCE)
-            {PAW3395_REG_PERFORMANCE, 0x4},
+            {static_cast<uint8_t>(RegAddr::PERFORMANCE), 0x4},
             // 3. 将值0x00写入寄存器0x7F
             {0x7F, 0x0},
             // 4. 将值0x80写入寄存器0x40 (PAW3395_REG_PERFORMANCE)
-            {PAW3395_REG_PERFORMANCE, 0x8},
+            {static_cast<uint8_t>(RegAddr::PERFORMANCE), 0x8},
             {0x7F, 0x0},
             // 6. 将值0x0D写入寄存器0x55
             {0x55, 0x0D}, // 0x55 未义
             // 7. 将值0x1B写入寄存器0x56 (PAW3395_REG_ANGLE_SNAP)
-            {PAW3395_REG_ANGLE_SNAP, 0x1},
+            {static_cast<uint8_t>(RegAddr::ANGLE_SNAP), 0x1},
             // 8. 将值0xE8写入寄存器0x57
             {0x57, 0xE8}, // 0x57 未义
             // 9. 将值0xD5写入寄存器0x58 (PAW3395_REG_RAWDATA_OUTPUT - 注意: 定义为 RO)
-            {PAW3395_REG_RAWDATA_OUTPUT, 0xD},
+            {static_cast<uint8_t>(RegAddr::RAWDATA_OUTPUT), 0xD},
             // 10. 将值0x14写入寄存器0x7F
             {0x7F, 0x1},
             // 11. 将值0xBC写入寄存器0x42
@@ -136,7 +220,7 @@ struct PAW3395_Prelude{
             // 12. 将值0x74写入寄存器0x43
             {0x43, 0x74}, // 0x43 未义
             // 13. 将值0x20写入寄存器0x4B (PAW3395_REG_RESOLUTION_Y_HIGH)
-            {PAW3395_REG_RESOLUTION_Y_HIGH, 0x2},
+            {static_cast<uint8_t>(RegAddr::RESOLUTION_Y_HIGH), 0x2},
             // 14. 将值0x00写入寄存器0x4D
             {0x4D, 0x00}, // 0x4D 未义
             // 15. 将值0x0E写入寄存器0x53
@@ -154,9 +238,9 @@ struct PAW3395_Prelude{
             // 21. 将值0xCA写入寄存器0x55
             {0x55, 0xCA}, // 0x55 未义
             // 22. 将值0xE8写入寄存器0x5A (PAW3395_REG_RIPPLE_CONTROL)
-            {PAW3395_REG_RIPPLE_CONTROL, 0xE},
+            {static_cast<uint8_t>(RegAddr::RIPPLE_CONTROL), 0xE},
             // 23. 将值0xEA写入寄存器0x5B (PAW3395_REG_AXIS_CONTROL) - 注意: 原文是 OxEA，应为 0xEA
-            {PAW3395_REG_AXIS_CONTROL, 0xE},
+            {static_cast<uint8_t>(RegAddr::AXIS_CONTROL), 0xE},
             // 24. 将值0x31写入寄存器0x61
             {0x61, 0x31}, // 0x61 未义
             // 25. 将值0x64写入寄存器0x62

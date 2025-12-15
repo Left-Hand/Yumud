@@ -11,12 +11,12 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 IResult<> TM1637_Phy::write_byte(const uint8_t data){
-    sda_gpio_.outod();
+    sda_pin_.outod();
     for(uint8_t mask = 0x01; mask; mask <<= 1){
-        scl_gpio_.clr();
-        sda_gpio_.write(BoolLevel::from(mask & data));
+        scl_pin_.set_low();
+        sda_pin_.write(BoolLevel::from(mask & data));
         clock::delay(3us);
-        scl_gpio_.set();
+        scl_pin_.set_high();
         clock::delay(3us);
     }
 
@@ -25,14 +25,14 @@ IResult<> TM1637_Phy::write_byte(const uint8_t data){
 
 
 IResult<> TM1637_Phy::wait_ack(){
-    sda_gpio_.inpu();
-    scl_gpio_.clr();
+    sda_pin_.inpu();
+    scl_pin_.set_low();
     clock::delay(5us);
-    scl_gpio_.set();
+    scl_pin_.set_high();
 
     bool ovt = false;
     const auto m = clock::micros();
-    while(sda_gpio_.read() == HIGH){
+    while(sda_pin_.read() == HIGH){
         if(clock::micros() - m >= Microseconds(2)){
             ovt = true;
             break;
@@ -40,9 +40,9 @@ IResult<> TM1637_Phy::wait_ack(){
         clock::delay(1us);
     }
 
-    scl_gpio_.set();
+    scl_pin_.set_high();
     clock::delay(2us);
-    scl_gpio_.clr();
+    scl_pin_.set_low();
     
     if(ovt){
         return Err(hal::HalResult::WritePayloadAckTimeout);
@@ -55,11 +55,11 @@ IResult<> TM1637_Phy::read_byte(uint8_t & data){
     uint8_t ret = 0;
 
     for(uint8_t i = 0; i < 8; i++){
-        scl_gpio_.clr();
+        scl_pin_.set_low();
         ret = ret >> 1;
         clock::delay(30us);
-        scl_gpio_.set();
-        ret = ret | ((sda_gpio_.read() == HIGH) ? 0x80 : 0x00);
+        scl_pin_.set_high();
+        ret = ret | ((sda_pin_.read() == HIGH) ? 0x80 : 0x00);
         clock::delay(30us);
     }
 
@@ -68,24 +68,24 @@ IResult<> TM1637_Phy::read_byte(uint8_t & data){
 }
 
 IResult<> TM1637_Phy::iic_start(const uint8_t data){
-    scl_gpio_.outod(HIGH);
-    sda_gpio_.outod(HIGH);
+    scl_pin_.outod(HIGH);
+    sda_pin_.outod(HIGH);
     clock::delay(2us);
-    sda_gpio_.clr();
+    sda_pin_.set_low();
     if(const auto res = write_byte(data);
         res.is_err()) return Err(hal::HalResult::SlaveAddrAckTimeout);
     return Ok();
 }
 
 IResult<> TM1637_Phy::iic_stop(){
-    scl_gpio_.clr();
-    sda_gpio_.outod();
+    scl_pin_.set_low();
+    sda_pin_.outod();
     clock::delay(2us);
-    sda_gpio_.clr();
+    sda_pin_.set_low();
     clock::delay(2us);
-    scl_gpio_.set();
+    scl_pin_.set_high();
     clock::delay(2us);
-    sda_gpio_.set();
+    sda_pin_.set_high();
 
     return Ok();
 }
@@ -167,11 +167,11 @@ IResult<>  TM1637::switch_to_readkey(){
     );
 }
 
-IResult<> TM1637::set_display_duty(const real_t duty){
-    if(duty > 1) return Err(Error::DutyGreatThanOne);
-    if(duty < 0) return Err(Error::DutyLessThanZero);
+IResult<> TM1637::set_display_dutycycle(const real_t dutycycle){
+    if(dutycycle > 1) return Err(Error::DutyGreatThanOne);
+    if(dutycycle < 0) return Err(Error::DutyLessThanZero);
 
-    const auto pw_opt = PulseWidth::from_duty(duty);
+    const auto pw_opt = PulseWidth::from_dutycycle(dutycycle);
     if(pw_opt.is_some()){
         disp_cmd_.pulse_width = pw_opt.unwrap().kind();
         disp_cmd_.display_en = true;

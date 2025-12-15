@@ -27,9 +27,9 @@ public:
 
 
     void write_can_frame(const NodeId nodeid, const std::span<const uint8_t> bytes) {
-        const auto msg = hal::CanClassicFrame(
+        const auto msg = hal::BxCanFrame(
             map_nodeid_to_canid(nodeid),
-            hal::CanClassicPayload::from_bytes(bytes)
+            hal::BxCanPayload::from_bytes(bytes)
         );
 
         if(can_.is_some()){

@@ -14,17 +14,23 @@ using namespace ymd::drivers;
 
 void pmw3901_main(){
 
-    hal::uart2.init({921600, CommStrategy::Blocking});
+    hal::uart2.init({
+        .remap = hal::UartRemap::_0,
+        .baudrate = 921600
+    });
     DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.no_brackets(EN);
     DEBUG_PRINTLN(std::setprecision(4));
 
     auto & spi = hal::spi1;
 
-    spi.init({4_MHz});
-    auto spi_cs_gpio_ = hal::PA<15>();
+    spi.init({
+        .remap = hal::SpiRemap::_0,
+        .baudrate = hal::NearestFreq(4_MHz)
+    });
+    auto spi_cs_pin_ = hal::PA<15>();
 
-    PMW3901 pmw{&spi, spi.allocate_cs_gpio(&spi_cs_gpio_).unwrap()};
+    PMW3901 pmw{&spi, spi.allocate_cs_pin(&spi_cs_pin_).unwrap()};
     pmw.init().unwrap();
 
     while(true){

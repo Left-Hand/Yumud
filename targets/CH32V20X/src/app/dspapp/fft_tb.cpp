@@ -2,13 +2,12 @@
 #include "core/clock/time.hpp"
 #include "core/debug/debug.hpp"
 #include "core/utils/Option.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "FFT.hpp"
-#include "liir.hpp"
 
 #include "core/math/realmath.hpp"
-#include "types/vectors/complex.hpp"
+#include "algebra/vectors/complex.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "func_eval.hpp"
@@ -215,7 +214,10 @@ static constexpr void rfft(std::span<Complex<T>> dst, std::span<const T> src){
 
 
 void fft_main(){
-    UART.init({576_KHz});
+    UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576_KHz
+    });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
@@ -230,11 +232,11 @@ void fft_main(){
     constexpr size_t N = 1024;
     // constexpr size_t N = 512;
 
-    [[maybe_unused]] auto make_sin_samples = []() -> std::vector<T>{
+    [[maybe_unused]] auto make_sine_samples = []() -> std::vector<T>{
         std::vector<T> ret;
         const auto freq = iq16(256.97) / N;
         for(size_t i = 0; i < N; ++i){
-            ret.push_back(T(sinpu(freq * i)));
+            ret.push_back(T(math::sinpu(freq * i)));
         }
         return ret;
     };
@@ -245,12 +247,12 @@ void fft_main(){
         constexpr auto carry_freq = iq16(56.97) / N;
         constexpr auto modu_depth = 0.4_r;
         for(size_t i = 0; i < N; ++i){
-            ret.push_back(T(sinpu(carry_freq * i) * (1 + modu_depth * sinpu(modu_freq * i))));
+            ret.push_back(T(math::sinpu(carry_freq * i) * (1 + modu_depth * math::sinpu(modu_freq * i))));
         }
         return ret;
     };
 
-    // const auto samples = make_sin_samples();
+    // const auto samples = make_sine_samples();
     const auto samples = make_am_samples();
     std::vector<Complex<T>> dst;
     dst.reserve(samples.size());

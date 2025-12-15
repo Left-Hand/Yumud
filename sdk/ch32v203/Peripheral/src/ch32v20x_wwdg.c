@@ -9,8 +9,8 @@
  **********************************************************************************/
 // #include "ch32v20x_wwdg.h"
 // #include "ch32v20x_rcc.h"
-#include "../sdk/ch32v203/Peripheral/inc/ch32v20x_wwdg.h"
-#include "../sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
+#include "sdk/ch32v203/Peripheral/inc/ch32v20x_wwdg.h"
+#include "sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
 
 /* CTLR register bit mask */
 #define CTLR_WDGA_Set      ((uint32_t)0x00000080)

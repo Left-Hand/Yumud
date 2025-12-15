@@ -1,3 +1,8 @@
+#include <atomic>
+#include <barrier>
+
+#include "src/testbench/tb.h"
+
 #include "core/debug/debug.hpp"
 #include "core/sync/spinlock.hpp"
 #include "core/sync/barrier.hpp"
@@ -7,25 +12,23 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "src/testbench/tb.h"
+
+#include "primitive/hid_input/keycode.hpp"
+#include "primitive/hid_input/axis_input.hpp"
+#include "primitive/hid_input/segcode.hpp"
+#include "primitive/hid_input/button_input.hpp"
 
 #include "drivers/HID/TM1637/TM1637.hpp"
 #include "drivers/HID/HT16K33/HT16K33.hpp"
-#include "drivers/HID/prelude/keycode.hpp"
-#include "drivers/HID/prelude/axis_input.hpp"
-#include "drivers/HID/prelude/segcode.hpp"
-#include "drivers/HID/prelude/button_input.hpp"
 
-#include <atomic>
-#include <barrier>
 
 
 using namespace ymd;
 using namespace ymd::drivers;
 
 #define UART hal::uart2
-#define SCL_GPIO hal::PB<0>()
-#define SDA_GPIO hal::PB<1>()
+#define SCL_PIN hal::PB<0>()
+#define SDA_PIN hal::PB<1>()
 
 
 namespace ymd::hid{
@@ -34,12 +37,8 @@ template<typename T>
 class KeyBoardComponent;
 
 
-template<typename T>
-struct KeyBoardLayout;
-
-template<>
-struct KeyBoardLayout<HT16K33> final{
-static constexpr char map_place_to_char(const uint8_t x, const uint8_t y){
+struct MyKeyBoardLayout final{
+static constexpr char coord_to_char(const uint8_t x, const uint8_t y){
     switch(y){
         case 0: switch(x){
             case 0: return 'E';
@@ -78,7 +77,7 @@ static constexpr char map_place_to_char(const uint8_t x, const uint8_t y){
     __builtin_unreachable();
 }
 
-static constexpr KeyCode map_wasd_to_arrow(const char chr){
+static constexpr KeyCode wasd_to_arrow(const char chr){
     switch(chr){
         case 'W': return KeyCode::ArrowUp;
         case 'A': return KeyCode::ArrowLeft;
@@ -87,8 +86,9 @@ static constexpr KeyCode map_wasd_to_arrow(const char chr){
         default: __builtin_unreachable();
     }
 }
-constexpr Option<KeyCode> map(const uint8_t x, const uint8_t y) const {
-    const auto chr = map_place_to_char(x,y);
+
+static constexpr Option<KeyCode> coord_to_code(const uint8_t x, const uint8_t y) {
+    const auto chr = coord_to_char(x,y);
 
 
     switch(chr){
@@ -97,7 +97,7 @@ constexpr Option<KeyCode> map(const uint8_t x, const uint8_t y) const {
         case 'A':
         case 'S':
         case 'D':
-            return Some(map_wasd_to_arrow(chr));
+            return Some(wasd_to_arrow(chr));
         case 'Q':
             return Some(KeyCode::NumpadBackspace);
         case 'E':
@@ -124,13 +124,15 @@ public:
     {;}
 
     IResult<> update(){
-        if(const auto res = inst_.is_any_key_pressed();
-            res.is_err()) return Err(res.unwrap_err());
-        else if(res.unwrap() == false){
-            input_.update(None);
+        if(({
+            const auto res = inst_.is_any_key_pressed();
+            if(res.is_err())
+                return Err(res.unwrap_err());
+            res.unwrap();
+        }) == false){
+            input_.reflash(None);
             return Ok();
         }
-        // const auto beg = clock::micros();
 
         const auto next_key_data = ({
             const auto res = inst_.get_key_data();
@@ -138,42 +140,26 @@ public:
             res.unwrap();
         });
 
-        // const auto beg = clock::micros();
-
         const auto may_keycode = [&] -> Option<KeyCode>{
-            const auto may_xy = next_key_data.to_first_xy();;
+            const auto may_xy = next_key_data.first_xy();;
             if(may_xy.is_none()) return None;
             const auto [x,y] = may_xy.unwrap();
-            const auto may_code = layouter_.map(x,y);
-            // DEBUG_PRINTLN("mc", may_code);
-            return may_code;
+            return layouter_.coord_to_code(x,y);
         }();
 
-        // DEBUG_PRINTLN(may_keycode.map([](const KeyCode code){
-        //     return code.to_char();
-        // }).flatten());
-
-        
-        input_.update(may_keycode);
-        // DEBUG_PRINTLN(clock::micros() - beg);
+        input_.reflash(may_keycode);
         return Ok();
     }
     constexpr const auto & input() const noexcept { return input_; }
 private:
     HT16K33 & inst_;
-    KeyBoardLayout<HT16K33> layouter_;
+    MyKeyBoardLayout layouter_;
     ButtonInput<KeyCode> input_;
 };
 
-template<typename T>
-class SegDisplayerComponent{
-
-};
-
-template<>
-class SegDisplayerComponent<HT16K33> final{
+class MyDisplayerComponent final{
 public:
-    SegDisplayerComponent(HT16K33 & inst) : inst_(inst){}
+    MyDisplayerComponent(HT16K33 & inst) : inst_(inst){}
 private:
     HT16K33 & inst_;
 };
@@ -199,7 +185,7 @@ private:
             if(next_position < 0) return Err();
             if(next_position > limit) return Err();
             // ASSERT(next_position < limit); 
-            return Ok(copy(CLAMP(next_position, 0, limit)));
+            return Ok(Cursor(CLAMP(next_position, 0, limit), max_limit_));
         }
 
         [[nodiscard]] constexpr uint8_t position() const {
@@ -208,10 +194,6 @@ private:
 
         [[nodiscard]] constexpr size_t max_limit() const {
             return max_limit_;
-        }
-
-        [[nodiscard]] constexpr Cursor copy(const uint8_t position) const {
-            return Cursor(position, max_limit_);
         }
 
         constexpr void set_position(const uint8_t position){
@@ -226,7 +208,6 @@ private:
             constexpr auto cursor = Cursor(0, 10);
             static_assert(cursor.position() == 0);
             static_assert(cursor.max_limit() == 10);
-            static_assert(cursor.copy(1).position() == 1);
             static_assert(cursor.shift(1).unwrap().position() == 1);
             static_assert(cursor.shift(3).unwrap().position() == 3);
 
@@ -277,9 +258,6 @@ public:
         #undef DEF_INSERT_CHAR
     }
 
-
-
-
     constexpr void handle_clear(){
         cursor_.set_position(0);
         str_.clear();
@@ -297,9 +275,6 @@ public:
     [[nodiscard]] constexpr auto cursor() const{
         return cursor_;
     }
-
-
-
 private:
     static constexpr size_t MAX_LENGTH = 7;
     HeaplessString<MAX_LENGTH> str_;
@@ -330,10 +305,8 @@ private:
     }
 
     constexpr void handle_insert_char(const size_t position, const char chr){
-        const auto res = str_.insert(position, chr);
-        if(res.is_err()){
-            __builtin_trap();
-        }
+        if(const auto res = str_.try_insert(position, chr);
+            res.is_err()) __builtin_trap();
 
         // cursor_ = cursor_.try_shift(1, str_.length());
         // cursor_ = cursor_.try_shift(1, MAX_LENGTH);
@@ -348,10 +321,9 @@ private:
 
     constexpr void handle_backspace(){
         const auto position = cursor_.position();
-        const auto res = str_.erase(position);
-        if(res.is_err()){
-            __builtin_trap();
-        }
+        if(const auto res = str_.try_erase(position);
+            res.is_err()) __builtin_trap();
+        
         cursor_ = cursor_
             .shift(-1, str_.length())
             .unwrap_or(cursor_);
@@ -406,42 +378,22 @@ private:
 
 
 
-
-
 static void HT16K33_tb(HT16K33 & ht16){
     ht16.init({.pulse_duty = HT16K33::PulseDuty::_8_16}).examine();
 
 
     uint8_t cnt = 0;
-    // sync::SpinLock locker;
-    // locker.lock();
-    // locker.unlock();
-    // locker.lock();
-
-    // std::atomic_bool a{false};
-
     hid::KeyBoardComponent<drivers::HT16K33> comp{ht16};
     hid::LineEdit line_edit;
 
     while(true){
         cnt++;
 
-        // const auto keydata = ht16.get_key_data().examine();
-        // const auto may_xy = keydata
-        //     .to_first_xy();
-
-        // const auto may_token = may_xy 
-        //     .map([](std::tuple<uint8_t, uint8_t> xy){
-        //         const auto [x,y] = xy;
-        //         return hid::KeyBoardLayout<HT16K33>::map(x,y).to_char();
-        //     })
-        //     .flatten()
-        //     ;
         comp.update().examine();
 
         using Pattern = HT16K33::GcRam;
-        auto test_pattern = Pattern{};
-        // test_pattern.fill(cnt);
+        auto example_pattern = Pattern{};
+        // example_pattern.fill(cnt);
 
         auto correct_display_xy = [](const uint8_t _x, const uint8_t _y)
             -> std::tuple<uint8_t, uint8_t>{
@@ -482,11 +434,11 @@ static void HT16K33_tb(HT16K33 & ht16){
             for(size_t j = 0; j < 8; j++){
                 if(not (raw & (1 << j))) continue;
                 const auto [x,y] = correct_display_xy(i,j);
-                test_pattern.write_pixel(x, y, true).examine();
+                example_pattern.write_pixel(x, y, true).examine();
             }
         };
 
-        // for(int i = 0; i < 7; i++){
+        // for(size_t i = 0; i < 7; i++){
         // display_segcode(0, SegCode::_0);
         // display_segcode(1, SegCode::_1);
         // display_segcode(2, SegCode::_2);
@@ -499,7 +451,7 @@ static void HT16K33_tb(HT16K33 & ht16){
             for(size_t i = 0; i < str.size(); i++){
                 display_segcode(i, hid::SegCode::from_char(str[i]).examine());
             }
-            ht16.update_displayer(test_pattern).examine();
+            ht16.update_displayer(example_pattern).examine();
         };
 
         const auto & input = comp.input();
@@ -517,13 +469,16 @@ static void HT16K33_tb(HT16K33 & ht16){
 
 
 void ht16k33_main(){
-    UART.init({576000});
+    UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
 
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;
-    hal::I2cSw i2c = hal::I2cSw{&scl_gpio_, &sda_gpio_};
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;
+    hal::I2cSw i2c = hal::I2cSw{&scl_pin_, &sda_pin_};
     i2c.init({400_KHz});
 
 

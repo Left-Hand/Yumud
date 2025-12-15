@@ -49,8 +49,8 @@ void Dvp::init(const Config & cfg){
     DVP->ROW_NUM = cfg.num_row;                     // rows行数
     DVP->COL_NUM = cfg.num_col;                     // cols列数
 
-    DVP->DMA_BUF0 = reinterpret_cast<size_t>(cfg.image0_addr);        // DMA addr0
-    DVP->DMA_BUF1 = reinterpret_cast<size_t>(cfg.image1_addr);        // DMA addr1
+    DVP->DMA_BUF0 = cfg.image0_addr;        // DMA addr0
+    DVP->DMA_BUF1 = cfg.image1_addr;        // DMA addr1
 
     // 使能中断
     DVP->IER = RB_DVP_IE_FRM_DONE;              // 开启帧接收完成中断

@@ -176,18 +176,30 @@ private:
 
     [[nodiscard]] IResult<> set_pa_gain(const uint8_t gain);
 
-    [[nodiscard]] IResult<> enable_analog(Enable en = EN);
+    [[nodiscard]] IResult<> enable_analog(Enable en);
 
     [[nodiscard]] IResult<> change_carrier(const Channel ch);
 
     [[nodiscard]] IResult<> set_rf_channel(const Channel ch, const bool tx, const bool rx);
-    [[nodiscard]] IResult<> set_rf_channel_and_enter_tx(const Channel ch){return set_rf_channel(ch, 1, 0);}
-    [[nodiscard]] IResult<> set_rf_channel_and_enter_rx(const Channel ch){return set_rf_channel(ch, 0, 1);}
-    [[nodiscard]] IResult<> set_rf_channel_and_exit_tx_rx(const Channel ch){return set_rf_channel(ch, 0, 0);}
+    [[nodiscard]] IResult<> set_rf_channel_and_enter_tx(const Channel ch){
+        return set_rf_channel(ch, 1, 0);
+    }
+    [[nodiscard]] IResult<> set_rf_channel_and_enter_rx(const Channel ch){
+        return set_rf_channel(ch, 0, 1);
+    }
+    [[nodiscard]] IResult<> set_rf_channel_and_exit_tx_rx(const Channel ch){
+        return set_rf_channel(ch, 0, 0);
+    }
 
-    [[nodiscard]] IResult<> enter_tx(){return set_rf_channel(curr_channel_, 1, 0);}
-    [[nodiscard]] IResult<> enter_rx(){return set_rf_channel(curr_channel_, 0, 1);}
-    [[nodiscard]] IResult<> exit_tx_rx(){return set_rf_channel(curr_channel_, 0, 0);}
+    [[nodiscard]] IResult<> enter_tx(){
+        return set_rf_channel(curr_channel_, 1, 0);
+    }
+    [[nodiscard]] IResult<> enter_rx(){
+        return set_rf_channel(curr_channel_, 0, 1);
+    }
+    [[nodiscard]] IResult<> exit_tx_rx(){
+        return set_rf_channel(curr_channel_, 0, 0);
+    }
 
     [[nodiscard]] IResult<> clear_fifo_write_and_read_ptr();
 

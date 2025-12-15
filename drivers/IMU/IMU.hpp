@@ -7,7 +7,7 @@
 #include "core/utils/Errno.hpp"
 
 
-#include "types/vectors/vector3.hpp"
+#include "algebra/vectors/vec3.hpp"
 #include "primitive/hal_result.hpp"
 
 namespace ymd::drivers{

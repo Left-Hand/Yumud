@@ -2,26 +2,26 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/sync/timer.hpp"
+#include "core/async/timer.hpp"
 #include "core/utils/Unit.hpp"
 #include "core/string/string_view.hpp"
-#include "core/string/utils/multiline_split.hpp"
+#include "core/string/split_iter.hpp"
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 
 #include "middlewares/rpc/rpc.hpp"
-#include "middlewares/repl/repl_service.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 
-#include "types/vectors/polar.hpp"
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/polar.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 #include "details/polar_robot_curvedata.hpp"
 
 #include "common_service.hpp"
 #include "joints.hpp"
-#include "gcode/gcode.hpp"
+#include "robots/gcode/gcode.hpp"
 #include "details/gcode_file.hpp"
 
-#ifdef ENABLE_UART1
+#ifdef UART1_PRESENT
 using namespace ymd;
 
 using namespace ymd::robots;
@@ -56,7 +56,7 @@ public:
     struct Config{
         iq16 rho_transform_scale;
         iq16 theta_transform_scale;
-        Angle<iq16> center_bias;
+        Angular<iq16> center_bias;
 
         Range2<iq16> rho_range;
         Range2<iq16> theta_range;
@@ -80,7 +80,7 @@ public:
 
     void set_coord(const Polar<iq16> p){
 
-        const auto rho_angle = Angle<iq16>::from_turns(
+        const auto rho_angle = Angular<iq16>::from_turns(
             p.amplitude * cfg_.rho_transform_scale);
 
         const auto theta_angle = 
@@ -137,7 +137,7 @@ private:
 struct Cartesian2ContinuousPolarRegulator final {
     struct State {
         Vec2<iq16> coord;
-        Angle<iq16> angle;  // 累积角度
+        Angular<iq16> angle;  // 累积角度
     };
 
     Polar<iq16> operator()(const Vec2<iq16> coord) {
@@ -282,7 +282,10 @@ private:
 
 void polar_robot_main(){
 
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     // DEBUGGER.force_sync(EN);
@@ -310,9 +313,9 @@ void polar_robot_main(){
     #else
 
     can.init({
-        .remap = CAN1_REMAP,
-        .mode = hal::CanMode::Normal,
-        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
+        .remap = hal::CAN1_REMAP_PA12_PA11,
+        .wiring_mode = hal::CanWiringMode::Normal,
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
     });
 
     can.enable_hw_retransmit(DISEN);
@@ -366,7 +369,7 @@ void polar_robot_main(){
     PolarRobotCurveGenerator curve_gen_{GEN_CONFIG};
 
     [[maybe_unused]] auto fetch_next_gcode_line = [] -> Option<StringView>{
-        static strconv2::StringSplitIter line_iter{GCODE_LINES_NANJING, '\n'};
+        static StringSplitIter line_iter{GCODE_LINES_NANJING, '\n'};
         while(line_iter.has_next()){
             const auto next_line = line_iter.next().unwrap();
             if(next_line.trim().length() == 0)

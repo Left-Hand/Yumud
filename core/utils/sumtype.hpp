@@ -6,8 +6,8 @@
 
 #include "Option.hpp"
 
-#include "core/magic/args_traits.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/args/query_element.hpp"
+#include "core/tmp/reflect/enum.hpp"
 
 namespace ymd{
 
@@ -32,11 +32,11 @@ public:
     // Explicit construction from value (avoids implicit conversion issues)
     template<typename Raw >
     [[nodiscard]] static constexpr Sumtype from(Raw && value) {
-        using T = std::decay_t<magic::first_convertible_arg_t<Raw, Ts...>>;
+        using T = std::decay_t<tmp::first_convertible_arg_t<Raw, Ts...>>;
         return Sumtype(std::in_place_type<T>, std::forward<T>(value));
     }
 
-    template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
+    template<typename Raw, typename T = tmp::first_convertible_arg_t<Raw, Ts...>>
     requires (!std::is_void_v<T>)
     constexpr Sumtype(Raw && val):
         value_(std::in_place_type<T>, static_cast<T>(val)) { // Add std::in_place_type<Raw> to specify variant type
@@ -67,7 +67,7 @@ public:
 
 
 
-    template<typename Raw, typename T = magic::first_convertible_arg_t<Raw, Ts...>>
+    template<typename Raw, typename T = tmp::first_convertible_arg_t<Raw, Ts...>>
     requires (!std::is_void_v<T>)
     constexpr bool is() const{
         return std::holds_alternative<T>(value_);
@@ -101,7 +101,7 @@ public:
 
     template<typename Raw>
     constexpr bool operator==(const Raw& rhs) const noexcept {
-        using T = magic::first_convertible_arg_t<Raw, Ts...>;
+        using T = tmp::first_convertible_arg_t<Raw, Ts...>;
         static_assert(!std::is_same_v<T, void>, 
                       "No convertible type found for comparison");
         

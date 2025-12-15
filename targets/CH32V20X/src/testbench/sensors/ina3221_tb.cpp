@@ -15,22 +15,25 @@ using namespace ymd;
 using drivers::INA3221;
 
 #define UART hal::uart2
-#define SCL_GPIO hal::PB<0>()
-#define SDA_GPIO hal::PB<1>()
+#define SCL_PIN hal::PB<0>()
+#define SDA_PIN hal::PB<1>()
 
 static constexpr double SHUNT_RES = 0.1;
 static constexpr double INV_SHUNT_RES = 1 / SHUNT_RES;
 
 void ina3221_main(){
-    UART.init({576000});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets(EN);
 
-    auto scl_gpio_ = SCL_GPIO;
-    auto sda_gpio_ = SDA_GPIO;
-    auto i2c = hal::I2cSw(&scl_gpio_, &sda_gpio_);
+    auto scl_pin_ = SCL_PIN;
+    auto sda_pin_ = SDA_PIN;
+    auto i2c = hal::I2cSw(&scl_pin_, &sda_pin_);
     i2c.init({1200_KHz});
 
     INA3221 ina{&i2c};

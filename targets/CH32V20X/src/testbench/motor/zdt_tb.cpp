@@ -4,13 +4,13 @@
 #include "core/clock/time.hpp"
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "core/string/string_view.hpp"
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 
-#include "core/sync/timer.hpp"
+#include "core/async/timer.hpp"
 #include "primitive/colors/color/color.hpp"
 
 
-#ifdef ENABLE_UART1
+#ifdef UART1_PRESENT
 using namespace ymd;
 
 using namespace ymd::robots;
@@ -28,7 +28,10 @@ using robots::zdtmotor::ZdtStepper;
 
 void zdt_main(){
     // slcan_test();
-    DBG_UART.init({576000});
+    DBG_UART.init({
+        .remap = hal::UartRemap::_0,
+        .baudrate = 576000
+    });
 
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
@@ -39,9 +42,9 @@ void zdt_main(){
     ZdtStepper motor{{.nodeid = {1}}, &COMM_UART};
     #else
     COMM_CAN.init({
-        .remap = 0,
-        .mode = hal::CanMode::Normal,
-        .timming_coeffs = hal::CanBaudrate(hal::CanBaudrate::_1M).to_coeffs()
+        .remap = hal::CanRemap::_0,
+        .wiring_mode = hal::CanWiringMode::Normal,
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
@@ -69,7 +72,7 @@ void zdt_main(){
             std::vector<uint8_t> recv;
             while(COMM_UART.available()){
                 char chr;
-                COMM_UART.read1(chr);
+                COMM_UART.read_char(chr);
                 recv.push_back(chr);
             }
 
@@ -89,16 +92,16 @@ void zdt_main(){
 
         // clock::delay(200ms);
         // motor.activate();
-        const auto d1 = sin(clock::time()*0.7_r);
-        const auto d2 = tpzpu(clock::time()*0.2_r);
+        const auto d1 = math::sin(clock::time()*0.7_r);
+        const auto d2 = math::sin(clock::time()*0.2_r);
         motor1.set_angle({
-            .angle = Angle<real_t>::from_turns(d1), 
+            .angle = Angular<real_t>::from_turns(d1), 
             .speed = 0
         }).examine();
 
         clock::delay(5ms);
         motor2.set_angle({
-            .angle = Angle<real_t>::from_turns(d2), 
+            .angle = Angular<real_t>::from_turns(d2), 
             .speed = 0
         }).examine();
         clock::delay(5ms);

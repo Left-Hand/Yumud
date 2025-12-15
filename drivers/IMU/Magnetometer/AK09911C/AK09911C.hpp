@@ -48,7 +48,7 @@ public:
 
 private:
     
-    AsahiKaseiSensor_Phy phy_;
+    AsahiKaseiImu_Phy phy_;
     AK09911C_Regset regs_ = {};
     Option<Vec3<iq24>> scale_ = None; 
     

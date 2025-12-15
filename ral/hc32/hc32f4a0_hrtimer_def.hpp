@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace ymd::ral::ch32f4a0{
+namespace ymd::ral::hc32::hc32f4a0{
 
 struct HRPWM_CRn{
     uint32_t NSEL:8;

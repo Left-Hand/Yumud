@@ -3,6 +3,7 @@
 //这个驱动已经完成
 //这个驱动还未测试
 
+// Apache-2.0 license
 // https://github.com/embedded-drivers/sitronix-touch
 
 #include "st1615_prelude.hpp"

@@ -14,7 +14,7 @@ namespace ymd::drivers{
 class TM1668 final:public TM1668_Prelude{
 public:
     using DisplayCommand = TM1668_Phy::DisplayCommand;
-    using KeyEvent = TM1668_Phy::KeyEvent;
+    using KeyCode = TM1668_Phy::KeyCode;
 
     static constexpr auto NAME = "TM1668";
 
@@ -63,7 +63,7 @@ public:
         return phy_.write_screen(cmd, pbuf);
     }
 
-    Result<KeyEvent, Error> read_key(){
+    Result<KeyCode, Error> read_key(){
         return phy_.read_key();
     }
 

@@ -18,7 +18,7 @@ protected:
 
 protected:
 
-    void parseCanmsg(const CanClassicFrame & frame) override;
+    void parseCanmsg(const BxCanFrame & frame) override;
     
     hal::UartHw & logger;
     
@@ -64,8 +64,8 @@ public:
     void setAccLimit(const real_t max_acc);
     void reset();
     void triggerCali();
-    // void parseCan(const CanClassicFrame & frame);
-    // void parseCommand(const NodeId id, const Command cmd, const CanClassicFrame &msg);
+    // void parseCan(const BxCanFrame & frame);
+    // void parseCommand(const NodeId id, const Command cmd, const BxCanFrame &msg);
 
     uint8_t getNodeId() {return 0;}
     bool stable() const {

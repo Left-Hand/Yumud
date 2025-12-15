@@ -48,6 +48,29 @@ using IResult = Result<T, Error>;
 if(not is_index_valid(nth.count()))\
     return Err(Error::IndexOutOfRange);\
 
+[[nodiscard]] static constexpr Self::RegAddr 
+get_dim_addr(const Nth nth){
+    switch(nth.count()){
+        case 0:  return Self::RegAddr::DimP00;
+        case 1:  return Self::RegAddr::DimP01;
+        case 2:  return Self::RegAddr::DimP02;
+        case 3:  return Self::RegAddr::DimP03;
+        case 4:  return Self::RegAddr::DimP04;
+        case 5:  return Self::RegAddr::DimP05;
+        case 6:  return Self::RegAddr::DimP06;
+        case 7:  return Self::RegAddr::DimP07;
+        case 8:  return Self::RegAddr::DimP10;
+        case 9:  return Self::RegAddr::DimP11;
+        case 10: return Self::RegAddr::DimP12;
+        case 11: return Self::RegAddr::DimP13;
+        case 12: return Self::RegAddr::DimP14;
+        case 13: return Self::RegAddr::DimP15;
+        case 14: return Self::RegAddr::DimP16;
+        case 15: return Self::RegAddr::DimP17;
+    }
+    __builtin_trap();
+}
+
 IResult<> Self::init(const Config & cfg){
     if(const auto res = reset();
         res.is_err()) return res;
@@ -58,7 +81,7 @@ IResult<> Self::init(const Config & cfg){
         res.is_err()) return res;
 
     for(size_t i = 0; i < MAX_CHANNELS; i++){
-        const auto res = set_led_current_dutycycle(std::bit_cast<hal::PinNth>(
+        const auto res = set_led_current_dutycycle(std::bit_cast<hal::PinSource>(
             hal::PinMask::from_nth(Nth(i)).to_u16()), 0);
 
         if(res.is_err()) [[unlikely]]
@@ -118,7 +141,7 @@ IResult<> Self::enable_led_mode(const hal::PinMask pin_mask){
 
 IResult<> Self::set_led_current_limit(const CurrentLimit limit){
     auto reg = RegCopy(regs_.ctl_reg);
-    reg.isel = (uint8_t)limit;
+    reg.isel = limit;
     return write_reg(reg);
 }
 
@@ -126,13 +149,19 @@ IResult<> Self::set_led_current_dutycycle(
     const hal::PinMask pin_mask, 
     const real_t dutycycle
 ){
+    TODO();
+    #if 0
     auto iter = pin_mask.iter();
     while(iter.has_next()){
-        const auto nth = Nth(iter.index());
-        if(const auto res = write_reg(get_dim_addr(nth), static_cast<uint8_t>(dutycycle * 255));
+        const auto pin_nth = iter.next();
+        if(const auto res = write_reg(
+            get_dim_addr(pin_nth), 
+            static_cast<uint8_t>(dutycycle * 255)
+        );
             res.is_err()) return Err(res.unwrap_err());
-        iter.next();
+
     }
+    #endif
     return Ok();
 }
 

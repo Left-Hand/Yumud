@@ -6,8 +6,8 @@
 
 namespace ymd::robots::mock{
 struct MotorCmd{
-    real_t ref_pos;
-    real_t ref_spd;
+    real_t ref_x1;
+    real_t ref_x2;
 };
 
 class MotorIntf{
@@ -27,7 +27,7 @@ public:
     }
 
     void set_motorcmd(const MotorCmd & cmd){
-        set_angle(cmd.ref_pos * real_t(PI));
+        set_angle(cmd.ref_x1 * real_t(PI));
     }
 private:
     real_t angle_;

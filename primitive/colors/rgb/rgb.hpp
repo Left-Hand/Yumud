@@ -1,12 +1,12 @@
 #pragma once
 
 #include "core/platform.hpp"
-#include "core/math/uint24_t.hpp"
+#include "core/int/uint24_t.hpp"
 #include "core/math/real.hpp"
 #include <tuple>
 
 namespace ymd{
-enum class ColorEnum:uint32_t{
+enum class [[nodiscard]] ColorEnum:uint32_t{
     WHITE       = 0xFFFFFF,    // White color
     YELLOW      = 0xFFFF00,    // Yellow color
     BRRED       = 0xFF4500,    // Brown-red color
@@ -31,7 +31,7 @@ enum class ColorEnum:uint32_t{
     OLIVE       = 0x808000     // Olive color
 };
 
-enum class RgbType:uint8_t{
+enum class [[nodiscard]] RgbType:uint8_t{
     _RGB332,
     _RGB565,
     _RGB888,
@@ -56,7 +56,7 @@ struct Gray;
 struct IGray;
 
 template<typename To, typename From>
-struct ColorCaster{};
+struct [[nodiscard]] ColorCaster;
 
 
 template<typename To, typename From>
@@ -68,7 +68,7 @@ static constexpr To color_cast(From && from){
     }
 }
 
-struct RGB888 {
+struct [[nodiscard]] RGB888 {
 
     uint8_t b;
     uint8_t g;
@@ -90,11 +90,11 @@ struct RGB888 {
         };
     }
 
-    __fast_inline constexpr uint24_t as_u24() const {return uint24_t(r | (g << 8) | (b << 16));}
+    [[nodiscard]] __fast_inline constexpr uint24_t as_u24() const {return uint24_t(r | (g << 8) | (b << 16));}
 };
 
-
-struct LAB888 {
+static_assert(sizeof(RGB888) == 3);
+struct [[nodiscard]] LAB888 {
 
     uint8_t l;
     int8_t a;
@@ -102,7 +102,7 @@ struct LAB888 {
 
 public:
 
-    __fast_inline constexpr uint24_t as_u24() const {return uint24_t(l | (a << 8) | (b << 16));}
+    [[nodiscard]] __fast_inline constexpr uint24_t as_u24() const {return uint24_t(l | (a << 8) | (b << 16));}
 
     __fast_inline static constexpr LAB888 from_l8a8b8(uint8_t l, uint8_t a, uint8_t b){
         return LAB888(l, a, b);
@@ -115,9 +115,10 @@ private:
 };
 
 
+static_assert(sizeof(RGB888) == 3);
 
-
-struct RGB332{
+struct [[nodiscard]] RGB332{
+    using Self = RGB332;
     union{
         struct{
             uint8_t b : 2;
@@ -128,24 +129,26 @@ struct RGB332{
     };
 
 
-    __fast_inline constexpr explicit RGB332() : data(0){;}
+    __fast_inline constexpr explicit RGB332(){;}
 
-    __fast_inline constexpr explicit RGB332(const uint8_t _data): data(_data){;}
+    __fast_inline static constexpr Self from_bits(const uint8_t bits){
+        return std::bit_cast<Self>(bits);
+    }
 
-    __fast_inline static constexpr RGB332 from_r3g3b2(uint8_t r, uint8_t g, uint8_t b){
-        return RGB332(r,g,b);
+    __fast_inline static constexpr Self from_r3g3b2(uint8_t r, uint8_t g, uint8_t b){
+        return Self(r,g,b);
     } 
 
-    __fast_inline constexpr uint8_t to_u8() const {return data;}
+    [[nodiscard]] __fast_inline constexpr uint8_t to_u8() const {return data;}
 
 private:
     __fast_inline constexpr explicit RGB332(const uint8_t _r, const uint8_t _g, const uint8_t _b): 
         b(_b), g(_g), r(_r){;}
 };
 
+static_assert(sizeof(RGB332) == 1);
 
-
-struct RGB565{
+struct [[nodiscard]] RGB565{
     uint16_t b : 5;
     uint16_t g : 6;
     uint16_t r : 5;
@@ -163,7 +166,7 @@ struct RGB565{
     RGB565 from_u16(const uint16_t raw){
         return std::bit_cast<RGB565>(raw);
     }
-    __fast_inline constexpr uint16_t to_u16() const {
+    [[nodiscard]] __fast_inline constexpr uint16_t to_u16() const {
         return std::bit_cast<uint16_t>(*this);
     }
 private:
@@ -177,10 +180,8 @@ private:
 
 static_assert(sizeof(RGB565) == 2);
 
-
-
-
-struct HSV888 {
+static_assert(sizeof(RGB565) == 2);
+struct [[nodiscard]] HSV888 {
 
     uint8_t h;
     uint8_t s;
@@ -197,15 +198,15 @@ struct HSV888 {
         };
     }
 
-    __fast_inline constexpr uint24_t as_u24() const {
+    [[nodiscard]] __fast_inline constexpr uint24_t as_u24() const {
         return uint24_t(uint32_t(h) << 16 | uint32_t(s) << 8 | uint32_t(v));
     }
 
 };
 
+static_assert(sizeof(HSV888) == 3);
 
-
-struct ARGB32{
+struct [[nodiscard]] ARGB32{
 
     uint8_t b;
     uint8_t g;
@@ -213,7 +214,7 @@ struct ARGB32{
     uint8_t a;
 
 
-    __fast_inline constexpr ARGB32 from_a8r8g8b8(
+    [[nodiscard]] __fast_inline constexpr ARGB32 from_a8r8g8b8(
         const uint8_t _a, const uint8_t _r, const uint8_t _g, const uint8_t _b){
             return ARGB32{
                 .b = _b,
@@ -229,9 +230,9 @@ struct ARGB32{
 
 };
 
+static_assert(sizeof(ARGB32) == 4);
 
-
-struct Binary{
+struct [[nodiscard]] Binary{
 
     enum Kind:uint8_t{
         WHITE   = 0xFF,  // White color
@@ -288,9 +289,9 @@ private:
     __fast_inline constexpr explicit Binary(const uint8_t cu8) : data(cu8){;}
 };
 
+static_assert(sizeof(Binary) == 1);
 
-
-struct Gray{
+struct [[nodiscard]] Gray{
 
     enum{
         WHITE   = 0xFF,  // White color
@@ -315,32 +316,33 @@ struct Gray{
         return RGB888::from_r8g8b8(data, data, data);
     }
 
-    __fast_inline constexpr auto operator <=> (const Gray & other) const {
+    [[nodiscard]] __fast_inline constexpr auto operator <=> (const Gray & other) const {
         return data <=> other.data;}
-    __fast_inline constexpr bool operator == (const Gray & other) const {
+    [[nodiscard]] __fast_inline constexpr bool operator == (const Gray & other) const {
         return data == other.data;}
 
 
-    __fast_inline constexpr bool is_white() const {return data == uint8_t(0xff);}
+    [[nodiscard]] __fast_inline constexpr bool is_white() const {return data == uint8_t(0xff);}
 
-    __fast_inline constexpr bool is_black() const {return data == uint8_t(0x00);}
+    [[nodiscard]] __fast_inline constexpr bool is_black() const {return data == uint8_t(0x00);}
 
-    __fast_inline constexpr uint8_t to_u8() const {return data;}
+    [[nodiscard]] __fast_inline constexpr uint8_t to_u8() const {return data;}
 
-    __fast_inline constexpr Gray flip() const {
+    [[nodiscard]] __fast_inline constexpr Gray flip() const {
         const uint8_t ret = ~data;
         return Gray(uint8_t(ret));
     }
 
-    __fast_inline constexpr Binary to_binary(const Gray threshold) const 
+    [[nodiscard]] __fast_inline constexpr Binary to_binary(const Gray threshold) const 
         {return Binary::from_bool(data > threshold.to_u8());}
 private:
     uint8_t data;
-    __fast_inline constexpr explicit Gray(const uint8_t cu8) : data(cu8){;}
+    [[nodiscard]] __fast_inline constexpr explicit Gray(const uint8_t cu8) : data(cu8){;}
 };
 
+static_assert(sizeof(Gray) == 1);
 
-struct IGray{
+struct [[nodiscard]] IGray{
 
 
     enum{
@@ -356,13 +358,13 @@ struct IGray{
     [[nodiscard]] static constexpr IGray from_black() { return IGray(BLACK); }
 
     [[nodiscard]] constexpr int8_t as_i8() const {return data;}
-    __fast_inline constexpr auto operator <=> (const IGray & other) const {
+    [[nodiscard]] __fast_inline constexpr auto operator <=> (const IGray & other) const {
         return data <=> other.data;}
 
-    __fast_inline constexpr Binary to_binary(const Gray threshold){
+    [[nodiscard]] __fast_inline constexpr Binary to_binary(const Gray threshold){
         return Binary::from_bool(ABS(data) > threshold.to_u8());}
 
-    __fast_inline constexpr Binary to_binary_signed(const IGray threshold){
+    [[nodiscard]] __fast_inline constexpr Binary to_binary_signed(const IGray threshold){
         return Binary::from_bool(data > threshold.as_i8());}
 
 private:
@@ -370,19 +372,21 @@ private:
     int8_t data;
 };
 
+static_assert(sizeof(IGray) == 1);
+
 
 using RGB24 = RGB888;
 
 
 template<>
-struct ColorCaster<Gray, RGB565>{
+struct [[nodiscard]] ColorCaster<Gray, RGB565>{
     static constexpr Gray cast(const RGB565 & color){
         return Gray::from_u8(((color.r*77 + color.g*150 + color.b*29+128) >> 8));
     }
 };
 
 template<>
-struct ColorCaster<RGB565, RGB888> {
+struct [[nodiscard]] ColorCaster<RGB565, RGB888> {
     static constexpr RGB565 cast(const RGB888 & color){
         return RGB565::from_r5g6b5(color.r >> 3, color.g >> 2, color.b >> 3);
     }
@@ -391,7 +395,7 @@ struct ColorCaster<RGB565, RGB888> {
 
 
 template<>
-struct ColorCaster<RGB565, Binary> {
+struct [[nodiscard]] ColorCaster<RGB565, Binary> {
     static constexpr RGB565 cast(const Binary & color){
         if(not color.is_white()) return RGB565::from_u16(0); 
         return RGB565::from_u16(0xffff);
@@ -400,7 +404,7 @@ struct ColorCaster<RGB565, Binary> {
 
 
 template<>
-struct ColorCaster<RGB565, Gray> {
+struct [[nodiscard]] ColorCaster<RGB565, Gray> {
     static constexpr RGB565 cast(const Gray & color){
         const auto cu8 = color.to_u8();
         return RGB565::from_r5g6b5(
@@ -412,14 +416,14 @@ struct ColorCaster<RGB565, Gray> {
 };
 
 template<>
-struct ColorCaster<RGB565, ColorEnum> {
+struct [[nodiscard]] ColorCaster<RGB565, ColorEnum> {
     static constexpr RGB565 cast(const ColorEnum & color){
         return color_cast<RGB565>(color_cast<RGB888>(color));
     }
 };
 
 template<>
-struct ColorCaster<RGB888, RGB565> {
+struct [[nodiscard]] ColorCaster<RGB888, RGB565> {
     static constexpr RGB888 cast(const RGB565 & color){
         return RGB888::from_r8g8b8(
             static_cast<uint8_t>(color.r) << 3, 
@@ -430,7 +434,7 @@ struct ColorCaster<RGB888, RGB565> {
 };
 
 template<>
-struct ColorCaster<RGB888, Binary> {
+struct [[nodiscard]] ColorCaster<RGB888, Binary> {
     static constexpr RGB888 cast(const Binary & color){
         if(not color.is_white()) return RGB888::from_u32(0); 
         const uint8_t cu8 = color.is_white() ? 0xff : 0;
@@ -440,7 +444,7 @@ struct ColorCaster<RGB888, Binary> {
 
 
 template<>
-struct ColorCaster<RGB888, Gray> {
+struct [[nodiscard]] ColorCaster<RGB888, Gray> {
     static constexpr RGB888 cast(const Gray & color){
         const auto cu8 = color.to_u8();
         return RGB888::from_r8g8b8(cu8, cu8, cu8);
@@ -450,7 +454,7 @@ struct ColorCaster<RGB888, Gray> {
 
 
 template<>
-struct ColorCaster<HSV888, RGB888> {
+struct [[nodiscard]] ColorCaster<HSV888, RGB888> {
     static constexpr HSV888 cast(const RGB888 & rgb){
         enum{
             HUE_RED = 0,
@@ -636,7 +640,7 @@ struct ColorCaster<HSV888, RGB888> {
 };
 
 template<>
-struct ColorCaster<RGB888, ColorEnum>{
+struct [[nodiscard]] ColorCaster<RGB888, ColorEnum>{
     __fast_inline static constexpr RGB888 cast(const ColorEnum from){
         return RGB888::from_u32(std::bit_cast<uint32_t>(from));
     }
@@ -644,7 +648,7 @@ struct ColorCaster<RGB888, ColorEnum>{
 
 
 template<>
-struct ColorCaster<RGB888, HSV888> {
+struct [[nodiscard]] ColorCaster<RGB888, HSV888> {
     static constexpr RGB888 cast(const HSV888 & hsv){
         #define APPLY_DIMMING(X) (X)
         #define HSV_SECTION_6 (0x20)

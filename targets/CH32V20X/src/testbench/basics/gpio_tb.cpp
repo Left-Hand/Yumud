@@ -8,9 +8,9 @@ using namespace ymd;
 void gpio_tb(hal::GpioIntf & gpio){
     gpio.outpp();
     while(true){
-        gpio.set();
+        gpio.set_high();
         clock::delay(200ms);
-        gpio.clr();
+        gpio.set_low();
         clock::delay(200ms);
     }
 }

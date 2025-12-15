@@ -3,7 +3,7 @@
 #include "../utils.hpp"
 
 
-namespace ymd::robots{
+namespace ymd::robots::damiao::dm9008{
 
 struct [[nodiscard]] DM9008_Fault{
 
@@ -38,17 +38,18 @@ private:
 
 static_assert(sizeof(DM9008_Fault) == 1);
 
-class [[nodiscard] ]DM9008{
+struct SpdCtrlParams{iq16 spd;};
+struct PosSpdCtrlParams{iq16 pos, spd;};
+class [[nodiscard]] DM9008{
 public:
-    struct SpdCtrlParams{real_t spd;};
-    struct PosSpdCtrlParams{real_t pos, spd;};
+
 
     struct MitCtrlParams{
-        real_t p_des;
-        real_t v_des;
-        real_t kp;
-        real_t kd;
-        real_t t_ff;
+        iq16 p_des;
+        iq16 v_des;
+        iq16 kp;
+        iq16 kd;
+        iq16 t_ff;
     };
     using NodeId = uint8_t;
 
@@ -57,7 +58,7 @@ public:
             const NodeId id, 
             const SpdCtrlParams & p
         ){
-            return hal::CanClassicFrame::from_tuple(
+            return hal::BxCanFrame::from_tuple(
                 CanStdId(0x100 | id), 
                 std::make_tuple(
                     float(p.spd)
@@ -69,7 +70,7 @@ public:
             const NodeId id, 
             const PosSpdCtrlParams & p
         ){
-            return hal::CanClassicFrame::from_tuple(
+            return hal::BxCanFrame::from_tuple(
                 CanStdId(0x200 | id), 
                 std::make_tuple(
                     float(p.pos),

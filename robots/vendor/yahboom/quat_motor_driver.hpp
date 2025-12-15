@@ -4,12 +4,12 @@
 #include "core/stream/BufStream.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-#include "core/magic/enum_traits.hpp"
+#include "core/tmp/reflect/enum.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "types/regions/range2.hpp"
+#include "algebra/regions/range2.hpp"
 
 
 
@@ -96,7 +96,7 @@ private:
     }
 
     void send_line(const StringView line){
-        uart_.writeN(line.data(), line.size());
+        uart_.try_write_chars(line.data(), line.size());
     }
 
     hal::Uart & uart_;

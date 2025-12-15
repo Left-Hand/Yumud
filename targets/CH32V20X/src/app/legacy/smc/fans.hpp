@@ -82,8 +82,8 @@ public:
     }
 
     void enable(const Enable en){
-        left_fan.enable(en);
-        right_fan.enable(en);
+        left_fan.start();
+        right_fan.start();
     }
 
     void init(){

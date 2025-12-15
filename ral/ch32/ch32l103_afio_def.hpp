@@ -5,14 +5,14 @@
 namespace ymd::ral::CH32V00x::AFIO_Regs{
 
     
-struct R32_AFIO_ECR{
+struct [[nodiscard]] R32_AFIO_ECR{
     uint32_t PIN:4;
     uint32_t PORT:3;
     uint32_t EVOE:1;
     uint32_t :24;
 };
 
-struct R32_AFIO_PCFR1{
+struct [[nodiscard]] R32_AFIO_PCFR1{
     // 00：默认映射（NSS/PA4，SCK/PA5，MISO/PA6，
     // MOSI/PA7）
     // 01：完全映射（NSS/PA15，SCK/PB3，MISO/PB4，
@@ -47,7 +47,7 @@ struct R32_AFIO_PCFR1{
     uint32_t :5;
 };
 
-struct R32_AFIO_EXTICR1{
+struct [[nodiscard]] R32_AFIO_EXTICR1{
     uint32_t EXTI0:4;
     uint32_t EXTI1:4;
     uint32_t EXTI2:4;
@@ -55,7 +55,7 @@ struct R32_AFIO_EXTICR1{
     uint32_t :16;
 };
 
-struct R32_AFIO_EXTICR2{
+struct [[nodiscard]] R32_AFIO_EXTICR2{
     uint32_t EXTI4:4;
     uint32_t EXTI5:4;
     uint32_t EXTI6:4;
@@ -63,7 +63,7 @@ struct R32_AFIO_EXTICR2{
     uint32_t :16;
 };
 
-struct R32_AFIO_EXTICR3{
+struct [[nodiscard]] R32_AFIO_EXTICR3{
     uint32_t EXTI8:4;
     uint32_t EXTI9:4;
     uint32_t EXTI10:4;
@@ -71,7 +71,7 @@ struct R32_AFIO_EXTICR3{
     uint32_t :16;
 };
 
-struct R32_AFIO_EXTICR4{
+struct [[nodiscard]] R32_AFIO_EXTICR4{
     uint32_t EXTI12:4;
     uint32_t EXTI13:4;
     uint32_t EXTI14:4;
@@ -79,7 +79,7 @@ struct R32_AFIO_EXTICR4{
     uint32_t :16;
 };
 
-struct R32_AFIO_CR{
+struct [[nodiscard]] R32_AFIO_CR{
     uint32_t :8;
     uint32_t USBPD_IN_HVT:2;
     uint32_t :6;
@@ -93,7 +93,7 @@ struct R32_AFIO_CR{
     uint32_t :10;
 };
 
-struct R32_AFIO_PCFR2{
+struct [[nodiscard]] R32_AFIO_PCFR2{
     uint32_t :16;
     uint32_t USART4_RM:1;
     uint32_t :1;
@@ -110,7 +110,7 @@ struct R32_AFIO_PCFR2{
     uint32_t :6;
 };
 
-struct AFIO_Def{
+struct [[nodiscard]] AFIO_Def{
     volatile R32_AFIO_ECR        ECR;
     volatile R32_AFIO_PCFR1      PCFR1;
     volatile R32_AFIO_EXTICR1    EXTICR1;

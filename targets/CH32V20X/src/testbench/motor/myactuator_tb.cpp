@@ -12,10 +12,10 @@
 #include "core/math/float/fp32.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "types/transforms/Basis.hpp"
+#include "algebra/transforms/Basis.hpp"
 
 #include "robots/vendor/DJI/M3508/m3508.hpp"
 #include "robots/vendor/DJI/DR16/DR16.hpp"
@@ -114,24 +114,24 @@ struct [[nodiscard]] AccelCode_u32{
 struct [[nodiscard]] DegreeCode_i16{
     int16_t bits;
 
-    [[nodiscard]] constexpr Angle<iq16> to_angle() const {
-        return Angle<iq16>::from_degrees(bits);
+    [[nodiscard]] constexpr Angular<iq16> to_angle() const {
+        return Angular<iq16>::from_degrees(bits);
     }
 };
 
 struct [[nodiscard]] PositionCode_i16{
     int16_t bits;
 
-    constexpr Angle<iq16> to_angle() const {
-        return Angle<iq16>::from_degrees(bits);
+    constexpr Angular<iq16> to_angle() const {
+        return Angular<iq16>::from_degrees(bits);
     }
 };
 
 
 struct [[nodiscard]] LapPosition_u16{
     uint16_t bits;
-    constexpr Angle<uq16> to_angle() const {
-        return Angle<uq16>::from_turns(uq16::from_bits(bits));
+    constexpr Angular<uq16> to_angle() const {
+        return Angular<uq16>::from_turns(uq16::from_bits(bits));
     }
 };
 
@@ -164,8 +164,8 @@ struct [[nodiscard]] PositionCode_i32{
     // 0.01degree/LSB
     int32_t bits;
 
-    [[nodiscard]] Angle<iq16> to_angle() const {
-        return Angle<iq16>::from_degrees(iq16(0.01) * bits);
+    [[nodiscard]] Angular<iq16> to_angle() const {
+        return Angular<iq16>::from_degrees(iq16(0.01) * bits);
     }
 };
 
@@ -173,8 +173,8 @@ struct [[nodiscard]] LapPositionCode{
     // 0.01degree/LSB
     uint16_t bits;
 
-    [[nodiscard]] Angle<uq16> to_angle() const {
-        return Angle<uq16>::from_degrees(uq16(0.01) * bits);
+    [[nodiscard]] Angular<uq16> to_angle() const {
+        return Angular<uq16>::from_degrees(uq16(0.01) * bits);
     }
 };
 
@@ -767,7 +767,10 @@ __no_inline constexpr auto make_bytes2(){
 }
 void myactuator_main(){
     auto & DBG_UART = DEBUGGER_INST;
-    DBG_UART.init({576000});
+    DEBUGGER_INST.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000 
+    });
 
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);

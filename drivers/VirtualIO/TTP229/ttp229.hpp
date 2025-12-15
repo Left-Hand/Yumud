@@ -16,8 +16,8 @@ public:
         Some<hal::GpioIntf *> sck_gpio, 
         Some<hal::GpioIntf *> sdo_gpio)
     :
-        sck_gpio_(sck_gpio.deref()), 
-        sdo_gpio_(sdo_gpio.deref()){;}
+        sck_pin_(sck_gpio.deref()), 
+        sdo_pin_(sdo_gpio.deref()){;}
 
     ~TTP229(){;}
 
@@ -27,8 +27,8 @@ public:
 private:
     Option<uint8_t> num_ = None;
     uint16_t map_ = 0;
-    hal::GpioIntf & sck_gpio_;
-    hal::GpioIntf & sdo_gpio_;
+    hal::GpioIntf & sck_pin_;
+    hal::GpioIntf & sdo_pin_;
 };
 
 };

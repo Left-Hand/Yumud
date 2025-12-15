@@ -2,12 +2,10 @@
 
 using namespace ymd::hal;
 
-void Uart::read1(char & data){
-    // __builtin_abort();
-    data = rx_fifo_.pop();
+size_t Uart::try_read_char(char & data){
+    return rx_fifo_.try_pop(std::span(&data, 1));
 }
 
-void Uart::readN(char * data_ptr, const size_t len){
-    // __builtin_abort();
-    (void)rx_fifo_.pop(std::span(data_ptr, len));
+size_t Uart::try_read_chars(char * data_ptr, const size_t len){
+    return rx_fifo_.try_pop(std::span(data_ptr, len));
 }

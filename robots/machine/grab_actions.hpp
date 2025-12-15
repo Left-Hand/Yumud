@@ -2,7 +2,7 @@
 
 #include "grab_module.hpp"
 #include "../autodrive/sequence/TrapezoidSolver_t.hpp"
-#include "types/vectors/vector3.hpp"
+#include "algebra/vectors/vec3.hpp"
 
 
 namespace ymd::robots::GrabActions{

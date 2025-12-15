@@ -8,8 +8,8 @@
 
 
 #include "primitive/pwm_channel.hpp"
-#include "types/vectors/vector2.hpp"
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
+#include "algebra/vectors/vec2.hpp"
 #include "dsp/filter/firstorder/lpf.hpp"
 
 #include "robots/mock/mock_servo.hpp"
@@ -23,15 +23,15 @@ namespace nuedc::_2023E{
 using ymd::robots::mock::MotorCmd;
 
 struct ServoConfig{
-    real_t min_angle;
-    real_t max_angle;
+    Angular<real_t> min_angle;
+    Angular<real_t> max_angle;
 };
 // class PwmServo final:public MotorIntf{
 class PwmServo final{
 public:
     using Config = ServoConfig;
 
-    PwmServo(
+    explicit PwmServo(
         const Config & cfg, 
         real_t min_duty, 
         real_t max_duty, 
@@ -47,19 +47,21 @@ public:
     }
 
     void set_motorcmd(const MotorCmd & cmd){
-        set_angle(cmd.ref_pos * real_t(PI));
+        set_angle(Angular<real_t>::from_turns(cmd.ref_x1));
     }
-    void set_angle(const real_t angle){
+    void set_angle(const Angular<real_t> angle){
         ASSERT(min_angle_ <= angle, "angle out of range");
         ASSERT(angle <= max_angle_, "angle out of range");
-        const auto dutycycle = LERP(INVLERP(angle, min_angle_, max_angle_), min_duty_, max_duty_);
+        const auto dutycycle = LERP(INVLERP(
+            angle.to_turns(), min_angle_.to_turns(), max_angle_.to_turns())
+        , min_duty_, max_duty_);
         pwm_.set_dutycycle(dutycycle);
     }
 private:
     real_t min_duty_;
     real_t max_duty_;
-    real_t min_angle_;
-    real_t max_angle_;
+    Angular<real_t> min_angle_;
+    Angular<real_t> max_angle_;
     ymd::hal::PwmIntf & pwm_;
 };
 
@@ -100,8 +102,8 @@ public:
     {}
 
     void set_gest(const GimbalSolution solu){
-        yaw_setter_     ({.ref_pos = solu.yaw, .ref_spd = 0});
-        pitch_setter_   ({.ref_pos = solu.pitch, .ref_spd = 0});
+        yaw_setter_     ({.ref_x1 = solu.yaw, .ref_x2 = 0});
+        pitch_setter_   ({.ref_x1 = solu.pitch, .ref_x2 = 0});
     }
 private:
     Setter yaw_setter_;

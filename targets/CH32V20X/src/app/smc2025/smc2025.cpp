@@ -11,15 +11,15 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
-#include "types/vectors/quat.hpp"
+#include "algebra/vectors/quat.hpp"
 #include "primitive/image/image.hpp"
 #include "primitive/image/font/font.hpp"
 #include "primitive/image/painter/painter.hpp"
 
-#include "nvcv2/shape/shape.hpp"
-#include "nvcv2/pixels/pixels.hpp"
+#include "middlewares/nvcv2/shape/shape.hpp"
+#include "middlewares/nvcv2/pixels/pixels.hpp"
 
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
@@ -41,11 +41,6 @@ using namespace ymd::drivers;
 static constexpr size_t MAX_COAST_ITEMS = 64;
 using Pile = Range2<uint8_t>;
 using Piles = std::map<uint8_t, Pile>;
-// using Pixel = Vec2<uint8_t>;
-// using PixelSegment = std::pair<Pixel ,Pixel>;
-// using Pixels = sstl::vector<Pixel, MAX_COAST_ITEMS>;
-
-
 
 using namespace ymd::smc::sim;
 
@@ -63,7 +58,7 @@ class Plotter{
     }
 
     IResult<> plot_rgb(const Image<RGB565> image, const Rect2u & area){
-        tft_.put_texture(area, image.data()).examine();
+        tft_.put_texture(area, image.head_ptr()).examine();
 
         return Ok();
     };
@@ -173,7 +168,10 @@ static auto init_mpu6050(MPU6050 & mpu) -> Result<void, MPU6050::Error> {
 
 void smc2025_main(){
 
-    UART.init({576_KHz});
+    UART.init({
+        .remap = hal::UART6_REMAP_PC0_PC1, 
+        .baudrate = 576_KHz
+    });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(4);
@@ -181,7 +179,10 @@ void smc2025_main(){
 
     auto & spi = hal::spi2;
 
-    hal::spi2.init({144_MHz});
+    hal::spi2.init({
+        .remap = hal::SPI2_REMAP_PB13_PB14_PB15_PB12,
+        .baudrate = hal::NearestFreq(144_MHz)
+    });
     
     auto lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
@@ -189,7 +190,7 @@ void smc2025_main(){
     auto lcd_dc = hal::PD<7>();
     auto dev_rst = hal::PB<7>();
     auto spi_cs_gpio = hal::PD<4>();
-    const auto spi_rank = spi.allocate_cs_gpio(&spi_cs_gpio).unwrap();
+    const auto spi_rank = spi.allocate_cs_pin(&spi_cs_gpio).unwrap();
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_rank, &lcd_dc, &dev_rst}, 
@@ -223,7 +224,7 @@ void smc2025_main(){
 
     init_mpu6050(mpu).examine();
 
-    auto yaw_angle = Angle<iq16>::ZERO; 
+    auto yaw_angle = Angular<iq16>::ZERO; 
 
     [[maybe_unused]] auto plot_gray = [&](
         const Image<Gray> & src, 
@@ -236,7 +237,7 @@ void smc2025_main(){
                 if(ins_opt.is_none()) return;
                 ins_opt.unwrap();
             }), 
-            src.data()
+            src.head_ptr()
         ).examine();
     };
 
@@ -251,16 +252,16 @@ void smc2025_main(){
                 if(ins_opt.is_none()) return;
                 ins_opt.unwrap();
             }), 
-            src.data()
+            src.head_ptr()
         ).examine();
     };
 
     [[maybe_unused]] auto test_render = [&]{
     
-        [[maybe_unused]]const auto ctime = clock::time();
+        [[maybe_unused]]const auto now_secs = clock::time();
         const auto pose = Isometry2<iq16>{
-            // .rotation = UnitComplex<iq16>::from_radians(ctime + q16(1 / TAU) * sinpu(ctime)),
-            // .translation = Vec2<iq16>(0, -1.5_r) + Vec2<iq16>(-1.9_r, 0).rotated(Angle<iq16>::from_radians(ctime)), 
+            // .rotation = UnitComplex<iq16>::from_radians(now_secs + iq16(1 / TAU) * math::sinpu(now_secs)),
+            // .translation = Vec2<iq16>(0, -1.5_r) + Vec2<iq16>(-1.9_r, 0).rotated(Angular<iq16>::from_radians(now_secs)), 
             .rotation = UnitComplex<iq16>::from_angle(yaw_angle),
             .translation = Vec2<iq16>(0, -1.5_r), 
         };
@@ -276,16 +277,16 @@ void smc2025_main(){
             .zoom = 0.02_r
         });
         // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
-        const auto render_use = clock::micros() - mbegin;
+        const auto render_uticks = clock::micros() - mbegin;
         plot_gray(gray_img, {Vec2u{0,6}, Vec2u{240,240}});
 
-        // DEBUG_PRINTLN(render_use.count(), gray_img.size(), uint8_t(gray_img.mean()));
-        // DEBUG_PRINTLN(render_use.count(), gray_img.size(), gray_img.size().to_rect().x_range());
+        // DEBUG_PRINTLN(render_uticks.count(), gray_img.size(), uint8_t(gray_img.mean()));
+        // DEBUG_PRINTLN(render_uticks.count(), gray_img.size(), gray_img.size().to_rect().x_range());
         const auto rect = Rect2u::from_size(gray_img.size());
         const auto range = Range2<uint32_t>::from_start_and_length(rect.top_left.x, rect.size.x);
 
         DEBUG_PRINTLN(
-            render_use.count(), 
+            render_uticks.count(), 
             gray_img.size(), 
             rect.top_left.x, 
             rect.size.x, 
@@ -294,7 +295,7 @@ void smc2025_main(){
     
         // DEBUG_PRINTLN(clock::millis(), qmc.read_mag().unwrap());
         // clock::delay(20ms);
-        // DEBUG_PRINTLN(render_use.count(), pose);
+        // DEBUG_PRINTLN(render_uticks.count(), pose);
     };
 
 
@@ -313,21 +314,29 @@ void smc2025_main(){
 
         FixedStringStream<64> ss;
         ss.println("helloword", clock::time());
-        painter.draw_ascii_str({0,0}, StringView(ss)).examine();
-        DEBUG_PRINTLN(StringView(ss));
+        painter.draw_ascii_str({0,0}, ss.str()).examine();
+        DEBUG_PRINTLN(ss.str());
         // painter.draw_hollow_rect({0,0,7,7}).examine();
         tft.put_texture(
             Rect2u16::from_size(rgb_img.size()),
-            rgb_img.data()
+            rgb_img.head_ptr()
         ).examine();
 
     };
 
     auto & timer = hal::timer1;
     timer.init({
+        .remap = hal::TIM10_REMAP_B3_B4_B5_C14__A5_A6_A7,
         .count_freq = hal::NearestFreq(25),
         .count_mode = hal::TimerCountMode::Up,
-    }, EN);
+    })        .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+        })
+        .unwrap();
+
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
     timer.set_event_handler([&](hal::TimerEvent ev){
@@ -337,19 +346,20 @@ void smc2025_main(){
             qmc.update().examine();
             const auto gyr = mpu.read_gyr().examine();
             // const auto dir = qmc.read_mag().examine();
-            yaw_angle = (yaw_angle + Angle<iq16>::from_radians(gyr.z) * 0.04_iq16).normalized();
+            yaw_angle = (yaw_angle + Angular<iq16>::from_radians(gyr.z) * 0.04_iq16).unsigned_normalized();
             break;
         }
         default: break;
         }
     });
 
+    timer.start();
     while(true){
         // test_fill();
         test_render();
 
 
-        // yaw_angle = Angle<iq16>::from_radians(atan2pu(dir.x, dir.y));
+        // yaw_angle = Angular<iq16>::from_radians(atan2pu(dir.x, dir.y));
         // DEBUG_PRINTLN_IDLE(gyr.z);
         DEBUG_PRINTLN_IDLE(yaw_angle.to_degrees(), mpu.read_acc().examine());
         //     mpu.read_acc().examine(),
@@ -358,7 +368,7 @@ void smc2025_main(){
         // test_paint();
         // test_paint();
         // qmc.update().examine();
-        // painter.set_color(HSV888{0, int(100 + 100 * sinpu(clock::time())), 255});
+        // painter.set_color(HSV888{0, int(100 + 100 * math::sinpu(clock::time())), 255});
         // painter.draw_pixel(Vec2u(0, 0));
         // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
 

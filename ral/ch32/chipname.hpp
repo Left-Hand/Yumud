@@ -1,5 +1,7 @@
 #pragma once
 #include <cstdint>
+
+// Apache-2.0 license & MIT license
 // https://github.com/ch32-rs/wlink/blob/main/src/chips.rs
 
 namespace ymd{

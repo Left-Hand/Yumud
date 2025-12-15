@@ -14,7 +14,7 @@ public:
     virtual Microseconds get_period_us() const = 0;
 };
 
-struct CaptureChannelUtils{ 
+namespace capture_channel_utils{ 
 
     template<typename T, typename U>
     static constexpr auto map_pulse_and_period_to_duty(
@@ -46,8 +46,8 @@ class CaptureChannelExti final:public CaptureChannelIntf{
 public:
     void update(){
         if(double_edge_){
-            if(instance_.p_gpio_ == nullptr) return;
-            bool val = instance_.p_gpio_->read() == HIGH;
+            if(instance_.p_pin_ == nullptr) return;
+            bool val = instance_.p_pin_->read() == HIGH;
 
             if(val == false){
                 const auto current_t = clock::micros();
@@ -73,12 +73,12 @@ public:
         double_edge_(instance.edge_ == ExtiTrigEdge::Dual){;}
     void init(){
         instance_.init();
-        instance_.bind_cb([this](){this->update();});
+        instance_.set_event_handler([this](){this->update();});
         instance_.enable_it(EN);
     }
 
     template<typename Fn>
-    void bind_cb(Fn && _cb){
+    void set_event_handler(Fn && _cb){
         cb_ = std::function<void(void)>(std::move(_cb));
     }
 

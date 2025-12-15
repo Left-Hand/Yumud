@@ -3,35 +3,35 @@
 #include "uart.hpp"
 
 
-#ifdef ENABLE_UART1
+#ifdef UART1_PRESENT
 extern "C" __interrupt void USART1_IRQHandler(void);
 #endif
 
-#ifdef ENABLE_UART2
+#ifdef UART2_PRESENT
 extern "C" __interrupt void USART2_IRQHandler(void);
 #endif
 
-#ifdef ENABLE_UART3
+#ifdef UART3_PRESENT
 extern "C" __interrupt void USART3_IRQHandler(void);
 #endif
 
-#ifdef ENABLE_UART4
+#ifdef UART4_PRESENT
 extern "C" __interrupt void UART4_IRQHandler(void);
 #endif
 
-#ifdef ENABLE_UART5
+#ifdef UART5_PRESENT
 extern "C" __interrupt void UART5_IRQHandler(void);
 #endif
 
-#ifdef ENABLE_UART6
+#ifdef UART6_PRESENT
 extern "C" __interrupt void UART6_IRQHandler(void);
 #endif
 
-#ifdef ENABLE_UART7
+#ifdef UART7_PRESENT
 extern "C" __interrupt void UART7_IRQHandler(void);
 #endif
 
-#ifdef ENABLE_UART8
+#ifdef UART8_PRESENT
 extern "C" __interrupt void UART8_IRQHandler(void);
 #endif
 
@@ -43,35 +43,27 @@ class DmaChannel;
 class UartHw final:public Uart{
 public:
     explicit UartHw(
-        USART_TypeDef * inst, 
-        DmaChannel & tx_dma, 
-        DmaChannel & rx_dma
-    ):
-        inst_(inst), 
-        tx_dma_(tx_dma), 
-        rx_dma_(rx_dma){;}
+        void * inst
+    );
 
     void init(const Config & cfg);
 
     void enable_single_line_mode(const Enable en);
 
-    void writeN(const char * data_ptr, const size_t len);
+    [[nodiscard]] size_t try_write_chars(const char * data_ptr, const size_t len);
 
-    void write1(const char data);
+    [[nodiscard]] size_t try_write_char(const char data);
     
     void set_tx_strategy(const CommStrategy tx_strategy);
 
     void set_rx_strategy(const CommStrategy rx_strategy);
 
-    Gpio txio();
-    Gpio rxio();
-
 private:
-    USART_TypeDef * inst_;
+    void * inst_;
 
     void enable_rcc(const Enable en);
     void register_nvic(const Enable en);
-    void set_remap(const uint8_t remap);
+    void set_remap(const UartRemap remap);
 
     void enable_rxne_it(const Enable en);
     void enable_idle_it(const Enable en);
@@ -80,18 +72,11 @@ private:
     void enable_rx_dma(const Enable en);
     void enable_tx_dma(const Enable en);
 
-    void on_rx_dma_done();
-    void on_rx_dma_half();
-
     void invoke_tx_dma();
 
-    __fast_inline void on_rxne_interrupt(){
-        this->rx_fifo_.push(uint8_t(inst_->DATAR));
-    }
+    void on_rxne_interrupt();
     
-    __fast_inline void on_txe_interrupt(){
-    
-    }
+    void on_txe_interrupt();
     
     void on_rxidle_interrupt();
 
@@ -102,35 +87,35 @@ private:
     DmaChannel & tx_dma_;
     DmaChannel & rx_dma_;
 
-    #ifdef ENABLE_UART1
+    #ifdef UART1_PRESENT
     friend void ::USART1_IRQHandler();
     #endif
 
-    #ifdef ENABLE_UART2
+    #ifdef UART2_PRESENT
     friend void ::USART2_IRQHandler(void);
     #endif
 
-    #ifdef ENABLE_UART3
+    #ifdef UART3_PRESENT
     friend void ::USART3_IRQHandler(void);
     #endif
 
-    #ifdef ENABLE_UART4
+    #ifdef UART4_PRESENT
     friend void ::UART4_IRQHandler(void);
     #endif
 
-    #ifdef ENABLE_UART5
+    #ifdef UART5_PRESENT
     friend void ::UART5_IRQHandler(void);
     #endif
 
-    #ifdef ENABLE_UART6
+    #ifdef UART6_PRESENT
     friend void ::UART6_IRQHandler(void);
     #endif
 
-    #ifdef ENABLE_UART7
+    #ifdef UART7_PRESENT
     friend void ::UART7_IRQHandler(void);
     #endif
 
-    #ifdef ENABLE_UART8
+    #ifdef UART8_PRESENT
     friend void ::UART8_IRQHandler(void);
     #endif
 public:
@@ -138,35 +123,35 @@ public:
 };
 
 
-#ifdef ENABLE_UART1
+#ifdef UART1_PRESENT
 extern UartHw uart1;
 #endif
 
-#ifdef ENABLE_UART2
+#ifdef UART2_PRESENT
 extern UartHw uart2;
 #endif
 
-#ifdef ENABLE_UART3
+#ifdef UART3_PRESENT
 extern UartHw uart3;
 #endif
 
-#ifdef ENABLE_UART4
+#ifdef UART4_PRESENT
 extern UartHw uart4;
 #endif
 
-#ifdef ENABLE_UART5
+#ifdef UART5_PRESENT
 extern UartHw uart5;
 #endif
 
-#ifdef ENABLE_UART6
+#ifdef UART6_PRESENT
 extern UartHw uart6;
 #endif
 
-#ifdef ENABLE_UART7
+#ifdef UART7_PRESENT
 extern UartHw uart7;
 #endif
 
-#ifdef ENABLE_UART8
+#ifdef UART8_PRESENT
 extern UartHw uart8;
 #endif
 

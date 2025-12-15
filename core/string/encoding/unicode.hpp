@@ -1,66 +1,59 @@
 #pragma once
 
 #include <cstdint>
+#include "core/string/string_view.hpp"
 
 namespace ymd {
 
-class UnicodeIterator final{
+struct [[nodiscard]] UnicodeIterator final{
 
 public:
-    constexpr UnicodeIterator(const char * _utf8String) : 
-        utf8String(_utf8String), 
-        currentIndex(0) {
-        length = 0;
-        while (utf8String[length] != '\0') {
-            ++length;
-        }
+    constexpr UnicodeIterator(const StringView str):
+        str_(str){;}
+    [[nodiscard]] constexpr bool has_next() const {
+        return idx_ < length;
     }
 
-    constexpr bool has_next() const {
-        return currentIndex < length;
-    }
-
-    constexpr uint32_t next() {
-        if (this->operator bool() == false) {
+    [[nodiscard]] constexpr uint32_t next() {
+        if (this->has_next() == false) {
             return -1;
         }
 
         uint32_t unicodeValue = 0;
-        uint8_t ch = static_cast<uint8_t>(utf8String[currentIndex]);
+        uint8_t ch = static_cast<uint8_t>(str_[idx_]);
 
         if ((ch & 0x80) == 0) {
             // 1-byte UTF-8 character
             unicodeValue = ch;
-            ++currentIndex;
+            ++idx_;
         } else if ((ch & 0xE0) == 0xC0) {
             // 2-byte UTF-8 character
             unicodeValue = (ch & 0x1F) << 6;
-            unicodeValue |= (static_cast<uint8_t>(utf8String[currentIndex + 1]) & 0x3F);
-            currentIndex += 2;
+            unicodeValue |= (static_cast<uint8_t>(str_[idx_ + 1]) & 0x3F);
+            idx_ += 2;
         } else if ((ch & 0xF0) == 0xE0) {
             // 3-byte UTF-8 character
             unicodeValue = (ch & 0x0F) << 12;
-            unicodeValue |= (static_cast<uint8_t>(utf8String[currentIndex + 1]) & 0x3F) << 6;
-            unicodeValue |= (static_cast<uint8_t>(utf8String[currentIndex + 2]) & 0x3F);
-            currentIndex += 3;
+            unicodeValue |= (static_cast<uint8_t>(str_[idx_ + 1]) & 0x3F) << 6;
+            unicodeValue |= (static_cast<uint8_t>(str_[idx_ + 2]) & 0x3F);
+            idx_ += 3;
         } else if ((ch & 0xF8) == 0xF0) {
             // 4-byte UTF-8 character
             unicodeValue = (ch & 0x07) << 18;
-            unicodeValue |= (static_cast<uint8_t>(utf8String[currentIndex + 1]) & 0x3F) << 12;
-            unicodeValue |= (static_cast<uint8_t>(utf8String[currentIndex + 2]) & 0x3F) << 6;
-            unicodeValue |= (static_cast<uint8_t>(utf8String[currentIndex + 3]) & 0x3F);
-            currentIndex += 4;
+            unicodeValue |= (static_cast<uint8_t>(str_[idx_ + 1]) & 0x3F) << 12;
+            unicodeValue |= (static_cast<uint8_t>(str_[idx_ + 2]) & 0x3F) << 6;
+            unicodeValue |= (static_cast<uint8_t>(str_[idx_ + 3]) & 0x3F);
+            idx_ += 4;
         } else {
             // Invalid UTF-8 sequence
-            ++currentIndex;
+            ++idx_;
         }
 
         return unicodeValue;
     }
 private:
-    const char* utf8String;
-    size_t currentIndex;
-    size_t length;
+    const char* str_;
+    size_t idx_;
 
 };
 

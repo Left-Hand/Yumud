@@ -11,7 +11,7 @@
 namespace ymd::ral::CH32{
 
 
-struct R32_DFSDM_CHyCFGR1{
+struct [[nodiscard]] R32_DFSDM_CHyCFGR1{
     // 通道 y 串行接口类型：
     // 1：下降沿选通数据 SPI；
     // 0：上升沿选通数据 SPI。
@@ -156,13 +156,13 @@ struct R32_DFSDM_CHyCFGR1{
     uint32_t DFSDMEN:1;
 };
 
-struct R32_DFSDM_CHyCFGR2{
+struct [[nodiscard]] R32_DFSDM_CHyCFGR2{
     uint32_t :3;
     uint32_t DRRBS:5;
     uint32_t OFFSET:24;
 };
 
-struct R32_DFSDM_CHyAWSCDR{
+struct [[nodiscard]] R32_DFSDM_CHyAWSCDR{
     uint32_t SCDT:8;
     uint32_t :4;
     uint32_t BKSCD:2;
@@ -173,7 +173,7 @@ struct R32_DFSDM_CHyAWSCDR{
     uint32_t :8;
 };
 
-struct R32_DFSDM_CHyDATAR{
+struct [[nodiscard]] R32_DFSDM_CHyDATAR{
     uint32_t DATA:16;
     uint32_t :16;
 };

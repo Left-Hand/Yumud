@@ -6,12 +6,12 @@
 namespace ymd::hal{
 class Pmbus:public ProtocolBus{
 protected:
-    // hal::GpioIntf & scl_gpio;
-    // hal::GpioIntf & sda_gpio;
+    // hal::GpioIntf & scl_pin;
+    // hal::GpioIntf & sda_pin;
 
     uint32_t timeout = 10;
 
-    // I2c(hal::GpioIntf & _scl_gpio, hal::GpioIntf & _ada_gpio):scl_gpio(_scl_gpio),sda_gpio(_ada_gpio){}
+    // I2c(hal::GpioIntf & _scl_pin, hal::GpioIntf & _ada_gpio):scl_pin(_scl_pin),sda_pin(_ada_gpio){}
 public:
     void setTimeout(const uint32_t _timeout){timeout = _timeout;}
 

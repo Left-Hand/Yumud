@@ -1,138 +1,314 @@
 #include "core/platform.hpp"
-#include "ral/ch32/ch32_common_uart_def.hpp"
+#include "core/utils/Option.hpp"
+#include "ral/uart.hpp"
 
 #include "hal/dma/dma.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "uarthw.hpp"
 
+#include "core/sdk.hpp"
+#include "uart_layout.hpp"
+
 using namespace ymd;
 using namespace ymd::hal;
-using namespace ymd::ral::CH32;
 
 
-static Gpio map_uart_to_rxio(const void * inst){
+#define COPY_CONST(a,b) std::conditional_t<\
+    std::is_const_v<std::decay_t<decltype(a)>>,\
+    std::add_const_t<b *>,\
+    std::remove_const_t<b *>>\
+
+#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, USART_TypeDef)>(x))
+#define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
+
+[[maybe_unused]] static Nth _uart_to_nth(const void * inst){
     switch(reinterpret_cast<size_t>(inst)){
-        #ifdef ENABLE_UART1
+        #ifdef UART1_PRESENT
         case USART1_BASE:
-            return UART1_RX_GPIO;
+            return Nth(1);
         #endif
-        #ifdef ENABLE_UART2
+        #ifdef UART2_PRESENT
         case USART2_BASE:
-            return UART2_RX_GPIO;
+            return Nth(2);
         #endif
-        #ifdef ENABLE_UART3
+        #ifdef UART3_PRESENT
         case USART3_BASE:
-            return UART3_RX_GPIO;
+            return Nth(3);
         #endif
-        #ifdef ENABLE_UART4
+        #ifdef UART4_PRESENT
         case UART4_BASE:
-            return UART4_RX_GPIO;
+            return Nth(4);
         #endif
-        #ifdef ENABLE_UART5
+        #ifdef UART5_PRESENT
         case UART5_BASE:
-            return UART5_RX_GPIO;
+            return Nth(5);
         #endif
-        #ifdef ENABLE_UART6
+        #ifdef UART6_PRESENT
         case UART6_BASE:
-            return UART6_RX_GPIO;
+            return Nth(6);
         #endif
-        #ifdef ENABLE_UART7
+        #ifdef UART7_PRESENT
         case UART7_BASE:
-            return UART7_RX_GPIO;
+            return Nth(7);
         #endif
-        #ifdef ENABLE_UART8
+        #ifdef UART8_PRESENT
         case UART8_BASE:
-            return UART8_RX_GPIO;
-        #endif
-    }
-    __builtin_trap();
-}
-
-static Gpio map_uart_to_txio(const void * inst){
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef ENABLE_UART1
-        case USART1_BASE:
-            return UART1_TX_GPIO;
-        #endif
-        #ifdef ENABLE_UART2
-        case USART2_BASE:
-            return UART2_TX_GPIO;
-        #endif
-        #ifdef ENABLE_UART3
-        case USART3_BASE:
-            return UART3_TX_GPIO;
-        #endif
-        #ifdef ENABLE_UART4
-        case UART4_BASE:
-            return UART4_TX_GPIO;
-        #endif
-        #ifdef ENABLE_UART5
-        case UART5_BASE:
-            return UART5_TX_GPIO;
-        #endif
-        #ifdef ENABLE_UART6
-        case UART6_BASE:
-            return UART6_TX_GPIO;
-        #endif
-        #ifdef ENABLE_UART7
-        case UART7_BASE:
-            return UART7_TX_GPIO;
-        #endif
-        #ifdef ENABLE_UART8
-        case UART8_BASE:
-            return UART8_TX_GPIO;
+            return Nth(8);
         #endif
     }
     __builtin_trap();
 }
 
 
-Gpio UartHw::txio(){
-    return map_uart_to_txio(inst_);
-}
-Gpio UartHw::rxio(){
-    return map_uart_to_rxio(inst_);
+template<UartRemap REMAP>
+[[maybe_unused]] static Gpio _uart_to_tx_pin(const void * inst){
+    const auto nth = _uart_to_nth(inst);
+    switch(nth.count()){
+        #ifdef UART1_PRESENT
+        case 1:
+            return pintag_to_pin<uart::tx_pin_t<1, REMAP>>();
+        #endif
+        #ifdef UART2_PRESENT
+        case 2:
+            return pintag_to_pin<uart::tx_pin_t<2, REMAP>>();
+        #endif
+        #ifdef UART3_PRESENT
+        case 3:
+            return pintag_to_pin<uart::tx_pin_t<3, REMAP>>();
+        #endif
+        #ifdef UART4_PRESENT
+        case 4:
+            return pintag_to_pin<uart::tx_pin_t<4, REMAP>>();
+        #endif
+        #ifdef UART5_PRESENT
+        case 5:
+            return pintag_to_pin<uart::tx_pin_t<5, REMAP>>();
+        #endif
+        #ifdef UART6_PRESENT
+        case 6:
+            return pintag_to_pin<uart::tx_pin_t<6, REMAP>>();
+        #endif
+        #ifdef UART7_PRESENT
+        case 7:
+            return pintag_to_pin<uart::tx_pin_t<7, REMAP>>();
+        #endif
+        #ifdef UART8_PRESENT
+        case 8:
+            return pintag_to_pin<uart::tx_pin_t<8, REMAP>>();
+        #endif
+    }
+    __builtin_trap();
 }
 
-void UartHw::enable_rcc(const Enable en){
-    switch(reinterpret_cast<size_t>(inst_)){
-        #ifdef ENABLE_UART1
+template<UartRemap REMAP>
+[[maybe_unused]] static Gpio _uart_to_rx_pin(const void * inst){
+    const auto nth = _uart_to_nth(inst);
+    switch(nth.count()){
+        #ifdef UART1_PRESENT
+        case 1:
+            return pintag_to_pin<uart::rx_pin_t<1, REMAP>>();
+        #endif
+        #ifdef UART2_PRESENT
+        case 2:
+            return pintag_to_pin<uart::rx_pin_t<2, REMAP>>();
+        #endif
+        #ifdef UART3_PRESENT
+        case 3:
+            return pintag_to_pin<uart::rx_pin_t<3, REMAP>>();
+        #endif
+        #ifdef UART4_PRESENT
+        case 4:
+            return pintag_to_pin<uart::rx_pin_t<4, REMAP>>();
+        #endif
+        #ifdef UART5_PRESENT
+        case 5:
+            return pintag_to_pin<uart::rx_pin_t<5, REMAP>>();
+        #endif
+        #ifdef UART6_PRESENT
+        case 6:
+            return pintag_to_pin<uart::rx_pin_t<6, REMAP>>();
+        #endif
+        #ifdef UART7_PRESENT
+        case 7:
+            return pintag_to_pin<uart::rx_pin_t<7, REMAP>>();
+        #endif
+        #ifdef UART8_PRESENT
+        case 8:
+            return pintag_to_pin<uart::rx_pin_t<8, REMAP>>();
+        #endif
+    }
+    __builtin_trap();
+}
+
+
+#define DEF_UART_BIND_PIN_LAYOUTER(name)\
+[[maybe_unused]] static Gpio uart_to_##name##_pin(const void * inst, const UartRemap remap){\
+    switch(remap){\
+        case UartRemap::_0: return _uart_to_##name##_pin<UartRemap::_0>(inst);\
+        case UartRemap::_1: return _uart_to_##name##_pin<UartRemap::_1>(inst);\
+        case UartRemap::_2: return _uart_to_##name##_pin<UartRemap::_2>(inst);\
+        case UartRemap::_3: return _uart_to_##name##_pin<UartRemap::_3>(inst);\
+    }\
+    __builtin_trap();\
+}\
+
+DEF_UART_BIND_PIN_LAYOUTER(tx)
+DEF_UART_BIND_PIN_LAYOUTER(rx)
+
+static DmaChannel & uart_to_rx_dma(const void * inst){
+    switch(reinterpret_cast<size_t>(inst)){
+        #ifdef UART1_PRESENT
+        case USART1_BASE:
+            return UART1_RX_DMA_CH;
+        #endif
+        #ifdef UART2_PRESENT
+        case USART2_BASE:
+            return UART2_RX_DMA_CH;
+        #endif
+        #ifdef UART3_PRESENT
+        case USART3_BASE:
+            return UART3_RX_DMA_CH;
+        #endif
+        #ifdef UART4_PRESENT
+        case UART4_BASE:
+            return UART4_RX_DMA_CH;
+        #endif
+        #ifdef UART5_PRESENT
+        case UART5_BASE:
+            return UART5_RX_DMA_CH;
+        #endif
+        #ifdef UART6_PRESENT
+        case UART6_BASE:
+            return UART6_RX_DMA_CH;
+        #endif
+        #ifdef UART7_PRESENT
+        case UART7_BASE:
+            return UART7_RX_DMA_CH;
+        #endif
+        #ifdef UART8_PRESENT
+        case UART8_BASE:
+            return UART8_RX_DMA_CH;
+        #endif
+    }
+    __builtin_trap();
+
+}
+static DmaChannel & uart_to_tx_dma(const void * inst){
+    switch(reinterpret_cast<size_t>(inst)){
+        #ifdef UART1_PRESENT
+        case USART1_BASE:
+            return UART1_TX_DMA_CH;
+        #endif
+        #ifdef UART2_PRESENT
+        case USART2_BASE:
+            return UART2_TX_DMA_CH;
+        #endif
+        #ifdef UART3_PRESENT
+        case USART3_BASE:
+            return UART3_TX_DMA_CH;
+        #endif
+        #ifdef UART4_PRESENT
+        case UART4_BASE:
+            return UART4_TX_DMA_CH;
+        #endif
+        #ifdef UART5_PRESENT
+        case UART5_BASE:
+            return UART5_TX_DMA_CH;
+        #endif
+        #ifdef UART6_PRESENT
+        case UART6_BASE:
+            return UART6_TX_DMA_CH;
+        #endif
+        #ifdef UART7_PRESENT
+        case UART7_BASE:
+            return UART7_TX_DMA_CH;
+        #endif
+        #ifdef UART8_PRESENT
+        case UART8_BASE:
+            return UART8_TX_DMA_CH;
+        #endif
+    }
+    __builtin_trap();
+}
+
+static IRQn get_nvic_irqn(const void * inst){
+
+    switch(reinterpret_cast<size_t>(inst)){
+        #ifdef UART1_PRESENT
+        case USART1_BASE:
+            return USART1_IRQn;
+        #endif
+        #ifdef UART2_PRESENT
+        case USART2_BASE:
+            return USART2_IRQn;
+        #endif
+        #ifdef UART3_PRESENT
+        case USART3_BASE:
+            return USART3_IRQn;
+        #endif
+        #ifdef UART4_PRESENT
+        case UART4_BASE:
+            return UART4_IRQn;
+        #endif
+        #ifdef UART5_PRESENT
+        case UART5_BASE:
+            return UART5_IRQn;
+        #endif
+        #ifdef UART6_PRESENT
+        case UART6_BASE:
+            return UART6_IRQn;
+        #endif
+        #ifdef UART7_PRESENT
+        case UART7_BASE:
+            return UART7_IRQn;
+        #endif
+        #ifdef UART8_PRESENT
+        case UART8_BASE:
+            return UART8_IRQn;
+        #endif
+    }
+    __builtin_trap();
+}
+
+static void uart_enable_rcc(const void * inst, const Enable en){
+    switch(reinterpret_cast<size_t>(inst)){
+        #ifdef UART1_PRESENT
         case USART1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, en == EN);
             return;
         #endif
-        #ifdef ENABLE_UART2
+        #ifdef UART2_PRESENT
         case USART2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, en == EN);
             return;
         #endif
-        #ifdef ENABLE_UART3
+        #ifdef UART3_PRESENT
         case USART3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, en == EN);
             return;
         #endif
-        #ifdef ENABLE_UART4
+        #ifdef UART4_PRESENT
         case UART4_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, en == EN);
             return;
         #endif
-        #ifdef ENABLE_UART5
+        #ifdef UART5_PRESENT
         case UART5_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, en == EN);
             return;
         #endif
-        #ifdef ENABLE_UART6
+        #ifdef UART6_PRESENT
         case UART6_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART6, en == EN);
             return;
         #endif
-        #ifdef ENABLE_UART7
+        #ifdef UART7_PRESENT
         case UART7_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, en == EN);
             return;
         #endif
-        #ifdef ENABLE_UART8
+        #ifdef UART8_PRESENT
         case UART8_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART8, en == EN);
             return;
@@ -141,85 +317,47 @@ void UartHw::enable_rcc(const Enable en){
     __builtin_trap();
 }
 
-static constexpr uint8_t get_default_remap(const void * inst){
+static void uart_set_remap(const void * inst, const UartRemap remap){
     switch(reinterpret_cast<size_t>(inst)){
-        #ifdef ENABLE_UART1
-        case USART1_BASE:
-            return UART1_REMAP;
-        #endif
-        #ifdef ENABLE_UART2
-        case USART2_BASE:
-            return UART2_REMAP;
-        #endif
-        #ifdef ENABLE_UART3
-        case USART3_BASE:
-            return UART3_REMAP;
-        #endif
-        #ifdef ENABLE_UART4
-        case UART4_BASE:
-            return UART4_REMAP;
-        #endif
-        #ifdef ENABLE_UART5
-        case UART5_BASE:
-            return UART5_REMAP;
-        #endif
-        #ifdef ENABLE_UART6
-        case UART6_BASE:
-            return UART6_REMAP;
-        #endif
-        #ifdef ENABLE_UART7
-        case UART7_BASE:
-            return UART7_REMAP;
-        #endif
-        #ifdef ENABLE_UART8
-        case UART8_BASE:
-            return UART8_REMAP;
-        #endif
-    }
-    __builtin_trap();
-}
-
-void UartHw::set_remap(const uint8_t remap){
-    switch(reinterpret_cast<size_t>(inst_)){
-        #ifdef ENABLE_UART1
+        #ifdef UART1_PRESENT
         case USART1_BASE:
             switch(remap){
-                case 0:
+                case UartRemap::_0:
                     GPIO_PinRemapConfig(GPIO_Remap_USART1, DISABLE);
                     return;
-                case 1:
+                case UartRemap::_1:
                     GPIO_PinRemapConfig(GPIO_Remap_USART1, ENABLE);
                     return;
                 default:
                     break;
             }
         #endif
-        #ifdef ENABLE_UART2
+        #ifdef UART2_PRESENT
         case USART2_BASE:
             switch(remap){
-                case 0:
+                case UartRemap::_0:
                     GPIO_PinRemapConfig(GPIO_Remap_USART2, DISABLE);
                     return;
-                case 1:
+                case UartRemap::_1:
                     GPIO_PinRemapConfig(GPIO_Remap_USART2, ENABLE);
                     return;
                 default:
                     break;
             }
         #endif
-        #ifdef ENABLE_UART3
+        #ifdef UART3_PRESENT
         case USART3_BASE:
             switch (remap){
-                case 0:
+                case UartRemap::_0:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART3, DISABLE);
                     return;
-                case 1:
+                case UartRemap::_1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap1_USART3, ENABLE);
                     return;
-                case 2:
+                case UartRemap::_2:
                     GPIO_PinRemapConfig(GPIO_PartialRemap2_USART3, ENABLE);
                     return;
-                case 3:
+                case UartRemap::_3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART3, ENABLE);
                     return;
                 default:
@@ -227,17 +365,17 @@ void UartHw::set_remap(const uint8_t remap){
             }
             break;
         #endif
-        #ifdef ENABLE_UART4
+        #ifdef UART4_PRESENT
         case UART4_BASE:
             switch (remap){
-                case 0:
+                case UartRemap::_0:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART4, DISABLE);
                     return;
-                case 1:
+                case UartRemap::_1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART4, ENABLE);
                     return;
-                case 2:
-                case 3:
+                case UartRemap::_2:
+                case UartRemap::_3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART4, ENABLE);
                     return;
                 default:
@@ -245,17 +383,17 @@ void UartHw::set_remap(const uint8_t remap){
             }
             break;
         #endif
-        #ifdef ENABLE_UART5
+        #ifdef UART5_PRESENT
         case UART5_BASE:
             switch (remap){
-                case 0:
+                case UartRemap::_0:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART5, DISABLE);
                     return;
-                case 1:
+                case UartRemap::_1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART5, ENABLE);
                     return;
-                case 2:
-                case 3:
+                case UartRemap::_2:
+                case UartRemap::_3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART5, ENABLE);
                     return;
                 default:
@@ -263,17 +401,17 @@ void UartHw::set_remap(const uint8_t remap){
             }
             break;
         #endif
-        #ifdef ENABLE_UART6
+        #ifdef UART6_PRESENT
         case UART6_BASE:
             switch (remap){
-                case 0:
+                case UartRemap::_0:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART6, DISABLE);
                     return;
-                case 1:
+                case UartRemap::_1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART6, ENABLE);
                     return;
-                case 2:
-                case 3:
+                case UartRemap::_2:
+                case UartRemap::_3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART6, ENABLE);
                     return;
                 default:
@@ -281,17 +419,17 @@ void UartHw::set_remap(const uint8_t remap){
             }
             break;
         #endif
-        #ifdef ENABLE_UART7
+        #ifdef UART7_PRESENT
         case UART7_BASE:
             switch (remap){
-                case 0:
+                case UartRemap::_0:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART7, DISABLE);
                     return;
-                case 1:
+                case UartRemap::_1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART7, ENABLE);
                     return;
-                case 2:
-                case 3:
+                case UartRemap::_2:
+                case UartRemap::_3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART7, ENABLE);
                     return;
                 default:
@@ -299,17 +437,17 @@ void UartHw::set_remap(const uint8_t remap){
             }
             break;
         #endif
-        #ifdef ENABLE_UART8
+        #ifdef UART8_PRESENT
         case UART8_BASE:
             switch (remap){
-                case 0:
+                case UartRemap::_0:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART8, DISABLE);
                     return;
-                case 1:
+                case UartRemap::_1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART8, ENABLE);
                     return;
-                case 2:
-                case 3:
+                case UartRemap::_2:
+                case UartRemap::_3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART8, ENABLE);
                     return;
                 default:
@@ -321,119 +459,52 @@ void UartHw::set_remap(const uint8_t remap){
     __builtin_trap();
 }
 
-static NvicRequest get_nvic_request(const void * inst){
 
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef ENABLE_UART1
-        case USART1_BASE:
-            return NvicRequest(UART1_IT_PP, UART1_IT_SP, USART1_IRQn);
-        #endif
-        #ifdef ENABLE_UART2
-        case USART2_BASE:
-            return NvicRequest(UART2_IT_PP, UART2_IT_SP, USART2_IRQn);
-        #endif
-        #ifdef ENABLE_UART3
-        case USART3_BASE:
-            return NvicRequest(UART3_IT_PP, UART3_IT_SP, USART3_IRQn);
-        #endif
-        #ifdef ENABLE_UART4
-        case UART4_BASE:
-            return NvicRequest(UART4_IT_PP, UART4_IT_SP, UART4_IRQn);
-        #endif
-        #ifdef ENABLE_UART5
-        case UART5_BASE:
-            return NvicRequest(UART5_IT_PP, UART5_IT_SP, UART5_IRQn);
-        #endif
-        #ifdef ENABLE_UART6
-        case UART6_BASE:
-            return NvicRequest(UART6_IT_PP, UART6_IT_SP, UART6_IRQn);
-        #endif
-        #ifdef ENABLE_UART7
-        case UART7_BASE:
-            return NvicRequest(UART8_IT_PP, UART7_IT_SP, UART7_IRQn);
-        #endif
-        #ifdef ENABLE_UART8
-        case UART8_BASE:
-            return NvicRequest(UART8_IT_PP, UART8_IT_SP, UART8_IRQn);
-        #endif
-    }
-    __builtin_trap();
+UartHw::UartHw(
+    void * inst
+):
+    inst_(inst), 
+    tx_dma_(uart_to_tx_dma(inst)), 
+    rx_dma_(uart_to_rx_dma(inst)){;}
+
+void UartHw::enable_rcc(const Enable en){
+    uart_enable_rcc(SDK_INST(inst_), en);
 }
+
+
+void UartHw::set_remap(const UartRemap remap){
+    uart_set_remap(SDK_INST(inst_), remap);
+}
+
 
 void UartHw::register_nvic(const Enable en){
-    get_nvic_request(inst_).enable(EN);
+    NvicPriority{1,1}.with_irqn(get_nvic_irqn(SDK_INST(inst_))).enable(EN);
 }
 
-
-void UartHw::on_rxidle_interrupt(){
-    switch(rx_strategy_){
-        case CommStrategy::Dma:{
-            // __builtin_trap();
-            const size_t next_index = UART_RX_DMA_BUF_SIZE - rx_dma_.remaining();
-
-            if(unlikely(next_index >= UART_RX_DMA_BUF_SIZE)) 
-                __builtin_trap();
-
-            if((next_index != (UART_RX_DMA_BUF_SIZE / 2)) and (next_index != UART_RX_DMA_BUF_SIZE)){
-            // if(true){
-                (void)this->rx_fifo_.push(std::span(
-                    &rx_dma_buf_[rx_dma_buf_index_], (next_index - rx_dma_buf_index_))); 
-                // (void)this->rx_fifo_.push(1); 
-            }
-
-            rx_dma_buf_index_ = next_index;
-            invoke_callback(Event::RxIdle);
-        }; 
-            break;
-
-        default:
-            __builtin_trap();
-    }
-}
-
-
-void UartHw::on_rx_dma_done(){
-    //将数据从当前索引填充至末尾
-    (void)this->rx_fifo_.push(std::span(
-        &rx_dma_buf_[rx_dma_buf_index_], 
-        UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_
-    )); 
-    rx_dma_buf_index_ = 0;
-}
-
-void UartHw::on_rx_dma_half(){
-
-    //将数据从当前索引填充至半满
-    (void)this->rx_fifo_.push(std::span(
-        &rx_dma_buf_[rx_dma_buf_index_], 
-        (UART_RX_DMA_BUF_SIZE / 2) - rx_dma_buf_index_
-    )); 
-    rx_dma_buf_index_ = UART_RX_DMA_BUF_SIZE / 2;
-}
 
 
 void UartHw::enable_single_line_mode(const Enable en){
-    USART_HalfDuplexCmd(inst_, en == EN);
-    if(en == EN){
-        txio().inpu();
-    }else{
-        txio().outod();
-    }
+    USART_HalfDuplexCmd(SDK_INST(inst_), en == EN);
+    // if(en == EN){
+    //     uart_to_txio(inst_, remap).inpu();
+    // }else{
+    //     uart_to_txio(inst_, remap).outod();
+    // }
 }
 
 void UartHw::invoke_tx_dma(){
     if(tx_dma_.remaining())    return;
 
     // 如果发送队列为空，则说明发送完成
-    if(tx_fifo_.available() == 0){
+    if(tx_fifo_.length() == 0){
         invoke_callback(Event::TxIdle);
         return;
     }
-    const size_t tx_amount = tx_fifo_.available();
-    (void)tx_fifo_.pop(std::span(tx_dma_buf_.data(), tx_amount));
+    const size_t num_tx_bytes = tx_fifo_.length();
+    (void)tx_fifo_.try_pop(std::span(tx_dma_buf_.data(), num_tx_bytes));
     tx_dma_.start_transfer_mem2pph<char>(
-        (&inst_->DATAR), 
-        tx_dma_buf_.data(), tx_amount
+        (&SDK_INST(inst_)->DATAR), 
+        tx_dma_buf_.data(), num_tx_bytes
     );
 }
 
@@ -442,12 +513,6 @@ void UartHw::invoke_tx_dma(){
 void UartHw::set_tx_strategy(const CommStrategy tx_strategy){
     if(tx_strategy_ == tx_strategy) return;
 
-    auto tx_gpio = txio();
-    if(tx_strategy != CommStrategy::Nil){
-        tx_gpio.afpp();
-    }else{
-        // tx_gpio.inflt();
-    }
 
     switch(tx_strategy){
         case CommStrategy::Blocking:
@@ -470,12 +535,6 @@ void UartHw::set_tx_strategy(const CommStrategy tx_strategy){
 void UartHw::set_rx_strategy(const CommStrategy rx_strategy){
     if(rx_strategy_ == rx_strategy) return;
         
-    auto rx_gpio = rxio();
-
-    if(rx_strategy != CommStrategy::Nil){
-        rx_gpio.inpu();
-    }
-
     switch(rx_strategy){
         case CommStrategy::Blocking:
             break;
@@ -499,7 +558,7 @@ void UartHw::set_rx_strategy(const CommStrategy rx_strategy){
 
 void UartHw::init(const Config & cfg){
     enable_rcc(EN);
-    set_remap(get_default_remap(inst_));
+    set_remap(cfg.remap);
 
     const USART_InitTypeDef USART_InitStructure{
         .USART_BaudRate = cfg.baudrate,
@@ -512,94 +571,91 @@ void UartHw::init(const Config & cfg){
         .USART_HardwareFlowControl = USART_HardwareFlowControl_None
     };
 
-    USART_Init(inst_, &USART_InitStructure);
-    USART_Cmd(inst_, ENABLE);
+    USART_Init(SDK_INST(inst_), &USART_InitStructure);
+    USART_Cmd(SDK_INST(inst_), ENABLE);
 
     register_nvic(EN);
     set_tx_strategy(cfg.tx_strategy);
     set_rx_strategy(cfg.rx_strategy);
+
+    if(cfg.tx_strategy != CommStrategy::Nil){
+        auto tx_pin = uart_to_tx_pin(inst_, cfg.remap);
+        tx_pin.afpp();
+    }
+    
+    if(cfg.rx_strategy != CommStrategy::Nil){
+        auto rx_pin = uart_to_rx_pin(inst_, cfg.remap);
+        rx_pin.inpu();
+    }
 }
 
-void UartHw::writeN(const char * pbuf, const size_t len){
+size_t UartHw::try_write_chars(const char * pchars, const size_t len){
     switch(tx_strategy_){
-        case CommStrategy::Blocking:
-            inst_->DATAR;
+        case CommStrategy::Blocking:{
+            SDK_INST(inst_)->DATAR;
 
-            (void)tx_fifo_.push(std::span(pbuf, len));
-            while(tx_fifo_.available()){
-                inst_->DATAR = tx_fifo_.pop();
-                while((inst_->STATR & USART_FLAG_TXE) == RESET);
+            // (void)tx_fifo_.push(std::span(pchars, len));
+            for(size_t i = 0; i < len; ++i){
+                SDK_INST(inst_)->DATAR = pchars[i];
+                while((SDK_INST(inst_)->STATR & USART_FLAG_TXE) == RESET);
             }
-            while((inst_->STATR & USART_FLAG_TC) == RESET);
-            
+            while((SDK_INST(inst_)->STATR & USART_FLAG_TC) == RESET);
+            return len;
+        }
             break;
-        case CommStrategy::Interrupt:
-            (void)tx_fifo_.push(std::span(pbuf, len));
+        case CommStrategy::Interrupt:{
+            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
             enable_tx_it(EN);
-
-            break;
-        case CommStrategy::Dma:
-            (void)tx_fifo_.push(std::span(pbuf, len));
+            return written_len;
+        }
+        case CommStrategy::Dma:{
+            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
             invoke_tx_dma();
-            break;
+            return written_len;
+        }
         default:
-            break;
+            //无法到达这个控制流
+            __builtin_trap();
     }
 }
 
-void UartHw::write1(const char data){
-    switch(tx_strategy_){
-        case CommStrategy::Blocking:
-            tx_fifo_.push(data);
-
-            inst_->DATAR;
-            inst_->DATAR = tx_fifo_.pop();
-            while((inst_->STATR & USART_FLAG_TC) == RESET);
-            break;
-
-        case CommStrategy::Interrupt:
-            tx_fifo_.push(data);
-            enable_tx_it(EN);
-            break;
-
-        case CommStrategy::Dma:
-            tx_fifo_.push(data);
-            invoke_tx_dma();
-            break;
-        default:
-            break;
-    }
+size_t UartHw::try_write_char(const char chr){
+    return try_write_chars(&chr, 1);
 }
 
 
 
 void UartHw::enable_tx_dma(const Enable en){
-    USART_DMACmd(inst_, USART_DMAReq_Tx, en == EN);
+    USART_DMACmd(SDK_INST(inst_), USART_DMAReq_Tx, en == EN);
 
-    if(en == EN){
-        static constexpr NvicPriority NVIC_PRIORITY = {1,1};
-        tx_dma_.init({DmaMode::ToPeriph, DmaPriority::Medium});
-
-        tx_dma_.register_nvic(NVIC_PRIORITY, EN);
-        tx_dma_.enable_interrupt<DmaIT::Done>(EN);
-        tx_dma_.set_event_handler(
-            [this](const DmaEvent event){
-                switch(event){
-                    case DmaEvent::TransferComplete:
-                        this->invoke_tx_dma();
-                        break;
-                    default:
-                        break;
-                }
-            }
-        );
-    }else{
+    if(en != EN){
         tx_dma_.set_event_handler(nullptr);
     }
+
+    static constexpr NvicPriority NVIC_PRIORITY = {1,1};
+    tx_dma_.init({
+        .mode = DmaMode::ToPeriph, 
+        .priority = DmaPriority::Medium
+    });
+
+    tx_dma_.register_nvic(NVIC_PRIORITY, EN);
+    tx_dma_.enable_interrupt<DmaIT::Done>(EN);
+    tx_dma_.set_event_handler(
+        [this](const DmaEvent ev){
+            switch(ev){
+                case DmaEvent::TransferComplete:
+                    this->invoke_tx_dma();
+                    break;
+                default:
+                    break;
+            }
+        }
+    );
+
 }
 
 void UartHw::enable_rx_dma(const Enable en){
-    USART_DMACmd(inst_, USART_DMAReq_Rx, en == EN);
+    USART_DMACmd(SDK_INST(inst_), USART_DMAReq_Rx, en == EN);
     if(en == EN){
         static constexpr NvicPriority NVIC_PRIORITY = {1,1};
         rx_dma_.init({DmaMode::ToMemCircular, DmaPriority::Medium});
@@ -608,14 +664,24 @@ void UartHw::enable_rx_dma(const Enable en){
         rx_dma_.enable_interrupt<DmaIT::Done>(EN);
         rx_dma_.enable_interrupt<DmaIT::Half>(EN);
         rx_dma_.set_event_handler(
-
-            [this](const DmaEvent event) -> void{
-                switch(event){
+            [this](const DmaEvent ev) -> void{
+                switch(ev){
                     case DmaEvent::TransferComplete:
-                        this->on_rx_dma_done();
+                        //将数据从当前索引填充至末尾
+                        (void)this->rx_fifo_.try_push(std::span(
+                            &rx_dma_buf_[rx_dma_buf_index_], 
+                            UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_
+                        )); 
+                        rx_dma_buf_index_ = 0;
                         break;
                     case DmaEvent::HalfTransfer:
-                        this->on_rx_dma_half();
+
+                        //将数据从当前索引填充至半满
+                        (void)this->rx_fifo_.try_push(std::span(
+                            &rx_dma_buf_[rx_dma_buf_index_], 
+                            (UART_RX_DMA_BUF_SIZE / 2) - rx_dma_buf_index_
+                        )); 
+                        rx_dma_buf_index_ = UART_RX_DMA_BUF_SIZE / 2;
                         break;
                     default:
                         break;
@@ -625,7 +691,7 @@ void UartHw::enable_rx_dma(const Enable en){
 
         rx_dma_.start_transfer_pph2mem<char>(
             rx_dma_buf_.data(), 
-            &inst_->DATAR, 
+            &SDK_INST(inst_)->DATAR, 
             UART_RX_DMA_BUF_SIZE
         );
     }else{
@@ -633,107 +699,139 @@ void UartHw::enable_rx_dma(const Enable en){
     }
 }
 
+void UartHw::on_rxne_interrupt(){
+    (void)this->rx_fifo_.try_push(uint8_t(SDK_INST(inst_)->DATAR));
+}
+
+void UartHw::on_txe_interrupt(){
+
+}
+
+void UartHw::on_rxidle_interrupt(){
+    switch(rx_strategy_){
+        case CommStrategy::Dma:{
+            const size_t next_index = UART_RX_DMA_BUF_SIZE - rx_dma_.remaining();
+
+            if(next_index >= UART_RX_DMA_BUF_SIZE) [[unlikely]]
+                __builtin_trap();
+
+            if((next_index != (UART_RX_DMA_BUF_SIZE / 2)) and (next_index != UART_RX_DMA_BUF_SIZE)){
+                (void)this->rx_fifo_.try_push(std::span(
+                    &rx_dma_buf_[rx_dma_buf_index_], (next_index - rx_dma_buf_index_))); 
+            }
+
+            rx_dma_buf_index_ = next_index;
+            invoke_callback(Event::RxIdle);
+        }; 
+            break;
+
+        default:
+            __builtin_trap();
+    }
+}
+
+
 void UartHw::enable_rxne_it(const Enable en){
-    USART_ClearITPendingBit(inst_, USART_IT_RXNE);
-    USART_ITConfig(inst_, USART_IT_RXNE, en == EN);
+    USART_ClearITPendingBit(SDK_INST(inst_), USART_IT_RXNE);
+    USART_ITConfig(SDK_INST(inst_), USART_IT_RXNE, en == EN);
 }
 
 void UartHw::enable_tx_it(const Enable en){
-    USART_ITConfig(inst_, USART_IT_TXE, en == EN);
+    USART_ITConfig(SDK_INST(inst_), USART_IT_TXE, en == EN);
 }
 
 
 void UartHw::enable_idle_it(const Enable en){
-    USART_ClearITPendingBit(inst_, USART_IT_IDLE);
-    USART_ITConfig(inst_, USART_IT_IDLE, en == EN);
+    USART_ClearITPendingBit(SDK_INST(inst_), USART_IT_IDLE);
+    USART_ITConfig(SDK_INST(inst_), USART_IT_IDLE, en == EN);
 }
 
 
 namespace ymd::hal{
-#ifdef ENABLE_UART1
-UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
+#ifdef UART1_PRESENT
+UartHw uart1{USART1};
 #endif
 
-#ifdef ENABLE_UART2
-UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
+#ifdef UART2_PRESENT
+UartHw uart2{USART2};
 #endif
 
-#ifdef ENABLE_UART3
-UartHw uart3{USART3, UART3_TX_DMA_CH, UART3_RX_DMA_CH};
+#ifdef UART3_PRESENT
+UartHw uart3{USART3};
 #endif
 
-#ifdef ENABLE_UART4
-UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
+#ifdef UART4_PRESENT
+UartHw uart4{UART4};
 #endif
 
-#ifdef ENABLE_UART5
-UartHw uart5{UART5, UART5_TX_DMA_CH, UART5_RX_DMA_CH};
+#ifdef UART5_PRESENT
+UartHw uart5{UART5};
 #endif
 
-#ifdef ENABLE_UART6
-UartHw uart6{UART6, UART6_TX_DMA_CH, UART6_RX_DMA_CH};
+#ifdef UART6_PRESENT
+UartHw uart6{UART6};
 #endif
 
-#ifdef ENABLE_UART7
-UartHw uart7{UART7, UART7_TX_DMA_CH, UART7_RX_DMA_CH};
+#ifdef UART7_PRESENT
+UartHw uart7{UART7};
 #endif
 
-#ifdef ENABLE_UART8
-UartHw uart8{UART8, UART8_TX_DMA_CH, UART8_RX_DMA_CH};
+#ifdef UART8_PRESENT
+UartHw uart8{UART8};
 #endif
 }
 
 #define UART_IT_TEMPLATE(name, uname, fname)\
 __interrupt void fname(void){\
-    const auto events = uname##_Inst->get_events();\
+    const auto events = ral::uname##_Inst->get_events();\
     if(events.RXNE){\
         name.on_rxne_interrupt();\
-        uname##_Inst->clear_events({.RXNE = 1});\
+        ral::uname##_Inst->clear_events({.RXNE = 1});\
     }else if(events.IDLE){\
         name.on_rxidle_interrupt();\
-        uname##_Inst->STATR;\
-        uname##_Inst->DATAR;\
+        ral::uname##_Inst->STATR;\
+        ral::uname##_Inst->DATAR;\
     }else if(events.TXE){\
         name.on_txe_interrupt();\
-        uname##_Inst->clear_events({.TXE = 1});\
+        ral::uname##_Inst->clear_events({.TXE = 1});\
     }else if(events.ORE){\
-        uname##_Inst->DATAR;\
-        uname##_Inst->clear_events({.ORE = 1});\
+        ral::uname##_Inst->DATAR;\
+        ral::uname##_Inst->clear_events({.ORE = 1});\
     }\
 }\
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
-#ifdef ENABLE_UART1
+#ifdef UART1_PRESENT
 UART_IT_TEMPLATE(uart1, USART1, USART1_IRQHandler)
 #endif
 
-#ifdef ENABLE_UART2
+#ifdef UART2_PRESENT
 UART_IT_TEMPLATE(uart2, USART2, USART2_IRQHandler)
 #endif
 
-#ifdef ENABLE_UART3
+#ifdef UART3_PRESENT
 UART_IT_TEMPLATE(uart3, USART3, USART3_IRQHandler)
 #endif
 
-#ifdef ENABLE_UART4
+#ifdef UART4_PRESENT
 UART_IT_TEMPLATE(uart4, USART4, UART4_IRQHandler)
 #endif
 
-#ifdef ENABLE_UART5
+#ifdef UART5_PRESENT
 UART_IT_TEMPLATE(uart5, USART5, UART5_IRQHandler)
 #endif
 
-#ifdef ENABLE_UART6
+#ifdef UART6_PRESENT
 UART_IT_TEMPLATE(uart6, USART6, UART6_IRQHandler)
 #endif
 
-#ifdef ENABLE_UART7
+#ifdef UART7_PRESENT
 UART_IT_TEMPLATE(uart7, USART7, UART7_IRQHandler)
 #endif
 
-#ifdef ENABLE_UART8
+#ifdef UART8_PRESENT
 UART_IT_TEMPLATE(uart8, USART8, UART8_IRQHandler)
 #endif
 

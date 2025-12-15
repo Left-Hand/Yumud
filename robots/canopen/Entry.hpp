@@ -210,7 +210,7 @@ public:
     bool is_writeable() const {return access_authority_ == AccessAuthority::RW || access_authority_ == AccessAuthority::WO;}
     StringView name() const {return StringView(name_);}
 
-    void put(const hal::CanClassicFrame & frame){
+    void put(const hal::BxCanFrame & frame){
         TODO();
     }
 private:

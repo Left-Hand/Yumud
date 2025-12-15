@@ -1,13 +1,13 @@
 #pragma once
 
-#include "core/math/uint24_t.hpp"
+#include "core/int/uint24_t.hpp"
 #include "core/constants/enums.hpp"
 #include <span>
 
 namespace ymd{
 
 template<typename T> 
-struct RegCopy final:public T{
+struct [[nodiscard]] RegCopy final:public T{
 public:
     using value_type = typename T::value_type;
 
@@ -34,7 +34,7 @@ RegCopy(T) -> RegCopy<T>;
 
 
 template<typename T, typename D = T>
-struct RegBase{
+struct [[nodiscard]] RegBase{
 public:
     using underly_type = T;
     using value_type = T;
@@ -72,13 +72,13 @@ public:
 
 #define DEF_REG_TEMPLATE(name, T, as_fn)\
 template<typename D = T>\
-struct name:public RegBase<T, D>{\
+struct [[nodiscard]] name:public RegBase<T, D>{\
 constexpr T as_fn() const {return std::bit_cast<T>(this->to_bits());}\
 };\
 
 #define DEF_REGC_TEMPLATE(name, T, as_fn)\
 template<typename D = T>\
-struct name:public RegBase<const T, D>{\
+struct [[nodiscard]] name:public RegBase<const T, D>{\
 constexpr T as_fn() const {return T(*this);}\
 };\
 

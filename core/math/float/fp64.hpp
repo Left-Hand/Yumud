@@ -4,7 +4,7 @@
 #include <bit>
 
 namespace ymd::math{
-struct fp64{
+struct [[nodiscard]] fp64{
 	uint64_t frac:52;
 	uint64_t exp:11;
 	uint64_t sign:1;

@@ -8,8 +8,8 @@ namespace ymd::hal{
 class Dvp{
 public:
     struct Config{
-        uint32_t *image0_addr;
-        uint32_t *image1_addr; 
+        uint32_t image0_addr;
+        uint32_t image1_addr; 
         size_t num_col; 
         size_t num_row;
     };

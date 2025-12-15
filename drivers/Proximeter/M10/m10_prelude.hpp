@@ -10,142 +10,166 @@
 #include "hal/bus/uart/uart.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/sumtype.hpp"
-#include "types/vectors/polar.hpp"
+#include "algebra/vectors/polar.hpp"
 
 
-namespace ymd::drivers{
+namespace ymd::drivers::m10{
+//固定波特率
+static constexpr size_t DEFAULT_UART_BAUD = 460800;
 
+static constexpr uint8_t HEADER1_TOKEN = 0xa5;
+static constexpr uint8_t HEADER2_TOKEN = 0x5a;
 
-struct M10_Prelude{
+//每个扇区有42点
+static constexpr size_t POINTS_PER_SECTOR = 42;
 
-    static constexpr size_t DEFAULT_UART_BAUD = 460800;
+//每圈有360/15 = 24个扇区
+static constexpr size_t SECTORS_PER_LAP = 360 / 15;
 
-    static constexpr uint8_t HEADER1_TOKEN = 0xa5;
-    static constexpr uint8_t HEADER2_TOKEN = 0x5a;
-    static constexpr size_t POINTS_PER_FRAME = 42;
+//每圈有42*24 = 1008点
+static constexpr size_t POINTS_PER_LAP = POINTS_PER_SECTOR * SECTORS_PER_LAP;
 
+// speed: 转速参数，一共两个字节,高位在前，低位在后，
+// 表示雷达从一个齿转到下一个 齿所需要的时间计数值，它和转速的计算公式为：转速=2500000/speed。
+// 例如：0x10 0x68 即十进制 4200 则转速为每分钟 595.239 转，也就是 10HZ；
+struct [[nodiscard]] LidarSpinSpeedCode{
+public:
+    static constexpr LidarSpinSpeedCode from_bits(const uint16_t bits){
+        return {bits};
+    }
 
-    struct [[nodiscard]] LidarSpinSpeed{
-    public:
-        static constexpr LidarSpinSpeed from_bits(const uint16_t bits){
-            return {bits};
-        }
-
-        [[nodiscard]] constexpr iq16 to_turns_per_secs() const{
-            constexpr iq16 RATIO = iq16(1.0 / 360);
-            return RATIO * bits;
-        }
-        uint16_t bits;
-    };
-
-    struct [[nodiscard]] LidarAngle{
-    public:
-        static constexpr LidarAngle from_bits(const uint16_t bits){
-            return {bits};
-        }
-
-        [[nodiscard]] constexpr uq24 to_turns() const{
-            constexpr auto RATIO = uq24(1.0 / 360 * 0.01);
-            return RATIO * bits;
-        }
-
-        uint16_t bits;
-    };
-
-    struct [[nodiscard]] LidarDistance{
-    public:
-        static constexpr LidarDistance from_bits(const uint16_t bits){
-            return {bits};
-        }
-
-        [[nodiscard]] constexpr uq24 to_meters() const{
-            constexpr auto RATIO = uq24(0.001);
-            return RATIO * bits;
-        }
-
-        uint16_t bits;
-    };
-
-    struct [[nodiscard]] LidarFrame final{
-        LidarAngle start_angle;
-        LidarSpinSpeed spin_speed;
-        std::array<LidarDistance, POINTS_PER_FRAME> distances;
-
-        struct Iterator{
-            static constexpr uq24 DELTA_TURNS = uq16(15.0 / 360 / POINTS_PER_FRAME);
-            constexpr Iterator(const LidarFrame & frame):frame_(frame){
-                current_turns_ = frame_.start_angle.to_turns();
-            }
-
-            constexpr bool has_next() const{
-                return index_ < frame_.distances.size();
-            }
-
-            constexpr Polar<uq24> next(){
-                const auto ret = Polar<uq24>{
-                    .amplitude = frame_.distances[index_].to_meters(),
-                    .phase = Angle<uq24>::from_turns(current_turns_)
-                };
-                index_ += 1;
-                current_turns_ += DELTA_TURNS;
-                return ret;
-            };
-        private:
-
-            const LidarFrame & frame_;
-            size_t index_ = 0;
-            uq24 current_turns_ = 0;
-        };
-    };
-
-    static constexpr size_t FRAME_SIZE = sizeof(LidarFrame);
-
-    struct Events{
-        struct [[nodiscard]] DataReady{
-            const LidarFrame & frame;
-        };
-        struct [[nodiscard]] InvalidCrc{
-            uint8_t expected;
-            uint8_t actual;
-        };
-    };
-
-    struct Event:public Sumtype<Events::DataReady>{
-
-    };
-
-    using Callback = std::function<void(Event)>;
+    [[nodiscard]] constexpr uq16 to_tps() const{
+        const auto rpm = (2500000u / __bswap16(bits));
+        return rpm * uq16(1.0 / 60);
+    }
+    uint16_t bits;
 };
 
+// 角度参数，一共两个字节,高位在前，低位在后，为从 0 度（360 度） 开始每 15 度增加的角度信息。
+// 例如：0x8C 0xA0 即十进制 36000 表示角度为 360 度，也就 是 0 度；
+struct [[nodiscard]] LidarAngleCode{
+public:
+    static constexpr LidarAngleCode from_bits(const uint16_t bits){
+        return {bits};
+    }
 
-class M10_StreamParser final:public M10_Prelude{
-    explicit M10_StreamParser(Callback callback):
+    [[nodiscard]] constexpr uq24 to_turns() const{
+        constexpr auto LSB_VALUE = uq24(1.0 / 360 * 0.01);
+        return LSB_VALUE * __bswap16(bits);
+    }
+
+    uint16_t bits;
+};
+
+//  Distance: 距离参数，一共两个字节,高位在前，低位在后，表示 15 度差分 42 个点之 后对应角度的距离值，单位是毫米。
+// 例如：0x13 0x88 即十进制 5000 那么该角度对应的距 离值就是 5 米。
+struct [[nodiscard]] LidarDistanceCode{
+    using Self = LidarDistanceCode;
+
+    static constexpr LidarDistanceCode from_bits(const uint16_t bits){
+        return {bits};
+    }
+
+    [[nodiscard]] constexpr uq24 to_meters() const{
+        constexpr auto LSB_VALUE = uq24(0.001);
+        return LSB_VALUE * __bswap16(bits);
+    }
+
+    uint16_t bits;
+
+    friend OutputStream & operator << (OutputStream & os, const Self & self){
+        return os << self.to_meters();
+    }
+};
+
+//每个帧返回15度内的42个点 总共42 * 24 = 1008个点
+struct [[nodiscard]] LidarSector final{
+    using Self = LidarSector;
+
+    LidarAngleCode start_angle;
+    LidarSpinSpeedCode spin_speed;
+    std::array<LidarDistanceCode, POINTS_PER_SECTOR> distances;
+
+    struct [[nodiscard]] Iterator{
+        static constexpr uq24 DELTA_TURNS = uq24(15.0 / 360 / POINTS_PER_SECTOR);
+        constexpr Iterator(const LidarSector & sector):sector_(sector){
+            current_turns_ = sector_.start_angle.to_turns();
+        }
+
+        [[nodiscard]] constexpr bool has_next() const{
+            return index_ < sector_.distances.size();
+        }
+
+        constexpr Polar<uq24> next(){
+            const auto ret = Polar<uq24>{
+                .amplitude = sector_.distances[index_].to_meters(),
+                .phase = Angular<uq24>::from_turns(current_turns_)
+            };
+            index_ += 1;
+            current_turns_ += DELTA_TURNS;
+            return ret;
+        };
+    private:
+
+        const LidarSector & sector_;
+        size_t index_ = 0;
+        uq24 current_turns_ = 0;
+    };
+
+    constexpr auto iter() const{
+        return Iterator{*this};
+    }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self){ 
+        return os << os.field("start_angle(n)")(self.start_angle.to_turns()) << os.splitter()
+            << os.field("spin_speed(n/s)")(self.spin_speed.to_tps());
+    };
+};
+
+static constexpr size_t NUM_SECTOR_BYTES = sizeof(LidarSector);
+
+namespace events{
+struct [[nodiscard]] DataReady{
+    using Self = DataReady;
+
+    const LidarSector & sector;
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os << os.field("sector")(self.sector);
+    }
+};
+struct [[nodiscard]] InvalidCrc{
+    using Self = InvalidCrc;
+    uint8_t expected;
+    uint8_t actual;
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os << os.field("expected")(self.expected) << os.splitter()
+            << os.field("actual")(self.actual);
+    }
+};
+};
+
+struct [[nodiscard]] Event:public Sumtype<
+    events::DataReady,
+    events::InvalidCrc
+>{
+    using DataReady = events::DataReady;
+    using InvalidCrc = events::InvalidCrc;
+};
+
+using Callback = std::function<void(Event)>;
+
+
+class M10_ParserSink final{
+public:
+    explicit M10_ParserSink(Callback callback):
         callback_(callback)
     {
         reset();
     }
 
-    void push_byte(const uint8_t byte){
-        switch(state_){
-            case State::WaitingHeader1:
-                if(byte != HEADER1_TOKEN){reset(); break;}
-                state_ = State::WaitingHeader2;
-                break;
-            case State::WaitingHeader2:
-                if(byte != HEADER2_TOKEN){reset(); break;}
-                state_ = State::Remaining;
-                break;
-            case State::Remaining:
-                bytes_[bytes_count_] = byte;
-                bytes_count_ += 1;
-                if(bytes_count_ == FRAME_SIZE){
-                    flush();
-                    reset();
-                }
-                break;
-        
-        }
-    }
+    void push_byte(const uint8_t byte);
 
     void push_bytes(const std::span<const uint8_t> bytes){
         for(const auto byte : bytes){
@@ -153,9 +177,7 @@ class M10_StreamParser final:public M10_Prelude{
         }
     }
 
-    void flush(){
-        if(callback_ == nullptr) __builtin_abort();
-    }
+    void flush();
 
     void reset(){
         state_ = State::WaitingHeader1;
@@ -165,8 +187,8 @@ private:
 
     Callback callback_;
     union{
-        LidarFrame frame_;
-        std::array<uint8_t, sizeof(LidarFrame)> bytes_;
+        LidarSector sector_;
+        std::array<uint8_t, sizeof(LidarSector)> bytes_;
     };
     size_t bytes_count_ = 0;
 

@@ -2,8 +2,10 @@
 
 #include <cstdint>
 
-
+// MIT LICENISE
 // https://github.com/matrixcascade/PainterEngine/blob/master/core/PX_curve25519.h
+
+
 
 /* Copyright 2008, Google Inc.
  * All rights reserved.

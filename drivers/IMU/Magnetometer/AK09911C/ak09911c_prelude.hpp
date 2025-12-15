@@ -49,15 +49,15 @@ struct AK09911C_Prelude{
 
         // When Continuous measurement mode 1 (MODE[4:0]=“00010”), 2 (MODE[4:0]=“00100”), 3 (MODE[4:0]=“00110”) or 4 
         // (MODE[4:0]=“01000”) is set, magnetic sensor measurement is started periodically at 10 Hz, 20 Hz, 50 Hz or 100 Hz 
-        // respectively. After magnetic sensor measurement and signal processing is finished, measurement magnetic data is stored to 
-        // measurement data registers (HXL to HZH) and all circuits except for the minimum circuit required for counting cycle 
+        // respectively. After magnetic sensor measurement and signal processing is finished, measurement magnetic bits is stored to 
+        // measurement bits registers (HXL to HZH) and all circuits except for the minimum circuit required for counting cycle 
         // length are turned off (PD). When the next measurement timing comes, AK09911 wakes up automatically from PD and 
         // starts measurement again.
         // Continuous measurement mode ends when Power-down mode (MODE[4:0]=“00000”) is set. It repeats measurement until 
         // Power-down mode is set.
         // When Continuous measurement mode 1 (MODE[4:0]=“00010”), 2 (MODE[4:0]=“00100”), 3 (MODE[4:0]=“00110”) or 4 
         // (MODE[4:0]=“01000”) is set again while AK09911 is already in Continuous measurement mode, a new measurement starts. 
-        // ST1, ST2 and measurement data registers (HXL to TMPS) will not be initialized by this.
+        // ST1, ST2 and measurement bits registers (HXL to TMPS) will not be initialized by this.
 
         PowerDown = 0b00000,
         SingleMeasurement = 0b00001,
@@ -84,26 +84,26 @@ struct AK09911C_Regset : public AK09911C_Prelude{
         static constexpr RegAddress address = 0x00;
         static constexpr uint8_t KEY = 0x48;
 
-        uint8_t data;
+        uint8_t bits;
     } DEF_R8(wia1_reg)
 
     struct R8_WIA2:public Reg8<>{
         static constexpr RegAddress address = 0x01;
         static constexpr uint8_t KEY = 0x05;
 
-        uint8_t data;
+        uint8_t bits;
     } DEF_R8(wia2_reg)
 
     struct R8_INFO1:public Reg8<>{
         static constexpr RegAddress address = 0x02;
 
-        uint8_t data;
+        uint8_t bits;
     } DEF_R8(info1_reg)
 
     struct R8_INFO2:public Reg8<>{
         static constexpr RegAddress address = 0x03;
 
-        uint8_t data;
+        uint8_t bits;
     } DEF_R8(info2_reg)
 
     struct R8_ST1:public Reg8<>{
@@ -150,7 +150,7 @@ struct AK09911C_Regset : public AK09911C_Prelude{
     //test reg is a dummy reg, it is not listed here
 
     struct _R8_ASA:public Reg8<>{
-        uint8_t data;
+        uint8_t bits;
     };
 
     struct R8_ASAX:public _R8_ASA{

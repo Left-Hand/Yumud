@@ -3,7 +3,8 @@
 #include <atomic>
 #include <algorithm>
 #include <array>
-#include "core/magic/size_traits.hpp"
+
+#include "core/tmp/bits/width.hpp"
 
 namespace ymd{
 
@@ -13,7 +14,7 @@ struct BitFlag final{
     static constexpr size_t BITS = N;  // 每个标志使用1位
     
     using Enum = typename Layout::Enum;
-    using Raw = typename magic::bits_to_uint_t<BITS>;
+    using Raw = typename tmp::bits_to_uint_t<BITS>;
     using Storage = std::atomic<Raw>;
 
     static constexpr Raw rank_to_mask(const size_t rank) {

@@ -8,35 +8,21 @@
 
 namespace ymd::drivers{
 
-class BoschSensor_Phy final{
+class BoschImu_Phy final{
 
 public:
     using Error = ImuError;
-    explicit BoschSensor_Phy(const hal::I2cDrv & i2c_drv):
+    explicit BoschImu_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    explicit BoschSensor_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
-        BoschSensor_Phy(hal::I2cDrv{i2c, addr}){;}
-    explicit BoschSensor_Phy(const hal::SpiDrv & spi_drv):
+    explicit BoschImu_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
+        BoschImu_Phy(hal::I2cDrv{i2c, addr}){;}
+    explicit BoschImu_Phy(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    explicit BoschSensor_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        BoschSensor_Phy(hal::SpiDrv{spi, index}){;}
+    explicit BoschImu_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
+        BoschImu_Phy(hal::SpiDrv{spi, index}){;}
 
-    [[nodiscard]] __fast_inline
-    Result<void, Error> write_reg(const uint8_t addr, const uint8_t data){
-        if(i2c_drv_){
-            if(const auto res = i2c_drv_->write_reg(addr, data);
-                res.is_err()) return Err(res.unwrap_err());
-            return Ok();
-        }else if(spi_drv_){
-            if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(addr), CONT);
-                res.is_err()) return Err(res.unwrap_err());
-            if(const auto res = spi_drv_->write_single<uint8_t>(data);
-                res.is_err()) return Err(res.unwrap_err());
-            return Ok();
-        }
-
-        return Err(Error::NoAvailablePhy);
-    }
+    [[nodiscard]] 
+    Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
 
     template<typename T>
     [[nodiscard]] __fast_inline
@@ -56,39 +42,11 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] __fast_inline
-    Result<void, Error> read_reg(const uint8_t addr, uint8_t & data){
-        if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_reg(uint8_t(addr), data);
-                res.is_err()) return Err(res.unwrap_err());
-        }else if(spi_drv_){
-            if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
-                res.is_err()) return Err(res.unwrap_err());
-            if(const auto res = spi_drv_->read_single<uint8_t>(data);
-                res.is_err()) return Err(res.unwrap_err());
-            return Ok();
-        }
+    [[nodiscard]] 
+    Result<void, Error> read_reg(const uint8_t addr, uint8_t & data);
 
-
-        return Err(Error::NoAvailablePhy);
-    }
-
-    [[nodiscard]] __fast_inline
-    Result<void, Error> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
-        if(i2c_drv_){
-            if(const auto res = (i2c_drv_->read_burst<int16_t>(uint8_t(addr), pbuf, std::endian::little));
-                res.is_err()) return Err(res.unwrap_err());
-        }else if(spi_drv_){
-            if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
-                res.is_err()) return Err(res.unwrap_err());
-            if(const auto res = spi_drv_->read_burst<uint8_t>(
-                std::span(reinterpret_cast<uint8_t *>(pbuf.data()), pbuf.size() * sizeof(int16_t)));
-                res.is_err()) return Err(res.unwrap_err());
-            return Ok();
-        }
-
-        return Err(Error::NoAvailablePhy);
-    }
+    [[nodiscard]] 
+    Result<void, Error> read_burst(const uint8_t addr, std::span<int16_t> pbuf);
 
     
     [[nodiscard]] __fast_inline

@@ -32,6 +32,31 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
+template<typename Fn>
+static auto do_set_reset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
+    if(const auto res = std::forward<Fn>(fn)(EN);
+        res.is_err()) return Err(res.unwrap_err());
+
+    for(auto m = clock::millis(); ;){
+        if(const auto res = imu.is_mag_meas_done(); 
+            res.is_err()) return Err(res.unwrap_err());
+        else if(res.unwrap() == true)
+            break;
+        if(clock::millis() - m > 1000ms) return Err<ImuError>(ImuError(ImuError::Kind::MagCantSetup));
+    }
+
+    if(const auto res = imu.update();
+        res.is_err()) return Err(res.unwrap_err());
+
+    if(const auto res = std::forward<Fn>(fn)(DISEN);
+        res.is_err()) return Err(res.unwrap_err());
+
+    return imu.read_mag();
+};
+
+
+
+
 IResult<> MMC5983::update(){
     auto & packet = regs_.data_packet_;
     return read_burst(packet.address, packet.as_bytes());
@@ -186,29 +211,6 @@ IResult<> MMC5983::enable_mag_reset(const Enable en){
     reg.reset = en == EN;
     return write_reg(reg);
 }
-
-template<typename Fn>
-static auto do_set_reset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
-    if(const auto res = std::forward<Fn>(fn)(EN);
-        res.is_err()) return Err(res.unwrap_err());
-
-    for(auto m = clock::millis(); ;){
-        if(const auto res = imu.is_mag_meas_done(); 
-            res.is_err()) return Err(res.unwrap_err());
-        else if(res.unwrap() == true)
-            break;
-        if(clock::millis() - m > 1000ms) return Err<ImuError>(ImuError(ImuError::Kind::MagCantSetup));
-    }
-
-    if(const auto res = imu.update();
-        res.is_err()) return Err(res.unwrap_err());
-
-    if(const auto res = std::forward<Fn>(fn)(DISEN);
-        res.is_err()) return Err(res.unwrap_err());
-
-    return imu.read_mag();
-};
-
 
 MMC5983::IResult<Vec3<iq24>> MMC5983::do_mag_set(){
     return do_set_reset(*this, [this](Enable en){return enable_mag_set(en);});

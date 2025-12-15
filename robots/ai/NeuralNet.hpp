@@ -22,7 +22,7 @@
 //         {
 //             outLayer = new Layer(outCount);
 //             hdnLayers = new Layer[hdnLayerCount];
-//             for(int i = 0, j = 0; i < hdnLayerCount; ++i)
+//             for(size_t i = 0, j = 0; i < hdnLayerCount; ++i)
 //             {
 //                 hdnLayers[i] = new Layer(neuronsOfLayers[j]);
 //             }
@@ -35,7 +35,7 @@
 //         public void InitWeights(int inputDataCount, InitWFunc.Type initType)
 //         {
 //             int neuronNum = inputDataCount;
-//             for(int i = 0; i < HdnLayers.Length; ++i)
+//             for(size_t i = 0; i < HdnLayers.Length; ++i)
 //             {
 //                 hdnLayers[i].InitWeights(neuronNum, initType);
 //                 neuronNum = HdnLayers[i].Neurons.Length;
@@ -45,7 +45,7 @@
 //         //初始化各神经元额外参数列表
 //         public void InitCache()
 //         {
-//             for(int i = 0; i < HdnLayers.Length; ++i)
+//             for(size_t i = 0; i < HdnLayers.Length; ++i)
 //             {
 //                 hdnLayers[i].InitCache();
 //             }

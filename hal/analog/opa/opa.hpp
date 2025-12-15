@@ -106,9 +106,9 @@ public:
         // using OutIoTag = OpaGpioMapping<OpaNth,  0, OutMap>::IoTag;
 
         #if 0
-        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinNth::_0>().inana();
-        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinNth::_0>().inana();
-        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinNth::_0>().inana();
+        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinSource::_0>().inana();
+        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinSource::_0>().inana();
+        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinSource::_0>().inana();
         #endif
 
         // Gpio::reflect<NegIoTag::source, NegIoTag::pin>().inana();
@@ -118,21 +118,20 @@ public:
 
     template<uint8_t NegMap, uint8_t PosMap, uint8_t OutMap>
     static void init(){
-        using chip::OPA_Inst;
 
         remap<NegMap, PosMap, OutMap>();
-        OPA_Inst->enable(nth, EN);
-        OPA_Inst->select_neg(nth, NegMap);
-        OPA_Inst->select_pos(nth, PosMap);
-        OPA_Inst->select_out(nth, OutMap);
+        ral::OPA_Inst->enable(nth, EN);
+        ral::OPA_Inst->select_neg(nth, NegMap);
+        ral::OPA_Inst->select_pos(nth, PosMap);
+        ral::OPA_Inst->select_out(nth, OutMap);
     }
 };
 
-#ifdef ENABLE_OPA1
+#ifdef OPA1_PRESENT
 extern Opa<1> opa1;
 #endif
 
-#ifdef ENABLE_OPA2
+#ifdef OPA2_PRESENT
 extern Opa<2> opa2;
 #endif
 

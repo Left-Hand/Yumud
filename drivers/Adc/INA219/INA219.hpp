@@ -12,7 +12,10 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit INA219(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit INA219(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit INA219(
+        Some<hal::I2c *> i2c, 
+        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+    ):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
 
@@ -23,7 +26,7 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
     
-    real_t current_lsb_ma_ = real_t(0.2);
+    iq16 current_lsb_ma_ = iq16(0.2);
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){

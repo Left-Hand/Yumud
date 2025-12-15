@@ -1,5 +1,5 @@
-#include "types/gesture/isometry2.hpp"
-#include "types/gesture/isometry3.hpp"
+#include "algebra/gesture/isometry2.hpp"
+#include "algebra/gesture/isometry3.hpp"
 
 
 using namespace ymd;

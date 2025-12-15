@@ -12,7 +12,7 @@
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 
-#include "nvcv2/shape/shape.hpp"
+#include "middlewares/nvcv2/shape/shape.hpp"
 #include "image/font/instance.hpp"
 
 
@@ -142,7 +142,7 @@ using namespace etk;
 //         if(logger.available()){
 //             EtkToken tk;
 //             while(logger.available()){
-//                 logger.read1(reinterpret_cast<char &>(tk));
+//                 logger.read_char(reinterpret_cast<char &>(tk));
 //             }
 
 //             eye.update(

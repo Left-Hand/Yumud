@@ -6,7 +6,7 @@
 namespace ymd{
 
 
-struct Nth{
+struct [[nodiscard]] Nth{
     constexpr explicit Nth(const size_t count):
         count_(count){;}
 

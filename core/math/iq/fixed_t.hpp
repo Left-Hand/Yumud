@@ -58,15 +58,17 @@ private:
         size_t(sizeof(D) * 8 - 1); // 为符号位预留一个bit
     static_assert(Q <= MAX_Q);
 
-    D count_;
-
+    using UD = std::make_unsigned_t<D>;
 public:
-    struct count_ctor{
+    D bits;
+
+    struct [[nodiscard]] bits_ctor{
         D count;
     };
 
     template<size_t P>
-    [[nodiscard]] __attribute__((always_inline)) static constexpr D transform(const D value){
+    [[nodiscard]] __attribute__((always_inline)) 
+    static constexpr D transform(const D value){
         if constexpr (P > Q){
             return D(static_cast<tmp::extended_underlying_t<D>>(value) << (P - Q));
         }else if constexpr (P < Q){
@@ -80,37 +82,51 @@ public:
 
     __attribute__((always_inline)) constexpr fixed_t(){;}
 
-    __attribute__((always_inline)) constexpr fixed_t(count_ctor ctor):
-        count_(ctor.count){;}
+    __attribute__((always_inline)) constexpr explicit fixed_t(bits_ctor ctor):
+        bits(ctor.count){;}
 
-    [[nodiscard]] static constexpr fixed_t<Q, D> from_bits(const D count){
-        return fixed_t<Q, D>(count_ctor{count});
+    [[nodiscard]] static constexpr fixed_t<Q, D> from_bits(const D bits){
+        return fixed_t<Q, D>(bits_ctor{bits});
+    };
+
+    template<typename I>
+    requires (
+        //必须为非bool的整数类型
+        std::is_integral_v<I> and (not std::is_same_v<I, bool>) 
+        //如果D是无符号的 I也必须为无符号数
+        and ((std::is_unsigned_v<D> ? std::is_unsigned_v<I> : true))
+    )
+    __attribute__((always_inline)) 
+    [[nodiscard]] static constexpr fixed_t<Q, D> from_rcp(const I int_val){
+        using ED = tmp::extended_underlying_t<D>;
+        const auto bits = static_cast<ED>(static_cast<ED>(1u) << Q) / int_val;
+        return fixed_t<Q, D>::from_bits(bits);
     };
 
     __attribute__((always_inline)) constexpr fixed_t(const fixed_t<Q, D> & other):
-        count_(other.count_){};
+        bits(other.bits){};
 
 
     template<size_t P, typename U>
     requires (sizeof(D) == sizeof(U))
     __attribute__((always_inline)) constexpr operator fixed_t<P, U>() const {
-        const auto bits = static_cast<U>(transform<P>(count_));
-        return fixed_t<P, U>::from_bits(bits);
+        const auto new_bits = static_cast<U>(transform<P>(bits));
+        return fixed_t<P, U>::from_bits(new_bits);
     }
 
-    __attribute__((always_inline)) constexpr D to_bits() const {return count_;}
+    __attribute__((always_inline)) constexpr D to_bits() const {return bits;}
     
     template<size_t P>
     __attribute__((always_inline)) constexpr 
     fixed_t & operator = (const fixed_t<P, D> & other){
-        count_ = fixed_t<Q, D>::template transform<Q>(other.to_bits());
+        bits = fixed_t<Q, D>::template transform<Q>(other.to_bits());
         return *this;
     };
 
     template<size_t P>
     __attribute__((always_inline)) constexpr 
     fixed_t & operator = (fixed_t<P, D> && other){
-        count_ = fixed_t<Q, D>::template transform<Q>(other.to_bits());
+        bits = fixed_t<Q, D>::template transform<Q>(other.to_bits());
         return *this;
     };
     
@@ -119,18 +135,20 @@ public:
     requires (std::is_integral_v<T> and (not std::is_same_v<T, bool>))
     __attribute__((always_inline)) constexpr 
     fixed_t(const T iv):
-        fixed_t(count_ctor{static_cast<D>(
+        fixed_t(bits_ctor{std::bit_cast<D>(static_cast<D>(
             iv * static_cast<tmp::extended_underlying_t<T>>(uint64_t(1) << Q)
-        )}){;}
+        ))}){;}
 
     __attribute__((always_inline)) consteval explicit fixed_t(const long double dv):
-        fixed_t(count_ctor{static_cast<D>(dv * static_cast<long double>(uint64_t(1) << Q))}){};
+        fixed_t(bits_ctor{std::bit_cast<D>(static_cast<D>(
+            dv * static_cast<long double>(uint64_t(1) << Q)
+        ))}){};
 
     __attribute__((always_inline)) static constexpr 
     fixed_t from (const std::floating_point auto fv){
-        return fixed_t{count_ctor{
-            .count = static_cast<D>(iqmath::details::_IQFtoN<Q>(fv))}
-        };
+        return fixed_t{bits_ctor{
+            std::bit_cast<D>(static_cast<D>(iqmath::details::_IQFtoN<Q>(fv)))
+        }};
     }
 
     __attribute__((always_inline)) constexpr 
@@ -139,7 +157,9 @@ public:
     }
 
     __attribute__((always_inline)) constexpr 
-    fixed_t operator-() const {
+    fixed_t operator-() const 
+    requires(std::is_signed_v<D>)
+    {
         return fixed_t::from_bits(-(to_bits()));
     }
 
@@ -173,50 +193,6 @@ public:
         return *this -= fixed_t<Q, D>(other);
     }
     //#endregion addsub
-
-    //#region multiply
-
-    template<size_t P>
-    __attribute__((always_inline)) constexpr 
-    fixed_t & operator *=(const fixed_t<P, D> other) {
-        return *this = fixed_t<Q, D>::from_bits(
-            (static_cast<tmp::extended_underlying_t<D>>(this->to_bits()) * 
-            static_cast<tmp::extended_underlying_t<D>>((other).to_bits())) >> (P)
-        );
-    }
-
-    __attribute__((always_inline)) constexpr 
-    fixed_t & operator *=(const std::integral auto other) {
-        return *this = fixed_t<Q, D>::from_bits(this->to_bits() * other);
-    }
-    
-    //#endregion
-
-    //#region division
-    __attribute__((always_inline)) constexpr 
-    fixed_t & operator/=(const std::integral auto other) {
-        return *this = fixed_t::from_bits((to_bits() / D(other)));
-    }
-
-    template<size_t P>
-    __attribute__((always_inline)) constexpr 
-    fixed_t & operator/=(const fixed_t<P, D> other) {
-        if (std::is_constant_evaluated()) {
-            return *this = fixed_t<Q, D>::from(float(*this) / float(other));
-        }else{
-            return *this = fixed_t::from_bits(iqmath::details::__IQNdiv_impl<Q, false>(
-                to_bits(), other.to_bits()
-            ));
-        }
-    }
-
-    //#endregion
-
-    //#region comparisons
-
-
-
-    //#endregion
 
     //#region shifts
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -254,7 +230,10 @@ public:
     }
 };
 
-template<size_t Q, size_t P, std::integral D1, std::integral D2, typename D = tmp::sum_underlying_t<D1, D2>>
+template<size_t Q, size_t P, 
+    std::integral D1, std::integral D2, 
+    typename D = tmp::sum_underlying_t<D1, D2>
+>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, D> operator +(const fixed_t<Q, D1> lhs, const fixed_t<P, D2> rhs) {
     fixed_t<Q, D> ret = fixed_t<Q, D>(rhs);
@@ -278,7 +257,10 @@ fixed_t<Q, D> operator +(const fixed_t<Q, D> lhs, const std::integral auto rhs) 
     return ret;
 }
 
-template<size_t Q, size_t P, std::integral D1, std::integral D2, typename D = tmp::sum_underlying_t<D1, D2>>
+template<size_t Q, size_t P, 
+    std::integral D1, std::integral D2, 
+    typename D = tmp::sum_underlying_t<D1, D2>
+>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, D> operator -(const fixed_t<Q, D1> lhs, const fixed_t<P, D2> rhs) {
     fixed_t<Q, D> ret = fixed_t<Q, D>(lhs);
@@ -303,84 +285,82 @@ fixed_t<Q, D> operator -(const fixed_t<Q, D> lhs, const std::integral auto rhs) 
 }
 
 
-template<size_t Q1, size_t Q2, std::integral D1, std::integral D2, typename D = tmp::extended_mul_underlying_t<D1, D2>>
+template<size_t Q1, size_t Q2, 
+    std::integral D1, std::integral D2, 
+    typename D = tmp::mul_underlying_t<D1, D2>
+>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q1, D1> operator *(const fixed_t<Q1, D1> lhs, const fixed_t<Q2, D2> rhs) {
-    return fixed_t<Q1, D1>::from_bits(static_cast<D>(lhs.to_bits()) * static_cast<D>(rhs.to_bits()) >> Q2);
+fixed_t<Q1, D> operator *(const fixed_t<Q1, D1> lhs, const fixed_t<Q2, D2> rhs) {
+    using ED = tmp::extended_mul_underlying_t<D1, D2>;
+    return fixed_t<Q1, D>::from_bits(
+        static_cast<D>(static_cast<ED>(lhs.to_bits()) * static_cast<ED>(rhs.to_bits()) >> Q2)
+    );
 }
 
-template<size_t Q, std::integral D1, std::integral D2, typename D = tmp::extended_mul_underlying_t<D1, D2>>
+template<size_t Q, 
+    std::integral D1, std::integral D2, 
+    typename D = tmp::mul_underlying_t<D1, D2>
+>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D1> operator *(const D2 lhs, const fixed_t<Q, D1> rhs) {
-    return fixed_t<Q, D1>::from_bits(static_cast<D>(lhs) * static_cast<D>(rhs.to_bits()));
+fixed_t<Q, D> operator *(const D2 lhs, const fixed_t<Q, D1> rhs) {
+    return fixed_t<Q, D>::from_bits(
+        static_cast<D>(lhs) * static_cast<D>(rhs.to_bits())
+    );
 }
 
-template<size_t Q, std::integral D1, std::integral D2, typename D = tmp::extended_mul_underlying_t<D1, D2>>
+template<size_t Q, 
+    std::integral D1, std::integral D2, 
+    typename D = tmp::mul_underlying_t<D1, D2>
+>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D1> operator *(const fixed_t<Q, D1> lhs, const D2 rhs) {
-    return fixed_t<Q, D1>::from_bits(static_cast<D>(lhs.to_bits()) * static_cast<D>(rhs));
+fixed_t<Q, D> operator *(const fixed_t<Q, D1> lhs, const D2 rhs) {
+    return fixed_t<Q, D>::from_bits(
+        static_cast<D>(lhs.to_bits()) * static_cast<D>(rhs)
+    );
 }
 
 template<size_t Q, std::integral D>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, D> operator *(const bool lhs, const fixed_t<Q, D> rhs) {
-    return fixed_t<Q, D>::from_bits(lhs * (rhs.to_bits()));
+    return lhs ? rhs : fixed_t<Q, D>::from_bits(0);
 }
 
 template<size_t Q, std::integral D>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, D> operator *(const fixed_t<Q, D> lhs, const bool rhs) {
-    return fixed_t<Q, D>::from_bits((lhs.to_bits()) * rhs);
+    return rhs ? lhs : fixed_t<Q, D>::from_bits(0);
 }
 
-template<size_t Q, size_t P, std::integral D1, std::integral D2>
+template<
+    size_t Q, size_t P, 
+    std::integral D1, std::integral D2,
+    typename D = tmp::mul_underlying_t<D1, D2>
+>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D1> operator /(const fixed_t<Q, D1> lhs, const fixed_t<P, D2> rhs) {
+fixed_t<Q, D> operator /(const fixed_t<Q, D1> lhs, const fixed_t<P, D2> rhs) {
     static_assert(sizeof(D1) == sizeof(D2));
-    fixed_t<Q, D1> ret = lhs;
-    ret /= rhs.template cast_inner<D1>();
-    return ret;
+    if (std::is_constant_evaluated()) {
+        return fixed_t<Q, D>::from(float(lhs) / float(rhs));
+    }else{
+        return fixed_t<Q, D>::from_bits(iqmath::details::__IQNdiv_impl<Q, true>(
+            lhs.to_bits(), rhs.to_bits()
+        ));
+    }
 }
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, D> operator /(const std::integral auto lhs, const fixed_t<Q, D> rhs) {
-	fixed_t<Q, D> ret = fixed_t<Q, D>(lhs);
-    ret /= rhs;
-    return ret;
+	return fixed_t<Q, D>(lhs) / rhs;
 }
 
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, D> operator /(const fixed_t<Q, D> lhs, const std::integral auto rhs) {
-	fixed_t<Q, D> ret = fixed_t<Q, D>(lhs);
-    ret /= rhs;
-    return ret;
+	return fixed_t<Q, D>::from_bits(lhs.to_bits() / rhs);
 }
 
-// template<typename T, size_t Q, typename D>
-// requires (std::is_convertible_v<T, fixed_t<Q, D>> && (!is_fixed_point_v<T>))
-// __attribute__((always_inline)) constexpr auto operator <=>(const T lhs, const fixed_t<Q, D> rhs) {
-// 	return fixed_t<Q, D>(lhs) <=> rhs;
-// }
-
-
-#if 0
-template<size_t Q, typename D, typename U = std::make_unsigned_t<D>>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed_t<Q, U> abs(const fixed_t<Q, D> x){
-    const auto bits = x.to_bits();
-    return fixed_t<Q, U>::from_bits(static_cast<U>(bits > 0 ? bits : -bits));
-}
-#else
-template<size_t Q, typename D>
-[[nodiscard]] __attribute__((always_inline))
-constexpr fixed_t<Q, D> abs(const fixed_t<Q, D> x){
-    const auto bits = x.to_bits();
-    return fixed_t<Q, D>::from_bits(static_cast<D>(bits > 0 ? bits : -bits));
-}
-#endif
 
 
 template<size_t Q1, size_t Q2, std::integral D1, std::integral D2>
@@ -404,12 +384,12 @@ std::strong_ordering operator <=> (const fixed_t<Q1, D1> & self, const fixed_t<Q
 template<size_t Q, std::integral D, std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 std::strong_ordering operator <=> (const fixed_t<Q, D> & self, const T & other) {
-    return (((self.to_bits())) <=> (D(other) << Q));
+    return (std::bit_cast<D>(self.to_bits()) <=> (D(other) << Q));
 }
 template<size_t Q, std::integral D, std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 std::strong_ordering operator <=> (const T & other, const fixed_t<Q,D> & self){
-    return (((self.to_bits())) <=> (D(other) << Q));
+    return (std::bit_cast<D>(self.to_bits()) <=> (D(other) << Q));
 }
 
 // 统一的等于运算符模板，直接复用 <=>
@@ -433,13 +413,21 @@ bool operator == (const fixed_t<Q1, D1> & self, const fixed_t<Q2, D2> & other) {
 }
 
 
-template<size_t Q1, size_t Q2, std::integral D1, std::integral D2, typename D = tmp::extended_mul_underlying_t<D1, D2>>
-static constexpr auto extended_mul(const fixed_t<Q1, D1> a, const fixed_t<Q2, D2> b) -> fixed_t<Q1 + Q2, D>{
+template<size_t Q1, size_t Q2, 
+    std::integral D1, std::integral D2, 
+    typename D = tmp::extended_mul_underlying_t<D1, D2>
+    >
+static constexpr auto extended_mul(const fixed_t<Q1, D1> a, const fixed_t<Q2, D2> b) 
+-> fixed_t<Q1 + Q2, D>{
     return fixed_t<Q1 + Q2, D>::from_bits(static_cast<D>(a.to_bits()) * static_cast<D>(b.to_bits()));
 }
 
+namespace math{
+
 template<size_t Q1, size_t Q2>
-static constexpr fixed_t<Q1, int32_t> sat(const fixed_t<Q1, int32_t> x, const fixed_t<Q2, int32_t> k){
+static constexpr fixed_t<Q1, int32_t> sat(
+    const fixed_t<Q1, int32_t> x, const fixed_t<Q2, int32_t> k
+){
     const auto kx = extended_mul(x, k);
     constexpr auto mask = (std::numeric_limits<uint64_t>::max() << (Q1 + Q2));
     if(kx.to_bits() & mask){
@@ -449,6 +437,41 @@ static constexpr fixed_t<Q1, int32_t> sat(const fixed_t<Q1, int32_t> x, const fi
         return fixed_t<Q1, int32_t>::from_bits(kx.to_bits() >> Q2);
     }
 }
+
+#if 0
+template<size_t Q, typename D, typename U = std::make_unsigned_t<D>>
+[[nodiscard]] __attribute__((always_inline))
+constexpr fixed_t<Q, U> abs(const fixed_t<Q, D> x){
+    const auto bits = x.to_bits();
+    return fixed_t<Q, U>::from_bits(static_cast<U>(bits > 0 ? bits : -bits));
+}
+#else
+template<size_t Q, typename D>
+[[nodiscard]] __attribute__((always_inline))
+constexpr fixed_t<Q, D> abs(const fixed_t<Q, D> x){
+    const auto bits = x.to_bits();
+    return fixed_t<Q, D>::from_bits(static_cast<D>(bits > 0 ? bits : -bits));
+}
+#endif
+
+template<size_t Q, typename D>
+static constexpr fixed_t<Q, D> closer_to_zero(const fixed_t<Q, D> a, const fixed_t<Q, D> b){
+    if constexpr(std::is_signed_v<D>){
+        if(math::abs(a) < math::abs(b)){
+            return a;
+        }else{
+            return b;
+        }
+    }else{
+        if(a < b){
+            return a;
+        }else{
+            return b;
+        }
+    }
+}
+
+
 
 
 template<size_t Q, typename D>
@@ -468,7 +491,7 @@ constexpr fixed_t<Q, D> sign(const fixed_t<Q, D> x){
 
 template<size_t Q, typename D>
 [[nodiscard]] __attribute__((always_inline))
-constexpr fixed_t<Q, D> fmod(const fixed_t<Q, D> a, const fixed_t<Q, D> b){
+constexpr fixed_t<Q, D> mod(const fixed_t<Q, D> a, const fixed_t<Q, D> b){
     return fixed_t<Q, D>(fixed_t<Q, D>::from_bits(a.to_bits() % b.to_bits()));
 }
 
@@ -495,7 +518,7 @@ constexpr fixed_t<Q, D> mean(const fixed_t<Q, D> a, const fixed_t<Q, D> b){
 template<size_t Q, typename D, typename U = std::make_unsigned_t<D>>
 [[nodiscard]] __attribute__((always_inline))
 constexpr fixed_t<Q, U> frac(const fixed_t<Q, D> x){
-    static constexpr U MASK = static_cast<U>((uint64_t(1u) << Q) - 1);
+    constexpr U MASK = static_cast<U>((uint64_t(1u) << Q) - 1);
     return fixed_t<Q, U>::from_bits(static_cast<U>(static_cast<U>(x.to_bits()) & MASK));
 }
 
@@ -508,14 +531,14 @@ constexpr D floor_int(const fixed_t<Q, D> x){
 template<size_t Q, typename D>
 [[nodiscard]] __attribute__((always_inline))
 constexpr D ceil_int(const fixed_t<Q, D> x){
-    static constexpr D MASK = (1 << Q) - 1;
+    constexpr D MASK = (1 << Q) - 1;
     return static_cast<D>((x.to_bits() >> Q) + bool(x.to_bits() & MASK));
 }
 
 template<size_t Q, typename D>
 [[nodiscard]] __attribute__((always_inline))
 constexpr D round_int(const fixed_t<Q, D> x){
-    static constexpr D MASK = (1 << (Q - 1));
+    constexpr D MASK = (1 << (Q - 1));
     return static_cast<D>((x.to_bits() + MASK) >> Q);
 }
 
@@ -582,7 +605,7 @@ template<size_t Q, typename D>
 static __attribute__((always_inline)) constexpr 
 fixed_t<Q, D> errmod(const fixed_t<Q, D> x, const fixed_t<Q, D> s) {
     const auto s_by_2 = s >> 1;
-    fixed_t<Q, D> value = fmod(x, s);
+    fixed_t<Q, D> value = mod(x, s);
     if (value > s_by_2) {
         value -= s;
     } else if (value <= -s_by_2) {
@@ -591,7 +614,51 @@ fixed_t<Q, D> errmod(const fixed_t<Q, D> x, const fixed_t<Q, D> s) {
     return value;
 }
 
+template<size_t Q_to, size_t Q_from, typename D>
+static __attribute__((always_inline)) constexpr  
+fixed_t<Q_to, int32_t> fixed_downcast(const fixed_t<Q_from, D> val){
+    return fixed_t<Q_to, int32_t>::from_bits(static_cast<int32_t>(val.to_bits() >> (Q_from - Q_to)));
 }
+
+
+template<size_t Q>
+[[nodiscard]] bool is_equal_approx(
+    const fixed_t<Q, int32_t> a, 
+    const fixed_t<Q, int32_t> b,
+    const fixed_t<Q, int32_t> epsilon
+) {
+    // Check for exact equality first, required to handle "infinity" values.
+    if (a - b == int32_t(0)) {
+        return true;
+    }
+    // Then check for approximate equality.
+    fixed_t<Q, int32_t> tolerance = fixed_t<Q, int32_t>() * (a < 0 ? -a : a);
+    if (tolerance < fixed_t<Q, int32_t>(epsilon)) {
+        tolerance = fixed_t<Q, int32_t>(epsilon);
+    }
+    return ((a - b < 0) ? b - a : a - b) < tolerance;
+}
+
+template<size_t Q>
+[[nodiscard]] bool is_equal_approx_ratio(
+    const fixed_t<Q, int32_t> a, 
+    const fixed_t<Q, int32_t> b, 
+    fixed_t<Q, int32_t> epsilon, 
+    fixed_t<Q, int32_t> min_epsilon
+){
+
+    fixed_t<Q, int32_t> diff = ymd::math::abs(a - b);
+    if (diff == 0 || diff < min_epsilon) {
+        return true;
+    }
+    fixed_t<Q, int32_t> avg_size = (ymd::math::abs(a) + ymd::math::abs(b)) >> 1;
+    diff = diff / avg_size;
+    return diff < epsilon;
+}
+}
+}
+
+
 
 namespace std{
     using ymd::fixed_t;
@@ -630,7 +697,8 @@ namespace std{
     };
 
     template<size_t Q, typename D>
-    __attribute__((always_inline)) constexpr auto signbit(const fixed_t<Q, D> iq)  {return ymd::signbit(iq);}
+    __attribute__((always_inline)) constexpr auto signbit(const fixed_t<Q, D> iq)  {
+        return ymd::math::signbit(iq);}
     
     template<size_t Q, typename D>
     struct make_signed<fixed_t<Q, D>>{

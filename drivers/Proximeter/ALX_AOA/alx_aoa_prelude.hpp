@@ -3,20 +3,19 @@
 #include "hal/bus/uart/uart.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/sumtype.hpp"
-#include "core/container/inline_vector.hpp"
+#include "core/container/heapless_vector.hpp"
 
-#include "primitive/arithmetic/angle.hpp"
-#include "types/vectors/spherical_coordinates.hpp"
+#include "primitive/arithmetic/angular.hpp"
+#include "algebra/vectors/spherical_coordinates.hpp"
 
-namespace ymd::drivers{
+namespace ymd::drivers::alx_aoa{
 
 
-struct AlxAoa_Prelude{
 
-static constexpr uint32_t DEFAULT_UART_BUAD = 115200;
+static constexpr uint32_t DEFAULT_UART_BAUD = 115200;
 static constexpr uint16_t PROTOCOL_VERSION = 0x0100;
 static constexpr size_t LEADER_SIZE = 6; //4 bytes(header) + 2 bytes(len)
-enum class Error:uint8_t{
+enum class [[nodiscard]] Error:uint8_t{
     InvalidCommand,
     InvalidProtocolVersion,
     InvalidTagStatus,
@@ -25,13 +24,13 @@ enum class Error:uint8_t{
     InvalidLength
 };
 
-friend OutputStream & operator <<(OutputStream & os, const AlxAoa_Prelude::Error & error);
+OutputStream & operator <<(OutputStream & os, const Error & error);
 
-enum class TargetStatus:uint16_t{
+enum class [[nodiscard]] TargetStatus:uint16_t{
     Normal = 0x1234
 };
 
-enum class RequestCommand:uint16_t{
+enum class [[nodiscard]] RequestCommand:uint16_t{
     Location = 0x2001,
     HeartBeat = 0x2002,
 };
@@ -57,8 +56,8 @@ struct [[nodiscard]] TargetAngleCode{
     int16_t bits;
 
     template<typename T = uq16>
-    [[nodiscard]] constexpr Angle<T> to_angle() const{
-        return Angle<T>::from_degrees(bits);
+    [[nodiscard]] constexpr Angular<T> to_angle() const{
+        return Angular<T>::from_degrees(bits);
     }
     static constexpr Self from_bits(const int16_t bits){
         return Self{bits};
@@ -117,21 +116,30 @@ struct [[nodiscard]] HeartBeat{
     }
 };
 
-struct Event:public Sumtype<std::monostate, HeartBeat, Location>{};
+struct [[nodiscard]] Event:public Sumtype<std::monostate, HeartBeat, Location>{};
 using Callback = std::function<void(Result<Event, Error>)>;
 
-struct LeaderInfo{
+struct [[nodiscard]] LeaderInfo{
     uint8_t len;
     uint16_t command;
 };
 
 
 
-};
-
-class AlxAoa_StreamParser final:public AlxAoa_Prelude{
+class AlxAoa_ParserSink final{
 public:
-    explicit AlxAoa_StreamParser(Callback callback):
+    enum class ByteProg:uint8_t{
+        Header0,
+        Header1,
+        Header2,
+        Header3,
+        WaitingLen0,
+        WaitingLen1,
+        Remaining
+    };
+
+    
+    explicit AlxAoa_ParserSink(Callback callback):
         callback_(callback)
     {
         reset();
@@ -154,17 +162,8 @@ public:
 private:
     static constexpr size_t MAX_PAYLOAD_SIZE = 32;
 
-    enum class ByteProg:uint8_t{
-        Header0,
-        Header1,
-        Header2,
-        Header3,
-        WaitingLen0,
-        WaitingLen1,
-        Remaining
-    };
 
-    friend OutputStream & operator <<(OutputStream & os, const AlxAoa_StreamParser::ByteProg & prog);
+    friend OutputStream & operator <<(OutputStream & os, const AlxAoa_ParserSink::ByteProg & prog);
 
     Result<Event, Error> parse();
 

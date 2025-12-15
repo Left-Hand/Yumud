@@ -42,7 +42,7 @@ public:
         _14_16,
     };
 
-    struct DataCommand{
+    struct [[nodiscard]] DataCommand{
         const uint8_t __resv1__:1 = 0;
         uint8_t write_or_read:1;
         uint8_t addr_inc_en:1;
@@ -51,7 +51,7 @@ public:
 
     static_assert(sizeof(DataCommand) == 1);
 
-    struct AddressCommand{
+    struct [[nodiscard]] AddressCommand{
         static constexpr AddressCommand from_idx(const uint8_t idx){
             return {uint8_t(0xC0 | idx)};
         }
@@ -62,7 +62,7 @@ public:
 
     static_assert(sizeof(AddressCommand) == 1);
 
-    struct DisplayCommand{
+    struct [[nodiscard]] DisplayCommand{
         PulseWidth pulse_width:3;
         uint8_t display_on:1;
         const uint8_t __resv2__:4 = 0b1000;
@@ -72,22 +72,22 @@ public:
 
     static_assert(sizeof(DisplayCommand) == 1);
 
-    class KeyEvent{
+    struct [[nodiscard]] KeyCode{
     public:
         constexpr Option<uint8_t> row() const {return row_;}
         constexpr Option<uint8_t> col() const {return col_;}
 
-        static constexpr KeyEvent from_u8(const uint8_t data){
+        static constexpr KeyCode from_u8(const uint8_t data){
             const uint8_t high = data >> 3;
             const uint8_t low = data & 0b111;
 
             if(low < 4) return {None, None};
             if(high < 8 or high > 14) return {None, None};
 
-            return KeyEvent{Some<uint8_t>(high - 8), Some<uint8_t>(low - 4)};
+            return KeyCode{Some<uint8_t>(high - 8), Some<uint8_t>(low - 4)};
         }
     private:
-        constexpr KeyEvent(Option<uint8_t> row, Option<uint8_t> col): 
+        constexpr KeyCode(Option<uint8_t> row, Option<uint8_t> col): 
             row_(row),
             col_(col)
         {;}
@@ -110,7 +110,7 @@ public:
         return Ok();
     }
 
-    Result<KeyEvent, Error> read_key(){
+    Result<KeyCode, Error> read_key(){
         const auto guard = i2c_.create_guard();
         uint32_t buf;
         TODO();
@@ -122,7 +122,7 @@ public:
         
         // if (res.wrong()) return Err(Error(res));
 
-        return Ok<KeyEvent>(KeyEvent::from_u8(buf));
+        return Ok<KeyCode>(KeyCode::from_u8(buf));
     }
 private:
     IResult<> write_display_cmd(const DisplayCommand cmd){
@@ -133,8 +133,8 @@ private:
     hal::I2c & i2c_;
     hal::GpioIntf & scb_io_;
 
-    void set_scb(){scb_io_.set();}
-    void clr_scb(){scb_io_.clr();}
+    void set_scb(){scb_io_.set_high();}
+    void clr_scb(){scb_io_.set_low();}
 
     IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){
         const auto guard = i2c_.create_guard();

@@ -271,7 +271,7 @@ static constexpr real_t INV_CALI_TIMES = real_t(1.0 / CALI_TIMES);
 // 	int32_t gyro_bias[3] = {0};
 // 	uint8_t gyro_offset[6] = {0};
 
-// 	for(int i = 0; i < CALI_TIMES; i++)
+// 	for(size_t i = 0; i < CALI_TIMES; i++)
 // 	{
 // 		gyro_read(&temp);
 // 		gyro_bias[0] += temp.x;
@@ -307,7 +307,7 @@ static constexpr real_t INV_CALI_TIMES = real_t(1.0 / CALI_TIMES);
 // 	int32_t accel_bias_reg[3] = {0};
 // 	uint8_t accel_offset[6] = {0};
 
-// 	for(int i = 0; i < CALI_TIMES; i++)
+// 	for(size_t i = 0; i < CALI_TIMES; i++)
 // 	{
 // 		accel_read(&temp);
 // 		accel_bias[0] += temp.x;

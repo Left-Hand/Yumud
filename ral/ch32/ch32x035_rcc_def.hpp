@@ -4,7 +4,7 @@
 
 namespace CH32X035{
 
-struct R32_RCC_CTLR{
+struct [[nodiscard]] R32_RCC_CTLR{
     uint32_t HSION:1;
     uint32_t HSIRDY:1;
     uint32_t :1;
@@ -13,7 +13,7 @@ struct R32_RCC_CTLR{
     uint32_t :16;
 };
 
-struct R32_RCC_CFGR0{
+struct [[nodiscard]] R32_RCC_CFGR0{
     uint32_t :4;
     uint32_t HPRE:4;
     uint32_t :16;
@@ -21,7 +21,7 @@ struct R32_RCC_CFGR0{
     uint32_t :5;
 };
 
-struct R32_RCC_APB2PRSTR{
+struct [[nodiscard]] R32_RCC_APB2PRSTR{
     uint32_t AFIORST:1;
     uint32_t :1;
 
@@ -39,7 +39,7 @@ struct R32_RCC_APB2PRSTR{
     uint32_t :17;
 };
 
-struct R32_RCC_APB1PRSTR{
+struct [[nodiscard]] R32_RCC_APB1PRSTR{
     uint32_t TIM2RST:1;
     uint32_t TIM3RST:1;
     uint32_t :9;
@@ -55,9 +55,7 @@ struct R32_RCC_APB1PRSTR{
     uint32_t :3;
 };
 
-
-
-struct R32_RCC_APB2PCENR{
+struct [[nodiscard]] R32_RCC_APB2PCENR{
     uint32_t AFIOEN:1;
     uint32_t :1;
 
@@ -75,7 +73,7 @@ struct R32_RCC_APB2PCENR{
     uint32_t :17;
 };
 
-struct R32_RCC_APB1PCENR{
+struct [[nodiscard]] R32_RCC_APB1PCENR{
     uint32_t TIM2EN:1;
     uint32_t TIM3EN:1;
     uint32_t :9;
@@ -91,7 +89,7 @@ struct R32_RCC_APB1PCENR{
     uint32_t :3;
 };
 
-struct R32_RCC_AHBPCENR{
+struct [[nodiscard]] R32_RCC_AHBPCENR{
     uint32_t DMA1:1;
     uint32_t :1;
     uint32_t SRAM:1;
@@ -102,7 +100,8 @@ struct R32_RCC_AHBPCENR{
     uint32_t USBPD:1;
     uint32_t :14;
 };
-struct R32_RCC_RSTSCKR{
+
+struct [[nodiscard]] R32_RCC_RSTSCKR{
     uint32_t :24;
     uint32_t RMVF:1;
     uint32_t OPA_RSTF:1;
@@ -114,7 +113,7 @@ struct R32_RCC_RSTSCKR{
     uint32_t LPWR_RSTF:1;
 };
 
-struct R32_RCC_AHBRSTR{
+struct [[nodiscard]] R32_RCC_AHBRSTR{
     uint32_t :12;
     uint32_t USBFSRST:1;
     uint32_t PIOCRST:1;
@@ -122,7 +121,7 @@ struct R32_RCC_AHBRSTR{
     uint32_t USBPDRST:1;
 };
 
-struct RCC_Def{
+struct [[nodiscard]] RCC_Def{
     volatile R32_RCC_CTLR CTLR;
     volatile R32_RCC_CFGR0 CFGR0;
     volatile R32_RCC_APB2PRSTR APB2PRSTR;

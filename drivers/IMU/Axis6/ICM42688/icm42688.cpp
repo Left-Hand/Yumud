@@ -1,9 +1,17 @@
 #include "icm42688.hpp"
 #include "core/debug/debug.hpp"
 
-#define ICM42688_DEBUG_EN
+
+
+// #define ICM42688_DEBUG_EN
+// #define SELFTEST_EN
 
 #ifdef ICM42688_DEBUG_EN
+#define ICM42688_TODO(...) TODO()
+#define ICM42688_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define ICM42688_PANIC(...) PANIC{__VA_ARGS__}
+#define ICM42688_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+
 
 #define CHECK_RES(x, ...) ({\
     const auto __res_check_res = (x);\
@@ -12,13 +20,18 @@
 })\
 
 
-#define CHECK_ERR(e, ...) ({\
-    const auto && __err_check_err = (e);\
-    PANIC{e.get(), ##__VA_ARGS__};\
+#define CHECK_ERR(x, ...) ({\
+    const auto && __err_check_err = (x);\
+    PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
 })\
 
 #else
+#define ICM42688_DEBUG(...)
+#define ICM42688_TODO(...) PANIC_NSRC()
+#define ICM42688_PANIC(...)  PANIC_NSRC()
+#define ICM42688_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
 #define CHECK_RES(x, ...) (x)
 #define CHECK_ERR(x, ...) (x)
 #endif
@@ -32,14 +45,7 @@ static constexpr uint8_t GYR_DATA_Z0L_ADDR              = 0x2A;
 
 
 using namespace ymd;
-using namespace ymd::drivers;
-
-
-using Error = ICM42688::Error;
-
-
-template<typename T = void>
-using IResult = Result<T, Error>; 
+using namespace ymd::drivers::icm42688;
 
 IResult<> ICM42688::init(const Config & cfg){
 	static constexpr size_t MAX_RETRY_TIMES = 20;
@@ -188,18 +194,18 @@ IResult<> ICM42688::set_acc_fs(const AccFs fs){
 
 IResult<> ICM42688::reset(){
 	auto reg = RegCopy(regs_.device_config_reg);
-	reg.soft_reset_config = 1;
+	reg.soft_reset = 1;
 	if(const auto res = write_reg(reg);
 		res.is_err()) return Err(res.unwrap_err());
-	reg.soft_reset_config = 0;
+	reg.soft_reset = 0;
 	reg.apply();
 	return Ok();
 }
 
 IResult<>  ICM42688::update(){
-	int16_t buf[6];
+	std::array<int16_t, 6> buf;
 
-	if(const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, std::span(buf, 6));
+	if(const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, std::span(buf));
 		res.is_err()) return Err(res.unwrap_err());
 	
 	regs_.acc_data_ = {buf[0], buf[1], buf[2]};
@@ -210,12 +216,13 @@ IResult<>  ICM42688::update(){
 
 
 IResult<>  ICM42688::validate(){
+	ICM42688_DEBUG("validate start");
 	auto & reg = regs_.who_am_i_reg;
 	if(const auto res = read_reg(reg);
 		res.is_err()) return res;
 	
-	if(reg.data != reg.KEY){
-		return CHECK_ERR(Err(Error::InvalidChipId), reg.data);
+	if(reg.bits != reg.KEY){
+		return CHECK_ERR(Err(Error::InvalidChipId), reg.bits);
 	}
 
 	return Ok();
@@ -223,9 +230,9 @@ IResult<>  ICM42688::validate(){
 
 IResult<Vec3<iq24>> ICM42688::read_acc(){
     return Ok{Vec3<iq24>{
-		acc_scale_ * iq24(iq16(regs_.acc_data_.x) >> 16), 
-		acc_scale_ * iq24(iq16(regs_.acc_data_.y) >> 16), 
-		acc_scale_ * iq24(iq16(regs_.acc_data_.z) >> 16), 
+		acc_scale_ * iq16::from_bits(regs_.acc_data_.x), 
+		acc_scale_ * iq16::from_bits(regs_.acc_data_.y), 
+		acc_scale_ * iq16::from_bits(regs_.acc_data_.z), 
 	}};
 }
 
@@ -233,8 +240,8 @@ IResult<Vec3<iq24>> ICM42688::read_acc(){
 IResult<Vec3<iq24>> ICM42688::read_gyr(){
 
     return Ok{Vec3<iq24>{
-		gyr_scale_ * iq24(iq16(regs_.gyr_data_.x) >> 16),
-		gyr_scale_ * iq24(iq16(regs_.gyr_data_.y) >> 16),
-		gyr_scale_ * iq24(iq16(regs_.gyr_data_.z) >> 16)
+		gyr_scale_ * iq16::from_bits(regs_.gyr_data_.x),
+		gyr_scale_ * iq16::from_bits(regs_.gyr_data_.y),
+		gyr_scale_ * iq16::from_bits(regs_.gyr_data_.z)
 	}};
 }

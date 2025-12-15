@@ -3,7 +3,7 @@
 #include <cstdint>
 
 
-namespace ymd::ral::py32f403{
+namespace ymd::ral::py32::py32f403{
 
 struct CANFD_TSNCR{
     uint32_t VERSION:16;

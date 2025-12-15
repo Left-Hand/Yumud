@@ -2,7 +2,7 @@
 #include "core/debug/debug.hpp"
 
 using namespace ymd;
-using namespace ymd::drivers;
+using namespace ymd::drivers::bmi160;
 
 
 // #define BMI160_DEBUG_EN
@@ -38,34 +38,29 @@ using namespace ymd::drivers;
 #define CHECK_ERR(x, ...) (x)
 #endif
 
-using Error = BMI160::Error;
-
-template<typename T = void>
-using IResult = Result<T, Error>;
-
 static constexpr size_t MAX_PMU_SETUP_RETRY_TIMES = 60;
 
 
 IResult<> BMI160::init(const Config & cfg){
     if(const auto res = reset();
-        unlikely(res.is_err())) return res;
+        res.is_err()) return res;
 
     clock::delay(1ms);
 
-    if(const auto res = validate()
-        ;unlikely(res.is_err())) return res;
+    if(const auto res = validate();
+        res.is_err()) return res;
 
     {
         //power up acc
         //向命令寄存器写入0x11,使加速度计处于正常工作模式  
         if(const auto res = set_pmu_mode(PmuType::ACC, PmuMode::NORMAL)		//Acc normal mode
-            ;unlikely(res.is_err())) return res;
+            ;res.is_err()) return res;
         clock::delay(1ms);
 
         //wait for power up acc
         if(const auto pw_res = retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
             if(const auto res = (get_pmu_mode(PmuType::ACC));
-                unlikely(res.is_err())) return Err(res.unwrap_err());
+                res.is_err()) return Err(res.unwrap_err());
             else if (res.unwrap() != PmuMode::NORMAL){
                 return Err(Error::AccCantSetup);
             }
@@ -77,14 +72,14 @@ IResult<> BMI160::init(const Config & cfg){
     
     #ifdef SELFTEST_EN
     if(const auto res = self_test_acc();
-        unlikely(res.is_err())) return res;
+        res.is_err()) return res;
     #endif
 
     {
         //power up gyr
         //向命令寄存器写入0x15,使陀螺仪处于正常工作模式 
         if(const auto res = set_pmu_mode(PmuType::GYR, PmuMode::NORMAL)		//Gro normal mode
-            ;unlikely(res.is_err())) return res;
+            ;res.is_err()) return res;
         clock::delay(1ms);
 
         //wait for power up gyr
@@ -98,24 +93,24 @@ IResult<> BMI160::init(const Config & cfg){
             return Ok();
         }, []{clock::delay(1ms);}); 
             
-        unlikely(res.is_err())) return Err(res.unwrap_err());
+        res.is_err()) return Err(res.unwrap_err());
     }
 
     #ifdef SELFTEST_EN
     if(const auto res = self_test_gyr();
-        unlikely(res.is_err())) return res;
+        res.is_err()) return res;
     #endif
 
 
     if(const auto res = set_acc_odr(cfg.acc_odr)
-        ;unlikely(res.is_err())) return res;
+        ;res.is_err()) return res;
     if(const auto res = set_acc_fs(cfg.acc_fs)
-        ;unlikely(res.is_err())) return res;
+        ;res.is_err()) return res;
 
     if(const auto res = set_gyr_odr(cfg.gyr_odr)
-        ;unlikely(res.is_err())) return res;
+        ;res.is_err()) return res;
     if(const auto res = set_gyr_fs(cfg.gyr_fs)
-        ;unlikely(res.is_err())) return res;
+        ;res.is_err()) return res;
 
     return Ok();
 }
@@ -129,14 +124,14 @@ IResult<> BMI160::self_test_acc(){
         reg.acc_bwp= 2;
         reg.acc_us = 0;
         if(const auto res = write_reg(reg);
-            unlikely(res.is_err())) return res;
+            res.is_err()) return res;
     }
 
     {
         auto reg = RegCopy(regs_.self_test);
         reg.acc_self_test_en = 1;
         if(const auto res = write_reg(reg);
-            unlikely(res.is_err())) return res;
+            res.is_err()) return res;
     }
 
     // https://www.wpgdadatong.com/blog/detail/42050
@@ -150,11 +145,11 @@ IResult<> BMI160::self_test_acc(){
         auto reg = RegCopy(regs_.self_test);
         reg.acc_self_test_en = 0;
         if(const auto res = write_reg(reg);
-            unlikely(res.is_err())) return res;
+            res.is_err()) return res;
     }
 
     if(const auto res = reset();
-        unlikely(res.is_err())) return res;
+        res.is_err()) return res;
 
     clock::delay(1ms);
 
@@ -167,7 +162,7 @@ IResult<> BMI160::self_test_gyr(){
         auto reg = RegCopy(regs_.self_test);
         reg.gyr_self_test_en = 1;
         if(const auto res = write_reg(reg);
-            unlikely(res.is_err())) return res;
+            res.is_err()) return res;
     }
 
     if(const auto res = 
@@ -182,13 +177,13 @@ IResult<> BMI160::self_test_gyr(){
             return Ok();
         }, []{clock::delay(1ms);}); 
         
-        unlikely(res.is_err())) return Err(res.unwrap_err());
+        res.is_err()) return Err(res.unwrap_err());
 
     {
         auto reg = RegCopy(regs_.self_test);
         reg.gyr_self_test_en = 1;
         if(const auto res = write_reg(reg);
-            unlikely(res.is_err())) return res;
+            res.is_err()) return res;
     }
 
     return Ok();
@@ -198,7 +193,7 @@ IResult<> BMI160::update(){
     std::array<int16_t, 6> buf;
 
     if(const auto res = phy_.read_burst(regs_.GYR_ADDRESS, buf);
-        unlikely(res.is_err())) return Err(res.unwrap_err());
+        res.is_err()) return Err(res.unwrap_err());
 
     regs_.gyr = {buf[0], buf[1], buf[2]};
     regs_.acc = {buf[3], buf[4], buf[5]};
@@ -208,16 +203,18 @@ IResult<> BMI160::update(){
 
 IResult<> BMI160::validate(){
     uint8_t dummy;
+    BMI160_DEBUG("validate_start");
     if(const auto res = read_reg(0x7f, dummy);
-        unlikely(res.is_err())) return Err(res.unwrap_err());
+        res.is_err()) return Err(res.unwrap_err());
 
     auto & reg = regs_.chip_id;
     if(const auto res = read_reg(reg);
-        unlikely(res.is_err())) return Err(res.unwrap_err());
+        res.is_err()) return Err(res.unwrap_err());
 
-    if(reg.data != reg.CORRECT_ID)
-        return CHECK_ERR(Err(Error::InvalidChipId), "read id is", reg.data);
+    if(reg.bits != reg.CORRECT_ID)
+        return CHECK_ERR(Err(Error::InvalidChipId), "read id is", reg.bits);
 
+    BMI160_DEBUG("validate_ok");
     return Ok();
 }
 
@@ -242,7 +239,7 @@ IResult<Vec3<iq24>> BMI160::read_gyr(){
         return iq16::from_bits(x) * gyr_scale_;
     };
     
-    // DEBUG_PRINTLN(regs_.gyr_reg.vec);
+    // DEBUG_PRINTLN(regs_.gyr);
     return Ok{Vec3<iq24>{
         conv(regs_.gyr.x),
         conv(regs_.gyr.y),
@@ -266,11 +263,11 @@ IResult<> BMI160::set_pmu_mode(const PmuType pmu, const PmuMode mode){
     return write_command(cmd);
 }
 
-IResult<BMI160::PmuMode> BMI160::get_pmu_mode(const PmuType type){
+IResult<PmuMode> BMI160::get_pmu_mode(const PmuType type){
     auto & reg = regs_.pmu_status;
 
     if(const auto res = read_reg(reg);
-        unlikely(res.is_err())) return Err(res.unwrap_err());
+        res.is_err()) return Err(res.unwrap_err());
 
     switch(type){
         case PmuType::ACC:  return  Ok(PmuMode(reg.acc_pmu_status));
@@ -292,7 +289,7 @@ IResult<> BMI160::set_acc_fs(const AccFs fs){
     auto reg = RegCopy(regs_.acc_fs);
     reg.acc_fs = fs;
     if(const auto res = write_reg(reg);
-        unlikely(res.is_err())) return res;
+        res.is_err()) return res;
     acc_scale_ = accfs_to_scale(fs);
     return Ok();
 }
@@ -308,7 +305,7 @@ IResult<> BMI160::set_gyr_fs(const GyrFs fs){
     auto reg = RegCopy(regs_.gyr_fs);
     reg.gyr_fs = fs;
     if(const auto res = write_reg(reg);
-        unlikely(res.is_err())) return res;
+        res.is_err()) return res;
     gyr_scale_ = gyrfs_to_scale(fs);
     return Ok();
 }

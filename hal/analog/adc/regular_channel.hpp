@@ -4,23 +4,19 @@
 
 namespace ymd::hal{
 
-class AdcRegularChannel: public AdcChannelOnChip{
-public:
-protected:
-    uint32_t data_cache;
-
+class AdcRegularChannel final : public AdcChannelOnChip{
     friend class AdcOnChip;
     friend class AdcPrimary;
     friend class AdcCompanion;
+    explicit AdcRegularChannel(
+        void * inst,
+        const ChannelSelection sel, 
+        const uint8_t rank
+    ):
+        AdcChannelOnChip(inst, sel, rank){;}
 
-public:
-    explicit AdcRegularChannel(ADC_TypeDef * _instance,const ChannelSelection nth, const uint8_t _rank):
-        AdcChannelOnChip(_instance, nth, _rank){;}
-
-    uint16_t read_raw();
-    void set_sample_cycles(const SampleCycles cycles) override{
-        ADC_RegularChannelConfig(inst_, std::bit_cast<uint8_t>(nth_), rank, (uint8_t)cycles);
-    }
+    [[nodiscard]] uint16_t read_u16();
+    void set_sample_cycles(const SampleCycles cycles);
 
 };
 

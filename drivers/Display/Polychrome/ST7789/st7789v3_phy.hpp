@@ -3,7 +3,8 @@
 #include "st7789_prelude.hpp"
 #include "core/utils/bits/bitsqueue.hpp"
 #include "core/utils/data_iter.hpp"
-
+#include "core/io/regs.hpp"
+#include "hal/bus/spi/spihw.hpp"
 
 namespace ymd::drivers{
 struct ST7789V3_Phy final:
@@ -24,7 +25,7 @@ struct ST7789V3_Phy final:
         };
 
         constexpr uint16_t next() {
-            if((queue_.writable_size() > 18) and iter_.has_next()){
+            if((queue_.free_capacity() > 18) and iter_.has_next()){
                 const uint16_t next = iter_.next();
                 queue_.push_bit(DATA_BIT);
                 queue_.push_bits<8>(next >> 8);
@@ -49,28 +50,28 @@ struct ST7789V3_Phy final:
 
     explicit ST7789V3_Phy(
         Some<hal::SpiHw *> spi,
-        const hal::SpiSlaveRank index,
-        Option<hal::Gpio &> res_gpio = None
+        const hal::SpiSlaveRank rank,
+        Option<hal::Gpio &> may_nrst_gpio = None
     ):  
         spi_(spi.deref()), 
-        rank_(index), 
-        res_gpio_(res_gpio)
+        rank_(rank), 
+        may_nrst_pin_(may_nrst_gpio)
         {};
 
     [[nodiscard]] IResult<> init(){
-        if(res_gpio_.is_some())
-            res_gpio_.unwrap().outpp(HIGH);
+        if(may_nrst_pin_.is_some())
+            may_nrst_pin_.unwrap().outpp(HIGH);
 
         return reset();
     }
 
     [[nodiscard]] IResult<> reset(){
-        if(res_gpio_.is_none()) return Ok();
-        auto & res_gpio = res_gpio_.unwrap();
+        if(may_nrst_pin_.is_none()) return Ok();
+        auto & nrst_gpio = may_nrst_pin_.unwrap();
         clock::delay(10ms);
-        res_gpio.clr();
+        nrst_gpio.set_low();
         clock::delay(10ms);
-        res_gpio.set();
+        nrst_gpio.set_high();
         return Ok();
     }
 
@@ -114,18 +115,18 @@ struct ST7789V3_Phy final:
             res.is_err()) 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_data_width(magic::type_to_bits_v<T>); res.is_err())
+            if(const auto res = spi_.set_word_width(tmp::type_to_bitswidth_v<T>); res.is_err())
                 return Err(res.unwrap_err());
         }
 
         while(iter.has_next()){
-            (void)spi_.fast_write(iter.next());
+            (void)spi_.fast_blocking_write(iter.next());
         }
 
         spi_.lend();
 
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); 
+            if(const auto res = spi_.set_word_width(8); 
                 res.is_err()) return Err(res.unwrap_err());
         }
 
@@ -135,7 +136,7 @@ private:
     hal::SpiHw & spi_;
     hal::SpiSlaveRank rank_;
 
-    Option<hal::Gpio &>res_gpio_;
+    Option<hal::Gpio &> may_nrst_pin_;
 
     template<hal::valid_spi_data T>
     [[nodiscard]] hal::HalResult phy_write_single(
@@ -145,19 +146,19 @@ private:
 
         if(const auto res = spi_.borrow(rank_); res.is_err()) return res;
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_data_width(sizeof(T) * 8); res.is_err())
+            if(const auto res = spi_.set_word_width(sizeof(T) * 8); res.is_err())
                 return res;
         }
 
         if constexpr (sizeof(T) == 1) {
-            if(const auto res = spi_.write(uint8_t(data)); res.is_err()) return res;
+            if(const auto res = spi_.blocking_write(uint8_t(data)); res.is_err()) return res;
         } else if constexpr (sizeof(T) == 2) {
-            if(const auto res = spi_.write(uint16_t(data)); res.is_err()) return res;
+            if(const auto res = spi_.blocking_write(uint16_t(data)); res.is_err()) return res;
         }
 
         if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_data_width(8); res.is_err()) return res;
+            if(const auto res = spi_.set_word_width(8); res.is_err()) return res;
         }
 
         return hal::HalResult::Ok();

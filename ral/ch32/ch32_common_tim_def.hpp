@@ -7,9 +7,9 @@
 #define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
 #endif
 
-namespace CH32V20x{
+namespace ymd::ral::ch32::common_tim{
 
-struct R16_TIM_CTLR1{
+struct [[nodiscard]] R16_TIM_CTLR1{
     uint16_t CEN:1;
     uint16_t UDIS:1;
     uint16_t URS:1;
@@ -27,7 +27,7 @@ struct R16_TIM_CTLR1{
     uint16_t TMR_CAP_LVL_EN:1;
 };
 
-struct R16_TIM_CTLR2{
+struct [[nodiscard]] R16_TIM_CTLR2{
     uint16_t CCPC:1;
     uint16_t :1;
     uint16_t CCUS:1;
@@ -44,7 +44,7 @@ struct R16_TIM_CTLR2{
     uint16_t :1;
 };
 
-struct R16_TIM_SMCFGR{
+struct [[nodiscard]] R16_TIM_SMCFGR{
     uint16_t SMS:3;
     uint16_t :1;
     uint16_t TS:3;
@@ -55,24 +55,28 @@ struct R16_TIM_SMCFGR{
     uint16_t ETP:1;
 };
 
-#define TIM_EVENTS uint16_t UIE:1;\
+#define DEF_TIM_EVENT_FLAGS_FIELDS\
+uint16_t UIE:1;\
 uint16_t CC1IE:1;\
 uint16_t CC2IE:1;\
 uint16_t CC3IE:1;\
+\
 uint16_t CC4IE:1;\
 uint16_t CCMIE:1;\
 uint16_t TIE:1;\
 uint16_t BIE:1;\
+\
 uint16_t UDE:1;\
 uint16_t CC1DE:1;\
 uint16_t CC2DE:1;\
 uint16_t CC3DE:1;\
+\
 uint16_t CC4DE:1;\
 uint16_t COMDE:1;\
 uint16_t TDE:1;\
 uint16_t :1;\
 
-struct R16_TIM_DMAINTENR{
+struct [[nodiscard]] R16_TIM_DMAINTENR{
     uint16_t UIE:1;
     uint16_t CC1IE:1;
     uint16_t CC2IE:1;
@@ -91,7 +95,7 @@ struct R16_TIM_DMAINTENR{
     uint16_t :1;
 };
 
-struct R16_TIM_INTFR{
+struct [[nodiscard]] R16_TIM_INTFR{
     uint16_t UIF:1;
     uint16_t CC1IF:1;
     uint16_t CC2IF:1;
@@ -108,7 +112,7 @@ struct R16_TIM_INTFR{
     uint16_t :3;
 };
 
-struct R16_TIM_SWEVGR{
+struct [[nodiscard]] R16_TIM_SWEVGR{
     uint16_t UG:1;
     uint16_t CC1G:1;
     uint16_t CC2G:1;
@@ -120,10 +124,10 @@ struct R16_TIM_SWEVGR{
     uint16_t :8;
 };
 
-struct R16_TIM_CHCTLR1{
+struct [[nodiscard]] R16_TIM_CHCTLR1{
     uint16_t CC1S:2;
     union{
-        struct{
+        struct{[[nodiscard]] 
             uint16_t OC1FE:1;
             uint16_t OC1PE:1;
         };
@@ -131,7 +135,7 @@ struct R16_TIM_CHCTLR1{
     };
 
     union{
-        struct{
+        struct{[[nodiscard]] 
             uint16_t OC1M:3;
             uint16_t OC1CE:1;
         };
@@ -140,7 +144,7 @@ struct R16_TIM_CHCTLR1{
 
     uint16_t CC2S:2;
     union{
-        struct{
+        struct{[[nodiscard]] 
             uint16_t OC2FE:1;
             uint16_t OC2PE:1;
         };
@@ -148,7 +152,7 @@ struct R16_TIM_CHCTLR1{
     };
 
     union{
-        struct{
+        struct{[[nodiscard]] 
             uint16_t OC2M:3;
             uint16_t OC2CE:1;
         };
@@ -156,11 +160,10 @@ struct R16_TIM_CHCTLR1{
     };
 };
 
-
-struct R16_TIM_CHCTLR2{
+struct [[nodiscard]] R16_TIM_CHCTLR2{
     uint16_t CC3S:2;
     union{
-        struct{
+        struct{[[nodiscard]] 
             uint16_t OC3FE:1;
             uint16_t OC3PE:1;
         };
@@ -168,7 +171,7 @@ struct R16_TIM_CHCTLR2{
     };
 
     union{
-        struct{
+        struct{[[nodiscard]] 
             uint16_t OC3M:3;
             uint16_t OC3CE:1;
         };
@@ -177,7 +180,7 @@ struct R16_TIM_CHCTLR2{
 
     uint16_t CC4S:2;
     union{
-        struct{
+        struct{[[nodiscard]] 
             uint16_t OC4FE:1;
             uint16_t OC4PE:1;
         };
@@ -185,7 +188,7 @@ struct R16_TIM_CHCTLR2{
     };
 
     union{
-        struct{
+        struct{[[nodiscard]] 
             uint16_t OC4M:3;
             uint16_t OC4CE:1;
         };
@@ -193,7 +196,7 @@ struct R16_TIM_CHCTLR2{
     };
 };
 
-struct R16_TIM_CCER{
+struct [[nodiscard]] R16_TIM_CCER{
     uint16_t CC1E:1;
     uint16_t CC1P:1;
     uint16_t CC1NE:1;
@@ -219,13 +222,12 @@ using R16_TIM_PSC = uint16_t;
 using R16_TIM_ATRLR = uint16_t;
 using R16_TIM_CHCVR = uint16_t;
 
-struct R16_TIM_RPTCR{
+struct [[nodiscard]] R16_TIM_RPTCR{
     uint8_t REP;
     uint8_t :8;
 };
 
-
-struct R16_TIM_BDTR{
+struct [[nodiscard]] R16_TIM_BDTR{
     uint16_t DTG:8;
 
     uint16_t LOCK:2;
@@ -238,18 +240,18 @@ struct R16_TIM_BDTR{
     uint16_t MOE:1;
 };
 
-struct R16_TIM_DMACFGR{
+struct [[nodiscard]] R16_TIM_DMACFGR{
     uint16_t DACFGR:5;
     uint16_t :3;
     uint16_t DBL:5;
     uint16_t :3;
 };
 
-struct R16_TIM_DMAADR{
+struct [[nodiscard]] R16_TIM_DMAADR{
     uint16_t DADDR;
 };
 
-struct TIM_Def{
+struct [[nodiscard]] TIM_Def{
     volatile R16_TIM_CTLR1 CTLR1;
     uint16_t :16;
     volatile R16_TIM_CTLR2 CTLR2;
@@ -381,15 +383,17 @@ struct TIM_Def{
             case 1: CTLR2.OIS1N = stat; 
             case 2: CTLR2.OIS2N = stat; 
             case 3: CTLR2.OIS3N = stat; 
+            default: __builtin_trap();
         }
     }
 
-    constexpr void set_coutput_idle_state(const uint8_t ch, const bool stat){
+    constexpr void set_output_idle_state(const uint8_t ch, const bool stat){
         switch(ch){
             case 1: CTLR2.OIS1 = stat; 
             case 2: CTLR2.OIS2 = stat; 
             case 3: CTLR2.OIS3 = stat; 
             case 4: CTLR2.OIS4 = stat; 
+            default: __builtin_trap();
         }
     }
 
@@ -425,8 +429,8 @@ struct TIM_Def{
         SMCFGR.ETP = en;
     }
 
-    struct Events{
-        TIM_EVENTS
+    struct [[nodiscard]] Events{
+        DEF_TIM_EVENT_FLAGS_FIELDS
     };
 
     constexpr void set_dma_interrupts_en(const Events events){

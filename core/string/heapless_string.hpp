@@ -78,7 +78,7 @@ struct [[nodiscard]] HeaplessString{
         len_++;
     }
 
-    [[nodiscard]] constexpr Result<void, void> insert(const size_t idx, const char chr){
+    [[nodiscard]] constexpr Result<void, void> try_insert(const size_t idx, const char chr){
         if (len_ >= N || idx > len_) return Err();
         // Move characters from the end to make space for the new character
         for (size_t i = len_; i > idx; i--) {
@@ -92,7 +92,7 @@ struct [[nodiscard]] HeaplessString{
         return Ok();
     }
 
-    [[nodiscard]] constexpr Result<void, void> erase(const size_t idx){
+    [[nodiscard]] constexpr Result<void, void> try_erase(const size_t idx){
         if (idx > len_) return Err();  // 正确索引检查
         if (len_ == 0) return Err();    // 防止空字符串操作
         if (idx == 0) return Err();

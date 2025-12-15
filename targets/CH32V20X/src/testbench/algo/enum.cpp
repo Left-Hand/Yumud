@@ -10,12 +10,10 @@
 
 #include "core/utils/enum/enum_dict.hpp"
 #include "core/utils/Option.hpp"
+#include "core/tmp/serialize_traits.hpp"
 
-
-#include "core/magic/size_traits.hpp"
-#include "core/magic/function_traits.hpp"
-// #include "core/magic/magic_details.hpp"
-#include "core/magic/serialize_traits.hpp"
+#include "core/tmp/functor.hpp"
+#include "core/tmp/bits/width.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
 using namespace ymd;
@@ -65,7 +63,10 @@ auto runtime_true(){
 
 void enum_main(){
 
-    hal::uart2.init({576000});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&hal::uart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
@@ -81,8 +82,8 @@ void enum_main(){
 
         // const auto s = sin<30>(t);
         // const auto c = cos<30>(t);
-        const auto s = sin(t);
-        const auto c = cos(t);
+        const auto s = math::sin(t);
+        const auto c = math::cos(t);
         // const auto s = int16_t(sin(t) * 300);
         // const auto c = int16_t(cos(t) * 300);
         
@@ -90,23 +91,23 @@ void enum_main(){
         // int r = 0; 
 
         auto dyn_func = runtime_true() ? &Ball::mset_xy : &Ball::mset_xy2;
-        const auto bytes = magic::serialize_args_to_bytes(s, c);
+        const auto bytes = tmp::serialize_args_to_bytes(s, c);
         for(size_t i = 0; i < 100000; i++){
             // r = invoke_func_by_serialzed_bytes(set_xy, std::span(bytes));
             // r = invoke_func_by_serialzed_bytes<int, int16_t, int16_t>(pfunc, std::span(bytes));
             // r = invoke_func_by_serialzed_bytes<int>(pfunc, std::span(bytes));
             // r = invoke_func_by_serialzed_bytes<int>(pfunc, std::span(bytes));
             // r = invoke_func_by_serialzed_bytes(ball, &Ball::mset_xy, std::span(bytes));
-            r = magic::invoke_func_by_serialzed_bytes(ball, dyn_func, std::span(bytes));
+            r = tmp::invoke_func_by_serialzed_bytes(ball, dyn_func, std::span(bytes));
         }
         // DEBUG_PRINTLN(t);
         // DEBUG_PRINTLN(s,c,r, uint32_t(micros() - begin_m), Fruit::APPLE);
         // DEBUG_PRINTLN(Fruit::APPLE);
-        // const auto name = magic::enum_item_name_v<Fruit, Fruit::APPLE>;
-        // const auto name = magic::enum_item_name_v<Fruit, Fruit::BANANA>;
-        // const auto name = magic::enum_item_name_v<Fruit, Fruit::APPLE>;
+        // const auto name = tmp::enum_item_name_v<Fruit, Fruit::APPLE>;
+        // const auto name = tmp::enum_item_name_v<Fruit, Fruit::BANANA>;
+        // const auto name = tmp::enum_item_name_v<Fruit, Fruit::APPLE>;
         const auto dyn_name = runtime_true() ? 
-            magic::enum_item_name_v<Fruit, Fruit::MANGO> : magic::enum_item_name_v<Fruit, Fruit::BANANA>;
+            tmp::enum_item_name_v<Fruit, Fruit::MANGO> : tmp::enum_item_name_v<Fruit, Fruit::BANANA>;
         DEBUG_PRINTLN(dyn_name);
         clock::delay(10ms);
         // clock::delay(10ms);
@@ -114,18 +115,18 @@ void enum_main(){
 
 
     {
-        // [[maybe_unused]] constexpr const char * banana = magic::enum_item_name_v<Fruit, Fruit::BANANA>;
-        // [[maybe_unused]] constexpr const char * _10 = magic::enum_item_name_v<Fruit, Fruit(10)>;
+        // [[maybe_unused]] constexpr const char * banana = tmp::enum_item_name_v<Fruit, Fruit::BANANA>;
+        // [[maybe_unused]] constexpr const char * _10 = tmp::enum_item_name_v<Fruit, Fruit(10)>;
 
         // constexpr const char * banana2 = enum_item_name_v2<Fruit::BANANA>;
         // using type = decltype(Fruit::BANANA);
-        // constexpr const char * banana = magic::enum_item_name_v<Fruit, Fruit::BANANA>;
+        // constexpr const char * banana = tmp::enum_item_name_v<Fruit, Fruit::BANANA>;
     
-        // static_assert(!, "!magic::enum_is_valid_v<Fruit, Fruit::10>()");
+        // static_assert(!, "!tmp::enum_is_valid_v<Fruit, Fruit::10>()");
         // const auto f = __PRETTY_FUNCTION__;
-        static_assert(magic::enum_is_valid_v<Fruit, Fruit::BANANA>, "enum_is not _valid_v<Fruit, Fruit::BANANA>()");
-        static_assert(!magic::enum_is_valid_v<Fruit, Fruit(10)>, "magic::enum_is_valid_v<Fruit, Fruit::10>()");
-        // static_assert(!magic::enum_is_valid_v<Fruit, Fruit>, "!magic::enum_is_valid_v<Fruit, Fruit::10>()");
+        static_assert(tmp::enum_is_valid_v<Fruit, Fruit::BANANA>, "enum_is not _valid_v<Fruit, Fruit::BANANA>()");
+        static_assert(!tmp::enum_is_valid_v<Fruit, Fruit(10)>, "tmp::enum_is_valid_v<Fruit, Fruit::10>()");
+        // static_assert(!tmp::enum_is_valid_v<Fruit, Fruit>, "!tmp::enum_is_valid_v<Fruit, Fruit::10>()");
     }
 
 
@@ -138,8 +139,8 @@ void enum_main(){
         // static constexpr size_t a2 = tuple_element_bytes_v<2, tup_t>;
 
         // static constexpr size_t a3 = element_bytes_v<2, int, uint16_t, uint8_t, iq16>;
-        using t0 = magic::args_element_t<0, int, uint16_t, uint8_t, iq16>;
-        using t1 = magic::args_element_t<1, int, uint16_t, uint8_t, iq16>;
+        using t0 = tmp::args_element_t<0, int, uint16_t, uint8_t, iq16>;
+        using t1 = tmp::args_element_t<1, int, uint16_t, uint8_t, iq16>;
         
         using t3 = std::tuple_element_t<3, std::tuple<int, uint16_t, uint8_t, iq16 >>;
 
@@ -165,23 +166,23 @@ void enum_main(){
         // func_ty
         static constexpr uint32_t u = 0x12345678;
         
-        static_assert(uint8_t(magic::get_byte_from_arg(0, u)) == 0x78);
-        static_assert(uint8_t(magic::get_byte_from_arg(1, u)) == 0x56);
-        static_assert(uint8_t(magic::get_byte_from_arg(2, u)) == 0x34);
-        static_assert(uint8_t(magic::get_byte_from_arg(3, u)) == 0x12);
+        static_assert(uint8_t(tmp::get_byte_from_arg(0, u)) == 0x78);
+        static_assert(uint8_t(tmp::get_byte_from_arg(1, u)) == 0x56);
+        static_assert(uint8_t(tmp::get_byte_from_arg(2, u)) == 0x34);
+        static_assert(uint8_t(tmp::get_byte_from_arg(3, u)) == 0x12);
 
         static constexpr float f = 1.234f;
 
-        static_assert(uint8_t(magic::get_byte_from_arg(0, f)) == 0xB6);
-        static_assert(uint8_t(magic::get_byte_from_arg(1, f)) == 0xF3);
-        static_assert(uint8_t(magic::get_byte_from_arg(2, f)) == 0x9D);
-        static_assert(uint8_t(magic::get_byte_from_arg(3, f)) == 0x3F);
+        static_assert(uint8_t(tmp::get_byte_from_arg(0, f)) == 0xB6);
+        static_assert(uint8_t(tmp::get_byte_from_arg(1, f)) == 0xF3);
+        static_assert(uint8_t(tmp::get_byte_from_arg(2, f)) == 0x9D);
+        static_assert(uint8_t(tmp::get_byte_from_arg(3, f)) == 0x3F);
 
-        static constexpr auto arr1 = magic::make_bytes_from_arg(u);
-        static constexpr auto arr2 = magic::make_bytes_from_arg(f);
+        static constexpr auto arr1 = tmp::make_bytes_from_arg(u);
+        static constexpr auto arr2 = tmp::make_bytes_from_arg(f);
 
-        static constexpr auto u_ = magic::make_arg_from_bytes<decltype(u)>(std::span(arr1));
-        static constexpr auto f_ = magic::make_arg_from_bytes<decltype(f)>(std::span(arr2));
+        static constexpr auto u_ = tmp::make_arg_from_bytes<decltype(u)>(std::span(arr1));
+        static constexpr auto f_ = tmp::make_arg_from_bytes<decltype(f)>(std::span(arr2));
 
         static_assert(u == u_);
         static_assert(f == f_);
@@ -190,8 +191,8 @@ void enum_main(){
         static constexpr auto q21 = 0.12_iq21;
         // static constexpr auto q21 = 16;
 
-        static constexpr auto arr3 = magic::serialize_args_to_bytes(u, f, ui16, q21);
-        static constexpr auto arr4 = magic::make_bytes_from_tuple(std::make_tuple(u, f, ui16, q21));
+        static constexpr auto arr3 = tmp::serialize_args_to_bytes(u, f, ui16, q21);
+        static constexpr auto arr4 = tmp::make_bytes_from_tuple(std::make_tuple(u, f, ui16, q21));
         static_assert(arr3 == arr4);
 
         static constexpr auto tup = std::make_tuple(u, f, ui16, q21);
@@ -201,17 +202,17 @@ void enum_main(){
         // [[maybe_unused]] using a1 = tuple_element_t<1, tup_t>;
         // [[maybe_unused]] using a2 = tuple_element_t<2, tup_t>;
 
-        static constexpr auto u_2 = magic::fetch_arg_from_bytes<0, tup_t>(std::span(arr3));
-        static constexpr auto f_2 = magic::fetch_arg_from_bytes<1, tup_t>(std::span(arr3));
+        static constexpr auto u_2 = tmp::fetch_arg_from_bytes<0, tup_t>(std::span(arr3));
+        static constexpr auto f_2 = tmp::fetch_arg_from_bytes<1, tup_t>(std::span(arr3));
 
         static_assert(u == u_2);
         static_assert(f == f_2);
-        // static constexpr auto f_2 = magic::fetch_arg_from_bytes<1, tup_t>(std::span(arr3));
+        // static constexpr auto f_2 = tmp::fetch_arg_from_bytes<1, tup_t>(std::span(arr3));
 
         // static_ass
-        static constexpr auto tup_ = magic::make_tuple_from_bytes<tup_t>(std::span<const uint8_t, 14>(arr4));
+        static constexpr auto tup_ = tmp::make_tuple_from_bytes<tup_t>(std::span<const uint8_t, 14>(arr4));
         static_assert(tup == tup_);
-        // static const auto magic::make_arg_from_bytes
+        // static const auto tmp::make_arg_from_bytes
     }
 
     {
@@ -224,13 +225,13 @@ void enum_main(){
         static constexpr iq10 q1 = 0.1_r;
         static constexpr auto r1 = func1(u1, q1);
 
-        static constexpr auto bytes = magic::serialize_args_to_bytes(u1, q1);
+        static constexpr auto bytes = tmp::serialize_args_to_bytes(u1, q1);
         
-        static_assert(magic::is_functor_v<decltype(func1)>);
+        static_assert(tmp::is_functor_v<decltype(func1)>);
 
-        using traits = magic::details::_functor_traits<std::decay_t<decltype(func1)>>;
+        using traits = tmp::details::_functor_traits<std::decay_t<decltype(func1)>>;
         static_assert(std::is_same_v<traits::return_type, iq20>);
-        static constexpr auto r2 = magic::invoke_func_by_serialzed_bytes(func1, std::span(bytes));
+        static constexpr auto r2 = tmp::invoke_func_by_serialzed_bytes(func1, std::span(bytes));
         static_assert(r1 == r2);
     }
 

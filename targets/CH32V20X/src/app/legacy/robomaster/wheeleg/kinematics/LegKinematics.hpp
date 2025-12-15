@@ -1,21 +1,11 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "types/vectors/vector2.hpp"
+#include "algebra/vectors/vec2.hpp"
 #include "core/utils/Option.hpp"
 
 namespace ymd::rmst{
 
-
-template<arithmetic T>
-struct Radian_t{
-    __inline constexpr explicit 
-    Radian_t(const auto & rad):rad_(rad){}
-    __inline constexpr explicit 
-    operator T() const{return rad_;}
-private:
-    T rad_;
-};
 
 using Radian = Radian_t<real_t>;
 

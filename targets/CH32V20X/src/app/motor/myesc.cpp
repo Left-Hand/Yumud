@@ -3,10 +3,11 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
+#include "core/utils/default.hpp"
 
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
@@ -25,13 +26,13 @@
 #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
-#include "dsp/controller/adrc/nltd2o.hpp"
-#include "dsp/motor_ctrl/position_filter.hpp"
+#include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
+#include "dsp/controller/adrc/linear/ltd2o.hpp"
 #include "dsp/filter/firstorder/lpf.hpp"
-#include "dsp/filter/butterworth/ButterBandFilter.hpp"
+#include "dsp/filter/butterworth/band.hpp"
 
 #include "middlewares/rpc/rpc.hpp"
-#include "middlewares/repl/repl_service.hpp"
+#include "middlewares/rpc/repl_server.hpp"
 
 
 #include "linear_regression.hpp"
@@ -44,6 +45,7 @@ using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
+using namespace ymd::dsp::adrc;
 
 #define DBG_UART hal::uart2
 
@@ -57,38 +59,44 @@ static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 static constexpr auto INV_BUS_VOLT = iq16(1 / 12.0);
 static constexpr size_t HFI_FREQ = 1000;
 
-#if 1
+#if 0
 static constexpr size_t POLE_PAIRS = 10u;
 // static constexpr auto PHASE_INDUCTANCE = 0.0085_iq20;
 // static constexpr auto PHASE_INDUCTANCE = 0.00245_iq20;
 // static constexpr auto PHASE_INDUCTANCE = 0.0025_iq20;
 
 //100uh
-static constexpr auto PHASE_INDUCTANCE = iq20(42.3 * 1E-6);
+static constexpr auto PHASE_INDUCTANCE = iq20(22.3 * 1E-6);
 
 //1ohm
 // static constexpr auto PHASE_RESISTANCE = 1.123_iq20;
-static constexpr auto PHASE_RESISTANCE = 0.823_iq20;
+static constexpr auto PHASE_RESISTANCE = 0.123_iq20;
 #else
+// static constexpr size_t POLE_PAIRS = 14u;
+// static constexpr auto PHASE_INDUCTANCE = iq20(400 * 1E-6);
+// // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
+// static constexpr auto PHASE_RESISTANCE = 0.763_iq20;
+
 static constexpr size_t POLE_PAIRS = 7u;
-static constexpr auto PHASE_INDUCTANCE = 0.0007_iq20;
+static constexpr auto PHASE_INDUCTANCE = iq20(180 * 1E-6);
 // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
-static constexpr auto PHASE_RESISTANCE = 0.523_iq20;
+static constexpr auto PHASE_RESISTANCE = 0.303_iq20;
 #endif
 
-static constexpr uint32_t CURRENT_CUTOFF_FREQ = 1200;
+// static constexpr uint32_t CURRENT_CUTOFF_FREQ = 2400;
+static constexpr uint32_t CURRENT_CUTOFF_FREQ = 400;
 // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 200;
 
-static constexpr auto MAX_MODU_VOLT = iq16(6.5);
+static constexpr auto MODU_VOLT_LIMIT = iq16(5.5);
 
 struct LrSeriesCurrentRegulatorConfig{
     uint32_t fs;                 // 采样频率 (Hz)
     uint32_t fc;                 // 截止频率/带宽 (Hz)
     iq16 phase_inductance;        // 相电感 (H)
     iq16 phase_resistance;        // 相电阻 (Ω)
-    iq16 max_voltage;                // 最大电压 (V)
+    iq16 voltage_limit;                // 最大电压 (V)
 
-    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, const char *> try_to_coeff() const {
+    [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> try_to_coeff() const {
         //U(s) = I(s) * R + s * I(s) * L
         //I(s) / U(s) = 1 / (R + sL)
         //G_open(s) = (Ki / s + Kp) / s(R / s + L)
@@ -100,14 +108,14 @@ struct LrSeriesCurrentRegulatorConfig{
         digipw::PiController::Cofficients coeff;
 
         const auto norm_omega = iq16(iq16(TAU) * fc / self.fs);
-        coeff.max_out = self.max_voltage;
+        coeff.max_out = self.voltage_limit;
 
         coeff.kp = iq20(self.phase_inductance * self.fc) * iq16(TAU);
         coeff.ki_discrete = self.phase_resistance * norm_omega;
 
         // coeff.ki_discrete = 0;
 
-        coeff.err_sum_max = self.max_voltage / iq16(coeff.ki_discrete);
+        coeff.err_sum_max = self.voltage_limit / iq16(coeff.ki_discrete);
         return Ok(coeff);
     }
 };
@@ -131,11 +139,105 @@ static constexpr auto current_regulator_cfg = LrSeriesCurrentRegulatorConfig{
     .fc = CURRENT_CUTOFF_FREQ,
     .phase_inductance = PHASE_INDUCTANCE,
     .phase_resistance = PHASE_RESISTANCE,
-    .max_voltage = MAX_MODU_VOLT,
+    .voltage_limit = MODU_VOLT_LIMIT,
 };
 
+namespace ymd::dsp::adrc{
 
 
+
+struct [[nodiscard]] MotorLeso{
+public:
+
+    struct [[nodiscard]] Coeffs{
+        uq8 b0;
+        uq32 dt;
+        uq32 g1t;
+        uq16 g2t;
+
+        friend OutputStream & operator <<(OutputStream & os, const Coeffs & coeffs){
+            return os << os.field("b0")(coeffs.b0) << os.splitter()
+                << os.field("dt")(coeffs.dt) << os.splitter()
+                << os.field("g1t")(coeffs.g1t) << os.splitter()
+                << os.field("g2t")(coeffs.g2t);
+        }
+    };
+
+    struct [[nodiscard]] Config{
+        uint32_t fs;
+        uint32_t fc;
+        uq8 b0;
+
+        constexpr Result<Coeffs, const char *> to_coeffs() const{
+            auto & self = *this;
+            const auto dt = uq32::from_rcp(self.fs);
+            if(self.fs >= 65536) 
+                return Err("fs too large");
+            if(self.fc * 2 >= fs ) 
+                return Err("fc too large");
+
+            const uq32 g1t = uq32::from_bits(static_cast<uint32_t>(
+                2u * uint64_t(fc) * uint64_t(uint64_t(1) << 32) / fs));
+            const uq16 g2t = uq16::from_bits(static_cast<uint32_t>(
+                uint64_t(fc)  * uint64_t(fc) * uint64_t(uint64_t(1) << 16) / fs));
+            return Ok(Coeffs{
+                .b0 = self.b0,
+                .dt = dt,
+                .g1t = g1t,
+                .g2t = g2t
+            });
+        }
+    };
+
+    using State = SecondOrderState<iq16>;
+
+    constexpr explicit MotorLeso(const Coeffs & coeffs):
+        coeffs_(coeffs){;}
+
+    constexpr State iterate(const State & state, const iq16 y, const iq16 u) const {
+        // dx1=x2+b0*u+g1*(y-x1);
+        // dx2=g2*(y-x1);
+
+        #if 0
+        uq16 g1t = coeffs_.dt * coeffs_.g1;
+        uq16 g2t = coeffs_.dt * coeffs_.g2;
+        const auto e = (y - state.x1);
+        const auto delta_x1 =  ((state.x2 + u * coeffs_.b0 ) * coeffs_.dt) + (e * g1t);
+        const auto delta_x2 = (e * g2t);
+        return State{
+            state.x1 + delta_x1, 
+            state.x2 + delta_x2
+        };
+        #else
+
+        #if 1
+        const auto e = (y - math::fixed_downcast<16>(state.x1));
+        const auto delta_x1 = extended_mul((state.x2 + (u * coeffs_.b0)), coeffs_.dt)
+            + extended_mul(e, coeffs_.g1t);
+        const auto delta_x2 = (e * coeffs_.g2t);
+        return State{
+            state.x1 + delta_x1,
+            state.x2 + delta_x2
+        };
+        #else
+        const auto e = (y - state.x1);
+        const auto delta_x1 = (state.x2 + u * coeffs_.b0 + e * coeffs_.g1) * coeffs_.dt;
+        const auto delta_x2 = (e * coeffs_.g2) * coeffs_.dt;
+        return State{
+            state.x1 + delta_x1,
+            state.x2 + delta_x2
+        };
+        #endif
+
+        #endif
+    }
+
+private:
+    using Self = MotorLeso;
+    Coeffs coeffs_;
+};
+
+}
 
 static void init_adc(){
 
@@ -158,14 +260,16 @@ static void init_adc(){
 
 void myesc_main(){
     DBG_UART.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = DEBUG_UART_BAUD,
-        .rx_strategy = CommStrategy::Dma,
-        .tx_strategy = CommStrategy::Dma
+        .tx_strategy = CommStrategy::Blocking,
     });
+
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
     DEBUGGER.no_brackets(EN);
+    // DEBUGGER.force_sync(EN);
 
     clock::delay(2ms);
 
@@ -174,38 +278,42 @@ void myesc_main(){
 
     // #region 初始化定时器
 
-    timer.init({
-        .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2), 
-        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
-    }, EN);
-
     static constexpr auto MOS_1C840L_500MA_BEST_DEADZONE = 90ns;
     // static constexpr auto MOS_1C840L_100MA_BEST_DEADZONE = 350ns;
     timer.bdtr().init({MOS_1C840L_500MA_BEST_DEADZONE});
     // timer.init_bdtr(MOS_1C840L_100MA_BEST_DEADZONE);
-    timer.set_remap(1);
+
+    timer.init({
+        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
+        .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2), 
+        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
+    })  .unwrap()
+        .alter_to_pins({
+            hal::TimerChannelSelection::CH1,
+            hal::TimerChannelSelection::CH2,
+            hal::TimerChannelSelection::CH3,
+
+            hal::TimerChannelSelection::CH1N,
+            hal::TimerChannelSelection::CH2N,
+            hal::TimerChannelSelection::CH3N,
+        }).unwrap()
+        ;
+
+    timer.start();
 
     auto & pwm_u_ = timer.oc<1>(); 
     auto & pwm_v_ = timer.oc<2>(); 
     auto & pwm_w_ = timer.oc<3>(); 
 
-    timer.ocn<1>().init({}); 
-    timer.ocn<2>().init({}); 
-    timer.ocn<3>().init({}); 
-
-    hal::PA<7>().afpp();
-    hal::PB<0>().afpp();
-    hal::PB<1>().afpp();
-
-    timer.oc<4>().cvr() = timer.arr() - 1;
+    timer.ocn<1>().init(Default); 
+    timer.ocn<2>().init(Default); 
+    timer.ocn<3>().init(Default); 
     
-    pwm_u_.init({});
-    pwm_v_.init({});
-    pwm_w_.init({});
-
-    timer.oc<4>().init({
-        .plant_en = DISEN
-    });
+    pwm_u_.init(Default);
+    pwm_v_.init(Default);
+    pwm_w_.init(Default);
+    timer.oc<4>().init(Default);
+    timer.oc<4>().cvr() = timer.arr() - 1;
 
     timer.oc<4>().enable_output(EN);
 
@@ -215,17 +323,18 @@ void myesc_main(){
 
     // #region 配置编码器
     
-    auto mt6825_cs_gpio_ = hal::PB<12>();
-    mt6825_cs_gpio_.outpp();
+    auto mt6825_cs_pin_ = hal::PB<12>();
+    mt6825_cs_pin_.outpp();
     auto & spi = hal::spi2;
 
     spi.init({
-        .baudrate = 18_MHz
+        .remap = hal::SpiRemap::_0,
+        .baudrate = hal::NearestFreq(18_MHz)
     });
 
     drivers::MT6825 mt6825_{
         &spi,
-        spi.allocate_cs_gpio(&mt6825_cs_gpio_)
+        spi.allocate_cs_pin(&mt6825_cs_pin_)
             .unwrap()
     };
 
@@ -235,37 +344,37 @@ void myesc_main(){
     // #region 初始化DRV8323
 
 
-    auto drv8323_en_gpio_ = hal::PA<11>();
-    auto drv8323_slp_gpio_ = hal::PA<12>();
-    auto drv8323_nfault_gpio_ = hal::PA<6>();
-    drv8323_nfault_gpio_.inpu();
+    auto drv8323_en_pin_ = hal::PA<11>();
+    auto drv8323_slp_pin_ = hal::PA<12>();
+    auto drv8323_nfault_pin_ = hal::PA<6>();
+    drv8323_nfault_pin_.inpu();
 
-    drv8323_en_gpio_.outpp(LOW);
-    drv8323_slp_gpio_.outpp(LOW);
+    drv8323_en_pin_.outpp(LOW);
+    drv8323_slp_pin_.outpp(LOW);
 
-    auto drv8323_mode_gpio_      = hal::PB<4>();
-    auto drv8323_vds_gpio_       = hal::PB<3>();
-    auto drv8323_idrive_gpio_    = hal::PB<5>();
-    auto drv8323_gain_gpio_      = hal::PA<15>();
-
-
-    drv8323_mode_gpio_.outpp(LOW);      //6x pwm
-    // drv8323_mode_gpio_.outpp(HIGH);    //independent
-
-    // drv8323_gain_gpio_.outpp(LOW);
-    // drv8323_gain_gpio_.outpp(LOW);
-    // drv8323_gain_gpio_.inpd();//10x
-    drv8323_gain_gpio_.inflt();//20x
-    // drv8323_gain_gpio_.outpp(HIGH);//40x
+    auto drv8323_mode_pin_      = hal::PB<4>();
+    auto drv8323_vds_pin_       = hal::PB<3>();
+    auto drv8323_idrive_pin_    = hal::PB<5>();
+    auto drv8323_gain_pin_      = hal::PA<15>();
 
 
-    drv8323_idrive_gpio_.outpp(HIGH);//Sink 2A / Source1A
-    // drv8323_idrive_gpio_.inflt();
-    // drv8323_idrive_gpio_.outpp(LOW);
+    drv8323_mode_pin_.outpp(LOW);      //6x pwm
+    // drv8323_mode_pin_.outpp(HIGH);    //independent
+
+    // drv8323_gain_pin_.outpp(LOW);
+    // drv8323_gain_pin_.outpp(LOW);
+    // drv8323_gain_pin_.inpd();//10x
+    drv8323_gain_pin_.inflt();//20x
+    // drv8323_gain_pin_.outpp(HIGH);//40x
 
 
-    drv8323_vds_gpio_.outpp(LOW); //10A保护
-    // drv8323_vds_gpio_.outpp(HIGH); //dangerous no ocp protect!!!!
+    drv8323_idrive_pin_.outpp(HIGH);//Sink 2A / Source1A
+    // drv8323_idrive_pin_.inflt();
+    // drv8323_idrive_pin_.outpp(LOW);
+
+
+    drv8323_vds_pin_.outpp(LOW); //10A保护
+    // drv8323_vds_pin_.outpp(HIGH); //dangerous no ocp protect!!!!
 
 
     // #endregion 初始化ADC
@@ -283,39 +392,66 @@ void myesc_main(){
     // #endregion 
 
     // #region 初始化LED
-    auto led_blue_gpio_ = hal::PC<13>();
-    auto led_red_gpio_ = hal::PC<14>();
-    auto led_green_gpio_ = hal::PC<15>();
+    auto led_blue_pin_ = hal::PC<13>();
+    auto led_red_pin_ = hal::PC<14>();
+    auto led_green_pin_ = hal::PC<15>();
 
-    led_red_gpio_.outpp(); 
-    led_blue_gpio_.outpp(); 
-    led_green_gpio_.outpp();
+    led_red_pin_.outpp(); 
+    led_blue_pin_.outpp(); 
+    led_green_pin_.outpp();
 
-    auto blink_service_poller = [&]{
+    [[maybe_unused]] auto poll_blink_service = [&]{
 
-        led_red_gpio_ = BoolLevel::from((
+        led_red_pin_ = BoolLevel::from((
             uint32_t(clock::millis().count()) % 200) > 100);
-        led_blue_gpio_ = BoolLevel::from((
+        led_blue_pin_ = BoolLevel::from((
             uint32_t(clock::millis().count()) % 400) > 200);
-        led_green_gpio_ = BoolLevel::from((
+        led_green_pin_ = BoolLevel::from((
             uint32_t(clock::millis().count()) % 800) > 400);
+    };
+
+    [[maybe_unused]] auto toggle_red_led = [&]{
+        led_red_pin_.toggle();
+    };
+
+    [[maybe_unused]] auto toggle_blue_led = [&]{
+        led_blue_pin_.toggle();
     };
 
     // #endregion 
     
-    Angle<uq16> openloop_elec_angle_ = Zero;
-    Angle<uq16> sensored_elec_angle_ = Zero;
-    Angle<uq16> encoder_lap_angle_ = Zero;
-    Angle<iq16> encoder_multi_angle_ = Zero;
-    Angle<iq16> diff_angle = Zero;
+    Angular<uq16> openloop_elec_angle_ = Zero;
+    Angular<uq16> sensored_elec_angle_ = Zero;
+    Angular<uq16> encoder_lap_angle_ = Zero;
+    Angular<iq16> encoder_multi_angle_ = Zero;
+
     UvwCoord<iq20> uvw_curr_ = Zero;
     DqCoord<iq20> dq_curr_ = Zero;
     DqCoord<iq20> dq_volt_ = Zero;
     AlphaBetaCoord<iq20> alphabeta_curr_ = Zero;
     AlphaBetaCoord<iq20> alphabeta_volt_ = Zero;
+
     Microseconds exe_us_ = 0us;
 
 
+    // using Leso = adrc::LinearExtendedStateObserver<iq20, 2>;
+    const auto leso_b0 = 30;
+    // const auto leso_b0 = 0.1_uq8;
+    using Leso = dsp::adrc::MotorLeso;
+    static constexpr auto leso_coeffs = Leso::Config{
+        .fs = FOC_FREQ,
+        // .fc = 2000,
+        .fc = 50,
+        // .b0 = 1000
+        .b0 = leso_b0
+    }.to_coeffs().unwrap();
+
+    // PANIC{leso_coeffs};
+    Leso leso = Leso{
+        leso_coeffs
+    };
+
+    Leso::State leso_state_ = Zero;
 
     static constexpr auto controller_coeff = current_regulator_cfg.try_to_coeff().unwrap();
     // PANIC{controller_coeff};
@@ -353,34 +489,54 @@ void myesc_main(){
         }
     };
 
-    static constexpr auto coeffs = typename NonlinearTrackingDifferentor::Config{
+    using Nltd2o = NonlinearTrackingDifferentiator<iq16, 2>;
+
+    #if 0
+    static constexpr auto coeffs = Nltd2o::Config{
         .fs = FOC_FREQ,
         // .r = 30.5_q24,
         // .h = 2.5_q24
         // .r = 252.5_iq10,
         // .r = 152.5_iq10,
-        .r = 242.5_iq10,
-        .h = 0.005_iq10,
+        .r = 202.5_iq10,
+        .h = 0.01_iq10,
         .x2_limit = 240
     }.try_to_coeffs().unwrap();
+    #else
+    static constexpr auto coeffs = Nltd2o::Config{
+        .fs = FOC_FREQ,
+        // .r = 30.5_q24,
+        // .h = 2.5_q24
+        // .r = 252.5_iq10,
+        // .r = 152.5_iq10,
+        // .r = 12.5_iq10,
+        .r = 37.5_iq10,
+        .h = 0.01_iq10,
+        .x2_limit = 10
+    }.try_to_coeffs().unwrap();
 
-    static NonlinearTrackingDifferentor command_shaper_{
+    #endif
+
+    static Nltd2o command_shaper_{
         coeffs
     };
 
-    SecondOrderState track_ref_;
-    SecondOrderState feedback_state_;
+    SecondOrderState<iq16> track_ref_;
+    SecondOrderState<iq16> feedback_state_;
 
-    static constexpr auto feedback_coeffs = LinearTrackingDifferentiator<iq16, 2>::Config{
-        .fs = FOC_FREQ, .r = 350
+    using Ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
+    static constexpr auto feedback_coeffs = Ltd2o::Config{
+        .fs = FOC_FREQ, .r = 200
     }.try_to_coeffs().unwrap();
 
-    [[maybe_unused]] LinearTrackingDifferentiator<iq16, 2> feedback_differ_{
+    // PANIC{feedback_coeffs};
+
+    [[maybe_unused]] Ltd2o feedback_differ_{
         feedback_coeffs
     };
     
     auto ctrl_isr = [&]{
-        [[maybe_unused]] const auto ctime = clock::time();
+        [[maybe_unused]] const auto now_secs = clock::time();
 
         //#region 电流传感
         const auto uvw_curr = UvwCoord<iq20>{
@@ -393,43 +549,43 @@ void myesc_main(){
         //#endregion
 
         //#region 位置提取
-        const auto openloop_manchine_angle = Angle<iq16>::from_turns(0 * ctime);
-        // const auto openloop_manchine_angle = Angle<iq16>::from_turns(1.2_r * ctime);
-        // const auto openloop_manchine_angle = Angle<iq16>::from_turns(sinpu(0.2_r * ctime));
+        const auto openloop_manchine_angle = Angular<iq16>::from_turns(0.2_iq16 * now_secs);
+        // const auto openloop_manchine_angle = Angular<iq16>::from_turns(1.2_r * now_secs);
+        // const auto openloop_manchine_angle = Angular<iq16>::from_turns(math::sinpu(0.2_r * now_secs));
         const auto openloop_elec_angle = openloop_manchine_angle * POLE_PAIRS;
 
-        static constexpr auto ANGLE_BASE = Angle<uq16>::from_turns(0.78_uq16);
+        // static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq16>::from_turns(0.84_uq16);
+        static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq16>::from_turns(0.145_uq16);
         const auto next_encoder_lap_angle = mt6825_.get_lap_angle().examine().cast_inner<uq16>();
 
-        // const auto diff_angle = (next_encoder_lap_angle.cast_inner<iq16>() 
-        diff_angle = (next_encoder_lap_angle.cast_inner<iq16>() 
-            - encoder_lap_angle_.cast_inner<iq16>()).normalized();
+        const auto diff_angle = (next_encoder_lap_angle.cast_inner<iq16>() 
+            - encoder_lap_angle_.cast_inner<iq16>()).signed_normalized();
 
         encoder_lap_angle_ = next_encoder_lap_angle;
         encoder_multi_angle_ = encoder_multi_angle_ + diff_angle;
-        feedback_state_ = feedback_differ_.update(feedback_state_, encoder_multi_angle_.to_turns());
+        feedback_state_ = feedback_differ_.update(feedback_state_, {encoder_multi_angle_.to_turns(), 0});
         
-        const auto sensored_elec_angle = ((next_encoder_lap_angle * POLE_PAIRS) + ANGLE_BASE).normalized(); 
+        const auto sensored_elec_angle = ((next_encoder_lap_angle * POLE_PAIRS) + SENSORED_ELEC_ANGLE_BASE).unsigned_normalized(); 
 
 
         #if 1
         // const auto elec_angle = openloop_elec_angle;
         const auto elec_angle = sensored_elec_angle;
         #else
-        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 10_deg;
-        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 20_deg;
-        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 40_deg;
-        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() - 90_deg);
-        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() + 80_deg);
-        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle()) - 40_deg;
-        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() + 180_deg + 30_deg);
-        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() + 50_deg);
-        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() - 22_deg);
-        // const auto elec_angle = Angle<iq16>(flux_sensorless_ob.angle() - 135_deg);
-        // const auto elec_angle = Angle<iq16>(lbg_sensorless_ob.angle() + 30_deg);
-        // const auto elec_angle = Angle<iq16>(smo_sensorless_ob.angle() + 90_deg);
-        // const auto elec_angle = Angle<iq16>(smo_sensorless_ob.angle() + 90_deg);
-        // const auto elec_angle = Angle<iq16>(smo_sensorless_ob.angle() + 90_deg);
+        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 10_deg;
+        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 20_deg;
+        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 40_deg;
+        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() - 90_deg);
+        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() + 80_deg);
+        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 40_deg;
+        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() + 180_deg + 30_deg);
+        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() + 50_deg);
+        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() - 22_deg);
+        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() - 135_deg);
+        // const auto elec_angle = Angular<iq16>(lbg_sensorless_ob.angle() + 30_deg);
+        // const auto elec_angle = Angular<iq16>(smo_sensorless_ob.angle() + 90_deg);
+        // const auto elec_angle = Angular<iq16>(smo_sensorless_ob.angle() + 90_deg);
+        // const auto elec_angle = Angular<iq16>(smo_sensorless_ob.angle() + 90_deg);
         #endif
 
         const auto elec_rotation = Rotation2<iq16>::from_angle(elec_angle);
@@ -438,51 +594,66 @@ void myesc_main(){
         //#region 位速合成力矩
         const auto [position_cmd, speed_cmd] = [&]{
             if constexpr(1){
-                // command_shaper_.update(10 + 12 * sign(iq16(sinpu(ctime * 0.5_r))));
-                // const auto s = iq16(sinpu(ctime * 0.7_r));
-                // const auto s = iq16(sinpu(ctime * 0.16_r));
+                // command_shaper_.update(10 + 12 * sign(iq16(math::sinpu(now_secs * 0.5_r))));
+                // const auto s = iq16(math::sinpu(now_secs * 0.7_r));
+                // const auto s = iq16(math::sinpu(now_secs * 0.16_r));
                 // command_shaper_.update(100 + 6 * (int(s * 8) / 8));
-                track_ref_ = command_shaper_.update(track_ref_, floor(ctime * 3) * 4, 0);
+                track_ref_ = command_shaper_.update(track_ref_, {math::frac(now_secs / 3) * (3 * 9), 9});
+                // track_ref_ = command_shaper_.update(track_ref_, {now_secs * 15, 15});
+                // track_ref_ = command_shaper_.update(track_ref_, {
+                //     1_iq16 * iq16(sin(now_secs / 100)),
+                //     0.01_iq16 *  iq16(cos(now_secs / 100))});
+                    // 1_iq16 * iq16(sin(now_secs)),
+                    // 1_iq16 *  iq16(cos(now_secs))});
+                    // _iq16 * iq16(sin(now_secs)),
+                    // 1_iq16 *  iq16(cos(now_secs))});
                 return std::make_tuple(
                     iq16::from_bits(track_ref_.x1.to_bits() >> 16),
                     track_ref_.x2
                 );
+            }else{
+                const auto omega = 9_iq16;
+                const auto amplitude = 2_iq16;
+    
+                const auto [s,c] = math::sincos(omega * now_secs);
+                return std::make_tuple<iq16, iq16>(
+                    amplitude * iq16(s),
+                    amplitude * omega * iq16(c)
+                );
             }
-            const auto omega = 9_iq16;
-            const auto amplitude = 2_iq16;
-
-            const auto [s,c] = sincos(omega * ctime);
-            return std::make_tuple<iq16, iq16>(
-                amplitude * s,
-                amplitude * omega * c
-            );
             // return std::make_tuple<iq16, iq16>(
-            //     amplitude * int(omega * ctime),
+            //     amplitude * int(omega * now_secs),
             //     0
             // );
         }();
 
 
-        const iq20 torque_cmd = [&]{ 
-            const iq16 kp = 0.23_iq16;
-            const iq16 kd = 0.035_iq16;
+        [[maybe_unused]] const iq20 torque_cmd = [&]{ 
+            const iq16 kp = 1.73_iq16;
+            // const iq16 kd = 0.16_iq16;
+            const iq16 kd = 0.075_iq16;
 
-            // const iq16 position_err = position_cmd - pos_filter_.accumulated_angle().to_turns();
-            // const iq16 speed_err = speed_cmd - pos_filter_.speed();
-            const iq16 position_err = position_cmd - iq16::from_bits(feedback_state_.x1.to_bits() >> 16);
-            const iq16 speed_err = speed_cmd - feedback_state_.x2;
+            // const iq16 e1 = position_cmd - pos_filter_.accumulated_angle().to_turns();
+            // const iq16 e2 = speed_cmd - pos_filter_.speed();
+            const iq16 e1 = CLAMP2(position_cmd - math::fixed_downcast<16>(feedback_state_.x1), 100);
+            const iq16 e2 = CLAMP2(speed_cmd - feedback_state_.x2, 1000);
 
-            return (kp * position_err) + (kd * speed_err);
+            return CLAMP2((kp * e1) + (kd * e2), 1);
         }();
 
         //#endregion 
 
         //#region 力矩转电流
 
-        static constexpr iq20 TORQUE_2_CURR_RATIO = 1_iq16;
-        static constexpr iq20 MAX_CURRENT = 0.4_iq16;
+        [[maybe_unused]] static constexpr iq20 TORQUE_2_CURR_RATIO = 1_iq20;
+        [[maybe_unused]] static constexpr iq20 CURRENT_LIMIT = 0.4_iq16;
 
-        const iq20 current_cmd = CLAMP2(torque_cmd * TORQUE_2_CURR_RATIO, MAX_CURRENT);
+        // const iq20 current_cmd = CLAMP2((torque_cmd - math::fixed_downcast<16>(leso_state_.x2) / 1000) * TORQUE_2_CURR_RATIO, CURRENT_LIMIT);
+        const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_CURR_RATIO, CURRENT_LIMIT);
+        // const iq20 current_cmd = 0.1_iq20 * iq16(math::sin(now_secs));
+        // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_CURR_RATIO, CURRENT_LIMIT);
+        // const iq20 current_cmd = 0.07_iq20 * iq16(sin(now_secs));
+        // const iq20 current_cmd = 0.07_iq20 * -1;
         //#endregion
 
         const auto dq_curr = alphabeta_curr.to_dq(elec_rotation);
@@ -496,31 +667,31 @@ void myesc_main(){
             };
         };
 
-        #if 0
+        #if 1
         [[maybe_unused]] auto generate_dq_volt_by_constant_voltage = [&]{
             auto dq_volt = dq_volt_;
             dq_volt.d = 0_r;
-            dq_volt.q = 0.2_r;
+            dq_volt.q = 0.4_r;
             return dq_volt;
         };
         #endif
 
 
 
-        // const auto dq_volt = (generate_dq_volt_by_hfi()).clamp(MAX_MODU_VOLT);
-        const auto dq_volt = (generate_dq_volt_by_pi_ctrl()).clamp(MAX_MODU_VOLT);
-        // const auto dq_volt = generate_dq_volt_by_constant_voltage().clamp(MAX_MODU_VOLT);
+        // const auto dq_volt = (generate_dq_volt_by_hfi()).clamp(MODU_VOLT_LIMIT);
+        const auto dq_volt = (generate_dq_volt_by_pi_ctrl()).clamp(MODU_VOLT_LIMIT);
+        // const auto dq_volt = generate_dq_volt_by_constant_voltage().clamp(MODU_VOLT_LIMIT);
 
         #if 0
         [[maybe_unused]] auto generate_alpha_beta_volt_by_hfi = [&]{
             static constexpr size_t HFI_MAX_STEPS = 4;
-            static constexpr auto HFI_MAX_VOLT = 1.0_r;
+            static constexpr auto HFI_VOLT_LIMIT = 1.0_r;
             static size_t hfi_step = 0;
             hfi_step = (hfi_step + 1) % HFI_MAX_STEPS;
             
             return AlphaBetaCoord<iq20>{
-                .alpha = HFI_MAX_VOLT * sinpu(iq16(hfi_step) / (HFI_MAX_STEPS)),
-                // .alpha = HFI_MAX_VOLT,
+                .alpha = HFI_VOLT_LIMIT * math::sinpu(iq16(hfi_step) / (HFI_MAX_STEPS)),
+                // .alpha = HFI_VOLT_LIMIT,
                 .beta = 0_r,
             };
         };
@@ -529,7 +700,7 @@ void myesc_main(){
 
         const auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation);
         // const auto alphabeta_volt = AlphaBetaCoord<iq20>::ZERO;
-        // const auto alphabeta_volt = generate_alpha_beta_volt_by_hfi().clamp(MAX_MODU_VOLT);
+        // const auto alphabeta_volt = generate_alpha_beta_volt_by_hfi().clamp(MODU_VOLT_LIMIT);
 
         // flux_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
         // smo_sensorless_ob.update(alphabeta_volt, alphabeta_curr);
@@ -541,6 +712,10 @@ void myesc_main(){
             } * INV_BUS_VOLT
         );
 
+        // leso_state_ = leso.iterate(leso_state_, feedback_state_.x1, current_cmd);
+        leso_state_ = leso.iterate(leso_state_, feedback_state_.x2, current_cmd);
+        // leso_state_ = leso.iterate(leso_state_, math::fixed_downcast<16>(feedback_state_.x1), current_cmd);
+
         uvw_pwmgen_.set_dutycycle(uvw_dutycycle);
         uvw_curr_ = uvw_curr;
         alphabeta_curr_ = alphabeta_curr;
@@ -550,9 +725,6 @@ void myesc_main(){
         openloop_elec_angle_ = openloop_elec_angle;
         sensored_elec_angle_ = sensored_elec_angle;
     };
-
-
-
     auto jeoc_isr = [&]{ 
         const auto begin_us = clock::micros();
         ctrl_isr();
@@ -592,11 +764,48 @@ void myesc_main(){
         repl_server.invoke(list);
     };
 
+    DBG_UART.set_event_handler([&](const hal::UartEvent & event){
+        switch(event.kind()){
+            case hal::UartEvent::TxIdle:{
+                // __builtin_trap();
+                poll_blink_service();
+                // toggle_blue_led();
+                break;
+            }
+            case hal::UartEvent::RxIdle:{
+                // __builtin_trap();
+                // poll_blink_service();
+                toggle_blue_led();
+                break;
+            }
+            default:{
+                break;
+            }
+        }
+    });
+
     while(true){
         // repl_service_poller();
-        if(DEBUGGER.pending() != 0) continue;
 
-        DEBUG_PRINTLN(
+        if(false)DEBUG_PRINTLN_IDLE(
+            pwm_u_.cvr(),
+            pwm_v_.cvr(),
+            pwm_w_.cvr()
+        );
+
+        if(false){
+            const auto now_secs = clock::time();
+            DEBUG_PRINTLN_IDLE(
+                math::sin(now_secs),
+                hal::uart2.available()
+            );
+            // DEBUG_PRINTLN(1);
+            // const char str[] = "h\r\n";
+            // hal::uart2.write_chars(str, sizeof(str) -1);
+            // clock::delay(200ms);
+        }
+        if(true) DEBUG_PRINTLN_IDLE(
+        // if(true) DEBUG_PRINTLN(
             // alphabeta_curr_,
             // alphabeta_volt_,
             // alphabeta_volt_.beta / alphabeta_curr_.beta,
@@ -613,16 +822,18 @@ void myesc_main(){
             // sensored_elec_angle_.to_turns(),
             // openloop_elec_angle_.to_turns(),
             iq16::from_bits(track_ref_.x1.to_bits() >> 16),
-            track_ref_.x2,
-
+            // track_ref_.x2,
             iq16::from_bits(feedback_state_.x1.to_bits() >> 16),
-            feedback_state_.x2,
-            // pos_filter_.accumulated_angle().to_turns(),
-            // pos_filter_.speed(),
-            // sensored_elec_angle_.to_turns(),
-            encoder_multi_angle_.to_turns(),
-            diff_angle.to_turns(),
+            // feedback_state_.x2,
+            // leso_state_.x2,
+            encoder_lap_angle_.to_turns(),
+            sensored_elec_angle_.to_turns(),
             0
+            // encoder_multi_angle_.to_turns(),
+            // leso_state_.x2,
+            // sensored_elec_angle_.to_turns(),
+            // encoder_multi_angle_.to_turns(),
+            // 0
             // flux_sensorless_ob.angle().to_turns()
             // flux_sensorless_ob.V_alphabeta_last_
             // smo_sensorless_ob.angle().to_turns(),
@@ -634,7 +845,7 @@ void myesc_main(){
             // uint32_t(exe_us_.count())
 
             // openloop_elec_angle_.normalized().to_turns()
-            // bool(drv8323_nfault_gpio_.read() == LOW),
+            // bool(drv8323_nfault_pin_.read() == LOW),
 
 
             // pwm_u_.cvr(),
@@ -645,8 +856,8 @@ void myesc_main(){
             // pwm_v_.get_dutycycle(),
             // pwm_w_.get_dutycycle(),
         );
-
-        blink_service_poller();
+        poll_blink_service();
+        // toggle_red_led();
         // repl_service_poller();
         // clock::delay(2ms);
     }

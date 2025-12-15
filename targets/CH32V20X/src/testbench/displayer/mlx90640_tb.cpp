@@ -2,7 +2,6 @@
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/Wireless/Radio/CH9141/CH9141.hpp"
 #include "drivers/Proximeter/VL53L0X/vl53l0x.hpp"
-#include "drivers/Camera/MT9V034/mt9v034.hpp"
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -42,8 +41,8 @@ static constexpr auto LCD_HEIGHT = 170;
 static constexpr size_t UART_BAUD = 576000;
 
 
-#define SCL_GPIO hal::PE<9>()
-#define SDA_GPIO hal::PE<11>()
+#define SCL_PIN hal::PE<9>()
+#define SDA_PIN hal::PE<11>()
 
 
 __no_inline void trap(){
@@ -62,6 +61,7 @@ void mlx90640_main(){
         auto & DBG_UART = hal::uart2;
 
         DBG_UART.init({
+            .remap = hal::UartRemap::_0,
             .baudrate = UART_BAUD
         });
 
@@ -81,7 +81,10 @@ void mlx90640_main(){
     auto & spi = hal::spi1;
     #endif
 
-    spi.init({144_MHz});
+    spi.init({
+        .remap = hal::SpiRemap::_0,
+        .baudrate = hal::NearestFreq(144_MHz)
+    });
     
     auto lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
@@ -90,12 +93,12 @@ void mlx90640_main(){
     auto lcd_dc = hal::PD<7>();
     auto dev_rst = hal::PB<7>();
     auto spi_cs = hal::PD<4>();
-    const auto spi_rank = spi.allocate_cs_gpio(&spi_cs).unwrap();
+    const auto spi_rank = spi.allocate_cs_pin(&spi_cs).unwrap();
 
-    hal::Gpio scl_gpio_ = SCL_GPIO;
-    hal::Gpio sda_gpio_ = SDA_GPIO;
+    hal::Gpio scl_pin_ = SCL_PIN;
+    hal::Gpio sda_pin_ = SDA_PIN;
 
-    hal::I2cSw i2c_sw_ = hal::I2cSw{&scl_gpio_, &sda_gpio_};
+    hal::I2cSw i2c_sw_ = hal::I2cSw{&scl_pin_, &sda_pin_};
 
     drivers::ST7789 tft{
         drivers::ST7789_Phy{&spi, spi_rank, &lcd_dc, &dev_rst}, 

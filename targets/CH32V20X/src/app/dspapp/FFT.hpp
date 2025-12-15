@@ -49,7 +49,7 @@ constexpr void _FFT(std::span<T> c){
 
     for(size_t k = 2; n <= N; n = n << 1 ){
 
-        const auto [wi, wr] = sincospu(T(1) / n);
+        const auto [wi, wr] = math::sincospu(T(1) / n);
         if constexpr( isign == 1 ) wi = -wi;
         cp = c;
         nb = N / n;

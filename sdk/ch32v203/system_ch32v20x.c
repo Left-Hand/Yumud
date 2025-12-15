@@ -10,7 +10,7 @@
  * SPDX-License-Identifier: Apache-2.0
  *********************************************************************************/
 // #include "ch32v20x.h" 
-#include "../sdk/ch32v203/Peripheral/inc/ch32v20x.h"
+#include "sdk/ch32v203/Peripheral/inc/ch32v20x.h"
 /* 
 * Uncomment the line corresponding to the desired System clock (SYSCLK) frequency (after 
 * reset the HSI is used as SYSCLK source).

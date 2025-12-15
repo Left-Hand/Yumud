@@ -10,7 +10,7 @@
 
 namespace ymd::ral::CH32{
 
-struct R32_SWPMI_CR{
+struct [[nodiscard]] R32_SWPMI_CR{
     // 接收 DMA 使能
     uint32_t RXDMA:1;
 
@@ -61,7 +61,7 @@ struct R32_SWPMI_CR{
     uint32_t :20;
 };ASSERT_REG_IS_32BIT(R32_SWPMI_CR)
 
-struct R32_SWPMI_BRR{
+struct [[nodiscard]] R32_SWPMI_BRR{
     // 比特率预分频器，必须按照以下公式，在考虑到
     // RCC（复位和时钟控制）中编程的 FHCLK的情况下编
     // 程该位域以设置 SWP 总线比特率：
@@ -74,7 +74,7 @@ struct R32_SWPMI_BRR{
     uint32_t :24;
 };ASSERT_REG_IS_32BIT(R32_SWPMI_BRR)
 
-struct R32_SWPMI_ISR {
+struct [[nodiscard]] R32_SWPMI_ISR {
     // 接收缓冲区已满标志：当 R32_SWPMI_RDR 中包含
     // 接收帧的最后一个字时，该标志由硬件置 1。该标
     // 志由软件清零，方法是向 R32_SWPMI_ICR 寄存器
@@ -168,7 +168,7 @@ struct R32_SWPMI_ISR {
     uint32_t :20;
 };ASSERT_REG_IS_32BIT(R32_SWPMI_ISR)
 
-struct R32_SWPMI_ICR{
+struct [[nodiscard]] R32_SWPMI_ICR{
     uint32_t CRXBFF:1;
     uint32_t CTXBEF:1;
     uint32_t CRXBERF:1;
@@ -181,7 +181,7 @@ struct R32_SWPMI_ICR{
     uint32_t :20;
 };ASSERT_REG_IS_32BIT(R32_SWPMI_ICR)
 
-struct R32_SWPMI_IER{
+struct [[nodiscard]] R32_SWPMI_IER{
     uint32_t RXBFIE:1;
     uint32_t TXBEIE:1;
     uint32_t RXBERIE:1;
@@ -196,20 +196,20 @@ struct R32_SWPMI_IER{
     uint32_t :20;
 }; ASSERT_REG_IS_32BIT(R32_SWPMI_IER)
 
-struct R32_SWPMI_RFL{
+struct [[nodiscard]] R32_SWPMI_RFL{
     uint32_t RFL:5;
     uint32_t :27;
 }; ASSERT_REG_IS_32BIT(R32_SWPMI_RFL)
 
-struct R32_SWPMI_TDR{
+struct [[nodiscard]] R32_SWPMI_TDR{
     uint32_t TD:32;
 }; ASSERT_REG_IS_32BIT(R32_SWPMI_TDR)
 
-struct R32_SWPMI_RDR{
+struct [[nodiscard]] R32_SWPMI_RDR{
     uint32_t RD:32;
 }; ASSERT_REG_IS_32BIT(R32_SWPMI_RDR)
 
-struct R32_SVPMI_OR{
+struct [[nodiscard]] R32_SVPMI_OR{
     uint32_t SWP_TBYP:1;
     uint32_t :31;
 }; ASSERT_REG_IS_32BIT(R32_SWPMI_OR)

@@ -32,7 +32,7 @@ public:
             e = digipw::AlphaBetaCoord<iq20>(0, 0);
         }
 
-        constexpr Angle<iq20> angle() const {
+        constexpr Angular<iq20> angle() const {
             return e.angle();
         }
     };

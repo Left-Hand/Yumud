@@ -3,6 +3,7 @@
 #include "core/math/realmath.hpp"
 #include "core/debug/debug.hpp"
 #include "core/utils/Option.hpp"
+#include "core/utils/default.hpp"
 
 #include "hal/timer/timer_oc.hpp"
 #include "hal/timer/timer.hpp"
@@ -153,43 +154,59 @@ public:
     void init(const Config & cfg){
 
         timer_.init({
+            .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
             .count_freq = hal::NearestFreq(cfg.freq), 
             .count_mode = hal::TimerCountMode::CenterAlignedDualTrig, 
-        }, DISEN
-    );
+        })
+            .unwrap()
+            .alter_to_pins({
+                hal::TimerChannelSelection::CH1,
+                hal::TimerChannelSelection::CH2,
+                hal::TimerChannelSelection::CH3,
+            })
+            .unwrap();
+
+
         timer_.bdtr().set_deadzone(cfg.deadzone_ns);
         timer_.enable_cc_ctrl_sync(DISEN);
 
         pwm_u_.init({
             .oc_mode = hal::TimerOcMode::ActiveBelowCvr,
-            .cvr_sync_en = EN
+            .cvr_sync_en = EN,
+            .valid_level = HIGH,
+            .out_en = EN
         });
     
-        pwm_un_.init({});
+        pwm_un_.init(Default);
 
         pwm_v_.init({
             .oc_mode = hal::TimerOcMode::ActiveBelowCvr,
-            .cvr_sync_en = DISEN
+            .cvr_sync_en = DISEN,
+            .valid_level = HIGH,
+            .out_en = EN
         });
 
-        pwm_vn_.init({});
+        pwm_vn_.init(Default);
     
         pwm_w_.init({
             .oc_mode = hal::TimerOcMode::ActiveBelowCvr,
-            .cvr_sync_en = DISEN
+            .cvr_sync_en = DISEN,
+            .valid_level = HIGH,
+            .out_en = EN
         });
 
-        pwm_wn_.init({});
+        pwm_wn_.init(Default);
     
         pwm_trig_.init({
             .oc_mode = hal::TimerOcMode::ActiveBelowCvr,
             .cvr_sync_en = DISEN,
-            .plant_en = EN,
+            .valid_level = HIGH,
+            .out_en = EN
         });
 
         pwm_trig_.set_dutycycle(TWO_BY_3);
         // test_gpio.outpp();
-        timer_.enable(EN);
+        timer_.start();
     }
 
     using Duty = std::array<real_t, 3>;
@@ -202,7 +219,7 @@ public:
     }
 
     void set_freq(const uint32_t freq){
-        timer_.set_freq(hal::TimerCountFreq(hal::NearestFreq(freq)));
+        timer_.set_count_freq(hal::TimerCountFreq(hal::NearestFreq(freq)));
     }
 
     void set_deadzone(const Nanoseconds ns){

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/constants/enums.hpp"
 #include <cstdint> 
 
 #define _SIZE(x) (sizeof(x))
@@ -8,9 +9,9 @@
 #define ASSERT_REG_IS_32BIT(name) static_assert((sizeof(name) == 4),  #name " is not 4 bytes"); 
 #endif
 
-namespace CH32V20x{
+namespace ymd::ral::ch32::ch32v203_rcc{
 
-struct R32_RCC_CTLR{
+struct [[nodiscard]] R32_RCC_CTLR{
     
     uint32_t HSION:1;
     uint32_t HSIRDY:1;
@@ -31,7 +32,7 @@ struct R32_RCC_CTLR{
     uint32_t :2;
 };ASSERT_REG_IS_32BIT(R32_RCC_CTLR)
 
-struct R32_RCC_CFGR0{
+struct [[nodiscard]] R32_RCC_CFGR0{
     uint32_t SW:2;
     uint32_t SWS:2;
     uint32_t HPRE:4;
@@ -51,8 +52,7 @@ struct R32_RCC_CFGR0{
     uint32_t ADC_DUTY:1;
 };ASSERT_REG_IS_32BIT(R32_RCC_CFGR0)
 
-
-struct R32_RCC_INTR{
+struct [[nodiscard]] R32_RCC_INTR{
     uint32_t LSI_RDYF:1;
     uint32_t LSE_RDYF:1;
     uint32_t HSI_RDYF:1;
@@ -83,7 +83,7 @@ struct R32_RCC_INTR{
     uint32_t :8;
 };ASSERT_REG_IS_32BIT(R32_RCC_INTR)
 
-struct R32_RCC_APB2PRSTR{
+struct [[nodiscard]] R32_RCC_APB2PRSTR{
     uint32_t AFIORST:1;
     uint32_t :1;
 
@@ -101,7 +101,7 @@ struct R32_RCC_APB2PRSTR{
     uint32_t :17;
 };ASSERT_REG_IS_32BIT(R32_RCC_APB2PRSTR)
 
-struct R32_RCC_APB1PRSTR{
+struct [[nodiscard]] R32_RCC_APB1PRSTR{
     uint32_t TIM2RST:1;
     uint32_t TIM3RST:1;
     uint32_t :9;
@@ -117,7 +117,7 @@ struct R32_RCC_APB1PRSTR{
     uint32_t :3;
 };ASSERT_REG_IS_32BIT(R32_RCC_APB1PRSTR)
 
-struct R32_RCC_AHBPCENR{
+struct [[nodiscard]] R32_RCC_AHBPCENR{
     uint32_t AFIOEN:1;
     uint32_t :1;
 
@@ -135,8 +135,7 @@ struct R32_RCC_AHBPCENR{
     uint32_t :17;
 };ASSERT_REG_IS_32BIT(R32_RCC_AHBPCENR)
 
-
-struct R32_RCC_APB2PCENR{
+struct [[nodiscard]] R32_RCC_APB2PCENR{
     uint32_t AFIOEN:1;
     uint32_t :1;
 
@@ -154,7 +153,7 @@ struct R32_RCC_APB2PCENR{
     uint32_t :17;
 };ASSERT_REG_IS_32BIT(R32_RCC_APB2PCENR)
 
-struct R32_RCC_APB1PCENR{
+struct [[nodiscard]] R32_RCC_APB1PCENR{
     uint32_t TIM2EN:1;
     uint32_t TIM3EN:1;
     uint32_t :9;
@@ -170,7 +169,7 @@ struct R32_RCC_APB1PCENR{
     uint32_t :3;
 };ASSERT_REG_IS_32BIT(R32_RCC_APB1PCENR)
 
-struct R32_RCC_RSTSCKR{
+struct [[nodiscard]] R32_RCC_RSTSCKR{
     uint32_t :24;
     uint32_t RMVF:1;
     uint32_t OPA_RSTF:1;
@@ -182,7 +181,7 @@ struct R32_RCC_RSTSCKR{
     uint32_t LPWR_RSTF:1;
 };ASSERT_REG_IS_32BIT(R32_RCC_RSTSCKR)
 
-struct R32_RCC_AHBRSTR{
+struct [[nodiscard]] R32_RCC_AHBRSTR{
     uint32_t :12;
     uint32_t USBFSRST:1;
     uint32_t PIOCRST:1;
@@ -190,8 +189,7 @@ struct R32_RCC_AHBRSTR{
     uint32_t USBPDRST:1;
 };ASSERT_REG_IS_32BIT(R32_RCC_AHBRSTR)
 
-
-struct R32_RCC_APB2PRSTR{
+struct [[nodiscard]] R32_RCC_APB2PRSTR{
     uint32_t AFIO_RST:1;
     uint32_t :1;
     uint32_t IOPA_RST:1;
@@ -214,7 +212,7 @@ struct R32_RCC_APB2PRSTR{
     uint32_t :11;        
 };ASSERT_REG_IS_32BIT(R32_RCC_APB2PRSTR)
 
-struct R32_RCC_APB1PRSTR{   
+struct [[nodiscard]] R32_RCC_APB1PRSTR{   
     uint32_t TIM2_RST:1;   
     uint32_t TIM3_RST:1;   
     uint32_t TIM4_RST:1;   
@@ -248,8 +246,7 @@ struct R32_RCC_APB1PRSTR{
     uint32_t :2;
 };ASSERT_REG_IS_32BIT(R32_RCC_APB1PRSTR)
 
-
-struct R32_RCC_APB2PCENR{
+struct [[nodiscard]] R32_RCC_APB2PCENR{
     uint32_t AFIO_EN:1;
     uint32_t :1;
     uint32_t IOPA_EN:1;
@@ -272,7 +269,7 @@ struct R32_RCC_APB2PCENR{
     uint32_t :11;        
 };ASSERT_REG_IS_32BIT(R32_RCC_APB2PCENR)
 
-struct R32_RCC_APB1PCENR{   
+struct [[nodiscard]] R32_RCC_APB1PCENR{   
     uint32_t TIM2_EN:1;   
     uint32_t TIM3_EN:1;   
     uint32_t TIM4_EN:1;   
@@ -306,8 +303,7 @@ struct R32_RCC_APB1PCENR{
     uint32_t :2;
 };ASSERT_REG_IS_32BIT(R32_RCC_APB1PCENR)
 
-
-struct R32_RCC_BDCTLR{
+struct [[nodiscard]] R32_RCC_BDCTLR{
     uint32_t LSEON:1;
     uint32_t LSERDY:1;
     uint32_t LSEBYP:1;
@@ -319,7 +315,7 @@ struct R32_RCC_BDCTLR{
     uint32_t :15;
 };ASSERT_REG_IS_32BIT(R32_RCC_BDCTLR);
 
-struct RCC_Def{
+struct [[nodiscard]] RCC_Def{
     volatile R32_RCC_CTLR           CTLR;
     volatile R32_RCC_CFGR0          CFGR0;
     volatile R32_RCC_INTR           INTR;
@@ -333,10 +329,10 @@ struct RCC_Def{
     volatile R32_RCC_AHBRSTR        AHBRSTR;
 
     constexpr void enable_hsi(const Enable en){
-        CTLR.HSION = en;
+        CTLR.HSION = en == EN;
     }
 
-    constexpr bool is_hsi_ready(){
+    [[nodiscard]] constexpr bool is_hsi_ready(){
         return CTLR.HSIRDY;
     }
 
@@ -349,30 +345,30 @@ struct RCC_Def{
     }
 
     constexpr void enable_hse(const Enable en){
-        CTLR.HSION = en;
+        CTLR.HSION = en == EN;
     }
 
-    constexpr bool is_hse_ready(){
+    [[nodiscard]] constexpr bool is_hse_ready(){
         return CTLR.HSIRDY;
     }
 
     constexpr void enable_hse_bypass(const Enable en){
-        CTLR.HSEBYP = en;
+        CTLR.HSEBYP = en == EN;
     }
 
     constexpr void enable_css(const Enable en){
-        CTLR.CSSON = en;
+        CTLR.CSSON = en == EN;
     }
 
     constexpr void enable_pll(const uint8_t pll_idx, const Enable en){
         switch(pll_idx){
-            case 1: CTLR.PLLON = en; return;
-            case 2: CTLR.PLLON = en; return;
-            case 3: CTLR.PLLON = en; return;
+            case 1: CTLR.PLLON = en == EN; return;
+            case 2: CTLR.PLLON = en == EN; return;
+            case 3: CTLR.PLLON = en == EN; return;
         }
     }
 
-    constexpr bool is_pll_ready(const uint8_t pll_idx){
+    [[nodiscard]] constexpr bool is_pll_ready(const uint8_t pll_idx){
         switch(pll_idx){
             case 1: return CTLR.PLLRDY;
             case 2: return CTLR.PLL2RDY;
@@ -598,56 +594,56 @@ struct RCC_Def{
     constexpr void reset_spi(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.SPI1_EN = en; return;
-            case 2:   APB1PCENR.SPI2_EN = en; return;
-            case 3:   APB1PCENR.SPI3_EN = en; return;
+            case 1:   APB2PCENR.SPI1_EN = en == EN; return;
+            case 2:   APB1PCENR.SPI2_EN = en == EN; return;
+            case 3:   APB1PCENR.SPI3_EN = en == EN; return;
         }
     }
 
     constexpr void enable_i2c(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
-            case 1:   APB1PCENR.I2C1_EN = en;return;
-            case 2:   APB1PCENR.I2C2_EN = en;return;
+            case 1:   APB1PCENR.I2C1_EN = en == EN;return;
+            case 2:   APB1PCENR.I2C2_EN = en == EN;return;
         }
     }
 
     constexpr void enable_timer(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.TIM1_EN = en; return;
-            case 2:   APB1PCENR.TIM2_EN = en; return;
-            case 3:   APB1PCENR.TIM3_EN = en; return;
-            case 4:   APB1PCENR.TIM4_EN = en; return;
-            case 5:   APB1PCENR.TIM5_EN = en; return;
-            case 6:   APB1PCENR.TIM6_EN = en; return;
-            case 7:   APB1PCENR.TIM7_EN = en; return;
-            case 8:   APB2PCENR.TIM8_EN = en; return;
-            case 9:   APB2PCENR.TIM9_EN = en; return;
-            case 10:  APB2PCENR.TIM10_EN = en; return;
+            case 1:   APB2PCENR.TIM1_EN = en == EN; return;
+            case 2:   APB1PCENR.TIM2_EN = en == EN; return;
+            case 3:   APB1PCENR.TIM3_EN = en == EN; return;
+            case 4:   APB1PCENR.TIM4_EN = en == EN; return;
+            case 5:   APB1PCENR.TIM5_EN = en == EN; return;
+            case 6:   APB1PCENR.TIM6_EN = en == EN; return;
+            case 7:   APB1PCENR.TIM7_EN = en == EN; return;
+            case 8:   APB2PCENR.TIM8_EN = en == EN; return;
+            case 9:   APB2PCENR.TIM9_EN = en == EN; return;
+            case 10:  APB2PCENR.TIM10_EN = en == EN; return;
         }
     }
 
     constexpr void enable_usart(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.USART1_EN = en; return;
-            case 2:   APB1PCENR.USART2_EN = en; return;
-            case 3:   APB1PCENR.USART3_EN = en; return;
-            case 4:   APB1PCENR.USART4_EN = en; return;
-            case 5:   APB1PCENR.USART5_EN = en; return;
-            case 6:   APB1PCENR.USART6_EN = en; return;
-            case 7:   APB1PCENR.USART7_EN = en; return;
-            case 8:   APB1PCENR.USART8_EN = en; return;
+            case 1:   APB2PCENR.USART1_EN = en == EN; return;
+            case 2:   APB1PCENR.USART2_EN = en == EN; return;
+            case 3:   APB1PCENR.USART3_EN = en == EN; return;
+            case 4:   APB1PCENR.USART4_EN = en == EN; return;
+            case 5:   APB1PCENR.USART5_EN = en == EN; return;
+            case 6:   APB1PCENR.USART6_EN = en == EN; return;
+            case 7:   APB1PCENR.USART7_EN = en == EN; return;
+            case 8:   APB1PCENR.USART8_EN = en == EN; return;
         }
     }
 
     constexpr void enable_spi(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.SPI1_EN = en; return;
-            case 2:   APB1PCENR.SPI2_EN = en; return;
-            case 3:   APB1PCENR.SPI3_EN = en; return;
+            case 1:   APB2PCENR.SPI1_EN = en == EN; return;
+            case 2:   APB1PCENR.SPI2_EN = en == EN; return;
+            case 3:   APB1PCENR.SPI3_EN = en == EN; return;
         }
     }
 };

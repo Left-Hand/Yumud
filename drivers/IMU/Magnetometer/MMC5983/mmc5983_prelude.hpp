@@ -5,8 +5,13 @@
 // 这个驱动已经完成编写
 // 这个驱动已经完成测试
 
+// 参考来源
 // https://www.memsic.com/Public/Uploads/uploadfile/files/20220119/MMC5983MADatasheetRevA.pdf
 // https://github.com/kriswiner/MMC5983MA/blob/master/LSM6DSM_MMC5983MA_LPS22HB_Dragonfly/MMC5983MA.cpp
+
+//  * 注意：本实现为完全原创，未使用上述项目的任何代码。
+//  * 参考仅用于理解问题领域，未复制任何具体实现。
+
 
 #include "core/io/regs.hpp"
 #include "drivers/IMU/IMU.hpp"
@@ -14,6 +19,11 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
+
+// The MMC5983MA is an AEC-Q100 qualified complete 3-axis magnetic sensor with on-chip 
+// signal processing and integrated I2C/SPI bus suitable for use in automotive applications.
+// Couple with the LSM6DSM accel/gyro and LPS22HB barometer the system provides a compact and
+// accurate absolute orientation estimation engine.
 
 namespace ymd::drivers{
 
@@ -31,7 +41,6 @@ struct MMC5983_Prelude{
         _400Hz = 0b10,
         _800Hz = 0b11,
     };
-
     
     enum class Odr:uint8_t{
         SingleShot = 0b000,
@@ -131,16 +140,15 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
 
 class MMC5983_Phy: public MMC5983_Prelude{
 public:
-    MMC5983_Phy(const hal::I2cDrv & i2c_drv):
+    explicit MMC5983_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    MMC5983_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
+    explicit MMC5983_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
         MMC5983_Phy(hal::I2cDrv{i2c, addr}){;}
-    MMC5983_Phy(const hal::SpiDrv & spi_drv):
+    explicit MMC5983_Phy(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    MMC5983_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
+    explicit MMC5983_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
-    [[nodiscard]] __fast_inline
     IResult<> write_reg(const uint8_t addr, const uint8_t data){
         if(i2c_drv_){
             if(const auto res = i2c_drv_->write_reg(addr, data);
@@ -152,7 +160,6 @@ public:
         return Err(Error::NoAvailablePhy);
     }
 
-    [[nodiscard]] __fast_inline
     IResult<> read_reg(const uint8_t addr, uint8_t & data){
         if(i2c_drv_){
             if(const auto res = i2c_drv_->read_reg(uint8_t(addr), data);
@@ -164,7 +171,6 @@ public:
         return Err(Error::NoAvailablePhy);
     }
 
-    [[nodiscard]] __fast_inline
     IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
         if(i2c_drv_){
             if(const auto res = i2c_drv_->read_burst<uint8_t>(uint8_t(addr), pbuf);
@@ -175,8 +181,7 @@ public:
         }
         return Err(Error::NoAvailablePhy);
     }
-
-    [[nodiscard]] __fast_inline 
+ 
     IResult<> release(){
         if(i2c_drv_){
             if(const auto res = i2c_drv_->release();

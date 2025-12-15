@@ -3,7 +3,7 @@
 #include <cstdint>
 // #include "hal/bus/can/can.hpp"
 #include "primitive/can/bxcan_frame.hpp"
-#include "primitive/arithmetic/angle.hpp"
+#include "primitive/arithmetic/angular.hpp"
 #include "core/math/realmath.hpp"
 #include "core/utils/nth.hpp"
 
@@ -14,9 +14,9 @@ namespace primitive{
 static constexpr hal::CanBaudrate DEFAULT_CAN_BAUD = hal::CanBaudrate::_500K;
 
 
-using CanFrame = hal::CanClassicFrame;
+using CanFrame = hal::BxCanFrame;
 using CanId = hal::CanStdId;
-using CanPayload = hal::CanClassicPayload;
+using CanPayload = hal::BxCanPayload;
 
 static constexpr size_t NUM_MAX_MOTORS = 8; 
 static constexpr uint16_t NUM_GENERIC_FEEDBACK_CANID_BASE = 0x96;
@@ -211,7 +211,7 @@ struct [[nodiscard]] CurrentCode{
     }
 };
 
-//每LSB 0.01RPm
+//设定值范围--21000~21000每LSB 0.01RPm
 struct [[nodiscard]] SpeedCode{
     using Self = SpeedCode;
     uint16_t bits;
@@ -255,18 +255,18 @@ struct [[nodiscard]] PositionCode{
         return Self::from_bits(bits);
     }
 
-    // static constexpr Result<Self, std::weak_ordering> from_angle(const Angle<uq32> angle){
+    // static constexpr Result<Self, std::weak_ordering> from_angle(const Angular<uq32> angle){
     //     const uint16_t bits = std::bit_cast<uint16_t>(int16_t(angle.to_turns().to_bits() >> (16u + 1u)));
     //     return Ok(from_bits(bits));
     // }
 
-    // constexpr Angle<uq32> to_angle() const {
+    // constexpr Angular<uq32> to_angle() const {
     //     const auto turns = uq32::from_bits(bits << 1);
-    //     return Angle<uq32>::from_turns(turns);
+    //     return Angular<uq32>::from_turns(turns);
     // }
 
     // Fixed conversion from angle to position code
-    static constexpr Result<Self, std::weak_ordering> from_angle(const Angle<uq32> angle){
+    static constexpr Result<Self, std::weak_ordering> from_angle(const Angular<uq32> angle){
         // Convert angle to turns (0-1 for 0°-360°)
         const auto turns = angle.to_turns();
         // Scale 0-1 turns to 0-32767 range
@@ -277,12 +277,12 @@ struct [[nodiscard]] PositionCode{
         return Ok(from_bits(bits));
     }
 
-    constexpr Angle<uq32> to_angle() const {
+    constexpr Angular<uq32> to_angle() const {
         // Convert 0-32767 back to 0-1 turns (0°-360°)
         // bits is 15-bit value (0-32767), we need to convert to uq32
         const uint32_t expanded = (static_cast<uint32_t>(bits) << 17);
         const auto turns = uq32::from_bits(expanded);
-        return Angle<uq32>::from_turns(turns);
+        return Angular<uq32>::from_turns(turns);
     }
 };
 

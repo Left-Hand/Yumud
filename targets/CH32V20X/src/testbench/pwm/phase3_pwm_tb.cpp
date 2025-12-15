@@ -5,10 +5,10 @@
 #include "core/math/realmath.hpp"
 #include "core/utils/Option.hpp"
 
-#include "hal/analog/adc/adcs/adc1.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/hw_singleton.hpp"
 
 #include "digipw/pwmgen/interleaved_pwmgen3.hpp"
 
@@ -51,7 +51,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
 
             const auto t = clock::time();
 
-            const auto [st, ct] = sincospu(700 * t);
+            const auto [st, ct] = math::sincospu(700 * t);
 
             static constexpr const real_t depth = 0.7_r;
             const auto uvw_dutycycle = digipw::SVM({ct * depth, st * depth});
@@ -95,7 +95,10 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
 }
 
 void phase3pwm_main(void){
-    UART.init({576000});
+    hal::uart2.init({
+        .remap = hal::UART2_REMAP_PA2_PA3,
+        .baudrate = 576000
+    });
     DEBUGGER.retarget(&UART);
     // tb1();
     // TIM1_Phase_shift_Init2();

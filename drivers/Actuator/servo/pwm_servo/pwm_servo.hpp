@@ -1,8 +1,9 @@
 #pragma once
 
 #include "drivers/Actuator/servo/servo.hpp"
-#include "types/regions/range2.hpp"
+#include "algebra/regions/range2.hpp"
 #include "primitive/pwm_channel.hpp"
+
 
 namespace ymd::drivers{
 
@@ -11,21 +12,21 @@ class ScaledPwm final:public hal::PwmIntf{
 public:
     ScaledPwm(
         hal::PwmIntf & pwm, 
-        const Range2<real_t> & duty_range
+        const Range2<uq16> & dutycycle_range
     ):
         pwm_(pwm), 
-        duty_range_(duty_range){;}
+        dutycycle_range_(dutycycle_range){;}
 
     void enable(const Enable en){
         enabled_ = en == EN;
         if(en == DISEN) this->set_dutycycle(0);
     }
 
-    void set_dutycycle(const real_t duty) override {
+    void set_dutycycle(const uq16 dutycycle) {
         if(false == enabled_){
             pwm_.set_dutycycle(0);
         }else{
-            pwm_.set_dutycycle(duty_range_.lerp(duty));
+            pwm_.set_dutycycle(dutycycle_range_.lerp(dutycycle));
         }
     }
 
@@ -34,7 +35,7 @@ public:
     }
 protected:
     hal::PwmIntf & pwm_;
-    Range2<real_t> duty_range_;
+    Range2<uq16> dutycycle_range_;
     bool enabled_ = true;
 };
 
@@ -42,14 +43,14 @@ protected:
 class PwmServo final:public ServoBase{
 private:
     ScaledPwm pwm_;
-    real_t last_angle;
+    Angular<real_t> last_angle;
 
-    void set_global_angle(const real_t angle) override{
-        pwm_.set_dutycycle((angle) * real_t(1 / PI));
+    void set_global_angle(const Angular<real_t> angle) {
+        pwm_.set_dutycycle((angle).to_turns());
         last_angle = angle;
     }
 
-    real_t get_global_angle() override{
+    Angular<real_t> get_global_angle() {
         return last_angle;
     }
     
@@ -66,17 +67,17 @@ protected:
     real_t max_turns_per_second_;
     real_t expect_speed_;
 
-    void set_speed_directly(const real_t rps) override{
+    void set_speed_directly(const real_t rps) {
         expect_speed_ = rps;
         set_dutycycle(rps / max_turns_per_second_);
     }
 
-    real_t get_speed() override{
+    real_t get_speed() {
         return expect_speed_;
     }
 
-    void set_dutycycle(const real_t duty){
-        pwm_.set_dutycycle((duty + 1) * real_t(0.5));
+    void set_dutycycle(const real_t dutycycle){
+        pwm_.set_dutycycle((dutycycle + 1) * real_t(0.5));
     }
 public:
     PwmSpeedServo(hal::PwmIntf & pwm, const real_t max_turns_per_second = 2):

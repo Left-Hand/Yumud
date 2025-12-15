@@ -19,7 +19,7 @@ public:
         }
     }
 
-    constexpr size_t pending() const {return 0;}
+    constexpr size_t free_capacity() const {return max_len_ - len_;}
 
     constexpr operator StringView() const {
         return StringView(buf_, len_);
@@ -38,7 +38,7 @@ private:
 // __inline size_t snprintf(char * buf, size_t len, Args && ... args){
 //     BufStream os(buf, len);
 //     (os << ... << std::forward<Args>(args));
-//     return os.pending();
+//     return os.free_capacity();
 // }
 
 // template <typename T, typename ... Args>
@@ -46,12 +46,12 @@ private:
 // __inline size_t snprintf(T & range, Args && ... args){
 //     BufStream os(range);
 //     (os << ... << std::forward<Args>(args));
-//     return os.pending();
+//     return os.free_capacity();
 // }
 
 // template<typename ... Args>
 // __inline size_t snprintf(OutputStream & os, Args && ... args){
 //     (os << ... << std::forward<Args>(args));
-//     return os.pending();
+//     return os.free_capacity();
 // }
 };

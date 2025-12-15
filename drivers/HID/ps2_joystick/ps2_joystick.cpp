@@ -15,22 +15,6 @@ enum class Command:uint8_t{
     RequestData = 0x42
 };
 
-struct TxPayload{
-    uint8_t right_vibration_strength;
-    uint8_t left_vibration_strength;
-    uint8_t __resv__[4];
-
-    static constexpr TxPayload from(const uint8_t left, const uint8_t right){
-        return {left, right, {}};
-    }
-
-    std::span<const uint8_t> as_bytes() const {
-        return std::span<const uint8_t>{reinterpret_cast<const uint8_t*>(this), sizeof(*this)};
-    }
-};
-
-static_assert(sizeof(TxPayload) == 6);
-
 IResult<> Ps2Joystick::init(){
     return Ok();
 }
@@ -38,7 +22,6 @@ IResult<> Ps2Joystick::init(){
 
 IResult<> Ps2Joystick::update(){
 
-    RxPayload rx_payload;
     if(const auto res = spi_drv_.write_single<uint8_t>((uint8_t)0x01);
         res.is_err()) return Err(res.unwrap_err());
 
@@ -53,14 +36,17 @@ IResult<> Ps2Joystick::update(){
     if(const auto res = spi_drv_.transceive_single<uint8_t>(permit, uint8_t(0x00));
         res.is_err()) return Err(res.unwrap_err());
 
+    const auto tx_frame = TxFrame::from_parts(0, 0);
+    RxFrame rx_frame;
+
     if(const auto res = spi_drv_.transceive_burst<uint8_t>(
-        rx_payload.as_bytes(),
-        TxPayload::from(0, 0).as_bytes()
+        rx_frame.as_bytes_mut(),
+        tx_frame.as_bytes()
     );  res.is_err()) 
         return Err(res.unwrap_err());
 
     if(permit == 0x5a){
-        rx_payload_ = rx_payload;
+        rx_frame_ = rx_frame;
     }else{
         // PANIC{permit};
     }
@@ -68,12 +54,12 @@ IResult<> Ps2Joystick::update(){
     return Ok();
 }
 
-IResult<Ps2Joystick::RxPayload> Ps2Joystick::read_info() const {
+IResult<Ps2Joystick::RxFrame> Ps2Joystick::read_info() const {
     switch(dev_id_){
         case DevId::DIGIT:
             return Err(Error::CantParseAtDigitMode);
-        case DevId::ANARED:
-            return Ok(rx_payload_);
+        case DevId::AnalogRed:
+            return Ok(rx_frame_);
         default:
             break;
     }
