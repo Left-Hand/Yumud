@@ -17,7 +17,7 @@
 
 
 auto & SERVO_PWMGEN_TIMER = hal::timer3;
-auto & DBG_UART = hal::uart2;
+auto & DBG_UART = hal::usart2;
 static constexpr auto CTRL_FREQ = 50;
 
 

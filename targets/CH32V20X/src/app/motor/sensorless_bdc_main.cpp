@@ -49,13 +49,13 @@ using BandpassFilter = dsp::ButterBandpassFilter<iq16, 4>;
 [[maybe_unused]] static 
 void at8222_tb(){
 
-    hal::uart2.init({
+    hal::usart2.init({
         hal::UART2_REMAP_PA2_PA3,
         4000000, 
         CommStrategy::Nil
     });
 
-    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.retarget(&hal::usart2);
     DEBUGGER.no_brackets(EN);
 
 

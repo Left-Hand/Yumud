@@ -52,7 +52,7 @@ using namespace ymd;
 
 #ifdef UART1_PRESENT
 
-#define UART hal::uart1
+#define UART hal::usart1
 
 using digipw::AlphaBetaCoord;
 
@@ -393,11 +393,11 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
 
 [[maybe_unused]] static void currentloop_tb(){
-    hal::uart1.init({
+    hal::usart1.init({
         .remap = hal::UART1_REMAP_PA9_PA10,
         .baudrate = 576000
     });
-    DEBUGGER.retarget(&hal::uart1);
+    DEBUGGER.retarget(&hal::usart1);
     // DEBUG_PRINTLN(hash(.unwrap()));
     clock::delay(400ms);
 

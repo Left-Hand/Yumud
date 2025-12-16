@@ -22,9 +22,9 @@ void ld19_main(){
     
 
     #if defined(CH32V20X)
-    auto & ld19_uart = hal::uart1;
+    auto & ld19_uart = hal::usart1;
     #elif defined(CH32V30X)
-    auto & ld19_uart = hal::uart2;
+    auto & ld19_uart = hal::usart2;
 
     #else
     static_assert(false, "Unsupported MCU");

@@ -47,7 +47,7 @@ using namespace ymd::digipw;
 using namespace ymd::dsp;
 using namespace ymd::dsp::adrc;
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 
 // static constexpr uint32_t DEBUG_UART_BAUD = 576000;
 // static constexpr uint32_t CHOPPER_FREQ = 24_KHz;
@@ -797,11 +797,11 @@ void myesc_main(){
             const auto now_secs = clock::time();
             DEBUG_PRINTLN_IDLE(
                 math::sin(now_secs),
-                hal::uart2.available()
+                hal::usart2.available()
             );
             // DEBUG_PRINTLN(1);
             // const char str[] = "h\r\n";
-            // hal::uart2.write_chars(str, sizeof(str) -1);
+            // hal::usart2.write_chars(str, sizeof(str) -1);
             // clock::delay(200ms);
         }
         if(true) DEBUG_PRINTLN_IDLE(

@@ -11,7 +11,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 
 void joystick_main(){
 

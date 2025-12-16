@@ -100,15 +100,15 @@ public:
 
 
 #ifdef UART1_PRESENT
-extern Uart uart1;
+extern Uart usart1;
 #endif
 
 #ifdef UART2_PRESENT
-extern Uart uart2;
+extern Uart usart2;
 #endif
 
 #ifdef UART3_PRESENT
-extern Uart uart3;
+extern Uart usart3;
 #endif
 
 #ifdef UART4_PRESENT

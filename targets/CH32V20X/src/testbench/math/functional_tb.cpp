@@ -23,7 +23,7 @@ struct FoundInfo{
 };
 
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 namespace ranges = std::ranges;
 

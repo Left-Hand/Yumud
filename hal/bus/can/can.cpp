@@ -519,8 +519,8 @@ void Can::enable_index_priority(const Enable en){
 
 
 void CanInterruptDispatcher::on_tx_interrupt(Can & self){
-    auto & tstatr = SDK_INST(self.inst_)->TSTATR;
-    const auto temp_tstatr = tstatr;
+    auto & tstatr_reg = SDK_INST(self.inst_)->TSTATR;
+    const auto temp_tstatr = tstatr_reg;
     //遍历每个邮箱
     auto iter_mailbox = [&]<CanMailboxIndex mbox_idx>(){
         static constexpr uint32_t TSTATR_TME_MASK = can_tstatr_tme_mask(mbox_idx);
@@ -539,7 +539,7 @@ void CanInterruptDispatcher::on_tx_interrupt(Can & self){
                 }
 
                 //清除发送标志位
-                tstatr = TSTATR_RQCP_MASK;
+                tstatr_reg = TSTATR_RQCP_MASK;
                 break;
             case TSTATR_TME_MASK | TSTATR_RQCP_MASK | TSTATR_RXOK_MASK:
                 //发送成功
@@ -549,7 +549,7 @@ void CanInterruptDispatcher::on_tx_interrupt(Can & self){
                 }
 
                 //清除发送标志位
-                tstatr = TSTATR_RQCP_MASK;
+                tstatr_reg = TSTATR_RQCP_MASK;
                 break;
         }
     };

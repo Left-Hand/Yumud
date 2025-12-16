@@ -198,7 +198,7 @@ class AnalogJoystick{
 // }
 
 
-#define UART hal::uart2
+#define UART hal::usart2
 static constexpr uint32_t TIM_FREQ = 5000;
 static constexpr uint32_t ISR_FREQ = TIM_FREQ / 2;
 void myservo_main(){

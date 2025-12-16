@@ -58,7 +58,7 @@ void mlx90640_main(){
 
 
     auto init_debugger = []{
-        auto & DBG_UART = hal::uart2;
+        auto & DBG_UART = hal::usart2;
 
         DBG_UART.init({
             .remap = hal::UartRemap::_0,

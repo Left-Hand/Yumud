@@ -17,8 +17,8 @@ using namespace ymd;
 static constexpr size_t CHOP_FREQ = 40_KHz;
 // #define CHOP_FREQ 200
 
-// #define UART uart1
-#define UART hal::uart2
+// #define UART usart1
+#define UART hal::usart2
 
 #define TIM_INDEX 1
 // #define TIM_INDEX 2
@@ -32,11 +32,11 @@ static constexpr size_t CHOP_FREQ = 40_KHz;
 
 
 void co_ab_main(){
-    hal::uart2.init({
+    hal::usart2.init({
         .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000
     });
-    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.retarget(&hal::usart2);
 
     #if TIM_INDEX == 1
     auto & timer = hal::timer1;

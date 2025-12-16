@@ -19,7 +19,7 @@ using namespace ymd;
 using hal::HalError;
 
 // #define UART DEBUGGER_INST
-#define UART hal::uart2
+#define UART hal::usart2
 
 #if 0
 #define SCL_PIN hal::PD<1>()
@@ -66,7 +66,7 @@ struct I2cTester{
         }();
 
         // DEBUG_PRINTLN("??");
-        hal::uart2.set_rx_strategy(CommStrategy::Blocking);
+        hal::usart2.set_rx_strategy(CommStrategy::Blocking);
 
         return Ok{max_baud};
     }

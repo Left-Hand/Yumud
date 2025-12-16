@@ -966,7 +966,7 @@ void host_main(){
         using namespace GrabActions;
 
         Map map{};
-        auto & vuart = uart2;
+        auto & vuart = usart2;
         vuart.init(576000, CommStrategy::Blocking);
         VisionModule vision{vuart};
 
@@ -1334,7 +1334,7 @@ void host_main(){
         // chassis << new StraightAction(chassis, 0.805_r);
         // chassis << new StrictSpinAction(chassis, real_t(PI/2));
         // txo.outpp();
-        // uart2.init(115200);
+        // usart2.init(115200);
         // chassis.shift({0.2_r, 0});
         // chassis.shift({-0.2_r, 0});
         // chassis.spin(real_t(PI/2));
@@ -1396,12 +1396,12 @@ void host_main(){
             // vuart.println("offset");
             // clock::delay(1000ms);
             continue;
-            // DEBUG_PRINTLN(uart2.available());
+            // DEBUG_PRINTLN(usart2.available());
             // clock::delay(10ms);
             // delay
             // clock::delay(100ms);
             // txo.toggle();
-            // uart2.println()
+            // usart2.println()
             // {
             //     clock::delay(2000ms);
 
@@ -1422,8 +1422,8 @@ void host_main(){
             // DEBUG_PRINTLN(chassis.gyr(), 
             //     chassis.rad(), stps[0].readPosition(), stps[1].readPosition(), stps[2].readPosition(),
             //     stps[3].readPosition());]
-            // uart2.println("color");
-            // DEBUG_PRINTLN(uart2.pending());
+            // usart2.println("color");
+            // DEBUG_PRINTLN(usart2.pending());
             // DEBUG_PRINTLN(int(status));
             // DEBUG_PRINTLN(std::setprecision(4))
             // DEBUG_PRINTLN(int(status));

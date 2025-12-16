@@ -12,7 +12,7 @@ using namespace ymd;
 // 
 using namespace ymd::drivers;
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 static void tm1637_tb(){
     auto scl_pin_ = hal::PB<0>();

@@ -14,7 +14,7 @@ using namespace ymd::drivers;
 
 void ma730_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
-    hal::uart2.init({
+    hal::usart2.init({
         .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000
     });

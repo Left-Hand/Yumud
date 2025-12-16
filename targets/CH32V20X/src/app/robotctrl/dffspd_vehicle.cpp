@@ -207,7 +207,7 @@ void diffspd_vehicle_main(){
     // static constexpr auto PWM_FREQ = 1000;
     static constexpr auto MOTOR_CTRL_FREQ = PWM_FREQ; 
     // my_can_ring_main();
-    auto & DBG_UART = hal::uart2;
+    auto & DBG_UART = hal::usart2;
 
     DBG_UART.init({
         .remap = hal::UART2_REMAP_PA2_PA3,

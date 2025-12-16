@@ -22,7 +22,7 @@ using namespace ymd;
 // https://www.cnblogs.com/wchmcu/p/18781096
 // https://www.cnblogs.com/wchmcu/p/18325273
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 
 
@@ -95,7 +95,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
 }
 
 void phase3pwm_main(void){
-    hal::uart2.init({
+    hal::usart2.init({
         .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000
     });

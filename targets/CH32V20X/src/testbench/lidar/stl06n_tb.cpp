@@ -22,9 +22,9 @@ void stl06n_main(){
     
 
     #if defined(CH32V20X)
-    auto & stl06n_uart_ = hal::uart1;
+    auto & stl06n_uart_ = hal::usart1;
     #elif defined(CH32V30X)
-    auto & stl06n_uart_ = hal::uart2;
+    auto & stl06n_uart_ = hal::usart2;
 
     #else
     static_assert(false, "Unsupported MCU");

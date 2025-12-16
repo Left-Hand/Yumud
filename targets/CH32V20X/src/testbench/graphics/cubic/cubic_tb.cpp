@@ -415,7 +415,7 @@ static void precompute_2(const float angle)
 	mat4_mul_mat4(mvp, vp, r);
 }
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 void cubic_main(void){
 

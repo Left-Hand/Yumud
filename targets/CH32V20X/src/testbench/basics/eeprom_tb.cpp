@@ -307,11 +307,11 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
 
 void eeprom_main(){
-    hal::uart2.init({
+    hal::usart2.init({
         .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000
     });
-    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.retarget(&hal::usart2);
     DEBUGGER.set_eps(2);
     DEBUGGER.set_radix(10);
     DEBUGGER.set_splitter("\t");

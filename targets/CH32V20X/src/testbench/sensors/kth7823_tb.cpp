@@ -13,7 +13,7 @@ using namespace ymd::drivers;
 
 
 void kth7823_main(){
-    hal::uart2.init({
+    hal::usart2.init({
         .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000
     });

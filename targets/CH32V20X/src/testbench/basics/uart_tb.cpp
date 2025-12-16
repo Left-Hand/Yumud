@@ -57,18 +57,18 @@ using namespace ymd;
 
 void uart_main(){
     // uart_tb_old();
-    //uart1 passed
-    //uart2 passed
-    //uart3 passed
+    //usart1 passed
+    //usart2 passed
+    //usart3 passed
     //uart5 passed
     //uart6 passed
     //uart8 passed
 
-    hal::uart2.init({
+    hal::usart2.init({
         .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000
     });
-    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.retarget(&hal::usart2);
     // DEBUGGER.init(DEBUG_UART_BAUD, CommStrategy::Dma, CommStrategy::None);
-    uart_tb(hal::uart2);
+    uart_tb(hal::usart2);
 }

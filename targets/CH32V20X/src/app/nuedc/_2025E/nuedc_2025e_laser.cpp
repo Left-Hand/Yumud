@@ -27,7 +27,7 @@ using namespace ymd::robots;
 using namespace ymd::nuedc_2025e;
 
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 static constexpr uint32_t PWM_FREQ = 10000;
 static constexpr uint32_t ISR_FREQ = PWM_FREQ / 2;
 

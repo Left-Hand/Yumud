@@ -17,8 +17,8 @@ using namespace ymd;
 
 using namespace ymd::drivers;
 
-// #define UART uart2
-#define UART hal::uart2
+// #define UART usart2
+#define UART hal::usart2
 #define SCL_PIN hal::PB<3>()
 #define SDA_PIN hal::PB<5>()
 

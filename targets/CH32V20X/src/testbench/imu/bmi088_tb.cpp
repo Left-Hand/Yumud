@@ -19,7 +19,7 @@ using namespace ymd::drivers;
 using ymd::drivers::BMI088_Acc;
 using ymd::drivers::BMI088_Gyr;
 
-#define UART hal::uart2
+#define UART hal::usart2
 #define ACC_CS_GPIO hal::PB<0>()
 #define GYR_CS_GPIO hal::PB<1>()
 

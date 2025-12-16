@@ -12,7 +12,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 #define SCL_PIN hal::PB<0>()
 #define SDA_PIN hal::PB<1>()
 

@@ -7,8 +7,8 @@
 #include "hal/bus/uart/uarthw.hpp"
 // #include "kalman/kalman3.hpp"
 
-// #define UART uart2
-#define UART hal::uart2
+// #define UART usart2
+#define UART hal::usart2
 void ekf_main(){
 
     DEBUGGER_INST.init({

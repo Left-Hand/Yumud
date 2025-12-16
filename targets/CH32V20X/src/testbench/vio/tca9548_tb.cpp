@@ -12,7 +12,7 @@
 
 using namespace ymd;
 
-#define UART hal::uart2
+#define UART hal::usart2
 #define SCL_PIN hal::PA<12>()
 #define SDA_PIN hal::PA<15>()
 

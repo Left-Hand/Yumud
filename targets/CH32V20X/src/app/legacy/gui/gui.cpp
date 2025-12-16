@@ -232,7 +232,7 @@ void gui_main(){
 
 
         // // DEBUG_PRINTLN(millis(), micros(), t);
-        // // uart2.println(millis(), micros(), t, nanos());
+        // // usart2.println(millis(), micros(), t, nanos());
         // // clock::delay(1ms);
         // // clock::delay(180us);
         // // clock::delay(380us);
@@ -263,9 +263,9 @@ void gui_main(){
         // // painter.fill(ColorEnum::RED);
         // // auto m = micros();
         // // painter.fill(ColorEnum::GREEN);
-        // // uart2.println(1000000 / (micros() - m));
-        // // uart2.println(millis(), uart2.available());
-        // // uart2.println(micros() - m);
+        // // usart2.println(1000000 / (micros() - m));
+        // // usart2.println(millis(), usart2.available());
+        // // usart2.println(micros() - m);
         // // painter.fill(ColorEnum::BLUE);
 
 

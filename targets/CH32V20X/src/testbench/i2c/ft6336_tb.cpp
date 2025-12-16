@@ -23,7 +23,7 @@
 using namespace ymd;
 using drivers::FT6336U;
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 #define SCL_PIN hal::PB<0>()
 #define SDA_PIN hal::PB<1>()

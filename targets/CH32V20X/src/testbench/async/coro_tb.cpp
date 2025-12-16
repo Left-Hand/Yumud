@@ -11,7 +11,7 @@ using namespace ymd;
 using namespace ymd::coro;
 // using Task = coro::Task;
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 Future<void> hello(int max) {
     DEBUGGER << "hello start\n";

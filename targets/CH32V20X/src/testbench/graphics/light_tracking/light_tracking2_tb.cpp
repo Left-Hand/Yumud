@@ -394,7 +394,7 @@ static void render_row(
 
 // #if 0
 
-#define UART hal::uart2
+#define UART hal::usart2
 using drivers::ST7789;
 using drivers::ST7789_Phy;
 

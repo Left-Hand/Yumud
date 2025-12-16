@@ -24,7 +24,7 @@
 using namespace ymd;
 using drivers::ST1615;
 
-#define UART hal::uart2
+#define UART hal::usart2
 // #define UART hal::uart6
 #define SCL_PIN hal::PB<3>()
 #define SDA_PIN hal::PB<5>()

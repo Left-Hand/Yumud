@@ -797,15 +797,15 @@ void UartInterruptDispatcher::on_interrupt(Uart & self){
 
 namespace ymd::hal{
 #ifdef UART1_PRESENT
-Uart uart1{USART1};
+Uart usart1{USART1};
 #endif
 
 #ifdef UART2_PRESENT
-Uart uart2{USART2};
+Uart usart2{USART2};
 #endif
 
 #ifdef UART3_PRESENT
-Uart uart3{USART3};
+Uart usart3{USART3};
 #endif
 
 #ifdef UART4_PRESENT
@@ -838,15 +838,15 @@ __interrupt void fname(void){\
 
 
 #ifdef UART1_PRESENT
-UART_IT_TEMPLATE(uart1, USART1_IRQHandler)
+UART_IT_TEMPLATE(usart1, USART1_IRQHandler)
 #endif
 
 #ifdef UART2_PRESENT
-UART_IT_TEMPLATE(uart2, USART2_IRQHandler)
+UART_IT_TEMPLATE(usart2, USART2_IRQHandler)
 #endif
 
 #ifdef UART3_PRESENT
-UART_IT_TEMPLATE(uart3, USART3_IRQHandler)
+UART_IT_TEMPLATE(usart3, USART3_IRQHandler)
 #endif
 
 #ifdef UART4_PRESENT

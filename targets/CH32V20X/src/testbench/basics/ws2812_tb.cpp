@@ -10,7 +10,7 @@
 using namespace ymd;
 
 
-#define TARG_UART hal::uart2
+#define TARG_UART hal::usart2
 
 [[maybe_unused]] static void ws2812_tb(hal::GpioIntf & gpio){
     gpio.outpp();

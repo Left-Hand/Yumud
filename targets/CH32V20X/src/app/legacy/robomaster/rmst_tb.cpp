@@ -167,8 +167,8 @@ void so_tb(){
 
 
 void rmst_main(){
-    uart2.init({576000});
-    DEBUGGER.retarget(&uart2);
+    usart2.init({576000});
+    DEBUGGER.retarget(&usart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 

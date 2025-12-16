@@ -699,7 +699,7 @@ void app(){
     auto & DBG_UARTSW_GPIO = hal::PA<5>();
     auto & TTS_UARTSW_GPIO = hal::PB<1>();
     auto & LED_GPIO = hal::PB<8>();
-    auto & UARTHW = uart2;
+    auto & UARTHW = usart2;
 
     hal::UartSw dbg_uart{DBG_UARTSW_GPIO, NullGpio}; 
     hal::UartSw tts_uart{TTS_UARTSW_GPIO, NullGpio}; 

@@ -210,7 +210,7 @@ static constexpr void rfft(std::span<Complex<T>> dst, std::span<const T> src){
 } // namespace dsp
 
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 
 void fft_main(){

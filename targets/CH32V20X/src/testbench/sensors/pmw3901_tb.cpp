@@ -14,11 +14,11 @@ using namespace ymd::drivers;
 
 void pmw3901_main(){
 
-    hal::uart2.init({
+    hal::usart2.init({
         .remap = hal::UartRemap::_0,
         .baudrate = 921600
     });
-    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.retarget(&hal::usart2);
     DEBUGGER.no_brackets(EN);
     DEBUG_PRINTLN(std::setprecision(4));
 

@@ -40,7 +40,7 @@ DEF_ERROR_WITH_KINDS(MyError, ST7789::Error, PainterBase::Error)
 
 
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 
 
 void st7789_main(void){

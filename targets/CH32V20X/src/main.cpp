@@ -90,7 +90,7 @@ int main(){
     
     // fmt_main();
     // sincos_pwm_main();
-    // stepper_tb(uart1);
+    // stepper_tb(usart1);
     // co_ab_main();
     // uart_main();
     // rpc_main();
@@ -136,25 +136,25 @@ int main(){
     // bmi160_main();
     // clock::delay(200ms);
     // pmdc_tb();
-    // uart_tb(uart1);
-    // joystick_tb(uart1);
+    // uart_tb(usart1);
+    // joystick_tb(usart1);
     // gpio_tb(hal::PC<13>());
     // can_tb(logger, can1, false);
     // m3508_main();
-    // stepper_tb(uart1);
+    // stepper_tb(usart1);
     // pmw3901_main();
-    // math_tb(uart1);
-    // zdt_main(uart1);
+    // math_tb(usart1);
+    // zdt_main(usart1);
     // m3508_main();
     // while(true);
-    // lds14_tb(logger, uart2);
+    // lds14_tb(logger, usart2);
     // pca_tb(logger);
-    // lua_tb(uart1);p
+    // lua_tb(usart1);p
     // pwm_tb(logger);
     // adc_tb(logger);
     // temp_tb(logger);
     // temp_tb2(logger);
-    // eeprom_tb(uart1);
+    // eeprom_tb(usart1);
     // eeprom_main();
     // myservo_main();
     // myesc_main();
@@ -181,11 +181,11 @@ int main(){
     // slcan_main();
     // programmer_main();
     // gui_main();
-    // math_tb(uart2);
+    // math_tb(usart2);
 
     // curve_tb();
 
-    // math_tb(hal::uart2);
+    // math_tb(hal::usart2);
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
     // uart_main();

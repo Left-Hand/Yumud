@@ -17,7 +17,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-// #define DEBUGGER_INST hal::uart2
+// #define DEBUGGER_INST hal::usart2
 
 using AlxEvent = drivers::alx_aoa::Event;
 using AlxError = drivers::alx_aoa::Error;
@@ -86,7 +86,7 @@ using namespace alx_aoa_tb;
 void alx_aoa_main(){
 
     #if defined(CH32V30X)
-    hal::uart2.init({
+    hal::usart2.init({
         .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000 ,
         .tx_strategy = CommStrategy::Blocking
@@ -95,7 +95,7 @@ void alx_aoa_main(){
 
 
 
-    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.retarget(&hal::usart2);
     DEBUGGER.no_brackets(DISEN);
     DEBUGGER.no_fieldname(EN);
 
@@ -135,7 +135,7 @@ void alx_aoa_main(){
     );
 
     
-    hal::uart3.init({
+    hal::usart3.init({
         .remap = hal::UART3_REMAP_PB10_PB11,
         .baudrate = alx_aoa::DEFAULT_UART_BAUD,
     });
@@ -146,7 +146,7 @@ void alx_aoa_main(){
     });
 
 
-    [[maybe_unused]] auto & alx_1_uart_ = hal::uart3;
+    [[maybe_unused]] auto & alx_1_uart_ = hal::usart3;
     [[maybe_unused]] auto & alx_2_uart_ = hal::uart4;
 
     alx_1_uart_.set_event_handler([&](const hal::UartEvent & ev){

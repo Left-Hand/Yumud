@@ -18,8 +18,8 @@ using namespace ymd;
 static constexpr size_t CHOP_FREQ = 40_KHz;
 // #define CHOP_FREQ 200
 
-// #define UART uart1
-#define UART hal::uart2
+// #define UART usart1
+#define UART hal::usart2
 
 #define TIM_INDEX 1
 // #define TIM_INDEX 2

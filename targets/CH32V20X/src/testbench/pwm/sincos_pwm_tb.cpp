@@ -24,8 +24,8 @@ using namespace ymd;
 static constexpr size_t FREQ = 2_KHz;
 // #define FREQ 200
 
-// #define UART uart1
-#define UART hal::uart2
+// #define UART usart1
+#define UART hal::usart2
 
 #define TIM_INDEX 1
 // #define TIM_INDEX 2
@@ -36,7 +36,7 @@ static constexpr size_t FREQ = 2_KHz;
 // #define TIM1_USE_CC4 1
 
 void sincos_pwm_main(){
-    hal::uart2.init({
+    hal::usart2.init({
         .remap = hal::UART2_REMAP_PA2_PA3,
         .baudrate = 576000
     });

@@ -22,9 +22,9 @@ void m10_main(){
     DEBUGGER.retarget(&DEBUGGER_INST);
 
     #if defined(CH32V20X)
-    auto & m10_uart_ = hal::uart1;
+    auto & m10_uart_ = hal::usart1;
     #elif defined(CH32V30X)
-    auto & m10_uart_ = hal::uart2;
+    auto & m10_uart_ = hal::usart2;
 
     #else
     static_assert(false, "Unsupported MCU");

@@ -19,7 +19,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 class Menu{
 protected:

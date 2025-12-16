@@ -22,9 +22,9 @@ void mk8000tr_main(){
     
 
     #if defined(CH32V20X)
-    auto & mk8000tr_uart_ = hal::uart1;
+    auto & mk8000tr_uart_ = hal::usart1;
     #elif defined(CH32V30X)
-    auto & mk8000tr_uart_ = hal::uart2;
+    auto & mk8000tr_uart_ = hal::usart2;
     #else
     static_assert(false, "Unsupported MCU");
     #endif

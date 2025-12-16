@@ -11,9 +11,9 @@
 using namespace ymd;
 
 
-#define UART hal::uart2
-// #define OTHER_UART hal::uart1
-#define OTHER_UART hal::uart2
+#define UART hal::usart2
+// #define OTHER_UART hal::usart1
+#define OTHER_UART hal::usart2
 static constexpr size_t BAUD = 921600;
 
 void half_line_uart_main(){
@@ -35,7 +35,7 @@ void half_line_uart_main(){
         DEBUG_PRINTLN(ava);
         // for(size_t i = 0; i < ava; i++){
         //     char chr;
-        //     uart1.read_char(chr);
+        //     usart1.read_char(chr);
         //     DEBUG_PRINT(int(chr));
         // }
         clock::delay(10ms);
