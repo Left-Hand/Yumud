@@ -144,7 +144,7 @@ public:
         const auto den = a1 * b2 - a2 * b1;
         const auto inv_den = T(1) / den;
 
-        return Some(Vec2<real_t>{num1 * inv_den, num2 * inv_den});
+        return Some(Vec2<T>{num1 * inv_den, num2 * inv_den});
     }
 
     [[nodiscard]] __fast_inline constexpr

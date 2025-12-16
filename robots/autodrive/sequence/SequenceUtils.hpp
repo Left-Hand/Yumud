@@ -36,7 +36,7 @@ public:
         CurvePoint(pos.x, pos.y, orientation){;}
         
     constexpr CurvePoint(const Ray2<iq16> & ray):
-        CurvePoint(ray.org.x, ray.org.y, ray.orientation){;}
+        CurvePoint(ray.center.x, ray.center.y, ray.orientation){;}
 
     constexpr Ray2<iq16> to_ray() const{
         return Ray2<iq16>(

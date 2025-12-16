@@ -5,6 +5,7 @@
 #include "algebra/vectors/polar.hpp"
 #include "algebra/vectors/spherical_coordinates.hpp"
 #include "algebra/shapes/circle2.hpp"
+#include "algebra/regions/ray2.hpp"
 
 namespace ymd::geometry { 
 
@@ -59,6 +60,52 @@ constexpr HeaplessVector<Vec2<T>, 2> compute_intersection_points(
         Vec2<T>(x0 + rx, y0 + ry),
         Vec2<T>(x0 - rx, y0 - ry)
     );
+}
+
+template<typename T>
+requires (not std::is_integral_v<T>)
+constexpr Option<Vec2<T>> compute_intersection_point(
+    const Ray2<T> & ray,
+    const Circle2<T> & circle
+){
+    const auto ray_center = ray.center;
+    const auto ray_orientation = ray.orientation;
+    
+    // Vector from circle center to ray origin
+    const Vec2<T> d = ray_center - circle.center;
+    
+    // Ray direction vector (assumed to be normalized)
+    const Vec2<T> v = Vec2<T>::from_angle(ray_orientation);
+    
+    // Quadratic equation coefficients: at^2 + bt + c = 0
+    const T a = v.dot(v);
+    const T b = T(2) * d.dot(v);
+    const T c = d.dot(d) - circle.radius * circle.radius;
+    
+    // Calculate discriminant
+    const T discriminant = b * b - T(4) * a * c;
+    
+    // No intersection if discriminant is negative
+    if (discriminant < T(0)) {
+        return None;
+    }
+    
+    // Calculate the nearest intersection point
+    const T sqrt_discriminant = std::sqrt(discriminant);
+    const T inv2a = T(0.5) / (a);
+    const T t1 = (-b - sqrt_discriminant) * inv2a;
+    const T t2 = (-b + sqrt_discriminant) * inv2a;
+    
+    // For a ray, we only consider positive t values
+    const T t = (t1 >= T(0)) ? t1 : t2;
+    
+    // If both t values are negative, no intersection in ray direction
+    if (t < T(0)) {
+        return None;
+    }
+    
+    // Calculate intersection point
+    return Some(ray_center + v * t);
 }
 
 }

@@ -101,4 +101,9 @@ __attribute__((always_inline)) constexpr T atan2pu(const T a, const T b) {
     constexpr auto INV_TAU = static_cast<T>(1 / TAU);
     return std::atan2(a, b) * INV_TAU;
 }
+
+template<std::floating_point T>
+__attribute__((always_inline)) constexpr T floor(const T x) {
+    return std::floor(x);
+}
 }

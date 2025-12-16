@@ -13,6 +13,7 @@
 #include "drivers/Proximeter/MK8000TR/mk8000tr_stream.hpp"
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
 
+#include "algebra/regions/Ray2.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -29,6 +30,8 @@ using drivers::alx_aoa::AlxAoa_ParserSink;
 using Mk8Event = drivers::mk8000tr::Event;
 
 using AlxMeasurement = SphericalCoordinates<float>;
+
+
 
 namespace alx_aoa_tb{
 struct [[nodiscard]] Mk8Measurement{
@@ -88,7 +91,7 @@ void alx_aoa_main(){
     #if defined(CH32V30X)
     hal::usart2.init({
         .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000 ,
+        .baudrate = 115200 * 2,
         .tx_strategy = CommStrategy::Blocking
         // 115200
     });
@@ -110,7 +113,9 @@ void alx_aoa_main(){
             const auto & ev = res.unwrap();
             if(ev.is<AlxLocation>()){
                 const AlxLocation & loc = ev.unwrap_as<AlxLocation>();
-                const auto && measurement = loc.to_spherical_coordinates<float>();
+                auto measurement = loc.to_spherical_coordinates<float>();
+                measurement.azimuth = -measurement.azimuth;
+                measurement.elevation = -measurement.elevation;
                 alx_measurements_.at(idx) = measurement;
                 // if(idx == 1)PANIC{idx};
             }else if(ev.is<AlxHeartBeat>()){
@@ -197,7 +202,7 @@ void alx_aoa_main(){
 
         blink_activity_.resume();
 
-        static auto report_timer = async::RepeatTimer::from_duration(3ms);
+        static auto report_timer = async::RepeatTimer::from_duration(30ms);
         
         report_timer.invoke_if([&]{
             #if 0
@@ -246,52 +251,106 @@ void alx_aoa_main(){
             );
             #else
             [[maybe_unused]] const auto & alx_measurement = alx_measurements_[0];
-            const auto & front_meas = alx_measurements_[1];
-            const auto & back_meas = alx_measurements_[0];
+            const auto & left_raw_meas = alx_measurements_[1];
+            const auto & right_raw_meas = alx_measurements_[0];
 
-            const auto front_offset_vec3 = front_meas.to_vec3();
-            const auto back_offset_vec3 = back_meas.to_vec3();
+            const auto left_meas = std::get<0>(left_raw_meas.to_polar_and_height());
+            const auto right_meas = std::get<0>(right_raw_meas.to_polar_and_height());
+            // const auto left_offset_vec3 = left_raw_meas.to_vec3();
+            // const auto right_offset_vec3 = right_raw_meas.to_vec3();
 
-            static constexpr float VERTICAL_DISJUDGE_CIRCLE_RADIUS = 0.6f;
-            const auto front_offset_vec2 = Vec2f(front_offset_vec3.x, front_offset_vec3.y);
-            const auto back_offset_vec2 = Vec2f(back_offset_vec3.x, back_offset_vec3.y);
+            // static constexpr float NEAR_JUDEGE_RADIUS = 0.6f;
+            // static constexpr float FAR_JUDEGE_RADIUS = 1.6f;
+            // [[maybe_unused]] const auto left_offset_vec2 = Vec2f(left_offset_vec3.x, left_offset_vec3.y);
+            // [[maybe_unused]] const auto right_offset_vec2 = Vec2f(right_offset_vec3.x, right_offset_vec3.y);
 
-            [[maybe_unused]] const auto FRONT_BASE = Vec2f(0.0, 0.37f);
-            [[maybe_unused]] const auto BACK_BASE = Vec2f(0.0, -0.37f);
+            [[maybe_unused]] const auto LEFT_ANGLE_BASE = Angular<float>::from_degrees(135);
+            [[maybe_unused]] const auto LEFT_BASE = Vec2f(-0.30f, 0.0f);
+            [[maybe_unused]] const auto RIGHT_ANGLE_BASE = Angular<float>::from_degrees(45);
+            [[maybe_unused]] const auto RIGHT_BASE = Vec2f(0.30f, -0.0f);
 
-            [[maybe_unused]] const auto circle_front = Circle2<float>{FRONT_BASE, front_meas.distance};
-            [[maybe_unused]] const auto circle_back = Circle2<float>{BACK_BASE, back_meas.distance};
+            [[maybe_unused]] const auto left_circle = Circle2<float>{LEFT_BASE, left_raw_meas.distance};
+            [[maybe_unused]] const auto right_circle = Circle2<float>{RIGHT_BASE, right_raw_meas.distance};
 
-            const auto points = geometry::compute_intersection_points(circle_front, circle_back);
-            const auto may_p = points.at_or(0, Vec2f::ZERO);
 
-            const bool is_in_side_disjudge_region = ABS(front_meas.distance - back_meas.distance) < 0.5f;
-            const bool is_in_front_disjudge_region = front_meas.distance < VERTICAL_DISJUDGE_CIRCLE_RADIUS;
-            const bool is_in_back_disjudge_region = back_meas.distance < VERTICAL_DISJUDGE_CIRCLE_RADIUS;
+            // const auto points = geometry::compute_intersection_points(left_circle, right_circle);
+            // const auto may_p = points.at_or(0, Vec2f::ZERO);
 
-            const bool is_in_strong_judge_region =
-                (is_in_front_disjudge_region == false) and (is_in_back_disjudge_region == false) and (is_in_side_disjudge_region == false);
+            // const bool is_right_near = ABS(left_raw_meas.distance - right_raw_meas.distance) < 0.5f;
+            // [[maybe_unused]] const bool is_left_near = left_meas.amplitude < NEAR_JUDEGE_RADIUS;
+            // [[maybe_unused]] const bool is_right_near = right_meas.amplitude < NEAR_JUDEGE_RADIUS;
+
+            // [[maybe_unused]] const bool is_left_far = left_meas.amplitude < FAR_JUDEGE_RADIUS;
+            // [[maybe_unused]] const bool is_right_far = right_meas.amplitude < FAR_JUDEGE_RADIUS;
+
+            // [[maybe_unused]] const bool is_near =
+            //     (is_left_near ) or (is_right_near);
+
+            // [[maybe_unused]] const bool is_far =
+            //     (is_left_far) and (is_right_far);
+            
+            // const auto may_dual_p = geometry::compute_intersection_points(left_circle, right_circle);
+            // const auto p = may_dual_p.size() ? may_dual_p[0] : Vec2f::ZERO;
+            const auto left_ray = Ray2<float>(LEFT_BASE, LEFT_ANGLE_BASE + left_meas.phase);
+            const auto right_ray = Ray2<float>(RIGHT_BASE, RIGHT_ANGLE_BASE + right_meas.phase);
+
+            // const auto p = geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(Vec2f::ZERO);
+
+            [[maybe_unused]] const auto left_est_point = left_ray.endpoint_at_length(left_meas.amplitude);
+            [[maybe_unused]] const auto right_est_point = right_ray.endpoint_at_length(right_meas.amplitude);
+            // const auto may_p = left_ray.intersection(right_ray, 0.0001f);
+            // const auto cp = may_p.unwrap_or(Vec2f::ZERO);
             DEBUG_PRINTLN(
                 // alx_measurement.distance,
-                // is_in_side_disjudge_region,
-                // front_meas.distance - back_meas.distance,
-                // is_in_front_disjudge_region,
-                // is_in_back_disjudge_region,
-                // is_in_strong_judge_region,
-                front_meas.azimuth.to_turns(),
-                // back_meas.distance < VERTICAL_DISJUDGE_CIRCLE_RADIUS
-                // front_meas.azimuth.to_turns()
+                // is_right_near,
+                // left_meas.distance,
+                // ,
+
+                // left_meas.distance,
+                // right_meas.distance,
+                // left_meas.phase.to_degrees(),
+                // left_est_err,
+                // right_est_err,
+                // left_meas.phase.to_radians(),
+                // right_meas.phase.to_radians(),
+                // cp.x,
+                // cp.y,
+                // (cp - LEFT_BASE.org).length(),
+                // (cp - RIGHT_BASE.org).length(),
+                // left_meas.distance,
+                // right_meas.distance,
+                left_est_point,
+                right_est_point,
+                // p
+                geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(Vec2f::ZERO),
+                geometry::compute_intersection_point(right_ray, left_circle).unwrap_or(Vec2f::ZERO)
+                // (left_raw_meas.distance > right_raw_meas.distance) ? right_est_point : right_est_point
+                
+                // ((left_est_point - RIGHT_BASE).angle() - (right_meas.phase + RIGHT_ANGLE_BASE)).to_turns(),
+                // ((right_est_point - LEFT_BASE).angle() - (left_meas.phase + LEFT_ANGLE_BASE)).to_turns(),
+                // left_est_point.x,
+                // left_est_point.y,
+                // (right_est_point - left_est_point).length(),
+                // ((cp - LEFT_BASE.org).length() - left_meas.distance),
+                // ((cp - RIGHT_BASE.org).length() - right_meas.distance),
+                // 0
+                // is_left_near,
+                // is_in_right_disjudge_region,
+                // is_near,
+                // left_meas.azimuth.to_turns(),
+                // right_meas.distance < NEAR_JUDEGE_RADIUS
+                // left_meas.azimuth.to_turns()
                 // alx_measurement.azimuth.to_radians()
                 // points.at_or(0, Vec2f::ZERO),
-                may_p.x,
-                may_p.y
-                // front_meas.distance,
-                // front_meas.azimuth.to_degrees(),
-                // back_meas.distance,
-                // front_offset_vec2,
-                // back_offset_vec2
-                // front_vec2,
-                // back_vec2
+                // may_p.x,
+                // may_p.y
+                // left_meas.distance,
+                // left_meas.azimuth.to_degrees(),
+                // right_meas.distance,
+                // left_offset_vec2,
+                // right_offset_vec2
+                // left_vec2,
+                // right_vec2
                 // alx_measurements_[1]
             );
             #endif
