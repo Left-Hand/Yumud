@@ -14,7 +14,7 @@
 
 //#region switches
 
-// #define CAN_SCE_ENABLED
+#define CAN_SCE_ENABLED
 
 //#endregion switches
 

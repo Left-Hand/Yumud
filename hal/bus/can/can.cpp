@@ -14,69 +14,6 @@ using namespace ymd::hal;
 
 using Callback = Can::Callback;
 
-namespace ymd::hal::can{
-// https://docs.rs/embassy-stm32/latest/embassy_stm32/can/config/enum.TxBufferMode.html
-enum class TxBufferMode:uint8_t {
-    // TX FIFO operation - In this mode CAN frames are trasmitted strictly in write order.
-    Fifo,
-    // TX priority queue operation - In this mode CAN frames are transmitted according to CAN priority.
-    Priority,
-};
-
-#if 0
-struct FdCanConfig final {
-    // Nominal Bit Timings
-    CanNominalBitTimming nbtr;
-    // (Variable) Data Bit Timings
-    DataBitTiming dbtr;
-    // Enables or disables automatic retransmission of messages
-
-    // If this is enabled, the CAN peripheral will automatically try to retransmit each frame util it can be sent. Otherwise, it will try only once to send each frame.
-
-    // Automatic retransmission is enabled by default.
-    Enable automatic_retransmit;
-
-    // The transmit pause feature is intended for use in CAN systems where the CAN message 
-    // identifiers are permanently specified to specific values and cannot easily be changed.
-
-    // These message identifiers can have a higher CAN arbitration priority than other defined messages, 
-    // while in a specific application their relative arbitration priority must be inverse.
-
-    // This may lead to a case where one ECU sends a burst of CAN messages that cause another ECU CAN 
-    // messages to be delayed because that other messages have a lower CAN arbitration priori
-    Enable transmit_pause;
-
-    // Enabled or disables the pausing between transmissions
-    // This feature looses up burst transmissions coming from a single node and it protects against 
-    // “babbling idiot” scenarios where the application program erroneously requests too many transmissions.
-    FrameTransmissionConfig frame_transmit;
-
-    // Non Isoe Mode If this is set, the FDCAN uses the CAN FD frame format as specified by the 
-    // Bosch CAN FD Specification V1.0.
-    Enable non_iso_mode;
-
-    // Edge Filtering: Two consecutive dominant tq required to detect an edge for hard synchronization
-    Enable edge_filtering;
-
-    // Enables protocol exception handling
-    Enable protocol_exception_handling;
-
-    // Sets the general clock divider for this FdCAN instance
-    ClockDivider clock_divider;
-
-    // Sets the timestamp source
-    TimestampSource timestamp_source;
-
-    // Configures the Global Filter
-    GlobalFilter global_filter;
-
-    // TX buffer mode (FIFO or priority queue)
-    TxBufferMode tx_buffer_mode;
-};
-#endif
-}
-
-
 
 #define COPY_CONST(a,b) std::conditional_t<\
     std::is_const_v<std::decay_t<decltype(a)>>,\
@@ -478,12 +415,12 @@ void Can::transmit(const BxCanFrame & frame, CanMailboxIndex mbox_idx){
 
 
 Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
-    const auto may_idle_mbox_index = can_get_idle_mailbox_index(inst_);
+    const auto may_idle_mbox_idx = can_get_idle_mailbox_index(inst_);
 
     //大概率有空闲邮箱 查找到空闲邮箱后发送
-    if(may_idle_mbox_index.is_some()){
-        const auto idle_mbox_index = may_idle_mbox_index.unwrap();
-        transmit(frame, idle_mbox_index);
+    if(may_idle_mbox_idx.is_some()){
+        const auto idle_mbox_idx = may_idle_mbox_idx.unwrap();
+        transmit(frame, idle_mbox_idx);
         return Ok();
     }
 
@@ -669,34 +606,47 @@ void CanInterruptDispatcher::on_rx_interrupt(Can & self, const CanFifoIndex fifo
 void CanInterruptDispatcher::on_sce_interrupt(Can & self){
     void * inst = self.inst_;
     const auto reg = SDK_INST(inst)->INTENR;
-    // #ifdef CAN_SCE_ENABLED
     if (can_get_it_status<CAN_IT_WKU>(reg, SDK_INST(inst))) {
         // Handle Wake-up interrupt
-        //TODO
+        {
+            //TODO
+        }
         can_clear_it_pending_bit<CAN_IT_WKU>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_SLK>(reg, SDK_INST(inst))) {
         // Handle Sleep acknowledge interrupt
-        //TODO
+        {
+            //TODO
+        }
         can_clear_it_pending_bit<CAN_IT_SLK>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_ERR>(reg, SDK_INST(inst))) {
         // Handle Error interrupt
-        //TODO
+        {
+            //TODO
+        }
         can_clear_it_pending_bit<CAN_IT_ERR>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_EWG>(reg, SDK_INST(inst))) {
         // Handle Error warning interrupt
-        //TODO
+        {
+            //TODO
+        }
         can_clear_it_pending_bit<CAN_IT_EWG>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_EPV>(reg, SDK_INST(inst))) {
         // Handle Error passive interrupt
-        //TODO
+        {
+            //TODO
+        }
         can_clear_it_pending_bit<CAN_IT_EPV>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_BOF>(reg, SDK_INST(inst))) {
         // Handle Bus-off interrupt
-        //TODO
+        {
+            //TODO
+        }
         can_clear_it_pending_bit<CAN_IT_BOF>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_LEC>(reg, SDK_INST(inst))) {
         // Handle Last error code interrupt
-        //TODO
+        {
+            //TODO
+        }
         can_clear_it_pending_bit<CAN_IT_LEC>(SDK_INST(inst));
     }
 }
