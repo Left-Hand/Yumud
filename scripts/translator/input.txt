@@ -1,7 +1,0 @@
-    Defines the reference step value LSBs with each clock input. 
-    With clock input mode, the reference moves forward 4*NSTEP 
-    LSBs with each clock input. Therefore, the steps number per 
-    round is 65536/(4*NSTEP).
-    With the digital and PWM input in speed mode, the gain 
-    coefficient is 1 when setting NSTEP[0] with 0. The gain 
-    coefficient is 8 when setting NSETEP[0] with 1.

@@ -602,6 +602,13 @@ constexpr fixed_t<Q, D> square(const fixed_t<Q, D> x) {
 
 
 template<size_t Q, typename D>
+[[nodiscard]] __attribute__((always_inline))
+constexpr fixed_t<Q, D> cubic(const fixed_t<Q, D> x) {
+    return x * x * x;
+}
+
+
+template<size_t Q, typename D>
 static __attribute__((always_inline)) constexpr 
 fixed_t<Q, D> errmod(const fixed_t<Q, D> x, const fixed_t<Q, D> s) {
     const auto s_by_2 = s >> 1;

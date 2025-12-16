@@ -67,6 +67,7 @@ struct [[nodiscard]]FunctionCode final{
     }
 
     friend OutputStream & operator<<(OutputStream & os, const Kind kind){
+
         switch(kind) {
             case Kind::ReadCoils:
                 return os << "ReadCoils";
@@ -93,9 +94,7 @@ struct [[nodiscard]]FunctionCode final{
             case Kind::ReadDeviceIdentification:
                 return os << "ReadDeviceIdentification";
         }
-        return os << "UnknownExceptionCode(" << 
-            std::hex << std::setfill('0') << std::setw(2) << static_cast<uint8_t>(self.bits) 
-            << ")";
+        return os << os.field("Unknown")(static_cast<uint8_t>(kind));
     }
     friend OutputStream & operator<<(OutputStream & os, const FunctionCode & self){
         if(self.is_none()) return os << "None";
@@ -158,11 +157,6 @@ enum class [[nodiscard]] Transport:uint8_t{
     TCP = 2,
 };
 
-
-struct Address{
-    uint16_t bits;
-};
-
 struct Quantity{
     uint16_t bits;
 };
@@ -173,7 +167,7 @@ struct BoolInterator{
 
 struct reqs{
 
-
+#if 0
 struct ReadCoils{
     Address address, 
     Quantity
@@ -216,7 +210,8 @@ struct ReadWriteMultipleRegisters{
     Quantity
     , Address, std::span<uint16_t>};
 struct ReadDeviceIdentification{ReadCode, ObjectId};
-// struct Custom{u8, Cow<'a, [u8]>};
-}
+
+#endif
+};
 }
 }

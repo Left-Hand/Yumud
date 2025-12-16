@@ -2,27 +2,9 @@
 
 #include <type_traits>
 
-// #if (!defined(USE_IQ)) &&  (!defined(USE_STD_MATH))
-// #define USE_STD_MATH
-// #endif
-
-// #ifdef USE_IQ
 #include "iq/fixed_t.hpp"
-// #endif
 
-// #if defined(USE_STDMATH)
-
-// #else
-// #include "dsp/floatlib/floatlib.hpp"
-// #endif
-
-// #ifdef USE_IQ
 using real_t = ymd::fixed_t<IQ_DEFAULT_Q, int32_t>;
-// #elif defined(USE_DOUBLE)
-// using real_t = double;
-// #else
-// using real_t = float;
-// #endif
 
 namespace ymd::literals{
 [[nodiscard]] consteval real_t operator"" _r(long double x){

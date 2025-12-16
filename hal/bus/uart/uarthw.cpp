@@ -830,43 +830,53 @@ Uart uart8{UART8};
 }
 
 
-#define UART_IT_TEMPLATE(name, fname)\
-__interrupt void fname(void){\
-    hal::UartInterruptDispatcher::on_interrupt(name);\
-}\
-
-
 
 #ifdef UART1_PRESENT
-UART_IT_TEMPLATE(usart1, USART1_IRQHandler)
+__interrupt void USART1_IRQHandler(){
+    hal::UartInterruptDispatcher::on_interrupt(hal::usart1);
+}
 #endif
 
 #ifdef UART2_PRESENT
-UART_IT_TEMPLATE(usart2, USART2_IRQHandler)
+__interrupt void USART2_IRQHandler(){
+    hal::UartInterruptDispatcher::on_interrupt(hal::usart2);
+}
 #endif
 
 #ifdef UART3_PRESENT
-UART_IT_TEMPLATE(usart3, USART3_IRQHandler)
+__interrupt void USART3_IRQHandler(){
+    hal::UartInterruptDispatcher::on_interrupt(hal::usart3);
+}
 #endif
 
 #ifdef UART4_PRESENT
-UART_IT_TEMPLATE(uart4, UART4_IRQHandler)
+__interrupt void UART4_IRQHandler(){
+    hal::UartInterruptDispatcher::on_interrupt(hal::uart4);
+}
 #endif
 
 #ifdef UART5_PRESENT
-UART_IT_TEMPLATE(uart5, UART5_IRQHandler)
+__interrupt void UART5_IRQHandler(){
+    hal::UartInterruptDispatcher::on_interrupt(hal::uart5);
+}
 #endif
 
 #ifdef UART6_PRESENT
-UART_IT_TEMPLATE(uart6, UART6_IRQHandler)
+__interrupt void UART6_IRQHandler(){
+    hal::UartInterruptDispatcher::on_interrupt(hal::uart6);
+}
 #endif
 
 #ifdef UART7_PRESENT
-UART_IT_TEMPLATE(uart7, UART7_IRQHandler)
+__interrupt void UART7_IRQHandler(){
+    hal::UartInterruptDispatcher::on_interrupt(hal::uart7);
+}
 #endif
 
 #ifdef UART8_PRESENT
-UART_IT_TEMPLATE(uart8, UART8_IRQHandler)
+__interrupt void UART8_IRQHandler(){
+    hal::UartInterruptDispatcher::on_interrupt(hal::uart8);
+}
 #endif
 
 

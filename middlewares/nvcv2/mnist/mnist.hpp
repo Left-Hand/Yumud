@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include "nvcv2/mnist/tinymaix.h"
-#include "nvcv2.hpp"
+#include "middlewares/nvcv2/mnist/tinymaix.h"
+#include "middlewares/nvcv2/nvcv2.hpp"
 
 class Classify{
 
@@ -12,9 +12,9 @@ class Classify{
 class Mnist{
 public:
     
-    static constexpr uint N = 10; 
+    static constexpr size_t N = 10; 
     static constexpr Vec2u IMAGE_SIZE = {28, 28};
-    static constexpr uint IMAGE_CHANNELS = 1;
+    static constexpr size_t IMAGE_CHANNELS = 1;
 
     using Choices = std::array<real_t, N>;
     

@@ -2,16 +2,16 @@
 
 
 
-// real_t Interpolation::demo(){
+// iq16 Interpolation::demo(){
 //     auto turnCnt = millis() % 2667;
 //     uint32_t turns = millis() / 2667;
     
-//     static constexpr real_t velPoints[7] = {
-//         real_t(20)/360, real_t(20)/360, real_t(62.4)/360, real_t(62.4)/360, real_t(20.0)/360, real_t(20.0)/360, real_t(20.0)/360
+//     static constexpr iq16 velPoints[7] = {
+//         iq16(20)/360, iq16(20)/360, iq16(62.4)/360, iq16(62.4)/360, iq16(20.0)/360, iq16(20.0)/360, iq16(20.0)/360
 //     };
     
-//     static constexpr real_t posPoints[7] = {
-//         real_t(1.0f)/360,real_t(106.1f)/360,real_t(108.1f)/360, real_t(126.65f)/360, real_t(233.35f)/360,real_t(359.0f)/360,real_t(361.0f)/360
+//     static constexpr iq16 posPoints[7] = {
+//         iq16(1.0f)/360,iq16(106.1f)/360,iq16(108.1f)/360, iq16(126.65f)/360, iq16(233.35f)/360,iq16(359.0f)/360,iq16(361.0f)/360
 //     };
 
 //     uint16_t tickPoints[7] = {
@@ -32,19 +32,19 @@
     
 //     turnSolver.pa = posPoints[i];
 //     turnSolver.pb = posPoints[i + 1];
-//     real_t dp = turnSolver.pb - turnSolver.pa;
+//     iq16 dp = turnSolver.pb - turnSolver.pa;
 
-//     real_t _t = ((real_t)(turnCnt  - turnSolver.ta) / (real_t)dt);
-//     real_t temp = (real_t)dt / 1000 / dp; 
+//     iq16 _t = ((iq16)(turnCnt  - turnSolver.ta) / (iq16)dt);
+//     iq16 temp = (iq16)dt / 1000 / dp; 
 
-//     real_t yt = 0;
+//     iq16 yt = 0;
 
 //     if((i == 0) || (i == 2) || (i == 4))
-//         yt = cubicBezier(_t, Vec2{real_t(0.4f), 0.4f * turnSolver.va * temp}, Vec2(real_t(0.6f), 1.0f - 0.4f * turnSolver.vb * temp));
+//         yt = cubicBezier(_t, Vec2{iq16(0.4f), 0.4f * turnSolver.va * temp}, Vec2(iq16(0.6f), 1.0f - 0.4f * turnSolver.vb * temp));
 //     else
 //         yt = _t;
 
-//     real_t new_pos =  real_t(turns) + turnSolver.pa + dp * yt;
+//     iq16 new_pos =  iq16(turns) + turnSolver.pa + dp * yt;
 
 //     return new_pos;
 // }

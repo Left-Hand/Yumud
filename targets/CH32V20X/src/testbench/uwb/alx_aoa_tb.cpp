@@ -202,7 +202,7 @@ void alx_aoa_main(){
 
         blink_activity_.resume();
 
-        static auto report_timer = async::RepeatTimer::from_duration(30ms);
+        static auto report_timer = async::RepeatTimer::from_duration(3ms);
         
         report_timer.invoke_if([&]{
             #if 0
