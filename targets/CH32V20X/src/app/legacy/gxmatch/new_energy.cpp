@@ -498,7 +498,7 @@ private:
 class DetectService final{
 private:
     using Inst = drivers::U13T;
-    hal::UartHw & uart_;
+    hal::Uart & uart_;
     // Inst inst_ = Inst{uart_};
     Option<StationName> last_sta_ = None;
 
@@ -595,7 +595,7 @@ private:
 
 
 public: 
-    DetectService(UartHw & uart):
+    DetectService(Uart & uart):
         uart_(uart){
     }
 

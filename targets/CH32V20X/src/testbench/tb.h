@@ -11,7 +11,7 @@ namespace ymd{
 
 namespace ymd::hal{
     class Can;
-    class UartHw;
+    class Uart;
     class Spi;
     class GpioIntf;
     class I2c;
@@ -22,7 +22,7 @@ namespace ymd::hal{
 
 void memory_tb(ymd::OutputStream & logger);
 
-void stepper_tb(ymd::hal::UartHw & logger);
+void stepper_tb(ymd::hal::Uart & logger);
 
 void lua_tb(ymd::OutputStream & logger);
 void pwm_tb(ymd::OutputStream & logger);

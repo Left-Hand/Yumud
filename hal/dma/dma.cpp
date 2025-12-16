@@ -263,7 +263,7 @@ void DmaChannel::init(const Config & cfg){
     DMA_Init(SDK_INST(inst_), &DMA_InitStructure);
 }
 
-static constexpr IRQn map_inst_to_irq(const uint8_t dma_nth, const uint8_t channel_index){
+static constexpr IRQn dma_to_irqn(const uint8_t dma_nth, const uint8_t channel_index){
     switch(dma_nth){
         #ifdef DMA1_PRESENT
         case 1:
@@ -300,7 +300,7 @@ static constexpr IRQn map_inst_to_irq(const uint8_t dma_nth, const uint8_t chann
 
 }
 void DmaChannel::register_nvic(const NvicPriority priority, const Enable en){
-    const auto irq = map_inst_to_irq(dma_index_, channel_index_);
+    const auto irq = dma_to_irqn(dma_index_, channel_index_);
     priority.with_irqn(irq).enable(en);
 }
 
@@ -318,25 +318,6 @@ static inline void modify_reg(volatile T* reg, Fn&& fn) {
     // 写回
     *const_cast<T*>(reg) = temp;
 }
-
-// #include <atomic>
-
-// template<typename T, typename Fn>
-// void modify_reg(volatile T* reg, Fn&& fn) {
-//     // 使用原子操作（如果硬件支持）
-//     std::atomic<T>* atomic_reg = reinterpret_cast<std::atomic<T>*>(const_cast<T *>(reg));
-    
-//     T expected = atomic_reg->load(std::memory_order_acquire);
-//     T desired;
-    
-//     do {
-//         desired = std::forward<Fn>(fn)(expected);
-//     } while (!atomic_reg->compare_exchange_weak(
-//         expected, desired,
-//         std::memory_order_release,
-//         std::memory_order_acquire
-//     ));
-// }
 
 [[nodiscard]] bool DmaChannel::is_done(){
     return DMA_GetFlagStatus(done_mask_);

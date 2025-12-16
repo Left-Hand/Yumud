@@ -60,7 +60,7 @@ uint8_t get_default_id(){
 };
 
 
-void stepper_tb(UartHw & logger_inst){
+void stepper_tb(Uart & logger_inst){
     logger_inst.init(576000, CommStrategy::Dma);
     DEBUGGER.retarget(&logger_inst);
     DEBUGGER.set_eps(4);

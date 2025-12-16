@@ -40,9 +40,14 @@ namespace ymd::hal{
 
 class DmaChannel;
 
-class UartHw final:public Uart{
+struct Uart;
+struct UartInterruptDispatcher{
+    static void on_interrupt(Uart & uart);
+};
+
+class Uart final:public UartBase{
 public:
-    explicit UartHw(
+    explicit Uart(
         void * inst
     );
 
@@ -72,13 +77,13 @@ private:
     void enable_rx_dma(const Enable en);
     void enable_tx_dma(const Enable en);
 
-    void invoke_tx_dma();
+    void poll_tx_dma();
 
-    void on_rxne_interrupt();
+    void accept_rxne_interrupt();
     
-    void on_txe_interrupt();
+    void accept_txe_interrupt();
     
-    void on_rxidle_interrupt();
+    void accept_rxidle_interrupt();
 
 
     std::array<char, UART_DMA_BUF_SIZE> tx_dma_buf_;
@@ -87,72 +92,43 @@ private:
     DmaChannel & tx_dma_;
     DmaChannel & rx_dma_;
 
-    #ifdef UART1_PRESENT
-    friend void ::USART1_IRQHandler();
-    #endif
-
-    #ifdef UART2_PRESENT
-    friend void ::USART2_IRQHandler(void);
-    #endif
-
-    #ifdef UART3_PRESENT
-    friend void ::USART3_IRQHandler(void);
-    #endif
-
-    #ifdef UART4_PRESENT
-    friend void ::UART4_IRQHandler(void);
-    #endif
-
-    #ifdef UART5_PRESENT
-    friend void ::UART5_IRQHandler(void);
-    #endif
-
-    #ifdef UART6_PRESENT
-    friend void ::UART6_IRQHandler(void);
-    #endif
-
-    #ifdef UART7_PRESENT
-    friend void ::UART7_IRQHandler(void);
-    #endif
-
-    #ifdef UART8_PRESENT
-    friend void ::UART8_IRQHandler(void);
-    #endif
 public:
     size_t rx_dma_buf_index_ = 0;
+
+    friend class UartInterruptDispatcher;
 };
 
 
 #ifdef UART1_PRESENT
-extern UartHw uart1;
+extern Uart uart1;
 #endif
 
 #ifdef UART2_PRESENT
-extern UartHw uart2;
+extern Uart uart2;
 #endif
 
 #ifdef UART3_PRESENT
-extern UartHw uart3;
+extern Uart uart3;
 #endif
 
 #ifdef UART4_PRESENT
-extern UartHw uart4;
+extern Uart uart4;
 #endif
 
 #ifdef UART5_PRESENT
-extern UartHw uart5;
+extern Uart uart5;
 #endif
 
 #ifdef UART6_PRESENT
-extern UartHw uart6;
+extern Uart uart6;
 #endif
 
 #ifdef UART7_PRESENT
-extern UartHw uart7;
+extern Uart uart7;
 #endif
 
 #ifdef UART8_PRESENT
-extern UartHw uart8;
+extern Uart uart8;
 #endif
 
 }

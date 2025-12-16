@@ -62,7 +62,7 @@ struct BlinkActivity{
 };
 
 struct AlxActivity{
-    hal::UartHw & uart_;
+    hal::Uart & uart_;
     drivers::alx_aoa::AlxAoa_ParserSink & parser_;
     uint32_t received_bytes_cnt_ = 0;
 
@@ -212,9 +212,6 @@ void alx_aoa_main(){
             // [[maybe_unused]] const auto circle_a = Circle2<float>{o1, alx_measurements_[0].to_polar().amplitude};
             // [[maybe_unused]] const auto circle_b = Circle2<float>{o2, alx_measurements_[1].to_polar().amplitude};
 
-            [[maybe_unused]] const auto circle_a = Circle2<float>{o1, mk8_measurements_[0].distance};
-            [[maybe_unused]] const auto circle_b = Circle2<float>{o2, mk8_measurements_[1].distance};
-
 
             // [[maybe_unused]] const auto [x,y,z] = vec3;
             // const auto polar = Polar<float>{
@@ -247,16 +244,57 @@ void alx_aoa_main(){
                 // DEBUGGER.scoped("abc")(vec3),
                 // DEBUGGER.scoped("uvw")(std::ignore)
             );
-        #else
+            #else
             [[maybe_unused]] const auto & alx_measurement = alx_measurements_[0];
+            const auto & front_meas = alx_measurements_[1];
+            const auto & back_meas = alx_measurements_[0];
 
+            const auto front_offset_vec3 = front_meas.to_vec3();
+            const auto back_offset_vec3 = back_meas.to_vec3();
+
+            static constexpr float VERTICAL_DISJUDGE_CIRCLE_RADIUS = 0.6f;
+            const auto front_offset_vec2 = Vec2f(front_offset_vec3.x, front_offset_vec3.y);
+            const auto back_offset_vec2 = Vec2f(back_offset_vec3.x, back_offset_vec3.y);
+
+            [[maybe_unused]] const auto FRONT_BASE = Vec2f(0.0, 0.37f);
+            [[maybe_unused]] const auto BACK_BASE = Vec2f(0.0, -0.37f);
+
+            [[maybe_unused]] const auto circle_front = Circle2<float>{FRONT_BASE, front_meas.distance};
+            [[maybe_unused]] const auto circle_back = Circle2<float>{BACK_BASE, back_meas.distance};
+
+            const auto points = geometry::compute_intersection_points(circle_front, circle_back);
+            const auto may_p = points.at_or(0, Vec2f::ZERO);
+
+            const bool is_in_side_disjudge_region = ABS(front_meas.distance - back_meas.distance) < 0.5f;
+            const bool is_in_front_disjudge_region = front_meas.distance < VERTICAL_DISJUDGE_CIRCLE_RADIUS;
+            const bool is_in_back_disjudge_region = back_meas.distance < VERTICAL_DISJUDGE_CIRCLE_RADIUS;
+
+            const bool is_in_strong_judge_region =
+                (is_in_front_disjudge_region == false) and (is_in_back_disjudge_region == false) and (is_in_side_disjudge_region == false);
             DEBUG_PRINTLN(
                 // alx_measurement.distance,
+                // is_in_side_disjudge_region,
+                // front_meas.distance - back_meas.distance,
+                // is_in_front_disjudge_region,
+                // is_in_back_disjudge_region,
+                // is_in_strong_judge_region,
+                front_meas.azimuth.to_turns(),
+                // back_meas.distance < VERTICAL_DISJUDGE_CIRCLE_RADIUS
+                // front_meas.azimuth.to_turns()
                 // alx_measurement.azimuth.to_radians()
-                alx_measurements_[0],
-                alx_measurements_[1]
+                // points.at_or(0, Vec2f::ZERO),
+                may_p.x,
+                may_p.y
+                // front_meas.distance,
+                // front_meas.azimuth.to_degrees(),
+                // back_meas.distance,
+                // front_offset_vec2,
+                // back_offset_vec2
+                // front_vec2,
+                // back_vec2
+                // alx_measurements_[1]
             );
-        #endif
+            #endif
     });
     }
 

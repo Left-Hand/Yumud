@@ -2,13 +2,13 @@
 
 #include <functional>
 
+#include "core/container/ringbuf.hpp"
 
 #include "hal/bus/bus_enums.hpp"
 #include "primitive/hal_result.hpp"
 
 #include "uart_primitive.hpp"
 
-#include "core/container/ringbuf.hpp"
 #include "uart_layout.hpp"
 
 
@@ -33,7 +33,7 @@ static constexpr size_t UART_RX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
 #endif
 
 
-class Uart{
+class UartBase{
 
 public:
     using Mode = CommDirection;
@@ -51,8 +51,8 @@ public:
         CommStrategy tx_strategy = CommStrategy::Dma;
     };
 
-    Uart(const Uart & other) = delete;
-    Uart(Uart && other) = delete;
+    UartBase(const UartBase & other) = delete;
+    UartBase(UartBase && other) = delete;
 
     virtual void init(const Config & cfg) = 0;
 
@@ -90,7 +90,7 @@ protected:
             return;
         callback_(event);
     }
-    Uart(){;}
+    UartBase(){;}
 
 };
 

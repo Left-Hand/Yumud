@@ -44,7 +44,7 @@ using namespace ymd;
             char chr;
             const auto len = uart.try_read_char(chr);
             if(len)
-            uart.try_write_char(chr);
+            (void)uart.try_write_char(chr);
             clock::delay(1ms);
         }
         clock::delay(300ms);

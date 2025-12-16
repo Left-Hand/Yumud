@@ -86,8 +86,7 @@ struct FdCanConfig final {
 #define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, CAN_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::CAN_Def)>(x))
 
-
-
+namespace {
 [[maybe_unused]] static Nth _can_to_nth(const void * inst){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef CAN1_PRESENT
@@ -190,39 +189,6 @@ static constexpr uint32_t can_statr_tkok_mask(const CanMailboxIndex mbox_idx){
     __builtin_unreachable();
 }
 
-static constexpr uint32_t can_rfifo_fmp_mask(const CanFifoIndex fifo_idx){ 
-    switch(fifo_idx){
-        case CanFifoIndex::_0: return CAN_RFIFO0_FMP0;
-        case CanFifoIndex::_1: return CAN_RFIFO1_FMP1;
-    }
-    __builtin_unreachable();
-}
-
-static constexpr uint32_t can_rfifo_fom_mask(const CanFifoIndex fifo_idx){ 
-    switch(fifo_idx){
-        case CanFifoIndex::_0: return CAN_RFIFO0_RFOM0;
-        case CanFifoIndex::_1: return CAN_RFIFO1_RFOM1;
-    }
-    __builtin_unreachable();
-}
-
-static constexpr uint32_t can_rfifo_ff_mask(const CanFifoIndex fifo_idx){ 
-    switch(fifo_idx){
-        case CanFifoIndex::_0: return CAN_RFIFO0_FULL0;
-        case CanFifoIndex::_1: return CAN_RFIFO1_FULL1;
-    }
-    __builtin_unreachable();
-}
-
-static constexpr uint32_t can_rfifo_fov_mask(const CanFifoIndex fifo_idx){ 
-    switch(fifo_idx){
-        case CanFifoIndex::_0: return CAN_RFIFO0_FOVR0;
-        case CanFifoIndex::_1: return CAN_RFIFO1_FOVR1;
-    }
-    __builtin_unreachable();
-}
-
-
 static Option<CanMailboxIndex> can_get_idle_mailbox_index(void * inst_){
     const uint32_t tempreg = SDK_INST(inst_)->TSTATR;
     static constexpr uint32_t ANY_MAILBOX_IDLE_BITMASK = (CAN_TSTATR_TME0 | CAN_TSTATR_TME1 | CAN_TSTATR_TME2);
@@ -232,8 +198,16 @@ static Option<CanMailboxIndex> can_get_idle_mailbox_index(void * inst_){
 };
 
 
+volatile uint32_t & can_get_rfifo_reg(void * inst, CanFifoIndex fifo_idx){
+    switch(fifo_idx){
+        case CanFifoIndex::_0: return SDK_INST(inst)->RFIFO0;
+        case CanFifoIndex::_1: return SDK_INST(inst)->RFIFO1;
+    }
+    __builtin_unreachable();
+}
+
 template<uint32_t IT>
-static ITStatus MY_CAN_GetITStatus(const uint32_t reg, void * inst){
+static ITStatus can_get_it_status(const uint32_t reg, void * inst){
     if((reg & IT) != RESET){
         if constexpr(IT == CAN_IT_TME){
             return(SDK_INST(inst)->TSTATR & (CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2));  
@@ -300,73 +274,6 @@ static void can_clear_it_pending_bit(void * inst)
 	}
 }
 
-
-void Can::init_interrupts(){
-    const uint32_t it_mask = 
-        CAN_IT_TME      //tx done
-        | CAN_IT_FMP0   //rx fifo0
-        | CAN_IT_FMP1   //rx fifo1
-
-        #ifdef CAN_SCE_ENABLED
-        | CAN_IT_ERR 
-        | CAN_IT_WKU
-        | CAN_IT_SLK 
-        | CAN_IT_EWG 
-        | CAN_IT_EPV 
-        | CAN_IT_BOF
-        | CAN_IT_LEC
-        #endif
-    ;
-
-    CAN_ClearITPendingBit(SDK_INST(inst_), it_mask);
-    CAN_ITConfig(SDK_INST(inst_), it_mask, ENABLE);
-
-    switch(reinterpret_cast<size_t>(SDK_INST(inst_))){
-        #ifdef CAN1_PRESENT
-        case CAN1_BASE:
-            //tx interrupt
-            NvicPriority{1, 7}.with_irqn(USB_HP_CAN1_TX_IRQn).enable(EN);
-            //rx0 interrupt
-            NvicPriority{1, 5}.with_irqn(USB_LP_CAN1_RX0_IRQn).enable(EN);
-            //rx1 interrupt
-            NvicPriority{1, 6}.with_irqn(CAN1_RX1_IRQn).enable(EN);
-            //sce interrupt
-
-            #ifdef CAN_SCE_ENABLED
-            NvicPriority{1, 2}.with_irqn(CAN1_SCE_IRQn).enable(EN);
-            #endif
-            break;
-        #endif
-
-        #ifdef CAN2_PRESENT
-        case CAN2_BASE:
-            //tx interrupt
-            NvicPriority{1, 6}.with_irqn(CAN2_TX_IRQn).enable(EN);
-            //rx0 interrupt
-            NvicPriority{1, 4}.with_irqn(CAN2_RX0_IRQn).enable(EN);
-            //rx1 interrupt
-            NvicPriority{1, 5}.with_irqn(CAN2_RX1_IRQn).enable(EN);
-            //sce interrupt
-            #ifdef CAN_SCE_ENABLED
-            NvicPriority{1, 2}.with_irqn(CAN2_SCE_IRQn).enable(EN);
-            #endif
-            break;
-        #endif
-        
-        default:
-            __builtin_trap();
-            break;
-    }
-}
-
-
-
-void Can::alter_to_pins(const CanRemap remap){
-    can_to_tx_pin(inst_, remap).afpp();
-    can_to_rx_pin(inst_, remap).afpp();
-}
-
-
 static void can_enable_rcc(void * inst, const Enable en){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef CAN1_PRESENT
@@ -428,6 +335,87 @@ static void can_set_remap(void * inst_, const CanRemap remap){
     __builtin_trap();
 }
 
+}
+
+
+
+static constexpr NvicPriority TX_INTERRUPT_NVIC_PRIORITY = {1, 4};
+static constexpr NvicPriority RX0_INTERRUPT_NVIC_PRIORITY = {1, 2};
+static constexpr NvicPriority RX1_INTERRUPT_NVIC_PRIORITY = {1, 2};
+static constexpr NvicPriority SCE_INTERRUPT_NVIC_PRIORITY = {1, 1};
+static constexpr uint32_t RFIFO_FMP_MASK = 0b00'0011;
+static constexpr uint32_t RFIFO_FOM_MASK = 0b10'0000;
+static constexpr uint32_t RFIFO_FFULL_MASK =  0b00'1000;
+static constexpr uint32_t RFIFO_FOV_MASK =  0b01'0000;
+
+void Can::init_interrupts(){
+    const uint32_t it_mask = 
+        CAN_IT_TME      //tx done
+        | CAN_IT_FMP0   //rx fifo0
+        | CAN_IT_FMP1   //rx fifo1
+
+        #ifdef CAN_SCE_ENABLED
+        | CAN_IT_ERR 
+        | CAN_IT_WKU
+        | CAN_IT_SLK 
+        | CAN_IT_EWG 
+        | CAN_IT_EPV 
+        | CAN_IT_BOF
+        | CAN_IT_LEC
+        #endif
+    ;
+
+    CAN_ClearITPendingBit(SDK_INST(inst_), it_mask);
+    CAN_ITConfig(SDK_INST(inst_), it_mask, ENABLE);
+
+
+    switch(reinterpret_cast<size_t>(SDK_INST(inst_))){
+        #ifdef CAN1_PRESENT
+        case CAN1_BASE:
+            //tx interrupt
+            TX_INTERRUPT_NVIC_PRIORITY.with_irqn(USB_HP_CAN1_TX_IRQn).enable(EN);
+            //rx0 interrupt
+            RX0_INTERRUPT_NVIC_PRIORITY.with_irqn(USB_LP_CAN1_RX0_IRQn).enable(EN);
+            //rx1 interrupt
+            RX1_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN1_RX1_IRQn).enable(EN);
+            //sce interrupt
+
+            #ifdef CAN_SCE_ENABLED
+            SCE_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN1_SCE_IRQn).enable(EN);
+            #endif
+            break;
+        #endif
+
+        #ifdef CAN2_PRESENT
+        case CAN2_BASE:
+            //tx interrupt
+            TX_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN2_TX_IRQn).enable(EN);
+            //rx0 interrupt
+            RX0_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN2_RX0_IRQn).enable(EN);
+            //rx1 interrupt
+            RX1_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN2_RX1_IRQn).enable(EN);
+            //sce interrupt
+            #ifdef CAN_SCE_ENABLED
+            SCE_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN2_SCE_IRQn).enable(EN);
+            #endif
+            break;
+        #endif
+        
+        default:
+            __builtin_trap();
+            break;
+    }
+}
+
+
+
+void Can::alter_to_pins(const CanRemap remap){
+    can_to_tx_pin(inst_, remap).afpp();
+    can_to_rx_pin(inst_, remap).afpp();
+}
+
+
+
 void Can::enable_rcc(const Enable en){
     can_enable_rcc(inst_, en);
 }
@@ -488,10 +476,6 @@ void Can::transmit(const BxCanFrame & frame, CanMailboxIndex mbox_idx){
 }
 
 
-void Can::enable_hw_retransmit(const Enable en){
-    if(en == EN)  SDK_INST(inst_)->CTLR &= ~CAN_CTLR_NART;
-    else    SDK_INST(inst_)->CTLR |=  CAN_CTLR_NART;
-}
 
 Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
     const auto may_idle_mbox_index = can_get_idle_mailbox_index(inst_);
@@ -504,8 +488,6 @@ Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
     }
 
     //如果没找到空闲邮箱 存入软fifo
-
-    
     if(const auto len = tx_fifo_.try_push(frame);
         len == 0){
         // 如果软fifo已满 则返回错误
@@ -513,10 +495,6 @@ Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
     }
     return Ok();
 
-}
-
-uint32_t Can::get_aligned_bus_clk_freq(){
-    return sys::clock::get_apb1_clk_freq();
 }
 
 
@@ -530,6 +508,32 @@ BxCanFrame Can::read(){
 
 size_t Can::available(){
     return rx_fifo_.length();
+}
+
+
+BxCanFrame Can::receive(const CanFifoIndex fifo_idx){
+    const auto & mailbox = SDK_INST(inst_)->sFIFOMailBox[std::bit_cast<uint8_t>(fifo_idx)];
+    const uint32_t rxmir = mailbox.RXMIR;
+    const uint32_t rxmdtr = mailbox.RXMDTR;
+
+    const uint8_t dlc_bits = rxmdtr & (0x0F);
+
+    const uint64_t payload_u64 = 
+        static_cast<uint64_t>(mailbox.RXMDLR) 
+        | (static_cast<uint64_t>(mailbox.RXMDHR) << 32);
+
+    return BxCanFrame::from_sxx32_regs(rxmir, payload_u64, dlc_bits);
+}
+
+
+void Can::enable_hw_retransmit(const Enable en){
+    if(en == EN)  SDK_INST(inst_)->CTLR &= ~CAN_CTLR_NART;
+    else    SDK_INST(inst_)->CTLR |=  CAN_CTLR_NART;
+}
+
+uint32_t Can::get_aligned_bus_clk_freq(){
+    //所有的CAN外设都使用APB1时钟
+    return sys::clock::get_apb1_clk_freq();
 }
 
 uint8_t Can::get_rx_errcnt(){
@@ -563,10 +567,7 @@ void Can::cancel_transmit(const CanMailboxIndex mbox_idx){
 }
 
 void Can::cancel_all_transmits(){
-    for(uint8_t i = 0; i < 3; i++) 
-        CAN_CancelTransmit(SDK_INST(inst_), i);
-    SDK_INST(inst_)->TSTATR = SDK_INST(inst_)->TSTATR | 
-        (CAN_TSTATR_ABRQ0 | CAN_TSTATR_ABRQ1 | CAN_TSTATR_ABRQ2);
+    SDK_INST(inst_)->TSTATR = (CAN_TSTATR_ABRQ0 | CAN_TSTATR_ABRQ1 | CAN_TSTATR_ABRQ2);
 }
 
 void Can::enable_fifo_lock(const Enable en){
@@ -580,27 +581,9 @@ void Can::enable_index_priority(const Enable en){
 }
 
 
-
-BxCanFrame Can::receive(const CanFifoIndex fifo_idx){
-    const auto & mailbox = SDK_INST(inst_)->sFIFOMailBox[std::bit_cast<uint8_t>(fifo_idx)];
-    const uint32_t rxmir = mailbox.RXMIR;
-    const uint32_t rxmdtr = mailbox.RXMDTR;
-
-    const uint8_t dlc_bits = rxmdtr & (0x0F);
-
-    const uint64_t payload_u64 = 
-        static_cast<uint64_t>(mailbox.RXMDLR) 
-        | (static_cast<uint64_t>(mailbox.RXMDHR) << 32);
-
-    return BxCanFrame::from_sxx32_regs(rxmir, payload_u64, dlc_bits);
-}
-
-
-
-
-void Can::on_tx_interrupt(){
-    // return;
-    const auto temp_tstatr = SDK_INST(inst_)->TSTATR;
+void CanInterruptDispatcher::on_tx_interrupt(Can & self){
+    auto & tstatr = SDK_INST(self.inst_)->TSTATR;
+    const auto temp_tstatr = tstatr;
     //遍历每个邮箱
     auto iter_mailbox = [&]<CanMailboxIndex mbox_idx>(){
         static constexpr uint32_t TSTATR_TME_MASK = can_tstatr_tme_mask(mbox_idx);
@@ -612,16 +595,24 @@ void Can::on_tx_interrupt(){
                 //pending
                 break;
             case TSTATR_TME_MASK | TSTATR_RQCP_MASK | 0:
-                //failed
-                if(callback_ != nullptr)
-                    callback_(CanEvent(CanTransmitEvent::Failed));
-                SDK_INST(inst_)->TSTATR = TSTATR_RQCP_MASK;
+                //发送失败
+                {
+                    if(self.callback_ != nullptr)
+                        self.callback_(CanEvent(CanTransmitEvent::Failed));
+                }
+
+                //清除发送标志位
+                tstatr = TSTATR_RQCP_MASK;
                 break;
             case TSTATR_TME_MASK | TSTATR_RQCP_MASK | TSTATR_RXOK_MASK:
-                //success
-                if(callback_ != nullptr)
-                    callback_(CanEvent(CanTransmitEvent::Success));
-                SDK_INST(inst_)->TSTATR = TSTATR_RQCP_MASK;
+                //发送成功
+                {
+                    if(self.callback_ != nullptr)
+                        self.callback_(CanEvent(CanTransmitEvent::Success));
+                }
+
+                //清除发送标志位
+                tstatr = TSTATR_RQCP_MASK;
                 break;
         }
     };
@@ -630,171 +621,124 @@ void Can::on_tx_interrupt(){
     iter_mailbox.template operator() < CanMailboxIndex::_1 > ();
     iter_mailbox.template operator() < CanMailboxIndex::_2 > ();
 
-    //poll next
-    if(tx_fifo_.length() == 0) return;
-    const auto may_idle_mailbox = can_get_idle_mailbox_index(inst_);
-    if(may_idle_mailbox.is_none()) return;
+    auto try_pool_next = [&]{
+        if(self.tx_fifo_.length() == 0) return;
+        const auto may_idle_mailbox = can_get_idle_mailbox_index(self.inst_);
+        if(may_idle_mailbox.is_none()) return;
 
-    transmit(tx_fifo_.pop_unchecked(), may_idle_mailbox.unwrap());
+        self.transmit(self.tx_fifo_.pop_unchecked(), may_idle_mailbox.unwrap());
+    };
+
+    try_pool_next();
 }
 
-volatile uint32_t & can_get_rfifo_reg(void * inst, CanFifoIndex fifo_idx){
-    switch(fifo_idx){
-        case CanFifoIndex::_0: return SDK_INST(inst)->RFIFO0;
-        case CanFifoIndex::_1: return SDK_INST(inst)->RFIFO1;
-    }
-    __builtin_unreachable();
-}
-
-void can_clear_fmp_mask(void * inst, const CanFifoIndex fifo_idx){
-    // switch(fifo_idx){
-    // case CanFifoIndex::_0:
-    //     SDK_INST(inst)->RFIFO0 = CAN_RFIFO0_RFOM0;
-    //     break;
-    // case CanFifoIndex::_1:
-    //     SDK_INST(inst)->RFIFO1 = CAN_RFIFO1_RFOM1;
-    //     break;
-    // }
-    can_get_rfifo_reg(inst, fifo_idx) = CAN_RFIFO0_RFOM0;
-}
-
-
-void Can::on_rx_interrupt(const CanFifoIndex fifo_idx){
-
-    [[maybe_unused]] static constexpr uint32_t FMP_MASK = 0b00'0011;
-    static constexpr uint32_t FOM_MASK = 0b10'0000;
-    [[maybe_unused]] static constexpr uint32_t FFULL_MASK =  0b00'1000;
-    [[maybe_unused]] static constexpr uint32_t FOV_MASK =  0b01'0000;
-
-
-    [[maybe_unused]] const auto temp_inten_r = SDK_INST(inst_)->INTENR;
-    auto & rfifo_reg = can_get_rfifo_reg(inst_, fifo_idx);
+void CanInterruptDispatcher::on_rx_interrupt(Can & self, const CanFifoIndex fifo_idx){
+    auto & rfifo_reg = can_get_rfifo_reg(self.inst_, fifo_idx);
     const uint32_t temp_rfifo_reg = rfifo_reg;
 
-    #if 0
-    if(temp_rfifo_reg & FFULL_MASK){
+    if(temp_rfifo_reg & RFIFO_FFULL_MASK){
         //fifo满
         {
             //TODO
-            accept_rx_full_interrupt(fifo_idx);
-            // __builtin_trap();
+            __builtin_trap();
         }
-
-        rfifo_reg = FFULL_MASK;
+        rfifo_reg = RFIFO_FFULL_MASK;
     }
     
-    if(temp_rfifo_reg & FOV_MASK){
+    if(temp_rfifo_reg & RFIFO_FOV_MASK){
         ///fifo溢出
         {
             //TODO
-            accept_rx_overrun_interrupt(fifo_idx);
+            __builtin_trap();
         }
-        rfifo_reg = FOV_MASK;
+        rfifo_reg = RFIFO_FOV_MASK;
     }
-    #endif
-    
-    if(temp_rfifo_reg & FOM_MASK){
-        //收到can报文
 
-        // const uint8_t num_pending = static_cast<uint8_t>((temp_rfifo_reg & FMP_MASK) >> 0);
-        // for(uint8_t _ = 0; _ < num_pending; _++)
-
-        accept_rx_frame_interrupt(fifo_idx);
-        rfifo_reg = FOM_MASK;
+    //注意这里是判断fmp掩码 但是清零的是fom
+    if (temp_rfifo_reg & RFIFO_FMP_MASK){
+        //收到新的报文
+        {
+            //TODO 改为sink
+            (void)self.rx_fifo_.try_push(self.receive(fifo_idx));
+        }
+        //已读这个报文
+        rfifo_reg = RFIFO_FOM_MASK;
     }
-    // rfifo_reg = FFULL_MASK | FOV_MASK | FOM_MASK;
-
 }
 
-void Can::accept_rx_full_interrupt(const CanFifoIndex fifo_idx){
-    //TODO
-    __builtin_trap();
+void CanInterruptDispatcher::on_sce_interrupt(Can & self){
+    void * inst = self.inst_;
+    const auto reg = SDK_INST(inst)->INTENR;
+    // #ifdef CAN_SCE_ENABLED
+    if (can_get_it_status<CAN_IT_WKU>(reg, SDK_INST(inst))) {
+        // Handle Wake-up interrupt
+        //TODO
+        can_clear_it_pending_bit<CAN_IT_WKU>(SDK_INST(inst));
+    } else if (can_get_it_status<CAN_IT_SLK>(reg, SDK_INST(inst))) {
+        // Handle Sleep acknowledge interrupt
+        //TODO
+        can_clear_it_pending_bit<CAN_IT_SLK>(SDK_INST(inst));
+    } else if (can_get_it_status<CAN_IT_ERR>(reg, SDK_INST(inst))) {
+        // Handle Error interrupt
+        //TODO
+        can_clear_it_pending_bit<CAN_IT_ERR>(SDK_INST(inst));
+    } else if (can_get_it_status<CAN_IT_EWG>(reg, SDK_INST(inst))) {
+        // Handle Error warning interrupt
+        //TODO
+        can_clear_it_pending_bit<CAN_IT_EWG>(SDK_INST(inst));
+    } else if (can_get_it_status<CAN_IT_EPV>(reg, SDK_INST(inst))) {
+        // Handle Error passive interrupt
+        //TODO
+        can_clear_it_pending_bit<CAN_IT_EPV>(SDK_INST(inst));
+    } else if (can_get_it_status<CAN_IT_BOF>(reg, SDK_INST(inst))) {
+        // Handle Bus-off interrupt
+        //TODO
+        can_clear_it_pending_bit<CAN_IT_BOF>(SDK_INST(inst));
+    } else if (can_get_it_status<CAN_IT_LEC>(reg, SDK_INST(inst))) {
+        // Handle Last error code interrupt
+        //TODO
+        can_clear_it_pending_bit<CAN_IT_LEC>(SDK_INST(inst));
+    }
 }
-
-void Can::accept_rx_overrun_interrupt(const CanFifoIndex fifo_idx){
-    //TODO
-    __builtin_trap();
-}
-
-void Can::accept_rx_frame_interrupt(const CanFifoIndex fifo_idx){
-    //TODO
-    (void)rx_fifo_.try_push(receive(fifo_idx));
-}
-
 
 #ifdef CAN1_PRESENT
 void USB_HP_CAN1_TX_IRQHandler(){
-    can1.on_tx_interrupt();
+    CanInterruptDispatcher::on_tx_interrupt(can1);
 }
-
-
-#if 0
-void USB_LP_CAN1_RX0_IRQHandler() {
-    can1.on_rx_interrupt(CanFifoIndex::_0);
-}
-
-void CAN1_RX1_IRQHandler(){
-    can1.on_rx_interrupt(CanFifoIndex::_1);
-}
-
-#else
-#define CAN_RX_HANDLER(inst, uinst)\
-if (MY_CAN_GetITStatus<FMP_MASK>(reg, uinst)){\
-    inst.accept_rx_frame_interrupt(FIFO_IDX);\
-    can_clear_fmp_mask(uinst, FIFO_IDX);\
-}\
-if(MY_CAN_GetITStatus<FF_MASK>(reg, uinst)){\
-    inst.accept_rx_full_interrupt(FIFO_IDX);\
-    can_clear_it_pending_bit<FF_MASK>(uinst);\
-}\
-if(MY_CAN_GetITStatus<FOV_MASK>(reg, uinst)){\
-    inst.accept_rx_overrun_interrupt(FIFO_IDX);\
-    can_clear_it_pending_bit<FOV_MASK>(uinst);\
-}\
 
 
 void USB_LP_CAN1_RX0_IRQHandler() {
-    static constexpr auto FMP_MASK = CAN_IT_FMP0;
-    static constexpr auto FF_MASK = CAN_IT_FF0;
-    static constexpr auto FOV_MASK = CAN_IT_FOV0;
-    static constexpr auto FIFO_IDX = CanFifoIndex::_0;
-    const auto reg = CAN1->INTENR;
-    CAN_RX_HANDLER(can1, CAN1)
+    CanInterruptDispatcher::on_rx_interrupt(can1, CanFifoIndex::_0);
 }
 
 void CAN1_RX1_IRQHandler(){
-    static constexpr auto FMP_MASK = CAN_IT_FMP1;
-    static constexpr auto FF_MASK = CAN_IT_FF1;
-    static constexpr auto FOV_MASK = CAN_IT_FOV1;
-    static constexpr auto FIFO_IDX = CanFifoIndex::_1;
-    const auto reg = CAN1->INTENR;
-    CAN_RX_HANDLER(can1, CAN1)
+    CanInterruptDispatcher::on_rx_interrupt(can1, CanFifoIndex::_1);
 }
-#endif
+
 
 #ifdef CAN_SCE_ENABLED
 void CAN1_SCE_IRQHandler(){
-    can1.on_sce_interrupt();
+    CanInterruptDispatcher::on_sce_interrupt(can1);
 }
 #endif
 #endif
 
 #ifdef CAN2_PRESENT
 void CAN2_TX_IRQHandler(){
-    can2.on_tx_interrupt();
+    CanInterruptDispatcher::on_tx_interrupt(can2);
 }
 
 void CAN2_RX0_IRQHandler(){
-    can1.on_rx_interrupt(CanFifoIndex::_0);
+    CanInterruptDispatcher::on_rx_interrupt(can2,CanFifoIndex::_0);
 }
 
 void CAN2_RX1_IRQHandler(){
-    can1.on_rx_interrupt(CanFifoIndex::_1);
+    CanInterruptDispatcher::on_rx_interrupt(can2,CanFifoIndex::_1);
 }
 
 #ifdef CAN_SCE_ENABLED
 void CAN2_SCE_IRQHandler(){
-    can2.on_sce_interrupt();
+    CanInterruptDispatcher::on_sce_interrupt(can2);
 }
 
 #endif
@@ -811,34 +755,3 @@ Can can2 = Can{CAN2};
 #endif
 }
 
-
-void Can::on_sce_interrupt(){
-    #if 1
-    const auto reg = SDK_INST(inst_)->INTENR;
-    // #ifdef CAN_SCE_ENABLED
-    if (MY_CAN_GetITStatus<CAN_IT_WKU>(reg, SDK_INST(inst_))) {
-        // Handle Wake-up interrupt
-        can_clear_it_pending_bit<CAN_IT_WKU>(SDK_INST(inst_));
-    } else if (MY_CAN_GetITStatus<CAN_IT_SLK>(reg, SDK_INST(inst_))) {
-        // Handle Sleep acknowledge interrupt
-        can_clear_it_pending_bit<CAN_IT_SLK>(SDK_INST(inst_));
-    } else if (MY_CAN_GetITStatus<CAN_IT_ERR>(reg, SDK_INST(inst_))) {
-        // Handle Error interrupt
-        can_clear_it_pending_bit<CAN_IT_ERR>(SDK_INST(inst_));
-    } else if (MY_CAN_GetITStatus<CAN_IT_EWG>(reg, SDK_INST(inst_))) {
-        // Handle Error warning interrupt
-        can_clear_it_pending_bit<CAN_IT_EWG>(SDK_INST(inst_));
-    } else if (MY_CAN_GetITStatus<CAN_IT_EPV>(reg, SDK_INST(inst_))) {
-        // Handle Error passive interrupt
-        can_clear_it_pending_bit<CAN_IT_EPV>(SDK_INST(inst_));
-    } else if (MY_CAN_GetITStatus<CAN_IT_BOF>(reg, SDK_INST(inst_))) {
-        // Handle Bus-off interrupt
-        can_clear_it_pending_bit<CAN_IT_BOF>(SDK_INST(inst_));
-    } else if (MY_CAN_GetITStatus<CAN_IT_LEC>(reg, SDK_INST(inst_))) {
-        // Handle Last error code interrupt
-        can_clear_it_pending_bit<CAN_IT_LEC>(SDK_INST(inst_));
-    } else {
-        // Handle other interrupts or add more cases as needed
-    }
-    #endif
-}

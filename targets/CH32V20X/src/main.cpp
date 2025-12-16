@@ -164,6 +164,7 @@ int main(){
     // sincos_main();
     // myesc_main();
     // s21c_main();
+    alx_aoa_main();
     smc2025_main();
     // vl53l5cx_main();
     // smc2025_main();

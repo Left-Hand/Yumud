@@ -3,7 +3,7 @@
 #include "uart.hpp"
 
 namespace ymd::hal{
-class UartSw final: public Uart{
+class UartSw final: public UartBase{
 public:
 
     UartSw(Gpio & tx_gpio, Gpio & rx_gpio): tx_pin_(tx_gpio), rx_pin_(rx_gpio){;}

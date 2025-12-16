@@ -22,7 +22,7 @@ using namespace gxm;
 
 class VisionModule:public AsciiProtocolIntf{
 protected:
-    // UartHw & uart_;
+    // Uart & uart_;
     std::optional<MaterialColor> color_;
     std::optional<Vec2> offset_;
 
@@ -34,7 +34,7 @@ protected:
 
     Mode mode_ = Mode::CLOSED;
 public: 
-    VisionModule(UartHw & uart):
+    VisionModule(Uart & uart):
         AsciiProtocolIntf(uart){;}
 
     void parseArgs(const StringViews args) override{

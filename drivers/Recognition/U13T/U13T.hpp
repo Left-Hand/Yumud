@@ -59,7 +59,7 @@ public:
 
     // void lineCb();
 
-    hal::Uart & uart_;
+    hal::UartBase & uart_;
 
     // template<size_t N>
     // static constexpr std::array<uint8_t, N> make_payload()
@@ -67,7 +67,7 @@ public:
 
 
 public:
-    U13T(hal::Uart & uart):uart_(uart){;}
+    U13T(hal::UartBase & uart):uart_(uart){;}
 
     void init();
     void tick();

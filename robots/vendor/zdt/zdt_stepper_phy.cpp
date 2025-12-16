@@ -29,7 +29,7 @@ void ZdtMotorPhy::uart_write_bytes(
     buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
     buf.append_unchecked(bytes);
 
-    uart.try_write_chars(
+    (void)uart.try_write_chars(
         reinterpret_cast<const char *>(buf.data()),
         buf.size()
     );

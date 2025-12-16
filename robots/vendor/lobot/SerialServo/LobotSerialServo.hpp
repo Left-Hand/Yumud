@@ -8,7 +8,7 @@ namespace ymd::robots::lobot{
 
 class LobotSerialServo{
 protected:
-    hal::Uart & uart_;
+    hal::UartBase & uart_;
     uint8_t id_;
 
     template<typename T>
@@ -17,7 +17,7 @@ protected:
     };
 
 public:
-    LobotSerialServo(hal::Uart & uart, const uint8_t id):
+    LobotSerialServo(hal::UartBase & uart, const uint8_t id):
             uart_(uart), id_(id){}
 
     void set_id(const uint8_t newID);
