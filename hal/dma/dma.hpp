@@ -74,7 +74,7 @@ public:
 
     void init(const Config & cfg);
 
-    void resume();
+    void clear_and_start();
 
     template <typename T>
     void start_transfer_pph2mem(void * dst, const volatile void * src, size_t size){
@@ -149,7 +149,7 @@ private:
     const uint8_t channel_index_;
     
     Callback callback_;
-    Mode mode_ = Mode::ToMemory;
+    Mode mode_ = Mode::Default;
 
 
     void enable_done_it(const Enable en);
@@ -202,7 +202,7 @@ private:
         friend void ::DMA2_Channel11_IRQHandler(void);
     #endif
 
-    void start_transfer(size_t dst, const size_t src, size_t size);
+    void start_transfer(const size_t dst_addr, const size_t src_addr, size_t size);
 };
 
 #ifdef DMA1_PRESENT

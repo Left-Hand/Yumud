@@ -16,9 +16,9 @@ void CanFilter::apply(const CanFilterConfig & cfg){
         .CAN_FilterMaskIdHigh = cfg.mask16[1],
         .CAN_FilterMaskIdLow = cfg.mask16[0],
         .CAN_FilterFIFOAssignment = CAN_FIFO0,
-        .CAN_FilterNumber = nth_count_,
+        .CAN_FilterNumber = filter_nth_,
         .CAN_FilterMode = cfg.is_list_mode_ ? CAN_FilterMode_IdList : CAN_FilterMode_IdMask,
-        .CAN_FilterScale = cfg.is_32_ ? CAN_FilterScale_32bit : CAN_FilterScale_16bit,
+        .CAN_FilterScale = cfg.is_32bit_ ? CAN_FilterScale_32bit : CAN_FilterScale_16bit,
         .CAN_FilterActivation = ENABLE,
     };
 
@@ -31,7 +31,6 @@ void CanFilter::apply(const CanFilterConfig & cfg){
 }
 
 void CanFilter::deinit(){
-
     // TODO();
 }
 

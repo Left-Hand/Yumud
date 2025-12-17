@@ -22,7 +22,6 @@ using namespace ymd::hal;
 #define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, USART_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
-
 namespace {
 [[maybe_unused]] static Nth _uart_to_nth(const void * inst){
     switch(reinterpret_cast<size_t>(inst)){
@@ -470,6 +469,12 @@ static constexpr NvicPriority UARTHW_INTERRUPT_NVIC_PRIORITY = {1,3};
 static constexpr DmaPriority RX_DMA_DMA_PRIORITY = DmaPriority::Medium;
 static constexpr DmaPriority TX_DMA_DMA_PRIORITY = DmaPriority::Medium;
 
+
+static_assert(std::has_single_bit(UART_RX_DMA_BUF_SIZE)); //缓冲区大小必须是2的幂
+static_assert(std::has_single_bit(UART_TX_DMA_BUF_SIZE)); //缓冲区大小必须是2的幂
+
+static constexpr size_t HALF_UART_RX_DMA_BUF_SIZE = UART_RX_DMA_BUF_SIZE / 2;
+
 Uart::Uart(
     void * inst
 ):
@@ -477,10 +482,28 @@ Uart::Uart(
     tx_dma_(uart_to_tx_dma(inst)), 
     rx_dma_(uart_to_rx_dma(inst)){;}
 
+void usart_enable_error_interrupt(void * inst_, const Enable en){
+	USART_ITConfig(SDK_INST(inst_), USART_IT_PE, en == EN);
+	USART_ITConfig(SDK_INST(inst_), USART_IT_ERR, en == EN);
+}
 
 void Uart::init(const Config & cfg){
     enable_rcc(EN);
+
+    USART_Cmd(SDK_INST(inst_), DISABLE);
+
     set_remap(cfg.remap);
+
+
+    if(cfg.tx_strategy != CommStrategy::Nil){
+        auto tx_pin = uart_to_tx_pin(inst_, cfg.remap);
+        tx_pin.afpp();
+    }
+
+    if(cfg.rx_strategy != CommStrategy::Nil){
+        auto rx_pin = uart_to_rx_pin(inst_, cfg.remap);
+        rx_pin.inpu();
+    }
 
     const auto baudrate_count = [&] -> uint32_t{
         const auto & baudrate = cfg.baudrate;
@@ -503,22 +526,55 @@ void Uart::init(const Config & cfg){
     };
 
     USART_Init(SDK_INST(inst_), &USART_InitStructure);
-    USART_Cmd(SDK_INST(inst_), ENABLE);
+
+    usart_enable_error_interrupt(inst_, EN);
 
     register_nvic(EN);
+
     set_tx_strategy(cfg.tx_strategy);
     set_rx_strategy(cfg.rx_strategy);
 
-    if(cfg.tx_strategy != CommStrategy::Nil){
-        auto tx_pin = uart_to_tx_pin(inst_, cfg.remap);
-        tx_pin.afpp();
-    }
-    
-    if(cfg.rx_strategy != CommStrategy::Nil){
-        auto rx_pin = uart_to_rx_pin(inst_, cfg.remap);
-        rx_pin.inpu();
-    }
+    USART_Cmd(SDK_INST(inst_), ENABLE);
+
 }
+
+size_t Uart::try_write_chars(const char * pchars, const size_t len){
+    switch(tx_strategy_){
+        case CommStrategy::Blocking:{
+            SDK_INST(inst_)->DATAR;
+
+            //阻塞地发送字符
+            for(size_t i = 0; i < len; ++i){
+                SDK_INST(inst_)->DATAR = pchars[i];
+                while((SDK_INST(inst_)->STATR & USART_FLAG_TXE) == RESET);
+            }
+            while((SDK_INST(inst_)->STATR & USART_FLAG_TC) == RESET);
+            return len;
+        }
+            break;
+        case CommStrategy::Interrupt:{
+            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
+            enable_tx_interrupt(EN);
+            return written_len;
+        }
+        case CommStrategy::Dma:{
+            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
+            return written_len;
+        }
+        case CommStrategy::Nil:
+            //运行到这里说明你可能配置错串口了 让未启用输出的串口输出数据
+            __builtin_trap();
+            return 0;
+    }
+    //无法到达这个控制流
+    __builtin_trap();
+}
+
+size_t Uart::try_write_char(const char chr){
+    return try_write_chars(&chr, 1);
+}
+
+
 
 void Uart::deinit(){
     enable_rcc(DISEN);
@@ -547,12 +603,16 @@ void Uart::set_tx_strategy(const CommStrategy tx_strategy){
 
     switch(tx_strategy){
         case CommStrategy::Blocking:
+            enable_tx_dma(DISEN);
+            enable_tx_interrupt(DISEN);
             break;
         case CommStrategy::Interrupt:
             enable_tx_dma(DISEN);
+            enable_tx_interrupt(EN);
             break;
         case CommStrategy::Dma:
             enable_tx_dma(EN);
+            enable_tx_interrupt(DISEN);
             break;
         default:
             __builtin_unreachable();
@@ -572,17 +632,34 @@ void Uart::enable_tx_dma(const Enable en){
     }
 
     tx_dma_.init({
-        .mode = DmaMode::ToPeriph, 
+        .mode = DmaMode::BurstMemoryToPeriphCircular, 
         .priority = TX_DMA_DMA_PRIORITY
     });
 
     tx_dma_.register_nvic(TX_DMA_NVIC_PRIORITY, EN);
     tx_dma_.enable_interrupt<DmaIT::Done>(EN);
+    tx_dma_.enable_interrupt<DmaIT::Half>(EN);
+    USART_SendData(SDK_INST(inst_), 0);
     tx_dma_.set_event_handler(
         [this](const DmaEvent ev){
+            __builtin_trap();
             switch(ev){
             case DmaEvent::TransferComplete:
-                this->poll_tx_dma();
+                //将数据从当前索引填充至末尾
+                (void)this->tx_fifo_.try_pop(std::span(
+                    &tx_dma_buf_[tx_dma_buf_index_], 
+                    UART_TX_DMA_BUF_SIZE - tx_dma_buf_index_
+                )); 
+                tx_dma_buf_index_ = 0;
+                break;
+            case DmaEvent::HalfTransfer:
+
+                //将数据从当前索引填充至半满
+                (void)this->tx_fifo_.try_pop(std::span(
+                    &tx_dma_buf_[tx_dma_buf_index_], 
+                    (UART_TX_DMA_BUF_SIZE / 2) - tx_dma_buf_index_
+                )); 
+                tx_dma_buf_index_ = UART_TX_DMA_BUF_SIZE / 2;
                 break;
             default:
                 break;
@@ -590,79 +667,11 @@ void Uart::enable_tx_dma(const Enable en){
         }
     );
 
-    // poll_tx_dma();
-}
-
-
-void Uart::poll_tx_dma(){
-    if(tx_dma_.pending_count() != 0)
-        return;
-
-    // 如果发送队列为空，则说明发送完成
-    if(tx_fifo_.length() == 0){
-        emit_event(Event::TxIdle);
-        return;
-    }
-    const size_t num_tx_desired = std::min(tx_fifo_.length(), tx_dma_buf_.size());
-    const size_t num_tx_actual = tx_fifo_.try_pop(std::span(tx_dma_buf_.data(), num_tx_desired));
     tx_dma_.start_transfer_mem2pph<char>(
         (&SDK_INST(inst_)->DATAR), 
-        tx_dma_buf_.data(), num_tx_actual
+        tx_dma_buf_.data(), 
+        UART_TX_DMA_BUF_SIZE
     );
-}
-
-
-// void Uart::poll_tx_dma(){
-//     if(tx_dma_.pending_count() != 0)    return;
-
-//     // 如果发送队列为空，则说明发送完成
-//     if(tx_fifo_.length() == 0){
-//         emit_event(Event::TxIdle);
-//         return;
-//     }
-//     const size_t num_tx_bytes = tx_fifo_.length();
-//     (void)tx_fifo_.try_pop(std::span(tx_dma_buf_.data(), num_tx_bytes));
-//     tx_dma_.start_transfer_mem2pph<char>(
-//         (&SDK_INST(inst_)->DATAR), 
-//         tx_dma_buf_.data(), num_tx_bytes
-//     );
-// }
-
-size_t Uart::try_write_chars(const char * pchars, const size_t len){
-    switch(tx_strategy_){
-        case CommStrategy::Blocking:{
-            SDK_INST(inst_)->DATAR;
-
-            //阻塞地发送字符
-            for(size_t i = 0; i < len; ++i){
-                SDK_INST(inst_)->DATAR = pchars[i];
-                while((SDK_INST(inst_)->STATR & USART_FLAG_TXE) == RESET);
-            }
-            while((SDK_INST(inst_)->STATR & USART_FLAG_TC) == RESET);
-            return len;
-        }
-            break;
-        case CommStrategy::Interrupt:{
-            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
-            enable_tx_interrupt(EN);
-            return written_len;
-        }
-        case CommStrategy::Dma:{
-            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
-            poll_tx_dma();
-            return written_len;
-        }
-        case CommStrategy::Nil:
-            //运行到这里说明你可能配置错串口了 让未启用输出的串口输出数据
-            __builtin_trap();
-            return 0;
-    }
-    //无法到达这个控制流
-    __builtin_trap();
-}
-
-size_t Uart::try_write_char(const char chr){
-    return try_write_chars(&chr, 1);
 }
 
 
@@ -700,7 +709,7 @@ void Uart::enable_rx_dma(const Enable en){
     }
 
     rx_dma_.init({
-        .mode = DmaMode::ToMemCircular, 
+        .mode = DmaMode::PeriphToBurstMemoryCircular, 
         .priority = RX_DMA_DMA_PRIORITY
     });
 
@@ -710,22 +719,38 @@ void Uart::enable_rx_dma(const Enable en){
     rx_dma_.set_event_handler(
         [this](const DmaEvent ev) -> void{
             switch(ev){
-            case DmaEvent::TransferComplete:
-                //将数据从当前索引填充至末尾
-                (void)this->rx_fifo_.try_push(std::span(
+            case DmaEvent::TransferComplete:{
+                const auto req_len = UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_;
+                //传送结束 将后半部分的pingpong区填入fifo中
+                const auto act_len = this->rx_fifo_.try_push(std::span(
                     &rx_dma_buf_[rx_dma_buf_index_], 
-                    UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_
+                    req_len
                 )); 
-                rx_dma_buf_index_ = 0;
-                break;
-            case DmaEvent::HalfTransfer:
 
-                //将数据从当前索引填充至半满
-                (void)this->rx_fifo_.try_push(std::span(
+                if(act_len < req_len){
+                    //TODO
+                    // 接收的数据没有被及时读取 接收fifo无法继续存数据
+                    __builtin_trap();
+
+                }
+                rx_dma_buf_index_ = 0;
+            }
+                break;
+            case DmaEvent::HalfTransfer:{
+                //传送进行一半 将前半部分的pingpong区填入fifo中
+                const auto req_len = HALF_UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_;
+                const auto act_len = this->rx_fifo_.try_push(std::span(
                     &rx_dma_buf_[rx_dma_buf_index_], 
-                    (UART_RX_DMA_BUF_SIZE / 2) - rx_dma_buf_index_
+                    req_len
                 )); 
-                rx_dma_buf_index_ = UART_RX_DMA_BUF_SIZE / 2;
+                if(act_len < req_len){
+                    //TODO
+                    // 接收的数据没有被及时读取 接收fifo无法继续存数据
+                    __builtin_trap();
+
+                }
+                rx_dma_buf_index_ = HALF_UART_RX_DMA_BUF_SIZE;
+            }
                 break;
             default:
                 break;
@@ -741,12 +766,41 @@ void Uart::enable_rx_dma(const Enable en){
 }
 
 void Uart::accept_rxne_interrupt(){
-    const auto data = uint8_t(SDK_INST(inst_)->DATAR);
-    (void)this->rx_fifo_.try_push(data);
+    switch(rx_strategy_){
+        case CommStrategy::Interrupt:{
+            const auto data = uint8_t(SDK_INST(inst_)->DATAR);
+            if(const auto len = this->rx_fifo_.try_push(data);
+                len == 0
+            ){
+                //TODO
+                // 接收的数据没有被及时读取 接收fifo无法继续存数据
+                __builtin_trap();
+            }
+        }
+            break;
+        default:
+            break;
+    }
+
 }
 
+void Uart::accept_tc_interrupt(){
+}
 void Uart::accept_txe_interrupt(){
-
+    switch(tx_strategy_){
+        case CommStrategy::Dma:
+            break;
+        case CommStrategy::Interrupt:{
+            char data = 0;
+            if(const auto len = tx_fifo_.try_pop(data);
+                len != 0){
+                SDK_INST(inst_)->DATAR = data;
+            }
+        }
+            break;
+        default:
+            break;
+    }
 }
 
 void Uart::accept_rxidle_interrupt(){
@@ -757,9 +811,20 @@ void Uart::accept_rxidle_interrupt(){
             if(next_index >= UART_RX_DMA_BUF_SIZE) [[unlikely]]
                 __builtin_trap();
 
-            if((next_index != (UART_RX_DMA_BUF_SIZE / 2)) and (next_index != UART_RX_DMA_BUF_SIZE)){
-                (void)this->rx_fifo_.try_push(std::span(
-                    &rx_dma_buf_[rx_dma_buf_index_], (next_index - rx_dma_buf_index_))); 
+            #if 0
+            // if((next_index != (UART_RX_DMA_BUF_SIZE / 2)) and (next_index != UART_RX_DMA_BUF_SIZE))
+            #else
+            if((next_index & (HALF_UART_RX_DMA_BUF_SIZE - 1)) != 0){
+            #endif
+                const auto req_len = size_t(next_index - rx_dma_buf_index_);
+                const auto act_len = this->rx_fifo_.try_push(std::span(
+                    rx_dma_buf_.data() + rx_dma_buf_index_, req_len
+                )); 
+                if(act_len != req_len){
+                    //TODO
+                    // 接收的数据没有被及时读取 接收fifo无法继续存数据
+                    __builtin_trap();
+                }   
             }
 
             rx_dma_buf_index_ = next_index;
@@ -768,9 +833,10 @@ void Uart::accept_rxidle_interrupt(){
             break;
 
         default:
-            __builtin_trap();
+            break;
     }
 }
+
 
 
 void Uart::enable_rxne_interrupt(const Enable en){
@@ -794,6 +860,7 @@ void UartInterruptDispatcher::on_interrupt(Uart & self){
     const auto events = ral_inst->get_events();
     if(events.any_fault()){
         if(events.ORE){
+            // 过载错误标志
             {
                 //TODO
             }
@@ -835,6 +902,12 @@ void UartInterruptDispatcher::on_interrupt(Uart & self){
         // 对数据寄存器进行写操作，此位将会清零
         self.accept_txe_interrupt();
     }
+
+    if(events.TC){
+        self.accept_tc_interrupt();
+        USART_ClearITPendingBit(SDK_INST(self.inst_), USART_IT_TC);
+    }
+
     if(events.IDLE){
         self.accept_rxidle_interrupt();
         ral_inst->STATR;

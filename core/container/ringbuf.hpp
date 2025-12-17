@@ -197,12 +197,12 @@ namespace ymd{
 
 
 
-
 template<typename T, size_t N>
 requires (std::has_single_bit(N))
 class RingBuf final {
 public:
     static constexpr size_t MASK = N - 1;
+    static constexpr size_t MAX_CAPACITY = N - 1;  // 保留一个空位区分空/满
     
 private:
     alignas(T) std::byte storage_[N * sizeof(T)];
@@ -218,11 +218,7 @@ private:
     }
     
     static constexpr size_t advance(size_t idx, size_t step = 1) noexcept {
-        return (idx + step) % N;  // 使用模运算，因为N是2的幂
-    }
-    
-    [[nodiscard]] constexpr size_t to_index(size_t idx) const noexcept {
-        return idx & MASK;  // 仅当N是2的幂时才有效
+        return (idx + step) & MASK;
     }
     
 public:
@@ -236,57 +232,111 @@ public:
     RingBuf(const RingBuf&) = delete;
     RingBuf& operator=(const RingBuf&) = delete;
     
-    // 移动操作
-    RingBuf(RingBuf&& other) noexcept 
-        : read_idx_(other.read_idx_.load())
-        , write_idx_(other.write_idx_.load()) 
+    // 移动构造
+    RingBuf(RingBuf&& other) noexcept(std::is_nothrow_move_constructible_v<T>) 
+        : read_idx_(other.read_idx_.load(std::memory_order_acquire))
+        , write_idx_(other.write_idx_.load(std::memory_order_acquire))
     {
         // 移动构造时移动已有元素
         const size_t len = other.length();
+        size_t other_read_idx = other.read_idx_.load(std::memory_order_relaxed);
+        
         for (size_t i = 0; i < len; ++i) {
-            size_t idx = (other.read_idx_ + i) % N;
+            size_t idx = advance(other_read_idx, i);
             std::construct_at(data() + idx, std::move(other.data()[idx]));
+            std::destroy_at(other.data() + idx);
         }
-        other.clear();
+        other.read_idx_.store(0, std::memory_order_release);
+        other.write_idx_.store(0, std::memory_order_release);
     }
     
-    RingBuf& operator=(RingBuf&& other) noexcept {
+    // 移动赋值
+    RingBuf& operator=(RingBuf&& other) noexcept(std::is_nothrow_move_constructible_v<T>) {
         if (this != &other) {
             clear();
-            read_idx_ = other.read_idx_.load();
-            write_idx_ = other.write_idx_.load();
+            read_idx_.store(other.read_idx_.load(std::memory_order_acquire), std::memory_order_relaxed);
+            write_idx_.store(other.write_idx_.load(std::memory_order_acquire), std::memory_order_relaxed);
             
             const size_t len = other.length();
+            size_t other_read_idx = other.read_idx_.load(std::memory_order_relaxed);
+            
             for (size_t i = 0; i < len; ++i) {
-                size_t idx = (other.read_idx_ + i) % N;
+                size_t idx = advance(other_read_idx, i);
                 std::construct_at(data() + idx, std::move(other.data()[idx]));
+                std::destroy_at(other.data() + idx);
             }
-            other.clear();
+            
+            other.read_idx_.store(0, std::memory_order_release);
+            other.write_idx_.store(0, std::memory_order_release);
         }
         return *this;
     }
     
     [[nodiscard]] static consteval size_t capacity() noexcept {
-        return N;
+        return MAX_CAPACITY;  // 实际可用容量
     }
     
+    // 单元素操作
     template<typename... Args>
-    size_t try_emplace(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) {
+    [[nodiscard]] size_t try_emplace(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) {
         if (is_full()) return false;
         
-        size_t write_idx = write_idx_.load(std::memory_order_relaxed);
+        size_t write_idx = write_idx_.load(std::memory_order_acquire);
         std::construct_at(data() + write_idx, std::forward<Args>(args)...);
         write_idx_.store(advance(write_idx), std::memory_order_release);
         return true;
     }
     
+    [[nodiscard]] size_t try_pop(T& value) noexcept(std::is_nothrow_move_constructible_v<T>) {
+        if (is_empty()) return false;
+        
+        size_t read_idx = read_idx_.load(std::memory_order_acquire);
+        std::construct_at(&value, std::move(data()[read_idx]));
+        std::destroy_at(data() + read_idx);
+        read_idx_.store(advance(read_idx), std::memory_order_release);
+        return true;
+    }
+    
+    [[nodiscard]] T pop_unchecked() noexcept(std::is_nothrow_move_constructible_v<T>) {
+        size_t read_idx = read_idx_.load(std::memory_order_acquire);
+        T result = std::move(data()[read_idx]);
+        std::destroy_at(data() + read_idx);
+        read_idx_.store(advance(read_idx), std::memory_order_release);
+        return result;
+    }
+    
+    void push_unchecked(const T& value) noexcept(std::is_nothrow_copy_constructible_v<T>) {
+        size_t write_idx = write_idx_.load(std::memory_order_acquire);
+        std::construct_at(data() + write_idx, value);
+        write_idx_.store(advance(write_idx), std::memory_order_release);
+    }
+    
+    void push_unchecked(T&& value) noexcept(std::is_nothrow_move_constructible_v<T>) {
+        size_t write_idx = write_idx_.load(std::memory_order_acquire);
+        std::construct_at(data() + write_idx, std::move(value));
+        write_idx_.store(advance(write_idx), std::memory_order_release);
+    }
+    
+    [[nodiscard]] size_t try_push(const T& value) noexcept(std::is_nothrow_copy_constructible_v<T>) {
+        if (is_full()) return false;
+        push_unchecked(value);
+        return true;
+    }
+    
+    [[nodiscard]] size_t try_push(T&& value) noexcept(std::is_nothrow_move_constructible_v<T>) {
+        if (is_full()) return false;
+        push_unchecked(std::move(value));
+        return true;
+    }
+    
+    // 批量操作
     [[nodiscard]] size_t try_push(std::span<const T> src) noexcept(std::is_nothrow_copy_constructible_v<T>) {
         const size_t free_space = free_capacity();
         const size_t to_push = std::min(src.size(), free_space);
         
         if (to_push == 0) return 0;
         
-        size_t write_idx = write_idx_.load(std::memory_order_relaxed);
+        size_t write_idx = write_idx_.load(std::memory_order_acquire);
         
         // 处理可能的分段写入
         const size_t first_part = std::min(to_push, N - write_idx);
@@ -312,7 +362,7 @@ public:
         
         if (to_pop == 0) return 0;
         
-        size_t read_idx = read_idx_.load(std::memory_order_relaxed);
+        size_t read_idx = read_idx_.load(std::memory_order_acquire);
         
         // 处理可能的分段读取
         const size_t first_part = std::min(to_pop, N - read_idx);
@@ -334,48 +384,8 @@ public:
         return to_pop;
     }
     
-    [[nodiscard]] size_t try_pop(T& value) noexcept(std::is_nothrow_move_constructible_v<T>) {
-        if (is_empty()) return false;
-        
-        size_t read_idx = read_idx_.load(std::memory_order_relaxed);
-        std::construct_at(&value, std::move(data()[read_idx]));
-        std::destroy_at(data() + read_idx);
-        read_idx_.store(advance(read_idx), std::memory_order_release);
-        return true;
-    }
-
-    [[nodiscard]] T pop_unchecked() {
-        if (is_empty()) {
-            // Undefined behavior if buffer is empty - similar to std::queue::pop
-            __builtin_unreachable();
-        }
-        
-        size_t read_idx = read_idx_.load(std::memory_order_relaxed);
-        T result = std::move(data()[read_idx]);
-        std::destroy_at(data() + read_idx);
-        read_idx_.store(advance(read_idx), std::memory_order_release);
-        return result;
-    }
-
-    [[nodiscard]] size_t try_push(const T& value) noexcept(std::is_nothrow_copy_constructible_v<T>) {
-        if (is_full()) return false;
-        
-        size_t write_idx = write_idx_.load(std::memory_order_relaxed);
-        std::construct_at(data() + write_idx, value);
-        write_idx_.store(advance(write_idx), std::memory_order_release);
-        return true;
-    }
-    
-    [[nodiscard]] size_t try_push(T&& value) noexcept(std::is_nothrow_move_constructible_v<T>) {
-        if (is_full()) return false;
-        
-        size_t write_idx = write_idx_.load(std::memory_order_relaxed);
-        std::construct_at(data() + write_idx, std::move(value));
-        write_idx_.store(advance(write_idx), std::memory_order_release);
-        return true;
-    }
-    
-    [[nodiscard]] constexpr size_t length() const noexcept {
+    // 查询状态
+    [[nodiscard]] size_t length() const noexcept {
         const size_t write_idx = write_idx_.load(std::memory_order_acquire);
         const size_t read_idx = read_idx_.load(std::memory_order_acquire);
         
@@ -386,44 +396,48 @@ public:
         }
     }
     
-    [[nodiscard]] constexpr bool is_empty() const noexcept {
+    [[nodiscard]] bool is_empty() const noexcept {
         const size_t write_idx = write_idx_.load(std::memory_order_acquire);
         const size_t read_idx = read_idx_.load(std::memory_order_acquire);
         return write_idx == read_idx;
     }
     
-    [[nodiscard]] constexpr bool is_full() const noexcept {
-        return length() == N;
+    [[nodiscard]] bool is_full() const noexcept {
+        // 下一个写入位置等于读位置时表示满了（保留一个空位）
+        const size_t next_write = advance(write_idx_.load(std::memory_order_acquire));
+        return next_write == read_idx_.load(std::memory_order_acquire);
     }
     
-    [[nodiscard]] constexpr size_t free_capacity() const noexcept {
-        return N - length();
+    [[nodiscard]] size_t free_capacity() const noexcept {
+        return MAX_CAPACITY - length();
     }
     
+    // 管理操作
     void clear() noexcept {
         const size_t len = length();
         size_t read_idx = read_idx_.load(std::memory_order_relaxed);
         
         for (size_t i = 0; i < len; ++i) {
-            std::destroy_at(data() + read_idx);
-            read_idx = advance(read_idx);
+            std::destroy_at(data() + advance(read_idx, i));
         }
         
         read_idx_.store(0, std::memory_order_release);
         write_idx_.store(0, std::memory_order_release);
     }
     
-    // 可选：提供非线程安全的快速版本
-    [[nodiscard]] size_t unsafe_length() const noexcept {
-        const size_t write_idx = write_idx_.load(std::memory_order_relaxed);
-        const size_t read_idx = read_idx_.load(std::memory_order_relaxed);
+    [[nodiscard]] size_t waste(size_t len) noexcept {
+        len = std::min(len, length());
+        if (len == 0) return 0;
         
-        if (write_idx >= read_idx) {
-            return write_idx - read_idx;
-        } else {
-            return N - (read_idx - write_idx);
+        size_t read_idx = read_idx_.load(std::memory_order_acquire);
+        
+        for (size_t i = 0; i < len; ++i) {
+            std::destroy_at(data() + advance(read_idx, i));
         }
+        
+        read_idx_.store(advance(read_idx, len), std::memory_order_release);
+        return len;
     }
+    
 };
-
 }

@@ -12,15 +12,16 @@ namespace ymd::hal::dma{
 struct [[nodiscard]] Mode{
 public:
     enum class Kind:uint8_t{
-        ToMemory = 0b000,
-        ToPeriph = 0b001,
+        PeriphToBurstMemory = 0b000,
+        BurstMemoryToPeriph = 0b001,
         Synergy = 0b010,
         Distribute = 0b011,
 
-        ToMemCircular = 0b100,
-        ToPeriphCircular = 0b101,
+        PeriphToBurstMemoryCircular = 0b100,
+        BurstMemoryToPeriphCircular = 0b101,
         SynergyCircular = 0b110,
         DistributeCircular = 0b111,
+        Default = PeriphToBurstMemory,
     };
 
     using enum Kind;
@@ -35,8 +36,8 @@ public:
 
     [[nodiscard]] constexpr bool dst_is_periph() const {
         switch(kind()){
-            case Kind::ToPeriph:
-            case Kind::ToPeriphCircular:
+            case Kind::BurstMemoryToPeriph:
+            case Kind::BurstMemoryToPeriphCircular:
                 return true;
             default:
                 return false;
@@ -50,8 +51,8 @@ private:
 struct [[nodiscard]] Direction{
 public:
     enum class Kind:uint8_t{
-        ToMemory = 0,
-        ToPeriph,
+        PeriphToBurstMemory = 0,
+        BurstMemoryToPeriph,
         Synergy,
         Distribute
     };

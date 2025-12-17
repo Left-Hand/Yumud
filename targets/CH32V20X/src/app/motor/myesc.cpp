@@ -271,7 +271,24 @@ void myesc_main(){
     DEBUGGER.no_brackets(EN);
     // DEBUGGER.force_sync(EN);
 
+
     clock::delay(2ms);
+    hal::usart1.init({
+        .remap = hal::USART1_REMAP_PB6_PB7,
+        .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
+        // .tx_strategy = CommStrategy::Blocking,
+    });
+
+    while(true){
+        clock::delay(3ms);
+        DEBUG_PRINTLN(
+            hal::usart2.available(),
+            hal::usart1.try_write_chars("hello", 5),
+            hal::usart1.tx_dma_buf_index_,
+            hal::usart1.tx_fifo_.length(),
+            USART1_TX_DMA_CH.pending_count()
+        );
+    }
 
 
     auto & timer = hal::timer1;

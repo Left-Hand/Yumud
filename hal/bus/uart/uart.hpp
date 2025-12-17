@@ -78,7 +78,8 @@ private:
     Callback callback_;
 
 
-protected:
+// protected:
+public:
     CommStrategy tx_strategy_;
     CommStrategy rx_strategy_;
 

@@ -301,10 +301,12 @@ static constexpr NvicPriority SCE_INTERRUPT_NVIC_PRIORITY = {1, 1};
 
 
 void Can::init(const Config & cfg){
+
+    CAN_DeInit(SDK_INST(inst_));
     enable_rcc(EN);
     set_remap(cfg.remap);
     alter_to_pins(cfg.remap);
-
+    init_interrupts();
 
     const auto bit_timming_coeffs = [&] -> CanNominalBitTimmingCoeffs{
         const auto & bit_timming = cfg.bit_timming;
@@ -317,6 +319,7 @@ void Can::init(const Config & cfg){
             __builtin_trap();
         }
     }();
+
 
     const CAN_InitTypeDef CAN_InitConf = {
         .CAN_Prescaler = bit_timming_coeffs.prescale,
@@ -333,8 +336,11 @@ void Can::init(const Config & cfg){
         .CAN_TXFP = DISABLE,
     };
 
-    CAN_Init(SDK_INST(inst_), &CAN_InitConf);
-    init_interrupts();
+    if(const auto status = CAN_Init(SDK_INST(inst_), &CAN_InitConf);
+        status == CAN_InitStatus_Failed){
+        //初始化失败
+        __builtin_trap();
+    }
 }
 
 void Can::deinit(){

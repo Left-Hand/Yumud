@@ -3,6 +3,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/can/can.hpp"
+#include "hal/dma/dma.hpp"
 
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
@@ -14,6 +15,8 @@
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
 
 #include "algebra/regions/Ray2.hpp"
+
+
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -108,6 +111,13 @@ void alx_aoa_main(){
         // 115200
     });
 
+    // hal::uart.init({
+    //     .remap = hal::UART5_REMAP_PC12_PD2,
+    //     .baudrate = hal::NearestFreq(115200 * 2),
+    //     .tx_strategy = CommStrategy::Blocking
+    //     // 115200
+    // });
+
 
 
     DEBUGGER.retarget(&hal::usart2);
@@ -160,6 +170,7 @@ void alx_aoa_main(){
     hal::usart3.init({
         .remap = hal::USART3_REMAP_PB10_PB11,
         .baudrate = hal::NearestFreq(alx_aoa::DEFAULT_UART_BAUD),
+        .tx_strategy = CommStrategy::Blocking
     });
 
     hal::uart4.init({
@@ -264,7 +275,6 @@ void alx_aoa_main(){
             [[maybe_unused]] const auto left_est_point = left_ray.endpoint_at_length(left_meas.amplitude);
             [[maybe_unused]] const auto right_est_point = right_ray.endpoint_at_length(right_meas.amplitude);
             // const auto may_p = left_ray.intersection(right_ray, 0.0001f);
-
             // const auto cp = may_p.unwrap_or(Vec2f::ZERO);
             // return;
             DEBUG_PRINTLN_IDLE(
@@ -291,7 +301,11 @@ void alx_aoa_main(){
                 // p
                 // geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(Vec2f::ZERO),
                 // geometry::compute_intersection_point(right_ray, left_circle).unwrap_or(Vec2f::ZERO),
-                hal::usart2.available()
+                hal::usart2.available(),
+                hal::usart3.tx_dma_buf_index_,
+                hal::usart3.tx_fifo_.length(),
+                hal::usart3.try_write_chars("1234567890", 10),
+                USART3_TX_DMA_CH.pending_count()
                 // 0
                 // (left_raw_meas.distance > right_raw_meas.distance) ? right_est_point : right_est_point
                 

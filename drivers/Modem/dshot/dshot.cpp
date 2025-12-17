@@ -13,7 +13,7 @@ using namespace ymd::drivers;
 static constexpr auto DSHOT_LEN = DShotChannel::DSHOT_LEN;
 
 void BurstDmaPwm::borrow(std::span<const uint16_t> pbuf){
-    dma_channel_.init({DmaMode::ToPeriph, DmaPriority::Medium});
+    dma_channel_.init({DmaMode::BurstMemoryToPeriph, DmaPriority::Medium});
     pbuf_ = pbuf;
 }
 
@@ -26,7 +26,7 @@ void BurstDmaPwm::invoke(){
 
 void BurstDmaPwm::install(){
     dma_channel_.init({
-        .mode = DmaMode::ToPeriph, 
+        .mode = DmaMode::BurstMemoryToPeriph, 
         .priority = DmaPriority::Ultra
     });
     

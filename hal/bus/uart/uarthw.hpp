@@ -81,12 +81,11 @@ private:
     void enable_rx_dma(const Enable en);
     void enable_tx_dma(const Enable en);
 
-    void poll_tx_dma();
-
-    void accept_rxne_interrupt();
     
     void accept_txe_interrupt();
+    void accept_tc_interrupt();
     
+    void accept_rxne_interrupt();
     void accept_rxidle_interrupt();
 
 
@@ -97,6 +96,7 @@ private:
     DmaChannel & rx_dma_;
 
 public:
+    volatile size_t tx_dma_buf_index_ = 0;
     volatile size_t rx_dma_buf_index_ = 0;
 
     friend class UartInterruptDispatcher;

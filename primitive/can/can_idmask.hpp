@@ -76,11 +76,19 @@ struct [[nodiscard]] _CanIdMaskPair final{
                     return None;
             }
         }
-        return Some(from_parts(
-            id_type(id),
-            id_type(mask),
-            spec
-        ));
+        if constexpr(std::is_same_v<id_type, hal::CanStdId>){
+            return Some(from_parts(
+                id_type::from_u11(id),
+                id_type::from_u11(mask),
+                spec
+            ));
+        }else if constexpr(std::is_same_v<id_type, hal::CanExtId>){
+            return Some(from_parts(
+                id_type::from_u29(id),
+                id_type::from_u29(mask),
+                spec
+            ));
+        }
     }
 
 private:

@@ -26,6 +26,7 @@ static constexpr SpiPrescaler calculate_prescaler(
     return SpiPrescaler(std::bit_cast<SpiPrescaler::Kind>(static_cast<uint8_t>(i & 0b111)));
 }
 
+namespace {
 [[maybe_unused]] static Nth _spi_to_nth(const void * inst){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef SPI1_PRESENT
@@ -140,6 +141,8 @@ DEF_SPI_BIND_PIN_LAYOUTER(miso)
 DEF_SPI_BIND_PIN_LAYOUTER(mosi)
 DEF_SPI_BIND_PIN_LAYOUTER(sclk)
 DEF_SPI_BIND_PIN_LAYOUTER(hwcs)
+
+}
 
 void SpiHw::enable_rcc(const Enable en){
     switch(reinterpret_cast<size_t>(inst_)){
