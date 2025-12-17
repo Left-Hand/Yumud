@@ -81,8 +81,8 @@ struct I2cTester{
 
 void i2c_scanner_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576_KHz,
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     // DEBUGGER.force_sync();

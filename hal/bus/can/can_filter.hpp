@@ -33,15 +33,13 @@ public:
         CanFilterConfig ret;
 
         switch(list.size()){
-            default:
-                HALT;
-                break;
             case 2:
                 ret.id16[0] =       std::next(list.begin(), 0) -> to_bits();
                 ret.id16[1] =       std::next(list.begin(), 1) -> to_bits();
                 ret.mask16[0] =     std::next(list.begin(), 2) -> to_bits();
                 ret.mask16[1] =     std::next(list.begin(), 3) -> to_bits();
-
+            default:
+                __builtin_trap();
                 break;
         }
         ret.is_32_ = false;

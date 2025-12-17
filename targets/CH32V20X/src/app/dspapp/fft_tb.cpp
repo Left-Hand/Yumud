@@ -215,8 +215,8 @@ static constexpr void rfft(std::span<Complex<T>> dst, std::span<const T> src){
 
 void fft_main(){
     UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576_KHz
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);

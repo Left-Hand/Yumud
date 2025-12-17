@@ -102,7 +102,11 @@ private:
 
 using Baudrate = Sumtype<Prescaler, NearestFreq, LeastFreq>;
 
-    
+enum class WordSize:uint8_t{
+    OneByte = 0b00,
+    TwoBytes = 0b01
+};
+
 struct Config{
     SpiRemap remap;
     Baudrate baudrate;
@@ -121,4 +125,5 @@ using SpiClockPhase = spi::ClockPhase;
 using SpiPrescaler = spi::Prescaler;
 using SpiBaudrate = spi::Baudrate;
 using SpiConfig = spi::Config;
+using SpiWordSize = spi::WordSize;
 }

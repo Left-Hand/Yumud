@@ -110,8 +110,8 @@ static void mmc5983_test(drivers::MMC5983 & imu){
 
 void mmc5983_main(){
     DEBUGGER_INST.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
 
     DEBUGGER.retarget(&UART);

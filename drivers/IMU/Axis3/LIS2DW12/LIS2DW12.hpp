@@ -216,7 +216,7 @@ public:
         phy_(spi_drv){;}
     explicit LIS2DW12(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit LIS2DW12(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit LIS2DW12(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         phy_(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] IResult<> init();

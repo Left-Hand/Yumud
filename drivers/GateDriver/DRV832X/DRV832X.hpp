@@ -12,7 +12,7 @@ public:
         phy_(spi_drv){;}
     explicit DRV8323R(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit DRV8323R(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit DRV8323R(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         phy_(hal::SpiDrv(spi, rank)){;}
 
 

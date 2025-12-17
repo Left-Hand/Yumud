@@ -119,8 +119,8 @@ static inline constexpr auto udivc(uint32_t divisor){
 
 void div_tb() {
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000 
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
 
     // i8 a = {0};

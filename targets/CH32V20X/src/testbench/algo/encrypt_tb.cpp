@@ -28,7 +28,7 @@ void encrypt_main(){
 
         DBG_UART.init({
             .remap = hal::UartRemap::_0,
-            .baudrate = UART_BAUD
+            .baudrate = hal::NearestFreq(UART_BAUD),
         });
 
         DEBUGGER.retarget(&DBG_UART);

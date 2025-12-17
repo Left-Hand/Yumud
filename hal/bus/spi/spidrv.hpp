@@ -23,7 +23,7 @@ concept valid_spi_data = (
 class SpiDrv final{
 public:
 
-    SpiDrv(Some<Spi *> spi, const SpiSlaveRank rank):
+    SpiDrv(Some<SpiBase *> spi, const SpiSlaveRank rank):
         spi_(spi.deref()),
         rank_(rank)
         {;}
@@ -31,7 +31,7 @@ public:
     template<typename T>
     void force_write(const T data) {
         constexpr size_t size = sizeof(T);
-        if constexpr(size != 1) this->set_word_width(size * 8);
+        if constexpr(size != 1) this->set_wordsize(SpiWordSize::TwoBytes);
 
         if constexpr (size == 1) {
             spi_.blocking_write(uint8_t(data));
@@ -41,16 +41,15 @@ public:
             spi_.blocking_write(uint32_t(data));
         }
 
-        if constexpr(size != 1) this->set_word_width(8);
+        if constexpr(size != 1) this->set_wordsize(SpiWordSize::OneByte);
     }
 
     
-    __fast_inline hal::HalResult set_word_width(const size_t width){
-        if(last_width_ != width) return spi_.set_word_width(width);
-        else return hal::HalResult::Ok();
+    __fast_inline hal::HalResult set_wordsize(const SpiWordSize wordsize){
+        return spi_.set_wordsize(wordsize);
     }
 
-    void set_endian(const std::endian endian){bytes_order_ = endian;}
+    void set_endian(const std::endian endian){endian_ = endian;}
     void set_baudrate(const uint32_t baud){baudrate_ = baud;}
 
 public:
@@ -118,15 +117,12 @@ public:
         Continuous cont = DISC);
 
 private:
-    Spi & spi_;
+    SpiBase & spi_;
     SpiSlaveRank rank_;
-    std::endian bytes_order_ = std::endian::little;  
+    std::endian endian_ = std::endian::little;  
     uint32_t baudrate_ = 1000000;
-    uint8_t last_width_ = -1;
 
     using WriteFn = std::function<HalResult(uint32_t)>;
-
-    // WriteFn write_fn_;
 };
 
 template<valid_spi_data T>
@@ -136,7 +132,7 @@ hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous con
     if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
     if constexpr (sizeof(T) != 1){
-        if(const auto res = this->set_word_width(sizeof(T) * 8); 
+        if(const auto res = this->set_wordsize(SpiWordSize::TwoBytes); 
             res.is_err()) return res;
     }
 
@@ -149,7 +145,7 @@ hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous con
     }
 
     if (cont == DISC) spi_.lend();
-    if constexpr (sizeof(T) != 1) this->set_word_width(8);
+    if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
 
     return hal::HalResult::Ok();
 }
@@ -160,13 +156,13 @@ hal::HalResult SpiDrv::write_repeat(const is_stdlayout auto data, const size_t l
     static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
     if (const auto res = spi_.borrow(rank_); 
         res.is_err()) return res; 
-    if constexpr (sizeof(T) != 1) this->set_word_width(sizeof(T) * 8);
+    if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
     for (size_t i = 0; i < len; i++){
         if(const auto res = spi_.blocking_write(uint32_t(static_cast<T>(data))); 
             res.is_err()) return res;
     }
     if (cont == DISC) spi_.lend();
-    if constexpr (sizeof(T) != 1) this->set_word_width(8);
+    if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
     return hal::HalResult::Ok();
 }
 
@@ -179,13 +175,13 @@ hal::HalResult SpiDrv::write_burst(
     static_assert(sizeof(T) == sizeof(U));
     if (const auto res = spi_.borrow(rank_); 
         res.is_err()) return res; 
-    if constexpr (sizeof(T) != 1) this->set_word_width(sizeof(T) * 8);
+    if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
     for (size_t i = 0; i < pbuf.size(); i++){
         if(const auto res = spi_.blocking_write(uint32_t(pbuf[i]));
             res.is_err()) return res;
     } 
     if (cont == DISC) spi_.lend();
-    if constexpr (sizeof(T) != 1) this->set_word_width(8);
+    if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
     return hal::HalResult::Ok();
 }
 
@@ -199,14 +195,14 @@ hal::HalResult SpiDrv::read_burst(
     if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
 
-    if constexpr (sizeof(T) != 1) this->set_word_width(sizeof(T) * 8);
+    if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
     for (size_t i = 0; i < pbuf.size(); i++) {
         uint32_t temp = 0;
         spi_.blocking_read(temp);
         pbuf[i] = temp;
     }
     if (cont == DISC) spi_.lend();
-    if constexpr (sizeof(T) != 1) this->set_word_width(8);
+    if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
     return hal::HalResult::Ok();
 }
 
@@ -217,12 +213,12 @@ hal::HalResult SpiDrv::read_single(is_stdlayout auto & data, const Continuous co
     if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
     {
-        if constexpr (sizeof(T) != 1) this->set_word_width(sizeof(T) * 8);
+        if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
         uint32_t temp = 0;
         spi_.blocking_read(temp);
         memcpy(&data, &temp, sizeof(T));
         if (cont == DISC) spi_.lend();
-        if constexpr (sizeof(T) != 1) this->set_word_width(8);
+        if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
     }
     return hal::HalResult::Ok();
 }
@@ -233,11 +229,11 @@ hal::HalResult SpiDrv::transceive_single(T & datarx, const T datatx, Continuous 
     if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
     {
-        if constexpr (sizeof(T) != 1) this->set_word_width(sizeof(T) * 8);
+        if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
         uint32_t ret = 0;
         spi_.blocking_transceive(ret, datatx);
         datarx = ret;
-        if constexpr (sizeof(T) != 1) this->set_word_width(8);
+        if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
         if (cont == DISC) spi_.lend();
     }
     return hal::HalResult::Ok();
@@ -252,13 +248,13 @@ hal::HalResult SpiDrv::transceive_burst(
     if(const auto res = spi_.borrow(rank_); 
         res.is_err()) return res;
     {
-        if constexpr (sizeof(T) != 1) this->set_word_width(sizeof(T) * 8);
+        if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
         for(size_t i = 0; i < N; i++) {
             uint32_t dummy = 0;
             spi_.blocking_transceive(dummy, pbuf_tx[i]);
             pbuf_rx[i] = dummy;
         }
-        if constexpr (sizeof(T) != 1) this->set_word_width(8);
+        if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
         if (cont == DISC) spi_.lend();
     }
     return hal::HalResult::Ok();
@@ -274,13 +270,13 @@ hal::HalResult SpiDrv::transceive_burst(
         res.is_err()) return res;
     {
         const auto N = pbuf_rx.size();
-        if constexpr (sizeof(T) != 1) this->set_word_width(sizeof(T) * 8);
+        if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
         for(size_t i = 0; i < N; i++) {
             uint32_t dummy = 0;
             spi_.blocking_transceive(dummy, pbuf_tx[i]);
             pbuf_rx[i] = dummy;
         }
-        if constexpr (sizeof(T) != 1) this->set_word_width(8);
+        if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
         if (cont == DISC) spi_.lend();
     }
     return hal::HalResult::Ok();

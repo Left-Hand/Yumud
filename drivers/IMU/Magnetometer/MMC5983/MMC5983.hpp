@@ -50,7 +50,7 @@ public:
         phy_(hal::I2cDrv{i2c, addr}){;}
     explicit MMC5983(const hal::SpiDrv & spi_drv):
         phy_(spi_drv){;}
-    explicit MMC5983(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit MMC5983(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         phy_(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);

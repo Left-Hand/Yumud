@@ -26,15 +26,15 @@ using namespace ymd::hal;
 namespace {
 [[maybe_unused]] static Nth _uart_to_nth(const void * inst){
     switch(reinterpret_cast<size_t>(inst)){
-        #ifdef UART1_PRESENT
+        #ifdef USART1_PRESENT
         case USART1_BASE:
             return Nth(1);
         #endif
-        #ifdef UART2_PRESENT
+        #ifdef USART2_PRESENT
         case USART2_BASE:
             return Nth(2);
         #endif
-        #ifdef UART3_PRESENT
+        #ifdef USART3_PRESENT
         case USART3_BASE:
             return Nth(3);
         #endif
@@ -67,15 +67,15 @@ template<UartRemap REMAP>
 [[maybe_unused]] static Gpio _uart_to_tx_pin(const void * inst){
     const auto nth = _uart_to_nth(inst);
     switch(nth.count()){
-        #ifdef UART1_PRESENT
+        #ifdef USART1_PRESENT
         case 1:
             return pintag_to_pin<uart::tx_pin_t<1, REMAP>>();
         #endif
-        #ifdef UART2_PRESENT
+        #ifdef USART2_PRESENT
         case 2:
             return pintag_to_pin<uart::tx_pin_t<2, REMAP>>();
         #endif
-        #ifdef UART3_PRESENT
+        #ifdef USART3_PRESENT
         case 3:
             return pintag_to_pin<uart::tx_pin_t<3, REMAP>>();
         #endif
@@ -107,15 +107,15 @@ template<UartRemap REMAP>
 [[maybe_unused]] static Gpio _uart_to_rx_pin(const void * inst){
     const auto nth = _uart_to_nth(inst);
     switch(nth.count()){
-        #ifdef UART1_PRESENT
+        #ifdef USART1_PRESENT
         case 1:
             return pintag_to_pin<uart::rx_pin_t<1, REMAP>>();
         #endif
-        #ifdef UART2_PRESENT
+        #ifdef USART2_PRESENT
         case 2:
             return pintag_to_pin<uart::rx_pin_t<2, REMAP>>();
         #endif
-        #ifdef UART3_PRESENT
+        #ifdef USART3_PRESENT
         case 3:
             return pintag_to_pin<uart::rx_pin_t<3, REMAP>>();
         #endif
@@ -160,17 +160,17 @@ DEF_UART_BIND_PIN_LAYOUTER(rx)
 
 static DmaChannel & uart_to_rx_dma(const void * inst){
     switch(reinterpret_cast<size_t>(inst)){
-        #ifdef UART1_PRESENT
+        #ifdef USART1_PRESENT
         case USART1_BASE:
-            return UART1_RX_DMA_CH;
+            return USART1_RX_DMA_CH;
         #endif
-        #ifdef UART2_PRESENT
+        #ifdef USART2_PRESENT
         case USART2_BASE:
-            return UART2_RX_DMA_CH;
+            return USART2_RX_DMA_CH;
         #endif
-        #ifdef UART3_PRESENT
+        #ifdef USART3_PRESENT
         case USART3_BASE:
-            return UART3_RX_DMA_CH;
+            return USART3_RX_DMA_CH;
         #endif
         #ifdef UART4_PRESENT
         case UART4_BASE:
@@ -198,17 +198,17 @@ static DmaChannel & uart_to_rx_dma(const void * inst){
 }
 static DmaChannel & uart_to_tx_dma(const void * inst){
     switch(reinterpret_cast<size_t>(inst)){
-        #ifdef UART1_PRESENT
+        #ifdef USART1_PRESENT
         case USART1_BASE:
-            return UART1_TX_DMA_CH;
+            return USART1_TX_DMA_CH;
         #endif
-        #ifdef UART2_PRESENT
+        #ifdef USART2_PRESENT
         case USART2_BASE:
-            return UART2_TX_DMA_CH;
+            return USART2_TX_DMA_CH;
         #endif
-        #ifdef UART3_PRESENT
+        #ifdef USART3_PRESENT
         case USART3_BASE:
-            return UART3_TX_DMA_CH;
+            return USART3_TX_DMA_CH;
         #endif
         #ifdef UART4_PRESENT
         case UART4_BASE:
@@ -237,15 +237,15 @@ static DmaChannel & uart_to_tx_dma(const void * inst){
 static IRQn get_nvic_irqn(const void * inst){
 
     switch(reinterpret_cast<size_t>(inst)){
-        #ifdef UART1_PRESENT
+        #ifdef USART1_PRESENT
         case USART1_BASE:
             return USART1_IRQn;
         #endif
-        #ifdef UART2_PRESENT
+        #ifdef USART2_PRESENT
         case USART2_BASE:
             return USART2_IRQn;
         #endif
-        #ifdef UART3_PRESENT
+        #ifdef USART3_PRESENT
         case USART3_BASE:
             return USART3_IRQn;
         #endif
@@ -275,17 +275,17 @@ static IRQn get_nvic_irqn(const void * inst){
 
 static void uart_enable_rcc(const void * inst, const Enable en){
     switch(reinterpret_cast<size_t>(inst)){
-        #ifdef UART1_PRESENT
+        #ifdef USART1_PRESENT
         case USART1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, en == EN);
             return;
         #endif
-        #ifdef UART2_PRESENT
+        #ifdef USART2_PRESENT
         case USART2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, en == EN);
             return;
         #endif
-        #ifdef UART3_PRESENT
+        #ifdef USART3_PRESENT
         case USART3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, en == EN);
             return;
@@ -321,7 +321,7 @@ static void uart_enable_rcc(const void * inst, const Enable en){
 
 static void uart_set_remap(const void * inst, const UartRemap remap){
     switch(reinterpret_cast<size_t>(inst)){
-        #ifdef UART1_PRESENT
+        #ifdef USART1_PRESENT
         case USART1_BASE:
             switch(remap){
                 case UartRemap::_0:
@@ -334,7 +334,7 @@ static void uart_set_remap(const void * inst, const UartRemap remap){
                     break;
             }
         #endif
-        #ifdef UART2_PRESENT
+        #ifdef USART2_PRESENT
         case USART2_BASE:
             switch(remap){
                 case UartRemap::_0:
@@ -347,7 +347,7 @@ static void uart_set_remap(const void * inst, const UartRemap remap){
                     break;
             }
         #endif
-        #ifdef UART3_PRESENT
+        #ifdef USART3_PRESENT
         case USART3_BASE:
             switch (remap){
                 case UartRemap::_0:
@@ -477,98 +477,22 @@ Uart::Uart(
     tx_dma_(uart_to_tx_dma(inst)), 
     rx_dma_(uart_to_rx_dma(inst)){;}
 
-void Uart::enable_rcc(const Enable en){
-    uart_enable_rcc(SDK_INST(inst_), en);
-}
-
-
-void Uart::set_remap(const UartRemap remap){
-    uart_set_remap(SDK_INST(inst_), remap);
-}
-
-
-
-void Uart::register_nvic(const Enable en){
-    UARTHW_INTERRUPT_NVIC_PRIORITY.with_irqn(get_nvic_irqn(SDK_INST(inst_))).enable(EN);
-}
-
-
-
-void Uart::enable_single_line_mode(const Enable en){
-    USART_HalfDuplexCmd(SDK_INST(inst_), en == EN);
-}
-
-void Uart::poll_tx_dma(){
-    if(tx_dma_.remaining())    return;
-
-    // 如果发送队列为空，则说明发送完成
-    if(tx_fifo_.length() == 0){
-        invoke_callback(Event::TxIdle);
-        return;
-    }
-    const size_t num_tx_bytes = tx_fifo_.length();
-    (void)tx_fifo_.try_pop(std::span(tx_dma_buf_.data(), num_tx_bytes));
-    tx_dma_.start_transfer_mem2pph<char>(
-        (&SDK_INST(inst_)->DATAR), 
-        tx_dma_buf_.data(), num_tx_bytes
-    );
-}
-
-
-
-void Uart::set_tx_strategy(const CommStrategy tx_strategy){
-    if(tx_strategy_ == tx_strategy) return;
-
-    switch(tx_strategy){
-        case CommStrategy::Blocking:
-            break;
-        case CommStrategy::Interrupt:
-            enable_tx_dma(DISEN);
-            break;
-        case CommStrategy::Dma:
-            enable_tx_dma(EN);
-            break;
-        default:
-            __builtin_unreachable();
-            break;
-    }
-
-    tx_strategy_ = tx_strategy;
-    
-}
-
-
-void Uart::set_rx_strategy(const CommStrategy rx_strategy){
-    if(rx_strategy_ == rx_strategy) return;
-        
-    switch(rx_strategy){
-        case CommStrategy::Blocking:
-            break;
-        case CommStrategy::Interrupt:
-            enable_rx_dma(DISEN);
-            enable_idle_it(DISEN);
-            enable_rxne_it(EN);
-            break;
-        case CommStrategy::Dma:
-            enable_rxne_it(DISEN);
-            enable_idle_it(EN);
-            enable_rx_dma(EN);
-            break;
-        default:
-            __builtin_unreachable();
-            break;
-    }
-    rx_strategy_ = rx_strategy;
-    
-}
-
 
 void Uart::init(const Config & cfg){
     enable_rcc(EN);
     set_remap(cfg.remap);
 
+    const auto baudrate_count = [&] -> uint32_t{
+        const auto & baudrate = cfg.baudrate;
+        if(baudrate.is<hal::NearestFreq>()){
+            return baudrate.unwrap_as<hal::NearestFreq>().count;
+        }else{
+            __builtin_trap();
+        }
+    }();
+
     const USART_InitTypeDef USART_InitStructure{
-        .USART_BaudRate = cfg.baudrate,
+        .USART_BaudRate = baudrate_count,
         .USART_WordLength = USART_WordLength_8b,
         .USART_StopBits = USART_StopBits_1,
         .USART_Parity = USART_Parity_No,
@@ -596,37 +520,47 @@ void Uart::init(const Config & cfg){
     }
 }
 
-size_t Uart::try_write_chars(const char * pchars, const size_t len){
-    switch(tx_strategy_){
-        case CommStrategy::Blocking:{
-            SDK_INST(inst_)->DATAR;
-
-            for(size_t i = 0; i < len; ++i){
-                SDK_INST(inst_)->DATAR = pchars[i];
-                while((SDK_INST(inst_)->STATR & USART_FLAG_TXE) == RESET);
-            }
-            while((SDK_INST(inst_)->STATR & USART_FLAG_TC) == RESET);
-            return len;
-        }
-            break;
-        case CommStrategy::Interrupt:{
-            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
-            enable_tx_it(EN);
-            return written_len;
-        }
-        case CommStrategy::Dma:{
-            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
-            poll_tx_dma();
-            return written_len;
-        }
-        default:
-            //无法到达这个控制流
-            __builtin_trap();
-    }
+void Uart::deinit(){
+    enable_rcc(DISEN);
 }
 
-size_t Uart::try_write_char(const char chr){
-    return try_write_chars(&chr, 1);
+void Uart::enable_rcc(const Enable en){
+    uart_enable_rcc(inst_, en);
+}
+
+
+void Uart::set_remap(const UartRemap remap){
+    uart_set_remap(inst_, remap);
+}
+
+void Uart::enable_single_line_mode(const Enable en){
+    USART_HalfDuplexCmd(SDK_INST(inst_), en == EN);
+}
+
+
+void Uart::register_nvic(const Enable en){
+    UARTHW_INTERRUPT_NVIC_PRIORITY.with_irqn(get_nvic_irqn(SDK_INST(inst_))).enable(EN);
+}
+
+void Uart::set_tx_strategy(const CommStrategy tx_strategy){
+    if(tx_strategy_ == tx_strategy) return;
+
+    switch(tx_strategy){
+        case CommStrategy::Blocking:
+            break;
+        case CommStrategy::Interrupt:
+            enable_tx_dma(DISEN);
+            break;
+        case CommStrategy::Dma:
+            enable_tx_dma(EN);
+            break;
+        default:
+            __builtin_unreachable();
+            break;
+    }
+
+    tx_strategy_ = tx_strategy;
+    
 }
 
 void Uart::enable_tx_dma(const Enable en){
@@ -636,7 +570,6 @@ void Uart::enable_tx_dma(const Enable en){
         tx_dma_.set_event_handler(nullptr);
         return;
     }
-
 
     tx_dma_.init({
         .mode = DmaMode::ToPeriph, 
@@ -657,7 +590,107 @@ void Uart::enable_tx_dma(const Enable en){
         }
     );
 
+    // poll_tx_dma();
 }
+
+
+void Uart::poll_tx_dma(){
+    if(tx_dma_.pending_count() != 0)
+        return;
+
+    // 如果发送队列为空，则说明发送完成
+    if(tx_fifo_.length() == 0){
+        emit_event(Event::TxIdle);
+        return;
+    }
+    const size_t num_tx_desired = std::min(tx_fifo_.length(), tx_dma_buf_.size());
+    const size_t num_tx_actual = tx_fifo_.try_pop(std::span(tx_dma_buf_.data(), num_tx_desired));
+    tx_dma_.start_transfer_mem2pph<char>(
+        (&SDK_INST(inst_)->DATAR), 
+        tx_dma_buf_.data(), num_tx_actual
+    );
+}
+
+
+// void Uart::poll_tx_dma(){
+//     if(tx_dma_.pending_count() != 0)    return;
+
+//     // 如果发送队列为空，则说明发送完成
+//     if(tx_fifo_.length() == 0){
+//         emit_event(Event::TxIdle);
+//         return;
+//     }
+//     const size_t num_tx_bytes = tx_fifo_.length();
+//     (void)tx_fifo_.try_pop(std::span(tx_dma_buf_.data(), num_tx_bytes));
+//     tx_dma_.start_transfer_mem2pph<char>(
+//         (&SDK_INST(inst_)->DATAR), 
+//         tx_dma_buf_.data(), num_tx_bytes
+//     );
+// }
+
+size_t Uart::try_write_chars(const char * pchars, const size_t len){
+    switch(tx_strategy_){
+        case CommStrategy::Blocking:{
+            SDK_INST(inst_)->DATAR;
+
+            //阻塞地发送字符
+            for(size_t i = 0; i < len; ++i){
+                SDK_INST(inst_)->DATAR = pchars[i];
+                while((SDK_INST(inst_)->STATR & USART_FLAG_TXE) == RESET);
+            }
+            while((SDK_INST(inst_)->STATR & USART_FLAG_TC) == RESET);
+            return len;
+        }
+            break;
+        case CommStrategy::Interrupt:{
+            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
+            enable_tx_interrupt(EN);
+            return written_len;
+        }
+        case CommStrategy::Dma:{
+            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
+            poll_tx_dma();
+            return written_len;
+        }
+        case CommStrategy::Nil:
+            //运行到这里说明你可能配置错串口了 让未启用输出的串口输出数据
+            __builtin_trap();
+            return 0;
+    }
+    //无法到达这个控制流
+    __builtin_trap();
+}
+
+size_t Uart::try_write_char(const char chr){
+    return try_write_chars(&chr, 1);
+}
+
+
+
+void Uart::set_rx_strategy(const CommStrategy rx_strategy){
+    if(rx_strategy_ == rx_strategy) return;
+        
+    switch(rx_strategy){
+        case CommStrategy::Blocking:
+            break;
+        case CommStrategy::Interrupt:
+            enable_rx_dma(DISEN);
+            enable_idle_interrupt(DISEN);
+            enable_rxne_interrupt(EN);
+            break;
+        case CommStrategy::Dma:
+            enable_rxne_interrupt(DISEN);
+            enable_idle_interrupt(EN);
+            enable_rx_dma(EN);
+            break;
+        default:
+            __builtin_unreachable();
+            break;
+    }
+    rx_strategy_ = rx_strategy;
+    
+}
+
 
 void Uart::enable_rx_dma(const Enable en){
     USART_DMACmd(SDK_INST(inst_), USART_DMAReq_Rx, en == EN);
@@ -666,7 +699,10 @@ void Uart::enable_rx_dma(const Enable en){
         return;
     }
 
-    rx_dma_.init({DmaMode::ToMemCircular, RX_DMA_DMA_PRIORITY});
+    rx_dma_.init({
+        .mode = DmaMode::ToMemCircular, 
+        .priority = RX_DMA_DMA_PRIORITY
+    });
 
     rx_dma_.register_nvic(RX_DMA_NVIC_PRIORITY, EN);
     rx_dma_.enable_interrupt<DmaIT::Done>(EN);
@@ -705,7 +741,8 @@ void Uart::enable_rx_dma(const Enable en){
 }
 
 void Uart::accept_rxne_interrupt(){
-    (void)this->rx_fifo_.try_push(uint8_t(SDK_INST(inst_)->DATAR));
+    const auto data = uint8_t(SDK_INST(inst_)->DATAR);
+    (void)this->rx_fifo_.try_push(data);
 }
 
 void Uart::accept_txe_interrupt(){
@@ -715,7 +752,7 @@ void Uart::accept_txe_interrupt(){
 void Uart::accept_rxidle_interrupt(){
     switch(rx_strategy_){
         case CommStrategy::Dma:{
-            const size_t next_index = UART_RX_DMA_BUF_SIZE - rx_dma_.remaining();
+            const size_t next_index = UART_RX_DMA_BUF_SIZE - rx_dma_.pending_count();
 
             if(next_index >= UART_RX_DMA_BUF_SIZE) [[unlikely]]
                 __builtin_trap();
@@ -726,7 +763,7 @@ void Uart::accept_rxidle_interrupt(){
             }
 
             rx_dma_buf_index_ = next_index;
-            invoke_callback(Event::RxIdle);
+            emit_event(Event::RxIdle);
         }; 
             break;
 
@@ -736,17 +773,17 @@ void Uart::accept_rxidle_interrupt(){
 }
 
 
-void Uart::enable_rxne_it(const Enable en){
+void Uart::enable_rxne_interrupt(const Enable en){
     USART_ClearITPendingBit(SDK_INST(inst_), USART_IT_RXNE);
     USART_ITConfig(SDK_INST(inst_), USART_IT_RXNE, en == EN);
 }
 
-void Uart::enable_tx_it(const Enable en){
+void Uart::enable_tx_interrupt(const Enable en){
     USART_ITConfig(SDK_INST(inst_), USART_IT_TXE, en == EN);
 }
 
 
-void Uart::enable_idle_it(const Enable en){
+void Uart::enable_idle_interrupt(const Enable en){
     USART_ClearITPendingBit(SDK_INST(inst_), USART_IT_IDLE);
     USART_ITConfig(SDK_INST(inst_), USART_IT_IDLE, en == EN);
 }
@@ -757,23 +794,35 @@ void UartInterruptDispatcher::on_interrupt(Uart & self){
     const auto events = ral_inst->get_events();
     if(events.any_fault()){
         if(events.ORE){
+            {
+                //TODO
+            }
             //这个事件无法自然消退
         }
         if(events.FE){
             //帧错误
-            //TODO
+            {
+                //TODO
+            }
+
             ral_inst->STATR;
             ral_inst->DATAR;
         }
         if(events.PE){
             //奇偶校验位错误
-            //TODO
+            {
+                //TODO
+            }
+
             ral_inst->STATR;
             ral_inst->DATAR;
         }
         if(events.NE){
             // 噪声错误标志
-            //TODO
+            {
+                //TODO
+            }
+
             ral_inst->STATR;
             ral_inst->DATAR;
         }
@@ -796,15 +845,15 @@ void UartInterruptDispatcher::on_interrupt(Uart & self){
 
 
 namespace ymd::hal{
-#ifdef UART1_PRESENT
+#ifdef USART1_PRESENT
 Uart usart1{USART1};
 #endif
 
-#ifdef UART2_PRESENT
+#ifdef USART2_PRESENT
 Uart usart2{USART2};
 #endif
 
-#ifdef UART3_PRESENT
+#ifdef USART3_PRESENT
 Uart usart3{USART3};
 #endif
 
@@ -830,20 +879,21 @@ Uart uart8{UART8};
 }
 
 
+extern "C"{
 
-#ifdef UART1_PRESENT
+#ifdef USART1_PRESENT
 __interrupt void USART1_IRQHandler(){
     hal::UartInterruptDispatcher::on_interrupt(hal::usart1);
 }
 #endif
 
-#ifdef UART2_PRESENT
+#ifdef USART2_PRESENT
 __interrupt void USART2_IRQHandler(){
     hal::UartInterruptDispatcher::on_interrupt(hal::usart2);
 }
 #endif
 
-#ifdef UART3_PRESENT
+#ifdef USART3_PRESENT
 __interrupt void USART3_IRQHandler(){
     hal::UartInterruptDispatcher::on_interrupt(hal::usart3);
 }
@@ -878,6 +928,4 @@ __interrupt void UART8_IRQHandler(){
     hal::UartInterruptDispatcher::on_interrupt(hal::uart8);
 }
 #endif
-
-
-
+}

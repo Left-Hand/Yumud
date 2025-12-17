@@ -11,48 +11,48 @@
 namespace ymd::ral::ch32::common_dma{
 
 struct [[nodiscard]] R32_DMA_INTFR{
-    uint32_t DATA;
+    uint32_t BITS;
 
     // constexpr bool get_global_flag(const uint8_t index){
-    //     const uint32_t temp = uint32_t(DATA);
+    //     const uint32_t temp = uint32_t(BITS);
     //     return  temp & (1 << (index * 4 - 4));
     // }
 
     // constexpr bool get_transfer_done_flag(const uint8_t index){
-    //     const uint32_t temp = uint32_t(DATA);
+    //     const uint32_t temp = uint32_t(BITS);
     //     return temp & (1 << (index * 4 - 3));
     // }
 
 
 
     // constexpr bool get_transfer_onhalf_flag(const uint8_t index){
-    //     const uint32_t temp = uint32_t(DATA);
+    //     const uint32_t temp = uint32_t(BITS);
     //     return temp & (1 << (index * 4 - 2));
     // }
 
 
     // constexpr bool get_transfer_error_flag(const uint8_t index){
-    //     const uint32_t temp = uint32_t(DATA);
+    //     const uint32_t temp = uint32_t(BITS);
     //     return temp & (1 << (index * 4 - 1));
     // }
 };ASSERT_REG_IS_32BIT(R32_DMA_INTFR)
 
 struct [[nodiscard]] R32_DMA_INTFCR{
-    uint32_t DATA;
+    uint32_t BITS;
 
     // constexpr void clear_global_flag(const uint8_t index){
-    //     DATA = (1 << (index * 4 - 4));
+    //     BITS = (1 << (index * 4 - 4));
     // }
 
     // constexpr void clear_transfer_done_flag(const uint8_t index){
-    //     DATA = (1 << (index * 4 - 3));
+    //     BITS = (1 << (index * 4 - 3));
     // }
     // constexpr void clear_transfer_onhalf_flag(const uint8_t index){
-    //     DATA = (1 << (index * 4 - 2));
+    //     BITS = (1 << (index * 4 - 2));
     // }
 
     // constexpr void clear_transfer_error_flag(const uint8_t index){
-    //     DATA = (1 << (index * 4 - 1));
+    //     BITS = (1 << (index * 4 - 1));
     // }
 
 };ASSERT_REG_IS_32BIT(R32_DMA_INTFCR)
@@ -80,7 +80,7 @@ using R32_DMA_PADDR = uint32_t;
 using R32_DMA_MADDR = uint32_t;
 
 struct [[nodiscard]] R32_DMA2_EXTEM_INTFR{
-    volatile uint32_t DATA;
+    volatile uint32_t BITS;
 };
 
 struct [[nodiscard]] DMA_CH_Def{
@@ -140,7 +140,8 @@ struct [[nodiscard]] DMA_CH_Def{
     void set_data_len(const uint16_t len){
         CNTR = len;
     }
-};static_assert((sizeof(DMA_CH_Def) == 16)); 
+};
+static_assert((sizeof(DMA_CH_Def) == 16)); 
 
 struct [[nodiscard]] DMA1_Def{
     volatile R32_DMA_INTFR INTFR;
@@ -148,80 +149,80 @@ struct [[nodiscard]] DMA1_Def{
     DMA_CH_Def CH[8];
 
     constexpr void clear_global_flag(const uint8_t index){
-        INTFCR.DATA = (1 << (index * 4 - 4));
+        INTFCR.BITS = (1 << (index * 4 - 4));
     }
 
     constexpr bool get_global_flag(const uint8_t index){
-        return  std::bit_cast<uint32_t>(INTFR.DATA) & (1 << (index * 4 - 4));
+        return  std::bit_cast<uint32_t>(INTFR.BITS) & (1 << (index * 4 - 4));
     }
 
     constexpr void clear_transfer_done_flag(const uint8_t index){
-        INTFCR.DATA = (1 << (index * 4 - 3));
+        INTFCR.BITS = (1 << (index * 4 - 3));
     }
 
     constexpr bool get_transfer_done_flag(const uint8_t index){
-        return std::bit_cast<uint32_t>(INTFR.DATA) & (1 << (index * 4 - 3));
+        return std::bit_cast<uint32_t>(INTFR.BITS) & (1 << (index * 4 - 3));
     }
 
     constexpr void clear_transfer_onhalf_flag(const uint8_t index){
-        INTFCR.DATA = (1 << (index * 4 - 2));
+        INTFCR.BITS = (1 << (index * 4 - 2));
     }
 
     constexpr bool get_transfer_onhalf_flag(const uint8_t index){
-        return std::bit_cast<uint32_t>(INTFR.DATA) & (1 << (index * 4 - 2));
+        return std::bit_cast<uint32_t>(INTFR.BITS) & (1 << (index * 4 - 2));
     }
 
     constexpr void clear_transfer_error_flag(const uint8_t index){
-        INTFCR.DATA = (1 << (index * 4 - 1));
+        INTFCR.BITS = (1 << (index * 4 - 1));
     }
     constexpr bool get_transfer_error_flag(const uint8_t index){
-        return std::bit_cast<uint32_t>(INTFR.DATA) & (1 << (index * 4 - 1));
+        return std::bit_cast<uint32_t>(INTFR.BITS) & (1 << (index * 4 - 1));
     }
 };
 
 struct [[nodiscard]] DMA2_Def{
     volatile R32_DMA_INTFR INTFR;
     volatile R32_DMA_INTFCR INTFCR;
-    volatile DMA_CH_Def CH[12];
+    DMA_CH_Def CH[12];
     volatile R32_DMA_INTFR EXTEM_INTFR;
     volatile R32_DMA_INTFCR EXTEM_INTFCR;
 
     constexpr void clear_global_flag(const uint8_t index){
         auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
-        reg.DATA = (1 << ((index & 0b111) * 4 - 4));
+        reg.BITS = (1 << ((index & 0b111) * 4 - 4));
     }
 
     constexpr bool get_global_flag(const uint8_t index){
         auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
-        return  std::bit_cast<uint32_t>(reg.DATA) & (1 << ((index & 0b111) * 4 - 4));
+        return  std::bit_cast<uint32_t>(reg.BITS) & (1 << ((index & 0b111) * 4 - 4));
     }
     constexpr void clear_transfer_done_flag(const uint8_t index){
         auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
-        reg.DATA = (1 << ((index & 0b111) * 4 - 3));
+        reg.BITS = (1 << ((index & 0b111) * 4 - 3));
     }
 
     constexpr bool get_transfer_done_flag(const uint8_t index){
         auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
-        return std::bit_cast<uint32_t>(reg.DATA) & (1 << ((index & 0b111) * 4 - 3));
+        return std::bit_cast<uint32_t>(reg.BITS) & (1 << ((index & 0b111) * 4 - 3));
     }
 
     constexpr void clear_transfer_onhalf_flag(const uint8_t index){
         auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
-        reg.DATA = (1 << ((index & 0b111) * 4 - 2));
+        reg.BITS = (1 << ((index & 0b111) * 4 - 2));
     }
 
     constexpr bool get_transfer_onhalf_flag(const uint8_t index){
         auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
-        return std::bit_cast<uint32_t>(reg.DATA) & (1 << ((index & 0b111) * 4 - 2));
+        return std::bit_cast<uint32_t>(reg.BITS) & (1 << ((index & 0b111) * 4 - 2));
     }
 
     constexpr void clear_transfer_error_flag(const uint8_t index){
         auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
-        reg.DATA = (1 << ((index & 0b111) * 4 - 1));
+        reg.BITS = (1 << ((index & 0b111) * 4 - 1));
     }
     constexpr bool get_transfer_error_flag(const uint8_t index){
         auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
-        return std::bit_cast<uint32_t>(reg.DATA) & (1 << ((index & 0b111) * 4 - 1));
+        return std::bit_cast<uint32_t>(reg.BITS) & (1 << ((index & 0b111) * 4 - 1));
     }
 };
 

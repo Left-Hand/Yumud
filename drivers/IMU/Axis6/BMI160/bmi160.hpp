@@ -14,7 +14,7 @@ public:
         phy_(spi_drv){;}
     explicit BMI160(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit BMI160(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit BMI160(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         phy_(hal::SpiDrv(spi, rank)){;}
 
     explicit BMI160(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):

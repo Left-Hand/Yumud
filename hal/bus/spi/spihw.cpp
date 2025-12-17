@@ -300,9 +300,18 @@ HalResult SpiHw::init(const SpiConfig & cfg){
 }
 
 
-HalResult SpiHw::set_word_width(const uint8_t bits){
-    inst_->enable_dualbyte((bits == 16) ? EN : DISEN);
-    return HalResult::Ok();
+HalResult SpiHw::set_wordsize(const SpiWordSize wordsize){
+    switch(wordsize){
+        case SpiWordSize::OneByte:
+            inst_->enable_dualbyte(DISEN);
+            return HalResult::Ok();
+            break;
+        case SpiWordSize::TwoBytes:
+            inst_->enable_dualbyte(DISEN);
+            return HalResult::Ok();
+            break;
+    }
+    __builtin_trap();
 }
 
 

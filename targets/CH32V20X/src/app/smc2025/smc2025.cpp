@@ -170,7 +170,7 @@ void smc2025_main(){
 
     UART.init({
         .remap = hal::UART6_REMAP_PC0_PC1, 
-        .baudrate = 576_KHz
+        .baudrate = hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);

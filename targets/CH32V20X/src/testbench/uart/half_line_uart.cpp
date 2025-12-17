@@ -20,13 +20,13 @@ void half_line_uart_main(){
 
     UART.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = BAUD
+        .baudrate = hal::NearestFreq(BAUD)
     });
     DEBUGGER.retarget(&UART);
 
     OTHER_UART.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = BAUD
+        .baudrate = hal::NearestFreq(BAUD)
     });
     OTHER_UART.enable_single_line_mode(EN);
 

@@ -15,8 +15,8 @@ using namespace ymd::drivers;
 
 void stl06n_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000 
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     
@@ -47,8 +47,8 @@ void stl06n_main(){
     auto stl06n_parser = stl06n::STL06N_ParserSink(lidar_ev_handler);
 
     stl06n_uart_.init({
-        .remap = hal::UART1_REMAP_PA9_PA10,
-        .baudrate = stl06n::DEFAULT_UART_BAUD
+        .remap = hal::USART1_REMAP_PA9_PA10,
+        .baudrate = hal::NearestFreq(stl06n::DEFAULT_UART_BAUD)
     });
 
 

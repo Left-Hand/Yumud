@@ -34,7 +34,8 @@ public:
     };
 
 
-    [[nodiscard]] __fast_inline constexpr Rect2(
+    [[nodiscard]] __fast_inline constexpr 
+    Rect2(
         const std::tuple<T, T, T, T> & _quad
     ):
         top_left(std::get<0>(_quad), std::get<1>(_quad)),
@@ -44,7 +45,8 @@ public:
 
 
     template<typename U, typename V = U>
-    [[nodiscard]] __fast_inline constexpr Rect2(
+    [[nodiscard]] __fast_inline constexpr 
+    Rect2(
         const Vec2<U> & _position,
         const Vec2<V> & _size
     ):
@@ -52,14 +54,17 @@ public:
         size(static_cast<Vec2<T>>((_position + _size).template ceil<T>() - top_left)){;}
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr Rect2(const Rect2<U> & other):
+    [[nodiscard]] __fast_inline constexpr 
+    Rect2(const Rect2<U> & other):
         top_left(static_cast<Vec2<T>>(other.top_left.template floor<T>())), 
         size(static_cast<Vec2<T>>((other.top_left + other.size).template ceil<T>() - top_left)){;}
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_uninitialized(){
+    [[nodiscard]] __fast_inline static constexpr 
+    Rect2 from_uninitialized(){
         return Rect2();
     }
 
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_xywh(
+    [[nodiscard]] __fast_inline static constexpr 
+    Rect2 from_xywh(
         const T x,
         const T y,
         const T w,
@@ -72,30 +77,35 @@ public:
         ret.size.y = h;
         return ret;
     }
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_center_and_halfsize(
+    [[nodiscard]] __fast_inline static constexpr 
+    Rect2 from_center_and_halfsize(
         const Vec2<T> & center, const Vec2<T> & half_size){
         return Rect2<T>(center - half_size, half_size * 2);
     }
 
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_center_and_size(
+    [[nodiscard]] __fast_inline static constexpr 
+    Rect2 from_center_and_size(
         const Vec2<T> & center, const Vec2<T> & size){
         return Rect2<T>(center - size, size);
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_topleft_and_bottomright(
+    [[nodiscard]] __fast_inline static constexpr 
+    Rect2 from_topleft_and_bottomright(
         const Vec2<T> & a, const Vec2<T> & b){
         return Rect2<T>(a, b-a).abs();
     }
 
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_top_left(
+    [[nodiscard]] __fast_inline static constexpr 
+    Rect2 from_top_left(
         const Vec2<T> & top_left
     ){
         return Rect2<T>(top_left, Vec2<T>::ZERO);
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_size(const Vec2<U> _size){
+    [[nodiscard]] __fast_inline static constexpr 
+    Rect2 from_size(const Vec2<U> _size){
         return Rect2<T>{Vec2<T>::ZERO, _size.template ceil<T>()};
     }
 
@@ -104,7 +114,8 @@ public:
         requires std::ranges::input_range<Range>;
         requires std::same_as<std::ranges::range_value_t<Range>, Vec2<T>>;
     }
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_minimal_bounding_box(
+    [[nodiscard]] __fast_inline static constexpr 
+    Rect2 from_minimal_bounding_box(
             Range&& range){
 
         auto first = std::ranges::begin(range);
@@ -138,47 +149,63 @@ public:
         return ret;
     }
 
-    [[nodiscard]] __fast_inline static constexpr Rect2 from_minimal_bounding_box(
+    [[nodiscard]] __fast_inline static constexpr 
+    Rect2 from_minimal_bounding_box(
         const std::initializer_list<Vec2<T>> & points){
             return from_minimal_bounding_box(std::span(points.begin(), points.end()));
         }
 
     // Add direct component accessors
-    [[nodiscard]] __fast_inline constexpr T & x() { return top_left.x; }
-    [[nodiscard]] __fast_inline constexpr const T & x() const { return top_left.x; }
+    [[nodiscard]] __fast_inline constexpr 
+    T & x() { return top_left.x; }
+    [[nodiscard]] __fast_inline constexpr 
+    const T & x() const { return top_left.x; }
 
-    [[nodiscard]] __fast_inline constexpr T & y() { return top_left.y; }
-    [[nodiscard]] __fast_inline constexpr const T & y() const { return top_left.y; }
+    [[nodiscard]] __fast_inline constexpr 
+    T & y() { return top_left.y; }
+    [[nodiscard]] __fast_inline constexpr 
+    const T & y() const { return top_left.y; }
 
-    [[nodiscard]] __fast_inline constexpr T & w() { return size.x; }
-    [[nodiscard]] __fast_inline constexpr const T & w() const { return size.x; }
+    [[nodiscard]] __fast_inline constexpr 
+    T & w() { return size.x; }
+    [[nodiscard]] __fast_inline constexpr 
+    const T & w() const { return size.x; }
 
-    [[nodiscard]] __fast_inline constexpr T & h() { return size.y; }
-    [[nodiscard]] __fast_inline constexpr const T & h() const { return size.y; }
+    [[nodiscard]] __fast_inline constexpr 
+    T & h() { return size.y; }
+    [[nodiscard]] __fast_inline constexpr 
+    const T & h() const { return size.y; }
 
-    [[nodiscard]] __fast_inline constexpr bool has_x(const T p_x) const{
+    [[nodiscard]] __fast_inline constexpr 
+    bool has_x(const T p_x) const{
         return p_x >= top_left.x && p_x < top_left.x + size.x;
     }
 
-    [[nodiscard]] __fast_inline constexpr bool has_y(const T p_y) const{
+    [[nodiscard]] __fast_inline constexpr 
+    bool has_y(const T p_y) const{
         return p_y >= top_left.y && p_y < top_left.y + size.y;
     }
 
-    [[nodiscard]] __fast_inline constexpr T area() const {
+    [[nodiscard]] __fast_inline constexpr 
+    T area() const {
         return ABS(size.x * size.y);}
-    [[nodiscard]] __fast_inline constexpr Vec2<T> center() const {
+    [[nodiscard]] __fast_inline constexpr 
+    Vec2<T> center() const {
         return(top_left + size / 2);}
-    [[nodiscard]] __fast_inline constexpr Vec2<T> bottom_right() const {
+    [[nodiscard]] __fast_inline constexpr 
+    Vec2<T> bottom_right() const {
         return(top_left + size);
     }
     
-    [[nodiscard]] __fast_inline constexpr Option<Rect2<T>> expand(const T val) const {
+    [[nodiscard]] __fast_inline constexpr 
+    Option<Rect2<T>> expand(const T val) const {
         if constexpr(std::is_integral_v<T> and std::is_signed_v<T>)
             if(val < 0) return None;
         return shrink_impl(-static_cast<Tsigned>(val));
     }
 
-    [[nodiscard]] __fast_inline constexpr Option<Rect2<T>> shrink(const T val) const {
+    [[nodiscard]] __fast_inline constexpr 
+    Option<Rect2<T>> shrink(const T val) const {
         if constexpr(std::is_integral_v<T> and std::is_signed_v<T>)
             if(val < 0) return None;
         return shrink_impl(static_cast<Tsigned>(val));
@@ -188,7 +215,8 @@ public:
     
     template<size_t I>
     requires(I < 4)
-    [[nodiscard]] __fast_inline constexpr Vec2<T> get_corner() const {
+    [[nodiscard]] __fast_inline constexpr 
+    Vec2<T> get_corner() const {
         switch(I){
             case 0: return top_left;
             case 1: return Vec2<T>(top_left.x + size.x, top_left.y);
@@ -223,37 +251,43 @@ public:
     }
 
 
-    [[nodiscard]] __fast_inline constexpr bool has_point(const Vec2<T> & point) const {
+    [[nodiscard]] __fast_inline constexpr 
+    bool has_point(const Vec2<T> & point) const {
         return IN_RANGE(point.x, top_left.x, top_left.x + size.x)
             and IN_RANGE(point.y, top_left.y, top_left.y + size.y);
     }
 
-    [[nodiscard]] __fast_inline constexpr bool contains(const Rect2<T> & other) const {
+    [[nodiscard]] __fast_inline constexpr 
+    bool contains(const Rect2<T> & other) const {
         bool x_ins = this->x_range().contains(other.x_range());
         if(false == x_ins) return false;
         bool y_ins = this->y_range().contains(other.y_range());
         return y_ins;
     }
 
-    [[nodiscard]] __fast_inline constexpr bool is_inside(const Rect2<T> & other) const{
+    [[nodiscard]] __fast_inline constexpr 
+    bool is_inside(const Rect2<T> & other) const{
         return other.contains(*this);
     }
 
 
 
-    [[nodiscard]] __fast_inline constexpr bool operator==(const Rect2<T> & other){
+    [[nodiscard]] __fast_inline constexpr 
+    bool operator==(const Rect2<T> & other){
         return (
             (this->top_left == other.top_left) 
             && (this->size == other.size));
     }
 
-    [[nodiscard]] __fast_inline constexpr bool operator!=(const Rect2<T> & other){
+    [[nodiscard]] __fast_inline constexpr 
+    bool operator!=(const Rect2<T> & other){
         return (
             (this->top_left != other.top_left )
             || (this->size != other.size));
     }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> scale_around_corner(
+    [[nodiscard]] __fast_inline constexpr 
+    Rect2<T> scale_around_corner(
         const auto & ratio
     ) const{
         Rect2<T> ret = (*this);
@@ -271,7 +305,8 @@ public:
                 (other.y() < self.y() + self.h());
     }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> shift(
+    [[nodiscard]] __fast_inline constexpr 
+    Rect2<T> shift(
         const Vec2<T> & other
     ) const{
         Rect2<T> ret = (*this);
@@ -345,7 +380,8 @@ private:
         size(Vec2<T>::from_uninitialized())
         {;}
 
-    [[nodiscard]] __fast_inline constexpr Option<Rect2<T>> shrink_impl(
+    [[nodiscard]] __fast_inline constexpr 
+    Option<Rect2<T>> shrink_impl(
         const Tsigned val
     ) const {
         if constexpr(std::is_integral_v<T>){

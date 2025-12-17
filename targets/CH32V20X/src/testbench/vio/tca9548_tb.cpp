@@ -20,7 +20,7 @@ void tca9548_main(){
 
     UART.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = 576000 
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);

@@ -43,9 +43,6 @@ public:
         }
     }
 
-    friend OutputStream& operator<<(OutputStream& os, Mode::Kind kind);
-    friend OutputStream& operator<<(OutputStream& os, Mode mode){
-        return os << mode.kind();}
 private:
     Kind kind_;
 };
@@ -75,9 +72,6 @@ public:
         return std::bit_cast<Mode>(static_cast<uint8_t>(std::bit_cast<uint8_t>(kind()) & 0b011));
     }
 
-    friend OutputStream& operator<<(OutputStream& os, Direction::Kind kind);
-    friend OutputStream& operator<<(OutputStream& os, Direction direction){
-        return os << direction.kind();}
 private:
     Kind kind_;
 };
@@ -96,6 +90,13 @@ enum class [[nodiscard]] IT:uint8_t{
     Half
 };
 
+enum class [[nodiscard]] WordSize:uint8_t{
+    OneByte = 0,
+    TwoByte = 1,
+    FourByte = 2,
+};
+
+
 enum class [[nodiscard]] Event:uint8_t{
     TransferComplete,
     HalfTransfer,
@@ -108,4 +109,5 @@ using DmaDirection = dma::Direction;
 using DmaEvent = dma::Event;
 using DmaIT = dma::IT;
 using DmaPriority = dma::Priority;
+using DmaWordSize = dma::WordSize;
 }

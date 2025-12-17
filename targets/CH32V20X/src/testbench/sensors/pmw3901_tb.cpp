@@ -16,7 +16,7 @@ void pmw3901_main(){
 
     hal::usart2.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = 921600
+        .baudrate = hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&hal::usart2);
     DEBUGGER.no_brackets(EN);

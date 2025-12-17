@@ -46,7 +46,7 @@ public:
 
     struct Config{
         UartRemap remap;
-        uint32_t baudrate;
+        UartBaudrate baudrate;
         CommStrategy rx_strategy = CommStrategy::Dma;
         CommStrategy tx_strategy = CommStrategy::Dma;
     };
@@ -85,7 +85,7 @@ protected:
 
     RingBuf<char, UART_FIFO_BUF_SIZE> tx_fifo_;
     RingBuf<char, UART_FIFO_BUF_SIZE> rx_fifo_;
-    void invoke_callback(const Event event){
+    void emit_event(const Event event){
         if(callback_ == nullptr) [[unlikely]]
             return;
         callback_(event);

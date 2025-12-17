@@ -17,7 +17,7 @@ public:
         spi_drv_(spi_drv){;}
     explicit PAW3395(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit PAW3395(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit PAW3395(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv(spi, rank)){;}
 
     PAW3395(const PAW3395 & other) = delete;

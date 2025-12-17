@@ -88,8 +88,8 @@ static void vl6180x_range_interleaved_continuous_tb(VL6180X & vl6180){
 
 void vl6180x_main(){
     DEBUGGER_INST.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);

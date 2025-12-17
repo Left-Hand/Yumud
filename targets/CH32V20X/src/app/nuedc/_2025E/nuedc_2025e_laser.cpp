@@ -82,8 +82,8 @@ struct Task{
 
 void nuedc_2025e_laser_main(){
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     
     DEBUGGER.retarget(&DBG_UART);

@@ -5,7 +5,7 @@
 namespace ymd::drivers::kth7823{
 class KTH7823 final{
 public:
-    explicit KTH7823(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit KTH7823(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         phy_(Phy{spi, rank}){;}
 
     [[nodiscard]] IResult<> init();

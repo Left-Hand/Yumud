@@ -249,6 +249,8 @@ private:
     }
 };
 
+
+
 struct [[nodiscard]] WiringMode{
     using Self = WiringMode;
 
@@ -287,18 +289,44 @@ private:
 };
 
 
-
-enum class [[nodiscard]] Exception:uint8_t{
-    Stuff = 0x10,
-    Form = 0x20,
-    Acknowledge = 0x30,
-    BitRecessive = 0x40,
-    BitDominant = 0x50,
-    Crc = 0x60,
-    SoftwareSet = 0x70,
+//can错误
+enum class [[nodiscard]] Error:uint8_t{
+    Stuff = 0x1,
+    Form = 0x2,
+    Acknowledge = 0x3,
+    BitRecessive = 0x4,
+    BitDominant = 0x5,
+    Crc = 0x6,
+    SoftwareSet = 0x7,
 };
 
-OutputStream & operator<<(OutputStream & os, const Exception & fault);
+struct [[nodiscard]] ErrorFlags{
+    uint32_t error_warning:1;
+    uint32_t error_passive:1;
+    uint32_t bus_off:1;
+    uint32_t stuff:1;
+    uint32_t form:1;
+    uint32_t acknowledgment:1;
+    uint32_t bit_recessive:1;
+    uint32_t bit_dominant:1;
+    uint32_t crc_error:1;
+    uint32_t fifo0_overrun:1;
+    uint32_t fifo1_overrun:1;
+
+    uint32_t mbox0_arbitration_lost:1;
+    uint32_t mbox0_transmit:1;
+    uint32_t mbox1_arbitration_lost:1;
+    uint32_t mbox1_transmit:1;
+    uint32_t mbox2_arbitration_lost:1;
+    uint32_t mbox2_transmit:1;
+
+    uint32_t timout:1;
+    uint32_t peripheral_not_initialized:1;
+    uint32_t peripheral_not_ready:1;
+    uint32_t peripheral_not_started:1;
+};
+
+OutputStream & operator<<(OutputStream & os, const Error & fault);
 
 enum class [[nodiscard]] LibError:uint8_t{
     BlockingTransmitTimeout,
@@ -366,8 +394,8 @@ struct FdCanConfig final {
     // Edge Filtering: Two consecutive dominant tq required to detect an edge for hard synchronization
     Enable edge_filtering;
 
-    // Enables protocol exception handling
-    Enable protocol_exception_handling;
+    // Enables protocol Error handling
+    Enable protocol_Error_handling;
 
     // Sets the general clock divider for this FdCAN instance
     ClockDivider clock_divider;
@@ -388,7 +416,7 @@ namespace ymd::hal{
 using CanSwj = can::Swj;
 using CanBaudrate = can::Baudrate;
 using CanWiringMode = can::WiringMode;
-using CanException = can::Exception;
+using CanError = can::Error;
 using CanLibError = can::LibError;
 using CanRtrSpecfier = can::RtrSpecfier;
 using CanRtr = can::Rtr;

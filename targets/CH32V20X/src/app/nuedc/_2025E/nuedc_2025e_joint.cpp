@@ -110,8 +110,8 @@ void nuedc_2025e_joint_main(){
     auto & DBG_UART = hal::usart2;
 
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = UART_BAUD
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(UART_BAUD),
     });
 
 

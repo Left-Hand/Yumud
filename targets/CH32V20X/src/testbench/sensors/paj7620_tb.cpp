@@ -20,8 +20,8 @@ using namespace ymd::drivers;
 #define SDA_PIN hal::PC<12>()
 void paj7620_main(){
     hal::usart2.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     
     auto scl_pin_ = SCL_PIN;

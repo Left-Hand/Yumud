@@ -75,8 +75,8 @@ static constexpr size_t LIDAR_SCAN_FREQ = 20'000;
 
 void s21c_main(){
     hal::usart2.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = DEBUG_UART_BAUD,
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
         .tx_strategy = CommStrategy::Blocking,
     });
 

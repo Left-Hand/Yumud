@@ -31,7 +31,7 @@ void CanFilter::apply(const CanFilterConfig & cfg){
 }
 
 void CanFilter::deinit(){
-    // HALT;
+
     // TODO();
 }
 

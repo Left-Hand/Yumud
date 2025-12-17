@@ -15,8 +15,8 @@ using namespace ymd::drivers;
 
 void ld19_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000 
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     
@@ -49,8 +49,8 @@ void ld19_main(){
 
     auto ld19_parser = ld19::LD19_ParserSink(ld19_ev_handler);
     ld19_uart.init({
-        .remap = hal::UART1_REMAP_PA9_PA10,
-        .baudrate = ld19::DEFAULT_UART_BAUD
+        .remap = hal::USART1_REMAP_PA9_PA10,
+        .baudrate = hal::NearestFreq(ld19::DEFAULT_UART_BAUD)
     });
 
 

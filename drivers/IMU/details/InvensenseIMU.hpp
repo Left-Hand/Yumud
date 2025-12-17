@@ -33,7 +33,7 @@ public:
         spi_drv_(spi_drv){;}
     explicit InvensenseImu_Phy(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit InvensenseImu_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
+    explicit InvensenseImu_Phy(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] Result<void, Error> reset(){

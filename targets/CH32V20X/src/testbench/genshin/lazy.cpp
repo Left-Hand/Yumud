@@ -555,8 +555,8 @@ void test_pipeline() {
 void lazy_main() {
 
     DEBUGGER_INST.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
     // UART.enable_single_line_mode(false);
     DEBUGGER.retarget(&UART);

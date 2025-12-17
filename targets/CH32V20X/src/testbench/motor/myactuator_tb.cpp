@@ -768,8 +768,8 @@ __no_inline constexpr auto make_bytes2(){
 void myactuator_main(){
     auto & DBG_UART = DEBUGGER_INST;
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000 
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
 
     DEBUGGER.retarget(&DBG_UART);

@@ -225,7 +225,7 @@ template<arithmetic T>
 Vec3<T> AABB<T>::get_endpoint(int p_point) const {
 	switch (p_point) {
 		default:
-			HALT;
+			__builtin_unreachable();
 		case 0:
 			return Vec3<T>(position.x, position.y, position.z);
 		case 1:
@@ -851,7 +851,7 @@ template<arithmetic T>
 void AABB<T>::get_edge(int p_edge, Vec3<T> &r_from, Vec3<T> &r_to) const {
 	switch (p_edge) {
 		default:
-		    HALT;
+		    __builtin_unreachable();
 		case 0: {
 			r_from = Vec3(position.x + size.x, position.y, position.z);
 			r_to = Vec3(position.x, position.y, position.z);

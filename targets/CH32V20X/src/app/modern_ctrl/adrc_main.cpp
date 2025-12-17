@@ -29,8 +29,8 @@ void adrc_main(){
         auto & DBG_UART = DEBUGGER_INST;
 
         DBG_UART.init({
-            .remap = hal::UART2_REMAP_PA2_PA3,
-            .baudrate = UART_BAUD
+            .remap = hal::USART2_REMAP_PA2_PA3,
+            .baudrate = hal::NearestFreq(UART_BAUD),
         });
 
         DEBUGGER.retarget(&DBG_UART);

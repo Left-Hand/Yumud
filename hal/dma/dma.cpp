@@ -323,16 +323,14 @@ static inline void modify_reg(volatile T* reg, Fn&& fn) {
     return DMA_GetFlagStatus(done_mask_);
 }
 
-void DmaChannel::set_mem_and_periph_bytes(
-    const size_t mem_bytes, 
-    const size_t periph_bytes
+void DmaChannel::set_mem_and_periph_wordsize(
+    const WordSize mem_wordsize, 
+    const WordSize periph_wordsize
 ){ 
-    // reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.MSIZE = (mem_bytes) - 1;
-    // reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.PSIZE = (periph_bytes) - 1;
     auto * dma_ch = reinterpret_cast<ral::DMA_CH_Def *>(inst_);
     modify_reg(&dma_ch->CFGR, [&](auto reg){
-        reg.MSIZE = (mem_bytes) - 1;
-        reg.PSIZE = (periph_bytes) - 1;
+        reg.MSIZE = static_cast<uint8_t>(mem_wordsize);
+        reg.PSIZE = static_cast<uint8_t>(periph_wordsize);
         return reg;
     });
 }
@@ -344,7 +342,7 @@ void DmaChannel::resume(){
     DMA_Cmd(SDK_INST(inst_), ENABLE);
 }
 
-size_t DmaChannel::remaining(){
+size_t DmaChannel::pending_count(){
     return reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> CNTR;
 }
 

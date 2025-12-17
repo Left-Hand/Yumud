@@ -16,8 +16,8 @@ using namespace ymd::drivers;
 void joystick_main(){
 
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
 
 

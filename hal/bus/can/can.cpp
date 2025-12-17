@@ -9,6 +9,8 @@
 #include "core/debug/debug.hpp"
 #include "ral/can.hpp"
 #include "core/sdk.hpp"
+
+
 using namespace ymd;
 using namespace ymd::hal;
 
@@ -128,14 +130,18 @@ static constexpr uint32_t can_statr_tkok_mask(const CanMailboxIndex mbox_idx){
 
 static Option<CanMailboxIndex> can_get_idle_mailbox_index(void * inst_){
     const uint32_t tempreg = SDK_INST(inst_)->TSTATR;
-    static constexpr uint32_t ANY_MAILBOX_IDLE_BITMASK = (CAN_TSTATR_TME0 | CAN_TSTATR_TME1 | CAN_TSTATR_TME2);
+    static constexpr uint32_t ANY_MAILBOX_IDLE_BITMASK = 
+        (can_tstatr_tme_mask(CanMailboxIndex::_0) 
+        | can_tstatr_tme_mask(CanMailboxIndex::_1) 
+        | can_tstatr_tme_mask(CanMailboxIndex::_2));
     const auto is_any_mailbox_idle = (tempreg & ANY_MAILBOX_IDLE_BITMASK) != 0;
     if(not is_any_mailbox_idle) return None;
-    return Some(std::bit_cast<CanMailboxIndex>(uint8_t((tempreg & CAN_TSTATR_CODE) >> 24)));
+    const auto idle_mbox_idx_bits = static_cast<uint8_t>((tempreg & CAN_TSTATR_CODE) >> 24);
+    return Some(std::bit_cast<CanMailboxIndex>(idle_mbox_idx_bits));
 };
 
 
-volatile uint32_t & can_get_rfifo_reg(void * inst, CanFifoIndex fifo_idx){
+static volatile uint32_t & can_get_rfifo_reg(void * inst, CanFifoIndex fifo_idx){
     switch(fifo_idx){
         case CanFifoIndex::_0: return SDK_INST(inst)->RFIFO0;
         case CanFifoIndex::_1: return SDK_INST(inst)->RFIFO1;
@@ -220,7 +226,6 @@ static void can_enable_rcc(void * inst, const Enable en){
         }
         #endif
 
-
         #ifdef CAN2_PRESENT
         case CAN2_BASE:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, ENABLE);
@@ -228,13 +233,13 @@ static void can_enable_rcc(void * inst, const Enable en){
         }
         #endif
     }
-
+    //如果运行到这里 说明调用了预期外的外设 请检查是否正确配置开关宏
     __builtin_trap();
 }
 
 
 static void can_set_remap(void * inst_, const CanRemap remap){
-    switch(reinterpret_cast<size_t>(SDK_INST(inst_))){
+    switch(reinterpret_cast<uint32_t>(inst_)){
         #ifdef CAN1_PRESENT
         case CAN1_BASE:{
             switch(remap){
@@ -254,7 +259,6 @@ static void can_set_remap(void * inst_, const CanRemap remap){
         break;
         #endif
 
-
         #ifdef CAN2_PRESENT
         case CAN2_BASE:{
             switch(remap){
@@ -269,21 +273,73 @@ static void can_set_remap(void * inst_, const CanRemap remap){
         break;
         #endif
     }
+    //如果运行到这里 说明调用了预期外的外设 请检查是否正确配置开关宏
     __builtin_trap();
 }
 
-}
 
-
-
-static constexpr NvicPriority TX_INTERRUPT_NVIC_PRIORITY = {1, 4};
-static constexpr NvicPriority RX0_INTERRUPT_NVIC_PRIORITY = {1, 2};
-static constexpr NvicPriority RX1_INTERRUPT_NVIC_PRIORITY = {1, 2};
-static constexpr NvicPriority SCE_INTERRUPT_NVIC_PRIORITY = {1, 1};
 static constexpr uint32_t RFIFO_FMP_MASK = 0b00'0011;
 static constexpr uint32_t RFIFO_FOM_MASK = 0b10'0000;
 static constexpr uint32_t RFIFO_FFULL_MASK =  0b00'1000;
 static constexpr uint32_t RFIFO_FOV_MASK =  0b01'0000;
+
+}
+
+
+//CAN发送中断 NVIC优先级
+static constexpr NvicPriority TX_INTERRUPT_NVIC_PRIORITY = {1, 4};
+
+//CAN接收中断0 NVIC优先级
+static constexpr NvicPriority RX0_INTERRUPT_NVIC_PRIORITY = {1, 2};
+
+//CAN接收中断1 NVIC优先级
+static constexpr NvicPriority RX1_INTERRUPT_NVIC_PRIORITY = {1, 2};
+
+//CAN状态改变中断 NVIC优先级
+static constexpr NvicPriority SCE_INTERRUPT_NVIC_PRIORITY = {1, 1};
+
+
+
+void Can::init(const Config & cfg){
+    enable_rcc(EN);
+    set_remap(cfg.remap);
+    alter_to_pins(cfg.remap);
+
+
+    const auto bit_timming_coeffs = [&] -> CanNominalBitTimmingCoeffs{
+        const auto & bit_timming = cfg.bit_timming;
+        if(bit_timming.is<CanBaudrate>()){
+            return (bit_timming.unwrap_as<CanBaudrate>()).to_coeffs(get_aligned_bus_clk_freq());
+        }else if(bit_timming.is<CanNominalBitTimmingCoeffs>()){
+            return bit_timming.unwrap_as<CanNominalBitTimmingCoeffs>();
+        }else{
+            //运行到这里说明库组件一致性出现问题 请联系我修复
+            __builtin_trap();
+        }
+    }();
+
+    const CAN_InitTypeDef CAN_InitConf = {
+        .CAN_Prescaler = bit_timming_coeffs.prescale,
+        .CAN_Mode = std::bit_cast<uint8_t>(cfg.wiring_mode),
+        .CAN_SJW = std::bit_cast<uint8_t>(bit_timming_coeffs.swj),
+        .CAN_BS1 = std::bit_cast<uint8_t>(bit_timming_coeffs.bs1),
+        .CAN_BS2 = std::bit_cast<uint8_t>(bit_timming_coeffs.bs2),
+
+        .CAN_TTCM = DISABLE,
+        .CAN_ABOM = ENABLE,
+        .CAN_AWUM = DISABLE,
+        .CAN_NART = ENABLE,
+        .CAN_RFLM = DISABLE,
+        .CAN_TXFP = DISABLE,
+    };
+
+    CAN_Init(SDK_INST(inst_), &CAN_InitConf);
+    init_interrupts();
+}
+
+void Can::deinit(){
+    enable_rcc(DISEN);
+};
 
 void Can::init_interrupts(){
     const uint32_t it_mask = 
@@ -306,7 +362,7 @@ void Can::init_interrupts(){
     CAN_ITConfig(SDK_INST(inst_), it_mask, ENABLE);
 
 
-    switch(reinterpret_cast<size_t>(SDK_INST(inst_))){
+    switch(reinterpret_cast<uint32_t>(inst_)){
         #ifdef CAN1_PRESENT
         case CAN1_BASE:
             //tx interrupt
@@ -339,6 +395,7 @@ void Can::init_interrupts(){
         #endif
         
         default:
+            //如果运行到这里 说明调用了预期外的外设 请检查是否正确配置开关宏
             __builtin_trap();
             break;
     }
@@ -346,75 +403,32 @@ void Can::init_interrupts(){
 
 
 
-void Can::alter_to_pins(const CanRemap remap){
-    can_to_tx_pin(inst_, remap).afpp();
-    can_to_rx_pin(inst_, remap).afpp();
-}
-
-
-
-void Can::enable_rcc(const Enable en){
-    can_enable_rcc(inst_, en);
-}
-
-void Can::set_remap(const CanRemap remap){
-    can_set_remap(inst_, remap);
-}
-
-
-void Can::init(const Config & cfg){
-    enable_rcc(EN);
-    set_remap(cfg.remap);
-    alter_to_pins(cfg.remap);
-
-
-    const auto bit_timming_coeffs = [&] -> CanNominalBitTimmingCoeffs{
-        const auto & bit_timming = cfg.bit_timming;
-        if(bit_timming.is<CanBaudrate>()){
-            return (bit_timming.unwrap_as<CanBaudrate>()).to_coeffs(get_aligned_bus_clk_freq());
-        }else if(bit_timming.is<CanNominalBitTimmingCoeffs>()){
-            return bit_timming.unwrap_as<CanNominalBitTimmingCoeffs>();
-        }else{
-            __builtin_trap();
-        }
-    }();
-
-    const CAN_InitTypeDef CAN_InitConf = {
-        .CAN_Prescaler = bit_timming_coeffs.prescale,
-        .CAN_Mode = std::bit_cast<uint8_t>(cfg.wiring_mode),
-        .CAN_SJW = std::bit_cast<uint8_t>(bit_timming_coeffs.swj),
-        .CAN_BS1 = std::bit_cast<uint8_t>(bit_timming_coeffs.bs1),
-        .CAN_BS2 = std::bit_cast<uint8_t>(bit_timming_coeffs.bs2),
-
-        .CAN_TTCM = DISABLE,
-        .CAN_ABOM = ENABLE,
-        .CAN_AWUM = DISABLE,
-        .CAN_NART = ENABLE,
-        .CAN_RFLM = DISABLE,
-        .CAN_TXFP = DISABLE,
-    };
-
-    CAN_Init(SDK_INST(inst_), &CAN_InitConf);
-    init_interrupts();
-}
-
 
 void Can::transmit(const BxCanFrame & frame, CanMailboxIndex mbox_idx){
-    const uint32_t tempmir = frame.identifier().to_bits();
-    const uint64_t data = frame.payload_u64();
+    if(size_t(mbox_idx) > 2) __builtin_unreachable();
+
     auto & mailbox_inst = SDK_INST(inst_)->sTxMailBox[
-        static_cast<size_t>(size_t(mbox_idx))];
+        static_cast<size_t>(mbox_idx)];
 
-    mailbox_inst.TXMDLR = data & UINT32_MAX;
-    mailbox_inst.TXMDHR = data >> 32;
+    const uint32_t tempmir = frame.identifier().to_sxx32_reg_bits();
+    const uint64_t payload_u64 = frame.payload_u64();
 
-    mailbox_inst.TXMDTR = uint32_t(0xFFFF0000 | frame.length());
+    //有关TXMIR和TXMDTR的描述，请参考芯片数据手册
     mailbox_inst.TXMIR = tempmir;
+    mailbox_inst.TXMDTR = uint32_t(0xFFFF0000 | (frame.length() & 0xf));
+
+    //将低四字节装载到txmdlr
+    mailbox_inst.TXMDLR = payload_u64 & UINT32_MAX;
+
+    //将高四字节装载到txmdhr
+    mailbox_inst.TXMDHR = payload_u64 >> 32;
+
 }
 
 
 
 Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
+    //查找空闲的邮箱
     const auto may_idle_mbox_idx = can_get_idle_mailbox_index(inst_);
 
     //大概率有空闲邮箱 查找到空闲邮箱后发送
@@ -436,16 +450,22 @@ Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
 
 
 BxCanFrame Can::read(){
-
     BxCanFrame frame = BxCanFrame::from_uninitialized();
     if(rx_fifo_.try_pop(frame) == 0)
         __builtin_trap();
     return frame;
 }
 
-size_t Can::available(){
-    return rx_fifo_.length();
+Option<BxCanFrame> Can::try_read(){
+    //如果没有可读的报文 返回空
+    if(rx_fifo_.length() == 0) return None;
+    BxCanFrame frame = BxCanFrame::from_uninitialized();
+    //弹出可读的报文
+    if(rx_fifo_.try_pop(frame) == 0)
+        __builtin_trap();
+    return Some(frame);
 }
+
 
 
 BxCanFrame Can::receive(const CanFifoIndex fifo_idx){
@@ -453,14 +473,41 @@ BxCanFrame Can::receive(const CanFifoIndex fifo_idx){
     const uint32_t rxmir = mailbox.RXMIR;
     const uint32_t rxmdtr = mailbox.RXMDTR;
 
+    //获取载荷长度
     const uint8_t dlc_bits = rxmdtr & (0x0F);
 
+    //将低四位的和高四位拼接为完整的8x8的载荷
     const uint64_t payload_u64 = 
-        static_cast<uint64_t>(mailbox.RXMDLR) 
-        | (static_cast<uint64_t>(mailbox.RXMDHR) << 32);
+        static_cast<uint64_t>(static_cast<uint32_t>(mailbox.RXMDLR)) 
+        | (static_cast<uint64_t>(static_cast<uint32_t>(mailbox.RXMDHR)) << 32);
 
     return BxCanFrame::from_sxx32_regs(rxmir, payload_u64, dlc_bits);
 }
+
+
+size_t Can::free_capacity(){
+    return tx_fifo_.free_capacity();
+}
+
+size_t Can::available(){
+    return rx_fifo_.length();
+}
+
+void Can::alter_to_pins(const CanRemap remap){
+    can_to_tx_pin(inst_, remap).afpp();
+    can_to_rx_pin(inst_, remap).afpp();
+}
+
+
+
+void Can::enable_rcc(const Enable en){
+    can_enable_rcc(inst_, en);
+}
+
+void Can::set_remap(const CanRemap remap){
+    can_set_remap(inst_, remap);
+}
+
 
 
 void Can::enable_hw_retransmit(const Enable en){
@@ -481,10 +528,10 @@ uint8_t Can::get_tx_errcnt(){
     return SDK_INST(inst_)->ERRSR >> 16;
 }
 
-Option<Can::Exception> Can::last_exception(){
-    const uint8_t bits = CAN_GetLastErrorCode(SDK_INST(inst_));
+Option<Can::Error> Can::last_error(){
+    const uint8_t bits = RAL_INST(inst_)->ERRSR.LEC;
     if(bits == 0) return None;
-    return Some(std::bit_cast<Can::Exception>(bits));
+    return Some(std::bit_cast<Can::Error>(bits));
 }
 
 bool Can::is_tranmitting(){
@@ -499,15 +546,15 @@ bool Can::is_busoff(){
     return SDK_INST(inst_)->ERRSR & CAN_ERRSR_BOFF;
 }
 
-void Can::cancel_transmit(const CanMailboxIndex mbox_idx){
-    CAN_CancelTransmit(SDK_INST(inst_), std::bit_cast<uint8_t>(mbox_idx));
+void Can::abort_transmit(const CanMailboxIndex mbox_idx){
+    SDK_INST(inst_)->TSTATR = can_statr_rqcp_mask(mbox_idx);
 }
 
-void Can::cancel_all_transmits(){
+void Can::abort_all_transmits(){
     SDK_INST(inst_)->TSTATR = (CAN_TSTATR_ABRQ0 | CAN_TSTATR_ABRQ1 | CAN_TSTATR_ABRQ2);
 }
 
-void Can::enable_fifo_lock(const Enable en){
+void Can::enable_rxfifo_lock(const Enable en){
     if(en == EN) SDK_INST(inst_)->CTLR |= CAN_CTLR_RFLM;
     else SDK_INST(inst_)->CTLR &= ~CAN_CTLR_RFLM;
 }
@@ -558,7 +605,7 @@ void CanInterruptDispatcher::on_tx_interrupt(Can & self){
     iter_mailbox.template operator() < CanMailboxIndex::_1 > ();
     iter_mailbox.template operator() < CanMailboxIndex::_2 > ();
 
-    auto try_pool_next = [&]{
+    auto try_poll_next = [&]{
         if(self.tx_fifo_.length() == 0) return;
         const auto may_idle_mailbox = can_get_idle_mailbox_index(self.inst_);
         if(may_idle_mailbox.is_none()) return;
@@ -566,7 +613,7 @@ void CanInterruptDispatcher::on_tx_interrupt(Can & self){
         self.transmit(self.tx_fifo_.pop_unchecked(), may_idle_mailbox.unwrap());
     };
 
-    try_pool_next();
+    try_poll_next();
 }
 
 void CanInterruptDispatcher::on_rx_interrupt(Can & self, const CanFifoIndex fifo_idx){
@@ -574,7 +621,7 @@ void CanInterruptDispatcher::on_rx_interrupt(Can & self, const CanFifoIndex fifo
     const uint32_t temp_rfifo_reg = rfifo_reg;
 
     if(temp_rfifo_reg & RFIFO_FFULL_MASK){
-        //fifo满
+        //rfifo满
         {
             //TODO
             __builtin_trap();
@@ -583,7 +630,7 @@ void CanInterruptDispatcher::on_rx_interrupt(Can & self, const CanFifoIndex fifo
     }
     
     if(temp_rfifo_reg & RFIFO_FOV_MASK){
-        ///fifo溢出
+        ///rfifo溢出
         {
             //TODO
             __builtin_trap();
@@ -608,91 +655,55 @@ void CanInterruptDispatcher::on_sce_interrupt(Can & self){
     const auto reg = SDK_INST(inst)->INTENR;
     if (can_get_it_status<CAN_IT_WKU>(reg, SDK_INST(inst))) {
         // Handle Wake-up interrupt
+        // 唤醒中断
         {
             //TODO
         }
         can_clear_it_pending_bit<CAN_IT_WKU>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_SLK>(reg, SDK_INST(inst))) {
         // Handle Sleep acknowledge interrupt
+        // 睡眠确认中断
         {
             //TODO
         }
         can_clear_it_pending_bit<CAN_IT_SLK>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_ERR>(reg, SDK_INST(inst))) {
         // Handle Error interrupt
+        // 错误中断
         {
             //TODO
         }
         can_clear_it_pending_bit<CAN_IT_ERR>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_EWG>(reg, SDK_INST(inst))) {
         // Handle Error warning interrupt
+        // 主动错误中断
         {
             //TODO
         }
         can_clear_it_pending_bit<CAN_IT_EWG>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_EPV>(reg, SDK_INST(inst))) {
         // Handle Error passive interrupt
+        // 被动错误中断
         {
             //TODO
         }
         can_clear_it_pending_bit<CAN_IT_EPV>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_BOF>(reg, SDK_INST(inst))) {
         // Handle Bus-off interrupt
+        // 掉线中断
         {
             //TODO
         }
         can_clear_it_pending_bit<CAN_IT_BOF>(SDK_INST(inst));
     } else if (can_get_it_status<CAN_IT_LEC>(reg, SDK_INST(inst))) {
         // Handle Last error code interrupt
+        // 错误码中断
         {
             //TODO
         }
         can_clear_it_pending_bit<CAN_IT_LEC>(SDK_INST(inst));
     }
 }
-
-#ifdef CAN1_PRESENT
-void USB_HP_CAN1_TX_IRQHandler(){
-    CanInterruptDispatcher::on_tx_interrupt(can1);
-}
-
-
-void USB_LP_CAN1_RX0_IRQHandler() {
-    CanInterruptDispatcher::on_rx_interrupt(can1, CanFifoIndex::_0);
-}
-
-void CAN1_RX1_IRQHandler(){
-    CanInterruptDispatcher::on_rx_interrupt(can1, CanFifoIndex::_1);
-}
-
-
-#ifdef CAN_SCE_ENABLED
-void CAN1_SCE_IRQHandler(){
-    CanInterruptDispatcher::on_sce_interrupt(can1);
-}
-#endif
-#endif
-
-#ifdef CAN2_PRESENT
-void CAN2_TX_IRQHandler(){
-    CanInterruptDispatcher::on_tx_interrupt(can2);
-}
-
-void CAN2_RX0_IRQHandler(){
-    CanInterruptDispatcher::on_rx_interrupt(can2,CanFifoIndex::_0);
-}
-
-void CAN2_RX1_IRQHandler(){
-    CanInterruptDispatcher::on_rx_interrupt(can2,CanFifoIndex::_1);
-}
-
-#ifdef CAN_SCE_ENABLED
-void CAN2_SCE_IRQHandler(){
-    CanInterruptDispatcher::on_sce_interrupt(can2);
-}
-
-#endif
-#endif
 
 namespace ymd::hal{
 
@@ -702,6 +713,52 @@ Can can1 = Can{CAN1};
 
 #ifdef CAN2_PRESENT
 Can can2 = Can{CAN2};
+#endif
+}
+
+
+
+extern "C"{
+#ifdef CAN1_PRESENT
+__interrupt void USB_HP_CAN1_TX_IRQHandler(){
+    CanInterruptDispatcher::on_tx_interrupt(can1);
+}
+
+__interrupt void USB_LP_CAN1_RX0_IRQHandler() {
+    CanInterruptDispatcher::on_rx_interrupt(can1, CanFifoIndex::_0);
+}
+
+__interrupt void CAN1_RX1_IRQHandler(){
+    CanInterruptDispatcher::on_rx_interrupt(can1, CanFifoIndex::_1);
+}
+
+
+#ifdef CAN_SCE_ENABLED
+__interrupt void CAN1_SCE_IRQHandler(){
+    CanInterruptDispatcher::on_sce_interrupt(can1);
+}
+#endif
+#endif
+
+#ifdef CAN2_PRESENT
+__interrupt void CAN2_TX_IRQHandler(){
+    CanInterruptDispatcher::on_tx_interrupt(can2);
+}
+
+__interrupt void CAN2_RX0_IRQHandler(){
+    CanInterruptDispatcher::on_rx_interrupt(can2,CanFifoIndex::_0);
+}
+
+__interrupt void CAN2_RX1_IRQHandler(){
+    CanInterruptDispatcher::on_rx_interrupt(can2,CanFifoIndex::_1);
+}
+
+#ifdef CAN_SCE_ENABLED
+__interrupt void CAN2_SCE_IRQHandler(){
+    CanInterruptDispatcher::on_sce_interrupt(can2);
+}
+
+#endif
 #endif
 }
 

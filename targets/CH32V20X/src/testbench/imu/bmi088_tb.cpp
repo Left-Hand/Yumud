@@ -27,7 +27,7 @@ static constexpr size_t CALC_FREQ_HZ = 200;
 
 
 
-static void bmi088_tb(hal::Spi & spi){
+static void bmi088_tb(hal::SpiBase & spi){
     auto acc_cs_pin_ = ACC_CS_GPIO;
     auto gyr_cs_pin_ = GYR_CS_GPIO;
 
@@ -93,8 +93,8 @@ static void bmi088_tb(hal::Spi & spi){
 
 void bmi088_main(){
     DEBUGGER_INST.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);

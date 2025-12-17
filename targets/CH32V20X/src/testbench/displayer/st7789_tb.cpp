@@ -46,8 +46,8 @@ DEF_ERROR_WITH_KINDS(MyError, ST7789::Error, PainterBase::Error)
 void st7789_main(void){
 
     DBG_UART.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);

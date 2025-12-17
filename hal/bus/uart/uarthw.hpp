@@ -2,38 +2,41 @@
 
 #include "uart.hpp"
 
+extern "C"{
 
 #ifdef UART1_PRESENT
-extern "C" __interrupt void USART1_IRQHandler(void);
+__interrupt void USART1_IRQHandler(void);
 #endif
 
 #ifdef UART2_PRESENT
-extern "C" __interrupt void USART2_IRQHandler(void);
+__interrupt void USART2_IRQHandler(void);
 #endif
 
 #ifdef UART3_PRESENT
-extern "C" __interrupt void USART3_IRQHandler(void);
+__interrupt void USART3_IRQHandler(void);
 #endif
 
 #ifdef UART4_PRESENT
-extern "C" __interrupt void UART4_IRQHandler(void);
+__interrupt void UART4_IRQHandler(void);
 #endif
 
 #ifdef UART5_PRESENT
-extern "C" __interrupt void UART5_IRQHandler(void);
+__interrupt void UART5_IRQHandler(void);
 #endif
 
 #ifdef UART6_PRESENT
-extern "C" __interrupt void UART6_IRQHandler(void);
+__interrupt void UART6_IRQHandler(void);
 #endif
 
 #ifdef UART7_PRESENT
-extern "C" __interrupt void UART7_IRQHandler(void);
+__interrupt void UART7_IRQHandler(void);
 #endif
 
 #ifdef UART8_PRESENT
-extern "C" __interrupt void UART8_IRQHandler(void);
+__interrupt void UART8_IRQHandler(void);
 #endif
+
+}
 
 
 namespace ymd::hal{
@@ -52,6 +55,7 @@ public:
     );
 
     void init(const Config & cfg);
+    void deinit();
 
     void enable_single_line_mode(const Enable en);
 
@@ -70,9 +74,9 @@ private:
     void register_nvic(const Enable en);
     void set_remap(const UartRemap remap);
 
-    void enable_rxne_it(const Enable en);
-    void enable_idle_it(const Enable en);
-    void enable_tx_it(const Enable en);
+    void enable_rxne_interrupt(const Enable en);
+    void enable_idle_interrupt(const Enable en);
+    void enable_tx_interrupt(const Enable en);
 
     void enable_rx_dma(const Enable en);
     void enable_tx_dma(const Enable en);
@@ -93,21 +97,21 @@ private:
     DmaChannel & rx_dma_;
 
 public:
-    size_t rx_dma_buf_index_ = 0;
+    volatile size_t rx_dma_buf_index_ = 0;
 
     friend class UartInterruptDispatcher;
 };
 
 
-#ifdef UART1_PRESENT
+#ifdef USART1_PRESENT
 extern Uart usart1;
 #endif
 
-#ifdef UART2_PRESENT
+#ifdef USART2_PRESENT
 extern Uart usart2;
 #endif
 
-#ifdef UART3_PRESENT
+#ifdef USART3_PRESENT
 extern Uart usart3;
 #endif
 

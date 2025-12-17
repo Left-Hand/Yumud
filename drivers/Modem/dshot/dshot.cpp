@@ -35,7 +35,7 @@ void BurstDmaPwm::install(){
 }
 
 bool BurstDmaPwm::is_done(){
-    return dma_channel_.remaining() == 0;
+    return dma_channel_.pending_count() == 0;
 }
 
 uint32_t BurstDmaPwm::calc_cvr_from_duty(const uq32 dutycycle) const {

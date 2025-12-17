@@ -5,7 +5,7 @@
 
 namespace ymd::hal{
 
-class SpiSw final: public Spi{
+class SpiSw final: public SpiBase{
 protected:
     volatile int8_t occupied = -1;
     hal::GpioIntf & sclk_pin_;
@@ -13,14 +13,14 @@ protected:
     hal::GpioIntf & miso_pin_;
 
     uint16_t delays = 100;
-    uint8_t width_ = 8;
+    SpiWordSize wordsize_ = SpiWordSize::OneByte;
     bool is_msb_ = true;
 
     __no_inline void delay_dur(){
         clock::delay(Microseconds(delays));
     }
     hal::HalResult lead(const SpiSlaveRank rank) {
-        auto ret = Spi::lead(rank);
+        auto ret = SpiBase::lead(rank);
         delay_dur();
         return ret;
     }
@@ -28,7 +28,7 @@ protected:
     void trail() {
         sclk_pin_.set_high();
         delay_dur();
-        Spi::trail();
+        SpiBase::trail();
     }
 protected :
 public:
@@ -74,8 +74,8 @@ public:
     hal::HalResult blocking_transceive(uint32_t & data_rx, const uint32_t data_tx)  ;
 
     hal::HalResult set_baudrate(const SpiBaudrate baud);
-    hal::HalResult set_word_width(const uint8_t bits)  {
-        width_ = bits;
+    hal::HalResult set_wordsize(const SpiWordSize wordsize)  {
+        wordsize_ = wordsize;
         return HalResult::Ok();
     }
 

@@ -28,7 +28,7 @@ class Gpio;
 
 
 
-class SpiHw final:public Spi{
+class SpiHw final:public SpiBase{
 public:
     using Callback = std::function<void(SpiEvent)>;
 
@@ -70,7 +70,7 @@ public:
         return HalResult::Ok();
     }
 
-    [[nodiscard]] HalResult set_word_width(const uint8_t len);
+    [[nodiscard]] HalResult set_wordsize(const SpiWordSize wordsize);
     [[nodiscard]] HalResult set_baudrate(const SpiBaudrate baud);
     [[nodiscard]] HalResult set_prescaler(const SpiPrescaler prescaler);
     [[nodiscard]] HalResult set_bitorder(const BitOrder bitorder);
@@ -89,14 +89,14 @@ private:
     Callback callback_ = nullptr;
     bool hw_cs_enabled_ = false;
 
-    uint32_t get_periph_clk_freq() const;
+    [[nodiscard]] uint32_t get_periph_clk_freq() const;
 
     void enable_rcc(const Enable en);
     void set_remap(const SpiRemap remap);
     void alter_to_pins(const SpiRemap remap);
     
-    void enable_rx_it(const Enable en);
-    void enable_tx_it(const Enable en);
+    void enable_rx_interrupt(const Enable en);
+    void enable_tx_interrupt(const Enable en);
 
     void accept_interrupt(const SpiI2sIT it);
 

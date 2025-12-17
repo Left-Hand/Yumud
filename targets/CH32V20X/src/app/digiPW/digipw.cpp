@@ -128,8 +128,8 @@ void test_sogi(){
 }
 void digipw_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART1_REMAP_PA9_PA10,
-        .baudrate = 6_MHz
+        .remap = hal::USART1_REMAP_PA9_PA10,
+        .baudrate = hal::NearestFreq(6_MHz)
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);

@@ -89,7 +89,7 @@ struct MT6826S:
     public MT6826S_Prelude
 {
 
-    explicit MT6826S(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
+    explicit MT6826S(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv(spi, index)){}
 
     explicit MT6826S(const hal::SpiDrv & spi_drv):

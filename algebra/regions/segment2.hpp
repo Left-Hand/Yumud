@@ -26,29 +26,35 @@ public:
             start((Vec2<T>(std::get<0>(tup), std::get<1>(tup)))),
             stop((Vec2<T>(std::get<2>(tup), std::get<3>(tup)))){;}
 
-    [[nodiscard]] __fast_inline constexpr const Vec2<T> & operator [](const size_t idx) const {
-        if(idx > 2) HALT;
+    [[nodiscard]] __fast_inline constexpr 
+    const Vec2<T> & operator [](const size_t idx) const {
+        if(idx > 2) __builtin_unreachable();
         return *(&start + idx);
     }
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> & operator [](const size_t idx){
-        if(idx > 2) HALT;
+    [[nodiscard]] __fast_inline constexpr 
+    Vec2<T> & operator [](const size_t idx){
+        if(idx > 2) __builtin_unreachable();
         return *(&start + idx);
     }
 
-	[[nodiscard]] __fast_inline constexpr bool operator==(const Segment2 & other) const{
+	[[nodiscard]] __fast_inline constexpr 
+    bool operator==(const Segment2 & other) const{
         return start == other.start and stop == other.stop;
     }
 
-	[[nodiscard]] __fast_inline constexpr bool operator!=(const Segment2 & other) const{
+	[[nodiscard]] __fast_inline constexpr 
+    bool operator!=(const Segment2 & other) const{
         return (*this == other) == false; 
     }
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> get_center() const{
+    [[nodiscard]] __fast_inline constexpr 
+    Vec2<T> get_center() const{
         return (this->start + this->stop)/2;
     }
 
-    [[nodiscard]] __fast_inline constexpr T distance_to(const Vec2<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr 
+    T distance_to(const Vec2<T> & p) const{
         const auto diff1 = start - p;
         const auto diff2 = stop - p;
         const auto diff3 = stop - start;
@@ -62,24 +68,29 @@ public:
         }
     }
 
-    [[nodiscard]] __fast_inline constexpr bool has_point(const Vec2<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr 
+    bool has_point(const Vec2<T> & p) const{
         return is_equal_approx(distance_to(p), 0);
     }
 
-    [[nodiscard]] __fast_inline constexpr int sign(const Vec2<T> & p) const{
+    [[nodiscard]] __fast_inline constexpr 
+    int sign(const Vec2<T> & p) const{
         return sign((start - p).cross(stop - p));
     }
 
-    [[nodiscard]] __fast_inline constexpr bool parallel_with(const Segment2 & other){
+    [[nodiscard]] __fast_inline constexpr 
+    bool is_parallel_with(const Segment2 & other){
         return is_equal_approx(this->diff().cross(other.diff()), 0);
     }
 
-    [[nodiscard]] __fast_inline constexpr bool orthogonal_with(const Segment2 & other){
+    [[nodiscard]] __fast_inline constexpr 
+    bool is_orthogonal_with(const Segment2 & other){
         return is_equal_approx(this->diff().dot(other.diff()), 0);
     }
 
-    [[nodiscard]] __fast_inline constexpr std::optional<Vec2<T>> intersection(const Segment2<T> & other) const{
-        if(this->parallel_with(other)) return std::nullopt;
+    [[nodiscard]] __fast_inline constexpr 
+    std::optional<Vec2<T>> intersection(const Segment2<T> & other) const{
+        if(this->is_parallel_with(other)) return std::nullopt;
         else if(this->operator==(other)) return std::nullopt;
         
 
@@ -94,11 +105,13 @@ public:
         return {this->d - other.d};
     }
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> diff() const{
+    [[nodiscard]] __fast_inline constexpr 
+    Vec2<T> diff() const{
         return stop - start;
     }
 
-    [[nodiscard]] __fast_inline constexpr std::tuple<T, T, T> abc() const{
+    [[nodiscard]] __fast_inline constexpr 
+    std::tuple<T, T, T> abc() const{
 
         //https://www.cnblogs.com/sailJs/p/17802652.html
 
@@ -110,54 +123,65 @@ public:
         return {start.y - stop.y, stop.x - start.x, start.cross(stop)};
     }
 
-    [[nodiscard]] __fast_inline constexpr T length() const {
+    [[nodiscard]] __fast_inline constexpr 
+    T length() const {
         return (stop - start).length();
     }
 
-    [[nodiscard]] __fast_inline constexpr T length_squared() const{
+    [[nodiscard]] __fast_inline constexpr 
+    T length_squared() const{
         return (stop - start).length_squared();
     }
 
-    [[nodiscard]] __fast_inline constexpr Angular<T> angle() const {
+    [[nodiscard]] __fast_inline constexpr 
+    Angular<T> angle() const {
         return (stop - start).angle();
     }
 
-    [[nodiscard]] __fast_inline constexpr Rect2<T> bounding_box() const{
+    [[nodiscard]] __fast_inline constexpr 
+    Rect2<T> bounding_box() const{
         const auto points = std::to_array({start, stop});
         return Rect2<T>::from_minimal_bounding_box(points);
     }
 
-    [[nodiscard]] __fast_inline constexpr T x_at_y(const T y) const{
+    [[nodiscard]] __fast_inline constexpr 
+    T x_at_y(const T y) const{
         if (start.y == stop.y) {
             return start.x; // For horizontal lines, return the x-coordinate
         }
         return start.x + (stop.x - start.x) * (y - start.y) / (stop.y - start.y);
     }
 
-    [[nodiscard]] __fast_inline constexpr Segment2 swap_if_inverted() const {
+    [[nodiscard]] __fast_inline constexpr 
+    Segment2 swap_if_inverted() const {
         if(start.y > stop.y){
             return {stop, start};
         }
         return *this;
     }
 
-    [[nodiscard]] __fast_inline constexpr bool is_horizontal() const{
+    [[nodiscard]] __fast_inline constexpr 
+    bool is_horizontal() const{
         return start.y == stop.y;
     }
 
-    [[nodiscard]] __fast_inline constexpr bool is_vertical() const{
+    [[nodiscard]] __fast_inline constexpr 
+    bool is_vertical() const{
         return start.x == stop.x;
     }
 
-    [[nodiscard]] __fast_inline constexpr Segment2 swap() const {
+    [[nodiscard]] __fast_inline constexpr 
+    Segment2 swap() const {
         return {stop, start};
     }
 
-    [[nodiscard]] __fast_inline constexpr Vec2<T> midpoint() const {
+    [[nodiscard]] __fast_inline constexpr 
+    Vec2<T> midpoint() const {
         return {(start.x + stop.x) / 2, (start.y + stop.y) / 2};
     }
 
-    [[nodiscard]] __fast_inline constexpr T x_delta_per_y(const T y_unit) const {
+    [[nodiscard]] __fast_inline constexpr 
+    T x_delta_per_y(const T y_unit) const {
         static_assert(not std::is_integral_v<T>);
         if (start.y == stop.y) {
             return T{0}; // No change in x per y unit for horizontal lines
@@ -167,7 +191,6 @@ public:
 };
 
 
-template<size_t Q>
 using Segment2f = Segment2<float>;
 using Segment2d = Segment2<double>;
 

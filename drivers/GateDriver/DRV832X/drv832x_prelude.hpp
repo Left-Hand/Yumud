@@ -338,7 +338,7 @@ public:
         spi_drv_(spi_drv){;}
     explicit DRV8323R_Phy(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit DRV8323R_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit DRV8323R_Phy(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv(spi, rank)){;}
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t reg);

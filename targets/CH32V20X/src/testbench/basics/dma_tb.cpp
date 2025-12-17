@@ -35,10 +35,10 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
     channel.set_event_handler([&](const hal::DmaEvent ev){
         switch(ev){
             case hal::DmaEvent::TransferComplete:
-                logger.println("d", channel.remaining());
+                logger.println("d", channel.pending_count());
                 break;
             case hal::DmaEvent::HalfTransfer:
-                logger.println("h", channel.remaining());
+                logger.println("h", channel.pending_count());
                 break;
             default:
                 break;
@@ -52,8 +52,8 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
     channel.register_nvic({0,0}, EN);
     logger.println("DMA begin");
     channel.start_transfer_mem2mem<char>(dst, src, sizeof(src));
-    while(channel.remaining()){
-        logger.println(channel.remaining());
+    while(channel.pending_count()){
+        logger.println(channel.pending_count());
         clock::delay(200ms);
     }
 

@@ -75,8 +75,8 @@ static void ak09911c_test(drivers::AK09911C & aku){
 
 void ak09911c_main(){
     DEBUGGER_INST.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);

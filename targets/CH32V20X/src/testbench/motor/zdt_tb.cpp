@@ -30,7 +30,7 @@ void zdt_main(){
     // slcan_test();
     DBG_UART.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = 576000
+        .baudrate = hal::NearestFreq(576_KHz),
     });
 
     DEBUGGER.retarget(&DBG_UART);

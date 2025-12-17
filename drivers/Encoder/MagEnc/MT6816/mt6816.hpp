@@ -30,7 +30,7 @@ public:
     explicit MT6816(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
 
-    explicit MT6816(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit MT6816(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
     IResult<> init(const Config & cfg);

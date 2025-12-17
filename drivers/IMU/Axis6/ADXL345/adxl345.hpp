@@ -27,7 +27,7 @@ public:
     explicit ADXL345(hal::SpiDrv && spi_drv): 
         phy_(std::move(spi_drv)){;}
 
-    explicit ADXL345(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank): 
+    explicit ADXL345(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank): 
         phy_(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] IResult<Vec3<iq24>> read_acc();

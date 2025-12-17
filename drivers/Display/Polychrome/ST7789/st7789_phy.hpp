@@ -86,7 +86,7 @@ private:
                 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_word_width(tmp::type_to_bitswidth_v<T>); res.is_err())
+            if(const auto res = spi_.set_wordsize(hal::SpiWordSize::TwoBytes); res.is_err())
                 
             return Err(res.unwrap_err());
         }
@@ -101,7 +101,7 @@ private:
         if (cont == DISC) spi_.lend();
 
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_word_width(8); res.is_err()) 
+            if(const auto res = spi_.set_wordsize(hal::SpiWordSize::OneByte); res.is_err()) 
             return Err(res.unwrap_err());
         }
 
@@ -117,7 +117,7 @@ private:
         if (const auto res = spi_.borrow(rank_); res.is_err()) 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_word_width(sizeof(T) * 8); res.is_err())
+            if(const auto res = spi_.set_wordsize(hal::SpiWordSize::TwoBytes); res.is_err())
                 
             return Err(res.unwrap_err());
         }
@@ -128,7 +128,7 @@ private:
         } 
         if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_word_width(8); res.is_err()) 
+            if(const auto res = spi_.set_wordsize(hal::SpiWordSize::OneByte); res.is_err()) 
             return Err(res.unwrap_err());
         }
         return Ok();
@@ -143,7 +143,7 @@ private:
         if(const auto res = spi_.borrow(rank_); res.is_err()) 
             return Err(res.unwrap_err());
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_word_width(sizeof(T) * 8); res.is_err())
+            if(const auto res = spi_.set_wordsize(hal::SpiWordSize::TwoBytes); res.is_err())
                 
             return Err(res.unwrap_err());
         }
@@ -158,7 +158,7 @@ private:
 
         if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_word_width(8); res.is_err()) 
+            if(const auto res = spi_.set_wordsize(hal::SpiWordSize::OneByte); res.is_err()) 
             return Err(res.unwrap_err());
         }
 

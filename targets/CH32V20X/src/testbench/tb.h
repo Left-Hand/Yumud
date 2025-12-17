@@ -12,7 +12,7 @@ namespace ymd{
 namespace ymd::hal{
     class Can;
     class Uart;
-    class Spi;
+    class SpiBase;
     class GpioIntf;
     class I2c;
     class Uart;
@@ -38,7 +38,7 @@ void lds14_tb(ymd::IOStream & logger,ymd::hal::Uart & uart);
 void gpio_tb(ymd::hal::GpioIntf & gpio);
 // void pca_tb(ymd::IOStream & logger);
 void pca_main();
-void st77xx_tb(ymd::hal::Spi & spi);
+void st77xx_tb(ymd::hal::SpiBase & spi);
 
 void joystick_main();
 

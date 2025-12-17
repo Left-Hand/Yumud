@@ -404,8 +404,8 @@ static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz;
 void light_tracking_main(void){
 
     UART.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);

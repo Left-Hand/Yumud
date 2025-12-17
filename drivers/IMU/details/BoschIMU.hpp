@@ -18,7 +18,7 @@ public:
         BoschImu_Phy(hal::I2cDrv{i2c, addr}){;}
     explicit BoschImu_Phy(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    explicit BoschImu_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
+    explicit BoschImu_Phy(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank index):
         BoschImu_Phy(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] 

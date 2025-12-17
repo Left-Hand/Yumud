@@ -16,7 +16,7 @@ using drivers::mk8000tr::MK8000TR_ParserSink;
 void mk8000tr_main(){
     DEBUGGER_INST.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = 576000 
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     
@@ -39,7 +39,7 @@ void mk8000tr_main(){
     auto mk8000tr_parser = MK8000TR_ParserSink(mk8000tr_ev_handler);
     mk8000tr_uart_.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = 576000 
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
 
 

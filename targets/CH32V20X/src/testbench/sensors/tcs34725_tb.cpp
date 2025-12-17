@@ -28,7 +28,7 @@ void tcs34725_tb(OutputStream & logger, hal::I2c & i2c){
 void tcs34725_main(){
     DEBUGGER_INST.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = 115200
+        .baudrate = hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
 

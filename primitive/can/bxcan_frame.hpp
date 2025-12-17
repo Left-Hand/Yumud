@@ -74,7 +74,7 @@ public:
         uint8_t len
     ){
         return Self(
-            CanIdentifier::from_bits(id_bits), 
+            CanIdentifier::from_sxx32_reg_bits(id_bits), 
             Payload::from_u64_and_dlc(int_val, BxCanDlc::from_bits(len))
         );
     }

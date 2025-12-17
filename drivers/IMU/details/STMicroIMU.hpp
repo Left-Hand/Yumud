@@ -21,7 +21,7 @@ public:
         spi_drv_(spi_drv){;}
     explicit StmicroImu_Phy(hal::SpiDrv && spi_drv):
         spi_drv_(spi_drv){;}
-    explicit StmicroImu_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
+    explicit StmicroImu_Phy(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
 

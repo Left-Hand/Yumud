@@ -12,8 +12,8 @@ using namespace ymd;
 
 void can_ring_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000, 
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz), 
         .tx_strategy = CommStrategy::Blocking
     });
 

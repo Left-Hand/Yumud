@@ -76,7 +76,7 @@ void pca_tb(OutputStream & logger){
 void pca_main(){
     DEBUGGER_INST.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = 576000 
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
 

@@ -15,7 +15,7 @@ public:
         const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
         phy_(i2c, i2c_addr){;}
-    explicit ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit ICM42688(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         phy_(spi, rank){;}
     explicit ICM42688(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}

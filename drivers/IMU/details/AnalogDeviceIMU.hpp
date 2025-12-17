@@ -25,7 +25,7 @@ public:
         spi_drv_(spi_drv){;}
     explicit AnalogDeviceIMU_Phy(hal::SpiDrv && spi_drv):
         spi_drv_(spi_drv){;}
-    explicit AnalogDeviceIMU_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit AnalogDeviceIMU_Phy(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] Result<void, ImuError> write_reg(const uint8_t reg_addr, const uint8_t reg_data);

@@ -46,7 +46,7 @@ public:
         phy_(spi_drv){;}
     explicit AK8975(hal::SpiDrv && spi_drv):
         phy_(std::move(spi_drv)){;}
-    explicit AK8975(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    explicit AK8975(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         phy_(hal::SpiDrv(spi, rank)){;}
 
     [[nodiscard]] IResult<> init();

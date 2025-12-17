@@ -394,8 +394,8 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
 [[maybe_unused]] static void currentloop_tb(){
     hal::usart1.init({
-        .remap = hal::UART1_REMAP_PA9_PA10,
-        .baudrate = 576000
+        .remap = hal::USART1_REMAP_PA9_PA10,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&hal::usart1);
     // DEBUG_PRINTLN(hash(.unwrap()));
@@ -530,8 +530,8 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 void mystepper_main(){
 
     UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);

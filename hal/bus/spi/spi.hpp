@@ -12,7 +12,7 @@
 namespace ymd::hal{
 
 
-class [[nodiscard]] Spi{
+class [[nodiscard]] SpiBase{
 public:
 
     #ifndef SPI_MAX_PINS
@@ -20,9 +20,9 @@ public:
     #endif
 
 public:
-    Spi(){;}
-    Spi(const hal::Spi &) = delete;
-    Spi(hal::Spi &&) = delete;
+    SpiBase(){;}
+    SpiBase(const hal::SpiBase &) = delete;
+    SpiBase(hal::SpiBase &&) = delete;
 
 
     HalResult borrow(const SpiSlaveRank rank){
@@ -48,7 +48,7 @@ public:
     [[nodiscard]] virtual hal::HalResult blocking_write(const uint32_t data) = 0;
     [[nodiscard]] virtual hal::HalResult blocking_transceive(uint32_t & data_rx, const uint32_t data_tx) = 0;
 
-    [[nodiscard]] virtual hal::HalResult set_word_width(const uint8_t bits) = 0;
+    [[nodiscard]] virtual hal::HalResult set_wordsize(const SpiWordSize wordsize) = 0;
     [[nodiscard]] virtual hal::HalResult set_baudrate(const SpiBaudrate baud) = 0;
     [[nodiscard]] virtual hal::HalResult set_bitorder(const BitOrder bitorder) = 0;
 

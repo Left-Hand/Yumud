@@ -112,8 +112,8 @@ void area(AreaTrait obj){
 
 void traits_tb(){
     hal::usart2.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&hal::usart2);
 

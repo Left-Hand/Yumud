@@ -89,9 +89,21 @@ using namespace alx_aoa_tb;
 void alx_aoa_main(){
 
     #if defined(CH32V30X)
+
+
+
+    auto blue_led_pin_ = hal::PC<13>();
+
+    blue_led_pin_.outpp();
+
+    BlinkActivity blink_activity_{
+        .blue_led_pin_ = blue_led_pin_
+    };
+
+
     hal::usart2.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 115200 * 2,
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(115200 * 2),
         .tx_strategy = CommStrategy::Blocking
         // 115200
     });
@@ -101,6 +113,11 @@ void alx_aoa_main(){
     DEBUGGER.retarget(&hal::usart2);
     DEBUGGER.no_brackets(DISEN);
     DEBUGGER.no_fieldname(EN);
+
+    // while(true){
+    //     clock::delay(5ms);
+    //     DEBUG_PRINTLN_IDLE(0);
+    // }
 
     using AlxMeasurements = std::array<AlxMeasurement, 2>;
     AlxMeasurements alx_measurements_ = {Zero, Zero};
@@ -139,15 +156,15 @@ void alx_aoa_main(){
         }
     );
 
-    
+
     hal::usart3.init({
-        .remap = hal::UART3_REMAP_PB10_PB11,
-        .baudrate = alx_aoa::DEFAULT_UART_BAUD,
+        .remap = hal::USART3_REMAP_PB10_PB11,
+        .baudrate = hal::NearestFreq(alx_aoa::DEFAULT_UART_BAUD),
     });
 
     hal::uart4.init({
         .remap = hal::UART4_REMAP_PC10_PC11,
-        .baudrate = alx_aoa::DEFAULT_UART_BAUD,
+        .baudrate = hal::NearestFreq(alx_aoa::DEFAULT_UART_BAUD),
     });
 
 
@@ -189,14 +206,6 @@ void alx_aoa_main(){
 
 
 
-    auto blue_led_pin_ = hal::PC<13>();
-
-    blue_led_pin_.outpp();
-
-    BlinkActivity blink_activity_{
-        .blue_led_pin_ = blue_led_pin_
-    };
-
 
     while(true){
 
@@ -205,51 +214,7 @@ void alx_aoa_main(){
         static auto report_timer = async::RepeatTimer::from_duration(3ms);
         
         report_timer.invoke_if([&]{
-            #if 0
-            const auto & alx_measurement = alx_measurements_[0];
-            // const auto [s,c] = alx_measurement.azimuth.sincos(); 
-            // const auto [x,y] = Vector2<float>::from_length_and_
-            [[maybe_unused]] const auto vec3 = alx_measurement.to_vec3();
-            [[maybe_unused]] const auto [x,y,z] = vec3;
-            [[maybe_unused]] const auto o1 = Vec2<float>(0.20, 0);
-            [[maybe_unused]] const auto o2 = Vec2<float>(-0.20, 0);
-            
-            // [[maybe_unused]] const auto circle_a = Circle2<float>{o1, alx_measurements_[0].to_polar().amplitude};
-            // [[maybe_unused]] const auto circle_b = Circle2<float>{o2, alx_measurements_[1].to_polar().amplitude};
 
-
-            // [[maybe_unused]] const auto [x,y,z] = vec3;
-            // const auto polar = Polar<float>{
-            //     .amplitude = alx_measurement.distance,
-            //     .phase = alx_measurement.azimuth
-            // };
-
-            // const auto [x,y] = polar.to_vec2();
-            const auto points = geometry::compute_intersection_points(circle_a, circle_b);
-            const auto p = points.at_or(0, Zero);
-            DEBUG_PRINTLN(
-                // measuremen/ts_
-                // 0
-
-                // bool(alx_measurements_[0].distance > alx_measurements_[1].distance)
-                // ,alx_measurements_[0].distance, alx_measurements_[1].distance
-                mk8_measurements_[0].distance, 
-                mk8_measurements_[1].distance,
-                p.x, p.y
-                // ,alx_measurements_[0].azimuth.to_radians(), alx_measurements_[1].azimuth.to_radians()
-                // ,p, points.size()
-                // x,y,z
-                // DEBUGGER.config().no_fieldname, 
-                // DEBUGGER.field("distance")(1),
-                // DEBUGGER.field("distanc")(2),
-                // DEBUGGER.field("distane")(3)
-                // DEBUGGER.scoped("meas")(alx_measurement), 
-                // DEBUGGER.scoped("xyz")(x, y, z)
-                // DEBUGGER.scoped("xyz")(vec3),
-                // DEBUGGER.scoped("abc")(vec3),
-                // DEBUGGER.scoped("uvw")(std::ignore)
-            );
-            #else
             [[maybe_unused]] const auto & alx_measurement = alx_measurements_[0];
             const auto & left_raw_meas = alx_measurements_[1];
             const auto & right_raw_meas = alx_measurements_[0];
@@ -299,8 +264,10 @@ void alx_aoa_main(){
             [[maybe_unused]] const auto left_est_point = left_ray.endpoint_at_length(left_meas.amplitude);
             [[maybe_unused]] const auto right_est_point = right_ray.endpoint_at_length(right_meas.amplitude);
             // const auto may_p = left_ray.intersection(right_ray, 0.0001f);
+
             // const auto cp = may_p.unwrap_or(Vec2f::ZERO);
-            DEBUG_PRINTLN(
+            // return;
+            DEBUG_PRINTLN_IDLE(
                 // alx_measurement.distance,
                 // is_right_near,
                 // left_meas.distance,
@@ -319,11 +286,13 @@ void alx_aoa_main(){
                 // (cp - RIGHT_BASE.org).length(),
                 // left_meas.distance,
                 // right_meas.distance,
-                left_est_point,
-                right_est_point,
+                // left_est_point,
+                // right_est_point,
                 // p
-                geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(Vec2f::ZERO),
-                geometry::compute_intersection_point(right_ray, left_circle).unwrap_or(Vec2f::ZERO)
+                // geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(Vec2f::ZERO),
+                // geometry::compute_intersection_point(right_ray, left_circle).unwrap_or(Vec2f::ZERO),
+                hal::usart2.available()
+                // 0
                 // (left_raw_meas.distance > right_raw_meas.distance) ? right_est_point : right_est_point
                 
                 // ((left_est_point - RIGHT_BASE).angle() - (right_meas.phase + RIGHT_ANGLE_BASE)).to_turns(),
@@ -353,7 +322,6 @@ void alx_aoa_main(){
                 // right_vec2
                 // alx_measurements_[1]
             );
-            #endif
     });
     }
 

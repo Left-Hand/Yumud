@@ -11,7 +11,7 @@ public:
         spi_drv_(spi_drv) {;}
     explicit LT8920(hal::SpiDrv && spi_drv) : 
         spi_drv_(std::move(spi_drv)) {;}
-    explicit LT8920(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank) : 
+    explicit LT8920(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank) : 
         spi_drv_(hal::SpiDrv(spi, rank)) {;}
 
     [[nodiscard]] IResult<> bind_nrst_gpio(hal::GpioIntf & gpio){
