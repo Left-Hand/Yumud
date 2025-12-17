@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <array>
 
-#include "hal/nvic/nvic.hpp"
+#include "hal/sysmisc/nvic/nvic.hpp"
 
 #include "dma_utils.hpp"
 

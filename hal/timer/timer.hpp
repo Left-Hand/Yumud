@@ -2,7 +2,7 @@
 
 #include "timer_oc.hpp"
 #include "timer_utils.hpp"
-#include "hal/nvic/nvic.hpp"
+#include "hal/sysmisc/nvic/nvic.hpp"
 #include "core/utils/result.hpp"
 
 

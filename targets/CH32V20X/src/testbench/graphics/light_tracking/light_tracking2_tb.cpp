@@ -19,7 +19,7 @@
 #include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
 #include "data.hpp"
 
-#include "hal/rng/rng.hpp"
+#include "hal/sysmisc/rng/rng.hpp"
 
 using namespace ymd;
 

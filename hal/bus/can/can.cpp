@@ -3,7 +3,7 @@
 
 #include "can_layout.hpp"
 
-#include "hal/nvic/nvic.hpp"
+#include "hal/sysmisc/nvic/nvic.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "core/debug/debug.hpp"

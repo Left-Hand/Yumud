@@ -2,7 +2,7 @@
 
 #include "core/platform.hpp"
 #include <initializer_list>
-#include "hal/nvic/nvic.hpp"
+#include "hal/sysmisc/nvic/nvic.hpp"
 #include "regular_channel.hpp"
 #include "injected_channel.hpp"
 #include "adc_utils.hpp"

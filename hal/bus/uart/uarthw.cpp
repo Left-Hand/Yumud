@@ -1,14 +1,12 @@
-#include "core/platform.hpp"
-#include "core/utils/Option.hpp"
+#include "core/sdk.hpp"
+#include "uarthw.hpp"
+#include "uart_layout.hpp"
 #include "ral/uart.hpp"
 
 #include "hal/dma/dma.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "uarthw.hpp"
 
-#include "core/sdk.hpp"
-#include "uart_layout.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;

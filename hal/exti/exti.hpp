@@ -2,7 +2,7 @@
 
 #include "hal/gpio/gpio_utils.hpp"
 
-#include "hal/nvic/nvic.hpp"
+#include "hal/sysmisc/nvic/nvic.hpp"
 
 #include <functional>
 
