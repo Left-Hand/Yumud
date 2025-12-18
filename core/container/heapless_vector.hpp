@@ -136,6 +136,15 @@ public:
         return buf_;
     }
 
+    constexpr void reserve(const size_t len){
+        if(len > capacity()) __builtin_trap();
+        static_assert(std::is_default_constructible_v<T>);
+        for(size_t i = 0; i < len; i++){
+            std::construct_at(&buf_[i]);
+        }
+        size_ = len;
+    }
+
 
     // 容量相关 - constexpr
     [[nodiscard]] constexpr size_t size() const noexcept {
@@ -150,7 +159,7 @@ public:
         return size_ == 0;
     }
 
-    [[nodiscard]] constexpr bool full() const noexcept {
+    [[nodiscard]] constexpr bool is_full() const noexcept {
         return size_ == N;
     }
 
@@ -262,6 +271,10 @@ public:
     }
 
     [[nodiscard]] constexpr std::span<const T> view() const {
+        return std::span(buf_, size_);
+    }
+
+    [[nodiscard]] constexpr std::span<T> mut_view(){
         return std::span(buf_, size_);
     }
 

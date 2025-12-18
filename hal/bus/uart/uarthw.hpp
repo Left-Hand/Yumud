@@ -4,15 +4,15 @@
 
 extern "C"{
 
-#ifdef UART1_PRESENT
+#ifdef USART1_PRESENT
 __interrupt void USART1_IRQHandler(void);
 #endif
 
-#ifdef UART2_PRESENT
+#ifdef USART2_PRESENT
 __interrupt void USART2_IRQHandler(void);
 #endif
 
-#ifdef UART3_PRESENT
+#ifdef USART3_PRESENT
 __interrupt void USART3_IRQHandler(void);
 #endif
 

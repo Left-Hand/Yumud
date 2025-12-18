@@ -3,7 +3,7 @@
 #include "hal/bus/can/can.hpp"
 #include "core/utils/Option.hpp"
 #include "core/utils/Result.hpp"
-#include "primitive/PerUnit.hpp"
+#include "primitive/arithmetic/PerUnit.hpp"
 
 #include "core/math/real.hpp"
 

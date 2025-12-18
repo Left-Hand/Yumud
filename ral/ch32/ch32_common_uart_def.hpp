@@ -238,7 +238,7 @@ struct USART_Def{
     }
 
     
-    R32_STATR get_events(){
+    R32_STATR get_flags(){
         return std::bit_cast<R32_STATR>(STATR);
     }
 

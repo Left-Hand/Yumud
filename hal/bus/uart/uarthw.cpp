@@ -855,16 +855,16 @@ void Uart::enable_idle_interrupt(const Enable en){
 
 void UartInterruptDispatcher::on_interrupt(Uart & self){
     auto * ral_inst = RAL_INST(self.inst_);
-    const auto events = ral_inst->get_events();
-    if(events.any_fault()){
-        if(events.ORE){
+    const auto flags = ral_inst->get_flags();
+    if(flags.any_fault()){
+        if(flags.ORE){
             // 过载错误标志
             {
                 //TODO
             }
             //这个事件无法自然消退
         }
-        if(events.FE){
+        if(flags.FE){
             //帧错误
             {
                 //TODO
@@ -873,7 +873,7 @@ void UartInterruptDispatcher::on_interrupt(Uart & self){
             ral_inst->STATR;
             ral_inst->DATAR;
         }
-        if(events.PE){
+        if(flags.PE){
             //奇偶校验位错误
             {
                 //TODO
@@ -882,7 +882,7 @@ void UartInterruptDispatcher::on_interrupt(Uart & self){
             ral_inst->STATR;
             ral_inst->DATAR;
         }
-        if(events.NE){
+        if(flags.NE){
             // 噪声错误标志
             {
                 //TODO
@@ -892,21 +892,23 @@ void UartInterruptDispatcher::on_interrupt(Uart & self){
             ral_inst->DATAR;
         }
     }
-    if(events.RXNE){
+
+    if(flags.RXNE){
         // 对数据寄存器的读操作可以将该位清零
         self.accept_rxne_interrupt();
     }
-    if(events.TXE){
+
+    if(flags.TXE){
         // 对数据寄存器进行写操作，此位将会清零
         self.accept_txe_interrupt();
     }
 
-    if(events.TC){
+    if(flags.TC){
         self.accept_tc_interrupt();
         USART_ClearITPendingBit(SDK_INST(self.inst_), USART_IT_TC);
     }
 
-    if(events.IDLE){
+    if(flags.IDLE){
         self.accept_rxidle_interrupt();
         ral_inst->STATR;
         ral_inst->DATAR;

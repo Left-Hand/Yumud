@@ -89,7 +89,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_72X40>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(72, 40);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(28, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         0xAE,0xD5,0xF0,0xA8,0X27,0XD3,0X00,0X40,
         0X8D,0X14,0X20,0X02,0XA1,0XC8,0XDA,0X12,
         0XAD,0X30,0X81,0XFF,0XD9,0X22,0XDB,0X20,
@@ -101,7 +101,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_128X64>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(128, 64);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(0, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         // 0xAE, 0xD5, 0xF0, 0xA8, 0X27, 0XD3, 0X00, 0X40,
         // 0X8D, 0X14, 0X20, 0X02, 0XA1, 0XC8, 0XDA, 0X12,
         // 0XAD, 0X30, 0X81, 0XFF, 0XD9, 0X22, 0XDB, 0X20,
@@ -147,7 +147,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_128X32>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(128, 32);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(2, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         0xAE, 0x00, 0x10, 0x00, 0xB0, 0X81, 0XFF, 0XA1, 0XA6,
         0XA8, 0X1F, 0XC8, 0XD3, 0X00, 0XD5, 0X80, 0XD9,
         0X1F, 0XDA, 0X00, 0XDB, 0X40, 0X8D, 0X14, 0XAF
@@ -158,7 +158,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_88X48>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(88, 48);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(2, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,
         0XD9, 0X1F,0XDA,0X00,0XDB, 0X40, 0X8D, 0X14, 0XAF
@@ -169,7 +169,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_64X48>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(64, 48);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(2, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,
         0XD9, 0X1F,0XDA,0X00,0XDB, 0X40, 0X8D, 0X14, 0XAF
@@ -181,7 +181,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_128X80>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(128, 80);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(2, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,
         0XD9, 0X1F,0XDA,0X00,0XDB, 0X40, 0X8D, 0X14, 0XAF

@@ -1,4 +1,5 @@
 #include "aes.hpp"
+#include "crc_generic.hpp"
 
 namespace ymd::encrypt::aes{
 

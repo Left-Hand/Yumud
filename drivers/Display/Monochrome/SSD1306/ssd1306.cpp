@@ -75,12 +75,11 @@ IResult<> SSD1306_Phy::write_repeat(const T data, size_t len){
     return Err(Error(Error::NoAvailablePhy));
 }
 
-template<typename T = void>
-using IResult = Result<T, Error>;
+
 IResult<> SSD13XX::set_offset(const Vec2u16 offset){
-    if(const auto res = phy_.write_command(0xD3);
+    if(const auto res = write_command(0xD3);
         res.is_err()) return res; 
-    if(const auto res = phy_.write_command(offset.y);
+    if(const auto res = write_command(offset.y);
         res.is_err()) return res;
     return Ok();
 }
@@ -90,11 +89,11 @@ IResult<> SSD13XX::set_flush_pos(const Vec2u16 pos){
     const auto x = std::get<0>(pos + offset_);
     const auto y = std::get<1>(pos + offset_);
     // const auto [x, y] = pos + offset_;
-    if(const auto res = phy_.write_command(static_cast<uint8_t>(0xb0 | static_cast<uint8_t>(y >> 3)));
+    if(const auto res = write_command(static_cast<uint8_t>(0xb0 | static_cast<uint8_t>(y >> 3)));
         res.is_err()) return res;
-    if(const auto res = phy_.write_command(static_cast<uint8_t>((x & 0xf0 ) >> 4) | 0x10);
+    if(const auto res = write_command(static_cast<uint8_t>((x & 0xf0 ) >> 4) | 0x10);
         res.is_err()) return res;
-    if(const auto res = phy_.write_command(static_cast<uint8_t>(x & 0x0f));
+    if(const auto res = write_command(static_cast<uint8_t>(x & 0x0f));
         res.is_err()) return res;
     return Ok();
 }
@@ -102,18 +101,18 @@ IResult<> SSD13XX::set_flush_pos(const Vec2u16 pos){
 IResult<> SSD13XX::enable_display(const Enable en){
     
     if(en == EN){
-        if(const auto res = phy_.write_command(0x8D);
+        if(const auto res = write_command(0x8D);
             res.is_err()) return res;
-        if(const auto res = phy_.write_command(0x14);
+        if(const auto res = write_command(0x14);
             res.is_err()) return res;
-        if(const auto res = phy_.write_command(0xAF);
+        if(const auto res = write_command(0xAF);
             res.is_err()) return res;
     }else{
-        if(const auto res = phy_.write_command(0x8D);
+        if(const auto res = write_command(0x8D);
             res.is_err()) return res;
-        if(const auto res = phy_.write_command(0x10);
+        if(const auto res = write_command(0x10);
             res.is_err()) return res;
-        if(const auto res = phy_.write_command(0xAE);
+        if(const auto res = write_command(0xAE);
             res.is_err()) return res;
     }
 
@@ -138,7 +137,7 @@ IResult<> SSD13XX::update(){
 IResult<> SSD13XX::preinit_by_cmds(const std::span<const uint8_t> init_cmds_list){
     // DEBUG_PRINTLN(init_cmds_list_);
     for(const auto cmd:init_cmds_list){
-        if(const auto res = phy_.write_command(cmd);
+        if(const auto res = write_command(cmd);
             res.is_err()) return res;
     }
 
@@ -146,7 +145,7 @@ IResult<> SSD13XX::preinit_by_cmds(const std::span<const uint8_t> init_cmds_list
 }
 
 // IResult<> SSD13XX::enable_inversion(const bool i){
-//     if(const auto res = phy_.write_command(0xC8 - 8*uint8_t(i));
+//     if(const auto res = write_command(0xC8 - 8*uint8_t(i));
 //         res.is_err()) return res;  //正常显示
-//     return phy_.write_command(0xA1 - uint8_t(i));
+//     return write_command(0xA1 - uint8_t(i));
 // }

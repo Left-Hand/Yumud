@@ -49,6 +49,7 @@ public:
 
 private:
 
+
     Phy phy_;
 
     const Vec2<uint16_t> offset_;
@@ -79,6 +80,10 @@ private:
     [[nodiscard]] IResult<> set_flush_pos(const Vec2<uint16_t> pos);
 
     [[nodiscard]] IResult<> preinit_by_cmds(const std::span<const uint8_t> pbuf);
+
+    IResult<> write_command(const uint8_t cmd){
+        return phy_.write_command(cmd);
+    }
 
     template<typename T>
     friend class DrawTarget;
