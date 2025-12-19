@@ -1,13 +1,17 @@
 #pragma once
 
-#include "zdt_stepper_prelude.hpp"
+#include "zdt_stepper_primitive.hpp"
+
+namespace ymd::hal{
+    class Can;
+    class Uart;
+};
 
 namespace ymd::robots::zdtmotor{
 
 
 class ZdtMotorPhy final{
 public:
-    using FuncCode = prelude::FuncCode;
 
     ZdtMotorPhy(Some<hal::Can *> && can) : 
         may_uart_(ymd::None),
@@ -20,27 +24,21 @@ public:
     {;}
 
 
-    void write_bytes(
-        const NodeId id, 
-        const FuncCode func_code,
-        const std::span<const uint8_t> bytes
+    void write_flat_packet(
+        const FlatPacket & flat_packet
     );
 private:
     Option<hal::Uart &> may_uart_;
     Option<hal::Can &> may_can_;
 
-    static void can_write_bytes(
+    static void can_write_flat_packet(
         hal::Can & can, 
-        const NodeId id, 
-        const FuncCode func_code,
-        const std::span<const uint8_t> bytes
+        const FlatPacket & flat_packet
     );
 
-    static void uart_write_bytes(
+    static void uart_write_flat_packet(
         hal::Uart & uart, 
-        const NodeId id, 
-        const FuncCode func_code,
-        const std::span<const uint8_t> bytes
+        const FlatPacket & flat_packet
     );
 };
 

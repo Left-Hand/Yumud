@@ -12,7 +12,7 @@
 namespace ymd::robots::dji::m3508{
 static constexpr uint16_t NUM_HIGHER_QUAD_CAN_ID = 0x200;
 static constexpr uint16_t NUM_LOWER_QUAD_CAN_ID = 0x1ff;
-static constexpr size_t NUM_MAX_SLAVES = 8;
+static constexpr size_t NUM_MAX_MOTORS = 8;
 
 struct [[nodiscard]] CurrentCode{
     using Self = CurrentCode;

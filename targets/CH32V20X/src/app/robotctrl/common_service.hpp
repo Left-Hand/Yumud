@@ -1,5 +1,6 @@
 #pragma once
 
+#include "hal/gpio/gpio.hpp"
 namespace ymd::robots{
 
 class LedService{

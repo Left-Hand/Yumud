@@ -58,7 +58,7 @@ public:
     using ZdtStepper = zdtmotor::ZdtStepper;
 
     struct Config{
-        ZdtStepper::HommingMode homming_mode;
+        zdtmotor::HommingMode homming_mode;
     };
 
     ZdtJointMotorActuator(

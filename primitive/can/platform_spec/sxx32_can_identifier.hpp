@@ -18,9 +18,7 @@ namespace details{
 
 struct [[nodiscard]]SXX32_CanIdentifier{
     using Self = SXX32_CanIdentifier;
-    static Self from_uninitialized() {
-        return Self{};
-    }
+
 
     /// @brief  构造函数
     /// @tparam ID id 类型(CanStdId/CanExtId)
@@ -43,6 +41,11 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     __attribute__((always_inline)) 
     static constexpr Self from_sxx32_reg_bits(uint32_t id_bits){
         return std::bit_cast<Self>(id_bits);
+    }
+
+    /// @brief 从未初始化值构造
+    static Self from_uninitialized() {
+        return Self{};
     }
 
     /// @brief 转换为原始32位bit
@@ -92,12 +95,14 @@ struct [[nodiscard]]SXX32_CanIdentifier{
         return Some(CanExtId::from_bits(full_id_));
     }
 
+    /// @brief 不顾帧格式，直接获取标准帧
     [[nodiscard]] constexpr CanStdId to_stdid() const {
         if(is_extended_ == true) [[unlikely]]
             __builtin_trap();
         return CanStdId::from_bits((full_id_ >> (29-11)));
     }
 
+    /// @brief 不顾帧格式，直接获取拓展帧
     [[nodiscard]] constexpr CanExtId to_extid() const {
         if(is_extended_ == false) [[unlikely]]
             __builtin_trap();
