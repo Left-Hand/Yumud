@@ -170,6 +170,7 @@ struct [[nodiscard]] LapPositionCode{
 };
 
 enum class CanAddr:uint8_t{};
+
 struct [[nodiscard]] FaultStatus{
     uint16_t :1;
     uint16_t stall:1;
@@ -371,7 +372,9 @@ struct [[nodiscard]] CommandHeadedDataField{
 static_assert(sizeof(CommandHeadedDataField) == 1 + BytesFiller::CAPACITY);
 
 
+enum class DeMsgError:uint8_t{
 
+};
 
 
 

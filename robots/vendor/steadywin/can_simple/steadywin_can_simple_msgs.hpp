@@ -4,11 +4,13 @@
 
 namespace ymd::robots::steadywin::can_simple{
 namespace req_msgs{
+
+
 struct [[nodiscard]] Heartbeat final{
     using Self = Heartbeat;
     static constexpr CommandKind COMMAND =  Command::Heartbeat;
 
-    AxisErrorFlags axis_error;
+    AxisFaultFlags axis_fault;
     AxisState axis_state;
 
 
@@ -37,35 +39,16 @@ struct [[nodiscard]] Estop final{
     static constexpr CommandKind COMMAND = Command::Estop;
 };
 
-struct [[nodiscard]] GetError final{
-    static constexpr CommandKind COMMAND = Command::GetMotorError;
-};
 
 // CMD ID: 0x003（电机→主机）
-struct [[nodiscard]] GetErrorReq final{
-    using Self = GetErrorReq;
+struct [[nodiscard]] GetError final{
+    using Self = GetError;
     static constexpr CommandKind COMMAND = Command::GetMotorError;
-    ErrorType type;
+    ErrorSource source;
 };
 
-// CMD ID: 0x003（电机←主机）
-struct [[nodiscard]] GetErrorResp final{
-    using Self = GetErrorResp;
-    static constexpr CommandKind COMMAND = Command::GetMotorError;
-    union{
-        uint64_t motor_exception;
-        uint32_t encoder_exception;
-        uint32_t controller_exception;
-        uint32_t system_exception;
-    };
-    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
-        return std::bit_cast<Self>(payload.u8x8());
-    }
-};
 
-static_assert(sizeof(GetErrorResp) == 8);   
-
-
+//ID 0x004
 struct [[nodiscard]] RxSdo final{
     using Self = RxSdo;
     static constexpr CommandKind COMMAND = Command::RxSdo;
@@ -75,6 +58,7 @@ struct [[nodiscard]] RxSdo final{
     uint32_t value;
 };
 
+//ID 0x005
 struct [[nodiscard]] TxSdo final{
     using Self = RxSdo;
     static constexpr CommandKind COMMAND = Command::TxSdo;
@@ -91,7 +75,6 @@ struct [[nodiscard]] SetAxisNodeId final{
     uint32_t node_id;
 };
 
-
 // CMD ID: 0x007（主机→电机）
 struct [[nodiscard]] SetAxisState final{
     using Self = SetAxisState;
@@ -99,7 +82,7 @@ struct [[nodiscard]] SetAxisState final{
     AxisState state;
 };
 
-
+//ID 0x008
 struct [[nodiscard]] MitControl final{
     
     using Self = MitControl;
@@ -181,12 +164,12 @@ struct [[nodiscard]] GetMotorCurrent final{
 struct [[nodiscard]] SetCotrollerMode final{
     using Self = SetCotrollerMode;
     static constexpr CommandKind COMMAND = Command::SetControllerMode;
-    ControlMode control_mode;
+    LoopMode loop_mode;
     InputMode input_mode;
 
     static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return Self {
-            .control_mode = std::bit_cast<ControlMode>(payload[0]),
+            .loop_mode = std::bit_cast<LoopMode>(payload[0]),
             .input_mode = std::bit_cast<InputMode>(payload[4])
         };
     }
@@ -194,7 +177,7 @@ struct [[nodiscard]] SetCotrollerMode final{
     constexpr hal::BxCanPayload to_can_payload() const {
         //stupid padding
         std::array<uint8_t, 8> bytes = {
-            std::bit_cast<uint8_t>(control_mode),
+            std::bit_cast<uint8_t>(loop_mode),
             0, 0, 0,
             std::bit_cast<uint8_t>(input_mode),
             0, 0, 0
@@ -221,6 +204,7 @@ struct [[nodiscard]] SetInputPosition final{
     }
 };
 
+//ID 0x00d
 struct [[nodiscard]] SetInputVelocity final{
     using Self = SetInputVelocity;
     static constexpr Command COMMAND = CommandKind{0x00d};
@@ -237,6 +221,7 @@ struct [[nodiscard]] SetInputVelocity final{
     }
 };
 
+//ID 0x00e
 struct [[nodiscard]] SetInputTorque final{
     using Self = SetInputTorque;
     static constexpr Command COMMAND = CommandKind{0x00e};
@@ -253,7 +238,7 @@ struct [[nodiscard]] SetInputTorque final{
     }
 };
 
-
+//ID 0x00f
 struct [[nodiscard]] SetLimits final{
     using Self = SetLimits;
     static constexpr Command COMMAND = CommandKind{0x00f};
@@ -269,11 +254,13 @@ struct [[nodiscard]] SetLimits final{
     }
 };
 
+//ID 0x010
 struct [[nodiscard]] StartAntiCogging final{
     using Self = StartAntiCogging;
     static constexpr Command COMMAND = CommandKind{0x010};
 };
 
+//ID 0x011
 struct [[nodiscard]] SetTrajVelLimit final{
     using Self = SetTrajVelLimit;
     static constexpr Command COMMAND = CommandKind{0x011};
@@ -290,6 +277,7 @@ struct [[nodiscard]] SetTrajVelLimit final{
     }
 };
 
+//ID 0x012
 struct [[nodiscard]] SetTrajAccelLimit final{
     using Self = SetTrajAccelLimit;
     static constexpr Command COMMAND = CommandKind{0x012};
@@ -307,6 +295,7 @@ struct [[nodiscard]] SetTrajAccelLimit final{
     }
 };
 
+//ID 0x013
 struct [[nodiscard]] SetTrajInertia final{
     using Self = SetTrajInertia;
     static constexpr Command COMMAND = CommandKind{0x013};
@@ -322,6 +311,7 @@ struct [[nodiscard]] SetTrajInertia final{
     }
 };
 
+//ID 0x014
 struct [[nodiscard]] GetIq final{
     using Self = GetIq;
     static constexpr Command COMMAND = CommandKind{0x014};
@@ -337,11 +327,13 @@ struct [[nodiscard]] GetIq final{
     }
 };
 
+//ID 0x016
 struct [[nodiscard]] Reboot final{
     using Self = Reboot;
     static constexpr Command COMMAND = CommandKind{0x016};
 };
 
+//ID 0x017
 struct [[nodiscard]] GetBusVoltageCurrent final{
     using Self = GetBusVoltageCurrent;
     static constexpr Command COMMAND = CommandKind{0x017};
@@ -356,12 +348,13 @@ struct [[nodiscard]] GetBusVoltageCurrent final{
     }
 };
 
-
+//ID 0x018
 struct [[nodiscard]] ClearErrors final{
     using Self = ClearErrors;
     static constexpr Command COMMAND = CommandKind{0x018};
 };
 
+//ID 0x019
 struct [[nodiscard]] SetLinearCount final{
     using Self = SetLinearCount;
     static constexpr Command COMMAND = CommandKind{0x019};
@@ -377,7 +370,7 @@ struct [[nodiscard]] SetLinearCount final{
     }
 };
 
-
+//ID 0x01a
 struct [[nodiscard]] SetPosGain final{
     using Self = SetPosGain;
     static constexpr Command COMMAND = CommandKind{0x01a};
@@ -393,7 +386,7 @@ struct [[nodiscard]] SetPosGain final{
     }
 };
 
-
+//ID 0x01b
 struct [[nodiscard]] SetVelGain final{
     using Self = SetVelGain;
     static constexpr Command COMMAND = CommandKind{0x01b};
@@ -409,6 +402,7 @@ struct [[nodiscard]] SetVelGain final{
     }
 };
 
+//ID 0x01c
 struct [[nodiscard]] SetTorques final{
     using Self = SetTorques;
     static constexpr Command COMMAND = CommandKind{0x01c};
@@ -424,6 +418,7 @@ struct [[nodiscard]] SetTorques final{
     }
 };
 
+//ID 0x01d
 struct [[nodiscard]] GetPowers final{
     using Self = GetPowers;
     static constexpr Command COMMAND = CommandKind{0x01d};
@@ -439,18 +434,38 @@ struct [[nodiscard]] GetPowers final{
     }
 };
 
+//ID 0x01e
 struct [[nodiscard]] DisableCan final{
     using Self = DisableCan;
     static constexpr Command COMMAND = CommandKind{0x01e};
 };
 
+//ID 0x01f
 struct [[nodiscard]] SaveConfig final{
     using Self = SaveConfig;
     static constexpr Command COMMAND = CommandKind{0x01f};
 };
 
+}
 
+namespace resp_msgs{
 
+// CMD ID: 0x003（电机←主机）
+struct [[nodiscard]] GetError final{
+    using Self = GetError;
+    static constexpr CommandKind COMMAND = Command::GetMotorError;
+    union{
+        uint64_t motor_exception;
+        uint32_t encoder_exception;
+        uint32_t controller_exception;
+        uint32_t system_exception;
+    };
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
+        return std::bit_cast<Self>(payload.u8x8());
+    }
+};
+
+static_assert(sizeof(GetError) == 8);   
 }
 
 #if 0

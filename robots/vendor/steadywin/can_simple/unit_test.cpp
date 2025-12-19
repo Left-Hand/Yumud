@@ -1,4 +1,5 @@
 #include "steadywin_can_simple_primitive.hpp"
+#include "steadywin_can_simple_msgs.hpp"
 
 using namespace ymd;
 using namespace robots::steadywin::can_simple;

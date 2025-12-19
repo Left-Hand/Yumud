@@ -18,7 +18,6 @@
 namespace ymd::robots::steadywin::can_simple{
 
 namespace primitive{
-using namespace ymd::hal;
 
 namespace mit{
 
@@ -77,8 +76,8 @@ private:
 };
 
 
-struct [[nodiscard]] AxisErrorFlags final{
-    using Self = AxisErrorFlags; 
+struct [[nodiscard]] AxisFaultFlags final{
+    using Self = AxisFaultFlags; 
     uint32_t invalid_state:1;
     uint32_t under_voltage:1;
     uint32_t over_voltage:1;
@@ -108,7 +107,7 @@ struct [[nodiscard]] AxisErrorFlags final{
 };
 
 
-static_assert(sizeof(AxisErrorFlags) == 4); 
+static_assert(sizeof(AxisFaultFlags) == 4); 
 
 struct [[nodiscard]] Flags final{ 
     // bit0：电机异常位（odrv0.axis0.motor.error 是否
@@ -133,30 +132,31 @@ struct [[nodiscard]] Flags final{
 static_assert(sizeof(Flags) == 1);  
 
 
-struct [[nodiscard]] EncoderErrorFlags final{
-    using Self = EncoderErrorFlags;
+struct [[nodiscard]] EncoderFaultFlags final{
+    using Self = EncoderFaultFlags;
     uint32_t unstable_gain:1;
     uint32_t cpr_out_of_range:1;
     uint32_t no_response:1;
     uint32_t unsupported_encoder_mode:1;
     uint32_t illegal_hall_state:1;
     uint32_t index_not_found_yet:1;
+    uint32_t :26;
 
     static constexpr Self from_bits(const uint32_t bits){
         return std::bit_cast<Self>(bits);
     } 
 };
 
-static_assert(sizeof(EncoderErrorFlags) == 4);
+static_assert(sizeof(EncoderFaultFlags) == 4);
 
-enum class [[nodiscard]] ErrorType:uint8_t{ 
+enum class [[nodiscard]] ErrorSource:uint8_t{ 
     Motor = 0,
     Encoder = 1,
     Controller = 3,
     System = 4,
 };
 
-static_assert(sizeof(ErrorType) == 1);
+static_assert(sizeof(ErrorSource) == 1);
 
 struct [[nodiscard]] FaultFlags final{
     using Self = FaultFlags;
@@ -164,15 +164,19 @@ struct [[nodiscard]] FaultFlags final{
     uint32_t phase_inductance_out_of_range:1;
     uint32_t adc_failed:1;
     uint32_t drv_fault:1;
+
     uint32_t control_deadline_missed:1;
     uint32_t not_implemented_motor_type:1;
     uint32_t brake_current_out_of_range:1;
     uint32_t modulation_magnitude:1;
+
     uint32_t brake_deadtime_violation:1;
     uint32_t unexpected_timer_callback:1;
     uint32_t current_sense_saturation:1;
     uint32_t inverter_over_temp:1;
+
     uint32_t current_unstable:1;
+    uint32_t :15;
 
     static constexpr Self from_bits(const uint32_t bits){
         return std::bit_cast<Self>(bits);
@@ -230,11 +234,11 @@ enum class [[nodiscard]] CommandKind:uint8_t{
     SaveConfig = 0x1f,
 };
 
-enum class [[nodiscard]] ControlMode:uint8_t {
-    VoltageControl = 0,
-    CurrentControl = 1,
-    VelocityControl = 2,
-    PositionControl = 3,
+enum class [[nodiscard]] LoopMode:uint8_t {
+    VoltageLoop = 0,
+    CurrentLoop = 1,
+    VelocityLoop = 2,
+    PositionLoop = 3,
 };
 
 enum class [[nodiscard]] InputMode:uint8_t{
@@ -268,68 +272,37 @@ struct [[nodiscard]] Command final{
     constexpr CommandKind kind() const{ return kind_; }
     static constexpr const char * err_to_str(const Kind kind){
         switch(kind){
-            case Kind::Undefined:
-                return "Undefined";
-            case Kind::Heartbeat:
-                return "Heartbeat";
-            case Kind::Estop:
-                return "Estop";
-            case Kind::GetMotorError:
-                return "GetMotorError";
-            case Kind::RxSdo:
-                return "RxSdo";
-            case Kind::TxSdo:
-                return "TxSdo";
-            case Kind::SetAxisNodeId:
-                return "SetAxisNodeId";
-            case Kind::SetAxisState:
-                return "SetAxisState";
-            case Kind::MitControl:
-                return "MitControl";
-            case Kind::GetEncoderEstimates:
-                return "GetEncoderEstimates";
-            case Kind::GetMotorCurrent:
-                return "GetMotorCurrent";
-            case Kind::SetControllerMode:
-                return "SetControllerMode";
-            case Kind::SetInputPosition:
-                return "SetInputPosition";
-            case Kind::SetInputVelocity:
-                return "SetInputVelocity";
-            case Kind::SetInputTorque:
-                return "SetInputTorque";
-            case Kind::SetLimits:
-                return "SetLimits";
-            case Kind::StartAnticogging:
-                return "StartAnticogging";
-            case Kind::SetTrajVelLimit:
-                return "SetTrajVelLimit";
-            case Kind::SetTrajAccelLimits:
-                return "SetTrajAccelLimits";
-            case Kind::SetTrajInertia:
-                return "SetTrajInertia";
-            case Kind::GetIq:
-                return "GetIq";
-            case Kind::Reboot:
-                return "Reboot";
-            case Kind::GetBusVoltageCurrent:
-                return "GetBusVoltageCurrent";
-            case Kind::ClearErrors:
-                return "ClearErrors";
-            case Kind::SetLinearCount:
-                return "SetLinearCount";
-            case Kind::SetPosGain:
-                return "SetPosGain";
-            case Kind::SetVelGain:
-                return "SetVelGain";
-            case Kind::SetTorques:
-                return "SetTorques";
-            case Kind::GetPowers:
-                return "GetPowers";
-            case Kind::DisableCan:
-                return "DisableCan";
-            case Kind::SaveConfig:
-                return "SaveConfig";
+            case Kind::Undefined:   return "Undefined";
+            case Kind::Heartbeat:   return "Heartbeat";
+            case Kind::Estop:   return "Estop";
+            case Kind::GetMotorError:   return "GetMotorError";
+            case Kind::RxSdo:   return "RxSdo";
+            case Kind::TxSdo:   return "TxSdo";
+            case Kind::SetAxisNodeId:   return "SetAxisNodeId";
+            case Kind::SetAxisState:    return "SetAxisState";
+            case Kind::MitControl:  return "MitControl";
+            case Kind::GetEncoderEstimates: return "GetEncoderEstimates";
+            case Kind::GetMotorCurrent: return "GetMotorCurrent";
+            case Kind::SetControllerMode:   return "SetControllerMode";
+            case Kind::SetInputPosition:    return "SetInputPosition";
+            case Kind::SetInputVelocity:    return "SetInputVelocity";
+            case Kind::SetInputTorque:  return "SetInputTorque";
+            case Kind::SetLimits:   return "SetLimits";
+            case Kind::StartAnticogging:    return "StartAnticogging";
+            case Kind::SetTrajVelLimit: return "SetTrajVelLimit";
+            case Kind::SetTrajAccelLimits:  return "SetTrajAccelLimits";
+            case Kind::SetTrajInertia:  return "SetTrajInertia";
+            case Kind::GetIq:   return "GetIq";
+            case Kind::Reboot:  return "Reboot";
+            case Kind::GetBusVoltageCurrent:    return "GetBusVoltageCurrent";
+            case Kind::ClearErrors: return "ClearErrors";
+            case Kind::SetLinearCount:  return "SetLinearCount";
+            case Kind::SetPosGain:  return "SetPosGain";
+            case Kind::SetVelGain:  return "SetVelGain";
+            case Kind::SetTorques:  return "SetTorques";
+            case Kind::GetPowers:   return "GetPowers";
+            case Kind::DisableCan:  return "DisableCan";
+            case Kind::SaveConfig:  return "SaveConfig";
         }
         return nullptr;
     }
@@ -364,11 +337,6 @@ struct [[nodiscard]] FrameId final{
     }
 
     constexpr hal::CanStdId to_stdid() const { 
-        // return hal::CanStdId::from_u11(
-        //     static_cast<uint16_t>((axis_id.to_bits() & 0b111111) << 5) | 
-        //     (static_cast<uint16_t>(command.kind()) & 0b11111))
-        // ;
-
         return hal::CanStdId::from_u11(
             axis_id.to_b6().connect(command.to_b5()).to_bits()
         );
