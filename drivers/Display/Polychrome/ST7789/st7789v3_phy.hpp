@@ -49,7 +49,7 @@ struct ST7789V3_Phy final:
     };
 
     explicit ST7789V3_Phy(
-        Some<hal::SpiHw *> spi,
+        Some<hal::Spi *> spi,
         const hal::SpiSlaveRank rank,
         Option<hal::Gpio &> may_nrst_gpio = None
     ):  
@@ -133,7 +133,7 @@ struct ST7789V3_Phy final:
         return Ok();
     }
 private:
-    hal::SpiHw & spi_;
+    hal::Spi & spi_;
     hal::SpiSlaveRank rank_;
 
     Option<hal::Gpio &> may_nrst_pin_;

@@ -16,7 +16,7 @@ public:
     using IResult = Result<void, drivers::DisplayerError>;
 
     explicit ST7789_Phy(
-        Some<hal::SpiHw *> spi,
+        Some<hal::Spi *> spi,
         const hal::SpiSlaveRank rank,
         Some<hal::Gpio *> dc_gpio, 
         Option<hal::Gpio &> res_gpio = None
@@ -71,7 +71,7 @@ public:
         return spi_fast_write_repeat<uint16_t>(data, len);
     }
 private:
-    hal::SpiHw & spi_;
+    hal::Spi & spi_;
     hal::SpiSlaveRank rank_;
 
     hal::Gpio & dc_pin_;

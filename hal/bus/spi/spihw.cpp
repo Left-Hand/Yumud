@@ -144,7 +144,7 @@ DEF_SPI_BIND_PIN_LAYOUTER(hwcs)
 
 }
 
-void SpiHw::enable_rcc(const Enable en){
+void Spi::enable_rcc(const Enable en){
     switch(reinterpret_cast<size_t>(inst_)){
         #ifdef SPI1_PRESENT
         case SPI1_BASE:
@@ -165,7 +165,7 @@ void SpiHw::enable_rcc(const Enable en){
     __builtin_trap();
 }
 
-void SpiHw::set_remap(const SpiRemap remap){
+void Spi::set_remap(const SpiRemap remap){
     switch(reinterpret_cast<size_t>(inst_)){
         #ifdef SPI1_PRESENT
         case SPI1_BASE:
@@ -199,7 +199,7 @@ void SpiHw::set_remap(const SpiRemap remap){
 
 
 
-void SpiHw::alter_to_pins(const SpiRemap remap){
+void Spi::alter_to_pins(const SpiRemap remap){
     spi_to_mosi_gpio(inst_, remap).afpp();
 
     spi_to_miso_gpio(inst_, remap).inflt();
@@ -211,7 +211,7 @@ void SpiHw::alter_to_pins(const SpiRemap remap){
     }
 }
 
-void SpiHw::enable_hw_cs(const Enable en){
+void Spi::enable_hw_cs(const Enable en){
     #if 0
     auto && cs_gpio = spi_to_hwcs_gpio(inst_, remap);
     cs_gpio.set_high();
@@ -228,7 +228,7 @@ void SpiHw::enable_hw_cs(const Enable en){
     #endif
 }
 
-uint32_t SpiHw::get_periph_clk_freq() const {
+uint32_t Spi::get_periph_clk_freq() const {
     switch(reinterpret_cast<size_t>(inst_)) {
         #ifdef SPI1_PRESENT
         case SPI1_BASE:
@@ -251,7 +251,7 @@ uint32_t SpiHw::get_periph_clk_freq() const {
     __builtin_trap();
 }
 
-HalResult SpiHw::init(const SpiConfig & cfg){
+HalResult Spi::init(const SpiConfig & cfg){
 	enable_rcc(EN);
     const auto remap = cfg.remap;
 
@@ -303,7 +303,7 @@ HalResult SpiHw::init(const SpiConfig & cfg){
 }
 
 
-HalResult SpiHw::set_wordsize(const SpiWordSize wordsize){
+HalResult Spi::set_wordsize(const SpiWordSize wordsize){
     switch(wordsize){
         case SpiWordSize::OneByte:
             inst_->enable_dualbyte(DISEN);
@@ -319,7 +319,7 @@ HalResult SpiHw::set_wordsize(const SpiWordSize wordsize){
 
 
 
-HalResult SpiHw::set_baudrate(const SpiBaudrate baud){
+HalResult Spi::set_baudrate(const SpiBaudrate baud){
     if(baud.is<SpiPrescaler>()){
         return set_prescaler(baud.unwrap_as<SpiPrescaler>());
     }else if(baud.is<LeastFreq>()){
@@ -338,54 +338,57 @@ HalResult SpiHw::set_baudrate(const SpiBaudrate baud){
     __builtin_trap();
 }
 
-HalResult SpiHw::set_prescaler(const SpiPrescaler prescaler){
+HalResult Spi::set_prescaler(const SpiPrescaler prescaler){
     inst_ -> CTLR1.BR = std::bit_cast<uint8_t>(prescaler.kind());
     return HalResult::Ok();
 }
 
 
-HalResult SpiHw::set_bitorder(const BitOrder bitorder){
+HalResult Spi::set_bitorder(const BitOrder bitorder){
     inst_->set_bitorder(bitorder);
     return HalResult::Ok();
 }
 
-void SpiHw::accept_interrupt(const SpiI2sIT it){
+void Spi::accept_interrupt(const SpiI2sIT it){
 
 }
 
-void SpiHw::deinit(){
+void Spi::deinit(){
 	enable_rcc(DISEN);
 }
 
 namespace ymd::hal{
 #ifdef SPI1_PRESENT
-SpiHw spi1{ral::SPI1_Inst};
+Spi spi1{ral::SPI1_Inst};
 #endif
 
 #ifdef SPI2_PRESENT
-SpiHw spi2{ral::SPI2_Inst};
+Spi spi2{ral::SPI2_Inst};
 #endif
 
 #ifdef SPI3_PRESENT
-SpiHw spi3{ral::SPI3_Inst};
+Spi spi3{ral::SPI3_Inst};
 #endif
 }
 
 #ifdef SPI1_PRESENT
 void SPI1_IRQHandler(void){
-    
+    //TODO
+    __builtin_trap();
 }
 
 #endif
 
 #ifdef SPI2_PRESENT
 void SPI2_IRQHandler(void){
-    
+    //TODO
+    __builtin_trap();
 }
 #endif
 
 #ifdef SPI3_PRESENT
 void SPI3_IRQHandler(void){
-    
+    //TODO
+    __builtin_trap();
 }
 #endif

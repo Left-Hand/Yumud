@@ -10,7 +10,7 @@
 
 namespace ymd::hal{
 
-class SpiHw;
+class Spi;
 class SpiSw;
 
 

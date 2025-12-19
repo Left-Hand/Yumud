@@ -28,15 +28,15 @@ class Gpio;
 
 
 
-class SpiHw final:public SpiBase{
+class Spi final:public SpiBase{
 public:
     using Callback = std::function<void(SpiEvent)>;
 
-    explicit SpiHw(ral::SPI_Def * inst):
+    explicit Spi(ral::SPI_Def * inst):
         inst_(inst){;}
 
-    SpiHw(const SpiHw & other) = delete;
-    SpiHw(SpiHw && other) = delete;
+    Spi(const Spi & other) = delete;
+    Spi(Spi && other) = delete;
 
     HalResult init(const SpiConfig & cfg);
     void deinit();
@@ -113,15 +113,15 @@ private:
 
 
 #ifdef SPI1_PRESENT
-extern SpiHw spi1;
+extern Spi spi1;
 #endif
 
 #ifdef SPI2_PRESENT
-extern SpiHw spi2;
+extern Spi spi2;
 #endif
 
 #ifdef SPI3_PRESENT
-extern SpiHw spi3;
+extern Spi spi3;
 #endif
 
 }

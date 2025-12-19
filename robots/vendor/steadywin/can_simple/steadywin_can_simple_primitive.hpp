@@ -11,7 +11,9 @@
 
 // 伺泰威对Odrive通讯消息进行了魔改 不能直接等效于Odrive
 // 参考Odrive的源码，所有Can报文的数据载荷都是8字节
-// https://docs.rs/odrive-cansimple/latest/src/odrive_cansimple/enumerations/axis_error.rs.html
+
+// 参考代码
+//      https://docs.rs/odrive-cansimple/latest/src/odrive_cansimple/enumerations/axis_error.rs.html
 
 namespace ymd::robots::steadywin::can_simple{
 
@@ -52,7 +54,7 @@ DEF_U16_STRONG_TYPE_GRADATION(MitTorqueCode_u12,    from_nm,
 
 }
 
-struct [[nodiscard]] AxisId{
+struct [[nodiscard]] AxisId final{
     using Self = AxisId;
 
     static constexpr Self from_bits(const uint8_t bits){
@@ -75,7 +77,7 @@ private:
 };
 
 
-struct [[nodiscard]] AxisErrorFlags{
+struct [[nodiscard]] AxisErrorFlags final{
     using Self = AxisErrorFlags; 
     uint32_t invalid_state:1;
     uint32_t under_voltage:1;
@@ -108,7 +110,7 @@ struct [[nodiscard]] AxisErrorFlags{
 
 static_assert(sizeof(AxisErrorFlags) == 4); 
 
-struct Flags{
+struct [[nodiscard]] Flags final{ 
     // bit0：电机异常位（odrv0.axis0.motor.error 是否
     // 为 0）
     // bit1：编码器异常位（odrv0.axis0.encoder.error
@@ -131,7 +133,7 @@ struct Flags{
 static_assert(sizeof(Flags) == 1);  
 
 
-struct [[nodiscard]] EncoderErrorFlags{
+struct [[nodiscard]] EncoderErrorFlags final{
     using Self = EncoderErrorFlags;
     uint32_t unstable_gain:1;
     uint32_t cpr_out_of_range:1;
@@ -156,8 +158,8 @@ enum class [[nodiscard]] ErrorType:uint8_t{
 
 static_assert(sizeof(ErrorType) == 1);
 
-struct [[nodiscard]] MotorErrorFlags{
-    using Self = MotorErrorFlags;
+struct [[nodiscard]] FaultFlags final{
+    using Self = FaultFlags;
     uint32_t phase_resistance_out_of_range:1;
     uint32_t phase_inductance_out_of_range:1;
     uint32_t adc_failed:1;
@@ -177,7 +179,7 @@ struct [[nodiscard]] MotorErrorFlags{
     }
 };
 
-static_assert(sizeof(MotorErrorFlags) == 4); 
+static_assert(sizeof(FaultFlags) == 4); 
 
 enum class [[nodiscard]] AxisState:uint8_t{
     Undefined = 0,
@@ -236,7 +238,7 @@ enum class [[nodiscard]] ControlMode:uint8_t {
 };
 
 enum class [[nodiscard]] InputMode:uint8_t{
-    Inactive,
+    Inactive = 0,
     PassThrough,
     VelocityRamp,
     PositionFilter,
@@ -247,7 +249,7 @@ enum class [[nodiscard]] InputMode:uint8_t{
 };
 
 
-struct [[nodiscard]] Command{
+struct [[nodiscard]] Command final{
     using Kind = CommandKind;
     constexpr Command(const Kind kind) : kind_(kind){;}
 
@@ -349,7 +351,7 @@ private:
     }
 };
 
-struct [[nodiscard]] FrameId {
+struct [[nodiscard]] FrameId final{
     AxisId axis_id;
     Command command;
 

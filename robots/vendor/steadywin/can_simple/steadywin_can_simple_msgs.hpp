@@ -4,9 +4,10 @@
 
 namespace ymd::robots::steadywin::can_simple{
 namespace req_msgs{
-struct [[nodiscard]] Heartbeat{
+struct [[nodiscard]] Heartbeat final{
     using Self = Heartbeat;
     static constexpr CommandKind COMMAND =  Command::Heartbeat;
+
     AxisErrorFlags axis_error;
     AxisState axis_state;
 
@@ -19,11 +20,11 @@ struct [[nodiscard]] Heartbeat{
     // 失，即通信不稳
     uint8_t life;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
@@ -32,23 +33,23 @@ static_assert(sizeof(Heartbeat) == 8);
 
 // CMD ID: 0x002（主机→电机）⽆参数⽆数据。
 // 此指令会导致电机紧急停机，并报 ESTOP_REQUESTED 异常
-struct [[nodiscard]] Estop{
+struct [[nodiscard]] Estop final{
     static constexpr CommandKind COMMAND = Command::Estop;
 };
 
-struct [[nodiscard]] GetError{
+struct [[nodiscard]] GetError final{
     static constexpr CommandKind COMMAND = Command::GetMotorError;
 };
 
 // CMD ID: 0x003（电机→主机）
-struct [[nodiscard]] GetErrorReq{
+struct [[nodiscard]] GetErrorReq final{
     using Self = GetErrorReq;
     static constexpr CommandKind COMMAND = Command::GetMotorError;
     ErrorType type;
 };
 
 // CMD ID: 0x003（电机←主机）
-struct [[nodiscard]] GetErrorResp{
+struct [[nodiscard]] GetErrorResp final{
     using Self = GetErrorResp;
     static constexpr CommandKind COMMAND = Command::GetMotorError;
     union{
@@ -57,7 +58,7 @@ struct [[nodiscard]] GetErrorResp{
         uint32_t controller_exception;
         uint32_t system_exception;
     };
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 };
@@ -65,12 +66,7 @@ struct [[nodiscard]] GetErrorResp{
 static_assert(sizeof(GetErrorResp) == 8);   
 
 
-// struct [[nodiscard]] EncoderCount{
-//     static constexpr CommandKind COMMAND = Command::GetEncoderCount;
-//     int32_t shadow_count;
-//     int32_t cpr_count;
-// };
-struct [[nodiscard]] RxSdo{
+struct [[nodiscard]] RxSdo final{
     using Self = RxSdo;
     static constexpr CommandKind COMMAND = Command::RxSdo;
     bool is_read;
@@ -79,7 +75,7 @@ struct [[nodiscard]] RxSdo{
     uint32_t value;
 };
 
-struct [[nodiscard]] TxSdo{
+struct [[nodiscard]] TxSdo final{
     using Self = RxSdo;
     static constexpr CommandKind COMMAND = Command::TxSdo;
     bool is_read;
@@ -89,7 +85,7 @@ struct [[nodiscard]] TxSdo{
 };
 
 // CMD ID: 0x006（主机→电机）
-struct [[nodiscard]] SetAxisNodeId{
+struct [[nodiscard]] SetAxisNodeId final{
     using Self = SetAxisNodeId;
     static constexpr CommandKind COMMAND = Command::SetAxisNodeId;
     uint32_t node_id;
@@ -97,14 +93,14 @@ struct [[nodiscard]] SetAxisNodeId{
 
 
 // CMD ID: 0x007（主机→电机）
-struct [[nodiscard]] SetAxisState{
+struct [[nodiscard]] SetAxisState final{
     using Self = SetAxisState;
     static constexpr CommandKind COMMAND = Command::SetAxisState;
     AxisState state;
 };
 
 
-struct [[nodiscard]] MitControl{
+struct [[nodiscard]] MitControl final{
     
     using Self = MitControl;
     static constexpr CommandKind COMMAND = Command::MitControl;
@@ -115,7 +111,7 @@ struct [[nodiscard]] MitControl{
     mit::MitKdCode_u12 kd;
     mit::MitTorqueCode_u12 torque;
 
-    constexpr hal::BxCanPayload to_payload(){
+    constexpr hal::BxCanPayload to_can_payload(){
         std::array<uint8_t, 8> bytes;
         bytes[0] = static_cast<uint8_t>(position.to_bits() >> 8);
         bytes[1] = static_cast<uint8_t>(position.to_bits() & 0xff);
@@ -150,52 +146,52 @@ struct [[nodiscard]] MitControl{
 };
 
 //ID 0x009
-struct [[nodiscard]] GetEncoderEstimates{
+struct [[nodiscard]] GetEncoderEstimates final{
     using Self = GetEncoderEstimates;
     static constexpr CommandKind COMMAND = Command::GetEncoderEstimates;
     math::fp32 position;
     math::fp32 velocity;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
 //ID 0x00A
-struct [[nodiscard]] GetMotorCurrent{
+struct [[nodiscard]] GetMotorCurrent final{
     using Self = GetMotorCurrent;
     static constexpr CommandKind COMMAND = Command::GetMotorCurrent;
     int32_t shadow_count;
     int32_t count_n_cpr;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
 //ID 0x00B
-struct [[nodiscard]] SetCotrollerMode{
+struct [[nodiscard]] SetCotrollerMode final{
     using Self = SetCotrollerMode;
     static constexpr CommandKind COMMAND = Command::SetControllerMode;
     ControlMode control_mode;
     InputMode input_mode;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return Self {
             .control_mode = std::bit_cast<ControlMode>(payload[0]),
             .input_mode = std::bit_cast<InputMode>(payload[4])
         };
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         //stupid padding
         std::array<uint8_t, 8> bytes = {
             std::bit_cast<uint8_t>(control_mode),
@@ -208,7 +204,7 @@ struct [[nodiscard]] SetCotrollerMode{
 };
 
 //ID 0x00C
-struct [[nodiscard]] SetInputPosition{ 
+struct [[nodiscard]] SetInputPosition final{
     using Self = SetInputPosition;
     static constexpr Command COMMAND = CommandKind{0x00c};
 
@@ -216,85 +212,85 @@ struct [[nodiscard]] SetInputPosition{
     int16_t vel_ff;
     int16_t torque_ff;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
-struct [[nodiscard]] SetInputVelocity{ 
+struct [[nodiscard]] SetInputVelocity final{
     using Self = SetInputVelocity;
     static constexpr Command COMMAND = CommandKind{0x00d};
 
     math::fp32 vel_ff;
     math::fp32 torque_ff;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
-struct [[nodiscard]] SetInputTorque{ 
+struct [[nodiscard]] SetInputTorque final{
     using Self = SetInputTorque;
     static constexpr Command COMMAND = CommandKind{0x00e};
 
     math::fp32 torque_ff;
     uint32_t __padding__ = 0;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
 
-struct [[nodiscard]] SetLimits{
+struct [[nodiscard]] SetLimits final{
     using Self = SetLimits;
     static constexpr Command COMMAND = CommandKind{0x00f};
 
     math::fp32 velocity_limit;
     math::fp32 current_limit;
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
-struct [[nodiscard]] StartAntiCogging{
+struct [[nodiscard]] StartAntiCogging final{
     using Self = StartAntiCogging;
     static constexpr Command COMMAND = CommandKind{0x010};
 };
 
-struct [[nodiscard]] SetTrajVelLimit{
+struct [[nodiscard]] SetTrajVelLimit final{
     using Self = SetTrajVelLimit;
     static constexpr Command COMMAND = CommandKind{0x011};
 
     math::fp32 traj_vel_limit;
     uint32_t __padding__ = 0;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
-struct [[nodiscard]] SetTrajAccelLimit{ 
+struct [[nodiscard]] SetTrajAccelLimit final{
     using Self = SetTrajAccelLimit;
     static constexpr Command COMMAND = CommandKind{0x012};
 
@@ -302,153 +298,153 @@ struct [[nodiscard]] SetTrajAccelLimit{
     math::fp32 traj_decel_limit;
     
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
-struct [[nodiscard]] SetTrajInertia{
+struct [[nodiscard]] SetTrajInertia final{
     using Self = SetTrajInertia;
     static constexpr Command COMMAND = CommandKind{0x013};
     math::fp32 traj_inertia;//惯量
     uint32_t __padding__ = 0;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
-struct [[nodiscard]] GetIq{ 
+struct [[nodiscard]] GetIq final{
     using Self = GetIq;
     static constexpr Command COMMAND = CommandKind{0x014};
     math::fp32 id_setpoint;
     math::fp32 iq_measured;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
-struct [[nodiscard]] Reboot{ 
+struct [[nodiscard]] Reboot final{
     using Self = Reboot;
     static constexpr Command COMMAND = CommandKind{0x016};
 };
 
-struct [[nodiscard]] GetBusVoltageCurrent{
+struct [[nodiscard]] GetBusVoltageCurrent final{
     using Self = GetBusVoltageCurrent;
     static constexpr Command COMMAND = CommandKind{0x017};
     math::fp32 bus_voltage;
     math::fp32 bus_current;
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
 
-struct [[nodiscard]] ClearErrors{ 
+struct [[nodiscard]] ClearErrors final{
     using Self = ClearErrors;
     static constexpr Command COMMAND = CommandKind{0x018};
 };
 
-struct [[nodiscard]] SetLinearCount{
+struct [[nodiscard]] SetLinearCount final{
     using Self = SetLinearCount;
     static constexpr Command COMMAND = CommandKind{0x019};
     int32_t linear_count;
     uint32_t __padding__ = 0;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
 
-struct [[nodiscard]] SetPosGain{
+struct [[nodiscard]] SetPosGain final{
     using Self = SetPosGain;
     static constexpr Command COMMAND = CommandKind{0x01a};
     math::fp32 pos_gain;
     uint32_t __padding__ = 0;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
 
-struct [[nodiscard]] SetVelGain{
+struct [[nodiscard]] SetVelGain final{
     using Self = SetVelGain;
     static constexpr Command COMMAND = CommandKind{0x01b};
     math::fp32 vel_gain;
     math::fp32 vel_integrator_gain;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
-struct [[nodiscard]] SetTorques{
+struct [[nodiscard]] SetTorques final{
     using Self = SetTorques;
     static constexpr Command COMMAND = CommandKind{0x01c};
     math::fp32 torque_setpoint;
     math::fp32 torque;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
-struct [[nodiscard]] GetPowers{
+struct [[nodiscard]] GetPowers final{
     using Self = GetPowers;
     static constexpr Command COMMAND = CommandKind{0x01d};
     math::fp32 electrical_power;
     math::fp32 mechanical_power;
 
-    static constexpr Self form_payload(const hal::BxCanPayload & payload){
+    static constexpr Self form_can_payload(const hal::BxCanPayload & payload){
         return std::bit_cast<Self>(payload.u8x8());
     }
 
-    constexpr hal::BxCanPayload to_payload() const {
+    constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
 
-struct [[nodiscard]] DisableCan{
+struct [[nodiscard]] DisableCan final{
     using Self = DisableCan;
     static constexpr Command COMMAND = CommandKind{0x01e};
 };
 
-struct [[nodiscard]] SaveConfig{
+struct [[nodiscard]] SaveConfig final{
     using Self = SaveConfig;
     static constexpr Command COMMAND = CommandKind{0x01f};
 };
@@ -483,6 +479,11 @@ struct [[nodiscard]] Event{
 };
 
 
+// struct [[nodiscard]] EncoderCount{
+//     static constexpr CommandKind COMMAND = Command::GetEncoderCount;
+//     int32_t shadow_count;
+//     int32_t cpr_count;
+// };
 #endif
 
 }

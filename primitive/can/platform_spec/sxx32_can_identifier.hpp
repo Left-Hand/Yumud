@@ -39,8 +39,8 @@ struct [[nodiscard]]SXX32_CanIdentifier{
 
     /// @brief 从原始32位bit构造
     __attribute__((always_inline)) 
-    static constexpr Self from_sxx32_reg_bits(uint32_t id_bits){
-        return std::bit_cast<Self>(id_bits);
+    static constexpr Self from_sxx32_reg_bits(uint32_t bits){
+        return std::bit_cast<Self>(bits);
     }
 
     /// @brief 从未初始化值构造
