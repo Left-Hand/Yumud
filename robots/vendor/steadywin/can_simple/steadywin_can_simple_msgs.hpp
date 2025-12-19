@@ -6,32 +6,6 @@ namespace ymd::robots::steadywin::can_simple{
 namespace req_msgs{
 
 
-struct [[nodiscard]] Heartbeat final{
-    using Self = Heartbeat;
-    static constexpr CommandKind COMMAND =  Command::Heartbeat;
-
-    AxisFaultFlags axis_fault_flags;
-    AxisState axis_state;
-
-
-    Flags axis_flags;
-    uint8_t __resv__;
-
-    // 周期消息的生命值，每一个⼼跳消息加 1，范围
-    // 0-255，如果此生命值不连续，表示⼼跳消息丢
-    // 失，即通信不稳
-    uint8_t life;
-
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
-    }
-};
-
-static_assert(sizeof(Heartbeat) == 8);
 
 // CMD ID: 0x002（主机→电机）⽆参数⽆数据。
 // 此指令会导致电机紧急停机，并报 ESTOP_REQUESTED 异常
@@ -39,14 +13,16 @@ struct [[nodiscard]] Estop final{
     static constexpr CommandKind COMMAND = Command::Estop;
 };
 
-
-// CMD ID: 0x003（电机→主机）
+// CMD ID: 0x003
 struct [[nodiscard]] GetError final{
     using Self = GetError;
     static constexpr CommandKind COMMAND = Command::GetMotorError;
     ErrorSource source;
-};
 
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        bytes[0] = static_cast<uint8_t>(source);
+    }
+};
 
 //ID 0x004
 struct [[nodiscard]] RxSdo final{
@@ -72,7 +48,12 @@ struct [[nodiscard]] TxSdo final{
 struct [[nodiscard]] SetAxisNodeId final{
     using Self = SetAxisNodeId;
     static constexpr CommandKind COMMAND = Command::SetAxisNodeId;
-    uint32_t node_id;
+    uint32_t axis_node_id;
+
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_le_u32(axis_node_id);
+    }
 };
 
 // CMD ID: 0x007（主机→电机）
@@ -80,6 +61,10 @@ struct [[nodiscard]] SetAxisState final{
     using Self = SetAxisState;
     static constexpr CommandKind COMMAND = Command::SetAxisState;
     AxisState state;
+
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        bytes[0] = static_cast<uint8_t>(state);
+    }
 };
 
 //ID 0x008
@@ -94,8 +79,7 @@ struct [[nodiscard]] MitControl final{
     mit::MitKdCode_u12 kd;
     mit::MitTorqueCode_u12 torque;
 
-    constexpr hal::BxCanPayload to_can_payload(){
-        std::array<uint8_t, 8> bytes;
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes){
         bytes[0] = static_cast<uint8_t>(position.to_bits() >> 8);
         bytes[1] = static_cast<uint8_t>(position.to_bits() & 0xff);
         bytes[2] = static_cast<uint8_t>(speed.to_bits() >> 4);
@@ -104,10 +88,9 @@ struct [[nodiscard]] MitControl final{
         bytes[5] = static_cast<uint8_t>(kd.to_bits() >> 4);
         bytes[6] = static_cast<uint8_t>(((kd.to_bits() & 0xf) << 4) | ((torque.to_bits() >> 8)));
         bytes[7] = static_cast<uint8_t>(torque.to_bits() & 0xf);
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(bytes));
     }
 
-    constexpr Self from_bytes(std::span<const uint8_t, 8> bytes) const {
+    constexpr Self try_from_bytes(std::span<const uint8_t, 8> bytes) const {
         const uint16_t position_bits = 
             (bytes[0] << 8) | bytes[1];
         const uint16_t speed_bits = 
@@ -128,22 +111,8 @@ struct [[nodiscard]] MitControl final{
     };
 };
 
-//ID 0x009
-struct [[nodiscard]] GetEncoderEstimates final{
-    using Self = GetEncoderEstimates;
-    static constexpr CommandKind COMMAND = Command::GetEncoderEstimates;
-    math::fp32 position;
-    math::fp32 velocity;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
-    }
-};
-
+#if 0
 //ID 0x00A
 struct [[nodiscard]] GetMotorCurrent final{
     using Self = GetMotorCurrent;
@@ -159,6 +128,7 @@ struct [[nodiscard]] GetMotorCurrent final{
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
 };
+#endif
 
 //ID 0x00B
 struct [[nodiscard]] SetCotrollerMode final{
@@ -174,15 +144,11 @@ struct [[nodiscard]] SetCotrollerMode final{
         };
     }
 
-    constexpr hal::BxCanPayload to_can_payload() const {
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
         //stupid padding
-        std::array<uint8_t, 8> bytes = {
-            std::bit_cast<uint8_t>(loop_mode),
-            0, 0, 0,
-            std::bit_cast<uint8_t>(input_mode),
-            0, 0, 0
-        };
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(bytes));
+        std::fill_n(bytes.begin(), 8, 0);
+        bytes[0] = std::bit_cast<uint8_t>(loop_mode);
+        bytes[4] = std::bit_cast<uint8_t>(input_mode);
     }
 };
 
@@ -195,12 +161,15 @@ struct [[nodiscard]] SetInputPosition final{
     int16_t vel_ff;
     int16_t torque_ff;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
+    // static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
+    //     return std::bit_cast<Self>(can_payload.u8x8());
+    // }
 
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(input_position);
+        filler.push_le_i16(vel_ff);
+        filler.push_le_i16(torque_ff);
     }
 };
 
@@ -212,12 +181,10 @@ struct [[nodiscard]] SetInputVelocity final{
     math::fp32 vel_ff;
     math::fp32 torque_ff;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(vel_ff);
+        filler.push_fp32(torque_ff);
     }
 };
 
@@ -227,14 +194,10 @@ struct [[nodiscard]] SetInputTorque final{
     static constexpr Command COMMAND = CommandKind{0x00e};
 
     math::fp32 torque_ff;
-    uint32_t __padding__ = 0;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(torque_ff);
     }
 };
 
@@ -245,12 +208,10 @@ struct [[nodiscard]] SetLimits final{
 
     math::fp32 velocity_limit;
     math::fp32 current_limit;
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(velocity_limit);
+        filler.push_fp32(current_limit);
     }
 };
 
@@ -266,14 +227,10 @@ struct [[nodiscard]] SetTrajVelLimit final{
     static constexpr Command COMMAND = CommandKind{0x011};
 
     math::fp32 traj_vel_limit;
-    uint32_t __padding__ = 0;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(traj_vel_limit);
     }
 };
 
@@ -286,12 +243,10 @@ struct [[nodiscard]] SetTrajAccelLimit final{
     math::fp32 traj_decel_limit;
     
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(traj_accel_limit);
+        filler.push_fp32(traj_decel_limit);
     }
 };
 
@@ -300,14 +255,10 @@ struct [[nodiscard]] SetTrajInertia final{
     using Self = SetTrajInertia;
     static constexpr Command COMMAND = CommandKind{0x013};
     math::fp32 traj_inertia;//惯量
-    uint32_t __padding__ = 0;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(traj_inertia);
     }
 };
 
@@ -318,12 +269,10 @@ struct [[nodiscard]] GetIq final{
     math::fp32 id_setpoint;
     math::fp32 iq_measured;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(id_setpoint);
+        filler.push_fp32(iq_measured);
     }
 };
 
@@ -339,12 +288,10 @@ struct [[nodiscard]] GetBusVoltageCurrent final{
     static constexpr Command COMMAND = CommandKind{0x017};
     math::fp32 bus_voltage;
     math::fp32 bus_current;
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(bus_voltage);
+        filler.push_fp32(bus_current);
     }
 };
 
@@ -359,14 +306,10 @@ struct [[nodiscard]] SetLinearCount final{
     using Self = SetLinearCount;
     static constexpr Command COMMAND = CommandKind{0x019};
     int32_t linear_count;
-    uint32_t __padding__ = 0;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_le_i32(linear_count);
     }
 };
 
@@ -375,14 +318,10 @@ struct [[nodiscard]] SetPosGain final{
     using Self = SetPosGain;
     static constexpr Command COMMAND = CommandKind{0x01a};
     math::fp32 pos_gain;
-    uint32_t __padding__ = 0;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(pos_gain);
     }
 };
 
@@ -393,12 +332,10 @@ struct [[nodiscard]] SetVelGain final{
     math::fp32 vel_gain;
     math::fp32 vel_integrator_gain;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(vel_gain);
+        filler.push_fp32(vel_integrator_gain);
     }
 };
 
@@ -407,14 +344,12 @@ struct [[nodiscard]] SetTorques final{
     using Self = SetTorques;
     static constexpr Command COMMAND = CommandKind{0x01c};
     math::fp32 torque_setpoint;
-    math::fp32 torque;
+    math::fp32 torque_measured;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(torque_setpoint);
+        filler.push_fp32(torque_measured);
     }
 };
 
@@ -425,12 +360,10 @@ struct [[nodiscard]] GetPowers final{
     math::fp32 electrical_power;
     math::fp32 mechanical_power;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
-    constexpr hal::BxCanPayload to_can_payload() const {
-        return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        BytesFiller filler(bytes);
+        filler.push_fp32(electrical_power);
+        filler.push_fp32(mechanical_power);
     }
 };
 
@@ -450,22 +383,91 @@ struct [[nodiscard]] SaveConfig final{
 
 namespace resp_msgs{
 
-// CMD ID: 0x003（电机←主机）
+// CMD ID: 0x001（电机←主机）
+struct [[nodiscard]] HeartbeatV513 final{
+    using Self = HeartbeatV513;
+    static constexpr CommandKind COMMAND =  Command::Heartbeat;
+
+    AxisFaultFlags axis_fault_flags;
+    AxisState axis_state;
+
+
+    MotorFlags motor_flags;
+
+    // 周期消息的生命值，每一个⼼跳消息加 1，范围
+    // 0-255，如果此生命值不连续，表示⼼跳消息丢
+    // 失，即通信不稳
+    uint8_t life;
+
+    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> & bytes){
+        const auto self = Self{
+            .axis_fault_flags = std::bit_cast<AxisFaultFlags>(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
+            .axis_state = ({
+                const auto res = try_into_axis_state(bytes[4]); 
+                if(res.is_err()) return Err(res.unwrap_err());
+                res.unwrap();
+            }),
+            .motor_flags = std::bit_cast<MotorFlags>(bytes[5]),
+            .life = bytes[7]
+        };
+
+        return Ok(self);
+    }
+};
+
+
+// CMD ID: 0x003
 struct [[nodiscard]] GetError final{
     using Self = GetError;
     static constexpr CommandKind COMMAND = Command::GetMotorError;
     union{
-        uint64_t motor_exception;
+        uint64_t motor_exception; 
         uint32_t encoder_exception;
         uint32_t controller_exception;
         uint32_t system_exception;
     };
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
+    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+        Self self;
+        self.motor_exception = le_bytes_to_int<uint64_t>(bytes);
+        return Ok(self);
     }
 };
 
 static_assert(sizeof(GetError) == 8);   
+
+//ID 0x009
+struct [[nodiscard]] GetEncoderEstimates final{
+    using Self = GetEncoderEstimates;
+    static constexpr CommandKind COMMAND = Command::GetEncoderEstimates;
+    math::fp32 position;
+    math::fp32 velocity;
+
+    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+        Self self{
+            .position = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
+            .velocity = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()))
+        };
+        return Ok(self);
+    }
+};
+
+//ID 0x00a
+struct [[nodiscard]] GetEncoderCount final{
+    using Self = GetEncoderCount;
+    static constexpr CommandKind COMMAND = Command::GetEncoderCount;
+    int32_t shadow_count;
+    int32_t cpr_count;
+
+    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+        Self self{
+            .shadow_count = le_bytes_to_int<int32_t>(bytes.subspan<0, 4>()),
+            .cpr_count = le_bytes_to_int<int32_t>(bytes.subspan<4, 4>())
+        };
+        return Ok(self);
+    }
+};
+
+
 }
 
 #if 0

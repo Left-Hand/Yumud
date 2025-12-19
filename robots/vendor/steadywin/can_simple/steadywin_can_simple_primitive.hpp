@@ -53,6 +53,10 @@ DEF_U16_STRONG_TYPE_GRADATION(MitTorqueCode_u12,    from_nm,
 
 }
 
+enum class DeMsgError:uint8_t{
+    Unnamed
+};
+
 struct [[nodiscard]] AxisId final{
     using Self = AxisId;
 
@@ -104,12 +108,16 @@ struct [[nodiscard]] AxisFaultFlags final{
     static constexpr Self from_bits(const uint32_t bits){
         return std::bit_cast<Self>(bits);
     }
+
+    [[nodiscard]] constexpr uint32_t to_u32() const {
+        return std::bit_cast<uint32_t>(*this);
+    }
 };
 
 
 static_assert(sizeof(AxisFaultFlags) == 4); 
 
-struct [[nodiscard]] Flags final{ 
+struct [[nodiscard]] MotorFlags final{ 
     // bit0：电机异常位（odrv0.axis0.motor.error 是否
     // 为 0）
     // bit1：编码器异常位（odrv0.axis0.encoder.error
@@ -129,7 +137,7 @@ struct [[nodiscard]] Flags final{
     uint8_t trajectory_done:1;
 };
 
-static_assert(sizeof(Flags) == 1);  
+static_assert(sizeof(MotorFlags) == 1);  
 
 
 struct [[nodiscard]] EncoderFaultFlags final{
@@ -200,9 +208,9 @@ enum class [[nodiscard]] AxisState:uint8_t{
     Homing = 11,
 };
 
-static constexpr Option<AxisState> try_into_axis_state(const uint8_t byte){
-    if(byte > 11) return None;
-    return Some(std::bit_cast<AxisState>(byte));
+static constexpr Result<AxisState, DeMsgError> try_into_axis_state(const uint8_t byte){
+    if(byte > 11) return Err(DeMsgError::Unnamed);
+    return Ok(std::bit_cast<AxisState>(byte));
 }
 
 enum class [[nodiscard]] CommandKind:uint8_t{
@@ -216,7 +224,8 @@ enum class [[nodiscard]] CommandKind:uint8_t{
     SetAxisState = 7,
     MitControl = 8,
     GetEncoderEstimates = 9,
-    GetMotorCurrent = 10,
+    // GetMotorCurrent = 10,
+    GetEncoderCount = 10,
     SetControllerMode = 11,
     SetInputPosition = 12,
     SetInputVelocity = 13,
@@ -239,9 +248,9 @@ enum class [[nodiscard]] CommandKind:uint8_t{
     SaveConfig = 0x1f,
 };
 
-static constexpr Option<CommandKind> try_into_command_kind(const uint8_t byte){
-    if(byte > 0x1f) return None;
-    return Some(std::bit_cast<CommandKind>(byte));
+static constexpr Result<CommandKind, DeMsgError> try_into_command_kind(const uint8_t byte){
+    if(byte > 0x1f) return Err(DeMsgError::Unnamed);
+    return Ok(std::bit_cast<CommandKind>(byte));
 }
 
 
@@ -253,9 +262,9 @@ enum class [[nodiscard]] LoopMode:uint8_t {
 };
 
 
-static constexpr Option<LoopMode> try_into_loop_mode(const uint8_t byte){
-    if(byte > 3) return None;
-    return Some(std::bit_cast<LoopMode>(byte));
+static constexpr Result<LoopMode, DeMsgError> try_into_loop_mode(const uint8_t byte){
+    if(byte > 3) return Err(DeMsgError::Unnamed);
+    return Ok(std::bit_cast<LoopMode>(byte));
 }
 
 
@@ -270,9 +279,9 @@ enum class [[nodiscard]] InputMode:uint8_t{
     Mirror = 7,
 };
 
-static constexpr Option<InputMode> try_into_input_mode(const uint8_t byte){
-    if(byte > 7) return None;
-    return Some(std::bit_cast<InputMode>(byte));
+static constexpr Result<InputMode, DeMsgError> try_into_input_mode(const uint8_t byte){
+    if(byte > 7) return Err(DeMsgError::Unnamed);
+    return Ok(std::bit_cast<InputMode>(byte));
 }
 
 
@@ -280,7 +289,7 @@ static constexpr Option<InputMode> try_into_input_mode(const uint8_t byte){
 struct [[nodiscard]] Command final{
     using Kind = CommandKind;
     constexpr Command(const Kind kind) : kind_(kind){
-        if(try_into_command_kind(static_cast<uint8_t>(kind)).is_none()) 
+        if(try_into_command_kind(static_cast<uint8_t>(kind)).is_err()) 
             __builtin_trap();
     }
 
@@ -309,7 +318,7 @@ struct [[nodiscard]] Command final{
             case Kind::SetAxisState:    return "SetAxisState";
             case Kind::MitControl:  return "MitControl";
             case Kind::GetEncoderEstimates: return "GetEncoderEstimates";
-            case Kind::GetMotorCurrent: return "GetMotorCurrent";
+            case Kind::GetEncoderCount: return "GetEncoderCount";
             case Kind::SetControllerMode:   return "SetControllerMode";
             case Kind::SetInputPosition:    return "SetInputPosition";
             case Kind::SetInputVelocity:    return "SetInputVelocity";
@@ -370,8 +379,107 @@ struct [[nodiscard]] FrameId final{
     }  
 };
 
+
+
 }
 
 using namespace primitive;
 
+struct [[nodiscard]] BytesFiller{
+public:
+    constexpr explicit BytesFiller(std::span<uint8_t> bytes):
+        bytes_(bytes){;}
+
+    constexpr ~BytesFiller(){
+        if(not is_full()) __builtin_abort();
+    }
+
+    constexpr __inline 
+    void push_byte(const uint8_t byte){
+        if(pos_ >= bytes_.size()) [[unlikely]] 
+            on_overflow();
+        bytes_[pos_++] = byte;
+    }
+
+
+    template<size_t Extents>
+    constexpr __inline 
+    void push_bytes(const std::span<const uint8_t, Extents> bytes){
+        if(pos_ + bytes.size() > bytes_.size()) [[unlikely]]
+            on_overflow();
+        push_bytes_unchecked(bytes);
+    }
+
+
+    constexpr __inline 
+    void push_le_u8(const uint16_t int_val) {
+        push_byte(int_val);
+    }
+
+    constexpr __inline 
+    void push_le_u16(const uint16_t int_val) {
+        push_byte(int_val & 0xFF);
+        push_byte(int_val >> 8);
+    }
+
+    constexpr __inline
+    void push_le_i16(const int16_t int_val) { 
+        return push_le_u16(std::bit_cast<uint16_t>(int_val));
+    }
+
+    constexpr __inline 
+    void push_le_u32(const uint32_t int_val){
+        push_le_u16(int_val & 0xFFFF);
+        push_le_u16(int_val >> 16);
+    }
+
+    constexpr __inline 
+    void push_le_i32(const int32_t int_val){
+        push_le_u16(int_val & 0xFFFF);
+        push_le_u16(int_val >> 16);
+    }
+
+    constexpr 
+    void push_fp32(const math::fp32 f_val){
+        return push_le_u32(std::bit_cast<uint32_t>(f_val));
+    }
+
+
+
+    [[nodiscard]] constexpr bool is_full() const {
+        return pos_ == bytes_.size();
+    }
+
+    size_t size() const {
+        return pos_;
+    }
+private:
+    std::span<uint8_t> bytes_;
+    size_t pos_ = 0;
+
+    constexpr __inline 
+    void push_byte_unchecked(const uint8_t byte){ 
+        bytes_[pos_++] = byte;
+    }
+
+    template<size_t Extents>
+    constexpr __inline 
+    void push_bytes_unchecked(const std::span<const uint8_t, Extents> bytes){ 
+        if constexpr(Extents == std::dynamic_extent){
+            // #pragma GCC unroll(4)
+            for(size_t i = 0; i < bytes.size(); i++){
+                push_byte(bytes[i]);
+            }
+        }else{
+            #pragma GCC unroll(4)
+            for(size_t i = 0; i < Extents; i++){
+                push_byte(bytes[i]);
+            }
+        }
+    }
+
+    constexpr __inline void on_overflow(){
+        __builtin_trap();
+    }
+};
 }
