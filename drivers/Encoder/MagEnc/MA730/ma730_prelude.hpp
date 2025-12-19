@@ -48,18 +48,19 @@ struct MA730_Regset:public MA730_Prelude{
 
     struct R8_ZeroDataLow:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ZeroDataLow;
-        uint8_t data;
+        uint8_t bits;
     };
 
     struct R8_ZeroDataHigh:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ZeroDataHigh;
-        uint8_t data;
+        uint8_t bits;
     };
 
     struct R8_Trim:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Trim;
         uint8_t trim;
     };
+
     struct R8_TrimConfig:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::TrimConfig;
         uint8_t enable_x:1;
@@ -77,7 +78,7 @@ struct MA730_Regset:public MA730_Prelude{
 
     struct R8_PulsePerTurn:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::PulsePerTurn;
-        uint8_t data;
+        uint8_t bits;
     };
 
     struct R8_Threshold:public Reg8<>{

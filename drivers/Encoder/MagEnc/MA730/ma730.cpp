@@ -44,13 +44,13 @@ IResult<uint16_t> MA730::get_raw_data(){
 IResult<> MA730::set_zero_data(const uint16_t data){
     {
         auto reg = RegCopy(regs_.zero_data_low_reg);
-        reg.data = data & 0xff;
+        reg.bits = data & 0xff;
         return write_reg(reg);
     }
 
     {
         auto reg = RegCopy(regs_.zero_data_high_reg);
-        reg.data = data >> 8;
+        reg.bits = data >> 8;
         return write_reg(reg);
     }
 }
@@ -158,7 +158,7 @@ IResult<> MA730::set_pulse_per_turn(uint16_t ppt){
         const uint8_t ppt_h = ppt_u10 >> 2;
 
         auto reg = RegCopy(regs_.pulse_per_turn_reg);
-        reg.data = ppt_h;
+        reg.bits = ppt_h;
 
         if(const auto res = (write_reg(reg));
             res.is_err()) return Err(res.unwrap_err());

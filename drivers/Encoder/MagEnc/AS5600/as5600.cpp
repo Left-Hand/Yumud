@@ -11,8 +11,8 @@ template<typename T = void>
 using IResult = Self::IResult<T>;
 
 
-static constexpr Angular<uq32> u12_to_angle(const uint16_t data){
-    return Angular<uq32>::from_turns(uq32(uq16::from_bits(data << 4)));
+static constexpr Angular<uq32> u12_to_angle(const uint16_t bits){
+    return Angular<uq32>::from_turns(uq32(uq16::from_bits(bits << 4)));
 }
 
 static constexpr uint16_t angle_to_u12(const Angular<uq32> angle){
@@ -67,42 +67,42 @@ IResult<MagStatus> Self::get_mag_status(){
 IResult<uint8_t> Self::get_gain(){
     if(const auto res = read_reg(auto_gain_reg); 
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(auto_gain_reg.data);
+    return Ok(auto_gain_reg.bits);
 }
 
 IResult<uint16_t> Self::get_magnitude(){
     if(const auto res = read_reg(magnitude_reg); 
         res.is_err()) return Err(res.unwrap_err());
-    return Ok((magnitude_reg.data) & 0xFFF);
+    return Ok((magnitude_reg.bits) & 0xFFF);
 }
 
 IResult<Angular<uq32>> Self::get_raw_angle(){
     if(const auto res = read_reg(raw_angle_reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(u12_to_angle(raw_angle_reg.data));
+    return Ok(u12_to_angle(raw_angle_reg.bits));
 }
 
 IResult<Angular<uq32>> Self::get_angle(){
     if(const auto res = read_reg(angle_reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(u12_to_angle(angle_reg.data));
+    return Ok(u12_to_angle(angle_reg.bits));
 }
 
 IResult<> Self::set_start_angle(const Angular<uq32> angle){
     auto reg = RegCopy(start_angle_reg);
-    reg.data = angle_to_u12(angle);
+    reg.bits = angle_to_u12(angle);
     return write_reg(reg);
 }
 
 IResult<> Self::set_end_angle(const Angular<uq32> angle){
     auto reg = RegCopy(end_angle_reg);
-    reg.data = angle_to_u12(angle);
+    reg.bits = angle_to_u12(angle);
     return write_reg(reg);
 }
 
 IResult<> Self::set_amount_angle(const Angular<uq32> angle){
     auto reg = RegCopy(amount_angle_reg);
-    reg.data = angle_to_u12(angle);
+    reg.bits = angle_to_u12(angle);
     return write_reg(reg);
 }
 
@@ -115,13 +115,13 @@ IResult<uint8_t> Self::get_program_times(){
 
 IResult<> Self::burn_angle(){
     auto reg = RegCopy(burn_reg);
-    reg.data = 0x80;
+    reg.bits = 0x80;
     return write_reg(reg);
 }
 
 IResult<> Self::burn_setting(){
     auto reg = RegCopy(burn_reg);
-    reg.data = 0x80;
+    reg.bits = 0x80;
     return write_reg(reg);
 }
 

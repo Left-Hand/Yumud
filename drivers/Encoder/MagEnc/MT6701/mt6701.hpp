@@ -34,7 +34,7 @@ public:
 
     [[nodiscard]] IResult<> set_direction(const bool clockwise);
 
-    [[nodiscard]] IResult<> set_poles(const uint8_t poles);
+    [[nodiscard]] IResult<> set_pole_pairs(const uint8_t pole_pairs);
 
     [[nodiscard]] IResult<> set_abz_resolution(const uint16_t abz_resolution);
 

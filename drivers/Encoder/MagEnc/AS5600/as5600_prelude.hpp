@@ -68,27 +68,27 @@ struct AS5600_Regs:public AS5600_Prelude{
 
     struct R16_StartAngle:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::StartAngle;
-        uint16_t data;
+        uint16_t bits;
     };
 
     struct R16_EndAngle:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::EndAngle;
-        uint16_t data;
+        uint16_t bits;
     };
 
     struct R16_AmountAngle:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::AmountAngle;        
-        uint16_t data;
+        uint16_t bits;
     };
 
     struct R16_RawAngle:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::RawAngle;
-        uint16_t data;
+        uint16_t bits;
     };
 
     struct R16_Angle:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Angle;
-        uint16_t data;
+        uint16_t bits;
     };
 
     struct R16_Config:public Reg16<>{
@@ -116,18 +116,18 @@ struct AS5600_Regs:public AS5600_Prelude{
 
     struct R8_AutoGain:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::AutoGain;
-        uint8_t data;
+        uint8_t bits;
     };
 
     struct R16_Magnitude:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Magnitude;
-        uint16_t data;
+        uint16_t bits;
     };
 
     struct R8_Burn:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Burn;
 
-        uint8_t data;
+        uint8_t bits;
     };
 
     R8_ProgramTimes program_times_reg = {};

@@ -23,15 +23,15 @@ public:
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> set_zero_angle(const Angular<q31> angle);
-    [[nodiscard]] IResult<Angular<q31>> read_lap_angle(){
-        return Ok(Angular<q31>::from_turns(lap_turns_));
+    [[nodiscard]] IResult<> set_zero_angle(const Angular<uq32> angle);
+    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle(){
+        return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 
 private:
     hal::SpiDrv spi_drv_;
     VCE2755_Regset regs_ = {};
-    q31 lap_turns_ = 0;
+    uq32 lap_turns_ = 0;
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
