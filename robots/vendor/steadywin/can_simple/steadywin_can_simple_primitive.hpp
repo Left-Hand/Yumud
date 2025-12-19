@@ -201,7 +201,7 @@ enum class [[nodiscard]] AxisState:uint8_t{
     MotorCalibration = 4,
     SensorlessControl = 5,
     EncoderIndexSearch = 6,
-    EncoderOffsetCalibration = 7,
+    EncoderCalibration = 7,
     ClosedLoopControl = 8,
     LockinSpin = 9,
     EncoderDirFind = 10,

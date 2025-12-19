@@ -60,10 +60,10 @@ struct [[nodiscard]] SetAxisNodeId final{
 struct [[nodiscard]] SetAxisState final{
     using Self = SetAxisState;
     static constexpr CommandKind COMMAND = Command::SetAxisState;
-    AxisState state;
+    AxisState axis_state;
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
-        bytes[0] = static_cast<uint8_t>(state);
+        bytes[0] = static_cast<uint8_t>(axis_state);
     }
 };
 
@@ -470,37 +470,31 @@ struct [[nodiscard]] GetEncoderCount final{
 
 }
 
-#if 0
-
-struct [[nodiscard]] Signal:public Sumtype<
-    // msgs::EncoderCount,
-    // msgs::GetEncoderEstimates,
-    msgs::Heartbeat
-    // msgs::GetMotorCurrent,
-    // msgs::VbusVoltage,
-    // EncoderErrorFlags,
-    // MotorErrorFlags
->{
-    // using EncoderCount = msgs::EncoderCount;
-    // using GetEncoderEstimates = msgs::GetEncoderEstimates;
-    // using Heartbeat = msgs::Heartbeat;
-    // using GetMotorCurrent = msgs::GetMotorCurrent;
-    // using VbusVoltage = msgs::VbusVoltage;
-    // using EncoderErrorFlags = msgs::EncoderErrorFlags;
-    // using MotorErrorFlags = msgs::MotorErrorFlags;
-};
-
-struct [[nodiscard]] Event{
-    AxisId axis_id;
-    Signal signal;
-};
 
 
-// struct [[nodiscard]] EncoderCount{
-//     static constexpr CommandKind COMMAND = Command::GetEncoderCount;
-//     int32_t shadow_count;
-//     int32_t cpr_count;
-// };
-#endif
+template<typename T>
+static constexpr hal::BxCanFrame serialize_msg_to_can_frame(
+    const AxisId & axis_id, 
+    const T & msg
+){
+    constexpr auto COMMAND = T::COMMAND;
+    const FrameId frame_id = FrameId{
+        .axis_id = axis_id,
+        .command = COMMAND,
+    };
+
+    std::array<uint8_t, 8> bytes;
+    if constexpr(std::is_same_v<
+        decltype(msg.fill_bytes(bytes)), void>
+    ){
+        msg.fill_bytes(bytes);
+    }
+    return hal::BxCanFrame::from_parts(
+        frame_id.to_stdid(),
+        hal::BxCanPayload::from_u8x8(bytes)
+    );
+}
+
+
 
 }

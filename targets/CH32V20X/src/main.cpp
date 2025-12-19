@@ -162,8 +162,10 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // sincos_main();
+
     // myesc_main();
     // s21c_main();
+    steadywin_main();
     alx_aoa_main();
     smc2025_main();
     // vl53l5cx_main();
