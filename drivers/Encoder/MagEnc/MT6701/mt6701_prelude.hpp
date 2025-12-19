@@ -86,8 +86,9 @@ struct [[nodiscard]] Packet{
     }
 
 private:
-    __inline constexpr bool is_crc_valid() const{
-        return true;//TODO
+    [[nodiscard]] constexpr bool is_crc_valid() const{
+        //TODO 添加crc校验算法
+        return true;
     }
 };
 

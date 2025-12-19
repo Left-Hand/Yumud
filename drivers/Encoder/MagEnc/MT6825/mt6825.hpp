@@ -32,7 +32,7 @@ enum class RegAddr:uint16_t{
 };
 
 #pragma pack(push, 1)
-alignas(4) struct Packet{
+struct [[nodiscard]] Packet final{
     using Self = Packet;
     union{
         struct{
