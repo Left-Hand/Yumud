@@ -5,17 +5,19 @@
 
 namespace ymd::math{
 struct [[nodiscard]] fp16{
-    union{
-        uint16_t raw;
-        struct{
-            uint16_t frac:10;
-            uint16_t exp:5;
-            uint16_t sign:1;
-        }__packed;
-    }__packed;
+    using Self = fp16;
 
-    constexpr fp16(fixed_t qv):fp16(float(qv)){;}
-    constexpr fp16(const fp16& other):raw(other.raw){;}
+    uint16_t frac:10;
+    uint16_t exp:5;
+    uint16_t sign:1;
+
+    template<size_t Q, typename D>
+    constexpr fp16(fixed_t<Q, D> qv):fp16(float(qv)){;}
+    constexpr fp16(const fp16& other) = default;
+
+    constexpr fp16 from_bits(const uint16_t bits){
+        return std::bit_cast<fp16>(bits);
+    }
     constexpr fp16(float value) {
 
         // 下面的代码仅做示例，不保证正确性
@@ -48,9 +50,9 @@ struct [[nodiscard]] fp16{
             frac = mantissa;
         }
 
-        raw = (sign << 15) | (exp << 10) | frac;
+        *this = from_bits(static_cast<uint16_t>((sign << 15) | (exp << 10) | frac));
     }
-    constexpr fp16(const int value){
+    constexpr fp16(int value){
         // 确保值在可表示的范围内
         if (value == 0) {
             exp = 0;
@@ -85,19 +87,16 @@ struct [[nodiscard]] fp16{
             frac = value;
         }
 
-        raw = (sign << 15) | (exp << 10) | frac;
+        *this = from_bits(static_cast<uint16_t>((sign << 15) | (exp << 10) | frac));
     }
 
     constexpr fp16(const double val):fp16((float)val){};
 
     explicit constexpr operator float() const {
-        union {
-            uint32_t raw;
-            struct {
-                uint32_t frac : 23;
-                uint32_t exp : 8;
-                uint32_t sign : 1;
-            } __attribute__((__packed__));
+        struct {
+            uint32_t frac : 23;
+            uint32_t exp : 8;
+            uint32_t sign : 1;
         } conversion;
 
         // 从fp16的内部表示中提取符号、指数和尾数
@@ -108,15 +107,17 @@ struct [[nodiscard]] fp16{
         // 浮点数的隐含位
         conversion.frac |= (1 << 23);
 
-        return *reinterpret_cast<const float*>(&conversion.raw);
+        return std::bit_cast<float>(conversion);
     }
 
-    explicit constexpr operator int() const {
+    template<typename D>
+    requires (std::is_integral_v<D>)
+    explicit constexpr operator D() const {
         // 首先检查是否为NaN或无穷大
         if (exp == 0x1F && frac != 0) { // NaN
             return 0; // 或者可以选择抛出异常或返回特定值
         } else if (exp == 0x1F && frac == 0) { // 正无穷或负无穷
-            return sign ? INT_MIN : INT_MAX;
+            return sign ? std::numeric_limits<D>::min() : std::numeric_limits<D>::max();
         }
 
         // 根据指数和尾数计算值
@@ -145,10 +146,12 @@ struct [[nodiscard]] fp16{
         return value;
     }
 
-    constexpr operator fixed_t() const{
-        return fixed_t(float(*this));
+
+    template<size_t Q, typename D>
+    explicit constexpr operator fixed_t<Q, D>() const{
+        return fixed_t<Q, D>(float(*this));
     }
-}__packed;
+};
 
 static_assert(sizeof(fp16) == 2);
 
