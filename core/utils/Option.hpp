@@ -337,19 +337,19 @@ constexpr auto operator|(Option<T> && opt, Fn&& fn){
 
 template<
     typename T, 
-    typename Tdecay = std::decay_t<T>
+    typename TDecay = std::decay_t<T>
 >
-[[nodiscard]] constexpr Option<Tdecay> optcond(bool cond, T&& value){
-    if(cond) return Some<Tdecay>(std::forward<T>(value));
+[[nodiscard]] constexpr Option<TDecay> optcond(bool cond, T&& value){
+    if(cond) return Some<TDecay>(std::forward<TDecay>(value));
     else return None;
 }
 
 template<
     typename T, 
-    typename Tdecay = std::decay_t<T>
+    typename TDecay = std::decay_t<T>
 >
-[[nodiscard]] constexpr Option<Tdecay> optcond(bool cond, Some<T>&& value){
-    if(cond) return Some<Tdecay>(std::forward<Some<T>>(value));
+[[nodiscard]] constexpr Option<TDecay> optcond(bool cond, Some<TDecay>&& value){
+    if(cond) return Some<TDecay>(std::forward<Some<TDecay>>(value));
     else return None;
 }
 
