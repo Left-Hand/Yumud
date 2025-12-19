@@ -200,6 +200,11 @@ enum class [[nodiscard]] AxisState:uint8_t{
     Homing = 11,
 };
 
+static constexpr Option<AxisState> try_into_axis_state(const uint8_t byte){
+    if(byte > 11) return None;
+    return Some(std::bit_cast<AxisState>(byte));
+}
+
 enum class [[nodiscard]] CommandKind:uint8_t{
     Undefined = 0,
     Heartbeat = 1,
@@ -234,6 +239,12 @@ enum class [[nodiscard]] CommandKind:uint8_t{
     SaveConfig = 0x1f,
 };
 
+static constexpr Option<CommandKind> try_into_command_kind(const uint8_t byte){
+    if(byte > 0x1f) return None;
+    return Some(std::bit_cast<CommandKind>(byte));
+}
+
+
 enum class [[nodiscard]] LoopMode:uint8_t {
     VoltageLoop = 0,
     CurrentLoop = 1,
@@ -241,21 +252,37 @@ enum class [[nodiscard]] LoopMode:uint8_t {
     PositionLoop = 3,
 };
 
+
+static constexpr Option<LoopMode> try_into_loop_mode(const uint8_t byte){
+    if(byte > 3) return None;
+    return Some(std::bit_cast<LoopMode>(byte));
+}
+
+
 enum class [[nodiscard]] InputMode:uint8_t{
     Inactive = 0,
-    PassThrough,
-    VelocityRamp,
-    PositionFilter,
-    MixChannels,
-    TrapezoidalTrajectory,
-    CurrentRamp,
-    Mirror,
+    PassThrough = 1,
+    VelocityRamp = 2,
+    PositionFilter = 3,
+    MixChannels = 4,
+    TrapezoidalTrajectory = 5,
+    CurrentRamp = 6,
+    Mirror = 7,
 };
+
+static constexpr Option<InputMode> try_into_input_mode(const uint8_t byte){
+    if(byte > 7) return None;
+    return Some(std::bit_cast<InputMode>(byte));
+}
+
 
 
 struct [[nodiscard]] Command final{
     using Kind = CommandKind;
-    constexpr Command(const Kind kind) : kind_(kind){;}
+    constexpr Command(const Kind kind) : kind_(kind){
+        if(try_into_command_kind(static_cast<uint8_t>(kind)).is_none()) 
+            __builtin_trap();
+    }
 
     static constexpr Command from_b5(literals::Bs5 bs){
         return from_bits(bs.to_bits());
@@ -345,10 +372,6 @@ struct [[nodiscard]] FrameId final{
 
 }
 
-
 using namespace primitive;
-
-
-
 
 }

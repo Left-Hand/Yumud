@@ -1,6 +1,6 @@
 #pragma once
 
-#include "odrive_can_simple_primitive.hpp"
+#include "steadywin_can_simple_primitive.hpp"
 
 namespace ymd::robots::steadywin::can_simple{
 
@@ -9,7 +9,7 @@ using namespace primitive;
 
 
 
-struct [[nodiscard]] FrameSerializer{
+struct [[nodiscard]] FrameFactory{
     using Error = Infallible;
 
     template<typename T = void>
@@ -17,55 +17,53 @@ struct [[nodiscard]] FrameSerializer{
 
     using SerFrameResult = Result<hal::BxCanFrame, Error>;
 
-    static constexpr SerFrameResult get_motor_error(AxisId axis_id){
-        return request(axis_id, Command::GetMotorError);
+    AxisId axis_id;
+    constexpr SerFrameResult get_motor_error() const {
+        return make_request(axis_id, Command::GetMotorError);
     }
 
-    static constexpr SerFrameResult get_encoder_estimates(AxisId axis_id){
-        return request(axis_id, Command::GetEncoderEstimates);
+    constexpr SerFrameResult get_encoder_estimates() const {
+        return make_request(axis_id, Command::GetEncoderEstimates);
     }
 
-    static constexpr SerFrameResult get_encoder_count(AxisId axis_id){
-        return request(axis_id, Command::GetEncoderCount);
+    constexpr SerFrameResult get_encoder_count() const {
+        return make_request(axis_id, Command::GetEncoderCount);
     }
 
-    static constexpr SerFrameResult get_iq(AxisId axis_id){
-        return request(axis_id, Command::GetIq);
+    constexpr SerFrameResult get_iq() const {
+        return make_request(axis_id, Command::GetIq);
     }
 
-    static constexpr SerFrameResult get_sensorless_estimate(AxisId axis_id){
-        return request(axis_id, Command::GetSensorlessEstimates);
+    constexpr SerFrameResult get_sensorless_estimate() const {
+        return make_request(axis_id, Command::GetSensorlessEstimates);
     }
 
-    static constexpr SerFrameResult get_vbus_voltage(AxisId axis_id){
-        return request(axis_id, Command::GetVbusVoltage);
-    }
-
-    static constexpr SerFrameResult request(AxisId axis_id, Command cmd){ 
-        return Ok(hal::BxCanFrame::from_remote(encode_id(axis_id, cmd)));
+    constexpr SerFrameResult get_vbus_voltage() const {
+        return make_request(axis_id, Command::GetVbusVoltage);
     }
 
 
-    static constexpr SerFrameResult emergency_stop(AxisId id) {
+
+    constexpr SerFrameResult emergency_stop(AxisId id)  const {
         return make_msg(FrameId{id, Command::Estop});
     }
 
-    static constexpr SerFrameResult reboot(AxisId id) {
+    constexpr SerFrameResult reboot(AxisId id)  const {
         return make_msg(FrameId{id, Command::ResetOdrive});
     }
 
 
-    static constexpr SerFrameResult clear_errors(AxisId id) {
+    constexpr SerFrameResult clear_errors(AxisId id)  const {
         return make_msg(FrameId{id, Command::ClearErrors});
     }
 
 
-    static constexpr SerFrameResult start_anticogging(AxisId id) {
+    constexpr SerFrameResult start_anticogging(AxisId id)  const {
         return make_msg(FrameId{id, Command::StartAnticogging});
     }
 
 
-    static constexpr SerFrameResult set_axis_node_id(AxisId id, AxisId new_id) {
+    constexpr SerFrameResult set_axis_node_id(AxisId new_id)  const {
         return make_msg(
             FrameId{id, Command::SetAxisNodeId}, 
             static_cast<uint32_t>(new_id.to_bits())
@@ -73,14 +71,14 @@ struct [[nodiscard]] FrameSerializer{
     }
 
 
-    static constexpr SerFrameResult set_axis_requested_state(AxisId id, AxisState axis_state) {
+    constexpr SerFrameResult set_axis_requested_state(AxisState axis_state)  const {
         return make_msg(
             FrameId{id, Command::SetAxisRequestedState}, 
             static_cast<uint32_t>(axis_state)
         );
     }
 
-    static constexpr SerFrameResult set_input_current(AxisId id, float value) {
+    constexpr SerFrameResult set_input_current(float value)  const {
         const auto scaled_value = static_cast<uint32_t>(static_cast<int32_t>(
             100.0f * value + 0.5f)
         );
@@ -91,7 +89,7 @@ struct [[nodiscard]] FrameSerializer{
     }
 
 
-    static constexpr SerFrameResult set_velocity_limit(AxisId id, fp32 value) {
+    constexpr SerFrameResult set_velocity_limit(math::fp32 value)  const {
         const auto value_bits = std::bit_cast<uint32_t>(value);
         return make_msg(
             FrameId{id, Command::SetVelLimit}, 
@@ -99,16 +97,20 @@ struct [[nodiscard]] FrameSerializer{
         );
     }
 
-    static constexpr SerFrameResult set_controller_modes(AxisId id, ControlMode control_mode) {
+    constexpr SerFrameResult set_controller_modes(LoopMode loop_mode)  const {
         return make_msg(
-            FrameId{id, Command::SetControllerModes}, 
-            static_cast<uint32_t>(control_mode),
+            FrameId{axis_id, Command::SetControllerMode}, 
+            static_cast<uint32_t>(loop_mode),
             static_cast<uint32_t>(InputMode::PassThrough)
         );
     }
 
 private:
-    static constexpr hal::CanStdId encode_id(const AxisId axis_id, const Command cmd){
+    static constexpr SerFrameResult make_request(const AxisId axis_id, Command cmd){ 
+        return Ok(hal::BxCanFrame::from_remote(encode_id(axis_id, cmd)));
+    }
+
+    static constexpr hal::CanStdId encode_id(const AxisId axis_id, const Command cmd) {
         return FrameId{axis_id, cmd}.to_stdid();
     }
 
