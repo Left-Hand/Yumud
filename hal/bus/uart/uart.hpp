@@ -57,7 +57,15 @@ public:
     virtual void init(const Config & cfg) = 0;
 
     [[nodiscard]] __fast_inline size_t available() const {return rx_fifo_.length();}
-    [[nodiscard]] __fast_inline size_t free_capacity() const {return tx_fifo_.free_capacity();}
+    [[nodiscard]] __fast_inline size_t free_capacity() const {
+        switch(tx_strategy_){
+            case CommStrategy::Nil: __builtin_trap();
+            case CommStrategy::Blocking: return UINT32_MAX;
+            case CommStrategy::Dma: return tx_fifo_.free_capacity();
+            case CommStrategy::Interrupt: return tx_fifo_.free_capacity();
+        }
+        __builtin_trap();
+    }
 
     virtual void set_tx_strategy(const CommStrategy tx_strategy) = 0;
     virtual void set_rx_strategy(const CommStrategy rx_strategy) = 0;

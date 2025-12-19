@@ -760,7 +760,7 @@ private:
     }
 
     __fast_inline void block_util_least_free_capacity(size_t n){
-        while(free_capacity() > n) __nopn(1);
+        while(free_capacity() < n) __nopn(1);
     }
 
     __fast_inline void print_indent(){

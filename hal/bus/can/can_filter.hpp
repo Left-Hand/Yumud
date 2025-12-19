@@ -24,7 +24,10 @@ public:
     friend class CanFilter;
 
     static constexpr CanFilterConfig accept_all(){
-        return from_pair(CanStdIdMaskPair::accept_all());
+        return from_pairs(
+            CanStdIdMaskPair::accept_all(),
+            CanStdIdMaskPair::accept_all()
+        );
     }
 
     static constexpr CanFilterConfig whitelist(
@@ -93,17 +96,37 @@ public:
 
 private:
     union{
-        uint16_t id16[2];
+        std::array<uint16_t, 2> id16;
         uint32_t id32;
     };
     
     union{
-        uint16_t mask16[2];
+        std::array<uint16_t, 2> mask16;
         uint32_t mask32;
     };
     
     bool is_32bit_;
     bool is_list_mode_;
+
+    friend OutputStream & operator << (OutputStream & os, const CanFilterConfig & self){
+        if(self.is_list_mode_){
+            if(self.is_32bit_){
+                return os << os.field("ext_list")(std::span(&self.id32, 2));
+            }else{
+                return os << os.field("std_list")(std::span(self.id16.data(), 4));
+            }
+        }else{
+            if(self.is_32bit_){
+                return os << os.field("ext_gated")(std::array{self.id32, self.mask32});
+            }else{
+                return os << os.field("std_gated")(
+                    std::array{self.id16[0], self.mask16[0]},
+                    os.splitter(),
+                    std::array{self.id16[1], self.mask16[2]}
+                );
+            }
+        }
+    }
 };
 
 class [[nodiscard]] CanFilter final{

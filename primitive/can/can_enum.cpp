@@ -2,7 +2,7 @@
 #include "core/stream/ostream.hpp"
 
 using namespace ymd;
-namespace ymd::hal{
+namespace ymd::hal::can{
 OutputStream & operator<<(OutputStream & os, const CanError & error){
     switch(error){
         case CanError::Stuff: 

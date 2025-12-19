@@ -341,6 +341,7 @@ void Can::init(const Config & cfg){
         //初始化失败
         __builtin_trap();
     }
+
 }
 
 void Can::deinit(){
@@ -419,15 +420,18 @@ void Can::transmit(const BxCanFrame & frame, CanMailboxIndex mbox_idx){
     const uint32_t tempmir = frame.identifier().to_sxx32_reg_bits();
     const uint64_t payload_u64 = frame.payload_u64();
 
-    //有关TXMIR和TXMDTR的描述，请参考芯片数据手册
-    mailbox_inst.TXMIR = tempmir;
-    mailbox_inst.TXMDTR = uint32_t(0xFFFF0000 | (frame.length() & 0xf));
+
+    mailbox_inst.TXMDTR = uint32_t(0xFFFF0000 | (frame.dlc().to_bits() & 0xf));
 
     //将低四字节装载到txmdlr
     mailbox_inst.TXMDLR = payload_u64 & UINT32_MAX;
 
     //将高四字节装载到txmdhr
     mailbox_inst.TXMDHR = payload_u64 >> 32;
+
+    //有关TXMIR和TXMDTR的描述，请参考芯片数据手册
+    //!txmir必须最后填写 因为填写txmir时会导致当前正在填充的报文被发出
+    mailbox_inst.TXMIR = tempmir;
 
 }
 
@@ -648,7 +652,7 @@ void CanInterruptDispatcher::on_rx_interrupt(Can & self, const CanFifoIndex fifo
     if (temp_rfifo_reg & RFIFO_FMP_MASK){
         //收到新的报文
         {
-            //TODO 改为sink
+            //TODO 改为异步sink
             (void)self.rx_fifo_.try_push(self.receive(fifo_idx));
         }
         //已读这个报文
@@ -767,4 +771,3 @@ __interrupt void CAN2_SCE_IRQHandler(){
 #endif
 #endif
 }
-
