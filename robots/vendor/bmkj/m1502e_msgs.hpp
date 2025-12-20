@@ -153,7 +153,7 @@ struct [[nodiscard]] StateFeedback{
     LoopMode loop_mode;
 
     constexpr CanFrame to_can_frame() const{
-        const auto canid = CanId::from_u11(
+        const auto can_id = CanId::from_u11(
             NUM_GENERIC_FEEDBACK_CANID_BASE + motor_id.nth().count()
         );
         std::array<uint8_t, 8> buf;
@@ -164,7 +164,7 @@ struct [[nodiscard]] StateFeedback{
         filler.push_u8(std::bit_cast<uint8_t>(exception_code));
         filler.push_u8(std::bit_cast<uint8_t>(loop_mode));
         return CanFrame::from_parts(
-            canid,
+            can_id,
             CanPayload::from_u8x8(buf)
         );
     };
@@ -223,7 +223,7 @@ struct [[nodiscard]] SetLoopMode{
 
 
     constexpr CanFrame to_can_frame() const{
-        const auto canid = CanId::from_u11(
+        const auto can_id = CanId::from_u11(
             NUM_CANID_BASE + motor_id.nth().count()
         );
         std::array<uint8_t, 8> buf;
@@ -232,7 +232,7 @@ struct [[nodiscard]] SetLoopMode{
         filler.push_repeat_u8(0xff, 7);
 
         return CanFrame::from_parts(
-            canid,
+            can_id,
             CanPayload::from_u8x8(buf)
         );
     };

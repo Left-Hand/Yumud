@@ -87,11 +87,11 @@ struct [[nodiscard]] SetPosition final{
 
 
 struct [[nodiscard]] SetLapPosition final{
-    // 1.角度控制值angleControl 为 uint16_t 类型， 数值范围0~35999, 对应实际位置为
+    // 1.角度控制值angleControl 为 u16 类型， 数值范围0~35999, 对应实际位置为
     // 0.01degree/LSB, 即实际角度范围0°~359.99°;
     //  2.spinDirection设置电机转动的方向， 为 uint8_t类型，0x00代表顺时针，0x01代表
     // 逆时针；
-    // 3.maxSpeed限制了电机转动的最大速度，为uint16_t类型，对应实际转速1dps/LSB。
+    // 3.maxSpeed限制了电机转动的最大速度，为u16类型，对应实际转速1dps/LSB。
     LapPosition_u16 lap_position;
     bool is_ccw;
     SpeedLimitCode_u16 max_speed;
@@ -212,9 +212,9 @@ struct [[nodiscard]] GetStatus3 final{
     }phase_current;
 };
 
-// 1.电机温度temperature (int8t类型，1°C/lsb
-// 2.电机的转矩电流值iq (int16_t类型， 0.01A/lsb
-// 3.电机输出轴转速speed (int16t类型， 1dps/lsb
+// 1.电机温度temperature (i8类型，1°C/lsb
+// 2.电机的转矩电流值iq (i16类型， 0.01A/lsb
+// 3.电机输出轴转速speed (i16 1dps/lsb
 // 4.电机输出轴角度 (intl6t类型，1degree/LSB,最大范围±32767degree)。
 template<typename Derived>
 struct [[nodiscard]] _MotorStatusReport{
@@ -233,9 +233,9 @@ struct [[nodiscard]] _MotorStatusReport{
     };
 };
 
-// 1.电机温度temperature (int8t类型，1°C/lsb
-//  2.电机的转矩电流值iq (int16_t类型， 0.01A/lsb
-//  3.电机输出轴转速speed (int16t类型， 1dps/lsb
+// 1.电机温度temperature (i8类型，1°C/lsb
+//  2.电机的转矩电流值iq (i16类型， 0.01A/lsb
+//  3.电机输出轴转速speed (i16 1dps/lsb
 //  4.编码器位置值encoder(uint16 t类型，编码器的数值范围由编码器位数决定)
 template<typename Derived>
 struct [[nodiscard]] _MotorStatusReport2{
@@ -254,40 +254,40 @@ struct [[nodiscard]] _MotorStatusReport2{
     };
 };
 
-// 1.电机温度temperature (int8t类型，1°C/lsb
-//  2.电机的转矩电流值iq (int16_t类型， 0.01A/lsb
-//  3.电机输出轴转速speed (int16t类型， 1dps/lsb
+// 1.电机温度temperature (i8类型，1°C/lsb
+//  2.电机的转矩电流值iq (i16类型， 0.01A/lsb
+//  3.电机输出轴转速speed (i16 1dps/lsb
 //  4.电机输出轴角度 (intl6t类型，1degree/LSB,最大范围±32767degree)。
 
 struct [[nodiscard]] SetTorque final:public _MotorStatusReport<SetTorque>{};
-// 1.电机温度temperature (int8t类型， 1°C/lsb
-//  2.电机的转矩电流值iq (intl6_t类型， 0.01A/lsb
-//  3.电机输出轴转速speed (int16t类型， 1dps/lsb
-//  4.电机输出轴角度 (intl6_t类型，1degree/LSB,最大范围±32767degree)。
+// 1.电机温度temperature (i8类型， 1°C/lsb
+//  2.电机的转矩电流值iq (i16类型， 0.01A/lsb
+//  3.电机输出轴转速speed (i16 1dps/lsb
+//  4.电机输出轴角度 (i16类型，1degree/LSB,最大范围±32767degree)。
 struct [[nodiscard]] SetSpeed final:public _MotorStatusReport<SetSpeed>{};
 
-// 1.电机温度temperature (int8t类型， 1°C/lsb
-//  2.电机的转矩电流值iq(int16t类型， 0.01A/lsb
-//  3.电机输出轴转速speed (int16_t类型， 1dps/lsb
+// 1.电机温度temperature (i8类型， 1°C/lsb
+//  2.电机的转矩电流值iq(i16 0.01A/lsb
+//  3.电机输出轴转速speed (i16类型， 1dps/lsb
 //  4.电机输出轴角度(intl6t类型，Idegree/LSB,最大范围±32767degree)。
 struct [[nodiscard]] SetPosition final:public _MotorStatusReport<SetPosition>{};
 
-// 1.电机温度temperature (int8t类型，1°C/lsb
-//  2.电机的转矩电流值iq (int16_t类型， 0.01A/lsb
-//  3.电机输出轴转速speed (int16t类型， 1dps/lsb
+// 1.电机温度temperature (i8类型，1°C/lsb
+//  2.电机的转矩电流值iq (i16类型， 0.01A/lsb
+//  3.电机输出轴转速speed (i16 1dps/lsb
 //  4.编码器位置值encoder(uint16 t类型，编码器的数值范围由编码器位数决定)
 struct [[nodiscard]] SetLapPosition final:public _MotorStatusReport2<SetLapPosition>{};
 
-// 1.电机温度temperature (int8t类型， 1℃/lsb
-//  2.电机的转矩电流值iq(int16_t类型， 0.01A/lsb
-//  3.电机输出轴转速speed (int16_t类型， 1dps/lsb
-//  4.电机输出轴角度 (intl6_t类型，1degree/LSB,最大范围±32767degree)。
+// 1.电机温度temperature (i8类型， 1℃/lsb
+//  2.电机的转矩电流值iq(i16类型， 0.01A/lsb
+//  3.电机输出轴转速speed (i16类型， 1dps/lsb
+//  4.电机输出轴角度 (i16类型，1degree/LSB,最大范围±32767degree)。
 struct [[nodiscard]] DeltaPosition final:public _MotorStatusReport<DeltaPosition>{};
 
-// 1.电机温度temperature (int8t类型， 1℃/lsb
-//  2.电机的转矩电流值iq(int16_t类型， 0.01A/lsb
-//  3.电机输出轴转速speed (int16_t类型， 1dps/lsb
-//  4.电机输出轴角度 (intl6_t类型，1degree/LSB,最大范围±32767degree)。
+// 1.电机温度temperature (i8类型， 1℃/lsb
+//  2.电机的转矩电流值iq(i16类型， 0.01A/lsb
+//  3.电机输出轴转速speed (i16类型， 1dps/lsb
+//  4.电机输出轴角度 (i16类型，1degree/LSB,最大范围±32767degree)。
 struct [[nodiscard]] SetTorquePosition final:public _MotorStatusReport<SetTorquePosition>{};
 
 

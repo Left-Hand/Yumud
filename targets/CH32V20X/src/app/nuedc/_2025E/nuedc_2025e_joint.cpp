@@ -251,7 +251,7 @@ void nuedc_2025e_joint_main(){
     RunStatus run_status_;
     run_status_.state = RunState::Idle;
 
-    RingBuf<hal::BxCanFrame, CANMSG_QUEUE_SIZE> msg_queue_;
+    RingBuf<hal::BxCanFrame, CANFRAME_QUEUE_SIZE> msg_queue_;
 
     AlphaBetaCoord<iq16> ab_volt_;
     

@@ -718,9 +718,10 @@ void Uart::enable_rx_dma(const Enable en){
         [this](const DmaEvent ev) -> void{
             switch(ev){
             case DmaEvent::TransferComplete:{
-                const auto req_len = UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_;
+                emit_event(Event::RxBulk);
+                const size_t req_len = UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_;
                 //传送结束 将后半部分的pingpong区填入fifo中
-                const auto act_len = this->rx_fifo_.try_push(std::span(
+                const size_t act_len = this->rx_fifo_.try_push(std::span(
                     &rx_dma_buf_[rx_dma_buf_index_], 
                     req_len
                 )); 
@@ -735,9 +736,10 @@ void Uart::enable_rx_dma(const Enable en){
             }
                 break;
             case DmaEvent::HalfTransfer:{
+                emit_event(Event::RxBulk);
                 //传送进行一半 将前半部分的pingpong区填入fifo中
-                const auto req_len = HALF_UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_;
-                const auto act_len = this->rx_fifo_.try_push(std::span(
+                const size_t req_len = HALF_UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_;
+                const size_t act_len = this->rx_fifo_.try_push(std::span(
                     &rx_dma_buf_[rx_dma_buf_index_], 
                     req_len
                 )); 

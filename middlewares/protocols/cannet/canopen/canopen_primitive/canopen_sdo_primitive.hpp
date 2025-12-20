@@ -150,7 +150,7 @@ enum struct [[nodiscard]] SdoCommandSpecifierKind:uint8_t{
 
 static_assert(sizeof(SdoCommandSpecifierKind) == 1);
 
-struct [[nodiscard]] SdoCommandSpecifier { 
+struct [[nodiscard]] SdoCommandSpecifier final{ 
     using Self = SdoCommandSpecifier;
     using Kind = SdoCommandSpecifierKind;
 
@@ -215,7 +215,7 @@ static_assert(sizeof(SdoCommandSpecifier) == 1);
 
 
 
-struct [[nodiscard]] SdoExpeditedHeader {
+struct [[nodiscard]] SdoExpeditedHeader final{
     using Self = SdoExpeditedHeader;
 
     uint32_t bits;
@@ -298,7 +298,7 @@ enum struct SdoAbortError : uint32_t {
     NoDataAvailable                         = 0x08000024,  // 无可用数据
 };
 
-struct [[nodiscard]] SdoAbortCode {
+struct [[nodiscard]] SdoAbortCode final{
 public:
     using Self = SdoAbortCode;
 
@@ -420,7 +420,7 @@ private:
 
 
 static_assert(sizeof(SdoAbortCode) == 4);
-struct [[nodiscard]] ExpeditedContext{
+struct [[nodiscard]] ExpeditedContext final{
     using Self = ExpeditedContext;
     using Header = SdoExpeditedHeader;
     using U8X4 = std::array<uint8_t, 4>;
@@ -544,7 +544,7 @@ struct [[nodiscard]] ExpeditedContext{
     }
 
     [[nodiscard]] constexpr 
-    CanFrame to_canmsg(const CobId cobid) const {
+    CanFrame to_can_frame(const CobId cobid) const {
         return CanFrame(cobid.to_stdid(), CanPayload::from_u64(this->to_u64()));
     }
 

@@ -495,7 +495,7 @@ private:
         const Angular<T> euler_z
     ) {
         // R = X(a1).Y(a2).Z(a3) convention for Euler angles.
-        // Conversion to Quat<T> as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
+        // https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
         // a3 is the angle of the first rotation, following the notation in this reference.
 
         auto [sin_a1, cos_a1] = (euler_x / 2).sincos();
@@ -503,10 +503,10 @@ private:
         auto [sin_a3, cos_a3] = (euler_z / 2).sincos();
 
         set(
-            +sin_a1 * cos_a2 * cos_a3 + sin_a2 * sin_a3 * cos_a1,
-            -sin_a1 * sin_a3 * cos_a2 + sin_a2 * cos_a1 * cos_a3,
-            +sin_a1 * sin_a2 * cos_a3 + sin_a3 * cos_a1 * cos_a2,
-            -sin_a1 * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3
+            static_cast<T>(+sin_a1 * cos_a2 * cos_a3 + sin_a2 * sin_a3 * cos_a1),
+            static_cast<T>(-sin_a1 * sin_a3 * cos_a2 + sin_a2 * cos_a1 * cos_a3),
+            static_cast<T>(+sin_a1 * sin_a2 * cos_a3 + sin_a3 * cos_a1 * cos_a2),
+            static_cast<T>(-sin_a1 * sin_a2 * sin_a3 + cos_a1 * cos_a2 * cos_a3)
         );
     }
 
@@ -517,12 +517,12 @@ private:
         } else {
             const auto half_angle = angle * static_cast<T>(0.5);
             const auto [sin_angle, cos_angle] = half_angle.sincos();
-            const T s = sin_angle / d;
+            const T s = static_cast<T>(sin_angle) / d;
             set(
                 axis.x * s, 
                 axis.y * s, 
                 axis.z * s,
-                cos_angle
+                static_cast<T>(cos_angle)
             );
         }
     }

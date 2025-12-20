@@ -13,7 +13,7 @@ using namespace ymd::literals;
 struct SubEntry;
 struct CobId;
 
-struct [[nodiscard]] NodeId{
+struct [[nodiscard]] NodeId final{
 
     //  1：NodeID由7bit组成，其中0是保留ID，代表一个未知的节点。
     // 2：Node ID取值为1-127，包含1-127，其中126，127是保留ID。
@@ -79,7 +79,7 @@ struct [[nodiscard]] NodeId{
 
 
 
-struct [[nodiscard]] CobId{
+struct [[nodiscard]] CobId final{
     constexpr explicit CobId(const hal::CanStdId stdid){
         (*this) = std::bit_cast<CobId>(stdid.to_u11());
     }
@@ -157,7 +157,7 @@ static_assert(sizeof(CobId) == sizeof(uint16_t));
 // A000h to AFFFh Network variables网络变量（符合IEC61131-3） 
 // B000h to BFFFh System variables用于路由网关的系统变量 
 // C000h to FFFFh Reserved保留
-struct [[nodiscard]] OdPreIndex{
+struct [[nodiscard]] OdPreIndex final{
     using Self = OdPreIndex;
     uint16_t count;
 
@@ -178,7 +178,7 @@ struct [[nodiscard]] OdPreIndex{
 
 static_assert(sizeof(OdPreIndex) == sizeof(uint16_t));
 
-struct [[nodiscard]] OdSubIndex{
+struct [[nodiscard]] OdSubIndex final{
     using Self = OdSubIndex;
     uint8_t count;
 

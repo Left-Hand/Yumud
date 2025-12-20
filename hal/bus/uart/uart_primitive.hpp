@@ -23,7 +23,8 @@ struct [[nodiscard]] UartEvent{
         TxOverrun,
         RxIdle,
         RxOverrun,
-        RxFull
+        RxFull,
+        RxBulk
     };
 
     using enum Kind;
