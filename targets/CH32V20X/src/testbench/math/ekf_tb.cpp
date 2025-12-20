@@ -2,7 +2,6 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "core/math/float/bf16.hpp"
 #include "dsp/filter/EKF.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 // #include "kalman/kalman3.hpp"

@@ -9,7 +9,7 @@ static_assert(sizeof(float) == 4);
 
 
 namespace ymd::math{
-struct [[nodiscard]] fp32{
+struct [[nodiscard]] fp32 final{
 	using Self = fp32;
 
 	uint32_t frac:23;
@@ -29,6 +29,10 @@ struct [[nodiscard]] fp32{
 		return self;
 	}
 
+	constexpr fp32 operator -() const {
+		return Self::from_bits(this->to_bits() ^ 0x80000000);
+	}
+
 	static constexpr fp32 from_bits(const uint32_t bits){
 		return fp32(std::bit_cast<float>(bits));
 	}
@@ -42,11 +46,6 @@ struct [[nodiscard]] fp32{
 	[[nodiscard]] constexpr uint32_t to_bits() const {
 		return std::bit_cast<uint32_t>(*this);
 	}
-
-	[[nodiscard]] constexpr std::array<uint8_t, 4> to_le_bytes() const {
-		return std::bit_cast<std::array<uint8_t, 4>>(*this);
-	}
-
 
 	[[nodiscard]] constexpr std::partial_ordering operator <=>(const fp32 & other){
 		return float(*this) <=> float(other);

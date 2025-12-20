@@ -8,7 +8,7 @@
 static_assert(8 == sizeof(double));
 namespace ymd::math{
 
-struct [[nodiscard]] fp64{
+struct [[nodiscard]] fp64 final{
 	using Self = fp64;
 
 	uint64_t frac:52;
@@ -17,6 +17,10 @@ struct [[nodiscard]] fp64{
 
     constexpr fp64(double dv){
 		*this = std::bit_cast<fp64>(dv);
+	}
+
+	constexpr fp64 operator -() const {
+		return Self::from_bits(this->to_bits() ^ 0x8000'0000'0000'0000);
 	}
 
 	[[nodiscard]] Self from_bits(const uint64_t bits) {
@@ -30,6 +34,7 @@ struct [[nodiscard]] fp64{
 	[[nodiscard]] Self from_nan() const {
 		return Self{0x7ff8000000000000};
 	}
+
     [[nodiscard]] constexpr operator double() const {
         return std::bit_cast<double>(*this);
     }

@@ -56,28 +56,28 @@ public:
         return Ok();
     }
     
-    IResult<> enable_flip_y(const Enable flip){
-        return modify_ctrl_reg(flip == EN, 7);
+    IResult<> enable_flip_y(const Enable en){
+        return modify_ctrl_reg(en == EN, 7);
     }
 
-    IResult<> enable_flip_x(const Enable flip){
-        return modify_ctrl_reg(flip == EN, 6);
+    IResult<> enable_flip_x(const Enable en){
+        return modify_ctrl_reg(en == EN, 6);
     }
 
-    IResult<> enable_swap_xy(const Enable flip){
-        return modify_ctrl_reg(flip == EN, 5);
+    IResult<> enable_swap_xy(const Enable en){
+        return modify_ctrl_reg(en == EN, 5);
     }
 
-    IResult<> enable_flush_dir_v(const Enable dir){
-        return modify_ctrl_reg(dir == EN, 4);
+    IResult<> enable_flush_dir_v(const Enable en){
+        return modify_ctrl_reg(en == EN, 4);
     }
 
-    IResult<> enable_format_rgb(const Enable is_rgb){
-        return modify_ctrl_reg(is_rgb == DISEN, 3);
+    IResult<> enable_format_rgb(const Enable en){
+        return modify_ctrl_reg(en == DISEN, 3);
     }
 
-    IResult<> enable_flush_dir_h(const Enable dir){
-        return modify_ctrl_reg(dir == EN, 2);
+    IResult<> enable_flush_dir_h(const Enable en){
+        return modify_ctrl_reg(en == EN, 2);
     }
     IResult<> enable_inversion(const Enable inv_en){
         return write_command((inv_en == EN) ? 0x21 : 0x20);
