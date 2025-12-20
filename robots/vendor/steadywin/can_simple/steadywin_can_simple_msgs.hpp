@@ -30,8 +30,7 @@ struct [[nodiscard]] RxSdo final{
     static constexpr CommandKind COMMAND = Command::RxSdo;
     bool is_read;
     uint32_t endpoint_id;
-    uint8_t __resv__;
-    uint32_t value;
+    uint32_t value_bits;
 };
 
 //ID 0x005
@@ -40,8 +39,7 @@ struct [[nodiscard]] TxSdo final{
     static constexpr CommandKind COMMAND = Command::TxSdo;
     bool is_read;
     uint32_t endpoint_id;
-    uint8_t __resv__;
-    uint32_t value;
+    uint32_t value_bits;
 };
 
 // CMD ID: 0x006（主机→电机）

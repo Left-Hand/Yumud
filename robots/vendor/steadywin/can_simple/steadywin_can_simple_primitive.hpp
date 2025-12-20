@@ -53,7 +53,7 @@ DEF_U16_STRONG_TYPE_GRADATION(MitTorqueCode_u12,    from_nm,
 
 }
 
-enum class DeMsgError:uint8_t{
+enum class [[nodiscard]] DeMsgError:uint8_t{
     Unnamed
 };
 
@@ -208,9 +208,9 @@ enum class [[nodiscard]] AxisState:uint8_t{
     Homing = 11,
 };
 
-static constexpr Result<AxisState, DeMsgError> try_into_axis_state(const uint8_t byte){
-    if(byte > 11) return Err(DeMsgError::Unnamed);
-    return Ok(std::bit_cast<AxisState>(byte));
+static constexpr Result<AxisState, DeMsgError> try_into_axis_state(const uint8_t b){
+    if(b > 11) return Err(DeMsgError::Unnamed);
+    return Ok(std::bit_cast<AxisState>(b));
 }
 
 enum class [[nodiscard]] CommandKind:uint8_t{
@@ -248,9 +248,9 @@ enum class [[nodiscard]] CommandKind:uint8_t{
     SaveConfig = 0x1f,
 };
 
-static constexpr Result<CommandKind, DeMsgError> try_into_command_kind(const uint8_t byte){
-    if(byte > 0x1f) return Err(DeMsgError::Unnamed);
-    return Ok(std::bit_cast<CommandKind>(byte));
+static constexpr Result<CommandKind, DeMsgError> try_into_command_kind(const uint8_t b){
+    if(b > 0x1f) return Err(DeMsgError::Unnamed);
+    return Ok(std::bit_cast<CommandKind>(b));
 }
 
 
@@ -262,9 +262,9 @@ enum class [[nodiscard]] LoopMode:uint8_t {
 };
 
 
-static constexpr Result<LoopMode, DeMsgError> try_into_loop_mode(const uint8_t byte){
-    if(byte > 3) return Err(DeMsgError::Unnamed);
-    return Ok(std::bit_cast<LoopMode>(byte));
+static constexpr Result<LoopMode, DeMsgError> try_into_loop_mode(const uint8_t b){
+    if(b > 3) return Err(DeMsgError::Unnamed);
+    return Ok(std::bit_cast<LoopMode>(b));
 }
 
 
@@ -279,9 +279,9 @@ enum class [[nodiscard]] InputMode:uint8_t{
     Mirror = 7,
 };
 
-static constexpr Result<InputMode, DeMsgError> try_into_input_mode(const uint8_t byte){
-    if(byte > 7) return Err(DeMsgError::Unnamed);
-    return Ok(std::bit_cast<InputMode>(byte));
+static constexpr Result<InputMode, DeMsgError> try_into_input_mode(const uint8_t b){
+    if(b > 7) return Err(DeMsgError::Unnamed);
+    return Ok(std::bit_cast<InputMode>(b));
 }
 
 

@@ -14,8 +14,8 @@ namespace ymd::robots::waveshare::ddsm400{
 static constexpr size_t DEFAULT_BAUDRATE = 38400;
 
 // head command payload crc
-static constexpr size_t MAX_PAYLOAD_BYTES = 7;
-static constexpr size_t MAX_PACKET_BYTES = 10;
+static constexpr size_t NUM_PAYLOAD_BYTES = 7;
+static constexpr size_t NUM_PACKET_BYTES = 10;
 
 
 struct [[nodiscard]] MotorId{
@@ -61,6 +61,61 @@ enum class [[nodiscard]] RespCommand:uint8_t{
     GetLoopMode = 0x76,
 };
 
+enum class DeMsgError:uint8_t{
+    Unnamed,
+    CommandNotMatch,
+    InvalidCommand,
+};
+
+
+enum class SerMsgError:uint8_t{
+    CurrentOverflow,
+    CurrentUnderflow,
+    SpeedOverflow,
+    SpeedUnderflow,
+};
+
+static constexpr Option<ReqCommand> try_into_req_command(const uint8_t b){
+    // return tmp::enum_match<ReqCommand>(b, [](auto cmd){
+    //     return Option<ReqCommand>::some(cmd);
+    // });
+
+    switch(std::bit_cast<ReqCommand>(b)){
+        case ReqCommand::SetTarget: return Some(ReqCommand::SetTarget);
+        case ReqCommand::GetJourney: return Some(ReqCommand::GetJourney);
+        case ReqCommand::SetLoopMode: return Some(ReqCommand::SetLoopMode);
+        case ReqCommand::SetMotorId: return Some(ReqCommand::SetMotorId);
+        case ReqCommand::GetLoopMode: return Some(ReqCommand::GetLoopMode);
+    }
+    return None;
+}
+
+
+// CRC-8/MAXIM
+static constexpr uint8_t calc_crc8(std::span<const uint8_t> bytes){
+    // https://www.codeleading.com/article/59474838692/
+    // 遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明
+
+    size_t len = bytes.size();
+    const uint8_t *data = bytes.data();
+
+    uint8_t crc, i;
+    crc = 0x00;
+
+    while(len--)
+    {
+        crc ^= *data++;
+        for(i = 0;i < 8;i++)
+        {
+            if(crc & 0x01)
+            {
+                crc = (crc >> 1) ^ 0x8c;
+            }
+                else crc >>= 1;
+        }
+    }
+    return crc;
+}
 
 #pragma pack(push, 1)
 struct FlatPacket{
@@ -69,38 +124,119 @@ struct FlatPacket{
         ReqCommand req_command;
         RespCommand resp_command;
     };
-    uint8_t payload[MAX_PAYLOAD_BYTES];
-    uint8_t crc;
+    uint8_t payload[NUM_PAYLOAD_BYTES];
+
+    constexpr uint8_t calc_crc() const { 
+        return calc_crc8(std::span(&motor_id.count, NUM_PACKET_BYTES - 1));
+    }
 };
 #pragma pack(pop)
 
-static_assert(sizeof(FlatPacket) == MAX_PACKET_BYTES);
+static_assert(sizeof(FlatPacket) == NUM_PACKET_BYTES - 1);
 
-static constexpr uint8_t calc_crc8(){
-    //TODO
-    return 0;
-}
 
-// 电流环模式下：-32767~32767 对应 -4A~4A，数据类型有符号 16 位；
-// 速度环模式下：-3800~3800 对应 -380rpm~380rpm，单位 0.1rpm，数据类型有符号 16 位；
-// 位置环模式下：0~32767 对应 0°~360°，数据类型无符号 16 位；
-struct [[nodiscard]] SpeedCode final{
-    int16_t bits;
-};
-
-struct [[nodiscard]] CurrentCode final{
-    int16_t bits;
-};
 
 struct [[nodiscard]] SetPointCode final{
-    uint16_t bits;
+    int16_t bits;
 };
 
+
+// 电流环模式下：-32767~32767 对应 -4A~4A，数据类型有符号 16 位；
+struct [[nodiscard]] CurrentCode final{
+    using Self = CurrentCode;
+    int16_t bits;
+    static constexpr Result<Self, SerMsgError> try_from_amps(const iq16 amps){
+        if(amps > 4) return Err(SerMsgError::CurrentOverflow);
+        if(amps < -4) return Err(SerMsgError::CurrentUnderflow);
+        const int16_t bits = static_cast<int16_t>((amps >> 3).to_bits());
+        return Ok(Self{.bits = bits});
+    }
+
+    constexpr iq16 to_amps() const {
+        return iq16::from_bits(int32_t(bits) << 3);
+    }
+
+    constexpr operator SetPointCode() const {
+        return SetPointCode{.bits = bits};
+    }
+};
+
+static_assert(sizeof(CurrentCode) == 2);
+static_assert(CurrentCode::try_from_amps(-2).unwrap().bits == -0x4000);
+static_assert(CurrentCode::try_from_amps(-4).unwrap().bits == -0x8000);
+static_assert(CurrentCode::try_from_amps(2).unwrap().bits == 0x4000);
+
+
+// 速度环模式下：-3800~3800 对应 -380rpm~380rpm，单位 0.1rpm，数据类型有符号 16 位；
+
+struct [[nodiscard]] SpeedCode final{
+    using Self = SpeedCode;
+    int16_t bits;
+
+    static constexpr Result<Self, SerMsgError> try_from_rpm(const iq16 rpm){
+        if(rpm > 380) return Err(SerMsgError::SpeedOverflow);
+        if(rpm < -380) return Err(SerMsgError::SpeedUnderflow);
+        return Ok(SpeedCode{.bits = static_cast<int16_t>(rpm * 10)});
+    }
+
+    static constexpr Result<Self, SerMsgError> try_from_rps(const iq16 rps){
+        return try_from_rpm(rps * 60);
+    }
+
+    constexpr iq16 to_rpm() const {
+        return iq16::from_bits(bits) / 10;
+    }
+
+    constexpr iq16 to_rps() const {
+        return iq16::from_bits(bits) / 600;
+    }
+
+    constexpr operator SetPointCode() const {
+        return SetPointCode{.bits = bits};
+    }
+};
+
+static_assert(sizeof(SpeedCode) == 2);
+static_assert(SpeedCode::try_from_rpm(10).unwrap().bits == 100);
+static_assert(SpeedCode::try_from_rpm(-10).unwrap().bits == -100);
+
+// 位置环模式下：0~32767 对应 0°~360°，数据类型无符号 16 位；
+struct [[nodiscard]] LapAngleCode final{
+    using Self = LapAngleCode;
+    uint16_t bits;
+
+    static constexpr Self from_angle(const Angular<uq32> angle){
+        return LapAngleCode{.bits = static_cast<uint16_t>(angle.to_turns().to_bits() >> 16)};
+    }
+
+    constexpr Angular<uq32> to_angle() const {
+        return Angular<uq32>::from_turns(uq32::from_bits(static_cast<uint32_t>(bits) << 16));
+    }
+
+    constexpr operator SetPointCode() const {
+        return SetPointCode{.bits = std::bit_cast<int16_t>(bits)};
+    }
+};
+
+static_assert(sizeof(LapAngleCode) == 2);
+static_assert(LapAngleCode::from_angle(Angular<uq32>::from_turns(0.25_uq32)).bits == 0x4000);
+
+// 加速时间：速度环模式下有效，每1rpm的加速时间，单位为1ms，
+// 当设置为1时，每1rpm的加速时间为1ms，当设置为10时，每1rpm的加速时间为 10*1ms=10ms，
+// 设置为0时，既默认为1，每1rpm的加速时间为1ms
 struct [[nodiscard]] AccelerationTimeCode final{ 
     uint8_t bits;
 };
 
-struct [[nodiscard]] FaultCode final{
+struct TempratureCode final{ 
+    uint8_t bits;
+};
+
+// 故障码：
+// 故障值	BIT7	BIT6	BIT5	BIT4	BIT3	BIT2	BIT1	BIT0
+// 内容	保留	过欠压故障	断联故障	过温故障	堵转故障	保留	过流故障	霍尔故障
+// 例如故障码为：0x02 即为 0b00000010，表示发生过流故障。
+struct [[nodiscard]] FaultFlags final{
     uint8_t hall:1;
     uint8_t over_current:1;
     uint8_t __resv__:1;
@@ -111,19 +247,10 @@ struct [[nodiscard]] FaultCode final{
     uint8_t __resv2__:1;
 };
 
-struct [[nodiscard]] LapAngleCode final{
-    uint16_t bits;
-};
 
-struct TempratureCode final{ 
-    uint8_t bits;
-};
 
-enum class DeMsgError:uint8_t{
-    Unnamed
-};
 
-static_assert(sizeof(FaultCode) == 1);
+static_assert(sizeof(FaultFlags) == 1);
 }
 
 

@@ -8,8 +8,9 @@ using namespace primitive;
 static constexpr AxisId ZERO_AXIS_ID = AxisId::from_bits(0);
 
 
+namespace {
 //上电校准
-void test1(){
+[[maybe_unused]] void test1(){
     {
     static constexpr auto frame = serialize_msg_to_can_frame(ZERO_AXIS_ID, req_msgs::SetAxisState{
         .axis_state = AxisState::MotorCalibration
@@ -28,7 +29,7 @@ void test1(){
 }
 
 //速度控制
-void test3(){
+[[maybe_unused]] void test3(){
     {
     static constexpr auto frame = serialize_msg_to_can_frame(ZERO_AXIS_ID, 
         req_msgs::SetCotrollerMode{
@@ -65,7 +66,7 @@ void test3(){
 }
 
 //位置控制
-void test6(){
+[[maybe_unused]] void test6(){
     {
         static constexpr auto frame = serialize_msg_to_can_frame(ZERO_AXIS_ID, 
             req_msgs::SetCotrollerMode{
@@ -106,4 +107,6 @@ void test6(){
         static_assert(frame.payload_bytes()[2] == 0x0c);
         static_assert(frame.payload_bytes()[3] == 0x40);
     }
+}
+
 }

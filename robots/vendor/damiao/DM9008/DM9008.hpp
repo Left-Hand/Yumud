@@ -1,10 +1,12 @@
 #pragma once
 
 #include "../utils.hpp"
+#include "core/math/iq/fixed_t.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 
 
 namespace ymd::robots::damiao::dm9008{
-
+using namespace literals;
 struct [[nodiscard]] DM9008_Fault{
 
     enum class [[nodiscard]] Kind:uint8_t{
@@ -38,51 +40,55 @@ private:
 
 static_assert(sizeof(DM9008_Fault) == 1);
 
-struct SpdCtrlParams{iq16 spd;};
-struct PosSpdCtrlParams{iq16 pos, spd;};
+// struct SpdCtrlParams{
+//     iq16 x2;
+//     void fill_bytes(std::span<uint8_t, 4> bytes) const{
+
+//     }
+// };
+// struct PosSpdCtrlParams{
+//     iq16 x1;
+//     iq16 x2;
+// };
+
 class [[nodiscard]] DM9008{
 public:
 
 
-    struct MitCtrlParams{
-        iq16 p_des;
-        iq16 v_des;
-        iq16 kp;
-        iq16 kd;
-        iq16 t_ff;
-    };
+    // struct MitCtrlParams{
+    //     iq16 p_des;
+    //     iq16 v_des;
+    //     iq16 kp;
+    //     iq16 kd;
+    //     iq16 t_ff;
+    // };
     using NodeId = uint8_t;
 
     struct FrameFactory{
-        static constexpr make_spd_frame(
-            const NodeId id, 
-            const SpdCtrlParams & p
-        ){
-            return hal::BxCanFrame::from_tuple(
-                CanStdId(0x100 | id), 
-                std::make_tuple(
-                    float(p.spd)
-                )
-            );
-        }
+        // static constexpr hal::BxCanFrame make_spd_frame(
+        //     const NodeId id, 
+        //     const SpdCtrlParams & p
+        // ){
+        //     return hal::BxCanFrame::from_parts(
+        //         hal::CanStdId::from_u11(0x100 | id), 
+        //         hal::BxCanPayload::from_bytes(
+        //             std::bit_cast<std::array<uint8_t, 4>>(float(p.x2))
+        //         )
+        //     );
+        // }
 
-        static constexpr make_posspd_frame(
-            const NodeId id, 
-            const PosSpdCtrlParams & p
-        ){
-            return hal::BxCanFrame::from_tuple(
-                CanStdId(0x200 | id), 
-                std::make_tuple(
-                    float(p.pos),
-                    float(p.spd),
-                )
-            );
-        }
+        // static constexpr hal::BxCanFrame make_posspd_frame(
+        //     const NodeId id, 
+        //     const PosSpdCtrlParams & p
+        // ){
+        //     return hal::BxCanFrame::from_parts(
+        //         hal::CanStdId::from_u11(0x100 | id), 
+        //         hal::BxCanPayload::from_bytes(
+        //             std::bit_cast<std::array<uint8_t, 8>>(p)
+        //         )
+        //     );
+        // }
 
-        static constexpr 
-        make_mit_frame(const NodeId id, const MitCtrlParams & p){
-            std::array<uint8_t, 8> buf;
-        }
     };
 };
 
