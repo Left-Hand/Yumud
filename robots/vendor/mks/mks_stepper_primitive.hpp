@@ -5,7 +5,7 @@
 #include "core/container/heapless_vector.hpp"
 #include "core/tmp/reflect/enum.hpp"
 
-#include "hal/bus/can/can.hpp"
+
 #include "hal/bus/uart/uarthw.hpp"
 
 #include "algebra/regions/range2.hpp"
@@ -24,7 +24,6 @@ struct [[nodiscard]] NodeId{
     }
 };
 
-namespace prelude{
 
 
 enum class [[nodiscard]] Error:uint8_t{
@@ -127,9 +126,7 @@ enum class [[nodiscard]] FuncCode:uint8_t{
     SpeedCtrl = 0xf6
 };
 
-
-
-static constexpr uint8_t get_verify_code(
+[[nodiscard]] static constexpr uint8_t get_verify_code(
     const NodeId nodeid,
     const FuncCode func_code,
     std::span<const uint8_t> bytes 
@@ -157,7 +154,9 @@ struct [[nodiscard]] Rpm final{
     }
 
     int16_t bits;
-}__packed;
+};
+
+static_assert(sizeof(Rpm) == 2);
 
 struct [[nodiscard]] iRpm final{
     static constexpr iRpm from_tps(const iq16 tps){
@@ -172,9 +171,9 @@ struct [[nodiscard]] iRpm final{
     }
 
     int16_t bits;
-}__packed;
+};
 
-static_assert(sizeof(Rpm) == 2);
+static_assert(sizeof(iRpm) == 2);
 
 struct [[nodiscard]] AcclerationLevel{
     static constexpr AcclerationLevel from_tpss(const iq16 tpss){
@@ -183,11 +182,11 @@ struct [[nodiscard]] AcclerationLevel{
     }
 
     uint8_t bits;
-}__packed;
+};
 
 static_assert(sizeof(AcclerationLevel) == 1);
 
-
+#pragma pack(push, 1)
 struct [[nodiscard]] PulseCnt final{
     static constexpr uint32_t PULSES_PER_TURN = 3200 * (256/16);
     static constexpr PulseCnt from_turns(const iq16 turns){
@@ -205,67 +204,9 @@ struct [[nodiscard]] PulseCnt final{
     }
 
     uint8_t bytes[3];
-}__packed;
+};
+#pragma pack(pop)
+static_assert(sizeof(PulseCnt) == 3);
 
 
-
-}
-
-namespace msgs{
-    using namespace prelude;
-
-
-    struct [[nodiscard]] SetPositionMode3 final{
-        static constexpr FuncCode FUNC_CODE = FuncCode::PositionCtrl3;
-        Rpm rpm;
-        AcclerationLevel acc_level;
-        PulseCnt abs_pulse_cnt;
-    }__packed;
-
-    struct [[nodiscard]] StopPositionMode3 final{
-        static constexpr FuncCode FUNC_CODE = FuncCode::PositionCtrl3;
-
-        const Rpm rpm = Rpm::from_tps(0);
-        AcclerationLevel acc_level;
-        const PulseCnt abs_pulse_cnt = PulseCnt::from_pulses(0);
-    }__packed;
-
-    struct [[nodiscard]] SetSpeed final{
-        static constexpr FuncCode FUNC_CODE = FuncCode::SpeedCtrl;
-        iRpm rpm;
-        AcclerationLevel acc_level;
-    }__packed;
-
-    struct [[nodiscard]] SetEnableStatus final{
-        static constexpr FuncCode FUNC_CODE = FuncCode::SetEnableStatus;
-        bool is_enabled;
-    }__packed;
-
-
-    struct [[nodiscard]] SetSubdivides final{
-        static constexpr FuncCode FUNC_CODE = FuncCode::SetSubdivides;
-        uint8_t subdivides;
-    }__packed;
-
-    struct [[nodiscard]] SetEndstopParaments final{
-        static constexpr FuncCode FUNC_CODE = FuncCode::SetEndstopParaments;
-        bool is_high;
-        bool is_ccw;
-        Rpm rpm;
-    };
-
-    struct [[nodiscard]] EndstopHomming final{
-        static constexpr FuncCode FUNC_CODE = FuncCode::EndstopHomming;
-    }__packed;
-
-    template<typename Raw, typename T = std::decay_t<Raw>>
-    static std::span<const uint8_t> serialize(
-        Raw && obj
-    ){
-        return std::span(
-            reinterpret_cast<const uint8_t *>(&obj),
-            tmp::pure_sizeof_v<T>
-        );
-    }
-}
 }

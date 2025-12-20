@@ -1,23 +1,21 @@
 #pragma once
 
-#include "mks_stepper_prelude.hpp"
+#include "mks_stepper_msgs.hpp"
+#include "hal/bus/can/can.hpp"
 
 namespace ymd::robots::mksmotor{
 
 
 class MksMotorPhy final{
 public:
-    using FuncCode = prelude::FuncCode;
-    
-
-    MksMotorPhy(Some<hal::Can *> && can) : 
+    explicit MksMotorPhy(Some<hal::Can *> && can) : 
         uart_(ymd::None),
         can_(std::move(can)
     ){
         // reconf(cfg);
     }
 
-    MksMotorPhy(Some<hal::Uart *> && uart) : 
+    explicit MksMotorPhy(Some<hal::Uart *> && uart) : 
         uart_(std::move(uart)),
         can_(ymd::None)
     {
@@ -26,9 +24,9 @@ public:
     }
 
 
-    void write_can_frame(const NodeId nodeid, const std::span<const uint8_t> bytes) {
+    void write_can_frame(const NodeId node_id, const std::span<const uint8_t> bytes) {
         const auto msg = hal::BxCanFrame(
-            map_nodeid_to_canid(nodeid),
+            map_nodeid_to_canid(node_id),
             hal::BxCanPayload::from_bytes(bytes)
         );
 
@@ -47,9 +45,9 @@ private:
     Option<hal::Can &> can_;
 
     static constexpr hal::CanStdId map_nodeid_to_canid(
-        const NodeId nodeid
+        const NodeId node_id
     ){
-        return hal::CanStdId::from_bits(nodeid.to_u8());
+        return hal::CanStdId::from_bits(node_id.to_u8());
     }
 };
 

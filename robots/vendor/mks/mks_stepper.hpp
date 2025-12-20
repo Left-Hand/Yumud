@@ -1,18 +1,12 @@
 #pragma once
 
 
-#include "details/mks_stepper_utils.hpp"
+#include "mks_stepper_transport.hpp"
 
 namespace ymd::robots::mksmotor{
 
 class MksStepper final{
 public:
-    using HommingMode = prelude::HommingMode;
-    using Error = prelude::Error;
-    using Buf = prelude::Buf;
-
-    template<typename T = void>
-    using IResult = prelude::IResult<T>;
 
     struct Config{
         NodeId nodeid;
@@ -68,7 +62,7 @@ private:
     ){
         Buf buf;
 
-        const auto bytes = msgs::serialize(obj);
+        const auto bytes = req_msgs::serialize(obj);
         const auto verify_code = get_verify_code(
             nodeid,
             T::FUNC_CODE,

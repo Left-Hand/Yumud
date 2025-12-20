@@ -5,7 +5,7 @@
 namespace ymd::robots::bmkj::m1502e{
 using namespace primitive;
     
-struct [[nodiscard]] BytesFiller{
+struct [[nodiscard]] BytesFiller final{
     constexpr explicit BytesFiller(std::span<uint8_t> bytes): bytes_(bytes){}
 
     constexpr void push_be_u16(uint16_t value){ 
@@ -35,27 +35,18 @@ private:
 
 namespace req_msg{
 
-struct [[nodiscard]] SetLowQuadMotorSetpoint{
+struct [[nodiscard]] SetLowQuadMotorSetpoint final{
     static constexpr uint16_t NUM_CANID = 0x32;
     std::array<SetPoint, 4> setpoints;
-    constexpr std::array<uint8_t, 8> to_bytes() const {
-        std::array<uint8_t, 8> bytes;
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
         BytesFiller filler(bytes);
         for(const auto & setpoint: setpoints){
             filler.push_be_u16(setpoint.bits);
         }
-        return bytes;
-    }
-
-    constexpr CanFrame to_can_frame() const {
-        return CanFrame(
-            CanId::from_u11(NUM_CANID),
-            CanPayload::from_u8x8(to_bytes())
-        );
     }
 };
 
-struct [[nodiscard]] SetLoopMode{
+struct [[nodiscard]] SetLoopMode final{
     using Self = SetLoopMode;
 
     static constexpr uint16_t NUM_CANID = 0x105;
@@ -67,24 +58,16 @@ struct [[nodiscard]] SetLoopMode{
         return Self{.modes = modes};
     }
 
-    constexpr std::array<uint8_t, 8> to_bytes() const{
-        std::array<uint8_t, 8> bytes;
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
         BytesFiller filler(bytes);
         for(const auto & mode: modes){
             filler.push_u8(static_cast<uint8_t>(mode));
         }
-        return bytes;
     }
 
-    constexpr CanFrame to_can_frame() const {
-        return CanFrame(
-            CanId::from_u11(NUM_CANID),
-            CanPayload::from_u8x8(to_bytes())
-        );
-    }
 };
 
-struct [[nodiscard]] SetFeedbackStrategy{
+struct [[nodiscard]] SetFeedbackStrategy final{
     using Self = SetFeedbackStrategy;
 
     static constexpr uint16_t NUM_CANID = 0x106;
@@ -96,32 +79,24 @@ struct [[nodiscard]] SetFeedbackStrategy{
         return Self{.strategies = strategies};
     }
 
-    constexpr std::array<uint8_t, 8> to_bytes() const{
-        std::array<uint8_t, 8> bytes;
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
         BytesFiller filler(bytes);
         for(const auto & strategy: strategies){
             filler.push_u8(strategy.to_bits());
         }
-        return bytes;
     }
 
-    constexpr CanFrame to_can_frame() const {
-        return CanFrame(
-            CanId::from_u11(NUM_CANID),
-            CanPayload::from_u8x8(to_bytes())
-        );
-    }
+
 };
 
-struct [[nodiscard]] QueryItems{
+struct [[nodiscard]] QueryItems final{
     static constexpr uint16_t NUM_CANID = 0x107;
 
     MotorId motor_id;
     std::array<QueryKind, 3> query_kinds;
     uint8_t custom_key = CUSTOM_MAGIC_KEY;
 
-    constexpr std::array<uint8_t, 8> to_bytes() const{
-        std::array<uint8_t, 8> bytes;
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
         BytesFiller filler(bytes);
         filler.push_u8((motor_id.to_bits()));
         for(const auto & kind: query_kinds){
@@ -129,61 +104,41 @@ struct [[nodiscard]] QueryItems{
         }
         filler.push_u8(custom_key);
         filler.push_repeat_u8(0xff, 3);
-        return bytes;
     }
 
-    constexpr CanFrame to_can_frame() const {
-        return CanFrame(
-            CanId::from_u11(NUM_CANID),
-            CanPayload::from_u8x8(to_bytes())
-        );
-    }
 };
 
-struct [[nodiscard]] SetMotorId{
+struct [[nodiscard]] SetMotorId final{
     static constexpr uint16_t NUM_CANID = 0x108;
     static constexpr uint8_t RESVERED_BYTE_CONTEXT = 0xff;
     MotorId motor_id;
 
-    constexpr std::array<uint8_t, 8> to_bytes() const{
-        std::array<uint8_t, 8> bytes;
-        BytesFiller filler(bytes);
-        filler.push_u8((motor_id.to_bits()));
-        for(size_t i = 0; i < 7; ++i ){
-            filler.push_u8(static_cast<uint8_t>(RESVERED_BYTE_CONTEXT));
-        }
-        return bytes;
-    }
-
-    constexpr CanFrame to_can_frame() const {
-        return CanFrame(
-            CanId::from_u11(NUM_CANID),
-            CanPayload::from_u8x8(to_bytes())
-        );
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
+        bytes[0] = motor_id.to_bits();
+        std::fill(bytes.begin() + 1, bytes.end(), RESVERED_BYTE_CONTEXT);
     }
 };
 
-struct [[nodiscard]] QueryFirmwareVersion{
+struct [[nodiscard]] QueryFirmwareVersion final{
     static constexpr uint16_t NUM_CANID = 0x10B;
 
-    constexpr std::array<uint8_t, 8> to_bytes() const{
-        std::array<uint8_t, 8> bytes;
-        bytes.fill(0);
-        return bytes;
-    }
-
-    constexpr CanFrame to_can_frame() const {
-        return CanFrame(
-            CanId::from_u11(NUM_CANID),
-            CanPayload::from_u8x8(to_bytes())
-        );
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const{
+        std::fill(bytes.begin(), bytes.end(), 0);
     }
 };
-
 
 }
 
-// static constexpr CanId generic_feedback
+
+template<typename T>
+static constexpr hal::BxCanFrame serialize_msg(const T & msg){
+    std::array<uint8_t, 8> buf;
+    msg.fill_bytes(buf);
+    return hal::BxCanFrame::from_parts(
+        hal::CanStdId::from_u11(T::NUM_CANID),
+        hal::BxCanPayload::from_u8x8(buf)
+    );
+}
 
 namespace resp_msg{
 struct [[nodiscard]] StateFeedback{
@@ -214,7 +169,7 @@ struct [[nodiscard]] StateFeedback{
         );
     };
 
-    static constexpr Result<Self, DeMsgError> from_can_frame(const CanFrame & frame){
+    static constexpr Result<Self, DeMsgError> try_from_can_frame(const CanFrame & frame){
         if(frame.is_extended()) 
             return Err(DeMsgError::ExtendedFrame);
         if(frame.is_remote()) 
@@ -282,7 +237,7 @@ struct [[nodiscard]] SetLoopMode{
         );
     };
 
-    static constexpr Result<Self, DeMsgError> from_can_frame(const CanFrame & frame){
+    static constexpr Result<Self, DeMsgError> try_from_can_frame(const CanFrame & frame){
         if(frame.is_extended()) 
             return Err(DeMsgError::ExtendedFrame);
         if(frame.is_remote()) 
@@ -326,7 +281,7 @@ struct [[nodiscard]] SetLoopMode{
 //     std::array<uint16_t, 3> values;
 //     uint8_t custom_key = 0;
 
-//     static constexpr Result<Self, DeMsgError> from_can_frame(const CanFrame & frame){
+//     static constexpr Result<Self, DeMsgError> try_from_can_frame(const CanFrame & frame){
 //         if(frame.is_extended()) 
 //             return Err(DeMsgError::ExtendedFrame);
 //         if(frame.is_remote()) 
@@ -354,7 +309,7 @@ struct [[nodiscard]] QueryFirmwareVersion{
     uint8_t day;
 
 
-    static constexpr Result<Self, DeMsgError> from_can_frame(const CanFrame & frame){
+    static constexpr Result<Self, DeMsgError> try_from_can_frame(const CanFrame & frame){
         if(frame.is_extended()) 
             return Err(DeMsgError::ExtendedFrame);
         if(frame.is_remote()) 
