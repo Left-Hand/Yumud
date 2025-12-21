@@ -170,7 +170,7 @@ struct [[nodiscard]] RGB565{
         return std::bit_cast<uint16_t>(*this);
     }
 private:
-    static __fast_inline constexpr ::std::tuple<uint8_t, uint8_t, uint8_t>
+    static __fast_inline constexpr std::tuple<uint8_t, uint8_t, uint8_t>
     seprate(const uint16_t data){
         return {(data >> 11) & 0x1f, (data >> 5) & 0x3f, data & 0x1f};}
     static __fast_inline constexpr uint16_t uni(const uint8_t _r, const uint8_t _g, const uint8_t _b){
@@ -455,17 +455,19 @@ struct [[nodiscard]] ColorCaster<RGB888, Gray> {
 
 template<>
 struct [[nodiscard]] ColorCaster<HSV888, RGB888> {
+
+    static constexpr uint8_t HUE_RED = 0;
+    static constexpr uint8_t HUE_ORANGE = 32;
+    static constexpr uint8_t HUE_YELLOW = 64;
+    static constexpr uint8_t HUE_GREEN = 96;
+    static constexpr uint8_t HUE_AQUA = 128;
+    static constexpr uint8_t HUE_BLUE = 160;
+    static constexpr uint8_t HUE_PURPLE = 192;
+    static constexpr uint8_t HUE_PINK = 224;
+
+
     static constexpr HSV888 cast(const RGB888 & rgb){
-        enum{
-            HUE_RED = 0,
-            HUE_ORANGE = 32,
-            HUE_YELLOW = 64,
-            HUE_GREEN = 96,
-            HUE_AQUA = 128,
-            HUE_BLUE = 160,
-            HUE_PURPLE = 192,
-            HUE_PINK = 224
-        };
+
 
         auto scale8 = [](const uint8_t i, const uint8_t scale) -> uint8_t {return (((uint16_t)i) * (1+(uint16_t)(scale))) >> 8;};
         auto qsub8 = [](const uint8_t i, const uint8_t j) -> uint8_t {return MAX(int(i) - int(j), 0);};
@@ -563,8 +565,8 @@ struct [[nodiscard]] ColorCaster<HSV888, RGB888> {
             v = qadd8(desat,total);
             // undo 'dimming' of brightness
             if( v != 255) v = sqrt16(uint16_t(v) << 8);
-            // without lib8tion: real_t ... ew ... sqrt... double ew, or rather, ew ^ 0.5
-            // if( v != 255) v = (256.0 * sqrt( (real_t)(v) / 256.0));
+            // without lib8tion: iq16 ... ew ... sqrt... double ew, or rather, ew ^ 0.5
+            // if( v != 255) v = (256.0 * sqrt( (iq16)(v) / 256.0));
             
         }
         
@@ -728,15 +730,15 @@ OutputStream & operator<<(OutputStream & os, const LAB888 & lab);
 OutputStream & operator<<(OutputStream & os, const HSV888 & hsv);
 
 template<typename T>
-concept is_monochrome = ::std::is_same_v<T, Binary> or ::std::is_same_v<T, Gray> or ::std::is_same_v<T, IGray>;
+concept is_monochrome = std::is_same_v<T, Binary> or std::is_same_v<T, Gray> or std::is_same_v<T, IGray>;
 
 template<typename T>
-concept is_rgb = ::std::is_same_v<T, RGB24> or ::std::is_same_v<T, RGB332> or ::std::is_same_v<T, RGB565> or ::std::is_same_v<T, RGB888> ;
+concept is_rgb = std::is_same_v<T, RGB24> or std::is_same_v<T, RGB332> or std::is_same_v<T, RGB565> or std::is_same_v<T, RGB888> ;
 
 template<typename T>
-concept is_polychrome = is_rgb<T> or ::std::is_same_v<T, LAB888> or ::std::is_same_v<T, HSV888>;
+concept is_polychrome = is_rgb<T> or std::is_same_v<T, LAB888> or std::is_same_v<T, HSV888>;
 
 template<typename T>
-concept is_color = is_monochrome<T> or is_polychrome<T> or ::std::is_same_v<T, ColorEnum>;
+concept is_color = is_monochrome<T> or is_polychrome<T> or std::is_same_v<T, ColorEnum>;
 
 }

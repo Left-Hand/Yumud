@@ -44,7 +44,7 @@ static constexpr int inv_b10(const uint16_t data, const int step) {
     return (4 * byte1 + byte2 + 1) * step;
 }
 
-static constexpr real_t to_num(SC8815::VBusRatio ratio){
+static constexpr iq16 to_num(SC8815::VBusRatio ratio){
     switch(ratio){
         case SC8815::VBusRatio::_12_5x: return 12.5_r;
         case SC8815::VBusRatio::_5x: return 5_r;
@@ -52,7 +52,7 @@ static constexpr real_t to_num(SC8815::VBusRatio ratio){
     }
 }
 
-static constexpr real_t to_num(SC8815::IBatRatio ratio){
+static constexpr iq16 to_num(SC8815::IBatRatio ratio){
     switch(ratio){
         case SC8815::IBatRatio::_6x:  return 6_r;
         case SC8815::IBatRatio::_12x: return 12_r;
@@ -68,7 +68,7 @@ static constexpr uint32_t to_num(SC8815::IBusRatio ratio){
     }
 }
 
-static constexpr real_t to_num(SC8815::VBatMonRatio ratio){
+static constexpr iq16 to_num(SC8815::VBatMonRatio ratio){
     switch(ratio){
         case SC8815::VBatMonRatio::_12_5x: return 12.5_r;
         case SC8815::VBatMonRatio::_5x: return 5_r;
@@ -100,8 +100,8 @@ IResult<> SC8815::init(const BatConfig & bat_conf){
         .ac_ok = true
     }); res.is_err()) return Err(res.unwrap_err());
 
-    // set_bat_curr_limit(1.2_r);
-    // set_bus_curr_limit(1.2_r);
+    // set_bat_current_limit(1.2_r);
+    // set_bus_current_limit(1.2_r);
     // setVinRegRefVolt(12);
     // enable_otg(false);
 
@@ -119,7 +119,7 @@ IResult<> SC8815::validate(){
 }
 
 
-IResult<real_t> SC8815::get_bus_volt(){
+IResult<iq16> SC8815::get_bus_voltage(){
     const auto ratio = to_num(regs_.ratio_reg.vbus_ratio);
     auto & reg = regs_.vbus_fb_value_reg;
     if(const auto res = read_reg(reg); 
@@ -127,7 +127,7 @@ IResult<real_t> SC8815::get_bus_volt(){
     return Ok(inv_b10(reg.to_bits(), 1) * ratio / 1000);
 }
 
-IResult<real_t> SC8815::get_bus_curr(){
+IResult<iq16> SC8815::get_bus_current(){
     const auto ratio = to_num(regs_.ratio_reg.ibus_ratio);
     auto & reg = regs_.ibus_value_reg;
     if(const auto res = read_reg(reg);
@@ -137,7 +137,7 @@ IResult<real_t> SC8815::get_bus_curr(){
         (3 * bus_shunt_res_mohms_));
 }
 
-IResult<real_t> SC8815::get_bat_volt(){
+IResult<iq16> SC8815::get_bat_voltage(){
     const auto ratio = to_num(regs_.ratio_reg.vbat_mon_ratio);
     auto & reg = regs_.vbat_fb_value_reg;
     if(const auto res = read_reg(reg);
@@ -145,7 +145,7 @@ IResult<real_t> SC8815::get_bat_volt(){
     return Ok(inv_b10(reg.to_bits(), 1) * ratio * 2 / 1000);
 }
 
-IResult<real_t> SC8815::get_bat_curr(){
+IResult<iq16> SC8815::get_bat_current(){
     const auto ratio = to_num(regs_.ratio_reg.ibat_ratio);
     auto & reg = regs_.ibat_value_reg;
     if(const auto res = read_reg(reg);
@@ -154,15 +154,15 @@ IResult<real_t> SC8815::get_bat_curr(){
         (3 * bus_shunt_res_mohms_)));
 }
 
-IResult<real_t> SC8815::get_adin_volt(){
+IResult<iq16> SC8815::get_adin_voltage(){
     auto & reg = regs_.adin_value_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
 
-    return Ok(real_t(inv_b10(reg.to_bits(), 1)) / 1000);
+    return Ok(iq16(inv_b10(reg.to_bits(), 1)) / 1000);
 }
 
-IResult<> SC8815::set_bus_curr_limit(const real_t limit_ma){
+IResult<> SC8815::set_bus_current_limit(const iq16 limit_ma){
     const auto ratio = to_num(regs_.ratio_reg.ibus_ratio);
     auto reg = RegCopy(regs_.ibus_lim_set_reg);
     reg.as_bits_mut() = uint16_t(
@@ -172,7 +172,7 @@ IResult<> SC8815::set_bus_curr_limit(const real_t limit_ma){
     return write_reg(reg);
 }
 
-IResult<> SC8815::set_bat_curr_limit(const real_t limit_ma){
+IResult<> SC8815::set_bat_current_limit(const iq16 limit_ma){
     const auto ratio = to_num(regs_.ratio_reg.ibat_ratio);
     auto reg = RegCopy(regs_.ibat_lim_set_reg);
     reg.as_bits_mut() = uint16_t(
@@ -182,7 +182,7 @@ IResult<> SC8815::set_bat_curr_limit(const real_t limit_ma){
     return write_reg(reg);
 }
 
-IResult<> SC8815::set_output_volt(const real_t volt){
+IResult<> SC8815::set_output_voltage(const iq16 volt){
 
     //判断 VBUS 电压反馈的模式
     if (regs_.ctrl1_set_reg.fb_sel){
@@ -191,8 +191,7 @@ IResult<> SC8815::set_output_volt(const real_t volt){
         //得到 VBUSREF 寄存器 2 的值
         uint16_t tmp2;
 
-        for (tmp2 = 0; tmp2 < 3; tmp2++)
-        {
+        for (tmp2 = 0; tmp2 < 3; tmp2++){
             if (((value - tmp2 - 1) % 4) == 0)
             {
                 break;
@@ -230,14 +229,14 @@ IResult<> SC8815::set_output_volt(const real_t volt){
 
 }
 
-IResult<> SC8815::set_internal_vbus_ref(const real_t volt){
+IResult<> SC8815::set_internal_vbus_ref(const iq16 volt){
     auto reg = RegCopy(regs_.vbus_ref_i_set_reg);
     reg.as_bits_mut() = b10(int(volt * 1000), 2);
     return write_reg(reg);
 
 }
 
-IResult<> SC8815::set_external_vbus_ref(const real_t volt){
+IResult<> SC8815::set_external_vbus_ref(const iq16 volt){
     auto reg = RegCopy(regs_.vbus_ref_e_set_reg);
     reg.as_bits_mut() = b10(int(volt * 1000), 2);
     return write_reg(reg);
@@ -313,7 +312,7 @@ IResult<> SC8815::enable_pgate(const Enable en){
 }
 
 IResult<> SC8815::reconf_bat(const BatConfig & config){
-    if(const auto res = this -> set_bat_volt(config.vcell_set);
+    if(const auto res = this -> set_bat_voltage(config.vcell_set);
         res.is_err()) return res;
     if(const auto res = this -> set_bat_ir_comp(config.ircomp);
         res.is_err()) return res;
@@ -324,7 +323,7 @@ IResult<> SC8815::reconf_bat(const BatConfig & config){
     return Ok();
 }
 
-IResult<SC8815::Interrupts> SC8815::interrupts(){
+IResult<SC8815::Interrupts> SC8815::get_interrupts(){
     auto & reg = regs_.mask_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
@@ -339,9 +338,9 @@ IResult<> SC8815::reconf_interrupt_mask(const Interrupts mask){
 
 
 
-IResult<> SC8815::set_bat_volt(const BatVolt bat_volt){
+IResult<> SC8815::set_bat_voltage(const BatVolt bat_voltage){
     auto reg = RegCopy(regs_.vbat_set_reg);
-    reg.vcell_set = bat_volt;
+    reg.vcell_set = bat_voltage;
     return write_reg(reg);
 }
 

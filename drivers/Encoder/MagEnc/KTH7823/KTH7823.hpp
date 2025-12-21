@@ -19,11 +19,11 @@ public:
 
     [[nodiscard]] IResult<> set_zero_angle(const Angular<uq32> angle);
 
-    [[nodiscard]] IResult<> set_trim_x(const real_t k);
+    [[nodiscard]] IResult<> set_trim_x(const iq16 k);
 
-    [[nodiscard]] IResult<> set_trim_y(const real_t k);
+    [[nodiscard]] IResult<> set_trim_y(const iq16 k);
 
-    [[nodiscard]] IResult<> set_trim(const real_t am, const real_t e);
+    [[nodiscard]] IResult<> set_trim(const iq16 am, const iq16 e);
 
     [[nodiscard]] IResult<> set_mag_threshold(const MagThreshold low, const MagThreshold high);
 

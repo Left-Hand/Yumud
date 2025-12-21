@@ -121,10 +121,10 @@ namespace ymd::nvcv2::pixels{
         const size_t total_sum = sum_map[255];
         const size_t total_cnt = cnt_map[255];
         
-        real_t p1 = 0;
+        iq16 p1 = 0;
         
         int max_i = 0;
-        real_t max_sep = 0;
+        iq16 max_sep = 0;
         
         for(size_t i = 0; i < 256; i++){
             const int current_sum = sum_map[i];
@@ -132,16 +132,16 @@ namespace ymd::nvcv2::pixels{
             
             const int remain_sum = total_sum - current_sum;
             const int remain_cnt = total_cnt - current_cnt;
-            const real_t m1 = real_t(current_sum) / current_cnt;
-            const real_t m2 = real_t(remain_sum) / remain_cnt;
+            const iq16 m1 = iq16(current_sum) / current_cnt;
+            const iq16 m2 = iq16(remain_sum) / remain_cnt;
             
-            real_t t = p1 * (1 - p1) * (m1 - m2) * (m1 - m2);
+            iq16 t = p1 * (1 - p1) * (m1 - m2) * (m1 - m2);
             if(t > max_sep){
                 max_i = i;
                 max_sep = t;
             }
             
-            p1 += real_t(1.0f / 256.0f);
+            p1 += iq16(1.0f / 256.0f);
         }
 
         binarization(dst, src, Gray::from_u8(max_i));
@@ -151,8 +151,8 @@ namespace ymd::nvcv2::pixels{
     void iter_threshold(
             Image<Binary>& dst, 
             const Image<Gray>& src, 
-            const real_t k, 
-            const real_t eps
+            const iq16 k, 
+            const iq16 eps
     ){
         const Vec2u size = src.size();
         std::array<int, 256> statics;
@@ -185,7 +185,7 @@ namespace ymd::nvcv2::pixels{
         const int total_cnt = cnt_map[255];
 
         int last_i = 0;
-        real_t last_t = real_t(0);
+        iq16 last_t = iq16(0);
 
         for(size_t i = 0; i < 256; i++){
             int current_sum = sum_map[i];
@@ -193,10 +193,10 @@ namespace ymd::nvcv2::pixels{
             
             int remain_sum = total_sum - current_sum;
             int remain_cnt = total_cnt - current_cnt;
-            real_t m1 = real_t(current_sum) / current_cnt;
-            real_t m2 = real_t(remain_sum) / remain_cnt;
+            iq16 m1 = iq16(current_sum) / current_cnt;
+            iq16 m2 = iq16(remain_sum) / remain_cnt;
             
-            real_t t = m1 * k + m2 * (1 - k);
+            iq16 t = m1 * k + m2 * (1 - k);
             if(ABS(t - last_t) < eps){
                 last_i = i;
                 last_t = t;
@@ -233,7 +233,7 @@ namespace ymd::nvcv2::pixels{
             for (size_t j = 0; j < i; ++j){
                 if (hist[j] != 0){
                     probability = (float)hist[j] / frontpix;
-                    HO = HO + probability*float(math::log(real_t(1)/real_t::from(probability)));
+                    HO = HO + probability*float(math::log(iq16(1)/iq16::from(probability)));
                 }
             }
     
@@ -241,7 +241,7 @@ namespace ymd::nvcv2::pixels{
             for (size_t k = i; k < 256; ++k){
                 if (hist[k] != 0){
                     probability = (float)hist[k] / (totalpix - frontpix);
-                    HB = HB + probability*float(math::log(1/real_t::from(probability)));
+                    HB = HB + probability*float(math::log(1/iq16::from(probability)));
                 }
             }
     
@@ -256,8 +256,8 @@ namespace ymd::nvcv2::pixels{
         int X, Y;
         int First, Last;
         int Threshold = -1;
-        real_t best_entropy = 114514;
-        real_t entropy = 0;
+        iq16 best_entropy = 114514;
+        iq16 entropy = 0;
         //   找到第一个和最后一个非0的色阶值
         for (First = 0; First <int(hist.size()) && hist[First] == 0; First++) ;
         for (Last = hist.size() - 1; Last > First && hist[Last] == 0; Last--) ;
@@ -277,15 +277,15 @@ namespace ymd::nvcv2::pixels{
         }
 
         // 建立公式（4）及（6）所用的查找表
-        // real_t[] smu = new real_t[Last + 1 - First];
-        std::array<real_t, 256> smu = {0};
+        // iq16[] smu = new iq16[Last + 1 - First];
+        std::array<iq16, 256> smu = {0};
 
         // DEBUG_VALUE(First);
         // DEBUG_VALUE(Last);
 
         for (Y = 1; Y < Last + 1 - First; Y++)
         {
-            real_t mu = 1 / (1 + (real_t)Y / (Last - First));               // 公式（4）
+            iq16 mu = 1 / (1 + (iq16)Y / (Last - First));               // 公式（4）
             // DEBUG_VALUE(mu);
             smu[Y] = -mu * math::log(mu) - (1 - mu) * math::log(1 - mu);      // 公式（6）
             // DEBUG_VALUE(smu[Y]);
@@ -301,10 +301,10 @@ namespace ymd::nvcv2::pixels{
         for (Y = First; Y <= Last; Y++)
         {
             entropy = 0;
-            int mu = (math::round_cast<int>((real_t)W[Y] / S[Y]));             // 公式17
+            int mu = (math::round_cast<int>((iq16)W[Y] / S[Y]));             // 公式17
             for (X = First; X <= Y; X++)
                 entropy = entropy + smu[ABS(X - mu)] * hist[X];
-            mu = math::round_cast<int>((real_t)(W[Last] - W[Y]) / (S[Last] - S[Y]));  // 公式18
+            mu = math::round_cast<int>((iq16)(W[Last] - W[Y]) / (S[Last] - S[Y]));  // 公式18
 
             for (X = Y + 1; X <= Last; X++)
                 entropy = entropy + smu[ABS(X - mu)] * hist[X];       // 公式8
@@ -343,8 +343,8 @@ namespace ymd::nvcv2::pixels{
         }
     }
 
-    void gamma(Image<Gray>& src, const real_t ga) {
-        static real_t last_ga = 1;
+    void gamma(Image<Gray>& src, const iq16 ga) {
+        static iq16 last_ga = 1;
         static std::array<Gray, 256> lut;
 
         if(ga != last_ga){
@@ -352,7 +352,7 @@ namespace ymd::nvcv2::pixels{
             lut.fill(Gray::from_black());
             for(size_t i = 0; i < 256; i++){
                 lut[i] = Gray::from_u8(CLAMP(
-                    uint8_t(math::pow(real_t(i)/256, ga)*256), 
+                    uint8_t(math::pow(iq16(i)/256, ga)*256), 
                     uint8_t(0), 
                     uint8_t(255))
                 );

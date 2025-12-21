@@ -32,14 +32,14 @@ def matrix_to_c_struct_text(matrix):
     # 容易与模板字符串混淆的占位符名称修改
     template = """\
 struct InvPerspectiveConfig{{ 
-    real_t H1 = real_t({H_1:.5f});
-    real_t H2 = real_t({H_2:.5f});
-    real_t H3 = real_t({H_3:.5f});
-    real_t H4 = real_t({H_4:.5f});
-    real_t H5 = real_t({H_5:.5f});
-    real_t H6 = real_t({H_6:.5f});
-    real_t H7 = real_t({H_7:.5f});
-    real_t H8 = real_t({H_8:.5f});
+    iq16 H1 = iq16({H_1:.5f});
+    iq16 H2 = iq16({H_2:.5f});
+    iq16 H3 = iq16({H_3:.5f});
+    iq16 H4 = iq16({H_4:.5f});
+    iq16 H5 = iq16({H_5:.5f});
+    iq16 H6 = iq16({H_6:.5f});
+    iq16 H7 = iq16({H_7:.5f});
+    iq16 H8 = iq16({H_8:.5f});
 }};
 """
 

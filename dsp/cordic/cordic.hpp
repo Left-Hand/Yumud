@@ -38,8 +38,8 @@ protected:
 		for(uint8_t i = 0; i < N; i++){
 			if(x > unit){
 				coord = Coord{
-					coord.x * real_t(cosine[i]) - coord.y * real_t(sine[i]),
-					coord.y * real_t(cosine[i]) + coord.x * real_t(sine[i])
+					coord.x * iq16(cosine[i]) - coord.y * iq16(sine[i]),
+					coord.y * iq16(cosine[i]) + coord.x * iq16(sine[i])
 				};
 				x -= unit;
 			}
@@ -57,15 +57,15 @@ protected:
 		for(uint8_t i = 0; i < N; i++){
 			if(coord.y > 0){
 				coord = Coord{
-					coord.x * real_t(cosine[i]) + coord.y * real_t(sine[i]),
-					coord.y * real_t(cosine[i]) - coord.x * real_t(sine[i])
+					coord.x * iq16(cosine[i]) + coord.y * iq16(sine[i]),
+					coord.y * iq16(cosine[i]) - coord.x * iq16(sine[i])
 				};
 				angleSum += angle;
 			}
 			else{
 				coord = Coord{
-					coord.x * real_t(cosine[i]) - coord.y * real_t(sine[i]),
-					coord.y * real_t(cosine[i]) + coord.x * real_t(sine[i])
+					coord.x * iq16(cosine[i]) - coord.y * iq16(sine[i]),
+					coord.y * iq16(cosine[i]) + coord.x * iq16(sine[i])
 				};
 				angleSum -= angle;
 			}

@@ -15,10 +15,10 @@ namespace ymd::digipw{
 class InterleavedPwmGen3 final{
 public:
 
-    static constexpr real_t ONE_BY_3 = real_t(1.0 / 3);
-    static constexpr real_t TWO_BY_3 = real_t(2.0 / 3);
-    static constexpr real_t FOUR_BY_3 = real_t(4.0 / 3);
-    static constexpr real_t FIVE_BY_3 = real_t(5.0 / 3);
+    static constexpr iq16 ONE_BY_3 = iq16(1.0 / 3);
+    static constexpr iq16 TWO_BY_3 = iq16(2.0 / 3);
+    static constexpr iq16 FOUR_BY_3 = iq16(4.0 / 3);
+    static constexpr iq16 FIVE_BY_3 = iq16(5.0 / 3);
 
     class TrigOccasion{
     public:
@@ -114,7 +114,7 @@ public:
 
     struct CalcResult{
         OcMode oc_mode_temp;
-        real_t oc_duty;
+        iq16 oc_duty;
         OcMode oc_mode2;
         Enable sync_en;
         friend OutputStream & operator <<(OutputStream & os, const CalcResult & self){
@@ -124,7 +124,7 @@ public:
 
     struct SlaveAlgoHelper{
 
-        static constexpr DutySpan calc_duty_span(const real_t dutycycle){
+        static constexpr DutySpan calc_duty_span(const iq16 dutycycle){
             constexpr auto NEAR_ONE = 0.999_r;
             return static_cast<DutySpan>(uint8_t(NEAR_ONE + dutycycle * 3)); 
         }
@@ -209,7 +209,7 @@ public:
         timer_.start();
     }
 
-    using Duty = std::array<real_t, 3>;
+    using Duty = std::array<iq16, 3>;
 
     template<typename UvwDutycycle>
     __no_inline void set_dutycycle(const UvwDutycycle dutycycle){
@@ -307,7 +307,7 @@ private:
 
     static void set_pwm_shift_120(
         hal::TimerOC & pwm, 
-        const real_t dutycycle,
+        const iq16 dutycycle,
         const TrigOccasion curr_ocs, 
         const uint32_t arr
     ){
@@ -380,7 +380,7 @@ private:
 
     static void set_pwm_shift_240(
         hal::TimerOC & pwm, 
-        const real_t dutycycle,
+        const iq16 dutycycle,
         const TrigOccasion curr_ocs, 
         const uint32_t arr
     ){

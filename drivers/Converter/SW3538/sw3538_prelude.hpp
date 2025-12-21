@@ -6,12 +6,12 @@
 namespace ymd::drivers{
 
 struct SW3538_Prelude {
-enum class PdProtocolVersion:uint8_t{
+enum class [[nodiscard]] PdProtocolVersion:uint8_t{
     V2 = 0x01,
     V3 = 0x02
 };
 
-enum class FastChargeProtocol:uint8_t{
+enum class [[nodiscard]] FastChargeProtocol:uint8_t{
     QC2 = 0x01,
     QC3 = 0x02,
     FCP,
@@ -25,7 +25,7 @@ enum class FastChargeProtocol:uint8_t{
     AFC
 };
 
-enum class AdcDataType:uint8_t{
+enum class [[nodiscard]] AdcDataType:uint8_t{
     Vin = 0x01,
     Vout,
     Iout1,

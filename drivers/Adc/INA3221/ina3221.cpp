@@ -94,7 +94,6 @@ IResult<> INA3221::update(const ChannelSelection sel){
 
     // update bus and shunt
     switch(sel){
-        default: __builtin_unreachable();
         case ChannelSelection::CH1: 
             READ_DUAL_REG(shuntvolt1_reg, busvolt1_reg);
         case ChannelSelection::CH2: 
@@ -102,6 +101,7 @@ IResult<> INA3221::update(const ChannelSelection sel){
         case ChannelSelection::CH3: 
             READ_DUAL_REG(shuntvolt3_reg, busvolt3_reg);
     }
+    __builtin_trap();
 
     #undef READ_DUAL_REG
 } 
@@ -115,7 +115,6 @@ IResult<> INA3221::set_average_times(const AverageTimes times){
 IResult<> INA3221::enable_channel(const ChannelSelection sel, const Enable en){
     auto reg = RegCopy(config_reg);
     switch(sel){
-        default: __builtin_unreachable();
         case ChannelSelection::CH1:
             reg.ch1_en = en == EN;
             break;
@@ -125,6 +124,8 @@ IResult<> INA3221::enable_channel(const ChannelSelection sel, const Enable en){
         case ChannelSelection::CH3:
             reg.ch3_en = en == EN;
             break;
+        default:
+            __builtin_trap();
     }
     return write_reg(reg);
 }
@@ -160,8 +161,8 @@ IResult<int> INA3221::get_shunt_volt_uv(const ChannelSelection sel){
             case ChannelSelection::CH1:return shuntvolt1_reg;
             case ChannelSelection::CH2:return shuntvolt2_reg;
             case ChannelSelection::CH3:return shuntvolt3_reg;
-            default: __builtin_unreachable();
         }
+        __builtin_trap();
     }();
 
     // const auto res = read_reg(addr, reg.as_bits_mut());
@@ -175,11 +176,11 @@ IResult<int> INA3221::get_bus_volt_mv(const ChannelSelection sel){
     // RegAddr addr;
     const R16_BusVolt & reg = [&]() -> const R16_BusVolt &{
         switch(sel){
-            default: __builtin_unreachable();
             case ChannelSelection::CH1:return busvolt1_reg;
             case ChannelSelection::CH2:return busvolt2_reg;
             case ChannelSelection::CH3:return busvolt3_reg;
         }
+        __builtin_trap();
     }();
 
     // if(const auto res = read_reg(addr, reg.as_bits_mut()); res.is_err())
@@ -189,41 +190,41 @@ IResult<int> INA3221::get_bus_volt_mv(const ChannelSelection sel){
 }
 
 
-IResult<real_t> INA3221::get_shunt_volt(const ChannelSelection sel){
+IResult<iq16> INA3221::get_shunt_volt(const ChannelSelection sel){
     const auto res = get_shunt_volt_uv(sel);
     if(res.is_err()) return Err(res.unwrap_err());
     return Ok(iq16(iq8(res.unwrap()) / 100) / 10000);
 }
 
-IResult<real_t> INA3221::get_bus_volt(const ChannelSelection sel){
+IResult<iq16> INA3221::get_bus_volt(const ChannelSelection sel){
     const auto res = get_bus_volt_mv(sel);
     if(res.is_err()) return Err(res.unwrap_err());
-    return Ok(real_t(res.unwrap()) / 1000);
+    return Ok(iq16(res.unwrap()) / 1000);
 }
 
 
-IResult<> INA3221::set_instant_ovc_threshold(const ChannelSelection sel, const real_t volt){
+IResult<> INA3221::set_instant_ovc_threshold(const ChannelSelection sel, const iq16 volt){
     const RegAddr addr = [&]{
         switch(sel){
             case ChannelSelection::CH1: return instant_ovc1_reg.ADDRESS; 
             case ChannelSelection::CH2: return instant_ovc1_reg.ADDRESS; 
             case ChannelSelection::CH3: return instant_ovc1_reg.ADDRESS; 
-            default: __builtin_unreachable();
         }
+        __builtin_trap();
     }();
 
     return write_reg(addr, R16_ShuntVolt::to_i16(volt));
 }
 
 
-IResult<> INA3221::set_constant_ovc_threshold(const ChannelSelection sel, const real_t volt){
+IResult<> INA3221::set_constant_ovc_threshold(const ChannelSelection sel, const iq16 volt){
     const RegAddr addr = [&]{
         switch(sel){
             case ChannelSelection::CH1: return constant_ovc1_reg.ADDRESS; 
             case ChannelSelection::CH2: return constant_ovc1_reg.ADDRESS; 
             case ChannelSelection::CH3: return constant_ovc1_reg.ADDRESS; 
-            default: __builtin_unreachable();
         }
+        __builtin_trap();
     }();
 
     return write_reg(addr, R16_ShuntVolt::to_i16(volt));

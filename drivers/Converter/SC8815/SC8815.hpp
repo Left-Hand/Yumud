@@ -30,25 +30,25 @@ public:
     explicit SC8815(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
         :i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
-    [[nodiscard]] IResult<Interrupts> interrupts();
+    [[nodiscard]] IResult<Interrupts> get_interrupts();
 
     [[nodiscard]] IResult<> init(const BatConfig & bat_conf);
 
     [[nodiscard]] IResult<> validate();
 
     [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<real_t> get_bus_volt();
-    [[nodiscard]] IResult<real_t> get_bus_curr();
-    [[nodiscard]] IResult<real_t> get_bat_volt();
-    [[nodiscard]] IResult<real_t> get_bat_curr();
-    [[nodiscard]] IResult<real_t> get_adin_volt();
+    [[nodiscard]] IResult<iq16> get_bus_voltage();
+    [[nodiscard]] IResult<iq16> get_bus_current();
+    [[nodiscard]] IResult<iq16> get_bat_voltage();
+    [[nodiscard]] IResult<iq16> get_bat_current();
+    [[nodiscard]] IResult<iq16> get_adin_voltage();
 
-    [[nodiscard]] IResult<> set_bus_curr_limit(const real_t curr);
-    [[nodiscard]] IResult<> set_bat_curr_limit(const real_t curr);
-    [[nodiscard]] IResult<> set_output_volt(const real_t volt);
+    [[nodiscard]] IResult<> set_bus_current_limit(const iq16 current);
+    [[nodiscard]] IResult<> set_bat_current_limit(const iq16 current);
+    [[nodiscard]] IResult<> set_output_voltage(const iq16 voltage);
 
-    [[nodiscard]] IResult<> set_internal_vbus_ref(const real_t volt);
-    [[nodiscard]] IResult<> set_external_vbus_ref(const real_t volt);
+    [[nodiscard]] IResult<> set_internal_vbus_ref(const iq16 voltage);
+    [[nodiscard]] IResult<> set_external_vbus_ref(const iq16 voltage);
 
     [[nodiscard]] IResult<> set_ibat_lim_ratio();
 
@@ -62,7 +62,7 @@ public:
     [[nodiscard]] IResult<> enable_gpo(const Enable en);
     [[nodiscard]] IResult<> enable_pgate(const Enable en);
 
-    [[nodiscard]] IResult<> set_bat_volt(const BatVolt bat_volt);
+    [[nodiscard]] IResult<> set_bat_voltage(const BatVolt bat_voltage);
 
     [[nodiscard]] IResult<> set_bat_cells(const BatCells bat_cells);
 
@@ -85,8 +85,8 @@ private:
     Regs regs_;
     uint32_t bus_shunt_res_mohms_ = 0;
     uint32_t bat_shunt_res_mohms_ = 0;
-    real_t fb_up_res_kohms_ = 0;
-    real_t fb_down_res_kohms_ = 0;
+    iq16 fb_up_res_kohms_ = 0;
+    iq16 fb_down_res_kohms_ = 0;
 
 
     template<typename T>

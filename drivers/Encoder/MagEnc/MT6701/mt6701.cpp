@@ -20,10 +20,8 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-
-
-static constexpr uint16_t uni_to_u12(const real_t uni){
-    return uint16_t(uni * 4096);
+static constexpr uint16_t perunit_angle_to_u12(const Angular<uq32> angle){
+    return static_cast<uint16_t>(static_cast<uint32_t>(angle.to_turns().to_bits()) >> (32 - 12) & 0xfff);
 }
 
 IResult<> MT6701::init(){
@@ -81,9 +79,9 @@ IResult<> MT6701::enable_abzmux(const Enable en){
     return write_reg(reg);
 }
 
-IResult<> MT6701::set_direction(const bool clockwise){
+IResult<> MT6701::set_direction(const RotateDirection dir){
     auto reg = RegCopy(abz_mux_reg);
-    reg.clockwise = clockwise;
+    reg.clockwise = dir == RotateDirection::CW;
     return write_reg(reg);
 }
 
@@ -100,11 +98,11 @@ IResult<> MT6701::set_abz_resolution(const uint16_t abz_resolution){
     return write_reg(reg);
 }
 
-IResult<> MT6701::set_zero_position(
-        const uint16_t zero_position){
-
+IResult<> MT6701::set_zero_angle(
+    const Angular<uq32> angle
+){
     auto reg = RegCopy(zero_config_reg);
-    reg.zero_position = zero_position;
+    reg.zero_position = perunit_angle_to_u12(angle);
     return write_reg(reg);
 }
 
@@ -119,7 +117,7 @@ IResult<> MT6701::set_zero_pulse_width(
 IResult<> MT6701::set_hysteresis(const Hysteresis hysteresis){
     {
         auto reg = RegCopy(hystersis_reg);
-        reg.hysteresis = static_cast<uint8_t>(hysteresis)  & 0b11;
+        reg.hysteresis = static_cast<uint8_t>(hysteresis) & 0b11;
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
     }
@@ -153,38 +151,38 @@ IResult<> MT6701::set_pwm_freq(const PwmFreq pwm_freq){
     return write_reg(reg);
 }
 
-IResult<> MT6701::set_start_position(const real_t start){
+IResult<> MT6701::set_start_angle(const Angular<uq32> angle){
 
-    const uint16_t start_data = uni_to_u12(start);
+    const uint16_t bits = perunit_angle_to_u12(angle);
     {
         auto reg =  RegCopy(start_reg);
-        reg.bits = start_data;
+        reg.bits = static_cast<uint8_t>(bits & 0xff);
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
 
     {
         auto reg = RegCopy(start_stop_reg);
-        reg.start = start_data >> 8;
+        reg.start = static_cast<uint8_t>(bits >> 8);
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
     return Ok();
 }
 
-IResult<> MT6701::set_stop_position(const real_t stop){
-    const uint16_t stop_data = uni_to_u12(stop);
+IResult<> MT6701::set_stop_angle(const Angular<uq32> angle){
+    const uint16_t bits = perunit_angle_to_u12(angle);
 
     {
         auto reg = RegCopy(stop_reg);
-        reg.bits = stop_data;
+        reg.bits = static_cast<uint8_t>(bits & 0xff);
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
 
     {
         auto reg = RegCopy(start_stop_reg);
-        reg.stop = stop_data >> 8;
+        reg.stop = static_cast<uint8_t>(bits >> 8);
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }

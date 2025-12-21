@@ -32,13 +32,13 @@ public:
 
     [[nodiscard]] IResult<> enable_abzmux(const Enable en);
 
-    [[nodiscard]] IResult<> set_direction(const bool clockwise);
+    [[nodiscard]] IResult<> set_direction(const RotateDirection dir);
 
     [[nodiscard]] IResult<> set_pole_pairs(const uint8_t pole_pairs);
 
     [[nodiscard]] IResult<> set_abz_resolution(const uint16_t abz_resolution);
 
-    [[nodiscard]] IResult<> set_zero_position(const uint16_t zero_position);
+    [[nodiscard]] IResult<> set_zero_angle(const Angular<uq32> angle);
 
     [[nodiscard]] IResult<> set_zero_pulse_width(const ZeroPulseWidth zero_pulse_width);
 
@@ -52,9 +52,9 @@ public:
 
     [[nodiscard]] IResult<> set_pwm_freq(const PwmFreq pwm_freq);
 
-    [[nodiscard]] IResult<> set_start_position(const real_t start);
+    [[nodiscard]] IResult<> set_start_angle(const Angular<uq32> start);
 
-    [[nodiscard]] IResult<> set_stop_position(const real_t stop);
+    [[nodiscard]] IResult<> set_stop_angle(const Angular<uq32> stop);
 private:
 
     MT6701_Phy phy_;

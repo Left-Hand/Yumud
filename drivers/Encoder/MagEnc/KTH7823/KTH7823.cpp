@@ -93,19 +93,19 @@ IResult<> KTH7823::set_zero_angle(const Angular<uq32> angle){
     return Ok();
 }
 
-IResult<> KTH7823::set_trim_x(const real_t k){
+IResult<> KTH7823::set_trim_x(const iq16 k){
     TODO();
     return Ok();
 }
 
-IResult<> KTH7823::set_trim_y(const real_t k){
+IResult<> KTH7823::set_trim_y(const iq16 k){
     TODO();
     return Ok();
 }
 
-IResult<> KTH7823::set_trim(const real_t am, const real_t e){
-    real_t k = math::tan(am + e) / math::tan(am);
-    if(k > real_t(1)) return set_trim_x(k);
+IResult<> KTH7823::set_trim(const iq16 am, const iq16 e){
+    iq16 k = math::tan(am + e) / math::tan(am);
+    if(k > iq16(1)) return set_trim_x(k);
     else return set_trim_y(k);
 }
 

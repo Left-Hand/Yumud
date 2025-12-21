@@ -55,7 +55,7 @@ struct _TM1637_Prelude{
         constexpr PulseWidth(const Kind kind):kind_(kind){;}
 
         using enum Kind;
-        static constexpr Option<PulseWidth> from_dutycycle(const real_t dutycycle){
+        static constexpr Option<PulseWidth> from_dutycycle(const iq16 dutycycle){
             if(dutycycle < DUTY_TABLE[0]) return None;
             else return Some(PulseWidth(duty2kind(dutycycle)));
         }
@@ -65,17 +65,17 @@ struct _TM1637_Prelude{
         Kind kind_;
 
         static constexpr std::array DUTY_TABLE = {
-            real_t(1.0 / 16),
-            real_t(2.0 / 16),
-            real_t(4.0 / 16),
-            real_t(10.0 / 16),
-            real_t(11.0 / 16),
-            real_t(12.0 / 16),
-            real_t(13.0 / 16),
-            real_t(14.0 / 16)
+            iq16(1.0 / 16),
+            iq16(2.0 / 16),
+            iq16(4.0 / 16),
+            iq16(10.0 / 16),
+            iq16(11.0 / 16),
+            iq16(12.0 / 16),
+            iq16(13.0 / 16),
+            iq16(14.0 / 16)
         };
 
-        static constexpr Kind duty2kind(const real_t dutycycle){
+        static constexpr Kind duty2kind(const iq16 dutycycle){
             const auto it = std::lower_bound(DUTY_TABLE.begin(), DUTY_TABLE.end(), dutycycle);
             const auto idx = std::distance(DUTY_TABLE.begin(), it);
             return std::bit_cast<Kind>(uint8_t(idx));

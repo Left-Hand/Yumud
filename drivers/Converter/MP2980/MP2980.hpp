@@ -13,7 +13,7 @@ public:
     explicit MP2980(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
-    [[nodiscard]] IResult<> set_feed_back_vref(const real_t vref);
+    [[nodiscard]] IResult<> set_feed_back_vref(const uq10 vref);
     [[nodiscard]] IResult<> set_feed_back_vref_mv(const uint32_t vref_mv);
     [[nodiscard]] IResult<> enable_power_switching(const Enable en);
     [[nodiscard]] IResult<> enable_vref_change_func(const Enable en);
@@ -27,7 +27,7 @@ public:
     [[nodiscard]] IResult<> set_curr_limit_threshold(const CurrLimitThreshold threshold);
     [[nodiscard]] IResult<Interrupts> interrupts();
     [[nodiscard]] IResult<> set_interrupt_mask(const Interrupts mask);
-    [[nodiscard]] IResult<> set_output_volt(const real_t output_volt);
+    [[nodiscard]] IResult<> set_output_volt(const uq10 output_volt);
     [[nodiscard]] IResult<> init();
 private:
     hal::I2cDrv i2c_drv_;
