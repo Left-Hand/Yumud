@@ -15,7 +15,7 @@ struct CobId;
 
 struct [[nodiscard]] NodeId final{
 
-    //  1：NodeID由7bit组成，其中0是保留ID，代表一个未知的节点。
+    // 1：NodeID由7bit组成，其中0是保留ID，代表一个未知的节点。
     // 2：Node ID取值为1-127，包含1-127，其中126，127是保留ID。
     // 3：NodeID分为SourceNodeID和DestinationNodeID。
     // 4：SourceNodeID表示节点自身的ID。
@@ -58,18 +58,21 @@ struct [[nodiscard]] NodeId final{
         return Bs7::from_bits_unchecked(bits);
     }
 
+    //是否为广播地址
     [[nodiscard]] constexpr bool is_boardcast() const {
         return bits == 0;
     }
 
+    //是否为保留地址
     [[nodiscard]] constexpr bool is_preserved() const{
         return bits == 244 || bits == 255;
     }
 
-    [[nodiscard]] constexpr bool acceptable_with(const NodeId & other) const {
+    [[nodiscard]] constexpr bool is_acceptable_with(const NodeId & other) const {
         return other.is_boardcast() || bits == other.bits;
     }
 
+    // cobid + fcode
     [[nodiscard]] constexpr CobId with_func_code(const FunctionCode fcode) const;
 
     [[nodiscard]] constexpr bool operator==(const NodeId & other) const{

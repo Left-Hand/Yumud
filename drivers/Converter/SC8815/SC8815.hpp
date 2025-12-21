@@ -20,7 +20,7 @@ public:
         .vcell_set = BatVolt::_4_2V,
         .csel = BatCells::_1S,
         .use_ext_setting = false,
-        .ircomp = BatIrComp::_20m
+        .ircomp = BatIrComp::_20m   
     };
 
     explicit SC8815(const hal::I2cDrv & i2c_drv):
@@ -47,8 +47,8 @@ public:
     [[nodiscard]] IResult<> set_bat_current_limit(const iq16 current);
     [[nodiscard]] IResult<> set_output_voltage(const iq16 voltage);
 
-    [[nodiscard]] IResult<> set_internal_vbus_ref(const iq16 voltage);
-    [[nodiscard]] IResult<> set_external_vbus_ref(const iq16 voltage);
+    [[nodiscard]] IResult<> set_internal_vbus_ref(const uq10 voltage);
+    [[nodiscard]] IResult<> set_external_vbus_ref(const uq10 voltage);
 
     [[nodiscard]] IResult<> set_ibat_lim_ratio();
 
@@ -66,7 +66,7 @@ public:
 
     [[nodiscard]] IResult<> set_bat_cells(const BatCells bat_cells);
 
-    [[nodiscard]] IResult<> enable_vbat_use_extneral(const bool use);
+    [[nodiscard]] IResult<> enable_vbat_use_extneral(const Enable en);
     [[nodiscard]] IResult<> set_bat_ir_comp(const BatIrComp bat_ir_comp);
     
     [[nodiscard]] IResult<> set_ibat_ratio(const IBatRatio ratio);

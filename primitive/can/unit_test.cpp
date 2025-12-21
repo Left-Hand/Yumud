@@ -117,13 +117,13 @@ static_assert(CanExtId::try_from_u29(UINT32_MAX).is_none());
 
 // Test constructors and factory methods
 static_assert([]{
-    constexpr auto msg = BxCanFrame::from_remote(CanStdId::from_bits(0x123U));
-    return msg.is_remote() && msg.id_u32() == 0x123U;
+    constexpr auto frame = BxCanFrame::from_remote(CanStdId::from_bits(0x123U));
+    return frame.is_remote() && frame.id_u32() == 0x123U;
 }());
 
 static_assert([]{
-    constexpr auto msg = BxCanFrame::from_empty(CanStdId::from_bits(0x456U));
-    return (!msg.is_remote()) && msg.length() == 0;
+    constexpr auto frame = BxCanFrame::from_empty(CanStdId::from_bits(0x456U));
+    return (!frame.is_remote()) && frame.length() == 0;
 }());
 
 
@@ -131,27 +131,27 @@ static_assert([]{
 // Test byte array construction with sized range
 static_assert([]{
     constexpr std::array<uint8_t, 3> data{1, 2, 3};
-    constexpr auto msg = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_bytes(data));
-    return msg.length() == 3 && msg[0] == 1 && msg[1] == 2 && msg[2] == 3;
+    constexpr auto frame = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_bytes(data));
+    return frame.length() == 3 && frame[0] == 1 && frame[1] == 2 && frame[2] == 3;
 }());
 
 // Test try_from_bytes with valid sized range
 static_assert([]{
     constexpr std::array<uint8_t, 5> data{1, 2, 3, 4, 5};
-    constexpr auto msg = BxCanFrame::from_parts(
+    constexpr auto frame = BxCanFrame::from_parts(
         CanStdId::from_bits(0x123U), 
         BxCanPayload::try_from_bytes(data).unwrap()
     );
-    return msg.length() == 5;
+    return frame.length() == 5;
 }());
 
 // Test initializer list construction
 static_assert([]{
-    constexpr auto msg = BxCanFrame::from_parts(
+    constexpr auto frame = BxCanFrame::from_parts(
         CanStdId::from_bits(0x123U), 
         BxCanPayload::from_list({1, 2, 3, 4})
     );
-    return msg.length() == 4 && msg[0] == 1 && msg[3] == 4;
+    return frame.length() == 4 && frame[0] == 1 && frame[3] == 4;
 }());
 
 
@@ -165,49 +165,49 @@ static_assert([]{
 
 // Test accessors
 static_assert([]{
-    constexpr auto msg = BxCanFrame::from_remote(CanStdId::from_bits(0x123U));
-    return msg.identifier().id_u32() == 0x123U;
+    constexpr auto frame = BxCanFrame::from_remote(CanStdId::from_bits(0x123U));
+    return frame.identifier().id_u32() == 0x123U;
 }());
 
 
 // Test span-based payload access
 static_assert([]{
-    constexpr auto may_msg = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({1, 2, 3}));
-    constexpr auto msg = may_msg;
-    constexpr auto payload_bits = msg.payload_u64();
-    static_assert(msg.dlc().length() == 3);   
+    constexpr auto may_frame = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({1, 2, 3}));
+    constexpr auto frame = may_frame;
+    constexpr auto payload_bits = frame.payload_u64();
+    static_assert(frame.dlc().length() == 3);   
     static_assert(payload_bits == 0x0000000000030201ULL);
-    static_assert(msg[0] == 1);
-    static_assert(msg[1] == 2);
-    static_assert(msg[2] == 3);
-    static_assert(msg.at_or(3,9) == 9);
+    static_assert(frame[0] == 1);
+    static_assert(frame[1] == 2);
+    static_assert(frame[2] == 3);
+    static_assert(frame.at_or(3,9) == 9);
     return true;
 }());
 
 // Test direct array access operators
 static_assert([]{
-    constexpr auto msg = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({10, 20, 30}));
-    return msg[0] == 10 && msg[1] == 20 && msg[2] == 30;
+    constexpr auto frame = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({10, 20, 30}));
+    return frame[0] == 10 && frame[1] == 20 && frame[2] == 30;
 }());
 
 // Test at() method with valid indices
 static_assert([]{
-    constexpr auto msg = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({5, 10, 15}));
-    return msg.at(0) == 5 && msg.at(1) == 10 && msg.at(2) == 15;
+    constexpr auto frame = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({5, 10, 15}));
+    return frame.at(0) == 5 && frame.at(1) == 10 && frame.at(2) == 15;
 }());
 
 // Test try_at() with valid indices
 static_assert([]{
-    constexpr auto msg = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({7, 14, 21}));
-    constexpr auto val0 = msg.try_at(0);
-    constexpr auto val1 = msg.try_at(1);
+    constexpr auto frame = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({7, 14, 21}));
+    constexpr auto val0 = frame.try_at(0);
+    constexpr auto val1 = frame.try_at(1);
     return val0.is_some() && val0.unwrap() == 7 && val1.is_some() && val1.unwrap() == 14;
 }());
 
 // Test try_at() with invalid index (should return None)
 static_assert([]{
-    constexpr auto msg = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({1, 2, 3}));
-    constexpr auto result = msg.try_at(5); // Index out of bounds
+    constexpr auto frame = BxCanFrame::from_parts(CanStdId::from_bits(0x123U), BxCanPayload::from_list({1, 2, 3}));
+    constexpr auto result = frame.try_at(5); // Index out of bounds
     return result.is_none();
 }());
 
