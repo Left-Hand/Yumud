@@ -1,7 +1,7 @@
 #pragma once 
 
 #include "st7789_prelude.hpp"
-#include "core/utils/bits/bitsqueue.hpp"
+#include "core/utils/bits/bits_queue.hpp"
 #include "core/utils/data_iter.hpp"
 #include "core/io/regs.hpp"
 #include "hal/bus/spi/spihw.hpp"

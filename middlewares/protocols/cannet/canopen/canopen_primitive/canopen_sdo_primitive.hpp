@@ -5,7 +5,7 @@
 #include "core/tmp/implfor.hpp"
 #include "core/utils/Option.hpp"
 #include "core/utils/Result.hpp"
-#include "cast.hpp"
+#include "core/utils/convert.hpp"
 
 
 namespace ymd::canopen::primitive{

@@ -19,6 +19,11 @@ using namespace asciican::primitive::operations;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
+static constexpr size_t STD_ID_STR_LEN = 3;
+static constexpr size_t EXT_ID_STR_LEN = 8;
+static constexpr size_t NUM_MAX_CAN_DLC = 8;
+
+
 [[nodiscard]] static constexpr 
 Option<uint8_t> char2digit(char c){
     switch(c){
@@ -70,26 +75,23 @@ IResult<uint32_t> parse_hex_str(const StringView str){
 [[nodiscard]] static constexpr 
 IResult<uint32_t> parse_dual_char(const char c1, const char c2){
 
-    const auto d1 = ({
+    const auto nibble1 = ({
         const auto may_digit = char2digit(c1);
         if(may_digit.is_none()) return Err(Error::UnsupportedHexChar);
         may_digit.unwrap();
     });
 
 
-    const auto d2 = ({
+    const auto nibble2 = ({
         const auto may_digit = char2digit(c2);
         if(may_digit.is_none()) return Err(Error::UnsupportedHexChar);
         may_digit.unwrap();
     });
 
 
-    return Ok(static_cast<uint32_t>(d1 << 4 | d2));
+    return Ok(static_cast<uint32_t>(nibble1 << 4 | nibble2));
 }
 
-static constexpr size_t STD_ID_STR_LEN = 3;
-static constexpr size_t EXT_ID_STR_LEN = 8;
-static constexpr size_t NUM_MAX_CAN_DLC = 8;
 
 [[nodiscard]] static constexpr 
 IResult<hal::CanStdId> parse_std_id(const StringView str){

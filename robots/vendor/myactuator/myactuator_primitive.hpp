@@ -4,7 +4,6 @@
 #include "core/math/float/fp32.hpp"
 #include "core/utils/bytes/bytes_provider.hpp"
 #include "core/utils/bits/bits_caster.hpp"
-#include "core/utils/bits/from_bits_debinder.hpp"
 #include "core/utils/enum/strong_type_gradation.hpp"
 #include "core/string/string_view.hpp"
 
@@ -87,7 +86,7 @@ struct [[nodiscard]] AccelCode_u32{
     static constexpr uq16 MAX_DPSS = 60000;
     static constexpr uq16 MIN_DPSS = 100;
     [[nodiscard]] static constexpr Result<AccelCode_u32, std::strong_ordering> 
-    from_dpss(const uq16 dpss){
+    try_from_dpss(const uq16 dpss){
         if(dpss > MAX_DPSS) [[unlikely]]
             return Err(std::strong_ordering::greater);
         if(dpss < MIN_DPSS) [[unlikely]]
@@ -218,10 +217,20 @@ enum class PlanAccelKind:uint8_t{
 };
 
 
-enum class [[nodiscard]] Command:uint8_t{
+enum class [[nodiscard]] ReqCommand:uint8_t{
     GetPidParameter = 0x30,
+    WritePidParameterToRam = 0x31,
+    WritePidParameterToRom = 0x32,
     GetPlanAccel = 0x42,
     SetPlanAccel = 0x43,
+    GetMultilapPosition = 0x60,
+    GetMultilapPositionWithoutOffset = 0x61,
+    GetEncoderMultilapOffset = 0x62,
+    WriteEncoderMultilapOffset = 0x62,
+    WriteCurrentEncoderMultilapOffset = 0x63,
+    ReadLapEncoder = 0x90,
+    ReadMultiLapAngle = 0x92,
+    ReadLapAngle = 0x94,
     GetStatus1 = 0x9A,
     GetStatus2 = 0x9c,
     GetStatus3 = 0x9d,
@@ -245,137 +254,5 @@ enum class Baudrate:uint8_t{
     RS485_500K = 1,
     CAN_1M = 1
 };
-
-static constexpr size_t PAYLOAD_CAPACITY = 7;
-
-struct [[nodiscard]] BytesFiller{
-public:
-    static constexpr size_t CAPACITY = PAYLOAD_CAPACITY;
-
-    constexpr explicit BytesFiller(std::span<uint8_t, CAPACITY> bytes):
-        bytes_(bytes){;}
-
-    constexpr ~BytesFiller(){
-        if(not is_full()) __builtin_abort();
-    }
-
-    constexpr __always_inline 
-    void push_byte(const uint8_t byte){
-        if(pos_ >= bytes_.size()) [[unlikely]] 
-            on_overflow();
-        bytes_[pos_++] = byte;
-    }
-
-    constexpr __always_inline 
-    void push_zero(){
-        push_byte(0);
-    }
-
-    constexpr __always_inline 
-    void push_zeros(size_t n){
-        #pragma GCC unroll(4)
-        for(size_t i = 0; i < n; i++)
-            push_byte(0);
-    }
-
-    constexpr __always_inline 
-    void fill_remaining(const uint8_t byte){
-        const size_t n = bytes_.size() - pos_;
-
-        #pragma GCC unroll(4)
-        for(size_t i = 0; i < n; i++){
-            push_byte_unchecked(byte);
-        }
-    }
-
-    template<size_t Extents>
-    constexpr __always_inline 
-    void push_bytes(const std::span<const uint8_t, Extents> bytes){
-        if(pos_ + bytes.size() > bytes_.size()) [[unlikely]]
-            on_overflow();
-        push_bytes_unchecked(bytes);
-    }
-
-    constexpr __always_inline 
-    void push_float(const float f_val){
-        static_assert(sizeof(float) == 4);
-        const auto bytes = std::bit_cast<std::array<uint8_t, sizeof(float)>>(f_val);
-        push_bytes(std::span(bytes));
-    }
-
-    template<typename T>
-    requires (std::is_integral_v<T>)
-    constexpr __always_inline 
-    void push_int(const T i_val){
-        const auto bytes = std::bit_cast<std::array<uint8_t, sizeof(T)>>(i_val);
-        push_bytes(std::span(bytes));
-    }
-
-
-    [[nodiscard]] constexpr bool is_full() const {
-        return pos_ == CAPACITY;
-    }
-private:
-    std::span<uint8_t, CAPACITY> bytes_;
-    size_t pos_ = 0;
-
-    constexpr __always_inline 
-    void push_byte_unchecked(const uint8_t byte){ 
-        bytes_[pos_++] = byte;
-    }
-
-    template<size_t Extents>
-    constexpr __always_inline 
-    void push_bytes_unchecked(const std::span<const uint8_t, Extents> bytes){ 
-        if constexpr(Extents == std::dynamic_extent){
-            #pragma GCC unroll(4)
-            for(size_t i = 0; i < bytes.size(); i++){
-                push_byte(bytes[i]);
-            }
-        }else{
-            #pragma GCC unroll(4)
-            for(size_t i = 0; i < Extents; i++){
-                push_byte(bytes[i]);
-            }
-        }
-    }
-
-    constexpr __always_inline void on_overflow(){
-        __builtin_trap();
-    }
-};
-
-
-
-struct [[nodiscard]] CommandHeadedDataField{
-    Command cmd;
-    std::array<uint8_t, PAYLOAD_CAPACITY> payload_bytes;
-
-    static constexpr CommandHeadedDataField from_command_and_payload_bytes(
-        const Command cmd,
-        std::span<const uint8_t, BytesFiller::CAPACITY> payload_bytes
-    ){
-        CommandHeadedDataField ret;
-        ret.cmd = cmd;
-        std::copy(payload_bytes.begin(), payload_bytes.end(), ret.payload_bytes.begin());
-        return ret;
-    }
-
-    static constexpr CommandHeadedDataField from_bytes(const std::span<uint8_t, BytesFiller::CAPACITY + 1> bytes){
-        return from_command_and_payload_bytes(
-            static_cast<Command>(bytes[0]),
-            bytes.subspan<1, BytesFiller::CAPACITY>()
-        );
-    }
-};
-
-static_assert(sizeof(CommandHeadedDataField) == 1 + BytesFiller::CAPACITY);
-
-
-enum class DeMsgError:uint8_t{
-
-};
-
-
 
 }

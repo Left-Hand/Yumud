@@ -1,17 +1,22 @@
 #pragma once
 
-#include "myactuator.hpp"
+#include "myactuator_primitive.hpp"
+#include "myactuator_utils.hpp"
 
 namespace ymd::robots::myactuator{
 namespace req_msgs{
 
 #define DEF_COMMAND_ONLY_REQ_MSG(cmd_t)\
 struct [[nodiscard]] cmd_t final{\
-    constexpr \
-    void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {\
+    static constexpr ReqCommand COMMAND = ReqCommand::cmd_t;\
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {\
     BytesFiller(bytes).fill_remaining(0);}};\
 
+//取PID参数命令(0×30) page2
+// 该指令可以读取电流环、速度环和位置环的PID参数，数据类型为Float,通过索引
+// 值来确定，具体见2.1.4索引说明表。
 struct [[nodiscard]] GetPidParameter{
+    static constexpr ReqCommand COMMAND = ReqCommand::GetPidParameter;  
     PidIndex index;
     constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = BytesFiller(bytes);
@@ -20,8 +25,37 @@ struct [[nodiscard]] GetPidParameter{
     }
 };
 
+// 写入PID参数到RAM命令(0×31) page 4
+struct [[nodiscard]] WritePidParameterToRam{
+    static constexpr ReqCommand COMMAND = ReqCommand::WritePidParameterToRam;  
+    PidIndex index;
+    math::fp32 value;
 
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+        auto filler = BytesFiller(bytes);
+        filler.push_byte(std::bit_cast<uint8_t>(index));
+        filler.push_zeros(2);
+        filler.push_float(value);
+    }
+};
+
+// 写入PID参数到ROM 命令(0x32) page 5
+struct [[nodiscard]] WritePidParameterToRom{
+    static constexpr ReqCommand COMMAND = ReqCommand::WritePidParameterToRom;  
+    PidIndex index;
+    math::fp32 value;
+
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+        auto filler = BytesFiller(bytes);
+        filler.push_byte(std::bit_cast<uint8_t>(index));
+        filler.push_zeros(2);
+        filler.push_float(value);
+    }
+};
+
+// 读取加速度命令(0×42) page 7
 struct [[nodiscard]] GetPlanAccel final{
+    static constexpr ReqCommand COMMAND = ReqCommand::GetPlanAccel;
     PlanAccelKind kind;
     constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = BytesFiller(bytes);
@@ -30,27 +64,67 @@ struct [[nodiscard]] GetPlanAccel final{
     }
 };
 
+//写入加减速度到RAM和 ROM命令(0x43) page 10
 struct [[nodiscard]] SetPlanAccel final{
-    PlanAccelKind kind;
-    AccelCode_u32 accel;
+    static constexpr ReqCommand COMMAND = ReqCommand::SetPlanAccel;
+
+    PlanAccelKind accel_kind;
+    AccelCode_u32 accel_code;
     constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = BytesFiller(bytes);
-        filler.push_byte(std::bit_cast<uint8_t>(kind));
+        filler.push_byte(std::bit_cast<uint8_t>(accel_kind));
         filler.push_zeros(2);
-        filler.push_int<uint32_t>(accel.bits);
+        filler.push_int<uint32_t>(accel_code.bits);
     }
 };
 
+// 读取多圈编码器位置数据命令(0x60) page13
+DEF_COMMAND_ONLY_REQ_MSG(GetMultilapPosition)
+//  读取多圈编码器原始位置数据命令(0x61) page15
+DEF_COMMAND_ONLY_REQ_MSG(GetMultilapPositionWithoutOffset)
+// 取多圈编码器零偏数据命令(0x62) page17
+DEF_COMMAND_ONLY_REQ_MSG(GetEncoderMultilapOffset)
 
+// 写 入编码器多圈值到ROM作为电机零点命令(0x63) page 18
+struct [[nodiscard]] WriteEncoderMultilapOffset final{
+    static constexpr ReqCommand COMMAND = ReqCommand::WriteEncoderMultilapOffset;
+    int32_t encoder_offset;
+
+    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+        auto filler = BytesFiller(bytes);
+        filler.push_zeros(3);
+        filler.push_int<int32_t>(encoder_offset);
+    }
+};
+//  写入编码器当前多圈位置到ROM作为电机零点命令 (0x64) page 20
+DEF_COMMAND_ONLY_REQ_MSG(WriteCurrentEncoderMultilapOffset)
+
+// 读取单圈编码器命令(0x90) page 21
+DEF_COMMAND_ONLY_REQ_MSG(ReadLapEncoder)
+
+// 读取多圈角度命令(0x92) page 23
+DEF_COMMAND_ONLY_REQ_MSG(ReadMultiLapAngle)
+
+// 读取单圈角度命令(0x94) page 25
+DEF_COMMAND_ONLY_REQ_MSG(ReadLapAngle)
+
+// 读取电机状态1和错误标志命令(0x9A) page 27
 DEF_COMMAND_ONLY_REQ_MSG(GetStatus1);
+
+// 读取电机状态2命令(0x9C) page 29
 DEF_COMMAND_ONLY_REQ_MSG(GetStatus2);
+
+// 读取电机状态3命令(0x9D) page 31
 DEF_COMMAND_ONLY_REQ_MSG(GetStatus3);
+
+// 电机关闭命令(0x80) page 33
 DEF_COMMAND_ONLY_REQ_MSG(ShutDown);
 
+// 转矩闭环控制命令(OxA1) page 34
 struct [[nodiscard]] SetTorque final{
     CurrentCode_i16 q_current;
-    constexpr 
-    void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void 
+    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = BytesFiller(bytes);
         filler.push_zeros(3);
         filler.push_int<int16_t>(q_current.bits);
@@ -59,11 +133,13 @@ struct [[nodiscard]] SetTorque final{
 };
 
 
+// 度闭环控制命令(0xA2) page 37
 struct [[nodiscard]] SetSpeed final{
     Percentage<uint8_t> rated_current_ratio;
     SpeedCtrlCode_i32 speed;
 
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void 
+    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = BytesFiller(bytes);
         filler.push_int<uint8_t>(rated_current_ratio.percents());
         filler.push_zeros(2);
@@ -72,12 +148,13 @@ struct [[nodiscard]] SetSpeed final{
 };
 
 
-
+// 绝对位置闭环控制命令(0xA4) page 40
 struct [[nodiscard]] SetPosition final{
     SpeedLimitCode_u16 speed_limit;
     PositionCode_i32 abs_position;
 
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void 
+    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = BytesFiller(bytes);
         filler.push_zeros(1);
         filler.push_int<uint16_t>(speed_limit.bits);
@@ -85,7 +162,7 @@ struct [[nodiscard]] SetPosition final{
     };
 };
 
-
+// 单圈位置控制命令(0xA6) page 44
 struct [[nodiscard]] SetLapPosition final{
     // 1.角度控制值angleControl 为 u16 类型， 数值范围0~35999, 对应实际位置为
     // 0.01degree/LSB, 即实际角度范围0°~359.99°;
@@ -96,7 +173,8 @@ struct [[nodiscard]] SetLapPosition final{
     bool is_ccw;
     SpeedLimitCode_u16 max_speed;
 
-    constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
+    constexpr void 
+    fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = BytesFiller(bytes);
         filler.push_int<uint8_t>(is_ccw);
         filler.push_int<uint16_t>(max_speed.bits);
@@ -105,6 +183,7 @@ struct [[nodiscard]] SetLapPosition final{
     };
 };
 
+// 增量位置闭环控制命令(0xA8) page 47
 // 该指令为控制指令，在电机没有故障的情况下可以运行该指令。主机发送该命令以
 // 控制电机的位置(多圈角度), 若给定的电流大于堵转电流， 则不开启力控模式，
 // 电机的最大转矩电流由上位机中的电机堵转电流值限制。
@@ -129,7 +208,27 @@ struct [[nodiscard]] SetTorquePosition final{
     };
 };
 
+// 力 控位置闭环控制命令(0xA9) page 50
 
+// 系统运行模式获取(0x70) page 54
+
+//  系统复位指令(0x76) page 55
+
+// 系统抱闸释放指令(0x77) page 56
+
+// 系统抱闸锁死指令(0x78) page 57
+
+// 系统运行时间读取指令(0xB1) page 57
+
+// 系统软件版本日期读取指令(0xB2) page 59
+
+// 通讯中断保护时间设置指令(0xB3) page 61
+
+// 通讯波特率设置指令(0xB4) page 63
+
+// 电机型号读取指令(0xB5) page 64
+
+//  主动回复功能指令(0xB6) page 66
 struct [[nodiscard]] MitParams final{
     MitPositionCode_u16 position;
     MitSpeedCode_u12 speed;
@@ -167,8 +266,12 @@ namespace resp_msgs{
 struct [[nodiscard]] cmd_t final{};
 // struct cmd{
 //    constexpr CommandHeadedDataFielfill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
-//        return CommandHeadedDataField::from_command(Command::cmd)};}
+//        return CommandHeadedDataField::from_command(ReqCommand::cmd)};}
 
+
+// 2.1. 读取PID参数命令(0×30)
+// 该指令可以读取电流环、速度环和位置环的PID参数，数据类型为Float,通过索引
+// 值来确定，具体见2.1.4索引说明表。
 struct [[nodiscard]] GetPidParameter final{
     using Self = GetPidParameter;
     PidIndex index;
@@ -178,7 +281,7 @@ struct [[nodiscard]] GetPidParameter final{
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         return Ok(Self{
             .index = std::bit_cast<PidIndex>(bytes[0]),
-            .value = le_bytes_ctor_bits(bytes.subspan<3, 4>())
+            .value = math::fp32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<3, 4>()))
         });
     }
 };
@@ -187,12 +290,12 @@ struct [[nodiscard]] GetPidParameter final{
 struct [[nodiscard]] GetPlanAccel final{
     using Self = GetPlanAccel;
     PlanAccelKind kind;
-    AccelCode_u32 accel;
+    AccelCode_u32 accel_code;
     [[nodiscard]] static constexpr Result<Self, DeMsgError>
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         return Ok(Self{
             .kind = std::bit_cast<PlanAccelKind>(bytes[0]), 
-            .accel = le_bytes_ctor_bits(bytes.subspan<3, 4>())
+            .accel_code = le_bytes_ctor_bits(bytes.subspan<3, 4>())
         });
     }
 };
