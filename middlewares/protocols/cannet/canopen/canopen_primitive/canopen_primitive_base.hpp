@@ -198,8 +198,7 @@ struct [[nodiscard]] OdSubIndex final{
 };
 
 static_assert(sizeof(OdSubIndex) == sizeof(uint8_t));   
-// enum class [[nodiscard]] OdPreIndex:uint16_t{};
-// enum class [[nodiscard]] OdSubIndex:uint8_t{};
+
 
 struct [[nodiscard]] OdIndex{
     using Self = OdIndex;
@@ -213,28 +212,11 @@ struct [[nodiscard]] OdIndex{
     static constexpr Self from_parts(const OdPreIndex _pre, const OdSubIndex _sub){
         return Self(_pre.to_bits(), _sub.to_bits());
     }
-    constexpr bool operator==(const OdIndex& other) const{
+    [[nodiscard]] constexpr bool operator==(const OdIndex& other) const{
         return pre == other.pre and sub == other.sub;
     }
 };
 
-
-
-
-// class SdoCommand {
-// public:
-//     // 位域结构体
-//     using CommandSpecifier = SdoCommandSpecifier;
-//     // 构造函数
-//     SdoCommand(const hal::BxCanFrame & frame) {
-//         specifier = std::bit_cast<CommandSpecifier>(msg.payload_bytes()[0]);
-//     }
-
-//     auto type() const { return SdoCommandType(speci.command); }
-
-// private:
-//     CommandSpecifier specifier;
-// };
 
 [[nodiscard]] constexpr CobId NodeId::with_func_code(const FunctionCode fcode) const{
     return CobId::from_parts(*this, fcode);

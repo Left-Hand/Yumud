@@ -9,7 +9,7 @@ namespace ymd{
 
 template<size_t N>
 requires (N <= 32 and N > 0)
-struct [[nodiscard]] BitsSet {
+struct [[nodiscard]] BitsSet final{
     using Self = BitsSet<N>;
     using D = tmp::bits_to_uint_t<N>;
 

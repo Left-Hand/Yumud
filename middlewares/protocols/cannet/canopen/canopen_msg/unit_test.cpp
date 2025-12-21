@@ -103,7 +103,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
 
 [[maybe_unused]] static void test1(){
     static constexpr auto err_code = SdoAbortCode(SdoAbortCode::DataTransferOrStorageFailed);
-    static constexpr auto context = ExpeditedContext::from_exception(
+    static constexpr auto context = SdoExpeditedContext::from_exception(
         OdIndex(0, 0),
         err_code
     );
@@ -111,22 +111,22 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     static_assert(context.header.to_bits() == 0x80'0000'00);
     static_assert(context.bytes_u32() == err_code.to_u32());
 
-    static_assert(ExpeditedContext::from_read_resp(OdIndex(0, 0), std::to_array<uint8_t>({0}))
+    static_assert(SdoExpeditedContext::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0}))
         .header.cmd_spec().to_u8() == 0x4f);
-    static_assert(ExpeditedContext::from_read_resp(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
+    static_assert(SdoExpeditedContext::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
         .header.cmd_spec().to_u8() == 0x4b);
-    static_assert(ExpeditedContext::from_read_resp(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
+    static_assert(SdoExpeditedContext::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
         .header.cmd_spec().to_u8() == 0x47);
-    static_assert(ExpeditedContext::from_read_resp(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
+    static_assert(SdoExpeditedContext::from_read_response(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
         .header.cmd_spec().to_u8() == 0x43);
 
-    static_assert(ExpeditedContext::from_write_req(OdIndex(0, 0), std::to_array<uint8_t>({0}))
+    static_assert(SdoExpeditedContext::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0}))
         .header.cmd_spec().to_u8() == 0x2f);
-    static_assert(ExpeditedContext::from_write_req(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
+    static_assert(SdoExpeditedContext::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0}))
         .header.cmd_spec().to_u8() == 0x2b);
-    static_assert(ExpeditedContext::from_write_req(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
+    static_assert(SdoExpeditedContext::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0}))
         .header.cmd_spec().to_u8() == 0x27);
-    static_assert(ExpeditedContext::from_write_req(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
+    static_assert(SdoExpeditedContext::from_write_request(OdIndex(0, 0), std::to_array<uint8_t>({0, 0, 0, 0}))
         .header.cmd_spec().to_u8() == 0x23);
     // static_assert()
 }
@@ -140,7 +140,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     // 测试写请求
     static constexpr auto write_request = Msg{
         .client_nodeid = NodeId::from_u7(5),
-        .context = ExpeditedContext::from_write_req<uint32_t>(
+        .context = SdoExpeditedContext::from_write_request<uint32_t>(
             OdIndex{0x1000, 0},
             uint32_t(0x12345678u)
         )
@@ -160,7 +160,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     //#region
     // 测试读请求
 
-    static constexpr auto context = ExpeditedContext::from_read_req(
+    static constexpr auto context = SdoExpeditedContext::from_read_request(
         OdIndex{0x1001, 1});
 
     static constexpr auto read_request = Msg{
@@ -187,7 +187,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     // 测试写响应
     static constexpr auto write_response = Msg{
         .server_nodeid = NodeId::from_u7(5),
-        .context = ExpeditedContext::from_write_succeed(
+        .context = SdoExpeditedContext::from_write_succeed(
             OdIndex{0x1000, 0}
         )
     };
@@ -203,7 +203,7 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
     // 测试读响应
     static constexpr auto read_response = Msg{
         .server_nodeid = NodeId::from_u7(3),
-        .context = ExpeditedContext::from_read_resp<uint32_t>(
+        .context = SdoExpeditedContext::from_read_response<uint32_t>(
             OdIndex{0x1001, 1},
             uint32_t(0x11223344)
         )
@@ -225,31 +225,31 @@ static_assert(PdoOnlyFunctionCode::try_from_bits(4).is_some());
 
 
 [[maybe_unused]] static void canopen_sdo_payload_static_test() {
-    // 测试 ExpeditedContext 的各种构建方法
+    // 测试 SdoExpeditedContext 的各种构建方法
     
     // 测试写请求构建
-    static constexpr auto write_payload = ExpeditedContext::from_write_req<uint16_t>(
+    static constexpr auto write_payload = SdoExpeditedContext::from_write_request<uint16_t>(
         OdIndex{OdPreIndex::from_bits(0x1002), OdSubIndex::from_bits(0)},
         0xABCDu
     );
     
     // 测试读请求构建
-    static constexpr auto read_payload = ExpeditedContext::from_read_req<uint8_t>(
+    static constexpr auto read_payload = SdoExpeditedContext::from_read_request<uint8_t>(
         OdIndex{OdPreIndex::from_bits(0x1003), OdSubIndex::from_bits(2)},
         0x00u
     );
     
     // 测试响应构建
-    static constexpr auto response_payload = ExpeditedContext::from_read_succeed(
+    static constexpr auto response_payload = SdoExpeditedContext::from_read_succeed(
         OdIndex{OdPreIndex::from_bits(0x1004), OdSubIndex::from_bits(0)}
     );
     
     // 验证大小
-    static_assert(sizeof(ExpeditedContext) == 8);
+    static_assert(sizeof(SdoExpeditedContext) == 8);
     
     // 验证转换
     static constexpr auto u64_value = write_payload.to_u64();
-    static constexpr auto restored_payload = ExpeditedContext::from_u64(u64_value);
+    static constexpr auto restored_payload = SdoExpeditedContext::from_u64(u64_value);
     static_assert(restored_payload.to_u64() == u64_value);
 }
 
