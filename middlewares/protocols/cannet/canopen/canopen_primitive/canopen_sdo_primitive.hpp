@@ -542,12 +542,12 @@ struct alignas(8) [[nodiscard]] SdoExpeditedContext final{
     [[nodiscard]] __always_inline static constexpr 
     Self from_exception(
         const OdIndex od_idx,
-        const SdoAbortCode code
+        const SdoAbortCode abort_code
     ){
         constexpr auto SPECIFIER = SdoCommandSpecifier(SdoCommandSpecifier::Kind::ServerException);
         return Self{
             Header::from_parts(SPECIFIER, od_idx), 
-            std::bit_cast<U8X4>(code.to_u32())
+            std::bit_cast<U8X4>(abort_code.to_u32())
         };
     }
 
@@ -576,7 +576,7 @@ struct alignas(8) [[nodiscard]] SdoExpeditedContext final{
 
     [[nodiscard]] constexpr 
     CanFrame to_can_frame(const CobId cobid) const {
-        return CanFrame(cobid.to_stdid(), CanPayload::from_u64(this->to_u64()));
+        return CanFrame::from_parts(cobid.to_stdid(), CanPayload::from_u64(this->to_u64()));
     }
 
 private:

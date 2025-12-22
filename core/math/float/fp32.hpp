@@ -9,7 +9,7 @@ static_assert(sizeof(float) == 4);
 
 
 namespace ymd::math{
-struct [[nodiscard]] fp32 final{
+struct alignas(4) [[nodiscard]] fp32 final{
 	using Self = fp32;
 
 	uint32_t frac:23;

@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace ymd::math{
-struct [[nodiscard]] fp16 final{
+struct alignas(2) [[nodiscard]] fp16 final{
     using Self = fp16;
 
     uint16_t frac:10;
@@ -23,13 +23,13 @@ struct [[nodiscard]] fp16 final{
 
     [[nodiscard]] constexpr uint16_t to_bits() const {
         return std::bit_cast<uint16_t>(*this);
-    
+    }
     constexpr fp16(float f_val) {
         *this = f32_to_fp16(f_val);
     }
 
-    constexpr fp16(int value){
-        *this = int_to_fp16(f_val);
+    constexpr fp16(int int_val){
+        *this = int_to_fp16(int_val);
     }
     constexpr fp16(const double val):fp16(static_cast<float>(val)){};
 
@@ -57,7 +57,7 @@ struct [[nodiscard]] fp16 final{
 
     template<typename D>
     requires (std::is_integral_v<D>)
-    [[nodiscad]] explicit constexpr operator D() const {
+    [[nodiscard]] explicit constexpr operator D() const {
         // 首先检查是否为NaN或无穷大
         if (exp == 0x1F && frac != 0) { // NaN
             return 0; // 或者可以选择抛出异常或返回特定值
@@ -93,7 +93,7 @@ struct [[nodiscard]] fp16 final{
 
 
     template<size_t Q, typename D>
-    [[nodiscad]] explicit constexpr operator fixed_t<Q, D>() const{
+    [[nodiscard]] explicit constexpr operator fixed_t<Q, D>() const{
         return fixed_t<Q, D>(float(*this));
     }
 

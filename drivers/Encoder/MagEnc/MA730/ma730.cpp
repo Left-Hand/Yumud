@@ -85,10 +85,10 @@ IResult<> MA730::update(){
 }
 
 
-IResult<> MA730::set_trim_x(const real_t k){
+IResult<> MA730::set_trim_x(const uq16 k){
     {
         auto reg = RegCopy(regs_.trim_reg);
-        reg.trim = uint8_t((real_t(1) - real_t(1) / k) * 258);
+        reg.trim = uint8_t((uq16(1) - uq16(1) / k) * 258);
         return write_reg(reg);
     }
     {
@@ -99,7 +99,7 @@ IResult<> MA730::set_trim_x(const real_t k){
     }
 }
 
-IResult<> MA730::set_trim_y(const real_t k){
+IResult<> MA730::set_trim_y(const uq16 k){
     {
         auto reg = RegCopy(regs_.trim_reg);
         reg.trim = uint8_t((1.0_r - k) * 258);
@@ -114,9 +114,9 @@ IResult<> MA730::set_trim_y(const real_t k){
 }
 
 
-IResult<> MA730::set_trim(const real_t am, const real_t e){
-    real_t k = std::tan(am + e) / std::tan(am);
-    if(k > real_t(1)) return set_trim_x(k);
+IResult<> MA730::set_trim(const uq16 am, const uq16 e){
+    uq16 k = std::tan(iq16(am + e)) / std::tan(iq16(am));
+    if(k > uq16(1)) return set_trim_x(k);
     else return set_trim_y(k);
 }
 

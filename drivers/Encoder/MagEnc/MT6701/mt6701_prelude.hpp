@@ -150,7 +150,7 @@ private:
 struct MT6701_Regs:public MT6701_Prelude{
     struct R16_RawAngle : public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::RawAngle;
-        uint16_t angle;
+        uint16_t bits;
     }DEF_R16(raw_angle_reg)
 
     struct R8_UVWMux : public Reg8<>{
@@ -163,7 +163,7 @@ struct MT6701_Regs:public MT6701_Prelude{
         static constexpr auto ADDRESS = RegAddr::ABZMux;
 
         uint8_t __resv1__:1;
-        uint8_t clockwise:1;
+        uint8_t is_clockwise:1;
         uint8_t __resv2__:4;
         uint8_t abz_mux:1;
         uint8_t __resv3__:1;
@@ -192,7 +192,7 @@ struct MT6701_Regs:public MT6701_Prelude{
     struct R8_WireConfig : public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::WireConfig;
         uint8_t __resv__:5;
-        uint8_t isPwm:1;
+        uint8_t pwm_en:1;
         uint8_t pwm_polarity_low:1;
         PwmFreq pwm_freq:1;
     };

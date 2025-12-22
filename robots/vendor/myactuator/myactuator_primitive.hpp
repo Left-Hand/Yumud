@@ -43,6 +43,35 @@ DEF_U16_STRONG_TYPE_GRADATION(MitKdCode_u12,        from_val,
 DEF_U16_STRONG_TYPE_GRADATION(MitTorqueCode_u12,    from_nm,        
     iq16,   -24,      24,     24.0/4095)
 
+static constexpr uq32 degree001_to_turns(const uint16_t bits){
+    // 目标：计算 (bits * 2^32) / 36000
+    // 避免除法，使用乘法和移位
+    // 公式：result ≈ (bits * M) >> S
+    // 其中 M ≈ 2^S * 2^32 / 36000
+    
+    // 选择 S = 20 提供足够的精度（误差 < 0.5 LSB）
+    // 计算 M = ceil(2^(32+S) / 36000)
+    constexpr uint32_t S = 20;
+    constexpr uint64_t M = ((1ULL << (32 + S)) + 36000 - 1) / 36000;
+    
+    // 计算 turns_bits = (bits * M) >> S
+    const uint64_t product = static_cast<uint64_t>(bits) * M;
+    const uint32_t turns_bits = static_cast<uint32_t>(product >> S);
+    
+    return uq32::from_bits(turns_bits);
+}
+
+static constexpr uq32 degree_to_turns(const uint16_t bits){
+    constexpr uint32_t S = 20;
+    constexpr uint64_t M = ((1ULL << (32 + S)) + 360 - 1) / 360;
+    
+    // 计算 turns_bits = (bits * M) >> S
+    const uint64_t product = static_cast<uint64_t>(bits) * M;
+    const uint32_t turns_bits = static_cast<uint32_t>(product >> S);
+    
+    return uq32::from_bits(turns_bits);
+}
+
 struct [[nodiscard]] SpeedCode_i16{
     int16_t bits;
 
@@ -85,6 +114,9 @@ struct [[nodiscard]] AccelCode_u32{
 
     static constexpr uq16 MAX_DPSS = 60000;
     static constexpr uq16 MIN_DPSS = 100;
+
+    static constexpr uq16 MAX_TPSS = uq16(60000.0 / 360);
+    static constexpr uq16 MIN_TPSS = uq16(100.0 / 360);
     [[nodiscard]] static constexpr Result<AccelCode_u32, std::strong_ordering> 
     try_from_dpss(const uq16 dpss){
         if(dpss > MAX_DPSS) [[unlikely]]
@@ -105,38 +137,34 @@ struct [[nodiscard]] DegreeCode_i16{
     int16_t bits;
 
     [[nodiscard]] constexpr Angular<iq16> to_angle() const {
-        return Angular<iq16>::from_degrees(bits);
-    }
-};
-
-struct [[nodiscard]] PositionCode_i16{
-    int16_t bits;
-
-    constexpr Angular<iq16> to_angle() const {
-        return Angular<iq16>::from_degrees(bits);
+        return Angular<iq16>::from_turns(degree_to_turns(bits));
     }
 };
 
 
-struct [[nodiscard]] LapPosition_u16{
+struct [[nodiscard]] LapAngleCode_u16{
+    // 电机单圈角度circleAngle, 为 uint16_t类型数据， 以编码器零点为起始点，顺时针
+    // 增加，再次到达零点时数值回0,单位0.01°LSB, 数值范围0~35999。
     uint16_t bits;
-    constexpr Angular<uq16> to_angle() const {
-        return Angular<uq16>::from_turns(uq16::from_bits(bits));
+    constexpr Angular<uq32> to_angle() const {
+        return Angular<uq32>::from_turns(degree001_to_turns(bits));
     }
 };
+
+static constexpr auto c = float(uq22(LapAngleCode_u16(35999).to_angle().to_turns()) * 360);
 
 struct [[nodiscard]] TemperatureCode_i8{
-    int8_t bits;
+    uint8_t bits;
 
-    [[nodiscard]] int8_t to_celsius() const {
-        return bits;
+    [[nodiscard]] constexpr int8_t to_celsius() const {
+        return std::bit_cast<int8_t>(bits);
     }
 };
 
 struct [[nodiscard]] VoltageCode_u16{
     uint16_t bits;
 
-    [[nodiscard]] uq16 to_volts() const {
+    [[nodiscard]] constexpr uq16 to_volts() const {
         return uq16(0.1) * bits;
     }
 };
@@ -144,29 +172,27 @@ struct [[nodiscard]] VoltageCode_u16{
 struct [[nodiscard]] CurrentCode_i16{
     int16_t bits;
 
-    [[nodiscard]] iq16 to_amps() const {
+    [[nodiscard]] constexpr iq16 to_amps() const {
         return iq16(0.01) * bits;
     }
 };
 
 
 struct [[nodiscard]] PositionCode_i32{
-    // 0.01degree/LSB
+    // 0.01度每lsb
+    // 至少需要iq15以表示全域数据
     int32_t bits;
 
-    [[nodiscard]] Angular<iq16> to_angle() const {
-        return Angular<iq16>::from_degrees(iq16(0.01) * bits);
+    [[nodiscard]] constexpr Angular<iq15> to_angle() const {
+        // 单次乘法，无除法
+        const iiq47 product = static_cast<int64_t>(bits) * iiq47::from_rcp(36000);
+        const int32_t iq15_turns_bits = static_cast<int32_t>(product.to_bits() >> 32);
+        
+        return Angular<iq15>::from_turns(iq15::from_bits(iq15_turns_bits));
     }
 };
 
-struct [[nodiscard]] LapPositionCode{
-    // 0.01degree/LSB
-    uint16_t bits;
-
-    [[nodiscard]] Angular<uq16> to_angle() const {
-        return Angular<uq16>::from_degrees(uq16(0.01) * bits);
-    }
-};
+// static constexpr auto turns = float(PositionCode_i32(0x7fffffff).to_angle().to_turns());
 
 enum class CanAddr:uint8_t{};
 
@@ -223,8 +249,8 @@ enum class [[nodiscard]] ReqCommand:uint8_t{
     WritePidParameterToRom = 0x32,
     GetPlanAccel = 0x42,
     SetPlanAccel = 0x43,
-    GetMultilapPosition = 0x60,
-    GetMultilapPositionWithoutOffset = 0x61,
+    GetMultiAngle = 0x60,
+    GetMultiAngleWithoutOffset = 0x61,
     GetEncoderMultilapOffset = 0x62,
     WriteEncoderMultilapOffset = 0x62,
     WriteCurrentEncoderMultilapOffset = 0x63,

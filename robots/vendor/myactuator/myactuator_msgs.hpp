@@ -79,9 +79,11 @@ struct [[nodiscard]] SetPlanAccel final{
 };
 
 // 读取多圈编码器位置数据命令(0x60) page13
-DEF_COMMAND_ONLY_REQ_MSG(GetMultilapPosition)
+DEF_COMMAND_ONLY_REQ_MSG(GetMultiAngle)
+
 //  读取多圈编码器原始位置数据命令(0x61) page15
-DEF_COMMAND_ONLY_REQ_MSG(GetMultilapPositionWithoutOffset)
+DEF_COMMAND_ONLY_REQ_MSG(GetMultiAngleWithoutOffset)
+
 // 取多圈编码器零偏数据命令(0x62) page17
 DEF_COMMAND_ONLY_REQ_MSG(GetEncoderMultilapOffset)
 
@@ -96,6 +98,7 @@ struct [[nodiscard]] WriteEncoderMultilapOffset final{
         filler.push_int<int32_t>(encoder_offset);
     }
 };
+
 //  写入编码器当前多圈位置到ROM作为电机零点命令 (0x64) page 20
 DEF_COMMAND_ONLY_REQ_MSG(WriteCurrentEncoderMultilapOffset)
 
@@ -169,7 +172,7 @@ struct [[nodiscard]] SetLapPosition final{
     //  2.spinDirection设置电机转动的方向， 为 uint8_t类型，0x00代表顺时针，0x01代表
     // 逆时针；
     // 3.maxSpeed限制了电机转动的最大速度，为u16类型，对应实际转速1dps/LSB。
-    LapPosition_u16 lap_position;
+    LapAngleCode_u16 lap_angle_code;
     bool is_ccw;
     SpeedLimitCode_u16 max_speed;
 
@@ -178,7 +181,7 @@ struct [[nodiscard]] SetLapPosition final{
         auto filler = BytesFiller(bytes);
         filler.push_int<uint8_t>(is_ccw);
         filler.push_int<uint16_t>(max_speed.bits);
-        filler.push_int<uint16_t>(lap_position.bits);
+        filler.push_int<uint16_t>(lap_angle_code.bits);
         filler.push_zeros(2);
     };
 };
@@ -343,10 +346,10 @@ struct [[nodiscard]] _MotorStatusReport{
 template<typename Derived>
 struct [[nodiscard]] _MotorStatusReport2{
     using Self = Derived;
-    TemperatureCode_i8 motor_temperature;
-    CurrentCode_i16 q_current;
-    SpeedCode_i16 axis_speed;
-    LapPosition_u16 axis_lap_position;
+    TemperatureCode_i8 motor_temperature_code;
+    CurrentCode_i16 q_current_code;
+    SpeedCode_i16 axis_speed_code;
+    LapAngleCode_u16 axis_lap_angle_code;
 
     static constexpr Result<Self, DeMsgError>
     try_from_bytes(const std::span<const uint8_t, 7> bytes){

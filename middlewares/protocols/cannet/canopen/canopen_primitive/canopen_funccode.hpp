@@ -142,17 +142,11 @@ struct [[nodiscard]] FunctionCode final{
         return kind_ == kind;
     }
     [[nodiscard]] constexpr bool is_nmt() const {return kind_ == Kind::Nmt;}
-
     [[nodiscard]] constexpr bool is_sync() const {return kind_ == Kind::Sync;}
-
     [[nodiscard]] constexpr bool is_energency() const {return kind_ == Kind::Emergency;}
-
     [[nodiscard]] constexpr bool is_heartbeat() const {return kind_ == Kind::Heartbeat;}
-
     [[nodiscard]] constexpr bool is_resp_sdo() const { return (kind_ == Kind::RespSdo);}
-
     [[nodiscard]] constexpr bool is_req_sdo() const { return (kind_ == Kind::ReqSdo);}
-
     [[nodiscard]] constexpr bool is_tx_pdo() const {
         switch(kind_){
             case Kind::TxPdo1:
@@ -164,7 +158,6 @@ struct [[nodiscard]] FunctionCode final{
                 return false;
         }
     }
-
     [[nodiscard]] constexpr bool is_rx_pdo() const {
         switch(kind_){
             case Kind::RxPdo1:

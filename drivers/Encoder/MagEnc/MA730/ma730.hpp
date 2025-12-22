@@ -29,11 +29,11 @@ public:
         return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 
-    [[nodiscard]] IResult<> set_trim_x(const real_t k);
+    [[nodiscard]] IResult<> set_trim_x(const uq16 k);
 
-    [[nodiscard]] IResult<> set_trim_y(const real_t k);
+    [[nodiscard]] IResult<> set_trim_y(const uq16 k);
 
-    [[nodiscard]] IResult<> set_trim(const real_t am, const real_t e);
+    [[nodiscard]] IResult<> set_trim(const uq16 am, const uq16 e);
 
     [[nodiscard]] IResult<> set_mag_threshold(
         const MagThreshold low, const MagThreshold high);

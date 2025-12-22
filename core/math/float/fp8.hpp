@@ -6,7 +6,7 @@
 #include "core/math/real.hpp"
 
 namespace ymd::math{
-struct [[nodiscad]] fp8_e4m3 final{
+struct alignas(1) [[nodiscad]] fp8_e4m3 final{
 	uint8_t frac:3;
 	uint8_t exp:4;
 	uint8_t sign:1;
@@ -70,7 +70,7 @@ struct [[nodiscad]] fp8_e4m3 final{
 	}
 };
 
-struct [[nodiscard]] fp8_e5m2 final{
+struct alignas(1) [[nodiscard]] fp8_e5m2 final{
 	uint8_t frac:2;
 	uint8_t exp:5;
 	uint8_t sign:1;

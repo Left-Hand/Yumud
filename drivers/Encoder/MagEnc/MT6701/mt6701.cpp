@@ -39,7 +39,7 @@ IResult<> MT6701::init(){
 
 IResult<> MT6701::update(){
     const auto res = read_reg(raw_angle_reg);
-    lap_position_ = uq32::from_bits(raw_angle_reg.angle);
+    lap_position_ = uq32::from_bits(raw_angle_reg.bits);
     return res;
     // else if(spi_drv){
 
@@ -81,7 +81,7 @@ IResult<> MT6701::enable_abzmux(const Enable en){
 
 IResult<> MT6701::set_direction(const RotateDirection dir){
     auto reg = RegCopy(abz_mux_reg);
-    reg.clockwise = dir == RotateDirection::CW;
+    reg.is_clockwise = dir == RotateDirection::CW;
     return write_reg(reg);
 }
 
@@ -135,7 +135,7 @@ IResult<> MT6701::enable_fast_mode(const Enable en){
 
 IResult<> MT6701::enable_pwm(const Enable en){
     auto reg = RegCopy(wire_config_reg);
-    reg.isPwm = en == EN;
+    reg.pwm_en = en == EN;
     return write_reg(reg);
 }
 

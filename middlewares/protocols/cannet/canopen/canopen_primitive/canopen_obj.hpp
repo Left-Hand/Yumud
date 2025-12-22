@@ -48,8 +48,8 @@ public:
     constexpr EntryDataType(Kind kind) : kind_(kind) {}
 
     // 判断是否为整数类型
-    constexpr bool is_int() const {return kind_ <= Kind::U32;}
-    constexpr bool is_string() const {return kind_ >= Kind::VisibleString;}
+    [[nodiscard]] constexpr bool is_int() const {return kind_ <= Kind::U32;}
+    [[nodiscard]] constexpr bool is_string() const {return kind_ >= Kind::VisibleString;}
 
     // 获取数据类型的大小
     constexpr Option<size_t> dsize() const {

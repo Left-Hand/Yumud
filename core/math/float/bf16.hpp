@@ -14,7 +14,7 @@ class OutputStream;
 namespace math{
 
 
-struct [[nodiscard]] bf16 final{
+struct alignas(2) [[nodiscard]] bf16 final{
     uint16_t frac:7;
     uint16_t exp:8;
     uint16_t sign:1;
