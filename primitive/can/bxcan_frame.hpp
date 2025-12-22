@@ -144,10 +144,10 @@ public:
     /// \brief 获取载荷的定长切片
     template<size_t Extents>
     requires (Extents <= 8)
-    [[nodiscard]] __always_inline constexpr std::span<const uint8_t> payload_bytes_fixed() const{
+    [[nodiscard]] __always_inline constexpr std::span<const uint8_t, Extents> payload_bytes_fixed() const{
         if(Extents != length()) [[unlikely]]
             __builtin_trap();
-        return std::span(payload_.data(), Extents);
+        return std::span<const uint8_t, Extents>(payload_.data(), Extents);
     }
 
     /// \brief 获取载荷的可变切片

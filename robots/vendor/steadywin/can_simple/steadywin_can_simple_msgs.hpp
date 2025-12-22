@@ -1,6 +1,7 @@
 #pragma once
 
 #include "steadywin_can_simple_primitive.hpp"
+#include "steadywin_can_simple_utils.hpp"
 
 namespace ymd::robots::steadywin::can_simple{
 namespace req_msgs{
@@ -16,7 +17,7 @@ struct [[nodiscard]] Estop final{
 // CMD ID: 0x003
 struct [[nodiscard]] GetError final{
     using Self = GetError;
-    static constexpr CommandKind COMMAND = Command::GetMotorError;
+    static constexpr CommandKind COMMAND = Command::GetError;
     ErrorSource source;
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
@@ -118,10 +119,6 @@ struct [[nodiscard]] GetMotorCurrent final{
     int32_t shadow_count;
     int32_t count_n_cpr;
 
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return std::bit_cast<Self>(can_payload.u8x8());
-    }
-
     constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
     }
@@ -134,13 +131,6 @@ struct [[nodiscard]] SetCotrollerMode final{
     static constexpr CommandKind COMMAND = Command::SetControllerMode;
     LoopMode loop_mode;
     InputMode input_mode;
-
-    static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-        return Self {
-            .loop_mode = std::bit_cast<LoopMode>(can_payload[0]),
-            .input_mode = std::bit_cast<InputMode>(can_payload[4])
-        };
-    }
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
         //stupid padding
@@ -158,10 +148,6 @@ struct [[nodiscard]] SetInputPosition final{
     math::fp32 input_position;
     int16_t vel_ff;
     int16_t torque_ff;
-
-    // static constexpr Self from_can_payload(const hal::BxCanPayload & can_payload){
-    //     return std::bit_cast<Self>(can_payload.u8x8());
-    // }
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
         BytesFiller filler(bytes);
@@ -300,14 +286,14 @@ struct [[nodiscard]] ClearErrors final{
 };
 
 //ID 0x019
-struct [[nodiscard]] SetLinearCount final{
-    using Self = SetLinearCount;
+struct [[nodiscard]] SetMoveIncremental final{
+    using Self = SetMoveIncremental;
     static constexpr Command COMMAND = CommandKind{0x019};
-    int32_t linear_count;
+    math::fp32 displacement;
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
         BytesFiller filler(bytes);
-        filler.push_le_i32(linear_count);
+        filler.push_le_i32(displacement.to_bits());
     }
 };
 
@@ -338,18 +324,18 @@ struct [[nodiscard]] SetVelGain final{
 };
 
 //ID 0x01c
-struct [[nodiscard]] SetTorques final{
-    using Self = SetTorques;
-    static constexpr Command COMMAND = CommandKind{0x01c};
-    math::fp32 torque_setpoint;
-    math::fp32 torque_measured;
+// struct [[nodiscard]] SetTorques final{
+//     using Self = SetTorques;
+//     static constexpr Command COMMAND = CommandKind{0x01c};
+//     math::fp32 torque_setpoint;
+//     math::fp32 torque_measured;
 
-    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
-        BytesFiller filler(bytes);
-        filler.push_fp32(torque_setpoint);
-        filler.push_fp32(torque_measured);
-    }
-};
+//     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+//         BytesFiller filler(bytes);
+//         filler.push_fp32(torque_setpoint);
+//         filler.push_fp32(torque_measured);
+//     }
+// };
 
 //ID 0x01d
 struct [[nodiscard]] GetPowers final{
@@ -411,13 +397,21 @@ struct [[nodiscard]] HeartbeatV513 final{
 
         return Ok(self);
     }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) {
+        return os 
+            << os.field("axis_fault_flags")(self.axis_fault_flags) << os.splitter()
+            << os.field("axis_state")(self.axis_state) << os.splitter()
+            << os.field("motor_flags")(self.motor_flags) << os.splitter()
+            << os.field("life")(self.life);
+    }
 };
 
 
 // CMD ID: 0x003
 struct [[nodiscard]] GetError final{
     using Self = GetError;
-    static constexpr CommandKind COMMAND = Command::GetMotorError;
+    static constexpr CommandKind COMMAND = Command::GetError;
     union{
         uint64_t motor_exception; 
         uint32_t encoder_exception;
@@ -429,9 +423,52 @@ struct [[nodiscard]] GetError final{
         self.motor_exception = le_bytes_to_int<uint64_t>(bytes);
         return Ok(self);
     }
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) {
+        return os;
+    }
 };
 
 static_assert(sizeof(GetError) == 8);   
+
+//id 0x008
+struct MitControl{
+    using Self = MitControl;
+    static constexpr CommandKind COMMAND = Command::MitControl;
+    uint8_t node_id;
+
+    // 位置：总共 16 位，BYTE1 为高 8 位，BYTE2 为低 8 位
+    // 输出轴的多圈位置，单位为弧度（RAD），范围-mit_max_pos～mit_max_pos
+    // 实际位置为 double 型，需要转换为 16 位 int 型，转换过程为：
+    // pos_int = (pos_double + mit_max_pos)*65535 / 25
+    // mit_max_pos默认值同上
+    mit::MitPositionCode_u16 position_code;
+
+    // 速度：总共 12 位，BYTE3 为其高 8 位，BYTE4[7-4]（高 4 位）为其低 4 位。表示输出轴的角速度，单位为 RAD/s，范围
+    // -mit_max_vel~ mit_max_vel
+    mit::MitSpeedCode_u12 speed_code;
+
+    // 力矩：总共 12 位，BYTE4[3-0]（低 4 位）为其高 4 位，BYTE5 为其低 8 位。单位是 N.m。
+    // 范围-mit_max_torque～mit_max_torque
+    mit::MitTorqueCode_u12 torque_code;
+
+    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 5> bytes){
+        const uint16_t position_code_bits = le_bytes_to_int<uint16_t>(bytes.subspan<1, 2>());
+        const int16_t speed_code_bits = 
+            (static_cast<int16_t>(bytes[3]) << 4)
+            | (static_cast<int16_t>(bytes[4]) >> 4);
+
+        const int16_t torque_code_bits = 
+            (static_cast<int16_t>(bytes[5]))
+            | (static_cast<int16_t>(bytes[4] & 0x0f) << 4);
+        Self self{
+            .node_id = bytes[0],
+            .position_code = mit::MitPositionCode_u16::from_bits(position_code_bits),
+            .speed_code = mit::MitSpeedCode_u12::from_bits(speed_code_bits),
+            .torque_code = mit::MitTorqueCode_u12::from_bits(torque_code_bits)
+        };
+        return Ok(self);
+    }
+};
 
 //ID 0x009
 struct [[nodiscard]] GetEncoderEstimates final{
@@ -446,6 +483,11 @@ struct [[nodiscard]] GetEncoderEstimates final{
             .velocity = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()))
         };
         return Ok(self);
+    }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) {
+        return os << os.field("position")(self.position) << os.splitter()
+            << os.field("velocity")(self.velocity);
     }
 };
 
@@ -463,8 +505,92 @@ struct [[nodiscard]] GetEncoderCount final{
         };
         return Ok(self);
     }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) {
+        return os << os.field("shadow_count")(self.shadow_count) << os.splitter()
+            << os.field("cpr_count")(self.cpr_count);
+    }
 };
 
+//0x14
+struct [[nodiscard]] GetIq final{
+    using Self = GetIq;
+    static constexpr CommandKind COMMAND = Command::GetIq;
+    math::fp32 iq_setpoint;
+    math::fp32 iq_measured;
+    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+        Self self{
+            .iq_setpoint = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
+            .iq_measured = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))
+        };
+        return Ok(self);
+    }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) {
+        return os << os.field("iq_setpoint")(self.iq_setpoint) << os.splitter()
+            << os.field("iq_measured")(self.iq_measured);
+    }
+};
+
+//0x17
+struct [[nodiscard]] GetBusVoltageCurrent final{
+    using Self = GetBusVoltageCurrent;
+    static constexpr CommandKind COMMAND = Command::GetBusVoltageCurrent;
+    math::fp32 bus_voltage;
+    math::fp32 bus_current;
+    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+        Self self{
+            .bus_voltage = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
+            .bus_current = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))
+        };
+        return Ok(self);
+    }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) {
+        return os << os.field("bus_voltage")(self.bus_voltage) << os.splitter()
+            << os.field("bus_current")(self.bus_current);
+    }
+};
+
+//0x1c
+struct [[nodiscard]] GetTorques final{
+    using Self = GetTorques;
+    static constexpr CommandKind COMMAND = Command::GetTorques;
+    math::fp32 torque_setpoint;
+    math::fp32 torque_measured;
+    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+        Self self{
+            .torque_setpoint = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
+            .torque_measured = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))
+        };
+        return Ok(self);
+    }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) {
+        return os << os.field("torque_setpoint")(self.torque_setpoint) << os.splitter()
+            << os.field("torque_measured")(self.torque_measured);
+    }
+};
+
+//0x1d
+struct [[nodiscard]] GetPowers final{
+    using Self = GetPowers;
+    static constexpr CommandKind COMMAND = Command::GetPowers;
+    math::fp32 eletrical_power;
+    math::fp32 mechanical_power;
+    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+        Self self{
+            .eletrical_power = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
+            .mechanical_power = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))
+        };
+        return Ok(self);
+    }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) {
+        return os << os.field("eletrical_power")(self.eletrical_power) << os.splitter()
+            << os.field("mechanical_power")(self.mechanical_power);
+    }
+};
 
 }
 

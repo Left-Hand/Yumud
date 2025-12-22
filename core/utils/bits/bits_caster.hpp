@@ -197,9 +197,8 @@ template<typename T, typename D = to_bits_t<T>>
 
 
 template<std::endian E, typename D, size_t Extent>
-requires ((Extent == sizeof(D)) || (Extent == std::dynamic_extent))
 [[nodiscard]] static constexpr D bytes_to_int(const std::span<const uint8_t, Extent> bytes){
-    static_assert((Extent == sizeof(D)) || (Extent == std::dynamic_extent),
+    static_assert((Extent == sizeof(D)),
         "static extent must equal to sizeof(D)"
     );
     using UD = std::make_unsigned_t<D>;

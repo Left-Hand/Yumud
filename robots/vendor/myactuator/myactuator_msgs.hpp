@@ -233,11 +233,11 @@ struct [[nodiscard]] SetTorquePosition final{
 
 //  主动回复功能指令(0xB6) page 66
 struct [[nodiscard]] MitParams final{
-    MitPositionCode_u16 position;
-    MitSpeedCode_u12 speed;
-    MitKpCode_u12 kp;
-    MitKdCode_u12 kd;
-    MitTorqueCode_u12 torque;
+    mit::MitPositionCode_u16 position;
+    mit::MitSpeedCode_u12 speed;
+    mit::MitKpCode_u12 kp;
+    mit::MitKdCode_u12 kd;
+    mit::MitTorqueCode_u12 torque;
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
         bytes[0] = static_cast<uint8_t>(position.to_bits() >> 8);
@@ -422,9 +422,9 @@ DEF_COMMAND_ONLY_RESP_MSG(ShutDown);
 struct [[nodiscard]] MitParams final{
     using Self = MitParams;
     CanAddr can_addr;
-    MitPositionCode_u16 position;
-    MitSpeedCode_u12 speed;
-    MitTorqueCode_u12 torque;
+    mit::MitPositionCode_u16 position;
+    mit::MitSpeedCode_u12 speed;
+    mit::MitTorqueCode_u12 torque;
 
     constexpr Result<Self, DeMsgError> try_from_bytes(std::span<const uint8_t, 8> bytes) const {
         const uint8_t can_addr_bits = 
@@ -437,9 +437,9 @@ struct [[nodiscard]] MitParams final{
             ((bytes[4] & 0x0f) << 8) | (bytes[5]);
         return Ok(Self{
             .can_addr = CanAddr(can_addr_bits),
-            .position = MitPositionCode_u16::from_bits(position_bits),
-            .speed = MitSpeedCode_u12::from_bits(speed_bits),
-            .torque = MitTorqueCode_u12::from_bits(torque_bits)
+            .position = mit::MitPositionCode_u16::from_bits(position_bits),
+            .speed = mit::MitSpeedCode_u12::from_bits(speed_bits),
+            .torque = mit::MitTorqueCode_u12::from_bits(torque_bits)
         });
     };
 };

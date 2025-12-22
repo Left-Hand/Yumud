@@ -301,11 +301,10 @@ static constexpr NvicPriority SCE_INTERRUPT_NVIC_PRIORITY = {1, 1};
 
 
 void Can::init(const Config & cfg){
-
-    CAN_DeInit(SDK_INST(inst_));
-    enable_rcc(EN);
     set_remap(cfg.remap);
     alter_to_pins(cfg.remap);
+
+    enable_rcc(EN);
     init_interrupts();
 
     const auto bit_timming_coeffs = [&] -> CanNominalBitTimmingCoeffs{

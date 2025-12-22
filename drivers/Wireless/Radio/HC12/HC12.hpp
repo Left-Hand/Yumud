@@ -52,22 +52,7 @@ protected:
 
         // uint32_t begin_ms = millis();
 
-        // while((millis() - begin_ms < timeout)){
-        //     if(!available()) continue;
-        //     char chr;
-        //     read(chr);
-        //     if(!chr) break;
-        //     recv += chr;
-        //     if(recv == "OK"){
-        //         // while((millis() - begin_ms < timeout)){
-        //         //     if(available() && !read()){
-        //         //         is_valid = true;
-        //         //         goto end_process;
-        //         //     }
-        //         // }
-        //         goto end_process;
-        //     }
-        // }
+
 
         // end_process:
         clock::delay(1us);

@@ -1,13 +1,10 @@
 #pragma once
 
-#include <cstdint>
 #include "core/stream/ostream.hpp"
 #include "core/utils/sumtype.hpp"
 #include "primitive/can/bxcan_frame.hpp"
 #include "core/utils/bits/bits_caster.hpp"
-#include "core/math/float/fp32.hpp"
-#include "core/utils/enum/strong_type_gradation.hpp"
-#include "core/math/real.hpp"
+#include "robots/vendor/mit/mit_primitive.hpp"
 
 // 伺泰威对Odrive通讯消息进行了魔改 不能直接等效于Odrive
 // 参考Odrive的源码，所有Can报文的数据载荷都是8字节
@@ -19,39 +16,6 @@ namespace ymd::robots::steadywin::can_simple{
 
 namespace primitive{
 
-namespace mit{
-
-// p_des:-12.5到 12.5, 单位rad;
-// 数据类型为uint16_t, 取值范围为0~65535, 其中0代表-12.5,65535代表 12.5,
-//  0~65535中间的所有数值，按比例映射 至-12.5~12.5。
-DEF_U16_STRONG_TYPE_GRADATION(MitPositionCode_u16,  from_radians,    
-    iq16,   -12.5,  12.5,   25.0/65535)
-
-// v_des:-45到 45, 单位rad/s;
-// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-45,4095代表45,
-//  0~4095 中间的所有数值，按比例映射至-45~45。
-DEF_U16_STRONG_TYPE_GRADATION(MitSpeedCode_u12,     from_radians,    
-    iq16,   -45,    45,     90.0/4095)
-
-// kp: 0到 500;
-// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表0,4095代表500,
-//  0~4095中间的所有数值，按比例映射至0~500。
-DEF_U16_STRONG_TYPE_GRADATION(MitKpCode_u12,        from_val,       
-    uq16,   0,      500,    500.0/4095)
-
-// kd: 0到 5;
-// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表0, 4095代表5,
-//  0~4095中间的所有数值，按比例映射至0~5。
-DEF_U16_STRONG_TYPE_GRADATION(MitKdCode_u12,        from_val,       
-    uq16,   0,      5,      5.0/4095)
-
-// t_f:-24到 24, 单位N-m;
-// 数据类型为12位无符号整数，取值范围为0~4095,其中0代表-24,4095代表24,
-//  0~4095中间的所有数值，按比例映射至-24~24。
-DEF_U16_STRONG_TYPE_GRADATION(MitTorqueCode_u12,    from_nm,        
-    iq16,   -24,      24,     24.0/4095)
-
-}
 
 enum class [[nodiscard]] DeMsgError:uint8_t{
     Unnamed
@@ -74,6 +38,10 @@ struct [[nodiscard]] AxisId final{
 
     constexpr literals::Bs6 to_b6() const {
         return literals::Bs6::from_bits(to_bits());
+    }
+
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os << self.to_bits();
     }
 private:
     uint8_t bits_;
@@ -112,12 +80,17 @@ struct [[nodiscard]] AxisFaultFlags final{
     [[nodiscard]] constexpr uint32_t to_u32() const {
         return std::bit_cast<uint32_t>(*this);
     }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) {
+        return os << self.to_u32();
+    }
 };
 
 
 static_assert(sizeof(AxisFaultFlags) == 4); 
 
 struct [[nodiscard]] MotorFlags final{ 
+    using Self = MotorFlags;
     // bit0：电机异常位（odrv0.axis0.motor.error 是否
     // 为 0）
     // bit1：编码器异常位（odrv0.axis0.encoder.error
@@ -135,6 +108,14 @@ struct [[nodiscard]] MotorFlags final{
 
     uint8_t __resv__:3;
     uint8_t trajectory_done:1;
+
+    [[nodiscard]] constexpr uint32_t to_u8() const {
+        return std::bit_cast<uint8_t>(*this);
+    }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self) {
+        return os << self.to_u8();
+    }
 };
 
 static_assert(sizeof(MotorFlags) == 1);  
@@ -208,6 +189,8 @@ enum class [[nodiscard]] AxisState:uint8_t{
     Homing = 11,
 };
 
+DEF_DERIVE_DEBUG(AxisState)
+
 static constexpr Result<AxisState, DeMsgError> try_into_axis_state(const uint8_t b){
     if(b > 11) return Err(DeMsgError::Unnamed);
     return Ok(std::bit_cast<AxisState>(b));
@@ -217,14 +200,13 @@ enum class [[nodiscard]] CommandKind:uint8_t{
     Undefined = 0,
     Heartbeat = 1,
     Estop = 2,
-    GetMotorError = 3,
+    GetError = 3,
     RxSdo = 4,
     TxSdo = 5,
     SetAxisNodeId = 6,
     SetAxisState = 7,
     MitControl = 8,
     GetEncoderEstimates = 9,
-    // GetMotorCurrent = 10,
     GetEncoderCount = 10,
     SetControllerMode = 11,
     SetInputPosition = 12,
@@ -239,10 +221,10 @@ enum class [[nodiscard]] CommandKind:uint8_t{
     Reboot = 0x16,
     GetBusVoltageCurrent = 0x17,
     ClearErrors = 0x18,
-    SetLinearCount = 0x19,
+    SetMoveIncremental = 0x19,
     SetPosGain = 0x1a,
     SetVelGain = 0x1b,
-    SetTorques = 0x1c,
+    GetTorques = 0x1c,
     GetPowers = 0x1d,
     DisableCan = 0x1e,
     SaveConfig = 0x1f,
@@ -311,7 +293,7 @@ struct [[nodiscard]] Command final{
             case Kind::Undefined:   return "Undefined";
             case Kind::Heartbeat:   return "Heartbeat";
             case Kind::Estop:   return "Estop";
-            case Kind::GetMotorError:   return "GetMotorError";
+            case Kind::GetError:   return "GetError";
             case Kind::RxSdo:   return "RxSdo";
             case Kind::TxSdo:   return "TxSdo";
             case Kind::SetAxisNodeId:   return "SetAxisNodeId";
@@ -332,10 +314,10 @@ struct [[nodiscard]] Command final{
             case Kind::Reboot:  return "Reboot";
             case Kind::GetBusVoltageCurrent:    return "GetBusVoltageCurrent";
             case Kind::ClearErrors: return "ClearErrors";
-            case Kind::SetLinearCount:  return "SetLinearCount";
+            case Kind::SetMoveIncremental:  return "SetMoveIncremental";
             case Kind::SetPosGain:  return "SetPosGain";
             case Kind::SetVelGain:  return "SetVelGain";
-            case Kind::SetTorques:  return "SetTorques";
+            case Kind::GetTorques:  return "GetTorques";
             case Kind::GetPowers:   return "GetPowers";
             case Kind::DisableCan:  return "DisableCan";
             case Kind::SaveConfig:  return "SaveConfig";
@@ -347,16 +329,16 @@ struct [[nodiscard]] Command final{
 private:
     CommandKind kind_;
 
-    friend OutputStream & operator<<(OutputStream & os, const CommandKind & kind){ 
-        if(const auto * str = err_to_str(kind); str != nullptr)
-            return os << str;
-        return os << "Custom" << static_cast<uint8_t>(kind);
-    } 
-
-    friend OutputStream & operator<<(OutputStream & os, const Command & cmd){ 
-        if(const auto * str = err_to_str(cmd.kind()); str != nullptr)
-            return os << str;
-        return os << "Custom" << static_cast<uint8_t>(cmd.kind());
+    friend OutputStream & operator<<(OutputStream & os, const Command & self){ 
+        auto guard = os.create_guard();
+        if(const auto * str = err_to_str(self.kind_); str != nullptr)
+            os << str;
+        else
+            os << "Custom";
+            
+        return os << os.brackets<'('>() 
+            << std::showbase << std::hex << static_cast<uint8_t>(self.kind_) 
+            << os.brackets<')'>();
     }
 };
 
@@ -377,6 +359,11 @@ struct [[nodiscard]] FrameId final{
             axis_id.to_b6().connect(command.to_b5()).to_bits()
         );
     }  
+
+    friend OutputStream & operator<<(OutputStream & os, const FrameId & primitive) {
+        return os << os.field("axis_id")(primitive.axis_id) << os.splitter() 
+            << os.field("command")(primitive.command);
+    }
 };
 
 
@@ -385,101 +372,4 @@ struct [[nodiscard]] FrameId final{
 
 using namespace primitive;
 
-struct [[nodiscard]] BytesFiller{
-public:
-    constexpr explicit BytesFiller(std::span<uint8_t> bytes):
-        bytes_(bytes){;}
-
-    constexpr ~BytesFiller(){
-        if(not is_full()) __builtin_abort();
-    }
-
-    constexpr __inline 
-    void push_byte(const uint8_t byte){
-        if(pos_ >= bytes_.size()) [[unlikely]] 
-            on_overflow();
-        bytes_[pos_++] = byte;
-    }
-
-
-    template<size_t Extents>
-    constexpr __inline 
-    void push_bytes(const std::span<const uint8_t, Extents> bytes){
-        if(pos_ + bytes.size() > bytes_.size()) [[unlikely]]
-            on_overflow();
-        push_bytes_unchecked(bytes);
-    }
-
-
-    constexpr __inline 
-    void push_le_u8(const uint16_t int_val) {
-        push_byte(int_val);
-    }
-
-    constexpr __inline 
-    void push_le_u16(const uint16_t int_val) {
-        push_byte(int_val & 0xFF);
-        push_byte(int_val >> 8);
-    }
-
-    constexpr __inline
-    void push_le_i16(const int16_t int_val) { 
-        return push_le_u16(std::bit_cast<uint16_t>(int_val));
-    }
-
-    constexpr __inline 
-    void push_le_u32(const uint32_t int_val){
-        push_le_u16(int_val & 0xFFFF);
-        push_le_u16(int_val >> 16);
-    }
-
-    constexpr __inline 
-    void push_le_i32(const int32_t int_val){
-        push_le_u16(int_val & 0xFFFF);
-        push_le_u16(int_val >> 16);
-    }
-
-    constexpr 
-    void push_fp32(const math::fp32 f_val){
-        return push_le_u32(std::bit_cast<uint32_t>(f_val));
-    }
-
-
-
-    [[nodiscard]] constexpr bool is_full() const {
-        return pos_ == bytes_.size();
-    }
-
-    size_t size() const {
-        return pos_;
-    }
-private:
-    std::span<uint8_t> bytes_;
-    size_t pos_ = 0;
-
-    constexpr __inline 
-    void push_byte_unchecked(const uint8_t byte){ 
-        bytes_[pos_++] = byte;
-    }
-
-    template<size_t Extents>
-    constexpr __inline 
-    void push_bytes_unchecked(const std::span<const uint8_t, Extents> bytes){ 
-        if constexpr(Extents == std::dynamic_extent){
-            // #pragma GCC unroll(4)
-            for(size_t i = 0; i < bytes.size(); i++){
-                push_byte(bytes[i]);
-            }
-        }else{
-            #pragma GCC unroll(4)
-            for(size_t i = 0; i < Extents; i++){
-                push_byte(bytes[i]);
-            }
-        }
-    }
-
-    constexpr __inline void on_overflow(){
-        __builtin_trap();
-    }
-};
 }

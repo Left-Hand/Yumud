@@ -28,6 +28,7 @@ using namespace ymd;
 using namespace robots::steadywin::can_simple;
 
 
+
 void steadywin_main(){
     auto & DBG_UART = hal::usart2;
     hal::usart2.init({
@@ -47,11 +48,11 @@ void steadywin_main(){
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
         //波特率为1M
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_500K), 
     });
 
     [[maybe_unused]] static constexpr auto STD_DATA_FRAME_ONLY_FILTER_PAIR = 
-        hal::CanStdIdMaskPair::from_str("xxxxxxxxxxx", hal::CanRtrSpecfier::DataOnly).unwrap();
+        hal::CanStdIdMaskPair::from_str("xxxxxxxxxxx", hal::CanRtrSpecfier::Discard).unwrap();
     
     const auto FILTER_CONFIG = hal::CanFilterConfig::accept_all();
     // PANIC{FILTER_CONFIG};
@@ -65,20 +66,182 @@ void steadywin_main(){
         FILTER_CONFIG
     );
 
+    auto accept_response = []<typename T>(const AxisId axis_id, T && msg){
+        DEBUG_PRINTLN(axis_id, msg);
+    };
 
-    while(true){
+    [[maybe_unused]] auto parse_can_frame = [&](const hal::BxCanFrame & frame){
+        if(frame.is_extended()) PANIC{};
+        if(frame.length() != 8) PANIC{};
+        const auto frame_id = FrameId::from_stdid(frame.identifier().to_stdid());
+        const auto axis_id = frame_id.axis_id;
+        const auto command = frame_id.command;
+        const auto payload_bytes = frame.payload_bytes_fixed<8>();
+        switch(command.kind()){
+            case Command::Undefined:{
+                //nothing
+            }break;
+            case Command::Heartbeat:{
+                const auto msg = resp_msgs::HeartbeatV513::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, msg);
+            }break;
+            case Command::Estop:{
+                //req only
+            }break;
+            case Command::GetError:{
+                const auto msg = resp_msgs::GetError::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, msg);
+            }break;
+            case Command::RxSdo:{
+                //do not handle currently
+            }break;
+            case Command::TxSdo:{
+                //do not handle currently
+            }break;
+            case Command::SetAxisNodeId:{
+                //req only
+            }break;
+            case Command::SetAxisState:{
+                //req only
+            }break;
+            case Command::MitControl:{
+                //do not handle currently
+            }break;
+            case Command::GetEncoderEstimates:{
+                const auto msg = resp_msgs::GetEncoderEstimates::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, msg);
+            }break;
+            case Command::GetEncoderCount:{
+                const auto msg = resp_msgs::GetEncoderCount::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, msg);
+            }break;
+            case Command::SetControllerMode:{
+                //req only
+            }break;
+            case Command::SetInputPosition:{
+                //req only
+            }break;
+            case Command::SetInputVelocity:{
+                //req only
+            }break;
+            case Command::SetInputTorque:{
+                //req only
+            }break;
+            case Command::SetLimits:{
+                //req only
+            }break;
+            case Command::StartAnticogging:{
+                //req only
+            }break;
+            case Command::SetTrajVelLimit:{
+                //req only
+            }break;
+            case Command::SetTrajAccelLimits:{
+                //req only
+            }break;
+            case Command::SetTrajInertia:{
+                //req only
+            }break;
+            case Command::GetIq:{
+                const auto msg = resp_msgs::GetIq::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, msg);
+            }break;
+            case Command::Reboot:{
+                //req only
+            }break;
+            case Command::GetBusVoltageCurrent:{
+                const auto msg = resp_msgs::GetBusVoltageCurrent::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, msg);
+            }break;
+            case Command::ClearErrors:{
+                //req only
+            }break;
+            case Command::SetMoveIncremental:{
+                //req only
+            }break;
+            case Command::SetPosGain:{
+                //req only
+            }break;
+            case Command::SetVelGain:{
+                //req only
+            }break;
+            case Command::GetTorques:{
+                const auto msg = resp_msgs::GetTorques::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, msg);
+            }break;
+            case Command::GetPowers:{
+                const auto msg = resp_msgs::GetPowers::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, msg);
+            }break;
+            case Command::DisableCan:{
+                //req only
+            }break;
+            case Command::SaveConfig:{
+                //req only
+            }break;
+        }
+    };
+
+    #if 1
+    [[maybe_unused]] auto & timer = hal::timer2;
+    //配置定时器
+    timer.init({
+        .remap = hal::TIM2_REMAP_A0_A1_A2_A3,
+        .count_freq = hal::NearestFreq(500), 
+        .count_mode = hal::TimerCountMode::Up
+    })  .unwrap()
+        .dont_alter_to_pins()
+    ;
+
+
+    //设置定时器事件回调
+    timer.set_event_handler([&](hal::TimerEvent ev){
+        switch(ev){
+        case hal::TimerEvent::Update:{
+            break;
+        }
+        default: break;
+        }
+    });
+
+    //使能更新事件的中断
+    timer.register_nvic<hal::TimerIT::Update>({0, 0}, EN);
+    timer.enable_interrupt<hal::TimerIT::Update>(EN);
+
+    //启动定时器
+    timer.start();
+    #endif
+
+    [[maybe_unused]] auto write_can_frame = [](const hal::BxCanFrame & frame){
+        can.try_write(frame).examine();
+    };
+
+
+    {
+        const auto frame = serialize_msg_to_can_frame(
+            AxisId::from_bits(0x01),
+            req_msgs::SetCotrollerMode{
+                .loop_mode = LoopMode::CurrentLoop,
+                .input_mode = InputMode::CurrentRamp,
+            }
+        );
+        write_can_frame(frame);
+    }
+
+
+    {
         const auto frame = serialize_msg_to_can_frame(
             AxisId::from_bits(0x01),
             req_msgs::SetAxisState{
-                .axis_state = AxisState::MotorCalibration
+                .axis_state = AxisState::ClosedLoopControl
             }
         );
+        write_can_frame(frame);
+    }
 
-        // const auto frame = hal::BxCanFrame::from_parts(
-        //     hal::CanStdId::from_u11(0x111),
-        //     hal::BxCanPayload::from_list({0x01, 0x02, 0x03, 0x04})
-        // );
-        can.try_write(frame).examine();
+    while(true){
+        
+
         // static constexpr auto frame = serialize_msg_to_can_frame(
         //     AxisId::from_bits(0), 
         //     req_msgs::SetInputPosition{
@@ -87,20 +250,44 @@ void steadywin_main(){
         //         .torque_ff = 0,
         //     }
         // );
-        DEBUG_PRINTLN_IDLE(
-            can.available(), 
-            hal::PA<12>().read().to_bool(),
-            hal::PA<11>().read().to_bool(),
-            can.last_error(),
-            clock::millis().count(),
-            can.get_tx_errcnt(),
-            can.get_rx_errcnt(),
-            frame
-        );
-        // if(can.available()){
-        //     DEBUG_PRINTLN_IDLE(can.read());
-        // }
-        clock::delay(20ms);
+        const auto now_secs = clock::time();
+        const auto torque_ff = iq16(math::sinpu(now_secs)) / 10;
+
+        {
+            const auto frame = serialize_msg_to_can_frame(
+                AxisId::from_bits(0x01),
+                req_msgs::SetInputTorque{
+                    .torque_ff = float(torque_ff)
+                }
+            );
+            write_can_frame(frame);
+        }
+
+        while(can.available()){
+            // parse_can_frame(can.read());
+            (void)(can.read());
+        }
+
+        // DEBUG_PRINTLN(frac(now_secs), torque_ff, iq16(math::sin(now_secs)));
+
+        // const auto frame = hal::BxCanFrame::from_parts(
+        //     hal::CanStdId::from_u11(0x111),
+        //     hal::BxCanPayload::from_list({0x01, 0x02, 0x03, 0x04})
+        // );
+
+
+        // DEBUG_PRINTLN_IDLE(
+        //     can.available(), 
+        //     hal::PA<12>().read().to_bool(),
+        //     hal::PA<11>().read().to_bool(),
+        //     can.last_error(),
+        //     clock::millis().count(),
+        //     can.get_tx_errcnt(),
+        //     can.get_rx_errcnt(),
+        //     // frame
+        // );
+
+        clock::delay(10ms);
     }
 }
 

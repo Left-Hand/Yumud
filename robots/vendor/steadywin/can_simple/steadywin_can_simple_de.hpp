@@ -14,42 +14,7 @@ struct [[nodiscard]] FrameDeserializer{
     };
 
 private:
-    struct [[nodiscard]] BytesReader{
-        explicit constexpr BytesReader(std::span<const uint8_t> bytes) : 
-            bytes_(bytes) {}
 
-        [[nodiscard]] constexpr Option<int32_t> fetch_i32(){
-            if(remaining().size() < 4)
-                return None;
-            return Some(le_bytes_to_int<int32_t>(fetch_bytes<4>()));
-        }
-        
-        [[nodiscard]] constexpr Option<uint32_t> fetch_u32(){
-            if(remaining().size() < 4)
-                return None;
-            return Some(le_bytes_to_int<uint32_t>(fetch_bytes<4>()));
-        }
-
-
-        [[nodiscard]] constexpr Option<math::fp32> fetch_f32(){
-            if(remaining().size() < 4)
-                return None;
-            return Some(math::fp32::from_bits(le_bytes_to_int<int32_t>(fetch_bytes<4>())));
-        }
-    private:
-        std::span<const uint8_t> bytes_;
-
-        template<size_t N>
-        [[nodiscard]] constexpr std::span<const uint8_t, N> fetch_bytes(){
-            const auto ret = std::span<const uint8_t, N>(bytes_.data(), N);
-            bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
-            return ret;
-        }
-
-        [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
-            return bytes_;
-        }
-    };
 public:
     static constexpr auto frame_to_event(const hal::BxCanFrame & frame) -> Result<Event, Error> {
         if(not frame.is_standard())

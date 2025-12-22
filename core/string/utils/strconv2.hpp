@@ -308,12 +308,21 @@ struct [[nodiscard]] IntDeformatter{
 				return Err(DestringError::InvalidChar);
 		}
 
+		auto compute_final = [&] -> T{
+			if constexpr(std::is_signed_v<T>){
+				const auto ret_without_sign = static_cast<T>(unsigned_ret);
+				return ((existing_sign == '-') ? -ret_without_sign : ret_without_sign);
+			}else{
+				return static_cast<T>(unsigned_ret);
+			}
+		};
+
 		for(size_t i = size_t(bool(existing_sign)); i < length; i++){
 			char chr = str[i];
 
 			switch(chr){
 				case '\0':
-					goto end_proc;
+					return Ok(compute_final());
 				case '-':
 					if constexpr(std::is_unsigned_v<T>)
 						return Err(DestringError::NegForUnsigned);
@@ -333,13 +342,7 @@ struct [[nodiscard]] IntDeformatter{
 					return Err(DestringError::InvalidChar);
 			}
 		}
-	end_proc:
-		if constexpr(std::is_signed_v<T>){
-			const auto ret_without_sign = static_cast<T>(unsigned_ret);
-			return Ok(((existing_sign == '-') ? -ret_without_sign : ret_without_sign));
-		}else{
-			return Ok(static_cast<T>(unsigned_ret));
-		}
+		return Ok(compute_final());
 	}
 };
 

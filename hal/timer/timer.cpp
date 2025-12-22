@@ -483,6 +483,7 @@ void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
 
 
 Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
+    set_remap(cfg.remap);
     this->enable_rcc(EN);
 
 
@@ -493,7 +494,7 @@ Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
 
     TIM_ClearFlag(SDK_INST(inst_), 0x1e7f);
     TIM_ClearITPendingBit(SDK_INST(inst_), 0x00ff);
-    set_remap(cfg.remap);
+
 
     return Ok(TimerPinSetuper{inst_, cfg.remap});
 }
