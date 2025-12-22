@@ -2,8 +2,8 @@
 #include "steadywin_can_simple_msgs.hpp"
 
 using namespace ymd;
+using namespace robots::steadywin;
 using namespace robots::steadywin::can_simple;
-using namespace primitive;
 
 static constexpr AxisId ZERO_AXIS_ID = AxisId::from_bits(0);
 

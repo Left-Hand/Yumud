@@ -2,11 +2,22 @@
 
 using namespace ymd::math;
 namespace{
-
-[[maybe_unused]]void test1(){
+[[maybe_unused]] void test1(){
+{
     constexpr AccumulationBuilder<int16_t> builder(4);
     static_assert(builder.add(1).get() == 5);
-    static_assert(builder.add(256).try_get<uint8_t>().unwrap_err() == std::strong_ordering::greater);
-    static_assert(builder.add(-256).try_get<uint8_t>().unwrap_err() == std::strong_ordering::less);
+    static_assert(builder.add(256).try_get_as<uint8_t>().unwrap_err() == std::strong_ordering::greater);
+    static_assert(builder.add(-256).try_get_as<uint8_t>().unwrap_err() == std::strong_ordering::less);
+}
+
+{
+    constexpr AccumulationBuilder<iiq32> builder(4);
+    static_assert(builder.add(1).get() == 5);
+    // static_assert(builder.add(256).try_get_as<uint16_t>().unwrap() == 260);
+    static_assert(builder.add(256).try_get_as<int>().unwrap() == 260);
+    // static_assert(static_cast<int>(builder.add(256).get()) == 5);
+    static_assert(builder.add(-256).try_get_as<int>().unwrap() == 4-256);
+    static_assert(builder.madd(16, 16).try_get_as<uint8_t>().unwrap_err() == std::strong_ordering::greater);
+}
 }
 }

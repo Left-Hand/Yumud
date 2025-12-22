@@ -89,7 +89,7 @@ struct [[nodiscard]] MitControl final{
         bytes[7] = static_cast<uint8_t>(torque.to_bits() & 0xf);
     }
 
-    constexpr Self try_from_bytes(std::span<const uint8_t, 8> bytes) const {
+    constexpr Result<Self, DeMsgError> try_from_bytes(std::span<const uint8_t, 8> bytes) const {
         const uint16_t position_bits = 
             (bytes[0] << 8) | bytes[1];
         const uint16_t speed_bits = 
@@ -100,13 +100,13 @@ struct [[nodiscard]] MitControl final{
             (bytes[5] << 4) | (bytes[6] >> 4);
         const uint16_t torque_bits = 
             ((bytes[6] & 0x0f) << 8) | (bytes[7]);
-        return Self{
+        return Ok(Self{
             .position = mit::MitPositionCode_u16::from_bits(position_bits),
             .speed = mit::MitSpeedCode_u12::from_bits(speed_bits),
             .kp = mit::MitKpCode_u12::from_bits(kp_bits),
             .kd = mit::MitKdCode_u12::from_bits(kd_bits),
             .torque = mit::MitTorqueCode_u12::from_bits(torque_bits)
-        };
+        });
     };
 };
 
@@ -385,13 +385,15 @@ struct [[nodiscard]] HeartbeatV513 final{
 
     static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> & bytes){
         const auto self = Self{
-            .axis_fault_flags = std::bit_cast<AxisFaultFlags>(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
+            .axis_fault_flags = std::bit_cast<AxisFaultFlags>(
+                le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())
+            ),
             .axis_state = ({
                 const auto res = try_into_axis_state(bytes[4]); 
                 if(res.is_err()) return Err(res.unwrap_err());
                 res.unwrap();
             }),
-            .motor_flags = std::bit_cast<MotorFlags>(bytes[5]),
+            .motor_flags = MotorFlags::from_bits(bytes[5]),
             .life = bytes[7]
         };
 
@@ -593,7 +595,6 @@ struct [[nodiscard]] GetPowers final{
 };
 
 }
-
 
 
 template<typename T>

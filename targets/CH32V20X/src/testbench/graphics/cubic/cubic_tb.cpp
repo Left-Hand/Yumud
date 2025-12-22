@@ -119,16 +119,9 @@ static constexpr Vec3<float> up = {0,1,0};
 
 #define lookat(view, eye, center, up) \
 { \
-	Vec3<float> zaxis = Vec3<float>::ZERO; \
-	zaxis = (eye - center); \
-	zaxis = zaxis.normalized(); \
- \
-	Vec3<float> xaxis = Vec3<float>::ZERO; \
-	xaxis = up.cross(zaxis); \
-	xaxis = xaxis.normalized(); \
- \
-	Vec3<float> yaxis = Vec3<float>::ZERO; \
-	yaxis = zaxis.cross(xaxis); \
+	const auto zaxis = (eye - center).normalized(); \
+	const auto xaxis = (up.cross(zaxis).normalized()); \
+	const auto yaxis = zaxis.cross(xaxis); \
  \
 	view.m[0][0] = xaxis.x; \
 	view.m[0][1] = yaxis.x; \

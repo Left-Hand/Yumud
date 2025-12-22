@@ -34,9 +34,10 @@
 #include "core/math/realmath.hpp"
 #include "algebra/vectors/vec2.hpp"
 #include "core/math/matrix/static_matrix.hpp"
+#include "unit_vec3.hpp"
 
 namespace ymd{
-template <arithmetic T>
+template <typename T>
 struct [[nodiscard]] Vec3{
 public:
     using Self = Vec3;
@@ -95,6 +96,10 @@ public:
         return Vec3<T>(static_cast<T>(1)/_x, static_cast<T>(1)/_y, static_cast<T>(1)/_z);}
     [[nodiscard]] __fast_inline static constexpr 
     Vec3 from_rcp(const Vec3<arithmetic auto>& v){
+        return Vec3<T>(static_cast<T>(1)/v.x, static_cast<T>(1)/v.y, static_cast<T>(1)/v.z);}
+
+    [[nodiscard]] __fast_inline static constexpr 
+    Vec3 from_rcp(const UnitVec3<arithmetic auto>& v){
         return Vec3<T>(static_cast<T>(1)/v.x, static_cast<T>(1)/v.y, static_cast<T>(1)/v.z);}
 
     [[nodiscard]] __fast_inline static constexpr 
@@ -247,15 +252,6 @@ public:
         return ret += *this;
     }
 
-	[[nodiscard]] __fast_inline constexpr 
-    Vec3 minf(arithmetic auto p_scalar) const {
-		return Vec3(
-            MIN(x, static_cast<T>(p_scalar)), 
-            MIN(y, static_cast<T>(p_scalar)), 
-            MIN(z, static_cast<T>(p_scalar))
-        );
-	}
-
     template<arithmetic U>
     [[nodiscard]] __fast_inline constexpr 
     Vec3 operator -(const Vec3<U> & other) const {
@@ -288,14 +284,14 @@ public:
         return (l > length ? *this * length / l : *this);
     }
 
-    [[nodiscard]] constexpr Vec2<T> xy() const{
-        return {x,y};
-    }
-
-
     [[nodiscard]] constexpr __fast_inline 
     T dot(const Vec3<arithmetic auto > &v) const{
         return static_cast<T>(x * v.x + y * v.y + z * v.z);
+    }
+
+    [[nodiscard]] constexpr __fast_inline 
+    T dot(const UnitVec3<arithmetic auto > &v) const{
+        return v.dot(*this);
     }
 
     [[nodiscard]] constexpr __fast_inline 
@@ -326,11 +322,27 @@ public:
         );
     }
 
+    template<arithmetic U>
+    __fast_inline constexpr 
+    Vec3 cross(const UnitVec3<U> &u) const{
+        return Vec3(
+            static_cast<T>(y * u.z - z * u.y),
+            static_cast<T>(z * u.x - x * u.z), 
+            static_cast<T>(x * u.y - y * u.x)
+        );
+    }
+
 
     [[nodiscard]] __fast_inline constexpr 
     T length() const{
         static_assert(not std::is_integral_v<T>);
         return math::sqrt(x * x + y * y + z * z);
+    }
+
+    [[nodiscard]] __fast_inline constexpr 
+    T inv_length() const{
+        static_assert(not std::is_integral_v<T>);
+        return math::inv_sqrt(this->length_squared());
     }
 
     [[nodiscard]] __fast_inline constexpr 
@@ -340,9 +352,9 @@ public:
 
 
     [[nodiscard]] constexpr 
-    Vec3 normalized() const {
+    UnitVec3<T> normalized() const {
         static_assert(not std::is_integral_v<T>);
-        T inv_len = math::inv_sqrt(this->length_squared());
+        T inv_len = inv_length();
         return {
             this->x * inv_len,
             this->y * inv_len,

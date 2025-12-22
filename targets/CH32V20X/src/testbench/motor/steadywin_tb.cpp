@@ -25,6 +25,7 @@
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_msgs.hpp"
 
 using namespace ymd;
+using namespace robots::steadywin;
 using namespace robots::steadywin::can_simple;
 
 
@@ -82,15 +83,15 @@ void steadywin_main(){
                 //nothing
             }break;
             case Command::Heartbeat:{
-                const auto msg = resp_msgs::HeartbeatV513::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, msg);
+                const auto either_msg = resp_msgs::HeartbeatV513::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, either_msg);
             }break;
             case Command::Estop:{
                 //req only
             }break;
             case Command::GetError:{
-                const auto msg = resp_msgs::GetError::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, msg);
+                const auto either_msg = resp_msgs::GetError::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, either_msg);
             }break;
             case Command::RxSdo:{
                 //do not handle currently
@@ -108,12 +109,12 @@ void steadywin_main(){
                 //do not handle currently
             }break;
             case Command::GetEncoderEstimates:{
-                const auto msg = resp_msgs::GetEncoderEstimates::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, msg);
+                const auto either_msg = resp_msgs::GetEncoderEstimates::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, either_msg);
             }break;
             case Command::GetEncoderCount:{
-                const auto msg = resp_msgs::GetEncoderCount::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, msg);
+                const auto either_msg = resp_msgs::GetEncoderCount::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, either_msg);
             }break;
             case Command::SetControllerMode:{
                 //req only
@@ -143,15 +144,15 @@ void steadywin_main(){
                 //req only
             }break;
             case Command::GetIq:{
-                const auto msg = resp_msgs::GetIq::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, msg);
+                const auto either_msg = resp_msgs::GetIq::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, either_msg);
             }break;
             case Command::Reboot:{
                 //req only
             }break;
             case Command::GetBusVoltageCurrent:{
-                const auto msg = resp_msgs::GetBusVoltageCurrent::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, msg);
+                const auto either_msg = resp_msgs::GetBusVoltageCurrent::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, either_msg);
             }break;
             case Command::ClearErrors:{
                 //req only
@@ -166,12 +167,12 @@ void steadywin_main(){
                 //req only
             }break;
             case Command::GetTorques:{
-                const auto msg = resp_msgs::GetTorques::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, msg);
+                const auto either_msg = resp_msgs::GetTorques::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, either_msg);
             }break;
             case Command::GetPowers:{
-                const auto msg = resp_msgs::GetPowers::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, msg);
+                const auto either_msg = resp_msgs::GetPowers::try_from_bytes(payload_bytes);
+                return accept_response(axis_id, either_msg);
             }break;
             case Command::DisableCan:{
                 //req only

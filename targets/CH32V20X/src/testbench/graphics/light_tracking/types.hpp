@@ -50,7 +50,7 @@ struct CacheOf<TriangleSurface<T>> : public TriangleSurface<T>{
         )){;}
 
 private:
-    static constexpr Vec3<T> calc_normal_from_points(
+    static constexpr UnitVec3<T> calc_normal_from_points(
         const Vec3<T> & _v0,
         const Vec3<T> & _v1,
         const Vec3<T> & _v2

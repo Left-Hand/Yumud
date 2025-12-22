@@ -20,7 +20,11 @@ namespace ymd::literals{
 using namespace ymd::literals;
 
 namespace ymd::math{
-    
+template<std::floating_point T>
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+T abs(const T a){
+    return a < 0 ? -a : a;
+}
 
 template<std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -81,22 +85,22 @@ bool is_equal_approx(
         return true;
     }
     // Then check for approximate equality.
-    auto tolerance = epsilon * ABS(a);
+    auto tolerance = epsilon * abs(a);
     if (tolerance < epsilon) {
         tolerance = epsilon;
     }
-    return ABS(a - b) < tolerance;
+    return abs(a - b) < tolerance;
 }
 
 
 template<std::floating_point T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 bool is_equal_approx_ratio(const T a, const T b, const T epsilon, const T min_epsilon){
-    auto diff = ABS(a - b);
+    auto diff = abs(a - b);
     if (diff == 0.0 || diff < min_epsilon) {
         return true;
     }
-    auto avg_size = (ABS(a) + ABS(b)) / 2.0;
+    auto avg_size = (abs(a) + abs(b)) / 2.0;
     diff /= avg_size;
     return diff < epsilon;
 }

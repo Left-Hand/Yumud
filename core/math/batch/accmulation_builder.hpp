@@ -7,6 +7,16 @@
 
 namespace ymd::math{
 
+template< 
+    std::integral D1, std::integral D2, 
+    typename D = tmp::extended_mul_underlying_t<D1, D2>
+    >
+static constexpr auto extended_mul(const D1 a, D2 b) 
+-> D{
+    return static_cast<D>(static_cast<D>(a) * static_cast<D>(b));
+}
+
+
 //为高精度定点卷积而生
 //普通定点卷积算式时可能有多次精度丢失与溢出风险
 //中间量使用拓展量则能避免这个问题
@@ -27,7 +37,7 @@ struct [[nodiscard]] AccumulationBuilder final{
     }
 
     template<typename T>
-    constexpr Result<T, std::strong_ordering> try_get() const {
+    constexpr Result<T, std::strong_ordering> try_get_as() const {
         constexpr auto E_TARGET_MAX = static_cast<ET>(std::numeric_limits<T>::max());
         constexpr auto E_TARGET_MIN = static_cast<ET>(std::numeric_limits<T>::min());
         if(value_ > E_TARGET_MAX) return Err(std::strong_ordering::greater);
@@ -36,7 +46,7 @@ struct [[nodiscard]] AccumulationBuilder final{
     }
 
     template<typename T>
-    constexpr T get_saturated() const {
+    constexpr T get_as_saturated() const {
         constexpr T TARGET_MAX = std::numeric_limits<T>::max();
         constexpr T TARGET_MIN = std::numeric_limits<T>::min();
         constexpr ET E_TARGET_MAX = static_cast<ET>(TARGET_MAX);
@@ -47,7 +57,7 @@ struct [[nodiscard]] AccumulationBuilder final{
     }
 
     template<typename T = ET>
-    constexpr T get_clamped(const auto min, const auto max) const{
+    constexpr T get_as_clamped(const auto min, const auto max) const{
         if(value_ > max) return static_cast<T>(max);
         if(value_ < min) return static_cast<T>(min);
         return static_cast<T>(value_);

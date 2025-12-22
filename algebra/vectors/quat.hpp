@@ -155,7 +155,7 @@ struct [[nodiscard]] Quat{
         const Vec3<T> default_dir(0, 0, 1);
         
         // Normalize the input direction
-        const Vec3<T> normalized_dir = dir.normalized();
+        const UnitVec3<T> normalized_dir = dir.normalized();
         
         // Calculate the dot product to determine the angle between the vectors
         T dot_product = default_dir.dot(normalized_dir);
@@ -413,8 +413,8 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Vec3<T> xform_up() const {
-        return Vec3<T>(
+    UnitVec3<T> xform_up() const {
+        return UnitVec3<T>(
             2 * (w * y + z * x),
             2 * (-w * x + z * y),
             2 * (z * z + w * w) - 1
