@@ -218,7 +218,7 @@ public:
         sccb_drv_(sccb_drv){;}
     explicit MT9V034(hal::SccbDrv && sccb_drv):
         sccb_drv_(std::move(sccb_drv)){;}
-    explicit MT9V034(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit MT9V034(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MT9V034(hal::SccbDrv{i2c, addr}){;}
 
     [[nodiscard]] IResult<> init();

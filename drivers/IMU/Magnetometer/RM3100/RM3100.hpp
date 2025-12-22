@@ -121,7 +121,7 @@ private:
 };
 
 struct RM3100:public RM3100_Prelude{
-    explicit RM3100(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit RM3100(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv(i2c, addr)){}
 
 

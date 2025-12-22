@@ -37,7 +37,7 @@ using namespace ymd::drivers;
     return Ok();
 }
 
-[[maybe_unused]] static void ak8963_tb(hal::I2c & i2c){
+[[maybe_unused]] static void ak8963_tb(hal::I2cBase & i2c){
     MPU6050 mpu{&i2c};
     
     init_mpu6050(mpu).examine();
@@ -54,7 +54,7 @@ using namespace ymd::drivers;
     while(true);
 }
 
-[[maybe_unused]] static void mpu6050_tb(hal::I2c & i2c){
+[[maybe_unused]] static void mpu6050_tb(hal::I2cBase & i2c){
     MPU6050 mpu{&i2c};
 
     init_mpu6050(mpu).examine();
@@ -68,7 +68,7 @@ using namespace ymd::drivers;
     }
 }
 
-[[maybe_unused]] static void mpu6500_tb(hal::I2c & i2c){
+[[maybe_unused]] static void mpu6500_tb(hal::I2cBase & i2c){
     MPU6050 mpu{&i2c};
 
     #ifdef MAG_ACTIVATED

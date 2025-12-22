@@ -17,7 +17,7 @@ public:
     explicit BMI160(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         phy_(hal::SpiDrv(spi, rank)){;}
 
-    explicit BMI160(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+    explicit BMI160(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
         phy_(i2c, i2c_addr){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);

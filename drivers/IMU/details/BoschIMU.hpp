@@ -14,7 +14,7 @@ public:
     using Error = ImuError;
     explicit BoschImu_Phy(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    explicit BoschImu_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
+    explicit BoschImu_Phy(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
         BoschImu_Phy(hal::I2cDrv{i2c, addr}){;}
     explicit BoschImu_Phy(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}

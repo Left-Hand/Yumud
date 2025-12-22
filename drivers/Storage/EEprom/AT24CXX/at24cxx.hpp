@@ -69,7 +69,7 @@ public:
 
 
     template<typename TConfig>
-    explicit AT24CXX(TConfig && cfg, hal::I2c & i2c):
+    explicit AT24CXX(TConfig && cfg, hal::I2cBase & i2c):
         AT24CXX(std::forward<TConfig>(cfg), 
         hal::I2cDrv{&i2c, DEFAULT_I2C_ADDR}){;}
 

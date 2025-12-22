@@ -10,7 +10,7 @@ class MT6701 final:
 {
 public:
     explicit MT6701(
-        Some<hal::I2c *> i2c, 
+        Some<hal::I2cBase *> i2c, 
         hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
         phy_(MT6701_Phy(i2c, addr)){;}

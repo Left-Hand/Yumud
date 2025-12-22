@@ -15,7 +15,7 @@ class ICM42605 final:
 {
 public:
     explicit ICM42605(
-        Some<hal::I2c *> i2c, 
+        Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
         phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}

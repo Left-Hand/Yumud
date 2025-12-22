@@ -11,7 +11,7 @@ public:
     using Self = ICM42688;
 
     explicit ICM42688(
-        Some<hal::I2c *> i2c, 
+        Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
         phy_(i2c, i2c_addr){;}

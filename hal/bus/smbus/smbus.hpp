@@ -11,7 +11,7 @@ protected:
 
     uint32_t timeout = 10;
 
-    // I2c(hal::GpioIntf & _scl_pin, hal::GpioIntf & _ada_gpio):scl_pin(_scl_pin),sda_pin(_ada_gpio){}
+    // I2cBase(hal::GpioIntf & _scl_pin, hal::GpioIntf & _ada_gpio):scl_pin(_scl_pin),sda_pin(_ada_gpio){}
 public:
     void setTimeout(const uint32_t _timeout){timeout = _timeout;}
 

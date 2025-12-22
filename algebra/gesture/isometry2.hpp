@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rotation2.hpp"
-#include "algebra/vectors/complex.hpp"
+#include "algebra/vectors/unit_complex.hpp"
 
 namespace ymd{
 

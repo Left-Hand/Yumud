@@ -9,7 +9,7 @@ class BMM150:
     public BMM150_Prelude{
 public:
     explicit BMM150(
-        Some<hal::I2c *> i2c, 
+        Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
         phy_(hal::I2cDrv(i2c, addr)){;}

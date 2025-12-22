@@ -79,14 +79,14 @@ static hal::Gpio i2c_get_sda(const void * inst, const uint8_t remap){
 }
 
 
-I2cHw::I2cHw(void * inst):
+I2c::I2c(void * inst):
     inst_(inst),
     scl_(i2c_get_scl(inst, 0)), 
     sda_(i2c_get_sda(inst, 0))
     {;}
 
 
-void I2cHw::enable_rcc(const Enable en){
+void I2c::enable_rcc(const Enable en){
     switch(reinterpret_cast<uint32_t>(SDK_INST(inst_))){
         #ifdef I2C1_PRESENT
         case I2C1_BASE:
@@ -110,12 +110,12 @@ void I2cHw::enable_rcc(const Enable en){
 
 
 
-bool I2cHw::locked(){
+bool I2c::locked(){
     return bool(SDK_INST(inst_)->STAR2 & I2C_STAR2_BUSY) 
         & bool(!(SDK_INST(inst_)->STAR1 & I2C_STAR1_STOPF));
 }
 
-void I2cHw::init(const uint32_t baudrate){
+void I2c::init(const uint32_t baudrate){
     enable_rcc(EN);
 
     scl().afod();
@@ -134,7 +134,7 @@ void I2cHw::init(const uint32_t baudrate){
     enable_hw_timeout(EN);
 }
 
-void I2cHw::reset(){
+void I2c::reset(){
     I2C_Cmd(SDK_INST(inst_),DISABLE);
     __nopn(4);
     I2C_Cmd(SDK_INST(inst_),ENABLE);
@@ -144,12 +144,12 @@ void I2cHw::reset(){
     SDK_INST(inst_)->CTLR1 &= ~I2C_CTLR1_SWRST;
 }
 
-void I2cHw::enable_hw_timeout(const Enable en){
+void I2c::enable_hw_timeout(const Enable en){
     if(en == EN) SDK_INST(inst_)->STAR1 |= I2C_STAR1_TIMEOUT;
     else SDK_INST(inst_)->STAR1 &= ~I2C_STAR1_TIMEOUT;
 }
 
-hal::HalResult I2cHw::unlock_bus(){
+hal::HalResult I2c::unlock_bus(){
     if(locked()){
         I2C_Cmd(SDK_INST(inst_), DISABLE);
 
@@ -182,13 +182,13 @@ hal::HalResult I2cHw::unlock_bus(){
     return hal::HalResult::Ok();
 }
 
-void I2cHw::trail(){
+void I2c::trail(){
     I2C_GenerateSTOP(SDK_INST(inst_), ENABLE);
     // I2C_AcknowledgeConfig(SDK_INST(inst_), ENABLE);
 }
 
 
-hal::HalResult I2cHw::lead(const hal::I2cSlaveAddrWithRw req){
+hal::HalResult I2c::lead(const hal::I2cSlaveAddrWithRw req){
     const auto address = req.addr_without_rw();
     const bool is_read = req.is_read();
 
@@ -207,14 +207,14 @@ hal::HalResult I2cHw::lead(const hal::I2cSlaveAddrWithRw req){
     return hal::HalResult::Ok();
 }
 
-hal::HalResult I2cHw::write(const uint32_t data){
+hal::HalResult I2c::write(const uint32_t data){
     I2C_SendData(SDK_INST(inst_), data);
     while(I2C_CheckEvent(SDK_INST(inst_), I2C_EVENT_MASTER_BYTE_TRANSMITTED) 
         == ErrorStatus::NoREADY);
     return hal::HalResult::Ok();
 }
 
-hal::HalResult I2cHw::read(uint8_t & data, const Ack ack){
+hal::HalResult I2c::read(uint8_t & data, const Ack ack){
     I2C_AcknowledgeConfig(SDK_INST(inst_), ack == ACK);
     while(I2C_GetFlagStatus(SDK_INST(inst_), I2C_FLAG_RXNE) == ErrorStatus::NoREADY);
 
@@ -225,11 +225,11 @@ hal::HalResult I2cHw::read(uint8_t & data, const Ack ack){
 namespace ymd{
 
 #ifdef I2C1_PRESENT
-I2cHw i2c1{I2C1};
+I2c i2c1{I2C1};
 #endif
 
 #ifdef I2C2_PRESENT
-I2cHw i2c2{I2C2};
+I2c i2c2{I2C2};
 #endif
 
 }

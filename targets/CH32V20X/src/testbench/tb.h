@@ -14,7 +14,7 @@ namespace ymd::hal{
     class Uart;
     class SpiBase;
     class GpioIntf;
-    class I2c;
+    class I2cBase;
     class Uart;
     class DmaChannel;
 }
@@ -50,7 +50,7 @@ void can_tb(ymd::IOStream & logger, ymd::hal::Can & can, bool tx_role = true);
 
 void usbcdc_tb();
 
-void at24cxx_tb(ymd::OutputStream & logger, ymd::hal::I2c & i2c);
+void at24cxx_tb(ymd::OutputStream & logger, ymd::hal::I2cBase & i2c);
 
 void at24cxx_main();
 
@@ -63,13 +63,13 @@ void flash_main();
 void qlz_main();
 
 void uart_main();
-void tcs34725_tb(ymd::OutputStream & logger, ymd::hal::I2c & i2c);
+void tcs34725_tb(ymd::OutputStream & logger, ymd::hal::I2cBase & i2c);
 
 void tcs34725_main();
 
 void dshot_main();
 
-void at24cxx_tb(ymd::OutputStream & logger, ymd::hal::I2c & i2c);
+void at24cxx_tb(ymd::OutputStream & logger, ymd::hal::I2cBase & i2c);
 void i2c_scanner_main();
 
 void dshot_main();

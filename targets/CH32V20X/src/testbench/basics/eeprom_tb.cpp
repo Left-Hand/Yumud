@@ -179,14 +179,14 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     logger.prints("at24 tb done");
 }
 
-[[maybe_unused]] static void eeprom02_tb(OutputStream & logger, hal::I2c & i2c){
+[[maybe_unused]] static void eeprom02_tb(OutputStream & logger, hal::I2cBase & i2c){
     AT24C02 at24{i2c};
     at24.init();
     Memory mem = at24;
     mem_tb(logger, mem);
 }
 
-[[maybe_unused]] static void eeprom64_tb(OutputStream & logger, hal::I2c & i2c){
+[[maybe_unused]] static void eeprom64_tb(OutputStream & logger, hal::I2cBase & i2c){
     AT24C64 at24{i2c};
     at24.init();
     // Memory mem = at24.slice({256,512});

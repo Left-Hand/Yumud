@@ -8,7 +8,7 @@
 // 与单片机等交换数据。 
 
 // 接口
-    // I2c(1MHz)
+    // I2cBase(1MHz)
     //  Scl: Gpio;
     //  Sda: Gpio;
     //  ~Interrupt: Option<Gpio>;

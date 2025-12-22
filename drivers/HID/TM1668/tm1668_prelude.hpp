@@ -28,7 +28,7 @@ struct TM1668_Prelude{
 class TM1668_Phy final:public TM1668_Prelude{
 public:
 
-    explicit TM1668_Phy(hal::I2c & i2c, hal::GpioIntf & scb_io):
+    explicit TM1668_Phy(hal::I2cBase & i2c, hal::GpioIntf & scb_io):
         i2c_(i2c), scb_io_(scb_io){;}
     
     enum class PulseWidth:uint8_t{
@@ -130,7 +130,7 @@ private:
         return Ok();
     }
 private:
-    hal::I2c & i2c_;
+    hal::I2cBase & i2c_;
     hal::GpioIntf & scb_io_;
 
     void set_scb(){scb_io_.set_high();}

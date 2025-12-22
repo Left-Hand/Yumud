@@ -17,17 +17,17 @@ class I2cDrv final{
 
 public:
 
-    explicit I2cDrv(Some<I2c *> i2c, I2cSlaveAddr<7> addr):
+    explicit I2cDrv(Some<I2cBase *> i2c, I2cSlaveAddr<7> addr):
         i2c_(i2c.deref()),
         slave_addr_(addr){;}
 
-    I2c & bus(){return i2c_;}
+    I2cBase & bus(){return i2c_;}
     HalResult set_baudrate(const uint32_t baud){
         return i2c_.set_baudrate(baud);
     }
 private:
 
-    I2c & i2c_;
+    I2cBase & i2c_;
     I2cSlaveAddr<7> slave_addr_;
 
     uint16_t timeout_ = 10;

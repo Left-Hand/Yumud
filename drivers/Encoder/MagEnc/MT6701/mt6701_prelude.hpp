@@ -101,7 +101,7 @@ public:
     MT6701_Phy(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
         MT6701_Phy(std::nullopt, hal::SpiDrv(spi, rank)){;}
 
-    MT6701_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
+    MT6701_Phy(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
         MT6701_Phy(hal::I2cDrv(i2c, addr), std::nullopt){;}
 
     template<typename T>

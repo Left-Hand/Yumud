@@ -46,7 +46,7 @@ public:
 
     explicit MMC5983(hal::I2cDrv && i2c_drv):
         phy_(std::move(i2c_drv)){;}
-    explicit MMC5983(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit MMC5983(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         phy_(hal::I2cDrv{i2c, addr}){;}
     explicit MMC5983(const hal::SpiDrv & spi_drv):
         phy_(spi_drv){;}

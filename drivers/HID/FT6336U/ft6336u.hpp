@@ -18,7 +18,7 @@ public:
     explicit FT6336U(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
     explicit FT6336U(
-        Some<hal::I2c *> i2c, 
+        Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
