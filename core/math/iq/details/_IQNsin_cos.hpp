@@ -59,33 +59,33 @@ struct [[nodiscard]] IqSincosIntermediate{
     uint8_t sect; 
 
     __attribute__((always_inline)) constexpr 
-    fixed_t<31, int32_t> exact_sin() const {
+    math::fixed_t<31, int32_t> exact_sin() const {
         //获取查找表的校准值
 
         switch(sect){
-            case 0: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 1: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
-            case 2: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
-            case 3: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 4: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
-            case 5: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 6: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 7: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
+            case 0: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
+            case 1: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
+            case 2: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
+            case 3: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
+            case 4: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
+            case 5: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
+            case 6: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
+            case 7: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
         }
         __builtin_unreachable();
     }
 
     __attribute__((always_inline)) constexpr 
-    fixed_t<31, int32_t> exact_cos() const {
+    math::fixed_t<31, int32_t> exact_cos() const {
         switch(sect){
-            case 0: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
-            case 1: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 2: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
-            case 3: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 4: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 5: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
-            case 6: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 7: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
+            case 0: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
+            case 1: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
+            case 2: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
+            case 3: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
+            case 4: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
+            case 5: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
+            case 6: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
+            case 7: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
 
         }
         __builtin_unreachable();
@@ -94,8 +94,8 @@ struct [[nodiscard]] IqSincosIntermediate{
     __attribute__((always_inline)) constexpr 
     auto exact_sincos() const {
         struct SinCosResult{
-            fixed_t<31, int32_t> sin;
-            fixed_t<31, int32_t> cos;
+            math::fixed_t<31, int32_t> sin;
+            math::fixed_t<31, int32_t> cos;
         };
 
         return SinCosResult{

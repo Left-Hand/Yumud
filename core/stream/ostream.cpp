@@ -152,7 +152,7 @@ void OutputStream::print_i64(const int64_t val){
     PRINT_INT_TEMPLATE(24, strconv::iltoa);
 }
 
-void OutputStream::print_iq16(const fixed_t<16, int32_t> val){
+void OutputStream::print_iq16(const math::fixed_t<16, int32_t> val){
     char str[12] = {0};
     const auto len = strconv::qtoa<16>(val, str, this->eps());
     print_numeric(str, len, val >= 0);

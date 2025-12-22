@@ -232,75 +232,74 @@ static constexpr fixed_t<Q, int32_t> tpzpu(const fixed_t<Q, int32_t> x){
 
 
 namespace std{
-using ymd::fixed_t;
 
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> sin(const fixed_t<Q, D> x){return ymd::math::sin(x);}
+ymd::math::fixed_t<Q, D> sin(const ymd::math::fixed_t<Q, D> x){return ymd::math::sin(x);}
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> cos(const fixed_t<Q, D> x){return ymd::math::cos<Q>(x);}
-
-
-template<size_t Q, typename D>
-__attribute__((always_inline)) constexpr 
-fixed_t<Q, D> tan(const fixed_t<Q, D> x){return ymd::math::tan(x);}
+ymd::math::fixed_t<Q, D> cos(const ymd::math::fixed_t<Q, D> x){return ymd::math::cos<Q>(x);}
 
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> asin(const fixed_t<Q, D> x){return ymd::math::asin(x);}
-
-template<size_t Q, typename D>
-__attribute__((always_inline)) constexpr 
-fixed_t<Q, D> acos(const fixed_t<Q, D> x){return ymd::math::acos(x);}
-
-template<size_t Q, typename D>
-__attribute__((always_inline)) constexpr 
-fixed_t<Q, D> atan(const fixed_t<Q, D> x){return ymd::math::atan(x);}
-
-template<size_t Q, typename D>
-__attribute__((always_inline)) constexpr 
-fixed_t<Q, D> atan2(const fixed_t<Q, D> a, const fixed_t<Q, D> b){return ymd::math::atan2(a,b);}
-
-template<size_t Q, typename D>
-__attribute__((always_inline)) constexpr 
-auto sqrt(const fixed_t<Q, D> x){return ymd::math::sqrt(x);}
-
-template<size_t Q, typename D>
-__attribute__((always_inline)) constexpr 
-fixed_t<Q, D> abs(const fixed_t<Q, D> x){return ymd::math::abs(x);}
+ymd::math::fixed_t<Q, D> tan(const ymd::math::fixed_t<Q, D> x){return ymd::math::tan(x);}
 
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> mod(const fixed_t<Q, D> a, const fixed_t<Q, D> b){return ymd::math::mod(a, b);}
+ymd::math::fixed_t<Q, D> asin(const ymd::math::fixed_t<Q, D> x){return ymd::math::asin(x);}
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> mean(const fixed_t<Q, D> a, const fixed_t<Q, D> b){return ymd::math::mean(a, b);}
+ymd::math::fixed_t<Q, D> acos(const ymd::math::fixed_t<Q, D> x){return ymd::math::acos(x);}
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> floor(const fixed_t<Q, D> x){return ymd::math::floor(x);}
+ymd::math::fixed_t<Q, D> atan(const ymd::math::fixed_t<Q, D> x){return ymd::math::atan(x);}
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> ceil(const fixed_t<Q, D> x){return ymd::math::ceil(x);}
+ymd::math::fixed_t<Q, D> atan2(const ymd::math::fixed_t<Q, D> a, const ymd::math::fixed_t<Q, D> b){return ymd::math::atan2(a,b);}
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> log10(const fixed_t<Q, D> x){return ymd::math::log10(x);}
+auto sqrt(const ymd::math::fixed_t<Q, D> x){return ymd::math::sqrt(x);}
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> log(const fixed_t<Q, D> x){return ymd::math::log(x);}
+ymd::math::fixed_t<Q, D> abs(const ymd::math::fixed_t<Q, D> x){return ymd::math::abs(x);}
+
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> pow(const fixed_t<Q, D> a, const fixed_t<Q, D> b){return ymd::math::pow(a, b);}
+ymd::math::fixed_t<Q, D> mod(const ymd::math::fixed_t<Q, D> a, const ymd::math::fixed_t<Q, D> b){return ymd::math::mod(a, b);}
+
+template<size_t Q, typename D>
+__attribute__((always_inline)) constexpr 
+ymd::math::fixed_t<Q, D> mean(const ymd::math::fixed_t<Q, D> a, const ymd::math::fixed_t<Q, D> b){return ymd::math::mean(a, b);}
+
+template<size_t Q, typename D>
+__attribute__((always_inline)) constexpr 
+ymd::math::fixed_t<Q, D> floor(const ymd::math::fixed_t<Q, D> x){return ymd::math::floor(x);}
+
+template<size_t Q, typename D>
+__attribute__((always_inline)) constexpr 
+ymd::math::fixed_t<Q, D> ceil(const ymd::math::fixed_t<Q, D> x){return ymd::math::ceil(x);}
+
+template<size_t Q, typename D>
+__attribute__((always_inline)) constexpr 
+ymd::math::fixed_t<Q, D> log10(const ymd::math::fixed_t<Q, D> x){return ymd::math::log10(x);}
+
+template<size_t Q, typename D>
+__attribute__((always_inline)) constexpr 
+ymd::math::fixed_t<Q, D> log(const ymd::math::fixed_t<Q, D> x){return ymd::math::log(x);}
+
+template<size_t Q, typename D>
+__attribute__((always_inline)) constexpr 
+ymd::math::fixed_t<Q, D> pow(const ymd::math::fixed_t<Q, D> a, const ymd::math::fixed_t<Q, D> b){return ymd::math::pow(a, b);}
 
 }
 

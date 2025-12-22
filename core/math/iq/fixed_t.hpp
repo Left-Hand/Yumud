@@ -20,39 +20,41 @@
 #endif
 
 
-namespace ymd{
+namespace ymd::math{
 template<size_t Q, std::integral D>
 struct fixed_t;
 }
 
 namespace std{
     template<size_t Q, typename D>
-    struct is_arithmetic<ymd::fixed_t<Q, D>> : std::true_type {};
+    struct is_arithmetic<ymd::math::fixed_t<Q, D>> : std::true_type {};
 
     template<size_t Q, typename D>
-    struct is_floating_point<ymd::fixed_t<Q, D>> : std::false_type {};
+    struct is_floating_point<ymd::math::fixed_t<Q, D>> : std::false_type {};
 
     template<size_t Q, typename D>
-    struct is_signed<ymd::fixed_t<Q, D>> : std::is_signed<D> {};
+    struct is_signed<ymd::math::fixed_t<Q, D>> : std::is_signed<D> {};
 }
 
-namespace ymd{
+namespace ymd::tmp{
 // 默认模板：非定点数类型
 template<typename T>
 constexpr bool is_fixed_point_v = false;
 
 // 特化模板：定点数类型
 template<size_t Q, typename D>
-constexpr bool is_fixed_point_v<fixed_t<Q, D>> = true;
+constexpr bool is_fixed_point_v<math::fixed_t<Q, D>> = true;
 
+}
 
+namespace ymd::math{
 
 
 template<size_t Q, std::integral D>
 struct [[nodiscard]] fixed_t{
 private:
-    static_assert(std
-        ::is_same_v<D, bool> == false);
+    static_assert(std::is_same_v<D, bool> == false);
+
     static constexpr size_t MAX_Q = std::is_unsigned_v<D> ? 
         size_t(sizeof(D) * 8) : 
         size_t(sizeof(D) * 8 - 1); // 为符号位预留一个bit
@@ -422,7 +424,6 @@ static constexpr auto extended_mul(const fixed_t<Q1, D1> a, const fixed_t<Q2, D2
     return fixed_t<Q1 + Q2, D>::from_bits(static_cast<D>(a.to_bits()) * static_cast<D>(b.to_bits()));
 }
 
-namespace math{
 
 template<size_t Q1, size_t Q2>
 static constexpr fixed_t<Q1, int32_t> sat(
@@ -663,12 +664,11 @@ template<size_t Q>
     return diff < epsilon;
 }
 }
-}
 
 
 
 namespace std{
-    using ymd::fixed_t;
+    using ymd::math::fixed_t;
     template<size_t Q, typename D>
     class numeric_limits<fixed_t<Q, D>> {
     public:

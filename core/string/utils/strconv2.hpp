@@ -542,7 +542,7 @@ struct Iq16Formatter{
 	static constexpr uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
 	static constexpr SerStringResult<size_t> fmt(
 		StringRef str,
-		const fixed_t<16, int32_t> value, 
+		const math::fixed_t<16, int32_t> value, 
 		const Eps eps
 	){
 		if(str.length() == 0) return Err(SerStringError::OutOfMemory);
@@ -613,9 +613,9 @@ struct DefmtStrDispatcher<StringView>{
 };
 
 template<size_t Q>
-struct DefmtStrDispatcher<fixed_t<Q, int32_t>>{
-	static constexpr DestringResult<fixed_t<Q, int32_t>> from_str(StringView str){
-		return details::FixedPointDeformatter<fixed_t<Q, int32_t>>::defmt(str);
+struct DefmtStrDispatcher<math::fixed_t<Q, int32_t>>{
+	static constexpr DestringResult<math::fixed_t<Q, int32_t>> from_str(StringView str){
+		return details::FixedPointDeformatter<math::fixed_t<Q, int32_t>>::defmt(str);
 	}
 };
 
@@ -644,7 +644,7 @@ static constexpr SerStringResult<size_t> to_str(
 }
 
 template<size_t Q>
-static constexpr SerStringResult<size_t> to_str(StringRef str, fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
+static constexpr SerStringResult<size_t> to_str(StringRef str, math::fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
 	return details::Iq16Formatter::fmt(str, value, eps);
 }
 

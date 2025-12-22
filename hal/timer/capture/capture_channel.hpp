@@ -21,7 +21,7 @@ namespace capture_channel_utils{
         const T pulse_, 
         const U period_
     ) {
-        if constexpr(is_fixed_point_v<real_t>){
+        if constexpr(tmp::is_fixed_point_v<real_t>){
             return pulse_ / period_;
         }else{
             return pulse_ / period_;
@@ -33,7 +33,7 @@ namespace capture_channel_utils{
         const T unit_, 
         const U period_
     ){
-        if constexpr(is_fixed_point_v<real_t>){
+        if constexpr(tmp::is_fixed_point_v<real_t>){
             return unit_ / period_;
         }else{
             return unit_ / period_;

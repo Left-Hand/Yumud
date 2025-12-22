@@ -74,8 +74,8 @@ uint8_t get_byte_from_arg(const size_t idx, Arg && arg){
 template<size_t Q>
 
 [[nodiscard]] constexpr 
-uint8_t get_byte_from_arg(const size_t idx, const ymd::fixed_t<Q, int32_t> & arg){
-    static_assert(sizeof(ymd::fixed_t<Q, int32_t>) <= 8, "Size of fixed_t<Q, int32_t> must be less than 8");
+uint8_t get_byte_from_arg(const size_t idx, const ymd::math::fixed_t<Q, int32_t> & arg){
+    static_assert(sizeof(ymd::math::fixed_t<Q, int32_t>) <= 8, "Size of fixed_t<Q, int32_t> must be less than 8");
     const auto raw = arg.to_bits();
     return uint8_t{uint8_t(raw >> (idx * 8))};
 }

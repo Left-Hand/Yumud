@@ -92,8 +92,8 @@ private:
 
 // 定点数特化
 template<size_t Q, typename D>
-struct [[nodiscard]] CellBase<fixed_t<Q, D>> {
-    using T = fixed_t<Q, D>;
+struct [[nodiscard]] CellBase<math::fixed_t<Q, D>> {
+    using T = math::fixed_t<Q, D>;
     static_assert(std::is_integral_v<D>, "Underlying type must be integral");
 
     CellBase(const T initial_value){
@@ -103,33 +103,33 @@ struct [[nodiscard]] CellBase<fixed_t<Q, D>> {
         set(0);
     }
 
-    void set(const fixed_t<Q, D>& val) {
+    void set(const math::fixed_t<Q, D>& val) {
         bits_.store(val.to_bits(), std::memory_order_release);
     }
     
-    fixed_t<Q, D> get() const {
-        return fixed_t<Q, D>::from_bits(bits_.load(std::memory_order_acquire));
+    math::fixed_t<Q, D> get() const {
+        return math::fixed_t<Q, D>::from_bits(bits_.load(std::memory_order_acquire));
     }
     
     // 原子加法
-    fixed_t<Q, D> fetch_add(const fixed_t<Q, D> arg) {
+    math::fixed_t<Q, D> fetch_add(const math::fixed_t<Q, D> arg) {
         D result_bits = bits_.fetch_add(arg.to_bits(), std::memory_order_acq_rel);
-        return fixed_t<Q, D>(result_bits);
+        return math::fixed_t<Q, D>(result_bits);
     }
     
     // 原子减法
-    fixed_t<Q, D> fetch_sub(const fixed_t<Q, D> arg) {
+    math::fixed_t<Q, D> fetch_sub(const math::fixed_t<Q, D> arg) {
         D result_bits = bits_.fetch_sub(arg.to_bits(), std::memory_order_acq_rel);
-        return fixed_t<Q, D>(result_bits);
+        return math::fixed_t<Q, D>(result_bits);
     }
     
     // 原子比较交换
-    bool compare_exchange(fixed_t<Q, D>& expected, const fixed_t<Q, D> desired) {
+    bool compare_exchange(math::fixed_t<Q, D>& expected, const math::fixed_t<Q, D> desired) {
         D expected_bits = expected.to_bits();
         bool success = bits_.compare_exchange_weak(expected_bits, 
             desired.to_bits(),
             std::memory_order_acq_rel);
-        expected = fixed_t<Q, D>::from_bits(expected_bits);
+        expected = math::fixed_t<Q, D>::from_bits(expected_bits);
         return success;
     }
     

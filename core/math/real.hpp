@@ -4,7 +4,7 @@
 
 #include "iq/fixed_t.hpp"
 
-using real_t = ymd::fixed_t<IQ_DEFAULT_Q, int32_t>;
+using real_t = ymd::math::fixed_t<IQ_DEFAULT_Q, int32_t>;
 
 namespace ymd::literals{
 [[nodiscard]] consteval real_t operator"" _r(long double x){

@@ -63,7 +63,7 @@ struct [[nodiscard]] Angular{
 	template<typename U>
 	requires std::is_floating_point_v<U>
 	static constexpr Angular from_degrees(const U degrees){
-		if constexpr(is_fixed_point_v<T>){
+		if constexpr(tmp::is_fixed_point_v<T>){
 			constexpr U INV_360 = static_cast<U>(1.0 / 360.0);
 			return make_angle_from_turns(T::from(static_cast<float>(degrees * INV_360)));
 		}else{
@@ -82,7 +82,7 @@ struct [[nodiscard]] Angular{
 	}
 
 	template<typename U>
-	requires (is_fixed_point_v<U>)
+	requires (tmp::is_fixed_point_v<U>)
 	static constexpr Angular from_degrees(const U degrees){
 		return make_angle_from_turns(static_cast<T>(degrees / 360));
 	}
@@ -304,7 +304,7 @@ struct [[nodiscard]] Angular{
 
 	friend OutputStream & operator <<(OutputStream & os, const Angular & self){
 		// return os << self.to_degrees() << '\'';
-		if constexpr (is_fixed_point_v<T>)
+		if constexpr (tmp::is_fixed_point_v<T>)
 			return os << static_cast<iq16>(self.to_turns()) * 360 << '\'';
 		else
 			return os << self.to_turns() * 360 << '\'';

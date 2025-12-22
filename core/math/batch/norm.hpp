@@ -1,8 +1,3 @@
-#pragma once
-
-#include "core/math/real.hpp"
-#include "core/math/iq/fixed_t.hpp"
-
 #if 0
 namespace ymd{
 

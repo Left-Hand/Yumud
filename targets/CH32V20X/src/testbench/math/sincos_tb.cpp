@@ -1,7 +1,7 @@
 
 #include "core/math/real.hpp"
 #include "core/math/iq/iqmath.hpp"
-#include "core/math/intrinsics/batch/conv.hpp"
+#include "core/math/batch/norm.hpp"
 #include "core/math/iq/fixed_t.hpp"
 #include "core/arch/riscv/riscv_common.hpp"
 
@@ -65,8 +65,8 @@ struct [[nodiscard]] IqSincosIntermediate{
     using Self = IqSincosIntermediate;
 
     struct SinCosResult{
-        fixed_t<31, int32_t> sin;
-        fixed_t<31, int32_t> cos;
+        math::fixed_t<31, int32_t> sin;
+        math::fixed_t<31, int32_t> cos;
 
         friend OutputStream & operator << (OutputStream & os, const SinCosResult & obj){
             return os << obj.sin << os.splitter() << obj.cos;
@@ -79,33 +79,33 @@ struct [[nodiscard]] IqSincosIntermediate{
     uint8_t sect; 
 
     __attribute__((always_inline)) constexpr 
-    fixed_t<31, int32_t> exact_sin() const {
+    math::fixed_t<31, int32_t> exact_sin() const {
         //获取查找表的校准值
 
         switch(sect){
-            case 0: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 1: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
-            case 2: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
-            case 3: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 4: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
-            case 5: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 6: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 7: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
+            case 0: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
+            case 1: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
+            case 2: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
+            case 3: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
+            case 4: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
+            case 5: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
+            case 6: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
+            case 7: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
         }
         __builtin_unreachable();
     }
 
     __attribute__((always_inline)) constexpr 
-    fixed_t<31, int32_t> exact_cos() const {
+    math::fixed_t<31, int32_t> exact_cos() const {
         switch(sect){
-            case 0: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
-            case 1: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 2: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
-            case 3: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 4: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 5: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
-            case 6: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 7: return fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
+            case 0: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
+            case 1: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
+            case 2: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
+            case 3: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
+            case 4: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
+            case 5: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
+            case 6: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
+            case 7: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
 
         }
         __builtin_unreachable();
@@ -151,8 +151,8 @@ private:
 };
 
 template<const size_t Q>
-constexpr fixed_t<Q, uint32_t> mysqrt(const fixed_t<Q, uint64_t> x){
-    return fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed_t<Q, uint32_t> mysqrt(const math::fixed_t<Q, uint64_t> x){
+    return math::fixed_t<Q, uint32_t>::from_bits(
         from_single_input_64<Q, TYPE_SQRT>(x.to_bits()
         // iqmath::details::IqSqrtCoeffs::template from_single_u32<Q, TYPE_SQRT>(x.to_bits()
         ).template compute<Q, TYPE_SQRT>()
@@ -219,21 +219,21 @@ constexpr IqSincosIntermediate __IQNgetCosSin(int32_t iqn_x){
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 __fast_inline constexpr 
-fixed_t<31, int32_t> mysinpu(const fixed_t<Q, D> iq_x){
+math::fixed_t<31, int32_t> mysinpu(const math::fixed_t<Q, D> iq_x){
     return __IQNgetCosSinPU<Q>(iq_x.to_bits()).exact_cos();
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
-fixed_t<31, int32_t> mycospu(const fixed_t<Q, D> x){
+math::fixed_t<31, int32_t> mycospu(const math::fixed_t<Q, D> x){
     return __IQNgetCosSinPU<Q>(x.to_bits()).exact_sin();
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
-std::array<fixed_t<31, int32_t>, 2> mysincospu(const fixed_t<Q, D> x){
+std::array<math::fixed_t<31, int32_t>, 2> mysincospu(const math::fixed_t<Q, D> x){
     const auto res = __IQNgetCosSinPU<Q>(x.to_bits()).exact_sincos();
     return {res.sin, res.cos};
 }

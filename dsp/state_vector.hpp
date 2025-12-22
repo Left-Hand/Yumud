@@ -67,10 +67,10 @@ struct [[nodiscard]] SecondOrderState<iq16>{
     using Self = SecondOrderState;
 
     //原始信号
-    fixed_t<32, int64_t> x1 = 0;
+    math::fixed_t<32, int64_t> x1 = 0;
 
     //一阶导信号
-    fixed_t<16, int32_t> x2 = 0;
+    math::fixed_t<16, int32_t> x2 = 0;
 
     //从零构造
     static constexpr Self zero(){

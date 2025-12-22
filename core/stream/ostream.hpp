@@ -371,19 +371,19 @@ private:
         this->write(str, len);
     }
 
-    void print_iq16(const fixed_t<16, int32_t> q_val);
+    void print_iq16(const math::fixed_t<16, int32_t> q_val);
 public:
 
     template<size_t Q, typename D>
-    OutputStream & operator<<(const fixed_t<Q, D> & q_val){
-        print_iq16(fixed_t<16, int32_t>(q_val));
+    OutputStream & operator<<(const math::fixed_t<Q, D> & q_val){
+        print_iq16(math::fixed_t<16, int32_t>(q_val));
         return *this;
     }
 
 
     // template<size_t Q, typename D>
-    // OutputStream & operator<<(const fixed_t<Q, D> & q_val){
-    //     static_assert(magic::false_v<fixed_t<Q, D>>, "unsportted");
+    // OutputStream & operator<<(const math::fixed_t<Q, D> & q_val){
+    //     static_assert(magic::false_v<math::fixed_t<Q, D>>, "unsportted");
     //     return *this;
     // }
 

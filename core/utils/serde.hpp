@@ -151,10 +151,10 @@ static constexpr auto deserialize(const auto & pbuf) {
 
 
 template<size_t Q, typename D>
-struct [[nodiscard]] SerializeGenerator<RawLeBytes, fixed_t<Q, D>>{
+struct [[nodiscard]] SerializeGenerator<RawLeBytes, math::fixed_t<Q, D>>{
     using Item = typename RawLeBytes::item_type;
     static constexpr size_t N = sizeof(D);
-    constexpr explicit SerializeGenerator(const fixed_t<Q, D> num):
+    constexpr explicit SerializeGenerator(const math::fixed_t<Q, D> num):
         buf_(serialize(num)){;}
     [[nodiscard]] constexpr bool has_next() const {
         return pos_ < N;
@@ -163,7 +163,7 @@ struct [[nodiscard]] SerializeGenerator<RawLeBytes, fixed_t<Q, D>>{
         return buf_[pos_++];
     }
 
-    [[nodiscard]] static constexpr std::array<Item, sizeof(D)> serialize(const fixed_t<Q, D> num){
+    [[nodiscard]] static constexpr std::array<Item, sizeof(D)> serialize(const math::fixed_t<Q, D> num){
         const auto inum = num.to_bits();
         return std::bit_cast<std::array<Item, sizeof(D)>>(inum);
     } 
@@ -175,7 +175,7 @@ private:
 };
 
 template<typename Protocol, size_t Q, typename D>
-struct [[nodiscard]] serialize_generator_support_sbo<Protocol, fixed_t<Q, D>>:std::true_type{};
+struct [[nodiscard]] serialize_generator_support_sbo<Protocol, math::fixed_t<Q, D>>:std::true_type{};
 
 
 template<typename T>
@@ -430,7 +430,7 @@ private:
 };
 
 template<size_t Q, typename D>
-struct [[nodiscard]] Deserializer<RawLeBytes, fixed_t<Q, D>> {
+struct [[nodiscard]] Deserializer<RawLeBytes, math::fixed_t<Q, D>> {
     static constexpr size_t N = sizeof(D);
     [[nodiscard]] static constexpr size_t size(){
         return N;
@@ -441,13 +441,13 @@ struct [[nodiscard]] Deserializer<RawLeBytes, fixed_t<Q, D>> {
         return pbuf.subspan(size());
     }
 
-    [[nodiscard]] static constexpr Result<fixed_t<Q, D>, DeserializeError> 
+    [[nodiscard]] static constexpr Result<math::fixed_t<Q, D>, DeserializeError> 
     deserialize(std::span<const uint8_t> pbuf) {
         if(pbuf.size() < N) return Err(DeserializeError::ShortParsingIq);
         static_assert(N == 4);
         D val = std::bit_cast<D>(
             std::array<uint8_t, N>{pbuf[0], pbuf[1], pbuf[2], pbuf[3]});
-        return Ok(fixed_t<Q, D>::from_bits(val));
+        return Ok(math::fixed_t<Q, D>::from_bits(val));
     }
 };
 

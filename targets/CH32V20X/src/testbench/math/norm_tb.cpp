@@ -1,5 +1,5 @@
 #include "core/math/real.hpp"
-#include "core/math/intrinsics/batch/conv.hpp"
+#include "core/math/batch/norm.hpp"
 #include "core/math/iq/fixed_t.hpp"
 
 
