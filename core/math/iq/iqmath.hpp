@@ -40,14 +40,14 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 fixed_t<31, int32_t> sin(const fixed_t<Q, D> x){
-    return iqmath::details::__IQNgetCosSinPU<Q>(x.to_bits()).exact_sin();
+    return iqmath::details::__IQNgetCosSin<Q>(x.to_bits()).exact_sin();
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 fixed_t<31, int32_t> cos(const fixed_t<Q, D> x){
-    return iqmath::details::__IQNgetCosSinPU<Q>(x.to_bits()).exact_sin();
+    return iqmath::details::__IQNgetCosSin<Q>(x.to_bits()).exact_sin();
 }
 
 template<size_t Q>
@@ -60,7 +60,7 @@ std::array<fixed_t<31, int32_t>, 2> sincos(const fixed_t<Q, int32_t> x){
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
 fixed_t<31, int32_t> tan(const fixed_t<Q, int32_t> x) {
-    const auto [s, c] = iqmath::details::__IQNgetCosSinPU<Q>(x.to_bits()).exact_sincos();
+    const auto [s, c] = iqmath::details::__IQNgetCosSin<Q>(x.to_bits()).exact_sincos();
     return s / c;
 }
 
