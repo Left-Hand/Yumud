@@ -205,8 +205,7 @@ template<std::endian E, typename D, size_t Extent>
 
     UD sum = 0;
 
-    constexpr auto _LSB = std::endian::little;
-    if constexpr (std::endian(E) == _LSB){
+    if constexpr (std::endian(E) == std::endian::big){
         for(auto it = bytes.begin(); it != bytes.end(); it++){
             sum = static_cast<UD>(static_cast<UD>(sum << 8) | static_cast<UD>(*it));
         }

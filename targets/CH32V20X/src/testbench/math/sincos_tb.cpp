@@ -240,6 +240,80 @@ std::array<math::fixed_t<31, int32_t>, 2> mysincospu(const math::fixed_t<Q, D> x
 
 }
 
+template<size_t Q>
+[[nodiscard]] static constexpr int32_t myIQFtoN(const float fv) {
+    static_assert(sizeof(float) == 4);
+    constexpr uint32_t NAN_BITS = 0x7fc00000;
+    const uint32_t bits = std::bit_cast<uint32_t>(fv);
+
+    if (bits == NAN_BITS) {
+        // NaN - 返回0或根据需求处理
+        return 0;
+    }
+    
+    const bool is_negative = bool(bits >> 31);
+    const int32_t exponent = static_cast<int32_t>((bits >> 23) & 0xFF) - 127;
+    const uint32_t mantissa_bits = bits & 0x7FFFFF;
+    
+    // 处理零和非常小的数
+    if (exponent == -127 && mantissa_bits == 0) {
+        return 0;  // 零（正或负）
+    }
+    
+    // 检查是否超出IQ表示范围
+    if (exponent >= int32_t(Q)) {
+        // 溢出 - 返回最大正值或最小负值
+        return (is_negative) ? 
+            std::numeric_limits<int32_t>::min() : std::numeric_limits<int32_t>::max();
+    }
+    
+    // 构建完整的尾数（包括隐含的1）
+    uint64_t mantissa = static_cast<uint64_t>(mantissa_bits) | (1ULL << 23);
+    
+    // 调整尾数位数，考虑小数点位置
+    int32_t shift = 23 - exponent - Q;
+    
+    int64_t result;
+    if (shift >= 0) {
+        result = static_cast<int64_t>(mantissa >> shift);
+    } else {
+        result = static_cast<int64_t>(mantissa << (-shift));
+    }
+    
+    // 应用符号
+    if(is_negative) result = -result;
+    
+    // 检查溢出
+    if (result > std::numeric_limits<int32_t>::max()) {
+        return std::numeric_limits<int32_t>::max();
+    } else if (result < std::numeric_limits<int32_t>::min()) {
+        return std::numeric_limits<int32_t>::min();
+    }
+    
+    return static_cast<int32_t>(result);
+}
+
+
+// 添加更多测试
+static_assert(myIQFtoN<16>(0.0f) == 0);
+static_assert(myIQFtoN<16>(-0.0f) == 0);
+static_assert(myIQFtoN<16>(1.0f) == 65536);  // Q16: 1.0 = 65536
+static_assert(myIQFtoN<16>(-1.0f) == -65536);
+static_assert(myIQFtoN<16>(0.5f) == 32768);
+static_assert(myIQFtoN<16>(-0.5f) == -32768);
+static_assert(myIQFtoN<16>(0.25f) == 16384);
+static_assert(myIQFtoN<16>(1.5f) == 98304);  // 1.5 * 65536 = 98304
+
+// 测试非常小的数
+static_assert(myIQFtoN<16>(0.0001f) == 6);  // 近似值
+static_assert(myIQFtoN<16>(-0.0001f) == -6);
+
+// 测试Q不同值的情况
+static_assert(myIQFtoN<8>(1.0f) == 256);    // Q8: 1.0 = 256
+static_assert(myIQFtoN<8>(0.5f) == 128);
+static_assert(myIQFtoN<24>(1.0f) == 16777216);  // Q24: 1.0 = 16777216
+
+static_assert(myIQFtoN<16>(-32768.0f / 65536.0f) == -32768);
 
 
 template<typename Fn>

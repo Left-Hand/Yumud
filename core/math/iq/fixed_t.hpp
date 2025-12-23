@@ -148,8 +148,14 @@ public:
 
     __attribute__((always_inline)) static constexpr 
     fixed_t from (const std::floating_point auto fv){
+        const D bits = [&]() -> D{
+            if(std::is_constant_evaluated()){
+                return D(fv * uint64_t(uint64_t(1) << Q));
+            }
+            return static_cast<D>(iqmath::details::_IQFtoN<Q>(fv));
+        }();
         return fixed_t{bits_ctor{
-            std::bit_cast<D>(static_cast<D>(iqmath::details::_IQFtoN<Q>(fv)))
+            bits
         }};
     }
 

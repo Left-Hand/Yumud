@@ -481,6 +481,8 @@ struct [[nodiscard]] GetEncoderEstimates final{
 
     static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
+            // .position = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
+            // .velocity = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()))
             .position = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
             .velocity = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()))
         };

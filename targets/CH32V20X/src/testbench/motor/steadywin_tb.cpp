@@ -76,8 +76,22 @@ void steadywin_main(){
         // FILTER_CONFIG
     );
 
-    auto accept_either_msg = []<typename T>(const AxisId axis_id, T && either_msg){
-        DEBUG_PRINTLN(axis_id, either_msg);
+    auto accept_either_msg = []<typename T>(const AxisId axis_id, const Result<T, DeMsgError> & either_msg){
+        // DEBUG_PRINTLN(axis_id, either_msg);
+        if(axis_id.to_bits() != 1) return;
+        if constexpr (std::is_same_v<T, resp_msgs::GetEncoderEstimates>){
+            // DEBUGGER.no_fieldname(EN);
+            if(not either_msg.is_ok()) return;
+            const resp_msgs::GetEncoderEstimates msg = either_msg.unwrap();
+            DEBUG_PRINTLN(msg.position, msg.velocity);
+        }
+
+        if constexpr (std::is_same_v<T, resp_msgs::HeartbeatV513>){
+            // DEBUGGER.no_fieldname(EN);
+            if(not either_msg.is_ok()) return;
+            const resp_msgs::HeartbeatV513 msg = either_msg.unwrap();
+            DEBUG_PRINTLN(msg);
+        }
     };
 
     [[maybe_unused]] auto parse_can_frame = [&](const hal::BxCanFrame & frame){

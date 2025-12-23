@@ -1,6 +1,7 @@
 // unit_test.cpp
 #include "bits_set.hpp"  // 假设你的头文件名为 bitset.hpp
 #include <type_traits>
+#include "bits_caster.hpp"
 
 using namespace ymd;
 // 测试用例分组
@@ -239,4 +240,18 @@ static_assert(z.to_bits() == 0xEF);   // 剩余8 bits: 0xEF
 #endif
 } // namespace CompileTimeTests
 
+
+[[maybe_unused]] void endian_test(){
+    {
+        constexpr uint8_t bytes[2] = {0x12, 0x34};
+        constexpr auto i = le_bytes_to_int<uint16_t>(std::span(bytes));
+        static_assert(i == 0x12 + (0x34 << 8));
+    }
+
+    {
+        constexpr uint8_t bytes[2] = {0x12, 0x34};
+        constexpr auto i = be_bytes_to_int<uint16_t>(std::span(bytes));
+        static_assert(i == 0x34 + (0x12 << 8));
+    }
+}
 } // namespace BitsetTests
