@@ -24,10 +24,20 @@
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_msgs.hpp"
 
+#include "core/container/heapless_binaryheap.hpp"
+
 using namespace ymd;
 using namespace robots::steadywin;
 using namespace robots::steadywin::can_simple;
 
+struct FrameFactory{
+    AxisId axis_id;
+
+    template<typename T>
+    hal::BxCanFrame serialize(T && msg){
+        return serialize_msg_to_can_frame(axis_id, std::forward<T>(msg));
+    }
+};
 
 
 void steadywin_main(){
@@ -49,26 +59,24 @@ void steadywin_main(){
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
         //波特率为1M
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_500K), 
+        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
     });
 
     [[maybe_unused]] static constexpr auto STD_DATA_FRAME_ONLY_FILTER_PAIR = 
         hal::CanStdIdMaskPair::from_str("xxxxxxxxxxx", hal::CanRtrSpecfier::Discard).unwrap();
     
-    const auto FILTER_CONFIG = hal::CanFilterConfig::accept_all();
-    // PANIC{FILTER_CONFIG};
     //配置can过滤器为接收标准数据帧（滤除拓展和远程帧）
     can.filters<0>().apply(
-        // hal::CanFilterConfig::from_pairs(
-        //     STD_DATA_FRAME_ONLY_FILTER_PAIR,
-        //     hal::CanStdIdMaskPair::reject_all()
-        // )
+        hal::CanFilterConfig::from_pairs(
+            STD_DATA_FRAME_ONLY_FILTER_PAIR,
+            hal::CanStdIdMaskPair::reject_all()
+        )
         // hal::CanFilterConfig::accept_all()
-        FILTER_CONFIG
+        // FILTER_CONFIG
     );
 
-    auto accept_response = []<typename T>(const AxisId axis_id, T && msg){
-        DEBUG_PRINTLN(axis_id, msg);
+    auto accept_either_msg = []<typename T>(const AxisId axis_id, T && either_msg){
+        DEBUG_PRINTLN(axis_id, either_msg);
     };
 
     [[maybe_unused]] auto parse_can_frame = [&](const hal::BxCanFrame & frame){
@@ -84,14 +92,14 @@ void steadywin_main(){
             }break;
             case Command::Heartbeat:{
                 const auto either_msg = resp_msgs::HeartbeatV513::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, either_msg);
+                return accept_either_msg(axis_id, either_msg);
             }break;
             case Command::Estop:{
                 //req only
             }break;
             case Command::GetError:{
                 const auto either_msg = resp_msgs::GetError::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, either_msg);
+                return accept_either_msg(axis_id, either_msg);
             }break;
             case Command::RxSdo:{
                 //do not handle currently
@@ -110,11 +118,11 @@ void steadywin_main(){
             }break;
             case Command::GetEncoderEstimates:{
                 const auto either_msg = resp_msgs::GetEncoderEstimates::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, either_msg);
+                return accept_either_msg(axis_id, either_msg);
             }break;
             case Command::GetEncoderCount:{
                 const auto either_msg = resp_msgs::GetEncoderCount::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, either_msg);
+                return accept_either_msg(axis_id, either_msg);
             }break;
             case Command::SetControllerMode:{
                 //req only
@@ -145,14 +153,14 @@ void steadywin_main(){
             }break;
             case Command::GetIq:{
                 const auto either_msg = resp_msgs::GetIq::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, either_msg);
+                return accept_either_msg(axis_id, either_msg);
             }break;
             case Command::Reboot:{
                 //req only
             }break;
             case Command::GetBusVoltageCurrent:{
                 const auto either_msg = resp_msgs::GetBusVoltageCurrent::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, either_msg);
+                return accept_either_msg(axis_id, either_msg);
             }break;
             case Command::ClearErrors:{
                 //req only
@@ -168,11 +176,11 @@ void steadywin_main(){
             }break;
             case Command::GetTorques:{
                 const auto either_msg = resp_msgs::GetTorques::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, either_msg);
+                return accept_either_msg(axis_id, either_msg);
             }break;
             case Command::GetPowers:{
                 const auto either_msg = resp_msgs::GetPowers::try_from_bytes(payload_bytes);
-                return accept_response(axis_id, either_msg);
+                return accept_either_msg(axis_id, either_msg);
             }break;
             case Command::DisableCan:{
                 //req only
@@ -182,6 +190,56 @@ void steadywin_main(){
             }break;
         }
     };
+
+
+
+    [[maybe_unused]] auto write_can_frame = [](const hal::BxCanFrame & frame, const Milliseconds delay_ms = 0ms){
+        can.try_write(frame).examine();
+        if(delay_ms != 0ms) clock::delay(delay_ms);
+    };
+
+    FrameFactory left_factory{AxisId::from_bits(0x01)};
+    FrameFactory right_factory{AxisId::from_bits(0x02)};
+
+    {
+        const auto frame = left_factory.serialize(
+            req_msgs::SetCotrollerMode{
+                .loop_mode = LoopMode::CurrentLoop,
+                .input_mode = InputMode::CurrentRamp,
+            }
+        );
+        write_can_frame(frame, 10ms);
+    }
+
+
+    {
+        const auto frame = left_factory.serialize(
+            req_msgs::SetAxisState{
+                .axis_state = AxisState::ClosedLoopControl
+            }
+        );
+        write_can_frame(frame, 10ms);
+    }
+
+    {
+        const auto frame = right_factory.serialize(
+            req_msgs::SetCotrollerMode{
+                .loop_mode = LoopMode::CurrentLoop,
+                .input_mode = InputMode::CurrentRamp,
+            }
+        );
+        write_can_frame(frame, 10ms);
+    }
+
+
+    {
+        const auto frame = right_factory.serialize(
+            req_msgs::SetAxisState{
+                .axis_state = AxisState::ClosedLoopControl
+            }
+        );
+        write_can_frame(frame, 10ms);
+    }
 
     #if 1
     [[maybe_unused]] auto & timer = hal::timer2;
@@ -199,6 +257,27 @@ void steadywin_main(){
     timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
+            const auto now_secs = clock::time();
+            const auto left_torque_ff = iq16(math::sinpu(now_secs)) / 10;
+            const auto right_torque_ff = iq16(math::cospu(now_secs)) / 10;
+
+            {
+                const auto frame = left_factory.serialize(
+                    req_msgs::SetInputTorque{
+                        .torque_ff = float(left_torque_ff)
+                    }
+                );
+                write_can_frame(frame);
+            }
+
+            {
+                const auto frame = right_factory.serialize(
+                    req_msgs::SetInputTorque{
+                        .torque_ff = float(right_torque_ff)
+                    }
+                );
+                write_can_frame(frame);
+            }
             break;
         }
         default: break;
@@ -212,34 +291,6 @@ void steadywin_main(){
     //启动定时器
     timer.start();
     #endif
-
-    [[maybe_unused]] auto write_can_frame = [](const hal::BxCanFrame & frame){
-        can.try_write(frame).examine();
-    };
-
-
-    {
-        const auto frame = serialize_msg_to_can_frame(
-            AxisId::from_bits(0x01),
-            req_msgs::SetCotrollerMode{
-                .loop_mode = LoopMode::CurrentLoop,
-                .input_mode = InputMode::CurrentRamp,
-            }
-        );
-        write_can_frame(frame);
-    }
-
-
-    {
-        const auto frame = serialize_msg_to_can_frame(
-            AxisId::from_bits(0x01),
-            req_msgs::SetAxisState{
-                .axis_state = AxisState::ClosedLoopControl
-            }
-        );
-        write_can_frame(frame);
-    }
-
     while(true){
         
 
@@ -251,22 +302,11 @@ void steadywin_main(){
         //         .torque_ff = 0,
         //     }
         // );
-        const auto now_secs = clock::time();
-        const auto torque_ff = iq16(math::sinpu(now_secs)) / 10;
 
-        {
-            const auto frame = serialize_msg_to_can_frame(
-                AxisId::from_bits(0x01),
-                req_msgs::SetInputTorque{
-                    .torque_ff = float(torque_ff)
-                }
-            );
-            write_can_frame(frame);
-        }
 
         while(can.available()){
-            // parse_can_frame(can.read());
-            (void)(can.read());
+            parse_can_frame(can.read());
+            // (void)(can.read());
         }
 
         // DEBUG_PRINTLN(frac(now_secs), torque_ff, iq16(math::sin(now_secs)));

@@ -10,10 +10,8 @@
 
 #include "core/tmp/bits/width.hpp"
 #include "core/tmp/functor.hpp"
-// #include "core/magic/magic_details.hpp"
 
 #include "core/tmp/reflect/enum.hpp"
-// #include "rust_enum.hpp"
 #include <coroutine>
 #include <vector>
 #include <chrono>

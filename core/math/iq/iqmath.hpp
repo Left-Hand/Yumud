@@ -25,7 +25,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 fixed_t<31, int32_t> cospu(const fixed_t<Q, D> x){
-    return iqmath::details::__IQNgetCosSinPU<Q>(x.to_bits()).exact_sin();
+    return iqmath::details::__IQNgetCosSinPU<Q>(x.to_bits()).exact_cos();
 }
 
 template<size_t Q, typename D>
@@ -47,7 +47,7 @@ template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 fixed_t<31, int32_t> cos(const fixed_t<Q, D> x){
-    return iqmath::details::__IQNgetCosSin<Q>(x.to_bits()).exact_sin();
+    return iqmath::details::__IQNgetCosSin<Q>(x.to_bits()).exact_cos();
 }
 
 template<size_t Q>

@@ -6,9 +6,10 @@
 #include <span>
 
 static_assert(sizeof(float) == 4);
+namespace ymd{
+class OutputStream;
 
-
-namespace ymd::math{
+namespace math{
 struct alignas(4) [[nodiscard]] fp32 final{
 	using Self = fp32;
 
@@ -59,11 +60,14 @@ struct alignas(4) [[nodiscard]] fp32 final{
 		return Self::from_bits(0x7fc00000);
 	}
 
-    [[nodiscard]] constexpr operator float() const {
+    [[nodiscard]] explicit constexpr operator float() const {
         return std::bit_cast<float>(*this);
     }
 
 };
+
+}
+OutputStream & operator << (OutputStream & os, const math::fp32 v);
 }
 
 namespace std{

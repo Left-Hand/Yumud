@@ -56,7 +56,7 @@ public:
     }
 
     constexpr __always_inline 
-    void push_float(const float f_val){
+    void push_float(const math::fp32 f_val){
         static_assert(sizeof(float) == 4);
         const auto bytes = std::bit_cast<std::array<uint8_t, sizeof(float)>>(f_val);
         push_bytes(std::span(bytes));
