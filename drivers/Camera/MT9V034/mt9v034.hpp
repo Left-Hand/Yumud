@@ -5,7 +5,7 @@
 #include "core/utils/enum/enum_array.hpp"
 #include "hal/bus/sccb/sccb_drv.hpp"
 
-#include "hal/bus/dvp/dvp.hpp"
+#include "hal/media/dvp/dvp.hpp"
 #include "primitive/image/image.hpp"
 
 namespace ymd::drivers{
