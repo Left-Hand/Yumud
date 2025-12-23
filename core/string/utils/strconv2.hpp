@@ -9,7 +9,7 @@
 
 #include "core/utils/Errno.hpp"
 #include "core/math/iq/fixed_t.hpp"
-#include "core/string/string_ref.hpp"
+#include "core/string/mut_string_view.hpp"
 #include "core/string/string_view.hpp"
 #include "core/utils/Result.hpp"
 #include "core/tmp/reflect/enum.hpp"
@@ -224,7 +224,7 @@ __always_inline constexpr T fast_div_10(T x){(((int64_t)x*0x66666667L) >> 34);}
 
 template<typename T>
 requires(std::is_unsigned_v<T>)
-__always_inline constexpr size_t uint_to_num_chars(T value, const Radix radix) {
+__always_inline constexpr size_t uint_to_len_chars(T value, const Radix radix) {
     if (value == 0) return 1;
 
     const auto radix_count = radix.count();
@@ -416,14 +416,14 @@ __always_inline static constexpr std::tuple<uint32_t, uint8_t> fast_div(uint32_t
 
 enum class DigitPaddingStrategy:uint8_t{
 	NoPadding,
-	PaddingZero
+	ZeroPadded
 };
 
 
 //格式化u32到字符串(静态派发进制)
 template<size_t Radix, DigitPaddingStrategy S>
 __always_inline static constexpr void static_fmt_u32(
-	StringRef str, 
+	MutStringView str, 
 	uint32_t value
 ){
 	size_t i = str.length();
@@ -433,7 +433,7 @@ __always_inline static constexpr void static_fmt_u32(
 		value = q;
 	} while (i > 0 && value >= 0);
 
-	if constexpr(S == DigitPaddingStrategy::PaddingZero){
+	if constexpr(S == DigitPaddingStrategy::ZeroPadded){
 		while (i > 0) {
 			str[--i] = '0';
 		}
@@ -443,7 +443,7 @@ __always_inline static constexpr void static_fmt_u32(
 //格式化u32到字符串(动态派发进制)
 template<DigitPaddingStrategy S>
 __always_inline static constexpr void dyn_fmt_u32(
-	StringRef str, 
+	MutStringView str, 
 	uint32_t int_val, 
 	const uint8_t radix_count
 ){
@@ -461,7 +461,7 @@ __always_inline static constexpr void dyn_fmt_u32(
 				int_val /= radix_count;
 			} while (i > 0 && int_val >= 0);
 
-			if constexpr( S == DigitPaddingStrategy::PaddingZero){
+			if constexpr( S == DigitPaddingStrategy::ZeroPadded){
 				while (i > 0) {
 					str[--i] = '0';
 				}
@@ -475,7 +475,7 @@ __always_inline static constexpr void dyn_fmt_u32(
 template<integral T>
 struct IntFormatter{
 	[[nodiscard]] static constexpr 
-	SerStringResult<size_t> fmt(StringRef str, const T int_val, const Radix radix){
+	SerStringResult<size_t> fmt(MutStringView str, const T int_val, const Radix radix){
 		if (str.length() == 0)
 			return Err(SerStringError::OutOfMemory);
 			
@@ -495,39 +495,37 @@ struct IntFormatter{
 
 			// Make int_val positive
 			using U = std::make_unsigned_t<T>;
-			U uvalue = is_negative ? 
+			U unsigned_value = is_negative ? 
 				static_cast<U>(-(int_val + 1)) + 1u : 
 				static_cast<U>(int_val);
 
 			// Compute length safely
-			const size_t uint_length = uint_to_num_chars(uvalue, radix);
+			const size_t uint_length = uint_to_len_chars(unsigned_value, radix);
 			const size_t total_length = uint_length + (is_negative ? 1 : 0);
 			if (str.length() < total_length) return Err(SerStringError::OutOfMemory);
 
 			dyn_fmt_u32<DigitPaddingStrategy::NoPadding>(
-				StringRef(str.data() + is_negative, uint_length), 
-			uvalue, radix_count);
+				MutStringView(str.data() + is_negative, uint_length), 
+			unsigned_value, radix_count);
 
 			return Ok(total_length);
 		}else{
-			const size_t total_length = uint_to_num_chars(int_val, radix);
+			const size_t total_length = uint_to_len_chars(int_val, radix);
 			if (str.length() < total_length) return Err(SerStringError::OutOfMemory);
 			dyn_fmt_u32<DigitPaddingStrategy::NoPadding>(
-				StringRef(str.data(), total_length), 
+				MutStringView(str.data(), total_length), 
 			int_val, radix_count);
 			return Ok(total_length);
 		}
 	}
-
-
 };
 
-struct PaddingZeroU32Formatter{
+struct ZeroPaddedU32Formatter{
 	[[nodiscard]] static constexpr 
-	SerStringResult<size_t> fmt(StringRef str, const uint32_t int_val, const Radix radix){
+	SerStringResult<size_t> fmt(MutStringView str, const uint32_t int_val, const Radix radix){
 		const auto radix_count = radix.count();
 	
-		dyn_fmt_u32<DigitPaddingStrategy::PaddingZero>(
+		dyn_fmt_u32<DigitPaddingStrategy::ZeroPadded>(
 			str, int_val, radix_count);
 
 		return Ok(str.length());
@@ -544,7 +542,7 @@ struct Iq16Formatter{
 	static constexpr size_t Q = 16;
 	static constexpr uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
 	static constexpr SerStringResult<size_t> fmt(
-		StringRef str,
+		MutStringView str,
 		const math::fixed_t<16, int32_t> value, 
 		const Eps eps
 	){
@@ -593,8 +591,8 @@ struct Iq16Formatter{
 		pos += 1;
 
 		//忽略返回的长度 因为它就是eps
-		if(const auto res = PaddingZeroU32Formatter::fmt( 
-			StringRef(str.data() + pos, eps_count), frac_int, Radix::Dec
+		if(const auto res = ZeroPaddedU32Formatter::fmt( 
+			MutStringView(str.data() + pos, eps_count), frac_int, Radix::Dec
 		); res.is_err()) return Err(res.unwrap_err());
 		
 		return Ok(size_t(pos + eps_count));
@@ -639,7 +637,7 @@ static constexpr DestringResult<T> defmt_str(StringView str){
 
 template<integral T>
 static constexpr SerStringResult<size_t> to_str(
-	StringRef str, 
+	MutStringView str, 
 	T value, 
 	Radix radix_count = Radix(Radix::Kind::Dec)
 ){
@@ -647,7 +645,7 @@ static constexpr SerStringResult<size_t> to_str(
 }
 
 template<size_t Q>
-static constexpr SerStringResult<size_t> to_str(StringRef str, math::fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
+static constexpr SerStringResult<size_t> to_str(MutStringView str, math::fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
 	return details::Iq16Formatter::fmt(str, value, eps);
 }
 

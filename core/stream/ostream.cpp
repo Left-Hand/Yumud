@@ -2,7 +2,7 @@
 #include "core/string/legacy/strconv.hpp"
 #include "core/clock/clock.hpp"
 #include "core/string/string_view.hpp"
-#include "core/string/string_ref.hpp"
+#include "core/string/mut_string_view.hpp"
 
 
 // #include "core/string/utils/strconv2.hpp"
@@ -134,26 +134,46 @@ OutputStream & OutputStream::operator<<(const double value){
 
 
 OutputStream & OutputStream::operator<<(const uint8_t val){
-    PRINT_INT_TEMPLATE(3, strconv::itoa);
+    if(radix() >= 4){
+        PRINT_INT_TEMPLATE(4, strconv::itoa);
+    }else{
+        PRINT_INT_TEMPLATE(8, strconv::itoa);
+    }
     return *this;
 }
 
 void OutputStream::print_u32(const uint32_t val){
-    PRINT_INT_TEMPLATE(12, strconv::itoa);
+    if(radix() >= 4){
+        PRINT_INT_TEMPLATE(16, strconv::iutoa);
+    }else{
+        PRINT_INT_TEMPLATE(32, strconv::iutoa);
+    }
 }
 void OutputStream::print_i32(const int32_t val){
-    PRINT_INT_TEMPLATE(12, strconv::itoa);
+    if(radix() >= 4){
+        PRINT_INT_TEMPLATE(16, strconv::itoa);
+    }else{
+        PRINT_INT_TEMPLATE(32, strconv::itoa);
+    }
 }
 void OutputStream::print_u64(const uint64_t val){
-    PRINT_INT_TEMPLATE(24, strconv::iutoa);
+    if(radix() >= 4){
+        PRINT_INT_TEMPLATE(32, strconv::iutoa);
+    }else{
+        PRINT_INT_TEMPLATE(64, strconv::iutoa);
+    }
 }
 
 void OutputStream::print_i64(const int64_t val){
-    PRINT_INT_TEMPLATE(24, strconv::iltoa);
+    if(radix() >= 4){
+        PRINT_INT_TEMPLATE(32, strconv::iltoa);
+    }else{
+        PRINT_INT_TEMPLATE(64, strconv::iltoa);
+    }
 }
 
 void OutputStream::print_iq16(const math::fixed_t<16, int32_t> val){
-    char str[12] = {0};
+    char str[16] = {0};
     const auto len = strconv::qtoa<16>(val, str, this->eps());
     print_numeric(str, len, val >= 0);
 }
@@ -175,7 +195,7 @@ void OutputStreamByRoute::sendout(const std::span<const char> pbuf){
 OutputStream & OutputStream::operator<<(const StringView str){
     write_checked(str.data(), str.length()); return * this;}
 
-OutputStream & OutputStream::operator<<(const StringRef str){
+OutputStream & OutputStream::operator<<(const MutStringView str){
     write_checked(str.data(), str.length()); return * this;}
 
 OutputStream & OutputStream::operator<<(const bool val){

@@ -9,20 +9,20 @@
 
 namespace ymd{
 
-struct [[nodiscard]] StringRef{
-    constexpr StringRef(const StringRef & other) noexcept: 
+struct [[nodiscard]] MutStringView{
+    constexpr MutStringView(const MutStringView & other) noexcept: 
         data_(other.data_), size_(other.size_){;}
-    constexpr StringRef(StringRef && other) noexcept: 
+    constexpr MutStringView(MutStringView && other) noexcept: 
         data_(other.data_), size_(other.size_) {}
-    constexpr explicit StringRef(char* str, size_t size) noexcept: 
+    constexpr explicit MutStringView(char* str, size_t size) noexcept: 
         data_(str), size_(size) {}
 
     template<size_t N>
-    constexpr explicit StringRef(char (&str)[N]) noexcept: 
+    constexpr explicit MutStringView(char (&str)[N]) noexcept: 
         data_(str), size_(N){;}
 
-    constexpr StringRef & operator =(const StringRef & other) noexcept = default;
-    constexpr StringRef & operator =(StringRef && other) noexcept = default;
+    constexpr MutStringView & operator =(const MutStringView & other) noexcept = default;
+    constexpr MutStringView & operator =(MutStringView && other) noexcept = default;
 
     [[nodiscard]] constexpr const char * begin() const noexcept {return data_;}
     [[nodiscard]] constexpr char * begin() noexcept {return data_;} 
@@ -46,7 +46,7 @@ struct [[nodiscard]] StringRef{
     [[nodiscard]] constexpr const char* data() const noexcept { return data_; }
 
     // String operations
-    [[nodiscard]] constexpr Option<StringRef> substr(size_t pos, size_t count) const noexcept {
+    [[nodiscard]] constexpr Option<MutStringView> substr(size_t pos, size_t count) const noexcept {
         // 检查pos是否超出范围
         if (pos > size_) {
             return None;
@@ -56,25 +56,25 @@ struct [[nodiscard]] StringRef{
         const size_t available = size_ - pos;
         const size_t safe_count = std::min(count, available);
         
-        return Some(StringRef(data_ + pos, safe_count));
+        return Some(MutStringView(data_ + pos, safe_count));
     }
 
-    [[nodiscard]] constexpr Option<StringRef> substr(size_t pos) const noexcept {
+    [[nodiscard]] constexpr Option<MutStringView> substr(size_t pos) const noexcept {
         // 检查pos是否超出范围
         if (pos > size_) {
             return None;
         }
         
-        return Some(StringRef(data_ + pos, size_ - pos));
+        return Some(MutStringView(data_ + pos, size_ - pos));
     }
 
     // String operations
-    [[nodiscard]] constexpr StringRef substr_unchecked(size_t pos, size_t count) const noexcept {
-        return StringRef(data_ + pos, std::min(count, size_ - pos));
+    [[nodiscard]] constexpr MutStringView substr_unchecked(size_t pos, size_t count) const noexcept {
+        return MutStringView(data_ + pos, std::min(count, size_ - pos));
     }
 
-    [[nodiscard]] constexpr StringRef substr_unchecked(size_t pos) const noexcept {
-        return StringRef(data_ + pos, size_ - pos);
+    [[nodiscard]] constexpr MutStringView substr_unchecked(size_t pos) const noexcept {
+        return MutStringView(data_ + pos, size_ - pos);
     }
 private:
     char * data_;

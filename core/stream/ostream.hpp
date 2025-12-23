@@ -30,7 +30,7 @@ namespace ymd{
 
 class String;
 class StringView;
-class StringRef;
+class MutStringView;
 class StringStream;
 class OutputStream;
 
@@ -288,7 +288,7 @@ public:
 
     OutputStream & operator<<(const String & str);
     OutputStream & operator<<(const StringView str);
-    OutputStream & operator<<(const StringRef str);
+    OutputStream & operator<<(const MutStringView str);
     __inline OutputStream & operator<<(const std::byte chr){return *this << (uint8_t(chr));}
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);

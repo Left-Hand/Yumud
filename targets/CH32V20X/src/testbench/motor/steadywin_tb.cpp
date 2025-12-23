@@ -39,6 +39,7 @@ struct FrameFactory{
     }
 };
 
+static constexpr auto f = static_cast<float>(0xBF92E042); 
 
 void steadywin_main(){
     auto & DBG_UART = hal::usart2;
