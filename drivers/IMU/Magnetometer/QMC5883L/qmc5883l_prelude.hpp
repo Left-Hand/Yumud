@@ -37,9 +37,7 @@ struct QMC5883L_Prelude{
         _2G, 
         _8G
     };
-};
 
-struct QMC5883L_Regs:public QMC5883L_Prelude{
     enum class RegAddr:uint8_t{
         MagX = 0x00,
         MagY = 0x02,
@@ -51,22 +49,26 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
         ResetPeriod = 0x0B,
         ChipID = 0x0D
     };
+};
+
+struct QMC5883L_Regs:public QMC5883L_Prelude{
+
 
     struct MagXReg:public Reg16i<>{
         static constexpr auto ADDRESS = RegAddr::MagX;
-        int16_t :16;
+        int16_t bits;
     };
 
     struct MagYReg:public Reg16i<>{
         static constexpr auto ADDRESS = RegAddr::MagY;
 
-        int16_t :16;
+        int16_t bits;
     };
 
     struct MagZReg:public Reg16i<>{
         static constexpr auto ADDRESS = RegAddr::MagZ;
 
-        int16_t :16;
+        int16_t bits;
     };
 
     struct StatusReg:public Reg8<>{
@@ -81,22 +83,21 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
     struct TemperatureReg:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Tempature;
 
-        uint16_t data;
+        uint16_t bits;
     };
 
     struct ConfigAReg:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ConfigA;
-        uint8_t measureMode:2;
+        uint8_t measure_mode:2;
         Odr odr:2;
         FullScale fs:2;
         OverSampleRatio ovs_ratio:2;
-        
     };
 
     struct ConfigBReg:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ConfigB;
 
-        uint8_t intEn:1;
+        uint8_t int_en:1;
         uint8_t __resv__:5;
         uint8_t rol:1;
         uint8_t srst:1;
@@ -106,13 +107,13 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
     struct ResetPeriodReg:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ResetPeriod;
 
-        uint8_t data;
+        uint8_t bits;
     };
 
-    struct ChipIDReg:public Reg8<>{
+    struct ChipIdReg:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ChipID;
 
-        uint8_t data;
+        uint8_t bits;
     };
 
 
@@ -124,7 +125,7 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
     ConfigAReg config_a_reg;
     ConfigBReg config_b_reg;
     ResetPeriodReg reset_period_reg;
-    ChipIDReg chip_id_reg;
+    ChipIdReg chip_id_reg;
 
 };
 

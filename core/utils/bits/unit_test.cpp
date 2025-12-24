@@ -1,12 +1,13 @@
 // unit_test.cpp
 #include "bits_set.hpp"  // 假设你的头文件名为 bitset.hpp
+#include "bitflag.hpp"
 #include <type_traits>
 #include "bits_caster.hpp"
 
 using namespace ymd;
 // 测试用例分组
 
-namespace BitsetTests {
+namespace {
 
 // 基础类型和约束测试
 namespace BasicTests {
@@ -240,6 +241,34 @@ static_assert(z.to_bits() == 0xEF);   // 剩余8 bits: 0xEF
 #endif
 } // namespace CompileTimeTests
 
+
+
+
+// enum class Fault:uint8_t{
+//     OverCurrent,
+//     OverVoltage,
+//     OverTemperature,
+//     UnderTemperature
+// };
+
+enum class MyFlagBit { A, B, C };
+
+using MyEnumList = EnumList<MyFlagBit, MyFlagBit::A, MyFlagBit::B, MyFlagBit::C>;
+
+static_assert(MyEnumList::size() == 3);
+static_assert(MyEnumList::enum_to_rank_v<MyFlagBit::B> == 1);
+static_assert(MyEnumList::rank_to_enum_v<1> == MyFlagBit::B);
+
+using MyBitFlag = BitFlag<MyEnumList>;
+
+static_assert(MyBitFlag::BITS == 3);
+// static_assert(MyBitFlag::from_enums({MyFlagBit::A, MyFlagBit::B}).begin().size() == 2);
+static_assert(MyBitFlag::enum_to_mask(MyFlagBit::A)  == 1 << 0);
+static_assert(MyBitFlag::enum_to_mask(MyFlagBit::B)  == 1 << 1);
+static_assert(MyBitFlag::Iterator(
+    MyBitFlag::enum_to_mask(MyFlagBit::A) |
+    MyBitFlag::enum_to_mask(MyFlagBit::B)
+).size()  == 2);
 
 
 } // namespace BitsetTests

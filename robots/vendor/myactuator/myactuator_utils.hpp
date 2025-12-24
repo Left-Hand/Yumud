@@ -131,7 +131,5 @@ struct [[nodiscard]] CommandHeadedDataField{
 static_assert(sizeof(CommandHeadedDataField) == 1 + BytesFiller::CAPACITY);
 
 
-enum class DeMsgError:uint8_t{
 
-};
 }

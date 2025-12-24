@@ -8,7 +8,7 @@ namespace ymd::drivers{
 
 class QMC5883L:
     public MagnetometerIntf,
-    public QMC5883L_Regs{
+    public QMC5883L_Prelude{
 public:
     explicit QMC5883L(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
@@ -50,17 +50,18 @@ public:
 
     [[nodiscard]] IResult<bool> is_overflow();
 private:
+    QMC5883L_Regs regs_;
     hal::I2cDrv i2c_drv_;
 
-    static constexpr EnumArray<FullScale, iq24> scaler_mapping_ = {
-        2, 8
-    };
+    // static constexpr EnumArray<FullScale, iq24> scaler_mapping_ = {
+    //     2, 8
+    // };
 
-    static constexpr EnumScaler<FullScale, iq24> scaler_ = {
-        FullScale::_2G,
-        scaler_mapping_
-    };
-
+    // static constexpr EnumScaler<FullScale, iq24> scaler_ = {
+    //     FullScale::_2G,
+    //     scaler_mapping_
+    // };
+    iq16 scaler_ = 2;
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
@@ -89,11 +90,7 @@ private:
     }
 
 
-    [[nodiscard]] IResult<bool> is_busy(){
-        if(const auto res = read_reg(status_reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok(status_reg.ready == false);
-    }
+    [[nodiscard]] IResult<bool> is_busy();
 };
 
 

@@ -5,6 +5,7 @@
 #include <array>
 
 #include "core/tmp/bits/width.hpp"
+#include "core/utils/enum/enum_list.hpp"
 
 namespace ymd{
 
@@ -149,32 +150,5 @@ private:
 };
 
 
-#if 0
-// enum class Fault:uint8_t{
-//     OverCurrent,
-//     OverVoltage,
-//     OverTemperature,
-//     UnderTemperature
-// };
-
-enum class MyEnum { A, B, C };
-
-using MyEnumList = EnumList<MyEnum, MyEnum::A, MyEnum::B, MyEnum::C>;
-
-static_assert(MyEnumList::size() == 3);
-static_assert(MyEnumList::enum_to_rank_v<MyEnum::B> == 1);
-static_assert(MyEnumList::rank_to_enum_v<1> == MyEnum::B);
-
-using MyBitFlag = BitFlag<MyEnumList>;
-
-static_assert(MyBitFlag::BITS == 3);
-// static_assert(MyBitFlag::from_enums({MyEnum::A, MyEnum::B}).begin().size() == 2);
-static_assert(MyBitFlag::enum_to_mask(MyEnum::A)  == 1 << 0);
-static_assert(MyBitFlag::enum_to_mask(MyEnum::B)  == 1 << 1);
-static_assert(MyBitFlag::Iterator(
-    MyBitFlag::enum_to_mask(MyEnum::A) |
-    MyBitFlag::enum_to_mask(MyEnum::B)
-).size()  == 2);
-#endif
 
 }

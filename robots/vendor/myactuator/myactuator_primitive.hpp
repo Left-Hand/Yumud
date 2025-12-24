@@ -14,6 +14,10 @@
 namespace ymd::robots::myactuator { 
 using namespace ymd::literals;
 
+enum class DeMsgError:uint8_t{
+
+};
+
 static constexpr uq32 degree001_to_turns(const uint16_t bits){
     // 目标：计算 (bits * 2^32) / 36000
     // 避免除法，使用乘法和移位
@@ -44,16 +48,24 @@ static constexpr uq32 degree_to_turns(const uint16_t bits){
 }
 
 struct [[nodiscard]] SpeedCode_i16{
+    using Self = SpeedCode_i16;
+
     int16_t bits;
 
+    static constexpr Result<Self, DeMsgError> try_from_bits(const uint16_t bits){
+        return Ok(Self{.bits = std::bit_cast<int16_t>(bits)});
+    }
     constexpr iq8 to_dps() const {
         return bits;
     }
 };
 
 struct [[nodiscard]] SpeedLimitCode_u16{
+    using Self = SpeedLimitCode_u16;    
     uint16_t bits;
-
+    static constexpr Result<Self, DeMsgError> try_from_bits(const uint16_t bits){
+        return Ok(Self{.bits = std::bit_cast<uint16_t>(bits)});
+    }
     static constexpr SpeedLimitCode_u16 from_dps(const uq8 dps){
         return SpeedLimitCode_u16{static_cast<uint16_t>(dps)};
     }
@@ -65,7 +77,7 @@ struct [[nodiscard]] SpeedLimitCode_u16{
 
 struct [[nodiscard]] SpeedCtrlCode_i32{
     // 控制值 speedControl 为int32_t类型，对应实际转速为0.01dps/LSB,
-
+    using Self = SpeedCtrlCode_i32;
     int32_t bits;
     static constexpr SpeedCtrlCode_i32 from_bits(const int32_t bits){
         return SpeedCtrlCode_i32{bits};
@@ -81,6 +93,7 @@ struct [[nodiscard]] SpeedCtrlCode_i32{
 };
 
 struct [[nodiscard]] AccelCode_u32{
+    using Self = AccelCode_u32;
     uint32_t bits;
 
     static constexpr uq16 MAX_DPSS = 60000;
@@ -88,6 +101,10 @@ struct [[nodiscard]] AccelCode_u32{
 
     static constexpr uq16 MAX_TPSS = uq16(60000.0 / 360);
     static constexpr uq16 MIN_TPSS = uq16(100.0 / 360);
+
+    static constexpr Result<Self, DeMsgError> try_from_bits(const uint32_t bits){
+        return Ok(Self{.bits = std::bit_cast<uint32_t>(bits)});
+    }
     [[nodiscard]] static constexpr Result<AccelCode_u32, std::strong_ordering> 
     try_from_dpss(const uq16 dpss){
         if(dpss > MAX_DPSS) [[unlikely]]
@@ -105,6 +122,7 @@ struct [[nodiscard]] AccelCode_u32{
 };
 
 struct [[nodiscard]] DegreeCode_i16{
+    using Self = DegreeCode_i16;
     int16_t bits;
 
     [[nodiscard]] constexpr Angular<iq16> to_angle() const {
@@ -121,8 +139,6 @@ struct [[nodiscard]] LapAngleCode_u16{
         return Angular<uq32>::from_turns(degree001_to_turns(bits));
     }
 };
-
-static constexpr auto c = float(uq22(LapAngleCode_u16(35999).to_angle().to_turns()) * 360);
 
 struct [[nodiscard]] TemperatureCode_i8{
     uint8_t bits;
@@ -163,9 +179,6 @@ struct [[nodiscard]] PositionCode_i32{
     }
 };
 
-// static constexpr auto turns = float(PositionCode_i32(0x7fffffff).to_angle().to_turns());
-
-enum class CanAddr:uint8_t{};
 
 struct [[nodiscard]] FaultStatus{
     uint16_t :1;
@@ -196,7 +209,7 @@ struct [[nodiscard]] FaultStatus{
     }
 };
 
-enum class PidIndex:uint8_t{
+enum class [[nodiscard]] PidIndex:uint8_t{
     CurrentKp = 0x01,
     CurrentKi = 0x02,
     SpeedKp = 0x04,
@@ -206,7 +219,7 @@ enum class PidIndex:uint8_t{
     PositionKd = 0x09,
 };
 
-enum class PlanAccelKind:uint8_t{
+enum class [[nodiscard]] PlanAccelKind:uint8_t{
     PositionAcc,
     PositionDec,
     SpeedAcc,
@@ -245,11 +258,15 @@ enum class [[nodiscard]] ReqCommand:uint8_t{
     GetPackage = 0xb5
 };
 
-enum class Baudrate:uint8_t{
+enum class [[nodiscard]] Baudrate:uint8_t{
     RS485_115200 = 0,
     CAN_500K = 0,
     RS485_500K = 1,
     CAN_1M = 1
+};
+
+struct [[nodiscard]] MotorId{
+    uint8_t count;
 };
 
 }

@@ -421,13 +421,13 @@ DEF_COMMAND_ONLY_RESP_MSG(ShutDown);
 
 struct [[nodiscard]] MitParams final{
     using Self = MitParams;
-    CanAddr can_addr;
+    MotorId motor_id;
     mit::MitPositionCode_u16 position;
     mit::MitSpeedCode_u12 speed;
     mit::MitTorqueCode_u12 torque;
 
     constexpr Result<Self, DeMsgError> try_from_bytes(std::span<const uint8_t, 8> bytes) const {
-        const uint8_t can_addr_bits = 
+        const uint8_t motor_id_bits = 
             bytes[0];
         const uint16_t position_bits = 
             (bytes[1] << 8) | bytes[2];
@@ -436,7 +436,7 @@ struct [[nodiscard]] MitParams final{
         const uint16_t torque_bits = 
             ((bytes[4] & 0x0f) << 8) | (bytes[5]);
         return Ok(Self{
-            .can_addr = CanAddr(can_addr_bits),
+            .motor_id = MotorId(motor_id_bits),
             .position = mit::MitPositionCode_u16::from_bits(position_bits),
             .speed = mit::MitSpeedCode_u12::from_bits(speed_bits),
             .torque = mit::MitTorqueCode_u12::from_bits(torque_bits)

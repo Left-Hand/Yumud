@@ -7,14 +7,14 @@
 
 namespace ymd{
 
-template<typename E, E ... EList> 
+template<typename E, E ... Elements> 
 struct EnumList final{
 
 public:
     using Enum = E;
-    static constexpr size_t N = sizeof...(EList);
+    static constexpr size_t N = sizeof...(Elements);
 private:
-    static constexpr std::array<Enum, N> VALUES = std::to_array({EList...});
+    static constexpr std::array<Enum, N> VALUES = std::to_array({Elements...});
 
     template<size_t ... Is>
     static consteval size_t enum_to_rank_tmp_impl(const E e, std::index_sequence<Is...>) {
