@@ -248,6 +248,7 @@ struct Layout{
     using ch1n_pin_type = void;
     using ch2n_pin_type = void;
     using ch3n_pin_type = void;
+    using bkin_pin_type = void;
 };
 
 // TIM1 Remap 0
@@ -260,6 +261,7 @@ struct Layout<1, Remap::_0> {
     using ch3_pin_type = PinTag<PortSource::PA, PinSource::_10>;
     using ch3n_pin_type = PinTag<PortSource::PB, PinSource::_15>;
     using ch4_pin_type = PinTag<PortSource::PA, PinSource::_11>;
+    using bkin_pin_type = PinTag<PortSource::PB, PinSource::_12>;
 };
 
 // TIM1 Remap 1
@@ -273,18 +275,22 @@ struct Layout<1, Remap::_1> {
     using ch1n_pin_type = PinTag<PortSource::PA, PinSource::_7>;
     using ch2n_pin_type = PinTag<PortSource::PB, PinSource::_0>;
     using ch3n_pin_type = PinTag<PortSource::PB, PinSource::_1>;
+    using bkin_pin_type = PinTag<PortSource::PA, PinSource::_6>;
 };
 
 // TIM1 Remap 3 
 template<>
 struct Layout<1, Remap::_3> {
     using ch1_pin_type = PinTag<PortSource::PE, PinSource::_9>;
-    using ch1n_pin_type = PinTag<PortSource::PE, PinSource::_8>;
     using ch2_pin_type = PinTag<PortSource::PE, PinSource::_11>;
-    using ch2n_pin_type = PinTag<PortSource::PE, PinSource::_10>;
     using ch3_pin_type = PinTag<PortSource::PE, PinSource::_13>;
-    using ch3n_pin_type = PinTag<PortSource::PE, PinSource::_12>;
     using ch4_pin_type = PinTag<PortSource::PE, PinSource::_14>;
+
+    using ch1n_pin_type = PinTag<PortSource::PE, PinSource::_8>;
+    using ch2n_pin_type = PinTag<PortSource::PE, PinSource::_10>;
+    using ch3n_pin_type = PinTag<PortSource::PE, PinSource::_12>;
+
+    using bkin_pin_type = PinTag<PortSource::PE, PinSource::_15>;
 };
 
 // TIM2 Remap 0
@@ -399,95 +405,109 @@ struct Layout<5, Remap::_0> {
 template<>
 struct Layout<8, Remap::_0> {
     using ch1_pin_type = PinTag<PortSource::PC, PinSource::_6>;
-    using ch1n_pin_type = PinTag<PortSource::PA, PinSource::_7>;
     using ch2_pin_type = PinTag<PortSource::PC, PinSource::_7>;
-    using ch2n_pin_type = PinTag<PortSource::PB, PinSource::_0>;
     using ch3_pin_type = PinTag<PortSource::PC, PinSource::_8>;
-    using ch3n_pin_type = PinTag<PortSource::PB, PinSource::_1>;
     using ch4_pin_type = PinTag<PortSource::PC, PinSource::_9>;
+
+    using ch1n_pin_type = PinTag<PortSource::PA, PinSource::_7>;
+    using ch2n_pin_type = PinTag<PortSource::PB, PinSource::_0>;
+    using ch3n_pin_type = PinTag<PortSource::PB, PinSource::_1>;
+
+    using bkin_pin_type = PinTag<PortSource::PA, PinSource::_6>;
 };
 
 // TIM8 Remap 1
 template<>
 struct Layout<8, Remap::_1> {
     using ch1_pin_type = PinTag<PortSource::PB, PinSource::_6>;
-    using ch1n_pin_type = PinTag<PortSource::PA, PinSource::_13>;
     using ch2_pin_type = PinTag<PortSource::PB, PinSource::_7>;
-    using ch2n_pin_type = PinTag<PortSource::PA, PinSource::_14>;
     using ch3_pin_type = PinTag<PortSource::PB, PinSource::_8>;
-    using ch3n_pin_type = PinTag<PortSource::PA, PinSource::_15>;
     using ch4_pin_type = PinTag<PortSource::PC, PinSource::_13>;
+
+    using ch1n_pin_type = PinTag<PortSource::PA, PinSource::_13>;
+    using ch2n_pin_type = PinTag<PortSource::PA, PinSource::_14>;
+    using ch3n_pin_type = PinTag<PortSource::PA, PinSource::_15>;
+
+    using bkin_pin_type = PinTag<PortSource::PB, PinSource::_9>;
 };
 
 // TIM9 Remap 0
 template<>
 struct Layout<9, Remap::_0> {
     using ch1_pin_type = PinTag<PortSource::PA, PinSource::_2>;
-    using ch1n_pin_type = PinTag<PortSource::PC, PinSource::_0>;
     using ch2_pin_type = PinTag<PortSource::PA, PinSource::_3>;
-    using ch2n_pin_type = PinTag<PortSource::PC, PinSource::_1>;
     using ch3_pin_type = PinTag<PortSource::PA, PinSource::_4>;
-    using ch3n_pin_type = PinTag<PortSource::PC, PinSource::_2>;
     using ch4_pin_type = PinTag<PortSource::PC, PinSource::_4>;
+
+    using ch1n_pin_type = PinTag<PortSource::PC, PinSource::_0>;
+    using ch2n_pin_type = PinTag<PortSource::PC, PinSource::_1>;
+    using ch3n_pin_type = PinTag<PortSource::PC, PinSource::_2>;
+
+    using bkin_pin_type = PinTag<PortSource::PC, PinSource::_5>;
 };
 
 // TIM9 Remap 1
 template<>
 struct Layout<9, Remap::_1> {
     using ch1_pin_type = PinTag<PortSource::PA, PinSource::_2>;
-    using ch1n_pin_type = PinTag<PortSource::PB, PinSource::_0>;
     using ch2_pin_type = PinTag<PortSource::PA, PinSource::_3>;
-    using ch2n_pin_type = PinTag<PortSource::PB, PinSource::_1>;
     using ch3_pin_type = PinTag<PortSource::PA, PinSource::_4>;
-    using ch3n_pin_type = PinTag<PortSource::PB, PinSource::_2>;
     using ch4_pin_type = PinTag<PortSource::PC, PinSource::_14>;
+
+    using ch1n_pin_type = PinTag<PortSource::PB, PinSource::_0>;
+    using ch2n_pin_type = PinTag<PortSource::PB, PinSource::_1>;
+    using ch3n_pin_type = PinTag<PortSource::PB, PinSource::_2>;
+
+    using bkin_pin_type = PinTag<PortSource::PA, PinSource::_1>;
 };
 
 // TIM9 Remap 2 and 3 
 template<>
 struct Layout<9, Remap::_2> {
     using ch1_pin_type = PinTag<PortSource::PD, PinSource::_9>;
-    using ch1n_pin_type = PinTag<PortSource::PD, PinSource::_8>;
     using ch2_pin_type = PinTag<PortSource::PD, PinSource::_11>;
-    using ch2n_pin_type = PinTag<PortSource::PD, PinSource::_10>;
     using ch3_pin_type = PinTag<PortSource::PD, PinSource::_13>;
-    using ch3n_pin_type = PinTag<PortSource::PD, PinSource::_12>;
     using ch4_pin_type = PinTag<PortSource::PD, PinSource::_15>;
+
+    using ch1n_pin_type = PinTag<PortSource::PD, PinSource::_8>;
+    using ch2n_pin_type = PinTag<PortSource::PD, PinSource::_10>;
+    using ch3n_pin_type = PinTag<PortSource::PD, PinSource::_12>;
+
+    using bkin_pin_type = PinTag<PortSource::PD, PinSource::_14>;
 };
 
 template<>
-struct Layout<9, Remap::_3> {
-    using ch1_pin_type = PinTag<PortSource::PD, PinSource::_9>;
-    using ch1n_pin_type = PinTag<PortSource::PD, PinSource::_8>;
-    using ch2_pin_type = PinTag<PortSource::PD, PinSource::_11>;
-    using ch2n_pin_type = PinTag<PortSource::PD, PinSource::_10>;
-    using ch3_pin_type = PinTag<PortSource::PD, PinSource::_15>;
-    using ch3n_pin_type = PinTag<PortSource::PD, PinSource::_12>;
-    using ch4_pin_type = PinTag<PortSource::PD, PinSource::_13>;
+struct Layout<9, Remap::_3>:public Layout<9, Remap::_2> {
 };
 
 // TIM10 Remap 0
 template<>
 struct Layout<10, Remap::_0> {
     using ch1_pin_type = PinTag<PortSource::PB, PinSource::_8>;
-    using ch1n_pin_type = PinTag<PortSource::PA, PinSource::_12>;
     using ch2_pin_type = PinTag<PortSource::PB, PinSource::_9>;
-    using ch2n_pin_type = PinTag<PortSource::PA, PinSource::_13>;
     using ch3_pin_type = PinTag<PortSource::PC, PinSource::_3>;
-    using ch3n_pin_type = PinTag<PortSource::PA, PinSource::_14>;
     using ch4_pin_type = PinTag<PortSource::PC, PinSource::_11>;
+
+    using ch1n_pin_type = PinTag<PortSource::PA, PinSource::_12>;
+    using ch2n_pin_type = PinTag<PortSource::PA, PinSource::_13>;
+    using ch3n_pin_type = PinTag<PortSource::PA, PinSource::_14>;
+
+    using bkin_pin_type = PinTag<PortSource::PC, PinSource::_12>;
 };
 
 // TIM10 Remap 1
 template<>
 struct Layout<10, Remap::_1> {
     using ch1_pin_type = PinTag<PortSource::PB, PinSource::_3>;
-    using ch1n_pin_type = PinTag<PortSource::PA, PinSource::_5>;
     using ch2_pin_type = PinTag<PortSource::PB, PinSource::_4>;
-    using ch2n_pin_type = PinTag<PortSource::PA, PinSource::_6>;
     using ch3_pin_type = PinTag<PortSource::PB, PinSource::_5>;
-    using ch3n_pin_type = PinTag<PortSource::PA, PinSource::_7>;
     using ch4_pin_type = PinTag<PortSource::PC, PinSource::_14>;
+
+    using ch1n_pin_type = PinTag<PortSource::PA, PinSource::_5>;
+    using ch2n_pin_type = PinTag<PortSource::PA, PinSource::_6>;
+    using ch3n_pin_type = PinTag<PortSource::PA, PinSource::_7>;
+
+    using bkin_pin_type = PinTag<PortSource::PB, PinSource::_10>;
 };
 
 // TIM10 Remap 2 and 3
@@ -503,19 +523,13 @@ struct Layout<10, Remap::_2> {
     using ch3_pin_type = PinTag<PortSource::PD, PinSource::_5>;
     using ch4_pin_type = PinTag<PortSource::PD, PinSource::_7>;
 
+    using bkin_pin_type = PinTag<PortSource::PE, PinSource::_2>;
 };
 
 template<>
-struct Layout<10, Remap::_3> {
-    using ch1n_pin_type = PinTag<PortSource::PE, PinSource::_3>;
-    using ch2n_pin_type = PinTag<PortSource::PE, PinSource::_4>;
-    using ch3n_pin_type = PinTag<PortSource::PE, PinSource::_5>;
-
-    using ch1_pin_type = PinTag<PortSource::PD, PinSource::_1>;
-    using ch2_pin_type = PinTag<PortSource::PD, PinSource::_3>;
-    using ch3_pin_type = PinTag<PortSource::PD, PinSource::_5>;
-    using ch4_pin_type = PinTag<PortSource::PD, PinSource::_7>;
+struct Layout<10, Remap::_3>:public Layout<10, Remap::_2> {
 };
+
 
 
 template<size_t NUM_TIM_NTH, Remap REMAP>
@@ -538,6 +552,9 @@ using ch2n_pin_t = typename Layout<NUM_TIM_NTH, REMAP>::ch2n_pin_type;
 
 template<size_t NUM_TIM_NTH, Remap REMAP>
 using ch3n_pin_t = typename Layout<NUM_TIM_NTH, REMAP>::ch3n_pin_type;
+
+template<size_t NUM_TIM_NTH, Remap REMAP>
+using bkin_pin_t = typename Layout<NUM_TIM_NTH, REMAP>::bkin_pin_type;
 
 }
 
