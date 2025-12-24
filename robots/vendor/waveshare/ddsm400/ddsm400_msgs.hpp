@@ -1,4 +1,5 @@
 #include "ddsm400_primitive.hpp"
+#include "core/utils/bytes/bytes_caster.hpp"
 
 namespace ymd::robots::waveshare::ddsm400{
 namespace req_msgs{

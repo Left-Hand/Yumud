@@ -4,6 +4,7 @@
 #include "primitive/can/bxcan_frame.hpp"
 #include "core/math/float/fp32.hpp"
 #include "core/utils/bits/bits_caster.hpp"
+#include "core/utils/bytes/bytes_caster.hpp"
 
 namespace ymd::xdrive::can_protocol{
 

@@ -241,17 +241,5 @@ static_assert(z.to_bits() == 0xEF);   // 剩余8 bits: 0xEF
 } // namespace CompileTimeTests
 
 
-[[maybe_unused]] void endian_test(){
-    {
-        constexpr uint8_t bytes[2] = {0x12, 0x34};
-        constexpr auto i = le_bytes_to_int<uint16_t>(std::span(bytes));
-        static_assert(i == 0x12 + (0x34 << 8));
-    }
 
-    {
-        constexpr uint8_t bytes[2] = {0x12, 0x34};
-        constexpr auto i = be_bytes_to_int<uint16_t>(std::span(bytes));
-        static_assert(i == 0x34 + (0x12 << 8));
-    }
-}
 } // namespace BitsetTests

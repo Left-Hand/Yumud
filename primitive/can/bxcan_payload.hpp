@@ -41,11 +41,9 @@ public:
         );
     }
 
-    static Self from_uninitialized(){
-        return Self(
-            ZERO_U8X8,
-            BxCanDlc::from_bits(0)
-        );
+    //non-constexpr
+    __attribute__((always_inline)) static Self from_uninitialized(){
+        return Self();
     }
 
     __attribute__((always_inline)) static constexpr Self from_u8x8(std::array<uint8_t, 8> array){
@@ -236,9 +234,13 @@ public:
     alignas(4) U8X8 bytes_;
     BxCanDlc dlc_;
 private:
-    [[nodiscard]] __attribute__((always_inline)) constexpr explicit
+    __attribute__((always_inline)) constexpr explicit
     BxCanPayload(const U8X8 bytes, const BxCanDlc dlc):
         bytes_(bytes), dlc_(dlc){;}
+
+    __attribute__((always_inline)) explicit
+    BxCanPayload():
+        bytes_({}), dlc_(BxCanDlc::from_uninitialized()){;}
 
     friend class BxCanFrame;
 

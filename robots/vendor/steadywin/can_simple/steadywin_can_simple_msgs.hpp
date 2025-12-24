@@ -2,6 +2,9 @@
 
 #include "steadywin_can_simple_primitive.hpp"
 #include "steadywin_can_simple_utils.hpp"
+#include "primitive/arithmetic/angular.hpp"
+#include "core/utils/bytes/bytes_caster.hpp"
+#include <utility>
 
 namespace ymd::robots::steadywin::can_simple{
 namespace req_msgs{
@@ -23,6 +26,12 @@ struct [[nodiscard]] GetError final{
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
         bytes[0] = static_cast<uint8_t>(source);
     }
+};
+
+struct [[nodiscard]] GetEncoderCount final{
+    using Self = GetEncoderCount;
+    static constexpr CommandKind COMMAND = Command::GetEncoderCount;
+
 };
 
 //ID 0x004
@@ -116,7 +125,7 @@ struct [[nodiscard]] MitControl final{
 struct [[nodiscard]] GetMotorCurrent final{
     using Self = GetMotorCurrent;
     static constexpr CommandKind COMMAND = Command::GetMotorCurrent;
-    int32_t shadow_count;
+    int32_t multilap_angle;
     int32_t count_n_cpr;
 
     constexpr hal::BxCanPayload to_can_payload() const {
@@ -383,10 +392,15 @@ struct [[nodiscard]] HeartbeatV513 final{
     // 失，即通信不稳
     uint8_t life;
 
-    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> & bytes){
+    // static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+
+
+    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+        // const uint8_t* __restrict__ bytes = bytes.data();
         const auto self = Self{
             .axis_fault_flags = std::bit_cast<AxisFaultFlags>(
                 le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())
+                // load_u32_may_unaligned(bytes)
             ),
             .axis_state = ({
                 const auto res = try_into_axis_state(bytes[4]); 
@@ -420,7 +434,8 @@ struct [[nodiscard]] GetError final{
         uint32_t controller_exception;
         uint32_t system_exception;
     };
-    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+    __no_inline static constexpr Result<Self, DeMsgError> 
+    try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self;
         self.motor_exception = le_bytes_to_int<uint64_t>(bytes);
         return Ok(self);
@@ -479,7 +494,8 @@ struct [[nodiscard]] GetEncoderEstimates final{
     math::fp32 position;
     math::fp32 velocity;
 
-    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+    __no_inline  static constexpr Result<Self, DeMsgError> 
+    try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
             // .position = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
             // .velocity = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()))
@@ -499,20 +515,22 @@ struct [[nodiscard]] GetEncoderEstimates final{
 struct [[nodiscard]] GetEncoderCount final{
     using Self = GetEncoderCount;
     static constexpr CommandKind COMMAND = Command::GetEncoderCount;
-    int32_t shadow_count;
-    int32_t cpr_count;
+    Angular<iq14> multilap_angle;
+    Angular<uq32> lap_angle;
 
     static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+        const iq14 multilap_turns = iq14::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>()));
+        const uq32 lap_turns = uq32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()) << (32 - 14));
         Self self{
-            .shadow_count = le_bytes_to_int<int32_t>(bytes.subspan<0, 4>()),
-            .cpr_count = le_bytes_to_int<int32_t>(bytes.subspan<4, 4>())
+            .multilap_angle = Angular<iq14>::from_turns(multilap_turns),
+            .lap_angle = Angular<uq32>::from_turns(lap_turns),
         };
         return Ok(self);
     }
 
     friend OutputStream & operator<<(OutputStream & os, const Self & self) {
-        return os << os.field("shadow_count")(self.shadow_count) << os.splitter()
-            << os.field("cpr_count")(self.cpr_count);
+        return os << os.field("multilap_angle")(self.multilap_angle) << os.splitter()
+            << os.field("lap_angle")(self.lap_angle);
     }
 };
 
@@ -610,16 +628,20 @@ static constexpr hal::BxCanFrame serialize_msg_to_can_frame(
         .command = COMMAND,
     };
 
-    std::array<uint8_t, 8> bytes;
-    if constexpr(std::is_same_v<
-        decltype(msg.fill_bytes(bytes)), void>
-    ){
+    if constexpr(requires { 
+        { msg.fill_bytes(std::declval<std::span<uint8_t, 8>>()) } -> std::same_as<void>; 
+    }) {
+        std::array<uint8_t, 8> bytes;
         msg.fill_bytes(bytes);
+        return hal::BxCanFrame::from_parts(
+            frame_id.to_stdid(),
+            hal::BxCanPayload::from_u8x8(bytes)
+        );
+    }else{
+        return hal::BxCanFrame::from_remote(
+            frame_id.to_stdid()
+        );
     }
-    return hal::BxCanFrame::from_parts(
-        frame_id.to_stdid(),
-        hal::BxCanPayload::from_u8x8(bytes)
-    );
 }
 
 

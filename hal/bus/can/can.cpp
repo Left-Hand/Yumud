@@ -101,6 +101,9 @@ template<CanRemap REMAP>
 DEF_CAN_BIND_PIN_LAYOUTER(tx)
 DEF_CAN_BIND_PIN_LAYOUTER(rx)
 
+#undef DEF_CAN_BIND_PIN_LAYOUTER
+}
+namespace {
 static constexpr uint32_t can_tstatr_tme_mask(const CanMailboxIndex mbox_idx){ 
     switch(mbox_idx){
         case CanMailboxIndex::_0: return CAN_TSTATR_TME0;
@@ -129,14 +132,15 @@ static constexpr uint32_t can_statr_tkok_mask(const CanMailboxIndex mbox_idx){
 }
 
 static Option<CanMailboxIndex> can_get_idle_mailbox_index(void * inst_){
-    const uint32_t tempreg = SDK_INST(inst_)->TSTATR;
     static constexpr uint32_t ANY_MAILBOX_IDLE_BITMASK = 
         (can_tstatr_tme_mask(CanMailboxIndex::_0) 
         | can_tstatr_tme_mask(CanMailboxIndex::_1) 
         | can_tstatr_tme_mask(CanMailboxIndex::_2));
-    const auto is_any_mailbox_idle = (tempreg & ANY_MAILBOX_IDLE_BITMASK) != 0;
+
+    const uint32_t tempreg = SDK_INST(inst_)->TSTATR;
+    const bool is_any_mailbox_idle = (tempreg & ANY_MAILBOX_IDLE_BITMASK) != 0;
     if(not is_any_mailbox_idle) return None;
-    const auto idle_mbox_idx_bits = static_cast<uint8_t>((tempreg & CAN_TSTATR_CODE) >> 24);
+    const uint8_t idle_mbox_idx_bits = static_cast<uint8_t>((tempreg & CAN_TSTATR_CODE) >> 24);
     return Some(std::bit_cast<CanMailboxIndex>(idle_mbox_idx_bits));
 };
 
@@ -437,14 +441,23 @@ void Can::transmit(const BxCanFrame & frame, CanMailboxIndex mbox_idx){
 
 
 Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
-    //查找空闲的邮箱
-    const auto may_idle_mbox_idx = can_get_idle_mailbox_index(inst_);
 
-    //大概率有空闲邮箱 查找到空闲邮箱后发送
-    if(may_idle_mbox_idx.is_some()){
-        const auto idle_mbox_idx = may_idle_mbox_idx.unwrap();
-        transmit(frame, idle_mbox_idx);
-        return Ok();
+    while(true){
+        //查找空闲的邮箱
+        const auto may_idle_mbox_idx = can_get_idle_mailbox_index(inst_);
+    
+        //大概率有空闲邮箱 查找到空闲邮箱后发送
+        if(may_idle_mbox_idx.is_some()){
+            const auto idle_mbox_idx = may_idle_mbox_idx.unwrap();
+            if(tx_fifo_.length() == 0){
+                transmit(frame, idle_mbox_idx);
+                return Ok();
+            }else{
+                transmit(tx_fifo_.pop_unchecked(), idle_mbox_idx);
+            }
+        }else{
+            break;
+        }
     }
 
     //如果没找到空闲邮箱 存入软fifo
@@ -468,11 +481,8 @@ BxCanFrame Can::read(){
 Option<BxCanFrame> Can::try_read(){
     //如果没有可读的报文 返回空
     if(rx_fifo_.length() == 0) return None;
-    BxCanFrame frame = BxCanFrame::from_uninitialized();
     //弹出可读的报文
-    if(rx_fifo_.try_pop(frame) == 0)
-        __builtin_trap();
-    return Some(frame);
+    return Some(rx_fifo_.pop_unchecked());
 }
 
 
@@ -614,17 +624,17 @@ void CanInterruptDispatcher::on_tx_interrupt(Can & self){
     iter_mailbox.template operator() < CanMailboxIndex::_1 > ();
     iter_mailbox.template operator() < CanMailboxIndex::_2 > ();
 
-    auto try_poll_next = [&]{
-        if(self.tx_fifo_.length() == 0) return;
-        const auto may_idle_mailbox = can_get_idle_mailbox_index(self.inst_);
-        if(may_idle_mailbox.is_none()) return;
 
-        self.transmit(self.tx_fifo_.pop_unchecked(), may_idle_mailbox.unwrap());
-    };
-
-    try_poll_next();
+    self.poll_backup_fifo();
 }
 
+void Can::poll_backup_fifo(){
+    auto & self = *this;
+    if(self.tx_fifo_.length() == 0) return;
+    const auto may_idle_mailbox = can_get_idle_mailbox_index(self.inst_);
+    if(may_idle_mailbox.is_none()) return;
+    self.transmit(self.tx_fifo_.pop_unchecked(), may_idle_mailbox.unwrap());
+}
 void CanInterruptDispatcher::on_rx_interrupt(Can & self, const CanFifoIndex fifo_idx){
     auto & rfifo_reg = can_get_rfifo_reg(self.inst_, fifo_idx);
     const uint32_t temp_rfifo_reg = rfifo_reg;

@@ -39,8 +39,26 @@ struct FrameFactory{
     }
 };
 
-static constexpr auto f = static_cast<float>(0xBF92E042); 
 
+
+
+struct EncoderFeedback{
+    using Self = EncoderFeedback;
+    Angular<iq14> multilap_angle;
+    Angular<uq32> lap_angle;
+
+    static constexpr Self zero(){
+        return Self{
+            .multilap_angle = Zero,
+            .lap_angle = Zero,
+        };
+    }
+
+    friend OutputStream & operator<<(OutputStream & os, const Self & self){ 
+        return os << os.field("multilap_angle")(self.multilap_angle.to_turns()) << os.splitter()
+            << os.field("lap_angle")(self.lap_angle.to_turns());
+    }
+};
 void steadywin_main(){
     auto & DBG_UART = hal::usart2;
     hal::usart2.init({
@@ -52,6 +70,8 @@ void steadywin_main(){
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
+    DEBUGGER.no_brackets(EN);
+    DEBUGGER.no_fieldname(EN);
 
     auto & can = hal::can1;
     //初始化CAN外设
@@ -76,21 +96,43 @@ void steadywin_main(){
         // FILTER_CONFIG
     );
 
-    auto accept_either_msg = []<typename T>(const AxisId axis_id, const Result<T, DeMsgError> & either_msg){
+    std::array<EncoderFeedback, 2> encoder_feedbacks = {Zero, Zero};
+
+    auto axis_id_to_idx = [](const AxisId axis_id) -> size_t {
+        switch(axis_id.to_bits()){
+            case 1: return 0;
+            case 2: return 1;
+        }
+        PANIC{};
+    };
+    auto store_encoder_feedback = [&](const size_t idx, const resp_msgs::GetEncoderCount & msg){
+        encoder_feedbacks.at(idx) = EncoderFeedback{
+            .multilap_angle = msg.multilap_angle,
+            .lap_angle = msg.lap_angle
+        };
+    };
+    auto accept_either_msg = [&]<typename T>(const AxisId axis_id, const Result<T, DeMsgError> & either_msg){
         // DEBUG_PRINTLN(axis_id, either_msg);
-        if(axis_id.to_bits() != 1) return;
         if constexpr (std::is_same_v<T, resp_msgs::GetEncoderEstimates>){
             // DEBUGGER.no_fieldname(EN);
             if(not either_msg.is_ok()) return;
             const resp_msgs::GetEncoderEstimates msg = either_msg.unwrap();
-            DEBUG_PRINTLN(msg.position, msg.velocity);
+            // DEBUG_PRINTLN(msg.position, msg.velocity);
         }
 
         if constexpr (std::is_same_v<T, resp_msgs::HeartbeatV513>){
             // DEBUGGER.no_fieldname(EN);
             if(not either_msg.is_ok()) return;
             const resp_msgs::HeartbeatV513 msg = either_msg.unwrap();
-            DEBUG_PRINTLN(msg);
+            // DEBUG_PRINTLN(msg);
+        }
+
+        if constexpr (std::is_same_v<T, resp_msgs::GetEncoderCount>){
+            // DEBUGGER.no_fieldname(EN);
+            if(not either_msg.is_ok()) return;
+            const resp_msgs::GetEncoderCount msg = either_msg.unwrap();
+            // DEBUG_PRINTLN(msg.lap_angle.to_turns(), msg.multilap_angle.to_turns());
+            store_encoder_feedback(axis_id_to_idx(axis_id), msg);
         }
     };
 
@@ -100,7 +142,10 @@ void steadywin_main(){
         const auto frame_id = FrameId::from_stdid(frame.identifier().to_stdid());
         const auto axis_id = frame_id.axis_id;
         const auto command = frame_id.command;
-        const auto payload_bytes = frame.payload_bytes_fixed<8>();
+        // const auto payload_bytes = std::span(frame.payload().u8x8());
+        
+        // const auto payload_bytes = frame.payload_bytes_fixed<8>();
+        const auto payload_bytes = std::span(frame.payload().u8x8());
         switch(command.kind()){
             case Command::Undefined:{
                 //nothing
@@ -108,6 +153,7 @@ void steadywin_main(){
             case Command::Heartbeat:{
                 const auto either_msg = resp_msgs::HeartbeatV513::try_from_bytes(payload_bytes);
                 return accept_either_msg(axis_id, either_msg);
+                // return accept_either_msg(axis_id, de_msg(payload_bytes));
             }break;
             case Command::Estop:{
                 //req only
@@ -256,6 +302,8 @@ void steadywin_main(){
         write_can_frame(frame, 10ms);
     }
 
+    can.enable_hw_retransmit(EN);
+
     #if 1
     [[maybe_unused]] auto & timer = hal::timer2;
     //配置定时器
@@ -268,11 +316,21 @@ void steadywin_main(){
     ;
 
 
+
     //设置定时器事件回调
     timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             const auto now_secs = clock::time();
+
+            {
+                const auto num_rx_frames = can.available();
+                for(size_t i = 0; i < num_rx_frames; ++i){
+                    parse_can_frame(can.read());
+                    // (void)(can.read());
+                }
+            }
+
             const auto left_torque_ff = iq16(math::sinpu(now_secs)) / 10;
             const auto right_torque_ff = iq16(math::cospu(now_secs)) / 10;
 
@@ -293,6 +351,23 @@ void steadywin_main(){
                 );
                 write_can_frame(frame);
             }
+
+            {
+                const auto frame = left_factory.serialize(
+                    req_msgs::GetEncoderCount{
+                    }
+                );
+                write_can_frame(frame);
+            }
+
+            {
+                const auto frame = right_factory.serialize(
+                    req_msgs::GetEncoderCount{
+                    }
+                );
+                write_can_frame(frame);
+            }
+
             break;
         }
         default: break;
@@ -319,11 +394,12 @@ void steadywin_main(){
         // );
 
 
-        while(can.available()){
-            parse_can_frame(can.read());
-            // (void)(can.read());
-        }
+        // while(can.available()){
+        //     parse_can_frame(can.read());
+        //     // (void)(can.read());
+        // }
 
+        DEBUG_PRINTLN_IDLE(encoder_feedbacks[0], encoder_feedbacks[1]);
         // DEBUG_PRINTLN(frac(now_secs), torque_ff, iq16(math::sin(now_secs)));
 
         // const auto frame = hal::BxCanFrame::from_parts(
@@ -343,7 +419,7 @@ void steadywin_main(){
         //     // frame
         // );
 
-        clock::delay(10ms);
+        // clock::delay(10ms);
     }
 }
 

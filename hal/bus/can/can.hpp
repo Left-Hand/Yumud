@@ -119,7 +119,7 @@ public:
     void enable_hw_retransmit(const Enable en);
 
     // 结束指定邮箱的发送
-    void abort_transmit(const CanMailboxIndex mailbox_index);
+    void abort_transmit(const CanMailboxIndex mbox_idx);
 
     // 结束所有邮箱的发送
     void abort_all_transmits();
@@ -174,7 +174,9 @@ private:
     void init_interrupts();
 
     //在指定的邮箱填写报文
-    void transmit(const BxCanFrame & frame, const CanMailboxIndex mbox_index);
+    void transmit(const BxCanFrame & frame, const CanMailboxIndex mbox_idx);
+
+    void poll_backup_fifo();
 
     //在指定的fifo读取报文
     [[nodiscard]] BxCanFrame receive(const CanFifoIndex fifo_idx);

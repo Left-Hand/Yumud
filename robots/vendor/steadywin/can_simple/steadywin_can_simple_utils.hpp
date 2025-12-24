@@ -1,6 +1,7 @@
 #pragma once
 
 #include "steadywin_can_simple_primitive.hpp"
+#include "core/utils/bytes/bytes_caster.hpp"
 
 namespace ymd::robots::steadywin::can_simple{
 
