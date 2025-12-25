@@ -34,7 +34,7 @@ struct FrameFactory{
     AxisId axis_id;
 
     template<typename T>
-    hal::BxCanFrame serialize(T && msg){
+    hal::BxCanFrame serialize(T && msg) const {
         return serialize_msg_to_can_frame(axis_id, std::forward<T>(msg));
     }
 };
@@ -59,6 +59,8 @@ struct EncoderFeedback{
             << os.field("lap_angle")(self.lap_angle.to_turns());
     }
 };
+
+
 void steadywin_main(){
     auto & DBG_UART = hal::usart2;
     hal::usart2.init({
@@ -96,6 +98,7 @@ void steadywin_main(){
         // FILTER_CONFIG
     );
 
+    can.enable_hw_retransmit(EN);
     std::array<EncoderFeedback, 2> encoder_feedbacks = {Zero, Zero};
 
     auto axis_id_to_idx = [](const AxisId axis_id) -> size_t {
@@ -138,7 +141,7 @@ void steadywin_main(){
 
     [[maybe_unused]] auto parse_can_frame = [&](const hal::BxCanFrame & frame){
         if(frame.is_extended()) PANIC{};
-        if(frame.length() != 8) PANIC{};
+        if(frame.length() != 8) PANIC{frame.length()};
         const auto frame_id = FrameId::from_stdid(frame.identifier().to_stdid());
         const auto axis_id = frame_id.axis_id;
         const auto command = frame_id.command;
@@ -252,8 +255,6 @@ void steadywin_main(){
         }
     };
 
-
-
     [[maybe_unused]] auto write_can_frame = [](const hal::BxCanFrame & frame, const Milliseconds delay_ms = 0ms){
         can.try_write(frame).examine();
         if(delay_ms != 0ms) clock::delay(delay_ms);
@@ -262,47 +263,10 @@ void steadywin_main(){
     FrameFactory left_factory{AxisId::from_bits(0x01)};
     FrameFactory right_factory{AxisId::from_bits(0x02)};
 
-    {
-        const auto frame = left_factory.serialize(
-            req_msgs::SetCotrollerMode{
-                .loop_mode = LoopMode::CurrentLoop,
-                .input_mode = InputMode::CurrentRamp,
-            }
-        );
-        write_can_frame(frame, 10ms);
-    }
+    clock::delay(100ms);
 
 
-    {
-        const auto frame = left_factory.serialize(
-            req_msgs::SetAxisState{
-                .axis_state = AxisState::ClosedLoopControl
-            }
-        );
-        write_can_frame(frame, 10ms);
-    }
 
-    {
-        const auto frame = right_factory.serialize(
-            req_msgs::SetCotrollerMode{
-                .loop_mode = LoopMode::CurrentLoop,
-                .input_mode = InputMode::CurrentRamp,
-            }
-        );
-        write_can_frame(frame, 10ms);
-    }
-
-
-    {
-        const auto frame = right_factory.serialize(
-            req_msgs::SetAxisState{
-                .axis_state = AxisState::ClosedLoopControl
-            }
-        );
-        write_can_frame(frame, 10ms);
-    }
-
-    can.enable_hw_retransmit(EN);
 
     #if 1
     [[maybe_unused]] auto & timer = hal::timer2;
@@ -331,8 +295,8 @@ void steadywin_main(){
                 }
             }
 
-            const auto left_torque_ff = iq16(math::sinpu(now_secs)) / 10;
-            const auto right_torque_ff = iq16(math::cospu(now_secs)) / 10;
+            const auto left_torque_ff = iq16(math::sin(now_secs)) / 10;
+            const auto right_torque_ff = iq16(math::cos(now_secs)) / 10;
 
             {
                 const auto frame = left_factory.serialize(
@@ -343,26 +307,13 @@ void steadywin_main(){
                 write_can_frame(frame);
             }
 
+
+
             {
                 const auto frame = right_factory.serialize(
                     req_msgs::SetInputTorque{
+
                         .torque_ff = float(right_torque_ff)
-                    }
-                );
-                write_can_frame(frame);
-            }
-
-            {
-                const auto frame = left_factory.serialize(
-                    req_msgs::GetEncoderCount{
-                    }
-                );
-                write_can_frame(frame);
-            }
-
-            {
-                const auto frame = right_factory.serialize(
-                    req_msgs::GetEncoderCount{
                     }
                 );
                 write_can_frame(frame);
@@ -380,6 +331,37 @@ void steadywin_main(){
 
     //启动定时器
     timer.start();
+
+    auto setup_motors = [&](const FrameFactory & factory){
+        {
+            const auto frame = factory.serialize(
+                req_msgs::ClearErrors{}
+            );
+            write_can_frame(frame, 1ms);
+        }
+
+        {
+            const auto frame = factory.serialize(
+                req_msgs::SetAxisState{
+                    .axis_state = AxisState::ClosedLoopControl
+                }
+            );
+            write_can_frame(frame, 1ms);
+        }
+
+        {
+            const auto frame = factory.serialize(
+                req_msgs::SetCotrollerMode{
+                    .loop_mode = LoopMode::CurrentLoop,
+                    .input_mode = InputMode::CurrentRamp,
+                }
+            );
+            write_can_frame(frame, 1ms);
+        }
+    };
+
+    setup_motors(left_factory);
+    setup_motors(right_factory);
     #endif
     while(true){
         
@@ -399,7 +381,7 @@ void steadywin_main(){
         //     // (void)(can.read());
         // }
 
-        // DEBUG_PRINTLN_IDLE(encoder_feedbacks[0], encoder_feedbacks[1]);
+        DEBUG_PRINTLN_IDLE(encoder_feedbacks[0], encoder_feedbacks[1]);
         // DEBUG_PRINTLN(frac(now_secs), torque_ff, iq16(math::sin(now_secs)));
 
         // const auto frame = hal::BxCanFrame::from_parts(
