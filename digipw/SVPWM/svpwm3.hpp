@@ -4,7 +4,7 @@
 #include "digipw/prelude/abdq.hpp"
 
 namespace ymd::digipw{
-
+// 输入的幅值的临界模长不能超过sqrt(3)/2 此时恰好能使其中一路输入满占空比或零占空比
 __attribute__((optimize("O3")))
 static constexpr UvwCoord<iq16> SVM(
     const AlphaBetaCoord<iq16> alphabeta_dutycycle

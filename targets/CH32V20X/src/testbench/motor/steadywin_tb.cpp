@@ -399,7 +399,7 @@ void steadywin_main(){
         //     // (void)(can.read());
         // }
 
-        DEBUG_PRINTLN_IDLE(encoder_feedbacks[0], encoder_feedbacks[1]);
+        // DEBUG_PRINTLN_IDLE(encoder_feedbacks[0], encoder_feedbacks[1]);
         // DEBUG_PRINTLN(frac(now_secs), torque_ff, iq16(math::sin(now_secs)));
 
         // const auto frame = hal::BxCanFrame::from_parts(

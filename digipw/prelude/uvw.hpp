@@ -52,6 +52,11 @@ struct UvwCoord{
         return u + v + w;
     }
 
+    template<typename U>
+    [[nodiscard]] constexpr T dot(const UvwCoord<U> & rhs) const {
+        return static_cast<T>(u * rhs.u + v * rhs.v + w * rhs.w);
+    }
+
 
     template<size_t I>
     requires (I < 3)

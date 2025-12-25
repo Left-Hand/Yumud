@@ -255,12 +255,14 @@ struct Layout{
 template<>
 struct Layout<1, Remap::_0> {
     using ch1_pin_type = PinTag<PortSource::PA, PinSource::_8>;
-    using ch1n_pin_type = PinTag<PortSource::PB, PinSource::_13>;
     using ch2_pin_type = PinTag<PortSource::PA, PinSource::_9>;
-    using ch2n_pin_type = PinTag<PortSource::PB, PinSource::_14>;
     using ch3_pin_type = PinTag<PortSource::PA, PinSource::_10>;
-    using ch3n_pin_type = PinTag<PortSource::PB, PinSource::_15>;
     using ch4_pin_type = PinTag<PortSource::PA, PinSource::_11>;
+
+    using ch1n_pin_type = PinTag<PortSource::PB, PinSource::_13>;
+    using ch2n_pin_type = PinTag<PortSource::PB, PinSource::_14>;
+    using ch3n_pin_type = PinTag<PortSource::PB, PinSource::_15>;
+
     using bkin_pin_type = PinTag<PortSource::PB, PinSource::_12>;
 };
 
@@ -275,6 +277,7 @@ struct Layout<1, Remap::_1> {
     using ch1n_pin_type = PinTag<PortSource::PA, PinSource::_7>;
     using ch2n_pin_type = PinTag<PortSource::PB, PinSource::_0>;
     using ch3n_pin_type = PinTag<PortSource::PB, PinSource::_1>;
+
     using bkin_pin_type = PinTag<PortSource::PA, PinSource::_6>;
 };
 

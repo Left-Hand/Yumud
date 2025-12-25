@@ -187,6 +187,6 @@ void sincos_pwm_main(){
         pwm_a.set_dutycycle(st);
         pwm_b.set_dutycycle(ct);
 
-        DEBUG_PRINTLN_IDLE(st, ct, inj.get_voltage());
+        DEBUG_PRINTLN_IDLE(st, ct, inj.get_perunit());
     }
 }

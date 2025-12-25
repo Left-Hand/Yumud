@@ -25,7 +25,7 @@ void AdcInjectedChannel::set_sample_cycles(const AdcSampleCycles cycles){
     ADC_InjectedChannelConfig(SDK_INST(inst_), mask_, rank_, static_cast<uint8_t>(cycles));
 }
 
-uint16_t AdcInjectedChannel::read_u16() {
+uint16_t AdcInjectedChannel::read_u12() {
     return ADC_GetInjectedConversionValue(SDK_INST(inst_), mask_);
 }
 

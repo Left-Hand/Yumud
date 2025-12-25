@@ -15,7 +15,7 @@ struct ScaledAnalogInput{
         inst_(inst), rescaler_(rescaler){}
 
     __inline T get_value(){
-        return rescaler_(inst_.get_voltage());
+        return rescaler_(inst_.get_perunit());
     }
 private:
     Inst & inst_;

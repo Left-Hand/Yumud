@@ -204,7 +204,7 @@ void at8222_tb(){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
                 watch_gpio.write(~watch_gpio.read());
-                volt = hal::adc1.inj<1>().get_voltage();
+                volt = hal::adc1.inj<1>().get_perunit();
                 const auto curr_raw = volt_2_current(volt);
 
                 lpf.update(curr_raw);

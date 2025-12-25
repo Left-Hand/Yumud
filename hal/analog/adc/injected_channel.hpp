@@ -17,11 +17,16 @@ public:
 
     void set_sample_cycles(const AdcSampleCycles cycles);
     
-    [[nodiscard]] uint16_t read_u16();
+    [[nodiscard]] uint16_t read_u12();
 
-    [[nodiscard]] iq16 get_voltage() {
+    // [[nodiscard]] iq16 get_voltage() {
+    //     //assume right aligned 12 bit resolution
+    //     return uq16::from_bits(static_cast<uint32_t>(read_u12()) << 4) * 3.3_iq16;
+    // }
+
+    [[nodiscard]] iq16 get_perunit() {
         //assume right aligned 12 bit resolution
-        return uq16::from_bits(static_cast<uint32_t>(read_u16()) << 4) * 3.3_iq16;
+        return iq16::from_bits(static_cast<int32_t>(read_u12()) << 4);
     }
 
 private:
