@@ -7,7 +7,7 @@
 
 namespace ymd::drivers{
 
-class AnalogDeviceIMU_Phy final{
+class AnalogDeviceIMU_Transport final{
 private:
     std::optional<hal::I2cDrv> i2c_drv_;
     std::optional<hal::SpiDrv> spi_drv_;
@@ -15,17 +15,17 @@ private:
 public:
     using Error = ImuError;
 
-    explicit AnalogDeviceIMU_Phy(const hal::I2cDrv & i2c_drv):
+    explicit AnalogDeviceIMU_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
-    explicit AnalogDeviceIMU_Phy(hal::I2cDrv && i2c_drv):
+    explicit AnalogDeviceIMU_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(i2c_drv){;}
-    explicit AnalogDeviceIMU_Phy(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
+    explicit AnalogDeviceIMU_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
-    explicit AnalogDeviceIMU_Phy(const hal::SpiDrv & spi_drv):
+    explicit AnalogDeviceIMU_Transport(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
-    explicit AnalogDeviceIMU_Phy(hal::SpiDrv && spi_drv):
+    explicit AnalogDeviceIMU_Transport(hal::SpiDrv && spi_drv):
         spi_drv_(spi_drv){;}
-    explicit AnalogDeviceIMU_Phy(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
+    explicit AnalogDeviceIMU_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] Result<void, ImuError> write_reg(const uint8_t reg_addr, const uint8_t reg_data);

@@ -9,10 +9,10 @@ class ST7789 final:
     public ST7789_Prelude{
 public:
     explicit ST7789(
-        ST7789_Phy && phy, 
+        ST7789_Transport && phy, 
         const Vec2<uint16_t> size
     ):
-        phy_(phy),
+        transport_(phy),
         algo_(size){;}
 
 
@@ -48,7 +48,7 @@ public:
     }
 
     IResult<> put_next_texture(const Rect2<uint16_t> rect, const is_color auto * pcolor){
-        return phy_.write_burst_pixels(std::span(pcolor, rect.area()));
+        return transport_.write_burst_pixels(std::span(pcolor, rect.area()));
     }
 
     IResult<> set_display_offset(const Vec2<uint16_t> _offset){
@@ -89,7 +89,7 @@ public:
     ){
         if(const auto res = setpos_unchecked(pos);
             res.is_err()) return res;
-        if(const auto res = phy_.write_data16(color.to_u16());
+        if(const auto res = transport_.write_data16(color.to_u16());
             res.is_err()) return res;
         return Ok();
     }
@@ -111,22 +111,22 @@ public:
 private:
     using Algo = ST7789_ReflashAlgo;
 
-    ST7789_Phy phy_;
+    ST7789_Transport transport_;
     Algo algo_;
 
     Vec2<uint16_t> offset_ = Vec2<uint16_t>::ZERO;
     uint8_t scr_ctrl_ = 0;
 
     [[nodiscard]] __fast_inline IResult<> write_command(const uint8_t cmd){
-        return phy_.write_command(cmd);
+        return transport_.write_command(cmd);
     }
 
     [[nodiscard]] __fast_inline IResult<> write_data8(const uint8_t data){
-        return phy_.write_data8(data);
+        return transport_.write_data8(data);
     }
 
     [[nodiscard]] __fast_inline IResult<> write_data16(const uint16_t data){
-        return phy_.write_data16(data);
+        return transport_.write_data16(data);
     }
 
     [[nodiscard]] IResult<> modify_ctrl_reg(const bool is_high, const uint8_t pos);

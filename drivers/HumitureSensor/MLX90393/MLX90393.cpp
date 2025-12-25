@@ -212,7 +212,7 @@ IResult<> MLX90393::read_reg(uint8_t reg, uint16_t & data) {
 }
 
 
-IResult<> MLX90393_Phy::transceive(std::span<uint8_t> rx_pbuf, std::span<const uint8_t> tx_pbuf){
+IResult<> MLX90393_Transport::transceive(std::span<uint8_t> rx_pbuf, std::span<const uint8_t> tx_pbuf){
     TODO();
     return Ok();
     // uint8_t status = 0;

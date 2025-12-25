@@ -138,15 +138,15 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
     }DEF_R8(product_id_reg)
 };
 
-class MMC5983_Phy: public MMC5983_Prelude{
+class MMC5983_Transport: public MMC5983_Prelude{
 public:
-    explicit MMC5983_Phy(const hal::I2cDrv & i2c_drv):
+    explicit MMC5983_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    explicit MMC5983_Phy(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
-        MMC5983_Phy(hal::I2cDrv{i2c, addr}){;}
-    explicit MMC5983_Phy(const hal::SpiDrv & spi_drv):
+    explicit MMC5983_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
+        MMC5983_Transport(hal::I2cDrv{i2c, addr}){;}
+    explicit MMC5983_Transport(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    explicit MMC5983_Phy(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank index):
+    explicit MMC5983_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     IResult<> write_reg(const uint8_t addr, const uint8_t data){

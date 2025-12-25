@@ -11,14 +11,14 @@ public:
 
 
     explicit BMI160(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
+        transport_(spi_drv){;}
     explicit BMI160(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
-    explicit BMI160(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
-        phy_(hal::SpiDrv(spi, rank)){;}
+        transport_(std::move(spi_drv)){;}
+    explicit BMI160(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        transport_(hal::SpiDrv(spi, rank)){;}
 
     explicit BMI160(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
-        phy_(i2c, i2c_addr){;}
+        transport_(i2c, i2c_addr){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> update();
@@ -37,29 +37,29 @@ public:
     [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
 
 private:
-    BoschImu_Phy phy_;
+    BoschImu_Transport transport_;
     Regset regs_;
 
     iq20 acc_scale_ = 0;
     iq20 gyr_scale_ = 0;
 
     [[nodiscard]] IResult<> write_command(uint8_t cmd){
-        return phy_.write_command(std::bit_cast<uint8_t>(cmd));
+        return transport_.write_command(std::bit_cast<uint8_t>(cmd));
     }
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        return phy_.write_reg(reg);
+        return transport_.write_reg(reg);
     }
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return phy_.read_reg(reg);
+        return transport_.read_reg(reg);
     }
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(const uint8_t addr, T & data){
-        return phy_.read_reg(addr, data);
+        return transport_.read_reg(addr, data);
     }
 
     [[nodiscard]] IResult<> self_test_acc();

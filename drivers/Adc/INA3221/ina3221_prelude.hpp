@@ -319,11 +319,11 @@ struct INA3221_Regs:public INA3221_Prelude {
     R16_ChipId       chip_id_reg = {};
 };
 
-class INA3221_Phy final : public INA3221_Prelude{
+class INA3221_Transport final : public INA3221_Prelude{
 public:
     static constexpr auto ENDIAN = std::endian::big;
 
-    INA3221_Phy(const hal::I2cDrv & i2c_drv):
+    INA3221_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
     
     [[nodiscard]] IResult<> read_reg(

@@ -25,10 +25,10 @@ struct TM1668_Prelude{
     using IResult = Result<T, Error>;
 };
 
-class TM1668_Phy final:public TM1668_Prelude{
+class TM1668_Transport final:public TM1668_Prelude{
 public:
 
-    explicit TM1668_Phy(hal::I2cBase & i2c, hal::GpioIntf & scb_io):
+    explicit TM1668_Transport(hal::I2cBase & i2c, hal::GpioIntf & scb_io):
         i2c_(i2c), scb_io_(scb_io){;}
     
     enum class PulseWidth:uint8_t{

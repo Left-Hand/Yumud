@@ -16,13 +16,13 @@ public:
     };
 
     explicit ZdtStepper(const Config & cfg, Some<hal::Can *> && can) : 
-        phy_(std::move(can)
+        transport_(std::move(can)
     ){
         reconf(cfg);
     }
 
     explicit ZdtStepper(const Config & cfg, Some<hal::Uart *> && uart) : 
-        phy_(std::move(uart)
+        transport_(std::move(uart)
     ){
         reconf(cfg);
     }
@@ -51,7 +51,7 @@ public:
     IResult<> trig_homming(const HommingMode mode);
 private:
     using Phy = ZdtMotorPhy;
-    Phy phy_;
+    Phy transport_;
 
     static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
     NodeId node_id_ = DEFAULT_NODE_ID;
@@ -97,7 +97,7 @@ private:
     template<typename T>
     IResult<> write_req_msg(const T & req_msg){
 
-        phy_.write_flat_packet(
+        transport_.write_flat_packet(
             req_to_flat_packet(
                 node_id_, 
                 verify_method_, 

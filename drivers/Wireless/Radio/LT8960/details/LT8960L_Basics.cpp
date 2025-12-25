@@ -240,14 +240,14 @@ auto reg = RegCopy(regs_.fifo_ptr_reg);
 
 IResult<> LT8960L::start_listen_pkt(){
     if(use_hw_pkt_){
-        return phy_.start_hw_listen_pkt();
+        return transport_.start_hw_listen_pkt();
     }
     return Ok();
 }
 
 IResult<bool> LT8960L::is_pkt_ready(){
     if(use_hw_pkt_){
-        return phy_.check_and_skip_hw_listen_pkt();
+        return transport_.check_and_skip_hw_listen_pkt();
     }
     auto & reg = regs_.rf_synthlock_reg;
     if(const auto res = read_reg(reg); 
@@ -311,14 +311,14 @@ auto reg = RegCopy(regs_.reg8);
 }
 
 
-IResult<> LT8960L_Phy::write_reg(
+IResult<> LT8960L_Transport::write_reg(
     uint8_t address, 
     uint16_t data
 ){
     return retry(2, [&]{return this->_write_reg(address, data);});
 }
 
-IResult<> LT8960L_Phy::read_reg(
+IResult<> LT8960L_Transport::read_reg(
     uint8_t address, 
     uint16_t & data
 ){
@@ -351,7 +351,7 @@ IResult<> LT8960L::set_trailer_bits(const uint bits){
     return write_reg(reg);
 }
 
-IResult<> LT8960L_Phy::_write_reg(
+IResult<> LT8960L_Transport::_write_reg(
     uint8_t address, 
     uint16_t data
 ){
@@ -367,7 +367,7 @@ IResult<> LT8960L_Phy::_write_reg(
     return Ok();
 }
 
-IResult<> LT8960L_Phy::_read_reg(
+IResult<> LT8960L_Transport::_read_reg(
     uint8_t address, 
     uint16_t & data
 ){
@@ -397,7 +397,7 @@ IResult<> LT8960L_Phy::_read_reg(
 
 
 IResult<size_t> LT8960L::read_fifo(std::span<uint8_t> buf){
-    return phy_.read_burst(Regs::R16_Fifo::ADDRESS, buf)
+    return transport_.read_burst(Regs::R16_Fifo::ADDRESS, buf)
         // .if_ok([&](){clear_fifo_write_and_read_ptr().unwrap();})
     ;
 }
@@ -482,7 +482,7 @@ IResult<> LT8960L::validate(){
     return Ok();
 }
 
-IResult<bool> LT8960L_Phy::check_and_skip_hw_listen_pkt(){
+IResult<bool> LT8960L_Transport::check_and_skip_hw_listen_pkt(){
     bool is_completed = i2c_.sda().read() == HIGH;
     if(is_completed) i2c_.sda().set_high();
     return Ok(is_completed);
@@ -498,7 +498,7 @@ IResult<bool> LT8960L::is_receiving(){
     return Ok(bool(reg.rev_sync));
 }
 
-IResult<> LT8960L_Phy::start_hw_listen_pkt(){
+IResult<> LT8960L_Transport::start_hw_listen_pkt(){
     i2c_.scl().set_low(); 
     i2c_.sda().set_high(); 
     i2c_.sda().inpu();
@@ -507,12 +507,12 @@ IResult<> LT8960L_Phy::start_hw_listen_pkt(){
 }
 
 
-IResult<> LT8960L_Phy::init(){
+IResult<> LT8960L_Transport::init(){
     i2c_.init({600'000});
     return Ok();
 }
 
-IResult<size_t> LT8960L_Phy::read_burst(uint8_t address, std::span<uint8_t> pbuf){
+IResult<size_t> LT8960L_Transport::read_burst(uint8_t address, std::span<uint8_t> pbuf){
 
 
     auto guard = i2c_.create_guard();
@@ -543,7 +543,7 @@ IResult<size_t> LT8960L_Phy::read_burst(uint8_t address, std::span<uint8_t> pbuf
 }
 
 
-IResult<size_t> LT8960L_Phy::write_burst(uint8_t address, std::span<const uint8_t> pbuf){
+IResult<size_t> LT8960L_Transport::write_burst(uint8_t address, std::span<const uint8_t> pbuf){
     
     auto guard = i2c_.create_guard();
     

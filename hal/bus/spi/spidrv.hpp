@@ -5,8 +5,7 @@
 #include <initializer_list>
 #include <functional>
 
-
-#include "spi.hpp"
+#include "spihw.hpp"
 
 namespace ymd::hal{
 
@@ -23,7 +22,7 @@ concept valid_spi_data = (
 class SpiDrv final{
 public:
 
-    SpiDrv(Some<SpiBase *> spi, const SpiSlaveRank rank):
+    SpiDrv(Some<Spi *> spi, const SpiSlaveRank rank):
         spi_(spi.deref()),
         rank_(rank)
         {;}
@@ -117,7 +116,7 @@ public:
         Continuous cont = DISC);
 
 private:
-    SpiBase & spi_;
+    Spi & spi_;
     SpiSlaveRank rank_;
     std::endian endian_ = std::endian::little;  
     uint32_t baudrate_ = 1000000;
@@ -137,11 +136,9 @@ hal::HalResult SpiDrv::write_single(const is_stdlayout auto data, Continuous con
     }
 
     if constexpr (sizeof(T) == 1) {
-        if(const auto res = spi_.blocking_write(std::bit_cast<uint8_t>(data)); 
-            res.is_err()) return res;
+        spi_.blocking_write(std::bit_cast<uint8_t>(data)); 
     } else if constexpr (sizeof(T) == 2) {
-        if(const auto res = spi_.blocking_write(std::bit_cast<uint16_t>(data)); 
-            res.is_err()) return res;
+        spi_.blocking_write(std::bit_cast<uint16_t>(data)); 
     }
 
     if (cont == DISC) spi_.lend();
@@ -158,8 +155,7 @@ hal::HalResult SpiDrv::write_repeat(const is_stdlayout auto data, const size_t l
         res.is_err()) return res; 
     if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
     for (size_t i = 0; i < len; i++){
-        if(const auto res = spi_.blocking_write(uint32_t(static_cast<T>(data))); 
-            res.is_err()) return res;
+        spi_.blocking_write(uint32_t(static_cast<T>(data))); 
     }
     if (cont == DISC) spi_.lend();
     if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
@@ -177,8 +173,7 @@ hal::HalResult SpiDrv::write_burst(
         res.is_err()) return res; 
     if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
     for (size_t i = 0; i < pbuf.size(); i++){
-        if(const auto res = spi_.blocking_write(uint32_t(pbuf[i]));
-            res.is_err()) return res;
+        spi_.blocking_write(uint32_t(pbuf[i]));
     } 
     if (cont == DISC) spi_.lend();
     if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
@@ -198,7 +193,7 @@ hal::HalResult SpiDrv::read_burst(
     if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
     for (size_t i = 0; i < pbuf.size(); i++) {
         uint32_t temp = 0;
-        spi_.blocking_read(temp);
+        temp = spi_.blocking_read();
         pbuf[i] = temp;
     }
     if (cont == DISC) spi_.lend();
@@ -214,9 +209,9 @@ hal::HalResult SpiDrv::read_single(is_stdlayout auto & data, const Continuous co
         res.is_err()) return res;
     {
         if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
-        uint32_t temp = 0;
-        spi_.blocking_read(temp);
-        memcpy(&data, &temp, sizeof(T));
+        const uint32_t temp = spi_.blocking_read();
+        // memcpy(&data, &temp, sizeof(T));
+        data = static_cast<T>(temp);
         if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
     }
@@ -231,7 +226,7 @@ hal::HalResult SpiDrv::transceive_single(T & datarx, const T datatx, Continuous 
     {
         if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
         uint32_t ret = 0;
-        spi_.blocking_transceive(ret, datatx);
+        ret = spi_.blocking_transceive(datatx);
         datarx = ret;
         if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
         if (cont == DISC) spi_.lend();
@@ -251,7 +246,7 @@ hal::HalResult SpiDrv::transceive_burst(
         if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
         for(size_t i = 0; i < N; i++) {
             uint32_t dummy = 0;
-            spi_.blocking_transceive(dummy, pbuf_tx[i]);
+            dummy = spi_.blocking_transceive(pbuf_tx[i]);
             pbuf_rx[i] = dummy;
         }
         if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);
@@ -273,7 +268,7 @@ hal::HalResult SpiDrv::transceive_burst(
         if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::TwoBytes);
         for(size_t i = 0; i < N; i++) {
             uint32_t dummy = 0;
-            spi_.blocking_transceive(dummy, pbuf_tx[i]);
+            dummy = spi_.blocking_transceive(pbuf_tx[i]);
             pbuf_rx[i] = dummy;
         }
         if constexpr (sizeof(T) != 1) this->set_wordsize(SpiWordSize::OneByte);

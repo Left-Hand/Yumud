@@ -27,7 +27,7 @@ static constexpr size_t CALC_FREQ_HZ = 200;
 
 
 
-static void bmi088_tb(hal::SpiBase & spi){
+static void bmi088_tb(hal::Spi & spi){
     auto acc_cs_pin_ = ACC_CS_GPIO;
     auto gyr_cs_pin_ = GYR_CS_GPIO;
 

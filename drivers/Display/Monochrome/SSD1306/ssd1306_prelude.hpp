@@ -22,7 +22,7 @@ struct SSD13XX_Presets{
 template<typename T>
 struct _oled_preset;
 
-class SSD1306_Phy final{
+class SSD1306_Transport final{
 public:
     using Error = DisplayerError;
     template<typename T = void>
@@ -32,11 +32,11 @@ public:
     static constexpr uint8_t DATA_TOKEN = 0x40;
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x78 >> 1);
 
-    SSD1306_Phy(const hal::I2cDrv & i2c_drv):
+    SSD1306_Transport(const hal::I2cDrv & i2c_drv):
         p_i2c_drv_(i2c_drv){};
-    SSD1306_Phy(hal::I2cDrv && i2c_drv):
+    SSD1306_Transport(hal::I2cDrv && i2c_drv):
         p_i2c_drv_(std::move(i2c_drv)){};
-    SSD1306_Phy(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    SSD1306_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         p_i2c_drv_(hal::I2cDrv{i2c, addr}){};
 
     [[nodiscard]] IResult<> init(){
@@ -62,7 +62,7 @@ class SSD13XX_DrawDispacther;
 
 struct SSD13XX;
 struct SSD13XX_Prelude{
-    using Phy = SSD1306_Phy;
+    using Phy = SSD1306_Transport;
     using Error = DisplayerError;
 
     template<typename T = void>

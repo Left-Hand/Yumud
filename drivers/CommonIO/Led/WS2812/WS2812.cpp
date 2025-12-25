@@ -13,19 +13,19 @@ using namespace ymd::drivers;
 
 // #define DELAY_CELL __nopn(4)
 #define DELAY_CELL clock::delay(1us);
-void WS2812_Phy::delay_long(){
+void WS2812_Transport::delay_long(){
     for(size_t i = 0; i < 13; i++){
         DELAY_CELL;
     }
 }
 
-void WS2812_Phy::delay_short(){
+void WS2812_Transport::delay_short(){
     for(size_t i = 0; i < 4; i++){
         DELAY_CELL;
     }
 }
 
-void WS2812_Phy::send_bit(const bool state){
+void WS2812_Transport::send_bit(const bool state){
     // __disable_irq();
     if(state){
         gpio_.set_high();
@@ -41,18 +41,18 @@ void WS2812_Phy::send_bit(const bool state){
     // __enable_irq();
 }
 
-void WS2812_Phy::send_byte(const uint8_t data){
+void WS2812_Transport::send_byte(const uint8_t data){
     for(uint8_t mask = 0x80; mask; mask >>= 1){
         send_bit(data & mask);
     }
 }
 
-void WS2812_Phy::send_reset(){
+void WS2812_Transport::send_reset(){
     gpio_.set_low();
     clock::delay(60us);
 }
 
-void WS2812_Phy::init(){
+void WS2812_Transport::init(){
     gpio_.outpp();
 }
 
@@ -62,14 +62,14 @@ void WS2812::set_rgb(const RGB<iq16> &color){
     uint8_t b = uint8_t(CLAMP(int(color.b * 256), 0, 255));
     
 
-    phy_.send_reset();
-    phy_.send_byte(g);
-    phy_.send_byte(r);
-    phy_.send_byte(b);
+    transport_.send_reset();
+    transport_.send_byte(g);
+    transport_.send_byte(r);
+    transport_.send_byte(b);
 
     // DEBUG_PRINTLN(g,r,b, color);
 }
 
 void WS2812::init(){
-    phy_.init();
+    transport_.init();
 }

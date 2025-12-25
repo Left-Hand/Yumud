@@ -54,7 +54,7 @@ struct X25QXX_Prelude:public StorageCollections{
     };
 };
 
-class X25QXX_Phy final:public StorageCollections{
+class X25QXX_Transport final:public StorageCollections{
     hal::HalResult write_byte(const uint8_t data, const Continuous cont = DISC){
         return spi_drv_.write_single<uint8_t>(data, cont);
     }

@@ -122,12 +122,12 @@ struct PwmAndDirPhy_WithFg final{
 
     explicit PwmAndDirPhy_WithFg(const Config & cfg):
         deducation_(cfg.deduction),
-        phy_(PwmAndDirPhy{{cfg.pwm, cfg.dir_gpio}}),
+        transport_(PwmAndDirPhy{{cfg.pwm, cfg.dir_gpio}}),
         fg_pin_(cfg.fg_gpio.deref())
     {}
 
     void set_dutycycle(const iq31 dutycycle){ 
-        phy_.set_dutycycle(dutycycle);
+        transport_.set_dutycycle(dutycycle);
         last_duty_ = dutycycle;
     }
 
@@ -150,7 +150,7 @@ struct PwmAndDirPhy_WithFg final{
     }
 private:
     uint32_t deducation_;
-    PwmAndDirPhy phy_;
+    PwmAndDirPhy transport_;
     hal::GpioIntf & fg_pin_;
     DirAndPulseCounter counter_;
     real_t last_duty_ = 0;
@@ -168,13 +168,13 @@ struct DualPwmMotorPhy_WithAbEnc final{
 
     explicit DualPwmMotorPhy_WithAbEnc(const Config & cfg):
         deducation_(cfg.deduction),
-        phy_(DualPwmPhy{{cfg.pwm_pos, cfg.pwm_neg}}),
+        transport_(DualPwmPhy{{cfg.pwm_pos, cfg.pwm_neg}}),
         encoder_(drivers::AbEncoderByGpio{
                 drivers::AbEncoderByGpio::Config{cfg.line_a, cfg.line_b}})
     {}
 
     void set_dutycycle(const iq31 dutycycle){ 
-        phy_.set_dutycycle(dutycycle);
+        transport_.set_dutycycle(dutycycle);
         last_duty_ = dutycycle;
     }
 
@@ -192,7 +192,7 @@ struct DualPwmMotorPhy_WithAbEnc final{
     }
 private:
     uint32_t deducation_;
-    DualPwmPhy phy_;
+    DualPwmPhy transport_;
     drivers::AbEncoderByGpio encoder_;
     real_t last_duty_ = 0;
 };

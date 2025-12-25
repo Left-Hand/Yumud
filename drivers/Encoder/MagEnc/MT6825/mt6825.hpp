@@ -115,7 +115,7 @@ static_assert(sizeof(Packet) == 4);
 struct MT6825:
     public MT6825_Prelude
 {
-    explicit MT6825(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
+    explicit MT6825(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv(spi, rank)){}
 
     explicit MT6825(const hal::SpiDrv & spi_drv):

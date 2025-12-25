@@ -30,12 +30,12 @@ IResult<> AK8975::init(){
 
 
 IResult<> AK8975::update_adj(){
-    return phy_.read_burst(0x10, std::span(&x_adj, 3));
+    return transport_.read_burst(0x10, std::span(&x_adj, 3));
 }
 
 
 IResult<> AK8975::update(){
-    return phy_.read_burst(0x03, std::span(&x, 2 * 3));
+    return transport_.read_burst(0x03, std::span(&x, 2 * 3));
 }
 
 
@@ -56,7 +56,7 @@ IResult<> AK8975::validate(){
     
     {
         uint8_t id = 0;
-        if(const auto res = phy_.read_reg(0x00, id);
+        if(const auto res = transport_.read_reg(0x00, id);
             res.is_err()) return Err(res.unwrap_err());
         if(id != CORRECT_CHIP_ID) 
             return Err(Error::InvalidChipId);
@@ -68,7 +68,7 @@ IResult<> AK8975::validate(){
         res.is_err()) return res;
 
     //2
-    if(const auto res = phy_.write_reg(0x0c, 0x40);
+    if(const auto res = transport_.write_reg(0x0c, 0x40);
         res.is_err()) return res;
 
     //3
@@ -97,19 +97,19 @@ IResult<> AK8975::validate(){
         res.is_err()) return res;
 
     //6
-    return phy_.write_reg(0x0c, 0x00);
+    return transport_.write_reg(0x0c, 0x00);
 }
 
 IResult<bool> AK8975::is_busy(){
     uint8_t stat;
-    if(const auto res = phy_.read_reg(0x00, stat);
+    if(const auto res = transport_.read_reg(0x00, stat);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(stat == 0);
 }
 
 IResult<bool> AK8975::is_stable(){
     uint8_t stat;
-    if(const auto res = phy_.read_reg(0x09, stat);
+    if(const auto res = transport_.read_reg(0x09, stat);
         res.is_err()) return Err(res.unwrap_err());
 
     if(stat != 0) 
@@ -133,11 +133,11 @@ IResult<bool> AK8975::is_stable(){
 
 
 IResult<> AK8975::set_mode(const Mode mode){
-    return phy_.write_reg(0x0A, (uint8_t)mode);
+    return transport_.write_reg(0x0A, (uint8_t)mode);
 }
 
 IResult<> AK8975::disable_i2c(){
-    return phy_.write_reg(0x0F, 0x01);
+    return transport_.write_reg(0x0F, 0x01);
 }
 
 IResult<Vec3<iq24>> AK8975::read_mag(){

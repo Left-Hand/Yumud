@@ -42,16 +42,16 @@ public:
     };
 
     explicit MMC5983(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
+        transport_(i2c_drv){;}
 
     explicit MMC5983(hal::I2cDrv && i2c_drv):
-        phy_(std::move(i2c_drv)){;}
+        transport_(std::move(i2c_drv)){;}
     explicit MMC5983(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv{i2c, addr}){;}
+        transport_(hal::I2cDrv{i2c, addr}){;}
     explicit MMC5983(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
-    explicit MMC5983(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
-        phy_(hal::SpiDrv{spi, rank}){;}
+        transport_(spi_drv){;}
+    explicit MMC5983(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        transport_(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> validate();
@@ -79,13 +79,13 @@ public:
     [[nodiscard]] IResult<> enable_mag_meas(const Enable en);
     [[nodiscard]] IResult<> enable_temp_meas(const Enable en);
 private:    
-    using Phy = MMC5983_Phy;
-    Phy phy_;
+    using Phy = MMC5983_Transport;
+    Phy transport_;
     MMC5983_Regs regs_ = {};
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = phy_.write_reg(T::ADDRESS, reg.to_bits());
+        const auto res = transport_.write_reg(T::ADDRESS, reg.to_bits());
         if(res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return res;
@@ -93,11 +93,11 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return phy_.read_reg(T::ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(T::ADDRESS, reg.as_bits_mut());
     }
 
     [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
-        return phy_.read_burst(addr, pbuf);
+        return transport_.read_burst(addr, pbuf);
     }
 
 };

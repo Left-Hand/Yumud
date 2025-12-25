@@ -106,11 +106,11 @@ struct VL6180X_Prelude{
 
 static_assert(sizeof(VL6180X_Prelude) == 1);
 
-class VL6180X_Phy final:public VL6180X_Prelude{
+class VL6180X_Transport final:public VL6180X_Prelude{
 public:
-    explicit VL6180X_Phy(const hal::I2cDrv & i2c_drv):
+    explicit VL6180X_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
-    explicit VL6180X_Phy(hal::I2cDrv && i2c_drv):
+    explicit VL6180X_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
     template<typename T>

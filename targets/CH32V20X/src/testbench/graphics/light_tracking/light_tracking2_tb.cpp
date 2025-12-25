@@ -396,7 +396,7 @@ static void render_row(
 
 #define UART hal::usart2
 using drivers::ST7789;
-using drivers::ST7789_Phy;
+using drivers::ST7789_Transport;
 
 static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz;
 // static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz / 4;
@@ -466,7 +466,7 @@ void light_tracking_main(void){
     // ST7789 displayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     
     ST7789 displayer(
-        ST7789_Phy{
+        ST7789_Transport{
             &spi, 
             spi_rank, 
             &lcd_dc, 

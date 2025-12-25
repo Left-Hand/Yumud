@@ -19,7 +19,7 @@ public:
         hal::GpioIntf & ser_;
     };
 private:
-    Phy phy_;
+    Phy transport_;
 
     enum class Command:uint8_t{
         Clear = 0x0A,
@@ -31,10 +31,10 @@ private:
     void send_line(const uint8_t value, const Command cmd);
     void send_num(const int value);
 public:
-    JQ8900(hal::GpioIntf & ser):phy_(ser){};
+    JQ8900(hal::GpioIntf & ser):transport_(ser){};
 
     void init(){
-        phy_.init();
+        transport_.init();
     }
     void set_volume(const uint8_t value){send_line(value, Command::SetVolume);}
     void play_disc(const uint8_t value){send_line(value, Command::SetDisc);}

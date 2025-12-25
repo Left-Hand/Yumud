@@ -98,11 +98,11 @@ void math_main(){
     };
     
     volatile size_t n = 0;
-    constexpr auto H = compute_homography_from_unit_rect(
+    constexpr auto H = compute_homogratransport_from_unit_rect(
         std::span(dst));
 
     const auto elapsed = measure_total_elapsed_us([&]{
-        const auto mat = compute_homography_from_unit_rect(
+        const auto mat = compute_homogratransport_from_unit_rect(
             std::span(dst)
         );
         (void)mat;
@@ -291,7 +291,7 @@ void math_main(){
 //         Vec2<float>{0, 1}
 //     };
     
-//     // constexpr auto H = compute_homography_from_unit_rect(
+//     // constexpr auto H = compute_homogratransport_from_unit_rect(
 //     //     std::span<const Vec2<float>, 4>(dst));
 //     constexpr auto H = compute_homography(
 //         std::span(src), std::span(dst));

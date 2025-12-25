@@ -23,7 +23,7 @@ IResult<ADS7830::ConvData> ADS7830::read_channel(const PairSelection sel){
         .sel = sel.kind()
     };
 
-    return phy_.fs_read(cmd);
+    return transport_.fs_read(cmd);
 }
 
 IResult<ADS7830::ConvData> ADS7830::read_pos_channel(const ChannelSelection sel){

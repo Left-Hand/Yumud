@@ -101,7 +101,7 @@ void mlx90640_main(){
     hal::I2cSw i2c_sw_ = hal::I2cSw{&scl_pin_, &sda_pin_};
 
     drivers::ST7789 tft{
-        drivers::ST7789_Phy{&spi, spi_rank, &lcd_dc, &dev_rst}, 
+        drivers::ST7789_Transport{&spi, spi_rank, &lcd_dc, &dev_rst}, 
         {LCD_WIDTH, LCD_HEIGHT}
     };
 

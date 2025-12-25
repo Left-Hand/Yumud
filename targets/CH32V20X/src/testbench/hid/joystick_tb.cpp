@@ -6,7 +6,7 @@
 
 #include "drivers/HID/ps2_joystick/ps2_joystick.hpp"
 
-#ifdef SPI1_PRESENT
+#if 0
 
 using namespace ymd;
 using namespace ymd::drivers;

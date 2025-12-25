@@ -16,7 +16,7 @@ struct TLE5012_Regset final: public TLE5012_Prelude{
 };
 
 
-class TLE5012_Phy final: public TLE5012_Prelude{
+class TLE5012_Transport final: public TLE5012_Prelude{
 
 };
 

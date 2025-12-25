@@ -6,8 +6,8 @@
 
 namespace ymd::drivers{
 
-[[nodiscard]] Result<void, BoschImu_Phy::Error> 
-BoschImu_Phy::write_reg(const uint8_t reg_addr, const uint8_t data){
+[[nodiscard]] Result<void, BoschImu_Transport::Error> 
+BoschImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t data){
     // DEBUG_PRINTLN(std::hex, std::showbase, "write_reg", reg_addr, data);
     if(i2c_drv_){
         if(const auto res = i2c_drv_->write_reg(reg_addr, data);
@@ -27,8 +27,8 @@ BoschImu_Phy::write_reg(const uint8_t reg_addr, const uint8_t data){
     return Err(Error::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, BoschImu_Phy::Error> 
-BoschImu_Phy::read_reg(const uint8_t reg_addr, uint8_t & data){
+[[nodiscard]] Result<void, BoschImu_Transport::Error> 
+BoschImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & data){
     // DEBUG_PRINTLN(std::hex, std::showbase, "read_reg", reg_addr, data);
     if(i2c_drv_){
         if(const auto res = i2c_drv_->read_reg(reg_addr, data);
@@ -46,8 +46,8 @@ BoschImu_Phy::read_reg(const uint8_t reg_addr, uint8_t & data){
     return Err(Error::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, BoschImu_Phy::Error> 
-BoschImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
+[[nodiscard]] Result<void, BoschImu_Transport::Error> 
+BoschImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
     if(i2c_drv_){
         if(const auto res = (i2c_drv_->read_burst<int16_t>(reg_addr, pbuf, std::endian::little));
             res.is_err()) return Err(res.unwrap_err());
@@ -65,8 +65,8 @@ BoschImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
 }
 
 
-[[nodiscard]] Result<void, InvensenseImu_Phy::Error> 
-InvensenseImu_Phy::write_reg(const uint8_t reg_addr, const uint8_t data) {
+[[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
+InvensenseImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t data) {
     DEBUG_PRINTLN(std::hex, std::showbase, "write_reg", reg_addr, data);
     if(i2c_drv_){
         if(const auto res = i2c_drv_->write_reg(reg_addr, data); res.is_err())
@@ -82,8 +82,8 @@ InvensenseImu_Phy::write_reg(const uint8_t reg_addr, const uint8_t data) {
     return Err(Error::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, InvensenseImu_Phy::Error> 
-InvensenseImu_Phy::read_reg(const uint8_t reg_addr, uint8_t & data) {
+[[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
+InvensenseImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & data) {
     DEBUG_PRINTLN(std::hex, std::showbase, "read_reg", reg_addr, data);
     if(i2c_drv_){
         if(const auto res = i2c_drv_->read_reg(reg_addr, data); res.is_err())
@@ -99,8 +99,8 @@ InvensenseImu_Phy::read_reg(const uint8_t reg_addr, uint8_t & data) {
     return Err(Error::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, InvensenseImu_Phy::Error> 
-InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
+[[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
+InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
     if(i2c_drv_){
         if(const auto res = i2c_drv_->read_burst<int16_t>(reg_addr, pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
@@ -116,7 +116,7 @@ InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
     return Err(Error::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, StmicroImu_Phy::Error> StmicroImu_Phy::write_reg(
+[[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::write_reg(
     const uint8_t reg_addr, const uint8_t data
 ) {
     if(i2c_drv_){
@@ -132,10 +132,10 @@ InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
         return Ok();
     }
 
-    return Err(StmicroImu_Phy::Error::NoAvailablePhy);
+    return Err(StmicroImu_Transport::Error::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, StmicroImu_Phy::Error> StmicroImu_Phy::read_reg(
+[[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::read_reg(
     const uint8_t reg_addr, uint8_t & data
 ) {
     if(i2c_drv_){
@@ -150,10 +150,10 @@ InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
         return Ok();
     }
 
-    return Err(StmicroImu_Phy::Error::NoAvailablePhy);
+    return Err(StmicroImu_Transport::Error::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, StmicroImu_Phy::Error> StmicroImu_Phy::read_burst(
+[[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::read_burst(
     const uint8_t reg_addr, std::span<int16_t> pbuf
 ){
     if(i2c_drv_){
@@ -168,10 +168,10 @@ InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
         return Ok();
     }
 
-    return Err(StmicroImu_Phy::Error::NoAvailablePhy);
+    return Err(StmicroImu_Transport::Error::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, StmicroImu_Phy::Error> StmicroImu_Phy::validate(){
+[[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::validate(){
     if(i2c_drv_){
         if(const auto res = i2c_drv_->validate();
             res.is_err()) return Err(res.unwrap_err());
@@ -184,11 +184,11 @@ InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
     }
 
 
-    return Err(StmicroImu_Phy::Error::NoAvailablePhy);
+    return Err(StmicroImu_Transport::Error::NoAvailablePhy);
 }
 
 
-[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Phy::write_reg(
+[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::write_reg(
     const uint8_t reg_addr, const uint8_t data
 ){
     if(i2c_drv_){
@@ -206,7 +206,7 @@ InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
     return Err(ImuError::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Phy::read_reg(
+[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_reg(
     const uint8_t reg_addr, uint8_t & data
 ){
     if(i2c_drv_){
@@ -224,7 +224,7 @@ InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
     return Err(ImuError::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Phy::read_burst(
+[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_burst(
     const uint8_t reg_addr, std::span<int16_t> pbuf
 ){
     if(i2c_drv_){
@@ -242,19 +242,19 @@ InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
     return Err(ImuError::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Phy::read_burst(
+[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_burst(
     const uint8_t reg_addr, const std::span<uint8_t> pbuf
 ){
     TODO();
     return Ok();
 }
 
-[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Phy::validate(){
+[[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::validate(){
     TODO();
     return Ok();
 }
 
-[[nodiscard]] Result<void, ImuError> AnalogDeviceIMU_Phy::write_reg(
+[[nodiscard]] Result<void, ImuError> AnalogDeviceIMU_Transport::write_reg(
     const uint8_t reg_addr, const uint8_t reg_data
 ){
     if(i2c_drv_){
@@ -267,7 +267,7 @@ InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
     return Err(ImuError::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, ImuError> AnalogDeviceIMU_Phy::read_reg(
+[[nodiscard]] Result<void, ImuError> AnalogDeviceIMU_Transport::read_reg(
     const uint8_t reg_addr, uint8_t & reg_data
 ){
     if(i2c_drv_){
@@ -280,7 +280,7 @@ InvensenseImu_Phy::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
     return Err(ImuError::NoAvailablePhy);
 }
 
-[[nodiscard]] Result<void, ImuError> AnalogDeviceIMU_Phy::read_burst(
+[[nodiscard]] Result<void, ImuError> AnalogDeviceIMU_Transport::read_burst(
     const uint8_t reg_addr, std::span<int16_t> pbuf
 ){
     if(i2c_drv_){

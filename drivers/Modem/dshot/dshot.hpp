@@ -44,13 +44,13 @@ private:
     std::span<const uint16_t> pbuf_;
 };
 
-class WS2812_PhyIntf{
+class WS2812_TransportIntf{
 
 };
 
-class WS2812_Phy_of_BurstPwm:public WS2812_PhyIntf{
+class WS2812_Transport_of_BurstPwm:public WS2812_TransportIntf{
 public:
-    WS2812_Phy_of_BurstPwm(BurstDmaPwm & burst_dma_pwm);
+    WS2812_Transport_of_BurstPwm(BurstDmaPwm & burst_dma_pwm);
     void borrow(std::span<const uint16_t> pbuf){
         return burst_dma_pwm_.borrow(pbuf);
     }

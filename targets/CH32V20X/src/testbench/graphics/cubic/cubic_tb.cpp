@@ -447,7 +447,7 @@ void cubic_main(void){
 	});
 
     drivers::ST7789 tft{
-		drivers::ST7789_Phy{
+		drivers::ST7789_Transport{
 			&spi, 
 			spi.allocate_cs_pin(&lcd_cs).unwrap(), 
 			&lcd_dc, 

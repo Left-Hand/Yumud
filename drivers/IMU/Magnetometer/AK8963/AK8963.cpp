@@ -33,17 +33,17 @@ static constexpr real_t conv_data_to_ut(const int16_t bits, const bool is_16_bit
 template<typename T = void>
 using IResult= Result<T, Error>;
 IResult<> AK8963::write_reg(const uint8_t addr, const uint8_t data){
-    auto res = phy_.write_reg(std::bit_cast<uint8_t>(addr), data);
+    auto res = transport_.write_reg(std::bit_cast<uint8_t>(addr), data);
     return res;
 }
 
 IResult<> AK8963::read_reg(const uint8_t addr, uint8_t & data){
-    auto res = phy_.read_reg(std::bit_cast<uint8_t>(addr), data);
+    auto res = transport_.read_reg(std::bit_cast<uint8_t>(addr), data);
     return res;
 }
 
 IResult<> AK8963::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
-    auto res = phy_.read_burst(reg_addr, pbuf);
+    auto res = transport_.read_burst(reg_addr, pbuf);
     return res;
 }
 
@@ -87,7 +87,7 @@ IResult<> AK8963::init(){
 
 IResult<> AK8963::validate(){
 
-    if (const auto res = phy_.validate();
+    if (const auto res = transport_.validate();
         res.is_err()) return Err(res.unwrap_err());
 
     auto & reg = regs_.wia_reg;

@@ -59,7 +59,7 @@ public:
         spi_drv_(spi_drv){;}
     explicit PMW3901(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit PMW3901(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
+    explicit PMW3901(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv(spi, rank)){;}
 
     PMW3901(const PMW3901 & other) = delete;

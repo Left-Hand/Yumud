@@ -109,17 +109,17 @@ DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
 using RegAddr = uint8_t;
 
-struct [[nodiscard]] MP6570_Phy{
+struct [[nodiscard]] MP6570_Transport{
 public: 
 
-    MP6570_Phy(const hal::I2cDrv & i2c_drv) : 
+    MP6570_Transport(const hal::I2cDrv & i2c_drv) : 
         i2c_drv_(i2c_drv) {}
-    MP6570_Phy(hal::I2cDrv && i2c_drv) : 
+    MP6570_Transport(hal::I2cDrv && i2c_drv) : 
         i2c_drv_(std::move(i2c_drv)) {}
 
-    MP6570_Phy(const SlaveAddress spi_slave_addr, const hal::SpiDrv & spi_drv)
+    MP6570_Transport(const SlaveAddress spi_slave_addr, const hal::SpiDrv & spi_drv)
         : spi_slave_addr_(spi_slave_addr), spi_drv_(spi_drv) {}
-    MP6570_Phy(const SlaveAddress spi_slave_addr, hal::SpiDrv && spi_drv)
+    MP6570_Transport(const SlaveAddress spi_slave_addr, hal::SpiDrv && spi_drv)
         : spi_slave_addr_(spi_slave_addr), spi_drv_(std::move(spi_drv)) {}
 
     

@@ -301,9 +301,9 @@ struct HT16K33_Regs:public HT16K33_Prelude{
     GcRam gc_ram_;
 };
 
-class HT16K33_Phy final:public HT16K33_Prelude{
+class HT16K33_Transport final:public HT16K33_Prelude{
 public:
-    HT16K33_Phy(
+    HT16K33_Transport(
         const hal::I2cDrv i2c_drv, 
         const Option<hal::InterruptInput> int_input
     ):

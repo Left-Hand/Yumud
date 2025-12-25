@@ -5,12 +5,12 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-using Error = TM1637_Phy::Error;
+using Error = TM1637_Transport::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> TM1637_Phy::write_byte(const uint8_t data){
+IResult<> TM1637_Transport::write_byte(const uint8_t data){
     sda_pin_.outod();
     for(uint8_t mask = 0x01; mask; mask <<= 1){
         scl_pin_.set_low();
@@ -24,7 +24,7 @@ IResult<> TM1637_Phy::write_byte(const uint8_t data){
 }
 
 
-IResult<> TM1637_Phy::wait_ack(){
+IResult<> TM1637_Transport::wait_ack(){
     sda_pin_.inpu();
     scl_pin_.set_low();
     clock::delay(5us);
@@ -51,7 +51,7 @@ IResult<> TM1637_Phy::wait_ack(){
     }
 }
 
-IResult<> TM1637_Phy::read_byte(uint8_t & data){
+IResult<> TM1637_Transport::read_byte(uint8_t & data){
     uint8_t ret = 0;
 
     for(uint8_t i = 0; i < 8; i++){
@@ -67,7 +67,7 @@ IResult<> TM1637_Phy::read_byte(uint8_t & data){
     return Ok();
 }
 
-IResult<> TM1637_Phy::iic_start(const uint8_t data){
+IResult<> TM1637_Transport::iic_start(const uint8_t data){
     scl_pin_.outod(HIGH);
     sda_pin_.outod(HIGH);
     clock::delay(2us);
@@ -77,7 +77,7 @@ IResult<> TM1637_Phy::iic_start(const uint8_t data){
     return Ok();
 }
 
-IResult<> TM1637_Phy::iic_stop(){
+IResult<> TM1637_Transport::iic_stop(){
     scl_pin_.set_low();
     sda_pin_.outod();
     clock::delay(2us);
@@ -90,7 +90,7 @@ IResult<> TM1637_Phy::iic_stop(){
     return Ok();
 }
 
-IResult<> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf){
+IResult<> TM1637_Transport::write_sram(const std::span<const uint8_t> pbuf){
     if(pbuf.size() > TM1637::CGRAM_MAX_LEN) return Err(Error::DisplayLengthTooLong);
 
     const auto command2 = AddressCommand{
@@ -108,7 +108,7 @@ IResult<> TM1637_Phy::write_sram(const std::span<const uint8_t> pbuf){
 }
 
 
-IResult<> TM1637_Phy::set_display(const DisplayCommand command){
+IResult<> TM1637_Transport::set_display(const DisplayCommand command){
     if(const auto res = iic_start(command.to_u8());
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = iic_stop();
@@ -116,7 +116,7 @@ IResult<> TM1637_Phy::set_display(const DisplayCommand command){
 
     return Ok();
 }
-Result<uint8_t, Error> TM1637_Phy::read_key(){
+Result<uint8_t, Error> TM1637_Transport::read_key(){
     const auto command1 = DataCommand{
         .read_key = true,//write
         .addr_inc_disen = true
@@ -134,7 +134,7 @@ Result<uint8_t, Error> TM1637_Phy::read_key(){
 
 }
 
-IResult<> TM1637_Phy::set_data_mode(const DataCommand command1){
+IResult<> TM1637_Transport::set_data_mode(const DataCommand command1){
 
     if(const auto res = iic_start(command1.to_u8());
         res.is_err()) return Err(res.unwrap_err());
@@ -148,7 +148,7 @@ IResult<> TM1637::switch_to_display(){
     if(is_on_display_else_readkey_ == true) return Ok();
     is_on_display_else_readkey_ = true;
 
-    return phy_.set_data_mode(
+    return transport_.set_data_mode(
         {
             .read_key = false,//write
             .addr_inc_disen = false
@@ -159,7 +159,7 @@ IResult<>  TM1637::switch_to_readkey(){
     if(is_on_display_else_readkey_ == false) return Ok();
     is_on_display_else_readkey_ = false;
 
-    return phy_.set_data_mode(
+    return transport_.set_data_mode(
         {
             .read_key = true,
             .addr_inc_disen = false
@@ -239,7 +239,7 @@ static constexpr Result<Option<KeyPlacement>, Error> map_raw_to_keyplace(const u
 }
 
 Result<Option<KeyPlacement>, Error> TM1637::read_key(){
-    const auto res = phy_.read_key();
+    const auto res = transport_.read_key();
     if(res.is_err()) return Err(res.unwrap_err());
     return map_raw_to_keyplace(res.unwrap());
 }
@@ -249,13 +249,13 @@ IResult<> TM1637::flush(){
 
     const bool changed = buf_.changed();
     if(changed){
-        // const auto res = phy_.write_screen(buf_.to_span());
-        const auto res = phy_.write_sram(buf_.to_span());
+        // const auto res = transport_.write_screen(buf_.to_span());
+        const auto res = transport_.write_sram(buf_.to_span());
         if(res.is_err())return res;
         buf_.flush();
     }
 
-    return phy_.set_display(DisplayCommand{
+    return transport_.set_display(DisplayCommand{
         .pulse_width = PulseWidth::_4_16,
         .display_en = true
     });

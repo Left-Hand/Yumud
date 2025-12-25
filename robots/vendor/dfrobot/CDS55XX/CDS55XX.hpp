@@ -314,7 +314,7 @@ private:
     // }
 };
 
-class CDS55XX_Phy:public CDS55XX_Prelude{
+class CDS55XX_Transport:public CDS55XX_Prelude{
 
     template<typename T>
     struct OperWrapper{

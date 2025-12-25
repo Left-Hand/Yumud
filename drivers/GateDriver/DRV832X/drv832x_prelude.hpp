@@ -332,13 +332,13 @@ struct DRV832X_Regs:public DRV832X_Prelude{
 };
 
 
-class DRV8323R_Phy final:public DRV832X_Prelude{
+class DRV8323R_Transport final:public DRV832X_Prelude{
 public:
-    explicit DRV8323R_Phy(const hal::SpiDrv & spi_drv):
+    explicit DRV8323R_Transport(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
-    explicit DRV8323R_Phy(hal::SpiDrv && spi_drv):
+    explicit DRV8323R_Transport(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit DRV8323R_Phy(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
+    explicit DRV8323R_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv(spi, rank)){;}
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t reg);

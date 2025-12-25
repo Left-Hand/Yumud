@@ -59,7 +59,7 @@ IResult<> Phy::transceive_u16(uint16_t & rx, const uint16_t tx){
 IResult<> KTH7823::update(){
     
     const auto data = ({
-        const auto res = phy_.direct_read(); 
+        const auto res = transport_.direct_read(); 
         if(res.is_err()) 
             return Err(res.unwrap_err());
         res.unwrap();
@@ -86,9 +86,9 @@ IResult<> KTH7823::set_zero_angle(const Angular<uq32> angle){
     reg_high.data = raw16 >> 8;
 
     // return Ok();
-    if(const auto res = phy_.burn_reg(reg_low); 
+    if(const auto res = transport_.burn_reg(reg_low); 
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = phy_.burn_reg(reg_high); 
+    if(const auto res = transport_.burn_reg(reg_high); 
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
@@ -114,7 +114,7 @@ IResult<> KTH7823::set_mag_threshold(const MagThreshold low, const MagThreshold 
     reg.mag_high = high;
     reg.mag_low = low;
 
-    return phy_.burn_reg(reg);
+    return transport_.burn_reg(reg);
     // return Ok();
 }
 

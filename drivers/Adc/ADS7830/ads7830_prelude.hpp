@@ -168,13 +168,13 @@ struct ADS7830_Prelude{
     using ConvData = uint8_t;
 };
 
-class ADS7830_Phy final:
+class ADS7830_Transport final:
     public ADS7830_Prelude{
 public:
-    ADS7830_Phy(const hal::I2cDrv & i2c_drv):
+    ADS7830_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
 
-    ADS7830_Phy(hal::I2cDrv && i2c_drv):
+    ADS7830_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
     IResult<ConvData> fs_read(const CommandByte cmd){

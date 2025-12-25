@@ -13,10 +13,10 @@ public:
         Some<hal::I2cBase *> i2c, 
         hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
-        phy_(MT6701_Phy(i2c, addr)){;}
+        transport_(MT6701_Transport(i2c, addr)){;}
 
-    explicit MT6701(MT6701_Phy && phy):
-        phy_(std::move(phy)){;}
+    explicit MT6701(MT6701_Transport && phy):
+        transport_(std::move(phy)){;}
 
     ~MT6701(){};
 
@@ -57,7 +57,7 @@ public:
     [[nodiscard]] IResult<> set_stop_angle(const Angular<uq32> stop);
 private:
 
-    MT6701_Phy phy_;
+    MT6701_Transport transport_;
     Packet packet_ = {0, 0};
     uq32 lap_position_ = 0;
     bool fast_mode_ = true;
@@ -65,13 +65,13 @@ private:
 
     template<typename T>
     IResult<> read_reg(T & reg){
-        return phy_.read_reg(reg);
+        return transport_.read_reg(reg);
     }
 
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
-        return phy_.write_reg(reg);
+        return transport_.write_reg(reg);
     }
 };
 

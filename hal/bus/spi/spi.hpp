@@ -43,11 +43,6 @@ public:
     }
 
     [[nodiscard]] bool is_occupied(){return owner_.is_borrowed();}
-
-    [[nodiscard]] virtual hal::HalResult blocking_read(uint32_t & data) = 0;
-    [[nodiscard]] virtual hal::HalResult blocking_write(const uint32_t data) = 0;
-    [[nodiscard]] virtual hal::HalResult blocking_transceive(uint32_t & data_rx, const uint32_t data_tx) = 0;
-
     [[nodiscard]] virtual hal::HalResult set_wordsize(const SpiWordSize wordsize) = 0;
     [[nodiscard]] virtual hal::HalResult set_baudrate(const SpiBaudrate baud) = 0;
     [[nodiscard]] virtual hal::HalResult set_bitorder(const BitOrder bitorder) = 0;

@@ -577,7 +577,7 @@ void render_main(){
     const auto spi_rank = spi.allocate_cs_pin(&lcd_cs).unwrap();
 
     drivers::ST7789 tft{
-        drivers::ST7789_Phy{&spi, spi_rank, &lcd_dc, &dev_rst}, 
+        drivers::ST7789_Transport{&spi, spi_rank, &lcd_dc, &dev_rst}, 
         {LCD_WIDTH, LCD_HEIGHT}
     };
 

@@ -9,11 +9,11 @@ class DRV8323R final:
     public DRV832X_Regs{
 public:
     explicit DRV8323R(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
+        transport_(spi_drv){;}
     explicit DRV8323R(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
-    explicit DRV8323R(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
-        phy_(hal::SpiDrv(spi, rank)){;}
+        transport_(std::move(spi_drv)){;}
+    explicit DRV8323R(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        transport_(hal::SpiDrv(spi, rank)){;}
 
 
     [[nodiscard]] IResult<> init(const Config & cfg);
@@ -31,13 +31,13 @@ public:
     [[nodiscard]] IResult<R16_Status1> get_status1();
     [[nodiscard]] IResult<R16_Status2> get_status2();
 private:
-    using Phy = DRV8323R_Phy;
-    Phy phy_;
+    using Phy = DRV8323R_Transport;
+    Phy transport_;
 
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = phy_.write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res = transport_.write_reg(T::ADDRESS, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -46,12 +46,12 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return phy_.read_reg(T::ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(T::ADDRESS, reg.as_bits_mut());
     }
 };
 
 
-class DRV8323H_Phy final:public DRV832X_Prelude{
+class DRV8323H_Transport final:public DRV832X_Prelude{
 public:
     struct Params{
         hal::Gpio & gain_gpio;
@@ -60,7 +60,7 @@ public:
         hal::Gpio & mode_gpio;
     };
 
-    DRV8323H_Phy(const Params & params):
+    DRV8323H_Transport(const Params & params):
         gain_pin_(params.gain_gpio),
         vds_pin_(params.vds_gpio),
         idrive_pin_(params.idrive_gpio),
@@ -111,7 +111,7 @@ public:
     static constexpr auto name = "DRV8323H";
     template<typename ... Args>
     explicit DRV8323H(Args && ... args):
-        phy_(std::forward<Args>(args)...){;}
+        transport_(std::forward<Args>(args)...){;}
 
 
     [[nodiscard]] IResult<> init(const Config & cfg);
@@ -127,8 +127,8 @@ public:
     [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
 
 private:
-    using Phy = DRV8323H_Phy;
-    Phy phy_;
+    using Phy = DRV8323H_Transport;
+    Phy transport_;
 };
 
 

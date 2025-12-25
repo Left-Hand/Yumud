@@ -14,7 +14,7 @@ namespace ymd::drivers{
 class TCA8418 final:public TCA8418_Regs{
 public:
     explicit TCA8418(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv{i2c, addr}){;}
+        transport_(hal::I2cDrv{i2c, addr}){;}
 
     IResult<> validate();
     IResult<> init();
@@ -23,7 +23,7 @@ private:
     IResult<bool> is_fifo_empty();
 
 
-    TCA8418_Phy phy_;
+    TCA8418_Transport transport_;
 public:
     class TCA8418_VPort:public hal::GpioPortIntf{
 

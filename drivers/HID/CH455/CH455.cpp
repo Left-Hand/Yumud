@@ -10,13 +10,13 @@ using IResult = Result<T, Error>;
 
 
 IResult<> CH455::init() {
-    phy_.init();
+    transport_.init();
 
     return enable_seg7_mode(DISEN);
 }
 
 IResult<> CH455::enable_seg7_mode(Enable en){
-    return phy_.write_u16(
+    return transport_.write_u16(
             (en == EN ? CH455_7SEG_ON : CH455_8SEG_ON));
 }
 
@@ -25,24 +25,24 @@ IResult<> CH455::set_brightness(const uint8_t br){
     if(br > 8) return Err(Error::BrightnessGreaterThanMax);
 
     if(br == 8){
-        return phy_.write_u16( CH455_SYSON_8);
+        return transport_.write_u16( CH455_SYSON_8);
     }else{
-        return phy_.write_u16( CH455_SYSON | (br<<4));
+        return transport_.write_u16( CH455_SYSON | (br<<4));
     }
 }
 
 IResult<> CH455::set_digit(const uint8_t digit, const uint8_t code){
     const auto cmd = dig2raw(digit, code);
-    return phy_.write_u16(cmd);
+    return transport_.write_u16(cmd);
 }
 
 IResult<> CH455::display_digit(const uint8_t digit, const uint8_t value){
     const auto cmd = dig2raw(digit, BCD_DEC_TABLE[value % BCD_DEC_TABLE.size()]);
-    return phy_.write_u16(cmd);
+    return transport_.write_u16(cmd);
 }
 
 IResult<KeyEvent> CH455::get_key() {
-    const auto res =  phy_.read_u8();
+    const auto res =  transport_.read_u8();
     if(res.is_err()) return Err(res.unwrap_err());
 
     // CH455所提供的按键代码为8位，位7始终为0，位2始终为1，位1～位0是列扫描码，位5～

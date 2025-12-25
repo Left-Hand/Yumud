@@ -49,7 +49,7 @@ IResult<> ADXL345::self_test(){
 
 IResult<Vec3<iq24>> ADXL345::read_acc(){
     std::array<int16_t, 3> buf;
-    if(const auto res = phy_.read_burst(std::bit_cast<uint8_t>(RegAddr::DeviceID), buf);
+    if(const auto res = transport_.read_burst(std::bit_cast<uint8_t>(RegAddr::DeviceID), buf);
         res.is_err()) return Err(res.unwrap_err());
 
     
@@ -64,9 +64,9 @@ IResult<Vec3<iq24>> ADXL345::read_acc(){
 }
 
 IResult<> ADXL345::write_reg(const RegAddr reg_address, const uint8_t reg_data){
-    return phy_.write_reg(std::bit_cast<uint8_t>(reg_address), reg_data);
+    return transport_.write_reg(std::bit_cast<uint8_t>(reg_address), reg_data);
 }
 
 IResult<> ADXL345::read_reg(const RegAddr reg_address, uint8_t & reg_data){
-    return phy_.read_reg(std::bit_cast<uint8_t>(reg_address), reg_data);
+    return transport_.read_reg(std::bit_cast<uint8_t>(reg_address), reg_data);
 }

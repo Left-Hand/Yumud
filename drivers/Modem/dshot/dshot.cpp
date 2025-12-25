@@ -64,11 +64,11 @@ void DShotChannel::update(const std::span<uint16_t, DSHOT_LEN> buf, const uint16
     }
 }
 
-WS2812_Phy_of_BurstPwm::WS2812_Phy_of_BurstPwm(BurstDmaPwm & burst_dma_pwm)
+WS2812_Transport_of_BurstPwm::WS2812_Transport_of_BurstPwm(BurstDmaPwm & burst_dma_pwm)
     : burst_dma_pwm_(burst_dma_pwm){}
 
 
-void WS2812_Phy_of_BurstPwm::apply_mono_to_buf(
+void WS2812_Transport_of_BurstPwm::apply_mono_to_buf(
     const std::span<uint16_t, 8> buf, 
     uint8_t mono
 ) const{
@@ -81,7 +81,7 @@ void WS2812_Phy_of_BurstPwm::apply_mono_to_buf(
     }
 }
 
-void WS2812_Phy_of_BurstPwm::apply_color_to_buf(
+void WS2812_Transport_of_BurstPwm::apply_color_to_buf(
     std::span<uint16_t, 24> buf, 
     std::array<uint8_t, 3> color
 ) const{

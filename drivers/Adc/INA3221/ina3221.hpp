@@ -41,11 +41,11 @@ class INA3221 final:
 public:
 
     explicit INA3221(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
+        transport_(i2c_drv){;}
     explicit INA3221(hal::I2cDrv && i2c_drv):
-        phy_(std::move(i2c_drv)){;}
+        transport_(std::move(i2c_drv)){;}
     explicit INA3221(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv(i2c, addr)){;}
+        transport_(hal::I2cDrv(i2c, addr)){;}
     ~INA3221(){;}
     
     [[nodiscard]] IResult<bool> is_ready();
@@ -76,12 +76,12 @@ public:
     [[nodiscard]] IResult<> set_instant_ovc_threshold(const ChannelSelection sel, const iq16 volt);
     [[nodiscard]] IResult<> set_constant_ovc_threshold(const ChannelSelection sel, const iq16 volt);
 private:
-    INA3221_Phy phy_;
+    INA3221_Transport transport_;
 
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = phy_.write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res = transport_.write_reg(T::ADDRESS, reg.to_bits());
             res.is_err()) return res;
         reg.apply();
         return Ok();
@@ -89,15 +89,15 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return phy_.read_reg(T::ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(T::ADDRESS, reg.as_bits_mut());
     }
 
     [[nodiscard]] IResult<> read_reg(const RegAddr addr, auto & data){
-        return phy_.read_reg(addr, data);
+        return transport_.read_reg(addr, data);
     }
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const auto data){
-        return phy_.write_reg(addr, data);
+        return transport_.write_reg(addr, data);
     }
 
 };

@@ -128,7 +128,7 @@ class LIS3DH:
     public AccelerometerIntf{
 public:
     using Regs      =  _LIS3DH_Regs;
-    using Phy       = StmicroImu_Phy;
+    using Phy       = StmicroImu_Transport;
     using SelfTestMode = Regs::SelfTestMode;
     using FifoMode     = Regs::FifoMode;
 
@@ -148,21 +148,21 @@ protected:
 
     Regs regs_ = {};
 
-    Phy phy_;
+    Phy transport_;
 public:
 
     LIS3DH(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv{i2c, addr}){;}
+        transport_(hal::I2cDrv{i2c, addr}){;}
     LIS3DH(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
+        transport_(i2c_drv){;}
     LIS3DH(hal::I2cDrv && i2c_drv):
-        phy_(std::move(i2c_drv)){;}
+        transport_(std::move(i2c_drv)){;}
     LIS3DH(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
+        transport_(spi_drv){;}
     LIS3DH(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
-    LIS3DH(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank index):
-        phy_(hal::SpiDrv{spi, index}){;}
+        transport_(std::move(spi_drv)){;}
+    LIS3DH(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
+        transport_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
@@ -247,7 +247,7 @@ namespace ymd::drivers{
 
 template<typename T>
 LIS3DH::IResult<> LIS3DH::write_reg(const RegCopy<T> & reg){
-    const auto res = phy_.write_reg(T::ADDRESS, reg.to_bits());
+    const auto res = transport_.write_reg(T::ADDRESS, reg.to_bits());
     if(res.is_err()) return res;
     reg.apply();
     return Ok();
@@ -255,11 +255,11 @@ LIS3DH::IResult<> LIS3DH::write_reg(const RegCopy<T> & reg){
 
 template<typename T>    
 LIS3DH::IResult<> LIS3DH::read_reg(T & reg){
-    return LIS3DH::IResult<>(phy_.read_reg(T::ADDRESS, reg.as_bits_mut()));
+    return LIS3DH::IResult<>(transport_.read_reg(T::ADDRESS, reg.as_bits_mut()));
 }
 
 LIS3DH::IResult<> LIS3DH::verify_phy(){
-    return LIS3DH::IResult<>(phy_.validate());
+    return LIS3DH::IResult<>(transport_.validate());
 }
 
 }

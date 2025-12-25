@@ -12,7 +12,7 @@ class HT16K33 final:public HT16K33_Regs{
 public:
     template<typename Set>
     explicit HT16K33(Set && set, const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv, None)
+        transport_(i2c_drv, None)
     {
         resetting(std::forward<Set>(set));
     }
@@ -22,7 +22,7 @@ public:
         const hal::I2cDrv & i2c_drv, 
         const hal::GpioIntf & int_input_gpio)
     :
-        phy_(i2c_drv, Some(hal::InterruptInput(int_input_gpio)))
+        transport_(i2c_drv, Some(hal::InterruptInput(int_input_gpio)))
     {
         resetting(std::forward<Set>(set));
     }
@@ -55,8 +55,8 @@ public:
 
     [[nodiscard]] IResult<KeyData> get_key_data();
 private:
-    using Phy = HT16K33_Phy;
-    Phy phy_;
+    using Phy = HT16K33_Transport;
+    Phy transport_;
     Package package_;
 
     [[nodiscard]] IResult<> write_command(const Command cmd);

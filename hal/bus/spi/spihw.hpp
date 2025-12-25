@@ -50,24 +50,22 @@ public:
         return HalResult::Ok();
     }
 
-    [[nodiscard]] __fast_inline HalResult blocking_write(const uint32_t data){
-        uint32_t dummy;
-        return blocking_transceive(dummy, data);
+    __fast_inline void blocking_write(const uint32_t data){
+        (void)blocking_transceive(data);
+        return;
     }
     
-    [[nodiscard]] __fast_inline HalResult blocking_read(uint32_t & data){
-        return blocking_transceive(data, 0);
+    [[nodiscard]] __fast_inline uint32_t blocking_read(){
+        return blocking_transceive(0);
     }
     
-    [[nodiscard]] __fast_inline HalResult blocking_transceive(uint32_t & data_rx, const uint32_t data_tx){
+    [[nodiscard]] __fast_inline uint32_t blocking_transceive(const uint32_t data_tx){
         while ((inst_->STATR.TXE) == false);
         inst_->DATAR.DR = data_tx;
 
         while ((inst_->STATR.RXNE) == false);
-        data_rx = inst_->DATAR.DR;
-
-    
-        return HalResult::Ok();
+        const uint32_t data_rx = inst_->DATAR.DR;
+        return data_rx;
     }
 
     [[nodiscard]] HalResult set_wordsize(const SpiWordSize wordsize);

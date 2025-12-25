@@ -94,15 +94,15 @@ private:
 
 };
 
-class MT6701_Phy:public MT6701_Prelude{
+class MT6701_Transport:public MT6701_Prelude{
 public:
-    using RegAddr = MT6701_Phy::RegAddr;
+    using RegAddr = MT6701_Transport::RegAddr;
 
-    MT6701_Phy(Some<hal::SpiBase *> spi, const hal::SpiSlaveRank rank):
-        MT6701_Phy(std::nullopt, hal::SpiDrv(spi, rank)){;}
+    MT6701_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        MT6701_Transport(std::nullopt, hal::SpiDrv(spi, rank)){;}
 
-    MT6701_Phy(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
-        MT6701_Phy(hal::I2cDrv(i2c, addr), std::nullopt){;}
+    MT6701_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
+        MT6701_Transport(hal::I2cDrv(i2c, addr), std::nullopt){;}
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
@@ -136,7 +136,7 @@ public:
     }
 
 private:
-    MT6701_Phy(
+    MT6701_Transport(
         std::optional<hal::I2cDrv> && i2c_drv, 
         std::optional<hal::SpiDrv> && spi_drv
     ):

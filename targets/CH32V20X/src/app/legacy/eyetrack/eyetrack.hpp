@@ -43,7 +43,7 @@ protected:
         }
     };
 
-    EyePhy eye_phy_;
+    EyePhy eye_transport_;
     std::array<EyelidPhy,2> eyelid_phys_;
 
     struct Refs{
@@ -59,14 +59,14 @@ protected:
 
 public:
     EyesPhy(const Refs & refs)
-    : eye_phy_{.yaw_ = PwmRadianServo{refs.yaw}, .pitch_ = PwmRadianServo{refs.pitch}, .info_ = EyeInfo{.pos = {}}}
+    : eye_transport_{.yaw_ = PwmRadianServo{refs.yaw}, .pitch_ = PwmRadianServo{refs.pitch}, .info_ = EyeInfo{.pos = {}}}
     , eyelid_phys_{
         EyelidPhy{PwmRadianServo{refs.upper_l}, PwmRadianServo{refs.lower_l}},
         EyelidPhy{PwmRadianServo{refs.upper_r}, PwmRadianServo{refs.lower_r}}
     }{}
 
     void move(const EyeInfo & eye_info, const std::array<EyelidInfo, 2> & eyelids_info){
-        eye_phy_ = eye_info;
+        eye_transport_ = eye_info;
         eyelid_phys_[0] = eyelids_info[0];
         eyelid_phys_[1] = eyelids_info[1];
     }
@@ -86,13 +86,13 @@ public:
 protected:
     const Config & config_;
 
-    EyesPhy eyes_phy_;
+    EyesPhy eyes_transport_;
     EyeInfo eye_info_;
     std::array<EyelidInfo,2> eyelids_info_;
 public:
     Eyes(const Config & config, const EyesPhy::Refs & refs):
             config_(config),
-            eyes_phy_{refs}{}
+            eyes_transport_{refs}{}
 
     void solve(const Vec2i & raw_lpos, const Vec2i & raw_rpos){
 
@@ -104,7 +104,7 @@ public:
     }
 
     void move(){
-        eyes_phy_.move(eye_info_, eyelids_info_);
+        eyes_transport_.move(eye_info_, eyelids_info_);
     }
 
     auto & eyeInfo(){return eye_info_;}

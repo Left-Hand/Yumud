@@ -62,7 +62,7 @@ public:
     [[nodiscard]] IResult<> set_gyr_fs(GyrFs gyrfs);
     [[nodiscard]] IResult<> set_acc_fs(AccFs accfs);
 private:
-    InvensenseImu_Phy phy_;
+    InvensenseImu_Transport transport_;
     ICM20948_Regs regs_;
 
     real_t gyro_scale_factor;

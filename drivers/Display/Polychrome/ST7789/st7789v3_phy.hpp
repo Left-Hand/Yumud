@@ -7,7 +7,7 @@
 #include "hal/bus/spi/spihw.hpp"
 
 namespace ymd::drivers{
-struct ST7789V3_Phy final:
+struct ST7789V3_Transport final:
     ST7789_Prelude{
     template<typename T = void>
     using IResult = Result<void, drivers::DisplayerError>;
@@ -48,7 +48,7 @@ struct ST7789V3_Phy final:
         bool is_runout_ = false;
     };
 
-    explicit ST7789V3_Phy(
+    explicit ST7789V3_Transport(
         Some<hal::Spi *> spi,
         const hal::SpiSlaveRank rank,
         Option<hal::Gpio &> may_nrst_gpio = None
@@ -139,7 +139,7 @@ private:
     Option<hal::Gpio &> may_nrst_pin_;
 
     template<hal::valid_spi_data T>
-    [[nodiscard]] hal::HalResult phy_write_single(
+    [[nodiscard]] hal::HalResult transport_write_single(
         const is_stdlayout auto data, 
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
@@ -151,9 +151,9 @@ private:
         }
 
         if constexpr (sizeof(T) == 1) {
-            if(const auto res = spi_.blocking_write(uint8_t(data)); res.is_err()) return res;
+            spi_.blocking_write(uint8_t(data));
         } else if constexpr (sizeof(T) == 2) {
-            if(const auto res = spi_.blocking_write(uint16_t(data)); res.is_err()) return res;
+            spi_.blocking_write(uint16_t(data)); 
         }
 
         if (cont == DISC) spi_.lend();

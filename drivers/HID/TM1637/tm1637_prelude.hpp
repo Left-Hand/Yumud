@@ -191,9 +191,9 @@ private:
 
 //TM1637 物理层接口
 //由于TM1637使用了另类的I2C接口 故特化
-class TM1637_Phy final:public _TM1637_Prelude{
+class TM1637_Transport final:public _TM1637_Prelude{
 public:
-    TM1637_Phy(hal::Gpio & scl_pin, hal::Gpio & sda_pin):
+    TM1637_Transport(hal::Gpio & scl_pin, hal::Gpio & sda_pin):
         scl_pin_(scl_pin),
         sda_pin_(sda_pin)
     {;}

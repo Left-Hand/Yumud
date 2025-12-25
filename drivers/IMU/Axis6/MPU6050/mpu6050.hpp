@@ -47,8 +47,8 @@ public:
     [[nodiscard]] IResult<> enable_direct_mode(const Enable en);
 private:
 
-    using Phy = InvensenseImu_Phy;
-    Phy phy_;
+    using Phy = InvensenseImu_Transport;
+    Phy transport_;
     MPU6050_Regset regs_ = {};
     iq16 acc_scaler_ = 0;
     iq16 gyr_scaler_ = 0;
@@ -59,7 +59,7 @@ private:
     MPU6050(const hal::I2cDrv i2c_drv, const Package package);
 
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
-        return phy_.write_reg(addr, data);
+        return transport_.write_reg(addr, data);
     }
 
     template<typename T>
@@ -71,11 +71,11 @@ private:
     }
 
     [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
-        return phy_.read_reg(addr, data);
+        return transport_.read_reg(addr, data);
     }
 
     [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
-        return phy_.read_burst(addr, pbuf);
+        return transport_.read_burst(addr, pbuf);
     }
 
     template<typename T>

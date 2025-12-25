@@ -98,7 +98,7 @@ static constexpr Matrix<T, 3, 3> compute_homography(
 }
 
 template<typename T>
-static constexpr Matrix3x3<T> compute_homography_from_unit_rect(
+static constexpr Matrix3x3<T> compute_homogratransport_from_unit_rect(
     const std::span<const Vec2<T>, 4> dst  // 目标四边形四个点 [p0, p1, p2, p3]
 ) {
     const auto [x0, y0] = dst[0];
@@ -347,7 +347,7 @@ public:
         };
 
         // return compute_homography(src, points);
-        compute_homography_from_unit_rect(points);
+        compute_homogratransport_from_unit_rect(points);
 
     }
 

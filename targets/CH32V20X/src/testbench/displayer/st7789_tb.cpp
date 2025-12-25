@@ -82,7 +82,7 @@ void st7789_main(void){
 
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     drivers::ST7789 tft(
-		drivers::ST7789_Phy{
+		drivers::ST7789_Transport{
 			&spi, 
 			spi.allocate_cs_pin(&lcd_cs).unwrap(), 
 			&lcd_dc, 

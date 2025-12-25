@@ -12,7 +12,7 @@ namespace ymd::drivers{
 class LT8960L final:public details::LT8960L_Prelude{
 public:
 
-    using Error = LT8960L_Phy::Error;
+    using Error = LT8960L_Transport::Error;
 
     using Regs = _LT8960L_Regs;
 public:
@@ -39,7 +39,7 @@ public:
     };
 
     explicit LT8960L(Some<hal::Gpio *> scl, Some<hal::Gpio *> sda):
-        phy_(scl, sda){;}
+        transport_(scl, sda){;}
 
 
     [[nodiscard]] IResult<> set_rf_freq_mhz(const size_t freq);
@@ -123,7 +123,7 @@ private:
     Regs regs_ = {};
     States states_ = {};
 
-    LT8960L_Phy phy_;
+    LT8960L_Transport transport_;
 
     bool use_hw_pkt_ = false;//使能通过监听引脚判断数据是否发送完成
 
@@ -134,7 +134,7 @@ private:
 
     [[nodiscard]] __fast_inline
     IResult<> write_reg(const RegAddr address, const uint16_t reg){
-        return phy_.write_reg(address, reg);
+        return transport_.write_reg(address, reg);
     }
 
     template<typename T>
@@ -149,25 +149,25 @@ private:
 
     [[nodiscard]] __fast_inline
     IResult<> read_reg(const RegAddr address, uint16_t & reg){
-        return phy_.read_reg(address, reg);
+        return transport_.read_reg(address, reg);
     }
 
 
     template<typename ... Ts>
     [[nodiscard]] __fast_inline
     IResult<> read_regs(Ts & ... reg) {
-        return (phy_.read_reg(reg.ADDRESS, reg.as_bits_mut()) | ...);
+        return (transport_.read_reg(reg.ADDRESS, reg.as_bits_mut()) | ...);
     }
 
     template<typename T>
     [[nodiscard]] __fast_inline
     IResult<> read_reg(T & reg){
-        return phy_.read_reg(reg.ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(reg.ADDRESS, reg.as_bits_mut());
     }
 
 
     [[nodiscard]] __fast_inline IResult<size_t> write_fifo(std::span<const uint8_t> buf){
-        return phy_.write_burst(Regs::R16_Fifo::ADDRESS, buf);
+        return transport_.write_burst(Regs::R16_Fifo::ADDRESS, buf);
     }
 
     [[nodiscard]] IResult<size_t> read_fifo(std::span<uint8_t> buf);

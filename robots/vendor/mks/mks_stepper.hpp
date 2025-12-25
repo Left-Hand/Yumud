@@ -13,13 +13,13 @@ public:
     };
 
     explicit MksStepper(const Config & cfg, Some<hal::Can *> && can) : 
-        phy_(std::move(can)
+        transport_(std::move(can)
     ){
         reconf(cfg);
     }
 
     explicit MksStepper(const Config & cfg, Some<hal::Uart *> && uart) : 
-        phy_(std::move(uart)
+        transport_(std::move(uart)
     ){
         reconf(cfg);
     }
@@ -50,7 +50,7 @@ public:
     IResult<> trig_homming(const HommingMode mode);
 private:
     using Phy = MksMotorPhy;
-    Phy phy_;
+    Phy transport_;
 
     static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
     NodeId nodeid_ = DEFAULT_NODE_ID;
@@ -78,7 +78,7 @@ private:
     IResult<> write_payload(const T & obj){
         const auto buf = map_payload_to_bytes(nodeid_, obj);
 
-        phy_.write_can_frame(nodeid_, buf.as_slice());
+        transport_.write_can_frame(nodeid_, buf.as_slice());
 
         return Ok();
     }

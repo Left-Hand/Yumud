@@ -10,7 +10,7 @@ using Vec2u16 = Vec2<uint16_t>;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> SSD1306_Phy::write_command(const uint8_t cmd){
+IResult<> SSD1306_Transport::write_command(const uint8_t cmd){
     if(p_i2c_drv_.has_value()){
         if(const auto res = p_i2c_drv_->write_reg<uint8_t>(CMD_TOKEN, uint8_t(cmd));
             res.is_err()) return Err(res.unwrap_err());
@@ -22,7 +22,7 @@ IResult<> SSD1306_Phy::write_command(const uint8_t cmd){
     return Err(Error(Error::NoAvailablePhy));
 }
 
-IResult<> SSD1306_Phy::write_data(const uint8_t data){
+IResult<> SSD1306_Transport::write_data(const uint8_t data){
     if(p_i2c_drv_.has_value()) {
         if(const auto res = p_i2c_drv_->write_reg<uint8_t>(DATA_TOKEN, uint8_t(data));
             res.is_err()) return Err(res.unwrap_err());
@@ -34,7 +34,7 @@ IResult<> SSD1306_Phy::write_data(const uint8_t data){
 }
 
 template<is_stdlayout T>
-IResult<> SSD1306_Phy::write_burst(const std::span<const T> pbuf){
+IResult<> SSD1306_Transport::write_burst(const std::span<const T> pbuf){
     if(p_i2c_drv_.has_value()){
         if constexpr(sizeof(T) != 1){
             if(const auto res = p_i2c_drv_->write_burst<T>(DATA_TOKEN, pbuf, std::endian::little);
@@ -57,7 +57,7 @@ IResult<> SSD1306_Phy::write_burst(const std::span<const T> pbuf){
 }
 
 template<is_stdlayout T>
-IResult<> SSD1306_Phy::write_repeat(const T data, size_t len){
+IResult<> SSD1306_Transport::write_repeat(const T data, size_t len){
     if(p_i2c_drv_.has_value()){
         if constexpr(sizeof(data) != 1){
             return IResult<>(p_i2c_drv_->write_repeat<T>(DATA_TOKEN, data, len, std::endian::little));
@@ -128,7 +128,7 @@ IResult<> SSD13XX::update(){
         const auto line = std::span<const uint8_t>(
             &frame[(y / 8) * size().x], size().x);
 
-        if(const auto res = phy_.write_burst(line);
+        if(const auto res = transport_.write_burst(line);
             res.is_err()) return res;
     }
     return Ok();

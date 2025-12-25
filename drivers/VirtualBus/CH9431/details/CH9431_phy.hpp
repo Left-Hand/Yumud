@@ -4,7 +4,7 @@
 
 namespace ymd::drivers{
 
-class CH9431_Phy final:public CH9431_Prelude {
+class CH9431_Transport final:public CH9431_Prelude {
 public:
 
     static constexpr uint8_t WRITE_CMD = 0x03;

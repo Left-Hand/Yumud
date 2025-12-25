@@ -36,12 +36,12 @@ IResult<> BMI088_Acc::init(){
 
 
 IResult<> BMI088_Acc::reset(){
-    return phy_.write_command(0xb6);
+    return transport_.write_command(0xb6);
 }
 
 IResult<> BMI088_Acc::verify_chip_id(){
     auto & reg = regs_.acc_chipid_reg;
-    if(const auto res = phy_.read_regs(reg);
+    if(const auto res = transport_.read_regs(reg);
         res.is_err()) return res;
 
     if(reg.data != ACC_CHIP_ID)
@@ -53,7 +53,7 @@ IResult<> BMI088_Acc::verify_chip_id(){
 IResult<> BMI088_Acc::validate(){
     if(const auto res = reset();
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = phy_.validate();
+    if(const auto res = transport_.validate();
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = retry(MAX_RETRY_TIMES, [&]{return verify_chip_id();}, [](){clock::delay(1ms);});
         res.is_err()) return Err(res.unwrap_err());
@@ -73,7 +73,7 @@ IResult<> BMI088_Acc::validate(){
 
 IResult<> BMI088_Acc::update(){
     auto & reg = regs_.acc_x_reg;
-    return phy_.read_burst(
+    return transport_.read_burst(
         reg.address, 
         std::span(&(reg.as_bits_mut()), 3)
     );
@@ -99,19 +99,19 @@ IResult<> BMI088_Acc::set_acc_fs(const AccFs fs){
     auto & reg = regs_.acc_range_reg;
     acc_scaler_ = calculate_acc_scale(fs);
     reg.acc_range = uint8_t(fs);
-    return phy_.write_regs(reg);
+    return transport_.write_regs(reg);
 }
 
 
 IResult<> BMI088_Acc::set_acc_bwp(const AccBwp bwp){
     auto & reg = regs_.acc_conf_reg;
     reg.acc_bwp = uint8_t(bwp);
-    return phy_.write_regs(reg);
+    return transport_.write_regs(reg);
 }
 
 
 IResult<> BMI088_Acc::set_acc_odr(const AccOdr odr){
     auto & reg = regs_.acc_conf_reg;
     reg.acc_odr = uint8_t(odr);
-    return phy_.write_regs(reg);
+    return transport_.write_regs(reg);
 }

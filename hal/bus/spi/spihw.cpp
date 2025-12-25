@@ -310,7 +310,7 @@ HalResult Spi::set_wordsize(const SpiWordSize wordsize){
             return HalResult::Ok();
             break;
         case SpiWordSize::TwoBytes:
-            inst_->enable_dualbyte(DISEN);
+            inst_->enable_dualbyte(EN);
             return HalResult::Ok();
             break;
     }

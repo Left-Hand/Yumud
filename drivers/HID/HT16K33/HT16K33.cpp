@@ -35,8 +35,8 @@ static constexpr uint8_t KEY0_REGADDR = 0x40;
 static constexpr uint8_t DISPLAYER_ADDR_BASE = 0x00;
 
 IResult<bool> HT16K33::is_any_key_pressed(){
-    if(phy_.has_int_io()){
-        return Ok(phy_.is_int_io_active());
+    if(transport_.has_int_io()){
+        return Ok(transport_.is_int_io_active());
     }else{
         // DEBUG_PRINTLN("reading");
         return get_intreg_status()
@@ -47,7 +47,7 @@ IResult<bool> HT16K33::is_any_key_pressed(){
 }
 
 IResult<> HT16K33::write_command(const Command cmd){
-    return phy_.write_command(cmd);
+    return transport_.write_command(cmd);
 }
 
 IResult<> HT16K33::setup_system(const Enable en){
@@ -59,7 +59,7 @@ IResult<> HT16K33::setup_system(const Enable en){
 IResult<HT16K33::KeyData> HT16K33::get_key_data(){
 
     KeyData ret;
-    if(const auto res = phy_.read_burst(KEY0_REGADDR, ret.as_bytes_mut());
+    if(const auto res = transport_.read_burst(KEY0_REGADDR, ret.as_bytes_mut());
         res.is_err()) return Err(res.unwrap_err());
     return Ok(ret);
 }
@@ -72,7 +72,7 @@ IResult<> HT16K33::set_int_pin_func(const IntPinFunc func){
 IResult<BoolLevel> HT16K33::get_intreg_status(){
     static constexpr auto INT_FLAG_REGADDR = 0x60;
     uint8_t ret = 0;
-    if(const auto res = phy_.read_data(INT_FLAG_REGADDR, ret);
+    if(const auto res = transport_.read_data(INT_FLAG_REGADDR, ret);
         res.is_err()) return Err(res.unwrap_err());
     switch(ret){
         case 0: return Ok(LOW);
@@ -119,7 +119,7 @@ IResult<> HT16K33::update_displayer(
     if(stop_addr > DISPLAYER_ADDR_BASE + NUM_GC_RAM_BYTES)
         return Err(Error::DisplayPayloadOversize);
 
-    return phy_.write_burst(start_addr, pbuf);
+    return transport_.write_burst(start_addr, pbuf);
 }
 
 IResult<> HT16K33::clear_displayer(){
@@ -129,9 +129,9 @@ IResult<> HT16K33::clear_displayer(){
 
 
 IResult<> HT16K33::setup_displayer(const BlinkFreq freq, const Enable en){
-    return phy_.write_command(Command(DisplaySetupCommand{en, freq}));
+    return transport_.write_command(Command(DisplaySetupCommand{en, freq}));
 }
 
 IResult<> HT16K33::set_pulse_duty(const PulseDuty duty){
-    return phy_.write_command(Command(DimmingSet{duty}));
+    return transport_.write_command(Command(DimmingSet{duty}));
 }

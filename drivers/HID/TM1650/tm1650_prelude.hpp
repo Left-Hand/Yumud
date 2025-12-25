@@ -113,12 +113,12 @@ struct TM1650_Prelude{
 };
 
 
-class TM1650_Phy final:public TM1650_Prelude{
+class TM1650_Transport final:public TM1650_Prelude{
 private:
     hal::I2cSw i2c_;
 public:
 
-    explicit TM1650_Phy(Some<hal::Gpio *> scl_io, Some<hal::Gpio *> sda_io):
+    explicit TM1650_Transport(Some<hal::Gpio *> scl_io, Some<hal::Gpio *> sda_io):
         i2c_{scl_io, sda_io}{;}
 
     IResult<> write_screen(const DisplayCommand cmd, const std::span<const uint8_t, 4> pbuf){
@@ -176,28 +176,28 @@ namespace ymd::drivers{
 
 class TM1650 final:public TM1650_Prelude{
 public:
-    using Error = TM1650_Phy::Error;
-    using DisplayCommand = TM1650_Phy::DisplayCommand;
+    using Error = TM1650_Transport::Error;
+    using DisplayCommand = TM1650_Transport::DisplayCommand;
 
     static constexpr auto NAME = "TM1650";
 
     explicit TM1650(Some<hal::Gpio *> scl_io, Some<hal::Gpio *> sda_io):
-        phy_(scl_io, sda_io){;}
+        transport_(scl_io, sda_io){;}
 
     IResult<> write_screen(
         const DisplayCommand cmd, 
         const std::span<const uint8_t, 4> pbuf){
         
-        return phy_.write_screen(cmd, pbuf);
+        return transport_.write_screen(cmd, pbuf);
     }
 
     Result<KeyEvent, Error> read_key(){
-        return phy_.read_key();
+        return transport_.read_key();
     }
 
 
 private:
-    TM1650_Phy phy_;
+    TM1650_Transport transport_;
 };
 
 #if 0
