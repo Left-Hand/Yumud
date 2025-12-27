@@ -16,7 +16,7 @@
 #include "algebra/regions/plane.hpp"
 #include "algebra/shapes/sphere.hpp"
 
-namespace ymd::robots{
+namespace ymd::robots::kinematics{
 
 
 template<typename T>

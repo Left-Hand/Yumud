@@ -3,7 +3,7 @@
 #include "algebra/vectors/vec2.hpp"
 #include "core/math/realmath.hpp"
 
-namespace ymd{
+namespace ymd::robots::kinematics{
 template<typename T>
 class Scara5Kinematics{
 public:

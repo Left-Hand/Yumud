@@ -4,7 +4,7 @@
 #include "core/utils/option.hpp"
 #include "prelude.hpp"
 
-namespace ymd::robots{
+namespace ymd::robots::kinematics{
 
 enum class KinematicPairs{
     Planar,

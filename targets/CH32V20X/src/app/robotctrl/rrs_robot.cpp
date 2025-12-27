@@ -123,7 +123,7 @@ public:
 
 class RRS3_RobotActuator{
 public:
-    using RRS3_Kinematics = typename ymd::robots::RRS_Kinematics<real_t>;
+    using RRS3_Kinematics = typename ymd::robots::kinematics::RRS_Kinematics<real_t>;
     using Gesture = typename RRS3_Kinematics::Gesture;
     using Config = typename RRS3_Kinematics::Config;
 

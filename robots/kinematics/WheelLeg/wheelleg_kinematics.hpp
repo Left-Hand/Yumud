@@ -10,7 +10,7 @@
 
 
 
-namespace ymd{
+namespace ymd::robots::kinematics{
 
 template<typename T>
 struct [[nodiscard]] WheelLegKinematics{
