@@ -501,6 +501,7 @@ void Uart::init(const Config & cfg){
     if(cfg.rx_strategy != CommStrategy::Nil){
         auto rx_pin = uart_to_rx_pin(inst_, cfg.remap);
         rx_pin.inpu();
+        // rx_pin.inflt();
     }
 
     const auto baudrate_count = [&] -> uint32_t{

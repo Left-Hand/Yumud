@@ -4,6 +4,7 @@
 
 namespace ymd::async{
 struct [[nodiscard]] RepeatTimer final {
+    using Self = RepeatTimer;
 
     static RepeatTimer from_duration(const Milliseconds duration){
         return RepeatTimer{duration};
@@ -18,7 +19,6 @@ struct [[nodiscard]] RepeatTimer final {
             // 计算下一个触发点，考虑可能已经错过多个周期的情况
             next_trigger_ = now + duration_;
         }
-        last_ = now;
     }
 
     [[nodiscard]] Milliseconds since_last_invoke() const {
@@ -31,7 +31,6 @@ struct [[nodiscard]] RepeatTimer final {
 
 private:
     Milliseconds duration_;
-    Milliseconds last_ = 0ms;
     Milliseconds last_invoke_ = 0ms;
     Milliseconds next_trigger_ = 0ms;
 
@@ -39,6 +38,11 @@ private:
         duration_(duration),
         next_trigger_(clock::millis() + duration) {}
 
+    friend OutputStream & operator <<(OutputStream & os, const Self & self){
+        return os << os.field("duration")(self.duration_) << os.splitter()
+            << os.field("last_invoke")(self.last_invoke_) << os.splitter()
+            << os.field("next_trigger")(self.next_trigger_);
+    }
 };
 
 struct [[nodiscard]] OnceTimer final {

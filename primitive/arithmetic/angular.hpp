@@ -298,6 +298,12 @@ struct [[nodiscard]] Angular{
 		return Angular<U>::make_angle_from_turns(static_cast<U>(turns_));
 	}
 
+
+    Angular<T> step_to(const Angular<T> y, const Angular<T> step) const {
+        return Angular<T>::from_turns(STEP_TO(turns_, y.turns_, step.turns_));
+    }
+
+
 	[[nodiscard]] constexpr Rotation2<T> to_rotation() const {
 		return Rotation2<T>::from_angle(*this);
 	}

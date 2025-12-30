@@ -8,8 +8,15 @@
 
 namespace ymd::robots::steadywin::can_simple{
 namespace req_msgs{
+using namespace steadywin::primitive;
+// struct SpeedForwardCode{
+//     int16_t bits;
 
-
+//     static constexpr SpeedForwardCode from_tps(const )
+//     {
+//         return SpeedForwardCode{speed};
+//     }
+// }
 
 // CMD ID: 0x002（主机→电机）⽆参数⽆数据。
 // 此指令会导致电机紧急停机，并报 ESTOP_REQUESTED 异常
@@ -375,7 +382,7 @@ struct [[nodiscard]] SaveConfig final{
 }
 
 namespace resp_msgs{
-
+using namespace steadywin::primitive;
 // CMD ID: 0x001（电机←主机）
 struct [[nodiscard]] HeartbeatV513 final{
     using Self = HeartbeatV513;
@@ -619,7 +626,7 @@ struct [[nodiscard]] GetPowers final{
 
 template<typename T>
 static constexpr hal::BxCanFrame serialize_msg_to_can_frame(
-    const AxisId & axis_id, 
+    const primitive::AxisId & axis_id, 
     const T & msg
 ){
     constexpr auto COMMAND = T::COMMAND;

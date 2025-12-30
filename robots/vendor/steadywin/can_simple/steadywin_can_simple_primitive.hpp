@@ -10,7 +10,7 @@
 //      https://docs.rs/odrive-cansimple/latest/src/odrive_cansimple/enumerations/axis_error.rs.html
 
 namespace ymd::robots::steadywin::can_simple{
-
+using namespace steadywin::primitive;
 struct [[nodiscard]] FrameId final{
     AxisId axis_id;
     Command command;
