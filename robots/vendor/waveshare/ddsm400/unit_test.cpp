@@ -2,6 +2,7 @@
 #include "ddsm400_msgs.hpp"
 
 using namespace ymd::robots::waveshare::ddsm400;
+using namespace primitive;
 using namespace ymd;
 
 
@@ -46,6 +47,15 @@ using namespace ymd;
 // 01 74 00 00 00 00 00 00 00 04 （电机 1）
 // 02 74 00 00 00 00 00 00 00 F1 （电机 2）
 
+
+
+static_assert(sizeof(SpeedCode) == 2);
+static_assert(SpeedCode::try_from_rpm(10).unwrap().bits == 100);
+static_assert(SpeedCode::try_from_rpm(-10).unwrap().bits == -100);
+static_assert(CurrentCode::try_from_amps(-2).unwrap().bits == -0x4000);
+static_assert(CurrentCode::try_from_amps(-4).unwrap().bits == -0x8000);
+static_assert(CurrentCode::try_from_amps(2).unwrap().bits == 0x4000);
+static_assert(LapAngleCode::from_angle(Angular<uq32>::from_turns(0.25_uq32)).bits == 0x4000);
 void test1(){
     static constexpr auto motor_id = MotorId::from_u8(1);
     // 电机模式切换

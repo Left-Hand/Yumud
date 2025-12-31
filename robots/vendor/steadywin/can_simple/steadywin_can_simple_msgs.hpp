@@ -142,8 +142,8 @@ struct [[nodiscard]] GetMotorCurrent final{
 #endif
 
 //ID 0x00B
-struct [[nodiscard]] SetCotrollerMode final{
-    using Self = SetCotrollerMode;
+struct [[nodiscard]] SetControllerMode final{
+    using Self = SetControllerMode;
     static constexpr CommandKind COMMAND = Command::SetControllerMode;
     LoopMode loop_mode;
     InputMode input_mode;
@@ -399,15 +399,10 @@ struct [[nodiscard]] HeartbeatV513 final{
     // 失，即通信不稳
     uint8_t life;
 
-    // static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
-
-
     static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
-        // const uint8_t* __restrict__ bytes = bytes.data();
         const auto self = Self{
             .axis_fault_flags = std::bit_cast<AxisFaultFlags>(
                 le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())
-                // load_u32_may_unaligned(bytes)
             ),
             .axis_state = ({
                 const auto res = try_into_axis_state(bytes[4]); 

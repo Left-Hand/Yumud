@@ -10,7 +10,7 @@
 
 // https://www.waveshare.net/wiki/DDSM400
 
-namespace ymd::robots::waveshare::ddsm400{
+namespace ymd::robots::waveshare::ddsm400::primitive{
 static constexpr size_t DEFAULT_BAUDRATE = 38400;
 
 // head command payload crc
@@ -18,7 +18,7 @@ static constexpr size_t NUM_PAYLOAD_BYTES = 7;
 static constexpr size_t NUM_PACKET_BYTES = 10;
 
 
-struct [[nodiscard]] MotorId{
+struct [[nodiscard]] MotorId final{
     using Self = MotorId;
     uint8_t count;
 
@@ -37,7 +37,7 @@ struct [[nodiscard]] MotorId{
 // 0x03：设定为位置环
 // 0x08：电机使能
 // 0x09：电机失能
-enum class LoopMode:uint8_t{
+enum class [[nodiscard]] LoopMode:uint8_t{
     OpenLoop = 0x00,
     CurrentLoop = 0x01,
     SpeedLoop = 0x02,
@@ -61,14 +61,14 @@ enum class [[nodiscard]] RespCommand:uint8_t{
     GetLoopMode = 0x76,
 };
 
-enum class DeMsgError:uint8_t{
+enum class [[nodiscard]] DeMsgError:uint8_t{
     Unnamed,
     CommandNotMatch,
     InvalidCommand,
 };
 
 
-enum class SerMsgError:uint8_t{
+enum class [[nodiscard]] SerMsgError:uint8_t{
     CurrentOverflow,
     CurrentUnderflow,
     SpeedOverflow,
@@ -162,9 +162,6 @@ struct [[nodiscard]] CurrentCode final{
 };
 
 static_assert(sizeof(CurrentCode) == 2);
-static_assert(CurrentCode::try_from_amps(-2).unwrap().bits == -0x4000);
-static_assert(CurrentCode::try_from_amps(-4).unwrap().bits == -0x8000);
-static_assert(CurrentCode::try_from_amps(2).unwrap().bits == 0x4000);
 
 
 // 速度环模式下：-3800~3800 对应 -380rpm~380rpm，单位 0.1rpm，数据类型有符号 16 位；
@@ -196,9 +193,7 @@ struct [[nodiscard]] SpeedCode final{
     }
 };
 
-static_assert(sizeof(SpeedCode) == 2);
-static_assert(SpeedCode::try_from_rpm(10).unwrap().bits == 100);
-static_assert(SpeedCode::try_from_rpm(-10).unwrap().bits == -100);
+
 
 // 位置环模式下：0~32767 对应 0°~360°，数据类型无符号 16 位；
 struct [[nodiscard]] LapAngleCode final{
@@ -219,7 +214,7 @@ struct [[nodiscard]] LapAngleCode final{
 };
 
 static_assert(sizeof(LapAngleCode) == 2);
-static_assert(LapAngleCode::from_angle(Angular<uq32>::from_turns(0.25_uq32)).bits == 0x4000);
+
 
 // 加速时间：速度环模式下有效，每1rpm的加速时间，单位为1ms，
 // 当设置为1时，每1rpm的加速时间为1ms，当设置为10时，每1rpm的加速时间为 10*1ms=10ms，
@@ -228,7 +223,7 @@ struct [[nodiscard]] AccelerationTimeCode final{
     uint8_t bits;
 };
 
-struct TempratureCode final{ 
+struct [[nodiscard]] TempratureCode final{ 
     uint8_t bits;
 };
 

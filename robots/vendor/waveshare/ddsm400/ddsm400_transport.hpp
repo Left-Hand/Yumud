@@ -2,7 +2,7 @@
 
 
 namespace ymd::robots::waveshare::ddsm400::transport{
-
+using namespace primitive;
 template<typename T>
 static constexpr std::array<uint8_t, NUM_PACKET_BYTES> 
 serialize_request(const MotorId motor_id, const T & msg){

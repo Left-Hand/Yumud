@@ -32,7 +32,7 @@ namespace {
 [[maybe_unused]] void test3(){
     {
     static constexpr auto frame = serialize_msg_to_can_frame(ZERO_AXIS_ID, 
-        req_msgs::SetCotrollerMode{
+        req_msgs::SetControllerMode{
             .loop_mode = LoopMode::VelocityLoop,
             .input_mode = InputMode::VelocityRamp
         }
@@ -69,7 +69,7 @@ namespace {
 [[maybe_unused]] void test6(){
     {
         static constexpr auto frame = serialize_msg_to_can_frame(ZERO_AXIS_ID, 
-            req_msgs::SetCotrollerMode{
+            req_msgs::SetControllerMode{
                 .loop_mode = LoopMode::PositionLoop,
                 .input_mode = InputMode::PositionFilter
             }

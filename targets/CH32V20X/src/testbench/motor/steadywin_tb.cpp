@@ -351,7 +351,7 @@ void steadywin_main(){
 
         {
             const auto frame = factory.serialize(
-                req_msgs::SetCotrollerMode{
+                req_msgs::SetControllerMode{
                     .loop_mode = LoopMode::CurrentLoop,
                     .input_mode = InputMode::CurrentRamp,
                 }

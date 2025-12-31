@@ -3,6 +3,7 @@
 
 namespace ymd::robots::waveshare::ddsm400{
 namespace req_msgs{
+using namespace primitive;
 // 协议1：驱动电机转动
 // 发送到电机：
 // 数据域	DATA[0]	DATA[1]	DATA[2]	DATA[3]	DATA[4]	DATA[5]	DATA[6]	DATA[7]	DATA[8]	DATA[9]
@@ -97,6 +98,7 @@ struct [[nodiscard]] GetLoopMode final{
 }
 
 namespace resp_msgs{
+using namespace primitive;
 struct [[nodiscard]] Feedback final{
     using Self = Feedback;
     static constexpr RespCommand COMMAND = RespCommand::Feedback;
