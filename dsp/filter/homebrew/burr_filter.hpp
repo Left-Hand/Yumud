@@ -11,11 +11,16 @@ class BurrFilter{
 			certainty_tolerance(_certainty_tolerance), error_tolerance(_error_tolerance), max_misjudge_cnt(_max_misjudge_cnt){;}
 
 	T update(const T x){
+		auto follow_output = [&]{
+			last = x;
+			current = x;
+		};
 		if(certainty(x) < certainty_tolerance && abs(error(x)) > error_tolerance){
 			misjudge_cnt++;
 			if(misjudge_cnt > max_misjudge_cnt){
 				misjudge_cnt = 0;
-				goto follow_output;
+				follow_output();
+				return x;
 			}else{
 				T ret = predict(current);
 				last = current;
@@ -24,13 +29,9 @@ class BurrFilter{
 			}
 		}else{
 			misjudge_cnt = 0;
-			goto follow_output;
+			follow_output();
+			return x;
 		}
-
-		follow_output:
-		last = x;
-		current = x;
-		return x;
 	}
 
 	T predict(const T x)const{

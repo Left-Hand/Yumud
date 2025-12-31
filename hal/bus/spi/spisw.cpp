@@ -25,7 +25,15 @@ hal::HalResult SpiSw::blocking_transceive(uint32_t & data_rx, const uint32_t dat
 
     sclk_pin_.set_high();
 
-    for(uint8_t i = 0; i < width_; i++){
+    const auto num_bits = [&] -> size_t{
+        switch(wordsize_){
+            case SpiWordSize::OneByte: return 8;
+            case SpiWordSize::TwoBytes: return 16;
+        }
+        __builtin_trap();
+    }();
+
+    for(uint8_t i = 0; i < num_bits; i++){
         sclk_pin_.set_high();
         delay_dur();
         mosi_pin_.write(BoolLevel::from(data_tx & (1 << (i))));
@@ -34,12 +42,12 @@ hal::HalResult SpiSw::blocking_transceive(uint32_t & data_rx, const uint32_t dat
         delay_dur();
 
         if(is_msb_){
-            mosi_pin_.write(BoolLevel::from(data_tx & (1 << (width_ - 2 - i))));
+            mosi_pin_.write(BoolLevel::from(data_tx & (1 << (num_bits - 2 - i))));
             ret <<= 1; ret |= miso_pin_.read().to_bool();
             delay_dur();
         }else{
             mosi_pin_.write(BoolLevel::from(data_tx & (1 << i)));
-            ret >>= 1; ret |= (uint32_t(miso_pin_.read().to_bool()) << (width_ - 1)) ;
+            ret >>= 1; ret |= (uint32_t(miso_pin_.read().to_bool()) << (num_bits - 1)) ;
             delay_dur();
         }
     }

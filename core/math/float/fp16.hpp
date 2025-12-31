@@ -4,100 +4,44 @@
 #include <cstdint>
 
 namespace ymd::math{
-struct [[nodiscard]] fp16{
-    union{
-        uint16_t raw;
-        struct{
-            uint16_t frac:10;
-            uint16_t exp:5;
-            uint16_t sign:1;
-        }__packed;
-    }__packed;
+struct alignas(2) [[nodiscard]] fp16 final{
+    using Self = fp16;
 
-    constexpr fp16(fixed_t qv):fp16(float(qv)){;}
-    constexpr fp16(const fp16& other):raw(other.raw){;}
-    constexpr fp16(float value) {
+    uint16_t frac:10;
+    uint16_t exp:5;
+    uint16_t sign:1;
 
-        // 下面的代码仅做示例，不保证正确性
-        union {
-            float input;
-            uint32_t bits;
-        } conversion;
+    constexpr fp16() = default;
 
-        conversion.input = value;
+    template<size_t Q, typename D>
+    constexpr fp16(fixed_t<Q, D> qv):fp16(float(qv)){;}
+    constexpr fp16(const fp16& other) = default;
 
-        // 提取符号位
-        sign = (conversion.bits >> 31) & 0x1;
-
-        // 提取指数和尾数
-        int exponent = ((conversion.bits >> 23) & 0xFF) - 127;
-        uint32_t mantissa = conversion.bits & 0x007FFFFF;
-
-        // 转换到fp16格式
-        if (exponent > 30) { // 溢出处理
-            exp = 0x1F;
-            frac = 0;
-        } else if (exponent <= -24) { // 下溢处理
-            exp = 0;
-            frac = 0;
-        } else {
-            // 移动指数和尾数
-            exponent += 15;
-            mantissa >>= (23 - (exponent - 15));
-            exp = exponent;
-            frac = mantissa;
-        }
-
-        raw = (sign << 15) | (exp << 10) | frac;
-    }
-    constexpr fp16(const int value){
-        // 确保值在可表示的范围内
-        if (value == 0) {
-            exp = 0;
-            frac = 0;
-            sign = 0;
-        } else if (value < 0) {
-            sign = 1;
-            value = -value;
-        } else {
-            sign = 0;
-        }
-
-        // fp16的指数范围是-14 ~ 15, 对于int值，我们假设它在[-32768, 32767]范围内
-        // 这意味着我们最多有15位有效数字，这可以通过右移来适应fp16的10位小数部分
-
-        // 计算指数
-        int shift = 0;
-        while (value >= (1 << 10)) {
-            value >>= 1;
-            shift++;
-        }
-
-        // 确保指数在fp16的范围内
-        if (shift > 15) {
-            exp = 0x1F; // 溢出
-            frac = 0;
-        } else if (shift < -14) {
-            exp = 0; // 下溢
-            frac = 0;
-        } else {
-            exp = shift + 15;
-            frac = value;
-        }
-
-        raw = (sign << 15) | (exp << 10) | frac;
+    [[nodiscard]] constexpr fp16 from_bits(const uint16_t bits){
+        return std::bit_cast<fp16>(bits);
     }
 
-    constexpr fp16(const double val):fp16((float)val){};
+    [[nodiscard]] constexpr uint16_t to_bits() const {
+        return std::bit_cast<uint16_t>(*this);
+    }
+    constexpr fp16(float f_val) {
+        *this = f32_to_fp16(f_val);
+    }
 
-    explicit constexpr operator float() const {
-        union {
-            uint32_t raw;
-            struct {
-                uint32_t frac : 23;
-                uint32_t exp : 8;
-                uint32_t sign : 1;
-            } __attribute__((__packed__));
+    constexpr fp16(int int_val){
+        *this = int_to_fp16(int_val);
+    }
+    constexpr fp16(const double val):fp16(static_cast<float>(val)){};
+
+    [[nodiscard]] constexpr bool is_nan() const {
+        return to_bits() == 0x7fc0;
+    }
+
+    [[nodiscard]] explicit constexpr operator float() const {
+        struct {
+            uint32_t frac : 23;
+            uint32_t exp : 8;
+            uint32_t sign : 1;
         } conversion;
 
         // 从fp16的内部表示中提取符号、指数和尾数
@@ -108,15 +52,17 @@ struct [[nodiscard]] fp16{
         // 浮点数的隐含位
         conversion.frac |= (1 << 23);
 
-        return *reinterpret_cast<const float*>(&conversion.raw);
+        return std::bit_cast<float>(conversion);
     }
 
-    explicit constexpr operator int() const {
+    template<typename D>
+    requires (std::is_integral_v<D>)
+    [[nodiscard]] explicit constexpr operator D() const {
         // 首先检查是否为NaN或无穷大
         if (exp == 0x1F && frac != 0) { // NaN
             return 0; // 或者可以选择抛出异常或返回特定值
         } else if (exp == 0x1F && frac == 0) { // 正无穷或负无穷
-            return sign ? INT_MIN : INT_MAX;
+            return sign ? std::numeric_limits<D>::min() : std::numeric_limits<D>::max();
         }
 
         // 根据指数和尾数计算值
@@ -145,10 +91,82 @@ struct [[nodiscard]] fp16{
         return value;
     }
 
-    constexpr operator fixed_t() const{
-        return fixed_t(float(*this));
+
+    template<size_t Q, typename D>
+    [[nodiscard]] explicit constexpr operator fixed_t<Q, D>() const{
+        return fixed_t<Q, D>(float(*this));
     }
-}__packed;
+
+private:
+    static constexpr fp16 int_to_fp16(int int_val){
+        fp16 ret = fp16();
+        // 确保值在可表示的范围内
+        if (int_val == 0) {
+            ret.exp = 0;
+            ret.frac = 0;
+            ret.sign = 0;
+        } else if (int_val < 0) {
+            ret.sign = 1;
+            int_val = -int_val;
+        } else {
+            ret.sign = 0;
+        }
+
+        // fp16的指数范围是-14 ~ 15, 对于int值，我们假设它在[-32768, 32767]范围内
+        // 这意味着我们最多有15位有效数字，这可以通过右移来适应fp16的10位小数部分
+
+        // 计算指数
+        int shift = 0;
+        while (int_val >= (1 << 10)) {
+            int_val >>= 1;
+            shift++;
+        }
+
+        // 确保指数在fp16的范围内
+        if (shift > 15) {
+            ret.exp = 0x1F; // 溢出
+            ret.frac = 0;
+        } else if (shift < -14) {
+            ret.exp = 0; // 下溢
+            ret.frac = 0;
+        } else {
+            ret.exp = shift + 15;
+            ret.frac = int_val;
+        }
+
+        return ret;
+    }
+
+    static constexpr fp16 f32_to_fp16(const float f_val){
+        fp16 ret;
+        uint32_t bits = std::bit_cast<uint32_t>(f_val);
+
+        // 提取符号位
+        ret.sign = (bits >> 31) & 0x1;
+
+        // 提取指数和尾数
+        int exponent = ((bits >> 23) & 0xFF) - 127;
+        uint32_t mantissa = bits & 0x007FFFFF;
+
+        // 转换到fp16格式
+        if (exponent > 30) { // 溢出处理
+            ret.exp = 0x1F;
+            ret.frac = 0;
+        } else if (exponent <= -24) { // 下溢处理
+            ret.exp = 0;
+            ret.frac = 0;
+        } else {
+            // 移动指数和尾数
+            exponent += 15;
+            mantissa >>= (23 - (exponent - 15));
+            ret.exp = exponent;
+            ret.frac = mantissa;
+        }
+
+        return ret;
+    }
+    
+};
 
 static_assert(sizeof(fp16) == 2);
 

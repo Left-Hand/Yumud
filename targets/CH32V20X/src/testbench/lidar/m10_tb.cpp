@@ -15,16 +15,16 @@ using drivers::m10::M10_ParserSink;
 
 void m10_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000 
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
 
     DEBUGGER.retarget(&DEBUGGER_INST);
 
     #if defined(CH32V20X)
-    auto & m10_uart_ = hal::uart1;
+    auto & m10_uart_ = hal::usart1;
     #elif defined(CH32V30X)
-    auto & m10_uart_ = hal::uart2;
+    auto & m10_uart_ = hal::usart2;
 
     #else
     static_assert(false, "Unsupported MCU");
@@ -55,8 +55,8 @@ void m10_main(){
 
     auto m10_parser = M10_ParserSink(m10_ev_handler);
     m10_uart_.init({
-        .remap = hal::UART1_REMAP_PA9_PA10,
-        .baudrate = drivers::m10::DEFAULT_UART_BAUD
+        .remap = hal::USART1_REMAP_PA9_PA10,
+        .baudrate = hal::NearestFreq(drivers::m10::DEFAULT_UART_BAUD)
     });
 
 

@@ -19,10 +19,10 @@ class ICM45686 final:
 public:
     using Error = ICM45686_Prelude::Error;
 
-    explicit ICM45686(Some<hal::I2c *> i2c, 
+    explicit ICM45686(Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        phy_(i2c, i2c_addr){;}
+        transport_(i2c, i2c_addr){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
@@ -35,10 +35,10 @@ public:
     [[nodiscard]] IResult<Vec3<iq24>> read_acc();
     [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
 private:
-    InvensenseImu_Phy phy_;
+    InvensenseImu_Transport transport_;
     
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
-        return phy_.write_reg(addr, data);
+        return transport_.write_reg(addr, data);
     }
 
 
@@ -55,7 +55,7 @@ private:
 
 
     [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
-        return phy_.read_reg(addr, data);
+        return transport_.read_reg(addr, data);
     }
 
 };

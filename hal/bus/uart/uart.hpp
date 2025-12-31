@@ -2,13 +2,13 @@
 
 #include <functional>
 
+#include "core/container/ringbuf.hpp"
 
 #include "hal/bus/bus_enums.hpp"
 #include "primitive/hal_result.hpp"
 
 #include "uart_primitive.hpp"
 
-#include "core/container/ringbuf.hpp"
 #include "uart_layout.hpp"
 
 
@@ -33,7 +33,7 @@ static constexpr size_t UART_RX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
 #endif
 
 
-class Uart{
+class UartBase{
 
 public:
     using Mode = CommDirection;
@@ -46,18 +46,26 @@ public:
 
     struct Config{
         UartRemap remap;
-        uint32_t baudrate;
+        UartBaudrate baudrate;
         CommStrategy rx_strategy = CommStrategy::Dma;
         CommStrategy tx_strategy = CommStrategy::Dma;
     };
 
-    Uart(const Uart & other) = delete;
-    Uart(Uart && other) = delete;
+    UartBase(const UartBase & other) = delete;
+    UartBase(UartBase && other) = delete;
 
     virtual void init(const Config & cfg) = 0;
 
     [[nodiscard]] __fast_inline size_t available() const {return rx_fifo_.length();}
-    [[nodiscard]] __fast_inline size_t free_capacity() const {return tx_fifo_.free_capacity();}
+    [[nodiscard]] __fast_inline size_t free_capacity() const {
+        switch(tx_strategy_){
+            case CommStrategy::Nil: __builtin_trap();
+            case CommStrategy::Blocking: return UINT32_MAX;
+            case CommStrategy::Dma: return tx_fifo_.free_capacity();
+            case CommStrategy::Interrupt: return tx_fifo_.free_capacity();
+        }
+        __builtin_trap();
+    }
 
     virtual void set_tx_strategy(const CommStrategy tx_strategy) = 0;
     virtual void set_rx_strategy(const CommStrategy rx_strategy) = 0;
@@ -78,19 +86,20 @@ private:
     Callback callback_;
 
 
-protected:
+// protected:
+public:
     CommStrategy tx_strategy_;
     CommStrategy rx_strategy_;
 
 
     RingBuf<char, UART_FIFO_BUF_SIZE> tx_fifo_;
     RingBuf<char, UART_FIFO_BUF_SIZE> rx_fifo_;
-    void invoke_callback(const Event event){
+    void emit_event(const Event event){
         if(callback_ == nullptr) [[unlikely]]
             return;
         callback_(event);
     }
-    Uart(){;}
+    UartBase(){;}
 
 };
 

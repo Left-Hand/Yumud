@@ -89,7 +89,7 @@ IResult<> MMC5983::init(const Config & cfg){
 }
 
 IResult<> MMC5983::validate(){
-    if(const auto res = phy_.release(); 
+    if(const auto res = transport_.release(); 
         res.is_err()) return CHECK_RES(res);
     
     auto & reg = regs_.product_id_reg;

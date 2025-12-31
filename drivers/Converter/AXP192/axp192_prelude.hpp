@@ -314,7 +314,7 @@ struct AXP192_Coulometre_RegSet:public AXP192_Prelude{
 
 class AXP192 final: public AXP192_Prelude{
 
-    explicit AXP192(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit AXP192(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c.get(), addr)){}
 
     explicit AXP192(hal::I2cDrv && i2c_drv):

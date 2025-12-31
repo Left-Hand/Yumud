@@ -17,7 +17,7 @@
 
 
 auto & SERVO_PWMGEN_TIMER = hal::timer3;
-auto & DBG_UART = hal::uart2;
+auto & DBG_UART = hal::usart2;
 static constexpr auto CTRL_FREQ = 50;
 
 
@@ -161,8 +161,8 @@ static constexpr auto make_cfg(){
 void nuedc_2023e_main(){
     using namespace nuedc::_2023E;
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.no_brackets(EN);

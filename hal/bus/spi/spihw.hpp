@@ -28,15 +28,15 @@ class Gpio;
 
 
 
-class SpiHw final:public Spi{
+class Spi final:public SpiBase{
 public:
     using Callback = std::function<void(SpiEvent)>;
 
-    explicit SpiHw(ral::SPI_Def * inst):
+    explicit Spi(ral::SPI_Def * inst):
         inst_(inst){;}
 
-    SpiHw(const SpiHw & other) = delete;
-    SpiHw(SpiHw && other) = delete;
+    Spi(const Spi & other) = delete;
+    Spi(Spi && other) = delete;
 
     HalResult init(const SpiConfig & cfg);
     void deinit();
@@ -50,27 +50,25 @@ public:
         return HalResult::Ok();
     }
 
-    [[nodiscard]] __fast_inline HalResult blocking_write(const uint32_t data){
-        uint32_t dummy;
-        return blocking_transceive(dummy, data);
+    __fast_inline void blocking_write(const uint32_t data){
+        (void)blocking_transceive(data);
+        return;
     }
     
-    [[nodiscard]] __fast_inline HalResult blocking_read(uint32_t & data){
-        return blocking_transceive(data, 0);
+    [[nodiscard]] __fast_inline uint32_t blocking_read(){
+        return blocking_transceive(0);
     }
     
-    [[nodiscard]] __fast_inline HalResult blocking_transceive(uint32_t & data_rx, const uint32_t data_tx){
+    [[nodiscard]] __fast_inline uint32_t blocking_transceive(const uint32_t data_tx){
         while ((inst_->STATR.TXE) == false);
         inst_->DATAR.DR = data_tx;
 
         while ((inst_->STATR.RXNE) == false);
-        data_rx = inst_->DATAR.DR;
-
-    
-        return HalResult::Ok();
+        const uint32_t data_rx = inst_->DATAR.DR;
+        return data_rx;
     }
 
-    [[nodiscard]] HalResult set_word_width(const uint8_t len);
+    [[nodiscard]] HalResult set_wordsize(const SpiWordSize wordsize);
     [[nodiscard]] HalResult set_baudrate(const SpiBaudrate baud);
     [[nodiscard]] HalResult set_prescaler(const SpiPrescaler prescaler);
     [[nodiscard]] HalResult set_bitorder(const BitOrder bitorder);
@@ -89,14 +87,14 @@ private:
     Callback callback_ = nullptr;
     bool hw_cs_enabled_ = false;
 
-    uint32_t get_periph_clk_freq() const;
+    [[nodiscard]] uint32_t get_periph_clk_freq() const;
 
     void enable_rcc(const Enable en);
     void set_remap(const SpiRemap remap);
     void alter_to_pins(const SpiRemap remap);
     
-    void enable_rx_it(const Enable en);
-    void enable_tx_it(const Enable en);
+    void enable_rx_interrupt(const Enable en);
+    void enable_tx_interrupt(const Enable en);
 
     void accept_interrupt(const SpiI2sIT it);
 
@@ -113,15 +111,15 @@ private:
 
 
 #ifdef SPI1_PRESENT
-extern SpiHw spi1;
+extern Spi spi1;
 #endif
 
 #ifdef SPI2_PRESENT
-extern SpiHw spi2;
+extern Spi spi2;
 #endif
 
 #ifdef SPI3_PRESENT
-extern SpiHw spi3;
+extern Spi spi3;
 #endif
 
 }

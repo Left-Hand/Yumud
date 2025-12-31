@@ -9,10 +9,10 @@ class BMP280 final:public BMP280_Prelude{
 public:
 
     explicit BMP280(
-        Some<hal::I2c *> i2c, 
+        Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
-        phy_(hal::I2cDrv(i2c, addr)){;}
+        transport_(hal::I2cDrv(i2c, addr)){;}
 
     ~BMP280(){;}
 
@@ -45,7 +45,7 @@ public:
 
 
 private:
-    BMP280_Phy phy_;
+    BMP280_Transport transport_;
     BMP280_Regset regs_ = {};
     Coeffs coeffs_;
 
@@ -55,7 +55,7 @@ private:
 
 
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
-        return phy_.write_reg(addr, data);
+        return transport_.write_reg(addr, data);
     }
 
     template<typename T>
@@ -67,19 +67,19 @@ private:
     }
 
     [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
-        return phy_.read_reg(addr, data);
+        return transport_.read_reg(addr, data);
     }
 
     [[nodiscard]] IResult<> read_burst(
         const uint8_t addr, 
         std::span<int16_t> pbuf
     ){
-        return phy_.read_burst(addr, pbuf);
+        return transport_.read_burst(addr, pbuf);
     }
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return phy_.read_reg(T::ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(T::ADDRESS, reg.as_bits_mut());
     }
 };
 

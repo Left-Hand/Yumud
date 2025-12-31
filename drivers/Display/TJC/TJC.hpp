@@ -6,9 +6,9 @@
 namespace ymd::drivers{
 
 
-class TJC_Phy{
+class TJC_Transport{
 public:
-    TJC_Phy(Uart & _uart):uart_(_uart){;}
+    TJC_Transport(Uart & _uart):uart_(_uart){;}
 
 
     // template<typename >

@@ -49,13 +49,13 @@ using BandpassFilter = dsp::ButterBandpassFilter<iq16, 4>;
 [[maybe_unused]] static 
 void at8222_tb(){
 
-    hal::uart2.init({
-        hal::UART2_REMAP_PA2_PA3,
-        4000000, 
+    hal::usart2.init({
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(4000000), 
         CommStrategy::Nil
     });
 
-    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.retarget(&hal::usart2);
     DEBUGGER.no_brackets(EN);
 
 
@@ -204,7 +204,7 @@ void at8222_tb(){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
                 watch_gpio.write(~watch_gpio.read());
-                volt = hal::adc1.inj<1>().get_voltage();
+                volt = hal::adc1.inj<1>().get_perunit();
                 const auto curr_raw = volt_2_current(volt);
 
                 lpf.update(curr_raw);

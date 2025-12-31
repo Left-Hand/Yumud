@@ -95,8 +95,8 @@ using RegAddr = uint8_t;
 };
 
 
-struct RM3100_Phy:public RM3100_Prelude{
-    explicit RM3100_Phy(hal::I2cDrv && i2c_drv):
+struct RM3100_Transport:public RM3100_Prelude{
+    explicit RM3100_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){}
 
     IResult<> write_reg(RegAddr addr, uint8_t data){
@@ -121,13 +121,13 @@ private:
 };
 
 struct RM3100:public RM3100_Prelude{
-    explicit RM3100(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv(i2c, addr)){}
+    explicit RM3100(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        transport_(hal::I2cDrv(i2c, addr)){}
 
 
     IResult<bool> is_conv_done(){
         uint8_t status;
-        if(const auto res = phy_.read_reg(RM3100_STATUS_REG, status);
+        if(const auto res = transport_.read_reg(RM3100_STATUS_REG, status);
             res.is_err()) return Err(res.unwrap_err());
         return Ok(status & 0x80);
     }
@@ -135,7 +135,7 @@ struct RM3100:public RM3100_Prelude{
     IResult<Vec3<int32_t>> get_mag_i32(){
         uint8_t buf[9];
 
-        if(const auto res = phy_.read_burst(0x24, std::span(buf));
+        if(const auto res = transport_.read_burst(0x24, std::span(buf));
             res.is_err()) return Err(res.unwrap_err());
 
         auto [x2,x1,x0,y2,y1,y0,z2,z1,z0] = buf;
@@ -159,7 +159,7 @@ struct RM3100:public RM3100_Prelude{
         return Ok(Vec3<int32_t>(x,y,z));
     }
 private:
-    RM3100_Phy phy_;
+    RM3100_Transport transport_;
 };
 
 }

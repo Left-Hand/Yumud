@@ -89,8 +89,8 @@ struct MT6826S:
     public MT6826S_Prelude
 {
 
-    explicit MT6826S(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        spi_drv_(hal::SpiDrv(spi, index)){}
+    explicit MT6826S(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv(spi, rank)){}
 
     explicit MT6826S(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){}
@@ -99,7 +99,7 @@ struct MT6826S:
         spi_drv_(std::move(spi_drv)){}
 
     [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<Angular<iq31>> get_lap_angle();
+    [[nodiscard]] IResult<Angular<uq32>> get_lap_angle();
     [[nodiscard]] IResult<MagStatus> get_mag_status();
     // [[nodiscard]] IResult<void> update();
 

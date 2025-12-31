@@ -22,7 +22,7 @@ struct SSD13XX_Presets{
 template<typename T>
 struct _oled_preset;
 
-class SSD1306_Phy final{
+class SSD1306_Transport final{
 public:
     using Error = DisplayerError;
     template<typename T = void>
@@ -32,11 +32,11 @@ public:
     static constexpr uint8_t DATA_TOKEN = 0x40;
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x78 >> 1);
 
-    SSD1306_Phy(const hal::I2cDrv & i2c_drv):
+    SSD1306_Transport(const hal::I2cDrv & i2c_drv):
         p_i2c_drv_(i2c_drv){};
-    SSD1306_Phy(hal::I2cDrv && i2c_drv):
+    SSD1306_Transport(hal::I2cDrv && i2c_drv):
         p_i2c_drv_(std::move(i2c_drv)){};
-    SSD1306_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    SSD1306_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         p_i2c_drv_(hal::I2cDrv{i2c, addr}){};
 
     [[nodiscard]] IResult<> init(){
@@ -62,7 +62,7 @@ class SSD13XX_DrawDispacther;
 
 struct SSD13XX;
 struct SSD13XX_Prelude{
-    using Phy = SSD1306_Phy;
+    using Phy = SSD1306_Transport;
     using Error = DisplayerError;
 
     template<typename T = void>
@@ -89,7 +89,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_72X40>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(72, 40);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(28, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         0xAE,0xD5,0xF0,0xA8,0X27,0XD3,0X00,0X40,
         0X8D,0X14,0X20,0X02,0XA1,0XC8,0XDA,0X12,
         0XAD,0X30,0X81,0XFF,0XD9,0X22,0XDB,0X20,
@@ -101,7 +101,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_128X64>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(128, 64);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(0, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         // 0xAE, 0xD5, 0xF0, 0xA8, 0X27, 0XD3, 0X00, 0X40,
         // 0X8D, 0X14, 0X20, 0X02, 0XA1, 0XC8, 0XDA, 0X12,
         // 0XAD, 0X30, 0X81, 0XFF, 0XD9, 0X22, 0XDB, 0X20,
@@ -147,7 +147,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_128X32>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(128, 32);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(2, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         0xAE, 0x00, 0x10, 0x00, 0xB0, 0X81, 0XFF, 0XA1, 0XA6,
         0XA8, 0X1F, 0XC8, 0XD3, 0X00, 0XD5, 0X80, 0XD9,
         0X1F, 0XDA, 0X00, 0XDB, 0X40, 0X8D, 0X14, 0XAF
@@ -158,7 +158,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_88X48>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(88, 48);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(2, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,
         0XD9, 0X1F,0XDA,0X00,0XDB, 0X40, 0X8D, 0X14, 0XAF
@@ -169,7 +169,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_64X48>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(64, 48);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(2, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,
         0XD9, 0X1F,0XDA,0X00,0XDB, 0X40, 0X8D, 0X14, 0XAF
@@ -181,7 +181,7 @@ template<>
 struct _oled_preset<SSD13XX_Presets::_128X80>{
     static constexpr Vec2<uint16_t> size = Vec2<uint16_t>(128, 80);
     static constexpr Vec2<uint16_t> offset = Vec2<uint16_t>(2, 0);
-    static constexpr auto buf = std::to_array<uint8_t>({ 
+    static constexpr auto init_cmds = std::to_array<uint8_t>({ 
         0xAE,0x00, 0x10,0x00, 0xB0, 0X81, 0XFF, 0XA1, 
         0XA6, 0XA8,0X1F,0XC8,0XD3,0X00, 0XD5, 0X80,
         0XD9, 0X1F,0XDA,0X00,0XDB, 0X40, 0X8D, 0X14, 0XAF

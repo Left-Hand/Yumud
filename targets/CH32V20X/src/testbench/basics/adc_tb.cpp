@@ -119,13 +119,13 @@ void adc_tb(OutputStream & logger){
         }, {});
 
     std::array<uint16_t, 16> adc_dma_buf;
-    hal::dma1_ch1.init({hal::DmaMode::ToMemCircular, hal::DmaPriority::High});
+    hal::dma1_ch1.init({hal::DmaMode::PeriphToBurstMemoryCircular, hal::DmaPriority::High});
     hal::dma1_ch1.start_transfer_pph2mem<uint16_t>(adc_dma_buf.data(), &(ADC1->RDATAR), adc_dma_buf.size());
 
     hal::adc1.enable_dma(EN);
     hal::adc1.sw_start_regular(true);
     while(true){
-        logger.println(adc_dma_buf[0], hal::dma1_ch1.remaining());
+        logger.println(adc_dma_buf[0], hal::dma1_ch1.pending_count());
     }
 
     #endif

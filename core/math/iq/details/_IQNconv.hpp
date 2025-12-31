@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <bit>
+
+#include <numeric>
 
 namespace ymd{
 
@@ -53,51 +56,61 @@ template<size_t Q>
 }
 
 
+
 template<size_t Q>
-[[nodiscard]] static constexpr int32_t _IQFtoN(const float fv){
-    if(std::is_constant_evaluated()){
-        return int32_t(fv * int(1 << Q));
+[[nodiscard]] static constexpr int32_t _IQFtoN(const float fv) {
+    static_assert(sizeof(float) == 4);
+    constexpr uint32_t NAN_BITS = 0x7fc00000;
+    const uint32_t bits = std::bit_cast<uint32_t>(fv);
+
+    if (bits == NAN_BITS) {
+        // NaN - 返回0或根据需求处理
+        return 0;
     }
-
-    const int32_t d = std::bit_cast<int32_t>(fv);
-    const int32_t exponent = ((d >> 23) & 0xff);
-    const uint64_t mantissa = (exponent == 0) ? (0) : ((d & ((1 << 23) - 1)) | (1 << 23));
-
-    const uint64_t temp = [&] -> uint64_t {
-        if(exponent == 0 or exponent == 0xff){
-            return 0;
-        }else{
-            // return LSHIFT(mantissa, exponent - 127);
-            if(exponent < 127)
-                return mantissa >> size_t(127 - exponent);
-            else
-                return mantissa << size_t(exponent - 127);
-        }
-    }();
-
-
-    const uint64_t uresult = [&] -> uint64_t {
-        static constexpr int s = 23 - Q;
-        if constexpr (s == 0){
-            return temp;
-        }else if constexpr (s > 0){
-            return temp >> size_t(s);
-        }else{
-            return temp << size_t(-s);
-        }
-    }();
-    const int32_t result = d > 0 ? uresult : -uresult;
-
-    if((bool(d > 0) ^ bool(result > 0)) or (uresult > (uint64_t)0x80000000)){//OVERFLOW
-        if(d > 0){
-            return std::bit_cast<int32_t>(0x7FFFFFFF);
-        }else{
-            return std::bit_cast<int32_t>(0x80000000);
-        }
-    }else{
-        return std::bit_cast<int32_t>(result);
+    
+    const bool is_negative = bool(bits >> 31);
+    const int32_t exponent = static_cast<int32_t>((bits >> 23) & 0xFF) - 127;
+    const uint32_t mantissa_bits = bits & 0x7FFFFF;
+    
+    // 处理零和非常小的数
+    if (exponent == -127 && mantissa_bits == 0) {
+        return 0;  // 零（正或负）
     }
-
+    
+    // 检查是否超出IQ表示范围
+    if (exponent >= int32_t(Q)) {
+        // 溢出 - 返回最大正值或最小负值
+        return (is_negative) ? 
+            std::numeric_limits<int32_t>::min() : std::numeric_limits<int32_t>::max();
+    }
+    
+    // 构建完整的尾数（包括隐含的1）
+    uint64_t mantissa = static_cast<uint64_t>(mantissa_bits) | (1ULL << 23);
+    
+    // 调整尾数位数，考虑小数点位置
+    int32_t shift = 23 - exponent - Q;
+    
+    int64_t result;
+    if (shift >= 0) {
+        result = static_cast<int64_t>(mantissa >> shift);
+    } else {
+        result = static_cast<int64_t>(mantissa << (-shift));
+    }
+    
+    // 应用符号
+    if(is_negative) result = -result;
+    
+    // 检查溢出
+    if (result > std::numeric_limits<int32_t>::max()) {
+        return std::numeric_limits<int32_t>::max();
+    } else if (result < std::numeric_limits<int32_t>::min()) {
+        return std::numeric_limits<int32_t>::min();
+    }
+    
+    return static_cast<int32_t>(result);
 }
+
+
+
 }
 }

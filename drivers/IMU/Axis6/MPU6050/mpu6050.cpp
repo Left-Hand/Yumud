@@ -43,7 +43,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 MPU6050::MPU6050(const hal::I2cDrv i2c_drv, const Package package):
-    phy_(i2c_drv),
+    transport_(i2c_drv),
     package_(package)
 {}
 
@@ -153,7 +153,7 @@ IResult<> MPU6050::set_gyr_fs(const GyrFs fs){
 }
 
 IResult<> MPU6050::reset(){
-    if(const auto res = phy_.reset(); 
+    if(const auto res = transport_.reset(); 
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

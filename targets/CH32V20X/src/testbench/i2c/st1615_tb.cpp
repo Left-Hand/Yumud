@@ -24,7 +24,7 @@
 using namespace ymd;
 using drivers::ST1615;
 
-#define UART hal::uart2
+#define UART hal::usart2
 // #define UART hal::uart6
 #define SCL_PIN hal::PB<3>()
 #define SDA_PIN hal::PB<5>()
@@ -32,8 +32,8 @@ using drivers::ST1615;
 void st1615_main(){
     // UART.init({576_KHz});
     UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000,
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
         .tx_strategy = CommStrategy::Dma
     });
     DEBUGGER.retarget(&UART);

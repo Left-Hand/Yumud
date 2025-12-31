@@ -33,7 +33,7 @@ static constexpr uint8_t GYR_CHIP_ID = 0;
 
 IResult<> BMI088_Gyr::update(){
     auto & reg = regs_.gyr_x_reg;
-    return phy_.read_burst(
+    return transport_.read_burst(
         reg.address, 
         std::span(&(reg.as_bits_mut()), 3)
     );
@@ -52,13 +52,13 @@ IResult<> BMI088_Gyr::set_gyr_fs(const GyrFs fs){
     gyr_scaler_ = calculate_gyr_scale(fs);
     auto & reg = regs_.gyro_range_reg;
     reg.data = uint8_t(fs);
-    return phy_.write_regs(reg);
+    return transport_.write_regs(reg);
 }
 
 IResult<> BMI088_Gyr::set_gyr_odr(const GyrOdr odr){
     auto & reg = regs_.gyro_bw_reg;
     reg.data = uint8_t(odr);
-    return phy_.write_regs(reg);
+    return transport_.write_regs(reg);
 }
 
 

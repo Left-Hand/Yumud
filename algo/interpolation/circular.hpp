@@ -4,54 +4,54 @@
 
 namespace ymd::intp{
 
-class ArcInterpolation:public Interpolation{
+class ArcInterpolation{
 protected:
-    real_t m_Centerx;
-    real_t m_Centery;
-    real_t m_dRadius;
-    real_t _a;
-    real_t _b;
-    // Vec2<iq16> 
+    iq16 m_Centerx;
+    iq16 m_Centery;
+    iq16 m_dRadius;
+    iq16 _a;
+    iq16 _b;
+
     bool IsPerpendicular(const Vec2<iq16> & pt1,const Vec2<iq16> & pt2,const Vec2<iq16> & pt3) const;
 
-    std::tuple<real_t, real_t, real_t> calcCircleFrom3Points (const Vec2<iq16> & pt1,const Vec2<iq16> & pt2,const Vec2<iq16> & pt3) const;
+    std::tuple<iq16, iq16, iq16> calcCircleFrom3Points (const Vec2<iq16> & pt1,const Vec2<iq16> & pt2,const Vec2<iq16> & pt3) const;
 public:
     ArcInterpolation(const Vec2<iq16> & handle);
 
-    real_t forward(const real_t x) const override;
+    iq16 forward(const iq16 x) const ;
 };
 
-class CircularFilletInterpoation:public Interpolation{
+class CircularFilletInterpoation{
 public:
-    CircularFilletInterpoation(const Vec2<iq16> & handle, real_t R):
+    CircularFilletInterpoation(const Vec2<iq16> & handle, iq16 R):
         _a(handle.x), _b(handle.y), _R(R){
             computeFilletParameters ({0,0}, {_a,_b}, {_a,_b}, {1,1}, _R);
         }
 
 
-    real_t forward(real_t x) const override;
+    iq16 forward(iq16 x) const ;
 
 private:
-    real_t arcCenterX = 0;
-    real_t arcCenterY = 0;
-    real_t arcStartAngle = 0;
-    real_t arcEndAngle = 0;
-    real_t arcRadius = 0;
-    real_t arcStartX = 0;
-    real_t arcStartY = 0;
-    real_t arcEndX = 0;
-    real_t arcEndY = 0;
+    iq16 arcCenterX = 0;
+    iq16 arcCenterY = 0;
+    iq16 arcStartAngle = 0;
+    iq16 arcEndAngle = 0;
+    iq16 arcRadius = 0;
+    iq16 arcStartX = 0;
+    iq16 arcStartY = 0;
+    iq16 arcEndX = 0;
+    iq16 arcEndY = 0;
 
     void computeFilletParameters (
         const Vec2<iq16> & pt1,
         const Vec2<iq16> & pt2,
         const Vec2<iq16> & pt3,
         const Vec2<iq16> & pt4,
-        real_t r);
+        iq16 r);
 
-    const real_t _a;
-    const real_t _b;
-    const real_t _R;
+    const iq16 _a;
+    const iq16 _b;
+    const iq16 _R;
 };
 
 };

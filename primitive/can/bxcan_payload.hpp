@@ -6,6 +6,7 @@
 
 namespace ymd::hal{
 
+//描述了CAN2.0B(传统CAN)的数据载荷
 struct [[nodiscard]] BxCanPayload{
 public:    
     using Self = BxCanPayload;
@@ -14,7 +15,7 @@ public:
     //这里并没有用零拷贝，原因是对齐排列的uint64比零拷贝效率更高
     static constexpr U8X8 ZERO_U8X8 = std::bit_cast<U8X8>(uint64_t(0));
 
-    /// \brief 从给定的id和连续数据切片创建一个数据帧 当数据超长时立即终止程序
+    //从给定的id和连续数据切片创建一个数据帧 当数据超长时立即终止程序
     template<std::ranges::input_range R>
     requires (std::same_as<std::ranges::range_value_t<R>, uint8_t>)
     __attribute__((always_inline)) static constexpr Self from_bytes(
@@ -40,11 +41,9 @@ public:
         );
     }
 
-    static Self from_uninitialized(){
-        return Self(
-            ZERO_U8X8,
-            BxCanDlc::from_bits(0)
-        );
+    //non-constexpr
+    __attribute__((always_inline)) static Self from_uninitialized(){
+        return Self();
     }
 
     __attribute__((always_inline)) static constexpr Self from_u8x8(std::array<uint8_t, 8> array){
@@ -235,12 +234,13 @@ public:
     alignas(4) U8X8 bytes_;
     BxCanDlc dlc_;
 private:
-    [[nodiscard]] __attribute__((always_inline)) constexpr explicit
+    __attribute__((always_inline)) constexpr explicit
     BxCanPayload(const U8X8 bytes, const BxCanDlc dlc):
         bytes_(bytes), dlc_(dlc){;}
 
-    // [[nodiscard]] __attribute__((always_inline)) constexpr explicit
-    // BxCanPayload(){;}
+    __attribute__((always_inline)) explicit
+    BxCanPayload():
+        bytes_({}), dlc_(BxCanDlc::from_uninitialized()){;}
 
     friend class BxCanFrame;
 
@@ -251,6 +251,5 @@ private:
     }
 };
 
-using BxCanPayload = BxCanPayload;
 
 }

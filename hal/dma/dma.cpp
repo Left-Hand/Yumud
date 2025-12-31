@@ -172,6 +172,59 @@ DMA2_IT_TEMPLATE(11);
 
 #define SDK_INST(x) (reinterpret_cast<COPY_CONST(inst_,DMA_Channel_TypeDef)>(x))
 
+static constexpr IRQn dma_to_irqn(const uint8_t dma_nth, const uint8_t channel_index){
+    switch(dma_nth){
+        #ifdef DMA1_PRESENT
+        case 1:
+            switch(channel_index){
+                case 1: return DMA1_Channel1_IRQn;
+                case 2: return DMA1_Channel2_IRQn;
+                case 3: return DMA1_Channel3_IRQn;
+                case 4: return DMA1_Channel4_IRQn;
+                case 5: return DMA1_Channel5_IRQn;
+                case 6: return DMA1_Channel6_IRQn;
+                case 7: return DMA1_Channel7_IRQn;
+                default: __builtin_trap();
+            }
+        #endif
+        #ifdef DMA2_PRESENT
+        case 2:
+            switch(channel_index){
+                case 1: return DMA2_Channel1_IRQn;
+                case 2: return DMA2_Channel2_IRQn;
+                case 3: return DMA2_Channel3_IRQn;
+                case 4: return DMA2_Channel4_IRQn;
+                case 5: return DMA2_Channel5_IRQn;
+                case 6: return DMA2_Channel6_IRQn;
+                case 7: return DMA2_Channel7_IRQn;
+                case 8: return DMA2_Channel8_IRQn;
+                case 9: return DMA2_Channel9_IRQn;
+                case 10: return DMA2_Channel10_IRQn;
+                case 11: return DMA2_Channel11_IRQn;
+                default: __builtin_trap();
+            }
+        #endif
+        default: __builtin_trap();
+    }
+
+}
+
+template<typename T, typename Fn>
+static inline void modify_reg(volatile T* reg, Fn&& fn) {
+    static_assert(std::is_trivially_copyable_v<T>, 
+                  "T must be trivially copyable for register operations");
+    
+    // 读取并转换
+    T temp = std::bit_cast<T>(*const_cast<const T*>(reg));
+    
+    // 应用修改
+    temp = fn(temp);
+    
+    // 写回
+    *const_cast<T*>(reg) = temp;
+}
+
+
 
 DmaChannel::DmaChannel(void * inst):
     inst_(inst), 
@@ -204,7 +257,7 @@ void DmaChannel::start_transfer(size_t dst_addr, size_t src_addr, const size_t s
         reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> MADDR = dst_addr;
     }
     reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> CNTR = size;
-    resume();
+    clear_and_start();
 }
 
 
@@ -216,7 +269,7 @@ void DmaChannel::init(const Config & cfg){
     DMA_InitStructure.DMA_Mode = cfg.mode.is_circular() ? DMA_Mode_Circular : DMA_Mode_Normal;
 
     switch(DmaDirection(cfg.mode).kind()){
-        case DmaDirection::ToMemory:
+        case DmaDirection::PeriphToBurstMemory :
             DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
             DMA_InitStructure.DMA_MemoryBaseAddr = 0;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
@@ -226,7 +279,7 @@ void DmaChannel::init(const Config & cfg){
             DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
             break;
             
-        case DmaDirection::ToPeriph:
+        case DmaDirection::BurstMemoryToPeriph:
             DMA_InitStructure.DMA_PeripheralBaseAddr = 0;
             DMA_InitStructure.DMA_MemoryBaseAddr = 0;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
@@ -263,107 +316,36 @@ void DmaChannel::init(const Config & cfg){
     DMA_Init(SDK_INST(inst_), &DMA_InitStructure);
 }
 
-static constexpr IRQn map_inst_to_irq(const uint8_t dma_nth, const uint8_t channel_index){
-    switch(dma_nth){
-        #ifdef DMA1_PRESENT
-        case 1:
-            switch(channel_index){
-                case 1: return DMA1_Channel1_IRQn;
-                case 2: return DMA1_Channel2_IRQn;
-                case 3: return DMA1_Channel3_IRQn;
-                case 4: return DMA1_Channel4_IRQn;
-                case 5: return DMA1_Channel5_IRQn;
-                case 6: return DMA1_Channel6_IRQn;
-                case 7: return DMA1_Channel7_IRQn;
-                default: __builtin_unreachable();
-            }
-        #endif
-        #ifdef DMA2_PRESENT
-        case 2:
-            switch(channel_index){
-                case 1: return DMA2_Channel1_IRQn;
-                case 2: return DMA2_Channel2_IRQn;
-                case 3: return DMA2_Channel3_IRQn;
-                case 4: return DMA2_Channel4_IRQn;
-                case 5: return DMA2_Channel5_IRQn;
-                case 6: return DMA2_Channel6_IRQn;
-                case 7: return DMA2_Channel7_IRQn;
-                case 8: return DMA2_Channel8_IRQn;
-                case 9: return DMA2_Channel9_IRQn;
-                case 10: return DMA2_Channel10_IRQn;
-                case 11: return DMA2_Channel11_IRQn;
-                default: __builtin_unreachable();
-            }
-        #endif
-        default: __builtin_unreachable();
-    }
-
-}
 void DmaChannel::register_nvic(const NvicPriority priority, const Enable en){
-    const auto irq = map_inst_to_irq(dma_index_, channel_index_);
+    const auto irq = dma_to_irqn(dma_index_, channel_index_);
     priority.with_irqn(irq).enable(en);
 }
 
-template<typename T, typename Fn>
-static inline void modify_reg(volatile T* reg, Fn&& fn) {
-    static_assert(std::is_trivially_copyable_v<T>, 
-                  "T must be trivially copyable for register operations");
-    
-    // 读取并转换
-    T temp = std::bit_cast<T>(*const_cast<const T*>(reg));
-    
-    // 应用修改
-    temp = fn(temp);
-    
-    // 写回
-    *const_cast<T*>(reg) = temp;
-}
-
-// #include <atomic>
-
-// template<typename T, typename Fn>
-// void modify_reg(volatile T* reg, Fn&& fn) {
-//     // 使用原子操作（如果硬件支持）
-//     std::atomic<T>* atomic_reg = reinterpret_cast<std::atomic<T>*>(const_cast<T *>(reg));
-    
-//     T expected = atomic_reg->load(std::memory_order_acquire);
-//     T desired;
-    
-//     do {
-//         desired = std::forward<Fn>(fn)(expected);
-//     } while (!atomic_reg->compare_exchange_weak(
-//         expected, desired,
-//         std::memory_order_release,
-//         std::memory_order_acquire
-//     ));
-// }
 
 [[nodiscard]] bool DmaChannel::is_done(){
     return DMA_GetFlagStatus(done_mask_);
 }
 
-void DmaChannel::set_mem_and_periph_bytes(
-    const size_t mem_bytes, 
-    const size_t periph_bytes
+void DmaChannel::set_mem_and_periph_wordsize(
+    const WordSize mem_wordsize, 
+    const WordSize periph_wordsize
 ){ 
-    // reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.MSIZE = (mem_bytes) - 1;
-    // reinterpret_cast<DMA_CH_Def *>(inst_)->CFGR.PSIZE = (periph_bytes) - 1;
     auto * dma_ch = reinterpret_cast<ral::DMA_CH_Def *>(inst_);
     modify_reg(&dma_ch->CFGR, [&](auto reg){
-        reg.MSIZE = (mem_bytes) - 1;
-        reg.PSIZE = (periph_bytes) - 1;
+        reg.MSIZE = static_cast<uint8_t>(mem_wordsize);
+        reg.PSIZE = static_cast<uint8_t>(periph_wordsize);
         return reg;
     });
 }
 
-void DmaChannel::resume(){
+void DmaChannel::clear_and_start(){
     DMA_ClearFlag(done_mask_);
     DMA_ClearFlag(half_mask_);
 
     DMA_Cmd(SDK_INST(inst_), ENABLE);
 }
 
-size_t DmaChannel::remaining(){
+size_t DmaChannel::pending_count(){
     return reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> CNTR;
 }
 

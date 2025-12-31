@@ -4,15 +4,15 @@
 
 
 
-#define UART1_TX_DMA_CH hal::dma1_ch4
-#define UART1_RX_DMA_CH hal::dma1_ch5
+#define USART1_TX_DMA_CH hal::dma1_ch4
+#define USART1_RX_DMA_CH hal::dma1_ch5
 
 
-#define UART2_TX_DMA_CH hal::dma1_ch7
-#define UART2_RX_DMA_CH hal::dma1_ch6
+#define USART2_TX_DMA_CH hal::dma1_ch7
+#define USART2_RX_DMA_CH hal::dma1_ch6
 
-#define UART3_TX_DMA_CH hal::dma1_ch2
-#define UART3_RX_DMA_CH hal::dma1_ch3
+#define USART3_TX_DMA_CH hal::dma1_ch2
+#define USART3_RX_DMA_CH hal::dma1_ch3
 
 #define UART4_TX_DMA_CH hal::dma2_ch5
 #define UART4_RX_DMA_CH hal::dma2_ch3
@@ -31,29 +31,29 @@
 
 
 #if 0
-#define UART1_RM0_TX_PIN hal::PA<9>()
-#define UART1_RM0_RX_PIN hal::PA<10>()
+#define USART1_RM0_TX_PIN hal::PA<9>()
+#define USART1_RM0_RX_PIN hal::PA<10>()
 
-#define UART1_RM1_TX_PIN hal::PB<6>()
-#define UART1_RM1_RX_PIN hal::PB<7>()
+#define USART1_RM1_TX_PIN hal::PB<6>()
+#define USART1_RM1_RX_PIN hal::PB<7>()
 
-#define UART2_RM0_TX_PIN hal::PA<2>()
-#define UART2_RM0_RX_PIN hal::PA<3>()
+#define USART2_RM0_TX_PIN hal::PA<2>()
+#define USART2_RM0_RX_PIN hal::PA<3>()
 
-#define UART2_RM1_TX_PIN hal::PD<5>()
-#define UART2_RM1_RX_PIN hal::PD<6>()
+#define USART2_RM1_TX_PIN hal::PD<5>()
+#define USART2_RM1_RX_PIN hal::PD<6>()
 
-#define UART3_RM0_TX_PIN hal::PB<10>()
-#define UART3_RM0_RX_PIN hal::PB<11>()
+#define USART3_RM0_TX_PIN hal::PB<10>()
+#define USART3_RM0_RX_PIN hal::PB<11>()
 
-#define UART3_RM1_TX_PIN hal::PC<10>()
-#define UART3_RM1_RX_PIN hal::PC<11>()
+#define USART3_RM1_TX_PIN hal::PC<10>()
+#define USART3_RM1_RX_PIN hal::PC<11>()
 
-#define UART3_RM2_TX_PIN hal::PA<13>()
-#define UART3_RM2_RX_PIN hal::PA<14>()
+#define USART3_RM2_TX_PIN hal::PA<13>()
+#define USART3_RM2_RX_PIN hal::PA<14>()
 
-#define UART3_RM3_TX_PIN hal::PD<8>()
-#define UART3_RM3_RX_PIN hal::PD<9>()
+#define USART3_RM3_TX_PIN hal::PD<8>()
+#define USART3_RM3_RX_PIN hal::PD<9>()
 
 #define UART4_RM0_TX_PIN hal::PC<10>()
 #define UART4_RM0_RX_PIN hal::PC<11>()
@@ -320,16 +320,16 @@ using rx_pin_t = typename Layout<NUM_UART_NTH, REMAP>::rx_pin_type;
 namespace ymd::hal {
 using UartRemap = uart::Remap;
 
-static constexpr UartRemap UART1_REMAP_PA9_PA10 = UartRemap::_0;
-static constexpr UartRemap UART1_REMAP_PB6_PB7 = UartRemap::_1;
+static constexpr UartRemap USART1_REMAP_PA9_PA10 = UartRemap::_0;
+static constexpr UartRemap USART1_REMAP_PB6_PB7 = UartRemap::_1;
 
-static constexpr UartRemap UART2_REMAP_PA2_PA3 = UartRemap::_0;
-static constexpr UartRemap UART2_REMAP_PD5_PD6 = UartRemap::_1;
+static constexpr UartRemap USART2_REMAP_PA2_PA3 = UartRemap::_0;
+static constexpr UartRemap USART2_REMAP_PD5_PD6 = UartRemap::_1;
 
-static constexpr UartRemap UART3_REMAP_PB10_PB11 = UartRemap::_0;
-static constexpr UartRemap UART3_REMAP_PC10_PC11 = UartRemap::_1;
-static constexpr UartRemap UART3_REMAP_PA13_PA14 = UartRemap::_2;
-static constexpr UartRemap UART3_REMAP_PD8_PD9 = UartRemap::_3;
+static constexpr UartRemap USART3_REMAP_PB10_PB11 = UartRemap::_0;
+static constexpr UartRemap USART3_REMAP_PC10_PC11 = UartRemap::_1;
+static constexpr UartRemap USART3_REMAP_PA13_PA14 = UartRemap::_2;
+static constexpr UartRemap USART3_REMAP_PD8_PD9 = UartRemap::_3;
 
 static constexpr UartRemap UART4_REMAP_PC10_PC11 = UartRemap::_0;
 static constexpr UartRemap UART4_REMAP_PB0_PB1 = UartRemap::_1;

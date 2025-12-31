@@ -6,18 +6,18 @@
 
 #include "drivers/HID/ps2_joystick/ps2_joystick.hpp"
 
-#ifdef SPI1_PRESENT
+#if 0
 
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 
 void joystick_main(){
 
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
 
 

@@ -6,7 +6,7 @@ namespace ymd::drivers::kth7823{
 class KTH7823 final{
 public:
     explicit KTH7823(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        phy_(Phy{spi, rank}){;}
+        transport_(Phy{spi, rank}){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> validate();
@@ -19,11 +19,11 @@ public:
 
     [[nodiscard]] IResult<> set_zero_angle(const Angular<uq32> angle);
 
-    [[nodiscard]] IResult<> set_trim_x(const real_t k);
+    [[nodiscard]] IResult<> set_trim_x(const iq16 k);
 
-    [[nodiscard]] IResult<> set_trim_y(const real_t k);
+    [[nodiscard]] IResult<> set_trim_y(const iq16 k);
 
-    [[nodiscard]] IResult<> set_trim(const real_t am, const real_t e);
+    [[nodiscard]] IResult<> set_trim(const iq16 am, const iq16 e);
 
     [[nodiscard]] IResult<> set_mag_threshold(const MagThreshold low, const MagThreshold high);
 
@@ -36,7 +36,7 @@ public:
 
 private:
     Regset regset_ = {};
-    Phy phy_;
+    Phy transport_;
     uq32 lap_turns_ = 0;
 
     [[nodiscard]]

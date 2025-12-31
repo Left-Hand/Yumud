@@ -32,7 +32,7 @@ enum class RegAddr:uint16_t{
 };
 
 #pragma pack(push, 1)
-struct Packet{
+struct [[nodiscard]] Packet final{
     using Self = Packet;
     union{
         struct{
@@ -50,6 +50,7 @@ struct Packet{
             uint8_t d2;
         };
     };
+    //方便对齐到4字节
     uint8_t __padding__;
 
     [[nodiscard]] static constexpr Packet from_u24(uint32_t bits){                  

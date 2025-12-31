@@ -44,58 +44,58 @@ IResult<> QMC5883L::init(){
 }
 
 IResult<> QMC5883L::enable_cont_mode(const Enable en){
-    auto reg = RegCopy( config_a_reg);
-    reg.measureMode = en == EN;
+    auto reg = RegCopy(regs_.config_a_reg);
+    reg.measure_mode = en == EN;
     return write_reg(reg);
 }
 
 IResult<> QMC5883L::set_odr(const Odr rate){
-    auto reg = RegCopy( config_a_reg);
+    auto reg = RegCopy(regs_.config_a_reg);
     reg.odr = rate;
     return write_reg(reg);
 }
 
 IResult<> QMC5883L::set_fs(const FullScale fullscale){
-    auto reg = RegCopy( config_a_reg);
+    auto reg = RegCopy(regs_.config_a_reg);
     reg.fs = fullscale;
     return write_reg(reg);
 }
 
 IResult<> QMC5883L::set_over_sample_ratio(const OverSampleRatio ratio){
-    auto reg = RegCopy( config_a_reg);
+    auto reg = RegCopy(regs_.config_a_reg);
     reg.ovs_ratio = ratio;
     return write_reg(reg);
 }
 
 IResult<> QMC5883L::update(){
-    return read_burst(mag_x_reg.ADDRESS, std::span(&mag_x_reg.as_bits_mut(), 3));
+    return read_burst(regs_.mag_x_reg.ADDRESS, std::span(&regs_.mag_x_reg.as_bits_mut(), 3));
 }
 
 IResult<Vec3<iq24>> QMC5883L::read_mag(){
     return Ok{Vec3<iq24>{
-        iq16::from_bits(mag_x_reg.to_bits()) * scaler_.to_fullscale(),
-        iq16::from_bits(mag_y_reg.to_bits()) * scaler_.to_fullscale(),
-        iq16::from_bits(mag_z_reg.to_bits()) * scaler_.to_fullscale()
+        iq16::from_bits(regs_.mag_x_reg.to_bits()) * scaler_,
+        iq16::from_bits(regs_.mag_y_reg.to_bits()) * scaler_,
+        iq16::from_bits(regs_.mag_z_reg.to_bits()) * scaler_
     }};
 }
 
 IResult<> QMC5883L::validate(){
-    if(const auto res = read_reg(chip_id_reg);
+    if(const auto res = read_reg(regs_.chip_id_reg);
         res.is_err()) return res;
 
-    if(chip_id_reg.to_bits() != 0xFF)
+    if(regs_.chip_id_reg.to_bits() != 0xFF)
         return Err(Error::InvalidChipId);
     return Ok{};
 }
 
-IResult<> QMC5883L::set_reset_period(const uint8_t resetPeriod){
-    auto reg =  RegCopy(reset_period_reg);
-    reg.data = resetPeriod;
+IResult<> QMC5883L::set_reset_period(const uint8_t reset_period){
+    auto reg =  RegCopy(regs_.reset_period_reg);
+    reg.bits = reset_period;
     return write_reg(reg);
 }
 
 IResult<> QMC5883L::reset(){
-    auto reg = RegCopy(config_b_reg);
+    auto reg = RegCopy(regs_.config_b_reg);
     reg.srst = true;
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
@@ -104,14 +104,20 @@ IResult<> QMC5883L::reset(){
 }
 
 IResult<> QMC5883L::enable_interrupt(const Enable en){
-    auto reg = RegCopy(config_b_reg);
-    reg.intEn = en == EN;
+    auto reg = RegCopy(regs_.config_b_reg);
+    reg.int_en = en == EN;
     return write_reg(reg);
 }
 
 IResult<bool> QMC5883L::is_overflow(){
-    auto & reg = status_reg;
+    auto & reg = regs_.status_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok(bool(reg.ovl));
+}
+
+IResult<bool> QMC5883L::is_busy(){
+    if(const auto res = read_reg(regs_.status_reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok(regs_.status_reg.ready == false);
 }

@@ -74,7 +74,7 @@ public:
         uint8_t len
     ){
         return Self(
-            CanIdentifier::from_bits(id_bits), 
+            CanIdentifier::from_sxx32_reg_bits(id_bits), 
             Payload::from_u64_and_dlc(int_val, BxCanDlc::from_bits(len))
         );
     }
@@ -144,10 +144,10 @@ public:
     /// \brief 获取载荷的定长切片
     template<size_t Extents>
     requires (Extents <= 8)
-    [[nodiscard]] __always_inline constexpr std::span<const uint8_t> payload_bytes_fixed() const{
+    [[nodiscard]] __always_inline constexpr std::span<const uint8_t, Extents> payload_bytes_fixed() const{
         if(Extents != length()) [[unlikely]]
             __builtin_trap();
-        return std::span(payload_.data(), Extents);
+        return std::span<const uint8_t, Extents>(payload_.data(), Extents);
     }
 
     /// \brief 获取载荷的可变切片

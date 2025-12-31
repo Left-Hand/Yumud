@@ -5,9 +5,9 @@
 namespace ymd::drivers{
 
 
-class TCA8418_Phy final:public TCA8418_Prelude{
+class TCA8418_Transport final:public TCA8418_Prelude{
 public:
-    TCA8418_Phy(hal::I2cDrv && i2c_drv):
+    TCA8418_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
     Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);

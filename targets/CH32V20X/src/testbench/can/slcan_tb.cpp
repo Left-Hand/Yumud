@@ -15,8 +15,8 @@ using namespace ymd;
 void slcan_main(){
     auto & DBG_UART = DEBUGGER_INST;
     DBG_UART.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
 
     DEBUGGER.retarget(&DBG_UART);

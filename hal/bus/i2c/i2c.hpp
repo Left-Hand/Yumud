@@ -10,11 +10,11 @@
 namespace ymd::hal{
 class Gpio;
 
-class I2c{
+class I2cBase{
 public:
     using Timeout = std::chrono::duration<uint16_t, std::micro>;
 
-    I2c(I2c && other) = default;
+    I2cBase(I2cBase && other) = default;
 
     struct Config{
         uint32_t baudrate;
@@ -35,15 +35,15 @@ public:
 
 
     struct Guard {
-        I2c & i2c_;
-        Guard(I2c & i2c):i2c_(i2c){}
+        I2cBase & i2c_;
+        Guard(I2cBase & i2c):i2c_(i2c){}
         ~Guard(){i2c_.lend();}
     };
 
     auto create_guard(){return Guard(*this);}
 protected:
 
-    I2c() = default;
+    I2cBase() = default;
 };
 
 

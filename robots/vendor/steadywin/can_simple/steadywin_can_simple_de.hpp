@@ -1,6 +1,6 @@
 #pragma once
 
-#include "odrive_can_simple_primitive.hpp"
+#include "steadywin_can_simple_primitive.hpp"
 
 namespace ymd::robots::steadywin::can_simple{
 
@@ -14,44 +14,9 @@ struct [[nodiscard]] FrameDeserializer{
     };
 
 private:
-    struct [[nodiscard]] BytesReader{
-        explicit constexpr BytesReader(std::span<const uint8_t> bytes) : 
-            bytes_(bytes) {}
 
-        [[nodiscard]] constexpr Option<int32_t> fetch_i32(){
-            if(remaining().size() < 4)
-                return None;
-            return Some(le_bytes_to_int<int32_t>(fetch_bytes<4>()));
-        }
-        
-        [[nodiscard]] constexpr Option<uint32_t> fetch_u32(){
-            if(remaining().size() < 4)
-                return None;
-            return Some(le_bytes_to_int<uint32_t>(fetch_bytes<4>()));
-        }
-
-
-        [[nodiscard]] constexpr Option<fp32> fetch_f32(){
-            if(remaining().size() < 4)
-                return None;
-            return Some(fp32::from_bits(le_bytes_to_int<int32_t>(fetch_bytes<4>())));
-        }
-    private:
-        std::span<const uint8_t> bytes_;
-
-        template<size_t N>
-        [[nodiscard]] constexpr std::span<const uint8_t, N> fetch_bytes(){
-            const auto ret = std::span<const uint8_t, N>(bytes_.data(), N);
-            bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
-            return ret;
-        }
-
-        [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
-            return bytes_;
-        }
-    };
 public:
-    static constexpr auto map_frame_to_event(const hal::BxCanFrame & frame) -> Result<Event, Error> {
+    static constexpr auto frame_to_event(const hal::BxCanFrame & frame) -> Result<Event, Error> {
         if(not frame.is_standard())
             return Err(Error::FrameIsNotStd);
 
@@ -60,7 +25,7 @@ public:
         const auto command = frame_id.command;
         BytesReader reader(frame.payload_bytes());
 
-        #define UNWRAP_PAYLOAD(expr) \
+        #define DEF_UNWRAP_PAYLOAD(expr) \
         ({\
             const auto may = (expr);\
             if(may.is_none())\
@@ -70,8 +35,8 @@ public:
 
         switch(command.kind()){
             case Command::GetEncoderCount:{
-                const auto shadow_count = UNWRAP_PAYLOAD(reader.fetch_i32());
-                const auto cpr_count = UNWRAP_PAYLOAD(reader.fetch_i32());
+                const auto shadow_count = DEF_UNWRAP_PAYLOAD(reader.fetch_i32());
+                const auto cpr_count = DEF_UNWRAP_PAYLOAD(reader.fetch_i32());
                 return Ok(Event{
                     .axis_id = axis_id,
                     .signal = Msg::EncoderCount{
@@ -82,7 +47,7 @@ public:
             }
             
             // case Command::GetEncoderError:{
-            //     const auto error_bits = UNWRAP_PAYLOAD(reader.fetch_u32());
+            //     const auto error_bits = DEF_UNWRAP_PAYLOAD(reader.fetch_u32());
             //     // Note: In your C++ code there's no EncoderErrorFlags::from_bits method shown,
             //     // so assuming direct bit interpretation or you'll need to implement that conversion
             //     const EncoderErrorFlags axis_error = EncoderErrorFlags::from_bits(error_bits);
@@ -93,8 +58,8 @@ public:
             // }
             
             case Command::GetEncoderEstimates:{
-                const auto position = UNWRAP_PAYLOAD(reader.fetch_f32());
-                const auto velocity = UNWRAP_PAYLOAD(reader.fetch_f32());
+                const auto position = DEF_UNWRAP_PAYLOAD(reader.fetch_f32());
+                const auto velocity = DEF_UNWRAP_PAYLOAD(reader.fetch_f32());
                 return Ok(Event{
                     .axis_id = axis_id,
                     .signal = Msg::EncoderEstimates{
@@ -114,8 +79,8 @@ public:
             }
             
             case Command::GetIq:{
-                const auto setpoint = UNWRAP_PAYLOAD(reader.fetch_f32());
-                const auto measurement = UNWRAP_PAYLOAD(reader.fetch_f32());
+                const auto setpoint = DEF_UNWRAP_PAYLOAD(reader.fetch_f32());
+                const auto measurement = DEF_UNWRAP_PAYLOAD(reader.fetch_f32());
                 return Ok(Event{
                     .axis_id = axis_id,
                     .signal = Msg::MotorCurrent{
@@ -126,7 +91,7 @@ public:
             }
             
             case Command::GetMotorError:{
-                const auto error_bits = UNWRAP_PAYLOAD(reader.fetch_u32());
+                const auto error_bits = DEF_UNWRAP_PAYLOAD(reader.fetch_u32());
                 // Similar bit mapping for MotorErrorFlags
                 const MotorErrorFlags axis_error = MotorErrorFlags::from_bits(error_bits);
                 return Ok(Event{
@@ -135,8 +100,8 @@ public:
                 });
             }
             
-            case Command::GetVbusVoltage:{
-                const auto voltage = UNWRAP_PAYLOAD(reader.fetch_f32());
+            case Command::GetBusVoltageCurrent:{
+                const auto voltage = DEF_UNWRAP_PAYLOAD(reader.fetch_f32());
                 return Ok(Event{
                     .axis_id = axis_id,
                     .signal = Msg::VbusVoltage{
@@ -148,7 +113,7 @@ public:
                 return Err(Error::NotImplemented);
         }
 
-        #undef UNWRAP_PAYLOAD
+        #undef DEF_UNWRAP_PAYLOAD
     }
 
 };

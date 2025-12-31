@@ -5,7 +5,7 @@
 
 
 namespace ymd::hal{
-class I2cSw final: public I2c{
+class I2cSw final: public I2cBase{
 public:
 
     explicit I2cSw(

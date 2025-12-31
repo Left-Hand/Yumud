@@ -15,7 +15,7 @@ using namespace ymd::drivers;
 
 #define SCL_PIN hal::PD<0>()
 #define SDA_PIN hal::PD<1>()
-void tcs34725_tb(OutputStream & logger, hal::I2c & i2c){
+void tcs34725_tb(OutputStream & logger, hal::I2cBase & i2c){
     TCS34725 tcs{&i2c};
     tcs.init({}).examine();
     tcs.start_conv().examine();
@@ -28,7 +28,7 @@ void tcs34725_tb(OutputStream & logger, hal::I2c & i2c){
 void tcs34725_main(){
     DEBUGGER_INST.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = 115200
+        .baudrate = hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
 

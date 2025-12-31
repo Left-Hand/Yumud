@@ -334,7 +334,7 @@ IResult<> LT8960L::init(const Config & cfg){
     // 无许可证声明
     // https://github.com/IOsetting/py32f0-template/blob/main/Examples/PY32F002B/LL/GPIO/LT8960L_Wireless/LT8960Ldrv.c
 
-    if(const auto res = phy_.init();
+    if(const auto res = transport_.init();
         res.is_err()) return Err(res.unwrap_err());
 
     if(const auto res = validate();

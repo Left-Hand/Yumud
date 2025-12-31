@@ -32,10 +32,9 @@
 /**************************************************************************/
 
 
-#include "core/stream/ostream.hpp"
-#include "core/math/real.hpp"
-#include "primitive/arithmetic/angular.hpp"
+
 #include "core/math/matrix/static_matrix.hpp"
+#include "unit_vec2.hpp"
 
 namespace ymd{
 
@@ -124,7 +123,7 @@ struct [[nodiscard]] Vec2{
     [[nodiscard]] __fast_inline static constexpr Vec2<T> from_angle_and_length(
         const Angular<U> angle, const T length){
         const auto [s,c] = angle.sincos();
-        return {static_cast<T>(length * c), static_cast<T>(length * s)};
+        return {length * static_cast<T>(c), length * static_cast<T>(s)};
     }
 
     [[nodiscard]] constexpr T & operator [](const size_t idx) { 
@@ -135,11 +134,15 @@ struct [[nodiscard]] Vec2{
         return *(&this->x + idx);
     }
 
+    [[nodiscard]] constexpr UnitVec2<T> normalized() const{
+        static_assert(not std::is_integral_v<T>);
+        const auto ilen = this->inv_length();
+        return UnitVec2<T>(x * ilen, y * ilen);
+    }
 
-
-
-    [[nodiscard]] constexpr Vec2<T> normalized() const;
-    [[nodiscard]] constexpr T cross(const Vec2<T> & other) const;
+    [[nodiscard]] constexpr T cross(const Vec2<T> & other) const{
+        return (x*other.y - y*other.x);
+    }
 
     template<typename U>
     [[nodiscard]] __fast_inline constexpr __attribute__((const)) bool 
@@ -153,7 +156,13 @@ struct [[nodiscard]] Vec2{
         return (x*other.y < y*other.x);
     }
 
-    [[nodiscard]] constexpr T dot(const Vec2<T> & other) const;
+    [[nodiscard]] constexpr T dot(const Vec2<T> & other) const{
+        return (x*other.x + y*other.y);
+    }
+
+    [[nodiscard]] constexpr T dot(const UnitVec2<T> & other) const{
+        return dot(Vec2<T>(other));
+    }
 
     template<typename U>
     [[nodiscard]] constexpr Vec2<T> improduct(const Vec2<U> & b) const{
@@ -166,13 +175,15 @@ struct [[nodiscard]] Vec2{
     template<typename U>
     [[nodiscard]] __fast_inline constexpr Vec2<T> rotated(const Angular<U> angle)const{
         static_assert(not std::is_integral_v<U>);
-        // return this->improduct(Vec2<T>::from_angle(angle));
-        const auto [s,c] = angle.sincos();
+        const auto [_s,_c] = angle.sincos();
+        const auto s = static_cast<T>(_s);
+        const auto c = static_cast<T>(_c);
         return Vec2<T>(
             static_cast<T>(x*c - y*s), 
             static_cast<T>(x*s + y*c)
         );
     }
+
     [[nodiscard]] __fast_inline constexpr Vec2<T> abs() const;
 
 
@@ -569,21 +580,6 @@ constexpr Vec2<T> Vec2<T>::snapped(const Vec2<T> &by) const{
     return Vec2<T>(snap(x, by.x), snap(y, by.y));
 }
 
-template<typename T>
-constexpr __fast_inline Vec2<T> Vec2<T>::normalized() const{
-    static_assert(not std::is_integral_v<T>);
-    return (*this) * math::inv_sqrt(this->length_squared());
-}
-
-template<typename T>
-constexpr __fast_inline T Vec2<T>::dot(const Vec2<T> & with) const{
-    return (x*with.x + y*with.y);
-}
-
-template<typename T>
-constexpr __fast_inline T Vec2<T>::cross(const Vec2<T> & with) const{
-    return (x*with.y - y*with.x);
-}
 
 
 #if 1

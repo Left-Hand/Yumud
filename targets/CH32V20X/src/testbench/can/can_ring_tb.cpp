@@ -12,8 +12,8 @@ using namespace ymd;
 
 void can_ring_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000, 
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz), 
         .tx_strategy = CommStrategy::Blocking
     });
 
@@ -31,12 +31,12 @@ void can_ring_main(){
         .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
     });
 
-    auto write_msg = [&](const hal::BxCanFrame & frame){
+    auto write_frame = [&](const hal::BxCanFrame & frame){
         DEBUG_PRINTLN("tx", frame);
         return can.try_write(frame);
     };
 
-    static constexpr auto UNREACHABLE_MSGS = std::to_array({
+    static constexpr auto UNREACHABLE_FRAMES = std::to_array({
         hal::BxCanFrame(
             hal::CanStdId::from_bits(0x100), 
             hal::BxCanPayload::from_list({0, 1, 3})
@@ -51,7 +51,7 @@ void can_ring_main(){
         )
     });
 
-    static constexpr auto REACHABLE_MSGS = std::to_array({
+    static constexpr auto REACHABLE_FRAMES = std::to_array({
         hal::BxCanFrame(
             hal::CanStdId::from_bits(0x200), 
             hal::BxCanPayload::from_list({0, 1, 2})
@@ -63,13 +63,13 @@ void can_ring_main(){
     });
 
     while(true){
-        for(const auto frame : UNREACHABLE_MSGS){
-            write_msg(frame).examine();
+        for(const auto frame : UNREACHABLE_FRAMES){
+            write_frame(frame).examine();
             clock::delay(2ms);
         }
 
-        for(const auto frame : REACHABLE_MSGS){
-            write_msg(frame).examine();
+        for(const auto frame : REACHABLE_FRAMES){
+            write_frame(frame).examine();
             clock::delay(2ms);
         }
 
@@ -78,8 +78,8 @@ void can_ring_main(){
         if(can.available()){
             DEBUG_PRINTLN(can.available());
             while(can.available()){
-                auto rx_msg = can.read();
-                DEBUG_PRINTLN("rx", rx_msg);
+                auto rx_frame = can.read();
+                DEBUG_PRINTLN("rx", rx_frame);
             }
         }else{
             DEBUG_PRINTLN("no frame received");

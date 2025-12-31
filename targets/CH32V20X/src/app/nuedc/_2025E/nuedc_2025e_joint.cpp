@@ -107,11 +107,11 @@ void nuedc_2025e_joint_main(){
 
 
 
-    auto & DBG_UART = hal::uart2;
+    auto & DBG_UART = hal::usart2;
 
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = UART_BAUD
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(UART_BAUD),
     });
 
 
@@ -251,7 +251,7 @@ void nuedc_2025e_joint_main(){
     RunStatus run_status_;
     run_status_.state = RunState::Idle;
 
-    RingBuf<hal::BxCanFrame, CANMSG_QUEUE_SIZE> msg_queue_;
+    RingBuf<hal::BxCanFrame, CANFRAME_QUEUE_SIZE> msg_queue_;
 
     AlphaBetaCoord<iq16> ab_volt_;
     

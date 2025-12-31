@@ -19,8 +19,8 @@ using namespace ymd;
 
 using namespace ymd::drivers;
 
-// #define UART uart2
-#define UART hal::uart2
+// #define UART usart2
+#define UART hal::usart2
 #define SCL_PIN hal::PB<0>()
 #define SDA_PIN hal::PB<1>()
 #define MAG_ACTIVATED
@@ -37,7 +37,7 @@ using namespace ymd::drivers;
     return Ok();
 }
 
-[[maybe_unused]] static void ak8963_tb(hal::I2c & i2c){
+[[maybe_unused]] static void ak8963_tb(hal::I2cBase & i2c){
     MPU6050 mpu{&i2c};
     
     init_mpu6050(mpu).examine();
@@ -54,7 +54,7 @@ using namespace ymd::drivers;
     while(true);
 }
 
-[[maybe_unused]] static void mpu6050_tb(hal::I2c & i2c){
+[[maybe_unused]] static void mpu6050_tb(hal::I2cBase & i2c){
     MPU6050 mpu{&i2c};
 
     init_mpu6050(mpu).examine();
@@ -68,7 +68,7 @@ using namespace ymd::drivers;
     }
 }
 
-[[maybe_unused]] static void mpu6500_tb(hal::I2c & i2c){
+[[maybe_unused]] static void mpu6500_tb(hal::I2cBase & i2c){
     MPU6050 mpu{&i2c};
 
     #ifdef MAG_ACTIVATED
@@ -165,8 +165,8 @@ using namespace ymd::drivers;
 
 void mpu6050_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000 
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);

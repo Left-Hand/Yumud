@@ -68,3 +68,26 @@ static_assert(signbit(iq16(167)) == 0);
 static_assert(signbit(iq16(-167)) == 1);
 
 static_assert(square(iq16(2)) = 4);
+static_assert(math::abs(iiq32(2)) == 2);
+static_assert(math::abs(iiq32(0)) == 0);
+
+// namespace mymath{
+// template<typename D>
+// static constexpr D abs(const D x){
+//     return x < 0 ? -x : x;
+// }
+// };
+// template<size_t Q, typename D>
+// static constexpr fixed_t<Q, D> closer_to_zero_(const fixed_t<Q, D> a, const fixed_t<Q, D> b){
+//     if constexpr(std::is_signed_v<D>){
+//         if(mymath::abs(a.to_bits()) < mymath::abs(b.to_bits())){
+//             return a;
+//         }else{
+//             return b;
+//         }
+//     }
+// }
+
+
+static_assert(math::closer_to_zero(iiq32(2), iiq32(0)) == 0);
+static_assert(math::closer_to_zero(iiq32(-2), iiq32(0)) == 0);

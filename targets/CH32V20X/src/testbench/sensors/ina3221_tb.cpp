@@ -14,7 +14,7 @@ using namespace ymd;
 
 using drivers::INA3221;
 
-#define UART hal::uart2
+#define UART hal::usart2
 #define SCL_PIN hal::PB<0>()
 #define SDA_PIN hal::PB<1>()
 
@@ -22,9 +22,9 @@ static constexpr double SHUNT_RES = 0.1;
 static constexpr double INV_SHUNT_RES = 1 / SHUNT_RES;
 
 void ina3221_main(){
-    hal::uart2.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+    hal::usart2.init({
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);

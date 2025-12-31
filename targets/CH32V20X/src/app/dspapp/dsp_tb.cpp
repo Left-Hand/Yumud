@@ -275,12 +275,12 @@ static auto make_tunning_filter(const T delay){
 
 // template<typename T>
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 void dsp_main(){
-    // uart2.init(576000, CommStrategy::Blocking);
+    // usart2.init(576000, CommStrategy::Blocking);
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);

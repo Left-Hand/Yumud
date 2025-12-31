@@ -2,22 +2,22 @@
 #include "core/stream/ostream.hpp"
 
 using namespace ymd;
-namespace ymd::hal{
-OutputStream & operator<<(OutputStream & os, const CanException & exception){
-    switch(exception){
-        case CanException::Stuff: 
+namespace ymd::hal::can{
+OutputStream & operator<<(OutputStream & os, const CanError & error){
+    switch(error){
+        case CanError::Stuff: 
             return os << "Stuff";
-        case CanException::Form: 
+        case CanError::Form: 
             return os << "Form";
-        case CanException::Acknowledge: 
+        case CanError::Acknowledge: 
             return os << "Acknowledge";
-        case CanException::BitRecessive: 
+        case CanError::BitRecessive: 
             return os << "BitRecessive";
-        case CanException::BitDominant: 
+        case CanError::BitDominant: 
             return os << "BitDominant";
-        case CanException::Crc: 
+        case CanError::Crc: 
             return os << "Crc";
-        case CanException::SoftwareSet:
+        case CanError::SoftwareSet:
             return os << "SoftwareSet";
     }
     __builtin_unreachable();

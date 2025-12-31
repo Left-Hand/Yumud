@@ -170,7 +170,7 @@ void smc2025_main(){
 
     UART.init({
         .remap = hal::UART6_REMAP_PC0_PC1, 
-        .baudrate = 576_KHz
+        .baudrate = hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);
@@ -193,7 +193,7 @@ void smc2025_main(){
     const auto spi_rank = spi.allocate_cs_pin(&spi_cs_gpio).unwrap();
 
     drivers::ST7789 tft{
-        drivers::ST7789_Phy{&spi, spi_rank, &lcd_dc, &dev_rst}, 
+        drivers::ST7789_Transport{&spi, spi_rank, &lcd_dc, &dev_rst}, 
         {240, 240}
     };
 

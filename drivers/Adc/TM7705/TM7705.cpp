@@ -10,7 +10,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-IResult<> TM7705_Phy::write_byte(uint8_t dat1){	//将数据dat1写入TM7705
+IResult<> TM7705_Transport::write_byte(uint8_t dat1){	//将数据dat1写入TM7705
     sclk_pin_ = HIGH;
     for(uint8_t i=0;i<8;i++){
         sclk_pin_= LOW;
@@ -29,7 +29,7 @@ IResult<> TM7705_Phy::write_byte(uint8_t dat1){	//将数据dat1写入TM7705
 }
 
 
-IResult<> TM7705_Phy::read_byte(uint8_t & ret){   //从TM7705寄存器读数据
+IResult<> TM7705_Transport::read_byte(uint8_t & ret){   //从TM7705寄存器读数据
     uint8_t i,dat2=0;
     sclk_pin_ = HIGH;
     for(i=0;i<8;i++)
@@ -48,7 +48,7 @@ IResult<> TM7705_Phy::read_byte(uint8_t & ret){   //从TM7705寄存器读数据
 }
 
 
-IResult<> TM7705_Phy::init(){
+IResult<> TM7705_Transport::init(){
     sclk_pin_.outpp(HIGH);
     din_pin_.outpp(HIGH);
     dout_pin_ = HIGH;

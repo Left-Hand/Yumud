@@ -8,7 +8,6 @@
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
 #include "core/utils/data_iter.hpp"
-#include "core/utils/bits/bitflag.hpp"
 #include "core/string/string_view.hpp"
 #include "core/utils/default.hpp"
 
@@ -52,7 +51,7 @@ using namespace ymd;
 
 #ifdef UART1_PRESENT
 
-#define UART hal::uart1
+#define UART hal::usart1
 
 using digipw::AlphaBetaCoord;
 
@@ -393,11 +392,11 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
 
 [[maybe_unused]] static void currentloop_tb(){
-    hal::uart1.init({
-        .remap = hal::UART1_REMAP_PA9_PA10,
-        .baudrate = 576000
+    hal::usart1.init({
+        .remap = hal::USART1_REMAP_PA9_PA10,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
-    DEBUGGER.retarget(&hal::uart1);
+    DEBUGGER.retarget(&hal::usart1);
     // DEBUG_PRINTLN(hash(.unwrap()));
     clock::delay(400ms);
 
@@ -530,8 +529,8 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 void mystepper_main(){
 
     UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);

@@ -15,10 +15,10 @@ class ICM42605 final:
 {
 public:
     explicit ICM42605(
-        Some<hal::I2c *> i2c, 
+        Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
-        phy_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
+        transport_(hal::I2cDrv(i2c, DEFAULT_I2C_ADDR)){;}
 
     [[nodiscard]] IResult<> init();
     
@@ -34,7 +34,7 @@ public:
 private:
 
 
-    InvensenseImu_Phy phy_;
+    InvensenseImu_Transport transport_;
     Option<Bank> last_bank_ = None;  
 
     iq16 acc_scaler_ = 0;
@@ -48,21 +48,21 @@ private:
         if(last_bank_.is_some() and (last_bank_.unwrap() == bank))
             return Ok();
         last_bank_ = Some(bank);
-        return phy_.write_reg(SWITCH_BANK_COMMAND, static_cast<uint8_t>(bank));
+        return transport_.write_reg(SWITCH_BANK_COMMAND, static_cast<uint8_t>(bank));
     }
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        if(const auto res = phy_.write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res = transport_.write_reg(T::ADDRESS, reg.to_bits());
             res.is_err()) return res;
         reg.apply();
         return Ok();
     }
 
     [[nodiscard]] IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
-        if(const auto res = phy_.write_reg(reg_addr, reg_val);
+        if(const auto res = transport_.write_reg(reg_addr, reg_val);
             res.is_err()) return res;
         return Ok();
     }
@@ -71,11 +71,11 @@ private:
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        return phy_.read_reg(T::ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(T::ADDRESS, reg.as_bits_mut());
     };
 
     [[nodiscard]] IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
-        if(const auto res = phy_.read_reg(reg_addr, reg_val);
+        if(const auto res = transport_.read_reg(reg_addr, reg_val);
             res.is_err()) return res;
         return Ok();
     }

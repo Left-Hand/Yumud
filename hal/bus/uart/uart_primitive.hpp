@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include "primitive/nearest_freq.hpp"
+#include "core/utils/sumtype.hpp"
 
 namespace ymd{
     class OutputStream;
@@ -21,7 +23,8 @@ struct [[nodiscard]] UartEvent{
         TxOverrun,
         RxIdle,
         RxOverrun,
-        RxFull
+        RxFull,
+        RxBulk
     };
 
     using enum Kind;
@@ -48,5 +51,9 @@ private:
     Kind kind_;
 
     friend OutputStream & operator << (OutputStream & os, const UartEvent & event);
+};
+
+struct [[nodiscard]] UartBaudrate:
+    public Sumtype<hal::NearestFreq>{
 };
 }

@@ -205,7 +205,7 @@ IResult<> ICM42688::reset(){
 IResult<>  ICM42688::update(){
 	std::array<int16_t, 6> buf;
 
-	if(const auto res = phy_.read_burst(ACC_DATA_X0L_ADDR - 1, std::span(buf));
+	if(const auto res = transport_.read_burst(ACC_DATA_X0L_ADDR - 1, std::span(buf));
 		res.is_err()) return Err(res.unwrap_err());
 	
 	regs_.acc_data_ = {buf[0], buf[1], buf[2]};

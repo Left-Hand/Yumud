@@ -17,18 +17,18 @@ class BMI088_Acc final:
     public BMI088_Prelude{
 public:
     explicit BMI088_Acc(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
+        transport_(i2c_drv){;}
     explicit BMI088_Acc(hal::I2cDrv && i2c_drv):
-        phy_(std::move(i2c_drv)){;}
-    explicit BMI088_Acc(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+        transport_(std::move(i2c_drv)){;}
+    explicit BMI088_Acc(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        transport_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     explicit BMI088_Acc(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
+        transport_(spi_drv){;}
     explicit BMI088_Acc(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
+        transport_(std::move(spi_drv)){;}
     explicit BMI088_Acc(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        phy_(hal::SpiDrv{spi, rank}){;}
+        transport_(hal::SpiDrv{spi, rank}){;}
 
 
     [[nodiscard]] IResult<> init();
@@ -43,7 +43,7 @@ public:
     [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
     [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
 private:
-    BoschImu_Phy phy_;
+    BoschImu_Transport transport_;
     iq20 acc_scaler_ = 0;
     BMI088_AccRegs regs_ = {};
 
@@ -61,7 +61,7 @@ private:
     //     [[nodiscard]] IResult<> enable_output(const Enable en){
     //         auto reg = RegCopy(ctrl_);
     //         reg.int_out = en == EN;
-    //         return bmi_.phy_.write_reg(reg);
+    //         return bmi_.transport_.write_reg(reg);
     //     }
     // protected:
     //     BMI088_Acc & bmi_;
@@ -106,18 +106,18 @@ public:
     using IResult = Result<T, Error>;
 public:
     explicit BMI088_Gyr(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
+        transport_(i2c_drv){;}
     explicit BMI088_Gyr(hal::I2cDrv && i2c_drv):
-        phy_(std::move(i2c_drv)){;}
-    explicit BMI088_Gyr(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
+        transport_(std::move(i2c_drv)){;}
+    explicit BMI088_Gyr(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        transport_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     explicit BMI088_Gyr(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
+        transport_(spi_drv){;}
     explicit BMI088_Gyr(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
+        transport_(std::move(spi_drv)){;}
     explicit BMI088_Gyr(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        phy_(hal::SpiDrv{spi, rank}){;}
+        transport_(hal::SpiDrv{spi, rank}){;}
 
 
     [[nodiscard]] IResult<> init();
@@ -130,7 +130,7 @@ public:
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs gyr_fs);
     [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
 private:
-    BoschImu_Phy phy_;
+    BoschImu_Transport transport_;
     iq20 gyr_scaler_ = 0;
 
     BMI088_GyrRegs regs_ = {};

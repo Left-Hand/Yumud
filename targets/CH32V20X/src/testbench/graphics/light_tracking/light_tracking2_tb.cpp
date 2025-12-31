@@ -19,7 +19,7 @@
 #include "dsp/siggen/noise/LCGNoiseSiggen.hpp"
 #include "data.hpp"
 
-#include "hal/rng/rng.hpp"
+#include "hal/sysmisc/rng/rng.hpp"
 
 using namespace ymd;
 
@@ -394,9 +394,9 @@ static void render_row(
 
 // #if 0
 
-#define UART hal::uart2
+#define UART hal::usart2
 using drivers::ST7789;
-using drivers::ST7789_Phy;
+using drivers::ST7789_Transport;
 
 static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz;
 // static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz / 4;
@@ -404,8 +404,8 @@ static constexpr size_t LCD_SPI_FREQ_HZ = 72_MHz;
 void light_tracking_main(void){
 
     UART.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
@@ -466,7 +466,7 @@ void light_tracking_main(void){
     // ST7789 displayer({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     
     ST7789 displayer(
-        ST7789_Phy{
+        ST7789_Transport{
             &spi, 
             spi_rank, 
             &lcd_dc, 

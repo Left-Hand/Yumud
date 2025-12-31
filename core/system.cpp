@@ -4,7 +4,7 @@
 #include "core/sdk.hpp"
 #include "core/arch.hpp"
 
-#include "hal/crc/crc.hpp"
+#include "hal/sysmisc/crc/crc.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "core/clock/clock.hpp"

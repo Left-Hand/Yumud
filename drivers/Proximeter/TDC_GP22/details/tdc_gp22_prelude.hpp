@@ -116,7 +116,7 @@ struct GP22_Regs final:public GP22_Prelude{
     }DEF_R32(cfg1_reg)
 };
 
-class GP22_Phy final:
+class GP22_Transport final:
     private GP22_Prelude{
 public:
         // TDC硬件初始化

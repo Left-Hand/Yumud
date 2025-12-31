@@ -1,31 +1,25 @@
 #pragma once
 
 
-#include "details/mks_stepper_utils.hpp"
+#include "mks_stepper_transport.hpp"
 
 namespace ymd::robots::mksmotor{
 
 class MksStepper final{
 public:
-    using HommingMode = prelude::HommingMode;
-    using Error = prelude::Error;
-    using Buf = prelude::Buf;
-
-    template<typename T = void>
-    using IResult = prelude::IResult<T>;
 
     struct Config{
         NodeId nodeid;
     };
 
     explicit MksStepper(const Config & cfg, Some<hal::Can *> && can) : 
-        phy_(std::move(can)
+        transport_(std::move(can)
     ){
         reconf(cfg);
     }
 
     explicit MksStepper(const Config & cfg, Some<hal::Uart *> && uart) : 
-        phy_(std::move(uart)
+        transport_(std::move(uart)
     ){
         reconf(cfg);
     }
@@ -56,7 +50,7 @@ public:
     IResult<> trig_homming(const HommingMode mode);
 private:
     using Phy = MksMotorPhy;
-    Phy phy_;
+    Phy transport_;
 
     static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
     NodeId nodeid_ = DEFAULT_NODE_ID;
@@ -68,7 +62,7 @@ private:
     ){
         Buf buf;
 
-        const auto bytes = msgs::serialize(obj);
+        const auto bytes = req_msgs::serialize(obj);
         const auto verify_code = get_verify_code(
             nodeid,
             T::FUNC_CODE,
@@ -84,7 +78,7 @@ private:
     IResult<> write_payload(const T & obj){
         const auto buf = map_payload_to_bytes(nodeid_, obj);
 
-        phy_.write_can_frame(nodeid_, buf.as_slice());
+        transport_.write_can_frame(nodeid_, buf.as_slice());
 
         return Ok();
     }

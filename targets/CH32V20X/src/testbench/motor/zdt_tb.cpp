@@ -16,8 +16,8 @@ using namespace ymd;
 using namespace ymd::robots;
 using robots::zdtmotor::ZdtStepper;
 
-#define DBG_UART hal::uart2
-#define COMM_UART hal::uart1
+#define DBG_UART hal::usart2
+#define COMM_UART hal::usart1
 #define COMM_CAN hal::can1
 
 #define PHY_SEL_CAN 0
@@ -30,7 +30,7 @@ void zdt_main(){
     // slcan_test();
     DBG_UART.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = 576000
+        .baudrate = hal::NearestFreq(576_KHz),
     });
 
     DEBUGGER.retarget(&DBG_UART);

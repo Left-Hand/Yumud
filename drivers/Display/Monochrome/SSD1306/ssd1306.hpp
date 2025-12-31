@@ -12,14 +12,14 @@ public:
 
     template<typename Cfg, typename T = std::decay_t<Cfg>>
     explicit SSD13XX(Phy && phy, Cfg && cfg):
-        phy_(std::move(phy)),
+        transport_(std::move(phy)),
         frame_(VerticalBinaryImage{cfg.size}){;}
 
 
     template<typename Cfg>
     [[nodiscard]] IResult<> init(Cfg && cfg){
             // DEBUG_PRINTLN(std::showbase, std::hex, init_cmds_list_);
-        if(const auto res = phy_.init() ; 
+        if(const auto res = transport_.init() ; 
             res.is_err()) return res;
         if(const auto res = preinit_by_cmds(cfg.buf); 
             res.is_err()) return res;
@@ -38,18 +38,19 @@ public:
 
     [[nodiscard]] IResult<> enable_display(const Enable en);
     [[nodiscard]] IResult<> enable_flip_y(const Enable flip_en = EN){
-        return phy_.write_command(0xA0 | (flip_en == EN));}
+        return transport_.write_command(0xA0 | (flip_en == EN));}
     [[nodiscard]] IResult<> enable_flip_x(const Enable flip_en = EN){
-        return phy_.write_command(0xC0 | ((flip_en == EN) << 3));}
+        return transport_.write_command(0xC0 | ((flip_en == EN) << 3));}
     [[nodiscard]] IResult<> enable_inversion(const Enable inv_en = EN){
-        return phy_.write_command(0xA7 - (inv_en == EN));}  
+        return transport_.write_command(0xA7 - (inv_en == EN));}  
 
     [[nodiscard]] Vec2<uint16_t> size() const {return frame_.size();}
     VerticalBinaryImage & fetch_frame() {return frame_;};
 
 private:
 
-    Phy phy_;
+
+    Phy transport_;
 
     const Vec2<uint16_t> offset_;
     VerticalBinaryImage frame_;
@@ -79,6 +80,10 @@ private:
     [[nodiscard]] IResult<> set_flush_pos(const Vec2<uint16_t> pos);
 
     [[nodiscard]] IResult<> preinit_by_cmds(const std::span<const uint8_t> pbuf);
+
+    IResult<> write_command(const uint8_t cmd){
+        return transport_.write_command(cmd);
+    }
 
     template<typename T>
     friend class DrawTarget;

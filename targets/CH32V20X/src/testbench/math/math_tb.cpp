@@ -57,8 +57,8 @@ DEBUGGER.println(__VA_ARGS__);\
 
 void math_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000 
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.set_eps(4);
@@ -98,11 +98,11 @@ void math_main(){
     };
     
     volatile size_t n = 0;
-    constexpr auto H = compute_homography_from_unit_rect(
+    constexpr auto H = compute_homogratransport_from_unit_rect(
         std::span(dst));
 
     const auto elapsed = measure_total_elapsed_us([&]{
-        const auto mat = compute_homography_from_unit_rect(
+        const auto mat = compute_homogratransport_from_unit_rect(
             std::span(dst)
         );
         (void)mat;
@@ -291,7 +291,7 @@ void math_main(){
 //         Vec2<float>{0, 1}
 //     };
     
-//     // constexpr auto H = compute_homography_from_unit_rect(
+//     // constexpr auto H = compute_homogratransport_from_unit_rect(
 //     //     std::span<const Vec2<float>, 4>(dst));
 //     constexpr auto H = compute_homography(
 //         std::span(src), std::span(dst));

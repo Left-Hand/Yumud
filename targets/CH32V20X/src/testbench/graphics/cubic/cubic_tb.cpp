@@ -119,16 +119,9 @@ static constexpr Vec3<float> up = {0,1,0};
 
 #define lookat(view, eye, center, up) \
 { \
-	Vec3<float> zaxis = Vec3<float>::ZERO; \
-	zaxis = (eye - center); \
-	zaxis = zaxis.normalized(); \
- \
-	Vec3<float> xaxis = Vec3<float>::ZERO; \
-	xaxis = up.cross(zaxis); \
-	xaxis = xaxis.normalized(); \
- \
-	Vec3<float> yaxis = Vec3<float>::ZERO; \
-	yaxis = zaxis.cross(xaxis); \
+	const auto zaxis = (eye - center).normalized(); \
+	const auto xaxis = (up.cross(zaxis).normalized()); \
+	const auto yaxis = zaxis.cross(xaxis); \
  \
 	view.m[0][0] = xaxis.x; \
 	view.m[0][1] = yaxis.x; \
@@ -415,13 +408,13 @@ static void precompute_2(const float angle)
 	mat4_mul_mat4(mvp, vp, r);
 }
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 void cubic_main(void){
 
     DEBUGGER_INST.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);
@@ -454,7 +447,7 @@ void cubic_main(void){
 	});
 
     drivers::ST7789 tft{
-		drivers::ST7789_Phy{
+		drivers::ST7789_Transport{
 			&spi, 
 			spi.allocate_cs_pin(&lcd_cs).unwrap(), 
 			&lcd_dc, 

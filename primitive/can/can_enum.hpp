@@ -249,6 +249,8 @@ private:
     }
 };
 
+
+
 struct [[nodiscard]] WiringMode{
     using Self = WiringMode;
 
@@ -287,18 +289,44 @@ private:
 };
 
 
-
-enum class [[nodiscard]] Exception:uint8_t{
-    Stuff = 0x10,
-    Form = 0x20,
-    Acknowledge = 0x30,
-    BitRecessive = 0x40,
-    BitDominant = 0x50,
-    Crc = 0x60,
-    SoftwareSet = 0x70,
+//can错误
+enum class [[nodiscard]] Error:uint8_t{
+    Stuff = 0x1,
+    Form = 0x2,
+    Acknowledge = 0x3,
+    BitRecessive = 0x4,
+    BitDominant = 0x5,
+    Crc = 0x6,
+    SoftwareSet = 0x7,
 };
 
-OutputStream & operator<<(OutputStream & os, const Exception & fault);
+struct [[nodiscard]] ErrorFlags{
+    uint32_t error_warning:1;
+    uint32_t error_passive:1;
+    uint32_t bus_off:1;
+    uint32_t stuff:1;
+    uint32_t form:1;
+    uint32_t acknowledgment:1;
+    uint32_t bit_recessive:1;
+    uint32_t bit_dominant:1;
+    uint32_t crc_error:1;
+    uint32_t fifo0_overrun:1;
+    uint32_t fifo1_overrun:1;
+
+    uint32_t mbox0_arbitration_lost:1;
+    uint32_t mbox0_transmit:1;
+    uint32_t mbox1_arbitration_lost:1;
+    uint32_t mbox1_transmit:1;
+    uint32_t mbox2_arbitration_lost:1;
+    uint32_t mbox2_transmit:1;
+
+    uint32_t timout:1;
+    uint32_t peripheral_not_initialized:1;
+    uint32_t peripheral_not_ready:1;
+    uint32_t peripheral_not_started:1;
+};
+
+OutputStream & operator<<(OutputStream & os, const Error & fault);
 
 enum class [[nodiscard]] LibError:uint8_t{
     BlockingTransmitTimeout,
@@ -323,14 +351,72 @@ struct [[nodiscard]] NominalBitTimming:
     public Sumtype<NominalBitTimmingCoeffs, Baudrate>{
 };
 
+// https://docs.rs/embassy-stm32/latest/embassy_stm32/can/config/enum.TxBufferMode.html
+enum class TxBufferMode:uint8_t {
+    // TX FIFO operation - In this mode CAN frames are trasmitted strictly in write order.
+    Fifo,
+    // TX priority queue operation - In this mode CAN frames are transmitted according to CAN priority.
+    Priority,
+};
 
+#if 0
+struct FdCanConfig final {
+    // Nominal Bit Timings
+    CanNominalBitTimming nbtr;
+    // (Variable) Data Bit Timings
+    DataBitTiming dbtr;
+    // Enables or disables automatic retransmission of messages
+
+    // If this is enabled, the CAN peripheral will automatically try to retransmit each frame util it can be sent. Otherwise, it will try only once to send each frame.
+
+    // Automatic retransmission is enabled by default.
+    Enable automatic_retransmit;
+
+    // The transmit pause feature is intended for use in CAN systems where the CAN message 
+    // identifiers are permanently specified to specific values and cannot easily be changed.
+
+    // These message identifiers can have a higher CAN arbitration priority than other defined messages, 
+    // while in a specific application their relative arbitration priority must be inverse.
+
+    // This may lead to a case where one ECU sends a burst of CAN messages that cause another ECU CAN 
+    // messages to be delayed because that other messages have a lower CAN arbitration priori
+    Enable transmit_pause;
+
+    // Enabled or disables the pausing between transmissions
+    // This feature looses up burst transmissions coming from a single node and it protects against 
+    // “babbling idiot” scenarios where the application program erroneously requests too many transmissions.
+    FrameTransmissionConfig frame_transmit;
+
+    // Non Isoe Mode If this is set, the FDCAN uses the CAN FD frame format as specified by the 
+    // Bosch CAN FD Specification V1.0.
+    Enable non_iso_mode;
+
+    // Edge Filtering: Two consecutive dominant tq required to detect an edge for hard synchronization
+    Enable edge_filtering;
+
+    // Enables protocol Error handling
+    Enable protocol_Error_handling;
+
+    // Sets the general clock divider for this FdCAN instance
+    ClockDivider clock_divider;
+
+    // Sets the timestamp source
+    TimestampSource timestamp_source;
+
+    // Configures the Global Filter
+    GlobalFilter global_filter;
+
+    // TX buffer mode (FIFO or priority queue)
+    TxBufferMode tx_buffer_mode;
+};
+#endif
 };
 
 namespace ymd::hal{
 using CanSwj = can::Swj;
 using CanBaudrate = can::Baudrate;
 using CanWiringMode = can::WiringMode;
-using CanException = can::Exception;
+using CanError = can::Error;
 using CanLibError = can::LibError;
 using CanRtrSpecfier = can::RtrSpecfier;
 using CanRtr = can::Rtr;

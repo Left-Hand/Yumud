@@ -4,8 +4,8 @@
 #include <compare>
 #include "core/utils/Option.hpp"
 
-//这个类与平台无关 相关标准在CanFD的官方文档中定义
-//这个文件描述了CanDlc类 对于dlc的字段进行类型安全保障
+
+//这个文件描述了BxCanDlc和FdCanBlc类 对于dlc的字段进行类型安全保障
 
 namespace ymd{
 class OutputStream;
@@ -67,7 +67,7 @@ private:
     friend OutputStream & operator <<(OutputStream & os, const Self & self);
 };
 
-
+//这个类与平台无关 相关标准在CanFD的官方文档中定义
 //fdcan的dlc字段 至少需要四个比特才能表述
 struct [[nodiscard]] FdCanDlc{
     static constexpr size_t NUM_BITS = 4;
@@ -83,12 +83,27 @@ struct [[nodiscard]] FdCanDlc{
         return Self(bits);
     }
 
-    /// @brief 从零长开始构造
-    /// @return CANFD帧的DLC
-    static constexpr Self zero(){
-        return Self(static_cast<uint8_t>(0));
+    static constexpr Option<Self> try_from_bits(const uint8_t bits){
+        if(bits > 15) [[unlikely]]
+            return None;
+        return Some(Self(bits));
     }
 
+
+    static constexpr Self from_length(const size_t length){
+        if(length <= 8) [[likely]]
+            return Self::from_bits(static_cast<uint8_t>(length));
+        switch(length){
+            case 12:    return Self::from_bits(9);
+            case 16:    return Self::from_bits(10);
+            case 20:    return Self::from_bits(11);
+            case 24:    return Self::from_bits(12);
+            case 32:    return Self::from_bits(13);
+            case 48:    return Self::from_bits(14);
+            case 64:    return Self::from_bits(15);
+        }
+        __builtin_trap();
+    }
     static constexpr Option<Self> try_from_length(const size_t length){
         if(length > 64) [[unlikely]]
             return None;
@@ -125,19 +140,16 @@ struct [[nodiscard]] FdCanDlc{
         return None;
     }
 
-    static constexpr Self from_length(const size_t length){
-        if(length <= 8) [[likely]]
-            return Self::from_bits(static_cast<uint8_t>(length));
-        switch(length){
-            case 12:    return Self::from_bits(9);
-            case 16:    return Self::from_bits(10);
-            case 20:    return Self::from_bits(11);
-            case 24:    return Self::from_bits(12);
-            case 32:    return Self::from_bits(13);
-            case 48:    return Self::from_bits(14);
-            case 64:    return Self::from_bits(15);
-        }
-        __builtin_trap();
+    /// @brief 从零长构造
+    /// @return CANFD帧的DLC
+    static constexpr Self zero(){
+        return from_bits(static_cast<uint8_t>(0));
+    }
+    
+    /// @brief 从满长度构造
+    /// @return CANFD帧的DLC
+    static constexpr Self full(){
+        return from_bits(static_cast<uint8_t>(0x0f));
     }
 
     [[nodiscard]] constexpr size_t length() const {

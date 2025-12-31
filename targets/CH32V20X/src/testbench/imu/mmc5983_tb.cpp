@@ -21,8 +21,8 @@ using namespace ymd;
 
 using namespace ymd::drivers;
 
-// #define UART uart2
-#define UART hal::uart2
+// #define UART usart2
+#define UART hal::usart2
 #define SCL_PIN hal::PB<3>()
 #define SDA_PIN hal::PB<5>()
 static constexpr uint FS = 100;
@@ -110,8 +110,8 @@ static void mmc5983_test(drivers::MMC5983 & imu){
 
 void mmc5983_main(){
     DEBUGGER_INST.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
 
     DEBUGGER.retarget(&UART);

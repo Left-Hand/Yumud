@@ -1,8 +1,8 @@
 #pragma once
 // class Test:pub
 // void buck_test(){
-//     uart2.init(115200 * 8, Uart::Mode::TxRx);
-//     IOStream & logger = uart2;
+//     usart2.init(115200 * 8, Uart::Mode::TxRx);
+//     IOStream & logger = usart2;
 //     logger.setSpace(",");
 //     logger.set_eps(4);
 

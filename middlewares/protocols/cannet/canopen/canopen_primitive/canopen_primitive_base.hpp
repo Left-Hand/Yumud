@@ -13,9 +13,9 @@ using namespace ymd::literals;
 struct SubEntry;
 struct CobId;
 
-struct [[nodiscard]] NodeId{
+struct [[nodiscard]] NodeId final{
 
-    //  1：NodeID由7bit组成，其中0是保留ID，代表一个未知的节点。
+    // 1：NodeID由7bit组成，其中0是保留ID，代表一个未知的节点。
     // 2：Node ID取值为1-127，包含1-127，其中126，127是保留ID。
     // 3：NodeID分为SourceNodeID和DestinationNodeID。
     // 4：SourceNodeID表示节点自身的ID。
@@ -58,18 +58,21 @@ struct [[nodiscard]] NodeId{
         return Bs7::from_bits_unchecked(bits);
     }
 
+    //是否为广播地址
     [[nodiscard]] constexpr bool is_boardcast() const {
         return bits == 0;
     }
 
+    //是否为保留地址
     [[nodiscard]] constexpr bool is_preserved() const{
         return bits == 244 || bits == 255;
     }
 
-    [[nodiscard]] constexpr bool acceptable_with(const NodeId & other) const {
+    [[nodiscard]] constexpr bool is_acceptable_with(const NodeId & other) const {
         return other.is_boardcast() || bits == other.bits;
     }
 
+    // cobid + fcode
     [[nodiscard]] constexpr CobId with_func_code(const FunctionCode fcode) const;
 
     [[nodiscard]] constexpr bool operator==(const NodeId & other) const{
@@ -79,7 +82,7 @@ struct [[nodiscard]] NodeId{
 
 
 
-struct [[nodiscard]] CobId{
+struct [[nodiscard]] CobId final{
     constexpr explicit CobId(const hal::CanStdId stdid){
         (*this) = std::bit_cast<CobId>(stdid.to_u11());
     }
@@ -157,7 +160,7 @@ static_assert(sizeof(CobId) == sizeof(uint16_t));
 // A000h to AFFFh Network variables网络变量（符合IEC61131-3） 
 // B000h to BFFFh System variables用于路由网关的系统变量 
 // C000h to FFFFh Reserved保留
-struct [[nodiscard]] OdPreIndex{
+struct [[nodiscard]] OdPreIndex final{
     using Self = OdPreIndex;
     uint16_t count;
 
@@ -178,7 +181,7 @@ struct [[nodiscard]] OdPreIndex{
 
 static_assert(sizeof(OdPreIndex) == sizeof(uint16_t));
 
-struct [[nodiscard]] OdSubIndex{
+struct [[nodiscard]] OdSubIndex final{
     using Self = OdSubIndex;
     uint8_t count;
 
@@ -198,8 +201,7 @@ struct [[nodiscard]] OdSubIndex{
 };
 
 static_assert(sizeof(OdSubIndex) == sizeof(uint8_t));   
-// enum class [[nodiscard]] OdPreIndex:uint16_t{};
-// enum class [[nodiscard]] OdSubIndex:uint8_t{};
+
 
 struct [[nodiscard]] OdIndex{
     using Self = OdIndex;
@@ -213,28 +215,11 @@ struct [[nodiscard]] OdIndex{
     static constexpr Self from_parts(const OdPreIndex _pre, const OdSubIndex _sub){
         return Self(_pre.to_bits(), _sub.to_bits());
     }
-    constexpr bool operator==(const OdIndex& other) const{
+    [[nodiscard]] constexpr bool operator==(const OdIndex& other) const{
         return pre == other.pre and sub == other.sub;
     }
 };
 
-
-
-
-// class SdoCommand {
-// public:
-//     // 位域结构体
-//     using CommandSpecifier = SdoCommandSpecifier;
-//     // 构造函数
-//     SdoCommand(const hal::BxCanFrame & frame) {
-//         specifier = std::bit_cast<CommandSpecifier>(msg.payload_bytes()[0]);
-//     }
-
-//     auto type() const { return SdoCommandType(speci.command); }
-
-// private:
-//     CommandSpecifier specifier;
-// };
 
 [[nodiscard]] constexpr CobId NodeId::with_func_code(const FunctionCode fcode) const{
     return CobId::from_parts(*this, fcode);

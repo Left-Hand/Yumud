@@ -137,7 +137,7 @@ struct TaskCircle:public TaskBase<TaskCircle>{
     constexpr Output calc(const Measurements meas) const {
         using namespace PhysicalConstants;
 
-        const auto vec_norm = meas.orientation.normalized();//计算当前摆杆姿态的法向量
+        const auto vec_norm = Vec2<iq16>(meas.orientation.normalized());//计算当前摆杆姿态的法向量
         const auto vec_tan = vec_norm.rotated(90_deg);//计算当前摆杆姿态的切向量
         
         const iq16 cmd_theta = math::atan2(W, H);

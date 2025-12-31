@@ -1,33 +1,28 @@
 #pragma once
 
 
-#include "zdt_stepper_phy.hpp"
+#include "zdt_stepper_transport.hpp"
 
 namespace ymd::robots::zdtmotor{
 
 class ZdtStepper final{
 public:
-    using HommingMode = prelude::HommingMode;
-    using VerifyMethod = prelude::VerifyMethod;
-    using Buf = prelude::Buf;
-    using Error = prelude::Error;
-    using VerifyUtils = prelude::VerifyUtils;
 
     template<typename T = void>
-    using IResult = prelude::IResult<T>;
+    using IResult = IResult<T>;
 
     struct Config{
         NodeId node_id;
     };
 
     explicit ZdtStepper(const Config & cfg, Some<hal::Can *> && can) : 
-        phy_(std::move(can)
+        transport_(std::move(can)
     ){
         reconf(cfg);
     }
 
     explicit ZdtStepper(const Config & cfg, Some<hal::Uart *> && uart) : 
-        phy_(std::move(uart)
+        transport_(std::move(uart)
     ){
         reconf(cfg);
     }
@@ -56,7 +51,7 @@ public:
     IResult<> trig_homming(const HommingMode mode);
 private:
     using Phy = ZdtMotorPhy;
-    Phy phy_;
+    Phy transport_;
 
     static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
     NodeId node_id_ = DEFAULT_NODE_ID;
@@ -67,32 +62,47 @@ private:
 
 
     template<typename T>
-    [[nodiscard]] static constexpr Buf map_payload_to_bytes(
+    [[nodiscard]] static constexpr FlatPacket req_to_flat_packet(
+        const NodeId node_id,   
         const VerifyMethod verify_method,
-        T && payload
+        const T & req_msg
     ){
-        Buf buf;
+        constexpr FuncCode FUNC_CODE = std::decay_t<T>::FUNC_CODE;
+        constexpr size_t PAYLOAD_LENGTH = std::decay_t<T>::PAYLOAD_LENGTH;
 
-        const auto bytes = msgs::serialize(payload);
+        FlatPacket flat_packet;
+        static_assert(PAYLOAD_LENGTH + 1 <= std::size(flat_packet.context));
 
-        buf.append_unchecked(bytes);
-        buf.append_unchecked(VerifyUtils::get_verify_code(
+        flat_packet.node_id = node_id;
+        flat_packet.func_code = std::decay_t<T>::FUNC_CODE;
+
+        const auto payload_bytes = std::span<uint8_t, PAYLOAD_LENGTH>(
+            &flat_packet.context[0],
+            PAYLOAD_LENGTH
+        );
+
+        if constexpr (PAYLOAD_LENGTH > 0){
+            req_msg.fill_bytes(payload_bytes);
+        }
+        flat_packet.context[PAYLOAD_LENGTH] = VerifyUtils::get_verify_code(
             verify_method,
-            std::decay_t<T>::FUNC_CODE,
-            bytes
-        ));
-        
-        return buf;
+            FUNC_CODE,
+            payload_bytes
+        );
+        flat_packet.payload_len = PAYLOAD_LENGTH;
+
+        return flat_packet;
     }
 
     template<typename T>
-    IResult<> write_payload(const T & payload){
-        const auto buf = map_payload_to_bytes(verify_method_, payload);
+    IResult<> write_req_msg(const T & req_msg){
 
-        phy_.write_bytes(
-            node_id_, 
-            T::FUNC_CODE, 
-            buf.as_slice()
+        transport_.write_flat_packet(
+            req_to_flat_packet(
+                node_id_, 
+                verify_method_, 
+                req_msg
+            )
         );
 
         return Ok();

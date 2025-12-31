@@ -27,7 +27,7 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 
 
 static constexpr auto ch = LT8960L::Channel(76);
@@ -286,11 +286,11 @@ void lt8960_tb(){
 }
 
 void lt8960_main(){
-    hal::uart2.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+    hal::usart2.init({
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
-    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.retarget(&hal::usart2);
     DEBUGGER.no_brackets(EN);
 
     lt8960_tb();

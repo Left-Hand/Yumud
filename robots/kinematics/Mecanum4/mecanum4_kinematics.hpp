@@ -2,7 +2,7 @@
 
 #include "algebra/gesture/twist2.hpp"
 
-namespace ymd{
+namespace ymd::robots::kinematics{
 template<arithmetic T>
 struct [[nodiscard]] Mecanum4Kinematics final{
 public:

@@ -14,7 +14,7 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    EcCan(AsciiCanPhy & phy): phy_(phy){;}
+    EcCan(AsciiCanPhy & phy): transport_(phy){;}
 private:
 
     enum class Command{
@@ -29,15 +29,15 @@ private:
         if(!str.size()) return Err(Error::NoArg);
         const char baud = str[0];
         switch(baud){
-            case '0': return phy_.set_can_baud(10_KHz);
-            case '1': return phy_.set_can_baud(20_KHz);
-            case '2': return phy_.set_can_baud(50_KHz);
-            case '3': return phy_.set_can_baud(100_KHz);
-            case '4': return phy_.set_can_baud(125_KHz);
-            case '5': return phy_.set_can_baud(250_KHz);
-            case '6': return phy_.set_can_baud(500_KHz);
-            case '7': return phy_.set_can_baud(800_KHz);
-            case '8': return phy_.set_can_baud(1000_KHz);
+            case '0': return transport_.set_can_baud(10_KHz);
+            case '1': return transport_.set_can_baud(20_KHz);
+            case '2': return transport_.set_can_baud(50_KHz);
+            case '3': return transport_.set_can_baud(100_KHz);
+            case '4': return transport_.set_can_baud(125_KHz);
+            case '5': return transport_.set_can_baud(250_KHz);
+            case '6': return transport_.set_can_baud(500_KHz);
+            case '7': return transport_.set_can_baud(800_KHz);
+            case '8': return transport_.set_can_baud(1000_KHz);
         }
         return Err(Error::InvalidCanBaudrate);
     }
@@ -174,14 +174,14 @@ private:
 
 
     IResult<> handle_open(const StringView str){ 
-        return phy_.open();
+        return transport_.open();
     }
 
     IResult<> handle_close(const StringView str){ 
-        return phy_.close();
+        return transport_.close();
     }
 private:
-    AsciiCanPhy & phy_;
+    AsciiCanPhy & transport_;
 };
 
 

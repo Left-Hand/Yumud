@@ -95,7 +95,7 @@ struct Packet{
     uint16_t addr:4;
     uint16_t is_write:1;
 
-    uint16_t as_val() const {
+    uint16_t to_bits() const {
         return std::bit_cast<uint16_t>(*this);
     }
 
@@ -106,27 +106,27 @@ struct Packet{
 
 static_assert(sizeof(Packet) == sizeof(uint16_t));
 
-IResult<> DRV8323R_Phy::write_reg(const RegAddr addr, const uint16_t reg){
+IResult<> DRV8323R_Transport::write_reg(const RegAddr addr, const uint16_t reg){
     const Packet packet = {
         .data = reg,
         .addr = uint16_t(addr),
         .is_write = 0
     };
 
-    if(const auto res = spi_drv_.write_single<uint16_t>((packet));
+    if(const auto res = spi_drv_.write_single<uint16_t>((packet.to_bits()));
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
-IResult<> DRV8323R_Phy::read_reg(const RegAddr addr, uint16_t & reg){
+IResult<> DRV8323R_Transport::read_reg(const RegAddr addr, uint16_t & reg){
     Packet packet = {
         .data = 0,
         .addr = uint16_t(addr),
         .is_write = 1
     };
 
-    if(const auto res = spi_drv_.read_single<uint16_t>((packet));
+    if(const auto res = spi_drv_.read_single<uint16_t>((packet.as_bits_mut()));
         res.is_err()) return Err(res.unwrap_err());
     reg = packet.data;
 

@@ -122,12 +122,12 @@ struct PwmAndDirPhy_WithFg final{
 
     explicit PwmAndDirPhy_WithFg(const Config & cfg):
         deducation_(cfg.deduction),
-        phy_(PwmAndDirPhy{{cfg.pwm, cfg.dir_gpio}}),
+        transport_(PwmAndDirPhy{{cfg.pwm, cfg.dir_gpio}}),
         fg_pin_(cfg.fg_gpio.deref())
     {}
 
     void set_dutycycle(const iq31 dutycycle){ 
-        phy_.set_dutycycle(dutycycle);
+        transport_.set_dutycycle(dutycycle);
         last_duty_ = dutycycle;
     }
 
@@ -150,7 +150,7 @@ struct PwmAndDirPhy_WithFg final{
     }
 private:
     uint32_t deducation_;
-    PwmAndDirPhy phy_;
+    PwmAndDirPhy transport_;
     hal::GpioIntf & fg_pin_;
     DirAndPulseCounter counter_;
     real_t last_duty_ = 0;
@@ -168,13 +168,13 @@ struct DualPwmMotorPhy_WithAbEnc final{
 
     explicit DualPwmMotorPhy_WithAbEnc(const Config & cfg):
         deducation_(cfg.deduction),
-        phy_(DualPwmPhy{{cfg.pwm_pos, cfg.pwm_neg}}),
+        transport_(DualPwmPhy{{cfg.pwm_pos, cfg.pwm_neg}}),
         encoder_(drivers::AbEncoderByGpio{
                 drivers::AbEncoderByGpio::Config{cfg.line_a, cfg.line_b}})
     {}
 
     void set_dutycycle(const iq31 dutycycle){ 
-        phy_.set_dutycycle(dutycycle);
+        transport_.set_dutycycle(dutycycle);
         last_duty_ = dutycycle;
     }
 
@@ -192,7 +192,7 @@ struct DualPwmMotorPhy_WithAbEnc final{
     }
 private:
     uint32_t deducation_;
-    DualPwmPhy phy_;
+    DualPwmPhy transport_;
     drivers::AbEncoderByGpio encoder_;
     real_t last_duty_ = 0;
 };
@@ -207,11 +207,11 @@ void diffspd_vehicle_main(){
     // static constexpr auto PWM_FREQ = 1000;
     static constexpr auto MOTOR_CTRL_FREQ = PWM_FREQ; 
     // my_can_ring_main();
-    auto & DBG_UART = hal::uart2;
+    auto & DBG_UART = hal::usart2;
 
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = UART_BAUD
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(UART_BAUD),
     });
 
     DEBUGGER.retarget(&DBG_UART);

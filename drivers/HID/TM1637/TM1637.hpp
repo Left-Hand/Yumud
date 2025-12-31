@@ -15,10 +15,10 @@ namespace ymd::drivers{
 //TM1637本体
 class TM1637 final:public _TM1637_Prelude{
 public:
-    using Phy = TM1637_Phy;
+    using Phy = TM1637_Transport;
 
     TM1637(hal::Gpio & scl_pin, hal::Gpio & sda_pin): 
-        phy_(TM1637_Phy(scl_pin, sda_pin)){;}
+        transport_(TM1637_Transport(scl_pin, sda_pin)){;}
 
 
     [[nodiscard]]
@@ -40,7 +40,7 @@ public:
 private:
     using Buf = DisplayBuf<uint8_t, CGRAM_MAX_LEN>;
 
-    Phy phy_;
+    Phy transport_;
     Buf buf_;
     DisplayCommand disp_cmd_;
     bool is_on_display_else_readkey_ = true;

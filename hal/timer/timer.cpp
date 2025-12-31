@@ -348,6 +348,30 @@ template<TimerRemap REMAP>
     __builtin_trap();
 }
 
+template<TimerRemap REMAP>
+[[maybe_unused]] static Gpio _timer_to_bkin_pin(const void * inst){
+    const auto nth = _timer_to_nth(inst);
+    switch(nth.count()){
+        #ifdef TIM1_PRESENT
+        case 1:
+            return pintag_to_pin<timer::bkin_pin_t<1, REMAP>>();
+        #endif
+        #ifdef TIM8_PRESENT
+        case 8:
+            return pintag_to_pin<timer::bkin_pin_t<8, REMAP>>();
+        #endif
+        #ifdef TIM9_PRESENT
+        case 9:
+            return pintag_to_pin<timer::bkin_pin_t<9, REMAP>>();
+        #endif
+        #ifdef TIM10_PRESENT
+        case 10:
+            return pintag_to_pin<timer::bkin_pin_t<10, REMAP>>();
+        #endif
+    }
+    __builtin_trap();
+}
+
 #define DEF_TIM_BIND_PIN_LAYOUTER(name)\
 [[maybe_unused]] static Gpio tim_to_##name##_pin(const void * inst, const TimerRemap remap){\
     switch(remap){\
@@ -366,6 +390,7 @@ DEF_TIM_BIND_PIN_LAYOUTER(ch4)
 DEF_TIM_BIND_PIN_LAYOUTER(ch1n)
 DEF_TIM_BIND_PIN_LAYOUTER(ch2n)
 DEF_TIM_BIND_PIN_LAYOUTER(ch3n)
+DEF_TIM_BIND_PIN_LAYOUTER(bkin)
 
 
 
@@ -483,6 +508,7 @@ void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
 
 
 Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
+    set_remap(cfg.remap);
     this->enable_rcc(EN);
 
 
@@ -493,7 +519,7 @@ Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
 
     TIM_ClearFlag(SDK_INST(inst_), 0x1e7f);
     TIM_ClearITPendingBit(SDK_INST(inst_), 0x00ff);
-    set_remap(cfg.remap);
+
 
     return Ok(TimerPinSetuper{inst_, cfg.remap});
 }

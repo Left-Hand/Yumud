@@ -25,8 +25,8 @@ static constexpr size_t CHOP_FREQ = 4_KHz;
 static constexpr size_t MODU_FREQ = 10;
 // #define CHOP_FREQ 200
 
-// #define UART uart1
-#define UART hal::uart2
+// #define UART usart1
+#define UART hal::usart2
 
 #define TIM_INDEX 1
 // #define TIM_INDEX 2
@@ -40,9 +40,9 @@ static constexpr size_t MODU_FREQ = 10;
 void pfm_zvs_main(){
 
 
-    hal::uart2.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+    hal::usart2.init({
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&UART);
 

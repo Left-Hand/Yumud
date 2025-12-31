@@ -12,7 +12,7 @@ using namespace ymd;
 // 
 using namespace ymd::drivers;
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 static void tm1637_tb(){
     auto scl_pin_ = hal::PB<0>();
@@ -34,8 +34,8 @@ static void tm1637_tb(){
 
 void tm1637_main(){
     DEBUGGER_INST.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);

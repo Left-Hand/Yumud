@@ -23,7 +23,7 @@
 using namespace ymd;
 using drivers::FT6336U;
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 #define SCL_PIN hal::PB<0>()
 #define SDA_PIN hal::PB<1>()
@@ -69,8 +69,8 @@ private:
 void ft6336_main(){
     // UART.init({576_KHz});
     UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000,
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
         .tx_strategy = CommStrategy::Dma
     });
     DEBUGGER.retarget(&UART);

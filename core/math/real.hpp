@@ -2,27 +2,9 @@
 
 #include <type_traits>
 
-// #if (!defined(USE_IQ)) &&  (!defined(USE_STD_MATH))
-// #define USE_STD_MATH
-// #endif
-
-// #ifdef USE_IQ
 #include "iq/fixed_t.hpp"
-// #endif
 
-// #if defined(USE_STDMATH)
-
-// #else
-// #include "dsp/floatlib/floatlib.hpp"
-// #endif
-
-// #ifdef USE_IQ
-using real_t = ymd::fixed_t<IQ_DEFAULT_Q, int32_t>;
-// #elif defined(USE_DOUBLE)
-// using real_t = double;
-// #else
-// using real_t = float;
-// #endif
+using real_t = ymd::math::fixed_t<IQ_DEFAULT_Q, int32_t>;
 
 namespace ymd::literals{
 [[nodiscard]] consteval real_t operator"" _r(long double x){
@@ -38,7 +20,11 @@ namespace ymd::literals{
 using namespace ymd::literals;
 
 namespace ymd::math{
-    
+template<std::floating_point T>
+[[nodiscard]] __attribute__((always_inline)) constexpr 
+T abs(const T a){
+    return a < 0 ? -a : a;
+}
 
 template<std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -99,22 +85,22 @@ bool is_equal_approx(
         return true;
     }
     // Then check for approximate equality.
-    auto tolerance = epsilon * ABS(a);
+    auto tolerance = epsilon * abs(a);
     if (tolerance < epsilon) {
         tolerance = epsilon;
     }
-    return ABS(a - b) < tolerance;
+    return abs(a - b) < tolerance;
 }
 
 
 template<std::floating_point T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 bool is_equal_approx_ratio(const T a, const T b, const T epsilon, const T min_epsilon){
-    auto diff = ABS(a - b);
+    auto diff = abs(a - b);
     if (diff == 0.0 || diff < min_epsilon) {
         return true;
     }
-    auto avg_size = (ABS(a) + ABS(b)) / 2.0;
+    auto avg_size = (abs(a) + abs(b)) / 2.0;
     diff /= avg_size;
     return diff < epsilon;
 }

@@ -7,8 +7,8 @@
 
 namespace ymd::drivers{
 
-class HC595_Phy final{
-    HC595_Phy(
+class HC595_Transport final{
+    HC595_Transport(
         hal::GpioIntf & sclk_io, 
         hal::GpioIntf & data_io, 
         hal::GpioIntf & latch_io
@@ -49,7 +49,7 @@ private:
 template<uint8_t N>
 class HC595 final{
 protected:
-    HC595_Phy phy_;
+    HC595_Transport transport_;
     std::array<uint8_t, N> buf_;
     void flush(){
         for(int8_t i = 0; i < N; i++){
@@ -57,7 +57,7 @@ protected:
         }
     }
 public:
-    HC595(HC595_Phy && phy):phy_(std::move(phy)){;}
+    HC595(HC595_Transport && phy):transport_(std::move(phy)){;}
 
     void init(){
         sclk_io_.outpp();

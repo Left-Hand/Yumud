@@ -17,7 +17,7 @@ static inline void disable_irq()
 }
 
 
-static inline uint32_t get_MSTATUS(void){
+[[nodiscard]] static inline uint32_t get_MSTATUS(void){
     uint32_t result;
 
     __asm volatile ( "csrr %0," "mstatus" : "=r" (result) );
@@ -42,7 +42,7 @@ static inline void set_PRIMASK(bool en) {
     }
 }
 
-static inline uint32_t enter_critical() {
+[[nodiscard]] static inline uint32_t enter_critical() {
     uint32_t primask = get_PRIMASK();
     cpu_core::disable_irq();
     return primask;

@@ -69,11 +69,11 @@ struct ConfigBuilder:public drivers::ADS111X_Prelude{
 void ads1115_main()
 {
 
-    hal::uart2.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+    hal::usart2.init({
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
-    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.retarget(&hal::usart2);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
 

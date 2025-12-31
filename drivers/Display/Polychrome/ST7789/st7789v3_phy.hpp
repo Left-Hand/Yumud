@@ -1,13 +1,13 @@
 #pragma once 
 
 #include "st7789_prelude.hpp"
-#include "core/utils/bits/bitsqueue.hpp"
+#include "core/utils/bits/bits_queue.hpp"
 #include "core/utils/data_iter.hpp"
 #include "core/io/regs.hpp"
 #include "hal/bus/spi/spihw.hpp"
 
 namespace ymd::drivers{
-struct ST7789V3_Phy final:
+struct ST7789V3_Transport final:
     ST7789_Prelude{
     template<typename T = void>
     using IResult = Result<void, drivers::DisplayerError>;
@@ -48,8 +48,8 @@ struct ST7789V3_Phy final:
         bool is_runout_ = false;
     };
 
-    explicit ST7789V3_Phy(
-        Some<hal::SpiHw *> spi,
+    explicit ST7789V3_Transport(
+        Some<hal::Spi *> spi,
         const hal::SpiSlaveRank rank,
         Option<hal::Gpio &> may_nrst_gpio = None
     ):  
@@ -115,7 +115,7 @@ struct ST7789V3_Phy final:
             res.is_err()) 
             return Err(res.unwrap_err()); 
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_word_width(tmp::type_to_bitswidth_v<T>); res.is_err())
+            if(const auto res = spi_.set_wordsize(hal::SpiWordSize::TwoBytes); res.is_err())
                 return Err(res.unwrap_err());
         }
 
@@ -126,39 +126,39 @@ struct ST7789V3_Phy final:
         spi_.lend();
 
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_word_width(8); 
+            if(const auto res = spi_.set_wordsize(hal::SpiWordSize::OneByte); 
                 res.is_err()) return Err(res.unwrap_err());
         }
 
         return Ok();
     }
 private:
-    hal::SpiHw & spi_;
+    hal::Spi & spi_;
     hal::SpiSlaveRank rank_;
 
     Option<hal::Gpio &> may_nrst_pin_;
 
     template<hal::valid_spi_data T>
-    [[nodiscard]] hal::HalResult phy_write_single(
+    [[nodiscard]] hal::HalResult transport_write_single(
         const is_stdlayout auto data, 
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));
 
         if(const auto res = spi_.borrow(rank_); res.is_err()) return res;
         if constexpr (sizeof(T) != 1){
-            if(const auto res = spi_.set_word_width(sizeof(T) * 8); res.is_err())
+            if(const auto res = spi_.set_wordsize(hal::SpiWordSize::TwoBytes); res.is_err())
                 return res;
         }
 
         if constexpr (sizeof(T) == 1) {
-            if(const auto res = spi_.blocking_write(uint8_t(data)); res.is_err()) return res;
+            spi_.blocking_write(uint8_t(data));
         } else if constexpr (sizeof(T) == 2) {
-            if(const auto res = spi_.blocking_write(uint16_t(data)); res.is_err()) return res;
+            spi_.blocking_write(uint16_t(data)); 
         }
 
         if (cont == DISC) spi_.lend();
         if constexpr (sizeof(T) != 1) {
-            if(const auto res = spi_.set_word_width(8); res.is_err()) return res;
+            if(const auto res = spi_.set_wordsize(hal::SpiWordSize::OneByte); res.is_err()) return res;
         }
 
         return hal::HalResult::Ok();

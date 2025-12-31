@@ -3,12 +3,6 @@
 #include "core/constants/enums.hpp"
 #include <cstdint>
 
-
-#ifndef BIT_CAST
-#define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
-#endif
-
-
 namespace ymd::ral::ch32::common_can{
 struct [[nodiscard]] R32_CAN_CTLR{
     uint32_t INRQ:1;
@@ -194,14 +188,8 @@ struct [[nodiscard]] R32_CAN_TXMIR{
     uint32_t TXRQ:1;
     uint32_t RTR:1;
     uint32_t IDE:1;
-    union{
-        uint32_t EXID:29;
-        struct{ 
-            uint32_t :18;
-            uint32_t STID:11;
-        };
-    };
-    
+
+    uint32_t EXID:29;
 };
 
 struct [[nodiscard]] R32_CAN_TXMDTR{
@@ -213,25 +201,17 @@ struct [[nodiscard]] R32_CAN_TXMDTR{
     uint32_t TIME:16;
 };
 
-struct [[nodiscard]] R32_CAN_TXMDLR{
-    uint8_t DATA[4];
-};
 
-struct [[nodiscard]] R32_CAN_TXMDHR{
-    uint8_t DATA[4];
-};
+
+using R32_CAN_TXMDLR = uint32_t;
+using R32_CAN_TXMDHR = uint32_t;
 
 struct [[nodiscard]] R32_CAN_RXMIR{
     uint32_t :1;
     uint32_t RTR:1;
     uint32_t IDE:1;
-    union{
-        uint32_t EXID:29;
-        struct{
-            uint32_t :18;
-            uint32_t STID:11;
-        };
-    };
+
+    uint32_t EXID:29;
 };
 
 struct [[nodiscard]] R32_CAN_RXMDTR{
@@ -241,13 +221,8 @@ struct [[nodiscard]] R32_CAN_RXMDTR{
     uint32_t TIME:16;
 };
 
-struct [[nodiscard]] R32_CAN_RXMDLR{
-    uint8_t DATA[4];
-};
-
-struct [[nodiscard]] R32_CAN_RXMDHR{
-    uint8_t DATA[4];
-};
+using R32_CAN_RXMDLR = uint32_t;
+using R32_CAN_RXMDHR = uint32_t;
 
 struct [[nodiscard]] R32_CAN_FCTLR{
     // 过滤器初始化模式使能标志位。
@@ -445,14 +420,24 @@ struct [[nodiscard]] CAN_Def{
         volatile R32_CAN_TXMIR  TXMIR;
         volatile R32_CAN_TXMDTR TXMDTR;
         volatile R32_CAN_TXMDLR TXMDLR;
-        volatile R32_CAN_TXMDLR TXMDHR;
+        volatile R32_CAN_TXMDHR TXMDHR;
+
+        static_assert(sizeof(R32_CAN_TXMIR) == 4);
+        static_assert(sizeof(R32_CAN_TXMDTR) == 4);
+        static_assert(sizeof(R32_CAN_TXMDLR) == 4);
+        static_assert(sizeof(R32_CAN_TXMDHR) == 4);
     };
 
     struct [[nodiscard]] FifoMailBox{
         volatile R32_CAN_RXMIR  RXMIR;
         volatile R32_CAN_RXMDTR RXMDTR;
         volatile R32_CAN_RXMDLR RXMDLR;
-        volatile R32_CAN_RXMDLR RXMDHR;
+        volatile R32_CAN_RXMDHR RXMDHR;
+
+        static_assert(sizeof(R32_CAN_RXMIR) == 4);
+        static_assert(sizeof(R32_CAN_RXMDTR) == 4);
+        static_assert(sizeof(R32_CAN_RXMDLR) == 4);
+        static_assert(sizeof(R32_CAN_RXMDHR) == 4);
     };
 
     struct [[nodiscard]] Events{
@@ -478,8 +463,10 @@ struct [[nodiscard]] CAN_Def{
     volatile R32_CAN_INTEN INTENR;
     volatile R32_CAN_ERRSR ERRSR;
     volatile R32_CAN_BTIMR BTIMR;
+    volatile R32_CAN_TTCTLR TTCTLR;
+    volatile R32_CAN_TTCNT TTCNT;
 
-    uint32_t __RESV1__[88];
+    uint32_t __RESV1__[86];
 
     TxMailBox sTxMailBox[3];
     FifoMailBox sFifoMailBox[3];
@@ -505,6 +492,31 @@ struct [[nodiscard]] CAN_Def{
 
 };
 
+
+static_assert(sizeof(R32_CAN_CTLR) == 4);
+static_assert(sizeof(R32_CAN_STATR) == 4);
+static_assert(sizeof(R32_CAN_TSTATR) == 4);
+static_assert(sizeof(R32_CAN_INTEN) == 4);
+static_assert(sizeof(R32_CAN_ERRSR) == 4);
+static_assert(sizeof(R32_CAN_BTIMR) == 4);
+
+
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::CTLR) == 0);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::STATR) == 4);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::TSTATR) == 8);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::RFIFO[0]) == 12);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::RFIFO[1]) == 16);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::INTENR) == 20);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::ERRSR) == 24);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::BTIMR) == 0x1c);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::TTCTLR) == 0x20);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::TTCNT) == 0x24);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::sTxMailBox[0]) == 0x180);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::sTxMailBox[1]) == 0x190);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::sTxMailBox[2]) == 0x1a0);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::sFifoMailBox[0]) == 0x1B0);
+static_assert(__builtin_offsetof(CAN_Def, CAN_Def::sFifoMailBox[1]) == 0x1c0);
+
 struct [[nodiscard]] CAN_Filt_Def{
 private:
     struct [[nodiscard]] CAN_Filt_Pair{
@@ -521,6 +533,7 @@ public:
 
     volatile CAN_Filt_Pair FILTER[28];
 };
+
 
 
 [[maybe_unused]] static inline CAN_Def * CAN1_Inst = reinterpret_cast<CAN_Def *>(0x40006400);

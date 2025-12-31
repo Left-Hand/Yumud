@@ -206,18 +206,18 @@ class LIS2DW12:
     public AccelerometerIntf,
     public LIS2DW12_Prelude{
 public:
-    explicit LIS2DW12(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv{i2c, i2c_addr}){;}
+    explicit LIS2DW12(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+        transport_(hal::I2cDrv{i2c, i2c_addr}){;}
     explicit LIS2DW12(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
+        transport_(i2c_drv){;}
     explicit LIS2DW12(hal::I2cDrv && i2c_drv):
-        phy_(std::move(i2c_drv)){;}
+        transport_(std::move(i2c_drv)){;}
     explicit LIS2DW12(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
+        transport_(spi_drv){;}
     explicit LIS2DW12(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
+        transport_(std::move(spi_drv)){;}
     explicit LIS2DW12(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        phy_(hal::SpiDrv{spi, rank}){;}
+        transport_(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
@@ -233,26 +233,26 @@ public:
     [[nodiscard]] IResult<Vec3<iq24>> read_acc();
 
 private:
-    using Phy = StmicroImu_Phy;
-    Phy phy_;
+    using Phy = StmicroImu_Transport;
+    Phy transport_;
 
     iq16 acc_scale = 0;
     iq16 gyr_scale = 0;
 
     [[nodiscard]] IResult<> write_reg(uint8_t reg_addr, uint8_t reg_val){
-        if(const auto res = phy_.write_reg(reg_addr, reg_val);
+        if(const auto res = transport_.write_reg(reg_addr, reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     [[nodiscard]] IResult<> read_reg(uint8_t reg_addr, uint8_t & reg_val){
-        if(const auto res = phy_.read_reg(reg_addr, reg_val);
+        if(const auto res = transport_.read_reg(reg_addr, reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     // [[nodiscard]] IResult<> read_burst(uint8_t reg_addr, std::span<uint8_t> pbuf){
-    //     if(const auto res = phy_.read_burst(reg_addr, pbuf, std::endian::little);
+    //     if(const auto res = transport_.read_burst(reg_addr, pbuf, std::endian::little);
     //         res.is_err()) return Err(res.unwrap_err());
     //     return Ok();
     // }

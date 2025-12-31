@@ -11,9 +11,9 @@ namespace ymd::hal{
 namespace ymd::drivers{
 
 
-class WS2812_Phy{
+class WS2812_Transport{
 public:
-    WS2812_Phy(hal::GpioIntf & gpio):gpio_(gpio){;}
+    WS2812_Transport(hal::GpioIntf & gpio):gpio_(gpio){;}
 
     __no_inline static void delay_long();
     __no_inline static void delay_short();
@@ -29,11 +29,11 @@ private:
 
 class WS2812: public RgbLedIntf{
 public:
-    explicit WS2812(hal::GpioIntf & gpio):phy_(gpio){;}
+    explicit WS2812(hal::GpioIntf & gpio):transport_(gpio){;}
     void init();
     void set_rgb(const RGB<iq16> &color);
 private:
-    WS2812_Phy phy_;
+    WS2812_Transport transport_;
 };
 
 class WS2812Single: public RgbLedIntf{
@@ -46,14 +46,14 @@ public:
 template<size_t N>
 class WS2812Chain{
 protected:
-    WS2812_Phy phy_;
+    WS2812_Transport transport_;
     std::array<WS2812Single, N> leds;
 
 public:
-    WS2812Chain(hal::GpioIntf & gpio):phy_(gpio){;}
+    WS2812Chain(hal::GpioIntf & gpio):transport_(gpio){;}
     void init(){
         for(auto & led : leds) led = RGB(0,0,0);
-        phy_.init();
+        transport_.init();
     }
 
     WS2812Single & operator[](const int index){
@@ -63,7 +63,7 @@ public:
 
     void refresh(){
 
-        phy_.send_reset();
+        transport_.send_reset();
 
         for(auto & led : leds){
             uint16_t r,g,b;
@@ -72,9 +72,9 @@ public:
             uni_to_u16(led.color.g, g);
             uni_to_u16(led.color.b, b);
 
-            phy_.send_byte(CLAMP(uint8_t(r * 255), 0, 255));
-            phy_.send_byte(CLAMP(uint8_t(g * 255), 0, 255));
-            phy_.send_byte(CLAMP(uint8_t(b * 255), 0, 255));
+            transport_.send_byte(CLAMP(uint8_t(r * 255), 0, 255));
+            transport_.send_byte(CLAMP(uint8_t(g * 255), 0, 255));
+            transport_.send_byte(CLAMP(uint8_t(b * 255), 0, 255));
 
         }
 

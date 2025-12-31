@@ -19,7 +19,7 @@ using namespace ymd;
 using hal::HalError;
 
 // #define UART DEBUGGER_INST
-#define UART hal::uart2
+#define UART hal::usart2
 
 #if 0
 #define SCL_PIN hal::PD<1>()
@@ -47,7 +47,7 @@ struct I2cTester{
     static constexpr uint32_t start_freq = 200_KHz;
     static constexpr auto grow_scale = 2;
     
-    static Result<uint32_t, HalError> get_max_baudrate(hal::I2c & i2c, const uint8_t read_addr){
+    static Result<uint32_t, HalError> get_max_baudrate(hal::I2cBase & i2c, const uint8_t read_addr){
         hal::I2cDrv i2c_drv{&i2c, hal::I2cSlaveAddr<7>::from_u7(read_addr >> 1)};
 
         const uint32_t max_baud = [&]{
@@ -66,11 +66,11 @@ struct I2cTester{
         }();
 
         // DEBUG_PRINTLN("??");
-        hal::uart2.set_rx_strategy(CommStrategy::Blocking);
+        hal::usart2.set_rx_strategy(CommStrategy::Blocking);
 
         return Ok{max_baud};
     }
-    static Result<void, HalError> validate(hal::I2c & i2c, const uint8_t read_addr, const uint32_t bbaud = start_freq){
+    static Result<void, HalError> validate(hal::I2cBase & i2c, const uint8_t read_addr, const uint32_t bbaud = start_freq){
         const auto res = hal::I2cDrv{&i2c, hal::I2cSlaveAddr<7>::from_u7(read_addr >> 1)}.validate();
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -81,8 +81,8 @@ struct I2cTester{
 
 void i2c_scanner_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576_KHz,
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     // DEBUGGER.force_sync();

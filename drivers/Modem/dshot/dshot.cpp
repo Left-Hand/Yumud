@@ -13,7 +13,7 @@ using namespace ymd::drivers;
 static constexpr auto DSHOT_LEN = DShotChannel::DSHOT_LEN;
 
 void BurstDmaPwm::borrow(std::span<const uint16_t> pbuf){
-    dma_channel_.init({DmaMode::ToPeriph, DmaPriority::Medium});
+    dma_channel_.init({DmaMode::BurstMemoryToPeriph, DmaPriority::Medium});
     pbuf_ = pbuf;
 }
 
@@ -26,7 +26,7 @@ void BurstDmaPwm::invoke(){
 
 void BurstDmaPwm::install(){
     dma_channel_.init({
-        .mode = DmaMode::ToPeriph, 
+        .mode = DmaMode::BurstMemoryToPeriph, 
         .priority = DmaPriority::Ultra
     });
     
@@ -35,7 +35,7 @@ void BurstDmaPwm::install(){
 }
 
 bool BurstDmaPwm::is_done(){
-    return dma_channel_.remaining() == 0;
+    return dma_channel_.pending_count() == 0;
 }
 
 uint32_t BurstDmaPwm::calc_cvr_from_duty(const uq32 dutycycle) const {
@@ -64,11 +64,11 @@ void DShotChannel::update(const std::span<uint16_t, DSHOT_LEN> buf, const uint16
     }
 }
 
-WS2812_Phy_of_BurstPwm::WS2812_Phy_of_BurstPwm(BurstDmaPwm & burst_dma_pwm)
+WS2812_Transport_of_BurstPwm::WS2812_Transport_of_BurstPwm(BurstDmaPwm & burst_dma_pwm)
     : burst_dma_pwm_(burst_dma_pwm){}
 
 
-void WS2812_Phy_of_BurstPwm::apply_mono_to_buf(
+void WS2812_Transport_of_BurstPwm::apply_mono_to_buf(
     const std::span<uint16_t, 8> buf, 
     uint8_t mono
 ) const{
@@ -81,7 +81,7 @@ void WS2812_Phy_of_BurstPwm::apply_mono_to_buf(
     }
 }
 
-void WS2812_Phy_of_BurstPwm::apply_color_to_buf(
+void WS2812_Transport_of_BurstPwm::apply_color_to_buf(
     std::span<uint16_t, 24> buf, 
     std::array<uint8_t, 3> color
 ) const{

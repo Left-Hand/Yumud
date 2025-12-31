@@ -17,9 +17,9 @@ public:
     IResult<> write(const hal::BxCanFrame & frame);
     IResult<hal::BxCanFrame> read();
     IResult<> reset(){
-        return phy_.reset_device();
+        return transport_.reset_device();
     }
 private:
-    CH9431_Phy phy_;
+    CH9431_Transport transport_;
 };
 }

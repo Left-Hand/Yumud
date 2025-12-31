@@ -530,8 +530,8 @@ void render_main(){
     auto init_debugger = []{
 
         DBG_UART.init({
-            .remap = hal::UART2_REMAP_PA2_PA3,
-            .baudrate = UART_BAUD
+            .remap = hal::USART2_REMAP_PA2_PA3,
+            .baudrate = hal::NearestFreq(UART_BAUD),
         });
 
         DEBUGGER.retarget(&DBG_UART);
@@ -577,7 +577,7 @@ void render_main(){
     const auto spi_rank = spi.allocate_cs_pin(&lcd_cs).unwrap();
 
     drivers::ST7789 tft{
-        drivers::ST7789_Phy{&spi, spi_rank, &lcd_dc, &dev_rst}, 
+        drivers::ST7789_Transport{&spi, spi_rank, &lcd_dc, &dev_rst}, 
         {LCD_WIDTH, LCD_HEIGHT}
     };
 

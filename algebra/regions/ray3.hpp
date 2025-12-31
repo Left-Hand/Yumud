@@ -8,7 +8,7 @@ namespace ymd{
 template<typename T>
 struct Ray3{
     Vec3<T> base;
-    Vec3<T> direction;
+    UnitVec3<T> direction;
 
     [[nodiscard]] constexpr Ray3(const Ray3<T> & other) = default;
     [[nodiscard]] static constexpr Ray3 
@@ -78,7 +78,7 @@ struct Ray3{
 private:
     [[nodiscard]] constexpr Ray3(
         const Vec3<T> & _base, 
-        const Vec3<T> & _direction
+        const UnitVec3<T> & _direction
     ):
         base(_base),
         direction(_direction){;}

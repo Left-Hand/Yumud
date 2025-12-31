@@ -10,13 +10,13 @@ namespace ymd::drivers{
 struct ADS7830 final:
     public ADS7830_Prelude{
 public:
-    using Phy = ADS7830_Phy;
+    using Phy = ADS7830_Transport;
 
     explicit ADS7830(
-        Some<hal::I2c *> i2c, 
+        Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
     ):
-        phy_(hal::I2cDrv(i2c, addr)){;}
+        transport_(hal::I2cDrv(i2c, addr)){;}
 
     [[nodiscard]] IResult<> init();
 
@@ -29,7 +29,7 @@ public:
         pwdn_sel_ = sel;
     }
 private:
-    Phy phy_;
+    Phy transport_;
     PowerDownSel pwdn_sel_ = PowerDownSel::RefOn_AdcOn;
 };
 

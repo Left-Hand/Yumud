@@ -96,7 +96,7 @@ private:
     }
 
     void send_line(const StringView line){
-        uart_.try_write_chars(line.data(), line.size());
+        (void)uart_.try_write_chars(line.data(), line.size());
     }
 
     hal::Uart & uart_;

@@ -36,6 +36,16 @@ static constexpr const char * modbus_exception_to_str(const ExceptionCode err){
             return "IllegalDataValue";
         case ExceptionCode::ServerDeviceFailure:
             return "ServerDeviceFailure";
+        case ExceptionCode::Acknowledge:
+            return "Acknowledge";
+        case ExceptionCode::ServerDeviceBusy:
+            return "ServerDeviceBusy";
+        case ExceptionCode::MemoryParityError:
+            return "MemoryParityError";
+        case ExceptionCode::GatewayPathUnavailable:
+            return "GatewayPathUnavailable";
+        case ExceptionCode::GatewayTargetDevice:
+            return "GatewayTargetDevice";
     }
     return nullptr;
 }
@@ -62,11 +72,6 @@ OutputStream & operator<<(OutputStream & os, const ModbusError & err){
     return os << err.unwrap_as<LibError>();
 }
 
-OutputStream & operator<<(OutputStream & os, const FunctionCode & fc){
-    if(const auto str = function_code_to_str(fc); str != nullptr) [[likely]]
-        return os << str;
-    return print_unkown_u8(os, static_cast<uint8_t>(fc));
-}
 
 }
 

@@ -37,7 +37,7 @@ struct MLX90333_Regs:public MLX90333_Prelude{
 
 };
 
-class MLX90333_Phy final:public MLX90333_Prelude{
+class MLX90333_Transport final:public MLX90333_Prelude{
 
 };
 

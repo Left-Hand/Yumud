@@ -27,8 +27,8 @@ using namespace ymd;
 using namespace ymd::robots;
 using robots::zdtmotor::ZdtStepper;
 
-#define DBG_UART hal::uart2
-#define COMM_UART hal::uart1
+#define DBG_UART hal::usart2
+#define COMM_UART hal::usart1
 #define COMM_CAN hal::can1
 
 #define PHY_SEL_CAN 0
@@ -283,8 +283,8 @@ private:
 void polar_robot_main(){
 
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
@@ -296,8 +296,8 @@ void polar_robot_main(){
     #ifndef MOCK_TEST
     #if PHY_SEL == PHY_SEL_UART
 
-    auto & MOTOR1_UART = hal::uart1;
-    auto & MOTOR2_UART = hal::uart1;
+    auto & MOTOR1_UART = hal::usart1;
+    auto & MOTOR2_UART = hal::usart1;
 
     MOTOR1_UART.init({921600});
 

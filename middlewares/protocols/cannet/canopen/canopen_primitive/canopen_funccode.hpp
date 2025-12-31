@@ -35,16 +35,16 @@ enum class [[nodiscard]] PdoOnlyFunctionCodeKind:uint8_t{
     RxPdo4,
 };
 
-struct [[nodiscard]] PdoOnlyFunctionCode{
+struct [[nodiscard]] PdoOnlyFunctionCode final{
     using Self = PdoOnlyFunctionCode;
     using Kind = PdoOnlyFunctionCodeKind;
 
-    [[nodiscard]] __always_inline constexpr 
+    [[nodiscard]] constexpr 
     PdoOnlyFunctionCode(const PdoOnlyFunctionCodeKind kind):
         bits_(std::bit_cast<uint8_t>(kind)){
     }
 
-    [[nodiscard]] __always_inline static constexpr 
+    [[nodiscard]] static constexpr 
     PdoOnlyFunctionCode from_bits_unchecked(const uint8_t bits){
         #ifndef NDEBUG
         if(bits > static_cast<uint8_t>(FunctionCodeKind::RxPdo4))
@@ -55,23 +55,21 @@ struct [[nodiscard]] PdoOnlyFunctionCode{
         return std::bit_cast<PdoOnlyFunctionCode>(bits);
     }
 
-    [[nodiscard]] __always_inline static constexpr 
-    Option<PdoOnlyFunctionCode> from_fc_kind(const FunctionCodeKind fc){
-        return from_bits(std::bit_cast<uint8_t>(fc));
+    [[nodiscard]] static constexpr 
+    Option<PdoOnlyFunctionCode> try_from_fc_kind(const FunctionCodeKind fc){
+        return try_from_bits(std::bit_cast<uint8_t>(fc));
     }
 
-    [[nodiscard]] __always_inline static constexpr 
-    Option<PdoOnlyFunctionCode> from_bits(const uint8_t bits){
-        #ifndef NDEBUG
+    [[nodiscard]] static constexpr 
+    Option<PdoOnlyFunctionCode> try_from_bits(const uint8_t bits){
         if(bits > static_cast<uint8_t>(FunctionCodeKind::RxPdo4))
             return None;
         if(bits < static_cast<uint8_t>(FunctionCodeKind::TxPdo1))
             return None;
-        #endif
         return Some(PdoOnlyFunctionCode(std::bit_cast<PdoOnlyFunctionCodeKind>(bits)));
     }
 
-    [[nodiscard]] __always_inline constexpr 
+    [[nodiscard]] constexpr 
     Option<uint8_t> rank() const {
         switch(bits_){
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo1):
@@ -86,12 +84,11 @@ struct [[nodiscard]] PdoOnlyFunctionCode{
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo4):
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo4):
                 return Some<uint8_t>(4);
-            default:
-                __builtin_trap();
         }
+        return None;
     }
 
-    [[nodiscard]] __always_inline constexpr 
+    [[nodiscard]] constexpr 
     Option<Self> conj() const {
         switch(bits_){
             case static_cast<uint8_t>(FunctionCodeKind::TxPdo1):
@@ -110,9 +107,8 @@ struct [[nodiscard]] PdoOnlyFunctionCode{
                 return Some<Self>(Self(PdoOnlyFunctionCodeKind::RxPdo4));
             case static_cast<uint8_t>(FunctionCodeKind::RxPdo4):
                 return Some<Self>(Self(PdoOnlyFunctionCodeKind::TxPdo4));
-            default:
-                __builtin_trap();
         }
+        return None;
     }
 
     using enum Kind;
@@ -122,7 +118,7 @@ private:
 
 
 
-struct [[nodiscard]] FunctionCode{
+struct [[nodiscard]] FunctionCode final{
 
     using Kind = FunctionCodeKind;
     constexpr FunctionCode(const Kind kind) : kind_(kind){;}
@@ -145,27 +141,13 @@ struct [[nodiscard]] FunctionCode{
     [[nodiscard]] constexpr bool operator ==(const FunctionCodeKind &kind) const {
         return kind_ == kind;
     }
-    [[nodiscard]] __always_inline constexpr 
-    bool is_nmt() const {return kind_ == Kind::Nmt;}
-
-    [[nodiscard]] __always_inline constexpr 
-    bool is_sync() const {return kind_ == Kind::Sync;}
-
-    [[nodiscard]] __always_inline constexpr 
-    bool is_energency() const {return kind_ == Kind::Emergency;}
-
-    
-    [[nodiscard]] __always_inline constexpr 
-    bool is_heartbeat() const {return kind_ == Kind::Heartbeat;}
-
-    [[nodiscard]] __always_inline constexpr 
-    bool is_resp_sdo() const { return (kind_ == Kind::RespSdo);}
-
-    [[nodiscard]] __always_inline constexpr 
-    bool is_req_sdo() const { return (kind_ == Kind::ReqSdo);}
-
-    [[nodiscard]] __always_inline constexpr 
-    bool is_tx_pdo() const {
+    [[nodiscard]] constexpr bool is_nmt() const {return kind_ == Kind::Nmt;}
+    [[nodiscard]] constexpr bool is_sync() const {return kind_ == Kind::Sync;}
+    [[nodiscard]] constexpr bool is_energency() const {return kind_ == Kind::Emergency;}
+    [[nodiscard]] constexpr bool is_heartbeat() const {return kind_ == Kind::Heartbeat;}
+    [[nodiscard]] constexpr bool is_resp_sdo() const { return (kind_ == Kind::RespSdo);}
+    [[nodiscard]] constexpr bool is_req_sdo() const { return (kind_ == Kind::ReqSdo);}
+    [[nodiscard]] constexpr bool is_tx_pdo() const {
         switch(kind_){
             case Kind::TxPdo1:
             case Kind::TxPdo2:
@@ -176,9 +158,7 @@ struct [[nodiscard]] FunctionCode{
                 return false;
         }
     }
-
-    [[nodiscard]] __always_inline constexpr 
-    bool is_rx_pdo() const {
+    [[nodiscard]] constexpr bool is_rx_pdo() const {
         switch(kind_){
             case Kind::RxPdo1:
             case Kind::RxPdo2:
@@ -190,7 +170,7 @@ struct [[nodiscard]] FunctionCode{
         }
     }
 
-    [[nodiscard]] __always_inline constexpr 
+    [[nodiscard]] constexpr 
     Option<uint8_t> pdo_rank() const {
         switch(kind_){
             case Kind::RxPdo1:
@@ -206,9 +186,9 @@ struct [[nodiscard]] FunctionCode{
         }
     }
 
-    [[nodiscard]] __always_inline constexpr 
-    Option<PdoOnlyFunctionCode> to_pdo_fc() const {
-        return PdoOnlyFunctionCode::from_fc_kind(kind_);
+    [[nodiscard]] constexpr 
+    Option<PdoOnlyFunctionCode> try_to_pdo_fc() const {
+        return PdoOnlyFunctionCode::try_from_fc_kind(kind_);
     }
 
     using enum Kind;

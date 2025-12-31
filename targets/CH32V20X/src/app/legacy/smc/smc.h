@@ -192,7 +192,7 @@ public:
         return angle;
     }
     
-    Measurer(hal::I2c & i2c):mpu{i2c}, qml{i2c}{;}
+    Measurer(hal::I2cBase & i2c):mpu{i2c}, qml{i2c}{;}
 
     void cali(){
         static constexpr int cali_times = 100;

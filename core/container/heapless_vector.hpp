@@ -9,21 +9,21 @@
 #include "core/utils/result.hpp"
 #include "core/utils/Option.hpp"
 
-namespace ymd{
+namespace ymd::heapless{
 
 template<typename T, size_t N>
-class [[nodiscard]] HeaplessVector {
+class [[nodiscard]] Vector {
 public:
     // 构造函数 - constexpr
-    constexpr HeaplessVector() noexcept : size_(0) {}
+    constexpr Vector() noexcept : size_(0) {}
 
-    static constexpr HeaplessVector from_empty(){
-        return HeaplessVector<T, N>();
+    static constexpr Vector from_empty(){
+        return Vector<T, N>();
     } 
 
     template<size_t Extents>
     requires (Extents <= N || Extents == std::dynamic_extent)
-    constexpr HeaplessVector(const std::span<const T, Extents> & elements) noexcept : 
+    constexpr Vector(const std::span<const T, Extents> & elements) noexcept : 
         size_(elements.size()
     ){
         if constexpr(Extents == std::dynamic_extent)
@@ -35,7 +35,7 @@ public:
 
     template<typename ... Ts>
     requires (sizeof...(Ts) == N)
-    constexpr HeaplessVector(Ts&& ... args) noexcept : 
+    constexpr Vector(Ts&& ... args) noexcept : 
         size_(sizeof...(Ts))
     {
         // Use an index sequence to properly forward each argument to the corresponding element
@@ -45,21 +45,21 @@ public:
     }
 
 
-    constexpr HeaplessVector from_array(const std::array<T, N> & arr) noexcept{
-        return HeaplessVector<T, N>(std::span<const T, N>(arr));
+    constexpr Vector from_array(const std::array<T, N> & arr) noexcept{
+        return Vector<T, N>(std::span<const T, N>(arr));
     }
 
-    constexpr HeaplessVector from_list(const std::initializer_list<T> & list) noexcept{
-        return HeaplessVector<T, N>(std::span<const T, N>(list));
+    constexpr Vector from_list(const std::initializer_list<T> & list) noexcept{
+        return Vector<T, N>(std::span<const T, N>(list));
     }
 
     // 析构函数 - constexpr
-    constexpr ~HeaplessVector() {
+    constexpr ~Vector() {
         clear();
     }
 
     // 移动构造函数 - constexpr
-    constexpr HeaplessVector(HeaplessVector&& other) noexcept {
+    constexpr Vector(Vector&& other) noexcept {
         size_ = other.size_;
         for (size_t i = 0; i < size_; ++i) {
             new (&buf_[i]) T(std::move(other.buf_[i]));
@@ -69,7 +69,7 @@ public:
     }
 
     // 移动赋值 - constexpr
-    constexpr HeaplessVector& operator=(HeaplessVector&& other) noexcept {
+    constexpr Vector& operator=(Vector&& other) noexcept {
         if (this != &other) {
             clear();
             size_ = other.size_;
@@ -83,7 +83,7 @@ public:
     }
 
     // Safe copy constructor
-    constexpr HeaplessVector(const HeaplessVector& other) {
+    constexpr Vector(const Vector& other) {
         size_ = 0; // Initialize in case constructor throws
         for (size_t i = 0; i < other.size_; ++i) {
             new (&buf_[i]) T(other.buf_[i]); // Copy construct each element
@@ -92,7 +92,7 @@ public:
     }
 
     // Safe copy assignment operator
-    constexpr HeaplessVector& operator=(const HeaplessVector& other) {
+    constexpr Vector& operator=(const Vector& other) {
         if (this != &other) {
             clear(); // Destroy existing elements
             size_ = 0;
@@ -136,6 +136,15 @@ public:
         return buf_;
     }
 
+    constexpr void reserve(const size_t len){
+        if(len > capacity()) __builtin_trap();
+        static_assert(std::is_default_constructible_v<T>);
+        for(size_t i = 0; i < len; i++){
+            std::construct_at(&buf_[i]);
+        }
+        size_ = len;
+    }
+
 
     // 容量相关 - constexpr
     [[nodiscard]] constexpr size_t size() const noexcept {
@@ -150,7 +159,7 @@ public:
         return size_ == 0;
     }
 
-    [[nodiscard]] constexpr bool full() const noexcept {
+    [[nodiscard]] constexpr bool is_full() const noexcept {
         return size_ == N;
     }
 
@@ -265,6 +274,10 @@ public:
         return std::span(buf_, size_);
     }
 
+    [[nodiscard]] constexpr std::span<T> mut_view(){
+        return std::span(buf_, size_);
+    }
+
 private:
     // 存储 - 使用 union 替代 aligned_storage (C++20 起支持 constexpr)
     union {
@@ -273,4 +286,10 @@ private:
     size_t size_{0};
 };
 
+
+}
+
+namespace ymd{
+template<typename T, size_t N>  
+using HeaplessVector = heapless::Vector<T, N>;
 }

@@ -6,10 +6,10 @@
 namespace ymd::hal{
 
 
-class I2cHw final: public I2c{
+class I2c final: public I2cBase{
 public:
 
-    I2cHw(void * inst);
+    I2c(void * inst);
 
     [[nodiscard]] HalResult write(const uint32_t data);
     [[nodiscard]] HalResult read(uint8_t & data, const Ack ack);
@@ -33,11 +33,11 @@ private:
 
 
 #ifdef I2C1_PRESENT
-extern I2cHw i2c1;
+extern I2c i2c1;
 #endif
 
 #ifdef I2C2_PRESENT
-extern I2cHw i2c2;
+extern I2c i2c2;
 #endif
 
 }

@@ -3,7 +3,7 @@
 #include "core/debug/debug.hpp"
 
 #include "hal/storage/flash/flash.hpp"
-#include "hal/bkp/bkp.hpp"
+#include "hal/sysmisc/bkp/bkp.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
@@ -179,14 +179,14 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     logger.prints("at24 tb done");
 }
 
-[[maybe_unused]] static void eeprom02_tb(OutputStream & logger, hal::I2c & i2c){
+[[maybe_unused]] static void eeprom02_tb(OutputStream & logger, hal::I2cBase & i2c){
     AT24C02 at24{i2c};
     at24.init();
     Memory mem = at24;
     mem_tb(logger, mem);
 }
 
-[[maybe_unused]] static void eeprom64_tb(OutputStream & logger, hal::I2c & i2c){
+[[maybe_unused]] static void eeprom64_tb(OutputStream & logger, hal::I2cBase & i2c){
     AT24C64 at24{i2c};
     at24.init();
     // Memory mem = at24.slice({256,512});
@@ -307,11 +307,11 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
 
 void eeprom_main(){
-    hal::uart2.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+    hal::usart2.init({
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
-    DEBUGGER.retarget(&hal::uart2);
+    DEBUGGER.retarget(&hal::usart2);
     DEBUGGER.set_eps(2);
     DEBUGGER.set_radix(10);
     DEBUGGER.set_splitter("\t");

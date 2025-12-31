@@ -45,7 +45,7 @@
 //     }
 // };
 
-// #define DBG_UART hal::uart2
+// #define DBG_UART hal::usart2
 
 // void can_actor_main(){
 //     DBG_UART.init({576000});

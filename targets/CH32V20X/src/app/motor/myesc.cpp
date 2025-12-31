@@ -33,7 +33,7 @@
 
 #include "middlewares/rpc/rpc.hpp"
 #include "middlewares/rpc/repl_server.hpp"
-
+#include "core/async/timer.hpp"
 
 #include "linear_regression.hpp"
 
@@ -47,7 +47,7 @@ using namespace ymd::digipw;
 using namespace ymd::dsp;
 using namespace ymd::dsp::adrc;
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 
 // static constexpr uint32_t DEBUG_UART_BAUD = 576000;
 // static constexpr uint32_t CHOPPER_FREQ = 24_KHz;
@@ -119,6 +119,109 @@ struct LrSeriesCurrentRegulatorConfig{
         return Ok(coeff);
     }
 };
+
+
+// template<typename D>
+// __attribute__((always_inline))
+// __no_inline __attribute__((optimize("O3")))
+// constexpr D max3i(const D a, const D b, const D c){
+//     const D x = a > b ? a : b;
+//     return (x > c) ? x : c;
+// };
+
+
+template<typename D>
+__fast_inline __attribute__((optimize("O3")))
+constexpr D max3i(const D a, const D b, const D c) {
+    using SignedD = typename std::make_signed<D>::type;
+    
+    // 比较 a 和 b，找到较大的
+    SignedD diff_ab = static_cast<SignedD>(a) - static_cast<SignedD>(b);
+    // 如果 a>b，diff_ab 是正数，mask_ab 全为0
+    // 如果 a<=b，diff_ab 是负数或0，mask_ab 全为1
+    D mask_ab = static_cast<D>(diff_ab >> (sizeof(D)*8 - 1));
+    
+    // max(a,b) = a ^ ((a^b) & mask)
+    D ab_max = a ^ ((a ^ b) & mask_ab);
+    
+    // 比较 ab_max 和 c
+    SignedD diff_maxc = static_cast<SignedD>(ab_max) - static_cast<SignedD>(c);
+    D mask_maxc = static_cast<D>(diff_maxc >> (sizeof(D)*8 - 1));
+    
+    return ab_max ^ ((ab_max ^ c) & mask_maxc);
+}
+
+template<typename D>
+__fast_inline __attribute__((optimize("O3")))
+constexpr D min3i(const D a, const D b, const D c) {
+    using SignedD = typename std::make_signed<D>::type;
+    
+    // 比较 a 和 b，找到较小的
+    SignedD diff_ab = static_cast<SignedD>(a) - static_cast<SignedD>(b);
+    // 如果 a<b，mask_ab 全为1；否则全为0
+    D mask_ab = static_cast<D>(diff_ab >> (sizeof(D)*8 - 1));
+    // 正确的计算公式：min(a,b) = b + ((a-b) & mask)
+    D ab_min = b + (mask_ab & static_cast<D>(diff_ab));
+    
+    // 比较 ab_min 和 c，找到两者中较小的
+    SignedD diff_minc = static_cast<SignedD>(ab_min) - static_cast<SignedD>(c);
+    D mask_minc = static_cast<D>(diff_minc >> (sizeof(D)*8 - 1));
+    // min(ab_min,c) = c + ((ab_min-c) & mask)
+    return c + (mask_minc & static_cast<D>(diff_minc));
+}
+
+static_assert(min3i(1, 2, 3) == 1);
+static_assert(min3i(114, 245, 313) == 114);
+
+static_assert(max3i(1, 2, 3) == 3);
+static_assert(max3i(114, 245, 313) == 313);
+
+template<size_t Q, typename D>
+__attribute__((always_inline))
+constexpr math::fixed_t<Q, D> max3(const math::fixed_t<Q, D> a, const math::fixed_t<Q, D> b, const math::fixed_t<Q, D> c){
+    return math::fixed_t<Q, D>::from_bits(max3i(a.to_bits(), b.to_bits(), c.to_bits()));
+};
+
+template<size_t Q, typename D>
+__attribute__((always_inline))
+constexpr math::fixed_t<Q, D> min3(const math::fixed_t<Q, D> a, const math::fixed_t<Q, D> b, const math::fixed_t<Q, D> c){
+    return math::fixed_t<Q, D>::from_bits(min3i(a.to_bits(), b.to_bits(), c.to_bits()));
+};
+
+
+// SVM的数学统一公式（无分支）
+__no_inline static constexpr UvwCoord<iq16> SVM_unified(
+    const AlphaBetaCoord<iq16> alphabeta_dutycycle
+) {
+    const auto [alpha, beta] = alphabeta_dutycycle;
+    
+    // Clark逆变换（alpha-beta 转 uvw）
+    const iq16 u = alpha;
+    const iq16 beta_ = beta * iq16(0.8660254);
+    const iq16 v = (-alpha >> 1) + (beta_);  // -0.5 = -1/2, 0.8660254 = √3/2
+    const iq16 w = (-alpha >> 1) - (beta_);
+    
+    // 找到最大值和最小值
+    // const iq16 max_val = MAX(u, v, w);
+    // const iq16 min_val = MIN(u, v, w);
+
+    const iq16 max_val = max3(u, v, w);
+    const iq16 min_val = min3(u, v, w);
+    
+    // 计算零序分量（使波形居中）
+    const iq16 v0 = -(max_val + min_val) >> 1;
+    
+    // 添加直流偏置（0.5）和零序分量
+    constexpr iq16 HALF = iq16(0.5);
+
+    return {
+        HALF + u + v0,
+        HALF + v + v0,
+        HALF + w + v0
+    };
+}
+
+
 
 
 #if 0
@@ -245,9 +348,9 @@ static void init_adc(){
             {hal::AdcChannelSelection::VREF, hal::AdcSampleCycles::T28_5}
         },{
 
-            {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T7_5},
-            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
-            {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T7_5},
+            {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T13_5},
+            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
+            {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T13_5},
 
         },
         {}
@@ -257,11 +360,24 @@ static void init_adc(){
     hal::adc1.enable_auto_inject(DISEN);
 }
 
+using namespace ymd::math;
+
+template<size_t Q>
+static constexpr fixed_t<Q, int32_t> lpf_exprimetal(fixed_t<Q, int32_t> x_state, const fixed_t<Q, int32_t> x_new){
+    constexpr uq32 alpha = uq32::from_bits(static_cast<uint32_t>((0.999) * (uint64_t(1u) << 32)));
+    constexpr uq32 beta = uq32::from_bits(~alpha.to_bits());
+    return fixed_t<Q, int32_t>::from_bits(
+        static_cast<int32_t>(
+            ((static_cast<int64_t>(x_state.to_bits()) * alpha.to_bits()) 
+            + (static_cast<int64_t>(x_new.to_bits()) * beta.to_bits())) >> 32
+        )
+    );
+}
 
 void myesc_main(){
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = DEBUG_UART_BAUD,
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
         .tx_strategy = CommStrategy::Blocking,
     });
 
@@ -271,9 +387,8 @@ void myesc_main(){
     DEBUGGER.no_brackets(EN);
     // DEBUGGER.force_sync(EN);
 
+
     clock::delay(2ms);
-
-
     auto & timer = hal::timer1;
 
     // #region 初始化定时器
@@ -299,7 +414,6 @@ void myesc_main(){
         }).unwrap()
         ;
 
-    timer.start();
 
     auto & pwm_u_ = timer.oc<1>(); 
     auto & pwm_v_ = timer.oc<2>(); 
@@ -380,13 +494,13 @@ void myesc_main(){
     // #endregion 初始化ADC
 
     // #region 初始化ADC
-    static constexpr auto VOLTAGE_TO_CURRENT_RATIO = 0.5_r;
+    static constexpr auto VOLTAGE_TO_CURRENT_RATIO = iq16(3.3 * 0.5);
     auto soa_ = hal::ScaledAnalogInput(hal::adc1.inj<1>(), 
-        Rescaler<iq16>::from_anti_offset(1.65_r)     * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
+        Rescaler<iq16>::from_anti_offset(0.497_r) * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
     auto sob_ = hal::ScaledAnalogInput(hal::adc1.inj<2>(), 
-        Rescaler<iq16>::from_anti_offset(1.65_r)     * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
+        Rescaler<iq16>::from_anti_offset(0.497_r) * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
     auto soc_ = hal::ScaledAnalogInput(hal::adc1.inj<3>(), 
-        Rescaler<iq16>::from_anti_offset(1.65_r)    * Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
+        Rescaler<iq16>::from_anti_offset(0.497_r)* Rescaler<iq16>::from_scale(VOLTAGE_TO_CURRENT_RATIO ));
 
     init_adc();
     // #endregion 
@@ -510,7 +624,8 @@ void myesc_main(){
         // .r = 252.5_iq10,
         // .r = 152.5_iq10,
         // .r = 12.5_iq10,
-        .r = 37.5_iq10,
+        // .r = 37.5_iq10,
+        .r = 87.5_iq10,
         .h = 0.01_iq10,
         .x2_limit = 10
     }.try_to_coeffs().unwrap();
@@ -534,7 +649,10 @@ void myesc_main(){
     [[maybe_unused]] Ltd2o feedback_differ_{
         feedback_coeffs
     };
-    
+
+    UvwCoord<iq16> uvw_dutycycle_ = Zero;
+    iq20 busbar_current_unfilted_ = Zero;
+    iq20 busbar_current_ = Zero;
     auto ctrl_isr = [&]{
         [[maybe_unused]] const auto now_secs = clock::time();
 
@@ -549,7 +667,8 @@ void myesc_main(){
         //#endregion
 
         //#region 位置提取
-        const auto openloop_manchine_angle = Angular<iq16>::from_turns(0.2_iq16 * now_secs);
+        // const auto openloop_manchine_angle = Angular<iq16>::from_turns(0.2_iq16 * now_secs);
+        const auto openloop_manchine_angle = Angular<iq16>::from_turns(0.1_iq16 * now_secs);
         // const auto openloop_manchine_angle = Angular<iq16>::from_turns(1.2_r * now_secs);
         // const auto openloop_manchine_angle = Angular<iq16>::from_turns(math::sinpu(0.2_r * now_secs));
         const auto openloop_elec_angle = openloop_manchine_angle * POLE_PAIRS;
@@ -589,6 +708,7 @@ void myesc_main(){
         #endif
 
         const auto elec_rotation = Rotation2<iq16>::from_angle(elec_angle);
+        const auto elec_omega = feedback_state_.x2 * POLE_PAIRS;
         //#endregion
 
         //#region 位速合成力矩
@@ -649,7 +769,9 @@ void myesc_main(){
         [[maybe_unused]] static constexpr iq20 CURRENT_LIMIT = 0.4_iq16;
 
         // const iq20 current_cmd = CLAMP2((torque_cmd - math::fixed_downcast<16>(leso_state_.x2) / 1000) * TORQUE_2_CURR_RATIO, CURRENT_LIMIT);
-        const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_CURR_RATIO, CURRENT_LIMIT);
+        // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_CURR_RATIO, CURRENT_LIMIT);
+        
+        const iq20 current_cmd = 0.14_iq20;
         // const iq20 current_cmd = 0.1_iq20 * iq16(math::sin(now_secs));
         // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_CURR_RATIO, CURRENT_LIMIT);
         // const iq20 current_cmd = 0.07_iq20 * iq16(sin(now_secs));
@@ -661,9 +783,13 @@ void myesc_main(){
         [[maybe_unused]] auto generate_dq_volt_by_pi_ctrl = [&]{
             const iq20 dest_d_curr = 0;
             const iq20 dest_q_curr = current_cmd;
+            // return DqCoord<iq20>{
+            //     .d = d_pi_ctrl_(dest_d_curr - dq_curr.d),
+            //     .q = q_pi_ctrl_(dest_q_curr - dq_curr.q)
+            // };
             return DqCoord<iq20>{
-                .d = d_pi_ctrl_(dest_d_curr - dq_curr.d),
-                .q = q_pi_ctrl_(dest_q_curr - dq_curr.q)
+                .d = d_pi_ctrl_(dest_d_curr - dq_curr.d) - PHASE_INDUCTANCE * dq_curr.q * elec_omega,
+                .q = q_pi_ctrl_(dest_q_curr - dq_curr.q) + PHASE_INDUCTANCE * dq_curr.d * elec_omega
             };
         };
 
@@ -712,11 +838,15 @@ void myesc_main(){
             } * INV_BUS_VOLT
         );
 
+        
+
         // leso_state_ = leso.iterate(leso_state_, feedback_state_.x1, current_cmd);
         leso_state_ = leso.iterate(leso_state_, feedback_state_.x2, current_cmd);
         // leso_state_ = leso.iterate(leso_state_, math::fixed_downcast<16>(feedback_state_.x1), current_cmd);
-
+        busbar_current_unfilted_ = UvwCoord<iq20>(uvw_dutycycle.u, uvw_dutycycle.v, uvw_dutycycle.w).dot(uvw_curr);
+        busbar_current_ = lpf_exprimetal(busbar_current_, busbar_current_unfilted_);
         uvw_pwmgen_.set_dutycycle(uvw_dutycycle);
+        uvw_dutycycle_ = uvw_dutycycle;
         uvw_curr_ = uvw_curr;
         alphabeta_curr_ = alphabeta_curr;
         dq_curr_ = dq_curr;
@@ -784,78 +914,112 @@ void myesc_main(){
         }
     });
 
+
+    timer.start();
+
     while(true){
         // repl_service_poller();
-
-        if(false)DEBUG_PRINTLN_IDLE(
-            pwm_u_.cvr(),
-            pwm_v_.cvr(),
-            pwm_w_.cvr()
-        );
-
-        if(false){
-            const auto now_secs = clock::time();
-            DEBUG_PRINTLN_IDLE(
-                math::sin(now_secs),
-                hal::uart2.available()
-            );
-            // DEBUG_PRINTLN(1);
-            // const char str[] = "h\r\n";
-            // hal::uart2.write_chars(str, sizeof(str) -1);
-            // clock::delay(200ms);
-        }
-        if(true) DEBUG_PRINTLN_IDLE(
-        // if(true) DEBUG_PRINTLN(
-            // alphabeta_curr_,
-            // alphabeta_volt_,
-            // alphabeta_volt_.beta / alphabeta_curr_.beta,
-            // dq_curr_,
-            // dq_volt_,
-            // alphabeta_volt_.beta / alphabeta_curr_.beta,
-            // q_pi_ctrl_.err_sum_,
-            // q_pi_ctrl_.kp_
-            // q_pi_ctrl_.err_sum_max_
-            // lbg_sensorless_ob.angle().to_turns(),
-            // hal::adc1.inj<1>().get_voltage(),
             
-            // iq16(lap_angle.to_turns()) * POLE_PAIRS,
-            // sensored_elec_angle_.to_turns(),
-            // openloop_elec_angle_.to_turns(),
-            iq16::from_bits(track_ref_.x1.to_bits() >> 16),
-            // track_ref_.x2,
-            iq16::from_bits(feedback_state_.x1.to_bits() >> 16),
-            // feedback_state_.x2,
-            // leso_state_.x2,
-            encoder_lap_angle_.to_turns(),
-            sensored_elec_angle_.to_turns(),
-            0
-            // encoder_multi_angle_.to_turns(),
-            // leso_state_.x2,
-            // sensored_elec_angle_.to_turns(),
-            // encoder_multi_angle_.to_turns(),
-            // 0
-            // flux_sensorless_ob.angle().to_turns()
-            // flux_sensorless_ob.V_alphabeta_last_
-            // smo_sensorless_ob.angle().to_turns(),
-            // exe_us_.count(),
+        static auto report_timer = async::RepeatTimer::from_duration(5ms);
+        report_timer.invoke_if([&]{
+            if(false)DEBUG_PRINTLN(
+                pwm_u_.cvr(),
+                pwm_v_.cvr(),
+                pwm_w_.cvr()
+            );
+            if(true){
+            // if(false){
+                DEBUG_PRINTLN(
+                    busbar_current_unfilted_,
+                    busbar_current_,
+                    // sensored_elec_angle_.to_turns()
 
-            // flux_sensorless_ob.angle().to_turns(),
-            // lbg_sensorless_ob.angle().to_turns(),
-            // smo_sensorless_ob.angle().to_turns(),
-            // uint32_t(exe_us_.count())
+                    uvw_curr_
 
-            // openloop_elec_angle_.normalized().to_turns()
-            // bool(drv8323_nfault_pin_.read() == LOW),
+                    // uvw_curr_
+                    // hal::adc1.inj<1>().get_perunit(),
+                    // hal::adc1.inj<2>().get_perunit()
+                    // soa_.get_value(),
+                    // sob_.get_value()
+                );
+            }
+            if(false){
+                const auto now_secs = clock::time();
+                const auto t = frac(now_secs * 2);
+                const auto [s,c] = math::sincospu(t);
+\
+                DEBUG_PRINTLN(
+                    // math::sin(now_secs),
+                    // hal::usart2.available()
+                    SVM_unified(AlphaBetaCoord<iq16>{iq16(c),iq16(s)}),
+                    // SVM_reference(AlphaBetaCoord<iq16>{iq16(s),iq16(c)}),
+                    SVM(AlphaBetaCoord<iq16>{iq16(c) * iq16(0.866),iq16(s) * iq16(0.866)}),
+                    t
+                    // u1.count(),
+                    // u2.count(),
+                    // i
+                    // 0
+                );
+                // DEBUG_PRINTLN(1);
+                // const char str[] = "h\r\n";
+                // hal::usart2.write_chars(str, sizeof(str) -1);
+                // clock::delay(200ms);
+            }
+            if(false) DEBUG_PRINTLN(
+            // if(true) DEBUG_PRINTLN(
+                // alphabeta_curr_,
+                // alphabeta_volt_,
+                // alphabeta_volt_.beta / alphabeta_curr_.beta,
+                // dq_curr_,
+                // dq_volt_,
+                // alphabeta_volt_.beta / alphabeta_curr_.beta,
+                // q_pi_ctrl_.err_sum_,
+                // q_pi_ctrl_.kp_
+                // q_pi_ctrl_.err_sum_max_
+                // lbg_sensorless_ob.angle().to_turns(),
+                // hal::adc1.inj<1>().get_voltage(),
+                
+                // iq16(lap_angle.to_turns()) * POLE_PAIRS,
+                // sensored_elec_angle_.to_turns(),
+                // openloop_elec_angle_.to_turns(),
+                iq16::from_bits(track_ref_.x1.to_bits() >> 16),
+                // track_ref_.x2,
+                iq16::from_bits(feedback_state_.x1.to_bits() >> 16),
+                // feedback_state_.x2,
+                // leso_state_.x2,
+                encoder_lap_angle_.to_turns(),
+                sensored_elec_angle_.to_turns(),
+
+                0
+                // encoder_multi_angle_.to_turns(),
+                // leso_state_.x2,
+                // sensored_elec_angle_.to_turns(),
+                // encoder_multi_angle_.to_turns(),
+                // 0
+                // flux_sensorless_ob.angle().to_turns()
+                // flux_sensorless_ob.V_alphabeta_last_
+                // smo_sensorless_ob.angle().to_turns(),
+                // exe_us_.count(),
+
+                // flux_sensorless_ob.angle().to_turns(),
+                // lbg_sensorless_ob.angle().to_turns(),
+                // smo_sensorless_ob.angle().to_turns(),
+                // uint32_t(exe_us_.count())
+
+                // openloop_elec_angle_.normalized().to_turns()
+                // bool(drv8323_nfault_pin_.read() == LOW),
 
 
-            // pwm_u_.cvr(),
-            // pwm_v_.cvr(),
-            // pwm_w_.cvr(),
+                // pwm_u_.cvr(),
+                // pwm_v_.cvr(),
+                // pwm_w_.cvr(),
 
-            // pwm_u_.get_dutycycle(),
-            // pwm_v_.get_dutycycle(),
-            // pwm_w_.get_dutycycle(),
-        );
+                // pwm_u_.get_dutycycle(),
+                // pwm_v_.get_dutycycle(),
+                // pwm_w_.get_dutycycle(),
+            );
+        });
+
         poll_blink_service();
         // toggle_red_led();
         // repl_service_poller();

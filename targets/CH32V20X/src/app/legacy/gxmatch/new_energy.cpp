@@ -498,7 +498,7 @@ private:
 class DetectService final{
 private:
     using Inst = drivers::U13T;
-    hal::UartHw & uart_;
+    hal::Uart & uart_;
     // Inst inst_ = Inst{uart_};
     Option<StationName> last_sta_ = None;
 
@@ -595,7 +595,7 @@ private:
 
 
 public: 
-    DetectService(UartHw & uart):
+    DetectService(Uart & uart):
         uart_(uart){
     }
 
@@ -699,7 +699,7 @@ void app(){
     auto & DBG_UARTSW_GPIO = hal::PA<5>();
     auto & TTS_UARTSW_GPIO = hal::PB<1>();
     auto & LED_GPIO = hal::PB<8>();
-    auto & UARTHW = uart2;
+    auto & UARTHW = usart2;
 
     hal::UartSw dbg_uart{DBG_UARTSW_GPIO, NullGpio}; 
     hal::UartSw tts_uart{TTS_UARTSW_GPIO, NullGpio}; 

@@ -92,7 +92,7 @@ constexpr int32_t __IQNasin(int32_t iqNInput)
         uiq31Input = uiq31InputTemp >> 1;
 
         /* Calculate sqrt((1 - uiq31Input)/2) */
-        uiq31Input = _IQNsqrt<31>(fixed_t<31, int32_t>::from_bits(uiq31Input)).to_bits();
+        uiq31Input = _IQNsqrt<31>(math::fixed_t<31, int32_t>::from_bits(uiq31Input)).to_bits();
 
         /* Flag that the transformation was used. */
         ui8Status |= 2;
@@ -153,16 +153,16 @@ constexpr int32_t __IQNasin(int32_t iqNInput)
 
 
 template<const size_t Q>
-constexpr fixed_t<29, int32_t> _IQNasin(fixed_t<Q, int32_t> iqNInput){
+constexpr math::fixed_t<29, int32_t> _IQNasin(math::fixed_t<Q, int32_t> iqNInput){
     // static_assert(Q <= 29, "Input must be 29 bits or less.");
 
     if constexpr (Q > 29){
-        return fixed_t<29, int32_t>::from_bits(
-            __IQNasin<29>(fixed_t<29, int32_t>(iqNInput).to_bits())
+        return math::fixed_t<29, int32_t>::from_bits(
+            __IQNasin<29>(math::fixed_t<29, int32_t>(iqNInput).to_bits())
         );
     }else{
-        return fixed_t<29, int32_t>::from_bits(
-            __IQNasin<Q>(fixed_t<29, int32_t>(iqNInput).to_bits())
+        return math::fixed_t<29, int32_t>::from_bits(
+            __IQNasin<Q>(math::fixed_t<29, int32_t>(iqNInput).to_bits())
         );
     }
 }

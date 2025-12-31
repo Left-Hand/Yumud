@@ -26,14 +26,14 @@ struct ControlWord {
 };
 
 struct StatusWord {
-    uint8_t readyToSwitchOn : 1;
-    uint8_t switchedOn : 1;
-    uint8_t operationEnabled : 1;
+    uint8_t ready_to_switch_on : 1;
+    uint8_t switched_on : 1;
+    uint8_t operation_enabled : 1;
     uint8_t fault : 1;
-    uint8_t voltageEnabled : 1;
-    uint8_t quickStop : 1;
+    uint8_t voltage_enabled : 1;
+    uint8_t quick_stop : 1;
     uint8_t warning : 1;
-    uint8_t targetReached : 1;
+    uint8_t target_reached : 1;
 };
 
 enum class MotionMode : uint8_t {

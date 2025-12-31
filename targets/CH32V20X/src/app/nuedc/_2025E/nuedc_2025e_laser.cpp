@@ -27,7 +27,7 @@ using namespace ymd::robots;
 using namespace ymd::nuedc_2025e;
 
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 static constexpr uint32_t PWM_FREQ = 10000;
 static constexpr uint32_t ISR_FREQ = PWM_FREQ / 2;
 
@@ -82,8 +82,8 @@ struct Task{
 
 void nuedc_2025e_laser_main(){
     DBG_UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     
     DEBUGGER.retarget(&DBG_UART);

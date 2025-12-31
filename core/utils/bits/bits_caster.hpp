@@ -1,13 +1,13 @@
 #pragma once
 
 #include "core/constants/enums.hpp"
-#include "core/utils/data_iter.hpp"
 #include "core/utils/Option.hpp"
-#include <bit>
-#include <span>
+#include "core/utils/bytes/bytes_caster.hpp"
+
 
 namespace ymd{
 
+#if 0
 template<size_t Extents>
 struct PaddingZero{
     using Self = PaddingZero;
@@ -17,6 +17,7 @@ struct PaddingZero{
 
     [[nodiscard]] static constexpr Self from_bytes(std::span<const uint8_t, Extents>){;}
 };
+#endif
 
 namespace details{
 template<typename T>
@@ -186,48 +187,17 @@ template<typename T>
 using to_bits_t = typename details::_to_bits<T>::bits_type;
 
 template<typename T, typename D = from_bits_t<T>>
+__attribute__((always_inline))
 [[nodiscard]] static constexpr T obj_from_bits(const D bits){
     return details::_from_bits<T>::into_obj(bits);
 }
 
 template<typename T, typename D = to_bits_t<T>>
+__attribute__((always_inline))
 [[nodiscard]] static constexpr D obj_to_bits(T && obj){
     return details::_to_bits<T>::into_bits(std::forward<T>(obj));
 }
 
-
-template<std::endian E, typename D, size_t Extent>
-requires ((Extent == sizeof(D)) || (Extent == std::dynamic_extent))
-[[nodiscard]] static constexpr D bytes_to_int(const std::span<const uint8_t, Extent> bytes){
-    static_assert((Extent == sizeof(D)) || (Extent == std::dynamic_extent),
-        "static extent must equal to sizeof(D)"
-    );
-    using UD = std::make_unsigned_t<D>;
-
-    UD sum = 0;
-
-    constexpr auto _LSB = std::endian::little;
-    if constexpr (std::endian(E) == _LSB){
-        for(auto it = bytes.begin(); it != bytes.end(); it++){
-            sum = static_cast<UD>(static_cast<UD>(sum << 8) | static_cast<UD>(*it));
-        }
-    }else{
-        for(auto it = bytes.rbegin(); it != bytes.rend(); it++){
-            sum = static_cast<UD>(static_cast<UD>(sum << 8) | static_cast<UD>(*it));
-        }
-    }
-    return std::bit_cast<D>(sum);
-}
-
-template<typename D, size_t Extent>
-[[nodiscard]] static constexpr D le_bytes_to_int(const std::span<const uint8_t, Extent> bytes){
-    return bytes_to_int<std::endian::little, D, Extent>(bytes);
-}
-
-template<typename D, size_t Extent>
-[[nodiscard]] static constexpr D be_bytes_to_int(const std::span<const uint8_t, Extent> bytes){
-    return bytes_to_int<std::endian::big, D, Extent>(bytes);
-}
 
 //可以将整数完成bits构造
 template<typename D>

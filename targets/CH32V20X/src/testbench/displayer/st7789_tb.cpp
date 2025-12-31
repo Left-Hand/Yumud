@@ -40,14 +40,14 @@ DEF_ERROR_WITH_KINDS(MyError, ST7789::Error, PainterBase::Error)
 
 
 
-#define DBG_UART hal::uart2
+#define DBG_UART hal::usart2
 
 
 void st7789_main(void){
 
     DBG_UART.init({
-        hal::UART2_REMAP_PA2_PA3,
-        576000
+        hal::USART2_REMAP_PA2_PA3,
+        hal::NearestFreq(576000),
     });
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
@@ -82,7 +82,7 @@ void st7789_main(void){
 
     // ST7789 tft({{spi, 0}, lcd_dc, dev_rst}, {240, 134});
     drivers::ST7789 tft(
-		drivers::ST7789_Phy{
+		drivers::ST7789_Transport{
 			&spi, 
 			spi.allocate_cs_pin(&lcd_cs).unwrap(), 
 			&lcd_dc, 

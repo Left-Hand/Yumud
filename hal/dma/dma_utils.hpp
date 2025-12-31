@@ -12,15 +12,16 @@ namespace ymd::hal::dma{
 struct [[nodiscard]] Mode{
 public:
     enum class Kind:uint8_t{
-        ToMemory = 0b000,
-        ToPeriph = 0b001,
+        PeriphToBurstMemory = 0b000,
+        BurstMemoryToPeriph = 0b001,
         Synergy = 0b010,
         Distribute = 0b011,
 
-        ToMemCircular = 0b100,
-        ToPeriphCircular = 0b101,
+        PeriphToBurstMemoryCircular = 0b100,
+        BurstMemoryToPeriphCircular = 0b101,
         SynergyCircular = 0b110,
         DistributeCircular = 0b111,
+        Default = PeriphToBurstMemory,
     };
 
     using enum Kind;
@@ -35,17 +36,14 @@ public:
 
     [[nodiscard]] constexpr bool dst_is_periph() const {
         switch(kind()){
-            case Kind::ToPeriph:
-            case Kind::ToPeriphCircular:
+            case Kind::BurstMemoryToPeriph:
+            case Kind::BurstMemoryToPeriphCircular:
                 return true;
             default:
                 return false;
         }
     }
 
-    friend OutputStream& operator<<(OutputStream& os, Mode::Kind kind);
-    friend OutputStream& operator<<(OutputStream& os, Mode mode){
-        return os << mode.kind();}
 private:
     Kind kind_;
 };
@@ -53,8 +51,8 @@ private:
 struct [[nodiscard]] Direction{
 public:
     enum class Kind:uint8_t{
-        ToMemory = 0,
-        ToPeriph,
+        PeriphToBurstMemory = 0,
+        BurstMemoryToPeriph,
         Synergy,
         Distribute
     };
@@ -75,9 +73,6 @@ public:
         return std::bit_cast<Mode>(static_cast<uint8_t>(std::bit_cast<uint8_t>(kind()) & 0b011));
     }
 
-    friend OutputStream& operator<<(OutputStream& os, Direction::Kind kind);
-    friend OutputStream& operator<<(OutputStream& os, Direction direction){
-        return os << direction.kind();}
 private:
     Kind kind_;
 };
@@ -96,6 +91,13 @@ enum class [[nodiscard]] IT:uint8_t{
     Half
 };
 
+enum class [[nodiscard]] WordSize:uint8_t{
+    OneByte = 0,
+    TwoByte = 1,
+    FourByte = 2,
+};
+
+
 enum class [[nodiscard]] Event:uint8_t{
     TransferComplete,
     HalfTransfer,
@@ -108,4 +110,5 @@ using DmaDirection = dma::Direction;
 using DmaEvent = dma::Event;
 using DmaIT = dma::IT;
 using DmaPriority = dma::Priority;
+using DmaWordSize = dma::WordSize;
 }

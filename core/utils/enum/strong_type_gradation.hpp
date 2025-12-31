@@ -4,7 +4,7 @@
 
 
 #define DEF_STRONG_TYPE_GRADATION(name, fn_name, D, T, start, stop, step)\
-struct [[nodiscard]] name {\
+struct [[nodiscard]] name final{\
 public:\
     static constexpr T MAX_VALUE = static_cast<T>(stop);\
     static constexpr T MIN_VALUE = static_cast<T>(start);\

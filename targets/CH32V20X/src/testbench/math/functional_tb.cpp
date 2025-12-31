@@ -23,14 +23,14 @@ struct FoundInfo{
 };
 
 
-#define UART hal::uart2
+#define UART hal::usart2
 
 namespace ranges = std::ranges;
 
 void functional_main(){
     DEBUGGER_INST.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000 
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz), 
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.force_sync(EN);

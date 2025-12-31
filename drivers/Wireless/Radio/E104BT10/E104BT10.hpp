@@ -60,7 +60,7 @@ struct E104BT10_Prelude{
     }
 };
 
-class E104BT10_Phy final:public E104BT10_Prelude{
+class E104BT10_Transport final:public E104BT10_Prelude{
 public:
     IResult<> write_bytes(const std::span<const uint8_t> pbuf);
     IResult<> read_bytes(const std::span<uint8_t> pbuf);
@@ -87,11 +87,11 @@ class E104BT10 final:public E104BT10_Prelude{
 public:
 
 private:
-    using Phy = E104BT10_Phy;
-    Phy phy_;
+    using Phy = E104BT10_Transport;
+    Phy transport_;
     
     void refactory(){
-        phy_.write_args(0x02, 0xc0, 0x15);
+        transport_.write_args(0x02, 0xc0, 0x15);
     }
 }
 }

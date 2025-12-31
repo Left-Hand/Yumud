@@ -3,5 +3,5 @@
 #include "hal/bus/i2c/i2c.hpp"
 
 namespace ymd::hal{
-    using Sccb = I2c;
+    using Sccb = I2cBase;
 }

@@ -20,8 +20,8 @@ namespace ymd::drivers{
 
 class MLX90393 final: public MLX90393_Prelude{
 public:
-    explicit MLX90393(MLX90393_Phy && phy):
-        phy_(phy){;}
+    explicit MLX90393(MLX90393_Transport && phy):
+        transport_(phy){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> reset();
@@ -43,7 +43,7 @@ public:
 
     
 private:
-    MLX90393_Phy phy_;
+    MLX90393_Transport transport_;
     [[nodiscard]] IResult<> read_reg(uint8_t reg_addr, uint16_t & data);
     [[nodiscard]] IResult<> write_reg(uint8_t reg_addr, uint16_t data);
 
@@ -60,7 +60,7 @@ private:
         std::span<const uint8_t> tx_pbuf, 
         const uint8_t interdelay
     ){
-        return phy_.transceive(rx_pbuf, tx_pbuf);
+        return transport_.transceive(rx_pbuf, tx_pbuf);
     }
 
     MLX90393_Regset regs_;

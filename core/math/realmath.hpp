@@ -35,7 +35,7 @@ __attribute__((always_inline)) constexpr T powfi(const T base, const size_t expo
 }
 
 template<std::floating_point T>
-__attribute__((always_inline)) constexpr T math::sinpu(const T val){
+__attribute__((always_inline)) constexpr T sinpu(const T val){
     constexpr T tau = static_cast<T>(M_TWOPI);
     return std::sin(static_cast<T>(val * tau));
 }
@@ -72,6 +72,13 @@ __attribute__((always_inline)) constexpr T square(const T x) {
     return x * x;
 }
 
+
+template<typename T>
+requires (std::is_arithmetic_v<T>)
+__attribute__((always_inline)) constexpr T cubic(const T x) {
+    return x * x * x;
+}
+
 template<typename T>
 requires (std::is_arithmetic_v<T>)
 __attribute__((always_inline)) constexpr T distance(const T a, const T b){
@@ -100,5 +107,10 @@ template<std::floating_point T>
 __attribute__((always_inline)) constexpr T atan2pu(const T a, const T b) {
     constexpr auto INV_TAU = static_cast<T>(1 / TAU);
     return std::atan2(a, b) * INV_TAU;
+}
+
+template<std::floating_point T>
+__attribute__((always_inline)) constexpr T floor(const T x) {
+    return std::floor(x);
 }
 }

@@ -26,7 +26,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#define UART hal::uart2
+#define UART hal::usart2
 #define SCL_PIN hal::PB<0>()
 #define SDA_PIN hal::PB<1>()
 
@@ -470,8 +470,8 @@ static void HT16K33_tb(HT16K33 & ht16){
 
 void ht16k33_main(){
     UART.init({
-        .remap = hal::UART2_REMAP_PA2_PA3,
-        .baudrate = 576000
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&UART);
     DEBUGGER.set_eps(4);

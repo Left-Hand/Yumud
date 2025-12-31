@@ -24,9 +24,12 @@ using Error = MP2980::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
+static constexpr uint32_t voltage_to_mv(const uq10 voltage){
+    return uint32_t(voltage * 1000);
+}
 
-IResult<> MP2980::set_feed_back_vref(const real_t vref){
-    return set_feed_back_vref_mv(int(vref * 1000));
+IResult<> MP2980::set_feed_back_vref(const uq10 vref){
+    return set_feed_back_vref_mv(voltage_to_mv(vref));
 }
 
 IResult<> MP2980::set_feed_back_vref_mv(const uint32_t vref_mv){
@@ -158,8 +161,8 @@ IResult<> MP2980::set_interrupt_mask(const Interrupts mask){
     return write_reg(reg);
 }
 
-IResult<> MP2980::set_output_volt(const real_t output_volt){
-    const uint32_t output_mv = uint32_t(output_volt * 1000);
+IResult<> MP2980::set_output_volt(const uq10 output_volt){
+    const uint32_t output_mv = voltage_to_mv(output_volt);
     const uint32_t fb_mv = (output_mv * fb_down_res_ohms) / (fb_up_res_ohms + fb_down_res_ohms);
     return set_feed_back_vref_mv(fb_mv);
 }

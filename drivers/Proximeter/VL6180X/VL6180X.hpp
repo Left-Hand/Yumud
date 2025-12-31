@@ -8,11 +8,11 @@ class VL6180X final:public VL6180X_Prelude{
 public:
 
     explicit VL6180X(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
+        transport_(i2c_drv){;}
     explicit VL6180X(hal::I2cDrv && i2c_drv):
-        phy_(std::move(i2c_drv)){;}
-    explicit VL6180X(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_{hal::I2cDrv(i2c, addr)}{;}
+        transport_(std::move(i2c_drv)){;}
+    explicit VL6180X(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        transport_{hal::I2cDrv(i2c, addr)}{;}
 
     [[nodiscard]] IResult<> validate();
 
@@ -56,17 +56,17 @@ private:
     template<typename T>
     requires (sizeof(T) <= 2)
     [[nodiscard]] IResult<> write_reg(RegAddr reg_addr, T reg_val){
-        return phy_.write_reg<T>(std::bit_cast<uint16_t>(reg_addr), reg_val);
+        return transport_.write_reg<T>(std::bit_cast<uint16_t>(reg_addr), reg_val);
     }
     
     template<typename T>
     requires (sizeof(T) <= 2)
     [[nodiscard]] IResult<> read_reg(RegAddr reg_addr, T reg_val){
-        return phy_.read_reg<T>(std::bit_cast<uint16_t>(reg_addr), reg_val);
+        return transport_.read_reg<T>(std::bit_cast<uint16_t>(reg_addr), reg_val);
     }
     [[nodiscard]] IResult<uint8_t> read_range();
 private:
-    VL6180X_Phy phy_;
+    VL6180X_Transport transport_;
     uint8_t scaling;
     int8_t ptp_offset;
 };

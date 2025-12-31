@@ -24,7 +24,7 @@ namespace ymd::drivers{
 class TCA9548A{
 public:
 
-class TCA9548A_VirtualI2c final: public hal::I2c{
+class TCA9548A_VirtualI2c final: public hal::I2cBase{
 private:
     TCA9548A & host_;
     const uint8_t ch_;
@@ -45,7 +45,7 @@ public:
 public:
     explicit TCA9548A(hal::I2cDrv && i2c_drv):
         i2c_(i2c_drv.bus()), self_i2c_drv_(std::move(i2c_drv)){;}
-    explicit TCA9548A(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
+    explicit TCA9548A(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
         i2c_(i2c.deref()), self_i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     auto & operator [](const size_t ch){
@@ -60,7 +60,7 @@ public:
     }
 
 private:
-    hal::I2c & i2c_;
+    hal::I2cBase & i2c_;
     hal::I2cDrv self_i2c_drv_;
     Option<uint8_t> last_ch_ = None;
 

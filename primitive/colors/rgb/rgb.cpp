@@ -119,11 +119,11 @@ __fast_inline static constexpr float fast_cbrtf(float x) {
     return v.x;
 }
 
-__fast_inline static constexpr auto xyz_gamma(const real_t x) -> real_t{
+__fast_inline static constexpr auto xyz_gamma(const iq16 x) -> iq16{
     return (x > 0.008856_r) ? iq16::from(fast_cbrtf(float(x))) : ((x * 7.787037_r) + 0.137931_r);
 }
 
-__fast_inline static constexpr auto inv_xyz_gamma_to8(const real_t x) -> uint8_t{
+__fast_inline static constexpr auto inv_xyz_gamma_to8(const iq16 x) -> uint8_t{
     if((x > 0.0031308_r)) 
         return __USAT8(uint8_t(((1.055_r * 255) * math::pow(x, 0.416666_r)) - (0.055_r * 255)));
     else
@@ -131,13 +131,13 @@ __fast_inline static constexpr auto inv_xyz_gamma_to8(const real_t x) -> uint8_t
 }
 
 
-__fast_inline static constexpr std::tuple<real_t, real_t, real_t> lab888_to_xyz(const LAB888 & lab){
+__fast_inline static constexpr std::tuple<iq16, iq16, iq16> lab888_to_xyz(const LAB888 & lab){
     const auto l = lab.l;
     const auto a = lab.a;
     const auto b = lab.b;
-    const real_t x = ((l + 16) * 0.008621_r) + (a * 0.002_r);
-    const real_t y = ((l + 16) * 0.008621_r);
-    const real_t z = ((l + 16) * 0.008621_r) - (b * 0.005_r);
+    const iq16 x = ((l + 16) * 0.008621_r) + (a * 0.002_r);
+    const iq16 y = ((l + 16) * 0.008621_r);
+    const iq16 z = ((l + 16) * 0.008621_r) - (b * 0.005_r);
 
 
     return {
@@ -147,16 +147,16 @@ __fast_inline static constexpr std::tuple<real_t, real_t, real_t> lab888_to_xyz(
     };
 }
 
-__fast_inline static constexpr XYZ<real_t> rgb888_to_xyz(const RGB888 & rgb){
+__fast_inline static constexpr XYZ<iq16> rgb888_to_xyz(const RGB888 & rgb){
     const auto [r,g,b] = rgb;
     
-    const real_t r_lin = iq16(xyz_table[r]) >> 8;
-    const real_t g_lin = iq16(xyz_table[g]) >> 8;
-    const real_t b_lin = iq16(xyz_table[b]) >> 8;
+    const iq16 r_lin = iq16(xyz_table[r]) >> 8;
+    const iq16 g_lin = iq16(xyz_table[g]) >> 8;
+    const iq16 b_lin = iq16(xyz_table[b]) >> 8;
 
-    const real_t x = ((r_lin * 0.4124_r) + (g_lin * 0.3576_r) + (b_lin * 0.1805_r)) * real_t(1.0f / 095.047f);
-    const real_t y = ((r_lin * 0.2126_r) + (g_lin * 0.7152_r) + (b_lin * 0.0722_r)) * real_t(1.0f / 100.000f);
-    const real_t z = ((r_lin * 0.0193_r) + (g_lin * 0.1192_r) + (b_lin * 0.9505_r)) * real_t(1.0f / 108.883f);
+    const iq16 x = ((r_lin * 0.4124_r) + (g_lin * 0.3576_r) + (b_lin * 0.1805_r)) * iq16(1.0f / 095.047f);
+    const iq16 y = ((r_lin * 0.2126_r) + (g_lin * 0.7152_r) + (b_lin * 0.0722_r)) * iq16(1.0f / 100.000f);
+    const iq16 z = ((r_lin * 0.0193_r) + (g_lin * 0.1192_r) + (b_lin * 0.9505_r)) * iq16(1.0f / 108.883f);
 
 
     return {xyz_gamma(x), xyz_gamma(y), xyz_gamma(z)};
@@ -166,9 +166,9 @@ __fast_inline static constexpr XYZ<real_t> rgb888_to_xyz(const RGB888 & rgb){
 
 __fast_inline static constexpr RGB888 xyz_to_rgb888(const auto & xyz){
     auto [x,y,z] = xyz;
-    real_t r_lin = ((x * (+3.2406_r)) + (y * (-1.5372_r)) + (z * (-0.4986_r))) * (0.01_r);
-    real_t g_lin = ((x * (-0.9689_r)) + (y * (+1.8758_r)) + (z * (+0.0415_r))) * (0.01_r);
-    real_t b_lin = ((x * (+0.0557_r)) + (y * (-0.2040_r)) + (z * (+1.0570_r))) * (0.01_r);
+    iq16 r_lin = ((x * (+3.2406_r)) + (y * (-1.5372_r)) + (z * (-0.4986_r))) * (0.01_r);
+    iq16 g_lin = ((x * (-0.9689_r)) + (y * (+1.8758_r)) + (z * (+0.0415_r))) * (0.01_r);
+    iq16 b_lin = ((x * (+0.0557_r)) + (y * (-0.2040_r)) + (z * (+1.0570_r))) * (0.01_r);
 
 
 
@@ -180,7 +180,7 @@ __fast_inline static constexpr RGB888 xyz_to_rgb888(const auto & xyz){
 }
 
 
-__fast_inline constexpr static LAB888 xyz_to_lab888(const XYZ<real_t> & xyz){
+__fast_inline constexpr static LAB888 xyz_to_lab888(const XYZ<iq16> & xyz){
     auto [xf, yf, zf] = xyz;
 
     return LAB888::from_l8a8b8(

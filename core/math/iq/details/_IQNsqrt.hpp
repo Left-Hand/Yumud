@@ -332,8 +332,8 @@ struct IqSqrtCoeffs{
 
 
 template<const size_t Q>
-constexpr fixed_t<Q, uint32_t> _IQNsqrt(const fixed_t<Q, uint32_t> x){
-    return fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed_t<Q, uint32_t> _IQNsqrt(const math::fixed_t<Q, uint32_t> x){
+    return math::fixed_t<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u32<Q, TYPE_SQRT>(
             x.to_bits()
         ).template compute<Q, TYPE_SQRT>()
@@ -342,8 +342,8 @@ constexpr fixed_t<Q, uint32_t> _IQNsqrt(const fixed_t<Q, uint32_t> x){
 
 
 template<const size_t Q>
-constexpr fixed_t<Q, uint32_t> _IQNisqrt(const fixed_t<Q, uint32_t> x){
-    return fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed_t<Q, uint32_t> _IQNisqrt(const math::fixed_t<Q, uint32_t> x){
+    return math::fixed_t<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u32<Q, TYPE_ISQRT>(
             x.to_bits()
         ).template compute<Q, TYPE_ISQRT>()
@@ -351,8 +351,8 @@ constexpr fixed_t<Q, uint32_t> _IQNisqrt(const fixed_t<Q, uint32_t> x){
 }
 
 template<const size_t Q>
-constexpr fixed_t<Q, uint32_t> _IQNsqrt64(const fixed_t<Q, uint64_t> x){
-    return fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed_t<Q, uint32_t> _IQNsqrt64(const math::fixed_t<Q, uint64_t> x){
+    return math::fixed_t<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u64<Q, TYPE_SQRT>(
             x.to_bits()
         ).template compute<Q, TYPE_SQRT>()
@@ -361,8 +361,8 @@ constexpr fixed_t<Q, uint32_t> _IQNsqrt64(const fixed_t<Q, uint64_t> x){
 
 
 template<const size_t Q>
-constexpr fixed_t<Q, uint32_t> _IQNisqrt64(const fixed_t<Q, uint64_t> x){
-    return fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed_t<Q, uint32_t> _IQNisqrt64(const math::fixed_t<Q, uint64_t> x){
+    return math::fixed_t<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u64<Q, TYPE_ISQRT>(
             x.to_bits()
         ).template compute<Q, TYPE_ISQRT>()
@@ -370,8 +370,8 @@ constexpr fixed_t<Q, uint32_t> _IQNisqrt64(const fixed_t<Q, uint64_t> x){
 }
 
 template<const size_t Q>
-constexpr fixed_t<Q, uint32_t> _IQNmag(fixed_t<Q, uint32_t> x, fixed_t<Q, uint32_t> y){
-    return fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed_t<Q, uint32_t> _IQNmag(math::fixed_t<Q, uint32_t> x, math::fixed_t<Q, uint32_t> y){
+    return math::fixed_t<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_dual_u32<Q, TYPE_MAG>(
             x.to_bits(), y.to_bits()
         ).template compute<Q, TYPE_MAG>()
@@ -380,8 +380,8 @@ constexpr fixed_t<Q, uint32_t> _IQNmag(fixed_t<Q, uint32_t> x, fixed_t<Q, uint32
 
 
 template<const size_t Q>
-constexpr fixed_t<Q, uint32_t> _IQNimag(fixed_t<Q, uint32_t> x, fixed_t<Q, uint32_t> y){
-    return fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed_t<Q, uint32_t> _IQNimag(math::fixed_t<Q, uint32_t> x, math::fixed_t<Q, uint32_t> y){
+    return math::fixed_t<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_dual_u32<Q, TYPE_IMAG>(
             x.to_bits(), y.to_bits()
         ).template compute<Q, TYPE_IMAG>()

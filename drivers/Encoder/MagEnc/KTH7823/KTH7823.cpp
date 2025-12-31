@@ -59,7 +59,7 @@ IResult<> Phy::transceive_u16(uint16_t & rx, const uint16_t tx){
 IResult<> KTH7823::update(){
     
     const auto data = ({
-        const auto res = phy_.direct_read(); 
+        const auto res = transport_.direct_read(); 
         if(res.is_err()) 
             return Err(res.unwrap_err());
         res.unwrap();
@@ -86,26 +86,26 @@ IResult<> KTH7823::set_zero_angle(const Angular<uq32> angle){
     reg_high.data = raw16 >> 8;
 
     // return Ok();
-    if(const auto res = phy_.burn_reg(reg_low); 
+    if(const auto res = transport_.burn_reg(reg_low); 
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = phy_.burn_reg(reg_high); 
+    if(const auto res = transport_.burn_reg(reg_high); 
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
-IResult<> KTH7823::set_trim_x(const real_t k){
+IResult<> KTH7823::set_trim_x(const iq16 k){
     TODO();
     return Ok();
 }
 
-IResult<> KTH7823::set_trim_y(const real_t k){
+IResult<> KTH7823::set_trim_y(const iq16 k){
     TODO();
     return Ok();
 }
 
-IResult<> KTH7823::set_trim(const real_t am, const real_t e){
-    real_t k = math::tan(am + e) / math::tan(am);
-    if(k > real_t(1)) return set_trim_x(k);
+IResult<> KTH7823::set_trim(const iq16 am, const iq16 e){
+    iq16 k = math::tan(am + e) / math::tan(am);
+    if(k > iq16(1)) return set_trim_x(k);
     else return set_trim_y(k);
 }
 
@@ -114,7 +114,7 @@ IResult<> KTH7823::set_mag_threshold(const MagThreshold low, const MagThreshold 
     reg.mag_high = high;
     reg.mag_low = low;
 
-    return phy_.burn_reg(reg);
+    return transport_.burn_reg(reg);
     // return Ok();
 }
 

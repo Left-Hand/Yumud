@@ -16,7 +16,7 @@ public:
     enum class ConvType{
         A128 = 1, B32, A64
     };
-    static constexpr real_t GRAVITY_G = real_t(9.8);
+    static constexpr iq16 GRAVITY_G = iq16(9.8);
 public:
     explicit HX711(
         hal::GpioIntf & sck_gpio, 

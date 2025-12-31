@@ -39,14 +39,14 @@ public:
     // 测量模式1下最大时间差：2*Tref*DIV_CLKHS=1us，超时TDC读出的数据为0xFFFFFFFF
     [[nodiscard]] IResult<iq16> get_meas_value() {
         clock::delay(1us);
-        return phy_.trans_u8_receive_u32(0xB0)
+        return transport_.trans_u8_receive_u32(0xB0)
             .transform([](const uint32_t x){return iq16::from_bits(x);}); // Read REG0
     }
 private:
-    GP22_Phy phy_;
+    GP22_Transport transport_;
 
     [[nodiscard]] IResult<> soft_reset() {
-        if(const auto res = phy_.write_u8(0x50);
+        if(const auto res = transport_.write_u8(0x50);
             res.is_err()) return res;
         clock::delay(1ms);
         return Ok();

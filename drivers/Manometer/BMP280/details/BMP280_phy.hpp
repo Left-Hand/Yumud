@@ -2,12 +2,12 @@
 #include "BMP280_Prelude.hpp"
 
 namespace ymd::drivers{
-class BMP280_Phy final:public BMP280_Prelude{
+class BMP280_Transport final:public BMP280_Prelude{
 public:
-    explicit BMP280_Phy(const hal::I2cDrv & i2c_drv):
+    explicit BMP280_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
 
-    explicit BMP280_Phy(hal::I2cDrv && i2c_drv):
+    explicit BMP280_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
 

@@ -30,7 +30,7 @@ bool ST7789::ST7789_ReflashAlgo::update(const Rect2<uint16_t> rect){
 } 
 
 IResult<> ST7789::common_init(){
-    if(const auto res = phy_.init(); 
+    if(const auto res = transport_.init(); 
         res.is_err())  return res;
     clock::delay(50us);
     if(const auto res = write_command(0x01); 
@@ -109,7 +109,7 @@ IResult<> ST7789::setpos_unchecked(const Vec2<uint16_t> pos){
 IResult<> ST7789::putrect_unchecked(const Rect2<uint16_t> rect, const RGB565 color){
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
-    if(const auto res = phy_.write_repeat_pixels(
+    if(const auto res = transport_.write_repeat_pixels(
             color, rect.area());
         res.is_err()) return res;
     return Ok();
@@ -118,7 +118,7 @@ IResult<> ST7789::putrect_unchecked(const Rect2<uint16_t> rect, const RGB565 col
 IResult<> ST7789::puttexture_unchecked(const Rect2<uint16_t> rect, const RGB565 * color_ptr){
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
-    if(const auto res = phy_.write_burst_pixels(
+    if(const auto res = transport_.write_burst_pixels(
             std::span<const RGB565>(color_ptr, rect.area()));
         res.is_err()) return res;
     return Ok();

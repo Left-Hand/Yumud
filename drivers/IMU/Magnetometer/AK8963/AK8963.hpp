@@ -10,17 +10,17 @@ class AK8963:
     public AK8963_Prelude{
 public:
     explicit AK8963(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
+        transport_(i2c_drv){;}
     explicit AK8963(hal::I2cDrv && i2c_drv):
-        phy_(i2c_drv){;}
-    explicit AK8963(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv(i2c, addr)){;}
+        transport_(i2c_drv){;}
+    explicit AK8963(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        transport_(hal::I2cDrv(i2c, addr)){;}
     explicit AK8963(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
+        transport_(spi_drv){;}
     explicit AK8963(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
+        transport_(std::move(spi_drv)){;}
     explicit AK8963(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        phy_(hal::SpiDrv(spi, rank)){;}
+        transport_(hal::SpiDrv(spi, rank)){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
@@ -33,7 +33,7 @@ public:
     [[nodiscard]] IResult<> set_data_width(const uint8_t bits);
     [[nodiscard]] IResult<> set_mode(const Mode mode);
 private:
-    AsahiKaseiImu_Phy phy_;
+    AsahiKaseiImu_Transport transport_;
     AK8963_Regs regs_ = {};
 
     bool data_valid_ = false;

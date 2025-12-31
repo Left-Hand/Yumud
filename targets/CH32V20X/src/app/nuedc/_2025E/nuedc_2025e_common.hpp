@@ -15,7 +15,7 @@ namespace ymd::nuedc_2025e{
 using Vector2u8 = Vec2<uint8_t>;
 using Vector2q20 = Vec2<iq20>;
 
-static constexpr size_t CANMSG_QUEUE_SIZE = 8;
+static constexpr size_t CANFRAME_QUEUE_SIZE = 8;
 
 static constexpr auto MAX_STATIC_SHOT_ERR = 0.007_iq20; 
 static constexpr auto PITCH_SEEKING_ANGLE = 0.012_iq20;

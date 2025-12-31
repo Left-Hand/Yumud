@@ -11,14 +11,14 @@ public:
     using Self = ICM42688;
 
     explicit ICM42688(
-        Some<hal::I2c *> i2c, 
+        Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        phy_(i2c, i2c_addr){;}
+        transport_(i2c, i2c_addr){;}
     explicit ICM42688(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        phy_(spi, rank){;}
+        transport_(spi, rank){;}
     explicit ICM42688(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
+        transport_(std::move(spi_drv)){;}
 
     [[nodiscard]] IResult<> init(const Config & cfg);
     
@@ -38,7 +38,7 @@ public:
     
 private:
     Regset regs_ = {};
-    InvensenseImu_Phy phy_;
+    InvensenseImu_Transport transport_;
     Option<Bank> last_bank_ = None;
 
     iq16 acc_scale_ = 0;
@@ -49,7 +49,7 @@ private:
         static constexpr uint8_t SWITCH_BANK_COMMAND = 0x76; 
         if(last_bank_.is_some() and (last_bank_.unwrap() == bank))
             return Ok();
-        if(const auto res = phy_.write_reg(SWITCH_BANK_COMMAND, static_cast<uint8_t>(bank));
+        if(const auto res = transport_.write_reg(SWITCH_BANK_COMMAND, static_cast<uint8_t>(bank));
             res.is_err()) return Err(res.unwrap_err());
         last_bank_ = Some(bank);
         return Ok();
@@ -59,7 +59,7 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        if(const auto res = phy_.write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res = transport_.write_reg(T::ADDRESS, reg.to_bits());
             res.is_err()) return res;
         reg.apply();
         return Ok();
@@ -67,7 +67,7 @@ private:
 
 
     [[nodiscard]] IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
-        if(const auto res = phy_.write_reg(reg_addr, reg_val);
+        if(const auto res = transport_.write_reg(reg_addr, reg_val);
             res.is_err()) return res;
         return Ok();
     }
@@ -76,7 +76,7 @@ private:
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        return phy_.read_reg(T::ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(T::ADDRESS, reg.as_bits_mut());
     };
 
     [[nodiscard]] static constexpr iq16 calc_gyr_scale(const GyrFs fs){

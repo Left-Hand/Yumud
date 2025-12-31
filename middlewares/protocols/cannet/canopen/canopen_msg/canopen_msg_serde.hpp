@@ -11,12 +11,12 @@ struct MsgSerde;
 
 
 template<typename T>
-static constexpr auto to_canmsg(const T& self){
-    return MsgSerde<T>::to_canmsg(self);
+static constexpr auto to_can_frame(const T& self){
+    return MsgSerde<T>::to_can_frame(self);
 }
 
 template<typename T, VerifyLevel verify_level = VerifyLevel::Propagate>
-static constexpr auto from_canmsg(const hal::BxCanFrame & frame){
-    return MsgSerde<T>::template from_canmsg<verify_level>(frame);
+static constexpr auto from_can_frame(const hal::BxCanFrame & frame){
+    return MsgSerde<T>::template from_can_frame<verify_level>(frame);
 }
 }

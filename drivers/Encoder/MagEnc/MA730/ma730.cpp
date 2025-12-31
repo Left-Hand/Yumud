@@ -44,13 +44,13 @@ IResult<uint16_t> MA730::get_raw_data(){
 IResult<> MA730::set_zero_data(const uint16_t data){
     {
         auto reg = RegCopy(regs_.zero_data_low_reg);
-        reg.data = data & 0xff;
+        reg.bits = data & 0xff;
         return write_reg(reg);
     }
 
     {
         auto reg = RegCopy(regs_.zero_data_high_reg);
-        reg.data = data >> 8;
+        reg.bits = data >> 8;
         return write_reg(reg);
     }
 }
@@ -85,10 +85,10 @@ IResult<> MA730::update(){
 }
 
 
-IResult<> MA730::set_trim_x(const real_t k){
+IResult<> MA730::set_trim_x(const uq16 k){
     {
         auto reg = RegCopy(regs_.trim_reg);
-        reg.trim = uint8_t((real_t(1) - real_t(1) / k) * 258);
+        reg.trim = uint8_t((uq16(1) - uq16(1) / k) * 258);
         return write_reg(reg);
     }
     {
@@ -99,7 +99,7 @@ IResult<> MA730::set_trim_x(const real_t k){
     }
 }
 
-IResult<> MA730::set_trim_y(const real_t k){
+IResult<> MA730::set_trim_y(const uq16 k){
     {
         auto reg = RegCopy(regs_.trim_reg);
         reg.trim = uint8_t((1.0_r - k) * 258);
@@ -114,9 +114,9 @@ IResult<> MA730::set_trim_y(const real_t k){
 }
 
 
-IResult<> MA730::set_trim(const real_t am, const real_t e){
-    real_t k = std::tan(am + e) / std::tan(am);
-    if(k > real_t(1)) return set_trim_x(k);
+IResult<> MA730::set_trim(const uq16 am, const uq16 e){
+    uq16 k = std::tan(iq16(am + e)) / std::tan(iq16(am));
+    if(k > uq16(1)) return set_trim_x(k);
     else return set_trim_y(k);
 }
 
@@ -158,7 +158,7 @@ IResult<> MA730::set_pulse_per_turn(uint16_t ppt){
         const uint8_t ppt_h = ppt_u10 >> 2;
 
         auto reg = RegCopy(regs_.pulse_per_turn_reg);
-        reg.data = ppt_h;
+        reg.bits = ppt_h;
 
         if(const auto res = (write_reg(reg));
             res.is_err()) return Err(res.unwrap_err());

@@ -7,20 +7,20 @@
 
 namespace ymd::drivers{
 
-class AsahiKaseiImu_Phy final{
+class AsahiKaseiImu_Transport final{
 
 public:
-    AsahiKaseiImu_Phy(const hal::I2cDrv & i2c_drv):
+    AsahiKaseiImu_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
-    AsahiKaseiImu_Phy(hal::I2cDrv && i2c_drv):
+    AsahiKaseiImu_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(i2c_drv){;}
-    AsahiKaseiImu_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
+    AsahiKaseiImu_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
-    AsahiKaseiImu_Phy(const hal::SpiDrv & spi_drv):
+    AsahiKaseiImu_Transport(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
-    AsahiKaseiImu_Phy(hal::SpiDrv && spi_drv):
+    AsahiKaseiImu_Transport(hal::SpiDrv && spi_drv):
         spi_drv_(spi_drv){;}
-    AsahiKaseiImu_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+    AsahiKaseiImu_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] Result<void, ImuError> write_reg(const uint8_t addr, const uint8_t data);

@@ -9,7 +9,7 @@
 
 namespace ymd::drivers{
 
-class InvensenseImu_Phy final{
+class InvensenseImu_Transport final{
 public:
     using Error = ImuError;
     [[nodiscard]] Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);
@@ -23,17 +23,17 @@ public:
         return Ok();
     }
 public:
-    explicit InvensenseImu_Phy(const hal::I2cDrv & i2c_drv):
+    explicit InvensenseImu_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
-    explicit InvensenseImu_Phy(hal::I2cDrv && i2c_drv):
+    explicit InvensenseImu_Transport(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit InvensenseImu_Phy(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr):
+    explicit InvensenseImu_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
         i2c_drv_(hal::I2cDrv{i2c, addr}){;}
-    explicit InvensenseImu_Phy(const hal::SpiDrv & spi_drv):
+    explicit InvensenseImu_Transport(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
-    explicit InvensenseImu_Phy(hal::SpiDrv && spi_drv):
+    explicit InvensenseImu_Transport(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){;}
-    explicit InvensenseImu_Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
+    explicit InvensenseImu_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         spi_drv_(hal::SpiDrv{spi, index}){;}
 
     [[nodiscard]] Result<void, Error> reset(){

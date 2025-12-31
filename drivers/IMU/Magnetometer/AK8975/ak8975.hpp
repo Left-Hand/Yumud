@@ -37,17 +37,17 @@ public:
 public:
 
     explicit AK8975(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
+        transport_(i2c_drv){;}
     explicit AK8975(hal::I2cDrv && i2c_drv):
-        phy_(i2c_drv){;}
-    explicit AK8975(Some<hal::I2c *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv(i2c, addr)){;}
+        transport_(i2c_drv){;}
+    explicit AK8975(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        transport_(hal::I2cDrv(i2c, addr)){;}
     explicit AK8975(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
+        transport_(spi_drv){;}
     explicit AK8975(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
+        transport_(std::move(spi_drv)){;}
     explicit AK8975(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        phy_(hal::SpiDrv(spi, rank)){;}
+        transport_(hal::SpiDrv(spi, rank)){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
@@ -58,7 +58,7 @@ public:
     [[nodiscard]] IResult<> disable_i2c();
     [[nodiscard]] IResult<Vec3<iq24>> read_mag() ;
 private:
-    AsahiKaseiImu_Phy phy_;
+    AsahiKaseiImu_Transport transport_;
     struct{
         int16_t x;
         int16_t y;

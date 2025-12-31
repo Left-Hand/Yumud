@@ -51,10 +51,10 @@ struct [[nodiscard]] SphericalCoordinates{
         return Vec3{x, -y, z};
     }
 
-    [[nodiscard]] Polar<T> constexpr to_polar() const{
-        const auto elevation_c = elevation.cos();
-        return Polar<T>(distance * elevation_c, azimuth);
-    }
+    // [[nodiscard]] Polar<T> constexpr to_polar() const{
+    //     const auto elevation_c = elevation.cos();
+    //     return Polar<T>(distance * elevation_c, azimuth);
+    // }
 
     [[nodiscard]] std::tuple<Polar<T>, T> constexpr to_polar_and_height() const{
         const auto [elevation_s, elevation_c] = elevation.sincos();

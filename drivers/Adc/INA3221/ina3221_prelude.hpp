@@ -14,7 +14,7 @@
 //     ina.update(INA3221::ChannelSelection::CH1).unwrap();
 //     DEBUG_PRINTLN(
 //         ina.get_bus_volt(ch).unwrap(), 
-//         ina.get_shunt_volt(ch).unwrap() * real_t(INV_SHUNT_RES)
+//         ina.get_shunt_volt(ch).unwrap() * iq16(INV_SHUNT_RES)
 //     );
 //     clock::delay(2ms);
 // }
@@ -167,7 +167,7 @@ struct INA3221_Regs:public INA3221_Prelude {
 
     static_assert(sizeof(R16_Config) == 2);
 
-    static constexpr int16_t volt_to_i16(const real_t volt){
+    static constexpr int16_t volt_to_i16(const iq16 volt){
         return int16_t(volt * 100000) & 0xfff8;
     }
 
@@ -175,9 +175,9 @@ struct INA3221_Regs:public INA3221_Prelude {
 
         int16_t : 16;
 
-        constexpr real_t to_volt() const {
+        constexpr iq16 to_volt() const {
             return iq24(iq16(this->to_bits() >> 3) / 25) / 1000;
-            // return real_t(this->to_bits());
+            // return iq16(this->to_bits());
         }
 
         constexpr int to_uv() const {
@@ -185,7 +185,7 @@ struct INA3221_Regs:public INA3221_Prelude {
             // return (this->to_bits());
         }
 
-        static constexpr int16_t to_i16(const real_t volt){
+        static constexpr int16_t to_i16(const iq16 volt){
             return volt_to_i16(volt);
         }
     };
@@ -205,15 +205,15 @@ struct INA3221_Regs:public INA3221_Prelude {
 
         int16_t : 16;
 
-        constexpr real_t to_volt() const {
-            return real_t((int16_t(this->to_bits()) >> 3) * 8) / 1000;
+        constexpr iq16 to_volt() const {
+            return iq16((int16_t(this->to_bits()) >> 3) * 8) / 1000;
         }
 
         constexpr int to_mv() const {
             return int16_t((int16_t(this->to_bits()) >> 3) * 8);
         }
 
-        static constexpr int16_t to_i16(const real_t volt){
+        static constexpr int16_t to_i16(const iq16 volt){
             return int16_t(volt * 1000) & 0xfff8;
         }
     };
@@ -228,7 +228,7 @@ struct INA3221_Regs:public INA3221_Prelude {
 
 
     struct R16_InstantOVC:public Reg16i<>{
-        static constexpr int16_t to_i16(const real_t volt){
+        static constexpr int16_t to_i16(const iq16 volt){
             return volt_to_i16(volt);
         }
         int16_t :16;
@@ -242,7 +242,7 @@ struct INA3221_Regs:public INA3221_Prelude {
         static constexpr RegAddr ADDRESS = 0x0b;};
 
     struct R16_ConstantOVC:public Reg16i<>{
-        static constexpr int16_t to_i16(const real_t volt){
+        static constexpr int16_t to_i16(const iq16 volt){
             return volt_to_i16(volt);
         }
         int16_t :16;
@@ -319,11 +319,11 @@ struct INA3221_Regs:public INA3221_Prelude {
     R16_ChipId       chip_id_reg = {};
 };
 
-class INA3221_Phy final : public INA3221_Prelude{
+class INA3221_Transport final : public INA3221_Prelude{
 public:
     static constexpr auto ENDIAN = std::endian::big;
 
-    INA3221_Phy(const hal::I2cDrv & i2c_drv):
+    INA3221_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
     
     [[nodiscard]] IResult<> read_reg(

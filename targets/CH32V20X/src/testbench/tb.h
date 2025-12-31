@@ -11,10 +11,10 @@ namespace ymd{
 
 namespace ymd::hal{
     class Can;
-    class UartHw;
-    class Spi;
+    class Uart;
+    class SpiBase;
     class GpioIntf;
-    class I2c;
+    class I2cBase;
     class Uart;
     class DmaChannel;
 }
@@ -22,7 +22,7 @@ namespace ymd::hal{
 
 void memory_tb(ymd::OutputStream & logger);
 
-void stepper_tb(ymd::hal::UartHw & logger);
+void stepper_tb(ymd::hal::Uart & logger);
 
 void lua_tb(ymd::OutputStream & logger);
 void pwm_tb(ymd::OutputStream & logger);
@@ -38,7 +38,7 @@ void lds14_tb(ymd::IOStream & logger,ymd::hal::Uart & uart);
 void gpio_tb(ymd::hal::GpioIntf & gpio);
 // void pca_tb(ymd::IOStream & logger);
 void pca_main();
-void st77xx_tb(ymd::hal::Spi & spi);
+void st77xx_tb(ymd::hal::SpiBase & spi);
 
 void joystick_main();
 
@@ -50,7 +50,7 @@ void can_tb(ymd::IOStream & logger, ymd::hal::Can & can, bool tx_role = true);
 
 void usbcdc_tb();
 
-void at24cxx_tb(ymd::OutputStream & logger, ymd::hal::I2c & i2c);
+void at24cxx_tb(ymd::OutputStream & logger, ymd::hal::I2cBase & i2c);
 
 void at24cxx_main();
 
@@ -63,13 +63,13 @@ void flash_main();
 void qlz_main();
 
 void uart_main();
-void tcs34725_tb(ymd::OutputStream & logger, ymd::hal::I2c & i2c);
+void tcs34725_tb(ymd::OutputStream & logger, ymd::hal::I2cBase & i2c);
 
 void tcs34725_main();
 
 void dshot_main();
 
-void at24cxx_tb(ymd::OutputStream & logger, ymd::hal::I2c & i2c);
+void at24cxx_tb(ymd::OutputStream & logger, ymd::hal::I2cBase & i2c);
 void i2c_scanner_main();
 
 void dshot_main();
@@ -194,3 +194,4 @@ void m10_main();
 void myactuator_main();
 void m1502e_main();
 void s21c_main();
+void steadywin_main();

@@ -14,65 +14,45 @@ class OutputStream;
 namespace math{
 
 
-struct [[nodiscard]] bf16 {
-    struct [[nodiscard]] Storage{
-        uint16_t frac:7;
-        uint16_t exp:8;
-        uint16_t sign:1;
+struct alignas(2) [[nodiscard]] bf16 final{
+    uint16_t frac:7;
+    uint16_t exp:8;
+    uint16_t sign:1;
 
-        static constexpr Storage from_bits(const uint16_t bits){
-            return Storage{
-                .frac = static_cast<uint16_t>(bits & 0x7F),
-                .exp = static_cast<uint16_t>((bits >> 7) & 0xFF),
-                .sign = static_cast<uint16_t>(bits >> 15)
-            };
-        }
 
-        [[nodiscard]] constexpr uint16_t to_bits() const{
-            return std::bit_cast<uint16_t>(*this);
-        }
+    constexpr bf16() = default;
+    constexpr bf16(const bf16 & other) = default;
+    constexpr bf16(bf16 && other) = default;
+    constexpr bf16& operator=(const bf16&) = default;
+    constexpr bf16& operator=(bf16 &&) = default;
 
-    };
-
-    static_assert(sizeof(Storage) == 2);
-
-    constexpr bf16(){;}
-
-    constexpr bf16 & operator = (const bf16 & other){
-        storage_ = other.storage_;
-        return *this;
-    }
-
-    static constexpr bf16 from_bits(const uint16_t bits){
-        return bf16(Storage::from_bits(bits));
-    }
-    
-    [[nodiscard]] constexpr uint16_t to_bits() const {
-        return storage_.to_bits();
-    }
-
-    constexpr bf16(const bf16 & other):storage_(other.storage_){;}
-    constexpr bf16(bf16 && other):storage_(other.storage_){;}
-
-    [[nodiscard]] constexpr uint16_t frac() const {return storage_.frac;};
-    [[nodiscard]] constexpr uint16_t exp() const {return storage_.exp;};
-    [[nodiscard]] constexpr uint16_t sign() const {return storage_.sign;};
 
     template<typename T>
     requires(std::is_floating_point_v<T>)
-    constexpr bf16(T fv) : storage_(Storage::from_bits(
-        static_cast<uint16_t>(std::bit_cast<uint32_t>(float(fv)) >> 16))){}
+    constexpr bf16(T f_val){
+        *this = from_bits(static_cast<uint16_t>(std::bit_cast<uint32_t>(float(f_val)) >> 16));
+    }
 
     template<size_t Q>
     constexpr bf16(fixed_t<Q, int32_t> qv) : bf16(float(qv)) {}
-    constexpr bf16(int iv) : bf16(float(iv)) {}
+    constexpr bf16(int int_val) : bf16(float(int_val)) {}
     constexpr bf16 operator -() const{
-        return from_bits(storage_.to_bits() ^ 0x8000);
+        return from_bits(to_bits() ^ 0x8000);
     }
+
+    static constexpr bf16 from_bits(const uint16_t bits){
+        return std::bit_cast<bf16>(bits);
+    }
+    
+    [[nodiscard]] constexpr uint16_t to_bits() const {
+        return std::bit_cast<uint16_t>(*this);
+    }
+
+
 
     // bf16 -> float
     [[nodiscard]] explicit constexpr operator float() const {
-        uint32_t f32_bits = uint32_t(storage_.to_bits()) << 16;
+        uint32_t f32_bits = uint32_t(to_bits()) << 16;
         return std::bit_cast<float>(f32_bits);
     }
 
@@ -96,11 +76,17 @@ struct [[nodiscard]] bf16 {
         );
     }
 
-private:
-    Storage storage_;
+    template<std::endian ENDIAN>
+    constexpr void fill_bytes(std::span<uint8_t, 2> bytes){
+        if constexpr(ENDIAN == std::endian::little){
+            bytes[0] = frac;
+            bytes[1] = exp | (sign << 7);
+        }else{
+            bytes[0] = exp | (sign << 7);
+            bytes[1] = frac;
+        }
+    }
 
-    constexpr explicit bf16(const Storage & sto):
-        storage_(sto){;}
 };
 
 static_assert(sizeof(bf16) == 2);

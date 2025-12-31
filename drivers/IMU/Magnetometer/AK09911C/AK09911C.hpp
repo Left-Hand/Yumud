@@ -19,17 +19,17 @@ class AK09911C final:
 public:
 
     explicit AK09911C(const hal::I2cDrv & i2c_drv):
-        phy_(i2c_drv){;}
+        transport_(i2c_drv){;}
     explicit AK09911C(hal::I2cDrv && i2c_drv):
-        phy_(i2c_drv){;}
-    explicit AK09911C(Some<hal::I2c *> i2c, hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        phy_(hal::I2cDrv(i2c, addr)){;}
+        transport_(i2c_drv){;}
+    explicit AK09911C(Some<hal::I2cBase *> i2c, hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+        transport_(hal::I2cDrv(i2c, addr)){;}
     explicit AK09911C(const hal::SpiDrv & spi_drv):
-        phy_(spi_drv){;}
+        transport_(spi_drv){;}
     explicit AK09911C(hal::SpiDrv && spi_drv):
-        phy_(std::move(spi_drv)){;}
+        transport_(std::move(spi_drv)){;}
     explicit AK09911C(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        phy_(hal::SpiDrv(spi, rank)){;}
+        transport_(hal::SpiDrv(spi, rank)){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> update();
@@ -48,7 +48,7 @@ public:
 
 private:
     
-    AsahiKaseiImu_Phy phy_;
+    AsahiKaseiImu_Transport transport_;
     AK09911C_Regset regs_ = {};
     Option<Vec3<iq24>> scale_ = None; 
     
@@ -57,11 +57,11 @@ private:
     [[nodiscard]] IResult<> update_adj();
 
     [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
-        return phy_.write_reg(addr, data);
+        return transport_.write_reg(addr, data);
     }
 
     [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
-        return phy_.read_reg(addr, data);
+        return transport_.read_reg(addr, data);
     }
 
     template<typename T>
@@ -72,12 +72,12 @@ private:
         return Ok();
     }
     [[nodiscard]] IResult<> read_reg(auto & reg){
-        return phy_.read_reg(reg.address, reg.as_bits_mut());
+        return transport_.read_reg(reg.address, reg.as_bits_mut());
     }
 
     
     [[nodiscard]] IResult<> read_burst(const RegAddress addr, std::span<int16_t> pbuf){
-        return phy_.read_burst(addr, pbuf);
+        return transport_.read_burst(addr, pbuf);
     }
 
     [[nodiscard]] IResult<Vec3<int8_t>> get_coeff();

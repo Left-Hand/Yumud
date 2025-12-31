@@ -8,7 +8,7 @@
 // 与单片机等交换数据。 
 
 // 接口
-    // I2c(1MHz)
+    // I2cBase(1MHz)
     //  Scl: Gpio;
     //  Sda: Gpio;
     //  ~Interrupt: Option<Gpio>;
@@ -35,7 +35,7 @@ public:
     };
 
     explicit CH455(const Config & cfg)
-        : phy_(cfg.scl_pin, cfg.sda_pin){;}
+        : transport_(cfg.scl_pin, cfg.sda_pin){;}
 
     IResult<> init();
 
@@ -53,7 +53,7 @@ public:
     }
 private:
     IResult<> set_brightness(const uint8_t brightness);
-    CH455_phy phy_;
+    CH455_phy transport_;
 
     // using Callback = std::function<void(MatrixKeyEvent)>;
 };
