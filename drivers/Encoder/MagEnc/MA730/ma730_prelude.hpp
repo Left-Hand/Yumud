@@ -46,12 +46,12 @@ struct MA730_Prelude{
 
 struct MA730_Regset:public MA730_Prelude{
 
-    struct R8_ZeroDataLow:public Reg8<>{
+    struct R8_ZeroLow:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ZeroDataLow;
         uint8_t bits;
     };
 
-    struct R8_ZeroDataHigh:public Reg8<>{
+    struct R8_ZeroHigh:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ZeroDataHigh;
         uint8_t bits;
     };
@@ -104,8 +104,8 @@ struct MA730_Regset:public MA730_Prelude{
         uint8_t magnitude_high :1;
     };
 
-    R8_ZeroDataLow zero_data_low_reg = {};
-    R8_ZeroDataHigh zero_data_high_reg = {};
+    R8_ZeroLow zero_low_reg = {};
+    R8_ZeroHigh zero_high_reg = {};
     R8_Trim trim_reg = {};
 
     R8_TrimConfig trim_config_reg = {};
@@ -114,6 +114,16 @@ struct MA730_Regset:public MA730_Prelude{
     R8_Threshold threshold_reg = {};
     R8_Direction direction_reg = {};
     R8_Magnitude magnitude_reg = {};
+
+    static_assert(sizeof(zero_low_reg) == 1);
+    static_assert(sizeof(zero_high_reg) == 1);
+    static_assert(sizeof(trim_reg) == 1);
+    static_assert(sizeof(trim_config_reg) == 1);
+    static_assert(sizeof(z_parameters_reg) == 1);
+    static_assert(sizeof(pulse_per_turn_reg) == 1);
+    static_assert(sizeof(threshold_reg) == 1);
+    static_assert(sizeof(direction_reg) == 1);
+    static_assert(sizeof(magnitude_reg) == 1);
 };
 
 };

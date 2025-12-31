@@ -20,17 +20,17 @@ struct VCE2755_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class Package:uint8_t{
+    enum class [[nodiscard]] Package:uint8_t{
         SOIC8 = 0x5A,
         TQFN3 = 0x5B
     };
 
-    enum class PwmFreq:uint8_t{
+    enum class [[nodiscard]] PwmFreq:uint8_t{
         _971_1Hz,_485_6Hz
     };
 
 
-    enum class Mux:uint8_t{
+    enum class [[nodiscard]] Mux:uint8_t{
         _1,
         _2,
         _3,
@@ -46,7 +46,7 @@ struct VCE2755_Prelude{
         SOIC_PWM_SPI = _3,
     };
 
-    enum class Hysteresis:uint8_t{
+    enum class [[nodiscard]] Hysteresis:uint8_t{
         _0deg = 0b000,
         _0_011deg = 0b001,
         _0_022deg = 0b010,
@@ -57,7 +57,7 @@ struct VCE2755_Prelude{
         _0_176deg = 0b111,
     };
 
-    enum class ZeroPulseWidth:uint8_t{
+    enum class [[nodiscard]] ZeroPulseWidth:uint8_t{
         _1lsb   = 0b000,
         _2lsb   = 0b001,
         _4lsb   = 0b010,
@@ -67,7 +67,7 @@ struct VCE2755_Prelude{
         _180deg = 0b110,
     };
 
-    enum class BandWidth:uint8_t{ 
+    enum class [[nodiscard]] BandWidth:uint8_t{ 
         _8BW0 = 0b011001,
         _4BW0 = 0b100011,
         _2BW0 = 0b101101,
@@ -75,7 +75,7 @@ struct VCE2755_Prelude{
     };
 
 
-    struct [[nodiscard]] Packet{
+    struct [[nodiscard]] Packet final{
         union{
             struct {
                 uint8_t angle_17_10;
@@ -161,7 +161,7 @@ struct VCE2755_Prelude{
         }
     };
 
-    enum class AbzPowerOnWaveform:uint8_t{
+    enum class [[nodiscard]] AbzPowerOnWaveform:uint8_t{
         // 00 脉冲序列 1（上电期间的标准脉冲输出）
 
 

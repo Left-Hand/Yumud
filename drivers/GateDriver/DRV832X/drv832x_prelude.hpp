@@ -24,20 +24,20 @@ struct DRV832X_Prelude{
 
     using RegAddr = uint8_t;
 
-    enum class PeakCurrent:uint16_t{
+    enum class [[nodiscard]] PeakCurrent:uint16_t{
         _1_7A = 0,
         _0_7A = 1,
         _0_25A = 2,
     };
 
-    enum class Gain:uint16_t{
+    enum class [[nodiscard]] Gain:uint16_t{
         X10 = 0,
         X20 = 1,
         X40 = 2,
         X80 = 3
     };
 
-    enum class IDriveN:uint16_t{
+    enum class [[nodiscard]] IDriveN:uint16_t{
         // 0000b = 20 mA
         // 0001b = 60 mA
         // 0010b = 120 mA
@@ -73,7 +73,7 @@ struct DRV832X_Prelude{
         _2000mA = 15
     };
 
-    enum class IDriveP:uint16_t{
+    enum class [[nodiscard]] IDriveP:uint16_t{
         // 0000b = 10 mA
         // 0001b = 30 mA
         // 0010b = 60 mA
@@ -109,7 +109,7 @@ struct DRV832X_Prelude{
         _1000mA = 15
     };
 
-    enum class VdsLevel:uint16_t{
+    enum class [[nodiscard]] VdsLevel:uint16_t{
         // 0000b = 0.06 V
         // 0001b = 0.13 V
         // 0010b = 0.2 V
@@ -145,28 +145,28 @@ struct DRV832X_Prelude{
         _1_88V = 15
     };
 
-    enum class OcpMode:uint16_t{
+    enum class [[nodiscard]] OcpMode:uint16_t{
         CurrentLimit = 0,
         OClatchShutdown = 1,
         ReportOnly = 2,
         OCdisabled = 3
     };
 
-    enum class OcpDeglitchTime:uint16_t{
+    enum class [[nodiscard]] OcpDeglitchTime:uint16_t{
         _2us = 0,
         _4us,
         _6us,
         _8us,
     };
 
-    enum class PeakDriveTime:uint16_t{
+    enum class [[nodiscard]] PeakDriveTime:uint16_t{
         _500ns = 0,
         _1us,
         _2us,
         _4us,
     };
 
-    enum class DeadTime:uint16_t{
+    enum class [[nodiscard]] Deadzone:uint16_t{
         // 00b = 50-ns dead time
         // 01b = 100-ns dead time
         // 10b = 200-ns dead time
@@ -178,14 +178,14 @@ struct DRV832X_Prelude{
         _400ns = 3,
     };
 
-    enum class CsaGain:uint16_t{
+    enum class [[nodiscard]] CsaGain:uint16_t{
         _5x = 0b00,
         _10x = 0b01,
         _20x = 0b10,
         _40x = 0b11,
     };
 
-    enum class SenseLevel:uint16_t{
+    enum class [[nodiscard]] SenseLevel:uint16_t{
         // 00b = 0.25 V
         // 01b = 0.5 V
         // 10b = 0.75 V
@@ -197,7 +197,7 @@ struct DRV832X_Prelude{
         _1_0V = 3,
     };
 
-    enum class PwmMode:uint16_t{
+    enum class [[nodiscard]] PwmMode:uint16_t{
         _6x = 0b00,
         _3x = 0b01,
         _1x = 0b10,
@@ -307,7 +307,7 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         VdsLevel vds_lvl:4;
         OcpDeglitchTime ocp_deg:2;
         OcpMode ocp_mode:2;
-        DeadTime dead_time:2;
+        Deadzone dead_time:2;
         uint16_t tretry:1;
 
         uint16_t :5;
