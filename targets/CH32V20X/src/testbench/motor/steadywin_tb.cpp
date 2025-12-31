@@ -23,23 +23,13 @@
 #include "drivers/CommonIO/Key/Key.hpp"
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_msgs.hpp"
+#include "robots/vendor/steadywin/can_simple/steadywin_can_simple_factory.hpp"
 
 #include "core/container/heapless_binaryheap.hpp"
 
 using namespace ymd;
 using namespace robots::steadywin;
 using namespace robots::steadywin::can_simple;
-
-struct FrameFactory{
-    AxisId axis_id;
-
-    template<typename T>
-    hal::BxCanFrame serialize(T && msg) const {
-        return serialize_msg_to_can_frame(axis_id, std::forward<T>(msg));
-    }
-};
-
-
 
 
 struct EncoderFeedback{
@@ -299,23 +289,18 @@ void steadywin_main(){
             const auto right_torque_ff = iq16(math::cos(now_secs)) / 10;
 
             {
-                const auto frame = left_factory.serialize(
-                    req_msgs::SetInputTorque{
-                        .torque_ff = float(left_torque_ff)
-                    }
-                );
+                const auto frame = left_factory.set_input_torque({
+                    .torque_ff = float(left_torque_ff)
+                });
                 write_can_frame(frame);
             }
 
 
 
             {
-                const auto frame = right_factory.serialize(
-                    req_msgs::SetInputTorque{
-
-                        .torque_ff = float(right_torque_ff)
-                    }
-                );
+                const auto frame = right_factory.set_input_torque({
+                    .torque_ff = float(right_torque_ff)
+                });
                 write_can_frame(frame);
             }
 
@@ -334,28 +319,22 @@ void steadywin_main(){
 
     auto setup_motors = [&](const FrameFactory & factory){
         {
-            const auto frame = factory.serialize(
-                req_msgs::ClearErrors{}
-            );
+            const auto frame = factory.clear_errors();
             write_can_frame(frame, 1ms);
         }
 
         {
-            const auto frame = factory.serialize(
-                req_msgs::SetAxisState{
-                    .axis_state = AxisState::ClosedLoopControl
-                }
-            );
+            const auto frame = factory.set_axis_state({
+                .axis_state = AxisState::ClosedLoopControl
+            });
             write_can_frame(frame, 1ms);
         }
 
         {
-            const auto frame = factory.serialize(
-                req_msgs::SetControllerMode{
-                    .loop_mode = LoopMode::CurrentLoop,
-                    .input_mode = InputMode::CurrentRamp,
-                }
-            );
+            const auto frame = factory.set_controller_mode({
+                .loop_mode = LoopMode::CurrentLoop,
+                .input_mode = InputMode::CurrentRamp,
+            });
             write_can_frame(frame, 1ms);
         }
     };

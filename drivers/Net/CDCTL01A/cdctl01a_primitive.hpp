@@ -42,7 +42,7 @@ enum class RegAddr:uint8_t{
     CLK_STATUS = 0x36,// RD 0x01时钟状态寄存器
 };
 
-
+struct Regset{
 struct R8_HwVersion:public Reg8<>{
     static constexpr RegAddr ADDRESS = RegAddr::VERSION;
     uint8_t bits;
@@ -74,6 +74,39 @@ struct R8_TxPreamableLen:public Reg8<>{
     uint8_t bits;
 };
 
-struct R8_Filters{}
+struct R8_PllCtrl:public Reg8<>{ 
+    static constexpr RegAddr ADDRESS = RegAddr::PLL_CTRL;
+    uint8_t pll_sleep_en:1;
+    uint8_t :3;
+    uint8_t pll_on:1;
+    uint8_t :3;
+};
+
+struct R8_IntCtrl:public Reg8<>{
+    static constexpr RegAddr ADDRESS = RegAddr::PIN_INT_CTRL;
+    uint8_t :4;
+    uint8_t is_pp_else_od:1;
+    uint8_t :3;
+};
+
+struct R8_ReCtrl:public Reg8<>{
+    static constexpr RegAddr ADDRESS = RegAddr::PIN_RE_CTRL;
+    uint8_t output_is_high:1;
+    uint8_t :2;
+    uint8_t is_pp_else_od:1;
+    uint8_t :4;
+};
+
+
+struct R8_ClockStatus:public Reg8<>{
+    static constexpr RegAddr ADDRESS = RegAddr::CLK_STATUS;
+    uint8_t sysclk_source_is_osc:1;
+    uint8_t sysclk_source_is_pll:1;
+    uint8_t is_clock_switching:1;
+    uint8_t :5;
+};
+
+};
+
 
 }

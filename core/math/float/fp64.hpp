@@ -49,3 +49,13 @@ struct alignas(8) [[nodiscard]] fp64 final{
 static_assert(sizeof(fp64) == sizeof(double));
 
 }
+
+namespace std{
+	//建立元函数偏特化
+    template<>
+    struct is_arithmetic<ymd::math::fp64> : std::true_type {};
+    template<>
+    struct is_floating_point<ymd::math::fp64> : std::true_type {};
+    template<>
+    struct is_signed<ymd::math::fp64> : std::true_type {};
+}
