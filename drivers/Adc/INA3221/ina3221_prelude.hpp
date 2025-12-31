@@ -155,7 +155,7 @@ struct INA3221_Regs:public INA3221_Prelude {
 
         uint16_t shunt_measure_en :1;
         uint16_t bus_measure_en :1;
-        uint16_t continuos :1;
+        uint16_t continuous :1;
         ConversionTime shunt_conv_time:3;
         ConversionTime bus_conv_time:3;
         uint16_t average_times:3;
@@ -168,7 +168,7 @@ struct INA3221_Regs:public INA3221_Prelude {
     static_assert(sizeof(R16_Config) == 2);
 
     static constexpr int16_t volt_to_i16(const iq16 volt){
-        return int16_t(volt * 100000) & 0xfff8;
+        return int16_t(iq16(volt) * 100000) & 0xfff8;
     }
 
     struct R16_ShuntVolt:public Reg16i<>{
@@ -203,10 +203,10 @@ struct INA3221_Regs:public INA3221_Prelude {
 
     struct R16_BusVolt:public Reg16i<>{
 
-        int16_t : 16;
+        int16_t bits;
 
         constexpr iq16 to_volt() const {
-            return iq16((int16_t(this->to_bits()) >> 3) * 8) / 1000;
+            return iq16((int16_t(this->to_bits()) >> 3) * 8) * iq16(0.001);
         }
 
         constexpr int to_mv() const {
@@ -214,16 +214,19 @@ struct INA3221_Regs:public INA3221_Prelude {
         }
 
         static constexpr int16_t to_i16(const iq16 volt){
-            return int16_t(volt * 1000) & 0xfff8;
+            return int16_t(iq16(volt) * 1000) & 0xfff8;
         }
     };
 
     struct R16_BusVolt1:public R16_BusVolt{
-        static constexpr RegAddr ADDRESS = 0x02;};
+        static constexpr RegAddr ADDRESS = 0x02;
+    };
     struct R16_BusVolt2:public R16_BusVolt{
-        static constexpr RegAddr ADDRESS = 0x04;};
+        static constexpr RegAddr ADDRESS = 0x04;
+    };
     struct R16_BusVolt3:public R16_BusVolt{
-        static constexpr RegAddr ADDRESS = 0x06;};
+        static constexpr RegAddr ADDRESS = 0x06;
+    };
 
 
 
@@ -231,7 +234,7 @@ struct INA3221_Regs:public INA3221_Prelude {
         static constexpr int16_t to_i16(const iq16 volt){
             return volt_to_i16(volt);
         }
-        int16_t :16;
+        int16_t bits;
     };
 
     struct R16_InstantOVC1:public R16_InstantOVC{
@@ -245,7 +248,7 @@ struct INA3221_Regs:public INA3221_Prelude {
         static constexpr int16_t to_i16(const iq16 volt){
             return volt_to_i16(volt);
         }
-        int16_t :16;
+        int16_t bits;
     };
 
     struct R16_ConstantOVC1:public R16_ConstantOVC{
@@ -274,25 +277,25 @@ struct INA3221_Regs:public INA3221_Prelude {
 
     struct R16_PowerHo:public Reg16i<>{
         static constexpr RegAddr ADDRESS = 0x10;
-        int16_t :16;
+        int16_t bits;
     };
 
     struct R16_PowerLo:public Reg16i<>{
         static constexpr RegAddr ADDRESS = 0x11;
-        int16_t :16;
+        int16_t bits;
     };
 
     struct R16_ManuId:public Reg16<>{
-        static constexpr uint16_t key = 0x5449;
+        static constexpr uint16_t KEY = 0x5449;
         static constexpr RegAddr ADDRESS = 0xfe;
-        uint16_t:16;
+        uint16_t bits;
     };
 
     
     struct R16_ChipId:public Reg16<>{
-        static constexpr uint16_t key = 0x3220;
+        static constexpr uint16_t KEY = 0x3220;
         static constexpr RegAddr ADDRESS = 0xff;
-        uint16_t:16;
+        uint16_t bits;
     };
 
     R16_Config       config_reg = {};

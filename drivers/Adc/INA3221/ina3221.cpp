@@ -80,8 +80,8 @@ IResult<> INA3221::validate(){
     if(const auto res = read_reg(chip_id_reg); res.is_err()) return CHECKRES(res);
     if(const auto res = read_reg(manu_id_reg); res.is_err()) return CHECKRES(res);
 
-    if(chip_id_reg.key != chip_id_reg.to_bits()) return CHECKERR(Err(Error::WrongChipId));
-    if(manu_id_reg.key != manu_id_reg.to_bits()) return CHECKERR(Err(Error::WrongManuId));
+    if(chip_id_reg.KEY != chip_id_reg.to_bits()) return CHECKERR(Err(Error::WrongChipId));
+    if(manu_id_reg.KEY != manu_id_reg.to_bits()) return CHECKERR(Err(Error::WrongManuId));
 
     return Ok();
 }
@@ -245,6 +245,6 @@ IResult<> INA3221::enable_measure_shunt(const Enable en){
 
 IResult<> INA3221::enable_continuous(const Enable en){
     auto reg = RegCopy(config_reg);
-    reg.continuos = en == EN;
+    reg.continuous = en == EN;
     return write_reg(reg);
 }

@@ -40,7 +40,7 @@ struct ADS112C04_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class Command:uint8_t{
+    enum class [[nodiscard]] Command:uint8_t{
         RST =         0b0000'0110,
         START =         0b0000'1000,
         POWER_DOWN =    0b0000'0010,
@@ -49,7 +49,7 @@ struct ADS112C04_Prelude{
         WRITE_REG =     0b0100'0000
     };
 
-    enum class IDAC1_MUX:uint8_t{
+    enum class [[nodiscard]] IDAC1_MUX:uint8_t{
         DISABLED = 0b000, // 000 : IDAC1 disabled (default)
         AIN0    = 0b001, // 001 : IDAC1 connected to AIN0
         AIN1    = 0b010, // 010 : IDAC1 connected to AIN1
@@ -60,7 +60,7 @@ struct ADS112C04_Prelude{
         __RESV__ = 0b111  // 111 : Reserved
     };
 
-    enum class IDAC2_MUX:uint8_t{
+    enum class [[nodiscard]] IDAC2_MUX:uint8_t{
         DISABLED = 0b000, // 000 :IDAC2 disabled (default)
         AIN0    = 0b001, // 001 : IDAC2 connected to AIN0
         AIN1    = 0b010, // 010 : IDAC2 connected to AIN1
@@ -71,12 +71,12 @@ struct ADS112C04_Prelude{
         __RESV__ = 0b111  // 111 : Reserved
     };
 
-    enum class DataRate:uint8_t{
+    enum class [[nodiscard]] DataRate:uint8_t{
         _20 = 0, _45, _90, _175, _330, _600, _1000
     };
 
 
-    enum class Mux : uint8_t {
+    enum class [[nodiscard]] Mux : uint8_t {
         P0N1 = 0b0000, // AINP = AIN0, AINN = AIN1 (default)
         P0N2 = 0b0001, // AINP = AIN0, AINN = AIN2
         P0N3 = 0b0010, // AINP = AIN0, AINN = AIN3
@@ -95,17 +95,17 @@ struct ADS112C04_Prelude{
         __RESV__ = 0b1111 // Reserved
     };
 
-    enum class Vref:uint8_t{
+    enum class [[nodiscard]] Vref:uint8_t{
         INTERNAL = 0b00, // 00 : Internal 2.048-V reference selected (default)
         EXTERNEL = 0b01, // 01 : External reference selected using the REFP and REFN inputs
         SUPPLY = 0b10// 10 : Analog supply (AVDD – AVSS) used as reference
     };
 
-    enum class Gain:uint8_t{
+    enum class [[nodiscard]] Gain:uint8_t{
         _1 = 0, _2, _4, _8, _16, _32, _64, _128
     };
 
-    enum class IDAC:uint8_t{
+    enum class [[nodiscard]] IDAC:uint8_t{
         OFF     = 0b000, // 000 : Off (default)
         _10uA   = 0b001, // 001 : 10 µA
         _50uA   = 0b010, // 010 : 50 µA
@@ -116,7 +116,7 @@ struct ADS112C04_Prelude{
         _1500uA = 0b111  // 111 : 1500 µA
     };
 
-    enum class CrcType:uint8_t{
+    enum class [[nodiscard]] CrcType:uint8_t{
         DISABLED = 0b00, // 00 : CRC disabled (default)
         INV = 0b01, // 01 : CRC 8-bit
         _16BIT = 0b10, // 10 : CRC 16-bit

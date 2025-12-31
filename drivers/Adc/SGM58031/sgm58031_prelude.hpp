@@ -22,7 +22,7 @@ struct SGM58031_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class DataRate:uint8_t{
+    enum class [[nodiscard]] DataRate:uint8_t{
         _6_25Hz = 0,
         _12_5Hz, 
         _25Hz, 
@@ -42,15 +42,15 @@ struct SGM58031_Prelude{
         _960Hz
     };
 
-    enum class MUX:uint8_t{
+    enum class [[nodiscard]] MUX:uint8_t{
         P0N1 = 0, P0N3, P1N3, P2N3, P0NG, P1NG, P2NG, P3NG
     };
 
-    enum class PGA:uint8_t{
+    enum class [[nodiscard]] PGA:uint8_t{
         _2_3 = 0, _1, _2, _4, _8, _16
     };
 
-    class FS{
+    struct [[nodiscard]] FS final{
     public:
         enum Kind:uint8_t{
             _6_144 = 0, _4_096, _2_048, _1_024, _0_512, _0_256
@@ -76,11 +76,11 @@ struct SGM58031_Prelude{
             }
         }
 
-        constexpr uint8_t to_u8() const {
+        [[nodiscard]] constexpr uint8_t to_u8() const {
             return uint8_t(kind_);
         }
 
-        constexpr auto as_pga() const {
+        [[nodiscard]] constexpr auto to_pga() const {
             return std::bit_cast<PGA>(kind_);
         }
     private:

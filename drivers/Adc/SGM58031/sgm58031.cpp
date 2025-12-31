@@ -73,7 +73,7 @@ IResult<> Self::set_fs(const FS fs){
     full_scale_ = fs.to_real();
 
     auto reg = RegCopy(regs_.config_reg);
-    reg.pga = fs.as_pga();
+    reg.pga = fs.to_pga();
     return write_reg(reg);
 }
 
@@ -88,8 +88,8 @@ IResult<> Self::set_fs(const uq16 _fs, const uq16 _vref){
 
 
 IResult<> Self::set_trim(const iq16 _trim){
-    iq16 trim = _trim * iq16(4.0f / 3.0f);
-    iq16 offset = trim - iq16(1.30225f);
+    const iq16 trim = _trim * iq16(4.0f / 3.0f);
+    const iq16 offset = trim - iq16(1.30225f);
     auto reg = RegCopy(regs_.trim_reg);
     reg.gn = int(offset * 0b01111111010);
     return write_reg(reg);
