@@ -7,6 +7,11 @@
 #include "primitive/can/bxcan_frame.hpp"
 #include "primitive/arithmetic/angular.hpp"
 
+//参考文件 
+// https://github.com/RobStride/robstride_actuator_bridge/blob/master/include/motor_control/robstride.h
+// https://github.com/RobStride/SampleProgram/blob/main/RS/Robstride01.cpp
+
+
 namespace ymd::robots::robstride{
 
 namespace primitive{
@@ -268,6 +273,7 @@ enum class Mode:uint8_t{
 };
 
 struct FaultFlags{
+    using Self = FaultFlags;
     uint8_t under_voltage:1;
     uint8_t phase_current:1;
     uint8_t over_temperature:1;
@@ -276,6 +282,14 @@ struct FaultFlags{
     uint8_t gridlock_overload:1;
     uint8_t uncalibrated:1;
     Mode mode:2;
+
+    constexpr uint8_t to_u8() const{
+        return std::bit_cast<uint8_t>(*this);
+    }
+
+    constexpr Self from_u8(const uint8_t u8){
+        return std::bit_cast<Self>(u8);
+    }
 };
 
 }
