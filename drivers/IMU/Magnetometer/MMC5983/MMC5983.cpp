@@ -59,7 +59,7 @@ static auto do_set_reset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
 
 IResult<> MMC5983::update(){
     auto & packet = regs_.data_packet_;
-    return read_burst(packet.address, packet.as_bytes());
+    return read_burst(packet.address, packet.as_bytes_mut());
 }
 
 
@@ -142,7 +142,7 @@ IResult<> MMC5983::enable_yz(const Enable en){
 IResult<Vec3<iq24>> MMC5983::read_mag(){
     static constexpr auto LSB_18BIT = 0.0000625_iq24;
 
-    const auto mag3i = regs_.data_packet_.to_vec3();
+    const auto mag3i = regs_.data_packet_.to_vec3_bits();
     
     return Ok(Vec3<iq24>{
         LSB_18BIT * mag3i.x,
@@ -152,7 +152,7 @@ IResult<Vec3<iq24>> MMC5983::read_mag(){
 }
 
 IResult<iq16> MMC5983::read_temp(){
-    const iq16 temp = regs_.data_packet_.to_temp();
+    const iq16 temp = regs_.data_packet_.to_temperature();
     return Ok(temp);
 }
 

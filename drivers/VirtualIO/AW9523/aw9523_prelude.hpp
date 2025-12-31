@@ -16,7 +16,9 @@
 
 namespace ymd::drivers{
 struct AW9523_Prelude{
-    enum class Error_Kind:uint8_t{
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
+
+    enum class [[nodiscard]] Error_Kind:uint8_t{
         WrongChipId,
         IndexOutOfRange
     };
@@ -27,17 +29,15 @@ struct AW9523_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class CurrentLimit:uint8_t{
+    enum class [[nodiscard]] CurrentLimit:uint8_t{
         Max = 0b00, 
         High  = 0b01, 
         Medium = 0b10, 
         Low = 0b11
     };
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1011000);
 
-
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         In = 0x00,
         Out = 0x02,
         Dir = 0x04,
@@ -80,7 +80,6 @@ struct AW9523_Prelude{
 
 struct AW9523_Regset final:public AW9523_Prelude{
 
-    
     struct InputReg  : public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::In;
 

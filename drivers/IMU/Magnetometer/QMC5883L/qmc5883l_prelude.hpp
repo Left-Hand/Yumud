@@ -100,7 +100,7 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
         uint8_t int_en:1;
         uint8_t __resv__:5;
         uint8_t rol:1;
-        uint8_t srst:1;
+        uint8_t soft_reset:1;
         
     };
 

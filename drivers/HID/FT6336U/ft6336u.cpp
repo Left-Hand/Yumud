@@ -111,7 +111,7 @@ IResult<uint8_t> Self::get_touch_count() {
 }
 
 IResult<Self::TouchPoints> Self::get_touch_points(){
-    uint8_t buf[9] = {0};
+    std::array<uint8_t, 9> buf;
     if(const auto res = read_burst(regs_.td_status.ADDRESS, std::span(buf));
         res.is_err()) return Err(res.unwrap_err());
     const uint8_t touch_cnt = buf[0] & 0x0f;
@@ -138,13 +138,13 @@ IResult<Self::TouchPoints> Self::get_touch_points(){
     }
 }
 
-IResult<uint8_t> Self::get_touch_event(const ChannelSelection nth) {
+IResult<uint8_t> Self::get_touch_event(const ChannelSelection sel) {
     const auto reg_addr = [&]{
-        switch(nth){
+        switch(sel){
             case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_EVENT;
             case ChannelSelection::_2: return FT6336U_ADDR_TOUCH2_EVENT;
-            default: __builtin_unreachable();
         }
+        __builtin_trap();
     }();
 
     return ({
@@ -154,13 +154,13 @@ IResult<uint8_t> Self::get_touch_event(const ChannelSelection nth) {
     });
 }
 
-IResult<uint8_t> Self::get_touch_id(const ChannelSelection nth) {
+IResult<uint8_t> Self::get_touch_id(const ChannelSelection sel) {
     const auto reg_addr = [&]{
-        switch(nth){
+        switch(sel){
             case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_ID;
             case ChannelSelection::_2: return FT6336U_ADDR_TOUCH2_ID;
-            default: __builtin_unreachable();
         }
+        __builtin_trap();
     }();
 
     return ({
@@ -171,26 +171,26 @@ IResult<uint8_t> Self::get_touch_id(const ChannelSelection nth) {
 }
 
 
-IResult<uint8_t> Self::get_touch_weight(const ChannelSelection nth) {
+IResult<uint8_t> Self::get_touch_weight(const ChannelSelection sel) {
     const auto reg_addr = [&]{
-        switch(nth){
+        switch(sel){
             case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_WEIGHT;
             case ChannelSelection::_2: return FT6336U_ADDR_TOUCH2_WEIGHT;
-            default: __builtin_unreachable();
         }
+        __builtin_trap();
     }();
 
     return read_reg(reg_addr);
 }
 
 
-IResult<uint8_t> Self::get_touch_misc(const ChannelSelection nth) {
+IResult<uint8_t> Self::get_touch_misc(const ChannelSelection sel) {
     const auto reg_addr = [&]{
-        switch(nth){
+        switch(sel){
             case ChannelSelection::_1: return FT6336U_ADDR_TOUCH1_MISC;
             case ChannelSelection::_2: return FT6336U_ADDR_TOUCH2_MISC;
-            default: __builtin_unreachable();
         }
+        __builtin_trap();
     }();
 
     return ({

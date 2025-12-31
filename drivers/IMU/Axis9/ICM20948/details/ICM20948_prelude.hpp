@@ -178,21 +178,21 @@ struct ICM20948_Prelude{
         
 
     /* Typedefs */
-    enum class BankKind:uint8_t{
+    enum class [[nodiscard]] BankKind:uint8_t{
         _0 = 0 << 4,
         _1 = 1 << 4,
         _2 = 2 << 4,
         _3 = 3 << 4
     } ;
 
-    enum class GyrFs:uint8_t{
+    enum class [[nodiscard]] GyrFs:uint8_t{
         _250dps,
         _500dps,
         _1000dps,
         _2000dps
     };
 
-    enum class AccFs:uint8_t{
+    enum class [[nodiscard]] AccFs:uint8_t{
         _2g,
         _4g,
         _8g,
@@ -200,7 +200,7 @@ struct ICM20948_Prelude{
     };
 
 
-    enum class OperationMode:uint8_t{
+    enum class [[nodiscard]] OperationMode:uint8_t{
         PowerDown = 0,
         SingleShot = 1,
         _10hz = 2,

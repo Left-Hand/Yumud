@@ -55,9 +55,9 @@ IResult<> QMC5883L::set_odr(const Odr rate){
     return write_reg(reg);
 }
 
-IResult<> QMC5883L::set_fs(const FullScale fullscale){
+IResult<> QMC5883L::set_fs(const FullScale fs){
     auto reg = RegCopy(regs_.config_a_reg);
-    reg.fs = fullscale;
+    reg.fs = fs;
     return write_reg(reg);
 }
 
@@ -68,7 +68,15 @@ IResult<> QMC5883L::set_over_sample_ratio(const OverSampleRatio ratio){
 }
 
 IResult<> QMC5883L::update(){
-    return read_burst(regs_.mag_x_reg.ADDRESS, std::span(&regs_.mag_x_reg.as_bits_mut(), 3));
+    std::array<int16_t, 3> buf;
+    if(const auto res = read_burst(regs_.mag_x_reg.ADDRESS, std::span(buf));
+        res.is_err()) return res;
+
+    regs_.mag_x_reg.bits = buf[0];
+    regs_.mag_y_reg.bits = buf[1];
+    regs_.mag_z_reg.bits = buf[2];
+
+    return Ok();
 }
 
 IResult<Vec3<iq24>> QMC5883L::read_mag(){
@@ -96,10 +104,10 @@ IResult<> QMC5883L::set_reset_period(const uint8_t reset_period){
 
 IResult<> QMC5883L::reset(){
     auto reg = RegCopy(regs_.config_b_reg);
-    reg.srst = true;
+    reg.soft_reset = true;
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
-    reg.srst = false;
+    reg.soft_reset = false;
     return write_reg(reg);
 }
 
@@ -117,7 +125,8 @@ IResult<bool> QMC5883L::is_overflow(){
 }
 
 IResult<bool> QMC5883L::is_busy(){
-    if(const auto res = read_reg(regs_.status_reg);
+    auto & reg = regs_.status_reg;
+    if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(regs_.status_reg.ready == false);
+    return Ok(reg.ready == false);
 }
