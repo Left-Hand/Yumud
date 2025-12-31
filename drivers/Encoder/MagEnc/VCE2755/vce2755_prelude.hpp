@@ -128,16 +128,16 @@ struct VCE2755_Prelude{
             // CRC0～CRC3 为 4bitCRC，系 ANGLE+SMF+BTE 共 20bit 数据的 CRC 校验值，
             // 对应的 CRC 生成多项式为 X^4+X+1，初始值=0000b，数据输入输出不取反。
 
-            const auto data = b20();
+            const auto bits = b20();
             
             // CRC-4 with polynomial X^4 + X + 1 (0x13 in normal representation)
             // But we only use the 4 MSB bits of the polynomial: 0x9 (1001)
             uint8_t crc = 0;
-            uint32_t crc_data = data;
+            uint32_t crc_bits = bits;
             
             // Process all 20 bits
             for(int i = 19; i >= 0; i--) {
-                uint8_t bit = (crc_data >> i) & 1;
+                uint8_t bit = (crc_bits >> i) & 1;
                 uint8_t msb = (crc >> 3) & 1;
                 
                 crc <<= 1;

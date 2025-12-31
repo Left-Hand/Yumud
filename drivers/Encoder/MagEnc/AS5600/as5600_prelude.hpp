@@ -93,12 +93,12 @@ struct AS5600_Regs:public AS5600_Prelude{
 
     struct R16_Config:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Config;
-        uint8_t power_mode :2;
-        uint8_t hysteresis:2;
-        uint8_t output_stage:2;
-        uint8_t pwm_frequency:2;
-        uint8_t slow_filter:2;
-        uint8_t fast_filter:3;
+        PowerMode power_mode :2;
+        Hysteresis hysteresis:2;
+        OutputStage output_stage:2;
+        PwmFrequency pwm_frequency:2;
+        SlowFilter slow_filter:2;
+        FastFilter fast_filter:3;
         uint8_t watch_dog:1;
         uint8_t __resv__ :2;
     };

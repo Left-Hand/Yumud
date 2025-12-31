@@ -29,7 +29,7 @@ IResult<> ST1615::init(){
 
 
 IResult<ST1615::GestureInfo> ST1615::get_gesture_info(){
-    const uint8_t raw = ({
+    const uint8_t bits = ({
         const auto res = this->read_reg8(ADVANCED_TOUCH_INFO);
         if(res.is_err()) return Err(res.unwrap_err());
         res.unwrap();
@@ -37,12 +37,12 @@ IResult<ST1615::GestureInfo> ST1615::get_gesture_info(){
 
     return Ok(GestureInfo {
         gesture_id: ({
-            const auto res = GestureId::from_u8(raw);
+            const auto res = GestureId::from_u8(bits);
             if(res.is_err()) return Err(res.unwrap_err());
             res.unwrap();
         }),
-        proximity: (raw & 0b0100'0000) != 0,
-        water: (raw & 0b0010'0000) != 0,
+        proximity: (bits & 0b0100'0000) != 0,
+        water: (bits & 0b0010'0000) != 0,
     });
 }
 
@@ -52,7 +52,7 @@ IResult<Option<ST1615::Point>> ST1615::get_point(uint8_t nth) {
     }
 
     uint8_t start_reg = 0x12 + 4 * nth;
-    uint8_t buf[4] = {0};
+    std::array<uint8_t,4> buf;
 
     
     if (const auto res = read_burst(start_reg, std::span(buf)); res.is_err()) {
@@ -74,7 +74,7 @@ IResult<Option<ST1615::Point>> ST1615::get_point(uint8_t nth) {
 
 /// Sensing Counter Registers provide a frame-based scan counter for host to verify current scan rate.
 IResult<uint16_t> ST1615::get_sensor_count() {
-    uint8_t buf[2] = {0};
+    std::array<uint8_t,2> buf;
 
     if (const auto res = read_burst(SENSING_COUNTER_L, std::span(buf)); res.is_err()) {
         return Err(res.unwrap_err());
@@ -97,7 +97,7 @@ IResult<ST1615::Capabilities> ST1615::get_capabilities() {
         res.unwrap();
     });
 
-    std::array<uint8_t, 3> buf = {0};
+    std::array<uint8_t, 3> buf;
     
     if (const auto res = read_burst(XY_RESOLUTION_H, std::span(buf));
         res.is_err()) {

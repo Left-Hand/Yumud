@@ -117,13 +117,13 @@ struct [[nodiscard]] HT16K33_Prelude{
         template<typename T>
         requires (sizeof(T) == 1)
         constexpr Command(const T cmd):
-            raw_(std::bit_cast<uint8_t>(cmd)){;}
+            bits_(std::bit_cast<uint8_t>(cmd)){;}
 
-        uint8_t to_u8() const{
-            return raw_;
+        [[nodiscard]] uint8_t to_u8() const{
+            return bits_;
         }
     private:
-        uint8_t raw_;
+        uint8_t bits_;
     };
 
     struct [[nodiscard]] Settings final{

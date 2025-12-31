@@ -129,7 +129,7 @@ IResult<> MA730::set_mag_threshold(const MagThreshold low, const MagThreshold hi
 
 IResult<> MA730::set_direction(const RotateDirection direction){
     auto reg = RegCopy(regs_.direction_reg);
-    reg.direction = direction == CCW;
+    reg.direction_is_ccw = direction == CCW;
     return write_reg(reg);
 }
 

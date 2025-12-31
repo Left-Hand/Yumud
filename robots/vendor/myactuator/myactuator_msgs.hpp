@@ -136,7 +136,7 @@ struct [[nodiscard]] SetTorque final{
 };
 
 
-// 度闭环控制命令(0xA2) page 37
+// 速度闭环控制命令(0xA2) page 37
 struct [[nodiscard]] SetSpeed final{
     Percentage<uint8_t> rated_current_ratio;
     SpeedCtrlCode_i32 speed;

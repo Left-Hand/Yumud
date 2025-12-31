@@ -104,7 +104,7 @@ struct CompressedInaccuracy {
     using Raw = uint16_t;
 
     constexpr CompressedInaccuracy ():
-        raw_(0){;}
+        bits_(0){;}
 
     static constexpr Option<CompressedInaccuracy> from_inaccuracy(const iq16 inaccuracy){
         if(is_input_valid(inaccuracy)) return None;
@@ -112,7 +112,7 @@ struct CompressedInaccuracy {
     }
 
     constexpr iq16 to_real() const{
-        return decompress(raw_);
+        return decompress(bits_);
     }
 
     static constexpr bool is_input_valid(const iq16 inaccuracy){
@@ -123,15 +123,15 @@ struct CompressedInaccuracy {
         return Raw(count.to_bits());
     }
 
-    static constexpr iq16 decompress(const Raw raw){
-        return iq16::from_bits(raw);
+    static constexpr iq16 decompress(const Raw bits){
+        return iq16::from_bits(bits);
     }
 
 private:
-    constexpr CompressedInaccuracy (Raw raw):
-        raw_(raw){;}
+    constexpr CompressedInaccuracy (Raw bits):
+        bits_(bits){;}
 
-    Raw raw_;
+    Raw bits_;
 };
 
 }

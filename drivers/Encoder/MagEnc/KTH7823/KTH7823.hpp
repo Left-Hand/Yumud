@@ -17,7 +17,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<> set_zero_angle(const Angular<uq32> angle);
+    [[nodiscard]] IResult<> burn_zero_angle(const Angular<uq32> angle);
 
     [[nodiscard]] IResult<> set_trim_x(const iq16 k);
 

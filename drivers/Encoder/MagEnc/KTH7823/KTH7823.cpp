@@ -6,31 +6,31 @@ using namespace ymd;
 using namespace ymd::drivers::kth7823;
 
 IResult<uint16_t> Phy::direct_read(){
-    uint16_t rx;
-    if(const auto res = transceive_u16(rx, 0);
+    uint16_t rx_bits;
+    if(const auto res = transceive_u16(rx_bits, 0);
         res.is_err()) return Err(res.unwrap_err());
 
-    return Ok(rx);
+    return Ok(rx_bits);
 }
 
 IResult<uint8_t> Phy::read_reg(const uint8_t addr){
-    const uint16_t tx = (uint16_t((addr & 0b00'111111) | 0b01'000000) << 8);
-    uint16_t rx;
-    const auto res = transceive_u16(rx, tx);
+    const uint16_t tx_bits = (uint16_t((addr & 0b00'111111) | 0b01'000000) << 8);
+    uint16_t rx_bits;
+    const auto res = transceive_u16(rx_bits, tx_bits);
     if(res.is_err()) return Err(res.unwrap_err());
-    return Ok(rx >> 8);
+    return Ok(rx_bits >> 8);
 }
 
 IResult<> Phy::burn_reg(const uint8_t addr, const uint8_t data){
-    const uint16_t tx = (uint16_t((addr & 0b00'111111) | 0b10'000000) << 8) | data;
-    uint16_t rx;
-    if(const auto res = transceive_u16(rx, tx);
+    const uint16_t tx_bits = (uint16_t((addr & 0b00'111111) | 0b10'000000) << 8) | data;
+    uint16_t rx_bits;
+    if(const auto res = transceive_u16(rx_bits, tx_bits);
         res.is_err()) return Err(res.unwrap_err());
     
-    if((rx >> 8) != data) 
+    if((rx_bits >> 8) != data) 
         return Err(Error::RegProgramFailed);
     
-    if((rx & 0xff) != 0) 
+    if((rx_bits & 0xff) != 0) 
         return Err(Error::RegProgramResponseFormatInvalid);
     return Ok();
 }
@@ -58,7 +58,7 @@ IResult<> Phy::transceive_u16(uint16_t & rx, const uint16_t tx){
 
 IResult<> KTH7823::update(){
     
-    const auto data = ({
+    const auto bits = ({
         const auto res = transport_.direct_read(); 
         if(res.is_err()) 
             return Err(res.unwrap_err());
@@ -66,7 +66,7 @@ IResult<> KTH7823::update(){
     });
 
 
-    lap_turns_ = uq16::from_bits(data);
+    lap_turns_ = lap_turns_.from_bits(static_cast<uint32_t>(bits) << 16);
 
     return Ok();
 }
@@ -76,14 +76,14 @@ IResult<> KTH7823::validate(){
     return Ok();
 }
 
-IResult<> KTH7823::set_zero_angle(const Angular<uq32> angle){
-    const auto raw16 = (angle.to_turns().to_bits() >> 16);
+IResult<> KTH7823::burn_zero_angle(const Angular<uq32> angle){
+    const uint16_t b16 = static_cast<uint16_t>(angle.to_turns().to_bits() >> 16);
 
     auto reg_low = RegCopy(regset_.zero_low_reg);
-    reg_low.data = raw16 & 0xff;
+    reg_low.bits = b16 & 0xff;
 
     auto reg_high = RegCopy(regset_.zero_high_reg);
-    reg_high.data = raw16 >> 8;
+    reg_high.bits = b16 >> 8;
 
     // return Ok();
     if(const auto res = transport_.burn_reg(reg_low); 

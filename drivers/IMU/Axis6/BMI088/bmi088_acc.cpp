@@ -89,10 +89,10 @@ IResult<Vec3<iq24>> BMI088_Acc::read_acc(){
 }
 IResult<iq24> BMI088_Acc::read_temp(){
     auto & reg = regs_.temp_reg;
-    auto bytes = reg.as_bytes();
-	auto bmi088_raw_temp = int16_t((bytes[0] << 3) | (bytes[1] >> 5));
-	if (bmi088_raw_temp > 1023) bmi088_raw_temp -= 2048;
-    return Ok(bmi088_raw_temp * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET);
+    const auto bytes = reg.as_bytes();
+	int16_t bits = int16_t((bytes[0] << 3) | (bytes[1] >> 5));
+	if (bits > 1023) bits -= 2048;
+    return Ok(bits * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET);
 }
 
 IResult<> BMI088_Acc::set_acc_fs(const AccFs fs){

@@ -91,7 +91,7 @@ struct MA730_Regset:public MA730_Prelude{
     struct R8_Direction:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Direction;
         uint8_t :7;
-        uint8_t direction :1;
+        uint8_t direction_is_ccw :1;
     };
 
     struct R8_Magnitude:public Reg8<>{

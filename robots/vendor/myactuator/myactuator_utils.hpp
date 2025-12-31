@@ -112,23 +112,23 @@ struct [[nodiscard]] CommandHeadedDataField{
 
     static constexpr CommandHeadedDataField from_command_and_payload_bytes(
         const ReqCommand cmd,
-        std::span<const uint8_t, BytesFiller::CAPACITY> payload_bytes
+        std::span<const uint8_t, PAYLOAD_CAPACITY> payload_bytes
     ){
-        CommandHeadedDataField ret;
-        ret.cmd = cmd;
-        std::copy(payload_bytes.begin(), payload_bytes.end(), ret.payload_bytes.begin());
-        return ret;
+        CommandHeadedDataField self;
+        self.cmd = cmd;
+        std::copy(payload_bytes.begin(), payload_bytes.end(), self.payload_bytes.begin());
+        return self;
     }
 
-    static constexpr CommandHeadedDataField from_bytes(const std::span<uint8_t, BytesFiller::CAPACITY + 1> bytes){
+    static constexpr CommandHeadedDataField from_bytes(const std::span<uint8_t, PAYLOAD_CAPACITY + 1> bytes){
         return from_command_and_payload_bytes(
             static_cast<ReqCommand>(bytes[0]),
-            bytes.subspan<1, BytesFiller::CAPACITY>()
+            bytes.subspan<1, PAYLOAD_CAPACITY>()
         );
     }
 };
 
-static_assert(sizeof(CommandHeadedDataField) == 1 + BytesFiller::CAPACITY);
+static_assert(sizeof(CommandHeadedDataField) == 1 + PAYLOAD_CAPACITY);
 
 
 

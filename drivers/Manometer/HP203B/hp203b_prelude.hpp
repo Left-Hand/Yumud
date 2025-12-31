@@ -27,19 +27,19 @@ namespace ymd::drivers{
 struct HP203B_Prelude{
 static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x77); // HP203B I2C address
 
-enum class State{
+enum class [[nodiscard]] State{
     Calibration,
     Sleep,
     Actions,
     Por,
 };
 
-enum class ChannelSelection:uint8_t{
+enum class [[nodiscard]] ChannelSelection:uint8_t{
     PressureAndTemperature = 0b00,
     Temperature = 0b10,
 };
 
-enum class Osr:uint8_t{
+enum class [[nodiscard]] Osr:uint8_t{
     _4096 = 0b000,
     _2048 = 0b001,
     _1024 = 0b010,
@@ -49,7 +49,7 @@ enum class Osr:uint8_t{
     Default = _256
 };
 
-enum class Command:uint8_t{
+enum class [[nodiscard]] Command:uint8_t{
     SoftReset  =0x06,
     ReadPressureAndTemperature  = 0x10,
     ReadAltitudeAndTemperature = 0x11,
@@ -59,10 +59,14 @@ enum class Command:uint8_t{
     CalibrateAnalog = 0x28
 };
 
-struct AdcConvertCommand{
+struct [[nodiscard]] AdcConvertCommand final{
     ChannelSelection channel_selection:2;
     Osr osr:3;
-    uint8_t __fixed__ = 0b010;
+    uint8_t __fixed__:3 = 0b010;
+
+    constexpr uint8_t to_u8() const{
+        return std::bit_cast<uint8_t>(*this);
+    }
 };
 
 
@@ -82,17 +86,17 @@ struct [[nodiscard]] Data20{
     static constexpr Data20 from_raw_bytes(
         const uint8_t msb, const uint8_t csb, const uint8_t lsb
     ){
-        const auto raw = (msb << 16) | (csb << 8) | lsb;
+        const auto bits = (msb << 16) | (csb << 8) | lsb;
         return Data20{
-            raw
+            bits
         };
     }
-    [[nodiscard]] q16 count() const {
-        return q24(raw_val) / 100;
+    [[nodiscard]] iq16 count() const {
+        return iq24(bits) / 100;
     }
 private:
-    constexpr Data20(uint32_t raw_val):raw_val(raw_val){}
-    uint32_t raw_val;
+    constexpr Data20(uint32_t bits):bits(bits){}
+    uint32_t bits;
 };
 
 
