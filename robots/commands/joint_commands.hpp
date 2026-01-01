@@ -5,7 +5,7 @@
 namespace ymd{
 
 
-namespace robots::joint_commands{
+namespace robots::joint_msgs{
 
 struct [[nodiscard]] SetPosition{
     math::bf16 position;
@@ -93,71 +93,71 @@ struct [[nodiscard]] FwdXY{
 
 }
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetPosition)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::SetPosition)
-DEF_DERIVE_MEM_REFLECTER_1(robots::joint_commands::SetPosition, position)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::SetPosition)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::SetPosition)
+DEF_DERIVE_MEM_REFLECTER_1(robots::joint_msgs::SetPosition, position)
 
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetSpeed)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::SetSpeed)
-DEF_DERIVE_MEM_REFLECTER_1(robots::joint_commands::SetSpeed, speed)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::SetSpeed)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::SetSpeed)
+DEF_DERIVE_MEM_REFLECTER_1(robots::joint_msgs::SetSpeed, speed)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::DeltaPosition)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::DeltaPosition)
-DEF_DERIVE_MEM_REFLECTER_1(robots::joint_commands::DeltaPosition, delta_position)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::DeltaPosition)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::DeltaPosition)
+DEF_DERIVE_MEM_REFLECTER_1(robots::joint_msgs::DeltaPosition, delta_position)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetPositionWithFwdSpeed)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::SetPositionWithFwdSpeed)
-DEF_DERIVE_MEM_REFLECTER_2(robots::joint_commands::SetPositionWithFwdSpeed, position, speed)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::SetPositionWithFwdSpeed)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::SetPositionWithFwdSpeed)
+DEF_DERIVE_MEM_REFLECTER_2(robots::joint_msgs::SetPositionWithFwdSpeed, position, speed)
 
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetTrapzoid)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::SetTrapzoid)
-DEF_DERIVE_MEM_REFLECTER_4(robots::joint_commands::SetTrapzoid, position, speed, acceleration, deceleration)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::SetTrapzoid)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::SetTrapzoid)
+DEF_DERIVE_MEM_REFLECTER_4(robots::joint_msgs::SetTrapzoid, position, speed, acceleration, deceleration)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetKpKd)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::SetKpKd)
-DEF_DERIVE_MEM_REFLECTER_2(robots::joint_commands::SetKpKd, kp, kd)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::SetKpKd)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::SetKpKd)
+DEF_DERIVE_MEM_REFLECTER_2(robots::joint_msgs::SetKpKd, kp, kd)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::SetKpKiKd)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::SetKpKiKd)
-DEF_DERIVE_MEM_REFLECTER_3(robots::joint_commands::SetKpKiKd, kp, ki, kd)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::SetKpKiKd)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::SetKpKiKd)
+DEF_DERIVE_MEM_REFLECTER_3(robots::joint_msgs::SetKpKiKd, kp, ki, kd)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::Deactivate)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::Deactivate)
-DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::Deactivate)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::Deactivate)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::Deactivate)
+DEF_DERIVE_MEM_REFLECTER_0(robots::joint_msgs::Deactivate)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::Activate)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::Activate)
-DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::Activate)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::Activate)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::Activate)
+DEF_DERIVE_MEM_REFLECTER_0(robots::joint_msgs::Activate)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::StopUpdating)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::StopUpdating)
-DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::StopUpdating)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::StopUpdating)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::StopUpdating)
+DEF_DERIVE_MEM_REFLECTER_0(robots::joint_msgs::StopUpdating)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::StartSeeking)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::StartSeeking)
-DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::StartSeeking)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::StartSeeking)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::StartSeeking)
+DEF_DERIVE_MEM_REFLECTER_0(robots::joint_msgs::StartSeeking)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::StopTracking)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::StopTracking)
-DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::StopTracking)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::StopTracking)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::StopTracking)
+DEF_DERIVE_MEM_REFLECTER_0(robots::joint_msgs::StopTracking)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::StartTracking)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::StartTracking)
-DEF_DERIVE_MEM_REFLECTER_0(robots::joint_commands::StartTracking)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::StartTracking)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::StartTracking)
+DEF_DERIVE_MEM_REFLECTER_0(robots::joint_msgs::StartTracking)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::PerspectiveRectInfo)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::PerspectiveRectInfo)
-DEF_DERIVE_MEM_REFLECTER_1(robots::joint_commands::PerspectiveRectInfo, data)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::PerspectiveRectInfo)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::PerspectiveRectInfo)
+DEF_DERIVE_MEM_REFLECTER_1(robots::joint_msgs::PerspectiveRectInfo, data)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::ErrXY)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::ErrXY)
-DEF_DERIVE_MEM_REFLECTER_2(robots::joint_commands::ErrXY, px, py)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::ErrXY)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::ErrXY)
+DEF_DERIVE_MEM_REFLECTER_2(robots::joint_msgs::ErrXY, px, py)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_commands::FwdXY)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_commands::FwdXY)
-DEF_DERIVE_MEM_REFLECTER_2(robots::joint_commands::FwdXY, fx, fy)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::joint_msgs::FwdXY)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::joint_msgs::FwdXY)
+DEF_DERIVE_MEM_REFLECTER_2(robots::joint_msgs::FwdXY, fx, fy)
 
 
 }

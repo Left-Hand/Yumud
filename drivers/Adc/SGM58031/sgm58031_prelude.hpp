@@ -42,11 +42,11 @@ struct SGM58031_Prelude{
         _960Hz
     };
 
-    enum class [[nodiscard]] MUX:uint8_t{
+    enum class [[nodiscard]] MUX:uint16_t{
         P0N1 = 0, P0N3, P1N3, P2N3, P0NG, P1NG, P2NG, P3NG
     };
 
-    enum class [[nodiscard]] PGA:uint8_t{
+    enum class [[nodiscard]] PGA:uint16_t{
         _2_3 = 0, _1, _2, _4, _8, _16
     };
 
@@ -80,7 +80,7 @@ struct SGM58031_Prelude{
         }
 
         [[nodiscard]] constexpr auto to_pga() const {
-            return std::bit_cast<PGA>(kind_);
+            return static_cast<PGA>(kind_);
         }
     private:
         Kind kind_;
@@ -101,59 +101,59 @@ struct SGM58031_Prelude{
 struct SGM58031_Regset:public SGM58031_Prelude{
     struct R16_Config:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Config;
-        uint8_t comp_que : 2;
-        uint8_t comp_lat : 1;
-        uint8_t comp_pol : 1;
-        uint8_t comp_mode :1;
-        uint8_t data_rate :3;
-        uint8_t mode:   1;
+        uint16_t comp_que : 2;
+        uint16_t comp_lat : 1;
+        uint16_t comp_pol : 1;
+        uint16_t comp_mode :1;
+        uint16_t data_rate :3;
+        uint16_t mode:   1;
         PGA pga:    3;
         MUX mux:    3;
-        uint8_t os:     1;
+        uint16_t os:     1;
     }DEF_R16(config_reg)
 
     struct R16_Config1:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Config1;        
-        uint8_t __resv1__    :3;
-        uint8_t ext_ref      :1;
-        uint8_t bus_flex     :1;
-        uint8_t __resv2__   :1;
-        uint8_t burn_out     :1;
-        uint8_t dr_sel       :1;
-        uint8_t pd          :1;
-        uint8_t __resv3__   :7;
+        uint16_t __resv1__    :3;
+        uint16_t ext_ref      :1;
+        uint16_t bus_flex     :1;
+        uint16_t __resv2__   :1;
+        uint16_t burn_out     :1;
+        uint16_t dr_sel       :1;
+        uint16_t pd          :1;
+        uint16_t __resv3__   :7;
     }DEF_R16(config1_reg)
 
     struct R16_DeviceId:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::DeviceID;
         static constexpr uint16_t KEY = 0x0080; 
-        uint8_t __resv1__   :5;
-        uint8_t ver         :3;
-        uint8_t id          :5;
-        uint8_t __resv2__   :3;
+        uint16_t __resv1__   :5;
+        uint16_t ver         :3;
+        uint16_t id          :5;
+        uint16_t __resv2__   :3;
         
     }DEF_R16(device_id_reg)
 
     struct R16_Trim:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Trim;
         uint16_t gn         :11;
-        uint8_t __resv__    :5;
+        uint16_t __resv__    :5;
         
     }DEF_R16(trim_reg)
 
     struct R16_Conv:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Conv;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(conv_reg)
 
     struct R16_LowThr:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::LowThr;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(low_thr_reg)
 
     struct R16_HighThr:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::HighThr;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(high_thr_reg)
 };
 

@@ -143,13 +143,13 @@ struct [[nodiscard]] CanFrame2BytesDumper{
     static inline constexpr uint8_t frame_to_nodeid(
         const hal::BxCanFrame & frame
     ){
-        return frame.identifier().to_extid().to_u29() >> 8;
+        return static_cast<uint8_t>(frame.identifier().to_extid().to_u29() >> 8);
     }
 
     static inline constexpr uint8_t frame_to_piececnt(
         const hal::BxCanFrame & frame
     ){
-        return frame.identifier().to_extid().to_u29() & 0xff;
+        return static_cast<uint8_t>(frame.identifier().to_extid().to_u29() & 0xff);
     }
 
 };

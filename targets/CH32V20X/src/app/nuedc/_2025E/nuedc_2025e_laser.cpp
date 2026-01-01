@@ -171,15 +171,15 @@ void nuedc_2025e_laser_main(){
 
 
     auto publish_joints_start_seeking = [&]{
-        publish_to_both_joints(commands::StartSeeking{});
+        publish_to_both_joints(msgs::StartSeeking{});
     };
 
     auto publish_joints_start_tracking = [&]{
-        publish_to_both_joints(commands::StartTracking{});
+        publish_to_both_joints(msgs::StartTracking{});
     };
 
     auto publish_joints_stop_tracking = [&]{
-        publish_to_both_joints(commands::StopTracking{});
+        publish_to_both_joints(msgs::StopTracking{});
     };
 
     auto publish_dall = [&]{
@@ -281,7 +281,7 @@ void nuedc_2025e_laser_main(){
 
     [[maybe_unused]] auto publish_joint_delta_position = [&](
         const NodeRole node_role, 
-        const commands::DeltaPosition & cmd
+        const msgs::DeltaPosition & cmd
     ){
         const auto frame = MsgFactory<CommandKind>{node_role}(cmd);
         write_can_frame(frame);
@@ -289,7 +289,7 @@ void nuedc_2025e_laser_main(){
 
     [[maybe_unused]] auto publish_joint_position = [&](
         const NodeRole node_role, 
-        const commands::SetPosition & cmd
+        const msgs::SetPosition & cmd
     ){
         const auto frame = MsgFactory<CommandKind>{node_role}(cmd);
         write_can_frame(frame);
@@ -356,7 +356,7 @@ void nuedc_2025e_laser_main(){
         //pitch 抬高到指定角度
         //yaw 波浪运动
         {
-            const auto command = commands::SetPosition{
+            const auto command = msgs::SetPosition{
                 // .position = 0.015_r
                 .position = PITCH_SEEKING_ANGLE
             };
@@ -370,7 +370,7 @@ void nuedc_2025e_laser_main(){
                 return (- 0.3_iq20 * (1.25_r + math::sinpu(3.0_r * t)) / MACHINE_CTRL_FREQ);
             };
 
-            const auto command = commands::DeltaPosition{
+            const auto command = msgs::DeltaPosition{
                 .delta_position = hesitate_spin_curve(now_secs)
             };
 
@@ -389,7 +389,7 @@ void nuedc_2025e_laser_main(){
         {
             const auto kp_contri = PITCH_KP * iq20(-err.y);
 
-            const auto command = commands::DeltaPosition{
+            const auto command = msgs::DeltaPosition{
                 .delta_position = kp_contri / MACHINE_CTRL_FREQ
             };
 
@@ -398,7 +398,7 @@ void nuedc_2025e_laser_main(){
 
         {
             const auto kp_contri = CLAMP2(YAW_KP * iq20(-err.x), 0.12_iq20);
-            const auto command = commands::DeltaPosition{
+            const auto command = msgs::DeltaPosition{
                 .delta_position = kp_contri / MACHINE_CTRL_FREQ
             };
 

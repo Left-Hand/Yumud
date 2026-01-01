@@ -20,16 +20,16 @@ using ymd::drivers::BMI088_Acc;
 using ymd::drivers::BMI088_Gyr;
 
 #define UART hal::usart2
-#define ACC_CS_GPIO hal::PB<0>()
-#define GYR_CS_GPIO hal::PB<1>()
+#define ACC_CS_PIN hal::PB<0>()
+#define GYR_CS_PIN hal::PB<1>()
 
 static constexpr size_t CALC_FREQ_HZ = 200;
 
 
 
 static void bmi088_tb(hal::Spi & spi){
-    auto acc_cs_pin_ = ACC_CS_GPIO;
-    auto gyr_cs_pin_ = GYR_CS_GPIO;
+    auto acc_cs_pin_ = ACC_CS_PIN;
+    auto gyr_cs_pin_ = GYR_CS_PIN;
 
     const auto acc_cs_rank = spi.allocate_cs_pin(&acc_cs_pin_).unwrap();
     const auto gyr_cs_rank = spi.allocate_cs_pin(&gyr_cs_pin_).unwrap();

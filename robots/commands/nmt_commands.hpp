@@ -3,7 +3,7 @@
 #include "core/utils/serde.hpp"
 
 namespace ymd{
-namespace robots::nmt_commands{
+namespace robots::nmt_msgs{
 
 enum class [[nodiscard]] NodeState:uint8_t{
     Reset = 0x00,
@@ -46,39 +46,39 @@ struct [[nodiscard]] ResponseNodeState{
 
 }
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_commands::ResetNode)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_commands::ResetNode)
-DEF_DERIVE_MEM_REFLECTER_1(robots::nmt_commands::ResetNode, timeout)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_msgs::ResetNode)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_msgs::ResetNode)
+DEF_DERIVE_MEM_REFLECTER_1(robots::nmt_msgs::ResetNode, timeout)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_commands::PreOperationalNode)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_commands::PreOperationalNode)
-DEF_DERIVE_MEM_REFLECTER_0(robots::nmt_commands::PreOperationalNode)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_msgs::PreOperationalNode)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_msgs::PreOperationalNode)
+DEF_DERIVE_MEM_REFLECTER_0(robots::nmt_msgs::PreOperationalNode)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_commands::StartNode)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_commands::StartNode)
-DEF_DERIVE_MEM_REFLECTER_0(robots::nmt_commands::StartNode)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_msgs::StartNode)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_msgs::StartNode)
+DEF_DERIVE_MEM_REFLECTER_0(robots::nmt_msgs::StartNode)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_commands::StopNode)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_commands::StopNode)
-DEF_DERIVE_MEM_REFLECTER_0(robots::nmt_commands::StopNode)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_msgs::StopNode)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_msgs::StopNode)
+DEF_DERIVE_MEM_REFLECTER_0(robots::nmt_msgs::StopNode)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_commands::BroadcastBootUp)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_commands::BroadcastBootUp)
-DEF_DERIVE_MEM_REFLECTER_0(robots::nmt_commands::BroadcastBootUp)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_msgs::BroadcastBootUp)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_msgs::BroadcastBootUp)
+DEF_DERIVE_MEM_REFLECTER_0(robots::nmt_msgs::BroadcastBootUp)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_commands::BroadcastHeartBeat)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_commands::BroadcastHeartBeat)
-DEF_DERIVE_MEM_REFLECTER_1(robots::nmt_commands::BroadcastHeartBeat, since_last_heartbeat_ms)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_msgs::BroadcastHeartBeat)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_msgs::BroadcastHeartBeat)
+DEF_DERIVE_MEM_REFLECTER_1(robots::nmt_msgs::BroadcastHeartBeat, since_last_heartbeat_ms)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_commands::SetHeartBeatDuration)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_commands::SetHeartBeatDuration)
-DEF_DERIVE_MEM_REFLECTER_1(robots::nmt_commands::SetHeartBeatDuration, target_duration_ms)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_msgs::SetHeartBeatDuration)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_msgs::SetHeartBeatDuration)
+DEF_DERIVE_MEM_REFLECTER_1(robots::nmt_msgs::SetHeartBeatDuration, target_duration_ms)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_commands::RequestNodeState)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_commands::RequestNodeState)
-DEF_DERIVE_MEM_REFLECTER_0(robots::nmt_commands::RequestNodeState)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_msgs::RequestNodeState)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_msgs::RequestNodeState)
+DEF_DERIVE_MEM_REFLECTER_0(robots::nmt_msgs::RequestNodeState)
 
-DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_commands::ResponseNodeState)
-DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_commands::ResponseNodeState)
-DEF_DERIVE_MEM_REFLECTER_1(robots::nmt_commands::ResponseNodeState, node_state)
+DEF_DERIVE_SERIALIZE_AS_TUPLE(robots::nmt_msgs::ResponseNodeState)
+DEF_DERIVE_RAW_BYTES_DESERIALIZER(robots::nmt_msgs::ResponseNodeState)
+DEF_DERIVE_MEM_REFLECTER_1(robots::nmt_msgs::ResponseNodeState, node_state)
 }

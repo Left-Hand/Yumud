@@ -56,7 +56,7 @@ struct kind_to_command<CommandKind, K>{ \
 };
 
 
-#define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, commands::NAME)
+#define DEF_QUICK_COMMAND_BIND(NAME) DEF_COMMAND_BIND(CommandKind::NAME, msgs::NAME)
 
 namespace ymd{
 
@@ -80,9 +80,9 @@ enum class CommandKind:uint8_t{
 };
 
 
-namespace commands{ 
-    using namespace robots::joint_commands;
-    using namespace robots::nmt_commands;
+namespace msgs{ 
+    using namespace robots::joint_msgs;
+    using namespace robots::nmt_msgs;
 }
 
 
