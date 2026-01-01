@@ -1,6 +1,7 @@
 #pragma once
 
 #include "robstride_primitive.hpp"
+#include "robots/vendor/mit/mit_primitive.hpp"
 
 namespace ymd::robots::robstride{
 
@@ -15,10 +16,15 @@ struct [[nodiscard]] GetDeviceId final{
     [[nodiscard]] constexpr hal::CanExtId can_id() const{
         return CanIdFields(COMMAND, static_cast<uint16_t>(host_id.count), motor_id.count).pack();
     }
+
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes){
+        std::fill_n(bytes.begin(), bytes.size(), 0);
+    }
 };
 
-struct [[nodiscard]] Conmmunication1 final{
-    static constexpr Command COMMAND = Command::CommunicationType1;
+struct [[nodiscard]] MotionControl final{
+    using Self = MotionControl;
+    static constexpr Command COMMAND = Command::MotionControl;
     TorqueCode torque_code;
     NodeId motor_id;
 
@@ -32,9 +38,23 @@ struct [[nodiscard]] Conmmunication1 final{
     }
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes){
-        //TODO
+        const auto x1_bits = x1_code.bits;
+        const auto x2_bits = x2_code.bits;
+        const auto kp_bits = kp_code.bits;
+        const auto kd_bits = kd_code.bits;
+
+        bytes[0] = static_cast<uint8_t>(x1_bits >> 8);
+        bytes[1] = static_cast<uint8_t>(x1_bits);
+        bytes[2] = static_cast<uint8_t>(x2_bits >> 8);
+        bytes[3] = static_cast<uint8_t>(x2_bits);
+        bytes[4] = static_cast<uint8_t>(kp_bits >> 8);
+        bytes[5] = static_cast<uint8_t>(kp_bits);
+        bytes[6] = static_cast<uint8_t>(kd_bits >> 8);
+        bytes[7] = static_cast<uint8_t>(kd_bits);
     }
 };
+
+
 
 struct [[nodiscard]] EnableRunning final{
     static constexpr Command COMMAND = Command::EnableRunning;
@@ -93,8 +113,8 @@ struct [[nodiscard]] SetMotorId final{
     }
 };
 
-struct [[nodiscard]] ReadSingleParament final{
-    static constexpr Command COMMAND = Command::ReadSingleParament;
+struct [[nodiscard]] GetSingleParament final{
+    static constexpr Command COMMAND = Command::GetSingleParament;
     NodeId main_id;
     NodeId motor_id;
     DictKey dict_key;
@@ -113,7 +133,171 @@ struct [[nodiscard]] ReadSingleParament final{
         std::copy(val_bytes.begin(), val_bytes.end(), bytes.begin() + 4);
     }
 };
+
+struct [[nodiscard]] SetBaudrate final{
+    static constexpr Command COMMAND = Command::SetBaudrate;
+    NodeId main_id;
+    NodeId motor_id;
+    CanBaudrate baudrate;
+
+    [[nodiscard]] constexpr hal::CanExtId can_id() const{
+        return CanIdFields(COMMAND, static_cast<uint16_t>(main_id.count), motor_id.count).pack();
+    }
+
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        bytes[0] = 0x01;
+        bytes[1] = 0x02;
+        bytes[2] = 0x03;
+        bytes[3] = 0x04;
+        bytes[4] = 0x05;
+        bytes[5] = 0x06;
+        bytes[6] = static_cast<uint8_t>(baudrate);
+        bytes[7] = 0x08;
+    }
+};
 }
+
+namespace mit_msgs{
+using namespace primitive;
+
+struct [[nodiscard]] EnableMit final{
+    NodeId motor_id;
+
+    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+        const auto id_bits = static_cast<uint16_t>(motor_id.count | 0);
+        return hal::CanStdId::from_u11(id_bits);
+    }
+
+    void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        std::fill_n(bytes.begin(), bytes.size(), 0xff);
+        bytes.back() = 0xfc;
+    }
+};
+
+struct [[nodiscard]] DisableMit final{
+    NodeId motor_id;
+
+    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+        const auto id_bits = static_cast<uint16_t>(motor_id.count | 0);
+        return hal::CanStdId::from_u11(id_bits);
+    }
+
+    void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        std::fill_n(bytes.begin(), bytes.size(), 0xff);
+        bytes.back() = 0xfd;
+    }
+};
+
+struct [[nodiscard]] SetMotorType final{
+    NodeId motor_id;
+    uint8_t motor_type;
+
+    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+        const auto id_bits = static_cast<uint16_t>(motor_id.count | 0);
+        return hal::CanStdId::from_u11(id_bits);
+    }
+
+    void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        std::fill_n(bytes.begin(), bytes.size(), 0xff);
+        bytes[6] = motor_type;
+        bytes.back() = 0xfc;
+    }
+};
+
+struct [[nodiscard]] SetMotorId final{
+    NodeId motor_id;
+    uint8_t f_cmd;
+
+    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+        const auto id_bits = static_cast<uint16_t>(motor_id.count | 0);
+        return hal::CanStdId::from_u11(id_bits);
+    }
+
+    void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        std::fill_n(bytes.begin(), bytes.size(), 0xff);
+        bytes[6] = f_cmd;
+        bytes.back() = 0x01;
+    }
+};
+
+struct [[nodiscard]] MitControl final{
+    NodeId motor_id;
+    mit::MitPositionCode_u16 position;
+    mit::MitSpeedCode_u12 speed;
+    mit::MitKpCode_u12 kp;
+    mit::MitKdCode_u12 kd;
+    mit::MitTorqueCode_u12 torque;
+    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+        const auto id_bits = static_cast<uint16_t>(motor_id.count | 0);
+        return hal::CanStdId::from_u11(id_bits);
+    }
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        bytes[0] = static_cast<uint8_t>(position.to_bits() >> 8);
+        bytes[1] = static_cast<uint8_t>(position.to_bits() & 0xff);
+        bytes[2] = static_cast<uint8_t>(speed.to_bits() >> 4);
+        bytes[3] = static_cast<uint8_t>(((speed.to_bits() & 0xf) << 4) | ((kp.to_bits() >> 8)));
+        bytes[4] = static_cast<uint8_t>(kp.to_bits() & 0xff);
+        bytes[5] = static_cast<uint8_t>(kd.to_bits() >> 4);
+        bytes[6] = static_cast<uint8_t>(((kd.to_bits() & 0xf) << 4) | ((torque.to_bits() >> 8)));
+        bytes[7] = static_cast<uint8_t>(torque.to_bits() & 0xf);
+    };
+};
+
+struct [[nodiscard]] MitPositionControl final{
+    NodeId motor_id;
+    math::fp32 x1_radians;
+    math::fp32 x2_radians;
+
+    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+        const auto id_bits = static_cast<uint16_t>(motor_id.count | (1u < 8));
+        return hal::CanStdId::from_u11(id_bits);
+    }
+
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        //little endian
+        const auto x1_bytes = std::bit_cast<std::array<uint8_t, 4>>(x1_radians.to_bits());
+        const auto x2_bytes = std::bit_cast<std::array<uint8_t, 4>>(x2_radians.to_bits());
+        std::copy(x1_bytes.begin(), x1_bytes.end(), bytes.begin());
+        std::copy(x2_bytes.begin(), x2_bytes.end(), bytes.begin() + 4);
+    };
+};
+
+struct [[nodiscard]] MitSpeedControl final{
+    NodeId motor_id;
+    math::fp32 x2_radians;
+    math::fp32 current_limit;
+
+    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+        const auto id_bits = static_cast<uint16_t>(motor_id.count | (2u < 8));
+        return hal::CanStdId::from_u11(id_bits);
+    }
+
+    constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        //little endian
+        const auto x2_bytes = std::bit_cast<std::array<uint8_t, 4>>(x2_radians.to_bits());
+        const auto current_bytes = std::bit_cast<std::array<uint8_t, 4>>(current_limit.to_bits());
+        std::copy(x2_bytes.begin(), x2_bytes.end(), bytes.begin());
+        std::copy(current_bytes.begin(), current_bytes.end(), bytes.begin() + 4);
+    };
+};
+
+struct [[nodiscard]] SetZeroPosition final{
+    NodeId motor_id;
+
+    [[nodiscard]] constexpr hal::CanStdId can_id() const{
+        const auto id_bits = static_cast<uint16_t>(motor_id.count | (0));
+        return hal::CanStdId::from_u11(id_bits);
+    }
+
+    void fill_bytes(std::span<uint8_t, 8> bytes) const {
+        std::fill_n(bytes.begin(), bytes.size(), 0xff);
+        bytes.back() = 0xfe;
+    }
+};
+
+}
+
+
 
 namespace resp_msgs{
 using namespace primitive;
@@ -141,8 +325,8 @@ struct [[nodiscard]] GetDeviceId final{
     }
 };
 
-struct [[nodiscard]] Conmmunication2 final{
-    static constexpr Command COMMAND = Command::CommunicationType2;
+struct [[nodiscard]] Feedback final{
+    static constexpr Command COMMAND = Command::Feedback;
     FaultFlags fault_flags;
     NodeId motor_id;
     NodeId host_id;

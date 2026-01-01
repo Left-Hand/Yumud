@@ -57,23 +57,22 @@ struct SGM58031_Prelude{
         };
 
         constexpr FS(Kind kind):kind_(kind){;}
-        constexpr real_t to_real() const{
+        constexpr iq16 to_real() const{
             switch(kind_){
                 case FS::_0_256:
-                    return real_t(0.256);
+                    return iq16(0.256);
                 case FS::_0_512:
-                    return real_t(0.512f);
+                    return iq16(0.512f);
                 case FS::_1_024:
-                    return real_t(1.024f);
+                    return iq16(1.024f);
                 case FS::_2_048:
-                    return real_t(2.048f);
+                    return iq16(2.048f);
                 case FS::_4_096:
-                    return real_t(4.096f);
+                    return iq16(4.096f);
                 case FS::_6_144:
-                    return real_t(6.144f);
-                default:
-                    __builtin_unreachable();
+                    return iq16(6.144f);
             }
+            __builtin_unreachable();
         }
 
         [[nodiscard]] constexpr uint8_t to_u8() const {

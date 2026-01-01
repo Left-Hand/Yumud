@@ -26,13 +26,23 @@ enum class [[nodiscard]] DeMsgError:uint8_t{
 
 enum class Command:uint8_t{
     GetDeviceId = 0,// 4.1.1@37
-    CommunicationType1 = 1,//4.1.2@37
-    CommunicationType2 = 2,
+    MotionControl = 1,//4.1.2@37
+    Feedback = 2,
     EnableRunning = 3,
     DisableRunning = 4,
     SetMechanicalZero = 6,
     SetMotorId = 7,
-    ReadSingleParament = 17
+    GetSingleParament = 0x11,
+    SetSingleParament = 0x12,
+    SetControlMode = 0x12,
+    FaultReport = 0x15,
+
+    //#region 使用以下模式时请注意电机驱动版本号是否 >= 0.13.0	
+    SaveData= 0x16,
+    SetBaudrate = 0x17,
+    ProactiveEscalationSet= 0x18,
+    SetMode= 0x19
+    //#endregion
 };
 
 enum class DictKey:uint16_t{
@@ -266,10 +276,17 @@ struct TemperatureCode final{
     }
 };
 
-enum class Mode:uint8_t{
+enum class [[nodiscard]] Mode:uint8_t{
     Reset = 0,
     Cali  = 1,
     Run = 2
+};
+
+enum class [[nodiscard]] CanBaudrate:uint8_t{
+    _1MHz = 0x01,
+    _500KHz = 0x02,
+    _250KHz = 0x03,
+    _125KHz = 0x04,
 };
 
 struct FaultFlags{
