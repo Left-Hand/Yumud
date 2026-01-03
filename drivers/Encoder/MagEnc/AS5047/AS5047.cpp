@@ -46,21 +46,6 @@ protected:
     }
 };
 
-class CommandFrame : public TransmissionFrame{
-public:
-    CommandFrame(const uint16_t addr, const uint8_t read){
-        addr_ = addr;
-        read_ = read;
-        parity_ = 0;
-        parity_ = calc_parity(*reinterpret_cast<uint16_t*>(this));
-    }
-};
-
-class ReadFrame:public TransmissionFrame{
-public:
-    // ReadFrame()
-};
-
 IResult<> AS5047::write_reg(const RegAddr addr, const uint8_t data){
 
     // WRFormat format = {
