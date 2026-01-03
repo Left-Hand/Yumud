@@ -249,7 +249,7 @@ struct [[nodiscard]] MitPositionControl final{
     math::fp32 x2_radians;
 
     [[nodiscard]] constexpr hal::CanStdId can_id() const{
-        const auto id_bits = static_cast<uint16_t>(motor_id.count | (1u < 8));
+        const auto id_bits = static_cast<uint16_t>(motor_id.count | (1u << 8));
         return hal::CanStdId::from_u11(id_bits);
     }
 
@@ -268,7 +268,7 @@ struct [[nodiscard]] MitSpeedControl final{
     math::fp32 current_limit;
 
     [[nodiscard]] constexpr hal::CanStdId can_id() const{
-        const auto id_bits = static_cast<uint16_t>(motor_id.count | (2u < 8));
+        const auto id_bits = static_cast<uint16_t>(motor_id.count | (2u << 8));
         return hal::CanStdId::from_u11(id_bits);
     }
 

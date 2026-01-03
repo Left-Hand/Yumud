@@ -19,7 +19,7 @@ namespace ymd::robots::dynamixel{
 // 广播 ID ： 254 （0xFE），使所有连接的设备执行指令包。
 
 
-enum class Instruction:uint8_t{
+enum class [[nodiscard]] Instruction:uint8_t{
     /// `0x01` - Checks device presence and ID matching
     Ping = 0x01,
     

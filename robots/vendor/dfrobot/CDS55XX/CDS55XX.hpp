@@ -7,48 +7,98 @@
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
+#include <span>
 
 namespace ymd::robots{
 
-
-template<typename T ,size_t N>
-class VectorOnArray{
+struct [[nodiscard]] BytesFiller{
 public:
-    constexpr void push_back(const T val){
-        if(size_ < N){
-            data_[size_++] = val;
-        }else{
-            __builtin_abort();
+
+    constexpr explicit BytesFiller(std::span<uint8_t> bytes):
+        bytes_(bytes){;}
+
+    constexpr ~BytesFiller(){
+        if(not is_full()) __builtin_abort();
+    }
+
+    constexpr __always_inline 
+    void push_byte(const uint8_t byte){
+        if(pos_ >= bytes_.size()) [[unlikely]] 
+            on_overflow();
+        bytes_[pos_++] = byte;
+    }
+
+    constexpr __always_inline 
+    void push_zero(){
+        push_byte(0);
+    }
+
+    constexpr __always_inline 
+    void push_zeros(size_t n){
+        #pragma GCC unroll(4)
+        for(size_t i = 0; i < n; i++)
+            push_byte(0);
+    }
+
+    constexpr __always_inline 
+    void fill_remaining(const uint8_t byte){
+        const size_t n = bytes_.size() - pos_;
+
+        #pragma GCC unroll(4)
+        for(size_t i = 0; i < n; i++){
+            push_byte_unchecked(byte);
         }
     }
 
-    constexpr void insert(T * pos, const auto beg, const auto ed){
-        if(size_ + std::distance(beg, ed) <= N){
-            std::copy(beg, ed, pos);
-            size_ += std::distance(beg, ed);
-        }else{
-            __builtin_abort();
-        }
-    }
-    constexpr auto size() const {return size_;}
-    constexpr auto & get() const {
-        if(size_ != N) __builtin_abort();
-        return data_;
+    template<size_t Extents>
+    constexpr __always_inline 
+    void push_bytes(const std::span<const uint8_t, Extents> bytes){
+        if(pos_ + bytes.size() > bytes_.size()) [[unlikely]]
+            on_overflow();
+        push_bytes_unchecked(bytes);
     }
 
-    constexpr auto & operator[](const size_t idx) const {return data_[idx];}
-    constexpr auto & operator[](const size_t idx) {return data_[idx];}
 
-    constexpr std::span<const T, N> view() const {return std::span<const T, N>(data_);}
+    template<typename T>
+    requires (std::is_integral_v<T>)
+    constexpr __always_inline 
+    void push_int(const T i_val){
+        const auto bytes = std::bit_cast<std::array<uint8_t, sizeof(T)>>(i_val);
+        push_bytes(std::span(bytes));
+    }
 
-    constexpr const T * begin() const {return &data_[0];}
-    constexpr const T * end() const {return &data_[size_];}
 
-    constexpr T * begin(){return &data_[0];}
-    constexpr T * end(){return &data_[size_];}
+    [[nodiscard]] constexpr bool is_full() const {
+        return pos_ == bytes_.size();
+    }
 private:
-    std::array<T, N> data_;
-    size_t size_ = 0;
+    std::span<uint8_t> bytes_;
+    size_t pos_ = 0;
+
+    constexpr __always_inline 
+    void push_byte_unchecked(const uint8_t byte){ 
+        bytes_[pos_++] = byte;
+    }
+
+    template<size_t Extents>
+    constexpr __always_inline 
+    void push_bytes_unchecked(const std::span<const uint8_t, Extents> bytes){ 
+        if constexpr(Extents == std::dynamic_extent){
+            #pragma GCC unroll(4)
+            for(size_t i = 0; i < bytes.size(); i++){
+                push_byte(bytes[i]);
+            }
+        }else{
+            #pragma GCC unroll(4)
+            for(size_t i = 0; i < Extents; i++){
+                push_byte(bytes[i]);
+            }
+        }
+    }
+
+    constexpr __always_inline void on_overflow(){
+        __builtin_trap();
+    }
 };
 
 struct CDS55XX_Prelude {
@@ -107,11 +157,10 @@ struct CDS55XX_Regs:public CDS55XX_Prelude{
 
 struct CDS55XX_MetaUtils:public CDS55XX_Prelude{
 public:
-
+    ServoId id;
     struct FrameFactory{
         template<size_t N>
-        [[nodiscard]] static constexpr auto write_data(
-            const ServoId id, 
+        [[nodiscard]] constexpr auto write_data(
             const uint8_t addr, 
             const std::span<const uint8_t, N> data
         ){
@@ -119,8 +168,7 @@ public:
         }
 
         template<size_t N>
-        [[nodiscard]] static constexpr auto async_write_data(
-            const ServoId id, 
+        [[nodiscard]] constexpr auto async_write_data(
             const uint8_t addr, 
             const std::span<const uint8_t, N> data
         ){
@@ -129,8 +177,7 @@ public:
     
     
         template<typename Dummy = void>
-        [[nodiscard]] static constexpr auto read_data(
-            const ServoId id, 
+        [[nodiscard]] constexpr auto read_data(
             const uint8_t addr, 
             const uint8_t len
         ){
@@ -138,22 +185,19 @@ public:
         }
     
         template<typename Dummy = void>
-        [[nodiscard]] static constexpr auto invoke_async(
-            const ServoId id
+        [[nodiscard]] constexpr auto invoke_async(
         ){
             return assembly_frame(id, [&]{return make_invoke_async_payload();});
         }
     
         template<typename Dummy = void>
-        [[nodiscard]] static constexpr auto ping(
-            const ServoId id
+        [[nodiscard]] constexpr auto ping(
         ){
             return assembly_frame(id, [&]{return make_ping_payload();});
         }
     
         template<typename Dummy = void>
-        [[nodiscard]] static constexpr auto reset(
-            const ServoId id
+        [[nodiscard]] constexpr auto reset(
         ){
             return assembly_frame(id, [&]{return make_reset_payload();});
         }
@@ -172,14 +216,15 @@ private:
 
     template<size_t N>
     static constexpr std::array<uint8_t, N + 5> assembly_payload(const ServoId id, std::span<const uint8_t, N> payload){
-        VectorOnArray<uint8_t, N + 5> ret;
-        ret.insert(ret.begin(), CDS55XX_Prelude::HEADER.begin(), CDS55XX_Prelude::HEADER.end());
-        ret.push_back(id.to_u8());
+        std::array<uint8_t, N + 5> buf;
+        auto filler = BytesFiller(buf);
+        filler.push_bytes(std::span(CDS55XX_Prelude::HEADER));
+        filler.push_byte(id.to_u8());
         const auto len = payload.size() + 1;
-        ret.push_back(len);
-        ret.insert(ret.end(), payload.begin(), payload.end());
-        ret.push_back(calc_checksum(id, payload));
-        return ret.get();
+        filler.push_byte(len);
+        filler.push_bytes(payload);
+        filler.push_byte(calc_checksum(id, payload));
+        return buf;
     }
 
     template<typename Fn>
@@ -191,55 +236,59 @@ private:
 
     template<size_t N>
     static constexpr std::array<uint8_t, N + 2> make_write_data_payload(const uint8_t addr, std::span<const uint8_t, N> data){
-        VectorOnArray<uint8_t, N + 2> ret;
-        ret.push_back(Command(Command::Kind::WriteData).to_u8());
-        ret.push_back(addr);
-        ret.insert(ret.end(), data.begin(), data.end());
-        return ret.get();
+        std::array<uint8_t, N + 2> buf;
+        auto filler = BytesFiller(buf);
+        filler.push_byte(Command(Command::Kind::WriteData).to_u8());
+        filler.push_byte(addr);
+        filler.push_bytes(buf.end(), data.begin(), data.end());
+        return buf;
     }
 
     template<size_t N>
     static constexpr std::array<uint8_t, N + 2> make_sync_write_payload(const uint8_t addr, std::span<const uint8_t, N> data){
-        VectorOnArray<uint8_t, N + 2> ret;
-        ret.push_back(Command(Command::Kind::WriteData).to_u8());
-        ret.push_back(addr);
-        ret.insert(ret.end(), data.begin(), data.end());
-        return ret.get();
+        std::array<uint8_t, N + 2> buf;
+        auto filler = BytesFiller(buf);
+        filler.push_byte(Command(Command::Kind::WriteData).to_u8());
+        filler.push_byte(addr);
+        filler.push_bytes(buf.end(), data.begin(), data.end());
+        return buf;
     }
 
     static constexpr std::array<uint8_t, 3> make_read_data_payload(const uint8_t addr, const uint8_t len){
-        VectorOnArray<uint8_t, 3> ret;
-        ret.push_back(Command(Command::Kind::ReadData).to_u8());
-        ret.push_back(addr);
-        ret.push_back(len);
-        return ret.get();
+        std::array<uint8_t, 3> buf;
+        auto filler = BytesFiller(buf);
+        filler.push_byte(Command(Command::Kind::ReadData).to_u8());
+        filler.push_byte(addr);
+        filler.push_byte(len);
+        return buf;
     }
 
     template<size_t N>
     static constexpr std::array<uint8_t, N + 2> make_async_write_data_payload(const uint8_t addr, std::span<const uint8_t, N> data){
-        VectorOnArray<uint8_t, N + 2> ret;
-        ret.push_back(Command(Command::Kind::AsyncWrite).to_u8());
-        ret.push_back(addr);
-        ret.insert(ret.end(), data.begin(), data.end());
-        return ret.get();
+        std::array<uint8_t, N + 2> buf;
+        auto filler = BytesFiller(buf);
+        filler.push_byte(Command(Command::Kind::AsyncWrite).to_u8());
+        filler.push_byte(addr);
+        filler.push_bytes(data);
+        return buf;
     }
 
     static constexpr std::array<uint8_t, 1> make_invoke_async_payload(){
-        VectorOnArray<uint8_t, 1> ret;
-        ret.push_back(Command(Command::Kind::InvokeAsync).to_u8());
-        return ret.get();
+        std::array<uint8_t, 1> buf;
+        buf[0] = (Command(Command::Kind::InvokeAsync).to_u8());
+        return buf;
     }
 
     static constexpr std::array<uint8_t, 1> make_ping_payload(){
-        VectorOnArray<uint8_t, 1> ret;
-        ret.push_back(Command(Command::Kind::Ping).to_u8());
-        return ret.get();
+        std::array<uint8_t, 1> buf;
+        buf[0] = (Command(Command::Kind::Ping).to_u8());
+        return buf;
     }
 
     static constexpr std::array<uint8_t, 1> make_reset_payload(){
-        VectorOnArray<uint8_t, 1> ret;
-        ret.push_back(Command(Command::Kind::Reset).to_u8());
-        return ret.get();
+        std::array<uint8_t, 1> buf;
+        buf[0] = (Command(Command::Kind::Reset).to_u8());
+        return buf;
     }
     // static constexpr void static_test(){
 

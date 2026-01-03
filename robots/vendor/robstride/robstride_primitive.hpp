@@ -24,7 +24,7 @@ enum class [[nodiscard]] DeMsgError:uint8_t{
     PayloadNot8Bytes,
 };
 
-enum class Command:uint8_t{
+enum class [[nodiscard]] Command:uint8_t{
     GetDeviceId = 0,// 4.1.1@37
     MotionControl = 1,//4.1.2@37
     Feedback = 2,
@@ -45,7 +45,7 @@ enum class Command:uint8_t{
     //#endregion
 };
 
-enum class DictKey:uint16_t{
+enum class [[nodiscard]] DictKey:uint16_t{
     RunMode = 0x7005,
     IqRef = 0x7006,
     IdRef = 0x7007,
@@ -78,7 +78,7 @@ enum class DictKey:uint16_t{
 };
 
 
-struct [[nodiscard]] DictVal{
+struct [[nodiscard]] DictVal final{
     uint32_t bits;
     
     template<typename T>
@@ -263,7 +263,7 @@ struct [[nodiscard]] KdCode final{
     }
 };
 
-struct TemperatureCode final{
+struct [[nodiscard]] TemperatureCode final{
     using Self = TemperatureCode;
     // Currenttemperature:
     // Temp(Celsius)*10Ifthevalueis
@@ -289,7 +289,7 @@ enum class [[nodiscard]] CanBaudrate:uint8_t{
     _125KHz = 0x04,
 };
 
-struct FaultFlags{
+struct [[nodiscard]] FaultFlags final{
     using Self = FaultFlags;
     uint8_t under_voltage:1;
     uint8_t phase_current:1;
