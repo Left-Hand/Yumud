@@ -3,12 +3,14 @@
 #include <cstdint>
 #include "primitive/can/can_id.hpp"
 
+// https://dronecan.github.io/Specification/4.1_CAN_bus_transport_layer/
+
 namespace ymd::uavcan::primitive{
 
 
 struct Header;
 
-struct [[nodiscard]] NodeId{
+struct [[nodiscard]] NodeId final{
 
     //  1：NodeID由7bit组成，其中0是保留ID，代表一个未知的节点。
     // 2：Node ID取值为1-127，包含1-127，其中126，127是保留ID。
@@ -45,7 +47,7 @@ struct [[nodiscard]] NodeId{
     }
 };
 
-struct [[nodiscard]] Priority{
+struct [[nodiscard]] Priority final{
     using Self = Priority;
     uint8_t count;
 
@@ -165,7 +167,7 @@ private:
     }
 };
 
-struct [[nodiscard]] TailByte{
+struct [[nodiscard]] TailByte final{
     using Self = TailByte;
     uint8_t transfer_id:5;
     uint8_t toggle:1;

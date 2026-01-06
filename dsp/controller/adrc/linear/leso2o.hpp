@@ -39,7 +39,7 @@ public:
 
     constexpr void reconf(const Config & cfg){
         b0_ = cfg.b0;
-        delta_ = 1_iq20 / cfg.fs;
+        dt_ = uq32::from_rcp(cfg.fs);
         g1_ = 2 * cfg.w;
         g2_ = cfg.w * cfg.w;
     }
@@ -47,14 +47,14 @@ public:
     constexpr State update(const State state,  const iq16 y, const iq16 u) const {
         auto & self = *this;
         return {
-            state[0] + (state[1] + self.b0_ * u + self.g1_ * (y - state[0])) * self.delta_,
-            state[1] + self.g2_ * (y - state[0]) * self.delta_
+            state[0] + (state[1] + self.b0_ * u + self.g1_ * (y - state[0])) * self.dt_,
+            state[1] + self.g2_ * (y - state[0]) * self.dt_
         };
     }
 private:
 
     iq8 b0_;
-    iq20 delta_;
+    uq32 dt_;
     iq20 g1_;
     iq20 g2_;
 

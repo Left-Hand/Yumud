@@ -39,7 +39,7 @@ struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
         constexpr Result<Coeffs, StringView> try_to_coeffs() const {
             const auto & self = *this;
             return Ok(Coeffs{
-                .dt = (std::numeric_limits<uq32>::max() / fs), 
+                .dt = uq32::from_rcp(fs), 
                 .fhan = (fhan_type(fhan_type::Config{.r = self.r, .h = self.h})),
                 .x2_limit = self.x2_limit
             });
