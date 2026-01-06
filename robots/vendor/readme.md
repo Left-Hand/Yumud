@@ -4,6 +4,7 @@ damiao:达妙
 dfrobot:上海智位机器人
 dji:大疆
 dynamixel: dynamixel
+hightorque:高擎
 lobot:乐动
 mit:mit机器狗
 mks:makerbase（广州谦辉信息科技）
