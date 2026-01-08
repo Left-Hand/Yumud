@@ -31,9 +31,9 @@ void test_lqr(){
         1.0
     };
 
-    constexpr dsp::LinearTimeInvariantModel<float, Xn, Un> model{
+    constexpr auto model = dsp::make_lti_model(
         A, B, R, Q
-    };
+    );
 
     
     [[maybe_unused]]constexpr auto Q_ = Q.inverse();

@@ -9,6 +9,28 @@ namespace ymd::robots::hightorque{
 namespace utils{
 using namespace primitive;
 
+template<typename T>
+static constexpr ElementType element_type_v = [] -> ElementType{
+    static_assert(not std::is_reference_v<T>);
+    if constexpr(std::is_integral_v<T>){
+        static_assert(sizeof(T) <= 4);
+        if constexpr(sizeof(T) == 1) return ElementType::B1;
+        else if constexpr(sizeof(T) == 2) return ElementType::B2;
+        else if constexpr (sizeof(T) == 4) return ElementType::B4;
+        __builtin_unreachable();
+    }else if constexpr(std::is_same_v<T, float>){
+        return ElementType::Float;
+    }else if constexpr(requires {T::ELEMENT_TYPE;}){
+        return T::ELEMENT_TYPE;
+    }else if constexpr(std::is_same_v<T, Mode>){
+        return ElementType::B1;
+    }else{
+        __builtin_unreachable();
+    }
+}();
+
+
+
 namespace details{
 template<typename... Types>
 struct common_element_type;
@@ -39,10 +61,6 @@ static constexpr ElementType common_element_type_v = []{
     return details::common_element_type<std::decay_t<Args> ...>::value;
 }();
 
-static_assert(common_element_type_v<int16_t, int16_t> == ElementType::B2);
-static_assert(common_element_type_v<int8_t, int8_t> == ElementType::B1);
-static_assert(common_element_type_v<PositionCode, SpeedCode> == ElementType::B2);
-
 static consteval size_t element_type_to_size(ElementType element_type){
     switch(element_type){
         case ElementType::B1: return 1;
@@ -64,8 +82,6 @@ static constexpr SlotSpecifier make_slot_specifier(
         slot_command
     };
 }
-
-static_assert(make_slot_specifier<SpeedCode, PositionCode, TorqueCode>(SlotCommand::Write).to_bits() == 0x07);
 
 
 template<std::endian E, typename T>

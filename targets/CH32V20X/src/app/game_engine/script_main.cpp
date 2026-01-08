@@ -9,7 +9,6 @@
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/uart/uartsw.hpp"
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 

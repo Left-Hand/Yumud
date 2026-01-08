@@ -341,27 +341,6 @@ struct [[nodiscard]] CurrentCode{
 
 
 
-template<typename T>
-static constexpr ElementType element_type_v = [] -> ElementType{
-    static_assert(not std::is_reference_v<T>);
-    if constexpr(std::is_integral_v<T>){
-        static_assert(sizeof(T) <= 4);
-        if constexpr(sizeof(T) == 1) return ElementType::B1;
-        else if constexpr(sizeof(T) == 2) return ElementType::B2;
-        else if constexpr (sizeof(T) == 4) return ElementType::B4;
-        __builtin_unreachable();
-    }else if constexpr(std::is_same_v<T, float>){
-        return ElementType::Float;
-    }else if constexpr(requires {T::ELEMENT_TYPE;}){
-        return T::ELEMENT_TYPE;
-    }else if constexpr(std::is_same_v<T, Mode>){
-        return ElementType::B1;
-    }else{
-        __builtin_unreachable();
-    }
-}();
-
-
 
 };
 }

@@ -10,8 +10,6 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
-#include "hal/bus/uart/uartsw.hpp"
-
 #include "core/clock/time.hpp"
 
 

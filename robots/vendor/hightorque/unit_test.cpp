@@ -8,12 +8,12 @@ using namespace robots::hightorque;
 using namespace primitive;
 using namespace utils;
 
-
-
-namespace {
 static constexpr bool is_nearly_equal(float a, float b, float epsilon = 0.0001f){
     return std::abs(a - b) < epsilon;
 }
+
+
+namespace {
 
 static_assert(element_type_v<uint8_t> == ElementType::B1);
 static_assert(element_type_v<uint16_t> == ElementType::B2);
@@ -25,6 +25,13 @@ static_assert(element_type_v<PositionCode> == ElementType::B2);
 static_assert(PositionCode::from_angle(Angular<iq16>::from_turns(0.5_iq16)).bits == 5000);
 static_assert(PositionCode::from_angle(Angular<iq16>::from_turns(0.25_iq16)).bits == 2500);
 static_assert(PositionCode{.bits = 32767}.bits == 0x7fff);
+
+
+static_assert(common_element_type_v<int16_t, int16_t> == ElementType::B2);
+static_assert(common_element_type_v<int8_t, int8_t> == ElementType::B1);
+static_assert(common_element_type_v<PositionCode, SpeedCode> == ElementType::B2);
+
+static_assert(make_slot_specifier<SpeedCode, PositionCode, TorqueCode>(SlotCommand::Write).to_bits() == 0x07);
 
 
 [[maybe_unused]] static void position_code_test(){
