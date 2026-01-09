@@ -283,7 +283,7 @@ void smc2025_main(){
         // DEBUG_PRINTLN(render_uticks.count(), gray_img.size(), uint8_t(gray_img.mean()));
         // DEBUG_PRINTLN(render_uticks.count(), gray_img.size(), gray_img.size().to_rect().x_range());
         const auto rect = Rect2u::from_size(gray_img.size());
-        const auto range = Range2<uint32_t>::from_start_and_length(rect.top_left.x, rect.size.x);
+        const auto range = Range2u::from_start_and_length(rect.top_left.x, rect.size.x);
 
         DEBUG_PRINTLN(
             render_uticks.count(), 
