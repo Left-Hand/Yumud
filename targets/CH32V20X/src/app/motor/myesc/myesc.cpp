@@ -4,6 +4,7 @@
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
 #include "core/utils/default.hpp"
+#include "core/async/timer.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -13,16 +14,6 @@
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/analog/opa/opa.hpp"
 #include "hal/dma/dma.hpp"
-
-#include "digipw/SVPWM/svpwm3.hpp"
-#include "digipw/prelude/abdq.hpp"
-#include "digipw/ctrl/pi_controller.hpp"
-
-#include "drivers/GateDriver/DRV832X/DRV8323h.hpp"
-#include "drivers/Encoder/MagEnc/MT6825/mt6825.hpp"
-#include "drivers/Encoder/MagEnc/VCE2755/vce2755.hpp"
-#include "drivers/GateDriver/uvw_pwmgen.hpp"
-
 
 #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
@@ -34,189 +25,34 @@
 
 #include "middlewares/rpc/rpc.hpp"
 #include "middlewares/rpc/repl_server.hpp"
-#include "core/async/timer.hpp"
+
+#include "digipw/SVPWM/svpwm3.hpp"
+#include "digipw/prelude/abdq.hpp"
+#include "digipw/ctrl/pi_controller.hpp"
+
+
+#include "drivers/GateDriver/uvw_pwmgen.hpp"
 
 #include "linear_regression.hpp"
+#include "motor_profiles.hpp"
 
 
-//电机参数：
-// https://item.taobao.com/item.htm?id=643573104607
 using namespace ymd;
 
 using namespace ymd::drivers;
 using namespace ymd::digipw;
 using namespace ymd::dsp;
 using namespace ymd::dsp::adrc;
-
-
-namespace ymd::dsp::adrc{
+using namespace ymd::myesc;
 
 
 
-struct [[nodiscard]] MotorLeso{
-public:
-
-    struct [[nodiscard]] Coeffs{
-        uq8 b0;
-        uq32 dt;
-        uq32 g1t;
-        uq16 g2t;
-
-        friend OutputStream & operator <<(OutputStream & os, const Coeffs & coeffs){
-            return os << os.field("b0")(coeffs.b0) << os.splitter()
-                << os.field("dt")(coeffs.dt) << os.splitter()
-                << os.field("g1t")(coeffs.g1t) << os.splitter()
-                << os.field("g2t")(coeffs.g2t);
-        }
-    };
-
-    struct [[nodiscard]] Config{
-        uint32_t fs;
-        uint32_t fc;
-        uq8 b0;
-
-        constexpr Result<Coeffs, const char *> try_into_coeffs() const{
-            auto & self = *this;
-            const auto dt = uq32::from_rcp(self.fs);
-            if(self.fs >= 65536) 
-                return Err("fs too large");
-            if(self.fc * 2 >= fs ) 
-                return Err("fc too large");
-
-            const uq32 g1t = uq32::from_bits(static_cast<uint32_t>(
-                2u * uint64_t(fc) * uint64_t(uint64_t(1) << 32) / fs));
-            const uq16 g2t = uq16::from_bits(static_cast<uint32_t>(
-                uint64_t(fc)  * uint64_t(fc) * uint64_t(uint64_t(1) << 16) / fs));
-            return Ok(Coeffs{
-                .b0 = self.b0,
-                .dt = dt,
-                .g1t = g1t,
-                .g2t = g2t
-            });
-        }
-    };
-
-    using State = SecondOrderState<iq16>;
-
-    constexpr explicit MotorLeso(const Coeffs & coeffs):
-        coeffs_(coeffs){;}
-
-    constexpr State iterate(const State & state, const iq16 y, const iq16 u) const {
-        // dx1=x2+b0*u+g1*(y-x1);
-        // dx2=g2*(y-x1);
-
-        #if 0
-        uq16 g1t = coeffs_.dt * coeffs_.g1;
-        uq16 g2t = coeffs_.dt * coeffs_.g2;
-        const auto e = (y - state.x1);
-        const auto delta_x1 =  ((state.x2 + u * coeffs_.b0 ) * coeffs_.dt) + (e * g1t);
-        const auto delta_x2 = (e * g2t);
-        return State{
-            state.x1 + delta_x1, 
-            state.x2 + delta_x2
-        };
-        #else
-
-        #if 1
-        const auto e = (y - math::fixed_downcast<16>(state.x1));
-        const auto delta_x1 = extended_mul((state.x2 + (u * coeffs_.b0)), coeffs_.dt)
-            + extended_mul(e, coeffs_.g1t);
-        const auto delta_x2 = (e * coeffs_.g2t);
-        return State{
-            state.x1 + delta_x1,
-            state.x2 + delta_x2
-        };
-        #else
-        const auto e = (y - state.x1);
-        const auto delta_x1 = (state.x2 + u * coeffs_.b0 + e * coeffs_.g1) * coeffs_.dt;
-        const auto delta_x2 = (e * coeffs_.g2) * coeffs_.dt;
-        return State{
-            state.x1 + delta_x1,
-            state.x2 + delta_x2
-        };
-        #endif
-
-        #endif
-    }
-
-private:
-    using Self = MotorLeso;
-    Coeffs coeffs_;
-};
-
-}
 
 #define DBG_UART hal::usart2
-using Leso = dsp::adrc::MotorLeso;
+
 // static constexpr uint32_t DEBUG_UART_BAUD = 576000;
 // static constexpr uint32_t CHOPPER_FREQ = 24_KHz;
-static constexpr uint32_t CHOPPER_FREQ = 32_KHz;
-static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
-static constexpr auto BUS_VOLT = iq16(12.0);
-static constexpr auto INV_BUS_VOLT = 1 / BUS_VOLT;
-static constexpr size_t HFI_FREQ = 1000;
-
-struct MotorProfile_Gim6010{
-    static constexpr size_t POLE_PAIRS = 10u;
-    // static constexpr auto PHASE_INDUCTANCE = 0.0085_iq20;
-    // static constexpr auto PHASE_INDUCTANCE = 0.00245_iq20;
-    // static constexpr auto PHASE_INDUCTANCE = 0.0025_iq20;
-
-    //100uh
-    static constexpr auto PHASE_INDUCTANCE = iq20(22.3 * 1E-6);
-
-    //1ohm
-    // static constexpr auto PHASE_RESISTANCE = 1.123_iq20;
-    static constexpr auto PHASE_RESISTANCE = 0.123_iq20;
-};
-
-struct MotorProfile_Ysc{
-    static constexpr size_t POLE_PAIRS = 7u;
-    static constexpr auto PHASE_INDUCTANCE = iq20(180 * 1E-6);
-    // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
-    static constexpr auto PHASE_RESISTANCE = 0.303_iq20;
-    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq16>::from_turns(0.145_uq16);
-
-    // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 2400;
-    static constexpr uint32_t CURRENT_CUTOFF_FREQ = 400;
-    static constexpr auto MODU_VOLT_LIMIT = iq16(5.5);
-    static constexpr auto leso_b0 = 30;
-
-    static constexpr iq16 KP = 1.73_iq16;
-    // const iq16 kd = 0.16_iq16;
-    static constexpr iq16 KD = 0.075_iq16;
-    static constexpr auto leso_coeffs = Leso::Config{
-        .fs = FOC_FREQ,
-        // .fc = 2000,
-        .fc = 50,
-        // .b0 = 1000
-        .b0 = leso_b0
-    }.try_into_coeffs().unwrap();
-
-    using MagEncoder = MT6825;
-};
-
-struct MotorProfile_Gim4010{
-    static constexpr size_t POLE_PAIRS = 14u;
-    static constexpr auto PHASE_INDUCTANCE = iq20(300 * 1E-6);
-    // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
-    static constexpr auto PHASE_RESISTANCE = 1.03_iq20;
-    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq16>::from_turns(0.265_uq16);
-    static constexpr auto MODU_VOLT_LIMIT = iq16(7.5);
-    static constexpr auto CURRENT_CUTOFF_FREQ = 1600;
-    static constexpr auto leso_coeffs = Leso::Config{
-        .fs = FOC_FREQ,
-        // .fc = 2000,
-        .fc = 50,
-        // .b0 = 1000
-        .b0 = 30
-    }.try_into_coeffs().unwrap();
-    static constexpr iq16 KP = 2.23_iq16;
-    // const iq16 kd = 0.16_iq16;
-    static constexpr iq16 KD = 0.045_iq16;
-    using MagEncoder = VCE2755;
-};
 
 // using MotorProfile = MotorProfile_Ysc;
 using MotorProfile = MotorProfile_Gim4010;
@@ -604,7 +440,7 @@ void myesc_main(){
 
         encoder_lap_angle_ = next_encoder_lap_angle;
         encoder_multilap_angle_ = encoder_multilap_angle_ + diff_angle;
-        feedback_state_var_ = feedback_differ_.update(feedback_state_var_, {encoder_multilap_angle_.to_turns(), 0});
+        feedback_state_var_ = feedback_differ_.iterate(feedback_state_var_, {encoder_multilap_angle_.to_turns(), 0});
         
         const auto sensored_elec_angle = ((next_encoder_lap_angle * MotorProfile::POLE_PAIRS)
                 + MotorProfile::SENSORED_ELEC_ANGLE_BASE).unsigned_normalized(); 
@@ -677,7 +513,7 @@ void myesc_main(){
             // const auto s = iq16(math::sinpu(now_secs * 0.16_r));
             // command_shaper_.update(100 + 6 * (int(s * 8) / 8));
             // track_ref_ = command_shaper_.update(track_ref_, );
-            track_ref_ = command_shaper_.update(track_ref_, {
+            track_ref_ = command_shaper_.iterate(track_ref_, {
                 x1_cmd, 
                 x2_cmd
             });

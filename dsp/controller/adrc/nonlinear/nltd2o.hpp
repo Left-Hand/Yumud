@@ -56,7 +56,7 @@ struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
     // x2' = clamp(u, x2_limit)
     // u = fhan(e1, e2)
 
-    constexpr SecondOrderState<iq16> update(
+    constexpr SecondOrderState<iq16> iterate(
         const SecondOrderState<iq16> & state, 
         const std::array<iq16, 2> & ref 
     ) const {

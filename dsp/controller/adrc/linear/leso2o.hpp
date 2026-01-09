@@ -44,7 +44,7 @@ public:
         g2_ = cfg.w * cfg.w;
     }
 
-    constexpr State update(const State state,  const iq16 y, const iq16 u) const {
+    constexpr State iterate(const State state,  const iq16 y, const iq16 u) const {
         auto & self = *this;
         return {
             state[0] + (state[1] + self.b0_ * u + self.g1_ * (y - state[0])) * self.dt_,

@@ -83,15 +83,15 @@ void adrc_main(){
     auto command_shaper_poller = [&](){
         const auto now_secs = clock::time();
         const auto t0 = clock::micros();
-        shaped_track_state_ = command_shaper_.update(shaped_track_state_, {u, 0});
-        // feedback_track_ = feedback_differ_.update(feedback_track_, iq16::from_bits(shaped_track_state_.x1.to_bits() >> 16));
-        // feedback_track_ = feedback_differ_.update(feedback_track_, sin(now_secs * 140));
-        feedback_track_ = feedback_differ_.update(feedback_track_, {math::frac(now_secs), 1});
-        // feedback_track_ = feedback_differ_.update(feedback_track_, u);
+        shaped_track_state_ = command_shaper_.iterate(shaped_track_state_, {u, 0});
+        // feedback_track_ = feedback_differ_.iterate(feedback_track_, iq16::from_bits(shaped_track_state_.x1.to_bits() >> 16));
+        // feedback_track_ = feedback_differ_.iterate(feedback_track_, sin(now_secs * 140));
+        feedback_track_ = feedback_differ_.iterate(feedback_track_, {math::frac(now_secs), 1});
+        // feedback_track_ = feedback_differ_.iterate(feedback_track_, u);
         const auto t1 = clock::micros();
         elapsed_micros = t1 - t0;
 
-        // leso.update(command_shaper_.state()[0], u);
+        // leso.iterate(command_shaper_.state()[0], u);
 
     };
 

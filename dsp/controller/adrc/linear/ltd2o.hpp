@@ -84,7 +84,7 @@ public:
     }
 
     using State = SecondOrderState<iq16>;
-    constexpr State update(
+    constexpr State iterate(
         const State state, 
         const std::array<iq16, 2> ref
     ) const {
