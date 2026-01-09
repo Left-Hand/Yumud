@@ -5,7 +5,7 @@
 using namespace ymd;
 using namespace ymd::drivers::kth7823;
 
-IResult<uint16_t> Phy::direct_read(){
+IResult<uint16_t> Transport::direct_read(){
     uint16_t rx_bits;
     if(const auto res = transceive_u16(rx_bits, 0);
         res.is_err()) return Err(res.unwrap_err());
@@ -13,7 +13,7 @@ IResult<uint16_t> Phy::direct_read(){
     return Ok(rx_bits);
 }
 
-IResult<uint8_t> Phy::read_reg(const uint8_t addr){
+IResult<uint8_t> Transport::read_reg(const uint8_t addr){
     const uint16_t tx_bits = (uint16_t((addr & 0b00'111111) | 0b01'000000) << 8);
     uint16_t rx_bits;
     const auto res = transceive_u16(rx_bits, tx_bits);
@@ -21,7 +21,7 @@ IResult<uint8_t> Phy::read_reg(const uint8_t addr){
     return Ok(rx_bits >> 8);
 }
 
-IResult<> Phy::burn_reg(const uint8_t addr, const uint8_t data){
+IResult<> Transport::burn_reg(const uint8_t addr, const uint8_t data){
     const uint16_t tx_bits = (uint16_t((addr & 0b00'111111) | 0b10'000000) << 8) | data;
     uint16_t rx_bits;
     if(const auto res = transceive_u16(rx_bits, tx_bits);
@@ -35,17 +35,17 @@ IResult<> Phy::burn_reg(const uint8_t addr, const uint8_t data){
     return Ok();
 }
 
-IResult<> Phy::disable_reg_oper(){
+IResult<> Transport::disable_reg_oper(){
     uint16_t dummy;
     return transceive_u16(dummy, 0b1110'1000'0000'0010);
 }
 
-IResult<> Phy::enable_reg_oper(){
+IResult<> Transport::enable_reg_oper(){
     uint16_t dummy;
     return transceive_u16(dummy, 0b1110'1000'0000'0000);
 }
 
-IResult<> Phy::transceive_u16(uint16_t & rx, const uint16_t tx){
+IResult<> Transport::transceive_u16(uint16_t & rx, const uint16_t tx){
     uint16_t dummy = 0;
     if(const auto res = spi_drv_.transceive_single<uint16_t>(dummy, tx);
         res.is_err()) return Err(res.unwrap_err());

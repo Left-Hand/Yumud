@@ -6,7 +6,7 @@ namespace ymd::drivers::kth7823{
 class KTH7823 final{
 public:
     explicit KTH7823(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
-        transport_(Phy{spi, rank}){;}
+        transport_(Transport{spi, rank}){;}
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<> validate();
@@ -36,7 +36,7 @@ public:
 
 private:
     Regset regset_ = {};
-    Phy transport_;
+    Transport transport_;
     uq32 lap_turns_ = 0;
 
     [[nodiscard]]

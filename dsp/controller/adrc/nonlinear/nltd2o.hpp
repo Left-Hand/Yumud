@@ -8,7 +8,7 @@ namespace ymd::dsp::adrc{
 
 template<>
 struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
-    using fhan_type = FhanPrecomputed<iq16>;
+    using Fhan = FhanPrecomputed<iq16>;
 
     //预计算系数
     struct [[nodiscard]] Coeffs{
@@ -16,7 +16,7 @@ struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
         uq32 dt;
 
         //FHAN算子
-        fhan_type fhan;
+        Fhan fhan;
 
         //一阶导约束
         iq16 x2_limit;
@@ -36,11 +36,11 @@ struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
         //原信号一阶导限幅
         iq16 x2_limit;
 
-        constexpr Result<Coeffs, StringView> try_to_coeffs() const {
+        constexpr Result<Coeffs, StringView> try_into_coeffs() const {
             const auto & self = *this;
             return Ok(Coeffs{
                 .dt = uq32::from_rcp(fs), 
-                .fhan = (fhan_type(fhan_type::Config{.r = self.r, .h = self.h})),
+                .fhan = (Fhan(Fhan::Config{.r = self.r, .h = self.h})),
                 .x2_limit = self.x2_limit
             });
         }

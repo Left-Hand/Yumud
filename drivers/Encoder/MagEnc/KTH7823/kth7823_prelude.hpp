@@ -90,10 +90,10 @@ struct R8_Rd:public Reg8<>{
 }DEF_R8(rd_reg)
 };
 
-class [[nodiscard]] Phy final{ 
+class [[nodiscard]] Transport final{ 
 public:
-    Phy(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){}
-    Phy(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
+    Transport(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){}
+    Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
         spi_drv_(hal::SpiDrv(spi, idx)){}
 
     [[nodiscard]] IResult<uint16_t> direct_read();

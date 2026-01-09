@@ -5,6 +5,8 @@
 // 这个驱动适用于VCE2755和VCE2758 他们只是在封装上有差异
 
 // 锐评：和KTH7823一样，都是和MA730 pin to pin的芯片
+//!! 这款磁编码器只能在18MHz下稳定工作 在36MHz下MISO会延后一个周期输出
+//!! 这款磁编码器提供了18位的原始数据，宣称有效位数为14位。 但实测18位不会叠加白噪声，目测约为16位的有效位数
 
 // VCE2755是一款基于各向异性磁阻（AMR）技术，高度集成的旋转磁编码器芯片，它在一个小型封装内集成了AMR
 // 磁传感器和高精度CMOS处理电路，实现14bit分辨率平行于封装表面的平面360°磁场角度检测。基于AMR在饱
@@ -26,8 +28,7 @@
 namespace ymd::drivers{
 
 class VCE2755 final:
-    public VCE2755_Prelude,
-    public MagEncoderIntf{
+    public VCE2755_Prelude{
 public:
     struct Config{
         RotateDirection direction;
@@ -49,19 +50,41 @@ public:
         return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 
+    [[nodiscard]] IResult<PackageCode> get_package_code();
+
 private:
     hal::SpiDrv spi_drv_;
     VCE2755_Regset regs_ = {};
     uq32 lap_turns_ = 0;
 
+
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_data){
+        const auto tx_u16 = uint16_t(
+            0x0000 | static_cast<uint16_t>(reg_addr << 8) | reg_data);
+        if(const auto res = spi_drv_.write_single<uint16_t>(tx_u16);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> bytes){
+        const auto tx_u8 = static_cast<uint8_t>(0x80 | reg_addr);
+        if(const auto res = spi_drv_.write_single<uint8_t>(tx_u8, CONT);
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = spi_drv_.read_burst<uint8_t>(bytes);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_data){
+        return read_burst(reg_addr, std::span(&reg_data, 1));
+    }
+
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto address = T::ADDRESS;
+        constexpr auto address = T::ADDRESS;
         const uint8_t data = reg.to_bits();
-        const auto tx = uint16_t(
-            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | data);
-        if(const auto res = spi_drv_.write_single<uint16_t>(tx);
-            res.is_err()) return Err(Error(res.unwrap_err()));
+        if(const auto res = write_reg(address, data); 
+            res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
@@ -69,35 +92,10 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        uint16_t dummy;
-        const auto addr = std::bit_cast<uint8_t>(T::ADDRESS);
-        const auto tx = uint16_t(0x4000 | ((uint8_t)addr << 8));
-        if(const auto res = spi_drv_.write_single<uint16_t>(tx); 
-            res.is_err()) return Err(Error(res.unwrap_err()));
-        if(const auto res = spi_drv_.read_single<uint16_t>(dummy);
-            res.is_err()) return Err(Error(res.unwrap_err()));
-        if((dummy & 0xff) != 0x00) 
-            return Err(Error(Error::Kind::InvalidRxFormat));
-        reg.as_bits_mut() = (dummy >> 8);
+        constexpr auto address = T::ADDRESS;
+        if(const auto res = read_reg(address, reg.as_bits_mut()); 
+            res.is_err()) return Err(res.unwrap_err());
         return Ok();
-    }
-
-    [[nodiscard]] IResult<Packet> read_packet() {
-        #if 1
-        static constexpr std::array<uint8_t, 4> tx = {0x83, 0x00, 0x00, 0x00};
-        std::array<uint8_t, 4> rx;
-        if(const auto res = spi_drv_.transceive_burst<uint8_t>(rx, tx);
-            res.is_err()) return Err(Error(res.unwrap_err()));
-        // DEBUG_PRINTLN(rx);
-        return Ok(Packet::from_bytes(rx[1], rx[2], rx[3]));
-        #else
-        //exprimental
-        static constexpr std::array<uint16_t, 2> tx = {0x8300, 0x0000};
-        std::array<uint16_t, 2> rx;
-        if(const auto res = spi_drv_.transceive_burst<uint16_t>(rx, tx);
-            res.is_err()) return Err(Error(res.unwrap_err()));
-        return Ok(Packet::from_u24(static_cast<uint32_t>(rx[0] >> 8) | static_cast<uint32_t>(rx[1] << 8)));
-        #endif
     }
 
 

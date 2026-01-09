@@ -60,7 +60,7 @@ void adrc_main(){
         .r = 256.5_iq10,
         .h = 0.01_iq10,
         .x2_limit = 200
-    }.try_to_coeffs().unwrap();
+    }.try_into_coeffs().unwrap();
     static NonlinearTrackingDifferentiator<iq16, 2> command_shaper_{
         coeffs
     };
@@ -73,7 +73,7 @@ void adrc_main(){
 
     static constexpr auto track_coeffs = typename LinearTrackingDifferentiator<iq16, 2>::Config{
         .fs = ISR_FREQ , .r = 140
-    }.try_to_coeffs().unwrap();
+    }.try_into_coeffs().unwrap();
 
     [[maybe_unused]] LinearTrackingDifferentiator<iq16, 2> feedback_differ_{
         track_coeffs

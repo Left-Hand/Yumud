@@ -148,11 +148,15 @@ struct [[nodiscard]] Angular{
 	}
 
 	[[nodiscard]] constexpr auto cos() const{
-		return cospu(turns_ );
+		return math::cospu(turns_ );
 	}
 
 	[[nodiscard]] constexpr auto tan() const{
-		return tan(to_radians());
+		return math::tanpu(turns_);
+	}
+
+	[[nodiscard]] constexpr auto cot() const{
+		return math::cotpu(turns_);
 	}
 
 	constexpr Angular forward_angle_to(const Angular& target) const {
@@ -357,4 +361,29 @@ consteval Angular<real_t> operator"" _turn(uint64_t x){
     return Angular<real_t>::from_turns(static_cast<real_t>(x));
 }
 
+namespace math{
+
+template<typename T>
+auto cos(const Angular<T> & x){
+	return x.cos();
+}
+
+template<typename T>
+auto sin(const Angular<T> & x){
+	return x.sin();
+}
+
+template<typename T>
+auto tan(const Angular<T> & x){
+	return x.tan();
+}
+
+template<typename T>
+auto cot(const Angular<T> & x){
+	return x.cot();
+}
+
+
+
+}
 }

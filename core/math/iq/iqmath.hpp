@@ -59,9 +59,32 @@ std::array<fixed_t<31, int32_t>, 2> sincos(const fixed_t<Q, int32_t> x){
 
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
-fixed_t<31, int32_t> tan(const fixed_t<Q, int32_t> x) {
+fixed_t<16, int32_t> tanpu(const fixed_t<Q, int32_t> x) {
+    const auto [s, c] = iqmath::details::__IQNgetCosSinPU<Q>(x.to_bits()).exact_sincos();
+    return iq16(s) / iq16(c);
+}
+
+//为了避免计算tan的倒数时调用了两次除法 提供cot函数
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed_t<16, int32_t> cotpu(const fixed_t<Q, int32_t> x) {
+    const auto [s, c] = iqmath::details::__IQNgetCosSinPU<Q>(x.to_bits()).exact_sincos();
+    return iq16(c) / iq16(s);
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed_t<16, int32_t> tan(const fixed_t<Q, int32_t> x) {
     const auto [s, c] = iqmath::details::__IQNgetCosSin<Q>(x.to_bits()).exact_sincos();
-    return s / c;
+    return iq16(s) / iq16(c);
+}
+
+//为了避免计算tan的倒数时调用了两次除法 提供cot函数
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed_t<16, int32_t> cot(const fixed_t<Q, int32_t> x) {
+    const auto [s, c] = iqmath::details::__IQNgetCosSin<Q>(x.to_bits()).exact_sincos();
+    return iq16(c) / iq16(s);
 }
 
 template<size_t Q>

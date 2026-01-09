@@ -54,10 +54,7 @@ struct [[nodiscard]] Packet final{
     uint8_t __padding__;
 
     [[nodiscard]] static constexpr Packet from_u24(uint32_t bits){                  
-        Self ret;                
-        ret.d1 = static_cast<uint16_t>(bits);               
-        ret.d2 = static_cast<uint8_t>(bits >> 16);
-        return ret;
+        return std::bit_cast<Self>(bits);
     }
     
     [[nodiscard]] static constexpr Packet from_bytes(
@@ -65,10 +62,10 @@ struct [[nodiscard]] Packet final{
         const uint8_t b2, 
         const uint8_t b3
     ){
-        Self ret;
-        ret.d1 = static_cast<uint16_t>(b2 << 8) | b1;
-        ret.d2 = b3;
-        return ret;
+        return from_u24((static_cast<uint32_t>(b3) << 16) 
+            | (static_cast<uint32_t>(b2) << 8) 
+            | static_cast<uint32_t>(b1)
+        );
     }
 
     [[nodiscard]] std::span<uint8_t, 3> as_bytes_mut() {
@@ -125,7 +122,7 @@ struct MT6825:
         spi_drv_(std::move(spi_drv)){}
 
     [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<Angular<uq32>> get_lap_angle();
+    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle();
 private:
     hal::SpiDrv spi_drv_;
 

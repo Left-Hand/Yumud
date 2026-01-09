@@ -9,7 +9,7 @@ using Error = Self::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<Angular<uq32>> Self::get_lap_angle(){
+IResult<Angular<uq32>> Self::read_lap_angle(){
     if(const auto res = read_packet();
         res.is_err()) return Err(res.unwrap_err());
     else{
