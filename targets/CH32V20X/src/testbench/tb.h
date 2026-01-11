@@ -196,3 +196,4 @@ void m1502e_main();
 void s21c_main();
 void steadywin_main();
 void vce2755_main();
+void sincospll_main();
