@@ -100,7 +100,7 @@ struct [[nodiscard]] Atan2Intermediate{
     // *     atan(y/x) = pi/2 - atan(x/y)
     // */
     static constexpr uint32_t transform_input_to_result(uint32_t uiq31Input) {
-        const auto * piq32Coeffs = &iqmath::details::_IQ32atan_coeffs[(uiq31Input >> 24) && 0x00fc];
+        const auto * piq32Coeffs = &iqmath::details::_IQ32atan_coeffs[(uiq31Input >> 24) & 0x00fc];
         /*
         * Calculate atan(x) using the following Taylor series:
         *

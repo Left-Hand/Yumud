@@ -97,7 +97,7 @@ struct [[nodiscard]] Angular{
 	}
 
 	static constexpr Angular from_atan2(const T y, const T x){
-		return make_angle_from_turns(atan2pu(y, x));
+		return make_angle_from_turns(static_cast<T>(math::atan2pu(y, x)));
 	}
 
 	template<typename U>

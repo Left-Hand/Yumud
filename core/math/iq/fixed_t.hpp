@@ -121,14 +121,14 @@ public:
     template<size_t P>
     __attribute__((always_inline)) constexpr 
     fixed_t & operator = (const fixed_t<P, D> & other){
-        bits = fixed_t<Q, D>::template transform<Q>(other.to_bits());
+        bits = fixed_t<P, D>::template transform<Q>(other.to_bits());
         return *this;
     };
 
     template<size_t P>
     __attribute__((always_inline)) constexpr 
     fixed_t & operator = (fixed_t<P, D> && other){
-        bits = fixed_t<Q, D>::template transform<Q>(other.to_bits());
+        bits = fixed_t<P, D>::template transform<Q>(other.to_bits());
         return *this;
     };
     
@@ -231,7 +231,7 @@ public:
     requires std::is_floating_point_v<T> __inline constexpr explicit 
     operator T() const{
         if(std::is_constant_evaluated()){
-            return float(this->to_bits()) / D(1u << Q);
+            return static_cast<long double>(this->to_bits()) / static_cast<long double>(uint64_t(1u) << Q);
         }else{
             return iqmath::details::_IQNtoF<Q>(this->to_bits());
         }

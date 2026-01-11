@@ -70,6 +70,10 @@ static_assert(signbit(iq16(-167)) == 1);
 static_assert(square(iq16(2)) = 4);
 static_assert(math::abs(iiq32(2)) == 2);
 static_assert(math::abs(iiq32(0)) == 0);
+static_assert(iq31(-1) == iq16(-1));
+static_assert(iq31(0) == iq16(0));
+static_assert(iq31(-1) == iq24(-1));
+static_assert(iq24(1) == iq16(1));
 
 // namespace mymath{
 // template<typename D>
