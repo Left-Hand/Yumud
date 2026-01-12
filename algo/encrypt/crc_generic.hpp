@@ -1,11 +1,12 @@
 #pragma once
 
-namespace ymd::crc{
 
-#include <cstdint>
 #include <array>
 #include <span>
 #include <type_traits>
+#include <cstdint>
+
+namespace ymd::encrypt::crc{
 
 // ================================
 // CRC 策略基类和具体实现

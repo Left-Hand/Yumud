@@ -23,10 +23,12 @@ public:
     }
 private:
     hal::SpiDrv spi_drv_;
-    Packet last_packet_;
+    AnglePacket last_packet_;
 
     [[nodiscard]] IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val);
     [[nodiscard]] IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val);
+    [[nodiscard]] IResult<> burn_eeprom();
+    [[nodiscard]] IResult<> transceive_3b(std::span<uint8_t, 3> resp, std::span<const uint8_t, 3> req);
 };
 
 };

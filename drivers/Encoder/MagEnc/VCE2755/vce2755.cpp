@@ -14,12 +14,12 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 using RegSet = VCE2755_Regset;
-using Packet = RegSet::Packet;
+using AnglePacket = RegSet::AnglePacket;
 
 IResult<> VCE2755::update(){
     // std::array<uint8_t, 3> bytes;
-    if(const auto res = read_burst(Packet::ADDRESS, std::span(regs_.packet_.bytes));
-    // if(const auto res = read_burst(Packet::ADDRESS, std::span(bytes));
+    if(const auto res = read_burst(AnglePacket::ADDRESS, std::span(regs_.packet_.bytes));
+    // if(const auto res = read_burst(AnglePacket::ADDRESS, std::span(bytes));
         res.is_err()) return Err(res.unwrap_err());
     lap_turns_ = regs_.packet_.parse().unwrap().to_turns();
     // DEBUG_PRINTLN(bytes);

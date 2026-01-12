@@ -13,7 +13,43 @@
 
 
 namespace ymd::drivers{
+namespace vce2755{
+// 对应的 CRC 生成多项式为 X4+X+1，初始值=0000b，数据输入输出不取反。
+static constexpr uint8_t calc_crc4(uint32_t bits20) {
+    // 确保只使用低20位
+    bits20 &= 0x000FFFFF;
+    
+    // CRC 寄存器，初始值为 0000 (4位)
+    uint8_t crc = 0x00;
+    
+    // 处理20个数据位，从最高位开始
+    for (int i = 19; i >= 0; i--) {
+        // 获取当前数据位
+        bool data_bit = (bits20 >> i) & 0x01;
+        
+        // 计算反馈位：CRC最高位(bit3)与数据位异或
+        bool feedback = ((crc >> 3) & 0x01) ^ data_bit;
+        
+        // CRC左移1位
+        crc = (crc << 1) & 0x0F;
+        
+        // 如果反馈位为1，则与多项式异或
+        if (feedback) {
+            // 多项式 X^4 + X + 1 对应的二进制: 10011
+            // 去掉最高位后为: 0011 (0x03)
+            crc ^= 0x03;
+        }
+    }
+    
+    return crc & 0x0F;  // 确保只返回低4位
+}
+static_assert(calc_crc4(0x12345) == 0x08);
+static_assert(calc_crc4(0x00) == 0x00);
+static_assert(calc_crc4(0x00001) == 0x03);
 
+
+
+}
 struct VCE2755_Prelude{
     using Error = EncoderError;
 
@@ -125,6 +161,8 @@ struct VCE2755_Prelude{
         // 输出上电初始位置的绝对角度脉冲信号
     };
 
+
+
     using RegAddr = uint8_t;
 };
 
@@ -135,7 +173,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         PackageCode code;
     };
 
-    struct [[nodiscard]] Packet final{
+    struct [[nodiscard]] AnglePacket final{
         static constexpr RegAddr ADDRESS = RegAddr{0x03};
         union{
             struct {
@@ -156,41 +194,40 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         };
         uint8_t __padding__; // to 32bit
             
-        [[nodiscard]] static Packet from_bytes(
+        [[nodiscard]] static AnglePacket from_bytes(
             const uint8_t b1, const uint8_t b2, const uint8_t b3
         ){
-            Packet ret;
+            AnglePacket ret;
             ret.bytes[0] = b1;
             ret.bytes[1] = b2;
             ret.bytes[2] = b3;
             return ret;
         }
 
-        [[nodiscard]] constexpr bool is_crc_valid() const {
-            // TODO
-            // return calc_crc() == crc_3_0;
-            return true;
-        }
 
         [[nodiscard]] constexpr IResult<Angular<uq32>> parse() const {
-            if(!is_crc_valid()) [[unlikely]]
-                return Err(Error::InvalidCrc);
 
-            const auto angle_b18 = static_cast<uint32_t>(b18());
-            const auto turns = static_cast<uq32>(uq18::from_bits(angle_b18));
+
+            const auto bits20 = b20();
+
+            if(vce2755::calc_crc4(bits20) != crc_3_0) [[unlikely]]
+                return Err(Error::InvalidCrc);
+            const auto turns = static_cast<uq32>(uq18::from_bits(static_cast<uint32_t>(bits20 >> 2)));
             return Ok(Angular<uq32>::from_turns(turns));
         }
     private:
-        [[nodiscard]] constexpr uint32_t b18() const{
-            return (angle_17_10 << 10) | (angle_9_2 << 2) | (angle_1_0);
+
+        [[nodiscard]] constexpr uint32_t b20() const{
+            uint32_t bits = 0;
+            bits |= static_cast<uint32_t>(bytes[0]) << 12;
+            bits |= static_cast<uint32_t>(bytes[1]) << 4;
+            bits |= static_cast<uint32_t>(bytes[2]) >> 4;
+            return bits;
         }
 
-        [[nodiscard]] constexpr uint8_t calc_crc() const {
-            //TODO
-            return 0;
-        }
+
     };
-    static_assert(sizeof(Packet) == 4);
+    static_assert(sizeof(AnglePacket) == 4);
 
     //0x40
     struct [[nodiscard]] R8_IO:public Reg8<> {
@@ -282,7 +319,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         WeakMagAlarmLevel weak_mag_alarm_lvl:2;
     };
 
-    Packet packet_;
+    AnglePacket packet_;
 };
 
 
