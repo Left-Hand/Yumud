@@ -350,7 +350,8 @@ fixed_t<Q, D> operator /(const fixed_t<Q, D1> lhs, const fixed_t<P, D2> rhs) {
     if (std::is_constant_evaluated()) {
         return fixed_t<Q, D>::from(float(lhs) / float(rhs));
     }else{
-        return fixed_t<Q, D>::from_bits(iqmath::details::__IQNdiv_impl<Q, true>(
+        constexpr bool result_is_signed = std::is_signed_v<D1> or std::is_signed_v<D2>;
+        return fixed_t<Q, D>::from_bits(iqmath::details::__IQNdiv_impl<Q, result_is_signed>(
             lhs.to_bits(), rhs.to_bits()
         ));
     }
@@ -358,15 +359,24 @@ fixed_t<Q, D> operator /(const fixed_t<Q, D1> lhs, const fixed_t<P, D2> rhs) {
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> operator /(const std::integral auto lhs, const fixed_t<Q, D> rhs) {
-	return fixed_t<Q, D>(lhs) / rhs;
+auto operator /(const std::integral auto lhs, const fixed_t<Q, D> rhs) {
+    constexpr bool result_is_signed = std::is_signed_v<D> or std::is_signed_v<decltype(lhs)>;
+    using result_underly_t = std::conditional_t<result_is_signed, std::make_signed_t<D>, D>;
+	return fixed_t<Q, result_underly_t>(lhs) / rhs;
 }
 
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, D> operator /(const fixed_t<Q, D> lhs, const std::integral auto rhs) {
-	return fixed_t<Q, D>::from_bits(lhs.to_bits() / rhs);
+    // cpp的标准规定有符号数除以无符号数会先将被除数转为无符号数 导致发生诸如-30 / 2被转换为了非常大的整数
+    // 这里的做法是将除数转为有符号数
+    if constexpr(std::is_signed_v<D> and std::is_unsigned_v<decltype(rhs)>){
+        using signed_rhs_t = std::make_signed_t<std::decay_t<decltype(rhs)>>;
+        return fixed_t<Q, D>::from_bits(lhs.to_bits() / static_cast<signed_rhs_t>(rhs));
+    }else{
+        return fixed_t<Q, D>::from_bits(lhs.to_bits() / rhs);
+    }
 }
 
 
