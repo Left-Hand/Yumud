@@ -36,30 +36,38 @@ uint32_t get_systick_cmp(){
 }
 
 
-static std::function<void(void)> systick_handler;
-static volatile std::atomic<uint32_t> MILLIS_CNT = 0;
+static std::function<void(void)> SYSTICK_HANDLER_ = nullptr;
+static volatile uint32_t MILLIS_CNT_ = 0;
 
 
 static __fast_inline uint32_t millis_cnt(void){
-    return MILLIS_CNT.load(std::memory_order_relaxed);
+    // return MILLIS_CNT_.load(std::memory_order_seq_cst);
+    return MILLIS_CNT_;
 }
 
 static __fast_inline uint64_t micros_cnt(void){
-    M_SYSTICK_DISER;
-    const uint64_t base = static_cast<uint64_t>(millis_cnt()) * 1000u;
-    const uint32_t systick_cnt = static_cast<uint32_t>(get_systick_cnt());
-    M_SYSTICK_ENER;
+    // M_SYSTICK_DISER;
+    const volatile uint32_t systick_cnt = static_cast<uint32_t>(get_systick_cnt());
+    // const auto ctlr = SysTick->CTLR;
+    // if(ctlr & 0x10000){MILLIS_CNT_.fetch_add(1);}
+    const volatile uint64_t base = static_cast<uint64_t>(millis_cnt()) * 1000u;
+    // M_SYSTICK_ENER;
 
-    return (base + static_cast<uint32_t>(systick_cnt / TICKS_CNTS_PER_US));
+    // return (base + static_cast<uint32_t>(systick_cnt / TICKS_CNTS_PER_US));
+    return (base + static_cast<uint32_t>((systick_cnt * 455) >> 16));
 }
 
 static __fast_inline uint64_t nanos_cnt(void){
+    #if 0
     M_SYSTICK_DISER;
     const uint64_t base = static_cast<uint64_t>(millis_cnt()) * 1000u;
     const uint32_t systick_cnt = static_cast<uint32_t>(get_systick_cnt());
     M_SYSTICK_ENER;
 
     return (base + ticks_to_nanos(systick_cnt));
+    #else
+    return 0;
+    #endif
 }
 
 
@@ -120,7 +128,10 @@ Milliseconds millis(void){
 }
 
 Microseconds micros(void){
-    return Microseconds(micros_cnt());
+    __disable_irq();
+    const auto ret = Microseconds(micros_cnt());
+    __enable_irq();
+    return ret;
 }
 Nanoseconds nanos(void){
     return Nanoseconds(nanos_cnt());
@@ -140,7 +151,7 @@ void delay(Nanoseconds ns){
 
 
 void set_systick_handler(std::function<void(void)> && cb){
-    systick_handler = std::move(cb);
+    SYSTICK_HANDLER_ = std::move(cb);
 }
 
 
@@ -187,8 +198,9 @@ void Systick_Init(){
 }
 
 void SysTick_Handler(void){
-    MILLIS_CNT.fetch_add(1);
-
+    __disable_irq();
+    MILLIS_CNT_++;
     SysTick->SR = 0;
-    EXECUTE(systick_handler);
+    __enable_irq();
+    EXECUTE(SYSTICK_HANDLER_);
 }

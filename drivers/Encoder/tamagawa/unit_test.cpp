@@ -1,4 +1,5 @@
 #include "tamagawa_utils.hpp"
+#include "tamagawa_primitive.hpp"
 #include <atomic>
 #include <memory>
 
@@ -10,13 +11,13 @@ consteval size_t test_calc_crc() {
     
     // 1. Test empty data
     std::array<uint8_t, 0> empty{};
-    if (calc_crc(empty) != 0x00) return 1;
+    if (calc_crc8(empty) != 0x00) return 1;
     
     // 2. Test with single byte [0x00]
     std::array<uint8_t, 1> zero_byte{0x00};
     // 计算: 0x00 XOR, 然后8次移位都不会异或多项式
     // 最终结果: 0x00
-    if (calc_crc(zero_byte) != 0x00) return 2;
+    if (calc_crc8(zero_byte) != 0x00) return 2;
     
     return 0;
 }

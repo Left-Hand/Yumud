@@ -466,8 +466,24 @@ uint32_t BasicTimer::get_periph_clk_freq(){
 void BasicTimer::set_psc(const uint16_t psc){
     SDK_INST(inst_)->PSC = psc;
 }
+
 void BasicTimer::set_arr(const uint16_t arr){
     SDK_INST(inst_)->ATRLR = arr;
+}
+
+//ckd = 0 : 1分频
+//ckd = 1 : 2分频
+//ckd = 2 : 4分频
+//ckd = 3 : 保留
+void BasicTimer::set_ckd(const uint8_t ckd){
+    if(ckd > 2) __builtin_trap();
+
+    auto tmpcr1 = SDK_INST(inst_)->CTLR1;
+    
+    tmpcr1 &= (uint16_t)(~((uint16_t)TIM_CTLR1_CKD));
+    tmpcr1 |= (static_cast<uint16_t>(ckd) << 8);
+
+    SDK_INST(inst_)->CTLR1 = tmpcr1;
 }
 
 void BasicTimer::set_count_mode(const TimerCountMode mode){
@@ -476,8 +492,6 @@ void BasicTimer::set_count_mode(const TimerCountMode mode){
     tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_DIR | TIM_CMS)));
     tmpcr1 |= (mode.to_bits() << 4);
 
-    tmpcr1 &= (uint16_t)(~((uint16_t)TIM_CTLR1_CKD));
-    tmpcr1 |= (uint32_t)TIM_CKD_DIV1;
 
     SDK_INST(inst_)->CTLR1 = tmpcr1;
 }
@@ -498,6 +512,14 @@ void BasicTimer::enable_psc_sync(const Enable en){
     }
 }
 
+void BasicTimer::enable_udis(const Enable en){
+    if(en == EN){
+        SDK_INST(inst_)->CTLR1 |= TIM_UDIS;
+    }else{
+        SDK_INST(inst_)->CTLR1 &= ~TIM_UDIS;
+    }
+}
+
 void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
 
     const auto [arr, psc] = timer::details::calc_arr_and_psc(
@@ -508,13 +530,17 @@ void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
 
 
 Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
+    TIM_DeInit(SDK_INST(inst_));
     set_remap(cfg.remap);
+    SDK_INST(inst_)->CNT = 0;
     this->enable_rcc(EN);
-
 
     TIM_InternalClockConfig(SDK_INST(inst_));
     set_count_freq(cfg.count_freq);
     set_count_mode(cfg.count_mode);
+
+    //默认不使用分频
+    set_ckd(0);
     enable_arr_sync(EN);
 
     TIM_ClearFlag(SDK_INST(inst_), 0x1e7f);

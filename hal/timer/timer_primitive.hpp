@@ -100,11 +100,34 @@ struct [[nodiscard]] CountFreq:
 
 struct [[nodiscard]] CountMode{
     enum class [[nodiscard]] Kind:uint8_t{
-        Up                      = 0x00,
-        Down                    = 0x01,
-        CenterAlignedDownTrig   = 0x02,
-        CenterAlignedUpTrig     = 0x04,
-        CenterAlignedDualTrig   = 0x06
+        //b0:计数器方向：
+        // 0：计数器的计数模式为增计数；
+        // 1：计数器的计数模式为减计数。
+        // 注：当计数器配置为中央对齐模式或编码器模式时，
+        // 该位无效。
+        // b1~b2:
+        // 中央对齐模式选择：
+        // 00：边沿对齐模式。计数器依据方向位(DIR)向上或
+        // 向下计数。
+        // 01：中央对齐模式 1。计数器交替地向上和向下计
+        // 数。配置为输出的通道(CHCTLRx 寄存器中 CCxS=00)
+        // 的输出比较中断标志位，只在计数器向下计数时被
+        // 设置。
+        // 10：中央对齐模式 2。计数器交替地向上和向下计
+        // 数。配置为输出的通道(CHCTLRx 寄存器中 CCxS=00)
+        // 的输出比较中断标志位，只在计数器向上计数时被
+        // 设置。
+        // 11：中央对齐模式 3。计数器交替地向上和向下计
+        // 数。配置为输出的通道(CHCTLRx 寄存器中 CCxS=00)
+        // 的输出比较中断标志位，在计数器向上和向下计数
+        // 时均被设置。
+        // 注：在计数器使能时(CEN=1)，不允许从边沿对齐模
+        // 式转换到中央对齐模式。
+        Up                      = 0b000,
+        Down                    = 0b001,
+        CenterAlignedDownTrig   = 0b010,
+        CenterAlignedUpTrig     = 0b100,
+        CenterAlignedDualTrig   = 0b110
     };
 
     using enum Kind;

@@ -74,7 +74,11 @@ static_assert(iq31(-1) == iq16(-1));
 static_assert(iq31(0) == iq16(0));
 static_assert(iq31(-1) == iq24(-1));
 static_assert(iq24(1) == iq16(1));
-
+static_assert(fixed_t<15, int16_t>(0.5).to_bits() == iq16(0.25).to_bits());
+static_assert(iq16::from_bits(fixed_t<15, int16_t>(0.25).to_bits()).to_bits() == iq15(0.25).to_bits());
+static_assert(iq16::from_bits(fixed_t<15, int16_t>(-0.25).to_bits()).to_bits() == iq15(-0.25).to_bits());
+static_assert(std::is_same_v<tmp::extended_mul_underlying_t<int32_t, int16_t>, int64_t>);
+static_assert(std::is_same_v<tmp::extended_mul_underlying_t<int16_t, int16_t>, int32_t>);
 // namespace mymath{
 // template<typename D>
 // static constexpr D abs(const D x){

@@ -210,8 +210,11 @@ struct VCE2755_Regset:public VCE2755_Prelude{
 
             const auto bits20 = b20();
 
-            if(vce2755::calc_crc4(bits20) != crc_3_0) [[unlikely]]
-                return Err(Error::InvalidCrc);
+            #if 0
+            // TODO 验证crc校验功能
+            // if(vce2755::calc_crc4(bits20) != crc_3_0) [[unlikely]]
+            //     return Err(Error::InvalidCrc);
+            #endif
             const auto turns = static_cast<uq32>(uq18::from_bits(static_cast<uint32_t>(bits20 >> 2)));
             return Ok(Angular<uq32>::from_turns(turns));
         }

@@ -66,6 +66,7 @@ IResult<> Self::read_reg(const Self::RegAddr reg_addr, uint8_t & reg_val){
 }
 
 IResult<> Self::burn_eeprom(){
+
     static constexpr uint8_t CONFIRM_CODE_MAGIC_NUM = 0x55;
     const auto req = std::array<uint8_t, 3>{0b11000000, 0x00, 0x00};
     std::array<uint8_t, 3> resp;

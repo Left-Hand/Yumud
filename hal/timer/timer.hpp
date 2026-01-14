@@ -163,6 +163,12 @@ public:
 
     //设置arr（SXX32专有）
     void set_arr(const uint16_t arr);
+
+    //设置ckd（SXX32专有）
+    void set_ckd(const uint8_t ckd);
+
+    //设置udis（SXX32专有）
+    void enable_udis(const Enable en);
     
     //设置计数频率
     void set_count_freq(const TimerCountFreq freq);
