@@ -304,64 +304,6 @@ constexpr IqSincosIntermediate __IQNgetCosSinPU(const math::fixed_t<32, uint32_t
 
 
 
-
-template<size_t Q, typename D>
-requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
-math::fixed_t<32, uint32_t> pu_to_uq32(const math::fixed_t<Q, D> x){
-    if constexpr(std::is_signed_v<D>){
-        return math::fixed_t<32, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()) << (32 - Q));
-    } else {
-        return math::fixed_t<32, uint32_t>::from_bits(x.to_bits() << (32 - Q));
-    }
-}
-
-template<size_t Q, typename D>
-requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
-math::fixed_t<32, uint32_t> rad_to_uq32(const math::fixed_t<Q, D> x){
-    constexpr uint64_t uq32_inv_tau_bits = static_cast<uint64_t>(static_cast<long double>(
-        static_cast<uint64_t>(1u) << (32)) / static_cast<long double>(M_PI * 2));
-
-    auto conv_positive = [&]{
-        return math::fixed_t<32, uint32_t>::from_bits(static_cast<uint32_t>((x.to_bits() * uq32_inv_tau_bits) >> Q));
-    };
-
-    auto conv_negtive = [&]{
-        return math::fixed_t<32, uint32_t>::from_bits(~static_cast<uint32_t>((static_cast<uint32_t>(-(x.to_bits())) * uq32_inv_tau_bits) >> Q));
-    };
-
-    if constexpr(std::is_signed_v<D>){
-        if(x >= 0) return conv_positive();
-        return conv_negtive();
-    } else {
-        return conv_positive();
-    }
-}
-
-template<size_t Q, typename D>
-requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
-math::fixed_t<32, uint32_t> deg_to_uq32(const math::fixed_t<Q, D> x){
-    constexpr uint64_t uq32_inv_tau_bits = static_cast<uint64_t>(static_cast<long double>(
-        static_cast<uint64_t>(1u) << (32)) / static_cast<long double>(180 * 2));
-
-    auto conv_positive = [&]{
-        return math::fixed_t<32, uint32_t>::from_bits(static_cast<uint32_t>((x.to_bits() * uq32_inv_tau_bits) >> Q));
-    };
-
-    auto conv_negtive = [&]{
-        return math::fixed_t<32, uint32_t>::from_bits(~static_cast<uint32_t>((static_cast<uint32_t>(-(x.to_bits())) * uq32_inv_tau_bits) >> Q));
-    };
-
-    if constexpr(std::is_signed_v<D>){
-        if(x >= 0) return conv_positive();
-        return conv_negtive();
-    } else {
-        return conv_positive();
-    }
-}
-
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 __fast_inline constexpr 
@@ -619,7 +561,7 @@ void play_func(Fn && fn){
         const auto now_secs = clock::time();
         // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
         // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
-        const auto x = exprimental::pu_to_uq32((now_secs * 2));
+        const auto x = pu_to_uq32((now_secs * 2));
         // const auto x = 6 * frac(t * 2) - 3;
         auto y = std::forward<Fn>(fn)(x);
         DEBUG_PRINTLN_IDLE(
@@ -660,7 +602,7 @@ void sincos_main(){
 
     clock::delay(200ms);
 
-    auto func = [](const iq16 x) -> auto {
+    [[maybe_unused]] auto func = [](const iq16 x) -> auto {
         // return std::sin(x);
         // return exprimental::math::sinpu(static_cast<iq31>(x));
         // return exprimental::cospu(static_cast<iq31>(x));
@@ -719,7 +661,7 @@ void sincos_main(){
         1024,
         // 32,
         [](const iq16 x) -> auto {
-            const auto [s, c] = exprimental::sincos_approx(x);
+            const auto [s, c] = sincospu_approx(x);
             // const auto [s, c] = exprimental::sincospu_approx(x);
             return iq20(s) + iq20(c);
             // return iq20(s);

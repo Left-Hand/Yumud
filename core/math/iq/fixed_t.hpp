@@ -15,6 +15,10 @@
 #define LOG_E (0.434294481903)
 #endif
 
+#ifndef M_PI
+#define M_PI (3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280)
+#endif
+
 #ifndef IQ_DEFAULT_Q
 #define IQ_DEFAULT_Q (size_t(16))
 #endif
@@ -381,6 +385,7 @@ fixed_t<Q, D> operator /(const fixed_t<Q, D> lhs, const std::integral auto rhs) 
 
 
 
+
 template<size_t Q1, size_t Q2, std::integral D1, std::integral D2>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 std::strong_ordering operator <=> (const fixed_t<Q1, D1> & self, const fixed_t<Q2, D2> & other) {
@@ -398,12 +403,20 @@ std::strong_ordering operator <=> (const fixed_t<Q1, D1> & self, const fixed_t<Q
 }
 
 
+template<size_t Q, std::integral D, std::floating_point T>
+[[nodiscard]] __attribute__((always_inline)) consteval 
+std::strong_ordering operator <=> (const fixed_t<Q, D> & self, const T & other) {
+    return (std::bit_cast<D>(self.to_bits()) <=> fixed_t<Q, D>(other));
+}
+
 
 template<size_t Q, std::integral D, std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 std::strong_ordering operator <=> (const fixed_t<Q, D> & self, const T & other) {
     return (std::bit_cast<D>(self.to_bits()) <=> (D(other) << Q));
 }
+
+
 template<size_t Q, std::integral D, std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 std::strong_ordering operator <=> (const T & other, const fixed_t<Q,D> & self){
@@ -679,9 +692,67 @@ template<size_t Q>
     diff = diff / avg_size;
     return diff < epsilon;
 }
+
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+fixed_t<32, uint32_t> pu_to_uq32(const fixed_t<Q, D> x){
+    if constexpr(std::is_signed_v<D>){
+        return fixed_t<32, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()) << (32 - Q));
+    } else {
+        return fixed_t<32, uint32_t>::from_bits(x.to_bits() << (32 - Q));
+    }
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+fixed_t<32, uint32_t> rad_to_uq32(const fixed_t<Q, D> x){
+    constexpr uint64_t uq32_inv_tau_bits = static_cast<uint64_t>(static_cast<long double>(
+        static_cast<uint64_t>(1u) << (32)) / static_cast<long double>(M_PI * 2));
+
+    auto conv_positive = [&]{
+        return fixed_t<32, uint32_t>::from_bits(static_cast<uint32_t>((x.to_bits() * uq32_inv_tau_bits) >> Q));
+    };
+
+    auto conv_negative = [&]{
+        return fixed_t<32, uint32_t>::from_bits(~static_cast<uint32_t>((static_cast<uint32_t>(-(x.to_bits())) * uq32_inv_tau_bits) >> Q));
+    };
+
+    if constexpr(std::is_signed_v<D>){
+        if(x >= 0) return conv_positive();
+        return conv_negative();
+    } else {
+        return conv_positive();
+    }
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+fixed_t<32, uint32_t> deg_to_uq32(const fixed_t<Q, D> x){
+    constexpr uint64_t uq32_inv_tau_bits = static_cast<uint64_t>(static_cast<long double>(
+        static_cast<uint64_t>(1u) << (32)) / static_cast<long double>(180 * 2));
+
+    auto conv_positive = [&]{
+        return fixed_t<32, uint32_t>::from_bits(static_cast<uint32_t>((x.to_bits() * uq32_inv_tau_bits) >> Q));
+    };
+
+    auto conv_negative = [&]{
+        return fixed_t<32, uint32_t>::from_bits(~static_cast<uint32_t>((static_cast<uint32_t>(-(x.to_bits())) * uq32_inv_tau_bits) >> Q));
+    };
+
+    if constexpr(std::is_signed_v<D>){
+        if(x >= 0) return conv_positive();
+        return conv_negative();
+    } else {
+        return conv_positive();
+    }
 }
 
 
+}
 
 namespace std{
     using ymd::math::fixed_t;

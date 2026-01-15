@@ -1,4 +1,5 @@
 #include "iqmath.hpp"
+#include <cmath>
 
 using namespace ymd;
 using namespace ymd::iqmath;
@@ -68,11 +69,15 @@ static_assert(sqrt(iq26(16)) == iq26(4));
 
 static_assert(inv_sqrt(iq16(16)) == iq16(0.25));
 static_assert(inv_sqrt(iq16(25)) == iq16(0.2));
+
+static_assert(inv_sqrt(uq16(16)) == uq16(0.25));
+static_assert(inv_sqrt(uq16(25)) == uq16(0.2));
+
 static_assert(mag(iq16(3), iq16(4)) == iq16(5));
 static_assert(inv_mag(iq16(3), iq16(4)).to_bits() == iq16(0.2).to_bits());
 static_assert(inv_mag(iq16(12), iq16(5)).to_bits() == iq16(1.0/13).to_bits());
 
-static_assert(sinpu(iq16(0)) == iq16(0));
+static_assert(sinpu(iq16(0)) == 0);
 static_assert(sinpu(iq16(0.25)) == std::numeric_limits<iq31>::max());
 static_assert(sinpu(iq16(0.5)) == iq16(0));
 static_assert(sinpu(iq16(1.0)) == iq16(0));
@@ -145,23 +150,33 @@ static_assert(iq16::from_bits(fixed_t<15, int16_t>(0.25).to_bits()).to_bits() ==
 static_assert(iq16::from_bits(fixed_t<15, int16_t>(-0.25).to_bits()).to_bits() == iq15(-0.25).to_bits());
 static_assert(std::is_same_v<tmp::extended_mul_underlying_t<int32_t, int16_t>, int64_t>);
 static_assert(std::is_same_v<tmp::extended_mul_underlying_t<int16_t, int16_t>, int32_t>);
-// namespace mymath{
-// template<typename D>
-// static constexpr D abs(const D x){
-//     return x < 0 ? -x : x;
-// }
-// };
-// template<size_t Q, typename D>
-// static constexpr fixed_t<Q, D> closer_to_zero_(const fixed_t<Q, D> a, const fixed_t<Q, D> b){
-//     if constexpr(std::is_signed_v<D>){
-//         if(myabs(a.to_bits()) < myabs(b.to_bits())){
-//             return a;
-//         }else{
-//             return b;
-//         }
-//     }
-// }
 
+
+
+// static_assert(pu_to_uq32(-1_iq16) == 0);
+static_assert(pu_to_uq32(-0.75_iq16) == 0.25_uq32);
+static_assert(pu_to_uq32(-0.75_iq10) == 0.25_uq32);
+static_assert(pu_to_uq32(-0.75_iq31) == 0.25_uq32);
+static_assert(pu_to_uq32(0.5_uq32) == 0.5_uq32);
+
+
+static_assert(fabs(0.25 - double(rad_to_uq32(uq16((2 * M_PI) * 0.25)))) < 3E-5);
+static_assert(fabs(0.75 - double(rad_to_uq32(uq16((2 * M_PI) * 1000.75)))) < 3E-5);
+static_assert(fabs(0.25 - double(rad_to_uq32(iq16((2 * M_PI) * -100.75)))) < 3E-5);
+
+static_assert(fabs(0.25 - double(rad_to_uq32(uq24((2 * M_PI) * 0.25)))) < 3E-5);
+static_assert(fabs(0.75 - double(rad_to_uq32(uq24((2 * M_PI) * 10.75)))) < 3E-5);
+static_assert(fabs(0.25 - double(rad_to_uq32(iq24((2 * M_PI) * -10.75)))) < 3E-5);
+
+static_assert(fabs(0.25 - double(deg_to_uq32(uq16((360) * 0.25)))) < 3E-5);
+static_assert(fabs(0.75 - double(deg_to_uq32(uq16((360) * 10.75)))) < 3E-5);
+static_assert(fabs(0.25 - double(deg_to_uq32(iq16((360) * -10.75)))) < 3E-5);
+
+static_assert(fabs(0.25 - double(deg_to_uq32(uq10((360) * 0.25)))) < 3E-5);
+static_assert(fabs(0.75 - double(deg_to_uq32(uq10((360) * 100.75)))) < 3E-5);
+static_assert(fabs(0.25 - double(deg_to_uq32(iq10((360) * -100.75)))) < 3E-5);
+
+static_assert(double(std::get<0>(sincospu(0.5_uq32))) == 0);
 
 static_assert(closer_to_zero(iiq32(2), iiq32(7)) == 2);
 static_assert(closer_to_zero(iiq32(-2), iiq32(-3)) == iiq32(-2));
