@@ -79,6 +79,7 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
     math::fixed_t<31, int32_t> exact_sin(Fn && taylor_law) const {
         //获取查找表的校准值
 
+        #if 1
         switch(sect_num){
             case 0: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
                 uq32_x_offset, iq31_sin_coeff,  iq31_cos_coeff));
@@ -98,6 +99,48 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
                 uq32_x_offset, -iq31_sin_coeff, -iq31_cos_coeff));
         }
         __builtin_unreachable();
+        #else
+        int32_t mut_iq31_sin_coeff;
+        int32_t mut_iq31_cos_coeff;
+        switch(sect_num){
+            case 0: 
+                mut_iq31_sin_coeff = iq31_sin_coeff;
+                mut_iq31_cos_coeff = iq31_cos_coeff;
+                break;
+            case 1: 
+                mut_iq31_sin_coeff = iq31_cos_coeff;
+                mut_iq31_cos_coeff = -iq31_sin_coeff;
+                break;
+            case 2: 
+                mut_iq31_sin_coeff = iq31_cos_coeff;
+                mut_iq31_cos_coeff = -iq31_sin_coeff;
+                break;
+            case 3: 
+                mut_iq31_sin_coeff = iq31_sin_coeff;
+                mut_iq31_cos_coeff =  iq31_cos_coeff;
+                break;
+            case 4: 
+                mut_iq31_sin_coeff = -iq31_sin_coeff;
+                mut_iq31_cos_coeff = -iq31_cos_coeff;
+                break;
+            case 5: 
+                mut_iq31_sin_coeff = -iq31_cos_coeff;
+                mut_iq31_cos_coeff =  iq31_sin_coeff;
+                break;
+            case 6: 
+                mut_iq31_sin_coeff = -iq31_cos_coeff;
+                mut_iq31_cos_coeff =  iq31_sin_coeff;
+                break;
+            case 7: 
+                mut_iq31_sin_coeff = -iq31_sin_coeff;
+                mut_iq31_cos_coeff = -iq31_cos_coeff;
+                break;
+            default:
+                __builtin_unreachable();
+        }
+        return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
+                uq32_x_offset, mut_iq31_sin_coeff, mut_iq31_cos_coeff));
+        #endif
     }
 
     template<typename Fn>
@@ -298,6 +341,29 @@ math::fixed_t<32, uint32_t> rad_to_uq32(const math::fixed_t<Q, D> x){
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+math::fixed_t<32, uint32_t> deg_to_uq32(const math::fixed_t<Q, D> x){
+    constexpr uint64_t uq32_inv_tau_bits = static_cast<uint64_t>(static_cast<long double>(
+        static_cast<uint64_t>(1u) << (32)) / static_cast<long double>(180 * 2));
+
+    auto conv_positive = [&]{
+        return math::fixed_t<32, uint32_t>::from_bits(static_cast<uint32_t>((x.to_bits() * uq32_inv_tau_bits) >> Q));
+    };
+
+    auto conv_negtive = [&]{
+        return math::fixed_t<32, uint32_t>::from_bits(~static_cast<uint32_t>((static_cast<uint32_t>(-(x.to_bits())) * uq32_inv_tau_bits) >> Q));
+    };
+
+    if constexpr(std::is_signed_v<D>){
+        if(x >= 0) return conv_positive();
+        return conv_negtive();
+    } else {
+        return conv_positive();
+    }
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
 __fast_inline constexpr 
 math::fixed_t<31, int32_t> sinpu(const math::fixed_t<Q, D> iq_x){
     return __IQNgetCosSinPU<Q>(iq_x.to_bits()).exact_cos(IqSincosIntermediate::exact_laws::taylor_3o);
@@ -367,6 +433,7 @@ static_assert(pu_to_uq32(0.5_uq32) == 0.5_uq32);
 
 
 
+
 static_assert(std::abs(0.25 - double(rad_to_uq32(uq16((2 * M_PI) * 0.25)))) < 3E-5);
 static_assert(std::abs(0.75 - double(rad_to_uq32(uq16((2 * M_PI) * 1000.75)))) < 3E-5);
 static_assert(std::abs(0.25 - double(rad_to_uq32(iq16((2 * M_PI) * -100.75)))) < 3E-5);
@@ -374,6 +441,14 @@ static_assert(std::abs(0.25 - double(rad_to_uq32(iq16((2 * M_PI) * -100.75)))) <
 static_assert(std::abs(0.25 - double(rad_to_uq32(uq24((2 * M_PI) * 0.25)))) < 3E-5);
 static_assert(std::abs(0.75 - double(rad_to_uq32(uq24((2 * M_PI) * 10.75)))) < 3E-5);
 static_assert(std::abs(0.25 - double(rad_to_uq32(iq24((2 * M_PI) * -10.75)))) < 3E-5);
+
+static_assert(std::abs(0.25 - double(deg_to_uq32(uq16((360) * 0.25)))) < 3E-5);
+static_assert(std::abs(0.75 - double(deg_to_uq32(uq16((360) * 10.75)))) < 3E-5);
+static_assert(std::abs(0.25 - double(deg_to_uq32(iq16((360) * -10.75)))) < 3E-5);
+
+static_assert(std::abs(0.25 - double(deg_to_uq32(uq10((360) * 0.25)))) < 3E-5);
+static_assert(std::abs(0.75 - double(deg_to_uq32(uq10((360) * 100.75)))) < 3E-5);
+static_assert(std::abs(0.25 - double(deg_to_uq32(iq10((360) * -100.75)))) < 3E-5);
 
 static_assert(double(std::get<0>(exprimental::sincospu(0.5_uq32))) == 0);
 }
@@ -542,29 +617,30 @@ template<typename Fn>
 void play_func(Fn && fn){
     while(true){
         const auto now_secs = clock::time();
-        // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(TAU) -  1000 * iq16(TAU);
-        // const auto x = iq16(TAU) * iq16(math::frac(now_secs * 2));
+        // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
+        // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
         const auto x = exprimental::pu_to_uq32((now_secs * 2));
         // const auto x = 6 * frac(t * 2) - 3;
         auto y = std::forward<Fn>(fn)(x);
         DEBUG_PRINTLN_IDLE(
             // x, 
             std::get<0>(y),
-            std::sin(TAU * float(iq20(x))),
-            100000 * (float(std::get<0>(y)) - std::sin(TAU * float(iq20(x)))), 
-            std::get<0>(y).to_bits() >> 16, 
-            std::get<1>(y).to_bits() >> 16, 
-            dual_iq31_length_squared(std::get<0>(y), std::get<1>(y)).to_bits() >> 16, 
+            std::get<1>(y)
+            // std::sin(2 * M_PI * float(iq20(x))),
+            // 100000 * (float(std::get<0>(y)) - std::sin(2 * M_PI * float(iq20(x)))), 
+            // std::get<0>(y).to_bits() >> 16, 
+            // std::get<1>(y).to_bits() >> 16, 
+            // dual_iq31_length_squared(std::get<0>(y), std::get<1>(y)).to_bits() >> 16, 
 
-            std::get<2>(y).to_bits() >> 16, 
-            std::get<3>(y).to_bits() >> 16, 
+            // std::get<2>(y).to_bits() >> 16, 
+            // std::get<3>(y).to_bits() >> 16, 
 
-            dual_iq31_length_squared(std::get<2>(y), std::get<3>(y)).to_bits(), 
-            ((std::get<0>(y).to_bits() >> 16) - (std::get<2>(y).to_bits() >> 16)),
-            ((std::get<1>(y).to_bits() >> 16) - (std::get<3>(y).to_bits() >> 16)),
+            // dual_iq31_length_squared(std::get<2>(y), std::get<3>(y)).to_bits(), 
+            // ((std::get<0>(y).to_bits() >> 16) - (std::get<2>(y).to_bits() >> 16)),
+            // ((std::get<1>(y).to_bits() >> 16) - (std::get<3>(y).to_bits() >> 16)),
 
             // dual_iq31_length_squared((std::get<0>(y) - std::get<2>(y)),
-            (std::get<1>(y) - std::get<3>(y)).to_bits()
+            // (std::get<1>(y) - std::get<3>(y)).to_bits()
         );
         clock::delay(1ms);
     }
@@ -578,7 +654,8 @@ void sincos_main(){
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(4);
+    // DEBUGGER.set_eps(4);
+    DEBUGGER.set_eps(6);
 
 
     clock::delay(200ms);
@@ -590,7 +667,7 @@ void sincos_main(){
         // return exprimental::sqrt(uuq16::from_bits(x.to_bits()) << 16);
         // return sqrt(uuq16::from_bits(x.to_bits()) << 16);
         // return sqrt(uq16::from_bits(x.to_bits()) << 16);
-        const auto [_s, _c] = exprimental::sincospu(x);
+        const auto [_s, _c] = exprimental::sincospu_approx(x);
         // const auto s = iq16(_s);
         // const auto c = iq16(_c);
         const auto [_s2, _c2] = math::sincospu(x);
@@ -608,8 +685,8 @@ void sincos_main(){
         //     iq16::from_bits(static_cast<int32_t>(std::bit_cast<uint32_t>(y_bits)))
         // );
         const auto res = std::make_tuple(
-            _s,
-            _c,
+            10 * iq16(_s),
+            10 * iq16(_c),
             _s2, 
             _c2
         );
@@ -626,7 +703,7 @@ void sincos_main(){
     // PANIC{has_b_clz};
     // PANIC{riscv_has_native_ctz};
     // PANIC{riscv_has_native_ctz};
-    // play_func(func);
+    play_func(func);
     if(false){
         uq32 x = 0;
         iq24 y = 0;
@@ -643,12 +720,16 @@ void sincos_main(){
         // 32,
         [](const iq16 x) -> auto {
             const auto [s, c] = exprimental::sincos_approx(x);
+            // const auto [s, c] = exprimental::sincospu_approx(x);
             return iq20(s) + iq20(c);
             // return iq20(s);
         },
         [](const iq16 x) -> auto {
-            const auto [s, c] = math::sincos(x);
-            return iq20(s) + iq20(c);
+            // const auto [s, c] = math::sincos(x);
+            const auto fx = float(x);
+            const auto s = std::sin(fx);
+            const auto c = std::cos(fx);
+            return iq20::from(s) + iq20::from(c);
             // return iq20(s);
         }
     );

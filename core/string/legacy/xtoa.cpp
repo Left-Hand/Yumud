@@ -4,7 +4,7 @@
 using namespace ymd;
 using namespace ymd::strconv;
 
-static constexpr  uint32_t scale_map[] = {
+static constexpr  uint32_t pow10_table[] = {
     1UL, 
     10UL, 
     100UL, 
@@ -12,8 +12,8 @@ static constexpr  uint32_t scale_map[] = {
 
     10000UL, 
     100000UL, 
-    // 1000000UL, 
-    // 10000000UL, 
+    1000000UL, 
+    10000000UL, 
     
     // 100000000UL,
     // 1000000000UL
@@ -36,10 +36,10 @@ __fast_inline constexpr size_t _get_scalar(uint64_t value, const uint8_t radix){
 
 template<integral T>
 static size_t _itoa_impl(T value, char * str, uint8_t radix){
-    const bool minus = value < 0;
-    if(minus) value = -value;
+    const bool is_negative = value < 0;
+    if(is_negative) value = -value;
 
-    const size_t len = _get_scalar(value, radix) + minus;
+    const size_t len = _get_scalar(value, radix) + is_negative;
     str[len] = 0;
     int i = len - 1;
 
@@ -50,7 +50,7 @@ static size_t _itoa_impl(T value, char * str, uint8_t radix){
         i--;
     } while((value /= radix) > 0 and (i >= 0));
 
-    if(minus) {
+    if(is_negative) {
         str[0] = '-';
     }
 
@@ -58,43 +58,55 @@ static size_t _itoa_impl(T value, char * str, uint8_t radix){
 }
 
 
-//TODO eps为5时计算会溢出 暂时限制eps=5的情况
-size_t strconv::_qtoa_impl(int32_t value, char * str, uint8_t eps, const uint8_t _Q){
-    //TODO 支持除了Q16格式外其他格式转换到字符串的函数 
-    static constexpr  size_t Q = 16;
+size_t strconv::_qtoa_impl(int32_t value_bits, char * str, uint8_t eps, const uint8_t Q){
+    // 安全限制eps，确保不超出表格范围
+    constexpr size_t max_eps = std::size(pow10_table) - 1;
+    eps = MIN(eps, static_cast<uint8_t>(max_eps));
 
-
-    value = RSHIFT(value, _Q - Q);
-    eps = MIN(eps, 5);
-
-	const bool minus = value < 0;
-    const uint32_t abs_value = ABS(value);
-    const uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
+    const bool is_negative = value_bits < 0;
+    const uint32_t abs_value = ABS(value_bits);
+    
+    // 为任意Q生成掩码
+    const uint64_t lower_mask = (Q >= 31) ? 
+        0x7fffffffu :  // 对于Q31，特殊处理以避免左移32位
+        ((Q == 0) ? 0 : ((1ULL << Q) - 1));
 
     const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
+    const uint32_t scale = pow10_table[eps];
 
-    const uint32_t scale = scale_map[eps];
-
-    const uint32_t fs = frac_part * scale;
+    // 使用64位整数进行计算，避免溢出
+    const uint64_t fs = (uint64_t)frac_part * scale;
     
-    const bool upper_round = (fs & lower_mask) >= (lower_mask >> 1);
+    // 计算舍入（基于小数部分的精度）
+    const bool need_upper_round = (fs & lower_mask) >= (lower_mask >> 1);
 
-    const uint32_t frac_int = (fs >> Q) + upper_round;
-    const uint32_t int_part = (uint32_t(abs_value) >> Q) + bool(frac_int >= scale);
+    // 右移Q位提取小数部分（注意处理Q=0的情况）
+    const uint64_t shifted_fs = (Q == 0) ? fs : (fs >> Q);
+    uint64_t frac_int64 = shifted_fs + (need_upper_round ? 1 : 0);
+    
+    // 检查是否需要进位到整数部分
+    const bool carry_to_int = (frac_int64 >= scale);
+    const uint32_t int_part = (uint32_t(abs_value) >> Q) + (carry_to_int ? 1 : 0);
+    
+    // 如果发生进位，调整小数部分
+    const uint64_t adjusted_frac_int64 = carry_to_int ? (frac_int64 - scale) : frac_int64;
+    const uint32_t adjusted_frac_int = static_cast<uint32_t>(adjusted_frac_int64);
 
-    if(minus){
+    size_t ind = 0;
+    if(is_negative){
         str[0] = '-';
+        ind++;
     }
 
-    const auto end = _itoa_impl<int>(int_part, str + minus, 10) + minus;
+    ind += _itoa_impl<int>(int_part, str + ind, 10);
 
     if(eps){
-        str[end] = '.';
-        //add dot to seprate
-        itoas(frac_int, str + end + 1, 10, eps);
+        str[ind] = '.';
+        // 使用调整后的小数部分
+        itoas(adjusted_frac_int, str + ind + 1, 10, eps);
     }
 
-    return end + 1 + eps;
+    return ind + (eps ? (1 + eps) : 0);
 }
 
 size_t strconv::itoa(int32_t value, char *str, uint8_t radix){

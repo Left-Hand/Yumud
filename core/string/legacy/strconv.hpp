@@ -60,7 +60,7 @@ math::fixed_t<Q, int32_t> atoq(const char * str, const size_t len){
 size_t _qtoa_impl(const int32_t value_, char * str, uint8_t eps, const uint8_t _Q);
 
 template<size_t Q>
-size_t qtoa(const math::fixed_t<Q, int32_t> & qv, char * str, uint8_t eps){
+size_t qtoa(const math::fixed_t<Q, int32_t> qv, char * str, uint8_t eps){
     return _qtoa_impl(qv.to_bits(), str, eps, Q);
 }
 
