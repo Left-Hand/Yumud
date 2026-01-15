@@ -17,6 +17,7 @@ struct UvwCoord{
     T w;
 
     static constexpr UvwCoord<T> ZERO = {T(0), T(0), T(0)};
+    static constexpr UvwCoord<T> HALF = {T(0.5), T(0.5), T(0.5)};
     enum class Axis:uint8_t{U, V, W};
 
     template<Axis A1, Axis A2>

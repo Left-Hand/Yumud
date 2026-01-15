@@ -26,10 +26,10 @@ namespace ymd::drivers{
 
 // class ABEncoderTimer:public ABEncoderIntf{
 // protected:
-//     GenericTimer & inst;
+//     GeneralTimer & inst;
 //     const uint lines = 1 << 4;
 // public:
-//     ABEncoderTimer(GenericTimer & _inst):inst(_inst){;}
+//     ABEncoderTimer(GeneralTimer & _inst):inst(_inst){;}
 //     void init() override{
 //         inst.initAsEncoder();
 //     }

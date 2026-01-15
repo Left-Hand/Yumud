@@ -1,5 +1,5 @@
 #include "dsp_lpf.hpp"
-
+#include "dsp_vec.hpp"
 
 using namespace ymd;
 using namespace ymd::dsp;
@@ -29,3 +29,8 @@ static_assert(is_result_nearly_equal(
 }
 
 }
+
+static_assert(dot2v2(1_iq20, 2_iq20, 3_iq20, 4_iq20) == 14_iq20);
+static_assert(dot2v2(1_iq16, 2_iq16, 3_iq16, 4_iq16) == 14_iq16);
+static_assert(cross2v2(1_iq20, 2_iq20, 3_iq20, 4_iq20) == -2_iq20);
+static_assert(cross2v2(1_iq16, 2_iq16, 3_iq16, 4_iq16) == -2_iq16);

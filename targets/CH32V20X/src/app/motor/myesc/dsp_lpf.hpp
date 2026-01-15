@@ -93,17 +93,15 @@ struct LpfCoeffs{
 
 
 //y[n] = alpha * x[n] + beta * y[n-1]
-template<size_t Q>
-static constexpr math::fixed_t<Q, int32_t> lpf_exprimetal(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_input){
-    // constexpr uint32_t alpha_bits = static_cast<uint32_t>((0.03) * (uint64_t(1u) << 32));
-    constexpr auto alpha = calc_lpf_alpha_uq32(16000, 800).unwrap();
-    constexpr auto beta = math::fixed_t<32, uint32_t>::from_bits(~alpha.to_bits());
-
-    int64_t bits = static_cast<int64_t>(x_input.to_bits()) * alpha.to_bits();
-    bits += static_cast<int64_t>(x_state.to_bits()) * beta.to_bits();
-
-    return math::fixed_t<Q, int32_t>::from_bits(
-        static_cast<int32_t>(bits >> 32)
+template<size_t Q, typename D>
+static constexpr math::fixed_t<Q, D> lpf_exprimetal(math::fixed_t<Q, D> x_state, const math::fixed_t<Q, D> x_new, const uq32 alpha){
+    const uq32 beta = uq32::from_bits(~alpha.to_bits());
+    using acc_t = std::conditional_t<std::is_signed_v<D>, int64_t, uint64_t>;
+    return math::fixed_t<Q, D>::from_bits(
+        static_cast<D>(
+            ((static_cast<acc_t>(x_state.to_bits()) * alpha.to_bits()) 
+            + (static_cast<acc_t>(x_new.to_bits()) * beta.to_bits())) >> 32
+        )
     );
 }
 

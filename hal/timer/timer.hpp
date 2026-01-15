@@ -230,13 +230,13 @@ protected:
     #endif
 };
 
-class [[nodiscard]] GenericTimer:public BasicTimer{
+class [[nodiscard]] GeneralTimer:public BasicTimer{
 protected:
     TimerOC channels_[4];
 private:
     void on_interrupt();
 public:
-    explicit GenericTimer(void * inst):
+    explicit GeneralTimer(void * inst):
         BasicTimer(inst),
         channels_{
             TimerOC(inst_, TimerChannel::ChannelSelection::CH1),
@@ -258,6 +258,9 @@ public:
         return channels_[I - 1];
     }
 
+
+    [[nodiscard]] bool is_up_counting();
+
     #ifdef TIM2_PRESENT
     DEF_GENERIC_TIMER_FRIEND_DECL(2)
     #endif
@@ -277,14 +280,14 @@ public:
 
 
 
-class [[nodiscard]] AdvancedTimer:public GenericTimer{
+class [[nodiscard]] AdvancedTimer:public GeneralTimer{
 protected:
     TimerOCN n_channels_[3];
 public:
     using LockLevel = TimerBdtrLockLevel;
 
     explicit AdvancedTimer(void * inst):
-            GenericTimer(inst),
+            GeneralTimer(inst),
             n_channels_{
                 TimerOCN(inst_, TimerChannel::ChannelSelection::CH1N),
                 TimerOCN(inst_, TimerChannel::ChannelSelection::CH2N),
@@ -301,6 +304,7 @@ public:
     template<size_t I>
     requires(I >= 1 and I <= 4)
     TimerOCN & ocn(){return n_channels_[I - 1];}
+
 
     #ifdef TIM1_PRESENT
     DEF_ADVANCED_TIMER_FRIEND_DECL(1);

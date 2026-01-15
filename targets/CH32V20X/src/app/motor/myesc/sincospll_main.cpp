@@ -63,6 +63,7 @@ void sincospll_main(){
     Angular<uq32> computed_angle_ = Zero;
 
     iq16 err_filtered_ = Zero;
+    static constexpr auto LPF_ALPHA = dsp::calc_lpf_alpha_uq32(FOC_FREQ, PLL_PI_FC).unwrap();
     auto isr_fn = [&]{
         {//simulate input
             [[maybe_unused]] const iq16 now_secs = clock::time();
@@ -91,8 +92,8 @@ void sincospll_main(){
             const auto measured_sine = iq16(sine_) + noise_sine_;
             const auto measured_cosine = iq16(cosine_) + noise_cosine_;
 
-            normalized_sine_ = dsp::lpf_exprimetal(normalized_sine_, measured_sine);
-            normalized_cosine_ = dsp::lpf_exprimetal(normalized_cosine_, measured_cosine);
+            normalized_sine_ = dsp::lpf_exprimetal(normalized_sine_, measured_sine, LPF_ALPHA);
+            normalized_cosine_ = dsp::lpf_exprimetal(normalized_cosine_, measured_cosine, LPF_ALPHA);
             // normalized_cosine_ = normalized_cosine_ * 0.9_iq16;
             // normalized_cosine_ = normalized_cosine_ + 0.1_iq16;
         }
@@ -106,7 +107,7 @@ void sincospll_main(){
 
         const auto [sine_, cosine_] = computed_angle_.sincos();
         const iq16 e = ((cosine_) * normalized_sine_- (sine_) * normalized_cosine_);
-        err_filtered_ = dsp::lpf_exprimetal(err_filtered_, e);
+        err_filtered_ = dsp::lpf_exprimetal(err_filtered_, e, LPF_ALPHA);
         // const iq16 e = (simulated_angle_.to_turns() - computed_angle_.to_turns());
         // computed_angluar_speed_ = Angular<iq16>::from_turns(1);
         computed_angluar_speed_ = computed_angluar_speed_.from_turns(

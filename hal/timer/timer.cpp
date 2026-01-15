@@ -415,11 +415,8 @@ Result<TimerPinSetuper::Next, TimerPinSetuper::Error> TimerPinSetuper::alter_to_
         case ChannelSelection::CH4:
             tim_to_ch4_pin(inst_, remap_).afpp();
             break;
-        case ChannelSelection::CH1N:{
-            auto pin = tim_to_ch1n_pin(inst_, remap_);
-            // PANIC{pin.pin_nth()};
-            pin.afpp();
-        }
+        case ChannelSelection::CH1N:
+            tim_to_ch1n_pin(inst_, remap_).afpp();
             break;
         case ChannelSelection::CH2N:
             tim_to_ch2n_pin(inst_, remap_).afpp();
@@ -485,6 +482,7 @@ void BasicTimer::set_ckd(const uint8_t ckd){
 
     SDK_INST(inst_)->CTLR1 = tmpcr1;
 }
+
 
 void BasicTimer::set_count_mode(const TimerCountMode mode){
     auto tmpcr1 = SDK_INST(inst_)->CTLR1;
@@ -565,7 +563,7 @@ void BasicTimer::enable(const Enable en){
     }
 }
 
-void GenericTimer::init_as_encoder(const CountMode mode){
+void GeneralTimer::init_as_encoder(const CountMode mode){
     this->enable_rcc(EN);
 
     {
@@ -605,23 +603,29 @@ void GenericTimer::init_as_encoder(const CountMode mode){
     TIM_Cmd(SDK_INST(inst_), ENABLE);
 }
 
-void GenericTimer::enable_single_shot(const Enable en){
+bool GeneralTimer::is_up_counting(){
+    auto tmpcr1 = SDK_INST(inst_)->CTLR1;
+    return (tmpcr1 & TIM_DIR) == 0;
+}
+
+
+void GeneralTimer::enable_single_shot(const Enable en){
     TIM_SelectOnePulseMode(SDK_INST(inst_), (en == EN) ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
 }
 
-void GenericTimer::set_trgo_source(const TrgoSource source){
+void GeneralTimer::set_trgo_source(const TrgoSource source){
     TIM_SelectOutputTrigger(SDK_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
 }
 
-void GenericTimer::set_trgi_source(const TrgiSource source){
+void GeneralTimer::set_trgi_source(const TrgiSource source){
     TIM_SelectInputTrigger(SDK_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
 }
 
-void GenericTimer::set_slave_mode(const SlaveMode slave_mode){
+void GeneralTimer::set_slave_mode(const SlaveMode slave_mode){
     TIM_SelectSlaveMode(SDK_INST(inst_), std::bit_cast<uint8_t>(slave_mode));
 }
 
-void GenericTimer::enable_master_slave_mode(const Enable en){
+void GeneralTimer::enable_master_slave_mode(const Enable en){
     TIM_SelectMasterSlaveMode(SDK_INST(inst_), 
         en == EN ? TIM_MasterSlaveMode_Enable : TIM_MasterSlaveMode_Disable);
 }
@@ -671,7 +675,7 @@ void AdvancedTimer::on_cc_interrupt(){
     TRY_ACCEPT_AND_CLEAR_IT(IT::CC4);
 }
 
-void GenericTimer::on_interrupt(){
+void GeneralTimer::on_interrupt(){
     const uint16_t itstatus = SDK_INST(inst_)->INTFR;
 
     TRY_ACCEPT_AND_CLEAR_IT(IT::Update);
@@ -694,19 +698,19 @@ AdvancedTimer timer1{TIM1};
 #endif
 
 #ifdef TIM2_PRESENT
-GenericTimer timer2{TIM2};
+GeneralTimer timer2{TIM2};
 #endif
 
 #ifdef TIM3_PRESENT
-GenericTimer timer3{TIM3};
+GeneralTimer timer3{TIM3};
 #endif
 
 #ifdef TIM4_PRESENT
-GenericTimer timer4{TIM4};
+GeneralTimer timer4{TIM4};
 #endif
 
 #ifdef TIM5_PRESENT
-GenericTimer timer5{TIM5};
+GeneralTimer timer5{TIM5};
 #endif
 
 #ifdef TIM6_PRESENT

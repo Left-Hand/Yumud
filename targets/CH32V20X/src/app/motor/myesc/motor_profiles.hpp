@@ -24,6 +24,7 @@ enum class [[nodiscard]] MagneticStructure{
 
 // static constexpr uint32_t CHOPPER_FREQ = 32_KHz;
 static constexpr uint32_t CHOPPER_FREQ = 25_KHz;
+// static constexpr uint32_t CHOPPER_FREQ = 10_KHz;
 static constexpr uint32_t FOC_FREQ = CHOPPER_FREQ;
 
 static constexpr auto BUS_VOLT = iq16(12.0);

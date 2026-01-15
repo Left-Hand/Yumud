@@ -32,12 +32,14 @@
 #include "digipw/ctrl/pi_controller.hpp"
 
 
-#include "drivers/GateDriver/uvw_pwmgen.hpp"
-
 #include "linear_regression.hpp"
 #include "motor_profiles.hpp"
 
 #include "core/sdk.hpp"
+
+
+#include "dsp_lpf.hpp"
+#include "dsp_vec.hpp"
 
 using namespace ymd;
 
@@ -111,6 +113,34 @@ struct LrSeriesCurrentRegulatorConfig{
 #endif
 
 
+template<size_t FC, size_t Q>
+static constexpr math::fixed_t<Q, int32_t> lpf_specified_fc(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
+    static constexpr auto ALPHA = dsp::calc_lpf_alpha_uq32(FOC_FREQ, FC).unwrap();
+    return lpf_exprimetal(x_state, x_new, ALPHA);
+}
+
+
+template<size_t Q>
+static constexpr math::fixed_t<Q, int32_t> lpf_10hz(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
+    return lpf_specified_fc<10>(x_state, x_new);
+}
+
+template<size_t Q>
+static constexpr math::fixed_t<Q, int32_t> lpf_100hz(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
+    return lpf_specified_fc<100>(x_state, x_new);
+}
+
+template<size_t Q>
+static constexpr math::fixed_t<Q, int32_t> lpf_1000hz(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
+    return lpf_specified_fc<1000>(x_state, x_new);
+}
+
+template<size_t Q>
+static constexpr math::fixed_t<Q, int32_t> lpf_allpass(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
+    return x_new;
+}
+
+
 static constexpr auto current_regulator_cfg = LrSeriesCurrentRegulatorConfig{
     .fs = FOC_FREQ,
     .fc = MotorProfile::CURRENT_CUTOFF_FREQ,
@@ -129,8 +159,8 @@ static void init_adc(){
         },{
 
             {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T13_5},
-            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
-            {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T13_5},
+            // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
+            // {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T13_5},
 
             // {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T7_5},
             // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
@@ -147,57 +177,14 @@ static void init_adc(){
 
 using namespace ymd::math;
 
-template<size_t Q>
-static constexpr fixed_t<Q, int32_t> lpf_exprimetal(fixed_t<Q, int32_t> x_state, const fixed_t<Q, int32_t> x_new, const uq32 alpha){
-    const uq32 beta = uq32::from_bits(~alpha.to_bits());
-    return fixed_t<Q, int32_t>::from_bits(
-        static_cast<int32_t>(
-            ((static_cast<int64_t>(x_state.to_bits()) * alpha.to_bits()) 
-            + (static_cast<int64_t>(x_new.to_bits()) * beta.to_bits())) >> 32
-        )
-    );
-}
 
-template<size_t Q>
-static constexpr fixed_t<Q, int32_t> lpf_10hz(fixed_t<Q, int32_t> x_state, const fixed_t<Q, int32_t> x_new){
-    return lpf_exprimetal(x_state, x_new, uq32::from_bits(static_cast<uint32_t>((0.996) * (uint64_t(1u) << 32))));
-}
-
-template<size_t Q>
-static constexpr fixed_t<Q, int32_t> lpf_100hz(fixed_t<Q, int32_t> x_state, const fixed_t<Q, int32_t> x_new){
-    return lpf_exprimetal(x_state, x_new, uq32::from_bits(static_cast<uint32_t>((0.96) * (uint64_t(1u) << 32))));
-}
-
-template<size_t Q>
-static constexpr fixed_t<Q, int32_t> lpf_1000hz(fixed_t<Q, int32_t> x_state, const fixed_t<Q, int32_t> x_new){
-    return lpf_exprimetal(x_state, x_new, uq32::from_bits(static_cast<uint32_t>((0.9) * (uint64_t(1u) << 32))));
-}
-
-template<size_t Q>
-static constexpr fixed_t<Q, int32_t> lpf_allpass(fixed_t<Q, int32_t> x_state, const fixed_t<Q, int32_t> x_new){
-    return lpf_exprimetal(x_state, x_new, uq32::from_bits(static_cast<uint32_t>((0.5) * (uint64_t(1u) << 32))));
-}
-
-//a * b + c * d
-template<size_t Q1, typename D1, size_t Q2, typename D2, typename ED = tmp::extended_mul_underlying_t<D1, D2>>
-static constexpr math::fixed_t<Q1, D1> dot2v2(
-    const math::fixed_t<Q1, D1> & a, const fixed_t<Q2, D2> & b,
-    const math::fixed_t<Q1, D1> & c, const fixed_t<Q2, D2> & d
-){
-    ED bits = 0;
-    bits += static_cast<ED>(a.to_bits()) * static_cast<ED>(b.to_bits());
-    bits += static_cast<ED>(c.to_bits()) * static_cast<ED>(d.to_bits());
-    return math::fixed_t<Q1, D1>::from_bits(static_cast<D1>(bits >> Q2));
-}
-
-static_assert(dot2v2(1_iq20, 2_iq20, 3_iq20, 4_iq20) == 14_iq20);
-static_assert(dot2v2(1_iq16, 2_iq16, 3_iq16, 4_iq16) == 14_iq16);
 
 void myesc_main(){
     DBG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
         // .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
-        .baudrate = hal::NearestFreq(6000000),
+        // .baudrate = hal::NearestFreq(6000000),
+        .baudrate = hal::NearestFreq(576000),
         .tx_strategy = CommStrategy::Blocking,
     });
 
@@ -222,12 +209,16 @@ void myesc_main(){
     timer.init({
         .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
         .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2), 
-        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
+        // .count_mode = hal::TimerCountMode::CenterAlignedDualTrig,
+        .count_mode = hal::TimerCountMode::CenterAlignedUpTrig,
+        // .count_mode = hal::TimerCountMode::CenterAlignedDownTrig,
+        // .count_mode = hal::TimerCountMode::Up
     })  .unwrap()
         .alter_to_pins({
             hal::TimerChannelSelection::CH1,
             hal::TimerChannelSelection::CH2,
             hal::TimerChannelSelection::CH3,
+            hal::TimerChannelSelection::CH4,
 
             hal::TimerChannelSelection::CH1N,
             hal::TimerChannelSelection::CH2N,
@@ -237,6 +228,8 @@ void myesc_main(){
 
     // timer.enable_cc_ctrl_sync(EN);
     timer.enable_arr_sync(EN);
+    // timer.set_trgo_source(hal::TimerTrgoSource::OC4R);
+    timer.set_trgo_source(hal::TimerTrgoSource::Update);
 
     auto & pwm_u_ = timer.oc<1>(); 
     auto & pwm_v_ = timer.oc<2>(); 
@@ -256,11 +249,16 @@ void myesc_main(){
     pwm_w_.enable_cvr_sync(EN);
 
     timer.oc<4>().init(Default);
-    timer.oc<4>().cvr() = timer.arr() - 10;
+    timer.oc<4>().enable_cvr_sync(DISEN);
+    // timer.oc<4>().cvr() = timer.arr() - 10;
+    timer.oc<4>().cvr() = 10;
+    // timer.oc<4>().cvr() = timer.arr() / 2;
 
     timer.oc<4>().enable_output(EN);
-    timer.set_trgo_source(hal::TimerTrgoSource::Update);
 
+
+    const auto full_arr = timer.arr();
+    // constexpr auto full_arr = 7200;
     auto set_uvw_dutycycle = [&]<typename T>(const T & dutycycle){
         // timer.enable_udis(DISEN);
         pwm_u_.set_dutycycle((dutycycle.template get<0>()));
@@ -302,11 +300,15 @@ void myesc_main(){
     //确保pwm完全停止
     clock::delay(20ms);
     // #endregion 
+    auto timming_watch_pin_ = hal::PA<12>();
+    timming_watch_pin_.outpp();
 
     // #region 配置编码器
     
     auto mag_encoder_cs_pin_ = hal::PB<12>();
     mag_encoder_cs_pin_.outpp();
+
+
     auto & spi = hal::spi2;
 
     spi.init({
@@ -338,6 +340,8 @@ void myesc_main(){
     auto drv8323_vds_pin_       = hal::PB<3>();
     auto drv8323_idrive_pin_    = hal::PB<5>();
     auto drv8323_gain_pin_      = hal::PA<15>();
+
+
 
 
     drv8323_mode_pin_.outpp(LOW);      //6x pwm
@@ -409,12 +413,13 @@ void myesc_main(){
 
     static constexpr iq20 HFI_VOLT_LIMIT = MotorProfile::PHASE_RESISTANCE * 1.4_iq20;
     // static constexpr iq20 HFI_VOLT = MIN((, 2);
-    static constexpr iq20 HFI_VOLT = 1;
+    // static constexpr iq20 HFI_VOLT = 1;
+    static constexpr iq20 HFI_VOLT = 0;
     static iq20 prev_sample = Zero;
     static size_t hfi_idx = 0;
     static std::array<iq20, HFI_N> hfi_buffer;
     static bool is_samp_n = false;
-    Microseconds exe_us_ = 0us;
+    Microseconds exe_elapsed_ = 0us;
 
     Leso leso = Leso{
         MotorProfile::leso_coeffs
@@ -508,7 +513,7 @@ void myesc_main(){
     iq20 hfi_response_real_bin2_ = Zero;
     iq20 hfi_response_imag_bin2_ = Zero;
     Microseconds last_isr_tick = 0us;
-    Microseconds isr_period = 0us;
+    Microseconds exe_duration_ = 0us;
     std::tuple<uint32_t, uint32_t, uint32_t> uvw_curr_bits_offset_acc_ = {0, 0, 0};
     std::tuple<uint16_t, uint16_t, uint16_t> uvw_curr_bits_offset_ = {0, 0, 0};
 
@@ -637,7 +642,7 @@ void myesc_main(){
         #endif
 
         const auto elec_rotation = Rotation2<iq16>::from_angle(elec_angle);
-        const auto elec_omega = rotor_rotation_state_var_.x2 * MotorProfile::POLE_PAIRS;
+        [[maybe_unused]] const auto elec_omega = rotor_rotation_state_var_.x2 * MotorProfile::POLE_PAIRS;
         //#endregion
 
         //#region 位速合成力矩
@@ -811,8 +816,8 @@ void myesc_main(){
 
         // const auto dq_volt = (generate_dq_volt_by_hfi()).clamp(MODU_VOLT_LIMIT);
         // const auto dq_volt = (generate_dq_volt_by_pi_ctrl()).clamp(MotorProfile::MODU_VOLT_LIMIT);
-        const auto dq_volt = (generate_dq_volt_by_pi_ctrl()).clamp(MotorProfile::MODU_VOLT_LIMIT);
-        // const auto dq_volt = DqCoord<iq20>{1.0_iq20, 0};
+        // const auto dq_volt = (generate_dq_volt_by_pi_ctrl()).clamp(MotorProfile::MODU_VOLT_LIMIT);
+        const auto dq_volt = DqCoord<iq20>{1.0_iq20, 0};
         // const auto dq_volt = generate_dq_volt_by_constant_voltage().clamp(MotorProfile::MODU_VOLT_LIMIT);
 
         [[maybe_unused]] const auto hfi_alphabeta_volt = generate_alpha_beta_volt_by_hfi();
@@ -877,13 +882,42 @@ void myesc_main(){
         openloop_elec_angle_ = openloop_elec_angle;
         encoder_elec_angle_ = encoder_elec_angle;
     };
+    static size_t trig_prog = 0;
     auto jeoc_isr = [&]{ 
-        const auto begin_us = clock::micros();
-        isr_period = begin_us - last_isr_tick;
-        last_isr_tick = begin_us;
-        ctrl_isr();
-        const auto end_us = clock::micros();
-        exe_us_ = end_us - begin_us;
+        timming_watch_pin_.set_high();
+
+        if(timer.is_up_counting()){
+            switch(trig_prog){
+                case 0:{
+                    timer.oc<4>().set_cvr(full_arr * 1 / 4);
+
+                    trig_prog = 1;
+                    break;
+                }
+                case 1:{
+                    timer.oc<4>().set_cvr(full_arr * 2 / 4);
+
+                    trig_prog = 2;
+                    break;
+                }
+                case 2:{
+                    timer.oc<4>().set_cvr(full_arr * 3 / 4);
+                    trig_prog = 3;
+                    break;
+                }
+                case 3:{
+                    timer.oc<4>().set_cvr(10);
+                    trig_prog = 0;
+                    break;
+                }
+            }
+        }
+
+
+        // ctrl_isr();
+        // for(volatile size_t i = 0; i < 30; i++);
+        for(volatile size_t i = 0; i < 6; i++);
+        timming_watch_pin_.set_low();
     };
 
     hal::adc1.register_nvic({0,0}, EN);
@@ -938,7 +972,7 @@ void myesc_main(){
     //     }
     // });
 
-
+    set_uvw_dutycycle(UvwCoord<iq16>::HALF);
     timer.start();
 
     while(true){
@@ -956,9 +990,8 @@ void myesc_main(){
         // const auto power_u = ((uvw_dutycycle_.u - 0.5_iq16)* uvw_curr_.u);
         // const auto power_v = ((uvw_dutycycle_.v - 0.5_iq16)* uvw_curr_.v);
         // const auto power_w = ((uvw_dutycycle_.w - 0.5_iq16)* uvw_curr_.w);
-        static size_t i = 0;
-        i = (i + 1) & 0x1f;
         if(true)DEBUG_PRINTLN(
+            trig_prog,
             // SINCOS32_2_TABLE[i][0].to_bits(),
             // SINCOS32_2_TABLE[i][1].to_bits(),
             // openloop_elec_angle_.unsigned_normalized().to_turns(),
@@ -970,7 +1003,7 @@ void myesc_main(){
             // alphabeta_volt_,
             // uvw_curr_bits_offset_,
             // dq_volt_,
-            hfi_alphabeta_volt_,
+            // hfi_alphabeta_volt_,
             // alphabeta_curr_,
             // busbar_current_,
             // power_u, power_v, power_w,
@@ -980,8 +1013,8 @@ void myesc_main(){
             // (dq_volt_.d * dq_curr_.q + dq_volt_.q * dq_curr_.d) / 8,
             // hfi_response_real_bin1_,
             // hfi_response_imag_bin1_,
-            hfi_response_real_bin2_,
-            hfi_response_imag_bin2_,
+            // hfi_response_real_bin2_,
+            // hfi_response_imag_bin2_,
             // alphabeta_curr_,
             // (1 / iq16(hfi_response_real_bin0_ + length_hfi_response)) * (1000000 / FOC_FREQ),
             // (1 / iq16(hfi_response_real_bin0_ - length_hfi_response)) * (1000000 / FOC_FREQ),
@@ -1006,9 +1039,13 @@ void myesc_main(){
             // pwm_w_.cvr(),
             // timer.oc<4>().cvr(),
             // smo_sensorless_ob.angle().to_turns(),
-
-            // isr_period.count(),
-            exe_us_.count()
+            pwm_u_.cvr(),
+            pwm_v_.cvr(),
+            pwm_w_.cvr(),
+            full_arr,
+            // exe_duration_.count(),
+            exe_elapsed_.count(),
+            exe_duration_.count()
             // alphabeta_volt_,
             // alphabeta_curr_
             // uvw_curr_.u,
@@ -1097,12 +1134,12 @@ void myesc_main(){
                 // flux_sensorless_ob.angle().to_turns()
                 // flux_sensorless_ob.V_alphabeta_last_
                 // smo_sensorless_ob.angle().to_turns(),
-                // exe_us_.count(),
+                // exe_elapsed_.count(),
 
                 // flux_sensorless_ob.angle().to_turns(),
                 // lbg_sensorless_ob.angle().to_turns(),
                 // smo_sensorless_ob.angle().to_turns(),
-                // uint32_t(exe_us_.count())
+                // uint32_t(exe_elapsed_.count())
 
                 // openloop_elec_angle_.normalized().to_turns()
                 // bool(drv8323_nfault_pin_.read() == LOW),

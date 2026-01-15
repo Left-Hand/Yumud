@@ -393,7 +393,7 @@ public:
     }
     
 private:
-    hal::GenericTimer & timer = hal::timer3;
+    hal::GeneralTimer & timer = hal::timer3;
             
     hal::TimerOC & pwm_pos = timer.oc<1>();
     hal::TimerOC & pwm_neg = timer.oc<2>();
