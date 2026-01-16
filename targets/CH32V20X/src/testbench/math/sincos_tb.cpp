@@ -10,32 +10,6 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include <cmath>
 
-// static constexpr __fast_inline 
-// int32_t __UIQ32getSinCosResult(uint32_t uq31_x, uint32_t iq31_sin_coeff, uint32_t iq31_cos_coeff){
-//     uint32_t iq31Res;
-
-//     /* 0.333*x*C(k) */
-//     iq31Res = __mpyf_l(0x2aaaaaab, uq31_x);
-//     iq31Res = __mpyf_l(iq31_cos_coeff, iq31Res);
-
-//     /* -S(k) - 0.333*x*C(k) */
-//     iq31Res = -(iq31_sin_coeff + iq31Res);
-
-//     /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
-//     iq31Res = iq31Res >> 1;
-//     iq31Res = __mpyf_l(uq31_x, iq31Res);
-
-//     /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
-//     iq31Res = iq31_cos_coeff + iq31Res;
-
-//     /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-//     iq31Res = __mpyf_l(uq31_x, iq31Res);
-
-//     /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-//     iq31Res = iq31_sin_coeff + iq31Res;
-
-//     return iq31Res;
-// }
 
 /*!
  * @brief Specifies inverse square root operation type.
@@ -53,6 +27,14 @@
  * @brief Specifies inverse magnitude operation type.
  */
 #define TYPE_IMAG    (3)
+
+
+#ifndef M_PI
+#define M_PI (3.1415926536)
+#endif
+
+#define TYPE_PU         (0)
+#define TYPE_RAD        (1)
 
 
 using namespace ymd;
@@ -258,7 +240,7 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
     };
 };
 
-template<const size_t Q>
+template<size_t Q>
 constexpr math::fixed_t<Q, uint32_t> sqrt(const math::fixed_t<Q, uint64_t> x){
     return math::fixed_t<Q, uint32_t>::from_bits(
         from_single_input_64<Q, TYPE_SQRT>(x.to_bits()
@@ -366,35 +348,163 @@ std::array<math::fixed_t<31, int32_t>, 2> sincos_approx(const math::fixed_t<Q, D
     return {res.sin, res.cos};
 }
 
-// static_assert(pu_to_uq32(-1_iq16) == 0);
-static_assert(pu_to_uq32(-0.75_iq16) == 0.25_uq32);
-static_assert(pu_to_uq32(-0.75_iq10) == 0.25_uq32);
-static_assert(pu_to_uq32(-0.75_iq31) == 0.25_uq32);
-static_assert(pu_to_uq32(0.5_uq32) == 0.5_uq32);
+
+struct [[nodiscard]] Atan2Flag{
+
+    uint8_t y_is_neg:1;
+    uint8_t x_is_neg:1;
+    uint8_t swapped:1;
+
+    static constexpr Atan2Flag zero(){
+        return Atan2Flag{0, 0, 0};
+    }
+
+    static constexpr std::tuple<Atan2Flag, uint32_t> convert_to_flag(uint32_t uq31_y, uint32_t uq31_x){
+        Atan2Flag flag = Atan2Flag::zero();
+        uint32_t uq32_input;
+
+        if (uq31_y & (1U << 31)) {
+            flag.y_is_neg = 1;
+            uq31_y = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uq31_y));
+        }
+
+        if (uq31_x & (1U << 31)) {
+            flag.x_is_neg = 1;
+            uq31_x = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uq31_x));
+        }
+
+        /*
+        * Calcualte the ratio of the inputs in iq31. When using the iq31 div
+        * fucntions with inputs of matching type the result will be iq31:
+        *
+        *     iq31 = _IQ31div(iqN, iqN);
+        */
+        if (uq31_x < uq31_y) {
+            flag.swapped = 1;
+            uq32_input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, false>(
+                uq31_x, uq31_y)) << 1;
+        } else if((uq31_x > uq31_y)) {
+            uq32_input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, false>(
+                uq31_y, uq31_x)) << 1;
+        } else{
+            // 1/8 lap
+            // 1/8 * 2^32
+            // return flag.template apply_to_uq32<Q, type>(((1u << (32 - 3))));
+            uq32_input = (1u << (30));
+        }
+        return std::make_tuple(flag, uq32_input);
+    };
+
+    [[nodiscard]] constexpr math::fixed_t<31, int32_t> apply_to_uq32(uint32_t uq32_result_pu) const {
+        auto & self = *this;
+        int32_t iq31_result;
+
+        /* Check if we swapped the transformation. */
+        if (self.swapped) {
+            /* atan(y/x) = pi/2 - uq32_result_pu */
+            uq32_result_pu = (uint32_t)(0x40000000 - uq32_result_pu);
+        }
+
+        /* Check if the result needs to be mirrored to the 2nd/3rd quadrants. */
+        if (self.x_is_neg) {
+            /* atan(y/x) = pi - uq32_result_pu */
+            uq32_result_pu = (uint32_t)(0x80000000 - uq32_result_pu);
+        }
+
+        iq31_result = uq32_result_pu >> 1;
+
+        /* Set the sign bit and result to correct quadrant. */
+        if (self.y_is_neg) {
+            return math::fixed_t<31, int32_t>::from_bits(-iq31_result);
+        } else {
+            return math::fixed_t<31, int32_t>::from_bits(iq31_result);
+        }
+    };
+
+    [[nodiscard]] constexpr uint8_t to_u8() const {
+        return std::bit_cast<uint8_t>(*this);
+    }
+};
+
+struct [[nodiscard]] Atan2Intermediate{
+    using Self = Atan2Intermediate;
 
 
+    // * Calculate atan2 using a 3rd order Taylor series. The coefficients are stored
+    // * in a lookup table with 17 ranges to give an accuracy of XX bits.
+    // *
+    // * The input to the Taylor series is the ratio of the two inputs and must be
+    // * in the range of 0 <= input <= 1. If the y argument is larger than the x
+    // * argument we must apply the following transformation:
+    // *
+    // *     atan(y/x) = pi/2 - atan(x/y)
+    // */
+    static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
+        const auto * piq32Coeffs = &iqmath::details::_IQ32atan_coeffs[(uq32_input >> 25) & 0x00fc];
+        /*
+        * Calculate atan(x) using the following Taylor series:
+        *
+        *     atan(x) = ((c3*x + c2)*x + c1)*x + c0
+        */
 
+        /* c3*x */
+        uint32_t uq32_result_pu = fast_mul(uq32_input, *piq32Coeffs++);
 
+        /* c3*x + c2 */
+        uq32_result_pu = uq32_result_pu + *piq32Coeffs++;
 
-static_assert(std::abs(0.25 - double(rad_to_uq32(uq16((2 * M_PI) * 0.25)))) < 3E-5);
-static_assert(std::abs(0.75 - double(rad_to_uq32(uq16((2 * M_PI) * 1000.75)))) < 3E-5);
-static_assert(std::abs(0.25 - double(rad_to_uq32(iq16((2 * M_PI) * -100.75)))) < 3E-5);
+        /* (c3*x + c2)*x */
+        uq32_result_pu = fast_mul(uq32_input, uq32_result_pu);
 
-static_assert(std::abs(0.25 - double(rad_to_uq32(uq24((2 * M_PI) * 0.25)))) < 3E-5);
-static_assert(std::abs(0.75 - double(rad_to_uq32(uq24((2 * M_PI) * 10.75)))) < 3E-5);
-static_assert(std::abs(0.25 - double(rad_to_uq32(iq24((2 * M_PI) * -10.75)))) < 3E-5);
+        /* (c3*x + c2)*x + c1 */
+        uq32_result_pu = uq32_result_pu + *piq32Coeffs++;
 
-static_assert(std::abs(0.25 - double(deg_to_uq32(uq16((360) * 0.25)))) < 3E-5);
-static_assert(std::abs(0.75 - double(deg_to_uq32(uq16((360) * 10.75)))) < 3E-5);
-static_assert(std::abs(0.25 - double(deg_to_uq32(iq16((360) * -10.75)))) < 3E-5);
+        /* ((c3*x + c2)*x + c1)*x */
+        uq32_result_pu = fast_mul(uq32_input, uq32_result_pu);
 
-static_assert(std::abs(0.25 - double(deg_to_uq32(uq10((360) * 0.25)))) < 3E-5);
-static_assert(std::abs(0.75 - double(deg_to_uq32(uq10((360) * 100.75)))) < 3E-5);
-static_assert(std::abs(0.25 - double(deg_to_uq32(iq10((360) * -100.75)))) < 3E-5);
+        /* ((c3*x + c2)*x + c1)*x + c0 */
+        uq32_result_pu = uq32_result_pu + *piq32Coeffs++;
+        return uq32_result_pu;
+    }
 
-static_assert(double(std::get<0>(exprimental::sincospu(0.5_uq32))) == 0);
+private:
+    [[nodiscard]] __attribute__((__always_inline__)) 
+    static constexpr int32_t fast_mul(uint32_t arg1, int32_t arg2){
+        return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 32);
+    }
+};
+
+template<size_t Q>
+constexpr math::fixed_t<31, int32_t> atan2pu(
+    math::fixed_t<Q, int32_t> iqn_input_y, 
+    math::fixed_t<Q, int32_t> iqn_input_x)
+{
+    const auto [flag, uq32_input] = Atan2Flag::convert_to_flag(
+        math::fixed_t<31, int32_t>(iqn_input_y).to_bits(), 
+        math::fixed_t<31, int32_t>(iqn_input_x).to_bits()
+    );
+    const uint32_t uq32_result_pu = Atan2Intermediate::transfrom_pu_x_to_uq32_result(uq32_input);
+    return flag.apply_to_uq32(uq32_result_pu);
 }
 
+constexpr math::fixed_t<29, int32_t> iq31_to_rad(const math::fixed_t<31, int32_t> x){
+    static_assert((double)std::numeric_limits<math::fixed_t<29, int32_t>>::max() > M_PI);
+    static_assert((double)std::numeric_limits<math::fixed_t<29, int32_t>>::min() < -M_PI);
+
+    constexpr uint64_t uq30_tau_bits = static_cast<uint64_t>(static_cast<long double>(
+        static_cast<uint64_t>(1u) << (30)) * static_cast<long double>(M_PI * 2));
+
+    return math::fixed_t<29, int32_t>::from_bits(
+        (static_cast<int64_t>(x.to_bits()) * uq30_tau_bits) >> 32);
+}
+
+template<size_t Q>
+constexpr math::fixed_t<29, int32_t> atan2(
+    math::fixed_t<Q, int32_t> iqn_input_y, 
+    math::fixed_t<Q, int32_t> iqn_input_x
+){
+    return iq31_to_rad(atan2pu(iqn_input_y, iqn_input_x));
+}
 template<size_t Q>
 [[nodiscard]] static constexpr int32_t IQFtoN(const float fv) {
     static_assert(sizeof(float) == 4);
@@ -450,70 +560,15 @@ template<size_t Q>
 
 
 
-
-template<typename Fn>
-__no_inline Microseconds eval_one_func(size_t times, Fn && fn){
-    const auto begin_us = clock::micros();
-    
-    auto y = std::forward<Fn>(fn)(0);
-    auto x = uq32(0);
-    const auto step = uq32::from_rcp(times * 4);
-    for(size_t i = 0; i < times; ++i){
-        (y) += (std::forward<Fn>(fn)(x));
-        x+= step;
-    }
-
-    const auto end_us = clock::micros();
-    const auto elapsed = end_us - begin_us;
-    DEBUG_PRINTLN(times, elapsed, y);
-    return (end_us - begin_us);
-}
-
-template<typename Fn1, typename Fn2>
-__no_inline auto compare_func(size_t times, Fn1 && fn1, Fn2 && fn2){
-    const auto elapsed1 = eval_one_func(times, std::forward<Fn1>(fn1));
-    const auto elapsed2 = eval_one_func(times, std::forward<Fn2>(fn2));
-    DEBUG_PRINTLN(elapsed1, elapsed2);
 }
 
 
-template<typename Fn>
-__no_inline auto eval_func(Fn && fn){
-    auto y = std::forward<Fn>(fn)(clock::time());
-
-    static constexpr size_t times = 10000;
-
-    const auto begin_us = clock::micros();
-    const auto t = clock::time();
-    for(size_t i = 0; i < times; ++i){
-        // __nop;
-        // (y) += (std::forward<Fn>(fn)(t));
-        // __nop;
-        // __nop;
-    }
-
-    const auto end_us = clock::micros();
-    // DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()) / times );
-    DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()), y);
-    return (end_us - begin_us);
-}
 static constexpr uq32 iq31_length_squared(const iq31 x){
     const auto abs_x_bits = x.to_bits() < 0 ? static_cast<uint32_t>(-x.to_bits()) : static_cast<uint32_t>(x.to_bits());
     const auto bits = static_cast<uint64_t>(abs_x_bits) * static_cast<uint64_t>(abs_x_bits);
     return uq32::from_bits(static_cast<uint32_t>(bits >> 30));
 }
 static_assert(iq31_length_squared(iq31(0.5)) == 0.25_uq32);
-// static constexpr uq32 dual_iq31_length_squared(const iq31 x, const iq31 y){
-//     uint64_t bits = 0;
-//     const auto abs_x_bits = x.to_bits() < 0 ? static_cast<uint32_t>(-x.to_bits()) : static_cast<uint32_t>(x.to_bits());
-//     const auto abs_y_bits = y.to_bits() < 0 ? static_cast<uint32_t>(-y.to_bits()) : static_cast<uint32_t>(y.to_bits());
-//     bits += static_cast<uint64_t>(abs_x_bits) * static_cast<uint64_t>(abs_x_bits);
-//     bits += static_cast<uint64_t>(abs_y_bits) * static_cast<uint64_t>(abs_y_bits);
-//     if(bits >= std::numeric_limits<uint32_t>::max()){
-//         bits = std::numeric_limits<uint32_t>::max();
-//     }
-//     return uq32::from_bits(static_cast<uint32_t>(bits >> 30));
-// }
 
 static constexpr uq32 dual_iq31_length_squared(const iq31 x, const iq31 y){
     // IQ31 格式：1 位符号 + 31 位小数
@@ -555,6 +610,60 @@ static constexpr uq32 dual_iq31_length_squared(const iq31 x, const iq31 y){
 static_assert(dual_iq31_length_squared(iq31(0.5), iq31(0.5)).to_bits() == (0.5_uq32).to_bits());
 
 
+
+
+
+
+template<typename Fn>
+__no_inline Microseconds eval_one_func(size_t times, Fn && fn){
+    const auto begin_us = clock::micros();
+    
+    auto y = std::forward<Fn>(fn)(0, 0);
+    auto x = uq32(0);
+    const auto step = uq32::from_rcp(times * 4);
+    for(size_t i = 0; i < times; ++i){
+        auto [s,c] = math::sincos_approx(x);
+        (y) += (std::forward<Fn>(fn)(s,c));
+        x+= step;
+    }
+
+    const auto end_us = clock::micros();
+    const auto elapsed = end_us - begin_us;
+    DEBUG_PRINTLN(times, elapsed, y);
+    return (end_us - begin_us);
+}
+
+template<typename Fn1, typename Fn2>
+__no_inline auto compare_func(size_t times, Fn1 && fn1, Fn2 && fn2){
+    const auto elapsed1 = eval_one_func(times, std::forward<Fn1>(fn1));
+    const auto elapsed2 = eval_one_func(times, std::forward<Fn2>(fn2));
+    DEBUG_PRINTLN(elapsed1, elapsed2);
+}
+
+
+template<typename Fn>
+__no_inline auto eval_func(Fn && fn){
+    auto y = std::forward<Fn>(fn)(clock::time());
+
+    static constexpr size_t times = 10000;
+
+    const auto begin_us = clock::micros();
+    const auto t = clock::time();
+    for(size_t i = 0; i < times; ++i){
+        // __nop;
+        // (y) += (std::forward<Fn>(fn)(t));
+        // __nop;
+        // __nop;
+    }
+
+    const auto end_us = clock::micros();
+    // DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()) / times );
+    DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()), y);
+    return (end_us - begin_us);
+}
+
+
+
 template<typename Fn>
 void play_func(Fn && fn){
     while(true){
@@ -591,7 +700,8 @@ void play_func(Fn && fn){
 void sincos_main(){
     DEBUGGER_INST.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576_KHz), 
+        // .baudrate = hal::NearestFreq(576_KHz), 
+        .baudrate = hal::NearestFreq(6000000), 
         .tx_strategy = CommStrategy::Blocking,
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
@@ -602,50 +712,31 @@ void sincos_main(){
 
     clock::delay(200ms);
 
-    [[maybe_unused]] auto func = [](const iq16 x) -> auto {
-        // return std::sin(x);
-        // return exprimental::math::sinpu(static_cast<iq31>(x));
-        // return exprimental::cospu(static_cast<iq31>(x));
-        // return exprimental::sqrt(uuq16::from_bits(x.to_bits()) << 16);
-        // return sqrt(uuq16::from_bits(x.to_bits()) << 16);
-        // return sqrt(uq16::from_bits(x.to_bits()) << 16);
-        const auto [_s, _c] = exprimental::sincospu_approx(x);
-        // const auto s = iq16(_s);
-        // const auto c = iq16(_c);
-        const auto [_s2, _c2] = math::sincospu(x);
-        // const auto s2 = iq16(_s2);
-        // const auto c2 = iq16(_c2);
-        // return sqrt(s * s + c * c);
-        // const auto res = (s * s + c * c);
-        // const auto res = sqrt(uuq16::from_bits(static_cast<uint64_t>(std::bit_cast<uint32_t>(x.to_bits())) << 16));
-        // const auto y_bits = x.to_bits();
-        // const auto y_bits = __builtin_clz(x.to_bits());
-        // const auto y_bits = __builtin_bitreverse32(x.to_bits());
-        // const auto res = sqrt(uuq16::from_bits(static_cast<uint64_t>(std::bit_cast<uint32_t>(y_bits) << 16)));
-        // const auto res = math::inv_mag(
-        //     iq16::from_bits(static_cast<int32_t>(std::bit_cast<uint32_t>(y_bits))),
-        //     iq16::from_bits(static_cast<int32_t>(std::bit_cast<uint32_t>(y_bits)))
-        // );
-        const auto res = std::make_tuple(
-            10 * iq16(_s),
-            10 * iq16(_c),
-            _s2, 
-            _c2
-        );
-        // if(res < 0) PANIC{s,c,res};
-        return (res);
-        // return (s * s);
-        // return (c * c);
-        // return sqrt(uq16::from_bits(x.to_bits()) << 16);
-        // return ymd::math::sinpu(x);
-    };
-
     // const auto dur = eval_func(func);
     // PANIC{riscv_has_native_hard_f32};
     // PANIC{has_b_clz};
     // PANIC{riscv_has_native_ctz};
     // PANIC{riscv_has_native_ctz};
-    play_func(func);
+
+
+    // if(false)while(true){
+    while(true){
+        const auto now_secs = clock::time();
+        // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
+        // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
+        const auto x = pu_to_uq32((now_secs * 2));
+        // const auto x = 6 * frac(t * 2) - 3;
+        const auto [s, c] = exprimental::sincospu(x);
+        // const auto [s, c] = exprimental::sincospu_approx(x);
+        DEBUG_PRINTLN_IDLE(
+            // x, 
+            s, c, 
+            math::atan2pu(iq20(s), iq20(c)),
+            (int64_t)math::pu_to_uq32(exprimental::atan2pu(s, c)).to_bits() - x.to_bits()
+            // iq20(exprimental::atan2(iq20(s), iq20(c)))
+        );
+        // clock::delay(1ms);
+    }
     if(false){
         uq32 x = 0;
         iq24 y = 0;
@@ -660,18 +751,21 @@ void sincos_main(){
     compare_func(
         1024,
         // 32,
-        [](const iq16 x) -> auto {
-            const auto [s, c] = sincospu_approx(x);
+        [](const iq24 s, const iq24 c) -> auto {
+            // const auto [s, c] = sincospu_approx(x);
             // const auto [s, c] = exprimental::sincospu_approx(x);
-            return iq20(s) + iq20(c);
+            // return iq20(s) + iq20(c);
+            return math::atan2pu(s,c);
             // return iq20(s);
         },
-        [](const iq16 x) -> auto {
-            // const auto [s, c] = math::sincos(x);
-            const auto fx = float(x);
-            const auto s = std::sin(fx);
-            const auto c = std::cos(fx);
-            return iq20::from(s) + iq20::from(c);
+        [](const iq31 s, const iq31 c) -> auto {
+            // const auto [s, c] = sincospu_approx(x);
+            // return exprimental::atan2pu(s,c);
+            return iq31(0);
+            // const auto fx = float(x);
+            // const auto s = std::sin(fx);
+            // const auto c = std::cos(fx);
+            // return iq20::from(s) + iq20::from(c);
             // return iq20(s);
         }
     );

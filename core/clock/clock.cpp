@@ -75,9 +75,9 @@ struct alignas(4) [[nodiscard]] MillisCounter{
     // 避免systick计数器和毫秒数撕裂的情况出现 
     // !非常重要
     __fast_inline uint32_t poll_and_get(){
-        const uint32_t current_sr = SysTick->SR;
+        const uint32_t now_sr = SysTick->SR;
         //判断是否发生了计数器溢出
-        if(current_sr) [[likely]] {
+        if(now_sr) [[likely]] {
             __disable_irq();
             __disable_irq();
             //清除标志位
