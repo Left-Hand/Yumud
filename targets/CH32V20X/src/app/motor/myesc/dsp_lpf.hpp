@@ -70,8 +70,8 @@ static constexpr Result<math::fixed_t<32, uint32_t>, StringView> calc_lpf_alpha_
 
 
 static constexpr Angular<uq32> calc_lpf_phaseshift_uq32(iq16 fc, iq16 f) {
-    const iq16 turns = atan2pu(static_cast<iq16>(f), static_cast<iq16>(fc));
-    return Angular<uq32>::from_turns(uq32::from_bits(static_cast<uint32_t>(turns.to_bits() << 16)));
+    const auto turns = atan2pu(static_cast<iq16>(f), static_cast<iq16>(fc));
+    return Angular<uq32>::from_turns(math::pu_to_uq32(turns));
 }
 
 struct LpfCoeffs{
@@ -99,8 +99,8 @@ static constexpr math::fixed_t<Q, D> lpf_exprimetal(math::fixed_t<Q, D> x_state,
     using acc_t = std::conditional_t<std::is_signed_v<D>, int64_t, uint64_t>;
     return math::fixed_t<Q, D>::from_bits(
         static_cast<D>(
-            ((static_cast<acc_t>(x_state.to_bits()) * alpha.to_bits()) 
-            + (static_cast<acc_t>(x_new.to_bits()) * beta.to_bits())) >> 32
+            ((static_cast<acc_t>(x_new.to_bits()) * alpha.to_bits()) 
+            + (static_cast<acc_t>(x_state.to_bits()) * beta.to_bits())) >> 32
         )
     );
 }

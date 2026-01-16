@@ -14,10 +14,16 @@
 #include "dsp_lpf.hpp"
 using namespace ymd;
 
-static constexpr size_t FOC_FREQ = 16000;
-static constexpr auto DT = uq32::from_rcp(FOC_FREQ);
+static constexpr size_t F_SAMPLE = 16000;
+static constexpr auto DT = uq32::from_rcp(F_SAMPLE);
 
-static constexpr size_t PLL_PI_FC = 200;
+// static constexpr size_t PLL_PI_FC = 1200;
+static constexpr size_t PLL_PI_FC = 900;
+static constexpr size_t PLL_LPF_FC = 1100;
+// static constexpr size_t PLL_LPF_FC = 100;
+// static constexpr size_t PLL_PI_FC = 100;
+// static constexpr size_t PLL_LPF_FC = 100;
+// static constexpr size_t PLL_LPF_FC = 300;
 
 [[maybe_unused]] static uint32_t generate_noise(){
     static uint32_t seed = 0;
@@ -38,17 +44,19 @@ void sincospll_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     hal::usart2.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576_KHz),
+        // .baudrate = hal::NearestFreq(576_KHz),
+        .baudrate = hal::NearestFreq(6000000),
         .tx_strategy = CommStrategy::Blocking,
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.no_brackets(EN);
+    // DEBUGGER.set_eps(6);
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
     hal::timer2.init({
         .remap = hal::TIM2_REMAP_A0_A1_A2_A3,
-        .count_freq =  hal::NearestFreq(FOC_FREQ),
+        .count_freq =  hal::NearestFreq(F_SAMPLE),
         .count_mode = hal::TimerCountMode::Up
     }).unwrap().dont_alter_to_pins();
     hal::timer2.register_nvic<hal::TimerIT::Update>({0,0}, EN);
@@ -58,27 +66,41 @@ void sincospll_main(){
 
     iq16 normalized_sine_ = Zero;
     iq16 normalized_cosine_ = Zero;
+
+    iq16 measured_sine_ = Zero;
+    iq16 measured_cosine_ = Zero;
     
     Angular<iq16> computed_angluar_speed_ = Zero;
     Angular<uq32> computed_angle_ = Zero;
 
     iq16 err_filtered_ = Zero;
-    static constexpr auto LPF_ALPHA = dsp::calc_lpf_alpha_uq32(FOC_FREQ, PLL_PI_FC).unwrap();
+    Microseconds isr_elapsed_us_ = 0us;
+    [[maybe_unused]] static constexpr uq32 LPF_ALPHA = dsp::calc_lpf_alpha_uq32(F_SAMPLE, PLL_LPF_FC).unwrap();
+    [[maybe_unused]] static constexpr auto LPF_ALPHA_F = float(LPF_ALPHA);
     auto isr_fn = [&]{
-        {//simulate input
+        for(size_t i = 0; i < 5; i++){//simulate input
+        // if(false){//simulate input
             [[maybe_unused]] const iq16 now_secs = clock::time();
-            const iq16 speed = 50 * iq16(math::sin(now_secs)) + 2 * iq16(math::sin(16 * now_secs));
-            // const iq16 speed = 4;
-            // const iq16 speed = 2;
+            const iq16 angular_speed = 1450 * iq16(math::sinpu(now_secs)) + 164 * iq16(math::sinpu(32 * now_secs));
+            // const iq16 angular_speed = 45 * iq16(math::sinpu(now_secs));
+            // const iq16 angular_speed = 4;
+            // const iq16 angular_speed = 2;
             simulated_angle_ = simulated_angle_.from_turns(uq32::from_bits(static_cast<uint32_t>(
                 static_cast<int64_t>(simulated_angle_.to_turns().to_bits()) + (
-                (static_cast<int64_t>(DT.to_bits()) * speed.to_bits()) >> 16)
+                (static_cast<int64_t>(DT.to_bits()) * angular_speed.to_bits()) >> 16)
             )));
+
+            #if 1
             const auto [sine_, cosine_] = simulated_angle_.sincos();
+            #else
+            const auto sine_= simulated_angle_.sin();
+            const auto cosine_= (simulated_angle_ + (Angular<uq32>::from_turns(uq32(0.33333333)))).sin();
+            #endif
+
             const auto [noise_sine_, noise_cosine_] = [] -> std::tuple<iq16, iq16>{
                 const uint32_t noise = generate_noise();
-                const int32_t i1 = std::bit_cast<int16_t>(static_cast<uint16_t>(noise & 0x07fF));
-                const int32_t i2 = std::bit_cast<int16_t>(static_cast<uint16_t>((noise >> 16) & 0x07fF));
+                const int32_t i1 = std::bit_cast<int16_t>(static_cast<uint16_t>(noise & 0x1ffF));
+                const int32_t i2 = std::bit_cast<int16_t>(static_cast<uint16_t>((noise >> 16) & 0x1ffF));
                 return std::make_tuple(
                     iq16::from_bits(i1),
                     iq16::from_bits(i2)
@@ -89,44 +111,56 @@ void sincospll_main(){
                 // );
             }();
 
-            const auto measured_sine = iq16(sine_) + noise_sine_;
-            const auto measured_cosine = iq16(cosine_) + noise_cosine_;
+            measured_sine_ = iq16(sine_) + noise_sine_;
+            measured_cosine_ = iq16(cosine_) + noise_cosine_;
 
-            normalized_sine_ = dsp::lpf_exprimetal(normalized_sine_, measured_sine, LPF_ALPHA);
-            normalized_cosine_ = dsp::lpf_exprimetal(normalized_cosine_, measured_cosine, LPF_ALPHA);
+
             // normalized_cosine_ = normalized_cosine_ * 0.9_iq16;
             // normalized_cosine_ = normalized_cosine_ + 0.1_iq16;
         }
+        
+        normalized_sine_ = dsp::lpf_exprimetal(normalized_sine_, measured_sine_, LPF_ALPHA);
+        // normalized_cosine_ = dsp::lpf_exprimetal(normalized_cosine_,
+        //     measured_cosine_ * iq16(2 / 1.73) + measured_sine_ * iq16(1.0 / 1.73), 
+        //     LPF_ALPHA
+        // );
+        normalized_cosine_ = dsp::lpf_exprimetal(normalized_cosine_,
+            measured_cosine_,
+            LPF_ALPHA
+        );
         
         // static constexpr size_t PLL_PI_FC = 1400;
 
         // static constexpr size_t PLL_PI_FC = 4;
         static constexpr size_t KP = 2 * PLL_PI_FC;
         static constexpr size_t KI = PLL_PI_FC * PLL_PI_FC;
-        static constexpr uq16 KI_BY_FS = uq16::from_bits((KI * (1u << 16)) / FOC_FREQ);
+        static constexpr uq16 KI_BY_FS = uq16::from_bits((KI * (1u << 16)) / F_SAMPLE);
 
         const auto [sine_, cosine_] = computed_angle_.sincos();
-        const iq16 e = ((cosine_) * normalized_sine_- (sine_) * normalized_cosine_);
+        const iq16 e = (iq16(cosine_) * normalized_sine_- iq16(sine_) * normalized_cosine_);
         err_filtered_ = dsp::lpf_exprimetal(err_filtered_, e, LPF_ALPHA);
         // const iq16 e = (simulated_angle_.to_turns() - computed_angle_.to_turns());
         // computed_angluar_speed_ = Angular<iq16>::from_turns(1);
         computed_angluar_speed_ = computed_angluar_speed_.from_turns(
             computed_angluar_speed_.to_turns() + e * KI_BY_FS);
 
-        uint32_t bits = computed_angle_.to_turns().to_bits();
-        bits += static_cast<uint32_t>((
+        uint32_t angle_bits = computed_angle_.to_turns().to_bits();
+        angle_bits += static_cast<uint32_t>((
             static_cast<uint64_t>(DT.to_bits()) * ((KP * e + computed_angluar_speed_.to_turns()).to_bits())
         ) >> 16);
         computed_angle_ = computed_angle_.from_turns(
-            uq32::from_bits(bits)
+            uq32::from_bits(angle_bits)
         );
     };
 
     hal::timer2.set_event_handler([&](const hal::TimerEvent & event){
         switch(event){
-            case hal::TimerEvent::Update:
+            case hal::TimerEvent::Update:{
+                const auto begin_us = clock::micros();
                 isr_fn();
+                isr_elapsed_us_ = clock::micros() - begin_us;
                 break;
+            }
             default:
                 break;
         }
@@ -136,22 +170,31 @@ void sincospll_main(){
 
     while(true){
         DEBUG_PRINTLN(
-            simulated_angle_.to_turns(),
-            normalized_sine_, 
-            normalized_cosine_,
+            // clock::time(),
 
-            computed_angluar_speed_.to_turns(),
+            simulated_angle_.to_turns(),
             computed_angle_.to_turns(),
-            err_filtered_,
-            Angular<iq16>::from_turns(iq16(simulated_angle_.to_turns()) - iq16(computed_angle_.to_turns())).signed_normalized().to_turns(),
+            
+
+            // computed_angluar_speed_.to_turns(),
+            // err_filtered_,
+            Angular<iq16>::from_turns(iq16(simulated_angle_.to_turns()) - iq16(computed_angle_.to_turns())).signed_normalized().to_degrees(),
+            // math::pu_to_uq32(math::atan2pu(measured_sine_, measured_cosine_))
             // (computed_angle_ + Angular<uq32>::from_turns(0.125_uq32)).unsigned_normalized().to_turns()
             // myiqmath::details::test(normalized_sine_, normalized_cosine_)
             // iq31::from_bits(myiqmath::details::Atan2Intermediate::transfrom_uq31_x_to_uq32_result(simulated_angle_.to_turns().to_bits() >> 1))
 
             // math::atan2pu(normalized_sine_, normalized_cosine_)
-            (computed_angle_ + dsp::calc_lpf_phaseshift_uq32(800, computed_angluar_speed_.to_turns())).unsigned_normalized().to_turns()
+            (computed_angle_ + dsp::calc_lpf_phaseshift_uq32(PLL_LPF_FC, computed_angluar_speed_.to_turns())).unsigned_normalized().to_turns(),
             // (computed_angle_ + Angular<uq32>::from_turns(uq32::from_bits(static_cast<int32_t>(static_cast<int64_t>(computed_angluar_speed_.to_turns().to_bits() << 16) / 800)))).unsigned_normalized().to_turns()
-            
+
+
+            normalized_sine_, 
+            normalized_cosine_,
+            measured_sine_, 
+            measured_cosine_,
+            isr_elapsed_us_.count()
+
         );
     }
 }

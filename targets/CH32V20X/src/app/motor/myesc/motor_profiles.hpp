@@ -54,7 +54,7 @@ struct MotorProfile_Ysc{
     static constexpr auto PHASE_INDUCTANCE = iq20(180 * 1E-6);
     // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
     static constexpr auto PHASE_RESISTANCE = 0.303_iq20;
-    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq16>::from_turns(0.145_uq16);
+    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.145_uq16);
 
     // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 2400;
     static constexpr uint32_t CURRENT_CUTOFF_FREQ = 400;
@@ -76,7 +76,7 @@ struct MotorProfile_3505{
     static constexpr auto PHASE_INDUCTANCE = iq20(20 * 1E-6);
     // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
     static constexpr auto PHASE_RESISTANCE = 0.203_iq20;
-    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq16>::from_turns(0.145_uq16);
+    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.145_uq16);
 
     // static constexpr uint32_t CURRENT_CUTOFF_FREQ = 2400;
     static constexpr uint32_t CURRENT_CUTOFF_FREQ = 400;
@@ -95,7 +95,7 @@ struct MotorProfile_Gim4010{
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(300 * 1E-6);
     static constexpr auto PHASE_RESISTANCE = 1.03_iq20;
-    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq16>::from_turns(0.265_uq16);
+    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
     static constexpr auto MODU_VOLT_LIMIT = iq16(7.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 1600;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
@@ -111,7 +111,7 @@ struct MotorProfile_36BLDB{
     static constexpr auto PHASE_INDUCTANCE = iq20(200 * 1E-6);
     // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
-    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq16>::from_turns(0.265_uq16);
+    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq32);
     static constexpr auto MODU_VOLT_LIMIT = iq16(7.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 400;
     static constexpr auto leso_coeffs = Leso::Config{
@@ -135,7 +135,7 @@ struct MotorProfile_NiuLiu{
     static constexpr auto PHASE_INDUCTANCE = iq20(200 * 1E-6);
     // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
-    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq16>::from_turns(0.265_uq16);
+    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
     static constexpr auto MODU_VOLT_LIMIT = iq16(7.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 400;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
@@ -153,7 +153,7 @@ struct MotorProfile_M06Bare{
     // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
     // static constexpr auto PHASE_RESISTANCE = 3.03_iq20;
     static constexpr auto PHASE_RESISTANCE = 2.45_iq20;
-    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq16>::from_turns(0.265_uq16);
+    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
     static constexpr auto MODU_VOLT_LIMIT = iq16(7.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 700;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;

@@ -115,7 +115,7 @@ struct LrSeriesCurrentRegulatorConfig{
 
 template<size_t FC, size_t Q>
 static constexpr math::fixed_t<Q, int32_t> lpf_specified_fc(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
-    static constexpr auto ALPHA = dsp::calc_lpf_alpha_uq32(FOC_FREQ, FC).unwrap();
+    constexpr auto ALPHA = dsp::calc_lpf_alpha_uq32(FOC_FREQ, FC).unwrap();
     return lpf_exprimetal(x_state, x_new, ALPHA);
 }
 
@@ -178,6 +178,23 @@ static void init_adc(){
 using namespace ymd::math;
 
 
+static constexpr iiq32 uq32_wrapped_diff(const uq32 last, const uq32 now){
+    const iiq32 diff = iiq32::from_bits(
+        static_cast<int64_t>(now.to_bits()) - static_cast<int64_t>(last.to_bits())
+    );
+    if(diff > iiq32(0.5)) return diff - 1;
+    if(diff < iiq32(-0.5)) return diff + 1;
+    return diff;
+};
+
+static_assert(uq32_wrapped_diff(0.35_uq32, 0.6_uq32).to_bits() == iiq32(0.25).to_bits());
+static_assert(uq32_wrapped_diff(0.75_uq32, 0.50_uq32).to_bits() == iiq32(-0.25).to_bits());
+static_assert(uq32_wrapped_diff(0.05_uq32, 0.80_uq32).to_bits() == iiq32(-0.25).to_bits());
+
+static constexpr iiq32 iiq32_inc_uq32_wrapped(const iiq32 state, const uq32 last, const uq32 now){
+    const auto diff = uq32_wrapped_diff(last, now);
+    return state + diff;
+}
 
 void myesc_main(){
     DBG_UART.init({
@@ -395,11 +412,11 @@ void myesc_main(){
 
     // #endregion 
     
-    Angular<uq16> openloop_elec_angle_ = Zero;
-    Angular<uq16> encoder_elec_angle_ = Zero;
-    Angular<uq16> hfi_elec_angle_ = Zero;
-    Angular<uq16> encoder_lap_angle_ = Zero;
-    Angular<iq16> encoder_multilap_angle_ = Zero;
+    Angular<uq32> openloop_elec_angle_ = Zero;
+    Angular<uq32> encoder_elec_angle_ = Zero;
+    Angular<uq32> hfi_elec_angle_ = Zero;
+    Angular<uq32> encoder_lap_angle_ = Zero;
+    Angular<iiq32> encoder_multilap_angle_ = Zero;
 
     Angular<uq16> hfi_lap_angle_ = Zero;
     Angular<iq16> hfi_multilap_angle_ = Zero;
@@ -411,7 +428,7 @@ void myesc_main(){
     AlphaBetaCoord<iq20> hfi_alphabeta_volt_ = Zero;
     AlphaBetaCoord<iq20> alphabeta_volt_ = Zero;
 
-    static constexpr iq20 HFI_VOLT_LIMIT = MotorProfile::PHASE_RESISTANCE * 1.4_iq20;
+    [[maybe_unused]] static constexpr iq20 HFI_VOLT_LIMIT = MotorProfile::PHASE_RESISTANCE * 1.4_iq20;
     // static constexpr iq20 HFI_VOLT = MIN((, 2);
     // static constexpr iq20 HFI_VOLT = 1;
     static constexpr iq20 HFI_VOLT = 0;
@@ -520,7 +537,7 @@ void myesc_main(){
     static constexpr size_t DC_CAL_TIMES = 32 * 128;
     bool dc_cal_done_ = false;
     size_t dc_cal_cnt_ = 0;
-    auto ctrl_isr = [&]{
+    [[maybe_unused]] auto ctrl_isr = [&]{
         const auto uvw_curr_bits = get_uvw_current_bits();
         if(dc_cal_done_ == false) [[unlikely]]{
             uvw_curr_bits_offset_acc_ = std::make_tuple<uint32_t, uint32_t, uint32_t>(
@@ -574,34 +591,36 @@ void myesc_main(){
         //#region 位置提取
 
         [[maybe_unused]] const auto now_secs = clock::time();
-        static constexpr auto ZERO_ELEC_ANGLE = Angular<iq20>::ZERO;
-        const auto hfi_angle = Angular<iq20>::from_turns(math::atan2pu(hfi_response_imag_bin2_ - 0.002_iq20, hfi_response_real_bin2_) + 0.5_iq20);
-        // const auto openloop_manchine_angle = Angular<iq16>::from_turns(0.02_iq16 * now_secs);
-        const auto openloop_manchine_angle = Angular<iq16>::from_turns(0.20_iq16 * now_secs);
-        // const auto openloop_manchine_angle = Angular<iq16>::from_turns(0.5_iq16 * now_secs);
-        // const auto openloop_manchine_angle = Angular<iq16>::from_turns(1.2_iq16 * now_secs);
-        // const auto openloop_manchine_angle = Angular<iq16>::from_turns(1.2_r * now_secs);
-        // const auto openloop_manchine_angle = Angular<iq16>::from_turns(math::sinpu(0.2_r * now_secs));
-        const auto openloop_elec_angle = openloop_manchine_angle * MotorProfile::POLE_PAIRS;
+        [[maybe_unused]] static constexpr auto ZERO_ELEC_ANGLE = Angular<uq32>::ZERO;
+        const auto hfi_angle = Angular<uq32>::from_turns(
+            math::pu_to_uq32(math::atan2pu(hfi_response_imag_bin2_ - 0.002_iq20, hfi_response_real_bin2_))
+        );
+        // const auto openloop_manchine_multilap_angle = Angular<iq16>::from_turns(0.02_iq16 * now_secs);
+        const auto openloop_manchine_multilap_angle = Angular<iq16>::from_turns(0.20_iq16 * now_secs);
+
+        const auto openloop_elec_angle = openloop_manchine_multilap_angle * MotorProfile::POLE_PAIRS;
 
         // static constexpr bool HAS_MAG_ENCODER = false;
         // mag_encoder_.update().examine();
-        Angular<uq16> encoder_elec_angle = Zero;
-        Angular<uq16> hfi_elec_angle = Zero;
+        Angular<uq32> encoder_elec_angle = Zero;
+        Angular<uq32> hfi_elec_angle = Zero;
         if(false){
-            const auto next_encoder_lap_angle = mag_encoder_.read_lap_angle().examine().cast_inner<uq16>();
+            const auto next_encoder_lapturns = mag_encoder_.read_lap_angle().examine().to_turns();
 
-            const auto encoder_diff_angle = (next_encoder_lap_angle.cast_inner<iq16>() 
-                - encoder_lap_angle_.cast_inner<iq16>()).signed_normalized();
+            const auto encoder_diff_angle = uq32_wrapped_diff(encoder_lap_angle_.to_turns(), next_encoder_lapturns);
 
-            encoder_lap_angle_ = next_encoder_lap_angle;
-            encoder_multilap_angle_ = encoder_multilap_angle_ + encoder_diff_angle;
-            rotor_rotation_state_var_ = rotor_rotation_ltd_.iterate(rotor_rotation_state_var_, {encoder_multilap_angle_.to_turns(), 0});
+            encoder_lap_angle_ = Angular<uq32>::from_turns(next_encoder_lapturns);
+            encoder_multilap_angle_ = Angular<iiq32>::from_turns(encoder_multilap_angle_.to_turns() + encoder_diff_angle);
+            rotor_rotation_state_var_ = rotor_rotation_ltd_.iterate(
+                rotor_rotation_state_var_, 
+                {fixed_downcast<16>(encoder_multilap_angle_.to_turns()), 0}
+            );
             
             
-            encoder_elec_angle = ((next_encoder_lap_angle * MotorProfile::POLE_PAIRS)
-                    + MotorProfile::SENSORED_ELEC_ANGLE_BASE).unsigned_normalized(); 
+            encoder_elec_angle = Angular<uq32>::from_turns(pu_to_uq32(next_encoder_lapturns * MotorProfile::POLE_PAIRS)
+                    + MotorProfile::SENSORED_ELEC_ANGLE_BASE.to_turns()); 
         }else{
+
             const auto next_hfi_lap_angle = hfi_angle.cast_inner<uq16>();
 
             const auto hfi_diff_angle = (next_hfi_lap_angle.cast_inner<iq16>() 
@@ -619,26 +638,13 @@ void myesc_main(){
 
 
         #if 1
-        // const auto elec_angle = Angular<iq16>::ZERO;
-        // const auto elec_angle = ZERO_ELEC_ANGLE;
-        const auto elec_angle = Angular<iq16>::from_turns(0.5_iq16 * now_secs);
-        // const auto elec_angle = hfi_elec_angle + Angular<uq16>::QUARTER;
-        // const auto elec_angle = encoder_elec_angle;
+        // const Angular<uq32> elec_angle = Angular<iq16>::ZERO;
+        // const Angular<uq32> elec_angle = ZERO_ELEC_ANGLE;
+        const Angular<uq32> elec_angle = Angular<uq32>::from_turns(0.5_uq16 * now_secs);
+        // const Angular<uq32> elec_angle = hfi_elec_angle + Angular<uq16>::QUARTER;
+        // const Angular<uq32> elec_angle = encoder_elec_angle;
         #else
-        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 10_deg;
-        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 20_deg;
-        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 40_deg;
-        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() + 90_deg);
-        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() + 80_deg);
-        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 40_deg;
-        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() + 180_deg + 30_deg);
-        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() + 50_deg);
-        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() - 22_deg);
-        // const auto elec_angle = Angular<iq16>(flux_sensorless_ob.angle() - 135_deg);
-        // const auto elec_angle = Angular<iq16>(lbg_sensorless_ob.angle() + 30_deg);
-        const auto elec_angle = Angular<iq16>(smo_sensorless_ob.angle() + 90_deg);
-        // const auto elec_angle = Angular<iq16>(smo_sensorless_ob.angle() + 90_deg);
-        // const auto elec_angle = Angular<iq16>(smo_sensorless_ob.angle() + 90_deg);
+        // const Angular<uq32> elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 10_deg;
         #endif
 
         const auto elec_rotation = Rotation2<iq16>::from_angle(elec_angle);
@@ -983,7 +989,7 @@ void myesc_main(){
         // const iq20 hfi_response_imag_bin1 = 1;
         // const auto real_bin1_double_ = math::square(hfi_response_real_bin1) - math::square(hfi_response_imag_bin1);
         // const auto imag_bin1_double_ = 2 * ((hfi_response_imag_bin1) * (hfi_response_real_bin1));
-        const auto hfi_bin2_angle = Angular<iq20>::from_turns(math::atan2pu(hfi_response_imag_bin2_ - 0.002_iq20, hfi_response_real_bin2_) + 0.5_iq20);
+        const auto hfi_bin2_angle = Angular<iq31>::from_turns(pu_to_uq32(math::atan2pu(hfi_response_imag_bin2_ - 0.002_iq20, hfi_response_real_bin2_)));
         [[maybe_unused]] const auto hfi_bin2_half_angle = -hfi_bin2_angle / 2;
         // [[maybe_unused]] const auto [sine_hfi_bin2_half_angle, cosine_hfi_bin2_half_angle] = hfi_bin2_half_angle.sincos();
         [[maybe_unused]] const auto length_hfi_response = math::mag(hfi_response_real_bin2_, hfi_response_imag_bin2_) * 2;
@@ -1121,7 +1127,7 @@ void myesc_main(){
                 // leso_state_var_.x2,
                 // encoder_lap_angle_.to_turns(),
                 // encoder_elec_angle_.to_turns(),
-                encoder_multilap_angle_.to_turns(),
+                // encoder_multilap_angle_.to_turns(),
                 busbar_current_unfilted_,
                 // busbar_current_,
                 hfi_response_real_bin2_,
