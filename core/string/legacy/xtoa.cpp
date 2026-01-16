@@ -20,12 +20,12 @@ static constexpr  uint32_t pow10_table[] = {
 };
 
 
-__fast_inline constexpr size_t _get_scalar(uint64_t value, const uint8_t radix){
-    if(value == 0) return 1;
+constexpr size_t _get_scalar(uint64_t int_val, const uint8_t radix){
+    if(int_val == 0) return 1;
 
     size_t i = 0;
     uint64_t sum = 1;
-    while(value >= sum){
+    while(int_val >= sum){
         sum *= radix;
         i++;
     }
@@ -35,20 +35,19 @@ __fast_inline constexpr size_t _get_scalar(uint64_t value, const uint8_t radix){
 
 
 template<integral T>
-static size_t _itoa_impl(T value, char * str, uint8_t radix){
-    const bool is_negative = value < 0;
-    if(is_negative) value = -value;
+static size_t _itoa_impl(T int_val, char * str, uint8_t radix){
+    const bool is_negative = int_val < 0;
+    if(is_negative) int_val = -int_val;
 
-    const size_t len = _get_scalar(value, radix) + is_negative;
-    str[len] = 0;
+    const size_t len = _get_scalar(int_val, radix) + is_negative;
     int i = len - 1;
 
     do {
-		const uint8_t digit = value % radix;
+		const uint8_t digit = int_val % radix;
         str[i] = ((digit) > 9) ? 
 		(digit - 10) + ('A') : (digit) + '0';
         i--;
-    } while((value /= radix) > 0 and (i >= 0));
+    } while((int_val /= radix) > 0 and (i >= 0));
 
     if(is_negative) {
         str[0] = '-';
@@ -109,55 +108,22 @@ size_t strconv::_qtoa_impl(int32_t value_bits, char * str, uint8_t eps, const ui
     return ind + (eps ? (1 + eps) : 0);
 }
 
-size_t strconv::itoa(int32_t value, char *str, uint8_t radix){
-    return _itoa_impl<int32_t>(value, str, radix);
+size_t strconv::itoa(int32_t int_val, char *str, uint8_t radix){
+    return _itoa_impl<int32_t>(int_val, str, radix);
 }
 
 
-size_t strconv::iutoa(uint64_t value,char *str,uint8_t radix){
-    // if(value > INT32_MAX or value < INT32_MIN){
-    //     return _itoa_impl<int32_t>(value, str, radix);
+size_t strconv::iutoa(uint64_t int_val,char *str,uint8_t radix){
+    // if(int_val > INT32_MAX or int_val < INT32_MIN){
+    //     return _itoa_impl<int32_t>(int_val, str, radix);
     // }
 
     //TODO 64位除法的实现会大幅增大体积
-    return _itoa_impl<int64_t>(value, str, radix);
+    return _itoa_impl<int64_t>(int_val, str, radix);
 }
 
 
-size_t strconv::iltoa(int64_t value, char * str, uint8_t radix){
-    // return _itoa_impl<int64_t>(value, str, radix);
-    return _itoa_impl<int32_t>(value, str, radix);
+size_t strconv::iltoa(int64_t int_val, char * str, uint8_t radix){
+    // return _itoa_impl<int64_t>(int_val, str, radix);
+    return _itoa_impl<int32_t>(int_val, str, radix);
 }
-
-#if 0
-size_t strconv::ftoa(float number,char *buf, uint8_t eps)
-{
-    char str_int[12] = {0};
-    char str_float[12] = {0};
-
-    long int_part = (long)number;
-    float float_part = number - (float)int_part;
-
-	if(number < 0 && int_part == 0){
-		str_int[0] = '-';
-		itoa(int_part,str_int + 1,10);
-	}
-	else itoa(int_part,str_int,10);
-
-    if(eps){
-        float scale = 1;
-        for(uint8_t i = 0; i < eps; i++)
-            scale *= 10;
-
-        float_part *= scale;
-        itoas((int)(float_part),str_float, 10, eps);
-    }
-
-    int i = strlen(str_int);
-    str_int[i] = '.';
-    strcat(str_int,str_float);
-    strcpy(buf,str_int);
-
-    return strlen(buf);
-}
-#endif

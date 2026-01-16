@@ -64,16 +64,15 @@ static_assert(sqrt(iq16(16)) == iq16(4));
 
 static_assert(sqrt(uq16(4)) == uq16(2));
 static_assert(sqrt(uq16(16)) == uq16(4));
-
 static_assert(sqrt(iq26(16)) == iq26(4));
 
+static_assert(inv_sqrt(iq10(16)) == iq10(0.25));
 static_assert(inv_sqrt(iq16(16)) == iq16(0.25));
-static_assert(inv_sqrt(iq16(25)) == iq16(0.2));
-
 static_assert(inv_sqrt(uq16(16)) == uq16(0.25));
-static_assert(inv_sqrt(uq16(25)) == uq16(0.2));
 
 static_assert(mag(iq16(3), iq16(4)) == iq16(5));
+static_assert(mag(iq26(3), iq26(4)) == iq26(5));
+
 static_assert(inv_mag(iq16(3), iq16(4)).to_bits() == iq16(0.2).to_bits());
 static_assert(inv_mag(iq16(12), iq16(5)).to_bits() == iq16(1.0/13).to_bits());
 

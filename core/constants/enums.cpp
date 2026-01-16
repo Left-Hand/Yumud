@@ -5,7 +5,9 @@ namespace ymd{
 
 #define DEF_DISPLAY_BINA_ENUM(name, u, l)\
 OutputStream & operator <<(OutputStream & os, const name self){\
-    return os << ((self == name::u) ? #u : #l); } \
+    return os << ((self == name::u) ? #u : #l);\
+} 
+
 
 DEF_DISPLAY_BINA_ENUM(BitOrder, MSB, LSB)
 DEF_DISPLAY_BINA_ENUM(Continuous, CONT, DISC)
