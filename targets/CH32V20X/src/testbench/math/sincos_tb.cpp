@@ -359,45 +359,9 @@ struct [[nodiscard]] Atan2Flag{
         return Atan2Flag{0, 0, 0};
     }
 
-    static constexpr std::tuple<Atan2Flag, uint32_t> convert_to_flag(uint32_t uq31_y, uint32_t uq31_x){
-        Atan2Flag flag = Atan2Flag::zero();
-        uint32_t uq32_input;
 
-        if (uq31_y & (1U << 31)) {
-            flag.y_is_neg = 1;
-            uq31_y = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uq31_y));
-        }
-
-        if (uq31_x & (1U << 31)) {
-            flag.x_is_neg = 1;
-            uq31_x = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uq31_x));
-        }
-
-        /*
-        * Calcualte the ratio of the inputs in iq31. When using the iq31 div
-        * fucntions with inputs of matching type the result will be iq31:
-        *
-        *     iq31 = _IQ31div(iqN, iqN);
-        */
-        if (uq31_x < uq31_y) {
-            flag.swapped = 1;
-            uq32_input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, false>(
-                uq31_x, uq31_y)) << 1;
-        } else if((uq31_x > uq31_y)) {
-            uq32_input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, false>(
-                uq31_y, uq31_x)) << 1;
-        } else{
-            // 1/8 lap
-            // 1/8 * 2^32
-            // return flag.template apply_to_uq32<Q, type>(((1u << (32 - 3))));
-            uq32_input = (1u << (30));
-        }
-        return std::make_tuple(flag, uq32_input);
-    };
-
-    [[nodiscard]] constexpr math::fixed_t<31, int32_t> apply_to_uq32(uint32_t uq32_result_pu) const {
+    [[nodiscard]] constexpr math::fixed_t<32, uint32_t> apply_to_uq32(uint32_t uq32_result_pu) const {
         auto & self = *this;
-        int32_t iq31_result;
 
         /* Check if we swapped the transformation. */
         if (self.swapped) {
@@ -411,14 +375,13 @@ struct [[nodiscard]] Atan2Flag{
             uq32_result_pu = (uint32_t)(0x80000000 - uq32_result_pu);
         }
 
-        iq31_result = uq32_result_pu >> 1;
 
         /* Set the sign bit and result to correct quadrant. */
         if (self.y_is_neg) {
-            return math::fixed_t<31, int32_t>::from_bits(-iq31_result);
-        } else {
-            return math::fixed_t<31, int32_t>::from_bits(iq31_result);
+            uq32_result_pu = ~uq32_result_pu;
         }
+
+        return math::fixed_t<32, uint32_t>::from_bits(uq32_result_pu);
     };
 
     [[nodiscard]] constexpr uint8_t to_u8() const {
@@ -440,6 +403,7 @@ struct [[nodiscard]] Atan2Intermediate{
     // *     atan(y/x) = pi/2 - atan(x/y)
     // */
     static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
+        // return 0;
         const auto * piq32Coeffs = &iqmath::details::_IQ32atan_coeffs[(uq32_input >> 25) & 0x00fc];
         /*
         * Calculate atan(x) using the following Taylor series:
@@ -448,22 +412,22 @@ struct [[nodiscard]] Atan2Intermediate{
         */
 
         /* c3*x */
-        uint32_t uq32_result_pu = fast_mul(uq32_input, *piq32Coeffs++);
+        uint32_t uq32_result_pu = fast_mul(uq32_input, piq32Coeffs[0]);
 
         /* c3*x + c2 */
-        uq32_result_pu = uq32_result_pu + *piq32Coeffs++;
+        uq32_result_pu = uq32_result_pu + piq32Coeffs[1];
 
         /* (c3*x + c2)*x */
         uq32_result_pu = fast_mul(uq32_input, uq32_result_pu);
 
         /* (c3*x + c2)*x + c1 */
-        uq32_result_pu = uq32_result_pu + *piq32Coeffs++;
+        uq32_result_pu = uq32_result_pu + piq32Coeffs[2];
 
         /* ((c3*x + c2)*x + c1)*x */
         uq32_result_pu = fast_mul(uq32_input, uq32_result_pu);
 
         /* ((c3*x + c2)*x + c1)*x + c0 */
-        uq32_result_pu = uq32_result_pu + *piq32Coeffs++;
+        uq32_result_pu = uq32_result_pu + piq32Coeffs[3];
         return uq32_result_pu;
     }
 
@@ -474,37 +438,144 @@ private:
     }
 };
 
+
+
 template<size_t Q>
-constexpr math::fixed_t<31, int32_t> atan2pu(
-    math::fixed_t<Q, int32_t> iqn_input_y, 
-    math::fixed_t<Q, int32_t> iqn_input_x)
-{
-    const auto [flag, uq32_input] = Atan2Flag::convert_to_flag(
-        math::fixed_t<31, int32_t>(iqn_input_y).to_bits(), 
-        math::fixed_t<31, int32_t>(iqn_input_x).to_bits()
-    );
-    const uint32_t uq32_result_pu = Atan2Intermediate::transfrom_pu_x_to_uq32_result(uq32_input);
+constexpr math::fixed_t<32, uint32_t> _atan2pu_impl(
+    uint32_t uqn_y,
+    uint32_t uqn_x
+){
+    Atan2Flag flag = Atan2Flag::zero();
+    uint32_t uq32_input;
+
+    // uq32_input =0;
+    // return {flag, uq32_input};
+
+    if (uqn_y & (1U << 31)) {
+        flag.y_is_neg = 1;
+        uqn_y = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uqn_y));
+    }
+
+    if (uqn_x & (1U << 31)) {
+        flag.x_is_neg = 1;
+        uqn_x = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uqn_x));
+    }
+
+    /*
+    * Calcualte the ratio of the inputs in iq31. When using the iq31 div
+    * fucntions with inputs of matching type the result will be iq31:
+    *
+    *     iq31 = _IQ31div(iqN, iqN);
+    */
+    if (uqn_x < uqn_y) {
+        flag.swapped = 1;
+        uq32_input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, false>(
+            uqn_x, uqn_y)) << (1);
+    } else if((uqn_x > uqn_y)) {
+        uq32_input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, false>(
+            uqn_y, uqn_x)) << (1);
+    } else{
+        // 1/8 lap
+        // 1/8 * 2^32
+        return flag.apply_to_uq32(((1u << (29))));
+    }
+    const uint32_t uq32_result_pu = exprimental::Atan2Intermediate::transfrom_pu_x_to_uq32_result(uq32_input);
     return flag.apply_to_uq32(uq32_result_pu);
 }
 
-constexpr math::fixed_t<29, int32_t> iq31_to_rad(const math::fixed_t<31, int32_t> x){
-    static_assert((double)std::numeric_limits<math::fixed_t<29, int32_t>>::max() > M_PI);
-    static_assert((double)std::numeric_limits<math::fixed_t<29, int32_t>>::min() < -M_PI);
+template<size_t Q>
+constexpr math::fixed_t<32, uint32_t> _atanpu_impl(
+    uint32_t uqn_y
+){
+    Atan2Flag flag = Atan2Flag::zero();
+    uint32_t uq32_input;
 
-    constexpr uint64_t uq30_tau_bits = static_cast<uint64_t>(static_cast<long double>(
-        static_cast<uint64_t>(1u) << (30)) * static_cast<long double>(M_PI * 2));
+    if (uqn_y & (1U << 31)) {
+        flag.y_is_neg = 1;
+        uqn_y = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uqn_y));
+    }
+
+    constexpr uint32_t ONE_BITS = (1u << Q);
+
+    if (uqn_y > ONE_BITS) {
+        flag.swapped = 1;
+        //TODO 替换为更轻量的求倒数算法
+        uq32_input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, false>(
+            (1u << Q), uqn_y
+        )) << 1;
+    } else if(uqn_y < ONE_BITS) {
+        uq32_input = uqn_y << (32 - Q);
+        // uq32_input = (1u << (30));
+    } else{// uqn_y == ONE_BITS
+        return flag.apply_to_uq32(((1u << (29))));
+    }
+
+    const uint32_t uq32_result_pu = exprimental::Atan2Intermediate::transfrom_pu_x_to_uq32_result(uq32_input);
+    return flag.apply_to_uq32(uq32_result_pu);
+}
+
+
+template<size_t Q>
+constexpr math::fixed_t<32, uint32_t> atan2pu(
+    math::fixed_t<Q, int32_t> iqn_input_y, 
+    math::fixed_t<Q, int32_t> iqn_input_x)
+{
+    return math::fixed_t<32, uint32_t>::from_bits(
+        std::bit_cast<int32_t>(_atan2pu_impl<Q>(iqn_input_y.to_bits(), iqn_input_x.to_bits()).to_bits())
+    );
+}
+
+
+
+__attribute__((always_inline)) constexpr 
+math::fixed_t<29, int32_t> uq32_to_rad(const math::fixed_t<32, uint32_t> x){
+
+    constexpr uint64_t uq29_tau_bits = static_cast<uint64_t>(static_cast<long double>(
+        static_cast<uint64_t>(1u) << (29)) * static_cast<long double>(M_PI * 2));
 
     return math::fixed_t<29, int32_t>::from_bits(
-        (static_cast<int64_t>(x.to_bits()) * uq30_tau_bits) >> 32);
+        (static_cast<uint64_t>(std::bit_cast<int32_t>(x.to_bits())) * uq29_tau_bits) >> 32);
 }
+
 
 template<size_t Q>
 constexpr math::fixed_t<29, int32_t> atan2(
     math::fixed_t<Q, int32_t> iqn_input_y, 
-    math::fixed_t<Q, int32_t> iqn_input_x
-){
-    return iq31_to_rad(atan2pu(iqn_input_y, iqn_input_x));
+    math::fixed_t<Q, int32_t> iqn_input_x)
+{
+    return exprimental::uq32_to_rad(exprimental::atan2pu<Q>(iqn_input_y, iqn_input_x));
 }
+
+template<size_t Q>
+constexpr math::fixed_t<32, uint32_t> atanpu(
+    math::fixed_t<Q, int32_t> iqn_input_y
+){
+    return _atanpu_impl<Q>(iqn_input_y.to_bits());
+}
+
+
+template<size_t Q>
+constexpr math::fixed_t<29, int32_t> atan(
+    math::fixed_t<Q, int32_t> iqn_input_y
+){
+    return exprimental::uq32_to_rad(exprimental::atanpu<Q>(iqn_input_y));
+}
+
+
+// constexpr auto d1 = exprimental::atan2pu(1.0_iq16, 1.0_iq16).to_bits();
+// constexpr auto d1 = (double)exprimental::atan2pu(1.0_iq16, 1.0_iq16);
+// static_assert(Atan2Flag{0, 0, 0}.apply_to_uq32(0x40000000) == 0.25_iq31);
+// static_assert(Atan2Flag{0, 1, 0}.apply_to_uq32(0x40000000) == 0.25_iq31);
+// static_assert(Atan2Flag{1, 0, 0}.apply_to_uq32(0x40000000) == -0.25_iq31);
+// static_assert(Atan2Flag{1, 1, 0}.apply_to_uq32(0x40000000) == -0.25_iq31);
+static_assert(std::abs((double)exprimental::atan2pu(1.0_iq16, 1.0_iq16) - 0.125) < 1E-7);
+static_assert(std::abs((double)exprimental::atan2pu(-1.0_iq16, -1.0_iq16) - 0.625) < 1E-7);
+static_assert(std::abs((double)exprimental::atan2pu(1.0_iq16, -1.0_iq16) - 0.375) < 1E-7);
+static_assert(std::abs((double)exprimental::atan2pu(-1.0_iq16, 1.0_iq16) - 0.875) < 1E-7);
+
+static_assert(std::abs((double)exprimental::atanpu(1.0_iq16) - 0.125) < 1E-7);
+static_assert(std::abs((double)exprimental::atanpu(-1.0_iq16) - 0.875) < 1E-7);
+
 template<size_t Q>
 [[nodiscard]] static constexpr int32_t IQFtoN(const float fv) {
     static_assert(sizeof(float) == 4);
@@ -719,21 +790,30 @@ void sincos_main(){
     // PANIC{riscv_has_native_ctz};
 
 
-    // if(false)while(true){
-    while(true){
-        const auto now_secs = clock::time();
+    if(false)while(true){
+    // while(true){
+        static uq32 x = 0;
+        constexpr uq32 step = uq32::from_rcp(1024u);
+        x += step;
         // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
         // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
-        const auto x = pu_to_uq32((now_secs * 2));
         // const auto x = 6 * frac(t * 2) - 3;
-        const auto [s, c] = exprimental::sincospu(x);
+        const auto [_s, _c] = exprimental::sincospu(x);
+        const auto s = _s;
+        const auto c = _c;
         // const auto [s, c] = exprimental::sincospu_approx(x);
         DEBUG_PRINTLN_IDLE(
             // x, 
             s, c, 
-            math::atan2pu(iq20(s), iq20(c)),
+            // math::atan2pu(iq20(s), iq20(c)),
             (int64_t)math::pu_to_uq32(exprimental::atan2pu(s, c)).to_bits() - x.to_bits()
-            // iq20(exprimental::atan2(iq20(s), iq20(c)))
+            // (int64_t)exprimental::atan2pu(s, c).to_bits(),
+            // x.to_bits()
+            // exprimental::atan2pu(s, c),
+            // iq16(exprimental::atanpu(s / c)),
+
+            // exprimental::atan2(s, c),
+            // iq16(exprimental::atan(s / c))
         );
         // clock::delay(1ms);
     }
@@ -760,8 +840,8 @@ void sincos_main(){
         },
         [](const iq31 s, const iq31 c) -> auto {
             // const auto [s, c] = sincospu_approx(x);
-            // return exprimental::atan2pu(s,c);
-            return iq31(0);
+            return exprimental::atan2pu(s,c);
+            // return iq31(0);
             // const auto fx = float(x);
             // const auto s = std::sin(fx);
             // const auto c = std::cos(fx);

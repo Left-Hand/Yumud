@@ -59,9 +59,15 @@ struct [[nodiscard]] fixed_t{
 private:
     static_assert(std::is_same_v<D, bool> == false);
 
+    #if 0
     static constexpr size_t MAX_Q = std::is_unsigned_v<D> ? 
         size_t(sizeof(D) * 8) : 
         size_t(sizeof(D) * 8 - 1); // 为符号位预留一个bit
+    #else
+    //允许iq0.32的存在 它的值域为[-0.5, 0.5)
+    static constexpr size_t MAX_Q = size_t(sizeof(D) * 8);
+    #endif
+    
     static_assert(Q <= MAX_Q);
 
     using UD = std::make_unsigned_t<D>;
@@ -750,6 +756,26 @@ fixed_t<32, uint32_t> deg_to_uq32(const fixed_t<Q, D> x){
         return conv_positive();
     }
 }
+
+__attribute__((always_inline)) constexpr 
+math::fixed_t<29, uint32_t> uq32_to_rad(const math::fixed_t<32, uint32_t> x){
+
+    constexpr uint64_t uq29_tau_bits = static_cast<uint64_t>(static_cast<long double>(
+        static_cast<uint64_t>(1u) << (29)) * static_cast<long double>(M_PI * 2));
+
+    return math::fixed_t<29, uint32_t>::from_bits(
+        (static_cast<uint64_t>(x.to_bits()) * uq29_tau_bits) >> 32);
+}
+
+
+__attribute__((always_inline)) constexpr 
+math::fixed_t<29, int32_t> iq32_to_rad(const math::fixed_t<32, int32_t> x){
+    const auto ur = math::fixed_t<32, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()));
+    return math::fixed_t<29, int32_t>::from_bits(
+        std::bit_cast<int32_t>(ur.to_bits())
+    );
+}
+
 
 
 }

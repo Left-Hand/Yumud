@@ -35,6 +35,9 @@ using iq29 = math::fixed_t<29, int32_t>;
 using iq30 = math::fixed_t<30, int32_t>;
 using iq31 = math::fixed_t<31, int32_t>;
 
+//允许iq0.32的存在 它的值域为[-0.5, 0.5)
+using iq32 = math::fixed_t<32, int32_t>;
+
 using iiq1 = math::fixed_t<1, int64_t>;
 using iiq2 = math::fixed_t<2, int64_t>;
 using iiq3 = math::fixed_t<3, int64_t>;
@@ -277,6 +280,7 @@ using uuq64 = math::fixed_t<64, uint64_t>;
 [[nodiscard]] consteval iq29 operator"" _iq29(unsigned long long x) { return iq29(x); }
 [[nodiscard]] consteval iq30 operator"" _iq30(unsigned long long x) { return iq30(x); }
 [[nodiscard]] consteval iq31 operator"" _iq31(unsigned long long x) { return iq31(x); }
+[[nodiscard]] consteval iq31 operator"" _iq32(unsigned long long x) { return iq32(x); }
 
 
 

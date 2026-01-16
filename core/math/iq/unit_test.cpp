@@ -161,7 +161,7 @@ static_assert(sinpu(iq30(0.25)) == std::numeric_limits<iq31>::max());
 static_assert(sinpu(iq30(0.5)) == iq30(0));
 static_assert(sinpu(iq30(1.0)) == iq30(0));
 
-static_assert(atan2pu(iq16(1), iq16(1)) == iq16(0.125));
+static_assert((double)atan2pu(iq16(1), iq16(1)) == (0.125));
 static_assert(atan2pu(iq16(1), iq16(-1)) == iq16(0.125 + 0.25));
 static_assert(atan2pu(iq16(-1), iq16(-1)).to_bits() == iq16(0.125 - 0.5).to_bits());
 static_assert(atan2pu(iq16(-1), iq16(1)).to_bits() == iq16(-0.125).to_bits());
