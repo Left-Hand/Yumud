@@ -664,37 +664,37 @@ fixed_t<Q_to, int32_t> fixed_downcast(const fixed_t<Q_from, D> val){
 }
 
 
-template<size_t Q>
+template<size_t Q, typename D>
 [[nodiscard]] bool is_equal_approx(
-    const fixed_t<Q, int32_t> a, 
-    const fixed_t<Q, int32_t> b,
-    const fixed_t<Q, int32_t> epsilon
+    const fixed_t<Q, D> a, 
+    const fixed_t<Q, D> b,
+    const fixed_t<Q, D> epsilon
 ) {
     // Check for exact equality first, required to handle "infinity" values.
-    if (a - b == int32_t(0)) {
+    if (a - b == D(0)) {
         return true;
     }
     // Then check for approximate equality.
-    fixed_t<Q, int32_t> tolerance = fixed_t<Q, int32_t>() * (a < 0 ? -a : a);
-    if (tolerance < fixed_t<Q, int32_t>(epsilon)) {
-        tolerance = fixed_t<Q, int32_t>(epsilon);
+    fixed_t<Q, D> tolerance = fixed_t<Q, D>() * (a < 0 ? -a : a);
+    if (tolerance < fixed_t<Q, D>(epsilon)) {
+        tolerance = fixed_t<Q, D>(epsilon);
     }
     return ((a - b < 0) ? b - a : a - b) < tolerance;
 }
 
-template<size_t Q>
+template<size_t Q, typename D>
 [[nodiscard]] bool is_equal_approx_ratio(
-    const fixed_t<Q, int32_t> a, 
-    const fixed_t<Q, int32_t> b, 
-    fixed_t<Q, int32_t> epsilon, 
-    fixed_t<Q, int32_t> min_epsilon
+    const fixed_t<Q, D> a, 
+    const fixed_t<Q, D> b, 
+    fixed_t<Q, D> epsilon, 
+    fixed_t<Q, D> min_epsilon
 ){
 
-    fixed_t<Q, int32_t> diff = ymd::math::abs(a - b);
+    fixed_t<Q, D> diff = ymd::math::abs(a - b);
     if (diff == 0 || diff < min_epsilon) {
         return true;
     }
-    fixed_t<Q, int32_t> avg_size = (ymd::math::abs(a) + ymd::math::abs(b)) >> 1;
+    fixed_t<Q, D> avg_size = (ymd::math::abs(a) + ymd::math::abs(b)) >> 1;
     diff = diff / avg_size;
     return diff < epsilon;
 }

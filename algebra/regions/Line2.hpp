@@ -201,11 +201,11 @@ public:
 
 
     //是否与另一条直线正交
-    [[nodiscard]] __fast_inline constexpr
-    bool is_orthogonal_with(const Line2<T> & other, const Angular<T> & epsilon) const {
-        return other.orientation.is_orthogonal_with(this->orientation, epsilon);
-        // return fposmod(other.orientation - this->orientation, T(PI));
-    }
+    // [[nodiscard]] __fast_inline constexpr
+    // bool is_orthogonal_with(const Line2<T> & other, const Angular<T> & epsilon) const {
+    //     return other.orientation.is_orthogonal_with(this->orientation, epsilon);
+    //     // return fposmod(other.orientation - this->orientation, T(PI));
+    // }
 
     [[nodiscard]] __fast_inline constexpr
     Line2<T> mean(const Line2<T> & other) const {

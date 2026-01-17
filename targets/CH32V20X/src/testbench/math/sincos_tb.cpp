@@ -115,30 +115,30 @@ void sincos_main(){
     // PANIC{riscv_has_native_ctz};
 
 
-    // if(false)while(true){
-    while(true){
+    if(false)while(true){
+    // while(true){
         static uq32 x = 0;
         constexpr uq32 step = uq32::from_rcp(1024u);
         x += step;
         // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
         // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
         // const auto x = 6 * frac(t * 2) - 3;
-        const auto [_s, _c] = exprimental::sincospu(x);
+        const auto [_s, _c] = math::sincospu(x);
         const auto s = _s;
         const auto c = _c;
-        // const auto [s, c] = exprimental::sincospu_approx(x);
+        // const auto [s, c] = math::sincospu_approx(x);
         DEBUG_PRINTLN_IDLE(
             // x, 
             s, c, 
-            // math::atan2pu(iq20(s), iq20(c)),
-            (int64_t)math::pu_to_uq32(exprimental::atan2pu(s, c)).to_bits() - x.to_bits()
-            // (int64_t)exprimental::atan2pu(s, c).to_bits(),
+            math::atan2pu(s, c),
+            (int64_t)math::pu_to_uq32(math::atan2pu(s, c)).to_bits() - x.to_bits()
+            // (int64_t)math::atan2pu(s, c).to_bits(),
             // x.to_bits()
-            // exprimental::atan2pu(s, c),
-            // iq16(exprimental::atanpu(s / c)),
+            // math::atan2pu(s, c),
+            // iq16(math::atanpu(s / c)),
 
-            // exprimental::atan2(s, c),
-            // iq16(exprimental::atan(s / c))
+            // math::atan2(s, c),
+            // iq16(math::atan(s / c))
         );
         // clock::delay(1ms);
     }
@@ -147,7 +147,7 @@ void sincos_main(){
         iq24 y = 0;
         constexpr uq32 step = uq32::from_rcp(32u);
         for(size_t i = 0; i < 32; ++i){
-            y += iq24(std::get<0>(exprimental::sincospu(x)));
+            y += iq24(std::get<0>(math::sincospu(x)));
             x += step;
         }
         DEBUG_PRINTLN(y);
@@ -158,14 +158,14 @@ void sincos_main(){
         // 32,
         [](const iq24 s, const iq24 c) -> auto {
             // const auto [s, c] = sincospu_approx(x);
-            // const auto [s, c] = exprimental::sincospu_approx(x);
+            // const auto [s, c] = math::sincospu_approx(x);
             // return iq20(s) + iq20(c);
             return math::atan2pu(s,c);
             // return iq20(s);
         },
         [](const iq31 s, const iq31 c) -> auto {
             // const auto [s, c] = sincospu_approx(x);
-            return exprimental::atan2pu(s,c);
+            return math::atan2pu(s,c);
             // return iq31(0);
             // const auto fx = float(x);
             // const auto s = std::sin(fx);

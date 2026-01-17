@@ -598,7 +598,8 @@ void myesc_main(){
         // const auto openloop_manchine_multilap_angle = Angular<iq16>::from_turns(0.02_iq16 * now_secs);
         const auto openloop_manchine_multilap_angle = Angular<iq16>::from_turns(0.20_iq16 * now_secs);
 
-        const auto openloop_elec_angle = openloop_manchine_multilap_angle * MotorProfile::POLE_PAIRS;
+        const auto openloop_elec_angle = make_angle_from_turns(
+            uq32(frac(openloop_manchine_multilap_angle.to_turns()) * MotorProfile::POLE_PAIRS));
 
         // static constexpr bool HAS_MAG_ENCODER = false;
         // mag_encoder_.update().examine();
@@ -628,10 +629,11 @@ void myesc_main(){
 
             hfi_lap_angle_ = next_hfi_lap_angle;
             hfi_multilap_angle_ = hfi_multilap_angle_ + hfi_diff_angle;
-            rotor_rotation_state_var_ = rotor_rotation_ltd_.iterate(rotor_rotation_state_var_, {hfi_multilap_angle_.to_turns(), 0});
+            rotor_rotation_state_var_ = rotor_rotation_ltd_.iterate(
+                rotor_rotation_state_var_, {hfi_multilap_angle_.to_turns(), 0});
             
             
-            hfi_elec_angle = (hfi_multilap_angle_).unsigned_normalized(); 
+            hfi_elec_angle = make_angle_from_turns(uq32((hfi_multilap_angle_).unsigned_normalized().to_turns())); 
             hfi_elec_angle_ = hfi_elec_angle;
         }
 

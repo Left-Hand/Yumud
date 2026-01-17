@@ -50,8 +50,8 @@ namespace ymd::iqmath::details{
  * Using a lookup table with a 64 bit index (52 indexes since the input range is
  * only 0 - 0.785398) and second order Taylor series gives 28 bits of accuracy.
  */
-struct alignas(16) [[nodiscard]] IqSincosIntermediate{
-    using Self = IqSincosIntermediate;
+struct alignas(16) [[nodiscard]] __SincosIntermediate{
+    using Self = __SincosIntermediate;
 
     struct SinCosResult{
         math::fixed_t<31, int32_t> sin;
@@ -249,7 +249,7 @@ struct alignas(16) [[nodiscard]] IqSincosIntermediate{
 };
 
 
-constexpr IqSincosIntermediate __IQNgetCosSinPU(const math::fixed_t<32, uint32_t> uq32_x_pu){
+constexpr __SincosIntermediate __IQNgetCosSinPU(const math::fixed_t<32, uint32_t> uq32_x_pu){
     constexpr uint32_t uq32_quatpi_bits = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
     constexpr uint32_t eeq_mask = ((1 << (32-3)) - 1);
 
@@ -273,7 +273,7 @@ constexpr IqSincosIntermediate __IQNgetCosSinPU(const math::fixed_t<32, uint32_t
     const int32_t iq31_sin_coeff = iqmath::details::_IQ31SinLookup[lut_index];
     const int32_t iq31_cos_coeff = iqmath::details::_IQ31CosLookup[lut_index];
 
-    return IqSincosIntermediate{
+    return __SincosIntermediate{
         uq32_x_offset, 
         iq31_sin_coeff,
         iq31_cos_coeff,
