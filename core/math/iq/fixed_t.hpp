@@ -15,6 +15,10 @@
 #define LOG_E (0.434294481903)
 #endif
 
+#ifndef M_PI
+#define M_PI (3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280)
+#endif
+
 #ifndef IQ_DEFAULT_Q
 #define IQ_DEFAULT_Q (size_t(16))
 #endif
@@ -55,9 +59,15 @@ struct [[nodiscard]] fixed_t{
 private:
     static_assert(std::is_same_v<D, bool> == false);
 
+    #if 0
     static constexpr size_t MAX_Q = std::is_unsigned_v<D> ? 
         size_t(sizeof(D) * 8) : 
         size_t(sizeof(D) * 8 - 1); // 为符号位预留一个bit
+    #else
+    //允许iq0.32的存在 它的值域为[-0.5, 0.5)
+    static constexpr size_t MAX_Q = size_t(sizeof(D) * 8);
+    #endif
+    
     static_assert(Q <= MAX_Q);
 
     using UD = std::make_unsigned_t<D>;
@@ -121,14 +131,14 @@ public:
     template<size_t P>
     __attribute__((always_inline)) constexpr 
     fixed_t & operator = (const fixed_t<P, D> & other){
-        bits = fixed_t<Q, D>::template transform<Q>(other.to_bits());
+        bits = fixed_t<P, D>::template transform<Q>(other.to_bits());
         return *this;
     };
 
     template<size_t P>
     __attribute__((always_inline)) constexpr 
     fixed_t & operator = (fixed_t<P, D> && other){
-        bits = fixed_t<Q, D>::template transform<Q>(other.to_bits());
+        bits = fixed_t<P, D>::template transform<Q>(other.to_bits());
         return *this;
     };
     
@@ -231,7 +241,7 @@ public:
     requires std::is_floating_point_v<T> __inline constexpr explicit 
     operator T() const{
         if(std::is_constant_evaluated()){
-            return float(this->to_bits()) / D(1u << Q);
+            return static_cast<long double>(this->to_bits()) / static_cast<long double>(uint64_t(1u) << Q);
         }else{
             return iqmath::details::_IQNtoF<Q>(this->to_bits());
         }
@@ -350,7 +360,8 @@ fixed_t<Q, D> operator /(const fixed_t<Q, D1> lhs, const fixed_t<P, D2> rhs) {
     if (std::is_constant_evaluated()) {
         return fixed_t<Q, D>::from(float(lhs) / float(rhs));
     }else{
-        return fixed_t<Q, D>::from_bits(iqmath::details::__IQNdiv_impl<Q, true>(
+        constexpr bool result_is_signed = std::is_signed_v<D1> or std::is_signed_v<D2>;
+        return fixed_t<Q, D>::from_bits(iqmath::details::__IQNdiv_impl<Q, result_is_signed>(
             lhs.to_bits(), rhs.to_bits()
         ));
     }
@@ -358,16 +369,26 @@ fixed_t<Q, D> operator /(const fixed_t<Q, D1> lhs, const fixed_t<P, D2> rhs) {
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, D> operator /(const std::integral auto lhs, const fixed_t<Q, D> rhs) {
-	return fixed_t<Q, D>(lhs) / rhs;
+auto operator /(const std::integral auto lhs, const fixed_t<Q, D> rhs) {
+    constexpr bool result_is_signed = std::is_signed_v<D> or std::is_signed_v<decltype(lhs)>;
+    using result_underly_t = std::conditional_t<result_is_signed, std::make_signed_t<D>, D>;
+	return fixed_t<Q, result_underly_t>(lhs) / rhs;
 }
 
 
 template<size_t Q, typename D>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, D> operator /(const fixed_t<Q, D> lhs, const std::integral auto rhs) {
-	return fixed_t<Q, D>::from_bits(lhs.to_bits() / rhs);
+    // cpp的标准规定有符号数除以无符号数会先将被除数转为无符号数 导致发生诸如-30 / 2被转换为了非常大的整数
+    // 这里的做法是将除数转为有符号数
+    if constexpr(std::is_signed_v<D> and std::is_unsigned_v<decltype(rhs)>){
+        using signed_rhs_t = std::make_signed_t<std::decay_t<decltype(rhs)>>;
+        return fixed_t<Q, D>::from_bits(lhs.to_bits() / static_cast<signed_rhs_t>(rhs));
+    }else{
+        return fixed_t<Q, D>::from_bits(lhs.to_bits() / rhs);
+    }
 }
+
 
 
 
@@ -388,12 +409,20 @@ std::strong_ordering operator <=> (const fixed_t<Q1, D1> & self, const fixed_t<Q
 }
 
 
+template<size_t Q, std::integral D, std::floating_point T>
+[[nodiscard]] __attribute__((always_inline)) consteval 
+std::strong_ordering operator <=> (const fixed_t<Q, D> & self, const T & other) {
+    return (std::bit_cast<D>(self.to_bits()) <=> fixed_t<Q, D>(other));
+}
+
 
 template<size_t Q, std::integral D, std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 std::strong_ordering operator <=> (const fixed_t<Q, D> & self, const T & other) {
     return (std::bit_cast<D>(self.to_bits()) <=> (D(other) << Q));
 }
+
+
 template<size_t Q, std::integral D, std::integral T>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
 std::strong_ordering operator <=> (const T & other, const fixed_t<Q,D> & self){
@@ -635,97 +664,166 @@ fixed_t<Q_to, int32_t> fixed_downcast(const fixed_t<Q_from, D> val){
 }
 
 
-template<size_t Q>
+template<size_t Q, typename D>
 [[nodiscard]] bool is_equal_approx(
-    const fixed_t<Q, int32_t> a, 
-    const fixed_t<Q, int32_t> b,
-    const fixed_t<Q, int32_t> epsilon
+    const fixed_t<Q, D> a, 
+    const fixed_t<Q, D> b,
+    const fixed_t<Q, D> epsilon
 ) {
     // Check for exact equality first, required to handle "infinity" values.
-    if (a - b == int32_t(0)) {
+    if (a - b == D(0)) {
         return true;
     }
     // Then check for approximate equality.
-    fixed_t<Q, int32_t> tolerance = fixed_t<Q, int32_t>() * (a < 0 ? -a : a);
-    if (tolerance < fixed_t<Q, int32_t>(epsilon)) {
-        tolerance = fixed_t<Q, int32_t>(epsilon);
+    fixed_t<Q, D> tolerance = fixed_t<Q, D>() * (a < 0 ? -a : a);
+    if (tolerance < fixed_t<Q, D>(epsilon)) {
+        tolerance = fixed_t<Q, D>(epsilon);
     }
     return ((a - b < 0) ? b - a : a - b) < tolerance;
 }
 
-template<size_t Q>
+template<size_t Q, typename D>
 [[nodiscard]] bool is_equal_approx_ratio(
-    const fixed_t<Q, int32_t> a, 
-    const fixed_t<Q, int32_t> b, 
-    fixed_t<Q, int32_t> epsilon, 
-    fixed_t<Q, int32_t> min_epsilon
+    const fixed_t<Q, D> a, 
+    const fixed_t<Q, D> b, 
+    fixed_t<Q, D> epsilon, 
+    fixed_t<Q, D> min_epsilon
 ){
 
-    fixed_t<Q, int32_t> diff = ymd::math::abs(a - b);
+    fixed_t<Q, D> diff = ymd::math::abs(a - b);
     if (diff == 0 || diff < min_epsilon) {
         return true;
     }
-    fixed_t<Q, int32_t> avg_size = (ymd::math::abs(a) + ymd::math::abs(b)) >> 1;
+    fixed_t<Q, D> avg_size = (ymd::math::abs(a) + ymd::math::abs(b)) >> 1;
     diff = diff / avg_size;
     return diff < epsilon;
 }
+
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+fixed_t<32, uint32_t> pu_to_uq32(const fixed_t<Q, D> x){
+    if constexpr(std::is_signed_v<D>){
+        return fixed_t<32, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()) << (32 - Q));
+    } else {
+        return fixed_t<32, uint32_t>::from_bits(x.to_bits() << (32 - Q));
+    }
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+fixed_t<32, uint32_t> rad_to_uq32(const fixed_t<Q, D> x){
+    constexpr uint64_t uq32_inv_tau_bits = static_cast<uint64_t>(static_cast<long double>(
+        static_cast<uint64_t>(1u) << (32)) / static_cast<long double>(M_PI * 2));
+
+    auto conv_positive = [&]{
+        return fixed_t<32, uint32_t>::from_bits(static_cast<uint32_t>((x.to_bits() * uq32_inv_tau_bits) >> Q));
+    };
+
+    auto conv_negative = [&]{
+        return fixed_t<32, uint32_t>::from_bits(~static_cast<uint32_t>((static_cast<uint32_t>(-(x.to_bits())) * uq32_inv_tau_bits) >> Q));
+    };
+
+    if constexpr(std::is_signed_v<D>){
+        if(x >= 0) return conv_positive();
+        return conv_negative();
+    } else {
+        return conv_positive();
+    }
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+fixed_t<32, uint32_t> deg_to_uq32(const fixed_t<Q, D> x){
+    constexpr uint64_t uq32_inv_tau_bits = static_cast<uint64_t>(static_cast<long double>(
+        static_cast<uint64_t>(1u) << (32)) / static_cast<long double>(180 * 2));
+
+    auto conv_positive = [&]{
+        return fixed_t<32, uint32_t>::from_bits(static_cast<uint32_t>((x.to_bits() * uq32_inv_tau_bits) >> Q));
+    };
+
+    auto conv_negative = [&]{
+        return fixed_t<32, uint32_t>::from_bits(~static_cast<uint32_t>((static_cast<uint32_t>(-(x.to_bits())) * uq32_inv_tau_bits) >> Q));
+    };
+
+    if constexpr(std::is_signed_v<D>){
+        if(x >= 0) return conv_positive();
+        return conv_negative();
+    } else {
+        return conv_positive();
+    }
+}
+
+__attribute__((always_inline)) constexpr 
+math::fixed_t<29, int32_t> uq32_to_rad(const math::fixed_t<32, uint32_t> x){
+
+    constexpr uint64_t uq29_tau_bits = static_cast<uint64_t>(static_cast<long double>(
+        static_cast<uint64_t>(1u) << (29)) * static_cast<long double>(M_PI * 2));
+
+    return math::fixed_t<29, int32_t>::from_bits(
+        (static_cast<uint64_t>(std::bit_cast<int32_t>(x.to_bits())) * uq29_tau_bits) >> 32);
 }
 
 
 
+}
+
 namespace std{
-    using ymd::math::fixed_t;
+
     template<size_t Q, typename D>
-    class numeric_limits<fixed_t<Q, D>> {
+    class numeric_limits<ymd::math::fixed_t<Q, D>> {
     public:
-        __attribute__((always_inline)) constexpr static fixed_t<Q, D> infinity() noexcept {
-            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::infinity());}
-        __attribute__((always_inline)) constexpr static fixed_t<Q, D> lowest() noexcept {
-            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::lowest());}
+        __attribute__((always_inline)) constexpr static ymd::math::fixed_t<Q, D> infinity() noexcept {
+            return ymd::math::fixed_t<Q, D>::from_bits(std::numeric_limits<D>::infinity());}
+        __attribute__((always_inline)) constexpr static ymd::math::fixed_t<Q, D> lowest() noexcept {
+            return ymd::math::fixed_t<Q, D>::from_bits(std::numeric_limits<D>::lowest());}
 
-        __attribute__((always_inline)) constexpr static fixed_t<Q, D> min() noexcept {
-            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::min());}
-        __attribute__((always_inline)) constexpr static fixed_t<Q, D> max() noexcept {
-            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::max());}
+        __attribute__((always_inline)) constexpr static ymd::math::fixed_t<Q, D> min() noexcept {
+            return ymd::math::fixed_t<Q, D>::from_bits(std::numeric_limits<D>::min());}
+        __attribute__((always_inline)) constexpr static ymd::math::fixed_t<Q, D> max() noexcept {
+            return ymd::math::fixed_t<Q, D>::from_bits(std::numeric_limits<D>::max());}
     };
 
     template<size_t Q, typename D>
-    struct common_type<fixed_t<Q, D>, float> {
-        using type = fixed_t<Q, D>;
+    struct common_type<ymd::math::fixed_t<Q, D>, float> {
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, typename D>
-    struct common_type<fixed_t<Q, D>, double> {
-        using type = fixed_t<Q, D>;
+    struct common_type<ymd::math::fixed_t<Q, D>, double> {
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, typename D>
-    struct common_type<float, fixed_t<Q, D>> {
-        using type = fixed_t<Q, D>;
+    struct common_type<float, ymd::math::fixed_t<Q, D>> {
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, typename D>
-    struct common_type<double, fixed_t<Q, D>> {
-        using type = fixed_t<Q, D>;
+    struct common_type<double, ymd::math::fixed_t<Q, D>> {
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, typename D>
-    __attribute__((always_inline)) constexpr auto signbit(const fixed_t<Q, D> iq)  {
+    __attribute__((always_inline)) constexpr auto signbit(const ymd::math::fixed_t<Q, D> iq)  {
         return ymd::math::signbit(iq);}
     
     template<size_t Q, typename D>
-    struct make_signed<fixed_t<Q, D>>{
-        using type = fixed_t<Q, D>;
+    struct make_signed<ymd::math::fixed_t<Q, D>>{
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, typename D>
-    struct make_unsigned<fixed_t<Q, D>>{
-        using type = fixed_t<Q, D>;
+    struct make_unsigned<ymd::math::fixed_t<Q, D>>{
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, size_t Q2, typename D>
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    fixed_t<Q, D> copysign(const fixed_t<Q, D> x, const fixed_t<Q2, D> s){
+    ymd::math::fixed_t<Q, D> copysign(const ymd::math::fixed_t<Q, D> x, const ymd::math::fixed_t<Q2, D> s){
         return s > 0 ? x : -x;
     }
 }

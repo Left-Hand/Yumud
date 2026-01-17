@@ -14,6 +14,8 @@ namespace ymd::drivers{
 
 namespace details{
 enum class EncoderError_Kind:uint8_t{
+    UnknownPackage,
+    EEpromProgramFailed,
     CantSetup,
 
     InvalidPc,

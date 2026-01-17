@@ -17,31 +17,31 @@ struct AS5600_Prelude{
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x1e >> 1);
 
-    enum class PowerMode:uint8_t{
+    enum class [[nodiscard]] PowerMode:uint8_t{
         Norm = 0, Pol5Ms, Pol10Ms, Pol100Ms
     };
 
-    enum class Hysteresis:uint8_t{
+    enum class [[nodiscard]] Hysteresis:uint8_t{
         OFF = 0, LSB1, LSB2, LSB3
     };
 
-    enum class OutputStage:uint8_t{
+    enum class [[nodiscard]] OutputStage:uint8_t{
         AnalogRailToRail = 0, AnalogWithBand,DigitalPwm 
     };
 
-    enum class PwmFrequency:uint8_t{
+    enum class [[nodiscard]] PwmFrequency:uint8_t{
         Hz115, Hz230, Hz460, Hz920
     };
 
-    enum class SlowFilter:uint8_t{
+    enum class [[nodiscard]] SlowFilter:uint8_t{
         X16 = 0, X8, X4, X2
     };
 
-    enum class FastFilter:uint8_t{
+    enum class [[nodiscard]] FastFilter:uint8_t{
         None = 0, LSB6, LSB7, LSB9, LSB18, LSB21, LSB24, LSB10
     };
 
-    enum class RegAddr : uint8_t {
+    enum class [[nodiscard]] RegAddr : uint8_t {
         ProgramTimes = 0x00,
         StartAngle = 0x01,
         EndAngle = 0x03,
@@ -93,12 +93,12 @@ struct AS5600_Regs:public AS5600_Prelude{
 
     struct R16_Config:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Config;
-        uint8_t power_mode :2;
-        uint8_t hysteresis:2;
-        uint8_t output_stage:2;
-        uint8_t pwm_frequency:2;
-        uint8_t slow_filter:2;
-        uint8_t fast_filter:3;
+        PowerMode power_mode :2;
+        Hysteresis hysteresis:2;
+        OutputStage output_stage:2;
+        PwmFrequency pwm_frequency:2;
+        SlowFilter slow_filter:2;
+        FastFilter fast_filter:3;
         uint8_t watch_dog:1;
         uint8_t __resv__ :2;
     };

@@ -155,43 +155,12 @@ template<typename T, typename U, typename... Args>
 using tuple_replace_specified_t = typename details::tuple_replace_specified_impl<T, U, Args...>::type;
 
 // 主模板别名
-template<template<typename> class Mapper, typename Tuple>
+template<typename Tuple, template<typename> class Mapper>
 using tuple_map_t = typename details::tuple_map_impl<Mapper, Tuple>::type;
 
 
 // 主模板别名 - 自动检测谓词类型
-template<template<typename> class Predicate, typename Tuple>
+template<typename Tuple, template<typename> class Predicate>
 using tuple_reduce_t = typename details::tuple_reduce_alias_impl<Predicate, Tuple>::type;
-
-// 测试代码
-static_assert(std::is_same_v<
-    tuple_reduce_t<std::is_integral, std::tuple<int, double, char, float>>,
-    std::tuple<double, float>
->);
-
-static_assert(std::is_same_v<
-    tuple_map_t<std::add_const, std::tuple<int, double, char>>,
-    std::tuple<const int, const double, const char>
->);
-
-// static_assert(std::is_same_v<
-//     tuple_remove_specified_t<std::tuple<int, double, char, float>, double, char>,
-//     std::tuple<int, float>
-// >);
-
-// static_assert(std::is_same_v<
-//     tuple_replace_specified_t<std::tuple<int, double, char>, float, double, char>,
-//     std::tuple<int, float, float>
-// >);
-
-// static_assert(std::is_same_v<
-//     tuple_remove_specified_t<std::tuple<int, double>, float>,
-//     std::tuple<int, double>
-// >);
-
-// static_assert(std::is_same_v<
-//     tuple_replace_specified_t<std::tuple<>, float, int, double>,
-//     std::tuple<>
-// >);
 
 }

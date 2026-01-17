@@ -15,7 +15,7 @@ struct [[nodiscard]] cmd_t final{\
 //取PID参数命令(0×30) page2
 // 该指令可以读取电流环、速度环和位置环的PID参数，数据类型为Float,通过索引
 // 值来确定，具体见2.1.4索引说明表。
-struct [[nodiscard]] GetPidParameter{
+struct [[nodiscard]] GetPidParameter final{
     static constexpr ReqCommand COMMAND = ReqCommand::GetPidParameter;  
     PidIndex index;
     constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
@@ -26,7 +26,7 @@ struct [[nodiscard]] GetPidParameter{
 };
 
 // 写入PID参数到RAM命令(0×31) page 4
-struct [[nodiscard]] WritePidParameterToRam{
+struct [[nodiscard]] WritePidParameterToRam final{
     static constexpr ReqCommand COMMAND = ReqCommand::WritePidParameterToRam;  
     PidIndex index;
     math::fp32 value;
@@ -40,7 +40,7 @@ struct [[nodiscard]] WritePidParameterToRam{
 };
 
 // 写入PID参数到ROM 命令(0x32) page 5
-struct [[nodiscard]] WritePidParameterToRom{
+struct [[nodiscard]] WritePidParameterToRom final{
     static constexpr ReqCommand COMMAND = ReqCommand::WritePidParameterToRom;  
     PidIndex index;
     math::fp32 value;
@@ -136,7 +136,7 @@ struct [[nodiscard]] SetTorque final{
 };
 
 
-// 度闭环控制命令(0xA2) page 37
+// 速度闭环控制命令(0xA2) page 37
 struct [[nodiscard]] SetSpeed final{
     Percentage<uint8_t> rated_current_ratio;
     SpeedCtrlCode_i32 speed;

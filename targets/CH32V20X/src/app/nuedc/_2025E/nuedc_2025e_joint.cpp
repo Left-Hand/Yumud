@@ -439,7 +439,7 @@ void nuedc_2025e_joint_main(){
     };
 
     [[maybe_unused]] auto delta_target_position_by_command = 
-        [&](const commands::DeltaPosition & cmd){
+        [&](const msgs::DeltaPosition & cmd){
         switch(self_node_role_){
             case NodeRole::YawJoint:{
                 static constexpr auto THIS_BMI160_YAW_GYR_BIAS = 0.0020_iq24;
@@ -471,7 +471,7 @@ void nuedc_2025e_joint_main(){
     };
 
     [[maybe_unused]] auto set_target_position_by_command = 
-        [&](const commands::SetPosition & cmd){
+        [&](const msgs::SetPosition & cmd){
         switch(self_node_role_){
             case NodeRole::YawJoint:{
                 axis_target_speed_ = 0;
@@ -502,14 +502,14 @@ void nuedc_2025e_joint_main(){
 
             case CommandKind::DeltaPosition:{
                 const auto may_cmd = serde::deserialize<serde::RawLeBytes,
-                    commands::DeltaPosition>(payload);
+                    msgs::DeltaPosition>(payload);
                 if(may_cmd.is_ok()) delta_target_position_by_command(may_cmd.unwrap());
             }
                 break;
 
             case CommandKind::SetPosition:{
                 const auto may_cmd = serde::deserialize<serde::RawLeBytes,
-                    commands::SetPosition>(payload);
+                    msgs::SetPosition>(payload);
                 if(may_cmd.is_ok()) set_target_position_by_command(may_cmd.unwrap());
                 break;
             }

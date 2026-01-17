@@ -1,4 +1,4 @@
-#pragma once
+
 
 // Copyright 2023 IOsetting <iosetting(at)outlook.com>
 //
@@ -14,13 +14,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma once
 
 #include "core/io/regs.hpp"
+#include "core/utils/result.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 #include "drivers/IMU/IMU.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "core/utils/result.hpp"
 
 
 
@@ -36,13 +38,13 @@ public:
     using IResult = Result<T, Error>;
 
 
-    enum class Dps:uint8_t{
+    enum class [[nodiscard]] Dps:uint8_t{
         _2000DPS = 0b10,
         _500DPS  = 0b01,
         _250DPS  = 0b00
     };
 
-    enum class OdrBw:uint8_t{
+    enum class [[nodiscard]] OdrBw:uint8_t{
         _800_110_Hz  = 0b1111,
         _800_50_Hz   = 0b1110,
         _800_35_Hz   = 0b1101,

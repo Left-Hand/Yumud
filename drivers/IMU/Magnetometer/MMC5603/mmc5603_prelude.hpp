@@ -17,14 +17,14 @@ struct MMC5603_Prelude{
     
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b01100000 >> 1);
 
-    enum class DataRate:uint8_t{
+    enum class [[nodiscard]] DataRate:uint8_t{
         _75,
         _150,
         _255,
         _1000
     };
 
-    enum class BandWidth:uint8_t{
+    enum class [[nodiscard]] BandWidth:uint8_t{
         _6_6ms,
         _3_5ms,
         _2_0ms,

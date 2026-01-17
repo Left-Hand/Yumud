@@ -21,37 +21,37 @@ static constexpr uint16_t angle_to_u12(const Angular<uq32> angle){
 
 IResult<> Self::set_power_mode(const PowerMode power_mode){
     auto reg = RegCopy(config_reg);
-    reg.power_mode = uint8_t(power_mode);
+    reg.power_mode = power_mode;
     return write_reg(reg);
 }
 
 IResult<> Self::set_fast_filter(const FastFilter fast_filter){
     auto reg = RegCopy(config_reg);
-    reg.fast_filter = uint8_t(fast_filter);
+    reg.fast_filter = fast_filter;
     return write_reg(reg);
 }
 
 IResult<> Self::set_slow_filter(const SlowFilter slow_filter){
     auto reg = RegCopy(config_reg);
-    reg.slow_filter = uint8_t(slow_filter);
+    reg.slow_filter = slow_filter;
     return write_reg(reg);
 }
 
 IResult<> Self::set_pwm_frequency(const PwmFrequency pwm_frequency){
     auto reg = RegCopy(config_reg);
-    reg.pwm_frequency = uint8_t(pwm_frequency);
+    reg.pwm_frequency = pwm_frequency;
     return write_reg(reg);
 }
 
 IResult<> Self::set_ouput_stage(const OutputStage output_stage){
     auto reg = RegCopy(config_reg);
-    reg.output_stage = uint8_t(output_stage);
+    reg.output_stage = output_stage;
     return write_reg(reg);
 }
 
 IResult<> Self::set_hysteresis(const Hysteresis hysteresis){
     auto reg = RegCopy(config_reg);
-    reg.hysteresis = uint8_t(hysteresis);
+    reg.hysteresis = hysteresis;
     return write_reg(reg);
 }
 

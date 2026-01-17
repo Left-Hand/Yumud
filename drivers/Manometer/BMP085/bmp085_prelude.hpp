@@ -21,14 +21,14 @@ namespace ymd::drivers{
 struct BMP085_Prelude{
 static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x77); // BMP085 I2C address
 
-enum class Mode:uint8_t{
+enum class [[nodiscard]] Mode:uint8_t{
     UltraLowPower = 0,
     Standard = 1,
     HighRes = 2,
     UltraHighRes = 3
 };
 
-enum class RegAddr:uint8_t{
+enum class [[nodiscard]] RegAddr:uint8_t{
     WHO_AM_I = 0x0d,
     CAL_AC1 = 0xAA,    // R   Calibration data (16 bits)
     CAL_AC2 = 0xAC,    // R   Calibration data (16 bits)
@@ -49,7 +49,7 @@ enum class RegAddr:uint8_t{
 
 };
 
-struct [[nodiscard]] Coeffs{
+struct [[nodiscard]] Coeffs final{
     int16_t ac1, ac2, ac3, b1, b2, mb, mc, md;
     uint16_t ac4, ac5, ac6;
 
@@ -69,17 +69,17 @@ struct [[nodiscard]] Coeffs{
         };
     }
 
-    constexpr int32_t computeB5(int32_t UT) const {
+    constexpr int32_t compute_B5(int32_t UT) const {
         int32_t X1 = (UT - (int32_t)ac6) * ((int32_t)ac5) >> 15;
         int32_t X2 = ((int32_t)mc << 11) / (X1 + (int32_t)md);
         return X1 + X2;
     }
 
     struct [[nodiscard]] SeaLevelPresure{
-        int32_t sealevel_pressure;
+        int32_t count;
 
         constexpr float to_altitude(const float pressure) const{
-            return 44330 * (1.0 - std::pow(pressure / sealevel_pressure, 0.1903));
+            return 44330 * (1.0 - std::pow(pressure / count, 0.1903));
         }
     };
 
@@ -92,7 +92,7 @@ struct [[nodiscard]] Coeffs{
     constexpr float requalify_temperature(const int32_t UT) const{
         float temp;
 
-        const auto B5 = computeB5(UT);
+        const auto B5 = compute_B5(UT);
         temp = (B5 + 8) >> 4;
         temp /= 10;
 
@@ -103,7 +103,7 @@ struct [[nodiscard]] Coeffs{
         int32_t B3, B5, B6, X1, X2, X3, p;
         uint32_t B4, B7;
 
-        B5 = computeB5(UT);
+        B5 = compute_B5(UT);
 
         #if BMP085_DEBUG_EN == 1
         DEBUG_PRINT("X1 = ", X1);
@@ -162,24 +162,21 @@ struct [[nodiscard]] Coeffs{
 
 
     friend OutputStream & operator<<(OutputStream & os, const Coeffs & self){ 
-        os.println("ac1 = ", std::hex, self.ac1);
-        os.println("ac2 = ", std::hex, self.ac2);
-        os.println("ac3 = ", std::hex, self.ac3);
-        os.println("ac4 = ", std::hex, self.ac4);
-        os.println("ac5 = ", std::hex, self.ac5);
-        os.println("ac6 = ", std::hex, self.ac6);
-
-        os.println("b1 = ", std::hex, self.b1);
-        os.println("b2 = ", std::hex, self.b2);
-
-        os.println("mb = ", std::hex, self.mb);
-        os.println("mc = ", std::hex, self.mc);
-        os.println("md = ", std::hex, self.md);
-        return os;
+        return os << os.field("ac1")(self.ac1) << os.splitter()
+            << os.field("ac2")(self.ac2) << os.splitter()
+            << os.field("ac3")(self.ac3) << os.splitter()
+            << os.field("ac4")(self.ac4) << os.splitter()
+            << os.field("ac5")(self.ac5) << os.splitter()
+            << os.field("ac6")(self.ac6) << os.splitter()
+            << os.field("b1")(self.b1) << os.splitter()
+            << os.field("b2")(self.b2) << os.splitter()
+            << os.field("mb")(self.mb) << os.splitter()
+            << os.field("mc")(self.mc) << os.splitter()
+            << os.field("md")(self.md);
     }
 };
 
-enum class Error_Kind:uint8_t{
+enum class [[nodiscard]] Error_Kind:uint8_t{
     InvalidId
 };
 

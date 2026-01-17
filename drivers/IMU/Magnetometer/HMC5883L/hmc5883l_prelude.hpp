@@ -12,26 +12,26 @@ struct HMC5883L_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class Odr:uint8_t{
+    enum class [[nodiscard]] Odr:uint8_t{
         DR0_75, DR1_5, DR3, DR7_5, DR15, DR30, DR75
     };
 
-    enum class SampleNumber:uint8_t{
+    enum class [[nodiscard]] SampleNumber:uint8_t{
         SN1, SN2, SN4, SN8
     };
 
-    enum class Gain:uint8_t{
+    enum class [[nodiscard]] Gain:uint8_t{
         GL0_73, GL0_92, GL1_22, GL1_52, GL2_27, GL2_56, GL3_03, GL4_35
     };
 
-    enum class Mode:uint8_t{
+    enum class [[nodiscard]] Mode:uint8_t{
         Continuous = 0, 
         Single = 1
     };
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x3d >> 1);
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         ConfigA = 0x00,
         ConfigB = 0x01,
         Mode = 0x02,

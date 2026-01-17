@@ -10,7 +10,12 @@
 int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
-    myesc_main();
+    // myesc_main();
+    // sincos_main();
+    sincospll_main();
+
+    // vce2755_main();
+    // sincospll_main();
     // myactuator_main();
     // eeprom_main();
     // while(true);
@@ -165,8 +170,8 @@ int main(){
 
     // myesc_main();
     // s21c_main();
-    steadywin_main();
-    alx_aoa_main();
+    // steadywin_main();
+    // alx_aoa_main();
     smc2025_main();
     // vl53l5cx_main();
     // smc2025_main();

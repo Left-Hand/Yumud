@@ -1,4 +1,4 @@
-#include "DRV832X.hpp"
+#include "drv8323r.hpp"
 
 
 #define DRV832X_DEBUG_EN
@@ -95,20 +95,20 @@ struct Packet{
     uint16_t addr:4;
     uint16_t is_write:1;
 
-    uint16_t to_bits() const {
+    [[nodiscard]] constexpr uint16_t to_bits() const {
         return std::bit_cast<uint16_t>(*this);
     }
 
-    uint16_t & as_bits_mut(){
+    [[nodiscard]] uint16_t & as_bits_mut(){
         return *reinterpret_cast<uint16_t *>(this);
     }
 };
 
 static_assert(sizeof(Packet) == sizeof(uint16_t));
 
-IResult<> DRV8323R_Transport::write_reg(const RegAddr addr, const uint16_t reg){
+IResult<> DRV8323R_Transport::write_reg(const RegAddr addr, const uint16_t reg_val){
     const Packet packet = {
-        .data = reg,
+        .data = reg_val,
         .addr = uint16_t(addr),
         .is_write = 0
     };
@@ -119,7 +119,7 @@ IResult<> DRV8323R_Transport::write_reg(const RegAddr addr, const uint16_t reg){
     return Ok();
 }
 
-IResult<> DRV8323R_Transport::read_reg(const RegAddr addr, uint16_t & reg){
+IResult<> DRV8323R_Transport::read_reg(const RegAddr addr, uint16_t & reg_val){
     Packet packet = {
         .data = 0,
         .addr = uint16_t(addr),
@@ -128,7 +128,7 @@ IResult<> DRV8323R_Transport::read_reg(const RegAddr addr, uint16_t & reg){
 
     if(const auto res = spi_drv_.read_single<uint16_t>((packet.as_bits_mut()));
         res.is_err()) return Err(res.unwrap_err());
-    reg = packet.data;
+    reg_val = packet.data;
 
     return Ok();
 }

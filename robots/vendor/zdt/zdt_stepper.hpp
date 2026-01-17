@@ -50,8 +50,7 @@ public:
     IResult<> query_homming_paraments();
     IResult<> trig_homming(const HommingMode mode);
 private:
-    using Phy = ZdtMotorPhy;
-    Phy transport_;
+    ZdtMotorTransport transport_;
 
     static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
     NodeId node_id_ = DEFAULT_NODE_ID;

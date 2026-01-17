@@ -1,39 +1,13 @@
 #pragma once 
 
 #include "m1502e_primitive.hpp"
+#include "m1502e_utils.hpp"
 
 namespace ymd::robots::bmkj::m1502e{
 using namespace primitive;
-    
-struct [[nodiscard]] BytesFiller final{
-    constexpr explicit BytesFiller(std::span<uint8_t> bytes): bytes_(bytes){}
 
-    constexpr void push_be_u16(uint16_t value){ 
-        if(offset_ + 2 > bytes_.size())
-            __builtin_trap();
-        bytes_[offset_++] = value >> 8;
-        bytes_[offset_++] = value;
-    }
 
-    constexpr void push_u8(const uint8_t value){
-        if(offset_ + 1 > bytes_.size())
-            __builtin_trap();
-        bytes_[offset_++] = value;
-    }
-
-    constexpr void push_repeat_u8(const uint8_t value, size_t count){ 
-        if(offset_ + count > bytes_.size())
-            __builtin_trap();
-        for(size_t i = 0; i < count; i++)
-            bytes_[offset_++] = value;
-
-    }
-private:
-    std::span<uint8_t> bytes_;
-    size_t offset_ = 0;
-};
-
-namespace req_msg{
+namespace req_msgs{
 
 struct [[nodiscard]] SetLowQuadMotorSetpoint final{
     static constexpr uint16_t NUM_CANID = 0x32;
@@ -130,17 +104,7 @@ struct [[nodiscard]] QueryFirmwareVersion final{
 }
 
 
-template<typename T>
-static constexpr hal::BxCanFrame serialize_msg(const T & msg){
-    std::array<uint8_t, 8> buf;
-    msg.fill_bytes(buf);
-    return hal::BxCanFrame::from_parts(
-        hal::CanStdId::from_u11(T::NUM_CANID),
-        hal::BxCanPayload::from_u8x8(buf)
-    );
-}
-
-namespace resp_msg{
+namespace resp_msgs{
 struct [[nodiscard]] StateFeedback{
     using Self = StateFeedback;
     static constexpr size_t NUM_CANID_BASE = NUM_GENERIC_FEEDBACK_CANID_BASE;

@@ -2,8 +2,8 @@
 
 #include "algebra/vectors/vec2.hpp"
 #include "core/math/float/bf16.hpp"
-using namespace ymd;
 
+using namespace ymd;
 using namespace ymd::math;
 
 using math::bf16;

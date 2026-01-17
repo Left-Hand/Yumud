@@ -699,4 +699,108 @@ public:
         };
     }
 };
+
+
+// template<typename D>
+// __attribute__((always_inline))
+// __no_inline __attribute__((optimize("O3")))
+// constexpr D max3i(const D a, const D b, const D c){
+//     const D x = a > b ? a : b;
+//     return (x > c) ? x : c;
+// };
+
+
+template<typename D>
+__fast_inline __attribute__((optimize("O3")))
+constexpr D max3i(const D a, const D b, const D c) {
+    using SignedD = typename std::make_signed<D>::type;
+    
+    // 比较 a 和 b，找到较大的
+    SignedD diff_ab = static_cast<SignedD>(a) - static_cast<SignedD>(b);
+    // 如果 a>b，diff_ab 是正数，mask_ab 全为0
+    // 如果 a<=b，diff_ab 是负数或0，mask_ab 全为1
+    D mask_ab = static_cast<D>(diff_ab >> (sizeof(D)*8 - 1));
+    
+    // max(a,b) = a ^ ((a^b) & mask)
+    D ab_max = a ^ ((a ^ b) & mask_ab);
+    
+    // 比较 ab_max 和 c
+    SignedD diff_maxc = static_cast<SignedD>(ab_max) - static_cast<SignedD>(c);
+    D mask_maxc = static_cast<D>(diff_maxc >> (sizeof(D)*8 - 1));
+    
+    return ab_max ^ ((ab_max ^ c) & mask_maxc);
+}
+
+template<typename D>
+__fast_inline __attribute__((optimize("O3")))
+constexpr D min3i(const D a, const D b, const D c) {
+    using SignedD = typename std::make_signed<D>::type;
+    
+    // 比较 a 和 b，找到较小的
+    SignedD diff_ab = static_cast<SignedD>(a) - static_cast<SignedD>(b);
+    // 如果 a<b，mask_ab 全为1；否则全为0
+    D mask_ab = static_cast<D>(diff_ab >> (sizeof(D)*8 - 1));
+    // 正确的计算公式：min(a,b) = b + ((a-b) & mask)
+    D ab_min = b + (mask_ab & static_cast<D>(diff_ab));
+    
+    // 比较 ab_min 和 c，找到两者中较小的
+    SignedD diff_minc = static_cast<SignedD>(ab_min) - static_cast<SignedD>(c);
+    D mask_minc = static_cast<D>(diff_minc >> (sizeof(D)*8 - 1));
+    // min(ab_min,c) = c + ((ab_min-c) & mask)
+    return c + (mask_minc & static_cast<D>(diff_minc));
+}
+
+static_assert(min3i(1, 2, 3) == 1);
+static_assert(min3i(114, 245, 313) == 114);
+
+static_assert(max3i(1, 2, 3) == 3);
+static_assert(max3i(114, 245, 313) == 313);
+
+template<size_t Q, typename D>
+__attribute__((always_inline))
+constexpr math::fixed_t<Q, D> max3(const math::fixed_t<Q, D> a, const math::fixed_t<Q, D> b, const math::fixed_t<Q, D> c){
+    return math::fixed_t<Q, D>::from_bits(max3i(a.to_bits(), b.to_bits(), c.to_bits()));
+};
+
+template<size_t Q, typename D>
+__attribute__((always_inline))
+constexpr math::fixed_t<Q, D> min3(const math::fixed_t<Q, D> a, const math::fixed_t<Q, D> b, const math::fixed_t<Q, D> c){
+    return math::fixed_t<Q, D>::from_bits(min3i(a.to_bits(), b.to_bits(), c.to_bits()));
+};
+
+
+// SVM的数学统一公式（无分支）
+__no_inline static constexpr UvwCoord<iq16> SVM_unified(
+    const AlphaBetaCoord<iq16> alphabeta_dutycycle
+) {
+    const auto [alpha, beta] = alphabeta_dutycycle;
+    
+    // Clark逆变换（alpha-beta 转 uvw）
+    const iq16 u = alpha;
+    const iq16 beta_ = beta * iq16(0.8660254);
+    const iq16 v = (-alpha >> 1) + (beta_);  // -0.5 = -1/2, 0.8660254 = √3/2
+    const iq16 w = (-alpha >> 1) - (beta_);
+    
+    // 找到最大值和最小值
+    // const iq16 max_val = MAX(u, v, w);
+    // const iq16 min_val = MIN(u, v, w);
+
+    const iq16 max_val = max3(u, v, w);
+    const iq16 min_val = min3(u, v, w);
+    
+    // 计算零序分量（使波形居中）
+    const iq16 v0 = -(max_val + min_val) >> 1;
+    
+    // 添加直流偏置（0.5）和零序分量
+    constexpr iq16 HALF = iq16(0.5);
+
+    return {
+        HALF + u + v0,
+        HALF + v + v0,
+        HALF + w + v0
+    };
+}
+
+
+
 #endif

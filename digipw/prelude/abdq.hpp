@@ -11,8 +11,8 @@ struct DqCoord;
 
 namespace details{
 template<typename To, typename From>
-__attribute__((optimize("O3")))
-static constexpr __fast_inline void alphabeta_to_dq(
+__attribute__((optimize("O3"))) __attribute__((always_inline))
+static constexpr void alphabeta_to_dq(
     To & dq, const From & alphabeta, const auto & angle
 ){
     auto [s,c] = angle.sincos();
@@ -22,8 +22,8 @@ static constexpr __fast_inline void alphabeta_to_dq(
 
 
 template<typename To, typename From>
-__attribute__((optimize("O3")))
-static constexpr __fast_inline void dq_to_alphabeta(
+__attribute__((optimize("O3"))) __attribute__((always_inline))
+static constexpr void dq_to_alphabeta(
     To & alphabeta, const From & dq, const auto & angle
 ){
     auto [s,c] = angle.sincos();
@@ -206,9 +206,9 @@ struct [[nodiscard]] AlphaBetaZeroCoord final{
 
 private:
     static constexpr T _2_by_3 = static_cast<T>(2.0/3);
-    static constexpr T _sqrt3_by_3 = static_cast<T>(sqrt(T(3)) / 3);
-    static constexpr T _sqrt3_by_2 = static_cast<T>(sqrt(T(3)) / 2);
-    static constexpr T _sqrt2_by_2 = static_cast<T>(sqrt(T(2)) / 2);
+    static constexpr T _sqrt3_by_3 = static_cast<T>(math::sqrt(T(3)) / 3);
+    static constexpr T _sqrt3_by_2 = static_cast<T>(math::sqrt(T(3)) / 2);
+    static constexpr T _sqrt2_by_2 = static_cast<T>(math::sqrt(T(2)) / 2);
 };
 
 

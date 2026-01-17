@@ -24,7 +24,7 @@ using IResult = Result<T, Error>;
 
 
 
-static constexpr uint16_t ScalerValues[4] = {0, 253, 127, 84};
+static constexpr uint16_t SCALER_VALUES[4] = {0, 253, 127, 84};
 
 using Pair = std::pair<uint16_t, uint8_t>;
 static constexpr Pair INIT_MAP[] = {
@@ -102,8 +102,8 @@ IResult<> VL6180X::init(){
 		if(const auto res = read_reg(RegAddr::RANGE_SCALER, s);
 			res.is_err()) return res;
 
-		if      (s == ScalerValues[3]) { scaling = 3; }
-		else if (s == ScalerValues[2]) { scaling = 2; }
+		if      (s == SCALER_VALUES[3]) { scaling = 3; }
+		else if (s == SCALER_VALUES[2]) { scaling = 2; }
 		else                           { scaling = 1; }
 
 		// Adjust the part-to-part range offset value read earlier to account for
@@ -192,7 +192,7 @@ IResult<> VL6180X::set_scaling(uint8_t new_scaling){
 	if (new_scaling < 1 || new_scaling > 3) { return Err(Error::InvalidScaling); }
 
 	scaling = new_scaling;
-	if(const auto res =write_reg<uint16_t>(RegAddr::RANGE_SCALER, ScalerValues[scaling]);
+	if(const auto res =write_reg<uint16_t>(RegAddr::RANGE_SCALER, SCALER_VALUES[scaling]);
 		res.is_err()) return res;
 
 	// apply scaling on part-to-part offset
@@ -242,9 +242,9 @@ IResult<> VL6180X::start_range_continuous(uint16_t period)
 // measurement. See section "Continuous mode limits" in the datasheet
 // for details.
 IResult<> VL6180X::start_ambient_continuous(uint16_t period){
-	const uint8_t raw = CLAMP(int16_t(period / 10) - 1, 0, 254);
+	const uint8_t bits = CLAMP(int16_t(period / 10) - 1, 0, 254);
 
-	if(const auto res = write_reg<uint8_t>(RegAddr::SYSALS__INTERMEASUREMENT_PERIOD, raw);
+	if(const auto res = write_reg<uint8_t>(RegAddr::SYSALS__INTERMEASUREMENT_PERIOD, bits);
 		res.is_err()) return res;
 	if(const auto res = write_reg<uint8_t>(RegAddr::SYSALS__START, 0x03);
 		res.is_err()) return res;
@@ -252,22 +252,22 @@ IResult<> VL6180X::start_ambient_continuous(uint16_t period){
 	return Ok();
 }
 
-	// Starts continuous interleaved measurements with the given period in ms
-	// (10 ms resolution; defaults to 500 ms if not specified). In this mode, each
-	// ambient light measurement is immediately followed by a range measurement.
-	//
-	// The datasheet recommends using this mode instead of running "range and ALS
-	// continuous modes simultaneously (i.e. asynchronously)".
-	//
-	// The period must be greater than the time it takes to perform both
-	// measurements. See section "Continuous mode limits" in the datasheet
-	// for details.
+// Starts continuous interleaved measurements with the given period in ms
+// (10 ms resolution; defaults to 500 ms if not specified). In this mode, each
+// ambient light measurement is immediately followed by a range measurement.
+//
+// The datasheet recommends using this mode instead of running "range and ALS
+// continuous modes simultaneously (i.e. asynchronously)".
+//
+// The period must be greater than the time it takes to perform both
+// measurements. See section "Continuous mode limits" in the datasheet
+// for details.
 IResult<> VL6180X::start_interleaved_continuous(uint16_t period){
-	const uint8_t raw = CLAMP(int16_t(period / 10) - 1, 0, 254);
+	const uint8_t bits = CLAMP(int16_t(period / 10) - 1, 0, 254);
 
 	if(const auto res = write_reg<uint8_t>(RegAddr::INTERLEAVED_MODE__ENABLE, 1);
 		res.is_err()) return res;
-	if(const auto res = write_reg<uint8_t>(RegAddr::SYSALS__INTERMEASUREMENT_PERIOD, raw);
+	if(const auto res = write_reg<uint8_t>(RegAddr::SYSALS__INTERMEASUREMENT_PERIOD, bits);
 		res.is_err()) return res;
 	if(const auto res = write_reg<uint8_t>(RegAddr::SYSALS__START, 0x03);
 		res.is_err()) return res;

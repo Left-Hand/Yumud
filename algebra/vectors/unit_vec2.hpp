@@ -26,10 +26,11 @@ struct [[nodiscard]] UnitVec2 final{
     static constexpr UnitVec2<T> DOWN = UnitVec2<T>(0, -1);
 
     template<typename U>
-    [[nodiscard]] __fast_inline static constexpr UnitVec2<T> from_angle_and_length(
-        const Angular<U> angle, const T length){
+    [[nodiscard]] __fast_inline static constexpr UnitVec2<T> from_angle(
+        const Angular<U> angle
+    ){
         const auto [s,c] = angle.sincos();
-        return {length * static_cast<T>(c), length * static_cast<T>(s)};
+        return {static_cast<T>(c), static_cast<T>(s)};
     }
 
     constexpr T length() const {return 1;}
@@ -81,4 +82,9 @@ struct [[nodiscard]] UnitVec2 final{
     }
     constexpr explicit operator Vec2<T>() const { return Vec2<T>{x, y}; }
 };
+
+template<typename U, typename T>
+static constexpr Vec2<T> operator *(const U lhs, const UnitVec2<T> rhs) { 
+    return Vec2<T>{rhs.x * lhs, rhs.y * lhs};
+}
 }

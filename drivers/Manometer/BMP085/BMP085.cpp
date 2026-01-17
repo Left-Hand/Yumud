@@ -10,6 +10,9 @@ using Error = Self::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
+static constexpr uint8_t BMP085_READTEMPCMD = 0x2E;     // Read temperature control register value
+static constexpr uint8_t BMP085_READPRESSURECMD = 0x34;// Read pressure control register value
+
 
 IResult<> BMP085::validate(){
     static constexpr uint8_t KEY = 0x55;
@@ -66,9 +69,6 @@ IResult<> BMP085::init(const Config & cfg) {
     return Ok();
 }
 
-static constexpr uint8_t BMP085_READTEMPCMD = 0x2E;     // Read temperature control register value
-static constexpr uint8_t BMP085_READPRESSURECMD = 0x34;// Read pressure control register value
-
 IResult<uint16_t> BMP085::read_raw_temperature(void) {
     if(const auto res = write8(RegAddr::CONTROL, BMP085_READTEMPCMD);
         res.is_err()) return Err(res.unwrap_err());
@@ -109,7 +109,7 @@ IResult<uint32_t> BMP085::read_raw_pressure(void) {
         res.is_err()) return Err(res.unwrap_err());
 
     const size_t shift = 8 - std::bit_cast<uint8_t>(mode_);
-    const uint32_t raw = (static_cast<uint32_t>(b1 << 8) | static_cast<uint8_t>(b2)) >> shift;
+    const uint32_t bits = (static_cast<uint32_t>(b1 << 8) | static_cast<uint8_t>(b2)) >> shift;
 
-    return Ok(raw);
+    return Ok(bits);
 }

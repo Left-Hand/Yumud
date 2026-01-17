@@ -9,19 +9,19 @@ extern AdvancedTimer timer1;
 #endif
 
 #ifdef TIM2_PRESENT
-extern GenericTimer timer2;
+extern GeneralTimer timer2;
 #endif
 
 #ifdef TIM3_PRESENT
-extern GenericTimer timer3;
+extern GeneralTimer timer3;
 #endif
 
 #ifdef TIM4_PRESENT
-extern GenericTimer timer4;
+extern GeneralTimer timer4;
 #endif
 
 #ifdef TIM5_PRESENT
-extern GenericTimer timer5;
+extern GeneralTimer timer5;
 #endif
 
 #ifdef TIM6_PRESENT

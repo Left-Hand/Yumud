@@ -47,7 +47,7 @@ static constexpr uq32 degree_to_turns(const uint16_t bits){
     return uq32::from_bits(turns_bits);
 }
 
-struct [[nodiscard]] SpeedCode_i16{
+struct [[nodiscard]] SpeedCode_i16 final{
     using Self = SpeedCode_i16;
 
     int16_t bits;
@@ -55,12 +55,13 @@ struct [[nodiscard]] SpeedCode_i16{
     static constexpr Result<Self, DeMsgError> try_from_bits(const uint16_t bits){
         return Ok(Self{.bits = std::bit_cast<int16_t>(bits)});
     }
+
     constexpr iq8 to_dps() const {
         return bits;
     }
 };
 
-struct [[nodiscard]] SpeedLimitCode_u16{
+struct [[nodiscard]] SpeedLimitCode_u16 final{
     using Self = SpeedLimitCode_u16;    
     uint16_t bits;
     static constexpr Result<Self, DeMsgError> try_from_bits(const uint16_t bits){
@@ -75,7 +76,7 @@ struct [[nodiscard]] SpeedLimitCode_u16{
     }
 };
 
-struct [[nodiscard]] SpeedCtrlCode_i32{
+struct [[nodiscard]] SpeedCtrlCode_i32 final{
     // 控制值 speedControl 为int32_t类型，对应实际转速为0.01dps/LSB,
     using Self = SpeedCtrlCode_i32;
     int32_t bits;
@@ -92,7 +93,7 @@ struct [[nodiscard]] SpeedCtrlCode_i32{
     }
 };
 
-struct [[nodiscard]] AccelCode_u32{
+struct [[nodiscard]] AccelCode_u32 final{
     using Self = AccelCode_u32;
     uint32_t bits;
 
@@ -121,7 +122,7 @@ struct [[nodiscard]] AccelCode_u32{
     }
 };
 
-struct [[nodiscard]] DegreeCode_i16{
+struct [[nodiscard]] DegreeCode_i16 final{
     using Self = DegreeCode_i16;
     int16_t bits;
 
@@ -131,7 +132,7 @@ struct [[nodiscard]] DegreeCode_i16{
 };
 
 
-struct [[nodiscard]] LapAngleCode_u16{
+struct [[nodiscard]] LapAngleCode_u16 final{
     // 电机单圈角度circleAngle, 为 uint16_t类型数据， 以编码器零点为起始点，顺时针
     // 增加，再次到达零点时数值回0,单位0.01°LSB, 数值范围0~35999。
     uint16_t bits;
@@ -140,7 +141,7 @@ struct [[nodiscard]] LapAngleCode_u16{
     }
 };
 
-struct [[nodiscard]] TemperatureCode_i8{
+struct [[nodiscard]] TemperatureCode_i8 final{
     uint8_t bits;
 
     [[nodiscard]] constexpr int8_t to_celsius() const {
@@ -148,7 +149,7 @@ struct [[nodiscard]] TemperatureCode_i8{
     }
 };
 
-struct [[nodiscard]] VoltageCode_u16{
+struct [[nodiscard]] VoltageCode_u16 final{
     uint16_t bits;
 
     [[nodiscard]] constexpr uq16 to_volts() const {
@@ -156,7 +157,7 @@ struct [[nodiscard]] VoltageCode_u16{
     }
 };
 
-struct [[nodiscard]] CurrentCode_i16{
+struct [[nodiscard]] CurrentCode_i16 final{
     int16_t bits;
 
     [[nodiscard]] constexpr iq16 to_amps() const {
@@ -165,7 +166,7 @@ struct [[nodiscard]] CurrentCode_i16{
 };
 
 
-struct [[nodiscard]] PositionCode_i32{
+struct [[nodiscard]] PositionCode_i32 final{
     // 0.01度每lsb
     // 至少需要iq15以表示全域数据
     int32_t bits;
@@ -180,7 +181,7 @@ struct [[nodiscard]] PositionCode_i32{
 };
 
 
-struct [[nodiscard]] FaultStatus{
+struct [[nodiscard]] FaultStatus final{
     uint16_t :1;
     uint16_t stall:1;
     uint16_t under_voltage:1;
@@ -208,6 +209,7 @@ struct [[nodiscard]] FaultStatus{
         return to_bits() == 0;
     }
 };
+
 
 enum class [[nodiscard]] PidIndex:uint8_t{
     CurrentKp = 0x01,
@@ -265,7 +267,7 @@ enum class [[nodiscard]] Baudrate:uint8_t{
     CAN_1M = 1
 };
 
-struct [[nodiscard]] MotorId{
+struct [[nodiscard]] MotorId final{
     uint8_t count;
 };
 

@@ -10,15 +10,7 @@ using namespace ymd::robots::dji::m3508;
 
 #define M3508_CHECK_INDEX if(index > size_ or index == 0) PANIC(); 
 
-static constexpr uint16_t curr_to_currdata(const iq16 current){
-    int16_t temp = int16_t((current / 20)* 16384);
-    return BSWAP_16(temp);
-}
 
-static constexpr iq16 currdata_to_curr(const uint16_t currdata_be){
-    int16_t currdata = BSWAP_16(currdata_be);
-    return (iq16(currdata) / 16384) * 20;
-};
 
 
 void M3508::init(){

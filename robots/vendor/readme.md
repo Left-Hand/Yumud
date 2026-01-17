@@ -1,0 +1,19 @@
+acmemach:机致科技
+bmkj:本末科技
+damiao:达妙
+dfrobot:上海智位机器人
+dji:大疆
+dynamixel: dynamixel
+hightorque:高擎
+lobot:乐动
+mit:mit机器狗
+mks:makerbase（广州谦辉信息科技）
+myactuator:苏州机械脉塔
+robstride:灵足科技
+steadywin:伺泰威赛博猛兽
+unitree:宇树
+waveshare:微雪
+xdrive:金色巧克力蛋糕开源的电机驱动项目
+xiaomi:小米铁蛋
+yahboom:亚博智能
+zdt:张大头

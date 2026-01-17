@@ -11,9 +11,6 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/uart/uartsw.hpp"
-
-
 
 
 auto & SERVO_PWMGEN_TIMER = hal::timer3;

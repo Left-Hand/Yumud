@@ -45,8 +45,8 @@ struct ST1615_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-        struct GestureId{
-        enum class Kind:uint8_t{
+    struct [[nodiscard]] GestureId final{
+        enum class [[nodiscard]] Kind:uint8_t{
             DoubleTab = 1,
             ZoomIn = 2,
             ZoomOut = 3,
@@ -68,17 +68,17 @@ struct ST1615_Prelude{
         constexpr GestureId(Kind kind):kind_(std::bit_cast<uint8_t>(kind)) {;}
         constexpr GestureId(_None_t):kind_(0) {;}
 
-        static constexpr IResult<GestureId> from_u8(const uint8_t raw){
-            switch(raw){
-                case k_None: return Ok(GestureId(None));
+        static constexpr IResult<GestureId> from_u8(const uint8_t bits){
+            switch(bits){
+                case NONE: return Ok(GestureId(None));
                 case int(DoubleTab) ... int(Drag): 
-                    return Ok(GestureId(std::bit_cast<Kind>(raw)));
+                    return Ok(GestureId(std::bit_cast<Kind>(bits)));
                 default:    return Err(Error::InvalidGestureId);
             }
         }
 
-        constexpr bool is_some() const { return kind_ != k_None; }
-        constexpr bool is_none() const { return kind_ == k_None; }
+        [[nodiscard]] constexpr bool is_some() const { return kind_ != NONE; }
+        [[nodiscard]] constexpr bool is_none() const { return kind_ == NONE; }
 
         constexpr Kind unwrap() const { 
             if(is_none()) __builtin_trap();
@@ -93,7 +93,7 @@ struct ST1615_Prelude{
             }
         }
     private:
-        static constexpr uint8_t k_None = 0x00;
+        static constexpr uint8_t NONE = 0x00;
         uint8_t kind_;
     };
 

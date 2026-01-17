@@ -9,7 +9,6 @@
 #include "hal/timer/hw_singleton.hpp"
 
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/uart/uartsw.hpp"
 
 using namespace ymd;
 using namespace ymd::robots;

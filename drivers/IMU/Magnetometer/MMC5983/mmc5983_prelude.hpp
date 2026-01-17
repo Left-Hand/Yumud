@@ -35,14 +35,14 @@ struct MMC5983_Prelude{
 
     using RegAddr = uint8_t;
     
-    enum class BandWidth:uint8_t{
+    enum class [[nodiscard]] BandWidth:uint8_t{
         _100Hz = 0b00,
         _200Hz = 0b01,
         _400Hz = 0b10,
         _800Hz = 0b11,
     };
     
-    enum class Odr:uint8_t{
+    enum class [[nodiscard]] Odr:uint8_t{
         SingleShot = 0b000,
         _1Hz = 0b001,
         _10Hz = 0b010,
@@ -53,7 +53,7 @@ struct MMC5983_Prelude{
         _1000Hz = 0b111,
     };
 
-    enum class PrdSet:uint8_t{
+    enum class [[nodiscard]] PrdSet:uint8_t{
         _1 = 0b000,
         _25 = 0b001,
         _75 = 0b010,
@@ -67,32 +67,35 @@ struct MMC5983_Prelude{
 
 
 struct MMC5983_Regs final:public MMC5983_Prelude{
-    struct alignas(sizeof(8)) DataPacket{
+    struct DataPacket{
         static constexpr uint8_t address = 0;
 
-        constexpr Vec3<int32_t> to_vec3() const{
-            const int32_t x = (int32_t(buf_[0]) << 10) | (int32_t(buf_[1]) << 2) | (buf_[6] >> 6);
-            const int32_t y = (int32_t(buf_[2]) << 10) | (int32_t(buf_[3]) << 2) | (buf_[6] >> 4);
-            const int32_t z = (int32_t(buf_[4]) << 10) | (int32_t(buf_[5]) << 2) | (buf_[6] >> 2);
+        constexpr Vec3<int32_t> to_vec3_bits() const{
+            //每个数据18位
+            const int32_t x_bits = (int32_t(buf_[0]) << 10) | (int32_t(buf_[1]) << 2) | (buf_[6] >> 6);
+            const int32_t y_bits = (int32_t(buf_[2]) << 10) | (int32_t(buf_[3]) << 2) | (buf_[6] >> 4);
+            const int32_t z_bits = (int32_t(buf_[4]) << 10) | (int32_t(buf_[5]) << 2) | (buf_[6] >> 2);
 
-            return {x,y,z};
+            return {x_bits,y_bits,z_bits};
         }
 
-        constexpr iq16 to_temp() const {
+        constexpr iq16 to_temperature() const {
             // Temperature output, unsigned format. The range is -75~125°C, about 0.8°C/LSB, 00000000 stands for -75°C
-            // return iq16(buf_[7] * 0.8_iq16 - 75);
-            return buf_[7];
+            return iq16(buf_[7] * 0.8_iq16 - 75);
+            // return buf_[7];
         }
-        constexpr std::span<uint8_t> as_bytes() {return std::span(buf_);}
+        constexpr std::span<uint8_t> as_bytes_mut() {return std::span(buf_);}
+        constexpr std::span<const uint8_t> as_bytes_mut() const {return std::span(buf_);}
     private:
         using Buf = std::array<uint8_t, 8>;
 
         Buf buf_;
-    } data_packet_;
+    } ;
 
+    DataPacket data_packet_;
     static_assert(sizeof(DataPacket) == 8);
 
-    struct R8_Status:public Reg8<>{
+    struct [[nodiscard]] R8_Status:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x08;
         uint8_t meas_mag_done:1;
         uint8_t meas_temp_done:1;
@@ -101,7 +104,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
         const uint8_t __resv2__:3 = 0;
     }DEF_R8(status_reg)
 
-    struct R8_InternalControl0:public Reg8<>{
+    struct [[nodiscard]] R8_InternalControl0:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x09;
         uint8_t tm_m:1;
         uint8_t tm_t:1;
@@ -113,7 +116,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
         uint8_t :1;
     }DEF_R8(internal_control_0_reg)
 
-    struct R8_InternalControl1:public Reg8<>{
+    struct [[nodiscard]] R8_InternalControl1:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x0A;
         BandWidth bw:2;
         uint8_t x_inhibit:1;
@@ -123,7 +126,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
     }DEF_R8(internal_control_1_reg)
 
 
-    struct R8_InternalControl2:public Reg8<>{
+    struct [[nodiscard]] R8_InternalControl2:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x0B;
         Odr data_rate:3;
         uint8_t cmm_en:1;
@@ -131,7 +134,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
         uint8_t en_prd_set:1 = 0;
     }DEF_R8(internal_control_2_reg)
 
-    struct R8_ProductID:public Reg8<>{
+    struct [[nodiscard]] R8_ProductID:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x2F;
         static constexpr uint8_t KEY = 0b00110000;
         uint8_t product_id;
@@ -146,8 +149,8 @@ public:
         MMC5983_Transport(hal::I2cDrv{i2c, addr}){;}
     explicit MMC5983_Transport(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    explicit MMC5983_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        spi_drv_(hal::SpiDrv{spi, index}){;}
+    explicit MMC5983_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        spi_drv_(hal::SpiDrv{spi, rank}){;}
 
     IResult<> write_reg(const uint8_t addr, const uint8_t data){
         if(i2c_drv_){
@@ -181,7 +184,7 @@ public:
         }
         return Err(Error::NoAvailablePhy);
     }
- 
+
     IResult<> release(){
         if(i2c_drv_){
             if(const auto res = i2c_drv_->release();

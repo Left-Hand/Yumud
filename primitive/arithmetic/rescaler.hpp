@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/stream/ostream.hpp"
+#include <type_traits>
 
 namespace ymd{
 template<typename D>
@@ -91,6 +92,11 @@ struct [[nodiscard]] Rescaler {
         };
     }
 
+    // template<std::arithmetic U>
+    // [[nodiscard]] __fast_inline friend constexpr U operator *(const U lhs, const Rescaler<D>& self) { 
+    //     return self.scale * lhs + self.offset;
+    // }
+
     [[nodiscard]] __fast_inline constexpr Rescaler<D> operator -() const {
         return Rescaler<D>{
             .scale = -scale,
@@ -115,4 +121,6 @@ struct [[nodiscard]] Rescaler {
             << self.offset << os.brackets<')'>();
     }
 };
+
+
 }

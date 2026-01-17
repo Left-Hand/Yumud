@@ -8,7 +8,7 @@ namespace ymd::dsp::adrc{
 
 template<>
 struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
-    using fhan_type = FhanPrecomputed<iq16>;
+    using Fhan = FhanPrecomputed<iq16>;
 
     //预计算系数
     struct [[nodiscard]] Coeffs{
@@ -16,7 +16,7 @@ struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
         uq32 dt;
 
         //FHAN算子
-        fhan_type fhan;
+        Fhan fhan;
 
         //一阶导约束
         iq16 x2_limit;
@@ -36,11 +36,11 @@ struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
         //原信号一阶导限幅
         iq16 x2_limit;
 
-        constexpr Result<Coeffs, StringView> try_to_coeffs() const {
+        constexpr Result<Coeffs, StringView> try_into_coeffs() const {
             const auto & self = *this;
             return Ok(Coeffs{
-                .dt = (std::numeric_limits<uq32>::max() / fs), 
-                .fhan = (fhan_type(fhan_type::Config{.r = self.r, .h = self.h})),
+                .dt = uq32::from_rcp(fs), 
+                .fhan = (Fhan(Fhan::Config{.r = self.r, .h = self.h})),
                 .x2_limit = self.x2_limit
             });
         }
@@ -56,7 +56,7 @@ struct [[nodiscard]] NonlinearTrackingDifferentiator<iq16, 2>{
     // x2' = clamp(u, x2_limit)
     // u = fhan(e1, e2)
 
-    constexpr SecondOrderState<iq16> update(
+    constexpr SecondOrderState<iq16> iterate(
         const SecondOrderState<iq16> & state, 
         const std::array<iq16, 2> & ref 
     ) const {

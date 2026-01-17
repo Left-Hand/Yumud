@@ -52,7 +52,7 @@ IResult<> Self::set_datarate(const DataRate data_rate){
 
 IResult<> Self::set_filter_coefficient(const FilterCoefficient filter_coeff){
     auto reg = RegCopy(regs_.config_reg);
-    reg.filter = filter_coeff;
+    reg.filter_coeff = filter_coeff;
     return write_reg(reg);
 }
 

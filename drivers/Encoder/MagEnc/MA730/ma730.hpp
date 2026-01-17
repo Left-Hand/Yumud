@@ -85,8 +85,6 @@ private:
     [[nodiscard]]
     IResult<uint16_t> get_raw_data();
     
-    [[nodiscard]]
-    IResult<> set_zero_data(const uint16_t data);
 };
 
 };

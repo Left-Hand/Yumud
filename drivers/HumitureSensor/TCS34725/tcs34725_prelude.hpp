@@ -15,17 +15,13 @@
 namespace ymd::drivers{
 
 struct TCS34725_Prelude{
-    enum class Gain:uint8_t{
-        _1x = 0b00, 
-        _4x = 0b01, 
-        _16x = 0b10, 
-        _60x = 0b11 
-    };
+    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x52 >> 1);
 
-    enum class Error_Kind:uint8_t{
+
+    enum class [[nodiscard]] Error_Kind:uint8_t{
         WrongChipId
     };
-
+    
     DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
@@ -50,7 +46,16 @@ struct TCS34725_Prelude{
         BlueData = 0x1A
     };
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x52 >> 1);
+
+
+    enum class [[nodiscard]] Gain:uint8_t{
+        _1x = 0b00, 
+        _4x = 0b01, 
+        _16x = 0b10, 
+        _60x = 0b11 
+    };
+
+
 };
 
 struct TCS34725_Regset final:public TCS34725_Prelude{

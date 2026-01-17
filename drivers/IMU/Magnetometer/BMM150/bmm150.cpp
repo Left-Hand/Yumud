@@ -40,5 +40,6 @@ using IResult = Result<T, Error>;
 }
 
 [[nodiscard]] IResult<Vec3<iq24>> Self::read_mag(){
+    TODO();
     return Ok(Vec3<iq24>{0,0,0});
 }

@@ -171,3 +171,13 @@ private:
 static_assert(sizeof(fp16) == 2);
 
 }
+
+namespace std{
+	//建立元函数偏特化
+    template<>
+    struct is_arithmetic<ymd::math::fp16> : std::true_type {};
+    template<>
+    struct is_floating_point<ymd::math::fp16> : std::true_type {};
+    template<>
+    struct is_signed<ymd::math::fp16> : std::true_type {};
+}

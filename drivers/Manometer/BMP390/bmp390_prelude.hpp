@@ -9,43 +9,43 @@
 namespace ymd::drivers{
 
 struct BMP390_Prelude{
-    using Error = ImuError;
+using Error = ImuError;
 
-    template<typename T = void>
-    using IResult = Result<T, Error>;
+template<typename T = void>
+using IResult = Result<T, Error>;
 
-    enum class DataRate:uint8_t{
-        _400Hz = 0x02,
-        _200Hz = 0x03,
-        _100Hz = 0x04,
-        _50Hz = 0x05,
-        _25Hz = 0x06,
-        _12_5Hz = 0x07,
-        _6_25Hz = 0x08,
-        _3_125Hz = 0x09,
-        _1_5625Hz = 0x0a
-    };
+enum class [[nodiscard]] DataRate:uint8_t{
+    _400Hz = 0x02,
+    _200Hz = 0x03,
+    _100Hz = 0x04,
+    _50Hz = 0x05,
+    _25Hz = 0x06,
+    _12_5Hz = 0x07,
+    _6_25Hz = 0x08,
+    _3_125Hz = 0x09,
+    _1_5625Hz = 0x0a
+};
 
-    enum class AverageTimes:uint8_t{
-        _0 = 0x00,
-        _2 = 0x01,
-        _4 = 0x02,
-        _8 = 0x03,
-    };
+enum class [[nodiscard]] AverageTimes:uint8_t{
+    _0 = 0x00,
+    _2 = 0x01,
+    _4 = 0x02,
+    _8 = 0x03,
+};
 
-    enum class PmuCommand:uint8_t{
-        Suspend = 0x00,
-        Normal = 0x01,
-        UpdateOAE = 0x02,
-        ForcedWithFullCRST = 0x03,
-        ForcedWithFastCRST = 0x04,
-        FluxGuideWithFullCRST = 0x05,
-        FluxGuideWithFastCRST = 0x06,
-        BitResetWithFullCRST = 0x07,
-        BitResetWithFastCRST = 0x08,
-    };
+enum class [[nodiscard]] PmuCommand:uint8_t{
+    Suspend = 0x00,
+    Normal = 0x01,
+    UpdateOAE = 0x02,
+    ForcedWithFullCRST = 0x03,
+    ForcedWithFastCRST = 0x04,
+    FluxGuideWithFullCRST = 0x05,
+    FluxGuideWithFastCRST = 0x06,
+    BitResetWithFullCRST = 0x07,
+    BitResetWithFastCRST = 0x08,
+};
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
+static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
 };
 
 

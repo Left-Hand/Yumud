@@ -58,8 +58,8 @@ public:
 
     IResult<> write_screen(
         const DisplayCommand cmd, 
-        const std::span<const uint8_t, 4> pbuf){
-        
+        const std::span<const uint8_t, 4> pbuf
+    ){
         return transport_.write_screen(cmd, pbuf);
     }
 

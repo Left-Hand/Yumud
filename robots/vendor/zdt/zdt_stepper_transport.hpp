@@ -10,15 +10,15 @@ namespace ymd::hal{
 namespace ymd::robots::zdtmotor{
 
 
-class ZdtMotorPhy final{
+class ZdtMotorTransport final{
 public:
 
-    ZdtMotorPhy(Some<hal::Can *> && can) : 
+    ZdtMotorTransport(Some<hal::Can *> && can) : 
         may_uart_(ymd::None),
         may_can_(std::move(can)
     ){;}
 
-    ZdtMotorPhy(Some<hal::Uart *> && uart) : 
+    ZdtMotorTransport(Some<hal::Uart *> && uart) : 
         may_uart_(std::move(uart)),
         may_can_(ymd::None)
     {;}

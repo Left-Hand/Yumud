@@ -63,7 +63,7 @@ static constexpr std::array<uint8_t, 256> CRC8_TABLE = {
     0x5a, 0x06, 0x4b, 0x9c, 0xd1, 0x7f, 0x32, 0xe5, 0xa8
 };
 
-static constexpr uint8_t calc_crc(const std::span<const uint8_t> pbuf){
+[[nodiscard]] static constexpr uint8_t calc_crc(const std::span<const uint8_t> pbuf){
     uint8_t crc = 0;
     for (size_t i = 0; i < pbuf.size(); i++){
         crc = CRC8_TABLE[(crc ^ pbuf[i]) & 0xff];

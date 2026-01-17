@@ -1,319 +1,40 @@
+#include "exprimental.hpp"
 
-#include "core/math/real.hpp"
-#include "core/math/iq/iqmath.hpp"
-#include "core/math/batch/norm.hpp"
-#include "core/math/iq/fixed_t.hpp"
 #include "core/arch/riscv/riscv_common.hpp"
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
-
-// static constexpr __fast_inline 
-// int32_t __UIQ32getSinCosResult(uint32_t iq31X, uint32_t iq31Sin, uint32_t iq31Cos){
-//     uint32_t iq31Res;
-
-//     /* 0.333*x*C(k) */
-//     iq31Res = __mpyf_l(0x2aaaaaab, iq31X);
-//     iq31Res = __mpyf_l(iq31Cos, iq31Res);
-
-//     /* -S(k) - 0.333*x*C(k) */
-//     iq31Res = -(iq31Sin + iq31Res);
-
-//     /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
-//     iq31Res = iq31Res >> 1;
-//     iq31Res = __mpyf_l(iq31X, iq31Res);
-
-//     /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
-//     iq31Res = iq31Cos + iq31Res;
-
-//     /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-//     iq31Res = __mpyf_l(iq31X, iq31Res);
-
-//     /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-//     iq31Res = iq31Sin + iq31Res;
-
-//     return iq31Res;
-// }
-
-/*!
- * @brief Specifies inverse square root operation type.
- */
-#define TYPE_ISQRT   (0)
-/*!
- * @brief Specifies square root operation type.
- */
-#define TYPE_SQRT    (1)
-/*!
- * @brief Specifies magnitude operation type.
- */
-#define TYPE_MAG     (2)
-/*!
- * @brief Specifies inverse magnitude operation type.
- */
-#define TYPE_IMAG    (3)
-
+#include <cmath>
 
 using namespace ymd;
 
-
-namespace exprimental{
-using namespace iqmath::details;
-
-struct [[nodiscard]] IqSincosIntermediate{
-    using Self = IqSincosIntermediate;
-
-    struct SinCosResult{
-        math::fixed_t<31, int32_t> sin;
-        math::fixed_t<31, int32_t> cos;
-
-        friend OutputStream & operator << (OutputStream & os, const SinCosResult & obj){
-            return os << obj.sin << os.splitter() << obj.cos;
-        }
-    };
-
-    int32_t iq31_x;
-    int32_t iq31_sin;
-    int32_t iq31_cos;
-    uint8_t sect; 
-
-    __attribute__((always_inline)) constexpr 
-    math::fixed_t<31, int32_t> exact_sin() const {
-        //获取查找表的校准值
-
-        switch(sect){
-            case 0: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 1: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
-            case 2: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
-            case 3: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 4: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
-            case 5: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 6: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 7: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
-        }
-        __builtin_unreachable();
+template<typename Fn>
+__no_inline Microseconds eval_one_func(size_t times, Fn && fn){
+    const auto begin_us = clock::micros();
+    
+    auto y = std::forward<Fn>(fn)(0, 0);
+    auto x = uq32(0);
+    const auto step = uq32::from_rcp(times * 4);
+    for(size_t i = 0; i < times; ++i){
+        auto [s,c] = math::sincos_approx(x);
+        (y) += (std::forward<Fn>(fn)(s,c));
+        x+= step;
     }
 
-    __attribute__((always_inline)) constexpr 
-    math::fixed_t<31, int32_t> exact_cos() const {
-        switch(sect){
-            case 0: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
-            case 1: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 2: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
-            case 3: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 4: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_cos,  iq31_sin));
-            case 5: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, -iq31_sin, -iq31_cos));
-            case 6: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_sin,  iq31_cos));
-            case 7: return math::fixed_t<31, int32_t>::from_bits(  exact(iq31_x, iq31_cos, -iq31_sin));
-
-        }
-        __builtin_unreachable();
-    }
-
-    __attribute__((always_inline)) constexpr 
-    auto exact_sincos() const {
-
-        return SinCosResult{
-            exact_sin(),
-            exact_cos()
-        };
-    }
-
-private:
-    static constexpr int32_t 
-    exact(int32_t iq31X, int32_t iq31Sin, int32_t iq31Cos){
-        int32_t iq31Res;
-
-        /* 0.333*x*C(k) */
-        iq31Res = __mpyf_l(0x2aaaaaab, iq31X);
-        iq31Res = __mpyf_l(iq31Cos, iq31Res);
-
-        /* -S(k) - 0.333*x*C(k) */
-        iq31Res = -(iq31Sin + iq31Res);
-
-        /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
-        iq31Res = iq31Res >> 1;
-        iq31Res = __mpyf_l(iq31X, iq31Res);
-
-        /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
-        iq31Res = iq31Cos + iq31Res;
-
-        /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-        iq31Res = __mpyf_l(iq31X, iq31Res);
-
-        /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-        iq31Res = iq31Sin + iq31Res;
-
-        return iq31Res;
-    }
-
-};
-
-template<const size_t Q>
-constexpr math::fixed_t<Q, uint32_t> mysqrt(const math::fixed_t<Q, uint64_t> x){
-    return math::fixed_t<Q, uint32_t>::from_bits(
-        from_single_input_64<Q, TYPE_SQRT>(x.to_bits()
-        // iqmath::details::IqSqrtCoeffs::template from_single_u32<Q, TYPE_SQRT>(x.to_bits()
-        ).template compute<Q, TYPE_SQRT>()
-    );
+    const auto end_us = clock::micros();
+    const auto elapsed = end_us - begin_us;
+    DEBUG_PRINTLN(times, elapsed, y);
+    return (end_us - begin_us);
 }
 
-
-
-template<size_t _Q, size_t Q = std::min(_Q, size_t(16))>
-constexpr IqSincosIntermediate __IQNgetCosSinPU(int32_t iqn_x){
-    if constexpr (_Q > 16) iqn_x = iqn_x >> (_Q - 16);
-    constexpr int32_t iqn_tau = (1 << Q) * (M_PI * 2);
-    //将x取余到[0, 1)之间
-
-    iqn_x = iqn_x & ((1 << Q) - 1);
-
-    constexpr uint32_t eeq_mask = ((1 << (Q-3)) - 1);
-    const uint8_t sect = iqn_x >> (Q - 3);
-    //将一个周期拆分为八个区块 每个区块长度pi/4 获取区块索引
-    
-    const uint32_t uiqn_eeq_x = (iqn_x & eeq_mask) * (iqn_tau / 8) >> (Q - 3);
-    //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块
-
-    const uint32_t uiq31_eeq_x = uiqn_eeq_x << (31 - Q);
-    //提高x的q值到31
-    
-    constexpr uint32_t uiq31_quatpi = uint32_t(uint64_t(1 << 29) * (M_PI));
-
-    const uint32_t uiq31_flip_x = (sect & 0b1) ? (uiq31_quatpi - uiq31_eeq_x) : uiq31_eeq_x;
-    //将x由锯齿波变为三角波
-
-    const int32_t iq31_x = uiq31_flip_x & 0x01ffffff;
-    //获取每个扇区的偏移值
-
-    const uint8_t lut_index = (uint16_t)(uiq31_flip_x >> 25) & 0x003f;
-    //计算查找表索引
-
-    const int32_t iq31_sin = iqmath::details::_IQ31SinLookup[lut_index];
-    const int32_t iq31_cos = iqmath::details::_IQ31CosLookup[lut_index];
-
-    return IqSincosIntermediate{
-        iq31_x, 
-        iq31_sin,
-        iq31_cos,
-        sect
-    };
-
+template<typename Fn1, typename Fn2>
+__no_inline auto compare_func(size_t times, Fn1 && fn1, Fn2 && fn2){
+    const auto elapsed1 = eval_one_func(times, std::forward<Fn1>(fn1));
+    const auto elapsed2 = eval_one_func(times, std::forward<Fn2>(fn2));
+    DEBUG_PRINTLN(elapsed1, elapsed2);
 }
-
-
-
-template<size_t _Q, size_t Q = std::min(_Q, size_t(16))>
-constexpr IqSincosIntermediate __IQNgetCosSin(int32_t iqn_x){
-    if constexpr (_Q > 16) iqn_x = iqn_x >> (_Q - 16);
-    constexpr uint32_t uiqn_inv_tau = (1 << Q) / (M_PI * 2);
-
-    //现在直接缩到原来1/pi 调用pu版本 这样减少了一次取余(复杂度与除法相同) 性能提高20%
-    //这个函数后面的不用看了
-    return __IQNgetCosSinPU<Q>(
-        (uint32_t(iqn_x) * uiqn_inv_tau) >> Q);
-}
-
-
-template<size_t Q, typename D>
-requires (sizeof(D) == 4)
-__fast_inline constexpr 
-math::fixed_t<31, int32_t> mysinpu(const math::fixed_t<Q, D> iq_x){
-    return __IQNgetCosSinPU<Q>(iq_x.to_bits()).exact_cos();
-}
-
-template<size_t Q, typename D>
-requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
-math::fixed_t<31, int32_t> mycospu(const math::fixed_t<Q, D> x){
-    return __IQNgetCosSinPU<Q>(x.to_bits()).exact_sin();
-}
-
-template<size_t Q, typename D>
-requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
-std::array<math::fixed_t<31, int32_t>, 2> mysincospu(const math::fixed_t<Q, D> x){
-    const auto res = __IQNgetCosSinPU<Q>(x.to_bits()).exact_sincos();
-    return {res.sin, res.cos};
-}
-
-}
-
-template<size_t Q>
-[[nodiscard]] static constexpr int32_t myIQFtoN(const float fv) {
-    static_assert(sizeof(float) == 4);
-    constexpr uint32_t NAN_BITS = 0x7fc00000;
-    const uint32_t bits = std::bit_cast<uint32_t>(fv);
-
-    if (bits == NAN_BITS) {
-        // NaN - 返回0或根据需求处理
-        return 0;
-    }
-    
-    const bool is_negative = bool(bits >> 31);
-    const int32_t exponent = static_cast<int32_t>((bits >> 23) & 0xFF) - 127;
-    const uint32_t mantissa_bits = bits & 0x7FFFFF;
-    
-    // 处理零和非常小的数
-    if (exponent == -127 && mantissa_bits == 0) {
-        return 0;  // 零（正或负）
-    }
-    
-    // 检查是否超出IQ表示范围
-    if (exponent >= int32_t(Q)) {
-        // 溢出 - 返回最大正值或最小负值
-        return (is_negative) ? 
-            std::numeric_limits<int32_t>::min() : std::numeric_limits<int32_t>::max();
-    }
-    
-    // 构建完整的尾数（包括隐含的1）
-    uint64_t mantissa = static_cast<uint64_t>(mantissa_bits) | (1ULL << 23);
-    
-    // 调整尾数位数，考虑小数点位置
-    int32_t shift = 23 - exponent - Q;
-    
-    int64_t result;
-    if (shift >= 0) {
-        result = static_cast<int64_t>(mantissa >> shift);
-    } else {
-        result = static_cast<int64_t>(mantissa << (-shift));
-    }
-    
-    // 应用符号
-    if(is_negative) result = -result;
-    
-    // 检查溢出
-    if (result > std::numeric_limits<int32_t>::max()) {
-        return std::numeric_limits<int32_t>::max();
-    } else if (result < std::numeric_limits<int32_t>::min()) {
-        return std::numeric_limits<int32_t>::min();
-    }
-    
-    return static_cast<int32_t>(result);
-}
-
-
-// 添加更多测试
-static_assert(myIQFtoN<16>(0.0f) == 0);
-static_assert(myIQFtoN<16>(-0.0f) == 0);
-static_assert(myIQFtoN<16>(1.0f) == 65536);  // Q16: 1.0 = 65536
-static_assert(myIQFtoN<16>(-1.0f) == -65536);
-static_assert(myIQFtoN<16>(0.5f) == 32768);
-static_assert(myIQFtoN<16>(-0.5f) == -32768);
-static_assert(myIQFtoN<16>(0.25f) == 16384);
-static_assert(myIQFtoN<16>(1.5f) == 98304);  // 1.5 * 65536 = 98304
-
-// 测试非常小的数
-static_assert(myIQFtoN<16>(0.0001f) == 6);  // 近似值
-static_assert(myIQFtoN<16>(-0.0001f) == -6);
-
-// 测试Q不同值的情况
-static_assert(myIQFtoN<8>(1.0f) == 256);    // Q8: 1.0 = 256
-static_assert(myIQFtoN<8>(0.5f) == 128);
-static_assert(myIQFtoN<24>(1.0f) == 16777216);  // Q24: 1.0 = 16777216
-
-static_assert(myIQFtoN<16>(-32768.0f / 65536.0f) == -32768);
 
 
 template<typename Fn>
@@ -322,30 +43,52 @@ __no_inline auto eval_func(Fn && fn){
 
     static constexpr size_t times = 10000;
 
-    const auto begin_ms = clock::micros();
+    const auto begin_us = clock::micros();
     const auto t = clock::time();
     for(size_t i = 0; i < times; ++i){
         // __nop;
-        (y) += (std::forward<Fn>(fn)(t));
+        // (y) += (std::forward<Fn>(fn)(t));
         // __nop;
         // __nop;
     }
 
-    const auto end_ms = clock::micros();
-    // DEBUG_PRINTLN(static_cast<uint32_t>((end_ms - begin_ms).count()) / times );
-    DEBUG_PRINTLN(static_cast<uint32_t>((end_ms - begin_ms).count()), y);
-    return (end_ms - begin_ms);
+    const auto end_us = clock::micros();
+    // DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()) / times );
+    DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()), y);
+    return (end_us - begin_us);
 }
 
+
+
 template<typename Fn>
-void test_func(Fn && fn){
+void play_func(Fn && fn){
     while(true){
         const auto now_secs = clock::time();
-        // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(TAU) -  1000 * iq16(TAU);
-        const auto x = 2 * iq16(math::frac(now_secs * 2));
+        // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
+        // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
+        const auto x = pu_to_uq32((now_secs * 2));
         // const auto x = 6 * frac(t * 2) - 3;
         auto y = std::forward<Fn>(fn)(x);
-        DEBUG_PRINTLN_IDLE(x, y);
+        DEBUG_PRINTLN_IDLE(
+            // x, 
+            std::get<0>(y),
+            std::get<1>(y)
+            // std::sin(2 * M_PI * float(iq20(x))),
+            // 100000 * (float(std::get<0>(y)) - std::sin(2 * M_PI * float(iq20(x)))), 
+            // std::get<0>(y).to_bits() >> 16, 
+            // std::get<1>(y).to_bits() >> 16, 
+            // dual_iq31_length_squared(std::get<0>(y), std::get<1>(y)).to_bits() >> 16, 
+
+            // std::get<2>(y).to_bits() >> 16, 
+            // std::get<3>(y).to_bits() >> 16, 
+
+            // dual_iq31_length_squared(std::get<2>(y), std::get<3>(y)).to_bits(), 
+            // ((std::get<0>(y).to_bits() >> 16) - (std::get<2>(y).to_bits() >> 16)),
+            // ((std::get<1>(y).to_bits() >> 16) - (std::get<3>(y).to_bits() >> 16)),
+
+            // dual_iq31_length_squared((std::get<0>(y) - std::get<2>(y)),
+            // (std::get<1>(y) - std::get<3>(y)).to_bits()
+        );
         clock::delay(1ms);
     }
 }
@@ -353,48 +96,83 @@ void test_func(Fn && fn){
 void sincos_main(){
     DEBUGGER_INST.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576_KHz), 
+        // .baudrate = hal::NearestFreq(576_KHz), 
+        .baudrate = hal::NearestFreq(6000000), 
+        .tx_strategy = CommStrategy::Blocking,
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
     DEBUGGER.no_brackets(EN);
+    // DEBUGGER.set_eps(4);
+    DEBUGGER.set_eps(6);
 
 
     clock::delay(200ms);
-
-    auto func = [](const iq16 x) -> auto {
-        // return std::sin(x);
-        // return exprimental::math::sinpu(static_cast<iq31>(x));
-        // return exprimental::mycospu(static_cast<iq31>(x));
-        // return exprimental::mysqrt(uuq16::from_bits(x.to_bits()) << 16);
-        // return sqrt(uuq16::from_bits(x.to_bits()) << 16);
-        // return sqrt(uq16::from_bits(x.to_bits()) << 16);
-        // const auto [_s, _c] = sincos(x);
-        // const auto s = iq16(_s);
-        // const auto c = iq16(_c);
-        // return sqrt(s * s + c * c);
-        // const auto res = (s * s + c * c);
-        // const auto res = sqrt(uuq16::from_bits(static_cast<uint64_t>(std::bit_cast<uint32_t>(x.to_bits())) << 16));
-        const auto y_bits = x.to_bits();
-        // const auto y_bits = __builtin_clz(x.to_bits());
-        // const auto y_bits = __builtin_bitreverse32(x.to_bits());
-        // const auto res = sqrt(uuq16::from_bits(static_cast<uint64_t>(std::bit_cast<uint32_t>(y_bits) << 16)));
-        const auto res = math::inv_mag(
-            iq16::from_bits(static_cast<int32_t>(std::bit_cast<uint32_t>(y_bits))),
-            iq16::from_bits(static_cast<int32_t>(std::bit_cast<uint32_t>(y_bits)))
-        );
-        // if(res < 0) PANIC{s,c,res};
-        return (res);
-        // return (s * s);
-        // return (c * c);
-        // return sqrt(uq16::from_bits(x.to_bits()) << 16);
-        // return ymd::math::sinpu(x);
-    };
 
     // const auto dur = eval_func(func);
     // PANIC{riscv_has_native_hard_f32};
     // PANIC{has_b_clz};
     // PANIC{riscv_has_native_ctz};
     // PANIC{riscv_has_native_ctz};
-    test_func(func);
+
+
+    if(false)while(true){
+    // while(true){
+        static uq32 x = 0;
+        constexpr uq32 step = uq32::from_rcp(1024u);
+        x += step;
+        // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
+        // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
+        // const auto x = 6 * frac(t * 2) - 3;
+        const auto [_s, _c] = math::sincospu(x);
+        const auto s = _s;
+        const auto c = _c;
+        // const auto [s, c] = math::sincospu_approx(x);
+        DEBUG_PRINTLN_IDLE(
+            // x, 
+            s, c, 
+            math::atan2pu(s, c),
+            (int64_t)math::pu_to_uq32(math::atan2pu(s, c)).to_bits() - x.to_bits()
+            // (int64_t)math::atan2pu(s, c).to_bits(),
+            // x.to_bits()
+            // math::atan2pu(s, c),
+            // iq16(math::atanpu(s / c)),
+
+            // math::atan2(s, c),
+            // iq16(math::atan(s / c))
+        );
+        // clock::delay(1ms);
+    }
+    if(false){
+        uq32 x = 0;
+        iq24 y = 0;
+        constexpr uq32 step = uq32::from_rcp(32u);
+        for(size_t i = 0; i < 32; ++i){
+            y += iq24(std::get<0>(math::sincospu(x)));
+            x += step;
+        }
+        DEBUG_PRINTLN(y);
+    }
+
+    compare_func(
+        1024,
+        // 32,
+        [](const iq24 s, const iq24 c) -> auto {
+            // const auto [s, c] = sincospu_approx(x);
+            // const auto [s, c] = math::sincospu_approx(x);
+            // return iq20(s) + iq20(c);
+            return math::atan2pu(s,c);
+            // return iq20(s);
+        },
+        [](const iq31 s, const iq31 c) -> auto {
+            // const auto [s, c] = sincospu_approx(x);
+            return math::atan2pu(s,c);
+            // return iq31(0);
+            // const auto fx = float(x);
+            // const auto s = std::sin(fx);
+            // const auto c = std::cos(fx);
+            // return iq20::from(s) + iq20::from(c);
+            // return iq20(s);
+        }
+    );
     PANIC{};
 }

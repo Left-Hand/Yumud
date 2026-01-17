@@ -30,10 +30,10 @@ public:
     }
 
     constexpr void set_delay(T delay) { 
-        alpha_ = map_delay_to_alpha(delay);
+        alpha_ = delay_to_alpha(delay);
     }
 
-    static constexpr T map_delay_to_alpha(T delay) noexcept{
+    static constexpr T delay_to_alpha(T delay) noexcept{
         // thiran delay limit to 0.5 ~ 1.5
         if (delay < T(0.5f)) {
             return 0; // equal to one delay

@@ -54,7 +54,7 @@ public:
         // 快速因子r 通过r的频率的信号响应减半
         uint32_t r;
 
-        constexpr Result<Coeffs, StringView> try_to_coeffs() const {
+        constexpr Result<Coeffs, StringView> try_into_coeffs() const {
             auto & self = *this;
 
             if(fs >= 65536) [[unlikely]]
@@ -84,7 +84,7 @@ public:
     }
 
     using State = SecondOrderState<iq16>;
-    constexpr State update(
+    constexpr State iterate(
         const State state, 
         const std::array<iq16, 2> ref
     ) const {

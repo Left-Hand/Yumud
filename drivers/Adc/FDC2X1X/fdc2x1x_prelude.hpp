@@ -96,40 +96,40 @@ struct FDC2X1X_Prelude{
 
 struct FDC1X2X_Regs:public FDC2X1X_Prelude{
 
-    struct ConversionDataHighReg:public Reg16<>{
+    struct R16_ConversionDataHigh:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x00;
         uint16_t data_msb:12;
-        bool err_aw:1;
-        bool err_wd:1;
+        uint16_t err_aw:1;
+        uint16_t err_wd:1;
         uint16_t __resv__:2;
     };
 
-    struct ConversionDataLowReg:public Reg16<>{
+    struct R16_ConversionDataLow:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x01;
-        uint16_t data_lsb:16;
+        uint16_t data_lsb;
     };
 
-    struct ConversionDataReg:public Reg16<>{
-        ConversionDataHighReg high;
-        ConversionDataLowReg low;
+    struct ConversionData{
+        R16_ConversionDataHigh high;
+        R16_ConversionDataLow low;
     };
 
-    struct ReferenceCountReg:public Reg16<>{
+    struct R16_ReferenceCount:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x08;
         uint8_t count;
     };
 
-    struct OffsetReg:public Reg16<>{
+    struct R16_Offset:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x0C;
         uint8_t offset;
     };
 
-    struct SettleCountReg:public Reg16<>{
+    struct R16_SettleCount:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x10;
         uint8_t settle_count;
     };
 
-    struct ClockDividerReg:public Reg16<>{
+    struct R16_ClockDivider:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x14;
         uint16_t fref_divider:10;
         uint16_t __resv1__:2;
@@ -137,93 +137,93 @@ struct FDC1X2X_Regs:public FDC2X1X_Prelude{
         uint16_t __resv2__:2;
     };
 
-    struct StatusReg:public Reg16<>{
+    struct R16_Status:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x18;
-        bool ch3_unread_conv:1;
-        bool ch2_unread_conv:1;
-        bool ch1_unread_conv:1;
-        bool ch0_unread_conv:1;
+        uint16_t ch3_unread_conv:1;
+        uint16_t ch2_unread_conv:1;
+        uint16_t ch1_unread_conv:1;
+        uint16_t ch0_unread_conv:1;
         uint16_t __resv1__:2;
-        bool data_ready:1;
-        bool amp_low_warning:1;
-        bool amp_high_warning:1;
-        bool wtd_timeout_error:1;
+        uint16_t data_ready:1;
+        uint16_t amp_low_warning:1;
+        uint16_t amp_high_warning:1;
+        uint16_t wtd_timeout_error:1;
         uint16_t __resv2__:2;
         uint16_t channel_error:2;
     };
 
-    struct StatusConfigReg:public Reg16<>{
+    struct R16_StatusConfig:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x19;
-        bool data_ready_to_int:1;
+        uint16_t data_ready_to_int:1;
         uint16_t __resv__:4;
         uint16_t wtd_timeout_error_to_int:1;
-        bool amp_low_warning_to_out:1;
-        bool amp_high_warning_to_out:1;
-        bool wtd_timeout_error_to_out:1;
+        uint16_t amp_low_warning_to_out:1;
+        uint16_t amp_high_warning_to_out:1;
+        uint16_t wtd_timeout_error_to_out:1;
         uint16_t __resv2__:2;
     };
 
-    struct ConfigReg:public Reg16<>{
+    struct R16_Config:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x1a;
         uint16_t __resv1__:6;
-        bool high_current_drive:1;
-        bool intb_disen:1;
+        uint16_t high_current_drive:1;
+        uint16_t intb_disen:1;
         uint16_t __resv2__:1;
-        bool lower_power_en:1;
+        uint16_t lower_power_en:1;
         uint16_t __resv3__:1;
-        bool sleep_mode_en:1;
+        uint16_t sleep_mode_en:1;
         uint16_t active_channel_sel:2;
     };
 
 
-    struct MuxConfigReg:public Reg16<>{
+    struct R16_MuxConfig:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x1b;
         BandWidth bandwidth:3;
         uint16_t __resv__:10;
         AutoScanConfig auto_scan_config:2;
-        bool auto_scan_en:1;
+        uint16_t auto_scan_en:1;
 
     };
 
-    struct ResetDevReg:public Reg16<>{
+    struct R16_ResetDev:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x1c;
         uint16_t __resv1__:9;
         Gain gain:2;
         uint16_t __resv2__:4; 
-        bool reset_dev:1;
+        uint16_t reset_dev:1;
     };
 
-    struct DriveCurrentReg:public Reg16<>{
+    struct R16_DriveCurrent:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x1e;
         uint16_t __resv__:11;
         DriveCurrent drive_current:5;
     };
 
-    struct ManufacturerIdReg:public Reg16<>{
+    struct R16_ManufacturerId:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x7E;
         static constexpr uint16_t correct = 0x5449;
         uint16_t id;
     };
 
-    struct DeviceIdReg:public Reg16<>{
+    struct R16_DeviceId:public Reg16<>{
         static constexpr RegAddr ADDRESS =0x7F;
         static constexpr uint16_t correct = 03054;
         uint16_t id;
     };
 
-    ConversionDataReg conv_data_regs[4] = {};
-    ReferenceCountReg ref_count_regs[4] = {};
-    OffsetReg offset_regs[4] = {};
-    SettleCountReg settle_count_regs[4] = {};
-    ClockDividerReg clock_divider_regs[4] = {};
-    StatusReg status_reg = {};
-    StatusConfigReg status_config_reg = {};
-    ConfigReg config_reg = {};
-    MuxConfigReg mux_config_reg = {};
-    ResetDevReg reset_dev_reg = {};
-    DriveCurrentReg drive_current_regs[4] = {};
-    ManufacturerIdReg manufacturer_id_reg = {};
-    DeviceIdReg device_id_reg = {};
+    ConversionData conv_data[4] = {};
+    R16_ReferenceCount ref_count_regs[4] = {};
+    R16_Offset offset_regs[4] = {};
+    R16_SettleCount settle_count_regs[4] = {};
+    R16_ClockDivider clock_divider_regs[4] = {};
+    R16_Status status_reg = {};
+    R16_StatusConfig status_config_reg = {};
+    R16_Config config_reg = {};
+    R16_MuxConfig mux_config_reg = {};
+    R16_ResetDev reset_dev_reg = {};
+    R16_DriveCurrent drive_current_regs[4] = {};
+    R16_ManufacturerId manufacturer_id_reg = {};
+    R16_DeviceId device_id_reg = {};
 };
 
 

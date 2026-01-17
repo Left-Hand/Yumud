@@ -10,8 +10,6 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
-#include "hal/bus/uart/uartsw.hpp"
-
 #include "core/clock/time.hpp"
 
 
@@ -62,7 +60,7 @@ void adrc_main(){
         .r = 256.5_iq10,
         .h = 0.01_iq10,
         .x2_limit = 200
-    }.try_to_coeffs().unwrap();
+    }.try_into_coeffs().unwrap();
     static NonlinearTrackingDifferentiator<iq16, 2> command_shaper_{
         coeffs
     };
@@ -75,7 +73,7 @@ void adrc_main(){
 
     static constexpr auto track_coeffs = typename LinearTrackingDifferentiator<iq16, 2>::Config{
         .fs = ISR_FREQ , .r = 140
-    }.try_to_coeffs().unwrap();
+    }.try_into_coeffs().unwrap();
 
     [[maybe_unused]] LinearTrackingDifferentiator<iq16, 2> feedback_differ_{
         track_coeffs
@@ -85,15 +83,15 @@ void adrc_main(){
     auto command_shaper_poller = [&](){
         const auto now_secs = clock::time();
         const auto t0 = clock::micros();
-        shaped_track_state_ = command_shaper_.update(shaped_track_state_, {u, 0});
-        // feedback_track_ = feedback_differ_.update(feedback_track_, iq16::from_bits(shaped_track_state_.x1.to_bits() >> 16));
-        // feedback_track_ = feedback_differ_.update(feedback_track_, sin(now_secs * 140));
-        feedback_track_ = feedback_differ_.update(feedback_track_, {math::frac(now_secs), 1});
-        // feedback_track_ = feedback_differ_.update(feedback_track_, u);
+        shaped_track_state_ = command_shaper_.iterate(shaped_track_state_, {u, 0});
+        // feedback_track_ = feedback_differ_.iterate(feedback_track_, iq16::from_bits(shaped_track_state_.x1.to_bits() >> 16));
+        // feedback_track_ = feedback_differ_.iterate(feedback_track_, sin(now_secs * 140));
+        feedback_track_ = feedback_differ_.iterate(feedback_track_, {math::frac(now_secs), 1});
+        // feedback_track_ = feedback_differ_.iterate(feedback_track_, u);
         const auto t1 = clock::micros();
         elapsed_micros = t1 - t0;
 
-        // leso.update(command_shaper_.state()[0], u);
+        // leso.iterate(command_shaper_.state()[0], u);
 
     };
 

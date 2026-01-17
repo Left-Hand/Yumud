@@ -26,10 +26,10 @@ namespace ymd::drivers{
 
 // class ABEncoderTimer:public ABEncoderIntf{
 // protected:
-//     GenericTimer & inst;
+//     GeneralTimer & inst;
 //     const uint lines = 1 << 4;
 // public:
-//     ABEncoderTimer(GenericTimer & _inst):inst(_inst){;}
+//     ABEncoderTimer(GeneralTimer & _inst):inst(_inst){;}
 //     void init() override{
 //         inst.initAsEncoder();
 //     }
@@ -149,7 +149,7 @@ public:
         b_pin_.inpu();    
     }
 
-    uint8_t get_code() const {
+    [[nodiscard]] uint8_t get_code() const {
 
         const auto a = a_pin_.read().to_bool(); 
         const auto b = b_pin_.read().to_bool(); 
@@ -157,28 +157,15 @@ public:
         return uint8_t(uint8_t(b) << 1) | uint8_t(a);
     }
 
-    constexpr const auto & count() const{
+    [[nodiscard]] constexpr int32_t count() const{
         return cnt_;
     }
 
-    constexpr const auto & get_err_cnt() const{
+    [[nodiscard]] constexpr uint32_t get_err_cnt() const{
         return err_cnt_;
     }
 
     void tick(){
-        static constexpr std::array<uint8_t, 4> INC_MAP = {
-            0b01,//00
-            0b11,//01
-            0b00,//10
-            0b10 //11
-        };
-
-        static constexpr std::array<uint8_t, 4> DEC_MAP = {
-            0b10,//00
-            0b00,//01
-            0b11,//10
-            0b01 //11
-        };
 
         const auto this_code = get_code();
 
@@ -186,8 +173,8 @@ public:
             last_code_ = this_code;
             return;
         }
-        const auto inc_code = INC_MAP[last_code_];
-        const auto dec_code = DEC_MAP[last_code_];
+        const auto inc_code = INC_TABLE[last_code_];
+        const auto dec_code = DEC_TABLE[last_code_];
 
         if(this_code == inc_code) {cnt_++;}
         else if(this_code == dec_code) {cnt_--;}
@@ -197,11 +184,26 @@ public:
 
 private:
     static constexpr uint8_t UNSET = 0xFF;
+
+    static constexpr std::array<uint8_t, 4> INC_TABLE = {
+        0b01,//00
+        0b11,//01
+        0b00,//10
+        0b10 //11
+    };
+
+    static constexpr std::array<uint8_t, 4> DEC_TABLE = {
+        0b10,//00
+        0b00,//01
+        0b11,//10
+        0b01 //11
+    };
+
     hal::Gpio & a_pin_;
     hal::Gpio & b_pin_;
-    uint8_t last_code_ = UNSET;
     int32_t cnt_ = 0;
     uint32_t err_cnt_ = 0;
+    uint8_t last_code_ = UNSET;
 };
 
 }

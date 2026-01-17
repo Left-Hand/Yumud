@@ -46,7 +46,7 @@ enum class [[nodiscard]] RegAddr:uint8_t{
 };
 
 
-struct [[nodiscard]] Packet{
+struct [[nodiscard]] Packet final{
     union{
         struct{
             uint32_t crc:6;

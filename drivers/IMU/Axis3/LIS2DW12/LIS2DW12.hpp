@@ -15,15 +15,15 @@ namespace ymd::drivers{
 
 
 struct LIS2DW12_Prelude{
-    enum class DPS:uint8_t{
+    enum class [[nodiscard]] DPS:uint8_t{
         _250, _500, _1000, _2000
     };
 
-    enum class G:uint8_t{
+    enum class [[nodiscard]] G:uint8_t{
         _2, _4, _8, _16
     };
 
-    enum class AccOdr:uint8_t{
+    enum class [[nodiscard]] AccOdr:uint8_t{
         _25_32 = 0b0001,
         _25_16,
         _25_8,
@@ -39,7 +39,7 @@ struct LIS2DW12_Prelude{
         _1600
     };
 
-    enum class GyrOdr:uint8_t{
+    enum class [[nodiscard]] GyrOdr:uint8_t{
         _25 = 0b0110,
         
         _50,
@@ -51,14 +51,14 @@ struct LIS2DW12_Prelude{
         _3200
     };
     
-    enum class AccFs:uint8_t{
+    enum class [[nodiscard]] AccFs:uint8_t{
         _2G     =   0b0011,
         _4G     =   0b0101,
         _8G     =   0b1000,
         _16G    =   0b1100
     };
 
-    enum class GyrFs:uint8_t{
+    enum class [[nodiscard]] GyrFs:uint8_t{
         _2000deg = 0b0000,
         _1000deg,
         _500deg,
@@ -66,7 +66,7 @@ struct LIS2DW12_Prelude{
         _125deg
     };
 
-    enum class Command:uint8_t{
+    enum class [[nodiscard]] Command:uint8_t{
         START_FOC = 0x04,
         ACC_SET_PMU = 0b0001'0000,
         GYR_SET_PMU = 0b0001'0100,
@@ -77,13 +77,13 @@ struct LIS2DW12_Prelude{
         STEP_CNT_CLR = 0xB2
     };
 
-    enum class PmuType{
+    enum class [[nodiscard]] PmuType{
         Acc,
         Gyr,
         Mag
     };
 
-    enum class PmuMode{
+    enum class [[nodiscard]] PmuMode{
         Suspend = 0b00,
         Normal = 0b01,
         LowPower = 0b10,

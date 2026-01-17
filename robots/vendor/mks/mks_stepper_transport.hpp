@@ -26,7 +26,7 @@ public:
 
     void write_can_frame(const NodeId node_id, const std::span<const uint8_t> bytes) {
         const auto msg = hal::BxCanFrame(
-            map_nodeid_to_canid(node_id),
+            nodeid_to_canid(node_id),
             hal::BxCanPayload::from_bytes(bytes)
         );
 
@@ -44,7 +44,34 @@ private:
     Option<hal::Uart &> uart_;
     Option<hal::Can &> can_;
 
-    static constexpr hal::CanStdId map_nodeid_to_canid(
+    static constexpr hal::CanStdId nodeid_to_canid(
+        const NodeId node_id
+    ){
+        return hal::CanStdId::from_bits(node_id.to_u8());
+    }
+};
+class MksMotor_CanTransport final{
+public:
+    explicit MksMotor_CanTransport(Some<hal::Can *> && can) : 
+        can_(can.deref()){
+        // reconf(cfg);
+    }
+
+
+    void write_msg(const NodeId node_id, const std::span<const uint8_t> bytes) {
+        const auto msg = hal::BxCanFrame(
+            nodeid_to_canid(node_id),
+            hal::BxCanPayload::from_bytes(bytes)
+        );
+
+        can_.try_write(msg).examine();
+    }
+
+
+private:
+    hal::Can & can_;
+
+    static constexpr hal::CanStdId nodeid_to_canid(
         const NodeId node_id
     ){
         return hal::CanStdId::from_bits(node_id.to_u8());

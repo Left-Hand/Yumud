@@ -9,7 +9,8 @@ class IST8310 final:
     public IST8310_Prelude{
 public:
 
-    explicit IST8310(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    explicit IST8310(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
     explicit IST8310(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
     explicit IST8310(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):

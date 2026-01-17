@@ -41,24 +41,20 @@ IResult<uint16_t> MA730::get_raw_data(){
 }
 
 
-IResult<> MA730::set_zero_data(const uint16_t data){
-    {
-        auto reg = RegCopy(regs_.zero_data_low_reg);
-        reg.bits = data & 0xff;
-        return write_reg(reg);
-    }
-
-    {
-        auto reg = RegCopy(regs_.zero_data_high_reg);
-        reg.bits = data >> 8;
-        return write_reg(reg);
-    }
-}
-
 
 IResult<> MA730::set_zero_angle(const Angular<uq32> angle){
-    const auto data = (angle.to_turns().to_bits() >> 16);
-    return set_zero_data(data);
+    const auto bits = (angle.to_turns().to_bits() >> 16);
+    {
+        auto reg = RegCopy(regs_.zero_low_reg);
+        reg.bits = bits & 0xff;
+        return write_reg(reg);
+    }
+
+    {
+        auto reg = RegCopy(regs_.zero_high_reg);
+        reg.bits = bits >> 8;
+        return write_reg(reg);
+    }
 }
 
 IResult<MagStatus> MA730::get_mag_status(){
@@ -129,7 +125,7 @@ IResult<> MA730::set_mag_threshold(const MagThreshold low, const MagThreshold hi
 
 IResult<> MA730::set_direction(const RotateDirection direction){
     auto reg = RegCopy(regs_.direction_reg);
-    reg.direction = direction == CCW;
+    reg.direction_is_ccw = direction == CCW;
     return write_reg(reg);
 }
 

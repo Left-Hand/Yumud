@@ -22,19 +22,26 @@ struct MT6835_Prelude{
     };
 
     enum class Command:uint16_t{
-        Write = 0b0110,
-        Read = 0b0011,
-        Burn = 0b1100,
+        WriteReg = 0b0110,
+        ReadReg = 0b0011,
+        BurnEEprom = 0b1100,
         AutoSetZero = 0b0101,
-        ContinuousRead = 0b1010
+        ContinuousReadAngle = 0b1010
     };
 
-    struct [[nodiscard]] Packet{
+    struct [[nodiscard]] AnglePacket final{
         uint8_t angle_20_13;
         uint8_t angle_12_5;
+
+        //转速太快 1为报警
         uint8_t over_speed:1;
+
+        //磁场太弱 1为报警
         uint8_t mag_weak:1;
+
+        //芯片供电欠压 1为报警
         uint8_t under_voltage:1;
+
         uint8_t angle_4_0:5;
         uint8_t crc;
 
@@ -42,25 +49,27 @@ struct MT6835_Prelude{
             return std::span<uint8_t, 4>(reinterpret_cast<uint8_t*>(this), 4);
         }
 
-        [[nodiscard]] IResult<Angular<uq32>> parse() const {
+        [[nodiscard]] constexpr IResult<Angular<uq32>> parse() const {
             if(calc_crc() != crc) [[unlikely]]
                 return Err(Error::InvalidCrc);
 
-            if(over_speed) [[unlikely]]
-                return Err(Error::OverSpeed);
+            // if(over_speed) [[unlikely]]
+            //     return Err(Error::OverSpeed);
 
-            if(under_voltage) [[unlikely]]
-                return Err(Error::UnderVoltage);
+            // if(under_voltage) [[unlikely]]
+            //     return Err(Error::UnderVoltage);
 
-            if(mag_weak) [[unlikely]]
-                return Err(Error::MagnetLow);
+            // if(mag_weak) [[unlikely]]
+            //     return Err(Error::MagnetLow);
 
-            const auto turns = uq20::from_bits(angle_20());
+            const auto turns = uq20::from_bits(angle21());
             return Ok(Angular<uq32>::from_turns(turns));
         }
     private:
-        [[nodiscard]] constexpr uint32_t angle_20() const {
-            return (angle_20_13 << 13) | (angle_12_5 << 5) | angle_4_0;
+        [[nodiscard]] constexpr uint32_t angle21() const {
+            return (static_cast<uint32_t>(angle_20_13) << 13) 
+                | (static_cast<uint32_t>(angle_12_5) << 5) 
+                | static_cast<uint32_t>(angle_4_0);
         }
 
         [[nodiscard]] constexpr uint8_t calc_crc() const{
@@ -96,107 +105,107 @@ struct MT6835_Prelude{
         }
     };
 
-    static_assert(sizeof(Packet) == 4);
+    static_assert(sizeof(AnglePacket) == 4);
 
 };
 
 class MT6835_Regs:public MT6835_Prelude{
-    struct R8_UserId:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x001;
-        uint8_t id:8;
-    };
+struct R8_UserId:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x001;
+    uint8_t id:8;
+};
 
-    struct R8_AngleH:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x003;
-        uint8_t angle:8;
-    };
+struct R8_AngleH:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x003;
+    uint8_t angle:8;
+};
 
-    struct R8_AngleM:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x004;
-        uint8_t angle:8;
-    };
+struct R8_AngleM:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x004;
+    uint8_t angle:8;
+};
 
-    struct R8_AngleL:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x005;
-        uint8_t over_speed:1;
-        uint8_t mag_weak:1;
-        uint8_t under_voltage:1;
-        uint8_t angle:5;
-    };
+struct R8_AngleL:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x005;
+    uint8_t over_speed:1;
+    uint8_t mag_weak:1;
+    uint8_t under_voltage:1;
+    uint8_t angle:5;
+};
 
-    struct R8_Crc:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x006;
-        uint8_t crc:8;
-    };
+struct R8_Crc:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x006;
+    uint8_t crc:8;
+};
 
-    struct R8_AbzResH:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x007;
-        uint8_t resolution:8;
-    };
+struct R8_AbzResH:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x007;
+    uint8_t resolution:8;
+};
 
-    struct R8_AbzResL:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x008;
-        uint8_t ab_swap:1;
-        uint8_t abz_off:1;
-        uint8_t resolution:6;
-    };
+struct R8_AbzResL:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x008;
+    uint8_t ab_swap:1;
+    uint8_t abz_off:1;
+    uint8_t resolution:6;
+};
 
-    struct R8_ZeroPosH:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x009;
-        uint8_t zero_pos:8;
-    };
+struct R8_ZeroPosH:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x009;
+    uint8_t zero_pos:8;
+};
 
-    struct R8_ZeroPosL:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x00A;
-        uint8_t z_pul_wid:3;
-        uint8_t z_falling_on_0edge:1;
-        uint8_t zero_pos:4;
-    };
-
-
-    struct R8_Uvw:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x00B;
-        uint8_t uvw_res:4;
-        uint8_t uvw_off:1;
-        uint8_t uvw_mux:1;
-        uint8_t z_phase:2;
-    };
+struct R8_ZeroPosL:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x00A;
+    uint8_t z_pul_wid:3;
+    uint8_t z_falling_on_0edge:1;
+    uint8_t zero_pos:4;
+};
 
 
-    struct R8_Pwm:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x00C;
-        uint8_t pwm_sel:3;
-        uint8_t pwm_pol:1;
-        uint8_t pwm_fq:1;
-        uint8_t nlc_en:1;
-    };
+struct R8_Uvw:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x00B;
+    uint8_t uvw_res:4;
+    uint8_t uvw_off:1;
+    uint8_t uvw_mux:1;
+    uint8_t z_phase:2;
+};
 
-    struct R8_Roatation:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x00D;
-        uint8_t hyst:3;
-        uint8_t rot_dir:1;
-    };
 
-    struct R8_Cali:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x00E;
+struct R8_Pwm:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x00C;
+    uint8_t pwm_sel:3;
+    uint8_t pwm_pol:1;
+    uint8_t pwm_fq:1;
+    uint8_t nlc_en:1;
+};
 
-        uint8_t :4;
-        uint8_t autocal_freq:3;
-        uint8_t gpio_ds:1;
-    };
+struct R8_Roatation:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x00D;
+    uint8_t hyst:3;
+    uint8_t rot_dir:1;
+};
 
-    struct R8_BandWidth:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x011;
-        uint8_t bw:3;
-        uint8_t :5;
-    };
+struct R8_Cali:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x00E;
 
-    struct R8_Nlc:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x013;
-        static constexpr RegAddr ADDRESS_end = 0x0D2;
+    uint8_t :4;
+    uint8_t autocal_freq:3;
+    uint8_t gpio_ds:1;
+};
 
-        uint8_t :8;
-    };
+struct R8_BandWidth:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x011;
+    uint8_t bw:3;
+    uint8_t :5;
+};
+
+struct R8_Nlc:public Reg8<>{
+    static constexpr RegAddr ADDRESS = 0x013;
+    static constexpr RegAddr ADDRESS_end = 0x0D2;
+
+    uint8_t bits;
+};
 };
 
 
