@@ -758,22 +758,13 @@ fixed_t<32, uint32_t> deg_to_uq32(const fixed_t<Q, D> x){
 }
 
 __attribute__((always_inline)) constexpr 
-math::fixed_t<29, uint32_t> uq32_to_rad(const math::fixed_t<32, uint32_t> x){
+math::fixed_t<29, int32_t> uq32_to_rad(const math::fixed_t<32, uint32_t> x){
 
     constexpr uint64_t uq29_tau_bits = static_cast<uint64_t>(static_cast<long double>(
         static_cast<uint64_t>(1u) << (29)) * static_cast<long double>(M_PI * 2));
 
-    return math::fixed_t<29, uint32_t>::from_bits(
-        (static_cast<uint64_t>(x.to_bits()) * uq29_tau_bits) >> 32);
-}
-
-
-__attribute__((always_inline)) constexpr 
-math::fixed_t<29, int32_t> iq32_to_rad(const math::fixed_t<32, int32_t> x){
-    const auto ur = math::fixed_t<32, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()));
     return math::fixed_t<29, int32_t>::from_bits(
-        std::bit_cast<int32_t>(ur.to_bits())
-    );
+        (static_cast<uint64_t>(std::bit_cast<int32_t>(x.to_bits())) * uq29_tau_bits) >> 32);
 }
 
 
@@ -781,58 +772,58 @@ math::fixed_t<29, int32_t> iq32_to_rad(const math::fixed_t<32, int32_t> x){
 }
 
 namespace std{
-    using ymd::math::fixed_t;
+
     template<size_t Q, typename D>
-    class numeric_limits<fixed_t<Q, D>> {
+    class numeric_limits<ymd::math::fixed_t<Q, D>> {
     public:
-        __attribute__((always_inline)) constexpr static fixed_t<Q, D> infinity() noexcept {
-            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::infinity());}
-        __attribute__((always_inline)) constexpr static fixed_t<Q, D> lowest() noexcept {
-            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::lowest());}
+        __attribute__((always_inline)) constexpr static ymd::math::fixed_t<Q, D> infinity() noexcept {
+            return ymd::math::fixed_t<Q, D>::from_bits(std::numeric_limits<D>::infinity());}
+        __attribute__((always_inline)) constexpr static ymd::math::fixed_t<Q, D> lowest() noexcept {
+            return ymd::math::fixed_t<Q, D>::from_bits(std::numeric_limits<D>::lowest());}
 
-        __attribute__((always_inline)) constexpr static fixed_t<Q, D> min() noexcept {
-            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::min());}
-        __attribute__((always_inline)) constexpr static fixed_t<Q, D> max() noexcept {
-            return fixed_t<Q, D>::from_bits(std::numeric_limits<D>::max());}
+        __attribute__((always_inline)) constexpr static ymd::math::fixed_t<Q, D> min() noexcept {
+            return ymd::math::fixed_t<Q, D>::from_bits(std::numeric_limits<D>::min());}
+        __attribute__((always_inline)) constexpr static ymd::math::fixed_t<Q, D> max() noexcept {
+            return ymd::math::fixed_t<Q, D>::from_bits(std::numeric_limits<D>::max());}
     };
 
     template<size_t Q, typename D>
-    struct common_type<fixed_t<Q, D>, float> {
-        using type = fixed_t<Q, D>;
+    struct common_type<ymd::math::fixed_t<Q, D>, float> {
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, typename D>
-    struct common_type<fixed_t<Q, D>, double> {
-        using type = fixed_t<Q, D>;
+    struct common_type<ymd::math::fixed_t<Q, D>, double> {
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, typename D>
-    struct common_type<float, fixed_t<Q, D>> {
-        using type = fixed_t<Q, D>;
+    struct common_type<float, ymd::math::fixed_t<Q, D>> {
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, typename D>
-    struct common_type<double, fixed_t<Q, D>> {
-        using type = fixed_t<Q, D>;
+    struct common_type<double, ymd::math::fixed_t<Q, D>> {
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, typename D>
-    __attribute__((always_inline)) constexpr auto signbit(const fixed_t<Q, D> iq)  {
+    __attribute__((always_inline)) constexpr auto signbit(const ymd::math::fixed_t<Q, D> iq)  {
         return ymd::math::signbit(iq);}
     
     template<size_t Q, typename D>
-    struct make_signed<fixed_t<Q, D>>{
-        using type = fixed_t<Q, D>;
+    struct make_signed<ymd::math::fixed_t<Q, D>>{
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, typename D>
-    struct make_unsigned<fixed_t<Q, D>>{
-        using type = fixed_t<Q, D>;
+    struct make_unsigned<ymd::math::fixed_t<Q, D>>{
+        using type = ymd::math::fixed_t<Q, D>;
     };
 
     template<size_t Q, size_t Q2, typename D>
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    fixed_t<Q, D> copysign(const fixed_t<Q, D> x, const fixed_t<Q2, D> s){
+    ymd::math::fixed_t<Q, D> copysign(const ymd::math::fixed_t<Q, D> x, const ymd::math::fixed_t<Q2, D> s){
         return s > 0 ? x : -x;
     }
 }
