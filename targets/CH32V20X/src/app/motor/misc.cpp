@@ -88,7 +88,7 @@
     [[maybe_unused]] auto cb_sensorless = [&]{
 
         // targ_pos = real_t(6.0) * sin(2 * t);
-        targ_pos = real_t(1.0) * clock::time();
+        targ_pos = real_t(1.0) * clock::seconds();
 
         const auto & ab_curr = curr_sens.ab();
         // const auto dq_curr = curr_sens.dq();
@@ -195,9 +195,9 @@
         const auto begin_ms = clock::micros();
         // const auto max_amp = real_t(2.8) + sin(t);
         // auto theta = omega * t + real_t(12) * sin(2 * real_t(TAU) * t);
-        // auto theta = omega * clock::time();
+        // auto theta = omega * clock::seconds();
         // const auto theta = 0;
-        // const auto t = clock::time();
+        // const auto t = clock::seconds();
 
 
         mg_meas_rad = mt * omega;
@@ -302,7 +302,7 @@
         real_t hfi_c = cos(hfi_rad);
         real_t hfi_out = hfi_base_volt * hfi_c;
 
-        real_t openloop_rad = -frac(2.1_r * clock::time())*real_t(TAU);
+        real_t openloop_rad = -frac(2.1_r * clock::seconds())*real_t(TAU);
         const auto [openloop_s, openloop_c] = sincos(openloop_rad);
         // real_t s = sin(hfi_rad);
 

@@ -122,7 +122,7 @@ void s21c_main(){
     timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
-            // const auto now_secs = clock::time();
+            // const auto now_secs = clock::seconds();
             // // const auto level = BoolLevel::from(
             // //     math::frac(math::frac(now_secs) * 10)  > 0.1_uq16);
             // s21c_tx_pin_ = level;

@@ -81,7 +81,7 @@ void dtmf_main(){
     timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
-            const auto t = clock::time();
+            const auto t = clock::seconds();
             dtmf.update(t);
             const auto wave = iq16(dtmf.result());
 

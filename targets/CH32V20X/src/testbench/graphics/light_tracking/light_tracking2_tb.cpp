@@ -383,7 +383,7 @@ static void render_row(
     std::span<const TriangleSurfaceCache<iq16>> co_triangles
 ){
     // ASSERT(row.size() == LCD_W);
-    // const auto s = sin(8 * clock::time());
+    // const auto s = sin(8 * clock::seconds());
     for (size_t x = 0; x < LCD_W; x++){
         row[x] = draw3drt(x, y, co_triangles);
     }
@@ -484,7 +484,7 @@ void light_tracking_main(void){
     [[maybe_unused]]
     auto fill_displayer = [&]{
         // const auto u = micros();
-        const auto st = math::sinpu(clock::time() * 2) * 0.5_r + 0.5_r;
+        const auto st = math::sinpu(clock::seconds() * 2) * 0.5_r + 0.5_r;
         // displayer.setpos_unchecked({0,0});
         displayer.setarea_unchecked({Vec2u16{0,0}, Vec2u16{LCD_W, LCD_H}}).examine();
         for (uint y = 0; y < LCD_H; y++){

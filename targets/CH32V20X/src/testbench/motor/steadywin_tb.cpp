@@ -275,7 +275,7 @@ void steadywin_main(){
     timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
-            const auto now_secs = clock::time();
+            const auto now_secs = clock::seconds();
 
             {
                 const auto num_rx_frames = can.available();

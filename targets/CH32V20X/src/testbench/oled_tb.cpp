@@ -173,7 +173,7 @@ static void oled_tb(){
         painter.draw_fx(
             view.shrink(6).unwrap(), 
             [&](const real_t x){
-                return math::sinpu(4 * x + clock::time()) * 0.5_r + 0.5_r;
+                return math::sinpu(4 * x + clock::seconds()) * 0.5_r + 0.5_r;
             }
         ).unwrap();
 

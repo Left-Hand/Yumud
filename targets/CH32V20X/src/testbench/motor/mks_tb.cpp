@@ -86,8 +86,8 @@ void mks_stepper_main(){
 
         // clock::delay(200ms);
         // motor.activate();
-        const auto d1 = math::sin(clock::time()*0.7_r);
-        const auto d2 = math::sin(clock::time()*0.2_r);
+        const auto d1 = math::sin(clock::seconds()*0.7_r);
+        const auto d2 = math::sin(clock::seconds()*0.2_r);
         // motor1.set_position({.position = d1, .speed = 0}).unwrap();
         clock::delay(5ms);
         motor2.set_position({.position = 0, .speed = 0}).unwrap();

@@ -30,7 +30,7 @@ void m2006_main(){
     );
 
     while(true){
-        const auto now_secs = clock::time();
+        const auto now_secs = clock::seconds();
         const auto [s, c] = math::sincospu(0.7_r * now_secs);
         int16_t d = int16_t(32768 * real_t(0.0014) * s);
         int16_t d2 = int16_t(32768 * real_t(0.0014) * c);

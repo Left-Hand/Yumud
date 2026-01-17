@@ -81,7 +81,7 @@ void adrc_main(){
 
     [[maybe_unused]]
     auto command_shaper_poller = [&](){
-        const auto now_secs = clock::time();
+        const auto now_secs = clock::seconds();
         const auto t0 = clock::micros();
         shaped_track_state_ = command_shaper_.iterate(shaped_track_state_, {u, 0});
         // feedback_track_ = feedback_differ_.iterate(feedback_track_, iq16::from_bits(shaped_track_state_.x1.to_bits() >> 16));
@@ -124,7 +124,7 @@ void adrc_main(){
 
     timer.start();
     while(true){
-        const auto now_secs = clock::time();
+        const auto now_secs = clock::seconds();
         // u = -180 + 10 * sign(iq16(math::sinpu(now_secs * 0.5_r)));
         u = -180 + 10 * iq16(math::sinpu(now_secs * 0.5_r));
         // u = 10 * sign(iq16(math::sinpu(now_secs * 0.5_r)));

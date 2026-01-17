@@ -173,7 +173,7 @@ void svpwm3_main(){
 
     while(true){
         
-        const auto now_secs = clock::time() * real_t(5 * TAU);
+        const auto now_secs = clock::seconds() * real_t(5 * TAU);
         const auto [st,ct] = math::sincos(now_secs);
         const auto [u, v, w] = digipw::SVM({iq16(st) * 0.5_r, iq16(ct) * 0.5_r});
 

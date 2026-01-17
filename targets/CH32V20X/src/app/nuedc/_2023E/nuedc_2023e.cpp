@@ -81,7 +81,7 @@ public:
 
 
     auto time(){
-        return clock::time();
+        return clock::seconds();
     }
 
     void ready(){

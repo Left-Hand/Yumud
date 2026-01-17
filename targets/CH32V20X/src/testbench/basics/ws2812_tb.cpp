@@ -17,7 +17,7 @@ using namespace ymd;
     drivers::WS2812 led{gpio};
     led.init();
     while(true){
-        const auto hue = 0.5_r + 0.5_r * math::sin(clock::time());
+        const auto hue = 0.5_r + 0.5_r * math::sin(clock::seconds());
         const auto amp = 0.2_r;
         led.set_rgb(RGB<real_t>::from_hsv(hue,1,1) * amp);
         clock::delay(10ms);

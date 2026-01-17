@@ -241,7 +241,7 @@ void rrs3_robot_main(){
 
 
     auto ctrl = [&]{
-        const auto t = clock::time();
+        const auto t = clock::seconds();
         const auto [s,c] = math::sincospu(0.7_r * t);
         
         actuator_.set_gest(
@@ -257,7 +257,7 @@ void rrs3_robot_main(){
     
     while(true){
         [[maybe_unused]]
-        const real_t t = clock::time();
+        const real_t t = clock::seconds();
         
         repl_server.invoke(rpc_list);
 

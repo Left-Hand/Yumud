@@ -590,7 +590,7 @@ void myesc_main(){
 
         //#region 位置提取
 
-        [[maybe_unused]] const auto now_secs = clock::time();
+        [[maybe_unused]] const auto now_secs = clock::seconds();
         [[maybe_unused]] static constexpr auto ZERO_ELEC_ANGLE = Angular<uq32>::ZERO;
         const auto hfi_angle = Angular<uq32>::from_turns(
             math::pu_to_uq32(math::atan2pu(hfi_response_imag_bin2_ - 0.002_iq20, hfi_response_real_bin2_))
@@ -1081,7 +1081,7 @@ void myesc_main(){
                 );
             }
             if(false){
-                const auto now_secs = clock::time();
+                const auto now_secs = clock::seconds();
                 const auto t = frac(now_secs * 2);
                 const auto [s,c] = math::sincospu(t);
 

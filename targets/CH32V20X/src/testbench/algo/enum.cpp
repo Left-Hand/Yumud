@@ -78,7 +78,7 @@ void enum_main(){
         //     return x * x + y * y;
         // };
 
-        const auto t = clock::time();
+        const auto t = clock::seconds();
 
         // const auto s = sin<30>(t);
         // const auto c = cos<30>(t);
