@@ -140,9 +140,11 @@ size_t strconv::itoa(int32_t int_val, char *str, uint8_t radix){
 
 
 size_t strconv::iutoa(uint64_t int_val,char *str,uint8_t radix){
-    // if(int_val > INT32_MAX or int_val < INT32_MIN){
-    //     return _itoa_impl<int32_t>(int_val, str, radix);
-    // }
+    static constexpr uint64_t MASK = (~(uint64_t)std::numeric_limits<uint32_t>::max());
+    const bool cant_be_represent_in_32 = int_val & MASK;
+    if(cant_be_represent_in_32 == 0){
+        return _itoa_impl<uint32_t>(int_val, str, radix);
+    }
 
     //TODO 64位除法的实现会大幅增大体积
     return _itoa_impl<int64_t>(int_val, str, radix);

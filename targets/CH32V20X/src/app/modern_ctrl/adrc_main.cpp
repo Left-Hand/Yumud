@@ -78,7 +78,8 @@ void adrc_main(){
         shaped_track_state_var_ = command_shaper_.iterate(shaped_track_state_var_, {u, 0});
         // feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, iq16::from_bits(shaped_track_state_var_.x1.to_bits() >> 16));
         // feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, sin(now_secs * 140));
-        feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, {math::frac(now_secs), 1});
+        // feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, {math::frac(now_secs), 1});
+        feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, {math::floor(now_secs), 0});
         // feedback_track_state_var_ = feedback_differ_.iterate(feedback_track_state_var_, u);
         const auto t1 = clock::micros();
         elapsed_micros = t1 - t0;

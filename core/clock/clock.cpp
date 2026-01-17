@@ -2,11 +2,10 @@
 #include <atomic>
 
 #include "core/math/iq/fixed_t.hpp"
+#include "core/utils/scope_guard.hpp"
+#include "core/clock/clock.hpp"
+#include "core/clock/time.hpp"
 #include "core/sdk.hpp"
-
-
-#include "clock.hpp"
-#include "time.hpp"
 
 
 static constexpr size_t TICK_CNTS_PER_MS = (size_t(F_CPU) / 1000);
@@ -45,19 +44,19 @@ struct alignas(4) [[nodiscard]] MillisCounter{
 struct alignas(4) [[nodiscard]] MillisCounter{
     uint64_t count_;
 
-    // 若当前在高优先级中断中发生了还未响应的systick中断
-    // 可以手动检查一次是否有未处理的定时器溢出事件并帮助更新毫秒计数
+    // 若当前在高优先级中断中发生了还未响应的systick溢出事件
+    // 可以手动检查一次是否有未处理的systick溢出事件并帮助更新毫秒计数
     // 避免systick计数器和毫秒数撕裂的情况出现 
     // !非常重要
     __attribute__((always_inline)) uint64_t poll_and_get(){
+        __disable_irq();
+        __disable_irq();
+        const auto guard = ymd::make_scope_guard([]{__enable_irq();});
         //判断是否发生了计数器溢出
         if(SysTick->SR) [[likely]] {
-            __disable_irq();
-            __disable_irq();
             //清除标志位
             SysTick->SR = 0;
             count_++;
-            __enable_irq();
         }
         return count_;
     }
@@ -255,6 +254,8 @@ static constexpr math::fixed_t<32, uint64_t> micros_to_seconds(uint64_t micros_c
 
 static_assert(micros_to_seconds(1000000).to_bits() == 1.0 * (1Ull << 32));
 static_assert(micros_to_seconds(uint64_t(1E8)).to_bits() == 1E2 * (1Ull << 32));
+static_assert(micros_to_seconds(uint64_t(4E8)).to_bits() == 4E2 * (1Ull << 32));
+static_assert(micros_to_seconds(uint64_t(7E8)).to_bits() == 7E2 * (1Ull << 32));
 static_assert(micros_to_seconds(uint64_t(1E12)).to_bits() == 1E6 * (1Ull << 32));
 static_assert(micros_to_seconds(uint64_t(1E15)).to_bits() == 1E9 * (1Ull << 32));
 static_assert(micros_to_seconds(uint64_t(4E15)).to_bits() == 4E9 * (1Ull << 32));

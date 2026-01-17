@@ -200,8 +200,8 @@ void myesc_main(){
     DBG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
         // .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
-        // .baudrate = hal::NearestFreq(6000000),
-        .baudrate = hal::NearestFreq(576000),
+        .baudrate = hal::NearestFreq(6000000),
+        // .baudrate = hal::NearestFreq(576000),
         .tx_strategy = CommStrategy::Blocking,
     });
 
@@ -529,7 +529,7 @@ void myesc_main(){
     iq20 hfi_response_imag_bin1_ = Zero;
     iq20 hfi_response_real_bin2_ = Zero;
     iq20 hfi_response_imag_bin2_ = Zero;
-    Microseconds last_isr_tick = 0us;
+    Microseconds last_exe_us_ = 0us;
     Microseconds exe_duration_ = 0us;
     std::tuple<uint32_t, uint32_t, uint32_t> uvw_curr_bits_offset_acc_ = {0, 0, 0};
     std::tuple<uint16_t, uint16_t, uint16_t> uvw_curr_bits_offset_ = {0, 0, 0};
@@ -846,11 +846,11 @@ void myesc_main(){
             // };
         }();
 
-        auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation);
-        alphabeta_volt = alphabeta_volt + hfi_alphabeta_volt;
-
-        // auto alphabeta_volt = openloop_alphabeta_volt;
+        // auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation);
         // alphabeta_volt = alphabeta_volt + hfi_alphabeta_volt;
+
+        auto alphabeta_volt = openloop_alphabeta_volt;
+        alphabeta_volt = alphabeta_volt + hfi_alphabeta_volt;
 
 
         // const auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation) + generate_alpha_beta_volt_by_hfi();
@@ -893,7 +893,11 @@ void myesc_main(){
     static size_t trig_prog = 0;
     auto jeoc_isr = [&]{ 
         timming_watch_pin_.set_high();
+        const auto now_us = clock::micros();
+        exe_duration_ = now_us - last_exe_us_;
+        last_exe_us_ = now_us;
 
+        #if 0
         if(timer.is_up_counting()){
             switch(trig_prog){
                 case 0:{
@@ -920,11 +924,12 @@ void myesc_main(){
                 }
             }
         }
-
-
-        // ctrl_isr();
+        #endif
+        
+        ctrl_isr();
+        exe_elapsed_ = clock::micros() - now_us;
         // for(volatile size_t i = 0; i < 30; i++);
-        for(volatile size_t i = 0; i < 6; i++);
+        // for(volatile size_t i = 0; i < 6; i++);
         timming_watch_pin_.set_low();
     };
 

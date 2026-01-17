@@ -1,4 +1,3 @@
-#include "core/sdk.hpp"
 #include "uarthw.hpp"
 #include "uart_layout.hpp"
 #include "ral/uart.hpp"
@@ -6,6 +5,7 @@
 #include "hal/dma/dma.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
+#include "core/sdk.hpp"
 
 
 using namespace ymd;
@@ -460,12 +460,12 @@ static void uart_set_remap(const void * inst, const UartRemap remap){
 
 }
 
-static constexpr NvicPriority RX_DMA_NVIC_PRIORITY = {1,4};
-static constexpr NvicPriority TX_DMA_NVIC_PRIORITY = {1,5};
-static constexpr NvicPriority UARTHW_INTERRUPT_NVIC_PRIORITY = {1,3};
+static constexpr const NvicPriority UART_RX_DMA_NVIC_PRIORITY = {1,4};
+static constexpr const NvicPriority UART_TX_DMA_NVIC_PRIORITY = {1,5};
+static constexpr const NvicPriority UART_INTERRUPT_NVIC_PRIORITY = {1,3};
 
-static constexpr DmaPriority RX_DMA_DMA_PRIORITY = DmaPriority::Medium;
-static constexpr DmaPriority TX_DMA_DMA_PRIORITY = DmaPriority::Medium;
+static constexpr const DmaPriority RX_DMA_DMA_PRIORITY = DmaPriority::Medium;
+static constexpr const DmaPriority TX_DMA_DMA_PRIORITY = DmaPriority::Medium;
 
 
 static_assert(std::has_single_bit(UART_RX_DMA_BUF_SIZE)); //缓冲区大小必须是2的幂
@@ -594,7 +594,7 @@ void Uart::enable_single_line_mode(const Enable en){
 
 
 void Uart::register_nvic(const Enable en){
-    UARTHW_INTERRUPT_NVIC_PRIORITY.with_irqn(get_nvic_irqn(SDK_INST(inst_))).enable(EN);
+    UART_INTERRUPT_NVIC_PRIORITY.with_irqn(get_nvic_irqn(SDK_INST(inst_))).enable(EN);
 }
 
 void Uart::set_tx_strategy(const CommStrategy tx_strategy){
@@ -635,9 +635,7 @@ void Uart::enable_tx_dma(const Enable en){
         .priority = TX_DMA_DMA_PRIORITY
     });
 
-    tx_dma_.register_nvic(TX_DMA_NVIC_PRIORITY, EN);
-    tx_dma_.enable_interrupt<DmaIT::Done>(EN);
-    tx_dma_.enable_interrupt<DmaIT::Half>(EN);
+
     USART_SendData(SDK_INST(inst_), 0);
     tx_dma_.set_event_handler(
         [this](const DmaEvent ev){
@@ -665,7 +663,10 @@ void Uart::enable_tx_dma(const Enable en){
             }
         }
     );
-
+    tx_dma_.register_nvic(UART_TX_DMA_NVIC_PRIORITY, EN);
+    tx_dma_.enable_interrupt<DmaIT::Done>(EN);
+    tx_dma_.enable_interrupt<DmaIT::Half>(EN);
+    
     tx_dma_.start_transfer_mem2pph<char>(
         (&SDK_INST(inst_)->DATAR), 
         tx_dma_buf_.data(), 
@@ -712,9 +713,7 @@ void Uart::enable_rx_dma(const Enable en){
         .priority = RX_DMA_DMA_PRIORITY
     });
 
-    rx_dma_.register_nvic(RX_DMA_NVIC_PRIORITY, EN);
-    rx_dma_.enable_interrupt<DmaIT::Done>(EN);
-    rx_dma_.enable_interrupt<DmaIT::Half>(EN);
+
     rx_dma_.set_event_handler(
         [this](const DmaEvent ev) -> void{
             switch(ev){
@@ -758,6 +757,10 @@ void Uart::enable_rx_dma(const Enable en){
             }
         }
     );
+
+    rx_dma_.register_nvic(UART_RX_DMA_NVIC_PRIORITY, EN);
+    rx_dma_.enable_interrupt<DmaIT::Done>(EN);
+    rx_dma_.enable_interrupt<DmaIT::Half>(EN);
 
     rx_dma_.start_transfer_pph2mem<char>(
         rx_dma_buf_.data(), 

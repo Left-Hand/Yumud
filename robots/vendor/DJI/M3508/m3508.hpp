@@ -3,7 +3,6 @@
 #include "hal/bus/can/can.hpp"
 
 #include "dsp/controller/pid_ctrl.hpp"
-#include "dsp/motor_ctrl/position_filter.hpp"
 
 #include <bitset>
 
