@@ -12,8 +12,8 @@ int main(){
     #ifdef CH32V20X
     // myesc_main();
     // pwm_main();
-    // cap_main();
-    dshot_main();
+    cap_main();
+    // dshot_main();
     // sincos_main();
     // sincospll_main();
     // adrc_main();

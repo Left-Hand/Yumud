@@ -537,14 +537,14 @@ void Uart::init(const Config & cfg){
 
 }
 
-size_t Uart::try_write_chars(const char * pchars, const size_t len){
+size_t Uart::try_write_chars(const char * p_chars, const size_t len){
     switch(tx_strategy_){
         case CommStrategy::Blocking:{
             SDK_INST(inst_)->DATAR;
 
             //阻塞地发送字符
             for(size_t i = 0; i < len; ++i){
-                SDK_INST(inst_)->DATAR = pchars[i];
+                SDK_INST(inst_)->DATAR = p_chars[i];
                 while((SDK_INST(inst_)->STATR & USART_FLAG_TXE) == RESET);
             }
             while((SDK_INST(inst_)->STATR & USART_FLAG_TC) == RESET);
@@ -552,12 +552,12 @@ size_t Uart::try_write_chars(const char * pchars, const size_t len){
         }
             break;
         case CommStrategy::Interrupt:{
-            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
+            const auto written_len = tx_fifo_.try_push(std::span(p_chars, len));
             enable_tx_interrupt(EN);
             return written_len;
         }
         case CommStrategy::Dma:{
-            const auto written_len = tx_fifo_.try_push(std::span(pchars, len));
+            const auto written_len = tx_fifo_.try_push(std::span(p_chars, len));
             return written_len;
         }
         case CommStrategy::Nil:

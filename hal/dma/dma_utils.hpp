@@ -9,9 +9,9 @@ class OutputStream;
 
 namespace ymd::hal::dma{
 
-struct [[nodiscard]] Mode{
+struct [[nodiscard]] Mode final{
 public:
-    enum class Kind:uint8_t{
+    enum class [[nodiscard]] Kind:uint8_t{
         PeriphToBurstMemory = 0b000,
         BurstMemoryToPeriph = 0b001,
         Synergy = 0b010,

@@ -3,10 +3,9 @@
 #include "primitive/gpio/pin_source.hpp"
 
 
-
+#ifdef CH32V30X
 #define USART1_TX_DMA_CH hal::dma1_ch4
 #define USART1_RX_DMA_CH hal::dma1_ch5
-
 
 #define USART2_TX_DMA_CH hal::dma1_ch7
 #define USART2_RX_DMA_CH hal::dma1_ch6
@@ -28,91 +27,28 @@
 
 #define UART8_TX_DMA_CH hal::dma2_ch10
 #define UART8_RX_DMA_CH hal::dma2_ch11
-
-
-#if 0
-#define USART1_RM0_TX_PIN hal::PA<9>()
-#define USART1_RM0_RX_PIN hal::PA<10>()
-
-#define USART1_RM1_TX_PIN hal::PB<6>()
-#define USART1_RM1_RX_PIN hal::PB<7>()
-
-#define USART2_RM0_TX_PIN hal::PA<2>()
-#define USART2_RM0_RX_PIN hal::PA<3>()
-
-#define USART2_RM1_TX_PIN hal::PD<5>()
-#define USART2_RM1_RX_PIN hal::PD<6>()
-
-#define USART3_RM0_TX_PIN hal::PB<10>()
-#define USART3_RM0_RX_PIN hal::PB<11>()
-
-#define USART3_RM1_TX_PIN hal::PC<10>()
-#define USART3_RM1_RX_PIN hal::PC<11>()
-
-#define USART3_RM2_TX_PIN hal::PA<13>()
-#define USART3_RM2_RX_PIN hal::PA<14>()
-
-#define USART3_RM3_TX_PIN hal::PD<8>()
-#define USART3_RM3_RX_PIN hal::PD<9>()
-
-#define UART4_RM0_TX_PIN hal::PC<10>()
-#define UART4_RM0_RX_PIN hal::PC<11>()
-
-#define UART4_RM1_TX_PIN hal::PB<0>()
-#define UART4_RM1_RX_PIN hal::PB<1>()
-
-#define UART4_RM2_TX_PIN hal::PE<0>()
-#define UART4_RM2_RX_PIN hal::PE<1>()
-
-#define UART4_RM3_TX_PIN hal::PE<0>()
-#define UART4_RM3_RX_PIN hal::PE<1>()
-
-#define UART5_RM0_TX_PIN hal::PC<12>()
-#define UART5_RM0_RX_PIN hal::PD<2>()
-
-#define UART5_RM1_TX_PIN hal::PB<4>()
-#define UART5_RM1_RX_PIN hal::PB<5>()
-
-#define UART6_RM0_TX_PIN hal::PC<0>()
-#define UART6_RM0_RX_PIN hal::PC<1>()
-
-#define UART6_RM1_TX_PIN hal::PB<8>()
-#define UART6_RM1_RX_PIN hal::PB<9>()
-
-#define UART6_RM2_TX_PIN hal::PE<10>()
-#define UART6_RM2_RX_PIN hal::PE<11>()
-
-#define UART6_RM3_TX_PIN hal::PE<10>()
-#define UART6_RM3_RX_PIN hal::PE<11>()
-
-#define UART7_RM0_TX_PIN hal::PC<2>()
-#define UART7_RM0_RX_PIN hal::PC<3>()
-
-#define UART7_RM1_TX_PIN hal::PA<6>()
-#define UART7_RM1_RX_PIN hal::PA<7>()
-
-#define UART7_RM2_TX_PIN hal::PE<12>()
-#define UART7_RM2_RX_PIN hal::PE<13>()
-
-#define UART7_RM3_TX_PIN hal::PE<12>()
-#define UART7_RM3_RX_PIN hal::PE<13>()
-
-#define UART8_RM0_TX_PIN hal::PC<4>()
-#define UART8_RM0_RX_PIN hal::PC<5>()
-
-#define UART8_RM1_TX_PIN hal::PA<14>()
-#define UART8_RM1_RX_PIN hal::PA<15>()
-
-#define UART8_RM2_TX_PIN hal::PE<14>()
-#define UART8_RM2_RX_PIN hal::PE<15>()
-
-#define UART8_RM3_TX_PIN hal::PE<14>()
-#define UART8_RM3_RX_PIN hal::PE<15>()
 #endif
+
+
+#ifdef CH32V20X
+#define USART1_TX_DMA_CH hal::dma1_ch4
+#define USART1_RX_DMA_CH hal::dma1_ch5
+
+#define USART2_TX_DMA_CH hal::dma1_ch7
+#define USART2_RX_DMA_CH hal::dma1_ch6
+
+#define USART3_TX_DMA_CH hal::dma1_ch2
+#define USART3_RX_DMA_CH hal::dma1_ch3
+
+#define UART4_TX_DMA_CH hal::dma1_ch1
+#define UART4_RX_DMA_CH hal::dma1_ch8
+#endif
+
+
 
 namespace ymd::hal::uart {
 
-enum class Remap : uint8_t {
+enum class [[nodiscard]] Remap : uint8_t {
     _0 = 0,
     _1 = 1,
     _2 = 2,
@@ -182,10 +118,15 @@ struct Layout<3, Remap::_3> {
 };
 
 // UART4 Remap 0
+// template<>
+// struct Layout<4, Remap::_0> {
+//     using tx_pin_type = PinTag<PortSource::PC, PinSource::_10>;
+//     using rx_pin_type = PinTag<PortSource::PC, PinSource::_11>;
+// };
 template<>
 struct Layout<4, Remap::_0> {
-    using tx_pin_type = PinTag<PortSource::PC, PinSource::_10>;
-    using rx_pin_type = PinTag<PortSource::PC, PinSource::_11>;
+    using tx_pin_type = PinTag<PortSource::PB, PinSource::_0>;
+    using rx_pin_type = PinTag<PortSource::PB, PinSource::_1>;
 };
 
 // UART4 Remap 1
@@ -331,6 +272,7 @@ static constexpr UartRemap USART3_REMAP_PC10_PC11 = UartRemap::_1;
 static constexpr UartRemap USART3_REMAP_PA13_PA14 = UartRemap::_2;
 static constexpr UartRemap USART3_REMAP_PD8_PD9 = UartRemap::_3;
 
+//! 在D6后缀的型号(V203)上 PB0-PB1 映射为0
 static constexpr UartRemap UART4_REMAP_PC10_PC11 = UartRemap::_0;
 static constexpr UartRemap UART4_REMAP_PB0_PB1 = UartRemap::_1;
 static constexpr UartRemap UART4_REMAP_PE0_PE1 = UartRemap::_2;

@@ -70,7 +70,7 @@ static constexpr void dshot_fill_buf(const std::span<uint16_t, DSHOT_LEN> buf, c
 }
 
 
-static constexpr uint16_t calculate_crc(uint16_t bits_in){
+static constexpr uint16_t add_crc(uint16_t bits_in){
     const uint16_t speed_bits = bits_in << 5;
     const uint16_t bits = bits_in << 1;
     return speed_bits | static_cast<uint16_t>((bits ^ (bits >> 4) ^ (bits >> 8)) & 0x0f);
@@ -87,8 +87,8 @@ void DShotChannel::init(){
 void DShotChannel::set_content(const uint16_t content_bits){
     if(content_bits > 2048) __builtin_trap();
     if(content_bits){
-        auto crc = calculate_crc(content_bits);
-        dshot_fill_buf(std::span(buf_), crc);
+        auto bits_with_crc = add_crc(content_bits);
+        dshot_fill_buf(std::span(buf_), bits_with_crc);
     }else{
         buf_.fill(0);
     }

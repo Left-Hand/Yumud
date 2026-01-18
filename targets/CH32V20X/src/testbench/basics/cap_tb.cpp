@@ -69,7 +69,7 @@ void cap_main(){
         .baudrate = hal::NearestFreq(576000),
         .tx_strategy = CommStrategy::Blocking,
     });
-
+    
     DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
     DEBUGGER.set_splitter(",");
