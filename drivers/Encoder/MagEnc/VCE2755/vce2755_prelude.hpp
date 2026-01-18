@@ -206,10 +206,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
 
 
         [[nodiscard]] constexpr IResult<Angular<uq32>> parse() const {
-
-
             const auto bits20 = b20();
-
             #if 0
             // TODO 验证crc校验功能
             // if(vce2755::calc_crc4(bits20) != crc_3_0) [[unlikely]]

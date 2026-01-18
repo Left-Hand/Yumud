@@ -98,12 +98,15 @@ struct [[nodiscard]] TimerBdtr final{
     uint32_t bus_freq;
 
     struct [[nodiscard]] Config{
-        Nanoseconds deadzone_ns;
+        TimerDeadzone deadzone;
         TimerBdtrLockLevel level = TimerBdtrLockLevel::Off;
     };
 
     void init(const Config &config);
-    void set_deadzone(const Nanoseconds ns);
+    // void set_deadzone(const Nanoseconds nanos){
+    //     set_deadzone_code(TimerDeadzoneCode::from_ns(bus_freq, nanos));
+    // }
+    // void set_deadzone_code(const TimerDeadzoneCode code);
 };
 
 

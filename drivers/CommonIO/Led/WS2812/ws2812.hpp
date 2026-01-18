@@ -5,13 +5,37 @@
 #include <array>
 
 namespace ymd::hal{
-    class GpioIntf;
+    struct GpioIntf;
     
 }
 namespace ymd::drivers{
 
+struct W8212_BurstPwmSer{
+    uint16_t low_cvr;
+    uint16_t high_cvr;
+    constexpr void apply_gs8_to_buf(
+        const std::span<uint16_t, 8> buf, 
+        uint8_t gs8
+    ) const{
 
-class WS2812_Transport{
+        for(size_t i = 0; i < 8; i++){
+            buf[i] = (gs8 & 0x80) ? high_cvr : low_cvr;
+            gs8 = gs8 << 1;
+        }
+    }
+
+    constexpr void apply_rgb888_to_buf(
+        std::span<uint16_t, 24> buf, 
+        std::array<uint8_t, 3> rgb888
+    ) const{
+        apply_gs8_to_buf(std::span<uint16_t, 8>(buf.begin() + 0, 8), rgb888[0]);
+        apply_gs8_to_buf(std::span<uint16_t, 8>(buf.begin() + 8, 8), rgb888[1]);
+        apply_gs8_to_buf(std::span<uint16_t, 8>(buf.begin() + 16, 8), rgb888[2]);
+    }
+
+};
+
+struct WS2812_Transport{
 public:
     WS2812_Transport(hal::GpioIntf & gpio):gpio_(gpio){;}
 
@@ -27,7 +51,7 @@ private:
 };
 
 
-class WS2812: public RgbLedIntf{
+struct WS2812: public RgbLedIntf{
 public:
     explicit WS2812(hal::GpioIntf & gpio):transport_(gpio){;}
     void init();
@@ -36,7 +60,7 @@ private:
     WS2812_Transport transport_;
 };
 
-class WS2812Single: public RgbLedIntf{
+struct WS2812Single: public RgbLedIntf{
 public:
     RGB<iq16> color;
     WS2812Single() = default;
@@ -44,7 +68,7 @@ public:
 
 
 template<size_t N>
-class WS2812Chain{
+struct WS2812Chain{
 protected:
     WS2812_Transport transport_;
     std::array<WS2812Single, N> leds;

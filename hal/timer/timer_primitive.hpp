@@ -241,11 +241,24 @@ enum class [[nodiscard]] IT:uint16_t{
     Break   = 0x0080,
 };
 
+// 锁定功能设置域
+// 在系统复位后，只能写一次 LOCK 位，无法再次
+// 修改直到复位。
 enum class [[nodiscard]] BdtrLockLevel:uint8_t{
+    // 关闭锁定功能；
     Off     = 0x00,
-    Low     = 0x01,
-    Medium  = 0x02,
-    High    = 0x03
+
+    // 锁定级别 1，不能写 DTG、BKE、BKP、AOE、OISx
+    // 和 OISxN 位；
+    I     = 0x01,
+
+    // 锁定级别 2，不能写入锁定级别 1 中的各位，
+    // 也不能写入 CC 极性位以及 OSSR 和 OSSI 位；
+    II  = 0x02,
+
+    // 锁定级别 3，不能写入锁定级别 2 中的各位，
+    // 也不能写入 CC 控制位。
+    III    = 0x03
 };
 
 enum class [[nodiscard]] OcMode:uint8_t{
@@ -297,12 +310,15 @@ struct [[nodiscard]] DeadzoneCode{
         return DeadzoneCode{bits};
     }
 };
+
+using Deadzone = Sumtype<DeadzoneCode, Nanoseconds>;
 }
 
 namespace ymd::hal{
 using TimerCountMode = timer::CountMode;
 using TimerCountFreq = timer::CountFreq;
 using TimerDeadzoneCode = timer::DeadzoneCode;
+using TimerDeadzone = timer::Deadzone;
 using TimerIT = timer::IT;
 using TimerEvent = timer::Event;
 using TimerTrgoSource = timer::TrgoSource;

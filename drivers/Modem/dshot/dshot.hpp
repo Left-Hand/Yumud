@@ -4,81 +4,36 @@
 #include <span>
 
 namespace ymd::hal{
-    class TimerOC;
-    class DmaChannel;
+    struct TimerOC;
+    struct DmaChannel;
 }
 
 namespace ymd::drivers{
 
-
-class BurstChannelIntf{
-public:
-    virtual void borrow(std::span<const uint16_t> pbuf);
-    virtual void invoke();
-    virtual void install();
-};
-
-class BurstPwmIntf:public BurstChannelIntf{
-public:
-    virtual uint32_t calc_cvr_from_duty(const uq32 duty) const;
-    virtual uq8 get_period_us() const;
-
-    uint32_t calc_cvr_from_us(const uq8 us){
-        return calc_cvr_from_duty(us / get_period_us());
-    }
-};
-
-class BurstDmaPwm final:public BurstPwmIntf{
+struct BurstDmaPwm final{
 public:
     BurstDmaPwm(hal::TimerOC & timer_oc);
 
-    void borrow(std::span<const uint16_t> pbuf);
+    void set_buf(std::span<const uint16_t> pbuf);
     void invoke();
     void install();
     bool is_done();
-    uint32_t calc_cvr_from_duty(const uq32 duty) const;
-    uq8 get_period_us() const;
+    // uint32_t calc_cvr_from_duty(const uq32 duty) const;
+    // uq8 get_period_us() const;
 private:
     hal::TimerOC & timer_oc_;
     hal::DmaChannel & dma_channel_;
     std::span<const uint16_t> pbuf_;
 };
 
-class WS2812_TransportIntf{
-
-};
-
-class WS2812_Transport_of_BurstPwm:public WS2812_TransportIntf{
-public:
-    WS2812_Transport_of_BurstPwm(BurstDmaPwm & burst_dma_pwm);
-    void borrow(std::span<const uint16_t> pbuf){
-        return burst_dma_pwm_.borrow(pbuf);
-    }
-
-    void set_color(std::array<uint8_t, 3> color){
-        // apply_color_to_buf()
-    }
-
-    bool is_done(){
-        return burst_dma_pwm_.is_done();
-    }
-private:
-    std::array<uint16_t, 24> buf_;
-    //pure function
-    void apply_color_to_buf(std::span<uint16_t, 24> buf, std::array<uint8_t, 3> color) const;
-    
-    //pure function
-    void apply_mono_to_buf(std::span<uint16_t, 8> buf, uint8_t mono) const;
-
-    BurstDmaPwm burst_dma_pwm_;
-};
 
 
-class DShotChannel{
+
+struct DShotChannel{
 public:
     static constexpr size_t DSHOT_LEN = 40;
 
-    enum class Command : uint8_t {
+    enum struct Command : uint8_t {
         MOTOR_STOP = 0, // not currently implemented
         BEEP1 = 1, // Wait at least the length of the beep before the next command (260 milliseconds)
         BEEP2 = 2, // Wait at least the length of the beep before the next command (260 milliseconds)
@@ -118,22 +73,21 @@ public:
 
     void init();
 
-    void set_dutycycle(const real_t dutycycle);
+    void set_content(const uint16_t content_bits);
 
-private:
+// private:
+public:
 
-    static constexpr uint16_t HIGH_CVR = (234 * 2 / 3);
-    static constexpr uint16_t LOW_CVR = (234 * 1 / 3);
 
 
     std::array<uint16_t, DSHOT_LEN> buf_ = {0};
     BurstDmaPwm burst_dma_pwm_;
 
-    static uint16_t calculate_crc(uint16_t data_in);
+    // static uint16_t calculate_crc(uint16_t data_in);
 
-    static void update(std::span<uint16_t, DSHOT_LEN> buf, uint16_t data);
+    // static void update(std::span<uint16_t, DSHOT_LEN> buf, uint16_t data);
 
-    static void clear(std::span<uint16_t, DSHOT_LEN> buf);
+    // static void clear(std::span<uint16_t, DSHOT_LEN> buf);
 
     void invoke();
 };

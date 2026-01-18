@@ -74,7 +74,7 @@ public:
 
     void init(const Config & cfg);
 
-    void clear_and_start();
+    void clear_it_flag_and_start();
 
     template <typename T>
     void start_transfer_pph2mem(void * dst, const volatile void * src, size_t size){

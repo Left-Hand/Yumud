@@ -226,6 +226,7 @@ void myesc_main(){
     timer.init({
         .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
         .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2), 
+        // .count_freq = hal::timer::ArrAndPsc{2880-1,1-1},
         // .count_mode = hal::TimerCountMode::CenterAlignedDualTrig,
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig,
         // .count_mode = hal::TimerCountMode::CenterAlignedDownTrig,

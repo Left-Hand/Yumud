@@ -38,17 +38,17 @@ struct [[nodiscard]] _CanIdMaskPair final{
         };
     }
 
-    static constexpr Option<_CanIdMaskPair> from_str(
-        const char (&str)[ID_NUM_BITS + 1],
+    static constexpr Option<_CanIdMaskPair> from_chars(
+        const char (&p_chars)[ID_NUM_BITS + 1],
         CanRtrSpecfier spec
     ){
-        return from_str(std::span<const char, ID_NUM_BITS>(
-            static_cast<const char *>(str), ID_NUM_BITS), 
+        return from_chars(std::span<const char, ID_NUM_BITS>(
+            static_cast<const char *>(p_chars), ID_NUM_BITS), 
             spec
         );
     }
 
-    static constexpr Option<_CanIdMaskPair> from_str(
+    static constexpr Option<_CanIdMaskPair> from_chars(
         std::span<const char, ID_NUM_BITS> chars,
         CanRtrSpecfier spec
     ){
@@ -110,4 +110,8 @@ private:
 using CanStdIdMaskPair = _CanIdMaskPair<details::SXX32_CanStdIdMask>;
 using CanExtIdMaskPair = _CanIdMaskPair<details::SXX32_CanExtIdMask>;
 
+
+[[maybe_unused]] static constexpr auto CAN_FILTER_PAIR_STD_DATA_FRAME_ONLY = 
+    hal::CanStdIdMaskPair::from_chars("xxxxxxxxxxx", hal::CanRtrSpecfier::Discard).unwrap();
+    
 }

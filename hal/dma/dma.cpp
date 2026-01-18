@@ -257,7 +257,7 @@ void DmaChannel::start_transfer(size_t dst_addr, size_t src_addr, const size_t s
         reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> MADDR = dst_addr;
     }
     reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> CNTR = size;
-    clear_and_start();
+    clear_it_flag_and_start();
 }
 
 
@@ -338,9 +338,8 @@ void DmaChannel::set_mem_and_periph_wordsize(
     });
 }
 
-void DmaChannel::clear_and_start(){
-    DMA_ClearFlag(done_mask_);
-    DMA_ClearFlag(half_mask_);
+void DmaChannel::clear_it_flag_and_start(){
+    DMA_ClearFlag(done_mask_ | half_mask_);
 
     DMA_Cmd(SDK_INST(inst_), ENABLE);
 }
