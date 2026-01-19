@@ -114,14 +114,20 @@ struct LrSeriesCurrentRegulatorConfig{
 
 
 template<size_t FC, size_t Q>
-static constexpr math::fixed_t<Q, int32_t> lpf_specified_fc(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
+static constexpr math::fixed_t<Q, int32_t> lpf_specified_fc(
+    const math::fixed_t<Q, int32_t> x_state, 
+    const math::fixed_t<Q, int32_t> x_new
+){
     constexpr auto ALPHA = dsp::calc_lpf_alpha_uq32(FOC_FREQ, FC).unwrap();
-    return lpf_exprimetal(x_state, x_new, ALPHA);
+    return lpf_with_given_alpha(x_state, x_new, ALPHA);
 }
 
 
 template<size_t Q>
-static constexpr math::fixed_t<Q, int32_t> lpf_10hz(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
+static constexpr math::fixed_t<Q, int32_t> lpf_10hz(
+    math::fixed_t<Q, int32_t> x_state, 
+    const math::fixed_t<Q, int32_t> x_new
+){
     return lpf_specified_fc<10>(x_state, x_new);
 }
 
@@ -141,13 +147,15 @@ static constexpr math::fixed_t<Q, int32_t> lpf_allpass(math::fixed_t<Q, int32_t>
 }
 
 
-static constexpr auto current_regulator_cfg = LrSeriesCurrentRegulatorConfig{
+static constexpr auto CURRENT_REGULATOR_CFG = LrSeriesCurrentRegulatorConfig{
     .fs = FOC_FREQ,
     .fc = MotorProfile::CURRENT_CUTOFF_FREQ,
     .phase_inductance = MotorProfile::PHASE_INDUCTANCE,
     .phase_resistance = MotorProfile::PHASE_RESISTANCE,
     .voltage_limit = MotorProfile::MODU_VOLT_LIMIT,
 };
+
+static constexpr auto PI_CONTROLLER_COEFFS = CURRENT_REGULATOR_CFG.try_into_coeffs().unwrap();
 
 static constexpr size_t HFI_N = 32;
 static_assert(std::has_single_bit(HFI_N));
@@ -445,11 +453,10 @@ void myesc_main(){
 
     Leso::State leso_state_var_ = Zero;
 
-    static constexpr auto controller_coeff = current_regulator_cfg.try_into_coeffs().unwrap();
-    // PANIC{controller_coeff};
+    // PANIC{PI_CONTROLLER_COEFFS};
 
-    auto d_pi_ctrl_ = controller_coeff.to_pi_controller();
-    auto q_pi_ctrl_ = controller_coeff.to_pi_controller();
+    auto d_pi_ctrl_ = PI_CONTROLLER_COEFFS.to_pi_controller();
+    auto q_pi_ctrl_ = PI_CONTROLLER_COEFFS.to_pi_controller();
 
     [[maybe_unused]] auto flux_sensorless_ob = dsp::motor_ctl::NonlinearFluxObserver{
         dsp::motor_ctl::NonlinearFluxObserver::Config{
@@ -584,8 +591,8 @@ void myesc_main(){
         const auto alphabeta_curr_unfilted = AlphaBetaCoord<iq20>::from_uvw(uvw_curr_);
         const auto alphabeta_curr = alphabeta_curr_unfilted;
         // const auto alphabeta_curr = AlphaBetaCoord{
-        //     lpf_exprimetal(alphabeta_curr_.alpha, alphabeta_curr_unfilted.alpha),
-        //     lpf_exprimetal(alphabeta_curr_.beta, alphabeta_curr_unfilted.beta),
+        //     lpf_with_given_alpha(alphabeta_curr_.alpha, alphabeta_curr_unfilted.alpha),
+        //     lpf_with_given_alpha(alphabeta_curr_.beta, alphabeta_curr_unfilted.beta),
         // };
         //#endregion
 

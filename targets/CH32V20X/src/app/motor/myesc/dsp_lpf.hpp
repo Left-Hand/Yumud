@@ -94,7 +94,7 @@ struct LpfCoeffs{
 
 //y[n] = alpha * x[n] + beta * y[n-1]
 template<size_t Q, typename D>
-static constexpr math::fixed_t<Q, D> lpf_exprimetal(math::fixed_t<Q, D> x_state, const math::fixed_t<Q, D> x_new, const uq32 alpha){
+static constexpr math::fixed_t<Q, D> lpf_with_given_alpha(math::fixed_t<Q, D> x_state, const math::fixed_t<Q, D> x_new, const uq32 alpha){
     const uq32 beta = uq32::from_bits(~alpha.to_bits());
     using acc_t = std::conditional_t<std::is_signed_v<D>, int64_t, uint64_t>;
     return math::fixed_t<Q, D>::from_bits(
