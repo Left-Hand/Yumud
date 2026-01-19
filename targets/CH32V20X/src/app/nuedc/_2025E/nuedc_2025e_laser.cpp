@@ -365,7 +365,7 @@ void nuedc_2025e_laser_main(){
         }
 
         {
-            const auto now_secs = clock::time();
+            const auto now_secs = clock::seconds();
             auto hesitate_spin_curve = [&](const iq16 t){
                 return (- 0.3_iq20 * (1.25_r + math::sinpu(3.0_r * t)) / MACHINE_CTRL_FREQ);
             };

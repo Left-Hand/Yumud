@@ -72,7 +72,7 @@ void co_ab_main(){
 
     while(true){
         DEBUG_PRINTLN(clock::millis());
-        auto dutycycle = math::sin(6 * clock::time());
+        auto dutycycle = math::sin(6 * clock::seconds());
         pwm_mirror.set_dutycycle(dutycycle);
     }    
 }

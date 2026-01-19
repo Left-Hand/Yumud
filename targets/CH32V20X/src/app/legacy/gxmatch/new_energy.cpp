@@ -766,7 +766,7 @@ void app(){
 
     
     bindSystickCb([&]{
-        const auto t = clock::time();
+        const auto t = clock::seconds();
         motor_service.process(t);
     });
     
@@ -775,7 +775,7 @@ void app(){
     clock::delay(10ms);
 
     while(true){
-        const auto t = clock::time();
+        const auto t = clock::seconds();
 
         boardcast_service.process(t);
         detect_service.process(t);

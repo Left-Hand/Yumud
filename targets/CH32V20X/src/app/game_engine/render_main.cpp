@@ -513,7 +513,7 @@ void render_main(){
     while(true){
 
 
-        const auto now_secs = clock::time();
+        const auto now_secs = clock::seconds();
         // const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.3_r);
         const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.1_r);
         // [[maybe_unused]] const auto [s,c] = math::sincospu(now_secs * 0.3_r);

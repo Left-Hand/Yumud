@@ -167,7 +167,13 @@ public:
             .unwrap();
 
 
-        timer_.bdtr().set_deadzone(cfg.deadzone_ns);
+        // timer_.bdtr().set_deadzone(cfg.deadzone_ns);
+        #if 0
+        timer.bdtr().set_deadzone(dead_zone_ns);
+        #else
+        __builtin_trap();
+        #endif
+
         timer_.enable_cc_ctrl_sync(DISEN);
 
         pwm_u_.init({
@@ -222,9 +228,9 @@ public:
         timer_.set_count_freq(hal::TimerCountFreq(hal::NearestFreq(freq)));
     }
 
-    void set_deadzone(const Nanoseconds ns){
-        timer_.bdtr().set_deadzone(ns);
-    }
+    // void set_deadzone(const Nanoseconds ns){
+    //     timer_.bdtr().set_deadzone(ns);
+    // }
 
     void static_test();
 
@@ -236,8 +242,8 @@ public:
 
         const bool is_on_top = tim_cnt > (tim_arr >> 1);
         const auto curr_occasion = [&]() -> TrigOccasion {
-            if(trig_occasion_opt_.is_some()){
-                return trig_occasion_opt_
+            if(may_trig_occasion_.is_some()){
+                return may_trig_occasion_
                     .unwrap()
                     .iter_next_on_upisr();
             }else{
@@ -245,7 +251,7 @@ public:
             }
         }();
 
-        trig_occasion_opt_ = Some(curr_occasion);
+        may_trig_occasion_ = Some(curr_occasion);
 
         if(is_on_top){
             duty_cmd_[0] = dutycycle_cmd_shadow_[0];
@@ -259,12 +265,12 @@ public:
     void on_ch4_isr(){
         // test_gpio.clr();
 
-        if(trig_occasion_opt_.is_none()) return;
+        if(may_trig_occasion_.is_none()) return;
 
-        const auto last_occasion = trig_occasion_opt_.unwrap();
+        const auto last_occasion = may_trig_occasion_.unwrap();
         const auto curr_occasion = last_occasion.iter_next_on_ch4isr();
 
-        trig_occasion_opt_ = Some(curr_occasion);
+        may_trig_occasion_ = Some(curr_occasion);
 
         const auto next_duty = [curr_occasion]{
             switch(curr_occasion.kind()){
@@ -301,7 +307,7 @@ private:
 
     // hal::Gpio & test_gpio = hal::PA<12>();
 
-    Option<TrigOccasion> trig_occasion_opt_ = None;
+    Option<TrigOccasion> may_trig_occasion_ = None;
     Duty dutycycle_cmd_shadow_ = {0.0_r, 0.0_r, 0.0_r};
     Duty duty_cmd_ = {0.0_r, 0.0_r, 0.0_r};
 

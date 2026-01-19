@@ -175,7 +175,7 @@ public:
         // const auto targ_speed = 6 * math::cos(6 * now_secs);
         
         // const auto input_targ_position = 10 * iq16(int(now_secs));
-        const auto now_secs = clock::time();
+        const auto now_secs = clock::seconds();
         // const auto input_targ_position = 5 * math::sin(now_secs/2);
 
         // command_shaper_.update(input_targ_position);
@@ -322,7 +322,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
         rpc::make_function("rst", [](){sys::reset();}),
         rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
         rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-        rpc::make_function("now", [&](){return clock::time();})
+        rpc::make_function("now", [&](){return clock::seconds();})
     );
 
     while(true){
@@ -502,7 +502,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
         case hal::TimerEvent::Update:{
             b_curr = inj_b.get_voltage();
             a_curr = inj_a.get_voltage();
-            const auto t = clock::time();
+            const auto t = clock::seconds();
             const auto [s,c] = math::sincospu(t);
             constexpr auto mag = 0.4_r;
             set_alphabeta_duty(
@@ -661,7 +661,7 @@ void mystepper_main(){
     timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
-            [[maybe_unused]] const auto now_secs = clock::time();
+            [[maybe_unused]] const auto now_secs = clock::seconds();
             const auto [s,c] = math::sincospu(10 * now_secs);
             constexpr auto mag = 0.3_r;
             pwm_gen_.set_dutycycle({

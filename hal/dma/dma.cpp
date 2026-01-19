@@ -6,8 +6,8 @@ using namespace ymd;
 using namespace ymd::hal;
 
 
-namespace dma_details{
-static constexpr uint8_t calculate_dma_index(const void * inst){
+namespace {
+static constexpr uint8_t _calc_dma_nth(const void * inst){
     #ifdef DMA2_PRESENT
     return inst < DMA2_Channel1 ? 1 : 2;
     #else
@@ -15,8 +15,8 @@ static constexpr uint8_t calculate_dma_index(const void * inst){
     #endif
 }
 
-static constexpr uint8_t calculate_channel_index(const void * inst){
-    uint8_t dma_nth = calculate_dma_index(inst);
+static constexpr uint8_t _calc_ch_sel_nth(const void * inst){
+    uint8_t dma_nth = _calc_dma_nth(inst);
     switch(dma_nth){
         #ifdef DMA1_PRESENT
         case 1:
@@ -34,55 +34,53 @@ static constexpr uint8_t calculate_channel_index(const void * inst){
                     (DMA2_Channel8_BASE - DMA2_Channel7_BASE)) + 7;
             }
         #endif
-        default:
-            __builtin_trap();
+
     }
+    __builtin_trap();
 }
 
-
-static constexpr uint32_t calculate_done_mask(const void * inst){
-    uint8_t dma_nth = calculate_dma_index(inst);
-    uint8_t channel_index = calculate_channel_index(inst);
+static constexpr uint32_t _calc_done_mask(const void * inst){
+    uint8_t dma_nth = _calc_dma_nth(inst);
+    uint8_t ch_sel_nth = _calc_ch_sel_nth(inst);
     switch(dma_nth){
         #ifdef DMA1_PRESENT
         case 1:
-            return (DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (channel_index - 1)));
+            return (DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (ch_sel_nth - 1)));
         #endif
         #ifdef DMA2_PRESENT
         case 2:
             if(reinterpret_cast<uint32_t>(inst) <= DMA2_Channel7_BASE){ 
-                return ((uint32_t)(DMA2_IT_TC1 & 0xff) << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
+                return ((uint32_t)(DMA2_IT_TC1 & 0xff) << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (ch_sel_nth - 1))) | (uint32_t)(0x10000000);
             }else{
-                return ((uint32_t)(DMA2_IT_TC8 & 0xff) << ((CTZ(DMA2_IT_TC9) - CTZ(DMA2_IT_TC8)) * (channel_index - 8))) | (uint32_t)(0x20000000);
+                return ((uint32_t)(DMA2_IT_TC8 & 0xff) << ((CTZ(DMA2_IT_TC9) - CTZ(DMA2_IT_TC8)) * (ch_sel_nth - 8))) | (uint32_t)(0x20000000);
             }
         #endif
         default:
             break;
     }
-    return 0;
+    __builtin_trap();
 }
 
-
-static constexpr uint32_t calculate_half_mask(const void * inst){
-    uint8_t dma_nth = calculate_dma_index(inst);
-    uint8_t channel_index = calculate_channel_index(inst);
+static constexpr uint32_t _calc_half_mask(const void * inst){
+    uint8_t dma_nth = _calc_dma_nth(inst);
+    uint8_t ch_sel_nth = _calc_ch_sel_nth(inst);
     switch(dma_nth){
         #ifdef DMA1_PRESENT
         case 1:
-            return (DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (channel_index - 1)));
+            return (DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (ch_sel_nth - 1)));
         #endif
         #ifdef DMA2_PRESENT
         case 2:
             if(reinterpret_cast<uint32_t>(inst) <= DMA2_Channel7_BASE){ 
-                return ((uint32_t)(DMA2_IT_HT1 & 0xff) << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
+                return ((uint32_t)(DMA2_IT_HT1 & 0xff) << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (ch_sel_nth - 1))) | (uint32_t)(0x10000000);
             }else{
-                return ((uint32_t)(DMA2_IT_HT8 & 0xff) << ((CTZ(DMA2_IT_HT9) - CTZ(DMA2_IT_HT8)) * (channel_index - 8))) | (uint32_t)(0x20000000);
+                return ((uint32_t)(DMA2_IT_HT8 & 0xff) << ((CTZ(DMA2_IT_HT9) - CTZ(DMA2_IT_HT8)) * (ch_sel_nth - 8))) | (uint32_t)(0x20000000);
             }
         #endif
         default:
             break;
     }
-    return 0;
+    __builtin_trap();
 }
 }
 
@@ -97,6 +95,7 @@ DmaChannel dma1_ch4{DMA1_Channel4};
 DmaChannel dma1_ch5{DMA1_Channel5};
 DmaChannel dma1_ch6{DMA1_Channel6};
 DmaChannel dma1_ch7{DMA1_Channel7};
+DmaChannel dma1_ch8{DMA1_Channel8};
 #endif
 
 #ifdef DMA2_PRESENT
@@ -137,6 +136,7 @@ DMA1_IT_TEMPLATE(4);
 DMA1_IT_TEMPLATE(5);
 DMA1_IT_TEMPLATE(6);
 DMA1_IT_TEMPLATE(7);
+DMA1_IT_TEMPLATE(8);
 #endif
 
 #ifdef DMA2_PRESENT
@@ -172,11 +172,11 @@ DMA2_IT_TEMPLATE(11);
 
 #define SDK_INST(x) (reinterpret_cast<COPY_CONST(inst_,DMA_Channel_TypeDef)>(x))
 
-static constexpr IRQn dma_to_irqn(const uint8_t dma_nth, const uint8_t channel_index){
+static constexpr IRQn dma_to_irqn(const uint8_t dma_nth, const uint8_t ch_sel_nth){
     switch(dma_nth){
         #ifdef DMA1_PRESENT
         case 1:
-            switch(channel_index){
+            switch(ch_sel_nth){
                 case 1: return DMA1_Channel1_IRQn;
                 case 2: return DMA1_Channel2_IRQn;
                 case 3: return DMA1_Channel3_IRQn;
@@ -184,12 +184,12 @@ static constexpr IRQn dma_to_irqn(const uint8_t dma_nth, const uint8_t channel_i
                 case 5: return DMA1_Channel5_IRQn;
                 case 6: return DMA1_Channel6_IRQn;
                 case 7: return DMA1_Channel7_IRQn;
-                default: __builtin_trap();
+                case 8: return DMA1_Channel8_IRQn;
             }
         #endif
         #ifdef DMA2_PRESENT
         case 2:
-            switch(channel_index){
+            switch(ch_sel_nth){
                 case 1: return DMA2_Channel1_IRQn;
                 case 2: return DMA2_Channel2_IRQn;
                 case 3: return DMA2_Channel3_IRQn;
@@ -201,12 +201,10 @@ static constexpr IRQn dma_to_irqn(const uint8_t dma_nth, const uint8_t channel_i
                 case 9: return DMA2_Channel9_IRQn;
                 case 10: return DMA2_Channel10_IRQn;
                 case 11: return DMA2_Channel11_IRQn;
-                default: __builtin_trap();
             }
         #endif
-        default: __builtin_trap();
     }
-
+    __builtin_trap();
 }
 
 template<typename T, typename Fn>
@@ -228,10 +226,10 @@ static inline void modify_reg(volatile T* reg, Fn&& fn) {
 
 DmaChannel::DmaChannel(void * inst):
     inst_(inst), 
-    done_mask_(dma_details::calculate_done_mask(inst)),
-    half_mask_(dma_details::calculate_half_mask(inst)),
-    dma_index_(dma_details::calculate_dma_index(inst)),
-    channel_index_(dma_details::calculate_channel_index(inst)){;}
+    done_mask_(_calc_done_mask(inst)),
+    half_mask_(_calc_half_mask(inst)),
+    dma_nth_(_calc_dma_nth(inst)),
+    ch_sel_nth_(_calc_ch_sel_nth(inst)){;}
     
 void DmaChannel::enable_rcc(Enable en){
     #ifdef DMA2_PRESENT
@@ -257,7 +255,7 @@ void DmaChannel::start_transfer(size_t dst_addr, size_t src_addr, const size_t s
         reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> MADDR = dst_addr;
     }
     reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> CNTR = size;
-    clear_and_start();
+    clear_it_flag_and_start();
 }
 
 
@@ -317,7 +315,7 @@ void DmaChannel::init(const Config & cfg){
 }
 
 void DmaChannel::register_nvic(const NvicPriority priority, const Enable en){
-    const auto irq = dma_to_irqn(dma_index_, channel_index_);
+    const auto irq = dma_to_irqn(dma_nth_, ch_sel_nth_);
     priority.with_irqn(irq).enable(en);
 }
 
@@ -338,9 +336,8 @@ void DmaChannel::set_mem_and_periph_wordsize(
     });
 }
 
-void DmaChannel::clear_and_start(){
-    DMA_ClearFlag(done_mask_);
-    DMA_ClearFlag(half_mask_);
+void DmaChannel::clear_it_flag_and_start(){
+    DMA_ClearFlag(done_mask_ | half_mask_);
 
     DMA_Cmd(SDK_INST(inst_), ENABLE);
 }

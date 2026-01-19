@@ -44,7 +44,7 @@ void aw9523_main(){
         .examine();
 
     while(true){
-        const auto dutycycle = (0.5_r + 0.5_r * math::sin(clock::time()));
+        const auto dutycycle = (0.5_r + 0.5_r * math::sin(clock::seconds()));
         aw9523.set_led_current_dutycycle(
             hal::PinMask::from_u16(0xffff),
             dutycycle

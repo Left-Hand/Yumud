@@ -5,5 +5,6 @@
 #include "core/math/real.hpp"
 
 namespace ymd::clock{
-uq16 time();
+uq16 seconds();
+uuq32 seconds_precious();
 }

@@ -27,6 +27,12 @@ public:
     // =>  fc = r * sqrt(sqrt(2) - 1)
     // =>  fc = r * 0.6435
 
+    // 阶越时域表达式
+    // \left(1-e^{-rx}-rxe^{-rx}\right)
+    // \ g'\left(x\right)=r^{2}xe^{-rx}
+
+    // 对于单位阶跃信号 一阶导最大绝对值为r/e
+
     using delta_type = uq16;
 
 

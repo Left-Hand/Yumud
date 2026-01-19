@@ -249,7 +249,7 @@ void myservo_main(){
         pwm_neg.init({});
 
         while(true){
-            const auto t = clock::time();
+            const auto t = clock::seconds();
             const auto duty = sin(t) * 0.5_r;
             set_dutycycle(duty);
             clock::delay(1ms);
@@ -351,16 +351,16 @@ void myservo_main(){
             // auto pwm = hal::
         mode1_gpio.outpp(HIGH);
         // slp_gpio
-        // const auto duty = 0.6_r * math::sinpu(clock::time());
+        // const auto duty = 0.6_r * math::sinpu(clock::seconds());
 
 
-        // curr_cmd = ABS(0.035_r * sin(clock::time() * 4))+ 0.035_r;
+        // curr_cmd = ABS(0.035_r * sin(clock::seconds() * 4))+ 0.035_r;
 
-        // const auto duty_cmd = 0.4_r * sin(clock::time());
-        // const auto pos_cmd = int(sin(clock::time()/3) * 5) * 0.2_r;
-        const auto pos_cmd = 0.81_r * sin(clock::time() * 3);
+        // const auto duty_cmd = 0.4_r * sin(clock::seconds());
+        // const auto pos_cmd = int(sin(clock::seconds()/3) * 5) * 0.2_r;
+        const auto pos_cmd = 0.81_r * sin(clock::seconds() * 3);
         const auto duty_cmd = 0.4_r * dsp::adrc::ssqrt(1.65_r + pos_cmd - spin_filter.get());
-        // const auto duty_cmd = 0.4_r * sign(math::sinpu(clock::time() * 10));
+        // const auto duty_cmd = 0.4_r * sign(math::sinpu(clock::seconds() * 10));
         set_dutycycle(duty_cmd);
         // curr_cmd = ain2.get_voltage() / 3.3_r * 0.015_r + 0.015_r;
         // phase_gpio = BoolLevel::from((clock::millis() % 400).count() > 200);

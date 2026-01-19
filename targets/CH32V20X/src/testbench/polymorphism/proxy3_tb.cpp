@@ -179,7 +179,7 @@ void proxy_tb(){
         // char str_buf[16] = {0};
         for(size_t i = 0; i < 100000; i++){
             // ss.println(*shapes[i]);
-            // strconv::qtoa(clock::time(), str_buf, 4);
+            // strconv::qtoa(clock::seconds(), str_buf, 4);
             // DEBUG_PRINTLN(*shapes[i]);
             // rect.width() = rect.width() + 1;
             // DEBUG_PRINTLN(rect);

@@ -200,8 +200,8 @@ void myesc_main(){
     DBG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
         // .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
-        // .baudrate = hal::NearestFreq(6000000),
-        .baudrate = hal::NearestFreq(576000),
+        .baudrate = hal::NearestFreq(6000000),
+        // .baudrate = hal::NearestFreq(576000),
         .tx_strategy = CommStrategy::Blocking,
     });
 
@@ -226,6 +226,7 @@ void myesc_main(){
     timer.init({
         .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
         .count_freq = hal::NearestFreq(CHOPPER_FREQ * 2), 
+        // .count_freq = hal::timer::ArrAndPsc{2880-1,1-1},
         // .count_mode = hal::TimerCountMode::CenterAlignedDualTrig,
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig,
         // .count_mode = hal::TimerCountMode::CenterAlignedDownTrig,
@@ -529,7 +530,7 @@ void myesc_main(){
     iq20 hfi_response_imag_bin1_ = Zero;
     iq20 hfi_response_real_bin2_ = Zero;
     iq20 hfi_response_imag_bin2_ = Zero;
-    Microseconds last_isr_tick = 0us;
+    Microseconds last_exe_us_ = 0us;
     Microseconds exe_duration_ = 0us;
     std::tuple<uint32_t, uint32_t, uint32_t> uvw_curr_bits_offset_acc_ = {0, 0, 0};
     std::tuple<uint16_t, uint16_t, uint16_t> uvw_curr_bits_offset_ = {0, 0, 0};
@@ -590,7 +591,7 @@ void myesc_main(){
 
         //#region 位置提取
 
-        [[maybe_unused]] const auto now_secs = clock::time();
+        [[maybe_unused]] const auto now_secs = clock::seconds();
         [[maybe_unused]] static constexpr auto ZERO_ELEC_ANGLE = Angular<uq32>::ZERO;
         const auto hfi_angle = Angular<uq32>::from_turns(
             math::pu_to_uq32(math::atan2pu(hfi_response_imag_bin2_ - 0.002_iq20, hfi_response_real_bin2_))
@@ -846,11 +847,11 @@ void myesc_main(){
             // };
         }();
 
-        auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation);
-        alphabeta_volt = alphabeta_volt + hfi_alphabeta_volt;
-
-        // auto alphabeta_volt = openloop_alphabeta_volt;
+        // auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation);
         // alphabeta_volt = alphabeta_volt + hfi_alphabeta_volt;
+
+        auto alphabeta_volt = openloop_alphabeta_volt;
+        alphabeta_volt = alphabeta_volt + hfi_alphabeta_volt;
 
 
         // const auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation) + generate_alpha_beta_volt_by_hfi();
@@ -893,7 +894,11 @@ void myesc_main(){
     static size_t trig_prog = 0;
     auto jeoc_isr = [&]{ 
         timming_watch_pin_.set_high();
+        const auto now_us = clock::micros();
+        exe_duration_ = now_us - last_exe_us_;
+        last_exe_us_ = now_us;
 
+        #if 0
         if(timer.is_up_counting()){
             switch(trig_prog){
                 case 0:{
@@ -920,11 +925,12 @@ void myesc_main(){
                 }
             }
         }
-
-
-        // ctrl_isr();
+        #endif
+        
+        ctrl_isr();
+        exe_elapsed_ = clock::micros() - now_us;
         // for(volatile size_t i = 0; i < 30; i++);
-        for(volatile size_t i = 0; i < 6; i++);
+        // for(volatile size_t i = 0; i < 6; i++);
         timming_watch_pin_.set_low();
     };
 
@@ -1081,7 +1087,7 @@ void myesc_main(){
                 );
             }
             if(false){
-                const auto now_secs = clock::time();
+                const auto now_secs = clock::seconds();
                 const auto t = frac(now_secs * 2);
                 const auto [s,c] = math::sincospu(t);
 

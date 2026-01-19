@@ -14,9 +14,7 @@ enum class [[nodiscard]] MAV_TYPE:uint8_t{
     ANTENNA_TRACKER = 5,
     GCS = 6,
     AIRSHIP = 7,
-    
-
-}
+};
 
 enum class [[nodiscard]] MavlinkMessageId : uint16_t {
     HEARTBEAT = 0,
@@ -218,8 +216,6 @@ enum class [[nodiscard]] MavlinkMessageType : uint8_t {
     STATUSTEXT = 253,
     DEBUG_VECT = 250,
     DEBUG = 254,
-    NAMED_VALUE_FLOAT = 266,
-    NAMED_VALUE_INT = 267,
     WIND = 168,
     RANGEFINDER = 173,
     TERRAIN_REQUEST = 133,
@@ -359,6 +355,6 @@ enum class [[nodiscard]] MavlinkComponentId : uint8_t {
     MAV_COMP_ID_CAMERA5 = 104,
     MAV_COMP_ID_CAMERA6 = 105,
     MAV_COMP_ID_SERVO1 = 14
-}
+};
 
 }

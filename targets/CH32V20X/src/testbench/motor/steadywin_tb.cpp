@@ -74,14 +74,11 @@ void steadywin_main(){
         //波特率为1M
         .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
     });
-
-    [[maybe_unused]] static constexpr auto STD_DATA_FRAME_ONLY_FILTER_PAIR = 
-        hal::CanStdIdMaskPair::from_str("xxxxxxxxxxx", hal::CanRtrSpecfier::Discard).unwrap();
     
     //配置can过滤器为接收标准数据帧（滤除拓展和远程帧）
     can.filters<0>().apply(
         hal::CanFilterConfig::from_pairs(
-            STD_DATA_FRAME_ONLY_FILTER_PAIR,
+            hal::CAN_FILTER_PAIR_STD_DATA_FRAME_ONLY,
             hal::CanStdIdMaskPair::reject_all()
         )
         // hal::CanFilterConfig::accept_all()
@@ -275,7 +272,7 @@ void steadywin_main(){
     timer.set_event_handler([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
-            const auto now_secs = clock::time();
+            const auto now_secs = clock::seconds();
 
             {
                 const auto num_rx_frames = can.available();

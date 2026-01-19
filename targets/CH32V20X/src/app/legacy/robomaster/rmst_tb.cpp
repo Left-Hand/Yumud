@@ -20,7 +20,7 @@ using namespace ymd;
 using namespace ymd::robots;
 
 auto input(){
-    const auto t = clock::time();
+    const auto t = clock::seconds();
 
     static constexpr auto w0 = real_t(TAU * 4); 
     static constexpr auto w1 = real_t(TAU * 70); 
@@ -156,7 +156,7 @@ void so_tb(){
     // while(true);
     dsp_func_test(fs, [&](){
         // auto x = input();
-        const auto x = clock::time();
+        const auto x = clock::seconds();
         // auto r = 0.001_r;
         sof.update(x);
         // DEBUG_PRINTLN(config.a1, config.a2, config.b0, config.b1, config.b2);

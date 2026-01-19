@@ -16,7 +16,7 @@ void float_main(){
     });
 
     while(true){
-        math::bf16 i = math::bf16(math::sin(clock::time()));
+        math::bf16 i = math::bf16(math::sin(clock::seconds()));
         math::bf16 o = i;
 
         const auto begin_us = clock::micros();

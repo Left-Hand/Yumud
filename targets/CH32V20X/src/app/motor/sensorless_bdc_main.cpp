@@ -256,7 +256,7 @@ void at8222_tb(){
         // spd_targ = 7.0_r + 3 * sin(5 * time());
         // spd_targ = 8.0_r + 1.0_r * ((sin(2.0_r * time())) > 0 ? 1 : -1);
         // spd_targ = 8.0_r + 1.0_r * math::sinpu(2.0_r * time());
-        const auto now_secs = clock::time();
+        const auto now_secs = clock::seconds();
 
         #define TEST_MODE 1
 

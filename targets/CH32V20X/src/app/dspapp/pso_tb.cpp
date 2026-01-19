@@ -45,7 +45,7 @@ void pso_tb(){
 
     pso.init(-10, 1);
     auto eval_func = [](const Particle & p){
-        // return -ABS(p.x - 5.5_r + sin(clock::time()));
+        // return -ABS(p.x - 5.5_r + sin(clock::seconds()));
         // return -ABS(p.x - 0.5_r);
         // const auto targ = sin(2 * time());
         // DEBUG_PRINTLN(targ);

@@ -258,7 +258,7 @@ void smc2025_main(){
 
     [[maybe_unused]] auto test_render = [&]{
     
-        [[maybe_unused]]const auto now_secs = clock::time();
+        [[maybe_unused]]const auto now_secs = clock::seconds();
         const auto pose = Isometry2<iq16>{
             // .rotation = UnitComplex<iq16>::from_radians(now_secs + iq16(1 / TAU) * math::sinpu(now_secs)),
             // .translation = Vec2<iq16>(0, -1.5_r) + Vec2<iq16>(-1.9_r, 0).rotated(Angular<iq16>::from_radians(now_secs)), 
@@ -313,7 +313,7 @@ void smc2025_main(){
         painter.fill(color_cast<RGB888>(ColorEnum::BLACK)).examine();
 
         FixedStringStream<64> ss;
-        ss.println("helloword", clock::time());
+        ss.println("helloword", clock::seconds());
         painter.draw_ascii_str({0,0}, ss.str()).examine();
         DEBUG_PRINTLN(ss.str());
         // painter.draw_hollow_rect({0,0,7,7}).examine();
@@ -368,7 +368,7 @@ void smc2025_main(){
         // test_paint();
         // test_paint();
         // qmc.update().examine();
-        // painter.set_color(HSV888{0, int(100 + 100 * math::sinpu(clock::time())), 255});
+        // painter.set_color(HSV888{0, int(100 + 100 * math::sinpu(clock::seconds())), 255});
         // painter.draw_pixel(Vec2u(0, 0));
         // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
 

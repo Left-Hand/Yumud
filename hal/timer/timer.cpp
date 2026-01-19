@@ -631,12 +631,29 @@ void GeneralTimer::enable_master_slave_mode(const Enable en){
 }
 
 void TimerBdtr::init(const Config & cfg){
+    auto & self = *this;
+    // MOE
+    // 主输出使能位。一旦刹车信号有效，将被异步清零。
+    // 1：允许 OCx 和 OCxN 设为输出；
+    // 0：禁止 OCx 和 OCxN 的输出或者强制为空闲状态。
 
+
+    // AOE
+    // 自动输出使能。
+    // 1：MOE 可以被软件置位或者在下一个更新事件中被
+    // 置位；
+    // 0：MOE 只能被软件置位。
+
+    const auto deadzone_code = [&] -> TimerDeadzoneCode{
+        if(cfg.deadzone.is<TimerDeadzoneCode>()) return cfg.deadzone.unwrap_as<TimerDeadzoneCode>();
+        if(cfg.deadzone.is<Nanoseconds>()) return TimerDeadzoneCode::from_ns(self.bus_freq, cfg.deadzone.unwrap_as<Nanoseconds>());
+        __builtin_trap();
+    }();
     const TIM_BDTRInitTypeDef TIM_BDTRInitStructure{
         .TIM_OSSRState = TIM_OSSRState_Disable,
         .TIM_OSSIState = TIM_OSSIState_Disable,
         .TIM_LOCKLevel = static_cast<uint16_t>(std::bit_cast<uint8_t>(cfg.level) << 8),
-        .TIM_DeadTime = TimerDeadzoneCode::from_ns(bus_freq, cfg.deadzone_ns).bits,
+        .TIM_DeadTime = deadzone_code.bits,
         .TIM_Break = TIM_Break_Disable,
         .TIM_BreakPolarity = TIM_BreakPolarity_Low,
         .TIM_AutomaticOutput = TIM_AutomaticOutput_Enable
@@ -645,14 +662,14 @@ void TimerBdtr::init(const Config & cfg){
     TIM_BDTRConfig(SDK_INST(inst_), &TIM_BDTRInitStructure);
 }
 
-void TimerBdtr::set_deadzone(const Nanoseconds deadzone_ns){
-    const auto deadzone_code = TimerDeadzoneCode::from_ns(bus_freq, deadzone_ns);
-
+#if 0
+void TimerBdtr::set_deadzone_code(const TimerDeadzoneCode deadzone_code){
     uint16_t tempreg = SDK_INST(inst_)->BDTR;
     tempreg &= 0xff00;
     tempreg |= deadzone_code.bits;
     SDK_INST(inst_)->BDTR = tempreg;
 }
+#endif
 
 void BasicTimer::enable_cc_ctrl_sync(const Enable en){
     TIM_CCPreloadControl(SDK_INST(inst_), en == EN);

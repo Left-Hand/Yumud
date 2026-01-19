@@ -34,6 +34,11 @@ static constexpr uq16 PLL_KI_BY_FS = uq16::from_bits(
     static_cast<uint32_t>((static_cast<uint64_t>(PLL_KI) * (1u << 16)) / F_SAMPLE)
 );
 
+static constexpr math::fixed_t<32, uint32_t> uq32_mul(const math::fixed_t<32, uint32_t> a, const size_t b){
+    const auto bits = static_cast<uint32_t>((static_cast<uint64_t>(a.to_bits()) * b) & std::numeric_limits<uint32_t>::max());
+    return math::fixed_t<32, uint32_t>::from_bits(bits);
+}
+static_assert(uq32_mul(0.125_uq32,13) == 0.625_uq32);
 
 [[maybe_unused]] static uint32_t generate_noise(){
     static uint32_t seed = 0;
@@ -196,7 +201,10 @@ void sincospll_main(){
 
     while(true){
         DEBUG_PRINTLN(
-            // clock::time(),
+            clock::seconds(),
+            // uq32::from_bits(clock::seconds().to_bits()),
+            // uq32::from_bits(clock::seconds().to_bits() >> 32),
+            // static_cast<uint32_t>(clock::seconds().to_bits()),
 
             simulated_angle_.to_turns(),
             computed_angle_.to_turns(),

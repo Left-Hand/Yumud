@@ -128,7 +128,7 @@ void curve_tb() {
 
         void setPosition(const Vec2<real_t> & pos){
             auto [x,y] = pos;
-            DEBUG_PRINTLN(x,y, sin(clock::time()));
+            DEBUG_PRINTLN(x,y, sin(clock::seconds()));
         }
 
         void setScale(const Vec3 & scale){
@@ -138,12 +138,12 @@ void curve_tb() {
 
         Vec2<real_t> getPosition(){
             // DEBUG_PRINTLN
-            return Vec2<real_t>(1,0).rotated(clock::time());
+            return Vec2<real_t>(1,0).rotated(clock::seconds());
         }
 
         operator real_t(){
             // DEBUG_PRINTLN("??")
-            return clock::time();
+            return clock::seconds();
         }
     };
 
@@ -244,14 +244,14 @@ void curve_tb() {
         // setter = Vec2<real_t>(1,0).rotated(t);
 
         // DEBUG_PRINTLN(getter(), getter2());
-        // tw3.update(frac(clock::time()));
+        // tw3.update(frac(clock::seconds()));
         // pos_setter({sin(time()), cos(time())});
 
         // tw2->update(fmod(t, tw2->period()));
         // tweener.update(fmod(t, tweener.period()));
         // DEBUG_PRINTLN(size_t(&Ball::setPosition));
-        tp->update(fmod(clock::time(), tp->period()));
-        tp2->update(fmod(clock::time(), tp2->period()));
+        tp->update(fmod(clock::seconds(), tp->period()));
+        tp2->update(fmod(clock::seconds(), tp2->period()));
         // DEBUG_PRINTLN(sizeof(decltype(tweener4)));P
         // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(tweener)>));
         // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(tweener4)>));

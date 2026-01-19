@@ -24,8 +24,7 @@ void memory_tb(ymd::OutputStream & logger);
 
 void stepper_tb(ymd::hal::Uart & logger);
 
-void lua_tb(ymd::OutputStream & logger);
-void pwm_tb(ymd::OutputStream & logger);
+void pwm_main();
 
 void adc_tb(ymd::OutputStream & logger);
 void temp_tb(ymd::OutputStream & logger);
@@ -197,3 +196,4 @@ void s21c_main();
 void steadywin_main();
 void vce2755_main();
 void sincospll_main();
+void cap_main();

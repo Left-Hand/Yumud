@@ -79,7 +79,7 @@ void pfm_zvs_main(){
     timer.start();
 
     while(true){
-        const auto t = clock::time();
+        const auto t = clock::seconds();
         const auto st = math::sinpu(t * 100);
         pwm_p.set_dutycycle(st * 0.4_r + 0.5_r);
 
@@ -88,7 +88,12 @@ void pfm_zvs_main(){
         timer.set_arr(arr);
 
         const auto dead_zone_ns = Nanoseconds(uint16_t(1000 * (1 + 0.5_r * st)));
+
+        #if 0
         timer.bdtr().set_deadzone(dead_zone_ns);
+        #else
+        __builtin_trap();
+        #endif
         DEBUG_PRINTLN(arr);
 
         clock::delay(300us);

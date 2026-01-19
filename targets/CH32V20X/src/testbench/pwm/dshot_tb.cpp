@@ -1,10 +1,16 @@
 #include "src/testbench/tb.h"
-
+#include "core/clock/time.hpp"
 #include "core/clock/clock.hpp"
-#include "core/debug/debug.hpp"
+#include "core/math/realmath.hpp"
+#include "core/stream/ostream.hpp"
+#include "core/utils/default.hpp"
 
+#include "hal/dma/dma.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/gpio_port.hpp"
 #include "hal/timer/hw_singleton.hpp"
-#include "hal/timer/timer_oc.hpp"
+
+#include "core/sdk.hpp"
 
 #include "drivers/Modem/dshot/dshot.hpp"
 
@@ -12,109 +18,70 @@ using namespace ymd;
 
 using namespace ymd::drivers;
 
-static constexpr size_t N = 40;
-static std::array<uint16_t, N> data;
-
-
-[[maybe_unused]] static constexpr uint16_t dshot_crc(uint16_t data_in){
-	uint16_t speed_data;
-	speed_data = data_in << 5;
-	data_in = data_in << 1;
-	data_in = (data_in ^ (data_in >> 4) ^ (data_in >> 8)) & 0x0f;
-	
-	return speed_data | data_in;
-}
-	
-
-[[maybe_unused]] static void transfer(uint16_t data_in){
-	uint8_t i;
-	for(i=0;i<16;i++)
-	{
-		if(data_in & 0x8000)data[i] = 171;
-		else data[i] = 81;
-		data_in = data_in << 1;
-	}
-}
-
-
-[[maybe_unused]] static void dshot_tb_new(OutputStream & logger, hal::TimerOC & oc1, hal::TimerOC & oc2){
-    DShotChannel ch1{oc1};
-    DShotChannel ch2{oc2};
-
-    ch1.init();
-    ch2.init();
-
-
-    auto entry_t = clock::millis();
-    while(clock::millis() - entry_t < 3000ms){
-        // ch1.enable();
-        // ch2.enable();
-        ch1.set_dutycycle(0);
-        ch2.set_dutycycle(0);
-
-        clock::delay(20ms);
-    }
-
-    clock::delay(200ms);
-    // clock::delay(3000ms);
-    // ch1.init();
-    // ch2.init();
-
-    // oc1.init();
-    // oc2.init();
-    // constexpr real_t base = 0.12;
-    // constexpr real_t full = 0.95;
-    // constexpr real_t delta = full-  base;
-    // ch1 = base;
-    // ch2 = base;
-
-    // auto t0 = t;
-    // real_t temp = base;
-    // while(true){
-        // ch2 = 0.2;
-        // clock::delay(15ms);
-
-        // temp = std::max(temp, base + (0.5 + 0.5 * sin((t - t0)/2)) * delta);
-        // ch1 = temp;
-        // ch2 = temp;
-        // clock::delay(20ms);
-
-        // clock::delay(10ms);
-        // ch1 = 0.6;
-        // ch2 = 0.6;
-        // oc2 = 0.4;
-        // logger.println(temp);
-        // clock::delay(20ms);
-    // }
-}
 
 void dshot_main(){
 
-    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
-    // DEBUGGER.retarget(&DEBUGGER_INST);
+    auto & DBG_UART = hal::usart2;
+    DBG_UART.init({
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        // .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
+        // .baudrate = hal::NearestFreq(6000000),
+        .baudrate = hal::NearestFreq(576000),
+        .tx_strategy = CommStrategy::Blocking,
+    });
 
-    DEBUGGER.set_radix(10);
+    DEBUGGER.retarget(&DBG_UART);
     DEBUGGER.set_eps(4);
-    auto & timer = hal::timer1;
+    DEBUGGER.set_splitter(",");
+    DEBUGGER.no_brackets(EN);
+    // DEBUGGER.force_sync(EN);
+
+    auto & timer = hal::timer3;
 
     timer.init({
-        .remap = hal::TIM1_REMAP_A8_A9_A10_A11__B13_B14_B15,
+        .remap = hal::TIM3_REMAP_A6_A7_B0_B1,
         .count_freq = hal::NearestFreq(20_KHz),
+        // .count_freq = hal::NearestFreq(600_KHz),
         .count_mode = hal::TimerCountMode::Up
-    })        .unwrap()
+    }).unwrap()
         .alter_to_pins({
-            hal::TimerChannelSelection::CH1,
-            hal::TimerChannelSelection::CH2,
+            // hal::TimerChannelSelection::CH1,
+            // hal::TimerChannelSelection::CH2,
             hal::TimerChannelSelection::CH3,
+            hal::TimerChannelSelection::CH4,
         })
         .unwrap();
-
+    // TIM_DMACmd(TIM3, TIM_DMA_CC1, ENABLE);
+    // TIM_DMACmd(TIM3, TIM_DMA_CC2, ENABLE);
+    // TIM_DMACmd(TIM3, TIM_DMA_CC3, ENABLE);
+    TIM_DMACmd(TIM3, TIM_DMA_CC4, ENABLE);
     timer.start();
-    auto & oc = timer.oc<1>();
-    auto & oc2 = timer.oc<2>();
+    // auto & oc3 = timer.oc<3>();
+    auto & oc4 = timer.oc<4>();
 
-    dshot_tb_new(DEBUGGER,oc, oc2);
-    // dshot_tb_old(logger,oc, oc2);
+    // DShotChannel ch1{oc3};
+    DShotChannel ch2{oc4};
 
-    // while(true);
+    // ch1.init();
+    ch2.init();
+
+    while(true){
+        const auto now_secs = clock::seconds();
+
+        const auto dutycycle = 0.4_iq16 * iq16(math::sinpu(4 * now_secs)) + 0.5_iq16;
+        const auto dutycycle_int = static_cast<uint16_t>(600 * dutycycle);
+        // ch1.set_content(dutycycle_int);
+        ch2.set_content(dutycycle_int);
+
+        clock::delay(1ms);
+        // auto & dma = oc3.dma().unwrap();
+        // DEBUG_PRINTLN(
+            // std::hex, reinterpret_cast<uint32_t>(dma.inst_),
+            // DMA1_Channel2_BASE
+            // dma.pending_count
+        // );
+        // while(oc3.dma().unwrap().pending_count() != 0){
+        //     __nop;
+        // }
+    }
 }

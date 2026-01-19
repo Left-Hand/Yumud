@@ -11,8 +11,12 @@ int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
     // myesc_main();
+    // pwm_main();
+    cap_main();
+    // dshot_main();
     // sincos_main();
-    sincospll_main();
+    // sincospll_main();
+    // adrc_main();
 
     // vce2755_main();
     // sincospll_main();

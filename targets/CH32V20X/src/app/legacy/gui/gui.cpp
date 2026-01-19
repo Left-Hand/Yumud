@@ -184,7 +184,7 @@ void gui_main(){
     #if 0
     while(true){
         painter.bind_image(img);
-        painter.set_color(HSV888{0, int(100 + 100 * math::sinpu(clock::time())), 255});
+        painter.set_color(HSV888{0, int(100 + 100 * math::sinpu(clock::seconds())), 255});
         painter.draw_pixel(Vec2u(0, 0));
         painter.draw_hollow_rect(Rect2u(20, 0, 20, 40)).examine();
 

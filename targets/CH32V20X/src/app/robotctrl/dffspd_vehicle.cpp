@@ -328,7 +328,7 @@ void diffspd_vehicle_main(){
     auto motor_ctrl_cb = [&](){
         motor_td_.update(motor_phy.get_angle().cast_inner<iq16>());
 
-        const auto now_secs = clock::time();
+        const auto now_secs = clock::seconds();
         const auto freq = 0.2_r;
         // const auto amp = 0.5_r;
         const auto amp = 1.0_r;

@@ -528,7 +528,7 @@ void polar_robot_main(){
 
         // can_watch_service();
 
-        // const auto clock_time = clock::time();
+        // const auto clock_time = clock::seconds();
         // const auto [s0,c0] = sincos(clock_time);
         // const auto [s,c] = std::make_tuple(s0, s0);
         // const auto vec = Vec2{s,c};

@@ -39,12 +39,12 @@ __no_inline auto compare_func(size_t times, Fn1 && fn1, Fn2 && fn2){
 
 template<typename Fn>
 __no_inline auto eval_func(Fn && fn){
-    auto y = std::forward<Fn>(fn)(clock::time());
+    auto y = std::forward<Fn>(fn)(clock::seconds());
 
     static constexpr size_t times = 10000;
 
     const auto begin_us = clock::micros();
-    const auto t = clock::time();
+    const auto t = clock::seconds();
     for(size_t i = 0; i < times; ++i){
         // __nop;
         // (y) += (std::forward<Fn>(fn)(t));
@@ -63,7 +63,7 @@ __no_inline auto eval_func(Fn && fn){
 template<typename Fn>
 void play_func(Fn && fn){
     while(true){
-        const auto now_secs = clock::time();
+        const auto now_secs = clock::seconds();
         // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
         // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
         const auto x = pu_to_uq32((now_secs * 2));

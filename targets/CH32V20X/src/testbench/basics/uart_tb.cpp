@@ -55,6 +55,47 @@ using namespace ymd;
     #endif
 }
 
+#if 0
+    auto & EXT_UART = hal::uart4;
+    EXT_UART.init({
+        .remap = hal::UartRemap::_0,
+        // .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
+        // .baudrate = hal::NearestFreq(6000000),
+        .baudrate = hal::NearestFreq(576000),
+        .tx_strategy = CommStrategy::Blocking,
+    });
+    
+    auto & DBG_UART = hal::usart2;
+    DBG_UART.init({
+        .remap = hal::USART2_REMAP_PA2_PA3,
+        // .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
+        // .baudrate = hal::NearestFreq(6000000),
+        .baudrate = hal::NearestFreq(576000),
+        .tx_strategy = CommStrategy::Blocking,
+    });
+    
+    DEBUGGER.retarget(&DBG_UART);
+    // DEBUGGER.retarget(&EXT_UART);
+    DEBUGGER.set_eps(4);
+    DEBUGGER.set_splitter(",");
+    DEBUGGER.no_brackets(EN);
+    // DEBUGGER.force_sync(EN);
+    auto led = hal::PC<13>();
+    led.outpp();
+
+    while(true){
+        led.set_high();
+        const char chars[] = {'h', '\r', '\n'};
+        // EXT_UART.try_write_chars(chars, sizeof(chars)-1);
+        DEBUG_PRINTLN(EXT_UART.available(), EXT_UART.try_write_chars(chars, 3));
+        // DEBUG_PRINTLN(EXT_UART.available());
+        clock::delay(10ms);
+        led.set_low();
+        // DEBUG_PRINTLN(EXT_UART.available());
+        clock::delay(10ms);
+    }
+#endif
+
 void uart_main(){
     // uart_tb_old();
     //usart1 passed

@@ -49,7 +49,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         case hal::TimerEvent::Update:{
             pwm_gen.on_update_isr();
 
-            const auto t = clock::time();
+            const auto t = clock::seconds();
 
             const auto [st, ct] = math::sincospu(700 * t);
 
