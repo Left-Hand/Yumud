@@ -6,7 +6,7 @@
 
 namespace ymd::crsf{
 using math::int24_t, math::uint24_t;
-struct [[nodiscard]] AltitudeCode  final{
+struct [[nodiscard]] AltitudeCode final{
     using Self = AltitudeCode;
     // 高度值取决于MSB（第15位）：
     // MSB = 0：高度以分米表示——10000分米偏移（0代表-1000米;10000代表0米（起始高度）;0x7fff表示2276.7米）;
@@ -66,7 +66,7 @@ struct [[nodiscard]] AltitudeCode  final{
     } 
 };
 
-struct [[nodiscard]] VerticalSpeedCode  final{
+struct [[nodiscard]] VerticalSpeedCode final{
     using Self = VerticalSpeedCode;
     
     static constexpr int   Kl = 100;       // linearity constant;
@@ -100,7 +100,7 @@ struct [[nodiscard]] VerticalSpeedCode  final{
     }
 };
 
-struct [[nodiscard]] VoltageCode  final{
+struct [[nodiscard]] VoltageCode final{
     using Self = VoltageCode;
     
     int16_t bits;  // LSB = 10 µV
@@ -124,7 +124,7 @@ struct [[nodiscard]] VoltageCode  final{
     }
 };
 
-struct [[nodiscard]] CurrentCode  final{
+struct [[nodiscard]] CurrentCode final{
     using Self = CurrentCode;
     
     int16_t bits;  // LSB = 10 µA
@@ -148,7 +148,7 @@ struct [[nodiscard]] CurrentCode  final{
     }
 };
 
-struct [[nodiscard]] RpmCode  final{
+struct [[nodiscard]] RpmCode final{
     using Self = RpmCode;
     
     int24_t bits;
@@ -163,7 +163,7 @@ struct [[nodiscard]] RpmCode  final{
     }
 };
 
-struct [[nodiscard]] TemperatureCode  final{
+struct [[nodiscard]] TemperatureCode final{
     using Self = TemperatureCode;
     
     int16_t bits;  // deci-degree (tenths of a degree) Celsius
@@ -178,7 +178,7 @@ struct [[nodiscard]] TemperatureCode  final{
     }
 };
 
-struct [[nodiscard]] GpsCoordinate  final{
+struct [[nodiscard]] GpsCoordinate final{
     using Self = GpsCoordinate;
     
     int32_t bits;  // degree / 10`000`000
@@ -193,7 +193,7 @@ struct [[nodiscard]] GpsCoordinate  final{
     }
 };
 
-struct [[nodiscard]] GpsHeading  final{
+struct [[nodiscard]] GpsHeading final{
     using Self = GpsHeading;
     
     uint16_t bits;  // degree / 100
@@ -208,7 +208,7 @@ struct [[nodiscard]] GpsHeading  final{
     }
 };
 
-struct [[nodiscard]] GpsGroundSpeed  final{
+struct [[nodiscard]] GpsGroundSpeed final{
     using Self = GpsGroundSpeed;
     
     uint16_t bits;  // km/h / 100
@@ -232,7 +232,7 @@ struct [[nodiscard]] GpsGroundSpeed  final{
     }
 };
 
-struct [[nodiscard]] AirspeedCode  final{
+struct [[nodiscard]] AirspeedCode final{
     using Self = AirspeedCode;
     
     uint16_t bits;  // Airspeed in 0.1 * km/h (hectometers/h)
@@ -256,7 +256,7 @@ struct [[nodiscard]] AirspeedCode  final{
     }
 };
 
-struct [[nodiscard]] AttitudeAngle  final{
+struct [[nodiscard]] AttitudeAngle final{
     using Self = AttitudeAngle;
     
     int16_t bits;  // LSB = 100 µrad
@@ -280,7 +280,7 @@ struct [[nodiscard]] AttitudeAngle  final{
     }
 };
 
-struct [[nodiscard]] RssiCode  final{
+struct [[nodiscard]] RssiCode final{
     using Self = RssiCode;
     
     uint8_t bits;  // RSSI (dBm * -1)
@@ -301,7 +301,7 @@ struct [[nodiscard]] RssiCode  final{
     }
 };
 
-struct [[nodiscard]] LinkQualityCode  final{
+struct [[nodiscard]] LinkQualityCode final{
     using Self = LinkQualityCode;
     
     uint8_t bits;  // Link quality (%)
@@ -316,7 +316,7 @@ struct [[nodiscard]] LinkQualityCode  final{
     }
 };
 
-struct [[nodiscard]] SnrCode  final{
+struct [[nodiscard]] SnrCode final{
     using Self = SnrCode;
     
     int8_t bits;  // SNR (dB)
@@ -331,7 +331,7 @@ struct [[nodiscard]] SnrCode  final{
     }
 };
 
-struct [[nodiscard]] RfPowerCode  final{
+struct [[nodiscard]] RfPowerCode final{
     using Self = RfPowerCode;
     
     uint8_t bits;  // rf power in dBm
@@ -346,7 +346,7 @@ struct [[nodiscard]] RfPowerCode  final{
     }
 };
 
-struct [[nodiscard]] FpsCode  final{
+struct [[nodiscard]] FpsCode final{
     using Self = FpsCode;
     
     uint8_t bits;  // rf frames per second (fps / 10)
@@ -361,7 +361,7 @@ struct [[nodiscard]] FpsCode  final{
     }
 };
 
-struct [[nodiscard]] PressureCode  final{
+struct [[nodiscard]] PressureCode final{
     using Self = PressureCode;
     
     int32_t bits;  // Pascals
@@ -385,7 +385,7 @@ struct [[nodiscard]] PressureCode  final{
     }
 };
 
-struct [[nodiscard]] TemperatureCentidegree  final{
+struct [[nodiscard]] TemperatureCentidegree final{
     using Self = TemperatureCentidegree;
     
     int32_t bits;  // centidegrees
@@ -400,7 +400,7 @@ struct [[nodiscard]] TemperatureCentidegree  final{
     }
 };
 
-struct [[nodiscard]] PassthroughTelemetryPacket  final{
+struct [[nodiscard]] PassthroughTelemetryPacket final{
     uint16_t appid;
     uint32_t data;
 };

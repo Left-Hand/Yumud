@@ -43,8 +43,15 @@ IResult<> IST8310::init(){
     return Ok();
 }
 IResult<> IST8310::update(){
-    auto & reg = regs_.axis_x_reg;
-    return read_burst(reg.ADDRESS, std::span(&reg.as_bits_mut(), 3));
+    std::array<int16_t, 3> buf;
+    if(const auto res = read_burst(regs_.axis_x_reg.ADDRESS, std::span(buf));
+        res.is_err()) return Err(res.unwrap_err());
+
+    regs_.axis_x_reg.bits = buf[0];
+    regs_.axis_y_reg.bits = buf[1];
+    regs_.axis_z_reg.bits = buf[2];
+
+    return Ok();
 }
 
 IResult<> IST8310::validate(){
@@ -116,7 +123,7 @@ IResult<bool> IST8310::is_data_ready(){
 IResult<> IST8310::enable_interrupt(const Enable en){
     auto reg = RegCopy(regs_.ctrl2_reg);
     reg.int_en = en == EN;
-    return write_reg(reg);;
+    return write_reg(reg);
 }
 
 IResult<> IST8310::set_interrupt_level(const BoolLevel lv){

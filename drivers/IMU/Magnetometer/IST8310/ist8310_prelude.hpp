@@ -30,7 +30,7 @@ struct IST8310_Regset:public IST8310_Prelude{
     struct R8_WhoAmI:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x00;
         static constexpr uint8_t expected_value = 0x10;
-        uint8_t data;
+        uint8_t bits;
     }DEF_R8(whoami_reg)
 
     struct R8_Status1:public Reg8<>{
@@ -41,22 +41,22 @@ struct IST8310_Regset:public IST8310_Prelude{
         uint8_t :6;
     }DEF_R8(status1_reg)
 
-    struct R16_AxisX:public Reg16i<>{
+    struct R16_AxisX:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x03;
 
-        int16_t data;
+        int16_t bits;
     }DEF_R16(axis_x_reg)
 
-    struct R16_AxisY:public Reg16i<>{
+    struct R16_AxisY:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x05;
 
-        int16_t data;
+        int16_t bits;
     }DEF_R16(axis_y_reg)
 
-    struct R16_AxisZ:public Reg16i<>{
+    struct R16_AxisZ:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x07;
 
-        int16_t data;
+        int16_t bits;
     }DEF_R16(axis_z_reg)
 
     struct R8_Status2:public Reg8<>{
@@ -95,7 +95,7 @@ struct IST8310_Regset:public IST8310_Prelude{
 
     struct R16_Temp:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x1C;
-        uint16_t data;
+        uint16_t bits;
 
         constexpr iq16 to_temp() const {
             return (this->to_bits() * iq16(0.8) - 75);

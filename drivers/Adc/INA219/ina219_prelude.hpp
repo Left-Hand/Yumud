@@ -61,26 +61,27 @@ struct INA219_Regs:public INA219_Prelude{
 
     struct R16_ShuntVolt:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x01;
-        uint16_t count;
+        uint16_t bits;
     }DEF_R16(shunt_volt_reg)
 
     struct R16_BusVolt:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x02;
-        uint16_t count;
+        uint16_t bits;
     }DEF_R16(bus_volt_reg)
 
-    struct R16_Power:public Reg16i<>{
+    struct R16_Power:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x03;
-        int16_t count;
+        int16_t bits;
     }DEF_R16(power_reg)
-    struct R16_Current:public Reg16i<>{
+    
+    struct R16_Current:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x04;
-        int16_t count;
+        int16_t bits;
     }DEF_R16(current_reg)
     
-    struct R16_Calibration:public Reg16i<>{
+    struct R16_Calibration:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x05;
-        int16_t count;
+        int16_t bits;
     }DEF_R16(calibration_reg)
 };
 }

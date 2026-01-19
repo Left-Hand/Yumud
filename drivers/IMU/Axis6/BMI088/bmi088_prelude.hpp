@@ -78,9 +78,9 @@ struct BMI088_AccRegs:public BMI088_Prelude{
         uint8_t drdy_acc:1 = 0;
     }DEF_R8(acc_stat_reg)
 
-    REG16I_QUICK_DEF(0x12, R8_AccXReg, acc_x_reg);
-    REG16I_QUICK_DEF(0x14, R8_AccYReg, acc_y_reg);
-    REG16I_QUICK_DEF(0x16, R8_AccZReg, acc_z_reg);
+    REG16_QUICK_DEF(0x12, R8_AccXReg, acc_x_reg);
+    REG16_QUICK_DEF(0x14, R8_AccYReg, acc_y_reg);
+    REG16_QUICK_DEF(0x16, R8_AccZReg, acc_z_reg);
     REG8_QUICK_DEF(0x18,  R8_SensorTime0, sensor_t0_reg);
     REG8_QUICK_DEF(0x19,  R8_SensorTime1, sensor_t1_reg);
     REG8_QUICK_DEF(0x1A,  R8_SensorTime2, sensor_t2_reg);
@@ -138,9 +138,9 @@ struct BMI088_AccRegs:public BMI088_Prelude{
 
 struct BMI088_GyrRegs:public BMI088_Prelude{
     REG8_QUICK_DEF(0x00, R8_GyroChipID, gyro_chip_id);
-    REG16I_QUICK_DEF(0x02, R8_AccXReg, gyr_x_reg);
-    REG16I_QUICK_DEF(0x04, R8_AccYReg, gyr_y_reg);
-    REG16I_QUICK_DEF(0x06, R8_AccZReg, gyr_z_reg);
+    REG16_QUICK_DEF(0x02, R8_AccXReg, gyr_x_reg);
+    REG16_QUICK_DEF(0x04, R8_AccYReg, gyr_y_reg);
+    REG16_QUICK_DEF(0x06, R8_AccZReg, gyr_z_reg);
     
     struct R8_GyroIntStatus1:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x0A;

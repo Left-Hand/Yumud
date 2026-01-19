@@ -63,9 +63,9 @@ struct AK8963_Regs:public AK8963_Prelude{
         bool is_data_overrun() const {return dor;}
     } DEF_R8(st1_reg)
 
-    REG16I_QUICK_DEF(0x03, MagXReg, mag_x_reg);
-    REG16I_QUICK_DEF(0x05, MagYReg, mag_y_reg);
-    REG16I_QUICK_DEF(0x07, MagZReg, mag_z_reg);
+    REG16_QUICK_DEF(0x03, MagXReg, mag_x_reg);
+    REG16_QUICK_DEF(0x05, MagYReg, mag_y_reg);
+    REG16_QUICK_DEF(0x07, MagZReg, mag_z_reg);
 
     struct R8_ST2:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x09;

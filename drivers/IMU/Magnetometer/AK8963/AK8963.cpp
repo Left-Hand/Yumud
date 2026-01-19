@@ -151,8 +151,13 @@ IResult<> AK8963::update(){
     // ak8963c-datasheet 8.3.5
     // when any of measurement data is read, be sure to read 
     // ST2 register at the end. 
-    if(const auto res = this->read_burst(regs_.mag_x_reg.address, std::span(&regs_.mag_x_reg.as_bits_mut(), 3));
+    std::array<int16_t, 3> buf;
+    if(const auto res = this->read_burst(regs_.mag_x_reg.ADDRESS, std::span(buf));
         res.is_err()) return Err(res.unwrap_err());
+
+    regs_.mag_x_reg.bits = buf[0];
+    regs_.mag_y_reg.bits = buf[1];
+    regs_.mag_z_reg.bits = buf[2];
 
     auto & reg = regs_.st2_reg;
     if(const auto res = read_reg(reg);

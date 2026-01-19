@@ -44,7 +44,7 @@ IResult<> BMI088_Acc::verify_chip_id(){
     if(const auto res = transport_.read_regs(reg);
         res.is_err()) return res;
 
-    if(reg.data != ACC_CHIP_ID)
+    if(reg.bits != ACC_CHIP_ID)
         Err(Error::InvalidChipId);
 
     return Ok();
@@ -74,8 +74,11 @@ IResult<> BMI088_Acc::validate(){
 IResult<> BMI088_Acc::update(){
     auto & reg = regs_.acc_x_reg;
     return transport_.read_burst(
-        reg.address, 
-        std::span(&(reg.as_bits_mut()), 3)
+        reg.ADDRESS, 
+        std::span(
+            reinterpret_cast<int16_t *>(&(reg.as_bits_mut())), 
+            3
+        )
     );
 }
 

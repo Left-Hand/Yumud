@@ -54,18 +54,18 @@ struct QMC5883L_Prelude{
 struct QMC5883L_Regs:public QMC5883L_Prelude{
 
 
-    struct MagXReg:public Reg16i<>{
+    struct MagXReg:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::MagX;
         int16_t bits;
     };
 
-    struct MagYReg:public Reg16i<>{
+    struct MagYReg:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::MagY;
 
         int16_t bits;
     };
 
-    struct MagZReg:public Reg16i<>{
+    struct MagZReg:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::MagZ;
 
         int16_t bits;

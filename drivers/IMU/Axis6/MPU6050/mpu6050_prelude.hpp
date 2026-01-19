@@ -80,15 +80,15 @@ struct MPU6050_Regset:public MPU6050_Prelude{
         uint8_t xg_st:1 = 0;
     }DEF_R8(acc_conf_reg)
     
-    REG16I_QUICK_DEF(0x3B, AccXReg, acc_x_reg);
-    REG16I_QUICK_DEF(0x3D, AccYReg, acc_y_reg);
-    REG16I_QUICK_DEF(0x3F, AccZReg, acc_z_reg);
+    REG16_QUICK_DEF(0x3B, AccXReg, acc_x_reg);
+    REG16_QUICK_DEF(0x3D, AccYReg, acc_y_reg);
+    REG16_QUICK_DEF(0x3F, AccZReg, acc_z_reg);
 
     REG16_QUICK_DEF(0x41, TemperatureReg, temperature_reg);
 
-    REG16I_QUICK_DEF(0x43, GyrXReg, gyr_x_reg);
-    REG16I_QUICK_DEF(0x45, GyrYReg, gyr_y_reg);
-    REG16I_QUICK_DEF(0x47, GyrZReg, gyr_z_reg);
+    REG16_QUICK_DEF(0x43, GyrXReg, gyr_x_reg);
+    REG16_QUICK_DEF(0x45, GyrYReg, gyr_y_reg);
+    REG16_QUICK_DEF(0x47, GyrZReg, gyr_z_reg);
     
 
     struct R8_IntPinCfg:public Reg8<>{

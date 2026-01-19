@@ -213,13 +213,14 @@ IResult<> PMW3901::read_data(){
 IResult<> PMW3901::read_data_slow(){
     std::array<uint8_t, 5> buf;
 
-    for(uint8_t i = 0; i < buf.size(); i++){
-        if(const auto res = read_reg(0x02 + i, buf[i]); res.is_err()) return res;
+    for(size_t i = 0; i < buf.size(); i++){
+        const auto res = read_reg(0x02 + i, buf[i]); 
+        if(res.is_err()) return Err(res.unwrap_err());
     }
 
     data_.motion.as_bits_mut() = buf[0];
-    data_.dx.data = (buf[2] << 8) | buf[1];
-    data_.dy.data = (buf[4] << 8) | buf[3];
+    data_.dx.bits = static_cast<int16_t>((static_cast<uint16_t>(buf[2] << 8)) | buf[1]);
+    data_.dy.bits = static_cast<int16_t>((static_cast<uint16_t>(buf[4] << 8)) | buf[3]);
 
     return Ok();
 }

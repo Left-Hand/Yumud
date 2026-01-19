@@ -5,7 +5,7 @@
 
 
 namespace ymd::math{
-struct uint24_t{
+struct [[nodiscard]] uint24_t final{
     uint32_t bits : 24;
 
     __fast_inline constexpr uint24_t();
@@ -28,7 +28,7 @@ struct uint24_t{
 
 };
 
-struct int24_t{
+struct [[nodiscard]] int24_t final{
     int32_t bits : 24;
 
     __fast_inline constexpr int24_t();

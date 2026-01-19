@@ -99,7 +99,9 @@ IResult<> MPU6050::init(const Config & cfg){
 
 IResult<> MPU6050::update(){
     auto res = read_burst(
-        regs_.acc_x_reg.address, std::span(&regs_.acc_x_reg.as_bits_mut(), 7));
+        regs_.acc_x_reg.ADDRESS, std::span(
+            reinterpret_cast<int16_t *>(&regs_.acc_x_reg.as_bits_mut()), 
+        7));
     is_data_valid_ = res.is_ok();
     return res;
 }

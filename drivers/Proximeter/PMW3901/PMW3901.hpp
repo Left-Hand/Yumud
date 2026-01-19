@@ -27,8 +27,8 @@ struct PMW3901_Prelude{
         uint8_t occured:1;
     };
 
-    struct DeltaReg:public Reg16i<>{
-        int16_t data;
+    struct DeltaReg:public Reg16<>{
+        int16_t bits;
     };
 
 

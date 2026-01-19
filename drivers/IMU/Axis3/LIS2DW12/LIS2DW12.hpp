@@ -103,9 +103,9 @@ struct LIS2DW12_Prelude{
 struct LIS2DW12_Regs:public LIS2DW12_Prelude{
     using RegAddr = uint8_t;
     struct TempOutReg:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x0D; uint8_t data;};
+        static constexpr RegAddr ADDRESS = 0x0D; uint8_t bits;};
     struct WhoAmIReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x0F; uint8_t data;};
+        static constexpr RegAddr ADDRESS = 0x0F; uint8_t bits;};
     struct Ctrl1Reg:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x20;
         uint8_t lp_mode:2;
@@ -169,7 +169,7 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
         uint8_t bw_filt:2;
     };
 
-    struct TempOut8Reg:public Reg16<>{static constexpr RegAddr ADDRESS = 0x26; uint8_t data;};
+    struct TempOut8Reg:public Reg16<>{static constexpr RegAddr ADDRESS = 0x26; uint8_t bits;};
 
     struct StatusReg:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x27;
@@ -183,9 +183,9 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
         uint8_t fifo_ths:1;
     };
 
-    struct OutputXReg:public Reg16i<>{static constexpr RegAddr ADDRESS = 0x28; int16_t data;};
-    struct OutputYReg:public Reg16i<>{static constexpr RegAddr ADDRESS = 0x2A; int16_t data;};
-    struct OutputZReg:public Reg16i<>{static constexpr RegAddr ADDRESS = 0x2C; int16_t data;};
+    struct OutputXReg:public Reg16<>{static constexpr RegAddr ADDRESS = 0x28; int16_t bits;};
+    struct OutputYReg:public Reg16<>{static constexpr RegAddr ADDRESS = 0x2A; int16_t bits;};
+    struct OutputZReg:public Reg16<>{static constexpr RegAddr ADDRESS = 0x2C; int16_t bits;};
 
     struct FifoCtrlReg:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x2E;
