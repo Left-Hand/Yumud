@@ -142,7 +142,12 @@ void digipw_main(){
     auto sda_pin = hal::PB<14>();
     
     hal::I2cSw i2csw{&scl_pin, &sda_pin};
-    i2csw.init({1000000});
+    // i2csw.init({1000000});
+
+    i2csw.init({
+        .baudrate = hal::NearestFreq(100_KHz)
+    });
+
     
     // INA226 ina226{i2csw};
     // // ina226.init(10, 5);

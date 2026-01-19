@@ -22,7 +22,7 @@ public:
         slave_addr_(addr){;}
 
     I2cBase & bus(){return i2c_;}
-    HalResult set_baudrate(const uint32_t baud){
+    HalResult set_baudrate(const I2cBuadrate baud){
         return i2c_.set_baudrate(baud);
     }
 private:
@@ -30,7 +30,6 @@ private:
     I2cBase & i2c_;
     I2cSlaveAddr<7> slave_addr_;
 
-    uint16_t timeout_ = 10;
     HalResult write_repeat_impl(
         const valid_i2c_regaddr auto addr, 
         const valid_i2c_data auto data, 

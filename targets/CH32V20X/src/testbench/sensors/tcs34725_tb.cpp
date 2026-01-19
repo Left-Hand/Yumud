@@ -36,6 +36,6 @@ void tcs34725_main(){
     auto sda_pin_ = SDA_PIN;
 
     hal::I2cSw i2c{&scl_pin_, &sda_pin_};
-    i2c.init({100000});
+    i2c.init({hal::NearestFreq(100000)});
     tcs34725_tb(DEBUGGER, i2c);
 }

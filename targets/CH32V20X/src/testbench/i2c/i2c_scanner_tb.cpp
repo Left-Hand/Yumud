@@ -54,7 +54,7 @@ struct I2cTester{
             uint32_t baud = start_freq;
             while(baud < 10_MHz){
                 // i2c_drv.set_baudrate(uint32_t(baud * grow_scale));
-                i2c.set_baudrate(uint32_t(baud * grow_scale));
+                i2c.set_baudrate(hal::NearestFreq(uint32_t(baud * grow_scale)));
                 const auto err = i2c_drv.validate();
                 if(err.is_err()) break;
 
@@ -89,7 +89,9 @@ void i2c_scanner_main(){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
     hal::I2cSw i2c{&scl_pin_, &sda_pin_};
-    i2c.init({100_KHz});
+    i2c.init({
+        .baudrate = hal::NearestFreq(200_KHz)
+    });
 
 
     DEBUG_PRINTLN();

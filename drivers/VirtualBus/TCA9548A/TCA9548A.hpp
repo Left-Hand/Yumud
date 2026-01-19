@@ -36,7 +36,7 @@ public:
     hal::HalResult write(const uint32_t data) {return host_.write(data);}
     hal::HalResult read(uint8_t & data, const Ack ack) {return host_.read(data, ack);}
     hal::HalResult unlock_bus() {return host_.unlock_bus();}
-    hal::HalResult set_baudrate(const uint32_t baud){return host_.set_baudrate(baud);}
+    hal::HalResult set_baudrate(const hal::I2cBuadrate baud){return host_.set_baudrate(baud);}
 
     void lend(){;}
 };
@@ -71,7 +71,7 @@ private:
 
     void trail(const uint8_t ch);
 
-    hal::HalResult set_baudrate(const uint32_t baud){return i2c_.set_baudrate(baud);}
+    hal::HalResult set_baudrate(const hal::I2cBuadrate baud){return i2c_.set_baudrate(baud);}
 
     hal::HalResult write(const uint32_t data){
         return i2c_.write(data);

@@ -28,7 +28,7 @@ void paj7620_main(){
     auto sda_pin_ = SDA_PIN;  
 
     hal::I2cSw i2c = hal::I2cSw{&scl_pin_, &sda_pin_};
-    i2c.init({400_KHz});
+    i2c.init({hal::NearestFreq(400_KHz)});
 
 
     PAJ7620 paj{&i2c};

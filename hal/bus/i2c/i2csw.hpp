@@ -24,7 +24,7 @@ public:
     HalResult write(const uint32_t data) final;
     HalResult read(uint8_t & data, const Ack ack) final;
 
-    HalResult set_baudrate(const uint32_t baudrate);
+    HalResult set_baudrate(const I2cBuadrate baudrate);
     void set_timeout(const Timeout timeout){timeout_ = timeout;}
     void discard_ack(const Enable en){discard_ack_ = en == EN;}
     void lend(){

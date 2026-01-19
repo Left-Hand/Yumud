@@ -320,7 +320,9 @@ void eeprom_main(){
     auto sda_pin = hal::PB<12>();
 
     hal::I2cSw i2csw = hal::I2cSw{&scl_pin, &sda_pin};
-    i2csw.init({400000});
+    i2csw.init({
+        .baudrate = hal::NearestFreq(400000)
+    });
 
     
     using namespace drivers;

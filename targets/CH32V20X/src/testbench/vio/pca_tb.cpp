@@ -55,7 +55,7 @@ void pca_tb(OutputStream & logger){
 
     static constexpr int servo_freq = 50;
     
-    i2c.init({100_KHz});
+    i2c.init({hal::NearestFreq(100_KHz)});
     PCA9685 pca{&i2c};
     pca.init({
         .freq = servo_freq, 

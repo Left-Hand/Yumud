@@ -32,7 +32,9 @@ void vl53l5cx_main(){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
     hal::I2cSw i2c{&scl_pin_, &sda_pin_};
-    i2c.init({400_KHz});
+    i2c.init({
+        .baudrate = hal::NearestFreq(400_KHz)
+    });
 
     auto red_led_pin_ = hal::PC<13>();
     auto blue_led_pin_ = hal::PC<14>();

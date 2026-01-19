@@ -174,7 +174,9 @@ void mpu6050_main(){
     auto sda_pin_ = SDA_PIN;
     hal::I2cSw i2c{&scl_pin_, &sda_pin_};
     // i2c.init(400_KHz);
-    i2c.init({400_KHz});
+    i2c.init({
+        .baudrate = hal::NearestFreq(400_KHz)
+    });
     // i2c.init();
 
     clock::delay(200ms);

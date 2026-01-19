@@ -508,7 +508,9 @@ IResult<> LT8960L_Transport::start_hw_listen_pkt(){
 
 
 IResult<> LT8960L_Transport::init(){
-    i2c_.init({600'000});
+    i2c_.init({
+        .baudrate = hal::NearestFreq(600'000)
+    });
     return Ok();
 }
 

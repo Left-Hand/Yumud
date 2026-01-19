@@ -97,7 +97,11 @@ void vl6180x_main(){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
     hal::I2cSw i2c{&scl_pin_, &sda_pin_};
-    i2c.init({400_KHz});
+    i2c.init({
+        .baudrate = hal::NearestFreq(400_KHz)
+    });
+
+
 
     // VL6180X vl6180{i2c, I2cSlaveAddr<7>::from_u7(0)};
     VL6180X vl6180{&i2c};

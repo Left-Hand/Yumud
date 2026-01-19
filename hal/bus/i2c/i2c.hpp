@@ -1,11 +1,11 @@
 #pragma once
 
-#include <chrono>
-
 #include "hal/bus/bus_base.hpp"
 #include "core/utils/Option.hpp"
 
-#include "i2c_primitive.hpp"
+#include "primitive/i2c/i2c_addr.hpp"
+#include "primitive/i2c/i2c_event.hpp"
+#include "primitive/i2c/i2c_timing.hpp"
 
 namespace ymd::hal{
 class Gpio;
@@ -17,7 +17,7 @@ public:
     I2cBase(I2cBase && other) = default;
 
     struct Config{
-        uint32_t baudrate;
+        I2cBuadrate baudrate;
     };
 
 
@@ -25,7 +25,7 @@ public:
     virtual HalResult read(uint8_t & data, const Ack ack) = 0;
     virtual HalResult write(const uint32_t data) = 0;
     virtual HalResult unlock_bus() = 0;
-    virtual HalResult set_baudrate(const uint32_t baudrate) = 0;
+    virtual HalResult set_baudrate(const I2cBuadrate baudrate) = 0;
 
     virtual HalResult lead(const I2cSlaveAddrWithRw req) = 0;
     virtual void trail() = 0;

@@ -83,7 +83,10 @@ public:
         // DEBUGGER.no_brackets();
         DEBUGGER.force_sync(EN);
 
-        i2c.init({400_KHz});
+
+        i2c.init({
+            .baudrate = hal::NearestFreq(400_KHz)
+        });
 
         #ifndef USE_MOCK_SERVO
         if(const auto res = [&]{

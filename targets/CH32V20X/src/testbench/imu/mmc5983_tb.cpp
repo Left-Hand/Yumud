@@ -128,7 +128,9 @@ void mmc5983_main(){
     
     clock::delay(200ms);
     
-    i2c.init({2000_KHz});
+    i2c.init({
+        .baudrate = hal::NearestFreq(2000_KHz)
+    });
 
     MMC5983 imu{&i2c};
 

@@ -112,7 +112,9 @@ public:
     }
 
     void init(){
-        i2c_.init({100000});
+        i2c_.init( hal::I2cBase::Config{
+            .baudrate = hal::NearestFreq(1000000)
+        });
     }
 private:
     hal::I2cSw i2c_;
