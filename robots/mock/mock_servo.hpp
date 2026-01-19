@@ -27,7 +27,7 @@ public:
     }
 
     void set_motorcmd(const MotorCmd & cmd){
-        set_angle(cmd.ref_x1 * real_t(PI));
+        set_angle(cmd.ref_x1 * real_t(M_PI));
     }
 private:
     real_t angle_;

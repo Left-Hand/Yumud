@@ -754,7 +754,7 @@ private:
 
     __fast_inline void print_end(){
         flush();
-        if(unlikely(config_.force_sync)){
+        if((config_.force_sync)) [[unlikely]] {
             block_util_least_free_capacity(0);
         }
     }
@@ -764,7 +764,8 @@ private:
     }
 
     __fast_inline void print_indent(){
-        if(likely(config_.indent == 0)) return;
+        if((config_.indent == 0)) [[likely]] 
+            return;
         for(size_t i = 0; i < config_.indent; i++){
             write('\t');
         }

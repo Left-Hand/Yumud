@@ -259,11 +259,11 @@ private:
 
     [[nodiscard]] static constexpr iq24 calc_gyr_scaler(const GyrFs fs){
         switch(fs){
-            case GyrFs::_2000deg  :      return DEG2RAD<iq24>(iq24(2 * 2000   ));
-            case GyrFs::_1000deg  :      return DEG2RAD<iq24>(iq24(2 * 1000   ));
-            case GyrFs::_500deg   :      return DEG2RAD<iq24>(iq24(2 * 500    ));
-            case GyrFs::_250deg   :      return DEG2RAD<iq24>(iq24(2 * 250    ));
-            case GyrFs::_125deg   :      return DEG2RAD<iq24>(iq24(2 * 125    ));
+            case GyrFs::_2000deg  :      return iq24(DEG2RAD_RATIO) * 2 * 2000;
+            case GyrFs::_1000deg  :      return iq24(DEG2RAD_RATIO) * 2 * 1000;
+            case GyrFs::_500deg   :      return iq24(DEG2RAD_RATIO) * 2 * 500;
+            case GyrFs::_250deg   :      return iq24(DEG2RAD_RATIO) * 2 * 250;
+            case GyrFs::_125deg   :      return iq24(DEG2RAD_RATIO) * 2 * 125;
         }
         __builtin_unreachable();
     }

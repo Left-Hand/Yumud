@@ -449,7 +449,7 @@ struct [[nodiscard]] Quat{
         // pitch (y-axis rotation)
         T sinp = 2 * (q.w * q.y - q.z * q.x);
         if (std::abs(sinp) >= 1)
-            angles.y = sinp > 0 ? T(PI / 2) : T(-PI / 2); // use 90 degrees if out of range
+            angles.y = sinp > 0 ? T(M_PI / 2) : T(-M_PI / 2); // use 90 degrees if out of range
         else
             angles.y = std::asin(sinp);
     

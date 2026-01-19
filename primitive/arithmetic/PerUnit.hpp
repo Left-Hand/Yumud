@@ -10,20 +10,22 @@ template<typename Derived, typename D>
 struct [[nodiscard]] _PerUnitCrtpBase{
 
     constexpr explicit _PerUnitCrtpBase(const auto count):count_(static_cast<D>(
-        D(INVLERP(min(), max(), CLAMP(count, min(), max())) * std::numeric_limits<D>::max()))){;}
+        D(INVLERP(_get_min(), _get_max(), CLAMP(count, _get_min(), _get_max())) * std::numeric_limits<D>::max()))){;}
 
     template<typename T>
     [[nodiscard]] constexpr T to() const {
         return LERP(
-            min(), 
-            max(), 
+            _get_min(), 
+            _get_max(), 
             T(count_) / std::numeric_limits<D>::max()
         );
     } 
 
     [[nodiscard]] static constexpr std::weak_ordering static_validate(const auto other){
-        if(unlikely(other > max())) return std::weak_ordering::greater;
-        if(unlikely(other < min())) return std::weak_ordering::less;
+        if((other > _get_max())) [[unlikely]]
+            return std::weak_ordering::greater;
+        if((other < _get_min())) [[unlikely]]
+            return std::weak_ordering::less;
         return std::weak_ordering::equivalent;
     }
 
@@ -39,8 +41,8 @@ struct [[nodiscard]] _PerUnitCrtpBase{
     
 private:
     D count_;
-    static constexpr D min() {return std::get<0>(Derived::range());}
-    static constexpr D max() {return std::get<1>(Derived::range());}
+    static constexpr D _get_min() {return std::get<0>(Derived::sweep());}
+    static constexpr D _get_max() {return std::get<1>(Derived::sweep());}
 };
 
 }
@@ -48,7 +50,7 @@ private:
 #define DEF_PER_UNIT(name, dtype, min, max)\
 struct [[nodiscard]] name:public ::ymd::details::_PerUnitCrtpBase<name, dtype>{\
     using _PerUnitCrtpBase<name, dtype>::_PerUnitCrtpBase;\
-    [[nodiscard]] static constexpr std::tuple<dtype, dtype> range(){\
+    [[nodiscard]] static constexpr std::tuple<dtype, dtype> sweep(){\
         return {static_cast<dtype>(min),static_cast<dtype>(max)};}\
     [[nodiscard]] static constexpr Result<name, std::weak_ordering>with_validation(const auto count){\
         const auto validation = _PerUnitCrtpBase<name, dtype>::static_validate(count);\

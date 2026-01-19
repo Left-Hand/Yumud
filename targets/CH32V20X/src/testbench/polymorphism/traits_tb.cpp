@@ -93,7 +93,7 @@ public:
     ~Circle(){
     }
 
-    real_t area() const { return radius_ * radius_ * real_t(PI);}
+    real_t area() const { return radius_ * radius_ * real_t(M_PI);}
 
     friend OutputStream & operator<<(OutputStream & os, const Circle & circle) {
         return os << "{Circle: radius = " << circle.radius_ << "}";

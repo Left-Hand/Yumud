@@ -1,8 +1,9 @@
-#include "crsf_boardcast_msgs.hpp"
-#include "crsf_extended_msgs.hpp"
+#include "msgs/crsf_boardcast_msgs.hpp"
+#include "msgs/crsf_extended_msgs.hpp"
 #include "crsf_utils.hpp"
 #include <charconv>
 
+using namespace ymd;
 using namespace ymd::crsf;
 
 namespace{
@@ -15,5 +16,12 @@ namespace{
 //     static_assert(seq.size() == 10);
 //     static_assert(seq.as_chars()[0] == 0x01);
 // }
+
+
+static_assert(strnlen_from_right("", 0) == 0);
+static_assert(strnlen_from_right("abc", 4) == 3);
+static_assert(strnlen_from_right("abc", 3) == 3);
+static_assert(strnlen_from_right("abc", 2) == 2);
+
 
 }

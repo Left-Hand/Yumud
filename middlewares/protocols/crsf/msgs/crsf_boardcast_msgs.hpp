@@ -1,8 +1,8 @@
 #pragma once
 
-#include "crsf_primitive.hpp"
+#include "../crsf_primitive.hpp"
 
-#include "compatible/crsf_mav_compatible_primitive.hpp"
+#include "../compatible/crsf_mav_compatible_primitive.hpp"
 
 
 namespace ymd::crsf::msgs{
@@ -299,7 +299,7 @@ struct [[nodiscard]] MavlinkFc final{
 // 0x21
 struct [[nodiscard]] FlightMode final{
     static constexpr FrameType FRAME_TYPE = FrameType{0x21};
-    CharsNullTerminated flight_mode;  // Null-terminated string
+    UCharsNullTerminated<> flight_mode;  // Null-terminated string
 };
 
 // 0x22

@@ -205,7 +205,7 @@ struct ResponseCalculator<Z_TransferCoefficients<T, 3, 2>>{
         const Z_TransferCoefficients<T, 3, 2>& self, 
         const auto freq, const auto fs
     ){
-        const auto frequency = static_cast<T>(2.0 * PI) * freq / fs;
+        const auto frequency = static_cast<T>(2.0 * M_PI) * freq / fs;
 
 		const T cos_f = cos(frequency);
 		const T sin_f = sin(frequency);

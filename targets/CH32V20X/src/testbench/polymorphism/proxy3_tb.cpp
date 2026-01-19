@@ -88,7 +88,7 @@ public:
         // DEBUG_PRINTLN("circle dropped");
     }
 
-    real_t Area() const { return radius_ * radius_ * real_t(PI);}
+    real_t Area() const { return radius_ * radius_ * real_t(M_PI);}
     // OutputStream & operator <<(OutputStream & os) const{
     //     return os << "{Circle: radius = " << radius_ << "}";
     // }

@@ -500,7 +500,7 @@ Basis<T> Basis<T>::diagonalize() {
 		// Compute the rotation angle
 		T angle;
 		if (is_equal_approx_f((*this)[j][j], (*this)[i][i])) {
-			angle = PI / 4;
+			angle = M_PI / 4;
 		} else {
 			angle = 0.5 * atanf(2 * (*this)[i][j] / ((*this)[j][j] - (*this)[i][i]));
 		}
@@ -760,12 +760,12 @@ Vec3<T> Basis<T>::get_euler_xyz() const {
 			}
 		} else {
 			euler.x = atan2f((*this)[2][1], (*this)[1][1]);
-			euler.y = -T(PI / 2.0);
+			euler.y = -T(M_PI / 2.0);
 			euler.z = 0;
 		}
 	} else {
 		euler.x = atan2f((*this)[2][1], (*this)[1][1]);
-		euler.y = T(PI / 2.0);
+		euler.y = T(M_PI / 2.0);
 		euler.z = 0;
 	}
 	return euler;
@@ -812,13 +812,13 @@ Vec3<T> Basis<T>::get_euler_xzy() const {
 			// It's -1
 			euler.x = -atan2f((*this)[1][2], (*this)[2][2]);
 			euler.y = 0;
-			euler.z = PI / 2.0;
+			euler.z = M_PI / 2.0;
 		}
 	} else {
 		// It's 1
 		euler.x = -atan2f((*this)[1][2], (*this)[2][2]);
 		euler.y = 0;
-		euler.z = -PI / 2.0;
+		euler.z = -M_PI / 2.0;
 	}
 	return euler;
 }
@@ -856,13 +856,13 @@ Vec3<T> Basis<T>::get_euler_yzx() const {
 			// It's -1
 			euler.x = atan2f((*this)[2][1], (*this)[2][2]);
 			euler.y = 0;
-			euler.z = -PI / 2.0;
+			euler.z = -M_PI / 2.0;
 		}
 	} else {
 		// It's 1
 		euler.x = atan2f((*this)[2][1], (*this)[2][2]);
 		euler.y = 0;
-		euler.z = PI / 2.0;
+		euler.z = M_PI / 2.0;
 	}
 	return euler;
 }
@@ -911,12 +911,12 @@ Vec3<T> Basis<T>::get_euler_yxz() const {
 				euler.z = atan2((*this)[1][0], (*this)[1][1]);
 			}
 		} else { // m12 == -1
-			euler.x = PI * 0.5;
+			euler.x = M_PI * 0.5;
 			euler.y = atan2((*this)[0][1], (*this)[0][0]);
 			euler.z = 0;
 		}
 	} else { // m12 == 1
-		euler.x = -PI * 0.5;
+		euler.x = -M_PI * 0.5;
 		euler.y = -atan2((*this)[0][1], (*this)[0][0]);
 		euler.z = 0;
 	}
@@ -961,13 +961,13 @@ Vec3<T> Basis<T>::get_euler_zxy() const {
 			euler.z = atan2f(-(*this)[0][1], (*this)[1][1]);
 		} else {
 			// It's -1
-			euler.x = -PI / 2.0;
+			euler.x = -M_PI / 2.0;
 			euler.y = atan2f((*this)[0][2], (*this)[0][0]);
 			euler.z = 0;
 		}
 	} else {
 		// It's 1
-		euler.x = PI / 2.0;
+		euler.x = M_PI / 2.0;
 		euler.y = atan2f((*this)[0][2], (*this)[0][0]);
 		euler.z = 0;
 	}
@@ -1005,13 +1005,13 @@ Vec3<T> Basis<T>::get_euler_zyx() const {
 		} else {
 			// It's -1
 			euler.x = 0;
-			euler.y = PI / 2.0;
+			euler.y = M_PI / 2.0;
 			euler.z = -atan2f((*this)[0][1], (*this)[1][1]);
 		}
 	} else {
 		// It's 1
 		euler.x = 0;
-		euler.y = -PI / 2.0;
+		euler.y = -M_PI / 2.0;
 		euler.z = -atan2f((*this)[0][1], (*this)[1][1]);
 	}
 	return euler;
@@ -1191,7 +1191,7 @@ void Basis<T>::get_axis_angle(Vec3<T> &r_axis, T &r_angle) const {
 			return;
 		}
 		// otherwise this singularity is angle = 180
-		angle = PI;
+		angle = M_PI;
 		T xx = ((*this)[0][0] + 1) / 2;
 		T yy = ((*this)[1][1] + 1) / 2;
 		T zz = ((*this)[2][2] + 1) / 2;

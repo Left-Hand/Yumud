@@ -335,7 +335,7 @@ struct [[nodiscard]] IntDeformatter{
 					return Err(DestringError::UnexpectedPositive);
 				case '0' ... '9':
 					unsigned_ret = (10u * unsigned_ret) + static_cast<U>(chr - '0');
-					if(unlikely(unsigned_ret > static_cast<U>(std::numeric_limits<T>::max())))
+					if((unsigned_ret > static_cast<U>(std::numeric_limits<T>::max()))) [[unlikely]]
 						return Err(DestringError::Overflow);
 					break;
 				default:

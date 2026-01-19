@@ -23,12 +23,12 @@ public:
     }
 
     constexpr void reconf(const Config & cfg){
-        const T a = std::tan((T(PI) * cfg.fc) / cfg.fs);
+        const T a = std::tan((T(M_PI) * cfg.fc) / cfg.fs);
         const T a2 = a*a;
 
         for(size_t i = 0; i < N / 2; ++i){
             auto & state = states_[i];
-            const T r = std::sin((T(PI)*(2*i+1)) / (2 * N));
+            const T r = std::sin((T(M_PI)*(2*i+1)) / (2 * N));
             const T s = a2 + 2 * a * r + 1;
 
             state.A = a2/s;

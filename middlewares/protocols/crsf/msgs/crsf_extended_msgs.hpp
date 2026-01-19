@@ -1,8 +1,8 @@
 
 
-#include "crsf_primitive.hpp"
+#include "../crsf_primitive.hpp"
 
-#include "compatible/crsf_mav_compatible_primitive.hpp"
+#include "../compatible/crsf_mav_compatible_primitive.hpp"
 
 
 namespace ymd::crsf{
@@ -14,7 +14,7 @@ struct [[nodiscard]] ParameterPingDevices final{
 
 // 0x29
 struct [[nodiscard]] ParameterDeviceInfo final{
-    CharsNullTerminated        device_name;        // Null-terminated string
+    UCharsNullTerminated<>        device_name;        // Null-terminated string
     uint32_t    serial_number;
     uint32_t    hardware_id;
     uint32_t    firmware_id;

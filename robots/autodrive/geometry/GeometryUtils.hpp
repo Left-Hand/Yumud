@@ -72,7 +72,7 @@ template<arithmetic T>
 Vec2<T> get_square_rounded_position(const Rect2<T> & rect, const T & rad){
     const auto squ_len = rect.size.x;
     const auto pos_center = rect.get_center();
-    const auto rad_90 = fmod(rad + T(PI/4), T(PI/2)) - T(PI/4);
+    const auto rad_90 = fmod(rad + T(M_PI/4), T(M_PI/2)) - T(M_PI/4);
     const auto distance = (squ_len / 2) / cos(rad_90);
     return pos_center + Vec2<T>{-distance, 0}.rotated(rad);
 }

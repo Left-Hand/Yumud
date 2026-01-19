@@ -78,11 +78,11 @@ private:
     [[nodiscard]] static constexpr 
     iq20 gyrfs_to_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_125deg:    return iq20(2 * 125 * PI / 180);
-            case GyrFs::_250deg:    return iq20(2 * 250 * PI / 180);
-            case GyrFs::_500deg:    return iq20(2 * 500 * PI / 180);
-            case GyrFs::_1000deg:   return iq20(2 * 1000 * PI / 180);
-            case GyrFs::_2000deg:   return iq20(2 * 2000 * PI / 180);
+            case GyrFs::_125deg:    return iq20(DEG2RAD_RATIO) * (2 * 125);
+            case GyrFs::_250deg:    return iq20(DEG2RAD_RATIO) * (2 * 250);
+            case GyrFs::_500deg:    return iq20(DEG2RAD_RATIO) * (2 * 500);
+            case GyrFs::_1000deg:   return iq20(DEG2RAD_RATIO) * (2 * 1000);
+            case GyrFs::_2000deg:   return iq20(DEG2RAD_RATIO) * (2 * 2000);
         }
         __builtin_unreachable();
     }

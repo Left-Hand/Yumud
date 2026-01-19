@@ -34,7 +34,7 @@ public:
     }
 
     constexpr void update(const T x){
-        if(unlikely(inited_ == false)){
+        if((inited_ == false)) [[unlikely]]{
             last_ = x;
             last_x_ = x;
             inited_ = true;

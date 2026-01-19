@@ -163,7 +163,7 @@ public:
 
     [[nodiscard]] __fast_inline constexpr const T & 
     unwrap_loc(const std::source_location & loc = std::source_location::current()) const {
-        if(unlikely(exists_ == false)){
+        if((exists_ == false)) [[unlikely]]{
             __PANIC_EXPLICIT_SOURCE(loc);
         }
         return get();
@@ -171,19 +171,21 @@ public:
 
     [[nodiscard]] __fast_inline constexpr const T & 
     unwrap() const {
-        if(unlikely(exists_ == false)) __builtin_trap();
+        if((exists_ == false)) [[unlikely]] 
+            sys::abort();
         return get();
     }
 
     [[nodiscard]] __fast_inline constexpr T & 
     unwrap(){
-        if(unlikely(exists_ == false)) __builtin_trap();
+        if((exists_ == false)) [[unlikely]] 
+            sys::abort();
         return get();
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 
     examine(const std::source_location loca = std::source_location::current()) const {
-        if (unlikely(!is_some())) {
+        if ((!is_some())) [[unlikely]] {
             __PANIC_EXPLICIT_SOURCE(loca);
         }
         return get();
@@ -193,7 +195,7 @@ public:
     template<typename ... Args>
     [[nodiscard]] __fast_inline constexpr const T & 
     expect(Args && ... args) const {
-        if (unlikely(!is_some())) {
+        if ((!is_some())) [[unlikely]] {
             PANIC_NSRC(std::forward<Args>(args) ...);
         }
         return get();
@@ -201,7 +203,8 @@ public:
 
     [[nodiscard]] __fast_inline constexpr const T 
     unwrap_or(const T choice) const {
-        if(unlikely(exists_ == false)) return choice;
+        if((exists_ == false)) [[unlikely]]
+            return choice;
         return get();
     }
 

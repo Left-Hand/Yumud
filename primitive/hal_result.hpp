@@ -78,9 +78,16 @@ public:
 
 
     __fast_inline constexpr bool is_err() const {
-        return unlikely(err_.has_value());}
+        return not is_ok();
+    }
+
+
     __fast_inline constexpr bool is_ok() const {
-        return likely(!err_.has_value());}
+        if(err_.has_value()) [[unlikely]] 
+            return false;
+        else [[likely]]
+            return true;
+    }
 
     // 链式处理
     template<typename Fn>

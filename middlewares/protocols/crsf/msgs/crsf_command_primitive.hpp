@@ -4,7 +4,7 @@
 
 namespace ymd::crsf{
 
-struct [[nodiscard]] [[nodiscard]] CommandType final final{
+struct [[nodiscard]] [[nodiscard]] CommandType final {
     enum class [[nodiscard]] [[nodiscard]] Kind:uint8_t{
         Fc = 0x01,
         BlueTooth = 0x03,
@@ -133,7 +133,7 @@ struct [[nodiscard]] H9S7V8 final{
     uint16_t v:8;
 };
 
-struct [[nodiscard]] Led{ final 
+struct [[nodiscard]] Led final{ 
     enum class [[nodiscard]] SubCommand:uint8_t{
         RestoreDefaults = 0x01,
         OverwriteColor = 0x02,
@@ -201,7 +201,7 @@ struct [[nodiscard]] Generic final{
 //   - uint8_t 模型编号
 // - 0x08 保留
 // - 0x09 保留
-struct [[nodiscard]] CrossFire{ final 
+struct [[nodiscard]] CrossFire final{ 
     enum class [[nodiscard]] SubCommand:uint8_t{
         SetBindingMode = 0x01,
         CancelBindingMode = 0x02,
@@ -223,7 +223,7 @@ struct [[nodiscard]] CrossFire{ final
 //   - uint16_t 最大间隔时间 // 毫秒
 // - 0x02 取消订阅
 //   - uint8_t  帧类型
-struct [[nodiscard]] FlowControl{ final 
+struct [[nodiscard]] FlowControl final{
     enum class [[nodiscard]] SubCommand:uint8_t{
         Subscribe = 0x01,
         Unsubscribe = 0x02

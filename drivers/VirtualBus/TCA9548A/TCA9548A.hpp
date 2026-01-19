@@ -49,7 +49,7 @@ public:
         i2c_(i2c.deref()), self_i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     auto & operator [](const size_t ch){
-        if(unlikely(ch >= 8)) while(true);
+        if((ch >= 8)) while(true);
         return v_i2cs_[ch];
     }
 

@@ -148,7 +148,7 @@ public:
 	__fast_inline constexpr Option<StringView> substr(size_t left) const noexcept{
         return substr_by_range(left, size_);};
 	__fast_inline constexpr Option<StringView> substr_by_range(size_t left, size_t right) const noexcept{
-        if (unlikely(left > right)) 
+        if ((left > right)) [[unlikely]] 
             return None;
         
         if (right > size_) 

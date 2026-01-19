@@ -141,15 +141,15 @@ private:
     calculate_gyr_scale(const GyrFs gyr_fs){
         switch(gyr_fs){
             case GyrFs::_125deg:
-                return iq24(2 * 125 * PI / 180);
+                return iq24(DEG2RAD_RATIO) * (2 * 125);
             case GyrFs::_250deg:
-                return iq24(2 * 250 * PI / 180);
+                return iq24(DEG2RAD_RATIO) * (2 * 250);
             case GyrFs::_500deg:
-                return iq24(2 * 500 * PI / 180);
+                return iq24(DEG2RAD_RATIO) * (2 * 500);
             case GyrFs::_1000deg:
-                return iq24(2 * 1000 * PI / 180);
+                return iq24(DEG2RAD_RATIO) * (2 * 1000);
             case GyrFs::_2000deg:
-                return iq24(2 * 2000 * PI / 180);
+                return iq24(DEG2RAD_RATIO) * (2 * 2000);
         }
 
         __builtin_unreachable();

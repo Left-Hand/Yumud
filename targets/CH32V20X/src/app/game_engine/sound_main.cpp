@@ -292,7 +292,7 @@ struct [[nodiscard]] FilterParaments{
     T q;
 
     [[nodiscard]] constexpr std::pair<T, T> k_and_norm() const {
-        T k = tan(PI * f0 / fs);
+        T k = tan(M_PI * f0 / fs);
         T norm = 1 / (1 + k / q + k * k);
         return {k, norm};
     }

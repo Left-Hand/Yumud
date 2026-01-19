@@ -124,9 +124,9 @@ OutputStream & OutputStream::operator<<(const double value){
 }
 
 #define PRINT_INT_TEMPLATE(blen, convfunc)\
-    if(unlikely(config_.showpos and val >= 0)) \
+    if((config_.showpos and val >= 0)) [[unlikely]]\
         this->write('+');\
-    if(unlikely(config_.showbase and (radix() != 10))){\
+    if((config_.showbase and (radix() != 10))) [[unlikely]]{\
         *this << get_basealpha(radix());}\
     char str[blen];\
     const auto len = convfunc(val, str, this->config_.radix);\
