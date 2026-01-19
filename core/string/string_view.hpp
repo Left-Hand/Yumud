@@ -89,14 +89,19 @@ public:
 
 
     //从不原始c字符串构造考虑到不带尾0的攻击 只能在编译期使用 运行期使用from_cstr
-    consteval StringView(const char * c_str) noexcept: 
-        data_(c_str), size_((c_str != nullptr) ? strlen(c_str) : 0) {}
-    constexpr StringView(const char * c_str, size_t size) noexcept: 
-        data_(c_str), size_(size) {}
+    consteval StringView(const char * p_chars) noexcept: 
+        data_(p_chars), size_((p_chars != nullptr) ? strlen(p_chars) : 0) {}
 
-    static constexpr StringView from_cstr(const char * c_str, size_t size = std::dynamic_extent) noexcept{
-        size = (c_str != nullptr) ? strnlen(c_str, size) : 0;
-        return StringView(c_str, size);
+    constexpr StringView(const char * p_chars, size_t size) noexcept: 
+        data_(p_chars), size_(size) {}
+
+    static constexpr StringView from_cstr(const char * p_chars, size_t max_size = std::dynamic_extent) noexcept{
+        return from_zero_terminated(p_chars, max_size);
+    }
+    
+    static constexpr StringView from_zero_terminated(const char * p_chars, size_t max_size = std::dynamic_extent) noexcept{
+        const size_t size = (p_chars != nullptr) ? strnlen(p_chars, max_size) : 0;
+        return StringView(p_chars, size);
     }
 
     template<size_t N>
@@ -204,6 +209,10 @@ public:
 
     [[nodiscard]] std::span<const uint8_t> as_bytes() const noexcept{
         return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(data_), size_);
+    }
+
+    [[nodiscard]] std::span<const unsigned char> as_uchars() const noexcept{
+        return std::span<const unsigned char>(reinterpret_cast<const unsigned char *>(data_), size_);
     }
 
     [[nodiscard]] constexpr std::span<const char> chars() const noexcept{
