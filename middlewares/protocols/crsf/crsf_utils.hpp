@@ -99,4 +99,68 @@ private:
     };
     size_t length_;
 };
+
+template<size_t Extents>
+using CharsSlice = std::span<const uint8_t, Extents>;
+
+using CharsNullTerminated = std::span<const uint8_t>;
+
+struct [[nodiscard]] OptionalUCharPtr final{
+    using Self = OptionalUCharPtr;  
+    static constexpr Self from_valid(const unsigned char* ptr){
+        return Self(ptr);
+    }
+
+    static constexpr Self from_null(){
+        return Self(nullptr);
+    }
+
+    [[nodiscard]] bool is_null() const{
+        return ptr_ == nullptr;
+    }
+
+    [[nodiscard]] const unsigned char * unwrap() const{
+        if(is_null()) __builtin_trap();
+        return ptr_;
+    }
+private:
+    const unsigned char* ptr_;
+
+    explicit constexpr OptionalUCharPtr(const unsigned char* ptr): ptr_(ptr){;}
+    explicit constexpr OptionalUCharPtr(const std::nullptr_t ): ptr_(nullptr){;}
+};
+struct SerialzeFunctions{
+    [[nodiscard]] static constexpr OptionalUCharPtr ser_zero_terminated_uchars(std::span<uint8_t> bytes, const CharsNullTerminated obj){
+        return ser_flexible_uchars(bytes, obj, 0);
+    }
+
+    [[nodiscard]] static constexpr OptionalUCharPtr ser_0xff_terminated_uchars(std::span<uint8_t> bytes, const CharsNullTerminated obj){
+        return ser_flexible_uchars(bytes, obj, 0);
+    }
+
+    [[nodiscard]] static constexpr OptionalUCharPtr ser_flexible_uchars(
+        std::span<uint8_t> bytes, 
+        const std::span<const uint8_t> obj, 
+        uint8_t terminator
+    ){
+        const auto required_length = obj.size() + 1;
+        if(bytes.size() < required_length) return OptionalUCharPtr::from_null();
+        auto * ptr = bytes.data();
+        std::copy_n(obj.begin(), obj.size(), ptr);
+        ptr += obj.size();
+        *ptr = terminator;
+        ptr++;
+        return OptionalUCharPtr::from_valid(ptr);
+    }
+};
+
+[[nodiscard]] static constexpr std::tuple<uint8_t *, std::span<uint8_t>> 
+split_bytes(std::span<uint8_t> bytes, size_t n){ 
+    return std::make_tuple(bytes.data(), bytes.subspan(n));
+}
+
+
+enum class DeserError:uint8_t{
+
+};
 }

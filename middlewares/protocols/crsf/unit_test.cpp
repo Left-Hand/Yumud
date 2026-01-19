@@ -1,4 +1,5 @@
-#include "crsf_msgs.hpp"
+#include "crsf_boardcast_msgs.hpp"
+#include "crsf_extended_msgs.hpp"
 #include "crsf_utils.hpp"
 #include <charconv>
 
