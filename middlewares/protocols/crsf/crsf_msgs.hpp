@@ -1,9 +1,11 @@
 #pragma once
 
+
+
 #include "crsf_primitive.hpp"
 #include "core/int/uint24_t.hpp"
 #include "core/math/realmath.hpp"
-
+#include "crsf_mav_compatible_primitive.hpp"
 namespace ymd::crsf{
 using math::int24_t, math::uint24_t;
 struct [[nodiscard]] AltitudeCode final{
@@ -178,8 +180,8 @@ struct [[nodiscard]] TemperatureCode final{
     }
 };
 
-struct [[nodiscard]] GpsCoordinate final{
-    using Self = GpsCoordinate;
+struct [[nodiscard]] GpsCoordinateCode final{
+    using Self = GpsCoordinateCode;
     
     int32_t bits;  // degree / 10`000`000
 
@@ -193,8 +195,8 @@ struct [[nodiscard]] GpsCoordinate final{
     }
 };
 
-struct [[nodiscard]] GpsHeading final{
-    using Self = GpsHeading;
+struct [[nodiscard]] GpsHeadingCode final{
+    using Self = GpsHeadingCode;
     
     uint16_t bits;  // degree / 100
 
@@ -208,8 +210,8 @@ struct [[nodiscard]] GpsHeading final{
     }
 };
 
-struct [[nodiscard]] GpsGroundSpeed final{
-    using Self = GpsGroundSpeed;
+struct [[nodiscard]] GpsGroundSpeedCode final{
+    using Self = GpsGroundSpeedCode;
     
     uint16_t bits;  // km/h / 100
 
@@ -256,8 +258,8 @@ struct [[nodiscard]] AirspeedCode final{
     }
 };
 
-struct [[nodiscard]] AttitudeAngle final{
-    using Self = AttitudeAngle;
+struct [[nodiscard]] AttitudeAngleCode final{
+    using Self = AttitudeAngleCode;
     
     int16_t bits;  // LSB = 100 µrad
 
@@ -331,8 +333,8 @@ struct [[nodiscard]] SnrCode final{
     }
 };
 
-struct [[nodiscard]] RfPowerCode final{
-    using Self = RfPowerCode;
+struct [[nodiscard]] RfPowerDbmCode final{
+    using Self = RfPowerDbmCode;
     
     uint8_t bits;  // rf power in dBm
 
@@ -345,6 +347,28 @@ struct [[nodiscard]] RfPowerCode final{
         return *this;
     }
 };
+
+enum class [[nodiscard]] RfFps:uint8_t{
+    _4 = 0,
+    _50 = 1,
+    _150 = 2,
+};
+
+static_assert(sizeof(RfFps) == 1);
+
+enum class [[nodiscard]] RfPower:uint8_t{
+    _0mW = 0,
+    _10mW = 1,
+    _25mW = 2,
+    _100mW = 3,
+    _500mW = 4,
+    _1000mW = 5,
+    _2000mW = 6,
+    _250mW = 7,
+    _50mW = 8,
+};
+
+static_assert(sizeof(RfPower) == 1);
 
 struct [[nodiscard]] FpsCode final{
     using Self = FpsCode;
@@ -385,8 +409,8 @@ struct [[nodiscard]] PressureCode final{
     }
 };
 
-struct [[nodiscard]] TemperatureCentidegree final{
-    using Self = TemperatureCentidegree;
+struct [[nodiscard]] TemperatureCentidegreeCode final{
+    using Self = TemperatureCentidegreeCode;
     
     int32_t bits;  // centidegrees
 
@@ -412,10 +436,10 @@ using math::int24_t, math::uint24_t;
 
 // 0x02
 struct [[nodiscard]] Gps final{
-    GpsCoordinate latitude;       // degree / 10`000`000
-    GpsCoordinate longitude;      // degree / 10`000`000
-    GpsGroundSpeed groundspeed;   // km/h / 100
-    GpsHeading heading;           // degree / 100
+    GpsCoordinateCode latitude;       // degree / 10`000`000
+    GpsCoordinateCode longitude;      // degree / 10`000`000
+    GpsGroundSpeedCode groundspeed;   // km/h / 100
+    GpsHeadingCode heading;           // degree / 100
     uint16_t altitude;            // meter - 1000m offset
     uint8_t satellites;           // # of sats in view
 };
@@ -508,7 +532,7 @@ struct [[nodiscard]] VtxTelemetry final{
 // 0x11
 struct [[nodiscard]] Barometer final{
     PressureCode pressure_pa;        // Pascals
-    TemperatureCentidegree baro_temp; // centidegrees
+    TemperatureCentidegreeCode baro_temp; // centidegrees
 };
 
 // 0x12
@@ -519,33 +543,56 @@ struct [[nodiscard]] Magnetometer final{
 };
 
 // 0x13
+// NEU机身坐标系下的原始加速度计和陀螺仪数据，样本是在采样间隔内平均的原始数据
+
+// 加速度计：+X轴 = 前进 +Y轴 = 右 +Z轴 = 上 陀螺仪： +X轴 = 左滚 +Y轴 = 俯仰向上 +Z轴 = 顺时针偏航
 struct [[nodiscard]] AccelGyro final{
     uint32_t sample_time;       // Timestamp of the sample in us
-    int16_t gyro_x;             // LSB = INT16_MAX/2000 DPS
-    int16_t gyro_y;             // LSB = INT16_MAX/2000 DPS
-    int16_t gyro_z;             // LSB = INT16_MAX/2000 DPS
+    int16_t gyr_x;             // LSB = INT16_MAX/2000 DPS
+    int16_t gyr_y;             // LSB = INT16_MAX/2000 DPS
+    int16_t gyr_z;             // LSB = INT16_MAX/2000 DPS
     int16_t acc_x;              // LSB = INT16_MAX/16 G
     int16_t acc_y;              // LSB = INT16_MAX/16 G
     int16_t acc_z;              // LSB = INT16_MAX/16 G
-    int16_t gyro_temp;          // centidegrees
+    int16_t gyr_temp;          // centidegrees
 };
 
 // 0x14
+// 上行链路是从地面到无人机的连接，下行链路则是相反方向
+
+
+
 struct [[nodiscard]] LinkStatistics final{
-    RssiCode     up_rssi_ant1;       // Uplink RSSI Antenna 1 (dBm * -1)
-    RssiCode     up_rssi_ant2;       // Uplink RSSI Antenna 2 (dBm * -1)
-    LinkQualityCode up_link_quality; // Uplink Package success rate / Link quality (%)
-    SnrCode      up_snr;             // Uplink SNR (dB)
-    uint8_t       active_antenna;     // number of currently best antenna
-    uint8_t       rf_profile;         // enum {4fps = 0 , 50fps, 150fps}
-    uint8_t       up_rf_power;        // enum {0mW = 0, 10mW, 25mW, 100mW,
+    RssiCode            up_rssi_ant1;       // Uplink RSSI Antenna 1 (dBm * -1)
+    RssiCode            up_rssi_ant2;       // Uplink RSSI Antenna 2 (dBm * -1)
+    LinkQualityCode     up_link_quality; // Uplink Package success rate / Link quality (%)
+    SnrCode             up_snr;             // Uplink SNR (dB)
+    uint8_t             active_antenna;     // number of currently best antenna
+    RfFps             rf_profile;         // enum {4fps = 0 , 50fps, 150fps}
+    RfPower             up_rf_power;        // enum {0mW = 0, 10mW, 25mW, 100mW,
                                       // 500mW, 1000mW, 2000mW, 250mW, 50mW}
-    RssiCode     down_rssi;          // Downlink RSSI (dBm * -1)
-    LinkQualityCode down_link_quality; // Downlink Package success rate / Link quality (%)
-    SnrCode      down_snr;           // Downlink SNR (dB)
+    RssiCode            down_rssi;          // Downlink RSSI (dBm * -1)
+    LinkQualityCode     down_link_quality; // Downlink Package success rate / Link quality (%)
+    SnrCode             down_snr;           // Downlink SNR (dB)
 };
 
+static_assert(sizeof(RssiCode) == 1);
+static_assert(sizeof(LinkQualityCode) == 1);
+static_assert(sizeof(SnrCode) == 1);
+
 // 0x16
+// 16个通道打包成22字节。如果发生故障保护，此帧将不再发送
+// （当故障保护类型设置为"切断"时）。建议在启动FC故障保护程序之前等待1秒。
+
+[[nodiscard]] static constexpr uint16_t TICKS_TO_US(uint16_t ticks) {
+    return (ticks - 992) * 5 / 8 + 1500;
+}
+
+[[nodiscard]] static constexpr uint16_t US_TO_TICKS(uint16_t us) {
+    return (us - 1500) * 8 / 5 + 992;
+}
+
+// 中心 (1500µs) = 992
 struct [[nodiscard]] RcChannelsPacked final{
     struct{
         int channel_01: 11;
@@ -567,53 +614,62 @@ struct [[nodiscard]] RcChannelsPacked final{
     } channels;
 };
 
+
+// 0x17 RC通道子集打包
+// [!警告] 不推荐实现此帧。正在修订中。
+
+// 0x18 RC通道打包11位（未使用）
+// 与0x16相同，但使用与0x17相同的转换样式
+
+// 0x19 - 0x1B 保留Crossfire
+
 // 0x1C
 struct [[nodiscard]] LinkStatisticsRx final{
-    RssiCode      rssi_db;        // RSSI (dBm * -1)
-    uint8_t        rssi_percent;   // RSSI in percent
-    LinkQualityCode link_quality; // Package success rate / Link quality (%)
-    SnrCode       snr;            // SNR (dB)
-    RfPowerCode   rf_power_db;    // rf power in dBm
+    RssiCode            rssi_dbm;        // RSSI (dBm * -1)
+    uint8_t             rssi_percent;   // RSSI in percent
+    LinkQualityCode     link_quality; // Package success rate / Link quality (%)
+    SnrCode             snr;            // SNR (dB)
+    RfPowerDbmCode      rf_power_dbm;    // rf power in dBm
 };
 
 // 0x1D
 struct [[nodiscard]] LinkStatisticsTx final{
-    RssiCode      rssi_db;        // RSSI (dBm * -1)
+    RssiCode      rssi_dbm;        // RSSI (dBm * -1)
     uint8_t        rssi_percent;   // RSSI in percent
     LinkQualityCode link_quality; // Package success rate / Link quality (%)
     SnrCode       snr;            // SNR (dB)
-    RfPowerCode   rf_power_db;    // rf power in dBm
+    RfPowerDbmCode   rf_power_dbm;    // rf power in dBm
     FpsCode       fps;            // rf frames per second (fps / 10)
 };
 
 // 0x1E
 struct [[nodiscard]] Attitude final{
-    AttitudeAngle pitch;  // Pitch angle (LSB = 100 µrad)
-    AttitudeAngle roll;   // Roll angle  (LSB = 100 µrad)
-    AttitudeAngle yaw;    // Yaw angle   (LSB = 100 µrad)
+    AttitudeAngleCode pitch;  // Pitch angle (LSB = 100 µrad)
+    AttitudeAngleCode roll;   // Roll angle  (LSB = 100 µrad)
+    AttitudeAngleCode yaw;    // Yaw angle   (LSB = 100 µrad)
 };
 
 // 0x1F
 struct [[nodiscard]] MavlinkFc final{
-    int16_t     airspeed;
-    uint8_t     base_mode;      // vehicle mode flags, defined in MAV_MODE_FLAG enum
-    uint32_t    custom_mode;    // autopilot-specific flags
-    uint8_t     autopilot_type; // FC type; defined in MAV_AUTOPILOT enum
-    uint8_t     firmware_type;  // vehicle type; defined in MAV_TYPE enum
+    int16_t                         airspeed;
+    mavlink::MavModeFlagBitfields   base_mode;      // vehicle mode flags, defined in MAV_MODE_FLAG enum
+    uint32_t                        custom_mode;    // autopilot-specific flags
+    mavlink::MavAutopilot           autopilot_type; // FC type; defined in MAV_AUTOPILOT enum
+    mavlink::MavComponentType       firmware_type;  // vehicle type; defined in MAV_TYPE enum
 };
 
 // 0x21
 struct [[nodiscard]] FlightMode final{
-    char flight_mode[];  // Null-terminated string
+    StringView flight_mode;  // Null-terminated string
 };
 
 // 0x22
 struct [[nodiscard]] EspNowMessages final{
     uint8_t VAL1;           // Used for Seat Position of the Pilot
     uint8_t VAL2;           // Used for the Current Pilots Lap
-    char    VAL3[15];       // 15 characters for the lap time current/split
-    char    VAL4[15];       // 15 characters for the lap time current/split
-    char    free_text[20];  // Free text of 20 character at the bottom of the screen
+    CharArray<15>    VAL3;       // 15 characters for the lap time current/split
+    CharArray<15>    VAL4;       // 15 characters for the lap time current/split
+    CharArray<20>    free_text;  // Free text of 20 character at the bottom of the screen
 };
 
 // 0x28
@@ -623,7 +679,7 @@ struct [[nodiscard]] ParameterPingDevices final{
 
 // 0x29
 struct [[nodiscard]] ParameterDeviceInfo final{
-    char        device_name[];        // Null-terminated string
+    StringView        device_name;        // Null-terminated string
     uint32_t    serial_number;
     uint32_t    hardware_id;
     uint32_t    firmware_id;
@@ -702,7 +758,7 @@ struct [[nodiscard]] ArduPilotPassthroughMulti final{
 struct [[nodiscard]] ArduPilotPassthroughStatus final{
     uint8_t sub_type = 0xF1;  // Always 0xF1 for status text
     uint8_t severity;
-    char text[50];  // (Null-terminated string)
+    CharArray<50> text;  // (Null-terminated string)
 };
 
 } // namespace ymd::crsf::msgs
