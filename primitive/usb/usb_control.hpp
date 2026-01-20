@@ -31,7 +31,7 @@ enum class [[nodiscard]] Recipient:uint8_t {
 };
 
 
-struct [[nodiscard]] Request {
+struct [[nodiscard]] Request  final{
     using Self = Request;
 
     Direction direction;
@@ -103,7 +103,7 @@ struct [[nodiscard]] Request {
     }
 };
 
-struct [[nodiscard]] OutResponse{
+struct [[nodiscard]] OutResponse final{
     using Self = OutResponse;
     static constexpr OutResponse from_accepted() { return OutResponse{true}; }
     static constexpr OutResponse from_rejected() { return OutResponse{false}; }
@@ -116,7 +116,7 @@ private:
 };
 
 
-struct [[nodiscard]] InResponse{
+struct [[nodiscard]] InResponse final{
     using Self = InResponse;
 
     static constexpr InResponse from_accepted(std::span<const uint8_t> bytes){

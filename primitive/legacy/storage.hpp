@@ -1,72 +1,3 @@
-#pragma once
-
-#include "algebra/regions/range2.hpp"
-#include "core/utils/Result.hpp"
-#include "core/utils/Option.hpp"
-#include "core/utils/Errno.hpp"
-
-#include "primitive/hal_result.hpp"
-
-namespace ymd{
-
-
-class Memory;
-
-struct AddressDiff{
-    [[nodiscard]] constexpr explicit AddressDiff(const uint32_t diff):value_(diff){;}
-    [[nodiscard]] constexpr uint32_t to_u32() const {return value_;}
-    [[nodiscard]] constexpr auto operator<=>(const AddressDiff &) const = default;
-private:
-    uint32_t value_;
-};
-
-using Capacity = AddressDiff;
-
-
-struct Address{
-    [[nodiscard]] constexpr explicit Address(const uint32_t addr):addr_(addr){;}
-    [[nodiscard]] constexpr uint32_t to_u32() const {return addr_;}
-
-    [[nodiscard]] constexpr auto operator<=>(const Address &) const = default;
-    [[nodiscard]] constexpr AddressDiff operator - (const Address &rhs) const {return AddressDiff(addr_ - rhs.addr_);}
-    [[nodiscard]] constexpr Address operator - (const AddressDiff &rhs) const {return Address(addr_ - rhs.to_u32());}
-    [[nodiscard]] constexpr Address operator + (const AddressDiff &rhs) const {return Address(addr_ + rhs.to_u32());}
-private:
-    uint32_t addr_;
-};
-
-
-consteval Address operator"" _addr(unsigned long long  x){
-    return Address(static_cast<uint32_t>(x));
-}
-
-inline OutputStream &operator << (OutputStream &os, const Address &addr){
-    const auto guard = os.create_guard();
-    os << std::hex << std::showbase << addr.to_u32();
-    return os;
-}
-
-
-struct AddressRange{
-    Address from;
-    Address to;
-
-    constexpr explicit AddressRange(const Address _from, const Address _to):
-        from(_from),to(_to){;}
-
-    constexpr explicit AddressRange(const Address _addr, const AddressDiff _AddressDiff):
-        from(_addr),to(_addr + _AddressDiff){;}
-
-    constexpr AddressDiff capacity() const{ return to - from; }
-};
-
-
-inline OutputStream &operator<<(OutputStream &os, const AddressRange &range){
-    const auto guard = os.create_guard();
-    os << os.brackets<'['>() << range.from << ":" << range.to << os.brackets<')'>();
-    return os;
-}
-
 // class BlockDeviceOperation{
 // public:
 //     struct Write{
@@ -95,29 +26,29 @@ inline OutputStream &operator<<(OutputStream &os, const AddressRange &range){
 //     // using enum Kind;
 
 //     // template<typename T>
-//     BlockDeviceOperation(Write oper):value_(oper){;}
-//     BlockDeviceOperation(Read oper):value_(oper){;}
-//     BlockDeviceOperation(Erase oper):value_(oper){;}
+//     BlockDeviceOperation(Write oper):count_(oper){;}
+//     BlockDeviceOperation(Read oper):count_(oper){;}
+//     BlockDeviceOperation(Erase oper):count_(oper){;}
 
 
 //     template<typename T>
 //     T as(){
-//         if(std::holds_alternative<T>(value_))
-//             return std::get<T>(value_);
+//         if(std::holds_alternative<T>(count_))
+//             return std::get<T>(count_);
 //         else __builtin_unreachable();
 //     }
 
 //     Kind kind() const{
-//         if(std::holds_alternative<Write>(value_))
+//         if(std::holds_alternative<Write>(count_))
 //             return Kind::Write;
-//         else if(std::holds_alternative<Read>(value_))
+//         else if(std::holds_alternative<Read>(count_))
 //             return Kind::Read;
-//         else if(std::holds_alternative<Erase>(value_))
+//         else if(std::holds_alternative<Erase>(count_))
 //             return Kind::Erase;
 //         else __builtin_unreachable();
 //     }
 // private:
-//     std::variant<Write, Read, Erase> value_;
+//     std::variant<Write, Read, Erase> count_;
 // };
 
 // class BlockDeviceAsyncTask;
@@ -243,7 +174,3 @@ inline OutputStream &operator<<(OutputStream &os, const AddressRange &range){
 
 //     // virtual void erase_bytes_impl(const Address loc, const AddressDiff length) = 0;
 // };
-
-
-
-}

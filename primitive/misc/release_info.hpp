@@ -44,7 +44,7 @@ struct [[nodiscard]] serde::SerializeGeneratorFactory<serde::RawLeBytes, Release
     }
 };
 
-struct [[nodiscard]] ReleaseInfo{
+struct [[nodiscard]] ReleaseInfo final{
     Author author;
     ReleaseVersion version;
     Date date = Date::from_compiler();

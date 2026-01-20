@@ -2,9 +2,11 @@
 
 #include "core/io/regs.hpp"
 #include "core/clock/clock.hpp"
-#include "core/utils/Option.hpp"
+#include "core/utils/Result.hpp"
+#include "primitive/address.hpp"
+#include "core/utils/Errno.hpp"
 
-#include "primitive/memory.hpp"
+#include "primitive/hal_result.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
@@ -28,24 +30,57 @@ public:
         hal::I2cSlaveAddr<7>::from_u7(0b10100000 >> 1); 
 
 
-    struct Config{
-        
-        template<size_t C, size_t P>
-        struct ConfigBase{
-            static constexpr auto CAPACITY = AddressDiff(C);
-            static constexpr auto PAGE_SIZE = AddressDiff(P);
+    struct Profiles{
+        struct [[nodiscard]] AT24C01 final{
+            static constexpr auto CAPACITY = AddressDiff(1 << 7);
+            static constexpr auto PAGE_SIZE = AddressDiff(8);
         };
 
-        struct AT24C01 final:public ConfigBase<1 << 7, 8>{};
-        struct AT24C02 final:public ConfigBase<1 << 8, 8>{};
-        struct AT24C04 final:public ConfigBase<1 << 9, 16>{};
-        struct AT24C08 final:public ConfigBase<1 << 10, 16>{};
-        struct AT24C16 final:public ConfigBase<1 << 11, 16>{};
-        struct AT24C32 final:public ConfigBase<1 << 12, 32>{};
-        struct AT24C64 final:public ConfigBase<1 << 13, 32>{};
-        struct AT24C128 final:public ConfigBase<1 << 14, 64>{};
-        struct AT24C256 final:public ConfigBase<1 << 15, 64>{};
-        struct AT24C512 final:public ConfigBase<1 << 16, 128>{};
+        struct [[nodiscard]] AT24C02 final{
+            static constexpr auto CAPACITY = AddressDiff(1 << 8);
+            static constexpr auto PAGE_SIZE = AddressDiff(8);
+        };
+
+        struct [[nodiscard]] AT24C04 final{
+            static constexpr auto CAPACITY = AddressDiff(1 << 9);
+            static constexpr auto PAGE_SIZE = AddressDiff(16);
+        };
+
+        struct [[nodiscard]] AT24C08 final{
+            static constexpr auto CAPACITY = AddressDiff(1 << 10);
+            static constexpr auto PAGE_SIZE = AddressDiff(16);
+        };
+
+        struct [[nodiscard]] AT24C16 final{
+            static constexpr auto CAPACITY = AddressDiff(1 << 11);
+            static constexpr auto PAGE_SIZE = AddressDiff(16);
+        };
+
+        struct [[nodiscard]] AT24C32 final{
+            static constexpr auto CAPACITY = AddressDiff(1 << 12);
+            static constexpr auto PAGE_SIZE = AddressDiff(32);
+        };
+
+        struct [[nodiscard]] AT24C64 final{
+            static constexpr auto CAPACITY = AddressDiff(1 << 13);
+            static constexpr auto PAGE_SIZE = AddressDiff(32);
+        };
+
+        struct [[nodiscard]] AT24C128 final{
+            static constexpr auto CAPACITY = AddressDiff(1 << 14);
+            static constexpr auto PAGE_SIZE = AddressDiff(64);
+        };
+
+        struct [[nodiscard]] AT24C256 final{
+            static constexpr auto CAPACITY = AddressDiff(1 << 15);
+            static constexpr auto PAGE_SIZE = AddressDiff(64);
+        };
+
+        struct [[nodiscard]] AT24C512 final{
+            static constexpr auto CAPACITY = AddressDiff(1 << 16);
+            static constexpr auto PAGE_SIZE = AddressDiff(128);
+        };
+
     };
 
 };
@@ -55,22 +90,22 @@ public:
 class AT24CXX final:
     public AT24CXX_Prelude{
 public:
-    template<typename TConfig>
-    explicit AT24CXX(TConfig && cfg, const hal::I2cDrv & i2c_drv):
+    template<typename TProfile>
+    explicit AT24CXX(TProfile && profile, const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), 
-        capacity_(cfg.CAPACITY), 
-        pagesize_(cfg.PAGE_SIZE){;}
+        capacity_(profile.CAPACITY), 
+        pagesize_(profile.PAGE_SIZE){;}
 
-    template<typename TConfig>
-    explicit AT24CXX(TConfig && cfg, hal::I2cDrv && i2c_drv):
+    template<typename TProfile>
+    explicit AT24CXX(TProfile && profile, hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)), 
-        capacity_(cfg.CAPACITY), 
-        pagesize_(cfg.PAGE_SIZE){;}
+        capacity_(profile.CAPACITY), 
+        pagesize_(profile.PAGE_SIZE){;}
 
 
-    template<typename TConfig>
-    explicit AT24CXX(TConfig && cfg, hal::I2cBase & i2c):
-        AT24CXX(std::forward<TConfig>(cfg), 
+    template<typename TProfile>
+    explicit AT24CXX(TProfile && profile, hal::I2cBase & i2c):
+        AT24CXX(std::forward<TProfile>(profile), 
         hal::I2cDrv{&i2c, DEFAULT_I2C_ADDR}){;}
 
     AT24CXX(const AT24CXX &) = delete;

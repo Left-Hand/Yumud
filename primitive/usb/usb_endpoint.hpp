@@ -5,7 +5,7 @@
 
 namespace ymd::usb{
 
-struct [[nodiscard]] EndpointAddress{
+struct [[nodiscard]] EndpointAddress final{
 public:
     enum class [[nodiscard]] Kind: uint8_t {
         // EP1_OUT = 0x01,

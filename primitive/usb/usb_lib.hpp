@@ -39,30 +39,30 @@ enum class RemoteWakeupError{
 
 
 struct events{
-    struct Enabled{
+    struct [[nodiscard]] Enabled final{
         bool is_enabled;
     };
     
-    struct Reset{
+    struct [[nodiscard]] Reset final{
     };
 
-    struct Addressed{
+    struct [[nodiscard]] Addressed final{
         uint8_t address;
     };
 
-    struct Configured{
+    struct [[nodiscard]] Configured final{
         uint8_t config_value;
     };
 
-    struct Suspended{
+    struct [[nodiscard]] Suspended final{
         bool is_suspended;
     };
 
-    struct RemoteWakeupEnabled{
+    struct [[nodiscard]] RemoteWakeupEnabled final{
         bool is_enabled;
     };
 
-    struct SetAltermateSetting{
+    struct [[nodiscard]] SetAltermateSetting final{
         InterfaceNumber iface; 
         uint8_t alternate_setting;
     };

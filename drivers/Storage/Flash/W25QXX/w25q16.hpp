@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "primitive/memory.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -9,7 +8,7 @@
 namespace ymd{
 
 
-class W25Q16:public StoragePaged{
+class W25Q16{
 protected:
     hal::SpiDrv spi_drv;
 

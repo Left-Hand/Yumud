@@ -30,7 +30,7 @@ enum class EndpointTransferType : uint8_t {
 
 
 
-struct UsbEndpointDescrPayload{
+struct [[nodiscard]] UsbEndpointDescrPayload final{
 
 #pragma pack(push, 1)
     const EndpointAddress  bEndpointAddress; //[2]
