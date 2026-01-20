@@ -194,8 +194,8 @@ __attribute__((always_inline))
 
 template<typename T, typename D = to_bits_t<T>>
 __attribute__((always_inline))
-[[nodiscard]] static constexpr D obj_to_bits(T && obj){
-    return details::_to_bits<T>::into_bits(std::forward<T>(obj));
+[[nodiscard]] static constexpr D obj_to_bits(const T & obj){
+    return details::_to_bits<T>::into_bits(obj);
 }
 
 
