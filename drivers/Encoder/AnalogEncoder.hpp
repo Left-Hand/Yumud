@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Encoder.hpp"
-#include "primitive/analog_channel.hpp"
+
 #include "algebra/regions/range2.hpp"
 
 #if 0

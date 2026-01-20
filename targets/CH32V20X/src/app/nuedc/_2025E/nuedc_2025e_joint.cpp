@@ -226,13 +226,19 @@ void nuedc_2025e_joint_main(){
         }).examine();
     }
 
-    static constexpr auto mp6540_adc_scaler = MP6540::make_adc_scaler(10'000);
+    // static constexpr auto mp6540_adc_scaler = MP6540::make_adc_scaler(10'000);
 
-    [[maybe_unused]] auto u_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_adc_scaler);
-    [[maybe_unused]] auto v_sense = hal::ScaledAnalogInput(adc.inj<2>(), mp6540_adc_scaler);
-    [[maybe_unused]] auto w_sense = hal::ScaledAnalogInput(adc.inj<3>(), mp6540_adc_scaler);
+    // [[maybe_unused]] auto u_sense = hal::ScaledAnalogInput(adc.inj<1>(), mp6540_adc_scaler);
+    // [[maybe_unused]] auto v_sense = hal::ScaledAnalogInput(adc.inj<2>(), mp6540_adc_scaler);
+    // [[maybe_unused]] auto w_sense = hal::ScaledAnalogInput(adc.inj<3>(), mp6540_adc_scaler);
     
-    auto uvw_pwmgen = UvwPwmgen(&pwm_u, &pwm_v, &pwm_w);
+    auto set_uvw_dutycycle = [&]<typename T>(const T & dutycycle){
+        // timer.enable_udis(DISEN);
+        pwm_u.set_dutycycle((dutycycle.template get<0>()));
+        pwm_v.set_dutycycle((dutycycle.template get<1>()));
+        pwm_w.set_dutycycle((dutycycle.template get<2>()));
+        // timer.enable_udis(EN);
+    };
 
     init_adc(adc);
     hal::PA<7>().inana();
@@ -347,7 +353,7 @@ void nuedc_2025e_joint_main(){
         update_sensors();
 
         if(run_status_.state == RunState::Idle){
-            uvw_pwmgen.set_dutycycle(UvwCoord<iq16>::ZERO);
+            set_uvw_dutycycle(UvwCoord<iq16>::ZERO);
             // leso_.reset();
             return;
         }
@@ -382,7 +388,7 @@ void nuedc_2025e_joint_main(){
 
         static constexpr auto INV_BUS_VOLT = iq16(1.0/12);
 
-        uvw_pwmgen.set_dutycycle(
+        set_uvw_dutycycle(
             SVM(alphabeta_volt * INV_BUS_VOLT)
         );
 

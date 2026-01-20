@@ -1,6 +1,6 @@
 #include "ads1115.hpp"
 #include "core/debug/debug.hpp"
-#include "primitive/analog_channel.hpp"
+
 
 // #define ADS1115_DEBUG
 

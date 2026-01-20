@@ -126,14 +126,14 @@ void lt8960_tb(){
     auto led = hal::PC<13>();
     led.outpp();
 
-    auto scl1_gpio = hal::PB<6>();
-    auto sda1_gpio = hal::PB<7>();
+    auto scl1_pin_ = hal::PB<6>();
+    auto sda1_pin_ = hal::PB<7>();
 
-    auto scl2_gpio = hal::PA<9>();
-    auto sda2_gpio = hal::PA<10>();
+    auto scl2_pin_ = hal::PA<9>();
+    auto sda2_pin_ = hal::PA<10>();
 
-    LT8960L tx_ltr{&scl1_gpio, &sda1_gpio};
-    LT8960L rx_ltr{&scl2_gpio, &sda2_gpio};
+    LT8960L tx_ltr{&scl1_pin_, &sda1_pin_};
+    LT8960L rx_ltr{&scl2_pin_, &sda2_pin_};
     
     auto common_settings = [](LT8960L & ltr) -> Result<void, LT8960L::Error>{
         static constexpr auto DATA_RATE = LT8960L::DataRate::_62_5K;

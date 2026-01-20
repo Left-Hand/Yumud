@@ -38,8 +38,9 @@ IResult<> MT6701::init(){
 }
 
 IResult<> MT6701::update(){
-    const auto res = read_reg(raw_angle_reg);
-    lap_position_ = uq32::from_bits(raw_angle_reg.bits);
+    auto & reg = regs_.raw_angle_reg;
+    const auto res = read_reg(reg);
+    lap_position_ = uq32::from_bits(reg.bits);
     return res;
     // else if(spi_drv){
 
@@ -68,32 +69,32 @@ IResult<Angular<uq32>> MT6701::read_lap_angle(){
 
 
 IResult<> MT6701::enable_uvwmux(const Enable en){
-    auto reg = RegCopy(uvw_mux_reg);
+    auto reg = RegCopy(regs_.uvw_mux_reg);
     reg.uvw_mux = en == EN;
     return write_reg(reg);
 }
 
 IResult<> MT6701::enable_abzmux(const Enable en){
-    auto reg = RegCopy(abz_mux_reg);
+    auto reg = RegCopy(regs_.abz_mux_reg);
     reg.abz_mux = en == EN;
     return write_reg(reg);
 }
 
 IResult<> MT6701::set_direction(const RotateDirection dir){
-    auto reg = RegCopy(abz_mux_reg);
+    auto reg = RegCopy(regs_.abz_mux_reg);
     reg.is_clockwise = dir == RotateDirection::CW;
     return write_reg(reg);
 }
 
 IResult<> MT6701::set_pole_pairs(const uint8_t pole_pairs){
-    auto reg = RegCopy(resolution_reg);
+    auto reg = RegCopy(regs_.resolution_reg);
     reg.pole_pairs = pole_pairs;
     return write_reg(reg);
 }
 
 IResult<> MT6701::set_abz_resolution(const uint16_t abz_resolution){
 
-    auto reg = RegCopy(resolution_reg);
+    auto reg = RegCopy(regs_.resolution_reg);
     reg.abz_resolution = abz_resolution;
     return write_reg(reg);
 }
@@ -101,7 +102,7 @@ IResult<> MT6701::set_abz_resolution(const uint16_t abz_resolution){
 IResult<> MT6701::set_zero_angle(
     const Angular<uq32> angle
 ){
-    auto reg = RegCopy(zero_config_reg);
+    auto reg = RegCopy(regs_.zero_config_reg);
     reg.zero_position = perunit_angle_to_u12(angle);
     return write_reg(reg);
 }
@@ -109,20 +110,20 @@ IResult<> MT6701::set_zero_angle(
 IResult<> MT6701::set_zero_pulse_width(
         const ZeroPulseWidth zero_pulse_width){
 
-    auto reg = RegCopy(zero_config_reg);
+    auto reg = RegCopy(regs_.zero_config_reg);
     reg.zero_pulse_width = zero_pulse_width;
     return write_reg(reg);
 }
 
 IResult<> MT6701::set_hysteresis(const Hysteresis hysteresis){
     {
-        auto reg = RegCopy(hystersis_reg);
+        auto reg = RegCopy(regs_.hystersis_reg);
         reg.hysteresis = static_cast<uint8_t>(hysteresis) & 0b11;
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
     }
     {
-        auto reg = RegCopy(zero_config_reg);
+        auto reg = RegCopy(regs_.zero_config_reg);
         reg.hysteresis = static_cast<uint8_t>(hysteresis) >> 2;
         return write_reg(reg);
     }
@@ -134,19 +135,19 @@ IResult<> MT6701::enable_fast_mode(const Enable en){
 }
 
 IResult<> MT6701::enable_pwm(const Enable en){
-    auto reg = RegCopy(wire_config_reg);
+    auto reg = RegCopy(regs_.wire_config_reg);
     reg.pwm_en = en == EN;
     return write_reg(reg);
 }
 
 IResult<> MT6701::set_pwm_polarity(const bool polarity){
-    auto reg = RegCopy(wire_config_reg);
+    auto reg = RegCopy(regs_.wire_config_reg);
     reg.pwm_polarity_low = !polarity;
     return write_reg(reg);
 }
 
 IResult<> MT6701::set_pwm_freq(const PwmFreq pwm_freq){
-    auto reg = RegCopy(wire_config_reg);
+    auto reg = RegCopy(regs_.wire_config_reg);
     reg.pwm_freq = pwm_freq;
     return write_reg(reg);
 }
@@ -155,14 +156,14 @@ IResult<> MT6701::set_start_angle(const Angular<uq32> angle){
 
     const uint16_t bits = perunit_angle_to_u12(angle);
     {
-        auto reg =  RegCopy(start_reg);
+        auto reg =  RegCopy(regs_.start_reg);
         reg.bits = static_cast<uint8_t>(bits & 0xff);
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
 
     {
-        auto reg = RegCopy(start_stop_reg);
+        auto reg = RegCopy(regs_.start_stop_reg);
         reg.start = static_cast<uint8_t>(bits >> 8);
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
@@ -174,14 +175,14 @@ IResult<> MT6701::set_stop_angle(const Angular<uq32> angle){
     const uint16_t bits = perunit_angle_to_u12(angle);
 
     {
-        auto reg = RegCopy(stop_reg);
+        auto reg = RegCopy(regs_.stop_reg);
         reg.bits = static_cast<uint8_t>(bits & 0xff);
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }
 
     {
-        auto reg = RegCopy(start_stop_reg);
+        auto reg = RegCopy(regs_.start_stop_reg);
         reg.stop = static_cast<uint8_t>(bits >> 8);
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());

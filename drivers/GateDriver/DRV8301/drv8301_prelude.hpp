@@ -3,7 +3,7 @@
 
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-#include "primitive/analog_channel.hpp"
+
 #include "hal/bus/spi/spidrv.hpp"
 
 #include "algebra/regions/range2.hpp"

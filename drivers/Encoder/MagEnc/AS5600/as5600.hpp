@@ -3,10 +3,9 @@
 #include "as5600_prelude.hpp"
 namespace ymd::drivers{
 
-class AS5600 final: 
-    public MagEncoderIntf,
-    public AS5600_Regs{
+class AS5600 final:public AS5600_Prelude{
 public:
+
     explicit AS5600(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
     explicit AS5600(hal::I2cDrv && i2c_drv):
@@ -31,7 +30,7 @@ public:
 
     [[nodiscard]] IResult<> set_hysteresis(const Hysteresis hysteresis);
     
-    [[nodiscard]] IResult<MagStatus> get_mag_status();
+    [[nodiscard]] IResult<EncoderFaultBitFields> get_fault();
     
     [[nodiscard]] IResult<uint8_t> get_gain();
     
@@ -54,6 +53,7 @@ public:
     [[nodiscard]] IResult<> burn_setting();
 
 private:
+    AS5600_Regs regs_ = {};
     hal::I2cDrv i2c_drv_;
 
     template<typename T>

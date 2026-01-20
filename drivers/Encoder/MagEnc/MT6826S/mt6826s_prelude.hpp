@@ -56,11 +56,20 @@ struct Status{
         return std::bit_cast<uint8_t>(*this);
     }
 
-    [[nodiscard]] EncoderError to_encoder_error() const {
-        if(overspeed) return EncoderError::OverSpeed;
-        if(magweak) return EncoderError::MagnetLow;
-        if(uvlo) return EncoderError::UnderVoltage;
-        __builtin_trap();
+    [[nodiscard]] EncoderFaultBitFields to_encoder_fault() const {
+        EncoderFaultBitFields fault = EncoderFaultBitFields::zero();
+        if(overspeed){
+            fault.is_over_speed = true;
+        }
+        
+        if(magweak){
+            fault.mag_strength = EncoderFaultBitFields::MagStrength::Low;
+        } 
+        
+        if(uvlo){
+            fault.supply_voltage_level = EncoderFaultBitFields::SupplyVoltageLevel::Under;
+        }
+        return fault;
     }
 };
 
@@ -100,7 +109,7 @@ struct MT6826S:
 
     [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<Angular<uq32>> get_lap_angle();
-    [[nodiscard]] IResult<MagStatus> get_mag_status();
+    [[nodiscard]] IResult<EncoderFaultBitFields> get_fault();
     // [[nodiscard]] IResult<void> update();
 
 

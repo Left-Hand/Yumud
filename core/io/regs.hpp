@@ -10,7 +10,7 @@ namespace ymd{
 template<typename T> 
 struct [[nodiscard]] RegCopy final:public T{
 public:
-    using value_type = typename T::value_type;
+    using bits_type = typename T::bits_type;
 
 	constexpr RegCopy(T & owner)
 		:owner_(owner)
@@ -36,7 +36,7 @@ template<typename T, typename D = T>
 struct [[nodiscard]] RegBase{
 public:
     using underly_type = T;
-    using value_type = T;
+    using bits_type = T;
     
     [[nodiscard]] constexpr std::span<uint8_t, sizeof(T)> as_bytes_mut() {
         return std::span<uint8_t, sizeof(T)>(reinterpret_cast<uint8_t *>(this), sizeof(T));
@@ -142,7 +142,7 @@ struct reg_decay{
 template<typename T>
 requires std::is_base_of_v<__RegBase, T>
 struct reg_decay<T>{
-    using type = T::value_type;
+    using type = T::bits_type;
 };
 
 

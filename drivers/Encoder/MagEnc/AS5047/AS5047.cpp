@@ -14,7 +14,7 @@ IResult<> AS5047::init() {
     return Ok();
 }
 
-uint16_t AS5047::get_position_data(){
+uint16_t AS5047::get_angle_bits(){
     TODO();
     return 0;
 }

@@ -27,8 +27,8 @@ IResult<Angular<uq32>> Self::get_lap_angle(){
     return Ok(Angular<uq32>::ZERO);
 }
 
-IResult<MagStatus> Self::get_mag_status(){
-    TODO();
-    return Ok(MagStatus::from_proper());
+IResult<EncoderFaultBitFields> Self::get_fault(){
+    EncoderFaultBitFields fault = EncoderFaultBitFields::zero();
+    return Ok(fault);
 }
 
