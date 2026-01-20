@@ -44,7 +44,7 @@ void stl06n_main(){
         // DEBUG_PRINTLN(ev.dist_cm, ev.signal_strength.to_dbm());
     };
 
-    auto stl06n_parser = stl06n::STL06N_ParserSink(lidar_ev_handler);
+    auto stl06n_parser = stl06n::STL06N_ParseReceiver(lidar_ev_handler);
 
     stl06n_uart_.init({
         .remap = hal::USART1_REMAP_PA9_PA10,

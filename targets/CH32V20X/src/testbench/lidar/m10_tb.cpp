@@ -10,7 +10,7 @@
 #include "core/async/timer.hpp"
 
 using namespace ymd;
-using drivers::m10::M10_ParserSink;
+using drivers::m10::M10_ParseReceiver;
 
 
 void m10_main(){
@@ -53,7 +53,7 @@ void m10_main(){
         }
     };
 
-    auto m10_parser = M10_ParserSink(m10_ev_handler);
+    auto m10_parser = M10_ParseReceiver(m10_ev_handler);
     m10_uart_.init({
         .remap = hal::USART1_REMAP_PA9_PA10,
         .baudrate = hal::NearestFreq(drivers::m10::DEFAULT_UART_BAUD)

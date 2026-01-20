@@ -92,12 +92,12 @@ struct [[nodiscard]] LidarPacket final{
 };
 
 
-class LDS14_ParserSink{
+class LDS14_ParseReceiver{
 public:
 
     void push_byte();
 private:
-    LidarPacket m_frame;
+    LidarPacket packet_;
 };
 
 

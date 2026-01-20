@@ -11,7 +11,7 @@
 
 using namespace ymd;
 
-using drivers::mk8000tr::MK8000TR_ParserSink;
+using drivers::mk8000tr::MK8000TR_ParseReceiver;
 
 void mk8000tr_main(){
     DEBUGGER_INST.init({
@@ -36,7 +36,7 @@ void mk8000tr_main(){
         DEBUG_PRINTLN(ev.dist_cm, ev.signal_strength.to_dbm());
     };
 
-    auto mk8000tr_parser = MK8000TR_ParserSink(mk8000tr_ev_handler);
+    auto mk8000tr_parser = MK8000TR_ParseReceiver(mk8000tr_ev_handler);
     mk8000tr_uart_.init({
         .remap = hal::UartRemap::_0,
         .baudrate = hal::NearestFreq(576_KHz), 

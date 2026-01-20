@@ -27,8 +27,8 @@ using AlxError = drivers::alx_aoa::Error;
 
 using AlxLocation = drivers::alx_aoa::Location;
 using AlxHeartBeat = drivers::alx_aoa::HeartBeat;
-using drivers::mk8000tr::MK8000TR_ParserSink;
-using drivers::alx_aoa::AlxAoa_ParserSink;
+using drivers::mk8000tr::MK8000TR_ParseReceiver;
+using drivers::alx_aoa::AlxAoa_ParseReceiver;
 using Mk8Event = drivers::mk8000tr::Event;
 
 using AlxMeasurement = SphericalCoordinates<float>;
@@ -68,7 +68,7 @@ struct BlinkActivity{
 
 struct AlxActivity{
     hal::Uart & uart_;
-    drivers::alx_aoa::AlxAoa_ParserSink & parser_;
+    drivers::alx_aoa::AlxAoa_ParseReceiver & parser_;
     uint32_t received_bytes_cnt_ = 0;
 
     void resume(){
@@ -152,14 +152,14 @@ void alx_aoa_main(){
         }
     };
 
-    auto alx_1_parser_ = AlxAoa_ParserSink(
+    auto alx_1_parser_ = AlxAoa_ParseReceiver(
         [&](const Result<AlxEvent, AlxError> & res){
 
             alx_ev_handler(res, 0);
         }
     );
 
-    auto alx_2_parser_ = AlxAoa_ParserSink(
+    auto alx_2_parser_ = AlxAoa_ParseReceiver(
         [&](const Result<AlxEvent, AlxError> & res){
             alx_ev_handler(res, 1);
         }

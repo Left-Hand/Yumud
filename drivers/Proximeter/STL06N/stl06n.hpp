@@ -9,9 +9,9 @@ namespace ymd::drivers::stl06n{
 using Callback = std::function<void(Event)>;
 
 
-class STL06N_ParserSink final{
+class STL06N_ParseReceiver final{
 public:
-    explicit STL06N_ParserSink(Callback callback):
+    explicit STL06N_ParseReceiver(Callback callback):
         callback_(callback)
     {
         reset();
@@ -31,17 +31,19 @@ private:
     union{
         alignas(4) std::array<uint8_t, 48> bytes_;
     };
-    size_t bytes_count_ = 0;
+
+
     Command command_ = Command::Sector;
 
-    enum class State:uint8_t{
+    enum class FsmState:uint8_t{
         WaitingHeader,
         WaitingVerlen,
         Remaining,
         Emitting,
     };
 
-    State state_ = State::WaitingHeader;
+    size_t bytes_count_ = 0;
+    volatile FsmState fsm_state_ = FsmState::WaitingHeader;
 
 };
 

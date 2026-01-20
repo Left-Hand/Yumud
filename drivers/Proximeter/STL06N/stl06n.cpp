@@ -4,30 +4,30 @@
 using namespace ymd;
 using namespace ymd::drivers::stl06n;
 
-using Self = STL06N_ParserSink;
+using Self = STL06N_ParseReceiver;
 
 
 
 void Self::push_byte(const uint8_t byte){
-    switch(state_){
-        case State::WaitingHeader:
+    switch(fsm_state_){
+        case FsmState::WaitingHeader:
             if(byte != HEADER_TOKEN){
                 reset();
                 break;
             }
-            state_ = State::WaitingVerlen;
+            fsm_state_ = FsmState::WaitingVerlen;
             break;
-        case State::WaitingVerlen:
+        case FsmState::WaitingVerlen:
             if(const auto may_command = Command::try_from_u8(byte); may_command.is_none()){
                 reset();
                 break;
             }else{
                 command_ = may_command.unwrap();
             }
-            state_ = State::Remaining;
+            fsm_state_ = FsmState::Remaining;
             
             break;
-        case State::Remaining:
+        case FsmState::Remaining:
             bytes_[bytes_count_] = byte;
             bytes_count_++;
 
@@ -36,7 +36,7 @@ void Self::push_byte(const uint8_t byte){
                 reset();
             }
             break;
-        case State::Emitting:
+        case FsmState::Emitting:
             PANIC{"racing condition is happening!!!"};
             break;
     }
@@ -57,7 +57,7 @@ void Self::flush(){
     if(callback_ == nullptr) [[unlikely]]
         PANIC{"callback is null"};
 
-    state_ = State::Emitting;
+    fsm_state_ = FsmState::Emitting;
 
     const auto num_bytes = command_.payload_size();
 
@@ -112,6 +112,6 @@ void Self::flush(){
 
 void Self::reset(){
     bytes_count_ = 0;
-    state_ = State::WaitingHeader;
+    fsm_state_ = FsmState::WaitingHeader;
     command_ = Command::Sector;
 }

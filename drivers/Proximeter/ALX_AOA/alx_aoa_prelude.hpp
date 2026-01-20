@@ -35,7 +35,7 @@ enum class [[nodiscard]] RequestCommand:uint16_t{
     HeartBeat = 0x2002,
 };
 
-struct [[nodiscard]] TargetDistanceCode{
+struct [[nodiscard]] TargetDistanceCode final{
     using Self = TargetDistanceCode;
     uint32_t bits;
 
@@ -51,7 +51,7 @@ struct [[nodiscard]] TargetDistanceCode{
     }
 };
 
-struct [[nodiscard]] TargetAngleCode{
+struct [[nodiscard]] TargetAngleCode final{
     using Self = TargetAngleCode;
     int16_t bits;
 
@@ -67,7 +67,7 @@ struct [[nodiscard]] TargetAngleCode{
     }
 };
 
-struct [[nodiscard]] DeviceIdCode{
+struct [[nodiscard]] DeviceIdCode final{
     using Self = DeviceIdCode;
     uint32_t bits;
 
@@ -81,7 +81,7 @@ struct [[nodiscard]] DeviceIdCode{
 };
 
 
-struct [[nodiscard]] Location{
+struct [[nodiscard]] Location final{
     DeviceIdCode anchor_id;
     DeviceIdCode target_id;
     TargetDistanceCode distance;
@@ -108,7 +108,7 @@ struct [[nodiscard]] Location{
     }
 };
 
-struct [[nodiscard]] HeartBeat{
+struct [[nodiscard]] HeartBeat final{
     DeviceIdCode anchor_id;
 
     friend OutputStream & operator <<(OutputStream & os, const HeartBeat & self){ 
@@ -119,16 +119,14 @@ struct [[nodiscard]] HeartBeat{
 struct [[nodiscard]] Event:public Sumtype<std::monostate, HeartBeat, Location>{};
 using Callback = std::function<void(Result<Event, Error>)>;
 
-struct [[nodiscard]] LeaderInfo{
+struct [[nodiscard]] LeaderInfo final{
     uint8_t len;
     uint16_t command;
 };
 
-
-
-class AlxAoa_ParserSink final{
+class AlxAoa_ParseReceiver final{
 public:
-    enum class ByteProg:uint8_t{
+    enum class FsmState:uint8_t{
         Header0,
         Header1,
         Header2,
@@ -138,8 +136,7 @@ public:
         Remaining
     };
 
-    
-    explicit AlxAoa_ParserSink(Callback callback):
+    explicit AlxAoa_ParseReceiver(Callback callback):
         callback_(callback)
     {
         reset();
@@ -151,26 +148,27 @@ public:
         }
     }
 
-
     void push_byte(const uint8_t byte);
     void flush();
 
     void reset(){
         payload_bytes_.clear();
-        byte_prog_ = ByteProg::Header0;
+        fsm_state_ = FsmState::Header0;
     }
 private:
     static constexpr size_t MAX_PAYLOAD_SIZE = 32;
 
 
-    friend OutputStream & operator <<(OutputStream & os, const AlxAoa_ParserSink::ByteProg & prog);
+    friend OutputStream & operator <<(OutputStream & os, const AlxAoa_ParseReceiver::FsmState & prog);
 
     Result<Event, Error> parse();
 
-    Callback callback_ = nullptr;
-    ByteProg byte_prog_ = ByteProg::Header0;
-    LeaderInfo leader_info_ = {};
     HeaplessVector<uint8_t, MAX_PAYLOAD_SIZE> payload_bytes_ = {};
+    
+    volatile FsmState fsm_state_ = FsmState::Header0;
+    Callback callback_ = nullptr;
+
+    LeaderInfo leader_info_ = {};
 
 };
 

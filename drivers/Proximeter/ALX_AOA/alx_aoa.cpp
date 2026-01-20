@@ -6,7 +6,7 @@ using namespace ymd::drivers;
 using namespace ymd::drivers::alx_aoa;
 
 
-using Self = AlxAoa_ParserSink;
+using Self = AlxAoa_ParseReceiver;
 
 #define ALXAOA_DEBUG_EN 0
 
@@ -227,30 +227,30 @@ static Result<Location, Error> parse_location(BytesSpawner & spawner){
 void Self::push_byte(const uint8_t byte){
     auto fsm_update = [&](const auto state){ 
         // ALXAOA_DEBUG(state);
-        byte_prog_ = state; 
+        fsm_state_ = state; 
     };
-    switch(byte_prog_){
-        case ByteProg::Header0:
+    switch(fsm_state_){
+        case FsmState::Header0:
             if(byte != 0xff){reset(); break;}
-            fsm_update(ByteProg::Header1);
+            fsm_update(FsmState::Header1);
             break;
-        case ByteProg::Header1:
+        case FsmState::Header1:
             if(byte != 0xff){reset(); break;}
-            fsm_update(ByteProg::Header2);
+            fsm_update(FsmState::Header2);
             break;
-        case ByteProg::Header2:
+        case FsmState::Header2:
             if(byte != 0xff){reset(); break;}
-            fsm_update(ByteProg::Header3);
+            fsm_update(FsmState::Header3);
             break;
-        case ByteProg::Header3:
+        case FsmState::Header3:
             if(byte != 0xff){reset(); break;}
-            fsm_update(ByteProg::WaitingLen0);
+            fsm_update(FsmState::WaitingLen0);
             break;
-        case ByteProg::WaitingLen0: 
+        case FsmState::WaitingLen0: 
             if(byte != 0x00){reset(); break;}
-            fsm_update(ByteProg::WaitingLen1);
+            fsm_update(FsmState::WaitingLen1);
             break;
-        case ByteProg::WaitingLen1:{
+        case FsmState::WaitingLen1:{
             const auto len = static_cast<uint8_t>(byte);
             const bool is_valid_len = [&]{
                 switch(len){
@@ -264,10 +264,10 @@ void Self::push_byte(const uint8_t byte){
             
             if(not is_valid_len) {reset(); break;}
             leader_info_.len = len;
-            fsm_update(ByteProg::Remaining);
+            fsm_update(FsmState::Remaining);
             break;
         }
-        case ByteProg::Remaining:
+        case FsmState::Remaining:
             payload_bytes_.push_back(byte);
 
             if(payload_bytes_.size() + LEADER_SIZE >= leader_info_.len){
@@ -390,7 +390,7 @@ OutputStream & operator <<(OutputStream & os, const Error & error){
     DeriveDebugDispatcher<Error>::call(os, error);
     return os;
 }
-OutputStream & operator <<(OutputStream & os, const AlxAoa_ParserSink::ByteProg & self){
-    DeriveDebugDispatcher<AlxAoa_ParserSink::ByteProg>::call(os, self);
+OutputStream & operator <<(OutputStream & os, const AlxAoa_ParseReceiver::FsmState & self){
+    DeriveDebugDispatcher<AlxAoa_ParseReceiver::FsmState>::call(os, self);
     return os;
 }

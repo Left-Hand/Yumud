@@ -2,17 +2,17 @@
 
 using namespace ymd::drivers::m10;
 
-void M10_ParserSink::push_byte(const uint8_t byte){
+void M10_ParseReceiver::push_byte(const uint8_t byte){
     switch(state_){
-        case State::WaitingHeader1:
+        case FsmState::WaitingHeader1:
             if(byte != HEADER1_TOKEN){reset(); break;}
-            state_ = State::WaitingHeader2;
+            state_ = FsmState::WaitingHeader2;
             break;
-        case State::WaitingHeader2:
+        case FsmState::WaitingHeader2:
             if(byte != HEADER2_TOKEN){reset(); break;}
-            state_ = State::Remaining;
+            state_ = FsmState::Remaining;
             break;
-        case State::Remaining:
+        case FsmState::Remaining:
             bytes_[bytes_count_] = byte;
             bytes_count_ +=1;
             if(bytes_count_ >= NUM_SECTOR_BYTES){
@@ -25,7 +25,7 @@ void M10_ParserSink::push_byte(const uint8_t byte){
 }
 
 
-void M10_ParserSink::flush(){
+void M10_ParseReceiver::flush(){
     if(callback_ == nullptr) [[unlikely]]
         __builtin_trap();
     if(bytes_count_ != NUM_SECTOR_BYTES) [[unlikely]]

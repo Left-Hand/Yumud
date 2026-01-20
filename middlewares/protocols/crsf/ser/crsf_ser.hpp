@@ -236,11 +236,6 @@ private:
         }
         return Ok();
     }
-
-    constexpr void recv_bytes_unchecked(std::span<const uint8_t> bytes) noexcept {
-        std::copy_n(bytes.data(), bytes.size(), uchars.begin() + idx);
-        idx += bytes.size();
-    }
 };
 
 

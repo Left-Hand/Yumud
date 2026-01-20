@@ -4,7 +4,7 @@
 using namespace ymd;
 using namespace ymd::drivers::ld19;
 
-using Self = LD19_ParserSink;
+using Self = LD19_ParseReceiver;
 
 static constexpr std::array<uint8_t, 256> CRC8_TABLE= {
 0x00,0x4d,0x9a,0xd7,0x79,0x34,0xe3,
@@ -46,22 +46,9 @@ static constexpr uint8_t calc_crc8(const std::span<const uint8_t> pbuf){
     return crc;
 }
 
-[[maybe_unused]] static void static_test(){
-    constexpr uint8_t bytes[] = {
-        0x54, 0x2C, 0x68, 0x08, 0xAB, 0x7E, 0xE0, 0x00, 
-        0xE4, 0xDC, 0x00, 0xE2, 0xD9, 0x00, 0xE5, 0xD5, 
-        0x00, 0xE3, 0xD3, 0x00, 0xE4, 0xD0, 0x00, 0xE9, 
-        0xCD, 0x00, 0xE4, 0xCA, 0x00, 0xE2, 0xC7, 0x00, 
-        0xE9, 0xC5, 0x00, 0xE5, 0xC2, 0x00, 0xE5, 0xC0, 
-        0x00, 0xE5, 0xBE, 0x82, 0x3A, 0x1A};
-
-    constexpr auto actual_crc = calc_crc8(std::span(bytes));
-    static_assert(actual_crc == 0x50);
-}
-
-[[nodiscard]] static uint8_t calc_crc(const LidarSectorPacket & frame){
+[[nodiscard]] static imconstexpr uint8_t calc_crc(const LidarSectorPacket & packet_){
     constexpr size_t PAYLOAD_LEN = 44;
-    return calc_crc8(std::span(reinterpret_cast<const uint8_t *>(&frame), PAYLOAD_LEN));
+    return calc_crc8(std::span(reinterpret_cast<const uint8_t *>(&packet_), PAYLOAD_LEN));
 }
 
 void Self::push_byte(const uint8_t byte){
@@ -114,7 +101,7 @@ void Self::flush(){
     //尾元素本身指向crc8校验
     const uint8_t expected_crc = *end;
 
-    const auto actual_crc = calc_crc(frame_);
+    const auto actual_crc = calc_crc(packet_);
 
     if((expected_crc != actual_crc)) [[unlikely]] {
         return callback_(Event(Event::InvalidCrc{
@@ -123,10 +110,23 @@ void Self::flush(){
         }));
     }
 
-    return callback_(Event(Event::DataReady{frame_}));
+    return callback_(Event(Event::DataReady{packet_}));
 }
 
 void Self::reset(){
     bytes_count_ = 0;
     state_ = State::WaitingHeader;
+}
+
+namespace{
+    constexpr uint8_t bytes[] = {
+        0x54, 0x2C, 0x68, 0x08, 0xAB, 0x7E, 0xE0, 0x00, 
+        0xE4, 0xDC, 0x00, 0xE2, 0xD9, 0x00, 0xE5, 0xD5, 
+        0x00, 0xE3, 0xD3, 0x00, 0xE4, 0xD0, 0x00, 0xE9, 
+        0xCD, 0x00, 0xE4, 0xCA, 0x00, 0xE2, 0xC7, 0x00, 
+        0xE9, 0xC5, 0x00, 0xE5, 0xC2, 0x00, 0xE5, 0xC0, 
+        0x00, 0xE5, 0xBE, 0x82, 0x3A, 0x1A};
+
+    constexpr auto actual_crc = calc_crc8(std::span(bytes));
+    static_assert(actual_crc == 0x50);
 }

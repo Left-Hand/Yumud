@@ -6,29 +6,29 @@ using namespace ymd::drivers;
 
 namespace ymd::drivers::mk8000tr{
 
-using Self = MK8000TR_ParserSink;
+using Self = MK8000TR_ParseReceiver;
 
 void Self::push_byte(const uint8_t byte){
     switch(state_){
-        case State::WaitingHeader:
+        case FsmState::WaitingHeader:
             if(byte != HEADER_TOKEN){
                 reset();
                 break;
             }
             frame_.header = byte;
             bytes_count_++;
-            state_ = State::WaitingLen;
+            state_ = FsmState::WaitingLen;
             break;
-        case State::WaitingLen:
+        case FsmState::WaitingLen:
             if(byte != LEN_TOKEN){
                 reset();
                 break;
             }
             frame_.length = byte;
             bytes_count_ ++;
-            state_ = State::Remaining;
+            state_ = FsmState::Remaining;
             break;
-        case State::Remaining:
+        case FsmState::Remaining:
             bytes_[bytes_count_] = byte;
             bytes_count_++;
             if(bytes_count_ == sizeof(TransportFrame)){
@@ -55,7 +55,7 @@ void Self::flush(){
 
 void Self::reset(){
     bytes_count_ = 0;
-    state_ = State::WaitingHeader;
+    state_ = FsmState::WaitingHeader;
 }
 
 }

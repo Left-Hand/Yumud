@@ -56,9 +56,9 @@ using Event = Packet;
 using Callback = std::function<void(Event)>;
 
 
-class MK8000TR_ParserSink final{
+class MK8000TR_ParseReceiver final{
 public:
-    explicit MK8000TR_ParserSink(Callback callback):
+    explicit MK8000TR_ParseReceiver(Callback callback):
         callback_(callback)
     {
         reset();
@@ -73,7 +73,6 @@ public:
     void reset();
 private:
 
-    Callback callback_;
     struct TransportFrame{
         #pragma pack(push, 1)
         uint8_t header;
@@ -84,23 +83,26 @@ private:
         Packet packet;
         uint8_t tail;
         #pragma pack(pop)
-
     };
 
-    static_assert(8 == sizeof(TransportFrame));
     union{
         TransportFrame frame_;
-        std::array<uint8_t, sizeof(TransportFrame)> bytes_;
+        alignas(4) std::array<uint8_t, sizeof(TransportFrame)> bytes_;
     };
+
+    Callback callback_;
+
+    static_assert(8 == sizeof(TransportFrame));
+
     size_t bytes_count_ = 0;
 
-    enum class State:uint8_t{
+    enum class FsmState:uint8_t{
         WaitingHeader,
         WaitingLen,
         Remaining
     };
 
-    State state_ = State::WaitingHeader;
+    volatile FsmState state_ = FsmState::WaitingHeader;
 
 };
 
