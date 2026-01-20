@@ -6,9 +6,7 @@
 
 namespace ymd::drivers{
 class MPU6050 final:
-    public MPU6050_Prelude,
-    public AccelerometerIntf, 
-    public GyroscopeIntf{
+    public MPU6050_Prelude{
 public:
 
     explicit MPU6050(const hal::I2cDrv & i2c_drv):

@@ -79,11 +79,11 @@ IResult<> QMC5883L::update(){
     return Ok();
 }
 
-IResult<Vec3<iq24>> QMC5883L::read_mag(){
-    return Ok{Vec3<iq24>{
-        iq16::from_bits(regs_.mag_x_reg.to_bits()) * scaler_,
-        iq16::from_bits(regs_.mag_y_reg.to_bits()) * scaler_,
-        iq16::from_bits(regs_.mag_z_reg.to_bits()) * scaler_
+IResult<Vec3<iq16>> QMC5883L::read_mag(){
+    return Ok{Vec3<iq16>{
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.mag_x_reg.to_bits())) * scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.mag_y_reg.to_bits())) * scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.mag_z_reg.to_bits())) * scaler_
     }};
 }
 

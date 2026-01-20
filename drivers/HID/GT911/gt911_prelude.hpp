@@ -3,12 +3,13 @@
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
+#include "core/utils/nth.hpp"
 #include "core/string/own/char_array.hpp"
+
+#include "algebra/vectors/vec2.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "algebra/vectors/vec2.hpp"
-#include "core/utils/nth.hpp"
 
 namespace ymd::drivers{
 
@@ -17,10 +18,10 @@ struct [[nodiscard]] GT9XX_Prelude{
 protected:
     using RegAddr = uint16_t;
     static constexpr uint8_t GT9XX_I2C_ADDR_BA  = 0x5D;
-    static constexpr RegAddr GT9XX_PRODUCT_ID_REG  = 0x8140;
-    static constexpr RegAddr GT9XX_TOUCHPOINT_STATUS_REG  = 0x814E;
-    static constexpr RegAddr GT9XX_TOUCHPOINT_1_REG  = 0x814F;
-    static constexpr RegAddr GT9XX_COMMAND_REG  = 0x8040;
+    static constexpr RegAddr GT9XX_PRODUCT_ID_REG_ADDR  = 0x8140;
+    static constexpr RegAddr GT9XX_TOUCHPOINT_STATUS_REG_ADDR  = 0x814E;
+    static constexpr RegAddr GT9XX_TOUCHPOINT_1_REG_ADDR  = 0x814F;
+    static constexpr RegAddr GT9XX_COMMAND_REG_ADDR  = 0x8040;
 
     static constexpr size_t MAX_NUM_TOUCHPOINTS  = 5;
 
@@ -91,7 +92,7 @@ protected:
     [[nodiscard]] static constexpr RegAddr map_nth_to_addr(
         const Nth nth
     ){
-        return GT9XX_TOUCHPOINT_1_REG + nth.count() * TOUCHPOINT_ENTRY_LEN;
+        return GT9XX_TOUCHPOINT_1_REG_ADDR + nth.count() * TOUCHPOINT_ENTRY_LEN;
     }
 
     enum class [[nodiscard]] WorkMode:uint8_t{

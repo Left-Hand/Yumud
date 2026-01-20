@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "core/stream/dummy_stream.hpp"
 #include "core/string/own/heapless_string.hpp"
 #include "core/string/legacy/streamed_string_splitter.hpp"
 
@@ -50,12 +49,25 @@ private:
 
         return [&]{
             if(!this->outen_){
-                DummyOutputStream dos{};
+                // DummyOutputStream dos{};
+                DummyReceiver dos{};
+
                 return rpc::visit(obj, dos, rpc::AccessProvider_ByStringViews(strs));
             }else{
                 return rpc::visit(obj, os_, rpc::AccessProvider_ByStringViews(strs));
             }
         }();
     }
+
+    struct DummyReceiver{
+        template<typename T>
+        DummyReceiver & operator <<(T && arg){
+            //do nothing
+            return *this;
+        }
+
+        template<typename ... Args>
+        void println(Args && ... args){;}
+    };
 };
 }

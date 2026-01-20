@@ -171,7 +171,7 @@ void lt8960_tb(){
 
     DEBUG_PRINTLN("LT8960L init done");
     
-    auto tx_task = [&]{
+    [[maybe_unused]] auto poll_tx_task = [&]{
         // if(!tx_ltr.is_pkt_ready().unwrap()) return;
         // std::array data = {uint8_t(uint8_t(64 + 64 * sin(clock::seconds() * 20))), uint8_t(0x34), uint8_t(0x56), uint8_t(0x78)};
         const auto t = clock::seconds();
@@ -195,10 +195,10 @@ void lt8960_tb(){
     };
     
     // iq16 mdur;
-    [[maybe_unused]] auto rx_task = [&]{
+    [[maybe_unused]] auto poll_rx_task = [&]{
         static std::array<uint8_t, 16> buf;
 
-        // const iq16 mbegin = micros();
+        // const iq16 begin_us = micros();
         auto len = rx_ltr.receive_rf(buf).unwrap();
         auto data = std::span(buf).subspan(0, len);
         if(len){
@@ -208,9 +208,9 @@ void lt8960_tb(){
             // auto [u] = make_tuple_from_bytes<std::tuple<iq16>>(std::span<const uint8_t>(data));
             auto may_res = make_tuple_from_payload<real_t, real_t>(std::span<const uint8_t>(data));
             // DEBUG_PRINTLN(u, v, w, clock::seconds() - tt);
-            // DEBUG_PRINTLN(u, v, clock::seconds() - w, mend -  mbegin);
-            // DEBUG_PRINTLN(std::dec, u, mend -  mbegin, std::hex, std::showbase, data);
-            // DEBUG_PRINTLN(std::dec, u, mend -  mbegin, data);
+            // DEBUG_PRINTLN(u, v, clock::seconds() - w, mend -  begin_us);
+            // DEBUG_PRINTLN(std::dec, u, mend -  begin_us, std::hex, std::showbase, data);
+            // DEBUG_PRINTLN(std::dec, u, mend -  begin_us, data);
             if(may_res.is_some()) {
                 auto [u, v] = may_res.unwrap();
                 DEBUG_PRINTLN(std::dec, u, v);
@@ -239,7 +239,7 @@ void lt8960_tb(){
         timer.set_event_handler([&](hal::TimerEvent ev){
             switch(ev){
             case hal::TimerEvent::Update:{
-                tx_task();
+                poll_tx_task();
                 break;
             }
             default: break;
@@ -266,7 +266,7 @@ void lt8960_tb(){
         timer.set_event_handler([&](hal::TimerEvent ev){
             switch(ev){
             case hal::TimerEvent::Update:{
-                rx_task();
+                poll_rx_task();
                 break;
             }
             default: break;

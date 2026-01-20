@@ -6,7 +6,6 @@
 #include "core/utils/nth.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
-#include "core/stream/fixed_string_stream.hpp"
 #include "core/string/conv/strconv2.hpp"
 
 #include "primitive/arithmetic/rescaler.hpp"

@@ -9,12 +9,12 @@
 namespace ymd::drivers{
 
 struct BMI323_Prelude{
-    using Error = ImuError;
+using Error = ImuError;
 
-    template<typename T = void>
-    using IResult = Result<T, Error>;
+template<typename T = void>
+using IResult = Result<T, Error>;
 
-    static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
+static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
 
 
 enum class ErrorStatus:uint16_t{

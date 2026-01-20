@@ -7,8 +7,8 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
-#include "core/utils/data_iter.hpp"
 #include "core/string/view/string_view.hpp"
+#include "core/utils/data_iter.hpp"
 #include "core/utils/default.hpp"
 
 #include "primitive/misc/release_info.hpp"
@@ -29,12 +29,6 @@
 
 #include "algebra/regions/range2.hpp"
 
-#include "meta_utils.hpp"
-#include "tasks.hpp"
-#include "ctrl.hpp"
-
-#include "calibrate_utils.hpp"
-
 #include "middlewares/rpc/repl_server.hpp"
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/pwmgen/stepper_pwmgen.hpp"
@@ -45,6 +39,11 @@
 #include "dsp/motor_ctrl/sensored/position_corrector.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 
+#include "meta_utils.hpp"
+#include "tasks.hpp"
+#include "ctrl.hpp"
+
+#include "calibrate_utils.hpp"
 
 
 using namespace ymd;

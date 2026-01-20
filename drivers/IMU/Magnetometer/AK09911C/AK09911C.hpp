@@ -13,8 +13,7 @@
 
 namespace ymd::drivers{
 
-class AK09911C final:
-    public MagnetometerIntf, 
+class AK09911C final: 
     public AK09911C_Prelude{
 public:
 

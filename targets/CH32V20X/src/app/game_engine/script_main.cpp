@@ -178,7 +178,7 @@ private:
 
         return [&]{
             if(!this->outen_){
-                DummyOutputStream dos{};
+                DummyReceiver dos{};
                 return rpc::visit(obj, dos, rpc::AccessProvider_ByStringViews(strs));
             }else{
                 return rpc::visit(obj, os_, rpc::AccessProvider_ByStringViews(strs));
@@ -189,6 +189,17 @@ private:
     [[nodiscard]] static constexpr bool is_visible_char(const char c){
         return (c >= 32) and (c <= 126);
     }
+
+    struct DummyReceiver{
+        template<typename T>
+        DummyReceiver & operator <<(T && arg){
+            //do nothing
+            return *this;
+        }
+
+        template<typename ... Args>
+        void println(Args && ... args){;}
+    };
 };
 
 

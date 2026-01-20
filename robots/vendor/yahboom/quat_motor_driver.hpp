@@ -92,7 +92,7 @@ private:
 
         bs << '#';
 
-        send_line(StringView(bs));
+        send_line((bs).inner_str());
     }
 
     void send_line(const StringView line){

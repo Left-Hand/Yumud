@@ -24,8 +24,7 @@ namespace ymd::drivers{
 
 
 class MMC5983:
-    public MMC5983_Prelude,
-    public MagnetometerIntf{
+    public MMC5983_Prelude{
 public:
     struct [[nodiscard]] Config{
         PrdSet prd_set;

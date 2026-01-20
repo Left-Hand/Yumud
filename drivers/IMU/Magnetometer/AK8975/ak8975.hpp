@@ -31,7 +31,6 @@ public:
 
 
 class AK8975 final:
-    public MagnetometerIntf,
     public AK8975_Prelude{
 public:
 public:

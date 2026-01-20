@@ -16,8 +16,7 @@ using IResult = Result<T, Error>;
 static constexpr auto VALID_PRODUCT_ID = 
     std::bit_cast<uint32_t>(std::to_array<char>({'9', '1', '1', '\0'}));
 
-static constexpr uint8_t GT9147_CFG_TBL[]=
-{ 
+static constexpr uint8_t GT9147_CONFIG_TABLE[]={ 
 	0X60, 0XE0, 0X01, 0X20, 0X03, 0X05, 0X35, 0X00, 0X02, 0X08,
 	0X1E, 0X08, 0X50, 0X3C, 0X0F, 0X05, 0X00, 0X00, 0XFF, 0X67,
 	0X50, 0X00, 0X00, 0X18, 0X1A, 0X1E, 0X14, 0X89, 0X28, 0X0A,
@@ -39,15 +38,12 @@ static constexpr uint8_t GT9147_CFG_TBL[]=
 	0XFF, 0XFF, 0XFF, 0XFF,
 }; 
 
-
-
-
 IResult<> Self::validate(){
-    if(const auto res = write_reg(GT9XX_COMMAND_REG, 0);
+    if(const auto res = write_reg(GT9XX_COMMAND_REG_ADDR, 0);
         res.is_err()) return Err(res.unwrap_err());
 
     std::array<uint8_t, 4> buf;
-    if(const auto res = read_reg(GT9XX_PRODUCT_ID_REG, buf);
+    if(const auto res = read_reg(GT9XX_PRODUCT_ID_REG_ADDR, buf);
         res.is_err()) return Err(res.unwrap_err());
 
     const auto product_id = std::bit_cast<uint32_t>(buf);
@@ -95,7 +91,7 @@ IResult<Option<Self::TouchPoint>> Self::get_touch_point(const Nth nth) {
 }
 
 IResult<> Self::clear_status(){
-    return write_reg(GT9XX_TOUCHPOINT_STATUS_REG, 0);
+    return write_reg(GT9XX_TOUCHPOINT_STATUS_REG_ADDR, 0);
 }
 
 IResult<Self::TouchPoints> Self::get_touch_points() {
@@ -117,7 +113,7 @@ IResult<Self::TouchPoints> Self::get_touch_points() {
         std::array<uint8_t, TOUCHPOINT_ENTRY_LEN * MAX_NUM_TOUCHPOINTS> buf;
         const auto read_size = TOUCHPOINT_ENTRY_LEN * num_touch_points;
         
-        if (const auto res = read_reg(GT9XX_TOUCHPOINT_1_REG, 
+        if (const auto res = read_reg(GT9XX_TOUCHPOINT_1_REG_ADDR, 
                 std::span<uint8_t>(buf.data(), read_size));
             res.is_err()) return Err(res.unwrap_err());
 
@@ -137,7 +133,7 @@ IResult<Self::TouchPoints> Self::get_touch_points() {
 IResult<size_t> Self::get_num_touch_points() {
     // read_reg coords
     std::array<uint8_t, 1> buf;
-    if (const auto res = read_reg(GT9XX_TOUCHPOINT_STATUS_REG, buf);
+    if (const auto res = read_reg(GT9XX_TOUCHPOINT_STATUS_REG_ADDR, buf);
         res.is_err()) return Err(res.unwrap_err());
         
     const uint8_t status = buf[0];

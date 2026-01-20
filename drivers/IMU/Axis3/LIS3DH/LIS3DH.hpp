@@ -124,8 +124,7 @@ struct _LIS3DH_Regs:public LIS3DH_Prelude{
 };
 
 class LIS3DH:
-    public LIS3DH_Prelude,
-    public AccelerometerIntf{
+    public LIS3DH_Prelude{
 public:
     using Regs      =  _LIS3DH_Regs;
     using Phy       = StmicroImu_Transport;

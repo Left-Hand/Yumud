@@ -197,3 +197,4 @@ void steadywin_main();
 void vce2755_main();
 void sincospll_main();
 void cap_main();
+void stl06n_main();

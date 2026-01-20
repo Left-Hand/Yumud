@@ -203,7 +203,6 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
 
 
 class LIS2DW12:
-    public AccelerometerIntf,
     public LIS2DW12_Prelude{
 public:
     explicit LIS2DW12(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):

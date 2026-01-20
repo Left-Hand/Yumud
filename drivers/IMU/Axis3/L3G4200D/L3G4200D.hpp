@@ -68,7 +68,6 @@ struct L3G4200D_Regs:public L3G4200D_Prelude{
 };
 
 class L3G4200D:
-    public AccelerometerIntf,
     public L3G4200D_Prelude{
 public:
     explicit L3G4200D(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)

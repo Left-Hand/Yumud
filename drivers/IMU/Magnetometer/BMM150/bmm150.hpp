@@ -5,7 +5,6 @@
 namespace ymd::drivers{
 
 class BMM150:
-    public MagnetometerIntf,
     public BMM150_Prelude{
 public:
     explicit BMM150(

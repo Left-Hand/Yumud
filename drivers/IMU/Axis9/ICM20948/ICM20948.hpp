@@ -4,9 +4,6 @@
 
 namespace ymd::drivers{
 class ICM20948:
-    public AccelerometerIntf,
-    public GyroscopeIntf,
-    public MagnetometerIntf,
     public ICM20948_Prelude
 {
 public:

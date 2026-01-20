@@ -13,7 +13,6 @@
 
 namespace ymd::drivers{
 class BMI088_Acc final: 
-    public AccelerometerIntf,
     public BMI088_Prelude{
 public:
     explicit BMI088_Acc(const hal::I2cDrv & i2c_drv):
@@ -97,7 +96,6 @@ private:
 
 
 class BMI088_Gyr final:
-    public GyroscopeIntf,
     public BMI088_Prelude{
 public:
     using Error = ImuError;

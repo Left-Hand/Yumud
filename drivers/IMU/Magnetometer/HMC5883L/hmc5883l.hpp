@@ -6,7 +6,6 @@ namespace ymd::drivers{
 
 
 class HMC5883L final:
-    public MagnetometerIntf,
     public HMC5883L_Prelude{
 public:
     explicit HMC5883L(const hal::I2cDrv & i2c_drv):

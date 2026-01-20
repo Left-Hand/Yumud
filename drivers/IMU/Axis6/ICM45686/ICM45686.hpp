@@ -13,8 +13,6 @@ namespace ymd::drivers{
 
 
 class ICM45686 final:
-    public AccelerometerIntf, 
-    public GyroscopeIntf,
     private ICM45686_Regs{
 public:
     using Error = ICM45686_Prelude::Error;
