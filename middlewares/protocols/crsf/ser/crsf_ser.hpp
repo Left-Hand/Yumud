@@ -170,7 +170,7 @@ struct NoCheckPolicy{
 
 struct [[nodiscard]] SerializeReceiver final{
 public:
-    using SerialzeFunc = SerialzeFunctions<NoCheckPolicy>;
+    using NoCheckSerialzeFunc = SerialzeFunctions<NoCheckPolicy>;
     std::span<uint8_t> uchars;
     size_t idx;
 
@@ -179,24 +179,47 @@ public:
 
 
     template<size_t Extents>
-    constexpr Result<void, SerError> push_zero_terminated_uchars(const std::span<const uint8_t, Extents> obj) noexcept {
+    constexpr Result<void, SerError> recv_zero_terminated_uchars(const std::span<const uint8_t, Extents> obj) noexcept {
         if(const auto res = check_input_length(obj.size() + 1);
             res.is_err()) return res;
-        const auto feed_len = SerialzeFunc::ser_zero_terminated_uchars(uchars.data(), obj);
+        const auto feed_len = NoCheckSerialzeFunc::ser_zero_terminated_uchars(uchars.data() + idx, obj);
         idx += feed_len;
         return Ok();
     }
 
     template<size_t Extents>
-    constexpr Result<void, SerError> push_0xff_terminated_uchars(const std::span<const uint8_t, Extents> obj) noexcept {
+    constexpr Result<void, SerError> recv_0xff_terminated_uchars(const std::span<const uint8_t, Extents> obj) noexcept {
         if(const auto res = check_input_length(obj.size() + 1);
             res.is_err()) return res;
-        const auto feed_len = SerialzeFunc::ser_0xff_terminated_uchars(uchars.data(), obj);
+        const auto feed_len = NoCheckSerialzeFunc::ser_0xff_terminated_uchars(uchars.data() + idx, obj);
         idx += feed_len;
         return Ok();
     }
 
+    template<typename D>
+    constexpr Result<void, SerError> recv_be_int(const auto int_val) noexcept {
+        if(const auto res = check_input_length(sizeof(D));
+            res.is_err()) return res;
+        const auto feed_len = NoCheckSerialzeFunc::ser_be_int<D>(uchars.data() + idx, static_cast<D>(int_val));
+        idx += feed_len;
+        return Ok();
+    }
 
+    template<typename T>
+    constexpr Result<void, SerError> recv_bits_intoable(const T obj) noexcept {
+        return recv_be_int<to_bits_t<T>>(uchars.data(), obj_to_bits<std::decay_t<T>>(obj));
+    }
+
+    template<typename E>
+    requires (std::is_enum_v<E>)
+    constexpr Result<void, SerError> recv_enum(const E obj) noexcept {
+        static_assert(sizeof(E) == 1);
+        return recv_be_int<uint8_t>(static_cast<uint8_t>(obj));
+    }
+
+    constexpr Result<void, SerError> recv_fp32(const math::fp32 obj) noexcept{
+        return recv_be_int<uint32_t>(obj.to_bits());
+    }
 private:
     constexpr Result<void, SerError> check_input_length(size_t length) noexcept {
         if(idx + length > uchars.size()){
@@ -205,7 +228,7 @@ private:
         return Ok();
     }
 
-    constexpr void push_bytes_unchecked(std::span<const uint8_t> bytes) noexcept {
+    constexpr void recv_bytes_unchecked(std::span<const uint8_t> bytes) noexcept {
         std::copy_n(bytes.data(), bytes.size(), uchars.begin() + idx);
         idx += bytes.size();
     }

@@ -1,11 +1,12 @@
 
 
 #include "../crsf_primitive.hpp"
+#include "../ser/crsf_ser.hpp"
 
 #include "../compatible/crsf_mav_compatible_primitive.hpp"
 
 
-namespace ymd::crsf{
+namespace ymd::crsf::msgs{
 
 // 0x28
 struct [[nodiscard]] ParameterPingDevices final{
@@ -22,6 +23,23 @@ struct [[nodiscard]] ParameterDeviceInfo final{
     uint32_t    firmware_id;
     uint8_t     parameters_total;   // Total amount of parameters
     uint8_t     parameter_version_number;
+
+    // template<typename Receiver>
+    constexpr Result<void, SerError> sink_to(SerializeReceiver & receiver) const {
+        if(const auto res = receiver.recv_zero_terminated_uchars(device_name.uchars());  
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = receiver.recv_be_int<uint32_t>(serial_number); 
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = receiver.recv_be_int<uint32_t>(hardware_id); 
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = receiver.recv_be_int<uint32_t>(firmware_id); 
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = receiver.recv_be_int<uint8_t>(parameter_version_number); 
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = receiver.recv_be_int<uint8_t>(parameters_total); 
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
 };
 
 // 0x2B
@@ -37,6 +55,14 @@ struct [[nodiscard]] ParameterSettingsRead final{
     static constexpr FrameType FRAME_TYPE = FrameType{0x2C};
     uint8_t parameter_number;
     uint8_t parameter_chunk_number; // Chunk number to request, starts with 0
+
+    constexpr Result<void, SerError> sink_to(SerializeReceiver & receiver) const {
+        if(const auto res = receiver.recv_be_int<uint8_t>(parameter_number); 
+            res.is_err()) return Err(res.unwrap_err());
+        if(const auto res = receiver.recv_be_int<uint8_t>(parameter_chunk_number); 
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
 };
 
 // 0x2D
@@ -66,7 +92,7 @@ struct [[nodiscard]] Logging final{
     static constexpr FrameType FRAME_TYPE = FrameType{0x34};
     uint16_t logtype;
     uint32_t timestamp;
-    std::span<uint32_t> params;
+    std::span<const uint32_t> params;
 };
 
 // 0x7A MSP Request
@@ -74,6 +100,7 @@ struct [[nodiscard]] MspRequest final{
     static constexpr FrameType FRAME_TYPE = FrameType{0x7A};
     uint8_t status_byte;
     std::span<const uint8_t> msp_payload;  // MSP frame body without header and CRC
+
 };
 
 // 0x7B MSP Response

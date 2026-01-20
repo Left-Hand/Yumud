@@ -64,7 +64,7 @@ struct UCharsView{
         return p_uchars_[idx];
     }
 
-    [[nodiscard]] constexpr std::span<const uint8_t> uchars(){
+    [[nodiscard]] constexpr std::span<const uint8_t> uchars() const {
         return {p_uchars_, length_};
     }
 
@@ -79,7 +79,7 @@ struct UCharsView{
         return CAPACITY;
     }
 
-    [[nodiscard]] imconstexpr StringView as_str(){
+    [[nodiscard]] imconstexpr StringView as_str() const {
         return StringView{
             reinterpret_cast<const char *>(p_uchars_), 
             length()
