@@ -22,8 +22,7 @@ IResult<> retry(const size_t times, Fn && fn){
     return retry(times, std::forward<Fn>(fn), nullptr);
 }
 
-static constexpr auto BMI088_TEMP_FACTOR = 0_r;
-static constexpr auto BMI088_TEMP_OFFSET = 0_r;
+
 static constexpr auto MAX_RETRY_TIMES = 3u;
 
 static constexpr uint8_t ACC_CHIP_ID = 0;
@@ -85,17 +84,42 @@ IResult<> BMI088_Acc::update(){
 
 IResult<Vec3<iq24>> BMI088_Acc::read_acc(){
     return Ok(Vec3<iq24>(
-        regs_.acc_x_reg.to_bits() * acc_scaler_,
-        regs_.acc_y_reg.to_bits() * acc_scaler_,
-        regs_.acc_z_reg.to_bits() * acc_scaler_
+        std::bit_cast<int16_t>(regs_.acc_x_reg.to_bits()) * acc_scaler_,
+        std::bit_cast<int16_t>(regs_.acc_y_reg.to_bits()) * acc_scaler_,
+        std::bit_cast<int16_t>(regs_.acc_z_reg.to_bits()) * acc_scaler_
     ));
 }
-IResult<iq24> BMI088_Acc::read_temp(){
-    auto & reg = regs_.temp_reg;
-    const auto bytes = reg.as_bytes();
-	int16_t bits = int16_t((bytes[0] << 3) | (bytes[1] >> 5));
-	if (bits > 1023) bits -= 2048;
-    return Ok(bits * BMI088_TEMP_FACTOR + BMI088_TEMP_OFFSET);
+
+static constexpr Option<iq16> temp_bits_to_celsius(uint8_t msb, uint8_t lsb){
+
+    if(msb == 0x80) return None;
+
+	const uint16_t bits_u11 = uint16_t((static_cast<uint32_t>(msb) << 3) + (static_cast<uint32_t>(lsb) >> 5));
+
+    const int16_t temp_i11 = [&] -> int16_t{
+        if(bits_u11 > 1023) 
+            return static_cast<int16_t>(bits_u11) - 2048;
+        else
+            return static_cast<int16_t>(bits_u11);
+    }();
+
+    const auto ret = iq16(iq16(temp_i11) >> 3) + 23;
+    return Some(ret);   
+}
+
+// static constexpr auto d = 0x3e*8;
+// static constexpr auto d2 = (d >> 3) + 23;
+
+static_assert(temp_bits_to_celsius(0xc1,0x00).unwrap() == -40);
+static_assert(temp_bits_to_celsius(0x3e,0x00).unwrap() == 85);
+static_assert(temp_bits_to_celsius(0x80,0x00).is_none());
+IResult<iq16> BMI088_Acc::read_temp(){
+
+    const auto may_temp = temp_bits_to_celsius(regs_.temp_msb_reg.bits, regs_.temp_lsb_reg.bits);
+    if(may_temp.is_some())
+        return Ok(may_temp.unwrap());
+    else
+        return Err(Error::InvalidTemperature);
 }
 
 IResult<> BMI088_Acc::set_acc_fs(const AccFs fs){

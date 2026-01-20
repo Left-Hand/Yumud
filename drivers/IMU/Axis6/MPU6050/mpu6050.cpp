@@ -109,18 +109,18 @@ IResult<> MPU6050::update(){
 IResult<Vec3<iq24>> MPU6050::read_acc(){
 
     return  Ok{Vec3<iq24>{
-        iq16::from_bits(regs_.acc_x_reg.to_bits()) * acc_scaler_,
-        iq16::from_bits(regs_.acc_y_reg.to_bits()) * acc_scaler_,
-        iq16::from_bits(regs_.acc_z_reg.to_bits()) * acc_scaler_
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.acc_x_reg.to_bits())) * acc_scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.acc_y_reg.to_bits())) * acc_scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.acc_z_reg.to_bits())) * acc_scaler_
     }};
 }
 
 IResult<Vec3<iq24>> MPU6050::read_gyr(){
 
     return Ok{Vec3<iq24>{
-        iq16::from_bits(regs_.gyr_x_reg.to_bits()) * gyr_scaler_,
-        iq16::from_bits(regs_.gyr_y_reg.to_bits()) * gyr_scaler_,
-        iq16::from_bits(regs_.gyr_z_reg.to_bits()) * gyr_scaler_
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.gyr_x_reg.to_bits())) * gyr_scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.gyr_y_reg.to_bits())) * gyr_scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.gyr_z_reg.to_bits())) * gyr_scaler_
     }};
 }
 

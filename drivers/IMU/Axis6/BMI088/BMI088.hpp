@@ -37,7 +37,7 @@ public:
     [[nodiscard]] IResult<> update();
 
     [[nodiscard]] IResult<Vec3<iq24>> read_acc();
-    [[nodiscard]] IResult<iq24> read_temp();
+    [[nodiscard]] IResult<iq16> read_temp();
 
     [[nodiscard]] IResult<> set_acc_fs(const AccFs gyr_fs);
     [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);

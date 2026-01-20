@@ -261,24 +261,24 @@ IResult<Vec3<iq24>> Self::read_mag(){
     static constexpr int16_t MIN_VALUE = -8190;
     static constexpr int16_t MAX_VALUE = 8190;
 
-    const auto x = regs_.mag_x_reg.to_bits();
-    const auto y = regs_.mag_y_reg.to_bits();
-    const auto z = regs_.mag_z_reg.to_bits();
+    const int16_t x_bits = std::bit_cast<int16_t>(regs_.mag_x_reg.to_bits());
+    const int16_t y_bits = std::bit_cast<int16_t>(regs_.mag_y_reg.to_bits());
+    const int16_t z_bits = std::bit_cast<int16_t>(regs_.mag_z_reg.to_bits());
 
-    if(not IN_RANGE(x, MIN_VALUE, MAX_VALUE)) 
+    if(not IN_RANGE(x_bits, MIN_VALUE, MAX_VALUE)) 
         return CHECK_ERR(Err(Error::AxisXOverflow));
 
-    if(not IN_RANGE(y, MIN_VALUE, MAX_VALUE))
+    if(not IN_RANGE(y_bits, MIN_VALUE, MAX_VALUE))
         return CHECK_ERR(Err(Error::AxisYOverflow));
     
-    if(not IN_RANGE(z, MIN_VALUE, MAX_VALUE))
+    if(not IN_RANGE(z_bits, MIN_VALUE, MAX_VALUE))
         return CHECK_ERR(Err(Error::AxisZOverflow));
     
     static constexpr iq24 VALUE_LSB = iq24(6E-5);
     return Ok(Vec3<iq24>{
-        VALUE_LSB * x,
-        VALUE_LSB * y,
-        VALUE_LSB * z
+        VALUE_LSB * x_bits,
+        VALUE_LSB * y_bits,
+        VALUE_LSB * z_bits
     });
 }
 

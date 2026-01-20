@@ -102,9 +102,9 @@ IResult<Vec3<iq24>> IST8310::read_mag(){
     };
 
     return Ok{Vec3<iq24>{
-        conv(regs_.axis_x_reg.to_bits()),
-        conv(regs_.axis_y_reg.to_bits()),
-        conv(regs_.axis_z_reg.to_bits())
+        conv(std::bit_cast<int16_t>(regs_.axis_x_reg.to_bits())),
+        conv(std::bit_cast<int16_t>(regs_.axis_y_reg.to_bits())),
+        conv(std::bit_cast<int16_t>(regs_.axis_z_reg.to_bits()))
     }};
 }
 

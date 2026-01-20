@@ -13,7 +13,8 @@ public:
     using value_type = typename T::value_type;
 
 	constexpr RegCopy(T & owner)
-		:owner_(owner){
+		:owner_(owner)
+    {
         T & self = *this;
         self.as_bits_mut() = owner_.to_bits();
     }
@@ -23,9 +24,6 @@ public:
         owner_.as_bits_mut() = self.to_bits();
     }
 
-    // constexpr ~RegCopy(){
-    //     apply();
-    // }
 private:
 	T & owner_;
 };
@@ -40,21 +38,26 @@ public:
     using underly_type = T;
     using value_type = T;
     
-    [[nodiscard]] constexpr std::span<uint8_t> as_bytes_mut() {
-        return std::span<uint8_t>(reinterpret_cast<uint8_t *>(this), sizeof(T));}
-    [[nodiscard]] constexpr std::span<const uint8_t> as_bytes() const {
-        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(T));}
+    [[nodiscard]] constexpr std::span<uint8_t, sizeof(T)> as_bytes_mut() {
+        return std::span<uint8_t, sizeof(T)>(reinterpret_cast<uint8_t *>(this), sizeof(T));
+    }
+
+    [[nodiscard]] constexpr std::span<const uint8_t, sizeof(T)> as_bytes() const {
+        return std::span<const uint8_t, sizeof(T)>(reinterpret_cast<const uint8_t *>(this), sizeof(T));
+    }
     
     constexpr RegBase<T> & set_bits(T bits) {
         this->as_bits_mut() = static_cast<T>(this->to_bits() | static_cast<T>(bits)); 
         return *this;
     }
+
     constexpr RegBase<T> & unset_bits(T bits) {
-        this->as_bits_mut() = static_cast<T>(this->to_bits() & ~static_cast<T>(bits)); 
+        this->as_bits_mut() = static_cast<T>(this->to_bits() & static_cast<T>(~static_cast<T>(bits))); 
         return *this;
     }
+
     constexpr RegBase<T> & write_bits(T bits) {
-        this->as_bits_mut() = static_cast<T>(static_cast<T>(bits)); 
+        this->as_bits_mut() = static_cast<T>(bits); 
         return *this;
     }
     
@@ -65,7 +68,9 @@ public:
     }
 
     [[nodiscard]] constexpr T to_bits() const 
-    {return (reinterpret_cast<const T &>(*this));}
+    {
+        return (reinterpret_cast<const T &>(*this));
+    }
 
     template<typename TOther>
     friend class RegCopy;
@@ -84,11 +89,11 @@ constexpr T as_fn() const {return T(*this);}\
 };\
 
 
-DEF_REG_TEMPLATE(Reg8, uint8_t, to_u8)
-DEF_REG_TEMPLATE(Reg16, uint16_t, to_u16)
+DEF_REG_TEMPLATE(Reg8,  uint8_t,        to_u8)
+DEF_REG_TEMPLATE(Reg16, uint16_t,       to_u16)
 DEF_REG_TEMPLATE(Reg24, math::uint24_t, as_u24)
-DEF_REG_TEMPLATE(Reg32, uint32_t, to_u32)
-DEF_REG_TEMPLATE(Reg64, uint64_t, to_u64)
+DEF_REG_TEMPLATE(Reg32, uint32_t,       to_u32)
+DEF_REG_TEMPLATE(Reg64, uint64_t,       to_u64)
 
 #undef DEF_REG_TEMPLATE
 #undef DEF_REGC_TEMPLATE

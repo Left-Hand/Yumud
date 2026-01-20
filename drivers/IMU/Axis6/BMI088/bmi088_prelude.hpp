@@ -91,7 +91,17 @@ struct BMI088_AccRegs:public BMI088_Prelude{
         uint8_t acc_drdy:1 = 0;
     }DEF_R8(acc_intstat1_reg)
 
-    REG8_QUICK_DEF(0x22, Temperature, temp_reg);
+    struct R8_TempratureMsb:public Reg8<>{
+        static constexpr RegAddr ADDRESS = 0x22;
+        uint8_t bits;
+    }DEF_R8(temp_msb_reg)
+
+    struct R8_TempratureLsb:public Reg8<>{
+        static constexpr RegAddr ADDRESS = 0x23;
+        uint8_t bits;
+    }DEF_R8(temp_lsb_reg)
+
+
     struct R8_AccConf:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x40;
 

@@ -22,8 +22,7 @@ IResult<> retry(const size_t times, Fn && fn){
     return retry(times, std::forward<Fn>(fn), nullptr);
 }
 
-static constexpr auto BMI088_TEMP_FACTOR = 0_r;
-static constexpr auto BMI088_TEMP_OFFSET = 0_r;
+
 static constexpr auto MAX_RETRY_TIMES = 3u;
 
 static constexpr uint8_t GYR_CHIP_ID = 0;

@@ -198,11 +198,20 @@ public:
 
     template<typename D>
     constexpr Result<void, SerError> recv_be_int(const auto int_val) noexcept {
-        if(const auto res = check_input_length(sizeof(D));
-            res.is_err()) return res;
-        const auto feed_len = NoCheckSerialzeFunc::ser_be_int<D>(uchars.data() + idx, static_cast<D>(int_val));
-        idx += feed_len;
-        return Ok();
+        if constexpr(std::is_same_v<D, uint24_t> || std::is_same_v<D, int24_t>){
+            if(const auto res = check_input_length(3);
+                res.is_err()) return res;
+            const auto feed_len = NoCheckSerialzeFunc::ser_be_int<D>(uchars.data() + idx, static_cast<D>(int_val));
+            idx += feed_len;
+            return Ok();
+        }else{
+            if(const auto res = check_input_length(sizeof(D));
+                res.is_err()) return res;
+            const auto feed_len = NoCheckSerialzeFunc::ser_be_int<D>(uchars.data() + idx, static_cast<D>(int_val));
+            idx += feed_len;
+            return Ok();
+        }
+
     }
 
     template<typename T>

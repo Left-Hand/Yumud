@@ -22,7 +22,7 @@ using Error = AK8963::Error;
 
 using Error = ImuError;
 
-static constexpr real_t conv_data_to_ut(const int16_t bits, const bool is_16_bits){
+static constexpr iq16 conv_data_to_ut(const int16_t bits, const bool is_16_bits){
     if(is_16_bits){
         return (bits * iq16(0.15));
     }else{
@@ -168,9 +168,9 @@ IResult<> AK8963::update(){
 }
 IResult<Vec3<iq24>> AK8963::read_mag(){
     return Ok(Vec3<iq24>{
-        conv_data_to_ut(regs_.mag_x_reg.to_bits(), data_is_16_bits_) * adj_scale_.x,
-        conv_data_to_ut(regs_.mag_y_reg.to_bits(), data_is_16_bits_) * adj_scale_.y,
-        conv_data_to_ut(regs_.mag_z_reg.to_bits(), data_is_16_bits_) * adj_scale_.z}
+        conv_data_to_ut(static_cast<int16_t>(regs_.mag_x_reg.to_bits()), data_is_16_bits_) * adj_scale_.x,
+        conv_data_to_ut(static_cast<int16_t>(regs_.mag_y_reg.to_bits()), data_is_16_bits_) * adj_scale_.y,
+        conv_data_to_ut(static_cast<int16_t>(regs_.mag_z_reg.to_bits()), data_is_16_bits_) * adj_scale_.z}
     );
 }
 

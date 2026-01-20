@@ -40,6 +40,8 @@ enum class ImuError_Kind:uint8_t{
     AxisYOverflow,
     AxisZOverflow,
 
+    InvalidTemperature,
+
     NoAvailablePhy,
     I2cPhyIsNotImplementedYet,
     I3cPhyIsNotImplementedYet,
