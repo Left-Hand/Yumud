@@ -9,8 +9,8 @@
 #include "core/tmp/functor.hpp"
 #include "core/tmp/reflect/enum.hpp"
 #include "core/utils/Result.hpp"
-#include "core/string/string_view.hpp"
-#include "core/string/utils/strconv2.hpp"
+#include "core/string/view/string_view.hpp"
+#include "core/string/conv/strconv2.hpp"
 #include "core/stream/ostream.hpp"
 
 namespace ymd::tmp{
@@ -61,7 +61,7 @@ struct ParamFromString final{
 
     template<typename T>
     constexpr IResult<T> defmt_to() const{
-        const auto res = strconv2::defmt_str<T>(str_);
+        const auto res = strconv2::defmt_from_str<T>(str_);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok(res.unwrap());
     }

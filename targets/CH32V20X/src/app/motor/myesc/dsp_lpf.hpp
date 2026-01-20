@@ -3,7 +3,7 @@
 
 #include "core/math/iq/iqmath.hpp"
 #include "core/utils/Result.hpp"
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 #include "primitive/arithmetic/angular.hpp"
 
 // https://blog.51cto.com/u_14344/14422008

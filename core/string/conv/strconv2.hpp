@@ -9,8 +9,8 @@
 
 #include "core/utils/Errno.hpp"
 #include "core/math/iq/fixed_t.hpp"
-#include "core/string/mut_string_view.hpp"
-#include "core/string/string_view.hpp"
+#include "core/string/view/mut_string_view.hpp"
+#include "core/string/view/string_view.hpp"
 #include "core/utils/Result.hpp"
 #include "core/tmp/reflect/enum.hpp"
 #include "core/stream/ostream.hpp"
@@ -630,13 +630,13 @@ struct DefmtStrDispatcher<T>{
 
 
 template<typename T>
-static constexpr DestringResult<T> defmt_str(StringView str){
+static constexpr DestringResult<T> defmt_from_str(StringView str){
 	return DefmtStrDispatcher<T>::from_str(str);
 }
 
 
 template<integral T>
-static constexpr SerStringResult<size_t> to_str(
+static constexpr SerStringResult<size_t> fmt_to_str(
 	MutStringView str, 
 	T value, 
 	Radix radix_count = Radix(Radix::Kind::Dec)
@@ -645,7 +645,7 @@ static constexpr SerStringResult<size_t> to_str(
 }
 
 template<size_t Q>
-static constexpr SerStringResult<size_t> to_str(MutStringView str, math::fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
+static constexpr SerStringResult<size_t> fmt_to_str(MutStringView str, math::fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
 	return details::Iq16Formatter::fmt(str, value, eps);
 }
 

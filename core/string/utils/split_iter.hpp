@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 #include "core/utils/scope_guard.hpp"
 #include <ranges>
 
@@ -92,7 +92,7 @@ private:
     size_t count_ = 0;
 };
 
-static constexpr SplitIterator split(
+static constexpr SplitIterator split_str(
     const StringView str, 
     char delimiter, 
     size_t max_pieces = 0

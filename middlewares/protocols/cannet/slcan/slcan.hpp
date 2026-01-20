@@ -4,7 +4,9 @@
 
 #include "../asciican_utils.hpp"
 #include "core/utils/Match.hpp"
-#include "core/string/heapless_string.hpp"
+#include "core/string/own/heapless_string.hpp"
+
+
 // Options:
 //          -o          (send open command 'O\r')
 //          -c          (send close command 'C\r')

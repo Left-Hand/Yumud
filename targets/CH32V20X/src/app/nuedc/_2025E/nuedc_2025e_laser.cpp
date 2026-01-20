@@ -2,8 +2,9 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/system.hpp"
-#include "core/string/split_iter.hpp"
+#include "core/string/utils/split_iter.hpp"
+#include "core/math/realmath.hpp"
+#include "core/async/timer.hpp"
 #include "core/utils/default.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
@@ -11,8 +12,6 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/analog/opa/opa.hpp"
 
-#include "core/math/realmath.hpp"
-#include "core/async/timer.hpp"
 #include "middlewares/rpc/repl_server.hpp"
 #include "robots/nodes/msg_factory.hpp"
 #include "robots/nodes/node_role.hpp"

@@ -3,7 +3,6 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/async/timer.hpp"
-#include "core/string/string_view.hpp"
 
 #include "algebra/vectors/vec2.hpp"
 #include "primitive/colors/color/color.hpp"

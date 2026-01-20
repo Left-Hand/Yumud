@@ -3,7 +3,7 @@
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-#include "core/string/char_array.hpp"
+#include "core/string/own/char_array.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 

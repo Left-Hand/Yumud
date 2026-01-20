@@ -5,7 +5,7 @@
 #include "core/debug/debug.hpp"
 #include "core/async/timer.hpp"
 #include "core/utils/sumtype.hpp"
-#include "core/string/utils/strconv2.hpp"
+#include "core/string/conv/strconv2.hpp"
 #include "core/utils/combo_counter.hpp"
 #include "core/utils/default.hpp"
 #include "core/async/delayed_semphr.hpp"

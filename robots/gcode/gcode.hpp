@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/string/utils/strconv2.hpp"
-#include "core/string/split_iter.hpp"
+#include "core/string/conv/strconv2.hpp"
+#include "core/string/utils/split_iter.hpp"
 #include "core/utils/result.hpp"
 
 namespace ymd::gcode{
@@ -182,7 +182,7 @@ struct [[nodiscard]] GcodeArgsIter {
 
             // Parse value (skip letter)
             const auto value_str = token_str.substr(1).unwrap();
-            const auto res = strconv2::defmt_str<iq16>(value_str);
+            const auto res = strconv2::defmt_from_str<iq16>(value_str);
             if (res.is_err()) {
                 // Value parsing failed (e.g., "X1.2.3") -> return Error
                 return Err(res.unwrap_err());
@@ -271,7 +271,7 @@ struct [[nodiscard]] GcodeLine{
 
     constexpr IResult<iq16> query_arg_value(const char letter) const {
         return details::query_tmp<iq16>(line, letter, [](const StringView str) -> IResult<iq16>{
-            const auto res = (strconv2::defmt_str<iq16>(str.substr(1).unwrap()));
+            const auto res = (strconv2::defmt_from_str<iq16>(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             return Ok(res.unwrap());
         });

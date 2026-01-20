@@ -1,14 +1,13 @@
 #include "src/testbench/tb.h"
 
 #include "core/debug/debug.hpp"
-#include "core/clock/time.hpp"
-#include "robots/vendor/zdt/zdt_stepper.hpp"
-#include "core/string/string_view.hpp"
-#include "algebra/vectors/vec2.hpp"
-
 #include "core/async/timer.hpp"
+#include "core/clock/time.hpp"
+
 #include "primitive/colors/color/color.hpp"
 
+#include "robots/vendor/zdt/zdt_stepper.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 #ifdef UART1_PRESENT
 using namespace ymd;

@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
 #include "core/clock/time.hpp"
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/timer/hw_singleton.hpp"

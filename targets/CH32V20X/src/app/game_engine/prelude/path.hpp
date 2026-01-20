@@ -5,7 +5,7 @@
 #include <string_view>
 #include <utility>
 
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 #include "core/utils/Option.hpp"
 
 namespace ymd::fs{

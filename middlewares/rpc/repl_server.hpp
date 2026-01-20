@@ -2,7 +2,7 @@
 
 #include "core/math/real.hpp"
 #include "core/stream/dummy_stream.hpp"
-#include "core/string/heapless_string.hpp"
+#include "core/string/own/heapless_string.hpp"
 #include "core/string/legacy/streamed_string_splitter.hpp"
 
 #include "middlewares/rpc/rpc.hpp"

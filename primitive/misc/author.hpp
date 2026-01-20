@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/utils/Option.hpp"
-#include "core/string/string_view.hpp"
-#include "core/string/char_array.hpp"
+#include "core/string/view/string_view.hpp"
+#include "core/string/own/char_array.hpp"
 #include "core/utils/serde.hpp"
 #include <utility>
 

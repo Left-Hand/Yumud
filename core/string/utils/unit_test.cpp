@@ -1,8 +1,10 @@
+#include "c_style/strnlen.hpp"
 #include "split_iter.hpp"
 
 using namespace ymd;
 
 
+namespace {
 [[maybe_unused]] static void static_test_multi_line_iter(){
 // Test helper function
     auto test_string_view_equal = [](StringView a, StringView b) -> bool{
@@ -96,4 +98,11 @@ using namespace ymd;
         if (iter.has_next()) return false;
         return true;
     }(), "Iterator with trimming test failed");
+}
+
+static_assert(strnlen_from_right("", 0) == 0);
+static_assert(strnlen_from_right("abc", 4) == 3);
+static_assert(strnlen_from_right("abc", 3) == 3);
+static_assert(strnlen_from_right("abc", 2) == 2);
+
 }

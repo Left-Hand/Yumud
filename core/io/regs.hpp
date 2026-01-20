@@ -2,6 +2,7 @@
 
 #include "core/int/uint24_t.hpp"
 #include "core/constants/enums.hpp"
+#include <bit>
 #include <span>
 
 namespace ymd{

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "crsf_constants.hpp"
-#include "core/string/string_view.hpp"
-#include "core/string/utils/strnlen.hpp"
+#include "core/string/view/string_view.hpp"
+#include "core/string/utils/c_style/strnlen.hpp"
 
 
 
@@ -81,15 +81,15 @@ struct [[nodiscard]] U8Sequence final{
         return ret;
     }
 
-    [[nodiscard]] constexpr uint8_t operator[](size_t index) const {return p_bytes_[index];}
-    [[nodiscard]] constexpr const uint8_t char_at(size_t index) const {
-        if(index >= length_) __builtin_trap();
-        return p_chars_[index];
+    [[nodiscard]] constexpr uint8_t operator[](size_t idx) const {return p_bytes_[idx];}
+    [[nodiscard]] constexpr const uint8_t char_at(size_t idx) const {
+        if(idx >= length_) __builtin_trap();
+        return p_chars_[idx];
     }
 
-    [[nodiscard]] constexpr const uint8_t byte_at(size_t index) const {
-        if(index >= length_) __builtin_trap();
-        return p_bytes_[index];
+    [[nodiscard]] constexpr const uint8_t byte_at(size_t idx) const {
+        if(idx >= length_) __builtin_trap();
+        return p_bytes_[idx];
     }
     [[nodiscard]] constexpr size_t length() const {return length_;}
     [[nodiscard]] constexpr size_t size() const {return length_;}
@@ -109,41 +109,7 @@ using CharsSlice = std::span<const uint8_t, Extents>;
 
 // using CharsNullTerminated = std::span<const uint8_t>;
 
-template<size_t Extents = std::dynamic_extent>
-struct UCharsNullTerminated{
-    using Self = UCharsNullTerminated;
 
-    std::span<const unsigned char, Extents> uchars;
-
-    [[nodiscard]] imconstexpr Self from_str(const StringView str){
-        return str.as_uchars();
-    }
-    [[nodiscard]] constexpr size_t serialized_length() const {
-        if constexpr(Extents == std::dynamic_extent){
-            return uchars.size() + 1;
-        }else{
-            return Extents;
-        }
-    }
-
-    [[nodiscard]] constexpr size_t str_length() const {
-
-        if(uchars.data() == nullptr) __builtin_trap();
-
-        if constexpr(Extents == std::dynamic_extent){
-            return strnlen_from_left(uchars.data(), std::min(uchars.size(), MAX_STR_LENGTH));
-        }else{
-            return strnlen_from_right(uchars.data(), Extents);
-        }
-    }
-
-    [[nodiscard]] imconstexpr StringView as_str(){
-        return StringView{
-            reinterpret_cast<const char *>(uchars.data()), 
-            str_length()
-        };
-    }
-};
 
 
 }

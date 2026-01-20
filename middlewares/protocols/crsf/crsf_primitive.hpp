@@ -1,13 +1,14 @@
 #pragma once
 
-#include <cstdint>
-
 #include "core/int/uint24_t.hpp"
 #include "core/math/realmath.hpp"
 #include "core/math/float/fp32.hpp"
 
-#include "core/string/string_view.hpp"
-#include "core/string/char_array.hpp"
+#include "core/string/view/string_view.hpp"
+#include "core/string/own/char_array.hpp"
+#include "core/string/view/null_terminated_uchars_view.hpp"
+#include "core/string/utils/optional_uchar_ptr.hpp"
+
 #include "crsf_utils.hpp"
 
 // https://github.com/tbs-fpv/tbs-crsf-spec/blob/main/crsf.md
@@ -122,6 +123,9 @@ enum class CommandStatus:uint8_t{
 
 namespace ymd::crsf{
 using math::int24_t, math::uint24_t;
+
+template<size_t N>
+using ustr = str::NullTerminatedUCharsView<N>;
 
 
 [[nodiscard]] static constexpr uint16_t TICKS_TO_US(uint16_t ticks) {

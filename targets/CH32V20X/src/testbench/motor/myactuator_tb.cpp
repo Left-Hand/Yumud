@@ -8,7 +8,6 @@
 #include "core/utils/bits/bits_caster.hpp"
 #include "core/utils/bits/from_bits_debinder.hpp"
 #include "core/utils/enum/strong_type_gradation.hpp"
-#include "core/string/string_view.hpp"
 #include "core/math/float/fp32.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"

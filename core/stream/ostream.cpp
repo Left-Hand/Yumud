@@ -1,8 +1,8 @@
 #include "ostream.hpp"
 #include "core/string/legacy/strconv.hpp"
 #include "core/clock/clock.hpp"
-#include "core/string/string_view.hpp"
-#include "core/string/mut_string_view.hpp"
+#include "core/string/view/string_view.hpp"
+#include "core/string/view/mut_string_view.hpp"
 
 
 // #include "core/string/utils/strconv2.hpp"

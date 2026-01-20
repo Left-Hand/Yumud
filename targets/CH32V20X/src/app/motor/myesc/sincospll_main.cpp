@@ -10,7 +10,6 @@
 #include "hal/gpio/gpio_port.hpp"
 
 #include "primitive/arithmetic/angular.hpp"
-#include "core/string/string_view.hpp"
 #include "dsp_lpf.hpp"
 using namespace ymd;
 

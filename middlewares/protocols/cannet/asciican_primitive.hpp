@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/string/string_view.hpp"
-#include "core/string/heapless_string.hpp"
+#include "core/string/view/string_view.hpp"
+#include "core/string/own/heapless_string.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "core/utils/scope_guard.hpp"

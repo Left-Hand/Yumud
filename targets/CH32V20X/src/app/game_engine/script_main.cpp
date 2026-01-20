@@ -5,7 +5,7 @@
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
 #include "primitive/arithmetic/rescaler.hpp"
-#include "core/string/heapless_string.hpp"
+#include "core/string/own/heapless_string.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -27,7 +27,7 @@
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "frame_buffer.hpp"
-#include "core/string/utils/strconv2.hpp"
+#include "core/string/conv/strconv2.hpp"
 
 
 using namespace ymd;

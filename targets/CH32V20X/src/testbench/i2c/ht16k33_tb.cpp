@@ -6,7 +6,7 @@
 #include "core/debug/debug.hpp"
 #include "core/sync/spinlock.hpp"
 #include "core/sync/barrier.hpp"
-#include "core/string/heapless_string.hpp"
+#include "core/string/own/heapless_string.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2csw.hpp"

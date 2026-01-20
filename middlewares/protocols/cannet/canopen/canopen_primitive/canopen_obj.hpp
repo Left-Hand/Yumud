@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 #include "canopen_sdo_primitive.hpp"
 
 // https://winshton.gitbooks.io/canopen-ds301-cn/content/chapter7.5.html

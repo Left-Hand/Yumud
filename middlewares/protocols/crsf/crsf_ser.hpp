@@ -4,30 +4,6 @@
 
 namespace ymd::crsf{
 
-struct [[nodiscard]] OptionalUCharPtr final{
-    using Self = OptionalUCharPtr;  
-    static constexpr Self from_valid(const unsigned char* ptr){
-        return Self(ptr);
-    }
-
-    static constexpr Self from_null(){
-        return Self(nullptr);
-    }
-
-    [[nodiscard]] bool is_null() const{
-        return ptr_ == nullptr;
-    }
-
-    [[nodiscard]] const unsigned char * unwrap() const{
-        if(is_null()) __builtin_trap();
-        return ptr_;
-    }
-private:
-    const unsigned char* ptr_;
-
-    explicit constexpr OptionalUCharPtr(const unsigned char* ptr): ptr_(ptr){;}
-    explicit constexpr OptionalUCharPtr(const std::nullptr_t ): ptr_(nullptr){;}
-};
 
 
 struct SerialzeFunctions{
@@ -35,7 +11,7 @@ struct SerialzeFunctions{
     template<size_t Extents>
     [[nodiscard]] static constexpr OptionalUCharPtr ser_zero_terminated_uchars(
         std::span<uint8_t> bytes, 
-        const UCharsNullTerminated<Extents> obj
+        const NullTerminatedUChars<Extents> obj
     ){
         return ser_flexible_uchars(bytes, obj, 0);
     }
@@ -77,15 +53,28 @@ struct [[nodiscard]] SerializeReceiver final{
 
 
     template<size_t Extents>
-    Result<void, Error> push_zero_terminated_uchars(const UCharsNullTerminated<Extents> obj){
-
+    constexpr Result<void, Error> push_zero_terminated_uchars(const NullTerminatedUChars<Extents> obj){
+        if(const auto res = check_input_length(obj.length() + 1); 
+            res.is_err();) return Err(res.unwrap_err());
+        push_bytes_unchecked(obj.uchars());
+        return Ok();
     }
 
 
 private:
-    constexpr void check_input_length(size_t length){
+    constexpr Result<void, Error> check_input_length(size_t length){
         if(idx + length > storage.size()) 
-            __builtin_trap();
+            if constexpr(std::is_same_v<Error, Infallible>){
+                __builtin_trap();
+            }else{
+                return Err(Error());
+            }
+        return Ok();
+    }
+
+    constexpr void push_bytes_unchecked(std::span<const uint8_t> bytes){
+        std::copy_n(bytes.data(), bytes.length(), storage.begin() + idx);
+        idx += bytes.length();
     }
 };
 
@@ -96,7 +85,7 @@ split_bytes(std::span<uint8_t> bytes, size_t n){
 }
 
 
-enum class DeserError:uint8_t{
+enum class [[nodiscard]] DeError:uint8_t{
 
 };
 }

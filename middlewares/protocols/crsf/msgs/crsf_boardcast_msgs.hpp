@@ -26,7 +26,7 @@ struct [[nodiscard]] GpsTime final{
     uint8_t day;
     uint8_t hour;
     uint8_t minute;
-    uint8_t second;
+    uint8_t seconds;
     uint16_t millisecond;
 };
 
@@ -299,7 +299,7 @@ struct [[nodiscard]] MavlinkFc final{
 // 0x21
 struct [[nodiscard]] FlightMode final{
     static constexpr FrameType FRAME_TYPE = FrameType{0x21};
-    UCharsNullTerminated<> flight_mode;  // Null-terminated string
+    ustr<MAX_STR_LENGTH> flight_mode;  // Null-terminated string
 };
 
 // 0x22
