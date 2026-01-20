@@ -6,13 +6,15 @@
 namespace ymd::str{
 
 template<size_t MaxExtents>
-struct NullTerminatedUCharsView{
-    using Self = NullTerminatedUCharsView;
+struct UCharsView{
+    using Self = UCharsView;
 
     static_assert((MaxExtents != std::dynamic_extent), "must give a bounded size");
     // static_assert(MaxExtents > 0, "must give a positive size");
     static_assert(std::is_same_v<unsigned char, uint8_t>);
 
+
+    static constexpr size_t CAPACITY = MaxExtents;
     const unsigned char * p_uchars_;
     size_t length_;
 
@@ -66,16 +68,15 @@ struct NullTerminatedUCharsView{
         return {p_uchars_, length_};
     }
 
-
-    [[nodiscard]] constexpr size_t serialized_length() const {
-        return length_ + 1;
-    }
-
     [[nodiscard]] constexpr size_t length() const {
 
         if(p_uchars_ == nullptr) [[unlikely]]
             return 0;
         return length_;
+    }
+
+    [[nodiscard]] static constexpr size_t capacity() {
+        return CAPACITY;
     }
 
     [[nodiscard]] imconstexpr StringView as_str(){
@@ -87,30 +88,30 @@ struct NullTerminatedUCharsView{
 };
 
 template<size_t Extents>
-static constexpr NullTerminatedUCharsView<Extents> make_null_terminated_uchars_view(
+static constexpr UCharsView<Extents> make_uchars_view(
     const std::span<const uint8_t,Extents> uchars
 ){
-    return NullTerminatedUCharsView<Extents>::from_uchars(uchars);
+    return UCharsView<Extents>::from_uchars(uchars);
 }
 
 template<size_t Extents>
-static constexpr NullTerminatedUCharsView<Extents> make_null_terminated_uchars_view_bounded(
+static constexpr UCharsView<Extents> make_uchars_view_bounded(
     const StringView str
 ){
-    return NullTerminatedUCharsView<Extents>::from_str_bounded(str.as_uchars());
+    return UCharsView<Extents>::from_str_bounded(str.as_uchars());
 }
 
 template<size_t Extents>
-static constexpr Option<NullTerminatedUCharsView<Extents>> try_make_null_terminated_uchars_view(
+static constexpr Option<UCharsView<Extents>> try_make_uchars_view(
     const StringView str
 ){
     if(str.length() > Extents) return None;
-    return Some(make_null_terminated_uchars_view_bounded<Extents>(str));
+    return Some(make_uchars_view_bounded<Extents>(str));
 }
 
 
 //CTAD
 template<size_t Extents>
-NullTerminatedUCharsView(const std::span<const uint8_t, Extents>) -> NullTerminatedUCharsView<Extents>;
+UCharsView(const std::span<const uint8_t, Extents>) -> UCharsView<Extents>;
 
 }

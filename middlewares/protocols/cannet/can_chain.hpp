@@ -16,19 +16,19 @@ public:
 class CanFrameHandlerChainlink final: public CanFrameHandlerIntf{ 
 public:
     CanFrameHandlerChainlink(
-        Some<CanFrameHandlerIntf *> curr, 
+        Some<CanFrameHandlerIntf *> self, 
         Option<CanFrameHandlerIntf &> next
     ):
-        curr_handler_(*curr.get()),
+        self_handler_(*self.get()),
         next_handler_(next){;}
 
     HandleStatus handle(const hal::BxCanFrame & frame){ 
-        HandleStatus res = curr_handler_.handle(frame);
+        HandleStatus res = self_handler_.handle(frame);
         if(next_handler_.is_none()) return res;
         return next_handler_.unwrap().handle(frame);
     }
 private:
-    CanFrameHandlerIntf & curr_handler_;
+    CanFrameHandlerIntf & self_handler_;
     Option<CanFrameHandlerIntf &> next_handler_ = None;
 };
 

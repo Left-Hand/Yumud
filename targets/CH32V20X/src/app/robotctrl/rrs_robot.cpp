@@ -41,13 +41,13 @@ static constexpr uint SERVO_FREQ = 50;
 
 class MockServo{
 protected:
-    Angular<real_t> curr_angle_;
+    Angular<real_t> now_angle_;
 public:
     void set_angle(const Angular<real_t> angle){
-        curr_angle_ = angle;
+        now_angle_ = angle;
     }
     Angular<real_t> get_angle(){
-        return curr_angle_;
+        return now_angle_;
     }
 };
 

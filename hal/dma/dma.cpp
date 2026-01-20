@@ -95,7 +95,10 @@ DmaChannel dma1_ch4{DMA1_Channel4};
 DmaChannel dma1_ch5{DMA1_Channel5};
 DmaChannel dma1_ch6{DMA1_Channel6};
 DmaChannel dma1_ch7{DMA1_Channel7};
+
+#if defined(DMA1_Channel8)
 DmaChannel dma1_ch8{DMA1_Channel8};
+#endif
 #endif
 
 #ifdef DMA2_PRESENT
@@ -136,7 +139,11 @@ DMA1_IT_TEMPLATE(4);
 DMA1_IT_TEMPLATE(5);
 DMA1_IT_TEMPLATE(6);
 DMA1_IT_TEMPLATE(7);
+
+#if defined(DMA1_Channel8)
 DMA1_IT_TEMPLATE(8);
+#endif
+
 #endif
 
 #ifdef DMA2_PRESENT
@@ -184,7 +191,9 @@ static constexpr IRQn dma_to_irqn(const uint8_t dma_nth, const uint8_t ch_sel_nt
                 case 5: return DMA1_Channel5_IRQn;
                 case 6: return DMA1_Channel6_IRQn;
                 case 7: return DMA1_Channel7_IRQn;
+                #if defined(DMA1_Channel8)
                 case 8: return DMA1_Channel8_IRQn;
+                #endif
             }
         #endif
         #ifdef DMA2_PRESENT

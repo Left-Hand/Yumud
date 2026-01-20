@@ -1,17 +1,15 @@
 #pragma once
 
-#include "crsf_primitive.hpp"
+#include "../crsf_primitive.hpp"
 
 namespace ymd::crsf{
-
-
 
 struct SerialzeFunctions{
 
     template<size_t Extents>
     [[nodiscard]] static constexpr OptionalUCharPtr ser_zero_terminated_uchars(
         std::span<uint8_t> bytes, 
-        const NullTerminatedUChars<Extents> obj
+        const std::span<const uint8_t, Extents> obj
     ){
         return ser_flexible_uchars(bytes, obj, 0);
     }
@@ -42,39 +40,38 @@ private:
 
 
 struct [[nodiscard]] SerializeReceiver final{
-    std::span<uint8_t> storage;
+    std::span<uint8_t> uchars;
     size_t idx;
-
-    // enum class Error{
-
-    // };
 
     using Error = Infallible;
 
 
     template<size_t Extents>
-    constexpr Result<void, Error> push_zero_terminated_uchars(const NullTerminatedUChars<Extents> obj){
-        if(const auto res = check_input_length(obj.length() + 1); 
-            res.is_err();) return Err(res.unwrap_err());
+    constexpr Result<void, Error> push_zero_terminated_uchars(const std::span<const uint8_t, Extents> obj){
+        if(const auto res = check_input_length<Error>(obj.length() + 1); 
+            res.is_err()) return Err(res.unwrap_err());
+
         push_bytes_unchecked(obj.uchars());
         return Ok();
     }
 
 
 private:
-    constexpr Result<void, Error> check_input_length(size_t length){
-        if(idx + length > storage.size()) 
-            if constexpr(std::is_same_v<Error, Infallible>){
+    template<typename E>
+    constexpr Result<void, E> check_input_length(size_t length){
+        if(idx + length > uchars.size()){
+            if constexpr(std::is_same_v<E, Infallible>){
                 __builtin_trap();
             }else{
-                return Err(Error());
+                return Err(E());
             }
+        }
         return Ok();
     }
 
     constexpr void push_bytes_unchecked(std::span<const uint8_t> bytes){
-        std::copy_n(bytes.data(), bytes.length(), storage.begin() + idx);
-        idx += bytes.length();
+        std::copy_n(bytes.data(), bytes.size(), uchars.begin() + idx);
+        idx += bytes.size();
     }
 };
 

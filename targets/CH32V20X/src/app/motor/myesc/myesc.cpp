@@ -310,15 +310,15 @@ void myesc_main(){
 
     init_adc();
 
-    auto & u_curr_sense_ch_ = hal::adc1.inj<1>();
-    auto & v_curr_sense_ch_ = hal::adc1.inj<2>();
-    auto & w_curr_sense_ch_ = hal::adc1.inj<3>();
+    auto & u_current_sense_ch_ = hal::adc1.inj<1>();
+    auto & v_current_sense_ch_ = hal::adc1.inj<2>();
+    auto & w_current_sense_ch_ = hal::adc1.inj<3>();
 
     auto get_uvw_current_bits = [&] -> std::tuple<uint16_t, uint16_t, uint16_t>{ 
         return std::make_tuple(
-            u_curr_sense_ch_.read_u12(),
-            v_curr_sense_ch_.read_u12(),
-            w_curr_sense_ch_.read_u12()
+            u_current_sense_ch_.read_u12(),
+            v_current_sense_ch_.read_u12(),
+            w_current_sense_ch_.read_u12()
         );
     };
 
@@ -430,10 +430,10 @@ void myesc_main(){
     Angular<uq16> hfi_lap_angle_ = Zero;
     Angular<iq16> hfi_multilap_angle_ = Zero;
 
-    UvwCoord<iq20> uvw_curr_ = Zero;
-    DqCoord<iq20> dq_curr_ = Zero;
+    UvwCoord<iq20> uvw_current_ = Zero;
+    DqCoord<iq20> dq_current_ = Zero;
     DqCoord<iq20> dq_volt_ = Zero;
-    AlphaBetaCoord<iq20> alphabeta_curr_ = Zero;
+    AlphaBetaCoord<iq20> alphabeta_current_ = Zero;
     AlphaBetaCoord<iq20> hfi_alphabeta_volt_ = Zero;
     AlphaBetaCoord<iq20> alphabeta_volt_ = Zero;
 
@@ -539,26 +539,26 @@ void myesc_main(){
     iq20 hfi_response_imag_bin2_ = Zero;
     Microseconds last_exe_us_ = 0us;
     Microseconds exe_duration_ = 0us;
-    std::tuple<uint32_t, uint32_t, uint32_t> uvw_curr_bits_offset_acc_ = {0, 0, 0};
-    std::tuple<uint16_t, uint16_t, uint16_t> uvw_curr_bits_offset_ = {0, 0, 0};
+    std::tuple<uint32_t, uint32_t, uint32_t> uvw_current_bits_offset_acc_ = {0, 0, 0};
+    std::tuple<uint16_t, uint16_t, uint16_t> uvw_current_bits_offset_ = {0, 0, 0};
 
     static constexpr size_t DC_CAL_TIMES = 32 * 128;
     bool dc_cal_done_ = false;
     size_t dc_cal_cnt_ = 0;
     [[maybe_unused]] auto ctrl_isr = [&]{
-        const auto uvw_curr_bits = get_uvw_current_bits();
+        const auto uvw_current_bits = get_uvw_current_bits();
         if(dc_cal_done_ == false) [[unlikely]]{
-            uvw_curr_bits_offset_acc_ = std::make_tuple<uint32_t, uint32_t, uint32_t>(
-                std::get<0>(uvw_curr_bits_offset_acc_) + static_cast<uint32_t>(std::get<0>(uvw_curr_bits)),
-                std::get<1>(uvw_curr_bits_offset_acc_) + static_cast<uint32_t>(std::get<1>(uvw_curr_bits)),
-                std::get<2>(uvw_curr_bits_offset_acc_) + static_cast<uint32_t>(std::get<2>(uvw_curr_bits))
+            uvw_current_bits_offset_acc_ = std::make_tuple<uint32_t, uint32_t, uint32_t>(
+                std::get<0>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<0>(uvw_current_bits)),
+                std::get<1>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<1>(uvw_current_bits)),
+                std::get<2>(uvw_current_bits_offset_acc_) + static_cast<uint32_t>(std::get<2>(uvw_current_bits))
             );
             dc_cal_cnt_++;
             if(dc_cal_cnt_ >= DC_CAL_TIMES){
-                uvw_curr_bits_offset_ = std::make_tuple<uint16_t, uint16_t, uint16_t>(
-                    static_cast<uint16_t>(std::get<0>(uvw_curr_bits_offset_acc_) / int(DC_CAL_TIMES)),
-                    static_cast<uint16_t>(std::get<1>(uvw_curr_bits_offset_acc_) / int(DC_CAL_TIMES)),
-                    static_cast<uint16_t>(std::get<2>(uvw_curr_bits_offset_acc_) / int(DC_CAL_TIMES))
+                uvw_current_bits_offset_ = std::make_tuple<uint16_t, uint16_t, uint16_t>(
+                    static_cast<uint16_t>(std::get<0>(uvw_current_bits_offset_acc_) / int(DC_CAL_TIMES)),
+                    static_cast<uint16_t>(std::get<1>(uvw_current_bits_offset_acc_) / int(DC_CAL_TIMES)),
+                    static_cast<uint16_t>(std::get<2>(uvw_current_bits_offset_acc_) / int(DC_CAL_TIMES))
                 );
                 dc_cal_done_ = true;
             }
@@ -580,19 +580,19 @@ void myesc_main(){
         //#region 电流传感
 
         const auto uvw_curr = UvwCoord<iq20>{
-            .u = static_cast<int32_t>(std::get<0>(uvw_curr_bits) - static_cast<int32_t>(std::get<0>(uvw_curr_bits_offset_)))
+            .u = static_cast<int32_t>(std::get<0>(uvw_current_bits) - static_cast<int32_t>(std::get<0>(uvw_current_bits_offset_)))
                  * AMPS_PER_ADC_LSB,
-            .v = static_cast<int32_t>(std::get<1>(uvw_curr_bits) - static_cast<int32_t>(std::get<1>(uvw_curr_bits_offset_)))
+            .v = static_cast<int32_t>(std::get<1>(uvw_current_bits) - static_cast<int32_t>(std::get<1>(uvw_current_bits_offset_)))
                  * AMPS_PER_ADC_LSB,
-            .w = static_cast<int32_t>(std::get<2>(uvw_curr_bits) - static_cast<int32_t>(std::get<2>(uvw_curr_bits_offset_)))
+            .w = static_cast<int32_t>(std::get<2>(uvw_current_bits) - static_cast<int32_t>(std::get<2>(uvw_current_bits_offset_)))
                  * AMPS_PER_ADC_LSB,
         };
 
-        const auto alphabeta_curr_unfilted = AlphaBetaCoord<iq20>::from_uvw(uvw_curr_);
-        const auto alphabeta_curr = alphabeta_curr_unfilted;
+        const auto alphabeta_current_unfilted = AlphaBetaCoord<iq20>::from_uvw(uvw_current_);
+        const auto alphabeta_curr = alphabeta_current_unfilted;
         // const auto alphabeta_curr = AlphaBetaCoord{
-        //     lpf_with_given_alpha(alphabeta_curr_.alpha, alphabeta_curr_unfilted.alpha),
-        //     lpf_with_given_alpha(alphabeta_curr_.beta, alphabeta_curr_unfilted.beta),
+        //     lpf_with_given_alpha(alphabeta_current_.alpha, alphabeta_current_unfilted.alpha),
+        //     lpf_with_given_alpha(alphabeta_current_.beta, alphabeta_current_unfilted.beta),
         // };
         //#endregion
 
@@ -744,17 +744,17 @@ void myesc_main(){
 
         //#region 力矩转电流
 
-        [[maybe_unused]] static constexpr iq20 TORQUE_2_CURR_RATIO = 1_iq20;
+        [[maybe_unused]] static constexpr iq20 TORQUE_2_current_RATIO = 1_iq20;
         [[maybe_unused]] static constexpr iq20 CURRENT_LIMIT = 1.2_iq16;
 
-        // const iq20 current_cmd = CLAMP2((torque_cmd - math::fixed_downcast<16>(leso_state_var_.x2) / 1000) * TORQUE_2_CURR_RATIO, CURRENT_LIMIT);
-        // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_CURR_RATIO, CURRENT_LIMIT);
+        // const iq20 current_cmd = CLAMP2((torque_cmd - math::fixed_downcast<16>(leso_state_var_.x2) / 1000) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
+        // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
         
         const iq20 current_cmd = 0.54_iq20;
         // const iq20 current_cmd = 0.7_iq20;
         // const iq20 current_cmd = 0;
         // const iq20 current_cmd = 0.1_iq20 * iq16(math::sin(now_secs));
-        // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_CURR_RATIO, CURRENT_LIMIT);
+        // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
         // const iq20 current_cmd = 0.07_iq20 * iq16(sin(now_secs));
         // const iq20 current_cmd = 0.07_iq20 * -1;
         //#endregion
@@ -890,9 +890,9 @@ void myesc_main(){
         hfi_alphabeta_volt_ = hfi_alphabeta_volt;
         busbar_current_ = lpf_10hz(busbar_current_, busbar_current_unfilted_);
         uvw_dutycycle_ = uvw_dutycycle;
-        uvw_curr_ = uvw_curr;
-        alphabeta_curr_ = alphabeta_curr;
-        dq_curr_ = dq_curr;
+        uvw_current_ = uvw_curr;
+        alphabeta_current_ = alphabeta_curr;
+        dq_current_ = dq_curr;
         dq_volt_ = dq_volt;
         alphabeta_volt_ = alphabeta_volt;
         openloop_elec_angle_ = openloop_elec_angle;
@@ -1008,9 +1008,9 @@ void myesc_main(){
         [[maybe_unused]] const auto hfi_bin2_half_angle = -hfi_bin2_angle / 2;
         // [[maybe_unused]] const auto [sine_hfi_bin2_half_angle, cosine_hfi_bin2_half_angle] = hfi_bin2_half_angle.sincos();
         [[maybe_unused]] const auto length_hfi_response = math::mag(hfi_response_real_bin2_, hfi_response_imag_bin2_) * 2;
-        // const auto power_u = ((uvw_dutycycle_.u - 0.5_iq16)* uvw_curr_.u);
-        // const auto power_v = ((uvw_dutycycle_.v - 0.5_iq16)* uvw_curr_.v);
-        // const auto power_w = ((uvw_dutycycle_.w - 0.5_iq16)* uvw_curr_.w);
+        // const auto power_u = ((uvw_dutycycle_.u - 0.5_iq16)* uvw_current_.u);
+        // const auto power_v = ((uvw_dutycycle_.v - 0.5_iq16)* uvw_current_.v);
+        // const auto power_w = ((uvw_dutycycle_.w - 0.5_iq16)* uvw_current_.w);
         if(true)DEBUG_PRINTLN(
             trig_prog,
             // SINCOS32_2_TABLE[i][0].to_bits(),
@@ -1022,21 +1022,21 @@ void myesc_main(){
             // hfi_response_real_bin0_.to_bits(),
             // hfi_response_real_bin0_,
             // alphabeta_volt_,
-            // uvw_curr_bits_offset_,
+            // uvw_current_bits_offset_,
             // dq_volt_,
             // hfi_alphabeta_volt_,
-            // alphabeta_curr_,
+            // alphabeta_current_,
             // busbar_current_,
             // power_u, power_v, power_w,
             // power_u + power_v + power_w,
-            // dq_volt_.d * dq_curr_.d,
-            // dq_volt_.q * dq_curr_.q,
-            // (dq_volt_.d * dq_curr_.q + dq_volt_.q * dq_curr_.d) / 8,
+            // dq_volt_.d * dq_current_.d,
+            // dq_volt_.q * dq_current_.q,
+            // (dq_volt_.d * dq_current_.q + dq_volt_.q * dq_current_.d) / 8,
             // hfi_response_real_bin1_,
             // hfi_response_imag_bin1_,
             // hfi_response_real_bin2_,
             // hfi_response_imag_bin2_,
-            // alphabeta_curr_,
+            // alphabeta_current_,
             // (1 / iq16(hfi_response_real_bin0_ + length_hfi_response)) * (1000000 / FOC_FREQ),
             // (1 / iq16(hfi_response_real_bin0_ - length_hfi_response)) * (1000000 / FOC_FREQ),
             // hfi_response_real_bin1,
@@ -1068,10 +1068,10 @@ void myesc_main(){
             exe_elapsed_.count(),
             exe_duration_.count()
             // alphabeta_volt_,
-            // alphabeta_curr_
-            // uvw_curr_.u,
-            // uvw_curr_.v,
-            // uvw_curr_.w
+            // alphabeta_current_
+            // uvw_current_.u,
+            // uvw_current_.v,
+            // uvw_current_.w
         );
         // clock::delay(4ms);
 
@@ -1089,7 +1089,7 @@ void myesc_main(){
                     busbar_current_,
                     // encoder_elec_angle_.to_turns()
 
-                    uvw_curr_
+                    uvw_current_
 
                 );
             }
@@ -1117,14 +1117,14 @@ void myesc_main(){
             }
             if(true) DEBUG_PRINTLN(
             // if(true) DEBUG_PRINTLN(
-                alphabeta_curr_,
+                alphabeta_current_,
                 // alphabeta_volt_,
                 // smo_sensorless_ob.angle().to_turns(),
                 uvw_dutycycle_,
-                // alphabeta_volt_.beta / alphabeta_curr_.beta,
-                // dq_curr_,
+                // alphabeta_volt_.beta / alphabeta_current_.beta,
+                // dq_current_,
                 // dq_volt_,
-                // alphabeta_volt_.beta / alphabeta_curr_.beta,
+                // alphabeta_volt_.beta / alphabeta_current_.beta,
                 // q_pi_ctrl_.err_sum_,
                 // q_pi_ctrl_.kp_
                 // q_pi_ctrl_.err_sum_max_

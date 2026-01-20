@@ -202,12 +202,12 @@ void smc2025_main(){
     auto cam_i2c_scl = hal::PD<2>();
     auto cam_i2c_sda = hal::PC<12>();
     hal::I2cSw cam_i2c{&cam_i2c_scl, &cam_i2c_sda};
-    cam_i2c.init({100_KHz});
+    cam_i2c.init({.baudrate = hal::NearestFreq(100_KHz)});
 
     auto i2c_scl = hal::PB<3>();
     auto i2c_sda = hal::PB<5>();
     hal::I2cSw i2c{&i2c_scl, &i2c_sda};
-    i2c.init({400_KHz});
+    i2c.init({.baudrate = hal::NearestFreq(400_KHz)});
     
     #if 0
     // drivers::MT9V034 camera{&cam_i2c};
@@ -346,7 +346,7 @@ void smc2025_main(){
             qmc.update().examine();
             const auto gyr = mpu.read_gyr().examine();
             // const auto dir = qmc.read_mag().examine();
-            yaw_angle = (yaw_angle + Angular<iq16>::from_radians(gyr.z) * 0.04_iq16).unsigned_normalized();
+            yaw_angle = Angular<iq16>::from_turns((yaw_angle + Angular<iq16>::from_radians(gyr.z) * 0.04_iq16).unsigned_normalized().to_turns());
             break;
         }
         default: break;

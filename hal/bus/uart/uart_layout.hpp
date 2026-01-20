@@ -118,16 +118,21 @@ struct Layout<3, Remap::_3> {
 };
 
 // UART4 Remap 0
-// template<>
-// struct Layout<4, Remap::_0> {
-//     using tx_pin_type = PinTag<PortSource::PC, PinSource::_10>;
-//     using rx_pin_type = PinTag<PortSource::PC, PinSource::_11>;
-// };
+#if defined(CH32V30X)
+template<>
+struct Layout<4, Remap::_0> {
+    using tx_pin_type = PinTag<PortSource::PC, PinSource::_10>;
+    using rx_pin_type = PinTag<PortSource::PC, PinSource::_11>;
+};
+#elif defined(CH32V20X)
 template<>
 struct Layout<4, Remap::_0> {
     using tx_pin_type = PinTag<PortSource::PB, PinSource::_0>;
     using rx_pin_type = PinTag<PortSource::PB, PinSource::_1>;
 };
+#else
+#error "Unsupported MCU"
+#endif
 
 // UART4 Remap 1
 template<>
@@ -272,9 +277,17 @@ static constexpr UartRemap USART3_REMAP_PC10_PC11 = UartRemap::_1;
 static constexpr UartRemap USART3_REMAP_PA13_PA14 = UartRemap::_2;
 static constexpr UartRemap USART3_REMAP_PD8_PD9 = UartRemap::_3;
 
-//! 在D6后缀的型号(V203)上 PB0-PB1 映射为0
 static constexpr UartRemap UART4_REMAP_PC10_PC11 = UartRemap::_0;
+
+//! 在D6后缀的型号(V203)上 PB0-PB1 映射为0
+#if defined(CH32V30X)
 static constexpr UartRemap UART4_REMAP_PB0_PB1 = UartRemap::_1;
+#elif defined(CH32V20X)
+static constexpr UartRemap UART4_REMAP_PB0_PB1 = UartRemap::_0;
+#else
+#error "UartRemap not defined for this chip"
+#endif
+
 static constexpr UartRemap UART4_REMAP_PE0_PE1 = UartRemap::_2;
 static constexpr UartRemap UART4_REMAP_PE0_PE1_ALT = UartRemap::_3;
 

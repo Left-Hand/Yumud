@@ -129,7 +129,6 @@ void pwm_dma_tx_main(){
     auto watch_pin_ = hal::PA<4>();
     watch_pin_.outpp();
 
-    volatile bool is_up_edge = 1;
     volatile uint32_t high_val = 0;
     volatile uint32_t low_val = 0;
     volatile uint32_t trig_times = 0;

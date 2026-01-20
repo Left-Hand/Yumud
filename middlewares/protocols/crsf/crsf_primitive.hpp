@@ -6,7 +6,7 @@
 
 #include "core/string/view/string_view.hpp"
 #include "core/string/own/char_array.hpp"
-#include "core/string/view/null_terminated_uchars_view.hpp"
+#include "core/string/view/uchars_view.hpp"
 #include "core/string/utils/optional_uchar_ptr.hpp"
 
 #include "crsf_utils.hpp"
@@ -125,7 +125,7 @@ namespace ymd::crsf{
 using math::int24_t, math::uint24_t;
 
 template<size_t N>
-using ustr = str::NullTerminatedUCharsView<N>;
+using ustr = str::UCharsView<N>;
 
 
 [[nodiscard]] static constexpr uint16_t TICKS_TO_US(uint16_t ticks) {
