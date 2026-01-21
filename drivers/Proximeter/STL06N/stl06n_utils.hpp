@@ -65,7 +65,7 @@ static constexpr uint8_t HEADER_TOKEN = 0x54;
 static constexpr uint8_t SECTOR_COMMAND = 0x2C;
 static constexpr size_t POINTS_PER_FRAME = 12;
 
-static constexpr size_t SECTOR_PAYLOAD_SIZE = 2 + 2 + 12 * 3 + 2 + 2 + 1;
+static constexpr size_t SECTOR_PAYLOAD_LENGTH = 2 + 2 + 12 * 3 + 2 + 2 ;
 
 struct alignas(4) [[nodiscard]] LidarPoint final{
 
@@ -119,9 +119,9 @@ struct alignas(1) [[nodiscard]] Command final{
         return static_cast<uint8_t>(kind_);
     }
 
-    [[nodiscard]] constexpr size_t payload_size(){
+    [[nodiscard]] constexpr size_t payload_length() const {
         switch(kind_){
-            case Kind::Sector: return SECTOR_PAYLOAD_SIZE;
+            case Kind::Sector: return SECTOR_PAYLOAD_LENGTH;
             default: return 1 + 4 + 1;
         }
         __builtin_unreachable();

@@ -377,8 +377,6 @@ static void uart_set_remap(const void * inst, const UartRemap remap){
                 case UartRemap::_3:
                     GPIO_PinRemapConfig(GPIO_FullRemap_USART4, ENABLE);
                     return;
-                default:
-                    break;
             }
             break;
         #endif
@@ -476,8 +474,8 @@ static constexpr size_t HALF_UART_RX_DMA_BUF_SIZE = UART_RX_DMA_BUF_SIZE / 2;
 Uart::Uart(
     void * inst
 ):
-    inst_(inst), 
-    tx_dma_(uart_to_tx_dma(inst)), 
+    inst_(inst),
+    tx_dma_(uart_to_tx_dma(inst)),
     rx_dma_(uart_to_rx_dma(inst)){;}
 
 void usart_enable_error_interrupt(void * inst_, const Enable en){
@@ -619,7 +617,7 @@ void Uart::set_tx_strategy(const CommStrategy tx_strategy){
     }
 
     tx_strategy_ = tx_strategy;
-    
+
 }
 
 void Uart::enable_tx_dma(const Enable en){
@@ -631,7 +629,7 @@ void Uart::enable_tx_dma(const Enable en){
     }
 
     tx_dma_.init({
-        .mode = DmaMode::BurstMemoryToPeriphCircular, 
+        .mode = DmaMode::BurstMemoryToPeriphCircular,
         .priority = TX_DMA_DMA_PRIORITY
     });
 
@@ -644,18 +642,18 @@ void Uart::enable_tx_dma(const Enable en){
             case DmaEvent::TransferComplete:
                 //将数据从当前索引填充至末尾
                 (void)this->tx_fifo_.try_pop(std::span(
-                    &tx_dma_buf_[tx_dma_buf_index_], 
+                    &tx_dma_buf_[tx_dma_buf_index_],
                     UART_TX_DMA_BUF_SIZE - tx_dma_buf_index_
-                )); 
+                ));
                 tx_dma_buf_index_ = 0;
                 break;
             case DmaEvent::HalfTransfer:
 
                 //将数据从当前索引填充至半满
                 (void)this->tx_fifo_.try_pop(std::span(
-                    &tx_dma_buf_[tx_dma_buf_index_], 
+                    &tx_dma_buf_[tx_dma_buf_index_],
                     (UART_TX_DMA_BUF_SIZE / 2) - tx_dma_buf_index_
-                )); 
+                ));
                 tx_dma_buf_index_ = UART_TX_DMA_BUF_SIZE / 2;
                 break;
             default:
@@ -666,10 +664,10 @@ void Uart::enable_tx_dma(const Enable en){
     tx_dma_.register_nvic(UART_TX_DMA_NVIC_PRIORITY, EN);
     tx_dma_.enable_interrupt<DmaIT::Done>(EN);
     tx_dma_.enable_interrupt<DmaIT::Half>(EN);
-    
+
     tx_dma_.start_transfer_mem2pph<char>(
-        (&SDK_INST(inst_)->DATAR), 
-        tx_dma_buf_.data(), 
+        (&SDK_INST(inst_)->DATAR),
+        tx_dma_buf_.data(),
         UART_TX_DMA_BUF_SIZE
     );
 }
@@ -678,7 +676,7 @@ void Uart::enable_tx_dma(const Enable en){
 
 void Uart::set_rx_strategy(const CommStrategy rx_strategy){
     if(rx_strategy_ == rx_strategy) return;
-        
+
     switch(rx_strategy){
         case CommStrategy::Blocking:
             break;
@@ -697,7 +695,7 @@ void Uart::set_rx_strategy(const CommStrategy rx_strategy){
             break;
     }
     rx_strategy_ = rx_strategy;
-    
+
 }
 
 
@@ -709,7 +707,7 @@ void Uart::enable_rx_dma(const Enable en){
     }
 
     rx_dma_.init({
-        .mode = DmaMode::PeriphToBurstMemoryCircular, 
+        .mode = DmaMode::PeriphToBurstMemoryCircular,
         .priority = RX_DMA_DMA_PRIORITY
     });
 
@@ -722,9 +720,9 @@ void Uart::enable_rx_dma(const Enable en){
                 const size_t req_len = UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_;
                 //传送结束 将后半部分的pingpong区填入fifo中
                 const size_t act_len = this->rx_fifo_.try_push(std::span(
-                    &rx_dma_buf_[rx_dma_buf_index_], 
+                    &rx_dma_buf_[rx_dma_buf_index_],
                     req_len
-                )); 
+                ));
 
                 if(act_len < req_len){
                     //TODO
@@ -740,9 +738,9 @@ void Uart::enable_rx_dma(const Enable en){
                 //传送进行一半 将前半部分的pingpong区填入fifo中
                 const size_t req_len = HALF_UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_;
                 const size_t act_len = this->rx_fifo_.try_push(std::span(
-                    &rx_dma_buf_[rx_dma_buf_index_], 
+                    &rx_dma_buf_[rx_dma_buf_index_],
                     req_len
-                )); 
+                ));
                 if(act_len < req_len){
                     //TODO
                     // 接收的数据没有被及时读取 接收fifo无法继续存数据
@@ -763,8 +761,8 @@ void Uart::enable_rx_dma(const Enable en){
     rx_dma_.enable_interrupt<DmaIT::Half>(EN);
 
     rx_dma_.start_transfer_pph2mem<char>(
-        rx_dma_buf_.data(), 
-        &SDK_INST(inst_)->DATAR, 
+        rx_dma_buf_.data(),
+        &SDK_INST(inst_)->DATAR,
         UART_RX_DMA_BUF_SIZE
     );
 }
@@ -823,17 +821,17 @@ void Uart::accept_rxidle_interrupt(){
                 const auto req_len = size_t(next_index - rx_dma_buf_index_);
                 const auto act_len = this->rx_fifo_.try_push(std::span(
                     rx_dma_buf_.data() + rx_dma_buf_index_, req_len
-                )); 
+                ));
                 if(act_len != req_len){
                     //TODO
                     // 接收的数据没有被及时读取 接收fifo无法继续存数据
                     __builtin_trap();
-                }   
+                }
             }
 
             rx_dma_buf_index_ = next_index;
             emit_event(Event::RxIdle);
-        }; 
+        };
             break;
 
         default:

@@ -12,7 +12,8 @@ int main(){
     #ifdef CH32V20X
     // myesc_main();
     // pwm_main();
-    cap_main();
+    // cap_main();
+    stl06n_main();
     // dshot_main();
     // sincos_main();
     // sincospll_main();
@@ -96,7 +97,7 @@ int main(){
     // hive_main();
     // rmst_main();
     // dsp_main();
-    
+
     // fmt_main();
     // sincos_pwm_main();
     // stepper_tb(usart1);
@@ -171,12 +172,12 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // sincos_main();
-
+    stl06n_main();
     // myesc_main();
     // s21c_main();
     // steadywin_main();
     // alx_aoa_main();
-    smc2025_main();
+    // smc2025_main();
     // stl06n_main();
     // vl53l5cx_main();
     // smc2025_main();
@@ -229,7 +230,7 @@ int main(){
     // svd_main();
     // mlx90640_main();
     // smc2025_main();
-    
+
     // slcan_main();
 
     // embd_main();
@@ -240,7 +241,7 @@ int main(){
     // smc2025_main();
     // st1615_main();
 
-    
+
     // sdc_main();
     // proxy_tb();
     // paj7620_main();

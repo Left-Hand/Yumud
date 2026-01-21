@@ -2,8 +2,6 @@
 
 #include "primitive/gpio/pin_source.hpp"
 
-
-#ifdef CH32V30X
 #define USART1_TX_DMA_CH hal::dma1_ch4
 #define USART1_RX_DMA_CH hal::dma1_ch5
 
@@ -13,9 +11,15 @@
 #define USART3_TX_DMA_CH hal::dma1_ch2
 #define USART3_RX_DMA_CH hal::dma1_ch3
 
+#if defined(CH32V30X)
 #define UART4_TX_DMA_CH hal::dma2_ch5
 #define UART4_RX_DMA_CH hal::dma2_ch3
+#elif defined(CH32V20X)
+#define UART4_TX_DMA_CH hal::dma1_ch1
+#define UART4_RX_DMA_CH hal::dma1_ch8
+#endif
 
+#if defined(CH32V30X)
 #define UART5_TX_DMA_CH hal::dma2_ch4
 #define UART5_RX_DMA_CH hal::dma2_ch2
 
@@ -27,21 +31,6 @@
 
 #define UART8_TX_DMA_CH hal::dma2_ch10
 #define UART8_RX_DMA_CH hal::dma2_ch11
-#endif
-
-
-#ifdef CH32V20X
-#define USART1_TX_DMA_CH hal::dma1_ch4
-#define USART1_RX_DMA_CH hal::dma1_ch5
-
-#define USART2_TX_DMA_CH hal::dma1_ch7
-#define USART2_RX_DMA_CH hal::dma1_ch6
-
-#define USART3_TX_DMA_CH hal::dma1_ch2
-#define USART3_RX_DMA_CH hal::dma1_ch3
-
-#define UART4_TX_DMA_CH hal::dma1_ch1
-#define UART4_RX_DMA_CH hal::dma1_ch8
 #endif
 
 
@@ -134,7 +123,22 @@ struct Layout<4, Remap::_0> {
 #error "Unsupported MCU"
 #endif
 
+// USART4 重映射。
+// 00：默认映射(TX/PC10，RX/PC11)；
+// 01：重映射(TX/PB0，RX/PB1)；
+// 1x：重映射(TX/PE0，RX/PE1)。
+// 注：适用于 CH32V30x_D8C、CH32V30x_D8、
+// CH32V30x_D8W、CH32V20x_D8 、CH32F20x_D8C、
+// CH32F20x_D8、CH32F20x_D8W。
+
+// x0：默认映射(CK/PB2，TX/PB0，RX/PB1，
+// CTS/PB3，RTS/PB4)；
+// x1：重映射(CK/PA6，TX/PA5，RX/PB5，CTS/PA7，
+// RTS/PA15)。
+// 注：（1）此位映射能不支持 64 引脚以下产品。
 // UART4 Remap 1
+
+
 template<>
 struct Layout<4, Remap::_1> {
     using tx_pin_type = PinTag<PortSource::PB, PinSource::_0>;

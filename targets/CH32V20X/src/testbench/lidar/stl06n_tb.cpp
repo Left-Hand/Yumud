@@ -14,25 +14,44 @@ using namespace ymd::drivers;
 
 
 void stl06n_main(){
-    DEBUGGER_INST.init({
+
+    #if defined(CH32V20X)
+    auto & UART = hal::usart2;
+    UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576_KHz), 
+        .baudrate = hal::NearestFreq(576000),
         .tx_strategy = CommStrategy::Blocking
     });
-    DEBUGGER.retarget(&DEBUGGER_INST);
-    
-
+    #elif defined(CH32V30X)
+    auto & UART = hal::uart6;
+    UART.init({
+        .remap = hal::UART6_REMAP_PC0_PC1,
+        .baudrate = hal::NearestFreq(576000),
+        .tx_strategy = CommStrategy::Blocking
+    });
+    #endif
+    DEBUGGER.retarget(&UART);
+    DEBUGGER.no_brackets(EN);
+    DEBUGGER.set_eps(4);
+    DEBUGGER.force_sync(EN);
+    DEBUGGER.no_fieldname(EN);
 
     using LidarEvent = stl06n::Event;
 
-
-    auto lidar_ev_handler = [&](const LidarEvent & ev){ 
+    volatile size_t lidar_recv_bytes_count_ = 0;
+    volatile size_t lidar_sector_count_ = 0;
+    volatile size_t lidar_ev_count_ = 0;
+    volatile size_t lidar_crc_err_count_ = 0;
+    auto lidar_ev_handler = [&](const LidarEvent & ev){
+        lidar_ev_count_++;
         if(ev.is<LidarEvent::DataReady>()){
             const auto & sector = ev.unwrap_as<LidarEvent::DataReady>().sector;
-            DEBUG_PRINTLN(sector.points[0], sector.points[11]);
+            lidar_sector_count_++;
+            // DEBUG_PRINTLN("sect", sector.points[0], sector.points[11]);
         }else if(ev.is<LidarEvent::InvalidCrc>()){
-            DEBUG_PRINTLN(ev.unwrap_as<LidarEvent::InvalidCrc>());
-            PANIC{};
+            lidar_crc_err_count_++;
+            DEBUG_PRINTLN("INVALID CRC", ev.unwrap_as<LidarEvent::InvalidCrc>());
+            // PANIC{};
         }
         // DEBUG_PRINTLN(ev.dist_cm, ev.signal_strength.to_dbm());
     };
@@ -40,34 +59,34 @@ void stl06n_main(){
     auto stl06n_parser_ = stl06n::STL06N_ParseReceiver(lidar_ev_handler);
 
 
-
-
-    auto red_led_pin_ = hal::PC<13>();
-    auto blue_led_pin_ = hal::PC<14>();
-    red_led_pin_.outpp();
-    blue_led_pin_.outpp();
-
-
     #if defined(CH32V20X)
-    auto & stl06n_uart_ = hal::usart1;
+    auto & stl06n_uart_ = hal::uart4;
+    stl06n_uart_.init({
+        .remap = hal::UartRemap::_0,
+        .baudrate = hal::NearestFreq(230400),
+        .tx_strategy = CommStrategy::Blocking
+    });
     #elif defined(CH32V30X)
     auto & stl06n_uart_ = hal::uart4;
     stl06n_uart_.init({
-        .remap = hal::UART4_REMAP_PE0_PE1,
-        .baudrate = hal::NearestFreq(stl06n::DEFAULT_UART_BAUD)
+        .remap = hal::UartRemap::_3,
+        .baudrate = hal::NearestFreq(230400),
+        .tx_strategy = CommStrategy::Blocking
     });
-
     #else
     static_assert(false, "Unsupported MCU");
     #endif
 
 
     stl06n_uart_.set_event_handler([&](const hal::UartEvent & ev){
+        lidar_recv_bytes_count_++;
+
+        #if 1
         auto poll_parser = [&](){
             while(true){
                 char chr;
                 if(stl06n_uart_.try_read_char(chr) == 0) break;
-                stl06n_parser_.push_byte(static_cast<uint8_t>(chr)); 
+                stl06n_parser_.push_byte(static_cast<uint8_t>(chr));
             }
         };
 
@@ -79,28 +98,59 @@ void stl06n_main(){
             case hal::UartEvent::RxBulk:
                 poll_parser();
                 break;
-            default: 
+            default:
                 break;
         }
+        #else
+        while(true){
+            char chr;
+            if(stl06n_uart_.try_read_char(chr) == 0) break;
+            // stl06n_parser_.push_byte(static_cast<uint8_t>(chr));
+        }
+        #endif
     });
 
-    auto blink_service_poller = [&]{
-
-        red_led_pin_ = BoolLevel::from((
-            uint32_t(clock::millis().count()) % 200) > 100);
-        blue_led_pin_ = BoolLevel::from((
-            uint32_t(clock::millis().count()) % 400) > 200);
+    #if 0
+    const uint8_t bytes[] = {
+        0x54, 0x2c, 0xfe, 0xd, 0x79, 0x21, 0x55, 0x02, 0x14, 0x55, 0x02, 0x14,
+        0x57, 0x02, 0x14, 0x6a, 0x02, 0x14, 0xe4, 0x02, 0x5c, 0xe0, 0x02, 0x2c,
+        0xe0, 0x02, 0x1e, 0xe3, 0x02, 0x38, 0x25, 0x00, 0x60, 0x27, 0x00, 0x14,
+        0x2b, 0x00, 0x14, 0x30, 0x00, 0x13, 0xa6, 0x24, 0x97, 0x5a, 0xbc
     };
 
+    for(size_t i = 0; i < std::size(bytes); i++){
+        stl06n_parser_.push_byte(bytes[i]);
+
+        DEBUG_PRINTLN(
+            lidar_ev_count_,
+            lidar_crc_err_count_,
+            lidar_sector_count_,
+            static_cast<uint8_t>(stl06n_parser_.fsm_state_),
+            static_cast<size_t>(stl06n_parser_.bytes_count_)
+        );
+        DEBUG_PRINTLN("------------");
+    }
+
+    PANIC{};
+    #endif
+
+    [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(3ms);
     while(true){
-        blink_service_poller();
 
-
-        static auto report_timer = async::RepeatTimer::from_duration(3ms);
-        
-        report_timer.invoke_if([&]{
-            DEBUG_PRINTLN_IDLE(clock::millis().count());
-        });
+        DEBUG_PRINTLN(
+            clock::millis().count(),
+            // hal::uart6.available(),
+            UART.available(),
+            hal::uart4.available(),
+            // static_cast<uint8_t>(stl06n_parser_.fsm_state_),
+            // static_cast<size_t>(stl06n_parser_.bytes_count_)
+            lidar_recv_bytes_count_,
+            lidar_crc_err_count_,
+            lidar_sector_count_
+            // hal::PE<1>().read().to_bool()
+        );
+        // report_timer.invoke_if([&]{
+        // });
     }
 
 
