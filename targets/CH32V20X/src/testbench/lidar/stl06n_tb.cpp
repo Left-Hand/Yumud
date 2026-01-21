@@ -1,14 +1,19 @@
 #include "src/testbench/tb.h"
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/gpio/gpio_port.hpp"
-
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 #include "core/utils/scope_guard.hpp"
+#include "core/utils/zero.hpp"
 #include "core/async/timer.hpp"
 
+
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/gpio/gpio_port.hpp"
+
+
 #include "drivers/Proximeter/STL06N/stl06n.hpp"
+
+#include <ranges>
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -38,19 +43,21 @@ void stl06n_main(){
     DEBUGGER.no_fieldname(EN);
 
     using LidarEvent = stl06n::Event;
-    using LidarPoint = stl06n::LidarPoint;
+    using stl06n::PackedLidarPoint;
 
     auto watch_pin_ = hal::PA<11>();
     watch_pin_.set_mode(hal::GpioMode::OutPP);
     watch_pin_.set_low();
 
-    volatile size_t lidar_recv_bytes_count_ = 0;
     volatile size_t lidar_sector_count_ = 0;
     volatile size_t lidar_ev_count_ = 0;
     volatile size_t lidar_crc_err_count_ = 0;
 
-    std::array<LidarPoint, 12> points;
+    std::array<PackedLidarPoint, 12> points;
     Microseconds lidar_clone_elapsed_us_ = 0us;
+    Angular<uq32> last_start_angle_ = Zero;
+    Angular<uq32> last_stop_angle_ = Zero;
+    PackedLidarPoint point_ = Zero;
     auto lidar_ev_handler = [&](const LidarEvent & ev){
         watch_pin_.set_high();
         watch_pin_.set_low();
@@ -62,11 +69,22 @@ void stl06n_main(){
         lidar_ev_count_++;
         if(ev.is<LidarEvent::DataReady>()){
             const auto & sector = ev.unwrap_as<LidarEvent::DataReady>().sector;
-            lidar_sector_count_++;
 
-            lidar_clone_elapsed_us_ = measure_total_elapsed_us([&]{
-                sector.points.clone_to(std::span(points));
-            });
+            sector.packed_cluster.clone_to(std::span(points));
+            // auto && view = make_std_range(sector.packed_cluster.iter())
+            //     | std::views::take(2);
+
+            const auto start_angle = sector.start_angle_code.to_angle();
+            const auto stop_angle = sector.stop_angle_code.to_angle();
+            if(last_start_angle_ > start_angle){
+                lidar_sector_count_ = 0;
+                point_ = sector.packed_cluster[0];
+            }else{
+                lidar_sector_count_++;
+            }
+
+            last_start_angle_ = start_angle;
+            last_stop_angle_ = stop_angle;
         }else if(ev.is<LidarEvent::InvalidCrc>()){
             lidar_crc_err_count_++;
             // DEBUG_PRINTLN("INVALID CRC", ev.unwrap_as<LidarEvent::InvalidCrc>());
@@ -102,8 +120,6 @@ void stl06n_main(){
         auto guard = make_scope_guard([&]{
             watch_pin_.set_low();
         });
-
-        lidar_recv_bytes_count_++;
 
         #if 1
         auto poll_parser = [&](){
@@ -158,21 +174,25 @@ void stl06n_main(){
     PANIC{};
     #endif
 
+
     [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(3ms);
     while(true){
-
+        // const auto heap_alloc_elapsed_us = measure_total_elapsed_us([&]{
+        //     auto arena = std::make_unique<uint8_t[]>(128 * 64);
+        // });
         DEBUG_PRINTLN(
             clock::millis().count(),
-            // hal::uart6.available(),
-            UART.available(),
-            hal::uart4.available(),
             // static_cast<uint8_t>(stl06n_parser_.fsm_state_),
             // static_cast<size_t>(stl06n_parser_.bytes_count_)
-            lidar_recv_bytes_count_,
-            lidar_crc_err_count_,
-            lidar_sector_count_,
-            lidar_clone_elapsed_us_.count()
-            // hal::PE<1>().read().to_bool()
+            lidar_clone_elapsed_us_.count(),
+            last_start_angle_.to_turns(),
+            last_stop_angle_.to_turns(),
+            point_.distance_code.to_meters(),
+            point_.intensity_code.bits
+            // heap_alloc_elapsed_us.count()
+            // points[0].distance_code.to_meters(),
+            // points[0].intensity
+            // hal::PE<1>().read().to_bool
         );
         // report_timer.invoke_if([&]{
         // });

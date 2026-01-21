@@ -38,7 +38,7 @@ public:
     enum class FsmState:uint8_t{
         AwaitingHeader = 0,
         AwaitingVerlen,
-        Remaining,
+        Payload,
         Emitting,
     };
 

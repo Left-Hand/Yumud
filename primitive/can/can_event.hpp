@@ -7,13 +7,13 @@ namespace ymd::hal::can{
 
 
 /// @brief CAN发送事件
-enum class [[nodiscard]] TransmitEvent:uint8_t{
+enum class [[nodiscard]] TransmitEventType:uint8_t{
     Failed,
     Success
 };
 
 /// @brief CAN接收事件
-enum class [[nodiscard]] ReceiveEvent:uint8_t{
+enum class [[nodiscard]] ReceiveEventType:uint8_t{
     Fifo0Pending,
     Fifo0Full,
     Fifo0Overrun,
@@ -23,7 +23,7 @@ enum class [[nodiscard]] ReceiveEvent:uint8_t{
 };
 
 /// @brief CAN状态事件
-enum class [[nodiscard]] StatusEvent:uint8_t{
+enum class [[nodiscard]] StatusEventType:uint8_t{
     Wakeup,
     SleepAcknowledge,
     ErrorWarning,
@@ -33,7 +33,7 @@ enum class [[nodiscard]] StatusEvent:uint8_t{
     Error
 };
 
-struct [[nodiscard]] Event:public Sumtype<TransmitEvent, ReceiveEvent, StatusEvent>{};
+struct [[nodiscard]] Event:public Sumtype<TransmitEventType, ReceiveEventType, StatusEventType>{};
 
 
 }
@@ -41,7 +41,7 @@ struct [[nodiscard]] Event:public Sumtype<TransmitEvent, ReceiveEvent, StatusEve
 namespace ymd::hal{
 
 using CanEvent = can::Event;
-using CanTransmitEvent = can::TransmitEvent;
-using CanReceiveEvent = can::ReceiveEvent;
-using CanStatusEvent = can::StatusEvent;
+using CanTransmitEventType = can::TransmitEventType;
+using CanReceiveEventType = can::ReceiveEventType;
+using CanStatusEventType = can::StatusEventType;
 }

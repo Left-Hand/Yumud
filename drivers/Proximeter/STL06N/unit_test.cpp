@@ -37,10 +37,10 @@ namespace {
 
 
 
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::spin_speed) == 0);
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::start_angle) == 2);
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::points) == 4);
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::stop_angle) == 40);
+static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::spin_speed_code) == 0);
+static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::start_angle_code) == 2);
+static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::packed_cluster) == 4);
+static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::stop_angle_code) == 40);
 static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::timestamp) == 42);
 static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::crc8) == 44);
 

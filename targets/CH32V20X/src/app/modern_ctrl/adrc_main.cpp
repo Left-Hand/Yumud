@@ -64,9 +64,6 @@ void adrc_main(){
     SecondOrderState<iq16> shaped_track_state_var_;
     SecondOrderState<iq16> feedback_track_state_var_;
 
-
-
-
     [[maybe_unused]] LinearTrackingDifferentiator<iq16, 2> feedback_differ_{
         track_coeffs
     };

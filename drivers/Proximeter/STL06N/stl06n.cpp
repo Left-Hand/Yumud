@@ -31,11 +31,11 @@ void Self::push_byte(const uint8_t byte){
                 return;
 
             }
-            fsm_state_ = FsmState::Remaining;
+            fsm_state_ = FsmState::Payload;
 
             return;
 
-        case FsmState::Remaining:
+        case FsmState::Payload:
             bytes_[bytes_count_] = byte;
             bytes_count_++;
 
@@ -75,19 +75,18 @@ void Self::flush(){
     fsm_state_ = FsmState::Emitting;
 
     const auto command = may_command_.unwrap();
-    const auto num_bytes = command.payload_length();
+    const size_t num_context_bytes = command.payload_length();
 
-    const uint8_t * buffer_begin = bytes_.data();
+    const auto context = std::span(bytes_.data(), num_context_bytes);
 
     //尾元素本身指向crc8校验 并不构成越界
-    const uint8_t actual_crc = buffer_begin[num_bytes];
-
-    const uint8_t expected_crc = [&]{
-        Crc8Calculator calc;
-        calc = calc.push_byte(HEADER_TOKEN);
-        calc = calc.push_byte(command.to_u8());
-        calc = calc.push_bytes(std::span(buffer_begin, num_bytes));
-        return calc.get();
+    const uint8_t actual_crc = context[num_context_bytes];
+    const uint8_t expected_crc = [&] -> uint8_t{
+        return Crc8Calculator()
+            .push_byte(HEADER_TOKEN)
+            .push_byte(command.to_u8())
+            .push_bytes(context)
+            .get();
     }();
 
     if(expected_crc != actual_crc) [[unlikely]]{
@@ -102,7 +101,7 @@ void Self::flush(){
 
     switch(command.kind()){
         case Command::Sector:{
-            const auto & sector = *reinterpret_cast<const LidarSectorPacket *>(buffer_begin);
+            const auto & sector = *reinterpret_cast<const LidarSectorPacket *>(context.data());
             const auto event = Event(Event::DataReady{.sector = sector});
             callback_(event);
         }
@@ -117,9 +116,9 @@ void Self::flush(){
             callback_(Event(Event::SetSpeed{}));
         return;
         case Command::GetSpeed:{
-            //buffer_begin[0] 为数据长度字段 固定为4
+            //context[0] 为数据长度字段 固定为4
             const auto speed = LidarSpinSpeedCode::from_bytes(
-                buffer_begin[1], buffer_begin[2]
+                context[1], context[2]
             );
             callback_(Event(Event::GetSpeed{.speed = speed}));
             return;

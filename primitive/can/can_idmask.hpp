@@ -33,8 +33,8 @@ struct [[nodiscard]] _CanIdMaskPair final{
     ){
 
         return _CanIdMaskPair{
-            .id = T(id, map_specifier_to_id_rtr(spec)), 
-            .mask = T(mask, map_specifier_to_mask_rtr(spec))
+            .id = T(id, specifier_to_id_rtr(spec)), 
+            .mask = T(mask, specifier_to_mask_rtr(spec))
         };
     }
 
@@ -92,14 +92,14 @@ struct [[nodiscard]] _CanIdMaskPair final{
     }
 
 private:
-    static constexpr CanRtr map_specifier_to_id_rtr(CanRtrSpecfier spec){
+    static constexpr CanRtr specifier_to_id_rtr(CanRtrSpecfier spec){
         switch(spec){
             case CanRtrSpecfier::RemoteOnly: return CanRtr::Remote;
             default: return CanRtr::Data;
         };
     }
 
-    static constexpr CanRtr map_specifier_to_mask_rtr(CanRtrSpecfier spec){
+    static constexpr CanRtr specifier_to_mask_rtr(CanRtrSpecfier spec){
         switch(spec){
             case CanRtrSpecfier::Discard: return CanRtr::Data;
             default: return CanRtr::Remote;

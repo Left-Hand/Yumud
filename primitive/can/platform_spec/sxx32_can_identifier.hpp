@@ -118,9 +118,8 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     //是否为扩展帧
     uint32_t is_extended_:1;
     uint32_t full_id_:29;
+
 private:
-
-
     __attribute__((always_inline)) 
     static constexpr Self from_std_id(
         const CanStdId id, 

@@ -607,7 +607,7 @@ void CanInterruptDispatcher::on_tx_interrupt(Can & self){
                 //发送失败
                 {
                     if(self.callback_ != nullptr)
-                        self.callback_(CanEvent(CanTransmitEvent::Failed));
+                        self.callback_(CanEvent(CanTransmitEventType::Failed));
                 }
 
                 //清除发送标志位
@@ -617,7 +617,7 @@ void CanInterruptDispatcher::on_tx_interrupt(Can & self){
                 //发送成功
                 {
                     if(self.callback_ != nullptr)
-                        self.callback_(CanEvent(CanTransmitEvent::Success));
+                        self.callback_(CanEvent(CanTransmitEventType::Success));
                 }
 
                 //清除发送标志位

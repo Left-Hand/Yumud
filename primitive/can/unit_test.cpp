@@ -119,7 +119,7 @@ static_assert([]{
 }());
 
 static_assert([]{
-    constexpr auto frame = hal::BxCanFrame::from_empty(hal::CanStdId::from_bits(0x456U));
+    constexpr auto frame = hal::BxCanFrame::from_empty_data(hal::CanStdId::from_bits(0x456U));
     return (!frame.is_remote()) && frame.length() == 0;
 }());
 
@@ -223,14 +223,14 @@ static_assert([]{
 // Test frame type identification
 static_assert([]{
     constexpr auto remote_msg = hal::BxCanFrame::from_remote(hal::CanStdId::from_bits(0x123U));
-    constexpr auto data_msg = hal::BxCanFrame::from_empty(hal::CanStdId::from_bits(0x456U));
+    constexpr auto data_msg = hal::BxCanFrame::from_empty_data(hal::CanStdId::from_bits(0x456U));
     return remote_msg.is_remote() && !data_msg.is_remote();
 }());
 
 // Test standard vs extended ID
 static_assert([]{
-    constexpr auto std_msg = hal::BxCanFrame::from_empty(hal::CanStdId::from_bits(0x123U));
-    constexpr auto ext_msg = hal::BxCanFrame::from_empty(hal::CanExtId::from_bits(0x123456U));
+    constexpr auto std_msg = hal::BxCanFrame::from_empty_data(hal::CanStdId::from_bits(0x123U));
+    constexpr auto ext_msg = hal::BxCanFrame::from_empty_data(hal::CanExtId::from_bits(0x123456U));
     return std_msg.is_standard() && !std_msg.is_extended() && 
            ext_msg.is_extended() && !ext_msg.is_standard();
 }());

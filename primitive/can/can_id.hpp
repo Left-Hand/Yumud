@@ -27,15 +27,19 @@ struct [[nodiscard]] CanStdId{
             __builtin_trap();
         return CanStdId(bits);
     }
+
+    //尝试从比特位构造id
     static constexpr Option<CanStdId> try_from_u11(const uint16_t bits){
         if(bits > MAX_VALUE) return None;
         return Some(CanStdId(bits));
     }
+
     constexpr CanStdId(const CanStdId & other) = default;
     constexpr CanStdId(CanStdId && other) = default;
 
     [[nodiscard]] constexpr bool operator ==(const CanStdId& other) const = default;
 
+    //是否比另一个canid要更优先
     [[nodiscard]] constexpr bool is_senior_than(const Self & other) const {
         //less id means higher priority
         return bits_ < other.bits_;
@@ -43,7 +47,8 @@ struct [[nodiscard]] CanStdId{
 
     [[nodiscard]] constexpr uint16_t to_u11() const {return bits_;}
     [[nodiscard]] constexpr literals::Bs11 to_b11() const {
-        return literals::Bs11::from_bits_unchecked(bits_);}
+        return literals::Bs11::from_bits_unchecked(bits_);
+    }
 
     [[nodiscard]] constexpr uint16_t to_bits() const {return bits_;}
 
@@ -70,6 +75,8 @@ struct [[nodiscard]] CanExtId{
             __builtin_trap();
         return CanExtId(bits);
     }
+
+    //尝试从比特位构造id
     static constexpr Option<CanExtId> try_from_u29(const uint32_t bits){
         if(bits > MAX_VALUE) return None;
         return Some(CanExtId(bits));
@@ -80,6 +87,7 @@ struct [[nodiscard]] CanExtId{
 
     [[nodiscard]] constexpr bool operator ==(const CanExtId& other) const = default;
 
+    //是否比另一个canid要更优先
     [[nodiscard]] constexpr bool is_senior_than(const Self & other) const {
         //less id means higher priority
         return bits_ < other.bits_;

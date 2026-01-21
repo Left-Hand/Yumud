@@ -7,7 +7,7 @@
 namespace ymd::hal{
 
 //描述了CAN2.0B(传统CAN)的数据载荷
-struct [[nodiscard]] BxCanPayload{
+struct [[nodiscard]] BxCanPayload final{
 public:    
     using Self = BxCanPayload;
 
@@ -41,16 +41,6 @@ public:
         );
     }
 
-    //non-constexpr
-    __attribute__((always_inline)) static Self from_uninitialized(){
-        return Self();
-    }
-
-    __attribute__((always_inline)) static constexpr Self from_u8x8(std::array<uint8_t, 8> array){
-        return Self(std::move(array), BxCanDlc::full());
-    }
-
-
     /// \brief 从给定的id和连续数据切片创建一个数据帧 当数据超长时返回空
     template<std::ranges::input_range R>
     requires (std::same_as<std::ranges::range_value_t<R>, uint8_t>)
@@ -76,6 +66,18 @@ public:
             BxCanDlc::from_bits(std::ranges::size(bytes))
         ));
     }
+
+    __attribute__((always_inline)) static imconstexpr Self from_uninitialized(){
+        return Self();
+    }
+
+    __attribute__((always_inline)) static constexpr Self from_u8x8(std::array<uint8_t, 8> array){
+        return Self(std::move(array), BxCanDlc::full());
+    }
+
+
+
+
 
 
     /// \brief 从给定的id和迭代器创建一个数据帧 当数据超长时立即终止程序
@@ -128,7 +130,7 @@ public:
     }
 
 
-    /// \brief 尝试从给定的id和初始化列表创建一个数据帧 当数据超长时立即终止
+    /// \brief 从给定的id和初始化列表创建一个数据帧 当数据超长时立即终止
     __attribute__((always_inline)) static constexpr Self from_list(
         const std::initializer_list<uint8_t> bytes
     ){
@@ -156,7 +158,7 @@ public:
         ));
     }
 
-    /// \brief 
+    /// \brief 从64位整数和长度创建一个数据帧
     __attribute__((always_inline)) static constexpr Self from_u64_and_dlc(
         const uint64_t int_val,
         const BxCanDlc dlc
@@ -164,14 +166,14 @@ public:
         return Self(std::bit_cast<U8X8>(int_val),dlc);
     }
 
-    /// \brief 
+    /// \brief 从64位整数创建一个长度为8的数据帧
     __attribute__((always_inline)) static constexpr Self from_u64(
         const uint64_t int_val
     ){
         return Self(std::bit_cast<U8X8>(int_val), BxCanDlc::full());
     }
 
-    /// \brief 
+    /// \brief 从数组和长度创建一个数据帧
     __attribute__((always_inline)) static constexpr Self from_parts(
         const U8X8 arr,
         const BxCanDlc dlc
@@ -179,7 +181,7 @@ public:
         return Self(arr,dlc);
     }
 
-    /// \brief 
+    /// \brief 零
     __attribute__((always_inline)) static constexpr Self zero(
     ){
         return Self(ZERO_U8X8, BxCanDlc::zero());

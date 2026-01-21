@@ -3,10 +3,6 @@ repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.6.0
       hooks:
-        - id: trailing-whitespace
-          name: 移除行尾空白字符
-        - id: end-of-file-fixer
-          name: 确保文件以换行符结尾
         - id: check-yaml
           name: 检查YAML语法
           args: ['--unsafe']
