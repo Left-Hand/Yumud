@@ -84,7 +84,7 @@ vs HAL：
 1. 将驱动层使用C++20的协程进行异步化重构（rtos由于调度开销大且引入大量竞态条件，且不支持零成本抽象，将不在任何未来的版本中被考虑）
 2. 确定驱动层具有对大部分MCU的适普能力且未来不会发生重大更名变化（要求编写更范化的primitive与api）
 3. 经验证后与多个不同型号的MCU具有良好互作能力
-4. 使用如xmake/cmake等构建工具重写文件结构 
+4. 使用如xmake/cmake等构建工具重写文件结构
 
 
 ## 🔨开发环境
@@ -164,14 +164,14 @@ vs HAL：
         - [x] TimerOC(定时器输出)
             - [x] TimerOC
 
-    - [ ] CaptureChannel 输入捕获概念 
+    - [ ] CaptureChannel 输入捕获概念
         - [x] ExtiCapture 基于EXTI的输入捕获
         - [ ] TimerIC(定时器输入捕获)
 
 - [ ] TCP/UDP
 - [ ] USB
     - [x] USBFS USBFS虚拟串口驱动
-    - [ ] utils 
+    - [ ] utils
 - [ ] BLE
 
 
@@ -209,10 +209,10 @@ vs HAL：
 
     - [ ] 模糊PID控制器
     - [x] LQR 控制器
-        - [x] DARE方程求解 
+        - [x] DARE方程求解
     - [ ] MPC 控制器
     - [x] ADRC 控制器
-        - [x] 跟踪微分器    
+        - [x] 跟踪微分器
             - [x] 2...4阶微分跟踪器
             - [x] 指令整形器
                 - [x] 一维指令整形器
@@ -275,20 +275,20 @@ vs HAL：
     - [x] 相位补偿器
 
 
-- [x] 信号发生  
+- [x] 信号发生
     - [x] dtmf
 
 - [ ] 合成器
     - [x] 梳状滤波器
     - [x] 延迟线
     - [x] 变频平滑器
-    - [x] 全通滤波器 
+    - [x] 全通滤波器
     - [x] 音符
     - [x] 复音合成器
     - [ ] disperser
 
 
-- [x] lti 基于ABCD矩阵描述的线性时不变系统  
+- [x] lti 基于ABCD矩阵描述的线性时不变系统
 - [x] 状态向量
 - [x] Z变换
 
@@ -297,7 +297,7 @@ vs HAL：
 - [x] Arc2D 二维弧形元素
 - [x] basis 三维旋转矩阵
 
-- [x] 颜色 
+- [x] 颜色
     - [x] RGBA,RGB,sRGB
     - [x] RGB565,RGB232,RGB888,RGBA32,Binary,Gray
 - [x] 姿态
@@ -342,7 +342,7 @@ vs HAL：
 
 ##### nvcv2 图像处理框架
 - [x] 颜色空间转换
-    - [x] 布尔运算 
+    - [x] 布尔运算
 
 - [x] 形态学
     - [x] 自适应阈值化
@@ -364,7 +364,7 @@ vs HAL：
 - [x] 太阳能
     - [x] MPPT
 - [x] spll
-    - [x] spll_1ph_notch 
+    - [x] spll_1ph_notch
     - [x] spll_1ph_sogi_fll
     - [x] spll_1ph_sogi
     - [x] spll_3ph_ddsrf
@@ -381,8 +381,8 @@ vs HAL：
     - [x] uvw坐标
 
 - [x] 斩波生成
-    - [x] 交错三相斩波生成 
-    - [x] 交错双相斩波生成 
+    - [x] 交错三相斩波生成
+    - [x] 交错双相斩波生成
 
 - [x] 编译期系数整定
     - [x] pi电流环系数整定
@@ -484,13 +484,13 @@ vs HAL：
 
 - [x] IMU
     - [ ] 加速度计
-        - [ ] L3G4200D 
-        - [ ] LISDW12 
-        - [ ] LIS3DH 
+        - [ ] L3G4200D
+        - [ ] LISDW12
+        - [ ] LIS3DH
 
     - [x] 六轴
-        - [x] ADXL345  
-        - [ ] BMI088  
+        - [x] ADXL345
+        - [ ] BMI088
         - [x] BMI160
         - [x] BMI270
         - [ ] BMI323
@@ -528,7 +528,7 @@ vs HAL：
     - [x] EEPROM(AT24)
     - [ ] FLASH(W25)
     - [ ] SD卡
- 
+
 - [x] 调制器
     - [x] DSHOT
     - [x] NEC
@@ -636,7 +636,7 @@ vs HAL：
             - [ ] traveo
         - [ ] cm7
     - [ ] riscv
-        - [ ] qingkeV3 
+        - [ ] qingkeV3
         - [ ] qingkeV4
     - [ ] xtensa
     - [ ] loongarch
@@ -644,7 +644,7 @@ vs HAL：
         - [ ] aurix
 
 - [x] constants 编译期常量
-    - [x] concepts c++20概念约束拓展 
+    - [x] concepts c++20概念约束拓展
     - [x] enums 内置枚举类型
     - [x] uints 单位转换
 
@@ -670,7 +670,7 @@ vs HAL：
     - [ ] metaclass
     - [ ] traits
 
-- [x] Stream(输入输出流) 
+- [x] Stream(输入输出流)
     - [x] `println` `print` `prints`  `<<` (基本输出流操作)
         - [x] 直接将类型格式化输出
         - [x] 将各输出类型重载输出
@@ -686,8 +686,8 @@ vs HAL：
         - [x] 超轻量级xtoa(数字转换到字符串)
         - [x] 超轻量级atox(字符串转换到数字)
 - [ ] utils 工具
-    - [x] setget 属性访问 
-    - [x] Bitfield 位域类 
+    - [x] setget 属性访问
+    - [x] Bitfield 位域类
     - [x] PerUnit 标幺量
     - [x] BytesIterator 数据大小端遍历
     - [ ] Reg 寄存器类
@@ -711,11 +711,11 @@ vs HAL：
         - [x] static_matrix 静态矩阵
             - [x] 加减乘法
             - [x] 求转置/逆
-            - [x] 求行列式 
+            - [x] 求行列式
             - [x] 方法库
 
     - [ ] float 各类浮点数
-        - [x] fp32 
+        - [x] fp32
         - [x] bf16
         - [ ] fp16
         - [ ] fp8
@@ -803,8 +803,8 @@ vs HAL：
     - [x] scara机械臂
     - [x] 麦克纳姆底盘
     - [x] 转动关节与平动关节
-    - [ ] 飞达 
-    - [ ] 夹爪 
+    - [ ] 飞达
+    - [ ] 夹爪
 
 - [ ] mavlink
     - [x] Serde/DeSerde

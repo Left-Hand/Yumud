@@ -20,3 +20,24 @@ repos:
       - id: mixed-line-ending
         name: Check for mixed line endings
         args: ['--fix=lf']
+
+  # C/C++ code formatting
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v19.1.6
+    hooks:
+      - id: clang-format
+        name: C/C++ code formatting
+        types_or: [c, c++]
+        args: ['-i']  # Modify files in-place
+
+
+  # Additional C++ style checks
+  - repo: local
+    hooks:
+      - id: cpp-style-checks
+        name: C++ style checks (no C-style casts)
+        entry: |
+          bash -c 'if grep -r -n "\([[:space:]]\)\([a-zA-Z_][a-zA-Z0-9_*&]*\)([[:space:]]*[^,;]*[[:space:]]*);*" --include="*.cpp" --include="*.h" --include="*.hpp" --include="*.cc" .; then echo "C-style cast found! Use static_cast, dynamic_cast, const_cast, or reinterpret_cast instead."; exit 1; fi'
+        language: system
+        pass_filenames: false
+        types_or: [c++]
