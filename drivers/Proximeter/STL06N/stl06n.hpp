@@ -21,6 +21,14 @@ public:
 
     void push_bytes(const std::span<const uint8_t> bytes);
 
+    [[nodiscard]] bool is_emitting() const{
+        return fsm_state_ == FsmState::Emitting;
+    }
+
+    // [[nodiscard]] bool isEmitting() const{
+    //     return fsm_state_ == FsmState::Emitting;
+    // }
+
     void flush();
 
     void reset();

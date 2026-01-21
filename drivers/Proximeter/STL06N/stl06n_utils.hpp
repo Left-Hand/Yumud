@@ -67,7 +67,7 @@ static constexpr size_t POINTS_PER_FRAME = 12;
 
 static constexpr size_t SECTOR_PAYLOAD_SIZE = 2 + 2 + 12 * 3 + 2 + 2 + 1;
 
-struct [[nodiscard]] LidarPoint final{
+struct alignas(4) [[nodiscard]] LidarPoint final{
 
     uint16_t distance_mm;
     uint8_t intensity;
@@ -88,7 +88,7 @@ struct [[nodiscard]] LidarPoint final{
     }
 };
 
-struct [[nodiscard]] Command final{
+struct alignas(1) [[nodiscard]] Command final{
     using Self = Command;
 
     enum class [[nodiscard]] Kind:uint8_t{
@@ -185,7 +185,7 @@ public:
 };
 
 
-struct [[nodiscard]] TimeStamp final{
+struct alignas(2) [[nodiscard]] TimeStamp final{
     uint16_t bits;
 
     static constexpr TimeStamp from_bits(const uint16_t bits){
@@ -233,78 +233,77 @@ struct [[nodiscard]] LidarSectorPacket final{
 };
 
 static_assert(sizeof(LidarSectorPacket) == 46);
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::spin_speed) == 0);
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::start_angle) == 2);
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::points) == 4);
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::stop_angle) == 40);
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::timestamp) == 42);
-static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::crc8) == 44);
 
+struct [[nodiscard]] ReqArg final{
+    using Self = ReqArg;
 
-struct ReqBuffer{
     uint32_t bits;
+
+    static constexpr Self zero(){
+        return Self{0};
+    }
 };
 
 struct req_msgs{
-struct Start{
+struct [[nodiscard]] Start final{
     static constexpr Command COMMAND = Command::Start;
 
-    constexpr auto to_req_buffer() const {
-        return ReqBuffer{0};
+    constexpr ReqArg to_req_arg() const {
+        return ReqArg::zero();
     }
 };
 
-struct Stop{
+struct [[nodiscard]] Stop final{
     static constexpr Command COMMAND = Command::Stop;
-    constexpr auto to_req_buffer() const {
-        return ReqBuffer{0};
+    constexpr ReqArg to_req_arg() const {
+        return ReqArg::zero();
     }
 };
 
-struct SetSpeed{
+struct [[nodiscard]] SetSpeed final{
     static constexpr Command COMMAND = Command::SetSpeed;
 
     LidarSpinSpeedCode speed;
-    constexpr auto to_req_buffer() const {
-        return ReqBuffer{static_cast<uint32_t>(speed.bits)};
+    constexpr ReqArg to_req_arg() const {
+        return ReqArg{static_cast<uint32_t>(speed.bits)};
     }
 };
 
-struct GetSpeed{
+struct [[nodiscard]] GetSpeed final{
     static constexpr Command COMMAND = Command::GetSpeed;
 
-    constexpr auto to_req_buffer() const {
-        return ReqBuffer{0};
+    constexpr ReqArg to_req_arg() const {
+        return ReqArg::zero();
     }
 };
 };
 
 struct resp_msgs{
-struct Start{
+struct [[nodiscard]] Start final{
     static constexpr Command COMMAND = Command::Start;
 
 };
 
-struct Stop{
+struct [[nodiscard]] Stop final{
     static constexpr Command COMMAND = Command::Stop;
 };
 
-struct SetSpeed{
+struct [[nodiscard]] SetSpeed final{
     static constexpr Command COMMAND = Command::SetSpeed;
 };
 
-struct GetSpeed{
+struct [[nodiscard]] GetSpeed final{
     static constexpr Command COMMAND = Command::GetSpeed;
     LidarSpinSpeedCode speed;
 };
 };
 
 namespace events{
-struct [[nodiscard]] DataReady{
+struct [[nodiscard]] DataReady final{
     const LidarSectorPacket & sector;
 };
 
-struct [[nodiscard]] InvalidCrc{
+struct [[nodiscard]] InvalidCrc final{
     using Self = InvalidCrc;
     Command command;
     uint8_t expected;

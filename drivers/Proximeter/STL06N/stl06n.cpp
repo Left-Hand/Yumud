@@ -6,8 +6,6 @@ using namespace ymd::drivers::stl06n;
 
 using Self = STL06N_ParseReceiver;
 
-
-
 void Self::push_byte(const uint8_t byte){
     switch(fsm_state_){
         case FsmState::WaitingHeader:
@@ -50,7 +48,7 @@ void Self::push_bytes(const std::span<const uint8_t> bytes){
 
 #define ASSUME(expr) ({\
     const bool is_right = bool(expr);\
-    if(!is_right) __builtin_unreachable();\
+    if(!is_right) __builtin_trap();\
 })\
 
 void Self::flush(){
@@ -61,15 +59,15 @@ void Self::flush(){
 
     const auto num_bytes = command_.payload_size();
 
-    const uint8_t * begin = bytes_.data();
-    const uint8_t * end = begin + num_bytes;
+    const uint8_t * buffer_begin = bytes_.data();
+    const uint8_t * buffer_end = buffer_begin + num_bytes;
 
-    //尾元素本身指向crc8校验
-    const uint8_t expected_crc = *end;
+    //尾元素本身指向crc8校验 并不构成越界
+    const uint8_t expected_crc = *buffer_end;
 
     const uint8_t actual_crc = [&]{
         Crc8Calculator calc;
-        calc = calc.push_bytes(std::span(begin, end));
+        calc = calc.push_bytes(std::span(buffer_begin, buffer_end));
         return calc.get();
     }();
 
@@ -84,7 +82,7 @@ void Self::flush(){
 
     switch(command_.kind()){
         case Command::Sector:{
-            const auto & sector = *reinterpret_cast<const LidarSectorPacket *>(begin);
+            const auto & sector = *reinterpret_cast<const LidarSectorPacket *>(buffer_begin);
             const auto event = Event(Event::DataReady{.sector = sector});
             callback_(event);
         }
@@ -99,9 +97,9 @@ void Self::flush(){
             callback_(Event(Event::SetSpeed{}));
             break;
         case Command::GetSpeed:{
-            //begin[0] 为数据长度字段 固定为4
+            //buffer_begin[0] 为数据长度字段 固定为4
             const auto speed = LidarSpinSpeedCode::from_bytes(
-                begin[1], begin[2]
+                buffer_begin[1], buffer_begin[2]
             );
             callback_(Event(Event::GetSpeed{.speed = speed}));
             break;

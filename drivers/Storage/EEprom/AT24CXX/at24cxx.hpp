@@ -26,8 +26,8 @@ public:
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    static constexpr auto DEFAULT_I2C_ADDR = 
-        hal::I2cSlaveAddr<7>::from_u7(0b10100000 >> 1); 
+    static constexpr auto DEFAULT_I2C_ADDR =
+        hal::I2cSlaveAddr<7>::from_u7(0b10100000 >> 1);
 
 
     struct Profiles{
@@ -92,20 +92,20 @@ class AT24CXX final:
 public:
     template<typename TProfile>
     explicit AT24CXX(TProfile && profile, const hal::I2cDrv & i2c_drv):
-        i2c_drv_(i2c_drv), 
-        capacity_(profile.CAPACITY), 
+        i2c_drv_(i2c_drv),
+        capacity_(profile.CAPACITY),
         pagesize_(profile.PAGE_SIZE){;}
 
     template<typename TProfile>
     explicit AT24CXX(TProfile && profile, hal::I2cDrv && i2c_drv):
-        i2c_drv_(std::move(i2c_drv)), 
-        capacity_(profile.CAPACITY), 
+        i2c_drv_(std::move(i2c_drv)),
+        capacity_(profile.CAPACITY),
         pagesize_(profile.PAGE_SIZE){;}
 
 
     template<typename TProfile>
     explicit AT24CXX(TProfile && profile, hal::I2cBase & i2c):
-        AT24CXX(std::forward<TProfile>(profile), 
+        AT24CXX(std::forward<TProfile>(profile),
         hal::I2cDrv{&i2c, DEFAULT_I2C_ADDR}){;}
 
     AT24CXX(const AT24CXX &) = delete;
@@ -117,7 +117,7 @@ public:
 
     AddressDiff capacity(){return capacity_;}
 
-    bool is_idle(){
+    [[nodiscard]] bool is_idle(){
         return state_.is_idle(clock::millis());
     }
 
@@ -162,11 +162,11 @@ private:
         Milliseconds begin_ = 0ms;
     };
 
-    
+
     struct LoadTask final{
     public:
         constexpr LoadTask(
-            const uint32_t begin, 
+            const uint32_t begin,
             const std::span<uint8_t> pbuf,
             const uint32_t gsize
         ):
@@ -218,7 +218,7 @@ private:
     struct StoreTask final{
     public:
         constexpr StoreTask(
-            const uint32_t begin, 
+            const uint32_t begin,
             const std::span<const uint8_t> pbuf,
             const uint32_t gsize
         ):
@@ -294,12 +294,12 @@ private:
         }
 
         IResult<> add_store_task(
-            const Address begin, 
+            const Address begin,
             const std::span<const uint8_t> pbuf,
             const AddressDiff gsize,
             const Milliseconds now
         ){
-            if(not is_idle(now)) 
+            if(not is_idle(now))
                 return Err(map_currtask_to_err(may_tasks_.value()));
             may_tasks_.emplace(Tasks(StoreTask(begin.to_u32(), pbuf, gsize.to_u32())));
             return Ok();
@@ -307,12 +307,12 @@ private:
 
 
         IResult<> add_load_task(
-            const Address begin, 
+            const Address begin,
             const std::span<uint8_t> pbuf,
             const AddressDiff gsize,
             const Milliseconds now
         ){
-            if(not is_idle(now)) 
+            if(not is_idle(now))
                 return Err(map_currtask_to_err(may_tasks_.value()));
             may_tasks_.emplace(Tasks(LoadTask(begin.to_u32(), pbuf, gsize.to_u32())));
             return Ok();
@@ -324,7 +324,7 @@ private:
     private:
 
         using Tasks = std::variant<
-            LoadTask, 
+            LoadTask,
             StoreTask
         >;
         std::optional<Tasks> may_tasks_;
@@ -332,12 +332,12 @@ private:
         static constexpr Error map_currtask_to_err(const Tasks & tasks){
             if(std::holds_alternative<LoadTask>(tasks))
                 return Error::DeviceIsBusyLoad;
-            else if(std::holds_alternative<StoreTask>(tasks)) 
+            else if(std::holds_alternative<StoreTask>(tasks))
                 return Error::DeviceIsBusyStore;
             __builtin_unreachable();
         }
 
-        // IResult<bool> is_busy(AT24CXX & self, const Milliseconds now){        
+        // IResult<bool> is_busy(AT24CXX & self, const Milliseconds now){
         //     if(may_tasks_.has_value() == false) return Ok(false);
         //     const auto oper = map_task_to_oper(may_tasks_.value());
         //     const auto lasting = map_operation_to_lasting(oper);

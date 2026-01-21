@@ -36,7 +36,7 @@ struct [[nodiscard]] LidarPoint{
         return distance_mm * 0.001_uq16;
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const LidarPoint & self){ 
+    friend OutputStream & operator<<(OutputStream & os, const LidarPoint & self){
         return os << self.distance_meters() << "m";
         //  << os.splitter()
             // << self.intensity << ;
@@ -78,7 +78,7 @@ struct [[nodiscard]] TimeStamp{
         return TimeStamp{bits};
     }
 
-    [[nodiscard]] constexpr std::chrono::duration<uint16_t, std::milli> 
+    [[nodiscard]] constexpr std::chrono::duration<uint16_t, std::milli>
     to_ms() const {
         return std::chrono::duration<uint16_t, std::milli>(bits);
     }
@@ -121,9 +121,9 @@ namespace events{
         uint8_t actual;
 
         friend OutputStream & operator<<(OutputStream & os, const InvalidCrc & self){
-            return os << "expected: " << self.actual << os.splitter() 
+            return os << "expected: " << self.actual << os.splitter()
                 << " actual: " << self.expected;
-        } 
+        }
     };
 };
 
