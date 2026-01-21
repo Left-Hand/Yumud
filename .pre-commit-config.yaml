@@ -1,0 +1,22 @@
+repos:
+  # General code quality checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+      - id: end-of-file-fixer
+        name: Ensure file ends with a newline
+      - id: check-yaml
+        name: Check YAML file syntax
+        args: ['--unsafe']
+      - id: check-added-large-files
+        name: Check for added large files
+        args: ['--maxkb=1024']
+      - id: check-merge-conflict
+        name: Check for merge conflict markers
+      - id: check-case-conflict
+        name: Check for file name case conflicts
+      - id: mixed-line-ending
+        name: Check for mixed line endings
+        args: ['--fix=lf']

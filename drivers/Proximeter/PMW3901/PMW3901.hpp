@@ -33,14 +33,18 @@ struct PMW3901_Prelude{
 
 
     #pragma pack(push, 1)
-    struct PMW3901_Data {
-    MotionReg motion = {};
-    uint8_t observation = {};
-    DeltaReg dx = {};
-    DeltaReg dy = {};
+    struct PMW3901_Packet {
+        alignas(1) MotionReg motion = {};
+        alignas(1) uint8_t observation = {};
+        alignas(2) DeltaReg dx = {};
+        alignas(2) DeltaReg dy = {};
     };
     #pragma pack(pop)
-    static_assert(sizeof(PMW3901_Data) == 1 + 1 + 2 + 2, "PMW3901_Data size error");
+    static_assert(sizeof(PMW3901_Packet) == 1 + 1 + 2 + 2, "PMW3901_Packet size error");
+    static_assert(__builtin_offsetof(PMW3901_Packet, PMW3901_Packet::motion) == 0);
+    static_assert(__builtin_offsetof(PMW3901_Packet, PMW3901_Packet::observation) == 1);
+    static_assert(__builtin_offsetof(PMW3901_Packet, PMW3901_Packet::dx) == 2);
+    static_assert(__builtin_offsetof(PMW3901_Packet, PMW3901_Packet::dy) == 4);
 
     enum class Error_Kind:uint8_t{
         InvalidChipId
@@ -72,16 +76,12 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] Vec2<iq16> get_position(){
-        return {x_cm * iq16(0.01), y_cm * iq16(0.01)};
-    }
-
     [[nodiscard]] IResult<> set_led(bool on);
 private:
 
     hal::SpiDrv spi_drv_;
 
-    PMW3901_Data data_ = {};
+    PMW3901_Packet packet_ = {};
     iq16 x_cm = 0;
     iq16 y_cm = 0;
 

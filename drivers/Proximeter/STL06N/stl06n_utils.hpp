@@ -54,7 +54,7 @@ public:
         return Crc8Calculator{crc};
     }
 
-    [[nodiscard]] constexpr uint8_t value() const {
+    [[nodiscard]] constexpr uint8_t get() const {
         return crc_;
     }
 };
@@ -67,7 +67,7 @@ static constexpr size_t POINTS_PER_FRAME = 12;
 
 static constexpr size_t SECTOR_PAYLOAD_SIZE = 2 + 2 + 12 * 3 + 2 + 2 + 1;
 
-struct [[nodiscard]] LidarPoint{
+struct [[nodiscard]] LidarPoint final{
 
     uint16_t distance_mm;
     uint8_t intensity;
@@ -83,12 +83,12 @@ struct [[nodiscard]] LidarPoint{
         return distance_mm * 0.001_uq16;
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const LidarPoint & self){ 
+    friend OutputStream & operator<<(OutputStream & os, const LidarPoint & self){
         return os << self.distance_meters() << "m";
     }
 };
 
-struct [[nodiscard]] Command{
+struct [[nodiscard]] Command final{
     using Self = Command;
 
     enum class [[nodiscard]] Kind:uint8_t{
@@ -145,7 +145,7 @@ private:
     }
 };
 
-struct [[nodiscard]] LidarSpinSpeedCode{
+struct alignas(2) [[nodiscard]] LidarSpinSpeedCode final{
 public:
     using Self = LidarSpinSpeedCode;
     static constexpr Self from_bits(const uint16_t bits){
@@ -170,7 +170,7 @@ public:
     uint16_t bits;
 };
 
-struct [[nodiscard]] LidarAngleCode{
+struct alignas(2) [[nodiscard]] LidarAngleCode final{
 public:
     static constexpr LidarAngleCode from_bits(const uint16_t bits){
         return LidarAngleCode{bits};
@@ -185,14 +185,14 @@ public:
 };
 
 
-struct [[nodiscard]] TimeStamp{
+struct [[nodiscard]] TimeStamp final{
     uint16_t bits;
 
     static constexpr TimeStamp from_bits(const uint16_t bits){
         return TimeStamp{bits};
     }
 
-    [[nodiscard]] constexpr std::chrono::duration<uint16_t, std::milli> 
+    [[nodiscard]] constexpr std::chrono::duration<uint16_t, std::milli>
     to_ms() const {
         return std::chrono::duration<uint16_t, std::milli>(bits);
     }
@@ -202,8 +202,8 @@ struct [[nodiscard]] LidarSectorPacket final{
     using Self = LidarSectorPacket;
 
     #pragma pack(push, 1)
-    LidarSpinSpeedCode spin_speed;
-    LidarAngleCode start_angle;
+    LidarSpinSpeedCode spin_speed;//[0:2]
+    LidarAngleCode start_angle;//[2:4]
 
 
     struct [[nodiscard]] Points{
@@ -214,19 +214,31 @@ struct [[nodiscard]] LidarSectorPacket final{
             return LidarPoint::from_bytes(std::span<const uint8_t, 3>(bytes.data() + index * 3, 3));
         }
     };
-    Points points;
-    LidarAngleCode end_angle;
-    TimeStamp timestamp;
-    uint8_t crc8;
+    Points points;//[4:40]
+    LidarAngleCode stop_angle;//[40:42]
+    TimeStamp timestamp;//[42:44]
+    uint8_t crc8;//[44:45]
     #pragma pack(pop)
 
+    static constexpr size_t PAYLOAD_LEN = 44;
     [[nodiscard]] uint8_t calc_crc() const {
-        constexpr size_t PAYLOAD_LEN = 46;
-        Crc8Calculator calc = Crc8Calculator();
-        return calc.push_bytes(std::span(reinterpret_cast<const uint8_t *>(this), PAYLOAD_LEN)).value();
-    }
+        const auto payload_bytes = std::span<const uint8_t, PAYLOAD_LEN>(
+            reinterpret_cast<const uint8_t *>(this),
+            PAYLOAD_LEN
+        );
 
+        Crc8Calculator calc = Crc8Calculator();
+        return calc.push_bytes(payload_bytes).get();
+    }
 };
+
+static_assert(sizeof(LidarSectorPacket) == 46);
+static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::spin_speed) == 0);
+static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::start_angle) == 2);
+static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::points) == 4);
+static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::stop_angle) == 40);
+static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::timestamp) == 42);
+static_assert(__builtin_offsetof(LidarSectorPacket, LidarSectorPacket::crc8) == 44);
 
 
 struct ReqBuffer{
@@ -312,7 +324,7 @@ using GetSpeed = resp_msgs::GetSpeed;
 };
 
 struct Event:public Sumtype<
-    events::DataReady, 
+    events::DataReady,
     events::InvalidCrc,
     events::Start,
     events::Stop,

@@ -26,7 +26,7 @@ IResult<> Ps2Joystick::update(){
         res.is_err()) return Err(res.unwrap_err());
 
     if(const auto res = spi_drv_.transceive_single<uint8_t>(
-        reinterpret_cast<uint8_t &>(dev_id_), 
+        reinterpret_cast<uint8_t &>(dev_id_),
         std::bit_cast<uint8_t>(Command::RequestData));
 
         res.is_err()) return Err(res.unwrap_err());
@@ -36,17 +36,17 @@ IResult<> Ps2Joystick::update(){
     if(const auto res = spi_drv_.transceive_single<uint8_t>(permit, uint8_t(0x00));
         res.is_err()) return Err(res.unwrap_err());
 
-    const auto tx_frame = TxFrame::from_parts(0, 0);
-    RxFrame rx_frame;
+    const auto tx_packet = TxPacket::from_parts(0, 0);
+    RxPacket rx_packet;
 
     if(const auto res = spi_drv_.transceive_burst<uint8_t>(
-        rx_frame.as_bytes_mut(),
-        tx_frame.as_bytes()
-    );  res.is_err()) 
+        rx_packet.as_bytes_mut(),
+        tx_packet.as_bytes()
+    );  res.is_err())
         return Err(res.unwrap_err());
 
     if(permit == 0x5a){
-        rx_frame_ = rx_frame;
+        rx_packet_ = rx_packet;
     }else{
         // PANIC{permit};
     }
@@ -54,12 +54,12 @@ IResult<> Ps2Joystick::update(){
     return Ok();
 }
 
-IResult<Ps2Joystick::RxFrame> Ps2Joystick::read_info() const {
+IResult<Ps2Joystick::RxPacket> Ps2Joystick::read_info() const {
     switch(dev_id_){
-        case DevId::DIGIT:
+        case DevId::Digit:
             return Err(Error::CantParseAtDigitMode);
         case DevId::AnalogRed:
-            return Ok(rx_frame_);
+            return Ok(rx_packet_);
         default:
             break;
     }
@@ -74,10 +74,10 @@ IResult<Ps2Joystick::RxFrame> Ps2Joystick::read_info() const {
 //     volatile u16 ref=0x01;
 //     Data[1] = 0;
 //     for(ref=0x01;ref<0x0100;ref<<=1)
-//     { 
+//     {
 
 //         if(ref&CMD)
-//         { 
+//         {
 
 //             DO_H;                   //输出以为控制位
 //         }
@@ -93,16 +93,16 @@ IResult<Ps2Joystick::RxFrame> Ps2Joystick::read_info() const {
 //     }
 // }
 
-//手柄配置初始化： 
+//手柄配置初始化：
 void PS2_ShortPoll(void) {
-    CS_L; 
-    delay_us(16); 
-    PS2_Cmd(0x01); 
-    PS2_Cmd(0x42); 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0x00); 
-    PS2_Cmd(0x00); 
-    CS_H; 
+    CS_L;
+    delay_us(16);
+    PS2_Cmd(0x01);
+    PS2_Cmd(0x42);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0x00);
+    PS2_Cmd(0x00);
+    CS_H;
     delay_us(16);
 }
 
@@ -110,48 +110,48 @@ void PS2_ShortPoll(void) {
 //进入配置
 void PS2_EnterConfing(void) {
     CS_L;
-    delay_us(16); 
-    PS2_Cmd(0x01); 
-    PS2_Cmd(0x43); 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0x01); 
-    PS2_Cmd(0x00); 
+    delay_us(16);
+    PS2_Cmd(0x01);
+    PS2_Cmd(0x43);
     PS2_Cmd(0X00);
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0X00); 
-    CS_H; 
+    PS2_Cmd(0x01);
+    PS2_Cmd(0x00);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0X00);
+    CS_H;
     delay_us(16);
 }
 
 
-// 发送模式设置 
+// 发送模式设置
 void PS2_TurnOnAnalogMode(void) {
-    CS_L; 
-    PS2_Cmd(0x01); 
-    PS2_Cmd(0x44); 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0x01);//analog=0x01;digital=0x00 软件设置发送模式 
-    PS2_Cmd(0xEE);//Ox03 锁存设置，即不可通过按键“MODE ”设置模式。        //0xEE 不锁存软件设置，可通过按键“MODE ”设置模式。 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0X00); 
-    CS_H; 
+    CS_L;
+    PS2_Cmd(0x01);
+    PS2_Cmd(0x44);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0x01);//analog=0x01;digital=0x00 软件设置发送模式
+    PS2_Cmd(0xEE);//Ox03 锁存设置，即不可通过按键“MODE ”设置模式。        //0xEE 不锁存软件设置，可通过按键“MODE ”设置模式。
+    PS2_Cmd(0X00);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0X00);
+    CS_H;
     delay_us(16);
 }
 
 
 // 振动设置
 void PS2_VibrationMode(void) {
-    CS_L; 
-    delay_us(16); 
-    PS2_Cmd(0x01); 
-    PS2_Cmd(0x4D); 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0x00); 
-    PS2_Cmd(0X01); 
-    CS_H; 
+    CS_L;
+    delay_us(16);
+    PS2_Cmd(0x01);
+    PS2_Cmd(0x4D);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0x00);
+    PS2_Cmd(0X01);
+    CS_H;
     delay_us(16);
 }
 
@@ -161,28 +161,28 @@ void PS2_ExitConfing(void){
     CS_L;
     delay_us(16);
     PS2_Cmd(0x01);
-    PS2_Cmd(0x43); 
+    PS2_Cmd(0x43);
     PS2_Cmd(0X00);
-    PS2_Cmd(0x00); 
-    PS2_Cmd(0x5A); 
-    PS2_Cmd(0x5A); 
+    PS2_Cmd(0x00);
     PS2_Cmd(0x5A);
-    PS2_Cmd(0x5A); 
-    PS2_Cmd(0x5A); 
-    CS_H; 
+    PS2_Cmd(0x5A);
+    PS2_Cmd(0x5A);
+    PS2_Cmd(0x5A);
+    PS2_Cmd(0x5A);
+    CS_H;
     delay_us(16);
 }
 
 
 // 手柄配置初始化
-void PS2_SetInit(void) 
+void PS2_SetInit(void)
 {
     PS2_ShortPoll();
     PS2_ShortPoll();
-    PS2_ShortPoll(); 
-    PS2_EnterConfing(); // 进入配置模式 
-    PS2_TurnOnAnalogMode(); // “红绿灯”配置模式，并选择是否保存 
-    PS2_VibrationMode(); // 开启震动模式 
+    PS2_ShortPoll();
+    PS2_EnterConfing(); // 进入配置模式
+    PS2_TurnOnAnalogMode(); // “红绿灯”配置模式，并选择是否保存
+    PS2_VibrationMode(); // 开启震动模式
     PS2_ExitConfing(); // 完成并保存配置
 }
 /*
@@ -192,19 +192,19 @@ void PS2_SetInit(void)
 */
 void PS2_Vibration(u8motor1,u8motor2)
 {
-    CS_L; 
-    delay_us(16); 
+    CS_L;
+    delay_us(16);
     PS2_Cmd(0x01); // 开始命令
     PS2_Cmd(0x42);// 请求数据
     PS2_Cmd(0X00);
     PS2_Cmd(motor1);
-    PS2_Cmd(motor2); 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0X00); 
-    PS2_Cmd(0X00); 
-    CS_H; 
+    PS2_Cmd(motor2);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0X00);
+    PS2_Cmd(0X00);
+    CS_H;
     delay_us(16);
-} 
+}
 
 #endif

@@ -12,7 +12,7 @@ static constexpr uint8_t HEADER_TOKEN = 0xF0;
 static constexpr uint8_t LEN_TOKEN = 0x05;
 static constexpr uint8_t TAIL_TOKEN = 0xAA;
 
-#pragma pack(push, 1)
+
 struct [[nodiscard]] SignalStrengthCode{
     using Self = SignalStrengthCode;
     uint8_t bits;
@@ -31,6 +31,7 @@ struct [[nodiscard]] SignalStrengthCode{
     }
 };
 
+#pragma pack(push, 1)
 struct [[nodiscard]] Packet{
     using Self = Packet;
 
@@ -39,7 +40,7 @@ struct [[nodiscard]] Packet{
     SignalStrengthCode signal_strength;
 
     friend OutputStream & operator<<(OutputStream & os, const Self & self){
-        return os 
+        return os
             << os.field("sender_addr")(self.sender_addr) << os.splitter()
             << os.field("dist_cm")(self.dist_cm) << os.splitter()
             << os.field("signal_strength")(self.signal_strength)

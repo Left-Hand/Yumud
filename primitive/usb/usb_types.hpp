@@ -3,11 +3,11 @@
 #include <cstdint>
 
 namespace ymd::usb{
-struct [[nodiscard]] InterfaceNumber{
+struct [[nodiscard]] InterfaceNumber final{
     uint8_t count;
 };
 
-struct [[nodiscard]] StringIndex{
+struct [[nodiscard]] StringIndex final{
     uint8_t count;
 };
 

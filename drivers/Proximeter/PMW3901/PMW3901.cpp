@@ -133,7 +133,7 @@ static constexpr iq16 scale = iq16(13.0/2000);
 IResult<> PMW3901::write_reg(const uint8_t command, const uint8_t data){
     if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT);
         res.is_err()) return Err(res.unwrap_err());
-        
+
     if(const auto res = spi_drv_.write_single<uint8_t>(data);
         res.is_err()) return Err(res.unwrap_err());
 
@@ -164,7 +164,7 @@ IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pbuf){
 
 //     for (int ii = 0; ii < 1225; ii++) { //for 1 frame of 1225 pixels (35*35)
 //         uint8_t a,b, hold;
-//         do { 
+//         do {
 //         //if data is either invalid status
 //         //check status bits 6 and 7
 //         //if 01 move upper 6 bits into temp value
@@ -173,7 +173,7 @@ IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pbuf){
 //         read_reg(0x58,a); //read register
 //         hold = a >> 6; //right shift to leave top two bits for ease of check.
 //         } while((hold == 0x03) || (hold == 0x00));
-        
+
 //         if (hold == 0x01) { //if data is upper 6 bits
 //         read_reg(0x58, b); //read next set to get lower 2 bits
 //         uint8_t pixel = a; //set pixel to a
@@ -184,14 +184,14 @@ IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pbuf){
 //         }
 //     }
 
-//     write_reg(0x70, 0x00);   //More magic? 
+//     write_reg(0x70, 0x00);   //More magic?
 //     write_reg(0x58, 0xFF);
 
-//     uint8_t temp, check; 
+//     uint8_t temp, check;
 
 //     do { //keep reading and testing
 //         read_reg(0x58, temp); //read status register
-//         check = temp>>6; //rightshift 6 bits so only top two stay 
+//         check = temp>>6; //rightshift 6 bits so only top two stay
 //     } while(check == 0x03); //while bits aren't set denoting ready state
 // }
 
@@ -214,19 +214,23 @@ IResult<> PMW3901::read_data_slow(){
     std::array<uint8_t, 5> buf;
 
     for(size_t i = 0; i < buf.size(); i++){
-        const auto res = read_reg(0x02 + i, buf[i]); 
+        const auto res = read_reg(0x02 + i, buf[i]);
         if(res.is_err()) return Err(res.unwrap_err());
     }
 
-    data_.motion.as_bits_mut() = buf[0];
-    data_.dx.bits = static_cast<int16_t>((static_cast<uint16_t>(buf[2] << 8)) | buf[1]);
-    data_.dy.bits = static_cast<int16_t>((static_cast<uint16_t>(buf[4] << 8)) | buf[3]);
+    const auto dx_ubits = static_cast<uint16_t>((static_cast<uint16_t>(buf[2] << 8)) | buf[1]);
+    const auto dy_ubits = static_cast<uint16_t>((static_cast<uint16_t>(buf[4] << 8)) | buf[3]);
+
+
+    packet_.motion.as_bits_mut() = buf[0];
+    packet_.dx.bits = std::bit_cast<int16_t>(dx_ubits);
+    packet_.dy.bits = std::bit_cast<int16_t>(dy_ubits);
 
     return Ok();
 }
 
 IResult<> PMW3901::read_data_burst(){
-    return read_burst(0x16, std::span(&data_.motion.as_bits_mut(), 6));
+    return read_burst(0x16, std::span(&packet_.motion.as_bits_mut(), 6));
 }
 
 
@@ -234,8 +238,8 @@ IResult<> PMW3901::read_data_burst(){
 IResult<> PMW3901::update(){
     return read_data()
     .if_ok([&]{
-        x_cm += int16_t(data_.dx.to_bits()) * scale;
-        y_cm += int16_t(data_.dy.to_bits()) * scale;
+        x_cm += int16_t(packet_.dx.to_bits()) * scale;
+        y_cm += int16_t(packet_.dy.to_bits()) * scale;
     });
 
 }
@@ -269,9 +273,9 @@ IResult<> PMW3901::validate(){
 IResult<> PMW3901::init() {
     if(const auto res = spi_drv_.release(); res.is_err())
         return Err(res.unwrap_err());
-    
-    if(const auto res = write_reg(PMW3901_REG_Power_Up_Reset, 0x5A); 
-        res.is_err()) return res; 
+
+    if(const auto res = write_reg(PMW3901_REG_Power_Up_Reset, 0x5A);
+        res.is_err()) return res;
 
 
     clock::delay(5ms);
@@ -363,6 +367,6 @@ IResult<> PMW3901::init() {
     clock::delay(10ms);
 
     if(const auto res = write_list(std::span(INIT_LIST2));
-        res.is_err()) return res;   
+        res.is_err()) return res;
     return Ok();
 }

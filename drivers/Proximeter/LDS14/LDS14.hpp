@@ -6,13 +6,12 @@
 namespace ymd::drivers::lds14{
 
 
-static constexpr size_t DEFAULT_UART_BAUD = 115200; 
+static constexpr size_t DEFAULT_UART_BAUD = 115200;
 static constexpr uint8_t HEADER_TOKEN = 0x54;
 static constexpr uint16_t VERLEN_TOKEN = 0x55;
 static constexpr size_t NUM_POINT_BYTES = 3;
 static constexpr size_t POINTS_PER_PACK = 12;
 
-#pragma pack(push, 1)
 
 struct [[nodiscard]] LidarPoint{
     using Self = LidarPoint;
@@ -20,14 +19,11 @@ struct [[nodiscard]] LidarPoint{
     uint8_t intensity;
 
     static constexpr Self from_bytes(std::span<const uint8_t, 3> bytes){
-        const auto distance = static_cast<uint16_t>(bytes[0] | bytes[1] << 8); 
+        const auto distance = static_cast<uint16_t>(bytes[0] | bytes[1] << 8);
         const auto intensity = bytes[2];
         return Self{distance, intensity};
     }
 };
-
-#pragma pack(pop)
-static_assert(sizeof(LidarPoint) == NUM_POINT_BYTES, "LidarPoint size is not 3 bytes");
 
 struct [[nodiscard]] LidarPoints{
     std::array<uint8_t, POINTS_PER_PACK * 3> bytes;
@@ -36,6 +32,8 @@ struct [[nodiscard]] LidarPoints{
         return LidarPoint::from_bytes(std::span<const uint8_t, 3>(bytes.data() + 3u * i, 3));
     }
 };
+
+static_assert(sizeof(LidarPoints) == POINTS_PER_PACK * 3);
 
 
 static constexpr std::array<uint8_t, 256> CRC8_TABLE = {

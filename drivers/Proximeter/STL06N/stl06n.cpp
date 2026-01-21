@@ -25,7 +25,7 @@ void Self::push_byte(const uint8_t byte){
                 command_ = may_command.unwrap();
             }
             fsm_state_ = FsmState::Remaining;
-            
+
             break;
         case FsmState::Remaining:
             bytes_[bytes_count_] = byte;
@@ -42,7 +42,7 @@ void Self::push_byte(const uint8_t byte){
     }
 }
 
-void Self::push_bytes(const std::span<const uint8_t> bytes){ 
+void Self::push_bytes(const std::span<const uint8_t> bytes){
     for(const auto byte: bytes){
         push_byte(byte);
     }
@@ -70,7 +70,7 @@ void Self::flush(){
     const uint8_t actual_crc = [&]{
         Crc8Calculator calc;
         calc = calc.push_bytes(std::span(begin, end));
-        return calc.value();
+        return calc.get();
     }();
 
     if(expected_crc != actual_crc) [[unlikely]]{
