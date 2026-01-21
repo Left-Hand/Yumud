@@ -10,19 +10,19 @@ namespace ymd::intrinsics{
     }
     const uintptr_t addr_val = reinterpret_cast<uintptr_t>(addr);
     const uint32_t *aligned_addr = reinterpret_cast<const uint32_t*>(addr_val & ~3);
-    
+
     const uint32_t low_word = aligned_addr[0];
     const uint32_t high_word = aligned_addr[1];
     const unsigned int shift = (addr_val & 3);
-    
+
     // 预计算的掩码表
     [[maybe_unused]] constexpr uint32_t RIGHT_SHIFT[4] = {0, 8, 16, 24};
     [[maybe_unused]] constexpr uint32_t LEFT_SHIFT[4] = {0, 24, 16, 8};
-    
+
     switch(shift){
         case 0: return low_word;
         case 1: return (low_word >> 8) | (high_word << 24);
-        case 2: return (low_word >> 16) | (high_word << 16);    
+        case 2: return (low_word >> 16) | (high_word << 16);
         case 3: return (low_word >> 24) | (high_word << 8);
         default: __builtin_unreachable();
     }
