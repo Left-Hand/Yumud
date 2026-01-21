@@ -16,7 +16,7 @@ using drivers::m10::M10_ParseReceiver;
 void m10_main(){
     DEBUGGER_INST.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576_KHz), 
+        .baudrate = hal::NearestFreq(576_KHz),
     });
 
     DEBUGGER.retarget(&DEBUGGER_INST);
@@ -33,7 +33,7 @@ void m10_main(){
     using M10Event = drivers::m10::Event;
 
     uq24 last_turns_ = 0;
-    auto m10_ev_handler = [&](const M10Event & ev){ 
+    auto m10_ev_handler = [&](const M10Event & ev){
         if(ev.is<M10Event::DataReady>()){
             const auto & packet = ev.unwrap_as<M10Event::DataReady>().sector;
             const auto turns = packet.start_angle.to_turns();
@@ -77,10 +77,10 @@ void m10_main(){
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:{
                 while(m10_uart_.available()){
-                    char chr;
-                    const auto read_len = m10_uart_.try_read_char(chr);
+                    uint8_t byte;
+                    const auto read_len = m10_uart_.try_read_byte(byte);
                     if(read_len == 0) break;
-                    m10_parser.push_byte(chr); 
+                    m10_parser.push_byte(byte);
                 }
             }
                 break;

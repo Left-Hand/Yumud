@@ -24,7 +24,7 @@ public:
     void flush();
 
     void reset();
-// private:
+
 public:
 
     union{

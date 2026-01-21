@@ -16,10 +16,10 @@ using drivers::mk8000tr::MK8000TR_ParseReceiver;
 void mk8000tr_main(){
     DEBUGGER_INST.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = hal::NearestFreq(576_KHz), 
+        .baudrate = hal::NearestFreq(576_KHz),
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
-    
+
 
     #if defined(CH32V20X)
     auto & mk8000tr_uart_ = hal::usart1;
@@ -32,14 +32,14 @@ void mk8000tr_main(){
     using MkEvent = drivers::mk8000tr::Event;
 
 
-    auto mk8000tr_ev_handler = [&](const MkEvent & ev){ 
+    auto mk8000tr_ev_handler = [&](const MkEvent & ev){
         DEBUG_PRINTLN(ev.dist_cm, ev.signal_strength.to_dbm());
     };
 
     auto mk8000tr_parser = MK8000TR_ParseReceiver(mk8000tr_ev_handler);
     mk8000tr_uart_.init({
         .remap = hal::UartRemap::_0,
-        .baudrate = hal::NearestFreq(576_KHz), 
+        .baudrate = hal::NearestFreq(576_KHz),
     });
 
 
@@ -64,10 +64,10 @@ void mk8000tr_main(){
 
             #if 1
             while(mk8000tr_uart_.available()){
-                char chr;
-                const auto read_len =  mk8000tr_uart_.try_read_char(chr);
+                uint8_t byte;
+                const auto read_len =  mk8000tr_uart_.try_read_byte(byte);
                 if(read_len == 0) break;
-                bytes.push_back(uint8_t(chr));
+                bytes.push_back(uint8_t(byte));
             }
             // DEBUG_PRINTLN_IDLE(
             //     received_bytes_cnt_
@@ -90,18 +90,18 @@ void mk8000tr_main(){
         if(mk8000tr_uart_.available()){
             // const auto u_begin = clock::micros();
             const auto bytes = collect_bytes();
-            mk8000tr_parser.push_bytes(std::span(bytes)); 
+            mk8000tr_parser.push_bytes(std::span(bytes));
             received_bytes_cnt_+=bytes.size();
             // DEBUG_PRINTLN(clock::micros() - u_begin);
         }
-        // DEBUG_PRINTLN("mk8000tr_uart_rx", uint8_t(chr));
+        // DEBUG_PRINTLN("mk8000tr_uart_rx", uint8_t(byte));
 
 
         blink_service_poller();
 
 
         static auto report_timer = async::RepeatTimer::from_duration(3ms);
-        
+
         report_timer.invoke_if([&]{
             // if(bytes.size() == 0) return;
             // if(DEBUGGER.pending() != 0) return;

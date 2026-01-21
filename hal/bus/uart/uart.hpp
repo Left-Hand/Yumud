@@ -73,12 +73,12 @@ public:
     template<typename Fn>
     void set_event_handler(Fn && cb){callback_ = std::forward<Fn>(cb);}
 
-    [[nodiscard]] virtual size_t try_write_chars(const char * pdata, const size_t len) = 0;
+    [[nodiscard]] virtual size_t try_write_bytes(std::span<const uint8_t> bytes) = 0;
 
-    [[nodiscard]] virtual size_t try_write_char(const char data) = 0;
+    [[nodiscard]] virtual size_t try_write_byte(const uint8_t byte) = 0;
 
-    [[nodiscard]] size_t try_read_char(char & data);
-    [[nodiscard]] size_t try_read_chars(char * pbuf, const size_t len);
+    [[nodiscard]] size_t try_read_bytes(std::span<uint8_t> bytes);
+    [[nodiscard]] size_t try_read_byte(uint8_t & byte);
 
     auto & tx_fifo(){return tx_fifo_;}
     auto & rx_fifo(){return rx_fifo_;}
@@ -92,8 +92,8 @@ public:
     CommStrategy rx_strategy_;
 
 
-    RingBuf<char, UART_FIFO_BUF_SIZE> tx_fifo_;
-    RingBuf<char, UART_FIFO_BUF_SIZE> rx_fifo_;
+    RingBuf<uint8_t, UART_FIFO_BUF_SIZE> tx_fifo_;
+    RingBuf<uint8_t, UART_FIFO_BUF_SIZE> rx_fifo_;
     void emit_event(const Event event){
         if(callback_ == nullptr) [[unlikely]]
             return;

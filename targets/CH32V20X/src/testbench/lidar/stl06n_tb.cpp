@@ -5,9 +5,10 @@
 
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
+#include "core/utils/scope_guard.hpp"
+#include "core/async/timer.hpp"
 
 #include "drivers/Proximeter/STL06N/stl06n.hpp"
-#include "core/async/timer.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -37,20 +38,38 @@ void stl06n_main(){
     DEBUGGER.no_fieldname(EN);
 
     using LidarEvent = stl06n::Event;
+    using LidarPoint = stl06n::LidarPoint;
+
+    auto watch_pin_ = hal::PA<11>();
+    watch_pin_.set_mode(hal::GpioMode::OutPP);
+    watch_pin_.set_low();
 
     volatile size_t lidar_recv_bytes_count_ = 0;
     volatile size_t lidar_sector_count_ = 0;
     volatile size_t lidar_ev_count_ = 0;
     volatile size_t lidar_crc_err_count_ = 0;
+
+    std::array<LidarPoint, 12> points;
+    Microseconds lidar_clone_elapsed_us_ = 0us;
     auto lidar_ev_handler = [&](const LidarEvent & ev){
+        watch_pin_.set_high();
+        watch_pin_.set_low();
+        watch_pin_.set_high();
+        auto guard = make_scope_guard([&]{
+            watch_pin_.set_low();
+        });
+
         lidar_ev_count_++;
         if(ev.is<LidarEvent::DataReady>()){
             const auto & sector = ev.unwrap_as<LidarEvent::DataReady>().sector;
             lidar_sector_count_++;
-            // DEBUG_PRINTLN("sect", sector.points[0], sector.points[11]);
+
+            lidar_clone_elapsed_us_ = measure_total_elapsed_us([&]{
+                sector.points.clone_to(std::span(points));
+            });
         }else if(ev.is<LidarEvent::InvalidCrc>()){
             lidar_crc_err_count_++;
-            DEBUG_PRINTLN("INVALID CRC", ev.unwrap_as<LidarEvent::InvalidCrc>());
+            // DEBUG_PRINTLN("INVALID CRC", ev.unwrap_as<LidarEvent::InvalidCrc>());
             // PANIC{};
         }
         // DEBUG_PRINTLN(ev.dist_cm, ev.signal_strength.to_dbm());
@@ -79,14 +98,19 @@ void stl06n_main(){
 
 
     stl06n_uart_.set_event_handler([&](const hal::UartEvent & ev){
+        watch_pin_.set_high();
+        auto guard = make_scope_guard([&]{
+            watch_pin_.set_low();
+        });
+
         lidar_recv_bytes_count_++;
 
         #if 1
         auto poll_parser = [&](){
             while(true){
-                char chr;
-                if(stl06n_uart_.try_read_char(chr) == 0) break;
-                stl06n_parser_.push_byte(static_cast<uint8_t>(chr));
+                uint8_t byte;
+                if(stl06n_uart_.try_read_byte(byte) == 0) break;
+                stl06n_parser_.push_byte(static_cast<uint8_t>(byte));
             }
         };
 
@@ -104,7 +128,7 @@ void stl06n_main(){
         #else
         while(true){
             char chr;
-            if(stl06n_uart_.try_read_char(chr) == 0) break;
+            if(stl06n_uart_.try_read_byte(chr) == 0) break;
             // stl06n_parser_.push_byte(static_cast<uint8_t>(chr));
         }
         #endif
@@ -146,7 +170,8 @@ void stl06n_main(){
             // static_cast<size_t>(stl06n_parser_.bytes_count_)
             lidar_recv_bytes_count_,
             lidar_crc_err_count_,
-            lidar_sector_count_
+            lidar_sector_count_,
+            lidar_clone_elapsed_us_.count()
             // hal::PE<1>().read().to_bool()
         );
         // report_timer.invoke_if([&]{

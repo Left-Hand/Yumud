@@ -36,6 +36,7 @@ struct Inner {
 
 
 struct ImagePieceUnit{
+    using Self = ImagePieceUnit;
     uint16_t header;
     TransType trans_type;
     uint32_t hash;
@@ -43,6 +44,10 @@ struct ImagePieceUnit{
     uint8_t size_x;
     uint8_t size_y;
     uint16_t data_index;
+
+    [[nodiscard]] std::span<const uint8_t> as_bytes() const {
+        return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(Self));
+    }
 };
 
 
@@ -65,7 +70,7 @@ protected:
     uint8_t time_stamp = 0;
     void transmit(const uint8_t * img_buf, const Vec2i & img_size, const uint8_t index);
 
-    void sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len);
+    void send_block_data(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len);
 public:
     ImageTransmitter(OutputStream & _instance):instance(_instance){;}
 
@@ -73,7 +78,7 @@ public:
     template<typename T>
     requires std::is_same_v<T, Binary> || std::is_same_v<T, Gray>
     void transmit(const Image<T> & img, const uint8_t index){
-        transmit((const uint8_t *)img.get_data(),img.get_size(), index); 
+        transmit((const uint8_t *)img.get_data(),img.get_size(), index);
     }
 
     void enable(const Enable en){

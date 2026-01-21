@@ -67,24 +67,49 @@ static constexpr size_t POINTS_PER_FRAME = 12;
 
 static constexpr size_t SECTOR_PAYLOAD_LENGTH = 2 + 2 + 12 * 3 + 2 + 2 ;
 
-struct alignas(4) [[nodiscard]] LidarPoint final{
+struct alignas(2) [[nodiscard]] LidarDistanceCode final{
+    uint16_t bits;
 
-    uint16_t distance_mm;
+    __attribute__((always_inline))
+    [[nodiscard]] constexpr uq16 to_meters() const {
+        return bits * 0.001_uq16;
+    }
+
+    __attribute__((always_inline))
+    [[nodiscard]] constexpr uint16_t to_milimeters() const {
+        return bits;
+    }
+};
+
+struct alignas(4) [[nodiscard]] LidarPoint final{
+    LidarDistanceCode distance_code;
     uint8_t intensity;
 
+    __attribute__((always_inline))
     static constexpr LidarPoint from_bytes(const std::span<const uint8_t, 3> bytes){
         return LidarPoint{
-            .distance_mm = static_cast<uint16_t>((bytes[1] << 8) | bytes[0]),
+            .distance_code = LidarDistanceCode{static_cast<uint16_t>((bytes[1] << 8) | bytes[0])},
             .intensity = bytes[2]
         };
     }
 
-    [[nodiscard]] constexpr uq16 distance_meters() const {
-        return distance_mm * 0.001_uq16;
+    friend OutputStream & operator<<(OutputStream & os, const LidarPoint & self){
+        return os << self.distance_code.to_meters() << "m";
+    }
+};
+
+struct alignas(4) [[nodiscard]] LidarPoints final{
+    std::array<uint8_t, 3 * POINTS_PER_FRAME> bytes;
+
+    //3字节对齐 必须值语义返回
+    [[nodiscard]] constexpr LidarPoint operator[](size_t index) const{
+        return LidarPoint::from_bytes(std::span<const uint8_t, 3>(bytes.data() + index * 3, 3));
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const LidarPoint & self){
-        return os << self.distance_meters() << "m";
+    constexpr void clone_to(std::span<LidarPoint, 12> points) const{
+        for(size_t i = 0; i < POINTS_PER_FRAME; i++){
+            points[i] = LidarPoint::from_bytes(std::span<const uint8_t, 3>(bytes.data() + i * 3, 3));
+        }
     }
 };
 
@@ -185,6 +210,7 @@ public:
 };
 
 
+
 struct alignas(2) [[nodiscard]] TimeStamp final{
     uint16_t bits;
 
@@ -200,25 +226,13 @@ struct alignas(2) [[nodiscard]] TimeStamp final{
 
 struct [[nodiscard]] LidarSectorPacket final{
     using Self = LidarSectorPacket;
-
-    #pragma pack(push, 1)
     LidarSpinSpeedCode spin_speed;//[0:2]
     LidarAngleCode start_angle;//[2:4]
 
-
-    struct [[nodiscard]] Points{
-        std::array<uint8_t, 3 * POINTS_PER_FRAME> bytes;
-
-        //3字节对齐 必须值语义返回
-        [[nodiscard]] constexpr LidarPoint operator[](size_t index) const{
-            return LidarPoint::from_bytes(std::span<const uint8_t, 3>(bytes.data() + index * 3, 3));
-        }
-    };
-    Points points;//[4:40]
+    LidarPoints points;//[4:40]
     LidarAngleCode stop_angle;//[40:42]
     TimeStamp timestamp;//[42:44]
     uint8_t crc8;//[44:45]
-    #pragma pack(pop)
 
     static constexpr size_t PAYLOAD_LEN = 44;
     [[nodiscard]] uint8_t calc_crc() const {
@@ -232,7 +246,6 @@ struct [[nodiscard]] LidarSectorPacket final{
     }
 };
 
-static_assert(sizeof(LidarSectorPacket) == 46);
 
 struct [[nodiscard]] ReqArg final{
     using Self = ReqArg;

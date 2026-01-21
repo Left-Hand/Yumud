@@ -11,12 +11,13 @@ public:
         buf_(pbuf.data()),
         capacity_(pbuf.size()){;}
 
-    void sendout(std::span<const char> pbuf){
-        if(pbuf.size() > writable_capacity()){
-            while(true);
-        }else{
-            std::copy(pbuf.data(), pbuf.data() + pbuf.size(), buf_);
+    void sendout(std::span<const uint8_t> pbuf){
+        if(pbuf.size() > writable_capacity()) [[unlikely]]{
+            __builtin_trap();
         }
+
+        std::copy(pbuf.data(), pbuf.data() + pbuf.size(), buf_);
+
     }
 
     [[nodiscard]] constexpr size_t free_capacity() const {return capacity_ - len_;}

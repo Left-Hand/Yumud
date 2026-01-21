@@ -31,7 +31,7 @@ struct YahboomQuatMotorDriver_Uart final:
     public YahboomQuatMotorDriver_Prelude{
     static constexpr size_t MAX_BUF_SIZE = 32;
 
-    YahboomQuatMotorDriver_Uart(Some<hal::Uart *> && uart) : 
+    YahboomQuatMotorDriver_Uart(Some<hal::Uart *> && uart) :
         uart_(uart.deref())
     {
         // reconf(cfg);
@@ -77,14 +77,14 @@ struct YahboomQuatMotorDriver_Uart final:
     }
 private:
     template<typename ... Args>
-    void send_var(StringView name, Args && ... args){    
+    void send_var(StringView name, Args && ... args){
         std::array<char, MAX_BUF_SIZE> buf;
         BufStream bs{buf};
         bs.set_splitter(',');
         bs.set_eps(2);
 
-        bs << '$' << name; 
-        
+        bs << '$' << name;
+
         if constexpr (sizeof...(args)) {
             bs << ':';
             bs.prints(std::forward<Args>(args)...);
@@ -96,7 +96,7 @@ private:
     }
 
     void send_line(const StringView line){
-        (void)uart_.try_write_chars(line.data(), line.size());
+        (void)uart_.try_write_bytes(line.as_uchars());
     }
 
     hal::Uart & uart_;

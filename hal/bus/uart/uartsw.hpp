@@ -16,12 +16,12 @@ public:
 
     void set_rx_strategy(const CommStrategy rx_strategy);
 
-    size_t try_write_chars(const char * pbuf, const size_t len){
-        return tx_fifo_.try_push(std::span(pbuf, len));
+    size_t try_write_bytes(std::span<const uint8_t> bytes){
+        return tx_fifo_.try_push(bytes);
     }
 
-    size_t try_write_char(const char chr){
-        return tx_fifo_.try_push(chr);
+    size_t try_write_byte(const uint8_t byte){
+        return tx_fifo_.try_push(byte);
     }
 
     Gpio & txio(){return tx_pin_;}
@@ -42,8 +42,8 @@ private:
     ByteProg prog_ = ByteProg::IDLE;
 
     uint16_t current_char = '\0';
-    char fetch_next(){
-        char ret;
+    uint8_t fetch_next(){
+        uint8_t ret;
         if(const auto len = tx_fifo_.try_pop(ret);
             len == 0) __builtin_trap();
         return  ret;

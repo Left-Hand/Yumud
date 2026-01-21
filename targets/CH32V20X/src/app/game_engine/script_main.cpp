@@ -34,7 +34,7 @@ using namespace ymd;
 
 namespace ymd::strconv2{
 
-struct StringSplitSeeker{ 
+struct StringSplitSeeker{
     explicit constexpr StringSplitSeeker(const char delimiter):
         delimiter_(delimiter){}
 
@@ -61,7 +61,7 @@ struct StringEntitySeeker{
     template<typename SpBeginner, typename SpTerminator>
     static constexpr DestringResult<std::tuple<size_t, size_t>> match(
         const StringView str,
-        const SpBeginner && beginner, 
+        const SpBeginner && beginner,
         const SpBeginner && terminator
     ){
         const size_t left = ({
@@ -85,7 +85,7 @@ struct StringEntitySeeker<StringView>{
     template<typename SpBeginner, typename SpTerminator>
     static constexpr DestringResult<std::tuple<size_t, size_t>> match(
         const StringView str,
-        const SpBeginner && beginner, 
+        const SpBeginner && beginner,
         const SpBeginner && terminator
     ){
         const size_t left = ({
@@ -119,9 +119,9 @@ struct StringEntitySeeker<StringView>{
 
 
 template<typename SpBeginner, typename SpTerminator>
-struct StringEntitySpawner{ 
+struct StringEntitySpawner{
     explicit constexpr StringEntitySpawner(
-        const SpBeginner && beginner, 
+        const SpBeginner && beginner,
         const SpBeginner && terminator
     ):
         beginner_(std::move(beginner)),
@@ -147,27 +147,27 @@ namespace ymd::rpc{
 struct ReplServer2 final{
 public:
     ReplServer2(ReadCharProxy && is, WriteCharProxy && os) :
-        is_(std::move(is)), 
+        is_(std::move(is)),
         os_(std::move(os)){;}
 
     template<typename T>
     void invoke(T && obj){
         while(is_->available()){
-            char chr;
-            is_->try_read_char(chr);
-            if(not is_visible_char(chr)) continue;
-            DEBUG_PRINTLN(chr);
+            uint8_t byte;
+            is_->try_read_byte(byte);
+            if(not is_visible_char(byte)) continue;
+            DEBUG_PRINTLN(byte);
         }
     }
 
-    void set_outen(Enable outen){ outen_ = outen == EN; }   
+    void set_outen(Enable outen){ outen_ = outen == EN; }
 private:
     ReadCharProxy is_;
     OutputStreamByRoute os_;
     // FixedString<32> temp_str_;
 
     bool outen_ = false;
-    
+
     template<typename T>
     auto respond(T && obj, const std::span<const StringView> strs){
         const auto guard = os_.create_guard();
@@ -261,10 +261,10 @@ void script_main(){
             static const auto list = rpc::make_list(
                 "list",
 
-                rpc::make_function("errn", [&](int32_t a, int32_t b){ 
+                rpc::make_function("errn", [&](int32_t a, int32_t b){
                     DEBUG_PRINTLN(a,b);
                 }),
-                rpc::make_function("errn2", [&](int32_t a, int32_t b){ 
+                rpc::make_function("errn2", [&](int32_t a, int32_t b){
                     DEBUG_PRINTLN(a,b);
                 })
 
@@ -274,27 +274,27 @@ void script_main(){
         };
 
         while(DBG_UART.available()){
-            char chr;
-            const auto len = DBG_UART.try_read_char(chr);
+            uint8_t chr;
+            const auto len = DBG_UART.try_read_byte(chr);
             if(len == 0) break;
             DEBUG_PRINTLN(static_cast<char>(chr));
-        } 
+        }
         if(0) DEBUG_PRINTLN(
             // DBG_UART.available(),
             // DBG_UART.rx_dma_buf_index_,
             // DBG_UART.rx_fifo().write_idx(),
             // DBG_UART.rx_fifo().read_idx(),
             // strconv2::defmt_str<bool>("1")
-            
+
             // strconv2::defmt_str<uint8_t>("256")
-            
+
             // ,shape.points
             // ,render_iter.is_mid_at_right()
-            // clear_us.count(), 
-            // upload_us.count(), 
+            // clear_us.count(),
+            // upload_us.count(),
             // total_us.count(),
             // shape_bb
-            
+
             // clock::micros().count()
 
             // render_iter

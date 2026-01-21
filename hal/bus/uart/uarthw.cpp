@@ -535,27 +535,27 @@ void Uart::init(const Config & cfg){
 
 }
 
-size_t Uart::try_write_chars(const char * p_chars, const size_t len){
+size_t Uart::try_write_bytes(std::span<const uint8_t> bytes){
     switch(tx_strategy_){
         case CommStrategy::Blocking:{
             SDK_INST(inst_)->DATAR;
 
             //阻塞地发送字符
-            for(size_t i = 0; i < len; ++i){
-                SDK_INST(inst_)->DATAR = p_chars[i];
+            for(size_t i = 0; i < bytes.size(); ++i){
+                SDK_INST(inst_)->DATAR = bytes[i];
                 while((SDK_INST(inst_)->STATR & USART_FLAG_TXE) == RESET);
             }
             while((SDK_INST(inst_)->STATR & USART_FLAG_TC) == RESET);
-            return len;
+            return bytes.size();
         }
             break;
         case CommStrategy::Interrupt:{
-            const auto written_len = tx_fifo_.try_push(std::span(p_chars, len));
+            const auto written_len = tx_fifo_.try_push(bytes);
             enable_tx_interrupt(EN);
             return written_len;
         }
         case CommStrategy::Dma:{
-            const auto written_len = tx_fifo_.try_push(std::span(p_chars, len));
+            const auto written_len = tx_fifo_.try_push(bytes);
             return written_len;
         }
         case CommStrategy::Nil:
@@ -567,8 +567,8 @@ size_t Uart::try_write_chars(const char * p_chars, const size_t len){
     __builtin_trap();
 }
 
-size_t Uart::try_write_char(const char chr){
-    return try_write_chars(&chr, 1);
+size_t Uart::try_write_byte(const uint8_t byte){
+    return try_write_bytes(std::span(&byte, 1));
 }
 
 
@@ -665,7 +665,7 @@ void Uart::enable_tx_dma(const Enable en){
     tx_dma_.enable_interrupt<DmaIT::Done>(EN);
     tx_dma_.enable_interrupt<DmaIT::Half>(EN);
 
-    tx_dma_.start_transfer_mem2pph<char>(
+    tx_dma_.start_transfer_mem2pph<uint8_t>(
         (&SDK_INST(inst_)->DATAR),
         tx_dma_buf_.data(),
         UART_TX_DMA_BUF_SIZE
@@ -760,7 +760,7 @@ void Uart::enable_rx_dma(const Enable en){
     rx_dma_.enable_interrupt<DmaIT::Done>(EN);
     rx_dma_.enable_interrupt<DmaIT::Half>(EN);
 
-    rx_dma_.start_transfer_pph2mem<char>(
+    rx_dma_.start_transfer_pph2mem<uint8_t>(
         rx_dma_buf_.data(),
         &SDK_INST(inst_)->DATAR,
         UART_RX_DMA_BUF_SIZE
@@ -793,10 +793,10 @@ void Uart::accept_txe_interrupt(){
         case CommStrategy::Dma:
             break;
         case CommStrategy::Interrupt:{
-            char data = 0;
-            if(const auto len = tx_fifo_.try_pop(data);
+            uint8_t byte = 0;
+            if(const auto len = tx_fifo_.try_pop(byte);
                 len != 0){
-                SDK_INST(inst_)->DATAR = data;
+                SDK_INST(inst_)->DATAR = byte;
             }
         }
             break;
@@ -839,7 +839,10 @@ void Uart::accept_rxidle_interrupt(){
     }
 }
 
-
+[[nodiscard]] size_t sink_bytes(std::span<const uint8_t> bytes){
+    // TODO
+    return 0;
+}
 
 void Uart::enable_rxne_interrupt(const Enable en){
     USART_ClearITPendingBit(SDK_INST(inst_), USART_IT_RXNE);

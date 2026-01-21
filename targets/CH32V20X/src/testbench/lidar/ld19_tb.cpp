@@ -16,17 +16,17 @@ using namespace ymd::drivers;
 void ld19_main(){
     DEBUGGER_INST.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576_KHz), 
+        .baudrate = hal::NearestFreq(576_KHz),
         .tx_strategy = CommStrategy::Blocking
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
-    
+
 
 
     using LD19Event = ld19::Event;
 
 
-    auto ld19_ev_handler = [&](const LD19Event & ev){ 
+    auto ld19_ev_handler = [&](const LD19Event & ev){
         if(ev.is<LD19Event::DataReady>()){
             const auto & packet = ev.unwrap_as<LD19Event::DataReady>().packet;
             // for(const auto & points: packet.points){
@@ -73,8 +73,8 @@ void ld19_main(){
         auto poll_parser = [&](){
             while(true){
                 char chr;
-                if(ld19_uart_.try_read_char(chr) == 0) break;
-                ld19_parser_.push_byte(static_cast<uint8_t>(chr)); 
+                if(ld19_uart_.try_read_byte(chr) == 0) break;
+                ld19_parser_.push_byte(static_cast<uint8_t>(chr));
             }
         };
         switch(ev.kind()){
@@ -85,7 +85,7 @@ void ld19_main(){
             case hal::UartEvent::RxBulk:
                 poll_parser();
                 break;
-            default: 
+            default:
                 break;
         }
     });

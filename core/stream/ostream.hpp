@@ -78,7 +78,7 @@ template<> struct _need_insert_splitter_before<Splitter>:std::false_type{};
 template<> struct _need_insert_splitter_before<std::_Swallow_assign>:std::false_type{};
 
 template<typename T>
-static constexpr bool need_insert_splitter_before_v = 
+static constexpr bool need_insert_splitter_before_v =
     details::_need_insert_splitter_before<std::decay_t<T>>::value;
 
 template<char c>
@@ -96,7 +96,7 @@ struct Brackets{
 // template<> struct _is_stringlike<StringView>{static constexpr bool value = true;};
 
 // template<typename T>
-// inline constexpr bool is_stringlike_v = 
+// inline constexpr bool is_stringlike_v =
 //     _is_stringlike<std::decay_t<T>>::value;
 
 
@@ -139,14 +139,14 @@ struct Brackets{
 
 // // 检查是否是连续容器或基于连续容器的视图
 // template <typename R>
-// static inline constexpr bool 
-// is_or_derived_from_contiguous_v = 
+// static inline constexpr bool
+// is_or_derived_from_contiguous_v =
 //     std::ranges::contiguous_range<R> ||
 //     std::ranges::contiguous_range<underlying_range_t<R>>;
 
 // template<typename T>
 // static inline constexpr bool
-// false_v = false; 
+// false_v = false;
 }
 
 
@@ -156,12 +156,13 @@ class OutputStreamIntf{
 public:
     virtual size_t free_capacity() const = 0;
 
-    virtual void sendout(const std::span<const char>) = 0;
+    virtual void sendout(const std::span<const uint8_t>) = 0;
 };
 
 class [[nodiscard]] OutputStream:public OutputStreamIntf{
 public:
     struct [[nodiscard]] Config{
+        // std::array<char, 4> splitter;
         char splitter[4];
 
         uint8_t radix:5;
@@ -185,7 +186,7 @@ private:
 
     using Splitter = details::Splitter;
     using Endl = details::Endl;
-    
+
     template<char c>
     using Brackets = details::Brackets<c>;
 public:
@@ -197,31 +198,40 @@ public:
 
     OutputStream(const OutputStream &) = delete;
     OutputStream(OutputStream &&) = delete;
-    
-    void write(const char data) {
-        buf_.push(data, 
-        [this](const std::span<const char> pbuf){
-            this->block_util_least_free_capacity(pbuf.size());
-            this->sendout(pbuf);
-        });
+
+    void write(const uint8_t byte) {
+        buf_.push(
+            byte,
+            [this](const std::span<const uint8_t> pbuf){
+                this->block_util_least_free_capacity(pbuf.size());
+                this->sendout(pbuf);
+            }
+        );
     }
-    void write(const char * pbuf, const size_t len){
-        buf_.push(std::span<const char>(pbuf, len),  
-        [this](const std::span<const char> _pbuf){
-            this->block_util_least_free_capacity(_pbuf.size());
-            this->sendout(_pbuf);
-        });
+    void write(std::span<const uint8_t> pbuf){
+        buf_.push(
+            pbuf,
+            [this](const std::span<const uint8_t> _pbuf){
+                this->block_util_least_free_capacity(_pbuf.size());
+                this->sendout(_pbuf);
+            }
+        );
 	}
 
     OutputStream & set_splitter(const char * splitter){
-        strcpy(config_.splitter, splitter);
-        sp_len = strlen(splitter);
+        std::fill_n(config_.splitter, 4, 0);
+
+        sp_len = 0;
+        for(size_t i = 0; i < 4 && splitter[i] != '\0'; ++i) {
+            config_.splitter[i] = splitter[i];
+            sp_len++;
+        }
         return *this;
     }
-    
+
     OutputStream & set_splitter(const char splitter){
+        std::fill_n(config_.splitter, 4, 0);
         config_.splitter[0] = splitter;
-        config_.splitter[1] = 0;
         sp_len = 1;
         return *this;
     }
@@ -250,12 +260,12 @@ public:
         return *this;
     }
 
-    OutputStream & no_scoped(const Enable en){ 
+    OutputStream & no_scoped(const Enable en){
         config_.no_scoped = bool(en == EN);
         return *this;
     }
 
-    OutputStream & no_fieldname(const Enable en){ 
+    OutputStream & no_fieldname(const Enable en){
         config_.no_fieldname = bool(en == EN);
         return *this;
     }
@@ -277,14 +287,36 @@ public:
         write_checked(chr); return *this;}
     __inline OutputStream & operator<<(const wchar_t chr){
         write_checked(chr); return *this;}
-    __inline OutputStream & operator<<(char * str){ 
-        write_checked(str, strlen(str)); return *this;}
-    __inline OutputStream & operator<<(const char* str){ 
-        write_checked(str, strlen(str)); return *this;}
+
+    // !warning, take care of you stupid null-terminated c-style string
+    __inline OutputStream & operator<<(char * str){
+        write_checked(std::span<const uint8_t>(
+            reinterpret_cast<const uint8_t *>(str),
+            strlen(str))
+        );
+        return *this;
+    }
+
+    // !warning, take care of you stupid null-terminated c-style string
+    __inline OutputStream & operator<<(const char* str){
+        write_checked(std::span<const uint8_t>(
+            reinterpret_cast<const uint8_t *>(str),
+            strlen(str))
+        );
+        return *this;
+    }
+
     __inline OutputStream & operator<<(const std::string & str){
-        write_checked(str.data(),str.length()); return *this;}
+        *this << std::string_view(str);
+        return *this;
+    }
     __inline OutputStream & operator<<(const std::string_view str){
-        write_checked(str.data(),str.length()); return *this;}
+        write_checked(std::span<const uint8_t>(
+            reinterpret_cast<const uint8_t *>(str.data()),
+            str.length())
+        );
+        return *this;
+    }
 
     OutputStream & operator<<(const String & str);
     OutputStream & operator<<(const StringView str);
@@ -365,10 +397,10 @@ private:
     void print_i32(const int32_t i_val);
     void print_u64(const uint64_t i_val);
     void print_i64(const int64_t i_val);
-    
+
     __inline void print_numeric(const char * str, const size_t len, const bool pos){
         if(config_.showpos and pos) *this << '+';
-        this->write(str, len);
+        this->write(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(str), len));
     }
 
     void print_iq16(const math::fixed_t<16, int32_t> q_val);
@@ -416,13 +448,13 @@ private:
         auto & self = *this;
         auto begin = std::ranges::begin(range);
         auto end = std::ranges::end(range);
-        
+
         self << brackets<'['>();
         if (begin != end) {
             // Print first element
             self << *begin;
             ++begin;
-            
+
             // Print remaining elements with separator
             for (; begin != end; ++begin) {
                 self << sep_func();
@@ -471,7 +503,7 @@ private:
         *this << brackets<'('>();
         std::apply(
             [&](const auto&... args) {
-                ((tupleSize > 1 && &args != &std::get<tupleSize - 1>(t) 
+                ((tupleSize > 1 && &args != &std::get<tupleSize - 1>(t)
                     ? (*this << args << ',') : (*this << args)), ...);
             },
             t
@@ -487,7 +519,7 @@ public:
     //     }else if constexpr(std::ranges::forward_range<R>){
     //         print_chained_range(std::forward<R>(range));
     //     }else{
-    //         static_assert(details::false_v<R>, 
+    //         static_assert(details::false_v<R>,
     //             "ostream does not support this range type");
     //     }
     //     return *this;
@@ -497,21 +529,21 @@ public:
     template <std::ranges::range R>
     OutputStream& operator<<(R&& range) {  // 改为万能引用
         *this << brackets<'['>();
-        
+
         auto it = std::ranges::begin(range);
         auto end = std::ranges::end(range);
-        
+
         if (it != end) {
             *this << *it;
             ++it;
-            
+
             for (; it != end; ++it) {
                 *this << ',' << *it;
             }
         } else {
             *this << '\\';
         }
-        
+
         *this << brackets<']'>();
         return *this;
     }
@@ -521,10 +553,10 @@ public:
     OutputStream& operator<<(const T& iter) {
         auto & self = *this;
         self << brackets<'['>();
-        
+
         bool is_first = true;
         auto temp_iter = iter; // 创建副本以避免修改原迭代器
-        
+
         while (temp_iter.has_next()) {
             if (!is_first) {
                 self << ',';
@@ -532,12 +564,12 @@ public:
             self << temp_iter.next();
             is_first = false;
         }
-        
+
         // 如果没有任何元素，可以输出特定标记（如原代码中的'\'）
         if (is_first) {
             self << '\\';
         }
-        
+
         self << self.template brackets<']'>();
         return self;
     }
@@ -559,7 +591,7 @@ public:
         return *this;
     }
 
-    
+
     template <typename First, typename ... Args>
     OutputStream & prints(First && first, Args&&... args){
         print_indent();
@@ -617,14 +649,14 @@ public:
     [[nodiscard]] __attribute__((const)) constexpr auto radix() const {return config_.radix;}
 
 
-    [[nodiscard]] __attribute__((const)) 
+    [[nodiscard]] __attribute__((const))
     static constexpr Endl endl(){return {};}
 
-    [[nodiscard]] __attribute__((const)) 
+    [[nodiscard]] __attribute__((const))
     static constexpr Splitter splitter(){return {};}
 
     template<char chr>
-    [[nodiscard]] __attribute__((const)) 
+    [[nodiscard]] __attribute__((const))
     static constexpr Brackets<chr> brackets(){return {};}
 
     struct [[nodiscard]] FieldName final{
@@ -646,7 +678,7 @@ public:
             return *this;
         }
 
-        __inline friend OutputStream & operator<<(OutputStream & os, const FieldName & self){ 
+        __inline friend OutputStream & operator<<(OutputStream & os, const FieldName & self){
             return os;
         }
     private:
@@ -673,12 +705,12 @@ public:
             if constexpr (sizeof...(args)) {
                 ((os_ << std::forward<Args>(args)), ...);
             }
-            if(not os_.config().no_scoped) 
+            if(not os_.config().no_scoped)
                 os_ << os_.brackets<'}'>();
             return *this;
         }
 
-        friend OutputStream & operator<<(OutputStream & os, const ScopedInfo & info){ 
+        friend OutputStream & operator<<(OutputStream & os, const ScopedInfo & info){
             return os;
         }
     private:
@@ -733,7 +765,7 @@ private:
     Config config_;
 
     __fast_inline void print_splt(){
-        write(config_.splitter, sp_len);
+        write(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(config_.splitter), sp_len));
     }
 
     template<typename T>
@@ -764,7 +796,7 @@ private:
     }
 
     __fast_inline void print_indent(){
-        if((config_.indent == 0)) [[likely]] 
+        if((config_.indent == 0)) [[likely]]
             return;
         for(size_t i = 0; i < config_.indent; i++){
             write('\t');
@@ -774,8 +806,11 @@ private:
     __fast_inline void print_endl(){
         static constexpr const char * enter_str = "\r\n";
         static constexpr size_t enter_str_len = 2;
-        
-        write(enter_str, enter_str_len);
+
+        write(std::span<const uint8_t>(
+            reinterpret_cast<const uint8_t *>(enter_str),
+            enter_str_len
+        ));
         print_end();
     }
 
@@ -800,29 +835,29 @@ private:
     #endif
 
     struct Buf{
-        char buf[OSTREAM_BUF_SIZE];
+        uint8_t buf[OSTREAM_BUF_SIZE];
         uint8_t size = 0;
-        
-        
+
+
         // 用于压入数据，当数据溢满时发送数据包
         template<typename Fn>
-        __fast_inline void push(const std::span<const char> pbuf, Fn&& fn) {
+        __fast_inline void push(const std::span<const uint8_t> pbuf, Fn&& fn) {
             size_t offset = 0;
             while (offset < pbuf.size()) {
                 size_t available = OSTREAM_BUF_SIZE - size;
-                size_t copy_size = std::min(available, pbuf.size() - offset);
+                size_t clone_size = std::min(available, pbuf.size() - offset);
 
                 std::copy(
                     pbuf.data() + offset,
-                    pbuf.data() + offset + copy_size,
+                    pbuf.data() + offset + clone_size,
                     buf + size
                 );
 
-                size += static_cast<uint8_t>(copy_size);
-                offset += copy_size;
+                size += static_cast<uint8_t>(clone_size);
+                offset += clone_size;
 
                 if (size == OSTREAM_BUF_SIZE) {
-                    fn(std::span<const char>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
+                    fn(std::span<const uint8_t>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
                     clear();  // 发送后重置缓冲区
                 }
             }
@@ -830,10 +865,10 @@ private:
 
         // 用于压入数据，当数据溢满时发送数据包
         template<typename Fn>
-        __fast_inline void push(char data, Fn&& fn) {
+        __fast_inline void push(uint8_t data, Fn&& fn) {
             buf[size++] = data;
             if (size == OSTREAM_BUF_SIZE) {
-                fn(std::span<const char>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
+                fn(std::span<const uint8_t>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
                 clear();  // 发送后重置缓冲区
             }
         }
@@ -842,7 +877,7 @@ private:
         template<typename Fn>
         __fast_inline void flush(Fn&& fn) {
             if (size > 0) {
-                fn(std::span<const char>(buf, size));  // 发送缓冲区数据
+                fn(std::span<const uint8_t>(buf, size));  // 发送缓冲区数据
                 clear();  // 发送后重置缓冲区
             }
         }
@@ -855,11 +890,11 @@ private:
 
     Buf buf_;
 
-    void write_checked(const char *pstr, size_t len){
-        return write(pstr, len);
+    void write_checked(const std::span<const uint8_t> bytes){
+        return write(bytes);
     }
 
-    void write_checked(const char chr){ 
+    void write_checked(const char chr){
         return write(chr);
     }
 };
@@ -871,16 +906,16 @@ private:
     using Route = pro::proxy<Traits>;
     Route p_route_;
 
-    void sendout(const std::span<const char> pbuf);
+    void sendout(const std::span<const uint8_t> pbuf);
 public:
     OutputStreamByRoute(){;}
 
-    OutputStreamByRoute(Route && route):    
+    OutputStreamByRoute(Route && route):
         p_route_(std::move(route)){;}
 
 
     [[nodiscard]] size_t free_capacity() const {
-        if(p_route_ == nullptr) [[unlikely]] 
+        if(p_route_ == nullptr) [[unlikely]]
             __builtin_trap();
         return p_route_->free_capacity();
     }
@@ -890,7 +925,7 @@ public:
     }
 
     Route & route() {
-        if(p_route_ == nullptr) [[unlikely]] 
+        if(p_route_ == nullptr) [[unlikely]]
             __builtin_trap();
         return p_route_;
     }

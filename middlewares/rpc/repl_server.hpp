@@ -11,16 +11,16 @@ namespace ymd::robots{
 struct ReplServer final{
 public:
     ReplServer(ReadCharProxy && is, WriteCharProxy && os) :
-        is_(std::move(is)), 
+        is_(std::move(is)),
         os_(std::move(os)){;}
 
     template<typename T>
     void invoke(T && obj){
         while(is_->available()){
-            char chr;
-            is_->try_read_char(chr);
+            uint8_t byte;
+            is_->try_read_byte(byte);
 
-            splitter_.update(chr, 
+            splitter_.update(byte,
                 [this, &obj](const std::span<const StringView> strs){
                 const auto res = respond(obj, strs);
                 if(outen_){
@@ -30,15 +30,15 @@ public:
         }
     }
 
-    void set_outen(Enable outen){ outen_ = outen == EN; }   
+    void set_outen(Enable outen){ outen_ = outen == EN; }
 private:
     ReadCharProxy is_;
     OutputStreamByRoute os_;
 
     StreamedStringSplitter splitter_;
-    
+
     bool outen_ = false;
-    
+
     template<typename T>
     auto respond(T && obj, const std::span<const StringView> strs){
         const auto guard = os_.create_guard();

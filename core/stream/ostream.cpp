@@ -21,12 +21,12 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
             break;
         }
 
-        
+
         else if (func == &std::scientific) {
             //TODO
             break;
         }
-        
+
         else if (func == &std::boolalpha){
             config_.boolalpha = true;
             break;
@@ -41,7 +41,7 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
             config_.showpos = true;
             break;
         }
-        
+
         else if (func == &std::noshowpos){
             config_.showpos = false;
             break;
@@ -51,7 +51,7 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
             config_.showbase = true;
             break;
         }
-        
+
         else if (func == &std::noshowbase){
             config_.showbase = false;
             break;
@@ -108,7 +108,7 @@ void OutputStream::print_source_loc(const std::source_location & loc){
 
     this->set_splitter('\0');
     this->set_indent(this->indent());
-    
+
     this->println(loc.function_name());
     this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
 }
@@ -130,7 +130,7 @@ OutputStream & OutputStream::operator<<(const double value){
         *this << get_basealpha(radix());}\
     char str[blen];\
     const auto len = convfunc(val, str, this->config_.radix);\
-    this->write(str, len);\
+    this->write(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(str), len));\
 
 
 OutputStream & OutputStream::operator<<(const uint8_t val){
@@ -183,26 +183,37 @@ void OutputStream::print_iq16(const math::fixed_t<16, int32_t> val){
 
 
 OutputStream & OutputStream::flush(){
-    buf_.flush([this](const std::span<const char> pbuf){this->sendout(pbuf);});
+    buf_.flush([this](const std::span<const uint8_t> pbuf){this->sendout(pbuf);});
     return *this;
 }
 
-void OutputStreamByRoute::sendout(const std::span<const char> pbuf){
-    if(!p_route_.has_value()) __builtin_trap();
-    p_route_->try_write_chars(pbuf.data(), pbuf.size());
+void OutputStreamByRoute::sendout(const std::span<const uint8_t> pbuf){
+    if(!p_route_.has_value())
+        __builtin_trap();
+    p_route_->try_write_bytes(pbuf);
 }
 
 OutputStream & OutputStream::operator<<(const StringView str){
-    write_checked(str.data(), str.length()); return * this;}
+    write_checked(std::span<const uint8_t>(
+        reinterpret_cast<const uint8_t *>(str.data()),
+        str.length())
+    );
+    return * this;
+}
 
 OutputStream & OutputStream::operator<<(const MutStringView str){
-    write_checked(str.data(), str.length()); return * this;}
+    write_checked(std::span<const uint8_t>(
+        reinterpret_cast<const uint8_t *>(str.data()),
+        str.length())
+    );
+    return * this;
+}
 
 OutputStream & OutputStream::operator<<(const bool val){
     if(config_.boolalpha == false){
         write(val ? '1' : '0');
         return *this;
     }else{
-        return *this << ((val) ? "true" : "false"); 
+        return *this << ((val) ? "true" : "false");
     }
 }

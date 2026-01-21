@@ -13,14 +13,14 @@ static constexpr  uint32_t hash_djb2_buffer(const uint8_t *p_buff, int p_len, ui
 	return hash;
 }
 
-void ImageTransmitter::sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len){
+void ImageTransmitter::send_block_data(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len){
 
     unit.header = header;
     unit.hash = hash_djb2_buffer(data_from, len);
     unit.time_stamp = time_stamp;
 
-    instance.write((const char *)&unit, sizeof(unit));
-    instance.write((const char *)(data_from), len);
+    instance.write(unit.as_bytes());
+    instance.write(std::span(reinterpret_cast<const uint8_t *>(data_from), len));
 }
 
 void ImageTransmitter::transmit(const uint8_t *buf, const Vec2i &img_size, const uint8_t index){
@@ -49,7 +49,7 @@ void ImageTransmitter::transmit(const uint8_t *buf, const Vec2i &img_size, const
             .data_index = block_start
         };
 
-        sendBlockData(unit, (const uint8_t *)buf + block_start, block_end - block_start);
+        send_block_data(unit, (const uint8_t *)buf + block_start, block_end - block_start);
 
         block_number++;
 

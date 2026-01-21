@@ -74,11 +74,11 @@ struct AlxActivity{
     void resume(){
         if(uart_.available() == 0) return;
         while(uart_.available()){
-            char chr;
-            const auto len = uart_.try_read_char(chr);
+            uint8_t byte;
+            const auto len = uart_.try_read_byte(byte);
             if(len == 0) break;
-            // _bytes.push_back(uint8_t(chr));
-            parser_.push_byte(static_cast<uint8_t>(chr)); 
+            // _bytes.push_back(uint8_t(byte));
+            parser_.push_byte(static_cast<uint8_t>(byte));
             received_bytes_cnt_++;
         }
     }
@@ -133,7 +133,7 @@ void alx_aoa_main(){
 
     using Mk8Measurements = std::array<Mk8Measurement, 2>;
 
-    [[maybe_unused]] auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res, const size_t idx){ 
+    [[maybe_unused]] auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res, const size_t idx){
 
         if(res.is_ok()){
             const auto & ev = res.unwrap();
@@ -187,10 +187,10 @@ void alx_aoa_main(){
             case hal::UartEvent::RxIdle:
 
                 while(alx_1_uart_.available()){
-                    char chr;
-                    const auto read_len = alx_1_uart_.try_read_char(chr);
+                    char byte;
+                    const auto read_len = alx_1_uart_.try_read_byte(byte);
                     if(read_len == 0) break;
-                    alx_1_parser_.push_byte(static_cast<uint8_t>(chr)); 
+                    alx_1_parser_.push_byte(static_cast<uint8_t>(byte));
                 }
                 break;
             default:
@@ -203,10 +203,10 @@ void alx_aoa_main(){
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:
                 while(alx_2_uart_.available()){
-                    char chr;
-                    const auto read_len = alx_2_uart_.try_read_char(chr);
+                    char byte;
+                    const auto read_len = alx_2_uart_.try_read_byte(byte);
                     if(read_len == 0) break;
-                    alx_2_parser_.push_byte(static_cast<uint8_t>(chr)); 
+                    alx_2_parser_.push_byte(static_cast<uint8_t>(byte));
                 }
                 break;
             default:
@@ -222,7 +222,7 @@ void alx_aoa_main(){
         blink_activity_.resume();
 
         static auto report_timer = async::RepeatTimer::from_duration(3ms);
-        
+
         report_timer.invoke_if([&]{
 
             [[maybe_unused]] const auto & alx_measurement = alx_measurements_[0];
@@ -263,7 +263,7 @@ void alx_aoa_main(){
 
             // [[maybe_unused]] const bool is_far =
             //     (is_left_far) and (is_right_far);
-            
+
             // const auto may_dual_p = geometry::compute_intersection_points(left_circle, right_circle);
             // const auto p = may_dual_p.size() ? may_dual_p[0] : Vec2f::ZERO;
             const auto left_ray = Ray2<float>(LEFT_BASE, LEFT_ANGLE_BASE + left_meas.phase);
@@ -303,11 +303,11 @@ void alx_aoa_main(){
                 hal::usart2.available(),
                 hal::usart3.tx_dma_buf_index_,
                 hal::usart3.tx_fifo_.length(),
-                hal::usart3.try_write_chars("1234567890", 10),
+                hal::usart3.try_write_bytes("1234567890", 10),
                 USART3_TX_DMA_CH.pending_count()
                 // 0
                 // (left_raw_meas.distance > right_raw_meas.distance) ? right_est_point : right_est_point
-                
+
                 // ((left_est_point - RIGHT_BASE).angle() - (right_meas.phase + RIGHT_ANGLE_BASE)).to_turns(),
                 // ((right_est_point - LEFT_BASE).angle() - (left_meas.phase + LEFT_ANGLE_BASE)).to_turns(),
                 // left_est_point.x,
