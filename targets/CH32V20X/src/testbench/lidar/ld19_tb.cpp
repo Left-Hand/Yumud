@@ -62,19 +62,27 @@ void ld19_main(){
 
     #if defined(CH32V20X)
     auto & ld19_uart_ = hal::usart1;
+    ld19_uart_.init({
+        .remap = hal::USART1_REMAP_PA9_PA10,
+        .baudrate = hal::NearestFreq(ld19::DEFAULT_UART_BAUD)
+    });
+
     #elif defined(CH32V30X)
     auto & ld19_uart_ = hal::uart4;
     ld19_uart_.init({
         .remap = hal::UART4_REMAP_PE0_PE1,
         .baudrate = hal::NearestFreq(ld19::DEFAULT_UART_BAUD)
     });
+    #else
+    static_assert(false, "Unsupported MCU");
+    #endif
 
     ld19_uart_.set_event_callback([&](const hal::UartEvent & ev){
         auto poll_parser = [&](){
             while(true){
-                char chr;
-                if(ld19_uart_.try_read_byte(chr) == 0) break;
-                ld19_parser_.push_byte(static_cast<uint8_t>(chr));
+                uint8_t byte;
+                if(ld19_uart_.try_read_byte(byte) == 0) break;
+                ld19_parser_.push_byte(static_cast<uint8_t>(byte));
             }
         };
         switch(ev.kind()){
@@ -89,10 +97,6 @@ void ld19_main(){
                 break;
         }
     });
-    #else
-    static_assert(false, "Unsupported MCU");
-    #endif
-
 
     while(true){
         blink_service_poller();

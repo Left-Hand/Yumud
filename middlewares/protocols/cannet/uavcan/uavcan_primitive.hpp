@@ -76,7 +76,7 @@ struct [[nodiscard]] MessageFrameHeader final{
         return std::bit_cast<uint32_t>(*this);
     }
     constexpr hal::CanExtId to_can_id() const {
-        return hal::CanExtId(to_bits());
+        return hal::CanExtId::from_bits(to_bits());
     }
 
     [[nodiscard]] NodeId source_id() const {
@@ -109,7 +109,7 @@ struct [[nodiscard]] AnonymousFrameHeader final{
         return std::bit_cast<uint32_t>(*this);
     }
     constexpr hal::CanExtId to_can_id() const {
-        return hal::CanExtId(to_bits());
+        return hal::CanExtId::from_bits(to_bits());
     }
 
     [[nodiscard]] NodeId source_id() const {
@@ -137,7 +137,7 @@ struct [[nodiscard]] ServiceFrameHeader final{
         return std::bit_cast<uint32_t>(*this);
     }
     constexpr hal::CanExtId to_can_id() const {
-        return hal::CanExtId(to_bits());
+        return hal::CanExtId::from_bits(to_bits());
     }
 
     constexpr NodeId dest_id() const {
@@ -174,9 +174,6 @@ struct [[nodiscard]] TailByte final{
     uint8_t is_end_of_transfer:1;
     uint8_t is_start_of_transfer:1;
 
-    static constexpr TailByte from_bits(uint8_t bits) {
-        return std::bit_cast<TailByte>(bits);
-    }
     [[nodiscard]] static constexpr Self from_bits(const uint8_t bits){
         return std::bit_cast<Self>(bits);
     }
@@ -186,10 +183,8 @@ struct [[nodiscard]] TailByte final{
     }
 };
 
-static_assert(sizeof(TailByte) == 1);
 
-
-struct Header{
+struct [[nodiscard]] Header final{
     using Self = Header;
     uint32_t bits;
 
@@ -214,13 +209,15 @@ struct Header{
     [[nodiscard]] constexpr T to_header() const {
         return T::from_bits(this->to_bits());
     }
+
     [[nodiscard]] constexpr hal::CanExtId to_can_id() const {
-        return hal::CanExtId(this->to_bits());
+        return hal::CanExtId::from_bits(this->to_bits());
     }
 
     [[nodiscard]] NodeId source_id() const {
         return NodeId::from_bits(static_cast<uint8_t>(to_bits() & 0b1111111));
     }
+
     [[nodiscard]] constexpr Priority priority() const {
         return Priority((bits >> 24) & 0b11111);
     }

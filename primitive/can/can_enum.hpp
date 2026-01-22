@@ -359,7 +359,7 @@ OutputStream & operator<<(OutputStream & os, const Error & fault);
 enum class [[nodiscard]] LibError:uint8_t{
     BlockingTransmitTimeout,
     NoMailboxAvailable,
-    SoftFifoOverflow
+    SoftQueueOverflow
 };
 
 OutputStream & operator<<(OutputStream & os, const LibError & error);

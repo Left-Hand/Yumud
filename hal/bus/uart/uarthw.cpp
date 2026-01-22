@@ -553,12 +553,12 @@ size_t Uart::try_write_bytes(std::span<const uint8_t> bytes){
         }
             break;
         case CommStrategy::Interrupt:{
-            const auto written_len = tx_fifo_.try_push(bytes);
+            const auto written_len = tx_queue_.try_push(bytes);
             enable_tx_interrupt(EN);
             return written_len;
         }
         case CommStrategy::Dma:{
-            const auto written_len = tx_fifo_.try_push(bytes);
+            const auto written_len = tx_queue_.try_push(bytes);
             return written_len;
         }
         case CommStrategy::Nil:
@@ -644,7 +644,7 @@ void Uart::enable_tx_dma(const Enable en){
             switch(ev){
             case DmaEvent::TransferComplete:
                 //将数据从当前索引填充至末尾
-                (void)self.tx_fifo_.try_pop(std::span(
+                (void)self.tx_queue_.try_pop(std::span(
                     &tx_dma_buf_[tx_dma_buf_index_],
                     UART_TX_DMA_BUF_SIZE - tx_dma_buf_index_
                 ));
@@ -653,7 +653,7 @@ void Uart::enable_tx_dma(const Enable en){
             case DmaEvent::HalfTransfer:
 
                 //将数据从当前索引填充至半满
-                (void)self.tx_fifo_.try_pop(std::span(
+                (void)self.tx_queue_.try_pop(std::span(
                     &tx_dma_buf_[tx_dma_buf_index_],
                     (UART_TX_DMA_BUF_SIZE / 2) - tx_dma_buf_index_
                 ));
@@ -727,7 +727,7 @@ void Uart::enable_rx_dma(const Enable en){
                 }
                 const size_t req_len = UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_;
                 //传送结束 将后半部分的pingpong区填入fifo中
-                const size_t act_len = self.rx_fifo_.try_push(std::span(
+                const size_t act_len = self.rx_queue_.try_push(std::span(
                     &rx_dma_buf_[rx_dma_buf_index_],
                     req_len
                 ));
@@ -736,8 +736,8 @@ void Uart::enable_rx_dma(const Enable en){
                     //TODO
                     // 接收的数据没有被及时读取 接收fifo无法继续存数据
                     __builtin_trap();
-
                 }
+
                 rx_dma_buf_index_ = 0;
             }
                 break;
@@ -748,7 +748,7 @@ void Uart::enable_rx_dma(const Enable en){
                 }
                 //传送进行一半 将前半部分的pingpong区填入fifo中
                 const size_t req_len = HALF_UART_RX_DMA_BUF_SIZE - rx_dma_buf_index_;
-                const size_t act_len = self.rx_fifo_.try_push(std::span(
+                const size_t act_len = self.rx_queue_.try_push(std::span(
                     &rx_dma_buf_[rx_dma_buf_index_],
                     req_len
                 ));
@@ -756,8 +756,8 @@ void Uart::enable_rx_dma(const Enable en){
                     //TODO
                     // 接收的数据没有被及时读取 接收fifo无法继续存数据
                     __builtin_trap();
-
                 }
+
                 rx_dma_buf_index_ = HALF_UART_RX_DMA_BUF_SIZE;
             }
                 break;
@@ -782,7 +782,7 @@ void UartInterruptDispatcher::isr_rxne(Uart & self){
     switch(self.rx_strategy_){
         case CommStrategy::Interrupt:{
             const auto data = uint8_t(SDK_INST(self.inst_)->DATAR);
-            if(const auto len = self.rx_fifo_.try_push(data);
+            if(const auto len = self.rx_queue_.try_push(data);
                 len == 0
             ){
                 //TODO
@@ -806,7 +806,7 @@ void UartInterruptDispatcher::isr_txe(Uart & self){
             break;
         case CommStrategy::Interrupt:{
             uint8_t byte = 0;
-            if(const auto len = self.tx_fifo_.try_pop(byte);
+            if(const auto len = self.tx_queue_.try_pop(byte);
                 len != 0){
                 SDK_INST(self.inst_)->DATAR = byte;
             }
@@ -831,7 +831,7 @@ void UartInterruptDispatcher::isr_rxidle(Uart & self){
             if((next_index & (HALF_UART_RX_DMA_BUF_SIZE - 1)) != 0){
             #endif
                 const auto req_len = size_t(next_index - self.rx_dma_buf_index_);
-                const auto act_len = self.rx_fifo_.try_push(std::span(
+                const auto act_len = self.rx_queue_.try_push(std::span(
                     self.rx_dma_buf_.data() + self.rx_dma_buf_index_, req_len
                 ));
                 if(act_len != req_len){

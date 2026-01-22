@@ -18,7 +18,7 @@ void UartSw::tick(){
             break;
 
         case ByteProg::D0 ... ByteProg::D7:
-            tx_pin_.write(BoolLevel::from(current_char & (1 << (uint8_t)prog_)));
+            tx_pin_.write(BoolLevel::from(now_char_ & (1 << (uint8_t)prog_)));
             prog_ = (prog_ == ByteProg::D7) ? ByteProg::STOP : ByteProg((int8_t)prog_ + 1);
             break;
             
@@ -28,9 +28,9 @@ void UartSw::tick(){
             break;
         case ByteProg::IDLE:
             tx_pin_.set_high();
-            if(tx_fifo_.length()){
-                current_char = fetch_next();
-                // current_char = 0x55;
+            if(tx_queue_.length()){
+                now_char_ = fetch_next();
+                // now_char_ = 0x55;
                 prog_ = ByteProg::START;
             }
             break;

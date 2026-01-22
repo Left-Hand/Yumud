@@ -14,8 +14,8 @@
 
 namespace ymd::hal{
 
-#ifndef UART_FIFO_BUF_SIZE
-static constexpr size_t UART_FIFO_BUF_SIZE = 256;
+#ifndef UART_BUFFERED_QUEUE_SIZE
+static constexpr size_t UART_BUFFERED_QUEUE_SIZE = 256;
 #endif
 
 
@@ -56,13 +56,13 @@ public:
 
     virtual void init(const Config & cfg) = 0;
 
-    [[nodiscard]] __fast_inline size_t available() const {return rx_fifo_.length();}
+    [[nodiscard]] __fast_inline size_t available() const {return rx_queue_.length();}
     [[nodiscard]] __fast_inline size_t free_capacity() const {
         switch(tx_strategy_){
             case CommStrategy::Nil: __builtin_trap();
-            case CommStrategy::Blocking: return UINT32_MAX;
-            case CommStrategy::Dma: return tx_fifo_.free_capacity();
-            case CommStrategy::Interrupt: return tx_fifo_.free_capacity();
+            case CommStrategy::Blocking: return std::numeric_limits<size_t>::max();
+            case CommStrategy::Dma: return tx_queue_.free_capacity();
+            case CommStrategy::Interrupt: return tx_queue_.free_capacity();
         }
         __builtin_trap();
     }
@@ -80,8 +80,8 @@ public:
     [[nodiscard]] size_t try_read_bytes(std::span<uint8_t> bytes);
     [[nodiscard]] size_t try_read_byte(uint8_t & byte);
 
-    auto & tx_fifo(){return tx_fifo_;}
-    auto & rx_fifo(){return rx_fifo_;}
+    auto & tx_queue(){return tx_queue_;}
+    auto & rx_queue(){return rx_queue_;}
 // private:
 protected:
     EventCallback event_callback_;
@@ -93,8 +93,8 @@ public:
     CommStrategy rx_strategy_;
 
 
-    RingBuf<uint8_t, UART_FIFO_BUF_SIZE> tx_fifo_;
-    RingBuf<uint8_t, UART_FIFO_BUF_SIZE> rx_fifo_;
+    RingBuf<uint8_t, UART_BUFFERED_QUEUE_SIZE> tx_queue_;
+    RingBuf<uint8_t, UART_BUFFERED_QUEUE_SIZE> rx_queue_;
     UartBase(){;}
 
 };

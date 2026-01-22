@@ -160,12 +160,12 @@ public:
 private:
     void * inst_;
     
-    #ifndef CAN_SOFTFIFO_SIZE
-    static constexpr size_t CAN_SOFTFIFO_SIZE = 8;
+    #ifndef CAN_BUFFERED_QUEUE_SIZE
+    static constexpr size_t CAN_BUFFERED_QUEUE_SIZE = 8;
     #endif
 
-    RingBuf<BxCanFrame, CAN_SOFTFIFO_SIZE> rx_fifo_;
-    RingBuf<BxCanFrame, CAN_SOFTFIFO_SIZE> tx_fifo_;
+    RingBuf<BxCanFrame, CAN_BUFFERED_QUEUE_SIZE> rx_queue_;
+    RingBuf<BxCanFrame, CAN_BUFFERED_QUEUE_SIZE> tx_queue_;
 
     EventCallback event_callback_ = nullptr;
 

@@ -476,7 +476,7 @@ void Can::transmit(const BxCanFrame & frame, CanMailboxIndex mbox_idx){
 }
 
 
-
+#if 0
 Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
 
     while(true){
@@ -486,40 +486,60 @@ Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
         //大概率有空闲邮箱 查找到空闲邮箱后发送
         if(may_idle_mbox_idx.is_some()){
             const auto idle_mbox_idx = may_idle_mbox_idx.unwrap();
-            if(tx_fifo_.length() == 0){
+            if(tx_queue_.length() == 0){
                 transmit(frame, idle_mbox_idx);
                 return Ok();
             }else{
-                transmit(tx_fifo_.pop_unchecked(), idle_mbox_idx);
+                transmit(tx_queue_.pop_unchecked(), idle_mbox_idx);
             }
         }else{
             break;
         }
     }
 
-    //如果没找到空闲邮箱 存入软fifo
-    if(const auto len = tx_fifo_.try_push(frame);
+    //如果没找到空闲邮箱 存入队列
+    if(const auto len = tx_queue_.try_push(frame);
         len == 0){
-        // 如果软fifo已满 则返回错误
-        return Err(CanLibError::SoftFifoOverflow);
+        // 如果队列已满 则返回错误
+        return Err(CanLibError::SoftQueueOverflow);
     }
     return Ok();
+}
+#else
+Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
+    //查找空闲的邮箱
+    const auto may_idle_mbox_idx = _can_get_idle_mailbox_index(inst_);
 
+    //如果有空闲邮箱，直接发送
+    if(may_idle_mbox_idx.is_some()){
+        const auto idle_mbox_idx = may_idle_mbox_idx.unwrap();
+        transmit(frame, idle_mbox_idx);
+        return Ok();
+    }
+    
+    //没有空闲邮箱，存入队列
+    if(const auto write_len = tx_queue_.try_push(frame);
+        write_len == 0){
+        // 队列已满
+        return Err(CanLibError::SoftQueueOverflow);
+    }
+    return Ok();
 }
 
+#endif
 
 BxCanFrame Can::read(){
     BxCanFrame frame = BxCanFrame::from_uninitialized();
-    if(rx_fifo_.try_pop(frame) == 0)
+    if(rx_queue_.try_pop(frame) == 0)
         __builtin_trap();
     return frame;
 }
 
 Option<BxCanFrame> Can::try_read(){
     //如果没有可读的报文 返回空
-    if(rx_fifo_.length() == 0) return None;
+    if(rx_queue_.length() == 0) return None;
     //弹出可读的报文
-    return Some(rx_fifo_.pop_unchecked());
+    return Some(rx_queue_.pop_unchecked());
 }
 
 
@@ -542,11 +562,11 @@ BxCanFrame Can::receive(const CanFifoIndex fifo_idx){
 
 
 size_t Can::free_capacity(){
-    return tx_fifo_.free_capacity();
+    return tx_queue_.free_capacity();
 }
 
 size_t Can::available(){
-    return rx_fifo_.length();
+    return rx_queue_.length();
 }
 
 void Can::alter_to_pins(const CanRemap remap){
@@ -723,10 +743,10 @@ void CanInterruptDispatcher::isr_tx(Can & self){
 
 void Can::poll_backup_fifo(){
     auto & self = *this;
-    if(self.tx_fifo_.length() == 0) return;
+    if(self.tx_queue_.length() == 0) return;
     const auto may_idle_mailbox = _can_get_idle_mailbox_index(self.inst_);
     if(may_idle_mailbox.is_none()) return;
-    self.transmit(self.tx_fifo_.pop_unchecked(), may_idle_mailbox.unwrap());
+    self.transmit(self.tx_queue_.pop_unchecked(), may_idle_mailbox.unwrap());
 }
 
 void CanInterruptDispatcher::isr_rx0(Can & can){
@@ -777,7 +797,7 @@ void CanInterruptDispatcher::isr_rx(Can & self, volatile uint32_t & rfifo_reg, c
         //收到新的报文
         {
             //TODO 改为异步sink
-            (void)self.rx_fifo_.try_push(self.receive(fifo_idx));
+            (void)self.rx_queue_.try_push(self.receive(fifo_idx));
         }
 
         {
