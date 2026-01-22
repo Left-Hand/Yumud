@@ -98,6 +98,8 @@ public:
 
     friend OutputStream & operator << (OutputStream & os, const CanFilterConfig & self);
 
+    friend class CanFilter;
+
 };
 
 

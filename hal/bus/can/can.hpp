@@ -64,7 +64,9 @@ struct Can;
 
 struct CanInterruptDispatcher{
     static void isr_tx(Can & can);
-    static void isr_rx(Can & can, const CanFifoIndex fifo_idx);
+    static void isr_rx(Can & can, volatile uint32_t & rfifo_reg, const CanFifoIndex fifo_idx);
+    static void isr_rx0(Can & can);
+    static void isr_rx1(Can & can);
     static void isr_sce(Can & can);
 };
 
