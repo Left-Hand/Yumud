@@ -27,6 +27,7 @@ using EventCallback = Can::EventCallback;
 
 
 #define EMIT_EVENT(x)   if(self.event_callback_ != nullptr) {self.event_callback_(x);}
+#define EMIT_EVENT_OR_TRAP(x)   if(self.event_callback_ != nullptr) {self.event_callback_(x);} else{__builtin_trap();}
 
 
 namespace {
@@ -610,7 +611,11 @@ void CanInterruptDispatcher::isr_tx(Can & self){
             case TSTATR_TME_MASK | TSTATR_RQCP_MASK | 0:
                 //发送失败
                 {
-                    const auto ev = CanEvent(CanTransmitEventType::Failed);
+                    const auto tx_ev = hal::CanTransmitEvent{
+                        .kind = CanTransmitEvent::Kind::Failed,
+                        .mbox_idx = mbox_idx
+                    };
+                    const auto ev = CanEvent::from(tx_ev);
                     EMIT_EVENT(ev);
                 }
 
@@ -620,7 +625,11 @@ void CanInterruptDispatcher::isr_tx(Can & self){
             case TSTATR_TME_MASK | TSTATR_RQCP_MASK | TSTATR_RXOK_MASK:
                 //发送成功
                 {
-                    const auto ev = CanEvent(CanTransmitEventType::Success);
+                    const auto tx_ev = hal::CanTransmitEvent{
+                        .kind = CanTransmitEvent::Kind::Success,
+                        .mbox_idx = mbox_idx
+                    };
+                    const auto ev = CanEvent::from(tx_ev);
                     EMIT_EVENT(ev);
                 }
 
@@ -652,8 +661,12 @@ void CanInterruptDispatcher::isr_rx(Can & self, const CanFifoIndex fifo_idx){
     if(temp_rfifo_reg & RFIFO_FFULL_MASK){
         //rfifo满
         {
-            //TODO
-            __builtin_trap();
+            const auto rx_ev = hal::CanReceiveEvent{
+                .kind = CanReceiveEvent::Kind::Full,
+                .fifo_idx = fifo_idx
+            };
+            const auto ev = CanEvent::from(rx_ev);
+            EMIT_EVENT_OR_TRAP(ev)
         }
         rfifo_reg = RFIFO_FFULL_MASK;
     }
@@ -661,8 +674,12 @@ void CanInterruptDispatcher::isr_rx(Can & self, const CanFifoIndex fifo_idx){
     if(temp_rfifo_reg & RFIFO_FOV_MASK){
         ///rfifo溢出
         {
-            //TODO
-            __builtin_trap();
+            const auto rx_ev = hal::CanReceiveEvent{
+                .kind = CanReceiveEvent::Kind::Overrun,
+                .fifo_idx = fifo_idx
+            };
+            const auto ev = CanEvent::from(rx_ev);
+            EMIT_EVENT_OR_TRAP(ev)
         }
         rfifo_reg = RFIFO_FOV_MASK;
     }
@@ -674,6 +691,15 @@ void CanInterruptDispatcher::isr_rx(Can & self, const CanFifoIndex fifo_idx){
             //TODO 改为异步sink
             (void)self.rx_fifo_.try_push(self.receive(fifo_idx));
         }
+
+        {
+            const auto rx_ev = hal::CanReceiveEvent{
+                .kind = CanReceiveEvent::Kind::Pending,
+                .fifo_idx = fifo_idx
+            };
+            const auto ev = CanEvent::from(rx_ev);
+            EMIT_EVENT_OR_TRAP(ev)
+        }
         //已读这个报文
         rfifo_reg = RFIFO_FOM_MASK;
     }
@@ -681,57 +707,60 @@ void CanInterruptDispatcher::isr_rx(Can & self, const CanFifoIndex fifo_idx){
 
 void CanInterruptDispatcher::isr_sce(Can & self){
     void * inst = self.inst_;
-    const auto reg = SDK_INST(inst)->INTENR;
-    if (can_get_it_status<CAN_IT_WKU>(reg, SDK_INST(inst))) {
+    const auto inten_reg = SDK_INST(inst)->INTENR;
+
+    auto flag_bits = hal::CanStatusFlag::zero();
+
+    if (can_get_it_status<CAN_IT_WKU>(inten_reg, SDK_INST(inst))) {
         // Handle Wake-up interrupt
         // 唤醒中断
-        {
-            //TODO
-        }
+        flag_bits.wakeup = 1;
         can_clear_it_pending_bit<CAN_IT_WKU>(SDK_INST(inst));
-    } else if (can_get_it_status<CAN_IT_SLK>(reg, SDK_INST(inst))) {
+    } 
+    
+    if (can_get_it_status<CAN_IT_SLK>(inten_reg, SDK_INST(inst))) {
         // Handle Sleep acknowledge interrupt
         // 睡眠确认中断
-        {
-            //TODO
-        }
+        flag_bits.sleep_acknowledge = 1;
         can_clear_it_pending_bit<CAN_IT_SLK>(SDK_INST(inst));
-    } else if (can_get_it_status<CAN_IT_ERR>(reg, SDK_INST(inst))) {
+    } 
+    
+    if (can_get_it_status<CAN_IT_ERR>(inten_reg, SDK_INST(inst))) {
         // Handle Error interrupt
         // 错误中断
-        {
-            //TODO
-        }
+        flag_bits.error = 1;
         can_clear_it_pending_bit<CAN_IT_ERR>(SDK_INST(inst));
-    } else if (can_get_it_status<CAN_IT_EWG>(reg, SDK_INST(inst))) {
+    } 
+    
+    if (can_get_it_status<CAN_IT_EWG>(inten_reg, SDK_INST(inst))) {
         // Handle Error warning interrupt
         // 主动错误中断
-        {
-            //TODO
-        }
+        flag_bits.error_warning = 1;
         can_clear_it_pending_bit<CAN_IT_EWG>(SDK_INST(inst));
-    } else if (can_get_it_status<CAN_IT_EPV>(reg, SDK_INST(inst))) {
+    } 
+    
+    if (can_get_it_status<CAN_IT_EPV>(inten_reg, SDK_INST(inst))) {
         // Handle Error passive interrupt
         // 被动错误中断
-        {
-            //TODO
-        }
+        flag_bits.error_passive = 1;
         can_clear_it_pending_bit<CAN_IT_EPV>(SDK_INST(inst));
-    } else if (can_get_it_status<CAN_IT_BOF>(reg, SDK_INST(inst))) {
+    } 
+    
+    if (can_get_it_status<CAN_IT_BOF>(inten_reg, SDK_INST(inst))) {
         // Handle Bus-off interrupt
         // 掉线中断
-        {
-            //TODO
-        }
+        flag_bits.bus_off = 1;
         can_clear_it_pending_bit<CAN_IT_BOF>(SDK_INST(inst));
-    } else if (can_get_it_status<CAN_IT_LEC>(reg, SDK_INST(inst))) {
+    } 
+    
+    if (can_get_it_status<CAN_IT_LEC>(inten_reg, SDK_INST(inst))) {
         // Handle Last error code interrupt
         // 错误码中断
-        {
-            //TODO
-        }
+        flag_bits.last_error_code = 1;
         can_clear_it_pending_bit<CAN_IT_LEC>(SDK_INST(inst));
     }
+
+    EMIT_EVENT(CanEvent::from(flag_bits));
 }
 
 namespace ymd::hal{
