@@ -45,6 +45,13 @@ class DmaChannel;
 
 struct Uart;
 struct UartInterruptDispatcher{
+
+    static void isr_txe(Uart & self);
+    static void isr_tc(Uart & self);
+
+    static void isr_rxne(Uart & self);
+    static void isr_rxidle(Uart & self);
+
     static void on_interrupt(Uart & uart);
 };
 
@@ -83,12 +90,6 @@ private:
     void enable_rx_dma(const Enable en);
     void enable_tx_dma(const Enable en);
 
-
-    void accept_txe_interrupt();
-    void accept_tc_interrupt();
-
-    void accept_rxne_interrupt();
-    void accept_rxidle_interrupt();
 
 
     std::array<uint8_t, UART_DMA_BUF_SIZE> tx_dma_buf_;

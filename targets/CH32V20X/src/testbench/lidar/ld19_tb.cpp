@@ -69,7 +69,7 @@ void ld19_main(){
         .baudrate = hal::NearestFreq(ld19::DEFAULT_UART_BAUD)
     });
 
-    ld19_uart_.set_event_handler([&](const hal::UartEvent & ev){
+    ld19_uart_.set_event_callback([&](const hal::UartEvent & ev){
         auto poll_parser = [&](){
             while(true){
                 char chr;

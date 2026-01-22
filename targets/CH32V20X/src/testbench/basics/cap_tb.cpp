@@ -109,7 +109,7 @@ void cap_main(){
     auto watch_pin_ = hal::PA<4>();
     watch_pin_.outpp();
 
-    hal::timer3.set_event_handler([&](const hal::TimerEvent & event){
+    hal::timer3.set_event_callback([&](const hal::TimerEvent & event){
         switch(event){
             case hal::TimerEvent::CC3:{
 

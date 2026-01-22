@@ -140,8 +140,8 @@ public:
     }
 
     template<typename Fn>
-    void set_event_handler(Fn && cb){
-        callback_ = std::forward<Fn>(cb);
+    void set_event_callback(Fn && cb){
+        event_callback_ = std::forward<Fn>(cb);
     }
 
     [[nodiscard]] bool is_done();
@@ -155,7 +155,7 @@ public:
     const uint8_t dma_nth_;
     const uint8_t ch_sel_nth_;
     
-    Callback callback_ = nullptr;
+    Callback event_callback_ = nullptr;
     Mode mode_ = Mode::Default;
 
 
@@ -181,7 +181,7 @@ public:
     );
 
     __fast_inline void accept_interrupt(DmaEvent event){
-        EXECUTE(callback_, event);
+        EXECUTE(event_callback_, event);
     }
     
 

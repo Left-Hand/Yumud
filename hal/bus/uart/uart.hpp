@@ -42,7 +42,7 @@ public:
 
 
 
-    using Callback = std::function<void(Event)>;
+    using EventCallback = std::function<void(Event)>;
 
     struct Config{
         UartRemap remap;
@@ -71,7 +71,7 @@ public:
     virtual void set_rx_strategy(const CommStrategy rx_strategy) = 0;
 
     template<typename Fn>
-    void set_event_handler(Fn && cb){callback_ = std::forward<Fn>(cb);}
+    void set_event_callback(Fn && cb){event_callback_ = std::forward<Fn>(cb);}
 
     [[nodiscard]] virtual size_t try_write_bytes(std::span<const uint8_t> bytes) = 0;
 
@@ -82,8 +82,9 @@ public:
 
     auto & tx_fifo(){return tx_fifo_;}
     auto & rx_fifo(){return rx_fifo_;}
-private:
-    Callback callback_;
+// private:
+protected:
+    EventCallback event_callback_;
 
 
 // protected:
@@ -94,11 +95,6 @@ public:
 
     RingBuf<uint8_t, UART_FIFO_BUF_SIZE> tx_fifo_;
     RingBuf<uint8_t, UART_FIFO_BUF_SIZE> rx_fifo_;
-    void emit_event(const Event event){
-        if(callback_ == nullptr) [[unlikely]]
-            return;
-        callback_(event);
-    }
     UartBase(){;}
 
 };

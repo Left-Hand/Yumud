@@ -181,7 +181,7 @@ void alx_aoa_main(){
     [[maybe_unused]] auto & alx_1_uart_ = hal::usart3;
     [[maybe_unused]] auto & alx_2_uart_ = hal::uart4;
 
-    alx_1_uart_.set_event_handler([&](const hal::UartEvent & ev){
+    alx_1_uart_.set_event_callback([&](const hal::UartEvent & ev){
 
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:
@@ -199,7 +199,7 @@ void alx_aoa_main(){
     });
 
 
-    alx_2_uart_.set_event_handler([&](const hal::UartEvent & ev){
+    alx_2_uart_.set_event_callback([&](const hal::UartEvent & ev){
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:
                 while(alx_2_uart_.available()){

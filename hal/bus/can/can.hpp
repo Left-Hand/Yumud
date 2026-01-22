@@ -63,9 +63,9 @@ struct CanFilter;
 struct Can;
 
 struct CanInterruptDispatcher{
-    static void on_tx_interrupt(Can & can);
-    static void on_rx_interrupt(Can & can, const CanFifoIndex fifo_idx);
-    static void on_sce_interrupt(Can & can);
+    static void isr_tx(Can & can);
+    static void isr_rx(Can & can, const CanFifoIndex fifo_idx);
+    static void isr_sce(Can & can);
 };
 
 class [[nodiscard]] Can final{
@@ -75,7 +75,7 @@ public:
     using Error = CanError;
     using LibError = CanLibError;
 
-    using Callback = std::function<void(CanEvent)>;
+    using EventCallback = std::function<void(CanEvent)>;
 
 
     struct [[nodiscard]] Config{
@@ -144,8 +144,8 @@ public:
     [[nodiscard]] bool is_busoff();
 
     template<typename Fn>
-    void set_event_handler(Fn && cb){
-        callback_ = std::forward<Fn>(cb);
+    void set_event_callback(Fn && cb){
+        event_callback_ = std::forward<Fn>(cb);
     }
 
 
@@ -165,7 +165,7 @@ private:
     RingBuf<BxCanFrame, CAN_SOFTFIFO_SIZE> rx_fifo_;
     RingBuf<BxCanFrame, CAN_SOFTFIFO_SIZE> tx_fifo_;
 
-    Callback callback_ = nullptr;
+    EventCallback event_callback_ = nullptr;
 
     void alter_to_pins(const CanRemap remap);
     void enable_rcc(const Enable en);

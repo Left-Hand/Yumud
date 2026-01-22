@@ -6,10 +6,6 @@
 
 namespace ymd::hal{
 class Adc1:public AdcPrimary{
-protected:
-    volatile uint8_t regular_conv_index = 0;
-    volatile uint8_t injected_conv_index = 0;
-    volatile int16_t cali_data;
 public:
     Adc1();
 

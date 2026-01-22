@@ -98,13 +98,15 @@ public:
 
     /// \brief 直接获取载荷的数据而不检查
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t operator[](
-        size_t idx) const noexcept{return payload_[idx];}
+    uint8_t operator[](size_t idx) const noexcept{
+        return payload_[idx];
+    }
 
     /// \brief 直接获取载荷的可变数据而不检查
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t & operator[](
-        size_t idx) noexcept{return payload_[idx];}
+    uint8_t & operator[](size_t idx) noexcept{
+        return payload_[idx];
+    }
 
     /// \brief 获取载荷的数据 如超界则立即终止
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -183,7 +185,8 @@ public:
     /// @brief 设置载荷数据，同时修改报文长度。如果数据超长返回错误
     template<size_t Extents>
     requires (Extents <= 8 || Extents == std::dynamic_extent)
-    __attribute__((always_inline)) constexpr Result<void, void> try_set_payload_bytes(
+    __attribute__((always_inline)) constexpr 
+    Result<void, void> try_set_payload_bytes(
         std::span<const uint8_t, Extents> bytes
     ) noexcept {
         if constexpr(Extents == std::dynamic_extent)
@@ -242,7 +245,7 @@ private:
         identifier_(identifier),
         payload_(payload){}
 
-    __attribute__((always_inline)) BxCanFrame():
+    __attribute__((always_inline)) imconstexpr BxCanFrame():
         identifier_(CanIdentifier::from_uninitialized()),
         payload_(Payload::from_uninitialized()){;}
 };

@@ -73,7 +73,7 @@ void m10_main(){
             uint32_t(clock::millis().count()) % 400) > 200);
     };
 
-    m10_uart_.set_event_handler([&](const hal::UartEvent ev){
+    m10_uart_.set_event_callback([&](const hal::UartEvent ev){
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:{
                 while(m10_uart_.available()){

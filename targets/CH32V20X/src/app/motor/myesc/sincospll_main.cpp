@@ -183,7 +183,7 @@ void sincospll_main(){
         }
     };
 
-    hal::timer2.set_event_handler([&](const hal::TimerEvent & event){
+    hal::timer2.set_event_callback([&](const hal::TimerEvent & event){
         switch(event){
             case hal::TimerEvent::Update:{
                 const auto begin_us = clock::micros();

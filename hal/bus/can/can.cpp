@@ -14,7 +14,7 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-using Callback = Can::Callback;
+using EventCallback = Can::EventCallback;
 
 
 #define COPY_CONST(a,b) std::conditional_t<\
@@ -24,6 +24,10 @@ using Callback = Can::Callback;
 
 #define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, CAN_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::CAN_Def)>(x))
+
+
+#define EMIT_EVENT(x)   if(self.event_callback_ != nullptr) {self.event_callback_(x);}
+
 
 namespace {
 [[maybe_unused]] static Nth _can_to_nth(const void * inst){
@@ -590,7 +594,7 @@ void Can::enable_index_priority(const Enable en){
 }
 
 
-void CanInterruptDispatcher::on_tx_interrupt(Can & self){
+void CanInterruptDispatcher::isr_tx(Can & self){
     volatile uint32_t & tstatr_reg = SDK_INST(self.inst_)->TSTATR;
     const auto temp_tstatr = tstatr_reg;
     //遍历每个邮箱
@@ -606,8 +610,8 @@ void CanInterruptDispatcher::on_tx_interrupt(Can & self){
             case TSTATR_TME_MASK | TSTATR_RQCP_MASK | 0:
                 //发送失败
                 {
-                    if(self.callback_ != nullptr)
-                        self.callback_(CanEvent(CanTransmitEventType::Failed));
+                    const auto ev = CanEvent(CanTransmitEventType::Failed);
+                    EMIT_EVENT(ev);
                 }
 
                 //清除发送标志位
@@ -616,8 +620,8 @@ void CanInterruptDispatcher::on_tx_interrupt(Can & self){
             case TSTATR_TME_MASK | TSTATR_RQCP_MASK | TSTATR_RXOK_MASK:
                 //发送成功
                 {
-                    if(self.callback_ != nullptr)
-                        self.callback_(CanEvent(CanTransmitEventType::Success));
+                    const auto ev = CanEvent(CanTransmitEventType::Success);
+                    EMIT_EVENT(ev);
                 }
 
                 //清除发送标志位
@@ -641,7 +645,7 @@ void Can::poll_backup_fifo(){
     if(may_idle_mailbox.is_none()) return;
     self.transmit(self.tx_fifo_.pop_unchecked(), may_idle_mailbox.unwrap());
 }
-void CanInterruptDispatcher::on_rx_interrupt(Can & self, const CanFifoIndex fifo_idx){
+void CanInterruptDispatcher::isr_rx(Can & self, const CanFifoIndex fifo_idx){
     volatile uint32_t & rfifo_reg = can_get_rfifo_reg(self.inst_, fifo_idx);
     const uint32_t temp_rfifo_reg = rfifo_reg;
 
@@ -675,7 +679,7 @@ void CanInterruptDispatcher::on_rx_interrupt(Can & self, const CanFifoIndex fifo
     }
 }
 
-void CanInterruptDispatcher::on_sce_interrupt(Can & self){
+void CanInterruptDispatcher::isr_sce(Can & self){
     void * inst = self.inst_;
     const auto reg = SDK_INST(inst)->INTENR;
     if (can_get_it_status<CAN_IT_WKU>(reg, SDK_INST(inst))) {
@@ -750,41 +754,41 @@ Can can3 = Can{CAN3};
 extern "C"{
 #ifdef CAN1_PRESENT
 __interrupt void USB_HP_CAN1_TX_IRQHandler(){
-    CanInterruptDispatcher::on_tx_interrupt(can1);
+    CanInterruptDispatcher::isr_tx(can1);
 }
 
 __interrupt void USB_LP_CAN1_RX0_IRQHandler() {
-    CanInterruptDispatcher::on_rx_interrupt(can1, CanFifoIndex::_0);
+    CanInterruptDispatcher::isr_rx(can1, CanFifoIndex::_0);
 }
 
 __interrupt void CAN1_RX1_IRQHandler(){
-    CanInterruptDispatcher::on_rx_interrupt(can1, CanFifoIndex::_1);
+    CanInterruptDispatcher::isr_rx(can1, CanFifoIndex::_1);
 }
 
 
 #ifdef CAN_SCE_ENABLED
 __interrupt void CAN1_SCE_IRQHandler(){
-    CanInterruptDispatcher::on_sce_interrupt(can1);
+    CanInterruptDispatcher::isr_sce(can1);
 }
 #endif
 #endif
 
 #ifdef CAN2_PRESENT
 __interrupt void CAN2_TX_IRQHandler(){
-    CanInterruptDispatcher::on_tx_interrupt(can2);
+    CanInterruptDispatcher::isr_tx(can2);
 }
 
 __interrupt void CAN2_RX0_IRQHandler(){
-    CanInterruptDispatcher::on_rx_interrupt(can2,CanFifoIndex::_0);
+    CanInterruptDispatcher::isr_rx(can2,CanFifoIndex::_0);
 }
 
 __interrupt void CAN2_RX1_IRQHandler(){
-    CanInterruptDispatcher::on_rx_interrupt(can2,CanFifoIndex::_1);
+    CanInterruptDispatcher::isr_rx(can2,CanFifoIndex::_1);
 }
 
 #ifdef CAN_SCE_ENABLED
 __interrupt void CAN2_SCE_IRQHandler(){
-    CanInterruptDispatcher::on_sce_interrupt(can2);
+    CanInterruptDispatcher::isr_sce(can2);
 }
 
 #endif

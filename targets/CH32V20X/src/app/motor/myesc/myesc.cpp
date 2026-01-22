@@ -943,7 +943,7 @@ void myesc_main(){
 
     hal::adc1.register_nvic({0,0}, EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    hal::adc1.set_event_handler(
+    hal::adc1.set_event_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
@@ -973,7 +973,7 @@ void myesc_main(){
         repl_server.invoke(list);
     };
 
-    // DBG_UART.set_event_handler([&](const hal::UartEvent & event){
+    // DBG_UART.set_event_callback([&](const hal::UartEvent & event){
     //     switch(event.kind()){
     //         case hal::UartEvent::TxIdle:{
     //             // __builtin_trap();
