@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <compare>
 #include "core/utils/Option.hpp"
-#include "core/utils/bits/bits_set.hpp"
+#include "core/container/bits_set.hpp"
 
 namespace ymd{
 class OutputStream;

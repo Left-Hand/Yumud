@@ -54,8 +54,8 @@ struct SerialzeFunctions{
         Buffer buffer, 
         const T obj
     ) noexcept {
-        using D = to_bits_t<T>;
-        return ser_be_int<D>(buffer, obj_to_bits<std::decay_t<T>>(obj));
+        using D = tmp::to_bits_t<T>;
+        return ser_be_int<D>(buffer, tmp::obj_to_bits<std::decay_t<T>>(obj));
     }
 private:
     template<size_t Extents>
@@ -216,7 +216,7 @@ public:
 
     template<typename T>
     constexpr Result<void, SerError> recv_bits_intoable(const T obj) noexcept {
-        return recv_be_int<to_bits_t<T>>(uchars.data(), obj_to_bits<std::decay_t<T>>(obj));
+        return recv_be_int<tmp::to_bits_t<T>>(uchars.data(), obj_to_bits<std::decay_t<T>>(obj));
     }
 
     template<typename E>

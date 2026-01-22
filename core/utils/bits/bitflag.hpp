@@ -11,11 +11,11 @@ namespace ymd{
 
 template<typename Policy>
 struct [[nodiscard]] BitFlag final{
-    static constexpr size_t N = Policy::size();
-    static constexpr size_t BITS = N;  // 每个标志使用1位
+    static constexpr size_t N = Policy::length();
+    static constexpr size_t NUM_BITS = N;  // 每个标志使用1位
     
     using Enum = typename Policy::Enum;
-    using Raw = typename tmp::width_to_uint_t<BITS>;
+    using Raw = typename tmp::width_to_least_uint_t<NUM_BITS>;
     using Storage = std::atomic<Raw>;
 
     static constexpr Raw rank_to_mask(const size_t rank) {
@@ -104,7 +104,7 @@ struct [[nodiscard]] BitFlag final{
             return remaining_ == 0;
         }
 
-        constexpr size_t size() const {
+        constexpr size_t ones() const {
             return __builtin_popcount(remaining_);
         }
 

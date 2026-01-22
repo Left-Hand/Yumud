@@ -1,6 +1,6 @@
 #include "cybergear.hpp"
 
-#include "core/utils/bits/BitField.hpp"
+#include "core/utils/bits/bitfield_proxy.hpp"
 
 #define MOTOR_DEBUG_EN
 

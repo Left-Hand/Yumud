@@ -78,7 +78,7 @@ namespace {
     {
         [[maybe_unused]] static constexpr auto obj = VoltageCode{.bits = 0x1234};
         static_assert(sizeof(obj) == 2);
-        static_assert(std::is_same_v<to_bits_t<std::decay_t<decltype(obj)>>, int16_t> );
+        static_assert(std::is_same_v<tmp::to_bits_t<std::decay_t<decltype(obj)>>, int16_t> );
         auto fn = []{
             std::array<uint8_t, 4> bytes;
             const auto res = SerialzeFunctions<CheckedPolicy>::ser_bits_intoable(std::span(bytes), obj);

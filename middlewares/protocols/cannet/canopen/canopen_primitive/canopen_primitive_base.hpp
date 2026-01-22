@@ -1,7 +1,7 @@
 #pragma once
 
 #include "canopen_funccode.hpp"
-#include "core/utils/bits/bits_set.hpp"
+#include "core/container/bits_set.hpp"
 
 namespace ymd::canopen::primitive{
 
@@ -203,7 +203,7 @@ struct [[nodiscard]] OdSubIndex final{
 static_assert(sizeof(OdSubIndex) == sizeof(uint8_t));   
 
 
-struct [[nodiscard]] OdIndex{
+struct [[nodiscard]] OdIndex final{
     using Self = OdIndex;
     OdPreIndex pre;
     OdSubIndex sub;

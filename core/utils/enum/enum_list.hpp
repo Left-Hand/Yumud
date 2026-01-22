@@ -26,7 +26,7 @@ private:
 
 public:
 
-    static consteval size_t size(){
+    static consteval size_t length(){
         return N;
     }
 

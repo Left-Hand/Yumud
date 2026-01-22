@@ -2,10 +2,12 @@
 
 #include "core/stream/ostream.hpp"
 #include "core/utils/sumtype.hpp"
+#include "core/container/bits_set.hpp"
 #include "core/utils/bits/bits_caster.hpp"
-#include "core/utils/bits/bits_set.hpp"
+
 #include "primitive/can/bxcan_frame.hpp"
 #include "primitive/arithmetic/angular.hpp"
+
 
 //参考文件 
 // https://github.com/RobStride/robstride_actuator_bridge/blob/master/include/motor_control/robstride.h

@@ -64,7 +64,7 @@ template<
 uint8_t get_byte_from_arg(const size_t idx, Arg && arg){
     static_assert(N <= 8, "N must be less than 8");
 
-    using T = bytes_to_uint_t<N>;
+    using T = size_to_uint_t<N>;
 
     const T raw = std::bit_cast<T>(arg);
     return uint8_t{uint8_t(raw >> (idx * 8))};
@@ -149,7 +149,7 @@ template<
 Arg make_arg_from_bytes(const std::span<const uint8_t, ArgSize> & bytes) {
     static_assert(sizeof(Arg) <= 8, "N must be less than 8"); // 确保类型不超过8字节
 
-    using T = bytes_to_uint_t<sizeof(Arg)>; // 使用预定义的中间类型
+    using T = size_to_uint_t<sizeof(Arg)>; // 使用预定义的中间类型
 
     T temp = static_cast<T>(bytes[0]);
 

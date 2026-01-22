@@ -28,7 +28,7 @@ struct ExampleReg{
 template<typename T>
 struct bitfield_reflecter{
 private:
-    using D = tmp::type_to_uint_t<T>;
+    using D = tmp::size_to_uint_t<sizeof(T)>;
     static constexpr T ZERO = std::bit_cast<T>(static_cast<D>(0));
 
     template<auto p>

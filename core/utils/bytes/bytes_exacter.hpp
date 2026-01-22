@@ -8,13 +8,13 @@
 namespace ymd{
 
 template<std::endian E, size_t Extents>
-struct [[nodiscard]] BytesCtorBitsExacter {
+struct [[nodiscard]] BytesExacter {
     static_assert(Extents != std::dynamic_extent);
-    constexpr explicit BytesCtorBitsExacter(std::span<const uint8_t, Extents> bytes) : 
+    constexpr explicit BytesExacter(std::span<const uint8_t, Extents> bytes) : 
         bytes_(bytes) {;}
 
     template<typename ... Ts>
-    requires ((total_bytes_of_bits_ctorable_v<std::tuple<Ts...>> == Extents))
+    requires ((tmp::total_bytes_of_bits_ctorable_v<std::tuple<Ts...>> == Extents))
     constexpr void exact_to_elements(Ts&... ts) const {
         // 使用折叠表达式为每个参数调用绑定函数
         [&]<std::size_t... Indices>(std::index_sequence<Indices...>) {
@@ -43,9 +43,9 @@ private:
         typename T = std::tuple_element_t<I, Tup >
         >
     constexpr __always_inline void exact_to_element(T& element) const {
-        using D = from_bits_t<T>;
+        using D = tmp::from_bits_t<T>;
         constexpr size_t WIDTH = sizeof(D);
-        constexpr size_t OFFSET = offset_of_bits_ctorable_v<I, Tup>;
+        constexpr size_t OFFSET = tmp::offset_of_bits_ctorable_v<I, Tup>;
 
         static_assert(OFFSET + WIDTH <= Extents);
         
@@ -58,10 +58,10 @@ private:
 
 
 template<std::endian E, size_t Extents>
-BytesCtorBitsExacter(std::span<const uint8_t, Extents>) -> BytesCtorBitsExacter<E, Extents>;
+BytesExacter(std::span<const uint8_t, Extents>) -> BytesExacter<E, Extents>;
 
 template<std::endian E, size_t N>
-static constexpr auto make_bytes_ctor_bits_exacter(std::span<const uint8_t, N> bytes){
-    return BytesCtorBitsExacter<E, N>(bytes);
+static constexpr auto make_bytes_exacter(std::span<const uint8_t, N> bytes){
+    return BytesExacter<E, N>(bytes);
 }
 }

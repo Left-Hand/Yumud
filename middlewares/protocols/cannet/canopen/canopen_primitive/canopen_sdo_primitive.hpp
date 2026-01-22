@@ -430,7 +430,7 @@ struct alignas(8) [[nodiscard]] SdoExpeditedContext final{
     alignas(4) Header header;
     alignas(4) U8X4 bytes;
 
-    template <typename T, typename D = tmp::type_to_uint_t<T>>
+    template <typename T, typename D = tmp::size_to_uint_t<sizeof(T)>>
     requires (sizeof(T) <= 4)
     [[nodiscard]] __always_inline static constexpr 
     Self from_write_request(
@@ -510,7 +510,7 @@ struct alignas(8) [[nodiscard]] SdoExpeditedContext final{
         };
     }
 
-    template <typename T, typename D = tmp::type_to_uint_t<T>>
+    template <typename T, typename D = tmp::size_to_uint_t<sizeof(T)>>
     requires (sizeof(T) <= 4)
     [[nodiscard]] __always_inline static constexpr 
     Self from_read_response(

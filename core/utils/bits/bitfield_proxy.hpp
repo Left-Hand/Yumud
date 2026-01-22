@@ -32,11 +32,11 @@ public:
     void set(const T & in){
         static_assert(!std::is_const_v<D>, "cannot assign to const");
         p_obj_ = (static_cast<D>(
-            std::bit_cast<tmp::type_to_uint_t<decltype(in)>>(in)) << BEGIN_OFFSET) | (p_obj_ & ~mask);
+            std::bit_cast<tmp::size_to_uint_t<sizeof(in)>>(in)) << BEGIN_OFFSET) | (p_obj_ & ~mask);
     }
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     T get() const{
-        return std::bit_cast<T>(static_cast<tmp::type_to_uint_t<T>>((p_obj_ & mask) >> (BEGIN_OFFSET)));
+        return std::bit_cast<T>(static_cast<tmp::size_to_uint_t<sizeof(T)>>((p_obj_ & mask) >> (BEGIN_OFFSET)));
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -96,13 +96,12 @@ auto _make_bitfield_proxy(auto && obj){
 template<typename D, size_t BEGIN_OFFSET, size_t END_OFFSET, size_t num>
 struct [[nodiscard]] BitFieldArrayProxy{
 private:    
-    static constexpr size_t bitswidth = tmp::type_to_bitswidth_v<D>;
     static constexpr size_t WIDTH = END_OFFSET - BEGIN_OFFSET;
     static constexpr size_t ELEMENT_WIDTH = (WIDTH / num);
     static_assert(WIDTH % num == 0, "bitfield array is not aligned with reg obj");
     // static constexpr size_t WIDTH = ()
 
-    static_assert(BEGIN_OFFSET + WIDTH <= bitswidth, "bitfield array is longer than reg obj");
+    static_assert(BEGIN_OFFSET + WIDTH <= sizeof(D) * 8, "bitfield array is longer than reg obj");
     static_assert(ELEMENT_WIDTH * num == WIDTH, "bitfield array is not aligned with reg obj");
 
     D & p_obj_;

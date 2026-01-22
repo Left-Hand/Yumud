@@ -1,7 +1,7 @@
 #pragma once
 
 #include "primitive/can/can_id.hpp"
-#include "core/utils/bits/BitField.hpp"
+#include "core/utils/bits/bitfield_proxy.hpp"
 
 // https://blog.csdn.net/geek_liyang/article/details/148498704
 namespace ymd::j1939{

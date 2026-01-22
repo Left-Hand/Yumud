@@ -11,7 +11,7 @@ template<size_t N>
 requires (N <= 32 and N > 0)
 struct [[nodiscard]] BitsSet final{
     using Self = BitsSet<N>;
-    using D = tmp::width_to_uint_t<N>;
+    using D = tmp::width_to_least_uint_t<N>;
 
     static constexpr D bits_mask = tmp::mask_calculator::lower_mask_of<D>(N);
 
@@ -33,7 +33,7 @@ struct [[nodiscard]] BitsSet final{
     template<typename D2 = D>
     static constexpr Self from_bits(const D2 bits){
         // using D2 = std::decay_t<decltype(bits)>;
-        if constexpr(N != tmp::type_to_bitswidth_v<D2>)
+        if constexpr(N != sizeof(D2) * 8)
             if(bits & invalid_bits_mask<D2>) [[unlikely]]
                 __builtin_trap();
         return from_bits_unchecked(bits);
@@ -50,7 +50,7 @@ struct [[nodiscard]] BitsSet final{
     template<typename D2 = D>
     static constexpr Option<Self> try_from_bits(const D2 bits){
         // using D2 = std::decay_t<decltype(bits)>;
-        if constexpr(N != tmp::type_to_bitswidth_v<D2>)
+        if constexpr(N != sizeof(D2) * 8)
             if(bits & invalid_bits_mask<D2>) [[unlikely]]
                 return None;
         return Some(from_bits_unchecked(bits));
@@ -115,7 +115,7 @@ struct [[nodiscard]] BitsSet final{
         return __builtin_popcount(bits_);
     }
 
-    [[nodiscard]] static consteval size_t size(){
+    [[nodiscard]] static consteval size_t width(){
         return N;
     }
 

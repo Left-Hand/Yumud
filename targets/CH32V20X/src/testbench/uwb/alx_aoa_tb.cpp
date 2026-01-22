@@ -8,7 +8,7 @@
 #include "core/debug/debug.hpp"
 #include "core/async/timer.hpp"
 #include "core/utils/zero.hpp"
-#include "core/utils/bits/atomic_bitset.hpp"
+#include "core/container/atomic_bitset.hpp"
 #include "geometry.hpp"
 #include "drivers/Proximeter/MK8000TR/mk8000tr_stream.hpp"
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"

@@ -1,7 +1,7 @@
 #include "../tb.h"
 
 #include "core/tmp/bits/width.hpp"
-#include "core/utils/bits/BitField.hpp"
+#include "core/utils/bits/bitfield_proxy.hpp"
 
 using namespace ymd;
 
