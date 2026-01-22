@@ -11,9 +11,7 @@ struct [[nodiscard]] uint24_t final{
 
     constexpr uint24_t(){};
 
-    constexpr explicit uint24_t(const uint24_t & other) {
-        bits = other.bits;
-    }
+    constexpr uint24_t(const uint24_t & other) = default;
 
     constexpr explicit uint24_t(const uint32_t other) {
         bits = other & 0xFFFFFF;
@@ -54,10 +52,7 @@ struct [[nodiscard]] int24_t final{
 
     constexpr int24_t(){};
 
-    constexpr explicit int24_t(const int24_t & other) {
-        bits = other.bits;
-    }
-
+    constexpr int24_t(const int24_t & other) = default;
     constexpr explicit int24_t(const int32_t other) {
         bits = other & 0xFFFFFF;
     }
