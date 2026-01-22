@@ -8,7 +8,7 @@
 namespace ymd{
 
 template<typename E, E ... Elements> 
-struct EnumList final{
+struct EnumRearranger final{
 
 public:
     using Enum = E;

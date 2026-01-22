@@ -5,7 +5,7 @@
 #include <array>
 
 #include "core/tmp/bits/width.hpp"
-#include "core/utils/enum/enum_list.hpp"
+#include "core/utils/enum/enum_rearranger.hpp"
 
 namespace ymd{
 
@@ -15,31 +15,30 @@ struct [[nodiscard]] BitFlag final{
     static constexpr size_t NUM_BITS = N;  // 每个标志使用1位
     
     using Enum = typename Policy::Enum;
-    using Raw = typename tmp::width_to_least_uint_t<NUM_BITS>;
-    using Storage = std::atomic<Raw>;
+    using D = typename tmp::width_to_least_uint_t<NUM_BITS>;
 
-    static constexpr Raw rank_to_mask(const size_t rank) {
-        return Raw(1) << rank;
+    static constexpr D rank_to_mask(const size_t rank) {
+        return D(1) << rank;
     }
 
-    static constexpr Raw enum_to_mask(const Enum e) {
+    static constexpr D enum_to_mask(const Enum e) {
         return rank_to_mask(Policy::enum_to_rank(e));
     }
 
     static constexpr BitFlag from_enum(const Enum e) {
-        return BitFlag::from_raw(enum_to_mask(e));
+        return BitFlag::from_bits(enum_to_mask(e));
     }
 
     static constexpr BitFlag from_enums(const std::initializer_list<Enum> es){
-        Raw raw = 0;
+        D bits = 0;
         for(const auto e : es){
-            raw |= enum_to_mask(e);
+            bits |= enum_to_mask(e);
         }
-        return BitFlag::from_raw(raw);
+        return BitFlag::from_bits(bits);
     }
 
-    static constexpr BitFlag from_raw(const Raw raw){
-        return BitFlag(raw);
+    static constexpr BitFlag from_bits(const D bits){
+        return BitFlag(bits);
     }
 
     constexpr void set(const Enum e) {
@@ -59,18 +58,18 @@ struct [[nodiscard]] BitFlag final{
         toggle(enum_to_mask(e));
     }
 
-    [[nodiscard]] constexpr Raw load() const {
-        return storage_.load(std::memory_order_relaxed);
+    [[nodiscard]] constexpr D load() const {
+        return bits_;
     }
 
-    constexpr void store(Raw value) {
-        storage_.store(value, std::memory_order_relaxed);
+    constexpr void store(D value) {
+        bits_ = value;
     }
 
     struct [[nodiscard]] Sentinel {};
 
     struct [[nodiscard]] Iterator {
-        const Raw remaining_;
+        const D remaining_;
         size_t rank_;
         
     public:
@@ -80,7 +79,7 @@ struct [[nodiscard]] BitFlag final{
         using pointer = const Enum*;
         using reference = const Enum&;
 
-        explicit constexpr Iterator(Raw remaining) : 
+        explicit constexpr Iterator(D remaining) : 
             remaining_(remaining), rank_(0) {}
 
         constexpr Enum operator*() const {
@@ -104,13 +103,13 @@ struct [[nodiscard]] BitFlag final{
             return remaining_ == 0;
         }
 
-        constexpr size_t ones() const {
+        constexpr size_t count_ones() const {
             return __builtin_popcount(remaining_);
         }
 
     private:
         constexpr void advance() {
-            const Raw mask = (Raw(1) << rank_);
+            const D mask = (D(1) << rank_);
             if (remaining_ & mask) {
                 return;
             }
@@ -119,34 +118,32 @@ struct [[nodiscard]] BitFlag final{
     };
 
 
-    [[nodiscard]] size_t size() const {
-        return __builtin_popcount(storage_.load(std::memory_order_relaxed));
+    [[nodiscard]] [[nodiscard]] size_t count_ones() const {
+        return __builtin_popcount(bits_);
     }
 
     Iterator begin() const {
-        Raw value = storage_.load(std::memory_order_relaxed);
+        D value = bits_;
         Iterator it(value);
         return it;
     }
-
-
 
     constexpr Sentinel end() const {
         return Sentinel{};
     }
 
 private:
-    Storage storage_{0};
+    D bits_{0};
 
-    constexpr BitFlag(const Raw raw):
-        storage_(raw){;}
+    constexpr BitFlag(const D bits):
+        bits_(bits){;}
 
-    constexpr void set_by_mask(const Raw mask) {
-        storage_.fetch_or(mask, std::memory_order_relaxed);
+    constexpr void set_by_mask(const D mask) {
+        bits_ |= (mask);
     }
 
-    constexpr void clear_by_mask(const Raw mask) {
-        storage_.fetch_and(~mask, std::memory_order_relaxed);
+    constexpr void clear_by_mask(const D mask) {
+        bits_ &= (~mask);
     }
 
 };

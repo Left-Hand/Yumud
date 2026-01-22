@@ -22,7 +22,7 @@ namespace ymd::cobs{
     uint8_t *codep = encode++; // Output code pointer
     uint8_t code = 1; // Code value
 
-    for (const uint8_t *byte = reinterpret_cast<const uint8_t *>(data); length--; ++byte)
+    for (const uint8_t *byte = static_cast<const uint8_t *>(data); length--; ++byte)
     {
         if (*byte) // Byte not zero, write it
             *encode++ = *byte, ++code;
@@ -61,7 +61,7 @@ namespace ymd::cobs{
     uint8_t *decode = data; // Decoded output byte pointer
 
     for (uint8_t code = 0xff, block = 0; 
-        byte < reinterpret_cast<const uint8_t *>(codec_buffer + length); 
+        byte < static_cast<const uint8_t *>(codec_buffer + length); 
         --block
     ){
         if (block) // Decode block byte

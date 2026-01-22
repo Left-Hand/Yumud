@@ -1,15 +1,16 @@
-#include "aes.hpp"
+#include "../aes.hpp"
 
 
 using namespace ymd::encrypt;
 
+
 namespace {
 // Test basic constants
-static_assert(BLOCK_BYTES_SIZE == 16, "Block size should be 16 bytes");
-static_assert(SEED_KEY_SIZE == 32, "Seed key size should be 32 bytes");
-static_assert(KEYSCHEDULE_MAX_ROW == 60, "Key schedule max rows should be 60");
-static_assert(KEYSCHEDULE_MAX_COLUMN == 4, "Key schedule max columns should be 4");
-static_assert(STATE_MATRIX_SIZE == 4, "State matrix size should be 4");
+static_assert(aes::BLOCK_BYTES_SIZE == 16, "Block size should be 16 bytes");
+static_assert(aes::SEED_KEY_SIZE == 32, "Seed key size should be 32 bytes");
+static_assert(aes::KEYSCHEDULE_MAX_ROW == 60, "Key schedule max rows should be 60");
+static_assert(aes::KEYSCHEDULE_MAX_COLUMN == 4, "Key schedule max columns should be 4");
+static_assert(aes::STATE_MATRIX_SIZE == 4, "State matrix size should be 4");
 
 // Test KeySize enum values
 static_assert(static_cast<uint8_t>(aes::KeySize::_128Bits) == 0, "aes::KeySize::_128Bits should be 0");
@@ -54,34 +55,38 @@ static_assert(aes::details::Rcon[0][0] == 0x00, "Rcon[0][0] incorrect");
 static_assert(aes::details::Rcon[1][0] == 0x01, "Rcon[1][0] incorrect");
 static_assert(aes::details::Rcon[10][0] == 0x36, "Rcon[10][0] incorrect");
 
+using State = aes::State;
+using Row = aes::Row;
+
+using namespace aes;
 // Test word operations
 static_assert([]() constexpr {
-    std::array<uint8_t, 4> word = {0x12, 0x34, 0x56, 0x78};
-    auto rot = aes::AesCipher::RotWord(word);
+    Row word = {0x12, 0x34, 0x56, 0x78};
+    auto rot = aes::AesCipher::rot_word(word);
     return rot[0] == 0x34 && rot[1] == 0x56 && rot[2] == 0x78 && rot[3] == 0x12;
-}(), "RotWord operation failed");
+}(), "rot_word operation failed");
 
 static_assert([]() constexpr {
-    std::array<uint8_t, 4> word = {0x00, 0x01, 0x02, 0x03};
-    auto sub = aes::AesCipher::SubWord(word);
+    Row word = {0x00, 0x01, 0x02, 0x03};
+    auto sub = aes::AesCipher::sub_word(word);
     return sub[0] == 0x63 && sub[1] == 0x7c && sub[2] == 0x77 && sub[3] == 0x7b;
-}(), "SubWord operation failed");
+}(), "sub_word operation failed");
 
 // Test row rotation functions
 static_assert([]() constexpr {
-    std::array<uint8_t, 4> row = {0x01, 0x02, 0x03, 0x04};
+    Row row = {0x01, 0x02, 0x03, 0x04};
     auto left1 = aes::AesCipher::rotate_row_left<1>(row);
     return left1[0] == 0x02 && left1[1] == 0x03 && left1[2] == 0x04 && left1[3] == 0x01;
 }(), "Rotate row left by 1 failed");
 
 static_assert([]() constexpr {
-    std::array<uint8_t, 4> row = {0x01, 0x02, 0x03, 0x04};
+    Row row = {0x01, 0x02, 0x03, 0x04};
     auto left2 = aes::AesCipher::rotate_row_left<2>(row);
     return left2[0] == 0x03 && left2[1] == 0x04 && left2[2] == 0x01 && left2[3] == 0x02;
 }(), "Rotate row left by 2 failed");
 
 static_assert([]() constexpr {
-    std::array<uint8_t, 4> row = {0x01, 0x02, 0x03, 0x04};
+    Row row = {0x01, 0x02, 0x03, 0x04};
     auto right1 = aes::AesCipher::rotate_row_right<1>(row);
     return right1[0] == 0x04 && right1[1] == 0x01 && right1[2] == 0x02 && right1[3] == 0x03;
 }(), "Rotate row right by 1 failed");
@@ -107,7 +112,7 @@ static_assert([]() constexpr {
     auto aes = aes::AesCipher::from_128bits(std::span(key));
     uint8_t ciphertext[16];
     
-    aes.i_Cipher(plaintext, ciphertext);
+    aes.i_cipher(plaintext, ciphertext);
     
     for (size_t i = 0; i < 16; ++i) {
         if (ciphertext[i] != expected_ciphertext[i]) {
@@ -138,7 +143,7 @@ static_assert([]() constexpr {
     auto aes = aes::AesCipher::from_128bits(std::span(key));
     uint8_t plaintext[16];
     
-    aes.i_InvCipher(ciphertext, plaintext);
+    aes.i_inv_cipher(ciphertext, plaintext);
     
     for (size_t i = 0; i < 16; ++i) {
         if (plaintext[i] != expected_plaintext[i]) {
@@ -151,7 +156,7 @@ static_assert([]() constexpr {
 // Test aes::AesCipher internal operations with simple data
 static_assert([]() constexpr {
     // Create a simple state for testing
-    aes::AesCipher::State test_state{};
+    State test_state{};
     test_state[0][0] = 0x12;
     test_state[0][1] = 0x34;
     test_state[0][2] = 0x56;
@@ -169,15 +174,15 @@ static_assert([]() constexpr {
     test_state[3][2] = 0x77;
     test_state[3][3] = 0x88;
     
-    // Test ShiftRows operation
-    auto shifted = aes::AesCipher::ShiftRows(test_state);
+    // Test shift_rows operation
+    auto shifted = aes::AesCipher::shift_rows(test_state);
     // Row 0 should be unchanged
     bool row0_ok = (shifted[0][0] == test_state[0][0]) &&
                    (shifted[0][1] == test_state[0][1]) &&
                    (shifted[0][2] == test_state[0][2]) &&
                    (shifted[0][3] == test_state[0][3]);
 
-    // Test AddRoundKey with zero round key
+    // Test add_round_key with zero round key
     aes::AesCipher aes_test{};
     for (size_t i = 0; i < KEYSCHEDULE_MAX_ROW; ++i) {
         for (size_t j = 0; j < KEYSCHEDULE_MAX_COLUMN; ++j) {
@@ -187,7 +192,7 @@ static_assert([]() constexpr {
     aes_test.Nk_ = 4;
     aes_test.Nr_ = 10;
     
-    auto added = aes_test.AddRoundKey(test_state, 0);
+    auto added = aes_test.add_round_key(test_state, 0);
     bool add_round_key_ok = true;
     for (size_t r = 0; r < 4; ++r) {
         for (size_t c = 0; c < 4; ++c) {
@@ -246,8 +251,8 @@ static_assert([]() constexpr {
     uint8_t ciphertext[16];
     uint8_t decrypted[16];
     
-    aes.i_Cipher(plaintext, ciphertext);
-    aes.i_InvCipher(ciphertext, decrypted);
+    aes.i_cipher(plaintext, ciphertext);
+    aes.i_inv_cipher(ciphertext, decrypted);
     
     // Check that we get back the original plaintext
     for (size_t i = 0; i < 16; ++i) {
@@ -264,7 +269,7 @@ static_assert([]() constexpr {
     uint8_t all_zero_plaintext[16] = {0};
     auto aes = aes::AesCipher::from_128bits(std::span(all_zero_key));
     uint8_t ciphertext[16];
-    aes.i_Cipher(all_zero_plaintext, ciphertext);
+    aes.i_cipher(all_zero_plaintext, ciphertext);
     return true; // 主要检查是否崩溃/编译
 }(), "All-zero test");
 };
