@@ -9,13 +9,13 @@
 
 namespace ymd{
 
-template<typename Layout>
-struct BitFlag final{
-    static constexpr size_t N = Layout::size();
+template<typename Policy>
+struct [[nodiscard]] BitFlag final{
+    static constexpr size_t N = Policy::size();
     static constexpr size_t BITS = N;  // 每个标志使用1位
     
-    using Enum = typename Layout::Enum;
-    using Raw = typename tmp::bits_to_uint_t<BITS>;
+    using Enum = typename Policy::Enum;
+    using Raw = typename tmp::width_to_uint_t<BITS>;
     using Storage = std::atomic<Raw>;
 
     static constexpr Raw rank_to_mask(const size_t rank) {
@@ -23,7 +23,7 @@ struct BitFlag final{
     }
 
     static constexpr Raw enum_to_mask(const Enum e) {
-        return rank_to_mask(Layout::enum_to_rank(e));
+        return rank_to_mask(Policy::enum_to_rank(e));
     }
 
     static constexpr BitFlag from_enum(const Enum e) {
@@ -51,7 +51,7 @@ struct BitFlag final{
         clear_by_mask(enum_to_mask(e));
     }
 
-    bool test(const Enum e) const {
+    [[nodiscard]] bool test(const Enum e) const {
         return test(enum_to_mask(e));
     }
 
@@ -59,7 +59,7 @@ struct BitFlag final{
         toggle(enum_to_mask(e));
     }
 
-    constexpr Raw load() const {
+    [[nodiscard]] constexpr Raw load() const {
         return storage_.load(std::memory_order_relaxed);
     }
 
@@ -67,9 +67,9 @@ struct BitFlag final{
         storage_.store(value, std::memory_order_relaxed);
     }
 
-    struct Sentinel {};
+    struct [[nodiscard]] Sentinel {};
 
-    class Iterator {
+    struct [[nodiscard]] Iterator {
         const Raw remaining_;
         size_t rank_;
         
@@ -84,7 +84,7 @@ struct BitFlag final{
             remaining_(remaining), rank_(0) {}
 
         constexpr Enum operator*() const {
-            return Layout::rank_to_enum(rank_);
+            return Policy::rank_to_enum(rank_);
         }
 
         constexpr Iterator& operator++() {
@@ -119,15 +119,17 @@ struct BitFlag final{
     };
 
 
+    [[nodiscard]] size_t size() const {
+        return __builtin_popcount(storage_.load(std::memory_order_relaxed));
+    }
+
     Iterator begin() const {
         Raw value = storage_.load(std::memory_order_relaxed);
         Iterator it(value);
         return it;
     }
 
-    size_t size() const {
-        return __builtin_popcount(storage_.load(std::memory_order_relaxed));
-    }
+
 
     constexpr Sentinel end() const {
         return Sentinel{};

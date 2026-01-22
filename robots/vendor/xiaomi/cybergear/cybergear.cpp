@@ -46,11 +46,11 @@ static constexpr Err<Error> make_err_from_cmp(const std::weak_ordering ord){
 struct [[nodiscard]] [[nodiscard]] CgId final{
 
 
-    [[nodiscard]] constexpr auto cmd() {return make_bitfield<24, 29, cybergear::Command>(bits_);}
-    [[nodiscard]] constexpr auto cmd() const {return make_bitfield<24, 29, cybergear::Command>(bits_);}
-    [[nodiscard]] constexpr auto high() {return make_bitfield<8, 24, uint16_t>(bits_);}
-    [[nodiscard]] constexpr auto fault() {return make_bitfield<8, 24, uint16_t>(bits_);}
-    [[nodiscard]] constexpr auto low() {return make_bitfield<0, 8, uint8_t>(bits_);}
+    [[nodiscard]] constexpr auto cmd() {return make_bitfield_proxy<24, 29, cybergear::Command>(bits_);}
+    [[nodiscard]] constexpr auto cmd() const {return make_bitfield_proxy<24, 29, cybergear::Command>(bits_);}
+    [[nodiscard]] constexpr auto high() {return make_bitfield_proxy<8, 24, uint16_t>(bits_);}
+    [[nodiscard]] constexpr auto fault() {return make_bitfield_proxy<8, 24, uint16_t>(bits_);}
+    [[nodiscard]] constexpr auto low() {return make_bitfield_proxy<0, 8, uint8_t>(bits_);}
 
     [[nodiscard]] static constexpr 
     CgId from_parts(const cybergear::Command cmd, const uint16_t high, const uint8_t low) {
@@ -91,10 +91,10 @@ IResult<> Self::ctrl(const MitParams & params){
 
     struct [[nodiscard]] CgPayload{
         uint64_t bits;
-        [[nodiscard]] auto cmd_rad() {return make_bitfield<0, 16, CmdRad>(bits);}
-        [[nodiscard]] auto cmd_omega() {return make_bitfield<16, 32, CmdOmega>(bits);}
-        [[nodiscard]] auto cmd_kp() {return make_bitfield<32, 48, CmdKp>(bits);}
-        [[nodiscard]] auto cmd_kd() {return make_bitfield<48, 64, CmdKd>(bits);}
+        [[nodiscard]] auto cmd_rad() {return make_bitfield_proxy<0, 16, CmdRad>(bits);}
+        [[nodiscard]] auto cmd_omega() {return make_bitfield_proxy<16, 32, CmdOmega>(bits);}
+        [[nodiscard]] auto cmd_kp() {return make_bitfield_proxy<32, 48, CmdKp>(bits);}
+        [[nodiscard]] auto cmd_kd() {return make_bitfield_proxy<48, 64, CmdKd>(bits);}
     };
 
     CgPayload payload = {0};
@@ -184,7 +184,7 @@ IResult<> Self::on_receive(const BxCanFrame & frame){
         __builtin_trap();
     const auto id_u32 = frame.id_u32();
     const auto cgid = CgId::from_bits(id_u32);
-    const auto cmd = cgid.cmd().to_bits();
+    const auto cmd = cgid.cmd().get();
 
     const uint64_t bits = frame.payload_u64();
     const uint8_t dlc = frame.length();
@@ -220,13 +220,13 @@ IResult<> Self::on_mcu_id_feed_back(const uint32_t id_u32, const uint64_t bits, 
 struct [[nodiscard]] CgPayload{
     uint64_t bits;
     [[nodiscard]] constexpr auto radians() const {            
-        return make_bitfield<0, 16, CmdRad>(bits);}
+        return make_bitfield_proxy<0, 16, CmdRad>(bits);}
     [[nodiscard]] constexpr auto omega() const {          
-        return make_bitfield<16, 32, CmdOmega>(bits);}
+        return make_bitfield_proxy<16, 32, CmdOmega>(bits);}
     [[nodiscard]] constexpr auto torque() const {         
-        return make_bitfield<32, 48, CmdTorque>(bits);}
+        return make_bitfield_proxy<32, 48, CmdTorque>(bits);}
     [[nodiscard]] constexpr auto temperature() const {    
-        return make_bitfield<48, 64, Temperature>(bits);}
+        return make_bitfield_proxy<48, 64, Temperature>(bits);}
 };
 
 
@@ -239,10 +239,10 @@ IResult<> Self::on_ctrl2_feed_back(const uint32_t id_u32, const uint64_t bits, c
 
     const CgPayload payload = {bits};
 
-    feedback_.radians =         payload.radians().to_bits().to<real_t>();
-    feedback_.omega =       payload.omega().to_bits().to<real_t>();
-    feedback_.torque =      payload.torque().to_bits().to<real_t>();
-    feedback_.temperature = static_cast<real_t>(payload.temperature().to_bits());
+    feedback_.radians =         payload.radians().get().to<real_t>();
+    feedback_.omega =       payload.omega().get().to<real_t>();
+    feedback_.torque =      payload.torque().get().to<real_t>();
+    feedback_.temperature = static_cast<real_t>(payload.temperature().get());
 
     return Ok();
 }

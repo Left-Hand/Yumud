@@ -22,21 +22,6 @@ struct [[nodiscard]] BytesCtorBitsExacter {
         }(std::make_index_sequence<sizeof...(Ts)> {});
     }
 
-    // template<typename ... Ts>
-    // requires (total_bytes_of_bits_ctorable_v<Ts...> == Extents)
-    // [[nodiscard]] constexpr std::tuple<Ts...> deconstruct_to_tuple() const{
-    //     using Tup = std::tuple<Ts...>;
-    //     static constexpr size_t N = sizeof...(Ts);
-    //     union{Tup ret;};
-
-    //     using Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
-    //     auto construct_tuple = [this]<std::size_t... Indices>(std::index_sequence<Indices...>) {
-    //         (deconstruct_element_from_total_bytes<Indices, Tup>(bytes_), ...);
-    //     };
-    //     construct_tuple(Is{});
-    //     return ret;
-    // }
-
     template<typename T> 
     [[nodiscard]] constexpr T make_struct() const {
         using Tup = std::decay_t<decltype(reflect::to<std::tuple>(std::declval<T>()))>;

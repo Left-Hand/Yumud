@@ -11,7 +11,7 @@ template<size_t N>
 requires (N <= 32 and N > 0)
 struct [[nodiscard]] BitsSet final{
     using Self = BitsSet<N>;
-    using D = tmp::bits_to_uint_t<N>;
+    using D = tmp::width_to_uint_t<N>;
 
     static constexpr D bits_mask = tmp::mask_calculator::lower_mask_of<D>(N);
 
