@@ -3,16 +3,16 @@
 #include <cstdint>
 #include <type_traits>
 
-
-template<typename T>
-requires std::is_integral_v<T>
+namespace ymd::math{
+template<typename D>
+requires std::is_integral_v<D>
 class [[nodiscard]] int_t{
 private:
-    T value;
+    D value;
 public:
-    explicit constexpr int_t(const T v) : value(v){
-        static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8, "int_t only support 1, 2, 4, 8 bytes");
-        // if constexpr(std::is_signed_v<T>) static_assert();
+    explicit constexpr int_t(const D v) : value(v){
+        static_assert(sizeof(D) == 1 || sizeof(D) == 2 || sizeof(D) == 4 || sizeof(D) == 8, "int_t only support 1, 2, 4, 8 bytes");
+        // if constexpr(std::is_signed_v<D>) static_assert();
     }
 
     constexpr int_t(const int_t & v) : int_t(v.value){}
@@ -21,8 +21,8 @@ public:
     __attribute__((always_inline)) constexpr 
     int_t & operator=(const int_t & v){ value = v.value; return *this; }
     __attribute__((always_inline)) constexpr 
-    int_t & operator=(const T v){ value = v; return *this; }
-    [[nodiscard]] explicit constexpr operator T(){ return value; }
+    int_t & operator=(const D v){ value = v; return *this; }
+    [[nodiscard]] explicit constexpr operator D(){ return value; }
     [[nodiscard]] explicit constexpr operator bool(){ return value; }
 
     __attribute__((always_inline)) constexpr 
@@ -94,3 +94,25 @@ using i8 = int_t<int8_t>;
 using i16 = int_t<int16_t>;
 using i32 = int_t<int32_t>;
 using i64 = int_t<int64_t>;
+}
+
+namespace std{
+
+template<typename D>
+struct numeric_limits<ymd::math::int_t<D>> {
+public:
+    __attribute__((always_inline)) constexpr static ymd::math::int_t<D> infinity() noexcept {
+        return ymd::math::int_t<D>::from_bits(std::numeric_limits<D>::max());
+    }
+    __attribute__((always_inline)) constexpr static ymd::math::int_t<D> lowest() noexcept {
+        return ymd::math::int_t<D>::from_bits(std::numeric_limits<D>::min());
+    }
+    __attribute__((always_inline)) constexpr static ymd::math::int_t<D> max() noexcept {
+        return ymd::math::int_t<D>::from_bits(std::numeric_limits<D>::max());
+    }
+    __attribute__((always_inline)) constexpr static ymd::math::int_t<D> min() noexcept {
+        return ymd::math::int_t<D>::from_bits(std::numeric_limits<D>::min());
+    }
+};
+
+}
