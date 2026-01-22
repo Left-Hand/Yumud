@@ -9,6 +9,8 @@
 
 //  * 注意：本实现为完全原创，未使用上述项目的任何代码。
 //  * 参考仅用于理解问题领域，未复制任何具体实现。
+
+
 namespace ymd::drivers{
 
 
@@ -35,25 +37,25 @@ public:
 private:
     InvensenseImu_Transport transport_;
     
-    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
-        return transport_.write_reg(addr, data);
+    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t reg_val){
+        return transport_.write_reg(addr, reg_val);
     }
 
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){return read_reg(reg.address, reg);}
+    [[nodiscard]] IResult<> read_reg(T & reg){return read_reg(T::ADDRESS, reg);}
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.address, reg.to_bits());
+        if(const auto res = write_reg(T::ADDRESS, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
 
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
-        return transport_.read_reg(addr, data);
+    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & reg_val){
+        return transport_.read_reg(addr, reg_val);
     }
 
 };

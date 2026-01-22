@@ -25,6 +25,39 @@ struct ICM20948_Prelude{
     static constexpr uint8_t ICM20948_ID = 0xEA;
     static constexpr uint8_t REG_BANK_SEL = 0x7F;
 
+
+    /* Typedefs */
+    enum class [[nodiscard]] BankKind:uint8_t{
+        _0 = 0 << 4,
+        _1 = 1 << 4,
+        _2 = 2 << 4,
+        _3 = 3 << 4
+    } ;
+
+    enum class [[nodiscard]] GyrFs:uint8_t{
+        _250dps,
+        _500dps,
+        _1000dps,
+        _2000dps
+    };
+
+    enum class [[nodiscard]] AccFs:uint8_t{
+        _2g,
+        _4g,
+        _8g,
+        _16g
+    };
+
+
+    enum class [[nodiscard]] OperationMode:uint8_t{
+        PowerDown = 0,
+        SingleShot = 1,
+        _10hz = 2,
+        _20hz = 4,
+        _50hz = 6,
+        _100hz = 8
+    };
+
     // USER BANK 0
     static constexpr uint8_t B0_WHO_AM_I = 0x00;		
     static constexpr uint8_t B0_USER_CTRL = 0x03;
@@ -174,44 +207,13 @@ struct ICM20948_Prelude{
 
     static constexpr uint8_t READ_CMD = 0x80;  
     static constexpr uint8_t WRITE_CMD = 0x00;
-
-        
-
-    /* Typedefs */
-    enum class [[nodiscard]] BankKind:uint8_t{
-        _0 = 0 << 4,
-        _1 = 1 << 4,
-        _2 = 2 << 4,
-        _3 = 3 << 4
-    } ;
-
-    enum class [[nodiscard]] GyrFs:uint8_t{
-        _250dps,
-        _500dps,
-        _1000dps,
-        _2000dps
-    };
-
-    enum class [[nodiscard]] AccFs:uint8_t{
-        _2g,
-        _4g,
-        _8g,
-        _16g
-    };
-
-
-    enum class [[nodiscard]] OperationMode:uint8_t{
-        PowerDown = 0,
-        SingleShot = 1,
-        _10hz = 2,
-        _20hz = 4,
-        _50hz = 6,
-        _100hz = 8
-    } ;
 };
 
 struct ICM20948_Regs:public ICM20948_Prelude{
 
+
+
+        
 };
 
 

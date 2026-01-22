@@ -16,14 +16,14 @@ struct ICM42605_Prelude{
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
 
-    enum class AccFs:uint8_t{
+    enum class [[nodiscard]] AccFs:uint8_t{
         _16G,// default
         _8G,
         _4G,
         _2G,
     };
 
-    enum class AccOdr:uint8_t
+    enum class [[nodiscard]] AccOdr:uint8_t
     {
         _32000HZ,
         _16000HZ,
@@ -42,7 +42,7 @@ struct ICM42605_Prelude{
         _500HZ,
     };
 
-    enum class GyrFs:uint8_t{
+    enum class [[nodiscard]] GyrFs:uint8_t{
         _2000DPS,// default
         _1000DPS,
         _500DPS,
@@ -53,7 +53,7 @@ struct ICM42605_Prelude{
         _15_625DPS,
     };
 
-    enum class GyrOdr:uint8_t{
+    enum class [[nodiscard]] GyrOdr:uint8_t{
         _32000HZ,
         _16000HZ,
         _8000HZ,
@@ -71,7 +71,7 @@ struct ICM42605_Prelude{
         _500HZ,
     };
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         ID = 0x47,
         DEVICE_CONFIG             = 0x11,
         DRIVE_CONFIG              = 0x13,
@@ -154,7 +154,7 @@ struct ICM42605_Prelude{
     };
 
 
-    enum class Bank{
+    enum class [[nodiscard]] Bank{
         _0 = 0,
         _1,
         _2,

@@ -73,6 +73,10 @@ static_assert(math::pu_to_uq32(-0.75_iq10) == 0.25_uq32);
 static_assert(math::pu_to_uq32(-0.75_iq31) == 0.25_uq32);
 static_assert(math::pu_to_uq32(0.5_uq32) == 0.5_uq32);
 
+static_assert(-0.25_iq16 == iq32(-0.25));
+static_assert(-0.25_iq10 == iq32(-0.25));
+static_assert(-0.25_iq31 == iq32(-0.25));
+
 
 static_assert(std::fabs(0.25 - double(rad_to_uq32(uq16((2 * M_PI) * 0.25)))) < 3E-5);
 static_assert(std::fabs(0.75 - double(rad_to_uq32(uq16((2 * M_PI) * 1000.75)))) < 3E-5);

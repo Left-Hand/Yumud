@@ -20,6 +20,23 @@ public:
     explicit BMI160(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
         transport_(i2c, i2c_addr){;}
 
+
+    struct [[nodiscard]] Config{
+        AccOdr acc_odr;
+        AccFs acc_fs;
+        GyrOdr gyr_odr;
+        GyrFs gyr_fs;
+
+        static constexpr Config from_default(){
+            return Config{
+                .acc_odr = AccOdr::_800Hz,
+                .acc_fs = AccFs::_8G,
+                .gyr_odr = GyrOdr::_800Hz,
+                .gyr_fs = GyrFs::_1000deg
+            };
+        }
+    };
+
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> update();
     [[nodiscard]] IResult<> validate();

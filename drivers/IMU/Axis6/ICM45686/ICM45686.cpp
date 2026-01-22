@@ -25,7 +25,7 @@ using Error = Self::Error;
 Result<void, Error> Self::validate(){
     uint8_t Product_ID = 0x00;
 
-    if(const auto res = read_reg(uint8_t(Self::REGISTER::WHO_AM_I), Product_ID); 
+    if(const auto res = read_reg(uint8_t(Self::RegAddr::WhoAmI), Product_ID); 
         res.is_err()) return Err(res.unwrap_err());
     else{
         if(Product_ID != 0xE9) return Err(Error(Error::InvalidChipId));

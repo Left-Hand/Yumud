@@ -129,10 +129,10 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t acc_drdy_int:1;
     };
 
-    struct R8_ScOut:public Reg16<>{
+    struct R16_ScOut:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x1E;
 
-        uint16_t :16;
+        uint16_t bits;
     };
 
     struct R8_WrGestOut:public Reg8<>{
@@ -156,7 +156,7 @@ struct BMI270_Regset:public BMI270_Prelude{
     struct R16_Temperature:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x22;
 
-        uint16_t :16;
+        uint16_t bits;
     };
 
     struct R16_FifoLength:public Reg16<>{
@@ -507,20 +507,6 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t temp_en:1;
         uint8_t :4;
     };
-
-
-    // ChipIdReg chipid_reg = {};
-    // uint8_t :8;
-    // ErrReg err_reg = {};
-    // StatusReg status_reg = {};
-
-    // uint8_t data_regs[Data0Reg::size] = {};
-    // uint8_t sensor_time_regs[SensorTime0Reg::size] = {};
-
-    // EventReg event_reg = {};
-    
-    // IntStatus0Reg int_status0_reg = {};
-    // IntStatus1Reg int_status1_reg = {};
 };
 
 }

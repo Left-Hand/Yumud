@@ -21,22 +21,16 @@ struct ICM45686_Prelude{
     using IResult = Result<T, Error>;
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
-    // enum class RegAddr{
-    //     Config0 = 0x16
-    // };
 
-    using RegAddr = uint8_t;
-
-
-    enum class REGISTER: uint8_t{
-        ACCEL_DATA_X1_UI = 0x00,
-        PWR_MGMT0        = 0x10,
-        ACCEL_CONFIG     = 0x1B,
-        GYRO_CONFIG 	 = 0x1C,
-        WHO_AM_I   		 = 0x72
+    enum class RegAddr: uint8_t{ 
+        AccelDataX1Ui = 0x00,
+        PwrMgmt0        = 0x10,
+        AccConfig     = 0x1B,
+        GyrConfig 	 = 0x1C,
+        WhoAmI   		 = 0x72
     };
 
-    enum class Mode: uint8_t{
+    enum class [[nodiscard]] Mode: uint8_t{
 
         Off = 0x00,
         Standby,
@@ -44,31 +38,31 @@ struct ICM45686_Prelude{
         LowNoise
     };
 
-    enum class AccelScale: uint8_t{
+    enum class [[nodiscard]] AccelFs: uint8_t{
 
         _32G = 0x00,
         _16G,
-        _08G,
-        _04G,
-        _02G
+        _8G,
+        _4G,
+        _2G
     };
 
-    enum class GyroScale: uint8_t{
+    enum class [[nodiscard]] GyrFs: uint8_t{
 
-        _4000_Dps = 0x00,
-        _2000_Dps,
-        _1000_Dps,
-        _0500_Dps,
-        _0250_Dps,
-        _0125_Dps,
-        _0062_Dps,
-        _0031_Dps,
-        _0015_Dps,
-        _0006_Dps
+        _4000deg = 0x00,
+        _2000deg,
+        _1000deg,
+        _500deg,
+        _250deg,
+        _125deg,
+        _62deg,
+        _31deg,
+        _15deg,
+        _6deg
 
     };
 
-    enum class ODR: uint8_t{
+    enum class [[nodiscard]] Odr: uint8_t{
 
         _6400_Hz = 3,
         _3200_Hz,
@@ -113,8 +107,8 @@ struct ICM45686_Regs:public ICM45686_Prelude{
         uint8_t en_apex_event:1;
     };
 
-    Vec3<int16_t> acc_data_ = Vec3<int16_t>::ZERO;
-    Vec3<int16_t> gyr_data_ = Vec3<int16_t>::ZERO;
+    Vec3<int16_t> acc_bits_ = Vec3<int16_t>::ZERO;
+    Vec3<int16_t> gyr_bits_ = Vec3<int16_t>::ZERO;
 };
 
 }
