@@ -13,10 +13,10 @@ struct [[nodiscard]] BitsSet final{
     using Self = BitsSet<N>;
     using D = tmp::width_to_least_uint_t<N>;
 
-    static constexpr D bits_mask = tmp::mask_calculator::lower_mask_of<D>(N);
+    static constexpr D BITS_MASK = tmp::mask_calculator::lower_mask_of<D>(N);
 
     template<typename D2 = D>
-    static constexpr D2 invalid_bits_mask = static_cast<D2>(~bits_mask);
+    static constexpr D2 INVALID_BITS_MASK = static_cast<D2>(~BITS_MASK);
 
     // 从短片段构造
     template<size_t N2>
@@ -24,17 +24,11 @@ struct [[nodiscard]] BitsSet final{
     constexpr explicit BitsSet(const BitsSet<N2> & other):
         bits_(static_cast<D>(other.bits_)){}
 
-    template<typename D2>
-    requires (std::is_unsigned_v<D2> && std::is_same_v<D, D2>)
-    constexpr explicit BitsSet(const D2 bits):
-        bits_(static_cast<D>(bits)){}
-
-
     template<typename D2 = D>
     static constexpr Self from_bits(const D2 bits){
         // using D2 = std::decay_t<decltype(bits)>;
         if constexpr(N != sizeof(D2) * 8)
-            if(bits & invalid_bits_mask<D2>) [[unlikely]]
+            if(bits & INVALID_BITS_MASK<D2>) [[unlikely]]
                 __builtin_trap();
         return from_bits_unchecked(bits);
     }
@@ -44,14 +38,13 @@ struct [[nodiscard]] BitsSet final{
     }
 
     static consteval Self full(){
-        return Self::from_bits(Self::bits_mask);
+        return Self::from_bits(Self::BITS_MASK);
     }
 
     template<typename D2 = D>
     static constexpr Option<Self> try_from_bits(const D2 bits){
-        // using D2 = std::decay_t<decltype(bits)>;
         if constexpr(N != sizeof(D2) * 8)
-            if(bits & invalid_bits_mask<D2>) [[unlikely]]
+            if(bits & INVALID_BITS_MASK<D2>) [[unlikely]]
                 return None;
         return Some(from_bits_unchecked(bits));
     }
@@ -61,10 +54,8 @@ struct [[nodiscard]] BitsSet final{
         if constexpr (std::is_same_v<D, D2>)
             return from_bits_unchecked(bits);
         else 
-            return from_bits_unchecked(bits & bits_mask);
+            return from_bits_unchecked(bits & BITS_MASK);
     }
-
-
 
     static constexpr Self from_bits_unchecked(const D bits){
         return Self{bits};
@@ -87,6 +78,17 @@ struct [[nodiscard]] BitsSet final{
             BitsSet<N - I>::from_bits_unchecked(bits_ & tmp::mask_calculator::lower_mask_of<typename BitsSet<N - I>::D>(N - I))
         };
     }
+
+
+    [[nodiscard]] constexpr bool highest_bit() const {
+        return bool(bits_ & (static_cast<D>(1) << (N - 1)));
+    }
+
+    // [[nodiscard]] constexpr std::tuple<bool, BitsSet<N - 1>> split_highest() const requires(N > 1){
+    //     static_assert(N > 1);
+    //     return std::make_tuple(highest_bit(), BitsSet<N - 1>::from_bits_unchecked(bits_ & (static_cast<D>(~0) << (N - 1))));
+    // }
+
 
     #if 0
     // 主接口：支持可变数量的分割点
@@ -119,6 +121,8 @@ struct [[nodiscard]] BitsSet final{
         return N;
     }
 
+
+
     [[nodiscard]] constexpr bool is_zero() const {
         return bits_ == 0;
     }
@@ -145,7 +149,7 @@ struct [[nodiscard]] BitsSet final{
     }
     
     constexpr Self operator~() const {
-        return from_bits_unchecked(~bits_ & bits_mask);
+        return from_bits_unchecked(~bits_ & BITS_MASK);
     }
 
     constexpr Self bitwise_not() const {
@@ -220,39 +224,39 @@ private:
 }
 
 namespace ymd::literals { 
-using Bs1 = ymd::BitsSet<1>;
-using Bs2 = ymd::BitsSet<2>;
-using Bs3 = ymd::BitsSet<3>;
-using Bs4 = ymd::BitsSet<4>;
-using Bs5 = ymd::BitsSet<5>;
-using Bs6 = ymd::BitsSet<6>;
-using Bs7 = ymd::BitsSet<7>;
-using Bs8 = ymd::BitsSet<8>;
-using Bs9 = ymd::BitsSet<9>;
+// using bs1 = ymd::BitsSet<1>;
+using bs2 = ymd::BitsSet<2>;
+using bs3 = ymd::BitsSet<3>;
+using bs4 = ymd::BitsSet<4>;
+using bs5 = ymd::BitsSet<5>;
+using bs6 = ymd::BitsSet<6>;
+using bs7 = ymd::BitsSet<7>;
+using bs8 = ymd::BitsSet<8>;
+using bs9 = ymd::BitsSet<9>;
 
-using Bs10 = ymd::BitsSet<10>;
-using Bs11 = ymd::BitsSet<11>;
-using Bs12 = ymd::BitsSet<12>;
-using Bs13 = ymd::BitsSet<13>;
-using Bs14 = ymd::BitsSet<14>;
-using Bs15 = ymd::BitsSet<15>;
-using Bs16 = ymd::BitsSet<16>;
-using Bs17 = ymd::BitsSet<17>;
-using Bs18 = ymd::BitsSet<18>;
-using Bs19 = ymd::BitsSet<19>;
+using bs10 = ymd::BitsSet<10>;
+using bs11 = ymd::BitsSet<11>;
+using bs12 = ymd::BitsSet<12>;
+using bs13 = ymd::BitsSet<13>;
+using bs14 = ymd::BitsSet<14>;
+using bs15 = ymd::BitsSet<15>;
+using bs16 = ymd::BitsSet<16>;
+using bs17 = ymd::BitsSet<17>;
+using bs18 = ymd::BitsSet<18>;
+using bs19 = ymd::BitsSet<19>;
 
-using Bs20 = ymd::BitsSet<20>;
-using Bs21 = ymd::BitsSet<21>;
-using Bs22 = ymd::BitsSet<22>;
-using Bs23 = ymd::BitsSet<23>;
-using Bs24 = ymd::BitsSet<24>;
-using Bs25 = ymd::BitsSet<25>;
-using Bs26 = ymd::BitsSet<26>;
-using Bs27 = ymd::BitsSet<27>;
-using Bs28 = ymd::BitsSet<28>;
-using Bs29 = ymd::BitsSet<29>;
+using bs20 = ymd::BitsSet<20>;
+using bs21 = ymd::BitsSet<21>;
+using bs22 = ymd::BitsSet<22>;
+using bs23 = ymd::BitsSet<23>;
+using bs24 = ymd::BitsSet<24>;
+using bs25 = ymd::BitsSet<25>;
+using bs26 = ymd::BitsSet<26>;
+using bs27 = ymd::BitsSet<27>;
+using bs28 = ymd::BitsSet<28>;
+using bs29 = ymd::BitsSet<29>;
 
-using Bs30 = ymd::BitsSet<30>;
-using Bs31 = ymd::BitsSet<31>;
-using Bs32 = ymd::BitsSet<32>;
+using bs30 = ymd::BitsSet<30>;
+using bs31 = ymd::BitsSet<31>;
+using bs32 = ymd::BitsSet<32>;
 }

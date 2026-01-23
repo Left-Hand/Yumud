@@ -29,6 +29,8 @@
 #include "frame_buffer.hpp"
 #include "core/string/conv/strconv2.hpp"
 
+#include "core/mem/o1heap/o1heap_alloc.hpp"
+
 
 using namespace ymd;
 

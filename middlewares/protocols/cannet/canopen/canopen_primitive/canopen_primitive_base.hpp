@@ -30,7 +30,7 @@ struct [[nodiscard]] NodeId final{
         return NodeId{bits};
     }
 
-    static constexpr NodeId from_b7(const Bs7 bs){
+    static constexpr NodeId from_b7(const bs7 bs){
         return NodeId{bs.to_bits()};
     }
 
@@ -54,8 +54,8 @@ struct [[nodiscard]] NodeId final{
         return static_cast<uint8_t>(bits & 0x7f);
     }
 
-    [[nodiscard]] constexpr Bs7 to_b7() const{
-        return Bs7::from_bits_unchecked(bits);
+    [[nodiscard]] constexpr bs7 to_b7() const{
+        return bs7::from_bits_unchecked(bits);
     }
 
     //是否为广播地址

@@ -46,8 +46,8 @@ struct [[nodiscard]] CanStdId{
     }
 
     [[nodiscard]] constexpr uint16_t to_u11() const {return bits_;}
-    [[nodiscard]] constexpr literals::Bs11 to_b11() const {
-        return literals::Bs11::from_bits_unchecked(bits_);
+    [[nodiscard]] constexpr literals::bs11 to_b11() const {
+        return literals::bs11::from_bits_unchecked(bits_);
     }
 
     [[nodiscard]] constexpr uint16_t to_bits() const {return bits_;}

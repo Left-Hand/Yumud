@@ -15,10 +15,10 @@ namespace {
     static_assert(std::is_same_v<BitsSet<32>::D, uint32_t>);
 
     // 测试掩码计算
-    static_assert(BitsSet<8>::bits_mask == 0xFF);
-    static_assert(BitsSet<16>::bits_mask == 0xFFFF);
-    static_assert(BitsSet<5>::bits_mask == 0b11111);
-    static_assert(BitsSet<1>::bits_mask == 0b1);
+    static_assert(BitsSet<8>::BITS_MASK == 0xFF);
+    static_assert(BitsSet<16>::BITS_MASK == 0xFFFF);
+    static_assert(BitsSet<5>::BITS_MASK == 0b11111);
+    static_assert(BitsSet<1>::BITS_MASK == 0b1);
 } // namespace BasicTests
 
 // 构造和验证测试

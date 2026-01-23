@@ -3,7 +3,7 @@
 
 using namespace ymd;
 using namespace ymd::uavcan;
-using namespace uavcan::primitive;
+using namespace uavcan;
 
 
 namespace {
