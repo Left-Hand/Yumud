@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/debug/debug.hpp"
+
 // ---------------------------------------- BUILD CONFIGURATION OPTIONS ----------------------------------------
 
 /// Define this macro to include build configuration header. This is an alternative to the -D compiler flag.
@@ -10,10 +12,18 @@
 
 /// The assertion macro defaults to the standard assert().
 /// It can be overridden to manually suppress assertion checks or use a different error handling policy.
-#define O1HEAP_ASSERT(x) ({\
+
+#if 0
+#define O1HEAP_ASSERT(x, ...) ({\
     const bool b = (x);\
     if(b == false) __builtin_unreachable();\
 })\
+
+#else
+
+// template<typename ... Args>
+#define O1HEAP_ASSERT(...) ymd::ASSERT(__VA_ARGS__)
+#endif
 
 /// Allow usage of compiler intrinsics for branch annotation and CLZ.
 #ifndef O1HEAP_USE_INTRINSICS

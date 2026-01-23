@@ -41,12 +41,12 @@ static constexpr size_t FRAGMENT_SIZE_MAX = ((SIZE_MAX >> 1U) + 1U);
 
 /// Normally we should subtract log2(FRAGMENT_SIZE_MIN) but log2 is bulky to compute using the preprocessor only.
 /// We will certainly end up with unused bins this way, but it is cheap to ignore.
-static constexpr size_t NUM_BINS_MAX = (sizeof(size_t) * sizeof(char));
+static constexpr size_t NUM_BINS_MAX = (sizeof(size_t) * sizeof(char) * 8);
 
-struct Fragment;
+struct [[nodiscard]] Fragment;
 
 /// Size is computed dynamically from (next - this) or (arena_end - this) for the last fragment.
-struct FragmentHeader
+struct [[nodiscard]] FragmentHeader
 {
     Fragment* next;       ///< Next fragment in address order; NULL if this is the last fragment.
     uintptr_t prev_used;  ///< Prev pointer in upper bits, 'used' flag in bit 0.
@@ -54,7 +54,7 @@ struct FragmentHeader
 static_assert(sizeof(FragmentHeader) == sizeof(void*) * 2U, "Memory layout error");
 static_assert(sizeof(FragmentHeader) == O1HEAP_ALIGNMENT, "Memory layout error");
 
-struct Fragment
+struct [[nodiscard]] Fragment
 {
     FragmentHeader header;
     // Everything past the header may spill over into the allocatable space. The header survives across alloc/free.
@@ -73,7 +73,8 @@ static_assert(sizeof(Fragment) <= FRAGMENT_SIZE_MIN, "Memory layout error");
 /// compared to the amount of computation needed to do the actual memory management. In the future, we may add a
 /// preprocessor option that disables diagnostics for the benefit of the most performance-sensitive applications.
 /// If you find this feature relevant for your use case, consider opening a ticket.
-struct O1HeapDiagnostics{
+struct [[nodiscard]] O1HeapDiagnostics{
+    using Self = O1HeapDiagnostics;
     /// The total amount of memory available for serving allocation requests (heap size).
     /// The maximum allocation size is (capacity - O1HEAP_ALIGNMENT).
     /// This parameter does not include the overhead used up by O1HeapInstance and arena alignment.
@@ -95,10 +96,14 @@ struct O1HeapDiagnostics{
     /// The number of times an allocation request could not be completed due to the lack of memory or
     /// excessive fragmentation. OOM stands for "out of memory". This parameter is never decreased.
     uint64_t oom_count;
+
+    static constexpr Self zero(){
+        return Self{0U, 0U, 0U, 0U, 0U};
+    }
 } ;
 
 /// The definition is private, so the user code can only operate on pointers. This is done to enforce encapsulation.
-struct O1HeapInstance
+struct [[nodiscard]] O1HeapInstance
 {
     Fragment* bins[NUM_BINS_MAX];  ///< Smallest fragments are in the bin at index 0.
     size_t    nonempty_bin_mask;   ///< Bit 1 represents a non-empty bin; bin at index 0 is for the smallest fragments.
@@ -200,6 +205,6 @@ bool o1heapDoInvariantsHold(const O1HeapInstance* const handle);
 /// Samples and returns a copy of the diagnostic information, see O1HeapDiagnostics.
 /// This function merely copies the structure from an internal storage, so it is fast to return.
 /// If the handle pointer is NULL, the behavior is undefined.
-O1HeapDiagnostics o1heapGetDiagnostics(const O1HeapInstance* const handle);
+const O1HeapDiagnostics & o1heapGetDiagnostics(const O1HeapInstance* const handle);
 
 }

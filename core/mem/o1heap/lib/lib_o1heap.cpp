@@ -27,16 +27,6 @@ namespace lib_o1heap{
 // ---------------------------------------- INTERNAL DEFINITIONS ----------------------------------------
 
 
-#if __STDC_VERSION__ < 201112L
-// Intentional violation of MISRA: static assertion macro cannot be replaced with a function definition.
-#    define static_assert(x, ...) typedef char _static_assert_gl(_static_assertion_, __LINE__)[(x) ? 1 : -1]  // NOSONAR
-#    define _static_assert_gl(a, b) _static_assert_gl_impl(a, b)                                              // NOSONAR
-// Intentional violation of MISRA: the paste operator ## cannot be avoided in this context.
-#    define _static_assert_gl_impl(a, b) a##b  // NOSONAR
-#endif
-
-
-
 static_assert((O1HEAP_ALIGNMENT & (O1HEAP_ALIGNMENT - 1U)) == 0U, "Not a power of 2");
 static_assert((FRAGMENT_SIZE_MIN & (FRAGMENT_SIZE_MIN - 1U)) == 0U, "Not a power of 2");
 static_assert((FRAGMENT_SIZE_MAX & (FRAGMENT_SIZE_MAX - 1U)) == 0U, "Not a power of 2");
@@ -168,7 +158,7 @@ O1HEAP_PRIVATE void rebin(O1HeapInstance* const handle, Fragment* const fragment
     O1HEAP_ASSERT(fragment != NULL);
     O1HEAP_ASSERT((fragment_size % FRAGMENT_SIZE_MIN) == 0U);
     const uint_fast8_t idx = log2Floor(fragment_size / FRAGMENT_SIZE_MIN);  // Round DOWN when inserting.
-    O1HEAP_ASSERT(idx < NUM_BINS_MAX);
+    O1HEAP_ASSERT(idx < NUM_BINS_MAX, idx, NUM_BINS_MAX);
     // Add the new fragment to the beginning of the bin list.
     // I.e., each allocation will be returning the most-recently-used fragment -- good for caching.
     fragment->next_free = handle->bins[idx];
@@ -570,6 +560,7 @@ bool o1heapDoInvariantsHold(const O1HeapInstance* const handle)
     bool valid = true;
 
     // Check the bin mask consistency.
+    #pragma GCC unroll 8
     for (size_t i = 0; i < NUM_BINS_MAX; i++)  // Dear compiler, feel free to unroll this loop.
     {
         const bool mask_bit_set = (handle->nonempty_bin_mask & pow2((uint_fast8_t) i)) != 0U;
@@ -604,11 +595,10 @@ bool o1heapDoInvariantsHold(const O1HeapInstance* const handle)
     return valid;
 }
 
-O1HeapDiagnostics o1heapGetDiagnostics(const O1HeapInstance* const handle)
+const O1HeapDiagnostics & o1heapGetDiagnostics(const O1HeapInstance* const handle)
 {
     O1HEAP_ASSERT(handle != NULL);
-    const O1HeapDiagnostics out = handle->diagnostics;
-    return out;
+    return handle->diagnostics;
 }
 
 }
