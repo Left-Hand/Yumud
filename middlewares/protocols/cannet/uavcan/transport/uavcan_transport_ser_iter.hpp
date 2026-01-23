@@ -8,29 +8,9 @@
 
 namespace ymd::uavcan{
 
-//bits over 0b11111 is undefined behaviour
-struct [[nodiscard]] TransferId final{
-    using Self = TransferId;
-
-    uint8_t bits;
-
-    static constexpr Self from_bits(uint8_t bits){
-        return TransferId{static_cast<uint8_t>(bits & 0b11111)};
-    }
-
-    constexpr Self rounded_inc() const {
-        return Self{static_cast<uint8_t>((bits + 1) & 0b11111)};
-    }
-
-    constexpr Self & operator++() {
-        auto & self = *this;
-        self = self.rounded_inc();
-        return self;
-    }
-};
 
 
-struct [[nodiscard]] Bytes2CanFrameSerializeIterator final{
+struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
 
 
     struct Parameters{
@@ -49,7 +29,7 @@ struct [[nodiscard]] Bytes2CanFrameSerializeIterator final{
         }
     };
 
-    explicit constexpr Bytes2CanFrameSerializeIterator(const Parameters & paras):paras_(paras){
+    explicit constexpr Bytes2CanFrameSlicingIterator(const Parameters & paras):paras_(paras){
         if(paras_.bytes.data() == nullptr)
             __builtin_trap();
         if(paras_.bytes.size() > 256) // UAVCAN 有最大传输大小限制
@@ -129,14 +109,14 @@ private:
     State state_ = State::zero();
 };
 
-struct [[nodiscard]] SerializeIteratorSpawner final{
+struct [[nodiscard]] SlicingIteratorSpawner final{
     struct [[nodiscard]] State{
         TransferId transfer_id;
     };
 
     State state;
 
-    [[nodiscard]] constexpr Bytes2CanFrameSerializeIterator spawn(
+    [[nodiscard]] constexpr Bytes2CanFrameSlicingIterator spawn(
         const Header header,
         const std::span<const uint8_t> bytes,
         const Signature signature
@@ -144,7 +124,7 @@ struct [[nodiscard]] SerializeIteratorSpawner final{
         auto gaurd = make_scope_guard([&](){
             state.transfer_id = state.transfer_id.rounded_inc();
         });
-        return Bytes2CanFrameSerializeIterator({
+        return Bytes2CanFrameSlicingIterator({
             .header = header,
             .bytes = bytes,
             .signature = signature,

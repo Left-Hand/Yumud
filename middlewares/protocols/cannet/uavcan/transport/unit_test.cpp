@@ -1,4 +1,5 @@
-#include "uavcan_transport_iterator.hpp"
+#include "uavcan_transport_ser_iter.hpp"
+#include "uavcan_transport_de_iter.hpp"
 
 using namespace ymd;
 using namespace ymd::uavcan;
@@ -34,7 +35,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
     static constexpr auto buf = std::to_array<uint8_t, 8>({0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08});
 
     auto make_iter = [&]{
-        return SerializeIteratorSpawner{
+        return SlicingIteratorSpawner{
             .state = {
                 .transfer_id = TransferId{3}
             }
@@ -84,7 +85,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
         {1,2,3,4,5,6,7});
 
     auto make_iter = [&]{
-        return SerializeIteratorSpawner{
+        return SlicingIteratorSpawner{
             .state = {
                 .transfer_id = TransferId{4}
             }
@@ -126,7 +127,7 @@ static constexpr auto get_nth_result(const size_t i, Iter && iter){
             19,20});
 
     auto make_iter = [&]{
-        return SerializeIteratorSpawner{
+        return SlicingIteratorSpawner{
             .state = {
                 .transfer_id = TransferId{7}
             }
