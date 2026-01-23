@@ -7,13 +7,13 @@
 namespace ymd{
 static constexpr size_t STATIC_FUNCRION_MAX_BUFFER_SIZE = 16;
 template <typename Signature, size_t BufferSize = STATIC_FUNCRION_MAX_BUFFER_SIZE>
-class StaticFunction;
+class HeaplessFunction;
 
 template <typename Ret, typename... Args, size_t BufferSize>
-class StaticFunction<Ret(Args...), BufferSize> {
+class HeaplessFunction<Ret(Args...), BufferSize> {
     // 存储可调用对象的缓冲区（对齐）
     using Storage = std::aligned_storage_t<BufferSize>;
-    Storage _storage;
+    Storage storage_;
 
     // 类型擦除的分发函数指针
     using InvokeFn = Ret(*)(const Storage&, Args&&...);
@@ -26,7 +26,7 @@ class StaticFunction<Ret(Args...), BufferSize> {
 
 public:
     // 默认构造（空函数）
-    constexpr StaticFunction() noexcept 
+    constexpr HeaplessFunction() noexcept 
         : _invoke(&NullInvoke) {}
 
     // 从可调用对象构造（lambda、函数指针等）
@@ -36,13 +36,13 @@ public:
         (sizeof(F) <= BufferSize) &&
         std::is_nothrow_move_constructible_v<F>
     )
-    constexpr StaticFunction(F&& f) noexcept {
+    constexpr HeaplessFunction(F&& f) noexcept {
         // 编译期检查缓冲区大小
         static_assert(sizeof(F) <= BufferSize, 
-            "Callable too large for StaticFunction buffer!");
+            "Callable too large for HeaplessFunction buffer!");
 
         // 存储可调用对象
-        new (&_storage) F(std::forward<F>(f));
+        new (&storage_) F(std::forward<F>(f));
 
         // 设置分发函数
         _invoke = [](const Storage& storage, Args&&... args) -> Ret {
@@ -55,7 +55,7 @@ public:
 
     // 调用运算符
     constexpr Ret operator()(Args... args) const {
-        return _invoke(_storage, std::forward<Args>(args)...);
+        return _invoke(storage_, std::forward<Args>(args)...);
     }
 
     // 检查是否非空

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "primitive/can/can_id.hpp"
+#include "primitive/can/bxcan_frame.hpp"
 #include "core/utils/bits/bitfield_proxy.hpp"
 
 // https://blog.csdn.net/geek_liyang/article/details/148498704
@@ -39,8 +40,37 @@ enum class [[nodiscard]] DataPage:uint8_t{
 };
 
 enum class [[nodiscard]] Priority:uint8_t{
-
+    _0 = 0b000,
+    _1, _2, _3, _4, _5, _6, _7,
+    Highest = _0,
+    Lowest = _7,
+    Default = _6,
 };
+
+// https://github.com/Open-Agriculture/AgIsoStack-rs/blob/main/src/driver/pgn.rs
+
+struct alignas(4) [[nodiscard]] Pgn final{
+    uint32_t bits;
+
+    constexpr auto pdu_specific() const {
+        return make_bitfield_proxy<0, 8, PsField>(bits);
+    }
+
+    constexpr auto pdu_format() const {
+        return make_bitfield_proxy<8, 16, PduFormat>(bits);
+    }
+
+    constexpr auto data_page() const {
+        return make_bitfield_proxy<16, 17, bool>(bits);
+    }
+
+
+    constexpr auto extended_data_page() const {
+        return make_bitfield_proxy<17, 18, bool>(bits);
+    }
+};
+
+static_assert(sizeof(Pgn) == 4);
 
 
 struct alignas(4) [[nodiscard]] Pdn final{
@@ -101,24 +131,6 @@ struct alignas(4) [[nodiscard]] Pdn final{
 
 static_assert(sizeof(Pdn) == 4);
 
-
-struct alignas(8) [[nodiscard]]EcuName final{
-    using Self = EcuName;
-
-    std::array<uint8_t, 8> bytes;
-
-    static constexpr Self from_bytes(std::span<const uint8_t, 8> bytes){
-        Self self;
-        std::copy(bytes.begin(), bytes.end(), self.bytes.begin());
-        return self;
-    }
-
-    static constexpr Self from_u64(const uint64_t bits){
-        return std::bit_cast<EcuName>(bits);
-    }
-};
-
-static_assert(sizeof(EcuName) == 8);
 
 }
 }

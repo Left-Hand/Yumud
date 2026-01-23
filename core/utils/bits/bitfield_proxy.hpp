@@ -8,7 +8,7 @@ namespace ymd{
 template<typename D,
 	size_t BEGIN_OFFSET, size_t END_OFFSET,
     typename T = D>
-struct [[nodiscard]] BitFieldProxy{
+struct [[nodiscard]] BitFieldProxy final{
 private:    
     D & p_obj_;
 
@@ -54,7 +54,7 @@ public:
 
 //指向动态确定起始比特位和结束比特位的代理
 template<typename D, typename T = D>
-struct [[nodiscard]] DynBitFieldProxy{
+struct [[nodiscard]] DynBitFieldProxy final{
 private:    
     D & p_obj_;
     const size_t beign_offset;
@@ -90,7 +90,7 @@ public:
 
 //指向一段连续的比特位数组
 template<typename D, size_t BEGIN_OFFSET, size_t END_OFFSET, size_t LEN>
-struct [[nodiscard]] BitFieldArrayProxy{
+struct [[nodiscard]] BitFieldArrayProxy final{
 private:    
     static constexpr size_t WIDTH = END_OFFSET - BEGIN_OFFSET;
     static constexpr size_t ELEMENT_WIDTH = (WIDTH / LEN);

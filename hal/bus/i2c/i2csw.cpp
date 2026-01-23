@@ -1,5 +1,5 @@
 #include "i2csw.hpp"
-#include "core/clock/time_stamp.hpp"
+#include "core/clock/monotic_clock.hpp"
 #include "core/debug/debug.hpp"
 #include "hal/gpio/gpio.hpp"
 

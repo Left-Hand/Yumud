@@ -2,9 +2,8 @@
 
 #include "clock.hpp"
 
-namespace ymd{
+namespace ymd::clock{
 
-// template<typename Dur = Microseconds>
 class TimeStamp{
 protected:
     const uint32_t begin;

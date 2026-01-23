@@ -2,7 +2,6 @@
 
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "core/clock/time_stamp.hpp"
 
 #include "middlewares/protocols/cannet/slcan/slcan.hpp"
 #include "middlewares/rpc/rpc.hpp"
