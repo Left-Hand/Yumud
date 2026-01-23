@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
-#include <span>
+#include "uavcan_primitive.hpp"
 
 namespace ymd::uavcan{
+
 
 namespace crc{
 
@@ -100,8 +100,8 @@ struct [[nodiscard]] CrcBuilder final{
         return *this;
     }
 
-    constexpr Self push_signature(const uint64_t signature){
-        crc_val = crc::crc16_push_signature(crc_val, signature);
+    constexpr Self push_signature(const Signature signature){
+        crc_val = crc::crc16_push_signature(crc_val, signature.bits);
         return *this;
     }
 

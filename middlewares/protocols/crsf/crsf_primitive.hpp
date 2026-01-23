@@ -13,6 +13,7 @@
 #include "crsf_utils.hpp"
 
 // https://github.com/tbs-fpv/tbs-crsf-spec/blob/main/crsf.md
+// https://github.com/elodin-sys/elodin/blob/1d1c42139e18fe6d5b425b64ca8b55b1d38741f2/fsw/sensor-fw/src/crsf.rs
 
 namespace ymd::crsf{
 
@@ -109,7 +110,16 @@ private:
     Kind kind_;
 };
 
-using FrameType = uint8_t;
+enum class FrameType:uint8_t{
+    GpsFrame = 0x02,
+    BatteryFrame = 0x08,
+    LinkStatistics = 0x14,
+    RcChannelsPacked = 0x16,
+    SubsetRcChannelsPacked = 0x17,
+    LinkStatisticsRx = 0x1C,
+    LinkStatisticsTx = 0x1D,
+    Attitude = 0x1E,
+};
 
 struct [[nodiscard]] DataType final{
     using Self = DataType;

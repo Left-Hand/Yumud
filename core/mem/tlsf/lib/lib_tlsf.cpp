@@ -200,26 +200,24 @@ tlsf_decl int tlsf_fls_sizet(size_t size)
 */
 
 /* Public constants: may be modified. */
-enum tlsf_public
-{
+
 	/* log2 of number of linear subdivisions of block sizes. Larger
 	** values require more memory in the control structure. Values of
 	** 4 or 5 are typical.
 	*/
-	SL_INDEX_COUNT_LOG2 = 5,
-};
+static constexpr size_t SL_INDEX_COUNT_LOG2 = 5;
+
 
 /* Private constants: do not modify. */
-enum tlsf_private
-{
+
 #if defined (TLSF_64BIT)
 	/* All allocation sizes and addresses are aligned to 8 bytes. */
-	ALIGN_SIZE_LOG2 = 3,
+static constexpr size_t ALIGN_SIZE_LOG2 = 3;
 #else
 	/* All allocation sizes and addresses are aligned to 4 bytes. */
-	ALIGN_SIZE_LOG2 = 2,
+static constexpr size_t ALIGN_SIZE_LOG2 = 2;
 #endif
-	ALIGN_SIZE = (1 << ALIGN_SIZE_LOG2),
+static constexpr size_t ALIGN_SIZE = (1 << ALIGN_SIZE_LOG2);
 
 	/*
 	** We support allocations of sizes up to (1 << FL_INDEX_MAX) bits.
@@ -237,24 +235,15 @@ enum tlsf_private
 	** TODO: We can increase this to support larger sizes, at the expense
 	** of more overhead in the TLSF structure.
 	*/
-	FL_INDEX_MAX = 32,
+static constexpr size_t FL_INDEX_MAX = 32;
 #else
-	FL_INDEX_MAX = 30,
+static constexpr size_t FL_INDEX_MAX = 30;
 #endif
-	SL_INDEX_COUNT = (1 << SL_INDEX_COUNT_LOG2),
-	FL_INDEX_SHIFT = (SL_INDEX_COUNT_LOG2 + ALIGN_SIZE_LOG2),
-	FL_INDEX_COUNT = (FL_INDEX_MAX - FL_INDEX_SHIFT + 1),
+static constexpr size_t SL_INDEX_COUNT = (1 << SL_INDEX_COUNT_LOG2);
+static constexpr size_t FL_INDEX_SHIFT = (SL_INDEX_COUNT_LOG2 + ALIGN_SIZE_LOG2);
+static constexpr size_t FL_INDEX_COUNT = (FL_INDEX_MAX - FL_INDEX_SHIFT + 1);
+static constexpr size_t SMALL_BLOCK_SIZE = (1 << FL_INDEX_SHIFT);
 
-	SMALL_BLOCK_SIZE = (1 << FL_INDEX_SHIFT),
-};
-
-/*
-** Cast and min/max macros.
-*/
-
-#define tlsf_cast(t, exp)	((t) (exp))
-#define tlsf_min(a, b)		((a) < (b) ? (a) : (b))
-#define tlsf_max(a, b)		((a) > (b) ? (a) : (b))
 
 
 
@@ -264,19 +253,18 @@ enum tlsf_private
 
 #define _tlsf_glue2(x, y) x ## y
 #define _tlsf_glue(x, y) _tlsf_glue2(x, y)
-#define tlsf_static_assert(exp) \
-	typedef char _tlsf_glue(static_assert, __LINE__) [(exp) ? 1 : -1]
+
 
 /* This code has been tested on 32- and 64-bit (LP/LLP) architectures. */
-tlsf_static_assert(sizeof(int) * CHAR_BIT == 32);
-tlsf_static_assert(sizeof(size_t) * CHAR_BIT >= 32);
-tlsf_static_assert(sizeof(size_t) * CHAR_BIT <= 64);
+static_assert(sizeof(int) * CHAR_BIT == 32);
+static_assert(sizeof(size_t) * CHAR_BIT >= 32);
+static_assert(sizeof(size_t) * CHAR_BIT <= 64);
 
 /* SL_INDEX_COUNT must be <= number of bits in sl_bitmap's storage type. */
-tlsf_static_assert(sizeof(unsigned int) * CHAR_BIT >= SL_INDEX_COUNT);
+static_assert(sizeof(unsigned int) * CHAR_BIT >= SL_INDEX_COUNT);
 
 /* Ensure we've properly tuned our sizes. */
-tlsf_static_assert(ALIGN_SIZE == SMALL_BLOCK_SIZE / SL_INDEX_COUNT);
+static_assert(ALIGN_SIZE == SMALL_BLOCK_SIZE / SL_INDEX_COUNT);
 
 /*
 ** Data structures and associated constants.
@@ -758,7 +746,7 @@ static block_header_t* block_locate_free(control_t* control, size_t size)
 		** So, we protect against that here, since this is the only callsite of mapping_search.
 		** Note that we don't need to check sl, since it comes from a modulo operation that guarantees it's always in range.
 		*/
-		if (fl < FL_INDEX_COUNT)
+		if (fl < int(FL_INDEX_COUNT))
 		{
 			block = search_suitable_block(control, &fl, &sl);
 		}
@@ -789,7 +777,7 @@ static void* block_prepare_used(control_t* control, block_header_t* block, size_
 /* Clear structure and point all empty lists at the null block. */
 static void control_construct(control_t* control)
 {
-	int i, j;
+	size_t i, j;
 
 	control->block_null.next_free = &control->block_null;
 	control->block_null.prev_free = &control->block_null;
@@ -836,15 +824,14 @@ static void integrity_walker(void* ptr, size_t size, int used, void* user)
 
 int tlsf_check(tlsf_t tlsf)
 {
-	int i, j;
 
 	control_t* control = tlsf_cast(control_t*, tlsf);
 	int status = 0;
 
 	/* Check that the free lists and bitmaps are accurate. */
-	for (i = 0; i < FL_INDEX_COUNT; ++i)
+	for (size_t i = 0; i < FL_INDEX_COUNT; ++i)
 	{
-		for (j = 0; j < SL_INDEX_COUNT; ++j)
+		for (size_t j = 0; j < SL_INDEX_COUNT; ++j)
 		{
 			const int fl_map = control->fl_bitmap & (1U << i);
 			const int sl_list = control->sl_bitmap[i];
@@ -877,7 +864,7 @@ int tlsf_check(tlsf_t tlsf)
 				tlsf_insist(block_size(block) >= block_size_min && "block not minimum size");
 
 				mapping_insert(block_size(block), &fli, &sli);
-				tlsf_insist(fli == i && sli == j && "block size indexed in wrong list");
+				tlsf_insist(fli == int(i) && sli == int(j) && "block size indexed in wrong list");
 				block = block->next_free;
 			}
 		}

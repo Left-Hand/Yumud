@@ -10,7 +10,7 @@ template<typename D,
     typename T = D>
 struct [[nodiscard]] BitFieldProxy final{
 private:    
-    D & p_obj_;
+    D & p_bits_;
 
     static constexpr D lower_mask = tmp::mask_calculator::lower_mask_of<D>(BEGIN_OFFSET);
 	static constexpr D mask = tmp::mask_calculator::mask_of<D>(BEGIN_OFFSET, END_OFFSET);
@@ -21,7 +21,7 @@ public:
     using underlying_type = D;
 
     [[nodiscard]] __attribute__((always_inline)) constexpr
-    explicit BitFieldProxy(D & obj):p_obj_(obj){;}
+    explicit BitFieldProxy(D & bits):p_bits_(bits){;}
 
     __attribute__((always_inline)) constexpr 
     auto & operator =(const T & in){
@@ -32,12 +32,12 @@ public:
     __attribute__((always_inline)) constexpr 
     void set(const T & in){
         static_assert(!std::is_const_v<D>, "cannot assign to const");
-        p_obj_ = (static_cast<D>(
-            std::bit_cast<tmp::size_to_uint_t<sizeof(in)>>(in)) << BEGIN_OFFSET) | (p_obj_ & ~mask);
+        p_bits_ = (static_cast<D>(
+            std::bit_cast<tmp::size_to_uint_t<sizeof(in)>>(in)) << BEGIN_OFFSET) | (p_bits_ & ~mask);
     }
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     T get() const{
-        return std::bit_cast<T>(static_cast<tmp::size_to_uint_t<sizeof(T)>>((p_obj_ & mask) >> (BEGIN_OFFSET)));
+        return std::bit_cast<T>(static_cast<tmp::size_to_uint_t<sizeof(T)>>((p_bits_ & mask) >> (BEGIN_OFFSET)));
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -56,7 +56,7 @@ public:
 template<typename D, typename T = D>
 struct [[nodiscard]] DynBitFieldProxy final{
 private:    
-    D & p_obj_;
+    D & p_bits_;
     const size_t beign_offset;
     const D mask_;
 
@@ -65,19 +65,19 @@ public:
 
     [[nodiscard]] __attribute__((always_inline)) constexpr
     explicit DynBitFieldProxy(D & obj, const size_t begin_offset, const size_t END_OFFSET):
-        p_obj_(obj), 
+        p_bits_(obj), 
         beign_offset(begin_offset), 
         mask_(tmp::mask_calculator::mask_of<D>(begin_offset, END_OFFSET)){;}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     auto & operator =(T && in){
-        p_obj_ = (static_cast<D>(in) << beign_offset) | (p_obj_ & ~mask_);
+        p_bits_ = (static_cast<D>(in) << beign_offset) | (p_bits_ & ~mask_);
         return *this;
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     T get() const{
-        return static_cast<T>((p_obj_ & mask_) >> (beign_offset));
+        return static_cast<T>((p_bits_ & mask_) >> (beign_offset));
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -97,16 +97,20 @@ private:
     static_assert(WIDTH % LEN == 0, "bitfield array is not aligned with obj");
     // static constexpr size_t WIDTH = ()
 
-    static_assert(BEGIN_OFFSET + WIDTH <= sizeof(D) * 8, "bitfield array is longer than obj");
+    static_assert((BEGIN_OFFSET + WIDTH) <= (sizeof(D) * 8), "bitfield array is longer than obj");
     static_assert(ELEMENT_WIDTH * LEN == WIDTH, "bitfield array is not aligned with obj");
 
-    D & p_obj_;
+    D & p_bits_;
 public:
-    constexpr explicit BitFieldArrayProxy(D & obj):p_obj_(obj){;}
+    constexpr explicit BitFieldArrayProxy(D & obj):p_bits_(obj){;}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     DynBitFieldProxy<D> operator [](const size_t idx) const {
-        return DynBitFieldProxy<D>(p_obj_, BEGIN_OFFSET + ELEMENT_WIDTH * idx, BEGIN_OFFSET + ELEMENT_WIDTH * (idx + 1));
+        return DynBitFieldProxy<D>(
+            p_bits_, 
+            BEGIN_OFFSET + ELEMENT_WIDTH * idx, 
+            BEGIN_OFFSET + ELEMENT_WIDTH * (idx + 1)
+        );
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -118,7 +122,10 @@ public:
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     auto get_element() const {
         static_assert(idx < LEN, "index out of range");
-        return BitFieldProxy<D, BEGIN_OFFSET + ELEMENT_WIDTH * idx, BEGIN_OFFSET + ELEMENT_WIDTH * (idx + 1)>(p_obj_);
+        return BitFieldProxy<D, 
+            BEGIN_OFFSET + ELEMENT_WIDTH * idx, 
+            BEGIN_OFFSET + ELEMENT_WIDTH * (idx + 1)
+        >(p_bits_);
     }
 };
 

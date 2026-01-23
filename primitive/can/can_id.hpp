@@ -45,7 +45,10 @@ struct [[nodiscard]] CanStdId{
         return bits_ < other.bits_;
     }
 
-    [[nodiscard]] constexpr uint16_t to_u11() const {return bits_;}
+    [[nodiscard]] constexpr uint16_t to_u11() const {
+        return bits_ & MAX_VALUE;
+    }
+
     [[nodiscard]] constexpr literals::bs11 to_b11() const {
         return literals::bs11::from_bits_unchecked(bits_);
     }
@@ -93,7 +96,9 @@ struct [[nodiscard]] CanExtId{
         return bits_ < other.bits_;
     }
 
-    [[nodiscard]] constexpr uint32_t to_u29() const {return bits_;}
+    [[nodiscard]] constexpr uint32_t to_u29() const {
+        return bits_ & MAX_VALUE;
+    }
     [[nodiscard]] constexpr uint32_t to_bits() const {return bits_;}
 
     friend OutputStream & operator << (OutputStream & os, const Self & self);
