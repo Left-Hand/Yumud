@@ -29,7 +29,7 @@
 
 #include "algebra/regions/range2.hpp"
 
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl_server.hpp"
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/pwmgen/stepper_pwmgen.hpp"
 
@@ -316,12 +316,12 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
         &UART, &UART
     };
 
-    auto list = rpc::make_list(
+    auto list = repl::make_list(
         "list",
-        rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
-        rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-        rpc::make_function("now", [&](){return clock::seconds();})
+        repl::make_function("rst", [](){sys::reset();}),
+        repl::make_function("outen", [&](){repl_server.set_outen(EN);}),
+        repl::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+        repl::make_function("now", [&](){return clock::seconds();})
     );
 
     while(true){

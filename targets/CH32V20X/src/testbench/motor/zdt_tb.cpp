@@ -60,7 +60,7 @@ void zdt_main(){
     // motor.trig_homming(ZdtStepper::HommingMode::LapsEndstop);
     // motor.query_homming_paraments();
 
-    // auto list = rpc::make_list(
+    // auto list = repl::make_list(
     //     "list",
 
     // );

@@ -24,8 +24,8 @@
 #include "algebra/vectors/quat.hpp"
 
 #include "robots/gesture/comp_est.hpp"
-#include "middlewares/rpc/rpc.hpp"
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
 
 #include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/sensored/calibrate_table.hpp"

@@ -5,7 +5,7 @@
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
 #include "primitive/arithmetic/rescaler.hpp"
-#include "core/string/own/heapless_string.hpp"
+#include "core/string/owned/heapless_string.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -22,8 +22,8 @@
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
-#include "middlewares/rpc/rpc.hpp"
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "frame_buffer.hpp"
@@ -142,7 +142,7 @@ private:
 }
 
 
-namespace ymd::rpc{
+namespace ymd::repl{
 
 struct ReplServer2 final{
 public:
@@ -179,9 +179,9 @@ private:
         return [&]{
             if(!this->outen_){
                 DummyReceiver dos{};
-                return rpc::visit(obj, dos, rpc::AccessProvider_ByStringViews(strs));
+                return script::visit(obj, dos, script::AccessProvider_ByStringViews(strs));
             }else{
-                return rpc::visit(obj, os_, rpc::AccessProvider_ByStringViews(strs));
+                return script::visit(obj, os_, script::AccessProvider_ByStringViews(strs));
             }
         }();
     }
@@ -256,15 +256,15 @@ void script_main(){
 
     while(true){
         [[maybe_unused]] auto repl_service_poller = [&]{
-            static rpc::ReplServer2 repl_server{&DBG_UART, &DBG_UART};
+            static repl::ReplServer2 repl_server{&DBG_UART, &DBG_UART};
 
-            static const auto list = rpc::make_list(
+            static const auto list = script::make_list(
                 "list",
 
-                rpc::make_function("errn", [&](int32_t a, int32_t b){
+                script::make_function("errn", [&](int32_t a, int32_t b){
                     DEBUG_PRINTLN(a,b);
                 }),
-                rpc::make_function("errn2", [&](int32_t a, int32_t b){
+                script::make_function("errn2", [&](int32_t a, int32_t b){
                     DEBUG_PRINTLN(a,b);
                 })
 

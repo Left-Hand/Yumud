@@ -12,7 +12,7 @@
 
 #include "core/utils/option.hpp"
 
-namespace ymd {
+namespace ymd::str {
 
 
 // UTF-8编码验证和工具函数

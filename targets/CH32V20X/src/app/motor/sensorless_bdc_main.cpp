@@ -173,7 +173,7 @@ void at8222_tb(){
     // }};
 
     #if 0
-    dsp::TrackingDifferentiatorByOrders<2> td{{
+    dsp::TrackingDifferentiatorOrdered<2> td{{
         // .r = 14.96_r,
         // .r = 7.9_r,
         // .r = 7.99_r,

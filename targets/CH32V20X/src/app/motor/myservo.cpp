@@ -172,7 +172,7 @@ public:
         pwm_(pwm){;}
 private:    
     drivers::AnalogEncoder encoder_;
-    // using Td = dsp::TrackingDifferentiatorByOrders<2>;
+    // using Td = dsp::TrackingDifferentiatorOrdered<2>;
     // Td fb_pos_td_;
     // Td cmd_pos_td_;
 

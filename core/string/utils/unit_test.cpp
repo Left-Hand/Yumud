@@ -100,9 +100,9 @@ namespace {
     }(), "Iterator with trimming test failed");
 }
 
-static_assert(strnlen_from_right("", 0) == 0);
-static_assert(strnlen_from_right("abc", 4) == 3);
-static_assert(strnlen_from_right("abc", 3) == 3);
-static_assert(strnlen_from_right("abc", 2) == 2);
+static_assert(str::strnlen_from_right("", 0) == 0);
+static_assert(str::strnlen_from_right("abc", 4) == 3);
+static_assert(str::strnlen_from_right("abc", 3) == 3);
+static_assert(str::strnlen_from_right("abc", 2) == 2);
 
 }

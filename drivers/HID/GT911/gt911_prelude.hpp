@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 #include "core/utils/nth.hpp"
-#include "core/string/own/char_array.hpp"
+#include "core/string/owned/char_array.hpp"
 
 #include "algebra/vectors/vec2.hpp"
 
@@ -73,7 +73,7 @@ public:
     DEF_ERROR_SUMWITH_HALERROR(Error, ErrorKind)
 
     struct [[nodiscard]] FamilySpecific { 
-        CharArray<4> name;
+        std::array<char, 4> name;
         size_t max_points_count;
     };
 

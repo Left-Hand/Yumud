@@ -250,7 +250,7 @@ public:
             const auto chr = iter.next();
             if(const auto res = draw_wchar(Vec2u(x, pos.y), chr);
                 res.is_err()) return res;
-            const auto & font = chr > 0x80 ? chfont : enfont;
+            const auto & font = chr.count() > 0x80 ? chfont : enfont;
             x += font.get_size().x + padding_;
 
         }

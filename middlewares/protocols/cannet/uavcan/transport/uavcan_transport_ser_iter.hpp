@@ -21,7 +21,7 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
     };
 
     struct [[nodiscard]] State final{
-        size_t offset;
+        size_t bytes_offset;
         bool toggle_bit;
 
         static constexpr State zero() {
@@ -37,53 +37,53 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
     }
 
     [[nodiscard]] constexpr hal::BxCanFrame next() {
-        const auto ext_id = paras_.header.to_can_id();
         const auto bytes = paras_.bytes;
-        const auto offset = state_.offset;
+        const auto bytes_offset = state_.bytes_offset;
 
-        if(state_.offset >= bytes.size()){
+        if(bytes_offset >= bytes.size()){
             //should not reach here, or lib it self has bug
             __builtin_trap();
         }
 
-        const size_t pending_length = bytes.size() - offset;
+        const size_t pending_length = bytes.size() - bytes_offset;
 
         std::array<uint8_t, 8> payload;
-        size_t ind = 0;
+        size_t len = 0;
 
-        if(offset == 0){//first frame
+        if(bytes_offset == 0){//first frame
             if(pending_length > 7){//multi frame
                 const auto crc = CrcBuilder(0xffff)
                     .push_signature(paras_.signature)
                     .push_bytes(bytes)
                     .get()
                 ;
-                payload[ind++] = static_cast<uint8_t>((crc >> 8) & 0xff);
-                payload[ind++] = static_cast<uint8_t>(crc & 0xff);
+                payload[len++] = static_cast<uint8_t>((crc >> 8) & 0xff);
+                payload[len++] = static_cast<uint8_t>(crc & 0xff);
             }
         }
 
         // 1：对于Single frame transfer ，start of transfer 位永远为 1。
         // 2：对于Multiframe transfer ，如果当前帧是数据包的首帧，该位为1 ，否则为0。
-        const bool is_start_of_transfer = (offset == 0);
+        const bool is_start_of_transfer = (bytes_offset == 0);
 
         // 1：对于Single frame transfer ，End of transfer 这一 bit 位永远为 1。
         // 2：对于Multiframe transfer ，如果当前帧是数据包的最后一帧，该位为1 ，否则为0。
-        const auto [copy_length, is_end_of_transfer] = [&]() -> std::tuple<size_t, bool>{ 
-            if(pending_length <= 7 - ind){
+        const auto [copy_len, is_end_of_transfer] = [&]() -> std::tuple<size_t, bool>{ 
+            if(pending_length <= 7 - len){
                 return std::make_tuple(pending_length, true);
             }else{
-                return std::make_tuple(7 - ind, false);
+                return std::make_tuple(7 - len, false);
             }
         }();
         const auto guard = make_scope_guard([&](){
-            state_.offset += copy_length;
+            state_.bytes_offset += copy_len;
             state_.toggle_bit = !state_.toggle_bit;
         });
 
-        const auto bytes_need_copy = std::span(bytes.begin() + offset, copy_length);
+        const auto bytes_need_copy = std::span(bytes.begin() + bytes_offset, copy_len);
 
-        std::copy(bytes_need_copy.begin(), bytes_need_copy.end(), payload.begin() + ind);
+        std::copy(bytes_need_copy.begin(), bytes_need_copy.end(), payload.begin() + len);
+        len += copy_len;
 
         const auto tail_byte = TailByte{
             .transfer_id = paras_.transfer_id.bits,
@@ -92,16 +92,17 @@ struct [[nodiscard]] Bytes2CanFrameSlicingIterator final{
             .is_start_of_transfer = is_start_of_transfer
         };
 
-        payload[ind + copy_length] = tail_byte.to_bits();
+        payload[len] = tail_byte.to_bits();
+        len += 1;
 
-        const size_t dlc_length = ind + copy_length + 1;
         return hal::BxCanFrame::from_parts(
-            ext_id,
-            hal::BxCanPayload::from_bytes(std::span(payload.data(), dlc_length))
+            paras_.header.to_can_id(),
+            hal::BxCanPayload::from_bytes(std::span(payload.data(), len))
         );
     }
+
     [[nodiscard]] constexpr bool has_next() const {
-        return state_.offset < paras_.bytes.size();
+        return state_.bytes_offset < paras_.bytes.size();
     }
 
 private:

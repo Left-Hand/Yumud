@@ -24,8 +24,8 @@
 #include "dsp/filter/firstorder/lpf.hpp"
 #include "dsp/filter/butterworth/band.hpp"
 
-#include "middlewares/rpc/rpc.hpp"
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
@@ -956,15 +956,15 @@ void myesc_main(){
     );
 
     [[maybe_unused]] auto repl_service_poller = [&]{
-        static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
+        static repl::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
-        static const auto list = rpc::make_list(
+        static const auto list = script::make_list(
             "list",
 
-            rpc::make_function("errn", [&](int32_t a, int32_t b){
+            script::make_function("errn", [&](int32_t a, int32_t b){
                 DEBUG_PRINTLN(a,b);
             }),
-            rpc::make_function("errn2", [&](int32_t a, int32_t b){
+            script::make_function("errn2", [&](int32_t a, int32_t b){
                 DEBUG_PRINTLN(a,b);
             })
 

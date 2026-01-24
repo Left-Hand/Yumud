@@ -6,7 +6,7 @@
 #include "core/math/realmath.hpp"
 #include "core/math/float/fp32.hpp"
 #include "core/string/view/string_view.hpp"
-#include "core/string/own/char_array.hpp"
+#include "core/string/owned/char_array.hpp"
 #include "core/string/view/uchars_view.hpp"
 #include "core/string/utils/optional_uchar_ptr.hpp"
 

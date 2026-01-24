@@ -113,7 +113,7 @@ void sincos_pwm_main();
 
 void bldc_main();
 
-void rpc_main();
+void repl_main();
 
 void leetcode_main();
 

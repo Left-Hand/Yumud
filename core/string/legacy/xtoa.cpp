@@ -1,52 +1,26 @@
-#include "strconv.hpp"
+#include "xtoa.hpp"
+#include "pow10.hpp"
 #include <array>
 
 using namespace ymd;
-using namespace ymd::strconv;
-
-static constexpr  uint32_t pow10_table[] = {
-    1UL, 
-    10UL, 
-    100UL, 
-    1000UL, 
-
-    10000UL, 
-    100000UL, 
-    1000000UL, 
-    10000000UL, 
-    
-    // 100000000UL,
-    // 1000000000UL
-};
-
-constexpr size_t _get_scaler(uint64_t int_val, const uint8_t radix){
-    if(int_val == 0) return 1;
-
-    size_t i = 0;
-    uint64_t sum = 1;
-    while(int_val >= sum){
-        sum = sum * static_cast<uint64_t>(radix);
-        i++;
-    }
-    return i > 0 ? i : 1;
-}
+using namespace ymd::str;
 
 // 测试用例
-static_assert(_get_scaler(0, 10) == 1, "0 should return 1");
-static_assert(_get_scaler(1, 10) == 1, "1 should return 1");
-static_assert(_get_scaler(9, 10) == 1, "9 should return 1");
-static_assert(_get_scaler(10, 10) == 2, "10 should return 2");
-static_assert(_get_scaler(99, 10) == 2, "99 should return 2");
-static_assert(_get_scaler(100, 10) == 3, "100 should return 3");
+static_assert(num_int2str_chars(0, 10) == 1, "0 should return 1");
+static_assert(num_int2str_chars(1, 10) == 1, "1 should return 1");
+static_assert(num_int2str_chars(9, 10) == 1, "9 should return 1");
+static_assert(num_int2str_chars(10, 10) == 2, "10 should return 2");
+static_assert(num_int2str_chars(99, 10) == 2, "99 should return 2");
+static_assert(num_int2str_chars(100, 10) == 3, "100 should return 3");
 
 // 关键测试：0x80000000
-static_assert(_get_scaler(0x80000000, 10) == 10, "0x80000000 should return 10");
+static_assert(num_int2str_chars(0x80000000, 10) == 10, "0x80000000 should return 10");
 
 // 更大值的测试
-static_assert(_get_scaler(0xFFFFFFFF, 10) == 10, "0xFFFFFFFF should return 10");
-static_assert(_get_scaler(0x100000000, 10) == 10, "0x100000000 should return 10");
-static_assert(_get_scaler(0x3B9ACA00, 10) == 10, "0x3B9ACA00 (1e9) should return 10");
-static_assert(_get_scaler(0x3B9ACA01, 10) == 10, "0x3B9ACA01 should return 10");
+static_assert(num_int2str_chars(0xFFFFFFFF, 10) == 10, "0xFFFFFFFF should return 10");
+static_assert(num_int2str_chars(0x100000000, 10) == 10, "0x100000000 should return 10");
+static_assert(num_int2str_chars(0x3B9ACA00, 10) == 10, "0x3B9ACA00 (1e9) should return 10");
+static_assert(num_int2str_chars(0x3B9ACA01, 10) == 10, "0x3B9ACA01 should return 10");
 
 
 template<integral T>
@@ -65,7 +39,7 @@ static size_t _itoa_impl(T int_val, char * str, uint8_t radix){
         }
     }();
 
-    const size_t len = _get_scaler(static_cast<uint64_t>(unsigned_val), radix) + is_negative;
+    const size_t len = num_int2str_chars(static_cast<uint64_t>(unsigned_val), radix) + is_negative;
     int i = len - 1;
 
     do {
@@ -83,7 +57,7 @@ static size_t _itoa_impl(T int_val, char * str, uint8_t radix){
 }
 
 
-size_t strconv::_qtoa_impl(int32_t value_bits, char * str, uint8_t eps, const uint8_t Q){
+size_t str::_qtoa_impl(int32_t value_bits, char * str, uint8_t eps, const uint8_t Q){
     // 安全限制eps，确保不超出表格范围
     constexpr size_t max_eps = std::size(pow10_table) - 1;
     eps = MIN(eps, static_cast<uint8_t>(max_eps));
@@ -134,12 +108,12 @@ size_t strconv::_qtoa_impl(int32_t value_bits, char * str, uint8_t eps, const ui
     return ind + (eps ? (1 + eps) : 0);
 }
 
-size_t strconv::itoa(int32_t int_val, char *str, uint8_t radix){
+size_t str::itoa(int32_t int_val, char *str, uint8_t radix){
     return _itoa_impl<int32_t>(int_val, str, radix);
 }
 
 
-size_t strconv::iutoa(uint64_t int_val,char *str,uint8_t radix){
+size_t str::iutoa(uint64_t int_val,char *str,uint8_t radix){
     static constexpr uint64_t MASK = (~(uint64_t)std::numeric_limits<uint32_t>::max());
     const bool cant_be_represent_in_32 = int_val & MASK;
     if(cant_be_represent_in_32 == 0){
@@ -151,7 +125,7 @@ size_t strconv::iutoa(uint64_t int_val,char *str,uint8_t radix){
 }
 
 
-size_t strconv::iltoa(int64_t int_val, char * str, uint8_t radix){
+size_t str::iltoa(int64_t int_val, char * str, uint8_t radix){
     // return _itoa_impl<int64_t>(int_val, str, radix);
     return _itoa_impl<int32_t>(int_val, str, radix);
 }

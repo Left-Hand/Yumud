@@ -26,7 +26,7 @@ using is_instantiation_of_t = typename is_instantiation_of<U, T>::type;
 }
 
 
-namespace ymd::rpc{
+namespace ymd::script{
 
 enum class EntryAccessError: uint8_t{
     NoArgForSetter,
@@ -235,7 +235,7 @@ convert_params_to_tuple(const auto & ap, std::index_sequence<Is...>)
 {
     // 参数数量检查
     if (ap.size() != sizeof...(Is)) {
-        return Err(rpc::EntryAccessError::ArgsCountNotMatch);
+        return Err(script::EntryAccessError::ArgsCountNotMatch);
     }
 
     // 开始递归转换
@@ -645,6 +645,6 @@ IResult<> visit(T&& self, auto & ar, auto && ap) {
 
 }
 
-#define DEF_RPC_MEMFUNC(func)\
-    rpc::make_memfunc(#func, this, &std::decay_t<decltype(*this)>::func)
+#define DEF_CALLABLE_MEMFUNC(func)\
+    script::make_memfunc(#func, this, &std::decay_t<decltype(*this)>::func)
 

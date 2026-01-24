@@ -14,8 +14,8 @@
 #include "primitive/image/font/font.hpp"
 #include "primitive/colors/rgb/rgb.hpp"
 
-#include "middlewares/rpc/rpc.hpp"
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
 
 
 #include "algebra/regions/rect2.hpp"

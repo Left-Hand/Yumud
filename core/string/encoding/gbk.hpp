@@ -4,6 +4,29 @@
 
 namespace ymd{
 
+struct alignas(4) [[nodiscard]] GbkChar final{
+
+    wchar_t bits;
+
+    constexpr explicit GbkChar(std::span<const uint8_t, 3> _bytes):
+        bits{static_cast<wchar_t>(_bytes[0] << 8 | _bytes[1])}{;}
+
+    constexpr explicit GbkChar(const wchar_t ch):
+        bits{ch}{;}
+
+    static constexpr GbkChar zero(){
+        return GbkChar{0};
+    }
+
+    constexpr wchar_t count() const {
+        return bits;
+    }
+
+    constexpr bool operator ==(const GbkChar & rhs) const{
+        return bits == rhs.bits;
+    }
+};
+
 class [[nodiscard]] GbkIterator final {
 public:
     constexpr explicit GbkIterator(const StringView str) : 
@@ -14,9 +37,9 @@ public:
         return idx_ < str_.size() && str_[idx_] != '\0';
     }
     
-    [[nodiscard]] constexpr unsigned int next() {
+    [[nodiscard]] constexpr GbkChar next() {
         if (!has_next()) {
-            return 0;
+            return GbkChar::zero();
         }
         
         unsigned char first_byte = static_cast<unsigned char>(str_[idx_]);
@@ -40,7 +63,7 @@ public:
             }
         }
         
-        return gbk_value;
+        return GbkChar(gbk_value);
     }
     
     constexpr size_t current_index() const {

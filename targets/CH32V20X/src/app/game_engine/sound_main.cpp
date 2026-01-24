@@ -5,7 +5,7 @@
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
 #include "primitive/arithmetic/rescaler.hpp"
-#include "core/string/own/heapless_string.hpp"
+#include "core/string/owned/heapless_string.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"

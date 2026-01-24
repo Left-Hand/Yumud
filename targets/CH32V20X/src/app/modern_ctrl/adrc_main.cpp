@@ -3,7 +3,7 @@
 #include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
 #include "dsp/controller/adrc/linear/ltd2o.hpp"
 
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "hal/gpio/gpio_port.hpp"

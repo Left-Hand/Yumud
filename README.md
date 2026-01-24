@@ -776,8 +776,8 @@ vs HAL：
         - [x] 自校准算法
         - [ ] 自检查算法
 
-        - [x] 基于串口的RPC
-        - [x] 基于CAN的RPC
+        - [x] 基于串口的REPL
+        - [x] 基于CAN的REPL
         - [x] 数据存档
 
         - [x] 高级插值规划
@@ -818,9 +818,9 @@ vs HAL：
     - [x] M6020
     - [x] DR16
 
-- [ ] rpc rpc框架
-    - [x] 串口 RPC
-    - [x] CAN RPC
+- [ ] repl repl框架
+    - [x] 串口 REPL
+    - [x] CAN REPL
 
 - [ ] AI
     - [x] 神经元

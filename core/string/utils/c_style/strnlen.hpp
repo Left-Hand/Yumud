@@ -4,7 +4,7 @@
 #include <cstdint>
 
 
-namespace ymd{
+namespace ymd::str{
 
 template<typename T>
 [[nodiscard]] static constexpr size_t strnlen_from_right(const T * str, size_t right) {
