@@ -57,7 +57,8 @@ static constexpr size_t _itoa_impl(T int_val, char * str, uint8_t radix){
 }
 
 
-static constexpr size_t _uqtoa_impl(uint32_t abs_value_bits, char * str, uint8_t eps, const uint8_t Q){
+static constexpr size_t _uqtoa_impl(uint32_t abs_value_bits, char * const orinal_str, uint8_t eps, const uint8_t Q){
+
     // 安全限制eps，确保不超出表格范围
     constexpr size_t max_eps = std::size(pow10_table) - 1;
     eps = MIN(eps, static_cast<uint8_t>(max_eps));
@@ -82,25 +83,25 @@ static constexpr size_t _uqtoa_impl(uint32_t abs_value_bits, char * str, uint8_t
     
     // 检查是否需要进位到整数部分
     const bool carry_to_int = (frac_int64 >= scale);
-    const uint32_t int_part = (uint32_t(abs_value_bits) >> Q) + (carry_to_int ? 1 : 0);
+    const uint32_t digit_part = (uint32_t(abs_value_bits) >> Q) + (carry_to_int ? 1 : 0);
     
     // 如果发生进位，调整小数部分
     const uint64_t adjusted_frac_int64 = carry_to_int ? (frac_int64 - scale) : frac_int64;
     const uint32_t adjusted_frac_int = static_cast<uint32_t>(adjusted_frac_int64);
 
-    size_t ind = 0;
-
-    ind += _itoa_impl<int32_t>(int_part, str + ind, 10);
+    char * str = orinal_str;
+    str += _itoa_impl<uint32_t>(digit_part, str, 10);
 
     if(eps){
-        str[ind] = '.';
-        ind++;
+        str[0] = '.';
+        str++;
         // 使用调整后的小数部分
-        itoas(adjusted_frac_int, str + ind, 10, eps);
-        ind += eps;
+        // if(eps != 4) __builtin_trap();
+        utoas(adjusted_frac_int, str, 10, eps);
+        str += eps;
     }
 
-    return ind;
+    return str - orinal_str;
 }
 
 size_t str::_uqtoa(const uint32_t abs_value_bits, char * str, uint8_t eps, const uint8_t Q){

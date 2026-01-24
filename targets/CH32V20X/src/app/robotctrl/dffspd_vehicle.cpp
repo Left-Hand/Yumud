@@ -30,7 +30,7 @@ namespace ymd::robots{
 struct PwmAndDirPhy final{
     struct Config{
         Some<hal::TimerOC *> pwm;
-        Some<hal::GpioIntf *> dir_gpio;
+        Some<hal::Gpio *> dir_gpio;
     };
 
     explicit PwmAndDirPhy(const Config & cfg):
@@ -49,7 +49,7 @@ struct PwmAndDirPhy final{
     }
 private:
     hal::TimerOC & pwm_;
-    hal::GpioIntf & dir_pin_;
+    hal::Gpio & dir_pin_;
 };
 
 struct DualPwmPhy final{
@@ -115,9 +115,9 @@ struct PwmAndDirPhy_WithFg final{
 
     struct Config{
         Some<hal::TimerOC *> pwm;
-        Some<hal::GpioIntf *> dir_gpio;
+        Some<hal::Gpio *> dir_gpio;
         uint32_t deduction;
-        Some<hal::GpioIntf *> fg_gpio;
+        Some<hal::Gpio *> fg_gpio;
     };
 
     explicit PwmAndDirPhy_WithFg(const Config & cfg):
@@ -151,7 +151,7 @@ struct PwmAndDirPhy_WithFg final{
 private:
     uint32_t deducation_;
     PwmAndDirPhy transport_;
-    hal::GpioIntf & fg_pin_;
+    hal::Gpio & fg_pin_;
     DirAndPulseCounter counter_;
     real_t last_duty_ = 0;
 };
@@ -246,11 +246,11 @@ void diffspd_vehicle_main(){
         }());
     };
 
-    auto init_fg_gpio = [](hal::GpioIntf & gpio){
+    auto init_fg_gpio = [](hal::Gpio & gpio){
         gpio.inpu();
     };
 
-    auto init_dir_gpio = [](hal::GpioIntf & gpio){
+    auto init_dir_gpio = [](hal::Gpio & gpio){
         gpio.outpp(LOW);
     };
 

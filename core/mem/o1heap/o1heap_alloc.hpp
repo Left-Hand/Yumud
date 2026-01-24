@@ -6,6 +6,7 @@
 #include <memory_resource>
 #include <span>
 
+#if 0
 namespace ymd::mem::o1heap {
     
 // 前置声明，因为我们需要在工厂函数中使用它
@@ -33,141 +34,16 @@ public:
     }
     
     bool is_valid() const noexcept {
-        return instance_ && lib_o1heap::o1heapDoInvariantsHold(instance_);
+        return instance_ && instance_->o1heapDoInvariantsHold();
     }
     
     const lib_o1heap::O1HeapDiagnostics & get_diagnostics() const {
-        return lib_o1heap::o1heapGetDiagnostics(instance_);
+        return instance_->diagnostics;
     }
 };
 
 #if 0
-template<typename T>
-class [[nodiscard]] O1HeapAllocator {
-public:
-    using O1HeapInstance = lib_o1heap::O1HeapInstance;
-    // Type aliases required by the allocator concept
-    using value_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using size_type = std::size_t;
-    using difference_type = std::ptrdiff_t;
 
-    // Rebind allocator to type U
-    template<typename U>
-    struct rebind {
-        using other = O1HeapAllocator<U>;
-    };
-
-    // Default constructor
-    O1HeapAllocator() noexcept : heap_instance_(nullptr) {}
-
-    // Constructor that accepts a heap instance
-    explicit O1HeapAllocator(O1HeapInstance* heap) noexcept 
-        : heap_instance_(heap) {}
-
-    // Constructor that accepts a HeapManager
-    explicit O1HeapAllocator(const HeapManager& manager) noexcept
-        : heap_instance_(manager.get_instance()) {}
-    
-    // Copy constructor
-    template<typename U>
-    O1HeapAllocator(const O1HeapAllocator<U>& other) noexcept 
-        : heap_instance_(other.get_heap_instance()) {}
-
-    // Destructor
-    ~O1HeapAllocator() = default;
-
-    // Get the underlying heap instance
-    O1HeapInstance* get_heap_instance() const noexcept {
-        return heap_instance_;
-    }
-
-    // Equality operator
-    template<typename U>
-    bool operator==(const O1HeapAllocator<U>& other) const noexcept {
-        return heap_instance_ == other.get_heap_instance();
-    }
-
-    // Inequality operator
-    template<typename U>
-    bool operator!=(const O1HeapAllocator<U>& other) const noexcept {
-        return !(*this == other);
-    }
-
-    // Allocate memory
-    pointer allocate(size_type n) noexcept {
-        if (n == 0) {
-            return nullptr;
-        }
-        
-        if (!heap_instance_) {
-            return nullptr; // Or handle error appropriately
-        }
-
-        // Check for potential overflow
-        if (n > max_size()) {
-            return nullptr;
-        }
-
-        void* ptr = lib_o1heap::o1heapAllocate(heap_instance_, n * sizeof(T));
-        if (!ptr) {
-            return nullptr;
-        }
-
-        return static_cast<pointer>(ptr);
-    }
-
-    // Deallocate memory
-    void deallocate(pointer p, size_type n) noexcept {
-        if (p != nullptr && heap_instance_) {
-            lib_o1heap::o1heapFree(heap_instance_, p);
-        }
-        (void)n; // Suppress unused parameter warning
-    }
-
-    // Construct an object
-    template<typename U, typename... Args>
-    void construct(U* p, Args&&... args) {
-        ::new(p) U(std::forward<Args>(args)...);
-    }
-
-    // Destroy an object
-    template<typename U>
-    void destroy(U* p) {
-        p->~U();
-    }
-
-    // Maximum size that can be allocated
-    size_type max_size() const noexcept {
-        if (!heap_instance_) {
-            return 0;
-        }
-        return lib_o1heap::o1heapGetMaxAllocationSize(heap_instance_) / sizeof(T);
-    }
-
-    // Create an allocator for a different type
-    template<typename U>
-    O1HeapAllocator<U> rebind_to() const noexcept {
-        return O1HeapAllocator<U>(heap_instance_);
-    }
-
-private:
-    O1HeapInstance* heap_instance_;
-};
-
-
-// 工厂函数：从内存缓冲区创建分配器
-template<typename T = int8_t>
-O1HeapAllocator<T> make_o1heap_allocator(std::span<uint8_t> buffer) {
-    auto* instance = lib_o1heap::o1heapInit(buffer.data(), buffer.size());
-    if (!instance) {
-        return O1HeapAllocator<T>(); // 返回无效分配器
-    }
-    return O1HeapAllocator<T>(instance);
-}
 #endif
 
 // PMR 内存资源包装器
@@ -252,3 +128,5 @@ inline std::unique_ptr<O1HeapMemoryResource> make_memory_resource(std::vector<ui
 }
 
 } // namespace ymd::mem::o1heap
+
+#endif

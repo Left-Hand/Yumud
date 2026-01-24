@@ -18,6 +18,7 @@
 #include "core/mem/o1heap/o1heap_alloc.hpp"
 #include "core/string/view/string_view.hpp"
 
+#if 0
 
 using namespace ymd;
 using namespace lib_o1heap;
@@ -72,7 +73,11 @@ struct alignas(16) Object{
         << self.length;
     }
 };
+
+
+
 void o1heap_main(){
+    __builtin_trap();
     #if defined(CH32V20X)
     auto & UART = hal::usart2;
     UART.init({
@@ -142,3 +147,6 @@ void o1heap_main(){
         __builtin_trap();
     }
 }
+
+
+#endif

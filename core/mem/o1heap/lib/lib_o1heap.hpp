@@ -95,7 +95,7 @@ struct [[nodiscard]] O1HeapDiagnostics{
 
     /// The number of times an allocation request could not be completed due to the lack of memory or
     /// excessive fragmentation. OOM stands for "out of memory". This parameter is never decreased.
-    uint64_t oom_count;
+    size_t oom_count;
 
     static constexpr Self zero(){
         return Self{0U, 0U, 0U, 0U, 0U};
@@ -111,6 +111,74 @@ struct [[nodiscard]] O1HeapInstance
     char* arena_end;  ///< Points past the last byte of the arena; used for computing size of the last fragment.
 
     O1HeapDiagnostics diagnostics;
+
+    /// Obtains the maximum theoretically possible allocation size for this heap instance.
+    /// This is useful when implementing std::allocator_traits<Alloc>::max_size.
+    size_t o1heapGetMaxAllocationSize() const ;
+
+    /// Performs a basic sanity check on the heap.
+    /// This function can be used as a weak but fast method of heap corruption detection.
+    /// If the handle pointer is NULL, the behavior is undefined.
+    /// The time complexity is constant.
+    /// The return value is truth if the heap looks valid, falsity otherwise.
+    bool o1heapDoInvariantsHold() const ;
+
+    size_t fragGetSize(const Fragment* const frag) const;
+
+
+    /// The semantics follows malloc() with additional guarantees the full list of which is provided below.
+    ///
+    /// If the allocation request is served successfully, a pointer to the newly allocated memory fragment is returned.
+    /// The returned pointer is guaranteed to be aligned at O1HEAP_ALIGNMENT.
+    ///
+    /// If the allocation request cannot be served due to the lack of memory or its excessive fragmentation,
+    /// a NULL pointer is returned.
+    ///
+    /// The function is executed in constant time.
+    /// The allocated memory is NOT zero-filled (because zero-filling is a variable-complexity operation).
+    void* o1heapAllocate(const size_t amount);
+
+    /// The semantics follows free() with additional guarantees the full list of which is provided below.
+    ///
+    /// If the pointer does not point to a previously allocated block and is not NULL, the behavior is undefined.
+    /// Builds where assertion checks are enabled may trigger an assertion failure for some invalid inputs.
+    ///
+    /// The function is executed in constant time.
+    void o1heapFree(void* const pointer);
+
+    /// Similar to the standard realloc() with a few improvements. Given a previously allocated fragment and a new size,
+    /// attempts to resize the fragment.
+    ///
+    /// - If the pointer is NULL, acts as o1heapAllocate(). The complexity is constant.
+    ///
+    /// - If the new_amount is zero, acts as o1heapFree() (n.b.: in realloc() this case is implementation-defined).
+    ///   The result should be ignored. The complexity is constant.
+    ///
+    /// - If the new_amount is not greater than the old fragment size, the same memory pointer is always returned;
+    ///   the data is not moved and the fragment is shrunk in place. The complexity is constant.
+    ///
+    /// - If the new_amount is greater than the old fragment but there is enough free space after the fragment
+    ///   to expand in-place, the fragment is expanded in place and the same pointer is returned; the data is not moved.
+    ///   The complexity is constant. The contents of the expanded memory is undefined.
+    ///
+    /// - If the new_amount is greater than the old fragment and there is not enough free space after the fragment to
+    ///   expand in-place, but there is a suitable free space elsewhere, the data is moved and the new pointer is returned.
+    ///   The complexity is LINEAR (sic!) of the size of the old fragment, as it needs to be memmove()d to the new location.
+    ///   The library attempts to relocate the data in a nearby or recently used area to improve cache locality.
+    ///   The new pointer is returned. The new fragment may overlap the original one.
+    ///
+    /// - Otherwise, there is not enough memory to expand the fragment as requested. The old fragment remains valid as-is,
+    ///   and NULL is returned to indicate failure. The complexity is constant.
+    ///
+    /// To summarize, the only linear-complexity case is when the new_amount is larger and there is not enough free space
+    /// following this fragment, necessitating moving the data to a new place; the library avoids this if at all possible.
+    /// Every other case is constant-complexity as the data is not moved.
+    void* o1heapReallocate(void* const pointer, const size_t new_amount);
+private:
+    void rebin(Fragment* const fragment, const size_t fragment_size);
+    void unbin(const Fragment* const fragment, const size_t fragment_size);
+
+    friend O1HeapInstance* o1heapInit(void* const base, const size_t size);
 };
 
 static constexpr size_t INSTANCE_SIZE_PADDED = ((sizeof(O1HeapInstance) + O1HEAP_ALIGNMENT - 1U) & ~(O1HEAP_ALIGNMENT - 1U));
@@ -142,69 +210,5 @@ static constexpr size_t o1heapMinArenaSize = INSTANCE_SIZE_PADDED + FRAGMENT_SIZ
 /// The heap is not thread-safe; external synchronization may be required.
 O1HeapInstance* o1heapInit(void* const base, const size_t size);
 
-/// The semantics follows malloc() with additional guarantees the full list of which is provided below.
-///
-/// If the allocation request is served successfully, a pointer to the newly allocated memory fragment is returned.
-/// The returned pointer is guaranteed to be aligned at O1HEAP_ALIGNMENT.
-///
-/// If the allocation request cannot be served due to the lack of memory or its excessive fragmentation,
-/// a NULL pointer is returned.
-///
-/// The function is executed in constant time.
-/// The allocated memory is NOT zero-filled (because zero-filling is a variable-complexity operation).
-void* o1heapAllocate(O1HeapInstance* const handle, const size_t amount);
-
-/// The semantics follows free() with additional guarantees the full list of which is provided below.
-///
-/// If the pointer does not point to a previously allocated block and is not NULL, the behavior is undefined.
-/// Builds where assertion checks are enabled may trigger an assertion failure for some invalid inputs.
-///
-/// The function is executed in constant time.
-void o1heapFree(O1HeapInstance* const handle, void* const pointer);
-
-/// Similar to the standard realloc() with a few improvements. Given a previously allocated fragment and a new size,
-/// attempts to resize the fragment.
-///
-/// - If the pointer is NULL, acts as o1heapAllocate(). The complexity is constant.
-///
-/// - If the new_amount is zero, acts as o1heapFree() (n.b.: in realloc() this case is implementation-defined).
-///   The result should be ignored. The complexity is constant.
-///
-/// - If the new_amount is not greater than the old fragment size, the same memory pointer is always returned;
-///   the data is not moved and the fragment is shrunk in place. The complexity is constant.
-///
-/// - If the new_amount is greater than the old fragment but there is enough free space after the fragment
-///   to expand in-place, the fragment is expanded in place and the same pointer is returned; the data is not moved.
-///   The complexity is constant. The contents of the expanded memory is undefined.
-///
-/// - If the new_amount is greater than the old fragment and there is not enough free space after the fragment to
-///   expand in-place, but there is a suitable free space elsewhere, the data is moved and the new pointer is returned.
-///   The complexity is LINEAR (sic!) of the size of the old fragment, as it needs to be memmove()d to the new location.
-///   The library attempts to relocate the data in a nearby or recently used area to improve cache locality.
-///   The new pointer is returned. The new fragment may overlap the original one.
-///
-/// - Otherwise, there is not enough memory to expand the fragment as requested. The old fragment remains valid as-is,
-///   and NULL is returned to indicate failure. The complexity is constant.
-///
-/// To summarize, the only linear-complexity case is when the new_amount is larger and there is not enough free space
-/// following this fragment, necessitating moving the data to a new place; the library avoids this if at all possible.
-/// Every other case is constant-complexity as the data is not moved.
-void* o1heapReallocate(O1HeapInstance* const handle, void* const pointer, const size_t new_amount);
-
-/// Obtains the maximum theoretically possible allocation size for this heap instance.
-/// This is useful when implementing std::allocator_traits<Alloc>::max_size.
-size_t o1heapGetMaxAllocationSize(const O1HeapInstance* const handle);
-
-/// Performs a basic sanity check on the heap.
-/// This function can be used as a weak but fast method of heap corruption detection.
-/// If the handle pointer is NULL, the behavior is undefined.
-/// The time complexity is constant.
-/// The return value is truth if the heap looks valid, falsity otherwise.
-bool o1heapDoInvariantsHold(const O1HeapInstance* const handle);
-
-/// Samples and returns a copy of the diagnostic information, see O1HeapDiagnostics.
-/// This function merely copies the structure from an internal storage, so it is fast to return.
-/// If the handle pointer is NULL, the behavior is undefined.
-const O1HeapDiagnostics & o1heapGetDiagnostics(const O1HeapInstance* const handle);
 
 }

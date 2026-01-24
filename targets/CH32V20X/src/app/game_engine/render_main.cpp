@@ -447,48 +447,45 @@ void render_main(){
         // DEBUGGER.no_brackets(EN);
     };
 
-
-
     init_debugger();
 
     #ifdef CH32V30X
     auto & spi = hal::spi2;
-    #else
-    auto & spi = hal::spi1;
-    #endif
-
     spi.init({
-        .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
+        .remap = hal::SPI2_REMAP_PB13_PB14_PB15_PB12,
         .baudrate = hal::NearestFreq(144_MHz)
     });
-    
-    auto scl_pin = hal::PB<3>();
-    auto sda_pin = hal::PB<5>();
-    
-    hal::I2cSw i2c{&scl_pin, &sda_pin};
-
-    i2c.init({
-        .baudrate = hal::NearestFreq(400_KHz)
-    });
-
-
-    drivers::QMC5883L qmc{&i2c};
-    retry(2, [&]{return qmc.init();}).examine();
-
-    
 
 
     auto lcd_blk = hal::PD<0>();
     lcd_blk.outpp(HIGH);
 
     auto lcd_dc = hal::PD<7>();
-    auto dev_rst = hal::PB<7>();
+    auto lcd_nrst = hal::PB<7>();
     auto lcd_cs = hal::PD<4>();
+
+    #else
+    auto & spi = hal::spi1;
+    spi.init({
+        .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
+        .baudrate = hal::NearestFreq(144_MHz)
+    });
+
+    auto lcd_blk = hal::PD<0>();
+    lcd_blk.outpp(HIGH);
+
+    auto lcd_dc = hal::PD<7>();
+    auto lcd_nrst = hal::PB<7>();
+    auto lcd_cs = hal::PD<4>();
+
+    
+    #endif
+
 
     const auto spi_rank = spi.allocate_cs_pin(&lcd_cs).unwrap();
 
     drivers::ST7789 tft{
-        drivers::ST7789_Transport{&spi, spi_rank, &lcd_dc, &dev_rst}, 
+        drivers::ST7789_Transport{&spi, spi_rank, &lcd_dc, &lcd_nrst}, 
         {LCD_WIDTH, LCD_HEIGHT}
     };
 

@@ -6,8 +6,9 @@
 #include "core/utils/zero.hpp"
 #include "core/async/timer.hpp"
 
-#include "core/mem/o1heap/o1heap_alloc.hpp"
+// #include "core/mem/o1heap/o1heap_alloc.hpp"
 #include "core/string/view/string_view.hpp"
+#include "core/clock/time.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
@@ -15,11 +16,140 @@
 #include "drivers/Proximeter/STL06N/stl06n.hpp"
 
 #include <ranges>
+// #include <unordered_set>
+#include <unordered_map>
+#include <map>
 
+
+#include "core/mem/o1heap/o1heap_alloc.hpp"
 
 
 using namespace ymd;
 using namespace ymd::drivers;
+
+namespace ymd::mem::o1heap{
+template<typename T>
+class [[nodiscard]] O1HeapAllocator {
+public:
+    using O1HeapInstance = lib_o1heap::O1HeapInstance;
+    // Type aliases required by the allocator concept
+    using value_type = T;
+    using pointer = T*;
+    using const_pointer = const T*;
+    using reference = T&;
+    using const_reference = const T&;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+
+    // Rebind allocator to type U
+    template<typename U>
+    struct rebind {
+        using other = O1HeapAllocator<U>;
+    };
+
+    // Constructor that accepts a heap instance
+    explicit O1HeapAllocator(O1HeapInstance & heap) noexcept 
+        : inst_(heap) {}
+
+    
+    // Copy constructor
+    template<typename U>
+    O1HeapAllocator(const O1HeapAllocator<U>& other) noexcept 
+        : inst_(other.heap_instance()) {}
+
+    // Destructor
+    ~O1HeapAllocator() = default;
+
+    // Get the underlying heap instance
+    O1HeapInstance & heap_instance() const noexcept {
+        return inst_;
+    }
+
+    // Equality operator
+    template<typename U>
+    bool operator==(const O1HeapAllocator<U>& other) const noexcept {
+        return inst_ == other.heap_instance();
+    }
+
+    // Inequality operator
+    template<typename U>
+    bool operator!=(const O1HeapAllocator<U>& other) const noexcept {
+        return !(*this == other);
+    }
+
+    // Allocate memory
+    pointer allocate(size_type n) noexcept {
+        if (n == 0) {
+            return nullptr;
+        }
+
+        // Check for potential overflow
+        if (n > max_size()) {
+            __builtin_trap();
+        }
+
+        void* ptr = inst_.o1heapAllocate(n * sizeof(T));
+        if (!ptr) {
+            __builtin_trap();
+        }
+
+        return static_cast<pointer>(ptr);
+    }
+
+    // Deallocate memory
+    void deallocate(pointer p, size_type n) noexcept {
+        if (p != nullptr) [[likely]]{
+            inst_.o1heapFree(p);
+        }
+        (void)n; // Suppress unused parameter warning
+    }
+
+    // Construct an object
+    template<typename U, typename... Args>
+    void construct(U* p, Args&&... args) {
+        ::new(p) U(std::forward<Args>(args)...);
+    }
+
+    // Destroy an object
+    template<typename U>
+    void destroy(U* p) {
+        p->~U();
+    }
+
+    // Maximum size that can be allocated
+    size_type max_size() const noexcept {
+        return inst_.o1heapGetMaxAllocationSize() / sizeof(T);
+    }
+
+    // Create an allocator for a different type
+    template<typename U>
+    O1HeapAllocator<U> rebind_to() const noexcept {
+        return O1HeapAllocator<U>(inst_);
+    }
+
+private:
+    O1HeapInstance & inst_;
+};
+
+
+// 工厂函数：从内存缓冲区创建分配器
+template<typename T = int8_t>
+Option<O1HeapAllocator<T>> make_o1heap_allocator(std::span<uint8_t> buffer) {
+    auto* instance = lib_o1heap::o1heapInit(buffer.data(), buffer.size());
+    if (!instance) return None;
+    return Some(O1HeapAllocator<T>(*instance));
+}
+
+}
+
+using LidarEvent = stl06n::Event;
+using stl06n::PackedLidarPoint;
+
+struct PackedCluster{
+    std::array<PackedLidarPoint, 12> points;
+    Angular<uq32> start_angle;
+    Angular<uq32> stop_angle;
+};
 
 
 
@@ -29,14 +159,14 @@ void stl06n_main(){
     auto & UART = hal::usart2;
     UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576000),
+        .baudrate = hal::NearestFreq(6000000),
         .tx_strategy = CommStrategy::Blocking
     });
     #elif defined(CH32V30X)
     auto & UART = hal::uart6;
     UART.init({
         .remap = hal::UART6_REMAP_PC0_PC1,
-        .baudrate = hal::NearestFreq(576000),
+        .baudrate = hal::NearestFreq(6000000),
         .tx_strategy = CommStrategy::Blocking
     });
     #endif
@@ -47,10 +177,6 @@ void stl06n_main(){
     DEBUGGER.no_fieldname(EN);
 
 
-
-    using LidarEvent = stl06n::Event;
-    using stl06n::PackedLidarPoint;
-
     auto watch_pin_ = hal::PA<11>();
     watch_pin_.set_mode(hal::GpioMode::OutPP);
     watch_pin_.set_low();
@@ -59,11 +185,28 @@ void stl06n_main(){
     volatile size_t lidar_ev_count_ = 0;
     volatile size_t lidar_crc_err_count_ = 0;
 
-    std::array<PackedLidarPoint, 12> points;
+
     Microseconds lidar_clone_elapsed_us_ = 0us;
     Angular<uq32> last_start_angle_ = Zero;
     Angular<uq32> last_stop_angle_ = Zero;
-    PackedLidarPoint point_ = Zero;
+    // std::vector<PackedCluster> packed_clusters_;
+    // packed_clusters_.reserve(64);
+
+    static constexpr size_t POOL_SIZE = 4096 * 2;
+    // static constexpr size_t POOL_SIZE = 6000;
+    auto resource = std::make_unique<uint8_t[]>(POOL_SIZE);
+
+    using Alloc = mem::o1heap::O1HeapAllocator<std::pair<const size_t, PackedCluster>>;
+    auto o1heap_alloc = mem::o1heap::make_o1heap_allocator(std::span(resource.get(), POOL_SIZE)).unwrap();
+
+    std::map<
+        size_t, 
+        PackedCluster, 
+        std::less<size_t>,
+        Alloc
+    > packed_clusters_(o1heap_alloc);
+    // std::map<size_t, PackedCluster> packed_clusters_;
+
     auto lidar_ev_handler = [&](const LidarEvent & ev){
         watch_pin_.set_high();
         watch_pin_.set_low();
@@ -76,7 +219,6 @@ void stl06n_main(){
         if(ev.is<LidarEvent::DataReady>()){
             const auto & sector = ev.unwrap_as<LidarEvent::DataReady>().sector;
 
-            sector.packed_cluster.clone_to(std::span(points));
             // auto && view = make_std_range(sector.packed_cluster.iter())
             //     | std::views::take(2);
 
@@ -84,10 +226,17 @@ void stl06n_main(){
             const auto stop_angle = sector.stop_angle_code.to_angle();
             if(last_start_angle_ > start_angle){
                 lidar_sector_count_ = 0;
-                point_ = sector.packed_cluster[0];
+                // point_ = sector.packed_cluster[0];
             }else{
                 lidar_sector_count_++;
             }
+
+            auto & packed_cluster = packed_clusters_[size_t(lidar_sector_count_)];
+            auto & points = packed_cluster.points;
+
+            sector.packed_cluster.clone_to(std::span(points));
+            packed_cluster.start_angle = start_angle;
+            packed_cluster.stop_angle = stop_angle;
 
             last_start_angle_ = start_angle;
             last_stop_angle_ = stop_angle;
@@ -181,20 +330,59 @@ void stl06n_main(){
     #endif
 
 
-    [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(3ms);
-    while(true){
+
+
+
+    auto poll_main = [&]{
+        
         // const auto heap_alloc_elapsed_us = measure_total_elapsed_us([&]{
         //     auto arena = std::make_unique<uint8_t[]>(128 * 64);
         // });
+
+        // const auto & point = packed_clusters_[0].points[0];
+
+        auto headed_points = packed_clusters_ 
+            | std::views::values                    // Extract just the values (PackedCluster objects)
+            | std::views::transform([](const PackedCluster & cluster) -> PackedLidarPoint { 
+                // return cluster.points[0];
+                //find min
+
+                return *std::min_element(cluster.points.begin(), cluster.points.end(), 
+                [](const PackedLidarPoint & a, const PackedLidarPoint & b){ return a.distance_code.bits < b.distance_code.bits; });
+            })
+            | std::views::filter([i = 0](const auto&) mutable { 
+                return (i++) % 4 == 0; 
+            });
+
+        const auto & diagnostics = o1heap_alloc.heap_instance().diagnostics;
+
+        std::array<iq16, 12> arr;
+        static constexpr auto step = iq16(1.0 / 24.0);
+        iq16 x = 0;
+        const auto secs = clock::seconds();
+        for(size_t i = 0; i < arr.size(); i++){
+            arr[i] = math::sinpu(x + secs);
+            x += step;
+        }
         DEBUG_PRINTLN(
-            clock::millis().count(),
+            // arr
+            headed_points
+            // clock::millis().count(),
             // static_cast<uint8_t>(stl06n_parser_.fsm_state_),
             // static_cast<size_t>(stl06n_parser_.bytes_count_)
-            lidar_clone_elapsed_us_.count(),
-            last_start_angle_.to_turns(),
-            last_stop_angle_.to_turns(),
-            point_.distance_code.to_meters(),
-            point_.intensity_code.bits
+            // lidar_clone_elapsed_us_.count(),
+            // last_start_angle_.to_turns(),
+            // last_stop_angle_.to_turns(),
+            // headed_points
+            // std::size(packed_clusters_),
+            // diagnostics.allocated,
+            // diagnostics.capacity,
+            // diagnostics.peak_allocated
+            // point.distance_code.to_meters(),
+            // point.intensity_code.bits,
+            // std::size(headed_points),
+            // std::size(packed_clusters_),
+            // 0
             // heap_alloc_elapsed_us.count()
             // points[0].distance_code.to_meters(),
             // points[0].intensity
@@ -202,6 +390,15 @@ void stl06n_main(){
         );
         // report_timer.invoke_if([&]{
         // });
+    };
+
+    clock::delay(1000ms);
+    [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(8ms);
+
+    while(true){
+        report_timer.invoke_if([&]{
+            poll_main();
+        });
     }
 
 

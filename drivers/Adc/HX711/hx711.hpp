@@ -2,11 +2,11 @@
 
 
 #include "core/math/real.hpp"
-#include "hal/gpio/gpio_intf.hpp"
+#include "hal/gpio/gpio.hpp"
 
 
 namespace ymd::hal{
-    class GpioIntf;
+    class Gpio;
 };
 
 namespace ymd::drivers{
@@ -19,8 +19,8 @@ public:
     static constexpr iq16 GRAVITY_G = iq16(9.8);
 public:
     explicit HX711(
-        hal::GpioIntf & sck_gpio, 
-        hal::GpioIntf & sdo_gpio
+        hal::Gpio & sck_gpio, 
+        hal::Gpio & sdo_gpio
     ):
         sck_pin_(sck_gpio), 
         sdo_pin_(sdo_gpio){;}
@@ -50,8 +50,8 @@ public:
         conv_type = convtype;
     }
 private:
-    hal::GpioIntf & sck_pin_;
-    hal::GpioIntf & sdo_pin_;
+    hal::Gpio & sck_pin_;
+    hal::Gpio & sdo_pin_;
     ConvType conv_type = ConvType::A128;
 
     uint32_t last_bits_;

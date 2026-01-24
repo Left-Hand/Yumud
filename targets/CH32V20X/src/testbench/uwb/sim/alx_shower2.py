@@ -1,11 +1,14 @@
-import serial
+import asyncio
+import serial_asyncio
 import tkinter as tk
 import math
 from typing import List, Optional, Tuple
 import threading
+from concurrent.futures import ThreadPoolExecutor
 
-DEFAULT_COM_NAME:str = "COM35"
-DEFAULT_COM_BAUD:int = 115200 * 2
+DEFAULT_COM_NAME: str = "COM19"
+DEFAULT_COM_BAUD: int = 6000000
+
 
 class PolarPlotter:
     """
@@ -51,12 +54,10 @@ class PolarPlotter:
         Plot a point in polar coordinates.
         
         Args:
-            r: Radial distance (normalized to max_radius)
-            theta: Angle in radians
+            x: X coordinate
+            y: Y coordinate
             color: Color of the point
         """
-
-        # print(x,y)
         x = x*50 + self.center_x
         y = -y*50 + self.center_y
         # Draw point
@@ -65,64 +66,76 @@ class PolarPlotter:
             fill=color, tags="point"
         )
 
-class SerialProcessor:
+
+class AsyncSerialProtocol(asyncio.Protocol):
     """
-    Process serial data and update polar plot.
+    Async protocol for handling serial communication
     """
-    def __init__(self, port: str, baudrate: int, plotter: PolarPlotter) -> None:
-        self.port: str = port
-        self.baudrate: int = baudrate
-        self.plotter: PolarPlotter = plotter
-        self.serial_conn: Optional[serial.Serial] = None
-        self.running: bool = False
+    def __init__(self, callback):
+        super().__init__()
+        self.callback = callback
+        self.buffer = ""
         
-    def connect(self) -> bool:
-        """Establish serial connection."""
+    def connection_made(self, transport):
+        self.transport = transport
+        
+    def data_received(self, data):
+        # Handle incoming data
         try:
-            self.serial_conn = serial.Serial(self.port, self.baudrate, timeout=1)
+            decoded_data = data.decode('utf-8', errors='ignore')
+            self.buffer += decoded_data
+            
+            # Process complete lines
+            while '\n' in self.buffer:
+                line, self.buffer = self.buffer.split('\n', 1)
+                self.callback(line.strip())
+                
+        except Exception as e:
+            print(f"Error processing received data: {e}")
+            
+    def connection_lost(self, exc):
+        print("Serial connection lost")
+
+
+class AsyncSerialProcessor:
+    """
+    Async processor for serial data and updating polar plot.
+    """
+    def __init__(self, plotter: PolarPlotter) -> None:
+        self.plotter: PolarPlotter = plotter
+        self.running: bool = False
+        self.protocol: Optional[AsyncSerialProtocol] = None
+        self.transport = None
+        self.loop = None
+        
+    async def connect(self, port: str, baudrate: int) -> bool:
+        """Establish async serial connection."""
+        try:
+            self.loop = asyncio.get_event_loop()
+            self.protocol = AsyncSerialProtocol(self._process_line)
+            self.transport, _ = await serial_asyncio.create_serial_connection(
+                self.loop, 
+                lambda: self.protocol, 
+                port, 
+                baudrate=baudrate
+            )
             return True
         except Exception as e:
-            print(f"Failed to connect to {self.port}: {e}")
+            print(f"Failed to connect to {port}: {e}")
             return False
             
-    def disconnect(self) -> None:
-        """Close serial connection."""
+    async def disconnect(self) -> None:
+        """Close async serial connection."""
         self.running = False
-        if self.serial_conn and self.serial_conn.is_open:
-            self.serial_conn.close()
+        if self.transport:
+            self.transport.close()
             
     def start_reading(self) -> None:
-        """Start reading data from serial port in a separate thread."""
-        if not self.serial_conn or not self.serial_conn.is_open:
-            if not self.connect():
-                return
-                
+        """Mark as running - actual reading is handled by async protocol"""
         self.running = True
-        thread = threading.Thread(target=self._read_serial_data)
-        thread.daemon = True
-        thread.start()
         
-    def _read_serial_data(self) -> None:
-        """Read and process data from serial port."""
-        buffer: str = ""
-        
-        while self.running:
-            try:
-                if self.serial_conn and self.serial_conn.in_waiting > 0:
-                    # Read available data
-                    raw_bytes: bytes = self.serial_conn.read(self.serial_conn.in_waiting)
-                    # Handle decoding errors gracefully
-                    buffer += raw_bytes.decode('utf-8', errors='ignore')
-                    
-                    # Process complete lines
-                    while '\n' in buffer:
-                        line, buffer = buffer.split('\n', 1)
-                        self._process_line(line.strip())
-                        
-            except Exception as e:
-                print(f"Error reading serial data: {e}")
     def _process_line(self, line: str) -> None:
-        """Process a single line of data."""
+        """Process a single line of data from the protocol."""
         if not line:
             return
             
@@ -131,27 +144,35 @@ class SerialProcessor:
             values: List[str] = line.split(',')
             float_values: List[float] = [float(val.strip()) for val in values]
             # We need at least 2 values for (r, theta)
-            if len(float_values) >= 6:
+            if len(float_values) >= 11:
                 # Update plot in main thread
                 self.plotter.clear_points()
-                self.plotter.plot_point_xy(float_values[0], float_values[1], "red")
-                self.plotter.plot_point_xy(float_values[2], float_values[3], "blue")
-                self.plotter.plot_point_xy(float_values[4], float_values[5], "pink")
-                self.plotter.plot_point_xy(float_values[6], float_values[7], "orange")
+                magnitudes = float_values
+                for i in range(0, len(magnitudes)):
+                    radians = 2 * math.pi * i / len(magnitudes)
+                    self.plotter.plot_point_xy(
+                        -magnitudes[i] * math.cos(radians), 
+                        -magnitudes[i] * math.sin(radians)
+                    )
                 
-                # print(float_values)
+            # print(len(float_values))
                 
         except ValueError as e:
             print(f"Error parsing line '{line}': {e}")
 
-class SerialPolarApp:
+
+class AsyncSerialPolarApp:
     """
-    Main application class for the serial polar plotter.
+    Main application class for the async serial polar plotter.
     """
     def __init__(self, root: tk.Tk) -> None:
         self.root: tk.Tk = root
-        self.root.title("Serial Polar Plotter")
+        self.root.title("Async Serial Polar Plotter")
         self.root.geometry("800x600")
+        
+        # Initialize event loop
+        self.loop = asyncio.new_event_loop()
+        self.executor = ThreadPoolExecutor(max_workers=1)
         
         # Create UI elements
         self._create_widgets()
@@ -159,8 +180,9 @@ class SerialPolarApp:
         # Initialize plotter
         self.plotter: PolarPlotter = PolarPlotter(self.canvas, 600, 500)
         
-        # Initialize serial processor
-        self.processor: Optional[SerialProcessor] = None
+        # Initialize async serial processor
+        self.processor: Optional[AsyncSerialProcessor] = None
+        
     def _update_port_list(self) -> None:
         """Update the list of available serial ports."""
         ports: List[str] = self._get_available_ports()
@@ -188,12 +210,6 @@ class SerialPolarApp:
         control_frame: tk.Frame = tk.Frame(self.root)
         control_frame.pack(pady=10)
         
-        # # Port entry
-        # tk.Label(control_frame, text="Port:").pack(side=tk.LEFT)
-        # self.port_entry: tk.Entry = tk.Entry(control_frame, width=10)
-        # self.port_entry.insert(0, DEFAULT_COM_NAME)  # Default value
-        # self.port_entry.pack(side=tk.LEFT, padx=5)
-        
         # Available ports dropdown
         self.port_var: tk.StringVar = tk.StringVar(value=DEFAULT_COM_NAME)
         self.port_menu: tk.OptionMenu = tk.OptionMenu(control_frame, self.port_var, DEFAULT_COM_NAME)
@@ -219,28 +235,76 @@ class SerialPolarApp:
         self.canvas.pack(pady=10)
         
     def _toggle_connection(self) -> None:
-        """Toggle serial connection."""
+        """Toggle async serial connection."""
         if self.processor and self.processor.running:
             # Disconnect
-            self.processor.disconnect()
+            asyncio.run_coroutine_threadsafe(
+                self.processor.disconnect(), 
+                self.loop
+            ).result()
             self.processor = None
             self.connect_button.config(text="Connect")
         else:
             # Connect
-            port: str = self.port_var.get()  # Changed from self.port_entry.get()
+            port: str = self.port_var.get()
             try:
                 baudrate: int = int(self.baudrate_entry.get())
-                self.processor = SerialProcessor(port, baudrate, self.plotter)
-                self.processor.start_reading()
-                self.connect_button.config(text="Disconnect")
+                self.processor = AsyncSerialProcessor(self.plotter)
+                
+                # Run the connection in a separate thread with its own event loop
+                future = asyncio.run_coroutine_threadsafe(
+                    self._connect_and_start(port, baudrate), 
+                    self.loop
+                )
+                
+                # Wait for connection result
+                connected = future.result(timeout=5)  # 5 second timeout
+                
+                if connected:
+                    self.processor.start_reading()
+                    self.connect_button.config(text="Disconnect")
+                else:
+                    self.processor = None
+                    print("Connection failed")
+                    
             except ValueError:
                 print("Invalid baudrate")
+            except Exception as e:
+                print(f"Error connecting: {e}")
+                
+    async def _connect_and_start(self, port: str, baudrate: int) -> bool:
+        """Connect to serial port and start reading."""
+        connected = await self.processor.connect(port, baudrate)
+        if connected:
+            self.processor.start_reading()
+        return connected
+
+    def run(self):
+        """Run the Tkinter mainloop in one thread and asyncio event loop in another."""
+        # Start the asyncio event loop in a separate thread
+        def run_async_loop():
+            asyncio.set_event_loop(self.loop)
+            self.loop.run_forever()
+        
+        import threading
+        async_thread = threading.Thread(target=run_async_loop, daemon=True)
+        async_thread.start()
+        
+        # Run the tkinter mainloop in the main thread
+        try:
+            self.root.mainloop()
+        finally:
+            # Clean shutdown
+            self.loop.call_soon_threadsafe(self.loop.stop)
+            self.executor.shutdown(wait=True)
+
 
 def main() -> None:
     """Main function to run the application."""
     root: tk.Tk = tk.Tk()
-    app: SerialPolarApp = SerialPolarApp(root)
-    root.mainloop()
+    app: AsyncSerialPolarApp = AsyncSerialPolarApp(root)
+    app.run()
+
 
 if __name__ == "__main__":
     main()

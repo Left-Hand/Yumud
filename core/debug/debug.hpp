@@ -75,18 +75,9 @@ struct DEBUG_SRC
 {    
 	DEBUG_SRC(Args &&... args, const std::source_location& loc = std::source_location::current()){
         DEBUG_PRINTS(std::forward<Args>(args)...);
-        clock::delay(10ms);
         
         {
             const auto guard = ymd::DEBUGGER.create_guard();
-            ymd::DEBUGGER.reconf({
-                .splitter = ", ",
-                .radix = 10,
-                .eps = 3,
-                .indent = ymd::DEBUGGER.indent(),
-                .flags = 0,
-            });
-            
             DEBUG_PRINT(loc);
         }
 	}

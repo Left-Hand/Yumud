@@ -2,15 +2,16 @@
 
 #include "spi.hpp"
 #include "core/clock/clock.hpp"
+#include "hal/gpio/gpio.hpp"
 
 namespace ymd::hal{
 
 class SpiSw final: public SpiBase{
 protected:
     volatile int8_t occupied = -1;
-    hal::GpioIntf & sclk_pin_;
-    hal::GpioIntf & mosi_pin_;
-    hal::GpioIntf & miso_pin_;
+    hal::Gpio & sclk_pin_;
+    hal::Gpio & mosi_pin_;
+    hal::Gpio & miso_pin_;
 
     uint16_t delays = 100;
     SpiWordSize wordsize_ = SpiWordSize::OneByte;
@@ -34,23 +35,23 @@ protected :
 public:
 
     SpiSw(
-        Some<hal::GpioIntf *> sclk_gpio,
-        Some<hal::GpioIntf *> mosi_gpio,
-        Some<hal::GpioIntf *> miso_gpio
+        Some<hal::Gpio *> sclk_gpio,
+        Some<hal::Gpio *> mosi_gpio,
+        Some<hal::Gpio *> miso_gpio
     ):
         sclk_pin_(sclk_gpio.deref()),
         mosi_pin_(mosi_gpio.deref()), 
         miso_pin_(miso_gpio.deref()){;}
 
     SpiSw(
-        Some<hal::GpioIntf *> sclk_gpio,
-        Some<hal::GpioIntf *> mosi_gpio,
-        Some<hal::GpioIntf *> miso_gpio,
-        Some<hal::GpioIntf *> cs_gpio
+        Some<hal::Gpio *> sclk_gpio,
+        Some<hal::Gpio *> mosi_gpio,
+        Some<hal::Gpio *> miso_gpio,
+        Some<hal::Gpio *> cs_gpio
     ):
         SpiSw(sclk_gpio, mosi_gpio, miso_gpio)
     {
-        bind_cs_pin(cs_gpio, 0_nth);
+        bind_cs_pin(cs_gpio.get(), 0_nth);
     }
 
     SpiSw(const SpiSw &) = delete;

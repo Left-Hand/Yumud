@@ -28,32 +28,32 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
         }
 
         else if (func == &std::boolalpha){
-            config_.boolalpha = true;
+            config_.specifier.boolalpha = true;
             break;
         }
 
         else if (func == &std::noboolalpha){
-            config_.boolalpha = false;
+            config_.specifier.boolalpha = false;
             break;
         }
 
         else if (func == &std::showpos){
-            config_.showpos = true;
+            config_.specifier.showpos = true;
             break;
         }
 
         else if (func == &std::noshowpos){
-            config_.showpos = false;
+            config_.specifier.showpos = false;
             break;
         }
 
         else if (func == &std::showbase){
-            config_.showbase = true;
+            config_.specifier.showbase = true;
             break;
         }
 
         else if (func == &std::noshowbase){
-            config_.showbase = false;
+            config_.specifier.showbase = false;
             break;
         }
         //TODO 支持std::flush
@@ -75,18 +75,22 @@ OutputStream & OutputStream::operator<<(const std::endian endian){
 }
 
 OutputStream & OutputStream::operator<<(const std::_Swallow_assign){
+    // this is std::ignore
+    // _GLIBCXX17_INLINE constexpr _Swallow_assign ignore{};
     return *this;
 }
 
 OutputStream & OutputStream::operator<<(const std::_Setw){
+    //TODO
     return *this;
 }
 
-#define PRINT_FLOAT_TEMPLATE(convfunc)\
-    char str[12] = {0};\
-    const auto len = convfunc(value, str, this->eps());\
-    if(config_.showpos and value >= 0) *this << '+';\
-    this->write(str, len);\
+
+OutputStream & OutputStream::operator<<(const std::_Setfill<char> setfill){
+    //TODO
+    return *this;
+}
+
 
 
 void OutputStream::print_source_loc(const std::source_location & loc){
@@ -111,9 +115,9 @@ OutputStream & OutputStream::operator<<(const double value){
 }
 
 #define PRINT_INT_TEMPLATE(blen, convfunc)\
-    if((config_.showpos and val >= 0)) [[unlikely]]\
+    if((config_.specifier.showpos and val >= 0)) [[unlikely]]\
         this->write('+');\
-    if((config_.showbase and (radix() != 10))) [[unlikely]]{\
+    if((config_.specifier.showbase and (radix() != 10))) [[unlikely]]{\
         *this << get_basealpha(radix());}\
     char str[blen];\
     const auto len = convfunc(val, str, this->config_.radix);\
@@ -160,7 +164,7 @@ void OutputStream::print_i64(const int64_t val){
 }
 
 void OutputStream::print_iq16(const math::fixed_t<16, int32_t> val){
-    char str[16] = {0};
+    char str[32];
     const auto len = str::qtoa<16>(val, str, this->eps());
     print_numeric(str, len, val >= 0);
 }
@@ -175,7 +179,7 @@ OutputStream & OutputStream::flush(){
 }
 
 void OutputStreamByRoute::sendout(const std::span<const uint8_t> pbuf){
-    if(!p_route_.has_value())
+    if(!p_route_.has_value()) [[unlikely]]
         __builtin_trap();
     p_route_->try_write_bytes(pbuf);
 }
@@ -197,10 +201,10 @@ OutputStream & OutputStream::operator<<(const MutStringView str){
 }
 
 OutputStream & OutputStream::operator<<(const bool val){
-    if(config_.boolalpha == false){
+    if(config_.specifier.boolalpha == false){
         write(val ? '1' : '0');
         return *this;
     }else{
-        return *this << ((val) ? "true" : "false");
+        return *this << ((val) ? StringView("true") : StringView("false"));
     }
 }

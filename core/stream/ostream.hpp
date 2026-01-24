@@ -161,26 +161,49 @@ public:
 
 class [[nodiscard]] OutputStream:public OutputStreamIntf{
 public:
-    struct [[nodiscard]] Config{
+    struct alignas(16) [[nodiscard]] Config{
+
+        using Self = Config;
+
+        struct Specifier{
+            uint16_t boolalpha:1;
+            uint16_t showpos:1;
+            uint16_t showbase:1;
+            uint16_t no_brackets:1;
+            uint16_t no_space:1;
+            uint16_t force_sync:1;
+            uint16_t no_scoped:1;
+            uint16_t no_fieldname:1;
+        };
+
         // std::array<char, 4> splitter;
         char splitter[4];
 
-        uint8_t radix:5;
-        uint8_t eps:3;
+        uint8_t splitter_len;
+        uint8_t radix;
+        uint8_t eps;
         uint8_t indent;
+
+        char pandding;
+        uint8_t pandding_len;
+
         union{
-            uint16_t flags;
-            struct{
-                uint16_t boolalpha:1;
-                uint16_t showpos:1;
-                uint16_t showbase:1;
-                uint16_t no_brackets:1;
-                uint16_t no_space:1;
-                uint16_t force_sync:1;
-                uint16_t no_scoped:1;
-                uint16_t no_fieldname:1;
-            };
+            uint16_t specifier_bits;
+            Specifier specifier;
         };
+
+        static constexpr Self from_default(){
+            return Self{
+                .splitter = {',', ' ', '\0', '\0'},
+                .splitter_len = 2,
+                .radix = 10,
+                .eps = 4,
+                .indent = 0,
+                .pandding = ' ',
+                .pandding_len = 0,
+                .specifier_bits = 0
+            };
+        }
     };
 private:
 
@@ -191,7 +214,7 @@ private:
     using Brackets = details::Brackets<c>;
 public:
     OutputStream(){
-        reconf(DEFAULT_CONFIG);
+        reconf(Config::from_default());
     }
 
     virtual ~OutputStream() = default;
@@ -221,10 +244,10 @@ public:
     OutputStream & set_splitter(const char * splitter){
         std::fill_n(config_.splitter, 4, 0);
 
-        sp_len = 0;
+        config_.splitter_len = 0;
         for(size_t i = 0; i < 4 && splitter[i] != '\0'; ++i) {
             config_.splitter[i] = splitter[i];
-            sp_len++;
+            config_.splitter_len++;
         }
         return *this;
     }
@@ -232,7 +255,7 @@ public:
     OutputStream & set_splitter(const char splitter){
         std::fill_n(config_.splitter, 4, 0);
         config_.splitter[0] = splitter;
-        sp_len = 1;
+        config_.splitter_len = 1;
         return *this;
     }
 
@@ -256,26 +279,26 @@ public:
     }
 
     OutputStream & no_brackets(const Enable en){
-        config_.no_brackets = bool(en == EN);
+        config_.specifier.no_brackets = bool(en == EN);
         return *this;
     }
 
     OutputStream & no_scoped(const Enable en){
-        config_.no_scoped = bool(en == EN);
+        config_.specifier.no_scoped = bool(en == EN);
         return *this;
     }
 
     OutputStream & no_fieldname(const Enable en){
-        config_.no_fieldname = bool(en == EN);
+        config_.specifier.no_fieldname = bool(en == EN);
         return *this;
     }
     OutputStream & force_sync(const Enable en){
-        config_.force_sync = bool(en == EN);
+        config_.specifier.force_sync = bool(en == EN);
         return *this;
     }
 
     OutputStream & no_space(const Enable en){
-        config_.no_space = bool(en == EN);
+        config_.specifier.no_space = bool(en == EN);
         return *this;
     }
 
@@ -353,7 +376,10 @@ public:
     OutputStream & operator<<(const Splitter){print_splt(); return *this;}
 
     template<char chr>
-    OutputStream & operator<<(const Brackets<chr>){if(!config_.no_brackets){write(chr);} return *this;}
+    OutputStream & operator<<(const Brackets<chr>){
+        if(!config_.specifier.no_brackets) write(chr); 
+        return *this;
+    }
     OutputStream & operator<<(const std::source_location & loc){print_source_loc(loc); return *this;}
 
     template<typename T>
@@ -368,6 +394,8 @@ public:
 
     OutputStream & operator<<(const std::_Swallow_assign);
     OutputStream & operator<<(const std::_Setw);
+    OutputStream & operator<<(const std::_Setfill<char> setfill);
+
     template<size_t N>
     OutputStream & operator<<(const std::bitset<N> bs){
         char str[N + 1];
@@ -398,8 +426,8 @@ private:
     void print_u64(const uint64_t i_val);
     void print_i64(const int64_t i_val);
 
-    __inline void print_numeric(const char * str, const size_t len, const bool pos){
-        if(config_.showpos and pos) *this << '+';
+    __inline void print_numeric(const char * str, const size_t len, const bool is_positive){
+        if(config_.specifier.showpos and is_positive) *this << '+';
         this->write(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(str), len));
     }
 
@@ -663,7 +691,7 @@ public:
 
         __inline explicit FieldName(OutputStream & os, const std::string_view name):
             os_(os){
-            if(not os.config().no_fieldname)
+            if(not os.config().specifier.no_fieldname)
                 os << name << ':';
         }
 
@@ -691,7 +719,7 @@ public:
     struct [[nodiscard]] ScopedInfo{
         __inline explicit ScopedInfo(OutputStream & os, const std::string_view name):
             os_(os){
-            if(not os.config().no_scoped){
+            if(not os.config().specifier.no_scoped){
                 os << name << ':';
                 os << os.brackets<'{'>();
             }
@@ -705,7 +733,7 @@ public:
             if constexpr (sizeof...(args)) {
                 ((os_ << std::forward<Args>(args)), ...);
             }
-            if(not os_.config().no_scoped)
+            if(not os_.config().specifier.no_scoped)
                 os_ << os_.brackets<'}'>();
             return *this;
         }
@@ -729,11 +757,10 @@ public:
 
     OutputStream & reconf(const Config config){
         config_ = config;
-        sp_len = strlen(config_.splitter);
         return *this;
     }
 
-    Config config() const {return config_;}
+    const Config & config() const {return config_;}
 
     class [[nodiscard]] ConfigGuard{
         OutputStream & os_;
@@ -741,6 +768,7 @@ public:
     public:
         ConfigGuard(OutputStream & os) : os_(os), config_(os.config()){}
 
+        constexpr const Config & config() const {return config_;}
         ~ConfigGuard(){
             os_.reconf(config_);
         }
@@ -751,21 +779,10 @@ public:
     }
 
 private:
-
-    uint8_t sp_len;
-
-    static constexpr Config DEFAULT_CONFIG = {
-        .splitter = ", ",
-        .radix = 10,
-        .eps = 3,
-        .indent = 0,
-        .flags = 0,
-    };
-
     Config config_;
 
     __fast_inline void print_splt(){
-        write(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(config_.splitter), sp_len));
+        write(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(config_.splitter), config_.splitter_len));
     }
 
     template<typename T>
@@ -786,7 +803,7 @@ private:
 
     __fast_inline void print_end(){
         flush();
-        if((config_.force_sync)) [[unlikely]] {
+        if((config_.specifier.force_sync)) [[unlikely]] {
             block_util_least_free_capacity(0);
         }
     }

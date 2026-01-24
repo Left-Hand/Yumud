@@ -18,30 +18,30 @@ public:
     explicit ST7789_Transport(
         Some<hal::Spi *> spi,
         const hal::SpiSlaveRank rank,
-        Some<hal::Gpio *> dc_gpio, 
-        Option<hal::Gpio &> res_gpio = None
+        Some<hal::Gpio *> dc_pin, 
+        Option<hal::GpioIntf &> nrst_pin = None
     ):  
         spi_(spi.deref()), 
         rank_(rank), 
-        dc_pin_(dc_gpio.deref()), 
-        res_pin_(res_gpio)
+        dc_pin_(dc_pin.deref()), 
+        nrst_pin_(nrst_pin)
         {};
 
     [[nodiscard]] IResult<> init(){
         dc_pin_.outpp();
-        if(res_pin_.is_some())
-            res_pin_.unwrap().outpp(HIGH);
+        if(nrst_pin_.is_some())
+            nrst_pin_.unwrap().outpp(HIGH);
 
         return reset();
     }
 
     [[nodiscard]] IResult<> reset(){
-        if(res_pin_.is_none()) return Ok();
-        auto & res_gpio = res_pin_.unwrap();
+        if(nrst_pin_.is_none()) return Ok();
+        auto & nrst_pin = nrst_pin_.unwrap();
         clock::delay(10ms);
-        res_gpio.set_low();
+        nrst_pin.set_low();
         clock::delay(10ms);
-        res_gpio.set_high();
+        nrst_pin.set_high();
         return Ok();
     }
 
@@ -75,7 +75,7 @@ private:
     hal::SpiSlaveRank rank_;
 
     hal::Gpio & dc_pin_;
-    Option<hal::Gpio &>res_pin_;
+    Option<hal::GpioIntf &>nrst_pin_;
 
     template <hal::valid_spi_data T>
     [[nodiscard]] IResult<> spi_fast_write_burst(
