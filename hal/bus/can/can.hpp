@@ -54,6 +54,24 @@ void CAN2_SCE_IRQHandler(void);
 }
 #endif
 
+#ifdef CAN3_PRESENT
+extern "C"{
+__interrupt
+void CAN3_TX_IRQHandler(void);
+
+__interrupt
+void CAN3_RX0_IRQHandler(void);
+
+__interrupt
+void CAN3_RX1_IRQHandler(void);
+
+#ifdef CAN_SCE_ENABLED
+__interrupt
+void CAN3_SCE_IRQHandler(void);
+#endif
+}
+#endif
+
 namespace ymd::hal{
 
 class Gpio;
@@ -190,9 +208,7 @@ private:
     friend class CanInterruptDispatcher;
 };
 
-class BufferedCan{
 
-};
 
 #ifdef CAN1_PRESENT
 extern Can can1;
@@ -200,6 +216,10 @@ extern Can can1;
 
 #ifdef CAN2_PRESENT
 extern Can can2;
+#endif
+
+#ifdef CAN3_PRESENT
+extern Can can3;
 #endif
 
 }

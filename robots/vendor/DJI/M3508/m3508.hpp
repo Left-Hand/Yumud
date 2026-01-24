@@ -1,12 +1,12 @@
 #pragma once
 
-#include "hal/bus/can/can.hpp"
-
-#include "dsp/controller/pid_ctrl.hpp"
-
 #include <bitset>
 
+#include "primitive/can/bxcan_frame.hpp"
+#include "dsp/controller/pid_ctrl.hpp"
 #include "drivers/Encoder/Encoder.hpp"
+
+
 
 namespace ymd::robots::dji::m3508{
 static constexpr uint16_t NUM_HIGHER_QUAD_CAN_ID = 0x200;

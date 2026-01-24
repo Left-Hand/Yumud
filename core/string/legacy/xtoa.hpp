@@ -31,11 +31,40 @@ static __fast_inline constexpr void itoas(uint32_t value, char *str, uint8_t rad
 	}while(i >= 0);
 }
 
-size_t _qtoa_impl(const int32_t value_, char * str, uint8_t eps, const uint8_t _Q);
+size_t _uqtoa(const uint32_t abs_value_bits, char * str, uint8_t eps, const uint8_t Q);
 
-template<size_t Q>
-size_t qtoa(const math::fixed_t<Q, int32_t> qv, char * str, uint8_t eps){
-    return _qtoa_impl(qv.to_bits(), str, eps, Q);
+template<typename D>	
+size_t _iqtoa(const D value_bits, char * str, uint8_t eps, const uint8_t Q){
+	using unsigned_type = std::make_unsigned_t<D>;
+	using bits_type = std::conditional_t<
+		std::is_signed_v<D>, 
+		std::make_signed_t<D>, 
+		std::make_unsigned_t<D>
+	>;
+
+	unsigned_type abs_value_bits;
+	if constexpr(std::is_signed_v<D>){
+		const bool is_negative = std::bit_cast<bits_type>(value_bits) < 0;
+		if(is_negative){
+			str[0] = '-';
+			str++;
+			abs_value_bits = static_cast<unsigned_type>(-value_bits);
+		}else{
+			abs_value_bits = static_cast<unsigned_type>(value_bits);
+		}
+	}else{
+		abs_value_bits = value_bits;
+	}
+    
+    return _uqtoa(abs_value_bits, str, eps, Q);
+}
+
+template<size_t Q, typename D>
+requires(sizeof(D) <= 4)
+size_t qtoa(const math::fixed_t<Q, D> qv, char * str, uint8_t eps){
+	using size_aligned_t = std::conditional_t<std::is_signed_v<D>, int32_t, uint32_t>;
+	static_assert(sizeof(size_aligned_t) == sizeof(D));
+	return _iqtoa<size_aligned_t>(std::bit_cast<size_aligned_t>(qv.to_bits()), str, eps, Q);
 }
 
 }

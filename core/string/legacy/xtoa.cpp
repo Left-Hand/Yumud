@@ -24,7 +24,7 @@ static_assert(num_int2str_chars(0x3B9ACA01, 10) == 10, "0x3B9ACA01 should return
 
 
 template<integral T>
-static size_t _itoa_impl(T int_val, char * str, uint8_t radix){
+static constexpr size_t _itoa_impl(T int_val, char * str, uint8_t radix){
     const bool is_negative = int_val < 0;
     std::make_unsigned_t<T> unsigned_val = [&]{
         if constexpr (std::is_signed_v<T>) {
@@ -57,20 +57,17 @@ static size_t _itoa_impl(T int_val, char * str, uint8_t radix){
 }
 
 
-size_t str::_qtoa_impl(int32_t value_bits, char * str, uint8_t eps, const uint8_t Q){
+static constexpr size_t _uqtoa_impl(uint32_t abs_value_bits, char * str, uint8_t eps, const uint8_t Q){
     // 安全限制eps，确保不超出表格范围
     constexpr size_t max_eps = std::size(pow10_table) - 1;
     eps = MIN(eps, static_cast<uint8_t>(max_eps));
 
-    const bool is_negative = value_bits < 0;
-    const uint32_t abs_value = ABS(value_bits);
-    
     // 为任意Q生成掩码
     const uint64_t lower_mask = (Q >= 31) ? 
         0x7fffffffu :  // 对于Q31，特殊处理以避免左移32位
         ((Q == 0) ? 0 : ((1ULL << Q) - 1));
 
-    const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
+    const uint32_t frac_part = abs_value_bits & lower_mask;
     const uint32_t scale = pow10_table[eps];
 
     // 使用64位整数进行计算，避免溢出
@@ -85,28 +82,31 @@ size_t str::_qtoa_impl(int32_t value_bits, char * str, uint8_t eps, const uint8_
     
     // 检查是否需要进位到整数部分
     const bool carry_to_int = (frac_int64 >= scale);
-    const uint32_t int_part = (uint32_t(abs_value) >> Q) + (carry_to_int ? 1 : 0);
+    const uint32_t int_part = (uint32_t(abs_value_bits) >> Q) + (carry_to_int ? 1 : 0);
     
     // 如果发生进位，调整小数部分
     const uint64_t adjusted_frac_int64 = carry_to_int ? (frac_int64 - scale) : frac_int64;
     const uint32_t adjusted_frac_int = static_cast<uint32_t>(adjusted_frac_int64);
 
     size_t ind = 0;
-    if(is_negative){
-        str[0] = '-';
-        ind++;
-    }
 
     ind += _itoa_impl<int32_t>(int_part, str + ind, 10);
 
     if(eps){
         str[ind] = '.';
+        ind++;
         // 使用调整后的小数部分
-        itoas(adjusted_frac_int, str + ind + 1, 10, eps);
+        itoas(adjusted_frac_int, str + ind, 10, eps);
+        ind += eps;
     }
 
-    return ind + (eps ? (1 + eps) : 0);
+    return ind;
 }
+
+size_t str::_uqtoa(const uint32_t abs_value_bits, char * str, uint8_t eps, const uint8_t Q){
+    return _uqtoa_impl(abs_value_bits, str, eps, Q);
+}
+
 
 size_t str::itoa(int32_t int_val, char *str, uint8_t radix){
     return _itoa_impl<int32_t>(int_val, str, radix);
