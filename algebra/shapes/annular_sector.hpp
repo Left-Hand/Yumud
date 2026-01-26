@@ -15,6 +15,7 @@ struct BoundingBoxOf<AnnularSector<T, D>>;
 
 template<typename T, typename D>
 struct [[nodiscard]] AnnularSector final{
+public:
     static_assert(not std::is_integral_v<D>);
 
     Vec2<T> center;

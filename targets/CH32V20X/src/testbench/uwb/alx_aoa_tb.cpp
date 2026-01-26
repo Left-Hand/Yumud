@@ -187,7 +187,7 @@ void alx_aoa_main(){
             case hal::UartEvent::RxIdle:
 
                 while(alx_1_uart_.available()){
-                    char byte;
+                    uint8_t byte;
                     const auto read_len = alx_1_uart_.try_read_byte(byte);
                     if(read_len == 0) break;
                     alx_1_parser_.push_byte(static_cast<uint8_t>(byte));
@@ -203,7 +203,7 @@ void alx_aoa_main(){
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:
                 while(alx_2_uart_.available()){
-                    char byte;
+                    uint8_t byte;
                     const auto read_len = alx_2_uart_.try_read_byte(byte);
                     if(read_len == 0) break;
                     alx_2_parser_.push_byte(static_cast<uint8_t>(byte));
@@ -302,8 +302,8 @@ void alx_aoa_main(){
                 // geometry::compute_intersection_point(right_ray, left_circle).unwrap_or(Vec2f::ZERO),
                 hal::usart2.available(),
                 hal::usart3.tx_dma_buf_index_,
-                hal::usart3.tx_fifo_.length(),
-                hal::usart3.try_write_bytes("1234567890", 10),
+                hal::usart3.tx_queue_.length(),
+                // hal::usart3.try_write_bytes("1234567890", 10),
                 USART3_TX_DMA_CH.pending_count()
                 // 0
                 // (left_raw_meas.distance > right_raw_meas.distance) ? right_est_point : right_est_point

@@ -13,13 +13,13 @@ struct HorizonOval2{
 	T radius;
 	T length;
 
-	static constexpr Option<HorizonOval2<T>> from_bounding_box(const Rect2<T> bb){
-		const auto h = bb.h();
-		const auto w = bb.w();
+	static constexpr Option<HorizonOval2<T>> try_from_bounding_box(const Rect2<T> bb){
+		const T h = bb.h();
+		const T w = bb.w();
 		if(w < h) return None;
-		const auto radius = static_cast<T>(h / 2);
-		const auto length = static_cast<T>(w - h);
-		const auto left_center = bb.top_left() + Vec2<T>{radius, radius};
+		const T radius = static_cast<T>(h / 2);
+		const T length = static_cast<T>(w - h);
+		const auto left_center = bb.top_left + Vec2<T>(radius, radius);
 		return Some(HorizonOval2<T>{
 			.left_center = left_center,
 			.radius = radius,
@@ -40,12 +40,12 @@ struct VerticalOval2{
 	T length;
 
 	static constexpr Option<VerticalOval2<T>> from_bounding_box(const Rect2<T> bb){
-		const auto h = bb.h();
-		const auto w = bb.w();
+		const T h = bb.h();
+		const T w = bb.w();
 		if(h < w) return None;
-		const auto radius = static_cast<T>(w / 2);
-		const auto length = static_cast<T>(h - w);
-		const auto top_center = bb.top_left() + Vec2<T>{radius, radius};
+		const T radius = static_cast<T>(w / 2);
+		const T length = static_cast<T>(h - w);
+		const Vec2<T> top_center = bb.top_left + Vec2<T>{radius, radius};
 		return Some(VerticalOval2<T>{
 			.top_center = top_center,
 			.radius = radius,

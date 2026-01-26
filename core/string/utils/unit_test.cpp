@@ -29,7 +29,7 @@ namespace {
         StringView single = "hello";
         StringSplitIter single_iter(single, '\n');
         if (!single_iter.has_next()) return false;
-        if (!test_string_view_equal(single_iter.next().unwrap(), "hello")) return false;
+        if (!test_string_view_equal(single_iter.next(), "hello")) return false;
         if (single_iter.has_next()) return false;
         return true;
     }(), "Single line test failed");
@@ -40,13 +40,13 @@ namespace {
         StringSplitIter multi_iter(multi, '\n');
         
         if (!multi_iter.has_next()) return false;
-        if (!test_string_view_equal(multi_iter.next().unwrap(), "line1")) return false;
+        if (!test_string_view_equal(multi_iter.next(), "line1")) return false;
         
         if (!multi_iter.has_next()) return false;
-        if (!test_string_view_equal(multi_iter.next().unwrap(), "line2")) return false;
+        if (!test_string_view_equal(multi_iter.next(), "line2")) return false;
         
         if (!multi_iter.has_next()) return false;
-        if (!test_string_view_equal(multi_iter.next().unwrap(), "line3")) return false;
+        if (!test_string_view_equal(multi_iter.next(), "line3")) return false;
         
         if (multi_iter.has_next()) return false;
         return true;
@@ -58,13 +58,13 @@ namespace {
         StringSplitIter iter(with_empty, '\n');
         
         if (!iter.has_next()) return false;
-        if (!test_string_view_equal(iter.next().unwrap(), "")) return false;
+        if (!test_string_view_equal(iter.next(), "")) return false;
         
         if (!iter.has_next()) return false;
-        if (!test_string_view_equal(iter.next().unwrap(), "line")) return false;
+        if (!test_string_view_equal(iter.next(), "line")) return false;
         
         if (!iter.has_next()) return false;
-        if (!test_string_view_equal(iter.next().unwrap(), "")) return false;
+        if (!test_string_view_equal(iter.next(), "")) return false;
         
         if (iter.has_next()) return false;
         return true;
@@ -88,11 +88,11 @@ namespace {
         StringSplitIter iter(text, '\n');
         
         if (!iter.has_next()) return false;
-        StringView line1 = iter.next().unwrap().trim();
+        StringView line1 = iter.next().trim();
         if (!test_string_view_equal(line1, "line1")) return false;
         
         if (!iter.has_next()) return false;
-        StringView line2 = iter.next().unwrap().trim();
+        StringView line2 = iter.next().trim();
         if (!test_string_view_equal(line2, "line2")) return false;
         
         if (iter.has_next()) return false;

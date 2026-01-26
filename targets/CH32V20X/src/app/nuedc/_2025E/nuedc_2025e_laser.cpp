@@ -2,7 +2,6 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/string/utils/split_iter.hpp"
 #include "core/math/realmath.hpp"
 #include "core/async/timer.hpp"
 #include "core/utils/default.hpp"

@@ -186,8 +186,9 @@ void Spi::set_remap(const SpiRemap remap){
         #endif
         #ifdef SPI3_PRESENT
         case SPI3_BASE:
-            //TODO
             switch(remap){
+                case SpiRemap::_0: return GPIO_PinRemapConfig(GPIO_Remap_SPI3, DISABLE);
+                case SpiRemap::_1: return GPIO_PinRemapConfig(GPIO_Remap_SPI3, ENABLE);
                 default: break;
             }
             break;

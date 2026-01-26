@@ -1,7 +1,6 @@
 #include "src/testbench/tb.h"
 #include "dsp/controller/adrc/linear/leso2o.hpp"
 
-#include "middlewares/repl/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "hal/gpio/gpio_port.hpp"

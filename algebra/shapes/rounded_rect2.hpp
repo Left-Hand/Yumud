@@ -30,7 +30,7 @@ public:
         y_range_(shape.bounding_rect.y_range()),
         y_(y_range_.start),
         radius_(shape.radius),
-        radius_squ_(square(shape.radius))
+        radius_squ_(math::square(shape.radius))
     {
         replace_x();
     }

@@ -163,9 +163,9 @@ void stl06n_main(){
         .tx_strategy = CommStrategy::Blocking
     });
     #elif defined(CH32V30X)
-    auto & UART = hal::uart6;
+    auto & UART = hal::usart2;
     UART.init({
-        .remap = hal::UART6_REMAP_PC0_PC1,
+        .remap = hal::USART2_REMAP_PA2_PA3,
         .baudrate = hal::NearestFreq(6000000),
         .tx_strategy = CommStrategy::Blocking
     });
@@ -175,6 +175,7 @@ void stl06n_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
     DEBUGGER.no_fieldname(EN);
+
 
 
     auto watch_pin_ = hal::PA<11>();
@@ -341,7 +342,7 @@ void stl06n_main(){
 
         // const auto & point = packed_clusters_[0].points[0];
 
-        auto headed_points = packed_clusters_ 
+        [[maybe_unused]] auto headed_points = packed_clusters_ 
             | std::views::values                    // Extract just the values (PackedCluster objects)
             | std::views::transform([](const PackedCluster & cluster) -> PackedLidarPoint { 
                 // return cluster.points[0];
@@ -354,7 +355,7 @@ void stl06n_main(){
                 return (i++) % 4 == 0; 
             });
 
-        const auto & diagnostics = o1heap_alloc.heap_instance().diagnostics;
+        [[maybe_unused]] const auto & diagnostics = o1heap_alloc.heap_instance().diagnostics;
 
         std::array<iq16, 12> arr;
         static constexpr auto step = iq16(1.0 / 24.0);
@@ -366,7 +367,8 @@ void stl06n_main(){
         }
         DEBUG_PRINTLN(
             // arr
-            headed_points
+            arr
+            // headed_points
             // clock::millis().count(),
             // static_cast<uint8_t>(stl06n_parser_.fsm_state_),
             // static_cast<size_t>(stl06n_parser_.bytes_count_)
@@ -392,7 +394,7 @@ void stl06n_main(){
         // });
     };
 
-    clock::delay(1000ms);
+    clock::delay(100ms);
     [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(8ms);
 
     while(true){

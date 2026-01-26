@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/stream/ostream.hpp"
-#include <type_traits>
+#include "algebra/regions/range2.hpp"
 
 namespace ymd{
 template<typename D>
@@ -10,8 +10,8 @@ struct [[nodiscard]] Rescaler {
     D offset;
 
     [[nodiscard]] static constexpr Rescaler from_input_and_output(
-        const std::tuple<auto, auto>& input, 
-        const std::tuple<auto, auto>& output
+        const Range2<auto> & input, 
+        const Range2<auto> & output
     ) {
         const auto [input_start, input_stop] = input;
         const auto [output_start, output_stop] = output;
@@ -27,13 +27,6 @@ struct [[nodiscard]] Rescaler {
         };
     }
 
-    [[nodiscard]] static constexpr Rescaler from_input_and_inverted_output(
-        const std::tuple<auto, auto>& input, 
-        const std::tuple<auto, auto>& output
-    ) {
-        const auto [output_start, output_stop] = output;
-        return from_input_and_output(input, std::tuple{output_stop, output_start});
-    }
 
     template<typename U>
     [[nodiscard]] static constexpr Rescaler<D> from_scale(const U scale){

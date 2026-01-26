@@ -3,139 +3,19 @@
 #include <cstdint>
 #include <concepts>
 #include <tuple>
-#include <string_view>
 
 #include "prelude.hpp"
+#include "fstrdump.hpp"
 
-#include "core/utils/Errno.hpp"
-#include "core/math/iq/fixed_t.hpp"
-#include "core/string/view/mut_string_view.hpp"
-#include "core/string/view/string_view.hpp"
-#include "core/utils/Result.hpp"
 #include "core/tmp/reflect/enum.hpp"
-#include "core/stream/ostream.hpp"
+#include "core/tmp/exprimetal_integral.hpp"
+#include "core/math/iq/fixed_t.hpp"
+
+#include "core/string/view/mut_string_view.hpp"
+
 #include "primitive/arithmetic/angular.hpp"
 
 namespace ymd::strconv2 {
-
-
-struct [[nodiscard]] FstrDump final{
-    int32_t digit_part;
-	int32_t frac_part;
-	uint32_t scale;
-
-
-	struct ParsingStatus{
-		uint8_t passed_dot:1 = false;
-		uint8_t contains_pre_dot_digits:1 = false;
-		uint8_t contains_post_dot_digits:1 = false;
-		uint8_t is_negative:1 = false;
-	};
-
-
-	static constexpr DestringResult<FstrDump> from_str(const StringView str) {
-		if (str.length() == 0) {	
-			return Err(DestringError::EmptyString);
-		}
-
-		int32_t digit_part = 0;
-		int32_t frac_part = 0;
-		uint32_t scale = 1;
-
-		ParsingStatus status;
-		const auto length = str.length();
-		size_t index = 0;
-
-		// 处理符号
-		if (str[index] == '+' || str[index] == '-') {
-			//如果字符串首字符为负号 说明这个数字是负数
-			status.is_negative = (str[0] == '-');
-			++ index;
-			if (length == 1) {
-				return Err(DestringError::OnlySignFounded);  // 只有符号没有数字
-			}
-		}
-
-		while (index < length) {
-			const char chr = str[index];
-			
-			switch (chr) {
-				case 0:
-					return Err(DestringError::UnexpectedZero);
-				case '0' ... '9':{  // Digit case (GCC/Clang extension)
-
-					const uint8_t digit = chr - '0';
-					
-					constexpr int32_t MAX_INT_NUM = (std::numeric_limits<int32_t>::max() - 9) / 10;
-					if (status.passed_dot == false) {
-						status.contains_pre_dot_digits = true;
-						// Check integer part overflow
-						if (digit_part > MAX_INT_NUM) {
-							return Err(DestringError::DigitOverflow);
-						}
-						digit_part = digit_part * 10 + digit;
-					} else {
-						status.contains_post_dot_digits = true;
-						// Check fractional part overflow
-						if (frac_part > MAX_INT_NUM) {
-							return Err(DestringError::FracOverflow);
-						}
-						frac_part = frac_part * 10 + digit;
-						scale *= 10;
-					}
-					++index;
-					break;
-				}
-
-				case '+':
-					return Err(DestringError::UnexpectedPositive);
-				case '-':
-					return Err(DestringError::UnexpectedNegative);
-				case '.':  // Handle decimal dot
-					if (status.passed_dot) [[unlikely]]
-						return Err(DestringError::MultipleDot);  // Multiple decimal dots
-					status.passed_dot = true;
-					++index;
-					break;
-				case 'a' ... 'z':
-					return Err(DestringError::UnexpectedAlpha);
-				case 'A' ... 'Z':
-					return Err(DestringError::UnexpectedAlpha);
-				case ' ':
-					return Err(DestringError::UnexpectedSpace);
-				default:  // Invalid characters
-					return Err(DestringError::UnexpectedChar);
-			}
-		}
-
-		if(status.passed_dot){
-			//有小数点的情况
-			if((status.contains_post_dot_digits == false)) [[unlikely]]
-				return Err(DestringError::NoDigitsAfterDot);
-		}else{
-			if (status.contains_pre_dot_digits == false) [[unlikely]]
-				return Err(DestringError::NoDigitsAfterSign);  // 符号位和小数点之间没有有效数字
-		}
-
-		if(status.is_negative){
-			digit_part = -digit_part;
-			frac_part = -frac_part;
-		}
-
-		return Ok(FstrDump{
-			.digit_part = digit_part,
-			.frac_part = frac_part,
-			.scale = (status.contains_post_dot_digits ? scale : 0)
-		});
-	}
-
-	friend OutputStream & operator<<(OutputStream & os, const FstrDump & dump) {
-		return os << dump.digit_part << os.splitter() 
-			<< dump.frac_part << os.splitter() 
-			<< dump.scale
-		;
-	}
-};
 
 //是否为0~9的ascii字符
 [[nodiscard]] __always_inline static constexpr 
@@ -205,84 +85,9 @@ bool is_digit_ascii(const StringView str){
 
 namespace details{
 
-
-static constexpr inline uint32_t FAST_EXP10_TABLE[] = {
-    1UL, 
-    10UL, 
-    100UL, 
-    1000UL, 
-
-    10000UL, 
-    100000UL, 
-};
-
-template<typename T>
-__always_inline constexpr T fast_div_5(T x){return (((int64_t)x*0x66666667L) >> 33);}
-
-template<typename T>
-__always_inline constexpr T fast_div_10(T x){(((int64_t)x*0x66666667L) >> 34);}
-
-template<typename T>
-requires(std::is_unsigned_v<T>)
-__always_inline constexpr size_t uint_to_len_chars(T value, const Radix radix) {
-    if (value == 0) return 1;
-
-    const auto radix_count = radix.count();
-
-    // 优化 1: radix_count 是 2 的幂时，用位运算
-    if ((radix_count & (radix_count - 1)) == 0) {
-        const int log2_radix = __builtin_ctz(radix_count); // log2(radix_count)
-        const int leading_zeros = __builtin_clz(value | 1); // 63 - bit_width(value)
-        const int bit_width = 64 - leading_zeros;
-        return (bit_width + log2_radix - 1) / log2_radix;
-    }
-
-    // 优化 2: 通用情况，用对数近似计算
-    size_t length = 1;
-    T sum = radix_count;
-    while (value >= sum) {
-        sum *= radix_count;
-        length++;
-    }
-    return length;
-}
-
-__always_inline constexpr uint32_t fast_exp10(const size_t n){
-	return FAST_EXP10_TABLE[n];
-}
-
-template<typename T>
-struct _extended_unsigned;
-
-
-template<> struct _extended_unsigned<uint8_t>{
-	using type = uint32_t;
-};
-template<> struct _extended_unsigned<uint16_t>{
-	using type = uint32_t;
-};
-template<> struct _extended_unsigned<uint32_t>{
-	using type = uint64_t;
-};
-template<> struct _extended_unsigned<int8_t>{
-	using type = uint32_t;
-};
-template<> struct _extended_unsigned<int16_t>{
-	using type = uint32_t;
-};
-template<> struct _extended_unsigned<int32_t>{
-	using type = uint32_t;
-};
-template<> struct _extended_unsigned<int>{
-	using type = uint32_t;
-};
-
-template<typename T>
-using extended_unsigned_t = typename _extended_unsigned<T>::type;
-
 template<integral T>
 struct [[nodiscard]] IntDeformatter{
-	using U = extended_unsigned_t<T>;
+	using U = tmp::extended_unsigned_t<T>;
 	static constexpr DestringResult<T> defmt(const StringView str) {
 
 		const auto length = str.length();
@@ -379,24 +184,40 @@ struct [[nodiscard]] IntDeformatter<bool>{
 	}
 };
 
-template<typename Fixed>
+template<size_t NUM_Q, typename D>
 struct [[nodiscard]] FixedPointDeformatter{
-	static constexpr size_t NUM_Q = Fixed::q_num;
-	static constexpr DestringResult<Fixed> defmt(const StringView str){
+	using T = math::fixed_t<NUM_Q, D>;
+
+	static constexpr size_t TABLE_LEN = std::size(str::pow10_table);
+	static constexpr std::array<uint32_t, TABLE_LEN> TABLE = []{
+		std::array<uint32_t, TABLE_LEN> ret;
+		for(size_t i = 0; i < TABLE_LEN; i++){
+			ret[i] = static_cast<uint32_t>(uint64_t(1 << NUM_Q) / str::pow10_table[i]);
+		}
+		return ret;
+	}();
+
+	static constexpr DestringResult<T> defmt(const StringView str){
+		static_assert(sizeof(D) <= 4, "64bit is not supported yet");
+
 		const auto dump = ({
 			const auto res = FstrDump::from_str(str);
 			if(res.is_err()) return Err(res.unwrap_err());
 			res.unwrap();
 		});
 		
-		const Fixed frac_part = [&] -> Fixed{
-			if (dump.scale == 0) return 0; 
-			return Fixed::from_bits(
-				(int32_t(dump.frac_part) * int32_t(1 << NUM_Q)) / int32_t(dump.scale)
-			);
-		}();
+		if (dump.num_frac_digits == 0){
+			return Ok(static_cast<T>(dump.digit_part));
+		}else{
+			const T frac_part = [&] -> T{
+				return T::from_bits(
+					static_cast<D>(int64_t(dump.frac_part) * TABLE[dump.num_frac_digits])
+				);
+			}();
 
-		return Ok(frac_part + Fixed(dump.digit_part));
+			return Ok(frac_part + static_cast<T>(dump.digit_part));
+		}
+
 	}
 };
 
@@ -500,7 +321,7 @@ struct IntFormatter{
 				static_cast<U>(int_val);
 
 			// Compute length safely
-			const size_t uint_length = uint_to_len_chars(unsigned_value, radix);
+			const size_t uint_length = str::uint_to_len_chars(unsigned_value, radix.count());
 			const size_t total_length = uint_length + (is_negative ? 1 : 0);
 			if (str.length() < total_length) return Err(SerStringError::OutOfMemory);
 
@@ -558,7 +379,7 @@ struct Iq16Formatter{
 
 		const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
 
-		const uint32_t scale = fast_exp10(eps_count);
+		const uint32_t scale = str::pow10_table[eps_count];
 
 		const uint32_t fs = frac_part * scale;
 		
@@ -613,10 +434,10 @@ struct DefmtStrDispatcher<StringView>{
 	}
 };
 
-template<size_t Q>
-struct DefmtStrDispatcher<math::fixed_t<Q, int32_t>>{
-	static constexpr DestringResult<math::fixed_t<Q, int32_t>> from_str(StringView str){
-		return details::FixedPointDeformatter<math::fixed_t<Q, int32_t>>::defmt(str);
+template<size_t Q, typename D>
+struct DefmtStrDispatcher<math::fixed_t<Q, D>>{
+	static constexpr DestringResult<math::fixed_t<Q, D>> from_str(StringView str){
+		return details::FixedPointDeformatter<Q, D>::defmt(str);
 	}
 };
 

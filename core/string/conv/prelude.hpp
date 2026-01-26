@@ -31,6 +31,7 @@ enum class DestringError:uint8_t{
 
     DigitOverflow,
 	FracOverflow,
+	FracDigitsOverflow,
 
 	NoDigits,
 	OnlySignFounded,

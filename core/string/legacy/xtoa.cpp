@@ -1,5 +1,5 @@
 #include "xtoa.hpp"
-#include "pow10.hpp"
+#include "core/string/utils/pow10.hpp"
 #include <array>
 
 using namespace ymd;
