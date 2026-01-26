@@ -3,8 +3,8 @@
 
 #include "service.hpp"
 
-#include "middlewares/rpc/rpc.hpp"
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
@@ -94,7 +94,7 @@ public:
 
         SERVO_PWMGEN_TIMER.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         SERVO_PWMGEN_TIMER.enable_interrupt<hal::TimerIT::Update>(EN);
-        SERVO_PWMGEN_TIMER.set_event_handler(std::forward<Fn>(callback));
+        SERVO_PWMGEN_TIMER.set_event_callback(std::forward<Fn>(callback));
     }
 private:
 
@@ -188,22 +188,22 @@ void nuedc_2023e_main(){
     [[maybe_unused]]
     auto gimbal_planner = GimbalPlanner(cfg.gimbal_planner_cfg, gimbal_actuator);
 
-    robots::ReplServer repl_server = {
+    repl::ReplServer repl_server = {
         &DBG_UART, &DBG_UART
     };
 
-    auto rpc_list =
-        rpc::make_list( "list",
-        rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
-        rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-        rpc::make_function("set_rad", [&](const real_t r1, const real_t r2){
+    auto repl_list =
+        script::make_list( "list",
+        script::make_function("rst", [](){sys::reset();}),
+        script::make_function("outen", [&](){repl_server.set_outen(EN);}),
+        script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+        script::make_function("set_rad", [&](const real_t r1, const real_t r2){
             servo_pitch.set_angle(r1);
             servo_yaw.set_angle(r2);
             DEBUG_PRINTLN(r1, r2);
         }),
 
-        rpc::make_function("get_rad", [&](){
+        script::make_function("get_rad", [&](){
             DEBUG_PRINTLN(
                 servo_pitch.get_angle(),
                 servo_yaw.get_angle()

@@ -8,8 +8,11 @@ using namespace ymd;
 
 extern "C"{
 
-int _write(int file, char *buf, int len){
-    DEBUGGER.write(buf, len);
+int _write(int file, char * buf_begin, int len){
+    DEBUGGER.write(std::span(
+        reinterpret_cast<const uint8_t *>(buf_begin),
+        len
+    ));
     return len;
 }
 
@@ -36,7 +39,7 @@ ssize_t _read(int fd, void *buf, size_t count){
 
 void _init(void) {}
 void _fini(void) {}
-    
+
 void _kill(int pid, int sig) {
     // 空实现
 }
@@ -73,17 +76,17 @@ int _open_r(struct _reent* reent_ptr, const char* filename, int open_flags) {
     (void)reent_ptr;
     (void)filename;
     (void)open_flags;
-    
+
     // 桩实现总是返回成功
     // 注意：实际无文件系统环境中，可以返回0表示成功
     return 0;
 }
 
-// 关闭文件 - 桩实现  
+// 关闭文件 - 桩实现
 int _close_r(struct _reent* reent_ptr, int file_descriptor) {
     (void)reent_ptr;
     (void)file_descriptor;
-    
+
     // 关闭操作总是成功
     return 0;
 }
@@ -95,12 +98,12 @@ int _lseek_r(struct _reent* reent_ptr, int fd, int offset, int whence) {
     int unused_fd = fd;
     int unused_offset = offset;
     int unused_whence = whence;
-    
+
     (void)unused_reent;
     (void)unused_fd;
     (void)unused_offset;
     (void)unused_whence;
-    
+
     // 定位操作总是成功，返回当前位置0
     return 0;
 }
@@ -112,12 +115,12 @@ int _read_r(struct _reent* reent_ptr, int fd, char* buffer, size_t count) {
     int file = fd;
     char* buf = buffer;
     size_t len = count;
-    
+
     (void)r;
     (void)file;
     (void)buf;
     (void)len;
-    
+
     // 读取0字节表示文件结束
     return 0;
 }
@@ -136,7 +139,7 @@ int atexit(void (*exit_handler)(void)) {
     // 消除未使用参数警告
     void (*handler)(void) = exit_handler;
     (void)handler;
-    
+
     // 桩实现不支持退出处理，返回失败
     // 注意：这里选择返回-1表示不支持，与原始可能不同
     return -1;

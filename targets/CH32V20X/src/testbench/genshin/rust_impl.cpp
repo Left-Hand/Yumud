@@ -30,21 +30,21 @@ struct RawBytes;
 
 template<std::integral D>
 struct ImplFor<SerializeAs<RawBytes>, D> {
-    static constexpr size_t N = tmp::type_to_bytes_v<D>;
+    static constexpr size_t N = sizeof(D);
     static constexpr std::array<uint8_t, N> serialize(const D obj) {
-        using Raw = tmp::type_to_uint_t<D>;
-        const auto raw = std::bit_cast<Raw>(obj);
+        using Raw = tmp::size_to_uint_t<sizeof(D)>;
+        const auto bits = std::bit_cast<Raw>(obj);
         using IS = std::make_index_sequence<N>;
 
         return [&]<size_t... Idx>(std::index_sequence<Idx...>) {
-            return std::array<uint8_t, N>{static_cast<uint8_t>((raw >> (8 * Idx)) & 0xFF)...};
+            return std::array<uint8_t, N>{static_cast<uint8_t>((bits >> (8 * Idx)) & 0xFF)...};
         }(IS{});
     }
 };
 
 template<std::integral D>
 struct ImplFor<DeserializeFrom<RawBytes>, D> {
-    static constexpr size_t N = tmp::type_to_bytes_v<D>;
+    static constexpr size_t N = sizeof(D);
     
     static constexpr D deserialize(const std::span<const uint8_t, N> bytes) {
         using IS = std::make_index_sequence<N>;
@@ -76,8 +76,8 @@ struct ImplFor<DeserializeFrom<RawBytes>, math::fixed_t<Q, int32_t>> {
 
 template<std::floating_point F>
 struct ImplFor<SerializeAs<RawBytes>, F> {
-    static constexpr size_t N = tmp::type_to_bytes_v<F>;
-    using Raw = tmp::type_to_uint_t<F>;
+    static constexpr size_t N = sizeof(F);
+    using Raw = tmp::size_to_uint_t<sizeof(F)>;
     static constexpr std::array<uint8_t, N> serialize(const F obj){
         return ImplFor<SerializeAs<RawBytes>, Raw>::serialize(std::bit_cast<Raw>(obj));
     }
@@ -85,8 +85,8 @@ struct ImplFor<SerializeAs<RawBytes>, F> {
 
 template<std::floating_point F>
 struct ImplFor<DeserializeFrom<RawBytes>, F> {
-    static constexpr size_t N = tmp::type_to_bytes_v<F>;
-    using Raw = tmp::type_to_uint_t<F>;
+    static constexpr size_t N = sizeof(F);
+    using Raw = tmp::size_to_uint_t<sizeof(F)>;
 
     static constexpr F deserialize(const std::span<const uint8_t, N> bytes){
         return std::bit_cast<F>(ImplFor<DeserializeFrom<RawBytes>, Raw>::deserialize(bytes));
@@ -117,7 +117,7 @@ static constexpr auto serialize(Args && ... args){
 template<
     typename Protocol, 
     typename T, 
-    size_t N = tmp::type_to_bytes_v<T>
+    size_t N = sizeof(T)
 >
 requires (std::is_same_v<Protocol, RawBytes>)
 static constexpr auto _deserialize(const std::span<const uint8_t, N> bytes){
@@ -150,7 +150,7 @@ static constexpr auto deserialize(const std::span<const uint8_t, N> bytes) {
 template<
     typename Protocol, 
     typename T, 
-    size_t N = tmp::type_to_bytes_v<T>
+    size_t N = sizeof(T)
 >
 requires (std::is_same_v<Protocol, hal::BxCanFrame>)
 static constexpr auto deserialize(const hal::BxCanFrame frame){

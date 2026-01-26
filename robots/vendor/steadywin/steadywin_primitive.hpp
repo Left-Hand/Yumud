@@ -3,7 +3,8 @@
 #include "core/stream/ostream.hpp"
 #include "core/utils/sumtype.hpp"
 #include "core/utils/bits/bits_caster.hpp"
-#include "core/utils/bits/bits_set.hpp"
+#include "core/container/bits_set.hpp"
+
 #include "robots/vendor/mit/mit_primitive.hpp"
 
 
@@ -23,7 +24,7 @@ struct [[nodiscard]] AxisId final{
         return std::bit_cast<Self>(bits);
     }
 
-    static constexpr Self from_b6(const literals::Bs6 bs){
+    static constexpr Self from_b6(const literals::bs6 bs){
         return from_bits(bs.to_bits());
     }
 
@@ -31,8 +32,8 @@ struct [[nodiscard]] AxisId final{
         return bits_;
     }
 
-    constexpr literals::Bs6 to_b6() const {
-        return literals::Bs6::from_bits(to_bits());
+    constexpr literals::bs6 to_b6() const {
+        return literals::bs6::from_bits(to_bits());
     }
 
     friend OutputStream & operator <<(OutputStream & os, const Self & self){
@@ -270,12 +271,12 @@ struct [[nodiscard]] Command final{
             __builtin_trap();
     }
 
-    static constexpr Command from_b5(literals::Bs5 bs){
+    static constexpr Command from_b5(literals::bs5 bs){
         return from_bits(bs.to_bits());
     }
 
-    constexpr literals::Bs5 to_b5() const {
-        return literals::Bs5::from_bits_bounded(static_cast<uint8_t>(kind_));
+    constexpr literals::bs5 to_b5() const {
+        return literals::bs5::from_bits_bounded(static_cast<uint8_t>(kind_));
     }
 
     static constexpr Command from_bits(const uint8_t bits){

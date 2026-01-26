@@ -126,14 +126,14 @@ void lt8960_tb(){
     auto led = hal::PC<13>();
     led.outpp();
 
-    auto scl1_gpio = hal::PB<6>();
-    auto sda1_gpio = hal::PB<7>();
+    auto scl1_pin_ = hal::PB<6>();
+    auto sda1_pin_ = hal::PB<7>();
 
-    auto scl2_gpio = hal::PA<9>();
-    auto sda2_gpio = hal::PA<10>();
+    auto scl2_pin_ = hal::PA<9>();
+    auto sda2_pin_ = hal::PA<10>();
 
-    LT8960L tx_ltr{&scl1_gpio, &sda1_gpio};
-    LT8960L rx_ltr{&scl2_gpio, &sda2_gpio};
+    LT8960L tx_ltr{&scl1_pin_, &sda1_pin_};
+    LT8960L rx_ltr{&scl2_pin_, &sda2_pin_};
     
     auto common_settings = [](LT8960L & ltr) -> Result<void, LT8960L::Error>{
         static constexpr auto DATA_RATE = LT8960L::DataRate::_62_5K;
@@ -171,7 +171,7 @@ void lt8960_tb(){
 
     DEBUG_PRINTLN("LT8960L init done");
     
-    auto tx_task = [&]{
+    [[maybe_unused]] auto poll_tx_task = [&]{
         // if(!tx_ltr.is_pkt_ready().unwrap()) return;
         // std::array data = {uint8_t(uint8_t(64 + 64 * sin(clock::seconds() * 20))), uint8_t(0x34), uint8_t(0x56), uint8_t(0x78)};
         const auto t = clock::seconds();
@@ -195,10 +195,10 @@ void lt8960_tb(){
     };
     
     // iq16 mdur;
-    [[maybe_unused]] auto rx_task = [&]{
+    [[maybe_unused]] auto poll_rx_task = [&]{
         static std::array<uint8_t, 16> buf;
 
-        // const iq16 mbegin = micros();
+        // const iq16 begin_us = micros();
         auto len = rx_ltr.receive_rf(buf).unwrap();
         auto data = std::span(buf).subspan(0, len);
         if(len){
@@ -208,9 +208,9 @@ void lt8960_tb(){
             // auto [u] = make_tuple_from_bytes<std::tuple<iq16>>(std::span<const uint8_t>(data));
             auto may_res = make_tuple_from_payload<real_t, real_t>(std::span<const uint8_t>(data));
             // DEBUG_PRINTLN(u, v, w, clock::seconds() - tt);
-            // DEBUG_PRINTLN(u, v, clock::seconds() - w, mend -  mbegin);
-            // DEBUG_PRINTLN(std::dec, u, mend -  mbegin, std::hex, std::showbase, data);
-            // DEBUG_PRINTLN(std::dec, u, mend -  mbegin, data);
+            // DEBUG_PRINTLN(u, v, clock::seconds() - w, mend -  begin_us);
+            // DEBUG_PRINTLN(std::dec, u, mend -  begin_us, std::hex, std::showbase, data);
+            // DEBUG_PRINTLN(std::dec, u, mend -  begin_us, data);
             if(may_res.is_some()) {
                 auto [u, v] = may_res.unwrap();
                 DEBUG_PRINTLN(std::dec, u, v);
@@ -236,10 +236,10 @@ void lt8960_tb(){
         .unwrap();
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
-        timer.set_event_handler([&](hal::TimerEvent ev){
+        timer.set_event_callback([&](hal::TimerEvent ev){
             switch(ev){
             case hal::TimerEvent::Update:{
-                tx_task();
+                poll_tx_task();
                 break;
             }
             default: break;
@@ -263,10 +263,10 @@ void lt8960_tb(){
         }).unwrap();
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
-        timer.set_event_handler([&](hal::TimerEvent ev){
+        timer.set_event_callback([&](hal::TimerEvent ev){
             switch(ev){
             case hal::TimerEvent::Update:{
-                rx_task();
+                poll_rx_task();
                 break;
             }
             default: break;

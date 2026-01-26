@@ -1,56 +1,30 @@
-#include "strconv.hpp"
+#include "xtoa.hpp"
+#include "core/string/utils/pow10.hpp"
 #include <array>
 
 using namespace ymd;
-using namespace ymd::strconv;
-
-static constexpr  uint32_t pow10_table[] = {
-    1UL, 
-    10UL, 
-    100UL, 
-    1000UL, 
-
-    10000UL, 
-    100000UL, 
-    1000000UL, 
-    10000000UL, 
-    
-    // 100000000UL,
-    // 1000000000UL
-};
-
-constexpr size_t _get_scaler(uint64_t int_val, const uint8_t radix){
-    if(int_val == 0) return 1;
-
-    size_t i = 0;
-    uint64_t sum = 1;
-    while(int_val >= sum){
-        sum = sum * static_cast<uint64_t>(radix);
-        i++;
-    }
-    return i > 0 ? i : 1;
-}
+using namespace ymd::str;
 
 // 测试用例
-static_assert(_get_scaler(0, 10) == 1, "0 should return 1");
-static_assert(_get_scaler(1, 10) == 1, "1 should return 1");
-static_assert(_get_scaler(9, 10) == 1, "9 should return 1");
-static_assert(_get_scaler(10, 10) == 2, "10 should return 2");
-static_assert(_get_scaler(99, 10) == 2, "99 should return 2");
-static_assert(_get_scaler(100, 10) == 3, "100 should return 3");
+static_assert(num_int2str_chars(0, 10) == 1, "0 should return 1");
+static_assert(num_int2str_chars(1, 10) == 1, "1 should return 1");
+static_assert(num_int2str_chars(9, 10) == 1, "9 should return 1");
+static_assert(num_int2str_chars(10, 10) == 2, "10 should return 2");
+static_assert(num_int2str_chars(99, 10) == 2, "99 should return 2");
+static_assert(num_int2str_chars(100, 10) == 3, "100 should return 3");
 
 // 关键测试：0x80000000
-static_assert(_get_scaler(0x80000000, 10) == 10, "0x80000000 should return 10");
+static_assert(num_int2str_chars(0x80000000, 10) == 10, "0x80000000 should return 10");
 
 // 更大值的测试
-static_assert(_get_scaler(0xFFFFFFFF, 10) == 10, "0xFFFFFFFF should return 10");
-static_assert(_get_scaler(0x100000000, 10) == 10, "0x100000000 should return 10");
-static_assert(_get_scaler(0x3B9ACA00, 10) == 10, "0x3B9ACA00 (1e9) should return 10");
-static_assert(_get_scaler(0x3B9ACA01, 10) == 10, "0x3B9ACA01 should return 10");
+static_assert(num_int2str_chars(0xFFFFFFFF, 10) == 10, "0xFFFFFFFF should return 10");
+static_assert(num_int2str_chars(0x100000000, 10) == 10, "0x100000000 should return 10");
+static_assert(num_int2str_chars(0x3B9ACA00, 10) == 10, "0x3B9ACA00 (1e9) should return 10");
+static_assert(num_int2str_chars(0x3B9ACA01, 10) == 10, "0x3B9ACA01 should return 10");
 
 
 template<integral T>
-static size_t _itoa_impl(T int_val, char * str, uint8_t radix){
+static constexpr size_t _itoa_impl(T int_val, char * str, uint8_t radix){
     const bool is_negative = int_val < 0;
     std::make_unsigned_t<T> unsigned_val = [&]{
         if constexpr (std::is_signed_v<T>) {
@@ -65,7 +39,7 @@ static size_t _itoa_impl(T int_val, char * str, uint8_t radix){
         }
     }();
 
-    const size_t len = _get_scaler(static_cast<uint64_t>(unsigned_val), radix) + is_negative;
+    const size_t len = num_int2str_chars(static_cast<uint64_t>(unsigned_val), radix) + is_negative;
     int i = len - 1;
 
     do {
@@ -83,20 +57,18 @@ static size_t _itoa_impl(T int_val, char * str, uint8_t radix){
 }
 
 
-size_t strconv::_qtoa_impl(int32_t value_bits, char * str, uint8_t eps, const uint8_t Q){
+static constexpr size_t _uqtoa_impl(uint32_t abs_value_bits, char * const orinal_str, uint8_t eps, const uint8_t Q){
+
     // 安全限制eps，确保不超出表格范围
     constexpr size_t max_eps = std::size(pow10_table) - 1;
     eps = MIN(eps, static_cast<uint8_t>(max_eps));
 
-    const bool is_negative = value_bits < 0;
-    const uint32_t abs_value = ABS(value_bits);
-    
     // 为任意Q生成掩码
     const uint64_t lower_mask = (Q >= 31) ? 
         0x7fffffffu :  // 对于Q31，特殊处理以避免左移32位
         ((Q == 0) ? 0 : ((1ULL << Q) - 1));
 
-    const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
+    const uint32_t frac_part = abs_value_bits & lower_mask;
     const uint32_t scale = pow10_table[eps];
 
     // 使用64位整数进行计算，避免溢出
@@ -111,35 +83,38 @@ size_t strconv::_qtoa_impl(int32_t value_bits, char * str, uint8_t eps, const ui
     
     // 检查是否需要进位到整数部分
     const bool carry_to_int = (frac_int64 >= scale);
-    const uint32_t int_part = (uint32_t(abs_value) >> Q) + (carry_to_int ? 1 : 0);
+    const uint32_t digit_part = (uint32_t(abs_value_bits) >> Q) + (carry_to_int ? 1 : 0);
     
     // 如果发生进位，调整小数部分
     const uint64_t adjusted_frac_int64 = carry_to_int ? (frac_int64 - scale) : frac_int64;
     const uint32_t adjusted_frac_int = static_cast<uint32_t>(adjusted_frac_int64);
 
-    size_t ind = 0;
-    if(is_negative){
-        str[0] = '-';
-        ind++;
-    }
-
-    ind += _itoa_impl<int32_t>(int_part, str + ind, 10);
+    char * str = orinal_str;
+    str += _itoa_impl<uint32_t>(digit_part, str, 10);
 
     if(eps){
-        str[ind] = '.';
+        str[0] = '.';
+        str++;
         // 使用调整后的小数部分
-        itoas(adjusted_frac_int, str + ind + 1, 10, eps);
+        // if(eps != 4) __builtin_trap();
+        utoas(adjusted_frac_int, str, 10, eps);
+        str += eps;
     }
 
-    return ind + (eps ? (1 + eps) : 0);
+    return str - orinal_str;
 }
 
-size_t strconv::itoa(int32_t int_val, char *str, uint8_t radix){
+size_t str::_uqtoa(const uint32_t abs_value_bits, char * str, uint8_t eps, const uint8_t Q){
+    return _uqtoa_impl(abs_value_bits, str, eps, Q);
+}
+
+
+size_t str::itoa(int32_t int_val, char *str, uint8_t radix){
     return _itoa_impl<int32_t>(int_val, str, radix);
 }
 
 
-size_t strconv::iutoa(uint64_t int_val,char *str,uint8_t radix){
+size_t str::iutoa(uint64_t int_val,char *str,uint8_t radix){
     static constexpr uint64_t MASK = (~(uint64_t)std::numeric_limits<uint32_t>::max());
     const bool cant_be_represent_in_32 = int_val & MASK;
     if(cant_be_represent_in_32 == 0){
@@ -151,7 +126,7 @@ size_t strconv::iutoa(uint64_t int_val,char *str,uint8_t radix){
 }
 
 
-size_t strconv::iltoa(int64_t int_val, char * str, uint8_t radix){
+size_t str::iltoa(int64_t int_val, char * str, uint8_t radix){
     // return _itoa_impl<int64_t>(int_val, str, radix);
     return _itoa_impl<int32_t>(int_val, str, radix);
 }

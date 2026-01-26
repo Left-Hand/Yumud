@@ -3,7 +3,7 @@
 #include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
 #include "dsp/controller/adrc/linear/ltd2o.hpp"
 
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
@@ -64,9 +64,6 @@ void adrc_main(){
     SecondOrderState<iq16> shaped_track_state_var_;
     SecondOrderState<iq16> feedback_track_state_var_;
 
-
-
-
     [[maybe_unused]] LinearTrackingDifferentiator<iq16, 2> feedback_differ_{
         track_coeffs
     };
@@ -105,7 +102,7 @@ void adrc_main(){
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_handler([&](hal::TimerEvent ev){
+    timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
             case hal::TimerEvent::Update:{
                 command_shaper_poller();

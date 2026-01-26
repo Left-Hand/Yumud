@@ -11,7 +11,7 @@ namespace ymd::robots::zdtmotor{
 struct [[nodiscard]] Bytes2CanFrameIterator{
     static constexpr size_t MAX_PAYLOAD_LENGTH_PER_CAN_FRAME = 7;
     explicit constexpr Bytes2CanFrameIterator(
-        const NodeId node_id, 
+        const NodeId node_id,
         const FuncCode func_code,
         const std::span<const uint8_t> tailed_context_bytes
     ):
@@ -34,15 +34,15 @@ struct [[nodiscard]] Bytes2CanFrameIterator{
     [[nodiscard]] constexpr hal::BxCanFrame next(){
 
         const auto frame_len = MIN(
-            tailed_context_bytes_.size() - offset_, 
+            tailed_context_bytes_.size() - offset_,
             MAX_PAYLOAD_LENGTH_PER_CAN_FRAME
         );
 
         const auto frame = make_canmsg(
-            node_id_, func_code_, 
+            node_id_, func_code_,
             offset_ / MAX_PAYLOAD_LENGTH_PER_CAN_FRAME,
             tailed_context_bytes_.subspan(offset_, frame_len)
-        ); 
+        );
 
         offset_ += frame_len;
 
@@ -68,11 +68,11 @@ private:
 
     //固定为拓展帧
     static constexpr hal::CanExtId nodeid_and_piececnt_to_canid(
-        const NodeId node_id, 
+        const NodeId node_id,
         const uint8_t piece
     ){
         return hal::CanExtId::from_bits(
-            uint32_t(node_id.to_u8() << 8) | 
+            uint32_t(node_id.to_u8() << 8) |
             (piece)
         );
     }
@@ -91,7 +91,7 @@ struct [[nodiscard]] CanFrame2BytesDumper{
     ) {
         if(frames.size() == 0)
             return Err(Error::RxNoMsgToDump);
-        
+
         FlatPacket flat_packet;
 
         flat_packet.node_id = ({
@@ -111,7 +111,7 @@ struct [[nodiscard]] CanFrame2BytesDumper{
 
         for(size_t i = 0; i < frames.size(); i++){
             const auto piece_cnt = frame_to_piececnt(frames[i]);
-            if(i != piece_cnt) 
+            if(i != piece_cnt)
                 return Err(Error::RxMsgPieceIsNotSteady);
         }
 
@@ -134,7 +134,7 @@ struct [[nodiscard]] CanFrame2BytesDumper{
             filler.push_bytes(frame.payload_bytes().subspan(1));
         }
         flat_packet.payload_len = (filler.size() - 1);
-        
+
         //TODO add tail verify
 
         return Ok<FlatPacket>(flat_packet);
@@ -156,12 +156,12 @@ struct [[nodiscard]] CanFrame2BytesDumper{
 
 
 void ZdtMotorTransport::can_write_flat_packet(
-    hal::Can & can, 
+    hal::Can & can,
     const FlatPacket & flat_packet
 ){
     auto iter = Bytes2CanFrameIterator(
-        flat_packet.node_id, 
-        flat_packet.func_code, 
+        flat_packet.node_id,
+        flat_packet.func_code,
         flat_packet.payload_bytes()
     );
     while(iter.has_next()){
@@ -171,15 +171,12 @@ void ZdtMotorTransport::can_write_flat_packet(
 }
 
 void ZdtMotorTransport::uart_write_flat_packet(
-    hal::Uart & uart, 
+    hal::Uart & uart,
     const FlatPacket & flat_packet
 ){
     const auto bytes = flat_packet.headed_bytes();
 
-    (void)uart.try_write_chars(
-        reinterpret_cast<const char *>(bytes.data()),
-        bytes.size()
-    );
+    (void)uart.try_write_bytes(bytes);
 }
 
 void ZdtMotorTransport::write_flat_packet(
@@ -187,12 +184,12 @@ void ZdtMotorTransport::write_flat_packet(
 ){
     if(may_uart_.is_some()){
         uart_write_flat_packet(
-            may_uart_.unwrap(), 
+            may_uart_.unwrap(),
             flat_packet
         );
     }else if(may_can_.is_some()){
         can_write_flat_packet(
-            may_can_.unwrap(), 
+            may_can_.unwrap(),
             flat_packet
         );
     }else{

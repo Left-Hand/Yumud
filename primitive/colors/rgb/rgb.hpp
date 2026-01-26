@@ -90,7 +90,7 @@ struct [[nodiscard]] RGB888 {
         };
     }
 
-    [[nodiscard]] __fast_inline constexpr uint24_t as_u24() const {return uint24_t(r | (g << 8) | (b << 16));}
+    [[nodiscard]] __fast_inline constexpr math::uint24_t as_u24() const {return math::uint24_t(r | (g << 8) | (b << 16));}
 };
 
 static_assert(sizeof(RGB888) == 3);
@@ -102,7 +102,7 @@ struct [[nodiscard]] LAB888 {
 
 public:
 
-    [[nodiscard]] __fast_inline constexpr uint24_t as_u24() const {return uint24_t(l | (a << 8) | (b << 16));}
+    [[nodiscard]] __fast_inline constexpr math::uint24_t as_u24() const {return math::uint24_t(l | (a << 8) | (b << 16));}
 
     __fast_inline static constexpr LAB888 from_l8a8b8(uint8_t l, uint8_t a, uint8_t b){
         return LAB888(l, a, b);
@@ -198,8 +198,8 @@ struct [[nodiscard]] HSV888 {
         };
     }
 
-    [[nodiscard]] __fast_inline constexpr uint24_t as_u24() const {
-        return uint24_t(uint32_t(h) << 16 | uint32_t(s) << 8 | uint32_t(v));
+    [[nodiscard]] __fast_inline constexpr math::uint24_t as_u24() const {
+        return math::uint24_t(uint32_t(h) << 16 | uint32_t(s) << 8 | uint32_t(v));
     }
 
 };

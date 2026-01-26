@@ -2,8 +2,8 @@
 
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
-#include "core/system.hpp"
-#include "core/string/split_iter.hpp"
+#include "core/math/realmath.hpp"
+#include "core/async/timer.hpp"
 #include "core/utils/default.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
@@ -11,9 +11,7 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/analog/opa/opa.hpp"
 
-#include "core/math/realmath.hpp"
-#include "core/async/timer.hpp"
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl_server.hpp"
 #include "robots/nodes/msg_factory.hpp"
 #include "robots/nodes/node_role.hpp"
 
@@ -225,19 +223,19 @@ void nuedc_2025e_laser_main(){
     };
 
     [[maybe_unused]] auto repl_service = [&]{
-        static robots::ReplServer repl_server{&DBG_UART, &DBG_UART};
+        static repl::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
-        static const auto list = rpc::make_list(
+        static const auto list = script::make_list(
             "list",
-            rpc::make_function("rst", [](){sys::reset();}),
-            rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
-            rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+            script::make_function("rst", [](){sys::reset();}),
+            script::make_function("outen", [&](){repl_server.set_outen(EN);}),
+            script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
 
-            rpc::make_function("dall", [&](){
+            script::make_function("dall", [&](){
                 publish_dall();
             }),
-            rpc::make_function("dty", set_laser_dutycycle),
-            rpc::make_function("errp", [&](
+            script::make_function("dty", set_laser_dutycycle),
+            script::make_function("errp", [&](
                 const iq16 px, 
                 const iq16 py,
                 const iq16 z, 
@@ -251,27 +249,27 @@ void nuedc_2025e_laser_main(){
                 });
             }),
 
-            rpc::make_function("errn", [&](){ 
+            script::make_function("errn", [&](){ 
                 may_err_position_ = None;
             }),
 
-            rpc::make_function("stk", [&](){ 
+            script::make_function("stk", [&](){ 
                 handle_start_generic_task();
             }),
 
-            rpc::make_function("rpen", [&](){
+            script::make_function("rpen", [&](){
                 report_en_ = true;
             }),
 
-            rpc::make_function("rpdis", [&](){
+            script::make_function("rpdis", [&](){
                 report_en_ = false;
             }),
 
-            rpc::make_function("fn2", [&](){
+            script::make_function("fn2", [&](){
                 handle_start_advanced_task();
             }),
 
-            rpc::make_function("fn3", [&](){
+            script::make_function("fn3", [&](){
                 handle_start_advanced_task();
             })
         );

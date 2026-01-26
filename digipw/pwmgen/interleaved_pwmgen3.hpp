@@ -241,7 +241,7 @@ public:
         const auto tim_cnt = timer_.cnt();
 
         const bool is_on_top = tim_cnt > (tim_arr >> 1);
-        const auto curr_occasion = [&]() -> TrigOccasion {
+        const auto now_occasion = [&]() -> TrigOccasion {
             if(may_trig_occasion_.is_some()){
                 return may_trig_occasion_
                     .unwrap()
@@ -251,7 +251,7 @@ public:
             }
         }();
 
-        may_trig_occasion_ = Some(curr_occasion);
+        may_trig_occasion_ = Some(now_occasion);
 
         if(is_on_top){
             duty_cmd_[0] = dutycycle_cmd_shadow_[0];
@@ -268,13 +268,13 @@ public:
         if(may_trig_occasion_.is_none()) return;
 
         const auto last_occasion = may_trig_occasion_.unwrap();
-        const auto curr_occasion = last_occasion.iter_next_on_ch4isr();
+        const auto now_occasion = last_occasion.iter_next_on_ch4isr();
 
-        may_trig_occasion_ = Some(curr_occasion);
+        may_trig_occasion_ = Some(now_occasion);
 
-        const auto next_duty = [curr_occasion]{
-            switch(curr_occasion.kind()){
-                // default: PANIC{"ch4isr", curr_occasion.kind()};
+        const auto next_duty = [now_occasion]{
+            switch(now_occasion.kind()){
+                // default: PANIC{"ch4isr", now_occasion.kind()};
                 default: __builtin_unreachable();
                 case TrigOccasion::UpFirst: return TWO_BY_3;
                 case TrigOccasion::UpSecond: return TWO_BY_3;
@@ -288,8 +288,8 @@ public:
         const auto tim_arr = timer_.arr();
 
         pwm_u_.set_dutycycle(duty_cmd_[0]);
-        set_pwm_shift_120(pwm_v_, duty_cmd_[1], curr_occasion, tim_arr);
-        set_pwm_shift_240(pwm_w_, duty_cmd_[2], curr_occasion, tim_arr);
+        set_pwm_shift_120(pwm_v_, duty_cmd_[1], now_occasion, tim_arr);
+        set_pwm_shift_240(pwm_w_, duty_cmd_[2], now_occasion, tim_arr);
 
         // test_gpio.set();
     }
@@ -314,14 +314,14 @@ private:
     static void set_pwm_shift_120(
         hal::TimerOC & pwm, 
         const iq16 dutycycle,
-        const TrigOccasion curr_ocs, 
+        const TrigOccasion now_ocs, 
         const uint32_t arr
     ){
         const auto duty_span = SlaveAlgoHelper::calc_duty_span(dutycycle);
 
         switch(duty_span){
         case DutySpan::_120:
-            switch(curr_ocs.kind()){
+            switch(now_ocs.kind()){
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::AlwaysActive);
@@ -341,7 +341,7 @@ private:
                 default: break;
             };break;
         case DutySpan::_240:
-            switch(curr_ocs.kind()){
+            switch(now_ocs.kind()){
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::AlwaysActive);
@@ -361,7 +361,7 @@ private:
                 default: break;
             }; break;
         case DutySpan::_360:
-            switch(curr_ocs.kind()){
+            switch(now_ocs.kind()){
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::AlwaysActive);
@@ -387,14 +387,14 @@ private:
     static void set_pwm_shift_240(
         hal::TimerOC & pwm, 
         const iq16 dutycycle,
-        const TrigOccasion curr_ocs, 
+        const TrigOccasion now_ocs, 
         const uint32_t arr
     ){
         const auto duty_span = SlaveAlgoHelper::calc_duty_span(dutycycle);
 
         switch(duty_span){
         case DutySpan::_120:
-            switch(curr_ocs.kind()){
+            switch(now_ocs.kind()){
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::AlwaysInactive);
@@ -414,7 +414,7 @@ private:
                 default: break;
             };break;
         case DutySpan::_240:
-            switch(curr_ocs.kind()){
+            switch(now_ocs.kind()){
                 case TrigOccasion::UpSecond:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::AlwaysActive);
@@ -434,7 +434,7 @@ private:
                 default: break;
             }; break;
         case DutySpan::_360:
-            switch(curr_ocs.kind()){
+            switch(now_ocs.kind()){
                 case TrigOccasion::UpFirst:
                     pwm.enable_cvr_sync(DISEN);
                     pwm.set_oc_mode(OcMode::AlwaysInactive);

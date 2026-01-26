@@ -25,7 +25,7 @@ struct TwiddleFactors {
     static constexpr std::array<T, N/2> COS_TABLE = []{
         std::array<T, N/2> ret;
         for (size_t k = 0; k < N/2; ++k) {
-            const T angle = -2 * T(PI) * k / N;
+            const T angle = -2 * T(M_PI) * k / N;
             ret[k] = std::cos(angle);
         }
         return ret;
@@ -34,7 +34,7 @@ struct TwiddleFactors {
     static constexpr std::array<T, N/2> SIN_TABLE = []{
         std::array<T, N/2> ret;
         for (size_t k = 0; k < N/2; ++k) {
-            const T angle = -2 * T(PI) * k / N;
+            const T angle = -2 * T(M_PI) * k / N;
             ret[k] = std::sin(angle);
         }
         return ret;

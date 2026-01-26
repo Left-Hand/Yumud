@@ -35,10 +35,9 @@ void pmw3901_main(){
 
     while(true){
 
-        const auto begin = clock::micros();
+        const auto begin_us = clock::micros();
         pmw.update().unwrap();
-        const auto pos = pmw.get_position();
-        DEBUG_PRINTLN(pos, clock::micros() - begin);
+        DEBUG_PRINTLN(clock::micros() - begin_us);
         clock::delay(1ms);
     }
 }

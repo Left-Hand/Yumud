@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/string/utils/strconv2.hpp"
-#include "core/string/split_iter.hpp"
+#include "core/string/conv/strconv2.hpp"
+#include "core/string/utils/split_iter.hpp"
 #include "core/utils/result.hpp"
 
 namespace ymd::gcode{
@@ -169,7 +169,7 @@ struct [[nodiscard]] GcodeArgsIter {
 
     constexpr IResult<GcodeArg> next() {
         while (arg_str_iter_.has_next()) {
-            const auto token_str = arg_str_iter_.next().unwrap();
+            const auto token_str = arg_str_iter_.next();
             if (token_str.length() == 0) continue; // Skip empty tokens (e.g., multiple spaces)
 
             const char letter = token_str[0];
@@ -182,7 +182,7 @@ struct [[nodiscard]] GcodeArgsIter {
 
             // Parse value (skip letter)
             const auto value_str = token_str.substr(1).unwrap();
-            const auto res = strconv2::defmt_str<iq16>(value_str);
+            const auto res = strconv2::defmt_from_str<iq16>(value_str);
             if (res.is_err()) {
                 // Value parsing failed (e.g., "X1.2.3") -> return Error
                 return Err(res.unwrap_err());
@@ -218,7 +218,7 @@ constexpr IResult<StringView> query_value_str(const StringView line, const char 
 
     if(not iter.has_next()) 
         return Err(GcodeParseError::NoStringSegmentFounded);
-    return Ok(iter.next().unwrap());
+    return Ok(iter.next());
 }
 
 template<typename T, typename FnMap>
@@ -236,12 +236,10 @@ struct [[nodiscard]] GcodeLine{
         if(line.length() < 1) 
             return Err(GcodeParseError::NoMnemonicFounded);
 
-        return ({
-            const auto may_mnemoic = Mnemonic::try_from_letter(line[0]);
-            if(may_mnemoic.is_none()) 
-                return Err(GcodeParseError::InvalidMnemonic);
-            Ok(may_mnemoic.unwrap());
-        });
+        const auto may_mnemoic = Mnemonic::try_from_letter(line[0]);
+        if(may_mnemoic.is_none()) 
+            return Err(GcodeParseError::InvalidMnemonic);
+        return Ok(may_mnemoic.unwrap());
     }
 
     constexpr IResult<uint16_t> query_major(const Mnemonic mnemoic) const {
@@ -262,7 +260,7 @@ struct [[nodiscard]] GcodeLine{
             const auto res = (strconv2::FstrDump::from_str(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
-            if(dump.scale == 0) return Err(GcodeParseError::NoMinorNumber);
+            if(dump.num_frac_digits == 0) return Err(GcodeParseError::NoMinorNumber);
             if(dump.frac_part > std::numeric_limits<uint16_t>::max())
                 return Err(GcodeParseError::MinorNumberOverflow);
             return Ok(uint16_t(dump.frac_part));
@@ -271,7 +269,7 @@ struct [[nodiscard]] GcodeLine{
 
     constexpr IResult<iq16> query_arg_value(const char letter) const {
         return details::query_tmp<iq16>(line, letter, [](const StringView str) -> IResult<iq16>{
-            const auto res = (strconv2::defmt_str<iq16>(str.substr(1).unwrap()));
+            const auto res = (strconv2::defmt_from_str<iq16>(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             return Ok(res.unwrap());
         });

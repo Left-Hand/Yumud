@@ -2,8 +2,6 @@
 
 #include "primitive/gpio/pin_source.hpp"
 
-
-#ifdef CH32V30X
 #define USART1_TX_DMA_CH hal::dma1_ch4
 #define USART1_RX_DMA_CH hal::dma1_ch5
 
@@ -13,9 +11,15 @@
 #define USART3_TX_DMA_CH hal::dma1_ch2
 #define USART3_RX_DMA_CH hal::dma1_ch3
 
+#if defined(CH32V30X)
 #define UART4_TX_DMA_CH hal::dma2_ch5
 #define UART4_RX_DMA_CH hal::dma2_ch3
+#elif defined(CH32V20X)
+#define UART4_TX_DMA_CH hal::dma1_ch1
+#define UART4_RX_DMA_CH hal::dma1_ch8
+#endif
 
+#if defined(CH32V30X)
 #define UART5_TX_DMA_CH hal::dma2_ch4
 #define UART5_RX_DMA_CH hal::dma2_ch2
 
@@ -27,21 +31,6 @@
 
 #define UART8_TX_DMA_CH hal::dma2_ch10
 #define UART8_RX_DMA_CH hal::dma2_ch11
-#endif
-
-
-#ifdef CH32V20X
-#define USART1_TX_DMA_CH hal::dma1_ch4
-#define USART1_RX_DMA_CH hal::dma1_ch5
-
-#define USART2_TX_DMA_CH hal::dma1_ch7
-#define USART2_RX_DMA_CH hal::dma1_ch6
-
-#define USART3_TX_DMA_CH hal::dma1_ch2
-#define USART3_RX_DMA_CH hal::dma1_ch3
-
-#define UART4_TX_DMA_CH hal::dma1_ch1
-#define UART4_RX_DMA_CH hal::dma1_ch8
 #endif
 
 
@@ -118,18 +107,38 @@ struct Layout<3, Remap::_3> {
 };
 
 // UART4 Remap 0
-// template<>
-// struct Layout<4, Remap::_0> {
-//     using tx_pin_type = PinTag<PortSource::PC, PinSource::_10>;
-//     using rx_pin_type = PinTag<PortSource::PC, PinSource::_11>;
-// };
+#if defined(CH32V30X)
+template<>
+struct Layout<4, Remap::_0> {
+    using tx_pin_type = PinTag<PortSource::PC, PinSource::_10>;
+    using rx_pin_type = PinTag<PortSource::PC, PinSource::_11>;
+};
+#elif defined(CH32V20X)
 template<>
 struct Layout<4, Remap::_0> {
     using tx_pin_type = PinTag<PortSource::PB, PinSource::_0>;
     using rx_pin_type = PinTag<PortSource::PB, PinSource::_1>;
 };
+#else
+#error "Unsupported MCU"
+#endif
 
+// USART4 重映射。
+// 00：默认映射(TX/PC10，RX/PC11)；
+// 01：重映射(TX/PB0，RX/PB1)；
+// 1x：重映射(TX/PE0，RX/PE1)。
+// 注：适用于 CH32V30x_D8C、CH32V30x_D8、
+// CH32V30x_D8W、CH32V20x_D8 、CH32F20x_D8C、
+// CH32F20x_D8、CH32F20x_D8W。
+
+// x0：默认映射(CK/PB2，TX/PB0，RX/PB1，
+// CTS/PB3，RTS/PB4)；
+// x1：重映射(CK/PA6，TX/PA5，RX/PB5，CTS/PA7，
+// RTS/PA15)。
+// 注：（1）此位映射能不支持 64 引脚以下产品。
 // UART4 Remap 1
+
+
 template<>
 struct Layout<4, Remap::_1> {
     using tx_pin_type = PinTag<PortSource::PB, PinSource::_0>;
@@ -272,9 +281,17 @@ static constexpr UartRemap USART3_REMAP_PC10_PC11 = UartRemap::_1;
 static constexpr UartRemap USART3_REMAP_PA13_PA14 = UartRemap::_2;
 static constexpr UartRemap USART3_REMAP_PD8_PD9 = UartRemap::_3;
 
-//! 在D6后缀的型号(V203)上 PB0-PB1 映射为0
 static constexpr UartRemap UART4_REMAP_PC10_PC11 = UartRemap::_0;
+
+//! 在D6后缀的型号(V203)上 PB0-PB1 映射为0
+#if defined(CH32V30X)
 static constexpr UartRemap UART4_REMAP_PB0_PB1 = UartRemap::_1;
+#elif defined(CH32V20X)
+static constexpr UartRemap UART4_REMAP_PB0_PB1 = UartRemap::_0;
+#else
+#error "UartRemap not defined for this chip"
+#endif
+
 static constexpr UartRemap UART4_REMAP_PE0_PE1 = UartRemap::_2;
 static constexpr UartRemap UART4_REMAP_PE0_PE1_ALT = UartRemap::_3;
 

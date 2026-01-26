@@ -148,7 +148,7 @@ template<>
 struct MsgSerde<nmt_msgs::Sync>{
     using Self = nmt_msgs::Sync;
     [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self){
-        return CanFrame::from_empty(Self::COBID.to_stdid());
+        return CanFrame::from_empty_data(Self::COBID.to_stdid());
     }
 
     template<VerifyLevel verify_level>
@@ -198,7 +198,7 @@ template<>
 struct MsgSerde<nmt_msgs::NodeGuardingRequest> {
     using Self = nmt_msgs::NodeGuardingRequest;
     [[nodiscard]] static constexpr CanFrame to_can_frame(const Self& self) {
-        return CanFrame::from_empty(self.cobid().to_stdid());
+        return CanFrame::from_empty_data(self.cobid().to_stdid());
     }
 
     template<VerifyLevel verify_level>

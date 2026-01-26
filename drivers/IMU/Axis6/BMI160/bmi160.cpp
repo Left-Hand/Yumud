@@ -57,17 +57,18 @@ IResult<> BMI160::init(const Config & cfg){
             ;res.is_err()) return res;
         clock::delay(1ms);
 
-        //wait for power up acc
-        if(const auto pw_res = retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
-            if(const auto res = (get_pmu_mode(PmuType::ACC));
-                res.is_err()) return Err(res.unwrap_err());
-            else if (res.unwrap() != PmuMode::NORMAL){
+        const auto res = retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
+            if(const auto _res = (get_pmu_mode(PmuType::ACC));
+                _res.is_err()) return Err(_res.unwrap_err());
+            else if (_res.unwrap() != PmuMode::NORMAL){
                 return Err(Error::AccCantSetup);
             }
             return Ok();
-        }, []{clock::delay(1ms);}); 
-            
-        unlikely(pw_res.is_err())) return Err(pw_res.unwrap_err());
+        }, []{clock::delay(1ms);});
+
+        //wait for power up acc
+        if(res.is_err()) [[unlikely]]
+            return Err(res.unwrap_err());
     }
     
     #ifdef SELFTEST_EN
@@ -86,7 +87,7 @@ IResult<> BMI160::init(const Config & cfg){
 
         if(const auto res = retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
             if(const auto _res = (get_pmu_mode(PmuType::GYR));
-                unlikely(_res.is_err())) return Err(_res.unwrap_err());
+                (_res.is_err())) return Err(_res.unwrap_err());
             else if (_res.unwrap() != PmuMode::NORMAL){
                 return Err(Error::GyrCantSetup);
             }
@@ -169,7 +170,7 @@ IResult<> BMI160::self_test_gyr(){
         retry(MAX_PMU_SETUP_RETRY_TIMES, [this] -> IResult<>{
             auto & reg = regs_.status;
             if(const auto _res = (read_reg(reg));
-                unlikely(_res.is_err())) return Err(_res.unwrap_err());
+                (_res.is_err())) return Err(_res.unwrap_err());
 
             if (reg.gyr_self_test_ok != 1){
                 return Err(Error::GyrCantSetup);

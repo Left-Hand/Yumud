@@ -37,7 +37,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
 
-#include "primitive/analog_channel.hpp"
+
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
@@ -171,16 +171,16 @@ struct INA3221_Regs:public INA3221_Prelude {
         return int16_t(iq16(volt) * 100000) & 0xfff8;
     }
 
-    struct [[nodiscard]] R16_ShuntVolt:public Reg16i<>{
+    struct [[nodiscard]] R16_ShuntVolt:public Reg16<>{
 
-        int16_t : 16;
+        int16_t bits;
 
         constexpr iq16 to_volt() const {
             return iq24(iq16(this->to_bits() >> 3) / 25) / 1000;
             // return iq16(this->to_bits());
         }
 
-        constexpr int to_uv() const {
+        constexpr int32_t to_uv() const {
             return ((this->to_bits() >> 3) * 40);
             // return (this->to_bits());
         }
@@ -201,7 +201,7 @@ struct INA3221_Regs:public INA3221_Prelude {
     struct [[nodiscard]] R16_ShuntVoltSumLimit:public R16_ShuntVolt{
         static constexpr RegAddr ADDRESS = 0x0E;};
 
-    struct [[nodiscard]] R16_BusVolt:public Reg16i<>{
+    struct [[nodiscard]] R16_BusVolt:public Reg16<>{
 
         int16_t bits;
 
@@ -230,10 +230,7 @@ struct INA3221_Regs:public INA3221_Prelude {
 
 
 
-    struct [[nodiscard]] R16_InstantOVC:public Reg16i<>{
-        static constexpr int16_t to_i16(const iq16 volt){
-            return volt_to_i16(volt);
-        }
+    struct [[nodiscard]] R16_InstantOVC:public Reg16<>{
         int16_t bits;
     };
 
@@ -244,10 +241,7 @@ struct INA3221_Regs:public INA3221_Prelude {
     struct [[nodiscard]] R16_InstantOVC3:public R16_InstantOVC{
         static constexpr RegAddr ADDRESS = 0x0b;};
 
-    struct [[nodiscard]] R16_ConstantOVC:public Reg16i<>{
-        static constexpr int16_t to_i16(const iq16 volt){
-            return volt_to_i16(volt);
-        }
+    struct [[nodiscard]] R16_ConstantOVC:public Reg16<>{
         int16_t bits;
     };
 
@@ -275,12 +269,12 @@ struct INA3221_Regs:public INA3221_Prelude {
         uint16_t :1;
     };
 
-    struct [[nodiscard]] R16_PowerHo:public Reg16i<>{
+    struct [[nodiscard]] R16_PowerHo:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x10;
         int16_t bits;
     };
 
-    struct [[nodiscard]] R16_PowerLo:public Reg16i<>{
+    struct [[nodiscard]] R16_PowerLo:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x11;
         int16_t bits;
     };

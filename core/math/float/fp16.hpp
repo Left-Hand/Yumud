@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../real.hpp"
+#include "core/math/real.hpp"
 #include <cstdint>
 
 namespace ymd::math{
@@ -98,6 +98,7 @@ struct alignas(2) [[nodiscard]] fp16 final{
     }
 
 private:
+
     static constexpr fp16 int_to_fp16(int int_val){
         fp16 ret = fp16();
         // 确保值在可表示的范围内
@@ -165,7 +166,6 @@ private:
 
         return ret;
     }
-    
 };
 
 static_assert(sizeof(fp16) == 2);

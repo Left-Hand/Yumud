@@ -16,31 +16,26 @@
 #define __no_inline __attribute__((__noinline__))
 #endif
 
+//a placeholder to explicitly clarify that this function can't be constexpr 
+//一个用于显示表示这里无法constexpr的占位符
+#define imconstexpr 
 
-
-#ifndef __fast_inline_consteval
-#ifdef __cplusplus
-    #define __fast_inline_consteval __fast_inline consteval
-#else
-    #define __fast_inline_consteval __fast_inline
-#endif
-#endif
-
-#ifndef _FORCE_INLINE_
-#define _FORCE_INLINE_ __fast_inline
-#endif
 
 #ifndef __interrupt_soft
 #define __interrupt_soft __attribute__((interrupt))
 #endif
 
-#define EXECUTE(func, ...) if(likely(func)) func(__VA_ARGS__)
+#define EXECUTE(func, ...) if((func)) [[likely]] func(__VA_ARGS__)
 
 #ifndef __interrupt
-#if defined(__riscv) && defined(WCH)
+#if defined(__riscv)
+#if defined(WCH)
 #define __interrupt __attribute__((interrupt("WCH-Interrupt-fast")))
 #else
-#define __interrupt __interrupt_soft
+#error "unsupported architecture"
+#endif
+#else
+#error "unsupported architecture"
 #endif
 #endif
 
@@ -48,20 +43,6 @@
 #define __nop __asm volatile ("nop")
 #endif
 
-#ifndef CHECK_INIT
-#define CHECK_INIT \
-    { \
-        static unsigned char inited = 0; \
-        if (!inited) { \
-            inited = 1; \
-        }else{ \
-            return; \
-        }\
-    } \
-
-#endif
-
-#define ARRSIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define ISSFR(ptr) (((uint32_t)ptr > 0x40000000))
 #define ISRAM(ptr) ((!ISSFR(ptr)) && (((uint32_t)(ptr)) > 0x20000000))
@@ -74,14 +55,6 @@
 #endif
 
 #ifdef __GNUC__
-#define likely(x) __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
-#else
-#define likely(x) x
-#define unlikely(x) x
-#endif
-
-#ifdef __GNUC__
 //#define FUNCTION_STR __PRETTY_FUNCTION__ - too annoying
 #define FUNCTION_STR __FUNCTION__
 #else
@@ -91,20 +64,9 @@
 #define CONCAT(a, b) a ## b
 #define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); }))
 
-#define CHECK_TYPE(x, type) \
-({ type __dummy; \
-    typeof(x) __dummy2; \
-    (void)(&__dummy == &__dummy2); \
-    1; \
-})
 
 #define TYPE_CMP(a,b) __builtin_types_compatible_p(type_a, type_b);
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
-
-#define BSWAP_8(x) ((decltype(x))((x) & 0xff))
-#define BSWAP_16(x) ((decltype(x))((BSWAP_8(x) << 8) | BSWAP_8((x) >> 8)))
-#define BSWAP_32(x) ((decltype(x))(((BSWAP_16(x) << 16) | BSWAP_16((x) >> 16))))
-#define BSWAP_64(x) ((decltype(x))((BSWAP_32(x) << 32) | BSWAP_32((x) >> 32)))
 
 #define VAR_AND_SIZE(x) x,sizeof(x)
 #define PTR8_AND_SIZE(x) (const uint8_t *)&x, sizeof(x)
@@ -129,8 +91,6 @@
 #error "Not supported architecture"
 #endif
 
-// #define HALT __HALT; __builtin_unreachable();
-#define HALT while(true);
 
 #ifdef __cplusplus
 
@@ -139,6 +99,5 @@
 #define DELETE_COPY_AND_MOVE(type)\
 type(const type & other) = delete;\
 type(type && other) = delete;\
-
 
 #endif

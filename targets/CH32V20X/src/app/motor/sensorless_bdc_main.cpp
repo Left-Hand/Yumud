@@ -131,7 +131,7 @@ void at8222_tb(){
     dsp::EdgeCounter ect;
     
     real_t curr = 0;
-    [[maybe_unused]]real_t curr_mid = 0;
+    [[maybe_unused]]real_t current_mid = 0;
 
     // IController pi_ctrl{
     //     IController::Config{
@@ -173,7 +173,7 @@ void at8222_tb(){
     // }};
 
     #if 0
-    dsp::TrackingDifferentiatorByOrders<2> td{{
+    dsp::TrackingDifferentiatorOrdered<2> td{{
         // .r = 14.96_r,
         // .r = 7.9_r,
         // .r = 7.99_r,
@@ -199,23 +199,23 @@ void at8222_tb(){
 
     hal::adc1.register_nvic({0,0}, EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    hal::adc1.set_event_handler(
+    hal::adc1.set_event_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
                 watch_gpio.write(~watch_gpio.read());
                 volt = hal::adc1.inj<1>().get_perunit();
-                const auto curr_raw = volt_2_current(volt);
+                const auto current_raw = volt_2_current(volt);
 
-                lpf.update(curr_raw);
-                lpf_mid.update(curr_raw);
+                lpf.update(current_raw);
+                lpf_mid.update(current_raw);
                 // curr = lpf.get();
-                curr = curr_raw;
+                curr = current_raw;
                 watch_gpio.write(~watch_gpio.read());
-                // bpf.update(curr_raw);
+                // bpf.update(current_raw);
 
-                bpf.update(curr_raw);
-                curr_mid = lpf_mid.get();
+                bpf.update(current_raw);
+                current_mid = lpf_mid.get();
 
                 ect.update(bool(bpf.output() > 0));
 
@@ -280,7 +280,7 @@ void at8222_tb(){
         
         // DEBUG_PRINTLN_IDLE(pos_targ, spd_targ, bpf.get(), volt, pi_ctrl.get(), bpf.get(), , exe_micros);
         // DEBUG_PRINTLN_IDLE(td.get(), lpf.get() * 90 ,volt,spd_targ, exe_micros);
-        DEBUG_PRINTLN_IDLE(curr * 1000,curr_mid * 1000, volt, curr > curr_mid);
+        DEBUG_PRINTLN_IDLE(curr * 1000,current_mid * 1000, volt, curr > current_mid);
         // DEBUG_PRINTLN_IDLE(trackin_sig, td.get());
         // DEBUG_PRINTLN(bool(pwm_pos.io()), bool(pwm_neg.io()));
         

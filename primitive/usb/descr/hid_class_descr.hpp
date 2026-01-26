@@ -38,13 +38,13 @@ enum class [[nodiscard]] CountryCode:uint8_t {
     Korean = 0x23,
 };
 
-enum class HidDescrType : uint8_t {
+enum class [[nodiscard]] HidDescrType : uint8_t {
     Hid = 0x21,
     Report = 0x22,
     Physical = 0x23
 };
 
-struct UsbHidClassDescrPayload final{
+struct [[nodiscard]] UsbHidClassDescrPayload final{
 #pragma pack(push, 1)
     const BcdUsb bcdHID;            // HID类规范版本号
     const CountryCode  bCountryCode = CountryCode::None;      // 国家代码

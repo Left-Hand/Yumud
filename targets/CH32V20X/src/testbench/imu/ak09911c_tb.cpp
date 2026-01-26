@@ -56,7 +56,7 @@ static void ak09911c_test(drivers::AK09911C & aku){
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_handler([&](hal::TimerEvent ev){
+    timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             measure();
@@ -87,7 +87,9 @@ void ak09911c_main(){
     auto sda_pin_ = SDA_PIN;
 
     hal::I2cSw i2c{&scl_pin_, &sda_pin_};
-    i2c.init({200_KHz});
+    i2c.init({
+        .baudrate = hal::NearestFreq(200_KHz)
+    });
 
     clock::delay(200ms);
 

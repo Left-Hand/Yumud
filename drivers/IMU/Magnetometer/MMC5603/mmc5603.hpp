@@ -4,7 +4,6 @@
 namespace ymd::drivers{
 
 class MMC5603:
-    public MagnetometerIntf,
     public MMC5603_Prelude{
 public:
 

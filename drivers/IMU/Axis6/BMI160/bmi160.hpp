@@ -20,6 +20,23 @@ public:
     explicit BMI160(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
         transport_(i2c, i2c_addr){;}
 
+
+    struct [[nodiscard]] Config{
+        AccOdr acc_odr;
+        AccFs acc_fs;
+        GyrOdr gyr_odr;
+        GyrFs gyr_fs;
+
+        static constexpr Config from_default(){
+            return Config{
+                .acc_odr = AccOdr::_800Hz,
+                .acc_fs = AccFs::_8G,
+                .gyr_odr = GyrOdr::_800Hz,
+                .gyr_fs = GyrFs::_1000deg
+            };
+        }
+    };
+
     [[nodiscard]] IResult<> init(const Config & cfg);
     [[nodiscard]] IResult<> update();
     [[nodiscard]] IResult<> validate();
@@ -78,11 +95,11 @@ private:
     [[nodiscard]] static constexpr 
     iq20 gyrfs_to_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_125deg:    return iq20(2 * 125 * PI / 180);
-            case GyrFs::_250deg:    return iq20(2 * 250 * PI / 180);
-            case GyrFs::_500deg:    return iq20(2 * 500 * PI / 180);
-            case GyrFs::_1000deg:   return iq20(2 * 1000 * PI / 180);
-            case GyrFs::_2000deg:   return iq20(2 * 2000 * PI / 180);
+            case GyrFs::_125deg:    return iq20(DEG2RAD_RATIO) * (2 * 125);
+            case GyrFs::_250deg:    return iq20(DEG2RAD_RATIO) * (2 * 250);
+            case GyrFs::_500deg:    return iq20(DEG2RAD_RATIO) * (2 * 500);
+            case GyrFs::_1000deg:   return iq20(DEG2RAD_RATIO) * (2 * 1000);
+            case GyrFs::_2000deg:   return iq20(DEG2RAD_RATIO) * (2 * 2000);
         }
         __builtin_unreachable();
     }

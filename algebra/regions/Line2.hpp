@@ -125,7 +125,8 @@ public:
 
     [[nodiscard]] __fast_inline constexpr
     Option<Vec2<T>> intersection(const Line2<T> & other, const T epsilon) const{
-        if(unlikely(false == this->intersects(other, epsilon))) return None;
+        if((false == this->intersects(other, epsilon))) [[unlikely]]
+            return None;
         
 
         //https://www.cnblogs.com/junlin623/p/17640554.html

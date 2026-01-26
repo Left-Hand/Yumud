@@ -1,5 +1,5 @@
 #include "i2csw.hpp"
-#include "core/clock/time_stamp.hpp"
+#include "core/clock/monotic_clock.hpp"
 #include "core/debug/debug.hpp"
 #include "hal/gpio/gpio.hpp"
 
@@ -168,24 +168,31 @@ void I2cSw::init(const Config & cfg){
     #endif
 
     auto release_bus = [&]{
-        set_baudrate(10'000);
+        set_baudrate(hal::NearestFreq{10'000});
         for(size_t i = 0; i < 4; i++){
             lend();
         }
     };
 
     release_bus();
+
+    
     set_baudrate(cfg.baudrate);
 }
 
-HalResult I2cSw::set_baudrate(const uint32_t baudrate) {
-    if(baudrate == 0){
-        delays_ = 0;
+HalResult I2cSw::set_baudrate(const I2cBuadrate baudrate) {
+    if(baudrate.is<hal::NearestFreq>()){
+        const NearestFreq nearest_freq = baudrate.unwrap_as<hal::NearestFreq>();
+        const uint32_t freq_hz = nearest_freq.count;
+        if(freq_hz < 1000){
+            delays_ = 0;
+        }else{
+            uint32_t b = freq_hz / 1000;
+            delays_ = 400 / b;
+        }
     }else{
-        uint32_t b = baudrate / 1000;
-        delays_ = 400 / b;
+        __builtin_unreachable();
     }
-
     return HalResult::Ok();
 }
 

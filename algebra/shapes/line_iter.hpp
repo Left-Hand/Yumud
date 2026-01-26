@@ -160,7 +160,7 @@ public:
         err_(1 - 2 * circle.radius),
         y_(-circle.radius),
         radius_(circle.radius),
-        radius_squ_(square(circle.radius))
+        radius_squ_(math::square(circle.radius))
     {
         replace_x();
     }

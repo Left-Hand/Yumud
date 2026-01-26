@@ -1,13 +1,11 @@
 #pragma once
 
 #include "core/system.hpp"
-#include "primitive/storage.hpp"
-#include "primitive/memory.hpp"
 
 
 #if 0
 namespace ymd{
-class Flash:public Storage{
+class Flash{
 protected:
 
     using Page = size_t;
@@ -26,18 +24,18 @@ protected:
 
     void revert_clock();
 
-    void entry_store() override;
-    void exit_store() override;
-    void entry_load() override;
-    void exit_load() override;
+    void entry_store();
+    void exit_store();
+    void entry_load();
+    void exit_load();
 
     void lock();
 
     void unlock();
 
-    void store_bytes(const Address loc, const void * data, const Address len) override;
+    void store_bytes(const Address loc, const void * data, const Address len);
 
-    void load_bytes(const Address loc, void * data, const Address len) override;
+    void load_bytes(const Address loc, void * data, const Address len);
 
     void erase_page(const Address vaddr);
     void program_page(const Address vaddr, const void * buf);
@@ -54,11 +52,11 @@ public:
     static size_t get_max_pages(){
         return sys::chip::get_flash_size() / page_size;
     }
-    void init() override{
+    void init(){
 
     }
 
-    bool busy() override{
+    bool busy(){
         return false;
     }
 

@@ -23,7 +23,7 @@ public:
             SetAddress = 0x2d,
             SetAutoMode = 0x2e,
         };
-        
+
         constexpr Command(const Kind kind, bool is_rx):
             is_rx_(is_rx){;}
 
@@ -74,18 +74,15 @@ public:
     void update();
 
     void write(std::span<const uint8_t> pbuf){
-        uart_.try_write_chars(reinterpret_cast<const char *>(
-            static_cast<const uint8_t *>(&pbuf[0])), 
-            pbuf.size()
-        );
+        uart_.try_write_bytes(pbuf);
     }
 
     static constexpr std::array<uint8_t, 7> make_baudrate_payload(const uint32_t baudrate){
         return {
-            uint8_t(baudrate >> 24  ), 
-            uint8_t(baudrate >> 16  ), 
-            uint8_t(baudrate >> 8   ), 
-            uint8_t(baudrate        ), 
+            uint8_t(baudrate >> 24  ),
+            uint8_t(baudrate >> 16  ),
+            uint8_t(baudrate >> 8   ),
+            uint8_t(baudrate        ),
             0x98,
             0x24,
             0x31
@@ -130,7 +127,7 @@ public:
     void set_baudrate(const uint32_t baudrate){
             // DEBUG_PRINTLN(std::hex, drivers::U13T::make_baudrate_message(9600));
     // const auto msg  =drivers::U13T::make_baudrate_message(115200);
-    // const auto msg  =drivers::U13T::make_read_card_num_message(); 
+    // const auto msg  =drivers::U13T::make_read_card_num_message();
     // u13t.write(std::span(msg));
     }
 };

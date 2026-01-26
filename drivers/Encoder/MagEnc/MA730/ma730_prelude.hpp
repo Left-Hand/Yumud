@@ -5,8 +5,6 @@
 #include "primitive/arithmetic/angular.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
-
-
 #include "drivers/Encoder/MagEncoder.hpp"
 
 

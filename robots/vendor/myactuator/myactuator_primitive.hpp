@@ -5,7 +5,7 @@
 #include "core/utils/bytes/bytes_provider.hpp"
 #include "core/utils/bits/bits_caster.hpp"
 #include "core/utils/enum/strong_type_gradation.hpp"
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 
 #include "primitive/arithmetic/angular.hpp"
 #include "primitive/arithmetic/percentage.hpp"

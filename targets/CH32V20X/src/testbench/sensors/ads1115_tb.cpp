@@ -80,7 +80,9 @@ void ads1115_main()
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
     auto i2c = hal::I2cSw(&scl_pin_, &sda_pin_);
-    i2c.init({400_KHz});
+    i2c.init({
+        .baudrate = hal::NearestFreq(400_KHz)
+    });
 
     drivers::ADS1115 ads{&i2c};
 

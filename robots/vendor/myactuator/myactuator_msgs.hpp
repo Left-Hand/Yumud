@@ -333,7 +333,7 @@ struct [[nodiscard]] _MotorStatusReport{
     [[nodiscard]] static constexpr Result<Derived, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         Derived ret;
-        const auto exacter = make_bytes_ctor_bits_exacter<std::endian::little>(bytes);
+        const auto exacter = make_bytes_exacter<std::endian::little>(bytes);
         exacter.exact_to_elements(ret.motor_temperature, ret.q_current, ret.axis_speed, ret.axis_degrees);
         return Ok(ret);
     };
@@ -354,7 +354,7 @@ struct [[nodiscard]] _MotorStatusReport2{
     static constexpr Result<Self, DeMsgError>
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         Self ret;
-        const auto exacter = make_bytes_ctor_bits_exacter<std::endian::little>(bytes);
+        const auto exacter = make_bytes_exacter<std::endian::little>(bytes);
         exacter.exact_to_elements(ret.motor_temperature, ret.q_current, ret.axis_speed, ret.axis_lap_position);
         return ret;
     };

@@ -3,11 +3,11 @@
 #include <cstdint>
 
 namespace ymd::usb{
-struct [[nodiscard]] InterfaceNumber{
+struct [[nodiscard]] InterfaceNumber final{
     uint8_t count;
 };
 
-struct [[nodiscard]] StringIndex{
+struct [[nodiscard]] StringIndex final{
     uint8_t count;
 };
 
@@ -17,7 +17,7 @@ struct [[nodiscard]] StringIndex{
 namespace ymd::usb{
 
 
-enum class BcdUsb:uint16_t{
+enum class [[nodiscard]] BcdUsb:uint16_t{
     V1_0 = 0x0100,
     V1_1 = 0x0110,
     V1_12 = 0x0112,
@@ -29,9 +29,7 @@ enum class BcdUsb:uint16_t{
     V3_3 = 0x0330,
 };
 
-
-
-enum class UsbClassCode : uint8_t {
+enum class [[nodiscard]] UsbClassCode : uint8_t {
     Audio = 0x01,
     CDCControl = 0x02,          // 通信设备类 - 控制接口
     HID = 0x03,                 // 人类接口设备类
@@ -58,20 +56,20 @@ enum class UsbClassCode : uint8_t {
     VendorSpecific = 0xFF       // 厂商特定类
 };
 
-enum class HidSubClassCode : uint8_t {
+enum class [[nodiscard]] HidSubClassCode : uint8_t {
     None = 0x00,
     Boot = 0x01,
     //Reserverd
 };
 
-enum class HidProtocolCode : uint8_t {
+enum class [[nodiscard]] HidProtocolCode : uint8_t {
     None = 0x00,
     Keyboard = 0x01,
     Mouse = 0x02,
     // Resrvered
 };
 
-struct UsbInterfaceDescrPayload{
+struct [[nodiscard]] UsbInterfaceDescrPayload final{
     // 接口编号，用于标识设备中的不同接口
     uint8_t bInterfaceNumber;
 

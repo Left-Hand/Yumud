@@ -13,7 +13,10 @@ protected:
 
     template<typename T>
     void write_frame(const T & data){
-        uart_.try_write_chars(reinterpret_cast<const char *>(&data), sizeof(data));
+        uart_.try_write_bytes(std::span<const uint8_t>(
+            reinterpret_cast<const uint8_t *>(&data),
+            sizeof(data)
+        ));
     };
 
 public:

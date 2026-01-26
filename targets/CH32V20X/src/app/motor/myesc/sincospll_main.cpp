@@ -10,7 +10,6 @@
 #include "hal/gpio/gpio_port.hpp"
 
 #include "primitive/arithmetic/angular.hpp"
-#include "core/string/string_view.hpp"
 #include "dsp_lpf.hpp"
 using namespace ymd;
 
@@ -151,12 +150,12 @@ void sincospll_main(){
         }
         
         for(size_t i = 0; i < 1; i++){
-            normalized_sine_ = dsp::lpf_exprimetal(normalized_sine_, measured_sine_, LPF_ALPHA);
-            // normalized_cosine_ = dsp::lpf_exprimetal(normalized_cosine_,
+            normalized_sine_ = dsp::lpf_with_given_alpha(normalized_sine_, measured_sine_, LPF_ALPHA);
+            // normalized_cosine_ = dsp::lpf_with_given_alpha(normalized_cosine_,
             //     measured_cosine_ * iq16(2 / 1.73) + measured_sine_ * iq16(1.0 / 1.73), 
             //     LPF_ALPHA
             // );
-            normalized_cosine_ = dsp::lpf_exprimetal(normalized_cosine_,
+            normalized_cosine_ = dsp::lpf_with_given_alpha(normalized_cosine_,
                 measured_cosine_,
                 LPF_ALPHA
             );
@@ -168,7 +167,7 @@ void sincospll_main(){
             // const iq16 e = cross2v2(cosine_ , normalized_cosine_, sine_ , normalized_sine_);
             const iq16 e = cross2v2(normalized_sine_, sine_ , normalized_cosine_, cosine_ );
             // const iq16 e = (iq16(cosine_) * normalized_sine_- iq16(sine_) * normalized_cosine_);
-            err_filtered_ = dsp::lpf_exprimetal(err_filtered_, e, LPF_ALPHA);
+            err_filtered_ = dsp::lpf_with_given_alpha(err_filtered_, e, LPF_ALPHA);
             // const iq16 e = (simulated_angle_.to_turns() - computed_angle_.to_turns());
             // computed_angluar_speed_ = Angular<iq16>::from_turns(1);
             computed_angluar_speed_ = computed_angluar_speed_.from_turns(
@@ -184,7 +183,7 @@ void sincospll_main(){
         }
     };
 
-    hal::timer2.set_event_handler([&](const hal::TimerEvent & event){
+    hal::timer2.set_event_callback([&](const hal::TimerEvent & event){
         switch(event){
             case hal::TimerEvent::Update:{
                 const auto begin_us = clock::micros();

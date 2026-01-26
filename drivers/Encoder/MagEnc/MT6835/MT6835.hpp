@@ -4,9 +4,7 @@
 
 namespace ymd::drivers{
 
-class MT6835 final:
-    public MagEncoderIntf,
-    public MT6835_Regs{
+class MT6835 final:public MT6835_Prelude{
 public:
     explicit MT6835(const hal::SpiDrv & spi_drv):
         spi_drv_(spi_drv){;}
@@ -22,6 +20,7 @@ public:
         return last_packet_.parse();
     }
 private:
+    MT6835_Regs regs_ = {};
     hal::SpiDrv spi_drv_;
     AnglePacket last_packet_;
 

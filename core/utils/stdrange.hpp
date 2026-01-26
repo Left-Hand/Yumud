@@ -13,7 +13,7 @@ template <typename Iter, typename = void>
 struct is_next_based_iter : std::false_type {};
 
 template <typename Iter>
-struct is_next_based_iter<Iter, 
+struct is_next_based_iter<Iter,
     std::void_t<
         decltype(std::declval<Iter>().next()),
         decltype(std::declval<Iter>().has_next())
@@ -40,7 +40,7 @@ template <typename T, typename = void>
 struct is_range : std::false_type {};
 
 template <typename T>
-struct is_range<T, 
+struct is_range<T,
     std::void_t<
         decltype(std::declval<T>().begin()),
         decltype(std::declval<T>().end())
@@ -179,7 +179,7 @@ struct StdRange<Range> {
         using pointer = typename std::iterator_traits<iterator_type>::pointer;
         using reference = typename std::iterator_traits<iterator_type>::reference;
 
-        constexpr Iterator(iterator_type iter, sentinel_type end) 
+        constexpr Iterator(iterator_type iter, sentinel_type end)
             : iter_(iter), end_(end) {}
 
         // 解引用
@@ -224,8 +224,8 @@ struct StdRange<Range> {
     };
 
     // 构造函数
-    explicit constexpr StdRange(Range&& range) 
-        : begin_(std::forward<Range>(range).begin()), 
+    explicit constexpr StdRange(Range&& range)
+        : begin_(std::forward<Range>(range).begin()),
             end_(std::forward<Range>(range).end()) {}
 
     // 提供 begin() 和 end()，支持 range-for
@@ -244,5 +244,10 @@ requires (is_range_v<std::decay_t<Range>>)
 StdRange(Range &&) -> StdRange<std::decay_t<Range>>;
 
 
+template <typename Iter>
+requires(is_next_based_iter_v<std::decay_t<Iter>>)
+StdRange<std::decay_t<Iter>> make_std_range(Iter && iter) {
+    return StdRange<std::decay_t<Iter>>(iter);
+}
 
 }

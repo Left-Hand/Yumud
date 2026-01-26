@@ -14,7 +14,7 @@
 
 namespace ymd::hal{
 
-struct alignas(16) [[nodiscard]] BxCanFrame{
+struct alignas(16) [[nodiscard]] BxCanFrame final{
 public:
     using Payload = BxCanPayload;
 
@@ -31,13 +31,13 @@ public:
 
     /// \brief 从创建一个未初始化的帧
 
-    __always_inline static Self from_uninitialized(){
+    __attribute__((always_inline)) static Self from_uninitialized() noexcept{
         return Self{};
     }
     /// \brief 从给定的id创建一个远程帧
-    __always_inline static constexpr Self from_remote(
+    __attribute__((always_inline)) static constexpr Self from_remote(
         details::is_canid auto id
-    ){
+    ) noexcept{
         return Self(
             CanIdentifier::from_parts(id, CanRtr::Remote), 
             Payload::zero()
@@ -46,21 +46,21 @@ public:
 
     /// \brief 从给定的id创建一个空的数据帧
 
-    __always_inline static constexpr Self from_empty(
+    __attribute__((always_inline)) static constexpr Self from_empty_data(
         details::is_canid auto id
-    ){
+    ) noexcept{
         return Self(CanIdentifier::from_parts(id, CanRtr::Data), Payload::zero());
     }
 
-
-    __always_inline static constexpr Self from_parts(
+    /// \brief 从id和载荷创建一个数据帧
+    __attribute__((always_inline)) static constexpr Self from_parts(
         details::is_canid auto id,
         Payload payload
-    ){
+    ) noexcept{
         return Self(CanIdentifier::from_parts(id, CanRtr::Data), payload);
     }
 
-    __always_inline constexpr BxCanFrame(
+    __attribute__((always_inline)) constexpr BxCanFrame(
         details::is_canid auto id,
         const Payload payload
     ):
@@ -68,148 +68,168 @@ public:
         payload_(payload){}
 
     /// \brief (SXX32专属)从寄存器值构造报文 不对比特做任何检查
-    __always_inline static constexpr Self from_sxx32_regs(
+    __attribute__((always_inline)) static constexpr Self from_sxx32_regs(
         uint32_t id_bits, 
-        uint64_t int_val, 
-        uint8_t len
-    ){
+        uint64_t payload_bits, 
+        uint8_t dlc_bits
+    ) noexcept{
         return Self(
             CanIdentifier::from_sxx32_reg_bits(id_bits), 
-            Payload::from_u64_and_dlc(int_val, BxCanDlc::from_bits(len))
+            Payload::from_u64_and_dlc(payload_bits, BxCanDlc::from_bits(dlc_bits))
         );
     }
 
-
-
     /// \brief 获取载荷的数据长度
-    [[nodiscard]] __always_inline constexpr size_t length() const {return dlc().length();}
+    [[nodiscard]] __attribute__((always_inline)) constexpr size_t length() const noexcept{
+        return dlc().length();
+    }
 
     /// \brief 获取dlc标识符
-    [[nodiscard]] __always_inline constexpr BxCanDlc dlc() const {
-        return payload_.dlc_;}
+    [[nodiscard]] __attribute__((always_inline)) constexpr BxCanDlc dlc() 
+    const noexcept{return payload_.dlc_;}
 
     /// \brief 获取dlc标识符
-    [[nodiscard]] __always_inline constexpr const Payload & payload() const {
-        return payload_;}
+    [[nodiscard]] __attribute__((always_inline)) constexpr const Payload & 
+    payload() const noexcept{return payload_;}
 
-    [[nodiscard]] constexpr Self clone() const {
+    [[nodiscard]] constexpr Self clone() const noexcept{
         return *this;
     }
 
     /// \brief 直接获取载荷的数据而不检查
-    [[nodiscard]] __always_inline constexpr uint8_t operator[](size_t idx) const {return payload_[idx];}
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    uint8_t operator[](size_t idx) const noexcept{
+        return payload_[idx];
+    }
 
     /// \brief 直接获取载荷的可变数据而不检查
-    [[nodiscard]] __always_inline constexpr uint8_t & operator[](size_t idx) {return payload_[idx];}
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    uint8_t & operator[](size_t idx) noexcept{
+        return payload_[idx];
+    }
 
     /// \brief 获取载荷的数据 如超界则立即终止
-    [[nodiscard]] __always_inline constexpr uint8_t at(size_t idx) const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    uint8_t at(size_t idx) const noexcept{
         if(idx >= length()) [[unlikely]]
             __builtin_trap();
         return payload_[idx];
     }
 
     /// \brief 获取载荷的可变数据 如超界则立即终止
-    [[nodiscard]] __always_inline constexpr uint8_t & at(size_t idx) {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    uint8_t & at(size_t idx) noexcept{
         if(idx >= length()) [[unlikely]]
             __builtin_trap();
         return payload_[idx];
     }
 
     /// \brief 获取载荷的数据 如超界则返回空
-    [[nodiscard]] __always_inline constexpr Option<uint8_t> try_at(size_t idx) const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    Option<uint8_t> try_at(size_t idx) const noexcept{
         if(idx >= length()) [[unlikely]]
             return None;
         return Some(static_cast<uint8_t>(payload_[idx]));
     }
 
     /// \brief 获取载荷的可变数据 如超界则返回空
-    [[nodiscard]] __always_inline constexpr Option<uint8_t &> try_at(size_t idx) {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    Option<uint8_t &> try_at(size_t idx) noexcept{
         if(idx >= length()) [[unlikely]]
             return None;
         return Some(payload_.begin() + idx);
     }
 
     /// \brief 获取载荷的可变数据 如超界则使使用备选值
-    [[nodiscard]] __always_inline constexpr uint8_t at_or(size_t idx, uint8_t other) const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    uint8_t at_or(size_t idx, uint8_t other) const noexcept{
         if(idx >= length()) [[unlikely]]
             return other;
         return payload_[idx];
     }
 
     /// \brief 获取载荷的切片
-    [[nodiscard]] __always_inline constexpr std::span<const uint8_t> payload_bytes() const{
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    std::span<const uint8_t> payload_bytes() const noexcept{
         return std::span(payload_.data(), length());
     }
+
     /// \brief 获取载荷的定长切片
     template<size_t Extents>
     requires (Extents <= 8)
-    [[nodiscard]] __always_inline constexpr std::span<const uint8_t, Extents> payload_bytes_fixed() const{
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    std::span<const uint8_t, Extents> payload_bytes_fixed() const noexcept{
         if(Extents != length()) [[unlikely]]
             __builtin_trap();
         return std::span<const uint8_t, Extents>(payload_.data(), Extents);
     }
 
     /// \brief 获取载荷的可变切片
-    [[nodiscard]] __always_inline constexpr std::span<uint8_t> payload_bytes_mut() {
+    [[nodiscard]] __attribute__((always_inline)) 
+    constexpr std::span<uint8_t> payload_bytes_mut() noexcept{
         return std::span(payload_.data(), length());
     }
 
     /// @brief 设置载荷数据，同时修改报文长度。如果数据超长立即终止
     template<size_t Extents>
     requires (Extents <= 8 || Extents == std::dynamic_extent)
-    __always_inline constexpr void set_payload_bytes(
+    __attribute__((always_inline)) constexpr void set_payload_bytes(
         std::span<const uint8_t, Extents> bytes
-    ) {
+    ) noexcept {
         if constexpr(Extents == std::dynamic_extent)
             if(bytes.size() > 8) [[unlikely]]
                 __builtin_trap();
-        payload_ = bytes.size();
-        std::copy(bytes.begin(), bytes.end(), payload_.begin());
+        payload_ = payload_.from_bytes(bytes);
     }
 
     /// @brief 设置载荷数据，同时修改报文长度。如果数据超长返回错误
     template<size_t Extents>
     requires (Extents <= 8 || Extents == std::dynamic_extent)
-    __always_inline constexpr Result<void, void> try_set_payload_bytes(
+    __attribute__((always_inline)) constexpr 
+    Result<void, void> try_set_payload_bytes(
         std::span<const uint8_t, Extents> bytes
-    ) {
+    ) noexcept {
         if constexpr(Extents == std::dynamic_extent)
             if(bytes.size() > 8) [[unlikely]]
                 return Err();
-        payload_ = bytes.size();
-        std::copy(bytes.begin(), bytes.end(), payload_.begin());
+        payload_ = payload_.from_bytes(bytes);
         return Ok();
     }
 
 
     /// @brief 是否为标准帧 
-    [[nodiscard]] __always_inline constexpr bool is_standard() const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    bool is_standard() const noexcept{
         return identifier_.is_standard();
     }
 
     /// @brief 是否为拓展帧 
-    [[nodiscard]] __always_inline constexpr bool is_extended() const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    bool is_extended() const noexcept{
         return identifier_.is_extended();
     }
 
     /// @brief 是否为远程帧 
-    [[nodiscard]] __always_inline constexpr bool is_remote() const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    bool is_remote() const noexcept{
         return identifier_.is_remote();
     }
 
     /// @brief 不顾帧格式直接获取id的数据大小
-    [[nodiscard]] __always_inline constexpr uint32_t id_u32() const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    uint32_t id_u32() const noexcept{
         return identifier_.id_u32();
     }
 
     /// @brief 不顾帧长度直接获取载荷的64位数据
-    [[nodiscard]] __always_inline constexpr uint64_t payload_u64() const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    uint64_t payload_u64() const noexcept{
         return std::bit_cast<uint64_t>(payload_.bytes_);
     }
 
     /// @brief 获取首部标识符
-    [[nodiscard]] __always_inline constexpr auto identifier() const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    auto identifier() const noexcept{
         return identifier_;
     }
 private:
@@ -218,14 +238,14 @@ private:
     alignas(4) Payload payload_;
 
 
-    __always_inline constexpr BxCanFrame(
+    __attribute__((always_inline)) constexpr BxCanFrame(
         const CanIdentifier identifier,
         const Payload payload
     ):
         identifier_(identifier),
         payload_(payload){}
 
-    __always_inline BxCanFrame():
+    __attribute__((always_inline)) imconstexpr BxCanFrame():
         identifier_(CanIdentifier::from_uninitialized()),
         payload_(Payload::from_uninitialized()){;}
 };

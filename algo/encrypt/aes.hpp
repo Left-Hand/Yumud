@@ -119,9 +119,61 @@ enum class KeySize:uint8_t{
 
 struct UnitTest;
 
-struct AesCipher{
-    using State = std::array<std::array<uint8_t, STATE_MATRIX_SIZE>, STATE_MATRIX_SIZE>;
+#if 0
+using Row  =std::array<uint8_t, STATE_MATRIX_SIZE>;
+using State = std::array<Row, STATE_MATRIX_SIZE>;
+#else
+struct alignas(4) [[nodiscard]] Row final{
+    std::array<uint8_t, 4> bytes;
 
+    [[nodiscard]] constexpr static Row from_bytes(std::span<const uint8_t, 4> bytes){
+        Row ret;
+        std::copy(bytes.begin(), bytes.end(), ret.bytes.begin());
+        return ret;
+    }
+
+
+    [[nodiscard]] constexpr static Row from_bits(const uint32_t bits){
+        return std::bit_cast<Row>(bits);
+    }
+
+    [[nodiscard]] constexpr uint8_t operator [](const size_t idx) const{
+        if(idx >= 4) __builtin_unreachable();
+        return bytes[idx];
+    }
+
+    [[nodiscard]] constexpr uint8_t & operator [](const size_t idx) {
+        if(idx >= 4) __builtin_unreachable();
+        return bytes[idx];
+    }
+};
+struct alignas(16) [[nodiscard]] State final{
+
+    std::array<Row, 4> rows;
+
+    [[nodiscard]] static constexpr State from_bytes(std::span<const uint8_t, 16> bytes){
+        State ret;
+        std::copy(bytes.begin() + 0, bytes.begin() + 4, ret.rows[0].bytes.begin());
+        std::copy(bytes.begin() + 4, bytes.begin() + 8, ret.rows[1].bytes.begin());
+        std::copy(bytes.begin() + 8, bytes.begin() + 12, ret.rows[2].bytes.begin());
+        std::copy(bytes.begin() + 12, bytes.begin() + 16, ret.rows[3].bytes.begin());
+        return ret;
+    }
+
+    [[nodiscard]] constexpr const Row & operator [](const size_t idx) const { 
+        if(idx >= 4) __builtin_unreachable();
+        return rows[idx];
+    }
+
+
+    [[nodiscard]] constexpr Row & operator [](const size_t idx) { 
+        if(idx >= 4) __builtin_unreachable();
+        return rows[idx];
+    }
+};
+#endif
+
+struct AesCipher{
     enum class Error:uint8_t{
         BufferIsNotAlignedTo16,
         BufferSizeNotMatching
@@ -162,7 +214,10 @@ struct AesCipher{
         if(in_size & 0b1111) return Err(Error::BufferIsNotAlignedTo16);
 
         for (size_t i=0;i<in_size/16;i++){
-            i_Cipher(input.data()+i*16,output.data()+i*16);
+            i_cipher(
+                ptr_to_block(input.data()+i*16),
+                ptr_to_block(output.data()+i*16)
+            );
         }
         return Ok();
     }
@@ -174,7 +229,10 @@ struct AesCipher{
         if(in_size & 0b1111) return Err(Error::BufferIsNotAlignedTo16);
 
         for (size_t i = 0;i < in_size/16;i++){
-            i_InvCipher(input.data() + i*16,output.data() + i*16);
+            i_inv_cipher(
+                ptr_to_block(input.data() + i*16),
+                ptr_to_block(output.data() + i*16)
+            );
         }
         return Ok();
     }
@@ -183,7 +241,7 @@ struct AesCipher{
         std::span<uint8_t, 16> output, 
         std::span<const uint8_t, 16> input
     ){
-        i_Cipher(input.data(),output.data());
+        i_cipher(input,output);
     }
 
 
@@ -191,9 +249,17 @@ struct AesCipher{
         std::span<uint8_t, 16> output, 
         std::span<const uint8_t, 16> input
     ){
-        i_InvCipher(input.data(),output.data());
+        i_inv_cipher(input,output);
     }
 public:
+    static constexpr std::span<const uint8_t, 16> ptr_to_block(const uint8_t * p_block){
+        return std::span<const uint8_t, 16>(p_block, 16);
+    }
+
+    static constexpr std::span<uint8_t, 16> ptr_to_block(uint8_t * p_block){
+        return std::span<uint8_t, 16>(p_block, 16);
+    }
+
 
 	uint8_t				w_[KEYSCHEDULE_MAX_ROW][KEYSCHEDULE_MAX_COLUMN];						// key_buffer schedule array. 
 	size_t					Nk_;																			// key_buffer size in 32-bit words.  4, 6, 8.  (128, 192, 256 bits).
@@ -204,7 +270,7 @@ public:
         
         std::tie(Nk_, Nr_) = keysize_to_nk_and_nr(key_size);
 
-        std::array<uint8_t, 4> temp;
+        Row temp;
 
         for (size_t row = 0; row < this->Nk_; ++row){
             this->w_[row][0] = key_buffer[4*row];
@@ -220,14 +286,14 @@ public:
             temp[3] = this->w_[row-1][3];
 
             if (row % this->Nk_ == 0)  {
-                temp = SubWord(RotWord(temp));
+                temp = sub_word(rot_word(temp));
 
                 temp[0] = (uint8_t)( (int32_t)temp[0] ^ (int32_t)Rcon[row/this->Nk_][0] );
                 temp[1] = (uint8_t)( (int32_t)temp[1] ^ (int32_t)Rcon[row/this->Nk_][1] );
                 temp[2] = (uint8_t)( (int32_t)temp[2] ^ (int32_t)Rcon[row/this->Nk_][2] );
                 temp[3] = (uint8_t)( (int32_t)temp[3] ^ (int32_t)Rcon[row/this->Nk_][3] );
             }else if ( this->Nk_ > 6 && (row % this->Nk_ == 4)){
-                temp = SubWord(temp);
+                temp = sub_word(temp);
             }
 
             this->w_[row][0] = (uint8_t) ( (int32_t)this->w_[row-this->Nk_][0] ^ (int32_t)temp[0] );
@@ -254,28 +320,29 @@ public:
     }
 
 
-    constexpr void i_Cipher(
-        const uint8_t input[BLOCK_BYTES_SIZE], 
-        uint8_t output[BLOCK_BYTES_SIZE]
+    constexpr void i_cipher(
+        std::span<const uint8_t, BLOCK_BYTES_SIZE> input, 
+        std::span<uint8_t, BLOCK_BYTES_SIZE> output
     ) const {
+        // State state = State::from_bytes((input));
         State state;
         for (size_t i = 0; i < (4 * 4); ++i){
             state[i % 4][i / 4] = input[i];
         }
 
-        state = AddRoundKey(state, 0);
+        state = add_round_key(state, 0);
 
         for (size_t round = 1; round <= (this->Nr_ - 1); ++round)  // main round loop
         {
-            state = SubBytes(state); 
-            state = ShiftRows(state);  
-            state = MixColumns(state); 
-            state = AddRoundKey(state, round);
+            state = sub_bytes(state); 
+            state = shift_rows(state);  
+            state = mix_columns(state); 
+            state = add_round_key(state, round);
         }  // main round loop
 
-        state = SubBytes(state);
-        state = ShiftRows(state);
-        state = AddRoundKey(state, this->Nr_);
+        state = sub_bytes(state);
+        state = shift_rows(state);
+        state = add_round_key(state, this->Nr_);
 
         // output = state
         for (size_t i = 0; i < (4 * 4); ++i){
@@ -284,9 +351,9 @@ public:
     }  // cipher_block()
 
 
-    constexpr void i_InvCipher(
-        const uint8_t input[BLOCK_BYTES_SIZE], 
-        uint8_t output[BLOCK_BYTES_SIZE]
+    constexpr void i_inv_cipher(
+        std::span<const uint8_t, BLOCK_BYTES_SIZE> input, 
+        std::span<uint8_t, BLOCK_BYTES_SIZE> output
     ) const {
         State state;
         for (size_t i = 0; i < (4 * 4); ++i)
@@ -294,19 +361,19 @@ public:
             state[i % 4][i / 4] = input[i];
         }
 
-        state = AddRoundKey(state, Nr_);
+        state = add_round_key(state, Nr_);
 
         for (size_t round = this->Nr_-1; round >= 1; --round)  // main round loop
         {
-            state = InvShiftRows(state);
-            state = InvSubBytes(state);
-            state = AddRoundKey(state, round);
-            state = InvMixColumns(state);
+            state = inv_shift_rows(state);
+            state = inv_sub_bytes(state);
+            state = add_round_key(state, round);
+            state = inv_mix_columns(state);
         }  // end main round loop for inv_cipher_block
 
-        state = InvShiftRows(state);
-        state = InvSubBytes(state);
-        state = AddRoundKey(state, 0);
+        state = inv_shift_rows(state);
+        state = inv_sub_bytes(state);
+        state = add_round_key(state, 0);
 
         // output = state
         for (size_t i = 0; i < (4 * 4); ++i){
@@ -318,7 +385,7 @@ public:
 
 
     [[nodiscard]] __inline static constexpr 
-    State InvSubBytes(const State & state){
+    State inv_sub_bytes(const State & state){
         using namespace details;
         State ret;
         for (size_t r = 0; r < 4; ++r){
@@ -327,11 +394,11 @@ public:
             }
         }
         return ret;
-    }  // InvSubBytes
+    }  // inv_sub_bytes
 
 
     [[nodiscard]] __inline static constexpr  
-    State InvMixColumns(const State & state){
+    State inv_mix_columns(const State & state){
         using namespace details;
 
         State ret;
@@ -348,11 +415,11 @@ public:
                 (int32_t)gfmultby09(state[2][c]) ^ (int32_t)gfmultby0e(state[3][c]) );
         }
         return ret;
-    }  // InvMixColumns
+    }  // inv_mix_columns
 
 
     [[nodiscard]] __inline static constexpr  
-    State MixColumns(const State & state){
+    State mix_columns(const State & state){
         using namespace details;
         State ret;
         for (size_t c = 0; c < 4; ++c)
@@ -368,11 +435,11 @@ public:
         }
 
         return ret;
-    }  // MixColumns
+    }  // mix_columns
 
 
     [[nodiscard]] __inline static constexpr  
-    State SubBytes(const State& state){
+    State sub_bytes(const State& state){
         State ret;
         using namespace details;
         for (size_t r = 0; r < 4; ++r){
@@ -384,7 +451,7 @@ public:
     }
 
     [[nodiscard]] __inline static constexpr 
-    State ShiftRows(const State& state){
+    State shift_rows(const State& state){
         State ret;
         ret[0] = state[0]; // 第0行不移位
         ret[1] = rotate_row_left<1>(state[1]); // 第1行左移1位
@@ -394,7 +461,7 @@ public:
     }
 
     [[nodiscard]] __inline static constexpr 
-    State InvShiftRows(const State& state){
+    State inv_shift_rows(const State& state){
         State ret;
         ret[0] = state[0]; // 第0行不移位
         ret[1] = rotate_row_right<1>(state[1]); // 第1行右移1位
@@ -404,9 +471,9 @@ public:
     }
 
     [[nodiscard]] static constexpr __inline 
-    std::array<uint8_t, 4> SubWord(const std::array<uint8_t, 4> word){
+    Row sub_word(const Row word){
         using namespace details;
-        std::array<uint8_t, 4> result;
+        Row result;
         result[0] = Sbox[ word[0] >> 4][word[0] & 0x0f ];
         result[1] = Sbox[ word[1] >> 4][word[1] & 0x0f ];
         result[2] = Sbox[ word[2] >> 4][word[2] & 0x0f ];
@@ -415,8 +482,8 @@ public:
     }
 
     [[nodiscard]] static constexpr __inline 
-    std::array<uint8_t, 4> RotWord(const std::array<uint8_t, 4> word){
-        std::array<uint8_t, 4> result;
+    Row rot_word(const Row word){
+        Row result;
         result[0] = word[1];
         result[1] = word[2];
         result[2] = word[3];
@@ -427,7 +494,7 @@ public:
 
     template<int32_t I>
     [[nodiscard]] __fast_inline static constexpr 
-    std::array<uint8_t, 4> rotate_row_left(const std::array<uint8_t, 4> src){
+    Row rotate_row_left(const Row src){
         static_assert(I < 4, "Row index must be less than 4");
         return {
             src[(0 + I) & 0b11],
@@ -440,7 +507,7 @@ public:
     // 需要添加右旋函数：
     template<int32_t I>
     [[nodiscard]] __fast_inline static constexpr 
-    std::array<uint8_t, 4> rotate_row_right(const std::array<uint8_t, 4> src){
+    Row rotate_row_right(const Row src){
         static_assert(I < 4, "Shift amount must be less than 4");
         return {
             src[(4 - I) & 0b11],
@@ -450,7 +517,7 @@ public:
         };
     }
     [[nodiscard]] constexpr __inline 
-    State AddRoundKey(const State state, const size_t round) const {
+    State add_round_key(const State state, const size_t round) const {
         State ret;
         for (size_t r = 0; r < 4; ++r){
             for (size_t c = 0; c < 4; ++c){

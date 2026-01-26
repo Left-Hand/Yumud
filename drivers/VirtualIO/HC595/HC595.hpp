@@ -9,9 +9,9 @@ namespace ymd::drivers{
 
 class HC595_Transport final{
     HC595_Transport(
-        hal::GpioIntf & sclk_io, 
-        hal::GpioIntf & data_io, 
-        hal::GpioIntf & latch_io
+        hal::Gpio & sclk_io, 
+        hal::Gpio & data_io, 
+        hal::Gpio & latch_io
     ):
         sclk_io_(sclk_io), 
         data_io_(data_io), 
@@ -34,9 +34,9 @@ class HC595_Transport final{
     }
 
 private:
-    hal::GpioIntf & sclk_io_;
-    hal::GpioIntf & data_io_;
-    hal::GpioIntf & latch_io_;
+    hal::Gpio & sclk_io_;
+    hal::Gpio & data_io_;
+    hal::Gpio & latch_io_;
 
     void pulse(){
         sclk_io_.set();
@@ -74,9 +74,9 @@ public:
 
 // class HC595Single: public VGpioPortIntf<8>{
 // protected:
-//     hal::GpioIntf & sclk_io_;
-//     hal::GpioIntf & data_io_;
-//     hal::GpioIntf & latch_io_;
+//     hal::Gpio & sclk_io_;
+//     hal::Gpio & data_io_;
+//     hal::Gpio & latch_io_;
 
 //     uint8_t buf_ = 0;
 
@@ -96,7 +96,7 @@ public:
 //     }
 
 // public:
-//     HC595Single(hal::GpioIntf & sclk_io, hal::GpioIntf & data_io, hal::GpioIntf & latch_io):
+//     HC595Single(hal::Gpio & sclk_io, hal::Gpio & data_io, hal::Gpio & latch_io):
 //             sclk_io_(sclk_io), data_io_(data_io), latch_io_(latch_io){;}
 
 //     void init(){

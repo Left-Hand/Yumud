@@ -3,10 +3,11 @@
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
+#include "core/math/real.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "primitive/analog_channel.hpp"
+
 
 
 namespace ymd::drivers{

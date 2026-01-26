@@ -113,7 +113,7 @@ void sincos_pwm_main();
 
 void bldc_main();
 
-void rpc_main();
+void repl_main();
 
 void leetcode_main();
 
@@ -197,3 +197,5 @@ void steadywin_main();
 void vce2755_main();
 void sincospll_main();
 void cap_main();
+void stl06n_main();
+void o1heap_main();

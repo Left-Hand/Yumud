@@ -32,7 +32,10 @@ void ads7830_main(){
     auto scl_pin = SCL_PIN;
     auto sda_pin = SDA_PIN;
     hal::I2cSw i2c = hal::I2cSw{&scl_pin, &sda_pin};
-    i2c.init({400_KHz});
+
+    i2c.init({
+        .baudrate = hal::NearestFreq(400_KHz)
+    });
 
     ADS7830 ads7830{&i2c, hal::I2cSlaveAddr<7>::from_u7(0b10010110 >> 1)};
     

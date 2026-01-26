@@ -54,7 +54,7 @@ enum class [[nodiscard]] Bs2:uint8_t{
     _8tq = 0x07,
 };
 
-struct [[nodiscard]] NominalBitTimmingCoeffs{
+struct [[nodiscard]] NominalBitTimmingCoeffs final{
     uint16_t prescale;
     Swj swj;
     Bs1 bs1;
@@ -62,7 +62,7 @@ struct [[nodiscard]] NominalBitTimmingCoeffs{
 
     [[nodiscard]] static constexpr NominalBitTimmingCoeffs from(
         const uint32_t aligned_bus_clk_freq,
-        const uint32_t baud_freq,
+        const uint32_t baud_freq_hz,
         const Percentage<uint8_t> sample_point
     ){
         //works only at 144mhz pclk1 freq
@@ -72,26 +72,53 @@ struct [[nodiscard]] NominalBitTimmingCoeffs{
 
         [[maybe_unused]] const auto sample_percents = sample_point.percents();
 
-        switch(baud_freq){
-            case 10'000:    return {.prescale = 900,  .swj = Swj::_1tq,     
-                .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq};
-            case 20'000:    return {.prescale = 450,  .swj = Swj::_1tq,     
-                .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq};
-            case 50'000:    return {.prescale = 180,  .swj = Swj::_1tq,     
-                .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq};
-            case 100'000:   return {.prescale = 90,   .swj = Swj::_1tq,     
-                .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq};
-            case 125'000:   return {.prescale = 72,   .swj = Swj::_1tq,     
-                .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq};
-            case 250'000:   return {.prescale = 36,   .swj = Swj::_1tq,     
-                .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq};
-            case 500'000:   return {.prescale = 18,   .swj = Swj::_1tq,     
-                .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq};
+        switch(baud_freq_hz){
+            case 10'000:    
+                return {
+                    .prescale = 900, .swj = Swj::_1tq, 
+                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
+                };
+            case 20'000:    
+                return {
+                    .prescale = 450, .swj = Swj::_1tq, 
+                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
+                };
+            case 50'000:    
+                return {
+                    .prescale = 180, .swj = Swj::_1tq, 
+                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
+                };
+            case 100'000:   
+                return {
+                    .prescale = 90,  .swj = Swj::_1tq, 
+                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
+                };
+            case 125'000:   
+                return {
+                    .prescale = 72,  .swj = Swj::_1tq, 
+                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
+                };
+            case 250'000:   
+                return {
+                    .prescale = 36,  .swj = Swj::_1tq, 
+                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
+                };
+            case 500'000:   
+                return {
+                    .prescale = 18,  .swj = Swj::_1tq, 
+                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
+                };
 
-            case 800'000:       return {.prescale = 9,    .swj = Swj::_2tq,     
-                .bs1 = Bs1::_15tq,     .bs2 = Bs2::_4tq};
-            case 1000'000:      return {.prescale = 9,    .swj = Swj::_2tq,     
-                .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq};
+            case 800'000:       
+                return {
+                    .prescale = 9,   .swj = Swj::_2tq, 
+                    .bs1 = Bs1::_15tq,     .bs2 = Bs2::_4tq
+                };
+            case 1000'000:      
+                return {
+                    .prescale = 9,   .swj = Swj::_2tq, 
+                    .bs1 = Bs1::_12tq,     .bs2 = Bs2::_3tq
+                };
         };
 
         __builtin_trap();
@@ -133,7 +160,7 @@ enum class [[nodiscard]] InterruptFlagBit:uint16_t{
 
 
 
-struct [[nodiscard]] Tq{
+struct [[nodiscard]] Tq final{
     using Self = Tq;
     static constexpr Self from_count(const uint8_t count){
         if(count == 0) __builtin_abort();
@@ -153,7 +180,7 @@ private:
     constexpr Tq(const uint8_t bits):bits_{bits}{}
 };
 
-class [[nodiscard]] Baudrate{
+class [[nodiscard]] Baudrate final{
 public:
     static constexpr Percentage<uint8_t> DEFAULT_SAMPLE_POINT = 
         Percentage<uint8_t>::from_percents(80).unwrap();
@@ -251,7 +278,7 @@ private:
 
 
 
-struct [[nodiscard]] WiringMode{
+struct [[nodiscard]] WiringMode final{
     using Self = WiringMode;
 
     enum class [[nodiscard]] Kind:uint8_t {
@@ -300,7 +327,8 @@ enum class [[nodiscard]] Error:uint8_t{
     SoftwareSet = 0x7,
 };
 
-struct [[nodiscard]] ErrorFlags{
+//from ST-HAL
+struct [[nodiscard]] ErrorFlags final{
     uint32_t error_warning:1;
     uint32_t error_passive:1;
     uint32_t bus_off:1;
@@ -320,7 +348,7 @@ struct [[nodiscard]] ErrorFlags{
     uint32_t mbox2_arbitration_lost:1;
     uint32_t mbox2_transmit:1;
 
-    uint32_t timout:1;
+    uint32_t timeout:1;
     uint32_t peripheral_not_initialized:1;
     uint32_t peripheral_not_ready:1;
     uint32_t peripheral_not_started:1;
@@ -331,7 +359,7 @@ OutputStream & operator<<(OutputStream & os, const Error & fault);
 enum class [[nodiscard]] LibError:uint8_t{
     BlockingTransmitTimeout,
     NoMailboxAvailable,
-    SoftFifoOverflow
+    SoftQueueOverflow
 };
 
 OutputStream & operator<<(OutputStream & os, const LibError & error);
@@ -358,58 +386,6 @@ enum class TxBufferMode:uint8_t {
     // TX priority queue operation - In this mode CAN frames are transmitted according to CAN priority.
     Priority,
 };
-
-#if 0
-struct FdCanConfig final {
-    // Nominal Bit Timings
-    CanNominalBitTimming nbtr;
-    // (Variable) Data Bit Timings
-    DataBitTiming dbtr;
-    // Enables or disables automatic retransmission of messages
-
-    // If this is enabled, the CAN peripheral will automatically try to retransmit each frame util it can be sent. Otherwise, it will try only once to send each frame.
-
-    // Automatic retransmission is enabled by default.
-    Enable automatic_retransmit;
-
-    // The transmit pause feature is intended for use in CAN systems where the CAN message 
-    // identifiers are permanently specified to specific values and cannot easily be changed.
-
-    // These message identifiers can have a higher CAN arbitration priority than other defined messages, 
-    // while in a specific application their relative arbitration priority must be inverse.
-
-    // This may lead to a case where one ECU sends a burst of CAN messages that cause another ECU CAN 
-    // messages to be delayed because that other messages have a lower CAN arbitration priori
-    Enable transmit_pause;
-
-    // Enabled or disables the pausing between transmissions
-    // This feature looses up burst transmissions coming from a single node and it protects against 
-    // “babbling idiot” scenarios where the application program erroneously requests too many transmissions.
-    FrameTransmissionConfig frame_transmit;
-
-    // Non Isoe Mode If this is set, the FDCAN uses the CAN FD frame format as specified by the 
-    // Bosch CAN FD Specification V1.0.
-    Enable non_iso_mode;
-
-    // Edge Filtering: Two consecutive dominant tq required to detect an edge for hard synchronization
-    Enable edge_filtering;
-
-    // Enables protocol Error handling
-    Enable protocol_Error_handling;
-
-    // Sets the general clock divider for this FdCAN instance
-    ClockDivider clock_divider;
-
-    // Sets the timestamp source
-    TimestampSource timestamp_source;
-
-    // Configures the Global Filter
-    GlobalFilter global_filter;
-
-    // TX buffer mode (FIFO or priority queue)
-    TxBufferMode tx_buffer_mode;
-};
-#endif
 };
 
 namespace ymd::hal{

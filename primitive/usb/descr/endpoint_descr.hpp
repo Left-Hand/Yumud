@@ -1,10 +1,10 @@
 #pragma once
 
 #include "usb/usb_types.hpp"
+#include "usb_endpoint.hpp"
+#include "usb_control.hpp"
 
 namespace ymd::usb{
-
-    
 
 // bEndpointAddress 1字节，表示该端点的地址和方向。
 // bmAttributes 1字节，表示该端点的属性，详细看上表。
@@ -30,15 +30,15 @@ enum class EndpointTransferType : uint8_t {
 
 
 
-struct UsbEndpointDescrPayload{
+struct [[nodiscard]] UsbEndpointDescrPayload final{
 
 #pragma pack(push, 1)
-    const EndpointAddress  bEndpointAddress; //[2]
-    const TransferType bmAttributes; //[3]
-    const uint16_t wMaxPacketSize; //[5:4] 
+    EndpointAddress  bEndpointAddress; //[2]
+    TransferType bmAttributes; //[3]
+    uint16_t wMaxPacketSize; //[5:4]
 
     //配置实时传输，此值必须为1（ms）；若该端点配置中断传输，此值为1～255（ms）
-    const EndpointInvervalMs  bInterval; //[6]
+    EndpointInvervalMs  bInterval; //[6]
 #pragma pack(pop)
 
 };

@@ -7,7 +7,6 @@ namespace ymd::drivers{
 
 
 class QMC5883L:
-    public MagnetometerIntf,
     public QMC5883L_Prelude{
 public:
     explicit QMC5883L(const hal::I2cDrv & i2c_drv):
@@ -38,7 +37,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vec3<iq24>> read_mag() override;
+    [[nodiscard]] IResult<Vec3<iq16>> read_mag();
     
     [[nodiscard]] IResult<> validate();
 

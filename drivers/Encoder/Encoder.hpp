@@ -13,7 +13,7 @@
 namespace ymd::drivers{
 
 namespace details{
-enum class EncoderError_Kind:uint8_t{
+enum class [[nodiscard]] EncoderError_Kind:uint8_t{
     UnknownPackage,
     EEpromProgramFailed,
     CantSetup,
@@ -22,12 +22,6 @@ enum class EncoderError_Kind:uint8_t{
     InvalidPc2,
     InvalidCrc,
 
-    MagnetLost,
-    MagnetInvalid,
-    MagnetLow,
-    MagnetHigh,
-
-    OverSpeed,
     RegProgramFailed,
     RegProgramResponseFormatInvalid,
     ValueOverflow,
@@ -37,9 +31,64 @@ enum class EncoderError_Kind:uint8_t{
     SpiIsNotImplementedYet,
     I2cIsNotImplementedYet,
 
-    UnderVoltage,
     Unreachable
 };
+
+// Magnetic,//磁编码器
+// Spin,//旋变编码器
+// LinearAnalog,//线性模拟信号编码器
+// SincosAnalog,//sincos模拟信号编码器
+// Pwm,//线性数字信号编码器
+// Hall6//六步霍尔
+
+
+
+struct alignas(4) [[nodiscard]] EncoderFaultBitFields final{
+    using Self = EncoderFaultBitFields;
+    enum class MagStrength:uint8_t{
+        Proper = 0b00,
+        Lost = 0b01,
+        Low = 0b10,
+        High = 0b11,
+    };
+
+    enum class SupplyVoltageLevel:uint8_t{
+        Proper = 0b00,
+        Lost = 0b01,
+        Under = 0b10,
+        Over = 0b11
+    };
+
+    union{
+        struct{
+            uint8_t arg0;
+            uint8_t arg1;
+            uint8_t arg2;
+        };
+
+        uint8_t args[3];
+    };
+
+    MagStrength mag_strength:2;
+    SupplyVoltageLevel supply_voltage_level:2;
+
+    uint8_t is_over_speed:1;
+    uint8_t is_over_tempreature:1;
+
+    [[nodiscard]] static constexpr Self zero(){
+        return std::bit_cast<Self>(uint32_t(0));
+    }
+
+    [[nodiscard]] constexpr uint32_t to_u32() const {
+        return std::bit_cast<uint32_t>(*this);
+    }
+    [[nodiscard]] constexpr bool is_ok(){
+        return to_u32() & 0xff00'0000;
+    }
+};
+
+static_assert(sizeof(EncoderFaultBitFields) == 4);
+
 }
 DEF_ERROR_SUMWITH_HALERROR(EncoderError, details::EncoderError_Kind)
 }
@@ -50,12 +99,9 @@ OutputStream& operator << (OutputStream& os, const drivers::details::EncoderErro
 
 
 namespace ymd::drivers{
-class EncoderIntf{
-public:
-    virtual Result<Angular<uq32>, EncoderError> read_lap_angle() = 0;
-    virtual Result<void, EncoderError> update() = 0;
-    virtual ~EncoderIntf() = default;
-};
+
+using details::EncoderFaultBitFields;
+
 
 
 }

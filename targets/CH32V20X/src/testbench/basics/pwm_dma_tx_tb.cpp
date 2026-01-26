@@ -129,12 +129,11 @@ void pwm_dma_tx_main(){
     auto watch_pin_ = hal::PA<4>();
     watch_pin_.outpp();
 
-    volatile bool is_up_edge = 1;
     volatile uint32_t high_val = 0;
     volatile uint32_t low_val = 0;
     volatile uint32_t trig_times = 0;
 
-    hal::timer3.set_event_handler([&](const hal::TimerEvent & event){
+    hal::timer3.set_event_callback([&](const hal::TimerEvent & event){
         switch(event){
             case hal::TimerEvent::CC3:{
                 trig_times++;

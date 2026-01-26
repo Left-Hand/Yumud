@@ -22,7 +22,7 @@ namespace ymd::cyphal::transport::serial{
 using namespace cyphal::primitive;
 
 
-alignas(4) struct [[nodiscard]] Header{
+alignas(4) struct [[nodiscard]] Header final{
     using Self = Header;
 
     //offset 0

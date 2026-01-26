@@ -6,7 +6,6 @@ namespace ymd::drivers{
 
 
 class AK8963:
-    public MagnetometerIntf,
     public AK8963_Prelude{
 public:
     explicit AK8963(const hal::I2cDrv & i2c_drv):

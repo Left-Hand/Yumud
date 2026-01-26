@@ -208,8 +208,8 @@ IResult<>  ICM42688::update(){
 	if(const auto res = transport_.read_burst(ACC_DATA_X0L_ADDR - 1, std::span(buf));
 		res.is_err()) return Err(res.unwrap_err());
 	
-	regs_.acc_data_ = {buf[0], buf[1], buf[2]};
-	regs_.gyr_data_ = {buf[3], buf[4], buf[5]};
+	regs_.acc_bits_ = {buf[0], buf[1], buf[2]};
+	regs_.gyr_bits_ = {buf[3], buf[4], buf[5]};
 
 	return Ok();
 }
@@ -230,9 +230,9 @@ IResult<>  ICM42688::validate(){
 
 IResult<Vec3<iq24>> ICM42688::read_acc(){
     return Ok{Vec3<iq24>{
-		acc_scale_ * iq16::from_bits(regs_.acc_data_.x), 
-		acc_scale_ * iq16::from_bits(regs_.acc_data_.y), 
-		acc_scale_ * iq16::from_bits(regs_.acc_data_.z), 
+		acc_scale_ * iq16::from_bits(regs_.acc_bits_.x), 
+		acc_scale_ * iq16::from_bits(regs_.acc_bits_.y), 
+		acc_scale_ * iq16::from_bits(regs_.acc_bits_.z), 
 	}};
 }
 
@@ -240,8 +240,8 @@ IResult<Vec3<iq24>> ICM42688::read_acc(){
 IResult<Vec3<iq24>> ICM42688::read_gyr(){
 
     return Ok{Vec3<iq24>{
-		gyr_scale_ * iq16::from_bits(regs_.gyr_data_.x),
-		gyr_scale_ * iq16::from_bits(regs_.gyr_data_.y),
-		gyr_scale_ * iq16::from_bits(regs_.gyr_data_.z)
+		gyr_scale_ * iq16::from_bits(regs_.gyr_bits_.x),
+		gyr_scale_ * iq16::from_bits(regs_.gyr_bits_.y),
+		gyr_scale_ * iq16::from_bits(regs_.gyr_bits_.z)
 	}};
 }

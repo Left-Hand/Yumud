@@ -12,7 +12,7 @@
 
 namespace ymd::drivers{
 
-class MT6816 final:public MagEncoderIntf{
+class MT6816 final{
 public:
     using Error = EncoderError;
 
@@ -41,16 +41,18 @@ public:
         return last_packet_.parse();
     }
 
-    IResult<MagStatus> get_mag_status() {
+    IResult<EncoderFaultBitFields> get_fault() {
+        EncoderFaultBitFields fault = EncoderFaultBitFields::zero();
         if(last_packet_.no_mag){
-            return Ok(MagStatus::from_low());
+            fault.mag_strength = EncoderFaultBitFields::MagStrength::Lost;
         }else{
-            return Ok(MagStatus::from_proper());
+            fault.mag_strength = EncoderFaultBitFields::MagStrength::Proper;
         }
+        return Ok(fault);
     }
 
 private:
-    struct Packet{
+    struct [[nodiscard]] Packet final{
         uint16_t pc:1;
         uint16_t no_mag:1;
         uint16_t data_14bit:14;
@@ -58,9 +60,6 @@ private:
         [[nodiscard]] IResult<Angular<uq32>> parse() const {
             if(not is_pc_valid()) [[unlikely]]
                 return Err(EncoderError::InvalidPc);
-            
-            if(no_mag) [[unlikely]]
-                return Err(EncoderError::MagnetLost);
 
             const auto turns = static_cast<uq32>(uq14::from_bits(data_14bit));
             return Ok(Angular<uq32>::from_turns(turns));

@@ -109,22 +109,6 @@ enum class [[nodiscard]] PmuMode:uint8_t{
 
 static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b1101001);
 
-struct [[nodiscard]] Config{
-    AccOdr acc_odr;
-    AccFs acc_fs;
-    GyrOdr gyr_odr;
-    GyrFs gyr_fs;
-
-    static constexpr Config from_default(){
-        return Config{
-            .acc_odr = AccOdr::_800Hz,
-            .acc_fs = AccFs::_8G,
-            .gyr_odr = GyrOdr::_800Hz,
-            .gyr_fs = GyrFs::_1000deg
-        };
-    }
-};
-
 
 
 struct Regset final{

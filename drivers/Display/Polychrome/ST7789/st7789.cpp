@@ -16,14 +16,14 @@ using IResult = ST7789::IResult<T>;
 
 //判断刷新命令符必要性判断算法 以提高spi dma的吞吐率
 bool ST7789::ST7789_ReflashAlgo::update(const Rect2<uint16_t> rect){
-    const auto curr_pt_range = get_point_index(curr_area_);
+    const auto now_pt_range = get_point_index(now_area_);
     const auto desired_pt_range = get_point_index(rect);
 
-    if(desired_pt_range.is_inside(curr_pt_range) and rect.is_inside(curr_area_)){
+    if(desired_pt_range.is_inside(now_pt_range) and rect.is_inside(now_area_)){
         last_point_ += desired_pt_range.length();
         return false;
     }else{
-        curr_area_ = rect;
+        now_area_ = rect;
         last_point_ = desired_pt_range.start;
         return true;
     }

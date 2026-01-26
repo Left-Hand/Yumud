@@ -11,6 +11,8 @@
 #include "primitive/hal_result.hpp"
 
 namespace ymd::drivers{
+template<typename T>
+static constexpr T GRAVITY_ACC = T(9.80665);
 
 namespace details{
 enum class ImuError_Kind:uint8_t{
@@ -40,6 +42,8 @@ enum class ImuError_Kind:uint8_t{
     AxisYOverflow,
     AxisZOverflow,
 
+    InvalidTemperature,
+
     NoAvailablePhy,
     I2cPhyIsNotImplementedYet,
     I3cPhyIsNotImplementedYet,
@@ -53,27 +57,4 @@ DEF_ERROR_SUMWITH_HALERROR(ImuError, details::ImuError_Kind)
 
 namespace ymd{
 OutputStream& operator << (OutputStream& os, const drivers::details::ImuError_Kind value);
-}
-
-
-namespace ymd::drivers{
-class AccelerometerIntf{
-public:
-    template<typename T>
-    static constexpr T GRAVITY_ACC = T(9.80665);
-
-    virtual Result<Vec3<iq24>, ImuError> read_acc() = 0;
-};
-
-class GyroscopeIntf{
-public:
-    virtual Result<Vec3<iq24>, ImuError> read_gyr() = 0;
-};
-
-class MagnetometerIntf{
-public:
-
-    virtual Result<Vec3<iq24>, ImuError> read_mag() = 0;
-};
-
 }

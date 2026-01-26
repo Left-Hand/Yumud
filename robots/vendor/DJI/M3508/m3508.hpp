@@ -1,12 +1,12 @@
 #pragma once
 
-#include "hal/bus/can/can.hpp"
-
-#include "dsp/controller/pid_ctrl.hpp"
-
 #include <bitset>
 
+#include "primitive/can/bxcan_frame.hpp"
+#include "dsp/controller/pid_ctrl.hpp"
 #include "drivers/Encoder/Encoder.hpp"
+
+
 
 namespace ymd::robots::dji::m3508{
 static constexpr uint16_t NUM_HIGHER_QUAD_CAN_ID = 0x200;
@@ -20,7 +20,7 @@ struct [[nodiscard]] CurrentCode final{
     static constexpr Self from_amps(const iq16 amps){
         int16_t temp = int16_t((amps / 20)* 16384);
         return Self{
-            .bits = std::bit_cast<uint16_t>(BSWAP_16(temp))
+            .bits = std::bit_cast<uint16_t>(__builtin_bswap16(temp))
         };
     }
     constexpr iq16 to_amps() const {
@@ -32,7 +32,7 @@ struct [[nodiscard]] AngleCode final{
     uint16_t bits;
 
     constexpr Angular<uq32> to_angle() const {
-        const auto angle_u13 = uint16_t(BSWAP_16(bits));
+        const auto angle_u13 = uint16_t(__builtin_bswap16(bits));
         const auto turns = uq32::from_bits(angle_u13 << (32u - 13u));
         return Angular<uq32>::from_turns(turns);
     }
@@ -42,7 +42,7 @@ struct [[nodiscard]] SpeedCode final{
     uint16_t bits;
 
     constexpr iq16 to_tps() const {
-        return iq16(1.0 / 60) * std::bit_cast<int16_t>(BSWAP_16(bits));
+        return iq16(1.0 / 60) * std::bit_cast<int16_t>(__builtin_bswap16(bits));
     }
 };
 

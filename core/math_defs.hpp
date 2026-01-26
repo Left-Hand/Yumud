@@ -2,7 +2,7 @@
 
 #include "core/sys_defs.hpp"
 #include <type_traits>
-#include "bits/move.h"
+#include <bits/move.h>
 #include <bit>
 
 #if defined(YMD_USE_MY_MEMORY)
@@ -97,8 +97,8 @@ __fast_inline constexpr char * __ymd_strcpy(char * dest, const char * src){
 #define TAU 6.2831853071795864769252867666
 #endif
 
-#ifndef PI
-#define PI 3.1415926535897932384626433833
+#ifndef M_PI
+#define M_PI 3.1415926535897932384626433833
 #endif
 
 #ifndef M_E
@@ -213,8 +213,10 @@ constexpr __fast_inline T INVLERP(const U & _a, const V & _b, const T& t){
 
 template<typename T>
 constexpr __fast_inline T __clamp_tmpl(const T x, const auto mi, const auto ma) {
-    if(unlikely(x > static_cast<T>(ma))) return static_cast<T>(ma);
-    if(unlikely(x < static_cast<T>(mi))) return static_cast<T>(mi);
+    if((x > static_cast<T>(ma))) [[unlikely]]
+        return static_cast<T>(ma);
+    if((x < static_cast<T>(mi))) [[unlikely]]
+        return static_cast<T>(mi);
     return x;
 }
 
@@ -238,61 +240,6 @@ constexpr __fast_inline T STEP_TO(const T x,const T y, const T s){
 }
 
 
-
-#ifndef SIGN_AS
-#ifdef __cplusplus
-#define SIGN_AS(x,s) __sign_as_impl(x, s)
-
-template<typename T>
-constexpr __fast_inline T __sign_as_impl(const T x, const auto s){
-    if(s){
-        return s > 0 ? x : -x;
-    }else{
-        return T(0);
-    }
-}
-#endif
-#endif
-
-#ifndef SIGN_DIFF
-#ifdef __cplusplus
-#define SIGN_DIFF(x,y) __sign_diff_impl(x, y)
-
-template<typename T>
-requires (sizeof(T) <= 4) 
-constexpr __fast_inline bool __sign_diff_impl(const T x, const auto y){
-    return (std::bit_cast<uint32_t>(x) ^ std::bit_cast<uint32_t>(y)) & 0x80000000;
-}
-
-#endif
-#endif
-
-#ifndef SIGN_SAME
-#ifdef __cplusplus
-#define SIGN_SAME(x,y) __sign_same_impl(x, y)
-
-template<typename T>
-requires (sizeof(T) <= 4) 
-constexpr __fast_inline bool __sign_same_impl(const T x, const auto y){
-    return (std::bit_cast<uint32_t>(x) ^ std::bit_cast<uint32_t>(y)) == 0;
-}
-
-#endif
-#endif
-
-#ifndef INVERSE_IF
-#ifdef __cplusplus
-#define INVERSE_IF(b, x) __inverse_if_impl(b, x)
-
-template<typename T>
-constexpr __fast_inline T __inverse_if_impl(const bool b, const T & x){
-    return b ? -x : x;
-}
-
-#endif
-#endif
-
-
 template<typename T>
 constexpr __fast_inline T LSHIFT(const T x, const int s){
     if (s >= 0){
@@ -312,13 +259,19 @@ constexpr __fast_inline T RSHIFT(const T x, const int s){
     }
 }
 
-#define NEXT_POWER_OF_2(x) ((x == 0) ? 1 : (1 << (32 - __builtin_clz(x - 1))))
-#define PREV_POWER_OF_2(x) (1 << (31 - __builtin_clz(x)))
+[[nodiscard]] static constexpr uint32_t NEXT_POWER_OF_2(const uint32_t x) {
+    return ((x == 0) ? 1 : (1 << (32 - __builtin_clz(x - 1))));
+}
+
+[[nodiscard]] static constexpr uint32_t PREV_POWER_OF_2(const uint32_t x) {
+    return (1 << (31 - __builtin_clz(x)));
+}
+
 
 #ifndef CTZ
 #ifdef __cplusplus
 #define CTZ(x) __ymd_ctz_impl(x)
-__fast_inline constexpr uint32_t __ymd_ctz_impl(uint32_t x) {
+[[nodiscard]] __fast_inline static constexpr uint32_t __ymd_ctz_impl(uint32_t x) {
     // under both the University of Illinois "BSD-Like" license and the MIT license
     //https://github.com/microsoft/compiler-rt/blob/master/lib/builtins/ctzsi2.c
 
@@ -351,7 +304,7 @@ __fast_inline constexpr uint32_t __ymd_ctz_impl(uint32_t x) {
 #ifdef __cplusplus
 #define CLZ(x) __ymd_clz_impl(x)
 
-__fast_inline constexpr uint32_t  __ymd_clz_impl(uint32_t x){
+[[nodiscard]] __fast_inline static constexpr uint32_t  __ymd_clz_impl(uint32_t x){
     // under both the University of Illinois "BSD-Like" license and the MIT license
     // https://github.com/m-labs/compiler-rt-lm32/blob/master/lib/clzsi2.c
 
@@ -382,14 +335,13 @@ __fast_inline constexpr uint32_t  __ymd_clz_impl(uint32_t x){
 static constexpr auto BITS(auto x) {return (sizeof(x) * 8);}
 static consteval auto PLAT_WIDTH() {return BITS(std::size_t());}
 
-template<typename T>
-static constexpr T DEG2RAD(auto x) {return (static_cast<T>(x) * static_cast<T>(TAU / 360));}
+static constexpr double DEG2RAD_RATIO = (TAU / 360);
+static constexpr double RAD2DEG_RATIO = (360 / TAU);
 
-template<typename T>
-static constexpr T RAD2DEG(auto x) {return (static_cast<T>(x) * static_cast<T>(360 / TAU));}
-
-static consteval auto YEAR() {return (((__DATE__[9]-'0')) * 10 + (__DATE__[10]-'0'));}
-static consteval auto MONTH() {
+static constexpr uint16_t BUILT_YEAR = []{
+    return static_cast<uint16_t>(((__DATE__[9]-'0')) * 10 + (__DATE__[10]-'0'));
+}();
+static constexpr uint8_t BUILT_MONTH = []{
     return (
         __DATE__[0] == 'J' && __DATE__[1] == 'a' && __DATE__[2] == 'n' ? 1 :
         __DATE__[0] == 'F' ? 2 :
@@ -402,16 +354,16 @@ static consteval auto MONTH() {
         __DATE__[0] == 'S' ? 9 :
         __DATE__[0] == 'O' ? 10 : 11
     );
-}
+}();
 
-static consteval auto DAY() {
+static constexpr uint8_t BUILT_DAY = []{
     return ((__DATE__[4] == ' ' ? 0 : __DATE__[4]-'0') * 10 + (__DATE__[5]-'0'));
-}
+}();
 
-static consteval auto HOUR() {
+static constexpr uint8_t BUILT_HOUR = []{
     return ((__TIME__[0]-'0') * 10 + __TIME__[1]-'0');
-}
+}();
 
-static consteval auto MINUTE() {
+static constexpr uint8_t BUILT_MINUTE = []{
     return((__TIME__[3]-'0') * 10 + __TIME__[4]-'0');
-}
+}();

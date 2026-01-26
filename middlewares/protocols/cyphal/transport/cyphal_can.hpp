@@ -6,7 +6,7 @@ namespace ymd::cyphal::transport::can{
 
 using namespace cyphal::primitive;
 
-struct [[nodiscard]] MessageHeader{
+struct [[nodiscard]] MessageHeader final{
 public:
     using Self = MessageHeader;
 
@@ -46,7 +46,7 @@ private:
 };
 
 
-struct [[nodiscard]] ServiceHeader{
+struct [[nodiscard]] ServiceHeader final{
 public:
     using Self = ServiceHeader;
 
@@ -89,7 +89,7 @@ private:
 };
 
 
-struct [[nodiscard]] TailByte{
+struct [[nodiscard]] TailByte final{
     using Self = TailByte;
     uint8_t transfer_id:5;
 

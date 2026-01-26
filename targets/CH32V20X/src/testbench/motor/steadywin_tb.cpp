@@ -269,7 +269,7 @@ void steadywin_main(){
 
 
     //设置定时器事件回调
-    timer.set_event_handler([&](hal::TimerEvent ev){
+    timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             const auto now_secs = clock::seconds();

@@ -36,7 +36,7 @@ struct [[nodiscard]] LidarPoint{
         return distance_mm * 0.001_uq16;
     }
 
-    friend OutputStream & operator<<(OutputStream & os, const LidarPoint & self){ 
+    friend OutputStream & operator<<(OutputStream & os, const LidarPoint & self){
         return os << self.distance_meters() << "m";
         //  << os.splitter()
             // << self.intensity << ;
@@ -78,7 +78,7 @@ struct [[nodiscard]] TimeStamp{
         return TimeStamp{bits};
     }
 
-    [[nodiscard]] constexpr std::chrono::duration<uint16_t, std::milli> 
+    [[nodiscard]] constexpr std::chrono::duration<uint16_t, std::milli>
     to_ms() const {
         return std::chrono::duration<uint16_t, std::milli>(bits);
     }
@@ -121,9 +121,9 @@ namespace events{
         uint8_t actual;
 
         friend OutputStream & operator<<(OutputStream & os, const InvalidCrc & self){
-            return os << "expected: " << self.actual << os.splitter() 
+            return os << "expected: " << self.actual << os.splitter()
                 << " actual: " << self.expected;
-        } 
+        }
     };
 };
 
@@ -135,9 +135,9 @@ struct Event:public Sumtype<events::DataReady, events::InvalidCrc> {
 using Callback = std::function<void(Event)>;
 
 
-class LD19_ParserSink final{
+class LD19_ParseReceiver final{
 public:
-    explicit LD19_ParserSink(Callback callback):
+    explicit LD19_ParseReceiver(Callback callback):
         callback_(callback)
     {
         reset();
@@ -154,10 +154,9 @@ private:
 
     Callback callback_;
     union{
-        LidarSectorPacket frame_;
+        alignas(4) LidarSectorPacket packet_;
         alignas(4) std::array<uint8_t, 48> bytes_;
     };
-    size_t bytes_count_ = 0;
 
     enum class State:uint8_t{
         WaitingHeader,
@@ -166,7 +165,8 @@ private:
         Emitting
     };
 
-    State state_ = State::WaitingHeader;
+    size_t bytes_count_ = 0;
+    volatile State state_ = State::WaitingHeader;
 
 };
 

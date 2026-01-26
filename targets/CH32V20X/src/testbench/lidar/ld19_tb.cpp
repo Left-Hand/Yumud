@@ -16,24 +16,17 @@ using namespace ymd::drivers;
 void ld19_main(){
     DEBUGGER_INST.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576_KHz), 
+        .baudrate = hal::NearestFreq(576_KHz),
+        .tx_strategy = CommStrategy::Blocking
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
-    
 
-    #if defined(CH32V20X)
-    auto & ld19_uart = hal::usart1;
-    #elif defined(CH32V30X)
-    auto & ld19_uart = hal::usart2;
 
-    #else
-    static_assert(false, "Unsupported MCU");
-    #endif
 
     using LD19Event = ld19::Event;
 
 
-    auto ld19_ev_handler = [&](const LD19Event & ev){ 
+    auto ld19_ev_handler = [&](const LD19Event & ev){
         if(ev.is<LD19Event::DataReady>()){
             const auto & packet = ev.unwrap_as<LD19Event::DataReady>().packet;
             // for(const auto & points: packet.points){
@@ -47,11 +40,8 @@ void ld19_main(){
         // DEBUG_PRINTLN(ev.dist_cm, ev.signal_strength.to_dbm());
     };
 
-    auto ld19_parser = ld19::LD19_ParserSink(ld19_ev_handler);
-    ld19_uart.init({
-        .remap = hal::USART1_REMAP_PA9_PA10,
-        .baudrate = hal::NearestFreq(ld19::DEFAULT_UART_BAUD)
-    });
+    auto ld19_parser_ = ld19::LD19_ParseReceiver(ld19_ev_handler);
+
 
 
     auto red_led_pin_ = hal::PC<13>();
@@ -69,59 +59,52 @@ void ld19_main(){
 
 
     uint32_t received_bytes_cnt_ = 0;
-    while(true){
-        auto collect_bytes = [&]{
-            
-            #if 1
-            std::vector<uint8_t> bytes(8);
-            while(ld19_uart.available()){
-                char chr;
-                const auto read_len = ld19_uart.try_read_char(chr);
-                if(read_len == 0) break;
-                bytes.push_back(uint8_t(chr));
+
+    #if defined(CH32V20X)
+    auto & ld19_uart_ = hal::usart1;
+    ld19_uart_.init({
+        .remap = hal::USART1_REMAP_PA9_PA10,
+        .baudrate = hal::NearestFreq(ld19::DEFAULT_UART_BAUD)
+    });
+
+    #elif defined(CH32V30X)
+    auto & ld19_uart_ = hal::uart4;
+    ld19_uart_.init({
+        .remap = hal::UART4_REMAP_PE0_PE1,
+        .baudrate = hal::NearestFreq(ld19::DEFAULT_UART_BAUD)
+    });
+    #else
+    static_assert(false, "Unsupported MCU");
+    #endif
+
+    ld19_uart_.set_event_callback([&](const hal::UartEvent & ev){
+        auto poll_parser = [&](){
+            while(true){
+                uint8_t byte;
+                if(ld19_uart_.try_read_byte(byte) == 0) break;
+                ld19_parser_.push_byte(static_cast<uint8_t>(byte));
             }
-
-            #else
-            const auto bytes = std::to_array<uint8_t>({
-                0x54, 0x2C, 0x68, 0x08, 0xAB, 0x7E, 0xE0, 0x00, 
-                0xE4, 0xDC, 0x00, 0xE2, 0xD9, 0x00, 0xE5, 0xD5, 
-                0x00, 0xE3, 0xD3, 0x00, 0xE4, 0xD0, 0x00, 0xE9, 
-                0xCD, 0x00, 0xE4, 0xCA, 0x00, 0xE2, 0xC7, 0x00, 
-                0xE9, 0xC5, 0x00, 0xE5, 0xC2, 0x00, 0xE5, 0xC0, 
-                0x00, 0xE5, 0xBE, 0x82, 0x3A, 0x1A, 
-                0x50, 
-            });
-
-            [[maybe_unused]] static constexpr auto bytes_size = sizeof(bytes);
-
-            #endif
-
-            // if(bytes.size()) DEBUG_PRINTLN(bytes);
-            return bytes;
         };
-
-        if(ld19_uart.available()){
-            // const auto u_begin = clock::micros();
-            const auto bytes = collect_bytes();
-            ld19_parser.push_bytes(std::span(bytes)); 
-            received_bytes_cnt_+=bytes.size();
-            // DEBUG_PRINTLN(clock::micros() - u_begin);
+        switch(ev.kind()){
+            case hal::UartEvent::RxIdle:
+                poll_parser();
+                ld19_parser_.reset();
+                break;
+            case hal::UartEvent::RxBulk:
+                poll_parser();
+                break;
+            default:
+                break;
         }
-        // DEBUG_PRINTLN("ld19_uart_rx", uint8_t(chr));
+    });
 
-
+    while(true){
         blink_service_poller();
 
-
         static auto report_timer = async::RepeatTimer::from_duration(3ms);
-        
         report_timer.invoke_if([&]{
             DEBUG_PRINTLN_IDLE(received_bytes_cnt_);
 
-
-            // for(const auto byte : bytes){
-            //     DEBUG_PRINT(byte);
-            // }
     });
     }
 

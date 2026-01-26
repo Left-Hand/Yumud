@@ -12,7 +12,7 @@
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 
 #include "robots/kinematics/RRS3/rrs3_kinematics.hpp"
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl_server.hpp"
 #include "algebra/transforms/euler.hpp"
 
 #define MOCK_TEST_ALL
@@ -41,13 +41,13 @@ static constexpr uint SERVO_FREQ = 50;
 
 class MockServo{
 protected:
-    Angular<real_t> curr_angle_;
+    Angular<real_t> now_angle_;
 public:
     void set_angle(const Angular<real_t> angle){
-        curr_angle_ = angle;
+        now_angle_ = angle;
     }
     Angular<real_t> get_angle(){
-        return curr_angle_;
+        return now_angle_;
     }
 };
 
@@ -83,7 +83,10 @@ public:
         // DEBUGGER.no_brackets();
         DEBUGGER.force_sync(EN);
 
-        i2c.init({400_KHz});
+
+        i2c.init({
+            .baudrate = hal::NearestFreq(400_KHz)
+        });
 
         #ifndef USE_MOCK_SERVO
         if(const auto res = [&]{
@@ -112,7 +115,7 @@ public:
         auto & timer = hal::timer1;
         timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
         timer.enable_interrupt<hal::TimerIT::Update>(EN);
-        timer.set_event_handler(std::forward<Fn>(fn));
+        timer.set_event_callback(std::forward<Fn>(fn));
     }
 
 
@@ -166,17 +169,17 @@ public:
         apply_angles_to_servos({0,0,0});
     }
 
-    auto make_rpc_list(const StringView name){
-        return rpc::make_list(
+    auto make_repl_list(const StringView name){
+        return script::make_list(
             name,
-            rpc::make_function("gest",  
+            script::make_function("gest",  
                 [&](const real_t yaw, const real_t pitch, const real_t height){
                     this->set_gest(Gesture::from({
                         .yaw = yaw, .pitch = pitch, .height = height}));
                 }
             ),
-            rpc::make_memfunc("set_bias",  this, &RRS3_RobotActuator::set_bias),
-            rpc::make_memfunc("go_idle",  this, &RRS3_RobotActuator::go_idle)
+            script::make_memfunc("set_bias",  this, &RRS3_RobotActuator::set_bias),
+            script::make_memfunc("go_idle",  this, &RRS3_RobotActuator::go_idle)
         );
     }
 private:
@@ -224,19 +227,19 @@ void rrs3_robot_main(){
         servo_c.set_angle(r3);
     }};
 
-    robots::ReplServer repl_server = {
+    repl::ReplServer repl_server = {
         &DBG_UART, &DBG_UART
     };
 
-    auto rpc_list = rpc::make_list(
+    auto repl_list = script::make_list(
         "list",
-        rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
-        rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-        rpc::make_function("name", [&](){
+        script::make_function("rst", [](){sys::reset();}),
+        script::make_function("outen", [&](){repl_server.set_outen(EN);}),
+        script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+        script::make_function("name", [&](){
             DEBUG_PRINTLN("hello i am a robot");
         }),
-        actuator_.make_rpc_list("rrs")
+        actuator_.make_repl_list("rrs")
     );
 
 
@@ -259,7 +262,7 @@ void rrs3_robot_main(){
         [[maybe_unused]]
         const real_t t = clock::seconds();
         
-        repl_server.invoke(rpc_list);
+        repl_server.invoke(repl_list);
 
 
         clock::delay(10ms);

@@ -7,8 +7,8 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
+#include "core/string/view/string_view.hpp"
 #include "core/utils/data_iter.hpp"
-#include "core/string/string_view.hpp"
 #include "core/utils/default.hpp"
 
 #include "primitive/misc/release_info.hpp"
@@ -29,13 +29,7 @@
 
 #include "algebra/regions/range2.hpp"
 
-#include "meta_utils.hpp"
-#include "tasks.hpp"
-#include "ctrl.hpp"
-
-#include "calibrate_utils.hpp"
-
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl_server.hpp"
 #include "digipw/prelude/abdq.hpp"
 #include "digipw/pwmgen/stepper_pwmgen.hpp"
 
@@ -45,6 +39,11 @@
 #include "dsp/motor_ctrl/sensored/position_corrector.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 
+#include "meta_utils.hpp"
+#include "tasks.hpp"
+#include "ctrl.hpp"
+
+#include "calibrate_utils.hpp"
 
 
 using namespace ymd;
@@ -303,7 +302,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_handler([&](hal::TimerEvent ev){
+    timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             motor_system_.resume().examine();
@@ -317,12 +316,12 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
         &UART, &UART
     };
 
-    auto list = rpc::make_list(
+    auto list = repl::make_list(
         "list",
-        rpc::make_function("rst", [](){sys::reset();}),
-        rpc::make_function("outen", [&](){repl_server.set_outen(EN);}),
-        rpc::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-        rpc::make_function("now", [&](){return clock::seconds();})
+        repl::make_function("rst", [](){sys::reset();}),
+        repl::make_function("outen", [&](){repl_server.set_outen(EN);}),
+        repl::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+        repl::make_function("now", [&](){return clock::seconds();})
     );
 
     while(true){
@@ -482,7 +481,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     adc.register_nvic({0,0}, EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    adc.set_event_handler(
+    adc.set_event_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
@@ -497,7 +496,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_handler([&](hal::TimerEvent ev){
+    timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             b_curr = inj_b.get_voltage();
@@ -591,7 +590,7 @@ void mystepper_main(){
 
     adc.register_nvic({0,0}, EN);
     adc.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    adc.set_event_handler(
+    adc.set_event_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{
@@ -658,7 +657,7 @@ void mystepper_main(){
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_handler([&](hal::TimerEvent ev){
+    timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             [[maybe_unused]] const auto now_secs = clock::seconds();

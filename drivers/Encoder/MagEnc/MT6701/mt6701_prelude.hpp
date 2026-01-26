@@ -11,7 +11,7 @@
 
 namespace ymd::drivers{
 
-struct MT6701_Prelude{
+struct [[nodiscard]] MT6701_Prelude{
 static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b000110);
 using Error = EncoderError;
 template<typename T = void>
@@ -48,10 +48,10 @@ enum class [[nodiscard]] RegAddr:uint8_t{
 
 struct [[nodiscard]] Packet final{
     union{
-        struct{
+        struct [[nodiscard]] { 
             uint32_t crc:6;
             union{
-                struct{
+                struct [[nodiscard]] { 
                     uint32_t stat:2;
                     uint32_t pushed:1;
                     uint32_t overspd:1;
@@ -60,7 +60,7 @@ struct [[nodiscard]] Packet final{
             };
             uint16_t data_14bit:14;
         };
-        struct{
+        struct [[nodiscard]] { 
             uint8_t data8;
             uint16_t data16;
         };
@@ -73,14 +73,10 @@ struct [[nodiscard]] Packet final{
         data8(_data8), data16(_data16){;}
     
     __inline constexpr IResult<> validate_fast() const {
-        if(pushed) return Err(Error::MagnetHigh);
-        if(overspd) return Err(Error::OverSpeed);
         return Ok();
     }
 
     __inline constexpr IResult<> validate() const {
-        if(pushed) return Err(Error::MagnetHigh);
-        if(overspd) return Err(Error::OverSpeed);
         if(is_crc_valid() == false) return Err(Error::InvalidCrc);
         return Ok();
     }
@@ -147,19 +143,24 @@ private:
     std::optional<hal::SpiDrv> spi_drv_;
 };
 
-struct MT6701_Regs:public MT6701_Prelude{
-    struct R16_RawAngle : public Reg16<>{
+struct [[nodiscard]] MT6701_Regs:public MT6701_Prelude{
+    struct [[nodiscard]] AngleCodeLeftAligned14bit final{
+        static constexpr auto ADDRESS = RegAddr::RawAngle;
+        uint16_t bits;
+    };
+
+    struct [[nodiscard]] R16_RawAngle : public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::RawAngle;
         uint16_t bits;
     }DEF_R16(raw_angle_reg)
 
-    struct R8_UVWMux : public Reg8<>{
+    struct [[nodiscard]] R8_UVWMux : public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::UVWMux;
         uint8_t __resv__:7;
         uint8_t uvw_mux:1;
     };
 
-    struct R8_ABZMux : public Reg8<>{
+    struct [[nodiscard]] R8_ABZMux : public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::ABZMux;
 
         uint8_t __resv1__:1;
@@ -169,27 +170,27 @@ struct MT6701_Regs:public MT6701_Prelude{
         uint8_t __resv3__:1;
     };
 
-    struct R16_Resolution : public Reg16<>{
+    struct [[nodiscard]] R16_Resolution : public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Resolution;
         uint16_t abz_resolution:10;
         uint16_t __resv__:2;
         uint16_t pole_pairs:4;
     };
 
-    struct R16_ZeroConfig : public Reg16<>{
+    struct [[nodiscard]] R16_ZeroConfig : public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::ZeroConfig;
         uint16_t zero_position:12;
         ZeroPulseWidth zero_pulse_width:3;
         uint16_t hysteresis:1;
     };
 
-    struct R8_Hystersis : public Reg8<>{
+    struct [[nodiscard]] R8_Hystersis : public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Hystersis;
         uint8_t __resv__:6;
         uint8_t hysteresis:2;
     };
 
-    struct R8_WireConfig : public Reg8<>{
+    struct [[nodiscard]] R8_WireConfig : public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::WireConfig;
         uint8_t __resv__:5;
         uint8_t pwm_en:1;
@@ -197,18 +198,18 @@ struct MT6701_Regs:public MT6701_Prelude{
         PwmFreq pwm_freq:1;
     };
 
-    struct R8_StartStop : public Reg8<>{
+    struct [[nodiscard]] R8_StartStop : public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::StartStop;
         uint8_t start:4;
         uint8_t stop:4;
     };
 
-    struct R8_Start:public  Reg8<>{
+    struct [[nodiscard]] R8_Start:public  Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Start;
         uint8_t bits;
     };
 
-    struct R8_Stop:public  Reg8<>{
+    struct [[nodiscard]] R8_Stop:public  Reg8<>{
         static constexpr auto ADDRESS = RegAddr::Stop;
         uint8_t bits;
     };

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../canopen_primitive/canopen_primitive.hpp"
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 #include "core/container/ring_memento.hpp"
 // https://winshton.gitbooks.io/canopen-ds301-cn/content/chapter7.5.html
 namespace ymd::canopen{

@@ -129,7 +129,7 @@ struct DRV2605L_Regs:public DRV2605L_Prelude{
         AutoCalibration
     };
 
-    struct R8_Status:public RegC8<>{
+    struct R8_Status:public Reg8<>{
         static constexpr RegAddr ADDRESS = 0x00;
 
         uint8_t oc_detect:1;

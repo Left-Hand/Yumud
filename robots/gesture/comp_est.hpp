@@ -17,7 +17,7 @@ struct ComplementaryGestureEstimator{
 
         const auto len_x3 = x3.length();
         const auto norm_x3 = x3 / len_x3;
-        const auto axis_theta_raw = math::atan2(norm_x3.x, norm_x3.y) + real_t(PI/2);
+        const auto axis_theta_raw = math::atan2(norm_x3.x, norm_x3.y) + real_t(M_PI/2);
         const auto axis_omega_raw = x2.z;
 
         if(is_inited_ == false){

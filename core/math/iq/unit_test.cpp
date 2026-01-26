@@ -3,7 +3,6 @@
 
 using namespace ymd;
 using namespace ymd::iqmath;
-using namespace ymd::math;
 using namespace ymd::literals;
 
 
@@ -56,110 +55,125 @@ static_assert((iq16(-19) / 2).to_bits() == iq16(-19/2.0).to_bits());
 static_assert((iq16(4) / 5).to_bits() == iq16(0.8).to_bits());
 static_assert((iq16(4) / iq16(5)).to_bits() == iq16(0.8).to_bits());
 
+static_assert(math::abs(iiq32(2)) == 2);
+static_assert(math::abs(iiq32(0)) == 0);
+static_assert(iq31(-1) == iq16(-1));
+static_assert(iq31(0) == iq16(0));
+static_assert(iq31(-1) == iq24(-1));
+static_assert(iq24(1) == iq16(1));
+static_assert(math::fixed_t<15, int16_t>(0.5).to_bits() == iq16(0.25).to_bits());
+static_assert(iq16::from_bits(math::fixed_t<15, int16_t>(0.25).to_bits()).to_bits() == iq15(0.25).to_bits());
+static_assert(iq16::from_bits(math::fixed_t<15, int16_t>(-0.25).to_bits()).to_bits() == iq15(-0.25).to_bits());
+static_assert(std::is_same_v<tmp::extended_mul_underlying_t<int32_t, int16_t>, int64_t>);
+static_assert(std::is_same_v<tmp::extended_mul_underlying_t<int16_t, int16_t>, int32_t>);
 
-// static_assert(pu_to_uq32(-1_iq16) == 0);
-static_assert(pu_to_uq32(-0.75_iq16) == 0.25_uq32);
-static_assert(pu_to_uq32(-0.75_iq10) == 0.25_uq32);
-static_assert(pu_to_uq32(-0.75_iq31) == 0.25_uq32);
-static_assert(pu_to_uq32(0.5_uq32) == 0.5_uq32);
+// static_assert(math::pu_to_uq32(-1_iq16) == 0);
+static_assert(math::pu_to_uq32(-0.75_iq16) == 0.25_uq32);
+static_assert(math::pu_to_uq32(-0.75_iq10) == 0.25_uq32);
+static_assert(math::pu_to_uq32(-0.75_iq31) == 0.25_uq32);
+static_assert(math::pu_to_uq32(0.5_uq32) == 0.5_uq32);
+
+static_assert(-0.25_iq16 == iq32(-0.25));
+static_assert(-0.25_iq10 == iq32(-0.25));
+static_assert(-0.25_iq31 == iq32(-0.25));
 
 
-static_assert(fabs(0.25 - double(rad_to_uq32(uq16((2 * M_PI) * 0.25)))) < 3E-5);
-static_assert(fabs(0.75 - double(rad_to_uq32(uq16((2 * M_PI) * 1000.75)))) < 3E-5);
-static_assert(fabs(0.25 - double(rad_to_uq32(iq16((2 * M_PI) * -100.75)))) < 3E-5);
+static_assert(std::fabs(0.25 - double(rad_to_uq32(uq16((2 * M_PI) * 0.25)))) < 3E-5);
+static_assert(std::fabs(0.75 - double(rad_to_uq32(uq16((2 * M_PI) * 1000.75)))) < 3E-5);
+static_assert(std::fabs(0.25 - double(rad_to_uq32(iq16((2 * M_PI) * -100.75)))) < 3E-5);
 
-static_assert(fabs(0.25 - double(rad_to_uq32(uq24((2 * M_PI) * 0.25)))) < 3E-5);
-static_assert(fabs(0.75 - double(rad_to_uq32(uq24((2 * M_PI) * 10.75)))) < 3E-5);
-static_assert(fabs(0.25 - double(rad_to_uq32(iq24((2 * M_PI) * -10.75)))) < 3E-5);
+static_assert(std::fabs(0.25 - double(rad_to_uq32(uq24((2 * M_PI) * 0.25)))) < 3E-5);
+static_assert(std::fabs(0.75 - double(rad_to_uq32(uq24((2 * M_PI) * 10.75)))) < 3E-5);
+static_assert(std::fabs(0.25 - double(rad_to_uq32(iq24((2 * M_PI) * -10.75)))) < 3E-5);
 
-static_assert(fabs(0.25 - double(deg_to_uq32(uq16((360) * 0.25)))) < 3E-5);
-static_assert(fabs(0.75 - double(deg_to_uq32(uq16((360) * 10.75)))) < 3E-5);
-static_assert(fabs(0.25 - double(deg_to_uq32(iq16((360) * -10.75)))) < 3E-5);
+static_assert(std::fabs(0.25 - double(deg_to_uq32(uq16((360) * 0.25)))) < 3E-5);
+static_assert(std::fabs(0.75 - double(deg_to_uq32(uq16((360) * 10.75)))) < 3E-5);
+static_assert(std::fabs(0.25 - double(deg_to_uq32(iq16((360) * -10.75)))) < 3E-5);
 
-static_assert(fabs(0.25 - double(deg_to_uq32(uq10((360) * 0.25)))) < 3E-5);
-static_assert(fabs(0.75 - double(deg_to_uq32(uq10((360) * 100.75)))) < 3E-5);
-static_assert(fabs(0.25 - double(deg_to_uq32(iq10((360) * -100.75)))) < 3E-5);
+static_assert(std::fabs(0.25 - double(deg_to_uq32(uq10((360) * 0.25)))) < 3E-5);
+static_assert(std::fabs(0.75 - double(deg_to_uq32(uq10((360) * 100.75)))) < 3E-5);
+static_assert(std::fabs(0.25 - double(deg_to_uq32(iq10((360) * -100.75)))) < 3E-5);
 
 static_assert(double(std::get<0>(sincospu(0.5_uq32))) == 0);
 
-static_assert(closer_to_zero(iiq32(2), iiq32(7)) == 2);
-static_assert(closer_to_zero(iiq32(-2), iiq32(-3)) == iiq32(-2));
+static_assert(math::closer_to_zero(iiq32(2), iiq32(7)) == 2);
+static_assert(math::closer_to_zero(iiq32(-2), iiq32(-3)) == iiq32(-2));
 
-static_assert(closer_to_zero(iq16(2), iq16(0)) == 0);
-static_assert(closer_to_zero(iq16(-2), iq16(2)) == 2);
-
-
-static_assert(frac(iq16(0.25)) == iq16(0.25));
-static_assert(frac(iq16(1.7)) == iq16(0.7));
-static_assert(frac(uq16(1.7)) == uq16(0.7));
+static_assert(math::closer_to_zero(iq16(2), iq16(0)) == 0);
+static_assert(math::closer_to_zero(iq16(-2), iq16(2)) == 2);
 
 
-
-static_assert(round_int(iq16(1145.14)) == iq16(1145));
-static_assert(round_int(iq16(1919.810)) == iq16(1920));
-
-static_assert(ceil_int(iq16(1145.14)) == iq16(1146));
-static_assert(ceil_int(iq16(1919.810)) == iq16(1920));
-
-static_assert(floor_int(iq16(1145.14)) == iq16(1145));
-static_assert(floor_int(iq16(1919.810)) == iq16(1919));
-
-static_assert(round_int(iq16(-1145.14)) == iq16(-1145));
-static_assert(round_int(iq16(-1919.810)) == iq16(-1920));
-
-static_assert(ceil_int(iq16(-1145.14)) == iq16(-1145));
-static_assert(ceil_int(iq16(-1919.810)) == iq16(-1919));
-
-static_assert(floor_int(iq16(-1145.14)) == iq16(-1146));
-static_assert(floor_int(iq16(-1919.810)) == iq16(-1920));
-
-static_assert(signbit(iq16(0)) == 0);
-static_assert(signbit(iq16(167)) == 0);
-static_assert(signbit(iq16(-167)) == 1);
-static_assert(signbit(iq31(0.5)) == 0);
-static_assert(signbit(iq31(-0.5)) == 1);
-
-static_assert(square(iq16(2)) = 4);
-static_assert(square(uq29(2)) = 4);
-static_assert(square(iq29(-2)) = 4);
-static_assert(square(uq16(2)) = 4);
-static_assert(square(uq16(100)) = 10000);
+static_assert(math::frac(iq16(0.25)) == iq16(0.25));
+static_assert(math::frac(iq16(1.7)) == iq16(0.7));
+static_assert(math::frac(uq16(1.7)) == uq16(0.7));
 
 
-static_assert(sqrt(iq16(4)) == iq16(2));
-static_assert(sqrt(iq16(16)) == iq16(4));
-static_assert(sqrt(iq16(64)) == iq16(8));
-static_assert(sqrt(iq16(36)) == iq16(6));
-static_assert(sqrt(iq16(16)) == iq16(4));
 
-static_assert(sqrt(uq16(4)) == uq16(2));
-static_assert(sqrt(uq16(16)) == uq16(4));
-static_assert(sqrt(iq26(16)) == iq26(4));
+static_assert(math::round_int(iq16(1145.14)) == iq16(1145));
+static_assert(math::round_int(iq16(1919.810)) == iq16(1920));
 
-static_assert(inv_sqrt(iq10(16)) == iq10(0.25));
-static_assert(inv_sqrt(iq16(16)) == iq16(0.25));
-static_assert(inv_sqrt(uq16(16)) == uq16(0.25));
+static_assert(math::round_int(iq16(-1145.14)) == iq16(-1145));
+static_assert(math::round_int(iq16(-1919.810)) == iq16(-1920));
 
-static_assert(mag(iq16(3), iq16(4)) == iq16(5));
-static_assert(mag(iq26(3), iq26(4)) == iq26(5));
+static_assert(math::ceil_int(iq16(1145.14)) == iq16(1146));
+static_assert(math::ceil_int(iq16(1919.810)) == iq16(1920));
 
-static_assert(inv_mag(iq16(3), iq16(4)).to_bits() == iq16(0.2).to_bits());
-static_assert(inv_mag(iq16(12), iq16(5)).to_bits() == iq16(1.0/13).to_bits());
+static_assert(math::ceil_int(iq16(-1145.14)) == iq16(-1145));
+static_assert(math::ceil_int(iq16(-1919.810)) == iq16(-1919));
 
-static_assert(sinpu(iq16(0)) == 0);
-static_assert(sinpu(iq16(0.25)) == std::numeric_limits<iq31>::max());
-static_assert(sinpu(iq16(0.5)) == iq16(0));
-static_assert(sinpu(iq16(1.0)) == iq16(0));
+static_assert(math::floor_int(iq16(1145.14)) == iq16(1145));
+static_assert(math::floor_int(iq16(1919.810)) == iq16(1919));
 
-static_assert(sinpu(iq10(0)) == iq10(0));
-static_assert(sinpu(iq10(0.25)) == std::numeric_limits<iq31>::max());
-static_assert(sinpu(iq10(0.5)) == iq10(0));
-static_assert(sinpu(iq10(1.0)) == iq10(0));
+static_assert(math::floor_int(iq16(-1145.14)) == iq16(-1146));
+static_assert(math::floor_int(iq16(-1919.810)) == iq16(-1920));
 
-static_assert(sinpu(iq30(0)) == iq30(0));
-static_assert(sinpu(iq30(0.25)) == std::numeric_limits<iq31>::max());
-static_assert(sinpu(iq30(0.5)) == iq30(0));
-static_assert(sinpu(iq30(1.0)) == iq30(0));
+static_assert(math::signbit(iq16(0)) == 0);
+static_assert(math::signbit(iq16(167)) == 0);
+static_assert(math::signbit(iq16(-167)) == 1);
+static_assert(math::signbit(iq31(0.5)) == 0);
+static_assert(math::signbit(iq31(-0.5)) == 1);
+
+static_assert(math::square(iq16(2)) = 4);
+static_assert(math::square(uq29(2)) = 4);
+static_assert(math::square(iq29(-2)) = 4);
+static_assert(math::square(uq16(2)) = 4);
+static_assert(math::square(uq16(100)) = 10000);
+
+
+static_assert(math::sqrt(iq16(4)) == iq16(2));
+static_assert(math::sqrt(iq16(16)) == iq16(4));
+static_assert(math::sqrt(iq16(64)) == iq16(8));
+static_assert(math::sqrt(iq16(36)) == iq16(6));
+static_assert(math::sqrt(iq16(16)) == iq16(4));
+
+static_assert(math::sqrt(uq16(4)) == uq16(2));
+static_assert(math::sqrt(uq16(16)) == uq16(4));
+static_assert(math::sqrt(iq26(16)) == iq26(4));
+
+static_assert(math::inv_sqrt(iq10(16)) == iq10(0.25));
+static_assert(math::inv_sqrt(iq16(16)) == iq16(0.25));
+static_assert(math::inv_sqrt(uq16(16)) == uq16(0.25));
+
+static_assert(math::mag(iq16(3), iq16(4)) == iq16(5));
+static_assert(math::mag(iq26(3), iq26(4)) == iq26(5));
+
+static_assert(math::inv_mag(iq16(3), iq16(4)).to_bits() == iq16(0.2).to_bits());
+static_assert(math::inv_mag(iq16(12), iq16(5)).to_bits() == iq16(1.0/13).to_bits());
+
+static_assert(math::sinpu(iq16(0)) == 0);
+static_assert(math::sinpu(iq16(0.25)) == std::numeric_limits<iq31>::max());
+static_assert(math::sinpu(iq16(0.5)) == iq16(0));
+static_assert(math::sinpu(iq16(1.0)) == iq16(0));
+
+static_assert(math::sinpu(iq10(0)) == iq10(0));
+static_assert(math::sinpu(iq10(0.25)) == std::numeric_limits<iq31>::max());
+static_assert(math::sinpu(iq10(0.5)) == iq10(0));
+static_assert(math::sinpu(iq10(1.0)) == iq10(0));
+
+static_assert(math::sinpu(iq30(0)) == iq30(0));
+static_assert(math::sinpu(iq30(0.25)) == std::numeric_limits<iq31>::max());
+static_assert(math::sinpu(iq30(0.5)) == iq30(0));
+static_assert(math::sinpu(iq30(1.0)) == iq30(0));
 
 static_assert(std::abs((double)math::atan2pu(ymd::literals::iq16(1.0), ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
 static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), -ymd::literals::iq16(1.0)) - 0.625) < 1E-7);
@@ -168,17 +182,3 @@ static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), ymd::lit
 
 static_assert(std::abs((double)math::atanpu(ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
 static_assert(std::abs((double)math::atanpu(-ymd::literals::iq16(1.0)) - 0.875) < 1E-7);
-
-static_assert(abs(iiq32(2)) == 2);
-static_assert(abs(iiq32(0)) == 0);
-static_assert(iq31(-1) == iq16(-1));
-static_assert(iq31(0) == iq16(0));
-static_assert(iq31(-1) == iq24(-1));
-static_assert(iq24(1) == iq16(1));
-static_assert(fixed_t<15, int16_t>(0.5).to_bits() == iq16(0.25).to_bits());
-static_assert(iq16::from_bits(fixed_t<15, int16_t>(0.25).to_bits()).to_bits() == iq15(0.25).to_bits());
-static_assert(iq16::from_bits(fixed_t<15, int16_t>(-0.25).to_bits()).to_bits() == iq15(-0.25).to_bits());
-static_assert(std::is_same_v<tmp::extended_mul_underlying_t<int32_t, int16_t>, int64_t>);
-static_assert(std::is_same_v<tmp::extended_mul_underlying_t<int16_t, int16_t>, int32_t>);
-
-

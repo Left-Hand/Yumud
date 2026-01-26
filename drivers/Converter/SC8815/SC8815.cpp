@@ -1,7 +1,7 @@
 #include "SC8815.hpp"
 #include "core/debug/debug.hpp"
 #include "primitive/pwm_channel.hpp"
-#include "primitive/analog_channel.hpp"
+
 
 using namespace ymd;
 using namespace ymd::drivers;

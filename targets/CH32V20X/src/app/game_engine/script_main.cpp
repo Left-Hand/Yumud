@@ -5,7 +5,7 @@
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
 #include "primitive/arithmetic/rescaler.hpp"
-#include "core/string/heapless_string.hpp"
+#include "core/string/owned/heapless_string.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -22,19 +22,19 @@
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
-#include "middlewares/rpc/rpc.hpp"
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
 #include "frame_buffer.hpp"
-#include "core/string/utils/strconv2.hpp"
+#include "core/string/conv/strconv2.hpp"
 
 
 using namespace ymd;
 
 namespace ymd::strconv2{
 
-struct StringSplitSeeker{ 
+struct StringSplitSeeker{
     explicit constexpr StringSplitSeeker(const char delimiter):
         delimiter_(delimiter){}
 
@@ -61,7 +61,7 @@ struct StringEntitySeeker{
     template<typename SpBeginner, typename SpTerminator>
     static constexpr DestringResult<std::tuple<size_t, size_t>> match(
         const StringView str,
-        const SpBeginner && beginner, 
+        const SpBeginner && beginner,
         const SpBeginner && terminator
     ){
         const size_t left = ({
@@ -85,7 +85,7 @@ struct StringEntitySeeker<StringView>{
     template<typename SpBeginner, typename SpTerminator>
     static constexpr DestringResult<std::tuple<size_t, size_t>> match(
         const StringView str,
-        const SpBeginner && beginner, 
+        const SpBeginner && beginner,
         const SpBeginner && terminator
     ){
         const size_t left = ({
@@ -119,9 +119,9 @@ struct StringEntitySeeker<StringView>{
 
 
 template<typename SpBeginner, typename SpTerminator>
-struct StringEntitySpawner{ 
+struct StringEntitySpawner{
     explicit constexpr StringEntitySpawner(
-        const SpBeginner && beginner, 
+        const SpBeginner && beginner,
         const SpBeginner && terminator
     ):
         beginner_(std::move(beginner)),
@@ -142,32 +142,32 @@ private:
 }
 
 
-namespace ymd::rpc{
+namespace ymd::repl{
 
 struct ReplServer2 final{
 public:
     ReplServer2(ReadCharProxy && is, WriteCharProxy && os) :
-        is_(std::move(is)), 
+        is_(std::move(is)),
         os_(std::move(os)){;}
 
     template<typename T>
     void invoke(T && obj){
         while(is_->available()){
-            char chr;
-            is_->try_read_char(chr);
-            if(not is_visible_char(chr)) continue;
-            DEBUG_PRINTLN(chr);
+            uint8_t byte;
+            is_->try_read_byte(byte);
+            if(not is_visible_char(byte)) continue;
+            DEBUG_PRINTLN(byte);
         }
     }
 
-    void set_outen(Enable outen){ outen_ = outen == EN; }   
+    void set_outen(Enable outen){ outen_ = outen == EN; }
 private:
     ReadCharProxy is_;
     OutputStreamByRoute os_;
     // FixedString<32> temp_str_;
 
     bool outen_ = false;
-    
+
     template<typename T>
     auto respond(T && obj, const std::span<const StringView> strs){
         const auto guard = os_.create_guard();
@@ -178,10 +178,10 @@ private:
 
         return [&]{
             if(!this->outen_){
-                DummyOutputStream dos{};
-                return rpc::visit(obj, dos, rpc::AccessProvider_ByStringViews(strs));
+                DummyReceiver dos{};
+                return script::visit(obj, dos, script::AccessProvider_ByStringViews(strs));
             }else{
-                return rpc::visit(obj, os_, rpc::AccessProvider_ByStringViews(strs));
+                return script::visit(obj, os_, script::AccessProvider_ByStringViews(strs));
             }
         }();
     }
@@ -189,6 +189,17 @@ private:
     [[nodiscard]] static constexpr bool is_visible_char(const char c){
         return (c >= 32) and (c <= 126);
     }
+
+    struct DummyReceiver{
+        template<typename T>
+        DummyReceiver & operator <<(T && arg){
+            //do nothing
+            return *this;
+        }
+
+        template<typename ... Args>
+        void println(Args && ... args){;}
+    };
 };
 
 
@@ -245,15 +256,15 @@ void script_main(){
 
     while(true){
         [[maybe_unused]] auto repl_service_poller = [&]{
-            static rpc::ReplServer2 repl_server{&DBG_UART, &DBG_UART};
+            static repl::ReplServer2 repl_server{&DBG_UART, &DBG_UART};
 
-            static const auto list = rpc::make_list(
+            static const auto list = script::make_list(
                 "list",
 
-                rpc::make_function("errn", [&](int32_t a, int32_t b){ 
+                script::make_function("errn", [&](int32_t a, int32_t b){
                     DEBUG_PRINTLN(a,b);
                 }),
-                rpc::make_function("errn2", [&](int32_t a, int32_t b){ 
+                script::make_function("errn2", [&](int32_t a, int32_t b){
                     DEBUG_PRINTLN(a,b);
                 })
 
@@ -263,27 +274,27 @@ void script_main(){
         };
 
         while(DBG_UART.available()){
-            char chr;
-            const auto len = DBG_UART.try_read_char(chr);
+            uint8_t chr;
+            const auto len = DBG_UART.try_read_byte(chr);
             if(len == 0) break;
             DEBUG_PRINTLN(static_cast<char>(chr));
-        } 
+        }
         if(0) DEBUG_PRINTLN(
             // DBG_UART.available(),
             // DBG_UART.rx_dma_buf_index_,
             // DBG_UART.rx_fifo().write_idx(),
             // DBG_UART.rx_fifo().read_idx(),
             // strconv2::defmt_str<bool>("1")
-            
+
             // strconv2::defmt_str<uint8_t>("256")
-            
+
             // ,shape.points
             // ,render_iter.is_mid_at_right()
-            // clear_us.count(), 
-            // upload_us.count(), 
+            // clear_us.count(),
+            // upload_us.count(),
             // total_us.count(),
             // shape_bb
-            
+
             // clock::micros().count()
 
             // render_iter

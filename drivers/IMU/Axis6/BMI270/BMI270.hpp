@@ -6,8 +6,7 @@ namespace ymd::drivers{
 
 
 class BMI270 final:
-    public BMI270_Prelude,
-    public AccelerometerIntf{
+    public BMI270_Prelude{
 public:
     using Error = BMI270_Prelude::Error;
 

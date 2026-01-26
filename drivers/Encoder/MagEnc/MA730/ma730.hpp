@@ -5,9 +5,7 @@
 namespace ymd::drivers{
 
 
-class MA730 final:
-    public MA730_Prelude,
-    public MagEncoderIntf{
+class MA730 final:public MA730_Prelude{
 public:
     struct Config{
         RotateDirection direction;
@@ -39,7 +37,7 @@ public:
         const MagThreshold low, const MagThreshold high);
 
     [[nodiscard]] IResult<> set_direction(const RotateDirection direction);
-    [[nodiscard]] IResult<MagStatus> get_mag_status();
+    [[nodiscard]] IResult<EncoderFaultBitFields> get_fault();
 
     [[nodiscard]] IResult<> 
     set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase);

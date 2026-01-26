@@ -54,6 +54,24 @@ void CAN2_SCE_IRQHandler(void);
 }
 #endif
 
+#ifdef CAN3_PRESENT
+extern "C"{
+__interrupt
+void CAN3_TX_IRQHandler(void);
+
+__interrupt
+void CAN3_RX0_IRQHandler(void);
+
+__interrupt
+void CAN3_RX1_IRQHandler(void);
+
+#ifdef CAN_SCE_ENABLED
+__interrupt
+void CAN3_SCE_IRQHandler(void);
+#endif
+}
+#endif
+
 namespace ymd::hal{
 
 class Gpio;
@@ -63,9 +81,11 @@ struct CanFilter;
 struct Can;
 
 struct CanInterruptDispatcher{
-    static void on_tx_interrupt(Can & can);
-    static void on_rx_interrupt(Can & can, const CanFifoIndex fifo_idx);
-    static void on_sce_interrupt(Can & can);
+    static void isr_tx(Can & can);
+    static void isr_rx(Can & can, volatile uint32_t & rfifo_reg, const CanFifoIndex fifo_idx);
+    static void isr_rx0(Can & can);
+    static void isr_rx1(Can & can);
+    static void isr_sce(Can & can);
 };
 
 class [[nodiscard]] Can final{
@@ -75,7 +95,7 @@ public:
     using Error = CanError;
     using LibError = CanLibError;
 
-    using Callback = std::function<void(CanEvent)>;
+    using EventCallback = std::function<void(CanEvent)>;
 
 
     struct [[nodiscard]] Config{
@@ -144,8 +164,8 @@ public:
     [[nodiscard]] bool is_busoff();
 
     template<typename Fn>
-    void set_event_handler(Fn && cb){
-        callback_ = std::forward<Fn>(cb);
+    void set_event_callback(Fn && cb){
+        event_callback_ = std::forward<Fn>(cb);
     }
 
 
@@ -158,14 +178,14 @@ public:
 private:
     void * inst_;
     
-    #ifndef CAN_SOFTFIFO_SIZE
-    static constexpr size_t CAN_SOFTFIFO_SIZE = 8;
+    #ifndef CAN_BUFFERED_QUEUE_SIZE
+    static constexpr size_t CAN_BUFFERED_QUEUE_SIZE = 8;
     #endif
 
-    RingBuf<BxCanFrame, CAN_SOFTFIFO_SIZE> rx_fifo_;
-    RingBuf<BxCanFrame, CAN_SOFTFIFO_SIZE> tx_fifo_;
+    RingBuf<BxCanFrame, CAN_BUFFERED_QUEUE_SIZE> rx_queue_;
+    RingBuf<BxCanFrame, CAN_BUFFERED_QUEUE_SIZE> tx_queue_;
 
-    Callback callback_ = nullptr;
+    EventCallback event_callback_ = nullptr;
 
     void alter_to_pins(const CanRemap remap);
     void enable_rcc(const Enable en);
@@ -188,9 +208,7 @@ private:
     friend class CanInterruptDispatcher;
 };
 
-class BufferedCan{
 
-};
 
 #ifdef CAN1_PRESENT
 extern Can can1;
@@ -198,6 +216,10 @@ extern Can can1;
 
 #ifdef CAN2_PRESENT
 extern Can can2;
+#endif
+
+#ifdef CAN3_PRESENT
+extern Can can3;
 #endif
 
 }

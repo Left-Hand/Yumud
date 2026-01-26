@@ -161,9 +161,9 @@ struct [[nodiscard]] Event:public Sumtype<
 using Callback = std::function<void(Event)>;
 
 
-class M10_ParserSink final{
+class M10_ParseReceiver final{
 public:
-    explicit M10_ParserSink(Callback callback):
+    explicit M10_ParseReceiver(Callback callback):
         callback_(callback)
     {
         reset();
@@ -180,25 +180,26 @@ public:
     void flush();
 
     void reset(){
-        state_ = State::WaitingHeader1;
+        state_ = FsmState::WaitingHeader1;
         bytes_count_ = 0;
     }
 private:
-
-    Callback callback_;
     union{
         LidarSector sector_;
-        std::array<uint8_t, sizeof(LidarSector)> bytes_;
+        alignas(4) std::array<uint8_t, sizeof(LidarSector)> bytes_;
     };
+
+    Callback callback_;
+
     size_t bytes_count_ = 0;
 
-    enum class State:uint8_t{
+    enum class FsmState:uint8_t{
         WaitingHeader1,
         WaitingHeader2,
         Remaining
     };
 
-    State state_ = State::WaitingHeader1;
+    volatile FsmState state_ = FsmState::WaitingHeader1;
 
 };
 

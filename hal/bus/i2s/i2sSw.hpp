@@ -8,9 +8,9 @@ namespace ymd::hal{
 class I2sSw: public I2s{
 private:
 volatile int8_t occupied = -1;
-hal::GpioIntf & sck;
-hal::GpioIntf & sda;
-hal::GpioIntf & ws;
+hal::Gpio & sck;
+hal::Gpio & sda;
+hal::Gpio & ws;
 
 uint16_t delays = 0;
 
@@ -56,7 +56,7 @@ protected :
 
 public:
 
-    I2sSw(hal::GpioIntf & _sck,hal::GpioIntf & _sda,hal::GpioIntf & _ws,const uint16_t _delays = 10):sck(_sck), sda(_sda), ws(_ws), delays(_delays){;}
+    I2sSw(hal::Gpio & _sck,hal::Gpio & _sda,hal::Gpio & _ws,const uint16_t _delays = 10):sck(_sck), sda(_sda), ws(_ws), delays(_delays){;}
 
     Error write(const uint32_t data) override {
         sck.outpp();

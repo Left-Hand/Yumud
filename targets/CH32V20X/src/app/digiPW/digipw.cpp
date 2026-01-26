@@ -108,7 +108,7 @@ void test_sogi(){
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_handler([&](hal::TimerEvent ev){
+    timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
             case hal::TimerEvent::Update:{
                 const auto m = clock::micros();
@@ -142,7 +142,12 @@ void digipw_main(){
     auto sda_pin = hal::PB<14>();
     
     hal::I2cSw i2csw{&scl_pin, &sda_pin};
-    i2csw.init({1000000});
+    // i2csw.init({1000000});
+
+    i2csw.init({
+        .baudrate = hal::NearestFreq(100_KHz)
+    });
+
     
     // INA226 ina226{i2csw};
     // // ina226.init(10, 5);
@@ -198,7 +203,7 @@ void digipw_main(){
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_handler([&](hal::TimerEvent ev){
+    timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
             case hal::TimerEvent::Update:{
                 static iq20 mt = 0;

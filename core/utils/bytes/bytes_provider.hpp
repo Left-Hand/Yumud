@@ -64,7 +64,7 @@ private:
 template<std::endian E>
 template<typename T>
 constexpr FetchLeadingBytesCtorBitsProxy<E>::operator T() const {
-    using D = from_bits_t<T>;
+    using D = tmp::from_bits_t<T>;
     static_assert(std::is_void_v<D> == false);
     static constexpr size_t Extents = sizeof(D);
     const D bits = bytes_to_int<E, D>(fetcher.fetch_leading<Extents>());

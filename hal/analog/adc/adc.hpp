@@ -91,7 +91,9 @@ struct [[nodiscard]] AdcChannelConfig{
     SampleCycles cycles;
 };
 
-
+struct AdcInterruptDispatcher{
+    static void on_interrupt();
+};
 
 
 class AdcPrimary: public Adc_Prelude{
@@ -135,8 +137,8 @@ public:
 
 
     template<typename Fn>
-    void set_event_handler(Fn && cb){
-        callback_ = std::forward<Fn>(cb);
+    void set_event_callback(Fn && cb){
+        event_callback_ = std::forward<Fn>(cb);
     }
 
     void register_nvic(const NvicPriority priority, const Enable en){
@@ -183,7 +185,7 @@ public:
 
 protected:
     void * inst_;
-    Callback callback_;
+    Callback event_callback_;
 
     bool right_align_ = true;
 
@@ -213,18 +215,22 @@ protected:
     friend void ::ADC1_2_IRQHandler(void);
     #endif
 
-    __fast_inline void accept_interrupt(const AdcIT it){
-        if(callback_ == nullptr) return;
-        switch(it){
-            case AdcIT::EOC: 
-                return callback_(AdcEvent::EndOfInjectedConversion);
-            case AdcIT::JEOC: 
-                return callback_(AdcEvent::EndOfInjectedConversion);
-            case AdcIT::AWD: 
-                return callback_(AdcEvent::AnalogWatchdog);
-        }
-        __builtin_unreachable();
+    __fast_inline void isr_eoc(){
+        if(event_callback_ == nullptr) return;
+        return event_callback_(AdcEvent::EndOfInjectedConversion);
     }
+
+    __fast_inline void isr_jeoc(){
+        if(event_callback_ == nullptr) return;
+        return event_callback_(AdcEvent::EndOfInjectedConversion);
+    }
+
+    __fast_inline void isr_awd(){
+        if(event_callback_ == nullptr) return;
+        return event_callback_(AdcEvent::AnalogWatchdog);
+    }
+
+    friend class AdcInterruptDispatcher;
 };
 
 

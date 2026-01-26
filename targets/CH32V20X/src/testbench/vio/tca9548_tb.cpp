@@ -32,7 +32,7 @@ void tca9548_main(){
 
     hal::I2cSw i2c{&scl_pin_, &sda_pin_};
 
-    i2c.init({400_KHz});
+    i2c.init({hal::NearestFreq(400_KHz)});
 
     auto tca = drivers::TCA9548A(&i2c, hal::I2cSlaveAddr<7>::from_u7(0x70));
 

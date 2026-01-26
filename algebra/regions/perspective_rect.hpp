@@ -118,7 +118,7 @@ static constexpr Matrix3x3<T> compute_homogratransport_from_unit_rect(
     const T det = A * E - B * D;
     
     // Check for degenerate case (optional safety check)
-    if (unlikely(std::abs(det) < T(1e-6))) {
+    if ((std::abs(det) < T(1e-6))) [[unlikely]]{
         // Return identity matrix for degenerate case
         return Matrix3x3<T>(
             1, 0, 0,

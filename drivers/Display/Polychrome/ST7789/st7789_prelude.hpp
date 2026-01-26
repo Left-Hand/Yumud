@@ -69,7 +69,7 @@ struct ST7789_Prelude{
         auto size() const {return size_;}
     private:
         const Vec2<uint16_t> size_;
-        Rect2<uint16_t> curr_area_ = Rect2<uint16_t>::ZERO;
+        Rect2<uint16_t> now_area_ = Rect2<uint16_t>::ZERO;
         uint32_t last_point_ = 0;
     };
 

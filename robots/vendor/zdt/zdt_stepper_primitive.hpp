@@ -271,7 +271,7 @@ private:
 struct [[nodiscard]] Rpm final{
     static constexpr Rpm from_speed(const real_t speed){
         const uint16_t temp = uint16_t(iq16(speed) * 600);
-        return {BSWAP_16(temp)};
+        return {__bswap16(temp)};
     }
     constexpr uint16_t to_u16() const {
         return bits;
@@ -284,7 +284,7 @@ struct [[nodiscard]] PulseCnt final{
     static constexpr uint32_t SCALE = 3200 * (256/16);
 
     static constexpr PulseCnt from_pulses(const uint32_t pulses){
-        return {BSWAP_32(pulses)};
+        return {__bswap32(pulses)};
     }
 
     static constexpr Option<PulseCnt> from_angle(const Angular<uq16> angle){

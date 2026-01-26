@@ -6,7 +6,7 @@
 
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 
-#include "middlewares/rpc/rpc.hpp"
+#include "middlewares/repl/repl.hpp"
 
 
 namespace ymd::robots{
@@ -21,16 +21,16 @@ public:
     virtual void trig_cali() = 0;
     virtual bool is_homing_done() = 0;
 
-    auto make_rpc_list(const StringView name){
-        return rpc::make_list(
+    auto make_repl_list(const StringView name){
+        return script::make_list(
             name,
-            DEF_RPC_MEMFUNC(trig_homing),
-            DEF_RPC_MEMFUNC(is_homing_done),
-            DEF_RPC_MEMFUNC(deactivate),
-            DEF_RPC_MEMFUNC(activate),
-            // DEF_RPC_MEMFUNC(set_angle),
-            // rpc::make_memfunc("trig_homing", this, &std::decay_t<decltype(*this)>::trig_homing)
-            DEF_RPC_MEMFUNC(trig_cali)
+            DEF_CALLABLE_MEMFUNC(trig_homing),
+            DEF_CALLABLE_MEMFUNC(is_homing_done),
+            DEF_CALLABLE_MEMFUNC(deactivate),
+            DEF_CALLABLE_MEMFUNC(activate),
+            // DEF_CALLABLE_MEMFUNC(set_angle),
+            // repl::make_memfunc("trig_homing", this, &std::decay_t<decltype(*this)>::trig_homing)
+            DEF_CALLABLE_MEMFUNC(trig_cali)
         );
     }
 };

@@ -9,39 +9,41 @@ namespace ymd::drivers::stl06n{
 using Callback = std::function<void(Event)>;
 
 
-class STL06N_ParserSink final{
+class [[nodiscard]] STL06N_ParseReceiver final{
 public:
-    explicit STL06N_ParserSink(Callback callback):
-        callback_(callback)
-    {
-        reset();
-    }
+    explicit STL06N_ParseReceiver(Callback && callback);
 
     void push_byte(const uint8_t byte);
 
     void push_bytes(const std::span<const uint8_t> bytes);
 
+    [[nodiscard]] bool is_emitting() const{
+        return fsm_state_ == FsmState::Emitting;
+    }
+
     void flush();
 
     void reset();
-private:
 
-    Callback callback_;
+public:
 
     union{
         alignas(4) std::array<uint8_t, 48> bytes_;
     };
-    size_t bytes_count_ = 0;
-    Command command_ = Command::Sector;
 
-    enum class State:uint8_t{
-        WaitingHeader,
-        WaitingVerlen,
-        Remaining,
+    Callback callback_;
+
+    Option<Command> may_command_ = None;
+
+    enum class FsmState:uint8_t{
+        AwaitingHeader = 0,
+        AwaitingVerlen,
+        Payload,
         Emitting,
     };
 
-    State state_ = State::WaitingHeader;
+    size_t bytes_count_;
+    volatile FsmState fsm_state_;
 
 };
 

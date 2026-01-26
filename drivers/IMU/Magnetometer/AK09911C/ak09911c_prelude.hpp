@@ -22,7 +22,7 @@ struct AK09911C_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0001101);
     // static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0001100);
 
-    using RegAddress = uint8_t;
+    using RegAddr = uint8_t;
     using Error = ImuError;
 
     template<typename T = void>
@@ -81,49 +81,49 @@ struct AK09911C_Prelude{
 
 struct AK09911C_Regset : public AK09911C_Prelude{
     struct R8_WIA1:public Reg8<>{
-        static constexpr RegAddress address = 0x00;
+        static constexpr RegAddr ADDRESS = 0x00;
         static constexpr uint8_t KEY = 0x48;
 
         uint8_t bits;
     } DEF_R8(wia1_reg)
 
     struct R8_WIA2:public Reg8<>{
-        static constexpr RegAddress address = 0x01;
+        static constexpr RegAddr ADDRESS = 0x01;
         static constexpr uint8_t KEY = 0x05;
 
         uint8_t bits;
     } DEF_R8(wia2_reg)
 
     struct R8_INFO1:public Reg8<>{
-        static constexpr RegAddress address = 0x02;
+        static constexpr RegAddr ADDRESS = 0x02;
 
         uint8_t bits;
     } DEF_R8(info1_reg)
 
     struct R8_INFO2:public Reg8<>{
-        static constexpr RegAddress address = 0x03;
+        static constexpr RegAddr ADDRESS = 0x03;
 
         uint8_t bits;
     } DEF_R8(info2_reg)
 
     struct R8_ST1:public Reg8<>{
-        static constexpr RegAddress address = 0x10;
+        static constexpr RegAddr ADDRESS = 0x10;
 
         uint8_t drdy:1;
         uint8_t dor:1;
         uint8_t :5;
         uint8_t hsm:1;
 
-        bool is_data_ready() const {return drdy;}
-        bool is_data_overrun() const {return dor;}
+        [[nodiscard]] constexpr bool is_data_ready() const {return drdy;}
+        [[nodiscard]] constexpr bool is_data_overrun() const {return dor;}
     } DEF_R8(st1_reg)
 
-    REG16I_QUICK_DEF(0x11, MagXReg, mag_x_reg);
-    REG16I_QUICK_DEF(0x13, MagYReg, mag_y_reg);
-    REG16I_QUICK_DEF(0x15, MagZReg, mag_z_reg);
+    REG16_QUICK_DEF(0x11, MagXReg, mag_x_reg);
+    REG16_QUICK_DEF(0x13, MagYReg, mag_y_reg);
+    REG16_QUICK_DEF(0x15, MagZReg, mag_z_reg);
 
     struct R8_ST2:public Reg8<>{
-        static constexpr RegAddress address = 0x18;
+        static constexpr RegAddr ADDRESS = 0x18;
 
         uint8_t :3;
         uint8_t hofl:1;
@@ -134,14 +134,14 @@ struct AK09911C_Regset : public AK09911C_Prelude{
     //cntl1 reg is a dummy reg, it is not listed here
 
     struct R8_CNTL2:public Reg8<>{
-        static constexpr RegAddress address = 0x31;
+        static constexpr RegAddr ADDRESS = 0x31;
 
         Mode mode:5;
         uint8_t :3;
     } DEF_R8(cntl2_reg)
 
     struct R8_CNTL3:public Reg8<>{
-        static constexpr RegAddress address = 0x32;
+        static constexpr RegAddr ADDRESS = 0x32;
 
         uint8_t srst:1;
         uint8_t :7;
@@ -154,15 +154,15 @@ struct AK09911C_Regset : public AK09911C_Prelude{
     };
 
     struct R8_ASAX:public _R8_ASA{
-        static constexpr RegAddress address = 0x10;
+        static constexpr RegAddr ADDRESS = 0x10;
     } DEF_R8(asax_reg)
 
     struct R8_ASAY:public _R8_ASA{
-        static constexpr RegAddress address = 0x11;
+        static constexpr RegAddr ADDRESS = 0x11;
     } DEF_R8(asay_reg)
 
     struct R8_ASAZ:public _R8_ASA{
-        static constexpr RegAddress address = 0x12;
+        static constexpr RegAddr ADDRESS = 0x12;
     } DEF_R8(asaz_reg)
 
 };

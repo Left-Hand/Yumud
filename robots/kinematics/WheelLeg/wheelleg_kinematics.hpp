@@ -27,7 +27,7 @@ protected:
 
     constexpr auto d2_forward_leg(const T hip_rad, const T knee_rad) const {
         auto knee_position = Vec2<T>(cfg_.thigh_length, 0).rotated(-hip_rad);
-        auto feet_position = knee_position + Vec2<T>(cfg_.shin_length_mster, 0).rotated(T(PI)-hip_rad - knee_rad);
+        auto feet_position = knee_position + Vec2<T>(cfg_.shin_length_mster, 0).rotated(T(M_PI)-hip_rad - knee_rad);
         return std::make_tuple(knee_position, feet_position);
     }
 

@@ -71,8 +71,8 @@ struct _mul_underlying{
 
     using type = std::conditional_t<
         is_signed,
-        bytes_to_sint_t<max_size>,
-        bytes_to_uint_t<max_size>
+        size_to_sint_t<max_size>,
+        size_to_uint_t<max_size>
     >;
 };
 
@@ -83,7 +83,7 @@ struct sum_underlying_type{
     static constexpr size_t max_size = 
         (sizeof(T1) > sizeof(T2) ? sizeof(T1) : sizeof(T2));
 
-    using bigger_uint_type = bytes_to_uint_t<max_size>;
+    using bigger_uint_type = size_to_uint_t<max_size>;
 
     using type = std::conditional_t<
         is_signed,
@@ -100,7 +100,7 @@ struct _extended_mul_underlying{
     static constexpr size_t max_size = 
         (sizeof(T1) > sizeof(T2) ? sizeof(T1) : sizeof(T2));
 
-    using bigger_uint_type = bytes_to_uint_t<max_size>;
+    using bigger_uint_type = size_to_uint_t<max_size>;
 
     using extended_bigger_uint_type = typename _extended_underlying<bigger_uint_type>::type;
 

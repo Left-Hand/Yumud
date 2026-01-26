@@ -45,6 +45,13 @@ class DmaChannel;
 
 struct Uart;
 struct UartInterruptDispatcher{
+
+    static void isr_txe(Uart & self);
+    static void isr_tc(Uart & self);
+
+    static void isr_rxne(Uart & self);
+    static void isr_rxidle(Uart & self);
+
     static void on_interrupt(Uart & uart);
 };
 
@@ -59,13 +66,15 @@ public:
 
     void enable_single_line_mode(const Enable en);
 
-    [[nodiscard]] size_t try_write_chars(const char * data_ptr, const size_t len);
+    [[nodiscard]] size_t try_write_bytes(std::span<const uint8_t> bytes);
 
-    [[nodiscard]] size_t try_write_char(const char data);
-    
+    [[nodiscard]] size_t try_write_byte(const uint8_t byte);
+
     void set_tx_strategy(const CommStrategy tx_strategy);
 
     void set_rx_strategy(const CommStrategy rx_strategy);
+
+    [[nodiscard]] size_t sink_bytes(std::span<const uint8_t> bytes);
 
 private:
     void * inst_;
@@ -81,16 +90,10 @@ private:
     void enable_rx_dma(const Enable en);
     void enable_tx_dma(const Enable en);
 
-    
-    void accept_txe_interrupt();
-    void accept_tc_interrupt();
-    
-    void accept_rxne_interrupt();
-    void accept_rxidle_interrupt();
 
 
-    std::array<char, UART_DMA_BUF_SIZE> tx_dma_buf_;
-    std::array<char, UART_DMA_BUF_SIZE> rx_dma_buf_;
+    std::array<uint8_t, UART_DMA_BUF_SIZE> tx_dma_buf_;
+    std::array<uint8_t, UART_DMA_BUF_SIZE> rx_dma_buf_;
 
     DmaChannel & tx_dma_;
     DmaChannel & rx_dma_;
@@ -136,6 +139,3 @@ extern Uart uart8;
 #endif
 
 }
-
-
-

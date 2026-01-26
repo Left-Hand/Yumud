@@ -44,7 +44,7 @@ void m2006_main(){
             hal::CanStdId::from_bits(0x200), 
             hal::BxCanPayload::from_bytes(
                 std::bit_cast<std::array<uint8_t, 4>>(
-                Payload{BSWAP_16(d), BSWAP_16(d2)})
+                Payload{__bswap16(d), __bswap16(d2)})
             )
         );
         DEBUG_PRINTLN(can.read());

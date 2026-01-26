@@ -138,7 +138,7 @@ public:
     using TrgoSource = TimerTrgoSource;
     using Callback = std::function<void(TimerEvent)>;
 private:
-    Callback callback_ = nullptr;
+    Callback event_callback_ = nullptr;
     void enable(const Enable en);
 public:
     explicit BasicTimer(void * inst):inst_(inst){;}
@@ -203,8 +203,8 @@ public:
 
     //设置事件处理函数
     template<typename Fn>
-    void set_event_handler(Fn && cb){
-        callback_ = std::forward<Fn>(cb);
+    void set_event_callback(Fn && cb){
+        event_callback_ = std::forward<Fn>(cb);
     }
 
 protected:
@@ -215,9 +215,9 @@ protected:
 
     //处理中断响应
     void accept_interrupt(const IT I){
-        if(callback_ == nullptr) [[unlikely]]
+        if(event_callback_ == nullptr) [[unlikely]]
             return;
-        callback_(I);
+        event_callback_(I);
     }
 
     void dyn_enable_interrupt(IT I,Enable en);

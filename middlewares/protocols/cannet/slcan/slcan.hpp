@@ -2,9 +2,11 @@
 
 // https://blog.csdn.net/weifengdq/article/details/128823317
 
-#include "../asciican_utils.hpp"
-#include "core/utils/Match.hpp"
-#include "core/string/heapless_string.hpp"
+#include "core/string/owned/heapless_string.hpp"
+
+#include "asciican_utils.hpp"
+
+
 // Options:
 //          -o          (send open command 'O\r')
 //          -c          (send close command 'C\r')
@@ -50,20 +52,20 @@ struct SlcanResponseFormatter{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    using String = HeaplessString<32>; 
+    using IString = HeaplessString<32>; 
 
     struct [[nodiscard]] Response{
-        String str;
+        IString str;
         static constexpr Response from_str(const StringView str){
-            return Response{String::from_str(str)};
+            return Response{IString::from_str(str)};
         }
 
         static constexpr Response from_empty(){
-            return Response{String::from_empty()};
+            return Response{IString::from_empty()};
         }
 
         friend OutputStream& operator<<(OutputStream & os, const Response & self){ 
-            return os << self.str << '\r';
+            return os << self.str;
         }
     };
 
@@ -77,10 +79,8 @@ struct SlcanResponseFormatter{
 
 
     static constexpr Response fmt_canmsg(const Frame & frame){
-        String str;
+        IString str;
         auto filler = CharsFiller{str.mut_chars()};
-
-
         auto push_id = [&](){
             const size_t num_chars = frame.is_extended() ? 8 : 3;
             const auto id_u32 = frame.id_u32();

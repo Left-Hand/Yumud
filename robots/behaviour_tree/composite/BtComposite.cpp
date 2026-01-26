@@ -17,13 +17,13 @@ Wrapper BtComposite::findChild(const StringView name){
 
 BtNode & BtComposite::operator[](size_t idx){
     if(idx >= children_.size()){
-        HALT;
+        __builtin_trap();
     }
 
     auto p_child = children_[idx];
 
     if(p_child == nullptr){
-        HALT;
+        __builtin_trap();
     }
 
     return *p_child;
@@ -31,13 +31,13 @@ BtNode & BtComposite::operator[](size_t idx){
 
 const BtNode & BtComposite::operator[](size_t idx) const {
     if(idx >= children_.size()){
-        HALT;
+        __builtin_trap();
     }
 
     auto p_child = children_[idx];
 
     if(p_child == nullptr){
-        HALT;
+        __builtin_trap();
     }
 
     return *p_child;

@@ -8,13 +8,12 @@
 
 
 namespace ymd{
+
 template<typename T>
-struct [[nodiscard]] Range2{
+struct alignas(sizeof(T) * 2) [[nodiscard]] Range2{
 public:
-    #pragma pack(push, 1)
     T start;
     T stop;
-    #pragma pack(pop)
 
     using Tsigned = std::make_signed_t<T>;
 
@@ -25,18 +24,18 @@ public:
 
 
     template<typename U, typename V>
-    [[nodiscard]] __fast_inline constexpr Range2(const U _start, const V _stop): 
-        start(math::floor_cast<T>(_start)), 
-        stop(math::ceil_cast<T>(_stop)) 
+    [[nodiscard]] __fast_inline constexpr Range2(const U _start, const V _stop):
+        start(math::floor_cast<T>(_start)),
+        stop(math::ceil_cast<T>(_stop))
     {
         if(stop < start) std::swap(start, stop);
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr Range2(const Range2<U> & other): 
+    [[nodiscard]] __fast_inline constexpr Range2(const Range2<U> & other):
         Range2(other.start, other.stop){;}
 
-    [[nodiscard]] __fast_inline constexpr Range2(const std::pair<T, T> & other): 
+    [[nodiscard]] __fast_inline constexpr Range2(const std::pair<T, T> & other):
         Range2(other.first, other.second){;}
 
     [[nodiscard]] __fast_inline constexpr Range2(const std::tuple<T, T> & other):
@@ -68,10 +67,10 @@ public:
         const U start, const V length)
     {
         return Range2<T>{
-            start, 
+            start,
             start + length
         };
-    } 
+    }
 
     template<typename U>
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_center_and_length(
@@ -85,18 +84,18 @@ public:
             const auto half_length = (length * HALF_ONE);
             return from_start_and_stop_unchecked(center - half_length, center + half_length);
         }
-    } 
+    }
 
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_center_and_half_length(
         const T center, const T half_length)
     {
-        return {static_cast<T>(center - half_length), 
+        return {static_cast<T>(center - half_length),
                 static_cast<T>(center + half_length)};
-    } 
+    }
 
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_center(const T center){
         return {center, center};
-    } 
+    }
 
 
     [[nodiscard]] __fast_inline constexpr Range2<T> swap() const {
@@ -106,7 +105,7 @@ public:
     [[nodiscard]] __fast_inline constexpr Range2<T> swap_if_inversed() const {
         return start > stop ? swap() : *this;
     }
-    
+
     [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_gridsize(
         const T start, const T grid_size)
     {
@@ -122,10 +121,10 @@ public:
         return Range2<T>(ret_from, ret_from + grid_size);
     }
 
-    [[nodiscard]] __fast_inline constexpr T & operator [](const size_t index) 
+    [[nodiscard]] __fast_inline constexpr T & operator [](const size_t index)
         { return *(&this->start + index);}
 
-    [[nodiscard]] __fast_inline constexpr const T & operator [](const size_t index) const 
+    [[nodiscard]] __fast_inline constexpr const T & operator [](const size_t index) const
         {return *(&this->start + index);}
 
     [[nodiscard]] __fast_inline constexpr const T * begin() const { return &this->start;}
@@ -198,7 +197,7 @@ public:
     }
 
     [[nodiscard]] constexpr bool contains(const arithmetic auto & value) const{
-        return (this->start <= static_cast<T>(value) 
+        return (this->start <= static_cast<T>(value)
             && static_cast<T>(value) < this->stop);
     }
 
@@ -228,16 +227,16 @@ public:
 
     [[nodiscard]] constexpr Option<Range2<T>> expand(const arithmetic auto & value) const{
         const auto next_start = this->start - value;
-        const auto next_stop = this->stop + value; 
+        const auto next_stop = this->stop + value;
 
         if(next_start > next_stop) return None;
         return Some(Range2<T>::from_start_and_stop_unchecked(next_start, next_stop));
     }
 
     [[nodiscard]] constexpr Option<Range2<T>> shrink(const arithmetic auto & value) const{
-        
+
         const auto next_start = this->start + value;
-        const auto next_stop = this->stop - value; 
+        const auto next_stop = this->stop - value;
 
         if(next_start > next_stop) return None;
         return Some(Range2<T>::from_start_and_stop_unchecked(next_start, next_stop));
@@ -290,7 +289,7 @@ public:
 private:
     [[nodiscard]] __fast_inline constexpr Range2(){;}
 
-    
+
 };
 
 using Range2i = Range2<int>;
@@ -301,7 +300,7 @@ using Range2u32 = Range2<uint32_t>;
 
 template<typename T>
 __inline OutputStream & operator<<(
-    OutputStream & os, 
+    OutputStream & os,
     const Range2<T> & value
 ){
     return os << os.brackets<'['>() << value.start << os.splitter() << value.stop << os.brackets<')'>();
@@ -365,8 +364,8 @@ private:
         return Range2u(MAX(range.start, grid_begin), range.stop);
     }
     static constexpr Option<Range2u> next_of_range(
-        const Range2u range_in, 
-        const Range2u range_targ, 
+        const Range2u range_in,
+        const Range2u range_targ,
         const uint gsize
     ){
         const auto end_range = end_of_range(range_targ, gsize);
@@ -378,8 +377,8 @@ private:
     }
 
     static constexpr Option<Range2u> prev_of_range(
-        const Range2u range_in, 
-        const Range2u range_targ, 
+        const Range2u range_in,
+        const Range2u range_targ,
         const uint gsize
     ){
         const auto begin_range = begin_of_range(range_targ, gsize);

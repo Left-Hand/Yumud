@@ -5,7 +5,7 @@
 #include "core/utils/Errno.hpp"
 #include "core/utils/Option.hpp"
 
-#include "primitive/analog_channel.hpp"
+
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
@@ -58,7 +58,7 @@ struct ADS111X_Regs:public ADS111X_Prelude{
 
     struct ConversionReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0b00; 
-        int16_t data;
+        int16_t bits;
     };
 
     struct ConfigReg:public Reg16<>{
@@ -77,14 +77,14 @@ struct ADS111X_Regs:public ADS111X_Prelude{
         uint16_t busy:1;
     };
 
-    struct LowThreshReg:public Reg16i<>{
+    struct LowThreshReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0b10;
-        int16_t data;
+        int16_t bits;
     };
 
-    struct HighThreshReg:public Reg16i<>{
+    struct HighThreshReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0b11; 
-        int16_t data;
+        int16_t bits;
     };
 
     ConversionReg conversion_reg = {};

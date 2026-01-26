@@ -6,7 +6,7 @@
 
 #include "adc_utils.hpp"
 
-#include "primitive/analog_channel.hpp"
+
 
 
 

@@ -10,13 +10,13 @@
 #include "core/async/timer.hpp"
 
 using namespace ymd;
-using drivers::m10::M10_ParserSink;
+using drivers::m10::M10_ParseReceiver;
 
 
 void m10_main(){
     DEBUGGER_INST.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576_KHz), 
+        .baudrate = hal::NearestFreq(576_KHz),
     });
 
     DEBUGGER.retarget(&DEBUGGER_INST);
@@ -33,7 +33,7 @@ void m10_main(){
     using M10Event = drivers::m10::Event;
 
     uq24 last_turns_ = 0;
-    auto m10_ev_handler = [&](const M10Event & ev){ 
+    auto m10_ev_handler = [&](const M10Event & ev){
         if(ev.is<M10Event::DataReady>()){
             const auto & packet = ev.unwrap_as<M10Event::DataReady>().sector;
             const auto turns = packet.start_angle.to_turns();
@@ -53,7 +53,7 @@ void m10_main(){
         }
     };
 
-    auto m10_parser = M10_ParserSink(m10_ev_handler);
+    auto m10_parser = M10_ParseReceiver(m10_ev_handler);
     m10_uart_.init({
         .remap = hal::USART1_REMAP_PA9_PA10,
         .baudrate = hal::NearestFreq(drivers::m10::DEFAULT_UART_BAUD)
@@ -73,14 +73,14 @@ void m10_main(){
             uint32_t(clock::millis().count()) % 400) > 200);
     };
 
-    m10_uart_.set_event_handler([&](const hal::UartEvent ev){
+    m10_uart_.set_event_callback([&](const hal::UartEvent ev){
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:{
                 while(m10_uart_.available()){
-                    char chr;
-                    const auto read_len = m10_uart_.try_read_char(chr);
+                    uint8_t byte;
+                    const auto read_len = m10_uart_.try_read_byte(byte);
                     if(read_len == 0) break;
-                    m10_parser.push_byte(chr); 
+                    m10_parser.push_byte(byte);
                 }
             }
                 break;

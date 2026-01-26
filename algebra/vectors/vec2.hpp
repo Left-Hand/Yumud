@@ -208,8 +208,8 @@ struct [[nodiscard]] Vec2{
         T diff = angle_b - angle_a;
         
         // 规范化到 [-π, π]
-        while (diff > T(PI)) diff -= T(2 * PI);
-        while (diff <= -T(PI)) diff += T(2 * PI);
+        while (diff > T(M_PI)) diff -= T(2 * M_PI);
+        while (diff <= -T(M_PI)) diff += T(2 * M_PI);
         
         return Angular<T>::from_radians(diff);
     }
@@ -517,7 +517,7 @@ constexpr Vec2<T> Vec2<T>::lerp(const Vec2<T> & b, const T _t) const{
 template<typename T>
 constexpr Vec2<T> Vec2<T>::slerp(const Vec2<T> & b, const T _t) const{
     static_assert(not std::is_integral_v<T>);
-    return lerp(b, sin(static_cast<T>(PI / 2) * _t));
+    return lerp(b, sin(static_cast<T>(M_PI / 2) * _t));
 }
 
 template<typename T>

@@ -18,12 +18,8 @@
 
 #include "core/io/regs.hpp"
 #include "core/utils/result.hpp"
-
 #include "hal/bus/i2c/i2cdrv.hpp"
-
 #include "drivers/IMU/IMU.hpp"
-
-
 
 
 namespace ymd::drivers{
@@ -68,7 +64,6 @@ struct L3G4200D_Regs:public L3G4200D_Prelude{
 };
 
 class L3G4200D:
-    public AccelerometerIntf,
     public L3G4200D_Prelude{
 public:
     explicit L3G4200D(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR)
@@ -93,8 +88,9 @@ public:
     [[nodiscard]] IResult<Vec3<iq24>> read_acc();
     [[nodiscard]] IResult<uint8_t> read_temperature();
 private:
+    using Regs = L3G4200D_Regs;
+    Regs regs_ = {};
     hal::I2cDrv i2c_drv_;
-    L3G4200D_Regs regs_ = {};
 
     [[nodiscard]] IResult<> write_reg(uint8_t reg_addr, uint8_t reg_val){
         if(const auto res = i2c_drv_.write_reg(reg_addr, reg_val);

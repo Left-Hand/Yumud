@@ -6,9 +6,7 @@
 
 namespace ymd::drivers{
 class MPU6050 final:
-    public MPU6050_Prelude,
-    public AccelerometerIntf, 
-    public GyroscopeIntf{
+    public MPU6050_Prelude{
 public:
 
     explicit MPU6050(const hal::I2cDrv & i2c_drv):
@@ -96,10 +94,10 @@ private:
 
     static constexpr iq16 calculate_gyr_scaler(const GyrFs fs){
         switch(fs){
-            case GyrFs::_250deg: return iq16(500 * PI / 180);
-            case GyrFs::_500deg: return iq16(1000 * PI / 180);
-            case GyrFs::_1000deg: return iq16(2000 * PI / 180);
-            case GyrFs::_2000deg: return iq16(4000 * PI / 180);
+            case GyrFs::_250deg: return iq16(500 * DEG2RAD_RATIO);
+            case GyrFs::_500deg: return iq16(1000 * DEG2RAD_RATIO);
+            case GyrFs::_1000deg: return iq16(2000 * DEG2RAD_RATIO);
+            case GyrFs::_2000deg: return iq16(4000 * DEG2RAD_RATIO);
         }
         __builtin_unreachable();
     }

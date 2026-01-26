@@ -12,7 +12,7 @@ static constexpr uint8_t HEADER_TOKEN = 0xF0;
 static constexpr uint8_t LEN_TOKEN = 0x05;
 static constexpr uint8_t TAIL_TOKEN = 0xAA;
 
-#pragma pack(push, 1)
+
 struct [[nodiscard]] SignalStrengthCode{
     using Self = SignalStrengthCode;
     uint8_t bits;
@@ -31,6 +31,7 @@ struct [[nodiscard]] SignalStrengthCode{
     }
 };
 
+#pragma pack(push, 1)
 struct [[nodiscard]] Packet{
     using Self = Packet;
 
@@ -39,7 +40,7 @@ struct [[nodiscard]] Packet{
     SignalStrengthCode signal_strength;
 
     friend OutputStream & operator<<(OutputStream & os, const Self & self){
-        return os 
+        return os
             << os.field("sender_addr")(self.sender_addr) << os.splitter()
             << os.field("dist_cm")(self.dist_cm) << os.splitter()
             << os.field("signal_strength")(self.signal_strength)
@@ -56,9 +57,9 @@ using Event = Packet;
 using Callback = std::function<void(Event)>;
 
 
-class MK8000TR_ParserSink final{
+class MK8000TR_ParseReceiver final{
 public:
-    explicit MK8000TR_ParserSink(Callback callback):
+    explicit MK8000TR_ParseReceiver(Callback callback):
         callback_(callback)
     {
         reset();
@@ -73,7 +74,6 @@ public:
     void reset();
 private:
 
-    Callback callback_;
     struct TransportFrame{
         #pragma pack(push, 1)
         uint8_t header;
@@ -84,23 +84,26 @@ private:
         Packet packet;
         uint8_t tail;
         #pragma pack(pop)
-
     };
 
-    static_assert(8 == sizeof(TransportFrame));
     union{
         TransportFrame frame_;
-        std::array<uint8_t, sizeof(TransportFrame)> bytes_;
+        alignas(4) std::array<uint8_t, sizeof(TransportFrame)> bytes_;
     };
+
+    Callback callback_;
+
+    static_assert(8 == sizeof(TransportFrame));
+
     size_t bytes_count_ = 0;
 
-    enum class State:uint8_t{
+    enum class FsmState:uint8_t{
         WaitingHeader,
         WaitingLen,
         Remaining
     };
 
-    State state_ = State::WaitingHeader;
+    volatile FsmState state_ = FsmState::WaitingHeader;
 
 };
 

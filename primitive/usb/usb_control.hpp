@@ -31,7 +31,7 @@ enum class [[nodiscard]] Recipient:uint8_t {
 };
 
 
-struct [[nodiscard]] Request {
+struct [[nodiscard]] Request  final{
     using Self = Request;
 
     Direction direction;
@@ -103,12 +103,12 @@ struct [[nodiscard]] Request {
     }
 };
 
-struct [[nodiscard]] OutResponse{
+struct [[nodiscard]] OutResponse final{
     using Self = OutResponse;
     static constexpr OutResponse from_accepted() { return OutResponse{true}; }
     static constexpr OutResponse from_rejected() { return OutResponse{false}; }
     [[nodiscard]] constexpr bool is_accepted() const { return is_accepted_; }
-    [[nodiscard]] constexpr bool is_rejected() const { return !is_accepted_; }  
+    [[nodiscard]] constexpr bool is_rejected() const { return !is_accepted_; }
 private:
     bool is_accepted_;
 
@@ -116,7 +116,7 @@ private:
 };
 
 
-struct [[nodiscard]] InResponse{
+struct [[nodiscard]] InResponse final{
     using Self = InResponse;
 
     static constexpr InResponse from_accepted(std::span<const uint8_t> bytes){
@@ -128,7 +128,7 @@ struct [[nodiscard]] InResponse{
     }
 
     [[nodiscard]] constexpr size_t size() const { return length_; }
-    [[nodiscard]] constexpr std::span<const uint8_t> bytes() const { 
+    [[nodiscard]] constexpr std::span<const uint8_t> bytes() const {
         return std::span(p_bytes_, length_); }
 
     [[nodiscard]] constexpr bool is_accepted() const { return p_bytes_ != nullptr; }
@@ -136,18 +136,9 @@ private:
     const uint8_t * p_bytes_;
     size_t length_;
 
-    constexpr explicit InResponse(const uint8_t *p_bytes, size_t length)    
+    constexpr explicit InResponse(const uint8_t *p_bytes, size_t length)
         : p_bytes_(p_bytes), length_(length) {}
 };
-
-
-
-
-}
-
-namespace ymd::usb{
-
-
 
 
 // Standard USB Transfer Types

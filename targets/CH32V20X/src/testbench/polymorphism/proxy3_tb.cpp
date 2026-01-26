@@ -88,7 +88,7 @@ public:
         // DEBUG_PRINTLN("circle dropped");
     }
 
-    real_t Area() const { return radius_ * radius_ * real_t(PI);}
+    real_t Area() const { return radius_ * radius_ * real_t(M_PI);}
     // OutputStream & operator <<(OutputStream & os) const{
     //     return os << "{Circle: radius = " << radius_ << "}";
     // }
@@ -204,7 +204,7 @@ void proxy_tb(){
     }
 
     DEBUG_PRINTLN("!!!!");
-    DEBUG_PRINTLN(StringView(ss));
+    DEBUG_PRINTLN(ss.inner_str());
     DEBUG_PRINTLN("!!!!");
     clock::delay(100ms);
     DEBUG_PRINTLN("done", dur);

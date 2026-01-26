@@ -6,7 +6,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 #include "core/system.hpp"
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/timer/bipolarity_abstract.hpp"

@@ -57,7 +57,7 @@ IResult<> MA730::set_zero_angle(const Angular<uq32> angle){
     }
 }
 
-IResult<MagStatus> MA730::get_mag_status(){
+IResult<EncoderFaultBitFields> MA730::get_fault(){
     auto & reg = regs_.magnitude_reg;
     const auto res = read_reg(reg);
     if(res.is_err()) return Err(res.unwrap_err());
@@ -65,9 +65,15 @@ IResult<MagStatus> MA730::get_mag_status(){
     const bool mgl = !(reg.mgl1 | reg.mgl2);
     const bool mgh = reg.magnitude_high;
 
-    if(mgl) return Ok(MagStatus::from_low());
-    else if(mgh) return Ok(MagStatus::from_high());
-    else return Ok(MagStatus::from_proper());
+    EncoderFaultBitFields fault = EncoderFaultBitFields::zero();
+    if(mgl){
+        fault.mag_strength = EncoderFaultBitFields::MagStrength::Low;
+    }else if(mgh){
+        fault.mag_strength = EncoderFaultBitFields::MagStrength::High;
+    } else{
+        fault.mag_strength = EncoderFaultBitFields::MagStrength::Proper;
+    }
+    return Ok(fault);
 }
 
 IResult<> MA730::update(){

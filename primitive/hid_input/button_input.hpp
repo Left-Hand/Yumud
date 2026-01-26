@@ -1,7 +1,7 @@
 #pragma once
 
 #include "keycode.hpp"
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 
 namespace ymd::hid{
 

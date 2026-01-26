@@ -3,7 +3,7 @@
 
 #include "core/math/iq/iqmath.hpp"
 #include "core/utils/Result.hpp"
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 #include "primitive/arithmetic/angular.hpp"
 
 // https://blog.51cto.com/u_14344/14422008
@@ -94,7 +94,7 @@ struct LpfCoeffs{
 
 //y[n] = alpha * x[n] + beta * y[n-1]
 template<size_t Q, typename D>
-static constexpr math::fixed_t<Q, D> lpf_exprimetal(math::fixed_t<Q, D> x_state, const math::fixed_t<Q, D> x_new, const uq32 alpha){
+static constexpr math::fixed_t<Q, D> lpf_with_given_alpha(math::fixed_t<Q, D> x_state, const math::fixed_t<Q, D> x_new, const uq32 alpha){
     const uq32 beta = uq32::from_bits(~alpha.to_bits());
     using acc_t = std::conditional_t<std::is_signed_v<D>, int64_t, uint64_t>;
     return math::fixed_t<Q, D>::from_bits(

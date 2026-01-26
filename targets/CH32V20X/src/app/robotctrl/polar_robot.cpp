@@ -4,12 +4,12 @@
 #include "core/clock/time.hpp"
 #include "core/async/timer.hpp"
 #include "core/utils/Unit.hpp"
-#include "core/string/string_view.hpp"
-#include "core/string/split_iter.hpp"
+#include "core/string/view/string_view.hpp"
+#include "core/string/utils/split_iter.hpp"
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 
-#include "middlewares/rpc/rpc.hpp"
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
 
 #include "algebra/vectors/polar.hpp"
 #include "algebra/vectors/vec2.hpp"
@@ -110,14 +110,14 @@ public:
             && joint_theta_.is_homing_done();
     }
 
-    auto make_rpc_list(const StringView name){
-        return rpc::make_list(
+    auto make_repl_list(const StringView name){
+        return repl::make_list(
             name,
-            DEF_RPC_MEMFUNC(trig_homing),
-            DEF_RPC_MEMFUNC(is_homing_done),
-            DEF_RPC_MEMFUNC(deactivate),
-            DEF_RPC_MEMFUNC(activate)
-            // DEF_RPC_MEMFUNC(set_coord)
+            DEF_CALLABLE_MEMFUNC(trig_homing),
+            DEF_CALLABLE_MEMFUNC(is_homing_done),
+            DEF_CALLABLE_MEMFUNC(deactivate),
+            DEF_CALLABLE_MEMFUNC(activate)
+            // DEF_CALLABLE_MEMFUNC(set_coord)
         );
     }
 
@@ -446,24 +446,24 @@ void polar_robot_main(){
         dispatch_gcode_line(line);
     };
 
-    auto list = rpc::make_list(
+    auto list = repl::make_list(
         "polar_robot",
-        rpc::make_function("reset", [&]{
+        repl::make_function("reset", [&]{
             sys::reset();
         }),
 
-        actuator_.make_rpc_list("actuator"),
-        radius_joint_.make_rpc_list("radius_joint"),
-        theta_joint_.make_rpc_list("theta_joint"),
+        actuator_.make_repl_list("actuator"),
+        radius_joint_.make_repl_list("radius_joint"),
+        theta_joint_.make_repl_list("theta_joint"),
 
-        rpc::make_function("pxy", [&](const iq16 x, const iq16 y){
+        repl::make_function("pxy", [&](const iq16 x, const iq16 y){
             curve_gen_.add_end_coord({
                 CLAMP2(x, 0.14_r),
                 CLAMP2(y, 0.14_r)
             });
         }),
 
-        rpc::make_function("next", [&](){
+        repl::make_function("next", [&](){
             static Vec2<iq16> coord = {0.1_r, 0};
             coord = coord.forward_90deg();
             actuator_.set_coord(regu_(coord));

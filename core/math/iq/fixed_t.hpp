@@ -521,7 +521,7 @@ template<size_t Q, typename D>
 [[nodiscard]] __attribute__((always_inline))
 constexpr fixed_t<Q, D> sign(const fixed_t<Q, D> x){
     static_assert(fixed_t<Q, D>(-1) != fixed_t<Q, D>(1));
-    if(likely(x)) return fixed_t<Q, D>(x > 0 ? 1 : -1);
+    if((x)) [[likely]]return fixed_t<Q, D>(x > 0 ? 1 : -1);
     else return fixed_t<Q, D>(0);
 }
 

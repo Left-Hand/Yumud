@@ -172,7 +172,7 @@ public:
         pwm_(pwm){;}
 private:    
     drivers::AnalogEncoder encoder_;
-    // using Td = dsp::TrackingDifferentiatorByOrders<2>;
+    // using Td = dsp::TrackingDifferentiatorOrdered<2>;
     // Td fb_pos_td_;
     // Td cmd_pos_td_;
 
@@ -333,7 +333,7 @@ void myservo_main(){
 
     hal::adc1.register_nvic({0,0}, EN);
     hal::adc1.enable_interrupt<hal::AdcIT::JEOC>(EN);
-    hal::adc1.set_event_handler(
+    hal::adc1.set_event_callback(
         [&](const hal::AdcEvent ev){
             switch(ev){
             case hal::AdcEvent::EndOfInjectedConversion:{

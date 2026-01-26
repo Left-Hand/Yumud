@@ -3,12 +3,14 @@
 
 namespace ymd{
 
-OutputStream & operator <<(OutputStream & os, hal::CanStdId & id){
-    return os << id.to_u11();
+OutputStream & operator <<(OutputStream & os, const hal::CanStdId & self){
+    auto guard = os.create_guard();
+    return os << std::hex << self.to_u11();
 } 
 
-OutputStream & operator <<(OutputStream & os, hal::CanExtId & id){
-    return os << id.to_u29();
+OutputStream & operator <<(OutputStream & os, const hal::CanExtId & self){
+    auto guard = os.create_guard();
+    return os << std::hex << self.to_u29();
 } 
 
 

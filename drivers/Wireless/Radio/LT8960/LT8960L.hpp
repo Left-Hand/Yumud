@@ -98,7 +98,7 @@ public:
     [[nodiscard]] IResult<> wait_rst_done(const size_t timeout);
 
     [[nodiscard]] IResult<> set_rf_channel(const Channel ch){
-        curr_channel_ = ch; return Ok();}
+        now_channel_ = ch; return Ok();}
 
     [[nodiscard]] IResult<> enable_use_hw_pkt(const Enable en){
         use_hw_pkt_ = en == EN; return Ok();}
@@ -130,7 +130,7 @@ private:
     DataRate datarate_;
     bool on_ble_ = false;
 
-    Channel curr_channel_ = Channel(0);
+    Channel now_channel_ = Channel(0);
 
     [[nodiscard]] __fast_inline
     IResult<> write_reg(const RegAddr address, const uint16_t reg){
@@ -172,7 +172,7 @@ private:
 
     [[nodiscard]] IResult<size_t> read_fifo(std::span<uint8_t> buf);
 
-    [[nodiscard]] IResult<> set_pa_current(const uint8_t current);
+    [[nodiscard]] IResult<> set_pa_current(const uint8_t nowent);
 
     [[nodiscard]] IResult<> set_pa_gain(const uint8_t gain);
 
@@ -192,13 +192,15 @@ private:
     }
 
     [[nodiscard]] IResult<> enter_tx(){
-        return set_rf_channel(curr_channel_, 1, 0);
+        return set_rf_channel(now_channel_, 1, 0);
     }
+
     [[nodiscard]] IResult<> enter_rx(){
-        return set_rf_channel(curr_channel_, 0, 1);
+        return set_rf_channel(now_channel_, 0, 1);
     }
+
     [[nodiscard]] IResult<> exit_tx_rx(){
-        return set_rf_channel(curr_channel_, 0, 0);
+        return set_rf_channel(now_channel_, 0, 0);
     }
 
     [[nodiscard]] IResult<> clear_fifo_write_and_read_ptr();

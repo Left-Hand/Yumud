@@ -71,7 +71,7 @@ public:
         const ScanLine line,
         const DestColor color
     ){
-        if(likely(line.y != y_)) return Ok();
+        if((line.y != y_)) [[likely]] return Ok();
         return fill_x_range(line.x_range, color);
     }
 

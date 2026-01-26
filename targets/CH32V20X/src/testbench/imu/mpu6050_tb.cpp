@@ -108,7 +108,7 @@ using namespace ymd::drivers;
 
     timer.register_nvic<hal::TimerIT::Update>({0,0}, EN);
     timer.enable_interrupt<hal::TimerIT::Update>(EN);
-    timer.set_event_handler([&](hal::TimerEvent ev){
+    timer.set_event_callback([&](hal::TimerEvent ev){
         switch(ev){
         case hal::TimerEvent::Update:{
             mpu.update().examine();
@@ -174,7 +174,9 @@ void mpu6050_main(){
     auto sda_pin_ = SDA_PIN;
     hal::I2cSw i2c{&scl_pin_, &sda_pin_};
     // i2c.init(400_KHz);
-    i2c.init({400_KHz});
+    i2c.init({
+        .baudrate = hal::NearestFreq(400_KHz)
+    });
     // i2c.init();
 
     clock::delay(200ms);

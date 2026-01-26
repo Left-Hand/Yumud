@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ads1115_prelude.hpp"
+#include "core/math/real.hpp"
+#include "core/utils/Option.hpp"
 
 namespace ymd::drivers{
 

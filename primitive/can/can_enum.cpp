@@ -29,8 +29,8 @@ OutputStream & operator<<(OutputStream & os, const CanLibError & error){
             return os << "BlockingTransmitTimeout";
         case CanLibError::NoMailboxAvailable: 
             return os << "NoMailboxAvailable";
-        case CanLibError::SoftFifoOverflow: 
-            return os << "SoftFifoOverflow";
+        case CanLibError::SoftQueueOverflow: 
+            return os << "SoftQueueOverflow";
     }
     __builtin_unreachable();
 }

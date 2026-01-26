@@ -4,12 +4,8 @@
 
 namespace ymd::drivers{
 
-class AS5047:
-    public MagEncoderIntf,
-    public AS5047_Prelude{
+class AS5047:public AS5047_Prelude{
 public:
-
-
     template<typename T = void>
     using IResult = Result<T, Error>;
 
@@ -30,12 +26,12 @@ public:
 private:
     using Regs = AS5047_Regs;
 
-    hal::SpiDrv spi_drv_;
     Regs regs_ = {};
+    hal::SpiDrv spi_drv_;
 
     uq32 lap_turns_ = 0;
 
-    uint16_t get_position_data();
+    uint16_t get_angle_bits();
 
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t data);
     [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & data);

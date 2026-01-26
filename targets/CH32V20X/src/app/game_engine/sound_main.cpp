@@ -5,7 +5,7 @@
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
 #include "primitive/arithmetic/rescaler.hpp"
-#include "core/string/heapless_string.hpp"
+#include "core/string/owned/heapless_string.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/uarthw.hpp"
@@ -292,7 +292,7 @@ struct [[nodiscard]] FilterParaments{
     T q;
 
     [[nodiscard]] constexpr std::pair<T, T> k_and_norm() const {
-        T k = tan(PI * f0 / fs);
+        T k = tan(M_PI * f0 / fs);
         T norm = 1 / (1 + k / q + k * k);
         return {k, norm};
     }

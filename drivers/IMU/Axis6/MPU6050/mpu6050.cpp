@@ -1,5 +1,6 @@
 #include "mpu6050.hpp"
 #include "core/debug/debug.hpp"
+#include "core/utils/scope_guard.hpp"
 
 #define MPU6050_DEBUG_EN 0
 
@@ -98,34 +99,50 @@ IResult<> MPU6050::init(const Config & cfg){
 }
 
 IResult<> MPU6050::update(){
-    auto res = read_burst(
-        regs_.acc_x_reg.address, std::span(&regs_.acc_x_reg.as_bits_mut(), 7));
-    is_data_valid_ = res.is_ok();
+    std::array<int16_t, 7> buf;
+
+    const auto res = read_burst(regs_.acc_x_reg.ADDRESS, std::span(buf));
+    if(res.is_err()){
+        is_data_valid_ = false;
+        return Err(res.unwrap_err());
+    }
+    is_data_valid_ = true;
+    regs_.acc_x_reg.bits = buf[0];
+    regs_.acc_y_reg.bits = buf[1];
+    regs_.acc_z_reg.bits = buf[2];
+
+    regs_.gyr_x_reg.bits = buf[3];
+    regs_.gyr_y_reg.bits = buf[4];
+    regs_.gyr_z_reg.bits = buf[5];
+
+    regs_.temperature_reg.bits = buf[6];
+
     return res;
 }
 
 IResult<Vec3<iq24>> MPU6050::read_acc(){
 
     return  Ok{Vec3<iq24>{
-        iq16::from_bits(regs_.acc_x_reg.to_bits()) * acc_scaler_,
-        iq16::from_bits(regs_.acc_y_reg.to_bits()) * acc_scaler_,
-        iq16::from_bits(regs_.acc_z_reg.to_bits()) * acc_scaler_
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.acc_x_reg.to_bits())) * acc_scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.acc_y_reg.to_bits())) * acc_scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.acc_z_reg.to_bits())) * acc_scaler_
     }};
 }
 
 IResult<Vec3<iq24>> MPU6050::read_gyr(){
 
     return Ok{Vec3<iq24>{
-        iq16::from_bits(regs_.gyr_x_reg.to_bits()) * gyr_scaler_,
-        iq16::from_bits(regs_.gyr_y_reg.to_bits()) * gyr_scaler_,
-        iq16::from_bits(regs_.gyr_z_reg.to_bits()) * gyr_scaler_
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.gyr_x_reg.to_bits())) * gyr_scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.gyr_y_reg.to_bits())) * gyr_scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.gyr_z_reg.to_bits())) * gyr_scaler_
     }};
 }
 
 IResult<iq16> MPU6050::read_temp(){
     auto & reg = regs_.temperature_reg;
-    static constexpr auto INV_340 = iq16(1.0 / 340);
-    return Ok(iq16(36.65f) + iq16::from_bits(reg.to_bits()) * INV_340);
+    static constexpr auto INV_340 = uq32(1.0 / 340);
+
+    return Ok(iq16(36.65f) + iq16::from_bits(std::bit_cast<int16_t>(reg.to_bits())) * INV_340);
 }
 
 IResult<> MPU6050::set_acc_fs(const AccFs fs){

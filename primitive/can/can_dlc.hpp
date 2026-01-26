@@ -15,11 +15,11 @@ class OutputStream;
 namespace ymd::hal{
 
 //bxcan的dlc字段  至少需要四个比特才能表述
-struct [[nodiscard]] BxCanDlc{
+struct [[nodiscard]] BxCanDlc final{
     static constexpr size_t NUM_BITS = 4;
     using Self = BxCanDlc;
 
-    static Self from_uninitialized(){
+    static imconstexpr Self from_uninitialized(){
         return Self();
     }
 
@@ -31,30 +31,36 @@ struct [[nodiscard]] BxCanDlc{
         return Self(static_cast<uint8_t>(8));
     }
 
+    __attribute__((always_inline))
     static constexpr Self from_bits(const uint8_t bits){
         return Self(bits);
     }
 
+    __attribute__((always_inline))
     static constexpr Option<Self> try_from_length(const size_t length){
         if(length > 8) [[unlikely]]
             return None;
         return Some(Self::from_bits(static_cast<uint8_t>(length)));
     }
 
+    __attribute__((always_inline))
     static constexpr Self from_length(const size_t length){
         if(length > 8) [[unlikely]]
             __builtin_trap();
         return Self::from_bits(static_cast<uint8_t>(length));
     }
 
+    __attribute__((always_inline))
     [[nodiscard]] constexpr size_t length() const {
         return bits_;
     };
 
+    __attribute__((always_inline))
     [[nodiscard]] constexpr uint8_t to_bits() const {
         return bits_;
     }
 
+    __attribute__((always_inline))
     [[nodiscard]] constexpr auto operator <=>(const Self & other) const = default;
 private:
     uint8_t bits_;
@@ -69,7 +75,7 @@ private:
 
 //这个类与平台无关 相关标准在CanFD的官方文档中定义
 //fdcan的dlc字段 至少需要四个比特才能表述
-struct [[nodiscard]] FdCanDlc{
+struct [[nodiscard]] FdCanDlc final{
     static constexpr size_t NUM_BITS = 4;
     using Self = FdCanDlc;
 

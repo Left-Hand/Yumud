@@ -43,13 +43,6 @@
 
 using namespace ymd;
 
-// void sys::clock::delay_ms(const uint32_t ms){
-//     clock::delay(ms);
-// }
-
-// void sys::clock::delay_us(const uint32_t us){
-//     clock::delay(us);
-// }
 
 void sys::preinit(){
     #ifdef N32G45X
@@ -113,18 +106,17 @@ void sys::preinit(){
     #endif
 }
 
-
-
-
 void sys::reset(){
     __disable_irq();
     __disable_irq();
     NVIC_SystemReset();
-    while(true);
+    while(true){
+        __nop;
+    }
 }
 
 uint64_t sys::chip::get_chip_id(){
-    static uint32_t chip_id[2] = {
+    const uint32_t chip_id[2] = {
         *(volatile uint32_t *)0x1FFFF7E8,
         *(volatile uint32_t *)0x1FFFF7EC
     };
@@ -132,14 +124,12 @@ uint64_t sys::chip::get_chip_id(){
 }
 
 uint32_t sys::chip::get_flash_size(){
-    static uint32_t chip_flash_size = operator"" _KB(*(volatile uint16_t *)0x1FFFF7E0);
+    const uint32_t chip_flash_size = operator"" _KB(*(volatile uint16_t *)0x1FFFF7E0);
     return chip_flash_size;
 }
 
 uint32_t sys::chip::get_chip_id_crc(){
-
-    
-    static const uint32_t chip_id_crc = [&](){
+    const uint32_t chip_id_crc = [&](){
         hal::crc.init();
         hal::crc.clear();
         uint64_t chip_id = get_chip_id();
@@ -208,12 +198,13 @@ void sys::clock::set_ahb_div(const uint8_t _div){
     switch(div){
         case 1:
             M_RCC_CONFIGER(RCC_SYSCLK_Div1);
-            break;
+            return;
         case 2:
             M_RCC_CONFIGER(RCC_SYSCLK_Div2);
-            break;
-        default:return;
+            return;
     }
+    //should not reach here
+    __builtin_trap();
 
 }
 
@@ -222,20 +213,22 @@ void sys::clock::set_apb1_div(const uint8_t _div){
     switch(div){
         case 1:
             M_PCLK1_CONFIGER(RCC_HCLK_Div1);
-            break;
+            return;
         case 2:
             M_PCLK1_CONFIGER(RCC_HCLK_Div2);
-            break;
+            return;
         case 4:
             M_PCLK1_CONFIGER(RCC_HCLK_Div4);
-            break;
+            return;
         case 8:
             M_PCLK1_CONFIGER(RCC_HCLK_Div8);
-            break;
+            return;
         case 16:
             M_PCLK1_CONFIGER(RCC_HCLK_Div16);
-            break;
+            return;
     }
+    //should not reach here
+    __builtin_trap();
 }
 
 void sys::clock::set_apb2_div(const uint8_t _div){
@@ -244,20 +237,22 @@ void sys::clock::set_apb2_div(const uint8_t _div){
     switch(div){
         case 1:
             M_PCLK2_CONFIGER(RCC_HCLK_Div1);
-            break;
+            return;
         case 2:
             M_PCLK2_CONFIGER(RCC_HCLK_Div2);
-            break;
+            return;
         case 4:
             M_PCLK2_CONFIGER(RCC_HCLK_Div4);
-            break;
+            return;
         case 8:
             M_PCLK2_CONFIGER(RCC_HCLK_Div8);
-            break;
+            return;
         case 16:
             M_PCLK2_CONFIGER(RCC_HCLK_Div16);
-            break;
+            return;
     }
+    //should not reach here
+    __builtin_trap();
 }
 
 uint32_t sys::chip::get_dev_id(){
@@ -286,7 +281,7 @@ bool sys::exception::is_interrupt_pending(){
     #ifdef ARCH_QKV4
     return QingKeV4::isInterruptPending();
     #else
-    return false;
+    #error "not supported yet"
     #endif
 }
 
@@ -294,7 +289,7 @@ bool sys::exception::is_interrupt_acting(){
     #ifdef ARCH_QKV4
     return QingKeV4::isIntrruptActing();
     #else
-    return false;
+    #error "not supported yet"
     #endif
 }
 
@@ -302,7 +297,7 @@ uint8_t sys::exception::get_interrupt_depth(){
     #ifdef ARCH_QKV4
     return QingKeV4::getInterruptDepth();
     #else
-    return 0;
+    #error "not supported yet"
     #endif
 }
 
@@ -370,18 +365,22 @@ void sys::abort(){
     DISABLE_INT;
     DISABLE_INT;
 
-    trip();
+    sys::trip();
 
     RCC_DeInit();
     while(true);
 }
 
 void sys::jumpto(const uint32_t addr){
+    #if defined(__riscv)
     __asm__ volatile (
         "jmp %0"
         :
         : "r" (addr)
         : "memory"
     );
+    #else
+    #error "not supported yet"
+    #endif
     __builtin_unreachable();
 }

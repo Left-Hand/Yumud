@@ -120,7 +120,7 @@ void mlx90640_main(){
     };
 
 
-    i2c_sw_.init({180_KHz});
+    i2c_sw_.init({.baudrate = hal::NearestFreq(180_KHz)});
     MLX90640 mlx{&i2c_sw_};
     clock::delay(50ms);                                    //预留一点时间让MLX传感器完成自己的初始化
     // MLX90640_SetRefreshRate(MLX90640_I2CADDR, 0).examine();       //0.5hz
@@ -130,9 +130,9 @@ void mlx90640_main(){
     while (true){
         if (const auto res = mlx.get_frame_data(Frame); res.is_err()){
             static Milliseconds last_millis_ = 0ms;
-            const auto curr_millis_ = clock::millis();
-            // DEBUG_PRINTLN(res.unwrap_err(), curr_millis_ - last_millis_, iq16::from(Vdd), iq16::from(Ta));
-            last_millis_ = curr_millis_;
+            const auto now_millis_ = clock::millis();
+            // DEBUG_PRINTLN(res.unwrap_err(), now_millis_ - last_millis_, iq16::from(Vdd), iq16::from(Ta));
+            last_millis_ = now_millis_;
             continue;
         }
 

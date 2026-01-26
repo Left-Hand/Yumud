@@ -3,9 +3,9 @@
 #include "Led.hpp"
 #include "primitive/colors/color/color.hpp"
 #include "primitive/pwm_channel.hpp"
-#include "hal/gpio/gpio_intf.hpp"
+#include "hal/gpio/gpio.hpp"
 
-class GpioIntf;
+class Gpio;
 
 namespace ymd::drivers{
 class RgbLedIntf{
@@ -15,9 +15,9 @@ class RgbLedIntf{
 class DigitalRgbLed final{
 public:
     DigitalRgbLed(
-        hal::GpioIntf & _red_pin_, 
-        hal::GpioIntf & _green_pin_, 
-        hal::GpioIntf & _blue_pin_
+        hal::Gpio & _red_pin_, 
+        hal::Gpio & _green_pin_, 
+        hal::Gpio & _blue_pin_
     ):
         red_pin_(_red_pin_), 
         green_pin_(_green_pin_), 
@@ -35,9 +35,9 @@ public:
         blue_pin_.write(BoolLevel::from(color.b > iq16(0.5)));
     }
 private:
-    hal::GpioIntf & red_pin_;
-    hal::GpioIntf & green_pin_;
-    hal::GpioIntf & blue_pin_;
+    hal::Gpio & red_pin_;
+    hal::Gpio & green_pin_;
+    hal::Gpio & blue_pin_;
 };
 
 

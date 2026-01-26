@@ -8,7 +8,7 @@
 #include "core/debug/debug.hpp"
 #include "core/async/timer.hpp"
 #include "core/utils/zero.hpp"
-#include "core/utils/bits/atomic_bitset.hpp"
+#include "core/container/atomic_bitset.hpp"
 #include "geometry.hpp"
 #include "drivers/Proximeter/MK8000TR/mk8000tr_stream.hpp"
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
@@ -27,8 +27,8 @@ using AlxError = drivers::alx_aoa::Error;
 
 using AlxLocation = drivers::alx_aoa::Location;
 using AlxHeartBeat = drivers::alx_aoa::HeartBeat;
-using drivers::mk8000tr::MK8000TR_ParserSink;
-using drivers::alx_aoa::AlxAoa_ParserSink;
+using drivers::mk8000tr::MK8000TR_ParseReceiver;
+using drivers::alx_aoa::AlxAoa_ParseReceiver;
 using Mk8Event = drivers::mk8000tr::Event;
 
 using AlxMeasurement = SphericalCoordinates<float>;
@@ -68,17 +68,17 @@ struct BlinkActivity{
 
 struct AlxActivity{
     hal::Uart & uart_;
-    drivers::alx_aoa::AlxAoa_ParserSink & parser_;
+    drivers::alx_aoa::AlxAoa_ParseReceiver & parser_;
     uint32_t received_bytes_cnt_ = 0;
 
     void resume(){
         if(uart_.available() == 0) return;
         while(uart_.available()){
-            char chr;
-            const auto len = uart_.try_read_char(chr);
+            uint8_t byte;
+            const auto len = uart_.try_read_byte(byte);
             if(len == 0) break;
-            // _bytes.push_back(uint8_t(chr));
-            parser_.push_byte(static_cast<uint8_t>(chr)); 
+            // _bytes.push_back(uint8_t(byte));
+            parser_.push_byte(static_cast<uint8_t>(byte));
             received_bytes_cnt_++;
         }
     }
@@ -133,7 +133,7 @@ void alx_aoa_main(){
 
     using Mk8Measurements = std::array<Mk8Measurement, 2>;
 
-    [[maybe_unused]] auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res, const size_t idx){ 
+    [[maybe_unused]] auto alx_ev_handler = [&](const Result<AlxEvent, AlxError> & res, const size_t idx){
 
         if(res.is_ok()){
             const auto & ev = res.unwrap();
@@ -152,14 +152,14 @@ void alx_aoa_main(){
         }
     };
 
-    auto alx_1_parser_ = AlxAoa_ParserSink(
+    auto alx_1_parser_ = AlxAoa_ParseReceiver(
         [&](const Result<AlxEvent, AlxError> & res){
 
             alx_ev_handler(res, 0);
         }
     );
 
-    auto alx_2_parser_ = AlxAoa_ParserSink(
+    auto alx_2_parser_ = AlxAoa_ParseReceiver(
         [&](const Result<AlxEvent, AlxError> & res){
             alx_ev_handler(res, 1);
         }
@@ -181,16 +181,16 @@ void alx_aoa_main(){
     [[maybe_unused]] auto & alx_1_uart_ = hal::usart3;
     [[maybe_unused]] auto & alx_2_uart_ = hal::uart4;
 
-    alx_1_uart_.set_event_handler([&](const hal::UartEvent & ev){
+    alx_1_uart_.set_event_callback([&](const hal::UartEvent & ev){
 
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:
 
                 while(alx_1_uart_.available()){
-                    char chr;
-                    const auto read_len = alx_1_uart_.try_read_char(chr);
+                    uint8_t byte;
+                    const auto read_len = alx_1_uart_.try_read_byte(byte);
                     if(read_len == 0) break;
-                    alx_1_parser_.push_byte(static_cast<uint8_t>(chr)); 
+                    alx_1_parser_.push_byte(static_cast<uint8_t>(byte));
                 }
                 break;
             default:
@@ -199,14 +199,14 @@ void alx_aoa_main(){
     });
 
 
-    alx_2_uart_.set_event_handler([&](const hal::UartEvent & ev){
+    alx_2_uart_.set_event_callback([&](const hal::UartEvent & ev){
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:
                 while(alx_2_uart_.available()){
-                    char chr;
-                    const auto read_len = alx_2_uart_.try_read_char(chr);
+                    uint8_t byte;
+                    const auto read_len = alx_2_uart_.try_read_byte(byte);
                     if(read_len == 0) break;
-                    alx_2_parser_.push_byte(static_cast<uint8_t>(chr)); 
+                    alx_2_parser_.push_byte(static_cast<uint8_t>(byte));
                 }
                 break;
             default:
@@ -222,7 +222,7 @@ void alx_aoa_main(){
         blink_activity_.resume();
 
         static auto report_timer = async::RepeatTimer::from_duration(3ms);
-        
+
         report_timer.invoke_if([&]{
 
             [[maybe_unused]] const auto & alx_measurement = alx_measurements_[0];
@@ -263,7 +263,7 @@ void alx_aoa_main(){
 
             // [[maybe_unused]] const bool is_far =
             //     (is_left_far) and (is_right_far);
-            
+
             // const auto may_dual_p = geometry::compute_intersection_points(left_circle, right_circle);
             // const auto p = may_dual_p.size() ? may_dual_p[0] : Vec2f::ZERO;
             const auto left_ray = Ray2<float>(LEFT_BASE, LEFT_ANGLE_BASE + left_meas.phase);
@@ -302,12 +302,12 @@ void alx_aoa_main(){
                 // geometry::compute_intersection_point(right_ray, left_circle).unwrap_or(Vec2f::ZERO),
                 hal::usart2.available(),
                 hal::usart3.tx_dma_buf_index_,
-                hal::usart3.tx_fifo_.length(),
-                hal::usart3.try_write_chars("1234567890", 10),
+                hal::usart3.tx_queue_.length(),
+                // hal::usart3.try_write_bytes("1234567890", 10),
                 USART3_TX_DMA_CH.pending_count()
                 // 0
                 // (left_raw_meas.distance > right_raw_meas.distance) ? right_est_point : right_est_point
-                
+
                 // ((left_est_point - RIGHT_BASE).angle() - (right_meas.phase + RIGHT_ANGLE_BASE)).to_turns(),
                 // ((right_est_point - LEFT_BASE).angle() - (left_meas.phase + LEFT_ANGLE_BASE)).to_turns(),
                 // left_est_point.x,

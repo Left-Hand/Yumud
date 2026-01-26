@@ -1,6 +1,6 @@
 #include "ads1115.hpp"
 #include "core/debug/debug.hpp"
-#include "primitive/analog_channel.hpp"
+
 
 // #define ADS1115_DEBUG
 
@@ -55,8 +55,8 @@ IResult<> ADS1115::start_conv(){
 IResult<> ADS1115::set_threshold(int16_t low, int16_t high){
     auto low_thresh_reg_copy = RegCopy(low_thresh_reg);
     auto high_thresh_reg_copy = RegCopy(high_thresh_reg);
-    low_thresh_reg_copy.data = low;
-    high_thresh_reg_copy.data = high;
+    low_thresh_reg_copy.bits = low;
+    high_thresh_reg_copy.bits = high;
 
     if(const auto res = write_reg(low_thresh_reg_copy);
         res.is_err()) return res;
@@ -112,7 +112,7 @@ IResult<bool> ADS1115::is_busy(){
 Option<iq16> ADS1115::get_voltage(){
     auto & reg = conversion_reg;
     if(read_reg(reg.ADDRESS, reg.as_bits_mut()).is_err()) return None;
-    return Some(iq16::from_bits(~reg.data) * 3.3_r);
+    return Some(iq16::from_bits(~std::bit_cast<int16_t>(reg.bits)) * 3.3_iq16);
     // return None;
 }
 

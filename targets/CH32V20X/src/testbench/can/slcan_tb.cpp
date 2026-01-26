@@ -2,11 +2,10 @@
 
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
-#include "core/clock/time_stamp.hpp"
 
 #include "middlewares/protocols/cannet/slcan/slcan.hpp"
-#include "middlewares/rpc/rpc.hpp"
-#include "middlewares/rpc/repl_server.hpp"
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
 
 using namespace ymd;
 
@@ -32,9 +31,9 @@ void slcan_main(){
 
     // asciican::AsciiCanPhy phy{can};
     [[maybe_unused]] robots::slcan::SlcanParser slcan_parser;
-    // auto list = rpc::make_list(
+    // auto list = repl::make_list(
     //     "slcan",
-    //     rpc::make_function("tx", [&](const StringView str) {
+    //     repl::make_function("tx", [&](const StringView str) {
     //         const auto u_begin = clock::micros();
     //         const auto res = slcan.on_recv_str(str);
     //         const auto u_end = clock::micros();
@@ -43,7 +42,7 @@ void slcan_main(){
     //     })
     // );
 
-    [[maybe_unused]] robots::ReplServer repl_server{
+    [[maybe_unused]] repl::ReplServer repl_server{
         &DBG_UART, &DBG_UART
     };
 

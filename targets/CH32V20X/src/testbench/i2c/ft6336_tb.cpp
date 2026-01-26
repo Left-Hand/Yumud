@@ -83,7 +83,11 @@ void ft6336_main(){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
     hal::I2cSw i2c{&scl_pin_, &sda_pin_};
-    i2c.init({200_KHz});
+
+    i2c.init({
+        .baudrate = hal::NearestFreq(200_KHz)
+    });
+
 
     clock::delay(1ms);
     clock::delay(100ms);

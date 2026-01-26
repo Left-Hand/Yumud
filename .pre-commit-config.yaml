@@ -1,0 +1,15 @@
+repos:
+    # ==================== 通用代码质量检查 ====================
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.6.0
+      hooks:
+        - id: check-yaml
+          name: 检查YAML语法
+          args: ['--unsafe']
+        - id: check-added-large-files
+          name: 检查添加的大文件
+          args: ['--maxkb=1024']
+        - id: check-merge-conflict
+          name: 检查合并冲突标记
+        - id: check-case-conflict
+          name: 检查文件名大小写冲突

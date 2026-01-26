@@ -81,14 +81,14 @@ private:
 
     [[nodiscard]] static constexpr iq16 calc_gyr_scale(const GyrFs fs){
         switch(fs){
-            case GyrFs::_2000deg  :      return iq16(2 * 2000   * PI / 180);
-            case GyrFs::_1000deg  :      return iq16(2 * 1000   * PI / 180);
-            case GyrFs::_500deg   :      return iq16(2 * 500    * PI / 180);
-            case GyrFs::_250deg   :      return iq16(2 * 250    * PI / 180);
-            case GyrFs::_125deg   :      return iq16(2 * 125    * PI / 180);
-            case GyrFs::_62_5deg  :      return iq16(2 * 62.5   * PI / 180);
-            case GyrFs::_31_25deg :      return iq16(2 * 31.25  * PI / 180);
-            case GyrFs::_15_625deg:      return iq16(2 * 15.625 * PI / 180);
+            case GyrFs::_2000deg  :      return iq16(2 * 2000   * DEG2RAD_RATIO);
+            case GyrFs::_1000deg  :      return iq16(2 * 1000   * DEG2RAD_RATIO);
+            case GyrFs::_500deg   :      return iq16(2 * 500    * DEG2RAD_RATIO);
+            case GyrFs::_250deg   :      return iq16(2 * 250    * DEG2RAD_RATIO);
+            case GyrFs::_125deg   :      return iq16(2 * 125    * DEG2RAD_RATIO);
+            case GyrFs::_62_5deg  :      return iq16(2 * 62.5   * DEG2RAD_RATIO);
+            case GyrFs::_31_25deg :      return iq16(2 * 31.25  * DEG2RAD_RATIO);
+            case GyrFs::_15_625deg:      return iq16(2 * 15.625 * DEG2RAD_RATIO);
         }
         __builtin_unreachable();
     }

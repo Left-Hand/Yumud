@@ -262,7 +262,7 @@ private:
         const std::source_location & loc,
         Args && ... args
     ) const {
-        if (likely(is_ok())) {
+        if ((is_ok())) [[likely]] {
             return storage_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
@@ -475,7 +475,7 @@ public:
     template<typename ... Args>
     constexpr 
     T expect(Args && ... args) const{
-        if (likely(is_ok())) {
+        if ((is_ok())) [[likely]]{
             return storage_.unwrap();
         } else {
             PANIC_NSRC(std::forward<Args>(args)...);
@@ -486,7 +486,7 @@ public:
     template<typename ... Args>
     [[nodiscard]] constexpr
     const Result & check(Args && ... args) const{
-        if(unlikely(is_err())){
+        if((is_err())) [[unlikely]]{
             #ifdef __DEBUG_INCLUDED
             DEBUG_PRINTLN(unwrap_err(), std::forward<Args>(args)...);
             #endif
@@ -509,7 +509,7 @@ public:
 
     __fast_inline constexpr 
     T unwrap() const {
-        if (likely(is_ok())) {
+        if ((is_ok())) [[likely]] {
             return storage_.unwrap();
         } else {
             sys::abort();
@@ -521,7 +521,7 @@ public:
     T examine(
         const std::source_location & loca = std::source_location::current())
     {
-        if (unlikely(!is_ok())) {
+        if ((!is_ok())) [[unlikely]]{
             if constexpr (not std::is_same_v<E, void>)
                 __PANIC_EXPLICIT_SOURCE(loca, unwrap_err());
             else
@@ -533,7 +533,7 @@ public:
     template<typename U = T>
     __fast_inline constexpr 
     T unwrap_or(const U & val) const {
-        if (likely(is_ok())) {
+        if ((is_ok())) [[likely]]{
             return storage_.unwrap();
         } else {
             return static_cast<T>(val);
@@ -541,7 +541,7 @@ public:
     }
     __fast_inline constexpr 
     E unwrap_err() const {
-        if (likely(is_err())) {
+        if ((is_err())) [[likely]]{
             return storage_.unwrap_err();
         } else {
             sys::abort();
@@ -550,7 +550,7 @@ public:
 
     constexpr Option<T> 
     ok() const{
-        if (likely(is_ok())) {
+        if ((is_ok())) [[likely]]{
             return Some(storage_.unwrap());
         } else {
             return None;
@@ -559,7 +559,7 @@ public:
 
     constexpr Option<E> 
     err() const{
-        if (likely(is_err())) {
+        if ((is_err())) [[likely]]{
             return Some(storage_.unwrap_err());
         } else {
             return None;

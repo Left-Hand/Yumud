@@ -5,7 +5,6 @@
 namespace ymd::drivers{
 
 class ADXL345:
-    public AccelerometerIntf, 
     public ADXL345_Prelude
 {
 

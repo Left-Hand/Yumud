@@ -7,18 +7,18 @@
 namespace ymd::drivers{
 
 [[nodiscard]] Result<void, BoschImu_Transport::Error> 
-BoschImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t data){
-    // DEBUG_PRINTLN(std::hex, std::showbase, "write_reg", reg_addr, data);
+BoschImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t reg_val){
+    // DEBUG_PRINTLN(std::hex, std::showbase, "write_reg", reg_addr, reg_val);
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->write_reg(reg_addr, data);
+        if(const auto res = i2c_drv_->write_reg(reg_addr, reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         // if(const auto res = spi_drv_->write_single<uint8_t>(reg_addr, CONT);
         //     res.is_err()) return Err(res.unwrap_err());
-        // if(const auto res = spi_drv_->write_single<uint8_t>(data);
+        // if(const auto res = spi_drv_->write_single<uint8_t>(reg_val);
         //     res.is_err()) return Err(res.unwrap_err());
-        const std::array<uint8_t, 2> bytes = {reg_addr, data};
+        const std::array<uint8_t, 2> bytes = {reg_addr, reg_val};
         if(const auto res = spi_drv_->write_burst<uint8_t>(std::span(bytes));
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -28,16 +28,16 @@ BoschImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t data){
 }
 
 [[nodiscard]] Result<void, BoschImu_Transport::Error> 
-BoschImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & data){
-    // DEBUG_PRINTLN(std::hex, std::showbase, "read_reg", reg_addr, data);
+BoschImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+    // DEBUG_PRINTLN(std::hex, std::showbase, "read_reg", reg_addr, reg_val);
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->read_reg(reg_addr, data);
+        if(const auto res = i2c_drv_->read_reg(reg_addr, reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(reg_addr | 0x80), CONT);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->read_single<uint8_t>(data);
+        if(const auto res = spi_drv_->read_single<uint8_t>(reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -66,16 +66,16 @@ BoschImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
 
 
 [[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
-InvensenseImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t data) {
-    DEBUG_PRINTLN(std::hex, std::showbase, "write_reg", reg_addr, data);
+InvensenseImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t reg_val) {
+    // DEBUG_PRINTLN(std::hex, std::showbase, "write_reg", reg_addr, reg_val);
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->write_reg(reg_addr, data); res.is_err())
+        if(const auto res = i2c_drv_->write_reg(reg_addr, reg_val); res.is_err())
             return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(reg_addr & 0x7f), CONT);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->write_single<uint8_t>(data); res.is_err())
+        if(const auto res = spi_drv_->write_single<uint8_t>(reg_val); res.is_err())
             return Err(res.unwrap_err());
         return Ok();
     }
@@ -83,16 +83,16 @@ InvensenseImu_Transport::write_reg(const uint8_t reg_addr, const uint8_t data) {
 }
 
 [[nodiscard]] Result<void, InvensenseImu_Transport::Error> 
-InvensenseImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & data) {
-    DEBUG_PRINTLN(std::hex, std::showbase, "read_reg", reg_addr, data);
+InvensenseImu_Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val) {
+    // DEBUG_PRINTLN(std::hex, std::showbase, "read_reg", reg_addr, reg_val);
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->read_reg(reg_addr, data); res.is_err())
+        if(const auto res = i2c_drv_->read_reg(reg_addr, reg_val); res.is_err())
             return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(reg_addr | 0x80), CONT);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->read_single<uint8_t>(data); res.is_err())
+        if(const auto res = spi_drv_->read_single<uint8_t>(reg_val); res.is_err())
             return Err(res.unwrap_err());
         return Ok();
     }
@@ -117,17 +117,17 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
 }
 
 [[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::write_reg(
-    const uint8_t reg_addr, const uint8_t data
+    const uint8_t reg_addr, const uint8_t reg_val
 ) {
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->write_reg(uint8_t(reg_addr), data);
+        if(const auto res = i2c_drv_->write_reg(uint8_t(reg_addr), reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(reg_addr), CONT);
             res.is_err()) return Err(res.unwrap_err());
 
-        if(const auto res = spi_drv_->write_single<uint8_t>(data);
+        if(const auto res = spi_drv_->write_single<uint8_t>(reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -136,16 +136,16 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
 }
 
 [[nodiscard]] Result<void, StmicroImu_Transport::Error> StmicroImu_Transport::read_reg(
-    const uint8_t reg_addr, uint8_t & data
+    const uint8_t reg_addr, uint8_t & reg_val
 ) {
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->read_reg(uint8_t(reg_addr), data);
+        if(const auto res = i2c_drv_->read_reg(uint8_t(reg_addr), reg_val);
             res.is_err()) return Err(res.unwrap_err());   
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(reg_addr) | 0x80), CONT);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->read_single<uint8_t>(data);
+        if(const auto res = spi_drv_->read_single<uint8_t>(reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -189,16 +189,16 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
 
 
 [[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::write_reg(
-    const uint8_t reg_addr, const uint8_t data
+    const uint8_t reg_addr, const uint8_t reg_val
 ){
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->write_reg(uint8_t(reg_addr), data);
+        if(const auto res = i2c_drv_->write_reg(uint8_t(reg_addr), reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(reg_addr), CONT); 
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->write_single<uint8_t>(data); 
+        if(const auto res = spi_drv_->write_single<uint8_t>(reg_val); 
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -207,16 +207,16 @@ InvensenseImu_Transport::read_burst(const uint8_t reg_addr, std::span<int16_t> p
 }
 
 [[nodiscard]] Result<void, ImuError> AsahiKaseiImu_Transport::read_reg(
-    const uint8_t reg_addr, uint8_t & data
+    const uint8_t reg_addr, uint8_t & reg_val
 ){
     if(i2c_drv_){
-        if(const auto res = i2c_drv_->read_reg(uint8_t(reg_addr), data);
+        if(const auto res = i2c_drv_->read_reg(uint8_t(reg_addr), reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }else if(spi_drv_){
         if(const auto res = spi_drv_->write_single<uint8_t>(uint8_t(uint8_t(reg_addr) | 0x80), CONT); 
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_->read_single<uint8_t>(data);
+        if(const auto res = spi_drv_->read_single<uint8_t>(reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

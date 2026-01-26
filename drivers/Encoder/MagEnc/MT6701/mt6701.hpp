@@ -4,10 +4,7 @@
 
 namespace ymd::drivers{
 
-class MT6701 final:
-    public MagEncoderIntf,
-    public MT6701_Regs
-{
+class MT6701 final:public MT6701_Prelude{
 public:
     explicit MT6701(
         Some<hal::I2cBase *> i2c, 
@@ -26,7 +23,7 @@ public:
 
     [[nodiscard]] IResult<Angular<uq32>> read_lap_angle();
     
-    [[nodiscard]] IResult<MagStatus> get_mag_status();
+    [[nodiscard]] IResult<EncoderFaultBitFields> get_fault();
 
     [[nodiscard]] IResult<> enable_uvwmux(const Enable en);
 
@@ -56,7 +53,7 @@ public:
 
     [[nodiscard]] IResult<> set_stop_angle(const Angular<uq32> stop);
 private:
-
+    MT6701_Regs regs_ = {};
     MT6701_Transport transport_;
     Packet packet_ = {0, 0};
     uq32 lap_position_ = 0;

@@ -9,7 +9,7 @@ using namespace asciican::primitive::operations;
 #define SLCAN_DEBUG_EN 0
 
 
-#if SLCAN_DEBUG_EN
+#if(SLCAN_DEBUG_EN == 1)
 #define constexpr
 #define RETURN_ERR(e, ...) {DEBUG_PRINTLN(__VA_ARGS__); return Err(e);}
 #else
@@ -25,7 +25,7 @@ static constexpr size_t NUM_MAX_CAN_DLC = 8;
 
 
 [[nodiscard]] static constexpr 
-Option<uint8_t> char2digit(char c){
+Option<uint8_t> _char2digit(char c){
     switch(c){
         case '0' ... '9':
             return Some(c - '0');
@@ -39,20 +39,7 @@ Option<uint8_t> char2digit(char c){
 }
 
 [[nodiscard]] static constexpr 
-char digit2char(const uint8_t digit){
-    switch(digit){
-        case 0 ... 9:
-            return digit + '0';
-        case 10 ... 15:
-            return (digit - 10) + 'a';
-        default:
-            return 0;
-    }
-}
-
-
-[[nodiscard]] static constexpr 
-IResult<uint32_t> parse_hex_str(const StringView str){
+IResult<uint32_t> _parse_hex_str(const StringView str){
     if(str.length() == 0)
         RETURN_ERR(Error::NoArg);
 
@@ -61,7 +48,7 @@ IResult<uint32_t> parse_hex_str(const StringView str){
     #pragma GCC unroll 8
     for(size_t i = 0; i < str.length(); i++){
         const auto chr = str[i];
-        const auto may_digit = char2digit(chr);
+        const auto may_digit = _char2digit(chr);
 
         if(may_digit.is_none())
             RETURN_ERR(Error::UnsupportedHexChar, chr);
@@ -73,17 +60,17 @@ IResult<uint32_t> parse_hex_str(const StringView str){
 }
 
 [[nodiscard]] static constexpr 
-IResult<uint32_t> parse_dual_char(const char c1, const char c2){
+IResult<uint32_t> _parse_dual_char(const char c1, const char c2){
 
     const auto nibble1 = ({
-        const auto may_digit = char2digit(c1);
+        const auto may_digit = _char2digit(c1);
         if(may_digit.is_none()) return Err(Error::UnsupportedHexChar);
         may_digit.unwrap();
     });
 
 
     const auto nibble2 = ({
-        const auto may_digit = char2digit(c2);
+        const auto may_digit = _char2digit(c2);
         if(may_digit.is_none()) return Err(Error::UnsupportedHexChar);
         may_digit.unwrap();
     });
@@ -102,7 +89,7 @@ IResult<hal::CanStdId> parse_std_id(const StringView str){
     if(str.length() < STD_ID_STR_LEN)
         RETURN_ERR(Error::StdIdTooShort);
 
-    const auto either_id = parse_hex_str(str);
+    const auto either_id = _parse_hex_str(str);
     
     if(either_id.is_err())
         RETURN_ERR(either_id.unwrap_err());
@@ -117,7 +104,7 @@ IResult<hal::CanStdId> parse_std_id(const StringView str){
 
 
 [[nodiscard]] static constexpr 
-IResult<hal::CanExtId> parse_ext_id(const StringView str){
+IResult<hal::CanExtId> _parse_ext_id(const StringView str){
     if(str.length() == 0) 
         RETURN_ERR(Error::NoArg);
     if(str.length() > EXT_ID_STR_LEN)
@@ -126,7 +113,7 @@ IResult<hal::CanExtId> parse_ext_id(const StringView str){
         RETURN_ERR(Error::ExtIdTooShort);
 
 
-    const auto either_id = parse_hex_str(str);
+    const auto either_id = _parse_hex_str(str);
     
     if(either_id.is_err())
         RETURN_ERR(either_id.unwrap_err());
@@ -152,7 +139,7 @@ IResult<std::array<uint8_t, NUM_MAX_CAN_DLC>> parse_payload(
     #pragma GCC unroll 8
     for(size_t i = 0; i < dlc; i++){
         buf[i] = ({
-            const auto res = parse_dual_char(
+            const auto res = _parse_dual_char(
                 str[i * 2], str[i * 2 + 1]
             );
             if(res.is_err()) RETURN_ERR(res.unwrap_err());
@@ -164,14 +151,14 @@ IResult<std::array<uint8_t, NUM_MAX_CAN_DLC>> parse_payload(
 
 
 [[nodiscard]] static constexpr 
-IResult<size_t> parse_dlc(const StringView str){
+IResult<size_t> _parse_dlc(const StringView str){
     if(str.length() == 0) 
         RETURN_ERR(Error::NoArg);
     if(str.length() != 1) 
         RETURN_ERR(Error::PayloadLengthMismatch, str.length());
 
     const auto dlc = ({
-        const auto res = parse_hex_str(str);
+        const auto res = _parse_hex_str(str);
         
         if(res.is_err()) 
             RETURN_ERR(res.unwrap_err());
@@ -186,9 +173,9 @@ IResult<size_t> parse_dlc(const StringView str){
 
 template<bool IS_EXTENDED>
 [[nodiscard]] static constexpr 
-IResult<uint32_t> parse_id_u32(const StringView str){
+IResult<uint32_t> _parse_id_u32(const StringView str){
     if constexpr(IS_EXTENDED){
-        return parse_ext_id(str).
+        return _parse_ext_id(str).
             map([](const hal::CanExtId id) -> uint32_t{return id.to_u29();}); 
     } else {
         return parse_std_id(str).
@@ -212,13 +199,13 @@ IResult<hal::BxCanFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
     auto provider = StrProvider{str};
 
     const uint32_t id_u32_checked = ({
-        const auto res = parse_id_u32<IS_EXTENDED>(provider.fetch_leading(ID_LEN).unwrap());
+        const auto res = _parse_id_u32<IS_EXTENDED>(provider.fetch_leading(ID_LEN).unwrap());
         if(res.is_err()) RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });
 
     const size_t dlc = ({
-        const auto res = parse_dlc(provider.fetch_leading(DLC_LEN).unwrap());
+        const auto res = _parse_dlc(provider.fetch_leading(DLC_LEN).unwrap());
         if(res.is_err()) RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });
@@ -247,14 +234,15 @@ IResult<hal::BxCanFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
             return Ok(hal::BxCanFrame::from_remote(ID::from_bits(id_u32_checked)));
         }
     }
-    __builtin_unreachable();
+    //unreachable
+    __builtin_trap();
 }
 
 
 
 
 [[nodiscard]] static constexpr 
-hal::CanBaudrate map_chr_to_baud(char chr){ 
+hal::CanBaudrate _chr_to_baud(char chr){ 
     switch(chr){
         case '0': return hal::CanBaudrate::_10K;
         case '1': return hal::CanBaudrate::_20K;
@@ -266,10 +254,11 @@ hal::CanBaudrate map_chr_to_baud(char chr){
         case '7': return hal::CanBaudrate::_800K;
         case '8': return hal::CanBaudrate::_1M;
     }
-    __builtin_unreachable();
+    //unreachable
+    __builtin_trap();
 };
 
-auto map_msg_to_operation = [](const hal::BxCanFrame & frame) { 
+auto _msg_to_operation = [](const hal::BxCanFrame & frame) { 
     return Operation(SendCanFrame{frame}); };
 
 IResult<Operation> SlcanParser::process_line(const StringView str) const {
@@ -306,7 +295,7 @@ IResult<Operation> SlcanParser::process_line(const StringView str) const {
                 if(chr < '0' || chr > '8') 
                     return Err(Error::InvalidCanBaudrate);
 
-                return Ok(Operation(SetCanBaud{.baudrate = map_chr_to_baud(chr)}));
+                return Ok(Operation(SetCanBaud{.baudrate = _chr_to_baud(chr)}));
             }
             case 's':{
                 //set serial baudrate
@@ -315,20 +304,21 @@ IResult<Operation> SlcanParser::process_line(const StringView str) const {
             }
 
             case 't': return parse_msg<not IS_EXTENDED>(cmd_line, hal::CanRtr::Data)
-                .map(map_msg_to_operation);
+                .map(_msg_to_operation);
             case 'r': return parse_msg<not IS_EXTENDED>(cmd_line, hal::CanRtr::Remote)
-                .map(map_msg_to_operation);
+                .map(_msg_to_operation);
 
             case 'T': return parse_msg<IS_EXTENDED>(cmd_line, hal::CanRtr::Data)
-                .map(map_msg_to_operation);
+                .map(_msg_to_operation);
             case 'R': return parse_msg<IS_EXTENDED>(cmd_line, hal::CanRtr::Remote)
-                .map(map_msg_to_operation);
+                .map(_msg_to_operation);
 
         }
         RETURN_ERR(Error::UnknownCommand);
     }
 
-    __builtin_unreachable();
+    //unreachable
+    __builtin_trap();
 }
 
 SendText SlcanParser::response_version() const{
@@ -352,7 +342,7 @@ SendText SlcanParser::response_flag() const{
     return SendText::from_str(StringView(str, 2));
 }
 
-namespace unit_test{
+namespace{
 static_assert(parse_payload("11x", 1).unwrap_err() == Error::PayloadLengthMismatch);
 static_assert(parse_payload("11", 1).unwrap()[0] == 0x11);
 static_assert(parse_payload("1122334455667788", 8).unwrap()[7] == 0x88);
@@ -362,56 +352,50 @@ static_assert(parse_std_id("9scd").unwrap_err() == Error::StdIdTooLong);
 static_assert(parse_std_id("9sc").unwrap_err() == Error::UnsupportedHexChar);
 
 // Additional tests for hex conversion functions
-static_assert(char2digit('0').unwrap() == 0);
-static_assert(char2digit('9').unwrap() == 9);
-static_assert(char2digit('a').unwrap() == 10);
-static_assert(char2digit('f').unwrap() == 15);
-static_assert(char2digit('A').unwrap() == 10);
-static_assert(char2digit('F').unwrap() == 15);
-static_assert(char2digit('g').is_none());
-static_assert(char2digit('G').is_none());
-static_assert(char2digit('-').is_none());
-
-static_assert(digit2char(0) == '0');
-static_assert(digit2char(9) == '9');
-static_assert(digit2char(10) == 'a');
-static_assert(digit2char(15) == 'f');
-static_assert(digit2char(16) == 0); // Invalid input
+static_assert(_char2digit('0').unwrap() == 0);
+static_assert(_char2digit('9').unwrap() == 9);
+static_assert(_char2digit('a').unwrap() == 10);
+static_assert(_char2digit('f').unwrap() == 15);
+static_assert(_char2digit('A').unwrap() == 10);
+static_assert(_char2digit('F').unwrap() == 15);
+static_assert(_char2digit('g').is_none());
+static_assert(_char2digit('G').is_none());
+static_assert(_char2digit('-').is_none());
 
 // Additional tests for parse_hex_str
-static_assert(parse_hex_str("").unwrap_err() == Error::NoArg);
-static_assert(parse_hex_str("12").unwrap() == 0x12);
-static_assert(parse_hex_str("AB").unwrap() == 0xAB);
-static_assert(parse_hex_str("ff").unwrap() == 0xFF);
-static_assert(parse_hex_str("xyz").unwrap_err() == Error::UnsupportedHexChar);
-static_assert(parse_dual_char('1', '0').unwrap() == 0x10);
-static_assert(parse_dual_char('f', 'f').unwrap() == 0xFF);
+static_assert(_parse_hex_str("").unwrap_err() == Error::NoArg);
+static_assert(_parse_hex_str("12").unwrap() == 0x12);
+static_assert(_parse_hex_str("AB").unwrap() == 0xAB);
+static_assert(_parse_hex_str("ff").unwrap() == 0xFF);
+static_assert(_parse_hex_str("xyz").unwrap_err() == Error::UnsupportedHexChar);
+static_assert(_parse_dual_char('1', '0').unwrap() == 0x10);
+static_assert(_parse_dual_char('f', 'f').unwrap() == 0xFF);
 
 
 // Additional tests for extended ID parsing
-static_assert(parse_ext_id("00000000").unwrap().to_u29() == 0);
-static_assert(parse_ext_id("1FFFFFFF").unwrap().to_u29() == 0x1FFFFFFF);
-static_assert(parse_ext_id("20000000").unwrap_err() == Error::ExtIdOverflow);
-static_assert(parse_ext_id("1234567").unwrap_err() == Error::ExtIdTooShort);
-static_assert(parse_ext_id("123456789").unwrap_err() == Error::ExtIdTooLong);
-static_assert(parse_ext_id("1234567G").unwrap_err() == Error::UnsupportedHexChar);
+static_assert(_parse_ext_id("00000000").unwrap().to_u29() == 0);
+static_assert(_parse_ext_id("1FFFFFFF").unwrap().to_u29() == 0x1FFFFFFF);
+static_assert(_parse_ext_id("20000000").unwrap_err() == Error::ExtIdOverflow);
+static_assert(_parse_ext_id("1234567").unwrap_err() == Error::ExtIdTooShort);
+static_assert(_parse_ext_id("123456789").unwrap_err() == Error::ExtIdTooLong);
+static_assert(_parse_ext_id("1234567G").unwrap_err() == Error::UnsupportedHexChar);
 
 // Additional tests for length parsing
-static_assert(parse_dlc("0").unwrap() == 0);
-static_assert(parse_dlc("8").unwrap() == 8);
-static_assert(parse_dlc("9").unwrap_err() == Error::PayloadLengthOverflow);
-static_assert(parse_dlc("").unwrap_err() == Error::NoArg);
-static_assert(parse_dlc("12").unwrap_err() == Error::PayloadLengthMismatch);
+static_assert(_parse_dlc("0").unwrap() == 0);
+static_assert(_parse_dlc("8").unwrap() == 8);
+static_assert(_parse_dlc("9").unwrap_err() == Error::PayloadLengthOverflow);
+static_assert(_parse_dlc("").unwrap_err() == Error::NoArg);
+static_assert(_parse_dlc("12").unwrap_err() == Error::PayloadLengthMismatch);
 
 // Tests for parse_id_u32
-static_assert(parse_id_u32<false>("000").unwrap() == 0);
-static_assert(parse_id_u32<false>("7FF").unwrap() == 0x7FF);
-static_assert(parse_id_u32<true>("00000000").unwrap() == 0);
-static_assert(parse_id_u32<true>("1FFFFFFF").unwrap() == 0x1FFFFFFF);
+static_assert(_parse_id_u32<false>("000").unwrap() == 0);
+static_assert(_parse_id_u32<false>("7FF").unwrap() == 0x7FF);
+static_assert(_parse_id_u32<true>("00000000").unwrap() == 0);
+static_assert(_parse_id_u32<true>("1FFFFFFF").unwrap() == 0x1FFFFFFF);
 
 // Tests for baudrate mapping
-static_assert(map_chr_to_baud('0').has_same_freq(hal::CanBaudrate::_10K));
-static_assert(map_chr_to_baud('8').has_same_freq(hal::CanBaudrate::_1M));
+static_assert(_chr_to_baud('0').has_same_freq(hal::CanBaudrate::_10K));
+static_assert(_chr_to_baud('8').has_same_freq(hal::CanBaudrate::_1M));
 
 // Test edge cases for payload parsing
 static_assert(parse_payload("", 0).unwrap()[0] == 0); // Empty payload

@@ -5,7 +5,6 @@
 namespace ymd::drivers{
 
 class IST8310 final:
-    public MagnetometerIntf,
     public IST8310_Prelude{
 public:
 
@@ -37,7 +36,7 @@ public:
 
     [[nodiscard]] IResult<> enable_sleep(const Enable en);
 
-    [[nodiscard]] IResult<Vec3<iq24>> read_mag() override;
+    [[nodiscard]] IResult<Vec3<iq24>> read_mag();
 
 private:
     hal::I2cDrv i2c_drv_;

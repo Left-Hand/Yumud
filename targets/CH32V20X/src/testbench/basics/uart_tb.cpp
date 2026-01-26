@@ -20,7 +20,7 @@ using namespace ymd;
     tx_led.outpp();
     rx_led.outpp();
 
-    uart.set_event_handler([&](const hal::UartEvent& ev){
+    uart.set_event_callback([&](const hal::UartEvent& ev){
         switch(ev.kind()){
             case hal::UartEvent::RxIdle:
                 rx_led.set_high();
@@ -41,10 +41,10 @@ using namespace ymd;
     while(true){
         // size_t size = uart.available();
         while(uart.available()){
-            char chr;
-            const auto len = uart.try_read_char(chr);
+            uint8_t chr;
+            const auto len = uart.try_read_byte(chr);
             if(len)
-            (void)uart.try_write_char(chr);
+            (void)uart.try_write_byte(chr);
             clock::delay(1ms);
         }
         clock::delay(300ms);
@@ -64,7 +64,7 @@ using namespace ymd;
         .baudrate = hal::NearestFreq(576000),
         .tx_strategy = CommStrategy::Blocking,
     });
-    
+
     auto & DBG_UART = hal::usart2;
     DBG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
@@ -73,7 +73,7 @@ using namespace ymd;
         .baudrate = hal::NearestFreq(576000),
         .tx_strategy = CommStrategy::Blocking,
     });
-    
+
     DEBUGGER.retarget(&DBG_UART);
     // DEBUGGER.retarget(&EXT_UART);
     DEBUGGER.set_eps(4);
@@ -86,8 +86,8 @@ using namespace ymd;
     while(true){
         led.set_high();
         const char chars[] = {'h', '\r', '\n'};
-        // EXT_UART.try_write_chars(chars, sizeof(chars)-1);
-        DEBUG_PRINTLN(EXT_UART.available(), EXT_UART.try_write_chars(chars, 3));
+        // EXT_UART.try_write_bytes(chars, sizeof(chars)-1);
+        DEBUG_PRINTLN(EXT_UART.available(), EXT_UART.try_write_bytes(chars, 3));
         // DEBUG_PRINTLN(EXT_UART.available());
         clock::delay(10ms);
         led.set_low();

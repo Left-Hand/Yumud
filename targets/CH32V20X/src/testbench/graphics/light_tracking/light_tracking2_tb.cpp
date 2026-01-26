@@ -126,11 +126,11 @@ static __fast_inline iq16 tt_intersect(
 
     const auto vec = ray.base - surface.v0;
     const auto u = P.dot(vec) * inv_determinant;
-    if (unlikely(not_in_one(u))) return 0;
+    if ((not_in_one(u))) [[unlikely]] return 0;
 
     const auto Q = vec.cross(E1);
     const auto v = Q.dot(ray.direction) * inv_determinant;
-    if (unlikely(not_in_one(v) or u + v > 1)) return 0;
+    if ((not_in_one(v) or u + v > 1)) [[unlikely]] return 0;
 
     return Q.dot(E2) * inv_determinant;
 };

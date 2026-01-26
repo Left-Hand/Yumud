@@ -1,8 +1,6 @@
 #pragma once
 
-#include "primitive/analog_channel.hpp"
-#include "drivers/GateDriver/uvw_pwmgen.hpp"
-
+#include "primitive/arithmetic/rescaler.hpp"
 
 namespace ymd::drivers{
 

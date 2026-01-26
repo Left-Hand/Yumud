@@ -34,7 +34,7 @@ void ina3221_main(){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
     auto i2c = hal::I2cSw(&scl_pin_, &sda_pin_);
-    i2c.init({1200_KHz});
+    i2c.init({hal::NearestFreq(1200_KHz)});
 
     INA3221 ina{&i2c};
 

@@ -3,8 +3,7 @@
 #include "core/io/regs.hpp"
 #include "core/utils/Result.hpp"
 #include "core/utils/Errno.hpp"
-
-#include "primitive/analog_channel.hpp"
+#include "core/math/real.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
@@ -65,27 +64,27 @@ struct INA226_Regs:public INA226_Prelude{
 
     struct ShuntVoltReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x01;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(shunt_volt_reg)
 
     struct BusVoltReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x02;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(bus_volt_reg)
 
-    struct PowerReg:public Reg16i<>{
+    struct PowerReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x03;
-        int16_t data;
+        int16_t bits;
     }DEF_R16(power_reg)
 
-    struct CurrentReg:public Reg16i<>{
+    struct CurrentReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x04;
-        int16_t data;
+        int16_t bits;
     }DEF_R16(current_reg)
     
-    struct CalibrationReg:public Reg16i<>{
+    struct CalibrationReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x05;
-        int16_t data;
+        int16_t bits;
     }DEF_R16(calibration_reg)
     
     struct MaskReg:public Reg16<>{
@@ -107,17 +106,17 @@ struct INA226_Regs:public INA226_Prelude{
 
     struct AlertLimitReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x07;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(alert_limit_reg)
 
     struct ManufactureReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0xfe;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(manufacture_reg)
 
     struct ChipIdReg:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0xff;
-        uint16_t data;
+        uint16_t bits;
     }DEF_R16(chip_id_reg)
 };
 

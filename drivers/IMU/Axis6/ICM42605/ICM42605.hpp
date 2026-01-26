@@ -8,12 +8,9 @@
 
 namespace ymd::drivers{
 
-class ICM42605 final:
-    public ICM42605_Prelude,
-    public AccelerometerIntf, 
-    public GyroscopeIntf
-{
+class ICM42605 final:public ICM42605_Prelude{
 public:
+
     explicit ICM42605(
         Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR

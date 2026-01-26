@@ -54,7 +54,7 @@ struct FrameContext{
 static_assert(sizeof(FrameContext) == 18);
 
 
-struct Dr16_ParserSink{
+struct Dr16_ParseReceiver{
 
 };
 

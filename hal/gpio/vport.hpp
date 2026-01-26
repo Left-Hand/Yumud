@@ -87,7 +87,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline bool is_nth_valid(const Nth nth){
-        return (likely(nth.count() < N));
+        return ((nth.count() < N));
     }
 
     [[nodiscard]] __fast_inline bool is_nth_available(const Nth nth){

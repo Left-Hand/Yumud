@@ -4,7 +4,7 @@
 #include "core/utils/reflecter.hpp"
 
 #include "core/math/float/bf16.hpp"
-#include "core/string/string_view.hpp"
+#include "core/string/view/string_view.hpp"
 
 namespace ymd::serde{
 template<std::endian Endian>
