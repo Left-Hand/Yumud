@@ -24,7 +24,7 @@ struct StringSplitIter {
 
     constexpr StringView next() {
         auto guard = make_scope_guard([&]{
-            pos_ = end_ + 1; // Skip the newline character
+            pos_ = end_ + 1; // Skip the delimiter character
             seek_next();
         });
         return StringView(str_.data() + pos_, end_ - pos_);
@@ -32,6 +32,18 @@ struct StringSplitIter {
 
 private:
     constexpr void seek_next() {
+        // Skip consecutive delimiters
+        while (pos_ < str_.size() && str_[pos_] == delimiter_) {
+            ++pos_;
+        }
+        
+        if (pos_ >= str_.size()) {
+            // If we've reached the end after skipping delimiters
+            end_ = str_.size();
+            return;
+        }
+        
+        // Find the next delimiter
         end_ = pos_;
         while (end_ < str_.size() && str_[end_] != delimiter_) {
             ++end_;
@@ -40,10 +52,7 @@ private:
 
     const StringView str_;
     const char delimiter_;
-    size_t pos_   = 0;  // Start of current line
-    size_t end_     = 0;    // End of current line (points to '\n' or str_.size())
+    size_t pos_ = 0;  // Start of current token
+    size_t end_ = 0;  // End of current token (points to delimiter or str_.size())
 };
-
-
-
 }

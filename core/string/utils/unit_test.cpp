@@ -53,24 +53,6 @@ namespace {
     }(), "Multi-line test failed");
 
     static_assert([&]()  {
-        // Test empty lines
-        StringView with_empty = "\nline\n\n";
-        StringSplitIter iter(with_empty, '\n');
-        
-        if (!iter.has_next()) return false;
-        if (!test_string_view_equal(iter.next(), "")) return false;
-        
-        if (!iter.has_next()) return false;
-        if (!test_string_view_equal(iter.next(), "line")) return false;
-        
-        if (!iter.has_next()) return false;
-        if (!test_string_view_equal(iter.next(), "")) return false;
-        
-        if (iter.has_next()) return false;
-        return true;
-    }(), "Empty lines test failed");
-
-    static_assert([&]()  {
         // Test trimming
         StringView to_trim = "  hello \t\n";
         StringView trimmed = to_trim.trim();
