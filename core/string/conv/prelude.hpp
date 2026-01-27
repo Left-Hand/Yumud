@@ -21,6 +21,7 @@ enum class DestringError:uint8_t{
 	MultiplyPositive,
 
 	MultipleDot,
+	UnexpectedDotInInteger,
 
 	UnexpectedZero,
 	UnexpectedSpace,
@@ -30,6 +31,7 @@ enum class DestringError:uint8_t{
     PosOverflow,
 
     DigitOverflow,
+    DigitUnderflow,
 	FracOverflow,
 	FracDigitsOverflow,
 
@@ -39,7 +41,7 @@ enum class DestringError:uint8_t{
 	NoDigitsAfterDot,
 
 	Overflow,
-    NegOverflow, //负值超过能表示的范围
+    Underflow, //负值超过能表示的范围
 	NegForUnsigned, //负值不能用于无符号数
     EmptyString,
 

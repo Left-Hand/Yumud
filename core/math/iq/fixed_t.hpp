@@ -104,12 +104,12 @@ public:
     template<typename I>
     requires (
         //必须为非bool的整数类型
-        std::is_integral_v<I> and (not std::is_same_v<I, bool>) 
-        //如果D是无符号的 I也必须为无符号数
-        and ((std::is_unsigned_v<D> ? std::is_unsigned_v<I> : true))
+        std::is_integral_v<I> and (not std::is_same_v<I, bool>)
     )
     __attribute__((always_inline)) 
     [[nodiscard]] static constexpr fixed_t<Q, D> from_rcp(const I int_val){
+        //如果D是无符号的 I也必须为无符号数
+        static_assert(std::is_unsigned_v<D> ? std::is_unsigned_v<I> : true);
         using ED = tmp::extended_underlying_t<D>;
         const auto bits = static_cast<ED>(static_cast<ED>(1u) << Q) / int_val;
         return fixed_t<Q, D>::from_bits(bits);
@@ -147,9 +147,19 @@ public:
     requires (std::is_integral_v<T> and (not std::is_same_v<T, bool>))
     __attribute__((always_inline)) constexpr 
     fixed_t(const T iv):
-        fixed_t(bits_ctor{std::bit_cast<D>(static_cast<D>(
-            iv * static_cast<tmp::extended_underlying_t<T>>(uint64_t(1) << Q)
-        ))}){;}
+        fixed_t([&]{
+            if constexpr(sizeof(T) >= 4)
+                return bits_ctor{std::bit_cast<D>(static_cast<D>(
+                    iv * static_cast<tmp::extended_underlying_t<T>>(uint64_t(1) << Q)
+                ))};
+            else{
+                static_assert(Q <= 32);
+                return bits_ctor{std::bit_cast<D>(static_cast<D>(
+                    static_cast<int32_t>(iv) * static_cast<int32_t>(uint64_t(1) << Q)
+                ))};
+            }
+        }()
+    ){;}
 
     __attribute__((always_inline)) consteval explicit fixed_t(const long double dv):
         fixed_t(bits_ctor{std::bit_cast<D>(static_cast<D>(
@@ -233,7 +243,7 @@ public:
     requires std::is_integral_v<T>
     [[nodiscard]] __attribute__((always_inline)) constexpr explicit 
     operator T() const {
-        return this->to_bits() >> Q;
+        return static_cast<T>(this->to_bits() >> Q);
     }
     
 

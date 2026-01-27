@@ -87,13 +87,13 @@ namespace details{
 
 template<integral T>
 struct [[nodiscard]] IntDeformatter{
-	using U = tmp::extended_unsigned_t<T>;
+	using U = std::conditional_t<sizeof(T) < 4, uint32_t, uint64_t>;
 	static constexpr DestringResult<T> defmt(const StringView str) {
 
 		const auto length = str.length();
 		if(length == 0) return Err(DestringError::EmptyString);
 
-		U unsigned_ret = 0;
+		U unsigned_temp = 0;
 		char existing_sign = '\0';
 
 		switch(str[0]){
@@ -115,10 +115,10 @@ struct [[nodiscard]] IntDeformatter{
 
 		auto compute_final = [&] -> T{
 			if constexpr(std::is_signed_v<T>){
-				const auto ret_without_sign = static_cast<T>(unsigned_ret);
-				return ((existing_sign == '-') ? -ret_without_sign : ret_without_sign);
+				const T unsigned_ret = static_cast<T>(unsigned_temp);
+				return ((existing_sign == '-') ? (-unsigned_ret) : (unsigned_ret));
 			}else{
-				return static_cast<T>(unsigned_ret);
+				return static_cast<T>(unsigned_temp);
 			}
 		};
 
@@ -139,10 +139,15 @@ struct [[nodiscard]] IntDeformatter{
 						return Err(DestringError::MultiplyPositive);
 					return Err(DestringError::UnexpectedPositive);
 				case '0' ... '9':
-					unsigned_ret = (10u * unsigned_ret) + static_cast<U>(chr - '0');
-					if((unsigned_ret > static_cast<U>(std::numeric_limits<T>::max()))) [[unlikely]]
+					unsigned_temp = (10u * unsigned_temp) + static_cast<U>(chr - '0');
+					if((unsigned_temp > static_cast<U>(std::numeric_limits<T>::max()))) [[unlikely]]
 						return Err(DestringError::Overflow);
 					break;
+				case '.':
+					return Err(DestringError::UnexpectedDotInInteger);
+				case 'a' ... 'z':
+				case 'A' ... 'Z':
+					return Err(DestringError::UnexpectedAlpha);
 				default:
 					return Err(DestringError::InvalidChar);
 			}
@@ -189,6 +194,9 @@ struct [[nodiscard]] FixedPointDeformatter{
 	using T = math::fixed_t<NUM_Q, D>;
 
 	static constexpr size_t TABLE_LEN = std::size(str::pow10_table);
+	static constexpr uint32_t DIGIT_MAX = uint32_t(
+		std::numeric_limits<math::fixed_t<NUM_Q, D>>::max());	
+
 	static constexpr std::array<uint32_t, TABLE_LEN> TABLE = []{
 		std::array<uint32_t, TABLE_LEN> ret;
 		for(size_t i = 0; i < TABLE_LEN; i++){
@@ -201,21 +209,38 @@ struct [[nodiscard]] FixedPointDeformatter{
 		static_assert(sizeof(D) <= 4, "64bit is not supported yet");
 
 		const auto dump = ({
-			const auto res = FstrDump::from_str(str);
+			const auto res = FstrDump::defmt_from_str(str);
 			if(res.is_err()) return Err(res.unwrap_err());
 			res.unwrap();
 		});
+
+		if constexpr(std::is_unsigned_v<D>){
+			if(dump.is_negative) return Err(DestringError::NegForUnsigned);
+			if(dump.digit_part > DIGIT_MAX) return Err(DestringError::Overflow);
+		}else{
+			if(dump.is_negative){
+				if(dump.digit_part > DIGIT_MAX) return Err(DestringError::Underflow);
+			}else{
+				if(dump.digit_part > DIGIT_MAX) return Err(DestringError::Overflow);
+			}
+		}
+
+		auto conv_ret = [&](const T whole){
+			if(dump.is_negative) return -whole;
+			return whole;
+		};
 		
 		if (dump.num_frac_digits == 0){
-			return Ok(static_cast<T>(dump.digit_part));
+			return Ok(static_cast<T>(conv_ret(dump.digit_part)));
 		}else{
 			const T frac_part = [&] -> T{
 				return T::from_bits(
-					static_cast<D>(int64_t(dump.frac_part) * TABLE[dump.num_frac_digits])
+					static_cast<D>(uint64_t(dump.frac_part) * TABLE[dump.num_frac_digits])
 				);
 			}();
 
-			return Ok(frac_part + static_cast<T>(dump.digit_part));
+			return Ok(conv_ret(frac_part + static_cast<T>(dump.digit_part)));
+			// return Ok(0);
 		}
 
 	}
@@ -296,7 +321,7 @@ __always_inline static constexpr void dyn_fmt_u32(
 template<integral T>
 struct IntFormatter{
 	[[nodiscard]] static constexpr 
-	SerStringResult<size_t> fmt(MutStringView str, const T int_val, const Radix radix){
+	SerStringResult<size_t> fmt_to_str(MutStringView str, const T int_val, const Radix radix){
 		if (str.length() == 0)
 			return Err(SerStringError::OutOfMemory);
 			
@@ -343,7 +368,7 @@ struct IntFormatter{
 
 struct ZeroPaddedU32Formatter{
 	[[nodiscard]] static constexpr 
-	SerStringResult<size_t> fmt(MutStringView str, const uint32_t int_val, const Radix radix){
+	SerStringResult<size_t> fmt_to_str(MutStringView str, const uint32_t int_val, const Radix radix){
 		const auto radix_count = radix.count();
 	
 		dyn_fmt_u32<DigitPaddingStrategy::ZeroPadded>(
@@ -362,7 +387,7 @@ struct Iq16Formatter{
 		
 	static constexpr size_t Q = 16;
 	static constexpr uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
-	static constexpr SerStringResult<size_t> fmt(
+	static constexpr SerStringResult<size_t> fmt_to_str(
 		MutStringView str,
 		const math::fixed_t<16, int32_t> value, 
 		const Eps eps
@@ -396,7 +421,7 @@ struct Iq16Formatter{
 		}
 
 		const auto digit_len = ({
-			const auto res = IntFormatter<int>::fmt(
+			const auto res = IntFormatter<int>::fmt_to_str(
 				str.substr_unchecked(pos), digit_part, Radix::Dec);
 			if(res.is_err()) return Err(res.unwrap_err());
 			res.unwrap();
@@ -412,7 +437,7 @@ struct Iq16Formatter{
 		pos += 1;
 
 		//忽略返回的长度 因为它就是eps
-		if(const auto res = ZeroPaddedU32Formatter::fmt( 
+		if(const auto res = ZeroPaddedU32Formatter::fmt_to_str( 
 			MutStringView(str.data() + pos, eps_count), frac_int, Radix::Dec
 		); res.is_err()) return Err(res.unwrap_err());
 		
@@ -429,14 +454,14 @@ struct DefmtStrDispatcher;
 
 template<>
 struct DefmtStrDispatcher<StringView>{
-	static constexpr DestringResult<StringView> from_str(StringView str){
+	static constexpr DestringResult<StringView> defmt_from_str(StringView str){
 		return Ok(str);
 	}
 };
 
 template<size_t Q, typename D>
 struct DefmtStrDispatcher<math::fixed_t<Q, D>>{
-	static constexpr DestringResult<math::fixed_t<Q, D>> from_str(StringView str){
+	static constexpr DestringResult<math::fixed_t<Q, D>> defmt_from_str(StringView str){
 		return details::FixedPointDeformatter<Q, D>::defmt(str);
 	}
 };
@@ -444,7 +469,7 @@ struct DefmtStrDispatcher<math::fixed_t<Q, D>>{
 template<typename T>
 requires std::is_integral_v<T>	
 struct DefmtStrDispatcher<T>{
-	static constexpr DestringResult<T> from_str(StringView str){
+	static constexpr DestringResult<T> defmt_from_str(StringView str){
 		return details::IntDeformatter<T>::defmt(str);
 	}
 };
@@ -452,7 +477,7 @@ struct DefmtStrDispatcher<T>{
 
 template<typename T>
 static constexpr DestringResult<T> defmt_from_str(StringView str){
-	return DefmtStrDispatcher<T>::from_str(str);
+	return DefmtStrDispatcher<T>::defmt_from_str(str);
 }
 
 
@@ -460,14 +485,14 @@ template<integral T>
 static constexpr SerStringResult<size_t> fmt_to_str(
 	MutStringView str, 
 	T value, 
-	Radix radix_count = Radix(Radix::Kind::Dec)
+	Radix radix = Radix(Radix::Kind::Dec)
 ){
-	return details::IntFormatter<T>::conv(str, value, radix_count);
+	return details::IntFormatter<T>::fmt_to_str(str, value, radix);
 }
 
 template<size_t Q>
 static constexpr SerStringResult<size_t> fmt_to_str(MutStringView str, math::fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
-	return details::Iq16Formatter::fmt(str, value, eps);
+	return details::Iq16Formatter::fmt_to_str(str, value, eps);
 }
 
 

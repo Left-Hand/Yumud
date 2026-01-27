@@ -14,14 +14,15 @@
 #include "core/utils/iter/foreach.hpp"
 #include "core/clock/time.hpp"
 
-
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Proximeter/STL06N/stl06n.hpp"
 
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
+
 #include <ranges>
-// #include <unordered_set>
 #include <unordered_map>
 #include <map>
 
@@ -69,7 +70,8 @@ void stl06n_main(){
     DEBUGGER.no_brackets(EN);
     DEBUGGER.set_eps(3);
     DEBUGGER.force_sync(EN);
-    DEBUGGER.no_fieldname(EN);
+    // DEBUGGER.no_fieldname(EN);
+    DEBUGGER.no_fieldname(DISEN);
 
 
     auto watch_pin_ = hal::PA<11>();
@@ -224,22 +226,33 @@ void stl06n_main(){
     PANIC{};
     #endif
 
-    std::array<char, 64> str_buf;
-    auto line_sinker = LineInputSinker{std::span(str_buf)};
 
-    auto poll_input_sinker = [&]{
-        if(not DEBUG_UART.available()) return;
-        while(true){
-            uint8_t byte;
-            if(const auto len = DEBUG_UART.try_read_byte(byte);
-                len == 0) break;
-            const auto res = line_sinker.push_char(static_cast<char>(byte));
-            if(res.is_full) line_sinker.reset();
-            if(res.is_end_of_line){
-                DEBUG_PRINTLN(line_sinker.dump_and_reset());
-            }
-        }
+    repl::ReplServer repl_server = {
+        &DEBUG_UART, &DEBUG_UART
     };
+
+    repl_server.set_outen(EN);
+
+    auto led = hal::PC<13>();
+    led.outpp();
+
+
+    auto add2 = [&](const iq24 a, const int8_t b) -> iq16 {return a + b;};
+
+    auto repl_list =
+        script::make_list( "list",
+            script::make_function("rst", [](){sys::reset();}),
+            script::make_function("outen", [&](){repl_server.set_outen(EN);}),
+            script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+            script::make_function("led", [&](const bool on){led.write(on ? HIGH : LOW);}),
+            script::make_function("add", [&](const int8_t a, const int8_t b){return a + b;}),
+            script::make_function("add2", add2),
+            script::make_function("test", [&](const StringView a){return strconv2::FstrDump::defmt_from_str(a);}),
+
+            script::make_list( "alct",
+                script::make_function("peak", [&](){return o1heap_allocator.diagnostics().allocated;})
+            )
+    );
 
     auto poll_main = [&]{
         
@@ -274,10 +287,11 @@ void stl06n_main(){
             x += step;
         }
 
-        poll_input_sinker();
+        // poll_input_sinker();
+        // repl_server.invoke(repl_list);
 
         if(false)DEBUG_PRINTLN(
-
+            repl_server.line_sinker_.now_line(),
             // arr
             // arr
             // StringSplitIter("H \rE \rL L O", '\r'),
@@ -313,6 +327,7 @@ void stl06n_main(){
     [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(8ms);
 
     while(true){
+        repl_server.invoke(repl_list);
         report_timer.invoke_if([&]{
             poll_main();
         });

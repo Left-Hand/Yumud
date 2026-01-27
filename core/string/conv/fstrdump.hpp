@@ -31,7 +31,7 @@ struct [[nodiscard]] FstrDump final{
 	};
 
 
-	static constexpr DestringResult<FstrDump> from_str(const StringView str) {
+	static constexpr DestringResult<FstrDump> defmt_from_str(const StringView str) {
 		if (str.length() == 0) {	
 			return Err(DestringError::EmptyString);
 		}

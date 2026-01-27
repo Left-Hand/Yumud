@@ -1,7 +1,8 @@
 #pragma once
 
 #include "core/string/view/string_view.hpp"
-#include "core/utils/iter/foreach.hpp"
+#include "core/utils/scope_guard.hpp"
+// #include "core/utils/iter/foreach.hpp"
 
 namespace ymd{
 
@@ -55,16 +56,14 @@ struct LineInputSinker{
         ind_ = 0;
     }
 
-    constexpr auto dump_and_reset(){
+    constexpr auto get_and_reset(){
         auto & self = *this;
         auto guard = make_scope_guard([&]{
             self.reset();
         });
 
         const auto line = now_line().trim();
-        return StringSplitIter(line, ' ') | foreach([](StringView token){ 
-            return token.trim();
-        });
+        return line;
     }
 
 private:

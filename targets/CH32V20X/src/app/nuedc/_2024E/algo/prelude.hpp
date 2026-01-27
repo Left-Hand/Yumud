@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/utils/Option.hpp"
+#include "core/string/view/string_view.hpp"
 #include "algebra/vectors/vec2.hpp"
 
 using namespace ymd;
@@ -154,8 +155,8 @@ public:
         data_(data){;}
 
     [[nodiscard]]
-    static constexpr Option<ChessBoard> from_str(const char * str){
-        if(strlen(str) != WIDTH * WIDTH) sys::abort();
+    static constexpr Option<ChessBoard> from_str(const StringView str){
+        if(str.length() != WIDTH * WIDTH) sys::abort();
         auto build_row = [str](size_t row_index) constexpr -> Option<Row> {
             const auto c0_opt = ChessCell::from_char(str[row_index * WIDTH + 0]);
             if(c0_opt.is_none()) return None;
