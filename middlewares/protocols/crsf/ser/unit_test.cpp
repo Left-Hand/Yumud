@@ -1,5 +1,6 @@
 #include "crsf_ser.hpp"
 #include "../crsf_primitive.hpp"
+#include "../crsf_packed_code.hpp"
 
 using namespace ymd;
 using namespace ymd::crsf;

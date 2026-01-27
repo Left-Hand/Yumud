@@ -105,9 +105,6 @@ public:
         uart_.write(data);
     }
 
-    void write(const char * data){
-        uart_.write_chars(data, strlen(data));
-    }
 
     void read(char & data){
         uart_.read_char(data);

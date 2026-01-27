@@ -250,7 +250,8 @@ void stl06n_main(){
             script::make_function("test", [&](const StringView a){return strconv2::FstrDump::defmt_from_str(a);}),
 
             script::make_list( "alct",
-                script::make_function("peak", [&](){return o1heap_allocator.diagnostics().allocated;})
+                script::make_function("now", [&](){return o1heap_allocator.diagnostics().allocated;}),
+                script::make_function("peak", [&](){return o1heap_allocator.diagnostics().peak_allocated;})
             )
     );
 

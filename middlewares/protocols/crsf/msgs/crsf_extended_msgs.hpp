@@ -1,6 +1,7 @@
 
 
 #include "../crsf_primitive.hpp"
+#include "../crsf_packed_code.hpp"
 #include "../ser/crsf_ser.hpp"
 
 #include "../compatible/crsf_mav_compatible_primitive.hpp"

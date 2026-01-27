@@ -224,7 +224,7 @@ int main(){
     // ch9141_tb(logger, uart7);
     // st7789_main();
     // smc2025_main();
-    mlx90640_main();
+    // mlx90640_main();
     // fft_main();
     // adrc_main();
     // render_main();
