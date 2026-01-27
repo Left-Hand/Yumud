@@ -437,7 +437,9 @@ struct DemoShapeFactory{
 
     auto make_segment2() const {
         auto shape = Segment2<uint16_t>{
-            Vec2u16{uint16_t(50 + 20 * math::cospu(now_secs * 0.2_r)), uint16_t(80 + 20 * math::sinpu(now_secs * 0.2_r))},
+            Vec2u16{
+                uint16_t(50 + 20 * iq16(math::cospu(now_secs * 0.2_r))), 
+                uint16_t(80 + 20 * iq16(math::sinpu(now_secs * 0.2_r)))},
             Vec2u16{50,80}
         };
         return shape;
@@ -467,7 +469,8 @@ struct DemoShapeFactory{
         auto shape = LineText<void, Font>{
             .left_top = {20,20},
             .spacing = 2,
-            .str = "0123456789abcdef",
+            // .str = "0123456789ABCDEF",
+            .str = "0123456789abcd",
             .font = font
         };
         return shape;
@@ -488,8 +491,10 @@ struct DemoShapeFactory{
 
     auto make_rounded_rect2_moving() const {
         auto shape = RoundedRect2<uint16_t>{
-            .bounding_rect = Rect2u{Vec2u16{uint16_t(115 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 
-                80}, Vec2u16{90, 30}}, 
+            .bounding_rect = Rect2u{
+                Vec2u16{uint16_t(115 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 
+                Vec2u16{90, 30}
+            }, 
             .radius = 8
         };
         return shape;
@@ -514,25 +519,34 @@ struct DemoShapeFactory{
         return shape;
     }
 
-    auto make_grid_map_rounded_rect(uint16_t shape_x, uint16_t shape_y) const {
-        auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
+    auto make_grid_map(uint16_t shape_x, uint16_t shape_y) const {
+        return GridMap2<uint16_t>{
             .top_left_cell = Rect2<uint16_t>::from_xywh(shape_x, shape_y, 15, 15),
             .padding = {2,2},
             .count = {15,7}
-        }.bounding_box(), .radius = 15};
-        return shape;
+            // .count = {2,2}
+        };
     }
 
-    // auto make_triangle2(Angular<iq16> dest_angle) const {
-    //     auto shape = Triangle2<uint16_t>{
-    //         .points = {
-    //             Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle),
-    //             Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 120_deg),
-    //             Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 240_deg)
-    //         }
-    //     }.to_sorted_by_y();
-    //     return shape;
-    // }
+    auto make_triangle2(Angular<iq16> dest_angle) const {
+        auto shape = Triangle2<iq16>{
+            .points = {
+                Vec2<iq16>{185,85} + Vec2<iq16>::from_ones(50).rotated(dest_angle),
+                Vec2<iq16>{185,85} + Vec2<iq16>::from_ones(50).rotated(dest_angle + 120_deg),
+                Vec2<iq16>{185,85} + Vec2<iq16>::from_ones(50).rotated(dest_angle + 240_deg)
+            }
+        }.to_sorted_by_y();
+        
+        const auto shape_pixeded = Triangle2<uint16_t>{
+            .points = {
+                Vec2<uint16_t>(shape.points[0]),
+                Vec2<uint16_t>(shape.points[1]),
+                Vec2<uint16_t>(shape.points[2])
+            }
+        };
+
+        return shape_pixeded;
+    }
 
     auto make_annular_sector() const {
         const auto shape = AnnularSector<uint16_t, iq16>{

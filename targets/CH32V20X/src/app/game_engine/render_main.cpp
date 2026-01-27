@@ -107,7 +107,13 @@ void render_main(){
         
         // const auto shape = factory.make_full_screen_rounded_rect();
         // const auto shape = factory.make_circle2();
-        const auto shape = factory.make_horizon_spectrum(samples);
+        // const auto shape = factory.make_horizon_spectrum(samples);
+        // const auto shape = factory.make_grid_map(10, 10);
+        // const auto shape = factory.make_triangle2(dest_angle);
+        // const auto shape = factory.make_horizon_oval2();
+        // const auto shape = factory.make_line_text(en_font);
+        // const auto shape = factory.make_segment2();
+        const auto shape = factory.make_rounded_rect2_moving();
 
         // using Shape = decltype(shape);
         auto shape_bb = shape.bounding_box();

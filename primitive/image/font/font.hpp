@@ -160,12 +160,17 @@ private:
 
 struct MonoFont8x5 final{
     constexpr MonoFont8x5() = default;
-	static uint32_t get_row_pixels(const wchar_t token, const uint8_t row_nth) {
-        auto & row_data = font_res::enfont_8x5[MAX(token - ' ', 0)];
+	static constexpr uint32_t get_row_pixels(const wchar_t token, const uint8_t row_nth) {
+
+        // auto & row_data = []{font_res::enfont_8x5['b' - ' '];
+        int idx = int(token) - ' ';
+        if(idx < 0) idx = 0;
+        // auto & row_data = font_res::enfont_8x5[MAX(token - ' ', 0)];
+        auto & row_data = font_res::enfont_8x5[idx];
         uint32_t row_mask = 0;
 
-        for(uint8_t x = 0; x < 5; x++){
-            row_mask |= uint32_t(bool(uint8_t(row_data[x]) & uint8_t(1 << row_nth))) << (x);
+        for(size_t i = 0; i < 5; i++){
+            row_mask |= uint32_t(bool(row_data[i] & (1 << row_nth))) << (i);
         }
 
         return row_mask;

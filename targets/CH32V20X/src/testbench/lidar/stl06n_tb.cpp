@@ -170,12 +170,13 @@ void stl06n_main(){
         .tx_strategy = CommStrategy::Blocking
     });
     #endif
+
+
     DEBUGGER.retarget(&UART);
     DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(4);
+    DEBUGGER.set_eps(3);
     DEBUGGER.force_sync(EN);
     DEBUGGER.no_fieldname(EN);
-
 
 
     auto watch_pin_ = hal::PA<11>();
@@ -197,14 +198,14 @@ void stl06n_main(){
     // static constexpr size_t POOL_SIZE = 6000;
     auto resource = std::make_unique<uint8_t[]>(POOL_SIZE);
 
-    using Alloc = mem::o1heap::O1HeapAllocator<std::pair<const size_t, PackedCluster>>;
+    using Allocator = mem::o1heap::O1HeapAllocator<std::pair<const size_t, PackedCluster>>;
     auto o1heap_alloc = mem::o1heap::make_o1heap_allocator(std::span(resource.get(), POOL_SIZE)).unwrap();
 
     std::map<
         size_t, 
         PackedCluster, 
         std::less<size_t>,
-        Alloc
+        Allocator
     > packed_clusters_(o1heap_alloc);
     // std::map<size_t, PackedCluster> packed_clusters_;
 
@@ -260,9 +261,9 @@ void stl06n_main(){
         .tx_strategy = CommStrategy::Blocking
     });
     #elif defined(CH32V30X)
-    auto & stl06n_uart_ = hal::uart4;
+    auto & stl06n_uart_ = hal::usart1;
     stl06n_uart_.init({
-        .remap = hal::UartRemap::_3,
+        .remap = hal::USART1_REMAP_PA9_PA10,
         .baudrate = hal::NearestFreq(230400),
         .tx_strategy = CommStrategy::Blocking
     });
@@ -330,10 +331,6 @@ void stl06n_main(){
     PANIC{};
     #endif
 
-
-
-
-
     auto poll_main = [&]{
         
         // const auto heap_alloc_elapsed_us = measure_total_elapsed_us([&]{
@@ -351,9 +348,10 @@ void stl06n_main(){
                 return *std::min_element(cluster.points.begin(), cluster.points.end(), 
                 [](const PackedLidarPoint & a, const PackedLidarPoint & b){ return a.distance_code.bits < b.distance_code.bits; });
             })
-            | std::views::filter([i = 0](const auto&) mutable { 
-                return (i++) % 4 == 0; 
-            });
+            // | std::views::filter([i = 0](const auto&) mutable { 
+            //     return (i++) % 4 == 0; 
+            // })
+            ;
 
         [[maybe_unused]] const auto & diagnostics = o1heap_alloc.heap_instance().diagnostics;
 
@@ -367,8 +365,8 @@ void stl06n_main(){
         }
         DEBUG_PRINTLN(
             // arr
-            arr
-            // headed_points
+            // arr
+            headed_points
             // clock::millis().count(),
             // static_cast<uint8_t>(stl06n_parser_.fsm_state_),
             // static_cast<size_t>(stl06n_parser_.bytes_count_)
