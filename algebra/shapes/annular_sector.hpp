@@ -30,13 +30,13 @@ public:
     Rect2<T> bounding_box() const {
         auto & self = *this;
         const bool x_reached_left = self.angle_range.
-            contains_angle(Angular<D>::HALF_LAP);
+            contains_angle(Angular<D>::HALF);
         const bool x_reached_right = self.angle_range.
             contains_angle(Angular<D>::ZERO);
         const bool y_reached_top = self.angle_range.
-            contains_angle(Angular<D>::QUARTER_LAP);
+            contains_angle(Angular<D>::QUARTER);
         const bool y_reached_bottom = self.angle_range.
-            contains_angle(Angular<D>::NEG_QUARTER_LAP);
+            contains_angle(Angular<D>::NEG_QUARTER);
 
         const Vec2<iq16> n1 = Vec2<iq16>::from_angle(self.angle_range.start);
         const Vec2<iq16> n2 = Vec2<iq16>::from_angle(self.angle_range.stop());
@@ -136,13 +136,13 @@ struct [[nodiscard]] RoundedAnnularSector final{
     Rect2<T> bounding_box() const {
         auto & self = *this;
         const bool x_reached_left = self.angle_range.
-            contains_angle(Angular<D>::HALF_LAP);
+            contains_angle(Angular<D>::HALF);
         const bool x_reached_right = self.angle_range.
             contains_angle(Angular<D>::ZERO);
         const bool y_reached_top = self.angle_range.
-            contains_angle(Angular<D>::QUARTER_LAP);
+            contains_angle(Angular<D>::QUARTER);
         const bool y_reached_bottom = self.angle_range.
-            contains_angle(Angular<D>::NEG_QUARTER_LAP);
+            contains_angle(Angular<D>::NEG_QUARTER);
 
         const Vec2<iq16> n1 = Vec2<iq16>::from_angle(self.angle_range.start);
         const Vec2<iq16> n2 = Vec2<iq16>::from_angle(self.angle_range.stop());
@@ -249,16 +249,16 @@ struct [[nodiscard]] Sector final{
         auto & self = *this;
 
         const bool x_reached_left = 
-            self.angle_range.contains_angle(Angular<D>::HALF_LAP);
+            self.angle_range.contains_angle(Angular<D>::HALF);
 
         const bool x_reached_right = 
             self.angle_range.contains_angle(Angular<D>::ZERO);
 
         const bool y_reached_top = 
-            self.angle_range.contains_angle(Angular<D>::QUARTER_LAP);
+            self.angle_range.contains_angle(Angular<D>::QUARTER);
 
         const bool y_reached_bottom = 
-            self.angle_range.contains_angle(Angular<D>::NEG_QUARTER_LAP);
+            self.angle_range.contains_angle(Angular<D>::NEG_QUARTER);
 
         const Vec2<iq16> p1 = Vec2<iq16>::from_angle(self.angle_range.start)
             .flip_y() * self.radius;
@@ -377,7 +377,7 @@ struct [[nodiscard]] DrawDispatchIterator<Sector<T, D>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         y_++;
     }
 
@@ -480,7 +480,7 @@ struct [[nodiscard]] DrawDispatchIterator<AnnularSector<T, D>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         y_++;
     }
 

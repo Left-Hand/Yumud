@@ -32,7 +32,7 @@ void render_main(){
 
     auto lcd_dc = hal::PD<7>();
     auto lcd_nrst = hal::PB<7>();
-    auto lcd_cs = hal::PD<4>();
+    auto lcd_cs = hal::PB<4>();
 
     #else
     auto & spi = hal::spi1;
@@ -88,11 +88,11 @@ void render_main(){
 
         const auto now_secs = clock::seconds();
         // const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.3_r);
-        const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.1_r);
+        const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.3_r);
         // [[maybe_unused]] const auto [s,c] = math::sincospu(now_secs * 0.3_r);
         [[maybe_unused]] const auto [s, c] = dest_angle.sincos();
         [[maybe_unused]] const auto [shape_x, shape_y] = std::make_tuple(
-            uint16_t(30 + 20 * c), uint16_t(30 + 20 * s));
+            uint16_t(30 + 20 * iq16(c)), uint16_t(30 + 20 * iq16(s)));
 
         [[maybe_unused]] const auto samples = [&]{
             static constexpr auto LEN = 20;
@@ -113,9 +113,13 @@ void render_main(){
         // const auto shape = factory.make_full_screen_rounded_rect();
         // const auto shape = factory.make_circle2();
         // const auto shape = factory.make_horizon_spectrum(samples);
+        // const auto shape = factory.make_annular_sector();
         // const auto shape = factory.make_grid_map(10, 10);
-        const auto shape = factory.make_triangle2(dest_angle);
-        // const auto shape = factory.make_horizon_oval2();
+        // const auto shape = factory.make_triangle2(dest_angle);
+        const auto shape = factory.make_horizon_oval2(Rect2<int16_t>::from_center_and_halfsize(
+            {static_cast<int16_t>(160 + 160 * iq16(c)), 70},
+            {60, 11}
+        ));
         // const auto shape = factory.make_line_text(en_font);
         // const auto shape = factory.make_segment2();
         // const auto shape = factory.make_rounded_rect2_moving();
@@ -127,30 +131,37 @@ void render_main(){
 
         // PANIC{render_iter};
 
-        Microseconds upload_us = 0us;
-        Microseconds render_us = 0us;
-        Microseconds clear_us = 0us;
+        Microseconds upload_elapsed_us = 0us;
+        Microseconds render_elapsed_us = 0us;
+        Microseconds clear_elapsed_us = 0us;
         const auto total_us = measure_total_elapsed_us([&]{
-            for(size_t i = 0; i < LCD_HEIGHT; i++){
+            for(uint16_t i = 0; i < LCD_HEIGHT; i++){
                 
                 auto line_buffer_span = LineBufferSpan<RGB565>(std::span(line_buffer), i);
                 auto guard = make_scope_guard([&]{
-                    clear_us += measure_total_elapsed_us([&]{
+                    clear_elapsed_us += measure_total_elapsed_us([&]{
                         line_buffer_span.fill(color_cast<RGB565>(ColorEnum::BLACK)).examine();
                     });
                 });
 
-                render_us += measure_total_elapsed_us([&]{
-                    if(not shape_bb.has_y(i)) return;
+                render_elapsed_us += measure_total_elapsed_us([&]{
+                    if(not shape_bb.contains_y(i)) return;
 
-                    if(i == shape_bb.y()){
+                    if(static_cast<int16_t>(i) == shape_bb.y()){
                         render_iter = make_draw_dispatch_iterator(shape);
                     }
 
                     if(render_iter.has_next()){
-                        for(size_t j = 0; j < 1; j++){
+                        for(uint16_t j = 0; j < 1; j++){
 
-                            static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);
+                            // static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);
+                            const auto color = color_cast<RGB565>(
+                                RGB<iq16>::from_hsv(
+                                    math::frac(now_secs/2),
+                                    iq16(1),
+                                    iq16(1)
+                                )
+                            );
 
                             render_iter.draw_filled(line_buffer_span, color).examine();
                         }
@@ -161,22 +172,23 @@ void render_main(){
                     }
                 });
 
-                upload_us += measure_total_elapsed_us([&]{
+                upload_elapsed_us += measure_total_elapsed_us([&]{
                     plot_rgb(line_buffer_span.view(), line_buffer_span.to_scanline());
                 });
             }
         });
 
 
-
-        
         DEBUG_PRINTLN(
-            now_secs
+            now_secs,
+            static_cast<uint32_t>(render_elapsed_us.count()),
+            // static_cast<uint32_t>(upload_elapsed_us.count())
+            shape_bb
             // shape.center
             // ,shape.points
             // ,render_iter.is_mid_at_right()
-            // clear_us.count(), 
-            // upload_us.count(), 
+            // clear_elapsed_us.count(), 
+            // upload_elapsed_us.count(), 
             // total_us.count(),
             // shape_bb
             

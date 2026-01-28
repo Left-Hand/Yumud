@@ -118,16 +118,16 @@ struct LineDDAIterator{
         return current_x_;
     }
 
-    __fast_inline constexpr Range2u16 x_range() const{
+    __fast_inline constexpr Range2<int16_t> x_range() const{
         const iq16 a = x();
         const iq16 b = a + x_step();
         if(a < b){
-            return Range2u16::from_start_and_stop_unchecked(
+            return Range2<int16_t>::from_start_and_stop_unchecked(
                 math::floor_cast<uint16_t>(a), 
                 math::ceil_cast<uint16_t>(b)
             );
         }else{
-            return Range2u16::from_start_and_stop_unchecked(
+            return Range2<int16_t>::from_start_and_stop_unchecked(
                 math::floor_cast<uint16_t>(b), 
                 math::ceil_cast<uint16_t>(a)
             );
@@ -157,57 +157,61 @@ struct CircleBresenhamIterator{
 public:
     constexpr CircleBresenhamIterator(const Circle2<T> & circle):
         x0_(circle.center.x),
-        err_(1 - 2 * circle.radius),
-        y_(-circle.radius),
-        radius_(circle.radius),
-        radius_squ_(math::square(circle.radius))
+        err_(1 - 2 * static_cast<int16_t>(circle.radius)),
+        y_offset_(-static_cast<int16_t>(circle.radius)),
+        radius_squ_(static_cast<uint32_t>(math::square(static_cast<int32_t>(circle.radius)))),
+        radius_(circle.radius)
     {
         replace_x();
     }
 
     constexpr void advance(){
-        y_++;
+        y_offset_++;
         replace_x();
     }
 
-    constexpr bool has_next() const {
-        return y_ < radius_;
+    [[nodiscard]] constexpr bool has_next() const {
+        return y_offset_ < radius_;
     }
 
-    constexpr Range2u16 x_range() const{
-        return Range2u16{x0_ + x_, x0_ - x_};
-        // return Range2u16{x0_ - 3, x0_ + 3};
+    [[nodiscard]] constexpr Range2<int16_t> x_range() const{
+        return Range2<int16_t>{x0_ + x_offset_, x0_ - x_offset_};
     }
 
-    constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
+    constexpr std::tuple<Range2<int16_t>, Range2<int16_t>> left_and_right() const {
         return {
-            Range2u16{x0_ + x_, x0_ + x_ + 1},
-            Range2u16{x0_ - x_, x0_ - x_ + 1}
+            Range2<int16_t>{x0_ + x_offset_, x0_ + x_offset_ + 1},
+            Range2<int16_t>{x0_ - x_offset_, x0_ - x_offset_ + 1}
         };
     }
 
     constexpr bool is_y_at_edge() const {
-        return y_ == (radius_ - 1) || y_ == (-radius_);
+        return y_offset_ == (radius_ - 1) || y_offset_ == (-radius_);
     }
 
     constexpr bool is_y_at_zero() const {
-        return y_ == 0;
+        return y_offset_ == 0;
     }
 private:
     int16_t x0_;
     int16_t err_;
-    int16_t y_;
+    int16_t x_offset_ = 0;
+    int16_t y_offset_;
     
+    uint32_t radius_squ_;
     int16_t radius_;
-    uint16_t radius_squ_;
 
-    int16_t x_ = 0;
 
 
     constexpr void replace_x(){
-        x_ = -radius_;
-        while(x_ * x_ + y_ * y_ > radius_squ_){
-            x_++;
+        x_offset_ = -radius_;
+        while(true){
+            const uint32_t coord_squ = static_cast<uint32_t>(
+                math::square(static_cast<int32_t>(x_offset_)) 
+                + math::square(static_cast<int32_t>(y_offset_))
+            );
+            if(coord_squ <= radius_squ_) break;
+            x_offset_++;
         }
     }
 

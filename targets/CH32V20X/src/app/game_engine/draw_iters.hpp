@@ -482,9 +482,9 @@ struct DemoShapeFactory{
         return shape;
     }
 
-    auto make_horizon_oval2() const {
-        auto shape = HorizonOval2<uint16_t>::try_from_bounding_box(
-            tft_bounding_box
+    auto make_horizon_oval2(const Rect2<int16_t> rect) const {
+        auto shape = HorizonOval2<int16_t>::try_from_bounding_box(
+            rect
         ).unwrap();
         return shape;
     }

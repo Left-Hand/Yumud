@@ -206,7 +206,7 @@ struct DrawDispatchIterator<HorizonOval2<T>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         iter_.advance();
     }
 
@@ -215,7 +215,8 @@ struct DrawDispatchIterator<HorizonOval2<T>> {
     Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
         // 绘制当前行的范围
         const auto x_range = iter_.x_range();
-        if(auto res = target.fill_x_range({x_range.start, x_range.stop + length_}, color);
+        const uint16_t x_start = static_cast<uint16_t>(std::max<int32_t>(x_range.start, 0));
+        if(auto res = target.fill_x_range({x_start, x_range.stop + length_}, color);
             res.is_err()) return res;
         
         return Ok();
@@ -262,7 +263,7 @@ struct DrawDispatchIterator<VerticalOval2<T>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         iter_.advance();
     }
 

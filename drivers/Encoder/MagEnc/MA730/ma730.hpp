@@ -51,11 +51,11 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto address = T::ADDRESS;
-        const uint8_t data = reg.to_bits();
-        const auto tx = uint16_t(
-            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | data);
-        if(const auto res = spi_drv_.write_single<uint16_t>(tx);
+        uint16_t tx_bits = uint16_t(0x8000);
+        tx_bits |= (static_cast<uint16_t>(T::ADDRESS) << 8);
+        tx_bits |= reg.to_bits();
+
+        if(const auto res = spi_drv_.write_single<uint16_t>(tx_bits);
             res.is_err()) return Err(Error(res.unwrap_err()));
         reg.apply();
         return Ok();
@@ -64,16 +64,18 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        uint16_t dummy;
-        const auto addr = std::bit_cast<uint8_t>(T::ADDRESS);
-        const auto tx = uint16_t(0x4000 | ((uint8_t)addr << 8));
-        if(const auto res = spi_drv_.write_single<uint16_t>(tx); 
+        uint16_t rx_bits;
+
+        uint16_t tx_bits = uint16_t(0x4000);
+        tx_bits |= (static_cast<uint16_t>(T::ADDRESS) << 8);
+
+        if(const auto res = spi_drv_.write_single<uint16_t>(tx_bits); 
             res.is_err()) return Err(Error(res.unwrap_err()));
-        if(const auto res = spi_drv_.read_single<uint16_t>(dummy);
+        if(const auto res = spi_drv_.read_single<uint16_t>(rx_bits);
             res.is_err()) return Err(Error(res.unwrap_err()));
-        if((dummy & 0xff) != 0x00) 
+        if((rx_bits & 0xff) != 0x00) 
             return Err(Error(Error::Kind::InvalidRxFormat));
-        reg.as_bits_mut() = (dummy >> 8);
+        reg.as_bits_mut() = (rx_bits >> 8);
         return Ok();
     }
 

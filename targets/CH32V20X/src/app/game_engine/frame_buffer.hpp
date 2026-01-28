@@ -80,21 +80,21 @@ public:
         const Range2<uint16_t> x_range,
         const DestColor dest_color
     ){
-        if(x_range.stop > buf_.size()) return Ok();
+        if(x_range.start > buf_.size()) return Ok();
 
-        const auto dest_x = MIN(buf_.size(), x_range.stop);
-        // const auto dest_x = x_range.stop;
+        const uint16_t x_stop = std::min(static_cast<uint16_t>(buf_.size()), x_range.stop);
+        // const auto x_stop = x_range.stop;
         const auto color = static_cast<Color>(dest_color);
         // #pragma GCC unroll(8)
         // #pragma GCC unroll(16)
-        if(dest_x - x_range.start < 16){
+        if(x_stop - x_range.start < 16){
             #pragma GCC unroll(8)
-            for(size_t i = x_range.start; i < dest_x; ++i){
+            for(size_t i = x_range.start; i < x_stop; ++i){
                 buf_[i] = color;
             }
         }else{
             #pragma GCC unroll(32)
-            for(size_t i = x_range.start; i < dest_x; ++i){
+            for(size_t i = x_range.start; i < x_stop; ++i){
                 buf_[i] = color;
             }
         }
@@ -114,16 +114,16 @@ public:
         const Rect2u16 area,
         const DestColor color
     ){
-        if(not area.has_y(y_)) return Ok();
+        if(not area.contains_y(y_)) return Ok();
         if(area.x() > buf_.size()) return Ok();
 
-        const auto dest_x = MIN(buf_.size(), area.x() + area.w());
+        const auto x_stop = MIN(buf_.size(), area.x() + area.w());
 
-        // for(size_t x = area.x(); x < dest_x; ++x){
+        // for(size_t x = area.x(); x < x_stop; ++x){
         //     buf_[x] = static_cast<Color>(color);
         // }
 
-        return fill_x_range({area.x(), dest_x}, color);
+        return fill_x_range({area.x(), x_stop}, color);
     }
 
     template<typename DestColor>

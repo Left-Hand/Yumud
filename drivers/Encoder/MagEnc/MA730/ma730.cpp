@@ -104,7 +104,7 @@ IResult<> MA730::set_trim_x(const uq16 k){
 IResult<> MA730::set_trim_y(const uq16 k){
     {
         auto reg = RegCopy(regs_.trim_reg);
-        reg.trim = uint8_t((1.0_r - k) * 258);
+        reg.trim = uint8_t((1.0_uq16 - k) * 258);
         return write_reg(reg);
     }
     {

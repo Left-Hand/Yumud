@@ -141,12 +141,22 @@ IResult<> ST7789::modify_ctrl_reg(const bool is_high,const uint8_t pos){
 
 ST7789_Prelude::IResult<void> st7789_preset::_320X170::advanced_init(ST7789 & displayer){
 
+    #if 0
     if(const auto res = displayer.enable_flip_x(DISEN);
         res.is_err()) return res;
     if(const auto res = displayer.enable_flip_y(EN);
         res.is_err()) return res;
     if(const auto res = displayer.enable_swap_xy(EN);
         res.is_err()) return res;
+    #else
+    if(const auto res = displayer.enable_flip_x(EN);
+        res.is_err()) return res;
+    if(const auto res = displayer.enable_flip_y(DISEN);
+        res.is_err()) return res;
+    if(const auto res = displayer.enable_swap_xy(EN);
+        res.is_err()) return res;
+
+    #endif
     if(const auto res = displayer.set_display_offset({0, 35}); 
         res.is_err()) return res;
     if(const auto res = displayer.enable_format_rgb(EN);

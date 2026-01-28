@@ -79,22 +79,52 @@ struct [[nodiscard]] AngularRange{
         return swapped();
     }
 
+
+    // 改进的包含性检查 - 考虑逆时针为正的约定
+    constexpr bool contains_angle(Angular<T> angle) const {
+        // Normalize all angles to [0, 1) range for comparison
+        const auto norm_start = start.unsigned_normalized();
+        const auto norm_stop = stop().unsigned_normalized();
+        const auto norm_angle = angle.unsigned_normalized();
+        
+        if (interval.is_positive()) {
+            // Counter-clockwise direction (positive interval)
+            if (norm_start < norm_stop) {
+                // Normal case: start < stop (e.g., 30° -> 120°)
+                return norm_angle >= norm_start && norm_angle < norm_stop;
+            } else {
+                // Wrap-around case: start > stop (e.g., 350° -> 30°)
+                return norm_angle >= norm_start || norm_angle < norm_stop;
+            }
+        } else {
+            // Clockwise direction (negative interval)
+            if (norm_start > norm_stop) {
+                // Normal case: start > stop (e.g., 120° -> 30° clockwise)
+                return norm_angle <= norm_start && norm_angle > norm_stop;
+            } else {
+                // Wrap-around case: start < stop (e.g., 30° -> 350° clockwise)
+                return norm_angle <= norm_start || norm_angle > norm_stop;
+            }
+        }
+    }
+
+
     #if 0
     constexpr AngularRange<T> normalize_counter_clockwised() const {
         if(is_counter_clockwise()) {
             // Already counter-clockwise, just normalize the start angle
-            Angular<T> normalized_start = start.normalized();
+            Angular<T> normalized_start = start.unsigned_normalized();
             return {normalized_start, interval};
         }
         
         // Convert clockwise to counter-clockwise
         // For counter-clockwise representation of a clockwise range,
         // we need to adjust the start angle
-        Angular<T> new_start = (start + interval).normalized();
+        Angular<T> new_start = (start + interval).unsigned_normalized();
         Angular<T> new_interval = -interval;
         
         // Ensure the new start is within [0, 1) range
-        Angular<T> normalized_start = new_start.normalized();
+        Angular<T> normalized_start = new_start.unsigned_normalized();
         
         return {normalized_start, new_interval};
     }
@@ -216,11 +246,11 @@ struct [[nodiscard]] AngularRange{
         if (contains_angle(angle)) return angle;
         
         auto norm_range = normalize_counter_clockwised();
-        Angular<T> norm_angle = angle.normalized();
+        Angular<T> norm_angle = angle.unsigned_normalized();
         
         // 计算到两个边界的距离（考虑圆的周期性）
-        Angular<T> dist_to_start = (norm_angle - norm_range.start).normalized();
-        Angular<T> dist_to_stop = (norm_range.stop() - norm_angle).normalized();
+        Angular<T> dist_to_start = (norm_angle - norm_range.start).unsigned_normalized();
+        Angular<T> dist_to_stop = (norm_range.stop() - norm_angle).unsigned_normalized();
         
         // 返回较近的边界
         return (dist_to_start < dist_to_stop) ? norm_range.start : norm_range.stop();
