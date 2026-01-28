@@ -25,22 +25,6 @@ struct [[nodiscard]] ParameterDeviceInfo final{
     uint8_t     parameters_total;   // Total amount of parameters
     uint8_t     parameter_version_number;
 
-    // template<typename Receiver>
-    constexpr Result<void, SerError> sink_to(SerializeReceiver & receiver) const {
-        if(const auto res = receiver.recv_zero_terminated_uchars(device_name.uchars());  
-            res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = receiver.recv_be_int<uint32_t>(serial_number); 
-            res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = receiver.recv_be_int<uint32_t>(hardware_id); 
-            res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = receiver.recv_be_int<uint32_t>(firmware_id); 
-            res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = receiver.recv_be_int<uint8_t>(parameter_version_number); 
-            res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = receiver.recv_be_int<uint8_t>(parameters_total); 
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
 };
 
 // 0x2B
@@ -57,13 +41,6 @@ struct [[nodiscard]] ParameterSettingsRead final{
     uint8_t parameter_number;
     uint8_t parameter_chunk_number; // Chunk number to request, starts with 0
 
-    constexpr Result<void, SerError> sink_to(SerializeReceiver & receiver) const {
-        if(const auto res = receiver.recv_be_int<uint8_t>(parameter_number); 
-            res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = receiver.recv_be_int<uint8_t>(parameter_chunk_number); 
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
 };
 
 // 0x2D

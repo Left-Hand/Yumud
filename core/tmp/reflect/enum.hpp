@@ -1,7 +1,9 @@
 #pragma once
 
 #include "core/tmp/bits/width.hpp"
+#include "core/stream/ostream.hpp"
 #include "core/tmp/container/static_string.hpp"
+
 #include <string_view>
 #include <optional>
 
@@ -191,9 +193,6 @@ private:
 }
 
 namespace ymd{
-template<typename T>
-struct DeriveDebugDispatcher;
-
 template<typename E>
 requires std::is_enum_v<E>
 struct DeriveDebugDispatcher<E> {

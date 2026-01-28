@@ -102,7 +102,7 @@ namespace {
         auto fn = []{
             std::array<uint8_t, 5> bytes{0xff, 0xff, 0xff, 0xff, 0xff};
             auto receiver = SerializeReceiver{std::span(bytes), 0};
-            receiver.recv_zero_terminated_uchars(std::span(obj)).unwrap();
+            receiver.push_zero_terminated_uchars(std::span(obj)).unwrap();
             return std::make_tuple(bytes, receiver);
         };
 

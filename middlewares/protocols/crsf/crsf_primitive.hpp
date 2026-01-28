@@ -219,14 +219,8 @@ using math::int24_t, math::uint24_t;
 template<size_t N>
 using ustr = str::UCharsView<N>;
 
-
-[[nodiscard]] static constexpr uint16_t TICKS_TO_US(uint16_t ticks) {
-    return (ticks - 992) * 5 / 8 + 1500;
-}
-
-[[nodiscard]] static constexpr uint16_t US_TO_TICKS(uint16_t us) {
-    return (us - 1500) * 8 / 5 + 992;
-}
+template<typename T, size_t N>
+using xff_span = std::span<T, N>;
 
 
 }

@@ -3,6 +3,17 @@
 #include "crsf_primitive.hpp"
 
 namespace ymd::crsf{
+
+
+[[nodiscard]] static constexpr uint16_t TICKS_TO_US(uint16_t ticks) {
+    return (ticks - 992) * 5 / 8 + 1500;
+}
+
+[[nodiscard]] static constexpr uint16_t US_TO_TICKS(uint16_t us) {
+    return (us - 1500) * 8 / 5 + 992;
+}
+
+
 struct [[nodiscard]] AltitudeCode final{
     using Self = AltitudeCode;
     // 高度值取决于MSB（第15位）：

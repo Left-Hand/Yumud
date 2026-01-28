@@ -13,22 +13,10 @@
 #include "core/string/conv/strconv2.hpp"
 #include "core/stream/ostream.hpp"
 
-namespace ymd::tmp{
-// 辅助类型特征检测
-template <template<typename...> class, typename...>
-struct is_instantiation_of : std::false_type {};
-
-template <template<typename...> class U, typename... Ts>
-struct is_instantiation_of<U, U<Ts...>> : std::true_type {};
-
-template <typename T, template<typename...> class U>
-using is_instantiation_of_t = typename is_instantiation_of<U, T>::type;
-}
-
 
 namespace ymd::script{
 
-enum class EntryAccessError: uint8_t{
+enum class [[nodiscard]] EntryAccessError: uint8_t{
     NoArgForSetter,
     NotImplemented,
     NoCallableFounded,
@@ -41,7 +29,7 @@ enum class EntryAccessError: uint8_t{
 DEF_DERIVE_DEBUG(EntryAccessError)
 
 
-enum class EntryInteractError: uint8_t{
+enum class [[nodiscard]] EntryInteractError: uint8_t{
     ValueIsGreatThanLimit,
     ValueIsLessThanLimit
 };
@@ -78,29 +66,6 @@ private:
 using Param = ParamFromString;
 
 
-// class AccessProvider_BySubSpan final{
-// public:
-//     constexpr AccessProvider_BySubSpan(
-//         const AccessProviderIntf & provider, 
-//         size_t offset, 
-//         size_t end
-//     ): 
-//         provider_(provider), 
-//         offset_(offset), 
-//         end_(end){;}
-
-//     constexpr size_t size() const {return end_ - offset_;}
-
-//     constexpr ParamFromString operator[](size_t idx) const{
-//         if(idx >= size()) __builtin_trap();
-//         return ParamFromString(provider_[offset_ + idx]);
-//     }
-// private:
-//     const AccessProviderIntf & provider_;
-//     const size_t offset_;
-//     const size_t end_;
-// };
-
 class AccessProvider_ByStringViews final{
 public: 
     AccessProvider_ByStringViews(const std::span<const StringView> views):
@@ -121,39 +86,9 @@ private:
     std::span<const StringView> views_;
 };
 
-#if 0
-
-class AccessProviderIntf{
-public:
-    virtual size_t size() const = 0;
-    virtual ParamFromString operator[](size_t idx) const = 0;
-};
-
-// 先定义 SubHelper（不依赖 AccessProviderIntf 的完整定义）
-
-static constexpr AccessProvider_BySubSpan make_sub_provider(
-    const AccessProviderIntf & owner, 
-    const size_t offset, 
-    const size_t end
-){
-    return AccessProvider_BySubSpan(owner, offset, end);
-}
-
-static constexpr AccessProvider_BySubSpan make_sub_provider(
-    const AccessProviderIntf & owner, 
-    const size_t offset
-){
-    return AccessProvider_BySubSpan(owner, offset, owner.size());
-}
-
-
-
-using AccessReponserIntf = OutputStream;
-
-#endif
 
 template<typename T>
-struct Property{
+struct [[nodiscard]] Property{
     constexpr explicit Property(
         const StringView name,
         T * value
@@ -174,7 +109,7 @@ private:
 };
 
 template<typename T>
-struct PropertyWithLimit final:public Property<T>{
+struct [[nodiscard]] PropertyWithLimit final:public Property<T>{
     static_assert(std::is_const_v<T> == false, "value must be setable");
 
     constexpr explicit PropertyWithLimit(
@@ -242,29 +177,10 @@ convert_params_to_tuple(const auto & ap, std::index_sequence<Is...>)
     return ConvertHelper<Tuple>::apply(ap, std::index_sequence<Is...>{});
 }
 
-#if 0
-[[maybe_unused]] static void static_test(){
-    {
-        constexpr std::array ap = {"1", "2"}; 
 
-        constexpr auto result = convert_params_to_tuple<std::tuple<int, int>>(ap, std::make_index_sequence<2>{});    
-        static_assert(result.is_ok());
-        static_assert(std::get<0>(result.unwrap()) == 1);
-        static_assert(std::get<1>(result.unwrap()) == 2);
-    }
-
-    {
-        constexpr std::array ap = {"1"}; 
-
-        constexpr auto result = convert_params_to_tuple<std::tuple<int>>(ap, std::make_index_sequence<1>{});    
-        static_assert(result.is_ok());
-        static_assert(std::get<0>(result.unwrap()) == 1);
-    }
-}
-#endif
 
 template<typename Ret, typename ... Args>
-struct MethodByLambda final{
+struct [[nodiscard]] MethodByLambda final{
 public:
     static constexpr size_t N = sizeof...(Args);
     
@@ -291,7 +207,7 @@ private:
 
 
 template<typename Obj, typename Ret, typename ... Args>
-struct MethodByMemFunc final{
+struct [[nodiscard]] MethodByMemFunc final{
 
     static constexpr size_t N = sizeof...(Args);
 
@@ -321,7 +237,7 @@ private:
 
 
 template<typename... Entries>
-struct List final{
+struct [[nodiscard]] List final{
     explicit List(const StringView name):
         name_(name){;}
 
@@ -356,6 +272,99 @@ private:
         return Ok();
     }
 };
+
+
+
+
+namespace details{
+template<typename Ret, typename ArgsTuple, template<typename, typename...> 
+    class MethodByLambda, typename Lambda>
+struct make_method_by_lambda_impl;
+
+template<typename Ret, template<typename, typename...> 
+    class MethodByLambda, typename... Args, typename Lambda>
+struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lambda> {
+    static auto make(const StringView name, Lambda&& lambda) {
+        return MethodByLambda<Ret, Args...>(
+            name,
+            std::forward<Lambda>(lambda)
+        );
+    }
+};
+
+}
+
+template<typename Lambda>
+auto make_function(const StringView func_name, Lambda && lambda) {
+    using DecayedLambda = typename std::decay<Lambda>::type;
+
+    using Ret = typename tmp::functor_ret_t<DecayedLambda>;
+    using ArgsTuple = typename tmp::functor_args_tuple_t<DecayedLambda>;
+
+    return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
+        func_name,
+        std::forward<Lambda>(lambda)
+    );
+}
+
+
+template<typename Ret, typename ... Args>
+auto make_function(const StringView func_name, Ret(*callback)(Args...)) {
+    return MethodByLambda<Ret, Args...>(
+        func_name,
+        static_cast<Ret(*)(Args...)>(callback)
+    );
+}
+
+template<typename Ret, typename ... Args, typename TObj>
+auto make_memfunc(
+    const StringView func_name, 
+    TObj * pobj, 
+    Ret(TObj::*member_func_ptr)(Args...)
+) {
+    return MethodByMemFunc<TObj, Ret, Args...>(
+        func_name,
+        pobj,
+        member_func_ptr
+    );
+}
+
+template<typename T>
+auto make_mut_property(const StringView prop_name, T * val){
+    return Property<T>(
+        prop_name, 
+        val
+    );
+}
+
+template<typename T>
+requires (not std::is_const_v<T>)
+auto make_mut_property_with_limit(const StringView prop_name, T * val, auto min, auto max){
+    return PropertyWithLimit<T>(
+        prop_name, 
+        val,
+        std::make_pair(static_cast<T>(min), static_cast<T>(max))
+    );
+}
+
+template<typename T>
+auto make_property(const StringView prop_name, const T * val){
+    return Property<const T>(
+        prop_name, 
+        val
+    );
+}
+
+
+template<typename ... Args>
+auto make_list(const StringView list_name, Args && ... entries){
+    return List<Args...>(
+        list_name, 
+        std::forward<Args>(entries)...
+        // entries...
+    );
+}
+
 
 
 
@@ -545,96 +554,6 @@ struct EntryVisitor<List<Entries...>> final{
         }, self.entries());
     }
 };
-
-namespace details{
-template<typename Ret, typename ArgsTuple, template<typename, typename...> 
-    class MethodByLambda, typename Lambda>
-struct make_method_by_lambda_impl;
-
-template<typename Ret, template<typename, typename...> 
-    class MethodByLambda, typename... Args, typename Lambda>
-struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lambda> {
-    static auto make(const StringView name, Lambda&& lambda) {
-        return MethodByLambda<Ret, Args...>(
-            name,
-            std::forward<Lambda>(lambda)
-        );
-    }
-};
-
-}
-
-template<typename Lambda>
-auto make_function(const StringView func_name, Lambda && lambda) {
-    using DecayedLambda = typename std::decay<Lambda>::type;
-
-    using Ret = typename tmp::functor_ret_t<DecayedLambda>;
-    using ArgsTuple = typename tmp::functor_args_tuple_t<DecayedLambda>;
-
-    return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
-        func_name,
-        std::forward<Lambda>(lambda)
-    );
-}
-
-
-template<typename Ret, typename ... Args>
-auto make_function(const StringView func_name, Ret(*callback)(Args...)) {
-    return MethodByLambda<Ret, Args...>(
-        func_name,
-        static_cast<Ret(*)(Args...)>(callback)
-    );
-}
-
-template<typename Ret, typename ... Args, typename TObj>
-auto make_memfunc(
-    const StringView func_name, 
-    TObj * pobj, 
-    Ret(TObj::*member_func_ptr)(Args...)
-) {
-    return MethodByMemFunc<TObj, Ret, Args...>(
-        func_name,
-        pobj,
-        member_func_ptr
-    );
-}
-
-template<typename T>
-auto make_property(const StringView prop_name, T * val){
-    return Property<T>(
-        prop_name, 
-        val
-    );
-}
-
-template<typename T>
-requires (not std::is_const_v<T>)
-auto make_property_with_limit(const StringView prop_name, T * val, auto min, auto max){
-    return PropertyWithLimit<T>(
-        prop_name, 
-        val,
-        std::make_pair(static_cast<T>(min), static_cast<T>(max))
-    );
-}
-
-template<typename T>
-auto make_ro_property(const StringView prop_name, const T * val){
-    return Property<const T>(
-        prop_name, 
-        val
-    );
-}
-
-
-template<typename ... Args>
-auto make_list(const StringView list_name, Args && ... entries){
-    return List<Args...>(
-        list_name, 
-        std::forward<Args>(entries)...
-        // entries...
-    );
-}
-
 
 // 统一访问接口
 template <typename T>
