@@ -23,7 +23,7 @@ void render_main(){
     auto & spi = hal::spi2;
     spi.init({
         .remap = hal::SPI2_REMAP_PB13_PB14_PB15_PB12,
-        .baudrate = hal::NearestFreq(144_MHz)
+        .baudrate = hal::NearestFreq(72_MHz)
     });
 
 
@@ -38,7 +38,7 @@ void render_main(){
     auto & spi = hal::spi1;
     spi.init({
         .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,
-        .baudrate = hal::NearestFreq(144_MHz)
+        .baudrate = hal::NearestFreq(72_MHz)
     });
 
     auto lcd_blk = hal::PD<0>();
@@ -47,9 +47,12 @@ void render_main(){
     auto lcd_dc = hal::PD<7>();
     auto lcd_nrst = hal::PB<7>();
     auto lcd_cs = hal::PD<4>();
-
-    
     #endif
+
+    lcd_nrst.outpp();
+    lcd_nrst.set_low();
+    clock::delay(10ms);
+    lcd_nrst.set_high();
 
 
     const auto spi_rank = spi.allocate_cs_pin(&lcd_cs).unwrap();
@@ -60,11 +63,13 @@ void render_main(){
     };
 
     tft.init(drivers::st7789_preset::_320X170{}).examine();
+    // tft.fill(color_cast<RGB565>(ColorEnum::BLACK)).examine();
 
-    std::array<RGB565, LCD_WIDTH> render_buffer;
+
+    std::array<RGB565, LCD_WIDTH> line_buffer;
 
     [[maybe_unused]] auto plot_rgb = [&](
-        const std::span<RGB565> & src, 
+        const std::span<const RGB565> src, 
         const ScanLine line
     ){
         // DEBUG_PRINTLN(line.bounding_box());
@@ -109,16 +114,17 @@ void render_main(){
         // const auto shape = factory.make_circle2();
         // const auto shape = factory.make_horizon_spectrum(samples);
         // const auto shape = factory.make_grid_map(10, 10);
-        // const auto shape = factory.make_triangle2(dest_angle);
+        const auto shape = factory.make_triangle2(dest_angle);
         // const auto shape = factory.make_horizon_oval2();
         // const auto shape = factory.make_line_text(en_font);
         // const auto shape = factory.make_segment2();
-        const auto shape = factory.make_rounded_rect2_moving();
+        // const auto shape = factory.make_rounded_rect2_moving();
 
         // using Shape = decltype(shape);
         auto shape_bb = shape.bounding_box();
         auto render_iter = make_draw_dispatch_iterator(shape);
-        
+
+
         // PANIC{render_iter};
 
         Microseconds upload_us = 0us;
@@ -127,10 +133,10 @@ void render_main(){
         const auto total_us = measure_total_elapsed_us([&]{
             for(size_t i = 0; i < LCD_HEIGHT; i++){
                 
-                auto line_span = LineBufferSpan<RGB565>(std::span(render_buffer), i);
+                auto line_buffer_span = LineBufferSpan<RGB565>(std::span(line_buffer), i);
                 auto guard = make_scope_guard([&]{
                     clear_us += measure_total_elapsed_us([&]{
-                        line_span.fill(color_cast<RGB565>(ColorEnum::BLACK)).examine();
+                        line_buffer_span.fill(color_cast<RGB565>(ColorEnum::BLACK)).examine();
                     });
                 });
 
@@ -146,23 +152,26 @@ void render_main(){
 
                             static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);
 
-                            render_iter.draw_filled(line_span, color).examine();
+                            render_iter.draw_filled(line_buffer_span, color).examine();
                         }
 
-                        render_iter.forward();
+                        render_iter.seek_next();
                     }{
 
                     }
                 });
 
                 upload_us += measure_total_elapsed_us([&]{
-                    plot_rgb(line_span.iter(), line_span.to_scanline());
+                    plot_rgb(line_buffer_span.view(), line_buffer_span.to_scanline());
                 });
             }
         });
 
+
+
         
-        if(0) DEBUG_PRINTLN(
+        DEBUG_PRINTLN(
+            now_secs
             // shape.center
             // ,shape.points
             // ,render_iter.is_mid_at_right()
@@ -179,24 +188,7 @@ void render_main(){
 
     }
 
+
+    __builtin_trap();
+
 };
-
-#if 0
-[[maybe_unused]] static void static_test(){
-    {
-        static constexpr auto len = []{
-            std::array<RGB565, LCD_WIDTH * LCD_HEIGHT> render_buffer;
-
-            auto frame_span = FrameBufferSpan<RGB565>::from_ptr_and_size(
-                render_buffer.data(), {LCD_WIDTH, LCD_HEIGHT}).unwrap();
-
-            auto iter = frame_span.iter();
-
-            return count_iter(iter);
-        }();
-
-        static_assert(len == LCD_HEIGHT);
-    }
-}
-
-#endif

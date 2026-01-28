@@ -66,7 +66,7 @@ struct DrawDispatchIterator<GridMap2<T>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         y_++;
     }
 

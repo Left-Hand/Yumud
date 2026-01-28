@@ -29,7 +29,7 @@ IResult<> MA730::init(const Config & cfg){
 }
 
 IResult<uint16_t> MA730::direct_read(){
-    uint16_t bits;
+    uint16_t bits = 0;
     const auto res = spi_drv_.read_single<uint16_t>(bits);
     if(res.is_err()) return Err(Error(res.unwrap_err()));
     return Ok(bits);

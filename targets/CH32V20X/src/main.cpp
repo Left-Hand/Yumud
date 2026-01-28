@@ -13,7 +13,9 @@ int main(){
     // myesc_main();
     // pwm_main();
     // cap_main();
-    stl06n_main();
+    // stl06n_main();
+    // nuedc_2025e_joint_main();
+    nuedc_2025e_laser_main();
     // o1heap_main();
     // dshot_main();
     // sincos_main();
@@ -173,8 +175,8 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // sincos_main();
-    stl06n_main();
-    // render_main();
+    // stl06n_main();
+    render_main();
     // myesc_main();
     // s21c_main();
     // steadywin_main();

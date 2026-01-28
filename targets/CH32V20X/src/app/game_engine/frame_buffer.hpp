@@ -20,11 +20,11 @@ public:
     ):
         buf_(buf), y_(y){;}
 
-    constexpr std::span<const Color> iter() const {
+    constexpr std::span<const Color> view() const {
         return std::span<const Color>(buf_);
     }
 
-    constexpr std::span<Color> iter(){
+    constexpr std::span<Color> view_mut(){
         return std::span<Color>(buf_);
     }
 

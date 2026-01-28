@@ -173,7 +173,7 @@ struct DrawDispatchIterator<Rect2<T>> {
         return y_ < y_range_.stop;
     }
 
-    constexpr void forward() {
+    constexpr void seek_next() {
         if (y_ < y_range_.stop) {
             y_++;
         }
@@ -203,7 +203,7 @@ struct DrawDispatchIterator<Segment2<T>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         iter_.advance();
     }
 
@@ -247,7 +247,7 @@ struct DrawDispatchIterator<Circle2<T>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         iter_.advance();
     }
 
@@ -301,7 +301,7 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         y_++;
     }
 
@@ -414,7 +414,7 @@ struct DrawDispatchIterator<LineText<Encoding, Font>> {
         return y_ < y_range_.stop;
     }
 
-    constexpr void forward() {
+    constexpr void seek_next() {
         if (y_ < y_range_.stop) {
             y_++;
         }
