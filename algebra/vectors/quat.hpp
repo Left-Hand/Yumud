@@ -4,7 +4,7 @@
 #include "algebra/vectors/vec3.hpp"
 #include "algebra/transforms/euler.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 namespace details{
 

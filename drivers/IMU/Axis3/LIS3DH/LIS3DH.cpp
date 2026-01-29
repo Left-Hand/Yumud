@@ -1,4 +1,5 @@
 #include "LIS3DH.hpp"
+#include "core/utils/scope_guard.hpp"
 
 // #define LIS3DH_DEBUG_EN
 #define LIS3DH_CHEAT_EN
@@ -70,16 +71,19 @@ Result<void, Error> LIS3DH::validate(){
 
 Result<void, Error> LIS3DH::reset(){
     auto reg = RegCopy(regs_.ctrl1_reg);
+    auto guard = make_scope_guard([&]{
+        reg.sw_reset = 0;
+    });
     reg.sw_reset = 1;
-    auto err = write_reg(reg);
-    reg.sw_reset = 0;
-    return err;
+    if(const auto res = write_reg(reg);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
 }
 
 
 
-IResult<Vec3<iq24>> LIS3DH::read_acc(){
-    return Ok(Vec3<iq24>::ZERO);
+IResult<math::Vec3<iq24>> LIS3DH::read_acc(){
+    return Ok(math::Vec3<iq24>::ZERO);
 
 }
 

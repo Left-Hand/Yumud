@@ -50,11 +50,11 @@ private:
 template<typename T>
 struct is_placed_t<GridMap2<T>>:std::true_type{;};
 
-// DrawDispatchIterator 特化
+// RenderIterator 特化
 template<std::integral T>
-struct DrawDispatchIterator<GridMap2<T>> {
+struct RenderIterator<GridMap2<T>> {
     using Shape = GridMap2<T>;
-    constexpr DrawDispatchIterator(const Shape & shape)
+    constexpr RenderIterator(const Shape & shape)
         : shape_(shape),
             y_stop_(shape_.bounding_box().y_range().stop),
             y_(shape.top_left_cell.y())
@@ -84,7 +84,7 @@ struct DrawDispatchIterator<GridMap2<T>> {
             const auto x_range = Range2u16::from_start_and_stop_unchecked(x, next_x);
             x = next_x + shape_.padding.x;
 
-            if(const auto res = target.fill_x_range(x_range, color_cast<RGB565>(ColorEnum::PINK));
+            if(const auto res = target.fill_x_range(x_range, color_cast<RGB565>(color));
                 res.is_err()) return res;
             // target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK)).examine();
             // target.fill_x_range(x_range, static_cast<RGB565>(ColorEnum::PINK));

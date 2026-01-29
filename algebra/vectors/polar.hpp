@@ -2,7 +2,7 @@
 
 #include "vec2.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 
 template<typename T>

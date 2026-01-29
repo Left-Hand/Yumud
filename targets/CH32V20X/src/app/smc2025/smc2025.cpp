@@ -96,13 +96,13 @@ class Plotter{
 
     // IResult<> plot_pixels(const Pixels & pts){
     //     for(const auto pixel : pts){
-    //         painter_.putpixel_unchecked(pixel);
+    //         painter_.put_pixel_unchecked(pixel);
     //     }
     //     return Ok();
     // };
 
     IResult<> plot_dot(const Vec2u pos, const uint radius = 2){
-        painter_.putpixel_unchecked(pos);
+        painter_.put_pixel_unchecked(pos);
 
         return Ok();
     };

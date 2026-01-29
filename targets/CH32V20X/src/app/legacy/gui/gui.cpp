@@ -226,7 +226,7 @@ void gui_main(){
         // #ifdef CAMERA_TB
         // auto sketch = make_image<Gray>(camera.size()/2);
         // auto img = Shape::x2(camera);
-        // tft.puttexture(img.get_view(), img.get_data());
+        // tft.put_texture(img.get_view(), img.get_data());
         // clock::delay(10ms);
         // #endif
 

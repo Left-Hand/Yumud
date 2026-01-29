@@ -36,7 +36,7 @@
 #include "core/math/matrix/static_matrix.hpp"
 #include "unit_vec2.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct Rect2;
@@ -93,7 +93,7 @@ struct [[nodiscard]] Vec2{
 
 
     [[nodiscard]] __fast_inline constexpr Vec2(
-        const Matrix<auto, 2, 1> mat):
+        const math::Matrix<auto, 2, 1> mat):
         x(mat(0, 0)), y(mat(1, 0)){;}
 
     [[nodiscard]] static constexpr Vec2<T> from_uninitialized(){
@@ -370,7 +370,7 @@ struct [[nodiscard]] Vec2{
 
 
     [[nodiscard]]
-    constexpr Matrix<T, 1, 2> to_matrix() const{
+    constexpr math::Matrix<T, 1, 2> to_matrix() const{
         return Matrix<T, 1, 2>(x,y);
     }
 
@@ -459,7 +459,7 @@ using Vec2u16 = Vec2<uint16_t>;
 
 }
 
-namespace ymd{
+namespace ymd::math{
 
 
 template<typename T>
@@ -655,22 +655,22 @@ struct ToMatrixDispatcher<Vec2<T>>{
 
 namespace std{
     template<typename T>
-    struct tuple_size<ymd::Vec2<T>> : integral_constant<size_t, 2> {};
+    struct tuple_size<ymd::math::Vec2<T>> : integral_constant<size_t, 2> {};
     
     template<typename T>
-    struct tuple_element<0, ymd::Vec2<T>> { using type = T; };
+    struct tuple_element<0, ymd::math::Vec2<T>> { using type = T; };
     
     template<typename T>
-    struct tuple_element<1, ymd::Vec2<T>> { using type = T; };
+    struct tuple_element<1, ymd::math::Vec2<T>> { using type = T; };
     
     template<size_t I>
-    constexpr auto& get(ymd::Vec2<auto>& p_vector2) {
+    constexpr auto& get(ymd::math::Vec2<auto>& p_vector2) {
         if constexpr (I == 0) return p_vector2.x;
         else return p_vector2.y;
     }
     
     template<size_t I>
-    constexpr const auto& get(const ymd::Vec2<auto>& p_vector2) {
+    constexpr const auto& get(const ymd::math::Vec2<auto>& p_vector2) {
         if constexpr (I == 0) return p_vector2.x;
         else return p_vector2.y;
     }

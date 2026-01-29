@@ -44,7 +44,7 @@ public:
         w_ColorType * ptr = image.data.get();
         for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
             for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++, i++)
-                may_src_imageputpixel_unchecked(Vec2u(x,y), ptr[i]);
+                may_src_imageput_pixel_unchecked(Vec2u(x,y), ptr[i]);
     }
 
     [[nodiscard]]
@@ -70,7 +70,7 @@ public:
                 if(j % 8 == 0) mask = 0;
 
                 Vec2u offs = Vec2u(i - char_rect.position.x ,j);
-                if(font->getpixel(chr, offs)){
+                if(font->get_pixel(chr, offs)){
                 // if(true){
                     mask |= (0x01 << (j % 8));
                 }
@@ -110,17 +110,17 @@ public:
         
         for(size_t y = region.y(); y < region.y() + region.h(); y++){
             for(size_t x = region.x(); x < region.x() + region.w(); ++x){
-                src_image.putpixel_unchecked({x,y}, color_cast<ColorType>(color_));
+                src_image.put_pixel_unchecked({x,y}, color_cast<ColorType>(color_));
             }
         }
 
         return Ok();
     }
 
-    void putpixel_unchecked(const Vec2<uint16_t> pos){
+    void put_pixel_unchecked(const Vec2<uint16_t> pos){
         auto & src_image = may_src_image_.unwrap();
         if(not src_image.size().has_point(pos)) return;
-        src_image.putpixel_unchecked(pos, color_cast<ColorType>(color_));
+        src_image.put_pixel_unchecked(pos, color_cast<ColorType>(color_));
     }
 
     [[nodiscard]]
@@ -153,9 +153,9 @@ public:
         int y = y0;
         for (int x = x0; x <= int(x1); ++x) {
             if (steep) {
-                putpixel_unchecked({uint16_t(y),uint16_t(x)});
+                put_pixel_unchecked({uint16_t(y),uint16_t(x)});
             } else {
-                putpixel_unchecked({uint16_t(x),uint16_t(y)});
+                put_pixel_unchecked({uint16_t(x),uint16_t(y)});
             }
             deltaY += ABS(dy << 1);
             if (deltaY >= middle) {
@@ -183,7 +183,7 @@ public:
         for(size_t x = 0; x < enfont_size.x; x++){
             for(size_t y = 0; y < enfont_size.y; y++){
                 if(enfont.get_pixel(chr, {uint8_t(x),uint8_t(y)})){
-                    src_image.putpixel_unchecked(
+                    src_image.put_pixel_unchecked(
                         pos + Vec2u{x, y}, 
                         color_cast<ColorType>(color_)
                     );
@@ -267,7 +267,7 @@ private:
     Option<Image<ColorType> &> may_src_image_ = None;
     
     void drawtexture_unchecked(const Rect2u & rect,const ColorType * color_ptr){
-        may_src_image_.unwrap().puttexture_unchecked(rect, color_ptr);
+        may_src_image_.unwrap().put_texture_unchecked(rect, color_ptr);
     }
 
 

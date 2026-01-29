@@ -1,8 +1,48 @@
 #include "draw_iters.hpp"
 
+
+
+#include "src/testbench/tb.h"
+
+#include "core/clock/time.hpp"
+#include "core/utils/nth.hpp"
+#include "core/utils/stdrange.hpp"
+#include "core/utils/data_iter.hpp"
+#include "core/string/conv/strconv2.hpp"
+
+#include "primitive/arithmetic/rescaler.hpp"
+#include "primitive/image/painter/painter.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/font/font.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
+
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
+
+
+
+#include "hal/gpio/gpio_port.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/timer/timer.hpp"
+#include "hal/analog/adc/hw_singleton.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/i2c/i2csw.hpp"
+
+
+#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+
+
+using namespace ymd;
+
+
+static constexpr auto LCD_WIDTH = 320u;
+static constexpr auto LCD_HEIGHT = 170u;
+
+
 void render_main(){
-
-
     auto init_debugger = []{
 
         hal::usart2.init({
@@ -27,12 +67,12 @@ void render_main(){
     });
 
 
-    auto lcd_blk = hal::PD<0>();
-    lcd_blk.outpp(HIGH);
+    auto lcd_blk_pin = hal::PD<0>();
+    lcd_blk_pin.outpp(HIGH);
 
-    auto lcd_dc = hal::PD<7>();
-    auto lcd_nrst = hal::PB<7>();
-    auto lcd_cs = hal::PB<4>();
+    auto lcd_dc_pin = hal::PD<7>();
+    auto lcd_nrst_pin = hal::PB<7>();
+    auto lcd_cs_pin = hal::PB<4>();
 
     #else
     auto & spi = hal::spi1;
@@ -41,25 +81,25 @@ void render_main(){
         .baudrate = hal::NearestFreq(72_MHz)
     });
 
-    auto lcd_blk = hal::PD<0>();
-    lcd_blk.outpp(HIGH);
+    auto lcd_blk_pin = hal::PD<0>();
+    lcd_blk_pin.outpp(HIGH);
 
-    auto lcd_dc = hal::PD<7>();
-    auto lcd_nrst = hal::PB<7>();
-    auto lcd_cs = hal::PD<4>();
+    auto lcd_dc_pin = hal::PD<7>();
+    auto lcd_nrst_pin = hal::PB<7>();
+    auto lcd_cs_pin = hal::PD<4>();
     #endif
 
-    lcd_nrst.outpp();
-    lcd_nrst.set_low();
+    lcd_nrst_pin.outpp();
+    lcd_nrst_pin.set_low();
     clock::delay(10ms);
-    lcd_nrst.set_high();
+    lcd_nrst_pin.set_high();
 
 
 
-    const auto spi_rank = spi.allocate_cs_pin(&lcd_cs).unwrap();
+    const auto spi_rank = spi.allocate_cs_pin(&lcd_cs_pin).unwrap();
 
     drivers::ST7789 tft{
-        drivers::ST7789_Transport{&spi, spi_rank, &lcd_dc, &lcd_nrst}, 
+        drivers::ST7789_Transport{&spi, spi_rank, &lcd_dc_pin, &lcd_nrst_pin}, 
         {LCD_WIDTH, LCD_HEIGHT}
     };
 
@@ -84,9 +124,12 @@ void render_main(){
     [[maybe_unused]] auto en_font = MonoFont8x5{};
     [[maybe_unused]] auto en_font2 = MonoFont16x8{};
 
+    auto image = make_image<RGB565>(Vec2u{32, 32});
+    // image.fill(RGB565::black);
+    // image.at({0,1}) = color_cast<RGB565>(ColorEnum::BLUE);
+    // image.at({10,11}) = color_cast<RGB565>(ColorEnum::BLUE);
+    image.fill(color_cast<RGB565>(ColorEnum::PINK));
     while(true){
-
-
         const auto now_secs = clock::seconds();
         // const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.3_r);
         const auto dest_angle = Angular<iq16>::from_turns(now_secs * 0.3_r);
@@ -105,7 +148,7 @@ void render_main(){
             return ret;
         } ();
 
-        const auto factory = DemoShapeFactory{
+        [[maybe_unused]] const auto factory = DemoShapeFactory{
             .now_secs = now_secs,
             .tft_bounding_box = tft.bounding_box(),
         };
@@ -115,19 +158,23 @@ void render_main(){
         // const auto shape = factory.make_circle2();
         // const auto shape = factory.make_horizon_spectrum(samples);
         // const auto shape = factory.make_annular_sector();
-        // const auto shape = factory.make_grid_map(10, 10);
+        // const auto shape = factory.make_grid_map(8, 10);
+        auto && shape = Sprite<RGB565>{.image = image.copy(), .position = Vec2u{shape_x, shape_y}};
         // const auto shape = factory.make_triangle2(dest_angle);
-        const auto shape = factory.make_horizon_oval2(Rect2<int16_t>::from_center_and_halfsize(
-            {static_cast<int16_t>(160 + 160 * iq16(c)), 70},
-            {60, 11}
-        ));
+
+        // const auto shape = factory.make_horizon_oval2(Rect2<int16_t>::from_center_and_halfsize(
+        //     {static_cast<int16_t>(160 + 160 * iq16(c)), 70},
+        //     {60, 11}
+        // ));
+
         // const auto shape = factory.make_line_text(en_font);
         // const auto shape = factory.make_segment2();
         // const auto shape = factory.make_rounded_rect2_moving();
 
         // using Shape = decltype(shape);
         auto shape_bb = shape.bounding_box();
-        auto render_iter = make_draw_dispatch_iterator(shape);
+        // auto render_iter = make_draw_dispatch_iterator(shape);
+        auto render_iter = RenderIterator<Sprite<RGB565>>(std::move(shape));
 
 
         // PANIC{render_iter};
@@ -148,7 +195,7 @@ void render_main(){
                 render_elapsed_us += measure_total_elapsed_us([&]{
                     if(not shape_bb.contains_y(i)) return;
 
-                    if(static_cast<int16_t>(i) == shape_bb.y()){
+                    if(static_cast<uint16_t>(i) == shape_bb.y()){
                         render_iter = make_draw_dispatch_iterator(shape);
                     }
 
@@ -156,7 +203,7 @@ void render_main(){
                         for(uint16_t j = 0; j < 1; j++){
 
                             // static constexpr auto color = color_cast<RGB565>(ColorEnum::PINK);
-                            const auto color = color_cast<RGB565>(
+                            [[maybe_unused]] const auto color = color_cast<RGB565>(
                                 RGB<iq16>::from_hsv(
                                     math::frac(now_secs/2),
                                     iq16(1),
@@ -164,7 +211,8 @@ void render_main(){
                                 )
                             );
 
-                            render_iter.draw_filled(line_buffer_span, color).examine();
+                            // render_iter.draw_filled(line_buffer_span, color).examine();
+                            render_iter.draw_texture(line_buffer_span).examine();
                         }
 
                         render_iter.seek_next();

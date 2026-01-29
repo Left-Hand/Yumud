@@ -192,11 +192,11 @@ private:
 
 
 template<std::integral T>
-struct DrawDispatchIterator<HorizonOval2<T>> {
+struct RenderIterator<HorizonOval2<T>> {
     using Shape = HorizonOval2<T>;
     using Iterator = CircleBresenhamIterator<T>;
 
-    constexpr DrawDispatchIterator(const Shape & shape)
+    constexpr RenderIterator(const Shape & shape)
         : iter_(Circle2<T>{.center = shape.left_center, .radius = shape.radius}),
             length_(shape.length){}
 
@@ -250,11 +250,11 @@ private:
 
 
 template<std::integral T>
-struct DrawDispatchIterator<VerticalOval2<T>> {
+struct RenderIterator<VerticalOval2<T>> {
     using Shape = VerticalOval2<T>;
     using Iterator = VerticalOval2SliceIterator<T>;
 
-    constexpr DrawDispatchIterator(const Shape & shape)
+    constexpr RenderIterator(const Shape & shape)
         : iter_(shape){;}
 
     // 检查是否还有下一行

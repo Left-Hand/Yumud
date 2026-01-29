@@ -3,7 +3,7 @@
 #include "vec3.hpp"
 #include "polar.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct [[nodiscard]] SphericalCoordinates{

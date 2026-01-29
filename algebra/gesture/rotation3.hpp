@@ -3,7 +3,7 @@
 #include "algebra/vectors/vec3.hpp"
 #include "algebra/vectors/quat.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct Rotation3{

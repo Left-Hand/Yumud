@@ -32,7 +32,7 @@ public:
     [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
     
     [[nodiscard]] IResult<> set_pmu_mode(const PmuType pum, const PmuMode mode);
-    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
 
 private:
     using Phy = StmicroImu_Transport;

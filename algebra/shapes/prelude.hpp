@@ -4,6 +4,7 @@
 #include "algebra/vectors/vec2.hpp"
 #include "algebra/regions/Rect2.hpp"
 #include "primitive/colors/rgb/rgb.hpp"
+#include "core/utils/nth.hpp"
 
 namespace ymd{
 
@@ -147,7 +148,7 @@ template<
     typename Shape
 >
 requires (is_placed_t<Shape>::value)
-struct DrawDispatchIterator final{
+struct RenderIterator final{
     // template<typename Target>
     // Result<void, Error> draw(Target & target) const{
     //     target.draw(shape_, style_);

@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct UnitQuat{

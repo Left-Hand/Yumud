@@ -4,7 +4,7 @@
 #include "primitive/arithmetic/angular.hpp"
 #include "algebra/vectors/vec2.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct [[nodiscard]] Complex{

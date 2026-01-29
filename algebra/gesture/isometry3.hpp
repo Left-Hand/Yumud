@@ -3,7 +3,7 @@
 #include "rotation3.hpp"
 
 
-namespace ymd{
+namespace ymd::math{
 
     
 template<typename T>

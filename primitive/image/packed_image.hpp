@@ -10,14 +10,14 @@ using PackedBinary = uint8_t;
 class [[nodiscard]] HorizonBinaryImage final{
 public:
 
-    explicit HorizonBinaryImage(std::shared_ptr<PackedBinary[]> resource, const Vec2u16 _size): 
+    explicit HorizonBinaryImage(std::shared_ptr<PackedBinary[]> resource, const math::Vec2u16 _size): 
         resource_(std::move(resource)),
         size_(_size){;}
 
-    explicit HorizonBinaryImage(const Vec2u16 _size): 
+    explicit HorizonBinaryImage(const math::Vec2u16 _size): 
         HorizonBinaryImage(std::make_shared<PackedBinary[]>(size().x * size().y / 8), _size){;}
 
-    void putseg_h8_unchecked(const Vec2u16 pos, const uint8_t mask, const Binary color){
+    void putseg_h8_unchecked(const math::Vec2u16 pos, const uint8_t mask, const Binary color){
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t pixel_index = point_index / 8;
         if(pixel_index % 8){
@@ -45,7 +45,7 @@ public:
         }
     }
 
-    [[nodiscard]] constexpr Vec2u16 size() const {return size_;}
+    [[nodiscard]] constexpr math::Vec2u16 size() const {return size_;}
     [[nodiscard]] uint8_t * head_ptr() {return resource_.get();}
     [[nodiscard]] const uint8_t * head_ptr() const {return resource_.get();}
 
@@ -57,7 +57,7 @@ public:
         return resource_[idx];
     }
 
-    void putpixel_unchecked(const Vec2u16 pos, const Binary color){
+    void put_pixel_unchecked(const math::Vec2u16 pos, const Binary color){
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t pixel_index = point_index / 8;
         uint8_t mask = 1 << (point_index % 8);
@@ -68,28 +68,28 @@ public:
         }
 
     }
-    void getpixel_unchecked(const Vec2u16 pos, Binary & color) const{
+    void get_pixel_unchecked(const math::Vec2u16 pos, Binary & color) const{
         uint32_t point_index = (pos.y * size().x + pos.x);
         uint32_t pixel_index = point_index / 8;
         color = Binary::from_bool(head_ptr()[pixel_index] & (1 << (point_index % 8)));
     }
 private:
     std::shared_ptr<uint8_t[]> resource_;
-    Vec2u16 size_;
+    math::Vec2u16 size_;
 
 };
 
 class [[nodiscard]] VerticalBinaryImage final{
 
 public:
-    explicit VerticalBinaryImage(std::shared_ptr<PackedBinary[]> resource, const Vec2u16 _size): 
+    explicit VerticalBinaryImage(std::shared_ptr<PackedBinary[]> resource, const math::Vec2u16 _size): 
         resource_(std::move(resource)),
         size_(_size){;}
 
-    explicit VerticalBinaryImage(const Vec2u16 _size): 
+    explicit VerticalBinaryImage(const math::Vec2u16 _size): 
         VerticalBinaryImage(std::make_shared<PackedBinary[]>(size().x * size().y / 8), _size){;}
 
-    void putseg_v8_unchecked(const Vec2u16 pos, const uint8_t mask, const Binary color){
+    void putseg_v8_unchecked(const math::Vec2u16 pos, const uint8_t mask, const Binary color){
         uint32_t pixel_index = pos.x + (pos.y / 8) * size().x; 
         if(pos.y % 8){
             uint16_t datum = (head_ptr()[pixel_index + size().x] << 8) | head_ptr()[pixel_index];
@@ -110,7 +110,7 @@ public:
         }
     }
 
-    [[nodiscard]] constexpr Vec2u16 size() const {return size_;}
+    [[nodiscard]] constexpr math::Vec2u16 size() const {return size_;}
     [[nodiscard]] uint8_t * head_ptr() {return resource_.get();}
     [[nodiscard]] const uint8_t * head_ptr() const {return resource_.get();}
 
@@ -122,7 +122,7 @@ public:
         return resource_[idx];
     }
 
-    void putpixel_unchecked(const Vec2u16 pos, const Binary color){
+    void put_pixel_unchecked(const math::Vec2u16 pos, const Binary color){
         uint32_t pixel_index = pos.x + (pos.y / 8) * size().x; 
         uint8_t mask = (1 << (pos.y % 8));
 
@@ -133,13 +133,13 @@ public:
         }
     }
 
-    void getpixel_unchecked(const Vec2u16 pos, Binary & color) const{
+    void get_pixel_unchecked(const math::Vec2u16 pos, Binary & color) const{
         uint32_t pixel_index = pos.x + (pos.y / 8) * size().x; 
         color = Binary::from_bool(head_ptr()[pixel_index] & (color.is_white() << (pos.y % 8)));
     }
 private:
     std::shared_ptr<uint8_t[]> resource_;
-    Vec2u16 size_;
+    math::Vec2u16 size_;
 
 };
 

@@ -155,7 +155,7 @@ public:
         real_t x = 0;
         for(size_t i = size_t(x_range.start); i < size_t(x_range.stop); i++){
             const auto y = std::forward<Fn>(fn)(x);
-            putpixel_unchecked({uint(i),uint(
+            put_pixel_unchecked({uint(i),uint(
                 y * (y_range.length()) + y_range.start
             )});
             x = x + x_step;
@@ -164,7 +164,7 @@ public:
         return Ok();
     }
 
-    virtual void putpixel_unchecked(const Vec2<uint16_t> pos);
+    virtual void put_pixel_unchecked(const Vec2<uint16_t> pos);
 
     [[nodiscard]] virtual IResult<> draw_wchar(const Vec2u & pos,const wchar_t chr) = 0;
 

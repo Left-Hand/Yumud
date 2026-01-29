@@ -36,7 +36,7 @@
 #include "core/math/matrix/static_matrix.hpp"
 #include "unit_vec3.hpp"
 
-namespace ymd{
+namespace ymd::math{
 template <typename T>
 struct [[nodiscard]] Vec3{
 public:

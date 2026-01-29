@@ -298,11 +298,11 @@ private:
 
 
 template<std::integral T>
-struct DrawDispatchIterator<Triangle2<T>> {
+struct RenderIterator<Triangle2<T>> {
     using Triangle = Triangle2<T>;
     using Iterator = TriangleIterator<T>;
 
-    constexpr DrawDispatchIterator(const Triangle & triangle):
+    constexpr RenderIterator(const Triangle & triangle):
         iter_(triangle.to_sorted_by_y()){;}
 
     // 检查是否还有下一行

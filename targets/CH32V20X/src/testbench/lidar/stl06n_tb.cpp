@@ -28,9 +28,6 @@
 #include <map>
 
 
-
-
-
 using namespace ymd;
 using namespace ymd::drivers;
 
@@ -46,6 +43,8 @@ struct PackedCluster{
 };
 
 
+static constexpr auto LCD_WIDTH = 320u;
+static constexpr auto LCD_HEIGHT = 170u;
 
 
 void stl06n_main(){
@@ -336,6 +335,4 @@ void stl06n_main(){
             poll_main();
         });
     }
-
-
 }

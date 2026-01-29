@@ -343,9 +343,9 @@ struct [[nodiscard]] is_placed_t<Sector<T, D>>:std::true_type{;};
 
 
 template<typename T, typename D>
-struct [[nodiscard]] DrawDispatchIterator<Sector<T, D>> {
+struct [[nodiscard]] RenderIterator<Sector<T, D>> {
     using Shape = Sector<T, D>;
-    using Self = DrawDispatchIterator<Sector<T, D>>;
+    using Self = RenderIterator<Sector<T, D>>;
 
     struct [[nodiscard]] CtorHelper{
         Range2<T> y_range;
@@ -368,8 +368,8 @@ struct [[nodiscard]] DrawDispatchIterator<Sector<T, D>> {
     };
 
 
-    constexpr DrawDispatchIterator(const Shape & shape):
-        DrawDispatchIterator(shape, CtorHelper::from(shape)){;}
+    constexpr RenderIterator(const Shape & shape):
+        RenderIterator(shape, CtorHelper::from(shape)){;}
 
     // 检查是否还有下一行
     constexpr bool has_next() const {
@@ -430,7 +430,7 @@ private:
         return true;
     }
 
-    constexpr DrawDispatchIterator(const Shape & shape, const CtorHelper & helper):
+    constexpr RenderIterator(const Shape & shape, const CtorHelper & helper):
         y_(helper.y_range.start),
         y_stop_(helper.y_range.stop),
         x_range_(helper.x_range),
@@ -446,9 +446,9 @@ private:
 
 
 template<typename T, typename D>
-struct [[nodiscard]] DrawDispatchIterator<AnnularSector<T, D>> {
+struct [[nodiscard]] RenderIterator<AnnularSector<T, D>> {
     using Shape = AnnularSector<T, D>;
-    using Self = DrawDispatchIterator<AnnularSector<T, D>>;
+    using Self = RenderIterator<AnnularSector<T, D>>;
 
     struct [[nodiscard]] CtorHelper{
         Range2<T> y_range;
@@ -471,8 +471,8 @@ struct [[nodiscard]] DrawDispatchIterator<AnnularSector<T, D>> {
     };
 
 
-    constexpr DrawDispatchIterator(const Shape & shape):
-        DrawDispatchIterator(shape, CtorHelper::from(shape)){;}
+    constexpr RenderIterator(const Shape & shape):
+        RenderIterator(shape, CtorHelper::from(shape)){;}
 
     // 检查是否还有下一行
     constexpr bool has_next() const {
@@ -567,7 +567,7 @@ private:
         return true;
     }
 
-    constexpr DrawDispatchIterator(const Shape & shape, const CtorHelper & helper):
+    constexpr RenderIterator(const Shape & shape, const CtorHelper & helper):
         y_(helper.y_range.start),
         y_stop_(helper.y_range.stop),
         x_range_(helper.x_range),

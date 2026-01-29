@@ -46,30 +46,30 @@ struct ST7789_Prelude{
 
     class ST7789_ReflashAlgo{
     public:
-        ST7789_ReflashAlgo(const Vec2<uint16_t> size):
+        ST7789_ReflashAlgo(const math::Vec2<uint16_t> size):
             size_(size){;}
 
         __fast_inline constexpr
-        uint32_t get_point_index(const Vec2<uint16_t> p){
+        uint32_t get_point_index(const math::Vec2<uint16_t> p){
             return (p.x + p.y * size_t(size_.x));
         }
 
         __fast_inline constexpr
-        Range2<uint32_t> get_point_index(const Rect2<uint16_t> r){
+        Range2<uint32_t> get_point_index(const math::Rect2<uint16_t> r){
             return {
                 get_point_index(r.top_left), 
                 get_point_index({uint16_t(r.top_left.x + r.size.x - 1), uint16_t(r.top_left.y + r.size.y - 1)})};
         }
 
-        bool update(const Rect2<uint16_t> rect);
-        bool update(const Vec2<uint16_t> p){
-            return update(Rect2<uint16_t>{p, size_});
+        bool update(const math::Rect2<uint16_t> rect);
+        bool update(const math::Vec2<uint16_t> p){
+            return update(math::Rect2<uint16_t>{p, size_});
         }
 
         auto size() const {return size_;}
     private:
-        const Vec2<uint16_t> size_;
-        Rect2<uint16_t> now_area_ = Rect2<uint16_t>::ZERO;
+        const math::Vec2<uint16_t> size_;
+        math::Rect2<uint16_t> now_area_ = math::Rect2<uint16_t>::ZERO;
         uint32_t last_point_ = 0;
     };
 

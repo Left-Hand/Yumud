@@ -2,7 +2,7 @@
 
 #include "algebra/vectors/vec2.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct [[nodiscard]] Twist2 final{

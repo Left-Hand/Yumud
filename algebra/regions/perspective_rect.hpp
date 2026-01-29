@@ -120,11 +120,7 @@ static constexpr Matrix3x3<T> compute_homogratransport_from_unit_rect(
     // Check for degenerate case (optional safety check)
     if ((std::abs(det) < T(1e-6))) [[unlikely]]{
         // Return identity matrix for degenerate case
-        return Matrix3x3<T>(
-            1, 0, 0,
-            0, 1, 0,
-            0, 0, 1
-        );
+        return Matrix3x3<T>::eye();
     }
 
     const T inv_det = T(1) / det;

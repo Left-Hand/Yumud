@@ -110,6 +110,25 @@ public:
     }
 
     template<typename DestColor>
+    __fast_inline constexpr Result<void, Error> fill_texture(
+        const ScanLine line,
+        const DestColor * p_colorbuf
+    ){
+        if((line.y != y_)) [[likely]] return Ok();
+
+        const auto x_range = line.x_range;
+        if(x_range.start > buf_.size()) return Ok();
+        const uint16_t x_start = x_range.start;
+        const uint16_t x_stop = std::min(static_cast<uint16_t>(buf_.size()), x_range.stop);
+
+        for(uint16_t i = x_start; i < x_stop; ++i){
+            buf_[i] = color_cast<Color>(p_colorbuf[i - x_start]);
+        }
+    
+        return Ok();
+    }
+
+    template<typename DestColor>
     __fast_inline constexpr Result<void, Error> fill_solid(
         const Rect2u16 area,
         const DestColor color

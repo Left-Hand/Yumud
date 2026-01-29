@@ -3,7 +3,7 @@
 #include "algebra/vectors/vec2.hpp"
 
 
-namespace ymd{
+namespace ymd::math{
 
 
 template<typename T>
@@ -152,7 +152,7 @@ private:
     T sine_;
     T cosine_;
 
-    constexpr explicit Rotation2(const Matrix2x2<T>& matrix):
+    constexpr explicit Rotation2(const math::Matrix2x2<T>& matrix):
         sine_(matrix.template at<1,0>()), cosine_(matrix.template at<1,1>()){;} 
 
     // 直接从sine和cosine构造

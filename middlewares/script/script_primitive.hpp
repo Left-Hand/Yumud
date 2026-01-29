@@ -379,8 +379,13 @@ struct EntryVisitor<Property<T>> {
         auto && ap
     ) {
         if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
-        self.deref() = ap[0].template defmt_to<std::decay_t<T>>();
-        ar << self.deref() << ar.endl();
+        const auto val = ({
+            const auto res = strconv2::defmt_from_str<std::decay_t<T>>(ap[0]);
+            if(res.is_err()) return Err(res.unwrap_err());
+            res.unwrap();
+        });
+        self.get() = val;
+        ar << self.get() << OutputStream::endl();
         return Ok();
     }
 };
@@ -396,7 +401,7 @@ struct EntryVisitor<const Property<T>> {
     ) {
         if (ap.size()) 
             return Err(EntryAccessError::CantModifyImmutable);
-        ar << self.deref() << ar.endl();
+        ar << self.get() << OutputStream::endl();
         return Ok();
     }
 };
@@ -412,7 +417,7 @@ struct EntryVisitor<PropertyWithLimit<T>> {
     ) {
         if (ap.size() != 1) return Err(EntryAccessError::NoArgForSetter);
         const auto val = ({
-            const auto res = ap[0].template defmt_to<std::decay_t<T>>();
+            const auto res = strconv2::defmt_from_str<std::decay_t<T>>(ap[0]);
             if(res.is_err()) return Err(res.unwrap_err());
             res.unwrap();
         });
@@ -421,7 +426,7 @@ struct EntryVisitor<PropertyWithLimit<T>> {
         if(unlikely(val > self.max()))
             return Err(EntryInteractError::ValueIsGreatThanLimit);
         self.get() = val;
-        ar << self.get() << ar.endl();
+        ar << self.get() << OutputStream::Endl{};
         return Ok();
     }
 };

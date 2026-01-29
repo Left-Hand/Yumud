@@ -16,8 +16,8 @@ using namespace ymd::drivers;
 
 namespace ymd::drivers{
 namespace details{
-PRO_DEF_MEM_DISPATCH(_Memfunc_PutPixel, putpixel_unchecked);
-PRO_DEF_MEM_DISPATCH(_Memfunc_PutTexture, puttexture_unchecked);
+PRO_DEF_MEM_DISPATCH(_Memfunc_put_pixel, put_pixel_unchecked);
+PRO_DEF_MEM_DISPATCH(_Memfunc_PutTexture, put_texture_unchecked);
 PRO_DEF_MEM_DISPATCH(_Memfunc_PutRect, putrect_unchecked);
 }
 
@@ -26,7 +26,7 @@ PRO_DEF_MEM_DISPATCH(_Memfunc_PutRect, putrect_unchecked);
 
 template<typename TColor>
 struct DrawTargetFacade : pro::facade_builder
-    ::add_convention<details::_Memfunc_PutPixel, 
+    ::add_convention<details::_Memfunc_put_pixel, 
     Result<void, DisplayerError>(const Vec2<uint16_t> pos, const TColor color)>
     ::add_convention<details::_Memfunc_PutTexture, 
     Result<void, DisplayerError>(const Rect2<uint16_t> rect, const TColor * pcolor)>

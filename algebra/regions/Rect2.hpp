@@ -7,7 +7,7 @@
 #include "algebra/vectors/vec2.hpp"
 
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 class [[nodiscard]] Rect2{

@@ -55,14 +55,14 @@ IResult<> PainterBase::draw_hollow_circle(const Vec2u & pos, const uint radius){
     int err=dx - 2 * radius;
 
     while (x>=y) {
-        this->putpixel_unchecked(Vec2u(x0-x, y0+y));
-        this->putpixel_unchecked(Vec2u(x0+x, y0+y));
-        this->putpixel_unchecked(Vec2u(x0-y, y0+x));
-        this->putpixel_unchecked(Vec2u(x0+y, y0+x));
-        this->putpixel_unchecked(Vec2u(x0-x, y0-y));
-        this->putpixel_unchecked(Vec2u(x0+x, y0-y));
-        this->putpixel_unchecked(Vec2u(x0-y, y0-x));
-        this->putpixel_unchecked(Vec2u(x0+y, y0-x));
+        this->put_pixel_unchecked(Vec2u(x0-x, y0+y));
+        this->put_pixel_unchecked(Vec2u(x0+x, y0+y));
+        this->put_pixel_unchecked(Vec2u(x0-y, y0+x));
+        this->put_pixel_unchecked(Vec2u(x0+y, y0+x));
+        this->put_pixel_unchecked(Vec2u(x0-x, y0-y));
+        this->put_pixel_unchecked(Vec2u(x0+x, y0-y));
+        this->put_pixel_unchecked(Vec2u(x0-y, y0-x));
+        this->put_pixel_unchecked(Vec2u(x0+y, y0-x));
 
         if (err<=0) {
             y++;
@@ -88,7 +88,7 @@ IResult<> PainterBase::draw_filled_circle(const Vec2u & pos, const uint radius){
     if(radius == 0) return Ok();
 
     if(radius == 1){
-        putpixel_unchecked(pos);
+        put_pixel_unchecked(pos);
         return Ok();
     }
     int x0 = pos.x;
@@ -144,10 +144,10 @@ IResult<> PainterBase::draw_hollow_ellipse(const Vec2u & pos, const Vec2u & r) {
     int s;
 
     for (x = 0, y = ry, s = 2*ry2+rx2*(1-2*ry); ry2*x <= rx2*y; x++) {
-        putpixel_unchecked(Vec2u(x0 + x, y0 + y));
-        putpixel_unchecked(Vec2u(x0 - x, y0 + y));
-        putpixel_unchecked(Vec2u(x0 - x, y0 - y));
-        putpixel_unchecked(Vec2u(x0 + x, y0 - y));
+        put_pixel_unchecked(Vec2u(x0 + x, y0 + y));
+        put_pixel_unchecked(Vec2u(x0 - x, y0 + y));
+        put_pixel_unchecked(Vec2u(x0 - x, y0 - y));
+        put_pixel_unchecked(Vec2u(x0 + x, y0 - y));
         if (s >= 0) {
             s += fx2 * (1 - y);
             y--;
@@ -156,10 +156,10 @@ IResult<> PainterBase::draw_hollow_ellipse(const Vec2u & pos, const Vec2u & r) {
     }
 
     for (x = rx, y = 0, s = 2*rx2+ry2*(1-2*rx); rx2*y <= ry2*x; y++) {
-        putpixel_unchecked(Vec2u(x0 + x, y0 + y));
-        putpixel_unchecked(Vec2u(x0 - x, y0 + y));
-        putpixel_unchecked(Vec2u(x0 - x, y0 - y));
-        putpixel_unchecked(Vec2u(x0 + x, y0 - y));
+        put_pixel_unchecked(Vec2u(x0 + x, y0 + y));
+        put_pixel_unchecked(Vec2u(x0 - x, y0 + y));
+        put_pixel_unchecked(Vec2u(x0 - x, y0 - y));
+        put_pixel_unchecked(Vec2u(x0 + x, y0 - y));
         if (s >= 0)
         {
             s += fy2 * (1 - x);

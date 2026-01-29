@@ -27,7 +27,7 @@ struct MT9V034_Prelude{
 
     
     // static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x3d);
-    static constexpr Vec2u FRAME_SIZE = {188, 120};
+    static constexpr math::Vec2u FRAME_SIZE = {188, 120};
 
 
     enum class GeneralRegAddr{

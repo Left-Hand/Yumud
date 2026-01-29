@@ -15,7 +15,7 @@ DigitProbability match_numbers(
 ){
     const auto tmp_size = roi.size;
     auto ret = src.clone(Rect2u(roi.top_left, tmp_size));
-    auto ret_bina = ret.shallow_copy<Gray>();
+    auto ret_bina = ret.copy_as<Gray>();
 
     DigitProbability digit_p = {0};
     for(size_t i = 0; i < MAX_NUMBERS; i++){
@@ -27,18 +27,6 @@ DigitProbability match_numbers(
     }
     return digit_p;
 
-    // uint maxi = -1;
-    // real_t maxp = threshold;
-
-    // for(size_t i=0; i < digit_p.size(); i++){
-    //     if(digit_p[i] > maxp) {
-    //         maxi = i;
-    //         maxp = digit_p[i];
-    //     }
-    // }
-
-    // if(maxi < 0) return None;
-    // else return Some(uint(maxi));
 }
 
 

@@ -2,7 +2,7 @@
 
 #include "algebra/vectors/Vec3.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct [[nodiscard]] Twist3 final{

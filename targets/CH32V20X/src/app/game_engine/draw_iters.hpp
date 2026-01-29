@@ -1,21 +1,7 @@
 
-
-#include "src/testbench/tb.h"
-
-#include "core/clock/time.hpp"
-#include "core/utils/nth.hpp"
-#include "core/utils/stdrange.hpp"
-#include "core/utils/data_iter.hpp"
-#include "core/string/conv/strconv2.hpp"
-
+#include "core/string/view/string_view.hpp"
 #include "primitive/arithmetic/rescaler.hpp"
-#include "primitive/image/painter/painter.hpp"
 #include "primitive/image/image.hpp"
-#include "primitive/image/font/font.hpp"
-#include "primitive/colors/rgb/rgb.hpp"
-
-#include "middlewares/repl/repl.hpp"
-#include "middlewares/repl/repl_server.hpp"
 
 
 #include "algebra/regions/rect2.hpp"
@@ -33,27 +19,36 @@
 #include "algebra/shapes/gridmap2.hpp"
 #include "algebra/shapes/rounded_rect2.hpp"
 
-#include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/timer.hpp"
-#include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/uart/uartsw.hpp"
-#include "hal/gpio/gpio.hpp"
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
-
-
-#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
-// #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
-// #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
 
 #include "frame_buffer.hpp"
 
 
 
 namespace ymd{
+
+template<typename T>
+struct [[nodiscard]] Sprite final{
+    Image<T> image;
+    Vec2u position;
+
+    Rect2u bounding_box() const{
+        // return image.bounding_box() + position;
+        return Rect2u16::from_xywh(
+            static_cast<uint16_t>(position.x),
+            static_cast<uint16_t>(position.y),
+            static_cast<uint16_t>(image.size().x),
+            static_cast<uint16_t>(image.size().y)
+        );
+    }
+
+    Sprite copy() {
+        return Sprite<T>(image.copy(), position);
+    }
+};
+
+template<typename T>
+struct is_placed_t<Sprite<T>>:std::true_type{;};
+
 template<typename T>
 struct is_placed_t<Segment2<T>>:std::true_type{};
 
@@ -82,12 +77,6 @@ template<typename Encoding, typename Font>
 struct is_placed_t<LineText<Encoding, Font>>:std::true_type{;};
 
 
-}
-
-
-using namespace ymd;
-
-
 
 
 template<typename Iter>
@@ -105,35 +94,20 @@ static constexpr size_t count_iter(Iter && iter){
     return cnt;
 }
 
-
-static constexpr auto UART_BAUD = 576000u;
-
-// static constexpr auto LCD_WIDTH = 32u;
-// static constexpr auto LCD_HEIGHT = 18u;
-
-// static constexpr auto LCD_WIDTH = 8u;
-// static constexpr auto LCD_HEIGHT = 6u;
-
-static constexpr auto LCD_WIDTH = 320u;
-static constexpr auto LCD_HEIGHT = 170u;
-
-
-
-
 template<typename Shape>
-// auto make_DrawDispatchIterator
+// auto make_RenderIterator
 auto make_draw_dispatch_iterator(Shape && shape){
-    return DrawDispatchIterator<std::decay_t<Shape>>(shape);
+    return RenderIterator<std::decay_t<Shape>>(std::move<Shape>(shape));
 }
 
 
 template<typename T>
 requires (std::is_integral_v<T>)
-struct DrawDispatchIterator<Rect2<T>> {
+struct RenderIterator<Rect2<T>> {
     using Shape = Rect2<T>;
-    using Self = DrawDispatchIterator<Shape>;
+    using Self = RenderIterator<Shape>;
 
-    constexpr DrawDispatchIterator(const Shape& shape) : 
+    constexpr explicit RenderIterator(const Shape& shape) : 
         x_range_(shape.x_range()),
         y_range_(shape.y_range()),
         y_(y_range_.start) {}  // 修复：使用 y_range_.start
@@ -187,14 +161,14 @@ private:
 
 
 
-// DrawDispatchIterator 特化
+// RenderIterator 特化
 template<std::integral T>
-struct DrawDispatchIterator<Segment2<T>> {
+struct RenderIterator<Segment2<T>> {
     using Segment = Segment2<T>;
     // using Iterator = BresenhamIterator<T>;
     using Iterator = LineDDAIterator<T>;
 
-    constexpr DrawDispatchIterator(const Segment& segment)
+    constexpr explicit RenderIterator(const Segment& segment)
         : iter_(segment){}
 
     // 检查是否还有下一行
@@ -232,13 +206,13 @@ private:
 };
 
 
-// DrawDispatchIterator 特化
+// RenderIterator 特化
 template<std::integral T>
-struct DrawDispatchIterator<Circle2<T>> {
+struct RenderIterator<Circle2<T>> {
     using Shape = Circle2<T>;
     using Iterator = CircleBresenhamIterator<T>;
 
-    constexpr DrawDispatchIterator(const Shape & shape)
+    constexpr explicit RenderIterator(const Shape & shape)
         : iter_(shape){}
 
     // 检查是否还有下一行
@@ -281,12 +255,50 @@ private:
 
 
 
-// DrawDispatchIterator 特化
+// RenderIterator 特化
+template<typename T>
+struct RenderIterator<Sprite<T>> {
+    using Shape = Sprite<T>;
+    constexpr explicit RenderIterator(Shape && shape)
+        : shape_(shape.copy()),
+            y_stop_(shape_.image.size().y + shape_.position.y),
+            y_(shape_.position.y)
+        {}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return y_ < y_stop_;
+    }
+
+    // 推进到下一行
+    constexpr void seek_next() {
+        y_++;
+    }
+
+    template<DrawTargetConcept Target>
+    Result<void, typename Target::Error> draw_texture(Target & target) {
+        const size_t x_start = shape_.position.x;
+        const size_t width = shape_.image.size().x;
+
+        const T * p_texture = shape_.image.head_ptr() + (y_ - shape_.position.y) * width;
+        if(const auto res = target.fill_texture(ScanLine{.x_range = {x_start, x_start + width}, .y = y_}, p_texture);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+private:
+    Shape shape_;
+    uint16_t y_stop_;
+    uint16_t y_;
+};
+
+
+// RenderIterator 特化
 template<std::integral T, typename D>
-struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
+struct RenderIterator<HorizonSpectrum<T, D>> {
     using Shape = HorizonSpectrum<T, D>;
     using Transformer = Rescaler<iq16>;
-    constexpr DrawDispatchIterator(const Shape & shape)
+    constexpr explicit RenderIterator(const Shape & shape)
         : shape_(shape),
             transformer_(Transformer::from_input_and_output(
                 shape_.sample_range,
@@ -356,14 +368,12 @@ private:
 };
 
 
-
-namespace ymd{
 template<typename Encoding, typename Font>
-struct DrawDispatchIterator<LineText<Encoding, Font>> {
+struct RenderIterator<LineText<Encoding, Font>> {
     using Shape = LineText<Encoding, Font>;
-    using Self = DrawDispatchIterator<Shape>;
+    using Self = RenderIterator<Shape>;
 
-    constexpr DrawDispatchIterator(const Shape& shape) : 
+    constexpr explicit RenderIterator(const Shape& shape) : 
         shape_(shape),
         x_range_(shape.bounding_box().x_range()),
         y_range_(shape.bounding_box().y_range()),

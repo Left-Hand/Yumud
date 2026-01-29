@@ -247,20 +247,20 @@ void SmartCar::main(){
     [[maybe_unused]] auto plot_gray = [&](const Image<Gray> & src, const Rect2i & area){
         CHECK_PLOTDE();
         painter.bindImage(tftDisplayer);
-        tftDisplayer.puttexture(area.intersection(Rect2i(area.position, src.get_size())), src.get_data());
+        tftDisplayer.put_texture(area.intersection(Rect2i(area.position, src.get_size())), src.get_data());
     };
 
     [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Rect2i & area){
         CHECK_PLOTDE();
         painter.bindImage(tftDisplayer);
-        tftDisplayer.puttexture(area, src.get_data());
+        tftDisplayer.put_texture(area, src.get_data());
     };
 
     
     [[maybe_unused]] auto plot_sketch = [&](const Rect2i & area){
         CHECK_PLOTDE();
         painter.bindImage(tftDisplayer);
-        tftDisplayer.puttexture(area, sketch.get_data());
+        tftDisplayer.put_texture(area, sketch.get_data());
     };
 
     [[maybe_unused]] auto plot_coast = [&](const Coast & coast,  const Vec2i & pos, const RGB565 & color = RGB565::RED){
