@@ -25,7 +25,7 @@ static void clear_corners(Image<T> & dst){
 void convolution(
     Image<Gray> & dst, 
     const Image<Gray> & src, 
-    const Matrix<int8_t, 3, 3> & core)
+    const math::Matrix<int8_t, 3, 3> & core)
 {
     const auto size = dst.size();
     const auto den = core.sum();
@@ -84,7 +84,7 @@ void gauss5x5(Image<Gray> & dst, const Image<Gray> & src){
             for(int dy = -int(CORE_RADIUS); dy <= int(CORE_RADIUS); ++dy){
                 for(int dx = -int(CORE_RADIUS); dx <= int(CORE_RADIUS); ++dx){
                     sum += 
-                        src[Vec2u{size_t(x + dx), size_t(y + dy)}].to_u8()
+                        src[math::Vec2u{size_t(x + dx), size_t(y + dy)}].to_u8()
                         * uint8_t(CORE[size_t(dy + CORE_RADIUS)][size_t(dx + CORE_RADIUS)]);
                 }
             }
@@ -100,9 +100,9 @@ void gauss(Image<Gray> & src){
     pixels::copy(src, temp);
 }
 
-Vec2u find_most(const Image<Gray> & src, const Gray & tg_color,  const Vec2u & point, const Vec2u & vec){
-    Vec2u now_point = point;
-    Vec2u delta_point = Vec2u(math::sign(vec.x), math::sign(vec.y));
+math::Vec2u find_most(const Image<Gray> & src, const Gray & tg_color,  const math::Vec2u & point, const math::Vec2u & vec){
+    math::Vec2u now_point = point;
+    math::Vec2u delta_point = math::Vec2u(math::sign(vec.x), math::sign(vec.y));
 
     {
         while(true){
@@ -119,16 +119,16 @@ Vec2u find_most(const Image<Gray> & src, const Gray & tg_color,  const Vec2u & p
         }
     }
 
-    auto eve = [](const Vec2u & _point, const Vec2u & _vec) -> size_t{
+    auto eve = [](const math::Vec2u & _point, const math::Vec2u & _vec) -> size_t{
         return _point.dot(_vec);
     };
 
     size_t now_eve = eve(now_point, vec);
     while(true){
-        Vec2u next_x_vec = now_point + Vec2u(math::sign(vec.x), 0);
-        Vec2u next_y_vec = now_point + Vec2u(0, math::sign(vec.y));
+        math::Vec2u next_x_vec = now_point + math::Vec2u(math::sign(vec.x), 0);
+        math::Vec2u next_y_vec = now_point + math::Vec2u(0, math::sign(vec.y));
 
-        Vec2u * next_point = &now_point;
+        math::Vec2u * next_point = &now_point;
         now_eve = eve(now_point, vec);
 
         if(src[next_x_vec] == tg_color){
@@ -595,14 +595,14 @@ void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real
 
     for(size_t y = 0; y < h / m; y++){
         for(size_t x = 0; x < w / m; x++){
-            Vec2u base = Vec2u(x, y)* m;
+            math::Vec2u base = math::Vec2u(x, y)* m;
             size_t pixel = 0;
             for(size_t j = 0; j < m; j++){
                 for(size_t i = 0; i < m; i++){
-                    Vec2u src_pos = base + Vec2u(i, j);
+                    math::Vec2u src_pos = base + math::Vec2u(i, j);
                     pixel += src[src_pos].is_white();
                 }
-            Vec2u dst_pos = Vec2u(x,y);
+            math::Vec2u dst_pos = math::Vec2u(x,y);
             dst[dst_pos] = Binary::from_bool(bool(pixel > n));
             }
         }
@@ -632,7 +632,7 @@ void zhang_suen(Image<Binary> & dst,const Image<Binary> & src){
 
         for (size_t y = 0; y < h; ++y) {
             for (size_t x = 0; x < w; ++x) {
-                const Vec2u p{x,y};
+                const math::Vec2u p{x,y};
                 // const Binary * p = &temp[x + y * w];
                 
                 if (temp[p] == 0) continue;
@@ -696,18 +696,18 @@ void zhang_suen2(Image<Binary> & dst,const Image<Binary> & src){
                     if((x + y) % 2 == 0) continue;
                 }
 
-                const Vec2u base = Vec2u(x, y);
+                const math::Vec2u base = math::Vec2u(x, y);
                 bool p1 = temp[base];
                 if (p1 == 0) continue;
 
-                bool p2 = temp[base + Vec2u(0, -1)];
-                bool p3 = temp[base + Vec2u(1, -1)];
-                bool p4 = temp[base + Vec2u(1, 0)];
-                bool p5 = temp[base + Vec2u(1, 1)];
-                bool p6 = temp[base + Vec2u(0, 1)];
-                bool p7 = temp[base + Vec2u(-1, 1)];
-                bool p8 = temp[base + Vec2u(-1, 0)];
-                bool p9 = temp[base + Vec2u(-1, -1)];
+                bool p2 = temp[base + math::Vec2u(0, -1)];
+                bool p3 = temp[base + math::Vec2u(1, -1)];
+                bool p4 = temp[base + math::Vec2u(1, 0)];
+                bool p5 = temp[base + math::Vec2u(1, 1)];
+                bool p6 = temp[base + math::Vec2u(0, 1)];
+                bool p7 = temp[base + math::Vec2u(-1, 1)];
+                bool p8 = temp[base + math::Vec2u(-1, 0)];
+                bool p9 = temp[base + math::Vec2u(-1, -1)];
 
                 size_t B  = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
                 size_t C = ((!p2) && (p3 || p4)) + ((!p4) && (p5 || p6)) + ((!p6) && (p7 || p8)) + ((!p8) && (p9 || p2));
@@ -815,8 +815,8 @@ static constexpr Direction xy_to_dir(const int16_t x, const int16_t y){
     #undef TWO_AND_HALF
 } 
 
-void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & threshold){
-    auto roi = Rect2u::from_size(src.size());
+void canny(Image<Binary> &dst, const Image<Gray> &src, const math::Range2<uint16_t> & threshold){
+    auto roi = math::Rect2u::from_size(src.size());
 
     const auto [low_thresh, high_thresh] = threshold;
 
@@ -1068,7 +1068,7 @@ void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
         return;
     }
 
-    const auto [w,h] = Vec2u{
+    const auto [w,h] = math::Vec2u{
         MIN(src.size().x, dst.size().x),
         MIN(src.size().y, dst.size().y),
     };

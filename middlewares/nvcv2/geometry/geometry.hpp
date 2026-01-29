@@ -27,11 +27,11 @@ struct [[nodiscard]] InvPerspectiveConfig{
     iq16 H8;
 };
 
-Vec2<iq16> perspective(const Vec2<iq16> & v);
+math::Vec2<iq16> perspective(const math::Vec2<iq16> & v);
 
-Vec2<iq16> inv_perspective(const Vec2<iq16> & v);
+math::Vec2<iq16> inv_perspective(const math::Vec2<iq16> & v);
 
-Vec2<iq16> inv_perspective_fast(const Vec2<iq16> & v);
+math::Vec2<iq16> inv_perspective_fast(const math::Vec2<iq16> & v);
 
 void perspective(
     Image<Gray> & dst,

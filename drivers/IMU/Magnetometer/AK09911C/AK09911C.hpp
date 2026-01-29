@@ -37,7 +37,7 @@ public:
     [[nodiscard]] IResult<bool> is_stable();
     [[nodiscard]] IResult<> set_mode(const Mode mode);
     [[nodiscard]] IResult<> disable_i2c();
-    [[nodiscard]] IResult<Vec3<iq24>> read_mag();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag();
 
     [[nodiscard]] IResult<bool> is_data_ready();
     [[nodiscard]] IResult<bool> is_data_overrun();
@@ -49,7 +49,7 @@ private:
     
     AsahiKaseiImu_Transport transport_;
     AK09911C_Regset regs_ = {};
-    Option<Vec3<iq24>> scale_ = None; 
+    Option<math::Vec3<iq24>> scale_ = None; 
     
     [[nodiscard]] IResult<> selftest();
     [[nodiscard]] IResult<> blocking_update();
@@ -79,11 +79,11 @@ private:
         return transport_.read_burst(addr, pbuf);
     }
 
-    [[nodiscard]] IResult<Vec3<int8_t>> get_coeff();
+    [[nodiscard]] IResult<math::Vec3<int8_t>> get_coeff();
 
-    [[nodiscard]] static constexpr Vec3<iq24> 
-    transform_coeff_into_scale(const Vec3<int8_t> coeff){
-        return Vec3<iq24>(coeff) / 128 + Vec3<iq24>(1, 1, 1); 
+    [[nodiscard]] static constexpr math::Vec3<iq24> 
+    transform_coeff_into_scale(const math::Vec3<int8_t> coeff){
+        return math::Vec3<iq24>(coeff) / 128 + math::Vec3<iq24>(1, 1, 1); 
     }
     
 };

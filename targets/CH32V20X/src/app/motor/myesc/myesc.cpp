@@ -657,7 +657,7 @@ void myesc_main(){
         // const Angular<uq32> elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 10_deg;
         #endif
 
-        const auto elec_rotation = Rotation2<iq16>::from_angle(elec_angle);
+        const auto elec_rotation = math::Rotation2<iq16>::from_angle(elec_angle);
         [[maybe_unused]] const auto elec_omega = rotor_rotation_state_var_.x2 * MotorProfile::POLE_PAIRS;
         //#endregion
 

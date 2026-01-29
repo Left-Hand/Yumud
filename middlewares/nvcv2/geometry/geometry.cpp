@@ -42,31 +42,31 @@ static constexpr InvPerspectiveConfig inv_perspective_config{
     .H8 = iq16(-0.00600),
 };
 
-Vec2<iq16> perspective(const Vec2<iq16> & v){
+math::Vec2<iq16> perspective(const math::Vec2<iq16> & v){
     auto [x,y] = v;
     iq16 inv_s = iq16(1) / (perspective_config.H8*y+iq16(1));
     iq16 _x = (perspective_config.H1 * x + perspective_config.H2 * y + perspective_config.H3)*inv_s;
     iq16 _y = (perspective_config.H4 * x + perspective_config.H5 * y + perspective_config.H6)*inv_s;
-    Vec2<iq16> ret = {_x,_y};
+    math::Vec2<iq16> ret = {_x,_y};
     return ret;
 }
 
 
-Vec2<iq16> inv_perspective(const Vec2<iq16> & v){
+math::Vec2<iq16> inv_perspective(const math::Vec2<iq16> & v){
     auto [x,y] = v;
     iq16 inv_s = iq16(1) / (inv_perspective_config.H8*y+iq16(1));
     iq16 _x = (inv_perspective_config.H1 * x + inv_perspective_config.H2 * y + inv_perspective_config.H3)*inv_s;
     iq16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y + inv_perspective_config.H6)*inv_s;
-    Vec2<iq16> ret = {_x,_y};
+    math::Vec2<iq16> ret = {_x,_y};
     return ret;
 }
 
-Vec2<iq16> inv_perspective_fast(const Vec2<iq16> & v){
+math::Vec2<iq16> inv_perspective_fast(const math::Vec2<iq16> & v){
     auto [x,y] = v;
     iq16 inv_s = iq16(1) / (inv_perspective_config.H8*y+iq16(1));
     iq16 _x = (x + inv_perspective_config.H2 * y)*inv_s;
     iq16 _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y)*inv_s;
-    Vec2<iq16> ret = {_x,_y};
+    math::Vec2<iq16> ret = {_x,_y};
 
     return ret;
 }
@@ -79,7 +79,7 @@ void perspective(Image<Gray> & dst,const Image<Gray> & src){
 
         for(size_t _x = 0; _x < size.x; _x++){
             x += x_step;
-            if(size.has_point(Vec2u{size_t(x),size_t(y)})){
+            if(size.has_point(math::Vec2u{size_t(x),size_t(y)})){
                 dst[{_x,_y}]= src[{size_t(x),size_t(y)}];
             }else{
                 dst[{_x,_y}] = Gray::black();

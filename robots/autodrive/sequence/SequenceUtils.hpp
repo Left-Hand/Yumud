@@ -27,23 +27,23 @@ protected:
     
     uint32_t x_:11;
     uint32_t y_:11;
-    uint32_t rad_:10;
+    uint32_t radians_:10;
 public:
     constexpr CurvePoint(const iq16 x, const iq16 y, const Angular<iq16> orientation):
-        x_(x << XY_SHIFT_BITS), y_(y << XY_SHIFT_BITS), rad_(orientation.to_radians() * RAD_SCALE){;}
+        x_(x << XY_SHIFT_BITS), y_(y << XY_SHIFT_BITS), radians_(orientation.to_radians() * RAD_SCALE){;}
 
-    constexpr CurvePoint(const Vec2<iq16> & pos, const Angular<iq16> orientation):
+    constexpr CurvePoint(const math::Vec2<iq16> & pos, const Angular<iq16> orientation):
         CurvePoint(pos.x, pos.y, orientation){;}
         
-    constexpr CurvePoint(const Ray2<iq16> & ray):
+    constexpr CurvePoint(const math::Ray2<iq16> & ray):
         CurvePoint(ray.center.x, ray.center.y, ray.orientation){;}
 
-    constexpr Ray2<iq16> to_ray() const{
-        return Ray2<iq16>(
-            Vec2<iq16>(
+    constexpr math::Ray2<iq16> to_ray() const{
+        return math::Ray2<iq16>(
+            math::Vec2<iq16>(
                 iq16(x_) >> XY_SHIFT_BITS, 
                 iq16(y_) >> XY_SHIFT_BITS), 
-            Angular<iq16>::from_radians(rad_ * INV_RAD_SCALE)
+            Angular<iq16>::from_radians(radians_ * INV_RAD_SCALE)
         );
     }
 };

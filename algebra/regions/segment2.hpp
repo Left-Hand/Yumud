@@ -4,7 +4,7 @@
 #include "algebra/vectors/vec2.hpp"
 #include "algebra/regions/Rect2.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<arithmetic T>
 struct Segment2{

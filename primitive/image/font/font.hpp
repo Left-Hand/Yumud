@@ -8,26 +8,26 @@ namespace ymd{
 struct [[nodiscard]] Font{
 protected:
 
-    Vec2<uint8_t> size;
+    math::Vec2<uint8_t> size;
     uint8_t scale;
     public:
-    constexpr Font(Vec2<uint8_t> _size, uint8_t _scale = 1):size(_size), scale(_scale){;}
+    constexpr Font(math::Vec2<uint8_t> _size, uint8_t _scale = 1):size(_size), scale(_scale){;}
     
-    virtual bool get_pixel(const wchar_t token, const Vec2<uint8_t> offset) = 0;
+    virtual bool get_pixel(const wchar_t token, const math::Vec2<uint8_t> offset) = 0;
     void set_scale(const uint8_t _scale){scale = _scale;}
-    Vec2<uint8_t> get_size() const { return size * scale; }
+    math::Vec2<uint8_t> get_size() const { return size * scale; }
 };
 
 
 
 
 struct [[nodiscard]] Font8x5:public Font{
-    bool get_pixel(const wchar_t token, const Vec2<uint8_t> offset) const {
+    bool get_pixel(const wchar_t token, const math::Vec2<uint8_t> offset) const {
         if (!size.has_point(offset)) return false;
         return font_res::enfont_8x5[MAX(token - ' ', 0)][offset.x + 1] & (1 << offset.y);
     }
 public:
-    constexpr Font8x5():Font( Vec2<uint8_t>(5,8)){;}
+    constexpr Font8x5():Font( math::Vec2<uint8_t>(5,8)){;}
 };
 
 
@@ -36,8 +36,8 @@ struct [[nodiscard]] Font7x7 final:public Font{
     using font_item_t = font_res::chfont_7x7_item_t;
 
 public:
-    constexpr Font7x7():Font(Vec2<uint8_t>{7,7}){;}
-	bool get_pixel(const wchar_t token, const Vec2<uint8_t> offset){
+    constexpr Font7x7():Font(math::Vec2<uint8_t>{7,7}){;}
+	bool get_pixel(const wchar_t token, const math::Vec2<uint8_t> offset){
         // if(!size.has_point(offset)) return false;
         if(offset.y > 6) return false;
 
@@ -94,8 +94,8 @@ private:
 struct [[nodiscard]] Font16x8:public Font{
 public:
     static constexpr auto & RES = font_res::enfont_16x8;
-    constexpr Font16x8():Font(Vec2<uint8_t>(8,16)){;}
-    bool get_pixel(const wchar_t token, const Vec2<uint8_t> offset) const {
+    constexpr Font16x8():Font(math::Vec2<uint8_t>(8,16)){;}
+    bool get_pixel(const wchar_t token, const math::Vec2<uint8_t> offset) const {
         if (!size.has_point(offset)) return false;
 
         return RES[MAX(token - ' ', 0)][offset.y] & (1 << offset.x);
@@ -127,8 +127,8 @@ struct MonoFont7x7 final{
 		}
 	}
 
-    constexpr Vec2u16 size() const {
-        return Vec2u16{7,7};
+    constexpr math::Vec2u16 size() const {
+        return math::Vec2u16{7,7};
     }
 private:
     wchar_t last_token_ = 0;
@@ -177,8 +177,8 @@ struct MonoFont8x5 final{
 	}
 
 
-    static constexpr Vec2u16 size() {
-        return Vec2u16{5,8};
+    static constexpr math::Vec2u16 size() {
+        return math::Vec2u16{5,8};
     }
 public:
 };
@@ -195,8 +195,8 @@ struct MonoFont16x8 final{
 	}
 
 
-    constexpr Vec2u16 size() const {
-        return Vec2u16{8,16};
+    constexpr math::Vec2u16 size() const {
+        return math::Vec2u16{8,16};
     }
 public:
 };

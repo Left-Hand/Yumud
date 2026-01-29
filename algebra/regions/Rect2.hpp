@@ -427,5 +427,10 @@ using Rect2u = Rect2<uint>;
 
 using Rect2u8 = Rect2<uint8_t>;
 using Rect2u16 = Rect2<uint16_t>;
+using Rect2u32 = Rect2<uint32_t>;
+
+using Rect2i8 = Rect2<int8_t>;
+using Rect2i16 = Rect2<int16_t>;
+using Rect2i32 = Rect2<int32_t>;
 
 };

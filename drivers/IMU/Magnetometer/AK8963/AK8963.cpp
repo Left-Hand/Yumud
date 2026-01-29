@@ -68,7 +68,7 @@ IResult<> AK8963::init(){
             return ((iq16(_coeff - 128) >> 8) + 1);
         };
 
-        adj_scale_ = Vec3<iq24>(
+        adj_scale_ = math::Vec3<iq24>(
             coeff2adj(coeff.x), coeff2adj(coeff.y), coeff2adj(coeff.z)
         );
     }
@@ -104,7 +104,7 @@ IResult<> AK8963::validate(){
 }
 
 
-Result<Vec3<uint8_t>, Error> AK8963::get_coeff(){
+Result<math::Vec3<uint8_t>, Error> AK8963::get_coeff(){
     if(const auto res = write_reg(0x0a, 0x0f);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_reg(regs_.asax_reg);
@@ -113,7 +113,7 @@ Result<Vec3<uint8_t>, Error> AK8963::get_coeff(){
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_reg(regs_.asaz_reg);
         res.is_err()) return Err(res.unwrap_err());
-    return Ok(Vec3<uint8_t>{
+    return Ok(math::Vec3<uint8_t>{
         regs_.asax_reg.data, 
         regs_.asay_reg.data, 
         regs_.asaz_reg.data
@@ -166,8 +166,8 @@ IResult<> AK8963::update(){
     data_valid_ &= !reg.hofl;
     return Ok();
 }
-IResult<Vec3<iq24>> AK8963::read_mag(){
-    return Ok(Vec3<iq24>{
+IResult<math::Vec3<iq24>> AK8963::read_mag(){
+    return Ok(math::Vec3<iq24>{
         conv_data_to_ut(static_cast<int16_t>(regs_.mag_x_reg.to_bits()), data_is_16_bits_) * adj_scale_.x,
         conv_data_to_ut(static_cast<int16_t>(regs_.mag_y_reg.to_bits()), data_is_16_bits_) * adj_scale_.y,
         conv_data_to_ut(static_cast<int16_t>(regs_.mag_z_reg.to_bits()), data_is_16_bits_) * adj_scale_.z}

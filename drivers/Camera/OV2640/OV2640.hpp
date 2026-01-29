@@ -20,7 +20,7 @@ public:
     using IResult = Result<T, Error>;
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x5c);
-    static constexpr Vec2i CAMERA_SIZE = {160, 120};
+    static constexpr math::Vec2i CAMERA_SIZE = {160, 120};
     explicit OV2640(hal::SccbDrv & sccb_drv):
         sccb_drv_(sccb_drv){;}
     explicit OV2640(hal::SccbDrv && sccb_drv):

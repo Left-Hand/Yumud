@@ -37,7 +37,7 @@ public:
 
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vec3<iq16>> read_mag();
+    [[nodiscard]] IResult<math::Vec3<iq16>> read_mag();
     
     [[nodiscard]] IResult<> validate();
 

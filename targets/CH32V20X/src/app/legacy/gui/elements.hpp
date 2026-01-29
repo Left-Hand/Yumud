@@ -58,7 +58,7 @@ struct Theme{
 class CanvasItem{
 public:
     // struct Config{
-    Rect2u rect = Rect2u();
+    math::Rect2u rect = math::Rect2u();
     // };  
     // auto config() const{return config_;}
 protected:
@@ -118,12 +118,12 @@ public:
         auto sw = rect.size.x - 2 * sp;
 
         painter.set_color(theme_.stroke_color);
-        painter.draw_filled_rect(Rect2u{sb, Vec2u{sw, 2}}).examine();
+        painter.draw_filled_rect(math::Rect2u{sb, Vec2u{sw, 2}}).examine();
 
         static constexpr auto h = 6u;
         static constexpr auto w = 6u;
         painter.set_color(theme_.text_color);
-        painter.draw_filled_rect(Rect2u{sb + Vec2i{5, - h / 2}, Vec2u{w, h}}).examine();
+        painter.draw_filled_rect(math::Rect2u{sb + Vec2i{5, - h / 2}, Vec2u{w, h}}).examine();
     }
 };
 
@@ -140,7 +140,7 @@ public:
         painter.draw_hollow_rect(rect).examine();
 
         painter.set_color(theme_.stroke_color);
-        painter.draw_filled_rect(Rect2u{rect.position + Vec2u(3,6), Vec2u(22,10)}).examine();
+        painter.draw_filled_rect(math::Rect2u{rect.position + Vec2u(3,6), Vec2u(22,10)}).examine();
 
         painter.set_color(theme_.text_color);
         painter.draw_filled_circle(rect.position + Vec2u(10,10), 5).examine();

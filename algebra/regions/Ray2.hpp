@@ -4,7 +4,7 @@
 #include "algebra/vectors/vec2.hpp"
 #include "algebra/regions/Line2.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<arithmetic T>
 struct [[nodiscard]] Ray2{

@@ -7,7 +7,7 @@ namespace ymd{
 
 template<typename T>
 struct RoundedRect2{
-    Rect2<T> bounding_rect;
+    math::Rect2<T> bounding_rect;
     T radius;
 
     constexpr auto bounding_box() const {
@@ -44,9 +44,9 @@ public:
         return y_ < y_range_.stop;
     }
 
-    constexpr Range2u16 x_range() const{
+    constexpr math::Range2u16 x_range() const{
         if(get_y_overhit()){
-            return Range2u16::from_start_and_stop_unchecked(
+            return math::Range2u16::from_start_and_stop_unchecked(
                 left_and_right_center_x_.start  + x_offset_,
                 left_and_right_center_x_.stop - x_offset_
             );
@@ -55,16 +55,16 @@ public:
         }
     }
 
-    constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
+    constexpr std::tuple<math::Range2u16, math::Range2u16> left_and_right() const {
         const auto [left, right] = x_range();
 
-        return {Range2u16{left, left + 1}, Range2u16{right - 1, right}};
+        return {math::Range2u16{left, left + 1}, math::Range2u16{right - 1, right}};
     }
 
 private:
-    Range2<uint16_t> x_range_;
-    Range2<uint16_t> left_and_right_center_x_;
-    Range2<uint16_t> y_range_;
+    math::Range2<uint16_t> x_range_;
+    math::Range2<uint16_t> left_and_right_center_x_;
+    math::Range2<uint16_t> y_range_;
     uint16_t y_;
     uint16_t radius_;
     uint32_t radius_squ_;

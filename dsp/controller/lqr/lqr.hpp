@@ -14,7 +14,7 @@ namespace ymd::dsp{
 
 
 template<typename T, size_t S, size_t U>
-static constexpr Option<Matrix<T, U, S>> solve_lqr(
+static constexpr Option<math::Matrix<T, U, S>> solve_lqr(
     LinearTimeInvariantModel<T, S, U> linear_model,
     size_t max_iter,
     T epsilon

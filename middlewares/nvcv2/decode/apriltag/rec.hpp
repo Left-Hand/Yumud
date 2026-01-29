@@ -17,7 +17,7 @@ public:
 
     void update(
         const Image<Gray> & src, 
-        const Rect2u roi
+        const math::Rect2u roi
     ) override {
         const auto vertexs = find_vertex(src, Gray::white(), roi);
 
@@ -64,7 +64,7 @@ public:
     static constexpr Vertexs find_vertex(
         const Image<Gray> & __map, 
         const Gray & match, 
-        const Rect2u & roi
+        const math::Rect2u & roi
     ){
         const auto x_range = roi.x_range();
         const auto y_range = roi.y_range();

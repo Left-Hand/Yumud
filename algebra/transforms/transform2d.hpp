@@ -34,7 +34,7 @@
 #include "algebra/regions/rect2.hpp"
 
 
-namespace ymd{
+namespace ymd::math{
 
 template<arithmetic T>
 struct Transform2D{
@@ -134,7 +134,7 @@ struct Transform2D{
 }
 
 
-namespace ymd{
+namespace ymd::math{
 template<arithmetic T>
 Transform2D<T>::Transform2D(T xx, T xy, T yx, T yy, T ox, T oy) {
 	elements[0][0] = xx;

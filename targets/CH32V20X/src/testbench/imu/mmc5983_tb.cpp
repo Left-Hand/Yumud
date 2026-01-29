@@ -65,10 +65,10 @@ static void mmc5983_test(drivers::MMC5983 & imu){
     for(size_t i = 0; i < 100; i++){
         const auto v2 = robots::EllipseCalibrator::project_idx_to_v2(i, 100);
         // const auto p = project_v2_to_v3();
-        const auto p = Vec3<q24>();
+        const auto p = math::Vec3<q24>();
         DEBUG_PRINTLN(p,i, v2);
         clock::delay(1ms);
-        calibrator.add_data(p + Vec3<q24>(0.2_r,1,1));
+        calibrator.add_data(p + math::Vec3<q24>(0.2_r,1,1));
     }
     const auto [mean, soft_iron] = calibrator.dignosis();
 

@@ -5,7 +5,7 @@ namespace ymd{
 
 template<typename T>
 struct Sphere{
-    Vec3<T> org;
+    math::Vec3<T> org;
     T radius;
 
     friend OutputStream & operator << (OutputStream & os, const Sphere & self){

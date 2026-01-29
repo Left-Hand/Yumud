@@ -55,7 +55,7 @@ struct ST7789_Prelude{
         }
 
         __fast_inline constexpr
-        Range2<uint32_t> get_point_index(const math::Rect2<uint16_t> r){
+        math::Range2<uint32_t> get_point_index(const math::Rect2<uint16_t> r){
             return {
                 get_point_index(r.top_left), 
                 get_point_index({uint16_t(r.top_left.x + r.size.x - 1), uint16_t(r.top_left.y + r.size.y - 1)})};

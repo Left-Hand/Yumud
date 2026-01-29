@@ -17,7 +17,7 @@ struct RotatedRect{
 
     template<size_t I>
     requires ((0 <= I) and (I < 4))
-    constexpr Vec2<T> get_vertice() const {
+    constexpr math::Vec2<T> get_vertice() const {
         switch(I){
             case 0: return {-width / 2, height / 2};
             case 1: return {width / 2, height / 2};
@@ -27,17 +27,17 @@ struct RotatedRect{
         }
     }
 
-    constexpr Rect2<T> bounding_box() const {
+    constexpr math::Rect2<T> bounding_box() const {
         auto & self = *this;
-        const auto norm_vec = Vec2<T>::from_angle(self.rotation);
-        const std::array<Vec2<T>, 4> points = {
+        const auto norm_vec = math::Vec2<T>::from_angle(self.rotation);
+        const std::array<math::Vec2<T>, 4> points = {
             self.template get_vertice<0>().improduct(norm_vec),
             self.template get_vertice<1>().improduct(norm_vec),
             self.template get_vertice<2>().improduct(norm_vec),
             self.template get_vertice<3>().improduct(norm_vec)
         };
 
-        return Rect2<T>::from_minimal_bounding_box(std::span(points));
+        return math::Rect2<T>::from_minimal_bounding_box(std::span(points));
     }
 };
 
@@ -62,12 +62,12 @@ struct CacheOf<RotatedRect<T>, bool>{
         };
     }
 
-    __fast_inline constexpr uint8_t color_from_point(const Vec2<T> offset) const {
+    __fast_inline constexpr uint8_t color_from_point(const math::Vec2<T> offset) const {
         return contains_point(*this, offset) ? 0xff : 0x00;
     }
 private:
     __fast_inline static constexpr bool contains_point(
-        const Self & self, const Vec2<T> offset
+        const Self & self, const math::Vec2<T> offset
     ){
         // -s * p.x + c * p.y;
         // -c * p.x - s * p.y;
@@ -87,7 +87,7 @@ struct BoundingBoxOf<RotatedRect<T>>{
     using Object = RotatedRect<T>;
     using Self =  BoundingBoxOf<Object>;
 
-    static constexpr Rect2<T> bounding_box(const Object & obj){
+    static constexpr math::Rect2<T> bounding_box(const Object & obj){
         return obj.bounding_box();
     }
 };

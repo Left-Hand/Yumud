@@ -110,7 +110,7 @@ void mlx90640_main(){
 
     [[maybe_unused]] auto plot_rgb = [&](
         const RGB565 * src, 
-        const Rect2u rect
+        const math::Rect2u rect
     ){
         // DEBUG_PRINTLN(line.bounding_box());
         tft.put_texture(
@@ -175,8 +175,8 @@ void mlx90640_main(){
             }
 
             // DEBUG_PRINTLN(std::setprecision(2), row_pixels_view);
-            plot_rgb(row_pixels_scaled.data(), Rect2u::from_xywh(0, 2 * j, VALID_PIXELS * 4, 1));
-            plot_rgb(row_pixels_scaled.data(), Rect2u::from_xywh(0, 2 * j + 1, VALID_PIXELS * 4, 1));
+            plot_rgb(row_pixels_scaled.data(), math::Rect2u::from_xywh(0, 2 * j, VALID_PIXELS * 4, 1));
+            plot_rgb(row_pixels_scaled.data(), math::Rect2u::from_xywh(0, 2 * j + 1, VALID_PIXELS * 4, 1));
             // DEBUG_PRINTLN(row_pixels);
 
             // clock::delay(2ms);

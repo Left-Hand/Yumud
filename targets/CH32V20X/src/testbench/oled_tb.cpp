@@ -167,7 +167,7 @@ static void oled_tb(){
         painter.fill(Binary(Binary::BLACK)).unwrap();
         painter.set_color(Binary(Binary::WHITE));
 
-        const Rect2u view = {0,0,128,48};
+        const math::Rect2u view = {0,0,128,48};
 
         painter.draw_hollow_rect(view).unwrap();
         painter.draw_fx(

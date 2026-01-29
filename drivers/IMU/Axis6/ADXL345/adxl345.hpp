@@ -29,7 +29,7 @@ public:
     explicit ADXL345(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank): 
         transport_(hal::SpiDrv{spi, rank}){;}
 
-    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
     
     [[nodiscard]] IResult<> validate();
 

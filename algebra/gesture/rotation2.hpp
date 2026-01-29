@@ -7,7 +7,7 @@ namespace ymd::math{
 
 
 template<typename T>
-struct [[nodiscard]] Rotation2 {
+struct [[nodiscard]] Rotation2 final{
 
     // 从角度构造
     [[nodiscard]] static constexpr 

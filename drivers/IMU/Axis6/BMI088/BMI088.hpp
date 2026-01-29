@@ -35,7 +35,7 @@ public:
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
     [[nodiscard]] IResult<iq16> read_temp();
 
     [[nodiscard]] IResult<> set_acc_fs(const AccFs gyr_fs);
@@ -122,7 +122,7 @@ public:
     [[nodiscard]] IResult<> reset();
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_gyr();
 
 
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs gyr_fs);

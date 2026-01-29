@@ -137,7 +137,7 @@ partition( const std::vector<_Tp>& _vec, std::vector<int>& labels,
 }
 
 
-void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t eps,
+void groupRectangles(std::vector<math::Rect2u>& rectList, int groupThreshold, real_t eps,
                      std::vector<int>* weights, std::vector<real_t>* levelWeights){
     if( groupThreshold <= 0 || rectList.empty() )
     {
@@ -159,7 +159,7 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
     // SimilarRects(eps)//TODO
     int nclasses = partition(rectList, labels, SimilarRects(eps));
  
-    std::vector<Rect2u> rrects(nclasses);
+    std::vector<math::Rect2u> rrects(nclasses);
     std::vector<int> rweights(nclasses, 0);
     std::vector<int> rejectLevels(nclasses, 0);
     std::vector<real_t> rejectWeights(nclasses, std::numeric_limits<real_t>::lowest());
@@ -195,9 +195,9 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
 	// 计算每一类别的平均矩形框位置，即每一个类别最终对应一个矩形框
     for( i = 0; i < nclasses; i++ )
     {
-        Rect2u r = rrects[i];
+        math::Rect2u r = rrects[i];
         real_t s = real_t(1)/rweights[i];
-        rrects[i] = Rect2u(
+        rrects[i] = math::Rect2u(
             saturate_cast<int>(r.x()*s),
             saturate_cast<int>(r.y()*s),
             saturate_cast<int>(r.w()*s),
@@ -212,7 +212,7 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
 	// 再次过滤上面分类中得到的所有矩形框
     for( i = 0; i < nclasses; i++ )
     {
-        Rect2u r1 = rrects[i];
+        math::Rect2u r1 = rrects[i];
         int n1 = rweights[i];
         real_t w1 = rejectWeights[i];
         int l1 = rejectLevels[i];
@@ -229,7 +229,7 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
  
             if( j == i || n2 <= groupThreshold )
                 continue;
-            Rect2u r2 = rrects[j];
+            math::Rect2u r2 = rrects[j];
  
             int dx = saturate_cast<int>( r2.w() * eps );
             int dy = saturate_cast<int>( r2.h() * eps );
@@ -253,13 +253,13 @@ void groupRectangles(std::vector<Rect2u>& rectList, int groupThreshold, real_t e
         }
     }
 }
-[[maybe_unused]] static real_t iou(const Rect2u & a, const Rect2u & b){
+[[maybe_unused]] static real_t iou(const math::Rect2u & a, const math::Rect2u & b){
 
-    Rect2u _a = a.abs();
-    Rect2u _b = b.abs();
+    math::Rect2u _a = a.abs();
+    math::Rect2u _b = b.abs();
 
     real_t ins = _a.intersection(_b)
-        .map([](const Rect2u & rect){return rect.get_area();})
+        .map([](const math::Rect2u & rect){return rect.get_area();})
         .unwrap_or(0);
     if(ins == 0) return 0;
 
@@ -322,7 +322,7 @@ Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter)
             std::vector<Vec2<uint8_t>> current_indices;
             map[{row,col}] = label;
             Blob blob{
-                .rect = Rect2u(Vec2u{row, col}, Vec2u{0,0}),
+                .rect = math::Rect2u(Vec2u{row, col}, Vec2u{0,0}),
                 .area = 0,
                 .index = uint8_t(label),
             };

@@ -68,7 +68,7 @@ protected:
     static constexpr uint16_t header = 0x54A8;
     static constexpr size_t mtu = 320;
     uint8_t time_stamp = 0;
-    void transmit(const uint8_t * img_buf, const Vec2i & img_size, const uint8_t index);
+    void transmit(const uint8_t * img_buf, const math::Vec2i & img_size, const uint8_t index);
 
     void send_block_data(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len);
 public:

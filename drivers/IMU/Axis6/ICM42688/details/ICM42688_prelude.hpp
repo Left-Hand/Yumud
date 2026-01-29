@@ -180,8 +180,8 @@ struct Regset{
         uint16_t bits;
     }DEF_R16(tempbuf_reg)
 
-    Vec3<int16_t> acc_bits_ = Vec3<int16_t>::ZERO;
-    Vec3<int16_t> gyr_bits_ = Vec3<int16_t>::ZERO;
+    math::Vec3<int16_t> acc_bits_ = math::Vec3<int16_t>::ZERO;
+    math::Vec3<int16_t> gyr_bits_ = math::Vec3<int16_t>::ZERO;
     
     struct [[nodiscard]] R16_TMST_FSYNC:public Reg16<>{
         static constexpr RegAddr ADDRESS = 0x2B;

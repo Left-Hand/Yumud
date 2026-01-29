@@ -140,9 +140,9 @@ IResult<> AK8975::disable_i2c(){
     return transport_.write_reg(0x0F, 0x01);
 }
 
-IResult<Vec3<iq24>> AK8975::read_mag(){
+IResult<math::Vec3<iq24>> AK8975::read_mag(){
     static constexpr iq16 max_mT = iq16(1.229);
     #define CONV(n) ((n * max_mT) / 4095) * ((iq16(n##_adj - 128) >> 8) + 1)
-    return Ok{Vec3<iq24>{CONV(x), CONV(y), CONV(z)}};
+    return Ok{math::Vec3<iq24>{CONV(x), CONV(y), CONV(z)}};
     #undef CONV
 }

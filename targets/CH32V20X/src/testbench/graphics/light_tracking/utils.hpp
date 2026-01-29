@@ -10,12 +10,12 @@
 static constexpr auto vec3_compMax(auto v) {return MAX(v.x,v.y,v.z);}
 static constexpr auto vec3_compMin(auto v) {return MIN(v.x,v.y,v.z);}
 
-static constexpr auto eye     = Vec3<iq16>(0.0_r, 1.0_r, 3.5_r);
+static constexpr auto eye     = math::Vec3<iq16>(0.0_r, 1.0_r, 3.5_r);
 
 static constexpr auto lightColor = RGB<iq16>{80, 80, 80};
 
-static constexpr auto bbmin = Vec3<iq16>(-1, 0, -1);
-static constexpr auto bbmax = Vec3<iq16>(1, 2, 1);
+static constexpr auto bbmin = math::Vec3<iq16>(-1, 0, -1);
+static constexpr auto bbmax = math::Vec3<iq16>(1, 2, 1);
 
 
 // static constexpr size_t LCD_W = 240;

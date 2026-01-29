@@ -132,7 +132,7 @@ struct RM3100:public RM3100_Prelude{
         return Ok(status & 0x80);
     }
 
-    IResult<Vec3<int32_t>> get_mag_i32(){
+    IResult<math::Vec3<int32_t>> get_mag_i32(){
         uint8_t buf[9];
 
         if(const auto res = transport_.read_burst(0x24, std::span(buf));
@@ -156,7 +156,7 @@ struct RM3100:public RM3100_Prelude{
         y = (y << 24) | (int32_t)(y2) << 16 | (uint16_t)(y1) << 8 | y0;
         z = (z << 24) | (int32_t)(z2) << 16 | (uint16_t)(z1) << 8 | z0;
 
-        return Ok(Vec3<int32_t>(x,y,z));
+        return Ok(math::Vec3<int32_t>(x,y,z));
     }
 private:
     RM3100_Transport transport_;

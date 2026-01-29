@@ -124,7 +124,7 @@ void render_main(){
     [[maybe_unused]] auto en_font = MonoFont8x5{};
     [[maybe_unused]] auto en_font2 = MonoFont16x8{};
 
-    auto image = make_image<RGB565>(Vec2u{32, 32});
+    auto image = make_image<RGB565>(math::Vec2u{32, 32});
     // image.fill(RGB565::black);
     // image.at({0,1}) = color_cast<RGB565>(ColorEnum::BLUE);
     // image.at({10,11}) = color_cast<RGB565>(ColorEnum::BLUE);
@@ -159,7 +159,7 @@ void render_main(){
         // const auto shape = factory.make_horizon_spectrum(samples);
         // const auto shape = factory.make_annular_sector();
         // const auto shape = factory.make_grid_map(8, 10);
-        auto && shape = Sprite<RGB565>{.image = image.copy(), .position = Vec2u{shape_x, shape_y}};
+        auto && shape = Sprite<RGB565>{.image = image.copy(), .position = math::Vec2u{shape_x, shape_y}};
         // const auto shape = factory.make_triangle2(dest_angle);
 
         // const auto shape = factory.make_horizon_oval2(Rect2<int16_t>::from_center_and_halfsize(

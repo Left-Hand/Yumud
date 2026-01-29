@@ -107,7 +107,7 @@ void curve_tb() {
     DEBUGGER_INST.init({576000});
     DEBUG_PRINTLN(std::setprecision(4));
 
-    using Vec3 = Vec3<real_t>;
+    using math::Vec3 = math::Vec3<real_t>;
 
     Points points = {
         {0,0},
@@ -131,7 +131,7 @@ void curve_tb() {
             DEBUG_PRINTLN(x,y, sin(clock::seconds()));
         }
 
-        void setScale(const Vec3 & scale){
+        void setScale(const math::Vec3 & scale){
             auto [x,y,z] = scale;
             DEBUG_PRINTLN(x,y,z);
         }

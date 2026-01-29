@@ -125,14 +125,14 @@ public:
 
     struct{
         Quat acc;
-        Vec3 gyr;
+        math::Vec3 gyr;
         Quat magnet;
     }drift;
     
     struct{
-        Vec3 acc;
-        Vec3 gyr;
-        Vec3 magnet;
+        math::Vec3 acc;
+        math::Vec3 gyr;
+        math::Vec3 magnet;
     }msm;
 
     real_t travel;
@@ -142,7 +142,7 @@ public:
 
     Vec2i seed_pos;
 protected:
-    void set_drift(const Quat & _acc_drift, const Vec3 & _gyr_drift, const Quat & _magent_drift){
+    void set_drift(const Quat & _acc_drift, const math::Vec3 & _gyr_drift, const Quat & _magent_drift){
         drift.acc = _acc_drift;
         drift.gyr = _gyr_drift;
         drift.magnet = _magent_drift;
@@ -156,9 +156,9 @@ protected:
         mpu.update();
         qml.update();
 
-        msm.acc = drift.acc.xform(Vec3(mpu.read_acc()));
-        msm.gyr = (Vec3(mpu.read_gyr()) - drift.gyr);
-        msm.magnet = drift.magnet.xform(Vec3(qml.read_mag()));
+        msm.acc = drift.acc.xform(math::Vec3(mpu.read_acc()));
+        msm.gyr = (math::Vec3(mpu.read_gyr()) - drift.gyr);
+        msm.magnet = drift.magnet.xform(math::Vec3(qml.read_mag()));
 
         real_t delta_t = t - last_t;
         last_t = t;
@@ -197,24 +197,24 @@ public:
     void cali(){
         static constexpr int cali_times = 100;
 
-        Vec3 temp_gravity = Vec3();
-        Vec3 temp_gyr_offs = Vec3();
-        Vec3 temp_magent = Vec3();
+        math::Vec3 temp_gravity = math::Vec3();
+        math::Vec3 temp_gyr_offs = math::Vec3();
+        math::Vec3 temp_magent = math::Vec3();
         
         for(size_t i = 0; i < cali_times; ++i){
-            temp_gravity += Vec3(mpu.read_acc());
-            temp_gyr_offs += Vec3(mpu.read_gyr());    
-            temp_magent += Vec3(qml.read_mag());
+            temp_gravity += math::Vec3(mpu.read_acc());
+            temp_gyr_offs += math::Vec3(mpu.read_gyr());    
+            temp_magent += math::Vec3(qml.read_mag());
             clock::delay(5ms);
         }
 
-        Vec3 g = temp_gravity / cali_times;
-        Vec3 m = temp_magent / cali_times;
+        math::Vec3 g = temp_gravity / cali_times;
+        math::Vec3 m = temp_magent / cali_times;
 
         set_drift(
-            Quat(Vec3(0,0,-1),g/g.length()).inverse(),
+            Quat(math::Vec3(0,0,-1),g/g.length()).inverse(),
             temp_gyr_offs / cali_times,
-            Quat(Vec3(0,0,-1), m/m.length()).inverse()
+            Quat(math::Vec3(0,0,-1), m/m.length()).inverse()
         );
     }
 

@@ -343,7 +343,7 @@ void SmartCar::main(){
     }; 
 
 
-    [[maybe_unused]] auto plot_vec3 = [&](const Vec3 & vec3,  const Vec2i & pos){
+    [[maybe_unused]] auto plot_vec3 = [&](const math::Vec3 & vec3,  const Vec2i & pos){
         static constexpr auto square_length = 50;
         auto arm_length = vec3.length();
 
@@ -352,9 +352,9 @@ void SmartCar::main(){
         static constexpr auto y_unit = Vec2(0.5, -0.73);
         static constexpr auto z_unit = Vec2(0, -1);
 
-        auto x_axis = Vec3(arm_length, 0, 0);
-        auto y_axis = Vec3(0, arm_length, 0);
-        auto z_axis = Vec3(0, 0, arm_length);
+        auto x_axis = math::Vec3(arm_length, 0, 0);
+        auto y_axis = math::Vec3(0, arm_length, 0);
+        auto z_axis = math::Vec3(0, 0, arm_length);
 
         static constexpr auto x_color = RGB565::RED;
         static constexpr auto y_color = RGB565::GREEN;
@@ -362,11 +362,11 @@ void SmartCar::main(){
         static constexpr auto bg_color = RGB565::BLACK;
 
         auto vec3n = vec3.normalized();
-        const Quat rot = Quat(Vec3(0, 0, -1), vec3n);
+        const Quat rot = Quat(math::Vec3(0, 0, -1), vec3n);
         const Vec2i center_point = pos + Vec2i(square_length, square_length) / 2;
 
-        auto plot_vec3_to_plane = [&](const Vec3 & axis, const char & chr, const RGB565 & color){
-            Vec3 end = rot.xform(axis);
+        auto plot_vec3_to_plane = [&](const math::Vec3 & axis, const char & chr, const RGB565 & color){
+            math::Vec3 end = rot.xform(axis);
             Vec2i end_point = center_point + (x_unit * end.x + y_unit * end.y + z_unit * end.z);
             painter.setColor(color);
             painter.drawLine(center_point, end_point);

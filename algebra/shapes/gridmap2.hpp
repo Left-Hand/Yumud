@@ -7,22 +7,22 @@ namespace ymd{
 
 template<typename T>
 struct GridMap2{
-    Rect2<T> top_left_cell;
-    Vec2<T> padding;
-    Vec2<uint8_t> count;
+    math::Rect2<T> top_left_cell;
+    math::Vec2<T> padding;
+    math::Vec2<uint8_t> count;
 
     constexpr auto bounding_box() const {
         const auto top_left = top_left_cell.top_left;
-        const auto size = Vec2<T>{
+        const auto size = math::Vec2<T>{
                 static_cast<T>(top_left_cell.size.x * (count.x)), 
                 static_cast<T>(top_left_cell.size.y * (count.y))} 
-            + Vec2<T>{
+            + math::Vec2<T>{
                 static_cast<T>(padding.x * (count.x - 1)), 
                 static_cast<T>(padding.y * (count.y - 1))};
-        return Rect2<T>(top_left, size);
+        return math::Rect2<T>(top_left, size);
     }
 
-    constexpr bool contains_point(const Vec2<T> point) const{
+    constexpr bool contains_point(const math::Vec2<T> point) const{
         return contains_impl<0>(point.x) and contains_impl<1>(point.y);
     }
 
@@ -81,7 +81,7 @@ struct RenderIterator<GridMap2<T>> {
 
         for(size_t i = 0; i < count.x; i++){
             const T next_x = x + shape_.top_left_cell.w();
-            const auto x_range = Range2u16::from_start_and_stop_unchecked(x, next_x);
+            const auto x_range = math::Range2u16::from_start_and_stop_unchecked(x, next_x);
             x = next_x + shape_.padding.x;
 
             if(const auto res = target.fill_x_range(x_range, color_cast<RGB565>(color));

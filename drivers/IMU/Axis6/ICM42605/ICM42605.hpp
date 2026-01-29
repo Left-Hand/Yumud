@@ -25,8 +25,8 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
-    [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_gyr();
 
 private:
 
@@ -37,8 +37,8 @@ private:
     iq16 acc_scaler_ = 0;
     iq16 gyr_scaler_ = 0;
 
-    Vec3<int16_t> acc_data_ = Vec3<int16_t>::ZERO;
-    Vec3<int16_t> gyr_data_ = Vec3<int16_t>::ZERO;
+    math::Vec3<int16_t> acc_data_ = math::Vec3<int16_t>::ZERO;
+    math::Vec3<int16_t> gyr_data_ = math::Vec3<int16_t>::ZERO;
 
     [[nodiscard]] IResult<> switch_bank(const Bank bank){
         static constexpr uint8_t SWITCH_BANK_COMMAND = 0x76; 

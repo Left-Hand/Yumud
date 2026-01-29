@@ -223,25 +223,25 @@ IResult<> BMI160::reset(){
     return write_command(std::bit_cast<uint8_t>(Command::SOFT_RESET));
 }
 
-IResult<Vec3<iq24>> BMI160::read_acc(){
+IResult<math::Vec3<iq24>> BMI160::read_acc(){
     auto conv = [&](const int16_t x) -> iq16{
         return iq16::from_bits(x) * acc_scale_;
     };
     
-    return Ok{Vec3<iq24>{
+    return Ok{math::Vec3<iq24>{
         conv(regs_.acc.x),
         conv(regs_.acc.y),
         conv(regs_.acc.z)
     }};
 }
 
-IResult<Vec3<iq24>> BMI160::read_gyr(){
+IResult<math::Vec3<iq24>> BMI160::read_gyr(){
     auto conv = [&](const int16_t x) -> iq16{
         return iq16::from_bits(x) * gyr_scale_;
     };
     
     // DEBUG_PRINTLN(regs_.gyr);
-    return Ok{Vec3<iq24>{
+    return Ok{math::Vec3<iq24>{
         conv(regs_.gyr.x),
         conv(regs_.gyr.y),
         conv(regs_.gyr.z)

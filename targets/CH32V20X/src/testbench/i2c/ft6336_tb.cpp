@@ -98,7 +98,7 @@ void ft6336_main(){
     while(true){
         DEBUG_PRINTLN(
             // ft6336.get_gesture_id().examine(),
-            ft6336.get_touch_points().examine().iter()
+            ft6336.get_touch_points().examine().view()
             // std::hex, 
             // std::showbase,
             // RepeatIter<uint16_t>{0X5555, 3}

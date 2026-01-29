@@ -78,7 +78,7 @@ IResult<> Self::update(){
 }
 
 
-IResult<Vec3<int8_t>> Self::get_coeff(){
+IResult<math::Vec3<int8_t>> Self::get_coeff(){
     if(const auto res = write_reg(0x0a, 0x0f);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = read_reg(regs_.asax_reg);
@@ -88,7 +88,7 @@ IResult<Vec3<int8_t>> Self::get_coeff(){
     if(const auto res = read_reg(regs_.asaz_reg);
         res.is_err()) return Err(res.unwrap_err());
     
-    return Ok(Vec3<uint8_t>{
+    return Ok(math::Vec3<uint8_t>{
         regs_.asax_reg.bits, 
         regs_.asay_reg.bits, 
         regs_.asaz_reg.bits
@@ -257,7 +257,7 @@ IResult<> Self::set_odr(const Odr odr){
     return set_mode(static_cast<Mode>(odr));
 }
 
-IResult<Vec3<iq24>> Self::read_mag(){
+IResult<math::Vec3<iq24>> Self::read_mag(){
     static constexpr int16_t MIN_VALUE = -8190;
     static constexpr int16_t MAX_VALUE = 8190;
 
@@ -275,7 +275,7 @@ IResult<Vec3<iq24>> Self::read_mag(){
         return CHECK_ERR(Err(Error::AxisZOverflow));
     
     static constexpr iq24 VALUE_LSB = iq24(6E-5);
-    return Ok(Vec3<iq24>{
+    return Ok(math::Vec3<iq24>{
         VALUE_LSB * x_bits,
         VALUE_LSB * y_bits,
         VALUE_LSB * z_bits

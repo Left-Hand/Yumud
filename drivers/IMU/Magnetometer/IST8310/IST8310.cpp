@@ -96,12 +96,12 @@ IResult<> IST8310::set_y_average_times(const AverageTimes times){
 
 
 
-IResult<Vec3<iq24>> IST8310::read_mag(){
+IResult<math::Vec3<iq24>> IST8310::read_mag(){
     auto conv = [](const int16_t data) -> real_t{
         return data * real_t(0.3);
     };
 
-    return Ok{Vec3<iq24>{
+    return Ok{math::Vec3<iq24>{
         conv(std::bit_cast<int16_t>(regs_.axis_x_reg.to_bits())),
         conv(std::bit_cast<int16_t>(regs_.axis_y_reg.to_bits())),
         conv(std::bit_cast<int16_t>(regs_.axis_z_reg.to_bits()))

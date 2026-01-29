@@ -42,7 +42,7 @@ namespace ymd::nvcv2::pixels{
     void conv(Image<RGB565>& dst, const Image<Gray>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = color_cast<RGB565>(src[Vec2u{x, y}]);
+                dst[math::Vec2u{x, y}] = color_cast<RGB565>(src[math::Vec2u{x, y}]);
             }
         }
     }
@@ -50,7 +50,7 @@ namespace ymd::nvcv2::pixels{
     void conv(Image<RGB565>& dst, const Image<Binary>& src) {
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = color_cast<RGB565>(src[Vec2u{x, y}]);
+                dst[math::Vec2u{x, y}] = color_cast<RGB565>(src[math::Vec2u{x, y}]);
             }
         }
     }
@@ -61,7 +61,7 @@ namespace ymd::nvcv2::pixels{
     void dyeing(Image<Gray>& dst, const Image<Gray>& src){
         for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = Gray::from_u8(lcg[src[Vec2u{x, y}].to_u8()]);
+                dst[math::Vec2u{x, y}] = Gray::from_u8(lcg[src[math::Vec2u{x, y}].to_u8()]);
             }
         }
     }
@@ -79,7 +79,7 @@ namespace ymd::nvcv2::pixels{
     void binarization(Image<Binary>& dst, const Image<Gray>& src, const Gray threshold){
         for (auto x = 0u; x < std::min(dst.size().x, src.size().x); x++) {
             for (auto y = 0u; y < std::min(dst.size().y, src.size().y); y++) {
-                dst[Vec2u{x, y}] = src[Vec2u{x, y}].to_binary(threshold);
+                dst[math::Vec2u{x, y}] = src[math::Vec2u{x, y}].to_binary(threshold);
             }
         }
     }
@@ -91,7 +91,7 @@ namespace ymd::nvcv2::pixels{
     }
 
     void ostu(Image<Binary>& dst, const Image<Gray>& src){
-        const Vec2u size = src.size();
+        const math::Vec2u size = src.size();
         std::array<size_t, 256> statics;
         statics.fill(0);
 
@@ -153,7 +153,7 @@ namespace ymd::nvcv2::pixels{
             const iq16 k, 
             const iq16 eps
     ){
-        const Vec2u size = src.size();
+        const math::Vec2u size = src.size();
         std::array<int, 256> statics;
         statics.fill(0);
 
@@ -205,7 +205,7 @@ namespace ymd::nvcv2::pixels{
     }
 
     void calc_max_entropy(const Image<Gray>& src, const int thresh){
-        const Vec2u size = src.size();
+        const math::Vec2u size = src.size();
         float probability = 0.0; //概率
         float max_Entropy = 0.0; //最大熵
         int totalpix = size.x * size.y;

@@ -80,7 +80,7 @@ public:
     Image & operator=(const Image& other) = delete;
     bool operator ==(const Image & other) const = delete;
 
-    [[nodiscard]] constexpr size_t position_to_index(const Vec2u16 pos) const {
+    [[nodiscard]] constexpr size_t position_to_index(const math::Vec2u16 pos) const {
         return pos.x + pos.y * this->size().x;
     }
 
@@ -94,7 +94,7 @@ public:
         return temp;
     }
 
-    [[nodiscard]] Image<T> clone(const Rect2u & view) const {
+    [[nodiscard]] Image<T> clone(const math::Rect2u & view) const {
         auto temp = Image<T>(view.size);
         for(size_t j = 0; j < view.h(); j++) {
             for(size_t i = 0; i < view.w(); i++) {

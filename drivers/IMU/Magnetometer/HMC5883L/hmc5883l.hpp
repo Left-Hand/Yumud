@@ -24,7 +24,7 @@ public:
     [[nodiscard]] IResult<> set_gain(const Gain gain);
     [[nodiscard]] IResult<> set_mode(const Mode mode);
 
-    [[nodiscard]] IResult<Vec3<iq24>> read_mag();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag();
 
     [[nodiscard]] IResult<> validate();
     [[nodiscard]] IResult<> update();

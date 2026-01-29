@@ -25,7 +25,7 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<Vec3<iq24>> read_mag();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag();
 private:
 
     BoschImu_Transport transport_;

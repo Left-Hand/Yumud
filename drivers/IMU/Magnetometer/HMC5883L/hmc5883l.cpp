@@ -73,12 +73,12 @@ IResult<> HMC5883L::set_mode(const Mode mode){
     return write_reg(reg);
 }
 
-IResult<Vec3<iq24>> HMC5883L::read_mag(){
+IResult<math::Vec3<iq24>> HMC5883L::read_mag(){
     iq16 x = transform_raw_to_gauss(regs_.mag_x_reg, lsb_);
     iq16 y = transform_raw_to_gauss(regs_.mag_y_reg, lsb_);
     iq16 z = transform_raw_to_gauss(regs_.mag_z_reg, lsb_);
 
-    return Ok(Vec3<iq24>(x,y,z));
+    return Ok(math::Vec3<iq24>(x,y,z));
 }
 
 IResult<> HMC5883L::validate(){

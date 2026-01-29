@@ -20,10 +20,10 @@ struct [[nodiscard]] SphericalCoordinates{
         };
     }
 
-    [[nodiscard]] Vec3<T> constexpr to_vec3() const {
+    [[nodiscard]] math::Vec3<T> constexpr to_vec3() const {
         const auto [azimuth_s, azimuth_c] = azimuth.sincos();
         const auto [elevation_s, elevation_c] = elevation.sincos();
-        return Vec3<T>{
+        return math::Vec3<T>{
             distance * azimuth_c * elevation_c,
             distance * azimuth_s * elevation_c,
             distance * elevation_s
@@ -31,7 +31,7 @@ struct [[nodiscard]] SphericalCoordinates{
     }
 
     // 可以添加反向转换
-    static constexpr Self from_vec3(const Vec3<T> & vec) {
+    static constexpr Self from_vec3(const math::Vec3<T> & vec) {
         const T length_squared = vec.length_squared();
         if (length_squared == static_cast<T>(0)) [[unlikely]]
             return zero();
@@ -46,9 +46,9 @@ struct [[nodiscard]] SphericalCoordinates{
         };
     }
 
-    [[nodiscard]] Vec3<T> constexpr to_vec3_downplaced() const {
+    [[nodiscard]] math::Vec3<T> constexpr to_vec3_downplaced() const {
         const auto [x,y,z] = to_vec3();
-        return Vec3{x, -y, z};
+        return math::Vec3{x, -y, z};
     }
 
     // [[nodiscard]] Polar<T> constexpr to_polar() const{

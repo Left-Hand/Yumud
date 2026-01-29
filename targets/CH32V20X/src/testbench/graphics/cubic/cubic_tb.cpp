@@ -32,9 +32,9 @@ static constexpr float fovy = RADIANS(45.0f);
 static constexpr float aspect = (float)LCD_W / LCD_H;
 static constexpr float znear = 0.1f;
 static constexpr float zfar = 10.0f;
-static constexpr Vec3<float> eye = {2.5, 2.5, 2.5};
-static constexpr Vec3<float> center = {0,0,0};
-static constexpr Vec3<float> up = {0,1,0};
+static constexpr math::Vec3<float> eye = {2.5, 2.5, 2.5};
+static constexpr math::Vec3<float> center = {0,0,0};
+static constexpr math::Vec3<float> up = {0,1,0};
 
 
 
@@ -193,7 +193,7 @@ static buffer_t colorbuffer;
 struct vertex_t
 {
 	float rhw;
-	Vec2<int> point = Vec2<int>::ZERO;
+	math::Vec2<int> point = math::Vec2<int>::ZERO;
 };
 
 struct triangle_t
@@ -201,9 +201,9 @@ struct triangle_t
 	uint8_t v0;
 	uint8_t v1;
 	uint8_t v2;
-	Vec2<float> texcoord0 = Vec2<float>::ZERO;
-	Vec2<float> texcoord1 = Vec2<float>::ZERO;
-	Vec2<float> texcoord2 = Vec2<float>::ZERO;
+	math::Vec2<float> texcoord0 = math::Vec2<float>::ZERO;
+	math::Vec2<float> texcoord1 = math::Vec2<float>::ZERO;
+	math::Vec2<float> texcoord2 = math::Vec2<float>::ZERO;
 	int16_t W12;
 	int16_t W20;
 	int16_t W01;
@@ -297,7 +297,7 @@ static void makeTriangle(void)
 	}
 }
 
-static void drawTriangle(const Rect2u & clip)
+static void drawTriangle(const math::Rect2u & clip)
 {
 	for (size_t k = 0; k < triangleIdx; k++)
 	{
@@ -345,21 +345,21 @@ static void drawTriangle(const Rect2u & clip)
 			for (size_t x = xmin; x <= xmax; x++)
 			{
 				if ((w12 >= 0) and (w20 >= 0) and (w01 >= 0)){
-					const auto uv = Vec3{
+					const auto uv = math::Vec3{
 						w12 * triangle.area_r,
 						w20 * triangle.area_r,
 						w01 * triangle.area_r,
 					};
 
-					Vec3<float> vertex_rhw = {
+					math::Vec3<float> vertex_rhw = {
 						vVertex[v0].rhw,
 						vVertex[v1].rhw,
 						vVertex[v2].rhw,
 					};
 
 					const auto uv_rhw = uv / vertex_rhw.dot(uv);
-					const auto u = Vec3(triangle.texcoord0.x, triangle.texcoord1.x, triangle.texcoord2.x).dot(uv_rhw);
-					const auto texcoordV = Vec3(triangle.texcoord0.y, triangle.texcoord1.y, triangle.texcoord2.y);
+					const auto u = math::Vec3(triangle.texcoord0.x, triangle.texcoord1.x, triangle.texcoord2.x).dot(uv_rhw);
+					const auto texcoordV = math::Vec3(triangle.texcoord0.y, triangle.texcoord1.y, triangle.texcoord2.y);
 					const auto v = texcoordV.dot(uv_rhw);
 					const auto texcolor = doge[uint(u * 31 + 0.5f)][uint(v * 31 + 0.5f)];
 					colorbuffer[y - clipY0][x - clipX0] = RGB565::from_u16(texcolor);
@@ -487,10 +487,10 @@ void cubic_main(void){
 				}
 
 
-				const auto clip = Rect2u(
-					Vec2u{LCD_W * i / M,
+				const auto clip = math::Rect2u(
+					math::Vec2u{LCD_W * i / M,
 					LCD_H * j / N},
-					Vec2u{LCD_W / M,
+					math::Vec2u{LCD_W / M,
 					LCD_H / N}
 				);
 

@@ -20,7 +20,7 @@ class ApriltagDecoder{
 
 class ApriltagRecognizerIntf{
 public:
-    using Vertexs = std::array<Vec2<real_t>, 4>;
+    using Vertexs = std::array<math::Vec2<real_t>, 4>;
 };
 
 

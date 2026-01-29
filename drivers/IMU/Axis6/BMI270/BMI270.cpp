@@ -41,7 +41,7 @@ IResult<> BMI270::set_pmu_mode(const PmuType pmu, const PmuMode mode){
 //     return Ok();
 // }
 
-// IResult<Vec3<q24>> BMI270::read_acc(){
+// IResult<math::Vec3<q24>> BMI270::read_acc(){
 //     uint8_t buf[6];
 //     return Ok();
 // }

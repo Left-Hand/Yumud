@@ -63,21 +63,21 @@ void st1615_main(){
     st1615.init().examine();
 
 
-    std::array<Vec2i, ST1615::MAX_POINTS_COUNT> points = {
-        Vec2i::ZERO, Vec2i::ZERO, Vec2i::ZERO,
-        Vec2i::ZERO, Vec2i::ZERO, Vec2i::ZERO,
-        Vec2i::ZERO, Vec2i::ZERO, Vec2i::ZERO
+    std::array<math::Vec2i, ST1615::MAX_POINTS_COUNT> points = {
+        math::Vec2i::ZERO, math::Vec2i::ZERO, math::Vec2i::ZERO,
+        math::Vec2i::ZERO, math::Vec2i::ZERO, math::Vec2i::ZERO,
+        math::Vec2i::ZERO, math::Vec2i::ZERO, math::Vec2i::ZERO
     };
 
     while(true){
         led.toggle();
         for(size_t i = 0; i < 1; ++i){
-            st1615.get_point(i).examine().inspect([&](Vec2i point) {
+            st1615.get_point(i).examine().inspect([&](math::Vec2i point) {
                 points[i] = point;
             });
         }
 
-        // pos.inspect([&](Vec2i point) {
+        // pos.inspect([&](math::Vec2i point) {
         //     // st1615.draw_point(point, 0xffff).examine();
         //     DEBUG_PRINTLN(
         //         // clock::millis(),

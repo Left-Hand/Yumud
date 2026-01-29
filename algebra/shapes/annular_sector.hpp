@@ -18,8 +18,8 @@ struct [[nodiscard]] AnnularSector final{
 public:
     static_assert(not std::is_integral_v<D>);
 
-    Vec2<T> center;
-    Range2<T> radius_range;
+    math::Vec2<T> center;
+    math::Range2<T> radius_range;
     AngularRange<D> angle_range;
 
     constexpr bool contains_angle(const Angular<D> angle) const {
@@ -27,7 +27,7 @@ public:
     }
 
     constexpr 
-    Rect2<T> bounding_box() const {
+    math::Rect2<T> bounding_box() const {
         auto & self = *this;
         const bool x_reached_left = self.angle_range.
             contains_angle(Angular<D>::HALF);
@@ -38,14 +38,14 @@ public:
         const bool y_reached_bottom = self.angle_range.
             contains_angle(Angular<D>::NEG_QUARTER);
 
-        const Vec2<iq16> n1 = Vec2<iq16>::from_angle(self.angle_range.start);
-        const Vec2<iq16> n2 = Vec2<iq16>::from_angle(self.angle_range.stop());
+        const math::Vec2<iq16> n1 = math::Vec2<iq16>::from_angle(self.angle_range.start);
+        const math::Vec2<iq16> n2 = math::Vec2<iq16>::from_angle(self.angle_range.stop());
 
-        const Vec2<iq16> p1 = (n1).flip_y() * self.radius_range.stop;
-        const Vec2<iq16> p2 = (n2).flip_y() * self.radius_range.stop;
+        const math::Vec2<iq16> p1 = (n1).flip_y() * self.radius_range.stop;
+        const math::Vec2<iq16> p2 = (n2).flip_y() * self.radius_range.stop;
 
-        const Vec2<iq16> p3 = (n1).flip_y() * self.radius_range.start;
-        const Vec2<iq16> p4 = (n2).flip_y() * self.radius_range.start;
+        const math::Vec2<iq16> p3 = (n1).flip_y() * self.radius_range.start;
+        const math::Vec2<iq16> p4 = (n2).flip_y() * self.radius_range.start;
 
         const T x_min = floor_cast<T>(self.center.x + (x_reached_left ?     
             static_cast<iq16>(-self.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x)));
@@ -57,12 +57,12 @@ public:
         const T y_max = ceil_cast<T>(self.center.y + (y_reached_bottom ?   
             static_cast<iq16>(self.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y)));
 
-        return Rect2<T>(
-            Vec2<T>{
+        return math::Rect2<T>(
+            math::Vec2<T>{
                 x_min, y_min
             },
 
-            Vec2<T>{
+            math::Vec2<T>{
                 static_cast<T>(x_max - x_min), 
                 static_cast<T>(y_max - y_min)
             }
@@ -70,7 +70,7 @@ public:
     }
 
     __fast_inline constexpr bool contains_point(
-        const Vec2<T>& p
+        const math::Vec2<T>& p
     ) const{
         const auto offset = p - center;
         const auto p_r_squ = offset.length_squared();
@@ -80,10 +80,10 @@ public:
     }
 
     __fast_inline constexpr bool contains_norm_dir(
-        const Vec2<D> norm_dir_vec
+        const math::Vec2<D> norm_dir_vec
     ) const {
-        const auto n1 = Vec2<D>::from_angle(angle_range.start);
-        const auto n2 = Vec2<D>::from_angle(angle_range.stop());
+        const auto n1 = math::Vec2<D>::from_angle(angle_range.start);
+        const auto n2 = math::Vec2<D>::from_angle(angle_range.stop());
         return contains_angle_helper(
             norm_dir_vec,
             n1, n2, n2.is_counter_clockwise_to(n1)
@@ -95,12 +95,12 @@ public:
 private:
     static constexpr bool contains_angle_helper(
         const T angle,
-        const Vec2<D> start_norm_vec,
-        const Vec2<D> stop_norm_vec,
+        const math::Vec2<D> start_norm_vec,
+        const math::Vec2<D> stop_norm_vec,
         const bool is_minor
     ){
         return contains_angle_helper(
-            Vec2<D>::from_angle(angle), 
+            math::Vec2<D>::from_angle(angle), 
             start_norm_vec, 
             stop_norm_vec, 
             is_minor
@@ -108,9 +108,9 @@ private:
     }
 
     static constexpr bool contains_angle_helper(
-        const Vec2<T> offset,
-        const Vec2<D> start_norm_vec,
-        const Vec2<D> stop_norm_vec,
+        const math::Vec2<T> offset,
+        const math::Vec2<D> start_norm_vec,
+        const math::Vec2<D> stop_norm_vec,
         const bool is_minor
     ){
         const auto b1 = offset.is_counter_clockwise_to(start_norm_vec);
@@ -128,12 +128,12 @@ template<typename T, typename D>
 struct [[nodiscard]] RoundedAnnularSector final{
     static_assert(not std::is_integral_v<D>);
 
-    Vec2<T> center;
-    Range2<T> radius_range;
+    math::Vec2<T> center;
+    math::Range2<T> radius_range;
     AngularRange<D> angle_range;
 
     constexpr 
-    Rect2<T> bounding_box() const {
+    math::Rect2<T> bounding_box() const {
         auto & self = *this;
         const bool x_reached_left = self.angle_range.
             contains_angle(Angular<D>::HALF);
@@ -144,14 +144,14 @@ struct [[nodiscard]] RoundedAnnularSector final{
         const bool y_reached_bottom = self.angle_range.
             contains_angle(Angular<D>::NEG_QUARTER);
 
-        const Vec2<iq16> n1 = Vec2<iq16>::from_angle(self.angle_range.start);
-        const Vec2<iq16> n2 = Vec2<iq16>::from_angle(self.angle_range.stop());
+        const math::Vec2<iq16> n1 = math::Vec2<iq16>::from_angle(self.angle_range.start);
+        const math::Vec2<iq16> n2 = math::Vec2<iq16>::from_angle(self.angle_range.stop());
 
-        const Vec2<iq16> p1 = (n1).flip_y() * self.radius_range.stop;
-        const Vec2<iq16> p2 = (n2).flip_y() * self.radius_range.stop;
+        const math::Vec2<iq16> p1 = (n1).flip_y() * self.radius_range.stop;
+        const math::Vec2<iq16> p2 = (n2).flip_y() * self.radius_range.stop;
 
-        const Vec2<iq16> p3 = (n1).flip_y()* self.radius_range.start;
-        const Vec2<iq16> p4 = (n2).flip_y() * self.radius_range.start;
+        const math::Vec2<iq16> p3 = (n1).flip_y()* self.radius_range.start;
+        const math::Vec2<iq16> p4 = (n2).flip_y() * self.radius_range.start;
 
         const T x_min = floor_cast<T>(self.center.x + (x_reached_left ?     
             static_cast<iq16>(-self.radius_range.stop) : MIN(p1.x, p2.x, p3.x, p4.x)));
@@ -163,12 +163,12 @@ struct [[nodiscard]] RoundedAnnularSector final{
         const T y_max = ceil_cast<T>(self.center.y + (y_reached_bottom ?   
             static_cast<iq16>(self.radius_range.stop) : MAX(p1.y, p2.y, p3.y, p4.y)));
 
-        return Rect2<T>(
-            Vec2<T>{
+        return math::Rect2<T>(
+            math::Vec2<T>{
                 x_min, y_min
             },
 
-            Vec2<T>{
+            math::Vec2<T>{
                 static_cast<T>(x_max - x_min), 
                 static_cast<T>(y_max - y_min)
             }
@@ -176,10 +176,10 @@ struct [[nodiscard]] RoundedAnnularSector final{
     }
 
     __fast_inline constexpr bool contains_norm_dir(
-        const Vec2<D> norm_dir_vec
+        const math::Vec2<D> norm_dir_vec
     ) const {
-        const auto n1 = Vec2<D>::from_angle(angle_range.start);
-        const auto n2 = Vec2<D>::from_angle(angle_range.stop());
+        const auto n1 = math::Vec2<D>::from_angle(angle_range.start);
+        const auto n2 = math::Vec2<D>::from_angle(angle_range.stop());
         return contains_angle_helper(
             norm_dir_vec,
             n1, n2, n2.is_counter_clockwise_to(n1)
@@ -191,12 +191,12 @@ struct [[nodiscard]] RoundedAnnularSector final{
 private:
     static constexpr bool contains_angle_helper(
         const T angle,
-        const Vec2<D> start_norm_vec,
-        const Vec2<D> stop_norm_vec,
+        const math::Vec2<D> start_norm_vec,
+        const math::Vec2<D> stop_norm_vec,
         const bool is_minor
     ){
         return contains_angle_helper(
-            Vec2<D>::from_angle(angle), 
+            math::Vec2<D>::from_angle(angle), 
             start_norm_vec, 
             stop_norm_vec, 
             is_minor
@@ -204,9 +204,9 @@ private:
     }
 
     static constexpr bool contains_angle_helper(
-        const Vec2<T> offset,
-        const Vec2<D> start_norm_vec,
-        const Vec2<D> stop_norm_vec,
+        const math::Vec2<T> offset,
+        const math::Vec2<D> start_norm_vec,
+        const math::Vec2<D> stop_norm_vec,
         const bool is_minor
     ){
         const auto b1 = offset.is_counter_clockwise_to(start_norm_vec);
@@ -215,8 +215,8 @@ private:
         else return b1 or b2;
     }
 
-    static constexpr Rect2<T> bounding_box_of_square(const Vec2<T> pos, const T radius){
-            const auto ret = Rect2<T>::from_uninitialied();
+    static constexpr math::Rect2<T> bounding_box_of_square(const math::Vec2<T> pos, const T radius){
+            const auto ret = math::Rect2<T>::from_uninitialied();
 
             ret.left_top.x = pos.x - radius;
             ret.left_top.y = pos.y - radius;
@@ -236,7 +236,7 @@ template<typename T, typename D>
 struct [[nodiscard]] Sector final{
     static_assert(not std::is_integral_v<D>);
 
-    Vec2<T> center;
+    math::Vec2<T> center;
     T radius;
     AngularRange<D> angle_range;
 
@@ -245,7 +245,7 @@ struct [[nodiscard]] Sector final{
     }
 
     constexpr 
-    Rect2<T> bounding_box() const {
+    math::Rect2<T> bounding_box() const {
         auto & self = *this;
 
         const bool x_reached_left = 
@@ -260,9 +260,9 @@ struct [[nodiscard]] Sector final{
         const bool y_reached_bottom = 
             self.angle_range.contains_angle(Angular<D>::NEG_QUARTER);
 
-        const Vec2<iq16> p1 = Vec2<iq16>::from_angle(self.angle_range.start)
+        const math::Vec2<iq16> p1 = math::Vec2<iq16>::from_angle(self.angle_range.start)
             .flip_y() * self.radius;
-        const Vec2<iq16> p2 = Vec2<iq16>::from_angle(self.angle_range.stop())
+        const math::Vec2<iq16> p2 = math::Vec2<iq16>::from_angle(self.angle_range.stop())
             .flip_y() * self.radius;
 
         const T x_min = floor_cast<T>(self.center.x + (x_reached_left ?     
@@ -275,12 +275,12 @@ struct [[nodiscard]] Sector final{
         const T y_max = ceil_cast<T>(self.center.y + (y_reached_bottom ?   
             static_cast<iq16>(self.radius) : MAX(p1.y, p2.y, 0)));
 
-        return Rect2<T>(
-            Vec2<T>{
+        return math::Rect2<T>(
+            math::Vec2<T>{
                 x_min, y_min
             },
 
-            Vec2<T>{
+            math::Vec2<T>{
                 static_cast<T>(x_max - x_min), 
                 static_cast<T>(y_max - y_min)
             }
@@ -288,7 +288,7 @@ struct [[nodiscard]] Sector final{
     }
 
     __fast_inline constexpr bool contains_point(
-        const Vec2<T>& p
+        const math::Vec2<T>& p
     ) const{
         const auto offset = p - center;
         const auto p_r_squ = offset.length_squared();
@@ -297,10 +297,10 @@ struct [[nodiscard]] Sector final{
     }
 
     __fast_inline constexpr bool contains_norm_dir(
-        const Vec2<D> norm_dir_vec
+        const math::Vec2<D> norm_dir_vec
     ) const {
-        const auto n1 = Vec2<D>::from_angle(angle_range.start);
-        const auto n2 = Vec2<D>::from_angle(angle_range.stop());
+        const auto n1 = math::Vec2<D>::from_angle(angle_range.start);
+        const auto n2 = math::Vec2<D>::from_angle(angle_range.stop());
         return contains_angle_helper(
             norm_dir_vec,
             n1, n2, n2.is_counter_clockwise_to(n1)
@@ -312,12 +312,12 @@ struct [[nodiscard]] Sector final{
 private:
     static constexpr bool contains_angle_helper(
         const T angle,
-        const Vec2<D> start_norm_vec,
-        const Vec2<D> stop_norm_vec,
+        const math::Vec2<D> start_norm_vec,
+        const math::Vec2<D> stop_norm_vec,
         const bool is_minor
     ){
         return contains_angle_helper(
-            Vec2<D>::from_angle(angle), 
+            math::Vec2<D>::from_angle(angle), 
             start_norm_vec, 
             stop_norm_vec, 
             is_minor
@@ -325,9 +325,9 @@ private:
     }
 
     static constexpr bool contains_angle_helper(
-        const Vec2<T> offset,
-        const Vec2<D> start_norm_vec,
-        const Vec2<D> stop_norm_vec,
+        const math::Vec2<T> offset,
+        const math::Vec2<D> start_norm_vec,
+        const math::Vec2<D> stop_norm_vec,
         const bool is_minor
     ){
         const auto b1 = offset.is_counter_clockwise_to(start_norm_vec);
@@ -348,10 +348,10 @@ struct [[nodiscard]] RenderIterator<Sector<T, D>> {
     using Self = RenderIterator<Sector<T, D>>;
 
     struct [[nodiscard]] CtorHelper{
-        Range2<T> y_range;
-        Range2<T> x_range;
-        Vec2<iq16> v1;
-        Vec2<iq16> v2;
+        math::Range2<T> y_range;
+        math::Range2<T> x_range;
+        math::Vec2<iq16> v1;
+        math::Vec2<iq16> v2;
 
         static constexpr CtorHelper from(const Shape & shape){
             const auto angle_range = shape.angle_range;
@@ -359,9 +359,9 @@ struct [[nodiscard]] RenderIterator<Sector<T, D>> {
             return {                
                 .y_range = bb.y_range(),
                 .x_range = bb.x_range(),
-                .v1 = Vec2<iq16>::from_angle(Angular<iq16>::from_turns(
+                .v1 = math::Vec2<iq16>::from_angle(Angular<iq16>::from_turns(
                     angle_range.start.to_turns())),
-                .v2 = Vec2<iq16>::from_angle(Angular<iq16>::from_turns(
+                .v2 = math::Vec2<iq16>::from_angle(Angular<iq16>::from_turns(
                     angle_range.stop().to_turns()))
             };
         }
@@ -388,7 +388,7 @@ struct [[nodiscard]] RenderIterator<Sector<T, D>> {
 
         #pragma GCC unroll(4)
         for(T i = x_range_.start; i < x_range_.stop; i++){
-            const bool is_inside = contains_point(Vec2<T>{i, y_});
+            const bool is_inside = contains_point(math::Vec2<T>{i, y_});
             if(not is_inside) continue;
             if(const auto res = target.draw_x_unchecked(i, color);
                 res.is_err()) return Err(res.unwrap_err());
@@ -407,17 +407,17 @@ struct [[nodiscard]] RenderIterator<Sector<T, D>> {
 private:
     T y_;
     T y_stop_;
-    Range2<T> x_range_;
-    Vec2<T> center_;
+    math::Range2<T> x_range_;
+    math::Vec2<T> center_;
     uint32_t squ_outer_radius_;
-    Vec2<iq16> start_norm_vec_;
-    Vec2<iq16> stop_norm_vec_;
+    math::Vec2<iq16> start_norm_vec_;
+    math::Vec2<iq16> stop_norm_vec_;
     bool is_minor_;
 
     using ST = std::make_signed_t<T>;
 
-    __fast_inline constexpr bool contains_point(const Vec2<T> p){
-        const Vec2<int32_t> offset = (Vec2<int32_t>(p) - Vec2<int32_t>(center_)).flip_y();
+    __fast_inline constexpr bool contains_point(const math::Vec2<T> p){
+        const math::Vec2<int32_t> offset = (math::Vec2<int32_t>(p) - math::Vec2<int32_t>(center_)).flip_y();
         const uint32_t len_squ = static_cast<uint32_t>(offset.length_squared());
 
         if (len_squ > squ_outer_radius_) return false;
@@ -451,10 +451,10 @@ struct [[nodiscard]] RenderIterator<AnnularSector<T, D>> {
     using Self = RenderIterator<AnnularSector<T, D>>;
 
     struct [[nodiscard]] CtorHelper{
-        Range2<T> y_range;
-        Range2<T> x_range;
-        Vec2<iq16> v1;
-        Vec2<iq16> v2;
+        math::Range2<T> y_range;
+        math::Range2<T> x_range;
+        math::Vec2<iq16> v1;
+        math::Vec2<iq16> v2;
 
         static constexpr CtorHelper from(const Shape & shape){
             const auto angle_range = shape.angle_range;
@@ -462,9 +462,9 @@ struct [[nodiscard]] RenderIterator<AnnularSector<T, D>> {
             return {                
                 .y_range = bb.y_range(),
                 .x_range = bb.x_range(),
-                .v1 = Vec2<iq16>::from_angle(Angular<iq16>::from_turns(
+                .v1 = math::Vec2<iq16>::from_angle(Angular<iq16>::from_turns(
                     angle_range.start.to_turns())),
-                .v2 = Vec2<iq16>::from_angle(Angular<iq16>::from_turns(
+                .v2 = math::Vec2<iq16>::from_angle(Angular<iq16>::from_turns(
                     angle_range.stop().to_turns()))
             };
         }
@@ -492,7 +492,7 @@ struct [[nodiscard]] RenderIterator<AnnularSector<T, D>> {
 
         #pragma GCC unroll(4)
         for(T i = x_range.start; i < x_range.stop; i++){
-            const bool is_inside = contains_point(Vec2<T>{i, y_});
+            const bool is_inside = contains_point(math::Vec2<T>{i, y_});
             if(not is_inside) continue;
             if(const auto res = target.draw_x_unchecked(i, color);
                 res.is_err()) return Err(res.unwrap_err());
@@ -512,18 +512,18 @@ private:
     // Iterator iter_;
     uint16_t y_;
     uint16_t y_stop_;
-    Range2<uint16_t> x_range_;
-    Vec2<uint16_t> center_;
+    math::Range2<uint16_t> x_range_;
+    math::Vec2<uint16_t> center_;
     uint32_t squ_inner_radius_;
     uint32_t squ_outer_radius_;
-    Vec2<iq16> start_norm_vec_;
-    Vec2<iq16> stop_norm_vec_;
+    math::Vec2<iq16> start_norm_vec_;
+    math::Vec2<iq16> stop_norm_vec_;
     bool is_minor_;
 
     using ST = std::make_signed_t<T>;
 
-    __fast_inline constexpr bool contains_point(const Vec2<uint32_t> p){
-        const Vec2<int32_t> offset = (Vec2<int32_t>(p) - Vec2<int32_t>(center_)).flip_y();
+    __fast_inline constexpr bool contains_point(const math::Vec2<uint32_t> p){
+        const math::Vec2<int32_t> offset = (math::Vec2<int32_t>(p) - math::Vec2<int32_t>(center_)).flip_y();
         const uint32_t len_squ = static_cast<uint32_t>(offset.length_squared());
 
         //判断半径
@@ -553,7 +553,7 @@ private:
         return is_minor_ ? (b1 && b2) : (b1 || b2);
 
         #else
-        // if(Vec2<iq16>(offset).angle()
+        // if(math::Vec2<iq16>(offset).angle()
         //     .mod(Angular<iq16>::from_degrees(10)) > 
         //     Angular<iq16>::from_degrees(2)) return false;
         const auto b1 = offset.is_counter_clockwise_to(start_norm_vec_);
@@ -589,13 +589,13 @@ struct [[nodiscard]] CacheOf<AnnularSector<T, D>, bool>{
 
     T squ_inner_radius;
     T squ_outer_radius;
-    Vec2<T> start_norm_vec;
-    Vec2<T> stop_norm_vec;
+    math::Vec2<T> start_norm_vec;
+    math::Vec2<T> stop_norm_vec;
     bool is_minor;
 
     static constexpr Self from(const AnnularSector<T, D> & obj){
-        const auto n1 = Vec2<D>::from_angle(obj.angle_range.start);
-        const auto n2 = Vec2<D>::from_angle(obj.angle_range.stop());
+        const auto n1 = math::Vec2<D>::from_angle(obj.angle_range.start);
+        const auto n2 = math::Vec2<D>::from_angle(obj.angle_range.stop());
         return Self{
             .squ_inner_radius = math::square(obj.radius_range.start),
             .squ_outer_radius = math::square(obj.radius_range.stop),
@@ -605,11 +605,11 @@ struct [[nodiscard]] CacheOf<AnnularSector<T, D>, bool>{
         };
 
     } 
-    __fast_inline constexpr uint8_t color_from_point(const Vec2<T> offset) const {
+    __fast_inline constexpr uint8_t color_from_point(const math::Vec2<T> offset) const {
         return s_color_from_point(*this, offset);
     }
 private:
-    static constexpr uint8_t s_color_from_point(const Self & self, const Vec2<T> offset){
+    static constexpr uint8_t s_color_from_point(const Self & self, const math::Vec2<T> offset){
         const auto len_squ = offset.length_squared();
 
         if (
@@ -631,12 +631,12 @@ private:
 
 template<typename T, typename D>
 struct [[nodiscard]] BoundingBoxOf<AnnularSector<T, D>> {
-    static constexpr Rect2<T> bounding_box(const AnnularSector<T, D> & obj){
-        const auto n1 = Vec2<D>::from_angle(obj.angle_range.start);
-        const auto n2 = Vec2<D>::from_angle(obj.angle_range.stop());
+    static constexpr math::Rect2<T> bounding_box(const AnnularSector<T, D> & obj){
+        const auto n1 = math::Vec2<D>::from_angle(obj.angle_range.start);
+        const auto n2 = math::Vec2<D>::from_angle(obj.angle_range.stop());
         const bool is_minor = n2.is_counter_clockwise_to(n1);
     
-        Rect2<T> bb = Rect2<T>::from_minimal_bounding_box({
+        math::Rect2<T> bb = math::Rect2<T>::from_minimal_bounding_box({
             n1 * obj.radius_range.start,
             n1 * obj.radius_range.stop,
             n2 * obj.radius_range.start,
@@ -652,9 +652,9 @@ struct [[nodiscard]] BoundingBoxOf<AnnularSector<T, D>> {
     }
 private:
     static constexpr bool contains_angle(
-        const Vec2<T> offset,
-        const Vec2<T> start_norm_vec,
-        const Vec2<T> stop_norm_vec,
+        const math::Vec2<T> offset,
+        const math::Vec2<T> start_norm_vec,
+        const math::Vec2<T> stop_norm_vec,
         const bool is_minor
     ){
         return AnnularSector<T, D>::contains_angle_helper(
@@ -668,10 +668,10 @@ private:
     struct [[nodiscard]] BoundingBoxMergeHelper{
 
         static constexpr void merge_if_contains_angle(
-            Rect2<T> & box,
-            const Vec2<T> offset,
-            const Vec2<T> start_norm_vec,
-            const Vec2<T> stop_norm_vec,
+            math::Rect2<T> & box,
+            const math::Vec2<T> offset,
+            const math::Vec2<T> start_norm_vec,
+            const math::Vec2<T> stop_norm_vec,
             const bool is_minor
         ){
             if(contains_angle(offset, start_norm_vec, stop_norm_vec, is_minor)){

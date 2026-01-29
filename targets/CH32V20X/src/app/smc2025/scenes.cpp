@@ -7,7 +7,7 @@ static constexpr auto make_scene1(){
     constexpr auto ROAD_WIDTH = 0.45_r;
     BlueprintSpawner spawner = {
         {.road_width = ROAD_WIDTH}
-        ,Isometry2<real_t>{ UnitComplex<real_t>::from_angle(180_deg), Vec2<real_t>{0, 0}}
+        ,math::Isometry2<iq16>{ math::UnitComplex<iq16>::from_angle(180_deg), math::Vec2<iq16>{0, 0}}
     };
 
     return make_static_scene(
@@ -49,7 +49,7 @@ static constexpr auto make_scene2(){
     constexpr auto ROAD_WIDTH = 0.05_r;
     BlueprintSpawner spawner = {
         {.road_width = ROAD_WIDTH}
-        ,Isometry2<real_t>{UnitComplex<real_t>::from_angle(180_deg), Vec2<real_t>{0, 0}}
+        ,math::Isometry2<iq16>{math::UnitComplex<iq16>::from_angle(180_deg), math::Vec2<iq16>{0, 0}}
     };
     
     return make_static_scene(
@@ -91,11 +91,11 @@ static constexpr auto make_scene2(){
 
 
 
-Image<Gray> Scenes::render_scene1(const CamView2<real_t> & viewport){
+Image<Gray> Scenes::render_scene1(const math::CamView2<iq16> & viewport){
     static constexpr auto scene = make_scene1();
     return scene.render(viewport.pose, viewport.zoom);
 } 
-Image<Gray> Scenes::render_scene2(const CamView2<real_t> & viewport){
+Image<Gray> Scenes::render_scene2(const math::CamView2<iq16> & viewport){
     static constexpr auto scene = make_scene2();
     return scene.render(viewport.pose, viewport.zoom);
 }

@@ -313,7 +313,7 @@ void lidar_visualize_main(){
     [[maybe_unused]] auto en_font2 = MonoFont16x8{};
 
     static constexpr size_t IMAGE_WIDTH = 128;
-    auto image = make_image<RGB565>(Vec2u{IMAGE_WIDTH, IMAGE_WIDTH});
+    auto image = make_image<RGB565>(math::Vec2u{IMAGE_WIDTH, IMAGE_WIDTH});
     image.fill(color_cast<RGB565>(ColorEnum::LIGHT_YELLOW));
 
     uint16_t zoom = 50;
@@ -358,10 +358,10 @@ void lidar_visualize_main(){
                 min_point.intensity_code.bits * iq16(1.0 / 255.0), 
                 iq16(1.0), iq16(1.0))
             );
-            image.put_pixel(Vec2u16{static_cast<uint16_t>(x     ), static_cast<uint16_t>    (y)}, color);
-            image.put_pixel(Vec2u16{static_cast<uint16_t>(x     ), static_cast<uint16_t>    (y + 1)}, color);
-            image.put_pixel(Vec2u16{static_cast<uint16_t>(x+1   ), static_cast<uint16_t>    (y)}, color);
-            image.put_pixel(Vec2u16{static_cast<uint16_t>(x+1   ), static_cast<uint16_t>    (y+1)}, color);
+            image.put_pixel(math::Vec2u16{static_cast<uint16_t>(x     ), static_cast<uint16_t>    (y)}, color);
+            image.put_pixel(math::Vec2u16{static_cast<uint16_t>(x     ), static_cast<uint16_t>    (y + 1)}, color);
+            image.put_pixel(math::Vec2u16{static_cast<uint16_t>(x+1   ), static_cast<uint16_t>    (y)}, color);
+            image.put_pixel(math::Vec2u16{static_cast<uint16_t>(x+1   ), static_cast<uint16_t>    (y+1)}, color);
         }
     };
 
@@ -370,7 +370,7 @@ void lidar_visualize_main(){
         const auto now_secs = clock::seconds();
 
         plot_clusters(packed_clusters_ | std::views::values);
-        auto && shape = Sprite<RGB565>{.image = image.copy(), .position = Vec2u{10, 10}};
+        auto && shape = Sprite<RGB565>{.image = image.copy(), .position = math::Vec2u{10, 10}};
 
         auto shape_bb = shape.bounding_box();
         auto render_iter = RenderIterator<Sprite<RGB565>>(std::move(shape));

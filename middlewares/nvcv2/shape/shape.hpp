@@ -8,39 +8,50 @@
 
 namespace ymd::nvcv2::shape{
     namespace cores{
-        static constexpr auto roberts_x      = Matrix<int8_t, 2, 2>{-1, 0, 0, 1};
-        static constexpr auto roberts_y      = Matrix<int8_t, 2, 2>{0, -1, 1, 0};
-        static constexpr auto prewiit_x      = Matrix<int8_t, 3, 3>{-1, 0, 1, -1, 0, 1, -1, 0, 1};
-        static constexpr auto prewiit_y      = Matrix<int8_t, 3, 3>{-1, -1, -1, 0, 0, 0, 1, 1, 1};
-        static constexpr auto sobel_x        = Matrix<int8_t, 3, 3>{-1, 0, 1, -2, 0, 2, -1, 0, 1};
-        static constexpr auto sobel_y        = Matrix<int8_t, 3, 3>{-1, -2, -1, 0, 0, 0, 1, 2, 1};
-        static constexpr auto scharr_x       = Matrix<int8_t, 3, 3>{-3, 0, 3, -10, 0, 10, -3, 0, 3};
-        static constexpr auto scharr_y       = Matrix<int8_t, 3, 3>{-3, -10, -3, 0, 0, 0, 3, 10, 3};
-        static constexpr auto laplacian_4    = Matrix<int8_t, 3, 3>{0, -1, 0, -1, 4, -1, 0, -1, 0};
-        static constexpr auto laplacian_8    = Matrix<int8_t, 3, 3>{-1, -1, -1, -1, 8, -1, -1, -1, -1};
-        static constexpr auto gauss          = Matrix<int8_t, 3, 3>{1, 1, 1, 1, 2, 1, 1, 1, 1};
+        static constexpr auto roberts_x      = math::Matrix<int8_t, 2, 2>{
+            -1, 0, 0, 1};
+        static constexpr auto roberts_y      = math::Matrix<int8_t, 2, 2>{
+            0, -1, 1, 0};
+        static constexpr auto prewiit_x      = math::Matrix<int8_t, 3, 3>{
+            -1, 0, 1, -1, 0, 1, -1, 0, 1};
+        static constexpr auto prewiit_y      = math::Matrix<int8_t, 3, 3>{
+            -1, -1, -1, 0, 0, 0, 1, 1, 1};
+        static constexpr auto sobel_x        = math::Matrix<int8_t, 3, 3>{
+            -1, 0, 1, -2, 0, 2, -1, 0, 1};
+        static constexpr auto sobel_y        = math::Matrix<int8_t, 3, 3>{
+            -1, -2, -1, 0, 0, 0, 1, 2, 1};
+        static constexpr auto scharr_x       = math::Matrix<int8_t, 3, 3>{
+            -3, 0, 3, -10, 0, 10, -3, 0, 3};
+        static constexpr auto scharr_y       = math::Matrix<int8_t, 3, 3>{
+            -3, -10, -3, 0, 0, 0, 3, 10, 3};
+        static constexpr auto laplacian_4    = math::Matrix<int8_t, 3, 3>{
+            0, -1, 0, -1, 4, -1, 0, -1, 0};
+        static constexpr auto laplacian_8    = math::Matrix<int8_t, 3, 3>{
+            -1, -1, -1, -1, 8, -1, -1, -1, -1};
+        static constexpr auto gauss          = math::Matrix<int8_t, 3, 3>{
+            1, 1, 1, 1, 2, 1, 1, 1, 1};
     }
 
 
     void convolution(
         Image<Gray> & dst, 
         const Image<Gray> & src, 
-        const Matrix<int8_t, 3, 3> & core);
+        const math::Matrix<int8_t, 3, 3> & core);
 
     void convolution(
         Image<Gray> & dst, 
         const Image<Gray> & src, 
-        const Matrix<int8_t, 2, 2> & core);
+        const math::Matrix<int8_t, 2, 2> & core);
 
     void gauss(Image<Gray> & dst, const Image<Gray> & src);
     void gauss(Image<Gray> &src);
     void gauss5x5(Image<Gray> & dst, const Image<Gray> & src);
 
-    Vec2i find_most(
+    math::Vec2i find_most(
         const Image<Gray> & src, 
         const Gray & tg_color, 
-        const Vec2i & point, 
-        const Vec2i & vec);
+        const math::Vec2i & point, 
+        const math::Vec2i & vec);
     __inline void sobel_x(Image<Gray> & dst, const Image<Gray> & src){
         convolution(dst, src, cores::sobel_x);}
     __inline void sobel_y(Image<Gray> & dst, const Image<Gray> & src){
@@ -165,9 +176,11 @@ namespace ymd::nvcv2::shape{
     }
 
 
-    void canny(Image<Binary> & dst, const Image<Gray> & src, const Range2<uint16_t> & threshold);
+    void canny(Image<Binary> & dst, const Image<Gray> & src, const math::Range2<uint16_t> & threshold);
     void eye(Image<Gray> & dst, const Image<Gray> & src);
-    class Seed{
+
+
+    struct Seed final{
         public:            
 
             uint8_t warp_dir_index(const int8_t & _dir) const{
@@ -179,76 +192,81 @@ namespace ymd::nvcv2::shape{
                 return _dir;
             }
 
-            Vec2i forward(){
-                m_jounrey ++;
-                return run_pos += dirs[dir_index];
+            math::Vec2i forward(){
+                jounrey_ ++;
+                return now_position_ += dirs[dir_index_];
             }
 
-            Vec2i backward(){
-                m_jounrey--;
-                return run_pos -= dirs[dir_index];
+            math::Vec2i backward(){
+                jounrey_--;
+                return now_position_ -= dirs[dir_index_];
             }
 
-            Vec2i drop() const{
-                return run_pos + dirs[warp_dir_index(dir_index)];
+            math::Vec2i drop() const{
+                return now_position_ + dirs[warp_dir_index(dir_index_)];
             }
 
             uint8_t jounrey() const{
-                return m_jounrey;
+                return jounrey_;
             }
 
             void reset(){
-                run_pos = default_pos;
-                m_jounrey = 0;
+                now_position_ = default_position_;
+                jounrey_ = 0;
             }
 
-            void move_to(const Vec2i& pos){
-                run_pos = pos;
+            void move_to(const math::Vec2i& pos){
+                now_position_ = pos;
             }
 
             void spin(){
-                dir_index = warp_dir_index(dir_index + (cw? -1 : 1));
+                dir_index_ = warp_dir_index(dir_index_ + (is_cw_? -1 : 1));
             }
 
             void spin(const bool not_inverse){
-                dir_index = warp_dir_index(dir_index + (cw ^ (!not_inverse) ? -1 : 1));
+                dir_index_ = warp_dir_index(dir_index_ + (is_cw_ ^ (!not_inverse) ? -1 : 1));
             }
 
             bool is_cw()const{
-                return cw;
+                return is_cw_;
             }
 
-            Seed(const Vec2i & pos, const Direction & index = Direction::L, const bool _cw = true):default_pos(pos), dir_index((uint8_t)index), run_pos(pos), cw(_cw){;}
+            Seed(const math::Vec2i & pos, const Direction & index = Direction::L, const bool _cw = true):
+                default_position_(pos), 
+                now_position_(pos), 
+                dir_index_((uint8_t)index), 
+                is_cw_(_cw)
+                {;}
 
-            // Seed(const Vec2i & pos)
-            auto & operator = (const Vec2i & pos){
-                run_pos = pos;
-                m_jounrey = 0;
+            // Seed(const math::Vec2i & pos)
+            auto & operator = (const math::Vec2i & pos){
+                now_position_ = pos;
+                jounrey_ = 0;
                 return *this;
             }
 
-            operator Vec2i()const{
-                return run_pos;
-                // m_jounrey = 0;
+            operator math::Vec2i()const{
+                return now_position_;
+                // jounrey_ = 0;
                 // return *this;
             }
 
-        protected:
-            Vec2i default_pos;
-            uint8_t dir_index;
-            Vec2i run_pos;
-            uint8_t m_jounrey = 0;
-            const bool cw;
+        private:
+            math::Vec2i default_position_;
+            math::Vec2i now_position_;
+            uint8_t dir_index_;
+            uint8_t jounrey_ = 0;
+            const bool is_cw_;
 
-            static constexpr std::array<Vec2i, 8>dirs = {
-                Vec2i{1,0},
-                Vec2i{1,-1}, 
-                Vec2i{0, -1}, 
-                Vec2i{-1,-1},
-                Vec2i{-1,0},
-                Vec2i{-1,1},
-                Vec2i{0,1},
-                Vec2i{1,1}
+            static constexpr std::array<math::Vec2i, 8>dirs = {
+                math::Vec2i{1,0},
+                math::Vec2i{1,-1}, 
+                math::Vec2i{0, -1}, 
+                math::Vec2i{-1,-1},
+                math::Vec2i{-1,0},
+                math::Vec2i{-1,1},
+                math::Vec2i{0,1},
+                math::Vec2i{1,1}
             };
     };
     

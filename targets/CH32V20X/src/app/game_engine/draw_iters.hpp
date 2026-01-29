@@ -9,7 +9,7 @@
 #include "algebra/shapes/bresenham_iter.hpp"
 #include "algebra/shapes/rotated_rect.hpp"
 #include "algebra/shapes/box_rect.hpp"
-#include "algebra/regions/Segment2.hpp"
+#include "algebra/regions/segment2.hpp"
 #include "algebra/shapes/triangle2.hpp"  
 #include "algebra/shapes/line_iter.hpp"
 #include "algebra/shapes/annular_sector.hpp"
@@ -29,11 +29,11 @@ namespace ymd{
 template<typename T>
 struct [[nodiscard]] Sprite final{
     Image<T> image;
-    Vec2u position;
+    math::Vec2u position;
 
-    Rect2u bounding_box() const{
+    math::Rect2u bounding_box() const{
         // return image.bounding_box() + position;
-        return Rect2u16::from_xywh(
+        return math::Rect2u16::from_xywh(
             static_cast<uint16_t>(position.x),
             static_cast<uint16_t>(position.y),
             static_cast<uint16_t>(image.size().x),
@@ -50,26 +50,26 @@ template<typename T>
 struct is_placed_t<Sprite<T>>:std::true_type{;};
 
 template<typename T>
-struct is_placed_t<Segment2<T>>:std::true_type{};
+struct is_placed_t<math::Segment2<T>>:std::true_type{};
 
 
 
 
 template<typename Encoding, typename Font>
 struct LineText{
-    Vec2u16 left_top;
+    math::Vec2u16 left_top;
     uint16_t spacing;
     StringView str;
     // MonoFont7x7 & font;
     // MonoFont7x7 font;
     Font font;
 
-    constexpr Rect2u16 bounding_box() const {
+    constexpr math::Rect2u16 bounding_box() const {
         const size_t str_len = str.length();
         const uint16_t width = (str_len * font.size().x) + (str_len - 1) * spacing;
         const uint16_t height = font.size().y;
 
-        return Rect2u16{left_top, {width, height}};
+        return math::Rect2u16{left_top, {width, height}};
     };
 };
 
@@ -103,8 +103,8 @@ auto make_draw_dispatch_iterator(Shape && shape){
 
 template<typename T>
 requires (std::is_integral_v<T>)
-struct RenderIterator<Rect2<T>> {
-    using Shape = Rect2<T>;
+struct RenderIterator<math::Rect2<T>> {
+    using Shape = math::Rect2<T>;
     using Self = RenderIterator<Shape>;
 
     constexpr explicit RenderIterator(const Shape& shape) : 
@@ -133,11 +133,11 @@ struct RenderIterator<Rect2<T>> {
         // 如果是中间行，只绘制左右两端
         else {
             // 绘制左端点
-            if (auto res = target.fill_x_range(Range2<T>::from_start_and_length(x_range_.start, 1), color);
+            if (auto res = target.fill_x_range(math::Range2<T>::from_start_and_length(x_range_.start, 1), color);
                 res.is_err()) return Err(res.unwrap_err());
             
             // 绘制右端点（注意：x_range_.stop 是 exclusive）
-            if (auto res = target.fill_x_range(Range2<T>::from_start_and_length(x_range_.stop - 1, 1), color);
+            if (auto res = target.fill_x_range(math::Range2<T>::from_start_and_length(x_range_.stop - 1, 1), color);
                 res.is_err()) return Err(res.unwrap_err());
         }
         return Ok();
@@ -154,8 +154,8 @@ struct RenderIterator<Rect2<T>> {
     }
 
 private:
-    Range2<T> x_range_;
-    Range2<T> y_range_;
+    math::Range2<T> x_range_;
+    math::Range2<T> y_range_;
     T y_;
 };
 
@@ -163,8 +163,8 @@ private:
 
 // RenderIterator 特化
 template<std::integral T>
-struct RenderIterator<Segment2<T>> {
-    using Segment = Segment2<T>;
+struct RenderIterator<math::Segment2<T>> {
+    using Segment = math::Segment2<T>;
     // using Iterator = BresenhamIterator<T>;
     using Iterator = LineDDAIterator<T>;
 
@@ -208,8 +208,8 @@ private:
 
 // RenderIterator 特化
 template<std::integral T>
-struct RenderIterator<Circle2<T>> {
-    using Shape = Circle2<T>;
+struct RenderIterator<math::Circle2<T>> {
+    using Shape = math::Circle2<T>;
     using Iterator = CircleBresenhamIterator<T>;
 
     constexpr explicit RenderIterator(const Shape & shape)
@@ -337,7 +337,7 @@ struct RenderIterator<HorizonSpectrum<T, D>> {
         for(size_t i = 0; i < count; i++){
             // const auto old_x = x;
             const T next_x = x + shape_.cell_size.x;
-            const auto x_range = Range2u16::from_start_and_stop_unchecked(x, next_x);
+            const auto x_range = math::Range2u16::from_start_and_stop_unchecked(x, next_x);
             x = next_x + shape_.spacing;
 
             const auto data_y = transformer_(shape_.samples[i]);
@@ -432,43 +432,43 @@ struct RenderIterator<LineText<Encoding, Font>> {
 
 private:
     Shape shape_;
-    Range2<uint16_t> x_range_;
-    Range2<uint16_t> y_range_;
+    math::Range2<uint16_t> x_range_;
+    math::Range2<uint16_t> y_range_;
     uint16_t y_;
 };
 
 
 struct DemoShapeFactory{
     uq16 now_secs;
-    Rect2u tft_bounding_box;
+    math::Rect2u tft_bounding_box;
     
     // Font en_font_;
     // Font ch_font_;
 
     auto make_segment2() const {
-        auto shape = Segment2<uint16_t>{
-            Vec2u16{
+        auto shape = math::Segment2<uint16_t>{
+            math::Vec2u16{
                 uint16_t(50 + 20 * iq16(math::cospu(now_secs * 0.2_r))), 
                 uint16_t(80 + 20 * iq16(math::sinpu(now_secs * 0.2_r)))},
-            Vec2u16{50,80}
+            math::Vec2u16{50,80}
         };
         return shape;
     }
 
     auto make_vertical_oval2() const {
         auto shape = VerticalOval2<uint16_t>::from_bounding_box(
-            Rect2u16{
-                Vec2u16{0,0},
-                Vec2u16{120,170},
+            math::Rect2u16{
+                math::Vec2u16{0,0},
+                math::Vec2u16{120,170},
             }
         ).unwrap();
         return shape;
     }
 
     auto make_rect2() const {
-        auto shape = Rect2u16{
-                Vec2u16{20,20},
-                Vec2u16{12,60},
+        auto shape = math::Rect2u16{
+                math::Vec2u16{20,20},
+                math::Vec2u16{12,60},
         };
         return shape;
     }
@@ -487,12 +487,12 @@ struct DemoShapeFactory{
     }
 
     auto make_circle2() const {
-        auto shape = Circle2<uint16_t>{
-            Vec2u16{uint16_t(160 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 6};
+        auto shape = math::Circle2<uint16_t>{
+            math::Vec2u16{uint16_t(160 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 6};
         return shape;
     }
 
-    auto make_horizon_oval2(const Rect2<int16_t> rect) const {
+    auto make_horizon_oval2(const math::Rect2<int16_t> rect) const {
         auto shape = HorizonOval2<int16_t>::try_from_bounding_box(
             rect
         ).unwrap();
@@ -501,9 +501,9 @@ struct DemoShapeFactory{
 
     auto make_rounded_rect2_moving() const {
         auto shape = RoundedRect2<uint16_t>{
-            .bounding_rect = Rect2u{
-                Vec2u16{uint16_t(115 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 
-                Vec2u16{90, 30}
+            .bounding_rect = math::Rect2u{
+                math::Vec2u16{uint16_t(115 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 
+                math::Vec2u16{90, 30}
             }, 
             .radius = 8
         };
@@ -531,7 +531,7 @@ struct DemoShapeFactory{
 
     auto make_grid_map(uint16_t shape_x, uint16_t shape_y) const {
         return GridMap2<uint16_t>{
-            .top_left_cell = Rect2<uint16_t>::from_xywh(shape_x, shape_y, 15, 15),
+            .top_left_cell = math::Rect2<uint16_t>::from_xywh(shape_x, shape_y, 15, 15),
             .padding = {2,2},
             .count = {15,7}
             // .count = {2,2}
@@ -541,17 +541,17 @@ struct DemoShapeFactory{
     auto make_triangle2(Angular<iq16> dest_angle) const {
         auto shape = Triangle2<iq16>{
             .points = {
-                Vec2<iq16>{185,85} + Vec2<iq16>::from_ones(50).rotated(dest_angle),
-                Vec2<iq16>{185,85} + Vec2<iq16>::from_ones(50).rotated(dest_angle + 120_deg),
-                Vec2<iq16>{185,85} + Vec2<iq16>::from_ones(50).rotated(dest_angle + 240_deg)
+                math::Vec2<iq16>{185,85} + math::Vec2<iq16>::from_ones(50).rotated(dest_angle),
+                math::Vec2<iq16>{185,85} + math::Vec2<iq16>::from_ones(50).rotated(dest_angle + 120_deg),
+                math::Vec2<iq16>{185,85} + math::Vec2<iq16>::from_ones(50).rotated(dest_angle + 240_deg)
             }
         }.to_sorted_by_y();
         
         const auto shape_pixeded = Triangle2<uint16_t>{
             .points = {
-                Vec2<uint16_t>(shape.points[0]),
-                Vec2<uint16_t>(shape.points[1]),
-                Vec2<uint16_t>(shape.points[2])
+                math::Vec2<uint16_t>(shape.points[0]),
+                math::Vec2<uint16_t>(shape.points[1]),
+                math::Vec2<uint16_t>(shape.points[2])
             }
         };
 

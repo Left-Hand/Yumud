@@ -39,7 +39,7 @@ using IResult = Result<T, Error>;
     return Ok();
 }
 
-[[nodiscard]] IResult<Vec3<iq24>> Self::read_mag(){
+[[nodiscard]] IResult<math::Vec3<iq24>> Self::read_mag(){
     TODO();
-    return Ok(Vec3<iq24>{0,0,0});
+    return Ok(math::Vec3<iq24>{0,0,0});
 }

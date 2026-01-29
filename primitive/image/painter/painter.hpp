@@ -17,9 +17,9 @@ public:
     using IResult = PainterBase::IResult<T>;
 
     Painter():PainterBase(){;}
-    Option<Rect2u> get_expose_rect(){
+    Option<math::Rect2u> get_expose_rect(){
         if(may_src_image_.is_none()) return None;
-        return Some(Rect2u::from_size(may_src_image_.unwrap().size()));
+        return Some(math::Rect2u::from_size(may_src_image_.unwrap().size()));
     }
 
     void set_font_scale(const uint8_t scale){
@@ -30,25 +30,25 @@ public:
     }
 
     #if 0
-    void draw_texture_rect(const Rect2u & rect,const ColorType * color_ptr){
+    void draw_texture_rect(const math::Rect2u & rect,const ColorType * color_ptr){
         if(!may_src_imagesize().to_rect().contains(rect)) return;
         drawtexture_unchecked(rect, color_ptr);
     }
 
     template<typename w_ColorType>
-    void draw_image(Image<w_ColorType> & image, const Vec2u & pos = Vec2u(0,0)){
+    void draw_image(Image<w_ColorType> & image, const math::Vec2u & pos = math::Vec2u(0,0)){
         if(!may_src_imageget_view().contains(image.get_view()) || image.data == nullptr) return;
-        auto rect = Rect2u(pos, image.size());
+        auto rect = math::Rect2u(pos, image.size());
         may_src_imagesetarea_unchecked(rect);
         uint32_t i = 0;
         w_ColorType * ptr = image.data.get();
         for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
             for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++, i++)
-                may_src_imageput_pixel_unchecked(Vec2u(x,y), ptr[i]);
+                may_src_imageput_pixel_unchecked(math::Vec2u(x,y), ptr[i]);
     }
 
     [[nodiscard]]
-    IResult<> draw_char(const Vec2u & pos,const wchar_t chr){
+    IResult<> draw_char(const math::Vec2u & pos,const wchar_t chr){
         const Font * font = chr > 0x80 ? chfont : enfont;
         // if(font == nullptr){
         //     return Err(Error::NoChineseFontFounded);
@@ -56,9 +56,9 @@ public:
         
         if(font == nullptr) return Ok();
 
-        const Rect2u image_area = Rect2u{Vec2u{0,0}, src_image->size()};
-        const Vec2u font_size = font->getSize();
-        const auto char_rect_opt = Rect2u(pos, font_size)
+        const math::Rect2u image_area = math::Rect2u{math::Vec2u{0,0}, src_image->size()};
+        const math::Vec2u font_size = font->getSize();
+        const auto char_rect_opt = math::Rect2u(pos, font_size)
             .intersection(image_area);
         if(char_rect_opt.is_none()) return Ok();
         const auto char_rect = char_rect_opt.unwrap();
@@ -69,14 +69,14 @@ public:
  
                 if(j % 8 == 0) mask = 0;
 
-                Vec2u offs = Vec2u(i - char_rect.position.x ,j);
+                math::Vec2u offs = math::Vec2u(i - char_rect.position.x ,j);
                 if(font->get_pixel(chr, offs)){
                 // if(true){
                     mask |= (0x01 << (j % 8));
                 }
 
                 if(j % 8 == 7 || j == font_size.y - 1){
-                    src_image->putseg_v8_unchecked(Vec2u(i, (j & (~(8 - 1))) + pos.y), mask, );
+                    src_image->putseg_v8_unchecked(math::Vec2u(i, (j & (~(8 - 1))) + pos.y), mask, );
                     mask = 0;
                 }
             }
@@ -85,22 +85,22 @@ public:
         return Ok();
     }
     #else
-    void draw_texture_rect(const Rect2u & rect,const ColorType * color_ptr){
+    void draw_texture_rect(const math::Rect2u & rect,const ColorType * color_ptr){
         TODO();
     }
 
     template<typename w_ColorType>
-    void draw_image(Image<w_ColorType> & image, const Vec2u & pos = Vec2u(0,0)){
+    void draw_image(Image<w_ColorType> & image, const math::Vec2u & pos = math::Vec2u(0,0)){
         TODO();
     }
 
     [[nodiscard]]
-    IResult<> draw_filled_rect(const Rect2u & rect){
+    IResult<> draw_filled_rect(const math::Rect2u & rect){
         if(may_src_image_.is_none()) 
             return Err(Error(Error::Kind::ImageNotSet));
         auto & src_image = may_src_image_.unwrap();
-        const Rect2u region = ({
-            const auto may_region = Rect2u::from_size(src_image.size())
+        const math::Rect2u region = ({
+            const auto may_region = math::Rect2u::from_size(src_image.size())
                 .intersection(rect);
             if(may_region.is_none()) return Ok();
             may_region.unwrap();
@@ -117,14 +117,14 @@ public:
         return Ok();
     }
 
-    void put_pixel_unchecked(const Vec2<uint16_t> pos){
+    void put_pixel_unchecked(const math::Vec2<uint16_t> pos){
         auto & src_image = may_src_image_.unwrap();
         if(not src_image.size().has_point(pos)) return;
         src_image.put_pixel_unchecked(pos, color_cast<ColorType>(color_));
     }
 
     [[nodiscard]]
-    IResult<> draw_line(const Vec2u & from, const Vec2u & to){
+    IResult<> draw_line(const math::Vec2u & from, const math::Vec2u & to){
         if(may_src_image_.is_none()) 
             return Err(Error(Error::Kind::ImageNotSet));
 
@@ -168,7 +168,7 @@ public:
     }
     
     [[nodiscard]]
-    IResult<> draw_wchar(const Vec2u & pos, const wchar_t chr){
+    IResult<> draw_wchar(const math::Vec2u & pos, const wchar_t chr){
         if(may_src_image_.is_none())
             return Err(Error(Error::Kind::ImageNotSet));
         if(may_enfont_.is_none())
@@ -184,7 +184,7 @@ public:
             for(size_t y = 0; y < enfont_size.y; y++){
                 if(enfont.get_pixel(chr, {uint8_t(x),uint8_t(y)})){
                     src_image.put_pixel_unchecked(
-                        pos + Vec2u{x, y}, 
+                        pos + math::Vec2u{x, y}, 
                         color_cast<ColorType>(color_)
                     );
                 }
@@ -195,7 +195,7 @@ public:
     }
 
     __no_inline IResult<> draw_ascii_str(
-        const Vec2u & pos, 
+        const math::Vec2u & pos, 
         const StringView str)
     {
         AsciiIterator iter(str);
@@ -215,7 +215,7 @@ public:
             if(not iter.has_next()) break;
 
             const auto chr = iter.next();
-            if(const auto res = draw_wchar(Vec2u(x, pos.y), chr);
+            if(const auto res = draw_wchar(math::Vec2u(x, pos.y), chr);
                 res.is_err()) return res;
             x += (enfont.get_size().x + padding_);
         }
@@ -224,7 +224,7 @@ public:
     }
 
     __no_inline IResult<> draw_gbk_str(
-        const Vec2u & pos, 
+        const math::Vec2u & pos, 
         const StringView str)
     {
         GbkIterator iter(str);
@@ -248,7 +248,7 @@ public:
             if(not iter.has_next()) break;
 
             const auto chr = iter.next();
-            if(const auto res = draw_wchar(Vec2u(x, pos.y), chr.count());
+            if(const auto res = draw_wchar(math::Vec2u(x, pos.y), chr.count());
                 res.is_err()) return res;
             const auto & font = chr.count() > 0x80 ? chfont : enfont;
             x += font.get_size().x + padding_;
@@ -266,7 +266,7 @@ private:
 
     Option<Image<ColorType> &> may_src_image_ = None;
     
-    void drawtexture_unchecked(const Rect2u & rect,const ColorType * color_ptr){
+    void drawtexture_unchecked(const math::Rect2u & rect,const ColorType * color_ptr){
         may_src_image_.unwrap().put_texture_unchecked(rect, color_ptr);
     }
 

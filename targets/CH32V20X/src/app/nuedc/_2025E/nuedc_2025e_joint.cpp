@@ -361,29 +361,29 @@ void nuedc_2025e_joint_main(){
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
         const auto meas_elec_angle = elecangle_comp_(meas_lap_angle);
 
-        const auto meas_position = pos_filter_.accumulated_angle().to_turns();
-        const auto meas_speed = pos_filter_.speed();
+        const auto meas_x1 = pos_filter_.accumulated_angle().to_turns();
+        const auto meas_x2 = pos_filter_.speed();
 
-        const auto [axis_target_position, axis_target_speed] = ({
+        const auto [axis_target_x1, axis_target_x2] = ({
             std::make_tuple(
                 axis_target_position_, axis_target_speed_
             );
         });
 
 
-        const auto targ_position = axis_target_position;
-        const auto targ_speed = axis_target_speed;
+        const auto targ_x1 = axis_target_x1;
+        const auto targ_x2 = axis_target_x2;
 
 
         const auto q_volt = CLAMP2(
-            pd_ctrl_law_(targ_position - meas_position, targ_speed - meas_speed)
+            pd_ctrl_law_(targ_x1 - meas_x1, targ_x2 - meas_x2)
         , SVPWM_MAX_VOLT);
 
         [[maybe_unused]] const auto alphabeta_volt = DqCoord<iq16>{
             .d = 0, 
             .q = CLAMP2(q_volt, SVPWM_MAX_VOLT)
             // CLAMP2(q_volt, SVPWM_MAX_VOLT)
-        }.to_alphabeta(Rotation2<iq20>::from_angle(meas_elec_angle));
+        }.to_alphabeta(math::Rotation2<iq20>::from_angle(meas_elec_angle));
 
 
         static constexpr auto INV_BUS_VOLT = iq16(1.0/12);
@@ -392,7 +392,7 @@ void nuedc_2025e_joint_main(){
             SVM(alphabeta_volt * INV_BUS_VOLT)
         );
 
-        // leso_.update(meas_speed, q_volt);
+        // leso_.update(meas_x2, q_volt);
 
         q_volt_ = q_volt;
         meas_elec_angle_ = meas_elec_angle;

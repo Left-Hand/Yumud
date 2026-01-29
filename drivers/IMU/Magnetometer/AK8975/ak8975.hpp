@@ -55,7 +55,7 @@ public:
     [[nodiscard]] IResult<bool> is_stable();
     [[nodiscard]] IResult<> set_mode(const Mode mode);
     [[nodiscard]] IResult<> disable_i2c();
-    [[nodiscard]] IResult<Vec3<iq24>> read_mag() ;
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag() ;
 private:
     AsahiKaseiImu_Transport transport_;
     struct{

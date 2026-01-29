@@ -46,7 +46,7 @@ public:
 
     constexpr Color & operator[](const size_t index) {return buf_[index];}
 
-    constexpr Rect2u16 bounding_box() const {return Rect2u16::from_xywh(0, y_, buf_.size(), 1);}
+    constexpr math::Rect2u16 bounding_box() const {return math::Rect2u16::from_xywh(0, y_, buf_.size(), 1);}
 
     constexpr ScanLine to_scanline() const {
         return ScanLine{
@@ -77,7 +77,7 @@ public:
 
     template<typename DestColor>
     __fast_inline constexpr Result<void, Error> fill_x_range(
-        const Range2<uint16_t> x_range,
+        const math::Range2<uint16_t> x_range,
         const DestColor dest_color
     ){
         if(x_range.start > buf_.size()) return Ok();
@@ -103,7 +103,7 @@ public:
 
     template<typename ColorsIter>
     __fast_inline constexpr Result<void, Error> fill_contiguous(
-        const Rect2u16 area,
+        const math::Rect2u16 area,
         ColorsIter && iter
     ){
         return Ok();
@@ -130,7 +130,7 @@ public:
 
     template<typename DestColor>
     __fast_inline constexpr Result<void, Error> fill_solid(
-        const Rect2u16 area,
+        const math::Rect2u16 area,
         const DestColor color
     ){
         if(not area.contains_y(y_)) return Ok();
@@ -172,7 +172,7 @@ public:
     ){ 
 
         return fill_x_range(
-            Range2u16::from_start_and_stop_unchecked(0u, buf_.size()),
+            math::Range2u16::from_start_and_stop_unchecked(0u, buf_.size()),
             dest_color
         );
 
@@ -203,7 +203,7 @@ struct FrameBufferSpan{
     using Error = Infallible;
 
     static constexpr Option<FrameBufferSpan> from_ptr_and_size(
-        Color * ptr, Vec2u size
+        Color * ptr, math::Vec2u size
     ){
         if(ptr == nullptr) return None;
         FrameBufferSpan ret;
@@ -223,7 +223,7 @@ struct FrameBufferSpan{
         FrameBufferSpan ret;
 
         ret.buf_ = slice;
-        ret.size_ = Vec2u{width, height};
+        ret.size_ = math::Vec2u{width, height};
 
         return Some(ret);
     }
@@ -241,7 +241,7 @@ struct FrameBufferSpan{
     }
 
     // Add a new iter method for partial iteration
-    constexpr auto iter(Range2u y_range) {
+    constexpr auto iter(math::Range2u y_range) {
 
         return ToLineSpanIter(buf_.data(), y_range, size_.x);
     }
@@ -252,8 +252,8 @@ struct FrameBufferSpan{
         return LineBufferSpan<Color>(std::span<Color>(pdata + y * width, width), y);
     }
 
-    constexpr Rect2u16 bounding_box() const {
-        return Rect2u16::from_size(size_);
+    constexpr math::Rect2u16 bounding_box() const {
+        return math::Rect2u16::from_size(size_);
     }
 
     template<typename PixelsIter>
@@ -272,7 +272,7 @@ struct FrameBufferSpan{
 
     template<typename ColorsIter>
     constexpr Result<void, Error> fill_contiguous(
-        const Rect2u16 area,
+        const math::Rect2u16 area,
         ColorsIter && iter
     ){
         auto & self = *this;
@@ -303,7 +303,7 @@ struct FrameBufferSpan{
 
     template<typename DestColor>
     constexpr Result<void, Error> fill_solid(
-        const Rect2u16 area,
+        const math::Rect2u16 area,
         const DestColor color
     ){
         auto & self = *this;
@@ -324,10 +324,10 @@ struct FrameBufferSpan{
     }
 private:
     std::span<Color> buf_;
-    Vec2u size_;
+    math::Vec2u size_;
 
     struct ToLineSpanIter{
-        constexpr ToLineSpanIter(Color * pbuf, Range2u y_range, size_t width):
+        constexpr ToLineSpanIter(Color * pbuf, math::Range2u y_range, size_t width):
             pbuf_(pbuf),
             y_(y_range.start),
             y_stop_(y_range.stop),

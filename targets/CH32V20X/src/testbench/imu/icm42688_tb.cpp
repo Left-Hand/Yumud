@@ -47,8 +47,8 @@ static void icm42688_tb(icm42688::ICM42688 & imu){
     iq24 z_radians = 0;
     Microseconds exe_us_ = 0us;
 
-    Vec3<iq24> gyr_ = Vec3<iq24>::ZERO;
-    Vec3<iq24> acc_ = Vec3<iq24>::ZERO;
+    math::Vec3<iq24> gyr_ = math::Vec3<iq24>::ZERO;
+    math::Vec3<iq24> acc_ = math::Vec3<iq24>::ZERO;
 
     auto & timer = hal::timer1;
     timer.init({

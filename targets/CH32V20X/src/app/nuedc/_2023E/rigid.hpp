@@ -17,7 +17,7 @@ public:
     };
 
     using E = iq16;
-    using T = Vec2<iq16>;
+    using T = math::Vec2<iq16>;
 
     using State = std::array<T, 3>;
     using Self = TdVec2;
@@ -73,11 +73,11 @@ private:
         const auto spd = state[1];
         // const auto acc = state[2];
 
-        // const auto raw_a = ((iq12(self.kp_) * (Vec2<iq12>(u - pos)))
+        // const auto raw_a = ((iq12(self.kp_) * (math::Vec2<iq12>(u - pos)))
         //      - (self.kd_ * spd));
         // DEBUG_PRINTLN(raw_a, self.max_x3_);
 
-        const auto e1 = Vec2<iq12>(u - pos);
+        const auto e1 = math::Vec2<iq12>(u - pos);
         const auto dist = e1.length();
         const auto norm_e1 = e1 / dist;
         const auto expect_spd = std::sqrt(2 * self.max_x3_ * dist);
@@ -158,7 +158,7 @@ private:
 //运动学 用于求解目标关节角
 class GimbalKinematics final{
 public:
-    using Gesture = ymd::Vec2<real_t>;
+    using Gesture = ymd::math::Vec2<real_t>;
     using Solution = GimbalSolution;
 
     struct Config{
@@ -202,8 +202,8 @@ public:
     };
 
     struct LineAction{
-        Vec2<real_t> start;
-        Vec2<real_t> stop;
+        math::Vec2<real_t> start;
+        math::Vec2<real_t> stop;
     };
 
     struct DelayAction{

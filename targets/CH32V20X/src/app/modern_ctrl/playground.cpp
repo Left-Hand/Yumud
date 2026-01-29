@@ -9,25 +9,25 @@ void test_lqr(){
     constexpr size_t Un = 1; // Control input dimension
 
     // State transition matrix A
-    constexpr auto A = Matrix<float, Xn, Xn>{
+    constexpr auto A = math::Matrix<float, Xn, Xn>{
         0.0, 1.0,
         10.0, 0.0
     };
 
     // Control matrix B
-    constexpr auto B = Matrix<float, Xn, Un>{
+    constexpr auto B = math::Matrix<float, Xn, Un>{
         0.0,
         -1.0
     };
 
     // State cost matrix Q
-    constexpr auto Q = Matrix<float, Xn, Xn>{
+    constexpr auto Q = math::Matrix<float, Xn, Xn>{
         1.0, 0.0,
         0.0, 0.1
     };
 
     // Control cost matrix R
-    constexpr Matrix<float, Un, Un> R{
+    constexpr math::Matrix<float, Un, Un> R{
         1.0
     };
 

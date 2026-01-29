@@ -149,7 +149,7 @@ using namespace ymd::drivers;
             // DEBUG_PRINTLN(mahony.result());
             DEBUG_PRINTLN(
                 mahony.rotation(), 
-                // Quat<real_t>(Vec3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
+                // Quat<real_t>(math::Vec3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
                 end_us - begin_us
             );
             break;

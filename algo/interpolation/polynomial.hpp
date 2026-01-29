@@ -28,7 +28,7 @@ public:
     static constexpr iq16 max_param_a = iq16(1.0 - epsilon);
     static constexpr iq16 min_param_b = iq16(0.0);
     static constexpr iq16 max_param_b = iq16(1.0);
-    static std::tuple<iq16, iq16> get_ab(const Vec2<iq16> & handle){
+    static std::tuple<iq16, iq16> get_ab(const math::Vec2<iq16> & handle){
 
         auto [a,b] = handle;
 
@@ -39,7 +39,7 @@ public:
     iq16 a;
     iq16 b;
 public:
-    SeatInterpolation(const Vec2<iq16> & handle){
+    SeatInterpolation(const math::Vec2<iq16> & handle){
         std::tie(a,b) = get_ab(handle);
     }
 

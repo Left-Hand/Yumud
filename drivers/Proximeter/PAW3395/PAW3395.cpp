@@ -108,7 +108,7 @@ IResult<bool> Self::is_motioned(){
 	return Ok(temp != 0);
 }
 
-IResult<Vec2i> Self::query_xy(){
+IResult<math::Vec2i> Self::query_xy(){
 	const int16_t x = ({
 		const auto res = read_i16(RegAddr::DELTA_X_L, RegAddr::DELTA_X_H);
 		if(res.is_err()) return Err(res.unwrap_err());
@@ -121,10 +121,10 @@ IResult<Vec2i> Self::query_xy(){
 		res.unwrap();
 	});
 
-	return Ok(Vec2i{x, y});
+	return Ok(math::Vec2i{x, y});
 }
 
-IResult<Vec2i> Self::update(){
+IResult<math::Vec2i> Self::update(){
 	const bool any_motion = ({
 		const auto res = is_motioned();
 		if(res.is_err()) return Err(res.unwrap_err());

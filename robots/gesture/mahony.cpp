@@ -12,7 +12,7 @@ __fast_inline constexpr
 auto build_norm_vec3_from_quat_xfrom_top(
     const T x, const T y, const T z, const T w){
 
-    return Vec3<Norm<T>>(
+    return math::Vec3<Norm<T>>(
         Norm(2 * (qconv(Norm(x) , Norm(z) , Norm(- w), Norm(y)))),
         Norm(2 * (qconv(Norm(w) , Norm(x) , Norm(  y), Norm(z)))),
         Norm(qsqu(Norm(w)) - qsqu(Norm(x)) - qsqu(Norm(y)) + qsqu(Norm(z)))
@@ -21,9 +21,9 @@ auto build_norm_vec3_from_quat_xfrom_top(
 
 template<arithmetic T>
 __fast_inline constexpr
-Vec3<Norm<T>> build_norm_vec3_from_vec3(const Vec3<T> & vec){
+math::Vec3<Norm<T>> build_norm_vec3_from_vec3(const math::Vec3<T> & vec){
 	const auto ilen = inv_sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-	return Vec3<Norm<T>>(
+	return math::Vec3<Norm<T>>(
 		Norm(vec.x * ilen),
 		Norm(vec.y * ilen),
 		Norm(vec.z * ilen)
@@ -33,8 +33,8 @@ Vec3<Norm<T>> build_norm_vec3_from_vec3(const Vec3<T> & vec){
 
 template<arithmetic T>
 __fast_inline constexpr
-Vec3<Norm<T>> build_norm_vec3_from_cross_of_vec3(Vec3<Norm<T>> const & v1, Vec3<Norm<T>> const & v2){
-	return Vec3<Norm<T>>(
+math::Vec3<Norm<T>> build_norm_vec3_from_cross_of_vec3(math::Vec3<Norm<T>> const & v1, math::Vec3<Norm<T>> const & v2){
+	return math::Vec3<Norm<T>>(
 		Norm(qconv(v1.y, v2.z, - v1.z, v2.y)),
 		Norm(qconv(v1.z, v2.x, - v1.x, v2.z)), 
 		Norm(qconv(v1.x, v2.y, - v1.y, v2.x))

@@ -89,8 +89,8 @@ struct [[nodiscard]] Location final{
     TargetAngleCode elevation;
 
     template<typename T>
-    constexpr SphericalCoordinates<T> to_spherical_coordinates() const{
-        return SphericalCoordinates<T>{
+    constexpr math::SphericalCoordinates<T> to_spherical_coordinates() const{
+        return math::SphericalCoordinates<T>{
             distance.to_meters<T>(),
             azimuth.to_angle<T>(), 
             elevation.to_angle<T>() 

@@ -9,12 +9,12 @@ using namespace ymd::hal;
 
 template<arithmetic T, size_t N_X, size_t N_Y>
 class AdaptiveEKF {
-    using MatrixXX = Matrix<T, N_X, N_X>;
-    using MatrixYX = Matrix<T, N_Y, N_X>;
-    using MatrixXY = Matrix<T, N_X, N_Y>;
-    using MatrixYY = Matrix<T, N_Y, N_Y>;
-    using VectorX = Matrix<T, N_X, 1>;
-    using VectorY = Matrix<T, N_Y, 1>;
+    using MatrixXX = math::Matrix<T, N_X, N_X>;
+    using MatrixYX = math::Matrix<T, N_Y, N_X>;
+    using MatrixXY = math::Matrix<T, N_X, N_Y>;
+    using MatrixYY = math::Matrix<T, N_Y, N_Y>;
+    using VectorX = math::Matrix<T, N_X, 1>;
+    using VectorY = math::Matrix<T, N_Y, 1>;
 
 public:
     explicit AdaptiveEKF(const VectorX &X0 = VectorX::Zero())

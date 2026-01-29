@@ -107,8 +107,8 @@ struct ICM45686_Regs:public ICM45686_Prelude{
         uint8_t en_apex_event:1;
     };
 
-    Vec3<int16_t> acc_bits_ = Vec3<int16_t>::ZERO;
-    Vec3<int16_t> gyr_bits_ = Vec3<int16_t>::ZERO;
+    math::Vec3<int16_t> acc_bits_ = math::Vec3<int16_t>::ZERO;
+    math::Vec3<int16_t> gyr_bits_ = math::Vec3<int16_t>::ZERO;
 };
 
 }

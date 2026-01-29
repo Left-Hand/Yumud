@@ -85,7 +85,7 @@ public:
     [[nodiscard]] IResult<> calibrate(uint8_t samples);
     [[nodiscard]] IResult<> update();
 
-    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
     [[nodiscard]] IResult<uint8_t> read_temperature();
 private:
     using Regs = L3G4200D_Regs;

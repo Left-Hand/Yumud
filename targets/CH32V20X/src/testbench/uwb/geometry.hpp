@@ -13,22 +13,22 @@ namespace ymd::geometry {
 
 template<typename T>
 requires (not std::is_integral_v<T>)
-constexpr HeaplessVector<Vec2<T>, 2> compute_intersection_points(
-    const Circle2<T>& circle_a, 
-    const Circle2<T>& circle_b
+constexpr HeaplessVector<math::Vec2<T>, 2> compute_intersection_points(
+    const math::Circle2<T>& circle_a, 
+    const math::Circle2<T>& circle_b
 ) {
-    using Container = HeaplessVector<Vec2<T>, 2>;
+    using Container = HeaplessVector<math::Vec2<T>, 2>;
     // 卫语句1: 半径检查
     if (circle_a.radius < T(0) || circle_b.radius < T(0)) [[unlikely]] 
         return Container::from_empty();
         // PANIC();
     
-    const Vec2<T>& p1 = circle_a.center;
-    const Vec2<T>& p2 = circle_b.center;
+    const math::Vec2<T>& p1 = circle_a.center;
+    const math::Vec2<T>& p2 = circle_b.center;
     const T & r1 = circle_a.radius;
     const T & r2 = circle_b.radius;
     
-    const Vec2<T> delta = p2 - p1;
+    const math::Vec2<T> delta = p2 - p1;
     const T & dx = delta.x;
     const T & dy = delta.y;
     const T distance_squ = dx * dx + dy * dy;
@@ -57,25 +57,25 @@ constexpr HeaplessVector<Vec2<T>, 2> compute_intersection_points(
     // intersection2 = (x0 - rx, y0 - ry)
     // return intersection1, intersection2
     return Container(
-        Vec2<T>(x0 + rx, y0 + ry),
-        Vec2<T>(x0 - rx, y0 - ry)
+        math::Vec2<T>(x0 + rx, y0 + ry),
+        math::Vec2<T>(x0 - rx, y0 - ry)
     );
 }
 
 template<typename T>
 requires (not std::is_integral_v<T>)
-constexpr Option<Vec2<T>> compute_intersection_point(
-    const Ray2<T> & ray,
-    const Circle2<T> & circle
+constexpr Option<math::Vec2<T>> compute_intersection_point(
+    const math::Ray2<T> & ray,
+    const math::Circle2<T> & circle
 ){
     const auto ray_center = ray.center;
     const auto ray_orientation = ray.orientation;
     
     // Vector from circle center to ray origin
-    const Vec2<T> d = ray_center - circle.center;
+    const math::Vec2<T> d = ray_center - circle.center;
     
     // Ray direction vector (assumed to be normalized)
-    const Vec2<T> v = Vec2<T>::from_angle(ray_orientation);
+    const math::Vec2<T> v = math::Vec2<T>::from_angle(ray_orientation);
     
     // Quadratic equation coefficients: at^2 + bt + c = 0
     const T a = v.dot(v);

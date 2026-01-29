@@ -8,8 +8,8 @@ namespace ymd{
 
 template<std::integral T>
 struct BresenhamIterator {
-    using Point = Vec2<T>;
-    using Segment = Segment2<T>;
+    using Point = math::Vec2<T>;
+    using Segment = math::Segment2<T>;
     using SignedT = std::make_signed_t<T>;
 
     constexpr BresenhamIterator(const Segment& segment)
@@ -42,9 +42,9 @@ struct BresenhamIterator {
         return current_y_ <= max_y_;
     }
 
-    constexpr Range2<T> current() const {
-        if (!has_next()) return Range2<T>{0, 0};
-        return Range2<T>::from_start_and_length(current_x_, 1);
+    constexpr math::Range2<T> current() const {
+        if (!has_next()) return math::Range2<T>{0, 0};
+        return math::Range2<T>::from_start_and_length(current_x_, 1);
     }
 
     constexpr void advance() {
@@ -97,14 +97,14 @@ private:
 
 template<typename T>
 struct LineDDAIterator{
-    using Point = Vec2<uint16_t>;
-    using Segment = Segment2<uint16_t>;
+    using Point = math::Vec2<uint16_t>;
+    using Segment = math::Segment2<uint16_t>;
 
     constexpr LineDDAIterator(const Segment& segment){
         auto & self = *this;
         const auto fixed_segment = segment.swap_if_inverted();
 
-        self.x_step_ = Segment2<iq16>(fixed_segment).x_delta_per_y(1);
+        self.x_step_ = math::Segment2<iq16>(fixed_segment).x_delta_per_y(1);
         self.current_x_ = fixed_segment.start.x;
         self.current_y_ = fixed_segment.start.y;
         self.stop_y_ = fixed_segment.stop.y;
@@ -118,16 +118,16 @@ struct LineDDAIterator{
         return current_x_;
     }
 
-    __fast_inline constexpr Range2<int16_t> x_range() const{
+    __fast_inline constexpr math::Range2<int16_t> x_range() const{
         const iq16 a = x();
         const iq16 b = a + x_step();
         if(a < b){
-            return Range2<int16_t>::from_start_and_stop_unchecked(
+            return math::Range2<int16_t>::from_start_and_stop_unchecked(
                 math::floor_cast<uint16_t>(a), 
                 math::ceil_cast<uint16_t>(b)
             );
         }else{
-            return Range2<int16_t>::from_start_and_stop_unchecked(
+            return math::Range2<int16_t>::from_start_and_stop_unchecked(
                 math::floor_cast<uint16_t>(b), 
                 math::ceil_cast<uint16_t>(a)
             );
@@ -155,7 +155,7 @@ private:
 template<typename T>
 struct CircleBresenhamIterator{
 public:
-    constexpr CircleBresenhamIterator(const Circle2<T> & circle):
+    constexpr CircleBresenhamIterator(const math::Circle2<T> & circle):
         x0_(circle.center.x),
         err_(1 - 2 * static_cast<int16_t>(circle.radius)),
         y_offset_(-static_cast<int16_t>(circle.radius)),
@@ -174,14 +174,14 @@ public:
         return y_offset_ < radius_;
     }
 
-    [[nodiscard]] constexpr Range2<int16_t> x_range() const{
-        return Range2<int16_t>{x0_ + x_offset_, x0_ - x_offset_};
+    [[nodiscard]] constexpr math::Range2<int16_t> x_range() const{
+        return math::Range2<int16_t>{x0_ + x_offset_, x0_ - x_offset_};
     }
 
-    constexpr std::tuple<Range2<int16_t>, Range2<int16_t>> left_and_right() const {
+    constexpr std::tuple<math::Range2<int16_t>, math::Range2<int16_t>> left_and_right() const {
         return {
-            Range2<int16_t>{x0_ + x_offset_, x0_ + x_offset_ + 1},
-            Range2<int16_t>{x0_ - x_offset_, x0_ - x_offset_ + 1}
+            math::Range2<int16_t>{x0_ + x_offset_, x0_ + x_offset_ + 1},
+            math::Range2<int16_t>{x0_ - x_offset_, x0_ - x_offset_ + 1}
         };
     }
 

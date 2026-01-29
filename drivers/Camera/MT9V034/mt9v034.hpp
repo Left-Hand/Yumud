@@ -263,7 +263,7 @@ private:
         return write_general_reg(GeneralRegAddr::Control, uint16_t(context));
     }
 
-    [[nodiscard]] IResult<> set_exposure_range(const Range2u range);
+    [[nodiscard]] IResult<> set_exposure_range(const math::Range2u range);
 
     [[nodiscard]] IResult<> enable_pixel_test_pattern(
         const Enable en,

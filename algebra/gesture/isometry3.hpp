@@ -25,11 +25,11 @@ struct [[nodiscard]] DhParameters{
         ));
     }
 
-    constexpr Vec3<T> to_translation() const {
+    constexpr math::Vec3<T> to_translation() const {
         const auto & self = *this;
         const auto [s_theta, c_theta] = self.theta.sincos();
 
-        const auto translation = Vec3<T>(
+        const auto translation = math::Vec3<T>(
             self.a * c_theta,
             self.a * s_theta,
             self.d
@@ -42,17 +42,17 @@ struct [[nodiscard]] DhParameters{
 template<typename T>
 struct [[nodiscard]] IsometryMatrix3 { 
     using Rotation = Rotation3<T>;
-    using Vec = Vec3<T>;
+    using Vec = math::Vec3<T>;
 
     static constexpr auto ZERO_1x3 = Matrix<T, 1, 3>::zero();
     static constexpr auto ONE_1x1 = Matrix<T, 1, 1>::identity();
 
     Rotation3<T> rotation;
-    Vec3<T> translation;
+    math::Vec3<T> translation;
 
     [[nodiscard]] static constexpr IsometryMatrix3 from_matrix(const Matrix<T, 4, 4>& matrix) { 
         return IsometryMatrix3{
-            .translation = Vec3<T>(matrix.template submatrix<3,1>(0,3))
+            .translation = math::Vec3<T>(matrix.template submatrix<3,1>(0,3))
             .rotation = Rotation3<T>::from_matrix(matrix.template submatrix<3,3>(0,0)),
         };
     }
@@ -69,7 +69,7 @@ struct [[nodiscard]] IsometryMatrix3 {
             T(0),     s_alpha,            c_alpha
         ));
 
-        const auto translation = Vec3<T>(
+        const auto translation = math::Vec3<T>(
             dh.a * c_theta,
             dh.a * s_theta,
             dh.d
@@ -83,7 +83,7 @@ struct [[nodiscard]] IsometryMatrix3 {
 
     [[nodiscard]] static constexpr IsometryMatrix3<T> identity() {
         return IsometryMatrix3<T>{
-            .translation = Vec3<T>::ZERO
+            .translation = math::Vec3<T>::ZERO
             .rotation = Rotation3<T>::identity(),
         };
     }
@@ -112,7 +112,7 @@ struct [[nodiscard]] IsometryMatrix3 {
     }
     
     // 点变换
-    [[nodiscard]] constexpr Vec3<T> operator * (const Vec3<T>& point) const {
+    [[nodiscard]] constexpr math::Vec3<T> operator * (const math::Vec3<T>& point) const {
         return rotation * point + translation;
     }
     
@@ -130,18 +130,18 @@ struct [[nodiscard]] IsometryMatrix3 {
 template<typename T>
 struct [[nodiscard]] Isometry3 { 
     using Rotation = Rotation3<T>;
-    using Vec = Vec3<T>;
+    using Vec = math::Vec3<T>;
 
     static constexpr auto ZERO_1x3 = Matrix<T, 1, 3>::zero();
     static constexpr auto ONE_1x1 = Matrix<T, 1, 1>::identity();
 
     Quat<T> rotation;
-    Vec3<T> translation;
+    math::Vec3<T> translation;
 
     [[nodiscard]] static constexpr Isometry3 from_matrix(const Matrix<T, 4, 4>& matrix) { 
         return Isometry3{
             .rotation = Rotation3<T>::from_matrix(matrix.template submatrix<3,3>(0,0)),
-            .translation = Vec3<T>(matrix.template submatrix<3,1>(0,3))
+            .translation = math::Vec3<T>(matrix.template submatrix<3,1>(0,3))
         };
     }
 
@@ -157,7 +157,7 @@ struct [[nodiscard]] Isometry3 {
             T(0),     s_alpha,            c_alpha
         ));
 
-        const auto translation = Vec3<T>(
+        const auto translation = math::Vec3<T>(
             dh.a * c_theta,
             dh.a * s_theta,
             dh.d
@@ -172,7 +172,7 @@ struct [[nodiscard]] Isometry3 {
     [[nodiscard]] static constexpr Isometry3<T> identity() {
         return Isometry3<T>{
             .rotation = Rotation3<T>::identity(),
-            .translation = Vec3<T>::ZERO
+            .translation = math::Vec3<T>::ZERO
         };
     }
 
@@ -200,7 +200,7 @@ struct [[nodiscard]] Isometry3 {
     }
     
     // 点变换
-    [[nodiscard]] constexpr Vec3<T> operator * (const Vec3<T>& point) const {
+    [[nodiscard]] constexpr math::Vec3<T> operator * (const math::Vec3<T>& point) const {
         return rotation * point + translation;
     }
     

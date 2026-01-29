@@ -209,7 +209,7 @@ __fast_inline Complex<T> conj(const Complex<T> & m){
 namespace ymd{
 
 template<typename T>
-__no_inline OutputStream & operator << (OutputStream & os , const Complex<T> & c){
+__no_inline OutputStream & operator << (OutputStream & os , const math::Complex<T> & c){
     // return os << c.re << os.splitter() << c.im << 'i';
     return os << c.re << os.splitter() << c.im;
 }

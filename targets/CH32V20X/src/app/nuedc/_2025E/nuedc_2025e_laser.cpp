@@ -377,7 +377,7 @@ void nuedc_2025e_laser_main(){
     };
 
     
-    [[maybe_unused]] auto joint_tracking_ctl = [&](const Vec2<iq20> err){
+    [[maybe_unused]] auto joint_tracking_ctl = [&](const math::Vec2<iq20> err){
         //pitch P控制
         //yaw P控制
 
@@ -413,7 +413,7 @@ void nuedc_2025e_laser_main(){
                 break;
             case RunState::Tracking:{
                 auto e_info = may_err_position_.unwrap();
-                joint_tracking_ctl(Vec2{iq20(e_info.px), iq20(e_info.py)});
+                joint_tracking_ctl(math::Vec2{iq20(e_info.px), iq20(e_info.py)});
                 break;
             }
             
