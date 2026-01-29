@@ -3,20 +3,20 @@
 #include "middlewares/nvcv2/nvcv2.hpp"
 
 namespace ymd::nvcv2::pixels{
-void conv(Image<RGB565>& dst, const Image<Gray>& src);
+void conv(Image<RGB565> & dst, const Image<Gray> & src);
 
-void conv(Image<RGB565>& dst, const Image<Binary>& src);
+void conv(Image<RGB565> & dst, const Image<Binary> & src);
 
 
-void dyeing(Image<Gray>& dst, const Image<Gray>& src);
+void dyeing(Image<Gray> & dst, const Image<Gray> & src);
 
-auto dyeing(const Image<Gray>& src);
+auto dyeing(const Image<Gray> & src);
 
 Gray dyeing(const Gray in);
 
 template<typename T>
 requires (std::is_same_v<T, Gray> || std::is_same_v<T, Binary>)
-void copy(Image<T>& dst, const Image<T>& src) {
+void copy(Image<T> & dst, const Image<T> & src) {
     for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
         for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
             dst[Vec2u{x, y}] = src[Vec2u{x, y}];
@@ -51,11 +51,12 @@ __inline void fast_diff_opera(Image<Gray> & dst, const Image<Gray> & src) {
 }
 
 __inline void fast_bina_opera(
-        Image<Binary> & out,
-        const Image<Gray> & em, 
-        const Gray et,
-        const Image<Gray>& dm,
-        const Gray dt) {
+    Image<Binary> & out,
+    const Image<Gray> & em, 
+    const Gray et,
+    const Image<Gray> & dm,
+    const Gray dt
+) {
 
     const auto area = Vec2<size_t>{
         MIN(em.size().x, dm.size().x), 
@@ -63,32 +64,32 @@ __inline void fast_bina_opera(
     }.x_mul_y();
 
     for (size_t i = 0u; i < area; i++) {
-        const auto o = Binary(em[i].to_binary(et)).and_with(Binary(dm[i].to_binary(dt)));
-        out[i] = o;
+        const auto o = Binary(em.head_ptr()[i].to_binary(et)).bitwise_and(Binary(dm.head_ptr()[i].to_binary(dt)));
+        out.head_ptr()[i] = o;
     }
 }
 
-void binarization(Image<Binary>& dst, const Image<Gray>& src, const Gray threshold);
+void binarization(Image<Binary> & dst, const Image<Gray> & src, const Gray threshold);
 
-Image<Binary> binarization(const Image<Gray>& src, const Gray threshold);
-void ostu(Image<Binary>& dst, const Image<Gray>& src);
+Image<Binary> binarization(const Image<Gray> & src, const Gray threshold);
+void ostu(Image<Binary> & dst, const Image<Gray> & src);
 
 
 void iter_threshold(
-    Image<Binary>& dst, 
-    const Image<Gray>& src, 
+    Image<Binary> & dst, 
+    const Image<Gray> & src, 
     const real_t k = real_t(0.5), 
     const real_t eps = real_t(0.02));
 
-void max_entropy(const Image<Gray>& src,const int thresh);
+void max_entropy(const Image<Gray> & src,const int thresh);
 
 int get_huang_fuzzy_threshold(Histogram hist);
 
-int huang(Image<Binary>& dst, const Image<Gray>& src);
+int huang(Image<Binary> & dst, const Image<Gray> & src);
 
 
 
-void gamma(Image<Gray>& src, const real_t ga);
+void gamma(Image<Gray> & src, const real_t ga);
 
 
 template<typename T>
@@ -97,15 +98,15 @@ concept is_monocolour_v = std::same_as<T, Binary> || std::same_as<T, Gray>;
 
 namespace bitwise{
 template<is_monocolour_v T>
-void inverse(Image<T>& src) {
-    for (auto i = 0u; i < src.size().x * src.size().y; i++) {
-        src[i] = src[i].flip();
+void inverse(Image<T> & src) {
+    for (size_t i = 0u; i < src.size().x * src.size().y; i++) {
+        src.head_ptr()[i] = src.head_ptr()[i].flip();
     }
 }
 
 
 template<is_monocolour_v T>
-void inverse(Image<T>& dst, const Image<T> & src) {
+void inverse(Image<T> & dst, const Image<T> & src) {
     auto window = dst.rect().intersection(src.rect());
     for (auto y = window.y(); y < window.y() + window.h(); y++) {
         for (auto x = window.x(); x < window.x() + window.w(); x++) {
@@ -113,33 +114,36 @@ void inverse(Image<T>& dst, const Image<T> & src) {
         }
     }
 }
+
+
 template<is_monocolour_v T>
-void and_with(Image<T> & src, Image<T>& op) {
-    for (auto i = 0; i < src.size().x * src.size().y; i++) {
+void bitwise_and(Image<T> & src, Image<T> & op) {
+    for (size_t i = 0; i < src.size().x * src.size().y; i++) {
         src[i] = std::min((uint8_t)src[i], (uint8_t)op[i]);
     }
 }
 
+
 template<is_monocolour_v T>
-void or_with(Image<T> & src, Image<T>& op) {
-    for (auto i = 0; i < src.size().x * src.size().y; i++) {
+void or_with(Image<T> & src, Image<T> & op) {
+    for (size_t i = 0; i < src.size().x * src.size().y; i++) {
         src[i] = std::max((uint8_t)src[i], (uint8_t)op[i]);
     }
 }
 
 
 template<is_monocolour_v T>
-void xor_with(Image<T> & src, Image<T>& op) {
-    for (auto i = 0; i < src.size().x * src.size().y; i++) {
+void xor_with(Image<T> & src, Image<T> & op) {
+    for (size_t i = 0; i < src.size().x * src.size().y; i++) {
         src[i] = ((uint8_t)src[i] ^ (uint8_t)op[i]);
     }
 }
 
 }
 
-void mask_with(Image<Gray> & src, const Image<Binary>& op);
-void sum_with(Image<Gray> & src, Image<Gray>& op);
-void sub_with(Image<Gray> & src, Image<Gray>& op);
+void mask_with(Image<Gray> & src, const Image<Binary> & op);
+void sum_with(Image<Gray> & src, Image<Gray> & op);
+void sub_with(Image<Gray> & src, Image<Gray> & op);
 
 constexpr uint64_t sum(const Image<Gray> & image, const Rect2u & roi){
     uint64_t sum = 0;
@@ -168,7 +172,7 @@ constexpr Gray mean(const Image<Gray> & image){
     return mean(image, Rect2u::from_size(image.size()));
 }
 
-__inline Gray average(const Image<Gray>& src){
+__inline Gray average(const Image<Gray> & src){
     return Gray::from_u8(pixels::sum(src) / src.size().x_mul_y());
 }
 

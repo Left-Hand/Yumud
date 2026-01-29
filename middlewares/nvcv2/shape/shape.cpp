@@ -9,17 +9,16 @@ namespace ymd::nvcv2::shape{
 template<is_monochrome T>
 static void clear_corners(Image<T> & dst){
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
-    static constexpr T black = T::from_black();
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
     for(size_t y = 0; y < h; y++)
-        dst[{0, y}] = black;
+        dst[{0, y}] = T::black();
     for(size_t y = 0; y < h; y++)
-        dst[{w-1u, y}] = black;
+        dst[{w-1u, y}] = T::black();
     for(size_t x = 0; x < w; x++)
-        dst[{x, 0}] = black;
+        dst[{x, 0}] = T::black();
     for(size_t x = 0; x < w; x++)
-        dst[{x, h-1u}] = black;
+        dst[{x, h-1u}] = T::black();
 }
 
 
@@ -30,25 +29,25 @@ void convolution(
 {
     const auto size = dst.size();
     const auto den = core.sum();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
     for(size_t y = 1; y < h-1u; y++){
         for(size_t x = 1; x < w-1u; x++){
             int32_t pixel = 0;
-            pixel += (src[x - 1 + (y - 1) * w]	).to_u8() * core[0][0];
-            pixel += (src[x +  (y - 1) * w]		).to_u8() * core[0][1];
-            pixel += (src[x + 1 + (y - 1) * w]	).to_u8() * core[0][2];
+            pixel += (src[{x - 1, (y - 1)}]	).to_u8() * core[0][0];
+            pixel += (src[{x + 0, (y - 1)}]		).to_u8() * core[0][1];
+            pixel += (src[{x + 1, (y - 1)}]	).to_u8() * core[0][2];
             
-            pixel += (src[x - 1 + (y) * w]		).to_u8() * core[1][0];
-            pixel += (src[x +  (y) * w]			).to_u8() * core[1][1];
-            pixel += (src[x + 1 + (y) * w]		).to_u8() * core[1][2];
+            pixel += (src[{x - 1, (y)}]		).to_u8() * core[1][0];
+            pixel += (src[{x + 0, (y)}]			).to_u8() * core[1][1];
+            pixel += (src[{x + 1, (y)}]		).to_u8() * core[1][2];
             
-            pixel += (src[x - 1 + (y + 1) * w] 	).to_u8() * core[2][0];
-            pixel += (src[x +  (y + 1) * w]		).to_u8() * core[2][1];
-            pixel += (src[x + 1 + (y + 1) * w]	).to_u8() * core[2][2];
+            pixel += (src[{x - 1, (y + 1)}] 	).to_u8() * core[2][0];
+            pixel += (src[{x + 0, (y + 1)}]		).to_u8() * core[2][1];
+            pixel += (src[{x + 1, (y + 1)}]	).to_u8() * core[2][2];
             
 
-            dst[x + y * w] = Gray::from_u8(CLAMP(ABS(pixel / den), 0, 255));
+            dst[{x, y}] = Gray::from_u8(CLAMP(ABS(pixel / den), 0, 255));
         }
     }
 }
@@ -62,12 +61,14 @@ void gauss(Image<Gray> & dst, const Image<Gray> & src){
 
 void gauss5x5(Image<Gray> & dst, const Image<Gray> & src){
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
-    static constexpr auto core_radius = 2u;
-    static constexpr auto core_sum = 256u;
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
+    static constexpr size_t CORE_RADIUS = 2u;
+    static constexpr size_t CORE_SUM = 256u;
 
-    static constexpr uint8_t core[5][5] ={
+    static constexpr size_t MAT_WIDTH = 2 * CORE_RADIUS + 1u;
+
+    static constexpr uint8_t CORE[MAT_WIDTH][MAT_WIDTH] ={
         {1,     4,      6,      4,      1},
         {4,     16,     24,     16,     4},
         {6,     24,     36,     24,     6},
@@ -76,19 +77,19 @@ void gauss5x5(Image<Gray> & dst, const Image<Gray> & src){
     };
 
     clear_corners(dst);
-    for(size_t y = core_radius; y < h - core_radius; ++y){
-        for(size_t x = core_radius; x < w - core_radius; ++x){
+    for(size_t y = int(CORE_RADIUS); y < h - int(CORE_RADIUS); ++y){
+        for(size_t x = int(CORE_RADIUS); x < w - int(CORE_RADIUS); ++x){
             uint32_t sum = 0;
 
-            for(int dy = -core_radius; dy <= int(core_radius); ++dy){
-                for(int dx = -core_radius; dx <= int(core_radius); ++dx){
+            for(int dy = -int(CORE_RADIUS); dy <= int(CORE_RADIUS); ++dy){
+                for(int dx = -int(CORE_RADIUS); dx <= int(CORE_RADIUS); ++dx){
                     sum += 
                         src[Vec2u{size_t(x + dx), size_t(y + dy)}].to_u8()
-                        * uint8_t(core[size_t(dy + core_radius)][size_t(dx + core_radius)]);
+                        * uint8_t(CORE[size_t(dy + CORE_RADIUS)][size_t(dx + CORE_RADIUS)]);
                 }
             }
             
-            dst[{x,y}] = Gray::from_u8(CLAMP(sum / core_sum, 0, 255));
+            dst[{x,y}] = Gray::from_u8(CLAMP(sum / CORE_SUM, 0, 255));
         }
     }
 }
@@ -100,85 +101,85 @@ void gauss(Image<Gray> & src){
 }
 
 Vec2u find_most(const Image<Gray> & src, const Gray & tg_color,  const Vec2u & point, const Vec2u & vec){
-    Vec2u current_point = point;
+    Vec2u now_point = point;
     Vec2u delta_point = Vec2u(math::sign(vec.x), math::sign(vec.y));
 
     {
         while(true){
-            if(not src.size().has_point(current_point)){
+            if(not src.size().has_point(now_point)){
                 return {0,0};//nothing
             }
-            // DEBUG_PRINTLN(current_point, src[current_point]);
+            // DEBUG_PRINTLN(now_point, src[now_point]);
 
-            if(src[current_point] == tg_color){
+            if(src[now_point] == tg_color){
                 break;
             }
 
-            current_point += delta_point;
+            now_point += delta_point;
         }
     }
 
-    auto eve = [](const Vec2u & _point, const Vec2u & _vec) -> int{
+    auto eve = [](const Vec2u & _point, const Vec2u & _vec) -> size_t{
         return _point.dot(_vec);
     };
 
-    int current_eve = eve(current_point, vec);
+    size_t now_eve = eve(now_point, vec);
     while(true){
-        Vec2u next_x_vec = current_point + Vec2u(math::sign(vec.x), 0);
-        Vec2u next_y_vec = current_point + Vec2u(0, math::sign(vec.y));
+        Vec2u next_x_vec = now_point + Vec2u(math::sign(vec.x), 0);
+        Vec2u next_y_vec = now_point + Vec2u(0, math::sign(vec.y));
 
-        Vec2u * next_point = &current_point;
-        current_eve = eve(current_point, vec);
+        Vec2u * next_point = &now_point;
+        now_eve = eve(now_point, vec);
 
         if(src[next_x_vec] == tg_color){
             auto x_eve = eve(next_x_vec, vec);
-            if(x_eve > current_eve){
+            if(x_eve > now_eve){
                 next_point = &next_x_vec;
-                current_eve = x_eve;
+                now_eve = x_eve;
             }
         }
 
         if(src[next_y_vec] == tg_color){
             auto y_eve = eve(next_y_vec, vec);
-            if(y_eve > current_eve){
+            if(y_eve > now_eve){
                 next_point = &next_y_vec;
-                current_eve = y_eve;
+                now_eve = y_eve;
             }
         }
 
-        if(next_point == &current_point){
-            return current_point;
+        if(next_point == &now_point){
+            return now_point;
         }
 
-        current_point = *next_point;
+        now_point = *next_point;
     }
-    // return current_point;
+    // return now_point;
 }
 
 
 void sobel_xy(Image<Gray> & dst, const Image<Gray> & src){
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
     {
 
         const auto & core = cores::sobel_x;
         for(size_t y = 1; y < h-1u; y++){
             for(size_t x = 1; x < w-1u; x++){
                 size_t pixel = 0;
-                pixel += (src[x - 1 + (y - 1) * w]	).to_u8() * core[0][0];
-                pixel += (src[x +  (y - 1) * w]		).to_u8() * core[0][1];
-                pixel += (src[x + 1 + (y - 1) * w]	).to_u8() * core[0][2];
+                pixel += (src[{x - 1, (y - 1)}]	).to_u8() * core[0][0];
+                pixel += (src[{x + 0, (y - 1)}]		).to_u8() * core[0][1];
+                pixel += (src[{x + 1, (y - 1)}]	).to_u8() * core[0][2];
                 
-                pixel += (src[x - 1 + (y) * w]		).to_u8() * core[1][0];
-                pixel += (src[x +  (y) * w]			).to_u8() * core[1][1];
-                pixel += (src[x + 1 + (y) * w]		).to_u8() * core[1][2];
+                pixel += (src[{x - 1, (y)}]		).to_u8() * core[1][0];
+                pixel += (src[{x + 0, (y)}]			).to_u8() * core[1][1];
+                pixel += (src[{x + 1, (y)}]		).to_u8() * core[1][2];
                 
-                pixel += (src[x - 1 + (y + 1) * w] 	).to_u8() * core[2][0];
-                pixel += (src[x +  (y + 1) * w]		).to_u8() * core[2][1];
-                pixel += (src[x + 1 + (y + 1) * w]	).to_u8() * core[2][2];
+                pixel += (src[{x - 1, (y + 1)}] 	).to_u8() * core[2][0];
+                pixel += (src[{x + 0, (y + 1)}]		).to_u8() * core[2][1];
+                pixel += (src[{x + 1, (y + 1)}]	).to_u8() * core[2][2];
                 
-                dst[x + y * w] = Gray::from_u8(CLAMP(ABS(pixel), 0, 255));
+                dst[{x , y}] = Gray::from_u8(CLAMP(ABS(pixel), 0, 255));
             }
         }
     }
@@ -186,22 +187,21 @@ void sobel_xy(Image<Gray> & dst, const Image<Gray> & src){
         const auto & core = cores::sobel_y;
         for(size_t y = 1; y < h-1u; y++){
             for(size_t x = 1; x < w-1u; x++){
-                size_t pixel = 0;
-                pixel += (src[x - 1 + (y - 1) * w]	).to_u8() * core[0][0];
-                pixel += (src[x +  (y - 1) * w]		).to_u8() * core[0][1];
-                pixel += (src[x + 1 + (y - 1) * w]	).to_u8() * core[0][2];
+                uint32_t pixel = 0;
+                pixel += (src[{x - 1 , (y - 1) }]	).to_u8() * core[0][0];
+                pixel += (src[{x + 0 , (y - 1) }]		).to_u8() * core[0][1];
+                pixel += (src[{x + 1 , (y - 1) }]	).to_u8() * core[0][2];
                 
-                pixel += (src[x - 1 + (y) * w]		).to_u8() * core[1][0];
-                pixel += (src[x +  (y) * w]			).to_u8() * core[1][1];
-                pixel += (src[x + 1 + (y) * w]		).to_u8() * core[1][2];
+                pixel += (src[{x - 1 , (y) }]		).to_u8() * core[1][0];
+                pixel += (src[{x + 0 , (y) }]			).to_u8() * core[1][1];
+                pixel += (src[{x + 1 , (y) }]		).to_u8() * core[1][2];
                 
-                pixel += (src[x - 1 + (y + 1) * w] 	).to_u8() * core[2][0];
-                pixel += (src[x +  (y + 1) * w]		).to_u8() * core[2][1];
-                pixel += (src[x + 1 + (y + 1) * w]	).to_u8() * core[2][2];
+                pixel += (src[{x - 1 , (y + 1) }] 	).to_u8() * core[2][0];
+                pixel += (src[{x + 0 , (y + 1) }]		).to_u8() * core[2][1];
+                pixel += (src[{x + 1 , (y + 1) }]	).to_u8() * core[2][2];
                 
-                dst[x + y * w] = Gray::from_u8(MAX(
-                    dst[x + y *w].to_u8(),
-                    CLAMP(ABS(pixel), 0, 255)
+                dst[{x, y}] = Gray::from_u8(MAX(
+                    dst[{x, y}].to_u8(), CLAMP(ABS(pixel), 0, 255)
                 ));
             }
         }
@@ -210,19 +210,19 @@ void sobel_xy(Image<Gray> & dst, const Image<Gray> & src){
 
 void convolution(Image<Gray> & dst, const Image<Gray> & src, const size_t core[2][2]){
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
     for(size_t y = 1; y < h-1u; y++){
         for(size_t x = 1; x < w-1u; x++){
             size_t pixel = 0;
 
-            pixel += (src[x - 1 + (y - 1) * w]	).to_u8() * core[0][0];
-            pixel += (src[x +  (y - 1) * w]		).to_u8() * core[0][1];
+            pixel += (src[{x - 1,(y - 1)}]).to_u8() * core[0][0];
+            pixel += (src[{x + 0,(y - 1)}]).to_u8() * core[0][1];
             
-            pixel += (src[x - 1 + (y) * w]		).to_u8() * core[1][0];
-            pixel += (src[x +  (y) * w]			).to_u8() * core[1][1];
+            pixel += (src[{x - 1, (y)}]).to_u8() * core[1][0];
+            pixel += (src[{x + 0, (y)}]).to_u8() * core[1][1];
             
-            dst[x + y * w] = Gray::from_u8(CLAMP(ABS(pixel), 0, 255));
+            dst[{x, y}] = Gray::from_u8(CLAMP(ABS(pixel), 0, 255));
         }
     }
 }
@@ -235,24 +235,24 @@ void dilate(Image<Binary> & dst, const Image<Binary> & src){
     }
 
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
 
     for(size_t y = 1; y < h-1u; y++){
         for(size_t x = 1; x < w-1u; x++){
             bool pixel = false;
-            pixel |= src[x - 1 + (y - 1) * w].is_white();
-            pixel |= src[x +  (y - 1) * w].is_white();
-            pixel |= src[x + 1 + (y - 1) * w].is_white();
-            pixel |= src[x - 1 + (y) * w].is_white();
-            pixel |= src[x +  (y) * w].is_white();
-            pixel |= src[x + 1 + (y) * w].is_white();
-            pixel |= src[x - 1 + (y + 1) * w].is_white();
-            pixel |= src[x +  (y + 1) * w].is_white();
-            pixel |= src[x + 1 + (y + 1) * w].is_white();
+            pixel |= src[{x - 1, (y - 1)}].is_white();
+            pixel |= src[{x + 0, (y - 1)}].is_white();
+            pixel |= src[{x + 1, (y - 1)}].is_white();
+            pixel |= src[{x - 1, (y + 0)}].is_white();
+            pixel |= src[{x + 0, (y + 0)}].is_white();
+            pixel |= src[{x + 1, (y + 0)}].is_white();
+            pixel |= src[{x - 1, (y + 1)}].is_white();
+            pixel |= src[{x + 0, (y + 1)}].is_white();
+            pixel |= src[{x + 1, (y + 1)}].is_white();
             
-            dst[x + y * w] = Binary::from_bool(pixel);
+            dst[{x, y}] = Binary::from_bool(pixel);
         }
     }
 }
@@ -265,17 +265,17 @@ void dilate_xy(Image<Binary> & dst, const Image<Binary> & src){
     }
 
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
 
     {   
         const size_t y = 0;
-        auto * p_dst = reinterpret_cast<uint8_t *>(&dst[1]);
-        auto * p_dst_end = reinterpret_cast<uint8_t *>(&dst[w - 2]);
+        auto * p_dst = reinterpret_cast<uint8_t *>(&dst.head_ptr()[1]);
+        auto * p_dst_end = reinterpret_cast<uint8_t *>(&dst.head_ptr()[w - 2]);
 
-        auto * p_src = reinterpret_cast<const uint8_t *>(&src[y * w + 1]);
-        auto * p_src_next = reinterpret_cast<const uint8_t *>(&src[(y+1) * w + 1]);
+        auto * p_src = reinterpret_cast<const uint8_t *>(&src.head_ptr()[y * w + 1]);
+        auto * p_src_next = reinterpret_cast<const uint8_t *>(&src.head_ptr()[(y+1) * w + 1]);
         while(p_dst < p_dst_end){
             *p_dst = *(p_src - 1) | *(p_src) | *(p_src + 1) | *(p_src_next); 
 
@@ -286,10 +286,10 @@ void dilate_xy(Image<Binary> & dst, const Image<Binary> & src){
     }
 
     for(size_t y = 1; y < h-1u; y++){
-        auto * p_dst = reinterpret_cast<uint8_t *>(&dst[y * w + 1]);
-        auto * p_src_last = reinterpret_cast<const uint8_t *>(&src[(y-1) * w + 1]);
-        auto * p_src = reinterpret_cast<const uint8_t *>(&src[y * w + 1]);
-        auto * p_src_next = reinterpret_cast<const uint8_t *>(&src[(y+1) * w + 1]);
+        auto * p_dst = reinterpret_cast<uint8_t *>(&dst.head_ptr()[y * w + 1]);
+        auto * p_src_last = reinterpret_cast<const uint8_t *>(&src.head_ptr()[(y-1) * w + 1]);
+        auto * p_src = reinterpret_cast<const uint8_t *>(&src.head_ptr()[y * w + 1]);
+        auto * p_src_next = reinterpret_cast<const uint8_t *>(&src.head_ptr()[(y+1) * w + 1]);
         for(size_t x = 1; x < w-1u; x++){
             bool pixel = *(p_src - 1) | *(p_src) | *(p_src + 1); 
             if(!pixel){
@@ -309,11 +309,11 @@ void dilate_xy(Image<Binary> & dst, const Image<Binary> & src){
 
     {   
         const size_t y = h - 1;
-        auto * p_dst = reinterpret_cast<uint8_t *>(&dst[y * w + 1]);
-        auto * p_dst_end = reinterpret_cast<uint8_t *>(&dst[y * w + (w - 2)]);
+        auto * p_dst = reinterpret_cast<uint8_t *>(&dst.head_ptr()[y * w + 1]);
+        auto * p_dst_end = reinterpret_cast<uint8_t *>(&dst.head_ptr()[y * w + (w - 2)]);
 
-        auto * p_src_last = reinterpret_cast<const uint8_t *>(&src[(y-1) * w + 1]);
-        auto * p_src = reinterpret_cast<const uint8_t *>(&src[y * w + 1]);
+        auto * p_src_last = reinterpret_cast<const uint8_t *>(&src.head_ptr()[(y-1) * w + 1]);
+        auto * p_src = reinterpret_cast<const uint8_t *>(&src.head_ptr()[y * w + 1]);
 
         while(p_dst != p_dst_end){
             *p_dst = *(p_src - 1) | *(p_src) | *(p_src + 1) | *(p_src_last); 
@@ -333,19 +333,19 @@ void dilate_y(Image<Binary> & dst, const Image<Binary> & src){
     }
 
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
 
     for(size_t y = 1; y < h-1u; y++){
         for(size_t x = 0; x < w; x++){
             bool pixel = false;
 
-            pixel |= src[x +  (y - 1) * w].is_white();
-            pixel |= src[x +  (y) * w].is_white();
-            pixel |= src[x +  (y + 1) * w].is_white();
+            pixel |= src[{x, (y - 1)}].is_white();
+            pixel |= src[{x, (y)}].is_white();
+            pixel |= src[{x, (y + 1)}].is_white();
             
-            dst[x + y * w] = Binary::from_bool(pixel);
+            dst[{x, y}] = Binary::from_bool(pixel);
         }
     }
 }
@@ -358,23 +358,23 @@ void erosion(Image<Binary> & dst, const Image<Binary> & src){
     }
 
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     for(size_t y = 1; y < h-1u; y++){
         for(size_t x = 1; x < w-1u; x++){
             bool pixel = true;
-            pixel &= src[x - 1 + (y - 1) * w].is_white();
-            pixel &= src[x +  (y - 1) * w].is_white();
-            pixel &= src[x + 1 + (y - 1) * w].is_white();
-            pixel &= src[x - 1 + (y) * w].is_white();
-            pixel &= src[x +  (y) * w].is_white();
-            pixel &= src[x + 1 + (y) * w].is_white();
-            pixel &= src[x - 1 + (y + 1) * w].is_white();
-            pixel &= src[x +  (y + 1) * w].is_white();
-            pixel &= src[x + 1 + (y + 1) * w].is_white();
+            pixel &= src[{x - 1,(y - 1)}].is_white();
+            pixel &= src[{x + 0,(y - 1)}].is_white();
+            pixel &= src[{x + 1,(y - 1)}].is_white();
+            pixel &= src[{x - 1,(y)}].is_white();
+            pixel &= src[{x + 0,(y)}].is_white();
+            pixel &= src[{x + 1,(y)}].is_white();
+            pixel &= src[{x - 1,(y + 1)}].is_white();
+            pixel &= src[{x + 0,(y + 1)}].is_white();
+            pixel &= src[{x + 1,(y + 1)}].is_white();
             
-            dst[x + y * w] = Binary::from_bool(pixel);
+            dst[{x, y}] = Binary::from_bool(pixel);
         }
     }
 }
@@ -386,12 +386,12 @@ void erosion_x(Image<Binary> & dst, const Image<Binary> & src){
         return;
     }
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     for(size_t y = 0; y < h; y++){
-        auto * p_src = reinterpret_cast<const uint8_t *>(&src[y * w + 1]);
-        auto * p_dst = reinterpret_cast<uint8_t *>(&dst[y * w + 1]);
+        auto * p_src = reinterpret_cast<const uint8_t *>(&src.head_ptr()[y * w + 1]);
+        auto * p_dst = reinterpret_cast<uint8_t *>(&dst.head_ptr()[y * w + 1]);
         uint8_t last_two = (*p_src - 1) & (*p_src);
         for (size_t x = 1; x < w - 1; ++x) {
             *p_dst = last_two & (*(p_src + 1));
@@ -412,12 +412,12 @@ void dilate_x(Image<Binary> & dst, const Image<Binary> & src){
         return;
     }
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     for(size_t y = 0; y < h; y++){
-        auto * p_src = reinterpret_cast<const uint8_t *>(&src[y * w + 1]);
-        auto * p_dst = reinterpret_cast<uint8_t *>(&dst[y * w + 1]);
+        auto * p_src = reinterpret_cast<const uint8_t *>(&src.head_ptr()[y * w + 1]);
+        auto * p_dst = reinterpret_cast<uint8_t *>(&dst.head_ptr()[y * w + 1]);
         uint8_t last_two = (*p_src - 1) & (*p_src);
         for (size_t x = 1; x < w - 1; ++x) {
             *p_dst = last_two | (*(p_src + 1));
@@ -436,18 +436,18 @@ void erosion_y(Image<Binary> & dst, const Image<Binary> & src){
         return;
     }
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     for(size_t y = 1; y < h-1u; y++){
         for(size_t x = 0; x < w; x++){
             bool pixel = true;
 
-            pixel &= src[x +  (y - 1) * w].is_white();
-            pixel &= src[x +  (y) * w].is_white();
-            pixel &= src[x +  (y + 1) * w].is_white();
+            pixel &= src[{x , (y - 1)}].is_white();
+            pixel &= src[{x , (y)}].is_white();
+            pixel &= src[{x , (y + 1)}].is_white();
             
-            dst[x + y * w] = Binary::from_bool(pixel);
+            dst[{x, y}] = Binary::from_bool(pixel);
         }
     }
 }
@@ -459,19 +459,19 @@ void erosion_xy(Image<Binary> & dst, const Image<Binary> & src){
         return;
     }
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     for(size_t y = 0; y < h; y++){
         for(size_t x = 1; x < w-1u; x++){
             bool pixel = true;
-            pixel &= src[x +  MAX((y - 1), 0) * w].is_white();
-            pixel &= src[x+  (y) * w].is_white();
-            pixel &= src[x +  (y) * w].is_white();
-            pixel &= src[x +  (y) * w].is_white();
-            pixel &= src[x +  MIN((y + 1), h-1u) * w].is_white();
+            pixel &= src[{x,  MAX((y - 1), 0) }].is_white();
+            pixel &= src[{x, (y) }].is_white();
+            pixel &= src[{x,  (y) }].is_white();
+            pixel &= src[{x,  (y) }].is_white();
+            pixel &= src[{x,  MIN((y + 1), h-1u) }].is_white();
             
-            dst[x + y * w] = Binary::from_bool(pixel);
+            dst[{x, y}] = Binary::from_bool(pixel);
         }
     }
 }
@@ -486,8 +486,8 @@ auto x4(const Image<Gray> & src, const size_t m){
 Image<Gray> x2(const Image<Gray> & src){
     Image<Gray> dst(src.size() / 2);
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     for(size_t y = 0; y < h; y++){
         for(size_t x = 0; x < w; x++){
@@ -514,12 +514,12 @@ void anti_pepper_x(Image<Binary> & dst,const Image<Binary> & src){
         return;
     }
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     for(size_t y = 0; y < h; y++){
-        const auto * p_src = &src[y * w + 1];
-        auto * p_dst = &dst[y * w + 1];
+        const auto * p_src = &src.head_ptr()[y * w + 1];
+        auto * p_dst = &dst.head_ptr()[y * w + 1];
         uint8_t last_two = false;
         for (size_t x = 1; x < w - 2; ++x) {
             uint8_t next = (*(p_src + 1)).is_white();
@@ -540,13 +540,13 @@ void anti_pepper_y(Image<Binary> & dst,const Image<Binary> & src){
     }
 
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
 
     for(size_t x = 0; x < w - 1; ++x){
-        auto * p_src = &src[x];
-        auto * p_dst = &dst[x];
+        auto * p_src = &src.head_ptr()[x];
+        auto * p_dst = &dst.head_ptr()[x];
         uint8_t last_two = false;
         for (size_t y = 1; y < h - 2; ++y) {
             uint8_t next = (*(p_src + 1)).is_white();
@@ -567,12 +567,12 @@ void anti_pepper(Image<Binary> & dst,const Image<Binary> & src){
     }
 
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     for(size_t y = 0; y < h; y++){
-        auto * p_src = &src[y * w + 1];
-        auto * p_dst = &dst[y * w + 1];
+        auto * p_src = &src.head_ptr()[y * w + 1];
+        auto * p_dst = &dst.head_ptr()[y * w + 1];
         uint8_t last_two = true;
         for (size_t x = 1; x < w - 1; ++x) {
             uint8_t next = (*(p_src + 1)).is_white();
@@ -588,8 +588,8 @@ void anti_pepper(Image<Binary> & dst,const Image<Binary> & src){
 
 void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real_t percent){
     const auto size = src.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     size_t n = int(percent * m * m);
 
@@ -620,8 +620,8 @@ void zhang_suen(Image<Binary> & dst,const Image<Binary> & src){
     }
 
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
     auto temp = src.clone();
     dst.clone(src);
     
@@ -680,8 +680,8 @@ void zhang_suen2(Image<Binary> & dst,const Image<Binary> & src){
     }
 
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
     auto temp = src.clone();
     dst.clone(src);
     
@@ -738,12 +738,12 @@ void convo_roberts_x(Image<Gray> & dst, const Image<Gray> & src){
     }
 
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     for (size_t y = 0; y < h; ++y) {
-        const auto * p_src = &src[y * w];
-        auto * p_dst = &dst[y * w];
+        const auto * p_src = &src.head_ptr()[y * w];
+        auto * p_dst = &dst.head_ptr()[y * w];
         for (size_t x = 0; x < w - 1; ++x) {
             *p_dst = Gray::from_u8(ABS(p_src->to_u8() - (p_src + 1)->to_u8()));
             p_src++;
@@ -761,13 +761,13 @@ void convo_roberts_xy(Image<Gray> & dst, const Image<Gray> & src){
     }
 
     const auto size = dst.size();
-    const auto w = size_t(size.x);
-    const auto h = size_t(size.y);
+    const size_t w = size_t(size.x);
+    const size_t h = size_t(size.y);
 
     for (size_t y = 0; y < h - 1; ++y) {
-        const auto * p_src = &src[y * w];
-        const auto * p_src2 = &src[(y + 1) * w];
-        auto * p_dst = &dst[y * w];
+        const auto * p_src = &src.head_ptr()[y * w];
+        const auto * p_src2 = &src.head_ptr()[(y + 1) * w];
+        auto * p_dst = &dst.head_ptr()[y * w];
         for (size_t x = 0; x < w - 1; ++x) {
             *p_dst = Gray::from_u8(MAX(
                 ABS(p_src->to_u8() - (p_src + 1)->to_u8()), 
@@ -781,8 +781,8 @@ void convo_roberts_xy(Image<Gray> & dst, const Image<Gray> & src){
 
     {
         size_t y = h - 1;
-        auto * p_src = &src[y * w];
-        auto * p_dst = &dst[y * w];
+        auto * p_src = src.head_ptr() + y * w;
+        auto * p_dst = dst.head_ptr() + y * w;
         for(size_t x = 0; x < w - 1; ++x) {
             *p_dst = Gray::from_u8(ABS(p_src->to_u8() - (p_src + 1)->to_u8()));
             p_src++;
@@ -810,6 +810,8 @@ static constexpr Direction xy_to_dir(const int16_t x, const int16_t y){
         }
     }
 
+    __builtin_unreachable();
+
     #undef TWO_AND_HALF
 } 
 
@@ -825,12 +827,12 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
 
     auto gm = std::make_unique<gvec_t[]>(roi.area());
 
-    const auto w = roi.w();
+    const size_t w = roi.w();
     
-    static constexpr size_t shift_bits = 9;
+    static constexpr size_t SHIFTS = 9;
     
-    const uint8_t low_squ = math::square(low_thresh) >> shift_bits;
-    const uint8_t high_squ = math::square(high_thresh) >> shift_bits;
+    const uint8_t low_squ = math::square(low_thresh) >> SHIFTS;
+    const uint8_t high_squ = math::square(high_thresh) >> SHIFTS;
     
 
     //2. Finding Image Gradients
@@ -843,28 +845,28 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
                 //  2   0   -2
                 //  1   0   -1
 
-                vx =  (src[(y - 1) * w + x - 1]).to_u8()
-                    - (src[(y - 1) * w + x + 1]).to_u8()
-                    + ((src[(y + 0) * w + x - 1]).to_u8() << 1)
-                    - ((src[(y + 0) * w + x + 1]).to_u8() << 1)
-                    + (src[(y + 1) * w + x - 1]).to_u8()
-                    - (src[(y + 1) * w + x + 1]).to_u8();
+                vx =    (src[{x - 1, (y - 1)}]).to_u8()
+                    -   (src[{x + 1, (y - 1)}]).to_u8()
+                    +   ((src[{x - 1, (y + 0)}]).to_u8() << 1)
+                    -   ((src[{x + 1, (y + 0)}]).to_u8() << 1)
+                    +   (src[{x - 1, (y + 1)}]).to_u8()
+                    -   (src[{x + 1, (y + 1)}]).to_u8();
 
                 //  1   2   1
                 //  0   0   0
                 //  -1  2   -1
 
-                vy = (src[(y - 1) * w + x - 1]).to_u8()
-                    + ((src[(y - 1) * w + x + 0]).to_u8() << 1)
-                    + (src[(y - 1) * w + x + 1]).to_u8()
-                    - (src[(y + 1) * w + x - 1]).to_u8()
-                    - ((src[(y + 1) * w + x + 0]).to_u8() << 1)
-                    - (src[(y + 1) * w + x + 1]).to_u8();
+                vy =    (src[{x - 1, (y - 1)}]).to_u8()
+                    +   ((src[{x + 0, (y - 1)}]).to_u8() << 1)
+                    +   (src[{x + 1, (y - 1)}]).to_u8()
+                    -   (src[{x - 1, (y + 1)}]).to_u8()
+                    -   ((src[{x + 0, (y + 1)}]).to_u8() << 1)
+                    -   (src[{x + 1, (y + 1)}]).to_u8();
 
                 // Find the direction and round angle to 0, 45, 90 or 135
 
                 gm[w * y + x] = gvec_t{
-                    .g = uint8_t((math::square(vx) + math::square(vy)) >> shift_bits),
+                    .g = uint8_t((math::square(vx) + math::square(vy)) >> SHIFTS),
                     .t = xy_to_dir(vx, vy)};
             }
         }
@@ -873,12 +875,12 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
     // 3. Hysteresis Thresholding
     // 4. Non-maximum Suppression and output
 
-    gvec_t *va = nullptr, *vb = nullptr;
+
 
     clear_corners(dst);
     for (size_t gy = 1; gy < size_t(roi.h())-1; gy++) {
         gvec_t * vc = &gm[gy * w];
-        auto * dp = &dst[gy * w];
+        auto * dp = &dst.head_ptr()[gy * w];
         for (size_t gx = 1; gx < roi.w()-1u; gx++) {
             vc++;
             dp++;
@@ -886,11 +888,11 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
 
             if (vc->g < low_squ) {
                 // Not an edge
-                *dp = Binary::from_black();
+                *dp = Binary::black();
                 continue;
                 // Check if strong or weak edge
             } else if (vc->g >= high_squ){
-                *dp = Binary::from_white();
+                *dp = Binary::white();
             } else{
                 if( gm[(gy - 1) * size_t(roi.w()) + (gx - 1)].g >= high_squ ||
                     gm[(gy - 1) * size_t(roi.w()) + (gx + 0)].g >= high_squ ||
@@ -902,43 +904,51 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const Range2<uint16_t> & 
                     gm[(gy + 1) * size_t(roi.w()) + (gx + 1)].g >= high_squ)
                 {
 
-                    *dp = Binary::from_white();
+                    *dp = Binary::white();
                 } else {
                     // Not an edge
-                    *dp = Binary::from_black();
+                    *dp = Binary::black();
                     continue;
                 }
             }
 
-            switch (Direction(vc->t)) {
-                default: __builtin_unreachable();
-                case Direction::R: {
-                    va = &gm[(gy + 0) * size_t(roi.w()) + (gx - 1)];
-                    vb = &gm[(gy + 0) * size_t(roi.w()) + (gx + 1)];
-                    break;
-                }
+            auto [va, vb] = [&](const Direction dir) -> std::tuple<gvec_t, gvec_t>{
+                switch (dir) {
+                    case Direction::R: {
+                        return{
+                            gm[(gy + 0) * size_t(roi.w()) + (gx - 1)],
+                            gm[(gy + 0) * size_t(roi.w()) + (gx + 1)]
+                        };
+                    }
 
-                case Direction::UR: {
-                    va = &gm[(gy + 1) * size_t(roi.w()) + (gx + 1)];
-                    vb = &gm[(gy - 1) * size_t(roi.w()) + (gx - 1)];
-                    break;
-                }
+                    case Direction::UR: {
+                        return{
+                            gm[(gy + 1) * size_t(roi.w()) + (gx + 1)],
+                            gm[(gy - 1) * size_t(roi.w()) + (gx - 1)]
+                        };
+                    }
 
-                case Direction::U: {
-                    va = &gm[(gy + 1) * size_t(roi.w()) + (gx + 0)];
-                    vb = &gm[(gy - 1) * size_t(roi.w()) + (gx + 0)];
-                    break;
-                }
+                    case Direction::U: {
+                        return{
+                            gm[(gy + 1) * size_t(roi.w()) + (gx + 0)],
+                            gm[(gy - 1) * size_t(roi.w()) + (gx + 0)]
+                        };
+                    }
 
-                case Direction::UL: {
-                    va = &gm[(gy + 1) * size_t(roi.w()) + (gx - 1)];
-                    vb = &gm[(gy - 1) * size_t(roi.w()) + (gx + 1)];
-                    break;
-                }
-            }
+                    case Direction::UL: {
+                        return{
+                            gm[(gy + 1) * size_t(roi.w()) + (gx - 1)],
+                            gm[(gy - 1) * size_t(roi.w()) + (gx + 1)]
+                        };
+                    }
+                    default:
+                    __builtin_unreachable();
 
-            if (((vc->g < va->g) || (vc->g < vb->g))) {
-                *dp = Binary::from_black();
+                }
+            }(vc->t);
+
+            if (((vc->g < va.g) || (vc->g < vb.g))) {
+                *dp = Binary::black();
             }
         }
     }
@@ -948,13 +958,13 @@ void eye(Image<Gray> &dst, const Image<Gray> &src){
     PANIC("todo");
     // using vec_t = Vec2<int8_t>;
     // #define math::square(x) (x * x)
-    // static constexpr size_t shift_bits = 3;
+    // static constexpr size_t SHIFTS = 3;
 
     // // sizeof(vec_t);
     // auto roi = src.size().to_rect();
     // auto gm = std::make_unique<vec_t[]>(roi.get_area());
     
-    // const auto w = size_t(roi.w());
+    // const size_t w = size_t(roi.w());
 
     // //2. Finding Image Gradients
     // {
@@ -987,8 +997,8 @@ void eye(Image<Gray> &dst, const Image<Gray> &src){
     //             // Find the direction and round angle to 0, 45, 90 or 135
 
     //             gm[w * y + x] = vec_t{
-    //                 int8_t(vx >> shift_bits), 
-    //                 int8_t(vy >> shift_bits)};
+    //                 int8_t(vx >> SHIFTS), 
+    //                 int8_t(vy >> SHIFTS)};
     //         }
     //     }
     // }
@@ -1073,12 +1083,12 @@ void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
             std::fill(min_values.begin(), min_values.end(), 255);
             for(size_t i=y-WINDOW_HALF_SIZE;i<=y+WINDOW_HALF_SIZE;i++){
                 for(size_t j=x-WINDOW_HALF_SIZE;j<=x+WINDOW_HALF_SIZE;j++){
-                    auto current_value = src[{j,i}].to_u8();
-                    auto it = std::find_if(min_values.begin(), min_values.end(), [current_value](const uint8_t val){
-                        return val > current_value;
+                    auto now_value = src[{j,i}].to_u8();
+                    auto it = std::find_if(min_values.begin(), min_values.end(), [now_value](const uint8_t val){
+                        return val > now_value;
                     });
                     if (it != min_values.end()) {
-                        *it = current_value; // Replace the found value with the current value
+                        *it = now_value; // Replace the found value with the now value
                     }
                 }
             }

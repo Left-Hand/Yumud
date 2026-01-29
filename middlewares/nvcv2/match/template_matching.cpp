@@ -26,16 +26,16 @@ iq16 template_match(
 ){
     BOUNDARY_CHECK()
 
-    const auto size_opt = Rect2u(offset, tmp.size())
+    const auto may_size = Rect2u(offset, tmp.size())
         .intersection(Rect2u::from_size(src.size()));
     
-    if(size_opt.is_none()) return 0;
-    const auto size = size_opt.unwrap();
+    if(may_size.is_none()) return 0;
+    const auto size = may_size.unwrap();
 
     size_t score = 0;
     for(size_t y = 0; y < size.h(); y++){
-        const auto * p_tmp = &tmp[Vec2u(0,y)];
-        const auto * p_src = &src[Vec2u(0,y) + offset];
+        const Binary * p_tmp = &tmp[{0,y}];
+        const Binary * p_src = src.head_ptr() + src.position_to_index(Vec2u(0,y) + offset);
         for(size_t x = 0; x < size.w(); x++){
             score += int32_t((*p_tmp).is_white() ^ (*p_src).is_white());
             p_tmp++;

@@ -28,41 +28,26 @@ template <typename ColorType>
 class PixelProxy;
 
 
+enum class [[nodiscard]] ImageCreateError:uint8_t{
+    OutOfMemory,
+    EmptySize,
+    LoadFromNull,
+    RegionOutOfSize,
+};
 
 
 template<typename T>
 class [[nodiscard]] Image final{
 public:
-    enum class [[nodiscard]] Error{
-        OutOfMemory,
-        EmptySize,
-        LoadFromNull,
-        RegionOutOfSize,
-    };
-
-    template<typename U = void>
-    using IResult = Result<U, Error>;
-
     explicit Image(const Vec2u size):
         size_(size),
         resource_(std::make_shared<T[]>(size.x * size.y)){
             ASSERT(not size.is_zero());
         }
 
-    // IResult<Image> from_size(const Vec2u size){
-    //     auto raw = new (std::nothrow) T[size.x * size.y];
-    //     if (!raw) {
-    //         return Err(Error::OutOfMemory);
-    //     }
-    //     return Ok(std::move(Image(
-    //         std::shared_ptr<T[]>(raw, std::default_delete<T[]>()),
-    //         size))
-    //     );
-    // }
-
-    explicit Image(std::shared_ptr<T[]> data, const Vec2u size):
+    explicit Image(std::shared_ptr<T[]> resource, const Vec2u size):
         size_(size),
-        resource_(data){
+        resource_(resource){
             ASSERT(not size.is_zero());
         }
 
@@ -94,6 +79,10 @@ public:
 
     Image & operator=(const Image& other) = delete;
     bool operator ==(const Image & other) const = delete;
+
+    [[nodiscard]] constexpr size_t position_to_index(const Vec2u16 pos) const {
+        return pos.x + pos.y * this->size().x;
+    }
 
     [[nodiscard]] Image<T> clone() const {
         const auto img_size = this->size();
@@ -132,32 +121,21 @@ public:
         putpixel_unchecked(pos, color);
     }
 
-    [[nodiscard]] __fast_inline const T & operator[](const size_t index) const { 
-        return resource_[index];
+    [[nodiscard]] T & operator[](const Vec2u pos) {
+        return resource_[pos.x + pos.y * this->size().x]; }
+
+    [[nodiscard]] const T & operator[](const Vec2u pos) const {
+        return resource_[pos.x + pos.y * this->size().x]; }
+
+    [[nodiscard]] T & at(const Vec2u pos){
+        assert_position_is_inrange(pos);
+        return resource_[pos.x + pos.y * this->size().x];
     }
 
-    [[nodiscard]] __fast_inline T & operator[](const size_t index) {
-        return resource_[index]; }
-
-    [[nodiscard]] __fast_inline T & operator[](const Vec2u pos) {
-        return resource_[pos.x + pos.y * this->size().x]; }
-
-    [[nodiscard]] __fast_inline const T & operator[](const Vec2u pos) const {
-        return resource_[pos.x + pos.y * this->size().x]; }
-
-
-    template<typename ToColorType>
-    [[nodiscard]] __fast_inline ToColorType at(const Vec2u pos) const {
+    [[nodiscard]] const T & at(const Vec2u pos) const {
         assert_position_is_inrange(pos);
-        return resource_[pos.x + pos.y * this->size().x]; }
-
-    [[nodiscard]] __fast_inline T & at(const Vec2u pos){
-        assert_position_is_inrange(pos);
-        return resource_[pos.x + pos.y * this->size().x]; }
-
-    [[nodiscard]] __fast_inline const T & at(const Vec2u pos)const{
-        assert_position_is_inrange(pos);
-        return resource_[pos.x + pos.y * this->size().x]; }
+        return resource_[pos.x + pos.y * this->size().x];
+    }
 
     void putpixel_unchecked(const Vec2u pos, const T color) 
         { resource_[this->size().x * pos.y + pos.x] = color; }
@@ -171,7 +149,7 @@ private:
 
     std::shared_ptr<T[]> resource_;
 
-    __fast_inline void assert_position_is_inrange(const Vec2u pos){
+    void assert_position_is_inrange(const Vec2u pos){
         ASSERT(size_.x > pos.x and size_.y > pos.y);
     }
 

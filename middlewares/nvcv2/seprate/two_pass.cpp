@@ -43,8 +43,8 @@ void TwoPass::twoPassConnectComponent(Image<Gray> & out,const Image<Binary> &src
 		for (size_t x = 0u; x < w; x++){
 			if (src[{x,y}].is_black()) continue;
 			//left and up labels
-			Gray left = (x - 1 < 0) ? Gray::from_black() : out.at({x - 1, y});
-			Gray up = (y - 1 < 0) ? Gray::from_black() : out.at({x, y-1});
+			Gray left = (x - 1 < 0) ? Gray::black() : out.at({x - 1, y});
+			Gray up = (y - 1 < 0) ? Gray::black() : out.at({x, y-1});
 
 			if (left.is_black() and up.is_black()){
 				//non of two labels is markded, so add a new label
@@ -74,7 +74,7 @@ void TwoPass::twoPassConnectComponent(Image<Gray> & out,const Image<Binary> &src
 	//second pass 
 	for (size_t y = 0u; y < h; y++){
 		for (size_t x = 0u; x < w; x++){
-			if (src[{x,y}] != Binary::from_black())
+			if (src[{x,y}] != Binary::black())
 				out[{x,y}] = Gray::from_u8(Find(out[{x,y}].to_u8()));
 		}
 	}
