@@ -245,9 +245,10 @@ void stl06n_main(){
             script::make_function("outen", [&](){repl_server.set_outen(EN);}),
             script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
             script::make_function("led", [&](const bool on){led.write(on ? HIGH : LOW);}),
-            script::make_function("add", [&](const int8_t a, const int8_t b){return a + b;}),
             script::make_function("add2", add2),
-            script::make_function("test", [&](const StringView a){return strconv2::FstrDump::defmt_from_str(a);}),
+            script::make_function("add", [&](const uint8_t a, const uint8_t b){return a + b;}),
+            script::make_function("add3", [&](const float a, const float b){return a + b;}),
+            script::make_function("test", [&](const StringView a){return strconv2::FstrDump::parse(a);}),
 
             script::make_list( "alct",
                 script::make_function("now", [&](){return o1heap_allocator.diagnostics().allocated;}),

@@ -55,6 +55,9 @@ private:
 template<typename T>
 using DestringResult = strconv2::DestringResult<T>;
 
+
+#if 0
+
 template<typename T>
 struct StringEntitySeeker{
 
@@ -103,6 +106,9 @@ struct StringEntitySeeker<StringView>{
         return Ok(std::make_tuple(left, right));
     }
 };
+
+#endif
+
 // struct StringDeformatIterator{
 //     template<typename T>
 //     using DestringResult = strconv2::DestringResult;

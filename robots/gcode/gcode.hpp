@@ -245,7 +245,7 @@ struct [[nodiscard]] GcodeLine{
     constexpr IResult<uint16_t> query_major(const Mnemonic mnemoic) const {
         return details::query_tmp<uint16_t>(line, mnemoic.to_letter(), 
         [](const StringView str) -> Result<uint16_t, Error>{
-            const auto res = (strconv2::FstrDump::defmt_from_str(str.substr(1).unwrap()));
+            const auto res = (strconv2::FstrDump::parse(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
             if(dump.digit_part > std::numeric_limits<uint16_t>::max())
@@ -257,7 +257,7 @@ struct [[nodiscard]] GcodeLine{
     constexpr IResult<uint16_t> query_minor(const Mnemonic mnemoic) const {
         return details::query_tmp<uint16_t>(line, mnemoic.to_letter(), 
         [](const StringView str) -> Result<uint16_t, Error>{
-            const auto res = (strconv2::FstrDump::defmt_from_str(str.substr(1).unwrap()));
+            const auto res = (strconv2::FstrDump::parse(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
             if(dump.num_frac_digits == 0) return Err(GcodeParseError::NoMinorNumber);

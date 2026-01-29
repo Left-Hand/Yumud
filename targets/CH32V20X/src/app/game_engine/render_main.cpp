@@ -55,6 +55,7 @@ void render_main(){
     lcd_nrst.set_high();
 
 
+
     const auto spi_rank = spi.allocate_cs_pin(&lcd_cs).unwrap();
 
     drivers::ST7789 tft{

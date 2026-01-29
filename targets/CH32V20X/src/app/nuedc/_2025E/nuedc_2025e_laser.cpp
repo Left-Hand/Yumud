@@ -189,9 +189,9 @@ void nuedc_2025e_laser_main(){
     [[maybe_unused]] auto blink_service = [&]{
         static auto timer = async::RepeatTimer::from_duration(200ms);
         timer.invoke_if([&]{
-            static BoolLevel last_state = LOW;
-            last_state = ~last_state;
-            led.write(last_state);
+            static BoolLevel last_led_state = LOW;
+            last_led_state = ~last_led_state;
+            led.write(last_led_state);
         });
     };
 
@@ -222,10 +222,10 @@ void nuedc_2025e_laser_main(){
         may_advanced_start_tick_ = Some(clock::millis());
     };
 
-    [[maybe_unused]] auto repl_service = [&]{
-        static repl::ReplServer repl_server{&DBG_UART, &DBG_UART};
+    [[maybe_unused]] auto poll_repl_activity = [&]{
+        [[maybe_unused]] static repl::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
-        static const auto list = script::make_list(
+        [[maybe_unused]] static const auto list = script::make_list(
             "list",
             script::make_function("rst", [](){sys::reset();}),
             script::make_function("outen", [&](){repl_server.set_outen(EN);}),
@@ -406,7 +406,7 @@ void nuedc_2025e_laser_main(){
 
 
     while(true){
-        auto joint_service = [&]{
+        auto poll_joint_activity = [&]{
             switch(run_status_.state){
             case RunState::Seeking:
                 joint_seeking_ctl();
@@ -422,7 +422,7 @@ void nuedc_2025e_laser_main(){
             }
         };
 
-        auto master_service = [&]{
+        auto poll_master_activity = [&]{
             switch(run_status_.state){
             case RunState::Idle: 
                 handle_gimbal_idle();
@@ -439,11 +439,11 @@ void nuedc_2025e_laser_main(){
         static auto timer = async::RepeatTimer::from_duration(1000ms / MACHINE_CTRL_FREQ);
 
         timer.invoke_if([&]{
-            master_service();
-            joint_service();
+            poll_master_activity();
+            poll_joint_activity();
         });
 
-        repl_service();
+        poll_repl_activity();
     
         if(report_en_){
             static auto report_timer = async::RepeatTimer::from_duration(DELTA_TIME_MS);
