@@ -13,6 +13,7 @@
 #include "core/string/utils/line_input_sinker.hpp"
 #include "core/utils/iter/foreach.hpp"
 #include "core/clock/time.hpp"
+#include "core/string/utils/simularity/ngram.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/gpio/gpio_port.hpp"
@@ -248,6 +249,7 @@ void stl06n_main(){
             script::make_function("add2", add2),
             script::make_function("add", [&](const uint8_t a, const uint8_t b){return a + b;}),
             script::make_function("add3", [&](const float a, const float b){return a + b;}),
+            script::make_function("ssm", [&](const StringView a, const StringView b){return str::ngram_similarity(a, b);}),
             script::make_function("test", [&](const StringView a){return strconv2::FstrDump::parse(a);}),
 
             script::make_list( "alct",

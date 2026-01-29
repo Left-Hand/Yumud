@@ -175,8 +175,8 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // sincos_main();
-    // stl06n_main();
-    render_main();
+    stl06n_main();
+    // render_main();
     // myesc_main();
     // s21c_main();
     // steadywin_main();
