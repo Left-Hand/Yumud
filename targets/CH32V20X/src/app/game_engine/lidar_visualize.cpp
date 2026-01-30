@@ -328,6 +328,8 @@ void lidar_visualize_main(){
     image.fill(color_cast<Gray>(ColorEnum::BLACK));
 
     uint16_t zoom = 50;
+    math::Vec2<uint16_t> dest_point = {64, 64};
+    math::Vec2<uint16_t> src_point = {64, 0};
 
     auto repl_list =
         script::make_list( "list",
@@ -339,6 +341,15 @@ void lidar_visualize_main(){
             script::make_function("add3", [&](const float a, const float b){return a + b;}),
             script::make_function("ssm", [&](const StringView a, const StringView b){return str::ngram_similarity(a, b);}),
             script::make_function("test", [&](const StringView a){return strconv2::FstrDump::parse(a);}),
+            script::make_function("dp", [&](const uint16_t x, const uint16_t y){
+                dest_point.x = x;
+                dest_point.y = y;
+            }),
+
+            script::make_function("sp", [&](const uint16_t x, const uint16_t y){
+                src_point.x = x;
+                src_point.y = y;
+            }),
             script::make_mut_property("zoom", &zoom),
 
             script::make_list( "alct",
@@ -351,9 +362,17 @@ void lidar_visualize_main(){
     clock::delay(100ms);
     [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(8ms);
 
-    auto render_clusters = [&](auto && range){
-        for(const PackedCluster & cluster : range){
-            if(cluster.start_angle < cluster.start_angle.DEG_90) continue;
+    auto render_clusters = [&](auto && clusters){
+        //屏蔽机器本身的遮挡
+        auto is_outof_blocked_area = [&](const PackedCluster & cluster){ 
+            // return (cluster.start_angle > cluster.start_angle.HALF);
+            static constexpr auto BLOCKED_START_ANGLE = make_angular_from_turns(uq32(0.25 - 0.25));
+            static constexpr auto BLOCKED_STOP_ANGLE = make_angular_from_turns(uq32(0.25 + 0.25));
+            if(cluster.start_angle < BLOCKED_START_ANGLE) return true;
+            if(cluster.start_angle > BLOCKED_STOP_ANGLE) return true;
+            return false;
+        };
+        for(const PackedCluster & cluster : clusters | std::views::filter(is_outof_blocked_area)){
             const PackedLidarPoint min_point = *std::min_element(cluster.points.begin(), cluster.points.end(), 
                 [](const PackedLidarPoint & a, const PackedLidarPoint & b){ return a.distance_code.bits < b.distance_code.bits; });
 
@@ -367,7 +386,6 @@ void lidar_visualize_main(){
             const uint16_t py = static_cast<uint16_t>(CLAMP(dy + (IMAGE_WIDTH / 2), 0, (IMAGE_WIDTH - BLOCK_WIDTH)));
 
             const auto color = color_cast<Gray>(ColorEnum::WHITE);
-            // const auto color = Gray::from_u8(min_point.intensity_code.bits);
 
             for(size_t x = px; x < size_t(px + BLOCK_WIDTH); ++x){
                 for(size_t y = py; y < size_t(py + BLOCK_WIDTH); ++y){
@@ -394,25 +412,22 @@ void lidar_visualize_main(){
         #endif
 
         #if 1
-        const math::Vec2u16 start_point = math::Vec2u16{
-            // static_cast<uint16_t>(IMAGE_WIDTH / 2), 
-            // static_cast<uint16_t>(IMAGE_WIDTH / 2)
-            static_cast<uint16_t>(10), 
-            static_cast<uint16_t>(10)
-        };
-
-        // const math::Vec2u16 stop_point = math::Vec2u16{50, 50};
-        // const math::Vec2u16 stop_point = math::Vec2u16{110, 110};
-        const math::Vec2u16 stop_point = math::Vec2u16{80, 110};
+        const math::Vec2u16 start_point = src_point;
+        const math::Vec2u16 stop_point = dest_point;
         
         auto allocator =std::allocator<math::Vec2<uint16_t>>{};
-        const auto path_points = nvcv2::bfs_pathfind(
+        // const auto path_points = nvcv2::bfs_pathfind(
+        const auto path_points = nvcv2::bfs_pathfind_8(
             allocator,
-            image.copy_as<uint8_t>(), start_point, stop_point);
+            image.copy_as<uint8_t>(), 
+            start_point, 
+            stop_point
+        );
 
         // DEBUG_PRINTLN(path_points.size());
         for(const auto & point : path_points){
-            image.put_pixel(point, color_cast<Gray>(ColorEnum::RED));
+            // image.put_pixel(point, color_cast<Gray>(ColorEnum::RED));
+            image.put_pixel(point, color_cast<Gray>(ColorEnum::WHITE));
         }
         #endif
     };
