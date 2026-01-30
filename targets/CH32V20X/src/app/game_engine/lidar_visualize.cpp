@@ -86,7 +86,7 @@ void lidar_visualize_main(){
     auto & DEBUG_UART = hal::usart2;
     DEBUG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(6000000),
+        .baudrate = hal::NearestFreq(230400),
         .tx_strategy = CommStrategy::Blocking
     });
     #endif
@@ -185,7 +185,7 @@ void lidar_visualize_main(){
         .tx_strategy = CommStrategy::Blocking
     });
     #elif defined(CH32V30X)
-    auto & stl06n_uart_ = hal::usart1;
+    auto &                                                                                                     stl06n_uart_ = hal::usart1;
     stl06n_uart_.init({
         .remap = hal::USART1_REMAP_PA9_PA10,
         .baudrate = hal::NearestFreq(230400),
@@ -243,13 +243,13 @@ void lidar_visualize_main(){
 
 
     #ifdef CH32V30X
-    auto & spi = hal::spi2;
+    auto & spi = hal::spi1;
     spi.init({
-        .remap = hal::SPI2_REMAP_PB13_PB14_PB15_PB12,
+        .remap = hal::SPI1_REMAP_PB3_PB4_PB5_PA15,
         .baudrate = hal::NearestFreq(72_MHz)
     });
 
-    #if 1
+    #if 0
     auto & timer = hal::timer3;
 
     timer.init({
@@ -267,12 +267,10 @@ void lidar_visualize_main(){
     timer.start();
     #endif
 
-    auto lcd_blk_pin = hal::PD<0>();
-    lcd_blk_pin.outpp(HIGH);
 
-    auto lcd_dc_pin = hal::PD<7>();
-    auto lcd_nrst_pin = hal::PB<7>();
-    auto lcd_cs_pin = hal::PB<4>();
+    auto lcd_dc_pin = hal::PB<4>();
+    auto lcd_nrst_pin = hal::PA<15>();
+    auto lcd_cs_pin = hal::PD<14>();
 
     #else
     auto & spi = hal::spi1;
@@ -328,8 +326,8 @@ void lidar_visualize_main(){
     image.fill(color_cast<Gray>(ColorEnum::BLACK));
 
     uint16_t zoom = 50;
-    math::Vec2<uint16_t> dest_point = {64, 64};
-    math::Vec2<uint16_t> src_point = {64, 0};
+    math::Vec2<uint16_t> dest_point = {64, 0};
+    math::Vec2<uint16_t> src_point = {70, 64};
 
     auto repl_list =
         script::make_list( "list",
@@ -359,8 +357,8 @@ void lidar_visualize_main(){
     );
 
 
-    clock::delay(100ms);
-    [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(8ms);
+    clock::delay(50ms);
+
 
     auto render_clusters = [&](auto && clusters){
         //屏蔽机器本身的遮挡
@@ -412,11 +410,17 @@ void lidar_visualize_main(){
         #endif
 
         #if 1
+        const auto now_secs = clock::seconds();
         const math::Vec2u16 start_point = src_point;
-        const math::Vec2u16 stop_point = dest_point;
+        // const math::Vec2u16 stop_point = dest_point;
+        const auto stop_point = math::Vec2u16{
+            static_cast<uint16_t>(64 + 30 * iq16(sinpu(0.2_iq16 * now_secs)))
+            , static_cast<uint16_t>(0)
+        };
         
         auto allocator =std::allocator<math::Vec2<uint16_t>>{};
         // const auto path_points = nvcv2::bfs_pathfind(
+        // const auto path_points = nvcv2::bfs_pathfind_8(
         const auto path_points = nvcv2::bfs_pathfind_8(
             allocator,
             image.copy_as<uint8_t>(), 
@@ -432,6 +436,7 @@ void lidar_visualize_main(){
         #endif
     };
 
+    [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(8ms);
     while(true){
         repl_server.invoke(repl_list);
         const auto now_secs = clock::seconds();

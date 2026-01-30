@@ -119,6 +119,10 @@ struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
         return Vec2<T>{len, 0};
     }
 
+    [[nodiscard]] __fast_inline static constexpr Vec2<T> from_y_axis(const T & len){
+        return Vec2<T>{len, 0};
+    }
+
     template<typename U>
     [[nodiscard]] __fast_inline static constexpr Vec2<T> from_angle_and_length(
         const Angular<U> angle, const T length){

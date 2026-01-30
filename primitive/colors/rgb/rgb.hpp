@@ -267,11 +267,11 @@ struct [[nodiscard]] Binary final{
         return Binary(b ? 0xff : 0x00);
     }
 
-    [[nodiscard]] static constexpr Binary black(){
+    [[nodiscard]] static consteval Binary black(){
         return Binary(static_cast<uint8_t>(BLACK));
     }
 
-    [[nodiscard]] static constexpr Binary white(){
+    [[nodiscard]] static consteval Binary white(){
         return Binary(static_cast<uint8_t>(WHITE));
     }
 
@@ -324,11 +324,11 @@ struct [[nodiscard]] Gray final{
         return Gray{_data};
     }
 
-    [[nodiscard]] static constexpr Gray black(){
+    [[nodiscard]] static consteval Gray black(){
         return Gray{BLACK};
     }
 
-    [[nodiscard]] static constexpr Gray white(){
+    [[nodiscard]] static consteval Gray white(){
         return Gray{WHITE};
     }
 
@@ -372,8 +372,8 @@ struct [[nodiscard]] IGray final{
         return IGray(value);
     }
 
-    [[nodiscard]] static constexpr IGray white() { return IGray(WHITE); }
-    [[nodiscard]] static constexpr IGray black() { return IGray(BLACK); }
+    [[nodiscard]] static consteval IGray white() { return IGray(WHITE); }
+    [[nodiscard]] static consteval IGray black() { return IGray(BLACK); }
 
     [[nodiscard]] constexpr int8_t as_i8() const {return bits;}
     [[nodiscard]] constexpr auto operator <=> (const IGray & other) const {
@@ -784,6 +784,7 @@ concept is_monochrome = std::is_same_v<T, Binary> or std::is_same_v<T, Gray> or 
 
 template<typename T>
 concept is_rgb = std::is_same_v<T, RGB24> or std::is_same_v<T, RGB332> or std::is_same_v<T, RGB565> or std::is_same_v<T, RGB888> ;
+
 
 template<typename T>
 concept is_polychrome = is_rgb<T> or std::is_same_v<T, LAB888> or std::is_same_v<T, HSV888>;

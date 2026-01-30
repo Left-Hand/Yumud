@@ -108,8 +108,8 @@ public:
         
         if(region.area() == 0) return Ok();
         
-        for(size_t y = region.y(); y < region.y() + region.h(); y++){
-            for(size_t x = region.x(); x < region.x() + region.w(); ++x){
+        for(uint16_t y = region.y(); y < region.y() + region.h(); y++){
+            for(uint16_t x = region.x(); x < region.x() + region.w(); ++x){
                 src_image.put_pixel_unchecked({x,y}, color_cast<ColorType>(color_));
             }
         }

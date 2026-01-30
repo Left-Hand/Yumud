@@ -19,7 +19,7 @@ DigitProbability match_numbers(
 
     DigitProbability digit_p = {0};
     for(size_t i = 0; i < MAX_NUMBERS; i++){
-        Image<Gray> tmp = Image<Gray>::from_buf(
+        Image<Gray> tmp = Image<Gray>::clone_from_buf(
             reinterpret_cast<const Gray *>(digit_images[i]), 
             tmp_size
         );
@@ -36,7 +36,7 @@ DigitProbability match_numbers(const Image<Binary> & src, const math::Rect2u & r
     DigitProbability digit_p;
     // const auto begin = clock::millis();
     for(size_t i = 0; i < MAX_NUMBERS; i++){
-        Image<Binary> tmp = Image<Binary>::from_buf(
+        Image<Binary> tmp = Image<Binary>::clone_from_buf(
             reinterpret_cast<const Binary *>(digit_bina_images[i]), 
             tmp_size
         );

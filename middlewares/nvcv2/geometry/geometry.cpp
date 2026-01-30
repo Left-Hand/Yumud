@@ -73,14 +73,14 @@ math::Vec2<iq16> inv_perspective_fast(const math::Vec2<iq16> & v){
 
 void perspective(Image<Gray> & dst,const Image<Gray> & src){
     auto size = static_cast<const Image<Gray> &>(dst).size();
-    for(size_t _y = 0; _y < size.y; _y++){
+    for(uint16_t _y = 0; _y < size.y; _y++){
         auto [x,y] = inv_perspective_fast({0, _y});
         auto x_step = inv_perspective_fast({1,_y}).x - x;
 
-        for(size_t _x = 0; _x < size.x; _x++){
+        for(uint16_t _x = 0; _x < size.x; _x++){
             x += x_step;
-            if(size.has_point(math::Vec2u{size_t(x),size_t(y)})){
-                dst[{_x,_y}]= src[{size_t(x),size_t(y)}];
+            if(size.has_point(math::Vec2u16{uint16_t(x),uint16_t(y)})){
+                dst[{_x,_y}]= src[{uint16_t(x),uint16_t(y)}];
             }else{
                 dst[{_x,_y}] = Gray::black();
             }

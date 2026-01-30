@@ -34,7 +34,10 @@ iq16 template_match(
 
     size_t score = 0;
     for(size_t y = 0; y < size.h(); y++){
-        const Binary * p_tmp = &tmp[{0,y}];
+        const Binary * p_tmp = &tmp[math::Vec2u16{
+            static_cast<uint16_t>(0),
+            static_cast<uint16_t>(y)
+        }];
         const Binary * p_src = src.head_ptr() + src.position_to_index(math::Vec2u(0,y) + offset);
         for(size_t x = 0; x < size.w(); x++){
             score += int32_t((*p_tmp).is_white() ^ (*p_src).is_white());

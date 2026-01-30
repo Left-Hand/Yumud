@@ -351,6 +351,7 @@ std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind(
     return path;
 }
 
+
 template<template<typename> typename Allocator>
 std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind_8(
     Allocator<math::Vec2<uint16_t>>& alloc,
@@ -370,15 +371,16 @@ std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind_
     const uint16_t height = static_cast<uint16_t>(image.height());
     const size_t total_nodes = static_cast<size_t>(width) * height;
     
-    // 使用一维数组存储节点信息，提高缓存局部性
+    // 使用一维数组存储节点信息
     struct alignas(4) NodeInfo {
-        uint16_t parent_idx = 0; // 使用索引而不是坐标，避免 optional 开销
+        uint16_t parent_idx = 0;
         bool visited = false;
     };
     
     // 创建分配器实例用于NodeInfo
-    using NodeAllocator = Allocator<NodeInfo>;
-    NodeAllocator node_alloc;
+    using NodeAllocator = typename std::allocator_traits<Allocator<math::Vec2<uint16_t>>>::
+                         template rebind_alloc<NodeInfo>;
+    NodeAllocator node_alloc(alloc);
     
     // 分配节点数组
     std::vector<NodeInfo, NodeAllocator> nodes(total_nodes, node_alloc);
@@ -396,20 +398,22 @@ std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind_
         };
     };
     
-    // BFS队列，存储节点索引（使用默认分配器即可）
+    // BFS队列
     std::queue<size_t> q;
     
     // 初始化起始节点
     size_t start_idx = pos_to_idx(start_point.x, start_point.y);
     nodes[start_idx].visited = true;
-    nodes[start_idx].parent_idx = start_idx; // 根节点的父节点指向自己
+    nodes[start_idx].parent_idx = static_cast<uint16_t>(start_idx); // 根节点的父节点指向自己
     q.push(start_idx);
     
     size_t stop_idx = pos_to_idx(stop_point.x, stop_point.y);
     
-    // 8方向向量（上、右上、右、右下、下、左下、左、左上）
-    constexpr int16_t dx[8] = {0, 1, 1, 1, 0, -1, -1, -1};
-    constexpr int16_t dy[8] = {-1, -1, 0, 1, 1, 1, 0, -1};
+    // 8方向向量 - 修改顺序，优先检查水平/垂直方向
+    // 顺序：上、下、左、右（水平/垂直方向），然后是对角线方向
+    constexpr int16_t dx[8] = {0, 0, -1, 1, -1, 1, 1, -1};
+    constexpr int16_t dy[8] = {-1, 1, 0, 0, -1, -1, 1, 1};
+    // 前4个是水平/垂直方向，后4个是对角线方向
     
     bool path_found = false;
     
@@ -427,7 +431,6 @@ std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind_
         
         // 探索邻居 (8个方向)
         for (size_t i = 0; i < 8; ++i) {
-            // 检查加法是否溢出
             int32_t new_x = static_cast<int32_t>(current_pos.x) + dx[i];
             int32_t new_y = static_cast<int32_t>(current_pos.y) + dy[i];
             
@@ -440,7 +443,7 @@ std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind_
             uint16_t neighbor_x = static_cast<uint16_t>(new_x);
             uint16_t neighbor_y = static_cast<uint16_t>(new_y);
             
-            // 跳过障碍物
+            // 检查是否为障碍物（0表示可通行）
             if (image(neighbor_x, neighbor_y) != 0) {
                 continue;
             }
@@ -452,9 +455,25 @@ std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind_
                 continue;
             }
             
+            // 对于对角线移动，检查相邻的水平/垂直方向是否可通行
+            // 防止"切角"通过障碍物
+            if (i >= 4) { // 对角线方向（后4个）
+                // 检查两个相邻的水平/垂直方向是否可通行
+                uint16_t check_x1 = static_cast<uint16_t>(current_pos.x);
+                uint16_t check_y1 = neighbor_y;
+                uint16_t check_x2 = neighbor_x;
+                uint16_t check_y2 = static_cast<uint16_t>(current_pos.y);
+                
+                // 如果任一相邻方向是障碍物，则不允许对角线移动
+                if (image(check_x1, check_y1) != 0 || 
+                    image(check_x2, check_y2) != 0) {
+                    continue;
+                }
+            }
+            
             // 标记为已访问并设置父节点
             nodes[neighbor_idx].visited = true;
-            nodes[neighbor_idx].parent_idx = current_idx;
+            nodes[neighbor_idx].parent_idx = static_cast<uint16_t>(current_idx);
             q.push(neighbor_idx);
         }
     }
@@ -464,7 +483,7 @@ std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind_
         return std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>>(alloc);
     }
     
-    // 重建路径（从终点到起点），使用传入的分配器
+    // 重建路径
     std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> path(alloc);
     size_t current_idx = stop_idx;
     
@@ -482,6 +501,7 @@ std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind_
     
     return path;
 }
+
 
 //双向BFS 寻路算法 图片中0为空 非0为障碍
 template<template<typename> typename Allocator>

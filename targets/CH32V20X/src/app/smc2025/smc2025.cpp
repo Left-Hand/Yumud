@@ -116,9 +116,9 @@ class Plotter{
         static constexpr RGB565 Z_COLOR = color_cast<RGB565>(ColorEnum::BLUE);
         
         const auto arm_length = vec3.length();
-        const auto x_axis = math::Vec3<iq16>::from_x00(arm_length);
-        const auto y_axis = math::Vec3<iq16>::from_0y0(arm_length);
-        const auto z_axis = math::Vec3<iq16>::from_00z(arm_length);
+        const auto x_axis = math::Vec3<iq16>::from_x_axis(arm_length);
+        const auto y_axis = math::Vec3<iq16>::from_y_axis(arm_length);
+        const auto z_axis = math::Vec3<iq16>::from_z_axis(arm_length);
 
         const auto rot = math::Quat<iq16>::from_direction(vec3);
         const auto center_point = pos + math::Vec2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;

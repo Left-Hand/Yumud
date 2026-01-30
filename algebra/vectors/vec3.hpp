@@ -103,15 +103,15 @@ public:
         return Vec3<T>(static_cast<T>(1)/v.x, static_cast<T>(1)/v.y, static_cast<T>(1)/v.z);}
 
     [[nodiscard]] __fast_inline static constexpr 
-    Vec3 from_x00(T _x){
+    Vec3 from_x_axis(T _x){
         return Vec3<T>(_x, T(0), T(0));}
 
     [[nodiscard]] __fast_inline static constexpr 
-    Vec3 from_0y0(T _y){
+    Vec3 from_y_axis(T _y){
         return Vec3<T>(T(0), _y, T(0));}
 
     [[nodiscard]] __fast_inline static constexpr 
-    Vec3 from_00z(T _z){
+    Vec3 from_z_axis(T _z){
         return Vec3<T>(T(0), T(0), _z);}
 
     template<arithmetic U = T>
