@@ -10,7 +10,7 @@ namespace ymd{
 
 
 template<typename Shape, typename Policy>
-struct CacheOf{
+struct PreComputedOf{
 
 };
 

@@ -28,9 +28,9 @@ public:
         return std::span<Color>(buf_);
     }
 
-    constexpr auto data() const {return buf_.data();}
+    constexpr const Color * data() const {return buf_.data();}
 
-    constexpr auto data() {return buf_.data();}
+    constexpr Color * data() {return buf_.data();}
 
     constexpr auto begin() const {return buf_.begin();}
 
@@ -228,11 +228,11 @@ struct FrameBufferSpan{
         return Some(ret);
     }
 
-    constexpr auto data() const {
+    constexpr const Color * data() const {
         return buf_.data();
     }
 
-    constexpr auto data() {
+    constexpr Color * data() {
         return buf_.data();
     }
 
@@ -346,7 +346,7 @@ private:
             return ret;
         }
 
-        constexpr bool has_next() const{
+        [[nodiscard]] constexpr bool has_next() const{
             return (y_ < y_stop_);
         }
 
@@ -356,7 +356,6 @@ private:
         size_t y_stop_;
         size_t width_;
     };
-
 };
 
 

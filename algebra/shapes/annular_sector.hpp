@@ -584,8 +584,8 @@ private:
 
 
 template<typename T, typename D>
-struct [[nodiscard]] CacheOf<AnnularSector<T, D>, bool>{
-    using Self = CacheOf<AnnularSector<T, D>, bool>;
+struct [[nodiscard]] PreComputedOf<AnnularSector<T, D>, bool>{
+    using Self = PreComputedOf<AnnularSector<T, D>, bool>;
 
     T squ_inner_radius;
     T squ_outer_radius;

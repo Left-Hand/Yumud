@@ -32,7 +32,6 @@
 #include "primitive/colors/color/color.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-// #include "hal/timer/timer.hpp"
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/uart/uartsw.hpp"
@@ -42,9 +41,9 @@
 #include "hal/gpio/gpio_port.hpp"
 
 
-
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"
+#include "middlewares/nvcv2/path/astar.hpp"
 
 #include "drivers/Proximeter/STL06N/stl06n.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
@@ -69,6 +68,10 @@ struct PackedCluster{
     Angular<uq32> stop_angle;
 };
 
+using ClusterAllocator = mem::o1heap::O1HeapAllocator<std::pair<const size_t, PackedCluster>>;
+
+template<typename T>
+using PathAllocator = mem::o1heap::O1HeapAllocator<T>;
 
 void lidar_visualize_main(){
 
@@ -110,18 +113,25 @@ void lidar_visualize_main(){
     Angular<uq32> last_start_angle_ = Zero;
     Angular<uq32> last_stop_angle_ = Zero;
 
-    static constexpr size_t POOL_SIZE = 4096 * 2;
-    auto resource = std::make_unique<uint8_t[]>(POOL_SIZE);
 
-    using Allocator = mem::o1heap::O1HeapAllocator<std::pair<const size_t, PackedCluster>>;
-    auto o1heap_allocator = Allocator::try_from_buf(std::span(resource.get(), POOL_SIZE)).unwrap();
+
+    static constexpr size_t LIDAR_CLUSTERS_HEAP_SIZE = 4096 * 2;
+    [[maybe_unused]] static constexpr size_t PATH_HEAP_SIZE = 4096 * 2;
+
+    auto clusters_heap_bytes = std::make_unique<uint8_t[]>(LIDAR_CLUSTERS_HEAP_SIZE);
+    auto clusters_heap_allocator = ClusterAllocator::try_from_buf(
+        std::span(clusters_heap_bytes.get(), LIDAR_CLUSTERS_HEAP_SIZE)).unwrap();
+
+    // auto path_heap_bytes = std::make_unique<uint8_t[]>(PATH_HEAP_SIZE);
+    // auto path_heap_allocator = PathAllocator<uint8_t>::try_from_buf(
+    //     std::span(path_heap_bytes.get(), PATH_HEAP_SIZE)).unwrap();
 
     std::map<
         size_t, 
         PackedCluster, 
         std::less<size_t>,
-        Allocator
-    > packed_clusters_(o1heap_allocator);
+        ClusterAllocator
+    > packed_clusters_(clusters_heap_allocator);
 
     auto lidar_ev_handler = [&](const LidarEvent & ev){
         watch_pin_.set_high();
@@ -313,8 +323,9 @@ void lidar_visualize_main(){
     [[maybe_unused]] auto en_font2 = MonoFont16x8{};
 
     static constexpr size_t IMAGE_WIDTH = 128;
-    auto image = make_image<RGB565>(math::Vec2u{IMAGE_WIDTH, IMAGE_WIDTH});
-    image.fill(color_cast<RGB565>(ColorEnum::LIGHT_YELLOW));
+    // static constexpr size_t IMAGE_WIDTH = 64;
+    auto image = make_image<Gray>(math::Vec2u{IMAGE_WIDTH, IMAGE_WIDTH});
+    image.fill(color_cast<Gray>(ColorEnum::BLACK));
 
     uint16_t zoom = 50;
 
@@ -331,8 +342,8 @@ void lidar_visualize_main(){
             script::make_mut_property("zoom", &zoom),
 
             script::make_list( "alct",
-                script::make_function("now", [&](){return o1heap_allocator.diagnostics().allocated;}),
-                script::make_function("peak", [&](){return o1heap_allocator.diagnostics().peak_allocated;})
+                script::make_function("now", [&](){return clusters_heap_allocator.diagnostics().allocated;}),
+                script::make_function("peak", [&](){return clusters_heap_allocator.diagnostics().peak_allocated;})
             )
     );
 
@@ -340,7 +351,7 @@ void lidar_visualize_main(){
     clock::delay(100ms);
     [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(8ms);
 
-    auto plot_clusters = [&](auto && range){
+    auto render_clusters = [&](auto && range){
         for(const PackedCluster & cluster : range){
             if(cluster.start_angle < cluster.start_angle.DEG_90) continue;
             const PackedLidarPoint min_point = *std::min_element(cluster.points.begin(), cluster.points.end(), 
@@ -351,29 +362,70 @@ void lidar_visualize_main(){
             const int16_t dx = int16_t(min_point.distance_code.to_meters() * iq16(c) * zoom);
             const int16_t dy = int16_t(min_point.distance_code.to_meters() * iq16(s) * zoom);
 
-            const uint16_t x = static_cast<uint16_t>(CLAMP(-dx + (IMAGE_WIDTH / 2), 0, (IMAGE_WIDTH - 1)));
-            const uint16_t y = static_cast<uint16_t>(CLAMP(dy + (IMAGE_WIDTH / 2), 0, (IMAGE_WIDTH - 1)));
+            static constexpr size_t BLOCK_WIDTH = 6;
+            const uint16_t px = static_cast<uint16_t>(CLAMP(-dx + (IMAGE_WIDTH / 2), 0, (IMAGE_WIDTH - BLOCK_WIDTH)));
+            const uint16_t py = static_cast<uint16_t>(CLAMP(dy + (IMAGE_WIDTH / 2), 0, (IMAGE_WIDTH - BLOCK_WIDTH)));
 
-            const auto color = color_cast<RGB565>(RGB<iq16>::from_hsv(
-                min_point.intensity_code.bits * iq16(1.0 / 255.0), 
-                iq16(1.0), iq16(1.0))
-            );
-            image.put_pixel(math::Vec2u16{static_cast<uint16_t>(x     ), static_cast<uint16_t>    (y)}, color);
-            image.put_pixel(math::Vec2u16{static_cast<uint16_t>(x     ), static_cast<uint16_t>    (y + 1)}, color);
-            image.put_pixel(math::Vec2u16{static_cast<uint16_t>(x+1   ), static_cast<uint16_t>    (y)}, color);
-            image.put_pixel(math::Vec2u16{static_cast<uint16_t>(x+1   ), static_cast<uint16_t>    (y+1)}, color);
+            const auto color = color_cast<Gray>(ColorEnum::WHITE);
+            // const auto color = Gray::from_u8(min_point.intensity_code.bits);
+
+            for(size_t x = px; x < size_t(px + BLOCK_WIDTH); ++x){
+                for(size_t y = py; y < size_t(py + BLOCK_WIDTH); ++y){
+                    const auto point = math::Vec2u16{static_cast<uint16_t>(x), static_cast<uint16_t>(y)};
+                    image.put_pixel_unchecked(point, color);
+                }
+            }
         }
+
+        #if 0
+        const auto rects = {
+            math::Rect2u16::from_xywh(30, 10, 4, 60),
+            math::Rect2u16::from_xywh(70, 60, 4, 40)
+        };
+
+        for(const auto & rect : rects){
+            for(size_t y = rect.y(); y < rect.y() + rect.h(); ++y){
+                for(size_t x = rect.x(); x < rect.x() + rect.w(); ++x){
+                    const auto point = math::Vec2u16{static_cast<uint16_t>(x), static_cast<uint16_t>(y)};
+                    image.put_pixel_unchecked(point, color_cast<Gray>(ColorEnum::WHITE));
+                }
+            }
+        }
+        #endif
+
+        #if 1
+        const math::Vec2u16 start_point = math::Vec2u16{
+            // static_cast<uint16_t>(IMAGE_WIDTH / 2), 
+            // static_cast<uint16_t>(IMAGE_WIDTH / 2)
+            static_cast<uint16_t>(10), 
+            static_cast<uint16_t>(10)
+        };
+
+        // const math::Vec2u16 stop_point = math::Vec2u16{50, 50};
+        // const math::Vec2u16 stop_point = math::Vec2u16{110, 110};
+        const math::Vec2u16 stop_point = math::Vec2u16{80, 110};
+        
+        auto allocator =std::allocator<math::Vec2<uint16_t>>{};
+        const auto path_points = nvcv2::bfs_pathfind(
+            allocator,
+            image.copy_as<uint8_t>(), start_point, stop_point);
+
+        // DEBUG_PRINTLN(path_points.size());
+        for(const auto & point : path_points){
+            image.put_pixel(point, color_cast<Gray>(ColorEnum::RED));
+        }
+        #endif
     };
 
     while(true){
         repl_server.invoke(repl_list);
         const auto now_secs = clock::seconds();
 
-        plot_clusters(packed_clusters_ | std::views::values);
-        auto && shape = Sprite<RGB565>{.image = image.copy(), .position = math::Vec2u{10, 10}};
+        render_clusters(packed_clusters_ | std::views::values);
+        auto && shape = Sprite<Gray>{.image = image.copy(), .position = math::Vec2u{10, 10}};
 
         auto shape_bb = shape.bounding_box();
-        auto render_iter = RenderIterator<Sprite<RGB565>>(std::move(shape));
+        auto render_iter = RenderIterator<Sprite<Gray>>(std::move(shape));
 
         Microseconds upload_elapsed_us = 0us;
         Microseconds render_elapsed_us = 0us;
@@ -422,7 +474,7 @@ void lidar_visualize_main(){
             }
         });
 
-        image.fill(color_cast<RGB565>(ColorEnum::LIGHT_YELLOW));
+        image.fill(color_cast<Gray>(ColorEnum::BLACK));
 
         if(false)DEBUG_PRINTLN(
             now_secs,

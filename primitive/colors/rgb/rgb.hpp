@@ -399,7 +399,19 @@ using RGB24 = RGB888;
 template<>
 struct [[nodiscard]] ColorCaster<Gray, RGB565>{
     static constexpr Gray cast(const RGB565 & color){
-        return Gray::from_u8(((color.r*77 + color.g*150 + color.b*29+128) >> 8));
+        uint32_t sum = 0;
+        sum += static_cast<uint32_t>(color.r) * uint32_t(77 * 8) ;
+        sum += static_cast<uint32_t>(color.g) * uint32_t(150 * 4) ;
+        sum += static_cast<uint32_t>(color.b) * uint32_t(29 * 8);
+
+        return Gray::from_u8(static_cast<uint8_t>(sum >> 8));
+    }
+};
+
+template<>
+struct [[nodiscard]] ColorCaster<Gray, RGB888>{
+    static constexpr Gray cast(const RGB888 & color){
+        return Gray::from_u8(static_cast<uint8_t>((color.r*77 + color.g*150 + color.b*29) >> 8));
     }
 };
 
@@ -498,12 +510,7 @@ struct [[nodiscard]] ColorCaster<HSV888, RGB888> {
         return MIN(int(i) + int(j), 255);
     };
 
-
     static constexpr HSV888 cast(const RGB888 & rgb){
-
-
-
-
         #define FIXFRAC8(N,D) (((N)*256)/(D))
 
         auto sqrt16 = [](uint16_t x) -> uint8_t
@@ -681,11 +688,22 @@ struct [[nodiscard]] ColorCaster<RGB888, ColorEnum>{
     }
 };
 
+template<>
+struct [[nodiscard]] ColorCaster<Gray, ColorEnum>{
+    static constexpr Gray cast(const ColorEnum from){
+        const auto rgb = RGB888::from_u32(std::bit_cast<uint32_t>(from));
+        return Gray::from_u8(static_cast<uint8_t>((rgb.r*77 + rgb.g*150 + rgb.b*29) >> 8));
+    }
+};
+
 
 template<>
 struct [[nodiscard]] ColorCaster<RGB888, HSV888> {
+
     static constexpr uint8_t HSV_SECTION_6 = (0x20);
     static constexpr uint8_t HSV_SECTION_3 = (0x40);
+
+
     static constexpr RGB888 cast(const HSV888 & hsv){
         // Convert hue, saturation and brightness ( HSV/HSB ) to RGB
         // "Dimming" is used on saturation and brightness to make

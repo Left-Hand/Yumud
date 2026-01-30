@@ -25,26 +25,28 @@ using Error = PMW3901::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-static constexpr uint8_t PMW3901_REG_Product_ID              = 0x00;
-static constexpr uint8_t PMW3901_REG_Revision_ID             = 0x01;
-static constexpr uint8_t PMW3901_REG_Motion                  = 0x02;
-static constexpr uint8_t PMW3901_REG_Delta_X_L               = 0x03;
-static constexpr uint8_t PMW3901_REG_Delta_X_H               = 0x04;
-static constexpr uint8_t PMW3901_REG_Delta_Y_L               = 0x05;
-static constexpr uint8_t PMW3901_REG_Delta_Y_H               = 0x06;
-static constexpr uint8_t PMW3901_REG_Squal                   = 0x07;
-static constexpr uint8_t PMW3901_REG_RawData_Sum             = 0x08;
-static constexpr uint8_t PMW3901_REG_RawData_Max             = 0x09;
-static constexpr uint8_t PMW3901_REG_RawData_Min_            = 0x0A;
-static constexpr uint8_t PMW3901_REG_Shutter_Lower           = 0x0B;
-static constexpr uint8_t PMW3901_REG_Shutter_Upper           = 0x0C;
-static constexpr uint8_t PMW3901_REG_Observation             = 0x15;
-static constexpr uint8_t PMW3901_REG_Motion_Burst            = 0x16;
-static constexpr uint8_t PMW3901_REG_Power_Up_Reset          = 0x3A;
-static constexpr uint8_t PMW3901_REG_Shutdown                = 0x3B;
-static constexpr uint8_t PMW3901_REG_RawData_Grab            = 0x58;
-static constexpr uint8_t PMW3901_REG_RawData_Grab_Status     = 0x59;
-static constexpr uint8_t PMW3901_REG_Inverse_Product_ID      = 0x5F;
+enum class RegAddr:uint8_t{
+    Product_ID              = 0x00,
+    Revision_ID             = 0x01,
+    Motion                  = 0x02,
+    Delta_X_L               = 0x03,
+    Delta_X_H               = 0x04,
+    Delta_Y_L               = 0x05,
+    Delta_Y_H               = 0x06,
+    Squal                   = 0x07,
+    RawData_Sum             = 0x08,
+    RawData_Max             = 0x09,
+    RawData_Min_            = 0x0A,
+    Shutter_Lower           = 0x0B,
+    Shutter_Upper           = 0x0C,
+    Observation             = 0x15,
+    Motion_Burst            = 0x16,
+    Power_Up_Reset          = 0x3A,
+    Shutdown                = 0x3B,
+    RawData_Grab            = 0x58,
+    RawData_Grab_Status     = 0x59,
+    Inverse_Product_ID      = 0x5F,
+};
 
 static constexpr auto INIT_LIST1 = std::to_array({
     std::make_pair<uint8_t, uint8_t>(0x7F, 0x00),
@@ -130,27 +132,27 @@ static_assert(sizeof(INIT_LIST2) == 2 * INIT_LIST2.size());
 
 static constexpr iq16 scale = iq16(13.0/2000);
 
-IResult<> PMW3901::write_reg(const uint8_t command, const uint8_t data){
-    if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command | 0x80), CONT);
+IResult<> PMW3901::write_reg(const uint8_t reg_addr, const uint8_t reg_val){
+    if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(reg_addr | 0x80), CONT);
         res.is_err()) return Err(res.unwrap_err());
 
-    if(const auto res = spi_drv_.write_single<uint8_t>(data);
+    if(const auto res = spi_drv_.write_single<uint8_t>(reg_val);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
 }
 
 
-IResult<> PMW3901::read_reg(const uint8_t command, uint8_t & data){
-    if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT);
+IResult<> PMW3901::read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+    if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(reg_addr & 0x7f), CONT);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = spi_drv_.read_single<uint8_t>(data);
+    if(const auto res = spi_drv_.read_single<uint8_t>(reg_val);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
-IResult<> PMW3901::read_burst(const uint8_t command, std::span<uint8_t> pbuf){
-    if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(command & 0x7f), CONT);
+IResult<> PMW3901::read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf){
+    if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(reg_addr & 0x7f), CONT);
         res.is_err()) return Err(res.unwrap_err());
     if(const auto res = spi_drv_.read_burst<uint8_t>(pbuf);
         res.is_err()) return Err(res.unwrap_err());
@@ -244,11 +246,11 @@ IResult<> PMW3901::update(){
 
 }
 
-IResult<> PMW3901::assert_reg(const uint8_t command, const uint8_t data, const Error & error){
+IResult<> PMW3901::assert_reg(const uint8_t reg_addr, const uint8_t reg_val, const Error & error){
     uint8_t temp = 0;
-    if(const auto res = read_reg(command, temp); res.is_err())
+    if(const auto res = read_reg(reg_addr, temp); res.is_err())
         return Err(res.unwrap_err());
-    if(temp != data) [[unlikely]]
+    if(temp != reg_val) [[unlikely]]
         return Err(error);
     return Ok();
 }
@@ -261,10 +263,10 @@ IResult<> PMW3901::write_list(std::span<const std::pair<uint8_t, uint8_t>> list)
 }
 
 IResult<> PMW3901::validate(){
-    if(const auto res = assert_reg(PMW3901_REG_Inverse_Product_ID, 0xB6, Error::InvalidChipId);
+    if(const auto res = assert_reg(uint8_t(RegAddr::Inverse_Product_ID), 0xB6, Error::InvalidChipId);
         res.is_err()) return Err(res.unwrap_err());
 
-    if(const auto res = assert_reg(PMW3901_REG_Product_ID, 0x49, Error::InvalidChipId);
+    if(const auto res = assert_reg(uint8_t(RegAddr::Product_ID), 0x49, Error::InvalidChipId);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
@@ -274,7 +276,7 @@ IResult<> PMW3901::init() {
     if(const auto res = spi_drv_.release(); res.is_err())
         return Err(res.unwrap_err());
 
-    if(const auto res = write_reg(PMW3901_REG_Power_Up_Reset, 0x5A);
+    if(const auto res = write_reg(uint8_t(RegAddr::Power_Up_Reset), 0x5A);
         res.is_err()) return res;
 
 

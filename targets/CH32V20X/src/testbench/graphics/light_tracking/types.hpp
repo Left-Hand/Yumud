@@ -34,14 +34,14 @@ struct TriangleSurface{
 
 
 template<typename T>
-struct CacheOf;
+struct PreComputedOf;
 
 template<typename T>
-struct CacheOf<TriangleSurface<T>> : public TriangleSurface<T>{
+struct PreComputedOf<TriangleSurface<T>> : public TriangleSurface<T>{
     math::Vec3<T> normal;
 
     template<typename U>
-    constexpr CacheOf<TriangleSurface<T>> (const TriangleSurface<U> & other):
+    constexpr PreComputedOf<TriangleSurface<T>> (const TriangleSurface<U> & other):
         TriangleSurface<T>(other),
         normal(calc_normal_from_points(
             static_cast<math::Vec3<T>>(other.v0), 
@@ -60,7 +60,7 @@ private:
 };
 
 template<typename T>
-using TriangleSurfaceCache = CacheOf<TriangleSurface<T>>;
+using TriangleSurfaceCache = PreComputedOf<TriangleSurface<T>>;
 
 template<typename T>
 struct Intersection{

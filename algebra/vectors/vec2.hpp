@@ -42,7 +42,7 @@ template<typename T>
 struct Rect2;
 
 template<typename T>
-struct [[nodiscard]] Vec2{
+struct alignas(sizeof(T) * 2) [[nodiscard]] Vec2{
     using Self = Vec2;
     static constexpr Vec2<T> ZERO = Vec2<T>(0, 0);
     static constexpr Vec2<T> ONE = Vec2<T>(1, 1);

@@ -53,21 +53,33 @@ struct [[nodiscard]] StructDeserializer<RawLeBytes, T>{
         return deserialize_struct(pbuf);
     }
 
-// private:
+    union Uninitialized{
+        T obj;
+        std::monostate m;
+    };
+
     static constexpr Result<T, DeserializeError> 
     deserialize_struct(const std::span<const uint8_t> pbuf) {
-        T result{};  // Initialize empty struct
-
+        Uninitialized ret{.m = std::monostate{}};
         // Process members with error propagation
-        auto process = [&]<size_t... Is>(std::index_sequence<Is...>) -> 
-        Result<std::span<const uint8_t>, DeserializeError> {
-            // Fold over all members with error handling
-            Result<std::span<const uint8_t>, DeserializeError> final_remaining = Ok(pbuf);
-            ((final_remaining = final_remaining.and_then([&](const std::span<const uint8_t> rem) { 
-                return deserialize_member<Is>(result, rem);
-            })), ...);
-
-            return final_remaining;
+        auto remaining = pbuf;
+        
+        auto process = [&]<size_t... Is>(std::index_sequence<Is...>) 
+            -> Result<void, DeserializeError> 
+        {
+            // Use correct parameter pack expansion
+            auto result = [&]<size_t I>(std::integral_constant<size_t, I>) -> Result<void, DeserializeError> {
+                const auto res = deserialize_member<I>(ret.obj, remaining);
+                if(res.is_err()) return Err(res.unwrap_err());
+                remaining = res.unwrap();
+                return Ok();
+            };
+            
+            // Expand the fold expression properly
+            auto fold_result = (result(std::integral_constant<size_t, Is>{}), ...);
+            if(fold_result.is_err()) return Err(fold_result.unwrap_err());
+            
+            return Ok();
         };
         
         const auto remaining_result = process(std::make_index_sequence<reflecter::Reflecter<T>::member_count_v>{});
@@ -75,13 +87,7 @@ struct [[nodiscard]] StructDeserializer<RawLeBytes, T>{
             return Err(remaining_result.unwrap_err());
         }
 
-        // Verify all bytes were consumed
-        const auto final_remaining = remaining_result.unwrap();
-        if (!final_remaining.empty()) {
-            return Err(DeserializeError::Long);
-        }
-
-        return Ok(result);
+        return Ok(std::move(ret.obj));
     }
 
     //输入给定的成员的字节流 返回剩余待处理的字节流或错误
@@ -103,7 +109,6 @@ struct [[nodiscard]] StructDeserializer<RawLeBytes, T>{
         return Ok(pbuf.subspan(sizeof(MemberType)));
     }
 };
-
 
 
 template<typename Protocol, typename T>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/utils/serde.hpp"
+#include "core/utils/serde/serde.hpp"
 
 namespace ymd{
 namespace robots::machine_msgs{

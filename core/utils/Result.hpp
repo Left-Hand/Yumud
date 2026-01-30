@@ -304,7 +304,7 @@ public:
 
     template<typename E2 = E>
     requires (std::is_void_v<E2>)
-    [[nodiscard]] __fast_inline constexpr Result(const Err<E2> & value) : 
+    [[nodiscard]] __fast_inline constexpr Result(const Err<E2> &) : 
         storage_(Err<void>()){}
 
 
@@ -339,7 +339,7 @@ public:
         else return Err<E>(unwrap_err());
     }
     
-
+    #if 0
     template<
         typename F,//函数的类型
         typename FDecay = std::decay_t<F>,
@@ -367,6 +367,7 @@ public:
         }
         return Err<E>(unwrap_err());
     }
+    #endif
 
     template<typename Fn>
     [[nodiscard]] __fast_inline constexpr 
@@ -591,7 +592,8 @@ template<typename TDummy = void>
 Result() -> Result<void, void>;
 
 
-struct Infallible{};
+
+
 template<typename T>
 struct [[nodiscard]] Result<T, Infallible>{
     constexpr Result(Ok<T> && okay):value_(okay.get()){;}
@@ -644,7 +646,7 @@ __inline auto retry(const size_t times, Fn && fn){
 
 
 template<typename T, typename E>
-__inline OutputStream & operator<<(OutputStream & os, const Result<T, E> & res) {
+__inline OutputStream & operator << (OutputStream & os, const Result<T, E> & res) {
     if(res.is_ok()){
         os << "Ok" << os.brackets<'('>(); 
         if constexpr(!std::is_void_v<T>) os << res.unwrap();
@@ -660,29 +662,5 @@ __inline OutputStream & operator << (OutputStream & os, const Infallible){
     return os << "Infallible";
 }
 
-
-template <typename T, typename E>
-struct __unwrap_helper<Result<T, E>> {
-    using Obj = Result<T, E>;
-    // Unwrap a non-const rvalue optional
-    static constexpr bool is_ok(const Obj & obj) {
-        return obj.is_ok();
-    }
-    static constexpr T && unwrap(Obj && obj) {
-        return std::move(obj.unwrap());
-    }
-    
-    static constexpr T unwrap(const Obj & obj) {
-        return obj.unwrap();
-    }
-    
-    static constexpr E unexpected(Obj && obj) {
-        return std::move(obj.unwrap_err());
-    }
-
-    static constexpr E unexpected(const Obj & obj) {
-        return obj.unwrap_err();
-    }
-};
 
 }

@@ -71,19 +71,19 @@ struct TM7705_Regset:public TM7705_Prelude{
 class TM7705_Transport final: public TM7705_Prelude{
 public:
     struct Config{
-        Borrow<hal::Gpio> sclk_gpio;
-        Borrow<hal::Gpio> dout_gpio;
-        Borrow<hal::Gpio> din_gpio;
-        Borrow<hal::Gpio> cs_gpio;
-        Borrow<hal::Gpio> drdy_gpio;
+        Some<hal::Gpio *> sclk_pin;
+        Some<hal::Gpio *> dout_pin;
+        Some<hal::Gpio *> din_pin;
+        Some<hal::Gpio *> cs_pin;
+        Some<hal::Gpio *> drdy_pin;
     };
 
     TM7705_Transport(const Config & cfg) :
-        sclk_pin_{cfg.sclk_gpio.unwrap()},
-        dout_pin_{cfg.dout_gpio.unwrap()},
-        din_pin_{cfg.din_gpio.unwrap()},
-        cs_pin_{cfg.cs_gpio.unwrap()},
-        drdy_pin_{cfg.drdy_gpio.unwrap()}
+        sclk_pin_{cfg.sclk_pin.deref()},
+        dout_pin_{cfg.dout_pin.deref()},
+        din_pin_{cfg.din_pin.deref()},
+        cs_pin_{cfg.cs_pin.deref()},
+        drdy_pin_{cfg.drdy_pin.deref()}
         {;}
 private:
     hal::Gpio & sclk_pin_;

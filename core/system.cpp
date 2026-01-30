@@ -388,10 +388,14 @@ void sys::trip(){
 
 //关闭所有外设
 void sys::abort(){
+    sys::trip();
+
+
     DISABLE_INT;
     DISABLE_INT;
 
-    sys::trip();
+    DEBUG_PRINTLN("system aborted");
+
 
     RCC_DeInit();
     while(true);

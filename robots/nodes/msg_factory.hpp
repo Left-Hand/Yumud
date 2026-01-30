@@ -2,7 +2,7 @@
 
 #include "node_role.hpp"
 #include "primitive/can/bxcan_frame.hpp"
-#include "core/utils/serde.hpp"
+#include "core/utils/serde/serde.hpp"
 
 
 namespace ymd{

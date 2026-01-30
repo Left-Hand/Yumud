@@ -328,56 +328,6 @@ Option(Some<T>) -> Option<T>;
 Option(_None_t) -> Option<std::monostate>;  // 显式空类型
 
 
-template<typename T, typename Fn>
-constexpr auto operator|(const Option<T>& opt, Fn&& fn){
-    return (opt.and_then(std::forward<Fn>(fn)));
-}
-
-template<typename T, typename Fn>
-constexpr auto operator|(Option<T> && opt, Fn&& fn){
-    return (std::move(opt).and_then(std::forward<Fn>(fn)));
-}
-
-template<
-    typename T, 
-    typename TDecay = std::decay_t<T>
->
-[[nodiscard]] constexpr Option<TDecay> optcond(bool cond, T&& value){
-    if(cond) return Some<TDecay>(std::forward<TDecay>(value));
-    else return None;
-}
-
-template<
-    typename T, 
-    typename TDecay = std::decay_t<T>
->
-[[nodiscard]] constexpr Option<TDecay> optcond(bool cond, Some<TDecay>&& value){
-    if(cond) return Some<TDecay>(std::forward<Some<TDecay>>(value));
-    else return None;
-}
-
-
-template <typename T>
-struct __unwrap_helper<Option<T>> {
-    using Obj = Option<T>;
-    // Unwrap a non-const rvalue Option
-    static constexpr T unwrap(Obj && obj) {
-        return std::move(obj.unwrap());
-    }
-
-    static constexpr T unwrap(const Obj & obj) {
-        return obj.value();
-    }
-
-    static constexpr void unexpected(Obj && obj) {
-        return std::move(obj.unexpected());
-    }
-
-    static constexpr void unexpected(const Obj & obj) {
-        return obj.unexpected();
-    }
-};
-
 
 template<typename T>
 OutputStream & operator<<(OutputStream & os, const Option<T> & opt) {

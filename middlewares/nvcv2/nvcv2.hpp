@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/platform.hpp"
 #include "core/debug/debug.hpp"
 
 #include "primitive/colors/color/color.hpp"

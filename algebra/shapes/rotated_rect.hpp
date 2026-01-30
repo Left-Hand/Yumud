@@ -42,9 +42,9 @@ struct RotatedRect{
 };
 
 template<typename T>
-struct CacheOf<RotatedRect<T>, bool>{
+struct PreComputedOf<RotatedRect<T>, bool>{
     using Object = RotatedRect<T>;
-    using Self = CacheOf<Object, bool>;
+    using Self = PreComputedOf<Object, bool>;
 
     T half_width;
     T half_height;

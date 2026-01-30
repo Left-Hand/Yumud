@@ -31,7 +31,7 @@ static constexpr uint8_t WHITE_COLOR = 0x9f;
 using namespace ymd;
 
 template<typename T>
-using cache_of_t = CacheOf<T, bool>;
+using precomputed_of_t = PreComputedOf<T, bool>;
 
 
 
@@ -59,8 +59,8 @@ struct RotatedZebraRect{
 };
 
 template<>
-struct alignas(4) CacheOf<RotatedZebraRect, bool>{
-    using Self = CacheOf<RotatedZebraRect, bool>;
+struct alignas(4) PreComputedOf<RotatedZebraRect, bool>{
+    using Self = PreComputedOf<RotatedZebraRect, bool>;
 
     iq16 half_width;
     iq16 half_height;
@@ -124,13 +124,13 @@ struct SpotLight final{
 
 
 template<>
-struct CacheOf<SpotLight, bool>{
-    using Self = CacheOf<SpotLight, bool>;
+struct PreComputedOf<SpotLight, bool>{
+    using Self = PreComputedOf<SpotLight, bool>;
 
     iq16 squ_radius;
 
     static constexpr auto from(const SpotLight & obj) {
-        return CacheOf{obj.radius * obj.radius};
+        return PreComputedOf{obj.radius * obj.radius};
     }
 
     __fast_inline constexpr uint8_t color_from_point(const math::Vec2<iq16> offset) const {
@@ -175,7 +175,7 @@ struct Placement{
 template<typename T>
 struct ElementWithPlacement{
     using Element = T;
-    using Cache = cache_of_t<T>;
+    using Cache = precomputed_of_t<T>;
 
     Placement placement;
     BoundingBox bounding_box;
@@ -187,7 +187,7 @@ constexpr ElementWithPlacement<T> operator | (const T & element, const Placement
     return ElementWithPlacement<T>{
         .placement = placement,
         .bounding_box = BoundingBoxOf<T>::bounding_box(element),
-        .cache = CacheOf<T, bool>::from(element),
+        .cache = PreComputedOf<T, bool>::from(element),
     };
 }
 
@@ -284,8 +284,8 @@ static constexpr math::Vec2u project_ground_to_pixel(
     
     // 5. Convert to camera coordinates and clamp to pixel grid
     return math::Vec2u{
-        math::round_cast<uint>(pixel_offset.x + HALF_CAMERA_SIZE.x),
-        math::round_cast<uint>(HALF_CAMERA_SIZE.y - pixel_offset.y)
+        math::round_cast<size_t>(pixel_offset.x + HALF_CAMERA_SIZE.x),
+        math::round_cast<size_t>(HALF_CAMERA_SIZE.y - pixel_offset.y)
     };
 }
 
@@ -306,17 +306,8 @@ struct ViewPoint{
 };
 
 
-class SceneIntf{
-public:
-    SceneIntf() = default;
-    SceneIntf(const SceneIntf &) = delete;
-    SceneIntf(SceneIntf &&) = default;
-    virtual ~SceneIntf() = default;
-    virtual Image<Gray> render(const math::Isometry2<iq16> pose, const iq16 zoom) const = 0;
-};
-
 template<typename ...Objects>
-class StaticScene final:public SceneIntf{ 
+class StaticScene final{ 
 public:
     using Container = std::tuple<Objects...>;
 

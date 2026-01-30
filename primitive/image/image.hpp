@@ -21,10 +21,6 @@ template <typename ColorType>
 class Painter;
 
 template <typename ColorType>
-class ImageWR;
-
-
-template <typename ColorType>
 class PixelProxy;
 
 
@@ -111,7 +107,7 @@ public:
     template<typename ColorType2> 
     [[nodiscard]] Image<ColorType2> copy_as(){
         return Image<ColorType2>(
-            std::reinterpret_pointer_cast<T[]>(this->resource()),
+            std::reinterpret_pointer_cast<ColorType2[]>(this->resource()),
             this->size());
     }
 
@@ -130,6 +126,12 @@ public:
 
     [[nodiscard]] const T & operator[](const math::Vec2u pos) const {
         return resource_[pos.x + pos.y * this->size().x]; }
+
+    [[nodiscard]] T & operator()(const size_t x, const size_t y) {
+        return resource_[x + y * this->size().x]; }
+
+    [[nodiscard]] const T & operator()(const size_t x, const size_t y) const {
+        return resource_[x + y * this->size().x]; }
 
     [[nodiscard]] T & at(const math::Vec2u pos){
         assert_position_is_inrange(pos);
@@ -152,6 +154,10 @@ public:
         { resource_[this->size().x * pos.y + pos.x] = color; }
     void get_pixel_unchecked(const math::Vec2u pos, T & color) const 
         { color = resource_[this->size().x * pos.y + pos.x]; }
+
+    [[nodiscard]] constexpr size_t width() const { return size_.x; }
+    [[nodiscard]] constexpr size_t height() const { return size_.y; }
+
 
 private:
     std::shared_ptr<T[]> resource_;

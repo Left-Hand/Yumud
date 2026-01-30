@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.hpp"
+
 #include "algebra/vectors/vec2.hpp"
 
 namespace ymd {

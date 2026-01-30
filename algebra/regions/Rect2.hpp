@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.hpp"
+
 #include "core/utils/Option.hpp"
 
 #include "algebra/regions/range2.hpp"

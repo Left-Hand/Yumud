@@ -295,3 +295,28 @@ static constexpr auto match(const T & value){
 namespace fpm = fp::primitive;
 }
 
+
+namespace ymd{
+
+template<typename T>
+class MATCH{
+public:
+    template<typename Fn, typename ... Args>
+    constexpr void operator ()(const T kase, Fn && fn, Args && ...args){
+        if(val_ == kase)return std::forward<Fn>(fn)();    
+        else if constexpr(sizeof...(Args)) return this->operator()(std::forward<Args>(args)...);
+    }
+
+    template<typename Fn, typename ... Args>
+    constexpr void operator ()(const _None_t, Fn && fn, Args && ...args){
+        return std::forward<Fn>(fn)();    
+    }
+
+    MATCH(const T & val):val_(val){;}
+private:    
+    const T & val_;
+};
+
+template<typename T>
+MATCH() -> MATCH<T>;
+}

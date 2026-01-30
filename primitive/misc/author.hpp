@@ -3,7 +3,7 @@
 #include "core/utils/Option.hpp"
 #include "core/string/view/string_view.hpp"
 #include "core/string/owned/char_array.hpp"
-#include "core/utils/serde.hpp"
+#include "core/utils/serde/serde.hpp"
 #include <utility>
 
 // DERIVE_SERIALIZE_AS_TUPLE(Date)

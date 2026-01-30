@@ -2,7 +2,7 @@
 
 #include <atomic>
 
-#include "core/utils/serde.hpp"
+#include "core/utils/serde/serde.hpp"
 
 #include "robots/vendor/zdt/zdt_stepper.hpp"
 
