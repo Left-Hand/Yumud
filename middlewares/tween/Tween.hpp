@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/utils/setget/Setter.hpp"
-#include "robots/curve/CurveConcept_t.hpp"
 
 #if 0
 

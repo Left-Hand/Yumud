@@ -14,7 +14,7 @@ namespace ymd::robots::zdtmotor{
 static constexpr size_t MAX_CONTEXT_BYTES = 12;
 static constexpr size_t MAX_PACKET_BYTES = 16;
 
-struct [[nodiscard]] NodeId{
+struct [[nodiscard]] NodeId final{
     using Self = NodeId;
     uint8_t count;
 
@@ -46,7 +46,7 @@ enum class [[nodiscard]] FuncCode:uint8_t{
 };
 
 
-struct FlatPacket{
+struct [[nodiscard]] FlatPacket final{
     NodeId node_id;
     FuncCode func_code;
     uint8_t context[MAX_CONTEXT_BYTES];
@@ -117,7 +117,7 @@ enum class [[nodiscard]] HommingMode:uint8_t{
     LapsEndstop = 0x03
 };
 
-struct [[nodiscard]] HommingStatus{
+struct [[nodiscard]] HommingStatus final{
     // 编码器就绪状态标志位     = 0x03 & 0x01 = 0x01
     // 校准表就绪状态标志位     = 0x03 & 0x02 = 0x01
     // 正在回零标志位            = 0x03 & 0x04 = 0x00
@@ -133,27 +133,26 @@ struct [[nodiscard]] HommingStatus{
 static_assert(sizeof(HommingStatus) == 1); 
 
 
-struct [[nodiscard]] BytesFiller{
+struct [[nodiscard]] BytesFiller final{
 public:
     constexpr explicit BytesFiller(std::span<uint8_t> bytes):
         bytes_(bytes){;}
 
     constexpr ~BytesFiller(){
-        if(not is_full()) __builtin_abort();
     }
 
     constexpr __inline 
     void push_byte(const uint8_t byte){
-        if(pos_ >= bytes_.size()) [[unlikely]] 
+        if(idx_ >= bytes_.size()) [[unlikely]] 
             on_overflow();
-        bytes_[pos_++] = byte;
+        bytes_[idx_++] = byte;
     }
 
 
     template<size_t Extents>
     constexpr __inline 
     void push_bytes(const std::span<const uint8_t, Extents> bytes){
-        if(pos_ + bytes.size() > bytes_.size()) [[unlikely]]
+        if(idx_ + bytes.size() > bytes_.size()) [[unlikely]]
             on_overflow();
         push_bytes_unchecked(bytes);
     }
@@ -179,19 +178,19 @@ public:
 
 
     [[nodiscard]] constexpr bool is_full() const {
-        return pos_ == bytes_.size();
+        return idx_ == bytes_.size();
     }
 
     size_t size() const {
-        return pos_;
+        return idx_;
     }
 private:
     std::span<uint8_t> bytes_;
-    size_t pos_ = 0;
+    size_t idx_ = 0;
 
     constexpr __inline 
     void push_byte_unchecked(const uint8_t byte){ 
-        bytes_[pos_++] = byte;
+        bytes_[idx_++] = byte;
     }
 
     template<size_t Extents>
@@ -225,8 +224,6 @@ struct [[nodiscard]] VerifyUtils final{
         std::span<const uint8_t> bytes 
     ){
         switch(method){
-            default:
-                __builtin_unreachable();
             case VerifyMethod::X6B:
                 return uint8_t{0x6b};
             case VerifyMethod::XOR:
@@ -236,6 +233,7 @@ struct [[nodiscard]] VerifyUtils final{
                 // __builtin_unreachable();
                 return VerifyUtils::by_crc8(func_code, bytes);
         }
+        __builtin_unreachable();
     }
 
 private:

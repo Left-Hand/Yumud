@@ -113,7 +113,7 @@ public:
     }
 };
 
-struct [[nodiscard]] TextSourceLocation{
+struct [[nodiscard]] TextSourceLocation final{
     uint8_t start;    // Starting column
     uint8_t end;      // Ending column  
     uint16_t line;    // Line number
@@ -128,7 +128,7 @@ struct [[nodiscard]] TextSourceLocation{
 };
 
 
-struct [[nodiscard]] GcodeArg{
+struct [[nodiscard]] GcodeArg final{
     char letter;
     iq16 value;
 
@@ -158,7 +158,7 @@ struct [[nodiscard]] GcodeArg{
 };
 
 
-struct [[nodiscard]] GcodeArgsIter {
+struct [[nodiscard]] GcodeArgsIter final{
     constexpr explicit GcodeArgsIter(StringView line)
         : arg_str_iter_(line, ' ') {}
 
@@ -230,7 +230,7 @@ constexpr IResult<T> query_tmp(const StringView line, const char letter, FnMap &
 }
 }
 
-struct [[nodiscard]] GcodeLine{
+struct [[nodiscard]] GcodeLine final{
     StringView line;
     constexpr IResult<Mnemonic> query_mnemonic() const {
         if(line.length() < 1) 

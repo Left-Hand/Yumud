@@ -5,6 +5,8 @@
 
 namespace ymd{
 namespace details{
+
+
 template<typename T, size_t R, size_t C>
 struct JacobiSVD {
 private:
@@ -34,7 +36,7 @@ public:
         bool converged = false;
         
         // 主迭代循环
-        for (size_t iter = 0; iter < max_iterations && !converged; iter++) {
+        for (size_t i = 0; i < max_iterations && !converged; i++) {
             converged = true;
             T max_off_diag = 0;
             

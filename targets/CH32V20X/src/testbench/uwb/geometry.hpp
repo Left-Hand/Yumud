@@ -91,7 +91,7 @@ constexpr Option<math::Vec2<T>> compute_intersection_point(
     }
     
     // Calculate the nearest intersection point
-    const T sqrt_discriminant = std::sqrt(discriminant);
+    const T sqrt_discriminant = math::sqrt(discriminant);
     const T inv2a = T(0.5) / (a);
     const T t1 = (-b - sqrt_discriminant) * inv2a;
     const T t2 = (-b + sqrt_discriminant) * inv2a;

@@ -1,10 +1,12 @@
 #pragma once
 
-#include "interpolation.hpp"
+// #include "interpolation.hpp"
+#include "core/math/real.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 namespace ymd::intp{
 
-class ArcInterpolation{
+struct [[nodiscard]] ArcInterpolation final {
 protected:
     iq16 m_Centerx;
     iq16 m_Centery;
@@ -21,7 +23,7 @@ public:
     iq16 forward(const iq16 x) const ;
 };
 
-class CircularFilletInterpoation{
+struct [[nodiscard]] CircularFilletInterpoation final {
 public:
     CircularFilletInterpoation(const math::Vec2<iq16> & handle, iq16 R):
         _a(handle.x), _b(handle.y), _R(R){

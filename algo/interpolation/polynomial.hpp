@@ -1,49 +1,50 @@
 #pragma once
 
-#include "interpolation.hpp"
+#include "core/math/real.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 namespace ymd::intp{
 
-struct CosineInterpolation{
+struct [[nodiscard]] CosineInterpolation final{
 public:
-    iq16 forward(iq16 x) const{
+    constexpr iq16 forward(iq16 x) const{
         iq16 x2 = x*x;
         iq16 x4 = x2*x2;
         iq16 x6 = x4*x2;
         
-        static constexpr iq16 fa = iq16( 4.0/9.0);
-        static constexpr iq16 fb = iq16(-17.0/9.0);
-        static constexpr iq16 fc = iq16(22.0/9.0);
+        constexpr iq16 fa = iq16( 4.0/9.0);
+        constexpr iq16 fb = iq16(-17.0/9.0);
+        constexpr iq16 fc = iq16(22.0/9.0);
         
         return fa*x6 + fb*x4 + fc*x2;
     }
 };
 
 
-struct SeatInterpolation{
+struct [[nodiscard]] SeatInterpolation final{
 public:
 
     static constexpr double epsilon = 0.001;
-    static constexpr iq16 min_param_a = iq16(0.0 + epsilon);
-    static constexpr iq16 max_param_a = iq16(1.0 - epsilon);
-    static constexpr iq16 min_param_b = iq16(0.0);
-    static constexpr iq16 max_param_b = iq16(1.0);
-    static std::tuple<iq16, iq16> get_ab(const math::Vec2<iq16> & handle){
+    static constexpr iq16 MIM_PARAM_A = iq16(0.0 + epsilon);
+    static constexpr iq16 MAX_PARAM_A = iq16(1.0 - epsilon);
+    static constexpr iq16 MIN_PARAM_A = iq16(0.0);
+    static constexpr iq16 MAX_PARAM_B = iq16(1.0);
+    static constexpr std::tuple<iq16, iq16> get_ab(const math::Vec2<iq16> & handle){
 
         auto [a,b] = handle;
 
-        a = MIN(max_param_a, MAX(min_param_a, a));  
-        b = MIN(max_param_b, MAX(min_param_b, b)); 
+        a = MIN(MAX_PARAM_A, MAX(MIM_PARAM_A, a));  
+        b = MIN(MAX_PARAM_B, MAX(MIN_PARAM_A, b)); 
         return std::make_tuple(a,b);
     }
     iq16 a;
     iq16 b;
 public:
-    SeatInterpolation(const math::Vec2<iq16> & handle){
+    constexpr explicit SeatInterpolation(const math::Vec2<iq16> & handle){
         std::tie(a,b) = get_ab(handle);
     }
 
-    iq16 forward(const iq16 x) const{
+    constexpr iq16 forward(const iq16 x) const{
         iq16 y = 0;
         if (x <= a){
             y = b - b*math::cubic(1-x/a);
@@ -54,11 +55,11 @@ public:
     }
 };
 
-struct SeatLineInterpolation{
+struct [[nodiscard]] SeatLineInterpolation final{
 public:
     iq16 a;
     iq16 b;
-    iq16 forward(const iq16 x) const{
+    constexpr iq16 forward(const iq16 x) const{
         iq16 y = 0;
         if (x<=a){
             y = b*x + (1-b)*a*(1-math::cubic(1-x/a));
@@ -69,13 +70,13 @@ public:
     }
 };
 
-struct SeatOddInterpolation{
+struct [[nodiscard]] SeatOddInterpolation final{
     iq16 a;
     iq16 b;
     // p(2 * n + 1)
     int p;
 public:
-    iq16 forward(const iq16 x) const{
+    constexpr iq16 forward(const iq16 x) const{
         // auto [a,b] = get_ab(handle);
         // int p = 2*n + 1;
         iq16 y = 0;
@@ -90,12 +91,12 @@ public:
 };
 
 
-struct SymmetricInterpolation{
+struct [[nodiscard]] SymmetricInterpolation final{
     iq16 a;
     iq16 b;
     int _n;
 
-    iq16 forward(const iq16 x) const{
+    constexpr iq16 forward(const iq16 x) const{
         iq16 y = 0;
         if (+_n%2 == 0){ 
             // even polynomial
@@ -120,12 +121,12 @@ struct SymmetricInterpolation{
     }
 };
 
-struct QuadraticSeatInterpolation{
+struct [[nodiscard]] QuadraticSeatInterpolation final{
     iq16 a;
     iq16 b;
     int _n;
 public:
-    iq16 forward(const iq16 x) const {
+    constexpr iq16 forward(const iq16 x) const {
         iq16 A = (1-b)/(1-a) - (b/a);
         iq16 B = (A*(a*a)-b)/a;
         iq16 y = A*(x*x) - B*(x);

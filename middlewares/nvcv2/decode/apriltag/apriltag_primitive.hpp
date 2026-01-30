@@ -6,6 +6,8 @@
 #include "core/utils/Option.hpp"
 
 namespace ymd::nvcv2::apriltag{
+
+
 enum class [[nodiscard]] ApriltagType{
     _16h5 = 1,
     _25h9 = 2,
@@ -13,11 +15,11 @@ enum class [[nodiscard]] ApriltagType{
     _36h11 = 4,
 };
 
-struct [[nodiscard]] ApriltagPattern{
+struct [[nodiscard]] ApriltagPattern final{
     uint64_t code;
 };
 
-struct [[nodiscard]] ApriltagIndex{
+struct [[nodiscard]] ApriltagIndex final{
 public:
     static constexpr ApriltagIndex from_u16(const uint16_t raw){
         return {raw};
@@ -32,7 +34,7 @@ private:
     uint16_t index_ = 0;
 };
 
-struct [[nodiscard]] ApriltagDirection{
+struct [[nodiscard]] ApriltagDirection final{
 public:
     enum class [[nodiscard]] Kind:uint8_t{
         Up = 0,
@@ -58,14 +60,13 @@ private:
     Kind kind_;
 };
 
-struct ApriltagResult{
+struct [[nodiscard]] ApriltagResult final{
     ApriltagIndex index;
     ApriltagDirection direction;
 };
 
 
 namespace utils{
-namespace details{
 [[nodiscard]] static constexpr uint16_t reverse_u16_16h5(uint16_t num) {
     uint16_t reversed = 0;
 
@@ -100,7 +101,7 @@ namespace details{
     }
     return reversed;
 }
-}
+
 
 [[nodiscard]] static constexpr uint16_t get_rcr_code_16h5(
     const uint16_t code, 
@@ -110,11 +111,11 @@ namespace details{
         case ApriltagDirection::Right :
             return code;
         case ApriltagDirection::Left :
-            return details::reverse_u4_16h5(code);
+            return reverse_u4_16h5(code);
         case ApriltagDirection::Up :
-            return details::reverse_u16_16h5(code);
+            return reverse_u16_16h5(code);
         case ApriltagDirection::Down :
-            return details::reverse_u16_16h5(details::reverse_u4_16h5(code));
+            return reverse_u16_16h5(reverse_u4_16h5(code));
     }
     __builtin_unreachable();
 };
@@ -136,17 +137,22 @@ template<typename T, size_t N, typename Fn>
         const auto down_code = std::forward<Fn>(fn)(raw_code, ApriltagDirection::Kind::Down);
         const auto left_code = std::forward<Fn>(fn)(raw_code, ApriltagDirection::Kind::Left);
 
-        if(dst_code == up_code) return 
-            Some(ApriltagResult{ApriltagIndex::from_u16(i), ApriltagDirection::Kind::Up});
-        if(dst_code == right_code) return 
-            Some(ApriltagResult{ApriltagIndex::from_u16(i), ApriltagDirection::Kind::Right});
-        if(dst_code == down_code) return 
-            Some(ApriltagResult{ApriltagIndex::from_u16(i), ApriltagDirection::Kind::Down});
-        if(dst_code == left_code) return 
-            Some(ApriltagResult{ApriltagIndex::from_u16(i), ApriltagDirection::Kind::Left});
+        const auto apriltag_idx = ApriltagIndex::from_u16(i);
+
+
+        if(dst_code == up_code) 
+            return Some(ApriltagResult{apriltag_idx, ApriltagDirection::Kind::Up});
+        if(dst_code == right_code) 
+            return Some(ApriltagResult{apriltag_idx, ApriltagDirection::Kind::Right});
+        if(dst_code == down_code) 
+            return Some(ApriltagResult{apriltag_idx, ApriltagDirection::Kind::Down});
+        if(dst_code == left_code) 
+            return Some(ApriltagResult{apriltag_idx, ApriltagDirection::Kind::Left});
     }
 
     return None;
 }
+
+
 }
 }
