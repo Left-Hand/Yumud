@@ -34,7 +34,7 @@ OutputStream & operator<<(OutputStream & os, const Author & self){
 }
 
 template<HashAlgo S>
-constexpr Hasher<S> & operator << (Hasher<S> & hs, const Author & self){
+constexpr HashBuilder<S> & operator << (HashBuilder<S> & hs, const Author & self){
     return hs << self.name();
 }
 

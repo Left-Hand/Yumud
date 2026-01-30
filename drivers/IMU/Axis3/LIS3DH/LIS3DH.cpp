@@ -11,7 +11,7 @@
 #define LIS3DH_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 #else
 #define LIS3DH_DEBUG(...)
-#define LIS3DH_TODO(...) PANIC_NSRC()
+#define LIS3DH_TODO(...) TODO()
 #define LIS3DH_PANIC(...)  PANIC_NSRC()
 #define LIS3DH_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif

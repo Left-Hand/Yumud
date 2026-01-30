@@ -4,30 +4,24 @@
 #include <type_traits>   // std::aligned_storage, std::is_invocable_r
 #include <functional>    // std::invoke
 
-namespace ymd{
+namespace ymd::heapless{
 static constexpr size_t STATIC_FUNCRION_MAX_BUFFER_SIZE = 16;
 template <typename Signature, size_t BufferSize = STATIC_FUNCRION_MAX_BUFFER_SIZE>
-class HeaplessFunction;
+class Function;
 
 template <typename Ret, typename... Args, size_t BufferSize>
-class HeaplessFunction<Ret(Args...), BufferSize> {
+class Function<Ret(Args...), BufferSize> {
     // 存储可调用对象的缓冲区（对齐）
     using Storage = std::aligned_storage_t<BufferSize>;
     Storage storage_;
 
     // 类型擦除的分发函数指针
     using InvokeFn = Ret(*)(const Storage&, Args&&...);
-    InvokeFn _invoke = nullptr;
-
-    // 默认的空操作
-    static Ret NullInvoke(const Storage&, Args&&...) {
-        throw std::bad_function_call();
-    }
-
+    InvokeFn invoke_ = nullptr;
 public:
     // 默认构造（空函数）
-    constexpr HeaplessFunction() noexcept 
-        : _invoke(&NullInvoke) {}
+    constexpr Function() noexcept 
+        : invoke_(nullptr) {}
 
     // 从可调用对象构造（lambda、函数指针等）
     template <typename F>
@@ -36,16 +30,16 @@ public:
         (sizeof(F) <= BufferSize) &&
         std::is_nothrow_move_constructible_v<F>
     )
-    constexpr HeaplessFunction(F&& f) noexcept {
+    constexpr Function(F&& f) noexcept {
         // 编译期检查缓冲区大小
         static_assert(sizeof(F) <= BufferSize, 
-            "Callable too large for HeaplessFunction buffer!");
+            "Callable too large for Function buffer!");
 
         // 存储可调用对象
         new (&storage_) F(std::forward<F>(f));
 
         // 设置分发函数
-        _invoke = [](const Storage& storage, Args&&... args) -> Ret {
+        invoke_ = [](const Storage& storage, Args&&... args) -> Ret {
             return std::invoke(
                 *reinterpret_cast<const F*>(&storage),
                 std::forward<Args>(args)...
@@ -55,13 +49,19 @@ public:
 
     // 调用运算符
     constexpr Ret operator()(Args... args) const {
-        return _invoke(storage_, std::forward<Args>(args)...);
+        return invoke_(storage_, std::forward<Args>(args)...);
     }
 
     // 检查是否非空
     constexpr explicit operator bool() const noexcept {
-        return _invoke != &NullInvoke;
+        return invoke_ != nullptr;
     }
 };
 
+}
+
+namespace ymd{
+
+// template <typename Ret, typename... Args, size_t BufferSize>
+// using HeaplessFunction = heapless::Function<Ret(Args...), BufferSize>;
 }

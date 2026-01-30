@@ -279,7 +279,7 @@ void sys::clock::set_apb2_clk_freq(const uint32_t freq){
 
 bool sys::exception::is_interrupt_pending(){
     #ifdef ARCH_QKV4
-    return QingKeV4::isInterruptPending();
+    return QingKeV4::is_interrupt_pending();
     #else
     #error "not supported yet"
     #endif
@@ -287,7 +287,7 @@ bool sys::exception::is_interrupt_pending(){
 
 bool sys::exception::is_interrupt_acting(){
     #ifdef ARCH_QKV4
-    return QingKeV4::isIntrruptActing();
+    return QingKeV4::is_intrrupt_acting();
     #else
     #error "not supported yet"
     #endif
@@ -295,7 +295,7 @@ bool sys::exception::is_interrupt_acting(){
 
 uint8_t sys::exception::get_interrupt_depth(){
     #ifdef ARCH_QKV4
-    return QingKeV4::getInterruptDepth();
+    return QingKeV4::get_interrupt_depth();
     #else
     #error "not supported yet"
     #endif
@@ -357,6 +357,32 @@ void sys::trip(){
     #endif
     #ifdef TIM4_PRESENT
     hal::timer4.deinit();
+    #endif
+
+    #ifdef TIM5_PRESENT
+    hal::timer5.deinit();
+    #endif
+    #ifdef TIM6_PRESENT
+    hal::timer6.deinit();
+    #endif
+    #ifdef TIM7_PRESENT
+    hal::timer7.deinit();
+    #endif
+    #ifdef TIM8_PRESENT
+    hal::timer8.deinit();
+    #endif
+
+    #ifdef TIM9_PRESENT
+    hal::timer9.deinit();
+    #endif
+    #ifdef TIM10_PRESENT
+    hal::timer10.deinit();
+    #endif
+    #ifdef TIM11_PRESENT
+    hal::timer11.deinit();
+    #endif
+    #ifdef TIM12_PRESENT
+    hal::timer12.deinit();
     #endif
 }
 

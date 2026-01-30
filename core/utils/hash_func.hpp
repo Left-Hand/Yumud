@@ -71,27 +71,27 @@ namespace hashfunc{
 
 
 template<HashAlgo S>
-struct Hasher{
+struct HashBuilder{
 
 };
 
 template<>
-struct Hasher<HashAlgo::Djb>{
+struct HashBuilder<HashAlgo::Djb>{
 public:
-    explicit constexpr Hasher(const HashCode seed = HASHDJB_SEED):
+    explicit constexpr HashBuilder(const HashCode seed = HASHDJB_SEED):
         seed_(seed){;}
 
-    constexpr HashCode seed() const{return seed_;} 
+    constexpr HashCode get() const{return seed_;} 
 
     template <typename T>
-    constexpr Hasher & operator << (T && obj){
+    constexpr HashBuilder & operator << (T && obj){
         seed_ =  hashfunc::hash_djb(obj, seed_);
         return *this;
     }
 
 
     template<std::integral T>
-    constexpr Hasher & operator << (const T i){
+    constexpr HashBuilder & operator << (const T i){
         constexpr size_t N = sizeof(T);
         *this << std::bit_cast<std::array<uint8_t, N>>(i);  
         return *this;
@@ -102,8 +102,8 @@ private:
 
 template <HashAlgo S = HashAlgo::Djb, typename ... Args>
 __inline static constexpr HashCode hash(Args &&... args) {
-    auto hasher = Hasher<S>{};
-    return (hasher << ... << std::forward<Args>(args)).seed();
+    auto hasher = HashBuilder<S>{};
+    return (hasher << ... << std::forward<Args>(args)).get();
 }
 
 __inline constexpr uint32_t operator "" _ha(char const* p, const size_t size)  {

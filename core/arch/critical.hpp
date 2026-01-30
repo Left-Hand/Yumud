@@ -4,13 +4,14 @@
 namespace ymd::cpu_core{
 
 
-[[nodiscard]] struct CriticalSectionGuard final{
+struct [[nodiscard]] CriticalSectionGuard final{
+    explicit CriticalSectionGuard() : mask_(cpu_core::enter_critical()) {}
+    ~CriticalSectionGuard() {cpu_core::exit_critical(mask_); }
+
     CriticalSectionGuard(const CriticalSectionGuard&) = delete;
     CriticalSectionGuard(const CriticalSectionGuard&&) = delete;
     void operator=(const CriticalSectionGuard&) = delete;
     void operator=(const CriticalSectionGuard&&) = delete;
-    explicit CriticalSectionGuard() : mask_(cpu_core::enter_critical()) {}
-    ~CriticalSectionGuard() {cpu_core::exit_critical(mask_); }
 private:
     uint32_t mask_;
 };

@@ -13,7 +13,7 @@ struct [[nodiscard]] _BitArray_Storage;
 template<size_t NUM_BITS>
 struct [[nodiscard]] BitArray {
 private:
-    struct [[nodiscard]] MutBitProxy {
+    struct [[nodiscard]] MutBitProxy final{
     public:
         constexpr explicit MutBitProxy(uint8_t& byte, const uint8_t offset)
             : byte_(byte), offset_(offset) {}
@@ -42,7 +42,7 @@ private:
         uint8_t offset_;
     };
 
-    struct [[nodiscard]] BitProxy {
+    struct [[nodiscard]] BitProxy final{
     public:
         constexpr explicit BitProxy(const uint8_t byte, const uint8_t offset)
             : byte_(byte), offset_(offset) {}
