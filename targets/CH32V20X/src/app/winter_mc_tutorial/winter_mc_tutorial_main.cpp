@@ -35,22 +35,42 @@
 
 using namespace ymd;
 
+//电机控制频率
+static constexpr size_t MC_FREQ = 500;
+
+//限制最大的占空比
+static constexpr auto PWM_DUTYCYCLE_LIMIT = 0.85_iq16;
+
+//限制占空比每次递增的大小
+static constexpr auto PWM_DUTYCYCLE_DELTA_LIMIT = 6.2_iq16 / MC_FREQ;
+
+//这里我测出来它每圈产生900个计数
+static constexpr size_t CNT_PER_TURN = 900;
+
+static constexpr iq16 rotor_cnt_to_position(const int32_t cnt){
+    constexpr uint64_t FACTOR = (1ull << (32 + 16)) / CNT_PER_TURN;
+    return iq16::from_bits(static_cast<int32_t>((static_cast<int64_t>(cnt) * FACTOR) >> 32));
+};
 
 void winter_mc_tutorial_main(){
     auto & DEBUG_UART = hal::usart2;
-    DEBUG_UART.init({
-        .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(576000),
-        .tx_strategy = CommStrategy::Blocking
-    });
 
-    DEBUGGER.retarget(&DEBUG_UART);
-    DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(3);
-    DEBUGGER.force_sync(EN);
-    // DEBUGGER.no_fieldname(EN);
-    DEBUGGER.no_fieldname(DISEN);
+    auto bsp_init_debug = [&]{
+        DEBUG_UART.init({
+            .remap = hal::USART2_REMAP_PA2_PA3,
+            .baudrate = hal::NearestFreq(576000),
+            .tx_strategy = CommStrategy::Blocking
+        });
 
+        DEBUGGER.retarget(&DEBUG_UART);
+        DEBUGGER.no_brackets(EN);
+        DEBUGGER.set_eps(3);
+        DEBUGGER.force_sync(EN);
+        // DEBUGGER.no_fieldname(EN);
+        DEBUGGER.no_fieldname(DISEN);
+    };
+
+    bsp_init_debug();
 
 
     auto & encoder_timer = hal::timer3;
@@ -63,7 +83,7 @@ void winter_mc_tutorial_main(){
 
     pwmgen_timer.init({
         .remap = hal::TIM1_REMAP_A8_A9_A10_A11__A7_B0_B1,
-        .count_freq = hal::NearestFreq(10_KHz),
+        .count_freq = hal::NearestFreq(20_KHz),
         .count_mode = hal::TimerCountMode::Up
     }).unwrap().alter_to_pins({
         hal::TimerChannelSelection::CH1,
@@ -88,7 +108,7 @@ void winter_mc_tutorial_main(){
 
     isr_timer.init({
         .remap = hal::TIM2_REMAP_A15_B3_A2_A3,
-        .count_freq = hal::NearestFreq(1_KHz),
+        .count_freq = hal::NearestFreq(MC_FREQ),
         .count_mode = hal::TimerCountMode::Up
     }).unwrap().dont_alter_to_pins();
 
@@ -97,10 +117,9 @@ void winter_mc_tutorial_main(){
 
 
     auto set_pwm_dutycycle = [&](const iq16 dutycycle) -> void{
-        // pwm_out.set_dutycycle(dutycycle);
         if(dutycycle > 0){
-            forward_dir_pin.set_high();
             backward_dir_pin.set_low();
+            forward_dir_pin.set_high();
             pwm_out.set_dutycycle(uq16(dutycycle));
         }else{
             forward_dir_pin.set_low();
@@ -110,87 +129,127 @@ void winter_mc_tutorial_main(){
     };
 
     auto get_encoder_cnt = [&] -> uint16_t{
-        const uint16_t this_cnt = static_cast<uint16_t>(encoder_timer.cnt());
-        return this_cnt;
+        return static_cast<uint16_t>(encoder_timer.cnt());
     };
 
     auto get_rotor_cnt = [&](const uint16_t this_cnt) -> int32_t{
-        constexpr int32_t HALF_CNT = 32768;
+        constexpr int32_t CYCLIC_CNT = 65536;
         static uint16_t last_cnt = 0;
         static int32_t accumulated_cnt = 0;
 
         int32_t delta_cnt = static_cast<int32_t>(this_cnt) - static_cast<int32_t>(last_cnt);
-        if(delta_cnt > HALF_CNT){
-            delta_cnt -= HALF_CNT * 2;
-        }else if(delta_cnt < -HALF_CNT){
-            delta_cnt += HALF_CNT * 2;
-        }
 
+        if(delta_cnt > CYCLIC_CNT / 2){
+            delta_cnt -= CYCLIC_CNT;
+        }else if(delta_cnt < (-CYCLIC_CNT / 2)){
+            delta_cnt += CYCLIC_CNT;
+        }
         last_cnt = this_cnt;
 
         accumulated_cnt += delta_cnt;
         return accumulated_cnt;
     };
 
-    auto rotor_cnt_to_position = [&](const int32_t cnt) -> iq16{
-        static constexpr uint64_t FACTOR = (1ull << 48) / 900;
-        return iq16::from_bits(static_cast<int32_t>((static_cast<int64_t>(cnt) * FACTOR) >> 32));
-    };
+    using ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
+    using state2o = dsp::SecondOrderState<iq16>;
+    auto rotor_ltd = ltd2o{ltd2o::Config{.fs = MC_FREQ, .r = 80}.try_into_coeffs().unwrap()};
+
+    state2o meas_rotor_state_var = {0, 0};
+    iq16 meas_rotor_x1 = 0;
+    iq16 meas_rotor_x2 = 0;
 
     iq16 target_rotor_x1 = 0;
     iq16 target_rotor_x2 = 0;
-    iq16 kp = 3;
-    iq16 kd = 0.07_iq16;
-    iq16 kf = 0.17_iq16;
+    iq16 kp = 4.0_iq16;
+    iq16 kd = 0.22_iq16;
+    iq16 kf = 0.225_iq16;
+
+    iq16 ramp_speed = 2;
+    iq16 pwm_dutycycle = 0;
+
+    enum class DemoManipulateSource:uint8_t{
+        None = 0,
+        Ramp = 1,
+        Sine = 2,
+        Square = 3,
+    };
+
+    DemoManipulateSource demo_manipulate_source = DemoManipulateSource::None;
 
     repl::ReplServer repl_server = {
         &DEBUG_UART, &DEBUG_UART
     };
 
-    repl_server.set_outen(EN);
+    repl_server.set_outen(DISEN);
 
-    auto repl_list =
-        script::make_list( "list",
-            script::make_function("rst", [](){sys::reset();}),
-            script::make_function("outen", [&](){repl_server.set_outen(EN);}),
-            script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
-            script::make_mut_property("x1", &target_rotor_x1),
-            script::make_mut_property("x2", &target_rotor_x2),
-            // script::make_function("s2", &kp),
-            script::make_mut_property("kp", &kp),
-            script::make_mut_property("kd", &kd),
-            script::make_mut_property("kf", &kf),
-            script::make_mut_property("s2", &kp)
+    auto repl_list = script::make_list( "list",
+        script::make_function("rst", [](){sys::reset();}),
+        script::make_function("outen", [&](){repl_server.set_outen(EN);}),
+        script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+        script::make_mut_property("x1", &target_rotor_x1),
+        script::make_mut_property("x2", &target_rotor_x2),
+        script::make_mut_property("kp", &kp),
+        script::make_mut_property("kd", &kd),
+        script::make_mut_property("kf", &kf),
+        script::make_mut_property("rs", &ramp_speed),
+        script::make_mut_property("dm", reinterpret_cast<uint8_t *>(&demo_manipulate_source))
     );
 
-    using ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
-    using state2o = dsp::SecondOrderState<iq16>;
-    auto rotor_ltd = ltd2o{ltd2o::Config{.fs = 1000, .r = 80}.try_into_coeffs().unwrap()};
-
-    state2o meas_rotor_state = {0, 0};
-    iq16 meas_rotor_x1 = 0;
-    iq16 meas_rotor_x2 = 0;
-    iq16 pwm_dutycycle = 0;
-
     auto motor_isr = [&]{
-        const auto now_secs = clock::seconds();
-        const auto speed = 2;
-        target_rotor_x1 = now_secs * speed;
-        target_rotor_x2 = 2;
+        //获取当前的时间
+        [[maybe_unused]] const auto now_secs = clock::seconds();
 
+        switch(demo_manipulate_source){
+            case DemoManipulateSource::None:{
+                break;
+            }
+
+            case DemoManipulateSource::Ramp:{
+                target_rotor_x1 += target_rotor_x2 * uq32::from_rcp(MC_FREQ);
+                target_rotor_x2 = ramp_speed;
+                break;
+            }
+
+            case DemoManipulateSource::Sine:{
+                target_rotor_x1 = 3.0_iq16 * math::sin(now_secs * 1.0_iq16);
+                target_rotor_x2 = 3.0_iq16 * math::cos(now_secs * 1.0_iq16);
+                break;
+            }
+
+            case DemoManipulateSource::Square:{
+                target_rotor_x1 = math::sin(now_secs * 2.0_iq16) > 0 ? 2 : -2;
+                target_rotor_x2 = 0;
+            }
+        }
+
+        //#region 更新电机运动状态变量
         const auto meas_rotor_cnt = get_rotor_cnt(get_encoder_cnt());
         const auto meas_rotor_x1_unfilted = rotor_cnt_to_position(meas_rotor_cnt);
 
-        // const auto meas_rotor_x1 = meas_rotor_x1_unfilted;
+        meas_rotor_state_var = rotor_ltd.iterate(meas_rotor_state_var, {meas_rotor_x1_unfilted, 0});
+        meas_rotor_x1 = math::fixed_downcast<16>(meas_rotor_state_var.x1);
+        meas_rotor_x2 = meas_rotor_state_var.x2;
+        //#endregion
 
-        meas_rotor_state = rotor_ltd.iterate(meas_rotor_state, {meas_rotor_x1_unfilted, 0});
-
-        meas_rotor_x1 = math::fixed_downcast<16>(meas_rotor_state.x1);
-        meas_rotor_x2 = meas_rotor_state.x2;
+        //计算位置误
         const auto e1 = target_rotor_x1 - meas_rotor_x1;
+
+        //计算速度误差
         const auto e2 = target_rotor_x2 - meas_rotor_x2;
 
-        pwm_dutycycle = CLAMP2(e1 * kp + e2 * kd + target_rotor_x2 * kf, 0.7_iq16);
+        //计算期望的占空比
+        const auto desired_pwm_dutycycle = 
+            (e1 * kp) + 
+            (e2 * kd) + 
+            (target_rotor_x2 * kf);
+
+        //计算钳位与限速后更新的占空比
+        pwm_dutycycle = STEP_TO(
+            pwm_dutycycle, 
+            CLAMP2(desired_pwm_dutycycle, PWM_DUTYCYCLE_LIMIT), 
+            PWM_DUTYCYCLE_DELTA_LIMIT);
+
+        //将占空比应用到输出
         set_pwm_dutycycle(pwm_dutycycle);
     };
 
@@ -212,7 +271,6 @@ void winter_mc_tutorial_main(){
 
 
         DEBUG_PRINTLN(
-            // meas_rotor_x1_unfilted,
             target_rotor_x1,
             target_rotor_x2,
             meas_rotor_x1,
@@ -220,6 +278,6 @@ void winter_mc_tutorial_main(){
             pwm_dutycycle
         );
 
-        clock::delay(10ms);
+        clock::delay(1ms);
     }
 }
