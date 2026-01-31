@@ -25,8 +25,8 @@ static void clear_corners(Image<T> & dst){
 void convolution(
     Image<Gray> & dst, 
     const Image<Gray> & src, 
-    const math::Matrix<int8_t, 3, 3> & core)
-{
+    const math::Matrix<int8_t, 3, 3> & core
+){
     const auto size = dst.size();
     const auto den = core.sum();
     const size_t w = size_t(size.x);
@@ -97,7 +97,7 @@ void gauss5x5(Image<Gray> & dst, const Image<Gray> & src){
 void gauss(Image<Gray> & src){
     auto temp = Image<Gray>(src.size());
     gauss(temp, src);
-    pixels::copy(src, temp);
+    src = temp.clone();
 }
 
 math::Vec2u16 find_most(const Image<Gray> & src, const Gray & tg_color,  const math::Vec2u16 & point, const math::Vec2u16 & vec){
@@ -957,112 +957,6 @@ void canny(Image<Binary> &dst, const Image<Gray> &src, const math::Range2<uint16
     }
 }
 
-void eye(Image<Gray> &dst, const Image<Gray> &src){
-    PANIC("todo");
-    // using vec_t = Vec2<int8_t>;
-    // #define math::square(x) (x * x)
-    // static constexpr size_t SHIFTS = 3;
-
-    // // sizeof(vec_t);
-    // auto roi = src.size().to_rect();
-    // auto gm = std::make_unique<vec_t[]>(roi.get_area());
-    
-    // const size_t w = size_t(roi.w());
-
-    // //2. Finding Image Gradients
-    // {
-    //     for (size_t y = size_t(roi.y()) + 1; y < size_t(roi.y()) + size_t(roi.h()) - 1u; y++) {
-    //         for (size_t x = size_t(roi.x()) + 1; x < size_t(roi.x()) + size_t(roi.w()) - 1u; x++) {
-    //             int16_t vx = 0, vy = 0;
-
-    //             //  1   0   -1
-    //             //  2   0   -2
-    //             //  1   0   -1
-
-    //             vx = uint8_t(src[(y - 1) * w + static_cast<uint16_t>(x-1)])
-    //                 - uint8_t(src[(y - 1) * w + x + 1])
-    //                 + uint8_t(uint8_t(src[static_cast<uint16_t>(y + 0) * w + static_cast<uint16_t>(x-1)]) << 1)
-    //                 - uint8_t(uint8_t(src[static_cast<uint16_t>(y + 0) * w + x + 1]) << 1)
-    //                 + uint8_t(src[static_cast<uint16_t>(y + 1) * w + static_cast<uint16_t>(x-1)])
-    //                 - uint8_t(src[static_cast<uint16_t>(y + 1) * w + x + 1]);
-
-    //             //  1   2   1
-    //             //  0   0   0
-    //             //  -1  2   -1
-
-    //             vy = uint8_t(src[(y - 1) * w + static_cast<uint16_t>(x-1)])
-    //                 + uint8_t(uint8_t(src[(y - 1) * w + static_cast<uint16_t>(x+0)]) << 1)
-    //                 + uint8_t(src[(y - 1) * w + x + 1])
-    //                 - uint8_t(src[static_cast<uint16_t>(y + 1) * w + static_cast<uint16_t>(x-1)])
-    //                 - uint8_t(uint8_t(src[static_cast<uint16_t>(y + 1) * w + static_cast<uint16_t>(x+0)]) << 1)
-    //                 - uint8_t(src[static_cast<uint16_t>(y + 1) * w + x + 1]);
-
-    //             // Find the direction and round angle to 0, 45, 90 or 135
-
-    //             gm[w * y + x] = vec_t{
-    //                 int8_t(vx >> SHIFTS), 
-    //                 int8_t(vy >> SHIFTS)};
-    //         }
-    //     }
-    // }
-
-    // clear_corners(dst);
-
-    // [[maybe_unused]] static constexpr size_t WINDOW_HALF_SIZE = 4;
-
-
-    // using template_t = std::array<
-    //     std::array<vec_t, WINDOW_HALF_SIZE * 2 + 1>, 
-    // WINDOW_HALF_SIZE * 2 + 1>;
-
-    // auto generate_template = []() -> template_t{
-    //     template_t ret ;
-    //     for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
-    //         for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
-    //             real_t rad = atan2(real_t(y), real_t(x));
-    //             const auto [s, c] = sincos(rad);
-    //             vec_t vec = vec_t{int8_t(s), int8_t(c)};
-    //             // vec_t vec = vec_t{scale, 0};
-    //             ret[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE] = vec;
-    //         }
-    //     }
-    //     return ret;
-    // };
-
-    // auto temp = generate_template();
-
-    // for (size_t gy = WINDOW_HALF_SIZE; gy < size_t(roi.h()) - WINDOW_HALF_SIZE; gy++) {
-    //     vec_t * vc = &gm[gy * w];
-    //     auto * dp = &dst[gy * w];
-    //     for (size_t gx = WINDOW_HALF_SIZE; gx < size_t(roi.w()) - WINDOW_HALF_SIZE; gx++) {
-    //         vc++;
-    //         dp++;
-
-    //         // *dp = fast_sqrt_i<uint16_t>((vc->x * vc->x + vc->y * vc->y));
-
-    //         // size_t x_sum = 0;
-    //         // size_t y_sum = 0;
-    //         size_t sum = 0;
-    //         for(size_t y = -WINDOW_HALF_SIZE; y <= WINDOW_HALF_SIZE; y++){
-    //             for(size_t x = -WINDOW_HALF_SIZE; x <= WINDOW_HALF_SIZE; x++){
-    //                 const auto & vec = gm[(gy + y) * w + (gx + x)];
-    //                 const auto & tvec = temp[y + WINDOW_HALF_SIZE][x + WINDOW_HALF_SIZE];
-    //                 // x_sum += ABS(vec.x * tvec.x);
-    //                 // y_sum += ABS(vec.y * tvec.y);
-    //                 // sum += temp[3][3].length_squared();
-    //                 // sum += tvec.length_squared();
-    //                 sum += vec.x * tvec.x + vec.y * tvec.y;
-    //             }
-    //         }
-    //         // size_t sum = fast_sqrt_i<int>(math::square(x_sum) + math::square(y_sum));
-    //         // size_t sum = fast_sqrt_i<int>(math::square(x_sum) + math::square(y_sum));
-    //         // size_t sum = MAX(x_sum, y_sum);
-    //         // size_t sum =  x_sum * x_sum + y_sum * y_sum;
-    //         *dp = Gray((ABS(sum) / ((WINDOW_HALF_SIZE * 2 + 1) * (WINDOW_HALF_SIZE * 2 + 1))) >> 4); 
-    //     }
-    // }
-}
-
 void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
     if(dst.is_shared_with(src)){
         auto temp = Image<Gray>(src.size());
@@ -1077,12 +971,12 @@ void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
     };
 
     static constexpr uint16_t WINDOW_HALF_SIZE = 3;
-    static constexpr uint16_t LEAST_POINTS = 7;
+    static constexpr uint16_t NUM_LEAST_POINTS = 7;
 
     for(uint16_t y = WINDOW_HALF_SIZE; y < h - WINDOW_HALF_SIZE - 1u; y++){
         for(uint16_t x = WINDOW_HALF_SIZE; x < w - WINDOW_HALF_SIZE - 1u; x++){
 
-            std::array<uint8_t, LEAST_POINTS> min_values;
+            std::array<uint8_t, NUM_LEAST_POINTS> min_values;
             std::fill(min_values.begin(), min_values.end(), 255);
             for(uint16_t i=y-WINDOW_HALF_SIZE;i<=y+WINDOW_HALF_SIZE;i++){
                 for(uint16_t j=x-WINDOW_HALF_SIZE;j<=x+WINDOW_HALF_SIZE;j++){
@@ -1097,7 +991,7 @@ void adaptive_threshold(Image<Gray> & dst, const Image<Gray> & src) {
                 }
             }
 
-            const auto ave = std::accumulate(min_values.begin(), min_values.end(), 0)/LEAST_POINTS;
+            const auto ave = std::accumulate(min_values.begin(), min_values.end(), 0)/NUM_LEAST_POINTS;
             const auto raw = src[{x,y}];
 
             auto RELU = [](uint8_t _x) -> uint8_t {return (_x) > 0 ? (_x) : (0);};

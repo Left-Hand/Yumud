@@ -9,27 +9,49 @@
 namespace ymd::nvcv2::shape{
     namespace cores{
         static constexpr auto roberts_x      = math::Matrix<int8_t, 2, 2>{
-            -1, 0, 0, 1};
+            -1, 0, 0, 1
+        };
+
         static constexpr auto roberts_y      = math::Matrix<int8_t, 2, 2>{
-            0, -1, 1, 0};
+            0, -1, 1, 0
+        };
+
         static constexpr auto prewiit_x      = math::Matrix<int8_t, 3, 3>{
-            -1, 0, 1, -1, 0, 1, -1, 0, 1};
+            -1, 0, 1, -1, 0, 1, -1, 0, 1
+        };
+
         static constexpr auto prewiit_y      = math::Matrix<int8_t, 3, 3>{
-            -1, -1, -1, 0, 0, 0, 1, 1, 1};
+            -1, -1, -1, 0, 0, 0, 1, 1, 1
+        };
+
         static constexpr auto sobel_x        = math::Matrix<int8_t, 3, 3>{
-            -1, 0, 1, -2, 0, 2, -1, 0, 1};
+            -1, 0, 1, -2, 0, 2, -1, 0, 1
+        };
+
         static constexpr auto sobel_y        = math::Matrix<int8_t, 3, 3>{
-            -1, -2, -1, 0, 0, 0, 1, 2, 1};
+            -1, -2, -1, 0, 0, 0, 1, 2, 1
+        };
+
         static constexpr auto scharr_x       = math::Matrix<int8_t, 3, 3>{
-            -3, 0, 3, -10, 0, 10, -3, 0, 3};
+            -3, 0, 3, -10, 0, 10, -3, 0, 3
+        };
+
         static constexpr auto scharr_y       = math::Matrix<int8_t, 3, 3>{
-            -3, -10, -3, 0, 0, 0, 3, 10, 3};
+            -3, -10, -3, 0, 0, 0, 3, 10, 3
+        };
+
         static constexpr auto laplacian_4    = math::Matrix<int8_t, 3, 3>{
-            0, -1, 0, -1, 4, -1, 0, -1, 0};
+            0, -1, 0, -1, 4, -1, 0, -1, 0
+        };
+
         static constexpr auto laplacian_8    = math::Matrix<int8_t, 3, 3>{
-            -1, -1, -1, -1, 8, -1, -1, -1, -1};
+            -1, -1, -1, -1, 8, -1, -1, -1, -1
+        };
+
         static constexpr auto gauss          = math::Matrix<int8_t, 3, 3>{
-            1, 1, 1, 1, 2, 1, 1, 1, 1};
+            1, 1, 1, 1, 2, 1, 1, 1, 1
+        };
+
     }
 
 
@@ -177,8 +199,6 @@ namespace ymd::nvcv2::shape{
 
 
     void canny(Image<Binary> & dst, const Image<Gray> & src, const math::Range2<uint16_t> & threshold);
-    void eye(Image<Gray> & dst, const Image<Gray> & src);
-
 
     struct Seed final{
         public:            

@@ -43,7 +43,7 @@
 
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"
-#include "middlewares/nvcv2/path/astar.hpp"
+#include "middlewares/nvcv2/path/bfs.hpp"
 
 #include "drivers/Proximeter/STL06N/stl06n.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
