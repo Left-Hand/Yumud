@@ -11,40 +11,43 @@ enum class DestringError:uint8_t{
     InvalidBooleanAlpha,       // 布尔值只能为true或false
     InvalidBooleanLength,      // 布尔值的长度必须为1,4,5
 	InvalidBooleanChar,		   // 单符号布尔只能为'0','1'
+	NegativeBoolean,
+	PositiveBoolean,
 
     InvalidChar,            // Single character parsing failed
     InvalidDigit,
 
-	UnexpectedPositive,
-	UnexpectedNegative,
 	MultiplyNegative,
 	MultiplyPositive,
 
 	MultipleDot,
+	UnexpectedDotInInteger,
 
-	UnexpectedZero,
 	UnexpectedSpace,
 	UnexpectedChar,
 	UnexpectedAlpha,
-	NoDigit,
-    PosOverflow,
 
     DigitOverflow,
+    DigitUnderflow,
 	FracOverflow,
-	FracDigitsOverflow,
+	FracTooLong,
 
-	NoDigits,
-	OnlySignFounded,
-	NoDigitsAfterSign,
-	NoDigitsAfterDot,
+	NoDigitPart,
+	NoFracPart,
 
 	Overflow,
-    NegOverflow, //负值超过能表示的范围
+    Underflow, //负值超过能表示的范围
 	NegForUnsigned, //负值不能用于无符号数
     EmptyString,
 
-	BeginnerNotFounded,
-	TerminatorNotFounded
+	HexBaseOnly,
+	BinBaseOnly,
+	OctBaseOnly,
+
+	NullTerminatorNotAllowed,//字符串中不能出现空结束符 这是c的糟粕
+	StrTooLong,
+	DigitExceedsBin,
+	DigitExceedsOct,
 };
 
 DEF_DERIVE_DEBUG(DestringError)
@@ -86,6 +89,10 @@ struct [[nodiscard]] Radix final{
 		return static_cast<Kind>(count_) == Dec;
 	}
 
+	[[nodiscard]] constexpr bool is_oct() const{
+		return static_cast<Kind>(count_) == Oct;
+	}
+
 	[[nodiscard]] constexpr bool is_hex() const{
 		return static_cast<Kind>(count_) == Hex;
 	}
@@ -94,7 +101,17 @@ struct [[nodiscard]] Radix final{
 		return static_cast<Kind>(count_) == Bin;
 	}
 
-    [[nodiscard]] constexpr auto operator<=>(const Radix & other) const = default;
+	[[nodiscard]] constexpr Kind kind() const{
+		return static_cast<Kind>(count_);
+	}
+
+    [[nodiscard]] constexpr bool operator ==(const Radix & rhs) const{
+		return count_ == rhs.count_;
+	}
+
+    [[nodiscard]] constexpr bool operator !=(const Radix & rhs) const{
+		return count_ == rhs.count_;
+	}
 
 private:
 	uint8_t count_;

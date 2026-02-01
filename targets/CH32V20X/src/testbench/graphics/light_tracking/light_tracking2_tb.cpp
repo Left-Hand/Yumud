@@ -10,8 +10,8 @@
 
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
@@ -136,12 +136,12 @@ static __fast_inline iq16 tt_intersect(
 };
 
 [[nodiscard]]
-static __fast_inline bool bb_intersect_impl(const Vec3<iq16> & t0, const Vec3<iq16> & t1){
+static __fast_inline bool bb_intersect_impl(const math::Vec3<iq16> & t0, const math::Vec3<iq16> & t1){
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
 
 [[nodiscard]]
-static __fast_inline bool tb_intersect_impl (const Vec3<iq16> & t0, const Vec3<iq16> & t1){
+static __fast_inline bool tb_intersect_impl (const math::Vec3<iq16> & t0, const math::Vec3<iq16> & t1){
     return (vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0));
 };
 
@@ -157,10 +157,10 @@ static Intersection<iq16> intersect(
     };
 
     const auto & base = ray.base;
-    const auto inv_dir = Vec3<iq16>::from_rcp(ray.direction);
+    const auto inv_dir = math::Vec3<iq16>::from_rcp(ray.direction);
 
-    const Vec3<iq16> t0 = (bbmin - base) * inv_dir;
-    const Vec3<iq16> t1 = (bbmax - base) * inv_dir;
+    const math::Vec3<iq16> t0 = (bbmin - base) * inv_dir;
+    const math::Vec3<iq16> t1 = (bbmax - base) * inv_dir;
 
     
     if ((vec3_compMin(t0.max_with(t1)) >= MAX(vec3_compMax(t0.min_with(t1)), 0))){
@@ -209,7 +209,7 @@ static Ray3<iq16> cos_weighted_hemi(
     const auto azimuth = u1 * iq16(TAU);
     const auto [sin_a, cos_a] = sincos(azimuth);
 
-    const auto v = Vec3<iq16>(
+    const auto v = math::Vec3<iq16>(
         iq16((r * cos_a)), 
         iq16((r * sin_a)), 
         iq16((std::sqrt(1 - u0)))
@@ -235,16 +235,16 @@ static Option<RGB<iq16>> sample_light(
 
     const auto & light = co_triangles[light_idx];
 
-    const auto linear_t = Vec3(
+    const auto linear_t = math::Vec3(
         (1 - su),
         (1 - u1) * su,
         u1 * su
     );
 
-    const auto light_pos = Vec3{
-        Vec3(light.v0.x, light.v1.x, light.v2.x).dot(linear_t),
-        Vec3(light.v0.y, light.v1.y, light.v2.y).dot(linear_t),
-        Vec3(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
+    const auto light_pos = math::Vec3{
+        math::Vec3(light.v0.x, light.v1.x, light.v2.x).dot(linear_t),
+        math::Vec3(light.v0.y, light.v1.y, light.v2.y).dot(linear_t),
+        math::Vec3(light.v0.z, light.v1.z, light.v2.z).dot(linear_t)
     };
 
     const auto ray = Ray3<iq16>::from_start_and_stop(
@@ -271,7 +271,7 @@ static Option<RGB<iq16>> sample_light(
 }
 
 
-static Quat<iq16> quat_from_normal(const Vec3<iq16>& normal)
+static Quat<iq16> quat_from_normal(const math::Vec3<iq16>& normal)
 {
     const auto ilen = inv_sqrt(1 + (normal.z + 2) * normal.z);
     return Quat<iq16>::from_xyzw(
@@ -342,7 +342,7 @@ static RGB<iq16> samplePixel(
         sample += 
         sampleRay(
             sample,
-            Ray3<iq16>::from_base_and_dir(eye,Vec3<iq16>(ux - 0.5_r, 0.5_r - uy, uz)),
+            Ray3<iq16>::from_base_and_dir(eye,math::Vec3<iq16>(ux - 0.5_r, 0.5_r - uy, uz)),
             co_triangles
         )
         // RGB(ux, uy, CLAMP(ux + uy, 0, 1))
@@ -486,7 +486,7 @@ void light_tracking_main(void){
         // const auto u = micros();
         const auto st = math::sinpu(clock::seconds() * 2) * 0.5_r + 0.5_r;
         // displayer.setpos_unchecked({0,0});
-        displayer.setarea_unchecked({Vec2u16{0,0}, Vec2u16{LCD_W, LCD_H}}).examine();
+        displayer.setarea_unchecked({math::Vec2u16{0,0}, math::Vec2u16{LCD_W, LCD_H}}).examine();
         for (uint y = 0; y < LCD_H; y++){
             std::array<RGB565, LCD_W> row;
             // row.fill(RGB565(Color<iq16>(0,int(y==0),0,0)));
@@ -514,11 +514,11 @@ void light_tracking_main(void){
             // DEBUG_PRINTLN(std::span(reinterpret_cast<const uint16_t * >(row.data()), row.size()));
             
             // const auto u = micros();
-            displayer.put_next_texture(Rect2u(Vec2i(0,y), Vec2i(LCD_W, 1)), row.data()).examine();
+            displayer.put_next_texture(math::Rect2u(Vec2i(0,y), Vec2i(LCD_W, 1)), row.data()).examine();
             // DEBUG_PRINTLN(micros() - u, int((uint64_t(row.size() * 16) * 1000000) / LCD_SPI_FREQ_HZ));
 
-            // displayer.put_rect(Rect2u(Vec2i(0,y), Vec2i(LCD_W, 1)), ColorEnum::WHITE);
-            // renderer.draw_rect(Rect2u(20, 0, 20, 40));
+            // displayer.put_rect(math::Rect2u(Vec2i(0,y), Vec2i(LCD_W, 1)), ColorEnum::WHITE);
+            // renderer.draw_rect(math::Rect2u(20, 0, 20, 40));
         }
 
         // const uint32_t use_us = micros() - u;
@@ -538,13 +538,13 @@ void light_tracking_main(void){
 
     auto render = [&](){
         const auto u = clock::micros();
-        displayer.setarea_unchecked(Rect2u{Vec2u{0,0}, Vec2u{LCD_W, LCD_H}}).examine();
+        displayer.setarea_unchecked(math::Rect2u{Vec2u{0,0}, Vec2u{LCD_W, LCD_H}}).examine();
         for (uint y = 0; y < LCD_H; y++){
 
             std::array<RGB565, LCD_W> row;
             render_row(row, y, co_triangles);
 
-            displayer.put_texture(Rect2u(Vec2i(0,y), Vec2i(LCD_W, 1)), row.data())
+            displayer.put_texture(math::Rect2u(Vec2i(0,y), Vec2i(LCD_W, 1)), row.data())
                 .examine();
         }
 

@@ -34,7 +34,7 @@ public:
 
     [[nodiscard]] IResult<> validate();
 
-    [[nodiscard]] IResult<Vec2i> update();
+    [[nodiscard]] IResult<math::Vec2i> update();
 
     [[nodiscard]] IResult<bool> is_motioned();
 
@@ -48,7 +48,7 @@ public:
 private:
     hal::SpiDrv spi_drv_;
 
-    [[nodiscard]] IResult<Vec2i> query_xy();
+    [[nodiscard]] IResult<math::Vec2i> query_xy();
     [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t RegAddr);
 
     [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & data);

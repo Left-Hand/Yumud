@@ -113,7 +113,7 @@ public:
     }
 };
 
-struct [[nodiscard]] TextSourceLocation{
+struct [[nodiscard]] TextSourceLocation final{
     uint8_t start;    // Starting column
     uint8_t end;      // Ending column  
     uint16_t line;    // Line number
@@ -128,7 +128,7 @@ struct [[nodiscard]] TextSourceLocation{
 };
 
 
-struct [[nodiscard]] GcodeArg{
+struct [[nodiscard]] GcodeArg final{
     char letter;
     iq16 value;
 
@@ -158,7 +158,7 @@ struct [[nodiscard]] GcodeArg{
 };
 
 
-struct [[nodiscard]] GcodeArgsIter {
+struct [[nodiscard]] GcodeArgsIter final{
     constexpr explicit GcodeArgsIter(StringView line)
         : arg_str_iter_(line, ' ') {}
 
@@ -230,7 +230,7 @@ constexpr IResult<T> query_tmp(const StringView line, const char letter, FnMap &
 }
 }
 
-struct [[nodiscard]] GcodeLine{
+struct [[nodiscard]] GcodeLine final{
     StringView line;
     constexpr IResult<Mnemonic> query_mnemonic() const {
         if(line.length() < 1) 
@@ -245,7 +245,7 @@ struct [[nodiscard]] GcodeLine{
     constexpr IResult<uint16_t> query_major(const Mnemonic mnemoic) const {
         return details::query_tmp<uint16_t>(line, mnemoic.to_letter(), 
         [](const StringView str) -> Result<uint16_t, Error>{
-            const auto res = (strconv2::FstrDump::from_str(str.substr(1).unwrap()));
+            const auto res = (strconv2::FstrDump::parse(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
             if(dump.digit_part > std::numeric_limits<uint16_t>::max())
@@ -257,7 +257,7 @@ struct [[nodiscard]] GcodeLine{
     constexpr IResult<uint16_t> query_minor(const Mnemonic mnemoic) const {
         return details::query_tmp<uint16_t>(line, mnemoic.to_letter(), 
         [](const StringView str) -> Result<uint16_t, Error>{
-            const auto res = (strconv2::FstrDump::from_str(str.substr(1).unwrap()));
+            const auto res = (strconv2::FstrDump::parse(str.substr(1).unwrap()));
             if(res.is_err()) return Err(res.unwrap_err());
             const auto dump = res.unwrap();
             if(dump.num_frac_digits == 0) return Err(GcodeParseError::NoMinorNumber);

@@ -273,7 +273,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
 
         struct Dignosis {
             Option<TaskError> err;
-            Range2<iq16> move_range;
+            math::Range2<iq16> move_range;
         };
         
         constexpr CheckStallTask(const Config & cfg){;} 
@@ -281,7 +281,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
         constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> cont_position){
 
             if(may_move_range_.is_none())
-                may_move_range_ = Some(Range2<iq16>::from_center(cont_position.to_turns()));
+                may_move_range_ = Some(math::Range2<iq16>::from_center(cont_position.to_turns()));
             else 
                 may_move_range_ = Some(may_move_range_.unwrap().merge(cont_position.to_turns()));
             tick_cnt_++;
@@ -314,7 +314,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
     private:
         size_t tick_cnt_ = 0;
 
-        Option<Range2<iq16>> may_move_range_ = None;
+        Option<math::Range2<iq16>> may_move_range_ = None;
     };
 
     struct CheckMovingTask final{
@@ -325,7 +325,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
 
         struct [[nodiscard]] Dignosis {
             Option<TaskError> err;
-            Range2<iq16> move_range;
+            math::Range2<iq16> move_range;
         };
 
         constexpr CheckMovingTask(const Config & cfg){
@@ -335,7 +335,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
         constexpr digipw::AlphaBetaCoord<iq16> resume(const Angular<uq32> cont_position){
 
             if(may_move_range_.is_none())
-                may_move_range_ = Some(Range2<iq16>::from_center(cont_position.to_turns()));
+                may_move_range_ = Some(math::Range2<iq16>::from_center(cont_position.to_turns()));
             else 
                 may_move_range_ = Some(may_move_range_.unwrap().merge(cont_position.to_turns()));
 
@@ -379,7 +379,7 @@ struct CoilCheckTasksPrelude:public MotorTaskPrelude{
         }
     private:
         size_t tick_cnt_ = 0;
-        Option<Range2<iq16>> may_move_range_ = None;
+        Option<math::Range2<iq16>> may_move_range_ = None;
         bool is_beta_;
     };
 };

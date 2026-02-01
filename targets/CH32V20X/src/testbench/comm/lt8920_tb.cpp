@@ -3,8 +3,8 @@
 #include "core/clock/clock.hpp"
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/bus/spi/spisw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/bus/spi/soft/soft_spi.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
@@ -18,10 +18,10 @@ void lt8920_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
 
 
-    // SpiSw spisw {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};
+    // SoftSpi SoftSpi {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};
 
     auto & spi = hal::spi1;
-    // auto & spi = spisw;
+    // auto & spi = SoftSpi;
 
 
     spi.init({

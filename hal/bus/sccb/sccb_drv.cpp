@@ -58,8 +58,10 @@ hal::HalResult SccbDrv::read_reg(const uint8_t reg_addr, uint16_t & reg_val){
     if(const auto res = i2c_.read(data_l, NACK);
         res.is_err()) return res;
 
-    reg_val = static_cast<uint16_t>(static_cast<uint8_t>(data_h) << 8) 
-        | static_cast<uint8_t>(data_l);
+    reg_val = static_cast<uint16_t>(
+        (static_cast<uint16_t>(data_h) << 8) 
+        | static_cast<uint16_t>(data_l)
+    );
 
     return hal::HalResult::Ok();
 }

@@ -3,7 +3,7 @@
 #include "algebra/vectors/vec3.hpp"
 #include "algebra/vectors/quat.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct Rotation3{
@@ -46,8 +46,8 @@ struct Rotation3{
         ));
     }
 
-    [[nodiscard]] constexpr Vec3<T> operator * (const Vec3<T>& v) const {
-        return Vec3<T>(matrix_ * to_matrix(v));
+    [[nodiscard]] constexpr math::Vec3<T> operator * (const math::Vec3<T>& v) const {
+        return math::Vec3<T>(matrix_ * to_matrix(v));
     }
 
     [[nodiscard]] constexpr Rotation3 inverse() const {

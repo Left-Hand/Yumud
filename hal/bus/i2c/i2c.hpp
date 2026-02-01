@@ -1,49 +1,34 @@
 #pragma once
 
-#include "hal/bus/bus_base.hpp"
-#include "core/utils/Option.hpp"
-
-#include "primitive/i2c/i2c_addr.hpp"
-#include "primitive/i2c/i2c_event.hpp"
-#include "primitive/i2c/i2c_timing.hpp"
+#include "i2c_base.hpp"
+#include "hal/gpio/gpio.hpp"
 
 namespace ymd::hal{
-class Gpio;
 
-class I2cBase{
+
+class I2c final: public I2cBase{
 public:
-    using Timeout = std::chrono::duration<uint16_t, std::micro>;
 
-    I2cBase(I2cBase && other) = default;
+    I2c(void * inst);
 
-    struct Config{
-        I2cBuadrate baudrate;
-    };
+    [[nodiscard]] HalResult write(const uint32_t data);
+    [[nodiscard]] HalResult read(uint8_t & data, const Ack ack);
+    void init(const uint32_t baudrate);
+    void reset();
+    bool locked();
+    [[nodiscard]] HalResult unlock_bus();
+    void enable_hw_timeout(const Enable en);
 
+    hal::Gpio & scl() {return scl_;}
+    hal::Gpio & sda() {return scl_;}
+private:
+    void * inst_;
+    hal::Gpio scl_;
+    hal::Gpio sda_;
 
-
-    virtual HalResult read(uint8_t & data, const Ack ack) = 0;
-    virtual HalResult write(const uint32_t data) = 0;
-    virtual HalResult unlock_bus() = 0;
-    virtual HalResult set_baudrate(const I2cBuadrate baudrate) = 0;
-
-    virtual HalResult lead(const I2cSlaveAddrWithRw req) = 0;
-    virtual void trail() = 0;
-
-    virtual void lend() = 0;
-    virtual HalResult borrow(const I2cSlaveAddrWithRw req);
-
-
-    struct Guard {
-        I2cBase & i2c_;
-        Guard(I2cBase & i2c):i2c_(i2c){}
-        ~Guard(){i2c_.lend();}
-    };
-
-    auto create_guard(){return Guard(*this);}
-protected:
-
-    I2cBase() = default;
+    void enable_rcc(const Enable en);
+    [[nodiscard]] HalResult lead(const I2cSlaveAddrWithRw req);
+    void trail();
 };
 
 

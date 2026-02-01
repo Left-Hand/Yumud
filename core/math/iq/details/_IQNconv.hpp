@@ -83,31 +83,49 @@ template<size_t Q>
         return (is_negative) ? 
             std::numeric_limits<int32_t>::min() : std::numeric_limits<int32_t>::max();
     }
-    
     // 构建完整的尾数（包括隐含的1）
-    uint64_t mantissa = static_cast<uint64_t>(mantissa_bits) | (1ULL << 23);
-    
+    const uint32_t full_mantissa = mantissa_bits | (1U << 23);
+
     // 调整尾数位数，考虑小数点位置
-    int32_t shift = 23 - exponent - Q;
-    
-    int64_t result;
+    const int32_t shift = 23 - exponent - Q;
+
+    int32_t result;
+
     if (shift >= 0) {
-        result = static_cast<int64_t>(mantissa >> shift);
+        // 右移操作 - 不太可能造成溢出，但可能会丢失精度
+        result = static_cast<int32_t>(full_mantissa >> shift);
     } else {
-        result = static_cast<int64_t>(mantissa << (-shift));
+        // 左移操作 - 这里可能发生溢出
+        const int32_t left_shift = -shift;
+        
+        // 检查左移是否会导致溢出
+        // 如果左移位数超过可安全左移的位数，或者左移会导致值超出int32_t范围
+        if (left_shift > 31 || full_mantissa > (UINT32_MAX >> left_shift)) {
+            // 溢出情况 - 返回边界值
+            return (is_negative) ? 
+                std::numeric_limits<int32_t>::min() : std::numeric_limits<int32_t>::max();
+        }
+        
+        result = static_cast<int32_t>(full_mantissa << left_shift);
     }
-    
+
     // 应用符号
-    if(is_negative) result = -result;
-    
-    // 检查溢出
-    if (result > std::numeric_limits<int32_t>::max()) {
-        return std::numeric_limits<int32_t>::max();
-    } else if (result < std::numeric_limits<int32_t>::min()) {
-        return std::numeric_limits<int32_t>::min();
+    if (is_negative) {
+        // 检查负数溢出情况
+        if (result == std::numeric_limits<int32_t>::min()) {
+            return std::numeric_limits<int32_t>::min(); // 防止 -INT_MIN 溢出
+        }
+        result = -result;
     }
-    
-    return static_cast<int32_t>(result);
+
+    // 最终检查结果是否在范围内
+    if (result < 0 && result < std::numeric_limits<int32_t>::min()) {
+        return std::numeric_limits<int32_t>::min();
+    } else if (result > 0 && result > std::numeric_limits<int32_t>::max()) {
+        return std::numeric_limits<int32_t>::max();
+    }
+
+    return result;
 }
 
 

@@ -4,7 +4,7 @@
 
 #include "hal/storage/flash/flash.hpp"
 #include "hal/sysmisc/bkp/bkp.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 #include "drivers/Storage/EEprom/AT24CXX/at24cxx.hpp"
@@ -13,7 +13,7 @@
 #include "algo/random/random_generator.hpp"
 
 #include "core/math/real.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
@@ -319,8 +319,8 @@ void eeprom_main(){
     auto scl_pin = hal::PB<13>();
     auto sda_pin = hal::PB<12>();
 
-    hal::I2cSw i2csw = hal::I2cSw{&scl_pin, &sda_pin};
-    i2csw.init({
+    hal::SoftI2c SoftI2c = hal::SoftI2c{&scl_pin, &sda_pin};
+    SoftI2c.init({
         .baudrate = hal::NearestFreq(400000)
     });
 
@@ -328,7 +328,7 @@ void eeprom_main(){
     using namespace drivers;
     auto at24 = AT24CXX(
         AT24CXX::Profiles::AT24C02{}, 
-        hal::I2cDrv{&i2csw, AT24CXX::DEFAULT_I2C_ADDR}
+        hal::I2cDrv{&SoftI2c, AT24CXX::DEFAULT_I2C_ADDR}
     );
 
 
@@ -355,8 +355,8 @@ void eeprom_main(){
 
         clock::delay(1000ms);
     }
-    // eeprom02_tb(DEBUGGER, i2csw);
-    // eeprom64_tb(DEBUGGER, i2csw);
+    // eeprom02_tb(DEBUGGER, SoftI2c);
+    // eeprom64_tb(DEBUGGER, SoftI2c);
 
     // flash_tb(logger);
     while(true);

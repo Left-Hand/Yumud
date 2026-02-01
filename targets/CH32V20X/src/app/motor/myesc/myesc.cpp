@@ -7,18 +7,20 @@
 #include "core/async/timer.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/gpio/gpio_port.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/can/can.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/analog/opa/opa.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
+
 #include "hal/dma/dma.hpp"
 
 #include "dsp/fft/fft32.hpp"
 #include "dsp/motor_ctrl/sensorless/slide_mode_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/luenberger_observer.hpp"
 #include "dsp/motor_ctrl/sensorless/nonlinear_flux_observer.hpp"
+
 #include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
 #include "dsp/controller/adrc/linear/ltd2o.hpp"
 #include "dsp/filter/firstorder/lpf.hpp"
@@ -40,6 +42,9 @@
 
 #include "dsp_lpf.hpp"
 #include "dsp_vec.hpp"
+
+
+
 
 using namespace ymd;
 
@@ -657,7 +662,7 @@ void myesc_main(){
         // const Angular<uq32> elec_angle = Angular<iq16>(flux_sensorless_ob.angle()) - 10_deg;
         #endif
 
-        const auto elec_rotation = Rotation2<iq16>::from_angle(elec_angle);
+        const auto elec_rotation = math::Rotation2<iq16>::from_angle(elec_angle);
         [[maybe_unused]] const auto elec_omega = rotor_rotation_state_var_.x2 * MotorProfile::POLE_PAIRS;
         //#endregion
 

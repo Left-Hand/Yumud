@@ -7,140 +7,31 @@
 #include "core/async/timer.hpp"
 
 // #include "core/mem/o1heap/o1heap_alloc.hpp"
+#include "core/mem/o1heap/o1heap_alloc.hpp"
 #include "core/string/view/string_view.hpp"
+#include "core/string/utils/split_iter.hpp"
+#include "core/string/utils/line_input_sinker.hpp"
+#include "core/utils/iter/foreach.hpp"
 #include "core/clock/time.hpp"
+#include "core/string/utils/simularity/ngram.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Proximeter/STL06N/stl06n.hpp"
 
+#include "middlewares/repl/repl.hpp"
+#include "middlewares/repl/repl_server.hpp"
+
 #include <ranges>
-// #include <unordered_set>
 #include <unordered_map>
 #include <map>
-
-
-#include "core/mem/o1heap/o1heap_alloc.hpp"
 
 
 using namespace ymd;
 using namespace ymd::drivers;
 
-namespace ymd::mem::o1heap{
-template<typename T>
-class [[nodiscard]] O1HeapAllocator {
-public:
-    using O1HeapInstance = lib_o1heap::O1HeapInstance;
-    // Type aliases required by the allocator concept
-    using value_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using size_type = std::size_t;
-    using difference_type = std::ptrdiff_t;
 
-    // Rebind allocator to type U
-    template<typename U>
-    struct rebind {
-        using other = O1HeapAllocator<U>;
-    };
-
-    // Constructor that accepts a heap instance
-    explicit O1HeapAllocator(O1HeapInstance & heap) noexcept 
-        : inst_(heap) {}
-
-    
-    // Copy constructor
-    template<typename U>
-    O1HeapAllocator(const O1HeapAllocator<U>& other) noexcept 
-        : inst_(other.heap_instance()) {}
-
-    // Destructor
-    ~O1HeapAllocator() = default;
-
-    // Get the underlying heap instance
-    O1HeapInstance & heap_instance() const noexcept {
-        return inst_;
-    }
-
-    // Equality operator
-    template<typename U>
-    bool operator==(const O1HeapAllocator<U>& other) const noexcept {
-        return inst_ == other.heap_instance();
-    }
-
-    // Inequality operator
-    template<typename U>
-    bool operator!=(const O1HeapAllocator<U>& other) const noexcept {
-        return !(*this == other);
-    }
-
-    // Allocate memory
-    pointer allocate(size_type n) noexcept {
-        if (n == 0) {
-            return nullptr;
-        }
-
-        // Check for potential overflow
-        if (n > max_size()) {
-            __builtin_trap();
-        }
-
-        void* ptr = inst_.o1heapAllocate(n * sizeof(T));
-        if (!ptr) {
-            __builtin_trap();
-        }
-
-        return static_cast<pointer>(ptr);
-    }
-
-    // Deallocate memory
-    void deallocate(pointer p, size_type n) noexcept {
-        if (p != nullptr) [[likely]]{
-            inst_.o1heapFree(p);
-        }
-        (void)n; // Suppress unused parameter warning
-    }
-
-    // Construct an object
-    template<typename U, typename... Args>
-    void construct(U* p, Args&&... args) {
-        ::new(p) U(std::forward<Args>(args)...);
-    }
-
-    // Destroy an object
-    template<typename U>
-    void destroy(U* p) {
-        p->~U();
-    }
-
-    // Maximum size that can be allocated
-    size_type max_size() const noexcept {
-        return inst_.o1heapGetMaxAllocationSize() / sizeof(T);
-    }
-
-    // Create an allocator for a different type
-    template<typename U>
-    O1HeapAllocator<U> rebind_to() const noexcept {
-        return O1HeapAllocator<U>(inst_);
-    }
-
-private:
-    O1HeapInstance & inst_;
-};
-
-
-// 工厂函数：从内存缓冲区创建分配器
-template<typename T = int8_t>
-Option<O1HeapAllocator<T>> make_o1heap_allocator(std::span<uint8_t> buffer) {
-    auto* instance = lib_o1heap::o1heapInit(buffer.data(), buffer.size());
-    if (!instance) return None;
-    return Some(O1HeapAllocator<T>(*instance));
-}
-
-}
 
 using LidarEvent = stl06n::Event;
 using stl06n::PackedLidarPoint;
@@ -152,30 +43,35 @@ struct PackedCluster{
 };
 
 
+static constexpr auto LCD_WIDTH = 320u;
+static constexpr auto LCD_HEIGHT = 170u;
+
 
 void stl06n_main(){
 
     #if defined(CH32V20X)
-    auto & UART = hal::usart2;
-    UART.init({
+    auto & DEBUG_UART = hal::usart2;
+    DEBUG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
         .baudrate = hal::NearestFreq(6000000),
         .tx_strategy = CommStrategy::Blocking
     });
     #elif defined(CH32V30X)
-    auto & UART = hal::usart2;
-    UART.init({
+    auto & DEBUG_UART = hal::usart2;
+    DEBUG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
         .baudrate = hal::NearestFreq(6000000),
         .tx_strategy = CommStrategy::Blocking
     });
     #endif
-    DEBUGGER.retarget(&UART);
-    DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(4);
-    DEBUGGER.force_sync(EN);
-    DEBUGGER.no_fieldname(EN);
 
+
+    DEBUGGER.retarget(&DEBUG_UART);
+    DEBUGGER.no_brackets(EN);
+    DEBUGGER.set_eps(3);
+    DEBUGGER.force_sync(EN);
+    // DEBUGGER.no_fieldname(EN);
+    DEBUGGER.no_fieldname(DISEN);
 
 
     auto watch_pin_ = hal::PA<11>();
@@ -197,15 +93,15 @@ void stl06n_main(){
     // static constexpr size_t POOL_SIZE = 6000;
     auto resource = std::make_unique<uint8_t[]>(POOL_SIZE);
 
-    using Alloc = mem::o1heap::O1HeapAllocator<std::pair<const size_t, PackedCluster>>;
-    auto o1heap_alloc = mem::o1heap::make_o1heap_allocator(std::span(resource.get(), POOL_SIZE)).unwrap();
+    using Allocator = mem::o1heap::O1HeapAllocator<std::pair<const size_t, PackedCluster>>;
+    auto o1heap_allocator = Allocator::try_from_buf(std::span(resource.get(), POOL_SIZE)).unwrap();
 
     std::map<
         size_t, 
         PackedCluster, 
         std::less<size_t>,
-        Alloc
-    > packed_clusters_(o1heap_alloc);
+        Allocator
+    > packed_clusters_(o1heap_allocator);
     // std::map<size_t, PackedCluster> packed_clusters_;
 
     auto lidar_ev_handler = [&](const LidarEvent & ev){
@@ -260,9 +156,9 @@ void stl06n_main(){
         .tx_strategy = CommStrategy::Blocking
     });
     #elif defined(CH32V30X)
-    auto & stl06n_uart_ = hal::uart4;
+    auto & stl06n_uart_ = hal::usart1;
     stl06n_uart_.init({
-        .remap = hal::UartRemap::_3,
+        .remap = hal::USART1_REMAP_PA9_PA10,
         .baudrate = hal::NearestFreq(230400),
         .tx_strategy = CommStrategy::Blocking
     });
@@ -331,8 +227,35 @@ void stl06n_main(){
     #endif
 
 
+    repl::ReplServer repl_server = {
+        &DEBUG_UART, &DEBUG_UART
+    };
+
+    repl_server.set_outen(EN);
+
+    auto led = hal::PC<13>();
+    led.outpp();
 
 
+    auto add2 = [&](const iq24 a, const int8_t b) -> iq16 {return a + b;};
+
+    auto repl_list =
+        script::make_list( "list",
+            script::make_function("rst", [](){sys::reset();}),
+            script::make_function("outen", [&](){repl_server.set_outen(EN);}),
+            script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+            script::make_function("led", [&](const bool on){led.write(on ? HIGH : LOW);}),
+            script::make_function("add2", add2),
+            script::make_function("add", [&](const uint8_t a, const uint8_t b){return a + b;}),
+            script::make_function("add3", [&](const float a, const float b){return a + b;}),
+            script::make_function("ssm", [&](const StringView a, const StringView b){return str::ngram_similarity(a, b);}),
+            script::make_function("test", [&](const StringView a){return strconv2::FstrDump::parse(a);}),
+
+            script::make_list( "alct",
+                script::make_function("now", [&](){return o1heap_allocator.diagnostics().allocated;}),
+                script::make_function("peak", [&](){return o1heap_allocator.diagnostics().peak_allocated;})
+            )
+    );
 
     auto poll_main = [&]{
         
@@ -351,11 +274,12 @@ void stl06n_main(){
                 return *std::min_element(cluster.points.begin(), cluster.points.end(), 
                 [](const PackedLidarPoint & a, const PackedLidarPoint & b){ return a.distance_code.bits < b.distance_code.bits; });
             })
-            | std::views::filter([i = 0](const auto&) mutable { 
-                return (i++) % 4 == 0; 
-            });
+            // | std::views::filter([i = 0](const auto&) mutable { 
+            //     return (i++) % 4 == 0; 
+            // })
+            ;
 
-        [[maybe_unused]] const auto & diagnostics = o1heap_alloc.heap_instance().diagnostics;
+        [[maybe_unused]] const auto & diagnostics = o1heap_allocator.diagnostics();
 
         std::array<iq16, 12> arr;
         static constexpr auto step = iq16(1.0 / 24.0);
@@ -365,9 +289,17 @@ void stl06n_main(){
             arr[i] = math::sinpu(x + secs);
             x += step;
         }
-        DEBUG_PRINTLN(
+
+        // poll_input_sinker();
+        // repl_server.invoke(repl_list);
+
+        if(false)DEBUG_PRINTLN(
+            repl_server.line_sinker_.now_line(),
             // arr
-            arr
+            // arr
+            // StringSplitIter("H \rE \rL L O", '\r'),
+
+            0
             // headed_points
             // clock::millis().count(),
             // static_cast<uint8_t>(stl06n_parser_.fsm_state_),
@@ -398,10 +330,9 @@ void stl06n_main(){
     [[maybe_unused]] static auto report_timer = async::RepeatTimer::from_duration(8ms);
 
     while(true){
+        repl_server.invoke(repl_list);
         report_timer.invoke_if([&]{
             poll_main();
         });
     }
-
-
 }

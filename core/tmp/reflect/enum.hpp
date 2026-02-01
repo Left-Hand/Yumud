@@ -1,7 +1,9 @@
 #pragma once
 
 #include "core/tmp/bits/width.hpp"
+#include "core/stream/ostream.hpp"
 #include "core/tmp/container/static_string.hpp"
+
 #include <string_view>
 #include <optional>
 
@@ -11,70 +13,6 @@ namespace ymd::tmp{
 namespace details{
 
 
-
-#if 0
-
-
-// 用来存储枚举反射信息的结构体
-// 注意名字都使用 string_view 存储，以避免动态内存分配
-struct ReflectionEnumInfo
-{      
-    bool scoped; // 是否 scoped enum
-    std::string_view enum_name;
-    std::string_view value_fullname; 
-    std::string_view value_name; // 类型名、值名、值全名
-
-    // 构造时，从母串中按指定位置 得到各子串
-    // info : 母串，即 __PRETTY_FUNCTION__ 得到的函数名
-    // e1:等号1位置; s:分号位置; e2:等号2位置; colon:分号位置; end:]位置
-    constexpr explicit ReflectionEnumInfo(char const* info
-        , std::size_t e1, std::size_t s, std::size_t e2
-        , std::size_t colon, std::size_t end)
-        : scoped(colon != 0), enum_name (info + e1 + 2, s - e1 -2)
-        , value_fullname (info + e2 + 2, end - e2 - 2)
-        , value_name((scoped)? std::string_view(info+colon+1, end-colon-1) 
-            : value_fullname)
-    {;}
-
-    // friend OutputStream & operator<<(OutputStream & os, const ReflectionEnumInfo & info){ 
-    //     const auto guard = os.create_guard();
-    //     os.no_scoped();
-    //     return os << os.scoped("hi")(
-    //             os
-    //             << os.field("scoped")(info.scoped) << os.splitter()
-    //             << os.field("enum_name")(info.enum_name) << os.splitter()
-    //             << os.field("value_fullname")(info.value_fullname) << os.splitter()
-    //             << os.field("value_name")(info.value_name)
-
-    //         )
-    //     ;
-    // }
-};
-
-// 说了半天的 模板函数，带 constexpr
-template <typename E, E V> 
-consteval ReflectionEnumInfo dump_enum()  {
-    char const* info = __PRETTY_FUNCTION__;
-            
-    // 找各个符号位置
-    std::size_t l = strlen(info);
-    std::size_t e1 = 0, s = 0, e2 = 0, colon = 0, end = 0;
-    
-    for (std::size_t i=0; i<l && !end; ++i)
-    {
-        switch(info[i])
-        {
-            case '=' : (!e1) ? e1 = i : e2 = i; break;            
-            case ';' : s = i; break;                
-            case ':' : colon = i; break;
-            case ']' : end = i; break;
-        }
-    }
-        
-    return ReflectionEnumInfo{info, e1, s, e2, colon, end}; 
-}
-
-#else
 
 // 用来存储枚举反射信息的结构体
 // 注意名字都使用 string_view 存储，以避免动态内存分配
@@ -135,7 +73,7 @@ consteval ReflectionEnumElementInfoV2 dump_enum()  {
         std::string_view(type_name)
     };
 }
-#endif
+
 
 template <typename E, E V>
 consteval std::string_view _enum_item_name() {
@@ -255,9 +193,6 @@ private:
 }
 
 namespace ymd{
-template<typename T>
-struct DeriveDebugDispatcher;
-
 template<typename E>
 requires std::is_enum_v<E>
 struct DeriveDebugDispatcher<E> {

@@ -27,7 +27,7 @@ struct MT9V034_Prelude{
 
     
     // static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x3d);
-    static constexpr Vec2u FRAME_SIZE = {188, 120};
+    static constexpr math::Vec2u FRAME_SIZE = {188, 120};
 
 
     enum class GeneralRegAddr{
@@ -263,7 +263,7 @@ private:
         return write_general_reg(GeneralRegAddr::Control, uint16_t(context));
     }
 
-    [[nodiscard]] IResult<> set_exposure_range(const Range2u range);
+    [[nodiscard]] IResult<> set_exposure_range(const math::Range2u range);
 
     [[nodiscard]] IResult<> enable_pixel_test_pattern(
         const Enable en,

@@ -1,6 +1,6 @@
 #include "core/system.hpp"
 
-#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
 #include "hal/gpio/vport.hpp"
 #include "core/debug/debug.hpp"
 
@@ -13,7 +13,10 @@ int main(){
     // myesc_main();
     // pwm_main();
     // cap_main();
-    stl06n_main();
+    // stl06n_main();
+    // nuedc_2025e_joint_main();
+    // nuedc_2025e_laser_main();
+    winter_mc_tutorial_main();
     // o1heap_main();
     // dshot_main();
     // sincos_main();
@@ -173,8 +176,9 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // sincos_main();
+    lidar_visualize_main();
     // stl06n_main();
-    render_main();
+    // render_main();
     // myesc_main();
     // s21c_main();
     // steadywin_main();
@@ -224,7 +228,7 @@ int main(){
     // ch9141_tb(logger, uart7);
     // st7789_main();
     // smc2025_main();
-    mlx90640_main();
+    // mlx90640_main();
     // fft_main();
     // adrc_main();
     // render_main();

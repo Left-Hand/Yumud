@@ -1,21 +1,7 @@
 
-
-#include "src/testbench/tb.h"
-
-#include "core/clock/time.hpp"
-#include "core/utils/nth.hpp"
-#include "core/utils/stdrange.hpp"
-#include "core/utils/data_iter.hpp"
-#include "core/string/conv/strconv2.hpp"
-
+#include "core/string/view/string_view.hpp"
 #include "primitive/arithmetic/rescaler.hpp"
-#include "primitive/image/painter/painter.hpp"
 #include "primitive/image/image.hpp"
-#include "primitive/image/font/font.hpp"
-#include "primitive/colors/rgb/rgb.hpp"
-
-#include "middlewares/repl/repl.hpp"
-#include "middlewares/repl/repl_server.hpp"
 
 
 #include "algebra/regions/rect2.hpp"
@@ -23,7 +9,7 @@
 #include "algebra/shapes/bresenham_iter.hpp"
 #include "algebra/shapes/rotated_rect.hpp"
 #include "algebra/shapes/box_rect.hpp"
-#include "algebra/regions/Segment2.hpp"
+#include "algebra/regions/segment2.hpp"
 #include "algebra/shapes/triangle2.hpp"  
 #include "algebra/shapes/line_iter.hpp"
 #include "algebra/shapes/annular_sector.hpp"
@@ -33,59 +19,62 @@
 #include "algebra/shapes/gridmap2.hpp"
 #include "algebra/shapes/rounded_rect2.hpp"
 
-#include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/timer/timer.hpp"
-#include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/uart/uartsw.hpp"
-#include "hal/gpio/gpio.hpp"
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
-
-
-#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
-// #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
-// #include "drivers/IMU/Magnetometer/QMC5883L/qmc5883l.hpp"
 
 #include "frame_buffer.hpp"
 
 
 
 namespace ymd{
+
 template<typename T>
-struct is_placed_t<Segment2<T>>:std::true_type{};
+struct [[nodiscard]] Sprite final{
+    Image<T> image;
+    math::Vec2u position;
+
+    math::Rect2u bounding_box() const{
+        // return image.bounding_box() + position;
+        return math::Rect2u16::from_xywh(
+            static_cast<uint16_t>(position.x),
+            static_cast<uint16_t>(position.y),
+            static_cast<uint16_t>(image.size().x),
+            static_cast<uint16_t>(image.size().y)
+        );
+    }
+
+    Sprite copy() {
+        return Sprite<T>(image.copy(), position);
+    }
+};
+
+template<typename T>
+struct is_placed_t<Sprite<T>>:std::true_type{;};
+
+template<typename T>
+struct is_placed_t<math::Segment2<T>>:std::true_type{};
 
 
 
 
 template<typename Encoding, typename Font>
 struct LineText{
-    Vec2u16 left_top;
+    math::Vec2u16 left_top;
     uint16_t spacing;
     StringView str;
     // MonoFont7x7 & font;
     // MonoFont7x7 font;
     Font font;
 
-    constexpr Rect2u16 bounding_box() const {
+    constexpr math::Rect2u16 bounding_box() const {
         const size_t str_len = str.length();
         const uint16_t width = (str_len * font.size().x) + (str_len - 1) * spacing;
         const uint16_t height = font.size().y;
 
-        return Rect2u16{left_top, {width, height}};
+        return math::Rect2u16{left_top, {width, height}};
     };
 };
 
 template<typename Encoding, typename Font>
 struct is_placed_t<LineText<Encoding, Font>>:std::true_type{;};
-
-
-}
-
-
-using namespace ymd;
 
 
 
@@ -105,35 +94,20 @@ static constexpr size_t count_iter(Iter && iter){
     return cnt;
 }
 
-
-static constexpr auto UART_BAUD = 576000u;
-
-// static constexpr auto LCD_WIDTH = 32u;
-// static constexpr auto LCD_HEIGHT = 18u;
-
-// static constexpr auto LCD_WIDTH = 8u;
-// static constexpr auto LCD_HEIGHT = 6u;
-
-static constexpr auto LCD_WIDTH = 320u;
-static constexpr auto LCD_HEIGHT = 170u;
-
-
-
-
 template<typename Shape>
-// auto make_DrawDispatchIterator
+// auto make_RenderIterator
 auto make_draw_dispatch_iterator(Shape && shape){
-    return DrawDispatchIterator<std::decay_t<Shape>>(shape);
+    return RenderIterator<std::decay_t<Shape>>(std::move<Shape>(shape));
 }
 
 
 template<typename T>
 requires (std::is_integral_v<T>)
-struct DrawDispatchIterator<Rect2<T>> {
-    using Shape = Rect2<T>;
-    using Self = DrawDispatchIterator<Shape>;
+struct RenderIterator<math::Rect2<T>> {
+    using Shape = math::Rect2<T>;
+    using Self = RenderIterator<Shape>;
 
-    constexpr DrawDispatchIterator(const Shape& shape) : 
+    constexpr explicit RenderIterator(const Shape& shape) : 
         x_range_(shape.x_range()),
         y_range_(shape.y_range()),
         y_(y_range_.start) {}  // 修复：使用 y_range_.start
@@ -159,11 +133,11 @@ struct DrawDispatchIterator<Rect2<T>> {
         // 如果是中间行，只绘制左右两端
         else {
             // 绘制左端点
-            if (auto res = target.fill_x_range(Range2<T>::from_start_and_length(x_range_.start, 1), color);
+            if (auto res = target.fill_x_range(math::Range2<T>::from_start_and_length(x_range_.start, 1), color);
                 res.is_err()) return Err(res.unwrap_err());
             
             // 绘制右端点（注意：x_range_.stop 是 exclusive）
-            if (auto res = target.fill_x_range(Range2<T>::from_start_and_length(x_range_.stop - 1, 1), color);
+            if (auto res = target.fill_x_range(math::Range2<T>::from_start_and_length(x_range_.stop - 1, 1), color);
                 res.is_err()) return Err(res.unwrap_err());
         }
         return Ok();
@@ -173,28 +147,28 @@ struct DrawDispatchIterator<Rect2<T>> {
         return y_ < y_range_.stop;
     }
 
-    constexpr void forward() {
+    constexpr void seek_next() {
         if (y_ < y_range_.stop) {
             y_++;
         }
     }
 
 private:
-    Range2<T> x_range_;
-    Range2<T> y_range_;
+    math::Range2<T> x_range_;
+    math::Range2<T> y_range_;
     T y_;
 };
 
 
 
-// DrawDispatchIterator 特化
+// RenderIterator 特化
 template<std::integral T>
-struct DrawDispatchIterator<Segment2<T>> {
-    using Segment = Segment2<T>;
+struct RenderIterator<math::Segment2<T>> {
+    using Segment = math::Segment2<T>;
     // using Iterator = BresenhamIterator<T>;
     using Iterator = LineDDAIterator<T>;
 
-    constexpr DrawDispatchIterator(const Segment& segment)
+    constexpr explicit RenderIterator(const Segment& segment)
         : iter_(segment){}
 
     // 检查是否还有下一行
@@ -203,7 +177,7 @@ struct DrawDispatchIterator<Segment2<T>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         iter_.advance();
     }
 
@@ -232,13 +206,13 @@ private:
 };
 
 
-// DrawDispatchIterator 特化
+// RenderIterator 特化
 template<std::integral T>
-struct DrawDispatchIterator<Circle2<T>> {
-    using Shape = Circle2<T>;
+struct RenderIterator<math::Circle2<T>> {
+    using Shape = math::Circle2<T>;
     using Iterator = CircleBresenhamIterator<T>;
 
-    constexpr DrawDispatchIterator(const Shape & shape)
+    constexpr explicit RenderIterator(const Shape & shape)
         : iter_(shape){}
 
     // 检查是否还有下一行
@@ -247,7 +221,7 @@ struct DrawDispatchIterator<Circle2<T>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         iter_.advance();
     }
 
@@ -281,12 +255,50 @@ private:
 
 
 
-// DrawDispatchIterator 特化
+// RenderIterator 特化
+template<typename T>
+struct RenderIterator<Sprite<T>> {
+    using Shape = Sprite<T>;
+    constexpr explicit RenderIterator(Shape && shape)
+        : shape_(shape.copy()),
+            y_stop_(shape_.image.size().y + shape_.position.y),
+            y_(shape_.position.y)
+        {}
+
+    // 检查是否还有下一行
+    constexpr bool has_next() const {
+        return y_ < y_stop_;
+    }
+
+    // 推进到下一行
+    constexpr void seek_next() {
+        y_++;
+    }
+
+    template<DrawTargetConcept Target>
+    Result<void, typename Target::Error> draw_texture(Target & target) {
+        const size_t x_start = shape_.position.x;
+        const size_t width = shape_.image.size().x;
+
+        const T * p_texture = shape_.image.head_ptr() + (y_ - shape_.position.y) * width;
+        if(const auto res = target.fill_texture(ScanLine{.x_range = {x_start, x_start + width}, .y = y_}, p_texture);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+private:
+    Shape shape_;
+    uint16_t y_stop_;
+    uint16_t y_;
+};
+
+
+// RenderIterator 特化
 template<std::integral T, typename D>
-struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
+struct RenderIterator<HorizonSpectrum<T, D>> {
     using Shape = HorizonSpectrum<T, D>;
     using Transformer = Rescaler<iq16>;
-    constexpr DrawDispatchIterator(const Shape & shape)
+    constexpr explicit RenderIterator(const Shape & shape)
         : shape_(shape),
             transformer_(Transformer::from_input_and_output(
                 shape_.sample_range,
@@ -301,7 +313,7 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         y_++;
     }
 
@@ -325,7 +337,7 @@ struct DrawDispatchIterator<HorizonSpectrum<T, D>> {
         for(size_t i = 0; i < count; i++){
             // const auto old_x = x;
             const T next_x = x + shape_.cell_size.x;
-            const auto x_range = Range2u16::from_start_and_stop_unchecked(x, next_x);
+            const auto x_range = math::Range2u16::from_start_and_stop_unchecked(x, next_x);
             x = next_x + shape_.spacing;
 
             const auto data_y = transformer_(shape_.samples[i]);
@@ -356,14 +368,12 @@ private:
 };
 
 
-
-namespace ymd{
 template<typename Encoding, typename Font>
-struct DrawDispatchIterator<LineText<Encoding, Font>> {
+struct RenderIterator<LineText<Encoding, Font>> {
     using Shape = LineText<Encoding, Font>;
-    using Self = DrawDispatchIterator<Shape>;
+    using Self = RenderIterator<Shape>;
 
-    constexpr DrawDispatchIterator(const Shape& shape) : 
+    constexpr explicit RenderIterator(const Shape& shape) : 
         shape_(shape),
         x_range_(shape.bounding_box().x_range()),
         y_range_(shape.bounding_box().y_range()),
@@ -414,7 +424,7 @@ struct DrawDispatchIterator<LineText<Encoding, Font>> {
         return y_ < y_range_.stop;
     }
 
-    constexpr void forward() {
+    constexpr void seek_next() {
         if (y_ < y_range_.stop) {
             y_++;
         }
@@ -422,41 +432,43 @@ struct DrawDispatchIterator<LineText<Encoding, Font>> {
 
 private:
     Shape shape_;
-    Range2<uint16_t> x_range_;
-    Range2<uint16_t> y_range_;
+    math::Range2<uint16_t> x_range_;
+    math::Range2<uint16_t> y_range_;
     uint16_t y_;
 };
 
 
 struct DemoShapeFactory{
     uq16 now_secs;
-    Rect2u tft_bounding_box;
+    math::Rect2u tft_bounding_box;
     
     // Font en_font_;
     // Font ch_font_;
 
     auto make_segment2() const {
-        auto shape = Segment2<uint16_t>{
-            Vec2u16{uint16_t(50 + 20 * math::cospu(now_secs * 0.2_r)), uint16_t(80 + 20 * math::sinpu(now_secs * 0.2_r))},
-            Vec2u16{50,80}
+        auto shape = math::Segment2<uint16_t>{
+            math::Vec2u16{
+                uint16_t(50 + 20 * iq16(math::cospu(now_secs * 0.2_r))), 
+                uint16_t(80 + 20 * iq16(math::sinpu(now_secs * 0.2_r)))},
+            math::Vec2u16{50,80}
         };
         return shape;
     }
 
     auto make_vertical_oval2() const {
         auto shape = VerticalOval2<uint16_t>::from_bounding_box(
-            Rect2u16{
-                Vec2u16{0,0},
-                Vec2u16{120,170},
+            math::Rect2u16{
+                math::Vec2u16{0,0},
+                math::Vec2u16{120,170},
             }
         ).unwrap();
         return shape;
     }
 
     auto make_rect2() const {
-        auto shape = Rect2u16{
-                Vec2u16{20,20},
-                Vec2u16{12,60},
+        auto shape = math::Rect2u16{
+                math::Vec2u16{20,20},
+                math::Vec2u16{12,60},
         };
         return shape;
     }
@@ -467,29 +479,32 @@ struct DemoShapeFactory{
         auto shape = LineText<void, Font>{
             .left_top = {20,20},
             .spacing = 2,
-            .str = "0123456789abcdef",
+            // .str = "0123456789ABCDEF",
+            .str = "0123456789abcd",
             .font = font
         };
         return shape;
     }
 
     auto make_circle2() const {
-        auto shape = Circle2<uint16_t>{
-            Vec2u16{uint16_t(160 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 6};
+        auto shape = math::Circle2<uint16_t>{
+            math::Vec2u16{uint16_t(160 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 6};
         return shape;
     }
 
-    auto make_horizon_oval2() const {
-        auto shape = HorizonOval2<uint16_t>::try_from_bounding_box(
-            tft_bounding_box
+    auto make_horizon_oval2(const math::Rect2<int16_t> rect) const {
+        auto shape = HorizonOval2<int16_t>::try_from_bounding_box(
+            rect
         ).unwrap();
         return shape;
     }
 
     auto make_rounded_rect2_moving() const {
         auto shape = RoundedRect2<uint16_t>{
-            .bounding_rect = Rect2u{Vec2u16{uint16_t(115 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 
-                80}, Vec2u16{90, 30}}, 
+            .bounding_rect = math::Rect2u{
+                math::Vec2u16{uint16_t(115 + 80 * iq16(math::sinpu(now_secs * 0.2_r))), 80}, 
+                math::Vec2u16{90, 30}
+            }, 
             .radius = 8
         };
         return shape;
@@ -514,25 +529,34 @@ struct DemoShapeFactory{
         return shape;
     }
 
-    auto make_grid_map_rounded_rect(uint16_t shape_x, uint16_t shape_y) const {
-        auto shape = RoundedRect2<uint16_t>{.bounding_rect = GridMap2<uint16_t>{
-            .top_left_cell = Rect2<uint16_t>::from_xywh(shape_x, shape_y, 15, 15),
+    auto make_grid_map(uint16_t shape_x, uint16_t shape_y) const {
+        return GridMap2<uint16_t>{
+            .top_left_cell = math::Rect2<uint16_t>::from_xywh(shape_x, shape_y, 15, 15),
             .padding = {2,2},
             .count = {15,7}
-        }.bounding_box(), .radius = 15};
-        return shape;
+            // .count = {2,2}
+        };
     }
 
-    // auto make_triangle2(Angular<iq16> dest_angle) const {
-    //     auto shape = Triangle2<uint16_t>{
-    //         .points = {
-    //             Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle),
-    //             Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 120_deg),
-    //             Vec2u16{85,85} + Vec2u16::from_ones(50).rotated(dest_angle + 240_deg)
-    //         }
-    //     }.to_sorted_by_y();
-    //     return shape;
-    // }
+    auto make_triangle2(Angular<iq16> dest_angle) const {
+        auto shape = Triangle2<iq16>{
+            .points = {
+                math::Vec2<iq16>{185,85} + math::Vec2<iq16>::from_ones(50).rotated(dest_angle),
+                math::Vec2<iq16>{185,85} + math::Vec2<iq16>::from_ones(50).rotated(dest_angle + 120_deg),
+                math::Vec2<iq16>{185,85} + math::Vec2<iq16>::from_ones(50).rotated(dest_angle + 240_deg)
+            }
+        }.to_sorted_by_y();
+        
+        const auto shape_pixeded = Triangle2<uint16_t>{
+            .points = {
+                math::Vec2<uint16_t>(shape.points[0]),
+                math::Vec2<uint16_t>(shape.points[1]),
+                math::Vec2<uint16_t>(shape.points[2])
+            }
+        };
+
+        return shape_pixeded;
+    }
 
     auto make_annular_sector() const {
         const auto shape = AnnularSector<uint16_t, iq16>{

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "core/platform.hpp"
+
 #include "core/utils/Option.hpp"
 
 #include "algebra/regions/range2.hpp"
 #include "algebra/vectors/vec2.hpp"
 
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 class [[nodiscard]] Rect2{
@@ -177,12 +177,12 @@ public:
     const T & h() const { return size.y; }
 
     [[nodiscard]] __fast_inline constexpr 
-    bool has_x(const T p_x) const{
+    bool contains_x(const T p_x) const{
         return p_x >= top_left.x && p_x < top_left.x + size.x;
     }
 
     [[nodiscard]] __fast_inline constexpr 
-    bool has_y(const T p_y) const{
+    bool contains_y(const T p_y) const{
         return p_y >= top_left.y && p_y < top_left.y + size.y;
     }
 
@@ -252,7 +252,7 @@ public:
 
 
     [[nodiscard]] __fast_inline constexpr 
-    bool has_point(const Vec2<T> & point) const {
+    bool contains_point(const Vec2<T> & point) const {
         return IN_RANGE(point.x, top_left.x, top_left.x + size.x)
             and IN_RANGE(point.y, top_left.y, top_left.y + size.y);
     }
@@ -427,5 +427,10 @@ using Rect2u = Rect2<uint>;
 
 using Rect2u8 = Rect2<uint8_t>;
 using Rect2u16 = Rect2<uint16_t>;
+using Rect2u32 = Rect2<uint32_t>;
+
+using Rect2i8 = Rect2<int8_t>;
+using Rect2i16 = Rect2<int16_t>;
+using Rect2i32 = Rect2<int32_t>;
 
 };

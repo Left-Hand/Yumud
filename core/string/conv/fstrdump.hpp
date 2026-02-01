@@ -11,94 +11,110 @@
 
 namespace ymd::strconv2{
 struct [[nodiscard]] FstrDump final{
+	//整数部分的数值 eg: "12.34" => 12
 	uint32_t digit_part;
+
+	//小数部分的数值 eg: "12.34" => 34
 	uint32_t frac_part;
+	
+	//是否为负数
 	bool is_negative;
+
+	//小数部分的位数 eg: "12.34" => 2
 	uint8_t num_frac_digits;
 
 
-	struct ParsingStatus{
+	struct alignas(4) ParsingStatus{
 		using Self = ParsingStatus;
 
-		uint8_t passed_dot:1;
-		uint8_t contains_pre_dot_digits:1;
-		uint8_t contains_post_dot_digits:1;
+		#if 0
+		uint8_t has_dot:1;
+		uint8_t has_digit_part:1;
+		uint8_t has_frac_part:1;
 		uint8_t is_negative:1;
 
 		static constexpr Self from_default(){
 			return std::bit_cast<Self>(uint8_t(0));
 		}
+		#else
+		bool has_dot;
+		bool has_digit_part;
+		bool has_frac_part;
+		char existing_sign;
+
+		static constexpr Self from_default(){
+			return std::bit_cast<Self>(uint32_t(0));
+		}
+		#endif
+
+
 	};
 
 
-	static constexpr DestringResult<FstrDump> from_str(const StringView str) {
+	static constexpr DestringResult<FstrDump> parse(const StringView str) {
 		if (str.length() == 0) {	
 			return Err(DestringError::EmptyString);
 		}
 
-		uint32_t digit_part = 0;
-		uint32_t frac_part = 0;
+		uint64_t digit_part = 0;
+		uint64_t frac_part = 0;
 		uint8_t num_frac_digits = 0;
 
 		ParsingStatus status = ParsingStatus::from_default();
-		const auto length = str.length();
-		size_t index = 0;
-
-		// 处理符号
-		if (str[index] == '+' || str[index] == '-') {
-			//如果字符串首字符为负号 说明这个数字是负数
-			status.is_negative = (str[0] == '-');
-			++ index;
-			if (length == 1) {
-				return Err(DestringError::OnlySignFounded);  // 只有符号没有数字
-			}
-		}
-
-		while (index < length) {
-			const char chr = str[index];
+		
+		for(size_t ind = 0; ind < str.length(); ind++) {
+			const char chr = str[ind];
 			
 			switch (chr) {
-				case 0:
-					return Err(DestringError::UnexpectedZero);
-				case '0' ... '9':{  // Digit case (GCC/Clang extension)
+				case '\0':
+					return Err(DestringError::NullTerminatorNotAllowed);
+				case '0' ... '9':{
 
 					const uint8_t digit = chr - '0';
 					
-					constexpr uint32_t MAX_INT_NUM = (std::numeric_limits<uint32_t>::max() - 9) / 10;
-					if (status.passed_dot == false) {
-						status.contains_pre_dot_digits = true;
+					constexpr uint64_t MAX_INT_NUM = static_cast<uint64_t>(std::numeric_limits<uint32_t>::max());
+					if(status.existing_sign == '\0'){
+						//如果还未找到符号就已经找到数字 那么已经隐含说明带有正号了
+						status.existing_sign = '+';
+					}
+
+					if (status.has_dot == false) {
+						status.has_digit_part = true;
+						digit_part = digit_part * 10u + digit;
 						// Check integer part overflow
 						if (digit_part > MAX_INT_NUM) {
 							return Err(DestringError::DigitOverflow);
 						}
-						digit_part = digit_part * 10u + digit;
 					} else {
-						status.contains_post_dot_digits = true;
+						status.has_frac_part = true;
+						frac_part = frac_part * 10u + digit;
 						// Check fractional part overflow
 						if (frac_part > MAX_INT_NUM) {
 							return Err(DestringError::FracOverflow);
 						}
-						frac_part = frac_part * 10u + digit;
 
 						if(num_frac_digits < std::size(str::pow10_table)){
 							num_frac_digits++;
 						}else{
-							return Err(DestringError::FracDigitsOverflow);
+							return Err(DestringError::FracTooLong);
 						}
 					}
-					++index;
 					break;
 				}
 
 				case '+':
-					return Err(DestringError::UnexpectedPositive);
-				case '-':
-					return Err(DestringError::UnexpectedNegative);
+				case '-':{
+					if(status.existing_sign != '\0'){
+						if(chr == '-') return Err(DestringError::MultiplyNegative);
+						else return Err(DestringError::MultiplyPositive);
+					}
+					status.existing_sign = chr;
+					break;
+				}
 				case '.':  // Handle decimal dot
-					if (status.passed_dot) [[unlikely]]
+					if (status.has_dot) [[unlikely]]
 						return Err(DestringError::MultipleDot);  // Multiple decimal dots
-					status.passed_dot = true;
-					++index;
+					status.has_dot = true;
 					break;
 				case 'a' ... 'z':
 					return Err(DestringError::UnexpectedAlpha);
@@ -109,22 +125,23 @@ struct [[nodiscard]] FstrDump final{
 				default:  // Invalid characters
 					return Err(DestringError::UnexpectedChar);
 			}
+
 		}
 
-		if(status.passed_dot){
-			//有小数点的情况
-			if((status.contains_post_dot_digits == false)) [[unlikely]]
-				return Err(DestringError::NoDigitsAfterDot);
+		if(status.has_dot){
+			//有小数点的情况不能没有小数部分
+			if((status.has_frac_part == false)) [[unlikely]]
+				return Err(DestringError::NoFracPart);
 		}else{
-			if (status.contains_pre_dot_digits == false) [[unlikely]]
-				return Err(DestringError::NoDigitsAfterSign);  // 符号位和小数点之间没有有效数字
+			if (status.has_digit_part == false) [[unlikely]]
+				return Err(DestringError::NoDigitPart);  // 符号位和小数点之间没有有效数字
 		}
 
 
 		return Ok(FstrDump{
-			.digit_part = digit_part,
-			.frac_part = frac_part,
-			.is_negative = bool(status.is_negative),
+			.digit_part = static_cast<uint32_t>(digit_part),
+			.frac_part = static_cast<uint32_t>(frac_part),
+			.is_negative = bool(status.existing_sign == '-'),
 			.num_frac_digits = num_frac_digits
 		});
 	}

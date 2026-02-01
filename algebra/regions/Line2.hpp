@@ -5,7 +5,7 @@
 #include "algebra/regions/segment2.hpp"
 #include "core/utils/Option.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<arithmetic T>
 struct [[nodiscard]] Line2{
@@ -22,13 +22,13 @@ public:
         d(((seg.start).cross(seg.stop)) / (seg.stop - seg.start).length()), 
         orientation(seg.angle()){;}
 
-    [[nodiscard]] constexpr Line2(const Vec2<auto> & _from, const Vec2<auto> & _to): 
+    [[nodiscard]] constexpr Line2(const math::Vec2<auto> & _from, const math::Vec2<auto> & _to): 
             Line2(Segment2<T>(_from, _to)){;}
             
 
     // d = p.x * sin(angle) - p.y * cos(angle) 
     [[nodiscard]] static constexpr Line2 from_point_and_angle(
-        const Vec2<auto> & p, 
+        const math::Vec2<auto> & p, 
         const Angular<T> angle
     ){
         const auto [s,c] = angle.sincos();
@@ -83,12 +83,12 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    T distance_to(const Vec2<T> & p) const{
+    T distance_to(const math::Vec2<T> & p) const{
         return ABS(this->signed_distance_to(p));
     }
     
     [[nodiscard]] __fast_inline constexpr
-    T signed_distance_to(const Vec2<T> & p) const{
+    T signed_distance_to(const math::Vec2<T> & p) const{
         // x * -sin(orientation) + y * cos(orientation) + d = 0
         const auto [s,c] = orientation.sincos();
         return -p.x * s + p.y * c + d;
@@ -124,7 +124,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Option<Vec2<T>> intersection(const Line2<T> & other, const T epsilon) const{
+    Option<math::Vec2<T>> intersection(const Line2<T> & other, const T epsilon) const{
         if((false == this->intersects(other, epsilon))) [[unlikely]]
             return None;
         
@@ -145,11 +145,11 @@ public:
         const auto den = a1 * b2 - a2 * b1;
         const auto inv_den = T(1) / den;
 
-        return Some(Vec2<T>{num1 * inv_den, num2 * inv_den});
+        return Some(math::Vec2<T>{num1 * inv_den, num2 * inv_den});
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Line2<T> rotated(const Vec2<T> & p, const Angular<T> angle){
+    Line2<T> rotated(const math::Vec2<T> & p, const Angular<T> angle){
         // if(this->has_point(p)) return Line2::from_point_and_angle(p, this->orientation + angle);
         // else{
         //FIXME optimize
@@ -160,7 +160,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Line2<T> normal(const Vec2<T> & p){
+    Line2<T> normal(const math::Vec2<T> & p){
         const auto next_angle = this->orientation + Angular<T>::QUARTER;
         const auto [s,c] = next_angle.sincos();
         return {p.x * s - p.x * c, next_angle};
@@ -168,13 +168,13 @@ public:
 
 
     [[nodiscard]] __fast_inline constexpr
-    Line2<T> rebase(const Vec2<T> & p){
+    Line2<T> rebase(const math::Vec2<T> & p){
         auto regular = this->abs();
         return Line2{regular.distance_to(p), regular.orientation};
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Option<Vec2<T>> fillet(const Line2<T> & other, const T radius) const{
+    Option<math::Vec2<T>> fillet(const Line2<T> & other, const T radius) const{
         if(false == this->intersects(other)) return std::nullopt;
 
 
@@ -183,12 +183,12 @@ public:
     }
     
     [[nodiscard]] __fast_inline constexpr
-    bool has_point(const Vec2<T> & p, const T epsilon) const{
+    bool has_point(const math::Vec2<T> & p, const T epsilon) const{
         return ymd::is_equal_approx(distance_to(p), T(0), epsilon);
     }
 
     [[nodiscard]] __fast_inline constexpr
-    int sign(const Vec2<T> & p) const{
+    int sign(const math::Vec2<T> & p) const{
         return sign(this->signed_distance_to(Line2(p, this->orientation)));
     }
 
@@ -229,7 +229,7 @@ public:
 
     //计算直线关于某个点的垂足
     [[nodiscard]] __fast_inline constexpr
-    Vec2<T> foot_of(const Vec2<T> & p) const{
+    math::Vec2<T> foot_of(const math::Vec2<T> & p) const{
         //https://blog.csdn.net/hjxu2016/article/details/111594359
 
         // x * -sin(orientation) + y * cos(orientation) + d = 0
@@ -256,7 +256,7 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Vec2<T> mirror(const Vec2<T> & p) const {
+    math::Vec2<T> mirror(const math::Vec2<T> & p) const {
         return (this->foot_of(p) * 2) - p;
     }
 
@@ -276,21 +276,21 @@ public:
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Line2<T> lineplofit(const Vec2<T> * begin, const size_t len){
+    Line2<T> lineplofit(const math::Vec2<T> * begin, const size_t len){
         //TODO
         return {};
     }
     
     [[nodiscard]] __fast_inline constexpr
-    Vec2<T> reflect(const Vec2<T> & p, const Vec2<T> & base) const {
+    math::Vec2<T> reflect(const math::Vec2<T> & p, const math::Vec2<T> & base) const {
         
         // TODO
 
-        return Vec2<T>{0,0};
+        return math::Vec2<T>{0,0};
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Segment2<T> perpendicular(const Vec2<T> & p) const{
+    Segment2<T> perpendicular(const math::Vec2<T> & p) const{
         return {p, this->foot_of(p)};
     }
 };

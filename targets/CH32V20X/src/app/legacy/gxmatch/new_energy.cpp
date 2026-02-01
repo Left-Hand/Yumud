@@ -12,7 +12,7 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/bus/uart/uartsw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
 
 #include "drivers/CommonIO/Led/WS2812/ws2812.hpp"

@@ -1,10 +1,12 @@
 #pragma once
 
-#include "interpolation.hpp"
+// #include "interpolation.hpp"
+#include "core/math/real.hpp"
+#include "algebra/vectors/vec2.hpp"
 
 namespace ymd::intp{
 
-class ArcInterpolation{
+struct [[nodiscard]] ArcInterpolation final {
 protected:
     iq16 m_Centerx;
     iq16 m_Centery;
@@ -12,18 +14,18 @@ protected:
     iq16 _a;
     iq16 _b;
 
-    bool IsPerpendicular(const Vec2<iq16> & pt1,const Vec2<iq16> & pt2,const Vec2<iq16> & pt3) const;
+    bool IsPerpendicular(const math::Vec2<iq16> & pt1,const math::Vec2<iq16> & pt2,const math::Vec2<iq16> & pt3) const;
 
-    std::tuple<iq16, iq16, iq16> calcCircleFrom3Points (const Vec2<iq16> & pt1,const Vec2<iq16> & pt2,const Vec2<iq16> & pt3) const;
+    std::tuple<iq16, iq16, iq16> calcCircleFrom3Points (const math::Vec2<iq16> & pt1,const math::Vec2<iq16> & pt2,const math::Vec2<iq16> & pt3) const;
 public:
-    ArcInterpolation(const Vec2<iq16> & handle);
+    ArcInterpolation(const math::Vec2<iq16> & handle);
 
     iq16 forward(const iq16 x) const ;
 };
 
-class CircularFilletInterpoation{
+struct [[nodiscard]] CircularFilletInterpoation final {
 public:
-    CircularFilletInterpoation(const Vec2<iq16> & handle, iq16 R):
+    CircularFilletInterpoation(const math::Vec2<iq16> & handle, iq16 R):
         _a(handle.x), _b(handle.y), _R(R){
             computeFilletParameters ({0,0}, {_a,_b}, {_a,_b}, {1,1}, _R);
         }
@@ -43,10 +45,10 @@ private:
     iq16 arcEndY = 0;
 
     void computeFilletParameters (
-        const Vec2<iq16> & pt1,
-        const Vec2<iq16> & pt2,
-        const Vec2<iq16> & pt3,
-        const Vec2<iq16> & pt4,
+        const math::Vec2<iq16> & pt1,
+        const math::Vec2<iq16> & pt2,
+        const math::Vec2<iq16> & pt3,
+        const math::Vec2<iq16> & pt4,
         iq16 r);
 
     const iq16 _a;

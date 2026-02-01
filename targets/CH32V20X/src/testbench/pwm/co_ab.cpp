@@ -8,7 +8,7 @@
 #include "hal/timer/bipolarity_abstract.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 
 using namespace ymd;

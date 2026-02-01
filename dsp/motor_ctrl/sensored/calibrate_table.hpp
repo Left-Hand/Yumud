@@ -23,14 +23,14 @@ struct CalibrateTable{
         const Angular<uq32> measured
     ){
         //确定原始数据的扇区
-        const auto index = angle_to_index(measured);
-        if(index >= capacity_) 
+        const auto ind = angle_to_index(measured);
+        if(ind >= capacity_) 
             return Err(Error::SampleIndexOutOfRange);//unreachable
 
-        if(sector_collected_nums_[index] != 0) 
+        if(sector_collected_nums_[ind] != 0) 
             return Err(Error::DuplicatedSectorSampleDetected); 
 
-        block_[index] = ({
+        block_[ind] = ({
             const auto may_calipoint = PackedCalibrateSample::from_expected_and_measure(
                 expected, measured
             );
@@ -63,7 +63,7 @@ struct CalibrateTable{
     }
 
     [[nodiscard]] constexpr std::span<const PackedCalibrateSample>
-    iter() const {return std::span(block_);}
+    view() const {return std::span(block_);}
 
     [[nodiscard]] constexpr size_t angle_to_index(const Angular<uq32> angle) const{
         return size_t(uq24(angle.to_turns()) * capacity_);

@@ -10,17 +10,17 @@ class ST7789 final:
 public:
     explicit ST7789(
         ST7789_Transport && phy, 
-        const Vec2<uint16_t> size
+        const math::Vec2<uint16_t> size
     ):
         transport_(phy),
         algo_(size){;}
 
 
-    Vec2<uint16_t> size() const {return algo_.size();}
+    math::Vec2<uint16_t> size() const {return algo_.size();}
 
-    Rect2u16 bounding_box() const {
-        return Rect2u16{
-            Vec2<uint16_t>::ZERO,
+    math::Rect2u16 bounding_box() const {
+        return math::Rect2u16{
+            math::Vec2<uint16_t>::ZERO,
             size()
         };
     }
@@ -34,12 +34,12 @@ public:
         return Ok();
     }
     IResult<> fill(const RGB565 color){
-        return putrect_unchecked(Rect2u16::from_size(size()), color);
+        return putrect_unchecked(math::Rect2u16::from_size(size()), color);
     }
-    IResult<> setpos_unchecked(const Vec2<uint16_t> pos);
-    IResult<> setarea_unchecked(const Rect2<uint16_t> rect);
+    IResult<> setpos_unchecked(const math::Vec2<uint16_t> pos);
+    IResult<> setarea_unchecked(const math::Rect2<uint16_t> rect);
 
-    IResult<> put_texture(const Rect2<uint16_t> & rect, const is_color auto * pcolor){
+    IResult<> put_texture(const math::Rect2<uint16_t> & rect, const is_color auto * pcolor){
         if(const auto res = setarea_unchecked(rect);
             res.is_err()) return res;
         if(const auto res = put_next_texture(rect, pcolor);
@@ -47,11 +47,11 @@ public:
         return Ok();
     }
 
-    IResult<> put_next_texture(const Rect2<uint16_t> rect, const is_color auto * pcolor){
+    IResult<> put_next_texture(const math::Rect2<uint16_t> rect, const is_color auto * pcolor){
         return transport_.write_burst_pixels(std::span(pcolor, rect.area()));
     }
 
-    IResult<> set_display_offset(const Vec2<uint16_t> _offset){
+    IResult<> set_display_offset(const math::Vec2<uint16_t> _offset){
         offset_ = _offset;
         return Ok();
     }
@@ -83,8 +83,8 @@ public:
         return write_command((inv_en == EN) ? 0x21 : 0x20);
     }
 
-    [[nodiscard]] __fast_inline IResult<> putpixel_unchecked(
-        const Vec2<uint16_t> pos, 
+    [[nodiscard]] __fast_inline IResult<> put_pixel_unchecked(
+        const math::Vec2<uint16_t> pos, 
         const RGB565 color
     ){
         if(const auto res = setpos_unchecked(pos);
@@ -95,17 +95,17 @@ public:
     }
 
     [[nodiscard]] IResult<> putrect_unchecked(
-        const Rect2<uint16_t> rect, 
+        const math::Rect2<uint16_t> rect, 
         const RGB565 color
     );
 
-    [[nodiscard]] IResult<> puttexture_unchecked(
-        const Rect2<uint16_t> rect, 
+    [[nodiscard]] IResult<> put_texture_unchecked(
+        const math::Rect2<uint16_t> rect, 
         const RGB565 * pcolor
     );
 
-    [[nodiscard]] Rect2u get_expose_rect(){
-        return Rect2u::from_size(algo_.size());
+    [[nodiscard]] math::Rect2u get_expose_rect(){
+        return math::Rect2u::from_size(algo_.size());
     }
 
 private:
@@ -114,7 +114,7 @@ private:
     ST7789_Transport transport_;
     Algo algo_;
 
-    Vec2<uint16_t> offset_ = Vec2<uint16_t>::ZERO;
+    math::Vec2<uint16_t> offset_ = math::Vec2<uint16_t>::ZERO;
     uint8_t scr_ctrl_ = 0;
 
     [[nodiscard]] __fast_inline IResult<> write_command(const uint8_t cmd){
@@ -139,28 +139,28 @@ private:
 
 template<>
 struct DrawTarget<ST7789>{
-    [[nodiscard]] static auto putpixel_unchecked(
+    [[nodiscard]] static auto put_pixel_unchecked(
         ST7789 & self,
-        const Vec2<uint16_t> pos, 
+        const math::Vec2<uint16_t> pos, 
         const RGB565 color
     ){
-        return self.putpixel_unchecked(pos, color);
+        return self.put_pixel_unchecked(pos, color);
     }
 
     [[nodiscard]] static auto putrect_unchecked(
         ST7789 & self,
-        const Rect2<uint16_t> rect, 
+        const math::Rect2<uint16_t> rect, 
         const RGB565 color
     ){
         return self.putrect_unchecked(rect, color);
     }
 
-    [[nodiscard]] static auto puttexture_unchecked(
+    [[nodiscard]] static auto put_texture_unchecked(
         ST7789 & self,
-        const Rect2<uint16_t> rect, 
+        const math::Rect2<uint16_t> rect, 
         const RGB565 * pcolor
     ){
-        return self.puttexture_unchecked(rect, pcolor);
+        return self.put_texture_unchecked(rect, pcolor);
     }
 };
 

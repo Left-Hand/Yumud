@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/errno.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio.hpp"
 
 
@@ -117,6 +117,6 @@ public:
         });
     }
 private:
-    hal::I2cSw i2c_;
+    hal::SoftI2c i2c_;
 };
 }

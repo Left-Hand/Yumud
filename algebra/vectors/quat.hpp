@@ -4,7 +4,7 @@
 #include "algebra/vectors/vec3.hpp"
 #include "algebra/transforms/euler.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 namespace details{
 
@@ -122,7 +122,7 @@ struct [[nodiscard]] Quat{
 
     [[nodiscard]]
     __fast_inline static constexpr Quat 
-    from_axis_angle(const Vec3<T> &axis, const Angular<T> angle) {
+    from_axis_angle(const math::Vec3<T> &axis, const Angular<T> angle) {
         Quat ret;
         ret.set_axis_angle(axis, angle);
         return ret;
@@ -130,11 +130,11 @@ struct [[nodiscard]] Quat{
 
     [[nodiscard]]
     static constexpr Quat from_shortest_arc(
-        const Vec3<T> &v0, 
-        const Vec3<T> &v1
+        const math::Vec3<T> &v0, 
+        const math::Vec3<T> &v1
     ){
-        const Vec3<T> n0 = v0.normalized();
-        const Vec3<T> n1 = v1.normalized();
+        const math::Vec3<T> n0 = v0.normalized();
+        const math::Vec3<T> n1 = v1.normalized();
 
         T d = v0.dot(v1);
 
@@ -142,7 +142,7 @@ struct [[nodiscard]] Quat{
             const auto axis = n0.get_any_perpendicular();
             return from_xyzw(axis.x, axis.y, axis.z, T(0));
         } else {
-            Vec3<T> c = n0.cross(n1);
+            math::Vec3<T> c = n0.cross(n1);
             const T s = std::sqrt((T(1) + d) * T(2));
             const T inv_s = T(1) / s;
             return from_xyzw(c.x * inv_s, c.y * inv_s, c.z * inv_s, s / 2);
@@ -150,12 +150,12 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]]
-    static constexpr Quat<T> from_direction(const Vec3<T> & dir){
+    static constexpr Quat<T> from_direction(const math::Vec3<T> & dir){
         // Default direction is the positive Z-axis
-        const Vec3<T> default_dir(0, 0, 1);
+        const math::Vec3<T> default_dir(0, 0, 1);
         
         // Normalize the input direction
-        const UnitVec3<T> normalized_dir = dir.normalized();
+        const math::UnitVec3<T> normalized_dir = dir.normalized();
         
         // Calculate the dot product to determine the angle between the vectors
         T dot_product = default_dir.dot(normalized_dir);
@@ -166,7 +166,7 @@ struct [[nodiscard]] Quat{
         }
         
         // Calculate the rotation axis using the cross product
-        Vec3<T> axis = default_dir.cross(normalized_dir);
+        math::Vec3<T> axis = default_dir.cross(normalized_dir);
         
         // Calculate the angle between the vectors
         const auto angle = Angular<T>::from_radians(std::acos(dot_product));
@@ -373,7 +373,7 @@ struct [[nodiscard]] Quat{
 
 
     [[nodiscard]]
-    constexpr Quat integral(const Vec3<T> & norm_dir, const T delta) const {
+    constexpr Quat integral(const math::Vec3<T> & norm_dir, const T delta) const {
         const auto k = delta / 2;
         return from_xyzw(
             x + k * (-y * norm_dir.z + z * norm_dir.y + w * norm_dir.x),
@@ -387,17 +387,17 @@ struct [[nodiscard]] Quat{
 
 
     [[nodiscard]] __fast_inline constexpr
-    Vec3<T> operator*(const Vec3<T> &v) const {
+    math::Vec3<T> operator*(const math::Vec3<T> &v) const {
         #if 1
-        Vec3<T> u(x, y, z);
-        Vec3<T> uv = u.cross(v);
+        math::Vec3<T> u(x, y, z);
+        math::Vec3<T> uv = u.cross(v);
         return v + ((uv * w) + u.cross(uv)) * 2;
         #else
         T tx = 2 * (y*v.z - z*v.y);
         T ty = 2 * (z*v.x - x*v.z); 
         T tz = 2 * (x*v.y - y*v.x);
         
-        return Vec3<T>(
+        return math::Vec3<T>(
             v.x + w*tx + y*tz - z*ty,
             v.y + w*ty + z*tx - x*tz, 
             v.z + w*tz + x*ty - y*tx
@@ -406,15 +406,15 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Vec3<T> xform(const Vec3<T> &v) const {
-        Vec3<T> u(x, y, z);
-        Vec3<T> uv = u.cross(v);
+    math::Vec3<T> xform(const math::Vec3<T> &v) const {
+        math::Vec3<T> u(x, y, z);
+        math::Vec3<T> uv = u.cross(v);
         return v + ((uv * w) + u.cross(uv)) * 2;
     }
 
     [[nodiscard]] __fast_inline constexpr
-    UnitVec3<T> xform_up() const {
-        return UnitVec3<T>(
+    math::UnitVec3<T> xform_up() const {
+        return math::UnitVec3<T>(
             2 * (w * y + z * x),
             2 * (-w * x + z * y),
             2 * (z * z + w * w) - 1
@@ -422,8 +422,8 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]] __fast_inline constexpr
-    Vec3<T> xform_top() const{
-        return Vec3<T>(
+    math::Vec3<T> xform_top() const{
+        return math::Vec3<T>(
             T(2 * (x * z - w * y)),
             T(2 * (w * x + y * z)),
             T(w * w - x * x - y * y + z * z)
@@ -510,7 +510,7 @@ private:
         );
     }
 
-    constexpr void set_axis_angle(const Vec3<T> &axis, const Angular<T> angle){
+    constexpr void set_axis_angle(const math::Vec3<T> &axis, const Angular<T> angle){
         T d = axis.length();
         if (d == 0) {
             set(T(0), T(0), T(0), T(0));

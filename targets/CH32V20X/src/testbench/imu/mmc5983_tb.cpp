@@ -3,10 +3,10 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/hw_singleton.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 
@@ -65,10 +65,10 @@ static void mmc5983_test(drivers::MMC5983 & imu){
     for(size_t i = 0; i < 100; i++){
         const auto v2 = robots::EllipseCalibrator::project_idx_to_v2(i, 100);
         // const auto p = project_v2_to_v3();
-        const auto p = Vec3<q24>();
+        const auto p = math::Vec3<q24>();
         DEBUG_PRINTLN(p,i, v2);
         clock::delay(1ms);
-        calibrator.add_data(p + Vec3<q24>(0.2_r,1,1));
+        calibrator.add_data(p + math::Vec3<q24>(0.2_r,1,1));
     }
     const auto [mean, soft_iron] = calibrator.dignosis();
 
@@ -119,10 +119,10 @@ void mmc5983_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
-    // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
+    // SoftI2c i2c{hal::PA<12>(), hal::PA<15>()};
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
     // i2c.init(400_KHz);
     // i2c.init();
     

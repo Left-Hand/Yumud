@@ -57,7 +57,7 @@ public:
         Release,
     } ;
 
-    using TouchPoint = Vec2<uint16_t>;
+    using TouchPoint = math::Vec2<uint16_t>;
 
 
     struct [[nodiscard]] GestureId{
@@ -202,7 +202,7 @@ public:
             return next;
         }
 
-        constexpr std::span<const TouchPoint> iter() const{
+        constexpr std::span<const TouchPoint> view() const{
             return std::span(points_.data(), touch_count_);
         }
     private:

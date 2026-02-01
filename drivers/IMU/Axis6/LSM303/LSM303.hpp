@@ -28,8 +28,8 @@ public:
 private:
     details::LSM303_Regs regs_ = {};
 
-    Option<Vec3<int16_t>> m_max = None; // maximum magnetometer values, used for calibration
-    Option<Vec3<int16_t>> m_min = None; // minimum magnetometer values, used for calibration
+    Option<math::Vec3<int16_t>> m_max = None; // maximum magnetometer values, used for calibration
+    Option<math::Vec3<int16_t>> m_min = None; // minimum magnetometer values, used for calibration
 
     deviceType _device = device_auto;; // chip type (D, DLHC, DLM, or DLH)
 

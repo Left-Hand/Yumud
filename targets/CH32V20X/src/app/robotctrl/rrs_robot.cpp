@@ -2,9 +2,9 @@
 
 #include "core/clock/time.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
@@ -56,7 +56,7 @@ class Environment{
 public:
     hal::Gpio scl_pin = SCL_PIN;
     hal::Gpio sda_pin = SDA_PIN;
-    hal::I2cSw i2c = hal::I2cSw{&scl_pin, &sda_pin};
+    hal::SoftI2c i2c = hal::SoftI2c{&scl_pin, &sda_pin};
     PCA9685 pca{&i2c};
 
 

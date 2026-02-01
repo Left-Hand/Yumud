@@ -1,7 +1,7 @@
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "src/testbench/tb.h"

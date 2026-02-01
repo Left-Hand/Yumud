@@ -12,8 +12,8 @@
 #include "primitive/hid_input/segcode.hpp"
 #include "primitive/hid_input/button_input.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/HID/ft6336u/ft6336u.hpp"
@@ -82,7 +82,7 @@ void ft6336_main(){
 
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
 
     i2c.init({
         .baudrate = hal::NearestFreq(200_KHz)
@@ -98,7 +98,7 @@ void ft6336_main(){
     while(true){
         DEBUG_PRINTLN(
             // ft6336.get_gesture_id().examine(),
-            ft6336.get_touch_points().examine().iter()
+            ft6336.get_touch_points().examine().view()
             // std::hex, 
             // std::showbase,
             // RepeatIter<uint16_t>{0X5555, 3}

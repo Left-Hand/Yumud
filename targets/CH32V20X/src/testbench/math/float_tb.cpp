@@ -5,7 +5,7 @@
 #include "core/math/float/bf16.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 using namespace ymd;
 

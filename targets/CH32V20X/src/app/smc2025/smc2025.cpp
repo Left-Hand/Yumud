@@ -7,10 +7,10 @@
 #include "core/stream/BufStream.hpp"
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "algebra/vectors/quat.hpp"
@@ -34,12 +34,8 @@ using namespace ymd;
 using namespace ymd::drivers;
 
 
-
-
-
-
 static constexpr size_t MAX_COAST_ITEMS = 64;
-using Pile = Range2<uint8_t>;
+using Pile = math::Range2<uint8_t>;
 using Piles = std::map<uint8_t, Pile>;
 
 using namespace ymd::smc::sim;
@@ -57,7 +53,7 @@ class Plotter{
         // painter_.bind_image(tft);
     }
 
-    IResult<> plot_rgb(const Image<RGB565> image, const Rect2u & area){
+    IResult<> plot_rgb(const Image<RGB565> image, const math::Rect2u & area){
         tft_.put_texture(area, image.head_ptr()).examine();
 
         return Ok();
@@ -96,42 +92,42 @@ class Plotter{
 
     // IResult<> plot_pixels(const Pixels & pts){
     //     for(const auto pixel : pts){
-    //         painter_.putpixel_unchecked(pixel);
+    //         painter_.put_pixel_unchecked(pixel);
     //     }
     //     return Ok();
     // };
 
-    IResult<> plot_dot(const Vec2u pos, const uint radius = 2){
-        painter_.putpixel_unchecked(pos);
+    IResult<> plot_dot(const math::Vec2u pos, const uint radius = 2){
+        painter_.put_pixel_unchecked(pos);
 
         return Ok();
     };
 
 
-    IResult<> plot_vec3(const Vec3<iq16> & vec3,  const Vec2u pos){
+    IResult<> plot_vec3(const math::Vec3<iq16> & vec3,  const math::Vec2u pos){
         static constexpr auto WINDOW_LENGTH = 50u;
         static constexpr auto ARROW_RADIUS = 3u;
-        static constexpr auto X_UNIT = Vec2<iq16>::RIGHT;
-        static constexpr auto Y_UNIT = Vec2<iq16>::RIGHT.rotated(60_deg);
-        static constexpr auto Z_UNIT = Vec2<iq16>::DOWN;
+        static constexpr auto X_UNIT = math::Vec2<iq16>::RIGHT;
+        static constexpr auto Y_UNIT = math::Vec2<iq16>::RIGHT.rotated(60_deg);
+        static constexpr auto Z_UNIT = math::Vec2<iq16>::DOWN;
         
         static constexpr RGB565 X_COLOR = color_cast<RGB565>(ColorEnum::RED);
         static constexpr RGB565 Y_COLOR = color_cast<RGB565>(ColorEnum::GREEN);
         static constexpr RGB565 Z_COLOR = color_cast<RGB565>(ColorEnum::BLUE);
         
         const auto arm_length = vec3.length();
-        const auto x_axis = Vec3<iq16>::from_x00(arm_length);
-        const auto y_axis = Vec3<iq16>::from_0y0(arm_length);
-        const auto z_axis = Vec3<iq16>::from_00z(arm_length);
+        const auto x_axis = math::Vec3<iq16>::from_x_axis(arm_length);
+        const auto y_axis = math::Vec3<iq16>::from_y_axis(arm_length);
+        const auto z_axis = math::Vec3<iq16>::from_z_axis(arm_length);
 
-        const auto rot = Quat<iq16>::from_direction(vec3);
-        const Vec2u center_point = pos + Vec2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
+        const auto rot = math::Quat<iq16>::from_direction(vec3);
+        const auto center_point = pos + math::Vec2u(WINDOW_LENGTH, WINDOW_LENGTH) / 2;
 
         auto plot_vec3_to_plane = [&](
-            const Vec3<iq16> & axis, const char chr, const RGB565 color)
+            const math::Vec3<iq16> & axis, const char chr, const RGB565 color)
         -> IResult<>{
-            const Vec3<iq16> end = rot.xform(axis);
-            const Vec2u end_point = center_point + (X_UNIT * end.x + Y_UNIT * end.y + Z_UNIT * end.z);
+            const math::Vec3<iq16> end = rot.xform(axis);
+            const math::Vec2u end_point = center_point + (X_UNIT * end.x + Y_UNIT * end.y + Z_UNIT * end.z);
             painter_.set_color(color);
             if(const auto res = painter_.draw_line(center_point, end_point);
                 res.is_err()) return res;
@@ -140,7 +136,7 @@ class Plotter{
         };
 
         const auto guard = painter_.create_color_guard();
-        if(const auto res = painter_.draw_filled_rect(Rect2u{pos, Vec2u{WINDOW_LENGTH, WINDOW_LENGTH}});
+        if(const auto res = painter_.draw_filled_rect(math::Rect2u{pos, math::Vec2u{WINDOW_LENGTH, WINDOW_LENGTH}});
             res.is_err()) return res;
         if(const auto res = plot_vec3_to_plane(x_axis, 'X', X_COLOR);
             res.is_err()) return res;
@@ -203,12 +199,12 @@ void smc2025_main(){
 
     auto cam_i2c_scl = hal::PD<2>();
     auto cam_i2c_sda = hal::PC<12>();
-    hal::I2cSw cam_i2c{&cam_i2c_scl, &cam_i2c_sda};
+    hal::SoftI2c cam_i2c{&cam_i2c_scl, &cam_i2c_sda};
     cam_i2c.init({.baudrate = hal::NearestFreq(100_KHz)});
 
     auto i2c_scl = hal::PB<3>();
     auto i2c_sda = hal::PB<5>();
-    hal::I2cSw i2c{&i2c_scl, &i2c_sda};
+    hal::SoftI2c i2c{&i2c_scl, &i2c_sda};
     i2c.init({.baudrate = hal::NearestFreq(400_KHz)});
     
     #if 0
@@ -234,12 +230,12 @@ void smc2025_main(){
 
     [[maybe_unused]] auto plot_gray = [&](
         const Image<Gray> & src, 
-        const Rect2u & area
+        const math::Rect2u & area
     ){
         tft.put_texture(
             ({
                 const auto ins_opt = area.intersection(
-                    Rect2u(area.top_left, src.size()));
+                    math::Rect2u(area.top_left, src.size()));
                 if(ins_opt.is_none()) return;
                 ins_opt.unwrap();
             }), 
@@ -249,12 +245,12 @@ void smc2025_main(){
 
     [[maybe_unused]] auto plot_bina = [&](
         const Image<Gray> & src, 
-        const Rect2u & area
+        const math::Rect2u & area
     ){
         tft.put_texture(
             ({
                 const auto ins_opt = area.intersection(
-                    Rect2u(area.top_left, src.size()));
+                    math::Rect2u(area.top_left, src.size()));
                 if(ins_opt.is_none()) return;
                 ins_opt.unwrap();
             }), 
@@ -265,11 +261,11 @@ void smc2025_main(){
     [[maybe_unused]] auto test_render = [&]{
     
         [[maybe_unused]]const auto now_secs = clock::seconds();
-        const auto pose = Isometry2<iq16>{
-            // .rotation = UnitComplex<iq16>::from_radians(now_secs + iq16(1 / TAU) * math::sinpu(now_secs)),
-            // .translation = Vec2<iq16>(0, -1.5_r) + Vec2<iq16>(-1.9_r, 0).rotated(Angular<iq16>::from_radians(now_secs)), 
-            .rotation = UnitComplex<iq16>::from_angle(yaw_angle),
-            .translation = Vec2<iq16>(0, -1.5_r), 
+        const auto pose = math::Isometry2<iq16>{
+            // .rotation = math::UnitComplex<iq16>::from_radians(now_secs + iq16(1 / TAU) * math::sinpu(now_secs)),
+            // .translation = math::Vec2<iq16>(0, -1.5_r) + math::Vec2<iq16>(-1.9_r, 0).rotated(Angular<iq16>::from_radians(now_secs)), 
+            .rotation = math::UnitComplex<iq16>::from_angle(yaw_angle),
+            .translation = math::Vec2<iq16>(0, -1.5_r), 
         };
             // {1.0_r, -0.5_r}, 0.0_r};
             // {-1.0_r, -1.81_r}, 1.57_r};
@@ -284,10 +280,10 @@ void smc2025_main(){
         });
         // const auto gray_img = Scenes::render_scene1(pose, 0.02_r);
         const auto render_uticks = clock::micros() - begin_us;
-        plot_gray(gray_img, {Vec2u{0,6}, Vec2u{240,240}});
+        plot_gray(gray_img, {math::Vec2u{0,6}, math::Vec2u{240,240}});
 
-        const auto rect = Rect2u::from_size(gray_img.size());
-        [[maybe_unused]] const auto range = Range2u::from_start_and_length(rect.top_left.x, rect.size.x);
+        const auto rect = math::Rect2u::from_size(gray_img.size());
+        [[maybe_unused]] const auto range = math::Range2u::from_start_and_length(rect.top_left.x, rect.size.x);
 
         // DEBUG_PRINTLN(
         //     render_uticks.count(), 
@@ -319,7 +315,7 @@ void smc2025_main(){
         DEBUG_PRINTLN(os.inner_str());
         // painter.draw_hollow_rect({0,0,7,7}).examine();
         tft.put_texture(
-            Rect2u16::from_size(rgb_img.size()),
+            math::Rect2u16::from_size(rgb_img.size()),
             rgb_img.head_ptr()
         ).examine();
 
@@ -369,8 +365,8 @@ void smc2025_main(){
         // test_paint();
         // qmc.update().examine();
         // painter.set_color(HSV888{0, int(100 + 100 * math::sinpu(clock::seconds())), 255});
-        // painter.draw_pixel(Vec2u(0, 0));
-        // painter.draw_filled_rect(Rect2u(0, 0, 20, 40)).examine();
+        // painter.draw_pixel(math::Vec2u(0, 0));
+        // painter.draw_filled_rect(math::Rect2u(0, 0, 20, 40)).examine();
 
     }
 

@@ -12,7 +12,7 @@ class ScaledPwm final:public hal::PwmIntf{
 public:
     ScaledPwm(
         hal::PwmIntf & pwm, 
-        const Range2<uq16> & dutycycle_range
+        const math::Range2<uq16> & dutycycle_range
     ):
         pwm_(pwm), 
         dutycycle_range_(dutycycle_range){;}
@@ -35,7 +35,7 @@ public:
     }
 protected:
     hal::PwmIntf & pwm_;
-    Range2<uq16> dutycycle_range_;
+    math::Range2<uq16> dutycycle_range_;
     bool enabled_ = true;
 };
 

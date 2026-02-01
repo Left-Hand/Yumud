@@ -17,11 +17,11 @@
 
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/can/can.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/analog/opa/opa.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
+
 #include "hal/gpio/gpio.hpp"
 
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
@@ -34,10 +34,10 @@
 #include "digipw/pwmgen/stepper_pwmgen.hpp"
 
 
-#include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/sensored/calibrate_table.hpp"
 #include "dsp/motor_ctrl/sensored/position_corrector.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
+#include "dsp/controller/adrc/linear/ltd2o.hpp"
 
 #include "meta_utils.hpp"
 #include "tasks.hpp"
@@ -363,7 +363,7 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
 [[maybe_unused]] static void eeprom_tb(){
     auto scl_pin = hal::PD<1>();
     auto sda_pin = hal::PD<0>();
-    hal::I2cSw i2c_sw{&scl_pin, &sda_pin};
+    hal::SoftI2c i2c_sw{&scl_pin, &sda_pin};
     i2c_sw.init({800_KHz});
     drivers::AT24CXX at24{drivers::AT24CXX::Config::AT24C02{}, i2c_sw};
 

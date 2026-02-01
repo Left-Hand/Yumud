@@ -7,7 +7,7 @@
 #include "core/math/realmath.hpp"
 
 #include "hal/gpio/vport.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/timer/hw_singleton.hpp"
@@ -24,7 +24,7 @@
 
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "digipw/spll/spll_1ph_sogi_iq.hpp"
 
 
@@ -141,15 +141,15 @@ void digipw_main(){
     auto scl_pin = hal::PB<15>();
     auto sda_pin = hal::PB<14>();
     
-    hal::I2cSw i2csw{&scl_pin, &sda_pin};
-    // i2csw.init({1000000});
+    hal::SoftI2c SoftI2c{&scl_pin, &sda_pin};
+    // SoftI2c.init({1000000});
 
-    i2csw.init({
+    SoftI2c.init({
         .baudrate = hal::NearestFreq(100_KHz)
     });
 
     
-    // INA226 ina226{i2csw};
+    // INA226 ina226{SoftI2c};
     // // ina226.init(10, 5);
     // ina226.init(100, 5);
 

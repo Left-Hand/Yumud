@@ -6,7 +6,7 @@
 #include "core/stream/ostream.hpp"
 #include "algebra/vectors/vec2.hpp"
 
-namespace ymd{
+namespace ymd::math{
 template <typename T>
 struct [[nodiscard]] UnitComplex {
 private:

@@ -1,7 +1,6 @@
 #pragma once
 
 
-#include "apriltag.hpp"
 #include "dec_16h5.hpp"
 
 #if 0
@@ -17,9 +16,9 @@ public:
 
     void update(
         const Image<Gray> & src, 
-        const Rect2u roi
+        const math::Rect2u roi
     ) override {
-        const auto vertexs = find_vertex(src, Gray::from_white(), roi);
+        const auto vertexs = find_vertex(src, Gray::white(), roi);
 
         uint16_t code = 0;
         for(uint j = 0; j < APRILTAG_SIDE_COUNTS; j++){
@@ -41,7 +40,7 @@ public:
     ){
         // TODO();
         while(true);
-        return Gray::from_black();
+        return Gray::black();
         // return gs.bilinear_interpol(get_vertex_grid(vretexs, _grid_pos));
     };
 
@@ -64,7 +63,7 @@ public:
     static constexpr Vertexs find_vertex(
         const Image<Gray> & __map, 
         const Gray & match, 
-        const Rect2u & roi
+        const math::Rect2u & roi
     ){
         const auto x_range = roi.x_range();
         const auto y_range = roi.y_range();

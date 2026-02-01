@@ -23,7 +23,7 @@ DEF_FRIEND_DERIVE_DEBUG(Error_Kind)
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-enum class [[nodiscard]] JoyStickChannel:uint8_t{
+enum class [[nodiscard]] JoyStickChannelSelection:uint8_t{
     Select,
     L3,
     R3,
@@ -107,9 +107,9 @@ struct [[nodiscard]] Modifiers final{
     PressLevel cross:1;
     PressLevel squ:1;
 
-    [[nodiscard]] constexpr Vec2i left_direction() const{
+    [[nodiscard]] constexpr math::Vec2i left_direction() const{
         auto & self =  *this;
-        return Vec2i(
+        return math::Vec2i(
             int(PressLevel::Pressed == self.right) - int(PressLevel::Pressed == self.left),
             int(PressLevel::Pressed == self.up) - int(PressLevel::Pressed == self.down)
         );
@@ -125,7 +125,7 @@ struct alignas(2) [[nodiscard]] JoystickPosition final{
     uint8_t x;
     uint8_t y;
 
-    constexpr Vec2<real_t> to_vec2() const{
+    constexpr math::Vec2<real_t> to_vec2() const{
         constexpr auto SCALE = real_t(1.0/510);
         return {SCALE * (int(x * 4)) - 1, SCALE * (-int(y * 4)) + 1};
     }
@@ -140,51 +140,51 @@ struct [[nodiscard]] RxPacket{
 
     #pragma pack(pop)
 
-    [[nodiscard]] constexpr uint8_t query_channel(const JoyStickChannel event) const {
-        switch(event){
-            case JoyStickChannel::Select:
-                return (PressLevel::Pressed == modifiers.select);
-            case JoyStickChannel::L3:
-                return (PressLevel::Pressed == modifiers.l3);
-            case JoyStickChannel::R3:
-                return (PressLevel::Pressed == modifiers.r3);
-            case JoyStickChannel::Start:
-                return (PressLevel::Pressed == modifiers.start);
-            case JoyStickChannel::Up:
-                return (PressLevel::Pressed == modifiers.up);
-            case JoyStickChannel::Right:
-                return (PressLevel::Pressed == modifiers.right);
-            case JoyStickChannel::Down:
-                return (PressLevel::Pressed == modifiers.down);
-            case JoyStickChannel::Left:
-                return (PressLevel::Pressed == modifiers.left);
+    [[nodiscard]] constexpr uint8_t query_channel(const JoyStickChannelSelection sel) const {
+        switch(sel){
+            case JoyStickChannelSelection::Select:
+                return (PressLevel::Pressed == modifiers.select) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::L3:
+                return (PressLevel::Pressed == modifiers.l3) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::R3:
+                return (PressLevel::Pressed == modifiers.r3) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::Start:
+                return (PressLevel::Pressed == modifiers.start) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::Up:
+                return (PressLevel::Pressed == modifiers.up) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::Right:
+                return (PressLevel::Pressed == modifiers.right) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::Down:
+                return (PressLevel::Pressed == modifiers.down) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::Left:
+                return (PressLevel::Pressed == modifiers.left) ? uint8_t(255) : uint8_t(0);
 
 
-            case JoyStickChannel::L2:
-                return (PressLevel::Pressed == modifiers.l2);
-            case JoyStickChannel::R2:
-                return (PressLevel::Pressed == modifiers.r2);
-            case JoyStickChannel::L1:
-                return (PressLevel::Pressed == modifiers.l1);
-            case JoyStickChannel::R1:
-                return (PressLevel::Pressed == modifiers.r1);
-            case JoyStickChannel::Delta:
-                return (PressLevel::Pressed == modifiers.delta);
-            case JoyStickChannel::Circle:
-                return (PressLevel::Pressed == modifiers.circ);
-            case JoyStickChannel::Cross:
-                return (PressLevel::Pressed == modifiers.cross);
-            case JoyStickChannel::Square:
-                return (PressLevel::Pressed == modifiers.squ);
+            case JoyStickChannelSelection::L2:
+                return (PressLevel::Pressed == modifiers.l2) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::R2:
+                return (PressLevel::Pressed == modifiers.r2) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::L1:
+                return (PressLevel::Pressed == modifiers.l1) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::R1:
+                return (PressLevel::Pressed == modifiers.r1) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::Delta:
+                return (PressLevel::Pressed == modifiers.delta) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::Circle:
+                return (PressLevel::Pressed == modifiers.circ) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::Cross:
+                return (PressLevel::Pressed == modifiers.cross) ? uint8_t(255) : uint8_t(0);
+            case JoyStickChannelSelection::Square:
+                return (PressLevel::Pressed == modifiers.squ) ? uint8_t(255) : uint8_t(0);
 
 
-            case JoyStickChannel::RX:
+            case JoyStickChannelSelection::RX:
                 return right_joystick.x;
-            case JoyStickChannel::RY:
+            case JoyStickChannelSelection::RY:
                 return right_joystick.y;
-            case JoyStickChannel::LX:
+            case JoyStickChannelSelection::LX:
                 return left_joystick.x;
-            case JoyStickChannel::LY:
+            case JoyStickChannelSelection::LY:
                 return left_joystick.y;
         }
         //unreachable

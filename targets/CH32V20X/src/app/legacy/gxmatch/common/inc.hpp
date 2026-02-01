@@ -18,8 +18,8 @@ namespace gxm{
     using namespace ymd;
     using namespace ymd::drivers;
 
-    using Vec3 = Vec3<real_t>;
-    using Vec3i = Vec3<int>;
+    using math::Vec3 = math::Vec3<real_t>;
+    using math::Vec3i = math::Vec3<int>;
     using AABB = AABB<real_t>;
     using Ray = Ray2<real_t>;
     
@@ -36,4 +36,4 @@ namespace gxm{
 
 #include "enum.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"

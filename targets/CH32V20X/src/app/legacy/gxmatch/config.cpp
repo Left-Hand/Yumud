@@ -76,14 +76,14 @@ SysConfig gxm::create_default_config(){
                 Vec2{0.0_r, 0.24_r},
             },
             
-            .inspect_xyz = Vec3{0, 0.24_r, 0.16_r},
-            .idle_xyz = Vec3{0, 0.145_r, 0.16_r},
+            .inspect_xyz = math::Vec3{0, 0.24_r, 0.16_r},
+            .idle_xyz = math::Vec3{0, 0.145_r, 0.16_r},
             
-            .home_xyz = Vec3(0, 0.24_r, 0.16_r),
+            .home_xyz = math::Vec3(0, 0.24_r, 0.16_r),
 
             .safe_aabb = AABB{
-                Vec3{-0.13_r, 0.12_r, 0.0_r},
-                Vec3{0.26_r, 0.15_r, 0.17_r}
+                math::Vec3{-0.13_r, 0.12_r, 0.0_r},
+                math::Vec3{0.26_r, 0.15_r, 0.17_r}
             },
 
             .max_spd = 1.03_r,

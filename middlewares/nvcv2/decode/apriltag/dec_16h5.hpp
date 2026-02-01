@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Apriltag.hpp"
-#include "Apriltag_utils.hpp"
+
+#include "apriltag_primitive.hpp"
 
 #include "core/utils/Option.hpp"
 
 namespace ymd::nvcv2::apriltag{
-class Apriltag16H5Decoder:public ApriltagDecoder{
+struct Apriltag16H5Decoder final{
 public:
     static constexpr std::array<uint16_t, 30> PATTERN_CODE_TABLE = {
         0x231b,

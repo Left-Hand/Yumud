@@ -6,7 +6,7 @@
 #include "core/utils/Option.hpp"
 
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/timer/hw_singleton.hpp"
 

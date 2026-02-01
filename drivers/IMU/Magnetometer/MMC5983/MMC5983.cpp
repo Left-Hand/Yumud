@@ -139,12 +139,12 @@ IResult<> MMC5983::enable_yz(const Enable en){
     return write_reg(reg);
 }
 
-IResult<Vec3<iq24>> MMC5983::read_mag(){
+IResult<math::Vec3<iq24>> MMC5983::read_mag(){
     static constexpr auto LSB_18BIT = 0.0000625_iq24;
 
     const auto mag3i = regs_.data_packet_.to_vec3_bits();
     
-    return Ok(Vec3<iq24>{
+    return Ok(math::Vec3<iq24>{
         LSB_18BIT * mag3i.x,
         LSB_18BIT * mag3i.y,
         LSB_18BIT * mag3i.z
@@ -212,11 +212,11 @@ IResult<> MMC5983::enable_mag_reset(const Enable en){
     return write_reg(reg);
 }
 
-MMC5983::IResult<Vec3<iq24>> MMC5983::do_mag_set(){
+MMC5983::IResult<math::Vec3<iq24>> MMC5983::do_mag_set(){
     return do_set_reset(*this, [this](Enable en){return enable_mag_set(en);});
 }
 
-MMC5983::IResult<Vec3<iq24>> MMC5983::do_mag_reset(){
+MMC5983::IResult<math::Vec3<iq24>> MMC5983::do_mag_reset(){
     return do_set_reset(*this, [this](Enable en){return enable_mag_reset(en);});
 }
 

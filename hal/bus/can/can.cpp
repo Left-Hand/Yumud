@@ -7,8 +7,9 @@
 #include "hal/gpio/gpio_port.hpp"
 
 #include "core/debug/debug.hpp"
-#include "ral/can.hpp"
+#include "core/utils/scope_guard.hpp"
 #include "core/sdk.hpp"
+#include "ral/can.hpp"
 
 
 using namespace ymd;
@@ -26,8 +27,18 @@ using EventCallback = Can::EventCallback;
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::CAN_Def)>(x))
 
 
-#define EMIT_EVENT(x)   if(self.event_callback_ != nullptr) {self.event_callback_(x);}
-#define EMIT_EVENT_OR_TRAP(x)   if(self.event_callback_ != nullptr) {self.event_callback_(x);} else{__builtin_trap();}
+#define EMIT_EVENT(x)   \
+if(self.event_callback_ != nullptr) {\
+    self.event_callback_(x);\
+}\
+
+
+#define EMIT_EVENT_OR_TRAP(x)\
+if(self.event_callback_ != nullptr){\
+    self.event_callback_(x);\
+} else{\
+    __builtin_trap();\
+}\
 
 
 namespace {
@@ -716,6 +727,11 @@ void CanInterruptDispatcher::isr_tx(Can & self){
             return;
         }
 
+        auto guard = make_scope_guard([&]{
+            //清除发送标志位
+            tstatr_reg = TSTATR_RQCP_MASK;
+        });
+
         CanTransmitEvent::Kind ev_kind = (temp_tstatr & TSTATR_RXOK_MASK) ? 
             CanTransmitEvent::Kind::Success : CanTransmitEvent::Kind::Failed;
 
@@ -725,10 +741,6 @@ void CanInterruptDispatcher::isr_tx(Can & self){
         };
         const auto ev = CanEvent::from(tx_ev);
         EMIT_EVENT(ev);
-
-        //清除发送标志位
-        tstatr_reg = TSTATR_RQCP_MASK;
-
     };
 
     iter_mailbox.template operator() < CanMailboxIndex::_0 > ();
@@ -767,6 +779,10 @@ void CanInterruptDispatcher::isr_rx(Can & self, volatile uint32_t & rfifo_reg, c
     const uint32_t temp_rfifo_reg = rfifo_reg;
 
     if(temp_rfifo_reg & CAN_RFIFO_FFULL_MASK){
+        auto guard = make_scope_guard([&](){
+            rfifo_reg = CAN_RFIFO_FFULL_MASK;
+        });
+
         //rfifo满
         {
             const auto rx_ev = hal::CanReceiveEvent{
@@ -776,10 +792,13 @@ void CanInterruptDispatcher::isr_rx(Can & self, volatile uint32_t & rfifo_reg, c
             const auto ev = CanEvent::from(rx_ev);
             EMIT_EVENT_OR_TRAP(ev)
         }
-        rfifo_reg = CAN_RFIFO_FFULL_MASK;
     }
     
     if(temp_rfifo_reg & CAN_RFIFO_FOV_MASK){
+        auto guard = make_scope_guard([&](){
+            rfifo_reg = CAN_RFIFO_FOV_MASK;
+        });
+
         ///rfifo溢出
         {
             const auto rx_ev = hal::CanReceiveEvent{
@@ -789,11 +808,14 @@ void CanInterruptDispatcher::isr_rx(Can & self, volatile uint32_t & rfifo_reg, c
             const auto ev = CanEvent::from(rx_ev);
             EMIT_EVENT_OR_TRAP(ev)
         }
-        rfifo_reg = CAN_RFIFO_FOV_MASK;
     }
 
     //注意这里是判断fmp掩码 但是清零的是fom
     if (temp_rfifo_reg & CAN_RFIFO_FMP_MASK){
+        auto guard = make_scope_guard([&](){
+            rfifo_reg = CAN_RFIFO_FOM_MASK;
+        });
+
         //收到新的报文
         {
             //TODO 改为异步sink
@@ -808,8 +830,6 @@ void CanInterruptDispatcher::isr_rx(Can & self, volatile uint32_t & rfifo_reg, c
             const auto ev = CanEvent::from(rx_ev);
             EMIT_EVENT(ev)
         }
-        //已读这个报文
-        rfifo_reg = CAN_RFIFO_FOM_MASK;
     }
 }
 
@@ -871,84 +891,3 @@ void CanInterruptDispatcher::isr_sce(Can & self){
     EMIT_EVENT(CanEvent::from(flag_bits));
 }
 
-namespace ymd::hal{
-
-#ifdef CAN1_PRESENT
-Can can1 = Can{CAN1};
-#endif
-
-#ifdef CAN2_PRESENT
-Can can2 = Can{CAN2};
-#endif
-
-#ifdef CAN3_PRESENT
-Can can3 = Can{CAN3};
-#endif
-}
-
-
-
-extern "C"{
-#ifdef CAN1_PRESENT
-__interrupt void USB_HP_CAN1_TX_IRQHandler(){
-    CanInterruptDispatcher::isr_tx(can1);
-}
-
-__interrupt void USB_LP_CAN1_RX0_IRQHandler() {
-    CanInterruptDispatcher::isr_rx0(can1);
-}
-
-__interrupt void CAN1_RX1_IRQHandler(){
-    CanInterruptDispatcher::isr_rx1(can1);
-}
-
-
-#ifdef CAN_SCE_ENABLED
-__interrupt void CAN1_SCE_IRQHandler(){
-    CanInterruptDispatcher::isr_sce(can1);
-}
-#endif
-#endif
-
-#ifdef CAN2_PRESENT
-__interrupt void CAN2_TX_IRQHandler(){
-    CanInterruptDispatcher::isr_tx(can2);
-}
-
-__interrupt void CAN2_RX0_IRQHandler(){
-    CanInterruptDispatcher::isr_rx0(can2);
-}
-
-__interrupt void CAN2_RX1_IRQHandler(){
-    CanInterruptDispatcher::isr_rx1(can2);
-}
-
-#ifdef CAN_SCE_ENABLED
-__interrupt void CAN2_SCE_IRQHandler(){
-    CanInterruptDispatcher::isr_sce(can2);
-}
-
-#endif
-#endif
-
-#ifdef CAN3_PRESENT
-__interrupt void CAN3_TX_IRQHandler(){
-    CanInterruptDispatcher::isr_tx(can3);
-}
-
-__interrupt void CAN3_RX0_IRQHandler(){
-    CanInterruptDispatcher::isr_rx0(can3);
-}
-
-__interrupt void CAN3_RX1_IRQHandler(){
-    CanInterruptDispatcher::isr_rx1(can3);
-}
-
-#ifdef CAN_SCE_ENABLED
-__interrupt void CAN3_SCE_IRQHandler(){
-    CanInterruptDispatcher::isr_sce(can3);
-}
-
-#endif
-#endif
-}

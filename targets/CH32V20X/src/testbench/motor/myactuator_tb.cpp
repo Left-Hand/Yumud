@@ -10,7 +10,7 @@
 #include "core/utils/enum/strong_type_gradation.hpp"
 #include "core/math/float/fp32.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 

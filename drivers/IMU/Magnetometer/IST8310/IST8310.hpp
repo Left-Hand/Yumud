@@ -36,7 +36,7 @@ public:
 
     [[nodiscard]] IResult<> enable_sleep(const Enable en);
 
-    [[nodiscard]] IResult<Vec3<iq24>> read_mag();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag();
 
 private:
     hal::I2cDrv i2c_drv_;

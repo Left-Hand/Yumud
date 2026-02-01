@@ -232,6 +232,7 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> IResult<size_t>{
         if(const auto res = write_reg(reg, data); 
             res.is_err()) return Err(res.unwrap_err());
 
+    #if 0
     return write_fifo(buf)
         .and_then([](const size_t size) -> IResult<size_t>{
             LT8960L_DEBUG("transmit successfully");
@@ -247,6 +248,9 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> IResult<size_t>{
             }
         })
     ;
+    #else
+    TODO();
+    #endif
     
     // write_reg()
     // LT8960L_WriteReg(7,0x00,0x00);  //IDLE 

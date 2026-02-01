@@ -1,7 +1,7 @@
 #pragma once
 
 #include "primitive/gpio/pin_source.hpp"
-
+#include "hal/dma/hw_singleton.hpp"
 
 #define TIM1_CH1_DMA_CH hal::dma1_ch2
 #define TIM1_CH2_DMA_CH hal::dma1_ch3

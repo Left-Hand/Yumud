@@ -4,7 +4,7 @@
 #include "core/math/real.hpp"
 #include "primitive/arithmetic/angular.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct Vec2;

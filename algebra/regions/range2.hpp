@@ -7,7 +7,7 @@
 #include <algorithm>
 
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct alignas(sizeof(T) * 2) [[nodiscard]] Range2{
@@ -24,7 +24,8 @@ public:
 
 
     template<typename U, typename V>
-    [[nodiscard]] __fast_inline constexpr Range2(const U _start, const V _stop):
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    Range2(const U _start, const V _stop):
         start(math::floor_cast<T>(_start)),
         stop(math::ceil_cast<T>(_stop))
     {
@@ -32,20 +33,24 @@ public:
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline constexpr Range2(const Range2<U> & other):
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    Range2(const Range2<U> & other):
         Range2(other.start, other.stop){;}
 
-    [[nodiscard]] __fast_inline constexpr Range2(const std::pair<T, T> & other):
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    Range2(const std::pair<T, T> & other):
         Range2(other.first, other.second){;}
 
-    [[nodiscard]] __fast_inline constexpr Range2(const std::tuple<T, T> & other):
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    Range2(const std::tuple<T, T> & other):
         Range2(std::get<0>(other), std::get<1>(other)) {;}
     static constexpr Range2<T> from_uninitialized(){
         return Range2();
     }
 
     template<typename U, typename V>
-    [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_stop_unchecked(
+    [[nodiscard]] __attribute__((always_inline)) static 
+    constexpr Range2<T> from_start_and_stop_unchecked(
         const U _start, const V _stop
     ){
         auto ret = Range2<T>::from_uninitialized();
@@ -55,7 +60,8 @@ public:
     };
 
     template<typename U, typename V>
-    [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_stop(
+    [[nodiscard]] __attribute__((always_inline)) static 
+    constexpr Range2<T> from_start_and_stop(
         const U _start, const V _stop
     ){
         return Range2<T>{_start, _stop};
@@ -63,7 +69,8 @@ public:
 
 
     template<typename U, typename V>
-    [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_length(
+    [[nodiscard]] __attribute__((always_inline)) static 
+    constexpr Range2<T> from_start_and_length(
         const U start, const V length)
     {
         return Range2<T>{
@@ -73,7 +80,8 @@ public:
     }
 
     template<typename U>
-    [[nodiscard]] __fast_inline static constexpr Range2<T> from_center_and_length(
+    [[nodiscard]] __attribute__((always_inline)) static 
+    constexpr Range2<T> from_center_and_length(
         const U center, const U length)
     {
         if constexpr(std::is_integral_v<U>){
@@ -86,27 +94,32 @@ public:
         }
     }
 
-    [[nodiscard]] __fast_inline static constexpr Range2<T> from_center_and_half_length(
+    [[nodiscard]] __attribute__((always_inline)) static 
+    constexpr Range2<T> from_center_and_half_length(
         const T center, const T half_length)
     {
         return {static_cast<T>(center - half_length),
                 static_cast<T>(center + half_length)};
     }
 
-    [[nodiscard]] __fast_inline static constexpr Range2<T> from_center(const T center){
+    [[nodiscard]] __attribute__((always_inline)) static 
+    constexpr Range2<T> from_center(const T center){
         return {center, center};
     }
 
 
-    [[nodiscard]] __fast_inline constexpr Range2<T> swap() const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    Range2<T> swap() const {
         return {stop, start};
     }
 
-    [[nodiscard]] __fast_inline constexpr Range2<T> swap_if_inversed() const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    Range2<T> swap_if_inversed() const {
         return start > stop ? swap() : *this;
     }
 
-    [[nodiscard]] __fast_inline static constexpr Range2<T> from_start_and_gridsize(
+    [[nodiscard]] __attribute__((always_inline)) static 
+    constexpr Range2<T> from_start_and_gridsize(
         const T start, const T grid_size)
     {
         const auto resi = [&]{
@@ -121,39 +134,49 @@ public:
         return Range2<T>(ret_from, ret_from + grid_size);
     }
 
-    [[nodiscard]] __fast_inline constexpr T & operator [](const size_t index)
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    T & operator [](const size_t index)
         { return *(&this->start + index);}
 
-    [[nodiscard]] __fast_inline constexpr const T & operator [](const size_t index) const
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    const T & operator [](const size_t index) const
         {return *(&this->start + index);}
 
-    [[nodiscard]] __fast_inline constexpr const T * begin() const { return &this->start;}
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    const T * begin() const { return &this->start;}
 
-    [[nodiscard]] __fast_inline constexpr const T * end() const { return &this->stop;}
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    const T * end() const { return &this->stop;}
 
-    [[nodiscard]] __fast_inline constexpr Range2<T> & operator=(const Range2<auto> & other) {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    Range2<T> & operator=(const Range2<auto> & other) {
         this->start = static_cast<T>(other.start);
         this->stop = static_cast<T>(other.stop);
         return *this;
     }
 
-    [[nodiscard]] __fast_inline constexpr bool is_regular() const {
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    bool is_regular() const {
         return start <= stop;
     }
 
-    [[nodiscard]] __fast_inline constexpr T length() const{
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    T length() const{
         return ABS(stop - start);
     }
 
-    [[nodiscard]] __fast_inline constexpr T length_unchecked() const{
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    T length_unchecked() const{
         return stop - start;
     }
 
-    [[nodiscard]] __fast_inline constexpr T half_length_unchecked() const{
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    T half_length_unchecked() const{
         return (stop - start) >> 1;
     }
 
-    [[nodiscard]] __fast_inline constexpr T length_signed() const{
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    T length_signed() const{
         return (stop - start);
     }
 
@@ -287,13 +310,15 @@ public:
     [[nodiscard]] constexpr T min() const {return MIN(this->start, this->stop);}
 
 private:
-    [[nodiscard]] __fast_inline constexpr Range2(){;}
+    [[nodiscard]] __attribute__((always_inline)) constexpr 
+    Range2(){;}
 
 
 };
 
 using Range2i = Range2<int>;
 using Range2u = Range2<uint>;
+
 using Range2u8 = Range2<uint8_t>;
 using Range2u16 = Range2<uint16_t>;
 using Range2u32 = Range2<uint32_t>;
@@ -311,84 +336,84 @@ __inline OutputStream & operator<<(
 struct [[nodiscard]] RangeGridIter{
 
     constexpr RangeGridIter(
-        const Range2u range,
+        const Range2u32 range,
         const uint32_t gsize
     ):
         range_targ_(range),
         gsize_(gsize){;}
 
-    constexpr Option<Range2u> next(
-        const Range2u range_in
+    constexpr Option<Range2u32> next(
+        const Range2u32 range_in
     )const{
         return next_of_range(range_in, range_targ_, gsize_);
     }
 
-    constexpr Option<Range2u> prev(
-        const Range2u range_in
+    constexpr Option<Range2u32> prev(
+        const Range2u32 range_in
     )const{
         return prev_of_range(range_in, range_targ_, gsize_);
     }
 
-    constexpr Range2u begin()const{
+    constexpr Range2u32 begin()const{
         return begin_of_range(range_targ_, gsize_);
     }
 
-    constexpr Range2u end()const{
+    constexpr Range2u32 end()const{
         return end_of_range(range_targ_, gsize_);
     }
 
     template<typename T>
-    constexpr std::span<T> subspan(const std::span<T> pbuf, const Range2u range) const{
+    constexpr std::span<T> subspan(const std::span<T> pbuf, const Range2u32 range) const{
         const auto offset = range.start - range_targ_.start;
         return pbuf.subspan(offset, range.length());
     }
 
-    constexpr Range2u whole() const {
+    constexpr Range2u32 whole() const {
         return range_targ_;
     }
 private:
 
-    static constexpr Range2u begin_of_range(
-        const Range2u range,
+    static constexpr Range2u32 begin_of_range(
+        const Range2u32 range,
         const uint gsize
     ){
         const auto grid_remaining = gsize - range.start % gsize;
-        return Range2u(range.start, MIN(range.start + grid_remaining, range.stop));
+        return Range2u32(range.start, MIN(range.start + grid_remaining, range.stop));
     }
 
-    static constexpr Range2u end_of_range(
-        const Range2u range,
+    static constexpr Range2u32 end_of_range(
+        const Range2u32 range,
         const uint gsize
     ){
         const auto grid_begin = range.stop - range.stop % gsize;
-        return Range2u(MAX(range.start, grid_begin), range.stop);
+        return Range2u32(MAX(range.start, grid_begin), range.stop);
     }
-    static constexpr Option<Range2u> next_of_range(
-        const Range2u range_in,
-        const Range2u range_targ,
+    static constexpr Option<Range2u32> next_of_range(
+        const Range2u32 range_in,
+        const Range2u32 range_targ,
         const uint gsize
     ){
         const auto end_range = end_of_range(range_targ, gsize);
         if(range_in.stop >= end_range.stop) return None;
         const auto next_stop = MIN(range_in.stop + gsize, range_targ.stop);
         const auto remainder = next_stop % gsize;
-        if(remainder == 0) return Some(Range2u{next_stop - gsize , next_stop});
-        else return Some(Range2u{next_stop - remainder , next_stop});
+        if(remainder == 0) return Some(Range2u32{next_stop - gsize , next_stop});
+        else return Some(Range2u32{next_stop - remainder , next_stop});
     }
 
-    static constexpr Option<Range2u> prev_of_range(
-        const Range2u range_in,
-        const Range2u range_targ,
+    static constexpr Option<Range2u32> prev_of_range(
+        const Range2u32 range_in,
+        const Range2u32 range_targ,
         const uint gsize
     ){
         const auto begin_range = begin_of_range(range_targ, gsize);
         if(range_in.start <= begin_range.start) return None;
         const auto prev_start = MAX(range_in.start - gsize, range_targ.start);
         const auto remainder = prev_start % gsize;
-        return Some(Range2u(prev_start, prev_start - remainder + gsize));
+        return Some(Range2u32(prev_start, prev_start - remainder + gsize));
     }
 
-    const Range2u range_targ_;
+    const Range2u32 range_targ_;
     const uint32_t gsize_;
 };
 };

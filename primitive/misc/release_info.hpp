@@ -2,7 +2,7 @@
 
 #include "primitive/misc/build_date.hpp"
 #include "primitive/misc/author.hpp"
-#include "core/utils/serde.hpp"
+#include "core/utils/serde/serde.hpp"
 
 namespace ymd{
 
@@ -32,7 +32,7 @@ OutputStream & operator <<(OutputStream & os, const ReleaseVersion & self){
 }
 
 template<HashAlgo S>
-constexpr Hasher<S> & operator << (Hasher<S> & hs, const ReleaseVersion & self){
+constexpr HashBuilder<S> & operator << (HashBuilder<S> & hs, const ReleaseVersion & self){
     return hs << self.major << self.minor;
 }
 
@@ -62,7 +62,7 @@ OutputStream & operator <<(OutputStream & os, const ReleaseInfo & self){
 }
 
 template<HashAlgo S>
-constexpr Hasher<S> & operator << (Hasher<S> & hs, const ReleaseInfo & self){
+constexpr HashBuilder<S> & operator << (HashBuilder<S> & hs, const ReleaseInfo & self){
     return hs << self.author << self.version << self.date << self.time;
 }
 

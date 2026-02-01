@@ -10,8 +10,8 @@ struct [[nodiscard]] Rescaler {
     D offset;
 
     [[nodiscard]] static constexpr Rescaler from_input_and_output(
-        const Range2<auto> & input, 
-        const Range2<auto> & output
+        const math::Range2<auto> & input, 
+        const math::Range2<auto> & output
     ) {
         const auto [input_start, input_stop] = input;
         const auto [output_start, output_stop] = output;

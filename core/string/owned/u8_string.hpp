@@ -197,14 +197,14 @@ public:
     constexpr Utf8String& operator=(Utf8String&& other) noexcept = default;
 
     // 访问方法
-    constexpr const char* data() const noexcept { return ascii_str_.c_str(); }
+    constexpr const char* data() const noexcept { return ascii_str_.data(); }
     constexpr size_t size() const noexcept { return ascii_str_.size(); }
     constexpr size_t length() const noexcept { return ascii_str_.size(); }
     constexpr bool empty() const noexcept { return ascii_str_.empty(); }
-    constexpr const char* c_str() const noexcept { return ascii_str_.c_str(); }
+    constexpr const char* data() const noexcept { return ascii_str_.data(); }
     
     constexpr std::string_view view() const noexcept {
-        return std::string_view(ascii_str_.c_str(), ascii_str_.size());
+        return std::string_view(ascii_str_.data(), ascii_str_.size());
     }
 
     // 代码点访问
@@ -212,20 +212,20 @@ public:
         if (pos >= ascii_str_.size()) return Option<CodePoint>{};
         
         auto len_opt = utf8::code_point_length(
-            static_cast<uint8_t>(ascii_str_.c_str()[pos]));
+            static_cast<uint8_t>(ascii_str_.data()[pos]));
         if (!len_opt.is_some()) return Option<CodePoint>{};
         
         size_t len = len_opt.unwrap();
         if (pos + len > ascii_str_.size()) return Option<CodePoint>{};
         
-        return Option<CodePoint>{CodePoint(ascii_str_.c_str() + pos, len)};
+        return Option<CodePoint>{CodePoint(ascii_str_.data() + pos, len)};
     }
     
     constexpr size_t next_code_point_position(size_t pos) const noexcept {
         if (pos >= ascii_str_.size()) return ascii_str_.size();
         
         auto len_opt = utf8::code_point_length(
-            static_cast<uint8_t>(ascii_str_.c_str()[pos]));
+            static_cast<uint8_t>(ascii_str_.data()[pos]));
         if (!len_opt.is_some()) return ascii_str_.size();
         
         return pos + len_opt.unwrap();
@@ -236,7 +236,7 @@ public:
         size_t pos = 0;
         while (pos < ascii_str_.size()) {
             auto len_opt = utf8::code_point_length(
-                static_cast<uint8_t>(ascii_str_.c_str()[pos]));
+                static_cast<uint8_t>(ascii_str_.data()[pos]));
             if (!len_opt.is_some()) break;
             
             pos += len_opt.unwrap();
@@ -253,41 +253,17 @@ public:
     constexpr const_iterator cbegin() const { return const_iterator(this, 0); }
     constexpr const_iterator cend() const { return const_iterator(this, ascii_str_.size()); }
 
-    // 比较操作
-    constexpr bool operator==(const Utf8String& other) const noexcept {
-        return ascii_str_ == other.ascii_str_;
-    }
-    
-    constexpr bool operator!=(const Utf8String& other) const noexcept {
-        return !(*this == other);
-    }
-    
-    constexpr bool operator<(const Utf8String& other) const noexcept {
-        return std::strcmp(ascii_str_.c_str(), other.ascii_str_.c_str()) < 0;
-    }
-    
-    constexpr bool operator>(const Utf8String& other) const noexcept {
-        return other < *this;
-    }
-    
-    constexpr bool operator<=(const Utf8String& other) const noexcept {
-        return !(other < *this);
-    }
-    
-    constexpr bool operator>=(const Utf8String& other) const noexcept {
-        return !(*this < other);
-    }
 
     // 子字符串操作（返回Option确保安全）
     constexpr Option<Utf8String> substr(size_t pos, size_t count = std::string_view::npos) const noexcept {
         if (pos > ascii_str_.size()) return Option<Utf8String>{};
         
         size_t actual_count = std::min(count, ascii_str_.size() - pos);
-        std::string_view sv(ascii_str_.c_str() + pos, actual_count);
+        std::string_view sv(ascii_str_.data() + pos, actual_count);
         
         // 确保子字符串从有效的UTF-8边界开始
         if (pos > 0 && utf8::is_continuation_byte(
-            static_cast<uint8_t>(ascii_str_.c_str()[pos]))) {
+            static_cast<uint8_t>(ascii_str_.data()[pos]))) {
             return Option<Utf8String>{};
         }
         
@@ -302,7 +278,7 @@ public:
     // 查找操作
     constexpr Option<size_t> find(char c, size_t pos = 0) const noexcept {
         for (size_t i = pos; i < ascii_str_.size(); ++i) {
-            if (ascii_str_.c_str()[i] == c) {
+            if (ascii_str_.data()[i] == c) {
                 return Option<size_t>{i};
             }
         }
@@ -313,7 +289,7 @@ public:
         if (sv.empty() || pos > ascii_str_.size()) return Option<size_t>{};
         
         for (size_t i = pos; i <= ascii_str_.size() - sv.size(); ++i) {
-            if (std::memcmp(ascii_str_.c_str() + i, sv.data(), sv.size()) == 0) {
+            if (std::memcmp(ascii_str_.data() + i, sv.data(), sv.size()) == 0) {
                 return Option<size_t>{i};
             }
         }

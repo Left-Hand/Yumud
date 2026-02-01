@@ -10,9 +10,9 @@ using namespace ymd;
 
 template<typename T>
 struct TriangleSurface{
-    using Vec = Vec3<T>;
+    using Vec = math::Vec3<T>;
 
-    Vec3<T> v0, v1, v2;
+    math::Vec3<T> v0, v1, v2;
 
     template<typename U>
     constexpr TriangleSurface(const TriangleSurface<U> & other):
@@ -22,45 +22,45 @@ struct TriangleSurface{
         {;}
 
     constexpr TriangleSurface(
-        const Vec3<auto> _v0,
-        const Vec3<auto> _v1,
-        const Vec3<auto> _v2
+        const math::Vec3<auto> _v0,
+        const math::Vec3<auto> _v1,
+        const math::Vec3<auto> _v2
     ):
-        v0(static_cast<Vec3<T>>(_v0)), 
-        v1(static_cast<Vec3<T>>(_v1)), 
-        v2(static_cast<Vec3<T>>(_v2))
+        v0(static_cast<math::Vec3<T>>(_v0)), 
+        v1(static_cast<math::Vec3<T>>(_v1)), 
+        v2(static_cast<math::Vec3<T>>(_v2))
         {;}
 };
 
 
 template<typename T>
-struct CacheOf;
+struct PreComputedOf;
 
 template<typename T>
-struct CacheOf<TriangleSurface<T>> : public TriangleSurface<T>{
-    Vec3<T> normal;
+struct PreComputedOf<TriangleSurface<T>> : public TriangleSurface<T>{
+    math::Vec3<T> normal;
 
     template<typename U>
-    constexpr CacheOf<TriangleSurface<T>> (const TriangleSurface<U> & other):
+    constexpr PreComputedOf<TriangleSurface<T>> (const TriangleSurface<U> & other):
         TriangleSurface<T>(other),
         normal(calc_normal_from_points(
-            static_cast<Vec3<T>>(other.v0), 
-            static_cast<Vec3<T>>(other.v1), 
-            static_cast<Vec3<T>>(other.v2)
+            static_cast<math::Vec3<T>>(other.v0), 
+            static_cast<math::Vec3<T>>(other.v1), 
+            static_cast<math::Vec3<T>>(other.v2)
         )){;}
 
 private:
-    static constexpr UnitVec3<T> calc_normal_from_points(
-        const Vec3<T> & _v0,
-        const Vec3<T> & _v1,
-        const Vec3<T> & _v2
+    static constexpr math::UnitVec3<T> calc_normal_from_points(
+        const math::Vec3<T> & _v0,
+        const math::Vec3<T> & _v1,
+        const math::Vec3<T> & _v2
     ){
         return (_v1 - _v0).cross(_v2 - _v0).normalized();
     }
 };
 
 template<typename T>
-using TriangleSurfaceCache = CacheOf<TriangleSurface<T>>;
+using TriangleSurfaceCache = PreComputedOf<TriangleSurface<T>>;
 
 template<typename T>
 struct Intersection{
@@ -73,6 +73,6 @@ struct Interaction{
     int i;
     T t;
     const TriangleSurface<T> & surface;
-    Vec3<T> position;
-    Vec3<T> normal;
+    math::Vec3<T> position;
+    math::Vec3<T> normal;
 };

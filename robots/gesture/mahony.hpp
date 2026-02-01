@@ -8,8 +8,8 @@
 namespace ymd{
 class Mahony final{
 public:
-    using IQuat = Quat<iq24>;
-    using IV3 = Vec3<iq24>;
+    using IQuat = math::Quat<iq24>;
+    using IV3 = math::Vec3<iq24>;
 
 public:
     struct Config{

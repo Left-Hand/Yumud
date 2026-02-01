@@ -1,4 +1,4 @@
-#include "Interpolation.hpp"
+
 
 
 
@@ -14,17 +14,17 @@
 //         iq16(1.0f)/360,iq16(106.1f)/360,iq16(108.1f)/360, iq16(126.65f)/360, iq16(233.35f)/360,iq16(359.0f)/360,iq16(361.0f)/360
 //     };
 
-//     uint16_t tickPoints[7] = {
+//     uint16_t tick_points[7] = {
 //         0, 300, 400, 500, 2210, 2567, 2667 
 //     };
 
 //     int8_t i = 6;
 
-//     while((turnCnt < tickPoints[i]) && (i > -1))
+//     while((turnCnt < tick_points[i]) && (i > -1))
 //         i--;
     
-//     turnSolver.ta = tickPoints[i];
-//     turnSolver.tb = tickPoints[i + 1];
+//     turnSolver.ta = tick_points[i];
+//     turnSolver.tb = tick_points[i + 1];
 //     uint16_t dt = turnSolver.tb - turnSolver.ta;
 
 //     turnSolver.va = velPoints[i];

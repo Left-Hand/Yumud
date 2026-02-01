@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 #include "hal/gpio/gpio_intf.hpp"
@@ -142,7 +142,7 @@ struct LT8960L_Transport final:public details::LT8960L_Prelude{
         Some<hal::Gpio *> scl, 
         Some<hal::Gpio *> sda
     ):
-        i2c_(hal::I2cSw(scl, sda)){};
+        i2c_(hal::SoftI2c(scl, sda)){};
 
     [[nodiscard]] IResult<> init();
 
@@ -158,7 +158,7 @@ struct LT8960L_Transport final:public details::LT8960L_Prelude{
 
     [[nodiscard]] IResult<bool> check_and_skip_hw_listen_pkt();
 private:
-    hal::I2cSw i2c_;
+    hal::SoftI2c i2c_;
     [[nodiscard]] IResult<> _write_reg(uint8_t address, uint16_t data);
 
     [[nodiscard]] IResult<> _read_reg(uint8_t address, uint16_t & data);

@@ -15,7 +15,7 @@ using IResult = ST7789::IResult<T>;
 
 
 //判断刷新命令符必要性判断算法 以提高spi dma的吞吐率
-bool ST7789::ST7789_ReflashAlgo::update(const Rect2<uint16_t> rect){
+bool ST7789::ST7789_ReflashAlgo::update(const math::Rect2<uint16_t> rect){
     const auto now_pt_range = get_point_index(now_area_);
     const auto desired_pt_range = get_point_index(rect);
 
@@ -55,15 +55,15 @@ IResult<> ST7789::common_init(){
     return Ok();
 }
 
-IResult<> ST7789::setarea_unchecked(const Rect2<uint16_t> rect){
+IResult<> ST7789::setarea_unchecked(const math::Rect2<uint16_t> rect){
 
     #ifdef ST7789_EXPRIMENTAL_SKIP_EN
     bool need = algo_.update(rect);
     if(!need) return;
     #endif
 
-    const Vec2<uint16_t> p1 = offset_ + rect.top_left;
-    const Vec2<uint16_t> p2 = offset_ + rect.bottom_right() - Vec2<uint16_t>(1,1);
+    const math::Vec2<uint16_t> p1 = offset_ + rect.top_left;
+    const math::Vec2<uint16_t> p2 = offset_ + rect.bottom_right() - math::Vec2<uint16_t>(1,1);
 
     if(const auto res = write_command(0x2a);
         res.is_err()) return res;
@@ -83,7 +83,7 @@ IResult<> ST7789::setarea_unchecked(const Rect2<uint16_t> rect){
     return Ok();
 }
 
-IResult<> ST7789::setpos_unchecked(const Vec2<uint16_t> pos){
+IResult<> ST7789::setpos_unchecked(const math::Vec2<uint16_t> pos){
 
     #ifdef ST7789_EXPRIMENTAL_SKIP_EN
     bool need = algo_.update(rect);
@@ -106,7 +106,7 @@ IResult<> ST7789::setpos_unchecked(const Vec2<uint16_t> pos){
 
 
 
-IResult<> ST7789::putrect_unchecked(const Rect2<uint16_t> rect, const RGB565 color){
+IResult<> ST7789::putrect_unchecked(const math::Rect2<uint16_t> rect, const RGB565 color){
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
     if(const auto res = transport_.write_repeat_pixels(
@@ -115,7 +115,7 @@ IResult<> ST7789::putrect_unchecked(const Rect2<uint16_t> rect, const RGB565 col
     return Ok();
 }
 
-IResult<> ST7789::puttexture_unchecked(const Rect2<uint16_t> rect, const RGB565 * color_ptr){
+IResult<> ST7789::put_texture_unchecked(const math::Rect2<uint16_t> rect, const RGB565 * color_ptr){
     if(const auto res = setarea_unchecked(rect);
         res.is_err()) return res;
     if(const auto res = transport_.write_burst_pixels(
@@ -141,12 +141,22 @@ IResult<> ST7789::modify_ctrl_reg(const bool is_high,const uint8_t pos){
 
 ST7789_Prelude::IResult<void> st7789_preset::_320X170::advanced_init(ST7789 & displayer){
 
+    #if 0
     if(const auto res = displayer.enable_flip_x(DISEN);
         res.is_err()) return res;
     if(const auto res = displayer.enable_flip_y(EN);
         res.is_err()) return res;
     if(const auto res = displayer.enable_swap_xy(EN);
         res.is_err()) return res;
+    #else
+    if(const auto res = displayer.enable_flip_x(EN);
+        res.is_err()) return res;
+    if(const auto res = displayer.enable_flip_y(DISEN);
+        res.is_err()) return res;
+    if(const auto res = displayer.enable_swap_xy(EN);
+        res.is_err()) return res;
+
+    #endif
     if(const auto res = displayer.set_display_offset({0, 35}); 
         res.is_err()) return res;
     if(const auto res = displayer.enable_format_rgb(EN);

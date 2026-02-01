@@ -4,12 +4,13 @@
 #include "algebra/vectors/vec2.hpp"
 #include "algebra/regions/Rect2.hpp"
 #include "primitive/colors/rgb/rgb.hpp"
+#include "core/utils/nth.hpp"
 
 namespace ymd{
 
 
 template<typename Shape, typename Policy>
-struct CacheOf{
+struct PreComputedOf{
 
 };
 
@@ -19,11 +20,11 @@ struct BoundingBoxOf{
 };
 
 struct ScanLine{
-    Range2<uint16_t> x_range;
+    math::Range2<uint16_t> x_range;
     uint16_t y;
 
-    Rect2u16 bounding_box() const{
-        return Rect2u16(Vec2u16{x_range.start, y}, Vec2u16{x_range.length(), 1});
+    math::Rect2u16 bounding_box() const{
+        return math::Rect2u16(math::Vec2u16{x_range.start, y}, math::Vec2u16{x_range.length(), 1});
     }
 };
 
@@ -49,7 +50,7 @@ template<typename Shape>
 requires (is_placed_t<Shape>::value == false)
 struct WithPosition final{
     Shape shape;
-    Vec2<iq16> position;
+    math::Vec2<iq16> position;
 };
 
 
@@ -73,7 +74,7 @@ template<typename Shape>
 struct is_placed_t<WithPosition<Shape>>:std::true_type{};
 
 struct AddPosition{
-    Vec2<iq16> position;
+    math::Vec2<iq16> position;
 };
 
 struct AddStyle{
@@ -127,7 +128,7 @@ requires(Shape shape, const Shape& const_shape) {
 template<typename T>
 concept DrawTargetConcept = requires {
     typename T::Error;
-} && requires(T target, const Rect2u16 area) {
+} && requires(T target, const math::Rect2u16 area) {
     // 只检查方法存在性，不严格检查参数和返回类型
     target.fill_contiguous(area, std::declval<int>()); // 用具体类型测试
     target.fill_solid(area, std::declval<int>());
@@ -147,7 +148,7 @@ template<
     typename Shape
 >
 requires (is_placed_t<Shape>::value)
-struct DrawDispatchIterator final{
+struct RenderIterator final{
     // template<typename Target>
     // Result<void, Error> draw(Target & target) const{
     //     target.draw(shape_, style_);
@@ -167,7 +168,7 @@ struct CornerRadii final{
 
 template<typename Color>
 struct Pixel final{
-    Vec2u position;
+    math::Vec2u position;
     Color color;
 };
 

@@ -43,13 +43,15 @@ static inline void set_PRIMASK(bool en) {
 }
 
 [[nodiscard]] static inline uint32_t enter_critical() {
-    uint32_t primask = get_PRIMASK();
+    volatile uint32_t primask = get_PRIMASK();
+    cpu_core::disable_irq();
     cpu_core::disable_irq();
     return primask;
 }
 
 static inline void exit_critical(uint32_t priority_mask) {
     cpu_core::set_PRIMASK(priority_mask);
+    cpu_core::enable_irq();
 }
 }
 

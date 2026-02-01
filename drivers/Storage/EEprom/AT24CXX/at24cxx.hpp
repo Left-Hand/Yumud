@@ -170,7 +170,7 @@ private:
             const std::span<uint8_t> pbuf,
             const uint32_t gsize
         ):
-            iter_(RangeGridIter{{begin, begin + pbuf.size()}, gsize}),
+            iter_(math::RangeGridIter{{begin, begin + pbuf.size()}, gsize}),
             pbuf_(pbuf),
             operating_(iter_.begin())
         {;}
@@ -206,10 +206,10 @@ private:
             return no_next_block_ and is_oper_complete(now);
         }
     private:
-        const RangeGridIter iter_;
+        const math::RangeGridIter iter_;
         const std::span<uint8_t> pbuf_;
         Milliseconds last_time_ = 0ms;
-        Range2u operating_;
+        math::Range2u32 operating_;
         bool no_next_block_ = false;
     };
 
@@ -222,7 +222,7 @@ private:
             const std::span<const uint8_t> pbuf,
             const uint32_t gsize
         ):
-            iter_(RangeGridIter{{begin, begin + pbuf.size()}, gsize}),
+            iter_(math::RangeGridIter{{begin, begin + pbuf.size()}, gsize}),
             pbuf_(pbuf),
             operating_(iter_.begin())
         {;}
@@ -257,10 +257,10 @@ private:
             return no_next_block_ and is_oper_complete(now);
         }
     private:
-        const RangeGridIter iter_;
+        const math::RangeGridIter iter_;
         const std::span<const uint8_t> pbuf_;
         Milliseconds last_time_ = 0ms;
-        Range2u operating_;
+        math::Range2u32 operating_;
         bool no_next_block_ = false;
     };
 

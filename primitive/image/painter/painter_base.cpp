@@ -7,21 +7,21 @@ using namespace ymd;
 template<typename T = void>
 using IResult = PainterBase::IResult<T>;
 
-IResult<> PainterBase::draw_hollow_rect(const Rect2u & rect){
-    // Rect2u regular = rect.abs();
+IResult<> PainterBase::draw_hollow_rect(const math::Rect2u & rect){
+    // math::Rect2u regular = rect.abs();
     // if(!src_image -> get_view().intersects(regular)) return;
 
-    // Range2u x_range = regular.x_range();
-    // Range2u y_range = regular.y_range();
+    // math::Range2u x_range = regular.x_range();
+    // math::Range2u y_range = regular.y_range();
 
     // if(y_range.length() > 2){
     //     draw_hri_line(x_range, y_range.from);
     //     draw_hri_line(x_range, y_range.to - 1);
-    //     Range2u shrunk_y_range = y_range.grow(-1);
+    //     math::Range2u shrunk_y_range = y_range.grow(-1);
     //     drawVerLine(shrunk_y_range, x_range.from);
     //     drawVerLine(shrunk_y_range, x_range.to - 1);
     // }else{
-    //     drawFilledRect(Rect2u(x_range, y_range));
+    //     drawFilledRect(math::Rect2u(x_range, y_range));
     // }
 
     if(const auto res = draw_hri_line(rect.x_range(), rect.top_left.y);
@@ -37,9 +37,9 @@ IResult<> PainterBase::draw_hollow_rect(const Rect2u & rect){
 }
 
 
-IResult<> PainterBase::draw_hollow_circle(const Vec2u & pos, const uint radius){
+IResult<> PainterBase::draw_hollow_circle(const math::Vec2u & pos, const uint radius){
     if(false == 
-        Rect2u::from_center_and_halfsize(pos, Vec2u(radius, radius))
+        math::Rect2u::from_center_and_halfsize(pos, math::Vec2u(radius, radius))
         .intersects(this->get_expose_rect().unwrap())
     ) return Ok();
 
@@ -55,14 +55,14 @@ IResult<> PainterBase::draw_hollow_circle(const Vec2u & pos, const uint radius){
     int err=dx - 2 * radius;
 
     while (x>=y) {
-        this->putpixel_unchecked(Vec2u(x0-x, y0+y));
-        this->putpixel_unchecked(Vec2u(x0+x, y0+y));
-        this->putpixel_unchecked(Vec2u(x0-y, y0+x));
-        this->putpixel_unchecked(Vec2u(x0+y, y0+x));
-        this->putpixel_unchecked(Vec2u(x0-x, y0-y));
-        this->putpixel_unchecked(Vec2u(x0+x, y0-y));
-        this->putpixel_unchecked(Vec2u(x0-y, y0-x));
-        this->putpixel_unchecked(Vec2u(x0+y, y0-x));
+        this->put_pixel_unchecked(math::Vec2u(x0-x, y0+y));
+        this->put_pixel_unchecked(math::Vec2u(x0+x, y0+y));
+        this->put_pixel_unchecked(math::Vec2u(x0-y, y0+x));
+        this->put_pixel_unchecked(math::Vec2u(x0+y, y0+x));
+        this->put_pixel_unchecked(math::Vec2u(x0-x, y0-y));
+        this->put_pixel_unchecked(math::Vec2u(x0+x, y0-y));
+        this->put_pixel_unchecked(math::Vec2u(x0-y, y0-x));
+        this->put_pixel_unchecked(math::Vec2u(x0+y, y0-x));
 
         if (err<=0) {
             y++;
@@ -79,8 +79,8 @@ IResult<> PainterBase::draw_hollow_circle(const Vec2u & pos, const uint radius){
     return Ok();
 }
 
-IResult<> PainterBase::draw_filled_circle(const Vec2u & pos, const uint radius){
-    if(not Rect2u::from_center_and_halfsize(pos, Vec2u(radius, radius))
+IResult<> PainterBase::draw_filled_circle(const math::Vec2u & pos, const uint radius){
+    if(not math::Rect2u::from_center_and_halfsize(pos, math::Vec2u(radius, radius))
         .is_inside(get_expose_rect().unwrap())) return Ok();
     
 
@@ -88,7 +88,7 @@ IResult<> PainterBase::draw_filled_circle(const Vec2u & pos, const uint radius){
     if(radius == 0) return Ok();
 
     if(radius == 1){
-        putpixel_unchecked(pos);
+        put_pixel_unchecked(pos);
         return Ok();
     }
     int x0 = pos.x;
@@ -101,13 +101,13 @@ IResult<> PainterBase::draw_filled_circle(const Vec2u & pos, const uint radius){
 
     while (x>=y) {
         // if(src_image->has_point(x0 - y))
-        if(const auto res = draw_hri_line(Vec2u(x0 - x, y0 + y), 2*x);
+        if(const auto res = draw_hri_line(math::Vec2u(x0 - x, y0 + y), 2*x);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = draw_hri_line(Vec2u(x0 - y, y0 + x), 2*y);
+        if(const auto res = draw_hri_line(math::Vec2u(x0 - y, y0 + x), 2*y);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = draw_hri_line(Vec2u(x0 - x, y0 - y), 2*x);
+        if(const auto res = draw_hri_line(math::Vec2u(x0 - x, y0 - y), 2*x);
             res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = draw_hri_line(Vec2u(x0 - y, y0 - x), 2*y);
+        if(const auto res = draw_hri_line(math::Vec2u(x0 - y, y0 - x), 2*y);
             res.is_err()) return Err(res.unwrap_err());
     
         if (err<=0) {
@@ -126,12 +126,12 @@ IResult<> PainterBase::draw_filled_circle(const Vec2u & pos, const uint radius){
 }
 
 
-IResult<> PainterBase::draw_hollow_ellipse(const Vec2u & pos, const Vec2u & r) {
+IResult<> PainterBase::draw_hollow_ellipse(const math::Vec2u & pos, const math::Vec2u & r) {
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return draw_hollow_circle(pos, rx);
     if (!this->get_expose_rect().unwrap().
-        intersects(Rect2u::from_center_and_halfsize(pos, r))) return Ok();
+        intersects(math::Rect2u::from_center_and_halfsize(pos, r))) return Ok();
     if (rx<2 || ry<2 ) return Ok();
 
     int x0 = pos.x;
@@ -144,10 +144,10 @@ IResult<> PainterBase::draw_hollow_ellipse(const Vec2u & pos, const Vec2u & r) {
     int s;
 
     for (x = 0, y = ry, s = 2*ry2+rx2*(1-2*ry); ry2*x <= rx2*y; x++) {
-        putpixel_unchecked(Vec2u(x0 + x, y0 + y));
-        putpixel_unchecked(Vec2u(x0 - x, y0 + y));
-        putpixel_unchecked(Vec2u(x0 - x, y0 - y));
-        putpixel_unchecked(Vec2u(x0 + x, y0 - y));
+        put_pixel_unchecked(math::Vec2u(x0 + x, y0 + y));
+        put_pixel_unchecked(math::Vec2u(x0 - x, y0 + y));
+        put_pixel_unchecked(math::Vec2u(x0 - x, y0 - y));
+        put_pixel_unchecked(math::Vec2u(x0 + x, y0 - y));
         if (s >= 0) {
             s += fx2 * (1 - y);
             y--;
@@ -156,10 +156,10 @@ IResult<> PainterBase::draw_hollow_ellipse(const Vec2u & pos, const Vec2u & r) {
     }
 
     for (x = rx, y = 0, s = 2*rx2+ry2*(1-2*rx); rx2*y <= ry2*x; y++) {
-        putpixel_unchecked(Vec2u(x0 + x, y0 + y));
-        putpixel_unchecked(Vec2u(x0 - x, y0 + y));
-        putpixel_unchecked(Vec2u(x0 - x, y0 - y));
-        putpixel_unchecked(Vec2u(x0 + x, y0 - y));
+        put_pixel_unchecked(math::Vec2u(x0 + x, y0 + y));
+        put_pixel_unchecked(math::Vec2u(x0 - x, y0 + y));
+        put_pixel_unchecked(math::Vec2u(x0 - x, y0 - y));
+        put_pixel_unchecked(math::Vec2u(x0 + x, y0 - y));
         if (s >= 0)
         {
             s += fy2 * (1 - x);
@@ -171,7 +171,7 @@ IResult<> PainterBase::draw_hollow_ellipse(const Vec2u & pos, const Vec2u & r) {
     return Ok();
 }
 
-IResult<> PainterBase::draw_filled_ellipse(const Vec2u & pos, const Vec2u & r){
+IResult<> PainterBase::draw_filled_ellipse(const math::Vec2u & pos, const math::Vec2u & r){
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return draw_hollow_circle(pos, rx);
@@ -179,7 +179,7 @@ IResult<> PainterBase::draw_filled_ellipse(const Vec2u & pos, const Vec2u & r){
         (
             false == this->get_expose_rect()
             .unwrap()
-            .intersects(Rect2u::from_center_and_halfsize(pos, r))
+            .intersects(math::Rect2u::from_center_and_halfsize(pos, r))
         )
     ) 
         return Ok();
@@ -195,7 +195,7 @@ IResult<> PainterBase::draw_filled_ellipse(const Vec2u & pos, const Vec2u & r){
     int s;
 
     for (x = 0, y = ry, s = 2*ry2+rx2*(1-2*ry); ry2*x <= rx2*y; x++) {
-        Range2u x_range = Range2u(x0 - x, x0 + x + 1);
+        math::Range2u x_range = math::Range2u(x0 - x, x0 + x + 1);
         if(const auto res = draw_hri_line(x_range, y0 - y); res.is_err()) return res;
         if(const auto res = draw_hri_line(x_range, y0 + y); res.is_err()) return res;
 
@@ -207,7 +207,7 @@ IResult<> PainterBase::draw_filled_ellipse(const Vec2u & pos, const Vec2u & r){
     }
 
     for (x = rx, y = 0, s = 2*rx2+ry2*(1-2*rx); rx2*y <= ry2*x; y++) {
-        Range2u x_range = Range2u(x0 - x, x0 + x + 1);
+        math::Range2u x_range = math::Range2u(x0 - x, x0 + x + 1);
         if(const auto res = draw_hri_line(x_range, y0 - y); res.is_err()) return res;
         if(const auto res = draw_hri_line(x_range, y0 + y); res.is_err()) return res;
 
@@ -222,7 +222,7 @@ IResult<> PainterBase::draw_filled_ellipse(const Vec2u & pos, const Vec2u & r){
 }
 
 
-IResult<> PainterBase::draw_polyline(const std::span<const Vec2u> points){
+IResult<> PainterBase::draw_polyline(const std::span<const math::Vec2u> points){
     const auto count = points.size();
     for(size_t i = 0; i < count-1; i++){
         const auto res = draw_line(points[i], points[i + 1]);
@@ -232,7 +232,7 @@ IResult<> PainterBase::draw_polyline(const std::span<const Vec2u> points){
 }
 
 
-IResult<> PainterBase::draw_polygon(const std::span<const Vec2u> points){
+IResult<> PainterBase::draw_polygon(const std::span<const math::Vec2u> points){
     const auto count = points.size();
     if(const auto res = draw_polyline(points);
         res.is_err()) return Err(res.unwrap_err());
@@ -241,14 +241,14 @@ IResult<> PainterBase::draw_polygon(const std::span<const Vec2u> points){
     return Ok();
 }
 
-IResult<> PainterBase::draw_hollow_triangle(const Vec2u & p0,const Vec2u & p1,const Vec2u & p2){
+IResult<> PainterBase::draw_hollow_triangle(const math::Vec2u & p0,const math::Vec2u & p1,const math::Vec2u & p2){
     if(const auto res = draw_line(p0, p1); res.is_err()) return res;
     if(const auto res = draw_line(p1, p2); res.is_err()) return res;
     if(const auto res = draw_line(p0, p2); res.is_err()) return res;
     return Ok();
 }
 
-IResult<> PainterBase::draw_filled_triangle(const Vec2u & p0,const Vec2u & p1,const Vec2u & p2){
+IResult<> PainterBase::draw_filled_triangle(const math::Vec2u & p0,const math::Vec2u & p1,const math::Vec2u & p2){
     int a, b, last;
     int x0 = p0.x;
     int y0 = p0.y;
@@ -276,7 +276,7 @@ IResult<> PainterBase::draw_filled_triangle(const Vec2u & p0,const Vec2u & p1,co
         else if (x1 > b) b = x1;
         if (x2 < a)      a = x2;
         else if (x2 > b) b = x2;
-        if(const auto res = draw_hri_line(Range2u(a, b + 1), y0); res.is_err()) return res;
+        if(const auto res = draw_hri_line(math::Range2u(a, b + 1), y0); res.is_err()) return res;
         return Ok();
     }
 
@@ -300,7 +300,7 @@ IResult<> PainterBase::draw_filled_triangle(const Vec2u & p0,const Vec2u & p1,co
         sb += dx02;
 
         if (a > b) SWAP(a, b);
-        if(const auto res = draw_hri_line(Range2u(a, b + 1), y); res.is_err()) return res;
+        if(const auto res = draw_hri_line(math::Range2u(a, b + 1), y); res.is_err()) return res;
     }
 
     sa = dx12 * (y - y1);
@@ -312,38 +312,38 @@ IResult<> PainterBase::draw_filled_triangle(const Vec2u & p0,const Vec2u & p1,co
         sb += dx02;
 
         if (a > b) SWAP(a, b);
-        if(const auto res = draw_hri_line(Range2u(a, b + 1), y); res.is_err()) return res;
+        if(const auto res = draw_hri_line(math::Range2u(a, b + 1), y); res.is_err()) return res;
     }
 
     return Ok();
 }
 
-IResult<> PainterBase::draw_roi(const Rect2u & rect){
-    Vec2u center = rect.center();
+IResult<> PainterBase::draw_roi(const math::Rect2u & rect){
+    math::Vec2u center = rect.center();
     if(const auto res = draw_hollow_rect(rect); res.is_err()) return res;
-    if(const auto res = draw_hri_line(center+Vec2u(-2,0), 5); res.is_err()) return res;
-    if(const auto res = draw_ver_line(center+Vec2u(0,-2), 5); res.is_err()) return res;
+    if(const auto res = draw_hri_line(center+math::Vec2u(-2,0), 5); res.is_err()) return res;
+    if(const auto res = draw_ver_line(center+math::Vec2u(0,-2), 5); res.is_err()) return res;
 
     return Ok();
 }
 
 
-IResult<> PainterBase::draw_hri_line(const Vec2u & pos,const int l){
-    const auto ins = Rect2u(pos, Vec2u(l, 1));
+IResult<> PainterBase::draw_hri_line(const math::Vec2u & pos,const int l){
+    const auto ins = math::Rect2u(pos, math::Vec2u(l, 1));
     if(ins.area() == 0) return Err(Error::AreaNotExist);
     return draw_filled_rect(ins);
 }
-IResult<> PainterBase::draw_ver_line(const Vec2u & pos,const int l){
-    const auto ins = Rect2u(pos, Vec2u(1, l));
+IResult<> PainterBase::draw_ver_line(const math::Vec2u & pos,const int l){
+    const auto ins = math::Rect2u(pos, math::Vec2u(1, l));
     if(ins.area() == 0) return Err(Error::AreaNotExist);
     return draw_filled_rect(ins);
 }
-IResult<> PainterBase::draw_ver_line(const Range2u & y_range, const int x){
+IResult<> PainterBase::draw_ver_line(const math::Range2u & y_range, const int x){
     const auto y_range_regular = y_range.abs();
-    return draw_ver_line(Vec2u(x, y_range_regular.start), y_range_regular.length());
+    return draw_ver_line(math::Vec2u(x, y_range_regular.start), y_range_regular.length());
 }
 
-IResult<> PainterBase::draw_hri_line(const Range2u & x_range, const int y){
+IResult<> PainterBase::draw_hri_line(const math::Range2u & x_range, const int y){
     const auto x_range_regular = x_range.abs();
-    return draw_hri_line(Vec2u(x_range_regular.start, y), x_range_regular.length());
+    return draw_hri_line(math::Vec2u(x_range_regular.start, y), x_range_regular.length());
 }

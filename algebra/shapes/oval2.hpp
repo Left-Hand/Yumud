@@ -5,57 +5,55 @@
 namespace ymd{
 
 
-    
-
 template<arithmetic T>
 struct HorizonOval2{
-	Vec2<T> left_center;
+	math::Vec2<T> left_center;
 	T radius;
 	T length;
 
-	static constexpr Option<HorizonOval2<T>> try_from_bounding_box(const Rect2<T> bb){
+	static constexpr Option<HorizonOval2<T>> try_from_bounding_box(const math::Rect2<T> bb){
 		const T h = bb.h();
 		const T w = bb.w();
 		if(w < h) return None;
 		const T radius = static_cast<T>(h / 2);
 		const T length = static_cast<T>(w - h);
-		const auto left_center = bb.top_left + Vec2<T>(radius, radius);
+		const auto left_center = bb.top_left + math::Vec2<T>(radius, radius);
 		return Some(HorizonOval2<T>{
 			.left_center = left_center,
 			.radius = radius,
 			.length = length
 		});
 	}
-	__fast_inline constexpr Rect2<T> bounding_box() const {
-		const auto top_left = left_center + Vec2<T>(-radius, -radius);
-		const auto size = Vec2<T>(radius * 2 + length, radius * 2);
-		return Rect2<T>{top_left, size};
+	__fast_inline constexpr math::Rect2<T> bounding_box() const {
+		const auto top_left = left_center + math::Vec2<T>(-radius, -radius);
+		const auto size = math::Vec2<T>(radius * 2 + length, radius * 2);
+		return math::Rect2<T>{top_left, size};
 	}
 };
 
 template<arithmetic T>
 struct VerticalOval2{
-	Vec2<T> top_center;
+	math::Vec2<T> top_center;
 	T radius;
 	T length;
 
-	static constexpr Option<VerticalOval2<T>> from_bounding_box(const Rect2<T> bb){
+	static constexpr Option<VerticalOval2<T>> from_bounding_box(const math::Rect2<T> bb){
 		const T h = bb.h();
 		const T w = bb.w();
 		if(h < w) return None;
 		const T radius = static_cast<T>(w / 2);
 		const T length = static_cast<T>(h - w);
-		const Vec2<T> top_center = bb.top_left + Vec2<T>{radius, radius};
+		const math::Vec2<T> top_center = bb.top_left + math::Vec2<T>{radius, radius};
 		return Some(VerticalOval2<T>{
 			.top_center = top_center,
 			.radius = radius,
 			.length = length
 		});
 	}
-	__fast_inline constexpr Rect2<T> bounding_box() const {
-		const auto top_left = top_center + Vec2<T>(-radius, -radius);
-		const auto size = Vec2<T>(radius * 2, radius * 2 + length);
-		return Rect2<T>{top_left, size};
+	__fast_inline constexpr math::Rect2<T> bounding_box() const {
+		const auto top_left = top_center + math::Vec2<T>(-radius, -radius);
+		const auto size = math::Vec2<T>(radius * 2, radius * 2 + length);
+		return math::Rect2<T>{top_left, size};
 	}
 };
 
@@ -107,9 +105,9 @@ public:
         return y_ < y_range_.stop;
     }
 
-    constexpr Range2u16 x_range() const{
+    constexpr math::Range2u16 x_range() const{
         if(get_y_overhit()){
-            return Range2u16::from_start_and_stop_unchecked(
+            return math::Range2u16::from_start_and_stop_unchecked(
                 static_cast<uint16_t>(x0_ + x_offset_),
                 static_cast<uint16_t>(x0_ - x_offset_)
             );
@@ -118,15 +116,15 @@ public:
         }
     }
 
-    constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
+    constexpr std::tuple<math::Range2u16, math::Range2u16> left_and_right() const {
         const auto [left, right] = x_range();
 
-        return {Range2u16{left, left + 1}, Range2u16{right - 1, right}};
+        return {math::Range2u16{left, left + 1}, math::Range2u16{right - 1, right}};
     }
 
 private:
-    Range2<uint16_t> x_range_;
-    Range2<uint16_t> y_range_;
+    math::Range2<uint16_t> x_range_;
+    math::Range2<uint16_t> y_range_;
     uint16_t y_;
     uint16_t x0_;
     uint16_t radius_;
@@ -192,12 +190,12 @@ private:
 
 
 template<std::integral T>
-struct DrawDispatchIterator<HorizonOval2<T>> {
+struct RenderIterator<HorizonOval2<T>> {
     using Shape = HorizonOval2<T>;
     using Iterator = CircleBresenhamIterator<T>;
 
-    constexpr DrawDispatchIterator(const Shape & shape)
-        : iter_(Circle2<T>{.center = shape.left_center, .radius = shape.radius}),
+    constexpr RenderIterator(const Shape & shape)
+        : iter_(math::Circle2<T>{.center = shape.left_center, .radius = shape.radius}),
             length_(shape.length){}
 
     // 检查是否还有下一行
@@ -206,7 +204,7 @@ struct DrawDispatchIterator<HorizonOval2<T>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         iter_.advance();
     }
 
@@ -215,7 +213,8 @@ struct DrawDispatchIterator<HorizonOval2<T>> {
     Result<void, typename Target::Error> draw_filled(Target& target, const Color& color) {
         // 绘制当前行的范围
         const auto x_range = iter_.x_range();
-        if(auto res = target.fill_x_range({x_range.start, x_range.stop + length_}, color);
+        const uint16_t x_start = static_cast<uint16_t>(std::max<int32_t>(x_range.start, 0));
+        if(auto res = target.fill_x_range({x_start, x_range.stop + length_}, color);
             res.is_err()) return res;
         
         return Ok();
@@ -249,11 +248,11 @@ private:
 
 
 template<std::integral T>
-struct DrawDispatchIterator<VerticalOval2<T>> {
+struct RenderIterator<VerticalOval2<T>> {
     using Shape = VerticalOval2<T>;
     using Iterator = VerticalOval2SliceIterator<T>;
 
-    constexpr DrawDispatchIterator(const Shape & shape)
+    constexpr RenderIterator(const Shape & shape)
         : iter_(shape){;}
 
     // 检查是否还有下一行
@@ -262,7 +261,7 @@ struct DrawDispatchIterator<VerticalOval2<T>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         iter_.advance();
     }
 

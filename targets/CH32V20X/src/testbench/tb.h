@@ -199,3 +199,5 @@ void sincospll_main();
 void cap_main();
 void stl06n_main();
 void o1heap_main();
+void lidar_visualize_main();
+void winter_mc_tutorial_main();

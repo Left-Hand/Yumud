@@ -2,8 +2,8 @@
 
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
@@ -51,7 +51,7 @@ void pca_tb(OutputStream & logger){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
 
-    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
 
     static constexpr int servo_freq = 50;
     

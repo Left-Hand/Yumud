@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "hal/bus/uart/uart.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/sumtype.hpp"
 #include "algebra/vectors/polar.hpp"
@@ -100,8 +100,8 @@ struct [[nodiscard]] LidarSector final{
             return index_ < sector_.distances.size();
         }
 
-        constexpr Polar<uq24> next(){
-            const auto ret = Polar<uq24>{
+        constexpr math::Polar<uq24> next(){
+            const auto ret = math::Polar<uq24>{
                 .amplitude = sector_.distances[index_].to_meters(),
                 .phase = Angular<uq24>::from_turns(current_turns_)
             };

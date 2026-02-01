@@ -4,7 +4,7 @@
 #include "core/math/realmath.hpp"
 #include "core/utils/default.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
@@ -12,7 +12,7 @@
 #include "drivers/IMU/Magnetometer/AK8963/AK8963.hpp"
 
 #include "robots/gesture/mahony.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
@@ -149,7 +149,7 @@ using namespace ymd::drivers;
             // DEBUG_PRINTLN(mahony.result());
             DEBUG_PRINTLN(
                 mahony.rotation(), 
-                // Quat<real_t>(Vec3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
+                // Quat<real_t>(math::Vec3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
                 end_us - begin_us
             );
             break;
@@ -172,7 +172,7 @@ void mpu6050_main(){
     DEBUGGER.no_brackets(EN);
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
     // i2c.init(400_KHz);
     i2c.init({
         .baudrate = hal::NearestFreq(400_KHz)

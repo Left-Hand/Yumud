@@ -6,12 +6,14 @@
 #include "algebra/vectors/vec3.hpp"
 #include "algebra/vectors/quat.hpp"
 
+using namespace ymd;
+
 template<arithmetic T>
 constexpr
 auto build_norm_vec3_from_quat(
     const T x, const T y, const T z, const T w){
 
-    return Vec3(
+    return math::Vec3<T>(
         Norm(2 * (qconv(Nrom_t(x) , Norm(z) , Norm(- w), Nrom_t(y)))),
         Norm(2 * (qconv(Nrom_t(w) , Norm(x) , Norm(y  ), Nrom_t(z)))),
         Norm(fconv(qsqu(Norm(w)) - qsqu(Norm(x)) - qsqu(Norm(y)) + qsau(Norm(z))))

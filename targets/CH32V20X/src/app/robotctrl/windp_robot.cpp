@@ -10,8 +10,8 @@
 
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/timer/bipolarity_abstract.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio.hpp"
 
 #include "algebra/regions/range2.hpp"
@@ -93,7 +93,7 @@ private:
 
 class RobotDynamics{
 
-    void move(const Vec2<iq16> dir){
+    void move(const math::Vec2<iq16> dir){
         static iq16 left = 0;
         static iq16 right = 0;
 
@@ -111,12 +111,12 @@ static constexpr iq16 DELTA = 0.01_iq16;
 template<typename Derived>
 struct TaskBase{
     struct Measurements{
-        Vec2<iq16> angular_accel;
-        Vec2<iq16> omega;
-        Vec2<iq16> orientation;
+        math::Vec2<iq16> angular_accel;
+        math::Vec2<iq16> omega;
+        math::Vec2<iq16> orientation;
     };
 
-    using Output = Vec2<iq16>;
+    using Output = math::Vec2<iq16>;
 };
 
 struct TaskCenter:public TaskBase<TaskCenter>{
@@ -137,7 +137,7 @@ struct TaskCircle:public TaskBase<TaskCircle>{
     constexpr Output calc(const Measurements meas) const {
         using namespace PhysicalConstants;
 
-        const auto vec_norm = Vec2<iq16>(meas.orientation.normalized());//计算当前摆杆姿态的法向量
+        const auto vec_norm = math::Vec2<iq16>(meas.orientation.normalized());//计算当前摆杆姿态的法向量
         const auto vec_tan = vec_norm.rotated(90_deg);//计算当前摆杆姿态的切向量
         
         const iq16 cmd_theta = math::atan2(W, H);
@@ -168,12 +168,12 @@ struct TaskLine:public TaskBase<TaskLine>{
         const auto angular_accel = meas.angular_accel; 
         const auto omega = meas.omega;
 
-        const Vec2 vec_norm = Vec2(0.0_iq16, 1.0_iq16).rotated(theta);
-        const Vec2 vec_tan = Vec2(1.0_iq16, 0.0_iq16).rotated(theta);
+        const math::Vec2 vec_norm = math::Vec2(0.0_iq16, 1.0_iq16).rotated(theta);
+        const math::Vec2 vec_tan = math::Vec2(1.0_iq16, 0.0_iq16).rotated(theta);
         
         const iq16 d1 = meas.omega.cross(vec_tan);
         const iq16 d2 = meas.angular_accel.cross(vec_tan);
-        const Vec2 out_norm = (0.027_iq16*d2 + 0.37_iq16*d1)*vec_norm;
+        const math::Vec2 out_norm = (0.027_iq16*d2 + 0.37_iq16*d1)*vec_norm;
 
         const iq16 E_targ = M * G * x * (1.0_iq16 - H / math::sqrt(H*H + W*W));
         
@@ -181,7 +181,7 @@ struct TaskLine:public TaskBase<TaskLine>{
         const iq16 E_k = 0.5_iq16 * J * (omega.project(vec_tan)).length_squared();
         const iq16 E = E_p + E_k;
 
-        const Vec2 out_tan = 15_iq16*(E_targ - E + 0.00037_iq16*math::abs(angular_accel.dot(vec_tan))) 
+        const math::Vec2 out_tan = 15_iq16*(E_targ - E + 0.00037_iq16*math::abs(angular_accel.dot(vec_tan))) 
             * vec_tan * math::sign(omega.dot(vec_tan));
 
         return out_norm + out_tan;

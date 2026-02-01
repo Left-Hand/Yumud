@@ -5,6 +5,8 @@
 
 namespace ymd{
 namespace details{
+
+
 template<typename T, size_t R, size_t C>
 struct JacobiSVD {
 private:
@@ -12,12 +14,12 @@ private:
     static constexpr T epsilon = static_cast<T>(1e-6);
 public:
     struct Solution{
-        Matrix<T, R, R> U;
-        Matrix<T, K, 1> sigma;
-        Matrix<T, C, C> V;
+        math::Matrix<T, R, R> U;
+        math::Matrix<T, K, 1> sigma;
+        math::Matrix<T, C, C> V;
     };
 
-    explicit constexpr JacobiSVD(const Matrix<T, R, C> & matrix, size_t max_iterations) {
+    explicit constexpr JacobiSVD(const math::Matrix<T, R, C> & matrix, size_t max_iterations) {
         compute(matrix, max_iterations);
     }
     
@@ -25,16 +27,16 @@ public:
      * 计算矩阵的SVD分解
      * 使用双边雅可比方法：通过左右旋转同时对角化矩阵
      */
-    constexpr void compute(const Matrix<T, R, C>& matrix, size_t max_iterations) {
+    constexpr void compute(const math::Matrix<T, R, C>& matrix, size_t max_iterations) {
         // 初始化U为单位矩阵，V为单位矩阵，B为输入矩阵
-        Matrix<T, R, C> B = matrix;
+        math::Matrix<T, R, C> B = matrix;
         
         // T epsilon = std::sqrt(std::numeric_limits<T>::epsilon());
 
         bool converged = false;
         
         // 主迭代循环
-        for (size_t iter = 0; iter < max_iterations && !converged; iter++) {
+        for (size_t i = 0; i < max_iterations && !converged; i++) {
             converged = true;
             T max_off_diag = 0;
             
@@ -97,7 +99,7 @@ private:
      * 返回: (左旋转余弦, 左旋转正弦, 右旋转余弦, 右旋转正弦)
      */
     static constexpr std::tuple<T, T, T, T> compute2x2_svd_rotation(
-        const Matrix<T, R, C>& B, size_t p, size_t q) {
+        const math::Matrix<T, R, C>& B, size_t p, size_t q) {
         
         // 提取2x2子矩阵元素
         T a00 = B(p, p), a01 = B(p, q);
@@ -147,9 +149,9 @@ private:
      * 应用双边雅可比旋转
      */
     static constexpr void apply_bilateral_rotation(
-        Matrix<T, R, C>& B, 
-        Matrix<T, R, R>& U,
-        Matrix<T, C, C>& V,
+        math::Matrix<T, R, C>& B, 
+        math::Matrix<T, R, R>& U,
+        math::Matrix<T, C, C>& V,
         size_t p, size_t q,
         T c_left, T s_left, T c_right, T s_right) {
         
@@ -189,7 +191,7 @@ private:
     /**
      * 调整符号以确保奇异值为非负
      */
-    constexpr void adjust_signs(Matrix<T, R, C>& B, Matrix<T, K, 1>& sigma) {
+    constexpr void adjust_signs(math::Matrix<T, R, C>& B, math::Matrix<T, K, 1>& sigma) {
         for (size_t i = 0; i < K; i++) {
             if (B(i, i) < 0) {
                 sigma.at(i, 0) = -B(i, i);
@@ -206,7 +208,7 @@ private:
     /**
      * 对奇异值进行排序（降序）
      */
-    constexpr void sort_singular_values(Matrix<T, R, C>& B) {
+    constexpr void sort_singular_values(math::Matrix<T, R, C>& B) {
         for (size_t i = 0; i < K; i++) {
             size_t max_index = i;
             T max_value = sigma_.at(i, 0);
@@ -238,16 +240,16 @@ private:
     }
 
 private:
-    Matrix<T, R, R> U_          = Matrix<T, R, R>::identity();      // 左奇异向量矩阵
-    Matrix<T, K, 1> sigma_      = Matrix<T, K, 1>::zero();  // 奇异值向量
-    Matrix<T, C, C> V_          = Matrix<T, C, C>::identity();      // 右奇异向量矩阵
+    math::Matrix<T, R, R> U_          = math::Matrix<T, R, R>::identity();      // 左奇异向量矩阵
+    math::Matrix<T, K, 1> sigma_      = math::Matrix<T, K, 1>::zero();  // 奇异值向量
+    math::Matrix<T, C, C> V_          = math::Matrix<T, C, C>::identity();      // 右奇异向量矩阵
 
 
     bool is_computed_ = false;        // 计算完成标志
 };
 }
 template<typename T, size_t R, size_t C, typename S = details::JacobiSVD<T, R, C>::Solution>
-Option<S> solve_jacobi_svd(const Matrix<T, R, C> & matrix, size_t max_iterations) {
+Option<S> solve_jacobi_svd(const math::Matrix<T, R, C> & matrix, size_t max_iterations) {
     return details::JacobiSVD<T, R, C>(matrix, max_iterations).solution();
 }
 

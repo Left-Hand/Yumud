@@ -14,7 +14,7 @@ cd_write(REG_DIV_HS_L, 2); // 4 Mbps @ 12MHz sysclk
 cd_write(REG_DIV_HS_H, 0);
 // cd_write(REG_RX_CTRL, 0x11); // Reset RX buffers and flags (optional)
 // Enable interrupts (optional)
-// cd_write(REG_INT_MASK, BIT_FLAG_TX_ERROR | BIT_FLAG_RX_ERROR \
+// cd_write(REG_INT_MASK, BIT_FLAG_TX_ERROR | BIT_FLAG_RX_ERROR
 | BIT_FLAG_RX_LOST | BIT_FLAG_RX_PENDING);
 #endif
 

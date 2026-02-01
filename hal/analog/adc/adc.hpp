@@ -1,10 +1,9 @@
 #pragma once
 
-#include "core/platform.hpp"
 #include <initializer_list>
 #include "hal/sysmisc/nvic/nvic.hpp"
-#include "regular_channel.hpp"
-#include "injected_channel.hpp"
+#include "channels/regular_channel.hpp"
+#include "channels/injected_channel.hpp"
 #include "adc_utils.hpp"
 
 #if defined(ADC1_PRESENT) || defined(ADC2_PRESENT)

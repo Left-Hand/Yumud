@@ -8,9 +8,9 @@
 #include "core/string/owned/heapless_string.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 #include "primitive/image/painter/painter.hpp"
 #include "primitive/colors/rgb/rgb.hpp"
@@ -54,6 +54,9 @@ private:
 
 template<typename T>
 using DestringResult = strconv2::DestringResult<T>;
+
+
+#if 0
 
 template<typename T>
 struct StringEntitySeeker{
@@ -103,6 +106,9 @@ struct StringEntitySeeker<StringView>{
         return Ok(std::make_tuple(left, right));
     }
 };
+
+#endif
+
 // struct StringDeformatIterator{
 //     template<typename T>
 //     using DestringResult = strconv2::DestringResult;

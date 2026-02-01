@@ -1,7 +1,7 @@
 #include "zdt_stepper_transport.hpp"
 
 #include "hal/bus/can/can.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 
 using namespace ymd;

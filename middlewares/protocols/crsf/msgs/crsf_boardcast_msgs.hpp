@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../crsf_primitive.hpp"
+#include "../crsf_packed_code.hpp"
 
 #include "../compatible/crsf_mav_compatible_primitive.hpp"
 

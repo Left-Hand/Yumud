@@ -117,7 +117,7 @@ void host_main(){
 
     DEBUG_PRINTLN(std::setprecision(4), "poweron");
 
-    auto i2c = I2cSw{hal::PD<2>(), hal::PC<12>()};
+    auto i2c = SoftI2c{hal::PD<2>(), hal::PC<12>()};
     i2c.init(3400_KHz);
     auto config = create_default_config();
 
@@ -388,7 +388,7 @@ void host_main(){
                 auto pos = Vec2(0, 0.19_r) + Vec2(0.10_r, 0).rotated(time());
                 auto height = LERP(0.12_r, 0.17_r, (sin(time()) + 1) >> 1);
 
-                grab_module.rapid(Vec3(pos.x, pos.y, height));
+                grab_module.rapid(math::Vec3(pos.x, pos.y, height));
 
                 auto p3 = grab_module.getPos();
                 DEBUG_PRINTLN(pos.x, pos.y, height, p3.x, p3.y, p3.z);
@@ -404,7 +404,7 @@ void host_main(){
             grab_module.init();
             // getline(logger);
             // size_t i = 0;
-            // static constexpr auto pos_arr = std::to_array<Vec3>({
+            // static constexpr auto pos_arr = std::to_array<math::Vec3>({
             //     {0.02_r, 0.2_r, 0.12_r},
             //     {-0.04_r, 0.2_r, 0.12_r},
             //     {-0.09_r, 0.2_r, 0.12_r},
@@ -642,8 +642,8 @@ void host_main(){
                 acc_gyr_sensor_.update();
                 mag_sensor_.update();
 
-                const auto gyr3_raw = Vec3{acc_gyr_sensor_.read_gyr()};
-                const auto mag3_raw = Vec3{mag_sensor_.read_mag()};
+                const auto gyr3_raw = math::Vec3{acc_gyr_sensor_.read_gyr()};
+                const auto mag3_raw = math::Vec3{mag_sensor_.read_mag()};
 
                 const auto rot_raw = -atan2(mag3_raw.y, mag3_raw.x);
                 const auto gyr_raw = gyr3_raw.z;
@@ -711,7 +711,7 @@ void host_main(){
                 // can_master.update();
                 acc_gyr_sensor_.update();
         
-                ang += Vec3(acc_gyr_sensor_.read_gyr()).z * 0.005_r;
+                ang += math::Vec3(acc_gyr_sensor_.read_gyr()).z * 0.005_r;
                 // auto delta = solver.inverse(Vec2{0.4_r*sin(t), 0}, 0);
 
                 // static constexpr real_t delta = {0.003_r};

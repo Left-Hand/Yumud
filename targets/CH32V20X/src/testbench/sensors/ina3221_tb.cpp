@@ -2,8 +2,8 @@
 
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Adc/INA3221/ina3221.hpp"
@@ -33,7 +33,7 @@ void ina3221_main(){
 
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    auto i2c = hal::I2cSw(&scl_pin_, &sda_pin_);
+    auto i2c = hal::SoftI2c(&scl_pin_, &sda_pin_);
     i2c.init({hal::NearestFreq(1200_KHz)});
 
     INA3221 ina{&i2c};

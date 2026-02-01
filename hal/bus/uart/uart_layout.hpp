@@ -1,6 +1,8 @@
 #pragma once
 
 #include "primitive/gpio/pin_source.hpp"
+#include "hal/dma/hw_singleton.hpp"
+
 
 #define USART1_TX_DMA_CH hal::dma1_ch4
 #define USART1_RX_DMA_CH hal::dma1_ch5

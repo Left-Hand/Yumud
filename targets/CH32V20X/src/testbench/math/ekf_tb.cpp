@@ -3,7 +3,7 @@
 #include "core/clock/time.hpp"
 
 #include "dsp/filter/EKF.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 // #include "kalman/kalman3.hpp"
 
 // #define UART usart2

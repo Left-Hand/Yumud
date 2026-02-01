@@ -8,11 +8,11 @@
 #include "core/utils/default.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/timer/bipolarity_abstract.hpp"
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/uart/uartsw.hpp"
+#include "hal/bus/uart/soft/soft_uart.hpp"
 
 
 #include "dsp/filter/butterworth/side.hpp"

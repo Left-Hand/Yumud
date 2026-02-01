@@ -4,8 +4,8 @@
 
 namespace ymd::intp{
 
-class QuadraticInterpolation{
-    Vec2<iq16> handle_point;
+struct QuadraticInterpolation final{
+    math::Vec2<iq16> handle_point;
     constexpr iq16 operator()(const iq16 x){
     // adapted from BEZMATH.PS (1993)
     // by Don Lancaster, SYNERGETICS Inc. 

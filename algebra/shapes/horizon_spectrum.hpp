@@ -6,26 +6,26 @@ namespace ymd{
 
 template<typename T, typename D>
 struct HorizonSpectrum{
-    Vec2<T> top_left;
-    Vec2<T> cell_size;
+    math::Vec2<T> top_left;
+    math::Vec2<T> cell_size;
     T spacing;
     std::span<const D> samples;
-    Range2<D> sample_range;
+    math::Range2<D> sample_range;
 
     [[nodiscard]] constexpr 
-    Range2<T> y_range(const Nth nth) const {
+    math::Range2<T> y_range(const Nth nth) const {
         const auto y_stop = top_left.y + cell_size.y;
         // const auto y_top = top_left.y;
         const auto data_height = sample_range.invlerp(samples[nth.count()]) * cell_size.y;
         const auto y_start = y_stop - data_height;
-        return Range2<T>{y_start, y_stop};
+        return math::Range2<T>{y_start, y_stop};
     }
 
     [[nodiscard]] constexpr 
-    Rect2<T> bounding_box() const {
+    math::Rect2<T> bounding_box() const {
         const size_t cnt = samples.size();
-        return Rect2<T>{top_left, 
-            Vec2<T>(
+        return math::Rect2<T>{top_left, 
+            math::Vec2<T>(
                 cell_size.x * cnt + 
                 static_cast<T>(spacing - 1) * static_cast<size_t>(cnt - 1), 
 

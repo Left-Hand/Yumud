@@ -2,7 +2,7 @@
 
 #include "core/utils/Option.hpp"
 #include "core/string/view/string_view.hpp"
-#include "core/utils/serde.hpp"
+#include "core/utils/serde/serde.hpp"
 #include <utility>
 
 namespace ymd{
@@ -53,7 +53,7 @@ struct [[nodiscard]] Month final{
 
 
     template<HashAlgo S>
-    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Month & self){
+    constexpr friend HashBuilder<S> & operator << (HashBuilder<S> & hs, const Month & self){
         return hs << uint8_t(self.kind);
     }
 
@@ -155,7 +155,7 @@ OutputStream & operator <<(OutputStream & os, const Date & self){
 }
 
 template<HashAlgo S>
-constexpr Hasher<S> & operator << (Hasher<S> & hs, const Date & self){
+constexpr HashBuilder<S> & operator << (HashBuilder<S> & hs, const Date & self){
     return hs << self.year << self.month << self.day;
 }
 
@@ -216,7 +216,7 @@ struct [[nodiscard]] Time final{
     }
 
     template<HashAlgo S>
-    constexpr friend Hasher<S> & operator << (Hasher<S> & hs, const Time & self){
+    constexpr friend HashBuilder<S> & operator << (HashBuilder<S> & hs, const Time & self){
         return hs << self.hour << self.minute << self.seconds;
     }
 

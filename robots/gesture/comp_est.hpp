@@ -13,7 +13,7 @@ struct ComplementaryGestureEstimator{
         delta_time_(1_r / cfg.fs),
         comp_filter_(make_comp_filter_config(cfg.fs)){;}
 
-    constexpr void process(const Vec3<iq24> & x3,const Vec3<iq24> & x2){
+    constexpr void process(const math::Vec3<iq24> & x3,const math::Vec3<iq24> & x2){
 
         const auto len_x3 = x3.length();
         const auto norm_x3 = x3 / len_x3;

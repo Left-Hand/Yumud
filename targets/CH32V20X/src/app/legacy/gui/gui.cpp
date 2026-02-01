@@ -5,10 +5,10 @@
 #include "core/clock/time.hpp"
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 
 #include "primitive/image/image.hpp"
 #include "primitive/image/font/font.hpp"
@@ -38,7 +38,7 @@ public:
 
 class Icon:public RenderIntf{
 protected:
-    Rect2u rect_ = {0,0,30,30};
+    math::Rect2u rect_ = {0,0,30,30};
     String name_ = "nil";
 public:
     Icon() = default;
@@ -152,7 +152,7 @@ void gui_main(){
 
     // OptionButton opt{theme};
     
-    // I2cSw       i2c{hal::PD<2>(), hal::PC<12>()};
+    // SoftI2c       i2c{hal::PD<2>(), hal::PC<12>()};
     // i2c.init(125_KHz);
     
     // MT9V034 camera{i2c};
@@ -160,12 +160,12 @@ void gui_main(){
     // camera.setExposureValue(1200);
 
     // [[maybe_unused]] auto plot_gray = [&](const Image<Gray> & src, const Vec2u & pos){
-    //     auto area = Rect2u(pos, src.size());
+    //     auto area = math::Rect2u(pos, src.size());
     //     tft.put_texture(area, src.get_data());
     // };
 
     // [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vec2u & pos){
-    //     auto area = Rect2u(pos, src.size());
+    //     auto area = math::Rect2u(pos, src.size());
     //     tft.put_texture(area, src.get_data());
     // };
 
@@ -186,7 +186,7 @@ void gui_main(){
         painter.bind_image(img);
         painter.set_color(HSV888{0, int(100 + 100 * math::sinpu(clock::seconds())), 255});
         painter.draw_pixel(Vec2u(0, 0));
-        painter.draw_hollow_rect(Rect2u(20, 0, 20, 40)).examine();
+        painter.draw_hollow_rect(math::Rect2u(20, 0, 20, 40)).examine();
 
         tft.put_texture(img.size().to_rect(), img.get_data()).examine();
         DEBUG_PRINTLN(clock::millis());
@@ -202,7 +202,7 @@ void gui_main(){
 
         // painter.set_color(ColorEnum::RED);
         // painter.draw_filled_rect({60,60 + 10 * sin(t),20,20});
-        // Rect2u rect = {30,40,80,50};
+        // math::Rect2u rect = {30,40,80,50};
         // painter.draw_filled_rect(rect);
         // painter.drawHollowRect(rect);
         // painter.drawPixel(rect.position);
@@ -226,7 +226,7 @@ void gui_main(){
         // #ifdef CAMERA_TB
         // auto sketch = make_image<Gray>(camera.size()/2);
         // auto img = Shape::x2(camera);
-        // tft.puttexture(img.get_view(), img.get_data());
+        // tft.put_texture(img.get_view(), img.get_data());
         // clock::delay(10ms);
         // #endif
 
@@ -247,11 +247,11 @@ void gui_main(){
         // painter.set_color(ColorEnum::BLACK);
         // painter.draw_filled_rect(painter.getClipWindow());
 
-        // // label.rect = Rect2u{15 + 10 * sin(4 * t),20,100,20};
-        // // label2.rect = Rect2u{15,80 + 20 * sin(4 * t),100,20};
+        // // label.rect = math::Rect2u{15 + 10 * sin(4 * t),20,100,20};
+        // // label2.rect = math::Rect2u{15,80 + 20 * sin(4 * t),100,20};
         
-        // slider.rect = Rect2u{15,20,100,20};
-        // opt.rect = Rect2u{15,40,100,20};
+        // slider.rect = math::Rect2u{15,20,100,20};
+        // opt.rect = math::Rect2u{15,40,100,20};
 
         // // label.render(painter);
         // // label2.render(painter);

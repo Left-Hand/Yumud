@@ -3,7 +3,7 @@
 #include "rotation2.hpp"
 #include "algebra/vectors/unit_complex.hpp"
 
-namespace ymd{
+namespace ymd::math{
 
 template<typename T>
 struct [[nodiscard]] IsometryMatrix2 { 

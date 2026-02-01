@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #define QKV4_REG_DEF(name) static inline volatile name##_Def * name = reinterpret_cast<name##_Def *>(name##_Def::address);
+
 namespace QingKeV4{
     struct PFIC_CFGR_Def{
         static constexpr uint32_t address = 0xE000E04C;
@@ -14,15 +15,15 @@ namespace QingKeV4{
 
     QKV4_REG_DEF(PFIC_CFGR)
 
-    __inline bool isInterruptPending(){
+    __inline bool is_interrupt_pending(){
         return PFIC_CFGR->GPENDSTA;
     }
 
-    __inline bool isIntrruptActing(){
+    __inline bool is_intrrupt_acting(){
         return PFIC_CFGR->GACTSTA;
     }
 
-    __inline uint8_t getInterruptDepth(){
+    __inline uint8_t get_interrupt_depth(){
         return PFIC_CFGR->NESTSTA;
     }
 }

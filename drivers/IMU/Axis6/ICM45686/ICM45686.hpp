@@ -32,8 +32,8 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<Vec3<iq24>> read_acc();
-    [[nodiscard]] IResult<Vec3<iq24>> read_gyr();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
+    [[nodiscard]] IResult<math::Vec3<iq24>> read_gyr();
 private:
     InvensenseImu_Transport transport_;
     

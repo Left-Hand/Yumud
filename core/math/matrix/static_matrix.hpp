@@ -7,7 +7,7 @@
 #include "core/utils/Option.hpp"
 
 
-namespace ymd{
+namespace ymd::math{
 template<arithmetic T, size_t R, size_t C>
 struct [[nodiscard]] Matrix{
 

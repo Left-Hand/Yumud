@@ -106,7 +106,7 @@ struct ST1615_Prelude{
         uint16_t max_y = 0xffff;
         bool smart_wake_up = false;
 
-        constexpr bool is_point_valid(const Vec2<uint16_t> point){
+        constexpr bool is_point_valid(const math::Vec2<uint16_t> point){
             return (point.x <= max_x) && (point.y <= max_y);
         }
 
@@ -134,7 +134,7 @@ struct ST1615_Prelude{
         }
     };
 
-    using Point = Vec2<uint16_t>;
+    using Point = math::Vec2<uint16_t>;
 };
 
 }

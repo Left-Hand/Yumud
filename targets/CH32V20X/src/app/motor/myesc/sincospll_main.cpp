@@ -5,7 +5,7 @@
 #include "core/clock/time.hpp"
 #include "core/utils/zero.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 

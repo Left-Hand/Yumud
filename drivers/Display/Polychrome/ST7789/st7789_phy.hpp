@@ -1,7 +1,7 @@
 #pragma once
 
 #include "st7789_prelude.hpp"
-#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
 
 namespace ymd::drivers{
 

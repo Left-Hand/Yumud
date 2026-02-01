@@ -70,7 +70,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
     struct DataPacket{
         static constexpr uint8_t address = 0;
 
-        constexpr Vec3<int32_t> to_vec3_bits() const{
+        constexpr math::Vec3<int32_t> to_vec3_bits() const{
             //每个数据18位
             const int32_t x_bits = (int32_t(buf_[0]) << 10) | (int32_t(buf_[1]) << 2) | (buf_[6] >> 6);
             const int32_t y_bits = (int32_t(buf_[2]) << 10) | (int32_t(buf_[3]) << 2) | (buf_[6] >> 4);

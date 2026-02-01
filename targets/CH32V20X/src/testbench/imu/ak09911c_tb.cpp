@@ -3,14 +3,14 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "drivers/IMU/Magnetometer/AK09911C/AK09911C.hpp"
 
 #include "robots/gesture/mahony.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
@@ -32,11 +32,11 @@ static void ak09911c_test(drivers::AK09911C & aku){
     aku.set_mode(AK09911C::Mode::Cont4).examine();
     DEBUG_PRINTLN("app started");
 
-    auto rotation = Quat<iq24>::from_uninitialized();
+    auto rotation = math::Quat<iq24>::from_uninitialized();
     auto measure = [&](){
         aku.update().examine();
         const auto dir = aku.read_mag().examine();
-        rotation = rotation.slerp(Quat<iq24>::from_direction(dir), 0.05_r);
+        rotation = rotation.slerp(math::Quat<iq24>::from_direction(dir), 0.05_r);
     };
 
     auto & timer = hal::timer1;
@@ -86,7 +86,7 @@ void ak09911c_main(){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
 
-    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
     i2c.init({
         .baudrate = hal::NearestFreq(200_KHz)
     });

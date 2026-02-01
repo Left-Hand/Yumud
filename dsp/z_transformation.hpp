@@ -201,7 +201,7 @@ static_assert(product.den[1] == 0.2f);
 template<typename T>
 struct ResponseCalculator<Z_TransferCoefficients<T, 3, 2>>{
     
-    static constexpr Polar<T> calc_complex_response(
+    static constexpr math::Polar<T> calc_complex_response(
         const Z_TransferCoefficients<T, 3, 2>& self, 
         const auto freq, const auto fs
     ){
@@ -212,12 +212,12 @@ struct ResponseCalculator<Z_TransferCoefficients<T, 3, 2>>{
 		const T cos_2f = 2 * cos_f * cos_f - 1;
 		const T sin_2f = 2 * cos_f * sin_f;
 
-        const Complex<T> n = {
+        const math::Complex<T> n = {
             self.num[0] + self.num[1] * cos_f + self.num[2] * cos_2f,
             - (self.num[1] * sin_f + self.num[2] * sin_2f)
         };
 		
-        const Complex<T> d = {
+        const math::Complex<T> d = {
             1 + self.den[0] * cos_f + self.den[1] * cos_2f,
             - (self.den[0] * sin_f + self.den[1] * sin_2f)
         };

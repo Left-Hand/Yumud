@@ -8,7 +8,7 @@ namespace ymd{
 class String;
 class StringView;
 
-class [[nodiscard]] StringView {
+struct alignas(sizeof(size_t) * 2) [[nodiscard]] StringView {
 public:
     // 构造函数 从容器构造必须为显式 避免调用者没注意到生命周期
     constexpr explicit StringView(const std::string & str) noexcept: 

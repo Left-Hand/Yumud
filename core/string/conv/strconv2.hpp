@@ -83,42 +83,82 @@ bool is_digit_ascii(const StringView str){
 }
 #endif
 
-namespace details{
-
 template<integral T>
 struct [[nodiscard]] IntDeformatter{
-	using U = tmp::extended_unsigned_t<T>;
-	static constexpr DestringResult<T> defmt(const StringView str) {
+	using U = std::conditional_t<sizeof(T) >= 4, uint64_t, uint32_t>;
+	static constexpr DestringResult<T> parse(StringView str){
+		if constexpr(std::is_signed_v<T>){
+			return parse_dec(str);
+		}
 
-		const auto length = str.length();
-		if(length == 0) return Err(DestringError::EmptyString);
+		//只有无符号数才可能检测为hex/oct/bin
 
-		U unsigned_ret = 0;
-		char existing_sign = '\0';
+		const Radix radix = ({
+			const auto may_radix = parse_radix(str);
+			if(may_radix.is_err()) return Err(may_radix.unwrap_err());
+			may_radix.unwrap();
+		});
 
-		switch(str[0]){
-			case '\0':
-				return Err(DestringError::EmptyString);
-			case '-':
-				if constexpr(std::is_unsigned_v<T>)
-					return Err(DestringError::NegForUnsigned);
-				existing_sign = '-';
+		if((radix.count() != 10) and (str.length() > 2)){
+			//移除前缀
+			str = StringView{str.data() + 2, str.size() - 2};
+		}
+
+		switch(radix.count()){
+			case 2: return parse_bin_no_show_base(str);
+			case 8: return parse_oct_no_show_base(str);
+			case 10: return parse_dec(str);
+			case 16: return parse_hex_no_show_base(str);
+		}
+
+		__builtin_unreachable();
+	}
+
+	static constexpr DestringResult<Radix> parse_radix(const StringView str){
+		const auto str_length = str.length();
+		if(str_length < 2) return Ok(Radix(Radix::Kind::Dec));
+
+		// "0x", "0b", "0o"
+
+		if(str[0] != '0') return Ok(Radix(Radix::Kind::Dec));
+		switch(str[1]){
+			case 'x':
+			case 'X':
+				if(str_length <= 2) return Err(DestringError::HexBaseOnly);
+				return Ok(Radix(Radix::Kind::Hex));
 				break;
-			case '+':
-				existing_sign = '+';
+			case 'b': 
+			case 'B':
+				if(str_length <= 2) return Err(DestringError::BinBaseOnly);
+				return Ok(Radix(Radix::Kind::Bin));
+				break;
+			case 'o': 
+			case 'O':
+				if(str_length <= 2) return Err(DestringError::OctBaseOnly);
+				return Ok(Radix(Radix::Kind::Oct));
 				break;
 			case '0' ... '9':
+				return Ok(Radix(Radix::Kind::Dec));
 				break;
 			default:
 				return Err(DestringError::InvalidChar);
 		}
+	}
+
+	static constexpr DestringResult<T> parse_dec(const StringView str) {
+
+		const auto length = str.length();
+		if(length == 0) return Err(DestringError::EmptyString);
+
+		U unsigned_temp = 0;
+		char existing_sign = '\0';
 
 		auto compute_final = [&] -> T{
 			if constexpr(std::is_signed_v<T>){
-				const auto ret_without_sign = static_cast<T>(unsigned_ret);
-				return ((existing_sign == '-') ? -ret_without_sign : ret_without_sign);
+				const T unsigned_ret = static_cast<T>(unsigned_temp);
+				return ((existing_sign == '-') ? (-unsigned_ret) : (unsigned_ret));
 			}else{
-				return static_cast<T>(unsigned_ret);
+				return static_cast<T>(unsigned_temp);
 			}
 		};
 
@@ -131,23 +171,167 @@ struct [[nodiscard]] IntDeformatter{
 				case '-':
 					if constexpr(std::is_unsigned_v<T>)
 						return Err(DestringError::NegForUnsigned);
-					if(existing_sign == '-') 
+					if(existing_sign != 0) 
 						return Err(DestringError::MultiplyNegative);
-					return Err(DestringError::UnexpectedNegative);
-				case '+':
-					if(existing_sign == '+') 
-						return Err(DestringError::MultiplyPositive);
-					return Err(DestringError::UnexpectedPositive);
-				case '0' ... '9':
-					unsigned_ret = (10u * unsigned_ret) + static_cast<U>(chr - '0');
-					if((unsigned_ret > static_cast<U>(std::numeric_limits<T>::max()))) [[unlikely]]
-						return Err(DestringError::Overflow);
+					existing_sign = '-';
 					break;
+				case '+':
+					if(existing_sign != 0) 
+						return Err(DestringError::MultiplyPositive);
+					existing_sign = '+';
+					break;
+				case '0' ... '9':{
+					if(existing_sign == '\0'){
+						//如果还未找到符号就已经找到数字 那么已经隐含说明带有正号了
+						existing_sign = '+';
+					}
+
+					unsigned_temp = (10u * unsigned_temp) + static_cast<U>(chr - '0');
+					{
+						constexpr U MAX_INT_NUM = static_cast<U>(std::numeric_limits<T>::max());
+						if constexpr(std::is_signed_v<T>){
+							if((existing_sign == '-') and (unsigned_temp > MAX_INT_NUM + 1)) [[unlikely]]
+								return Err(DestringError::Underflow);
+						}
+						if((unsigned_temp > MAX_INT_NUM)) [[unlikely]]
+							return Err(DestringError::Overflow);
+					}
+
+					break;
+				}
+				case '.':
+					return Err(DestringError::UnexpectedDotInInteger);
+				case 'a' ... 'z':
+				case 'A' ... 'Z':
+					return Err(DestringError::UnexpectedAlpha);
 				default:
 					return Err(DestringError::InvalidChar);
 			}
 		}
 		return Ok(compute_final());
+	}
+
+	static constexpr DestringResult<T> parse_hex_no_show_base(const StringView str) {
+		static_assert(std::is_unsigned_v<U>, "hex must be unsigned");
+
+		const auto str_length = str.length();
+		if(str_length == 0) return Err(DestringError::EmptyString);
+
+		U temp = 0;
+
+		//nibble calc
+		if(str_length > sizeof(T) * 2) return Err(DestringError::StrTooLong);
+
+		#pragma GCC unroll 2
+		for(size_t i = 0; i < str_length; i ++){
+			const auto chr = str[i];
+
+			uint8_t nibble = 0;
+			switch(chr){
+				case '\0':
+					return Err(DestringError::NullTerminatorNotAllowed);
+				case '0' ... '9':
+					nibble = chr - '0';
+					break;
+				case 'a' ... 'f':
+					nibble = chr - 'a' + 10;
+					break;
+
+				case 'A' ... 'F':
+					nibble = chr - 'A' + 10;
+					break;
+				default:
+					return Err(DestringError::InvalidChar);
+			}
+
+			temp = (temp << 4) | nibble;
+		}
+
+		return Ok(static_cast<T>(temp));
+	}
+
+	static constexpr DestringResult<T> parse_oct_no_show_base(const StringView str) {
+		static_assert(std::is_unsigned_v<U>, "oct must be unsigned");
+
+		const auto str_length = str.length();
+		if(str_length == 0) return Err(DestringError::EmptyString);
+
+		U temp = 0;
+
+		// 八进制：每个字符3位，但需要处理前导零
+		// 最大长度 = ceil(sizeof(T) * 8 / 3)
+		constexpr size_t MAX_OCT_DIGITS = (sizeof(T) * 8 + 2) / 3; // 向上取整
+		if(str_length > MAX_OCT_DIGITS) return Err(DestringError::StrTooLong);
+
+		#pragma GCC unroll 2
+		for(size_t i = 0; i < str_length; i++) {
+			const auto chr = str[i];
+
+			uint8_t digit = 0;
+			switch(chr) {
+				case '\0':
+					return Err(DestringError::NullTerminatorNotAllowed);
+				case '0' ... '7':
+					digit = chr - '0';
+					break;
+				case '8' ... '9':
+					return Err(DestringError::DigitExceedsOct);
+				default:
+					return Err(DestringError::InvalidChar);
+			}
+
+			// 检查移位是否会导致溢出（对于U可能小于T的情况）
+			if constexpr (sizeof(U) * 8 <= sizeof(T) * 8) {
+				// 如果U不比T大，需要检查移位溢出
+				constexpr U max_shift_safe = std::numeric_limits<U>::max() >> 3;
+				if (temp > max_shift_safe) {
+					return Err(DestringError::Overflow);
+				}
+			}
+			
+			temp = (temp << 3) | digit;
+		}
+
+		// 最终检查是否适合T
+		if (temp > std::numeric_limits<T>::max()) {
+			return Err(DestringError::Overflow);
+		}
+
+		return Ok(static_cast<T>(temp));
+	}
+
+	static constexpr DestringResult<T> parse_bin_no_show_base(const StringView str) {
+		static_assert(std::is_unsigned_v<U>, "bin must be unsigned");
+
+		const auto str_length = str.length();
+		if(str_length == 0) return Err(DestringError::EmptyString);
+
+		U temp = 0;
+
+		// 二进制：每个字符1位
+		if(str_length > sizeof(T) * 8) return Err(DestringError::StrTooLong);
+
+		#pragma GCC unroll 2
+		for(size_t i = 0; i < str_length; i++) {
+			const auto chr = str[i];
+
+			uint8_t bit = 0;
+			switch(chr) {
+				case '\0':
+					return Err(DestringError::NullTerminatorNotAllowed);
+				case '0' ... '1':
+					bit = chr - '0';
+					break;
+				case '2' ... '9':
+					return Err(DestringError::DigitExceedsBin);
+				default:
+					return Err(DestringError::InvalidChar);
+			}
+			
+			temp = (temp << 1) | bit;
+		}
+
+		return Ok(static_cast<T>(temp));
 	}
 };
 
@@ -155,7 +339,7 @@ template<>
 struct [[nodiscard]] IntDeformatter<bool>{
 	static constexpr StringView TRUE_STR = StringView("true");
 	static constexpr StringView FALSE_STR = StringView("false");
-	static constexpr DestringResult<bool> defmt(const StringView str) {
+	static constexpr DestringResult<bool> parse(const StringView str) {
 		const auto length = str.length();
 		switch(length){
 			case 1:
@@ -165,9 +349,9 @@ struct [[nodiscard]] IntDeformatter<bool>{
 					case '1':
 						return Ok(true);
 					case '-':
-						return Err(DestringError::UnexpectedNegative);
+						return Err(DestringError::NegativeBoolean);
 					case '+':
-						return Err(DestringError::UnexpectedPositive);
+						return Err(DestringError::PositiveBoolean);
 					default:	
 						return Err(DestringError::InvalidBooleanChar);
 				}
@@ -189,35 +373,102 @@ struct [[nodiscard]] FixedPointDeformatter{
 	using T = math::fixed_t<NUM_Q, D>;
 
 	static constexpr size_t TABLE_LEN = std::size(str::pow10_table);
-	static constexpr std::array<uint32_t, TABLE_LEN> TABLE = []{
-		std::array<uint32_t, TABLE_LEN> ret;
+	static constexpr uint32_t DIGIT_MAX = uint32_t(
+		std::numeric_limits<math::fixed_t<NUM_Q, D>>::max());	
+
+	static constexpr std::array<uint64_t, TABLE_LEN> TABLE = []{
+		std::array<uint64_t, TABLE_LEN> ret;
 		for(size_t i = 0; i < TABLE_LEN; i++){
-			ret[i] = static_cast<uint32_t>(uint64_t(1 << NUM_Q) / str::pow10_table[i]);
+			ret[i] = static_cast<uint64_t>(uint64_t(1ull << (NUM_Q + 32u)) / str::pow10_table[i]);
 		}
 		return ret;
 	}();
 
-	static constexpr DestringResult<T> defmt(const StringView str){
+	static constexpr DestringResult<T> parse(const StringView str){
 		static_assert(sizeof(D) <= 4, "64bit is not supported yet");
 
-		const auto dump = ({
-			const auto res = FstrDump::from_str(str);
+		//从字符串dump出相关信息
+		const FstrDump dump = ({
+			const auto res = FstrDump::parse(str);
 			if(res.is_err()) return Err(res.unwrap_err());
 			res.unwrap();
 		});
+
+		//进行防溢出检查
+		if constexpr(std::is_unsigned_v<D>){
+			if(dump.is_negative) return Err(DestringError::NegForUnsigned);
+			if(dump.digit_part > DIGIT_MAX) return Err(DestringError::Overflow);
+		}else{
+			if(dump.is_negative){
+				if(dump.digit_part > static_cast<uint32_t>(DIGIT_MAX + 1u)){
+					return Err(DestringError::Underflow);
+				}
+			}else{
+				if(dump.digit_part > DIGIT_MAX) return Err(DestringError::Overflow);
+			}
+		}
+
+		auto conv_ret = [&](const T unsigned_ret) -> T{
+			if constexpr(std::is_unsigned_v<T>){
+				return unsigned_ret;
+			}else{
+				if(dump.is_negative) return -unsigned_ret;
+				return unsigned_ret;
+			}
+		};
 		
 		if (dump.num_frac_digits == 0){
-			return Ok(static_cast<T>(dump.digit_part));
+			return Ok(static_cast<T>(conv_ret(dump.digit_part)));
 		}else{
+			if(dump.num_frac_digits >= TABLE_LEN){
+				return Err(DestringError::FracTooLong);
+			}
+
 			const T frac_part = [&] -> T{
 				return T::from_bits(
-					static_cast<D>(int64_t(dump.frac_part) * TABLE[dump.num_frac_digits])
+					static_cast<D>((uint64_t(dump.frac_part) * TABLE[dump.num_frac_digits]) >> 32)
 				);
 			}();
 
-			return Ok(frac_part + static_cast<T>(dump.digit_part));
+			return Ok(conv_ret(frac_part + static_cast<T>(dump.digit_part)));
 		}
 
+	}
+};
+
+struct [[nodiscard]] FloatDeformatter{
+	using T = float;
+
+	static constexpr size_t TABLE_LEN = 12;
+	static constexpr std::array<T, TABLE_LEN> TABLE = []{
+		std::array<T, TABLE_LEN> ret;
+		uint64_t ratio = 1;
+		for(size_t i = 0; i < TABLE_LEN; i++){
+			ret[i] = static_cast<T>(static_cast<long double>(1) / ratio);
+			ratio *= 10u;
+		}
+		return ret;
+	}();
+
+	static constexpr DestringResult<T> parse(const StringView str){
+		//从字符串dump出相关信息
+		const FstrDump dump = ({
+			const auto res = FstrDump::parse(str);
+			if(res.is_err()) return Err(res.unwrap_err());
+			res.unwrap();
+		});
+
+		auto conv_ret = [&](const T unsigned_ret) -> T{
+			if(dump.is_negative) return -static_cast<T>(unsigned_ret);
+			return static_cast<T>(unsigned_ret);
+		};
+		
+		if (dump.num_frac_digits == 0){
+			return Ok(static_cast<T>(conv_ret(dump.digit_part)));
+		}else{
+			const T frac_part = dump.frac_part * TABLE[dump.num_frac_digits];
+			return Ok(conv_ret(frac_part + static_cast<T>(dump.digit_part)));
+		}
 	}
 };
 
@@ -296,7 +547,7 @@ __always_inline static constexpr void dyn_fmt_u32(
 template<integral T>
 struct IntFormatter{
 	[[nodiscard]] static constexpr 
-	SerStringResult<size_t> fmt(MutStringView str, const T int_val, const Radix radix){
+	SerStringResult<size_t> fmt_to_str(MutStringView str, const T int_val, const Radix radix){
 		if (str.length() == 0)
 			return Err(SerStringError::OutOfMemory);
 			
@@ -343,7 +594,7 @@ struct IntFormatter{
 
 struct ZeroPaddedU32Formatter{
 	[[nodiscard]] static constexpr 
-	SerStringResult<size_t> fmt(MutStringView str, const uint32_t int_val, const Radix radix){
+	SerStringResult<size_t> fmt_to_str(MutStringView str, const uint32_t int_val, const Radix radix){
 		const auto radix_count = radix.count();
 	
 		dyn_fmt_u32<DigitPaddingStrategy::ZeroPadded>(
@@ -362,7 +613,7 @@ struct Iq16Formatter{
 		
 	static constexpr size_t Q = 16;
 	static constexpr uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
-	static constexpr SerStringResult<size_t> fmt(
+	static constexpr SerStringResult<size_t> fmt_to_str(
 		MutStringView str,
 		const math::fixed_t<16, int32_t> value, 
 		const Eps eps
@@ -396,7 +647,7 @@ struct Iq16Formatter{
 		}
 
 		const auto digit_len = ({
-			const auto res = IntFormatter<int>::fmt(
+			const auto res = IntFormatter<int>::fmt_to_str(
 				str.substr_unchecked(pos), digit_part, Radix::Dec);
 			if(res.is_err()) return Err(res.unwrap_err());
 			res.unwrap();
@@ -412,15 +663,13 @@ struct Iq16Formatter{
 		pos += 1;
 
 		//忽略返回的长度 因为它就是eps
-		if(const auto res = ZeroPaddedU32Formatter::fmt( 
+		if(const auto res = ZeroPaddedU32Formatter::fmt_to_str( 
 			MutStringView(str.data() + pos, eps_count), frac_int, Radix::Dec
 		); res.is_err()) return Err(res.unwrap_err());
 		
 		return Ok(size_t(pos + eps_count));
 	}
 };
-
-}
 
 
 
@@ -429,30 +678,40 @@ struct DefmtStrDispatcher;
 
 template<>
 struct DefmtStrDispatcher<StringView>{
-	static constexpr DestringResult<StringView> from_str(StringView str){
+	static constexpr DestringResult<StringView> defmt_from_str(StringView str){
 		return Ok(str);
 	}
 };
 
 template<size_t Q, typename D>
 struct DefmtStrDispatcher<math::fixed_t<Q, D>>{
-	static constexpr DestringResult<math::fixed_t<Q, D>> from_str(StringView str){
-		return details::FixedPointDeformatter<Q, D>::defmt(str);
+	static constexpr DestringResult<math::fixed_t<Q, D>> defmt_from_str(StringView str){
+		return FixedPointDeformatter<Q, D>::parse(str);
 	}
 };
 
 template<typename T>
 requires std::is_integral_v<T>	
 struct DefmtStrDispatcher<T>{
-	static constexpr DestringResult<T> from_str(StringView str){
-		return details::IntDeformatter<T>::defmt(str);
+	static constexpr DestringResult<T> defmt_from_str(StringView str){
+		return IntDeformatter<T>::parse(str);
+	}
+};
+
+template<typename T>
+requires std::is_floating_point_v<T>	
+struct DefmtStrDispatcher<T>{
+	static constexpr DestringResult<T> defmt_from_str(StringView str){
+		const auto res = FloatDeformatter::parse(str);
+		if(res.is_err()) return Err(res.unwrap_err());
+		return Ok(res.unwrap());
 	}
 };
 
 
 template<typename T>
 static constexpr DestringResult<T> defmt_from_str(StringView str){
-	return DefmtStrDispatcher<T>::from_str(str);
+	return DefmtStrDispatcher<T>::defmt_from_str(str);
 }
 
 
@@ -460,14 +719,14 @@ template<integral T>
 static constexpr SerStringResult<size_t> fmt_to_str(
 	MutStringView str, 
 	T value, 
-	Radix radix_count = Radix(Radix::Kind::Dec)
+	Radix radix = Radix(Radix::Kind::Dec)
 ){
-	return details::IntFormatter<T>::conv(str, value, radix_count);
+	return IntFormatter<T>::fmt_to_str(str, value, radix);
 }
 
 template<size_t Q>
 static constexpr SerStringResult<size_t> fmt_to_str(MutStringView str, math::fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
-	return details::Iq16Formatter::fmt(str, value, eps);
+	return Iq16Formatter::fmt_to_str(str, value, eps);
 }
 
 

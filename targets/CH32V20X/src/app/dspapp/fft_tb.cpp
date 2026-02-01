@@ -9,7 +9,7 @@
 #include "core/math/realmath.hpp"
 #include "algebra/vectors/complex.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "func_eval.hpp"
 #include <ranges>
 
@@ -47,7 +47,7 @@ struct TwiddleFactors {
 template <typename T, size_t N>
 requires (std::has_single_bit(N))
 struct FFT_Impl{
-    static constexpr void calc(std::span<Complex<T>> dst, std::span<const T> src) noexcept {
+    static constexpr void calc(std::span<math::Complex<T>> dst, std::span<const T> src) noexcept {
         static_assert(N >= 2, "FFT size must be at least 2");
         
         // 1. 初始化并位反转置换
@@ -152,7 +152,7 @@ struct FFT_Impl{
 // 特化处理小规模FFT
 template <typename T>
 struct FFT_Impl<T, 2>{
-    static constexpr void calc(std::span<Complex<T>> dst,std::span<const T> src) noexcept {
+    static constexpr void calc(std::span<math::Complex<T>> dst,std::span<const T> src) noexcept {
         dst[0].re = src[0] + src[1];
         dst[1].re = src[0] - src[1];
         dst[0].im = dst[1].im = T(0);
@@ -162,7 +162,7 @@ struct FFT_Impl<T, 2>{
 // 特化处理小规模FFT
 template <typename T>
 struct FFT_Impl<T, 4>{
-    static constexpr void calc(std::span<Complex<T>> dst,std::span<const T> src) noexcept {
+    static constexpr void calc(std::span<math::Complex<T>> dst,std::span<const T> src) noexcept {
         // 位反转排列
         dst[0].re = src[0]; dst[0].im = T(0);
         dst[1].re = src[2]; dst[1].im = T(0);
@@ -203,7 +203,7 @@ struct FFT_Impl<T, 4>{
 };
 
 template <size_t N, typename T>
-static constexpr void rfft(std::span<Complex<T>> dst, std::span<const T> src){
+static constexpr void rfft(std::span<math::Complex<T>> dst, std::span<const T> src){
     FFT_Impl<T, N>::calc(dst, src);
 }
 
@@ -254,7 +254,7 @@ void fft_main(){
 
     // const auto samples = make_sine_samples();
     const auto samples = make_am_samples();
-    std::vector<Complex<T>> dst;
+    std::vector<math::Complex<T>> dst;
     dst.reserve(samples.size());
 
     const auto elapsed_us = measure_total_elapsed_ms([&]{
@@ -271,7 +271,7 @@ void fft_main(){
             dst[i], 
             samples[i],
             dst[i].length()
-            // dst | std::views::transform([](const Complex<auto> & x){return x.abs();})
+            // dst | std::views::transform([](const math::Complex<auto> & x){return x.abs();})
         );
     }
 

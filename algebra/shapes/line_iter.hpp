@@ -8,8 +8,8 @@ namespace ymd{
 
 template<std::integral T>
 struct BresenhamIterator {
-    using Point = Vec2<T>;
-    using Segment = Segment2<T>;
+    using Point = math::Vec2<T>;
+    using Segment = math::Segment2<T>;
     using SignedT = std::make_signed_t<T>;
 
     constexpr BresenhamIterator(const Segment& segment)
@@ -42,9 +42,9 @@ struct BresenhamIterator {
         return current_y_ <= max_y_;
     }
 
-    constexpr Range2<T> current() const {
-        if (!has_next()) return Range2<T>{0, 0};
-        return Range2<T>::from_start_and_length(current_x_, 1);
+    constexpr math::Range2<T> current() const {
+        if (!has_next()) return math::Range2<T>{0, 0};
+        return math::Range2<T>::from_start_and_length(current_x_, 1);
     }
 
     constexpr void advance() {
@@ -97,14 +97,14 @@ private:
 
 template<typename T>
 struct LineDDAIterator{
-    using Point = Vec2<uint16_t>;
-    using Segment = Segment2<uint16_t>;
+    using Point = math::Vec2<uint16_t>;
+    using Segment = math::Segment2<uint16_t>;
 
     constexpr LineDDAIterator(const Segment& segment){
         auto & self = *this;
         const auto fixed_segment = segment.swap_if_inverted();
 
-        self.x_step_ = Segment2<iq16>(fixed_segment).x_delta_per_y(1);
+        self.x_step_ = math::Segment2<iq16>(fixed_segment).x_delta_per_y(1);
         self.current_x_ = fixed_segment.start.x;
         self.current_y_ = fixed_segment.start.y;
         self.stop_y_ = fixed_segment.stop.y;
@@ -118,16 +118,16 @@ struct LineDDAIterator{
         return current_x_;
     }
 
-    __fast_inline constexpr Range2u16 x_range() const{
+    __fast_inline constexpr math::Range2<int16_t> x_range() const{
         const iq16 a = x();
         const iq16 b = a + x_step();
         if(a < b){
-            return Range2u16::from_start_and_stop_unchecked(
+            return math::Range2<int16_t>::from_start_and_stop_unchecked(
                 math::floor_cast<uint16_t>(a), 
                 math::ceil_cast<uint16_t>(b)
             );
         }else{
-            return Range2u16::from_start_and_stop_unchecked(
+            return math::Range2<int16_t>::from_start_and_stop_unchecked(
                 math::floor_cast<uint16_t>(b), 
                 math::ceil_cast<uint16_t>(a)
             );
@@ -155,59 +155,63 @@ private:
 template<typename T>
 struct CircleBresenhamIterator{
 public:
-    constexpr CircleBresenhamIterator(const Circle2<T> & circle):
+    constexpr CircleBresenhamIterator(const math::Circle2<T> & circle):
         x0_(circle.center.x),
-        err_(1 - 2 * circle.radius),
-        y_(-circle.radius),
-        radius_(circle.radius),
-        radius_squ_(math::square(circle.radius))
+        err_(1 - 2 * static_cast<int16_t>(circle.radius)),
+        y_offset_(-static_cast<int16_t>(circle.radius)),
+        radius_squ_(static_cast<uint32_t>(math::square(static_cast<int32_t>(circle.radius)))),
+        radius_(circle.radius)
     {
         replace_x();
     }
 
     constexpr void advance(){
-        y_++;
+        y_offset_++;
         replace_x();
     }
 
-    constexpr bool has_next() const {
-        return y_ < radius_;
+    [[nodiscard]] constexpr bool has_next() const {
+        return y_offset_ < radius_;
     }
 
-    constexpr Range2u16 x_range() const{
-        return Range2u16{x0_ + x_, x0_ - x_};
-        // return Range2u16{x0_ - 3, x0_ + 3};
+    [[nodiscard]] constexpr math::Range2<int16_t> x_range() const{
+        return math::Range2<int16_t>{x0_ + x_offset_, x0_ - x_offset_};
     }
 
-    constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
+    constexpr std::tuple<math::Range2<int16_t>, math::Range2<int16_t>> left_and_right() const {
         return {
-            Range2u16{x0_ + x_, x0_ + x_ + 1},
-            Range2u16{x0_ - x_, x0_ - x_ + 1}
+            math::Range2<int16_t>{x0_ + x_offset_, x0_ + x_offset_ + 1},
+            math::Range2<int16_t>{x0_ - x_offset_, x0_ - x_offset_ + 1}
         };
     }
 
     constexpr bool is_y_at_edge() const {
-        return y_ == (radius_ - 1) || y_ == (-radius_);
+        return y_offset_ == (radius_ - 1) || y_offset_ == (-radius_);
     }
 
     constexpr bool is_y_at_zero() const {
-        return y_ == 0;
+        return y_offset_ == 0;
     }
 private:
     int16_t x0_;
     int16_t err_;
-    int16_t y_;
+    int16_t x_offset_ = 0;
+    int16_t y_offset_;
     
+    uint32_t radius_squ_;
     int16_t radius_;
-    uint16_t radius_squ_;
 
-    int16_t x_ = 0;
 
 
     constexpr void replace_x(){
-        x_ = -radius_;
-        while(x_ * x_ + y_ * y_ > radius_squ_){
-            x_++;
+        x_offset_ = -radius_;
+        while(true){
+            const uint32_t coord_squ = static_cast<uint32_t>(
+                math::square(static_cast<int32_t>(x_offset_)) 
+                + math::square(static_cast<int32_t>(y_offset_))
+            );
+            if(coord_squ <= radius_squ_) break;
+            x_offset_++;
         }
     }
 

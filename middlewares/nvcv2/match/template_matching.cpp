@@ -8,7 +8,7 @@
 
 
 #define BOUNDARY_CHECK()\
-if(not Rect2u::from_size(src.size()).contains(Rect2u{offset, tmp.size()})){\
+if(not math::Rect2u::from_size(src.size()).contains(math::Rect2u{offset, tmp.size()})){\
     ASSERT(false, "template_match: out of bound");\
     return 0;\
 }\
@@ -22,20 +22,23 @@ namespace ymd::nvcv2::match{
 iq16 template_match(
     const Image<Binary> & src, 
     const Image<Binary> & tmp,
-    const Vec2u & offset
+    const math::Vec2u & offset
 ){
     BOUNDARY_CHECK()
 
-    const auto size_opt = Rect2u(offset, tmp.size())
-        .intersection(Rect2u::from_size(src.size()));
+    const auto may_size = math::Rect2u(offset, tmp.size())
+        .intersection(math::Rect2u::from_size(src.size()));
     
-    if(size_opt.is_none()) return 0;
-    const auto size = size_opt.unwrap();
+    if(may_size.is_none()) return 0;
+    const auto size = may_size.unwrap();
 
     size_t score = 0;
     for(size_t y = 0; y < size.h(); y++){
-        const auto * p_tmp = &tmp[Vec2u(0,y)];
-        const auto * p_src = &src[Vec2u(0,y) + offset];
+        const Binary * p_tmp = &tmp[math::Vec2u16{
+            static_cast<uint16_t>(0),
+            static_cast<uint16_t>(y)
+        }];
+        const Binary * p_src = src.head_ptr() + src.position_to_index(math::Vec2u(0,y) + offset);
         for(size_t x = 0; x < size.w(); x++){
             score += int32_t((*p_tmp).is_white() ^ (*p_src).is_white());
             p_tmp++;
@@ -49,20 +52,20 @@ iq16 template_match(
 iq16 template_match_ncc(
     const Image<Gray> & src, 
     const Image<Gray> & tmp, 
-    const Vec2u & offset
+    const math::Vec2u & offset
 ){
     BOUNDARY_CHECK()
 
     int32_t t_mean = pixels::mean(tmp).to_u8();
-    int32_t s_mean = pixels::mean(src, Rect2u(offset, tmp.size())).to_u8();
+    int32_t s_mean = pixels::mean(src, math::Rect2u(offset, tmp.size())).to_u8();
 
     int64_t num = 0;
     uint64_t den_t = 0;
     uint64_t den_s = 0;
 
     for(auto y = 0u; y < tmp.size().y; y++){
-        const Gray * p_tmp = &tmp[Vec2u{0,y}];
-        const Gray * p_src = &src[Vec2u{0,y} + offset];
+        const Gray * p_tmp = &tmp[math::Vec2u{0,y}];
+        const Gray * p_src = &src[math::Vec2u{0,y} + offset];
 
         int32_t line_num = 0;
 
@@ -90,7 +93,7 @@ iq16 template_match_ncc(
 }
 
 
-iq16 template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, const Vec2u & offset){
+iq16 template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, const math::Vec2u & offset){
 
     BOUNDARY_CHECK();
 
@@ -98,8 +101,8 @@ iq16 template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, const 
     uint32_t area = tmp.size().x * tmp.size().y;
 
     for(auto y = 0u; y < tmp.size().y; y++){
-        const auto * p_tmp = &tmp[Vec2u{0,y}];
-        const auto * p_src = &src[Vec2u{0,y} + offset];
+        const auto * p_tmp = &tmp[math::Vec2u{0,y}];
+        const auto * p_src = &src[math::Vec2u{0,y} + offset];
 
         uint32_t line_num = 0;
         for(auto x = 0u; x < tmp.size().x; x++){
@@ -123,7 +126,7 @@ iq16 template_match_squ(const Image<Gray> & src, const Image<Gray> & tmp, const 
     return 1 - iq16::from_bits(res);
 }
 
-iq16 template_match(const Image<Gray> & src, const Image<Gray> & tmp, const Vec2u & offset){
+iq16 template_match(const Image<Gray> & src, const Image<Gray> & tmp, const math::Vec2u & offset){
     return template_match_ncc(src, tmp, offset);
     // return template_match_squ(src, tmp, offs);
 }

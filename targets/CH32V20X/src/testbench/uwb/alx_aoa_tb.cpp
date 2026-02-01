@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/dma/dma.hpp"
 
@@ -13,7 +13,7 @@
 #include "drivers/Proximeter/MK8000TR/mk8000tr_stream.hpp"
 #include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
 
-#include "algebra/regions/Ray2.hpp"
+#include "algebra/regions/ray2.hpp"
 
 
 
@@ -31,7 +31,7 @@ using drivers::mk8000tr::MK8000TR_ParseReceiver;
 using drivers::alx_aoa::AlxAoa_ParseReceiver;
 using Mk8Event = drivers::mk8000tr::Event;
 
-using AlxMeasurement = SphericalCoordinates<float>;
+using AlxMeasurement = math::SphericalCoordinates<float>;
 
 
 
@@ -236,20 +236,20 @@ void alx_aoa_main(){
 
             // static constexpr float NEAR_JUDEGE_RADIUS = 0.6f;
             // static constexpr float FAR_JUDEGE_RADIUS = 1.6f;
-            // [[maybe_unused]] const auto left_offset_vec2 = Vec2f(left_offset_vec3.x, left_offset_vec3.y);
-            // [[maybe_unused]] const auto right_offset_vec2 = Vec2f(right_offset_vec3.x, right_offset_vec3.y);
+            // [[maybe_unused]] const auto left_offset_vec2 = math::Vec2f(left_offset_vec3.x, left_offset_vec3.y);
+            // [[maybe_unused]] const auto right_offset_vec2 = math::Vec2f(right_offset_vec3.x, right_offset_vec3.y);
 
             [[maybe_unused]] const auto LEFT_ANGLE_BASE = Angular<float>::from_degrees(135);
-            [[maybe_unused]] const auto LEFT_BASE = Vec2f(-0.30f, 0.0f);
+            [[maybe_unused]] const auto LEFT_BASE = math::Vec2f(-0.30f, 0.0f);
             [[maybe_unused]] const auto RIGHT_ANGLE_BASE = Angular<float>::from_degrees(45);
-            [[maybe_unused]] const auto RIGHT_BASE = Vec2f(0.30f, -0.0f);
+            [[maybe_unused]] const auto RIGHT_BASE = math::Vec2f(0.30f, -0.0f);
 
-            [[maybe_unused]] const auto left_circle = Circle2<float>{LEFT_BASE, left_raw_meas.distance};
-            [[maybe_unused]] const auto right_circle = Circle2<float>{RIGHT_BASE, right_raw_meas.distance};
+            [[maybe_unused]] const auto left_circle = math::Circle2<float>{LEFT_BASE, left_raw_meas.distance};
+            [[maybe_unused]] const auto right_circle = math::Circle2<float>{RIGHT_BASE, right_raw_meas.distance};
 
 
             // const auto points = geometry::compute_intersection_points(left_circle, right_circle);
-            // const auto may_p = points.at_or(0, Vec2f::ZERO);
+            // const auto may_p = points.at_or(0, math::Vec2f::ZERO);
 
             // const bool is_right_near = ABS(left_raw_meas.distance - right_raw_meas.distance) < 0.5f;
             // [[maybe_unused]] const bool is_left_near = left_meas.amplitude < NEAR_JUDEGE_RADIUS;
@@ -265,16 +265,16 @@ void alx_aoa_main(){
             //     (is_left_far) and (is_right_far);
 
             // const auto may_dual_p = geometry::compute_intersection_points(left_circle, right_circle);
-            // const auto p = may_dual_p.size() ? may_dual_p[0] : Vec2f::ZERO;
-            const auto left_ray = Ray2<float>(LEFT_BASE, LEFT_ANGLE_BASE + left_meas.phase);
-            const auto right_ray = Ray2<float>(RIGHT_BASE, RIGHT_ANGLE_BASE + right_meas.phase);
+            // const auto p = may_dual_p.size() ? may_dual_p[0] : math::Vec2f::ZERO;
+            const auto left_ray = math::Ray2<float>(LEFT_BASE, LEFT_ANGLE_BASE + left_meas.phase);
+            const auto right_ray = math::Ray2<float>(RIGHT_BASE, RIGHT_ANGLE_BASE + right_meas.phase);
 
-            // const auto p = geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(Vec2f::ZERO);
+            // const auto p = geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(math::Vec2f::ZERO);
 
             [[maybe_unused]] const auto left_est_point = left_ray.endpoint_at_length(left_meas.amplitude);
             [[maybe_unused]] const auto right_est_point = right_ray.endpoint_at_length(right_meas.amplitude);
             // const auto may_p = left_ray.intersection(right_ray, 0.0001f);
-            // const auto cp = may_p.unwrap_or(Vec2f::ZERO);
+            // const auto cp = may_p.unwrap_or(math::Vec2f::ZERO);
             // return;
             DEBUG_PRINTLN_IDLE(
                 // alx_measurement.distance,
@@ -298,8 +298,8 @@ void alx_aoa_main(){
                 // left_est_point,
                 // right_est_point,
                 // p
-                // geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(Vec2f::ZERO),
-                // geometry::compute_intersection_point(right_ray, left_circle).unwrap_or(Vec2f::ZERO),
+                // geometry::compute_intersection_point(left_ray, right_circle).unwrap_or(math::Vec2f::ZERO),
+                // geometry::compute_intersection_point(right_ray, left_circle).unwrap_or(math::Vec2f::ZERO),
                 hal::usart2.available(),
                 hal::usart3.tx_dma_buf_index_,
                 hal::usart3.tx_queue_.length(),
@@ -323,7 +323,7 @@ void alx_aoa_main(){
                 // right_meas.distance < NEAR_JUDEGE_RADIUS
                 // left_meas.azimuth.to_turns()
                 // alx_measurement.azimuth.to_radians()
-                // points.at_or(0, Vec2f::ZERO),
+                // points.at_or(0, math::Vec2f::ZERO),
                 // may_p.x,
                 // may_p.y
                 // left_meas.distance,

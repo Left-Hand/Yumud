@@ -5,58 +5,8 @@
 
 namespace ymd {
 
-// Helper template to unwrap optional types
-template <typename T>
-struct __unwrap_helper {
-};
 
-// Specialization for std::optional
-template <typename T>
-struct __unwrap_helper<std::optional<T>> {
-    // Unwrap a non-const rvalue optional
-    static constexpr T&& unwrap(std::optional<T>&& opt) {
-        return std::move(opt.value());
-    }
-
-    // Unwrap a const lvalue optional
-    static constexpr const T& unwrap(const std::optional<T>& opt) {
-        return opt.value();
-    }
-
-    // Return std::nullopt for unexpected cases
-    static constexpr std::nullopt_t unexpected(const std::optional<T>& opt) {
-        return std::nullopt;
-    }
-
-    // Return std::nullopt for unexpected cases
-    static constexpr std::nullopt_t unexpected(std::optional<T> && opt) {
-        return std::nullopt;
-    }
-};
-
-// Macro to simplify unwrapping
-#define UNWRAP(expr) \
-    ({ \
-        const auto result = (expr); \
-        using helper = ymd::__unwrap_helper<std::decay_t<decltype(result)>>; \
-        if (unlikely(!helper::is_ok(result))) { \
-            return helper::unexpected(result); \
-        } \
-        helper::unwrap(std::move(result)); \
-    })
-
-template<typename T>
-class Borrow{
-public:
-    Borrow(T * ptr):
-        ptr_(ptr){;}
-
-    Borrow(std::nullptr_t) = delete;
-
-    T & unwrap() const {return *ptr_;}
-private:
-    T * ptr_;
-};
+struct Infallible{};
 
     
 template<typename T>
@@ -127,7 +77,7 @@ public:
     // 主构造函数 - 使用完美转发
     template<typename U>
     requires (std::is_constructible_v<value_type, U&&> && 
-             !std::is_same_v<std::remove_cvref_t<U>, Ok>)
+            !std::is_same_v<std::remove_cvref_t<U>, Ok>)
     constexpr explicit(!std::is_convertible_v<U&&, value_type>) 
     Ok(U&& value) 
         noexcept(std::is_nothrow_constructible_v<value_type, U&&>)
@@ -136,7 +86,7 @@ public:
     // 拷贝构造函数
     template<typename U>
     requires (std::is_constructible_v<value_type, const U&> && 
-             std::is_convertible_v<const U&, value_type>)
+            std::is_convertible_v<const U&, value_type>)
     constexpr Ok(const Ok<U>& other)
         noexcept(std::is_nothrow_constructible_v<value_type, const U&>)
         : value_(other.value_) {}
@@ -144,7 +94,7 @@ public:
     // 移动构造函数  
     template<typename U>
     requires (std::is_constructible_v<value_type, U&&> && 
-             std::is_convertible_v<U&&, value_type>)
+            std::is_convertible_v<U&&, value_type>)
     constexpr Ok(Ok<U>&& other)
         noexcept(std::is_nothrow_constructible_v<value_type, U&&>)
         : value_(std::move(other).get()) {}
@@ -202,7 +152,7 @@ public:
     // 主构造函数 - 完美转发
     template<typename U>
     requires (std::is_constructible_v<error_type, U&&> && 
-             !std::is_same_v<std::remove_cvref_t<U>, Err>)
+            !std::is_same_v<std::remove_cvref_t<U>, Err>)
     constexpr explicit(!std::is_convertible_v<U&&, error_type>)
     Err(U&& error) 
         noexcept(std::is_nothrow_constructible_v<error_type, U&&>)
@@ -236,8 +186,8 @@ public:
     // 跨类型拷贝构造函数
     template<typename U>
     requires (std::is_constructible_v<error_type, const U&> && 
-             std::is_convertible_v<const U&, error_type> &&
-             !std::is_same_v<U, E>)
+            std::is_convertible_v<const U&, error_type> &&
+            !std::is_same_v<U, E>)
     constexpr Err(const Err<U>& other)
         noexcept(std::is_nothrow_constructible_v<error_type, const U&>)
         : value_(other.get()) {}
@@ -245,8 +195,8 @@ public:
     // 跨类型移动构造函数
     template<typename U>
     requires (std::is_constructible_v<error_type, U&&> && 
-             std::is_convertible_v<U&&, error_type> &&
-             !std::is_same_v<U, E>)
+            std::is_convertible_v<U&&, error_type> &&
+            !std::is_same_v<U, E>)
     constexpr Err(Err<U>&& other)
         noexcept(std::is_nothrow_constructible_v<error_type, U&&>)
         : value_(std::move(other).get()) {}
@@ -301,30 +251,5 @@ Err(E && val) -> Err<std::decay_t<E>>;
 template<typename TDummy = void>
 Err() -> Err<void>;
 
-
-template<typename T>
-class MATCH{
-public:
-    template<typename Fn, typename ... Args>
-    constexpr void operator ()(const T kase, Fn && fn, Args && ...args){
-        if(val_ == kase)return std::forward<Fn>(fn)();    
-        else if constexpr(sizeof...(Args)) return this->operator()(std::forward<Args>(args)...);
-    }
-
-    template<typename Fn, typename ... Args>
-    constexpr void operator ()(const _None_t, Fn && fn, Args && ...args){
-        return std::forward<Fn>(fn)();    
-    }
-
-    MATCH(const T & val):val_(val){;}
-private:    
-    const T & val_;
-};
-
-template<typename T>
-MATCH() -> MATCH<T>;
-
-
-#define UNWRAP_OR_RETURN_ERR(x) ({if(const auto res = x; res.is_err()) return Err(res.unwrap_err());})
 
 } // namespace ymd

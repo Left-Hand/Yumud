@@ -22,7 +22,7 @@ namespace ymd::robots::kinematics{
 template<typename T>
 struct [[nodiscard]] CirclePassZAxis{
     //这个圆所在的平面包含z轴 自由度特殊化
-    Vec3<T> org;
+    math::Vec3<T> org;
     T radius;
 
     friend OutputStream & operator << (OutputStream & os, const CirclePassZAxis & self){
@@ -42,7 +42,7 @@ public:
     };
 
     struct [[nodiscard]] Gesture{
-        const Vec2<T> shift_position;
+        const math::Vec2<T> shift_position;
     };
 
     struct [[nodiscard]] Solution{
@@ -99,7 +99,7 @@ public:
         const auto L = cfg.link_length;
         const auto R1 = solu.to_absolute().j1_abs;
         const auto R2 = solu.to_absolute().j2_abs;
-        return {Vec2<T>(B, 0).rotated(R1) + Vec2<T>(L, 0).rotated(R2)};
+        return {math::Vec2<T>(B, 0).rotated(R1) + math::Vec2<T>(L, 0).rotated(R2)};
     }
 
     static constexpr Option<Solution> inverse(const Config & cfg, const Gesture & gest){
@@ -149,7 +149,7 @@ public:
     };
 
     struct [[nodiscard]] Gesture{
-        Quat<T> orientation;
+        math::Quat<T> orientation;
         T z;
 
         struct [[nodiscard]] Initializer{
@@ -160,7 +160,7 @@ public:
 
         static constexpr Gesture from(const Initializer & iz){
             const Gesture gest{
-                .orientation = Quat<real_t>::from_euler_angles<EulerAnglePolicy::XYZ>({
+                .orientation = math::Quat<real_t>::from_euler_angles<EulerAnglePolicy::XYZ>({
                     .x = iz.yaw, 
                     .y = iz.pitch, 
                     .z = 0
@@ -204,7 +204,7 @@ public:
 
     //     const auto center = (p0 + p1 + p2) / 3;
     //     const auto z = center.z;
-    //     const auto ori = Quat<T>::from_shortest_arc({0,0,1}, (p0 - center).normalized());
+    //     const auto ori = math::Quat<T>::from_shortest_arc({0,0,1}, (p0 - center).normalized());
     //     DEBUG_PRINTLN(p0, p1, p2);
     //     DEBUG_PRINTLN((p0 - p1).length(), (p1 - p2).length());
     //     DEBUG_PRINTLN(ori,z);
@@ -221,31 +221,31 @@ private:
     Config cfg_ {};
 
     // static constexpr SQRT3 =  1.732050807568877;
-    static constexpr std::array<Vec2<T>, 3> norms_ {
-        Vec2<T>(1, 0),
-        Vec2<T>(T(-0.5), T(SQRT3/2)),
-        Vec2<T>(T(-0.5), T(-SQRT3/2))
+    static constexpr std::array<math::Vec2<T>, 3> norms_ {
+        math::Vec2<T>(1, 0),
+        math::Vec2<T>(T(-0.5), T(SQRT3/2)),
+        math::Vec2<T>(T(-0.5), T(-SQRT3/2))
     };
 
     //pure fn
-    static constexpr Vec2<T> get_xynorm_from_nth(const Nth nth){
-        return Vec2<T>::RIGHT.rotated(nth.count() * T(TAU / 3));
+    static constexpr math::Vec2<T> get_xynorm_from_nth(const Nth nth){
+        return math::Vec2<T>::RIGHT.rotated(nth.count() * T(TAU / 3));
     };
 
     //pure fn
     //输入关节的方位单位向量
     //获取基座铰链的位置
-    static constexpr Vec3<T> get_base_point(const Config & cfg, const Vec2<T> xy_norm){
-        const auto base_point_2 = Vec2<T>{cfg.base_plate_radius, 0}.improduct(xy_norm);
-        return Vec3<T>{base_point_2.x, base_point_2.y, 0};
+    static constexpr math::Vec3<T> get_base_point(const Config & cfg, const math::Vec2<T> xy_norm){
+        const auto base_point_2 = math::Vec2<T>{cfg.base_plate_radius, 0}.improduct(xy_norm);
+        return math::Vec3<T>{base_point_2.x, base_point_2.y, 0};
     }
 
     //pure fn
     //输入关节的方位单位向量(寻找对应的铰链)以及姿态 
     //获取顶部铰链的位置
-    static constexpr Vec3<T> get_top_point(const Config & cfg, const Vec2<T> xy_norm, const Gesture & gest){
-        const auto top_point_2 = Vec2<T>{cfg.top_plate_radius, 0}.improduct(xy_norm);
-        return gest.orientation.xform(Vec3<T>{top_point_2.x, top_point_2.y, 0}) + Vec3<T>(0, 0, gest.z);
+    static constexpr math::Vec3<T> get_top_point(const Config & cfg, const math::Vec2<T> xy_norm, const Gesture & gest){
+        const auto top_point_2 = math::Vec2<T>{cfg.top_plate_radius, 0}.improduct(xy_norm);
+        return gest.orientation.xform(math::Vec3<T>{top_point_2.x, top_point_2.y, 0}) + math::Vec3<T>(0, 0, gest.z);
     }
 
 
@@ -253,14 +253,14 @@ private:
     //pure fn
     //输入关节的方位单位向量(寻找对应的铰链)以及姿态 
     //获取顶部铰链的活动球面
-    static constexpr Sphere<T> get_top_sphere(const Config & cfg, const Vec2<T> xy_norm, const Gesture & gest){
+    static constexpr Sphere<T> get_top_sphere(const Config & cfg, const math::Vec2<T> xy_norm, const Gesture & gest){
         return Sphere{get_top_point(cfg, xy_norm, gest), cfg.link_length};
     }
 
     //pure fn
     //输入活动球面和方位单位向量
     //获取切片圆
-    static constexpr Option<CirclePassZAxis<T>> project_sphere_to_circle(const Sphere<T> & sphere, const Vec2<T> xy_norm){
+    static constexpr Option<CirclePassZAxis<T>> project_sphere_to_circle(const Sphere<T> & sphere, const math::Vec2<T> xy_norm){
         // 方位单位向量的结构体绑定
         // [x', y'] = xy_norm
 
@@ -290,7 +290,7 @@ private:
     //通过计算底部，顶部铰链位置和切片圆的半径 将问题转换为二维平面上的双转动副问题
     static constexpr Option<SideSolution> inverse_single_axis(
         const Config & cfg, 
-        const Vec2<T> xy_norm, 
+        const math::Vec2<T> xy_norm, 
         const Gesture & gest
     ){
         const auto sphere = get_top_sphere(cfg, xy_norm, gest);
@@ -302,13 +302,13 @@ private:
 
         return RR2_Kinematics<T>::inverse(
             {.base_length = cfg.base_length, .link_length = circle.radius},//大臂长度和小臂长度
-            {.shift_position = Vec2<T>{circle.org.length(), circle.org.z} 
-                - Vec2<T>{cfg.base_plate_radius, 0}}            //目的位置
+            {.shift_position = math::Vec2<T>{circle.org.length(), circle.org.z} 
+                - math::Vec2<T>{cfg.base_plate_radius, 0}}            //目的位置
         );
     }
 
     // 正解需要考虑yaw角错位 难度极高
-    // static constexpr Vec3<T> forward_point(const Config & cfg, const Vec2<T> xy_norm, const SideSolution & solu){
+    // static constexpr math::Vec3<T> forward_point(const Config & cfg, const math::Vec2<T> xy_norm, const SideSolution & solu){
     //     const auto p_2d = RR2_Kinematics<T>::forward(
     //         //大臂长度和小臂长度
     //         {.base_length = cfg.base_length, .link_length = cfg.link_length}, 
@@ -316,10 +316,10 @@ private:
     //         //关节角度
     //         solu,
     //         //基位置
-    //         Vec2<T>{cfg.base_plate_radius,0}
+    //         math::Vec2<T>{cfg.base_plate_radius,0}
     //     );
 
-    //     const auto p_3d = Vec3<T>{
+    //     const auto p_3d = math::Vec3<T>{
     //         p_2d.x * xy_norm.x, 
     //         p_2d.x * xy_norm.y, 
     //         p_2d.y

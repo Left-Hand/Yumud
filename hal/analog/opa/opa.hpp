@@ -3,84 +3,11 @@
 #include "core/platform.hpp"
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/gpio/gpio_tag.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "ral/ch32/ch32v203_opa_def.hpp"
+#include "opa_layout.hpp"
 
-namespace ymd::hal{
-
-//OpaNth: 运放序号 1/2
-//Channel: 通道序号 0:Output -1:Neg 1:Pos
-//Mapping: 布局序号 0/1
-template<uint8_t OpaNth, int8_t Channel, uint8_t Mapping>
-struct OpaGpioMapping{
-    using IoTag = void;
-};
-
-
-template<>
-struct OpaGpioMapping<1, -1, 0>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-template<>
-struct OpaGpioMapping<1, -1, 1>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-template<>
-struct OpaGpioMapping<1, 0, 0>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-template<>
-struct OpaGpioMapping<1, 0, 1>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-template<>
-struct OpaGpioMapping<1, 1, 0>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-template<>
-struct OpaGpioMapping<1, 1, 1>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-
-template<>
-struct OpaGpioMapping<2, -1, 0>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-template<>
-struct OpaGpioMapping<2, -1, 1>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-template<>
-struct OpaGpioMapping<2, 0, 0>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-template<>
-struct OpaGpioMapping<2, 0, 1>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-template<>
-struct OpaGpioMapping<2, 1, 0>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-template<>
-struct OpaGpioMapping<2, 1, 1>{
-    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
-};
-
-}
 
 
 
@@ -127,12 +54,5 @@ public:
     }
 };
 
-#ifdef OPA1_PRESENT
-extern Opa<1> opa1;
-#endif
-
-#ifdef OPA2_PRESENT
-extern Opa<2> opa2;
-#endif
 
 }

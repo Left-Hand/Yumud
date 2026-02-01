@@ -6,12 +6,12 @@
 namespace ymd{
 template <arithmetic T, size_t N>
 struct [[nodiscard]] Jet{
-  Matrix<T, N, 1> v;
+  math::Matrix<T, N, 1> v;
   T a;
   constexpr Jet() : a(0) {}
   constexpr Jet(const T value) : a(value) { v.setZero(); }
 
-  constexpr Jet(const T value, const Matrix<T, N, 1>& v_)
+  constexpr Jet(const T value, const math::Matrix<T, N, 1>& v_)
       : a(value), v(v_){}
 
   constexpr T & operator [](const size_t n){

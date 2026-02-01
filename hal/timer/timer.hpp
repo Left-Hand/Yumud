@@ -207,6 +207,7 @@ public:
         event_callback_ = std::forward<Fn>(cb);
     }
 
+    void set_remap(const TimerRemap rm);
 protected:
     void * inst_;
 
@@ -221,8 +222,6 @@ protected:
     }
 
     void dyn_enable_interrupt(IT I,Enable en);
-
-    void set_remap(const TimerRemap rm);
 
     #ifdef TIM6_PRESENT
     DEF_BASIC_TIMER_FRIEND_DECL(6)

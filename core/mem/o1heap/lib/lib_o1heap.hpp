@@ -24,9 +24,6 @@
 
 namespace lib_o1heap{
 
-/// The semantic version number of this distribution.
-static constexpr size_t  O1HEAP_VERSION_MAJOR = 3;
-
 /// The guaranteed alignment depends on the platform pointer width.
 static constexpr size_t O1HEAP_ALIGNMENT = (sizeof(void*) * 2U);
 
@@ -73,7 +70,7 @@ static_assert(sizeof(Fragment) <= FRAGMENT_SIZE_MIN, "Memory layout error");
 /// compared to the amount of computation needed to do the actual memory management. In the future, we may add a
 /// preprocessor option that disables diagnostics for the benefit of the most performance-sensitive applications.
 /// If you find this feature relevant for your use case, consider opening a ticket.
-struct [[nodiscard]] O1HeapDiagnostics{
+struct [[nodiscard]] O1HeapDiagnostics final{
     using Self = O1HeapDiagnostics;
     /// The total amount of memory available for serving allocation requests (heap size).
     /// The maximum allocation size is (capacity - O1HEAP_ALIGNMENT).
@@ -99,6 +96,10 @@ struct [[nodiscard]] O1HeapDiagnostics{
 
     static constexpr Self zero(){
         return Self{0U, 0U, 0U, 0U, 0U};
+    }
+
+    constexpr Self clone() const {
+        return *this;
     }
 } ;
 

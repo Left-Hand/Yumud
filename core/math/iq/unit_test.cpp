@@ -5,8 +5,7 @@ using namespace ymd;
 using namespace ymd::iqmath;
 using namespace ymd::literals;
 
-
-
+namespace{
 // 添加更多测试
 static_assert(iqmath::details::_IQFtoN<16>(0.0f) == 0);
 static_assert(iqmath::details::_IQFtoN<16>(-0.0f) == 0);
@@ -28,6 +27,18 @@ static_assert(iqmath::details::_IQFtoN<24>(1.0f) == 16777216);  // Q24: 1.0 = 16
 
 static_assert(iqmath::details::_IQFtoN<16>(-32768.0f / 65536.0f) == -32768);
 
+static_assert(iq24(10.0) + 90 == 100);
+static_assert(iq16(10.0) + 90 == 100);
+static_assert(iq10(10.0) + 90 == 100);
+
+[[maybe_unused]] void test_add(){
+    auto add2 = [&](const iq16 a, const int8_t b) -> iq16 {return a + b;};
+    // auto add2 = [&](const iq16 a, const int8_t b){return a + b;};
+    static_assert((iq16(9)) == 9);
+    static_assert((iq16(int8_t(9))) == 9);
+    static_assert((iq16(10.0) + int8_t(9)) == 19);
+    static_assert(add2(iq16(10.0), int8_t(90)) == 100);
+}
 
 static_assert((iq16(4) >> 1) == iq16(2));
 static_assert((iq16::from_rcp(4)) == iq16(0.25));
@@ -182,3 +193,4 @@ static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), ymd::lit
 
 static_assert(std::abs((double)math::atanpu(ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
 static_assert(std::abs((double)math::atanpu(-ymd::literals::iq16(1.0)) - 0.875) < 1E-7);
+}

@@ -12,48 +12,10 @@ namespace ymd::ral::ch32::common_dma{
 
 struct [[nodiscard]] R32_DMA_INTFR{
     uint32_t BITS;
-
-    // constexpr bool get_global_flag(const uint8_t index){
-    //     const uint32_t temp = uint32_t(BITS);
-    //     return  temp & (1 << (index * 4 - 4));
-    // }
-
-    // constexpr bool get_transfer_done_flag(const uint8_t index){
-    //     const uint32_t temp = uint32_t(BITS);
-    //     return temp & (1 << (index * 4 - 3));
-    // }
-
-
-
-    // constexpr bool get_transfer_onhalf_flag(const uint8_t index){
-    //     const uint32_t temp = uint32_t(BITS);
-    //     return temp & (1 << (index * 4 - 2));
-    // }
-
-
-    // constexpr bool get_transfer_error_flag(const uint8_t index){
-    //     const uint32_t temp = uint32_t(BITS);
-    //     return temp & (1 << (index * 4 - 1));
-    // }
 };ASSERT_REG_IS_32BIT(R32_DMA_INTFR)
 
 struct [[nodiscard]] R32_DMA_INTFCR{
     uint32_t BITS;
-
-    // constexpr void clear_global_flag(const uint8_t index){
-    //     BITS = (1 << (index * 4 - 4));
-    // }
-
-    // constexpr void clear_transfer_done_flag(const uint8_t index){
-    //     BITS = (1 << (index * 4 - 3));
-    // }
-    // constexpr void clear_transfer_onhalf_flag(const uint8_t index){
-    //     BITS = (1 << (index * 4 - 2));
-    // }
-
-    // constexpr void clear_transfer_error_flag(const uint8_t index){
-    //     BITS = (1 << (index * 4 - 1));
-    // }
 
 };ASSERT_REG_IS_32BIT(R32_DMA_INTFCR)
 
@@ -141,6 +103,8 @@ struct [[nodiscard]] DMA_CH_Def{
         CNTR = len;
     }
 };
+
+
 static_assert((sizeof(DMA_CH_Def) == 16)); 
 
 struct [[nodiscard]] DMA1_Def{
@@ -148,35 +112,82 @@ struct [[nodiscard]] DMA1_Def{
     volatile R32_DMA_INTFCR INTFCR;
     DMA_CH_Def CH[8];
 
-    constexpr void clear_global_flag(const uint8_t index){
-        INTFCR.BITS = (1 << (index * 4 - 4));
+    // 使用宏定义每个通道的特定掩码
+    template<uint8_t CHANNEL_NUM>
+    static constexpr uint32_t TRANSFER_DONE_MASK = [] -> uint32_t{
+        static_assert(CHANNEL_NUM <= 8);
+        return (1 << (CHANNEL_NUM * 4 - 3));
+    }();
+
+    template<uint8_t CHANNEL_NUM>
+    static constexpr uint32_t HALF_TRANSFER_MASK = [] -> uint32_t{
+        static_assert(CHANNEL_NUM <= 8);
+        return (1 << (CHANNEL_NUM * 4 - 2));
+    }();
+
+    template<uint8_t CHANNEL_NUM>
+    static constexpr uint32_t TRANSFER_ERROR_MASK = [] -> uint32_t{
+        static_assert(CHANNEL_NUM <= 8);
+        return (1 << (CHANNEL_NUM * 4 - 1));
+    }();
+
+    template<uint8_t CHANNEL_NUM>
+    static constexpr uint32_t DIRECT_MODE_ERROR_MASK = [] -> uint32_t{
+        static_assert(CHANNEL_NUM <= 8);
+        return (1 << (CHANNEL_NUM * 4));
+    }();
+
+
+    template<uint8_t CHANNEL_NUM>
+    [[nodiscard]] 
+    constexpr bool get_transfer_done_flag() const noexcept {
+        constexpr auto MASK = TRANSFER_DONE_MASK<CHANNEL_NUM>;
+        return (INTFR.BITS & MASK) != 0;
     }
 
-    constexpr bool get_global_flag(const uint8_t index){
-        return  std::bit_cast<uint32_t>(INTFR.BITS) & (1 << (index * 4 - 4));
+    template<uint8_t CHANNEL_NUM>
+    [[nodiscard]]
+    constexpr bool get_transfer_onhalf_flag() const noexcept {
+        constexpr auto MASK = HALF_TRANSFER_MASK<CHANNEL_NUM>;
+        return (INTFR.BITS & MASK) != 0;
     }
 
-    constexpr void clear_transfer_done_flag(const uint8_t index){
-        INTFCR.BITS = (1 << (index * 4 - 3));
+    template<uint8_t CHANNEL_NUM>
+    [[nodiscard]]
+    constexpr bool get_transfer_error_flag() const noexcept {
+        constexpr auto MASK = TRANSFER_ERROR_MASK<CHANNEL_NUM>;
+        return (INTFR.BITS & MASK) != 0;
     }
 
-    constexpr bool get_transfer_done_flag(const uint8_t index){
-        return std::bit_cast<uint32_t>(INTFR.BITS) & (1 << (index * 4 - 3));
+    template<uint8_t CHANNEL_NUM>
+    [[nodiscard]]
+    constexpr bool get_direct_mode_error_flag() const noexcept {
+        constexpr auto MASK = DIRECT_MODE_ERROR_MASK<CHANNEL_NUM>;
+        return (INTFR.BITS & MASK) != 0;
     }
 
-    constexpr void clear_transfer_onhalf_flag(const uint8_t index){
-        INTFCR.BITS = (1 << (index * 4 - 2));
+    template<uint8_t CHANNEL_NUM>
+    constexpr void clear_transfer_done_flag() noexcept {
+        constexpr auto MASK = TRANSFER_DONE_MASK<CHANNEL_NUM>;
+        INTFCR.BITS = MASK;
     }
 
-    constexpr bool get_transfer_onhalf_flag(const uint8_t index){
-        return std::bit_cast<uint32_t>(INTFR.BITS) & (1 << (index * 4 - 2));
+    template<uint8_t CHANNEL_NUM>
+    constexpr void clear_transfer_onhalf_flag() noexcept {
+        constexpr auto MASK = HALF_TRANSFER_MASK<CHANNEL_NUM>;
+        INTFCR.BITS = MASK;
     }
 
-    constexpr void clear_transfer_error_flag(const uint8_t index){
-        INTFCR.BITS = (1 << (index * 4 - 1));
+    template<uint8_t CHANNEL_NUM>
+    constexpr void clear_transfer_error_flag() noexcept {
+        constexpr auto MASK = TRANSFER_ERROR_MASK<CHANNEL_NUM>;
+        INTFCR.BITS = MASK;
     }
-    constexpr bool get_transfer_error_flag(const uint8_t index){
-        return std::bit_cast<uint32_t>(INTFR.BITS) & (1 << (index * 4 - 1));
+
+    template<uint8_t CHANNEL_NUM>
+    constexpr void clear_direct_mode_error_flag() noexcept {
+        constexpr auto MASK = DIRECT_MODE_ERROR_MASK<CHANNEL_NUM>;
+        INTFCR.BITS = MASK;
     }
 };
 
@@ -187,42 +198,98 @@ struct [[nodiscard]] DMA2_Def{
     volatile R32_DMA_INTFR EXTEM_INTFR;
     volatile R32_DMA_INTFCR EXTEM_INTFCR;
 
-    constexpr void clear_global_flag(const uint8_t index){
-        auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
-        reg.BITS = (1 << ((index & 0b111) * 4 - 4));
+    // 使用宏定义每个通道的特定掩码
+    template<uint8_t CHANNEL_NUM>
+    static constexpr uint32_t TRANSFER_DONE_MASK = [] -> uint32_t{
+        static_assert(CHANNEL_NUM <= 12);
+        uint8_t ind = CHANNEL_NUM;
+        if(ind >= 8) ind -= 7;
+        return (1 << ((ind & 0b111) * 4 - 3));
+    }();
+
+    template<uint8_t CHANNEL_NUM>
+    static constexpr uint32_t HALF_TRANSFER_MASK = [] -> uint32_t{
+        static_assert(CHANNEL_NUM <= 12);
+        uint8_t ind = CHANNEL_NUM;
+        if(ind >= 8) ind -= 7;
+        return (1 << ((ind & 0b111) * 4 - 2));
+    }();
+
+    template<uint8_t CHANNEL_NUM>
+    static constexpr uint32_t TRANSFER_ERROR_MASK = [] -> uint32_t{
+        static_assert(CHANNEL_NUM <= 12);
+        uint8_t ind = CHANNEL_NUM;
+        if(ind >= 8) ind -= 7;
+        return (1 << ((ind & 0b111) * 4 - 1));
+    }();
+
+    template<uint8_t CHANNEL_NUM>
+    static constexpr uint32_t DIRECT_MODE_ERROR_MASK = [] -> uint32_t{
+        static_assert(CHANNEL_NUM <= 12);
+        uint8_t ind = CHANNEL_NUM;
+        if(ind >= 8) ind -= 7;
+        return (1 << ((ind & 0b111) * 4));
+    }();
+
+
+    template<uint8_t CHANNEL_NUM>
+    [[nodiscard]] 
+    constexpr bool get_transfer_done_flag() const noexcept {
+        constexpr auto MASK = TRANSFER_DONE_MASK<CHANNEL_NUM>;
+        auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFR : INTFR;
+        return (reg.BITS & MASK) != 0;
     }
 
-    constexpr bool get_global_flag(const uint8_t index){
-        auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
-        return  std::bit_cast<uint32_t>(reg.BITS) & (1 << ((index & 0b111) * 4 - 4));
-    }
-    constexpr void clear_transfer_done_flag(const uint8_t index){
-        auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
-        reg.BITS = (1 << ((index & 0b111) * 4 - 3));
-    }
-
-    constexpr bool get_transfer_done_flag(const uint8_t index){
-        auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
-        return std::bit_cast<uint32_t>(reg.BITS) & (1 << ((index & 0b111) * 4 - 3));
+    template<uint8_t CHANNEL_NUM>
+    [[nodiscard]]
+    constexpr bool get_transfer_onhalf_flag() const noexcept {
+        constexpr auto MASK = HALF_TRANSFER_MASK<CHANNEL_NUM>;
+        auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFR : INTFR;
+        return (reg.BITS & MASK) != 0;
     }
 
-    constexpr void clear_transfer_onhalf_flag(const uint8_t index){
-        auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
-        reg.BITS = (1 << ((index & 0b111) * 4 - 2));
+    template<uint8_t CHANNEL_NUM>
+    [[nodiscard]]
+    constexpr bool get_transfer_error_flag() const noexcept {
+        constexpr auto MASK = TRANSFER_ERROR_MASK<CHANNEL_NUM>;
+        auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFR : INTFR;
+        return (reg.BITS & MASK) != 0;
     }
 
-    constexpr bool get_transfer_onhalf_flag(const uint8_t index){
-        auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
-        return std::bit_cast<uint32_t>(reg.BITS) & (1 << ((index & 0b111) * 4 - 2));
+    template<uint8_t CHANNEL_NUM>
+    [[nodiscard]]
+    constexpr bool get_direct_mode_error_flag() const noexcept {
+        constexpr auto MASK = DIRECT_MODE_ERROR_MASK<CHANNEL_NUM>;
+        auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFR : INTFR;
+        return (reg.BITS & MASK) != 0;
     }
 
-    constexpr void clear_transfer_error_flag(const uint8_t index){
-        auto & reg = index > 7 ? EXTEM_INTFCR : INTFCR; 
-        reg.BITS = (1 << ((index & 0b111) * 4 - 1));
+    template<uint8_t CHANNEL_NUM>
+    constexpr void clear_transfer_done_flag() noexcept {
+        constexpr auto MASK = TRANSFER_DONE_MASK<CHANNEL_NUM>;
+        auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFCR : INTFCR;
+        reg.BITS = MASK;
     }
-    constexpr bool get_transfer_error_flag(const uint8_t index){
-        auto & reg = index > 7 ? EXTEM_INTFR : INTFR; 
-        return std::bit_cast<uint32_t>(reg.BITS) & (1 << ((index & 0b111) * 4 - 1));
+
+    template<uint8_t CHANNEL_NUM>
+    constexpr void clear_transfer_onhalf_flag() noexcept {
+        constexpr auto MASK = HALF_TRANSFER_MASK<CHANNEL_NUM>;
+        auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFCR : INTFCR;
+        reg.BITS = MASK;
+    }
+
+    template<uint8_t CHANNEL_NUM>
+    constexpr void clear_transfer_error_flag() noexcept {
+        constexpr auto MASK = TRANSFER_ERROR_MASK<CHANNEL_NUM>;
+        auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFCR : INTFCR;
+        reg.BITS = MASK;
+    }
+
+    template<uint8_t CHANNEL_NUM>
+    constexpr void clear_direct_mode_error_flag() noexcept {
+        constexpr auto MASK = DIRECT_MODE_ERROR_MASK<CHANNEL_NUM>;
+        auto & reg = (CHANNEL_NUM >= 8) ? EXTEM_INTFCR : INTFCR;
+        reg.BITS = MASK;
     }
 };
 

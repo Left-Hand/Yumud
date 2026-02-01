@@ -568,6 +568,18 @@ private:
 
 };
 
+template<typename T>
+struct [[nodiscard]] ColorCaster<RGB565, RGB<T>>{
+    static constexpr RGB565 cast(const RGB<T> from){
+        return RGB565::from_r5g6b5(
+            static_cast<uint8_t>(from.r * 31),
+            static_cast<uint8_t>(from.g * 63),
+            static_cast<uint8_t>(from.b * 31)
+        );
+    }
+};
+
+
 }
 
 #include "color.tpp"

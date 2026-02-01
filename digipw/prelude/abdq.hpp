@@ -121,7 +121,7 @@ struct [[nodiscard]] AlphaBetaCoord final{
     }
 
     template<typename U>
-    [[nodiscard]] constexpr DqCoord<T> to_dq(const Rotation2<U> rot) const{
+    [[nodiscard]] constexpr DqCoord<T> to_dq(const math::Rotation2<U> rot) const{
         DqCoord<T> dq;
         details::alphabeta_to_dq(dq, *this, rot);
         return dq;
@@ -303,7 +303,7 @@ struct [[nodiscard]] DqCoord final{
 
 
     template<typename U>
-    [[nodiscard]] constexpr AlphaBetaCoord<T> to_alphabeta(const Rotation2<U> rot) const {
+    [[nodiscard]] constexpr AlphaBetaCoord<T> to_alphabeta(const math::Rotation2<U> rot) const {
         AlphaBetaCoord<T> ret;
         details::dq_to_alphabeta(ret, *this, rot);
         return ret;

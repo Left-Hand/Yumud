@@ -482,8 +482,8 @@ struct Regset final{
     }DEF_R8(self_test)
 
 
-    Vec3<int16_t> gyr = Vec3<int16_t>::ZERO;;
-    Vec3<int16_t> acc = Vec3<int16_t>::ZERO;;
+    math::Vec3<int16_t> gyr = math::Vec3<int16_t>::ZERO;;
+    math::Vec3<int16_t> acc = math::Vec3<int16_t>::ZERO;;
 
 };
 

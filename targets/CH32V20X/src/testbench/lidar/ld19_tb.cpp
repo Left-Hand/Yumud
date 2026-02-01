@@ -1,6 +1,6 @@
 #include "src/testbench/tb.h"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "core/clock/clock.hpp"

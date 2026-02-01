@@ -172,66 +172,72 @@ struct [[nodiscard]] SerializeReceiver final{
 public:
     using NoCheckSerialzeFunc = SerialzeFunctions<NoCheckPolicy>;
     std::span<uint8_t> uchars;
-    size_t idx;
+    size_t ind_ = 0;
 
     using Error = SerError;
     using SerResult = Result<void, Error>;
 
 
     template<size_t Extents>
-    constexpr Result<void, SerError> recv_zero_terminated_uchars(const std::span<const uint8_t, Extents> obj) noexcept {
+    constexpr Result<void, SerError> push_zero_terminated_uchars(
+        const std::span<const uint8_t, Extents> obj
+    ) noexcept {
         if(const auto res = check_input_length(obj.size() + 1);
             res.is_err()) return res;
-        const auto feed_len = NoCheckSerialzeFunc::ser_zero_terminated_uchars(uchars.data() + idx, obj);
-        idx += feed_len;
+        const auto feed_len = NoCheckSerialzeFunc::ser_zero_terminated_uchars(uchars.data() + ind_, obj);
+        ind_ += feed_len;
         return Ok();
     }
 
     template<size_t Extents>
-    constexpr Result<void, SerError> recv_0xff_terminated_uchars(const std::span<const uint8_t, Extents> obj) noexcept {
+    constexpr Result<void, SerError> push_0xff_terminated_uchars(
+        const std::span<const uint8_t, Extents> obj
+    ) noexcept {
         if(const auto res = check_input_length(obj.size() + 1);
             res.is_err()) return res;
-        const auto feed_len = NoCheckSerialzeFunc::ser_0xff_terminated_uchars(uchars.data() + idx, obj);
-        idx += feed_len;
+        const auto feed_len = NoCheckSerialzeFunc::ser_0xff_terminated_uchars(uchars.data() + ind_, obj);
+        ind_ += feed_len;
         return Ok();
     }
 
     template<typename D>
-    constexpr Result<void, SerError> recv_be_int(const auto int_val) noexcept {
+    constexpr Result<void, SerError> push_be_int(
+        const auto int_val
+    ) noexcept {
         if constexpr(std::is_same_v<D, uint24_t> || std::is_same_v<D, int24_t>){
             if(const auto res = check_input_length(3);
                 res.is_err()) return res;
-            const auto feed_len = NoCheckSerialzeFunc::ser_be_int<D>(uchars.data() + idx, static_cast<D>(int_val));
-            idx += feed_len;
+            const auto feed_len = NoCheckSerialzeFunc::ser_be_int<D>(uchars.data() + ind_, static_cast<D>(int_val));
+            ind_ += feed_len;
             return Ok();
         }else{
             if(const auto res = check_input_length(sizeof(D));
                 res.is_err()) return res;
-            const auto feed_len = NoCheckSerialzeFunc::ser_be_int<D>(uchars.data() + idx, static_cast<D>(int_val));
-            idx += feed_len;
+            const auto feed_len = NoCheckSerialzeFunc::ser_be_int<D>(uchars.data() + ind_, static_cast<D>(int_val));
+            ind_ += feed_len;
             return Ok();
         }
 
     }
 
     template<typename T>
-    constexpr Result<void, SerError> recv_bits_intoable(const T obj) noexcept {
-        return recv_be_int<tmp::to_bits_t<T>>(uchars.data(), obj_to_bits<std::decay_t<T>>(obj));
+    constexpr Result<void, SerError> push_bits_intoable(const T obj) noexcept {
+        return push_be_int<tmp::to_bits_t<T>>(uchars.data(), obj_to_bits<std::decay_t<T>>(obj));
     }
 
     template<typename E>
     requires (std::is_enum_v<E>)
-    constexpr Result<void, SerError> recv_enum(const E obj) noexcept {
+    constexpr Result<void, SerError> push_enum(const E obj) noexcept {
         static_assert(sizeof(E) == 1);
-        return recv_be_int<uint8_t>(static_cast<uint8_t>(obj));
+        return push_be_int<uint8_t>(static_cast<uint8_t>(obj));
     }
 
-    constexpr Result<void, SerError> recv_fp32(const math::fp32 obj) noexcept{
-        return recv_be_int<uint32_t>(obj.to_bits());
+    constexpr Result<void, SerError> push_fp32(const math::fp32 obj) noexcept{
+        return push_be_int<uint32_t>(obj.to_bits());
     }
 private:
     constexpr Result<void, SerError> check_input_length(size_t length) noexcept {
-        if(idx + length > uchars.size()){
+        if(ind_ + length > uchars.size()){
             return Err(SerError::OutOfMemory);
         }
         return Ok();

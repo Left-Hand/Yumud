@@ -6,10 +6,10 @@ namespace ymd{
 
 template<typename T>
 struct Triangle2{
-    std::array<Vec2<T>, 3> points;
+    std::array<math::Vec2<T>, 3> points;
 
 
-    constexpr Vec2<T> top() const {
+    constexpr math::Vec2<T> top() const {
         const auto min_y = MIN(points[0].y, points[1].y, points[2].y);
         for (const auto& point : points) {
             if (point.y == min_y) {
@@ -19,7 +19,7 @@ struct Triangle2{
         return points[0]; // fallback
     }
 
-    constexpr Vec2<T> bottom() const {
+    constexpr math::Vec2<T> bottom() const {
         const auto max_y = MAX(points[0].y, points[1].y, points[2].y);
         for (const auto& point : points) {
             if (point.y == max_y) {
@@ -29,7 +29,7 @@ struct Triangle2{
         return points[0]; // fallback
     }
 
-    constexpr Vec2<T> middle() const {
+    constexpr math::Vec2<T> middle() const {
         const auto y0 = points[0].y, y1 = points[1].y, y2 = points[2].y;
         const auto min_y = MIN(y0, y1, y2);
         const auto max_y = MAX(y0, y1, y2);
@@ -56,15 +56,15 @@ struct Triangle2{
         return (points[1] - points[0]).cross(points[2] - points[0]) / 2;
     }
 
-    constexpr bool contains_point(const Vec2<T>& p) const {
+    constexpr bool contains_point(const math::Vec2<T>& p) const {
         const auto& a = points[0];
         const auto& b = points[1];
         const auto& c = points[2];
         
         // 计算重心坐标
-        const Vec2<T> v0 = b - a;
-        const Vec2<T> v1 = c - a;
-        const Vec2<T> v2 = p - a;
+        const math::Vec2<T> v0 = b - a;
+        const math::Vec2<T> v1 = c - a;
+        const math::Vec2<T> v2 = p - a;
         
         const T dot00 = v0.dot(v0);
         const T dot01 = v0.dot(v1);
@@ -93,23 +93,23 @@ struct Triangle2{
         return result;
     }
 
-    constexpr Rect2<T> bounding_box() const {
-        return Rect2<T>::from_minimal_bounding_box(points);
+    constexpr math::Rect2<T> bounding_box() const {
+        return math::Rect2<T>::from_minimal_bounding_box(points);
     }
 
-    constexpr Vec2<T> operator[](const size_t index) const{
+    constexpr math::Vec2<T> operator[](const size_t index) const{
         return points[index];
     }
 
-    constexpr Vec2<T> & operator[](const size_t index){
+    constexpr math::Vec2<T> & operator[](const size_t index){
         return points[index];
     }
 
-    constexpr Vec2<T> compute_centroid() const{
+    constexpr math::Vec2<T> compute_centroid() const{
         return (points[0] + points[1] + points[2]) / 3;
     }
 
-    constexpr std::tuple<T, T, T> compute_barycentric_2d(const Vec2<T> p)
+    constexpr std::tuple<T, T, T> compute_barycentric_2d(const math::Vec2<T> p)
     {
         const auto [xp, yp] = p;
         const T xa = points[0].x, ya = points[0].y;
@@ -123,7 +123,7 @@ struct Triangle2{
     }
 
 private:
-    static constexpr bool is_points_clockwise(const std::span<const Vec2<T>, 3> points) {
+    static constexpr bool is_points_clockwise(const std::span<const math::Vec2<T>, 3> points) {
         if (points.size() < 3) return false;
         
         T cross_sum = T{0};
@@ -150,12 +150,12 @@ struct is_placed_t<Triangle2<T>>: std::true_type {};
 template<typename T>
 struct TriangleIterator {
 public:
-    using Point = Vec2<T>;
+    using Point = math::Vec2<T>;
 
     struct LineIterator{
-        using Point = Vec2<uint16_t>;
+        using Point = math::Vec2<uint16_t>;
 
-        constexpr LineIterator(const Vec2<auto> p1, const Vec2<auto> p2):
+        constexpr LineIterator(const math::Vec2<auto> p1, const math::Vec2<auto> p2):
             x_step_((p1.y == p2.y) ? 0 : iq16(p2.x - p1.x) / (p2.y - p1.y)),
             current_x_(p1.x){;}
 
@@ -163,16 +163,16 @@ public:
             return current_x_;
         }
 
-        __fast_inline constexpr Range2u16 x_range() const{
+        __fast_inline constexpr math::Range2u16 x_range() const{
             const iq16 a = x();
             const iq16 b = a + x_step();
             if(a < b){
-                return Range2u16::from_start_and_stop_unchecked(
+                return math::Range2u16::from_start_and_stop_unchecked(
                     math::floor_cast<uint16_t>(a), 
                     math::ceil_cast<uint16_t>(b)
                 );
             }else{
-                return Range2u16::from_start_and_stop_unchecked(
+                return math::Range2u16::from_start_and_stop_unchecked(
                     math::floor_cast<uint16_t>(b), 
                     math::ceil_cast<uint16_t>(a)
                 );
@@ -214,16 +214,16 @@ public:
         return current_y_ < stop_y_;
     }
 
-    __fast_inline constexpr Range2u16 current_filled() const {
+    __fast_inline constexpr math::Range2u16 current_filled() const {
         auto & self = *this;
-        return Range2u16::from_start_and_stop(
-        // return Range2u16::from_start_and_stop_unchecked(
+        return math::Range2u16::from_start_and_stop(
+        // return math::Range2u16::from_start_and_stop_unchecked(
             math::floor_cast<uint16_t>(left_iter(self).x()), 
             math::ceil_cast<uint16_t>(right_iter(self).x())
         );
     }
 
-    __fast_inline constexpr std::tuple<Range2u16, Range2u16> left_and_right() const {
+    __fast_inline constexpr std::tuple<math::Range2u16, math::Range2u16> left_and_right() const {
         auto & self = *this;
         return {
             left_iter(self).x_range(),
@@ -260,8 +260,8 @@ private:
         ....B  
         */
 
-        const Vec2<T> ab = sorted_triangle_.points[2] - sorted_triangle_.points[0];
-        const Vec2<T> ap = sorted_triangle_.points[1] - sorted_triangle_.points[0];
+        const math::Vec2<T> ab = sorted_triangle_.points[2] - sorted_triangle_.points[0];
+        const math::Vec2<T> ap = sorted_triangle_.points[1] - sorted_triangle_.points[0];
         return ap.is_clockwise_to(ab);
     }
 
@@ -298,11 +298,11 @@ private:
 
 
 template<std::integral T>
-struct DrawDispatchIterator<Triangle2<T>> {
+struct RenderIterator<Triangle2<T>> {
     using Triangle = Triangle2<T>;
     using Iterator = TriangleIterator<T>;
 
-    constexpr DrawDispatchIterator(const Triangle & triangle):
+    constexpr RenderIterator(const Triangle & triangle):
         iter_(triangle.to_sorted_by_y()){;}
 
     // 检查是否还有下一行
@@ -311,7 +311,7 @@ struct DrawDispatchIterator<Triangle2<T>> {
     }
 
     // 推进到下一行
-    constexpr void forward() {
+    constexpr void seek_next() {
         iter_.advance();
     }
 

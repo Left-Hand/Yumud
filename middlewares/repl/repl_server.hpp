@@ -4,6 +4,9 @@
 #include "core/string/owned/heapless_string.hpp"
 #include "core/container/heapless_vector.hpp"
 #include "middlewares/repl/repl.hpp"
+#include "core/string/utils/line_input_sinker.hpp"
+#include "core/string/utils/split_iter.hpp"
+#include "core/utils/iter/foreach.hpp"
 
 namespace ymd::repl{
 
@@ -15,106 +18,46 @@ public:
 
     template<typename T>
     void invoke(T && obj){
-        while(is_->available()){
+        if(not is_->available()) return;
+        while(true){
             uint8_t byte;
-            is_->try_read_byte(byte);
+            if(const auto len = is_->try_read_byte(byte);
+                len == 0) break;
+            const auto res = line_sinker_.push_char(static_cast<char>(byte));
+            if(res.is_full) line_sinker_.reset();
+            if(res.is_end_of_line){
+                // DEBUG_PRINTLN(line_sinker_.dump_and_reset());
+                auto line = line_sinker_.get_and_reset();
+                auto iter = StringSplitIter(line, ' ') | foreach([](StringView token){ 
+                    return token.trim();
+                });
+                const auto strs = [&]{
+                    HeaplessVector<StringView, 12> ret;
+                    while(iter.has_next()){
+                        if(ret.append(iter.next()).is_err()) break; 
+                    }
+                    return ret;
+                }();
 
-            splitter_.update(byte,
-                [this, &obj](const std::span<const StringView> strs){
-                const auto res = respond(obj, strs);
+                const auto resp_res = respond(obj, strs);
                 if(outen_){
-                    os_.prints(">>=", res);
+                    os_.prints(">>=", resp_res);
                 }
-            });
+        
+
+            }
         }
     }
 
     void set_outen(Enable outen){ outen_ = outen == EN; }
-private:
+// private:
+public:
     ReadCharProxy is_;
     OutputStreamByRoute os_;
 
 
-
-    struct StreamedStringSplitter final{
-    public:
-        constexpr StreamedStringSplitter(){;}
-
-        template<typename Fn>
-        constexpr void update(const char chr, Fn && fn){
-            if(is_valid_char(chr)){
-                temp_str_.push_back_unchecked(chr);
-            }
-
-            if(temp_str_.size() >= STR_MAX_LENGTH){
-                on_buf_overflow();
-                temp_str_.clear();
-            }
-
-            if(chr == '\n'){
-                send_line(
-                    StringView(temp_str_.data(), temp_str_.size()), 
-                    delimiter_,
-                    std::forward<Fn>(fn)
-                );
-
-                temp_str_.clear();
-            }
-        }
-
-        constexpr StringView temp() const {
-            return StringView{temp_str_.data(), temp_str_.size()};
-        }
-
-    private:
-        static constexpr size_t STR_MAX_LENGTH = 64;
-        static constexpr size_t STR_MAX_PIECES = 8;
-
-        HeaplessString<STR_MAX_LENGTH> temp_str_;
-        char delimiter_ = ' ';
-
-        template<typename Fn>
-        static constexpr void send_line(const StringView line, const char delimiter, Fn && fn) {
-
-            HeaplessVector<StringView, STR_MAX_PIECES> str_pieces;
-        
-            size_t from = 0;
-            for(size_t i = 0; i < line.length(); i++){
-                if((i == 0 || line[i - 1] == delimiter) and line[i] != delimiter){
-                    from = i;
-                }
-        
-                
-                if(line[i] != delimiter and 
-                    (i + 1 >= line.length() or line[i + 1] == delimiter or line[i + 1] == '\0')){
-                    str_pieces.push_back(line.substr_by_range(from, i+1).unwrap());
-                }
-        
-                if((str_pieces.size() == STR_MAX_PIECES)){
-                    on_pieces_overflow();
-                    return;
-                }
-            }
-        
-            std::forward<Fn>(fn)(std::span<StringView>(str_pieces.data(), str_pieces.size()));
-        }
-
-        static constexpr bool is_valid_char(const char c){
-            return (c >= 32) and (c <= 126);
-        }
-
-        static constexpr void on_buf_overflow(){
-            //TODO
-        }
-
-        static constexpr void on_pieces_overflow(){
-            //TODO
-        }
-
-    };
-
-    
-    StreamedStringSplitter splitter_;
+    std::array<char, 64> str_buf_;
+    LineInputSinker line_sinker_ = LineInputSinker{std::span(str_buf_)};
 
     bool outen_ = false;
 

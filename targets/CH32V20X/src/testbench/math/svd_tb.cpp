@@ -9,10 +9,10 @@
 #include "core/math/realmath.hpp"
 #include "core/utils/Result.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 #include "robots/slam/svd.hpp"
 #include "algebra/vectors/vec3.hpp"
@@ -50,11 +50,11 @@ OutputStream & operator<<(OutputStream & os, const SlamErrorKind & error){
 namespace ymd::slam{
 
 template<typename T>
-static constexpr Matrix<T, 3, 9> jacobian_so3(const Matrix3x3<T> & m){
+static constexpr math::Matrix<T, 3, 9> jacobian_so3(const math::Matrix3x3<T> & m){
     const auto trace = m.trace();
     const auto c = sqrt(trace - 1) * static_cast<T>(0.5);
     if(c > static_cast<T>(0.999999))
-        return Matrix<T, 3, 9>::zero();
+        return math::Matrix<T, 3, 9>::zero();
     const auto s = sqrt(1 - math::square(c));
 
     const auto theta = atan2(s, c);
@@ -64,7 +64,7 @@ static constexpr Matrix<T, 3, 9> jacobian_so3(const Matrix3x3<T> & m){
     const auto a3 = m.template at<1,0> - m.template at<0,1> * factor;
     const auto b = static_cast<T>(0.5) * theta / s;
 
-    return Matrix<T, 3, 9>(
+    return math::Matrix<T, 3, 9>(
         a1,  a2,  a3,  
         0.0, 0.0,   b,
         0.0,  -b, 0.0,
@@ -87,7 +87,7 @@ namespace experimental{
 
 
     template<typename T>    
-    __fast_inline Rotation2<T> svd_2x2(const Matrix<T,2,2> H) {
+    __fast_inline math::Rotation2<T> svd_2x2(const math::Matrix<T,2,2> H) {
 
         const auto [a, b, c, d] = H.to_flatten_array();
             // 使用更数值稳定的方法
@@ -99,12 +99,12 @@ namespace experimental{
         const T rotation_angle = atan2pu(off_diag, diff);
         
         
-        return Rotation2<T>::from_angle(Angular<T>::from_turns(0.5f * rotation_angle));
+        return math::Rotation2<T>::from_angle(Angular<T>::from_turns(0.5f * rotation_angle));
 
         // // 直接计算旋转角度，忽略次要项
         // const auto rotation_angle = atan2pu(b + c, a - d);  // atan2(g, f)的2倍简化
         
-        // return Rotation2<T>::from_angle(Angular<T>::from_turns(static_cast<T>(0.5f) * rotation_angle));
+        // return math::Rotation2<T>::from_angle(Angular<T>::from_turns(static_cast<T>(0.5f) * rotation_angle));
 
         const T e = static_cast<T>(0.5f) * (a + d);
         const T f = static_cast<T>(0.5f) * (a - d);
@@ -117,14 +117,14 @@ namespace experimental{
         // const auto theta_angle = Angular<T>::from_turns(static_cast<T>(0.5f) * (a2 - a1));
         // const auto phi_angle = Angular<T>::from_turns(static_cast<T>(0.5f) * (a2 + a1));
 
-        // return Rotation2<T>::from_angle(theta_angle - phi_angle);  // ❌ 这里错了！
+        // return math::Rotation2<T>::from_angle(theta_angle - phi_angle);  // ❌ 这里错了！
         // const T q = mag(e, h);
         // const T r = mag(f, g);
 
         // const T sx = q + r;
         // const T sy = q - r;
 
-        // const auto sigma = Matrix<T,2,2>(
+        // const auto sigma = math::Matrix<T,2,2>(
         //     sx, 0,
         //     0, sy
         // );
@@ -135,22 +135,22 @@ namespace experimental{
         const auto theta_angle = Angular<T>::from_radians(static_cast<T>(0.5f) * (a2 - a1));
         const auto phi_angle = Angular<T>::from_radians(static_cast<T>(0.5f) * (a2 + a1));
 
-        // return Rotation2<T>::from_angle(theta_angle - phi_angle);
+        // return math::Rotation2<T>::from_angle(theta_angle - phi_angle);
 
         const auto [theta_sin, theta_cos] = (theta_angle).sincos();
         const auto [phi_sin, phi_cos] = (phi_angle).sincos();
 
-        const auto u = Matrix<T,2,2>(
+        const auto u = math::Matrix<T,2,2>(
             theta_cos, -theta_sin,
             theta_sin, theta_cos
         );
 
-        const auto v = Matrix<T,2,2>(
+        const auto v = math::Matrix<T,2,2>(
             phi_cos, -phi_sin,
             phi_sin, phi_cos
         );
 
-        return Rotation2<T>(u * v.transpose());
+        return math::Rotation2<T>(u * v.transpose());
     }
 }
     struct IndexRelations{
@@ -194,18 +194,18 @@ namespace experimental{
     template<typename T>
     struct CorrespondPointCloudIterator{
     private:
-        const std::span<const Vec2<T>> pts1_; 
-        const std::span<const Vec2<T>> pts2_;
+        const std::span<const math::Vec2<T>> pts1_; 
+        const std::span<const math::Vec2<T>> pts2_;
         IndexRelations relations_;
     };
 
     template<typename T>
-    static constexpr Matrix2x2<T> compute_cross_variance_2x2(
-        const std::span<const Vec2<T>> points1, 
-        const std::span<const Vec2<T>> points2,
+    static constexpr math::Matrix2x2<T> compute_cross_variance_2x2(
+        const std::span<const math::Vec2<T>> points1, 
+        const std::span<const math::Vec2<T>> points2,
         const int16_t * cor
     ) {
-        Matrix2x2<T> cov = Matrix2x2<T>::zero(); 
+        math::Matrix2x2<T> cov = math::Matrix2x2<T>::zero(); 
         for (size_t i = 0; i < points1.size(); i++) {
             const auto j = cor[i];
             if (j < 0) continue;
@@ -223,8 +223,8 @@ namespace experimental{
 
 
 template<typename T, size_t D, 
-    typename Isometry = std::conditional_t<D == 2, Isometry2<T>, Isometry3<T>>,
-    typename Vec = std::conditional_t<D == 2, Vec2<T>, Vec3<T>>
+    typename Isometry = std::conditional_t<D == 2, math::Isometry2<T>, math::Isometry3<T>>,
+    typename Vec = std::conditional_t<D == 2, math::Vec2<T>, math::Vec3<T>>
 >
 static constexpr Result<Isometry, SlamErrorKind> pose_estimation(
     const std::span<const Vec> points1,
@@ -235,7 +235,7 @@ static constexpr Result<Isometry, SlamErrorKind> pose_estimation(
     static_assert(D == 2 || D == 3, "Invalid dimension");
 
     using Rotation = typename Isometry::Rotation;
-    using W_Matrix = Matrix<T, D, D>;
+    using W_Matrix = math::Matrix<T, D, D>;
 
     if(points1.size() != points2.size())
         return Err(SlamErrorKind::PointsCntNotMatch);
@@ -252,7 +252,7 @@ static constexpr Result<Isometry, SlamErrorKind> pose_estimation(
     // 计算协方差矩阵 W
     const W_Matrix W = std::transform_reduce(
         points1.begin(), points1.end(), points2.begin(),
-        Matrix<T, D, D>::zero(),
+        math::Matrix<T, D, D>::zero(),
         
         std::plus<>(),
         [&](const Vec& p1, const Vec& p2) {
@@ -268,8 +268,8 @@ static constexpr Result<Isometry, SlamErrorKind> pose_estimation(
         return Err(SlamErrorKind::JacobiSvdIterLimitReached);
 
     const auto & sol = may_sol.unwrap();
-    const Matrix<T, D, D> & U = sol.U;
-    const Matrix<T, D, D> & V = sol.V;
+    const math::Matrix<T, D, D> & U = sol.U;
+    const math::Matrix<T, D, D> & V = sol.V;
 
     
     // 确保是旋转矩阵（行列式为正）
@@ -288,8 +288,8 @@ static constexpr Result<Isometry, SlamErrorKind> pose_estimation(
 
 
 template<typename T, typename Fn>
-static std::vector<Vec2<T>> make_points2d_from_lambda(Fn && fn, size_t num){
-    std::vector<Vec2<T>> pts;
+static std::vector<math::Vec2<T>> make_points2d_from_lambda(Fn && fn, size_t num){
+    std::vector<math::Vec2<T>> pts;
     pts.reserve(num);
     for(size_t i = 0; i < num; ++i){
         pts.push_back(std::forward<Fn>(fn)(i));
@@ -300,7 +300,7 @@ static std::vector<Vec2<T>> make_points2d_from_lambda(Fn && fn, size_t num){
 
 template<typename T, typename Fn>
 static auto make_point_cloud3d_from_lambda(Fn && fn, size_t num){
-    std::vector<Vec3<T>> pts(num);
+    std::vector<math::Vec3<T>> pts(num);
     for(size_t i = 0; i < num; ++i){
         pts.push_back(std::forward<Fn>(fn)(i));
     }
@@ -313,13 +313,13 @@ static void point_cloud_demo(){
     static constexpr size_t MAX_ITERATIONS = 100;
 
     auto lambda1 = [](size_t i){ 
-        return Vec2<T>::from_angle(Angular<T>::from_radians(i * static_cast<T>(0.1)));
+        return math::Vec2<T>::from_angle(Angular<T>::from_radians(i * static_cast<T>(0.1)));
     };
 
     auto lambda2 = [](size_t i){ 
         const auto angle = Angular<T>::from_radians(i * static_cast<T>(0.1) + 
             Angular<T>::from_degrees(10).to_radians());
-        return Vec2<T>::from_angle(angle) + Vec2<T>(40, 50);
+        return math::Vec2<T>::from_angle(angle) + math::Vec2<T>(40, 50);
     };
 
     const auto points1 = make_points2d_from_lambda<T>(lambda1, NUM_POINTS);
@@ -361,7 +361,7 @@ void svd_main(){
 
     // Create a test matrix (3x2)
     const auto begin_us = clock::micros();
-    auto A = Matrix<float, 3, 2>::from_uninitialized();
+    auto A = math::Matrix<float, 3, 2>::from_uninitialized();
     A(0, 0) = 1.0; A(0, 1) = 2.0;
     A(1, 0) = 3.0; A(1, 1) = 4.0;
     A(2, 0) = 5.0; A(2, 1) = 6.0;
@@ -385,7 +385,7 @@ void svd_main(){
     DEBUG_PRINTLN(V);
     
     // Verify orthogonality of U (U^T * U should be identity)
-    Matrix<float, 3, 3> U_orthogonality_check = U.transpose() * U;
+    math::Matrix<float, 3, 3> U_orthogonality_check = U.transpose() * U;
     float u_error = 0.0;
     for (size_t i = 0; i < 3; i++) {
         for (size_t j = 0; j < 3; j++) {
@@ -395,7 +395,7 @@ void svd_main(){
     }
     
     // Verify orthogonality of V (V^T * V should be identity)
-    Matrix<float, 2, 2> V_orthogonality_check = V.transpose() * V;
+    math::Matrix<float, 2, 2> V_orthogonality_check = V.transpose() * V;
     float v_error = 0.0;
     for (size_t i = 0; i < 2; i++) {
         for (size_t j = 0; j < 2; j++) {
@@ -405,7 +405,7 @@ void svd_main(){
     }
     
     // Verify reconstruction: A ≈ U * Σ * V^T
-    auto reconstructed = Matrix<float, 3, 2>::from_uninitialized();
+    auto reconstructed = math::Matrix<float, 3, 2>::from_uninitialized();
     for (size_t i = 0; i < 3; i++) {
         for (size_t j = 0; j < 2; j++) {
             reconstructed(i, j) = 0;

@@ -12,8 +12,8 @@
 namespace ymd::nuedc_2025e{
 
 
-using Vector2u8 = Vec2<uint8_t>;
-using Vector2q20 = Vec2<iq20>;
+using Vector2u8 = math::Vec2<uint8_t>;
+using Vector2q20 = math::Vec2<iq20>;
 
 static constexpr size_t CANFRAME_QUEUE_SIZE = 8;
 
@@ -87,7 +87,7 @@ namespace msgs{
 
 
 struct ErrPosition{
-    // std::array<Vec2<uint8_t>, 4> points;
+    // std::array<math::Vec2<uint8_t>, 4> points;
     math::bf16 px;
     math::bf16 py;
     math::bf16 z;

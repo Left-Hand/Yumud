@@ -4,9 +4,9 @@
 #include "drivers/Proximeter/VL53L0X/vl53l0x.hpp"
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 
 #include "drivers/HumitureSensor/MLX90640/mlx90640.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
@@ -98,7 +98,7 @@ void mlx90640_main(){
     hal::Gpio scl_pin_ = SCL_PIN;
     hal::Gpio sda_pin_ = SDA_PIN;
 
-    hal::I2cSw i2c_sw_ = hal::I2cSw{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c_sw_ = hal::SoftI2c{&scl_pin_, &sda_pin_};
 
     drivers::ST7789 tft{
         drivers::ST7789_Transport{&spi, spi_rank, &lcd_dc, &dev_rst}, 
@@ -110,7 +110,7 @@ void mlx90640_main(){
 
     [[maybe_unused]] auto plot_rgb = [&](
         const RGB565 * src, 
-        const Rect2u rect
+        const math::Rect2u rect
     ){
         // DEBUG_PRINTLN(line.bounding_box());
         tft.put_texture(
@@ -175,8 +175,8 @@ void mlx90640_main(){
             }
 
             // DEBUG_PRINTLN(std::setprecision(2), row_pixels_view);
-            plot_rgb(row_pixels_scaled.data(), Rect2u::from_xywh(0, 2 * j, VALID_PIXELS * 4, 1));
-            plot_rgb(row_pixels_scaled.data(), Rect2u::from_xywh(0, 2 * j + 1, VALID_PIXELS * 4, 1));
+            plot_rgb(row_pixels_scaled.data(), math::Rect2u::from_xywh(0, 2 * j, VALID_PIXELS * 4, 1));
+            plot_rgb(row_pixels_scaled.data(), math::Rect2u::from_xywh(0, 2 * j + 1, VALID_PIXELS * 4, 1));
             // DEBUG_PRINTLN(row_pixels);
 
             // clock::delay(2ms);

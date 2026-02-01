@@ -17,7 +17,7 @@
 #include "ParticleSwarmOptimization.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "func_eval.hpp"
 #include "digipw/ctrl/qpr_controller.hpp"
 
