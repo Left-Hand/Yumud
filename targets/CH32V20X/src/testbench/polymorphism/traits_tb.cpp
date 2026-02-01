@@ -5,7 +5,7 @@
 
 #include "core/polymorphism/traits.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 using namespace ymd;
 

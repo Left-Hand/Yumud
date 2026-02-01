@@ -7,10 +7,10 @@
 #include "core/stream/BufStream.hpp"
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "algebra/vectors/quat.hpp"
@@ -199,12 +199,12 @@ void smc2025_main(){
 
     auto cam_i2c_scl = hal::PD<2>();
     auto cam_i2c_sda = hal::PC<12>();
-    hal::I2cSw cam_i2c{&cam_i2c_scl, &cam_i2c_sda};
+    hal::SoftI2c cam_i2c{&cam_i2c_scl, &cam_i2c_sda};
     cam_i2c.init({.baudrate = hal::NearestFreq(100_KHz)});
 
     auto i2c_scl = hal::PB<3>();
     auto i2c_sda = hal::PB<5>();
-    hal::I2cSw i2c{&i2c_scl, &i2c_sda};
+    hal::SoftI2c i2c{&i2c_scl, &i2c_sda};
     i2c.init({.baudrate = hal::NearestFreq(400_KHz)});
     
     #if 0

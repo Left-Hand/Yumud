@@ -6,7 +6,7 @@
 #include "hal/timer/hw_singleton.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 namespace ymd{
 struct TransferSysEvaluator{

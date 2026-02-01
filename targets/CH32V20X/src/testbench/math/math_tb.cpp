@@ -28,7 +28,7 @@
 #include "robots/kinematics/Mecanum4/mecanum4_kinematics.hpp"
 #include "robots/kinematics/WheelLeg/wheelleg_kinematics.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 
 

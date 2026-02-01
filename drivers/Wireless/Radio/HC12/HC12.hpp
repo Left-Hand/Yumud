@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/bus/uart/uart.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_intf.hpp"
 
 #include "core/clock/clock.hpp"

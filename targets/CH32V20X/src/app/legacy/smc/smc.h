@@ -357,8 +357,8 @@ protected:
     ST7789 tftDisplayer {SpiInterfaceLcd, Vec2i(240, 240)};
     Painter<RGB565> painter = Painter<RGB565>{};
 
-    I2cSw sccb      {hal::PD<2>(), hal::PC<12>()};
-    I2cSw i2c       {hal::PB<3>(), hal::PB<5>()};
+    SoftI2c sccb      {hal::PD<2>(), hal::PC<12>()};
+    SoftI2c i2c       {hal::PB<3>(), hal::PB<5>()};
 
     MT9V034 camera  {sccb};
     Key start_key   {hal::PE<3>(), false};

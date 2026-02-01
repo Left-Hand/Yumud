@@ -10,8 +10,8 @@
 
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/timer/bipolarity_abstract.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio.hpp"
 
 #include "algebra/regions/range2.hpp"

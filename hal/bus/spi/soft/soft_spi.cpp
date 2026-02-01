@@ -1,9 +1,9 @@
-#include "spisw.hpp"
+#include "soft_spi.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
 
-void SpiSw::init(const SpiConfig & cfg){
+void SoftSpi::init(const SpiConfig & cfg){
     set_baudrate(cfg.baudrate);
 
     mosi_pin_.outpp();
@@ -20,7 +20,7 @@ void SpiSw::init(const SpiConfig & cfg){
 }
 
 
-hal::HalResult SpiSw::blocking_transceive(uint32_t & data_rx, const uint32_t data_tx){
+hal::HalResult SoftSpi::blocking_transceive(uint32_t & data_rx, const uint32_t data_tx){
     uint32_t ret = 0;
 
     sclk_pin_.set_high();
@@ -58,7 +58,7 @@ hal::HalResult SpiSw::blocking_transceive(uint32_t & data_rx, const uint32_t dat
     return hal::HalResult::Ok();
 }
 
-hal::HalResult SpiSw::set_baudrate(const SpiBaudrate baud) {
+hal::HalResult SoftSpi::set_baudrate(const SpiBaudrate baud) {
     const auto baud_freq = [&]{
         if(not baud.is<LeastFreq>()) 
             __builtin_trap();

@@ -11,8 +11,8 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
 
 #include "algebra/vectors/vec3.hpp"
 

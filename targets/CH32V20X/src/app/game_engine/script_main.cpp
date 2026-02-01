@@ -8,9 +8,9 @@
 #include "core/string/owned/heapless_string.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 #include "primitive/image/painter/painter.hpp"
 #include "primitive/colors/rgb/rgb.hpp"

@@ -7,10 +7,10 @@
 #include "core/utils/default.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
-#include "hal/bus/can/can.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/analog/opa/opa.hpp"
+#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
+#include "hal/gpio/gpio_port.hpp"
 #include "middlewares/repl/repl_server.hpp"
 #include "robots/nodes/msg_factory.hpp"
 #include "robots/nodes/node_role.hpp"

@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "core/debug/debug.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Proximeter/PAJ7620/paj7620.hpp"
@@ -27,7 +27,7 @@ void paj7620_main(){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;  
 
-    hal::I2cSw i2c = hal::I2cSw{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c = hal::SoftI2c{&scl_pin_, &sda_pin_};
     i2c.init({hal::NearestFreq(400_KHz)});
 
 

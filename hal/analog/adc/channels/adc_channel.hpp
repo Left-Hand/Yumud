@@ -1,13 +1,6 @@
 #pragma once
 
-
-#include "core/platform.hpp"
-
-
-#include "adc_utils.hpp"
-
-
-
+#include "../adc_utils.hpp"
 
 
 namespace ymd::hal{

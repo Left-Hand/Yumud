@@ -1,6 +1,6 @@
 #include "core/system.hpp"
 
-#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
 #include "hal/gpio/vport.hpp"
 #include "core/debug/debug.hpp"
 

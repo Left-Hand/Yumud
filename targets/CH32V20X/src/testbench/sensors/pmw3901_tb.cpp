@@ -1,8 +1,8 @@
 #include "src/testbench/tb.h"
 #include "core/debug/debug.hpp"
 
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 #include "drivers/Proximeter/PMW3901/PMW3901.hpp"
 #include "hal/gpio/gpio_port.hpp"

@@ -4,7 +4,7 @@
 #include "core/container/bits_queue.hpp"
 #include "core/utils/data_iter.hpp"
 #include "core/io/regs.hpp"
-#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
 
 namespace ymd::drivers{
 struct ST7789V3_Transport final:

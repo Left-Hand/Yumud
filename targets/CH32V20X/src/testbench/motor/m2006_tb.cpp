@@ -3,7 +3,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "hal/bus/can/can.hpp"
+#include "hal/bus/can/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "core/math/realmath.hpp"

@@ -19,7 +19,7 @@
 
 namespace ymd::hal::can{
 
-enum class Remap{
+enum class [[nodiscard]] Remap{
     _0 = 0,
     _1 = 1,
     _2 = 2,
@@ -27,38 +27,38 @@ enum class Remap{
 };
 
 template<size_t NUM_CAN_NTH, Remap REMAP>
-struct Layout{
+struct [[nodiscard]] Layout{
     using tx_pin_type = void;
     using rx_pin_type = void;
 };
 
 
 template<>
-struct Layout<1, Remap::_0>{
+struct [[nodiscard]] Layout<1, Remap::_0>{
     using tx_pin_type = PinTag<PortSource::PA, PinSource::_12>;
     using rx_pin_type = PinTag<PortSource::PA, PinSource::_11>;
 };
 
 template<>
-struct Layout<1, Remap::_1>{
+struct [[nodiscard]] Layout<1, Remap::_1>{
     using tx_pin_type = PinTag<PortSource::PB, PinSource::_9>;
     using rx_pin_type = PinTag<PortSource::PB, PinSource::_8>;
 };
 
 template<>
-struct Layout<1, Remap::_2>{
+struct [[nodiscard]] Layout<1, Remap::_2>{
     using tx_pin_type = PinTag<PortSource::PD, PinSource::_1>;
     using rx_pin_type = PinTag<PortSource::PD, PinSource::_0>;
 };
 
 template<>
-struct Layout<2, Remap::_0>{
+struct [[nodiscard]] Layout<2, Remap::_0>{
     using tx_pin_type = PinTag<PortSource::PB, PinSource::_13>;
     using rx_pin_type = PinTag<PortSource::PB, PinSource::_12>;
 };
 
 template<>
-struct Layout<2, Remap::_1>{
+struct [[nodiscard]] Layout<2, Remap::_1>{
     using tx_pin_type = PinTag<PortSource::PB, PinSource::_6>;
     using rx_pin_type = PinTag<PortSource::PB, PinSource::_5>;
 };
@@ -69,8 +69,6 @@ using tx_pin_t = typename Layout<NUM_CAN_NTH, REMAP>::tx_pin_type;
 
 template<size_t NUM_CAN_NTH, Remap REMAP>
 using rx_pin_t = typename Layout<NUM_CAN_NTH, REMAP>::rx_pin_type;
-
-
 
 }
 

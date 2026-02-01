@@ -14,21 +14,20 @@
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/can/can.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/analog/opa/opa.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 #include "algebra/vectors/quat.hpp"
 
-#include "robots/gesture/comp_est.hpp"
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"
 
-#include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/sensored/calibrate_table.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/motor_ctrl/elecrad_compsator.hpp"
 #include "dsp/controller/adrc/linear/leso2o.hpp"
+#include "dsp/controller/adrc/linear/ltd2o.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
@@ -42,7 +41,7 @@ static constexpr size_t MC_FREQ = 500;
 static constexpr auto PWM_DUTYCYCLE_LIMIT = 0.85_iq16;
 
 //限制占空比每次递增的大小
-static constexpr auto PWM_DUTYCYCLE_DELTA_LIMIT = 6.2_iq16 / MC_FREQ;
+static constexpr auto PWM_DUTYCYCLE_DELTA_LIMIT = 8.2_iq16 / MC_FREQ;
 
 //这里我测出来它每圈产生900个计数
 static constexpr size_t CNT_PER_TURN = 900;
@@ -128,6 +127,7 @@ void winter_mc_tutorial_main(){
         }
     };
 
+    //获取编码器的位置
     auto get_encoder_cnt = [&] -> uint16_t{
         return static_cast<uint16_t>(encoder_timer.cnt());
     };
@@ -162,7 +162,7 @@ void winter_mc_tutorial_main(){
     iq16 target_rotor_x2 = 0;
     iq16 kp = 4.0_iq16;
     iq16 kd = 0.22_iq16;
-    iq16 kf = 0.225_iq16;
+    iq16 kf = iq16(0.43/2);
 
     iq16 ramp_speed = 2;
     iq16 pwm_dutycycle = 0;
@@ -211,6 +211,8 @@ void winter_mc_tutorial_main(){
             }
 
             case DemoManipulateSource::Sine:{
+                //f(x) = 3 * sin(t);
+                //f'(x) = 3 * cos(t);
                 target_rotor_x1 = 3.0_iq16 * math::sin(now_secs * 1.0_iq16);
                 target_rotor_x2 = 3.0_iq16 * math::cos(now_secs * 1.0_iq16);
                 break;
@@ -224,25 +226,50 @@ void winter_mc_tutorial_main(){
 
         //#region 更新电机运动状态变量
         const auto meas_rotor_cnt = get_rotor_cnt(get_encoder_cnt());
+
+        //1.获取编码器位置
+        //2.通过编码器的位置计算得出转子的位置
+
+        // 1lap - 900 cnt (meas_rotor_cnt / 900)
+
+        // x1 postion 位置
+        // x2 speed 速度
         const auto meas_rotor_x1_unfilted = rotor_cnt_to_position(meas_rotor_cnt);
 
         meas_rotor_state_var = rotor_ltd.iterate(meas_rotor_state_var, {meas_rotor_x1_unfilted, 0});
         meas_rotor_x1 = math::fixed_downcast<16>(meas_rotor_state_var.x1);
         meas_rotor_x2 = meas_rotor_state_var.x2;
+
+        //3.前后的两次的位置求差得到速度 dx / dt = v
+        //4.速度做低通滤波平滑
+        //5.对速度积分 得到平滑的位置
+
         //#endregion
 
-        //计算位置误
+        //6.计算位置误差
         const auto e1 = target_rotor_x1 - meas_rotor_x1;
 
-        //计算速度误差
+        //7.计算速度误差
         const auto e2 = target_rotor_x2 - meas_rotor_x2;
 
-        //计算期望的占空比
+        
+        //8.计算期望的占空比
+        // out = kp * e1 + kd * e2 + (kf * x2)
+        //输出为 = 位置误差 * 位置误差权重 + 速度误差 * 速度误差权重 + 期望速度 * 前馈速度权重
+        // 0.45/2
+
         const auto desired_pwm_dutycycle = 
             (e1 * kp) + 
-            (e2 * kd) + 
-            (target_rotor_x2 * kf);
+            (e2 * kd) +
+            (target_rotor_x2 * kf)
+        ;
 
+        //pwm 0 - 0.6
+
+        // (d/dt)pwm
+
+        // a = dv / dt
+        //9.PWM限幅/PWM导数限幅
         //计算钳位与限速后更新的占空比
         pwm_dutycycle = STEP_TO(
             pwm_dutycycle, 

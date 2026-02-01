@@ -2,7 +2,7 @@
 
 #if 0
 
-#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
 #include "hal/bus/can/can.hpp"
 
 #include "robots/foc/stepper/stepper.hpp"
@@ -18,7 +18,7 @@
 
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 
 #define MOTOR_TYPE_STEPPER 0
 #define MOTOR_TYPE_BLDC 1
@@ -131,9 +131,9 @@ void stepper_tb(Uart & logger_inst){
     MT6816 encoder{{spi1, spi1.allocate_cs_pin(hal::PA<15>()).value()}};
     // MT6701 encoder{{spi1, 0}};
 
-    I2cSw i2cSw{hal::PD<1>(), hal::PD<0>()};
-    i2cSw.init(400_KHz);
-    AT24CXX at24{AT24CXX::AT24C02{}, i2cSw};
+    SoftI2c SoftI2c{hal::PD<1>(), hal::PD<0>()};
+    SoftI2c.init(400_KHz);
+    AT24CXX at24{AT24CXX::AT24C02{}, SoftI2c};
     Memory mem{at24};
 
     uint8_t node_id = get_default_id();

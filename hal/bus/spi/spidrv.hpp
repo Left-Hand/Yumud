@@ -5,12 +5,12 @@
 #include <initializer_list>
 #include <functional>
 
-#include "spihw.hpp"
+#include "spi.hpp"
 
 namespace ymd::hal{
 
 class Spi;
-class SpiSw;
+class SoftSpi;
 
 
 template <typename T>

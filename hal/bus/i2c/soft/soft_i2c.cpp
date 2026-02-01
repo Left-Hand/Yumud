@@ -1,4 +1,4 @@
-#include "i2csw.hpp"
+#include "soft_i2c.hpp"
 #include "core/clock/monotic_clock.hpp"
 #include "core/debug/debug.hpp"
 #include "hal/gpio/gpio.hpp"
@@ -6,17 +6,17 @@
 using namespace ymd;
 using namespace ymd::hal;
 
-#define I2CSW_SCL_USE_PP_THAN_OD
-// #define I2CSW_DISCARD_ACK
-// #define I2CSW_TEST_TIMEOUT (1000)
+#define SoftI2c_SCL_USE_PP_THAN_OD
+// #define SoftI2c_DISCARD_ACK
+// #define SoftI2c_TEST_TIMEOUT (1000)
 
 
-void I2cSw::delay_dur(){
+void SoftI2c::delay_dur(){
     if(delays_) clock::delay(Microseconds(delays_));
     else for(size_t i = 0; i < 3; i++) __nopn(5);
 }
 
-HalResult I2cSw::wait_ack(){
+HalResult SoftI2c::wait_ack(){
 
     delay_dur();
     sda().set_high();
@@ -27,12 +27,12 @@ HalResult I2cSw::wait_ack(){
 
     bool ovt = false;
 
-    #ifndef I2CSW_DISCARD_ACK
+    #ifndef SoftI2c_DISCARD_ACK
     const auto m = clock::micros();
     while(sda().read() == HIGH){
         if(clock::micros() - m >= 
-        #if I2CSW_TEST_TIMEOUT
-            I2CSW_TEST_TIMEOUT
+        #if SoftI2c_TEST_TIMEOUT
+            SoftI2c_TEST_TIMEOUT
         #else
             timeout_
         #endif
@@ -58,7 +58,7 @@ HalResult I2cSw::wait_ack(){
     }
 }
 
-HalResult I2cSw::borrow(const I2cSlaveAddrWithRw req){
+HalResult SoftI2c::borrow(const I2cSlaveAddrWithRw req){
     if(false == owner_.is_borrowed()){
         owner_.borrow(req);
         return lead(req);
@@ -71,8 +71,8 @@ HalResult I2cSw::borrow(const I2cSlaveAddrWithRw req){
 }
 
 
-HalResult I2cSw::lead(const I2cSlaveAddrWithRw req){
-    #ifdef I2CSW_SCL_USE_PP_THAN_OD
+HalResult SoftI2c::lead(const I2cSlaveAddrWithRw req){
+    #ifdef SoftI2c_SCL_USE_PP_THAN_OD
     scl().outpp();
     #else
     scl().outod();
@@ -101,7 +101,7 @@ HalResult I2cSw::lead(const I2cSlaveAddrWithRw req){
     );
 }
 
-void I2cSw::trail(){
+void SoftI2c::trail(){
     scl().set_low();
     sda().outod();
     sda().set_low();
@@ -114,7 +114,7 @@ void I2cSw::trail(){
 
 
 
-HalResult I2cSw::write(const uint32_t data){
+HalResult SoftI2c::write(const uint32_t data){
     sda().outod();
 
     for(uint8_t mask = 0x80; mask; mask >>= 1){
@@ -128,7 +128,7 @@ HalResult I2cSw::write(const uint32_t data){
     return wait_ack();
 }
 
-HalResult I2cSw::read(uint8_t & data, const Ack ack){
+HalResult SoftI2c::read(uint8_t & data, const Ack ack){
     uint8_t ret = 0;
 
     sda().set_high();
@@ -155,13 +155,13 @@ HalResult I2cSw::read(uint8_t & data, const Ack ack){
     return HalResult::Ok();
 }
 
-void I2cSw::init(const Config & cfg){
+void SoftI2c::init(const Config & cfg){
 
     sda().set_high();
     sda().outod();
     scl().set_high();
 
-    #ifdef I2CSW_SCL_USE_PP_THAN_OD
+    #ifdef SoftI2c_SCL_USE_PP_THAN_OD
     scl().outpp();
     #else
     scl().outod();
@@ -180,7 +180,7 @@ void I2cSw::init(const Config & cfg){
     set_baudrate(cfg.baudrate);
 }
 
-HalResult I2cSw::set_baudrate(const I2cBuadrate baudrate) {
+HalResult SoftI2c::set_baudrate(const I2cBuadrate baudrate) {
     if(baudrate.is<hal::NearestFreq>()){
         const NearestFreq nearest_freq = baudrate.unwrap_as<hal::NearestFreq>();
         const uint32_t freq_hz = nearest_freq.count;
@@ -196,10 +196,10 @@ HalResult I2cSw::set_baudrate(const I2cBuadrate baudrate) {
     return HalResult::Ok();
 }
 
-HalResult I2cSw::reset(){
+HalResult SoftI2c::reset(){
     return HalResult::Ok();
 }
 
-HalResult I2cSw::unlock_bus(){
+HalResult SoftI2c::unlock_bus(){
     return HalResult::Ok();
 }

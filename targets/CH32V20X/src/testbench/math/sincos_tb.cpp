@@ -5,7 +5,7 @@
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include <cmath>
 
 using namespace ymd;

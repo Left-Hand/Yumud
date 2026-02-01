@@ -8,7 +8,7 @@ enum class AudioFormat:uint16_t {
     PCM = 1
 
 };
-struct [[nodiscard]] FileDescriptor{
+struct [[nodiscard]] FileDescriptor final {
     char     chunk_id[4]; //内容为"RIFF"
     uint32_t chunk_size;  //存储文件的字节数（不包含ChunkID和ChunkSize这8个字节）
     char     format[4];  //内容为"WAVE“
@@ -19,7 +19,7 @@ struct [[nodiscard]] FileDescriptor{
     }
 };
 
-struct [[nodiscard]] FileFormatSubchunk{
+struct [[nodiscard]] FileFormatSubchunk final {
    char     subchunk1_id[4]; //内容为"fmt"
    uint32_t subchunk1_size;  //存储该子块的字节数（不含前面的Subchunk1ID和Subchunk1Size这8个字节）
    AudioFormat audio_format;    //存储音频文件的编码格式，例如若为PCM则其存储值为1。
@@ -34,7 +34,7 @@ struct [[nodiscard]] FileFormatSubchunk{
     }
 };
 
-struct [[nodiscard]] FileDataSubchunk{
+struct [[nodiscard]] FileDataSubchunk final {
     char     subchunk2_id[4]; //内容为“data”
 
     //接下来的正式的数据部分的字节数，其值 == NumSamples * NumChannels * BitsPerSample / 8

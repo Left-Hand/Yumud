@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "hal/bus/uart/uart.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/sumtype.hpp"
 #include "algebra/vectors/polar.hpp"

@@ -1,7 +1,6 @@
 #pragma once
 
-#include "hal/bus/uart/uart.hpp"
-#include "hal/analog/adc/adc_channel.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 
 namespace ymd::robots::dji::dr16{

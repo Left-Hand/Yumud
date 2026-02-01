@@ -4,7 +4,7 @@
 #include "core/utils/Result.hpp"
 #include "core/utils/errno.hpp"
 
-#include "hal/bus/uart/uart.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 
 namespace ymd::drivers{

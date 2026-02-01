@@ -117,7 +117,7 @@ void host_main(){
 
     DEBUG_PRINTLN(std::setprecision(4), "poweron");
 
-    auto i2c = I2cSw{hal::PD<2>(), hal::PC<12>()};
+    auto i2c = SoftI2c{hal::PD<2>(), hal::PC<12>()};
     i2c.init(3400_KHz);
     auto config = create_default_config();
 

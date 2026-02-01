@@ -1,12 +1,12 @@
 #pragma once
 
-#include "spi.hpp"
+#include "../spi_base.hpp"
 #include "core/clock/clock.hpp"
 #include "hal/gpio/gpio.hpp"
 
 namespace ymd::hal{
 
-class SpiSw final: public SpiBase{
+class SoftSpi final: public SpiBase{
 protected:
     volatile int8_t occupied = -1;
     hal::Gpio & sclk_pin_;
@@ -34,7 +34,7 @@ protected:
 protected :
 public:
 
-    SpiSw(
+    SoftSpi(
         Some<hal::Gpio *> sclk_gpio,
         Some<hal::Gpio *> mosi_gpio,
         Some<hal::Gpio *> miso_gpio
@@ -43,19 +43,19 @@ public:
         mosi_pin_(mosi_gpio.deref()), 
         miso_pin_(miso_gpio.deref()){;}
 
-    SpiSw(
+    SoftSpi(
         Some<hal::Gpio *> sclk_gpio,
         Some<hal::Gpio *> mosi_gpio,
         Some<hal::Gpio *> miso_gpio,
         Some<hal::Gpio *> cs_gpio
     ):
-        SpiSw(sclk_gpio, mosi_gpio, miso_gpio)
+        SoftSpi(sclk_gpio, mosi_gpio, miso_gpio)
     {
         bind_cs_pin(cs_gpio.get(), 0_nth);
     }
 
-    SpiSw(const SpiSw &) = delete;
-    SpiSw(SpiSw &&) = delete;
+    SoftSpi(const SoftSpi &) = delete;
+    SoftSpi(SoftSpi &&) = delete;
 
     void init(const SpiConfig & cfg) ;
 

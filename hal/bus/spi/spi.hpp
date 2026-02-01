@@ -1,85 +1,95 @@
 #pragma once
 
-#include <optional>
+#include "spi_base.hpp"
 #include "core/utils/Option.hpp"
 
-#include "hal/gpio/vport.hpp"
-#include "hal/bus/bus_base.hpp"
-#include "hal/bus/bus_enums.hpp"
-#include "primitive/hal_result.hpp"
-#include "spi_primitive.hpp"
+#include "ral/spi.hpp"
+#include "spi_layout.hpp"
+
+
+
 
 namespace ymd::hal{
 
+class Gpio;
 
-class [[nodiscard]] SpiBase{
-public:
-
-    #ifndef SPI_MAX_PINS
-    static constexpr size_t SPI_MAX_PINS = 4;
-    #endif
-
-public:
-    SpiBase(){;}
-    SpiBase(const hal::SpiBase &) = delete;
-    SpiBase(hal::SpiBase &&) = delete;
-
-
-    HalResult borrow(const SpiSlaveRank rank){
-        if(false == owner_.is_borrowed()){
-            owner_.borrow(rank);
-            return lead(rank);
-        }else if(owner_.is_borrowed_by(rank)){
-            owner_.borrow(rank);
-            return lead(rank);
-        }else{
-            return hal::HalResult::OccuipedByOther;
-        }
-    }
-
-    void lend(){
-        this->trail();
-        owner_.lend();
-    }
-
-    [[nodiscard]] bool is_occupied(){return owner_.is_borrowed();}
-    [[nodiscard]] virtual hal::HalResult set_wordsize(const SpiWordSize wordsize) = 0;
-    [[nodiscard]] virtual hal::HalResult set_baudrate(const SpiBaudrate baud) = 0;
-    [[nodiscard]] virtual hal::HalResult set_bitorder(const BitOrder bitorder) = 0;
-
-
-    [[nodiscard]]
-    Option<SpiSlaveRank> allocate_cs_pin(Some<hal::GpioIntf *> io);
-
-protected:
-    VGpioPort <SPI_MAX_PINS> cs_port_ = VGpioPort<SPI_MAX_PINS>();
-    PeripheralOwnershipTracker owner_ = {};
-    Option<Nth> last_nth_ = None;
-
-    [[nodiscard]] __fast_inline hal::HalResult lead(const SpiSlaveRank rank){
-        const auto nth = Nth(rank.count());
-        if(not cs_port_.is_nth_valid(nth))
-            return hal::HalResult::NoSelecter;
-        cs_port_[nth].set_low();
-        last_nth_ = Some(nth);
-        return hal::HalResult::Ok();
-    }
-
-    __fast_inline void trail(){
-        const auto nth = last_nth_.unwrap();
-        cs_port_[nth].set_high();
-        last_nth_ = None;
-    }
-
-    void bind_cs_pin(
-        Some<hal::GpioIntf *> gpio, 
-        const Nth nth
-    ){
-        gpio.deref().outpp(HIGH);
-        cs_port_.bind_pin(gpio.deref(), nth);
-    }
-
+struct SpiInterruptDispatcher{
 
 };
 
+class Spi final:public SpiBase{
+public:
+    using Callback = std::function<void(SpiEvent)>;
+
+    explicit Spi(ral::SPI_Def * inst):
+        inst_(inst){;}
+
+    Spi(const Spi & other) = delete;
+    Spi(Spi && other) = delete;
+
+    HalResult init(const SpiConfig & cfg);
+    void deinit();
+
+    void enable_hw_cs(const Enable en);
+
+    [[nodiscard]] __fast_inline HalResult fast_blocking_write(const uint16_t data){
+        while ((inst_->STATR.TXE) == false);
+        inst_->DATAR.DR = data;
+
+        return HalResult::Ok();
+    }
+
+    __fast_inline void blocking_write(const uint32_t data){
+        (void)blocking_transceive(data);
+        return;
+    }
+    
+    [[nodiscard]] __fast_inline uint32_t blocking_read(){
+        return blocking_transceive(0);
+    }
+    
+    [[nodiscard]] __fast_inline uint32_t blocking_transceive(const uint32_t data_tx){
+        while ((inst_->STATR.TXE) == false);
+        inst_->DATAR.DR = data_tx;
+
+        while ((inst_->STATR.RXNE) == false);
+        const uint32_t data_rx = inst_->DATAR.DR;
+        return data_rx;
+    }
+
+    [[nodiscard]] HalResult set_wordsize(const SpiWordSize wordsize);
+    [[nodiscard]] HalResult set_baudrate(const SpiBaudrate baud);
+    [[nodiscard]] HalResult set_prescaler(const SpiPrescaler prescaler);
+    [[nodiscard]] HalResult set_bitorder(const BitOrder bitorder);
+
+    template<typename Fn>
+    void set_event_handler(Fn && fn){
+        callback_ = std::forward<Fn>(fn);
+    }
+
+    [[nodiscard]] bool is_busy(){
+        return inst_->STATR.BSY;
+    }
+
+private:
+    ral::SPI_Def * inst_ = nullptr;
+    Callback callback_ = nullptr;
+    bool hw_cs_enabled_ = false;
+
+    [[nodiscard]] uint32_t get_periph_clk_freq() const;
+
+    void enable_rcc(const Enable en);
+    void set_remap(const SpiRemap remap);
+    void alter_to_pins(const SpiRemap remap);
+    
+    void enable_rx_interrupt(const Enable en);
+    void enable_tx_interrupt(const Enable en);
+
+    void accept_interrupt(const SpiI2sIT it);
+};
+
+
+
 }
+
+

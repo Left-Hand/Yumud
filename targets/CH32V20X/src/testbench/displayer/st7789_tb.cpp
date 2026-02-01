@@ -4,8 +4,8 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "primitive/image/painter/painter_base.hpp"

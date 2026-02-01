@@ -10,9 +10,9 @@
 #include "core/async/timer.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/can/can.hpp"
+#include "hal/bus/can/hw_singleton.hpp"
 
 #include "robots/vendor/bmkj/m1502e_highlayer.hpp"
 

@@ -5,10 +5,10 @@
 #include "core/clock/time.hpp"
 
 #include "hal/gpio/gpio.hpp"
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 
 #include "primitive/image/image.hpp"
 #include "primitive/image/font/font.hpp"
@@ -152,7 +152,7 @@ void gui_main(){
 
     // OptionButton opt{theme};
     
-    // I2cSw       i2c{hal::PD<2>(), hal::PC<12>()};
+    // SoftI2c       i2c{hal::PD<2>(), hal::PC<12>()};
     // i2c.init(125_KHz);
     
     // MT9V034 camera{i2c};

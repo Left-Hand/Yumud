@@ -1,7 +1,6 @@
 #include "src/testbench/tb.h"
-
-#include "hal/bus/spi/spisw.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/spi/soft/soft_spi.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/HID/ps2_joystick/ps2_joystick.hpp"
@@ -31,14 +30,14 @@ void joystick_main(){
     auto MISO_PIN = SPI1_RM0_MISO_PIN;
     auto CS_PIN = SPI1_RM0_CS_PIN;
 
-    hal::SpiSw spisw{
+    hal::SoftSpi SoftSpi{
         &SCLK_PIN, 
         &MOSI_PIN, 
         &MISO_PIN, 
         &CS_PIN
     };
 
-    auto & spi = spisw;
+    auto & spi = SoftSpi;
 
     spi.init({
         .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,

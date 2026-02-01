@@ -1,6 +1,6 @@
 #pragma once
 
-#include "uart.hpp"
+#include "../uart_base.hpp"
 
 namespace ymd::hal{
 class UartSw final: public UartBase{

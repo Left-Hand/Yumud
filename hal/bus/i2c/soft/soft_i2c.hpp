@@ -1,21 +1,21 @@
 #pragma once
 
-#include "i2c.hpp"
+#include "../i2c_base.hpp"
 #include "core/clock/clock.hpp"
 
 
 namespace ymd::hal{
-class I2cSw final: public I2cBase{
+class SoftI2c final: public I2cBase{
 public:
 
-    explicit I2cSw(
+    explicit SoftI2c(
         Some<Gpio *> scl,
         Some<Gpio *> sda
     ):
         scl_(scl.deref()),
         sda_(sda.deref()){;}
 
-    I2cSw(I2cSw && other) = default;
+    SoftI2c(SoftI2c && other) = default;
     void init(const Config & cfg);
     Gpio & scl() {return scl_;}
     Gpio & sda() {return sda_;}

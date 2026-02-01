@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "hal/bus/uart/uart.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 namespace ymd::drivers{
 

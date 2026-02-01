@@ -15,7 +15,7 @@
 #include "core/clock/time.hpp"
 #include "core/string/utils/simularity/ngram.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/Proximeter/STL06N/stl06n.hpp"

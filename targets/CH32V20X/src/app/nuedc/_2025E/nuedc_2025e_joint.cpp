@@ -11,11 +11,12 @@
 #include "core/async/delayed_semphr.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
+#include "hal/gpio/gpio_port.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
-#include "hal/bus/can/can.hpp"
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/spi/spihw.hpp"
-#include "hal/analog/opa/opa.hpp"
+#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
+
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
@@ -23,15 +24,14 @@
 
 #include "algebra/vectors/quat.hpp"
 
-#include "robots/gesture/comp_est.hpp"
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"
 
-#include "dsp/motor_ctrl/position_filter.hpp"
 #include "dsp/motor_ctrl/sensored/calibrate_table.hpp"
 #include "dsp/motor_ctrl/ctrl_law.hpp"
 #include "dsp/motor_ctrl/elecrad_compsator.hpp"
 #include "dsp/controller/adrc/linear/leso2o.hpp"
+#include "dsp/controller/adrc/linear/ltd2o.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
 #include "digipw/prelude/abdq.hpp"
@@ -261,27 +261,34 @@ void nuedc_2025e_joint_main(){
 
     AlphaBetaCoord<iq16> ab_volt_;
     
-    dsp::PositionFilter pos_filter_{
-        typename dsp::PositionFilter::Config{
-            .fs = FOC_FREQ,
-            .r = 105
-        }
-    };
+    // dsp::PositionFilter pos_filter_{
+    //     typename dsp::PositionFilter::Config{
+    //         .fs = FOC_FREQ,
+    //         .r = 105
+    //     }
+    // };
 
-    pos_filter_.set_base_lap_angle(
+    // pos_filter_.set_base_lap_angle(
         
-        Angular<iq16>::from_turns([&] -> iq16{
-            switch(self_node_role_){
-                case NodeRole::YawJoint:
-                    return {0.389_r + 0.5_r};
-                case NodeRole::PitchJoint:
-                    return {0.737_r};
-                    // return {0.223_r};
-                default:
-                    PANIC();
-            }
-        }())
-    );
+    //     Angular<iq16>::from_turns([&] -> iq16{
+    //         switch(self_node_role_){
+    //             case NodeRole::YawJoint:
+    //                 return {0.389_r + 0.5_r};
+    //             case NodeRole::PitchJoint:
+    //                 return {0.737_r};
+    //                 // return {0.223_r};
+    //             default:
+    //                 PANIC();
+    //         }
+    //     }())
+    // );
+
+
+    using ltd2o = dsp::adrc::LinearTrackingDifferentiator<iq16, 2>;
+    using state2o = dsp::SecondOrderState<iq16>;
+    auto rotor_ltd = ltd2o{ltd2o::Config{.fs = FOC_FREQ, .r = 105}.try_into_coeffs().unwrap()};
+
+    state2o meas_rotor_state_var = {0, 0};
 
     ElecAngleCompensator elecangle_comp_{
         .base = [&]{
@@ -345,7 +352,7 @@ void nuedc_2025e_joint_main(){
         }
 
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
-        pos_filter_.update(Angular<iq16>::from_turns(meas_lap_angle.to_turns()));
+        meas_rotor_state_var = rotor_ltd.iterate(meas_rotor_state_var, {iq16(meas_lap_angle.to_turns()), 0});
     };
 
 
@@ -361,8 +368,8 @@ void nuedc_2025e_joint_main(){
         const auto meas_lap_angle = ma730_.read_lap_angle().examine(); 
         const auto meas_elec_angle = elecangle_comp_(meas_lap_angle);
 
-        const auto meas_x1 = pos_filter_.accumulated_angle().to_turns();
-        const auto meas_x2 = pos_filter_.speed();
+        const auto meas_x1 = math::fixed_downcast<16>(meas_rotor_state_var.x1);
+        const auto meas_x2 = meas_rotor_state_var.x2;
 
         const auto [axis_target_x1, axis_target_x2] = ({
             std::make_tuple(
@@ -459,7 +466,7 @@ void nuedc_2025e_joint_main(){
 
                 const auto cmd_delta_position = iq20(cmd.delta_position + yaw_speed / MACHINE_CTRL_FREQ);
                 axis_target_speed_ = iq20(cmd_delta_position * MACHINE_CTRL_FREQ);
-                axis_target_position_ = (pos_filter_.accumulated_angle().to_turns() + cmd_delta_position);
+                axis_target_position_ = (math::fixed_downcast<16>(meas_rotor_state_var.x1) + cmd_delta_position);
                 break;
             }
             case NodeRole::PitchJoint:{

@@ -4,8 +4,8 @@
 #include "core/math/realmath.hpp"
 #include "core/clock/time.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
@@ -131,8 +131,8 @@ static void oled_tb(){
     key_right.init();
     clock::delay(100ms);
 
-    // I2cSw i2c{hal::PB<13>(), hal::PB<15>()};
-    hal::I2cSw i2c{SCL_PIN, SDA_PIN};
+    // SoftI2c i2c{hal::PB<13>(), hal::PB<15>()};
+    hal::SoftI2c i2c{SCL_PIN, SDA_PIN};
     // i2c.init(0);
     i2c.init(I2C_BAUD);
 

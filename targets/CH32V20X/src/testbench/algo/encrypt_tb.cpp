@@ -9,7 +9,7 @@
 #include "core/math/realmath.hpp"
 #include "core/utils/Result.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "algo/encrypt/base64.hpp"
 #include "algo/encrypt/sha256.hpp"
 #include "algo/encrypt/aes.hpp"

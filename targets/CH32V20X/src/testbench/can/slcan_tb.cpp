@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 
-#include "hal/bus/can/can.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/can/hw_singleton.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 #include "middlewares/protocols/cannet/slcan/slcan.hpp"
 #include "middlewares/repl/repl.hpp"

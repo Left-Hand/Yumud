@@ -8,8 +8,8 @@
 #include "core/sync/spinlock.hpp"
 #include "core/sync/barrier.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 #include "primitive/hid_input/keycode.hpp"
@@ -45,7 +45,7 @@ void st1615_main(){
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
 
-    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
 
     i2c.init({
         .baudrate = hal::NearestFreq(ST1615::MAX_I2C_BAUDRATE)

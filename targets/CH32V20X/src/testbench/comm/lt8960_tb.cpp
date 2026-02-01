@@ -9,11 +9,11 @@
 
 #include "core/tmp/serialize_traits.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 #include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
 

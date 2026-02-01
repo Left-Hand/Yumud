@@ -3,11 +3,11 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/spi/hw_singleton.hpp"
 #include "hal/timer/hw_singleton.hpp"
 
 #include "drivers/IMU/Axis6/ICM42688/icm42688.hpp"
@@ -112,11 +112,11 @@ void icm42688_main(){
     clock::delay(200ms);
 
     #if PHY_SEL == PHY_SEL_I2C
-    // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
+    // SoftI2c i2c{hal::PA<12>(), hal::PA<15>()};
 
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
     // i2c.init(400_KHz);
     i2c.init({2000_KHz});
 

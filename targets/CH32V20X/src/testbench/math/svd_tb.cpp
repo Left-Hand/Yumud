@@ -9,10 +9,10 @@
 #include "core/math/realmath.hpp"
 #include "core/utils/Result.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 
 #include "robots/slam/svd.hpp"
 #include "algebra/vectors/vec3.hpp"

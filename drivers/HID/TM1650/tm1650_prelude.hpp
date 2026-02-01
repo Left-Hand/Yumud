@@ -12,7 +12,7 @@
 #include "hal/gpio/gpio_intf.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 
 
 
@@ -115,7 +115,7 @@ struct TM1650_Prelude{
 
 class TM1650_Transport final:public TM1650_Prelude{
 private:
-    hal::I2cSw i2c_;
+    hal::SoftI2c i2c_;
 public:
 
     explicit TM1650_Transport(Some<hal::Gpio *> scl_io, Some<hal::Gpio *> sda_io):

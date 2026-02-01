@@ -10,12 +10,12 @@ struct Stop{};
 struct SendDeviceAddr{};
 
 template<typename Iterator>
-struct SendData{
+struct Send{
     Iterator iter;
 };
 
 template<typename Iterator>
-struct ReceiveData{
+struct Receive{
     Iterator iter;
 };
 }
@@ -24,18 +24,18 @@ namespace ymd::hal::spi_oper{
 struct Start{};
 struct Stop{};
 template<typename Iterator>
-struct SendData{
+struct Send{
     Iterator iter;
 };
 
 template<typename Iterator>
-struct ReceiveData{
+struct Receive{
     Iterator iter;
 };
 
 
 template<typename Iterator>
-struct TransreceiveData{
+struct Transreceive{
     Iterator iter;
 };
 

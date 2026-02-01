@@ -9,7 +9,7 @@
 #include "core/math/realmath.hpp"
 #include "algebra/vectors/complex.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "func_eval.hpp"
 #include <ranges>
 

@@ -1,4 +1,4 @@
-#include "adc1.hpp"
+#include "hw_singleton.hpp"
 #include "core/debug/debug.hpp"
 #include "core/sdk.hpp"
 

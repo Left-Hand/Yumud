@@ -1,7 +1,7 @@
 #include "src/testbench/tb.h"
 #include "core/clock/clock.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/dma/dma.hpp"
 
 #include "core/stream/ostream.hpp"

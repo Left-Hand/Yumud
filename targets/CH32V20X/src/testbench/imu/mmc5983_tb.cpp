@@ -3,10 +3,10 @@
 #include "core/debug/debug.hpp"
 #include "core/math/realmath.hpp"
 
-#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/hw_singleton.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
 
@@ -119,10 +119,10 @@ void mmc5983_main(){
     DEBUGGER.set_eps(4);
     DEBUGGER.force_sync(EN);
 
-    // I2cSw i2c{hal::PA<12>(), hal::PA<15>()};
+    // SoftI2c i2c{hal::PA<12>(), hal::PA<15>()};
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    hal::I2cSw i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
     // i2c.init(400_KHz);
     // i2c.init();
     
