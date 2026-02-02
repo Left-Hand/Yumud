@@ -49,12 +49,12 @@ protected:
 
     void write_page(const size_t addr, const void * data, const Address len);
 
-    void store_bytes(const Address loc, const void * data, const Address len) override;
-    void load_bytes(const Address loc, void * data, const Address len) override;
-    void entry_store() override;
-    void exit_store() override;
-    void entry_load() override;
-    void exit_load() override;
+    void store_bytes(const Address loc, const void * data, const Address len) ;
+    void load_bytes(const Address loc, void * data, const Address len) ;
+    void entry_store() ;
+    void exit_store() ;
+    void entry_load() ;
+    void exit_load() ;
 
 public:
     W25Q16(hal::SpiDrv & _spi_drv):StoragePaged(_m_size, _pagesize), spi_drv(_spi_drv){;}

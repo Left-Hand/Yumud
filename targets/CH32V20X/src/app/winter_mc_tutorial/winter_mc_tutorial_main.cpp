@@ -47,9 +47,14 @@ static constexpr auto PWM_DUTYCYCLE_DELTA_LIMIT = 8.2_iq16 / MC_FREQ;
 static constexpr size_t CNT_PER_TURN = 900;
 
 static constexpr iq16 rotor_cnt_to_position(const int32_t cnt){
-    constexpr uint64_t FACTOR = (1ull << (32 + 16)) / CNT_PER_TURN;
+    // constexpr uint64_t FACTOR = 1 + ((1ull << (32 + 16))) / CNT_PER_TURN;
+    constexpr uint64_t FACTOR = ((1ull << (32 + 16))) / CNT_PER_TURN;
     return iq16::from_bits(static_cast<int32_t>((static_cast<int64_t>(cnt) * FACTOR) >> 32));
 };
+
+static_assert(math::abs((double)rotor_cnt_to_position(CNT_PER_TURN) - 1) < 1E-4);
+static_assert(math::abs((double)rotor_cnt_to_position(CNT_PER_TURN * 32700) - 32700) < 1E-4);
+static_assert(math::abs((double)rotor_cnt_to_position(CNT_PER_TURN * -32700) - -32700) < 1E-4);
 
 void winter_mc_tutorial_main(){
     auto & DEBUG_UART = hal::usart2;

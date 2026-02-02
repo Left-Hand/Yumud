@@ -1,5 +1,5 @@
-#include "timer_hw.hpp"
 #include "core/sdk.hpp"
+#include "hw_singleton.hpp"
 
 using namespace ymd::hal;
 
@@ -67,3 +67,45 @@ ADVANCED_TIMER_IT_TEMPLATE(9)
 #ifdef TIM10_PRESENT
 ADVANCED_TIMER_IT_TEMPLATE(10)
 #endif
+
+namespace ymd::hal{
+#ifdef TIM1_PRESENT
+AdvancedTimer timer1{TIM1};
+#endif
+
+#ifdef TIM2_PRESENT
+GeneralTimer timer2{TIM2};
+#endif
+
+#ifdef TIM3_PRESENT
+GeneralTimer timer3{TIM3};
+#endif
+
+#ifdef TIM4_PRESENT
+GeneralTimer timer4{TIM4};
+#endif
+
+#ifdef TIM5_PRESENT
+GeneralTimer timer5{TIM5};
+#endif
+
+#ifdef TIM6_PRESENT
+BasicTimer timer6{TIM6};
+#endif
+
+#ifdef TIM7_PRESENT
+BasicTimer timer7{TIM7};
+#endif
+
+#ifdef TIM8_PRESENT
+AdvancedTimer timer8{TIM8};
+#endif
+
+#ifdef TIM9_PRESENT
+AdvancedTimer timer9{TIM9};
+#endif
+
+#ifdef TIM10_PRESENT
+AdvancedTimer timer10{TIM10};
+#endif
+}

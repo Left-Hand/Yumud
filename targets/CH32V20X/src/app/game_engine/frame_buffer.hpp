@@ -55,8 +55,8 @@ public:
         };
     }
 
-    template<typename PixelsIter>
-    constexpr Result<void, Error> draw_iter(PixelsIter && iter){
+    template<typename Iter>
+    constexpr Result<void, Error> draw_iter(Iter && iter){
         for(const auto pixel : StdRange(iter)){
             const auto [x, y] = pixel.position;
             if(y != y_) continue;
@@ -101,10 +101,10 @@ public:
         return Ok();
     }
 
-    template<typename ColorsIter>
+    template<typename Iter>
     __fast_inline constexpr Result<void, Error> fill_contiguous(
         const math::Rect2u16 area,
-        ColorsIter && iter
+        Iter && iter
     ){
         return Ok();
     }
@@ -256,8 +256,8 @@ struct FrameBufferSpan{
         return math::Rect2u16::from_size(size_);
     }
 
-    template<typename PixelsIter>
-    constexpr Result<void, Error> draw_iter(PixelsIter && iter){
+    template<typename Iter>
+    constexpr Result<void, Error> draw_iter(Iter && iter){
         auto & self = *this;
         while(true){
             if(iter.has_next() == false) return Ok();
@@ -270,10 +270,10 @@ struct FrameBufferSpan{
         return Ok();
     };
 
-    template<typename ColorsIter>
+    template<typename Iter>
     constexpr Result<void, Error> fill_contiguous(
         const math::Rect2u16 area,
-        ColorsIter && iter
+        Iter && iter
     ){
         auto & self = *this;
         const auto x_range = area.x_range();

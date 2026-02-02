@@ -16,7 +16,7 @@ struct [[nodiscard]] MavModeFlagBitfields final{
 
 // 微型飞行器/自动驾驶仪类别。这标识了单个型号。
 // Micro air vehicle / autopilot classes. This identifies the individual model.
-enum class MavAutopilot : uint8_t {
+enum class [[nodiscard]] MavAutopilot : uint8_t {
     Generic = 0,                           ///< 通用自动驾驶仪，支持全部功能 / Generic autopilot, full support for everything
     Reserved = 1,                          ///< 预留供将来使用 / Reserved for future use
     Slugs = 2,                             ///< SLUGS自动驾驶仪，http://slugsuav.soe.ucsc.edu / SLUGS autopilot, http://slugsuav.soe.ucsc.edu
@@ -67,7 +67,7 @@ static constexpr MavAutopilot MAV_AUTOPILOT_REFLEX = MavAutopilot::Reflex;
 // MAVLINK component type reported in HEARTBEAT message. Flight controllers must report the type of the 
 // vehicle on which they are mounted (e.g. MAV_TYPE_OCTOROTOR). 
 // All other components must report a value appropriate for their type (e.g. a camera must use MAV_TYPE_CAMERA).
-enum class MavComponentType : uint8_t {
+enum class [[nodiscard]] MavComponentType : uint8_t {
     Generic = 0,                    ///< 通用微型飞行器 / Generic micro air vehicle
     FixedWing = 1,                  ///< 固定翼飞机 / Fixed wing aircraft
     Quadrotor = 2,                  ///< 四旋翼 / Quadrotor

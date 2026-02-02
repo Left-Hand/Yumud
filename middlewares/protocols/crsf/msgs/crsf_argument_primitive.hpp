@@ -22,8 +22,6 @@ struct [[nodiscard]] TextSelectionContext final{
     math::fp32          maximum;
     math::fp32          default_value;
     ustr<MAX_STR_LENGTH>     unit;                       // 空终止字符串
-
-
 };
 
 struct [[nodiscard]] StringContext final{

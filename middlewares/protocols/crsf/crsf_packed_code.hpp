@@ -34,7 +34,6 @@ struct [[nodiscard]] AltitudeCode final{
         return Some(Self{b});
     }
 
-
     [[nodiscard]] constexpr bool is_represented_in_meters() const{
         return (bits & 0x8000) != 0;
     }
@@ -44,27 +43,29 @@ struct [[nodiscard]] AltitudeCode final{
     }
 
     [[nodiscard]] constexpr int32_t to_dm() const {
-        if(is_invalid()) __builtin_trap();
-        if(bits & 0x8000)
+        auto & self = *this;
+        if(self.is_invalid()) __builtin_trap();
+        if(self.is_represented_in_meters())
             return static_cast<int32_t>((bits & 0x7fff)) * 10;
         else
             return static_cast<int32_t>(bits) - 10000;
     }
 
     [[nodiscard]] constexpr int32_t to_meters() const {
-        if(is_invalid()) __builtin_trap();
-        if(bits & 0x8000)
+        auto & self = *this;
+        if(self.is_invalid()) __builtin_trap();
+        if(is_represented_in_meters())
             return static_cast<int32_t>((bits & 0x7fff));
         else
             return (static_cast<int32_t>(bits) - 10000) / 10;
     }
 
-    static constexpr Self from_dm(const int32_t altitude_dm){
-        const auto bits = dm_to_bits(altitude_dm);
+    static constexpr Self from_dm_bounded(const int32_t altitude_dm){
+        const auto bits = dm_to_bits_bounded(altitude_dm);
         return Self{bits};
     }
 
-    static constexpr Self from_meters(const int32_t altitude_m){
+    static constexpr Option<Self> from_meters(const int32_t altitude_m){
         uint16_t bits = INVALID_VALUE;
         if(altitude_m < -1000) {
             bits = 0;  // minimum
@@ -75,10 +76,12 @@ struct [[nodiscard]] AltitudeCode final{
         } else {
             bits = static_cast<uint16_t>((altitude_m + 5) / 10) | 0x8000;  // meter-resolution range
         }
-        return Self{bits};
+
+        if(bits == INVALID_VALUE) return None;
+        return Some(Self{bits});
     }
 
-    static constexpr uint16_t dm_to_bits(const int32_t altitude_dm){
+    static constexpr uint16_t dm_to_bits_bounded(const int32_t altitude_dm){
         if(altitude_dm < -static_cast<int32_t>(ALT_MIN_DM))               //less than minimum altitude
             return 0;                               //minimum
         if(altitude_dm > static_cast<int32_t>(ALT_MAX_DM))                //more than maximum

@@ -14,8 +14,6 @@
 #include "algebra/vectors/polar.hpp"
 #include "algebra/vectors/vec2.hpp"
 
-#include "details/polar_robot_curvedata.hpp"
-
 #include "common_service.hpp"
 #include "joints.hpp"
 #include "robots/gcode/gcode.hpp"
