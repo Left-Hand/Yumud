@@ -15,6 +15,21 @@
 using namespace ymd;
 using namespace ymd::hal;
 
+
+//CAN发送中断 NVIC优先级
+static constexpr NvicPriority CAN_TX_INTERRUPT_NVIC_PRIORITY = {1, 4};
+
+//CAN接收中断0 NVIC优先级
+static constexpr NvicPriority CAN_RX0_INTERRUPT_NVIC_PRIORITY = {1, 2};
+
+//CAN接收中断1 NVIC优先级
+static constexpr NvicPriority CAN_RX1_INTERRUPT_NVIC_PRIORITY = {1, 2};
+
+//CAN状态改变中断 NVIC优先级
+static constexpr NvicPriority CAN_SCE_INTERRUPT_NVIC_PRIORITY = {1, 1};
+
+
+
 using EventCallback = Can::EventCallback;
 
 
@@ -322,18 +337,6 @@ static constexpr uint32_t CAN_RFIFO_FOV_MASK =  0b01'0000;
 
 }
 
-
-//CAN发送中断 NVIC优先级
-static constexpr NvicPriority CAN_TX_INTERRUPT_NVIC_PRIORITY = {1, 4};
-
-//CAN接收中断0 NVIC优先级
-static constexpr NvicPriority CAN_RX0_INTERRUPT_NVIC_PRIORITY = {1, 2};
-
-//CAN接收中断1 NVIC优先级
-static constexpr NvicPriority CAN_RX1_INTERRUPT_NVIC_PRIORITY = {1, 2};
-
-//CAN状态改变中断 NVIC优先级
-static constexpr NvicPriority CAN_SCE_INTERRUPT_NVIC_PRIORITY = {1, 1};
 
 
 

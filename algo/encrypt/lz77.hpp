@@ -44,8 +44,8 @@ enum class Error:uint8_t{
 // Compression function
 // Returns the number of bytes actually written to dst, returns std::nullopt if dst space is insufficient
 [[nodiscard]] constexpr Result<size_t, Error> compress(
-    std::span<uint8_t> dst, 
-    std::span<const uint8_t> src
+    const std::span<uint8_t> dst, 
+    const std::span<const uint8_t> src
 ) {
     
     size_t dst_pos = 0;
@@ -113,18 +113,14 @@ enum class Error:uint8_t{
 // Decompression function
 // Returns the number of bytes actually written to dst, returns std::nullopt if dst space is insufficient or data format error
 [[nodiscard]] constexpr Result<size_t, Error> decompress(
-    std::span<uint8_t> dst, 
-    std::span<const uint8_t> src
+    const std::span<uint8_t> dst, 
+    const std::span<const uint8_t> src
 ) {
     
     size_t dst_pos = 0;
     size_t src_pos = 0;
     
     while (src_pos < src.size() && dst_pos < dst.size()) {
-        // This check is redundant as it's already checked in the while condition
-        // if (src_pos >= src.size()) {
-        //     return Err(Error::InvalidData); // Incomplete data
-        // }
         
         const uint8_t token_type = src[src_pos++];
         

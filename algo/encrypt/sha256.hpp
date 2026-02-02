@@ -218,7 +218,7 @@ private:
 };
 
 constexpr void calculate_sha256(
-    std::span<uint8_t, SHA256_BYTES> digest,          // [in]
+    std::span<uint8_t, SHA256_BYTES> digest,
     std::span<const uint8_t> pbuf
 ){
     Sha256Context context;
@@ -233,17 +233,4 @@ static constexpr std::array<uint8_t, SHA256_BYTES> calculate_sha256(std::span<co
     return digest;
 }
 
-
-
-namespace test{
-
-#if 0
-static constexpr void test_sha256(){ 
-    constexpr auto input = std::array<uint8_t, 5>{0x61, 0x62, 0x63, 0x64, 0x65};
-    constexpr auto digest = calculate_sha256(std::span(input));
-    // static_assert(digest[0] == 0);
-}
-#endif
-
-}
 }

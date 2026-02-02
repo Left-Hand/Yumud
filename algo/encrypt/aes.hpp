@@ -113,16 +113,34 @@ static constexpr uint8_t Rcon[][4]=
 
 }
 
-enum class KeySize:uint8_t{
-	_128Bits, _192Bits, _256Bits
+
+struct [[nodiscard]] KeySize final{
+    enum class [[nodiscard]] Kind:uint8_t{
+        _128Bits, _192Bits, _256Bits
+    };
+
+    using enum Kind;
+
+    constexpr KeySize(Kind k):kind_(k){}
+
+    [[nodiscard]] constexpr std::tuple<size_t, size_t> 
+    nk_and_nr(){
+        switch (kind_){
+            case KeySize::_128Bits:
+                return {4, 10};
+            case KeySize::_192Bits:
+                return {6, 12};
+            case KeySize::_256Bits:
+                return {8, 14};
+        }
+        __builtin_unreachable();
+    }
+
+private:
+    Kind kind_;
 };
 
-struct UnitTest;
 
-#if 0
-using Row  =std::array<uint8_t, STATE_MATRIX_SIZE>;
-using State = std::array<Row, STATE_MATRIX_SIZE>;
-#else
 struct alignas(4) [[nodiscard]] Row final{
     std::array<uint8_t, 4> bytes;
 
@@ -171,9 +189,9 @@ struct alignas(16) [[nodiscard]] State final{
         return rows[idx];
     }
 };
-#endif
 
-struct AesCipher{
+struct [[nodiscard]] AesCipher final{
+    using Self = AesCipher;
     enum class Error:uint8_t{
         BufferIsNotAlignedTo16,
         BufferSizeNotMatching
@@ -214,7 +232,7 @@ struct AesCipher{
         if(in_size & 0b1111) return Err(Error::BufferIsNotAlignedTo16);
 
         for (size_t i=0;i<in_size/16;i++){
-            i_cipher(
+            cipher_block(
                 ptr_to_block(input.data()+i*16),
                 ptr_to_block(output.data()+i*16)
             );
@@ -229,7 +247,7 @@ struct AesCipher{
         if(in_size & 0b1111) return Err(Error::BufferIsNotAlignedTo16);
 
         for (size_t i = 0;i < in_size/16;i++){
-            i_inv_cipher(
+            inv_cipher_block(
                 ptr_to_block(input.data() + i*16),
                 ptr_to_block(output.data() + i*16)
             );
@@ -237,26 +255,87 @@ struct AesCipher{
         return Ok();
     }
 
+    struct [[nodiscard]] CipherIter final{
+        Self & self;
+
+        constexpr void poll(){
+
+        }
+
+        constexpr bool has_remaing() const{
+            return false;
+        }
+    };
+
     constexpr void cipher_block(
-        std::span<uint8_t, 16> output, 
-        std::span<const uint8_t, 16> input
-    ){
-        i_cipher(input,output);
-    }
+        std::span<const uint8_t, BLOCK_BYTES_SIZE> input, 
+        std::span<uint8_t, BLOCK_BYTES_SIZE> output
+    ) const {
+        State state;
+        for (size_t i = 0; i < (4 * 4); ++i){
+            state[i % 4][i / 4] = input[i];
+        }
+
+        state = add_round_key(state, 0);
+
+        for (size_t round = 1; round <= (this->Nr_ - 1); ++round)  // main round loop
+        {
+            state = sub_bytes(state); 
+            state = shift_rows(state);  
+            state = mix_columns(state); 
+            state = add_round_key(state, round);
+        }  // main round loop
+
+        state = sub_bytes(state);
+        state = shift_rows(state);
+        state = add_round_key(state, this->Nr_);
+
+        // output = state
+        for (size_t i = 0; i < (4 * 4); ++i){
+            output[i] = state[i % 4][i / 4];
+        }
+    }  // cipher_block()
 
 
     constexpr void inv_cipher_block(
-        std::span<uint8_t, 16> output, 
-        std::span<const uint8_t, 16> input
-    ){
-        i_inv_cipher(input,output);
-    }
+        std::span<const uint8_t, BLOCK_BYTES_SIZE> input, 
+        std::span<uint8_t, BLOCK_BYTES_SIZE> output
+    ) const {
+        State state;
+
+        for (size_t i = 0; i < (4 * 4); ++i){
+            state[i % 4][i / 4] = input[i];
+        }
+
+        state = add_round_key(state, Nr_);
+
+        for (size_t round = this->Nr_-1; round >= 1; --round)  // main round loop
+        {
+            state = inv_shift_rows(state);
+            state = inv_sub_bytes(state);
+            state = add_round_key(state, round);
+            state = inv_mix_columns(state);
+        }  // end main round loop for inv_cipher_block
+
+        state = inv_shift_rows(state);
+        state = inv_sub_bytes(state);
+        state = add_round_key(state, 0);
+
+        // output = state
+        for (size_t i = 0; i < (4 * 4); ++i){
+            output[i] = state[i % 4][i / 4];
+        }
+
+    }  // inv_cipher_block()
+
 public:
-    static constexpr std::span<const uint8_t, 16> ptr_to_block(const uint8_t * p_block){
+    static constexpr std::span<const uint8_t, 16> 
+    ptr_to_block(const __restrict uint8_t * p_block){
         return std::span<const uint8_t, 16>(p_block, 16);
     }
 
-    static constexpr std::span<uint8_t, 16> ptr_to_block(uint8_t * p_block){
+    static constexpr std::span<uint8_t, 16> 
+    ptr_to_block(__restrict uint8_t * p_block){
         return std::span<uint8_t, 16>(p_block, 16);
     }
 
@@ -265,10 +344,10 @@ public:
 	size_t					Nk_;																			// key_buffer size in 32-bit words.  4, 6, 8.  (128, 192, 256 bits).
 	size_t					Nr_;																			// number of rounds. 10, 12, 14.
 
-    constexpr void compute(KeySize key_size, const uint8_t * key_buffer){
+    constexpr void compute(KeySize key_size, const __restrict uint8_t * key_buffer){
         using namespace details;
         
-        std::tie(Nk_, Nr_) = keysize_to_nk_and_nr(key_size);
+        std::tie(Nk_, Nr_) = (key_size).nk_and_nr();
 
         Row temp;
 
@@ -305,86 +384,7 @@ public:
     }
 
 
-
-    [[nodiscard]] static constexpr std::tuple<size_t, size_t> 
-    keysize_to_nk_and_nr(const KeySize key_size){
-        switch (key_size){
-            case KeySize::_128Bits:
-                return {4, 10};
-            case KeySize::_192Bits:
-                return {6, 12};
-            case KeySize::_256Bits:
-                return {8, 14};
-        }
-        __builtin_unreachable();
-    }
-
-
-    constexpr void i_cipher(
-        std::span<const uint8_t, BLOCK_BYTES_SIZE> input, 
-        std::span<uint8_t, BLOCK_BYTES_SIZE> output
-    ) const {
-        // State state = State::from_bytes((input));
-        State state;
-        for (size_t i = 0; i < (4 * 4); ++i){
-            state[i % 4][i / 4] = input[i];
-        }
-
-        state = add_round_key(state, 0);
-
-        for (size_t round = 1; round <= (this->Nr_ - 1); ++round)  // main round loop
-        {
-            state = sub_bytes(state); 
-            state = shift_rows(state);  
-            state = mix_columns(state); 
-            state = add_round_key(state, round);
-        }  // main round loop
-
-        state = sub_bytes(state);
-        state = shift_rows(state);
-        state = add_round_key(state, this->Nr_);
-
-        // output = state
-        for (size_t i = 0; i < (4 * 4); ++i){
-            output[i] = state[i % 4][i / 4];
-        }
-    }  // cipher_block()
-
-
-    constexpr void i_inv_cipher(
-        std::span<const uint8_t, BLOCK_BYTES_SIZE> input, 
-        std::span<uint8_t, BLOCK_BYTES_SIZE> output
-    ) const {
-        State state;
-        for (size_t i = 0; i < (4 * 4); ++i)
-        {
-            state[i % 4][i / 4] = input[i];
-        }
-
-        state = add_round_key(state, Nr_);
-
-        for (size_t round = this->Nr_-1; round >= 1; --round)  // main round loop
-        {
-            state = inv_shift_rows(state);
-            state = inv_sub_bytes(state);
-            state = add_round_key(state, round);
-            state = inv_mix_columns(state);
-        }  // end main round loop for inv_cipher_block
-
-        state = inv_shift_rows(state);
-        state = inv_sub_bytes(state);
-        state = add_round_key(state, 0);
-
-        // output = state
-        for (size_t i = 0; i < (4 * 4); ++i){
-            output[i] = state[i % 4][i / 4];
-        }
-
-    }  // inv_cipher_block()
-
-
-
-    [[nodiscard]] __inline static constexpr 
+    [[nodiscard]] __fast_inline static constexpr
     State inv_sub_bytes(const State & state){
         using namespace details;
         State ret;
@@ -397,7 +397,7 @@ public:
     }  // inv_sub_bytes
 
 
-    [[nodiscard]] __inline static constexpr  
+    [[nodiscard]] __fast_inline static constexpr 
     State inv_mix_columns(const State & state){
         using namespace details;
 
@@ -418,7 +418,7 @@ public:
     }  // inv_mix_columns
 
 
-    [[nodiscard]] __inline static constexpr  
+    [[nodiscard]] __fast_inline static constexpr 
     State mix_columns(const State & state){
         using namespace details;
         State ret;
@@ -438,7 +438,7 @@ public:
     }  // mix_columns
 
 
-    [[nodiscard]] __inline static constexpr  
+    [[nodiscard]] __fast_inline static constexpr 
     State sub_bytes(const State& state){
         State ret;
         using namespace details;
@@ -450,7 +450,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] __inline static constexpr 
+    [[nodiscard]] __fast_inline static constexpr
     State shift_rows(const State& state){
         State ret;
         ret[0] = state[0]; // 第0行不移位
@@ -460,7 +460,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] __inline static constexpr 
+    [[nodiscard]] __fast_inline static constexpr
     State inv_shift_rows(const State& state){
         State ret;
         ret[0] = state[0]; // 第0行不移位
@@ -470,7 +470,7 @@ public:
         return ret;
     }
 
-    [[nodiscard]] static constexpr __inline 
+    [[nodiscard]] __fast_inline static constexpr  
     Row sub_word(const Row word){
         using namespace details;
         Row result;
@@ -481,7 +481,7 @@ public:
         return result;
     }
 
-    [[nodiscard]] static constexpr __inline 
+    [[nodiscard]] __fast_inline static constexpr  
     Row rot_word(const Row word){
         Row result;
         result[0] = word[1];
@@ -496,11 +496,16 @@ public:
     [[nodiscard]] __fast_inline static constexpr 
     Row rotate_row_left(const Row src){
         static_assert(I < 4, "Row index must be less than 4");
+        constexpr uint8_t REMAPPED_IDX0 = (0 + I) & 0b11;
+        constexpr uint8_t REMAPPED_IDX1 = (1 + I) & 0b11;
+        constexpr uint8_t REMAPPED_IDX2 = (2 + I) & 0b11;
+        constexpr uint8_t REMAPPED_IDX3 = (3 + I) & 0b11;
+
         return {
-            src[(0 + I) & 0b11],
-            src[(1 + I) & 0b11],
-            src[(2 + I) & 0b11],
-            src[(3 + I) & 0b11]
+            src[REMAPPED_IDX0],
+            src[REMAPPED_IDX1],
+            src[REMAPPED_IDX2],
+            src[REMAPPED_IDX3]
         };
     }
 
@@ -509,11 +514,16 @@ public:
     [[nodiscard]] __fast_inline static constexpr 
     Row rotate_row_right(const Row src){
         static_assert(I < 4, "Shift amount must be less than 4");
+        constexpr uint8_t REMAPPED_IDX0 = (4 - I) & 0b11;
+        constexpr uint8_t REMAPPED_IDX1 = (5 - I) & 0b11;
+        constexpr uint8_t REMAPPED_IDX2 = (6 - I) & 0b11;
+        constexpr uint8_t REMAPPED_IDX3 = (7 - I) & 0b11;
+
         return {
-            src[(4 - I) & 0b11],
-            src[(5 - I) & 0b11], 
-            src[(6 - I) & 0b11],
-            src[(7 - I) & 0b11]
+            src[REMAPPED_IDX0],
+            src[REMAPPED_IDX1],
+            src[REMAPPED_IDX2],
+            src[REMAPPED_IDX3]
         };
     }
     [[nodiscard]] constexpr __inline 
@@ -527,7 +537,6 @@ public:
         return ret;
     }
 
-    friend class UnitTest;
 };
 
 

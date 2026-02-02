@@ -1,10 +1,7 @@
+#include "testbench/tb.h"
 #include "core/system.hpp"
 
-#include "hal/bus/spi/hw_singleton.hpp"
-#include "hal/gpio/vport.hpp"
-#include "core/debug/debug.hpp"
 
-#include "testbench/tb.h"
 
 
 int main(){
@@ -17,6 +14,7 @@ int main(){
     // nuedc_2025e_joint_main();
     // nuedc_2025e_laser_main();
     winter_mc_tutorial_main();
+    // lz77_main();
     // o1heap_main();
     // dshot_main();
     // sincos_main();
