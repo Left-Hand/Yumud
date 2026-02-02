@@ -145,7 +145,6 @@ private:
 template <typename T>
 struct is_placed_t<Triangle2<T>>: std::true_type {};
 
-//TODO 修复三角形迭代器奇怪的逻辑
 
 template<typename T>
 struct TriangleIterator {
@@ -194,7 +193,7 @@ public:
 
     constexpr TriangleIterator(const Triangle2<T>& sorted_triangle_)
         :
-            // is_mid_at_right_(is_point_at_right(sorted_triangle_)),
+            // is_mid_at_right_(is_midpoint_at_right(sorted_triangle_)),
             is_mid_at_right_(true),
             current_y_(sorted_triangle_.points[0].y),
             mid_y_(sorted_triangle_.points[1].y),
@@ -247,8 +246,8 @@ public:
 private:
 
 
-    __fast_inline static constexpr bool is_point_at_right(
-        const Triangle2<T> & sorted_triangle_
+    __fast_inline static constexpr bool is_midpoint_at_right(
+        const Triangle2<T> & sorted_triangle
     ) {
         /* 
         ....A
@@ -260,8 +259,8 @@ private:
         ....B  
         */
 
-        const math::Vec2<T> ab = sorted_triangle_.points[2] - sorted_triangle_.points[0];
-        const math::Vec2<T> ap = sorted_triangle_.points[1] - sorted_triangle_.points[0];
+        const math::Vec2<T> ab = sorted_triangle.points[2] - sorted_triangle.points[0];
+        const math::Vec2<T> ap = sorted_triangle.points[1] - sorted_triangle.points[0];
         return ap.is_clockwise_to(ab);
     }
 
@@ -298,11 +297,11 @@ private:
 
 
 template<std::integral T>
-struct RenderIterator<Triangle2<T>> {
+struct RasterizationIterator<Triangle2<T>> {
     using Triangle = Triangle2<T>;
     using Iterator = TriangleIterator<T>;
 
-    constexpr RenderIterator(const Triangle & triangle):
+    constexpr RasterizationIterator(const Triangle & triangle):
         iter_(triangle.to_sorted_by_y()){;}
 
     // 检查是否还有下一行

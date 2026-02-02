@@ -148,7 +148,7 @@ template<
     typename Shape
 >
 requires (is_placed_t<Shape>::value)
-struct RenderIterator final{
+struct RasterizationIterator final{
     // template<typename Target>
     // Result<void, Error> draw(Target & target) const{
     //     target.draw(shape_, style_);

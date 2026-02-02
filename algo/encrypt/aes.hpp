@@ -11,51 +11,58 @@ static constexpr size_t  BLOCK_BYTES_SIZE		= 16;
 static constexpr size_t  SEED_KEY_SIZE			= 32;
 static constexpr size_t  KEYSCHEDULE_MAX_ROW	    = 60;
 static constexpr size_t  KEYSCHEDULE_MAX_COLUMN =  4;
-static constexpr size_t  STATE_MATRIX_SIZE	= 	4;
+static constexpr size_t  STATE_MATRIX_WIDTH	= 	4;
 
 namespace details{
 
-[[nodiscard]] static constexpr uint8_t gfmultby01(uint8_t b){
+[[nodiscard]] __fast_inline static constexpr 
+uint8_t gfmultby01(uint8_t b){
     return b;
 }
 
-[[nodiscard]] static constexpr uint8_t gfmultby02(uint8_t b){
+[[nodiscard]] __fast_inline static constexpr 
+uint8_t gfmultby02(uint8_t b){
     if (b < 0x80)
-        return (uint8_t)(int32_t)(b <<1);
+        return (uint8_t)(uint32_t)(b <<1);
     else
-        return (uint8_t)( (int32_t)(b << 1) ^ (int32_t)(0x1b) );
+        return (uint8_t)( (uint32_t)(b << 1) ^ (uint32_t)(0x1b) );
 }
 
-[[nodiscard]] static constexpr uint8_t gfmultby03(uint8_t b){
-    return (uint8_t) ( (int32_t)gfmultby02(b) ^ (int32_t)b );
+[[nodiscard]] __fast_inline static constexpr 
+uint8_t gfmultby03(uint8_t b){
+    return (uint8_t) ( (uint32_t)gfmultby02(b) ^ (uint32_t)b );
 }
 
-[[nodiscard]] static constexpr uint8_t gfmultby09(uint8_t b){
-    return (uint8_t)( (int32_t)gfmultby02(gfmultby02(gfmultby02(b))) ^
-        (int32_t)b );
+[[nodiscard]] __fast_inline static constexpr 
+uint8_t gfmultby09(uint8_t b){
+    return (uint8_t)( (uint32_t)gfmultby02(gfmultby02(gfmultby02(b))) ^
+        (uint32_t)b );
 }
 
-[[nodiscard]] static constexpr uint8_t gfmultby0b(uint8_t b){
-    return (uint8_t)( (int32_t)gfmultby02(gfmultby02(gfmultby02(b))) ^
-        (int32_t)gfmultby02(b) ^
-        (int32_t)b );
+[[nodiscard]] __fast_inline static constexpr 
+uint8_t gfmultby0b(uint8_t b){
+    return (uint8_t)( (uint32_t)gfmultby02(gfmultby02(gfmultby02(b))) ^
+        (uint32_t)gfmultby02(b) ^
+        (uint32_t)b );
 }
 
-[[nodiscard]] static constexpr uint8_t gfmultby0d(uint8_t b){
-    return (uint8_t)( (int32_t)gfmultby02(gfmultby02(gfmultby02(b))) ^
-        (int32_t)gfmultby02(gfmultby02(b)) ^
-        (int32_t)(b) );
+[[nodiscard]] __fast_inline static constexpr 
+uint8_t gfmultby0d(uint8_t b){
+    return (uint8_t)( (uint32_t)gfmultby02(gfmultby02(gfmultby02(b))) ^
+        (uint32_t)gfmultby02(gfmultby02(b)) ^
+        (uint32_t)(b) );
 }
 
-[[nodiscard]] static constexpr uint8_t gfmultby0e(uint8_t b){
-    return (uint8_t)( (int32_t)gfmultby02(gfmultby02(gfmultby02(b))) ^
-        (int32_t)gfmultby02(gfmultby02(b)) ^
-        (int32_t)gfmultby02(b) );
+[[nodiscard]] __fast_inline static constexpr 
+uint8_t gfmultby0e(uint8_t b){
+    return (uint8_t)( (uint32_t)gfmultby02(gfmultby02(gfmultby02(b))) ^
+        (uint32_t)gfmultby02(gfmultby02(b)) ^
+        (uint32_t)gfmultby02(b) );
 }
 
 
 
-static constexpr uint8_t Sbox[][16]={  // populate the Sbox matrix
+static constexpr uint8_t Sbox[16][16]={  // populate the Sbox matrix
 	/* 0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f */
 	/*0*/  {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},
 	/*1*/  {0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0},
@@ -75,7 +82,7 @@ static constexpr uint8_t Sbox[][16]={  // populate the Sbox matrix
 	/*f*/  {0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16}, 
 };
 
-static constexpr uint8_t iSbox[][16]= {  // populate the iSbox matrix
+static constexpr uint8_t iSbox[16][16]= {  // populate the iSbox matrix
 	/* 0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f */
 	/*0*/  {0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb},
 	/*1*/  {0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb},

@@ -1,89 +1,10 @@
 #include "zdt_stepper_transport.hpp"
-
+#include "hal/bus/uart/uart.hpp"
 #include "hal/bus/can/can.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
 
 
 using namespace ymd;
 namespace ymd::robots::zdtmotor{
-
-
-struct [[nodiscard]] Bytes2CanFrameIterator{
-    static constexpr size_t MAX_PAYLOAD_LENGTH_PER_CAN_FRAME = 7;
-    explicit constexpr Bytes2CanFrameIterator(
-        const NodeId node_id,
-        const FuncCode func_code,
-        const std::span<const uint8_t> tailed_context_bytes
-    ):
-        node_id_(node_id),
-        func_code_(func_code),
-        tailed_context_bytes_(tailed_context_bytes){;}
-
-    explicit constexpr Bytes2CanFrameIterator(
-        const FlatPacket & flat_packet
-    ):
-        Bytes2CanFrameIterator(
-            flat_packet.node_id,
-            flat_packet.func_code,
-            flat_packet.tailed_context_bytes()
-        ){;}
-
-    [[nodiscard]] constexpr bool has_next() const {
-        return tailed_context_bytes_.size() > offset_;
-    }
-    [[nodiscard]] constexpr hal::BxCanFrame next(){
-
-        const auto frame_len = MIN(
-            tailed_context_bytes_.size() - offset_,
-            MAX_PAYLOAD_LENGTH_PER_CAN_FRAME
-        );
-
-        const auto frame = make_canmsg(
-            node_id_, func_code_,
-            offset_ / MAX_PAYLOAD_LENGTH_PER_CAN_FRAME,
-            tailed_context_bytes_.subspan(offset_, frame_len)
-        );
-
-        offset_ += frame_len;
-
-        return frame;
-    }
-private:
-    static constexpr hal::BxCanFrame make_canmsg(
-        const NodeId node_id,
-        const FuncCode func_code,
-        const uint8_t piece_cnt,
-        const std::span<const uint8_t> bytes
-    ){
-        constexpr size_t CAN_MAX_PAYLOAD_SIZE = 8;
-        auto buf = HeaplessVector<uint8_t, CAN_MAX_PAYLOAD_SIZE>{};
-        buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
-        buf.append_unchecked(bytes);
-
-        return hal::BxCanFrame(
-            nodeid_and_piececnt_to_canid(node_id, piece_cnt),
-            hal::BxCanPayload::from_bytes(buf.as_slice())
-        );
-    }
-
-    //固定为拓展帧
-    static constexpr hal::CanExtId nodeid_and_piececnt_to_canid(
-        const NodeId node_id,
-        const uint8_t piece
-    ){
-        return hal::CanExtId::from_bits(
-            uint32_t(node_id.to_u8() << 8) |
-            (piece)
-        );
-    }
-
-private:
-    NodeId node_id_;
-    FuncCode func_code_;
-    std::span<const uint8_t> tailed_context_bytes_;
-    size_t offset_ = 0;
-};
-
 
 struct [[nodiscard]] CanFrame2BytesDumper{
     static constexpr IResult<FlatPacket> dump(
@@ -159,11 +80,7 @@ void ZdtMotorTransport::can_write_flat_packet(
     hal::Can & can,
     const FlatPacket & flat_packet
 ){
-    auto iter = Bytes2CanFrameIterator(
-        flat_packet.node_id,
-        flat_packet.func_code,
-        flat_packet.payload_bytes()
-    );
+    auto iter = flat_packet.to_canframe_iter();
     while(iter.has_next()){
         const auto frame = iter.next();
         can.try_write(frame).examine();

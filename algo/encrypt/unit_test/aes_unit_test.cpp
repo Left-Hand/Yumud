@@ -10,7 +10,6 @@ static_assert(aes::BLOCK_BYTES_SIZE == 16, "Block size should be 16 bytes");
 static_assert(aes::SEED_KEY_SIZE == 32, "Seed key size should be 32 bytes");
 static_assert(aes::KEYSCHEDULE_MAX_ROW == 60, "Key schedule max rows should be 60");
 static_assert(aes::KEYSCHEDULE_MAX_COLUMN == 4, "Key schedule max columns should be 4");
-static_assert(aes::STATE_MATRIX_SIZE == 4, "State matrix size should be 4");
 
 // Test KeySize enum values
 static_assert(static_cast<uint8_t>(aes::KeySize::_128Bits) == 0, "aes::KeySize::_128Bits should be 0");

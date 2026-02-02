@@ -36,7 +36,19 @@ using Event = Uart::Event;
 #define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, USART_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
-#define EMIT_EVENT(x)   if(self.event_callback_ != nullptr) {self.event_callback_(x);}
+
+#define EMIT_EVENT(x)   \
+if(self.event_callback_ != nullptr) {\
+    self.event_callback_(x);\
+}\
+
+
+#define EMIT_EVENT_OR_TRAP(x)\
+if(self.event_callback_ != nullptr){\
+    self.event_callback_(x);\
+} else{\
+    __builtin_trap();\
+}\
 
 namespace {
 [[maybe_unused]] static constexpr Nth _uart_to_nth(const uint32_t base_addr){
@@ -787,7 +799,7 @@ void Uart::enable_rx_dma(const Enable en){
 void UartInterruptDispatcher::isr_rxne(Uart & self){
     switch(self.rx_strategy_){
         case CommStrategy::Interrupt:{
-            const auto data = uint8_t(SDK_INST(self.inst_)->DATAR);
+            const auto data = static_cast<uint8_t>(SDK_INST(self.inst_)->DATAR);
             if(const auto len = self.rx_queue_.try_push(data);
                 len == 0
             ){

@@ -48,7 +48,7 @@ private:
     Kind kind_;
 };
 
-struct [[nodiscard]] Direction{
+struct [[nodiscard]] Direction final{
 public:
     enum class Kind:uint8_t{
         PeriphToBurstMemory = 0,
@@ -77,14 +77,12 @@ private:
     Kind kind_;
 };
 
-
 enum class [[nodiscard]] Priority:uint16_t{
     Low = 0,
     Medium = 1,
     High = 2,
     Ultra = 3
 };
-
 
 enum class [[nodiscard]] IT:uint8_t{
     Done,
@@ -97,12 +95,12 @@ enum class [[nodiscard]] WordSize:uint8_t{
     FourByte = 2,
 };
 
-
 enum class [[nodiscard]] Event:uint8_t{
     TransferComplete,
     HalfTransfer,
     TransferError
 };
+
 }
 namespace ymd::hal{
 using DmaMode = dma::Mode;

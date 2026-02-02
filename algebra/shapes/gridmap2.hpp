@@ -50,11 +50,11 @@ private:
 template<typename T>
 struct is_placed_t<GridMap2<T>>:std::true_type{;};
 
-// RenderIterator 特化
+// RasterizationIterator 特化
 template<std::integral T>
-struct RenderIterator<GridMap2<T>> {
+struct RasterizationIterator<GridMap2<T>> {
     using Shape = GridMap2<T>;
-    constexpr RenderIterator(const Shape & shape)
+    constexpr RasterizationIterator(const Shape & shape)
         : shape_(shape),
             y_stop_(shape_.bounding_box().y_range().stop),
             y_(shape.top_left_cell.y())

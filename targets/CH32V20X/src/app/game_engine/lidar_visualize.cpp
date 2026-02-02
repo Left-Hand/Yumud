@@ -444,7 +444,7 @@ void lidar_visualize_main(){
         auto && shape = Sprite<Gray>{.image = image.copy(), .position = math::Vec2u{10, 10}};
 
         auto shape_bb = shape.bounding_box();
-        auto render_iter = RenderIterator<Sprite<Gray>>(std::move(shape));
+        auto render_iter = RasterizationIterator<Sprite<Gray>>(std::move(shape));
 
         Microseconds upload_elapsed_us = 0us;
         Microseconds render_elapsed_us = 0us;

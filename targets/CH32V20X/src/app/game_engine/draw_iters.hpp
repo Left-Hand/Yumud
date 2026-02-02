@@ -95,19 +95,19 @@ static constexpr size_t count_iter(Iter && iter){
 }
 
 template<typename Shape>
-// auto make_RenderIterator
+// auto make_RasterizationIterator
 auto make_draw_dispatch_iterator(Shape && shape){
-    return RenderIterator<std::decay_t<Shape>>(std::move<Shape>(shape));
+    return RasterizationIterator<std::decay_t<Shape>>(std::move<Shape>(shape));
 }
 
 
 template<typename T>
 requires (std::is_integral_v<T>)
-struct RenderIterator<math::Rect2<T>> {
+struct RasterizationIterator<math::Rect2<T>> {
     using Shape = math::Rect2<T>;
-    using Self = RenderIterator<Shape>;
+    using Self = RasterizationIterator<Shape>;
 
-    constexpr explicit RenderIterator(const Shape& shape) : 
+    constexpr explicit RasterizationIterator(const Shape& shape) : 
         x_range_(shape.x_range()),
         y_range_(shape.y_range()),
         y_(y_range_.start) {}  // 修复：使用 y_range_.start
@@ -161,14 +161,14 @@ private:
 
 
 
-// RenderIterator 特化
+// RasterizationIterator 特化
 template<std::integral T>
-struct RenderIterator<math::Segment2<T>> {
+struct RasterizationIterator<math::Segment2<T>> {
     using Segment = math::Segment2<T>;
     // using Iterator = BresenhamIterator<T>;
     using Iterator = LineDDAIterator<T>;
 
-    constexpr explicit RenderIterator(const Segment& segment)
+    constexpr explicit RasterizationIterator(const Segment& segment)
         : iter_(segment){}
 
     // 检查是否还有下一行
@@ -206,13 +206,13 @@ private:
 };
 
 
-// RenderIterator 特化
+// RasterizationIterator 特化
 template<std::integral T>
-struct RenderIterator<math::Circle2<T>> {
+struct RasterizationIterator<math::Circle2<T>> {
     using Shape = math::Circle2<T>;
     using Iterator = CircleBresenhamIterator<T>;
 
-    constexpr explicit RenderIterator(const Shape & shape)
+    constexpr explicit RasterizationIterator(const Shape & shape)
         : iter_(shape){}
 
     // 检查是否还有下一行
@@ -255,11 +255,11 @@ private:
 
 
 
-// RenderIterator 特化
+// RasterizationIterator 特化
 template<typename T>
-struct RenderIterator<Sprite<T>> {
+struct RasterizationIterator<Sprite<T>> {
     using Shape = Sprite<T>;
-    constexpr explicit RenderIterator(Shape && shape)
+    constexpr explicit RasterizationIterator(Shape && shape)
         : shape_(shape.copy()),
             y_stop_(shape_.image.size().y + shape_.position.y),
             y_(shape_.position.y)
@@ -293,12 +293,12 @@ private:
 };
 
 
-// RenderIterator 特化
+// RasterizationIterator 特化
 template<std::integral T, typename D>
-struct RenderIterator<HorizonSpectrum<T, D>> {
+struct RasterizationIterator<HorizonSpectrum<T, D>> {
     using Shape = HorizonSpectrum<T, D>;
     using Transformer = Rescaler<iq16>;
-    constexpr explicit RenderIterator(const Shape & shape)
+    constexpr explicit RasterizationIterator(const Shape & shape)
         : shape_(shape),
             transformer_(Transformer::from_input_and_output(
                 shape_.sample_range,
@@ -369,11 +369,11 @@ private:
 
 
 template<typename Encoding, typename Font>
-struct RenderIterator<LineText<Encoding, Font>> {
+struct RasterizationIterator<LineText<Encoding, Font>> {
     using Shape = LineText<Encoding, Font>;
-    using Self = RenderIterator<Shape>;
+    using Self = RasterizationIterator<Shape>;
 
-    constexpr explicit RenderIterator(const Shape& shape) : 
+    constexpr explicit RasterizationIterator(const Shape& shape) : 
         shape_(shape),
         x_range_(shape.bounding_box().x_range()),
         y_range_(shape.bounding_box().y_range()),

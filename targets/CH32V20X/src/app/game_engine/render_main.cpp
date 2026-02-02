@@ -174,7 +174,7 @@ void render_main(){
         // using Shape = decltype(shape);
         auto shape_bb = shape.bounding_box();
         // auto render_iter = make_draw_dispatch_iterator(shape);
-        auto render_iter = RenderIterator<Sprite<RGB565>>(std::move(shape));
+        auto render_iter = RasterizationIterator<Sprite<RGB565>>(std::move(shape));
 
 
         // PANIC{render_iter};
