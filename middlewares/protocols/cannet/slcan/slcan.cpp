@@ -1,7 +1,8 @@
 #include "slcan.hpp"
+#include "core/utils/scope_guard.hpp"
 
 using namespace ymd;
-using namespace ymd::robots::slcan;
+using namespace ymd::slcan;
 using namespace ymd::asciican;
 using namespace asciican::primitive::operations;
 
@@ -51,7 +52,7 @@ IResult<uint32_t> _parse_hex_str(const StringView str){
         const auto may_digit = _char2digit(chr);
 
         if(may_digit.is_none())
-            RETURN_ERR(Error::UnsupportedHexChar, chr);
+            RETURN_ERR(Error::InvalidCharInHex, chr);
 
         ret = static_cast<uint32_t>(ret << 4) | static_cast<uint32_t>(may_digit.unwrap());
     }
@@ -64,14 +65,14 @@ IResult<uint32_t> _parse_dual_char(const char c1, const char c2){
 
     const auto nibble1 = ({
         const auto may_digit = _char2digit(c1);
-        if(may_digit.is_none()) return Err(Error::UnsupportedHexChar);
+        if(may_digit.is_none()) return Err(Error::InvalidCharInHex);
         may_digit.unwrap();
     });
 
 
     const auto nibble2 = ({
         const auto may_digit = _char2digit(c2);
-        if(may_digit.is_none()) return Err(Error::UnsupportedHexChar);
+        if(may_digit.is_none()) return Err(Error::InvalidCharInHex);
         may_digit.unwrap();
     });
 
@@ -84,6 +85,7 @@ IResult<uint32_t> _parse_dual_char(const char c1, const char c2){
 IResult<hal::CanStdId> parse_std_id(const StringView str){
     if(str.length() == 0)
         RETURN_ERR(Error::NoArg);
+
     if(str.length() > STD_ID_STR_LEN)
         RETURN_ERR(Error::StdIdTooLong);
     if(str.length() < STD_ID_STR_LEN)
@@ -107,6 +109,7 @@ IResult<hal::CanStdId> parse_std_id(const StringView str){
 IResult<hal::CanExtId> _parse_ext_id(const StringView str){
     if(str.length() == 0) 
         RETURN_ERR(Error::NoArg);
+
     if(str.length() > EXT_ID_STR_LEN)
         RETURN_ERR(Error::ExtIdTooLong);
     if(str.length() < EXT_ID_STR_LEN)
@@ -131,6 +134,8 @@ IResult<std::array<uint8_t, NUM_MAX_CAN_DLC>> parse_payload(
     const StringView str, 
     const size_t dlc
 ){
+    if((str.length() & 1) != 0) 
+        RETURN_ERR(Error::OddPayloadLength, str.length(), dlc, str);
     if(str.length() != dlc * 2) 
         RETURN_ERR(Error::PayloadLengthMismatch, str.length(), dlc, str);
 
@@ -146,6 +151,12 @@ IResult<std::array<uint8_t, NUM_MAX_CAN_DLC>> parse_payload(
             res.unwrap();
         });
     }
+
+    #pragma GCC unroll 8
+    for(size_t i = dlc; i < NUM_MAX_CAN_DLC; i++){
+        buf[i] = 0;
+    }
+
     return Ok{buf};
 }
 
@@ -155,7 +166,7 @@ IResult<size_t> _parse_dlc(const StringView str){
     if(str.length() == 0) 
         RETURN_ERR(Error::NoArg);
     if(str.length() != 1) 
-        RETURN_ERR(Error::PayloadLengthMismatch, str.length());
+        RETURN_ERR(Error::InvalidDlcFormat, str.length());
 
     const auto dlc = ({
         const auto res = _parse_hex_str(str);
@@ -196,22 +207,25 @@ IResult<hal::BxCanFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
     if(str.length() < 4)
         RETURN_ERR(Error::ArgTooShort, str.length());
 
-    auto provider = StrProvider{str};
+    // auto provider = StrProvider{str};
+    size_t offset = 0;
+
 
     const uint32_t id_u32_checked = ({
-        const auto res = _parse_id_u32<IS_EXTENDED>(provider.fetch_leading(ID_LEN).unwrap());
+        const auto res = _parse_id_u32<IS_EXTENDED>(StringView(str.data() + offset, ID_LEN));
         if(res.is_err()) RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });
+    offset += ID_LEN;
 
     const size_t dlc = ({
-        const auto res = _parse_dlc(provider.fetch_leading(DLC_LEN).unwrap());
+        const auto res = _parse_dlc(StringView(str.data() + offset, DLC_LEN));
         if(res.is_err()) RETURN_ERR(res.unwrap_err());
         res.unwrap();
     });
 
-    const StringView payload_str = provider.fetch_remaining().unwrap();
-    
+    offset += DLC_LEN;
+    const StringView payload_str = StringView(str.data() + offset, str.length() - offset);
 
     switch(can_rtr){
         case hal::CanRtr::Data:{
@@ -230,7 +244,7 @@ IResult<hal::BxCanFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
         }
         case hal::CanRtr::Remote:{
             if(payload_str.length() != 0) 
-                RETURN_ERR(Error::InvalidFieldInRemoteMsg);
+                RETURN_ERR(Error::PayloadFoundedInRemote);
             return Ok(hal::BxCanFrame::from_remote(ID::from_bits(id_u32_checked)));
         }
     }
@@ -239,53 +253,67 @@ IResult<hal::BxCanFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
 }
 
 
-
-
 [[nodiscard]] static constexpr 
-hal::CanBaudrate _chr_to_baud(char chr){ 
+uint32_t _chr_to_baud_unchecked(char chr){
     switch(chr){
-        case '0': return hal::CanBaudrate::_10K;
-        case '1': return hal::CanBaudrate::_20K;
-        case '2': return hal::CanBaudrate::_50K;
-        case '3': return hal::CanBaudrate::_100K;
-        case '4': return hal::CanBaudrate::_125K;
-        case '5': return hal::CanBaudrate::_250K;
-        case '6': return hal::CanBaudrate::_500K;
-        case '7': return hal::CanBaudrate::_800K;
-        case '8': return hal::CanBaudrate::_1M;
+        case '0': return 10000;
+        case '1': return 20000;
+        case '2': return 50000;
+        case '3': return 100000;
+        case '4': return 125000;
+        case '5': return 250000;
+        case '6': return 500000;
+        case '7': return 800000;
+        case '8': return 1000000;
     }
-    //unreachable
     __builtin_trap();
-};
+}
 
 auto _msg_to_operation = [](const hal::BxCanFrame & frame) { 
     return Operation(SendCanFrame{frame}); };
 
-IResult<Operation> SlcanParser::process_line(const StringView str) const {
+
+IResult<Operation> SlcanParser::process_line(const StringView input_line) const {
     static constexpr bool IS_EXTENDED = true;
-    const StringView line = str.trim();
-    // DEBUG_PRINTLN(line, line.length());
-    if(line.size() == 0){
-        RETURN_ERR(Error::NoInput);
-    }
-    
+    const StringView line = input_line.trim();
+    if(line.size() == 0) RETURN_ERR(Error::NoInput);
     if(line.size() == 1){
         switch(line[0]){
             case 'F': return Ok(Operation(response_flag()));
             case 'V': return Ok(Operation(response_version()));
-            case 'N': return Ok(Operation(response_serial_idx()));
+            case 'N': return Ok(Operation(response_serial_number()));
             
             case 'O': return Ok(Operation(Open{}));
             case 'C': return Ok(Operation(Close{}));
 
-            case 'Z': RETURN_ERR(Error::NotImplemented);
+            case 'S':
+            case 's': 
+            case 't': 
+            case 'r': 
+            case 'T': 
+            case 'R': 
+            case 'M': 
+            case 'm': 
+            case 'Z': 
+                RETURN_ERR(Error::NoArg);
         }
-        RETURN_ERR(Error::UnknownCommand);
+        RETURN_ERR(Error::InvalidCommand);
     }else{
         const auto cmd_line = line.substr(1).unwrap();
         if(cmd_line.size() == 0) [[unlikely]]
             RETURN_ERR(Error::NoArg);
         switch(line[0]){
+            // Setup with standard CAN bit-rates where n is 0-8.
+            // This command is only active if the CAN channel is closed.
+            // S0 Setup 10Kbit
+            // S1 Setup 20Kbit
+            // S2 Setup 50Kbit
+            // S3 Setup 100Kbit
+            // S4 Setup 125Kbit
+            // S5 Setup 250Kbit
+            // S6 Setup 500Kbit
+            // S7 Setup 800Kbit
+            // S8 Setup 1Mbit
             case 'S': {
                 if(cmd_line.size() == 0) 
                     RETURN_ERR(Error::NoArg);
@@ -295,61 +323,103 @@ IResult<Operation> SlcanParser::process_line(const StringView str) const {
                 if(chr < '0' || chr > '8') 
                     return Err(Error::InvalidCanBaudrate);
 
-                return Ok(Operation(SetCanBaud{.baudrate = _chr_to_baud(chr)}));
+                return Ok(Operation(SetCanBaud{.baudrate = _chr_to_baud_unchecked(chr)}));
             }
+
+            // Setup with BTR0/BTR1 CAN bit-rates where xx and yy is a hex
+            // value. This command is only active if the CAN channel is closed.
             case 's':{
-                //set serial baudrate
-                TODO();
-                return Ok(Operation(SetSerialBaud{.baudrate = 0}));
+                RETURN_ERR(Error::WillNeverSupport);
             }
 
             case 't': return parse_msg<not IS_EXTENDED>(cmd_line, hal::CanRtr::Data)
                 .map(_msg_to_operation);
-            case 'r': return parse_msg<not IS_EXTENDED>(cmd_line, hal::CanRtr::Remote)
-                .map(_msg_to_operation);
 
             case 'T': return parse_msg<IS_EXTENDED>(cmd_line, hal::CanRtr::Data)
                 .map(_msg_to_operation);
+                
+            case 'r': return parse_msg<not IS_EXTENDED>(cmd_line, hal::CanRtr::Remote)
+                .map(_msg_to_operation);
+
+
             case 'R': return parse_msg<IS_EXTENDED>(cmd_line, hal::CanRtr::Remote)
                 .map(_msg_to_operation);
 
+            // Sets Acceptance Code Register (ACn Register of SJA1000).
+            // This command is only active if the CAN channel is initiated and
+            // not opened.
+            case 'M': RETURN_ERR(Error::WillNeverSupport);
+
+            // Sets Acceptance Mask Register (AMn Register of SJA1000).
+            // This command is only active if the CAN channel is initiated and
+            // not opened.
+            case 'm': RETURN_ERR(Error::WillNeverSupport);
+
+            // Sets Time Stamp ON/OFF for received frames only.
+            // This command is only active if the CAN channel is closed.
+            // The value will be saved in EEPROM and remembered next time
+            // the CANUSB is powered up. This command shouldn’t be used more
+            // than when you want to change this behaviour. It is set to OFF by
+            // default, to be compatible with old programs written for CANUSB.
+            // Setting it to ON, will add 4 bytes sent out from CANUSB with the A
+            // and P command or when the Auto Poll/Send feature is enabled.
+            // When using Time Stamp each message gets a time in milliseconds
+            // when it was received into the CANUSB, this can be used for real
+            // time applications for e.g. knowing time inbetween messages etc.
+            // Note however by using this feature you maybe will decrease
+            // bandwith on the CANUSB, since it adds 4 bytes to each message
+            // being sent (specially on VCP drivers).
+            // If the Time Stamp is OFF, the incomming frames looks like this:
+            // t10021133[CR] (a standard frame with ID=0x100 & 2 bytes)
+            // If the Time Stamp is ON, the incomming frames looks like this:
+            // t100211334D67[CR] (a standard frame with ID=0x100 & 2 bytes)
+            // Note the last 4 bytes 0x4D67, which is a Time Stamp for this
+            // specific message in milliseconds (and of course in hex). The timer
+            // in the CANUSB starts at zero 0x0000 and goes up to 0xEA5F before
+            // it loop arround and get’s back to 0x0000. This corresponds to exact
+            // 60,000mS (i.e. 1 minute which will be more than enough in most
+            // systems)
+            case 'Z': RETURN_ERR(Error::WillNeverSupport);
+
         }
-        RETURN_ERR(Error::UnknownCommand);
+        RETURN_ERR(Error::InvalidCommand);
     }
 
     //unreachable
     __builtin_trap();
 }
 
-SendText SlcanParser::response_version() const{
-    return SendText::from_str("V1013\r");
+SendString SlcanParser::response_version() const{
+    return SendString::from_str("V1013\r");
 }
 
-SendText SlcanParser::response_serial_idx() const{
-    return SendText::from_str("NA123\r");
+SendString SlcanParser::response_serial_number() const{
+    return SendString::from_str("NA123\r");
 }
 
-Flags SlcanParser::get_flag() const {
-    return Flags::RxFifoFull;
+StatusFlag SlcanParser::get_flag() const {
+    return StatusFlag::zero();
 }
 
-SendText SlcanParser::response_flag() const{
-    const auto flags = get_flag();
-    const char str[2] = {
-        static_cast<char>(std::bit_cast<char>(flags) + '0'), 'r'
-    };
+SendString SlcanParser::response_flag() const{
+    static constexpr size_t LEN = 4;
+    std::array<char, LEN> chars;
+    const auto flag = get_flag();
+    chars[0] = 'F';
+    std::tie(chars[1], chars[2]) = flag.to_nibbles();
+    chars[3] = '\r';
 
-    return SendText::from_str(StringView(str, 2));
+    return SendString::from_str(StringView(chars.data(), LEN));
 }
 
 namespace{
-static_assert(parse_payload("11x", 1).unwrap_err() == Error::PayloadLengthMismatch);
+static_assert(parse_payload("11x", 1).unwrap_err() == Error::OddPayloadLength);
 static_assert(parse_payload("11", 1).unwrap()[0] == 0x11);
 static_assert(parse_payload("1122334455667788", 8).unwrap()[7] == 0x88);
 static_assert(parse_std_id("123").unwrap().to_u11() == 0x123);
 static_assert(parse_std_id("923").unwrap_err() == Error::StdIdOverflow);
 static_assert(parse_std_id("9scd").unwrap_err() == Error::StdIdTooLong);
-static_assert(parse_std_id("9sc").unwrap_err() == Error::UnsupportedHexChar);
+static_assert(parse_std_id("9sc").unwrap_err() == Error::InvalidCharInHex);
 
 // Additional tests for hex conversion functions
 static_assert(_char2digit('0').unwrap() == 0);
@@ -367,7 +437,7 @@ static_assert(_parse_hex_str("").unwrap_err() == Error::NoArg);
 static_assert(_parse_hex_str("12").unwrap() == 0x12);
 static_assert(_parse_hex_str("AB").unwrap() == 0xAB);
 static_assert(_parse_hex_str("ff").unwrap() == 0xFF);
-static_assert(_parse_hex_str("xyz").unwrap_err() == Error::UnsupportedHexChar);
+static_assert(_parse_hex_str("xyz").unwrap_err() == Error::InvalidCharInHex);
 static_assert(_parse_dual_char('1', '0').unwrap() == 0x10);
 static_assert(_parse_dual_char('f', 'f').unwrap() == 0xFF);
 
@@ -378,14 +448,14 @@ static_assert(_parse_ext_id("1FFFFFFF").unwrap().to_u29() == 0x1FFFFFFF);
 static_assert(_parse_ext_id("20000000").unwrap_err() == Error::ExtIdOverflow);
 static_assert(_parse_ext_id("1234567").unwrap_err() == Error::ExtIdTooShort);
 static_assert(_parse_ext_id("123456789").unwrap_err() == Error::ExtIdTooLong);
-static_assert(_parse_ext_id("1234567G").unwrap_err() == Error::UnsupportedHexChar);
+static_assert(_parse_ext_id("1234567G").unwrap_err() == Error::InvalidCharInHex);
 
 // Additional tests for length parsing
 static_assert(_parse_dlc("0").unwrap() == 0);
 static_assert(_parse_dlc("8").unwrap() == 8);
 static_assert(_parse_dlc("9").unwrap_err() == Error::PayloadLengthOverflow);
 static_assert(_parse_dlc("").unwrap_err() == Error::NoArg);
-static_assert(_parse_dlc("12").unwrap_err() == Error::PayloadLengthMismatch);
+static_assert(_parse_dlc("12").unwrap_err() == Error::InvalidDlcFormat);
 
 // Tests for parse_id_u32
 static_assert(_parse_id_u32<false>("000").unwrap() == 0);
@@ -393,9 +463,6 @@ static_assert(_parse_id_u32<false>("7FF").unwrap() == 0x7FF);
 static_assert(_parse_id_u32<true>("00000000").unwrap() == 0);
 static_assert(_parse_id_u32<true>("1FFFFFFF").unwrap() == 0x1FFFFFFF);
 
-// Tests for baudrate mapping
-static_assert(_chr_to_baud('0').has_same_freq(hal::CanBaudrate::_10K));
-static_assert(_chr_to_baud('8').has_same_freq(hal::CanBaudrate::_1M));
 
 // Test edge cases for payload parsing
 static_assert(parse_payload("", 0).unwrap()[0] == 0); // Empty payload

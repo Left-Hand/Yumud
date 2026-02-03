@@ -15,29 +15,29 @@ namespace ymd::asciican::primitive{
 
 namespace operations{
     struct [[nodiscard]] SendCanFrame{
-        hal::BxCanFrame msg;
+        hal::BxCanFrame frame;
 
         friend OutputStream & operator<<(OutputStream & os, const SendCanFrame & self){ 
-            return os << os.field("msg")(self.msg);
+            return os << os.field("frame")(self.frame);
         }
     };
 
-    struct [[nodiscard]] SendText{
+    struct [[nodiscard]] SendString{
         static constexpr size_t MAX_TEXT_LEN = 16;
 
-        using String = HeaplessString<MAX_TEXT_LEN> ;
-        String str;
+        using IString = HeaplessString<MAX_TEXT_LEN> ;
+        IString str;
 
-        static constexpr SendText from_str(const StringView str){
+        static constexpr SendString from_str(const StringView str){
             if(str.size() > MAX_TEXT_LEN) 
                 __builtin_trap();
 
-            return SendText{
-                .str = String::from_str(str)
+            return SendString{
+                .str = IString::from_str(str)
             };
         }
 
-        friend OutputStream & operator<<(OutputStream & os, const SendText & self){ 
+        friend OutputStream & operator<<(OutputStream & os, const SendString & self){ 
             return os << os.field("str")(self.str.view());
         }
     };
@@ -51,7 +51,7 @@ namespace operations{
     };
 
     struct [[nodiscard]] SetCanBaud{
-        hal::CanBaudrate baudrate;
+        uint32_t baudrate;
 
         friend OutputStream & operator<<(OutputStream & os, const SetCanBaud & self){ 
             return os << os.field("baudrate")(self.baudrate);
@@ -81,7 +81,7 @@ namespace operations{
 
 struct [[nodiscard]] Operation:public Sumtype<
     operations::SendCanFrame, 
-    operations::SendText,
+    operations::SendString,
     operations::SetSerialBaud,
     operations::SetCanBaud,
     operations::Open,
@@ -96,16 +96,19 @@ using Frame = hal::BxCanFrame;
 enum class Error:uint8_t{
     NoInput,
     NoArg,
+    OddPayloadLength,
     PayloadLengthMismatch,
+    InvalidDlcFormat,
     PayloadLengthOverflow,
     InvalidCommand,
-    UnknownCommand,
     InvalidCanBaudrate,
     InvalidSerialBaudrate,
-    StdIdOverflow,
-    ExtIdOverflow,
+
     ArgTooLong,
     ArgTooShort,
+
+    StdIdOverflow,
+    ExtIdOverflow,
     
     StdIdTooLong,
     StdIdTooShort,
@@ -113,9 +116,10 @@ enum class Error:uint8_t{
     ExtIdTooLong,
     ExtIdTooShort,
 
-    UnsupportedHexChar,
-    InvalidFieldInRemoteMsg,
-    NotImplemented
+    InvalidCharInHex,
+    PayloadFoundedInRemote,
+    NotImplemented,
+    WillNeverSupport
 };
 
 enum class Flags:uint8_t{

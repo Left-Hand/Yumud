@@ -18,12 +18,73 @@
 //          -b <btr>    (set bit time register value)
 //          -F          (stay in foreground; no daemonize)
 
-namespace ymd::robots::slcan{
+
+
+namespace ymd::slcan{
+
+
 using namespace asciican;
 using namespace asciican::primitive;
 using Error = asciican::primitive::Error;
-using Flags = asciican::primitive::Flags;
 using Frame = asciican::primitive::Frame;
+
+struct [[nodiscard]] StatusFlag final{
+    using Self = StatusFlag;
+    uint8_t rx_queue_full:1;
+    uint8_t tx_queue_full:1;
+    // Bit 2 Error warning (EI), see SJA1000 datasheet
+    // Bit 3 Data Overrun (DOI), see SJA1000 datasheet
+    // Bit 4 Not used.
+    // Bit 5 Error Passive (EPI), see SJA1000 datasheet
+    // Bit 6 Arbitration Lost (ALI), see SJA1000 datasheet *
+    // Bit 7 Bus Error (BEI), see SJA1000 datasheet **
+
+    uint8_t ei:1;
+    uint8_t doi:1;
+    uint8_t __resv__:1;
+    uint8_t epi:1;
+    uint8_t ali:1;
+    uint8_t bei:1;
+
+    static constexpr Self from_bits(uint8_t bits){
+        return std::bit_cast<Self>(bits);
+    }
+
+    static constexpr Self from_nibbles_unchecked(char nib1, char nib2){ 
+        uint8_t bits = 0;
+        bits |= static_cast<uint8_t>(((nib1 - '0') & 0x0f) << 4);
+        bits |= static_cast<uint8_t>(((nib2 - '0') & 0x0f));
+
+        return from_bits(bits);
+    }
+
+    static constexpr Option<Self> from_nibbles(char nib1, char nib2){ 
+        auto validate_char = [](char ch) -> bool{
+            switch(ch){
+                case '0' ... '9': return true;
+                case 'A' ... 'F': return true;
+                case 'a' ... 'f': return true;
+            }
+            return false;
+        };
+
+        if(validate_char(nib1) == false) return None;
+        if(validate_char(nib2) == false) return None;
+        return Some(from_nibbles_unchecked(nib1, nib2));
+    }
+
+
+    static constexpr Self zero(){
+        return from_bits(0);
+    }
+
+    constexpr std::tuple<char, char> to_nibbles() const{
+        const uint8_t bits = std::bit_cast<uint8_t>(*this);
+        // chars[0] = '0' + (bits >> 4);
+        // chars[1] = '0' + (bits & 0x0F);
+        return std::make_tuple('0' + (bits >> 4), '0' + (bits & 0x0F));
+    }
+};
 
 
 class [[nodiscard]] SlcanParser final{
@@ -37,10 +98,10 @@ public:
     [[nodiscard]] IResult<Operation> process_line(const StringView str) const;
 private:
 
-    [[nodiscard]] operations::SendText response_version() const ;
-    [[nodiscard]] operations::SendText response_serial_idx() const ;
-    [[nodiscard]] Flags get_flag() const;
-    [[nodiscard]] operations::SendText response_flag() const ;
+    [[nodiscard]] operations::SendString response_version() const ;
+    [[nodiscard]] operations::SendString response_serial_number() const ;
+    [[nodiscard]] StatusFlag get_flag() const;
+    [[nodiscard]] operations::SendString response_flag() const ;
 };
 
 
@@ -71,8 +132,15 @@ struct SlcanResponseFormatter{
 
     static constexpr Response fmt_operation(const IResult<Operation> & res){
         if(res.is_err()){
-            return Response::from_str("Z");
+            return Response::from_str("\b");
         }else{
+            const Operation & var_op = res.unwrap();
+            if(var_op.is<operations::SendCanFrame>()){
+                const auto op = var_op.unwrap_as<operations::SendCanFrame>();
+                return SlcanResponseFormatter::fmt_canmsg(op.frame);
+            }else if(var_op.is<operations::SendString>()){
+                return Response::from_str(var_op.unwrap_as<operations::SendString>().str.view());
+            }
             return Response::from_empty();
         }
     }

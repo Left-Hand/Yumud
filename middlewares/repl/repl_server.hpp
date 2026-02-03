@@ -10,7 +10,7 @@
 
 namespace ymd::repl{
 
-struct ReplServer final{
+struct [[nodiscard]] ReplServer final{
 public:
     ReplServer(ReadCharProxy && is, WriteCharProxy && os) :
         is_(std::move(is)),
@@ -41,7 +41,7 @@ public:
 
                 const auto resp_res = respond(obj, strs);
                 if(outen_){
-                    os_.prints(">>=", resp_res);
+                    os_.prints(StringView(">>="), resp_res);
                 }
         
 
@@ -66,8 +66,10 @@ public:
         const auto guard = os_.create_guard();
         if(outen_){
             os_.force_sync(EN);
-            os_.prints("<<=", strs);
+            os_ << StringView("<<= ") << strs;
         }
+
+        os_ << StringView("\r\n----\r\n");
 
         return [&]{
             if(!this->outen_){
@@ -76,6 +78,10 @@ public:
 
                 return script::visit(obj, dos, script::AccessProvider_ByStringViews(strs));
             }else{
+                auto t_guard = make_scope_guard([&]{
+                    os_ << StringView("\r\n----\r\n");
+                });
+                
                 return script::visit(obj, os_, script::AccessProvider_ByStringViews(strs));
             }
         }();

@@ -192,7 +192,7 @@ void nuedc_2023e_main(){
         &DBG_UART, &DBG_UART
     };
 
-    auto repl_list =
+    [[maybe_unused]] auto repl_list =
         script::make_list( "list",
         script::make_function("rst", [](){sys::reset();}),
         script::make_function("outen", [&](){repl_server.set_outen(EN);}),

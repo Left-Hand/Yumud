@@ -172,7 +172,7 @@ convert_params_to_tuple(const auto & ap) {
 }
 
 
-
+#if 0
 template<typename Ret, typename ... Args>
 struct alignas(4) [[nodiscard]] MethodByLambda final{
 public:
@@ -198,6 +198,38 @@ private:
     StringView name_;
     Callback callback_;
 };
+#else
+
+template<typename Fn>
+struct alignas(4) [[nodiscard]] MethodByLambda final{
+public:
+
+    using Tup = tmp::functor_args_tuple_t<Fn>;
+    static constexpr size_t N = std::tuple_size_v<Tup>; 
+    // using Callback = std::function<Ret(Args...)>;
+    using Ret = tmp::functor_ret_t<Fn>;
+
+
+    template<typename T>
+    constexpr explicit MethodByLambda(
+        const StringView name, 
+        T && callback
+    )
+        : name_(name), callback_(std::forward<T>(callback)) {}
+
+    [[nodiscard]] constexpr StringView name() const {
+        return name_;
+    }
+
+    constexpr Ret invoke(const Tup & tup) const {
+        return std::apply(callback_, tup);
+    }
+private:
+    StringView name_;
+    Fn callback_;
+};
+
+#endif
 
 
 template<typename Obj, typename Ret, typename ... Args>
@@ -260,33 +292,38 @@ public:
 
 
 namespace details{
-template<typename Ret, typename ArgsTuple, template<typename, typename...> 
-    class MethodByLambda, typename Lambda>
-struct make_method_by_lambda_impl;
+// template<typename Ret, typename ArgsTuple, template<typename, typename...> 
+//     class MethodByLambda, typename Lambda>
+// struct make_method_by_lambda_impl;
 
-template<typename Ret, template<typename, typename...> 
-    class MethodByLambda, typename... Args, typename Lambda>
-struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lambda> {
-    static auto make(const StringView name, Lambda&& lambda) {
-        return MethodByLambda<Ret, Args...>(
-            name,
-            std::forward<Lambda>(lambda)
-        );
-    }
-};
+// template<typename Ret, template<typename, typename...> 
+//     class MethodByLambda, typename... Args, typename Lambda>
+// struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lambda> {
+//     static auto make(const StringView name, Lambda&& lambda) {
+//         return MethodByLambda<Ret, Args...>(
+//             name,
+//             std::forward<Lambda>(lambda)
+//         );
+//     }
+// };
 
 }
 
-template<typename Lambda>
-auto make_function(const StringView func_name, Lambda && lambda) {
-    using DecayedLambda = std::decay_t<Lambda>;
+template<typename MayRValueFn>
+auto make_function(const StringView func_name, MayRValueFn && fn) {
+    using Fn = std::decay_t<MayRValueFn>;
 
-    using Ret = tmp::functor_ret_t<DecayedLambda>;
-    using ArgsTuple = tmp::functor_args_tuple_t<DecayedLambda>;
+    using Ret = tmp::functor_ret_t<Fn>;
+    using ArgsTuple = tmp::functor_args_tuple_t<Fn>;
 
-    return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
+    // return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Fn>::make(
+    //     func_name,
+    //     std::forward<Fn>(fn)
+    // );
+
+    return MethodByLambda<Fn>(
         func_name,
-        std::forward<Lambda>(lambda)
+        std::forward<Fn>(fn)
     );
 }
 
@@ -418,16 +455,17 @@ struct EntryVisitor<PropertyWithLimit<T>> {
 };
 
 
-template <typename Ret, typename... Args>
-struct EntryVisitor<MethodByLambda<Ret, Args...>> final{
-    using Self = MethodByLambda<Ret, Args...>;
-    using Tup = std::tuple<Args...>;
+template <typename Fn>
+struct EntryVisitor<MethodByLambda<Fn>> final{
+    using Self = MethodByLambda<Fn>;
+    using Tup = typename Self::Tup;
+    using Ret = typename Self::Ret;
 
     static IResult<> visit(const Self & self, 
         auto & ar,
         auto && ap
     ) {
-        if (ap.size() != sizeof...(Args)) {
+        if (ap.size() != std::tuple_size_v<Tup>) {
             return Err(EntryAccessError::ArgsCountMismatch);
         }
 
