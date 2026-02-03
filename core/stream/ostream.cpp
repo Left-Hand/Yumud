@@ -11,6 +11,55 @@
 
 using namespace ymd;
 
+
+static constexpr StringView get_basealpha(const size_t _radix){
+    switch(_radix){
+        default:
+        case 10:
+            return StringView("");
+        case 2:
+            return StringView("0b");
+        case 8:
+            return StringView("0");
+        case 16:
+            return StringView("0x");
+    }
+}
+
+void OutputStream::write_byte(const uint8_t byte){
+    const auto bytes = std::span<const uint8_t, 1>{&byte, 1};
+    return write_bytes(bytes);
+}
+
+void OutputStream::write_bytes(std::span<const uint8_t> bytes){
+    #if 0
+    buf_.push_bytes(
+        bytes,
+        [this](const std::span<const uint8_t> _pbuf){
+            size_t written_len = 0;
+            while(written_len < _pbuf.size()){
+                const size_t rem_len = static_cast<size_t>(_pbuf.size() - written_len);
+                written_len += this->sendout(std::span(_pbuf.data() + written_len, rem_len));
+            }
+        }
+    );
+    #else
+    size_t written_len = 0;
+    while(written_len < bytes.size()){
+        const size_t rem_len = static_cast<size_t>(bytes.size() - written_len);
+        written_len += this->sendout(std::span(bytes.data() + written_len, rem_len));
+    }
+    #endif
+}
+
+OutputStream & OutputStream::flush(){
+    // buf_.flush([this](const std::span<const uint8_t> pbuf){this->sendout(pbuf);});
+    return *this;
+}
+
+OutputStream & OutputStream::operator<<(const wchar_t chr){
+    write_byte(chr); return *this;}
+
 OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     do{
         if (func == &std::oct) {set_radix(8);break;}
@@ -58,10 +107,15 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
         }
         //TODO 支持std::flush
 
-        //TODO 支持std::endl
 
     }while(false);
 
+    return *this;
+}
+
+
+OutputStream & OutputStream::operator<<(const std::string & str){
+    *this << std::string_view(str);
     return *this;
 }
 
@@ -104,8 +158,6 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
 }
 
-
-
 OutputStream & OutputStream::operator<<(const float value){
     return (*this) << literals::iq16::from(value);
 }
@@ -114,15 +166,19 @@ OutputStream & OutputStream::operator<<(const double value){
     return (*this) << literals::iq16::from(value);
 }
 
-#define PRINT_INT_TEMPLATE(blen, convfunc)\
+#define PRINT_INT_TEMPLATE(cap, convfunc)\
     if((config_.specifier.showpos and val >= 0)) [[unlikely]]\
-        this->write('+');\
+        this->write_byte('+');\
     if((config_.specifier.showbase and (radix() != 10))) [[unlikely]]{\
         *this << get_basealpha(radix());}\
-    char str[blen];\
-    const auto len = convfunc(val, str, this->config_.radix);\
-    this->write(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(str), len));\
+    char buf[cap];\
+    const auto len = convfunc(val, buf, this->config_.radix);\
+    this->write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(buf), len));\
 
+#define PRINT_NUMERIC(buf, len, is_positive)\
+    if(config_.specifier.showpos and is_positive) *this << '+';\
+    this->write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(buf), len));\
+\
 
 OutputStream & OutputStream::operator<<(const uint8_t val){
     if(radix() >= 4){
@@ -164,28 +220,21 @@ void OutputStream::print_i64(const int64_t val){
 }
 
 void OutputStream::print_iq16(const math::fixed_t<16, int32_t> val){
-    char str[32];
-    const auto len = str::qtoa<16>(val, str, this->eps());
-    print_numeric(str, len, val >= 0);
+    char buf[32];
+    const auto len = str::qtoa<16>(val, buf, this->eps());
+    PRINT_NUMERIC(buf, len, (val >= 0));
 }
 
 #undef PUT_FLOAT_TEMPLATE
 
 
-
-OutputStream & OutputStream::flush(){
-    buf_.flush([this](const std::span<const uint8_t> pbuf){this->sendout(pbuf);});
-    return *this;
+OutputStream & OutputStream::operator<<(const std::monostate){
+    return *this << "monostate";
 }
 
-void OutputStreamByRoute::sendout(const std::span<const uint8_t> pbuf){
-    if(!p_route_.has_value()) [[unlikely]]
-        __builtin_trap();
-    p_route_->try_write_bytes(pbuf);
-}
 
 OutputStream & OutputStream::operator<<(const StringView str){
-    write_checked(std::span<const uint8_t>(
+    write_bytes(std::span<const uint8_t>(
         reinterpret_cast<const uint8_t *>(str.data()),
         str.length())
     );
@@ -193,7 +242,7 @@ OutputStream & OutputStream::operator<<(const StringView str){
 }
 
 OutputStream & OutputStream::operator<<(const MutStringView str){
-    write_checked(std::span<const uint8_t>(
+    write_bytes(std::span<const uint8_t>(
         reinterpret_cast<const uint8_t *>(str.data()),
         str.length())
     );
@@ -202,9 +251,16 @@ OutputStream & OutputStream::operator<<(const MutStringView str){
 
 OutputStream & OutputStream::operator<<(const bool val){
     if(config_.specifier.boolalpha == false){
-        write(val ? '1' : '0');
+        write_byte('0' + val);
         return *this;
     }else{
         return *this << ((val) ? StringView("true") : StringView("false"));
     }
+}
+
+
+size_t OutputStreamByRoute::sendout(const std::span<const uint8_t> pbuf){
+    if(!p_route_.has_value()) [[unlikely]]
+        __builtin_trap();
+    return p_route_->try_write_bytes(pbuf);
 }

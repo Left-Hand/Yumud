@@ -11,12 +11,13 @@ public:
         buf_(pbuf.data()),
         capacity_(pbuf.size()){;}
 
-    void sendout(std::span<const uint8_t> pbuf){
-        if(pbuf.size() > writable_capacity()) [[unlikely]]{
-            __builtin_trap();
-        }
+    size_t sendout(std::span<const uint8_t> pbuf){
+        const size_t req_len = std::min(pbuf.size(), writable_capacity());
 
-        std::copy(pbuf.data(), pbuf.data() + pbuf.size(), buf_);
+        std::copy(pbuf.data(), pbuf.data() + req_len, buf_);
+
+        len_ += req_len;
+        return req_len;
 
     }
 

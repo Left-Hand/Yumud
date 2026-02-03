@@ -6,7 +6,6 @@
 #include <iomanip>
 
 #include <cstdint>
-#include <string>
 #include <string_view>
 #include <type_traits>
 #include <tuple>
@@ -23,6 +22,10 @@
 
 
 namespace std{
+
+    template<class CharT, class Traits = std::char_traits<CharT>, class Allocator = std::allocator<CharT>>
+    class basic_string;
+    
     class source_location;
 }
 
@@ -85,78 +88,12 @@ template<char c>
 struct Brackets{
     static constexpr char chr = c;
 };
-
-// template<typename T>
-// struct _is_stringlike:  std::false_type{};
-
-// template<> struct _is_stringlike<std::string>{static constexpr bool value = true;};
-// template<> struct _is_stringlike<std::string_view>{static constexpr bool value = true;};
-
-// template<> struct _is_stringlike<String>{static constexpr bool value = true;};
-// template<> struct _is_stringlike<StringView>{static constexpr bool value = true;};
-
-// template<typename T>
-// inline constexpr bool is_stringlike_v =
-//     _is_stringlike<std::decay_t<T>>::value;
-
-
-// template<typename T>
-// struct _inhibit_display_asrange:std::false_type{};
-
-// template<typename T>
-// requires is_stringlike_v<T>
-// struct _inhibit_display_asrange<T>{static constexpr bool value = true;};
-
-// template<size_t N>
-// struct _inhibit_display_asrange<char[N]>{static constexpr bool value = true;};
-
-// template<size_t N>
-// struct _inhibit_display_asrange<std::bitset<N>>{static constexpr bool value = true;};
-
-
-// template<typename T>
-// inline constexpr bool inhibit_display_asrange_v = _inhibit_display_asrange<std::decay_t<T>>::value;
-
-
-// // 概念：检测是否有 base() 方法
-// template <typename R>
-// concept has_base = requires(R r) {
-//     { r.base() } -> std::ranges::range;
-// };
-
-// // 主模板
-// template <typename R>
-// struct underlying_range {
-//     using type = R;
-// };
-
-// // 有 base() 方法的特化
-// template <has_base R>
-// struct underlying_range<R> : underlying_range<decltype(std::declval<R>().base())> {};
-
-// template <typename R>
-// using underlying_range_t = typename underlying_range<R>::type;
-
-// // 检查是否是连续容器或基于连续容器的视图
-// template <typename R>
-// static inline constexpr bool
-// is_or_derived_from_contiguous_v =
-//     std::ranges::contiguous_range<R> ||
-//     std::ranges::contiguous_range<underlying_range_t<R>>;
-
-// template<typename T>
-// static inline constexpr bool
-// false_v = false;
 }
-
-
 
 
 class OutputStreamIntf{
 public:
-    virtual size_t free_capacity() const = 0;
-
-    virtual void sendout(const std::span<const uint8_t>) = 0;
+    [[nodiscard]] virtual size_t sendout(const std::span<const uint8_t>) = 0;
 };
 
 class [[nodiscard]] OutputStream:public OutputStreamIntf{
@@ -210,8 +147,8 @@ private:
     using Splitter = details::Splitter;
     using Endl = details::Endl;
 
-    template<char c>
-    using Brackets = details::Brackets<c>;
+    template<char CHR>
+    using Brackets = details::Brackets<CHR>;
 public:
     OutputStream(){
         reconf(Config::from_default());
@@ -222,24 +159,9 @@ public:
     OutputStream(const OutputStream &) = delete;
     OutputStream(OutputStream &&) = delete;
 
-    void write(const uint8_t byte) {
-        buf_.push(
-            byte,
-            [this](const std::span<const uint8_t> pbuf){
-                this->block_util_least_free_capacity(pbuf.size());
-                this->sendout(pbuf);
-            }
-        );
-    }
-    void write(std::span<const uint8_t> pbuf){
-        buf_.push(
-            pbuf,
-            [this](const std::span<const uint8_t> _pbuf){
-                this->block_util_least_free_capacity(_pbuf.size());
-                this->sendout(_pbuf);
-            }
-        );
-	}
+    void write_byte(const uint8_t byte);
+
+    void write_bytes(std::span<const uint8_t> bytes);
 
     OutputStream & set_splitter(const char * splitter){
         std::fill_n(config_.splitter, 4, 0);
@@ -307,34 +229,32 @@ public:
     OutputStream & operator<<(const uint8_t val);
 
     __inline OutputStream & operator<<(const char chr){
-        write_checked(chr); return *this;}
-    __inline OutputStream & operator<<(const wchar_t chr){
-        write_checked(chr); return *this;}
+        write_byte(chr); return *this;}
 
-    // !warning, take care of you stupid null-terminated c-style string
+    OutputStream & operator<<(const wchar_t chr);
+
+    // !warning, take care of your stupid null-terminated c-style string
     __inline OutputStream & operator<<(char * str){
-        write_checked(std::span<const uint8_t>(
+        write_bytes(std::span<const uint8_t>(
             reinterpret_cast<const uint8_t *>(str),
             strlen(str))
         );
         return *this;
     }
 
-    // !warning, take care of you stupid null-terminated c-style string
+    // !warning, take care of your stupid null-terminated c-style string
     __inline OutputStream & operator<<(const char* str){
-        write_checked(std::span<const uint8_t>(
+        write_bytes(std::span<const uint8_t>(
             reinterpret_cast<const uint8_t *>(str),
             strlen(str))
         );
         return *this;
     }
 
-    __inline OutputStream & operator<<(const std::string & str){
-        *this << std::string_view(str);
-        return *this;
-    }
+    OutputStream & operator<<(const std::string & str);
+
     __inline OutputStream & operator<<(const std::string_view str){
-        write_checked(std::span<const uint8_t>(
+        write_bytes(std::span<const uint8_t>(
             reinterpret_cast<const uint8_t *>(str.data()),
             str.length())
         );
@@ -344,10 +264,12 @@ public:
     OutputStream & operator<<(const String & str);
     OutputStream & operator<<(const StringView str);
     OutputStream & operator<<(const MutStringView str);
-    __inline OutputStream & operator<<(const std::byte chr){return *this << (uint8_t(chr));}
+    __inline OutputStream & operator<<(const std::byte byte){return *this << (uint8_t(byte));}
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);
-    OutputStream & operator<<(std::ostream& (*manipulator)(std::ostream&)) {
+
+    /// !不要试图移除这个函数的内联性 否则将会灾难性引入cxx11abi相关的大量无用函数 无异于直接引入iostream
+    __always_inline OutputStream & operator<<(std::ostream& (*manipulator)(std::ostream&)){
         if (manipulator == static_cast<std::ostream& (*)(std::ostream&)>(std::endl)) {
             *this << "\r\n";
             this->flush();
@@ -364,22 +286,39 @@ public:
 
     template<typename T>
     OutputStream & operator<<(const std::chrono::duration<T, std::milli> ms){
-        return *this << ms.count() << "ms";}
+        auto & self = *this;
+        static constexpr std::array<uint8_t, 2> MS_BYTES = {'m', 's'}; 
+        self << ms.count();
+        self.write_bytes(std::span(MS_BYTES));
+        return self;
+    }
 
     template<typename T>
     OutputStream & operator<<(const std::chrono::duration<T, std::micro> us){
-        return *this << us.count() << "us";}
+        auto & self = *this;
+        static constexpr std::array<uint8_t, 2> US_BYTES = {'u', 's'}; 
+        self << us.count();
+        self.write_bytes(std::span(US_BYTES));
+        return self;
+    }
 
     template<typename T>
     OutputStream & operator<<(const std::chrono::duration<T, std::nano> ns){
-        return *this << ns.count() << "ns";}
+        auto & self = *this;
+        static constexpr std::array<uint8_t, 2> NS_BYTES = {'n', 's'}; 
+        self << ns.count();
+        self.write_bytes(std::span(NS_BYTES));
+        return self;
+    }
+
     OutputStream & operator<<(const Splitter){print_splt(); return *this;}
 
-    template<char chr>
-    OutputStream & operator<<(const Brackets<chr>){
-        if(!config_.specifier.no_brackets) write(chr); 
+    template<char CHR>
+    OutputStream & operator<<(const Brackets<CHR>){
+        if(!config_.specifier.no_brackets) write_byte(CHR); 
         return *this;
     }
+
     OutputStream & operator<<(const std::source_location & loc){print_source_loc(loc); return *this;}
 
     template<typename T>
@@ -388,9 +327,7 @@ public:
         else return *this << '/';
     }
 
-    OutputStream & operator<<(const std::monostate){
-        return *this << "monostate";
-    }
+    OutputStream & operator<<(const std::monostate);
 
     OutputStream & operator<<(const std::_Swallow_assign);
     OutputStream & operator<<(const std::_Setw);
@@ -398,12 +335,12 @@ public:
 
     template<size_t N>
     OutputStream & operator<<(const std::bitset<N> bs){
-        char str[N + 1];
+        std::array<uint8_t, N> buf;
         for(size_t i = 0; i < N; ++i){
-            str[N - 1 - i] = (bs[i]) ? '1' : '0';
+            buf[N - 1 - i] = (bs[i]) ? '1' : '0';
         }
-        str[N] = '\0';
-        return *this << str;
+        this->write_bytes(std::span(buf));
+        return *this;
     }
 
     template<typename T>
@@ -426,10 +363,7 @@ private:
     void print_u64(const uint64_t i_val);
     void print_i64(const int64_t i_val);
 
-    __inline void print_numeric(const char * str, const size_t len, const bool is_positive){
-        if(config_.specifier.showpos and is_positive) *this << '+';
-        this->write(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(str), len));
-    }
+
 
     void print_iq16(const math::fixed_t<16, int32_t> q_val);
 public:
@@ -439,13 +373,6 @@ public:
         print_iq16(math::fixed_t<16, int32_t>(q_val));
         return *this;
     }
-
-
-    // template<size_t Q, typename D>
-    // OutputStream & operator<<(const math::fixed_t<Q, D> & q_val){
-    //     static_assert(magic::false_v<math::fixed_t<Q, D>>, "unsportted");
-    //     return *this;
-    // }
 
     template<typename T>
     requires (std::is_integral_v<T> and (sizeof(T) <= 8))
@@ -527,15 +454,14 @@ private:
     template <typename... Args>
     void print_tuple(const std::tuple<Args...> & t){
         using TupleType = std::tuple<Args...>;
-        constexpr size_t tupleSize = std::tuple_size<TupleType>::value;
+        constexpr size_t TUP_SIZE = std::tuple_size_v<TupleType>;
+        
         *this << brackets<'('>();
-        std::apply(
-            [&](const auto&... args) {
-                ((tupleSize > 1 && &args != &std::get<tupleSize - 1>(t)
-                    ? (*this << args << ',') : (*this << args)), ...);
-            },
-            t
-        );
+        
+        [&]<size_t... Is>(std::index_sequence<Is...>) {
+            ((Is > 0 ? (*this << splitter() << std::get<Is>(t)) : (*this << std::get<Is>(t))), ...);
+        }(std::make_index_sequence<TUP_SIZE>{});
+        
         *this << brackets<')'>();
     }
 public:
@@ -782,7 +708,7 @@ private:
     Config config_;
 
     __fast_inline void print_splt(){
-        write(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(config_.splitter), config_.splitter_len));
+        write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(config_.splitter), config_.splitter_len));
     }
 
     template<typename T>
@@ -796,27 +722,23 @@ private:
     template<typename T>
     __fast_inline void print_given_splt_then_entity(const char splt, T && any){
         if constexpr(details::need_insert_splitter_before_v<T>){
-            write(splt);
+            write_byte(splt);
         }
         *this << std::forward<T>(any);
     }
 
     __fast_inline void print_end(){
         flush();
-        if((config_.specifier.force_sync)) [[unlikely]] {
-            block_util_least_free_capacity(0);
-        }
-    }
-
-    __fast_inline void block_util_least_free_capacity(size_t n){
-        while(free_capacity() < n) __nopn(1);
+        // if((config_.specifier.force_sync)) [[unlikely]] {
+        //     block_util_least_free_capacity(1u);
+        // }
     }
 
     __fast_inline void print_indent(){
         if((config_.indent == 0)) [[likely]]
             return;
         for(size_t i = 0; i < config_.indent; i++){
-            write('\t');
+            write_byte('\t');
         }
     }
 
@@ -824,69 +746,47 @@ private:
         static constexpr const char * enter_str = "\r\n";
         static constexpr size_t enter_str_len = 2;
 
-        write(std::span<const uint8_t>(
+        write_bytes(std::span<const uint8_t>(
             reinterpret_cast<const uint8_t *>(enter_str),
             enter_str_len
         ));
         print_end();
     }
 
-    static constexpr const char * get_basealpha(const size_t _radix){
-        switch(_radix){
-            default:
-            case 10:
-                return "";
-            case 2:
-                return "0b";
-            case 8:
-                return "0";
-            case 16:
-                return "0x";
-        }
-    }
+
 
     void print_source_loc(const std::source_location & loc);
 
     #ifndef OSTREAM_BUF_SIZE
-    static constexpr size_t OSTREAM_BUF_SIZE = 64;
+    static constexpr size_t OSTREAM_BUF_SIZE = 60;
     #endif
 
     struct Buf{
-        uint8_t buf[OSTREAM_BUF_SIZE];
-        uint8_t size = 0;
+        std::array<uint8_t, OSTREAM_BUF_SIZE> buf;
+        size_t size = 0;
 
 
         // 用于压入数据，当数据溢满时发送数据包
         template<typename Fn>
-        __fast_inline void push(const std::span<const uint8_t> pbuf, Fn&& fn) {
+        __fast_inline void push_bytes(const std::span<const uint8_t> bytes, Fn&& fn) {
             size_t offset = 0;
-            while (offset < pbuf.size()) {
-                size_t available = OSTREAM_BUF_SIZE - size;
-                size_t clone_size = std::min(available, pbuf.size() - offset);
+            while (offset < bytes.size()) {
+                size_t free_cap = OSTREAM_BUF_SIZE - size;
+                size_t clone_size = std::min(free_cap, bytes.size() - offset);
 
                 std::copy(
-                    pbuf.data() + offset,
-                    pbuf.data() + offset + clone_size,
-                    buf + size
+                    bytes.data() + offset,
+                    bytes.data() + offset + clone_size,
+                    buf.data() + size
                 );
 
-                size += static_cast<uint8_t>(clone_size);
+                size += clone_size;
                 offset += clone_size;
 
-                if (size == OSTREAM_BUF_SIZE) {
-                    fn(std::span<const uint8_t>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
+                if (size >= OSTREAM_BUF_SIZE) {
+                    std::forward<Fn>(fn)(std::span<const uint8_t>(buf.data(), size));  // 发送缓冲区数据
                     clear();  // 发送后重置缓冲区
                 }
-            }
-        }
-
-        // 用于压入数据，当数据溢满时发送数据包
-        template<typename Fn>
-        __fast_inline void push(uint8_t data, Fn&& fn) {
-            buf[size++] = data;
-            if (size == OSTREAM_BUF_SIZE) {
-                fn(std::span<const uint8_t>(buf, OSTREAM_BUF_SIZE));  // 发送缓冲区数据
-                clear();  // 发送后重置缓冲区
             }
         }
 
@@ -894,7 +794,7 @@ private:
         template<typename Fn>
         __fast_inline void flush(Fn&& fn) {
             if (size > 0) {
-                fn(std::span<const uint8_t>(buf, size));  // 发送缓冲区数据
+                std::forward<Fn>(fn)(std::span<const uint8_t>(buf.data(), size));  // 发送缓冲区数据
                 clear();  // 发送后重置缓冲区
             }
         }
@@ -905,15 +805,7 @@ private:
         }
     };
 
-    Buf buf_;
-
-    void write_checked(const std::span<const uint8_t> bytes){
-        return write(bytes);
-    }
-
-    void write_checked(const char chr){
-        return write(chr);
-    }
+    // Buf buf_;
 };
 
 
@@ -923,7 +815,7 @@ private:
     using Route = pro::proxy<Traits>;
     Route p_route_;
 
-    void sendout(const std::span<const uint8_t> pbuf);
+    size_t sendout(const std::span<const uint8_t> bytes);
 public:
     OutputStreamByRoute(){;}
 

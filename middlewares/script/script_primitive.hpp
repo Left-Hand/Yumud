@@ -267,7 +267,9 @@ private:
                 }
             }
         }
+
         return Ok();
+
         #else
 
         std::array hashes = { entries.name().hash()... };

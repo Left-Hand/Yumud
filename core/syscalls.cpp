@@ -9,7 +9,7 @@ using namespace ymd;
 extern "C"{
 
 int _write(int file, char * buf_begin, int len){
-    DEBUGGER.write(std::span(
+    DEBUGGER.write_bytes(std::span(
         reinterpret_cast<const uint8_t *>(buf_begin),
         len
     ));

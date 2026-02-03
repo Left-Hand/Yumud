@@ -136,7 +136,7 @@ int main(){
     // zdt_main();
     // polar_robot_main();
     // ads7830_main();
-    dsp_main();
+    // dsp_main();
     // can_ring_main();
     // rrs3_robot_main();
     // flash_main();
@@ -174,6 +174,7 @@ int main(){
     while(true);
     #elif defined(CH32V30X)
     // sincos_main();
+    // winter_mc_tutorial_main();
     lidar_visualize_main();
     // stl06n_main();
     // render_main();
