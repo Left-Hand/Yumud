@@ -6,9 +6,12 @@
 #include "core/utils/Unit.hpp"
 #include "core/string/view/string_view.hpp"
 #include "core/string/utils/split_iter.hpp"
-#include "robots/vendor/zdt/zdt_stepper.hpp"
+#include "robots/vendor/zdt/zdt_frame_factory.hpp"
 
-#include "middlewares/repl/repl.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/can/hw_singleton.hpp"
+
+#include "middlewares/script/script_primitive.hpp"
 #include "middlewares/repl/repl_server.hpp"
 
 #include "algebra/vectors/polar.hpp"
@@ -19,11 +22,10 @@
 #include "robots/gcode/gcode.hpp"
 #include "details/gcode_file.hpp"
 
-#ifdef UART1_PRESENT
+#ifdef USART1_PRESENT
 using namespace ymd;
 
 using namespace ymd::robots;
-using robots::zdtmotor::ZdtStepper;
 
 #define DBG_UART hal::usart2
 #define COMM_UART hal::usart1
@@ -56,8 +58,8 @@ public:
         iq16 theta_transform_scale;
         Angular<iq16> center_bias;
 
-        Range2<iq16> rho_range;
-        Range2<iq16> theta_range;
+        math::Range2<iq16> rho_range;
+        math::Range2<iq16> theta_range;
     };
 
     struct Params{
@@ -76,7 +78,7 @@ public:
     {;}
 
 
-    void set_coord(const Polar<iq16> p){
+    void set_coord(const math::Polar<iq16> p){
 
         const auto rho_angle = Angular<iq16>::from_turns(
             p.amplitude * cfg_.rho_transform_scale);
@@ -109,7 +111,7 @@ public:
     }
 
     auto make_repl_list(const StringView name){
-        return repl::make_list(
+        return script::make_list(
             name,
             DEF_CALLABLE_MEMFUNC(trig_homing),
             DEF_CALLABLE_MEMFUNC(is_homing_done),
@@ -134,18 +136,18 @@ private:
 
 struct Cartesian2ContinuousPolarRegulator final {
     struct State {
-        Vec2<iq16> coord;
+        math::Vec2<iq16> coord;
         Angular<iq16> angle;  // 累积角度
     };
 
-    Polar<iq16> operator()(const Vec2<iq16> coord) {
+    math::Polar<iq16> operator()(const math::Vec2<iq16> coord) {
         if (may_last_state_.is_none()) {
             // 第一次调用，初始化状态
             may_last_state_ = Some(State{
                 .coord = coord,
                 .angle = coord.angle()  // 初始角度
             });
-            return Polar<iq16>{coord.length(), coord.angle()};
+            return math::Polar<iq16>{coord.length(), coord.angle()};
         }
 
         // 获取上次状态
@@ -163,7 +165,7 @@ struct Cartesian2ContinuousPolarRegulator final {
             .angle = new_theta  // 存储累积角度
         });
 
-        return Polar<iq16>{coord.length(), new_theta};
+        return math::Polar<iq16>{coord.length(), new_theta};
     }
 
 private:
@@ -172,8 +174,8 @@ private:
 
 
 template<typename T>
-constexpr Vec2<T> vec_step_to(const Vec2<T> from, const Vec2<T> to, T step){
-    Vec2<T> delta = to - from;
+constexpr math::Vec2<T> vec_step_to(const math::Vec2<T> from, const math::Vec2<T> to, T step){
+    math::Vec2<T> delta = to - from;
     T distance = delta.length();
     if (distance <= step) return to;  // 如果步长足够大，直接到达目标
     return from + delta * (step / distance);  // 按比例移动
@@ -183,7 +185,7 @@ constexpr Vec2<T> vec_step_to(const Vec2<T> from, const Vec2<T> to, T step){
 
 struct StepPointIterator{
     struct Config{
-        Vec2<iq24> initial_coord;
+        math::Vec2<iq24> initial_coord;
     };
 
     explicit constexpr StepPointIterator(
@@ -192,12 +194,12 @@ struct StepPointIterator{
         now_coord_(cfg.initial_coord){;}
 
     constexpr void set_target_coord(
-        const Vec2<iq24> target_coord
+        const math::Vec2<iq24> target_coord
     ) {
         may_end_coord_ = Some(target_coord);
     }
 
-    [[nodiscard]] constexpr Vec2<iq24> next(const iq24 step){
+    [[nodiscard]] constexpr math::Vec2<iq24> next(const iq24 step){
         if(may_end_coord_.is_none()) return now_coord_;
         now_coord_ = vec_step_to(now_coord_, may_end_coord_.unwrap(), step);
         return now_coord_;
@@ -208,8 +210,8 @@ struct StepPointIterator{
             (not now_coord_.is_equal_approx(may_end_coord_.unwrap(), 0.001_iq16));
     }
 private:
-    Vec2<iq24> now_coord_ = Vec2<iq24>::ZERO;
-    Option<Vec2<iq24>> may_end_coord_ = None;
+    math::Vec2<iq24> now_coord_ = math::Vec2<iq24>::ZERO;
+    Option<math::Vec2<iq24>> may_end_coord_ = None;
 };
 
 
@@ -240,7 +242,7 @@ struct PolarRobotCurveGenerator{
     struct Config{
         uint32_t fs;
         iq16 speed;
-        Vec2<iq24> initial_coord = {0,0};
+        math::Vec2<iq24> initial_coord = {0,0};
     };
 
     explicit constexpr PolarRobotCurveGenerator(const Config & cfg):
@@ -250,7 +252,7 @@ struct PolarRobotCurveGenerator{
             .initial_coord = cfg.initial_coord
         }}){;}
 
-    constexpr void add_end_coord(const Vec2<iq24> coord){
+    constexpr void add_end_coord(const math::Vec2<iq24> coord){
         step_iter_.set_target_coord(coord.flip_y());
     }
 
@@ -262,18 +264,18 @@ struct PolarRobotCurveGenerator{
         return step_iter_.has_next();
     }
 
-    constexpr Vec2<iq24> next(){
+    constexpr math::Vec2<iq24> next(){
         coord_ = step_iter_.next(delta_dist_);
         return coord_;
     }
 
-    constexpr Vec2<iq24> last_coord() const {
+    constexpr math::Vec2<iq24> last_coord() const {
         return coord_;
     }
 private:    
     uint32_t fs_;
     iq24 delta_dist_;
-    Vec2<iq24> coord_ = Vec2<iq24>::ZERO;
+    math::Vec2<iq24> coord_ = math::Vec2<iq24>::ZERO;
     StepPointIterator step_iter_;
 };
 
@@ -299,13 +301,13 @@ void polar_robot_main(){
 
     MOTOR1_UART.init({921600});
 
-    ZdtStepper motor1{{.nodeid = {1}}, &MOTOR1_UART};
+    zdtmotor factory1{{.nodeid = {1}}, &MOTOR1_UART};
 
     if(&MOTOR1_UART != &MOTOR2_UART){
         MOTOR2_UART.init({921600});
     }
 
-    ZdtStepper motor2{{.nodeid = {2}}, &MOTOR2_UART};
+    zdtmotor factory2{{.nodeid = {2}}, &MOTOR2_UART};
 
 
     #else
@@ -322,18 +324,18 @@ void polar_robot_main(){
         hal::CanFilterConfig::accept_all()
     );
 
-    ZdtStepper motor1{{.node_id = {1}}, &COMM_CAN};
-    ZdtStepper motor2{{.node_id = {2}}, &COMM_CAN};
+    zdtmotor::ZdtFrameFactory factory1{.node_id = {1}};
+    zdtmotor::ZdtFrameFactory factory2{.node_id = {2}};
 
     #endif
 
     ZdtJointMotorActuator radius_joint_ = {{
-        .homming_mode = ZdtStepper::HommingMode::LapsCollision
-    }, motor2};
+        .homming_mode = zdtmotor::HommingMode::LapsCollision
+    }, factory2};
 
     ZdtJointMotorActuator theta_joint_ = {{
-        .homming_mode = ZdtStepper::HommingMode::LapsEndstop
-    }, motor1};
+        .homming_mode = zdtmotor::HommingMode::LapsEndstop
+    }, factory1};
     #else
     MockJointMotorActuator radius_joint_ = {};
     MockJointMotorActuator theta_joint_ = {};
@@ -369,7 +371,7 @@ void polar_robot_main(){
     [[maybe_unused]] auto fetch_next_gcode_line = [] -> Option<StringView>{
         static StringSplitIter line_iter{GCODE_LINES_NANJING, '\n'};
         while(line_iter.has_next()){
-            const auto next_line = line_iter.next().unwrap();
+            const auto next_line = line_iter.next();
             if(next_line.trim().length() == 0)
                 continue;
             return Some(next_line); 
@@ -444,9 +446,9 @@ void polar_robot_main(){
         dispatch_gcode_line(line);
     };
 
-    auto list = repl::make_list(
+    auto list = script::make_list(
         "polar_robot",
-        repl::make_function("reset", [&]{
+        script::make_function("reset", [&]{
             sys::reset();
         }),
 
@@ -454,15 +456,15 @@ void polar_robot_main(){
         radius_joint_.make_repl_list("radius_joint"),
         theta_joint_.make_repl_list("theta_joint"),
 
-        repl::make_function("pxy", [&](const iq16 x, const iq16 y){
+        script::make_function("pxy", [&](const iq16 x, const iq16 y){
             curve_gen_.add_end_coord({
                 CLAMP2(x, 0.14_r),
                 CLAMP2(y, 0.14_r)
             });
         }),
 
-        repl::make_function("next", [&](){
-            static Vec2<iq16> coord = {0.1_r, 0};
+        script::make_function("next", [&](){
+            static math::Vec2<iq16> coord = {0.1_r, 0};
             coord = coord.forward_90deg();
             actuator_.set_coord(regu_(coord));
         })
@@ -477,7 +479,7 @@ void polar_robot_main(){
 
     [[maybe_unused]] auto repl_service = [&](){ 
         
-        static robots::ReplServer repl_server = {
+        static repl::ReplServer repl_server = {
             &DBG_UART, &DBG_UART
         };
         repl_server.invoke(list);
@@ -529,7 +531,7 @@ void polar_robot_main(){
         // const auto clock_time = clock::seconds();
         // const auto [s0,c0] = sincos(clock_time);
         // const auto [s,c] = std::make_tuple(s0, s0);
-        // const auto vec = Vec2{s,c};
+        // const auto vec = math::Vec2{s,c};
         // DEBUG_PRINTLN(s,c, atan2(s,c), vec_angle_diff<iq16>(vec, vec.rotated(1.6_r*s0)));
         // clock::delay(1ms);
     }

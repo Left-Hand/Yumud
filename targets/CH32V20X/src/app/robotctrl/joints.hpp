@@ -4,7 +4,7 @@
 
 #include "core/utils/serde/serde.hpp"
 
-#include "robots/vendor/zdt/zdt_stepper.hpp"
+#include "robots/vendor/zdt/zdt_frame_factory.hpp"
 
 #include "middlewares/repl/repl.hpp"
 
@@ -55,7 +55,6 @@ private:
 class ZdtJointMotorActuator final
     :public JointMotorActuatorIntf{
 public:
-    using ZdtStepper = zdtmotor::ZdtStepper;
 
     struct Config{
         zdtmotor::HommingMode homming_mode;
@@ -63,25 +62,28 @@ public:
 
     ZdtJointMotorActuator(
         const Config & cfg, 
-        ZdtStepper & stepper
+        zdtmotor::ZdtFrameFactory & factory
     ):
         cfg_(cfg),
-        stepper_(stepper){;}
+        factory_(factory){;}
 
     void activate(){
-        stepper_.activate(EN).unwrap();
+        const auto flat_packet = factory_.activate(EN);
+        write_packet(flat_packet);
     }
 
     void deactivate(){
-        stepper_.activate(DISEN).unwrap();;
+        const auto flat_packet = factory_.activate(DISEN);;
+        write_packet(flat_packet);
     }
 
     void set_angle(Angular<real_t> angle){
         last_angle_ = angle;
-        stepper_.set_angle({
-            .angle = angle,
-            .speed = 0.47_r
-        }).unwrap();
+        const auto flat_packet = factory_.set_angle(
+            angle,
+            0.47_r
+        );
+        write_packet(flat_packet);
     }
 
     Angular<real_t> last_angle(){
@@ -90,11 +92,13 @@ public:
 
     void trig_homing(){
         homing_begin_ = Some(clock::millis());
-        stepper_.trig_homming(cfg_.homming_mode).unwrap();;
+        const auto flat_packet = factory_.trig_homming(cfg_.homming_mode);;
+        write_packet(flat_packet);
     }
 
     void trig_cali(){ 
-        stepper_.trig_cali().unwrap();;
+        const auto flat_packet = factory_.trig_cali();;
+        write_packet(flat_packet);
     }
 
     bool is_homing_done(){
@@ -106,12 +110,17 @@ public:
         return (clock::millis() - homing_begin_.unwrap()) > HOMING_TIMEOUT_;
     }
 
-
+    void write_packet(const zdtmotor::FlatPacket & packet){
+        auto && iter = packet.to_canframe_iter();
+        while(iter.has_next()){
+            hal::can1.try_write(iter.next()).examine();
+        }
+    };
 private:
     static constexpr Milliseconds HOMING_TIMEOUT_ = 5000ms;
 
     Config cfg_;
-    ZdtStepper & stepper_;
+    zdtmotor::ZdtFrameFactory & factory_;
 
     Angular<real_t> last_angle_;
     Option<Milliseconds> homing_begin_ = None;

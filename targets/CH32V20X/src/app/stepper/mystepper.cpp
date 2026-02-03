@@ -18,10 +18,8 @@
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/analog/adc/hw_singleton.hpp"
 #include "hal/bus/i2c/soft/soft_i2c.hpp"
-#include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/bus/spi/hw_singleton.hpp"
-
 #include "hal/gpio/gpio.hpp"
 
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
@@ -48,12 +46,11 @@
 
 using namespace ymd;
 
-#ifdef UART1_PRESENT
+#if 0
 
 #define UART hal::usart1
 
 using digipw::AlphaBetaCoord;
-
 
 
 struct PreoperateTasks{

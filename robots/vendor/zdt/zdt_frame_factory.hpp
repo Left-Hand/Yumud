@@ -1,16 +1,17 @@
 #pragma once
 
 
-#include "zdt_stepper_transport.hpp"
+#include "zdt_stepper_utils.hpp"
 
 namespace ymd::robots::zdtmotor{
+
 
 class ZdtFrameFactory final{
 public:
     static constexpr auto DEFAULT_NODE_ID = NodeId::from_u8(0x01);
-    NodeId node_id_;
-    VerifyMethod verify_method_ = VerifyMethod::Default;
-    bool is_multi_axis_sync_ = false;
+    NodeId node_id;
+    VerifyMethod verify_method = VerifyMethod::Default;
+    bool is_multi_axis_sync = false;
 
 
     FlatPacket brake();
@@ -25,9 +26,8 @@ public:
 private:
 template<typename T>
     [[nodiscard]] constexpr FlatPacket ser_req(
-        const T & req
-    ){
-        return make_req(node_id_, verify_method_, req);
+        const T & req){
+        return make_req(node_id, verify_method, req);
     }
 
 
