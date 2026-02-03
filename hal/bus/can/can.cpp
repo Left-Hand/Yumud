@@ -490,36 +490,6 @@ void Can::transmit(const BxCanFrame & frame, CanMailboxIndex mbox_idx){
 }
 
 
-#if 0
-Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
-
-    while(true){
-        //查找空闲的邮箱
-        const auto may_idle_mbox_idx = _can_get_idle_mailbox_index(inst_);
-    
-        //大概率有空闲邮箱 查找到空闲邮箱后发送
-        if(may_idle_mbox_idx.is_some()){
-            const auto idle_mbox_idx = may_idle_mbox_idx.unwrap();
-            if(tx_queue_.length() == 0){
-                transmit(frame, idle_mbox_idx);
-                return Ok();
-            }else{
-                transmit(tx_queue_.pop_unchecked(), idle_mbox_idx);
-            }
-        }else{
-            break;
-        }
-    }
-
-    //如果没找到空闲邮箱 存入队列
-    if(const auto len = tx_queue_.try_push(frame);
-        len == 0){
-        // 如果队列已满 则返回错误
-        return Err(CanLibError::SoftQueueOverflow);
-    }
-    return Ok();
-}
-#else
 Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
     //查找空闲的邮箱
     const auto may_idle_mbox_idx = _can_get_idle_mailbox_index(inst_);
@@ -535,12 +505,10 @@ Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
     if(const auto write_len = tx_queue_.try_push(frame);
         write_len == 0){
         // 队列已满
-        return Err(CanLibError::SoftQueueOverflow);
+        return Err(CanLibError::SoftQueueFull);
     }
     return Ok();
 }
-
-#endif
 
 BxCanFrame Can::read(){
     BxCanFrame frame = BxCanFrame::from_uninitialized();
@@ -564,7 +532,7 @@ BxCanFrame Can::receive(const CanFifoIndex fifo_idx){
     const uint32_t rxmdtr = mailbox.RXMDTR;
 
     //获取载荷长度
-    const uint8_t dlc_bits = rxmdtr & (0x0F);
+    const uint8_t dlc_bits = static_cast<uint8_t>(rxmdtr & (0x0F << 0u));
 
     //将低四位的和高四位拼接为完整的8x8的载荷
     const uint64_t payload_u64 = 
@@ -659,60 +627,6 @@ void Can::enable_index_priority(const Enable en){
     else SDK_INST(inst_)->CTLR &= ~CAN_CTLR_TXFP;
 }
 
-#if 0
-void CanInterruptDispatcher::isr_tx(Can & self){
-    volatile uint32_t & tstatr_reg = SDK_INST(self.inst_)->TSTATR;
-    const auto temp_tstatr = tstatr_reg;
-    //遍历每个邮箱
-    auto iter_mailbox = [&]<CanMailboxIndex mbox_idx>(){
-        static constexpr uint32_t TSTATR_TME_MASK = can_tstatr_tme_mask(mbox_idx);
-        static constexpr uint32_t TSTATR_RQCP_MASK = can_statr_rqcp_mask(mbox_idx);
-        static constexpr uint32_t TSTATR_RXOK_MASK = can_statr_tkok_mask(mbox_idx);
-    
-        switch(temp_tstatr & (TSTATR_TME_MASK | TSTATR_RQCP_MASK | TSTATR_RXOK_MASK)){
-            case 0:
-                //pending
-                break;
-            case TSTATR_TME_MASK | TSTATR_RQCP_MASK | 0:
-                //发送失败
-                {
-                    const auto tx_ev = hal::CanTransmitEvent{
-                        .kind = CanTransmitEvent::Kind::Failed,
-                        .mbox_idx = mbox_idx
-                    };
-                    const auto ev = CanEvent::from(tx_ev);
-                    EMIT_EVENT(ev);
-                }
-
-                //清除发送标志位
-                tstatr_reg = TSTATR_RQCP_MASK;
-                break;
-            case TSTATR_TME_MASK | TSTATR_RQCP_MASK | TSTATR_RXOK_MASK:
-                //发送成功
-                {
-                    const auto tx_ev = hal::CanTransmitEvent{
-                        .kind = CanTransmitEvent::Kind::Success,
-                        .mbox_idx = mbox_idx
-                    };
-                    const auto ev = CanEvent::from(tx_ev);
-                    EMIT_EVENT(ev);
-                }
-
-                //清除发送标志位
-                tstatr_reg = TSTATR_RQCP_MASK;
-                break;
-        }
-    };
-
-    iter_mailbox.template operator() < CanMailboxIndex::_0 > ();
-    iter_mailbox.template operator() < CanMailboxIndex::_1 > ();
-    iter_mailbox.template operator() < CanMailboxIndex::_2 > ();
-
-
-    self.poll_backup_fifo();
-}
-
-#else
 
 void CanInterruptDispatcher::isr_tx(Can & self){
     volatile uint32_t & tstatr_reg = SDK_INST(self.inst_)->TSTATR;
@@ -753,8 +667,6 @@ void CanInterruptDispatcher::isr_tx(Can & self){
 
     self.poll_backup_fifo();
 }
-
-#endif
 
 void Can::poll_backup_fifo(){
     auto & self = *this;

@@ -62,6 +62,12 @@ void __cxa_atexit(void (*func)(void), void *objptr, void *dso_handle) {}
 
 }
 
+// 避免链接器错误，提供空实现
+void __cxa_pure_virtual() {
+    // 纯虚函数调用时的处理
+    while(1);  // 或你的错误处理
+}
+
 extern "C" {
 
 

@@ -367,3 +367,7 @@ static constexpr uint8_t BUILT_HOUR = []{
 static constexpr uint8_t BUILT_MINUTE = []{
     return((__TIME__[3]-'0') * 10 + __TIME__[4]-'0');
 }();
+
+static constexpr uint8_t BUILT_SECOND = []{
+    return((__TIME__[6]-'0') * 10 + __TIME__[7]-'0');
+}();

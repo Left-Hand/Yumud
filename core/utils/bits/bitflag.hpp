@@ -118,7 +118,7 @@ struct [[nodiscard]] BitFlag final{
     };
 
 
-    [[nodiscard]] [[nodiscard]] size_t count_ones() const {
+    [[nodiscard]] size_t count_ones() const {
         return __builtin_popcount(bits_);
     }
 

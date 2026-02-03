@@ -4,8 +4,8 @@
 
 namespace ymd::crsf{
 
-struct [[nodiscard]] [[nodiscard]] CommandType final {
-    enum class [[nodiscard]] [[nodiscard]] Kind:uint8_t{
+struct [[nodiscard]] CommandType final {
+    enum class [[nodiscard]] Kind:uint8_t{
         Fc = 0x01,
         BlueTooth = 0x03,
         Osd = 0x05,

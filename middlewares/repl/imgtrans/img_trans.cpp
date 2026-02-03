@@ -19,8 +19,8 @@ void ImageTransmitter::send_block_data(ImagePieceUnit & unit, const uint8_t * da
     unit.hash = hash_djb2_buffer(data_from, len);
     unit.time_stamp = time_stamp;
 
-    instance.write(unit.as_bytes());
-    instance.write(std::span(reinterpret_cast<const uint8_t *>(data_from), len));
+    // instance.write_bytes(unit.as_bytes());
+    // instance.write_bytes(std::span(reinterpret_cast<const uint8_t *>(data_from), len));
 }
 
 void ImageTransmitter::transmit(const uint8_t *buf, const math::Vec2i &img_size, const uint8_t index){

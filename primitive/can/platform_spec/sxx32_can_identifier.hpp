@@ -16,7 +16,7 @@ namespace details{
     // uint32_t full_id_:29; //完整id
 
 
-struct [[nodiscard]]SXX32_CanIdentifier{
+struct alignas(4) [[nodiscard]] SXX32_CanIdentifier{
     using Self = SXX32_CanIdentifier;
 
 
@@ -51,7 +51,7 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     /// @brief 转换为原始32位bit
     [[nodiscard]] __attribute__((always_inline)) 
     constexpr uint32_t to_sxx32_reg_bits() const{
-        return std::bit_cast<uint32_t>(*this);
+        return uint32_t(std::bit_cast<uint32_t>(*this) | uint32_t(1));
     }
 
     /// @brief 是否为拓展帧
@@ -82,6 +82,7 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     }
 
     /// @brief 尝试将帧ID转为标准帧ID
+    __attribute__((always_inline)) 
     [[nodiscard]] constexpr Option<CanStdId> try_to_stdid() const {
         if(is_extended_ == true) [[unlikely]]
             return None;
@@ -89,6 +90,7 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     }
 
     /// @brief 尝试将帧ID转为 帧ID
+    __attribute__((always_inline)) 
     [[nodiscard]] constexpr Option<CanExtId> try_to_extid() const {
         if(is_extended_ == false) [[unlikely]]
             return None;
@@ -96,6 +98,7 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     }
 
     /// @brief 不顾帧格式，直接获取标准帧
+    __attribute__((always_inline)) 
     [[nodiscard]] constexpr CanStdId to_stdid() const {
         if(is_extended_ == true) [[unlikely]]
             __builtin_trap();
@@ -103,6 +106,7 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     }
 
     /// @brief 不顾帧格式，直接获取拓展帧
+    __attribute__((always_inline)) 
     [[nodiscard]] constexpr CanExtId to_extid() const {
         if(is_extended_ == false) [[unlikely]]
             __builtin_trap();
@@ -110,7 +114,7 @@ struct [[nodiscard]]SXX32_CanIdentifier{
     }
 
     //此位置1 启动发送请求
-    const uint32_t __txrq__:1 = 1;
+    uint32_t :1;
     
     //是否为远程帧
     uint32_t is_remote_:1;

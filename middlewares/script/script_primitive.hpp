@@ -258,6 +258,7 @@ private:
 
     [[nodiscard]] constexpr Result<void, std::tuple<size_t, size_t>> 
     check_hash_collision(auto && ... entries) {
+        #if 1
         const std::array hashes = { entries.name().hash()... };
         for (size_t i = 0; i < hashes.size(); ++i) {
             for (size_t j = i + 1; j < hashes.size(); ++j) {
@@ -267,6 +268,17 @@ private:
             }
         }
         return Ok();
+        #else
+
+        std::array hashes = { entries.name().hash()... };
+        std::sort(hashes.begin(), hashes.end());
+        for (size_t i = 0; i < hashes.size() - 1; ++i) {
+            if (hashes[i] == hashes[i + 1]) {
+                return Err(std::make_tuple(i, i + 1));
+            }
+        }
+        return Ok();
+        #endif
     }
 };
 

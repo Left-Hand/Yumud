@@ -89,7 +89,7 @@ partition( const std::vector<_Tp>& _vec, std::vector<int>& labels,
                     root = root2;
                 }
 				// 根节点的parent必须小于0
-                assert(nodes[root][PARENT] < 0 );
+                ASSERT(nodes[root][PARENT] < 0 );
  
                 int k = j, parent;
  

@@ -19,7 +19,7 @@ using namespace ymd::robots;
 using namespace ymd::robots::cybergear::details;
 
 using BxCanFrame = hal::BxCanFrame;
-using Temperature = cybergear::details::Temperature;
+using TemperatureCode = cybergear::details::TemperatureCode;
 using CmdRad = cybergear::details::CmdRad;
 using CmdOmega = cybergear::details::CmdOmega;
 using CmdTorque = cybergear::details::CmdTorque;
@@ -42,15 +42,21 @@ static constexpr Err<Error> make_err_from_cmp(const std::weak_ordering ord){
     }
 }
 
+namespace ymd::robots::cybergear{
 
-struct [[nodiscard]] [[nodiscard]] CgId final{
+struct [[nodiscard]] CgId final{
 
 
-    [[nodiscard]] constexpr auto cmd() {return make_bitfield_proxy<24, 29, cybergear::Command>(bits_);}
-    [[nodiscard]] constexpr auto cmd() const {return make_bitfield_proxy<24, 29, cybergear::Command>(bits_);}
-    [[nodiscard]] constexpr auto high() {return make_bitfield_proxy<8, 24, uint16_t>(bits_);}
-    [[nodiscard]] constexpr auto fault() {return make_bitfield_proxy<8, 24, uint16_t>(bits_);}
-    [[nodiscard]] constexpr auto low() {return make_bitfield_proxy<0, 8, uint8_t>(bits_);}
+    [[nodiscard]] constexpr auto cmd() {
+        return make_bitfield_proxy<24, 29, cybergear::Command>(bits);}
+    [[nodiscard]] constexpr auto cmd() const {
+        return make_bitfield_proxy<24, 29, cybergear::Command>(bits);}
+    [[nodiscard]] constexpr auto high() {
+        return make_bitfield_proxy<8, 24, uint16_t>(bits);}
+    [[nodiscard]] constexpr auto fault() {
+        return make_bitfield_proxy<8, 24, uint16_t>(bits);}
+    [[nodiscard]] constexpr auto low() {
+        return make_bitfield_proxy<0, 8, uint8_t>(bits);}
 
     [[nodiscard]] static constexpr 
     CgId from_parts(const cybergear::Command cmd, const uint16_t high, const uint8_t low) {
@@ -65,14 +71,13 @@ struct [[nodiscard]] [[nodiscard]] CgId final{
 
     [[nodiscard]] static constexpr CgId from_bits(const uint32_t bits) {
         CgId self;
-        self.bits_ = bits;
+        self.bits = bits;
         return self;
     }
 
-    [[nodiscard]] constexpr uint32_t to_bits() const {return bits_;}
+    [[nodiscard]] constexpr uint32_t to_bits() const {return bits;}
 
-private:
-    uint32_t bits_;
+    uint32_t bits;
 
 };
 
@@ -226,7 +231,7 @@ struct [[nodiscard]] CgPayload{
     [[nodiscard]] constexpr auto torque() const {         
         return make_bitfield_proxy<32, 48, CmdTorque>(bits);}
     [[nodiscard]] constexpr auto temperature() const {    
-        return make_bitfield_proxy<48, 64, Temperature>(bits);}
+        return make_bitfield_proxy<48, 64, TemperatureCode>(bits);}
 };
 
 
@@ -239,10 +244,12 @@ IResult<> Self::on_ctrl2_feed_back(const uint32_t id_u32, const uint64_t bits, c
 
     const CgPayload payload = {bits};
 
-    feedback_.radians =         payload.radians().get().to<real_t>();
-    feedback_.omega =       payload.omega().get().to<real_t>();
-    feedback_.torque =      payload.torque().get().to<real_t>();
-    feedback_.temperature = static_cast<real_t>(payload.temperature().get());
+    feedback_.radians =         payload.radians().get().to<iq16>();
+    feedback_.omega =       payload.omega().get().to<iq16>();
+    feedback_.torque =      payload.torque().get().to<iq16>();
+    feedback_.celsius = payload.temperature().get().to_celsius();
 
     return Ok();
+}
+
 }

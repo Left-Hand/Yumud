@@ -46,7 +46,7 @@ struct [[nodiscard]] CanStdId{
     }
 
     [[nodiscard]] constexpr uint16_t to_u11() const {
-        return bits_ & MAX_VALUE;
+        return bits_;
     }
 
     [[nodiscard]] constexpr literals::bs11 to_b11() const {
@@ -97,7 +97,7 @@ struct [[nodiscard]] CanExtId{
     }
 
     [[nodiscard]] constexpr uint32_t to_u29() const {
-        return bits_ & MAX_VALUE;
+        return bits_;
     }
     [[nodiscard]] constexpr uint32_t to_bits() const {return bits_;}
 
