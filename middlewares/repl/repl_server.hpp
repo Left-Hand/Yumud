@@ -40,7 +40,7 @@ public:
                 }();
 
                 const auto resp_res = respond(obj, strs);
-                if(outen_){
+                if(echo_en_){
                     os_.prints(StringView(">>="), resp_res);
                 }
         
@@ -49,7 +49,7 @@ public:
         }
     }
 
-    void set_outen(Enable outen){ outen_ = outen == EN; }
+    void enable_echo(Enable echo_en){ echo_en_ = echo_en == EN; }
 // private:
 public:
     ReadCharProxy is_;
@@ -59,12 +59,12 @@ public:
     std::array<char, 64> str_buf_;
     LineInputSinker line_sinker_ = LineInputSinker{std::span(str_buf_)};
 
-    bool outen_ = false;
+    bool echo_en_ = false;
 
     template<typename T>
     auto respond(T && obj, const std::span<const StringView> strs){
         const auto guard = os_.create_guard();
-        if(outen_){
+        if(echo_en_){
             os_.force_sync(EN);
             os_ << StringView("<<= ") << strs;
         }
@@ -72,7 +72,7 @@ public:
         os_ << StringView("\r\n----\r\n");
 
         return [&]{
-            if(!this->outen_){
+            if(!this->echo_en_){
                 // DummyOutputStream dos{};
                 DummyReceiver dos{};
 

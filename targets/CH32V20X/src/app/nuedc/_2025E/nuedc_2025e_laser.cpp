@@ -228,8 +228,8 @@ void nuedc_2025e_laser_main(){
         [[maybe_unused]] static const auto list = script::make_list(
             "list",
             script::make_function("rst", [](){sys::reset();}),
-            script::make_function("outen", [&](){repl_server.set_outen(EN);}),
-            script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+            script::make_function("outen", [&](){repl_server.enable_echo(EN);}),
+            script::make_function("outdis", [&](){repl_server.enable_echo(DISEN);}),
 
             script::make_function("dall", [&](){
                 publish_dall();

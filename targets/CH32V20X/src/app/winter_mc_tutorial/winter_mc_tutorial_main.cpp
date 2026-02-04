@@ -184,12 +184,12 @@ void winter_mc_tutorial_main(){
         &DEBUG_UART, &DEBUG_UART
     };
 
-    repl_server.set_outen(DISEN);
+    repl_server.enable_echo(DISEN);
 
     auto repl_list = script::make_list( "list",
         script::make_function("rst", [](){sys::reset();}),
-        script::make_function("outen", [&](){repl_server.set_outen(EN);}),
-        script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+        script::make_function("outen", [&](){repl_server.enable_echo(EN);}),
+        script::make_function("outdis", [&](){repl_server.enable_echo(DISEN);}),
         script::make_mut_property("x1", &target_rotor_x1),
         script::make_mut_property("x2", &target_rotor_x2),
         script::make_mut_property("kp", &kp),

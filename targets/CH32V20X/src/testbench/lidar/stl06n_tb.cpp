@@ -231,7 +231,7 @@ void stl06n_main(){
         &DEBUG_UART, &DEBUG_UART
     };
 
-    repl_server.set_outen(EN);
+    repl_server.enable_echo(EN);
 
     auto led = hal::PC<13>();
     led.outpp();
@@ -242,8 +242,8 @@ void stl06n_main(){
     auto repl_list =
         script::make_list( "list",
             script::make_function("rst", [](){sys::reset();}),
-            script::make_function("outen", [&](){repl_server.set_outen(EN);}),
-            script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+            script::make_function("outen", [&](){repl_server.enable_echo(EN);}),
+            script::make_function("outdis", [&](){repl_server.enable_echo(DISEN);}),
             script::make_function("led", [&](const bool on){led.write(on ? HIGH : LOW);}),
             script::make_function("add2", add2),
             script::make_function("add", [&](const uint8_t a, const uint8_t b){return a + b;}),

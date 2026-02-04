@@ -195,8 +195,8 @@ void nuedc_2023e_main(){
     [[maybe_unused]] auto repl_list =
         script::make_list( "list",
         script::make_function("rst", [](){sys::reset();}),
-        script::make_function("outen", [&](){repl_server.set_outen(EN);}),
-        script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+        script::make_function("outen", [&](){repl_server.enable_echo(EN);}),
+        script::make_function("outdis", [&](){repl_server.enable_echo(DISEN);}),
         script::make_function("set_rad", [&](const real_t r1, const real_t r2){
             servo_pitch.set_angle(r1);
             servo_yaw.set_angle(r2);

@@ -166,7 +166,7 @@ public:
         }
     }
 
-    void set_outen(Enable outen){ outen_ = outen == EN; }
+    void enable_echo(Enable outen){ outen_ = outen == EN; }
 private:
     ReadCharProxy is_;
     OutputStreamByRoute os_;

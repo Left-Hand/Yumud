@@ -234,8 +234,8 @@ void rrs3_robot_main(){
     auto repl_list = script::make_list(
         "list",
         script::make_function("rst", [](){sys::reset();}),
-        script::make_function("outen", [&](){repl_server.set_outen(EN);}),
-        script::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+        script::make_function("outen", [&](){repl_server.enable_echo(EN);}),
+        script::make_function("outdis", [&](){repl_server.enable_echo(DISEN);}),
         script::make_function("name", [&](){
             DEBUG_PRINTLN("hello i am a robot");
         }),

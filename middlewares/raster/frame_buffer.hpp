@@ -359,9 +359,6 @@ private:
 };
 
 
-
-
-
 template<typename T, typename Iter = LineBufferSpan<T>::ToLineSpanIter>
 requires requires(OutputStream& os, const LineBufferSpan<T>& line_span) {
     os << line_span;

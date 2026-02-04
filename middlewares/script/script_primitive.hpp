@@ -290,36 +290,12 @@ public:
 };
 
 
-
-namespace details{
-// template<typename Ret, typename ArgsTuple, template<typename, typename...> 
-//     class MethodByLambda, typename Lambda>
-// struct make_method_by_lambda_impl;
-
-// template<typename Ret, template<typename, typename...> 
-//     class MethodByLambda, typename... Args, typename Lambda>
-// struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lambda> {
-//     static auto make(const StringView name, Lambda&& lambda) {
-//         return MethodByLambda<Ret, Args...>(
-//             name,
-//             std::forward<Lambda>(lambda)
-//         );
-//     }
-// };
-
-}
-
 template<typename MayRValueFn>
 auto make_function(const StringView func_name, MayRValueFn && fn) {
     using Fn = std::decay_t<MayRValueFn>;
 
     using Ret = tmp::functor_ret_t<Fn>;
     using ArgsTuple = tmp::functor_args_tuple_t<Fn>;
-
-    // return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Fn>::make(
-    //     func_name,
-    //     std::forward<Fn>(fn)
-    // );
 
     return MethodByLambda<Fn>(
         func_name,
@@ -492,7 +468,7 @@ struct EntryVisitor<MethodByMemFunc<Obj, Ret, Args...>> final {
     using Tup = std::tuple<Args...>;
 
 
-    static IResult<> visit(const Self & self, 
+    __no_inline static IResult<> visit(const Self & self, 
         auto & ar,
         auto && ap
     ) {
@@ -524,7 +500,7 @@ struct EntryVisitor<List<Entries...>> final{
     static constexpr size_t N = sizeof...(Entries);
     using EntriesTuple = std::tuple<Entries...>;
 
-    static IResult<> visit(const Self & self, 
+    __no_inline static IResult<> visit(const Self & self, 
         auto & ar,
         auto && ap
     ) {

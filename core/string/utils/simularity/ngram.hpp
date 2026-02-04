@@ -1,21 +1,23 @@
 #pragma once
 
 #include "core/string/view/string_view.hpp"
+#include "primitive/arithmetic/fraction.hpp"
 
 namespace ymd::str{
 
 
-static constexpr float ngram_similarity(StringView str1, StringView str2, size_t n = 2) noexcept {
+static constexpr Fraction<size_t> ngram_similarity(StringView str1, StringView str2, size_t n = 2) noexcept {
+    using Ret = Fraction<size_t>;
     // 限制n的最大值以防止栈溢出和无效计算
-    if (n > 8 || n == 0) return 0.0f;
+    if (n > 8 || n == 0) return Ret::zero();
     
     const size_t len1 = str1.length();
     const size_t len2 = str2.length();
     
     // 如果字符串长度小于n，使用回退策略
     if (len1 < n || len2 < n) {
-        if (len1 == 0 && len2 == 0) return 1.0f;
-        if (len1 == 0 || len2 == 0) return 0.0f;
+        if (len1 == 0 && len2 == 0) return Ret::one();
+        if (len1 == 0 || len2 == 0) return Ret::zero();
         
         // 使用位图而不是bool数组，更节省空间
         // 32字节 * 2 = 64字节
@@ -45,7 +47,8 @@ static constexpr float ngram_similarity(StringView str1, StringView str2, size_t
             union_size += __builtin_popcount(uni);
         }
         
-        return union_size > 0 ? static_cast<float>(intersection_size) / union_size : 0.0f;
+        // return union_size > 0 ? static_cast<float>(intersection_size) / union_size : Ret::zero();
+        return union_size ?  Fraction<size_t>{intersection_size, union_size} : Fraction<size_t>::zero();
     }else{
         const size_t ngram_count1 = len1 - n + 1;
         const size_t ngram_count2 = len2 - n + 1;
@@ -113,7 +116,9 @@ static constexpr float ngram_similarity(StringView str1, StringView str2, size_t
         
         // 计算 Sørensen-Dice 系数
         size_t den = count1 + count2;
-        return float(2 * common_count) / den;
+        // return float(2 * common_count) / den;
+
+        return den ? Fraction<size_t>{2 * common_count, den} : Fraction<size_t>::zero();
     }
     
 

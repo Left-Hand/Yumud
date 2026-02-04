@@ -316,8 +316,8 @@ static void motorcheck_tb(drivers::EncoderIntf & encoder,digipw::StepperPwmGen &
     auto list = repl::make_list(
         "list",
         repl::make_function("rst", [](){sys::reset();}),
-        repl::make_function("outen", [&](){repl_server.set_outen(EN);}),
-        repl::make_function("outdis", [&](){repl_server.set_outen(DISEN);}),
+        repl::make_function("outen", [&](){repl_server.enable_echo(EN);}),
+        repl::make_function("outdis", [&](){repl_server.enable_echo(DISEN);}),
         repl::make_function("now", [&](){return clock::seconds();})
     );
 

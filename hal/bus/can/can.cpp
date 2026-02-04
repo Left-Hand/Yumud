@@ -483,6 +483,8 @@ void Can::transmit(const BxCanFrame & frame, CanMailboxIndex mbox_idx){
     //将高四字节装载到txmdhr
     mailbox_inst.TXMDHR = static_cast<uint32_t>(payload_u64 >> 32);
 
+    std::atomic_thread_fence(std::memory_order_release);
+
     //有关TXMIR和TXMDTR的描述，请参考芯片数据手册
     //!txmir必须最后填写 因为填写txmir时会导致当前正在填充的报文被发出
     mailbox_inst.TXMIR = tempmir;
@@ -677,14 +679,16 @@ void Can::poll_backup_fifo(){
 }
 
 void CanInterruptDispatcher::isr_rx0(Can & can){
-    CanInterruptDispatcher::isr_rx(can, 
+    CanInterruptDispatcher::isr_rx(
+        can, 
         _can_get_rfifo_reg<CanFifoIndex::_0>(can.inst_), 
         CanFifoIndex::_0
     );
 }
 
 void CanInterruptDispatcher::isr_rx1(Can & can){
-    CanInterruptDispatcher::isr_rx(can, 
+    CanInterruptDispatcher::isr_rx(
+        can, 
         _can_get_rfifo_reg<CanFifoIndex::_1>(can.inst_), 
         CanFifoIndex::_1
     );
