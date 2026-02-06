@@ -49,9 +49,6 @@ struct alignas(4) [[nodiscard]] MillisCounter{
     // 避免systick计数器和毫秒数撕裂的情况出现 
     // !非常重要
     __attribute__((always_inline)) uint64_t poll_and_get(){
-        __disable_irq();
-        __disable_irq();
-        const auto guard = ymd::make_scope_guard([]{__enable_irq();});
         //判断是否发生了计数器溢出
         if(SysTick->SR) [[likely]] {
             //清除标志位
@@ -122,13 +119,23 @@ uint32_t _get_systick_cnt(){
 
 [[nodiscard]] static 
 uint64_t _get_millis_cnt(void){
-    return MILLIS_COUNTER_.poll_and_get();
+    __disable_irq();
+    __disable_irq();
+    const uint64_t millis_cnt = MILLIS_COUNTER_.poll_and_get();
+    __enable_irq();
+    return millis_cnt;
 }
 
 [[nodiscard]] static 
 uint64_t _get_micros_cnt(void){
-    const uint64_t millis_cnt = MILLIS_COUNTER_.poll_and_get();
-    const uint32_t systick_cnt = static_cast<uint32_t>(_get_systick_cnt());
+    __disable_irq();
+    __disable_irq();
+    // const auto guard = ymd::make_scope_guard([]{__enable_irq();});
+
+    const volatile uint64_t millis_cnt = MILLIS_COUNTER_.poll_and_get();
+    const volatile uint32_t systick_cnt = static_cast<uint32_t>(_get_systick_cnt());
+    __enable_irq();
+
     const uint64_t base = static_cast<uint64_t>(millis_cnt) * 1000u;
 
     return (base + _ticks_to_micros(systick_cnt));
@@ -148,10 +155,12 @@ uint64_t _get_nanos_cnt(void){
 static
 void _delay_ticks(const uint64_t duration_ticks){
     /* Number of elapsed systick_cnt */
-    
+    __disable_irq();
+    __disable_irq();
     uint32_t last_ticks = _get_systick_cnt();
     uint32_t now_ticks = last_ticks;
-    
+    __enable_irq();
+
     volatile uint64_t elapsed_ticks = 0;
     do {
         now_ticks = _get_systick_cnt();

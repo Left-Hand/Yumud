@@ -53,8 +53,6 @@ template<typename T>
 struct is_placed_t<math::Segment2<T>>:std::true_type{};
 
 
-
-
 template<typename Encoding, typename Font>
 struct LineText{
     math::Vec2u16 left_top;
@@ -75,8 +73,6 @@ struct LineText{
 
 template<typename Encoding, typename Font>
 struct is_placed_t<LineText<Encoding, Font>>:std::true_type{;};
-
-
 
 
 template<typename Iter>
