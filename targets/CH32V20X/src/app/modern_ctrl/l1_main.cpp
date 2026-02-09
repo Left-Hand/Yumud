@@ -30,8 +30,8 @@ public:
 
     void update(float torque) {
         // 这里假设机械臂的转动惯量和阻尼系数为1
-        float inertia = 1.0;
-        float damping = 1.0;
+        float inertia = 10.0;
+        float damping = 18.2;
         angular_velocity += (torque - damping * angular_velocity) / inertia * dt;
         angle += angular_velocity * dt;
     }
