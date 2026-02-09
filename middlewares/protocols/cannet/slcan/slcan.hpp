@@ -2,10 +2,8 @@
 
 // https://blog.csdn.net/weifengdq/article/details/128823317
 
+#include "asciican_primitive.hpp"
 #include "core/string/owned/heapless_string.hpp"
-
-#include "asciican_utils.hpp"
-
 
 // Options:
 //          -o          (send open command 'O\r')
@@ -148,27 +146,47 @@ struct SlcanResponseFormatter{
 
     static constexpr Response fmt_canmsg(const Frame & frame){
         IString str;
-        auto filler = CharsFiller{str.mut_chars()};
+
+        auto push_char = [&](const char chr){
+            if(const auto res = str.push_back(chr);
+                res.is_err()) __builtin_trap();
+        };
+
+        auto push_hex = [&](const uint32_t int_val, const size_t num_chars){
+            for (int32_t i = static_cast<int32_t>(num_chars) - 1; i >= 0; i--) {
+                // 每次提取4位（一个十六进制字符）
+                uint8_t nibble = (int_val >> (i * 4)) & 0xF;
+                
+                // 转换为ASCII字符
+                if (nibble < 10) {
+                    push_char('0' + nibble);
+                } else {
+                    push_char('A' + (nibble - 10));
+                }
+            }
+        };
+
         auto push_id = [&](){
             const size_t num_chars = frame.is_extended() ? 8 : 3;
             const auto id_u32 = frame.id_u32();
-            filler.push_hex(id_u32, num_chars);
+            push_hex(id_u32, num_chars);
         };
 
         auto push_dlc = [&]() {
             const auto dlc = frame.dlc();
-            filler.push_hex(dlc.length(), 1);  // DLC 是1个十六进制字符
+            push_hex(dlc.length(), 1);  // DLC 是1个十六进制字符
         };
 
         auto push_payload = [&](){ 
             const auto payload_bytes = frame.payload_bytes();
             for(size_t i = 0; i < payload_bytes.size(); i++){
-                filler.push_hex(payload_bytes[i], 2);
+                push_hex(payload_bytes[i], 2);
             }
         };
 
         const auto header_char = frame_to_header_char(frame);
-        filler.push_char(header_char);
+
+        push_char(header_char);
         push_id();
         push_dlc();
         push_payload();

@@ -34,7 +34,7 @@ static constexpr uint8_t CUSTOM_MAGIC_KEY = 0xaa;
 //  0x10A            0x32C  +MOTOR_ID           查询固件版本
 
 //可用的ID为(0, 8]分布 
-struct [[nodiscard]] MotorId{
+struct [[nodiscard]] MotorId final{
     using Self = MotorId;
 
     static constexpr Self from_bits(const uint8_t bits){
@@ -82,7 +82,7 @@ enum class [[nodiscard]] Exception:uint8_t{
     Stall = 0x62,
 };
 
-struct [[nodiscard]] ExceptionCode{
+struct [[nodiscard]] ExceptionCode final{
     using Self = ExceptionCode;
 
     static constexpr uint8_t NONE = 0x00;
@@ -149,69 +149,46 @@ enum class [[nodiscard]] DeMsgError:uint8_t{
     SetLoopModeNot_0xffx7,
 };
 
-struct [[nodiscard]] FeedbackStrategy{
-    using Self = FeedbackStrategy;
-
-    uint8_t duration_ms:7;
-    uint8_t is_once:1;
-
-    static constexpr Self from_bits(uint8_t bits){
-        return std::bit_cast<Self>(bits);
-    }
-
-    static constexpr Self from_once(){
-        return Self{
-            .duration_ms = 0,
-            .is_once = 1
-        };
-    }
-
-    static constexpr Option<Self> from_duration(std::chrono::duration<uint8_t, std::milli> duration){
-        if(duration.count() > 0x7f) 
-            return None;
-        return Some(Self{
-            .duration_ms = duration.count(), 
-            .is_once = 0
-        });
-    }
-
-    [[nodiscard]] constexpr uint8_t to_bits() const{
-        return std::bit_cast<uint8_t>(*this);
-    }
-};
-
+DEF_DERIVE_DEBUG(DeMsgError)
 
 // 设定值范围-32767~32767，对应-33A~33A
-struct [[nodiscard]] CurrentCode{
+struct [[nodiscard]] CurrentCode final{
     using Self = CurrentCode;
-    uint16_t bits;
+    int16_t bits;
 
-    static constexpr Self from_bits(const uint16_t bits){
+    static constexpr Self from_bits(const int16_t bits){
         return Self{bits};
     }
 
     static constexpr Self from_be_bytes(const uint8_t b0, const uint8_t b1){
-        const auto bits = (uint16_t(b0) << 8) | uint16_t(b1);
+        const uint16_t bits = (uint16_t(b0) << 8) | uint16_t(b1);
         return Self::from_bits(bits);
     }
 
     //从安培构造
     static constexpr Result<Self, std::weak_ordering> from_amps(const iq16 amps){
+        constexpr uq32 INV_33 = uq32::from_rcp(33u);
         if(amps > 33) return Err(std::weak_ordering::greater);
         else if (amps < -33) return Err(std::weak_ordering::less);
-        const uint16_t bits = std::bit_cast<uint16_t>(int16_t((amps / 33).to_bits()));
+        const int16_t bits = int16_t((amps * INV_33).to_bits());
         return Ok(from_bits(bits));
     }
 
     //转为安培
     constexpr iq16 to_amps() const {
-        const auto i32_bits = std::bit_cast<int16_t>(bits);
-        return iq16::from_bits(i32_bits * 33);
+        const int32_t i32_bits = static_cast<int32_t>(bits);
+        return iq16::from_bits(i32_bits * 66);
     }
 };
 
+static_assert(sizeof(CurrentCode) == 2);
+static_assert(CurrentCode::from_amps(34).unwrap_err() == std::weak_ordering::greater);
+static_assert(CurrentCode::from_amps(-34).unwrap_err() == std::weak_ordering::less);
+static_assert(std::abs(static_cast<float>(CurrentCode::from_bits(32767).to_amps()) - 33.0f) < 1E-2);
+static_assert(std::abs(static_cast<float>(CurrentCode::from_bits(-32767).to_amps()) - -33.0f) < 1E-2);
+
 //设定值范围--21000~21000每LSB 0.01RPm
-struct [[nodiscard]] SpeedCode{
+struct [[nodiscard]] SpeedCode final{
     using Self = SpeedCode;
     uint16_t bits;
 
@@ -220,7 +197,7 @@ struct [[nodiscard]] SpeedCode{
     }
 
     static constexpr Self from_be_bytes(const uint8_t b0, const uint8_t b1){
-        const auto bits = (uint16_t(b0) << 8) | uint16_t(b1);
+        const uint16_t bits = (uint16_t(b0) << 8) | uint16_t(b1);
         return Self::from_bits(bits);
     }
 
@@ -241,7 +218,7 @@ struct [[nodiscard]] SpeedCode{
 };
 
 // 0~32767 对应 0°~360°
-struct [[nodiscard]] PositionCode{ 
+struct [[nodiscard]] PositionCode final{ 
     using Self = PositionCode;  
     uint16_t bits;
 
@@ -285,17 +262,53 @@ struct [[nodiscard]] PositionCode{
     }
 };
 
+struct [[nodiscard]] SetPoint final{
+    constexpr imexplicit SetPoint(const CurrentCode code):
+        bits(std::bit_cast<uint16_t>(code.bits)){;}
+    constexpr imexplicit SetPoint(const PositionCode code):
+        bits(std::bit_cast<uint16_t>(code.bits)){;}
+    constexpr imexplicit SetPoint(const SpeedCode code):
+        bits(std::bit_cast<uint16_t>(code.bits)){;}
 
-struct [[nodiscard]] SetPoint{
-    constexpr SetPoint(const CurrentCode code):bits(code.bits){;}
-    constexpr SetPoint(const PositionCode code):bits(code.bits){;}
-    constexpr SetPoint(const SpeedCode code):bits(code.bits){;}
-
-    constexpr SetPoint(const uint16_t code):bits(code){;}
+    constexpr imexplicit SetPoint(const uint16_t code):bits(code){;}
 
 
     uint16_t bits;
 };
+
+struct [[nodiscard]] FeedbackStrategy final{
+    using Self = FeedbackStrategy;
+
+    uint8_t duration_ms:7;
+    uint8_t is_once:1;
+
+    static constexpr Self from_bits(uint8_t bits){
+        return std::bit_cast<Self>(bits);
+    }
+
+    static constexpr Self from_once(){
+        return Self{
+            .duration_ms = 0,
+            .is_once = 1
+        };
+    }
+
+    static constexpr Option<Self> from_duration(
+        std::chrono::duration<uint8_t, std::milli> duration
+    ){
+        if(duration.count() > 0x7f) 
+            return None;
+        return Some(Self{
+            .duration_ms = duration.count(), 
+            .is_once = 0
+        });
+    }
+
+    [[nodiscard]] constexpr uint8_t to_bits() const{
+        return std::bit_cast<uint8_t>(*this);
+    }
+};
+
 
 namespace details{
 [[nodiscard]] static constexpr const char * exception_to_str(const Exception e){
@@ -345,7 +358,7 @@ namespace details{
 
 using namespace primitive;
 struct Prelude{
-    DEF_FRIEND_DERIVE_DEBUG(DeMsgError)
+    
 };
 
 

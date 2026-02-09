@@ -264,3 +264,23 @@ size_t OutputStreamByRoute::sendout(const std::span<const uint8_t> pbuf){
         __builtin_trap();
     return p_route_->try_write_bytes(pbuf);
 }
+
+OutputStream & OutputStream::operator<<(const std::strong_ordering & ordering){
+    if (ordering == std::strong_ordering::greater) {
+        return *this << StringView("greater");
+    } else if (ordering == std::strong_ordering::less) {
+        return *this << StringView("less");
+    } else {
+        return *this << StringView("equal");
+    }
+}
+
+OutputStream & OutputStream::operator<<(const std::weak_ordering & ordering){
+    if (ordering == std::weak_ordering::greater) {
+        return *this << StringView("greater");
+    } else if (ordering == std::weak_ordering::less) {
+        return *this << StringView("less");
+    } else {
+        return *this << StringView("equivalent");
+    }
+}

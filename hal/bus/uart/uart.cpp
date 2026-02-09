@@ -892,6 +892,32 @@ void Uart::enable_idle_interrupt(const Enable en){
     USART_ITConfig(SDK_INST(inst_), USART_IT_IDLE, en == EN);
 }
 
+struct alignas(4) [[nodiscard]] BareUartEvent{
+    enum class Bits:uint32_t{
+        ParityError = 1u << 0,
+        FrameError = 1u << 1,
+        NoiseError = 1u << 2,
+        OverrunError = 1u << 3,
+        Idle = 1u << 4,
+        RxNotEmpty = 1u << 5,
+        TxClear = 1u << 6,
+        TxEmpty = 1u << 7,
+        LinBreakDetected = 1u << 8,
+        CtsStateChange = 1u << 9
+    };
+
+    uint32_t parity_error:1;
+    uint32_t frame_error:1;
+    uint32_t noise_error:1;
+    uint32_t overrun_error:1;
+
+    uint32_t idle:1;
+    uint32_t rx_not_empty:1;
+    uint32_t tx_clear:1;
+    uint32_t tx_empty:1;
+    uint32_t lin_break_detected:1;
+    uint32_t cts_state_change:1;
+};
 
 void UartInterruptDispatcher::on_interrupt(Uart & self){
     auto * ral_inst = RAL_INST(self.inst_);

@@ -13,6 +13,8 @@ public:
     virtual void set_low() = 0;
     virtual void write(const BoolLevel val) = 0;
     virtual BoolLevel read() const = 0;
+    [[nodiscard]] bool is_low() const{return read() == BoolLevel::LOW;}
+    [[nodiscard]] bool is_high() const{return read() == BoolLevel::HIGH;}
     virtual Nth nth() const = 0;
     virtual void set_mode(const GpioMode mode) = 0;
 

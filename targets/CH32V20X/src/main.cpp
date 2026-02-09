@@ -175,7 +175,6 @@ int main(){
     #elif defined(CH32V30X)
     // sincos_main();
     // winter_mc_tutorial_main();
-    lidar_visualize_main();
     // stl06n_main();
     // render_main();
     // myesc_main();

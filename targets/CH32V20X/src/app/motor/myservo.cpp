@@ -183,14 +183,7 @@ private:
 
 }
 
-class Joystick{
-public: 
-    virtual void update();
-};
 
-class AnalogJoystick{
-
-};
 
 // template<typename Q>
 // static constexpr fixed_t<Q, int32_t> stepify(const fixed_t<Q, int32_t> x, const auto step){

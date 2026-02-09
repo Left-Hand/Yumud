@@ -512,6 +512,21 @@ Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
     return Ok();
 }
 
+#if 0
+union Ret{
+    BxCanFrame frame;
+    uint8_t dummy;
+
+    Ret():dummy(){;}
+};
+BxCanFrame Can::read(){
+    Ret ret;
+    // Option<BxCanFrame> may_frame = None;
+    if(rx_queue_.try_pop(ret.frame) == 0)
+        __builtin_trap();
+    return ret.frame;
+}
+#else
 BxCanFrame Can::read(){
     BxCanFrame frame = BxCanFrame::from_uninitialized();
     if(rx_queue_.try_pop(frame) == 0)
@@ -519,7 +534,10 @@ BxCanFrame Can::read(){
     return frame;
 }
 
+#endif
+
 Option<BxCanFrame> Can::try_read(){
+    
     //如果没有可读的报文 返回空
     if(rx_queue_.length() == 0) return None;
     //弹出可读的报文

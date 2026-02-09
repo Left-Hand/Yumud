@@ -17,6 +17,18 @@ enum class [[nodiscard]] UartParity{
     Odd     = 0x0600
 };
 
+
+enum class [[nodiscard]] UartStopBits{
+    _1b,
+    _0_5b,
+    _2b,
+    _1_5b
+};
+
+enum class [[nodiscard]] UartWordSize{
+    _8b, _9b
+};
+
 struct [[nodiscard]] UartEvent{
     enum class [[nodiscard]] Kind:uint8_t{
         TxIdle,

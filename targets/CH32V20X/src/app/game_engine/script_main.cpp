@@ -26,7 +26,7 @@
 #include "middlewares/repl/repl_server.hpp"
 #include "robots/mock/mock_burshed_motor.hpp"
 
-#include "frame_buffer.hpp"
+#include "middlewares/raster/frame_buffer.hpp"
 #include "core/string/conv/strconv2.hpp"
 
 

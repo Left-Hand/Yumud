@@ -27,6 +27,9 @@ namespace std{
     class basic_string;
     
     class source_location;
+
+    struct strong_ording;
+    struct weak_ording;
 }
 
 namespace ymd{
@@ -283,6 +286,8 @@ public:
     OutputStream & operator<<(const Endl){this->print_endl(); return *this;}
     OutputStream & operator<<(const std::nullopt_t){return *this << '/';}
     OutputStream & operator<<(const std::endian endian);
+    OutputStream & operator<<(const std::strong_ordering & ordering);
+    OutputStream & operator<<(const std::weak_ordering & ordering);
 
     template<typename T>
     OutputStream & operator<<(const std::chrono::duration<T, std::milli> ms){

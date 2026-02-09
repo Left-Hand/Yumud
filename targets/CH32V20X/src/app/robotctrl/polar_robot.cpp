@@ -183,8 +183,8 @@ constexpr math::Vec2<T> vec_step_to(const math::Vec2<T> from, const math::Vec2<T
 
 
 
-struct StepPointIterator{
-    struct Config{
+struct [[nodiscard]] StepPointIterator final{
+    struct [[nodiscard]] Config final{
         math::Vec2<iq24> initial_coord;
     };
 
@@ -215,39 +215,31 @@ private:
 };
 
 
-struct GcodeStateHolder{
+struct [[nodiscard]] GcodeStateHolder final{
     static constexpr auto X_LIMIT = 0.2_r;
     static constexpr auto Y_LIMIT = 0.2_r;
 
-    iq16 max_speed = 0.02_r;
-    iq16 speed;
+    static constexpr iq16 max_speed = 0.02_r;
+    iq16 x2_limit;
     unit::Meter<iq16> x = unit::Meter<iq16>(0);
     unit::Meter<iq16> y = unit::Meter<iq16>(0);
     bool is_rapid;
 
-    constexpr void set_speed(const iq16 _speed){
-        speed = MIN(_speed / 1000, max_speed);
-    }
-
-    constexpr void set_x_by_mm(const iq16 _x){
-        x = CLAMP2(_x / 1000, X_LIMIT);
-    }
-
-    constexpr void set_y_by_mm(const iq16 _y){
-        y = CLAMP2(_y / 1000, Y_LIMIT);
+    constexpr void set_x2_limit(const iq16 _speed){
+        x2_limit = MIN(_speed / 1000, max_speed);
     }
 };
 
-struct PolarRobotCurveGenerator{
-    struct Config{
+struct [[nodiscard]] PolarRobotCurveGenerator final{
+    struct [[nodiscard]] Config final{
         uint32_t fs;
-        iq16 speed;
+        iq16 x2_limit;
         math::Vec2<iq24> initial_coord = {0,0};
     };
 
     explicit constexpr PolarRobotCurveGenerator(const Config & cfg):
         fs_(cfg.fs),
-        delta_dist_(cfg.speed / cfg.fs),
+        delta_dist_(cfg.x2_limit / cfg.fs),
         step_iter_(StepPointIterator{StepPointIterator::Config{
             .initial_coord = cfg.initial_coord
         }}){;}
@@ -256,8 +248,8 @@ struct PolarRobotCurveGenerator{
         step_iter_.set_target_coord(coord.flip_y());
     }
 
-    constexpr void set_move_speed(const iq24 speed){
-        delta_dist_ = (speed / fs_);
+    constexpr void set_move_speed(const iq24 x2_limit){
+        delta_dist_ = (x2_limit / fs_);
     }
 
     constexpr bool has_next(){
@@ -361,12 +353,12 @@ void polar_robot_main(){
     static constexpr auto POINT_GEN_DURATION_MS = 1000ms / POINT_GEN_FREQ;
     static constexpr auto MAX_MOVE_SPEED = 0.002_iq24; // 2cm / s
 
-    static constexpr auto GEN_CONFIG = PolarRobotCurveGenerator::Config{
+    static constexpr auto CURVE_GEN_CONFIG = PolarRobotCurveGenerator::Config{
         .fs = POINT_GEN_FREQ,
-        .speed = MAX_MOVE_SPEED
+        .x2_limit = MAX_MOVE_SPEED
     };
 
-    PolarRobotCurveGenerator curve_gen_{GEN_CONFIG};
+    PolarRobotCurveGenerator curve_gen_{CURVE_GEN_CONFIG};
 
     [[maybe_unused]] auto fetch_next_gcode_line = [] -> Option<StringView>{
         static StringSplitIter line_iter{GCODE_LINES_NANJING, '\n'};
@@ -395,7 +387,7 @@ void polar_robot_main(){
                 curve_gen_.add_end_coord({state_.x.count(), state_.y.count()});
                 break;
             case 1://linear move
-                curve_gen_.set_move_speed(state_.speed);
+                curve_gen_.set_move_speed(state_.x2_limit);
                 curve_gen_.add_end_coord({state_.x.count(), state_.y.count()});
                 break;
             case 4:
@@ -419,7 +411,7 @@ void polar_robot_main(){
                 state_.y = unit::MilliMeter<iq16>(arg.value);
                 break;
             case 'F':
-                state_.set_speed(arg.value);
+                state_.set_x2_limit(arg.value);
                 break;
             case 'G':
                 parse_g_command(arg);

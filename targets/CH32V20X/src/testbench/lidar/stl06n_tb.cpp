@@ -116,24 +116,24 @@ void stl06n_main(){
         if(ev.is<LidarEvent::DataReady>()){
             const auto & sector = ev.unwrap_as<LidarEvent::DataReady>().sector;
 
-            // auto && view = make_std_range(sector.packed_cluster.iter())
+            // auto && view = make_std_range(sector.packed_points.iter())
             //     | std::views::take(2);
 
             const auto start_angle = sector.start_angle_code.to_angle();
             const auto stop_angle = sector.stop_angle_code.to_angle();
             if(last_start_angle_ > start_angle){
                 lidar_sector_count_ = 0;
-                // point_ = sector.packed_cluster[0];
+                // point_ = sector.packed_points[0];
             }else{
                 lidar_sector_count_++;
             }
 
-            auto & packed_cluster = packed_clusters_[size_t(lidar_sector_count_)];
-            auto & points = packed_cluster.points;
+            auto & packed_points = packed_clusters_[size_t(lidar_sector_count_)];
+            auto & points = packed_points.points;
 
-            sector.packed_cluster.clone_to(std::span(points));
-            packed_cluster.start_angle = start_angle;
-            packed_cluster.stop_angle = stop_angle;
+            sector.packed_points.clone_to(std::span(points));
+            packed_points.start_angle = start_angle;
+            packed_points.stop_angle = stop_angle;
 
             last_start_angle_ = start_angle;
             last_stop_angle_ = stop_angle;
