@@ -60,15 +60,16 @@ void stl06n_main(){
     auto & DEBUG_UART = hal::usart2;
     DEBUG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        .baudrate = hal::NearestFreq(6000000),
+        .baudrate = hal::NearestFreq(576000),
         .tx_strategy = CommStrategy::Blocking
     });
+
     #endif
 
 
     DEBUGGER.retarget(&DEBUG_UART);
     DEBUGGER.no_brackets(EN);
-    DEBUGGER.set_eps(3);
+    DEBUGGER.set_eps(9);
     DEBUGGER.force_sync(EN);
     // DEBUGGER.no_fieldname(EN);
     DEBUGGER.no_fieldname(DISEN);
@@ -149,25 +150,29 @@ void stl06n_main(){
 
 
     #if defined(CH32V20X)
-    auto & stl06n_uart_ = hal::uart4;
-    stl06n_uart_.init({
+    auto & lidar_uart_ = hal::uart4;
+    lidar_uart_.init({
         .remap = hal::UartRemap::_0,
         .baudrate = hal::NearestFreq(230400),
         .tx_strategy = CommStrategy::Blocking
     });
     #elif defined(CH32V30X)
-    auto & stl06n_uart_ = hal::usart1;
-    stl06n_uart_.init({
-        .remap = hal::USART1_REMAP_PA9_PA10,
-        .baudrate = hal::NearestFreq(230400),
-        .tx_strategy = CommStrategy::Blocking
-    });
+
+    [[maybe_unused]] auto & lidar_uart_ = [] -> hal::Uart &{
+        auto & uart = hal::uart4;
+        uart.init({
+            .remap = hal::UART4_REMAP_PC10_PC11,
+            .baudrate = hal::NearestFreq(230400),
+        });
+        return uart;
+    }();
+
     #else
     static_assert(false, "Unsupported MCU");
     #endif
 
 
-    stl06n_uart_.set_event_callback([&](const hal::UartEvent & ev){
+    lidar_uart_.set_event_callback([&](const hal::UartEvent & ev){
         watch_pin_.set_high();
         auto guard = make_scope_guard([&]{
             watch_pin_.set_low();
@@ -177,7 +182,7 @@ void stl06n_main(){
         auto poll_parser = [&](){
             while(true){
                 uint8_t byte;
-                if(stl06n_uart_.try_read_byte(byte) == 0) break;
+                if(lidar_uart_.try_read_byte(byte) == 0) break;
                 stl06n_parser_.push_byte(static_cast<uint8_t>(byte));
             }
         };
@@ -196,7 +201,7 @@ void stl06n_main(){
         #else
         while(true){
             char chr;
-            if(stl06n_uart_.try_read_byte(chr) == 0) break;
+            if(lidar_uart_.try_read_byte(chr) == 0) break;
             // stl06n_parser_.push_byte(static_cast<uint8_t>(chr));
         }
         #endif
@@ -281,7 +286,7 @@ void stl06n_main(){
 
         [[maybe_unused]] const auto & diagnostics = o1heap_allocator.diagnostics();
 
-        std::array<iq16, 12> arr;
+        std::array<iq31, 12> arr;
         static constexpr auto step = iq16(1.0 / 24.0);
         iq16 x = 0;
         const auto secs = clock::seconds();
@@ -293,13 +298,12 @@ void stl06n_main(){
         // poll_input_sinker();
         // repl_server.invoke(repl_list);
 
-        if(false)DEBUG_PRINTLN(
-            repl_server.line_sinker_.now_line(),
+        DEBUG_PRINTLN(
+            // repl_server.line_sinker_.now_line(),
             // arr
             // arr
             // StringSplitIter("H \rE \rL L O", '\r'),
 
-            0
             // headed_points
             // clock::millis().count(),
             // static_cast<uint8_t>(stl06n_parser_.fsm_state_),
@@ -318,7 +322,8 @@ void stl06n_main(){
             // std::size(packed_clusters_),
             // 0
             // heap_alloc_elapsed_us.count()
-            // points[0].distance_code.to_meters(),
+            // points[0].distance_code.to_meters()
+            arr[0]
             // points[0].intensity
             // hal::PE<1>().read().to_bool
         );

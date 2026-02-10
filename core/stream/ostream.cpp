@@ -158,13 +158,7 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
 }
 
-OutputStream & OutputStream::operator<<(const float value){
-    return (*this) << literals::iq16::from(value);
-}
 
-OutputStream & OutputStream::operator<<(const double value){
-    return (*this) << literals::iq16::from(value);
-}
 
 #define PRINT_INT_TEMPLATE(cap, convfunc)\
     if((config_.specifier.showpos and val >= 0)) [[unlikely]]\
@@ -187,6 +181,17 @@ OutputStream & OutputStream::operator<<(const uint8_t val){
         PRINT_INT_TEMPLATE(8, str::itoa);
     }
     return *this;
+}
+
+OutputStream & OutputStream::operator<<(const float val){
+    char buf[32];
+    const auto len = str::ftoa(val, buf, this->eps());
+    PRINT_NUMERIC(buf, len, (val >= 0));
+    return *this;
+}
+
+OutputStream & OutputStream::operator<<(const double val){
+    return (*this) << static_cast<float>(val);
 }
 
 void OutputStream::print_u32(const uint32_t val){
@@ -225,11 +230,9 @@ void OutputStream::print_iq16(const math::fixed_t<16, int32_t> val){
     PRINT_NUMERIC(buf, len, (val >= 0));
 }
 
-#undef PUT_FLOAT_TEMPLATE
-
 
 OutputStream & OutputStream::operator<<(const std::monostate){
-    return *this << "monostate";
+    return *this << StringView("monostate");
 }
 
 
