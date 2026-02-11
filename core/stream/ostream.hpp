@@ -370,12 +370,20 @@ private:
 
 
 
-    void print_iq16(const math::fixed_t<16, int32_t> q_val);
+    void print_iq32(const int32_t bits, const uint32_t Q);
+    void print_uq32(const uint32_t bits, const uint32_t Q);
 public:
 
     template<size_t Q, typename D>
     OutputStream & operator<<(const math::fixed_t<Q, D> & q_val){
-        print_iq16(math::fixed_t<16, int32_t>(q_val));
+        // print_iq16(math::fixed_t<16, int32_t>(q_val));
+        static_assert(sizeof(D) <= 4);
+
+        if constexpr (std::is_signed_v<D>){
+            print_iq32(static_cast<int32_t>(q_val.to_bits()), Q);
+        }else{
+            print_uq32(static_cast<uint32_t>(q_val.to_bits()), Q);
+        }
         return *this;
     }
 

@@ -173,7 +173,7 @@ int main(){
     // bldc_main();
     while(true);
     #elif defined(CH32V30X)
-    // sincos_main();
+    sincos_main();
     // winter_mc_tutorial_main();
     // stl06n_main();
     // render_main();
@@ -183,7 +183,7 @@ int main(){
     // alx_aoa_main();
     // smc2025_main();
     // stl06n_main();
-    l1_adaptive_main();
+    // l1_adaptive_main();
     // vl53l5cx_main();
     // smc2025_main();
     // m1502e_main();

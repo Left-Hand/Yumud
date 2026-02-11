@@ -28,6 +28,7 @@ static constexpr int32_t _iq31_quarterPi   = 0x6487ed51;
 static constexpr int32_t _iq31_invRoot2    = 0x5a82799a;
 static constexpr int32_t _iq31_tanSmall    = 0x0020c49b;
 static constexpr int32_t _iq31_ln2         = 0x58b90bfc;
+static constexpr uint32_t _uq32_ln2         = _iq31_ln2 << 1;
 static constexpr int32_t _iq31_twoThird    = 0x55555555;
 static constexpr int32_t _iq31_pointOne    = 0x0ccccccd;
 static constexpr int32_t _iq31_oneTenth    = 0x0ccccccd;

@@ -15,14 +15,14 @@
 
 namespace ymd::iqmath::details{
 
-struct [[nodiscard]] __Atan2Flag{
+struct alignas(4) [[nodiscard]] __Atan2Flag final{
+    using Self = __Atan2Flag;
+    uint8_t y_is_neg;
+    uint8_t x_is_neg;
+    uint8_t swapped;
 
-    uint8_t y_is_neg:1;
-    uint8_t x_is_neg:1;
-    uint8_t swapped:1;
-
-    static constexpr __Atan2Flag zero(){
-        return __Atan2Flag{0, 0, 0};
+    static constexpr Self zero(){
+        return std::bit_cast<Self>(uint32_t(0));
     }
 
 
@@ -49,10 +49,6 @@ struct [[nodiscard]] __Atan2Flag{
 
         return ymd::math::fixed_t<32, uint32_t>::from_bits(uq32_result_pu);
     };
-
-    [[nodiscard]] constexpr uint8_t to_u8() const {
-        return std::bit_cast<uint8_t>(*this);
-    }
 };
 
 struct [[nodiscard]] __Atan2Intermediate{

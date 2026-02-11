@@ -224,10 +224,18 @@ void OutputStream::print_i64(const int64_t val){
     }
 }
 
-void OutputStream::print_iq16(const math::fixed_t<16, int32_t> val){
+
+
+void OutputStream::print_iq32(const int32_t bits, const uint32_t Q){
     char buf[32];
-    const auto len = str::qtoa<16>(val, buf, this->eps());
-    PRINT_NUMERIC(buf, len, (val >= 0));
+    const auto len = str::qtoa(bits, Q, buf, this->eps());
+    PRINT_NUMERIC(buf, len, (bits >= 0));
+}
+
+void OutputStream::print_uq32(const uint32_t bits, const uint32_t Q){
+    char buf[32];
+    const auto len = str::qtoa(bits, Q, buf, this->eps());
+    PRINT_NUMERIC(buf, len, (bits >= 0));
 }
 
 

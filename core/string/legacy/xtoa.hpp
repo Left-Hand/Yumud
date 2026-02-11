@@ -34,8 +34,9 @@ static __fast_inline constexpr void utoas(uint32_t value, char * const str, uint
 
 size_t _uqtoa(const uint32_t abs_value_bits, char * const str, uint8_t precsion, const uint8_t Q);
 
-template<typename D>	
-size_t _iqtoa(const D value_bits, char * str, uint8_t precsion, const uint8_t Q){
+template<typename D>
+requires(sizeof(D) <= 4)
+size_t _qtoa(const D value_bits, char * str, uint8_t precsion, const uint8_t Q){
 	using unsigned_type = std::make_unsigned_t<D>;
 	using bits_type = std::conditional_t<
 		std::is_signed_v<D>, 
@@ -49,7 +50,7 @@ size_t _iqtoa(const D value_bits, char * str, uint8_t precsion, const uint8_t Q)
 		const bool is_negative = std::bit_cast<bits_type>(value_bits) < 0;
 		if(is_negative){
 			str[0] = '-';
-			ind = 1;
+			str++;
 			// abs_value_bits = static_cast<unsigned_type>(-value_bits);
 			abs_value_bits = static_cast<unsigned_type>(-(value_bits + 1)) + 1;
 		}else{
@@ -62,12 +63,15 @@ size_t _iqtoa(const D value_bits, char * str, uint8_t precsion, const uint8_t Q)
     return ind + _uqtoa(abs_value_bits, str + ind, precsion, Q);
 }
 
-template<size_t Q, typename D>
+template<typename D>
 requires(sizeof(D) <= 4)
-size_t qtoa(const math::fixed_t<Q, D> qv, char * const str, uint8_t precsion){
+size_t qtoa(const D bits, const size_t Q, char * const str, uint8_t precsion){
 	using size_aligned_t = std::conditional_t<std::is_signed_v<D>, int32_t, uint32_t>;
 	static_assert(sizeof(size_aligned_t) == sizeof(D));
-	return _iqtoa<size_aligned_t>(std::bit_cast<size_aligned_t>(qv.to_bits()), str, precsion, Q);
+	if constexpr(std::is_signed_v<D>)
+		return _qtoa(int32_t(bits), str, precsion, Q);
+	else
+		return _uqtoa(uint32_t(bits), str, precsion, Q);
 }
 
 }

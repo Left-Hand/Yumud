@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include "core/stream/ostream.hpp"
 
 namespace ymd{
 

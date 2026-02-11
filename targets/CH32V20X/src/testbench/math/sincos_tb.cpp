@@ -33,7 +33,7 @@ template<typename Fn1, typename Fn2>
 __no_inline auto compare_func(size_t times, Fn1 && fn1, Fn2 && fn2){
     const auto elapsed1 = eval_one_func(times, std::forward<Fn1>(fn1));
     const auto elapsed2 = eval_one_func(times, std::forward<Fn2>(fn2));
-    DEBUG_PRINTLN(elapsed1, elapsed2);
+    DEBUG_PRINTLN(uq16(elapsed1.count()) / times, uq16(elapsed2.count()) / times);
 }
 
 
@@ -58,6 +58,142 @@ __no_inline auto eval_func(Fn && fn){
     return (end_us - begin_us);
 }
 
+
+template<int8_t Q, bool IS_SIGNED>
+constexpr int32_t m__IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
+{
+    using namespace iqmath::details;
+    bool is_neg = 0;
+    uint32_t uiqNResult;
+
+    if constexpr(IS_SIGNED == true) {
+        /* save sign of denominator */
+        if (iqNInput2 == 0) [[unlikely]]{
+            return INT32_MAX;
+        }else if(iqNInput2 < 0){
+            if(iqNInput2 == INT32_MIN) [[unlikely]] {
+                iqNInput2 = INT32_MAX;
+                is_neg = 1;
+            }else{
+                iqNInput2 = -iqNInput2;
+                is_neg = 1;
+            }
+        }
+
+        /* save sign of numerator */
+        if (iqNInput1 < 0) {
+            is_neg = !is_neg;
+
+            if(iqNInput1 == INT32_MIN) [[unlikely]] {
+                iqNInput1 = INT32_MAX;
+            }else{
+                iqNInput1 = -iqNInput1;
+            }
+        }
+
+    } else {
+        /* Check for divide by zero */
+        if (iqNInput2 == 0) [[unlikely]] {
+            return INT32_MAX;
+        }
+    }
+
+
+    /* Scale inputs so that 0.5 <= uiq32Input2 < 1.0. */
+    // Handle zero case to avoid undefined behavior in __builtin_clz
+    // Find the number of leading zeros to determine the shift amount
+    #if 0
+    //1.046us per call @ch32v303 144mhz(fpu present)
+    #if 0
+    const size_t shift_amount = [&] -> size_t __no_inline{
+        return size_t(CLZ(iqNInput2));
+    }();
+    #else
+    const size_t shift_amount = size_t(CLZ(iqNInput2));
+    #endif
+    #else
+    //0.79us per call @ch32v303 144mhz(fpu present)
+    const size_t shift_amount = __builtin_clz(iqNInput2);
+    #endif
+
+    if(shift_amount >= 32) __builtin_unreachable();
+    
+    uint32_t uiq32Input2 = iqNInput2 << shift_amount;
+    uint64_t uiiqNInput1 = uint64_t(iqNInput1);
+    if constexpr(Q < 31) {
+        const int32_t shifts = (31 - Q - 1 - shift_amount);
+        if(shifts >= 0) {
+            uiiqNInput1 >>= shifts;
+        } else {
+            uiiqNInput1 <<= -shifts;
+        }
+    } else {
+        uiiqNInput1 <<= 1 + shift_amount;
+    }
+
+    /*
+     * Shift input1 back from iq31 to iqN but scale by 2 since we multiply
+     * by result in iq30 format.
+     */
+
+
+    /* Check for saturation. */
+    if (uint32_t(uiiqNInput1 >> 32)) {
+        if (is_neg) {
+            return INT32_MIN;
+        } else {
+            return INT32_MAX;
+        }
+    }
+
+    /* use left most 7 bits as ui8Index into lookup table (range: 32-64) */
+    const size_t ui8Index = size_t((uiq32Input2 >> 25) - 64);
+    uint32_t uiq30Guess = uint32_t(_IQ6div_lookup[ui8Index]) << 24;
+
+    
+
+    uint32_t ui30Temp;
+
+    /* 牛顿迭代 lambda - 无分支 */
+    auto newton_iter = [&]() __attribute__((always_inline)){
+        ui30Temp = static_cast<uint32_t>(
+            static_cast<uint64_t>(uiq30Guess) * 
+            static_cast<uint64_t>(uiq32Input2) >> 32
+        );
+        ui30Temp = 0x80000000 - ui30Temp;  /* - (temp - 0x80000000) */
+        uiq30Guess = static_cast<uint64_t>(uiq30Guess) * 
+                    static_cast<uint64_t>(ui30Temp) >> 32;
+        uiq30Guess <<= 2;
+    };
+
+    newton_iter();
+    newton_iter();
+    
+    if constexpr (Q >= 24) {
+        newton_iter();
+    }
+
+    /* Multiply 1/uiq32Input2 and uiqNInput1. */
+    uiqNResult = (static_cast<uint64_t>(uiq30Guess) * static_cast<uint64_t>(uint32_t(uiiqNInput1))) >> 32;
+
+
+    /* Saturate, add the sign and return. */
+    if constexpr(IS_SIGNED == true) {
+        if(is_neg){
+            if(uiqNResult > uint32_t(INT32_MIN)) [[unlikely]] {
+                return INT32_MIN;
+            }
+            return -(int32_t)uiqNResult;
+        }else{
+            if(uiqNResult > uint32_t(INT32_MAX)) [[unlikely]] {
+                return INT32_MAX;
+            }
+            return (int32_t)uiqNResult;
+        }
+    } else {
+        return uiqNResult;
+    }
+}
 
 
 template<typename Fn>
@@ -96,8 +232,8 @@ void play_func(Fn && fn){
 void sincos_main(){
     DEBUGGER_INST.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        // .baudrate = hal::NearestFreq(576_KHz), 
-        .baudrate = hal::NearestFreq(6000000), 
+        .baudrate = hal::NearestFreq(576_KHz), 
+        // .baudrate = hal::NearestFreq(6000000), 
         .tx_strategy = CommStrategy::Blocking,
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
@@ -153,26 +289,52 @@ void sincos_main(){
         DEBUG_PRINTLN(y);
     }
 
-    compare_func(
-        1024,
-        // 32,
-        [](const iq24 s, const iq24 c) -> auto {
+
+    auto fn1 = [](const iq16 s, const iq16 c) -> auto {
+        // const auto [s, c] = sincospu_approx(x);
+        // const auto [s, c] = math::sincospu_approx(x);
+        // return iq20(s) + iq20(c);
+        return iq16::from_bits(m__IQNdiv_impl<16, true>(s.to_bits(),c.to_bits()));
+        // return iq20(s);
+    };
+
+    auto fn2 = [](const iq16 s, const iq16 c) -> auto {
             // const auto [s, c] = sincospu_approx(x);
-            // const auto [s, c] = math::sincospu_approx(x);
-            // return iq20(s) + iq20(c);
-            return math::atan2pu(s,c);
-            // return iq20(s);
-        },
-        [](const iq31 s, const iq31 c) -> auto {
-            // const auto [s, c] = sincospu_approx(x);
-            return math::atan2pu(s,c);
+            // return math::atan2pu(s,c);
+            // return math::atanpu(s/c);
+            return s / c;
             // return iq31(0);
             // const auto fx = float(x);
             // const auto s = std::sin(fx);
             // const auto c = std::cos(fx);
             // return iq20::from(s) + iq20::from(c);
             // return iq20(s);
-        }
+    };
+
+    while(true){
+        const auto now_secs = clock::seconds();
+        // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
+        // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
+        const auto x = pu_to_uq32((now_secs * 2));
+        const auto [s,c] = math::sincospu(x);
+        // const auto x = 6 * frac(t * 2) - 3;
+        DEBUG_PRINTLN(
+            x,
+            s, c,
+            fn1(s, c),
+            fn2(s, c),
+            math::asin(iq16(s)),
+            math::acos(iq16(s)),
+            fn1(s,c).to_bits() - fn2(s, c).to_bits()
+        );
+        clock::delay(1ms);
+    }
+
+    compare_func(
+        2048,
+        // 32,
+        fn1, 
+        fn2
     );
     PANIC{};
 }
