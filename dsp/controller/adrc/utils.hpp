@@ -8,9 +8,9 @@
 namespace ymd::dsp::adrc{
 
 static constexpr 
-iq16 fal(const iq16 e, const iq16 alpha, const iq16 delta){
+iq16 fal(const iq16 e, const iq16 alpha, const uq16 delta){
 
-    const auto fabsf_e = std::abs(e);
+    const uq16 fabsf_e = std::abs(e);
     
     if(delta>=fabsf_e)
         return e/math::pow(delta,1-alpha);

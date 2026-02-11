@@ -63,7 +63,7 @@ constexpr int32_t __IQNasin(uint32_t uiq31Input)
             uiq31Input = uiq31InputTemp >> 1;
 
             /* Calculate sqrt((1 - uiq31Input)/2) */
-            uiq31Input = _IQNsqrt<31>(math::fixed_t<31, int32_t>::from_bits(uiq31InputTemp >> 1)).to_bits();
+            uiq31Input = _IQNsqrt32<31>(math::fixed_t<31, int32_t>::from_bits(uiq31InputTemp >> 1)).to_bits();
 
             /* Flag that the transformation was used. */
             is_acos = !is_acos;

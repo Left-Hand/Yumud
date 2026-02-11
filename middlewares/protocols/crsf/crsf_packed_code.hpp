@@ -104,13 +104,13 @@ struct [[nodiscard]] AltitudeCode final{
 struct [[nodiscard]] VerticalSpeedCode final{
     using Self = VerticalSpeedCode;
     
-    static constexpr int KL = 100;       // linearity constant;
-    static constexpr iq16 KR = iq16(.026); // range constant;
+    static constexpr uint32_t KL = 100;       // linearity constant;
+    static constexpr uq16 KR = iq16(.026); // range constant;
 
     int8_t bits;
 
     [[nodiscard]] static constexpr int8_t cm_per_seconds_to_bits (int16_t val){
-        const iq16 base = math::log(math::abs(static_cast<iq16>(val))/KL + 1)/KR;
+        const iq16 base = math::log(static_cast<uq16>(uint32_t(val < 0 ? -val : val))/KL + 1)/KR;
         if(val >= 0)
             return static_cast<int8_t>(base);
         else

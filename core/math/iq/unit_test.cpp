@@ -133,12 +133,14 @@ static_assert(math::square(uq16(2)) = 4);
 static_assert(math::square(uq16(100)) = 10000);
 
 
+static_assert(math::sqrt(iq16(0)) == iq16(0));
 static_assert(math::sqrt(iq16(4)) == iq16(2));
 static_assert(math::sqrt(iq16(16)) == iq16(4));
 static_assert(math::sqrt(iq16(64)) == iq16(8));
 static_assert(math::sqrt(iq16(36)) == iq16(6));
 static_assert(math::sqrt(iq16(16)) == iq16(4));
 
+static_assert(math::sqrt(iiq16(0)) == iq16(0));
 static_assert(math::sqrt(iiq16(4)) == iq16(2));
 static_assert(math::sqrt(iiq16(16)) == iq16(4));
 static_assert(math::sqrt(iiq16(64)) == iq16(8));
@@ -165,6 +167,7 @@ static_assert(math::mag(iq26(3), iq26(4)) == iq26(5));
 static_assert(math::inv_mag(iq16(3), iq16(4)).to_bits() == iq16(0.2).to_bits());
 static_assert(math::inv_mag(iq16(12), iq16(5)).to_bits() == iq16(1.0/13).to_bits());
 
+static_assert(math::mag(iq16(0), iq16(0), iq16(0)) == iq16(0));
 static_assert(math::mag(iq16(1), iq16(2), iq16(2)) == iq16(3));
 static_assert(math::mag(iq16(3), iq16(4), iq16(0)) == iq16(5));
 static_assert(math::mag(iq16(1), iq16(1), iq16(1), iq16(1)) == iq16(2));
@@ -185,6 +188,18 @@ static_assert(math::sinpu(iq30(0)) == iq30(0));
 static_assert(math::sinpu(iq30(0.25)) == std::numeric_limits<iq31>::max());
 static_assert(math::sinpu(iq30(0.5)) == iq30(0));
 static_assert(math::sinpu(iq30(1.0)) == iq30(0));
+
+[[maybe_unused]] static void test_exp(){
+    constexpr float f0 = float(math::exp(iq16(0)));
+    constexpr float f0_5 = float(math::exp(iq16(0.5)));
+    constexpr float f1 = float(math::exp(iq16(1)));
+    constexpr float f3 = float(math::exp(iq16(3)));
+    static_assert(f0 == 1.0);
+    static_assert((f0_5 - 1.6487212707) < 1e-4);
+    static_assert((f1 - 2.7182818284590451) < 1e-4);
+    static_assert((f3 - 20.0855369232) < 1e-4);
+
+}
 
 static_assert(std::abs((double)math::atan2pu(ymd::literals::iq16(1.0), ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
 static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), -ymd::literals::iq16(1.0)) - 0.625) < 1E-7);

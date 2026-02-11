@@ -39,46 +39,29 @@ static_assert(u32_num_digits_r10(0x3B9ACA01) == 10, "0x3B9ACA01 should return 10
 
 
 
-static constexpr size_t _u32toa_r10(uint32_t unsigned_val, char * str){
-    char* original_str = str;
+__no_inline static constexpr size_t _u32toa_r10(uint32_t unsigned_val, char* str) {
+    const size_t len = u32_num_digits_r10((unsigned_val));
+    int i = len - 1;
+
+    auto fast_div10 = [](const uint32_t x) -> uint32_t{
+        return str::div_10(x);
+    };
 
     // Handle special case of zero
-    if (unsigned_val == 0) [[unlikely]]{
+    if (unsigned_val == 0) {
         str[0] = '0';
         return 1;
     }
-    
-    // Convert number to string in reverse order
+
+    // Convert number to string using fast division by 10
     while (unsigned_val) {
-        uint32_t quotient = str::div_10(unsigned_val);
+        uint32_t quotient = fast_div10(unsigned_val);
         uint8_t digit = unsigned_val - quotient * 10;  // Get remainder (digit)
-        *str = digit + '0';              // Convert to character and place in string
-        str++;
-        unsigned_val = quotient;         // Move to next digit
+        str[i--] = digit + '0';              // Convert to character and place in string
+        unsigned_val = quotient;                      // Move to next digit
     }
 
-    #if 0
-    // Reverse the string in place
-    char* start = original_str;
-    char* end = str - 1;
-    while(start < end) {
-        char temp = *start;
-        *start = *end;
-        *end = temp;
-        start++;
-        end--;
-    }
-
-    return str - original_str; // Return the length
-    #else
-    // Get the length of the string
-    size_t len = str - original_str;
-    
-    // Reverse the string in place using the optimized reverse function
-    str::reverse(original_str, len);
-
-    return len; // Return the length
-    #endif
+    return len;
 }
 
 

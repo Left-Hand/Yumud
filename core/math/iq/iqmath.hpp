@@ -194,7 +194,7 @@ __attribute__((always_inline)) constexpr
 fixed_t<Q, int32_t> sqrt(const fixed_t<Q, int32_t> x){
     if(x.to_bits() == 0) return 0;
     if(x.to_bits() < 0) __builtin_trap();
-    return fixed_t<Q, int32_t>(iqmath::details::_IQNsqrt(
+    return fixed_t<Q, int32_t>(iqmath::details::_IQNsqrt32(
         fixed_t<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()))
     ));
 }
@@ -204,11 +204,11 @@ __attribute__((always_inline)) constexpr
 fixed_t<Q, int32_t> ssqrt(const fixed_t<Q, int32_t> x){
     if(x.to_bits() == 0) return 0;
     if(x.to_bits() < 0){
-        return -fixed_t<Q, int32_t>(iqmath::details::_IQNsqrt(
+        return -fixed_t<Q, int32_t>(iqmath::details::_IQNsqrt32(
             fixed_t<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(-x.to_bits()))
         ));
     }else{
-        return fixed_t<Q, int32_t>(iqmath::details::_IQNsqrt(
+        return fixed_t<Q, int32_t>(iqmath::details::_IQNsqrt32(
             fixed_t<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()))
         ));
     }
@@ -218,7 +218,7 @@ template<size_t Q>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, uint32_t> sqrt(const fixed_t<Q, uint32_t> x){
     if(x.to_bits() == 0) return 0;
-    return fixed_t<Q, uint32_t>(iqmath::details::_IQNsqrt(x));
+    return fixed_t<Q, uint32_t>(iqmath::details::_IQNsqrt32(x));
 }
 
 
@@ -256,32 +256,32 @@ fixed_t<Q, uint32_t> sqrt(const fixed_t<Q, uint64_t> x){
 
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, int32_t> log10(const fixed_t<Q, int32_t> x) {
+fixed_t<Q, int32_t> log10(const fixed_t<Q, uint32_t> x) {
     constexpr auto INV_LN10 = 1 / fixed_t(iqmath::details::_IQNlog<Q>(fixed_t<Q, int32_t>(10)));
     return fixed_t<Q, int32_t>(iqmath::details::_IQNlog(x)) * INV_LN10;
 }
 
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, int32_t> log(const fixed_t<Q, int32_t> x) {
+fixed_t<Q, int32_t> log(const fixed_t<Q, uint32_t> x) {
     return fixed_t<Q, int32_t>(iqmath::details::_IQNlog(x));
 }
 
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, int32_t> exp(const fixed_t<Q, int32_t> x) {
-    return fixed_t<Q, int32_t>(iqmath::details::_IQNexp<Q>(x));
+fixed_t<Q, uint32_t> exp(const fixed_t<Q, int32_t> x) {
+    return fixed_t<Q, uint32_t>(iqmath::details::_IQNexp<Q>(x));
 }
 
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, int32_t> pow(const fixed_t<Q, int32_t> base, const fixed_t<Q, int32_t> exponent) {
+fixed_t<Q, uint32_t> pow(const fixed_t<Q, uint32_t> base, const fixed_t<Q, int32_t> exponent) {
     return exp(exponent * log(base));
 }
 
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, int32_t> pow(const fixed_t<Q, int32_t> base, const std::integral auto times) {
+fixed_t<Q, uint32_t> pow(const fixed_t<Q, uint32_t> base, const std::integral auto times) {
     //TODO 判断使用循环还是pow运算 选取最优时间
     return exp(times * log(base));
 }
@@ -290,7 +290,7 @@ fixed_t<Q, int32_t> pow(const fixed_t<Q, int32_t> base, const std::integral auto
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, int32_t> inv_sqrt(const fixed_t<Q, int32_t> x){
-    return fixed_t<Q, int32_t>(iqmath::details::_IQNisqrt(
+    return fixed_t<Q, int32_t>(iqmath::details::_IQNisqrt32(
         fixed_t<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()))
     ));
 }
@@ -298,7 +298,7 @@ fixed_t<Q, int32_t> inv_sqrt(const fixed_t<Q, int32_t> x){
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, uint32_t> inv_sqrt(const fixed_t<Q, uint32_t> x){
-    return fixed_t<Q, uint32_t>(iqmath::details::_IQNisqrt<Q>(x));
+    return fixed_t<Q, uint32_t>(iqmath::details::_IQNisqrt32<Q>(x));
 }
 
 

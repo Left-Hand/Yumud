@@ -39,7 +39,7 @@ namespace PhysicalConstants {
 
 static constexpr iq16 cali_iq16(const iq16 _x){
     iq16 x = CLAMP2(_x, 1.0_iq16);
-    return math::sign(x)*(math::pow(math::abs(x), 1.5_iq16)+0.022_iq16);
+    return math::sign(x)*(math::pow(uq16(math::abs(x)), 1.5_iq16)+0.022_iq16);
 }
 
 

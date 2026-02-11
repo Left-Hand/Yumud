@@ -280,7 +280,7 @@ namespace ymd::nvcv2::pixels{
             for (size_t j = 0; j < i; ++j){
                 if (hist[j] != 0){
                     probability = (float)hist[j] / frontpix;
-                    HO = HO + probability*float(math::log(iq16(1)/iq16::from(probability)));
+                    HO = HO + probability*float(math::log(uq16(1)/uq16::from(probability)));
                 }
             }
     
@@ -288,7 +288,7 @@ namespace ymd::nvcv2::pixels{
             for (size_t k = i; k < 256; ++k){
                 if (hist[k] != 0){
                     probability = (float)hist[k] / (totalpix - frontpix);
-                    HB = HB + probability*float(math::log(1/iq16::from(probability)));
+                    HB = HB + probability*float(math::log(1u/uq16::from(probability)));
                 }
             }
     
@@ -332,9 +332,9 @@ namespace ymd::nvcv2::pixels{
 
         for (Y = 1; Y < Last + 1 - First; Y++)
         {
-            iq16 mu = 1 / (1 + (iq16)Y / (Last - First));               // 公式（4）
+            uq16 mu = 1 / (1 + (uq16)Y / uint32_t(Last - First));               // 公式（4）
             // DEBUG_VALUE(mu);
-            smu[Y] = -mu * math::log(mu) - (1 - mu) * math::log(1 - mu);      // 公式（6）
+            smu[Y] = -iq16(mu) * math::log(mu) - (1 - mu) * math::log(1 - mu);      // 公式（6）
             // DEBUG_VALUE(smu[Y]);
             // smu[Y] = math::log(mu);
             // S
@@ -399,7 +399,7 @@ namespace ymd::nvcv2::pixels{
             lut.fill(Gray::black());
             for(size_t i = 0; i < 256; i++){
                 lut[i] = Gray::from_u8(CLAMP(
-                    uint8_t(math::pow(iq16(i)/256, ga)*256), 
+                    uint8_t(math::pow(uq16(i)/256, ga)*256), 
                     uint8_t(0), 
                     uint8_t(255))
                 );

@@ -16,7 +16,7 @@ namespace ymd::iqmath::details{
  */
 
 template<size_t Q>
-constexpr int32_t __IQNlog(int32_t iqNInput, const int32_t iqNMin)
+constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
 {
     int16_t i16Exp;
     int32_t iq30Result;
@@ -27,20 +27,13 @@ constexpr int32_t __IQNlog(int32_t iqNInput, const int32_t iqNMin)
      * Check the sign of the input and for negative saturation for Qs
      * larger than iq26.
      */
-    if constexpr(Q > 26) {
-        if (iqNInput <= 0) {
-            return 0;
-        } else if (iqNInput <= iqNMin) {
-            return INT32_MIN;
-        }
-    }
     /*
      * Only check the sign of the input and that it is not equal to zero for
      * Qs less than or equal to iq26.
      */
-    else {
-        if (iqNInput <= 0) {
-            return 0;
+    if constexpr(Q > 26) {
+        if (iqNInput <= iqNMin) {
+            return INT32_MIN;
         }
     }
 
@@ -90,7 +83,7 @@ constexpr int32_t __IQNlog(int32_t iqNInput, const int32_t iqNMin)
 }
 
 template<size_t Q>
-constexpr math::fixed_t<30, int32_t> _IQNlog(math::fixed_t<Q, int32_t> a){
+constexpr math::fixed_t<30, int32_t> _IQNlog(math::fixed_t<Q, uint32_t> a){
     return math::fixed_t<30, int32_t>::from_bits(__IQNlog<Q>(a.to_bits(), ((Q >= 27) ? _IQNlog_min[Q - 27] : 1)));
 }
 

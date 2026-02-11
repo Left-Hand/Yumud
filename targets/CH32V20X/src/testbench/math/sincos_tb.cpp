@@ -294,7 +294,7 @@ void sincos_main(){
         // const auto [s, c] = sincospu_approx(x);
         // const auto [s, c] = math::sincospu_approx(x);
         // return iq20(s) + iq20(c);
-        return math::inv_mag(2 * s, c);
+        return math::exp(iq16(math::inv_mag(2 * s, c)));
         // return iq16::from_bits(m__IQNdiv_impl<16, true>(s.to_bits(),c.to_bits()));
         // return iq20(s);
     };

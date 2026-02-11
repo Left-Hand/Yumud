@@ -20,18 +20,18 @@ namespace ymd::iqmath::details{
  */
 
 template<const size_t Q>
-constexpr int32_t __IQNexp(int32_t iqNInput){
+static constexpr uint32_t __IQNexp(int32_t iqNInput){
     const uint32_t *iqNLookupTable = _IQNexp_lookup[Q - 1];
-    uint8_t ui8IntegerOffset = _IQNexp_offset[Q - 1];
-    const int32_t iqN_MIN = _IQNexp_min[Q - 1];
-    const int32_t iqN_MAX = _IQNexp_max[Q - 1];
+    constexpr uint8_t ui8IntegerOffset = _IQNexp_offset[Q - 1];
+    constexpr int32_t iqN_MIN = _IQNexp_min[Q - 1];
+    constexpr int32_t iqN_MAX = _IQNexp_max[Q - 1];
     
     uint8_t ui8Count;
     int16_t i16Integer;
     int32_t iq31Fractional;
     uint32_t uiqNResult;
     uint32_t uiqNIntegerResult;
-    uint32_t uiq30FractionalResult;
+    [[maybe_unused]] uint32_t uiq30FractionalResult;
     uint32_t uiq31FractionalResult;
     const uint32_t *piq30Coeffs;
 
@@ -93,6 +93,8 @@ constexpr int32_t __IQNexp(int32_t iqNInput){
      * coefficient in the table.
      */
     piq30Coeffs = _IQ30exp_coeffs;
+
+    #if 1
     uiq30FractionalResult = *piq30Coeffs++;
 
     /* Compute exp^(iq31Fractional). */
@@ -103,6 +105,18 @@ constexpr int32_t __IQNexp(int32_t iqNInput){
 
     /* Scale the iq30 fractional result by to iq31. */
     uiq31FractionalResult = uiq30FractionalResult << 1;
+    #else
+    uiq31FractionalResult = (*piq30Coeffs++) << 1;
+
+    /* Compute exp^(iq31Fractional). */
+    for (ui8Count = _IQ30exp_order; ui8Count > 0; ui8Count--) {
+        uiq31FractionalResult = int32_t((int64_t(iq31Fractional) * uint64_t(uiq31FractionalResult)) >> 32);
+        uiq31FractionalResult += ((*piq30Coeffs++) << 1);
+    }
+
+    #endif
+
+
 
     /*
      * Multiply the integer result in iqN format and the fractional result in
@@ -119,8 +133,8 @@ constexpr int32_t __IQNexp(int32_t iqNInput){
 }
 
 template<const size_t Q>
-constexpr math::fixed_t<Q, int32_t> _IQNexp(math::fixed_t<Q, int32_t> input){
-    return math::fixed_t<Q, int32_t>::from_bits(__IQNexp<Q>((input).to_bits()));
+constexpr math::fixed_t<Q, uint32_t> _IQNexp(math::fixed_t<Q, int32_t> input){
+    return math::fixed_t<Q, uint32_t>::from_bits(__IQNexp<Q>((input).to_bits()));
 }
 
 }

@@ -1,4 +1,5 @@
 #pragma once
+#if 0
 
 #include <cstddef>
 
@@ -22,3 +23,5 @@ constexpr void reverse(char * str, size_t len){
 	}
 }
 }
+
+#endif
