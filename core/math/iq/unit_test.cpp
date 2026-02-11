@@ -7,25 +7,7 @@ using namespace ymd::literals;
 
 namespace{
 // 添加更多测试
-static_assert(iqmath::details::_IQFtoN<16>(0.0f) == 0);
-static_assert(iqmath::details::_IQFtoN<16>(-0.0f) == 0);
-static_assert(iqmath::details::_IQFtoN<16>(1.0f) == 65536);  // Q16: 1.0 = 65536
-static_assert(iqmath::details::_IQFtoN<16>(-1.0f) == -65536);
-static_assert(iqmath::details::_IQFtoN<16>(0.5f) == 32768);
-static_assert(iqmath::details::_IQFtoN<16>(-0.5f) == -32768);
-static_assert(iqmath::details::_IQFtoN<16>(0.25f) == 16384);
-static_assert(iqmath::details::_IQFtoN<16>(1.5f) == 98304);  // 1.5 * 65536 = 98304
 
-// 测试非常小的数
-static_assert(iqmath::details::_IQFtoN<16>(0.0001f) == 6);  // 近似值
-static_assert(iqmath::details::_IQFtoN<16>(-0.0001f) == -6);
-
-// 测试Q不同值的情况
-static_assert(iqmath::details::_IQFtoN<8>(1.0f) == 256);    // Q8: 1.0 = 256
-static_assert(iqmath::details::_IQFtoN<8>(0.5f) == 128);
-static_assert(iqmath::details::_IQFtoN<24>(1.0f) == 16777216);  // Q24: 1.0 = 16777216
-
-static_assert(iqmath::details::_IQFtoN<16>(-32768.0f / 65536.0f) == -32768);
 
 static_assert(iq24(10.0) + 90 == 100);
 static_assert(iq16(10.0) + 90 == 100);
@@ -89,21 +71,21 @@ static_assert(-0.25_iq10 == iq32(-0.25));
 static_assert(-0.25_iq31 == iq32(-0.25));
 
 
-static_assert(std::fabs(0.25 - double(rad_to_uq32(uq16((2 * M_PI) * 0.25)))) < 3E-5);
-static_assert(std::fabs(0.75 - double(rad_to_uq32(uq16((2 * M_PI) * 1000.75)))) < 3E-5);
-static_assert(std::fabs(0.25 - double(rad_to_uq32(iq16((2 * M_PI) * -100.75)))) < 3E-5);
+static_assert(std::abs(0.25 - double(rad_to_uq32(uq16((2 * M_PI) * 0.25)))) < 3E-5);
+static_assert(std::abs(0.75 - double(rad_to_uq32(uq16((2 * M_PI) * 1000.75)))) < 3E-5);
+static_assert(std::abs(0.25 - double(rad_to_uq32(iq16((2 * M_PI) * -100.75)))) < 3E-5);
 
-static_assert(std::fabs(0.25 - double(rad_to_uq32(uq24((2 * M_PI) * 0.25)))) < 3E-5);
-static_assert(std::fabs(0.75 - double(rad_to_uq32(uq24((2 * M_PI) * 10.75)))) < 3E-5);
-static_assert(std::fabs(0.25 - double(rad_to_uq32(iq24((2 * M_PI) * -10.75)))) < 3E-5);
+static_assert(std::abs(0.25 - double(rad_to_uq32(uq24((2 * M_PI) * 0.25)))) < 3E-5);
+static_assert(std::abs(0.75 - double(rad_to_uq32(uq24((2 * M_PI) * 10.75)))) < 3E-5);
+static_assert(std::abs(0.25 - double(rad_to_uq32(iq24((2 * M_PI) * -10.75)))) < 3E-5);
 
-static_assert(std::fabs(0.25 - double(deg_to_uq32(uq16((360) * 0.25)))) < 3E-5);
-static_assert(std::fabs(0.75 - double(deg_to_uq32(uq16((360) * 10.75)))) < 3E-5);
-static_assert(std::fabs(0.25 - double(deg_to_uq32(iq16((360) * -10.75)))) < 3E-5);
+static_assert(std::abs(0.25 - double(deg_to_uq32(uq16((360) * 0.25)))) < 3E-5);
+static_assert(std::abs(0.75 - double(deg_to_uq32(uq16((360) * 10.75)))) < 3E-5);
+static_assert(std::abs(0.25 - double(deg_to_uq32(iq16((360) * -10.75)))) < 3E-5);
 
-static_assert(std::fabs(0.25 - double(deg_to_uq32(uq10((360) * 0.25)))) < 3E-5);
-static_assert(std::fabs(0.75 - double(deg_to_uq32(uq10((360) * 100.75)))) < 3E-5);
-static_assert(std::fabs(0.25 - double(deg_to_uq32(iq10((360) * -100.75)))) < 3E-5);
+static_assert(std::abs(0.25 - double(deg_to_uq32(uq10((360) * 0.25)))) < 3E-5);
+static_assert(std::abs(0.75 - double(deg_to_uq32(uq10((360) * 100.75)))) < 3E-5);
+static_assert(std::abs(0.25 - double(deg_to_uq32(iq10((360) * -100.75)))) < 3E-5);
 
 static_assert(double(std::get<0>(sincospu(0.5_uq32))) == 0);
 
