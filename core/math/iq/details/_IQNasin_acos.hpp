@@ -48,9 +48,7 @@ namespace ymd::iqmath::details{
 
 constexpr int32_t __IQNasin(uint32_t uiq31Input)
 {
-
-    
-    bool is_acos;
+    bool is_acos = false;
 
     /*
      * Apply the transformation from asin to acos if input is greater than 0.5.
@@ -65,21 +63,19 @@ constexpr int32_t __IQNasin(uint32_t uiq31Input)
             uiq31Input = uiq31InputTemp >> 1;
 
             /* Calculate sqrt((1 - uiq31Input)/2) */
-            uiq31Input = _IQNsqrt<31>(math::fixed_t<31, int32_t>::from_bits(uiq31Input)).to_bits();
+            uiq31Input = _IQNsqrt<31>(math::fixed_t<31, int32_t>::from_bits(uiq31InputTemp >> 1)).to_bits();
 
             /* Flag that the transformation was used. */
-            is_acos = true;
-        }else{
-            is_acos = false;
+            is_acos = !is_acos;
         }
     }
 
-    [[maybe_unused]] const uint32_t uiq32Input = (uiq31Input << 1); 
+    const uint32_t uiq32Input = (uiq31Input << 1); 
 
     
     /* Calculate the index using the left 6 most bits of the input. */
     /* Set the coefficient pointer. */
-    const int32_t * piq29Coeffs = _IQ29Asin_coeffs[(uint16_t)(uiq31Input >> 26) & 0x003f];
+    const int32_t * piq29Coeffs = _IQ29Asin_coeffs[size_t((uiq31Input >> 26) & 0x003f)];
     int32_t iq29Result;
 
     /*
@@ -92,29 +88,32 @@ constexpr int32_t __IQNasin(uint32_t uiq31Input)
     iq29Result = int32_t(((int64_t(uiq32Input) * (*piq29Coeffs++)) >> 32));
 
     /* c4*x + c3 */
-    iq29Result = iq29Result + *piq29Coeffs++;
+    iq29Result += *piq29Coeffs++;
 
     /* (c4*x + c3)*x */
     iq29Result = int32_t(((int64_t(uiq32Input) * iq29Result) >> 32));
 
     /* (c4*x + c3)*x + c2 */
-    iq29Result = iq29Result + *piq29Coeffs++;
+    iq29Result += *piq29Coeffs++;
 
     /* ((c4*x + c3)*x + c2)*x */
     iq29Result = int32_t(((int64_t(uiq32Input) * iq29Result) >> 32));
 
     /* ((c4*x + c3)*x + c2)*x + c1 */
-    iq29Result = iq29Result + *piq29Coeffs++;
+    iq29Result += *piq29Coeffs++;
 
     /* (((c4*x + c3)*x + c2)*x + c1)*x */
     iq29Result = int32_t(((int64_t(uiq32Input) * iq29Result) >> 32));
 
     /* (((c4*x + c3)*x + c2)*x + c1)*x + c0 */
-    iq29Result = iq29Result + *piq29Coeffs++;
+    iq29Result += *piq29Coeffs++;
 
     /* check if we switched to acos */
     if (is_acos) {
         /* asin(x) = pi/2 - 2*iq29Result */
+
+        // acos(x) = -(2 * asin(sqrt(1-x)/2)-pi/2)
+        // 2\arcsin\left(\sqrt{\frac{\left(1-x\right)}{2}}\right)-\frac{\pi}{2}
         iq29Result = iq29Result << 1;
         iq29Result -= _iq29_halfPi;      // this is equivalent to the above
         iq29Result = -iq29Result;       // but avoids using temporary registers
@@ -126,6 +125,7 @@ constexpr int32_t __IQNasin(uint32_t uiq31Input)
 
 template<const size_t Q>
 constexpr math::fixed_t<29, int32_t> _IQNasin(math::fixed_t<Q, int32_t> iqNInput){
+    static_assert(Q <= 32);
     uint32_t input_bits = std::bit_cast<uint32_t>(iqNInput.to_bits());
     const bool is_neg  = input_bits & (1u << 31);
     if(is_neg) input_bits = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(input_bits));
@@ -135,8 +135,8 @@ constexpr math::fixed_t<29, int32_t> _IQNasin(math::fixed_t<Q, int32_t> iqNInput
             return 0;
 
     const uint32_t uiq31Input = [&] -> uint32_t{
-        if constexpr(Q < 32) return (uint32_t)input_bits << (31 - Q);
-        else return (input_bits >> 1);
+        if constexpr(Q < 32) return uint32_t(input_bits << (31 - Q));
+        else return uint32_t(input_bits >> 1);
     }();
 
     int32_t iq29_ret_bits = __IQNasin(uiq31Input);

@@ -139,6 +139,12 @@ static_assert(math::sqrt(iq16(64)) == iq16(8));
 static_assert(math::sqrt(iq16(36)) == iq16(6));
 static_assert(math::sqrt(iq16(16)) == iq16(4));
 
+static_assert(math::sqrt(iiq16(4)) == iq16(2));
+static_assert(math::sqrt(iiq16(16)) == iq16(4));
+static_assert(math::sqrt(iiq16(64)) == iq16(8));
+static_assert(math::sqrt(iiq16(36)) == iq16(6));
+static_assert(math::sqrt(iiq16(16)) == iq16(4));
+
 static_assert(math::sqrt(uq16(4)) == uq16(2));
 static_assert(math::sqrt(uq16(16)) == uq16(4));
 static_assert(math::sqrt(iq26(16)) == iq26(4));
@@ -152,6 +158,18 @@ static_assert(math::mag(iq26(3), iq26(4)) == iq26(5));
 
 static_assert(math::inv_mag(iq16(3), iq16(4)).to_bits() == iq16(0.2).to_bits());
 static_assert(math::inv_mag(iq16(12), iq16(5)).to_bits() == iq16(1.0/13).to_bits());
+
+static_assert(math::mag(iq16(3), iq16(4)) == iq16(5));
+static_assert(math::mag(iq26(3), iq26(4)) == iq26(5));
+
+static_assert(math::inv_mag(iq16(3), iq16(4)).to_bits() == iq16(0.2).to_bits());
+static_assert(math::inv_mag(iq16(12), iq16(5)).to_bits() == iq16(1.0/13).to_bits());
+
+static_assert(math::mag(iq16(1), iq16(2), iq16(2)) == iq16(3));
+static_assert(math::mag(iq16(3), iq16(4), iq16(0)) == iq16(5));
+static_assert(math::mag(iq16(1), iq16(1), iq16(1), iq16(1)) == iq16(2));
+
+static_assert(math::inv_mag(iq16(1), iq16(2), iq16(2)).to_bits() == iq16(1.0/3).to_bits());
 
 static_assert(math::sinpu(iq16(0)) == 0);
 static_assert(math::sinpu(iq16(0.25)) == std::numeric_limits<iq31>::max());

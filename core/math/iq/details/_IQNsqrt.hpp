@@ -61,7 +61,7 @@ struct IqSqrtCoeffs{
     uint32_t uiq32Input;
     int16_t i16Exponent;
 
-    template<const size_t Q, const int32_t type>
+    template<size_t Q, const uint8_t type>
     __attribute__((always_inline))
     static constexpr IqSqrtCoeffs from_u32(uint32_t iqNInputX) {
         if(iqNInputX == 0) [[unlikely]]
@@ -94,6 +94,7 @@ struct IqSqrtCoeffs{
         /* Save input as unsigned iq32. */
         uiq32Input = iqNInputX;
 
+        #if 0
         /* Shift to iq32 by keeping track of exponent */
         while ((uiq32Input) < 0x40000000) {
             uiq32Input <<= 2;
@@ -106,6 +107,19 @@ struct IqSqrtCoeffs{
                 i16Exponent++;
             }
         }
+        #else
+        if (uiq32Input < 0x40000000) {
+            int leadingZeros = __builtin_clz(uiq32Input);
+            int shiftsNeeded = leadingZeros / 2;  // 直接使用leadingZeros/2
+            
+            uiq32Input <<= 2 * shiftsNeeded;
+            if constexpr(type != TYPE_ISQRT) {
+                i16Exponent -= shiftsNeeded;
+            } else {
+                i16Exponent += shiftsNeeded;
+            }
+        }
+        #endif
 
         return {
             uiq32Input,
@@ -113,17 +127,18 @@ struct IqSqrtCoeffs{
         };
     }
 
-    template<const size_t Q, const int32_t type>
+    template<size_t Q, const uint8_t type>
     __attribute__((always_inline))
-    static constexpr IqSqrtCoeffs from_u64 (uint64_t iqNInputX) {
-        if(iqNInputX == 0) [[unlikely]]
+    static constexpr IqSqrtCoeffs from_u64 (uint64_t uiiqNInputX) {
+        if(uiiqNInputX == 0) [[unlikely]]
             return {0, 0};
+
         uint32_t uiq32Input;
         int16_t i16Exponent;
 
         /* If the Q gives an odd starting exponent make it even. */
         if constexpr((32 - Q) % 2 == 1) {
-            iqNInputX <<= 1;
+            uiiqNInputX <<= 1;
             /* Start with positive exponent for sqrt */
             if constexpr(type == TYPE_SQRT) {
                 i16Exponent = ((32 - Q) - 1) >> 1;
@@ -143,10 +158,11 @@ struct IqSqrtCoeffs{
             }
         }
 
+        #if 0
         /* 将输入保存为无符号iq32 */
         /* 需要将64位输入适配到32位处理 */
-        while (iqNInputX > UINT32_MAX) {
-            iqNInputX >>= 2;
+        while ((uiiqNInputX >> 32)) {
+            uiiqNInputX >>= 2;
             /* 对于sqrt和mag，递增指数 */
             if constexpr(type == TYPE_SQRT || type == TYPE_MAG) {
                 i16Exponent++;
@@ -158,7 +174,7 @@ struct IqSqrtCoeffs{
         }
 
         /* Save input as unsigned iq32. */
-        uiq32Input = iqNInputX;
+        uiq32Input = uiiqNInputX;
 
         /* Shift to iq32 by keeping track of exponent */
         while (((uiq32Input)) < 0x40000000) {
@@ -173,6 +189,42 @@ struct IqSqrtCoeffs{
             }
         }
 
+        #else
+        /* 将输入保存为无符号iq32 */
+        /* 需要将64位输入适配到32位处理 - 使用高32位CLZ优化 */
+        if (uiiqNInputX >> 32) {
+            uint32_t high32 = (uint32_t)(uiiqNInputX >> 32);
+            int clz_high = __builtin_clz(high32);          // 高32位前导零，范围0~31
+            // 最高位位置 pos = 63 - clz_high (32~63)
+            // 右移使pos ≤ 31，每次移2位，次数k = ceil((pos - 31)/2)
+            // 推导: k = ceil((32 - clz_high)/2) = (33 - clz_high) >> 1
+            int k = (33 - clz_high) >> 1;
+            uiiqNInputX >>= (2 * k);
+            if constexpr(type == TYPE_SQRT || type == TYPE_MAG) {
+                i16Exponent += k;
+            } else { // TYPE_ISQRT
+                i16Exponent -= k;
+            }
+        }
+
+        /* 保存为32位无符号数 */
+        uiq32Input = (uint32_t)uiiqNInputX;
+
+        /* 将32位输入规范化到 [0x40000000, 0xFFFFFFFF] - 使用CLZ优化 */
+        if (uiq32Input != 0 && uiq32Input < 0x40000000) {
+            int clz = __builtin_clz(uiq32Input);           // 32位前导零，非零时1~31
+            // 最高位位置 p = 31 - clz (0~29)
+            // 左移使p ≥ 30，每次移2位，次数k = ceil((30 - p)/2) = ceil((clz - 1)/2) = clz / 2
+            int k = clz / 2;
+            uiq32Input <<= (2 * k);
+            if constexpr(type != TYPE_ISQRT) {
+                i16Exponent -= k;
+            } else {
+                i16Exponent += k;
+            }
+        }
+        #endif
+
         return {
             uiq32Input,
             i16Exponent
@@ -180,9 +232,10 @@ struct IqSqrtCoeffs{
     }
 
 
-    template<const size_t Q, const int32_t type>
+    template<size_t Q, const uint8_t type>
     __attribute__((always_inline))
-    static constexpr IqSqrtCoeffs from_dual_u32(uint32_t iqNInputX, uint32_t iqNInputY) {
+    static constexpr IqSqrtCoeffs from_sqsum(uint64_t ui64Sum) {
+        #if 0
         /* Calculate y^2 and add to x^2 */
         uint64_t ui64Sum = (
             static_cast<uint64_t>(iqNInputX) * static_cast<uint64_t>(iqNInputX)
@@ -220,9 +273,57 @@ struct IqSqrtCoeffs{
             (uint32_t)(ui64Sum >> 32),
             i16Exponent
         };
+        #else
+        if (ui64Sum == 0) [[unlikely]]
+            return {0, 0};
+
+        int16_t i16Exponent;
+        if constexpr (type == TYPE_MAG) {
+            i16Exponent = (32 - int(Q));      // 幅度：指数初始为正
+        } else {
+            i16Exponent = (int(Q) - 32);      // 逆幅度：指数初始为负
+        }
+
+        /* ------------------------------------------------------------
+        *  将64位平方和规范化，使高32位 ≥ 0x40000000。
+        *  每次左移2位，同时调整指数。
+        *  利用 __builtin_clz 一次计算所需移位次数，消除循环。
+        * ------------------------------------------------------------
+        */
+        uint32_t high = static_cast<uint32_t>(ui64Sum >> 32);
+        uint32_t low  = static_cast<uint32_t>(ui64Sum);
+
+        int bit_pos;                          // 整个64位数中最高1的位置 (0 … 63)
+        if (high != 0) {
+            // 高32位非零：最高位位于高32位内
+            bit_pos = 63 - __builtin_clz(high);
+        } else {
+            // 高32位为零，但整个数非零：最高位位于低32位内
+            bit_pos = 31 - __builtin_clz(low);
+        }
+
+        // 目标：最高位移至第62位（高32位 ≥ 0x40000000 对应64位的第62位）
+        // 需要左移的位数 = 62 - bit_pos，每次移2位 → 次数 k = ceil((62 - bit_pos)/2)
+        int k = (62 - bit_pos + 1) / 2;       // 向上取整，且保证非负
+        if (k > 0) {
+            ui64Sum <<= (2 * k);             // 整体左移
+            if constexpr (type == TYPE_MAG) {
+                i16Exponent -= k;            // 左移使数值变大，幅度指数减小
+            } else {
+                i16Exponent += k;            // 逆幅度指数增大
+            }
+        }
+
+        /* 此时高32位一定 ≥ 0x40000000，截取高32位作为iq32格式数值 */
+        return {
+            static_cast<uint32_t>(ui64Sum >> 32),
+            i16Exponent
+        };
+        #endif
+
     }
 
-    template<const size_t Q, const int32_t type>
+    template<size_t Q, const uint8_t type>
     [[nodiscard]] constexpr uint32_t compute() && {
         if(uiq32Input == 0) [[unlikely]]
             return 0;
@@ -331,7 +432,7 @@ struct IqSqrtCoeffs{
 
 
 
-template<const size_t Q>
+template<size_t Q>
 constexpr math::fixed_t<Q, uint32_t> _IQNsqrt(const math::fixed_t<Q, uint32_t> x){
     return math::fixed_t<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u32<Q, TYPE_SQRT>(
@@ -341,7 +442,7 @@ constexpr math::fixed_t<Q, uint32_t> _IQNsqrt(const math::fixed_t<Q, uint32_t> x
 }
 
 
-template<const size_t Q>
+template<size_t Q>
 constexpr math::fixed_t<Q, uint32_t> _IQNisqrt(const math::fixed_t<Q, uint32_t> x){
     return math::fixed_t<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u32<Q, TYPE_ISQRT>(
@@ -350,7 +451,7 @@ constexpr math::fixed_t<Q, uint32_t> _IQNisqrt(const math::fixed_t<Q, uint32_t> 
     );
 }
 
-template<const size_t Q>
+template<size_t Q>
 constexpr math::fixed_t<Q, uint32_t> _IQNsqrt64(const math::fixed_t<Q, uint64_t> x){
     return math::fixed_t<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u64<Q, TYPE_SQRT>(
@@ -360,7 +461,7 @@ constexpr math::fixed_t<Q, uint32_t> _IQNsqrt64(const math::fixed_t<Q, uint64_t>
 }
 
 
-template<const size_t Q>
+template<size_t Q>
 constexpr math::fixed_t<Q, uint32_t> _IQNisqrt64(const math::fixed_t<Q, uint64_t> x){
     return math::fixed_t<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u64<Q, TYPE_ISQRT>(
@@ -369,24 +470,41 @@ constexpr math::fixed_t<Q, uint32_t> _IQNisqrt64(const math::fixed_t<Q, uint64_t
     );
 }
 
-template<const size_t Q>
-constexpr math::fixed_t<Q, uint32_t> _IQNmag(math::fixed_t<Q, uint32_t> x, math::fixed_t<Q, uint32_t> y){
+// 计算单个值的平方（辅助函数）
+template<typename T>
+constexpr uint64_t square_value(const T& val) {
+    using extended_t = std::conditional_t<std::is_signed_v<T>, int64_t, uint64_t>;
+    auto bits = static_cast<extended_t>(val.to_bits());
+    return static_cast<uint64_t>(bits * bits);
+}
+
+// 使用折叠表达式计算多个值的平方和
+template<typename... Args>
+requires (sizeof...(Args) > 0)
+constexpr uint64_t sum_of_squares(Args&&... args) {
+
+    return (square_value(args) + ...);
+
+}
+
+// 支持任意数量参数的模长计算
+template<typename D, size_t Q, typename... Args>
+constexpr math::fixed_t<Q, uint32_t> _IQNmag(math::fixed_t<Q, D> first, Args&&... rest) {
+    uint64_t sum = sum_of_squares(first, rest...);
     return math::fixed_t<Q, uint32_t>::from_bits(
-        IqSqrtCoeffs::template from_dual_u32<Q, TYPE_MAG>(
-            x.to_bits(), y.to_bits()
-        ).template compute<Q, TYPE_MAG>()
+        IqSqrtCoeffs::template from_sqsum<Q, TYPE_MAG>(sum).template compute<Q, TYPE_MAG>()
     );
 }
 
-
-template<const size_t Q>
-constexpr math::fixed_t<Q, uint32_t> _IQNimag(math::fixed_t<Q, uint32_t> x, math::fixed_t<Q, uint32_t> y){
+// 支持任意数量参数的逆模长计算
+template<typename D, size_t Q, typename... Args>
+constexpr math::fixed_t<Q, uint32_t> _IQNimag(math::fixed_t<Q, D> first, Args&&... rest) {
+    uint64_t sum = sum_of_squares(first, rest...);
     return math::fixed_t<Q, uint32_t>::from_bits(
-        IqSqrtCoeffs::template from_dual_u32<Q, TYPE_IMAG>(
-            x.to_bits(), y.to_bits()
-        ).template compute<Q, TYPE_IMAG>()
+        IqSqrtCoeffs::template from_sqsum<Q, TYPE_IMAG>(sum).template compute<Q, TYPE_IMAG>()
     );
 }
+
 
 }
 

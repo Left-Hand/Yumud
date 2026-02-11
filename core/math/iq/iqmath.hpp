@@ -140,17 +140,15 @@ fixed_t<16, int32_t> cotpu(const fixed_t<Q, D> x) {
 
 
 template<size_t Q>
-requires (Q < 30)
 __attribute__((always_inline)) constexpr 
 fixed_t<29, int32_t> asin(const fixed_t<Q, int32_t> x){
     return fixed_t<29, int32_t>(iqmath::details::_IQNasin(x));
 }
 
 template<size_t Q>
-requires (Q < 30)
 __attribute__((always_inline)) constexpr 
 fixed_t<29, int32_t> acos(const fixed_t<Q, int32_t> x){
-    return fixed_t<29, int32_t>(M_PI/2) - fixed_t<29, int32_t>(iqmath::details::_IQNasin(x));
+    return fixed_t<29, int32_t>(M_PI/2) - asin(x);
 }
 
 
@@ -300,20 +298,22 @@ fixed_t<Q, int32_t> inv_sqrt(const fixed_t<Q, int32_t> x){
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
 fixed_t<Q, uint32_t> inv_sqrt(const fixed_t<Q, uint32_t> x){
-    return fixed_t<Q, uint32_t>(iqmath::details::_IQNisqrt(x));
+    return fixed_t<Q, uint32_t>(iqmath::details::_IQNisqrt<Q>(x));
 }
 
-template<size_t Q>
+
+template<typename D, size_t Q, typename... Args>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, int32_t> mag(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t> b){
-    return fixed_t<Q, int32_t>(iqmath::details::_IQNmag<Q>(a, b));
+fixed_t<Q, uint32_t> mag(const fixed_t<Q, D> first, Args&&... rest) {
+    return fixed_t<Q, uint32_t>(iqmath::details::_IQNmag(first, rest...));
 }
 
-template<size_t Q>
+template<typename D, size_t Q, typename... Args>
 __attribute__((always_inline)) constexpr 
-fixed_t<Q, int32_t> inv_mag(const fixed_t<Q, int32_t> a, const fixed_t<Q, int32_t> b){
-    return fixed_t<Q, int32_t>(iqmath::details::_IQNimag<Q>(a, b));
+fixed_t<Q, uint32_t> inv_mag(const fixed_t<Q, D> first, Args&&... rest) {
+    return fixed_t<Q, uint32_t>(iqmath::details::_IQNimag(first, rest...));
 }
+
 
 template<size_t Q>
 static constexpr fixed_t<Q, int32_t> tpzpu(const fixed_t<Q, int32_t> x){
