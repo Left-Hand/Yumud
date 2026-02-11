@@ -13,18 +13,10 @@
 /// The assertion macro defaults to the standard assert().
 /// It can be overridden to manually suppress assertion checks or use a different error handling policy.
 
-#if 0
-#define O1HEAP_ASSERT(x, ...) ({\
-    const bool b = (x);\
-    if(b == false) __builtin_unreachable();\
-})\
-
-#else
 
 // template<typename ... Args>
 #define O1HEAP_ASSERT(...) ymd::ASSERT(__VA_ARGS__)
-#endif
-
+#define O1HEAP_ASSUME_ALIGNED(ptr, n, ...) ({std::assume_aligned<n>(ptr);})
 /// Allow usage of compiler intrinsics for branch annotation and CLZ.
 #ifndef O1HEAP_USE_INTRINSICS
 #    define O1HEAP_USE_INTRINSICS 1
@@ -57,11 +49,13 @@
 /// which can be overridden by the user via O1HEAP_CONFIG_HEADER. The library guarantees that the argument is positive.
 #if O1HEAP_USE_INTRINSICS && !defined(O1HEAP_CLZ)
 #    if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM)
-#        define O1HEAP_CLZ __builtin_clzl
+        static constexpr uint_fast8_t O1HEAP_CLZ(const size_t x){
+            return __builtin_clzl(x);
+        }
 #    endif
 #endif
 #ifndef O1HEAP_CLZ
-O1HEAP_PRIVATE uint_fast8_t O1HEAP_CLZ(const size_t x)
+static constexpr uint_fast8_t O1HEAP_CLZ(const size_t x)
 {
     O1HEAP_ASSERT(x > 0);
     size_t       t = ((size_t) 1U) << ((sizeof(size_t) * CHAR_BIT) - 1U);

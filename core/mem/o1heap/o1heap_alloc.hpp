@@ -25,9 +25,9 @@ public:
         : inst_(heap) {}
 
     static inline Option<Self> try_from_buf(std::span<uint8_t> buffer_bytes){
-        auto* instance = lib_o1heap::o1heapInit(buffer_bytes.data(), buffer_bytes.size());
-        if (instance == nullptr) return None;
-        return Some(Self(*instance));
+        auto* inst = lib_o1heap::Ctor(buffer_bytes.data(), buffer_bytes.size());
+        if (inst == nullptr) return None;
+        return Some(Self(*inst));
     }
 
     
@@ -71,7 +71,7 @@ public:
             __builtin_trap();
         }
 
-        void* ptr = inst_.o1heapAllocate(n * sizeof(T));
+        void* ptr = inst_.Allocate(n * sizeof(T));
         if (!ptr) {
             __builtin_trap();
         }
@@ -82,7 +82,7 @@ public:
     // Deallocate memory
     void deallocate(pointer p, size_type n) noexcept {
         if (p != nullptr) [[likely]]{
-            inst_.o1heapFree(p);
+            inst_.Free(p);
         }
         (void)n; // Suppress unused parameter warning
     }
@@ -101,7 +101,7 @@ public:
 
     // Maximum size that can be allocated
     size_type max_size() const noexcept {
-        return inst_.o1heapGetMaxAllocationSize() / sizeof(T);
+        return inst_.GetMaxAllocationSize() / sizeof(T);
     }
 
     // Create an allocator for a different type

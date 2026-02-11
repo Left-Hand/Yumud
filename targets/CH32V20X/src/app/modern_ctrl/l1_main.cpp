@@ -47,6 +47,8 @@ public:
     }
 };
 
+
+
 void l1_adaptive_main(){
     auto init_debugger = []{
         auto & DBG_UART = hal::usart2;
