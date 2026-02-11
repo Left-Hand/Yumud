@@ -49,9 +49,7 @@
 /// which can be overridden by the user via O1HEAP_CONFIG_HEADER. The library guarantees that the argument is positive.
 #if O1HEAP_USE_INTRINSICS && !defined(O1HEAP_CLZ)
 #    if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM)
-        static constexpr uint_fast8_t O1HEAP_CLZ(const size_t x){
-            return __builtin_clzl(x);
-        }
+#        define O1HEAP_CLZ __builtin_clzl
 #    endif
 #endif
 #ifndef O1HEAP_CLZ

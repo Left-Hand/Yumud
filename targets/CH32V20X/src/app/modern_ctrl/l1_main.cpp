@@ -15,7 +15,8 @@ using namespace ymd;
 using namespace ymd::dsp;
 using namespace ymd::dsp::l1;
 
-static constexpr auto UART_BAUD = 576000;
+// static constexpr auto UART_BAUD = 576000;
+static constexpr auto UART_BAUD = 115200;
 
 class SingleLinkArm {
 private:
@@ -60,7 +61,7 @@ void l1_adaptive_main(){
         });
 
         DEBUGGER.retarget(&DBG_UART);
-        DEBUGGER.set_eps(5);
+        DEBUGGER.set_eps(6);
         DEBUGGER.set_splitter(",");
         DEBUGGER.no_brackets(EN);
     };
@@ -110,7 +111,20 @@ void l1_adaptive_main(){
         // 更新机械臂状态
         arm.update(torque);
         
-        DEBUG_PRINTLN(desired_angle, actual_angle, torque, desired_angle - actual_angle);
+        // DEBUG_PRINTLN(
+        //     desired_angle, 
+        //     actual_angle, 
+        //     torque, 
+        //     desired_angle - actual_angle
+        // );
+
+        
+        DEBUG_PRINTLN(
+            iq16::from(desired_angle), 
+            iq16::from(actual_angle), 
+            iq16::from(torque), 
+            iq16::from(desired_angle - actual_angle)
+        );
         
     }
 

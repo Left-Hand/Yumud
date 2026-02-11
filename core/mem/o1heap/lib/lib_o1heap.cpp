@@ -71,34 +71,29 @@ static constexpr size_t roundUpToPowerOf2(const size_t x)
 
 // ---------------------------------------- FRAGMENT HEADER ACCESSORS ----------------------------------------
 
-Fragment * Fragment::GetNext() const
-{
-    O1HEAP_ASSERT((((size_t) this) % sizeof(Fragment*)) == 0U);
-    Fragment* const out = this->header.next;
-    O1HEAP_ASSERT((((size_t) out) % sizeof(Fragment*)) == 0U);
-    return out;
+#define ASSUME_ALIGNED_FRAG_PTR(x) O1HEAP_ASSUME_ALIGNED(x, sizeof(Fragment*))
+
+Fragment * Fragment::GetNext() const{
+    Fragment* const out = ASSUME_ALIGNED_FRAG_PTR(this)->header.next;
+    return ASSUME_ALIGNED_FRAG_PTR(out);
 }
 
 Fragment * Fragment::GetPrev() const
 {
-    O1HEAP_ASSERT((((size_t) this) % sizeof(Fragment*)) == 0U);
-    Fragment* const out = (Fragment*) (this->header.prev_used & ~(uintptr_t) 1U);
-    O1HEAP_ASSERT((((size_t) out) % sizeof(Fragment*)) == 0U);
-    return out;
+    Fragment* const out = (Fragment*) (ASSUME_ALIGNED_FRAG_PTR(this)->header.prev_used & ~(uintptr_t) 1U);
+    return ASSUME_ALIGNED_FRAG_PTR(out);
 }
 
 bool Fragment::IsUsed() const 
 {
-    O1HEAP_ASSERT((((size_t) this) % sizeof(Fragment*)) == 0U);
-    return (this->header.prev_used & (uintptr_t) 1U) != 0U;
+    return (ASSUME_ALIGNED_FRAG_PTR(this)->header.prev_used & (uintptr_t) 1U) != 0U;
 }
 
 size_t O1HeapInstance::fragGetSize(const Fragment* const frag) const
 {
-    O1HEAP_ASSERT((((size_t) frag) % sizeof(Fragment*)) == 0U);
+    ASSUME_ALIGNED_FRAG_PTR(frag);
     O1HEAP_ASSERT(((size_t) frag) >= (((size_t) this) + INSTANCE_SIZE_PADDED));
-    O1HEAP_ASSERT((((size_t) ((frag)->GetNext())) % sizeof(Fragment*)) == 0U);
-    O1HEAP_ASSERT((((size_t) ((frag)->GetPrev())) % sizeof(Fragment*)) == 0U);
+    ASSUME_ALIGNED_FRAG_PTR((frag)->GetPrev());
 
     const size_t sz = (frag->header.next != NULL) ? (size_t) (((const char*) frag->header.next) - ((const char*) frag))
                                                 : (size_t) (this->arena_end - ((const char*) frag));
@@ -111,21 +106,21 @@ size_t O1HeapInstance::fragGetSize(const Fragment* const frag) const
 
 static void fragSetNext(Fragment* const frag, Fragment* const value)
 {
-    O1HEAP_ASSERT((((size_t) frag) % O1HEAP_ALIGNMENT) == 0U);
-    O1HEAP_ASSERT((((size_t) value) % O1HEAP_ALIGNMENT) == 0U);
+    // O1HEAP_ASSERT((((size_t) frag) % O1HEAP_ALIGNMENT) == 0U);
+    // O1HEAP_ASSERT((((size_t) value) % O1HEAP_ALIGNMENT) == 0U);
     frag->header.next = value;
 }
 
 static void fragSetPrev(Fragment* const frag, Fragment* const value)
 {
-    O1HEAP_ASSERT((((size_t) frag) % O1HEAP_ALIGNMENT) == 0U);
-    O1HEAP_ASSERT((((size_t) value) % O1HEAP_ALIGNMENT) == 0U);
+    // O1HEAP_ASSERT((((size_t) frag) % O1HEAP_ALIGNMENT) == 0U);
+    // O1HEAP_ASSERT((((size_t) value) % O1HEAP_ALIGNMENT) == 0U);
     frag->header.prev_used = (frag->header.prev_used & (uintptr_t) 1U) | (uintptr_t) value;
 }
 
 static void fragSetUsed(Fragment* const frag, const bool value)
 {
-    O1HEAP_ASSERT((((size_t) frag) % O1HEAP_ALIGNMENT) == 0U);
+    // O1HEAP_ASSERT((((size_t) frag) % O1HEAP_ALIGNMENT) == 0U);
     if (value)
     {
         frag->header.prev_used |= (uintptr_t) 1U;
