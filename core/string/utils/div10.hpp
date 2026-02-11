@@ -6,7 +6,7 @@
 
 
 namespace ymd::str{
-__attribute__((always_inline)) [[gnu::const]]
+__attribute__((always_inline))
 [[nodiscard]] static constexpr uint8_t  div_10( const uint8_t u8_in ) noexcept{
     uint16_t  u16_out = 0xCD;
     u16_out *= u8_in;
@@ -14,7 +14,7 @@ __attribute__((always_inline)) [[gnu::const]]
     return static_cast<uint8_t>(u16_out);
 }
 
-__attribute__((always_inline)) [[gnu::const]]
+__attribute__((always_inline))
 [[nodiscard]] static constexpr uint16_t  div_10( const uint16_t u16_in ) noexcept{
     uint32_t  u32_out = 0xCCCD;
     u32_out *= u16_in;
@@ -23,30 +23,28 @@ __attribute__((always_inline)) [[gnu::const]]
 }
 
 
-__attribute__((always_inline)) [[gnu::const]]
-[[nodiscard]] static constexpr uint32_t  div_10( const uint32_t uint_in ) noexcept
-{
+__attribute__((always_inline))
+[[nodiscard]] static constexpr uint32_t  div_10( const uint32_t u32_in ) noexcept{
     // 这里取2的35次方，是因为取到 大于等于 这个值，即算法的推导过程中使用的数字要高于32bit数字8倍以上，
     // 才能够保证任意32bit除数计算的精度，
     // 过去有很多算法论文中给出的 magic number 并不能保证32bit任意数字除十都是完全正确的，是工程中的大坑
     constexpr uint32_t MAGIC = 0xCCCCCCCD;
     static_assert(MAGIC == (1ull << 35) / 10 + 1);
     uint64_t  u64_out = MAGIC;
-    u64_out *= uint_in;
+    u64_out *= u32_in;
     u64_out = u64_out >> 35;
     return  static_cast<uint32_t>(u64_out);
 }
 
 
 
-__attribute__((always_inline)) [[gnu::const]]
+__attribute__((always_inline))
 
-[[nodiscard]] static constexpr uint32_t  div_100( const uint32_t uint_in ) noexcept
-{
+[[nodiscard]] static constexpr uint32_t  div_100( const uint32_t u32_in ) noexcept{
     constexpr uint32_t MAGIC = 0x51EB851F;
     static_assert(MAGIC == (1ull << 37) / 100 + 1);
     uint64_t  u64_out = MAGIC;
-    u64_out *= uint_in;
+    u64_out *= u32_in;
     u64_out = u64_out >> 37;
     return  static_cast<uint32_t>(u64_out);
 }
@@ -115,5 +113,6 @@ static constexpr ReciprocalPow10_64 reciprocal_pow10_64[] = {
     {17, 100000000000000000ULL,0x6B6B6B6B6B6B6B6B6B6B6B6B6B6B6B6BULL, 122, 64},
     {18, 1000000000000000000ULL,0x58D2D2D2D2D2D2D2D2D2D2D2D2D2D2D3ULL, 126, 64},
     {19, 10000000000000000000ULL,0x91A2B3C4D5E6F708192A3B4C5D6E7F8ULL, 129, 64},
+};
 #endif
 }
