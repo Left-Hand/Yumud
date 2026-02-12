@@ -124,8 +124,6 @@ static constexpr auto m_pow10 = [](size_t n) -> uint64_t {
 };
 
 [[maybe_unused]] void test_num_digits_r10(){
-
-
     constexpr auto u32_test_n = [&](size_t n) -> Result<void, void> {
         if(not (u32_num_digits_r10(m_pow10(n-1)) == n)) return Err();
         if(not (u32_num_digits_r10(m_pow10(n) - 1) == n)) return Err();
@@ -186,9 +184,13 @@ static constexpr void _u32toa_r10_padded(uint32_t unsigned_val, char * str, cons
         str[i] = '0';
     }
 
-    
     auto fast_div10 = [](const uint32_t x) -> uint32_t{
+        #if 1
         return str::div_10(x);
+        #else
+        constexpr uint32_t MAGIC = ((1ull << 32) / 10u) + 1;
+        return (uint64_t(x) * MAGIC) >> 32u;
+        #endif
     };
 
     // 从右向左填充数字
@@ -197,8 +199,13 @@ static constexpr void _u32toa_r10_padded(uint32_t unsigned_val, char * str, cons
     // 从右到左逐位填充数字
 
     while (unsigned_val > 0) {  // 当还有数字要处理且未越界时
+        #if 1
         uint32_t quotient = fast_div10(unsigned_val);
         uint8_t digit = unsigned_val - quotient * 10;  // 获取余数（即当前位数字）
+        #else
+        uint32_t quotient = unsigned_val / 10;
+        uint8_t digit = unsigned_val % 10;  // 获取余数（即当前位数字）
+        #endif
         str[pos] = digit + '0';                   // 转换为字符并填入字符串
         unsigned_val = quotient;                      // 处理下一位
         if (pos == 0) break;                      // 防止下标下溢
@@ -214,8 +221,7 @@ static constexpr size_t _stupid_u64toa_r10(uint64_t unsigned_val, char* str) {
 
     do {
 		const uint8_t digit = unsigned_val % 10;
-        str[i] = ((digit) > 9) ? 
-		(digit - 10) + ('A') : (digit) + '0';
+        str[i] = (digit) + '0';
         i--;
     } while((unsigned_val /= 10) > 0 and (i >= 0));
 
@@ -257,6 +263,18 @@ static constexpr size_t _u32toa_r16(uint32_t unsigned_val, char* str) {
     return len;
 }
 
+//n <= 34
+static constexpr uint32_t div_3(const uint32_t n){
+    constexpr size_t SHIFTS = 32;
+    constexpr uint32_t MAGIC = ((1ull << SHIFTS) / 3 + 1);
+    return uint32_t((uint64_t(n) * MAGIC) >> SHIFTS);
+}
+
+static_assert(div_3(0) == 0);
+static_assert(div_3(3) == 1);
+static_assert(div_3(34) == 11);
+static_assert(div_3(33) == 11);
+
 // 使用 CLZ 计算 32 位无符号整数的八进制位数
 static constexpr size_t u32_num_digits_r8(uint32_t val) {
     if (val == 0) return 1;
@@ -264,7 +282,7 @@ static constexpr size_t u32_num_digits_r8(uint32_t val) {
     uint32_t bits_needed = 32 - __builtin_clz(val);  // 有效二进制位数
     
     // 八进制：每 3 位一个数字，向上取整
-    return (bits_needed + 2) / 3;
+    return div_3(bits_needed + 2);
 }
 
 // 测试用例

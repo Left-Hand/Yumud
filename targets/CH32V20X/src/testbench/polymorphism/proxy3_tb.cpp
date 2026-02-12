@@ -132,7 +132,7 @@ using DrawableProxy = pro::proxy<Drawable>;
 void proxy_tb(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUG_PRINTLN("\r\nstart");
-    std::array<char, 1000> buf;
+    std::array<uint8_t, 1000> buf;
     BufStream ss{std::span(buf)};
     Microseconds dur;
     {
@@ -204,7 +204,7 @@ void proxy_tb(){
     }
 
     DEBUG_PRINTLN("!!!!");
-    DEBUG_PRINTLN(ss.inner_str());
+    DEBUG_PRINTLN(ss.collected_str());
     DEBUG_PRINTLN("!!!!");
     clock::delay(100ms);
     DEBUG_PRINTLN("done", dur);

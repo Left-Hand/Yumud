@@ -6,6 +6,7 @@
 #include "core/clock/time.hpp"
 
 #include "hal/bus/uart/hw_singleton.hpp"
+#include "core/stream/BufStream.hpp"
 #include "core/utils/Result.hpp"
 #include <cmath>
 
@@ -356,6 +357,11 @@ void sincos_main(){
             // return iq20(s);
     };
 
+    std::array<uint8_t, 128> format_buf;
+    auto formatter = BufStream (std::span(format_buf));
+    formatter.set_radix(8);
+    formatter.set_splitter(", ");
+    formatter.set_eps(6);
     while(true){
         const auto now_secs = clock::seconds();
         // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
@@ -364,18 +370,28 @@ void sincos_main(){
         const auto [s,c] = math::sincospu(x);
         // const auto x = 6 * frac(t * 2) - 3;
 
-        DEBUG_PRINTLN(
-            x,
-            s, c,
-            fn1(s, c),
-            fn2(s, c),
-            math::asin(iq16(s)),
-            math::acos(iq16(s)),
-            math::atan2(iq16(s), iq16(c)),
-            x.to_bits() >> 24
-            // std::oct
-            // x.to_bits() >> 24,
-        );
+        
+        const auto y1 = fn1(s, c);
+        const auto y2 = fn2(s, c);
+        const auto y3 = math::asin(iq16(s));
+        const auto y4 = math::acos(iq16(s));
+        const auto y5 = math::atan2(iq16(s), iq16(c));
+        const auto elapsed_us = measure_total_elapsed_us([&]{
+            formatter.println(
+                x,
+                s, c,
+                y1, y2,
+                y3, y4, y5,
+
+                0
+                // x.to_bits() >> 24
+                // std::oct
+                // x.to_bits() >> 24,
+            );
+        });
+
+        DEBUG_PRINTLN(formatter.collected_str().trim(), elapsed_us.count(), formatter.collected_str().length());
+        formatter.reset();
         // clock::delay(1ms);
     }
 

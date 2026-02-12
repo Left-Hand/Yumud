@@ -78,8 +78,8 @@ struct YahboomQuatMotorDriver_Uart final:
 private:
     template<typename ... Args>
     void send_var(StringView name, Args && ... args){
-        std::array<char, MAX_BUF_SIZE> buf;
-        BufStream bs{buf};
+        std::array<uint8_t, MAX_BUF_SIZE> buf;
+        auto bs = BufStream(std::span(buf));
         bs.set_splitter(',');
         bs.set_eps(2);
 
@@ -92,7 +92,7 @@ private:
 
         bs << '#';
 
-        send_line((bs).inner_str());
+        send_line((bs).collected_str());
     }
 
     void send_line(const StringView line){

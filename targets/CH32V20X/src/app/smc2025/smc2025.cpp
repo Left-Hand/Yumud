@@ -308,11 +308,11 @@ void smc2025_main(){
         painter.set_en_font(&enfont).examine();
         painter.fill(color_cast<RGB888>(ColorEnum::BLACK)).examine();
 
-        std::array<char, 64> buf;
+        std::array<uint8_t, 64> buf;
         BufStream os{buf};
         os.println("helloworld", clock::seconds());
-        painter.draw_ascii_str({0,0}, os.inner_str()).examine();
-        DEBUG_PRINTLN(os.inner_str());
+        painter.draw_ascii_str({0,0}, os.collected_str()).examine();
+        DEBUG_PRINTLN(os.collected_str());
         // painter.draw_hollow_rect({0,0,7,7}).examine();
         tft.put_texture(
             math::Rect2u16::from_size(rgb_img.size()),
