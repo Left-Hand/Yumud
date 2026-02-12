@@ -2,22 +2,46 @@
 #include "core/string/utils/pow10.hpp"
 #include "core/string/utils/div10.hpp"
 #include "core/string/utils/reverse.hpp"
+#include "core/utils/Result.hpp"
 #include <array>
 
 using namespace ymd;
 using namespace ymd::str;
 
 
-static constexpr size_t u32_num_digits_r10(uint32_t int_val){
-    if(int_val == 0) return 1;
+__attribute__((always_inline))
 
-    size_t i = 0;
-    uint64_t sum = 1;
-    while(int_val >= sum){
-        sum = sum * uint32_t(10);
-        i++;
+[[nodiscard]] static constexpr uint32_t  div_100000( const uint32_t u32_in ) noexcept{
+    // constexpr size_t SHIFTS = 43;
+    constexpr size_t SHIFTS = 48;
+    constexpr uint32_t MAGIC = (1ull << SHIFTS) / 100000 + 1;
+    return static_cast<uint32_t>((static_cast<uint64_t>(MAGIC) * (u32_in)) >> SHIFTS);
+}
+
+static_assert(div_100000(uint32_t(0xFFFFFFFF)) == 0xFFFFFFFF / 100000);
+
+
+
+
+static constexpr size_t u32_num_digits_r10(uint32_t int_val){
+    if(int_val == 0) [[unlikely]] return 1;
+    size_t len = 0;
+    if(int_val >= 100000){
+        int_val = div_100000(int_val);
+        len += 5;
     }
-    return i > 0 ? i : 1;
+
+
+    if(int_val >= 100){
+        if(int_val >= 10000) len += 5;
+        else if(int_val >= 1000) len += 4;
+        else len += 3;
+    }else{
+        if(int_val >= 10) len += 2;
+        else len += 1;
+    }
+
+    return len;
 }
 
 // 测试用例
@@ -27,6 +51,7 @@ static_assert(u32_num_digits_r10(9) == 1, "9 should return 1");
 static_assert(u32_num_digits_r10(10) == 2, "10 should return 2");
 static_assert(u32_num_digits_r10(99) == 2, "99 should return 2");
 static_assert(u32_num_digits_r10(100) == 3, "100 should return 3");
+static_assert(u32_num_digits_r10(100000) == 6, "100 should return 3");
 
 // 关键测试：0x80000000
 static_assert(u32_num_digits_r10(0x80000000) == 10, "0x80000000 should return 10");
@@ -36,10 +61,98 @@ static_assert(u32_num_digits_r10(0xFFFFFFFF) == 10, "0xFFFFFFFF should return 10
 static_assert(u32_num_digits_r10(0x3B9ACA00) == 10, "0x3B9ACA00 (1e9) should return 10");
 static_assert(u32_num_digits_r10(0x3B9ACA01) == 10, "0x3B9ACA01 should return 10");
 
+#if 0
+static constexpr std::tuple<uint32_t, uint32_t> depart_hilo_18(const uint32_t hi, const uint32_t lo) {
+    // 计算 val / 10^9 和 val % 10^9
+    // val = hi * 2^32 + lo
+    // 2^32 = 4294967296 = 4 * 10^9 + 294967296
+    
+    // 先处理高32位部分
+    uint32_t hi_div_1e9 = hi / 1000000000;      // 高位贡献几个完整的10^9
+    uint32_t hi_rem_1e9 = hi % 1000000000;      // 高位剩余部分
+    
+    // hi_rem_1e9 * 294967296 + lo 可能超过32位，用64位中间结果
+    uint64_t carry = (uint64_t)hi_rem_1e9 * 294967296 + lo;
+    
+    // 合并贡献：
+    // 1. hi_div_1e9 * 4 来自 hi_div_1e9 * (4 * 10^9) / 10^9
+    // 2. carry / 10^9 来自剩余部分的贡献
+    uint32_t quotient = hi_div_1e9 * 4 + (uint32_t)(carry / 1000000000);
+    uint32_t remainder = (uint32_t)(carry % 1000000000);
+    
+    return {quotient, remainder};
+}
+
+// 基础测试
+static_assert(depart_hilo_18(0, 0) == std::make_tuple(0u, 0u), "0 should return (0,0)");
+static_assert(depart_hilo_18(0, 1) == std::make_tuple(0u, 1u), "1 should return (0,1)");
+static_assert(depart_hilo_18(0, 9) == std::make_tuple(0u, 9u), "9 should return (0,9)");
+static_assert(depart_hilo_18(0, 10) == std::make_tuple(0u, 10u), "10 should return (0,10)");
+static_assert(depart_hilo_18(0, 999999999) == std::make_tuple(0u, 999999999u), "999999999 should return (0,999999999)");
+static_assert(depart_hilo_18(0, 1000000000) == std::make_tuple(1u, 0u), "1e9 should return (1,0)");
+static_assert(depart_hilo_18(0, 1000000001) == std::make_tuple(1u, 1u), "1e9+1 should return (1,1)");
+static_assert(depart_hilo_18(0, 1999999999) == std::make_tuple(1u, 999999999u), "1999999999 should return (1,999999999)");
+static_assert(depart_hilo_18(0, 2000000000) == std::make_tuple(2u, 0u), "2e9 should return (2,0)");
+static_assert(depart_hilo_18(0, UINT32_MAX) == std::make_tuple(4u, 294967295u), "0xFFFFFFFF should return (4,294967295)");
+
+// 测试高32位非零的情况
+static_assert(depart_hilo_18(1, 0) == std::make_tuple(4u, 294967296u), "0x100000000 should return (4,294967296)");
+static_assert(depart_hilo_18(1, 1) == std::make_tuple(4u, 294967297u), "0x100000001 should return (4,294967297)");
+static_assert(depart_hilo_18(1, 4294967295) == std::make_tuple(5u, 294967295u), "0x1FFFFFFFF should return (5,294967295)");
+
+// 测试边界值：2^32-1 和 2^32
+static_assert(depart_hilo_18(0, 0xFFFFFFFF) == std::make_tuple(4u, 294967295u), "0xFFFFFFFF -> (4,294967295)");
+static_assert(depart_hilo_18(1, 0) == std::make_tuple(4u, 294967296u), "0x100000000 -> (4,294967296)");
+
+// 测试接近10^9整数倍的值
+static_assert(depart_hilo_18(0, 4000000000) == std::make_tuple(4u, 0u), "4e9 should return (4,0)");
+static_assert(depart_hilo_18(0, 4000000001) == std::make_tuple(4u, 1u), "4e9+1 should return (4,1)");
+static_assert(depart_hilo_18(4, 294967296) == std::make_tuple(18u, 294967296u), "0x4FFFFFFFF? need verify");
+
+// 测试最大值范围
+static_assert(depart_hilo_18(0xFFFFFFFF, 0xFFFFFFFF) == 
+              std::make_tuple(18446744073u, 554309260u), "0xFFFFFFFFFFFFFFFF should return known values");
+#endif
 
 
+static constexpr auto m_pow10 = [](size_t n) -> uint64_t {
+    size_t sum = 1;
+    for(size_t i = 0; i < n; i++){
+        sum *= 10;
+    }
+    return sum;
+};
 
-__no_inline static constexpr size_t _u32toa_r10(uint32_t unsigned_val, char* str) {
+[[maybe_unused]] void test_num_digits_r10(){
+
+
+    constexpr auto u32_test_n = [&](size_t n) -> Result<void, void> {
+        if(not (u32_num_digits_r10(m_pow10(n-1)) == n)) return Err();
+        if(not (u32_num_digits_r10(m_pow10(n) - 1) == n)) return Err();
+        return Ok();
+    };
+
+    constexpr auto test_all = [&]<typename Fn>(Fn && fn, size_t n) -> Result<void, int>{
+        for(int i = 1; i <= int(n); i++){
+            if(const auto res = (fn)(i); res.is_err()){
+                return Err(i);
+            }
+        }
+        return Ok();
+    };
+
+    static constexpr auto u32_res = test_all(u32_test_n, 9);
+    static_assert(u32_res.is_ok(), "u32_num_digits_r10 failed");
+}
+
+
+static constexpr size_t _u32toa_r10(uint32_t unsigned_val, char* str) {
+    // Handle special case of zero
+    if (unsigned_val == 0) {
+        str[0] = '0';
+        return 1;
+    }
+
     const size_t len = u32_num_digits_r10((unsigned_val));
     int i = len - 1;
 
@@ -47,11 +160,7 @@ __no_inline static constexpr size_t _u32toa_r10(uint32_t unsigned_val, char* str
         return str::div_10(x);
     };
 
-    // Handle special case of zero
-    if (unsigned_val == 0) {
-        str[0] = '0';
-        return 1;
-    }
+
 
     // Convert number to string using fast division by 10
     while (unsigned_val) {
@@ -67,13 +176,16 @@ __no_inline static constexpr size_t _u32toa_r10(uint32_t unsigned_val, char* str
 
 
 static constexpr void _u32toa_r10_padded(uint32_t unsigned_val, char * str, const size_t len){
+    if(unsigned_val == 0) [[unlikely]] {
+        str[0] = '0';
+        return;
+    }
+
     // 先填充所有位置为'0'
     for (size_t i = 0; i < len; ++i) {
         str[i] = '0';
     }
 
-    if(unsigned_val == 0) [[unlikely]] 
-        return;
     
     auto fast_div10 = [](const uint32_t x) -> uint32_t{
         return str::div_10(x);
@@ -95,6 +207,178 @@ static constexpr void _u32toa_r10_padded(uint32_t unsigned_val, char * str, cons
     }
 }
 
+static constexpr size_t _stupid_u64toa_r10(uint64_t unsigned_val, char* str) {
+
+    const size_t len = num_int2str_chars(static_cast<uint64_t>(unsigned_val), 10);
+    int i = len - 1;
+
+    do {
+		const uint8_t digit = unsigned_val % 10;
+        str[i] = ((digit) > 9) ? 
+		(digit - 10) + ('A') : (digit) + '0';
+        i--;
+    } while((unsigned_val /= 10) > 0 and (i >= 0));
+
+    return len;
+}
+
+static constexpr size_t u32_num_digits_r16(uint32_t val) {
+    if (val == 0) return 1;
+    
+    uint32_t bits_needed = 32 - __builtin_clz(val);  // GCC/Clang 内置函数
+    // 向上取整到 4 的倍数，再除以 4 得到十六进制位数
+    return (bits_needed + 3) / 4;
+}
+
+static_assert(u32_num_digits_r16(0xFFFFFFFF) == 8);
+static_assert(u32_num_digits_r16(0xFFFFFFF) == 7);
+static_assert(u32_num_digits_r16(0xFFFFFF) == 6);
+static_assert(u32_num_digits_r16(0xFFFFF) == 5);
+static_assert(u32_num_digits_r16(0xFFFF) == 4);
+
+
+static constexpr size_t _u32toa_r16(uint32_t unsigned_val, char* str) {
+    const size_t len = u32_num_digits_r16((unsigned_val));
+    int i = len - 1;
+
+    // Handle special case of zero
+    if (unsigned_val == 0) {
+        str[0] = '0';
+        return 1;
+    }
+
+    // Convert number to hexadecimal string
+    while (unsigned_val) {
+        uint8_t digit = unsigned_val & 0b1111;  // Get lowest 4 bits (hex digit)
+        str[i--] = digit > 9 ? (digit - 10 + 'A') : (digit + '0');
+        unsigned_val >>= 4;                     // Move to next hex digit
+    }
+
+    return len;
+}
+
+// 使用 CLZ 计算 32 位无符号整数的八进制位数
+static constexpr size_t u32_num_digits_r8(uint32_t val) {
+    if (val == 0) return 1;
+    
+    uint32_t bits_needed = 32 - __builtin_clz(val);  // 有效二进制位数
+    
+    // 八进制：每 3 位一个数字，向上取整
+    return (bits_needed + 2) / 3;
+}
+
+// 测试用例
+static_assert(u32_num_digits_r8(0xFFFFFFFF) == 11);  // 37777777777 (32位全1，11位八进制)
+static_assert(u32_num_digits_r8(077777777) == 8);    // 8位八进制
+static_assert(u32_num_digits_r8(0777777) == 6);      // 6位八进制
+static_assert(u32_num_digits_r8(07777) == 4);        // 4位八进制
+static_assert(u32_num_digits_r8(077) == 2);          // 2位八进制
+static_assert(u32_num_digits_r8(07) == 1);           // 1位八进制
+static_assert(u32_num_digits_r8(0) == 1);            // 0特殊处理
+
+
+static constexpr size_t _u32toa_r8(uint32_t unsigned_val, char* str) {
+    const size_t len = u32_num_digits_r8(unsigned_val);
+    int i = len - 1;
+
+    // Handle special case of zero
+    if (unsigned_val == 0) {
+        str[0] = '0';
+        return 1;
+    }
+
+    // Convert number to octal string
+    while (unsigned_val) {
+        uint8_t digit = unsigned_val & 0b111;  // Get lowest 3 bits (octal digit)
+        str[i--] = digit + '0';                // 八进制数字只能是0-7
+        unsigned_val >>= 3;                    // Move to next octal digit
+    }
+
+    return len;
+}
+
+
+#if 1
+// 使用 CLZ 计算二进制位数（保持与之前一致）
+static constexpr size_t u32_num_digits_r2(uint32_t val) {
+    if (val == 0) return 1;
+    return 32 - __builtin_clz(val);  // 或 std::countl_zero(val)
+}
+
+// 朴素二进制转换：每次处理1位，不使用查表，逻辑清晰
+static constexpr size_t _u32toa_r2(uint32_t unsigned_val, char* str) {
+    // 处理 0 的特殊情况
+    if (unsigned_val == 0) {
+        str[0] = '0';
+        return 1;
+    }
+
+    // 计算总位数
+    const size_t total_len = u32_num_digits_r2(unsigned_val);
+    uint32_t pos = total_len;      // 从末尾开始填充
+    uint32_t val = unsigned_val;
+
+    // 逐位转换：从最低位开始，逆序填充
+    while (val) {
+        uint8_t digit = val & 1;   // 取最低位
+        str[--pos] = digit + '0';  // 转为字符 '0' 或 '1'
+        val >>= 1;                 // 右移处理下一位
+    }
+
+    // 此时 pos 应为 0，total_len 即为最终长度
+    return total_len;
+}
+#else
+
+// 4位二进制到字符串的查找表
+alignas(64) static constexpr std::array<std::array<char, 4>, 16> BIN_TABLE = []{
+    std::array<std::array<char, 4>, 16> ret;
+    for(size_t i = 0; i < 16; ++i){
+        ret[i] = std::array<char, 4>{
+            static_cast<char>(bool(i & (1 << 3)) + '0'), 
+            static_cast<char>(bool(i & (1 << 2)) + '0'), 
+            static_cast<char>(bool(i & (1 << 1)) + '0'), 
+            static_cast<char>(bool(i & (1 << 0)) + '0'),
+        };
+    }
+    return ret;
+}();
+
+static constexpr size_t _u32toa_r2(uint32_t unsigned_val, char* str) {
+    if (unsigned_val == 0) {
+        str[0] = '0';
+        return 1;
+    }
+
+    const size_t total_len = 32 - __builtin_clz(unsigned_val);
+    uint32_t pos = total_len;          // 当前写入位置（从末尾向前移动）
+    uint32_t val = unsigned_val;
+
+    // 一次处理4位（低位组先写）
+    for (; val >= 16; val >>= 4) {
+        uint8_t nibble = val & 0xF;
+        const char* chars = BIN_TABLE[nibble].data();
+        str[--pos] = chars[3];        // 最低位
+        str[--pos] = chars[2];
+        str[--pos] = chars[1];
+        str[--pos] = chars[0];        // 最高位
+    }
+
+    // 处理剩余不足4位的部分
+    if (val > 0) {
+        const char* chars = BIN_TABLE[val].data();
+        uint32_t bits_remaining = pos;          // 剩余位数 = 有效位数
+        uint32_t offset = 4 - bits_remaining;  // 跳过前导零
+
+        for (uint32_t j = 0; j < bits_remaining; ++j) {
+            str[--pos] = chars[offset + j];    // 从最高有效位开始取
+        }
+    }
+
+    return total_len;
+}
+#endif
+
 template<integral T>
 static constexpr size_t _itoa_impl(T int_val, char * str, uint8_t radix){
     const bool is_negative = int_val < 0;
@@ -111,21 +395,39 @@ static constexpr size_t _itoa_impl(T int_val, char * str, uint8_t radix){
         }
     }();
 
-    const size_t len = num_int2str_chars(static_cast<uint64_t>(unsigned_val), radix) + is_negative;
-    int i = len - 1;
+    switch(radix){
+        case 10:
+            static_assert(sizeof(T) <= 8);
+            if constexpr(sizeof(T) <= 4){
+                return _u32toa_r10(static_cast<uint32_t>(unsigned_val), str);
+            }else{
+                if(is_negative){
+                    str[0] = '-';
+                    str++;
+                }
 
-    do {
-		const uint8_t digit = unsigned_val % radix;
-        str[i] = ((digit) > 9) ? 
-		(digit - 10) + ('A') : (digit) + '0';
-        i--;
-    } while((unsigned_val /= radix) > 0 and (i >= 0));
+                size_t ind = is_negative;
+                if(unsigned_val <= 0xFFFFFFFFU){
+                    return ind + _u32toa_r10(unsigned_val, str);
+                }
 
-    if(is_negative) {
-        str[0] = '-';
+                return ind + _stupid_u64toa_r10(unsigned_val, str);
+            }
+        case 16:
+            return _u32toa_r16(unsigned_val, str);
+            break;
+        case 8:
+            return _u32toa_r8(unsigned_val, str);
+            break;
+        case 2:
+            return _u32toa_r2(unsigned_val, str);
+        default:
+            break;
     }
 
-    return len;
+    //no chars 
+    return 0;
+
 }
 
 //Q = 0 is not granted

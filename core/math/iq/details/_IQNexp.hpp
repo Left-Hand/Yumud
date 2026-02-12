@@ -21,19 +21,18 @@ namespace ymd::iqmath::details{
 
 template<const size_t Q>
 static constexpr uint32_t __IQNexp(int32_t iqNInput){
-    const uint32_t *iqNLookupTable = _IQNexp_lookup[Q - 1];
+    constexpr const uint32_t *iqNLookupTable = _IQNexp_lookup[Q - 1];
     constexpr uint8_t ui8IntegerOffset = _IQNexp_offset[Q - 1];
     constexpr int32_t iqN_MIN = _IQNexp_min[Q - 1];
     constexpr int32_t iqN_MAX = _IQNexp_max[Q - 1];
     
-    uint8_t ui8Count;
-    int16_t i16Integer;
+    const uint32_t *piq30Coeffs;
     int32_t iq31Fractional;
     uint32_t uiqNResult;
     uint32_t uiqNIntegerResult;
     [[maybe_unused]] uint32_t uiq30FractionalResult;
     uint32_t uiq31FractionalResult;
-    const uint32_t *piq30Coeffs;
+    uint8_t ui8Count;
 
     /* Input is negative. */
     if (iqNInput < 0) {
@@ -43,16 +42,13 @@ static constexpr uint32_t __IQNexp(int32_t iqNInput){
         }
 
         /* Extract the fractional portion in iq31 and set sign bit. */
-        iq31Fractional = iqNInput;
-        iq31Fractional <<= (31 - Q);
-        iq31Fractional |= 0x80000000;
+        iq31Fractional = (iqNInput << (31 - Q)) | 0x80000000;
 
         /* Extract the integer portion. */
-        i16Integer = (int16_t)(iqNInput >> Q) + 1;
+        const uint16_t u16Integer = uint16_t((iqNInput >> Q) + 1 + ui8IntegerOffset);
 
         /* Offset the integer portion and lookup the integer result. */
-        i16Integer += ui8IntegerOffset;
-        uiqNIntegerResult = iqNLookupTable[i16Integer];
+        uiqNIntegerResult = iqNLookupTable[u16Integer];
 
         /* Reduce the fractional portion to -ln(2) < iq31Fractional < 0 */
         if (iq31Fractional <= -_iq31_ln2) {
@@ -68,16 +64,13 @@ static constexpr uint32_t __IQNexp(int32_t iqNInput){
         }
 
         /* Extract the fractional portion in iq31 and clear sign bit. */
-        iq31Fractional = iqNInput;
-        iq31Fractional <<= (31 - Q);
-        iq31Fractional &= 0x7fffffff;
+        iq31Fractional = (iqNInput << (31 - Q)) & 0x7fffffff;
 
         /* Extract the integer portion. */
-        i16Integer = (int16_t)(iqNInput >> Q);
+        const uint16_t u16Integer = uint16_t((iqNInput >> Q) + ui8IntegerOffset);
 
         /* Offset the integer portion and lookup the integer result. */
-        i16Integer += ui8IntegerOffset;
-        uiqNIntegerResult = iqNLookupTable[i16Integer];
+        uiqNIntegerResult = iqNLookupTable[u16Integer];
 
         /* Reduce the fractional portion to 0 < iq31Fractional < ln(2) */
         if (iq31Fractional >= _iq31_ln2) {
@@ -107,7 +100,7 @@ static constexpr uint32_t __IQNexp(int32_t iqNInput){
     uiq31FractionalResult = uiq30FractionalResult << 1;
     #else
     uiq31FractionalResult = (*piq30Coeffs++) << 1;
-
+    iq31Fractional <<= 1;
     /* Compute exp^(iq31Fractional). */
     for (ui8Count = _IQ30exp_order; ui8Count > 0; ui8Count--) {
         uiq31FractionalResult = int32_t((int64_t(iq31Fractional) * uint64_t(uiq31FractionalResult)) >> 32);

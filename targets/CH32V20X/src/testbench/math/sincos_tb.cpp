@@ -6,6 +6,7 @@
 #include "core/clock/time.hpp"
 
 #include "hal/bus/uart/hw_singleton.hpp"
+#include "core/utils/Result.hpp"
 #include <cmath>
 
 using namespace ymd;
@@ -34,6 +35,49 @@ __no_inline auto compare_func(size_t times, Fn1 && fn1, Fn2 && fn2){
     const auto elapsed1 = eval_one_func(times, std::forward<Fn1>(fn1));
     const auto elapsed2 = eval_one_func(times, std::forward<Fn2>(fn2));
     DEBUG_PRINTLN(uq16(elapsed1.count()) / times, uq16(elapsed2.count()) / times);
+}
+
+
+__attribute__((always_inline))
+
+[[nodiscard]] static constexpr uint32_t  div_10000( const uint32_t u32_in ) noexcept{
+    // constexpr size_t SHIFTS = 43;
+    constexpr size_t SHIFTS = 45;
+    constexpr uint32_t MAGIC = (1ull << SHIFTS) / 10000 + 1;
+    return static_cast<uint32_t>((static_cast<uint64_t>(MAGIC) * (u32_in)) >> SHIFTS);
+}
+
+static_assert(div_10000(uint32_t(0xFFFFFFFF)) == 0xFFFFFFFF / 10000);
+
+
+
+void test_div_10000(){
+    static constexpr size_t NUM_BLOCKS = 256;
+    for(uint32_t i = 0; i < NUM_BLOCKS; ++i){
+        const auto block_res = [&] -> Result<void, std::tuple<uint32_t, uint32_t, uint32_t>>{
+            //将u32分为block个区间 从base开始
+            static constexpr size_t BLOCK_SIZE = ((1ull << 32) / NUM_BLOCKS);
+            const uint32_t base = i * BLOCK_SIZE;
+            const uint32_t end = base + BLOCK_SIZE;
+
+            for(uint32_t n = base; n < end; ++n){
+                const uint32_t expected = static_cast<uint32_t>(n / 10000);
+                const uint32_t actual = div_10000(n);
+                if(expected != actual){
+                    return Err(std::make_tuple(n, expected, actual));
+                }
+            }
+            return Ok();
+        }();
+
+        if(!block_res.is_ok()){
+            DEBUG_PRINTLN(block_res.unwrap_err());
+            return;
+        }else{
+            DEBUG_PRINTLN("block done:", i, '/', NUM_BLOCKS);
+        }
+    }
+    DEBUG_PRINTLN("done");
 }
 
 
@@ -294,8 +338,8 @@ void sincos_main(){
         // const auto [s, c] = sincospu_approx(x);
         // const auto [s, c] = math::sincospu_approx(x);
         // return iq20(s) + iq20(c);
-        return math::exp(iq16(math::inv_mag(2 * s, c)));
-        // return iq16::from_bits(m__IQNdiv_impl<16, true>(s.to_bits(),c.to_bits()));
+        // return math::exp(iq16(math::inv_mag(2 * s, c)));
+        return iq16::from_bits(m__IQNdiv_impl<16, true>(s.to_bits(),c.to_bits()));
         // return iq20(s);
     };
 
@@ -319,6 +363,7 @@ void sincos_main(){
         const auto x = pu_to_uq32((now_secs * 2));
         const auto [s,c] = math::sincospu(x);
         // const auto x = 6 * frac(t * 2) - 3;
+
         DEBUG_PRINTLN(
             x,
             s, c,
@@ -326,11 +371,15 @@ void sincos_main(){
             fn2(s, c),
             math::asin(iq16(s)),
             math::acos(iq16(s)),
-            fn1(s,c).to_bits() - fn2(s, c).to_bits()
+            math::atan2(iq16(s), iq16(c)),
+            x.to_bits() >> 24
+            // std::oct
+            // x.to_bits() >> 24,
         );
-        clock::delay(1ms);
+        // clock::delay(1ms);
     }
 
+    test_div_10000();
     compare_func(
         2048,
         // 32,
