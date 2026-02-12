@@ -95,10 +95,10 @@ struct ErrPosition{
 
     friend OutputStream & operator << (OutputStream & os, const ErrPosition self){
         return os << os.brackets<'('>() 
-            << self.px << os.splitter() 
-            << self.py << os.splitter() 
-            << self.z << os.splitter() 
-            << self.e << os.splitter() 
+            << iq16(self.px) << os.splitter() 
+            << iq16(self.py) << os.splitter() 
+            << iq16(self.z) << os.splitter() 
+            << iq16(self.e) << os.splitter() 
         << os.brackets<')'>();
     }
 };

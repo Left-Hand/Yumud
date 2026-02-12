@@ -1,5 +1,5 @@
 #include "ostream.hpp"
-#include "core/string/legacy/xtoa.hpp"
+#include "core/string/xtoa/xtoa.hpp"
 #include "core/clock/clock.hpp"
 #include "core/string/view/string_view.hpp"
 #include "core/string/view/mut_string_view.hpp"

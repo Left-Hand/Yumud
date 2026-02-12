@@ -166,7 +166,9 @@ void sincos_main(){
 
     auto fn1 = [](const iq16 x) -> auto {
         // const auto [s, c] = sincospu_approx(x);
-        return iq20(math::cospu_approx(x));
+        // return iq20(math::cospu_approx(x));
+        return iq20(math::atan2pu(iq16(1),x));
+        // return iq20(math::atan2pu(iq16(x),iq16(1)));
         // return iq20(math::cospu(x));
         // return iq20(math::sinpu_approx(x));
         // return iq20(s) + iq20(c);
@@ -195,7 +197,7 @@ void sincos_main(){
     formatter.set_radix(8);
     formatter.set_splitter(", ");
     formatter.set_eps(6);
-    if(0)while(true){
+    while(true){
         const auto now_secs = clock::seconds();
         // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
         // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
@@ -211,13 +213,16 @@ void sincos_main(){
         const auto y5 = math::atan2(iq16(s), iq16(c));
         const auto elapsed_us = measure_total_elapsed_us([&]{
             formatter.println(
-                x,
+                // uq30(x),
+                uq32(x),
                 (s).to_bits() - fn2(x).to_bits(), c,
                 s, fn2(x),
                 // std::numeric_limits<iq31>::min(), 
                 // std::numeric_limits<iq31>::max(), 
                 // y1, y2,
-                y3, y4, y5,
+                y3, y4, 
+                iq16::from(float(-y5)),
+                // -y5,
 
                 0
                 // x.to_bits() >> 24
