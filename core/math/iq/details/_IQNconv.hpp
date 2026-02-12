@@ -14,7 +14,7 @@ namespace iqmath::details{
 
 template<size_t Q>
 [[nodiscard]] static constexpr float _IQNtoF(const int32_t iqNInput) {
-    uint16_t ui16Exp;
+    uint32_t ui16Exp;
     uint32_t uiq23Result;
     uint32_t uiq31Input;
 

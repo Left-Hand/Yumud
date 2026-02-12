@@ -41,7 +41,7 @@ enum class [[nodiscard]] SqrtNormStrategy {
 
 struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
     uint32_t uiq32Input;
-    int16_t i16Exponent;
+    int32_t i16Exponent;
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
     __attribute__((always_inline))
@@ -49,7 +49,7 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
         if(iqNInputX == 0) [[unlikely]]
             return {0, 0};
         uint32_t uiq32Input;
-        int16_t i16Exponent;
+        int32_t i16Exponent;
 
         /* If the Q gives an odd starting exponent make it even. */
         if constexpr((32 - Q) % 2 == 1) {
@@ -105,7 +105,7 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
         uint32_t uiq31Result;
 
         /* Use left most byte as index into lookup table (range: 32-128) */
-        const uint8_t ui8Index = ((uiq32Input >> 25) - 32);
+        const uint32_t ui8Index = ((uiq32Input >> 25) - 32);
         uiq30Guess = (uint32_t)_IQ14sqrt_lookup[ui8Index] << 16;
 
         /*
@@ -210,7 +210,7 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
         if (uiiqNInputX == 0) [[unlikely]]
             return {0, 0};
 
-        int16_t i16Exponent;
+        int32_t i16Exponent;
 
         // ---------- 1. 奇偶校正与指数初始化（完全保留原逻辑）----------
         if constexpr ((32 - Q) % 2 == 1) {
@@ -278,7 +278,7 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
         if (ui64Sum == 0) [[unlikely]]
             return {0, 0};
 
-        int16_t i16Exponent;
+        int32_t i16Exponent;
         if constexpr (STRATEGY == SqrtNormStrategy::MAG) {
             i16Exponent = (32 - int32_t(Q));      // 幅度：指数初始为正
         } else {

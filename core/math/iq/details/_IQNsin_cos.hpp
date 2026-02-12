@@ -2,6 +2,7 @@
 
 #include "support.hpp"
 #include "_IQNtables.hpp"
+#include <tuple>
 
 
 #ifndef M_PI
@@ -62,100 +63,96 @@ struct alignas(16) [[nodiscard]] __SincosIntermediate{
     uint32_t uq32_x_offset;
     int32_t iq31_sin_coeff;
     int32_t iq31_cos_coeff;
-    uint8_t sect_num; 
+    uint32_t sect_num; 
+
+
 
     template<typename Fn>
     __attribute__((always_inline)) constexpr 
     math::fixed_t<31, int32_t> exact_sin(Fn && taylor_law) const {
         //获取查找表的校准值
-
-        #if 1
+        int32_t a, b;
         switch(sect_num){
-            case 0: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, iq31_sin_coeff,  iq31_cos_coeff));
-            case 1: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, iq31_cos_coeff, -iq31_sin_coeff));
-            case 2: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, iq31_cos_coeff, -iq31_sin_coeff));
-            case 3: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, iq31_sin_coeff,  iq31_cos_coeff));
-            case 4: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, -iq31_sin_coeff, -iq31_cos_coeff));
-            case 5: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, -iq31_cos_coeff,  iq31_sin_coeff));
-            case 6: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, -iq31_cos_coeff,  iq31_sin_coeff));
-            case 7: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, -iq31_sin_coeff, -iq31_cos_coeff));
-        }
-        __builtin_unreachable();
-        #else
-        int32_t mut_iq31_sin_coeff;
-        int32_t mut_iq31_cos_coeff;
-        switch(sect_num){
-            case 0: 
-                mut_iq31_sin_coeff = iq31_sin_coeff;
-                mut_iq31_cos_coeff = iq31_cos_coeff;
+            case 0:
+                a = iq31_sin_coeff;
+                b =  iq31_cos_coeff;
                 break;
-            case 1: 
-                mut_iq31_sin_coeff = iq31_cos_coeff;
-                mut_iq31_cos_coeff = -iq31_sin_coeff;
+            case 1:
+                a = iq31_cos_coeff;
+                b = -iq31_sin_coeff;
                 break;
-            case 2: 
-                mut_iq31_sin_coeff = iq31_cos_coeff;
-                mut_iq31_cos_coeff = -iq31_sin_coeff;
+            case 2:
+                a = iq31_cos_coeff;
+                b = -iq31_sin_coeff;
                 break;
-            case 3: 
-                mut_iq31_sin_coeff = iq31_sin_coeff;
-                mut_iq31_cos_coeff =  iq31_cos_coeff;
+            case 3:
+                a = iq31_sin_coeff;
+                b =  iq31_cos_coeff;
                 break;
-            case 4: 
-                mut_iq31_sin_coeff = -iq31_sin_coeff;
-                mut_iq31_cos_coeff = -iq31_cos_coeff;
+            case 4:
+                a = -iq31_sin_coeff;
+                b = -iq31_cos_coeff;
                 break;
-            case 5: 
-                mut_iq31_sin_coeff = -iq31_cos_coeff;
-                mut_iq31_cos_coeff =  iq31_sin_coeff;
+            case 5:
+                a = -iq31_cos_coeff;
+                b =  iq31_sin_coeff;
                 break;
-            case 6: 
-                mut_iq31_sin_coeff = -iq31_cos_coeff;
-                mut_iq31_cos_coeff =  iq31_sin_coeff;
+            case 6:
+                a = -iq31_cos_coeff;
+                b =  iq31_sin_coeff;
                 break;
-            case 7: 
-                mut_iq31_sin_coeff = -iq31_sin_coeff;
-                mut_iq31_cos_coeff = -iq31_cos_coeff;
+            case 7:
+                a = -iq31_sin_coeff;
+                b = -iq31_cos_coeff;
                 break;
             default:
                 __builtin_unreachable();
         }
-        return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, mut_iq31_sin_coeff, mut_iq31_cos_coeff));
-        #endif
+        return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(uq32_x_offset, a, b));
     }
 
     template<typename Fn>
     __attribute__((always_inline)) constexpr 
     math::fixed_t<31, int32_t> exact_cos(Fn && taylor_law) const {
+        int32_t a, b;
         switch(sect_num){
-            case 0: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, iq31_cos_coeff, -iq31_sin_coeff));
-            case 1: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, iq31_sin_coeff,  iq31_cos_coeff));
-            case 2: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, -iq31_sin_coeff, -iq31_cos_coeff));
-            case 3: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, -iq31_cos_coeff,  iq31_sin_coeff));
-            case 4: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, -iq31_cos_coeff,  iq31_sin_coeff));
-            case 5: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, -iq31_sin_coeff, -iq31_cos_coeff));
-            case 6: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, iq31_sin_coeff,  iq31_cos_coeff));
-            case 7: return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(
-                uq32_x_offset, iq31_cos_coeff, -iq31_sin_coeff));
-
+            case 0:
+                a = iq31_cos_coeff; 
+                b = -iq31_sin_coeff;
+                break;
+            case 1:
+                a = iq31_sin_coeff; 
+                b =  iq31_cos_coeff;
+                break;
+            case 2:
+                a = -iq31_sin_coeff; 
+                b = -iq31_cos_coeff;
+                break;
+            case 3:
+                a = -iq31_cos_coeff; 
+                b =  iq31_sin_coeff;
+                break;
+            case 4:
+                a = -iq31_cos_coeff; 
+                b =  iq31_sin_coeff;
+                break;
+            case 5:
+                a = -iq31_sin_coeff; 
+                b = -iq31_cos_coeff;
+                break;
+            case 6:
+                a = iq31_sin_coeff; 
+                b =  iq31_cos_coeff;
+                break;
+            case 7:
+                a = iq31_cos_coeff; 
+                b = -iq31_sin_coeff;
+                break;
+            default:
+                __builtin_unreachable();
         }
-        __builtin_unreachable();
+
+        return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(uq32_x_offset, a, b));
     }
 
     template<typename Fn>
@@ -198,13 +195,13 @@ struct alignas(16) [[nodiscard]] __SincosIntermediate{
 
             /* 0.5*x*(-S(k)) */
             iq31Res = iq31Res >> 1;
-            iq31Res = iq31_mpy_uq32(iq31Res,uq32_x_offset);
+            iq31Res = (static_cast<int64_t>(iq31Res) * uq32_x_offset) >> 32;
 
             /* C(k) + 0.5*x*(-S(k)) */
             iq31Res = iq31_cos_coeff + iq31Res;
 
             /* x*(C(k) + 0.5*x*(-S(k))) */
-            iq31Res = iq31_mpy_uq32(iq31Res, uq32_x_offset);
+            iq31Res = (static_cast<int64_t>(iq31Res) *  uq32_x_offset) >> 32;
 
             /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k))) */
             iq31Res = iq31_sin_coeff + iq31Res;
@@ -217,23 +214,29 @@ struct alignas(16) [[nodiscard]] __SincosIntermediate{
         taylor_3o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
             int32_t iq31Res;
 
+            #if 0
             /* 0.333*x*C(k) */
             constexpr int32_t ONE_BY_3_IQ31_BITS = math::fixed_t<31, int32_t>(1.0/3).to_bits() + 1;
             iq31Res = iq31_mpy_uq32(ONE_BY_3_IQ31_BITS, uq32_x_offset);
             iq31Res = iqmath::details::__mpyf_l(iq31_cos_coeff, iq31Res);
+            #else
+            constexpr int32_t TWO_BY_3_IQ31_BITS = math::fixed_t<31, int32_t>(2.0/3).to_bits() + 1;
+            iq31Res = static_cast<int32_t>((static_cast<int64_t>(TWO_BY_3_IQ31_BITS) * uq32_x_offset) >> 32);
+            iq31Res = static_cast<int32_t>((static_cast<int64_t>(iq31Res) * iq31_cos_coeff) >> 32);
+            #endif
 
             /* -S(k) - 0.333*x*C(k) */
             iq31Res = -(iq31_sin_coeff + iq31Res);
 
             /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
             iq31Res = iq31Res >> 1;
-            iq31Res = iq31_mpy_uq32(iq31Res,uq32_x_offset);
+            iq31Res = static_cast<int32_t>((static_cast<int64_t>(iq31Res) * uq32_x_offset) >> 32);
 
             /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
             iq31Res = iq31_cos_coeff + iq31Res;
 
             /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-            iq31Res = iq31_mpy_uq32(iq31Res, uq32_x_offset);
+            iq31Res = static_cast<int32_t>((static_cast<int64_t>(iq31Res) * uq32_x_offset) >> 32);
 
             /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
             iq31Res = iq31_sin_coeff + iq31Res;
@@ -249,37 +252,49 @@ struct alignas(16) [[nodiscard]] __SincosIntermediate{
 };
 
 
-constexpr __SincosIntermediate __IQNgetCosSinPU(const math::fixed_t<32, uint32_t> uq32_x_pu){
+constexpr __SincosIntermediate __IQNgetCosSinPU(uint32_t uq32_x_pu_bits){
     constexpr uint32_t uq32_quatpi_bits = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
-    constexpr uint32_t eeq_mask = ((1 << (32-3)) - 1);
 
     //将一个周期拆分为八个区块 每个区块长度pi/4 获取区块索引
-    const uint8_t sect_num = static_cast<uint8_t>((uq32_x_pu.to_bits()) >> (32 - 3));
+    const uint32_t sect_num = static_cast<uint32_t>((uq32_x_pu_bits) >> (32 - 3));
     
+    //将x由锯齿波变为三角波
+    uq32_x_pu_bits = ((sect_num & 0b1)) ? ~uq32_x_pu_bits : uq32_x_pu_bits;
+
+    #if 0
     //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块
     const uint32_t uq32_eeq_x = static_cast<uint32_t>(
-        (static_cast<uint64_t>(uq32_x_pu.to_bits() & eeq_mask) * (uq32_quatpi_bits)) >> (32 - 3));
-
-
-    //将x由锯齿波变为三角波
-    const uint32_t uq32_flip_x = (sect_num & 0b1) ? (uq32_quatpi_bits - uq32_eeq_x) : uq32_eeq_x;
+        (static_cast<uint64_t>(uq32_x_pu_bits & eeq_mask) * (uq32_quatpi_bits)) >> (32 - 3)) ;
+    #else
+    uint32_t uq32_eeq_x = static_cast<uint32_t>(
+        (static_cast<uint64_t>(uq32_x_pu_bits << 3) * (uq32_quatpi_bits)) >> (32));
+        // (static_cast<uint64_t>(uq32_x_pu_bits) * (uq32_quatpi_bits)) >> (32)) << 3;
+    #endif
 
     //获取每个扇区的偏移值
-    const uint32_t uq32_x_offset = uq32_flip_x & 0x03ffffff;
+    const uint32_t uq32_x_offset = (uq32_eeq_x)& 0x03ffffff;
 
-    const uint8_t lut_index = (uint16_t)(uq32_flip_x >> 26) & 0x003f;
+    #if 0
+    const uint8_t lut_index = (uint16_t)(uq32_eeq_x >> 26) & 0x003f;
+    #else
+    const uint32_t lut_index = uint32_t(uq32_eeq_x >> 26);
+    #endif
     //计算查找表索引
 
+    #if 1
+    const int32_t iq31_sin_coeff = iqmath::details::_IQ31_SINCOS_TABLE[lut_index][0];
+    const int32_t iq31_cos_coeff = iqmath::details::_IQ31_SINCOS_TABLE[lut_index][1];
+    #else
     const int32_t iq31_sin_coeff = iqmath::details::_IQ31SinLookup[lut_index];
     const int32_t iq31_cos_coeff = iqmath::details::_IQ31CosLookup[lut_index];
+    #endif  
 
-    return __SincosIntermediate{
+    return iqmath::details::__SincosIntermediate{
         uq32_x_offset, 
         iq31_sin_coeff,
         iq31_cos_coeff,
         sect_num
     };
-
 }
 
 

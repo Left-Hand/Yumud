@@ -174,14 +174,13 @@ static constexpr size_t _u32toa_r10(uint32_t unsigned_val, char* str) {
 
 
 static constexpr void _u32toa_r10_padded(uint32_t unsigned_val, char * str, const size_t len){
-    if(unsigned_val == 0) [[unlikely]] {
-        str[0] = '0';
-        return;
-    }
-
     // 先填充所有位置为'0'
     for (size_t i = 0; i < len; ++i) {
         str[i] = '0';
+    }
+
+    if(unsigned_val == 0) [[unlikely]] {
+        return;
     }
 
     auto fast_div10 = [](const uint32_t x) -> uint32_t{

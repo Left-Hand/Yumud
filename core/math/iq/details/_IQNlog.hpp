@@ -18,7 +18,7 @@ namespace ymd::iqmath::details{
 template<size_t Q>
 constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
 {
-    int16_t i16Exp;
+    int32_t i16Exp;
     int32_t iq30Result;
     uint32_t uiq31Input;
     const uint32_t *piq30Coeffs;

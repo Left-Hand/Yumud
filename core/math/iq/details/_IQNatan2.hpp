@@ -66,7 +66,7 @@ struct [[nodiscard]] __Atan2Intermediate{
     // */
     static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
         // return 0;
-        const auto * piq32Coeffs = &ymd::iqmath::details::_IQ32atan_coeffs[(uq32_input >> 25) & 0x00fc];
+        const int32_t * piq32Coeffs = &ymd::iqmath::details::_IQ32atan_coeffs[(uq32_input >> 25) & 0x00fc];
         /*
         * Calculate atan(x) using the following Taylor series:
         *

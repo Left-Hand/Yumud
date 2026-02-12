@@ -9,34 +9,24 @@
 #include "core/math/iq/fixed_t.hpp"
 
 namespace ymd::str{
-__fast_inline bool is_digit(const char chr){return chr >= '0' && chr <= '9';}
-__fast_inline bool is_alpha(const char chr) {
+[[nodiscard]] __fast_inline constexpr 
+bool is_digit(const char chr){return chr >= '0' && chr <= '9';}
+[[nodiscard]] __fast_inline constexpr 
+bool is_alpha(const char chr) {
     return (chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z');
 }
 
-size_t itoa(int32_t value, char * str, uint8_t radix);
-size_t iutoa(uint64_t value, char * str, uint8_t radix);
-size_t iltoa(int64_t value, char * str, uint8_t radix);
-size_t ftoa(float value, char * str, uint8_t precsion);
+[[nodiscard]] size_t itoa(int32_t value, char * str, uint8_t radix);
+[[nodiscard]] size_t iutoa(uint64_t value, char * str, uint8_t radix);
+[[nodiscard]] size_t iltoa(int64_t value, char * str, uint8_t radix);
+[[nodiscard]] size_t ftoa(float value, char * str, uint8_t precsion);
 
 
-static __fast_inline constexpr void utoas(uint32_t value, char * const str, uint8_t radix, int8_t i)  {
-    i -= 1;
-	do{
-		const uint8_t digit = value % radix;
-		str[i] = ((digit) > 9) ? 
-		(digit - 10) + ('A') : (digit) + '0';
-
-		i--;
-        value /= radix;
-	}while(i >= 0);
-}
-
-size_t _uqtoa(const uint32_t abs_value_bits, char * const str, uint8_t precsion, const uint8_t Q);
+[[nodiscard]] size_t _uqtoa(const uint32_t abs_value_bits, char * const str, uint8_t precsion, const uint8_t Q);
 
 template<typename D>
 requires(sizeof(D) <= 4)
-size_t _qtoa(const D value_bits, char * str, uint8_t precsion, const uint8_t Q){
+[[nodiscard]] size_t _qtoa(const D value_bits, char * str, uint8_t precsion, const uint8_t Q){
 	using unsigned_type = std::make_unsigned_t<D>;
 	using bits_type = std::conditional_t<
 		std::is_signed_v<D>, 
@@ -65,7 +55,7 @@ size_t _qtoa(const D value_bits, char * str, uint8_t precsion, const uint8_t Q){
 
 template<typename D>
 requires(sizeof(D) <= 4)
-size_t qtoa(const D bits, const size_t Q, char * const str, uint8_t precsion){
+[[nodiscard]] size_t qtoa(const D bits, const size_t Q, char * const str, uint8_t precsion){
 	using size_aligned_t = std::conditional_t<std::is_signed_v<D>, int32_t, uint32_t>;
 	static_assert(sizeof(size_aligned_t) == sizeof(D));
 	if constexpr(std::is_signed_v<D>)

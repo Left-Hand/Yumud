@@ -22,7 +22,7 @@ namespace ymd::iqmath::details{
 template<const size_t Q>
 static constexpr uint32_t __IQNexp(int32_t iqNInput){
     constexpr const uint32_t *iqNLookupTable = _IQNexp_lookup[Q - 1];
-    constexpr uint8_t ui8IntegerOffset = _IQNexp_offset[Q - 1];
+    constexpr uint32_t ui8IntegerOffset = _IQNexp_offset[Q - 1];
     constexpr int32_t iqN_MIN = _IQNexp_min[Q - 1];
     constexpr int32_t iqN_MAX = _IQNexp_max[Q - 1];
     
@@ -32,7 +32,7 @@ static constexpr uint32_t __IQNexp(int32_t iqNInput){
     uint32_t uiqNIntegerResult;
     [[maybe_unused]] uint32_t uiq30FractionalResult;
     uint32_t uiq31FractionalResult;
-    uint8_t ui8Count;
+    uint32_t ui8Count;
 
     /* Input is negative. */
     if (iqNInput < 0) {
