@@ -248,54 +248,68 @@ static constexpr size_t _fmtnum_u32_r2(uint32_t unsigned_val, char* p_str) {
 }
 #endif
 
-template<typename T>
-constexpr char * _fmtnum_int_impl(char * p_str, T int_val, uint8_t radix){
-    const bool is_negative = int_val < 0;
-    std::make_unsigned_t<T> unsigned_val = [&]{
-        if constexpr (std::is_signed_v<T>) {
+template<bool IS_SIGNED>
+constexpr char * _fmtnum_int32_impl(char * p_str, uint32_t int_val, uint8_t radix){
+    auto preprocess_ifneg = [&]{
+        if constexpr (IS_SIGNED) {
+            const bool is_negative = int32_t(int_val) < 0;
             if(is_negative) {
+                p_str[0] = '-';
+                p_str++;
                 // 安全地取绝对值
-                return static_cast<std::make_unsigned_t<T>>(-(int_val + 1)) + 1;
-            } else {
-                return static_cast<std::make_unsigned_t<T>>(int_val);
+                int_val = static_cast<uint32_t>(-int32_t(int_val));
             }
-        } else {
-            return static_cast<std::make_unsigned_t<T>>(int_val);
-        }
-    }();
+        } 
+    };
 
     switch(radix){
         case 10:
-            static_assert(sizeof(T) <= 8);
-            if constexpr(sizeof(T) <= 4){
-                return _fmtnum_u32_r10(p_str, static_cast<uint32_t>(unsigned_val));
-            }else{
-                if(is_negative){
-                    p_str[0] = '-';
-                    p_str++;
-                }
-
-                if(unsigned_val <= 0xFFFFFFFFU){
-                    return _fmtnum_u32_r10(p_str, static_cast<uint32_t>(unsigned_val));
-                }
-
-                return _stupid_fmtnum_u64_r10(p_str, unsigned_val);
-            }
+            preprocess_ifneg();
+            return _fmtnum_u32_r10(p_str, int_val);
         case 16:
-            return _fmtnum_u32_r16(p_str, unsigned_val);
-            break;
+            return _fmtnum_u32_r16(p_str, int_val);
         case 8:
-            return _fmtnum_u32_r8(p_str, unsigned_val);
-            break;
+            return _fmtnum_u32_r8(p_str, int_val);
         case 2:
-            return _fmtnum_u32_r2(p_str, unsigned_val);
+            return _fmtnum_u32_r2(p_str, int_val);
         default:
-            break;
+            //no chars 
+            return p_str;
     }
 
-    //no chars 
-    return p_str;
+    __builtin_unreachable();
+}
 
+template<typename T>
+requires (sizeof(T) <= 4)
+constexpr char * _fmtnum_int32(char * p_str, T int_val, uint8_t radix){
+    return _fmtnum_int32_impl<std::is_signed_v<T>>(p_str, static_cast<uint32_t>(int_val), radix);
+}
+
+template<typename T>
+requires ((sizeof(T) == 8))
+constexpr char * _fmtnum_int64_impl(char * p_str, T int_val, uint8_t radix){
+    //TODO support 64bit
+    return _fmtnum_int32_impl<std::is_signed_v<T>>(p_str, static_cast<uint32_t>(int_val), radix);
+}
+
+
+
+char * str::_fmtnum_signed_fixed_impl(
+    char * p_str, 
+    uint32_t value_bits, 
+    uint8_t precsion, 
+    const uint8_t Q
+){
+    const bool is_negative = int32_t(value_bits) < 0;
+
+    if(is_negative){
+        p_str[0] = '-';
+        p_str++;
+        value_bits = static_cast<uint32_t>(-int32_t(value_bits));
+    }
+
+    return _fmtnum_unsigned_fixed_impl(p_str, value_bits, precsion, Q);
 }
 
 //Q = 0 is not granted
@@ -309,28 +323,6 @@ static constexpr uint32_t calc_low_mask(const uint8_t Q){
 static_assert(calc_low_mask(31) == 0x7fffffffu);
 static_assert(calc_low_mask(32) == 0xffffffffu);
 static_assert(calc_low_mask(16) == 0x0000ffffu);
-
-
-char * str::_fmtnum_signed_fixed_impl(
-    char * p_str, 
-    const int32_t value_bits, 
-    uint8_t precsion, 
-    const uint8_t Q
-){
-    const bool is_negative = value_bits < 0;
-
-	uint32_t abs_value_bits;
-    if(is_negative){
-        p_str[0] = '-';
-        p_str++;
-        // abs_value_bits = static_cast<unsigned_type>(-value_bits);
-        abs_value_bits = static_cast<uint32_t>(-(value_bits + 1)) + 1;
-    }else{
-        abs_value_bits = static_cast<uint32_t>(value_bits);
-    }
-    return _fmtnum_unsigned_fixed_impl(p_str, abs_value_bits, precsion, Q);
-
-}
 
 char * str::_fmtnum_unsigned_fixed_impl(
     char * p_str, 
@@ -388,7 +380,7 @@ char * str::fmtnum_i32(
     int32_t int_val,
     uint8_t radix
 ){
-    return _fmtnum_int_impl<int32_t>(p_str, int_val, radix);
+    return _fmtnum_int32<int32_t>(p_str, int_val, radix);
 }
 
 char * str::fmtnum_u32(
@@ -396,7 +388,7 @@ char * str::fmtnum_u32(
     uint32_t int_val,
     uint8_t radix
 ){
-    return _fmtnum_int_impl<uint32_t>(p_str, int_val, radix);
+    return _fmtnum_int32<uint32_t>(p_str, int_val, radix);
 }
 
 
@@ -405,14 +397,12 @@ char * str::fmtnum_u64(
     uint64_t int_val,
     uint8_t radix
 ){
-    static constexpr uint64_t MASK = (~(uint64_t)std::numeric_limits<uint32_t>::max());
-    const bool cant_be_represent_in_32 = int_val & MASK;
-    if(cant_be_represent_in_32 == 0){
-        return _fmtnum_int_impl<uint32_t>(p_str, int_val, radix);
+    if(bool(int_val >> 32) == false){
+        return _fmtnum_int32<uint32_t>(p_str, int_val, radix);
     }
 
     //TODO 64位除法的实现会大幅增大体积
-    return _fmtnum_int_impl<int64_t>(p_str, int_val, radix);
+    return _fmtnum_int64_impl<uint64_t>(p_str, int_val, radix);
 }
 
 
@@ -421,156 +411,24 @@ char * str::fmtnum_i64(
     int64_t int_val, 
     uint8_t radix
 ){
-    // return _fmtnum_int_impl<int64_t>(p_str, int_val, radix);
-    return _fmtnum_int_impl<int32_t>(p_str, int_val, radix);
-}
+    const uint32_t high32 = static_cast<uint32_t>(int_val >> 32);
 
-
-#if 0
-[[maybe_unused]] static constexpr size_tfmtnum_ _f_impl(float value, char* p_str, uint8_t precision) {
-    if (precision > 9) precision = 9;
-    
-    // Extract IEEE 754 floating point components
-    uint32_t bits = std::bit_cast<uint32_t>(value);
-    bool is_negative = (bits >> 31) != 0;
-    int32_t exponent = ((bits >> 23) & 0xFF) - 127;
-    uint32_t mantissa = bits & 0x7FFFFF;
-    bits &= 0x7FFFFFFF;
-    
-    // Check NaN
-    if ((bits) > uint32_t(0x7F800000)) [[unlikely]] {
-        p_str[0] = 'n'; p_str[1] = 'a'; p_str[2] = 'n';
-        return 3;
-    }
-    
-    // Check infinity
-    if ((bits) == uint32_t(0x7F800000)) [[unlikely]] {
-        if (is_negative) {
-            p_str[0] = '-'; p_str[1] = 'i'; p_str[2] = 'n'; p_str[3] = 'f';
-            return 4;
-        } else {
-            p_str[0] = 'i'; p_str[1] = 'n'; p_str[2] = 'f';
-            return 3;
-        }
+    //u32
+    if(high32 == 0) [[likely]]{
+        return _fmtnum_int32<uint32_t>(p_str, static_cast<uint32_t>(int_val), radix);
     }
 
-    // Handle zero
-    if (exponent == -127 && mantissa == 0) [[unlikely]] {
-        if (is_negative) {
-            p_str[0] = '-'; p_str[1] = '0';
-            return 2;
-        } else {
-            p_str[0] = '0';
-            return 1;
-        }
-    }
-    
-    char* start = p_str;
-
-    if (is_negative) {
+    //neg i32
+    if(high32 == UINT32_MAX) [[likely]]{
         p_str[0] = '-';
         p_str++;
-    }
-    
-    // Build complete mantissa (including implicit 1)
-    uint64_t full_mantissa = (static_cast<uint64_t>(mantissa) | (1ULL << 23));
-    
-    // Calculate scaling factor for decimal precision
-    uint64_t scale = pow10_table[precision];
-    
-    // Handle different exponent cases for proper conversion
-    int64_t scaled_value;
-    if (exponent >= 0) {
-        // For positive exponents
-        scaled_value = static_cast<int64_t>(full_mantissa);
-        // Scale by 10^precision
-        scaled_value *= static_cast<int64_t>(scale);
-        // Divide by 2^23
-        scaled_value >>= 23;
-        // Apply positive exponent
-        if (exponent > 0) {
-            scaled_value <<= exponent;
-        }
-    } else {
-        // For negative exponents
-        scaled_value = static_cast<int64_t>(full_mantissa);
-        // Scale by 10^precision
-        scaled_value *= static_cast<int64_t>(scale);
-        // Apply negative exponent (divide by 2^(-exponent))
-        int shift_amount = 23 + (-exponent);
-        if (shift_amount >= 0 && shift_amount < 64) {
-            scaled_value >>= shift_amount;
-        } else {
-            scaled_value = 0;
-        }
+        return _fmtnum_int32<uint32_t>(p_str, static_cast<uint32_t>(-int_val), radix);
     }
 
-    if (exponent >= 0) {
-        // 计算余数用于判断舍入
-        uint64_t unscaled = full_mantissa;
-        unscaled <<= exponent;
-        unscaled >>= 23;
-    }
-    
-    // 判断是否需要进位（四舍五入）
-    // 通过检查中间精度的小数部分来决定
-    bool need_round_up = false;
-    
-    // 更精确的舍入判断
-    if (exponent >= 0) {
-        // 计算到更高精度来判断舍入
-        uint64_t high_precision_scale = scale * 10; // 多一位精度
-        uint64_t high_precision_value = full_mantissa;
-        high_precision_value *= high_precision_scale;
-        high_precision_value >>= 23;
-        high_precision_value <<= exponent;
-        
-        // 获取额外的一位用于舍入判断
-        uint64_t extra_digit = (high_precision_value / scale) % 10;
-        need_round_up = (extra_digit >= 5);
-    } else {
-        // 对于负数指数，使用不同的舍入策略
-        int shift_amount = 23 + (-exponent);
-        uint64_t high_precision_scale = scale * 10;
-        uint64_t high_precision_value = full_mantissa;
-        high_precision_value *= high_precision_scale;
-        high_precision_value >>= shift_amount;
-        
-        uint64_t extra_digit = (high_precision_value / scale) % 10;
-        need_round_up = (extra_digit >= 5);
-    }
-    
-    // 应用舍入
-    if (need_round_up) {
-        scaled_value += 1;
-    }
-    
-    // Separate integer and fractional parts
-    uint64_t int_part = scaled_value / scale;
-    uint64_t frac_part = scaled_value % scale;
-    
-    // 处理进位导致整数部分增加的情况
-    if (frac_part >= scale) {
-        int_part += 1;
-        frac_part -= scale;
-    }
-    
-    // Convert integer part
-    p_str += _fmtnum_u32_r10(static_cast<uint32_t>(int_part), p_str);
-    
-    // Convert fractional part
-    if (precision > 0) {
-        p_str[0] = '.';
-        p_str++;
-        _fmtnum_u32_r10_padded(frac_part, p_str, precision);
-        p_str += precision;
-    }
-    
-    return static_cast<size_t>(p_str - start);
+    return _fmtnum_int64_impl<int64_t>(p_str, int_val, radix);
 }
-#else
 
-#if 1
+
 [[maybe_unused]] static constexpr char * _fmtnum_f32_impl(
     char* p_str, 
     float value, 
@@ -721,185 +579,6 @@ char * str::fmtnum_i64(
     
     return p_str;
 }
-#else
-[[maybe_unused]] static constexpr size_tfmtnum_ _f_impl(float value, char* p_str, uint8_t precision) {
-    if (precision > 9) precision = 9;
-    
-    // 提取IEEE 754浮点组件
-    uint32_t bits = std::bit_cast<uint32_t>(value);
-    bool is_negative = (bits >> 31) != 0;
-    int32_t exponent = ((bits >> 23) & 0xFF) - 127;
-    uint32_t mantissa = bits & 0x7FFFFF;
-    bits &= 0x7FFFFFFF;
-    
-    // 检查特殊值
-    if ((bits) > uint32_t(0x7F800000)) [[unlikely]] {
-        p_str[0] = 'n'; p_str[1] = 'a'; p_str[2] = 'n';
-        return 3;
-    }
-    
-    if ((bits) == uint32_t(0x7F800000)) [[unlikely]] {
-        if (is_negative) {
-            p_str[0] = '-'; p_str[1] = 'i'; p_str[2] = 'n'; p_str[3] = 'f';
-            return 4;
-        } else {
-            p_str[0] = 'i'; p_str[1] = 'n'; p_str[2] = 'f';
-            return 3;
-        }
-    }
-
-    if (exponent == -127 && mantissa == 0) [[unlikely]] {
-        if (is_negative) {
-            p_str[0] = '-'; p_str[1] = '0';
-            return 2;
-        } else {
-            p_str[0] = '0';
-            return 1;
-        }
-    }
-    
-    char* start = p_str;
-    if (is_negative) {
-        p_str[0] = '-';
-        p_str++;
-    }
-    
-    // 构建完整尾数（包含隐含的1）
-    const uint32_t full_mantissa = (mantissa | (1U << 23));
-    
-    // 计算精度缩放因子
-    const uint32_t scale = pow10_table[precision];
-    
-    // 根据指数分类处理
-    uint32_t int_part = 0;
-    uint32_t frac_part = 0;
-    
-    if (exponent >= 23) {
-        // 纯整数部分
-        int_part = full_mantissa;
-        if (exponent > 23) {
-            int_part <<= (exponent - 23);
-        }
-    } else if (exponent >= 0) {
-        // 有整数和小数部分
-        int_part = full_mantissa >> (23 - exponent);
-        
-        // 计算小数部分：使用快速算法
-        const uint32_t frac_mantissa = full_mantissa & ((1U << (23 - exponent)) - 1);
-        const uint32_t divisor_power = 23 - exponent;
-        
-        // 使用乘法代替除法：frac_mantissa * scale / 2^divisor_power
-        // 我们将其转换为：(frac_mantissa * scale) >> divisor_power
-        uint32_t temp = frac_mantissa;
-        
-        // 避免溢出，逐步计算
-        if (temp != 0) {
-            // 如果scale很小，可以直接计算
-            if (scale <= std::numeric_limits<uint32_t>::max() / temp) {
-                temp *= scale;
-                temp >>= divisor_power;
-                
-                // 计算余数用于舍入
-                uint32_t remainder = (frac_mantissa * scale) & ((1U << divisor_power) - 1);
-                if (remainder >= (1U << (divisor_power - 1))) {
-                    temp += 1;
-                    if (temp >= scale) {
-                        int_part += 1;
-                        temp -= scale;
-                    }
-                }
-                frac_part = temp;
-            } else {
-                // 需要更复杂的处理避免溢出
-                // 使用分数形式进行计算
-                uint64_t result = static_cast<uint64_t>(frac_mantissa) * scale;
-                result >>= divisor_power;
-                
-                // 检查是否溢出，如果溢出则使用近似值
-                if (result <= std::numeric_limits<uint32_t>::max()) {
-                    uint32_t remainder = (frac_mantissa * scale) & ((1U << divisor_power) - 1);
-                    if (remainder >= (1U << (divisor_power - 1))) {
-                        result += 1;
-                        if (result >= scale) {
-                            int_part += 1;
-                            result -= scale;
-                        }
-                    }
-                    frac_part = static_cast<uint32_t>(result);
-                }
-            }
-        }
-    } else {
-        // 小于1的数，纯小数
-        int32_t effective_exp = -(exponent + 23);  // 负数表示需要左移多少位
-        
-        if (effective_exp >= 0) {
-            // 数值很小，接近0
-            frac_part = 0;
-        } else {
-            // effective_exp 是负数，所以 -effective_exp 是我们要右移的位数
-            int32_t shift_right = -(effective_exp);
-            
-            if (shift_right <= 23) {
-                // 计算小数部分：full_mantissa * scale / 2^shift_right
-                uint32_t temp = full_mantissa;
-                
-                // 为了避免溢出，我们先尝试计算
-                if (scale <= std::numeric_limits<uint32_t>::max() / temp) {
-                    temp *= scale;
-                    temp >>= shift_right;
-                    
-                    // 舍入处理
-                    uint32_t remainder = (full_mantissa * scale) & ((1U << shift_right) - 1);
-                    if (remainder >= (1U << (shift_right - 1))) {
-                        temp += 1;
-                        if (temp >= scale) {
-                            int_part += 1;
-                            temp -= scale;
-                        }
-                    }
-                    frac_part = temp;
-                } else {
-                    // 溢出处理，使用64位临时计算
-                    uint64_t result = static_cast<uint64_t>(full_mantissa) * scale;
-                    result >>= shift_right;
-                    
-                    if (result <= std::numeric_limits<uint32_t>::max()) {
-                        uint32_t remainder = (full_mantissa * scale) & ((1U << shift_right) - 1);
-                        if (remainder >= (1U << (shift_right - 1))) {
-                            result += 1;
-                            if (result >= scale) {
-                                int_part += 1;
-                                result -= scale;
-                            }
-                        }
-                        frac_part = static_cast<uint32_t>(result);
-                    }
-                }
-            }
-        }
-    }
-    
-    // 输出整数部分
-    if (int_part == 0) {
-        p_str[0] = '0';
-        p_str++;
-    } else {
-        p_str += _fmtnum_u32_r10(int_part, p_str);
-    }
-    
-    // 输出小数部分
-    if (precision > 0) {
-        p_str[0] = '.';
-        p_str++;
-        _fmtnum_u32_r10_padded(frac_part, p_str, precision);
-        p_str += precision;
-    }
-    
-    return static_cast<size_t>(p_str - start);
-}
-#endif
-#endif
 
 
 char * str::fmtnum_f32(

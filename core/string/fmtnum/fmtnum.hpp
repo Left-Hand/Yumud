@@ -14,7 +14,7 @@ namespace ymd::str{
     const uint32_t abs_value_bits, uint8_t precsion, const uint8_t Q);
 
 [[nodiscard]] char * _fmtnum_signed_fixed_impl(char * p_str, 
-    const int32_t value_bits, uint8_t precsion, const uint8_t Q);
+    const uint32_t value_bits, uint8_t precsion, const uint8_t Q);
 
 template<typename D>
 requires(sizeof(D) <= 4)

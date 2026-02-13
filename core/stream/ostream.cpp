@@ -205,8 +205,8 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     char * p_str = buf.data();\
 
 #define PRINT_NUMERIC_END(convfunc, ...)\
-    char * end = convfunc(p_str, val, ##__VA_ARGS__);\
-    this->write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(buf.data()), reinterpret_cast<const uint8_t *>(end)));\
+    size_t len = convfunc(p_str, val, ##__VA_ARGS__) - p_str;\
+    this->write_bytes(std::span(reinterpret_cast<const uint8_t *>(buf.data()), len));\
 
 #define PRINT_NUMERIC_TEMPLATE(val, cap, convfunc, ...)\
     PRINT_NUMERIC_BEGIN(cap)\
@@ -252,11 +252,11 @@ void OutputStream::print_i32(const int32_t val){
 }
 
 void OutputStream::print_u64(const uint64_t val){
-    PRINT_INT_TEMPLATE(val, 64, str::fmtnum_u64, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, 32, str::fmtnum_u64, this->config_.radix);
 }
 
 void OutputStream::print_i64(const int64_t val){
-    PRINT_INT_TEMPLATE(val, 64, str::fmtnum_i64, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, 32, str::fmtnum_i64, this->config_.radix);
 }
 
 OutputStream & OutputStream::operator<<(const uint8_t val){

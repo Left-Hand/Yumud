@@ -230,7 +230,7 @@ void sincos_main(){
                 iq16::from(float(-y5)),
                 // -y5,
 
-                uint32_t(0)
+                int32_t(-1)
                 // x.to_bits() >> 24
                 // std::oct
                 // x.to_bits() >> 24,
