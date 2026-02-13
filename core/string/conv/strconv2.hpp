@@ -4,14 +4,15 @@
 #include <concepts>
 #include <tuple>
 
-#include "prelude.hpp"
-#include "fstrdump.hpp"
-
 #include "core/tmp/reflect/enum.hpp"
 #include "core/tmp/exprimetal_integral.hpp"
 #include "core/math/iq/fixed_t.hpp"
-
 #include "core/string/view/mut_string_view.hpp"
+#include "core/string/utils/pow10.hpp"
+
+#include "prelude.hpp"
+#include "fstrdump.hpp"
+
 
 #include "primitive/arithmetic/angular.hpp"
 

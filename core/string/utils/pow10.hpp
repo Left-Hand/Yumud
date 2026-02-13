@@ -33,12 +33,6 @@ constexpr uint32_t num_int2str_chars(uint64_t int_val, const uint8_t radix){
 }
 
 template<typename T>
-constexpr T fast_div_5(T x){return (((int64_t)x*0x66666667L) >> 33);}
-
-template<typename T>
-constexpr T fast_div_10(T x){(((int64_t)x*0x66666667L) >> 34);}
-
-template<typename T>
 requires(std::is_unsigned_v<T>)
 constexpr uint32_t uint_to_len_chars(T value, const uint8_t radix_count) {
     if (value == 0) return 1;
