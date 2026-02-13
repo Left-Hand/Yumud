@@ -9,7 +9,7 @@ using namespace ymd;
 using namespace ymd::str;
 
 
-static constexpr char * _u32toa_r10(uint32_t unsigned_val, char* str) {
+static constexpr char * _fmtstr_u32_r10(char* str, uint32_t unsigned_val) {
     // Handle special case of zero
     if (unsigned_val == 0) {
         str[0] = '0';
@@ -17,7 +17,7 @@ static constexpr char * _u32toa_r10(uint32_t unsigned_val, char* str) {
     }
 
     const size_t len = _u32_num_digits_r10((unsigned_val));
-    int i = len - 1;
+    size_t pos = len - 1;
 
     auto fast_div10 = [](const uint32_t x) -> uint32_t{
         return str::div_10(x);
@@ -27,7 +27,7 @@ static constexpr char * _u32toa_r10(uint32_t unsigned_val, char* str) {
     while (unsigned_val) {
         uint32_t quotient = fast_div10(unsigned_val);
         uint8_t digit = unsigned_val - quotient * 10;  // Get remainder (digit)
-        str[i--] = digit + '0';              // Convert to character and place in string
+        str[pos--] = digit + '0';              // Convert to character and place in string
         unsigned_val = quotient;                      // Move to next digit
     }
 
@@ -36,15 +36,13 @@ static constexpr char * _u32toa_r10(uint32_t unsigned_val, char* str) {
 
 
 
-static constexpr void _u32toa_r10_padded(uint32_t unsigned_val, char * str, const size_t len){
+static constexpr void _fmtstr_u32_r10_padded(char * str, uint32_t unsigned_val, const size_t len){
     // 即使数据为0 也需要先填充所有位置为'0'
     for (size_t i = 0; i < len; ++i) {
         str[i] = '0';
     }
 
-    if(unsigned_val == 0) [[unlikely]] {
-        return;
-    }
+    // 即使数据为0也不做卫语句 会产生不必要的分支开销 对于小数位而言为0的可能性很小
 
     auto fast_div10 = [](const uint32_t x) -> uint32_t{
         #if 1
@@ -60,7 +58,8 @@ static constexpr void _u32toa_r10_padded(uint32_t unsigned_val, char * str, cons
     
     // 从右到左逐位填充数字
 
-    while (unsigned_val > 0) {  // 当还有数字要处理且未越界时
+    #if 1
+    while (unsigned_val) {  // 当还有数字要处理且未越界时
         #if 1
         uint32_t quotient = fast_div10(unsigned_val);
         uint8_t digit = unsigned_val - quotient * 10;  // 获取余数（即当前位数字）
@@ -68,17 +67,17 @@ static constexpr void _u32toa_r10_padded(uint32_t unsigned_val, char * str, cons
         uint32_t quotient = unsigned_val / 10;
         uint8_t digit = unsigned_val % 10;  // 获取余数（即当前位数字）
         #endif
-        str[pos] = digit + '0';                   // 转换为字符并填入字符串
+        str[pos--] = digit + '0';                   // 转换为字符并填入字符串
         unsigned_val = quotient;                      // 处理下一位
-        if (pos == 0) break;                      // 防止下标下溢
-        --pos;
-        if(pos >= len) __builtin_unreachable();
     }
+    #else
+
+    #endif
 }
 
 
 //TODO replace impl
-static constexpr char * _stupid_u64toa_r10(uint64_t unsigned_val, char* str) {
+static constexpr char * _stupid_fmtstr_u64_r10(char* str, uint64_t unsigned_val) {
 
     const size_t len = num_int2str_chars(static_cast<uint64_t>(unsigned_val), 10);
     int i = len - 1;
@@ -107,7 +106,7 @@ static_assert(u32_num_digits_r16(0xFFFFF) == 5);
 static_assert(u32_num_digits_r16(0xFFFF) == 4);
 
 
-static constexpr char * _u32toa_r16(uint32_t unsigned_val, char* str) {
+static constexpr char * _fmtstr_u32_r16(char* str, uint32_t unsigned_val) {
     const size_t len = u32_num_digits_r16((unsigned_val));
     int i = len - 1;
 
@@ -148,7 +147,7 @@ static_assert(_u32_num_digits_r8(07) == 1);           // 1位八进制
 static_assert(_u32_num_digits_r8(0) == 1);            // 0特殊处理
 
 
-static constexpr char * _u32toa_r8(uint32_t unsigned_val, char* str) {
+static constexpr char * _fmtstr_u32_r8(char* str, uint32_t unsigned_val) {
     const size_t len = _u32_num_digits_r8(unsigned_val);
     int i = len - 1;
 
@@ -177,7 +176,7 @@ static constexpr size_t _u32_num_digits_r2(uint32_t val) {
 }
 
 // 朴素二进制转换：每次处理1位，不使用查表，逻辑清晰
-static constexpr char * _u32toa_r2(uint32_t unsigned_val, char* str) {
+static constexpr char * _fmtstr_u32_r2(char* str, uint32_t unsigned_val) {
     // 处理 0 的特殊情况
     if (unsigned_val == 0) {
         str[0] = '0';
@@ -215,7 +214,7 @@ alignas(64) static constexpr std::array<std::array<char, 4>, 16> BIN_TABLE = []{
     return ret;
 }();
 
-static constexpr size_t _u32toa_r2(uint32_t unsigned_val, char* str) {
+static constexpr size_t _fmtstr_u32_r2(uint32_t unsigned_val, char* str) {
     if (unsigned_val == 0) {
         str[0] = '0';
         return 1;
@@ -251,7 +250,7 @@ static constexpr size_t _u32toa_r2(uint32_t unsigned_val, char* str) {
 #endif
 
 template<integral T>
-constexpr char * _itoa_impl(T int_val, char * str, uint8_t radix){
+constexpr char * _fmtstr_int_impl(char * str, T int_val, uint8_t radix){
     const bool is_negative = int_val < 0;
     std::make_unsigned_t<T> unsigned_val = [&]{
         if constexpr (std::is_signed_v<T>) {
@@ -270,7 +269,7 @@ constexpr char * _itoa_impl(T int_val, char * str, uint8_t radix){
         case 10:
             static_assert(sizeof(T) <= 8);
             if constexpr(sizeof(T) <= 4){
-                return _u32toa_r10(static_cast<uint32_t>(unsigned_val), str);
+                return _fmtstr_u32_r10(str, static_cast<uint32_t>(unsigned_val));
             }else{
                 if(is_negative){
                     str[0] = '-';
@@ -278,19 +277,19 @@ constexpr char * _itoa_impl(T int_val, char * str, uint8_t radix){
                 }
 
                 if(unsigned_val <= 0xFFFFFFFFU){
-                    return _u32toa_r10(unsigned_val, str);
+                    return _fmtstr_u32_r10(str, static_cast<uint32_t>(unsigned_val));
                 }
 
-                return _stupid_u64toa_r10(unsigned_val, str);
+                return _stupid_fmtstr_u64_r10(str, unsigned_val);
             }
         case 16:
-            return _u32toa_r16(unsigned_val, str);
+            return _fmtstr_u32_r16(str, unsigned_val);
             break;
         case 8:
-            return _u32toa_r8(unsigned_val, str);
+            return _fmtstr_u32_r8(str, unsigned_val);
             break;
         case 2:
-            return _u32toa_r2(unsigned_val, str);
+            return _fmtstr_u32_r2(str, unsigned_val);
         default:
             break;
     }
@@ -313,13 +312,12 @@ static_assert(calc_low_mask(32) == 0xffffffffu);
 static_assert(calc_low_mask(16) == 0x0000ffffu);
 
 
-char * str::_iqtoa_impl(
-    const int32_t value_bits, 
+char * str::_fmtstr_signed_fixed_impl(
     char * str, 
+    const int32_t value_bits, 
     uint8_t precsion, 
     const uint8_t Q
 ){
-
     const bool is_negative = value_bits < 0;
 
 	uint32_t abs_value_bits;
@@ -331,13 +329,13 @@ char * str::_iqtoa_impl(
     }else{
         abs_value_bits = static_cast<uint32_t>(value_bits);
     }
-    return _uqtoa_impl(abs_value_bits, str, precsion, Q);
+    return _fmtstr_unsigned_fixed_impl(str, abs_value_bits, precsion, Q);
 
 }
 
-char * str::_uqtoa_impl(
-    uint32_t abs_value_bits, 
+char * str::_fmtstr_unsigned_fixed_impl(
     char * str, 
+    uint32_t abs_value_bits, 
     uint8_t precsion, 
     const uint8_t Q
 ){
@@ -346,6 +344,7 @@ char * str::_uqtoa_impl(
     if(precsion > MAX_PRECSION) precsion = MAX_PRECSION;
 
     const uint32_t LOWER_MASK = calc_low_mask(Q);
+    const uint32_t ROUND_BIT = calc_low_mask(Q) & (~calc_low_mask(Q-1));
     const uint32_t POW10_SCALE = pow10_table[precsion];
 
     // 使用64位整数进行计算，避免溢出
@@ -356,9 +355,14 @@ char * str::_uqtoa_impl(
     uint32_t digit_part;
 
     if(Q != 32)[[likely]]{
-        frac_part = static_cast<uint32_t>(fs >> Q);
+        // 计算舍入（基于小数部分的精度）
+        const bool need_upper_round = (static_cast<uint32_t>(fs) & ROUND_BIT);
+
+        frac_part = static_cast<uint32_t>(fs >> Q) + need_upper_round;
+
         // 检查是否需要进位到整数部分
         const bool carry_to_int = (frac_part >= POW10_SCALE);
+
         digit_part = (uint32_t(abs_value_bits) >> Q) + uint32_t(carry_to_int);
 
         // 如果发生进位，调整小数部分
@@ -368,43 +372,63 @@ char * str::_uqtoa_impl(
         digit_part = 0;
     }
 
-    str = _u32toa_r10(digit_part, str);
+    str = _fmtstr_u32_r10(str, digit_part);
 
     if(precsion){
         str[0] = '.';
         str++;
-        _u32toa_r10_padded(frac_part, str, precsion);
+        _fmtstr_u32_r10_padded(str, frac_part, precsion);
         str += precsion;
     }
 
     return str;
 }
 
-size_t str::itoa(int32_t int_val, char *str, uint8_t radix){
-    return _itoa_impl<int32_t>(int_val, str, radix) - str;
+char * str::fmtstr_i32(
+    char *str, 
+    int32_t int_val,
+    uint8_t radix
+){
+    return _fmtstr_int_impl<int32_t>(str, int_val, radix);
+}
+
+char * str::fmtstr_u32(
+    char *str, 
+    uint32_t int_val,
+    uint8_t radix
+){
+    return _fmtstr_int_impl<uint32_t>(str, int_val, radix);
 }
 
 
-size_t str::iutoa(uint64_t int_val,char *str,uint8_t radix){
+char * str::fmtstr_u64(
+    char *str,
+    uint64_t int_val,
+    uint8_t radix
+){
     static constexpr uint64_t MASK = (~(uint64_t)std::numeric_limits<uint32_t>::max());
     const bool cant_be_represent_in_32 = int_val & MASK;
     if(cant_be_represent_in_32 == 0){
-        return _itoa_impl<uint32_t>(int_val, str, radix) - str;
+        return _fmtstr_int_impl<uint32_t>(str, int_val, radix);
     }
 
     //TODO 64位除法的实现会大幅增大体积
-    return _itoa_impl<int64_t>(int_val, str, radix) - str;
+    return _fmtstr_int_impl<int64_t>(str, int_val, radix);
 }
 
 
-size_t str::iltoa(int64_t int_val, char * str, uint8_t radix){
-    // return _itoa_impl<int64_t>(int_val, str, radix);
-    return _itoa_impl<int32_t>(int_val, str, radix) - str;
+char * str::fmtstr_i64(
+    char * str, 
+    int64_t int_val, 
+    uint8_t radix
+){
+    // return _fmtstr_int_impl<int64_t>(str, int_val, radix);
+    return _fmtstr_int_impl<int32_t>(str, int_val, radix);
 }
 
 
 #if 0
-[[maybe_unused]] static constexpr size_t _ftoa_impl(float value, char* str, uint8_t precision) {
+[[maybe_unused]] static constexpr size_tfmtstr_ _f_impl(float value, char* str, uint8_t precision) {
     if (precision > 9) precision = 9;
     
     // Extract IEEE 754 floating point components
@@ -533,13 +557,13 @@ size_t str::iltoa(int64_t int_val, char * str, uint8_t radix){
     }
     
     // Convert integer part
-    str += _u32toa_r10(static_cast<uint32_t>(int_part), str);
+    str += _fmtstr_u32_r10(static_cast<uint32_t>(int_part), str);
     
     // Convert fractional part
     if (precision > 0) {
         str[0] = '.';
         str++;
-        _u32toa_r10_padded(frac_part, str, precision);
+        _fmtstr_u32_r10_padded(frac_part, str, precision);
         str += precision;
     }
     
@@ -548,7 +572,11 @@ size_t str::iltoa(int64_t int_val, char * str, uint8_t radix){
 #else
 
 #if 1
-[[maybe_unused]] static constexpr char * _ftoa_impl(float value, char* str, uint8_t precision) {
+[[maybe_unused]] static constexpr char * _fmtstr_f32_impl(
+    char* str, 
+    float value, 
+    uint8_t precision
+) {
     constexpr size_t MAX_PRECSION = std::size(pow10_table) - 1;
     if (precision > MAX_PRECSION) precision = MAX_PRECSION;
     
@@ -682,20 +710,20 @@ size_t str::iltoa(int64_t int_val, char * str, uint8_t radix){
     }
     
     // 转换整数部分
-    str = _u32toa_r10(int_part, str);
+    str = _fmtstr_u32_r10(str, int_part);
     
     // 转换小数部分
     if (precision > 0) {
         str[0] = '.';
         str++;
-        _u32toa_r10_padded(frac_part, str, precision);
+        _fmtstr_u32_r10_padded(str, frac_part, precision);
         str += precision;
     }
     
     return str;
 }
 #else
-[[maybe_unused]] static constexpr size_t _ftoa_impl(float value, char* str, uint8_t precision) {
+[[maybe_unused]] static constexpr size_tfmtstr_ _f_impl(float value, char* str, uint8_t precision) {
     if (precision > 9) precision = 9;
     
     // 提取IEEE 754浮点组件
@@ -858,14 +886,14 @@ size_t str::iltoa(int64_t int_val, char * str, uint8_t radix){
         str[0] = '0';
         str++;
     } else {
-        str += _u32toa_r10(int_part, str);
+        str += _fmtstr_u32_r10(int_part, str);
     }
     
     // 输出小数部分
     if (precision > 0) {
         str[0] = '.';
         str++;
-        _u32toa_r10_padded(frac_part, str, precision);
+        _fmtstr_u32_r10_padded(frac_part, str, precision);
         str += precision;
     }
     
@@ -875,6 +903,10 @@ size_t str::iltoa(int64_t int_val, char * str, uint8_t radix){
 #endif
 
 
-size_t str::ftoa(float float_val, char * str, uint8_t precision){
-    return _ftoa_impl(float_val, str, precision) - str;
+char * str::fmtstr_f32(
+    char * str, 
+    float float_val, 
+    uint8_t precision
+){
+    return _fmtstr_f32_impl(str, float_val, precision);
 }

@@ -117,7 +117,7 @@ public:
         };
 
         // std::array<char, 4> splitter;
-        char splitter[4];
+        char splitter_chars[4];
 
         uint8_t splitter_len;
         uint8_t radix;
@@ -134,7 +134,7 @@ public:
 
         static constexpr Self from_default(){
             return Self{
-                .splitter = {',', ' ', '\0', '\0'},
+                .splitter_chars = {',', ' ', '\0', '\0'},
                 .splitter_len = 2,
                 .radix = 10,
                 .eps = 4,
@@ -167,20 +167,20 @@ public:
     void write_bytes(std::span<const uint8_t> bytes);
 
     OutputStream & set_splitter(const char * splitter){
-        std::fill_n(config_.splitter, 4, 0);
+        std::fill_n(config_.splitter_chars, 4, 0);
 
-        config_.splitter_len = 0;
-        for(size_t i = 0; i < 4 && splitter[i] != '\0'; ++i) {
-            config_.splitter[i] = splitter[i];
-            config_.splitter_len++;
+        size_t i = 0;
+        for(;i < 4 && splitter[i] != '\0'; ++i) {
+            config_.splitter_chars[i] = splitter[i];
         }
+        config_.splitter_len = static_cast<uint8_t>(i);
         return *this;
     }
 
     OutputStream & set_splitter(const char splitter){
-        std::fill_n(config_.splitter, 4, 0);
-        config_.splitter[0] = splitter;
-        config_.splitter_len = 1;
+        std::fill_n(config_.splitter_chars, 4, 0);
+        config_.splitter_chars[0] = splitter;
+        config_.splitter_len = (splitter == '\0');
         return *this;
     }
 
@@ -721,7 +721,7 @@ private:
     Config config_;
 
     __fast_inline void print_splt(){
-        write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(config_.splitter), config_.splitter_len));
+        write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(config_.splitter_chars), config_.splitter_len));
     }
 
     template<typename T>

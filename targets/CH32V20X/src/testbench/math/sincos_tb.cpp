@@ -15,7 +15,6 @@ using namespace ymd;
 template<typename GFn, typename EFn>
 __no_inline Microseconds eval_one_func(GFn && g_fn, size_t times, EFn && fn){
     const auto begin_us = clock::micros();
-    
     auto y = std::forward<EFn>(fn)(0);
     auto x = uq32(0);
     const auto step = uq32::from_rcp(times * 4);
@@ -194,14 +193,16 @@ void sincos_main(){
 
     std::array<uint8_t, 128> format_buf;
     auto formatter = BufStream (std::span(format_buf));
-    formatter.set_radix(8);
-    formatter.set_splitter(", ");
-    formatter.set_eps(6);
+    // formatter.set_radix(8);
+    // formatter.set_splitter(", ");
+    formatter.set_splitter(",");
+    formatter.set_eps(4);
     while(true){
-        const auto now_secs = clock::seconds();
+        const auto now_secs = clock::seconds_precious();
         // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
         // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
-        const auto x = pu_to_uq32((now_secs * 2));
+        // const auto x = pu_to_uq32((now_secs * 2));
+        const auto x = uq32::from_bits((now_secs * 2).to_bits());
         const auto [s,c] = math::sincospu(x);
         // const auto x = 6 * frac(t * 2) - 3;
 
@@ -214,8 +215,13 @@ void sincos_main(){
         const auto elapsed_us = measure_total_elapsed_us([&]{
             formatter.println(
                 // uq30(x),
+                // std::showpos, 
+                // std::showbase,
+                // std::hex,
+                uq16(x),
                 uq32(x),
-                (s).to_bits() - fn2(x).to_bits(), c,
+                // (s).to_bits() - fn2(x).to_bits(), 
+                c,
                 s, fn2(x),
                 // std::numeric_limits<iq31>::min(), 
                 // std::numeric_limits<iq31>::max(), 
@@ -224,7 +230,7 @@ void sincos_main(){
                 iq16::from(float(-y5)),
                 // -y5,
 
-                0
+                uint32_t(0)
                 // x.to_bits() >> 24
                 // std::oct
                 // x.to_bits() >> 24,

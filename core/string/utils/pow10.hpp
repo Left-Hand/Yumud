@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <type_traits>
 
 namespace ymd::str{
 
@@ -19,10 +20,10 @@ static constexpr  uint32_t pow10_table[] = {
     1000000000UL
 };
 
-constexpr size_t num_int2str_chars(uint64_t int_val, const uint8_t radix){
+constexpr uint32_t num_int2str_chars(uint64_t int_val, const uint8_t radix){
     if(int_val == 0) return 1;
 
-    size_t i = 0;
+    uint32_t i = 0;
     uint64_t sum = 1;
     while(int_val >= sum){
         sum = sum * static_cast<uint64_t>(radix);
@@ -32,14 +33,14 @@ constexpr size_t num_int2str_chars(uint64_t int_val, const uint8_t radix){
 }
 
 template<typename T>
-__always_inline constexpr T fast_div_5(T x){return (((int64_t)x*0x66666667L) >> 33);}
+constexpr T fast_div_5(T x){return (((int64_t)x*0x66666667L) >> 33);}
 
 template<typename T>
-__always_inline constexpr T fast_div_10(T x){(((int64_t)x*0x66666667L) >> 34);}
+constexpr T fast_div_10(T x){(((int64_t)x*0x66666667L) >> 34);}
 
 template<typename T>
 requires(std::is_unsigned_v<T>)
-__always_inline constexpr size_t uint_to_len_chars(T value, const uint8_t radix_count) {
+constexpr uint32_t uint_to_len_chars(T value, const uint8_t radix_count) {
     if (value == 0) return 1;
 
     // 优化 1: radix_count 是 2 的幂时，用位运算
@@ -51,7 +52,7 @@ __always_inline constexpr size_t uint_to_len_chars(T value, const uint8_t radix_
     }
 
     // 优化 2: 通用情况，用对数近似计算
-    size_t length = 1;
+    uint32_t length = 1;
     T sum = radix_count;
     while (value >= sum) {
         sum *= radix_count;

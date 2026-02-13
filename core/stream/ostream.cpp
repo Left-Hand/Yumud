@@ -12,17 +12,23 @@
 using namespace ymd;
 
 
-static constexpr StringView get_basealpha(const size_t _radix){
+__attribute__((always_inline))
+static constexpr char * put_basealpha(char * str, const size_t _radix){
     switch(_radix){
         default:
         case 10:
-            return StringView("");
+            return str;
         case 2:
-            return StringView("0b");
+            str[0] = '0';
+            str[1] = 'b';
+            return str + 2;
         case 8:
-            return StringView("0");
+            str[0] = '0';
+            return str + 1;
         case 16:
-            return StringView("0x");
+            str[0] = '0';
+            str[1] = 'x';
+            return str + 2;
     }
 }
 
@@ -158,36 +164,43 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
 }
 
+#define PRINT_NUMERIC_BEGIN(cap)\
+    std::array<char, cap> buf;\
+    char * str = buf.data();\
+
+#define PRINT_NUMERIC_END(convfunc, ...)\
+    char * end = convfunc(str, val, ##__VA_ARGS__);\
+    this->write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(buf.data()), reinterpret_cast<const uint8_t *>(end)));\
+
+#define PRINT_NUMERIC_TEMPLATE(val, cap, convfunc, ...)\
+    PRINT_NUMERIC_BEGIN(cap)\
+    if((config_.specifier.showpos and val >= 0)) [[unlikely]]{\
+        str[0] = ('+');\
+        str++;}\
+    PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
+
+#define PRINT_INT_TEMPLATE(val, cap, convfunc, ...)\
+    PRINT_NUMERIC_BEGIN(cap)\
+    if((config_.specifier.showbase)) [[unlikely]]{\
+        str = put_basealpha(str, config_.radix);}\
+    else {if((config_.specifier.showpos and val >= 0)) [[unlikely]]{\
+        str[0] = ('+');\
+        str++;}}\
+    PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
 
 
-#define PRINT_INT_TEMPLATE(cap, convfunc)\
-    if((config_.specifier.showpos and val >= 0)) [[unlikely]]\
-        this->write_byte('+');\
-    if((config_.specifier.showbase and (radix() != 10))) [[unlikely]]{\
-        *this << get_basealpha(radix());}\
-    char buf[cap];\
-    const auto len = convfunc(val, buf, this->config_.radix);\
-    this->write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(buf), len));\
 
-#define PRINT_NUMERIC(buf, len, is_positive)\
-    if(config_.specifier.showpos and is_positive) *this << '+';\
-    this->write_bytes(std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(buf), len));\
-\
-
-OutputStream & OutputStream::operator<<(const uint8_t val){
-    if(radix() >= 4){
-        PRINT_INT_TEMPLATE(4, str::itoa);
-    }else{
-        PRINT_INT_TEMPLATE(8, str::itoa);
-    }
+OutputStream & OutputStream::operator<<(const float val){
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtstr_f32, this->config_.eps)
     return *this;
 }
 
-OutputStream & OutputStream::operator<<(const float val){
-    char buf[32];
-    const auto len = str::ftoa(val, buf, this->eps());
-    PRINT_NUMERIC(buf, len, (val >= 0));
-    return *this;
+void OutputStream::print_iq32(const int32_t val, const uint32_t Q){
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtstr_fixed<int32_t>, this->config_.eps, Q)
+}
+
+void OutputStream::print_uq32(const uint32_t val, const uint32_t Q){
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtstr_fixed<uint32_t>, this->config_.eps, Q)
 }
 
 OutputStream & OutputStream::operator<<(const double val){
@@ -195,49 +208,25 @@ OutputStream & OutputStream::operator<<(const double val){
 }
 
 void OutputStream::print_u32(const uint32_t val){
-    if(radix() >= 4){
-        PRINT_INT_TEMPLATE(16, str::iutoa);
-    }else{
-        PRINT_INT_TEMPLATE(32, str::iutoa);
-    }
+    PRINT_INT_TEMPLATE(val, 32, str::fmtstr_u32, this->config_.radix);
 }
+
 void OutputStream::print_i32(const int32_t val){
-    if(radix() >= 4){
-        PRINT_INT_TEMPLATE(16, str::itoa);
-    }else{
-        PRINT_INT_TEMPLATE(32, str::itoa);
-    }
+    PRINT_INT_TEMPLATE(val, 32, str::fmtstr_i32, this->config_.radix);
 }
+
 void OutputStream::print_u64(const uint64_t val){
-    if(radix() >= 4){
-        PRINT_INT_TEMPLATE(32, str::iutoa);
-    }else{
-        PRINT_INT_TEMPLATE(64, str::iutoa);
-    }
+    PRINT_INT_TEMPLATE(val, 64, str::fmtstr_u64, this->config_.radix);
 }
 
 void OutputStream::print_i64(const int64_t val){
-    if(radix() >= 4){
-        PRINT_INT_TEMPLATE(32, str::iltoa);
-    }else{
-        PRINT_INT_TEMPLATE(64, str::iltoa);
-    }
+    PRINT_INT_TEMPLATE(val, 64, str::fmtstr_i64, this->config_.radix);
 }
 
-
-
-void OutputStream::print_iq32(const int32_t bits, const uint32_t Q){
-    char buf[32];
-    const auto len = str::qtoa(bits, Q, buf, this->eps());
-    PRINT_NUMERIC(buf, len, (bits >= 0));
+OutputStream & OutputStream::operator<<(const uint8_t val){
+    PRINT_INT_TEMPLATE(val, 8, str::fmtstr_u32, this->config_.radix);
+    return *this;
 }
-
-void OutputStream::print_uq32(const uint32_t bits, const uint32_t Q){
-    char buf[32];
-    const auto len = str::qtoa(bits, Q, buf, this->eps());
-    PRINT_NUMERIC(buf, len, (bits >= 0));
-}
-
 
 OutputStream & OutputStream::operator<<(const std::monostate){
     return *this << StringView("monostate");
