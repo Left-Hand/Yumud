@@ -16,20 +16,20 @@ bool is_alpha(const char chr) {
     return (chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z');
 }
 
-[[nodiscard]] char * fmtstr_i32(char * str, const int32_t value, uint8_t radix);
-[[nodiscard]] char * fmtstr_u32(char * str, const uint32_t value, uint8_t radix);
-[[nodiscard]] char * fmtstr_u64(char * str, const uint64_t value, uint8_t radix);
-[[nodiscard]] char * fmtstr_i64(char * str, const int64_t value, uint8_t radix);
-[[nodiscard]] char * fmtstr_f32(char * str, const float value, uint8_t precsion);
+[[nodiscard]] char * fmtnum_i32(char * str, const int32_t value, uint8_t radix);
+[[nodiscard]] char * fmtnum_u32(char * str, const uint32_t value, uint8_t radix);
+[[nodiscard]] char * fmtnum_u64(char * str, const uint64_t value, uint8_t radix);
+[[nodiscard]] char * fmtnum_i64(char * str, const int64_t value, uint8_t radix);
+[[nodiscard]] char * fmtnum_f32(char * str, const float value, uint8_t precsion);
 
 
-[[nodiscard]] char * _fmtstr_unsigned_fixed_impl(char * str, const uint32_t abs_value_bits, uint8_t precsion, const uint8_t Q);
+[[nodiscard]] char * _fmtnum_unsigned_fixed_impl(char * str, const uint32_t abs_value_bits, uint8_t precsion, const uint8_t Q);
 
-[[nodiscard]] char * _fmtstr_signed_fixed_impl(char * str, const int32_t value_bits, uint8_t precsion, const uint8_t Q);
+[[nodiscard]] char * _fmtnum_signed_fixed_impl(char * str, const int32_t value_bits, uint8_t precsion, const uint8_t Q);
 
 template<typename D>
 requires(sizeof(D) <= 4)
-[[nodiscard]] char * fmtstr_fixed(
+[[nodiscard]] char * fmtnum_fixed(
     char * const str, 
     const D bits, 
     uint8_t precsion, 
@@ -38,9 +38,9 @@ requires(sizeof(D) <= 4)
 	using size_aligned_t = std::conditional_t<std::is_signed_v<D>, int32_t, uint32_t>;
 	static_assert(sizeof(size_aligned_t) == sizeof(D));
 	if constexpr(std::is_signed_v<D>)
-		return _fmtstr_signed_fixed_impl(str, int32_t(bits), precsion, Q);
+		return _fmtnum_signed_fixed_impl(str, int32_t(bits), precsion, Q);
 	else
-		return _fmtstr_unsigned_fixed_impl(str, uint32_t(bits), precsion, Q);
+		return _fmtnum_unsigned_fixed_impl(str, uint32_t(bits), precsion, Q);
 }
 
 

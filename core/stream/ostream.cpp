@@ -1,6 +1,7 @@
 #include "ostream.hpp"
-#include "core/string/xtoa/xtoa.hpp"
 #include "core/clock/clock.hpp"
+
+#include "core/string/fmtnum/fmtnum.hpp"
 #include "core/string/view/string_view.hpp"
 #include "core/string/view/mut_string_view.hpp"
 
@@ -191,16 +192,16 @@ void OutputStream::print_source_loc(const std::source_location & loc){
 
 
 OutputStream & OutputStream::operator<<(const float val){
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtstr_f32, this->config_.eps)
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_f32, this->config_.eps)
     return *this;
 }
 
 void OutputStream::print_iq32(const int32_t val, const uint32_t Q){
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtstr_fixed<int32_t>, this->config_.eps, Q)
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixed<int32_t>, this->config_.eps, Q)
 }
 
 void OutputStream::print_uq32(const uint32_t val, const uint32_t Q){
-    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtstr_fixed<uint32_t>, this->config_.eps, Q)
+    PRINT_NUMERIC_TEMPLATE(val, 32, str::fmtnum_fixed<uint32_t>, this->config_.eps, Q)
 }
 
 OutputStream & OutputStream::operator<<(const double val){
@@ -208,23 +209,23 @@ OutputStream & OutputStream::operator<<(const double val){
 }
 
 void OutputStream::print_u32(const uint32_t val){
-    PRINT_INT_TEMPLATE(val, 32, str::fmtstr_u32, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, 32, str::fmtnum_u32, this->config_.radix);
 }
 
 void OutputStream::print_i32(const int32_t val){
-    PRINT_INT_TEMPLATE(val, 32, str::fmtstr_i32, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, 32, str::fmtnum_i32, this->config_.radix);
 }
 
 void OutputStream::print_u64(const uint64_t val){
-    PRINT_INT_TEMPLATE(val, 64, str::fmtstr_u64, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, 64, str::fmtnum_u64, this->config_.radix);
 }
 
 void OutputStream::print_i64(const int64_t val){
-    PRINT_INT_TEMPLATE(val, 64, str::fmtstr_i64, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, 64, str::fmtnum_i64, this->config_.radix);
 }
 
 OutputStream & OutputStream::operator<<(const uint8_t val){
-    PRINT_INT_TEMPLATE(val, 8, str::fmtstr_u32, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, 8, str::fmtnum_u32, this->config_.radix);
     return *this;
 }
 

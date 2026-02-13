@@ -1,7 +1,6 @@
-#include "xtoa.hpp"
+#include "fmtnum.hpp"
 #include "core/string/utils/pow10.hpp"
 #include "core/string/utils/div10.hpp"
-#include "core/string/utils/reverse.hpp"
 
 #include <array>
 
@@ -9,7 +8,7 @@ using namespace ymd;
 using namespace ymd::str;
 
 
-static constexpr char * _fmtstr_u32_r10(char* str, uint32_t unsigned_val) {
+static constexpr char * _fmtnum_u32_r10(char* str, uint32_t unsigned_val) {
     // Handle special case of zero
     if (unsigned_val == 0) {
         str[0] = '0';
@@ -36,7 +35,7 @@ static constexpr char * _fmtstr_u32_r10(char* str, uint32_t unsigned_val) {
 
 
 
-static constexpr void _fmtstr_u32_r10_padded(char * str, uint32_t unsigned_val, const size_t len){
+static constexpr void _fmtnum_u32_r10_padded(char * str, uint32_t unsigned_val, const size_t len){
     // 即使数据为0 也需要先填充所有位置为'0'
     for (size_t i = 0; i < len; ++i) {
         str[i] = '0';
@@ -77,7 +76,7 @@ static constexpr void _fmtstr_u32_r10_padded(char * str, uint32_t unsigned_val, 
 
 
 //TODO replace impl
-static constexpr char * _stupid_fmtstr_u64_r10(char* str, uint64_t unsigned_val) {
+static constexpr char * _stupid_fmtnum_u64_r10(char* str, uint64_t unsigned_val) {
 
     const size_t len = num_int2str_chars(static_cast<uint64_t>(unsigned_val), 10);
     int i = len - 1;
@@ -106,7 +105,7 @@ static_assert(u32_num_digits_r16(0xFFFFF) == 5);
 static_assert(u32_num_digits_r16(0xFFFF) == 4);
 
 
-static constexpr char * _fmtstr_u32_r16(char* str, uint32_t unsigned_val) {
+static constexpr char * _fmtnum_u32_r16(char* str, uint32_t unsigned_val) {
     const size_t len = u32_num_digits_r16((unsigned_val));
     int i = len - 1;
 
@@ -147,7 +146,7 @@ static_assert(_u32_num_digits_r8(07) == 1);           // 1位八进制
 static_assert(_u32_num_digits_r8(0) == 1);            // 0特殊处理
 
 
-static constexpr char * _fmtstr_u32_r8(char* str, uint32_t unsigned_val) {
+static constexpr char * _fmtnum_u32_r8(char* str, uint32_t unsigned_val) {
     const size_t len = _u32_num_digits_r8(unsigned_val);
     int i = len - 1;
 
@@ -176,7 +175,7 @@ static constexpr size_t _u32_num_digits_r2(uint32_t val) {
 }
 
 // 朴素二进制转换：每次处理1位，不使用查表，逻辑清晰
-static constexpr char * _fmtstr_u32_r2(char* str, uint32_t unsigned_val) {
+static constexpr char * _fmtnum_u32_r2(char* str, uint32_t unsigned_val) {
     // 处理 0 的特殊情况
     if (unsigned_val == 0) {
         str[0] = '0';
@@ -214,7 +213,7 @@ alignas(64) static constexpr std::array<std::array<char, 4>, 16> BIN_TABLE = []{
     return ret;
 }();
 
-static constexpr size_t _fmtstr_u32_r2(uint32_t unsigned_val, char* str) {
+static constexpr size_t _fmtnum_u32_r2(uint32_t unsigned_val, char* str) {
     if (unsigned_val == 0) {
         str[0] = '0';
         return 1;
@@ -250,7 +249,7 @@ static constexpr size_t _fmtstr_u32_r2(uint32_t unsigned_val, char* str) {
 #endif
 
 template<integral T>
-constexpr char * _fmtstr_int_impl(char * str, T int_val, uint8_t radix){
+constexpr char * _fmtnum_int_impl(char * str, T int_val, uint8_t radix){
     const bool is_negative = int_val < 0;
     std::make_unsigned_t<T> unsigned_val = [&]{
         if constexpr (std::is_signed_v<T>) {
@@ -269,7 +268,7 @@ constexpr char * _fmtstr_int_impl(char * str, T int_val, uint8_t radix){
         case 10:
             static_assert(sizeof(T) <= 8);
             if constexpr(sizeof(T) <= 4){
-                return _fmtstr_u32_r10(str, static_cast<uint32_t>(unsigned_val));
+                return _fmtnum_u32_r10(str, static_cast<uint32_t>(unsigned_val));
             }else{
                 if(is_negative){
                     str[0] = '-';
@@ -277,19 +276,19 @@ constexpr char * _fmtstr_int_impl(char * str, T int_val, uint8_t radix){
                 }
 
                 if(unsigned_val <= 0xFFFFFFFFU){
-                    return _fmtstr_u32_r10(str, static_cast<uint32_t>(unsigned_val));
+                    return _fmtnum_u32_r10(str, static_cast<uint32_t>(unsigned_val));
                 }
 
-                return _stupid_fmtstr_u64_r10(str, unsigned_val);
+                return _stupid_fmtnum_u64_r10(str, unsigned_val);
             }
         case 16:
-            return _fmtstr_u32_r16(str, unsigned_val);
+            return _fmtnum_u32_r16(str, unsigned_val);
             break;
         case 8:
-            return _fmtstr_u32_r8(str, unsigned_val);
+            return _fmtnum_u32_r8(str, unsigned_val);
             break;
         case 2:
-            return _fmtstr_u32_r2(str, unsigned_val);
+            return _fmtnum_u32_r2(str, unsigned_val);
         default:
             break;
     }
@@ -312,7 +311,7 @@ static_assert(calc_low_mask(32) == 0xffffffffu);
 static_assert(calc_low_mask(16) == 0x0000ffffu);
 
 
-char * str::_fmtstr_signed_fixed_impl(
+char * str::_fmtnum_signed_fixed_impl(
     char * str, 
     const int32_t value_bits, 
     uint8_t precsion, 
@@ -329,11 +328,11 @@ char * str::_fmtstr_signed_fixed_impl(
     }else{
         abs_value_bits = static_cast<uint32_t>(value_bits);
     }
-    return _fmtstr_unsigned_fixed_impl(str, abs_value_bits, precsion, Q);
+    return _fmtnum_unsigned_fixed_impl(str, abs_value_bits, precsion, Q);
 
 }
 
-char * str::_fmtstr_unsigned_fixed_impl(
+char * str::_fmtnum_unsigned_fixed_impl(
     char * str, 
     uint32_t abs_value_bits, 
     uint8_t precsion, 
@@ -372,36 +371,36 @@ char * str::_fmtstr_unsigned_fixed_impl(
         digit_part = 0;
     }
 
-    str = _fmtstr_u32_r10(str, digit_part);
+    str = _fmtnum_u32_r10(str, digit_part);
 
     if(precsion){
         str[0] = '.';
         str++;
-        _fmtstr_u32_r10_padded(str, frac_part, precsion);
+        _fmtnum_u32_r10_padded(str, frac_part, precsion);
         str += precsion;
     }
 
     return str;
 }
 
-char * str::fmtstr_i32(
+char * str::fmtnum_i32(
     char *str, 
     int32_t int_val,
     uint8_t radix
 ){
-    return _fmtstr_int_impl<int32_t>(str, int_val, radix);
+    return _fmtnum_int_impl<int32_t>(str, int_val, radix);
 }
 
-char * str::fmtstr_u32(
+char * str::fmtnum_u32(
     char *str, 
     uint32_t int_val,
     uint8_t radix
 ){
-    return _fmtstr_int_impl<uint32_t>(str, int_val, radix);
+    return _fmtnum_int_impl<uint32_t>(str, int_val, radix);
 }
 
 
-char * str::fmtstr_u64(
+char * str::fmtnum_u64(
     char *str,
     uint64_t int_val,
     uint8_t radix
@@ -409,26 +408,26 @@ char * str::fmtstr_u64(
     static constexpr uint64_t MASK = (~(uint64_t)std::numeric_limits<uint32_t>::max());
     const bool cant_be_represent_in_32 = int_val & MASK;
     if(cant_be_represent_in_32 == 0){
-        return _fmtstr_int_impl<uint32_t>(str, int_val, radix);
+        return _fmtnum_int_impl<uint32_t>(str, int_val, radix);
     }
 
     //TODO 64位除法的实现会大幅增大体积
-    return _fmtstr_int_impl<int64_t>(str, int_val, radix);
+    return _fmtnum_int_impl<int64_t>(str, int_val, radix);
 }
 
 
-char * str::fmtstr_i64(
+char * str::fmtnum_i64(
     char * str, 
     int64_t int_val, 
     uint8_t radix
 ){
-    // return _fmtstr_int_impl<int64_t>(str, int_val, radix);
-    return _fmtstr_int_impl<int32_t>(str, int_val, radix);
+    // return _fmtnum_int_impl<int64_t>(str, int_val, radix);
+    return _fmtnum_int_impl<int32_t>(str, int_val, radix);
 }
 
 
 #if 0
-[[maybe_unused]] static constexpr size_tfmtstr_ _f_impl(float value, char* str, uint8_t precision) {
+[[maybe_unused]] static constexpr size_tfmtnum_ _f_impl(float value, char* str, uint8_t precision) {
     if (precision > 9) precision = 9;
     
     // Extract IEEE 754 floating point components
@@ -557,13 +556,13 @@ char * str::fmtstr_i64(
     }
     
     // Convert integer part
-    str += _fmtstr_u32_r10(static_cast<uint32_t>(int_part), str);
+    str += _fmtnum_u32_r10(static_cast<uint32_t>(int_part), str);
     
     // Convert fractional part
     if (precision > 0) {
         str[0] = '.';
         str++;
-        _fmtstr_u32_r10_padded(frac_part, str, precision);
+        _fmtnum_u32_r10_padded(frac_part, str, precision);
         str += precision;
     }
     
@@ -572,7 +571,7 @@ char * str::fmtstr_i64(
 #else
 
 #if 1
-[[maybe_unused]] static constexpr char * _fmtstr_f32_impl(
+[[maybe_unused]] static constexpr char * _fmtnum_f32_impl(
     char* str, 
     float value, 
     uint8_t precision
@@ -710,20 +709,20 @@ char * str::fmtstr_i64(
     }
     
     // 转换整数部分
-    str = _fmtstr_u32_r10(str, int_part);
+    str = _fmtnum_u32_r10(str, int_part);
     
     // 转换小数部分
     if (precision > 0) {
         str[0] = '.';
         str++;
-        _fmtstr_u32_r10_padded(str, frac_part, precision);
+        _fmtnum_u32_r10_padded(str, frac_part, precision);
         str += precision;
     }
     
     return str;
 }
 #else
-[[maybe_unused]] static constexpr size_tfmtstr_ _f_impl(float value, char* str, uint8_t precision) {
+[[maybe_unused]] static constexpr size_tfmtnum_ _f_impl(float value, char* str, uint8_t precision) {
     if (precision > 9) precision = 9;
     
     // 提取IEEE 754浮点组件
@@ -886,14 +885,14 @@ char * str::fmtstr_i64(
         str[0] = '0';
         str++;
     } else {
-        str += _fmtstr_u32_r10(int_part, str);
+        str += _fmtnum_u32_r10(int_part, str);
     }
     
     // 输出小数部分
     if (precision > 0) {
         str[0] = '.';
         str++;
-        _fmtstr_u32_r10_padded(frac_part, str, precision);
+        _fmtnum_u32_r10_padded(frac_part, str, precision);
         str += precision;
     }
     
@@ -903,10 +902,10 @@ char * str::fmtstr_i64(
 #endif
 
 
-char * str::fmtstr_f32(
+char * str::fmtnum_f32(
     char * str, 
     float float_val, 
     uint8_t precision
 ){
-    return _fmtstr_f32_impl(str, float_val, precision);
+    return _fmtnum_f32_impl(str, float_val, precision);
 }
