@@ -8,11 +8,11 @@ using namespace ymd;
 using namespace ymd::str;
 
 
-static constexpr char * _fmtnum_u32_r10(char* str, uint32_t unsigned_val) {
+static constexpr char * _fmtnum_u32_r10(char* p_str, uint32_t unsigned_val) {
     // Handle special case of zero
     if (unsigned_val == 0) {
-        str[0] = '0';
-        return str + 1;
+        p_str[0] = '0';
+        return p_str + 1;
     }
 
     const size_t len = _u32_num_digits_r10((unsigned_val));
@@ -26,19 +26,19 @@ static constexpr char * _fmtnum_u32_r10(char* str, uint32_t unsigned_val) {
     while (unsigned_val) {
         uint32_t quotient = fast_div10(unsigned_val);
         uint8_t digit = unsigned_val - quotient * 10;  // Get remainder (digit)
-        str[pos--] = digit + '0';              // Convert to character and place in string
+        p_str[pos--] = digit + '0';              // Convert to character and place in string
         unsigned_val = quotient;                      // Move to next digit
     }
 
-    return str + len;
+    return p_str + len;
 }
 
 
 
-static constexpr void _fmtnum_u32_r10_padded(char * str, uint32_t unsigned_val, const size_t len){
+static constexpr void _fmtnum_u32_r10_padded(char * p_str, uint32_t unsigned_val, const size_t len){
     // 即使数据为0 也需要先填充所有位置为'0'
     for (size_t i = 0; i < len; ++i) {
-        str[i] = '0';
+        p_str[i] = '0';
     }
 
     // 即使数据为0也不做卫语句 会产生不必要的分支开销 对于小数位而言为0的可能性很小
@@ -66,7 +66,7 @@ static constexpr void _fmtnum_u32_r10_padded(char * str, uint32_t unsigned_val, 
         uint32_t quotient = unsigned_val / 10;
         uint8_t digit = unsigned_val % 10;  // 获取余数（即当前位数字）
         #endif
-        str[pos--] = digit + '0';                   // 转换为字符并填入字符串
+        p_str[pos--] = digit + '0';                   // 转换为字符并填入字符串
         unsigned_val = quotient;                      // 处理下一位
     }
     #else
@@ -76,18 +76,18 @@ static constexpr void _fmtnum_u32_r10_padded(char * str, uint32_t unsigned_val, 
 
 
 //TODO replace impl
-static constexpr char * _stupid_fmtnum_u64_r10(char* str, uint64_t unsigned_val) {
+static constexpr char * _stupid_fmtnum_u64_r10(char* p_str, uint64_t unsigned_val) {
 
     const size_t len = num_int2str_chars(static_cast<uint64_t>(unsigned_val), 10);
     int i = len - 1;
 
     do {
 		const uint8_t digit = unsigned_val % 10;
-        str[i] = (digit) + '0';
+        p_str[i] = (digit) + '0';
         i--;
     } while((unsigned_val /= 10) > 0 and (i >= 0));
 
-    return str + len;
+    return p_str + len;
 }
 
 static constexpr size_t u32_num_digits_r16(uint32_t val) {
@@ -105,24 +105,24 @@ static_assert(u32_num_digits_r16(0xFFFFF) == 5);
 static_assert(u32_num_digits_r16(0xFFFF) == 4);
 
 
-static constexpr char * _fmtnum_u32_r16(char* str, uint32_t unsigned_val) {
+static constexpr char * _fmtnum_u32_r16(char* p_str, uint32_t unsigned_val) {
     const size_t len = u32_num_digits_r16((unsigned_val));
     int i = len - 1;
 
     // Handle special case of zero
     if (unsigned_val == 0) {
-        str[0] = '0';
-        return str + 1;
+        p_str[0] = '0';
+        return p_str + 1;
     }
 
     // Convert number to hexadecimal string
     while (unsigned_val) {
         uint8_t digit = unsigned_val & 0b1111;  // Get lowest 4 bits (hex digit)
-        str[i--] = digit > 9 ? (digit - 10 + 'A') : (digit + '0');
+        p_str[i--] = digit > 9 ? (digit - 10 + 'A') : (digit + '0');
         unsigned_val >>= 4;                     // Move to next hex digit
     }
 
-    return str + len;
+    return p_str + len;
 }
 
 
@@ -146,24 +146,24 @@ static_assert(_u32_num_digits_r8(07) == 1);           // 1位八进制
 static_assert(_u32_num_digits_r8(0) == 1);            // 0特殊处理
 
 
-static constexpr char * _fmtnum_u32_r8(char* str, uint32_t unsigned_val) {
+static constexpr char * _fmtnum_u32_r8(char* p_str, uint32_t unsigned_val) {
     const size_t len = _u32_num_digits_r8(unsigned_val);
     int i = len - 1;
 
     // Handle special case of zero
     if (unsigned_val == 0) {
-        str[0] = '0';
-        return str + 1;
+        p_str[0] = '0';
+        return p_str + 1;
     }
 
     // Convert number to octal string
     while (unsigned_val) {
         uint8_t digit = unsigned_val & 0b111;  // Get lowest 3 bits (octal digit)
-        str[i--] = digit + '0';                // 八进制数字只能是0-7
+        p_str[i--] = digit + '0';                // 八进制数字只能是0-7
         unsigned_val >>= 3;                    // Move to next octal digit
     }
 
-    return str + len;
+    return p_str + len;
 }
 
 
@@ -175,11 +175,11 @@ static constexpr size_t _u32_num_digits_r2(uint32_t val) {
 }
 
 // 朴素二进制转换：每次处理1位，不使用查表，逻辑清晰
-static constexpr char * _fmtnum_u32_r2(char* str, uint32_t unsigned_val) {
+static constexpr char * _fmtnum_u32_r2(char* p_str, uint32_t unsigned_val) {
     // 处理 0 的特殊情况
     if (unsigned_val == 0) {
-        str[0] = '0';
-        return str + 1;
+        p_str[0] = '0';
+        return p_str + 1;
     }
 
     // 计算总位数
@@ -190,12 +190,12 @@ static constexpr char * _fmtnum_u32_r2(char* str, uint32_t unsigned_val) {
     // 逐位转换：从最低位开始，逆序填充
     while (val) {
         uint8_t digit = val & 1;   // 取最低位
-        str[--pos] = digit + '0';  // 转为字符 '0' 或 '1'
+        p_str[--pos] = digit + '0';  // 转为字符 '0' 或 '1'
         val >>= 1;                 // 右移处理下一位
     }
 
     // 此时 pos 应为 0，total_len 即为最终长度
-    return str + total_len;
+    return p_str + total_len;
 }
 #else
 
@@ -213,9 +213,9 @@ alignas(64) static constexpr std::array<std::array<char, 4>, 16> BIN_TABLE = []{
     return ret;
 }();
 
-static constexpr size_t _fmtnum_u32_r2(uint32_t unsigned_val, char* str) {
+static constexpr size_t _fmtnum_u32_r2(uint32_t unsigned_val, char* p_str) {
     if (unsigned_val == 0) {
-        str[0] = '0';
+        p_str[0] = '0';
         return 1;
     }
 
@@ -227,10 +227,10 @@ static constexpr size_t _fmtnum_u32_r2(uint32_t unsigned_val, char* str) {
     for (; val >= 16; val >>= 4) {
         uint8_t nibble = val & 0xF;
         const char* chars = BIN_TABLE[nibble].data();
-        str[--pos] = chars[3];        // 最低位
-        str[--pos] = chars[2];
-        str[--pos] = chars[1];
-        str[--pos] = chars[0];        // 最高位
+        p_str[--pos] = chars[3];        // 最低位
+        p_str[--pos] = chars[2];
+        p_str[--pos] = chars[1];
+        p_str[--pos] = chars[0];        // 最高位
     }
 
     // 处理剩余不足4位的部分
@@ -240,7 +240,7 @@ static constexpr size_t _fmtnum_u32_r2(uint32_t unsigned_val, char* str) {
         uint32_t offset = 4 - bits_remaining;  // 跳过前导零
 
         for (uint32_t j = 0; j < bits_remaining; ++j) {
-            str[--pos] = chars[offset + j];    // 从最高有效位开始取
+            p_str[--pos] = chars[offset + j];    // 从最高有效位开始取
         }
     }
 
@@ -248,8 +248,8 @@ static constexpr size_t _fmtnum_u32_r2(uint32_t unsigned_val, char* str) {
 }
 #endif
 
-template<integral T>
-constexpr char * _fmtnum_int_impl(char * str, T int_val, uint8_t radix){
+template<typename T>
+constexpr char * _fmtnum_int_impl(char * p_str, T int_val, uint8_t radix){
     const bool is_negative = int_val < 0;
     std::make_unsigned_t<T> unsigned_val = [&]{
         if constexpr (std::is_signed_v<T>) {
@@ -268,33 +268,33 @@ constexpr char * _fmtnum_int_impl(char * str, T int_val, uint8_t radix){
         case 10:
             static_assert(sizeof(T) <= 8);
             if constexpr(sizeof(T) <= 4){
-                return _fmtnum_u32_r10(str, static_cast<uint32_t>(unsigned_val));
+                return _fmtnum_u32_r10(p_str, static_cast<uint32_t>(unsigned_val));
             }else{
                 if(is_negative){
-                    str[0] = '-';
-                    str++;
+                    p_str[0] = '-';
+                    p_str++;
                 }
 
                 if(unsigned_val <= 0xFFFFFFFFU){
-                    return _fmtnum_u32_r10(str, static_cast<uint32_t>(unsigned_val));
+                    return _fmtnum_u32_r10(p_str, static_cast<uint32_t>(unsigned_val));
                 }
 
-                return _stupid_fmtnum_u64_r10(str, unsigned_val);
+                return _stupid_fmtnum_u64_r10(p_str, unsigned_val);
             }
         case 16:
-            return _fmtnum_u32_r16(str, unsigned_val);
+            return _fmtnum_u32_r16(p_str, unsigned_val);
             break;
         case 8:
-            return _fmtnum_u32_r8(str, unsigned_val);
+            return _fmtnum_u32_r8(p_str, unsigned_val);
             break;
         case 2:
-            return _fmtnum_u32_r2(str, unsigned_val);
+            return _fmtnum_u32_r2(p_str, unsigned_val);
         default:
             break;
     }
 
     //no chars 
-    return str;
+    return p_str;
 
 }
 
@@ -312,7 +312,7 @@ static_assert(calc_low_mask(16) == 0x0000ffffu);
 
 
 char * str::_fmtnum_signed_fixed_impl(
-    char * str, 
+    char * p_str, 
     const int32_t value_bits, 
     uint8_t precsion, 
     const uint8_t Q
@@ -321,19 +321,19 @@ char * str::_fmtnum_signed_fixed_impl(
 
 	uint32_t abs_value_bits;
     if(is_negative){
-        str[0] = '-';
-        str++;
+        p_str[0] = '-';
+        p_str++;
         // abs_value_bits = static_cast<unsigned_type>(-value_bits);
         abs_value_bits = static_cast<uint32_t>(-(value_bits + 1)) + 1;
     }else{
         abs_value_bits = static_cast<uint32_t>(value_bits);
     }
-    return _fmtnum_unsigned_fixed_impl(str, abs_value_bits, precsion, Q);
+    return _fmtnum_unsigned_fixed_impl(p_str, abs_value_bits, precsion, Q);
 
 }
 
 char * str::_fmtnum_unsigned_fixed_impl(
-    char * str, 
+    char * p_str, 
     uint32_t abs_value_bits, 
     uint8_t precsion, 
     const uint8_t Q
@@ -371,63 +371,63 @@ char * str::_fmtnum_unsigned_fixed_impl(
         digit_part = 0;
     }
 
-    str = _fmtnum_u32_r10(str, digit_part);
+    p_str = _fmtnum_u32_r10(p_str, digit_part);
 
     if(precsion){
-        str[0] = '.';
-        str++;
-        _fmtnum_u32_r10_padded(str, frac_part, precsion);
-        str += precsion;
+        p_str[0] = '.';
+        p_str++;
+        _fmtnum_u32_r10_padded(p_str, frac_part, precsion);
+        p_str += precsion;
     }
 
-    return str;
+    return p_str;
 }
 
 char * str::fmtnum_i32(
-    char *str, 
+    char *p_str, 
     int32_t int_val,
     uint8_t radix
 ){
-    return _fmtnum_int_impl<int32_t>(str, int_val, radix);
+    return _fmtnum_int_impl<int32_t>(p_str, int_val, radix);
 }
 
 char * str::fmtnum_u32(
-    char *str, 
+    char *p_str, 
     uint32_t int_val,
     uint8_t radix
 ){
-    return _fmtnum_int_impl<uint32_t>(str, int_val, radix);
+    return _fmtnum_int_impl<uint32_t>(p_str, int_val, radix);
 }
 
 
 char * str::fmtnum_u64(
-    char *str,
+    char *p_str,
     uint64_t int_val,
     uint8_t radix
 ){
     static constexpr uint64_t MASK = (~(uint64_t)std::numeric_limits<uint32_t>::max());
     const bool cant_be_represent_in_32 = int_val & MASK;
     if(cant_be_represent_in_32 == 0){
-        return _fmtnum_int_impl<uint32_t>(str, int_val, radix);
+        return _fmtnum_int_impl<uint32_t>(p_str, int_val, radix);
     }
 
     //TODO 64位除法的实现会大幅增大体积
-    return _fmtnum_int_impl<int64_t>(str, int_val, radix);
+    return _fmtnum_int_impl<int64_t>(p_str, int_val, radix);
 }
 
 
 char * str::fmtnum_i64(
-    char * str, 
+    char * p_str, 
     int64_t int_val, 
     uint8_t radix
 ){
-    // return _fmtnum_int_impl<int64_t>(str, int_val, radix);
-    return _fmtnum_int_impl<int32_t>(str, int_val, radix);
+    // return _fmtnum_int_impl<int64_t>(p_str, int_val, radix);
+    return _fmtnum_int_impl<int32_t>(p_str, int_val, radix);
 }
 
 
 #if 0
-[[maybe_unused]] static constexpr size_tfmtnum_ _f_impl(float value, char* str, uint8_t precision) {
+[[maybe_unused]] static constexpr size_tfmtnum_ _f_impl(float value, char* p_str, uint8_t precision) {
     if (precision > 9) precision = 9;
     
     // Extract IEEE 754 floating point components
@@ -439,17 +439,17 @@ char * str::fmtnum_i64(
     
     // Check NaN
     if ((bits) > uint32_t(0x7F800000)) [[unlikely]] {
-        str[0] = 'n'; str[1] = 'a'; str[2] = 'n';
+        p_str[0] = 'n'; p_str[1] = 'a'; p_str[2] = 'n';
         return 3;
     }
     
     // Check infinity
     if ((bits) == uint32_t(0x7F800000)) [[unlikely]] {
         if (is_negative) {
-            str[0] = '-'; str[1] = 'i'; str[2] = 'n'; str[3] = 'f';
+            p_str[0] = '-'; p_str[1] = 'i'; p_str[2] = 'n'; p_str[3] = 'f';
             return 4;
         } else {
-            str[0] = 'i'; str[1] = 'n'; str[2] = 'f';
+            p_str[0] = 'i'; p_str[1] = 'n'; p_str[2] = 'f';
             return 3;
         }
     }
@@ -457,19 +457,19 @@ char * str::fmtnum_i64(
     // Handle zero
     if (exponent == -127 && mantissa == 0) [[unlikely]] {
         if (is_negative) {
-            str[0] = '-'; str[1] = '0';
+            p_str[0] = '-'; p_str[1] = '0';
             return 2;
         } else {
-            str[0] = '0';
+            p_str[0] = '0';
             return 1;
         }
     }
     
-    char* start = str;
+    char* start = p_str;
 
     if (is_negative) {
-        str[0] = '-';
-        str++;
+        p_str[0] = '-';
+        p_str++;
     }
     
     // Build complete mantissa (including implicit 1)
@@ -556,23 +556,23 @@ char * str::fmtnum_i64(
     }
     
     // Convert integer part
-    str += _fmtnum_u32_r10(static_cast<uint32_t>(int_part), str);
+    p_str += _fmtnum_u32_r10(static_cast<uint32_t>(int_part), p_str);
     
     // Convert fractional part
     if (precision > 0) {
-        str[0] = '.';
-        str++;
-        _fmtnum_u32_r10_padded(frac_part, str, precision);
-        str += precision;
+        p_str[0] = '.';
+        p_str++;
+        _fmtnum_u32_r10_padded(frac_part, p_str, precision);
+        p_str += precision;
     }
     
-    return static_cast<size_t>(str - start);
+    return static_cast<size_t>(p_str - start);
 }
 #else
 
 #if 1
 [[maybe_unused]] static constexpr char * _fmtnum_f32_impl(
-    char* str, 
+    char* p_str, 
     float value, 
     uint8_t precision
 ) {
@@ -589,25 +589,25 @@ char * str::fmtnum_i64(
     
     // 检查NaN
     if ((bits) > uint32_t(0x7F800000)) [[unlikely]] {
-        str[0] = 'n'; str[1] = 'a'; str[2] = 'n';
-        return str + 3;
+        p_str[0] = 'n'; p_str[1] = 'a'; p_str[2] = 'n';
+        return p_str + 3;
     }
     
     if (is_negative) {
-        str[0] = '-';
-        str++;
+        p_str[0] = '-';
+        p_str++;
     }
 
     // 检查无穷大
     if ((bits) == uint32_t(0x7F800000)) [[unlikely]] {
-        str[0] = 'i'; str[1] = 'n'; str[2] = 'f';
-        return str + 3;
+        p_str[0] = 'i'; p_str[1] = 'n'; p_str[2] = 'f';
+        return p_str + 3;
     }
 
     // 处理零
     if (exponent == -127 && mantissa == 0) [[unlikely]] {
-        str[0] = '0';
-        return str + 1;
+        p_str[0] = '0';
+        return p_str + 1;
     }
 
     
@@ -709,20 +709,20 @@ char * str::fmtnum_i64(
     }
     
     // 转换整数部分
-    str = _fmtnum_u32_r10(str, int_part);
+    p_str = _fmtnum_u32_r10(p_str, int_part);
     
     // 转换小数部分
     if (precision > 0) {
-        str[0] = '.';
-        str++;
-        _fmtnum_u32_r10_padded(str, frac_part, precision);
-        str += precision;
+        p_str[0] = '.';
+        p_str++;
+        _fmtnum_u32_r10_padded(p_str, frac_part, precision);
+        p_str += precision;
     }
     
-    return str;
+    return p_str;
 }
 #else
-[[maybe_unused]] static constexpr size_tfmtnum_ _f_impl(float value, char* str, uint8_t precision) {
+[[maybe_unused]] static constexpr size_tfmtnum_ _f_impl(float value, char* p_str, uint8_t precision) {
     if (precision > 9) precision = 9;
     
     // 提取IEEE 754浮点组件
@@ -734,34 +734,34 @@ char * str::fmtnum_i64(
     
     // 检查特殊值
     if ((bits) > uint32_t(0x7F800000)) [[unlikely]] {
-        str[0] = 'n'; str[1] = 'a'; str[2] = 'n';
+        p_str[0] = 'n'; p_str[1] = 'a'; p_str[2] = 'n';
         return 3;
     }
     
     if ((bits) == uint32_t(0x7F800000)) [[unlikely]] {
         if (is_negative) {
-            str[0] = '-'; str[1] = 'i'; str[2] = 'n'; str[3] = 'f';
+            p_str[0] = '-'; p_str[1] = 'i'; p_str[2] = 'n'; p_str[3] = 'f';
             return 4;
         } else {
-            str[0] = 'i'; str[1] = 'n'; str[2] = 'f';
+            p_str[0] = 'i'; p_str[1] = 'n'; p_str[2] = 'f';
             return 3;
         }
     }
 
     if (exponent == -127 && mantissa == 0) [[unlikely]] {
         if (is_negative) {
-            str[0] = '-'; str[1] = '0';
+            p_str[0] = '-'; p_str[1] = '0';
             return 2;
         } else {
-            str[0] = '0';
+            p_str[0] = '0';
             return 1;
         }
     }
     
-    char* start = str;
+    char* start = p_str;
     if (is_negative) {
-        str[0] = '-';
-        str++;
+        p_str[0] = '-';
+        p_str++;
     }
     
     // 构建完整尾数（包含隐含的1）
@@ -882,30 +882,30 @@ char * str::fmtnum_i64(
     
     // 输出整数部分
     if (int_part == 0) {
-        str[0] = '0';
-        str++;
+        p_str[0] = '0';
+        p_str++;
     } else {
-        str += _fmtnum_u32_r10(int_part, str);
+        p_str += _fmtnum_u32_r10(int_part, p_str);
     }
     
     // 输出小数部分
     if (precision > 0) {
-        str[0] = '.';
-        str++;
-        _fmtnum_u32_r10_padded(frac_part, str, precision);
-        str += precision;
+        p_str[0] = '.';
+        p_str++;
+        _fmtnum_u32_r10_padded(frac_part, p_str, precision);
+        p_str += precision;
     }
     
-    return static_cast<size_t>(str - start);
+    return static_cast<size_t>(p_str - start);
 }
 #endif
 #endif
 
 
 char * str::fmtnum_f32(
-    char * str, 
+    char * p_str, 
     float float_val, 
     uint8_t precision
 ){
-    return _fmtnum_f32_impl(str, float_val, precision);
+    return _fmtnum_f32_impl(p_str, float_val, precision);
 }
