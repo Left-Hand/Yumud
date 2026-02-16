@@ -20,7 +20,6 @@ using namespace ymd;
 using namespace ymd::robots::bmkj;
 using namespace ymd::robots::bmkj::m1502e;
 using namespace ymd::robots::bmkj::m1502e::primitive;
-using namespace ymd::sync;
 
 using namespace ymd::dsp;
 
@@ -92,7 +91,7 @@ struct [[nodiscard]] MotorControlLawModule{
     };
 
     struct Outputs{
-        sync::Cell<iq16> torque_ref;
+        sync::AtomicCell<iq16> torque_ref;
     };
 
     Inputs inputs;
@@ -122,12 +121,12 @@ struct [[nodiscard]] MotorStateObserveModule{
     };
 
     struct Outputs{
-        sync::Cell<iq16> x1;
-        sync::Cell<iq16> x2;
-        sync::Cell<iq16> x3;
-        sync::Cell<Angular<uq16>> rotor_lap_angle;
-        sync::Cell<iq16> disturbance;
-        sync::Cell<iq16> current_amps;
+        sync::AtomicCell<iq16> x1;
+        sync::AtomicCell<iq16> x2;
+        sync::AtomicCell<iq16> x3;
+        sync::AtomicCell<Angular<uq16>> rotor_lap_angle;
+        sync::AtomicCell<iq16> disturbance;
+        sync::AtomicCell<iq16> current_amps;
     };
 
     Inputs inputs;
@@ -158,8 +157,8 @@ struct [[nodiscard]] MotorStateObserveModule{
 };
 
 struct CtrlSystemOutput{
-    Probe<iq16> left_torque;
-    Probe<iq16> right_torque;
+    sync::Probe<iq16> left_torque;
+    sync::Probe<iq16> right_torque;
 };
 
 static constexpr size_t CTRL_FREQ = 500;
@@ -194,8 +193,8 @@ void m1502e_main(){
         hal::CanFilterConfig::accept_all()
     );
 
-    Cell<iq16> left_torque;
-    Cell<iq16> right_torque;
+    sync::AtomicCell<iq16> left_torque;
+    sync::AtomicCell<iq16> right_torque;
 
     CtrlSystemOutput ctl_sys_output{
         .left_torque = left_torque.probe(),

@@ -124,7 +124,7 @@ struct FlatPacket{
         ReqCommand req_command;
         RespCommand resp_command;
     };
-    uint8_t payload[NUM_PAYLOAD_BYTES];
+    std::array<uint8_t, NUM_PAYLOAD_BYTES> payload;
 
     constexpr uint8_t calc_crc() const { 
         return calc_crc8(std::span(&motor_id.count, NUM_PACKET_BYTES - 1));

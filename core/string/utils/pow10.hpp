@@ -6,7 +6,7 @@
 namespace ymd::str{
 
 // \frac{32\ln\left(2\right)}{\ln\left(10\right)} <= 10
-static constexpr  uint32_t pow10_table[] = {
+static constexpr  uint32_t POW10_TABLE[] = {
     1UL, 
     10UL, 
     100UL, 

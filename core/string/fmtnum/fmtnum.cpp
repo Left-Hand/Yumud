@@ -288,7 +288,7 @@ constexpr char * _fmtnum_int32(char * p_str, T int_val, uint8_t radix){
 
 template<typename T>
 requires ((sizeof(T) == 8))
-constexpr char * _fmtnum_int64_impl(char * p_str, T int_val, uint8_t radix){
+constexpr char * _fmtnum_int64(char * p_str, T int_val, uint8_t radix){
     //TODO support 64bit
     return _fmtnum_int32_impl<std::is_signed_v<T>>(p_str, static_cast<uint32_t>(int_val), radix);
 }
@@ -315,7 +315,6 @@ char * str::_fmtnum_signed_fixed_impl(
 //Q = 0 is not granted
 __attribute__((always_inline))
 static constexpr uint32_t calc_low_mask(const uint8_t Q){
-    if (Q == 0) __builtin_unreachable();
     if (Q == 32) [[unlikely]] return 0xFFFFFFFFU;
     return (1U << Q) - 1;
 }
@@ -324,6 +323,66 @@ static_assert(calc_low_mask(31) == 0x7fffffffu);
 static_assert(calc_low_mask(32) == 0xffffffffu);
 static_assert(calc_low_mask(16) == 0x0000ffffu);
 
+
+static constexpr auto _dump_from_usigned_fixed(
+    uint32_t abs_value_bits, 
+    const uint32_t precsion,
+    const uint8_t Q
+){
+
+    struct Ret{
+        uint32_t digit_part;
+        uint32_t frac_part;
+    };
+
+    const uint32_t lower_mask = calc_low_mask(Q);
+
+    const uint32_t pow10_scale = POW10_TABLE[precsion];
+    // 使用64位整数进行计算，避免溢出
+    const uint64_t frac_scaled_bits = static_cast<uint64_t>(abs_value_bits & lower_mask) * pow10_scale;
+
+    const uint32_t round_bit = calc_low_mask(Q) & (~calc_low_mask(Q-1));
+
+    
+    // 右移Q位提取小数部分（注意处理Q=0的情况）
+    uint32_t frac_part;
+    uint32_t digit_part;
+
+    // 计算舍入（基于小数部分的精度）
+    const bool need_upper_round = (static_cast<uint32_t>(frac_scaled_bits) & round_bit) != 0;
+
+    frac_part = static_cast<uint32_t>(frac_scaled_bits >> Q) + need_upper_round;
+
+    // 检查是否需要进位到整数部分
+    const bool carry_to_int = (frac_part >= pow10_scale);
+    if(Q != 32) [[likely]]{
+        digit_part = (uint32_t(abs_value_bits) >> Q) + uint32_t(carry_to_int);
+    }else{
+        digit_part = uint32_t(carry_to_int);
+    }
+
+    // 如果发生进位，调整小数部分
+    frac_part -= carry_to_int * pow10_scale;
+
+
+    return Ret{
+        .digit_part = digit_part, 
+        .frac_part = frac_part
+    };
+}
+
+static_assert(sizeof(uint32_t) == 4);
+
+static_assert(_dump_from_usigned_fixed((114514) << 10, 4, 10).digit_part == 114514);
+static_assert(_dump_from_usigned_fixed((114514) << 10, 4, 10).frac_part == 0);
+
+static_assert(_dump_from_usigned_fixed((114514) << 1, 4, 1).digit_part == 114514);
+static_assert(_dump_from_usigned_fixed((114514) << 1, 4, 1).frac_part == 0);
+
+static_assert(_dump_from_usigned_fixed(0xffff0000, 4, 32).digit_part == 1);
+static_assert(_dump_from_usigned_fixed(0xffff0000, 4, 32).frac_part == 0);
+
+
 char * str::_fmtnum_unsigned_fixed_impl(
     char * p_str, 
     uint32_t abs_value_bits, 
@@ -331,38 +390,13 @@ char * str::_fmtnum_unsigned_fixed_impl(
     const uint8_t Q
 ){
     // 安全限制precsion，确保不超出表格范围
-    constexpr size_t MAX_PRECSION = std::size(pow10_table) - 1;
+    constexpr size_t MAX_PRECSION = std::size(POW10_TABLE) - 1;
     if(precsion > MAX_PRECSION) precsion = MAX_PRECSION;
 
-    const uint32_t LOWER_MASK = calc_low_mask(Q);
-    const uint32_t ROUND_BIT = calc_low_mask(Q) & (~calc_low_mask(Q-1));
-    const uint32_t POW10_SCALE = pow10_table[precsion];
+    const auto res = _dump_from_usigned_fixed(abs_value_bits, precsion, Q);
 
-    // 使用64位整数进行计算，避免溢出
-    const uint64_t fs = static_cast<uint64_t>(abs_value_bits & LOWER_MASK) * POW10_SCALE;
-    
-    // 右移Q位提取小数部分（注意处理Q=0的情况）
-    uint32_t frac_part;
-    uint32_t digit_part;
-
-    if(Q != 32)[[likely]]{
-        // 计算舍入（基于小数部分的精度）
-        const bool need_upper_round = (static_cast<uint32_t>(fs) & ROUND_BIT);
-
-        frac_part = static_cast<uint32_t>(fs >> Q) + need_upper_round;
-
-        // 检查是否需要进位到整数部分
-        const bool carry_to_int = (frac_part >= POW10_SCALE);
-
-        digit_part = (uint32_t(abs_value_bits) >> Q) + uint32_t(carry_to_int);
-
-        // 如果发生进位，调整小数部分
-        frac_part -= carry_to_int * POW10_SCALE;
-    }else{
-        frac_part = static_cast<uint32_t>(fs >> 32);
-        digit_part = 0;
-    }
-
+    const auto digit_part = res.digit_part;
+    const auto frac_part = res.frac_part;
     p_str = _fmtnum_u32_r10(p_str, digit_part);
 
     if(precsion){
@@ -374,6 +408,8 @@ char * str::_fmtnum_unsigned_fixed_impl(
 
     return p_str;
 }
+
+
 
 char * str::fmtnum_i32(
     char *p_str, 
@@ -402,7 +438,7 @@ char * str::fmtnum_u64(
     }
 
     //TODO 64位除法的实现会大幅增大体积
-    return _fmtnum_int64_impl<uint64_t>(p_str, int_val, radix);
+    return _fmtnum_int64<uint64_t>(p_str, int_val, radix);
 }
 
 
@@ -425,7 +461,7 @@ char * str::fmtnum_i64(
         return _fmtnum_int32<uint32_t>(p_str, static_cast<uint32_t>(-int_val), radix);
     }
 
-    return _fmtnum_int64_impl<int64_t>(p_str, int_val, radix);
+    return _fmtnum_int64<int64_t>(p_str, int_val, radix);
 }
 
 
@@ -434,7 +470,7 @@ char * str::fmtnum_i64(
     float value, 
     uint8_t precision
 ) {
-    constexpr size_t MAX_PRECSION = std::size(pow10_table) - 1;
+    constexpr size_t MAX_PRECSION = std::size(POW10_TABLE) - 1;
     if (precision > MAX_PRECSION) precision = MAX_PRECSION;
     
     
@@ -473,7 +509,7 @@ char * str::fmtnum_i64(
     uint32_t full_mantissa = (mantissa | (1U << 23));
     
     // 计算精度缩放因子
-    const uint32_t scale = pow10_table[precision];
+    const uint32_t scale = POW10_TABLE[precision];
     
     // 使用32位运算处理不同指数情况
     uint64_t scaled_value;
@@ -538,14 +574,14 @@ char * str::fmtnum_i64(
     #endif
     
     // 分离整数和小数部分，避免直接的64位除法
-    uint32_t int_part, frac_part;
+    uint32_t digit_part, frac_part;
     
     // 使用预先计算的方法分离整数和小数部分
     if (scaled_value < std::numeric_limits<uint32_t>::max()) {
         // 对于较小的值，可以直接使用32位除法
         // 这里使用除法并不会比连续快速除法慢 除法占用约10个周期 快速除法占用约4个周期
         uint32_t val32 = static_cast<uint32_t>(scaled_value);
-        int_part = val32 / scale;
+        digit_part = val32 / scale;
         frac_part = val32 % scale;
     } else {
         // TODO 避免64位除法
@@ -556,18 +592,18 @@ char * str::fmtnum_i64(
         // 基于scale的值（来自pow10_table）我们可以使用专门的快速算法
         
         // 通用快速除法，针对pow10_table中的值进行优化
-        int_part = static_cast<uint32_t>(scaled_value / scale);
+        digit_part = static_cast<uint32_t>(scaled_value / scale);
         frac_part = static_cast<uint32_t>(scaled_value % scale);
     }
     
     // 检查进位到整数部分
     if (frac_part >= scale) {
-        int_part += 1;
+        digit_part += 1;
         frac_part -= scale;
     }
     
     // 转换整数部分
-    p_str = _fmtnum_u32_r10(p_str, int_part);
+    p_str = _fmtnum_u32_r10(p_str, digit_part);
     
     // 转换小数部分
     if (precision > 0) {
@@ -587,4 +623,205 @@ char * str::fmtnum_f32(
     uint8_t precision
 ){
     return _fmtnum_f32_impl(p_str, float_val, precision);
+}
+
+
+struct ScientificParts{
+    uint32_t frac_part;
+    uint32_t digit_minor_number;
+    int32_t exponent;
+};
+
+static constexpr ScientificParts _dump_from_unsigned_fixed_scientific(
+    uint32_t abs_value_bits, 
+    const uint8_t precsion,
+    const uint8_t Q
+){
+
+
+    if(Q == 32) [[unlikely]] {
+        return _dump_from_unsigned_fixed_scientific(abs_value_bits >> 1, precsion, 31);
+    }
+
+    const uint32_t int_part = static_cast<uint32_t>(abs_value_bits >> Q);
+    uint32_t scaled_abs_value_bits = abs_value_bits;
+    int32_t exponent;
+
+    uint32_t frac_part; 
+    uint32_t digit_minor_number;
+    if((int_part) == 0){// x < 1
+        const uint32_t one_bits = 1u << Q;
+        const uint32_t iter_times = _u32_num_digits_r10(one_bits / abs_value_bits);
+        const auto scaler = POW10_TABLE[iter_times];
+        exponent = -iter_times;
+
+        {
+            const auto res = _dump_from_usigned_fixed(abs_value_bits * scaler, precsion, Q);
+            frac_part = res.frac_part;
+            digit_minor_number = res.digit_part;
+        }
+    }else if((int_part) >= 10){ // x >= 10
+
+        uint32_t iter_times = _u32_num_digits_r10(int_part) - 1;
+        const uint32_t scale_int = POW10_TABLE[iter_times];
+
+        digit_minor_number = abs_value_bits / (scale_int << Q);
+        const uint32_t frac_bits = (abs_value_bits - ((digit_minor_number * scale_int) << Q));
+        const uint64_t frac_fixed = static_cast<uint64_t>(frac_bits) * POW10_TABLE[precsion - iter_times];
+        const bool need_up_round = bool(static_cast<uint32_t>(frac_fixed) & (1u << (Q - 1)));
+        //round
+        exponent = iter_times;
+        
+        frac_part = (frac_fixed >> Q);
+        frac_part += uint32_t(need_up_round);
+
+    }else{
+        // x >= 1 and x < 10
+        {
+            const auto res = _dump_from_usigned_fixed(scaled_abs_value_bits, precsion, Q);
+            frac_part = res.frac_part;
+            digit_minor_number = res.digit_part;
+        }
+        exponent = 0;
+    }
+
+    if(digit_minor_number >= 10){
+        digit_minor_number = 1;
+        frac_part = frac_part / 10;
+        exponent++;
+    }
+    
+    return {
+        .frac_part = frac_part,
+        .digit_minor_number = digit_minor_number,
+        .exponent = exponent
+    };
+}
+
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99993) * (1u << 24)), 3, 24).digit_minor_number == 9);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99993) * (1u << 24)), 3, 24).frac_part == 999);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99993) * (1u << 24)), 3, 24).exponent == -1);
+
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99997) * (1u << 24)), 3, 24).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99997) * (1u << 24)), 3, 24).frac_part == 0);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.99997) * (1u << 24)), 3, 24).exponent == 0);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59993) * (1u << 24)), 3, 24).digit_minor_number == 5);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59993) * (1u << 24)), 3, 24).frac_part == 999);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59993) * (1u << 24)), 3, 24).exponent == -1);
+
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59997) * (1u << 24)), 3, 24).digit_minor_number == 6);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59997) * (1u << 24)), 3, 24).frac_part == 0);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.59997) * (1u << 24)), 3, 24).exponent == -1);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.099999997) * (1u << 24)), 3, 24).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.099999997) * (1u << 24)), 3, 24).frac_part == 0);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.099999997) * (1u << 24)), 3, 24).exponent == -1);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999997) * (1u << 24)), 3, 24).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999997) * (1u << 24)), 3, 24).frac_part == 0);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999997) * (1u << 24)), 3, 24).exponent == 1);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.125) * (1u << 16)), 4, 16).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.125) * (1u << 16)), 4, 16).frac_part == 2500);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.125) * (1u << 16)), 4, 16).exponent == -1);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.125) * (1u << 16)), 4, 16).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.125) * (1u << 16)), 4, 16).frac_part == 1250);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.125) * (1u << 16)), 4, 16).exponent == 0);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((919.514) * (1u << 16)), 4, 16).digit_minor_number == 9);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((919.514) * (1u << 16)), 4, 16).frac_part == 1951);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((919.514) * (1u << 16)), 4, 16).exponent == 2);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451) * (1u << 2)), 4, 2).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451) * (1u << 2)), 4, 2).frac_part == 1451);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451) * (1u << 2)), 4, 2).exponent == 4);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((114.51) * (1u << 16)), 4, 16).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((114.51) * (1u << 16)), 4, 16).frac_part == 1451);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((114.51) * (1u << 16)), 4, 16).exponent == 2);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1u << 24)), 5, 24).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1u << 24)), 5, 24).frac_part == 14500);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1u << 24)), 5, 24).exponent == -2);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1ull << 32)), 4, 32).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1ull << 32)), 4, 32).frac_part == 1450);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.01145) * (1ull << 32)), 4, 32).exponent == -2);
+
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.001919) * (1u << 24)), 4, 24).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.001919) * (1u << 24)), 4, 24).frac_part == 9190);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.001919) * (1u << 24)), 4, 24).exponent == -3);
+
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.9999995) * (1u << 24)), 4, 24).digit_minor_number == 2);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.9999995) * (1u << 24)), 4, 24).frac_part == 0);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((1.9999995) * (1u << 24)), 4, 24).exponent == 0);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.9999995) * (1u << 24)), 3, 24).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.9999995) * (1u << 24)), 3, 24).frac_part == 0);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.9999995) * (1u << 24)), 3, 24).exponent == 0);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999995) * (1u << 24)), 3, 24).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999995) * (1u << 24)), 3, 24).frac_part == 0);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((9.9999995) * (1u << 24)), 3, 24).exponent == 1);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((2.5555555) * (1u << 24)), 3, 24).digit_minor_number == 2);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((2.5555555) * (1u << 24)), 3, 24).frac_part == 556);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.00999995) * (1u << 24)), 3, 24).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.00999995) * (1u << 24)), 3, 24).frac_part == 0);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.00999995) * (1u << 24)), 3, 24).exponent == -2);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451.9995) * (1u << 2)), 4, 2).digit_minor_number == 1);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451.9995) * (1u << 2)), 4, 2).frac_part == 1452);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((11451.9995) * (1u << 2)), 4, 2).exponent == 4);
+
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.5999995) * (1u << 24)), 3, 24).digit_minor_number == 6);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.5999995) * (1u << 24)), 3, 24).frac_part == 0);
+static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.5999995) * (1u << 24)), 3, 24).exponent == -1);
+
+
+char * _fmtnum_unsigned_fixed_scientific_impl(
+    char * p_str, 
+    uint32_t abs_value_bits, 
+    uint8_t precsion, 
+    const uint8_t Q
+){
+    // 安全限制precsion，确保不超出表格范围
+    constexpr size_t MAX_PRECSION = std::size(POW10_TABLE) - 1;
+    if(precsion > MAX_PRECSION) precsion = MAX_PRECSION;
+
+    const auto res = _dump_from_unsigned_fixed_scientific(abs_value_bits, precsion, Q);
+
+    const auto digit_minor_number = res.digit_minor_number;
+    const auto frac_part = res.frac_part;
+    const auto exponent = res.exponent;
+
+    p_str[0] = static_cast<char>(digit_minor_number + '0');
+    p_str[1] = '.';
+    p_str+=2;
+
+    _fmtnum_u32_r10_padded(p_str, frac_part, precsion);
+    p_str += precsion;
+
+    p_str[0] = 'e';
+    p_str++;
+
+    uint32_t unsigned_exponent;
+    if(exponent < 0){
+        p_str[0] = '-';
+        p_str++;
+        unsigned_exponent = -exponent;
+    }else{
+        unsigned_exponent = exponent;
+    }
+
+    p_str = _fmtnum_u32_r10(p_str, unsigned_exponent);
+    return p_str;
 }

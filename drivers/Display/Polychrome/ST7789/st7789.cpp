@@ -11,7 +11,6 @@ using namespace ymd::drivers;
 template<typename T = void>
 using IResult = ST7789::IResult<T>;
 
-// #_ENdefine ST7789_EXPRIMENTAL_SKIP
 
 
 //判断刷新命令符必要性判断算法 以提高spi dma的吞吐率

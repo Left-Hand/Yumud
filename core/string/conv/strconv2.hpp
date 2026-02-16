@@ -373,14 +373,14 @@ template<size_t NUM_Q, typename D>
 struct [[nodiscard]] FixedPointDeformatter{
 	using T = math::fixed_t<NUM_Q, D>;
 
-	static constexpr size_t TABLE_LEN = std::size(str::pow10_table);
+	static constexpr size_t TABLE_LEN = std::size(str::POW10_TABLE);
 	static constexpr uint32_t DIGIT_MAX = uint32_t(
 		std::numeric_limits<math::fixed_t<NUM_Q, D>>::max());	
 
 	static constexpr std::array<uint64_t, TABLE_LEN> TABLE = []{
 		std::array<uint64_t, TABLE_LEN> ret;
 		for(size_t i = 0; i < TABLE_LEN; i++){
-			ret[i] = static_cast<uint64_t>(uint64_t(1ull << (NUM_Q + 32u)) / str::pow10_table[i]);
+			ret[i] = static_cast<uint64_t>(uint64_t(1ull << (NUM_Q + 32u)) / str::POW10_TABLE[i]);
 		}
 		return ret;
 	}();
@@ -631,7 +631,7 @@ struct Iq16Formatter{
 
 		const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
 
-		const uint32_t scale = str::pow10_table[eps_count];
+		const uint32_t scale = str::POW10_TABLE[eps_count];
 
 		const uint32_t fs = frac_part * scale;
 		

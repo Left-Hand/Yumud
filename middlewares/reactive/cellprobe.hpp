@@ -143,7 +143,9 @@ struct [[nodiscard]] CellBase<Angular<T>> {
         set(initial_value);
     }
 
-    CellBase(){;}
+    CellBase(){
+        set(Angular<T>::ZERO);
+    }
 
     void set(const Angular<T>& val) {
         inner_.set(val.to_turns());
@@ -188,25 +190,25 @@ private:
 };
 
 
-// 主 Cell 模板
+// 主 AtomicCell 模板
 template<typename T>
-struct [[nodiscard]] Cell : public CellBase<T> {
-    using Self = Cell;
+struct [[nodiscard]] AtomicCell : public CellBase<T> {
+    using Self = AtomicCell;
     using Base = CellBase<T>;
     using Base::set;
     using Base::get;
 
-    Cell(const T initial_value):
+    AtomicCell(const T initial_value):
         Base(initial_value){;}
 
-    Cell(): Base(){;}
+    AtomicCell(): Base(){;}
     
-    Cell & operator =(const Cell &) = delete;
-    Cell & operator =(Cell &&) = delete;
+    AtomicCell & operator =(const AtomicCell &) = delete;
+    AtomicCell & operator =(AtomicCell &&) = delete;
 
     #if 0
     // 便捷的赋值操作符
-    Cell& operator=(const T& val) {
+    AtomicCell& operator=(const T& val) {
         set(val);
         return *this;
     }
@@ -268,22 +270,22 @@ struct [[nodiscard]] Probe {
         return *this;
     }
 private:
-    const Cell<T>* cell_;
+    const AtomicCell<T>* cell_;
 
 
-    explicit Probe(const Cell<T> * cell) : 
+    explicit Probe(const AtomicCell<T> * cell) : 
         cell_(cell) {}
 
     friend OutputStream & operator <<(OutputStream & os, const Probe & self){
         return os << self.get();
     }
 
-    friend class Cell<T>;
+    friend class AtomicCell<T>;
 };
 
 //CTAD
 template<typename T>
-Cell(T) -> Cell<T>;
+AtomicCell(T) -> AtomicCell<T>;
 
 template<typename T>
 Probe(T *) -> Probe<T>;

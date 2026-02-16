@@ -95,7 +95,7 @@ struct alignas(8) [[nodiscard]] FstrDump final{
 							return Err(DestringError::FracOverflow);
 						}
 
-						if(num_frac_digits < std::size(str::pow10_table)){
+						if(num_frac_digits < std::size(str::POW10_TABLE)){
 							num_frac_digits++;
 						}else{
 							return Err(DestringError::FracTooLong);
@@ -235,7 +235,7 @@ struct alignas(8) [[nodiscard]] FstrDump final{
 							return Err(DestringError::FracOverflow);
 						}
 
-						if(num_frac_digits < std::size(str::pow10_table)){
+						if(num_frac_digits < std::size(str::POW10_TABLE)){
 							num_frac_digits++;
 						}else{
 							return Err(DestringError::FracTooLong);
