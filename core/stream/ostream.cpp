@@ -1,6 +1,6 @@
 #include "ostream.hpp"
 
-#include "core/string/fmtnum/fmtnum.hpp"
+#include "core/string/conv/fmtnum/fmtnum.hpp"
 #include "core/string/view/string_view.hpp"
 #include "core/string/view/mut_string_view.hpp"
 
