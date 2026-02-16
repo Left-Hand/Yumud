@@ -9,7 +9,25 @@
 using namespace ymd;
 
 
-
+__attribute__((always_inline))
+static constexpr char * put_basealpha_lower(char * p_str, const uint32_t radix){
+    switch(radix){
+        default:
+        case 10:
+            return p_str;
+        case 2:
+            p_str[0] = '0';
+            p_str[1] = 'b';
+            return p_str + 2;
+        case 8:
+            p_str[0] = '0';
+            return p_str + 1;
+        case 16:
+            p_str[0] = '0';
+            p_str[1] = 'x';
+            return p_str + 2;
+    }
+}
 
 void OutputStream::write_byte(const uint8_t byte){
     const auto bytes = std::span<const uint8_t, 1>{&byte, 1};
@@ -218,7 +236,7 @@ void OutputStream::print_source_loc(const std::source_location & loc){
 #define PRINT_INT_TEMPLATE(val, cap, convfunc, ...)\
     PRINT_NUMERIC_BEGIN(cap)\
     if((config_.specifier.showbase)) [[unlikely]]{\
-        p_str = str::put_basealpha(p_str, config_.radix);}\
+        p_str = put_basealpha_lower(p_str, config_.radix);}\
     else {if((config_.specifier.showpos and val >= 0)) [[unlikely]]{\
         p_str[0] = ('+');\
         p_str++;}}\

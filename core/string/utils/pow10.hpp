@@ -2,11 +2,12 @@
 
 #include <cstdint>
 #include <type_traits>
+#include <array>
 
 namespace ymd::str{
 
 // \frac{32\ln\left(2\right)}{\ln\left(10\right)} <= 10
-static constexpr  uint32_t POW10_TABLE[] = {
+static constexpr std::array<uint32_t, 10> POW10_TABLE = {
     1UL, 
     10UL, 
     100UL, 
