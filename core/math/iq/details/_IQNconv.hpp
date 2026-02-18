@@ -35,38 +35,9 @@ template<size_t Q>
         uiq31Input = iqNInput;
     }
 
-    //TODO 在支持B拓展的机器上直接使用CLZ指令
-
-    /* 5次二分查找展开 - 每次检查一半范围 */
-    /* 第1次: 检查高16位是否为0 */
-    if ((uiq31Input & 0xFFFF0000) == 0) [[likely]] {
-        uiq31Input <<= 16;
-        ui16Exp -= 0x0080 * 16;
-    }
-
-    /* 第2次: 检查剩下的高8位是否为0 */
-    if ((uiq31Input & 0xFF000000) == 0) [[likely]] {
-        uiq31Input <<= 8;
-        ui16Exp -= 0x0080 * 8;
-    }
-
-    /* 第3次: 检查剩下的高4位是否为0 */
-    if ((uiq31Input & 0xF0000000) == 0) [[likely]] {
-        uiq31Input <<= 4;
-        ui16Exp -= 0x0080 * 4;
-    }
-
-    /* 第4次: 检查剩下的高2位是否为0 */
-    if ((uiq31Input & 0xC0000000) == 0) [[likely]] {
-        uiq31Input <<= 2;
-        ui16Exp -= 0x0080 * 2;
-    }
-
-    /* 第5次: 检查最高位是否为0 */
-    if ((uiq31Input & 0x80000000) == 0) [[unlikely]] {
-        uiq31Input <<= 1;
-        ui16Exp -= 0x0080;
-    }
+    const size_t leading_zeros = __builtin_clz(uiq31Input);
+    uiq31Input <<= leading_zeros;
+    ui16Exp -= (leading_zeros << 7);
 
     /* Right shift to uiq23 */
     uiq23Result = uiq31Input >> 8;

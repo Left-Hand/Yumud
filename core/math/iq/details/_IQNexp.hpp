@@ -91,7 +91,7 @@ static constexpr uint32_t __IQNexp(int32_t iqNInput){
     uiq30FractionalResult = *piq30Coeffs++;
 
     /* Compute exp^(iq31Fractional). */
-    for (ui8Count = _IQ30exp_order; ui8Count > 0; ui8Count--) {
+    for (ui8Count = IQ30EXP_ORDER; ui8Count > 0; ui8Count--) {
         uiq30FractionalResult = __mpyf_l(iq31Fractional, uiq30FractionalResult);
         uiq30FractionalResult += *piq30Coeffs++;
     }

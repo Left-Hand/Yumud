@@ -149,7 +149,15 @@ static_assert(math::sqrt(iiq16(16)) == iq16(4));
 
 static_assert(math::sqrt(uq16(4)) == uq16(2));
 static_assert(math::sqrt(uq16(16)) == uq16(4));
-static_assert(math::sqrt(iq26(16)) == iq26(4));
+
+static constexpr int64_t err64(const uint64_t a, const uint64_t b){
+    if(a > b) return a - b;
+    else return b - a;
+}
+static_assert(err64(math::sqrt(uq32(0.25)).to_bits(), uq32(0.5).to_bits()) <= 4);
+static_assert(err64(math::sqrt(uq32(1.0/16)).to_bits(), uq32(1.0/4).to_bits()) <= 4);
+static_assert(err64(math::sqrt(uq32(1.0/64)).to_bits(), uq32(1.0/8).to_bits()) <= 4);
+static_assert(err64(math::sqrt(uq32(1.0/256)).to_bits(), uq32(1.0/16).to_bits()) <= 4);
 
 static_assert(math::inv_sqrt(iq10(16)) == iq10(0.25));
 static_assert(math::inv_sqrt(iq16(16)) == iq16(0.25));
@@ -208,4 +216,10 @@ static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), ymd::lit
 
 static_assert(std::abs((double)math::atanpu(ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
 static_assert(std::abs((double)math::atanpu(-ymd::literals::iq16(1.0)) - 0.875) < 1E-7);
+
+static_assert(std::abs((double)math::asin(ymd::literals::iq16(1.0)) - (M_PI / 2)) < 1E-7);
+static_assert(std::abs((double)math::asin(-ymd::literals::iq16(1.0)) - (-M_PI / 2)) < 1E-7);
+
+static_assert(std::abs((double)math::asin(ymd::literals::iq16(0.5)) - (M_PI / 6)) < 1E-7);
+
 }

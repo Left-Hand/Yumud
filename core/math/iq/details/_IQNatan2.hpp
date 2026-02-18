@@ -15,8 +15,8 @@
 
 namespace ymd::iqmath::details{
 
-struct alignas(4) [[nodiscard]] __Atan2Flag final{
-    using Self = __Atan2Flag;
+struct alignas(4) [[nodiscard]] Atan2Flag final{
+    using Self = Atan2Flag;
     uint8_t y_is_neg;
     uint8_t x_is_neg;
     uint8_t swapped;
@@ -32,13 +32,13 @@ struct alignas(4) [[nodiscard]] __Atan2Flag final{
         /* Check if we swapped the transformation. */
         if (self.swapped) {
             /* atan(y/x) = pi/2 - uq32_result_pu */
-            uq32_result_pu = (uint32_t)(0x40000000 - uq32_result_pu);
+            uq32_result_pu = (uint32_t)(0x40000000u - uq32_result_pu);
         }
 
         /* Check if the result needs to be mirrored to the 2nd/3rd quadrants. */
         if (self.x_is_neg) {
             /* atan(y/x) = pi - uq32_result_pu */
-            uq32_result_pu = (uint32_t)(0x80000000 - uq32_result_pu);
+            uq32_result_pu = (uint32_t)(0x80000000u - uq32_result_pu);
         }
 
 
@@ -51,8 +51,8 @@ struct alignas(4) [[nodiscard]] __Atan2Flag final{
     };
 };
 
-struct [[nodiscard]] __Atan2Intermediate{
-    using Self = __Atan2Intermediate;
+struct [[nodiscard]] Atan2Intermediate{
+    using Self = Atan2Intermediate;
 
 
     // * Calculate atan2 using a 3rd order Taylor series. The coefficients are stored
@@ -66,7 +66,7 @@ struct [[nodiscard]] __Atan2Intermediate{
     // */
     static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
         // return 0;
-        const int32_t * piq32Coeffs = &ymd::iqmath::details::_IQ32atan_coeffs[(uq32_input >> 25) & 0x00fc];
+        const int32_t * piq32Coeffs = &ymd::iqmath::details::IQ32ATAN_COEFFS[(uq32_input >> 25) & 0x00fc];
         /*
         * Calculate atan(x) using the following Taylor series:
         *
@@ -107,11 +107,8 @@ constexpr ymd::math::fixed_t<32, uint32_t> _atan2pu_impl(
     uint32_t uqn_y,
     uint32_t uqn_x
 ){
-    __Atan2Flag flag = __Atan2Flag::zero();
+    Atan2Flag flag = Atan2Flag::zero();
     uint32_t uq32_input;
-
-    // uq32_input =0;
-    // return {flag, uq32_input};
 
     if (uqn_y & (1U << 31)) {
         flag.y_is_neg = 1;
@@ -123,12 +120,6 @@ constexpr ymd::math::fixed_t<32, uint32_t> _atan2pu_impl(
         uqn_x = std::bit_cast<uint32_t>(-std::bit_cast<int32_t>(uqn_x));
     }
 
-    /*
-    * Calcualte the ratio of the inputs in ymd::math::fixed_t<31, int32_t>. When using the ymd::math::fixed_t<31, int32_t> div
-    * fucntions with inputs of matching type the result will be ymd::math::fixed_t<31, int32_t>:
-    *
-    *     ymd::math::fixed_t<31, int32_t> = _IQ31div(iqN, iqN);
-    */
     if (uqn_x < uqn_y) {
         flag.swapped = 1;
         uq32_input = std::bit_cast<uint32_t>(ymd::iqmath::details::__IQNdiv_impl<31, false>(
@@ -141,7 +132,7 @@ constexpr ymd::math::fixed_t<32, uint32_t> _atan2pu_impl(
         // 1/8 * 2^32
         return flag.apply_to_uq32(((1u << (29))));
     }
-    const uint32_t uq32_result_pu = __Atan2Intermediate::transfrom_pu_x_to_uq32_result(uq32_input);
+    const uint32_t uq32_result_pu = Atan2Intermediate::transfrom_pu_x_to_uq32_result(uq32_input);
     return flag.apply_to_uq32(uq32_result_pu);
 }
 
@@ -149,7 +140,7 @@ template<size_t Q>
 constexpr ymd::math::fixed_t<32, uint32_t> _atanpu_impl(
     uint32_t uqn_y
 ){
-    __Atan2Flag flag = __Atan2Flag::zero();
+    Atan2Flag flag = Atan2Flag::zero();
     uint32_t uq32_input;
 
     if (uqn_y & (1U << 31)) {
@@ -172,7 +163,7 @@ constexpr ymd::math::fixed_t<32, uint32_t> _atanpu_impl(
         return flag.apply_to_uq32(((1u << (29))));
     }
 
-    const uint32_t uq32_result_pu = __Atan2Intermediate::transfrom_pu_x_to_uq32_result(uq32_input);
+    const uint32_t uq32_result_pu = Atan2Intermediate::transfrom_pu_x_to_uq32_result(uq32_input);
     return flag.apply_to_uq32(uq32_result_pu);
 }
 

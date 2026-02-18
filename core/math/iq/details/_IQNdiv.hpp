@@ -76,7 +76,7 @@ constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
     /* use left most 7 bits as ui8Index into lookup table (range: 32-64) */
     ui8Index = uiq31Input2 >> 24;
     ui8Index -= 64;
-    uiq30Guess = (uint32_t)_IQ6div_lookup[ui8Index] << 24;
+    uiq30Guess = (uint32_t)IQ6DIV_LOOPUP[ui8Index] << 24;
 
 
 

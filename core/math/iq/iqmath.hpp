@@ -19,7 +19,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 math::fixed_t<31, int32_t> sin(const math::fixed_t<Q, D> x){
     return iqmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_sin(iqmath::details::__SincosIntermediate::exact_laws::taylor_3o);
+        .exact_sin(iqmath::details::SincosIntermediate::exact_laws::taylor_3o);
 }
 
 template<size_t Q, typename D>
@@ -27,7 +27,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 math::fixed_t<31, int32_t> cos(const math::fixed_t<Q, D> x){
     return iqmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_cos(iqmath::details::__SincosIntermediate::exact_laws::taylor_3o);
+        .exact_cos(iqmath::details::SincosIntermediate::exact_laws::taylor_3o);
 }
 
 template<size_t Q, typename D>
@@ -35,7 +35,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 math::fixed_t<31, int32_t> sin_approx(const math::fixed_t<Q, D> x){
     return iqmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_sin(iqmath::details::__SincosIntermediate::exact_laws::taylor_2o);
+        .exact_sin(iqmath::details::SincosIntermediate::exact_laws::taylor_2o);
 }
 
 template<size_t Q, typename D>
@@ -43,7 +43,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 math::fixed_t<31, int32_t> cos_approx(const math::fixed_t<Q, D> x){
     return iqmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_cos(iqmath::details::__SincosIntermediate::exact_laws::taylor_2o);
+        .exact_cos(iqmath::details::SincosIntermediate::exact_laws::taylor_2o);
 }
 
 
@@ -52,7 +52,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 math::fixed_t<31, int32_t> sinpu(const math::fixed_t<Q, D> x){
     return iqmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_sin(iqmath::details::__SincosIntermediate::exact_laws::taylor_3o);
+        .exact_sin(iqmath::details::SincosIntermediate::exact_laws::taylor_3o);
 }
 
 template<size_t Q, typename D>
@@ -60,7 +60,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 math::fixed_t<31, int32_t> cospu(const math::fixed_t<Q, D> x){
     return iqmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_cos(iqmath::details::__SincosIntermediate::exact_laws::taylor_3o);
+        .exact_cos(iqmath::details::SincosIntermediate::exact_laws::taylor_3o);
 }
 
 template<size_t Q, typename D>
@@ -68,7 +68,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 math::fixed_t<31, int32_t> sinpu_approx(const math::fixed_t<Q, D> x){
     return iqmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_sin(iqmath::details::__SincosIntermediate::exact_laws::taylor_2o);
+        .exact_sin(iqmath::details::SincosIntermediate::exact_laws::taylor_2o);
 }
 
 template<size_t Q, typename D>
@@ -76,7 +76,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 math::fixed_t<31, int32_t> cospu_approx(const math::fixed_t<Q, D> x){
     return iqmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_cos(iqmath::details::__SincosIntermediate::exact_laws::taylor_2o);
+        .exact_cos(iqmath::details::SincosIntermediate::exact_laws::taylor_2o);
 }
 
 
@@ -85,7 +85,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 std::array<math::fixed_t<31, int32_t>, 2> sincos(const math::fixed_t<Q, D> x){
     const auto res = iqmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_sincos(iqmath::details::__SincosIntermediate::exact_laws::taylor_3o);
+        .exact_sincos(iqmath::details::SincosIntermediate::exact_laws::taylor_3o);
     return {res.sin, res.cos};
 }
 
@@ -94,7 +94,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 std::array<math::fixed_t<31, int32_t>, 2> sincospu(const math::fixed_t<Q, D> x){
     const auto res = iqmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_sincos(iqmath::details::__SincosIntermediate::exact_laws::taylor_3o);
+        .exact_sincos(iqmath::details::SincosIntermediate::exact_laws::taylor_3o);
     return {res.sin, res.cos};
 }
 
@@ -103,7 +103,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 std::array<math::fixed_t<31, int32_t>, 2> sincospu_approx(const math::fixed_t<Q, D> x){
     const auto res = iqmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_sincos(iqmath::details::__SincosIntermediate::exact_laws::taylor_2o);
+        .exact_sincos(iqmath::details::SincosIntermediate::exact_laws::taylor_2o);
     return {res.sin, res.cos};
 }
 
@@ -112,7 +112,7 @@ requires (sizeof(D) == 4)
 __attribute__((always_inline)) constexpr 
 std::array<math::fixed_t<31, int32_t>, 2> sincos_approx(const math::fixed_t<Q, D> x){
     const auto res = iqmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_sincos(iqmath::details::__SincosIntermediate::exact_laws::taylor_2o);
+        .exact_sincos(iqmath::details::SincosIntermediate::exact_laws::taylor_2o);
     return {res.sin, res.cos};
 }
 

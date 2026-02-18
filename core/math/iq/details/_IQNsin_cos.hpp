@@ -51,8 +51,8 @@ namespace ymd::iqmath::details{
  * Using a lookup table with a 64 bit index (52 indexes since the input range is
  * only 0 - 0.785398) and second order Taylor series gives 28 bits of accuracy.
  */
-struct alignas(16) [[nodiscard]] __SincosIntermediate{
-    using Self = __SincosIntermediate;
+struct alignas(16) [[nodiscard]] SincosIntermediate{
+    using Self = SincosIntermediate;
 
     struct SinCosResult{
         math::fixed_t<31, int32_t> sin;
@@ -188,60 +188,60 @@ struct alignas(16) [[nodiscard]] __SincosIntermediate{
         //通过分析发现 三阶泰勒公式能提供最低约28.78位的精度(因此精度比浮点数还高)
         static constexpr int32_t 
         taylor_2o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
-            int32_t iq31Res = 0;
+            int32_t res_iq31_bits = 0;
 
             /* -S(k) */
-            iq31Res = -(iq31_sin_coeff + iq31Res);
+            res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
 
             /* 0.5*x*(-S(k)) */
-            iq31Res = iq31Res >> 1;
-            iq31Res = (static_cast<int64_t>(iq31Res) * uq32_x_offset) >> 32;
+            res_iq31_bits = res_iq31_bits >> 1;
+            res_iq31_bits = (static_cast<int64_t>(res_iq31_bits) * uq32_x_offset) >> 32;
 
             /* C(k) + 0.5*x*(-S(k)) */
-            iq31Res = iq31_cos_coeff + iq31Res;
+            res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
 
             /* x*(C(k) + 0.5*x*(-S(k))) */
-            iq31Res = (static_cast<int64_t>(iq31Res) *  uq32_x_offset) >> 32;
+            res_iq31_bits = (static_cast<int64_t>(res_iq31_bits) *  uq32_x_offset) >> 32;
 
             /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k))) */
-            iq31Res = iq31_sin_coeff + iq31Res;
+            res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
 
-            return iq31Res;
+            return res_iq31_bits;
         }
 
 
         static constexpr int32_t 
         taylor_3o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
-            int32_t iq31Res;
+            int32_t res_iq31_bits;
 
             #if 0
             /* 0.333*x*C(k) */
             constexpr int32_t ONE_BY_3_IQ31_BITS = math::fixed_t<31, int32_t>(1.0/3).to_bits() + 1;
-            iq31Res = iq31_mpy_uq32(ONE_BY_3_IQ31_BITS, uq32_x_offset);
-            iq31Res = iqmath::details::__mpyf_l(iq31_cos_coeff, iq31Res);
+            res_iq31_bits = iq31_mpy_uq32(ONE_BY_3_IQ31_BITS, uq32_x_offset);
+            res_iq31_bits = iqmath::details::__mpyf_l(iq31_cos_coeff, res_iq31_bits);
             #else
             constexpr int32_t TWO_BY_3_IQ31_BITS = math::fixed_t<31, int32_t>(2.0/3).to_bits() + 1;
-            iq31Res = static_cast<int32_t>((static_cast<int64_t>(TWO_BY_3_IQ31_BITS) * uq32_x_offset) >> 32);
-            iq31Res = static_cast<int32_t>((static_cast<int64_t>(iq31Res) * iq31_cos_coeff) >> 32);
+            res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(TWO_BY_3_IQ31_BITS) * uq32_x_offset) >> 32);
+            res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(res_iq31_bits) * iq31_cos_coeff) >> 32);
             #endif
 
             /* -S(k) - 0.333*x*C(k) */
-            iq31Res = -(iq31_sin_coeff + iq31Res);
+            res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
 
             /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
-            iq31Res = iq31Res >> 1;
-            iq31Res = static_cast<int32_t>((static_cast<int64_t>(iq31Res) * uq32_x_offset) >> 32);
+            res_iq31_bits = res_iq31_bits >> 1;
+            res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(res_iq31_bits) * uq32_x_offset) >> 32);
 
             /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
-            iq31Res = iq31_cos_coeff + iq31Res;
+            res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
 
             /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-            iq31Res = static_cast<int32_t>((static_cast<int64_t>(iq31Res) * uq32_x_offset) >> 32);
+            res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(res_iq31_bits) * uq32_x_offset) >> 32);
 
             /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-            iq31Res = iq31_sin_coeff + iq31Res;
+            res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
 
-            return iq31Res;
+            return res_iq31_bits;
         }
 
     private:
@@ -252,7 +252,7 @@ struct alignas(16) [[nodiscard]] __SincosIntermediate{
 };
 
 
-constexpr __SincosIntermediate __IQNgetCosSinPU(uint32_t uq32_x_pu_bits){
+constexpr SincosIntermediate __IQNgetCosSinPU(uint32_t uq32_x_pu_bits){
     constexpr uint32_t uq32_quatpi_bits = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
 
     //将一个周期拆分为八个区块 每个区块长度pi/4 获取区块索引
@@ -282,14 +282,14 @@ constexpr __SincosIntermediate __IQNgetCosSinPU(uint32_t uq32_x_pu_bits){
     //计算查找表索引
 
     #if 1
-    const int32_t iq31_sin_coeff = iqmath::details::_IQ31_SINCOS_TABLE[lut_index][0];
-    const int32_t iq31_cos_coeff = iqmath::details::_IQ31_SINCOS_TABLE[lut_index][1];
+    const int32_t iq31_sin_coeff = iqmath::details::IQ31_SINCOS_TABLE[lut_index][0];
+    const int32_t iq31_cos_coeff = iqmath::details::IQ31_SINCOS_TABLE[lut_index][1];
     #else
     const int32_t iq31_sin_coeff = iqmath::details::_IQ31SinLookup[lut_index];
     const int32_t iq31_cos_coeff = iqmath::details::_IQ31CosLookup[lut_index];
     #endif  
 
-    return iqmath::details::__SincosIntermediate{
+    return iqmath::details::SincosIntermediate{
         uq32_x_offset, 
         iq31_sin_coeff,
         iq31_cos_coeff,

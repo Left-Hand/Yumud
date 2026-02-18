@@ -21,7 +21,7 @@ constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
     int32_t i16Exp;
     int32_t iq30Result;
     uint32_t uiq31Input;
-    const uint32_t *piq30Coeffs;
+    const uint32_t *piq30Coeffs = IQ30LOG_COEFFS;
 
     /*
      * Check the sign of the input and for negative saturation for Qs
@@ -57,15 +57,24 @@ constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
      * for the logarithm functions. Set the iq30 result to the first
      * coefficient in the table. Subtract one from the iq31 input.
      */
-    piq30Coeffs = _IQ30log_coeffs;
     iq30Result = *piq30Coeffs++;
+
+    #if 1
     uiq31Input -= _iq31_one;
 
     /* Calculate log(uiq31Input) using the iq30 Taylor Series coefficients. */
-    for (uint8_t ui8Counter = _IQ30log_order; ui8Counter > 0; ui8Counter--) {
+    for (uint8_t ui8Counter = IQ30LOG_ORDER; ui8Counter > 0; ui8Counter--) {
         iq30Result = __mpyf_l(uiq31Input, iq30Result);
         iq30Result += *piq30Coeffs++;
     }
+    #else
+    const uint32_t uiq32Input = (uiq31Input - _iq31_one) << 1;
+    for (uint8_t ui8Counter = IQ30LOG_ORDER; ui8Counter > 0; ui8Counter--) {
+        // iq30Result = __mpyf_l(uiq31Input, iq30Result);
+        iq30Result = static_cast<uint32_t>((static_cast<int64_t>(uiq32Input) * iq30Result) >> 32);
+        iq30Result += *piq30Coeffs++;
+    }
+    #endif
 
 
     /*
@@ -75,16 +84,16 @@ constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
      * unsigned data type.
      */
     if (i16Exp > 0) {
-        return iq30Result + __mpyf_ul(_iq31_ln2, ((int32_t)i16Exp << 30));
+        return iq30Result + static_cast<int32_t>((static_cast<int64_t>(_uq32_ln2) * ((int32_t)i16Exp << 30)) >> 32);
     } else {
-        return iq30Result - __mpyf_ul(_iq31_ln2, (((uint32_t) - i16Exp) << 30));
+        return iq30Result - static_cast<int32_t>((static_cast<int64_t>(_uq32_ln2) * (((uint32_t) - i16Exp) << 30)) >> 32);
     }
 
 }
 
 template<size_t Q>
 constexpr math::fixed_t<30, int32_t> _IQNlog(math::fixed_t<Q, uint32_t> a){
-    return math::fixed_t<30, int32_t>::from_bits(__IQNlog<Q>(a.to_bits(), ((Q >= 27) ? _IQNlog_min[Q - 27] : 1)));
+    return math::fixed_t<30, int32_t>::from_bits(__IQNlog<Q>(a.to_bits(), ((Q >= 27) ? IQNLOG_MIN[Q - 27] : 1)));
 }
 
 }

@@ -5,8 +5,8 @@
 
 namespace ymd::iqmath::details{
 
-static constexpr size_t _IQ30log_order = 14;
-static constexpr size_t _IQ30exp_order = 10;
+static constexpr size_t IQ30LOG_ORDER = 14;
+static constexpr size_t IQ30EXP_ORDER = 10;
 
 static constexpr int32_t _IQ31CosLookup[52] = {
     2147483647, 2147221509, 2146435157, 2145124784,
@@ -41,7 +41,7 @@ static constexpr int32_t _IQ31SinLookup[52] = {
     1463808091, 1488179813, 1512188216, 1535827441
 };
 
-static constexpr auto _IQ31_SINCOS_TABLE = []{
+static constexpr auto IQ31_SINCOS_TABLE = []{
     std::array<std::array<int32_t, 2>, 52> ret;
     for(size_t i = 0; i < ret.size(); ++i){
         ret[i][0] = iqmath::details::_IQ31SinLookup[i];
@@ -51,7 +51,7 @@ static constexpr auto _IQ31_SINCOS_TABLE = []{
 }();
 
 /* Asin */
-static constexpr int32_t _IQ29Asin_coeffs[17][5] = {
+static constexpr int32_t IQ29ASIN_COEFFS[17][5] = {
     {  3149732,   89392309,       962, 536870908,       0},
     {  9526495,   88593699,     40416, 536870004,       8},
     { 16138900,   86937495,    197996, 536863257,     118},
@@ -72,7 +72,7 @@ static constexpr int32_t _IQ29Asin_coeffs[17][5] = {
 };
 
 /* atan */
-static constexpr int32_t _IQ32atan_coeffs[132] = {
+static constexpr int32_t IQ32ATAN_COEFFS[132] = {
     -227484580, -9261, 683565333, 0,
         -224831707, -276221, 683574534, -108,
         -219602897, -1274081, 683638558, -1488,
@@ -261,18 +261,18 @@ static constexpr uint32_t _IQNexp_lookup[][22] = {
 };
 
 /* log */
-static constexpr uint32_t _IQNlog_min[5] = {
+static constexpr uint32_t IQNLOG_MIN[5] = {
     0x00000010, 0x00015FC3, 0x00960AAE, 0x08A95552, 0x2F16AC6D
 };
 
-static constexpr uint32_t _IQ30log_coeffs[15] = {
+static constexpr uint32_t IQ30LOG_COEFFS[15] = {
     0xfb6db6db, 0x04ec4ec4, 0xfaaaaaab, 0x05d1745d, 0xf999999a,
     0x071c71c7, 0xf8000000, 0x09249249, 0xf5555556, 0x0ccccccc,
     0xf0000000, 0x15555555, 0xe0000000, 0x40000000, 0x00000000
 };
 
 /* div */
-static constexpr uint8_t _IQ6div_lookup[65] = {
+static constexpr uint8_t IQ6DIV_LOOPUP[65] = {
     0x7F, 0x7D, 0x7B, 0x79, 0x78, 0x76, 0x74, 0x73,
     0x71, 0x6F, 0x6E, 0x6D, 0x6B, 0x6A, 0x68, 0x67,
     0x66, 0x65, 0x63, 0x62, 0x61, 0x60, 0x5F, 0x5E,
@@ -285,7 +285,7 @@ static constexpr uint8_t _IQ6div_lookup[65] = {
 
 
 /* sqrt */
-static constexpr uint16_t _IQ14sqrt_lookup[96] = {
+static constexpr uint16_t IQ14SQRT_LOOKUP[96] = {
     0x7f02, 0x7d19, 0x7b46, 0x7986, 0x77d9, 0x763d, 0x74b2, 0x7335,
     0x71c7, 0x7066, 0x6f11, 0x6dc8, 0x6c8b, 0x6b58, 0x6a2f, 0x690f,
     0x67f8, 0x66ea, 0x65e4, 0x64e5, 0x63ee, 0x62fe, 0x6214, 0x6131,

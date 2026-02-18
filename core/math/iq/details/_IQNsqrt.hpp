@@ -16,83 +16,11 @@ enum class [[nodiscard]] SqrtNormStrategy {
 };
 
 
-/*
- * Calculate square root, inverse square root and the magnitude of two inputs
- * using a Newton-Raphson iterative method. This method takes an initial guess
- * and performs an error correction with each iteration. The equation is:
- *
- *     x1 = x0 - f(x0)/f'(x0)
- *
- * Where f' is the derivative of f. The approximation for inverse square root
- * is:
- *
- *     g' = g * (1.5 - (x/2) * g * g)
- *
- *     g' = new guess approximation
- *     g = best guess approximation
- *     x = input
- *
- * The inverse square root is multiplied by the initial input x to get the
- * square root result for square root and magnitude functions.
- *
- *     root(x) = x * 1/root(x)
- */
-
 
 struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
     uint32_t uiq32Input;
     int32_t i16Exponent;
 
-    template<size_t Q, const SqrtNormStrategy STRATEGY>
-    __attribute__((always_inline))
-    static constexpr IqSqrtCoeffs from_u32(uint32_t iqNInputX) {
-        if(iqNInputX == 0) [[unlikely]]
-            return {0, 0};
-        uint32_t uiq32Input;
-        int32_t i16Exponent;
-
-        /* If the Q gives an odd starting exponent make it even. */
-        if constexpr((32 - Q) % 2 == 1) {
-            iqNInputX <<= 1;
-            /* Start with positive exponent for sqrt */
-            if constexpr(STRATEGY == SqrtNormStrategy::SQRT) {
-                i16Exponent = ((32 - Q) - 1) >> 1;
-            }
-            /* start with negative exponent for isqrt */
-            else {
-                i16Exponent = -(((32 - Q) - 1) >> 1);
-            }
-        } else {
-            /* start with positive exponent for sqrt */
-            if constexpr(STRATEGY == SqrtNormStrategy::SQRT) {
-                i16Exponent = (32 - Q) >> 1;
-            }
-            /* start with negative exponent for isqrt */
-            else {
-                i16Exponent = -((32 - int32_t(Q)) >> 1);
-            }
-        }
-
-        /* Save input as unsigned iq32. */
-        uiq32Input = iqNInputX;
-
-        if (uiq32Input < 0x40000000) [[likely]] {
-            int32_t leadingZeros = __builtin_clz(uiq32Input);
-            int32_t shiftsNeeded = leadingZeros / 2;  // 直接使用leadingZeros/2
-            
-            uiq32Input <<= 2 * shiftsNeeded;
-            if constexpr(STRATEGY != SqrtNormStrategy::ISQRT) {
-                i16Exponent -= shiftsNeeded;
-            } else {
-                i16Exponent += shiftsNeeded;
-            }
-        }
-
-        return {
-            uiq32Input,
-            i16Exponent
-        };
-    }
 
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
@@ -101,12 +29,11 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
             return 0;
 
         uint32_t uiq30Guess;
-        uint32_t uiq30Result;
-        uint32_t uiq31Result;
+
 
         /* Use left most byte as index into lookup table (range: 32-128) */
         const uint32_t ui8Index = ((uiq32Input >> 25) - 32);
-        uiq30Guess = (uint32_t)_IQ14sqrt_lookup[ui8Index] << 16;
+        uiq30Guess = (uint32_t)IQ14SQRT_LOOKUP[ui8Index] << 16;
 
         /*
         * Set the loop counter:
@@ -115,21 +42,54 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
         *     iq22 <= Q <= 31 - 3 loops
         */
 
-        auto newton_iter = [&]() __attribute__((always_inline)){
-            uiq31Result = __mpyf_ul(uiq32Input, uiq30Guess);
-            uiq30Result = __mpyf_ul(uiq31Result, uiq30Guess);
-            uiq30Result = -(uiq30Result - 0xC0000000);
-            uiq30Guess = __mpyf_ul(uiq30Guess, uiq30Result);
-        };
 
-        /* Iterate through Newton-Raphson algorithm. */
-        newton_iter();
-        newton_iter();
-        
-        if constexpr (Q >= 24) {
+        /*
+        * Calculate square root, inverse square root and the magnitude of two inputs
+        * using a Newton-Raphson iterative method. This method takes an initial guess
+        * and performs an error correction with each iteration. The equation is:
+        *
+        *     x1 = x0 - f(x0)/f'(x0)
+        *
+        * Where f' is the derivative of f. The approximation for inverse square root
+        * is:
+        *
+        *     g' = g * (1.5 - (x/2) * g * g)
+        *
+        *     g' = new guess approximation
+        *     g = best guess approximation
+        *     x = input
+        *
+        * The inverse square root is multiplied by the initial input x to get the
+        * square root result for square root and magnitude functions.
+        *
+        *     root(x) = x * 1/root(x)
+        */
+        {
+            #if 0
+            auto newton_iter = [&]() __attribute__((always_inline)){
+                uint32_t uiq32_temp = __mpyf_ul(uiq32Input, uiq30Guess);
+                uint32_t uiq31_temp = (0xC0000000 - __mpyf_ul(uiq32_temp, uiq30Guess));
+                uiq30Guess = __mpyf_ul(uiq30Guess, uiq31_temp);
+            };
+            #else
+            auto newton_iter = [&]() __attribute__((always_inline)){
+                uint32_t uiq32_temp = (uint64_t(uiq32Input) * (uiq30Guess << 1)) >> 32;
+                uint32_t uiq31_temp = (0xC0000000 - uint32_t((uint64_t(uiq32_temp) * (uiq30Guess << 1)) >> 32));
+                uiq30Guess = (uint64_t(uiq30Guess << 1) * (uiq31_temp)) >> 32;
+            };
+
+            #endif
+
+            /* Iterate through Newton-Raphson algorithm. */
             newton_iter();
+            newton_iter();
+            
+            if constexpr (Q >= 24) {
+                newton_iter();
+            }
         }
 
+        uint32_t uiq31Result;
         /* Calculate sqrt(x) for both sqrt and mag */
         if constexpr(STRATEGY == SqrtNormStrategy::SQRT || STRATEGY == SqrtNormStrategy::MAG) {
             /*
@@ -195,14 +155,65 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
 
         /* 一次性右移，并保持原舍入逻辑：最后 1 位做加 1 后右移，之前各位无舍入 */
         if (shift > 1) {
-            uiq31Result >>= (shift - 1);
-            uiq31Result = (uiq31Result + 1) >> 1;
+            return ((uiq31Result >> (shift - 1)) + 1) >> 1;
         } else {  /* shift == 1 */
-            uiq31Result = (uiq31Result + 1) >> 1;
+            return (uiq31Result + 1) >> 1;
+        }
+    }
+
+
+    template<size_t Q, const SqrtNormStrategy STRATEGY>
+    __attribute__((always_inline))
+    static constexpr IqSqrtCoeffs from_u32(uint32_t iqNInputX) {
+        if(iqNInputX == 0) [[unlikely]]
+            return {0, 0};
+        int32_t i16Exponent;
+
+        /* If the Q gives an odd starting exponent make it even. */
+        if constexpr((32 - Q) % 2 == 1) {
+            iqNInputX <<= 1;
+            /* Start with positive exponent for sqrt */
+            if constexpr(STRATEGY == SqrtNormStrategy::SQRT) {
+                i16Exponent = ((32 - Q) - 1) >> 1;
+            }
+            /* start with negative exponent for isqrt */
+            else {
+                i16Exponent = -(((32 - Q) - 1) >> 1);
+            }
+        } else {
+            /* start with positive exponent for sqrt */
+            if constexpr(STRATEGY == SqrtNormStrategy::SQRT) {
+                i16Exponent = (32 - Q) >> 1;
+            }
+            /* start with negative exponent for isqrt */
+            else {
+                i16Exponent = -((32 - int32_t(Q)) >> 1);
+            }
         }
 
-        return uiq31Result;
+        /* Save input as unsigned iq32. */
+        uint32_t uiq32Input;
+
+        if (iqNInputX < 0x40000000) [[likely]] {
+            int32_t leading_zeros = __builtin_clz(iqNInputX);
+            int32_t shifts_needed = leading_zeros / 2;  // 直接使用leadingZeros/2
+            
+            uiq32Input = iqNInputX << (2 * shifts_needed);
+            if constexpr(STRATEGY != SqrtNormStrategy::ISQRT) {
+                i16Exponent -= shifts_needed;
+            } else {
+                i16Exponent += shifts_needed;
+            }
+        }else{
+            uiq32Input = iqNInputX;
+        }
+
+        return {
+            uiq32Input,
+            i16Exponent
+        };
     }
+
 
     template<size_t Q, const SqrtNormStrategy STRATEGY>
     __attribute__((always_inline))
