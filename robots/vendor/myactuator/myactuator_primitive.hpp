@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/fixed/fixed.hpp"
 #include "core/math/float/fp32.hpp"
 #include "core/utils/bytes/bytes_provider.hpp"
 #include "core/utils/bits/bits_caster.hpp"

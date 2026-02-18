@@ -89,7 +89,7 @@ partition( const std::vector<_Tp>& _vec, std::vector<int>& labels,
                     root = root2;
                 }
 				// 根节点的parent必须小于0
-                assert(nodes[root][PARENT] < 0 );
+                ASSERT(nodes[root][PARENT] < 0 );
  
                 int k = j, parent;
  
@@ -137,8 +137,8 @@ partition( const std::vector<_Tp>& _vec, std::vector<int>& labels,
 }
 
 
-void groupRectangles(std::vector<math::Rect2u>& rectList, int groupThreshold, real_t eps,
-                     std::vector<int>* weights, std::vector<real_t>* levelWeights){
+void groupRectangles(std::vector<math::Rect2u>& rectList, int groupThreshold, iq16 eps,
+                     std::vector<int>* weights, std::vector<iq16>* levelWeights){
     if( groupThreshold <= 0 || rectList.empty() )
     {
         if( weights )
@@ -162,7 +162,7 @@ void groupRectangles(std::vector<math::Rect2u>& rectList, int groupThreshold, re
     std::vector<math::Rect2u> rrects(nclasses);
     std::vector<int> rweights(nclasses, 0);
     std::vector<int> rejectLevels(nclasses, 0);
-    std::vector<real_t> rejectWeights(nclasses, std::numeric_limits<real_t>::lowest());
+    std::vector<iq16> rejectWeights(nclasses, std::numeric_limits<iq16>::lowest());
     int i, j, nlabels = (int)labels.size();
     for( i = 0; i < nlabels; i++ )
     {
@@ -196,7 +196,7 @@ void groupRectangles(std::vector<math::Rect2u>& rectList, int groupThreshold, re
     for( i = 0; i < nclasses; i++ )
     {
         math::Rect2u r = rrects[i];
-        real_t s = real_t(1)/rweights[i];
+        iq16 s = iq16(1)/rweights[i];
         rrects[i] = math::Rect2u(
             saturate_cast<int>(r.x()*s),
             saturate_cast<int>(r.y()*s),
@@ -214,7 +214,7 @@ void groupRectangles(std::vector<math::Rect2u>& rectList, int groupThreshold, re
     {
         math::Rect2u r1 = rrects[i];
         int n1 = rweights[i];
-        real_t w1 = rejectWeights[i];
+        iq16 w1 = rejectWeights[i];
         int l1 = rejectLevels[i];
  
         // filter out rectangles which don't have enough similar rectangles
@@ -253,17 +253,17 @@ void groupRectangles(std::vector<math::Rect2u>& rectList, int groupThreshold, re
         }
     }
 }
-[[maybe_unused]] static real_t iou(const math::Rect2u & a, const math::Rect2u & b){
+[[maybe_unused]] static iq16 iou(const math::Rect2u & a, const math::Rect2u & b){
 
     math::Rect2u _a = a.abs();
     math::Rect2u _b = b.abs();
 
-    real_t ins = _a.intersection(_b)
+    iq16 ins = _a.intersection(_b)
         .map([](const math::Rect2u & rect){return rect.get_area();})
         .unwrap_or(0);
     if(ins == 0) return 0;
 
-    real_t uni = _a.get_area() + _b.get_area() - ins;
+    iq16 uni = _a.get_area() + _b.get_area() - ins;
 
     return (ins / uni);
 }
@@ -367,7 +367,7 @@ Image<Gray> FloodFill::run(const Image<Binary> & src, const BlobFilter & filter)
                 }
                 // skip_flag |= rect.h() > 50;
                 // skip_flag |= rect.h < 5;
-                // skip_flag |= real_t(int(rect)) / blob.area < (1.0 / 0.7);
+                // skip_flag |= iq16(int(rect)) / blob.area < (1.0 / 0.7);
                 // skip_flag |= blob.area < 50;
                 // skip_flag |= blob.area > 20;
                 // skip_flag |= true;

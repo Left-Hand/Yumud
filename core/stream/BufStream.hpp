@@ -7,32 +7,36 @@ namespace ymd{
 
 class BufStream final:public OutputStream{
 public:
-    BufStream(std::span<char> pbuf):
+    explicit BufStream(std::span<uint8_t> pbuf):
         buf_(pbuf.data()),
-        capacity_(pbuf.size()){;}
-
-    void sendout(std::span<const uint8_t> pbuf){
-        if(pbuf.size() > writable_capacity()) [[unlikely]]{
-            __builtin_trap();
+        capacity_(pbuf.size()){
+            reset();
         }
 
-        std::copy(pbuf.data(), pbuf.data() + pbuf.size(), buf_);
+    void reset(){
+        len_ = 0;
+    }
+
+    size_t sendout(std::span<const uint8_t> pbuf){
+        const size_t req_len = std::min(pbuf.size(), free_capacity());
+
+        std::copy(pbuf.data(), pbuf.data() + req_len, buf_ + len_);
+
+        len_ += req_len;
+        return req_len;
 
     }
 
     [[nodiscard]] constexpr size_t free_capacity() const {return capacity_ - len_;}
 
-    [[nodiscard]] constexpr StringView inner_str() const {
-        return StringView(buf_, len_);
+    [[nodiscard]] StringView collected_str() const {
+        return StringView(reinterpret_cast<const char *>(buf_), len_);
     }
 private:
-    char * buf_;
+    uint8_t * buf_;
     const size_t capacity_;
-    size_t len_ = 0;
+    size_t len_;
 
-    size_t writable_capacity() const {
-        return capacity_ - len_;
-    }
 };
 
 

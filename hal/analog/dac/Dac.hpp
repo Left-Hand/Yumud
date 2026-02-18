@@ -35,7 +35,7 @@ protected:
 public:
     void init();
 
-    DacChannel & operator = (const real_t value);
+    DacChannel & operator = (const iq16 value);
 };
 
 

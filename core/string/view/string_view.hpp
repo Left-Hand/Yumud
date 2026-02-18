@@ -24,11 +24,17 @@ public:
     constexpr StringView(const char * p_chars, size_t size) noexcept: 
         p_str_(p_chars), length_(size) {}
 
-    static constexpr StringView from_cstr(const char * p_chars, size_t max_size = std::dynamic_extent) noexcept{
+    static constexpr StringView from_cstr(
+        const char * p_chars, 
+        size_t max_size = std::dynamic_extent
+    ) noexcept{
         return from_zero_terminated(p_chars, max_size);
     }
     
-    static constexpr StringView from_zero_terminated(const char * p_chars, size_t max_size = std::dynamic_extent) noexcept{
+    static constexpr StringView from_zero_terminated(
+        const char * p_chars, 
+        size_t max_size = std::dynamic_extent
+    ) noexcept{
         const size_t size = (p_chars != nullptr) ? strnlen(p_chars, max_size) : 0;
         return StringView(p_chars, size);
     }
@@ -82,7 +88,9 @@ public:
     [[nodiscard]] constexpr char operator [](const size_t index) const noexcept{return p_str_[index];}
 	__fast_inline constexpr Option<StringView> substr(size_t left) const noexcept{
         return substr_by_range(left, length_);};
-	__fast_inline constexpr Option<StringView> substr_by_range(size_t left, size_t right) const noexcept{
+	
+    __fast_inline constexpr Option<StringView> 
+    substr_by_range(size_t left, size_t right) const noexcept{
         if ((left > right)) [[unlikely]] 
             return None;
         
@@ -92,7 +100,8 @@ public:
         return Some(StringView(this->p_str_ + left, right - left));
     }
 
-	__fast_inline constexpr Option<StringView> substr_by_len(size_t left, size_t len) const noexcept{
+	__fast_inline constexpr Option<StringView> 
+    substr_by_len(size_t left, size_t len) const noexcept{
         if (left + len > length_) 
             return None;
 

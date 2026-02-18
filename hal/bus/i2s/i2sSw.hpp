@@ -41,16 +41,16 @@ void stop() {
 
 
 protected :
-    Error begin_use(const uint8_t index = 0) override {
+    Error begin_use(const uint8_t index = 0) {
         return start(index);
     }
-    void end_use() override {stop();}
+    void end_use() {stop();}
 
-    bool is_idle() override {
+    bool is_idle() {
         return (occupied >= 0 ? false : true);
     }
 
-    bool owned_by(const uint8_t index = 0) override{
+    bool owned_by(const uint8_t index = 0){
         return (index == occupied);
     }
 
@@ -58,7 +58,7 @@ public:
 
     I2sSw(hal::Gpio & _sck,hal::Gpio & _sda,hal::Gpio & _ws,const uint16_t _delays = 10):sck(_sck), sda(_sda), ws(_ws), delays(_delays){;}
 
-    Error write(const uint32_t data) override {
+    Error write(const uint32_t data) {
         sck.outpp();
         sda.outpp();
 
@@ -100,7 +100,7 @@ public:
         sda.outpp();
         ws.outpp();
     }
-    void setBaudRate(const uint32_t baudrate) override {;}
+    void setBaudRate(const uint32_t baudrate) {;}
 };
 
 };

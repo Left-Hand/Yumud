@@ -7,20 +7,20 @@ namespace ymd::robots{
 
 //描述地图元素分布的位置和朝向
 struct Map{
-    static constexpr Ray2<real_t> garbage_gest =              
-        {Vec2{real_t(0),         real_t(0)},          90_deg};
-    static constexpr Ray2<real_t> entry_gest =                
-        {Vec2{real_t(0.3),       real_t(0.3)},        90_deg};
-    static constexpr Ray2<real_t> exit_gest =                 
-        {Vec2{real_t(0.3),       real_t(0.3)},        180_deg};
-    static constexpr Ray2<real_t> billboard_gest =            
-        {Vec2{real_t(0.065),     real_t(0.3)},        -90_deg};
-    static constexpr Ray2<real_t> staging_gest =              
-        {Vec2{real_t(1.8),       real_t(1.015)},      0_deg};
-    static constexpr Ray2<real_t> raw_material_gest =         
-        {Vec2{real_t(1.45),      real_t(0.3)},        -90_deg};
-    static constexpr Ray2<real_t> rough_process_gest =        
-        {Vec2{real_t(1.05),      real_t(1.72)},       90_deg};
+    static constexpr Ray2<iq16> garbage_gest =              
+        {Vec2{iq16(0),         iq16(0)},          90_deg};
+    static constexpr Ray2<iq16> entry_gest =                
+        {Vec2{iq16(0.3),       iq16(0.3)},        90_deg};
+    static constexpr Ray2<iq16> exit_gest =                 
+        {Vec2{iq16(0.3),       iq16(0.3)},        180_deg};
+    static constexpr Ray2<iq16> billboard_gest =            
+        {Vec2{iq16(0.065),     iq16(0.3)},        -90_deg};
+    static constexpr Ray2<iq16> staging_gest =              
+        {Vec2{iq16(1.8),       iq16(1.015)},      0_deg};
+    static constexpr Ray2<iq16> raw_material_gest =         
+        {Vec2{iq16(1.45),      iq16(0.3)},        -90_deg};
+    static constexpr Ray2<iq16> rough_process_gest =        
+        {Vec2{iq16(1.05),      iq16(1.72)},       90_deg};
 
     Map & operator =(const Map & other) = default;
     Map & operator =(Map && other) = default;
@@ -49,7 +49,7 @@ public:
     constexpr bool operator ==(const FieldKind kind) const {return kind_ == kind;}
     constexpr bool operator ==(const Field other) const {return kind_ == other.kind_;}
 
-    [[nodiscard]] Vec2<real_t> to_position(const Map & map) const {
+    [[nodiscard]] Vec2<iq16> to_position(const Map & map) const {
         switch(kind_){
             default:
                 HALT;
@@ -66,7 +66,7 @@ public:
         }
     }
 
-    [[nodiscard]] Angular<real_t> to_angle(const Map & map) const {
+    [[nodiscard]] Angular<iq16> to_angle(const Map & map) const {
         switch(kind_){
             default:
                 HALT;
@@ -83,7 +83,7 @@ public:
         }
     }
 
-    [[nodiscard]] Ray2<real_t> to_isometry(const Map & map) const{
+    [[nodiscard]] Ray2<iq16> to_isometry(const Map & map) const{
         return {to_pos(map), to_rot(map)};
     }
 };

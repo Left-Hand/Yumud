@@ -9,7 +9,7 @@ using namespace ymd::nvcv2;
 DigitsProbability match_numbers(
         const Image<Gray> & src, 
         const math::Rect2u16 & roi, 
-        const real_t threshold
+        const iq16 threshold
 ){
     const auto tmp_size = roi.size;
     auto ret = src.clone(math::Rect2u16(roi.top_left, tmp_size));
@@ -63,7 +63,7 @@ Option<uint> match_number(const Image<Binary> & src, const math::Rect2u16 & roi)
 
 
 
-real_t number_match(const Image<Gray> &src, const uint index){
+iq16 number_match(const Image<Gray> &src, const uint index){
     TODO();
-    return real_t();
+    return iq16();
 }

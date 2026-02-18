@@ -48,26 +48,26 @@ namespace{
     {
         constexpr auto str1 = StringView("");
         constexpr auto str2 = StringView("");
-        constexpr auto distance = ngram_similarity(str1, str2);
+        constexpr auto distance = (float)ngram_similarity(str1, str2);
         static_assert(distance == 1.0f);
     }
 
     {
         constexpr auto str1 = StringView("apple");
         constexpr auto str2 = StringView("penapple");
-        constexpr auto distance = ngram_similarity(str1, str2);
+        constexpr auto distance = (float)ngram_similarity(str1, str2);
         static_assert(distance > 0.7);
     }
 
     {
-        constexpr auto similarity = ngram_similarity("add", "add2");
-        constexpr auto similarity2 = ngram_similarity("add", "adopt");
+        constexpr auto similarity = (float)ngram_similarity("add", "add2");
+        constexpr auto similarity2 = (float)ngram_similarity("add", "adopt");
         static_assert(similarity > similarity2);
     }
 
     {
-        constexpr auto similarity = ngram_similarity("i love rusty", "i love rust");
-        constexpr auto similarity2 = ngram_similarity("i love code", "i love cpp");
+        constexpr auto similarity = (float)ngram_similarity("i love rusty", "i love rust");
+        constexpr auto similarity2 = (float)ngram_similarity("i love code", "i love cpp");
         static_assert(similarity > similarity2);
     }
 }

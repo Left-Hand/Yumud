@@ -18,10 +18,10 @@
 //     // extern_dac.
 
 //     // extern_dac.setDistort(0);
-//     // extern_dac.setRail(real_t(0.3), real_t(3.0));
+//     // extern_dac.setRail(iq16(0.3), iq16(3.0));
 //     while(true){
-//         // real_t audio_out = sin(40*t);
-//         // real_t audio_volt = audio_out * 2 + 2.5;
+//         // iq16 audio_out = sin(40*t);
+//         // iq16 audio_volt = audio_out * 2 + 2.5;
 //         // extern_dac.setVoltage(frac(t), frac(t));
 //         // extern_dac.setChData(0, );
 //         // uint32_t data = 0x8000 + int(0x7fff * sin(400 * t));

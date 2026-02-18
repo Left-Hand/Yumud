@@ -37,7 +37,7 @@ else {logger.prints("Succeed[", s, ']', std::hex, std::showbase, a, "->", b);}\
 struct TestData{
     std::array<uint8_t, 4> data = {0x5a,0xa5,0x54,00};
     char name[8] = "Rstr1aN";
-    real_t value = real_t(0.1);
+    iq16 value = iq16(0.1);
     uint32_t crc = 0x08;
 
     friend OutputStream & operator<<(OutputStream & os, const TestData & td){
@@ -163,7 +163,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
         logger.prints("write", archive);
         // mem.store(0,archive);
-        archive.value = real_t(0.2);
+        archive.value = iq16(0.2);
         archive.crc = 0x12;
         // archive.name = "rstr1aN";
         archive.data = {22,44,6,78};
@@ -277,7 +277,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
     //     archive.data[3] = bkp.readData(1);
     //     archive.name[2] = 'k';
-    //     // archive.value = real_t(0.2);
+    //     // archive.value = iq16(0.2);
     //     archive.crc = 10;
 
     //     logger.prints(archive.data[0], archive.data[1], archive.data[2], archive.data[3]);

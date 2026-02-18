@@ -247,7 +247,7 @@ public:
             TimerOC(inst_, TimerChannel::ChannelSelection::CH4)
         }{;}
 
-    void init_as_encoder(const CountMode mode = CountMode::Up);
+    void init_as_encoder();
     void enable_single_shot(const Enable en);
     void set_trgo_source(const TimerTrgoSource source);
     void set_trgi_source(const TimerTrgiSource source);

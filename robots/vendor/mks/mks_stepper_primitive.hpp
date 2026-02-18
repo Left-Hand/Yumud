@@ -12,7 +12,7 @@
 
 namespace ymd::robots::mksmotor{
 
-struct [[nodiscard]] NodeId{
+struct [[nodiscard]] NodeId final{
     using Self = NodeId;
     uint8_t count;
 
@@ -40,6 +40,10 @@ enum class [[nodiscard]] Error:uint8_t{
 DEF_DERIVE_DEBUG(Error)
 
 using Buf = HeaplessVector<uint8_t, 8>;
+struct [[nodiscard]]FlatPacket final{ 
+    NodeId node_id;
+    Buf buf;
+};
 
 template<typename T = void>
 using IResult = Result<T, Error>;
@@ -175,7 +179,7 @@ struct [[nodiscard]] iRpm final{
 
 static_assert(sizeof(iRpm) == 2);
 
-struct [[nodiscard]] AcclerationLevel{
+struct [[nodiscard]] AcclerationLevel final{
     static constexpr AcclerationLevel from_tpss(const iq16 tpss){
         // TODO
         return AcclerationLevel{uint8_t(tpss)};

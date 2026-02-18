@@ -62,8 +62,8 @@ private:
     InvensenseImu_Transport transport_;
     ICM20948_Regs regs_;
 
-    real_t gyro_scale_factor;
-    real_t accel_scale_factor;
+    iq16 gyro_scale_factor;
+    iq16 accel_scale_factor;
 
 
     IResult<> select_bank(BankKind bank);

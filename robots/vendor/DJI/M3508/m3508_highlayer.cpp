@@ -74,37 +74,37 @@ void M3508::tick(){
             // static constexpr iq16 kd = iq16(0.85);
 
             static constexpr iq16 kp = iq16(2.75); 
-            static constexpr iq16 kd = real_t(1.45);
+            static constexpr iq16 kd = iq16(1.45);
             
-            // static constexpr real_t kd = real_t(1.95);
+            // static constexpr iq16 kd = iq16(1.95);
 
-            // static constexpr real_t kp = real_t(4); 
-            // static constexpr real_t kd = real_t(2.75);
+            // static constexpr iq16 kp = iq16(4); 
+            // static constexpr iq16 kd = iq16(2.75);
             
-            // static constexpr real_t kp = real_t(6); 
-            // static constexpr real_t kd = real_t(3.75);
+            // static constexpr iq16 kp = iq16(6); 
+            // static constexpr iq16 kd = iq16(3.75);
 
-            // static constexpr real_t kp = real_t(8); 
-            // static constexpr real_t kd = real_t(7.45);
+            // static constexpr iq16 kp = iq16(8); 
+            // static constexpr iq16 kd = iq16(7.45);
 
-            // static constexpr real_t kp = real_t(9); 
-            // static constexpr real_t kd = real_t(10.45);
+            // static constexpr iq16 kp = iq16(9); 
+            // static constexpr iq16 kd = iq16(10.45);
 
-            // static constexpr real_t kp = real_t(10); 
-            // static constexpr real_t kd = real_t(13.45);
+            // static constexpr iq16 kp = iq16(10); 
+            // static constexpr iq16 kd = iq16(13.45);
 
-            // static constexpr real_t kp = real_t(11); 
-            // static constexpr real_t kd = real_t(16.45);
+            // static constexpr iq16 kp = iq16(11); 
+            // static constexpr iq16 kd = iq16(16.45);
 
-            // static constexpr real_t ki = real_t(0.066);
-            // static constexpr real_t ki = real_t(0.0);
-            // static real_t ci = 0;
+            // static constexpr iq16 ki = iq16(0.066);
+            // static constexpr iq16 ki = iq16(0.0);
+            // static iq16 ci = 0;
             // ci += (ki * (delta()>>4) * e1) >> 12;
             // ci = CLAMP2(ci, curr_limit_ * 0.1);
 
             // if(SIGN_DIFF(e1, e2)) ci = SIGN_AS(curr_limit_, e1);
-            // static constexpr real_t kd = real_t(13);
-            // static constexpr real_t kd = real_t(-20);
+            // static constexpr iq16 kd = iq16(13);
+            // static constexpr iq16 kd = iq16(-20);
             
             expect_curr = sqrt(ABS(e1)) * sign(e1) * kp + e2 * kd;  
             // expect_curr = (e1) * kp + e2 * kd;  
@@ -119,18 +119,18 @@ void M3508::tick(){
     }
 }
 
-void M3508::set_target_current(const real_t _curr){
+void M3508::set_target_current(const iq16 _curr){
     ctrl_method = CtrlMethod::CURR;
     targ_curr = _curr;
 }
 
 
-void M3508::set_target_speed(const real_t _spd){
+void M3508::set_target_speed(const iq16 _spd){
     ctrl_method = CtrlMethod::SPD;
     targ_spd = _spd;
 }
 
-void M3508::set_target_position(const real_t _pos){
+void M3508::set_target_position(const iq16 _pos){
     ctrl_method = CtrlMethod::POS;
     targ_pos = _pos;
 }

@@ -14,7 +14,7 @@ struct alignas(2) [[nodiscard]] fp16 final{
     constexpr fp16() = default;
 
     template<size_t Q, typename D>
-    constexpr fp16(fixed_t<Q, D> qv):fp16(float(qv)){;}
+    constexpr fp16(fixed<Q, D> qv):fp16(float(qv)){;}
     constexpr fp16(const fp16& other) = default;
 
     [[nodiscard]] constexpr fp16 from_bits(const uint16_t bits){
@@ -93,8 +93,8 @@ struct alignas(2) [[nodiscard]] fp16 final{
 
 
     template<size_t Q, typename D>
-    [[nodiscard]] explicit constexpr operator fixed_t<Q, D>() const{
-        return fixed_t<Q, D>(float(*this));
+    [[nodiscard]] explicit constexpr operator fixed<Q, D>() const{
+        return fixed<Q, D>(float(*this));
     }
 
 private:

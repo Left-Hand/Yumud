@@ -125,8 +125,8 @@ struct alignas(2) [[nodiscard]] JoystickPosition final{
     uint8_t x;
     uint8_t y;
 
-    constexpr math::Vec2<real_t> to_vec2() const{
-        constexpr auto SCALE = real_t(1.0/510);
+    constexpr math::Vec2<iq16> to_vec2() const{
+        constexpr auto SCALE = iq16(1.0/510);
         return {SCALE * (int(x * 4)) - 1, SCALE * (-int(y * 4)) + 1};
     }
 };

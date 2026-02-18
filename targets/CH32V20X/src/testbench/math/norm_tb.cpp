@@ -1,6 +1,6 @@
 #include "core/math/real.hpp"
 #include "core/math/batch/norm.hpp"
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/fixed/fixed.hpp"
 
 
 #include "algebra/vectors/vec3.hpp"

@@ -1,10 +1,7 @@
+#include "testbench/tb.h"
 #include "core/system.hpp"
 
-#include "hal/bus/spi/hw_singleton.hpp"
-#include "hal/gpio/vport.hpp"
-#include "core/debug/debug.hpp"
 
-#include "testbench/tb.h"
 
 
 int main(){
@@ -15,8 +12,9 @@ int main(){
     // cap_main();
     // stl06n_main();
     // nuedc_2025e_joint_main();
-    // nuedc_2025e_laser_main();
-    winter_mc_tutorial_main();
+    nuedc_2025e_laser_main();
+    // winter_mc_tutorial_main();
+    // lz77_main();
     // o1heap_main();
     // dshot_main();
     // sincos_main();
@@ -138,7 +136,7 @@ int main(){
     // zdt_main();
     // polar_robot_main();
     // ads7830_main();
-    dsp_main();
+    // dsp_main();
     // can_ring_main();
     // rrs3_robot_main();
     // flash_main();
@@ -175,8 +173,8 @@ int main(){
     // bldc_main();
     while(true);
     #elif defined(CH32V30X)
-    // sincos_main();
-    lidar_visualize_main();
+    sincos_main();
+    // winter_mc_tutorial_main();
     // stl06n_main();
     // render_main();
     // myesc_main();
@@ -185,6 +183,7 @@ int main(){
     // alx_aoa_main();
     // smc2025_main();
     // stl06n_main();
+    // l1_adaptive_main();
     // vl53l5cx_main();
     // smc2025_main();
     // m1502e_main();

@@ -32,8 +32,8 @@ void can_tb(OutputStream & logger, hal::Can & can, bool is_tx){
     }
 
     {
-        real_t data = 0.09_r;
-        real_t data2 = 0.99_r;
+        iq16 data = 0.09_r;
+        iq16 data2 = 0.99_r;
         uint32_t id = 0x5678;
         const auto frame = hal::BxCanFrame(
             hal::CanExtId::from_bits(id), 

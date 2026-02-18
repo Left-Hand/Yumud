@@ -20,6 +20,9 @@
 //一个用于显示表示这里无法constexpr的占位符
 #define imconstexpr 
 
+//一个用于显示表示这里无需explicit的占位符
+#define imexplicit
+
 
 #ifndef __interrupt_soft
 #define __interrupt_soft __attribute__((interrupt))

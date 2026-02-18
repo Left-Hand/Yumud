@@ -47,7 +47,7 @@ void ina3221_main(){
         ina.update(INA3221::ChannelSelection::CH3).examine();
         DEBUG_PRINTLN(
             ina.get_bus_volt(ch).examine(), 
-            ina.get_shunt_volt(ch).examine() * real_t(INV_SHUNT_RES)
+            ina.get_shunt_volt(ch).examine() * iq16(INV_SHUNT_RES)
         );
         clock::delay(1ms);
     }

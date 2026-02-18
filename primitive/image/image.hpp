@@ -121,6 +121,13 @@ public:
         put_pixel_unchecked(pos, color);
     }
 
+    Result<void, void> try_put_pixel(const math::Vec2u16 pos, const T color) {
+        if(check_position_is_inrange(pos).is_err())
+            return Err();
+        put_pixel_unchecked(pos, color);
+        return Ok();
+    }
+
     [[nodiscard]] T & operator[](const math::Vec2u16 pos) {
         return resource_[pos.x + pos.y * this->size().x]; }
 

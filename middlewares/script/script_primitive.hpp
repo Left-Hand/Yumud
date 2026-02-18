@@ -1,17 +1,12 @@
 #pragma once
 
-#include <span>
-#include <utility>
-#include <functional>
-#include <utility>
-#include <type_traits>
-
+#include "core/stream/ostream.hpp"
 #include "core/tmp/functor.hpp"
 #include "core/tmp/reflect/enum.hpp"
 #include "core/utils/Result.hpp"
-#include "core/string/view/string_view.hpp"
 #include "core/string/conv/strconv2.hpp"
-#include "core/stream/ostream.hpp"
+
+#include "core/utils/hash_redirector.hpp"
 
 
 namespace ymd::script{
@@ -116,9 +111,11 @@ private:
 template<typename Tuple>
 struct ConvertHelper {
         
-    union{
+    union alignas(4) Ret{
         alignas(4) Tuple tuple;
-    }ret;
+    };
+    
+    Ret ret;
 
     // 递归情况：处理至少一个索引
     template <size_t I, size_t... Js>
@@ -175,7 +172,7 @@ convert_params_to_tuple(const auto & ap) {
 }
 
 
-
+#if 0
 template<typename Ret, typename ... Args>
 struct alignas(4) [[nodiscard]] MethodByLambda final{
 public:
@@ -201,6 +198,38 @@ private:
     StringView name_;
     Callback callback_;
 };
+#else
+
+template<typename Fn>
+struct alignas(4) [[nodiscard]] MethodByLambda final{
+public:
+
+    using Tup = tmp::functor_args_tuple_t<Fn>;
+    static constexpr size_t N = std::tuple_size_v<Tup>; 
+    // using Callback = std::function<Ret(Args...)>;
+    using Ret = tmp::functor_ret_t<Fn>;
+
+
+    template<typename T>
+    constexpr explicit MethodByLambda(
+        const StringView name, 
+        T && callback
+    )
+        : name_(name), callback_(std::forward<T>(callback)) {}
+
+    [[nodiscard]] constexpr StringView name() const {
+        return name_;
+    }
+
+    constexpr Ret invoke(const Tup & tup) const {
+        return std::apply(callback_, tup);
+    }
+private:
+    StringView name_;
+    Fn callback_;
+};
+
+#endif
 
 
 template<typename Obj, typename Ret, typename ... Args>
@@ -242,65 +271,35 @@ struct alignas(4) [[nodiscard]] List final{
     explicit List(const StringView name, Args&&... entries) :
         name_(name),
         entries_(std::forward<Args>(entries)...) {
-            const auto check_res = check_hash_collision(entries...);
-            if(check_res.is_err()) 
-                // PANIC("Hash collision detected", check_res.unwrap_err());
-                while(true);
-        } 
-
+            const auto res = hash_redirector.try_init(
+                [](auto && obj){return obj.name().hash();}, 
+                entries...); // 修复：传递解包的entries
+            if(res.is_err()) 
+                PANIC("Hash collision detected", res.unwrap_err());
+        }
 
     constexpr const auto & entries() const { return entries_; } 
-
     constexpr StringView name() const { return name_; }
+    
+
 private:
     StringView name_;
     std::tuple<Entries...> entries_;
-
-    [[nodiscard]] constexpr Result<void, std::tuple<size_t, size_t>> 
-    check_hash_collision(auto && ... entries) {
-        const std::array hashes = { entries.name().hash()... };
-        for (size_t i = 0; i < hashes.size(); ++i) {
-            for (size_t j = i + 1; j < hashes.size(); ++j) {
-                if (hashes[i] == hashes[j]) {
-                    return Err(std::make_tuple(i, j));
-                }
-            }
-        }
-        return Ok();
-    }
+public:
+    HashRedirector<sizeof...(Entries)> hash_redirector{};
 };
 
 
+template<typename MayRValueFn>
+auto make_function(const StringView func_name, MayRValueFn && fn) {
+    using Fn = std::decay_t<MayRValueFn>;
 
+    using Ret = tmp::functor_ret_t<Fn>;
+    using ArgsTuple = tmp::functor_args_tuple_t<Fn>;
 
-namespace details{
-template<typename Ret, typename ArgsTuple, template<typename, typename...> 
-    class MethodByLambda, typename Lambda>
-struct make_method_by_lambda_impl;
-
-template<typename Ret, template<typename, typename...> 
-    class MethodByLambda, typename... Args, typename Lambda>
-struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lambda> {
-    static auto make(const StringView name, Lambda&& lambda) {
-        return MethodByLambda<Ret, Args...>(
-            name,
-            std::forward<Lambda>(lambda)
-        );
-    }
-};
-
-}
-
-template<typename Lambda>
-auto make_function(const StringView func_name, Lambda && lambda) {
-    using DecayedLambda = std::decay_t<Lambda>;
-
-    using Ret = tmp::functor_ret_t<DecayedLambda>;
-    using ArgsTuple = tmp::functor_args_tuple_t<DecayedLambda>;
-
-    return details::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
+    return MethodByLambda<Fn>(
         func_name,
-        std::forward<Lambda>(lambda)
+        std::forward<Fn>(fn)
     );
 }
 
@@ -432,16 +431,17 @@ struct EntryVisitor<PropertyWithLimit<T>> {
 };
 
 
-template <typename Ret, typename... Args>
-struct EntryVisitor<MethodByLambda<Ret, Args...>> final{
-    using Self = MethodByLambda<Ret, Args...>;
-    using Tup = std::tuple<Args...>;
+template <typename Fn>
+struct EntryVisitor<MethodByLambda<Fn>> final{
+    using Self = MethodByLambda<Fn>;
+    using Tup = typename Self::Tup;
+    using Ret = typename Self::Ret;
 
     static IResult<> visit(const Self & self, 
         auto & ar,
         auto && ap
     ) {
-        if (ap.size() != sizeof...(Args)) {
+        if (ap.size() != std::tuple_size_v<Tup>) {
             return Err(EntryAccessError::ArgsCountMismatch);
         }
 
@@ -468,7 +468,7 @@ struct EntryVisitor<MethodByMemFunc<Obj, Ret, Args...>> final {
     using Tup = std::tuple<Args...>;
 
 
-    static IResult<> visit(const Self & self, 
+    __no_inline static IResult<> visit(const Self & self, 
         auto & ar,
         auto && ap
     ) {
@@ -493,34 +493,84 @@ struct EntryVisitor<MethodByMemFunc<Obj, Ret, Args...>> final {
 
 };
 
+
 template<typename... Entries>
 struct EntryVisitor<List<Entries...>> final{
     using Self = List<Entries...>;
-    static IResult<> visit(const Self & self, 
+    static constexpr size_t N = sizeof...(Entries);
+    using EntriesTuple = std::tuple<Entries...>;
+
+    __no_inline static IResult<> visit(const Self & self, 
         auto & ar,
         auto && ap
     ) {
         if(ap.size() == 0) 
             return Err(EntryAccessError::EmptyArgs);
 
-        const auto head_hash = ap[0].hash();
-        // Modify the first block for "ls" command
-        if (head_hash == "ls"_ha) {
-            std::apply([&ar](auto&&... entry) { ar.println(entry.name()...); }, self.entries());
-            return Ok();
+        const auto str_hash = ap[0].hash();
+
+        // builtin operations
+        switch(str_hash){
+            case "ls"_ha: {
+                std::apply([&ar](auto&&... entry) { ar.println(entry.name()...); }, self.entries());
+                return Ok();
+            }
+
+            #if 0
+            case "help"_ha: {
+                std::apply([&ar](auto&&... entry) { 
+                    ((ar << entry.name() 
+                    << " -> " 
+                    << std::string_view(type_name_of<std::decay_t<decltype(entry)>>()) 
+                    << OutputStream::endl()), ...); 
+                }, self.entries());
+                return Ok();
+            }
+            #endif
         }
-        return std::apply([&](auto&&... entry) -> IResult<> {
-            IResult<> res = Err(EntryAccessError::NoCallableFounded);
-            ( [&]() -> void {
-                    auto ent_hash = entry.name().hash();
-                    if (head_hash == ent_hash) {
-                        res = EntryVisitor<std::decay_t<decltype(entry)>>::visit(
-                            entry, ar, ap.subspan(1));
-                    }
-                }(), ...
-            );
-            return res; 
-        }, self.entries());
+
+        const auto& redirector = self.hash_redirector;
+        auto may_found_index = redirector.find(str_hash);
+        
+        if (may_found_index.is_some()) {
+            return dispatch_by_index(may_found_index.unwrap(), self.entries(), ar, ap.subspan(1));
+        }
+
+        return Err(EntryAccessError::NoCallableFounded);
+    }
+
+private:
+    template<size_t I>
+    static IResult<> perform_dispatch(const EntriesTuple& entries, auto & ar, auto && ap) {
+        auto& entry = std::get<I>(entries);
+        return EntryVisitor<std::decay_t<decltype(entry)>>::visit(entry, ar, ap);
+    }
+
+    template<size_t... Is>
+    static IResult<> dispatch_by_index_impl(
+        size_t target_idx, 
+        const EntriesTuple& entries, 
+        auto & ar, 
+        auto && ap, 
+        std::index_sequence<Is...>
+    ) {
+        IResult<> result = Err(EntryAccessError::NoCallableFounded);
+        
+        [&]<size_t... Js>(std::index_sequence<Js...>) {
+            (void)(( (Js == target_idx) ? 
+                (result = perform_dispatch<Js>(entries, ar, ap), true) : false ) || ...);
+        }(std::make_index_sequence<N>());
+
+        return result;
+    }
+    
+    static IResult<> dispatch_by_index(
+        size_t target_idx, 
+        const EntriesTuple& entries, 
+        auto & ar, 
+        auto && ap
+    ) {
+        return dispatch_by_index_impl(target_idx, entries, ar, ap, std::make_index_sequence<N>{});
     }
 };
 

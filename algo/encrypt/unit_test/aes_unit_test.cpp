@@ -10,28 +10,11 @@ static_assert(aes::BLOCK_BYTES_SIZE == 16, "Block size should be 16 bytes");
 static_assert(aes::SEED_KEY_SIZE == 32, "Seed key size should be 32 bytes");
 static_assert(aes::KEYSCHEDULE_MAX_ROW == 60, "Key schedule max rows should be 60");
 static_assert(aes::KEYSCHEDULE_MAX_COLUMN == 4, "Key schedule max columns should be 4");
-static_assert(aes::STATE_MATRIX_SIZE == 4, "State matrix size should be 4");
 
 // Test KeySize enum values
 static_assert(static_cast<uint8_t>(aes::KeySize::_128Bits) == 0, "aes::KeySize::_128Bits should be 0");
 static_assert(static_cast<uint8_t>(aes::KeySize::_192Bits) == 1, "aes::KeySize::_192Bits should be 1");
 static_assert(static_cast<uint8_t>(aes::KeySize::_256Bits) == 2, "aes::KeySize::_256Bits should be 2");
-
-// Test key size mappings
-static_assert([]() constexpr {
-    auto [nk, nr] = aes::AesCipher::keysize_to_nk_and_nr(aes::KeySize::_128Bits);
-    return nk == 4 && nr == 10;
-}(), "aes::AesCipher-128 key size mapping incorrect");
-
-static_assert([]() constexpr {
-    auto [nk, nr] = aes::AesCipher::keysize_to_nk_and_nr(aes::KeySize::_192Bits);
-    return nk == 6 && nr == 12;
-}(), "aes::AesCipher-192 key size mapping incorrect");
-
-static_assert([]() constexpr {
-    auto [nk, nr] = aes::AesCipher::keysize_to_nk_and_nr(aes::KeySize::_256Bits);
-    return nk == 8 && nr == 14;
-}(), "aes::AesCipher-256 key size mapping incorrect");
 
 // Test GF(2^8) multiplication operations
 static_assert(aes::details::gfmultby01(0x57) == 0x57, "gfmultby01 failed");
@@ -112,7 +95,7 @@ static_assert([]() constexpr {
     auto aes = aes::AesCipher::from_128bits(std::span(key));
     uint8_t ciphertext[16];
     
-    aes.i_cipher(plaintext, ciphertext);
+    aes.cipher_block(plaintext, ciphertext);
     
     for (size_t i = 0; i < 16; ++i) {
         if (ciphertext[i] != expected_ciphertext[i]) {
@@ -143,7 +126,7 @@ static_assert([]() constexpr {
     auto aes = aes::AesCipher::from_128bits(std::span(key));
     uint8_t plaintext[16];
     
-    aes.i_inv_cipher(ciphertext, plaintext);
+    aes.inv_cipher_block(ciphertext, plaintext);
     
     for (size_t i = 0; i < 16; ++i) {
         if (plaintext[i] != expected_plaintext[i]) {
@@ -251,8 +234,8 @@ static_assert([]() constexpr {
     uint8_t ciphertext[16];
     uint8_t decrypted[16];
     
-    aes.i_cipher(plaintext, ciphertext);
-    aes.i_inv_cipher(ciphertext, decrypted);
+    aes.cipher_block(plaintext, ciphertext);
+    aes.inv_cipher_block(ciphertext, decrypted);
     
     // Check that we get back the original plaintext
     for (size_t i = 0; i < 16; ++i) {
@@ -269,7 +252,7 @@ static_assert([]() constexpr {
     uint8_t all_zero_plaintext[16] = {0};
     auto aes = aes::AesCipher::from_128bits(std::span(all_zero_key));
     uint8_t ciphertext[16];
-    aes.i_cipher(all_zero_plaintext, ciphertext);
+    aes.cipher_block(all_zero_plaintext, ciphertext);
     return true; // 主要检查是否崩溃/编译
 }(), "All-zero test");
 };

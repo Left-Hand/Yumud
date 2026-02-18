@@ -109,11 +109,11 @@ private:
 
 
 template<std::integral T>
-struct RenderIterator<RoundedRect2<T>> {
+struct RasterizationIterator<RoundedRect2<T>> {
     using Shape = RoundedRect2<T>;
     using Iterator = RoundedRect2SliceIterator<T>;
 
-    constexpr RenderIterator(const Shape & shape)
+    constexpr RasterizationIterator(const Shape & shape)
         : iter_(shape){;}
 
     // 检查是否还有下一行

@@ -7,8 +7,6 @@
 namespace ymd::gcode{
 
 
-
-
 enum class GcodeParseError:uint8_t{
     NoLetterFounded,
     NoStringSegmentFounded,
@@ -233,7 +231,7 @@ constexpr IResult<T> query_tmp(const StringView line, const char letter, FnMap &
 struct [[nodiscard]] GcodeLine final{
     StringView line;
     constexpr IResult<Mnemonic> query_mnemonic() const {
-        if(line.length() < 1) 
+        if(line.length() == 0) 
             return Err(GcodeParseError::NoMnemonicFounded);
 
         const auto may_mnemoic = Mnemonic::try_from_letter(line[0]);

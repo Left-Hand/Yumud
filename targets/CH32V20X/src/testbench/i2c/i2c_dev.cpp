@@ -1,7 +1,7 @@
 #include "core/io/regs.hpp"
 #include "core/utils/Option.hpp"
-#include "hal/bus/i2c/i2cdrv.hpp"
 #include "core/utils/Errno.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 namespace ymd::hal::i2c_oper{
 

@@ -27,7 +27,7 @@ public:
     void resume();
 
 private:
-    // void set_color(const Color<real_t> & color){
+    // void set_color(const Color<iq16> & color){
 
     // }
 };

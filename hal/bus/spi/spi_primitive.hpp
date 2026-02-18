@@ -102,12 +102,12 @@ private:
 
 using Baudrate = Sumtype<Prescaler, NearestFreq, LeastFreq>;
 
-enum class WordSize:uint8_t{
+enum class [[nodiscard]] WordSize:uint8_t{
     OneByte = 0b00,
     TwoBytes = 0b01
 };
 
-struct Config{
+struct [[nodiscard]] Config{
     SpiRemap remap;
     Baudrate baudrate;
     Mode mode = Mode::_3;

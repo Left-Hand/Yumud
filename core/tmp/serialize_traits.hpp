@@ -1,7 +1,7 @@
 #pragma once
 
 #include "args/query_element.hpp"
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/fixed/fixed.hpp"
 #include "functor.hpp"
 #include <span>
 
@@ -70,12 +70,12 @@ uint8_t get_byte_from_arg(const size_t idx, Arg && arg){
     return uint8_t{uint8_t(raw >> (idx * 8))};
 }
 
-//由于未知原因 fixed_t不支持平凡复制 故需要额外进行特化
+//由于未知原因 fixed不支持平凡复制 故需要额外进行特化
 template<size_t Q>
 
 [[nodiscard]] constexpr 
-uint8_t get_byte_from_arg(const size_t idx, const ymd::math::fixed_t<Q, int32_t> & arg){
-    static_assert(sizeof(ymd::math::fixed_t<Q, int32_t>) <= 8, "Size of fixed_t<Q, int32_t> must be less than 8");
+uint8_t get_byte_from_arg(const size_t idx, const ymd::math::fixed<Q, int32_t> & arg){
+    static_assert(sizeof(ymd::math::fixed<Q, int32_t>) <= 8, "Size of fixed<Q, int32_t> must be less than 8");
     const auto raw = arg.to_bits();
     return uint8_t{uint8_t(raw >> (idx * 8))};
 }

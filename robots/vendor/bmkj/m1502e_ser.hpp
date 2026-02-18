@@ -15,15 +15,19 @@ static constexpr hal::BxCanFrame serialize_msg(const T & msg){
 
 struct [[nodiscard]] FrameFactory final{
 public:
-    constexpr hal::BxCanFrame set_low_quad_motor_setpoint(const req_msgs::SetLowQuadMotorSetpoint & msg) const{
+    constexpr hal::BxCanFrame set_low_quad_motor_setpoint(
+        const req_msgs::SetLowQuadMotorSetpoint & msg
+    ) const{
         return serialize_msg(msg);
     }
 
-    constexpr hal::BxCanFrame set_loop_mode(const req_msgs::SetLoopMode & msg){
+    constexpr hal::BxCanFrame set_loop_mode(const req_msgs::SetLoopMode & msg) const {
         return serialize_msg(msg);
     }
 
-    constexpr hal::BxCanFrame set_feedback_strategy(const req_msgs::SetFeedbackStrategy & msg) const{
+    constexpr hal::BxCanFrame set_feedback_strategy(
+        const req_msgs::SetFeedbackStrategy & msg
+    ) const{
         return serialize_msg(msg);
     }
 

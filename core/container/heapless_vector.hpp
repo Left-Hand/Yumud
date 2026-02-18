@@ -12,7 +12,7 @@
 namespace ymd::heapless{
 
 template<typename T, size_t N>
-class [[nodiscard]] Vector {
+class alignas(8) [[nodiscard]] Vector {
 public:
     // 构造函数 - constexpr
     constexpr Vector() noexcept : size_(0) {}
@@ -280,10 +280,10 @@ public:
 
 private:
     // 存储 - 使用 union 替代 aligned_storage (C++20 起支持 constexpr)
-    union {
+    union alignas(4){
         T buf_[N];
     };
-    size_t size_{0};
+    alignas(4) size_t size_{0};
 };
 
 

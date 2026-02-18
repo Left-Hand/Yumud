@@ -9,7 +9,7 @@ using namespace ymd;
 extern "C"{
 
 int _write(int file, char * buf_begin, int len){
-    DEBUGGER.write(std::span(
+    DEBUGGER.write_bytes(std::span(
         reinterpret_cast<const uint8_t *>(buf_begin),
         len
     ));
@@ -60,6 +60,12 @@ void abort(void){
 void *__dso_handle = nullptr;
 void __cxa_atexit(void (*func)(void), void *objptr, void *dso_handle) {}
 
+}
+
+// 避免链接器错误，提供空实现
+void __cxa_pure_virtual() {
+    // 纯虚函数调用时的处理
+    while(1);  // 或你的错误处理
 }
 
 extern "C" {

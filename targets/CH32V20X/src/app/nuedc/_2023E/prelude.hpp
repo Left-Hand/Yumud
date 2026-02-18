@@ -7,8 +7,8 @@ using namespace ymd;
 
 namespace nuedc::_2023E{
 struct YawPitch final{
-    real_t yaw;
-    real_t pitch;
+    iq16 yaw;
+    iq16 pitch;
 
     friend OutputStream & operator << (OutputStream & os, const YawPitch & self){
         return os << os.brackets<'('>() 

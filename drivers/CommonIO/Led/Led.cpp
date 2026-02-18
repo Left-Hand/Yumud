@@ -6,13 +6,13 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-// LedGpio &  LedGpio::operator =(const real_t dutycycle{
-//     inst_ = BoolLevel::from((duty > real_t(0.5)) ^ inversed);
+// LedGpio &  LedGpio::operator =(const iq16 dutycycle{
+//     inst_ = BoolLevel::from((duty > iq16(0.5)) ^ inversed);
 //     return *this;
 // }
 
-void LedGpio::set_dutycycle(const real_t dutycycle){
-    inst_.write(BoolLevel::from((dutycycle > real_t(0.5)) ^ inversed));
+void LedGpio::set_dutycycle(const iq16 dutycycle){
+    inst_.write(BoolLevel::from((dutycycle > iq16(0.5)) ^ inversed));
 }
 
 
@@ -22,7 +22,7 @@ void LedGpio::toggle() {
 }
 
 
-// void LedPwm::set_dutycycle(const real_t dutycycle{
+// void LedPwm::set_dutycycle(const iq16 dutycycle{
 //     inst = inversed ? 1 - duty : duty;
 // }
 

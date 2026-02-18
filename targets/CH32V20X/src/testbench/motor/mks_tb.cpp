@@ -8,14 +8,16 @@
 #include "primitive/colors/color/color.hpp"
 
 
-#include "robots/vendor/mks/mks_stepper.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/can/hw_singleton.hpp"
+
+#include "robots/vendor/mks/mks_frame_factory.hpp"
 
 
-#ifdef UART1_PRESENT
+#ifdef USART1_PRESENT
 using namespace ymd;
 
 using namespace ymd::robots;
-using robots::mksmotor::MksStepper;
 
 #define DBG_UART hal::usart2
 #define COMM_UART hal::usart1
@@ -40,7 +42,7 @@ void mks_stepper_main(){
 
     #if PHY_SEL == PHY_SEL_UART
     COMM_UART.init({921600});
-    MksStepper motor{{.nodeid = {1}}, &COMM_UART};
+    MksStepper motor{{.node_id = {1}}, &COMM_UART};
     #else
     COMM_CAN.init({
         .remap = hal::CanRemap::_0,
@@ -49,13 +51,21 @@ void mks_stepper_main(){
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
-    MksStepper motor1{{.nodeid = {1}}, &COMM_CAN};
-    MksStepper motor2{{.nodeid = {2}}, &COMM_CAN};
+    mksmotor::MksFrameFactory factory1{.node_id = mksmotor::NodeId::from_u8(1)};
+    mksmotor::MksFrameFactory factory2{.node_id = mksmotor::NodeId::from_u8(2)};
     #endif
     
+    auto write_packet = [&](const mksmotor::FlatPacket & packet) {
+        const auto can_frame = hal::BxCanFrame::from_parts(
+            hal::CanStdId::from_u11(static_cast<uint16_t>(packet.node_id.to_u8())),
+            hal::BxCanPayload::from_bytes(packet.buf.view())
+        );
+
+        COMM_CAN.try_write(can_frame).examine();
+    };
     clock::delay(10ms);
-    motor1.activate(EN).unwrap();
-    motor2.activate(EN).unwrap();
+    write_packet(factory1.activate(EN));
+    write_packet(factory2.activate(EN));
     clock::delay(10ms);
 
 
@@ -87,10 +97,10 @@ void mks_stepper_main(){
         // motor.activate();
         const auto d1 = math::sin(clock::seconds()*0.7_r);
         const auto d2 = math::sin(clock::seconds()*0.2_r);
-        // motor1.set_position({.position = d1, .speed = 0}).unwrap();
+        // factory1.set_position({.position = d1, .speed = 0}).unwrap();
         clock::delay(5ms);
-        motor2.set_position({.position = 0, .speed = 0}).unwrap();
-        // motor2.set_position({.position = d2, .speed = 0}).unwrap();
+        write_packet(factory2.set_position({.position = 0, .speed = 0}));
+        // factory2.set_position({.position = d2, .speed = 0}).unwrap();
         clock::delay(5ms);
         DEBUG_PRINTLN(d1, d2);
         // DEBUG_PRINTLN(clock::millis());

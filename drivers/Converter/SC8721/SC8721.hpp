@@ -19,7 +19,7 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<> set_target_voltage(const real_t volt);
+    [[nodiscard]] IResult<> set_target_voltage(const iq16 volt);
 
     [[nodiscard]] IResult<> enable_external_fb(const Enable en);
 

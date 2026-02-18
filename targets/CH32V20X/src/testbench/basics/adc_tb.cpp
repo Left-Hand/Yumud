@@ -43,16 +43,16 @@ void adc_tb(OutputStream & logger){
     auto & pwm = timer1.oc(1);
     pwm.init();
 
-    real_t src_data;
-    real_t raw_data;
-    real_t filt_data;
-    LowpassFilter<real_t, real_t> lpf(200);
+    iq16 src_data;
+    iq16 raw_data;
+    iq16 filt_data;
+    LowpassFilter<iq16, iq16> lpf(200);
 
     timer3.init(40000);
     timer3.oc(4).init();
     timer3.oc(4) = 0.5;
     timer3.bindCb(TimerIT::CC4, [&](){
-        real_t angle = TAU * t * 50;
+        iq16 angle = TAU * t * 50;
         src_data = 0.5 + 0.2 * sin(angle) + 0.2 * sin(angle * 64);
         pwm = src_data;
         raw_data = int(ADC1->IDATAR1);
@@ -66,7 +66,7 @@ void adc_tb(OutputStream & logger){
         // bled = (millis() / 2000) & 0b1;
         // hal::adc1.swStartInjected();
 
-        // auto Vsense = (real_t(uint16_t(ADC1->IDATAR1)) >> 12) * 3.3;           // ��ѹֵ 
+        // auto Vsense = (iq16(uint16_t(ADC1->IDATAR1)) >> 12) * 3.3;           // ��ѹֵ 
         // auto temperate = ((1.43 - Vsense) / 0.0043 + 25);    // ת��Ϊ�¶�ֵ��ת����ʽ��T���棩= ((V25 - Vsense) / Avg_Slope) + 25
         auto temperate = TempSensor_Volt_To_Temper(ADC1->IDATAR1 * 3300 / 4096);
         auto vref = ADC1->IDATAR2 * 3300 / 4096;

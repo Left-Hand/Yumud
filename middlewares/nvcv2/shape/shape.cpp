@@ -228,6 +228,7 @@ void convolution(Image<Gray> & dst, const Image<Gray> & src, const size_t core[2
 }
 
 void dilate(Image<Binary> & dst, const Image<Binary> & src){
+    #if 1
     if(src.is_shared_with(dst)){
         auto temp = src.clone();
         dilate(dst, temp);
@@ -242,19 +243,20 @@ void dilate(Image<Binary> & dst, const Image<Binary> & src){
     for(uint16_t y = 1; y < h-1u; y++){
         for(uint16_t x = 1; x < w-1u; x++){
             bool pixel = false;
-            pixel |= src[{static_cast<uint16_t>(x-1), static_cast<uint16_t>(y - 1)}].is_white();
-            pixel |= src[{static_cast<uint16_t>(x+0), static_cast<uint16_t>(y - 1)}].is_white();
-            pixel |= src[{static_cast<uint16_t>(x+1), static_cast<uint16_t>(y - 1)}].is_white();
-            pixel |= src[{static_cast<uint16_t>(x-1), static_cast<uint16_t>(y + 0)}].is_white();
-            pixel |= src[{static_cast<uint16_t>(x+0), static_cast<uint16_t>(y + 0)}].is_white();
-            pixel |= src[{static_cast<uint16_t>(x+1), static_cast<uint16_t>(y + 0)}].is_white();
-            pixel |= src[{static_cast<uint16_t>(x-1), static_cast<uint16_t>(y + 1)}].is_white();
-            pixel |= src[{static_cast<uint16_t>(x+0), static_cast<uint16_t>(y + 1)}].is_white();
-            pixel |= src[{static_cast<uint16_t>(x+1), static_cast<uint16_t>(y + 1)}].is_white();
+            pixel |= (not src[{static_cast<uint16_t>(x-1), static_cast<uint16_t>(y - 1)}].is_black());
+            pixel |= (not src[{static_cast<uint16_t>(x+0), static_cast<uint16_t>(y - 1)}].is_black());
+            pixel |= (not src[{static_cast<uint16_t>(x+1), static_cast<uint16_t>(y - 1)}].is_black());
+            pixel |= (not src[{static_cast<uint16_t>(x-1), static_cast<uint16_t>(y + 0)}].is_black());
+            pixel |= (not src[{static_cast<uint16_t>(x+0), static_cast<uint16_t>(y + 0)}].is_black());
+            pixel |= (not src[{static_cast<uint16_t>(x+1), static_cast<uint16_t>(y + 0)}].is_black());
+            pixel |= (not src[{static_cast<uint16_t>(x-1), static_cast<uint16_t>(y + 1)}].is_black());
+            pixel |= (not src[{static_cast<uint16_t>(x+0), static_cast<uint16_t>(y + 1)}].is_black());
+            pixel |= (not src[{static_cast<uint16_t>(x+1), static_cast<uint16_t>(y + 1)}].is_black());
             
             dst[{x, y}] = Binary::from_bool(pixel);
         }
     }
+    #endif
 }
 
 void dilate_xy(Image<Binary> & dst, const Image<Binary> & src){
@@ -589,7 +591,7 @@ void anti_pepper(Image<Binary> & dst,const Image<Binary> & src){
 }
 
 
-void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real_t percent){
+void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const iq16 percent){
     const auto size = src.size();
     const size_t w = size_t(size.x);
     const size_t h = size_t(size.y);

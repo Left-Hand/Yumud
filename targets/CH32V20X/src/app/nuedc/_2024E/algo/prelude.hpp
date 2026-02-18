@@ -9,16 +9,15 @@ using namespace ymd;
 namespace nuedc::_2024E{
 
 
-class Role{
+struct Role{
 public:
-    enum class Kind:uint8_t{
+    enum struct Kind:uint8_t{
         X,
         O
     };
 
     using enum Kind;
 
-    //FIXME remove default constructor
     [[nodiscard]]
     constexpr Role() = delete;
     
@@ -58,19 +57,14 @@ public:
     [[nodiscard]]
     constexpr bool operator !=(const Role other) const{return kind_ != other.kind_;}
 
-    [[nodiscard]]
-    constexpr Role operator !() const{return Role(kind_ == X ? O : X);}
+    [[nodiscard]] constexpr Role opponent() const{return Role(kind_ == X ? O : X);}
 
-    [[nodiscard]]
-    constexpr Role get_opponent() const{return !(*this);}
-
-    [[nodiscard]]
-    constexpr Kind kind() const {return kind_;}
+    [[nodiscard]] constexpr Kind kind() const {return kind_;}
 private:
     Kind kind_;
 };
 
-class ChessCell{
+struct [[nodiscard]] ChessCell final{
 public:
     ChessCell() = delete;
 
@@ -138,7 +132,7 @@ private:
     Data data_ = None;
 };
 
-class ChessBoard{
+struct [[nodiscard]] ChessBoard final{
 public:
     static constexpr size_t WIDTH = 3;
     using Row = std::array<ChessCell, WIDTH>;

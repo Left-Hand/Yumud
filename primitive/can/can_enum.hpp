@@ -8,13 +8,20 @@
 #include <functional>
 
 namespace ymd{
-    class OutputStream;
+    struct OutputStream;
 }
+
+
 namespace ymd::hal::can{
+
+enum struct [[nodiscard]] LibError:uint8_t{
+    NoMailboxAvailable,
+    SoftQueueFull
+};
 
 
 /// @brief CAN Swj时间长度
-enum class [[nodiscard]] Swj:uint8_t{
+enum struct [[nodiscard]] Swj:uint8_t{
     _1tq = 0x00,
     _2tq = 0x01,
     _3tq = 0x02,
@@ -22,7 +29,7 @@ enum class [[nodiscard]] Swj:uint8_t{
 };
 
 /// @brief CAN Bs1时间长度
-enum class [[nodiscard]] Bs1:uint8_t{
+enum struct [[nodiscard]] Bs1:uint8_t{
     _1tq = 0x00,
     _2tq = 0x01,
     _3tq = 0x02,
@@ -43,7 +50,7 @@ enum class [[nodiscard]] Bs1:uint8_t{
 
 
 /// @brief CAN Bs2时间长度
-enum class [[nodiscard]] Bs2:uint8_t{
+enum struct [[nodiscard]] Bs2:uint8_t{
     _1tq = 0x00,
     _2tq = 0x01,
     _3tq = 0x02,
@@ -53,7 +60,6 @@ enum class [[nodiscard]] Bs2:uint8_t{
     _7tq = 0x06,
     _8tq = 0x07,
 };
-
 struct [[nodiscard]] NominalBitTimmingCoeffs final{
     uint16_t prescale;
     Swj swj;
@@ -61,15 +67,16 @@ struct [[nodiscard]] NominalBitTimmingCoeffs final{
     Bs2 bs2;
 
     [[nodiscard]] static constexpr NominalBitTimmingCoeffs from(
-        const uint32_t aligned_bus_clk_freq,
+        const uint32_t aligned_bus_clk_freq_hz,
         const uint32_t baud_freq_hz,
         const Percentage<uint8_t> sample_point
     ){
         //works only at 144mhz pclk1 freq
         //TODO : support other freq
-        if(aligned_bus_clk_freq != 144'000'000) 
+        if(aligned_bus_clk_freq_hz != 144'000'000) 
             __builtin_trap();
 
+        //TODO use percents;
         [[maybe_unused]] const auto sample_percents = sample_point.percents();
 
         switch(baud_freq_hz){
@@ -125,20 +132,18 @@ struct [[nodiscard]] NominalBitTimmingCoeffs final{
     }
 };
 
-
-
-enum class [[nodiscard]] FifoIndex:uint8_t{
+enum struct [[nodiscard]] FifoIndex:uint8_t{
     _0 = 0,
     _1 = 1
 };
 
-enum class [[nodiscard]] MailboxIndex:uint8_t{
+enum struct [[nodiscard]] MailboxIndex:uint8_t{
     _0 = 0,
     _1 = 1,
     _2 = 2
 };
 
-enum class [[nodiscard]] InterruptFlagBit:uint16_t{
+enum struct [[nodiscard]] InterruptFlagBit:uint16_t{
     TME = (1u << 0),
 
     FMP0 = (1u << 1),
@@ -157,8 +162,6 @@ enum class [[nodiscard]] InterruptFlagBit:uint16_t{
     LEC = (1u << 12),
     ERR = (1u << 13),
 };
-
-
 
 struct [[nodiscard]] Tq final{
     using Self = Tq;
@@ -180,11 +183,26 @@ private:
     constexpr Tq(const uint8_t bits):bits_{bits}{}
 };
 
-class [[nodiscard]] Baudrate final{
+//can错误
+enum class [[nodiscard]] Error:uint8_t{
+    Stuff = 0x1,
+    Form = 0x2,
+    Acknowledge = 0x3,
+    BitRecessive = 0x4,
+    BitDominant = 0x5,
+    Crc = 0x6,
+    SoftwareSet = 0x7,
+};
+
+
+OutputStream & operator<<(OutputStream & os, const Error & error);
+
+struct [[nodiscard]] Baudrate final{
 public:
     static constexpr Percentage<uint8_t> DEFAULT_SAMPLE_POINT = 
         Percentage<uint8_t>::from_percents(80).unwrap();
-    enum class [[nodiscard]] Kind:uint8_t{
+
+    enum struct [[nodiscard]] Kind:uint8_t{
         _10K,
         _20K,
         _50K,
@@ -211,11 +229,11 @@ public:
         sample_point_(sample_point){}
 
     constexpr NominalBitTimmingCoeffs to_coeffs(
-        const uint32_t aligned_bus_clk_freq,
+        const uint32_t aligned_bus_clk_freq_hz,
         const Percentage<uint8_t> sample_point = DEFAULT_SAMPLE_POINT
     ) const {
         return NominalBitTimmingCoeffs::from(
-            aligned_bus_clk_freq, 
+            aligned_bus_clk_freq_hz, 
             freq_, 
             sample_point
         );
@@ -276,12 +294,10 @@ private:
     }
 };
 
-
-
 struct [[nodiscard]] WiringMode final{
     using Self = WiringMode;
 
-    enum class [[nodiscard]] Kind:uint8_t {
+    enum struct [[nodiscard]] Kind:uint8_t {
         Normal = 0b00,
         Silent = 0b10,
         SilentLoopback = 0b11,
@@ -316,61 +332,16 @@ private:
 };
 
 
-//can错误
-enum class [[nodiscard]] Error:uint8_t{
-    Stuff = 0x1,
-    Form = 0x2,
-    Acknowledge = 0x3,
-    BitRecessive = 0x4,
-    BitDominant = 0x5,
-    Crc = 0x6,
-    SoftwareSet = 0x7,
-};
-
-//from ST-HAL
-struct [[nodiscard]] ErrorFlags final{
-    uint32_t error_warning:1;
-    uint32_t error_passive:1;
-    uint32_t bus_off:1;
-    uint32_t stuff:1;
-    uint32_t form:1;
-    uint32_t acknowledgment:1;
-    uint32_t bit_recessive:1;
-    uint32_t bit_dominant:1;
-    uint32_t crc_error:1;
-    uint32_t fifo0_overrun:1;
-    uint32_t fifo1_overrun:1;
-
-    uint32_t mbox0_arbitration_lost:1;
-    uint32_t mbox0_transmit:1;
-    uint32_t mbox1_arbitration_lost:1;
-    uint32_t mbox1_transmit:1;
-    uint32_t mbox2_arbitration_lost:1;
-    uint32_t mbox2_transmit:1;
-
-    uint32_t timeout:1;
-    uint32_t peripheral_not_initialized:1;
-    uint32_t peripheral_not_ready:1;
-    uint32_t peripheral_not_started:1;
-};
-
-OutputStream & operator<<(OutputStream & os, const Error & fault);
-
-enum class [[nodiscard]] LibError:uint8_t{
-    BlockingTransmitTimeout,
-    NoMailboxAvailable,
-    SoftQueueOverflow
-};
 
 OutputStream & operator<<(OutputStream & os, const LibError & error);
 
-enum class [[nodiscard]] RtrSpecfier:uint8_t{
+enum struct [[nodiscard]] RtrSpecfier:uint8_t{
     Discard,
     RemoteOnly,
     DataOnly
 };
 
-enum class [[nodiscard]] Rtr:uint8_t{
+enum struct [[nodiscard]] Rtr:uint8_t{
     Data = 0,
     Remote = 1,
 };  
@@ -380,7 +351,7 @@ struct [[nodiscard]] NominalBitTimming:
 };
 
 // https://docs.rs/embassy-stm32/latest/embassy_stm32/can/config/enum.TxBufferMode.html
-enum class TxBufferMode:uint8_t {
+enum struct TxBufferMode:uint8_t {
     // TX FIFO operation - In this mode CAN frames are trasmitted strictly in write order.
     Fifo,
     // TX priority queue operation - In this mode CAN frames are transmitted according to CAN priority.
@@ -401,5 +372,7 @@ using CanNominalBitTimmingCoeffs = can::NominalBitTimmingCoeffs;
 using CanMailboxIndex = can::MailboxIndex;
 using CanFifoIndex = can::FifoIndex;
 using CanIT = can::InterruptFlagBit;
+
+static constexpr auto CAN_BAUD_1M = CanBaudrate(1000'000, CanBaudrate::DEFAULT_SAMPLE_POINT);
 }
 

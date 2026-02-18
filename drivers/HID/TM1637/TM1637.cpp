@@ -167,7 +167,7 @@ IResult<>  TM1637::switch_to_readkey(){
     );
 }
 
-IResult<> TM1637::set_display_dutycycle(const real_t dutycycle){
+IResult<> TM1637::set_display_dutycycle(const iq16 dutycycle){
     if(dutycycle > 1) return Err(Error::DutyGreatThanOne);
     if(dutycycle < 0) return Err(Error::DutyLessThanZero);
 

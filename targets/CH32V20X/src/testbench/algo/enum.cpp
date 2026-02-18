@@ -87,7 +87,7 @@ void enum_main(){
         // const auto s = int16_t(sin(t) * 300);
         // const auto c = int16_t(cos(t) * 300);
         
-        real_t r = 0; 
+        iq16 r = 0; 
         // int r = 0; 
 
         auto dyn_func = runtime_true() ? &Ball::mset_xy : &Ball::mset_xy2;

@@ -7,7 +7,7 @@
 namespace ymd::rmst{
 
 
-using Radian = Radian_t<real_t>;
+using Radian = Radian_t<iq16>;
 
 using RadianPair = std::tuple<Radian, Radian>;
 
@@ -16,10 +16,10 @@ using RadianPair = std::tuple<Radian, Radian>;
 
 class LegKinematics{
     struct Config{
-        real_t rotor_length;
-        real_t hipbone_length;
-        real_t thigh_length;
-        real_t shank_length;
+        iq16 rotor_length;
+        iq16 hipbone_length;
+        iq16 thigh_length;
+        iq16 shank_length;
     };
 
     static constexpr Config default_cfg {
@@ -40,24 +40,24 @@ class LegKinematics{
         shank_length_ = cfg.shank_length;
     }
 
-    Option<Vec2<real_t>> forward(const Radian l_rad, const Radian r_rad){
+    Option<Vec2<iq16>> forward(const Radian l_rad, const Radian r_rad){
         return _forward(l_rad, r_rad);
     }
 
-    Option<RadianPair> inverse(Vec2<real_t> const pos){
+    Option<RadianPair> inverse(Vec2<iq16> const pos){
         return _inverse(pos);
     }
 private:
-    real_t rotor_length_;
-    real_t hipbone_length_;
-    real_t thigh_length_;
-    real_t shank_length_;
+    iq16 rotor_length_;
+    iq16 hipbone_length_;
+    iq16 thigh_length_;
+    iq16 shank_length_;
 
-    Option<Vec2<real_t>> _forward(const Radian l_rad, const Radian r_rad) const{
-        return Some(Vec2<real_t>(0,0));
+    Option<Vec2<iq16>> _forward(const Radian l_rad, const Radian r_rad) const{
+        return Some(Vec2<iq16>(0,0));
     }
     
-    Option<RadianPair> _inverse(Vec2<real_t> const pos) const;
+    Option<RadianPair> _inverse(Vec2<iq16> const pos) const;
 };
 // }
 

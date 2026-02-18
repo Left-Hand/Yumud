@@ -2,10 +2,7 @@
 
 #include <cstddef>
 
-// namespace ymd::str{
-namespace ymd{
-
-
+namespace ymd::str{
 struct [[nodiscard]] OptionalUCharPtr final{
     using Self = OptionalUCharPtr;  
     static constexpr Self from_valid(const unsigned char* ptr){

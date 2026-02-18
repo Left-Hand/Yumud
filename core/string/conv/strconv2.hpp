@@ -4,14 +4,15 @@
 #include <concepts>
 #include <tuple>
 
+#include "core/tmp/reflect/enum.hpp"
+#include "core/tmp/exprimetal_integral.hpp"
+#include "core/math/fixed/fixed.hpp"
+#include "core/string/view/mut_string_view.hpp"
+#include "core/string/utils/pow10.hpp"
+
 #include "prelude.hpp"
 #include "fstrdump.hpp"
 
-#include "core/tmp/reflect/enum.hpp"
-#include "core/tmp/exprimetal_integral.hpp"
-#include "core/math/iq/fixed_t.hpp"
-
-#include "core/string/view/mut_string_view.hpp"
 
 #include "primitive/arithmetic/angular.hpp"
 
@@ -370,16 +371,16 @@ struct [[nodiscard]] IntDeformatter<bool>{
 
 template<size_t NUM_Q, typename D>
 struct [[nodiscard]] FixedPointDeformatter{
-	using T = math::fixed_t<NUM_Q, D>;
+	using T = math::fixed<NUM_Q, D>;
 
-	static constexpr size_t TABLE_LEN = std::size(str::pow10_table);
+	static constexpr size_t TABLE_LEN = std::size(str::POW10_TABLE);
 	static constexpr uint32_t DIGIT_MAX = uint32_t(
-		std::numeric_limits<math::fixed_t<NUM_Q, D>>::max());	
+		std::numeric_limits<math::fixed<NUM_Q, D>>::max());	
 
 	static constexpr std::array<uint64_t, TABLE_LEN> TABLE = []{
 		std::array<uint64_t, TABLE_LEN> ret;
 		for(size_t i = 0; i < TABLE_LEN; i++){
-			ret[i] = static_cast<uint64_t>(uint64_t(1ull << (NUM_Q + 32u)) / str::pow10_table[i]);
+			ret[i] = static_cast<uint64_t>(uint64_t(1ull << (NUM_Q + 32u)) / str::POW10_TABLE[i]);
 		}
 		return ret;
 	}();
@@ -615,7 +616,7 @@ struct Iq16Formatter{
 	static constexpr uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
 	static constexpr SerStringResult<size_t> fmt_to_str(
 		MutStringView str,
-		const math::fixed_t<16, int32_t> value, 
+		const math::fixed<16, int32_t> value, 
 		const Eps eps
 	){
 		if(str.length() == 0) return Err(SerStringError::OutOfMemory);
@@ -630,7 +631,7 @@ struct Iq16Formatter{
 
 		const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
 
-		const uint32_t scale = str::pow10_table[eps_count];
+		const uint32_t scale = str::POW10_TABLE[eps_count];
 
 		const uint32_t fs = frac_part * scale;
 		
@@ -684,8 +685,8 @@ struct DefmtStrDispatcher<StringView>{
 };
 
 template<size_t Q, typename D>
-struct DefmtStrDispatcher<math::fixed_t<Q, D>>{
-	static constexpr DestringResult<math::fixed_t<Q, D>> defmt_from_str(StringView str){
+struct DefmtStrDispatcher<math::fixed<Q, D>>{
+	static constexpr DestringResult<math::fixed<Q, D>> defmt_from_str(StringView str){
 		return FixedPointDeformatter<Q, D>::parse(str);
 	}
 };
@@ -725,7 +726,7 @@ static constexpr SerStringResult<size_t> fmt_to_str(
 }
 
 template<size_t Q>
-static constexpr SerStringResult<size_t> fmt_to_str(MutStringView str, math::fixed_t<Q, int32_t> value, const Eps eps = Eps(3)){
+static constexpr SerStringResult<size_t> fmt_to_str(MutStringView str, math::fixed<Q, int32_t> value, const Eps eps = Eps(3)){
 	return Iq16Formatter::fmt_to_str(str, value, eps);
 }
 

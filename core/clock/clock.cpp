@@ -1,7 +1,7 @@
 #include <functional>
 #include <atomic>
 
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/fixed/fixed.hpp"
 #include "core/utils/scope_guard.hpp"
 #include "core/clock/clock.hpp"
 #include "core/clock/time.hpp"
@@ -49,9 +49,6 @@ struct alignas(4) [[nodiscard]] MillisCounter{
     // 避免systick计数器和毫秒数撕裂的情况出现 
     // !非常重要
     __attribute__((always_inline)) uint64_t poll_and_get(){
-        __disable_irq();
-        __disable_irq();
-        const auto guard = ymd::make_scope_guard([]{__enable_irq();});
         //判断是否发生了计数器溢出
         if(SysTick->SR) [[likely]] {
             //清除标志位
@@ -122,13 +119,23 @@ uint32_t _get_systick_cnt(){
 
 [[nodiscard]] static 
 uint64_t _get_millis_cnt(void){
-    return MILLIS_COUNTER_.poll_and_get();
+    __disable_irq();
+    __disable_irq();
+    const uint64_t millis_cnt = MILLIS_COUNTER_.poll_and_get();
+    __enable_irq();
+    return millis_cnt;
 }
 
 [[nodiscard]] static 
 uint64_t _get_micros_cnt(void){
-    const uint64_t millis_cnt = MILLIS_COUNTER_.poll_and_get();
-    const uint32_t systick_cnt = static_cast<uint32_t>(_get_systick_cnt());
+    __disable_irq();
+    __disable_irq();
+    // const auto guard = ymd::make_scope_guard([]{__enable_irq();});
+
+    const volatile uint64_t millis_cnt = MILLIS_COUNTER_.poll_and_get();
+    const volatile uint32_t systick_cnt = static_cast<uint32_t>(_get_systick_cnt());
+    __enable_irq();
+
     const uint64_t base = static_cast<uint64_t>(millis_cnt) * 1000u;
 
     return (base + _ticks_to_micros(systick_cnt));
@@ -148,10 +155,12 @@ uint64_t _get_nanos_cnt(void){
 static
 void _delay_ticks(const uint64_t duration_ticks){
     /* Number of elapsed systick_cnt */
-    
+    __disable_irq();
+    __disable_irq();
     uint32_t last_ticks = _get_systick_cnt();
     uint32_t now_ticks = last_ticks;
-    
+    __enable_irq();
+
     volatile uint64_t elapsed_ticks = 0;
     do {
         now_ticks = _get_systick_cnt();
@@ -221,7 +230,7 @@ struct MicrosDump{
 };
 
 //经过测试这段代码在120年的时间刻度内能保证可靠性
-static constexpr math::fixed_t<32, uint64_t> micros_to_seconds(uint64_t micros_count){
+static constexpr math::fixed<32, uint64_t> micros_to_seconds(uint64_t micros_count){
     static_assert(sizeof(MicrosDump) == sizeof(uint64_t));
     const MicrosDump micros_dump = std::bit_cast<MicrosDump>(micros_count);
     uint64_t result_bits = 0;
@@ -235,21 +244,21 @@ static constexpr math::fixed_t<32, uint64_t> micros_to_seconds(uint64_t micros_c
     }
     
     {
-        constexpr uint64_t FACTOR = math::fixed_t<32, uint64_t>((1 << 15) / 1e6).to_bits();
+        constexpr uint64_t FACTOR = math::fixed<32, uint64_t>((1 << 15) / 1e6).to_bits();
         uint64_t value = static_cast<uint64_t>(micros_dump.middle_15);
         uint64_t scaled_value = (value * FACTOR);
         result_bits += scaled_value;
     }
     
     {
-        constexpr uint64_t FACTOR = math::fixed_t<32, uint64_t>((1 << 30) / 1e6).to_bits() >> 11;
+        constexpr uint64_t FACTOR = math::fixed<32, uint64_t>((1 << 30) / 1e6).to_bits() >> 11;
         static_assert(FACTOR < std::numeric_limits<uint32_t>::max());
         uint64_t value = static_cast<uint64_t>(micros_dump.high_31);
         uint64_t scaled_value = (value * FACTOR) << 11;
         result_bits += scaled_value;
     }
 
-    return math::fixed_t<32, uint64_t>::from_bits(result_bits);
+    return math::fixed<32, uint64_t>::from_bits(result_bits);
 }
 
 static_assert(micros_to_seconds(1000000).to_bits() == 1.0 * (1Ull << 32));
@@ -262,11 +271,11 @@ static_assert(micros_to_seconds(uint64_t(4E15)).to_bits() == 4E9 * (1Ull << 32))
 }
 
 
-math::fixed_t<32, uint64_t> seconds_precious(){
+math::fixed<32, uint64_t> seconds_precious(){
     return micros_to_seconds(micros().count());
 }
 
-math::fixed_t<16, uint32_t> seconds(){
+math::fixed<16, uint32_t> seconds(){
 
 
     static_assert(sizeof(MicrosDump) == sizeof(uint64_t));
@@ -282,11 +291,11 @@ math::fixed_t<16, uint32_t> seconds(){
         result_bits += scaled_value;
     }
     
-    auto result = math::fixed_t<16, uint32_t>::from_bits(result_bits);
+    auto result = math::fixed<16, uint32_t>::from_bits(result_bits);
     return 
         result
-        + math::fixed_t<16, uint32_t>((1 << 15) / 1e6) * static_cast<uint32_t>(micros_dump.middle_15)
-        + math::fixed_t<16, uint32_t>((1 << 30) / 1e6) * static_cast<uint32_t>(micros_dump.high_31)
+        + math::fixed<16, uint32_t>((1 << 15) / 1e6) * static_cast<uint32_t>(micros_dump.middle_15)
+        + math::fixed<16, uint32_t>((1 << 30) / 1e6) * static_cast<uint32_t>(micros_dump.high_31)
         ;
 }
 

@@ -12,12 +12,26 @@ struct [[nodiscard]] Percentage{
 
 	static constexpr Option<Percentage> from_percents(const auto percents){
 		if constexpr(std::is_signed_v<T>){
-			if(percents < 0) return None;
+			if(percents < 0) [[unlikely]]
+				return None;
 		}
 
-		if(percents > 100) return None;
+		if(percents > 100) [[unlikely]]
+			return None;
 
-		return Some(Percentage(static_cast<T>(percents)));
+		return Some(from_percents_unchecked(percents));
+	}
+
+	static constexpr Percentage from_percents_bounded(const auto percents){
+		if constexpr(std::is_signed_v<T>){
+			if(percents < 0) [[unlikely]]
+				return from_percents_unchecked(0);
+		}
+
+		if(percents > 100) [[unlikely]]
+			return from_percents_unchecked(100);
+
+		return from_percents_unchecked(percents);
 	}
 
 	static constexpr Percentage from_percents_unchecked(const auto percents){

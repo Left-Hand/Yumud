@@ -98,7 +98,7 @@ enum class Fault:uint8_t{
 };
 
 
-struct [[nodiscard]] [[nodiscard]] FaultCode final{
+struct [[nodiscard]] FaultCode final{
     using Self = FaultCode;
     static constexpr uint8_t MAX_NUM = static_cast<uint8_t>(Fault::DriverEnableError);
     uint8_t bits;

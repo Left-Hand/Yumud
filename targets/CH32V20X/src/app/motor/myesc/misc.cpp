@@ -8,7 +8,7 @@
 #define TYPE_RAD        (1)
 
 
-namespace ymd::myiqmath::details{
+namespace ymd::myfxmath::details{
 
 struct [[nodiscard]] Atan2Flag{
     /*
@@ -81,7 +81,7 @@ struct [[nodiscard]] Atan2Intermediate{
     // *     atan(y/x) = pi/2 - atan(x/y)
     // */
     static constexpr uint32_t transfrom_uq31_x_to_uq32_result(uint32_t uiq31Input) {
-        const auto * piq32Coeffs = &iqmath::details::_IQ32atan_coeffs[(uiq31Input >> 24) & 0x00fc];
+        const auto * piq32Coeffs = &fxmath::details::IQ32ATAN_COEFFS[(uiq31Input >> 24) & 0x00fc];
         /*
         * Calculate atan(x) using the following Taylor series:
         *
@@ -89,19 +89,19 @@ struct [[nodiscard]] Atan2Intermediate{
         */
 
         /* c3*x */
-        uint32_t uiq32ResultPU = iqmath::details::__mpyf_l(uiq31Input, *piq32Coeffs++);
+        uint32_t uiq32ResultPU = fxmath::details::__mpyf_l(uiq31Input, *piq32Coeffs++);
 
         /* c3*x + c2 */
         uiq32ResultPU = uiq32ResultPU + *piq32Coeffs++;
 
         /* (c3*x + c2)*x */
-        uiq32ResultPU = iqmath::details::__mpyf_l(uiq31Input, uiq32ResultPU);
+        uiq32ResultPU = fxmath::details::__mpyf_l(uiq31Input, uiq32ResultPU);
 
         /* (c3*x + c2)*x + c1 */
         uiq32ResultPU = uiq32ResultPU + *piq32Coeffs++;
 
         /* ((c3*x + c2)*x + c1)*x */
-        uiq32ResultPU = iqmath::details::__mpyf_l(uiq31Input, uiq32ResultPU);
+        uiq32ResultPU = fxmath::details::__mpyf_l(uiq31Input, uiq32ResultPU);
 
         /* ((c3*x + c2)*x + c1)*x + c0 */
         uiq32ResultPU = uiq32ResultPU + *piq32Coeffs++;
@@ -131,10 +131,10 @@ std::tuple<Atan2Flag, uint32_t> convert_to_flag(uint32_t uiqNInputX, uint32_t ui
     */
     if (uiqNInputX < uiqNInputY) {
         flag.inversed = 1;
-        uiq31Input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, true>(
+        uiq31Input = std::bit_cast<uint32_t>(fxmath::details::__IQNdiv_impl<31, true>(
             uiqNInputX, uiqNInputY));
     } else if((uiqNInputX > uiqNInputY)) {
-        uiq31Input = std::bit_cast<uint32_t>(iqmath::details::__IQNdiv_impl<31, true>(
+        uiq31Input = std::bit_cast<uint32_t>(fxmath::details::__IQNdiv_impl<31, true>(
             uiqNInputY, uiqNInputX));
     } else{
         // 1/8 lap
@@ -154,11 +154,11 @@ constexpr int32_t __IQNatan2_impl(uint32_t uiqNInputY, uint32_t uiqNInputX){
 }
 
 template<const size_t Q>
-constexpr math::fixed_t<Q, int32_t> test_atan(
-    math::fixed_t<Q, int32_t> iqNInputY, 
-    math::fixed_t<Q, int32_t> iqNInputX)
+constexpr math::fixed<Q, int32_t> test_atan(
+    math::fixed<Q, int32_t> iqNInputY, 
+    math::fixed<Q, int32_t> iqNInputX)
 {
-    return math::fixed_t<Q, int32_t>::from_bits(__IQNatan2_impl<Q, TYPE_RAD>(
+    return math::fixed<Q, int32_t>::from_bits(__IQNatan2_impl<Q, TYPE_RAD>(
         std::bit_cast<uint32_t>(iqNInputY.to_bits()), 
         std::bit_cast<uint32_t>(iqNInputX.to_bits()))
     );
@@ -172,37 +172,37 @@ constexpr int32_t __IQNatan_impl(uint32_t uiqNInputX){
 
 
 template<const size_t Q>
-constexpr math::fixed_t<Q, int32_t> _IQNatan2(
-    math::fixed_t<Q, int32_t> iqNInputY, 
-    math::fixed_t<Q, int32_t> iqNInputX
+constexpr math::fixed<Q, int32_t> _IQNatan2(
+    math::fixed<Q, int32_t> iqNInputY, 
+    math::fixed<Q, int32_t> iqNInputX
 ){
-    return math::fixed_t<Q, int32_t>::from_bits(__IQNatan2_impl<Q, TYPE_RAD>(
+    return math::fixed<Q, int32_t>::from_bits(__IQNatan2_impl<Q, TYPE_RAD>(
         std::bit_cast<uint32_t>(iqNInputY.to_bits()), 
         std::bit_cast<uint32_t>(iqNInputX.to_bits()))
     );
 }
 
 template<const size_t Q>
-constexpr math::fixed_t<Q, int32_t> _IQNatan2PU(
-    math::fixed_t<Q, int32_t> iqNInputY, 
-    math::fixed_t<Q, int32_t> iqNInputX
+constexpr math::fixed<Q, int32_t> _IQNatan2PU(
+    math::fixed<Q, int32_t> iqNInputY, 
+    math::fixed<Q, int32_t> iqNInputX
 ){
-    return math::fixed_t<Q, int32_t>::from_bits(__IQNatan2_impl<Q, TYPE_PU>(
+    return math::fixed<Q, int32_t>::from_bits(__IQNatan2_impl<Q, TYPE_PU>(
         std::bit_cast<uint32_t>(iqNInputY.to_bits()), 
         std::bit_cast<uint32_t>(iqNInputX.to_bits()))
     );
 }
 
 template<const size_t Q>
-constexpr math::fixed_t<Q, int32_t> _IQNatan2(math::fixed_t<Q, int32_t> iqNInputX){
-    return math::fixed_t<Q, int32_t>::from_bits(__IQNatan_impl<Q, TYPE_RAD>(
+constexpr math::fixed<Q, int32_t> _IQNatan2(math::fixed<Q, int32_t> iqNInputX){
+    return math::fixed<Q, int32_t>::from_bits(__IQNatan_impl<Q, TYPE_RAD>(
         std::bit_cast<uint32_t>(iqNInputX.to_bits()))
     );
 }
 
 template<const size_t Q>
-constexpr math::fixed_t<Q, int32_t> _IQNatan2PU(math::fixed_t<Q, int32_t> iqNInputX){
-    return math::fixed_t<Q, int32_t>::from_bits(__IQNatanPU_impl<Q, TYPE_PU>(
+constexpr math::fixed<Q, int32_t> _IQNatan2PU(math::fixed<Q, int32_t> iqNInputX){
+    return math::fixed<Q, int32_t>::from_bits(__IQNatanPU_impl<Q, TYPE_PU>(
         std::bit_cast<uint32_t>(iqNInputX.to_bits()))
     );
 }

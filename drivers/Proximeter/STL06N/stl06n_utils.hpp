@@ -76,7 +76,8 @@ struct alignas(2) [[nodiscard]] LidarDistanceCode final{
 
     __attribute__((always_inline))
     [[nodiscard]] constexpr uq16 to_meters() const {
-        return bits * 0.001_uq16;
+        constexpr uint64_t FACTOR = static_cast<uint64_t>(static_cast<double>(0.001f) * (1ull << 48));
+        return uq16::from_bits(static_cast<uint32_t>((static_cast<uint64_t>(bits) * FACTOR) >> 32u));
     }
 
     __attribute__((always_inline))
@@ -141,7 +142,7 @@ struct [[nodiscard]] PackedClusterIterator final{
 };
 
 
-struct alignas(4) [[nodiscard]] LidarPackedCluster final{
+struct alignas(4) [[nodiscard]] LidarPackedPoints final{
     std::array<uint8_t, 3 * POINTS_PER_FRAME> bytes;
 
     using Iterator = PackedClusterIterator;
@@ -282,7 +283,7 @@ struct [[nodiscard]] LidarSectorPacket final{
     LidarSpinSpeedCode spin_speed_code;//[0:2]
     LidarAngleCode start_angle_code;//[2:4]
 
-    LidarPackedCluster packed_cluster;//[4:40]
+    LidarPackedPoints packed_points;//[4:40]
     LidarAngleCode stop_angle_code;//[40:42]
     TimeStamp timestamp;//[42:44]
     uint8_t crc8;//[44:45]

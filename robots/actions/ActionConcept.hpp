@@ -24,15 +24,15 @@ protected:
         return is_executed_ == false;
     }
 
-    real_t progress() const {
-        return real_t(1) - real_t(sustain_) / full_;
+    iq16 progress() const {
+        return iq16(1) - iq16(sustain_) / full_;
     }
 
     void kill(){
         is_finished_ = true;
     }
 
-    real_t time() const {
+    iq16 time() const {
         return CLAMP(full_ - sustain_, size_t(0), UINT32_MAX) / 1000;
     }
 public:

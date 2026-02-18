@@ -21,9 +21,9 @@ void float_main(){
 
         const auto begin_us = clock::micros();
         for(size_t _ = 0; _ < 10000; _++){
-            o = math::bf16(float(math::sin(real_t::from(float(o)))));
+            o = math::bf16(float(math::sin(iq16::from(float(o)))));
         }
         const auto dur_us = clock::micros() - begin_us;
-        DEBUG_PRINTLN(real_t(i), real_t(o), dur_us);
+        DEBUG_PRINTLN(iq16(i), iq16(o), dur_us);
     }
 }

@@ -19,6 +19,7 @@ DmaChannel dma1_ch5{DMA1_Channel5};
 DmaChannel dma1_ch6{DMA1_Channel6};
 DmaChannel dma1_ch7{DMA1_Channel7};
 
+//DMA1CH8只有部分芯片有
 #if defined(DMA1_Channel8)
 DmaChannel dma1_ch8{DMA1_Channel8};
 #endif
@@ -40,20 +41,20 @@ DmaChannel dma2_ch11{DMA2_Channel11};
 }
 
 
-#define NAME_OF_DMA_XY(x,num_ch) dma##x##_ch##num_ch
+#define NAME_OF_DMA_XY(NUM_DMA,NUM_CH) dma##NUM_DMA##_ch##NUM_CH
 
 #ifdef DMA1_PRESENT
 
 #define DMA1_Inst reinterpret_cast<ral::DMA1_Def *>(DMA1)
 
-#define DMA1_IT_TEMPLATE(num_ch)\
-__interrupt void DMA1##_Channel##num_ch##_IRQHandler(void){\
-    if(DMA1_Inst->get_transfer_done_flag<num_ch>()){\
-        NAME_OF_DMA_XY(1,num_ch).accept_interrupt(DmaEvent::TransferComplete);\
-        DMA1_Inst->clear_transfer_done_flag<num_ch>();\
-    }else if(DMA1_Inst->get_transfer_onhalf_flag<num_ch>()){\
-        NAME_OF_DMA_XY(1,num_ch).accept_interrupt(DmaEvent::HalfTransfer);\
-        DMA1_Inst->clear_transfer_onhalf_flag<num_ch>();\
+#define DMA1_IT_TEMPLATE(NUM_CH)\
+__interrupt void DMA1##_Channel##NUM_CH##_IRQHandler(void){\
+    if(DMA1_Inst->get_transfer_done_flag<NUM_CH>()){\
+        NAME_OF_DMA_XY(1,NUM_CH).accept_interrupt(DmaEvent::TransferComplete);\
+        DMA1_Inst->clear_transfer_done_flag<NUM_CH>();\
+    }else if(DMA1_Inst->get_transfer_onhalf_flag<NUM_CH>()){\
+        NAME_OF_DMA_XY(1,NUM_CH).accept_interrupt(DmaEvent::HalfTransfer);\
+        DMA1_Inst->clear_transfer_onhalf_flag<NUM_CH>();\
     }\
 }\
 
@@ -76,14 +77,14 @@ DMA1_IT_TEMPLATE(8);
 
 #define DMA2_Inst reinterpret_cast<ral::DMA2_Def *>(DMA2)
 
-#define DMA2_IT_TEMPLATE(num_ch)\
-__interrupt void DMA2##_Channel##num_ch##_IRQHandler(void){\
-    if(DMA2_Inst->get_transfer_done_flag<num_ch>()){\
-        NAME_OF_DMA_XY(2,num_ch).accept_interrupt(DmaEvent::TransferComplete);\
-        DMA2_Inst->clear_transfer_done_flag<num_ch>();\
-    }else if(DMA2_Inst->get_transfer_onhalf_flag<num_ch>()){\
-        NAME_OF_DMA_XY(2,num_ch).accept_interrupt(DmaEvent::HalfTransfer);\
-        DMA2_Inst->clear_transfer_onhalf_flag<num_ch>();\
+#define DMA2_IT_TEMPLATE(NUM_CH)\
+__interrupt void DMA2##_Channel##NUM_CH##_IRQHandler(void){\
+    if(DMA2_Inst->get_transfer_done_flag<NUM_CH>()){\
+        NAME_OF_DMA_XY(2,NUM_CH).accept_interrupt(DmaEvent::TransferComplete);\
+        DMA2_Inst->clear_transfer_done_flag<NUM_CH>();\
+    }else if(DMA2_Inst->get_transfer_onhalf_flag<NUM_CH>()){\
+        NAME_OF_DMA_XY(2,NUM_CH).accept_interrupt(DmaEvent::HalfTransfer);\
+        DMA2_Inst->clear_transfer_onhalf_flag<NUM_CH>();\
     }\
 }\
 

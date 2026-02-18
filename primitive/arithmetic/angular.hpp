@@ -342,29 +342,29 @@ static constexpr bool is_equal_approx(const Angular<T> a, const Angular<T> b) no
 	return a.is_equal_approx(b);
 }
 
-consteval Angular<real_t> operator"" _deg(long double x) noexcept{
-    return Angular<real_t>::from_degrees(x);
+consteval Angular<iq16> operator"" _deg(long double x) noexcept{
+    return Angular<iq16>::from_degrees(x);
 }
 
 //字面量只能被uint64_t覆写 内部转换到uint32_t
-consteval Angular<real_t> operator"" _deg(uint64_t x) noexcept{
-    return Angular<real_t>::from_degrees(static_cast<uint32_t>(x));
+consteval Angular<iq16> operator"" _deg(uint64_t x) noexcept{
+    return Angular<iq16>::from_degrees(static_cast<uint32_t>(x));
 }
 
-consteval Angular<real_t> operator"" _rad(long double x) noexcept{
-    return Angular<real_t>::from_radians(static_cast<real_t>(x));
+consteval Angular<iq16> operator"" _rad(long double x) noexcept{
+    return Angular<iq16>::from_radians(static_cast<iq16>(x));
 }
 
-consteval Angular<real_t> operator"" _rad(uint64_t x) noexcept{
-    return Angular<real_t>::from_radians(static_cast<real_t>(x));
+consteval Angular<iq16> operator"" _rad(uint64_t x) noexcept{
+    return Angular<iq16>::from_radians(static_cast<iq16>(x));
 }
 
-consteval Angular<real_t> operator"" _turn(long double x) noexcept{
-    return Angular<real_t>::from_turns(static_cast<real_t>(x));
+consteval Angular<iq16> operator"" _turn(long double x) noexcept{
+    return Angular<iq16>::from_turns(static_cast<iq16>(x));
 }
 
-consteval Angular<real_t> operator"" _turn(uint64_t x) noexcept{
-    return Angular<real_t>::from_turns(static_cast<real_t>(x));
+consteval Angular<iq16> operator"" _turn(uint64_t x) noexcept{
+    return Angular<iq16>::from_turns(static_cast<iq16>(x));
 }
 
 namespace math{

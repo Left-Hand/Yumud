@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "core/math/iq/iqmath.hpp"
+#include "core/math/fixed/fxmath.hpp"
 #include "core/utils/Result.hpp"
 #include "core/string/view/string_view.hpp"
 #include "primitive/arithmetic/angular.hpp"
@@ -35,7 +35,7 @@ static constexpr Angular<float> calc_lpf_phaseshift_f32(uint32_t fc, uint32_t f)
 }
 
 
-static constexpr Result<math::fixed_t<32, uint32_t>, StringView> calc_lpf_alpha_uq32(uint32_t fs, uint32_t fc){
+static constexpr Result<math::fixed<32, uint32_t>, StringView> calc_lpf_alpha_uq32(uint32_t fs, uint32_t fc){
     constexpr size_t SHIFT_BITS = 9;
     constexpr size_t MAX_FREQ = (1u << (32u - SHIFT_BITS)) / 8;  // div 8 for margin
     
@@ -64,7 +64,7 @@ static constexpr Result<math::fixed_t<32, uint32_t>, StringView> calc_lpf_alpha_
     // 防止除零
     if(den == 0) return Err(StringView("denominator is zero"));
     
-    return Ok(math::fixed_t<32, uint32_t>::from_bits(~static_cast<uint32_t>(num / den)));
+    return Ok(math::fixed<32, uint32_t>::from_bits(~static_cast<uint32_t>(num / den)));
 }
 
 
@@ -82,22 +82,22 @@ struct LpfCoeffs{
         // constexpr Result<LpfCoeffs, StringView> try_into_coeffs() const {
         //     const static_cast<uint64_t>((fs) << 16) / (fs + T(TAU) * fc));
         //     return LpfCoeffs{
-        //         .alpha = math::fixed_t<32, uint32_t>::from_bits(static_cast<uint32_t>(alpha * (1u << 32)))
+        //         .alpha = math::fixed<32, uint32_t>::from_bits(static_cast<uint32_t>(alpha * (1u << 32)))
         //     };
         // }
     };
 
-    math::fixed_t<32, uint32_t> alpha;
+    math::fixed<32, uint32_t> alpha;
 };
 
 
 
 //y[n] = alpha * x[n] + beta * y[n-1]
 template<size_t Q, typename D>
-static constexpr math::fixed_t<Q, D> lpf_with_given_alpha(math::fixed_t<Q, D> x_state, const math::fixed_t<Q, D> x_new, const uq32 alpha){
+static constexpr math::fixed<Q, D> lpf_with_given_alpha(math::fixed<Q, D> x_state, const math::fixed<Q, D> x_new, const uq32 alpha){
     const uq32 beta = uq32::from_bits(~alpha.to_bits());
     using acc_t = std::conditional_t<std::is_signed_v<D>, int64_t, uint64_t>;
-    return math::fixed_t<Q, D>::from_bits(
+    return math::fixed<Q, D>::from_bits(
         static_cast<D>(
             ((static_cast<acc_t>(x_new.to_bits()) * alpha.to_bits()) 
             + (static_cast<acc_t>(x_state.to_bits()) * beta.to_bits())) >> 32

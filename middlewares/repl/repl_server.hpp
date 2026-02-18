@@ -10,7 +10,7 @@
 
 namespace ymd::repl{
 
-struct ReplServer final{
+struct [[nodiscard]] ReplServer final{
 public:
     ReplServer(ReadCharProxy && is, WriteCharProxy && os) :
         is_(std::move(is)),
@@ -40,8 +40,8 @@ public:
                 }();
 
                 const auto resp_res = respond(obj, strs);
-                if(outen_){
-                    os_.prints(">>=", resp_res);
+                if(echo_en_){
+                    os_.prints(StringView(">>="), resp_res);
                 }
         
 
@@ -49,7 +49,7 @@ public:
         }
     }
 
-    void set_outen(Enable outen){ outen_ = outen == EN; }
+    void enable_echo(Enable echo_en){ echo_en_ = echo_en == EN; }
 // private:
 public:
     ReadCharProxy is_;
@@ -59,23 +59,29 @@ public:
     std::array<char, 64> str_buf_;
     LineInputSinker line_sinker_ = LineInputSinker{std::span(str_buf_)};
 
-    bool outen_ = false;
+    bool echo_en_ = false;
 
     template<typename T>
     auto respond(T && obj, const std::span<const StringView> strs){
         const auto guard = os_.create_guard();
-        if(outen_){
+        if(echo_en_){
             os_.force_sync(EN);
-            os_.prints("<<=", strs);
+            os_ << StringView("<<= ") << strs;
         }
 
+        os_ << StringView("\r\n----\r\n");
+
         return [&]{
-            if(!this->outen_){
+            if(!this->echo_en_){
                 // DummyOutputStream dos{};
                 DummyReceiver dos{};
 
                 return script::visit(obj, dos, script::AccessProvider_ByStringViews(strs));
             }else{
+                auto t_guard = make_scope_guard([&]{
+                    os_ << StringView("\r\n----\r\n");
+                });
+                
                 return script::visit(obj, os_, script::AccessProvider_ByStringViews(strs));
             }
         }();

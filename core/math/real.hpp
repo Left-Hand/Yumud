@@ -2,17 +2,16 @@
 
 #include <type_traits>
 
-#include "iq/fixed_t.hpp"
+#include "fixed/fixed.hpp"
 
-using real_t = ymd::math::fixed_t<IQ_DEFAULT_Q, int32_t>;
 
 namespace ymd::literals{
-[[nodiscard]] consteval real_t operator"" _r(long double x){
-    return real_t(x);
+[[nodiscard]] consteval iq16 operator"" _r(long double x){
+    return iq16(x);
 }
 
-[[nodiscard]] consteval real_t operator"" _r(unsigned long long x){
-    return real_t(x);
+[[nodiscard]] consteval iq16 operator"" _r(unsigned long long x){
+    return iq16(x);
 }
 
 }
@@ -134,24 +133,24 @@ T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
 #if 0
 
 [[nodiscard]] __attribute__((always_inline)) constexpr 
-fixed_t<Q, int32_t> u16_to_uni(const uint16_t data){
-    if constexpr(is_fixed_point_v<fixed_t<Q, int32_t>>){
-        constexpr size_t Q = fixed_t<Q, int32_t>::q_num;
+fixed<Q, int32_t> u16_to_uni(const uint16_t data){
+    if constexpr(is_fixed_point_v<fixed<Q, int32_t>>){
+        constexpr size_t Q = fixed<Q, int32_t>::q_num;
         if constexpr(Q > 16)
-            return fixed_t<Q, int32_t>(fixed_t<Q, int32_t>::from_bits(data << (Q - 16)));
+            return fixed<Q, int32_t>(fixed<Q, int32_t>::from_bits(data << (Q - 16)));
         else if constexpr (Q < 16)
-            return fixed_t<Q, int32_t>(fixed_t<Q, int32_t>::from_bits(data >> (16 - Q)));
+            return fixed<Q, int32_t>(fixed<Q, int32_t>::from_bits(data >> (16 - Q)));
         else
-            return fixed_t<Q, int32_t>(fixed_t<Q, int32_t>::from_bits(data));
-    }else if constexpr(std::is_floating_point_v<fixed_t<Q, int32_t>>){
-        return fixed_t<Q, int32_t>(data) / 65536;
+            return fixed<Q, int32_t>(fixed<Q, int32_t>::from_bits(data));
+    }else if constexpr(std::is_floating_point_v<fixed<Q, int32_t>>){
+        return fixed<Q, int32_t>(data) / 65536;
     }
 }
 
 template<size_t Q>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
-fixed_t<Q, uint32_t> u32_to_uni(const uint32_t data){
-    fixed_t<Q, uint32_t> qv;
+fixed<Q, uint32_t> u32_to_uni(const uint32_t data){
+    fixed<Q, uint32_t> qv;
 #if Q > 16
     qv.value = data << (Q - 16);
 #elif(Q < 16)
@@ -163,16 +162,16 @@ fixed_t<Q, uint32_t> u32_to_uni(const uint32_t data){
 }
 
 [[nodiscard]] __attribute__((always_inline)) constexpr 
-fixed_t<Q, int32_t> s16_to_uni(const int16_t data){
-    if constexpr(is_fixed_point_v<fixed_t<Q, int32_t>>){
-        return fixed_t<16, int32_t>(data) >> 16;
+fixed<Q, int32_t> s16_to_uni(const int16_t data){
+    if constexpr(is_fixed_point_v<fixed<Q, int32_t>>){
+        return fixed<16, int32_t>(data) >> 16;
     }
-    return fixed_t<Q, int32_t>(0);
+    return fixed<Q, int32_t>(0);
 }
 
 template<size_t Q>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
-uint16_t uni_to_u16(const fixed_t<Q, uint32_t> qv){
+uint16_t uni_to_u16(const fixed<Q, uint32_t> qv){
     uint16_t data;
     if constexpr (Q >= 16) data = qv.to_bits() >> (Q - 16);
     else data = qv.to_bits() << (16 - Q);
@@ -182,7 +181,7 @@ uint16_t uni_to_u16(const fixed_t<Q, uint32_t> qv){
 
 template<size_t Q>
 [[nodiscard]] __attribute__((always_inline)) constexpr 
-int16_t uni_to_s16(const fixed_t<Q, int32_t> qv){
+int16_t uni_to_s16(const fixed<Q, int32_t> qv){
     int16_t data;
 #if Q >= 16
     data = qv.value >> (Q - 16);
@@ -192,10 +191,10 @@ int16_t uni_to_s16(const fixed_t<Q, int32_t> qv){
     return data;
 }
 
-[[nodiscard]] __attribute__((always_inline)) fixed_t<
+[[nodiscard]] __attribute__((always_inline)) fixed<
 Q, int32_t> uni(const uint16_t data){return u16_to_uni(data);}
 
-[[nodiscard]] __attribute__((always_inline)) fixed_t<
+[[nodiscard]] __attribute__((always_inline)) fixed<
 Q, int32_t> uni(const int16_t data){return s16_to_uni(data);}
 
 #endif

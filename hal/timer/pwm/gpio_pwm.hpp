@@ -32,13 +32,13 @@ public:
     __inline void set_threshold(const uint16_t val){cvr_ = val - 1;}
     __inline void set_period(const uint16_t val){arr_ = val - 1;}
 
-    void set_dutycycle(const real_t dutycycle){
-        if(dutycycle == real_t(0)) {cvr_ = 0;}
-        else if(dutycycle == real_t(1)) {cvr_ = arr_ - 1;}
+    void set_dutycycle(const iq16 dutycycle){
+        if(dutycycle == iq16(0)) {cvr_ = 0;}
+        else if(dutycycle == iq16(1)) {cvr_ = arr_ - 1;}
         else {cvr_ = int(dutycycle * arr_);}
     }
 
-    [[nodiscard]] real_t get_dutyscale(){return real_t(cvr_) / real_t(arr_);}
+    [[nodiscard]] iq16 get_dutyscale(){return iq16(cvr_) / iq16(arr_);}
 private:
     GpioIntf & gpio_;
     volatile uint16_t cnt_ = 0;

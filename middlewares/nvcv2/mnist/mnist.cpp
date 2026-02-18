@@ -69,13 +69,13 @@ static uint8_t mdl_buf[MDL_BUF_LEN];
 void Mnist::parse_output(){
     tm_mat_t out = outs[0];
     const float* data  = out.dataf;
-    real_t maxp = 0;
+    iq16 maxp = 0;
     int maxi = -1;
     for(size_t i=0; i<N; i++){
-        outputs[i] = real_t::from(data[i]);
-        if(real_t::from(data[i]) > maxp) {
+        outputs[i] = iq16::from(data[i]);
+        if(iq16::from(data[i]) > maxp) {
             maxi = i;
-            maxp = real_t::from(data[i]);
+            maxp = iq16::from(data[i]);
         }
     }
 

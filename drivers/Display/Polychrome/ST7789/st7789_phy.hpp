@@ -29,8 +29,6 @@ public:
 
     [[nodiscard]] IResult<> init(){
         dc_pin_.outpp();
-        if(nrst_pin_.is_some())
-            nrst_pin_.unwrap().outpp(HIGH);
 
         return reset();
     }
@@ -38,6 +36,8 @@ public:
     [[nodiscard]] IResult<> reset(){
         if(nrst_pin_.is_none()) return Ok();
         auto & nrst_pin = nrst_pin_.unwrap();
+        nrst_pin.outpp(HIGH);
+        nrst_pin.set_high();
         clock::delay(10ms);
         nrst_pin.set_low();
         clock::delay(10ms);

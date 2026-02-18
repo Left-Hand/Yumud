@@ -76,7 +76,7 @@ chess_forward_ai(const Role role, const ChessBoard & board){
     if (const auto pos = find_winning_move(role)) return *pos;
 
     // 2. 阻止对手必胜
-    if (const auto pos = find_winning_move(role.get_opponent())) return *pos;
+    if (const auto pos = find_winning_move(role.opponent())) return *pos;
 
     // 3. 占领中心
     if (board.at({1,1}) == None) return {1,1};

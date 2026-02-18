@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/fixed/fixed.hpp"
 #include "core/utils/Option.hpp"
 #include "core/utils/serde/serde.hpp"
 
@@ -50,13 +50,13 @@ public:
     static constexpr Option<PackedCalibrateSample> 
     from_expected_and_measure(const Angular<uq32> expected, const Angular<uq32> measured){
         const auto expected_packed_data = ({
-            const auto may = real_to_packed(expected);
+            const auto may = iq16o_packed(expected);
             if(may.is_none()) return None;
             may.unwrap();
         });
 
         const auto measured_packed_data = ({
-            const auto may = real_to_packed(measured);
+            const auto may = iq16o_packed(measured);
             if(may.is_none()) return None;
             may.unwrap();
         });
@@ -90,7 +90,7 @@ private:
     uint16_t expected_packed_data_;
     uint16_t measured_packed_data_;
 
-    static constexpr Option<uint16_t> real_to_packed(const Angular<uq32> unpacked){
+    static constexpr Option<uint16_t> iq16o_packed(const Angular<uq32> unpacked){
         return Some(uint16_t(unpacked.to_turns().to_bits() >> 16));
     }
 

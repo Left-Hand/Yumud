@@ -13,7 +13,7 @@ limitations under the License.
 #include "tinymaix.h"
 #include "float.h"
 #include "core/math/realmath.hpp"
-#include "core/math/iq/iqmath.hpp"
+#include "core/math/fixed/fxmath.hpp"
 
 using namespace ymd;
 
@@ -205,7 +205,7 @@ tm_err_t __attribute__((weak)) tml_softmax(tm_mat_t* in, tm_mat_t* out, sctype_t
     float sum = 0;
     for(int c=0; c <in->c; c++){
         dout[c] -= dmax;
-        dout[c] = static_cast<float>(math::exp(real_t::from(dout[c])));
+        dout[c] = static_cast<float>(math::exp(iq16::from(dout[c])));
         sum     += dout[c];
         dout[c] -= 0.000001;  //prevent 1.0 value (cause 256 overflow)
     }

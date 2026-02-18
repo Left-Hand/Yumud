@@ -15,12 +15,12 @@
 
 using namespace ymd;
 
-using Particle = dsp::Particle<real_t, real_t>;
+using Particle = dsp::Particle<iq16, iq16>;
 
 void pso_tb() __attribute((optimize(3,"Ofast","inline")));
 
 void pso_tb(){
-    using Pso = dsp::ParticleSwarmOptimization<Particle, real_t>;
+    using Pso = dsp::ParticleSwarmOptimization<Particle, iq16>;
     using Config = typename Pso::Config;
 
 

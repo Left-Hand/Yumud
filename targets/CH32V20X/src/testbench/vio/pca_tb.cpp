@@ -27,13 +27,13 @@ using namespace ymd::drivers;
 
 //     friend class PCA9685;
 
-//     void set_dutycycle(const real_t dutycycle){
+//     void set_dutycycle(const iq16 dutycycle){
 //         pca_.set_pwm(nth_, 0, uint16_t(dutycycle << 12)).unwrap();
 //     }
-//     __fast_inline void set() {this->set_dutycycle(real_t(1));}
-//     __fast_inline void clr() {this->set_dutycycle(real_t(0));}
+//     __fast_inline void set() {this->set_dutycycle(iq16(1));}
+//     __fast_inline void clr() {this->set_dutycycle(iq16(0));}
 //     __fast_inline void write(const BoolLevel val){
-//         this->set_dutycycle(real_t(int(val.to_bool())));
+//         this->set_dutycycle(iq16(int(val.to_bool())));
 //     }
 
 //     BoolLevel read() const;

@@ -19,10 +19,8 @@ public:
         SelecterOutOfRange,
         NoSelecter,
         PayloadNoLength,
-        VerifyFailed,
-        LengthOverflow,
+        LengthTooLong,
         InvalidArgument,
-        TxLengthAndRxLengthNotMatch,
         Unspecified = 0x7f
     };
 

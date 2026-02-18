@@ -8,10 +8,10 @@
 namespace SMC{
 
 struct MotorStrength{
-    real_t left;
-    real_t right;
-    real_t hri ;
-    real_t chassis ;
+    iq16 left;
+    iq16 right;
+    iq16 hri ;
+    iq16 chassis ;
 
     MotorStrength(){reset();}
     void reset(){
@@ -30,11 +30,11 @@ protected:
     SideFan & right_fan;
     HriFanPair & hri_fan;
 
-    real_t real_cha_output = 0;
+    iq16 real_cha_output = 0;
 
     bool enabled = false;
 
-    void setds(const real_t ds){
+    void setds(const iq16 ds){
         real_cha_output = ds;
         static DShotChannel ch1{timer8.oc(1)};
         static DShotChannel ch2{timer8.oc(2)};
@@ -84,9 +84,9 @@ public:
             right_fan = motor_strength.right;
             hri_fan = motor_strength.hri;
         }else{
-            left_fan = real_t(0);
-            right_fan = real_t(0);
-            hri_fan  = real_t(0);
+            left_fan = iq16(0);
+            right_fan = iq16(0);
+            hri_fan  = iq16(0);
         }
 
         setds(real_cha_output);

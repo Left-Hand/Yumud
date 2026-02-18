@@ -10,8 +10,8 @@
 
 namespace ymd::robots::cybergear{
 
-struct [[nodiscard]] Fault{
-    using Self = Fault;
+struct [[nodiscard]] FaultBitFields{
+    using Self = FaultBitFields;
     uint8_t can_id;
     uint8_t under_voltage:1;
     uint8_t over_current:1;
@@ -21,12 +21,11 @@ struct [[nodiscard]] Fault{
     uint8_t uncalibrated:1;
     uint8_t mode:2;
 
-    void update(const uint16_t bits){*this = std::bit_cast<Self>(bits);}
     [[nodiscard]] constexpr bool is_running() const {return mode == 2;}
     [[nodiscard]] constexpr bool is_reset() const {return mode == 0;}
     [[nodiscard]] constexpr bool is_calibrating() const {return mode == 1;}
 };
-static_assert(sizeof(Fault) == 2);
+static_assert(sizeof(FaultBitFields) == 2);
 
 
 enum class [[nodiscard]] Error:uint8_t{
@@ -60,11 +59,11 @@ using IResult = Result<T, Error>;
 
 namespace details{
 
-struct Temperature{
-    uint16_t data;
+struct [[nodiscard]] TemperatureCode final{
+    uint16_t bits;
 
-    constexpr explicit operator real_t() const {
-        return real_t(data) / 10;
+    constexpr iq16 to_celsius() const {
+        return iq16(bits) / 10;
     }
 };
 
@@ -75,11 +74,11 @@ DEF_PER_UNIT(CmdKp, uint16_t, 0, 500)
 DEF_PER_UNIT(CmdKd, uint16_t, 0, 5)
 
 
-struct Feedback{
-    real_t radians = {};
-    real_t omega = {};
-    real_t torque = {};
-    real_t temperature = {};
+struct [[nodiscard]] Feedback final{
+    iq16 radians;
+    iq16 omega;
+    iq16 torque;
+    iq16 celsius;
 };
 }
 
@@ -93,7 +92,7 @@ public:
     using CanFrame = hal::BxCanFrame; 
 
     using Feedback = details::Feedback;
-    using Temperature = details::Temperature;
+    using TemperatureCode = details::TemperatureCode;
     using CmdRad = details::CmdRad;
     using CmdOmega = details::CmdOmega;
     using CmdTorque = details::CmdTorque;
@@ -113,11 +112,11 @@ public:
     [[nodiscard]] IResult<> request_mcu_id();
 
     struct MitParams{
-        real_t torque;
-        real_t radians;
-        real_t omega; 
-        real_t kp; 
-        real_t kd;
+        iq16 torque;
+        iq16 radians;
+        iq16 omega; 
+        iq16 kp; 
+        iq16 kd;
     };
 
     [[nodiscard]] IResult<> ctrl(const MitParams & params);
@@ -142,7 +141,7 @@ private:
     const uint8_t host_id_;
     uint8_t node_id_;
     
-    Fault fault_ = {};
+    FaultBitFields fault_ = {};
     Option<uint64_t> device_mcu_id_ = None;
 
 

@@ -35,7 +35,7 @@ public:
 
 
     [[nodiscard]]
-    IResult<> set_display_dutycycle(const real_t dutycycle);
+    IResult<> set_display_dutycycle(const iq16 dutycycle);
     
 private:
     using Buf = DisplayBuf<uint8_t, CGRAM_MAX_LEN>;

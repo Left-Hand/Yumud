@@ -11,6 +11,21 @@
 using namespace ymd;
 using namespace ymd::hal;
 
+
+static constexpr const NvicPriority UART_RX_DMA_NVIC_PRIORITY = {1,4};
+static constexpr const NvicPriority UART_TX_DMA_NVIC_PRIORITY = {1,5};
+static constexpr const NvicPriority UART_INTERRUPT_NVIC_PRIORITY = {1,3};
+
+static constexpr const DmaPriority RX_DMA_DMA_PRIORITY = DmaPriority::Medium;
+static constexpr const DmaPriority TX_DMA_DMA_PRIORITY = DmaPriority::Medium;
+
+
+static_assert(std::has_single_bit(UART_RX_DMA_BUF_SIZE)); //缓冲区大小必须是2的幂
+static_assert(std::has_single_bit(UART_TX_DMA_BUF_SIZE)); //缓冲区大小必须是2的幂
+
+static constexpr size_t HALF_UART_RX_DMA_BUF_SIZE = UART_RX_DMA_BUF_SIZE / 2;
+
+
 using Event = Uart::Event;
 
 #define COPY_CONST(a,b) std::conditional_t<\
@@ -21,7 +36,19 @@ using Event = Uart::Event;
 #define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, USART_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
-#define EMIT_EVENT(x)   if(self.event_callback_ != nullptr) {self.event_callback_(x);}
+
+#define EMIT_EVENT(x)   \
+if(self.event_callback_ != nullptr) {\
+    self.event_callback_(x);\
+}\
+
+
+#define EMIT_EVENT_OR_TRAP(x)\
+if(self.event_callback_ != nullptr){\
+    self.event_callback_(x);\
+} else{\
+    __builtin_trap();\
+}\
 
 namespace {
 [[maybe_unused]] static constexpr Nth _uart_to_nth(const uint32_t base_addr){
@@ -158,8 +185,8 @@ template<UartRemap REMAP>
 DEF_UART_BIND_PIN_LAYOUTER(tx)
 DEF_UART_BIND_PIN_LAYOUTER(rx)
 
-static DmaChannel & uart_to_rx_dma(const void * inst){
-    switch(reinterpret_cast<size_t>(inst)){
+static DmaChannel & uart_to_rx_dma(const uint32_t base_addr){
+    switch(base_addr){
         #ifdef USART1_PRESENT
         case USART1_BASE:
             return USART1_RX_DMA_CH;
@@ -196,8 +223,8 @@ static DmaChannel & uart_to_rx_dma(const void * inst){
     __builtin_trap();
 
 }
-static DmaChannel & uart_to_tx_dma(const void * inst){
-    switch(reinterpret_cast<size_t>(inst)){
+static DmaChannel & uart_to_tx_dma(const uint32_t base_addr){
+    switch(base_addr){
         #ifdef USART1_PRESENT
         case USART1_BASE:
             return USART1_TX_DMA_CH;
@@ -234,9 +261,9 @@ static DmaChannel & uart_to_tx_dma(const void * inst){
     __builtin_trap();
 }
 
-static IRQn get_nvic_irqn(const void * inst){
+static IRQn get_nvic_irqn(const uint32_t base_addr){
 
-    switch(reinterpret_cast<size_t>(inst)){
+    switch(base_addr){
         #ifdef USART1_PRESENT
         case USART1_BASE:
             return USART1_IRQn;
@@ -461,25 +488,13 @@ static void uart_set_remap(const void * inst, const UartRemap remap){
 
 }
 
-static constexpr const NvicPriority UART_RX_DMA_NVIC_PRIORITY = {1,4};
-static constexpr const NvicPriority UART_TX_DMA_NVIC_PRIORITY = {1,5};
-static constexpr const NvicPriority UART_INTERRUPT_NVIC_PRIORITY = {1,3};
-
-static constexpr const DmaPriority RX_DMA_DMA_PRIORITY = DmaPriority::Medium;
-static constexpr const DmaPriority TX_DMA_DMA_PRIORITY = DmaPriority::Medium;
-
-
-static_assert(std::has_single_bit(UART_RX_DMA_BUF_SIZE)); //缓冲区大小必须是2的幂
-static_assert(std::has_single_bit(UART_TX_DMA_BUF_SIZE)); //缓冲区大小必须是2的幂
-
-static constexpr size_t HALF_UART_RX_DMA_BUF_SIZE = UART_RX_DMA_BUF_SIZE / 2;
 
 Uart::Uart(
     void * inst
 ):
     inst_(inst),
-    tx_dma_(uart_to_tx_dma(inst)),
-    rx_dma_(uart_to_rx_dma(inst)){;}
+    tx_dma_(uart_to_tx_dma(reinterpret_cast<uint32_t>(inst))),
+    rx_dma_(uart_to_rx_dma(reinterpret_cast<uint32_t>(inst))){;}
 
 void usart_enable_error_interrupt(void * inst_, const Enable en){
 	USART_ITConfig(SDK_INST(inst_), USART_IT_PE, en == EN);
@@ -596,7 +611,9 @@ void Uart::enable_single_line_mode(const Enable en){
 
 
 void Uart::register_nvic(const Enable en){
-    UART_INTERRUPT_NVIC_PRIORITY.with_irqn(get_nvic_irqn(SDK_INST(inst_))).enable(EN);
+    UART_INTERRUPT_NVIC_PRIORITY.with_irqn(
+        get_nvic_irqn(reinterpret_cast<uint32_t>(inst_))
+    ).enable(EN);
 }
 
 void Uart::set_tx_strategy(const CommStrategy tx_strategy){
@@ -782,7 +799,7 @@ void Uart::enable_rx_dma(const Enable en){
 void UartInterruptDispatcher::isr_rxne(Uart & self){
     switch(self.rx_strategy_){
         case CommStrategy::Interrupt:{
-            const auto data = uint8_t(SDK_INST(self.inst_)->DATAR);
+            const auto data = static_cast<uint8_t>(SDK_INST(self.inst_)->DATAR);
             if(const auto len = self.rx_queue_.try_push(data);
                 len == 0
             ){
@@ -875,6 +892,32 @@ void Uart::enable_idle_interrupt(const Enable en){
     USART_ITConfig(SDK_INST(inst_), USART_IT_IDLE, en == EN);
 }
 
+struct alignas(4) [[nodiscard]] BareUartEvent{
+    enum class Bits:uint32_t{
+        ParityError = 1u << 0,
+        FrameError = 1u << 1,
+        NoiseError = 1u << 2,
+        OverrunError = 1u << 3,
+        Idle = 1u << 4,
+        RxNotEmpty = 1u << 5,
+        TxClear = 1u << 6,
+        TxEmpty = 1u << 7,
+        LinBreakDetected = 1u << 8,
+        CtsStateChange = 1u << 9
+    };
+
+    uint32_t parity_error:1;
+    uint32_t frame_error:1;
+    uint32_t noise_error:1;
+    uint32_t overrun_error:1;
+
+    uint32_t idle:1;
+    uint32_t rx_not_empty:1;
+    uint32_t tx_clear:1;
+    uint32_t tx_empty:1;
+    uint32_t lin_break_detected:1;
+    uint32_t cts_state_change:1;
+};
 
 void UartInterruptDispatcher::on_interrupt(Uart & self){
     auto * ral_inst = RAL_INST(self.inst_);

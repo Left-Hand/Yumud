@@ -1156,7 +1156,7 @@ namespace matchit
             {
                 if (mDepth > depth || mDepth == 0)
                 {
-                    assert(depth == mDepth - 1 || depth == mDepth || mDepth == 0);
+                    ASSERT(depth == mDepth - 1 || depth == mDepth || mDepth == 0);
                     mDepth = depth;
                 }
             }

@@ -47,9 +47,8 @@ struct [[nodiscard]] DifferentialDriveKinematics final {
         const auto left_motor_xn = Angular<iq16>::from_radians(
             wheel_common_xn_radians - wheel_diff_xn_radians);
 
-        //右轮的正向旋转方向和车身正方向相反，需要镜像过来
         const auto right_motor_xn = Angular<iq16>::from_radians(
-            -(wheel_common_xn_radians + wheel_diff_xn_radians));
+            (wheel_common_xn_radians + wheel_diff_xn_radians));
 
         return {left_motor_xn, right_motor_xn};
     }

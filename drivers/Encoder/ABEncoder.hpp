@@ -10,16 +10,16 @@ namespace ymd::drivers{
 
 // class ABEncoderIntf:public AbsoluteEncoder{
 // protected:
-//     // real_t scale;
+//     // iq16 scale;
 //     uint16_t cnt = 0;
 // public:
 //     // virtual uint16_t update() = 0;
-// //     virtual real_t getLapPositionPerUnit() = 0;
+// //     virtual iq16 getLapPositionPerUnit() = 0;
 // // public:
 // //     constexpr ABEncoder(const uint16_t lines):
 // //         scale(4.0 * lines / 65536){;}
 
-// //     real_t getLapPosition(){
+// //     iq16 getLapPosition(){
 // //         return getLapPositionPerUnit() * scale;
 // //     }
 // };
@@ -30,17 +30,17 @@ namespace ymd::drivers{
 //     const uint lines = 1 << 4;
 // public:
 //     ABEncoderTimer(GeneralTimer & _inst):inst(_inst){;}
-//     void init() override{
+//     void init() {
 //         inst.initAsEncoder();
 //     }
 
-//     real_t getLapPosition() override {
-//         real_t ret;
+//     iq16 getLapPosition()  {
+//         iq16 ret;
 //         u16_to_uni(inst.cnt() * lines, ret);
 //         return ret;
 //     }
 
-//     bool stable() const override{
+//     bool stable() const {
 //         return true;
 //     }
 // };
@@ -79,7 +79,7 @@ namespace ymd::drivers{
 //         trigExtiCHA(trigGpioA, _priority, ExtiChannel::Trigger::RisingFalling),
 //         trigExtiCHB(trigGpioB, _priority, ExtiChannel::Trigger::RisingFalling){;}
 
-//     void init() override{
+//     void init() {
 //         trigGpioA.inpu();
 //         trigGpioB.inpu();
 //         trigExtiCHA.bindCb(std::bind(&ABEncoderExti::a_pulse, this));
@@ -87,8 +87,8 @@ namespace ymd::drivers{
 //         trigExtiCHA.init();
 //         trigExtiCHB.init();
 //     }
-//     real_t getLapPosition() override{
-//         real_t ret;
+//     iq16 getLapPosition() {
+//         iq16 ret;
 //         s16_to_uni(cnt, ret);
 //         return ret;
 //     }

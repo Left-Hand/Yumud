@@ -49,13 +49,13 @@ static constexpr auto LED_SUSTAIN = 500ms;
 static constexpr auto LED_BLANKING = 100ms;
 
 static constexpr size_t MOTOR_ISR_FREQ = 5000;
-static constexpr real_t SAMPLE_RES = 0.005_r;
-static constexpr real_t INA240_BETA = 100;
-static constexpr real_t VOLT_BAIS = 1.65_r;
+static constexpr iq16 SAMPLE_RES = 0.005_r;
+static constexpr iq16 INA240_BETA = 100;
+static constexpr iq16 VOLT_BAIS = 1.65_r;
 
-static constexpr real_t MIN_DUTY = 0.1_r;
-static constexpr real_t MAX_DUTY = 0.94_r;
-static constexpr real_t PI_KP = 10.6_r;
+static constexpr iq16 MIN_DUTY = 0.1_r;
+static constexpr iq16 MAX_DUTY = 0.94_r;
+static constexpr iq16 PI_KP = 10.6_r;
 
 static constexpr uint CURRENT_LPF_FC_HZ = 10;
 
@@ -64,7 +64,7 @@ static constexpr auto SPEECH_DURATION_PER_CHAR = 0.2_r;
 
 namespace motorctl{
 
-real_t volt_2_current(real_t volt){
+iq16 volt_2_current(iq16 volt){
     static constexpr auto INV_SCALE = 1 / (SAMPLE_RES * INA240_BETA);
     return (volt - VOLT_BAIS) *INV_SCALE;
 }
@@ -79,16 +79,16 @@ public:
         a_sense_(a_sense){;}
 
     void update(){
-        lpf_.update(volt_2_current(real_t(a_sense_)));
+        lpf_.update(volt_2_current(iq16(a_sense_)));
         current_ = lpf_.get();
     };
 
-    const real_t & get() const{
+    const iq16 & get() const{
         return current_;
     }
 private:
     AnalogInIntf & a_sense_;
-    real_t current_ = 0;
+    iq16 current_ = 0;
 
     static constexpr Config CFG = {
         .fc = CURRENT_LPF_FC_HZ,
@@ -108,12 +108,12 @@ public:
         cs_(cs)
         {;}
 
-    void set_torque(const real_t torque){
+    void set_torque(const iq16 torque){
         static constexpr auto TORQUE_2_CURRENT_RATIO = 1.0_r;
         set_current(torque * TORQUE_2_CURRENT_RATIO);
     }
 
-    void set_current(const real_t current){
+    void set_current(const iq16 current){
         targ_current_ = current;
     }
     
@@ -130,7 +130,7 @@ public:
     }
 
 private:
-    void set_dutycycle(const real_t dutycycle){
+    void set_dutycycle(const iq16 dutycycle){
         drv_ = CLAMP(duty, MIN_DUTY, MAX_DUTY);
     }
 
@@ -147,7 +147,7 @@ private:
     Chopper & drv_;
     CurrentSensor & cs_;
 
-    real_t targ_current_ = 0;
+    iq16 targ_current_ = 0;
     Ctrl ctrl_{PI_CFG};
 };
 
@@ -318,13 +318,13 @@ public:
 
     struct Config{
         //开始缓启动的时间
-        real_t start_time; // S
+        iq16 start_time; // S
 
         //缓启动加速的时间
-        real_t accelerate_time; // S
+        iq16 accelerate_time; // S
 
         //缓启动最终恒定输出的力
-        real_t final_torque; // N / m 
+        iq16 final_torque; // N / m 
     };
 
 
@@ -380,7 +380,7 @@ public:
         timer3.oc<4>().cvr() = 1;
     }
 
-    void process(const real_t t){
+    void process(const iq16 t){
         const auto torque = CLAMP(
             (t - start_time_) * final_torque_ / accelerate_time_, 
             0, final_torque_);
@@ -407,13 +407,13 @@ private:
     BrushedMotor motor_{chopper_, sensor_};
 
     //开始缓启动的时间
-    real_t start_time_; // S
+    iq16 start_time_; // S
 
     //缓启动加速的时间
-    real_t accelerate_time_; // S
+    iq16 accelerate_time_; // S
 
     //缓启动最终恒定输出的力
-    real_t final_torque_; // N / m 
+    iq16 final_torque_; // N / m 
 };
 
 class CnTTS final{
@@ -439,7 +439,7 @@ class BoardcastService final{
 public:
     // using Inst = drivers::JQ8900;
     using Inst = CnTTS;
-    using Item = std::pair<StationName, real_t>;
+    using Item = std::pair<StationName, iq16>;
     using StationQueue = std::queue<Item>;
 
     BoardcastService(Inst & inst):
@@ -450,7 +450,7 @@ public:
         play_list_.push(name_2_item(sta));
     }
 
-    void process(const real_t t){
+    void process(const iq16 t){
         if(playing_.is_none()){
             push_next(t);
         }else{
@@ -468,7 +468,7 @@ private:
         return {name, time}; 
     }
 
-    void push_next(const real_t t){
+    void push_next(const iq16 t){
         if(play_list_.empty()) return;
         const auto front = play_list_.front();
         playing_ = Some(Playing{
@@ -481,13 +481,13 @@ private:
     StationQueue play_list_;
     struct Playing{
         StationName name;
-        real_t sustain;
-        real_t start_time;
-        real_t has_been_played(const real_t t) const {
+        iq16 sustain;
+        iq16 start_time;
+        iq16 has_been_played(const iq16 t) const {
             return t - start_time;
         }
 
-        bool is_timeout(const real_t t) const {
+        bool is_timeout(const iq16 t) const {
             return has_been_played(t) > sustain;
         }
     };
@@ -602,7 +602,7 @@ public:
     void init(){
     }
 
-    void process(const real_t t){
+    void process(const iq16 t){
         if(semphr_.take()){
             static constexpr auto cmds = 
                 std::to_array<char>({0x7f, 0x04, 0x00, 0x11, 0x04, 0x11});
@@ -673,12 +673,12 @@ public:
     LedService(StatLed & led):
         led_(led){;}
 
-    void add_token(const real_t t){
+    void add_token(const iq16 t){
         invoke_t_ = Some(t);
     }
 
-    void process(const real_t t){
-        invoke_t_.inspect([&](const real_t last_t){
+    void process(const iq16 t){
+        invoke_t_.inspect([&](const iq16 last_t){
             const auto dt = Milliseconds(uint32_t((t - last_t) * 1000));
 
             led_.write(BoolLevel::from(
@@ -688,7 +688,7 @@ public:
     }
 private:
     StatLed & led_;
-    Option<real_t> invoke_t_ = None;
+    Option<iq16> invoke_t_ = None;
 };
 }
 

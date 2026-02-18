@@ -11,7 +11,7 @@ using namespace ymd::foc;
 namespace gxm{
 
 
-using Vec2 = Vec2<real_t>;
+using Vec2 = Vec2<iq16>;
 
 
 
@@ -25,9 +25,9 @@ void print_curve(OutputStream & logger, const Curve & curve);
 
 void draw_turtle(PainterIntf & painter, const Ray & ray);
 
-void test_servo(RadianServo & servo, std::function<real_t(real_t)> && func);
+void test_servo(RadianServo & servo, std::function<iq16(iq16)> && func);
 
-void test_joint(JointLR & joint, std::function<real_t(real_t)> && func);
+void test_joint(JointLR & joint, std::function<iq16(iq16)> && func);
 
 String getline(InputStream & logger);
 
@@ -45,10 +45,10 @@ void init_displayer(ST7789 & displayer);
 
 
 struct JointConfig{
-    real_t max_rad_delta;
-    real_t left_basis_radian;
-    real_t right_basis_radian;
-    real_t z_basis_radian;
+    iq16 max_rad_delta;
+    iq16 left_basis_radian;
+    iq16 right_basis_radian;
+    iq16 z_basis_radian;
 };
 
 

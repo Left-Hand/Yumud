@@ -151,6 +151,8 @@ std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind(
 }
 
 
+
+
 template<template<typename> typename Allocator>
 std::vector<math::Vec2<uint16_t>, Allocator<math::Vec2<uint16_t>>> bfs_pathfind_8(
     Allocator<math::Vec2<uint16_t>>& alloc,

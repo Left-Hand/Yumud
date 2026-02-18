@@ -4,7 +4,7 @@
 
 #include "core/utils/serde/serde.hpp"
 
-#include "robots/vendor/zdt/zdt_stepper.hpp"
+#include "robots/vendor/zdt/zdt_frame_factory.hpp"
 
 #include "middlewares/repl/repl.hpp"
 
@@ -15,8 +15,8 @@ class JointMotorActuatorIntf{
 public:
     virtual void activate() = 0;
     virtual void deactivate() = 0;
-    virtual void set_angle(Angular<real_t> angle) = 0;
-    virtual Angular<real_t> last_angle() = 0;
+    virtual void set_angle(Angular<iq16> angle) = 0;
+    virtual Angular<iq16> last_angle() = 0;
     virtual void trig_homing() = 0;
     virtual void trig_cali() = 0;
     virtual bool is_homing_done() = 0;
@@ -41,21 +41,20 @@ class MockJointMotorActuator final:
 public:
     void activate() {}
     void deactivate() {}
-    void set_angle(Angular<real_t> angle) {
+    void set_angle(Angular<iq16> angle) {
         angle = position_;
     }
     void trig_homing() {}
     void trig_cali() {}
     bool is_homing_done() {return true;}
-    Angular<real_t> last_angle(){return 0_deg;}
+    Angular<iq16> last_angle(){return 0_deg;}
 private:
-    Angular<real_t> position_ = 0_deg;
+    Angular<iq16> position_ = 0_deg;
 };
 
 class ZdtJointMotorActuator final
     :public JointMotorActuatorIntf{
 public:
-    using ZdtStepper = zdtmotor::ZdtStepper;
 
     struct Config{
         zdtmotor::HommingMode homming_mode;
@@ -63,38 +62,43 @@ public:
 
     ZdtJointMotorActuator(
         const Config & cfg, 
-        ZdtStepper & stepper
+        zdtmotor::ZdtFrameFactory & factory
     ):
         cfg_(cfg),
-        stepper_(stepper){;}
+        factory_(factory){;}
 
     void activate(){
-        stepper_.activate(EN).unwrap();
+        const auto flat_packet = factory_.activate(EN);
+        write_packet(flat_packet);
     }
 
     void deactivate(){
-        stepper_.activate(DISEN).unwrap();;
+        const auto flat_packet = factory_.activate(DISEN);;
+        write_packet(flat_packet);
     }
 
-    void set_angle(Angular<real_t> angle){
+    void set_angle(Angular<iq16> angle){
         last_angle_ = angle;
-        stepper_.set_angle({
-            .angle = angle,
-            .speed = 0.47_r
-        }).unwrap();
+        const auto flat_packet = factory_.set_angle(
+            angle,
+            0.47_r
+        );
+        write_packet(flat_packet);
     }
 
-    Angular<real_t> last_angle(){
+    Angular<iq16> last_angle(){
         return last_angle_ ;
     }
 
     void trig_homing(){
         homing_begin_ = Some(clock::millis());
-        stepper_.trig_homming(cfg_.homming_mode).unwrap();;
+        const auto flat_packet = factory_.trig_homming(cfg_.homming_mode);;
+        write_packet(flat_packet);
     }
 
     void trig_cali(){ 
-        stepper_.trig_cali().unwrap();;
+        const auto flat_packet = factory_.trig_cali();;
+        write_packet(flat_packet);
     }
 
     bool is_homing_done(){
@@ -106,14 +110,19 @@ public:
         return (clock::millis() - homing_begin_.unwrap()) > HOMING_TIMEOUT_;
     }
 
-
+    void write_packet(const zdtmotor::FlatPacket & packet){
+        auto && iter = packet.to_canframe_iter();
+        while(iter.has_next()){
+            hal::can1.try_write(iter.next()).examine();
+        }
+    };
 private:
     static constexpr Milliseconds HOMING_TIMEOUT_ = 5000ms;
 
     Config cfg_;
-    ZdtStepper & stepper_;
+    zdtmotor::ZdtFrameFactory & factory_;
 
-    Angular<real_t> last_angle_;
+    Angular<iq16> last_angle_;
     Option<Milliseconds> homing_begin_ = None;
     std::atomic<bool> is_homed_ = false;
 

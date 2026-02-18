@@ -13,7 +13,7 @@ concept valid_i2c_regaddr = std::integral<T> and (sizeof(T) <= 2) and std::is_un
 template <typename T>
 concept valid_i2c_data = std::is_standard_layout_v<T> and (sizeof(T) <= 4);
 
-enum class [[nodiscard]] [[nodiscard]] I2cRole:uint8_t{
+enum class [[nodiscard]] I2cRole:uint8_t{
     Master,
     Slave
 };

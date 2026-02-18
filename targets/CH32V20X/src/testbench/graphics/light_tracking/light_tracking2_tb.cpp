@@ -105,7 +105,7 @@ static Interaction<iq16> make_interaction(
 }
 
 template<size_t Q, typename D>
-static constexpr bool not_in_one(const fixed_t<Q, D> & d){
+static constexpr bool not_in_one(const fixed<Q, D> & d){
     return (d < -1 or d > 1);
 };
 

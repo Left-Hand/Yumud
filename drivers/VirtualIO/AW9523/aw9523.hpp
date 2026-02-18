@@ -56,7 +56,7 @@ public:
 
     [[nodiscard]] IResult<> set_led_current_dutycycle(
         const hal::PinMask pin, 
-        const real_t dutycycle
+        const iq16 dutycycle
     );
     
     [[nodiscard]] IResult<> validate();

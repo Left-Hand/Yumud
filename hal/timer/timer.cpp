@@ -563,12 +563,12 @@ void BasicTimer::enable(const Enable en){
     }
 }
 
-void GeneralTimer::init_as_encoder(const CountMode mode){
+void GeneralTimer::init_as_encoder(){
     this->enable_rcc(EN);
-
+    constexpr auto mode = CountMode(CountMode::Up);
     {
         const TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
-            .TIM_Prescaler = 0,
+            .TIM_Prescaler = TIM_CKD_DIV1,
             .TIM_CounterMode = static_cast<uint16_t>(mode.to_bits() << 4),
             .TIM_Period = 0xffff,
             .TIM_ClockDivision = TIM_CKD_DIV1,
@@ -589,8 +589,17 @@ void GeneralTimer::init_as_encoder(const CountMode mode){
         };
 
         TIM_ICInit(SDK_INST(inst_),&TIM_ICInitStruct);
+    }
 
-        TIM_ICInitStruct.TIM_Channel = TIM_Channel_2;
+    {
+        TIM_ICInitTypeDef TIM_ICInitStruct = {
+            .TIM_Channel = TIM_Channel_2,
+            .TIM_ICPolarity = TIM_ICPolarity_Rising,
+            .TIM_ICSelection = TIM_ICSelection_DirectTI,
+            .TIM_ICPrescaler = TIM_ICPSC_DIV1,
+            .TIM_ICFilter = 0x0F
+        };
+
         TIM_ICInit(SDK_INST(inst_),&TIM_ICInitStruct);
     }
 
@@ -649,6 +658,8 @@ void TimerBdtr::init(const Config & cfg){
         if(cfg.deadzone.is<Nanoseconds>()) return TimerDeadzoneCode::from_ns(self.bus_freq, cfg.deadzone.unwrap_as<Nanoseconds>());
         __builtin_trap();
     }();
+
+
     const TIM_BDTRInitTypeDef TIM_BDTRInitStructure{
         .TIM_OSSRState = TIM_OSSRState_Disable,
         .TIM_OSSIState = TIM_OSSIState_Disable,
@@ -709,44 +720,3 @@ void AdvancedTimer::set_repeat_times(const uint8_t rep){
     SDK_INST(inst_)->RPTCR = rep;
 }
 
-namespace ymd::hal{
-#ifdef TIM1_PRESENT
-AdvancedTimer timer1{TIM1};
-#endif
-
-#ifdef TIM2_PRESENT
-GeneralTimer timer2{TIM2};
-#endif
-
-#ifdef TIM3_PRESENT
-GeneralTimer timer3{TIM3};
-#endif
-
-#ifdef TIM4_PRESENT
-GeneralTimer timer4{TIM4};
-#endif
-
-#ifdef TIM5_PRESENT
-GeneralTimer timer5{TIM5};
-#endif
-
-#ifdef TIM6_PRESENT
-BasicTimer timer6{TIM6};
-#endif
-
-#ifdef TIM7_PRESENT
-BasicTimer timer7{TIM7};
-#endif
-
-#ifdef TIM8_PRESENT
-AdvancedTimer timer8{TIM8};
-#endif
-
-#ifdef TIM9_PRESENT
-AdvancedTimer timer9{TIM9};
-#endif
-
-#ifdef TIM10_PRESENT
-AdvancedTimer timer10{TIM10};
-#endif
-}

@@ -30,13 +30,13 @@ using namespace ymd;
 
 
 static constexpr size_t ISR_FREQ = 19200 * 2;
-static constexpr real_t SAMPLE_RES = 0.008_r;
-static constexpr real_t INA240_BETA = 100;
-static constexpr real_t VOLT_BAIS = 1.65_r;
+static constexpr iq16 SAMPLE_RES = 0.008_r;
+static constexpr iq16 INA240_BETA = 100;
+static constexpr iq16 VOLT_BAIS = 1.65_r;
 
 
 
-real_t volt_2_current(real_t volt){
+iq16 volt_2_current(iq16 volt){
     static constexpr auto INV_SCALE = 1 / (SAMPLE_RES * INA240_BETA);
     return (volt - VOLT_BAIS) *INV_SCALE;
 }
@@ -130,8 +130,8 @@ void at8222_tb(){
 
     dsp::EdgeCounter ect;
     
-    real_t curr = 0;
-    [[maybe_unused]]real_t current_mid = 0;
+    iq16 curr = 0;
+    [[maybe_unused]]iq16 current_mid = 0;
 
     // IController pi_ctrl{
     //     IController::Config{
@@ -187,11 +187,11 @@ void at8222_tb(){
     #endif
 
     // volatile uint32_t exe_micros = 0;
-    real_t spd_targ = 0;
-    real_t pos_targ = 0;
+    iq16 spd_targ = 0;
+    iq16 pos_targ = 0;
 
-    real_t trackin_sig = 0;
-    real_t volt = 0;
+    iq16 trackin_sig = 0;
+    iq16 volt = 0;
 
     auto watch_gpio = hal::PA<3>();
     watch_gpio.outpp();
@@ -265,15 +265,15 @@ void at8222_tb(){
         pos_targ = 10.0_r * now_secs + 2*frac(now_secs);
         #elif TEST_MODE == 1
         spd_targ = 7.0_r + 1.0_r * math::sinpu(1.3_r * now_secs);
-        pos_targ = 7.0_r * now_secs + real_t(-1.0/6) * math::cospu(1.3_r * now_secs);
+        pos_targ = 7.0_r * now_secs + iq16(-1.0/6) * math::cospu(1.3_r * now_secs);
         #endif
         // spd_targ = 9.0_r + 1.0_r * ((sin(1.0_r * time())) > 0 ? 1 : ;
         // spd_targ = 9.0_r + 1.0_r * -1;
         // spd_targ = 16.57_r;
         // trackin_sig = sign(sin(now_secs * 3));
-        // trackin_sig = real_t(int(sin(now_secs * 3) * 32)) / 32;
-        // trackin_sig = real_t(int(0.2_r * sin(now_secs * 3) * 32)) / 32;
-        // trackin_sig = real_t(int(0.2_r * now_secs * 32)) / 32;
+        // trackin_sig = iq16(int(sin(now_secs * 3) * 32)) / 32;
+        // trackin_sig = iq16(int(0.2_r * sin(now_secs * 3) * 32)) / 32;
+        // trackin_sig = iq16(int(0.2_r * now_secs * 32)) / 32;
         // trackin_sig = 1/(1 + exp(4 * tpzpu(3 * now_secs)));
         trackin_sig = 10 * CLAMP2(math::sinpu(7 * now_secs), 0.5_r);
         // trackin_sig = tpzpu(t);

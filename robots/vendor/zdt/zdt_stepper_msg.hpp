@@ -1,7 +1,10 @@
 #pragma once
 
 #include "zdt_stepper_primitive.hpp"
+#include "zdt_stepper_utils.hpp"
+
 namespace ymd::robots::zdtmotor{
+    
 namespace req_msgs{
 // 地址 + 0xF3 + 0xAB + 使能状态 + 多机同步标志 + 校验字节
 struct [[nodiscard]] Actvation final{

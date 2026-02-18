@@ -23,8 +23,8 @@ namespace nuedc::_2023E{
 using ymd::robots::mock::MotorCmd;
 
 struct ServoConfig{
-    Angular<real_t> min_angle;
-    Angular<real_t> max_angle;
+    Angular<iq16> min_angle;
+    Angular<iq16> max_angle;
 };
 // class PwmServo final:public MotorIntf{
 class PwmServo final{
@@ -33,8 +33,8 @@ public:
 
     explicit PwmServo(
         const Config & cfg, 
-        real_t min_duty, 
-        real_t max_duty, 
+        iq16 min_duty, 
+        iq16 max_duty, 
         ymd::hal::PwmIntf & pwm
     ) 
         :min_duty_(min_duty), max_duty_(max_duty), pwm_(pwm){
@@ -47,9 +47,9 @@ public:
     }
 
     void set_motorcmd(const MotorCmd & cmd){
-        set_angle(Angular<real_t>::from_turns(cmd.ref_x1));
+        set_angle(Angular<iq16>::from_turns(cmd.ref_x1));
     }
-    void set_angle(const Angular<real_t> angle){
+    void set_angle(const Angular<iq16> angle){
         ASSERT(min_angle_ <= angle, "angle out of range");
         ASSERT(angle <= max_angle_, "angle out of range");
         const auto dutycycle = LERP(INVLERP(
@@ -58,10 +58,10 @@ public:
         pwm_.set_dutycycle(dutycycle);
     }
 private:
-    real_t min_duty_;
-    real_t max_duty_;
-    Angular<real_t> min_angle_;
-    Angular<real_t> max_angle_;
+    iq16 min_duty_;
+    iq16 max_duty_;
+    Angular<iq16> min_angle_;
+    Angular<iq16> max_angle_;
     ymd::hal::PwmIntf & pwm_;
 };
 

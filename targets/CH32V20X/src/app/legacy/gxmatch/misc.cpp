@@ -35,8 +35,8 @@ Ray canvas_transform(const Ray & ray){
     static constexpr auto org =  Vec2{12,12};
     static constexpr auto area = Rect2i{org,size};
     
-    auto x = LERP(real_t(area.x), real_t(area.x + area.w), ray.org.x / meter);
-    auto y = LERP(real_t(area.y + area.h), real_t(area.y), ray.org.y / meter);
+    auto x = LERP(iq16(area.x), iq16(area.x + area.w), ray.org.x / meter);
+    auto y = LERP(iq16(area.y + area.h), iq16(area.y), ray.org.y / meter);
     return Ray{Vec2{x,y} + Vec2::ones(12), ray.rad};
 };
 
@@ -60,12 +60,12 @@ void print_curve(OutputStream & logger, const Curve & curve){
 
 
 void draw_turtle(PainterIntf & painter, const Ray & ray){
-    static constexpr real_t len = 7;
+    static constexpr iq16 len = 7;
     auto [org, rad] = canvas_transform(ray);
     rad = -rad;//flipy
     auto pf = org + Vec2::from_angle(len, rad);
-    auto p1 = org + Vec2::from_angle(len, rad + real_t(  PI * 0.8));
-    auto p2 = org + Vec2::from_angle(len, rad + real_t(- PI * 0.8));
+    auto p1 = org + Vec2::from_angle(len, rad + iq16(  PI * 0.8));
+    auto p2 = org + Vec2::from_angle(len, rad + iq16(- PI * 0.8));
 
     // painter.setColor(ColorEnum::RED);
     painter.setColor(RGB888(HSV888(int(time() * 64),255,255)));
@@ -76,7 +76,7 @@ void draw_turtle(PainterIntf & painter, const Ray & ray){
     painter.drawHollowTriangle(pf, p1, p2);
 };
 
-void test_servo(RadianServo & servo, std::function<real_t(real_t)> && func){
+void test_servo(RadianServo & servo, std::function<iq16(iq16)> && func){
     while(true){
         auto targ = func(time());
         servo.setRadian(targ);
@@ -85,7 +85,7 @@ void test_servo(RadianServo & servo, std::function<real_t(real_t)> && func){
     }
 }
 
-void test_joint(JointLR & joint, std::function<real_t(real_t)> && func){
+void test_joint(JointLR & joint, std::function<iq16(iq16)> && func){
     while(true){
         auto targ = func(time());
         joint.setRadian(targ);

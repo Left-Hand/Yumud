@@ -3,34 +3,33 @@
 
 using namespace ymd;
 namespace ymd::hal::can{
-OutputStream & operator<<(OutputStream & os, const CanError & error){
+OutputStream & operator<<(OutputStream & os, const Error & error){
     switch(error){
-        case CanError::Stuff: 
+        case Error::Stuff: 
             return os << "Stuff";
-        case CanError::Form: 
+        case Error::Form: 
             return os << "Form";
-        case CanError::Acknowledge: 
+        case Error::Acknowledge: 
             return os << "Acknowledge";
-        case CanError::BitRecessive: 
+        case Error::BitRecessive: 
             return os << "BitRecessive";
-        case CanError::BitDominant: 
+        case Error::BitDominant: 
             return os << "BitDominant";
-        case CanError::Crc: 
+        case Error::Crc: 
             return os << "Crc";
-        case CanError::SoftwareSet:
+        case Error::SoftwareSet:
             return os << "SoftwareSet";
     }
     __builtin_unreachable();
 }
 
-OutputStream & operator<<(OutputStream & os, const CanLibError & error){
+
+OutputStream & operator<<(OutputStream & os, const LibError & error){
     switch(error){
-        case CanLibError::BlockingTransmitTimeout: 
-            return os << "BlockingTransmitTimeout";
-        case CanLibError::NoMailboxAvailable: 
+        case LibError::NoMailboxAvailable: 
             return os << "NoMailboxAvailable";
-        case CanLibError::SoftQueueOverflow: 
-            return os << "SoftQueueOverflow";
+        case LibError::SoftQueueFull: 
+            return os << "SoftQueueFull";
     }
     __builtin_unreachable();
 }

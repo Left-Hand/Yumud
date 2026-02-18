@@ -30,7 +30,7 @@ void slcan_main(){
     });
 
     // asciican::AsciiCanPhy phy{can};
-    [[maybe_unused]] robots::slcan::SlcanParser slcan_parser;
+[[maybe_unused]] slcan::SlcanParser slcan_parser;
     // auto list = repl::make_list(
     //     "slcan",
     //     repl::make_function("tx", [&](const StringView str) {

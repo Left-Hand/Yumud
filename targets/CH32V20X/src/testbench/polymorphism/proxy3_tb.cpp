@@ -16,7 +16,7 @@ PRO_DEF_MEM_DISPATCH(MemArea, Area);
 
 struct Drawable : pro::facade_builder
     ::add_convention<pro::operator_dispatch<"<<", true>, OutputStream&(OutputStream&) const>
-    // ::add_convention<MemArea, real_t() const>
+    // ::add_convention<MemArea, iq16() const>
     ::build {};
 
 
@@ -46,7 +46,7 @@ struct CopyabilityAware : pro::facade_builder
 // volatile int cnt = 0;
 class Rectangle {
 public:
-    Rectangle(real_t width, real_t height) : width_(width), height_(height) {
+    Rectangle(iq16 width, iq16 height) : width_(width), height_(height) {
         // DEBUG_PRINTLN("rect created");
         // cnt++;
     }
@@ -58,7 +58,7 @@ public:
     ~Rectangle(){
         // DEBUG_PRINTLN("rect dropped");
     }
-    real_t Area() const { return width_ * height_; }
+    iq16 Area() const { return width_ * height_; }
 
     // OutputStream & operator <<(OutputStream & os) const{
     //     return os << "{Rectangle: width = " << width_ << ", height = " << height_ << "}";
@@ -70,15 +70,15 @@ public:
 
     auto & width() { return width_; }
 private:
-    real_t width_;
-    real_t height_;
+    iq16 width_;
+    iq16 height_;
 
     // std::array<uint32_t, 1000> data;
 };
 
 class Circle {
 public:
-    Circle(real_t radius) : radius_(radius){
+    Circle(iq16 radius) : radius_(radius){
         // DEBUG_PRINTLN("circle created");
         // cnt++;
     }
@@ -88,7 +88,7 @@ public:
         // DEBUG_PRINTLN("circle dropped");
     }
 
-    real_t Area() const { return radius_ * radius_ * real_t(M_PI);}
+    iq16 Area() const { return radius_ * radius_ * iq16(M_PI);}
     // OutputStream & operator <<(OutputStream & os) const{
     //     return os << "{Circle: radius = " << radius_ << "}";
     // }
@@ -97,7 +97,7 @@ public:
         return os << "{Circle: radius = " << circle.radius_ << "}";
     }
 private:
-    real_t radius_;
+    iq16 radius_;
 };
 
 // OutputStream & ymd::operator <<(OutputStream & os) const{
@@ -132,7 +132,7 @@ using DrawableProxy = pro::proxy<Drawable>;
 void proxy_tb(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUG_PRINTLN("\r\nstart");
-    std::array<char, 1000> buf;
+    std::array<uint8_t, 1000> buf;
     BufStream ss{std::span(buf)};
     Microseconds dur;
     {
@@ -204,7 +204,7 @@ void proxy_tb(){
     }
 
     DEBUG_PRINTLN("!!!!");
-    DEBUG_PRINTLN(ss.inner_str());
+    DEBUG_PRINTLN(ss.collected_str());
     DEBUG_PRINTLN("!!!!");
     clock::delay(100ms);
     DEBUG_PRINTLN("done", dur);

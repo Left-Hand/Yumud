@@ -126,9 +126,9 @@ void ak09916_init()
 // 	bool new_data = ak09916_mag_read(&temp);
 // 	if(!new_data)	return false;
 
-// 	data->x = int32_t(temp.x * real_t(0.15));
-// 	data->y = int32_t(temp.y * real_t(0.15));
-// 	data->z = int32_t(temp.z * real_t(0.15));
+// 	data->x = int32_t(temp.x * iq16(0.15));
+// 	data->y = int32_t(temp.y * iq16(0.15));
+// 	data->z = int32_t(temp.z * iq16(0.15));
 
 // 	return true;
 // }	
@@ -264,7 +264,7 @@ IResult<> ICM20948::ak09916_operation_mode_setting(OperationMode mode){
 #endif
 
 static constexpr size_t CALI_TIMES = 64;
-static constexpr real_t INV_CALI_TIMES = real_t(1.0 / CALI_TIMES);
+static constexpr iq16 INV_CALI_TIMES = iq16(1.0 / CALI_TIMES);
 
 // IResult<> ICM20948::gyro_calibration(){
 // 	axises temp;

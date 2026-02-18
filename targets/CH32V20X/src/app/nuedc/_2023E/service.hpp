@@ -11,7 +11,7 @@ class GimbalService{
 
 class GimbalServiceForMaster final: public GimbalService{
 public:
-    void process(const real_t t){
+    void process(const iq16 t){
 
     }
 private:
@@ -20,7 +20,7 @@ private:
 
 class GimbalServiceForSlave final: public GimbalService{
 public:
-    void process(const real_t t){
+    void process(const iq16 t){
 
     }
 private:

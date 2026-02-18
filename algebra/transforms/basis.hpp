@@ -296,7 +296,7 @@ inline Basis<T> Basis<T>::operator*(const Basis<T> &p_matrix) const {
 	return Basis<T>(
 			p_matrix.tdotx((*this)[0]), p_matrix.tdoty((*this)[0]), p_matrix.tdotz((*this)[0]),
 			p_matrix.tdotx((*this)[1]), p_matrix.tdoty((*this)[1]), p_matrix.tdotz((*this)[1]),
-			// real_t(0), real_t(0), real_t(0),
+			// iq16(0), iq16(0), iq16(0),
 			p_matrix.tdotx((*this)[2]), p_matrix.tdoty((*this)[2]), p_matrix.tdotz((*this)[2]));
 }
 template<arithmetic T>

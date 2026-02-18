@@ -40,7 +40,7 @@ static constexpr size_t FRAGMENT_SIZE_MAX = ((SIZE_MAX >> 1U) + 1U);
 /// We will certainly end up with unused bins this way, but it is cheap to ignore.
 static constexpr size_t NUM_BINS_MAX = (sizeof(size_t) * sizeof(char) * 8);
 
-struct [[nodiscard]] Fragment;
+struct alignas(2*sizeof(size_t)) [[nodiscard]] Fragment;
 
 /// Size is computed dynamically from (next - this) or (arena_end - this) for the last fragment.
 struct [[nodiscard]] FragmentHeader
@@ -51,12 +51,16 @@ struct [[nodiscard]] FragmentHeader
 static_assert(sizeof(FragmentHeader) == sizeof(void*) * 2U, "Memory layout error");
 static_assert(sizeof(FragmentHeader) == O1HEAP_ALIGNMENT, "Memory layout error");
 
-struct [[nodiscard]] Fragment
+struct alignas(4*sizeof(size_t)) [[nodiscard]] Fragment
 {
     FragmentHeader header;
     // Everything past the header may spill over into the allocatable space. The header survives across alloc/free.
     Fragment* next_free;  // Next free fragment in the bin; NULL in the last one.
     Fragment* prev_free;  // Same but points back; NULL in the first one.
+
+    Fragment * GetNext() const ;
+    Fragment * GetPrev() const ;
+    bool IsUsed() const ;
 };
 static_assert(sizeof(Fragment) <= FRAGMENT_SIZE_MIN, "Memory layout error");
 
@@ -115,14 +119,14 @@ struct [[nodiscard]] O1HeapInstance
 
     /// Obtains the maximum theoretically possible allocation size for this heap instance.
     /// This is useful when implementing std::allocator_traits<Alloc>::max_size.
-    size_t o1heapGetMaxAllocationSize() const ;
+    size_t GetMaxAllocationSize() const ;
 
     /// Performs a basic sanity check on the heap.
     /// This function can be used as a weak but fast method of heap corruption detection.
     /// If the handle pointer is NULL, the behavior is undefined.
     /// The time complexity is constant.
     /// The return value is truth if the heap looks valid, falsity otherwise.
-    bool o1heapDoInvariantsHold() const ;
+    bool DoInvariantsHold() const ;
 
     size_t fragGetSize(const Fragment* const frag) const;
 
@@ -137,7 +141,7 @@ struct [[nodiscard]] O1HeapInstance
     ///
     /// The function is executed in constant time.
     /// The allocated memory is NOT zero-filled (because zero-filling is a variable-complexity operation).
-    void* o1heapAllocate(const size_t amount);
+    void* Allocate(const size_t amount);
 
     /// The semantics follows free() with additional guarantees the full list of which is provided below.
     ///
@@ -145,7 +149,7 @@ struct [[nodiscard]] O1HeapInstance
     /// Builds where assertion checks are enabled may trigger an assertion failure for some invalid inputs.
     ///
     /// The function is executed in constant time.
-    void o1heapFree(void* const pointer);
+    void Free(void* const pointer);
 
     /// Similar to the standard realloc() with a few improvements. Given a previously allocated fragment and a new size,
     /// attempts to resize the fragment.
@@ -174,21 +178,21 @@ struct [[nodiscard]] O1HeapInstance
     /// To summarize, the only linear-complexity case is when the new_amount is larger and there is not enough free space
     /// following this fragment, necessitating moving the data to a new place; the library avoids this if at all possible.
     /// Every other case is constant-complexity as the data is not moved.
-    void* o1heapReallocate(void* const pointer, const size_t new_amount);
+    void* Reallocate(void* const pointer, const size_t new_amount);
 private:
     void rebin(Fragment* const fragment, const size_t fragment_size);
     void unbin(const Fragment* const fragment, const size_t fragment_size);
 
-    friend O1HeapInstance* o1heapInit(void* const base, const size_t size);
+    friend O1HeapInstance* Ctor(void* const base, const size_t size);
 };
 
 static constexpr size_t INSTANCE_SIZE_PADDED = ((sizeof(O1HeapInstance) + O1HEAP_ALIGNMENT - 1U) & ~(O1HEAP_ALIGNMENT - 1U));
 
 
-/// o1heapInit() will fail unless the arena size is at least this large.
+/// Ctor() will fail unless the arena size is at least this large.
 /// This value depends only on the machine architecture.
 /// The other reason to fail is if the arena pointer is not aligned at O1HEAP_ALIGNMENT.
-static constexpr size_t o1heapMinArenaSize = INSTANCE_SIZE_PADDED + FRAGMENT_SIZE_MIN;
+static constexpr size_t O1HEAP_MIN_ARENA_SIZE = INSTANCE_SIZE_PADDED + FRAGMENT_SIZE_MIN;
 
 /// The arena base pointer shall be aligned at O1HEAP_ALIGNMENT, otherwise NULL is returned.
 ///
@@ -209,7 +213,7 @@ static constexpr size_t o1heapMinArenaSize = INSTANCE_SIZE_PADDED + FRAGMENT_SIZ
 /// Therefore, if the instance is no longer needed, it can be discarded without any de-initialization procedures.
 ///
 /// The heap is not thread-safe; external synchronization may be required.
-O1HeapInstance* o1heapInit(void* const base, const size_t size);
+O1HeapInstance* Ctor(void* const base, const size_t size);
 
 
 }

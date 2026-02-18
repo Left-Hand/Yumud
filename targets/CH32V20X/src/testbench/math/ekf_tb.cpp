@@ -19,12 +19,12 @@ void ekf_main(){
     
     clock::delay(200ms);
 
-    // AdaptiveEKF<real_t, 2,3> ekf = {};
-    // Predict<real_t> predict;
-    // Measure<real_t> measure;
+    // AdaptiveEKF<iq16, 2,3> ekf = {};
+    // Predict<iq16> predict;
+    // Measure<iq16> measure;
     
     // while(true){
-    //     ekf.update(measure, Matrix<real_t,3,1>{3,4,5});
+    //     ekf.update(measure, Matrix<iq16,3,1>{3,4,5});
     //     ekf.predict(predict);
     // }
 

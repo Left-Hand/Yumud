@@ -11,22 +11,22 @@ namespace ymd::drivers{
 
 class ServoBase{
 private:
-    AngularRange<real_t> angle_range_ = AngularRange<real_t>::STRAIGHT;
+    AngularRange<iq16> angle_range_ = AngularRange<iq16>::STRAIGHT;
 protected:
     
-    virtual void set_global_angle(const Angular<real_t> angle) = 0;
-    virtual Angular<real_t> get_global_angle() = 0;
+    virtual void set_global_angle(const Angular<iq16> angle) = 0;
+    virtual Angular<iq16> get_global_angle() = 0;
 public:
-    void set_range(const AngularRange<real_t> & range){
+    void set_range(const AngularRange<iq16> & range){
         angle_range_ = range;
     }
     
-    void set_angle(const Angular<real_t> angle){
+    void set_angle(const Angular<iq16> angle){
         TODO();
-        // set_global_angle(Angular<real_t>::HALF - angle_range_.clamp(angle));
+        // set_global_angle(Angular<iq16>::HALF - angle_range_.clamp(angle));
     }
 
-    Angular<real_t> get_angle(){
+    Angular<iq16> get_angle(){
         return get_global_angle();
     }
 
@@ -34,13 +34,13 @@ public:
 
 
 class SpeedServo{
-    virtual void set_speed_directly(const real_t rad) = 0;
+    virtual void set_speed_directly(const iq16 rad) = 0;
 public:
-    void set_speed(const real_t rad){
+    void set_speed(const iq16 rad){
         set_speed_directly(rad);    
     }
 
-    virtual real_t get_speed() = 0;
+    virtual iq16 get_speed() = 0;
 };
 
 };

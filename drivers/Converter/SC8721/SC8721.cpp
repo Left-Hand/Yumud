@@ -57,7 +57,7 @@ IResult<> SC8721::reset(){
 }
 
 
-IResult<> SC8721::set_target_voltage(const real_t volt){
+IResult<> SC8721::set_target_voltage(const iq16 volt){
     uint16_t data = int(volt * 50);
 
     auto vout_set_msb_reg_copy = RegCopy(regs_.vout_set_msb_reg);

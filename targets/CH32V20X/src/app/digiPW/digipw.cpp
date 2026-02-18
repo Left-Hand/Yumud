@@ -194,7 +194,7 @@ void digipw_main(){
     // BuckConverter buck{curr_ch, volt_ch, mp1907};
     // buck.init();
 
-    // fixed_t<24> duty = 0.5_r;
+    // fixed<24> duty = 0.5_r;
 
     // size_t a;
     // DEBUG_PRINTLN(a);
@@ -228,7 +228,7 @@ void digipw_main(){
         // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch));
         // DEBUG_PRINTLN_IDLE(iq16(curr_ch), iq16(volt_ch), math::sin(t), sqrt(t), atan2(cos(t), math::sin(t)));
 
-        // const auto curr_meas = fixed_t<24>(iq16(curr_ch));
+        // const auto curr_meas = fixed<24>(iq16(curr_ch));
         // const auto curr_targ = 0.04_q24;
         // const auto curr_err = curr_targ - curr_meas;
         // const auto delta = (curr_err * 0.007_r);

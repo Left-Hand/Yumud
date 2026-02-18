@@ -11,7 +11,7 @@
 
 namespace ymd::dsp{
 
-template<typename D, arithmetic T = real_t>
+template<typename D, arithmetic T = iq16>
 struct Particle{
     D x;
     D v;
@@ -27,7 +27,7 @@ struct Particle{
 };
 
 
-template<typename P, arithmetic T = real_t>
+template<typename P, arithmetic T = iq16>
 class ParticleSwarmOptimization{
 public:
     // using EvalFunc = std::function<T(const P &)>;

@@ -1,6 +1,4 @@
-#include "draw_iters.hpp"
-
-
+#include "middlewares/raster/draw_iters.hpp"
 
 #include "src/testbench/tb.h"
 
@@ -174,7 +172,7 @@ void render_main(){
         // using Shape = decltype(shape);
         auto shape_bb = shape.bounding_box();
         // auto render_iter = make_draw_dispatch_iterator(shape);
-        auto render_iter = RenderIterator<Sprite<RGB565>>(std::move(shape));
+        auto render_iter = RasterizationIterator<Sprite<RGB565>>(std::move(shape));
 
 
         // PANIC{render_iter};

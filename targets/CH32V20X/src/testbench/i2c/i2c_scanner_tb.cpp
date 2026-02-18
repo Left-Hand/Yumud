@@ -1,14 +1,17 @@
 #include "src/testbench/tb.h"
 
+
 #include "core/debug/debug.hpp"
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
+
 
 #include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
 #include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
+
 
 #include <bitset>
 #include <ranges>

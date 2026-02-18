@@ -145,7 +145,7 @@ namespace SMC{
         return CoastUtils::which_in_window(coast, window_size.form_rect());
     }
 
-    Corners CoastUtils::search_corners(const Coast & coast, const CornerType exp_ct, const real_t threshold){
+    Corners CoastUtils::search_corners(const Coast & coast, const CornerType exp_ct, const iq16 threshold){
         if(coast.size() < 3) return {};
 
         Corners ret;
@@ -185,7 +185,7 @@ namespace SMC{
         return ret;
     }
 
-    // Points CoastUtils::a_points(const Coast & coast, const real_t threshold){
+    // Points CoastUtils::a_points(const Coast & coast, const iq16 threshold){
     //     recordRunStatus()
     //     auto corners = CoastUtils::search_corners(coast, CornerType::AC, threshold);
     //     Points ret = {};
@@ -197,7 +197,7 @@ namespace SMC{
     //     return ret;
     // }
 
-    // Points CoastUtils::v_points(const Coast & coast, const real_t threshold){
+    // Points CoastUtils::v_points(const Coast & coast, const iq16 threshold){
         
     //     auto corners = CoastUtils::search_corners(coast, CornerType::VC, threshold);
     //     Points ret;
@@ -360,8 +360,8 @@ namespace SMC{
         return coast;
     }
 
-    Coasts split_to_coasts(const Coast & line, const real_t break_angle){
-        const real_t MIN_shadow = cos(break_angle);
+    Coasts split_to_coasts(const Coast & line, const iq16 break_angle){
+        const iq16 MIN_shadow = cos(break_angle);
         Coasts coasts;
         Coast coast = {};
 
@@ -376,7 +376,7 @@ namespace SMC{
 
             auto diff = nextpoint - currpoint;
             auto last_diff = currpoint - lastpoint;
-            real_t cos_ang = diff.dot(last_diff) / (diff.length() * last_diff.length());
+            iq16 cos_ang = diff.dot(last_diff) / (diff.length() * last_diff.length());
 
             if(cos_ang > MIN_shadow){
                 coast.push_back(currpoint);
@@ -390,7 +390,7 @@ namespace SMC{
         return coasts;
     }
 
-    Coast get_main_coast(const Coast & line, const real_t break_angle){
+    Coast get_main_coast(const Coast & line, const iq16 break_angle){
         std::map<int, int> length_map;
 
         auto coasts = split_to_coasts(line, break_angle);
@@ -413,35 +413,35 @@ namespace SMC{
 
 
 
-// typedef std::pair<real_t, real_t> Point;
+// typedef std::pair<iq16, iq16> Point;
 
-real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Point& lineEnd)
+iq16 PerpendicularDistance(const Point& pt, const Point& lineStart, const Point& lineEnd)
 {
-	real_t dx = lineEnd.x - lineStart.x;
-	real_t dy = lineEnd.y - lineStart.y;
+	iq16 dx = lineEnd.x - lineStart.x;
+	iq16 dy = lineEnd.y - lineStart.y;
 
 	//Normalise
-	// real_t mag = sqrt(pow(dx, 2) + pow(dy, 2));
-    real_t mag = lineEnd.dist_to(lineStart);
+	// iq16 mag = sqrt(pow(dx, 2) + pow(dy, 2));
+    iq16 mag = lineEnd.dist_to(lineStart);
 	if (mag > 0.0)
 	{
 		dx /= mag;
 		dy /= mag;
 	}
 
-	real_t pvx = pt.x - lineStart.x;
-	real_t pvy = pt.y - lineStart.y;
+	iq16 pvx = pt.x - lineStart.x;
+	iq16 pvy = pt.y - lineStart.y;
 
 	//Get dot product (project pv onto normalized direction)
-	real_t pvdot = dx * pvx + dy * pvy;
+	iq16 pvdot = dx * pvx + dy * pvy;
 
 	//Scale line direction vector
-	real_t dsx = pvdot * dx;
-	real_t dsy = pvdot * dy;
+	iq16 dsx = pvdot * dx;
+	iq16 dsy = pvdot * dy;
 
 	//Subtract this from pv
-	real_t ax = pvx - dsx;
-	real_t ay = pvy - dsy;
+	iq16 ax = pvx - dsx;
+	iq16 ay = pvy - dsy;
 
 	// return sqrt(pow(ax, 2.0) + pow(ay, 2.0));
     return Vec2(ax, ay).length();
@@ -449,7 +449,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
 
 
 
-    Points douglas_peucker_vector(const Points& polyLine, const real_t epsilon){
+    Points douglas_peucker_vector(const Points& polyLine, const iq16 epsilon){
     // Points& _polyLine
     Points simplifiedPolyLine = {};
 	if (polyLine.size() < 2)
@@ -458,12 +458,12 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
 	}
 
 	// Find the point with the MAXimum distance from line between start and end
-	real_t MAXDistance = 0.0;
+	iq16 MAXDistance = 0.0;
 	int index = 0;
 	int end = polyLine.size() - 1;
 	for (int i = 1; i < end; i++)
 	{
-		real_t d = PerpendicularDistance(polyLine[i], polyLine[0], polyLine[end]);
+		iq16 d = PerpendicularDistance(polyLine[i], polyLine[0], polyLine[end]);
 		if (d > MAXDistance)
 		{
 			index = i;
@@ -498,7 +498,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
 }
 
 
-    Coast CoastUtils::douglas_peucker(const Coast & line, const real_t epsilon) {
+    Coast CoastUtils::douglas_peucker(const Coast & line, const iq16 epsilon) {
         if(line.size() == 0){
             DEBUG_WARN("dp input size 0");
             return {};
@@ -546,15 +546,15 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
             if (is_line_segment_cross(p1,p2,q1,q2))
             {
                 //求交点
-                real_t tmpLeft,tmpRight;
+                iq16 tmpLeft,tmpRight;
                 tmpLeft = (q2.x - q1.x) * (p1.y - p2.y) - (p2.x - p1.x) * (q1.y - q2.y);
                 tmpRight = (p1.y - q1.y) * (p2.x - p1.x) * (q2.x - q1.x) + q1.x * (q2.y - q1.y) * (p2.x - p1.x) - p1.x * (p2.y - p1.y) * (q2.x - q1.x);
     
-                out.x = int(((real_t)tmpRight/(real_t)tmpLeft));
+                out.x = int(((iq16)tmpRight/(iq16)tmpLeft));
     
                 tmpLeft = (p1.x - p2.x) * (q2.y - q1.y) - (p2.y - p1.y) * (q1.x - q2.x);
                 tmpRight = p2.y * (p1.x - p2.x) * (q2.y - q1.y) + (q2.x- p2.x) * (q2.y - q1.y) * (p1.y - p2.y) - q2.y * (q1.x - q2.x) * (p2.y - p1.y); 
-                out.y = int(((real_t)tmpRight/(real_t)tmpLeft));
+                out.y = int(((iq16)tmpRight/(iq16)tmpLeft));
                 return true;
             }
         }
@@ -686,7 +686,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         return ret;
     }
 
-    Coast CoastUtils::shrink(const Coast & line, const real_t width, const Vec2i & window_size){
+    Coast CoastUtils::shrink(const Coast & line, const iq16 width, const Vec2i & window_size){
         if(line.size() == 1){
             DEBUG_WARN("only one point");
         }else if(line.size() == 2){
@@ -727,8 +727,8 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
 
     Circle calculate_cicular(const Vec2 & px1, const Vec2 & px2, const Vec2 & px3)
     {
-        real_t x1, y1, x2, y2, x3, y3;
-        real_t a, b, c, g, e, f;
+        iq16 x1, y1, x2, y2, x3, y3;
+        iq16 a, b, c, g, e, f;
         x1 = px1.x;
         y1 = px1.y;
         x2 = px2.x;
@@ -741,9 +741,9 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         a = 2 * (x3 - x2);
         b = 2 * (y3 - y2);
         c = x3*x3 - x2*x2 + y3*y3 - y2*y2;
-        real_t X = (g*b - c*f) / (e*b - a*f);
-        real_t Y = (a*g - c*e) / (a*f - b*e);
-        real_t R = sqrt((X-x1)*(X-x1)+(Y-y1)*(Y-y1));
+        iq16 X = (g*b - c*f) / (e*b - a*f);
+        iq16 Y = (a*g - c*e) / (a*f - b*e);
+        iq16 R = sqrt((X-x1)*(X-x1)+(Y-y1)*(Y-y1));
 
         return {{X, Y}, R};
     }
@@ -775,28 +775,28 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         int N = End- S;
 
         if (N < 3) {
-            return {Vec2{0, 0}, std::numeric_limits<real_t>::infinity()};
+            return {Vec2{0, 0}, std::numeric_limits<iq16>::infinity()};
         }
 
         Vec2 center;
-        real_t r;
+        iq16 r;
         
-        real_t sumX = 0.0; 
-        real_t sumY = 0.0;
-        real_t sumX2 = 0.0;
-        real_t sumY2 = 0.0;
-        real_t sumX3 = 0.0;
-        real_t sumY3 = 0.0;
-        real_t sumXY = 0.0;
-        real_t sumXY2 = 0.0;
-        real_t sumX2Y = 0.0;
+        iq16 sumX = 0.0; 
+        iq16 sumY = 0.0;
+        iq16 sumX2 = 0.0;
+        iq16 sumY2 = 0.0;
+        iq16 sumX3 = 0.0;
+        iq16 sumY3 = 0.0;
+        iq16 sumXY = 0.0;
+        iq16 sumXY2 = 0.0;
+        iq16 sumX2Y = 0.0;
 
         for (int pId = S; pId < End; ++pId) {
             sumX += coast[pId].x;
             sumY += coast[pId].y;
 
-            real_t x2 = coast[pId].x * coast[pId].x;
-            real_t y2 = coast[pId].y * coast[pId].y;
+            iq16 x2 = coast[pId].x * coast[pId].x;
+            iq16 y2 = coast[pId].y * coast[pId].y;
             sumX2 += x2;
             sumY2 += y2;
 
@@ -809,8 +809,8 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
 
 
 
-        real_t C, D, E, G, H;
-        real_t a, b, c;
+        iq16 C, D, E, G, H;
+        iq16 a, b, c;
 
         C = N * sumX2 - sumX * sumX;
         D = N * sumXY - sumX * sumY;
@@ -826,9 +826,9 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         center.y = -b / 2.0;
         r = sqrt(a * a + b * b - 4 * c) / 2.0;
 
-        real_t err = 0.0;
-        real_t e;
-        real_t r2 = r * r;
+        iq16 err = 0.0;
+        iq16 e;
+        iq16 r2 = r * r;
 
         for(int pId = S; pId < End; ++pId){
             Vec2 point = coast[pId];

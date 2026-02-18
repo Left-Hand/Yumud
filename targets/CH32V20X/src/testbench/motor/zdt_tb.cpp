@@ -5,15 +5,18 @@
 #include "core/clock/time.hpp"
 
 #include "primitive/colors/color/color.hpp"
-
-#include "robots/vendor/zdt/zdt_stepper.hpp"
 #include "algebra/vectors/vec2.hpp"
 
-#ifdef UART1_PRESENT
+
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/can/hw_singleton.hpp"
+
+#include "robots/vendor/zdt/zdt_frame_factory.hpp"
+
+#ifdef USART1_PRESENT
 using namespace ymd;
 
 using namespace ymd::robots;
-using robots::zdtmotor::ZdtStepper;
 
 #define DBG_UART hal::usart2
 #define COMM_UART hal::usart1
@@ -26,7 +29,6 @@ using robots::zdtmotor::ZdtStepper;
 #define PHY_SEL PHY_SEL_CAN
 
 void zdt_main(){
-    // slcan_test();
     DBG_UART.init({
         .remap = hal::UartRemap::_0,
         .baudrate = hal::NearestFreq(576_KHz),
@@ -47,23 +49,22 @@ void zdt_main(){
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);
-    ZdtStepper motor1{{.node_id = {1}}, &COMM_CAN};
-    ZdtStepper motor2{{.node_id = {2}}, &COMM_CAN};
+    zdtmotor::ZdtFrameFactory factory1{.node_id = {1}};
+    zdtmotor::ZdtFrameFactory factory2{.node_id = {2}};
+
+    auto write_packet = [&](const zdtmotor::FlatPacket & packet){
+        auto && iter = packet.to_canframe_iter();
+        while(iter.has_next()){
+            hal::can1.try_write(iter.next()).examine();
+        }
+    };
     #endif
     
     clock::delay(10ms);
-    motor1.activate(EN).examine();
-    motor2.activate(EN).examine();
+    write_packet(factory1.activate(EN));
+    write_packet(factory2.activate(EN));
     clock::delay(10ms);
-    // motor.set_subdivides(256);
-    // motor.trig_homming(ZdtStepper::HommingMode::LapsCollision);
-    // motor.trig_homming(ZdtStepper::HommingMode::LapsEndstop);
-    // motor.query_homming_paraments();
 
-    // auto list = repl::make_list(
-    //     "list",
-
-    // );
 
     while(true){
         #if PHY_SEL == PHY_SEL_UART
@@ -93,16 +94,16 @@ void zdt_main(){
         // motor.activate();
         const auto d1 = math::sin(clock::seconds()*0.7_r);
         const auto d2 = math::sin(clock::seconds()*0.2_r);
-        motor1.set_angle({
-            .angle = Angular<real_t>::from_turns(d1), 
-            .speed = 0
-        }).examine();
+        write_packet(factory1.set_angle(
+            Angular<iq16>::from_turns(d1), 
+            0
+        ));
 
         clock::delay(5ms);
-        motor2.set_angle({
-            .angle = Angular<real_t>::from_turns(d2), 
-            .speed = 0
-        }).examine();
+        write_packet(factory2.set_angle(
+            Angular<iq16>::from_turns(d2), 
+            0
+        ));
         clock::delay(5ms);
         DEBUG_PRINTLN(d1, d2);
         // DEBUG_PRINTLN(clock::millis());

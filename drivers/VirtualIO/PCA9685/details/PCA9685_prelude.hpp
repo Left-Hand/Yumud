@@ -40,7 +40,7 @@ public:
 
     struct Config{
         uint freq; 
-        real_t trim = real_t(1);
+        iq16 trim = iq16(1);
     };
 };
 

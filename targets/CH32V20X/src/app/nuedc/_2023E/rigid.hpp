@@ -158,14 +158,14 @@ private:
 //运动学 用于求解目标关节角
 class GimbalKinematics final{
 public:
-    using Gesture = ymd::math::Vec2<real_t>;
+    using Gesture = ymd::math::Vec2<iq16>;
     using Solution = GimbalSolution;
 
     struct Config{
-        real_t gimbal_base_height;
-        real_t gimbal_dist_to_screen;
-        real_t screen_width;
-        real_t screen_height;
+        iq16 gimbal_base_height;
+        iq16 gimbal_dist_to_screen;
+        iq16 screen_width;
+        iq16 screen_height;
     };
 
     constexpr GimbalKinematics(const Config & cfg){
@@ -202,12 +202,12 @@ public:
     };
 
     struct LineAction{
-        math::Vec2<real_t> start;
-        math::Vec2<real_t> stop;
+        math::Vec2<iq16> start;
+        math::Vec2<iq16> stop;
     };
 
     struct DelayAction{
-        real_t seconds;
+        iq16 seconds;
     };
 
     size_t pending() const {

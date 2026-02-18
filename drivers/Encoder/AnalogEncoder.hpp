@@ -10,8 +10,8 @@ class AnalogEncoder final:public EncoderIntf{
 public:
     using Error = EncoderError;
     struct Config{
-        Range2<real_t> volt_range;
-        Range2<real_t> pos_range;
+        Range2<iq16> volt_range;
+        Range2<iq16> pos_range;
     };
 
     AnalogEncoder(const Config & cfg, hal::AnalogInIntf & ain):
@@ -34,9 +34,9 @@ public:
 
 private:
     hal::AnalogInIntf & ain_;
-    Range2<real_t> volt_range_;
-    Range2<real_t> pos_range_;
-    real_t last_pos_;
+    Range2<iq16> volt_range_;
+    Range2<iq16> pos_range_;
+    iq16 last_pos_;
 };
 
 };

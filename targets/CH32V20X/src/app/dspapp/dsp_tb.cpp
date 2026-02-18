@@ -300,7 +300,7 @@ void dsp_main(){
     constexpr size_t N = 4;
 
     #if 0
-    auto sig_in = [&](const real_t t) {
+    auto sig_in = [&](const iq16 t) {
         // const T t = T(time());
         // const T rad = T(TAU) * T(time());
 
@@ -324,7 +324,7 @@ void dsp_main(){
         // return 0.0001_r;
     };
     #else
-    auto sig_in = [](const real_t t){
+    auto sig_in = [](const iq16 t){
         // return math::sinpu(75 * t);
         // return math::sinpu(15 * t);
         return iq16(math::frac(75 * t)) * 0.2_r;
@@ -340,7 +340,7 @@ void dsp_main(){
     auto buffer = std::vector<iq16>(BUFFER_SIZE);
     auto && allpass = dsp::CombAllpass<iq16>(std::span(buffer));
     allpass.set_delay_ticks(10.6_r);
-    auto && sig_proc = [&](const real_t t){
+    auto && sig_proc = [&](const iq16 t){
         const auto bpf_out = bpf(t);
         return allpass(bpf_out);
     };

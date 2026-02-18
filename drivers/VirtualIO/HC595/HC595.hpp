@@ -80,7 +80,7 @@ public:
 
 //     uint8_t buf_ = 0;
 
-//     void write(const uint16_t data) override{
+//     void write(const uint16_t data) {
 //         buf_ = data;
 //         latch_io_.clr();
 //         for(uint8_t mask = 0x80; mask; mask >>= 1){
@@ -91,7 +91,7 @@ public:
 //         latch_io_.set();
 //     }
 
-//     uint16_t read() override{
+//     uint16_t read() {
 //         return buf_;
 //     }
 
@@ -106,37 +106,37 @@ public:
 //     }
 
 
-//     void set(const PinSource pin) override{
+//     void set(const PinSource pin) {
 //         if((uint8_t)pin == 0)return;
 //         write(buf_ | (uint8_t)pin);
 //     }
-//     void clr(const PinSource pin) override{
+//     void clr(const PinSource pin) {
 //         if((uint8_t)pin == 0)return;
 //         write(buf_ &= ~(uint8_t)(pin));
 //     }
 
-//     void set(const uint16_t data) override{
+//     void set(const uint16_t data) {
 //         write(buf | (uint8_t)data);
 //     }
-//     void clr(const uint16_t data) override{
+//     void clr(const uint16_t data) {
 //         write(buf & (~(uint8_t)(data)));
 //     }
 
-//     void write_nth(const int index, const bool data) override{
+//     void write_nth(const int index, const bool data) {
 //         if(index < 0 || index >= 8) return;
 //         uint8_t last_buf = buf;
 //         buf &= ~(uint8_t)(1 << index);
 //         buf |= (uint8_t)(data << index);
 //         if(last_buf != buf) write(buf);
 //     }
-//     bool read_nth(const int index) override{
+//     bool read_nth(const int index) {
 //         if(index < 0 || index >= 8) return false;
 //         return buf & (1 << index);
 //     }
 
 
 //     HC595Single & operator << (const uint8_t data){write(data); return *this;}
-//     HC595Single & operator = (const uint16_t data) override {write(data); return *this;}
+//     HC595Single & operator = (const uint16_t data)  {write(data); return *this;}
 // };
 
 }

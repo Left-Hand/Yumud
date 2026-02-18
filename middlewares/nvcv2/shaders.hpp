@@ -10,7 +10,7 @@
 // }
 
 // __fast_inline RGB565 ShaderUV(const Vec2 & UV){
-//     if((UV - Vec2(0.5, 0.5)).length_squared() <= real_t(0.25)){
+//     if((UV - Vec2(0.5, 0.5)).length_squared() <= iq16(0.25)){
 //         return RGB565::RED;
 //     }else{
 //         return RGB565::BLUE;
@@ -18,11 +18,11 @@
 // }
 
 // __fast_inline RGB565 Mandelbrot(const Vec2 & UV){
-//     Complex c(lerp(UV.x, real_t(0.5), real_t(-1.5)), lerp(UV.y, real_t(-1), real_t(1)));
+//     Complex c(lerp(UV.x, iq16(0.5), iq16(-1.5)), lerp(UV.y, iq16(-1), iq16(1)));
 //     Complex z;
 //     uint8_t count = 0;
 
-//     while ((z < real_t(4)) && (count < 23))
+//     while ((z < iq16(4)) && (count < 23))
 //     {
 //         z = z*z + c;
 //         count = count + 1;

@@ -19,13 +19,13 @@ struct TransferSysEvaluator{
 
         #pragma GCC unroll 32
         for(size_t i = 0; i < times; ++i){
-            const auto x = real_t(i) / times;
+            const auto x = iq16(i) / times;
             std::forward<FnProc>(fn_proc)(x);
         }
 
         const auto end_ms = clock::micros();
         
-        DEBUG_PRINTS(real_t((end_ms - begin_ms).count()) / times, "us per call");
+        DEBUG_PRINTS(iq16((end_ms - begin_ms).count()) / times, "us per call");
         clock::delay(20ms);
         std::terminate();
     }

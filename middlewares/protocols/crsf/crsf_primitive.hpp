@@ -118,6 +118,7 @@ private:
     Kind kind_;
 };
 
+
 enum class [[nodiscard]] FrameType:uint8_t{
     GpsFrame = 0x02,
     BatteryFrame = 0x08,
@@ -128,6 +129,7 @@ enum class [[nodiscard]] FrameType:uint8_t{
     LinkStatisticsTx = 0x1D,
     Attitude = 0x1E,
 };
+
 
 struct [[nodiscard]] DataType final{
     using Self = DataType;

@@ -115,7 +115,7 @@ __inline constexpr
 Norm<T> qmux(const Norm<T> a, const Norm<T> b){
     if constexpr (ymd::is_fixed_point_v<T> and ymd::iq_num_v<T> < 15){
         constexpr size_t q_num = ymd::iq_num_v<T>;
-        return Norm(fixed_t<q_num>::from_i32((
+        return Norm(fixed<q_num>::from_i32((
             (T(a).as_i32() * T(b).as_i32()) >> q_num)
         ));
     }else{

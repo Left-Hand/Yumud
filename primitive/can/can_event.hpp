@@ -108,6 +108,38 @@ struct alignas(4) [[nodiscard]] Event final{
     }
 };
 
+#if 0
+
+
+//from ST-HAL
+struct [[nodiscard]] ErrorFlags final{
+    uint32_t error_warning:1;
+    uint32_t error_passive:1;
+    uint32_t bus_off:1;
+    uint32_t stuff:1;
+    uint32_t form:1;
+    uint32_t acknowledgment:1;
+    uint32_t bit_recessive:1;
+    uint32_t bit_dominant:1;
+    uint32_t crc_error:1;
+    uint32_t fifo0_overrun:1;
+    uint32_t fifo1_overrun:1;
+
+    uint32_t mbox0_arbitration_lost:1;
+    uint32_t mbox0_transmit:1;
+    uint32_t mbox1_arbitration_lost:1;
+    uint32_t mbox1_transmit:1;
+    uint32_t mbox2_arbitration_lost:1;
+    uint32_t mbox2_transmit:1;
+
+    uint32_t timeout:1;
+    uint32_t peripheral_not_initialized:1;
+    uint32_t peripheral_not_ready:1;
+    uint32_t peripheral_not_started:1;
+};
+
+#endif
+
 }
 
 namespace ymd::hal{

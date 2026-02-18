@@ -33,8 +33,8 @@ void ostu(Image<Binary> & dst, const Image<Gray> & src);
 void iter_threshold(
     Image<Binary> & dst, 
     const Image<Gray> & src, 
-    const real_t k = real_t(0.5), 
-    const real_t eps = real_t(0.02));
+    const iq16 k = iq16(0.5), 
+    const iq16 eps = iq16(0.02));
 
 void max_entropy(const Image<Gray> & src,const int thresh);
 
@@ -44,7 +44,7 @@ int huang(Image<Binary> & dst, const Image<Gray> & src);
 
 
 
-void gamma(Image<Gray> & src, const real_t ga);
+void gamma(Image<Gray> & src, const iq16 ga);
 
 template<is_monochrome T>
 void bitwise_inverse(Image<T> & src) {
@@ -138,12 +138,12 @@ __inline math::Vec2<iq16> uv2aero(const math::Vec2u16 size, const math::Vec2<iq1
 
 __inline math::Vec2<iq16> pixel2uv(const math::Vec2u16 size,const math::Vec2u16 & pixel){
     return math::Vec2<iq16>(
-        INVLERP(size.x / 2, size.x, real_t(pixel.x)), 
-        INVLERP(size.y / 2, size.y, real_t(pixel.y)));
+        INVLERP(size.x / 2, size.x, iq16(pixel.x)), 
+        INVLERP(size.y / 2, size.y, iq16(pixel.y)));
 }
 
 __inline math::Vec2<iq16> uvstep(const math::Vec2u16 size){
-    return math::Vec2<iq16>(real_t(2) / size.x, real_t(2) / size.y);
+    return math::Vec2<iq16>(iq16(2) / size.x, iq16(2) / size.y);
 }
 }
 

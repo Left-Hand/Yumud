@@ -75,7 +75,7 @@ struct ST7789V3_Transport final:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> set_back_light_brightness(const real_t brightness){
+    [[nodiscard]] IResult<> set_back_light_brightness(const iq16 brightness){
         return Ok();
     }
 

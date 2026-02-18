@@ -206,7 +206,7 @@ void lt8960_tb(){
             // auto [u, v, w] = make_tuple_from_bytes<std::tuple<iq16, iq16, iq16>>(std::span<const uint8_t>(buf));
             // auto [u, v, w] = make_tuple_from_bytes<std::tuple<iq16, iq16, iq16>>(std::span<const uint8_t>(buf));
             // auto [u] = make_tuple_from_bytes<std::tuple<iq16>>(std::span<const uint8_t>(data));
-            auto may_res = make_tuple_from_payload<real_t, real_t>(std::span<const uint8_t>(data));
+            auto may_res = make_tuple_from_payload<iq16, iq16>(std::span<const uint8_t>(data));
             // DEBUG_PRINTLN(u, v, w, clock::seconds() - tt);
             // DEBUG_PRINTLN(u, v, clock::seconds() - w, mend -  begin_us);
             // DEBUG_PRINTLN(std::dec, u, mend -  begin_us, std::hex, std::showbase, data);

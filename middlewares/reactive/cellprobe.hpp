@@ -1,7 +1,7 @@
 #pragma once
 
 #include "primitive/arithmetic/angular.hpp"
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/fixed/fixed.hpp"
 #include "core/utils/zero.hpp"
 
 
@@ -92,8 +92,8 @@ private:
 
 // 定点数特化
 template<size_t Q, typename D>
-struct [[nodiscard]] CellBase<math::fixed_t<Q, D>> {
-    using T = math::fixed_t<Q, D>;
+struct [[nodiscard]] CellBase<math::fixed<Q, D>> {
+    using T = math::fixed<Q, D>;
     static_assert(std::is_integral_v<D>, "Underlying type must be integral");
 
     CellBase(const T initial_value){
@@ -103,33 +103,33 @@ struct [[nodiscard]] CellBase<math::fixed_t<Q, D>> {
         set(0);
     }
 
-    void set(const math::fixed_t<Q, D>& val) {
+    void set(const math::fixed<Q, D>& val) {
         bits_.store(val.to_bits(), std::memory_order_release);
     }
     
-    math::fixed_t<Q, D> get() const {
-        return math::fixed_t<Q, D>::from_bits(bits_.load(std::memory_order_acquire));
+    math::fixed<Q, D> get() const {
+        return math::fixed<Q, D>::from_bits(bits_.load(std::memory_order_acquire));
     }
     
     // 原子加法
-    math::fixed_t<Q, D> fetch_add(const math::fixed_t<Q, D> arg) {
+    math::fixed<Q, D> fetch_add(const math::fixed<Q, D> arg) {
         D result_bits = bits_.fetch_add(arg.to_bits(), std::memory_order_acq_rel);
-        return math::fixed_t<Q, D>(result_bits);
+        return math::fixed<Q, D>(result_bits);
     }
     
     // 原子减法
-    math::fixed_t<Q, D> fetch_sub(const math::fixed_t<Q, D> arg) {
+    math::fixed<Q, D> fetch_sub(const math::fixed<Q, D> arg) {
         D result_bits = bits_.fetch_sub(arg.to_bits(), std::memory_order_acq_rel);
-        return math::fixed_t<Q, D>(result_bits);
+        return math::fixed<Q, D>(result_bits);
     }
     
     // 原子比较交换
-    bool compare_exchange(math::fixed_t<Q, D>& expected, const math::fixed_t<Q, D> desired) {
+    bool compare_exchange(math::fixed<Q, D>& expected, const math::fixed<Q, D> desired) {
         D expected_bits = expected.to_bits();
         bool success = bits_.compare_exchange_weak(expected_bits, 
             desired.to_bits(),
             std::memory_order_acq_rel);
-        expected = math::fixed_t<Q, D>::from_bits(expected_bits);
+        expected = math::fixed<Q, D>::from_bits(expected_bits);
         return success;
     }
     
@@ -143,7 +143,9 @@ struct [[nodiscard]] CellBase<Angular<T>> {
         set(initial_value);
     }
 
-    CellBase(){;}
+    CellBase(){
+        set(Angular<T>::ZERO);
+    }
 
     void set(const Angular<T>& val) {
         inner_.set(val.to_turns());
@@ -188,25 +190,25 @@ private:
 };
 
 
-// 主 Cell 模板
+// 主 AtomicCell 模板
 template<typename T>
-struct [[nodiscard]] Cell : public CellBase<T> {
-    using Self = Cell;
+struct [[nodiscard]] AtomicCell : public CellBase<T> {
+    using Self = AtomicCell;
     using Base = CellBase<T>;
     using Base::set;
     using Base::get;
 
-    Cell(const T initial_value):
+    AtomicCell(const T initial_value):
         Base(initial_value){;}
 
-    Cell(): Base(){;}
+    AtomicCell(): Base(){;}
     
-    Cell & operator =(const Cell &) = delete;
-    Cell & operator =(Cell &&) = delete;
+    AtomicCell & operator =(const AtomicCell &) = delete;
+    AtomicCell & operator =(AtomicCell &&) = delete;
 
     #if 0
     // 便捷的赋值操作符
-    Cell& operator=(const T& val) {
+    AtomicCell& operator=(const T& val) {
         set(val);
         return *this;
     }
@@ -268,22 +270,22 @@ struct [[nodiscard]] Probe {
         return *this;
     }
 private:
-    const Cell<T>* cell_;
+    const AtomicCell<T>* cell_;
 
 
-    explicit Probe(const Cell<T> * cell) : 
+    explicit Probe(const AtomicCell<T> * cell) : 
         cell_(cell) {}
 
     friend OutputStream & operator <<(OutputStream & os, const Probe & self){
         return os << self.get();
     }
 
-    friend class Cell<T>;
+    friend class AtomicCell<T>;
 };
 
 //CTAD
 template<typename T>
-Cell(T) -> Cell<T>;
+AtomicCell(T) -> AtomicCell<T>;
 
 template<typename T>
 Probe(T *) -> Probe<T>;

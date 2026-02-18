@@ -146,7 +146,7 @@ private:
         }
         __builtin_unreachable();
         #else
-        // x_offset_ = static_cast<int16_t>(-ymd::sqrt(fixed_t<16>(radius_squ_ - squ_y_offset)));
+        // x_offset_ = static_cast<int16_t>(-ymd::sqrt(fixed<16>(radius_squ_ - squ_y_offset)));
         #endif
     }
 
@@ -190,11 +190,11 @@ private:
 
 
 template<std::integral T>
-struct RenderIterator<HorizonOval2<T>> {
+struct RasterizationIterator<HorizonOval2<T>> {
     using Shape = HorizonOval2<T>;
     using Iterator = CircleBresenhamIterator<T>;
 
-    constexpr RenderIterator(const Shape & shape)
+    constexpr RasterizationIterator(const Shape & shape)
         : iter_(math::Circle2<T>{.center = shape.left_center, .radius = shape.radius}),
             length_(shape.length){}
 
@@ -248,11 +248,11 @@ private:
 
 
 template<std::integral T>
-struct RenderIterator<VerticalOval2<T>> {
+struct RasterizationIterator<VerticalOval2<T>> {
     using Shape = VerticalOval2<T>;
     using Iterator = VerticalOval2SliceIterator<T>;
 
-    constexpr RenderIterator(const Shape & shape)
+    constexpr RasterizationIterator(const Shape & shape)
         : iter_(shape){;}
 
     // 检查是否还有下一行

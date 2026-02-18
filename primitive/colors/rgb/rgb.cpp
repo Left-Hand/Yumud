@@ -123,7 +123,7 @@ __fast_inline static constexpr auto xyz_gamma(const iq16 x) -> iq16{
     return (x > 0.008856_r) ? iq16::from(fast_cbrtf(float(x))) : ((x * 7.787037_r) + 0.137931_r);
 }
 
-__fast_inline static constexpr auto inv_xyz_gamma_to8(const iq16 x) -> uint8_t{
+__fast_inline static constexpr auto inv_xyz_gamma_to8(const uq16 x) -> uint8_t{
     if((x > 0.0031308_r)) 
         return __USAT8(uint8_t(((1.055_r * 255) * math::pow(x, 0.416666_r)) - (0.055_r * 255)));
     else
@@ -166,9 +166,9 @@ __fast_inline static constexpr XYZ<iq16> rgb888_to_xyz(const RGB888 & rgb){
 
 __fast_inline static constexpr RGB888 xyz_to_rgb888(const auto & xyz){
     auto [x,y,z] = xyz;
-    iq16 r_lin = ((x * (+3.2406_r)) + (y * (-1.5372_r)) + (z * (-0.4986_r))) * (0.01_r);
-    iq16 g_lin = ((x * (-0.9689_r)) + (y * (+1.8758_r)) + (z * (+0.0415_r))) * (0.01_r);
-    iq16 b_lin = ((x * (+0.0557_r)) + (y * (-0.2040_r)) + (z * (+1.0570_r))) * (0.01_r);
+    uq16 r_lin = uq16(((x * (+3.2406_iq16)) + (y * (-1.5372_iq16)) + (z * (-0.4986_iq16))) * (0.01_iq16));
+    uq16 g_lin = uq16(((x * (-0.9689_iq16)) + (y * (+1.8758_iq16)) + (z * (+0.0415_iq16))) * (0.01_iq16));
+    uq16 b_lin = uq16(((x * (+0.0557_iq16)) + (y * (-0.2040_iq16)) + (z * (+1.0570_iq16))) * (0.01_iq16));
 
 
 

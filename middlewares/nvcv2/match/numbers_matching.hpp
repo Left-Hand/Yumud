@@ -9,12 +9,12 @@
 namespace ymd::nvcv2{
 
 static constexpr size_t MAX_NUMBERS = 10;
-using DigitsProbability = std::array<real_t, MAX_NUMBERS>;
+using DigitsProbability = std::array<iq16, MAX_NUMBERS>;
 
 DigitsProbability match_numbers(
     const Image<Gray> & img, 
     const math::Rect2u16 & roi, 
-    const real_t threshold = real_t(0.0));
+    const iq16 threshold = iq16(0.0));
 
 DigitsProbability match_numbers(
     const Image<Binary> & img, 

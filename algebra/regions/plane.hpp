@@ -139,9 +139,6 @@ bool Plane<T>::operator!=(const Plane<T> &p_plane) const {
 	return normal != p_plane.normal || d != p_plane.d;
 }
 
-using PlaneR = Plane<real_t>;
-using PlaneF = Plane<float>;
-using PlaneD = Plane<double>;
 
 template<arithmetic T>
 __fast_inline OutputStream & operator<<(OutputStream & os, const Plane<T> & value){
