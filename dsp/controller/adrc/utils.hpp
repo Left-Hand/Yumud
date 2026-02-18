@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/math/fixed/iqmath.hpp"
+#include "core/math/fixed/fxmath.hpp"
 #include "core/math/real.hpp"
 
 #include "dsp/state_vector.hpp"

@@ -3,7 +3,6 @@
 #include <compare>
 #include "core/tmp/integral.hpp"
 
-#include "details/support.hpp"
 #include "details/_IQNdiv.hpp"
 #include "details/_IQNconv.hpp"
 
@@ -172,7 +171,7 @@ public:
             if(std::is_constant_evaluated()){
                 return D(fv * uint64_t(uint64_t(1) << Q));
             }
-            return static_cast<D>(iqmath::details::_IQFtoN<Q>(fv));
+            return static_cast<D>(fxmath::details::_IQFtoN<Q>(fv));
         }();
         return fixed{bits_ctor{
             bits
@@ -253,7 +252,7 @@ public:
         if(std::is_constant_evaluated()){
             return static_cast<long double>(this->to_bits()) / static_cast<long double>(uint64_t(1u) << Q);
         }else{
-            return iqmath::details::_IQNtoF<Q>(this->to_bits());
+            return fxmath::details::_IQNtoF<Q>(this->to_bits());
         }
     }
 };
@@ -371,7 +370,7 @@ fixed<Q, D> operator /(const fixed<Q, D1> lhs, const fixed<P, D2> rhs) {
         return fixed<Q, D>::from(float(lhs) / float(rhs));
     }else{
         constexpr bool result_is_signed = std::is_signed_v<D1> or std::is_signed_v<D2>;
-        return fixed<Q, D>::from_bits(iqmath::details::__IQNdiv_impl<Q, result_is_signed>(
+        return fixed<Q, D>::from_bits(fxmath::details::__IQNdiv_impl<Q, result_is_signed>(
             lhs.to_bits(), rhs.to_bits()
         ));
     }

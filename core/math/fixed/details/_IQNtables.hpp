@@ -1,9 +1,9 @@
 #pragma once
 
-#include "rts_support.hpp"
+
 #include <array>
 
-namespace ymd::iqmath::details{
+namespace ymd::fxmath::details{
 
 static constexpr size_t IQ30LOG_ORDER = 14;
 static constexpr size_t IQ30EXP_ORDER = 10;
@@ -44,8 +44,8 @@ static constexpr int32_t _IQ31SinLookup[52] = {
 static constexpr auto IQ31_SINCOS_TABLE = []{
     std::array<std::array<int32_t, 2>, 52> ret;
     for(size_t i = 0; i < ret.size(); ++i){
-        ret[i][0] = iqmath::details::_IQ31SinLookup[i];
-        ret[i][1] = iqmath::details::_IQ31CosLookup[i];
+        ret[i][0] = fxmath::details::_IQ31SinLookup[i];
+        ret[i][1] = fxmath::details::_IQ31CosLookup[i];
     }
     return ret;
 }();
@@ -109,11 +109,19 @@ static constexpr int32_t IQ32ATAN_COEFFS[132] = {
     };
 
 /* exp */
-static constexpr uint32_t _IQ30exp_coeffs[11] = {
+static constexpr uint32_t IQ30EXP_COEFFS[11] = {
     0x00000127, 0x00000B93, 0x00006806, 0x00034034,
     0x0016C16C, 0x00888888, 0x02AAAAAA, 0x0AAAAAAA,
     0x20000000, 0x40000000, 0x40000000
 };
+
+static constexpr std::array<uint32_t, 11> IQ31EXP_COEFFS = []{
+    std::array<uint32_t, 11> ret;
+    for(size_t i = 0; i < ret.size(); ++i){
+        ret[i] = IQ30EXP_COEFFS[i] << 1;
+    }
+    return ret;
+}();
 
 static constexpr uint32_t _IQNexp_min[30] = {
     0xffffffff, 0xfffffffb, 0xfffffff0, 0xffffffd4, 0xffffff92, 0xfffffef6,
@@ -271,17 +279,7 @@ static constexpr uint32_t IQ30LOG_COEFFS[15] = {
     0xf0000000, 0x15555555, 0xe0000000, 0x40000000, 0x00000000
 };
 
-/* div */
-static constexpr uint8_t IQ6DIV_LOOPUP[65] = {
-    0x7F, 0x7D, 0x7B, 0x79, 0x78, 0x76, 0x74, 0x73,
-    0x71, 0x6F, 0x6E, 0x6D, 0x6B, 0x6A, 0x68, 0x67,
-    0x66, 0x65, 0x63, 0x62, 0x61, 0x60, 0x5F, 0x5E,
-    0x5D, 0x5C, 0x5B, 0x5A, 0x59, 0x58, 0x57, 0x56,
-    0x55, 0x54, 0x53, 0x52, 0x52, 0x51, 0x50, 0x4F,
-    0x4E, 0x4E, 0x4D, 0x4C, 0x4C, 0x4B, 0x4A, 0x49,
-    0x49, 0x48, 0x48, 0x47, 0x46, 0x46, 0x45, 0x45,
-    0x44, 0x43, 0x43, 0x42, 0x42, 0x41, 0x41, 0x40, 0x40
-};
+
 
 
 /* sqrt */

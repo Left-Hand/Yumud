@@ -9,11 +9,8 @@
 #define M_PI (3.1415926536)
 #endif
 
-#define TYPE_PU         (0)
-#define TYPE_RAD        (1)
 
-
-namespace ymd::iqmath::details{
+namespace ymd::fxmath::details{
 
 struct alignas(4) [[nodiscard]] Atan2Flag final{
     using Self = Atan2Flag;
@@ -66,7 +63,7 @@ struct [[nodiscard]] Atan2Intermediate{
     // */
     static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
         // return 0;
-        const int32_t * piq32Coeffs = &ymd::iqmath::details::IQ32ATAN_COEFFS[(uq32_input >> 25) & 0x00fc];
+        const int32_t * piq32Coeffs = &ymd::fxmath::details::IQ32ATAN_COEFFS[(uq32_input >> 25) & 0x00fc];
         /*
         * Calculate atan(x) using the following Taylor series:
         *
@@ -98,6 +95,11 @@ private:
     static constexpr int32_t fast_mul(uint32_t arg1, int32_t arg2){
         return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 32);
     }
+
+    [[nodiscard]] __attribute__((__always_inline__)) 
+    static constexpr int32_t fast_mul(uint32_t arg1, uint32_t arg2){
+        return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 32);
+    }
 };
 
 
@@ -122,10 +124,10 @@ constexpr ymd::math::fixed<32, uint32_t> _atan2pu_impl(
 
     if (uqn_x < uqn_y) {
         flag.swapped = 1;
-        uq32_input = std::bit_cast<uint32_t>(ymd::iqmath::details::__IQNdiv_impl<31, false>(
+        uq32_input = std::bit_cast<uint32_t>(ymd::fxmath::details::__IQNdiv_impl<31, false>(
             uqn_x, uqn_y)) << (1);
     } else if((uqn_x > uqn_y)) {
-        uq32_input = std::bit_cast<uint32_t>(ymd::iqmath::details::__IQNdiv_impl<31, false>(
+        uq32_input = std::bit_cast<uint32_t>(ymd::fxmath::details::__IQNdiv_impl<31, false>(
             uqn_y, uqn_x)) << (1);
     } else{
         // 1/8 lap
@@ -153,7 +155,7 @@ constexpr ymd::math::fixed<32, uint32_t> _atanpu_impl(
     if (uqn_y > ONE_BITS) {
         flag.swapped = 1;
         //TODO 替换为更轻量的求倒数算法
-        uq32_input = std::bit_cast<uint32_t>(ymd::iqmath::details::__IQNdiv_impl<31, false>(
+        uq32_input = std::bit_cast<uint32_t>(ymd::fxmath::details::__IQNdiv_impl<31, false>(
             (1u << Q), uqn_y
         )) << 1;
     } else if(uqn_y < ONE_BITS) {
@@ -168,6 +170,3 @@ constexpr ymd::math::fixed<32, uint32_t> _atanpu_impl(
 }
 
 }
-
-#undef TYPE_PU
-#undef TYPE_RAD

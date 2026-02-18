@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "core/math/fixed/iqmath.hpp"
+#include "core/math/fixed/fxmath.hpp"
 #include "core/utils/Result.hpp"
 #include "core/string/view/string_view.hpp"
 #include "primitive/arithmetic/angular.hpp"

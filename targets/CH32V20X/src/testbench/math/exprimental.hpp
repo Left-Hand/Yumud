@@ -1,4 +1,4 @@
-#include "core/math/fixed/iqmath.hpp"
+#include "core/math/fixed/fxmath.hpp"
 #include "core/math/fixed/fixed.hpp"
 #include <cmath>
 

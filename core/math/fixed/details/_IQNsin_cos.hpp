@@ -10,7 +10,7 @@
 #endif
 
 
-namespace ymd::iqmath::details{
+namespace ymd::fxmath::details{
 
 /**
  * @brief Computes the sine of an UIQ31 input.
@@ -218,7 +218,7 @@ struct alignas(16) [[nodiscard]] SincosIntermediate{
             /* 0.333*x*C(k) */
             constexpr int32_t ONE_BY_3_IQ31_BITS = math::fixed<31, int32_t>(1.0/3).to_bits() + 1;
             res_iq31_bits = iq31_mpy_uq32(ONE_BY_3_IQ31_BITS, uq32_x_offset);
-            res_iq31_bits = iqmath::details::__mpyf_l(iq31_cos_coeff, res_iq31_bits);
+            res_iq31_bits = fxmath::details::__mpyf_l(iq31_cos_coeff, res_iq31_bits);
             #else
             constexpr int32_t TWO_BY_3_IQ31_BITS = math::fixed<31, int32_t>(2.0/3).to_bits() + 1;
             res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(TWO_BY_3_IQ31_BITS) * uq32_x_offset) >> 32);
@@ -282,14 +282,14 @@ constexpr SincosIntermediate __IQNgetCosSinPU(uint32_t uq32_x_pu_bits){
     //计算查找表索引
 
     #if 1
-    const int32_t iq31_sin_coeff = iqmath::details::IQ31_SINCOS_TABLE[lut_index][0];
-    const int32_t iq31_cos_coeff = iqmath::details::IQ31_SINCOS_TABLE[lut_index][1];
+    const int32_t iq31_sin_coeff = fxmath::details::IQ31_SINCOS_TABLE[lut_index][0];
+    const int32_t iq31_cos_coeff = fxmath::details::IQ31_SINCOS_TABLE[lut_index][1];
     #else
-    const int32_t iq31_sin_coeff = iqmath::details::_IQ31SinLookup[lut_index];
-    const int32_t iq31_cos_coeff = iqmath::details::_IQ31CosLookup[lut_index];
+    const int32_t iq31_sin_coeff = fxmath::details::_IQ31SinLookup[lut_index];
+    const int32_t iq31_cos_coeff = fxmath::details::_IQ31CosLookup[lut_index];
     #endif  
 
-    return iqmath::details::SincosIntermediate{
+    return fxmath::details::SincosIntermediate{
         uq32_x_offset, 
         iq31_sin_coeff,
         iq31_cos_coeff,

@@ -8,7 +8,7 @@
 
 namespace ymd{
 
-namespace iqmath::details{
+namespace fxmath::details{
 
 #if 1
 

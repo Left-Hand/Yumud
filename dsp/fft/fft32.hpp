@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/math/real.hpp"
-#include "core/math/fixed/iqmath.hpp"
+#include "core/math/fixed/fxmath.hpp"
 #include <span>
 
 namespace ymd::dsp{

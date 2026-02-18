@@ -4,7 +4,7 @@
 #include "_IQNtables.hpp"
 
 
-namespace ymd::iqmath::details{
+namespace ymd::fxmath::details{
 /**
  * @brief Computes the base-e logarithm of an IQN input.
  *

@@ -13,7 +13,7 @@ limitations under the License.
 #include "tinymaix.h"
 #include "float.h"
 #include "core/math/realmath.hpp"
-#include "core/math/fixed/iqmath.hpp"
+#include "core/math/fixed/fxmath.hpp"
 
 using namespace ymd;
 

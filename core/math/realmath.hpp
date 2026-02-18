@@ -6,7 +6,7 @@
 #include <cmath>
 #include <numbers>
 
-#include "fixed/iqmath.hpp"
+#include "fixed/fxmath.hpp"
 
 namespace ymd::math{
 

@@ -5,7 +5,7 @@
 
 #include "_IQNsqrt.hpp"
 
-namespace ymd::iqmath::details{
+namespace ymd::fxmath::details{
 /**
  * @brief Computes the inverse sine of the IQN input.
  *

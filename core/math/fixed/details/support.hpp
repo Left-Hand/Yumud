@@ -1,11 +1,11 @@
 #pragma once
 
 #include "rts_support.hpp"
-// #define __IQMATH_USE_MY_IMPL
+// #define __fxmath_USE_MY_IMPL
 
 /* Common value defines. */
 
-namespace ymd::iqmath::details{
+namespace ymd::fxmath::details{
 static constexpr int16_t _q15_ln2          = 0x58b9;
 static constexpr int16_t _q13_pi           = 0x6488;
 static constexpr int16_t _q14_pi           = 0xc910;
@@ -28,7 +28,7 @@ static constexpr int32_t _iq31_quarterPi   = 0x6487ed51;
 static constexpr int32_t _iq31_invRoot2    = 0x5a82799a;
 static constexpr int32_t _iq31_tanSmall    = 0x0020c49b;
 static constexpr int32_t _iq31_ln2         = 0x58b90bfc;
-static constexpr uint32_t _uq32_ln2         = _iq31_ln2 << 1;
+static constexpr uint32_t _uq32_ln2         = 2977044472u;
 static constexpr int32_t _iq31_twoThird    = 0x55555555;
 static constexpr int32_t _iq31_pointOne    = 0x0ccccccd;
 static constexpr int32_t _iq31_oneTenth    = 0x0ccccccd;

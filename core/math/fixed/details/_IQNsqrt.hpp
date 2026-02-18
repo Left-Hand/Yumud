@@ -7,7 +7,7 @@
 
 
 
-namespace ymd::iqmath::details{
+namespace ymd::fxmath::details{
 enum class [[nodiscard]] SqrtNormStrategy {
     SQRT,   // from_u64 with SqrtNormStrategy::SQRT
     ISQRT,  // from_u64 with SqrtNormStrategy::ISQRT

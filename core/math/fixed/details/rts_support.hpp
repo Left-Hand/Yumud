@@ -3,7 +3,7 @@
 #include <cstdint>
 
 
-namespace ymd::iqmath::details{
+namespace ymd::fxmath::details{
 [[nodiscard]] __attribute__((__always_inline__)) constexpr 
 int16_t __mpy_w(int16_t arg1, int16_t arg2){
     return (arg1 * arg2);

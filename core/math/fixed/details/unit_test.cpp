@@ -2,7 +2,7 @@
 #include <cmath>
 
 using namespace ymd;
-using namespace ymd::iqmath::details;
+using namespace ymd::fxmath::details;
 
 
 namespace {

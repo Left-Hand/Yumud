@@ -214,9 +214,6 @@ void sincospll_main(){
             Angular<iq16>::from_turns(iq16(simulated_angle_.to_turns()) - iq16(computed_angle_.to_turns())).signed_normalized().to_turns(),
             // math::pu_to_uq32(math::atan2pu(measured_sine_, measured_cosine_))
             // (computed_angle_ + Angular<uq32>::from_turns(0.125_uq32)).unsigned_normalized().to_turns()
-            // myiqmath::details::test(normalized_sine_, normalized_cosine_)
-            // iq31::from_bits(myiqmath::details::Atan2Intermediate::transfrom_uq31_x_to_uq32_result(simulated_angle_.to_turns().to_bits() >> 1))
-
             // math::atan2pu(normalized_sine_, normalized_cosine_)
             (computed_angle_ + dsp::calc_lpf_phaseshift_uq32(PLL_LPF_FC, computed_angluar_speed_.to_turns())).unsigned_normalized().to_turns(),
             // (computed_angle_ + Angular<uq32>::from_turns(uq32::from_bits(static_cast<int32_t>(static_cast<int64_t>(computed_angluar_speed_.to_turns().to_bits() << 16) / 800)))).unsigned_normalized().to_turns()
