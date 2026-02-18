@@ -60,7 +60,7 @@ struct YahboomQuatMotorDriver_Uart final:
         send_var("wdiameter", radius_mm);
     }
 
-    void set_pid(const real_t kp, const real_t ki, const real_t kd){
+    void set_pid(const iq16 kp, const iq16 ki, const iq16 kd){
         send_var("MPID", kp, ki, kd);
     }
 

@@ -141,7 +141,7 @@ void nuedc_2025e_laser_main(){
     RunStatus run_status_;
     run_status_.state = RunState::Idle;
 
-    auto set_laser_dutycycle = [&](real_t duty){
+    auto set_laser_dutycycle = [&](iq16 duty){
         DEBUG_PRINTLN("duty", duty);
         duty = CLAMP2(duty, 0.99_r);
         laser_pwm.set_dutycycle(ABS(duty));

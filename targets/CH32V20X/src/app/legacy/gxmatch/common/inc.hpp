@@ -18,14 +18,14 @@ namespace gxm{
     using namespace ymd;
     using namespace ymd::drivers;
 
-    using math::Vec3 = math::Vec3<real_t>;
+    using math::Vec3 = math::Vec3<iq16>;
     using math::Vec3i = math::Vec3<int>;
-    using AABB = AABB<real_t>;
-    using Ray = Ray2<real_t>;
+    using AABB = AABB<iq16>;
+    using Ray = Ray2<iq16>;
     
-    using Mecanum4Solver = Mecanum4Solver_t<real_t>;
-    using Scara5Solver = Scara5Solver_t<real_t>;
-    using CrossSolver = CrossSolver_t<real_t>;
+    using Mecanum4Solver = Mecanum4Solver_t<iq16>;
+    using Scara5Solver = Scara5Solver_t<iq16>;
+    using CrossSolver = CrossSolver_t<iq16>;
 }
 
 

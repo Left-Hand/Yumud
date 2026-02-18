@@ -61,7 +61,7 @@ public:
 
 namespace SMC{
 
-static constexpr real_t full_duty = 0.85;
+static constexpr iq16 full_duty = 0.85;
 static constexpr RGB565 white = 0xffff;
 static constexpr RGB565 black = 0;
 static constexpr RGB565 red = RGB565(31,0,0);
@@ -69,17 +69,17 @@ static constexpr RGB565 green = RGB565(0,63,0);
 static constexpr RGB565 blue = RGB565(0,0,31);
 
 static constexpr uint ctrl_freq = 50;
-static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
+static constexpr iq16 inv_ctrl_ferq = 1.0 / ctrl_freq;
 
 static constexpr uint window_y = 32;
 static constexpr Vec2i window_half_size = {20, 20};
-static constexpr real_t startup_meters = 0.6;
+static constexpr iq16 startup_meters = 0.6;
 
 class SmartCar;
 
 struct ElementLocker{
-    real_t remain_time = 0;
-    real_t remain_travel = 0;
+    iq16 remain_time = 0;
+    iq16 remain_travel = 0;
 };
 
 struct ElementHolder{
@@ -95,8 +95,8 @@ protected:
 
     ElementLocker m_locker;
 
-    real_t unlock_t = 0;
-    real_t unlock_travel = 0;
+    iq16 unlock_t = 0;
+    iq16 unlock_travel = 0;
 
     void invoke();
 public:
@@ -135,8 +135,8 @@ public:
         math::Vec3 magnet;
     }msm;
 
-    real_t travel;
-    real_t dir_error;
+    iq16 travel;
+    iq16 dir_error;
 
     Range2i road_window;
 
@@ -148,9 +148,9 @@ protected:
         drift.magnet = _magent_drift;
     }
 
-    real_t now_spd;
+    iq16 now_spd;
     Range2i ccd_range;
-    real_t dir;
+    iq16 dir;
 
     void update_gesture(){
         mpu.update();
@@ -160,27 +160,27 @@ protected:
         msm.gyr = (math::Vec3(mpu.read_gyr()) - drift.gyr);
         msm.magnet = drift.magnet.xform(math::Vec3(qml.read_mag()));
 
-        real_t delta_t = t - last_t;
+        iq16 delta_t = t - last_t;
         last_t = t;
         angle = angle + (get_omega() * delta_t);
     }
 
     void update_front_speed(){
-        static constexpr real_t wheel_l = 0.182;
+        static constexpr iq16 wheel_l = 0.182;
         odo.update();
 
         travel = odo.getPosition() * wheel_l;
-        static real_t last_travel = travel;
+        static iq16 last_travel = travel;
         
-        real_t pos_delta = travel - last_travel;
+        iq16 pos_delta = travel - last_travel;
         last_travel = travel;
 
         now_spd = pos_delta * ctrl_freq;
 
     }
 
-    real_t angle;
-    real_t last_t;
+    iq16 angle;
+    iq16 last_t;
 public:
 
     void reset_angle(){
@@ -188,7 +188,7 @@ public:
         last_t = t;
     }
 
-    real_t get_angle() const {
+    iq16 get_angle() const {
         return angle;
     }
     
@@ -235,12 +235,12 @@ public:
         ccd_range = _ccd_range;
     }
 
-    void update_dir(const real_t _dir){
+    void update_dir(const iq16 _dir){
         dir = _dir;
     }
 
     auto get_dir(){
-        if(travel < startup_meters) return real_t(PI/2);
+        if(travel < startup_meters) return iq16(PI/2);
         return dir;
     }
 
@@ -260,7 +260,7 @@ public:
         return msm.magnet;
     }
 
-    real_t get_omega() const{
+    iq16 get_omega() const{
         return msm.gyr.z;
     }
 
@@ -270,12 +270,12 @@ public:
     }
 
 
-    real_t get_lane_offset(const AlignMode align_mode, const real_t padding_meters = 0.12) const{
+    iq16 get_lane_offset(const AlignMode align_mode, const iq16 padding_meters = 0.12) const{
         if(travel < startup_meters) return 0;
         //ccd 部分的比例和透视部分的比例不一样 将就用
-        static constexpr real_t k = 200;
+        static constexpr iq16 k = 200;
 
-        auto conv = [&](const int pixel) -> real_t{
+        auto conv = [&](const int pixel) -> iq16{
             return -(1/k) * (pixel - 94);
         };
 

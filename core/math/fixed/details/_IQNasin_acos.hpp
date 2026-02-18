@@ -46,7 +46,7 @@ namespace ymd::iqmath::details{
  */
 
 
-constexpr math::fixed_t<29, int32_t> __IQNasin31(uint32_t uiq31Input)
+constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input)
 {
     bool is_acos = false;
 
@@ -62,12 +62,12 @@ constexpr math::fixed_t<29, int32_t> __IQNasin31(uint32_t uiq31Input)
         if (Temp < 0x40000000u) {
             /* Calculate sqrt((1 - uiq31Input)/2) */
             #if 0
-            // uiq32Input = _IQNsqrt32<31>(math::fixed_t<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
+            // uiq32Input = _IQNsqrt32<31>(math::fixed<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
             #else
-            // uiq32Input = _IQNsqrt32<31>(math::fixed_t<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
-            // uiq32Input = _IQNsqrt32<31>(math::fixed_t<32, uint32_t>::from_bits(Temp)).to_bits();
-            uiq32Input = _IQNsqrt32<32>(math::fixed_t<32, uint32_t>::from_bits(Temp << 1)).to_bits();
-            // uiq32Input = _IQNsqrt32<31>(math::fixed_t<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
+            // uiq32Input = _IQNsqrt32<31>(math::fixed<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
+            // uiq32Input = _IQNsqrt32<31>(math::fixed<32, uint32_t>::from_bits(Temp)).to_bits();
+            uiq32Input = _IQNsqrt32<32>(math::fixed<32, uint32_t>::from_bits(Temp << 1)).to_bits();
+            // uiq32Input = _IQNsqrt32<31>(math::fixed<31, uint32_t>::from_bits(Temp >> 1)).to_bits() << 1;
             #endif
 
             /* Flag that the transformation was used. */
@@ -124,12 +124,12 @@ constexpr math::fixed_t<29, int32_t> __IQNasin31(uint32_t uiq31Input)
         iq29Result = -iq29Result;       // but avoids using temporary registers
     }
 
-    return math::fixed_t<29, int32_t>::from_bits(iq29Result);
+    return math::fixed<29, int32_t>::from_bits(iq29Result);
 
 }
 
 
-constexpr math::fixed_t<29, int32_t> __IQNasin32(uint32_t uiq32Input)
+constexpr math::fixed<29, int32_t> __IQNasin32(uint32_t uiq32Input)
 {
     bool is_acos = false;
 
@@ -142,8 +142,8 @@ constexpr math::fixed_t<29, int32_t> __IQNasin32(uint32_t uiq32Input)
     {
         const uint32_t Temp = ~uiq32Input;
         if (Temp < 0x80000000u) {
-            // uiq32Input = _IQNsqrt32<32>(math::fixed_t<32, uint32_t>::from_bits(Temp)).to_bits();
-            uiq32Input = _IQNsqrt32<32>(math::fixed_t<32, uint32_t>::from_bits(Temp)).to_bits() >> 1;
+            // uiq32Input = _IQNsqrt32<32>(math::fixed<32, uint32_t>::from_bits(Temp)).to_bits();
+            uiq32Input = _IQNsqrt32<32>(math::fixed<32, uint32_t>::from_bits(Temp)).to_bits() >> 1;
             is_acos = true;
         }else{
             is_acos = false;
@@ -197,12 +197,12 @@ constexpr math::fixed_t<29, int32_t> __IQNasin32(uint32_t uiq32Input)
         iq29Result = -iq29Result;       // but avoids using temporary registers
     }
 
-    return math::fixed_t<29, int32_t>::from_bits(iq29Result);
+    return math::fixed<29, int32_t>::from_bits(iq29Result);
 
 }
 
 template<const size_t Q>
-constexpr math::fixed_t<29, int32_t> _IQNasin(math::fixed_t<Q, int32_t> iqNInput){
+constexpr math::fixed<29, int32_t> _IQNasin(math::fixed<Q, int32_t> iqNInput){
     static_assert(Q <= 32);
     uint32_t input_bits = std::bit_cast<uint32_t>(iqNInput.to_bits());
     const bool is_neg  = input_bits & (1u << 31);

@@ -12,7 +12,7 @@ struct alignas(1) [[nodiscad]] fp8_e4m3 final{
 	uint8_t sign:1;
 
 	template<size_t Q, typename D>
-	constexpr fp8_e4m3(fixed_t<Q, D> qv):
+	constexpr fp8_e4m3(fixed<Q, D> qv):
 		fp8_e4m3(float(qv)){;}
 	constexpr fp8_e4m3(const fp8_e4m3 & other) = default;
 	constexpr fp8_e4m3(int iv){
@@ -65,8 +65,8 @@ struct alignas(1) [[nodiscad]] fp8_e4m3 final{
 	}
 
 	template<size_t Q, typename D>
-	explicit constexpr operator fixed_t<Q, D>() const {
-		return fixed_t(float(*this));
+	explicit constexpr operator fixed<Q, D>() const {
+		return fixed(float(*this));
 	}
 };
 

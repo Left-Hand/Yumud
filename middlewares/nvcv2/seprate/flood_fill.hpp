@@ -57,16 +57,16 @@ public:
 
 class SimilarRects{
 public:    
-    SimilarRects(const real_t _eps) : eps(_eps) {}
+    SimilarRects(const iq16 _eps) : eps(_eps) {}
     inline bool operator()(const math::Rect2u& r1, const math::Rect2u& r2) const{
-        real_t delta = eps*(std::min(r1.w(), r2.w()) + std::min(r1.h(), r2.h()))*real_t(0.5);
+        iq16 delta = eps*(std::min(r1.w(), r2.w()) + std::min(r1.h(), r2.h()))*iq16(0.5);
         return ABS(r1.x() - r2.x()) <= delta &&
             ABS(r1.y() - r2.y()) <= delta &&
             ABS(r1.x() + r1.w() - r2.x() - r2.w()) <= delta &&
             ABS(r1.y() + r1.h() - r2.y() - r2.h()) <= delta;
     }
 
-    real_t eps;
+    iq16 eps;
 };    
 
 

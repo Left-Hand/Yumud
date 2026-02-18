@@ -224,7 +224,7 @@ static_assert(sizeof(HommingStatus) == 1);
 
 
 struct [[nodiscard]] Rpm final{
-    static constexpr Rpm from_speed(const real_t speed){
+    static constexpr Rpm from_speed(const iq16 speed){
         const uint16_t temp = uint16_t(iq16(speed) * 600);
         return {__builtin_bswap16(temp)};
     }
@@ -258,7 +258,7 @@ struct [[nodiscard]] PulseCnt final{
 };
 
 struct [[nodiscard]] AcclerationLevel{
-    static constexpr AcclerationLevel from(const real_t acc_per_second){
+    static constexpr AcclerationLevel from(const iq16 acc_per_second){
         // TODO
         return AcclerationLevel{10};
     }

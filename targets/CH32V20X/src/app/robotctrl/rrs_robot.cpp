@@ -41,12 +41,12 @@ static constexpr uint SERVO_FREQ = 50;
 
 class MockServo{
 protected:
-    Angular<real_t> now_angle_;
+    Angular<iq16> now_angle_;
 public:
-    void set_angle(const Angular<real_t> angle){
+    void set_angle(const Angular<iq16> angle){
         now_angle_ = angle;
     }
-    Angular<real_t> get_angle(){
+    Angular<iq16> get_angle(){
         return now_angle_;
     }
 };
@@ -126,12 +126,12 @@ public:
 
 class RRS3_RobotActuator{
 public:
-    using RRS3_Kinematics = typename ymd::robots::kinematics::RRS_Kinematics<real_t>;
+    using RRS3_Kinematics = typename ymd::robots::kinematics::RRS_Kinematics<iq16>;
     using Gesture = typename RRS3_Kinematics::Gesture;
     using Config = typename RRS3_Kinematics::Config;
 
     using ServoSetter = std::function<
-        void(Angular<real_t>, Angular<real_t>, Angular<real_t>)>;
+        void(Angular<iq16>, Angular<iq16>, Angular<iq16>)>;
 
     template<typename T>
     using IResult = RRS3_Kinematics::IResult<T>;
@@ -159,7 +159,7 @@ public:
         }
     };
 
-    constexpr void set_bias(const real_t a, const real_t b, const real_t c){
+    constexpr void set_bias(const iq16 a, const iq16 b, const iq16 c){
         r_bias_[0].set_radians(a);
         r_bias_[1].set_radians(b);
         r_bias_[2].set_radians(c);
@@ -173,7 +173,7 @@ public:
         return script::make_list(
             name,
             script::make_function("gest",  
-                [&](const real_t yaw, const real_t pitch, const real_t height){
+                [&](const iq16 yaw, const iq16 pitch, const iq16 height){
                     this->set_gest(Gesture::from({
                         .yaw = yaw, .pitch = pitch, .height = height}));
                 }
@@ -185,15 +185,15 @@ public:
 private:
     RRS3_Kinematics rrs3_kine_;
 
-    std::array<Angular<real_t>,3> r_bias_ = {
-        Angular<real_t>::from_radians(1.15_r),
-        Angular<real_t>::from_radians(0.99_r),
-        Angular<real_t>::from_radians(1.25_r)
+    std::array<Angular<iq16>,3> r_bias_ = {
+        Angular<iq16>::from_radians(1.15_r),
+        Angular<iq16>::from_radians(0.99_r),
+        Angular<iq16>::from_radians(1.25_r)
     };
 
     ServoSetter servo_setter_;
 
-    void apply_angles_to_servos(const std::array<Angular<real_t>,3> angles){
+    void apply_angles_to_servos(const std::array<Angular<iq16>,3> angles){
         servo_setter_(
             angles[0] + r_bias_[0], 
             angles[1] + r_bias_[1], 
@@ -221,7 +221,7 @@ void rrs3_robot_main(){
     auto & servo_b = env.servo_b;
     auto & servo_c = env.servo_c;
 
-    RRS3_RobotActuator actuator_{cfg, [&](Angular<real_t> r1, Angular<real_t> r2, Angular<real_t> r3){
+    RRS3_RobotActuator actuator_{cfg, [&](Angular<iq16> r1, Angular<iq16> r2, Angular<iq16> r3){
         servo_a.set_angle(r1);
         servo_b.set_angle(r2);
         servo_c.set_angle(r3);
@@ -249,8 +249,8 @@ void rrs3_robot_main(){
         
         actuator_.set_gest(
             RRS3_RobotActuator::Gesture::from({
-                .yaw = Angular<real_t>::from_radians(3.0_r * s), 
-                .pitch = Angular<real_t>::from_radians(3.0_r * c), 
+                .yaw = Angular<iq16>::from_radians(3.0_r * s), 
+                .pitch = Angular<iq16>::from_radians(3.0_r * c), 
                 .height = 0.14_r
             })
         );
@@ -260,7 +260,7 @@ void rrs3_robot_main(){
     
     while(true){
         [[maybe_unused]]
-        const real_t t = clock::seconds();
+        const iq16 t = clock::seconds();
         
         repl_server.invoke(repl_list);
 

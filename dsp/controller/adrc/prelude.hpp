@@ -2,7 +2,7 @@
 
 #include "core/math/realmath.hpp"
 #include "core/string/view/string_view.hpp"
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/fixed/fixed.hpp"
 #include "core/utils/Result.hpp"
 #include "dsp/state_vector.hpp"
 #include "utils.hpp"

@@ -46,6 +46,6 @@ public:
     }
 };
 
-using Neuron = Neuron<real_t>;
+using Neuron = Neuron<iq16>;
 
 }

@@ -126,8 +126,8 @@ static constexpr uint32_t __IQNexp(int32_t iqNInput){
 }
 
 template<const size_t Q>
-constexpr math::fixed_t<Q, uint32_t> _IQNexp(math::fixed_t<Q, int32_t> input){
-    return math::fixed_t<Q, uint32_t>::from_bits(__IQNexp<Q>((input).to_bits()));
+constexpr math::fixed<Q, uint32_t> _IQNexp(math::fixed<Q, int32_t> input){
+    return math::fixed<Q, uint32_t>::from_bits(__IQNexp<Q>((input).to_bits()));
 }
 
 }

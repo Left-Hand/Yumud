@@ -53,7 +53,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
 
             const auto [st, ct] = math::sincospu(700 * t);
 
-            static constexpr const real_t depth = 0.7_r;
+            static constexpr const iq16 depth = 0.7_r;
             const auto uvw_dutycycle = digipw::SVM({ct * depth, st * depth});
             pwm_gen.set_dutycycle(uvw_dutycycle);
             break;
@@ -70,9 +70,9 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
     while(true){
 
         // DEBUG_PRINTLN(
-        //     real_t(timer.oc(1)),
-        //     real_t(timer.oc(2)),
-        //     real_t(timer.oc(3))
+        //     iq16(timer.oc(1)),
+        //     iq16(timer.oc(2)),
+        //     iq16(timer.oc(3))
         // );
 
 
@@ -87,7 +87,7 @@ void tb1_pwm_always_high(hal::AdvancedTimer & timer){
         // pwm_gen.set_dutycycle({0.2_r, 0.4_r, 0.6_r});
         // pwm_gen.set_dutycycle({0.6_r, 0.8_r, 0.9_r});
 
-        // DEBUG_PRINTLN(t, real_t(pwm_trig_));
+        // DEBUG_PRINTLN(t, iq16(pwm_trig_));
         // if(trig_occasion_opt_.is_some())
         //     DEBUG_PRINTLN(trig_occasion_opt_.unwrap().kind());
         // clock::delay(1ms);

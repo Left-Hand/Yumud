@@ -75,7 +75,7 @@ struct TJC_Controls{
         Waveform(WaveWindow & _parent, const uint8_t _channel_id, Range && _range):parent(_parent), channel_id(_channel_id), range(_range){;}
 
         void add_data(const auto & data){
-            real_t value = data;
+            iq16 value = data;
             auto ratio = range.invlerp(value);
             parent.add_ch_data(channel_id, uint8_t((255 * ratio)));
         }

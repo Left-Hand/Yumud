@@ -186,7 +186,7 @@ private:
 
 
 // template<typename Q>
-// static constexpr fixed_t<Q, int32_t> stepify(const fixed_t<Q, int32_t> x, const auto step){
+// static constexpr fixed<Q, int32_t> stepify(const fixed<Q, int32_t> x, const auto step){
 //     return int(x / step) * step;
 // }
 
@@ -227,7 +227,7 @@ void myservo_main(){
         auto & pwm_pos = hal::timer3.oc<1>();
         auto & pwm_neg = hal::timer3.oc<1>();
 
-        auto set_dutycycle = [&](real_t duty){
+        auto set_dutycycle = [&](iq16 duty){
             duty = CLAMP2(duty, 0.8_r);
             const auto duty_is_forward = duty > 0.0_r;
             if(duty_is_forward){
@@ -304,7 +304,7 @@ void myservo_main(){
         .count_mode = hal::TimerCountMode::CenterAlignedUpTrig
     }, EN);
 
-    real_t sense_raw_volt;
+    iq16 sense_raw_volt;
     auto & pwm = hal::timer3.oc<1>();
     auto & pwm_trig = hal::timer3.oc<4>();
     pwm.init({});
@@ -312,10 +312,10 @@ void myservo_main(){
     pwm_trig.set_dutycycle(0.001_r);
     hal::timer3.set_trgo_source(hal::TimerTrgoSource::OC4R);
 
-    // real_t curr_cmd = 0;
+    // iq16 curr_cmd = 0;
 
     bool duty_is_forward = false;
-    auto set_dutycycle = [&](real_t duty){
+    auto set_dutycycle = [&](iq16 duty){
         duty = CLAMP2(duty, 0.8_r);
         duty_is_forward = duty > 0.0_r;
         phase_gpio = BoolLevel::from(duty_is_forward);
@@ -366,11 +366,11 @@ void myservo_main(){
         // led = LOW;
         // clock::delay(200ms);
         // DEBUG_PRINTLN(
-        //     real_t(pwm) 
+        //     iq16(pwm) 
         //     ,bool(hal::PA<6>().read()) 
         //     ,bool(phase_gpio.read())
-        //     ,real_t(ain1)
-        //     ,real_t(ain2)
+        //     ,iq16(ain1)
+        //     ,iq16(ain2)
         // );
         // DEBUG_PRINTLN(clock::millis().count(), UART.available());
         // DEBUG_PRINTLN(UART.available());

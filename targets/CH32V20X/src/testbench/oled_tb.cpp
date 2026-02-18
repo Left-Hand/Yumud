@@ -39,7 +39,7 @@ protected:
     Painter<Binary> painter_;
 
     String send_str;
-    real_t para = 0;
+    iq16 para = 0;
 public:
     Menu(VerticalBinaryImage & _frame, OutputStream & _os):frame_(_frame), os_(_os){
         painter_.bind(&frame_);
@@ -94,7 +94,7 @@ public:
                 break;
             case Func::EZ:
                 // str = "ez " + toString(para);
-                para += real_t(0.3);
+                para += iq16(0.3);
                 break;
             case Func::CF:
                 str = "c 0.6";
@@ -172,7 +172,7 @@ static void oled_tb(){
         painter.draw_hollow_rect(view).unwrap();
         painter.draw_fx(
             view.shrink(6).unwrap(), 
-            [&](const real_t x){
+            [&](const iq16 x){
                 return math::sinpu(4 * x + clock::seconds()) * 0.5_r + 0.5_r;
             }
         ).unwrap();

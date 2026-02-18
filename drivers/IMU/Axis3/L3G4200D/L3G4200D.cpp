@@ -111,9 +111,9 @@ static constexpr uint8_t ENABLE_ALL                 = 0b00000111;
 static constexpr uint8_t ENABLE_NONE                = 0b00000000;
 static constexpr uint8_t POWER_ON                   = 0b00001000;
 
-static constexpr auto DPS_250                    = real_t(.00875f);
-static constexpr auto DPS_500                    = real_t(.0175f);
-static constexpr auto DPS_2000                   = real_t(.07f);
+static constexpr auto DPS_250                    = iq16(.00875f);
+static constexpr auto DPS_500                    = iq16(.0175f);
+static constexpr auto DPS_2000                   = iq16(.07f);
 
 
 using namespace ymd;

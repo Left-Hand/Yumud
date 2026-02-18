@@ -13,20 +13,20 @@ public:
     int16_t left_data;
     int16_t right_data;
     uint32_t distort_mask = 0xFFFFFFFF;
-    real_t voltH;
-    real_t voltL;
-    real_t voltComm;
-    real_t voltDiff_2;
+    iq16 voltH;
+    iq16 voltL;
+    iq16 voltComm;
+    iq16 voltDiff_2;
 
-    static constexpr int16_t voltage_to_data(real_t volt){
+    static constexpr int16_t voltage_to_data(iq16 volt){
         volt = CLAMP(volt, voltL, voltH);
-        real_t k = ((volt - voltComm) / voltDiff_2);
+        iq16 k = ((volt - voltComm) / voltDiff_2);
         return (int16_t)(k * 0x7FFF);
     }
 
-    static constexpr int16_t duty_to_data(real_t duty){
-        duty = CLAMP(duty, real_t(0), real_t(1));
-        real_t k = (duty - 0.5) / 0.5;
+    static constexpr int16_t duty_to_data(iq16 duty){
+        duty = CLAMP(duty, iq16(0), iq16(1));
+        iq16 k = (duty - 0.5) / 0.5;
         return (int16_t)(k * 0x7FFF);
     }
 
@@ -38,7 +38,7 @@ public:
 
 public:
     TM8211(I2sDrv & i2c_drv):i2s_drv_(i2c_drv){
-        setRail(real_t(3.3 * 0.25f), real_t(3.3 * 0.75f)); 
+        setRail(iq16(3.3 * 0.25f), iq16(3.3 * 0.75f)); 
     }
     void set_ch_data(const uint8_t index,const uint16_t data){
         if(index) right_data = data;
@@ -46,7 +46,7 @@ public:
 
         write(((left_data << 16) | right_data) & distort_mask);
     }
-    void set_rail(const real_t _voltL, const real_t _voltH){
+    void set_rail(const iq16 _voltL, const iq16 _voltH){
         voltL = _voltL;
         voltH = _voltH;
         voltComm = (voltL + voltH) / 2;
@@ -55,7 +55,7 @@ public:
 
 
 
-    void set_ch_voltage(const uint8_t index, const real_t volt){
+    void set_ch_voltage(const uint8_t index, const iq16 volt){
         setChData(index, VoltageToData(volt));
     }
 
@@ -63,14 +63,14 @@ public:
         uint16_t mask_16 = ~((1 << level) - 1);
         distort_mask = (mask_16 << 16) | mask_16;
     }
-    void set_voltage(const real_t left_volt, const real_t right_volt){
+    void set_voltage(const iq16 left_volt, const iq16 right_volt){
         left_data = VoltageToData(left_volt);
         right_data = VoltageToData(right_volt);
 
         write(((left_data << 16) | right_data) & distort_mask);
     }
 
-    // void setChDuty(const real_t dutycycle{
+    // void setChDuty(const iq16 dutycycle{
 
     // }
 };

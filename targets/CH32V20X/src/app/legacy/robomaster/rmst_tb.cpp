@@ -22,8 +22,8 @@ using namespace ymd::robots;
 auto input(){
     const auto t = clock::seconds();
 
-    static constexpr auto w0 = real_t(TAU * 4); 
-    static constexpr auto w1 = real_t(TAU * 70); 
+    static constexpr auto w0 = iq16(TAU * 4); 
+    static constexpr auto w1 = iq16(TAU * 70); 
 
     static constexpr auto a0 = 1_r; 
     static constexpr auto a1 = 0.07_r; 
@@ -33,7 +33,7 @@ auto input(){
 };
 
 void lpf_tb(){
-    using Transfer = dsp::LowpassFilter<fixed_t<20>>;
+    using Transfer = dsp::LowpassFilter<fixed<20>>;
 
     static constexpr uint ISR_FREQ = 2000;
     const auto config = Transfer::Config{
@@ -56,7 +56,7 @@ void lpf_tb(){
 
 
 void hpf_tb(){
-    using Transfer = dsp::HighpassFilter<fixed_t<20>>;
+    using Transfer = dsp::HighpassFilter<fixed<20>>;
 
     static constexpr uint ISR_FREQ = 2000;
     const auto config = Transfer::Config{
@@ -78,7 +78,7 @@ void hpf_tb(){
 }
 
 void bpf_tb(){
-    using Bpf = dsp::BandpassFilter<fixed_t<16>>;
+    using Bpf = dsp::BandpassFilter<fixed<16>>;
 
     static constexpr uint ISR_FREQ = 2000;
     const auto config = Bpf::Config{
@@ -101,7 +101,7 @@ void bpf_tb(){
 }
 
 void shock_tb(){
-    using Transfer = dsp::LowpassFilter<fixed_t<16>>;
+    using Transfer = dsp::LowpassFilter<fixed<16>>;
 
     static constexpr uint ISR_FREQ = 2000;
     const auto config = Transfer::Config{
@@ -140,7 +140,7 @@ void dsp_func_test(const uint fs, Fn && fn){
 
 void so_tb(){
     // using Sof = dsp::SecondOrderTransferFunc<float>;
-    using Sof = dsp::SecondOrderTransferFunc<real_t>;
+    using Sof = dsp::SecondOrderTransferFunc<iq16>;
 
     // constexpr auto config = Sof::make_butterworth_bpf({
 

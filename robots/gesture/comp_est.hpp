@@ -17,7 +17,7 @@ struct ComplementaryGestureEstimator{
 
         const auto len_x3 = x3.length();
         const auto norm_x3 = x3 / len_x3;
-        const auto axis_theta_raw = math::atan2(norm_x3.x, norm_x3.y) + real_t(M_PI/2);
+        const auto axis_theta_raw = math::atan2(norm_x3.x, norm_x3.y) + iq16(M_PI/2);
         const auto axis_omega_raw = x2.z;
 
         if(is_inited_ == false){
@@ -43,10 +43,10 @@ private:
     using CompFilter = dsp::ComplementaryFilter<iq20>;
     using CompFilterConfig = typename CompFilter::Config;
 
-    real_t delta_time_;
+    iq16 delta_time_;
     CompFilter comp_filter_;
-    real_t theta_ = 0;
-    real_t omega_ = 0;
+    iq16 theta_ = 0;
+    iq16 omega_ = 0;
     bool is_inited_ = false;
 
     static constexpr CompFilterConfig

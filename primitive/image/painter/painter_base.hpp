@@ -150,9 +150,9 @@ public:
     IResult<> draw_fx(const math::Rect2u rect, Fn && fn) {
         const auto x_range = rect.x_range();
         const auto y_range = rect.y_range();
-        const auto x_step = real_t(1) / x_range.length();
+        const auto x_step = iq16(1) / x_range.length();
 
-        real_t x = 0;
+        iq16 x = 0;
         for(size_t i = size_t(x_range.start); i < size_t(x_range.stop); i++){
             const auto y = std::forward<Fn>(fn)(x);
             put_pixel_unchecked({uint(i),uint(

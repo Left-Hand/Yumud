@@ -145,11 +145,11 @@ using namespace ymd::drivers;
                 
             const auto end_us = clock::micros();
             // DEBUG_PRINTLN(fusion.quat());
-            // DEBUG_PRINTLN(Basis<real_t>(mahony.result()).get_euler_xyz(), end_us - begin_us);
+            // DEBUG_PRINTLN(Basis<iq16>(mahony.result()).get_euler_xyz(), end_us - begin_us);
             // DEBUG_PRINTLN(mahony.result());
             DEBUG_PRINTLN(
                 mahony.rotation(), 
-                // Quat<real_t>(math::Vec3<real_t>(0,0,1), aku.read_mag().examine().normalized()), 
+                // Quat<iq16>(math::Vec3<iq16>(0,0,1), aku.read_mag().examine().normalized()), 
                 end_us - begin_us
             );
             break;

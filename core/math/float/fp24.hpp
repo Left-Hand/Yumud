@@ -47,7 +47,7 @@ public:
 
     // 从定点数构造
     template<size_t Q>
-    constexpr fp24(fixed_t<Q, int32_t> qv) : fp24(float(qv)) {}
+    constexpr fp24(fixed<Q, int32_t> qv) : fp24(float(qv)) {}
 
     // 从整数构造
     constexpr fp24(int int_val) : fp24(float(int_val)) {}
@@ -114,8 +114,8 @@ public:
 
     // fp24 -> 定点数
     template <size_t Q>
-    [[nodiscard]] explicit constexpr operator fixed_t<Q, int32_t>() const {
-        return fixed_t<Q, int32_t>::from(static_cast<float>(*this));
+    [[nodiscard]] explicit constexpr operator fixed<Q, int32_t>() const {
+        return fixed<Q, int32_t>::from(static_cast<float>(*this));
     }
 
     // 转换为3字节数组

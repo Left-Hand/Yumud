@@ -12,24 +12,24 @@ namespace SMC{
 
 
 struct TurnCtrl{
-    real_t kp = real_t(0.6);
-    real_t kd = real_t(1);
+    iq16 kp = iq16(0.6);
+    iq16 kd = iq16(1);
 
-    real_t last_t;
-    real_t last_output;
-    real_t out_clamp = real_t(0.8);
+    iq16 last_t;
+    iq16 last_output;
+    iq16 out_clamp = iq16(0.8);
 
     void reset(){
         last_t = 0;
         last_output = 0;
     }
 
-    real_t update(const real_t target_dir, const real_t current_dir, const real_t current_omega){
-        real_t error_dir = target_dir - current_dir;
-        real_t kp_contribute = kp * error_dir;
+    iq16 update(const iq16 target_dir, const iq16 current_dir, const iq16 current_omega){
+        iq16 error_dir = target_dir - current_dir;
+        iq16 kp_contribute = kp * error_dir;
 
-        real_t kd_contribute = kd * current_omega;
-        real_t output = (kp_contribute + kd_contribute);
+        iq16 kd_contribute = kd * current_omega;
+        iq16 output = (kp_contribute + kd_contribute);
         output = CLAMP(output, -out_clamp, out_clamp);
         last_t = t;
         last_output = output;
@@ -38,21 +38,21 @@ struct TurnCtrl{
 };
 
 struct VelocityCtrl{
-    real_t kp = real_t(0.05);
-    real_t kd = real_t(0);
+    iq16 kp = iq16(0.05);
+    iq16 kd = iq16(0);
 
-    real_t last_output = real_t(0);
-    real_t output_clamp = 0.5;
+    iq16 last_output = iq16(0);
+    iq16 output_clamp = 0.5;
 
     void reset(){
         last_output = 0;
     }
-    real_t update(const real_t targ, const real_t now){
+    iq16 update(const iq16 targ, const iq16 now){
 
-        real_t error = targ - now;
-        real_t kp_contribute = kp * error;
+        iq16 error = targ - now;
+        iq16 kp_contribute = kp * error;
 
-        real_t output = last_output;
+        iq16 output = last_output;
         
         output += kp_contribute;
         // DEBUG_PRINTL7N(output);
@@ -63,28 +63,28 @@ struct VelocityCtrl{
 
 
 struct SideCtrl{
-    real_t kp = real_t(5);
-    real_t ki = real_t(0.0);
-    real_t kd = real_t(1.2);
+    iq16 kp = iq16(5);
+    iq16 ki = iq16(0.0);
+    iq16 kd = iq16(1.2);
 
-    real_t intergal = real_t(0);
-    real_t intergal_clamp = real_t(0.15);
+    iq16 intergal = iq16(0);
+    iq16 intergal_clamp = iq16(0.15);
 
-    real_t last_t;
-    real_t update(const real_t target_offs, const real_t current_offs, const real_t measured_velocity){
-        real_t error_dir = target_offs - current_offs;
-        real_t kp_contribute = kp * error_dir;
+    iq16 last_t;
+    iq16 update(const iq16 target_offs, const iq16 current_offs, const iq16 measured_velocity){
+        iq16 error_dir = target_offs - current_offs;
+        iq16 kp_contribute = kp * error_dir;
 
         intergal = CLAMP(intergal + (t - last_t) * ki, -intergal_clamp, intergal_clamp);
-        real_t ki_contribute = ki * intergal;
+        iq16 ki_contribute = ki * intergal;
 
-        static constexpr real_t eps_dir = real_t(0.01);
+        static constexpr iq16 eps_dir = iq16(0.01);
         if(abs(error_dir) < eps_dir){
             intergal /= 2;
         }
 
-        real_t kd_contribute = kd * measured_velocity;
-        real_t output = kp_contribute + ki_contribute + kd_contribute;
+        iq16 kd_contribute = kd * measured_velocity;
+        iq16 output = kp_contribute + ki_contribute + kd_contribute;
         last_t = t;
         return output;
     }
@@ -96,10 +96,10 @@ struct SideCtrl{
 };
 
 struct CentripetalCtrl{
-    real_t k = real_t(2.0);                    
-    real_t k_clamp = real_t(0.84);                        
+    iq16 k = iq16(2.0);                    
+    iq16 k_clamp = iq16(0.84);                        
                  
-    real_t update(const real_t spd, const real_t omega){               
+    iq16 update(const iq16 spd, const iq16 omega){               
         return CLAMP(k * spd * omega, -k_clamp, k_clamp);
     };
 };
@@ -107,17 +107,17 @@ struct CentripetalCtrl{
 
 struct SideVelocityObserver{
 protected:
-    real_t v1 = 0;
-    real_t v2 = 0;
+    iq16 v1 = 0;
+    iq16 v2 = 0;
 public:
-    real_t last_pos;
-    real_t last_t = 0;
-    real_t k1 = 0.4;
-    real_t k2 = 0.4;
+    iq16 last_pos;
+    iq16 last_t = 0;
+    iq16 k1 = 0.4;
+    iq16 k2 = 0.4;
 
-    real_t out_clamp = real_t(1);
-    real_t update(const real_t pos, const real_t acc){
-        real_t delta = (t - last_t);
+    iq16 out_clamp = iq16(1);
+    iq16 update(const iq16 pos, const iq16 acc){
+        iq16 delta = (t - last_t);
         v1 += acc * delta;
         v1 = k1 * v1 + (1-k1) * (pos - last_pos) / delta;
         v2 = CLAMP(v2 * k2 + (1-k2) * v1, -out_clamp, out_clamp);

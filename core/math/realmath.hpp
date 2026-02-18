@@ -5,9 +5,8 @@
 
 #include <cmath>
 #include <numbers>
-#include "dsp/constexprmath/ConstexprMath.hpp"
 
-#include "iq/iqmath.hpp"
+#include "fixed/iqmath.hpp"
 
 namespace ymd::math{
 
@@ -48,8 +47,7 @@ __attribute__((always_inline)) constexpr T cospu(const T val){
 
 template<std::floating_point T>
 __attribute__((always_inline)) constexpr T inv_sqrt(const T val){
-    if(std::is_constant_evaluated()) return 1 / ConstexprMath::sqrt(val);
-    else return 1 / std::sqrt(val);
+    return 1 / std::sqrt(val);
 }
 
 

@@ -22,7 +22,7 @@
 //     chn.init();
 
 //     auto buck_pwm = PwmIntf(ch);
-//     buck_pwm.setClamp(real_t(0.1), real_t(0.9));
+//     buck_pwm.setClamp(iq16(0.1), iq16(0.9));
 //     buck_pwm.init();
 
 //     adc1.init(
@@ -37,22 +37,22 @@
 //     static constexpr int buck_freq = 1000;
 //     timer3.init(buck_freq);
 
-//     real_t adc_fl1, adc_fl2, adc_out, duty;
+//     iq16 adc_fl1, adc_fl2, adc_out, duty;
 //     buckRuntimeValues buck_rv;
-//     LowpassFilter<real_t, real_t> lpf(50);
-//     LowpassFilter<real_t, real_t> lpf2(30);
+//     LowpassFilter<iq16, iq16> lpf(50);
+//     LowpassFilter<iq16, iq16> lpf2(30);
 
 //     // TIM3->CH4CVR = TIM3->ATRLR >> 1;
 //     // timer3.bindCb(Timer::IT::CC4, [&](){
 
-//     //     duty = real_t(0.3) + 0.14 * sin(4 * TAU * t);
-//     //     // duty = real_t(0.5);
+//     //     duty = iq16(0.3) + 0.14 * sin(4 * TAU * t);
+//     //     // duty = iq16(0.5);
 //     //     u16_to_uni(ADC1->IDATAR1<<4, adc_out);
-//     //     // adc_fl1 = lpf.forward(adc_out, real_t(1.0 / buck_freq));
-//     //     // adc_fl2 = lpf2.forward(adc_fl1, real_t(1.0 / buck_freq));
+//     //     // adc_fl1 = lpf.forward(adc_out, iq16(1.0 / buck_freq));
+//     //     // adc_fl2 = lpf2.forward(adc_fl1, iq16(1.0 / buck_freq));
 
-//     //     // buck_rv.curr.measure = real_t(adc_fl2);
-//     //     buck_pwm = real_t(0.1);
+//     //     // buck_rv.curr.measure = iq16(adc_fl2);
+//     //     buck_pwm = iq16(0.1);
 //     // });
 //     // timer3.enableIt(Timer::IT::CC4, NvicPriority(0, 0));
 
@@ -83,15 +83,15 @@
 //         // u16_to_uni(ADC1->RDATAR << 4, adc_out);
 
 
-//         static real_t last_t = t;
-//         static real_t angle = real_t(0);
-//         const real_t omega = 50 + 20 * sin(t);
-//         real_t delta_t = t - last_t;
+//         static iq16 last_t = t;
+//         static iq16 angle = iq16(0);
+//         const iq16 omega = 50 + 20 * sin(t);
+//         iq16 delta_t = t - last_t;
 //         last_t = t;
 
 //         angle += delta_t * omega;
-//         real_t pll_input = sin(angle);
-//         real_t pll_output =  pll.update(pll_input,real_t(0.04));
+//         iq16 pll_input = sin(angle);
+//         iq16 pll_output =  pll.update(pll_input,iq16(0.04));
 //         logger.println(pll_input, cos(pll_output), pll.omega, ADC1->IDATAR1);
 //         Sys::Clock::reCalculateTime();
 //     }

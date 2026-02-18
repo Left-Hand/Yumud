@@ -95,13 +95,13 @@ void zdt_main(){
         const auto d1 = math::sin(clock::seconds()*0.7_r);
         const auto d2 = math::sin(clock::seconds()*0.2_r);
         write_packet(factory1.set_angle(
-            Angular<real_t>::from_turns(d1), 
+            Angular<iq16>::from_turns(d1), 
             0
         ));
 
         clock::delay(5ms);
         write_packet(factory2.set_angle(
-            Angular<real_t>::from_turns(d2), 
+            Angular<iq16>::from_turns(d2), 
             0
         ));
         clock::delay(5ms);

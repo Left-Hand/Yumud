@@ -146,7 +146,7 @@ private:
         }
         __builtin_unreachable();
         #else
-        // x_offset_ = static_cast<int16_t>(-ymd::sqrt(fixed_t<16>(radius_squ_ - squ_y_offset)));
+        // x_offset_ = static_cast<int16_t>(-ymd::sqrt(fixed<16>(radius_squ_ - squ_y_offset)));
         #endif
     }
 

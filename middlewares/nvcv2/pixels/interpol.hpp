@@ -33,7 +33,7 @@ constexpr ColorType Image<ColorType>::bilinear_interpol(const math::Vec2<iq16> &
         // uni_to_u16(pos_frac.x, x_u16);
         // int c1 =  int(img(pos_i));
         // int c2 = int(img(pos_i + math::Vec2u16(1, 0)));
-        // return int((real_t(1)-pos_frac.x) * c1 + pos_frac.x * c2);
+        // return int((iq16(1)-pos_frac.x) * c1 + pos_frac.x * c2);
         int color_up = int(LERP(int(self[pos_i]), int(self[pos_i + math::Vec2u16(1, 0)]), pos_frac.x));
         // return color_up;
         if(!pos_frac.y){

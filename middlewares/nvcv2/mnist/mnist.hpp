@@ -16,11 +16,11 @@ public:
     static constexpr math::Vec2u IMAGE_SIZE = {28, 28};
     static constexpr size_t IMAGE_CHANNELS = 1;
 
-    using Choices = std::array<real_t, N>;
+    using Choices = std::array<iq16, N>;
     
     struct Result{
         int token;
-        real_t confidence;
+        iq16 confidence;
     };
 
     Choices outputs = {0};

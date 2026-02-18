@@ -119,9 +119,9 @@ struct LrSeriesCurrentRegulatorConfig{
 
 
 template<size_t FC, size_t Q>
-static constexpr math::fixed_t<Q, int32_t> lpf_specified_fc(
-    const math::fixed_t<Q, int32_t> x_state,
-    const math::fixed_t<Q, int32_t> x_new
+static constexpr math::fixed<Q, int32_t> lpf_specified_fc(
+    const math::fixed<Q, int32_t> x_state,
+    const math::fixed<Q, int32_t> x_new
 ){
     constexpr auto ALPHA = dsp::calc_lpf_alpha_uq32(FOC_FREQ, FC).unwrap();
     return lpf_with_given_alpha(x_state, x_new, ALPHA);
@@ -129,25 +129,25 @@ static constexpr math::fixed_t<Q, int32_t> lpf_specified_fc(
 
 
 template<size_t Q>
-static constexpr math::fixed_t<Q, int32_t> lpf_10hz(
-    math::fixed_t<Q, int32_t> x_state,
-    const math::fixed_t<Q, int32_t> x_new
+static constexpr math::fixed<Q, int32_t> lpf_10hz(
+    math::fixed<Q, int32_t> x_state,
+    const math::fixed<Q, int32_t> x_new
 ){
     return lpf_specified_fc<10>(x_state, x_new);
 }
 
 template<size_t Q>
-static constexpr math::fixed_t<Q, int32_t> lpf_100hz(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
+static constexpr math::fixed<Q, int32_t> lpf_100hz(math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new){
     return lpf_specified_fc<100>(x_state, x_new);
 }
 
 template<size_t Q>
-static constexpr math::fixed_t<Q, int32_t> lpf_1000hz(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
+static constexpr math::fixed<Q, int32_t> lpf_1000hz(math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new){
     return lpf_specified_fc<1000>(x_state, x_new);
 }
 
 template<size_t Q>
-static constexpr math::fixed_t<Q, int32_t> lpf_allpass(math::fixed_t<Q, int32_t> x_state, const math::fixed_t<Q, int32_t> x_new){
+static constexpr math::fixed<Q, int32_t> lpf_allpass(math::fixed<Q, int32_t> x_state, const math::fixed<Q, int32_t> x_new){
     return x_new;
 }
 

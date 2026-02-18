@@ -340,8 +340,8 @@ private:
 
 
 template<size_t Q>
-constexpr math::fixed_t<Q, uint32_t> _IQNsqrt32(const math::fixed_t<Q, uint32_t> x){
-    return math::fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed<Q, uint32_t> _IQNsqrt32(const math::fixed<Q, uint32_t> x){
+    return math::fixed<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u32<Q, SqrtNormStrategy::SQRT>(
             x.to_bits()
         ).template compute<Q, SqrtNormStrategy::SQRT>()
@@ -350,8 +350,8 @@ constexpr math::fixed_t<Q, uint32_t> _IQNsqrt32(const math::fixed_t<Q, uint32_t>
 
 
 template<size_t Q>
-constexpr math::fixed_t<Q, uint32_t> _IQNisqrt32(const math::fixed_t<Q, uint32_t> x){
-    return math::fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed<Q, uint32_t> _IQNisqrt32(const math::fixed<Q, uint32_t> x){
+    return math::fixed<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u32<Q, SqrtNormStrategy::ISQRT>(
             x.to_bits()
         ).template compute<Q, SqrtNormStrategy::ISQRT>()
@@ -359,8 +359,8 @@ constexpr math::fixed_t<Q, uint32_t> _IQNisqrt32(const math::fixed_t<Q, uint32_t
 }
 
 template<size_t Q>
-constexpr math::fixed_t<Q, uint32_t> _IQNsqrt64(const math::fixed_t<Q, uint64_t> x){
-    return math::fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed<Q, uint32_t> _IQNsqrt64(const math::fixed<Q, uint64_t> x){
+    return math::fixed<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u64<Q, SqrtNormStrategy::SQRT>(
             x.to_bits()
         ).template compute<Q, SqrtNormStrategy::SQRT>()
@@ -369,8 +369,8 @@ constexpr math::fixed_t<Q, uint32_t> _IQNsqrt64(const math::fixed_t<Q, uint64_t>
 
 
 template<size_t Q>
-constexpr math::fixed_t<Q, uint32_t> _IQNisqrt64(const math::fixed_t<Q, uint64_t> x){
-    return math::fixed_t<Q, uint32_t>::from_bits(
+constexpr math::fixed<Q, uint32_t> _IQNisqrt64(const math::fixed<Q, uint64_t> x){
+    return math::fixed<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_u64<Q, SqrtNormStrategy::ISQRT>(
             x.to_bits()
         ).template compute<Q, SqrtNormStrategy::ISQRT>()
@@ -396,18 +396,18 @@ constexpr uint64_t sum_of_squares(Args&&... args) {
 
 // 支持任意数量参数的模长计算
 template<typename D, size_t Q, typename... Args>
-constexpr math::fixed_t<Q, uint32_t> _IQNmag(math::fixed_t<Q, D> first, Args&&... rest) {
+constexpr math::fixed<Q, uint32_t> _IQNmag(math::fixed<Q, D> first, Args&&... rest) {
     uint64_t sum = sum_of_squares(first, rest...);
-    return math::fixed_t<Q, uint32_t>::from_bits(
+    return math::fixed<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_sqsum<Q, SqrtNormStrategy::MAG>(sum).template compute<Q, SqrtNormStrategy::MAG>()
     );
 }
 
 // 支持任意数量参数的逆模长计算
 template<typename D, size_t Q, typename... Args>
-constexpr math::fixed_t<Q, uint32_t> _IQNimag(math::fixed_t<Q, D> first, Args&&... rest) {
+constexpr math::fixed<Q, uint32_t> _IQNimag(math::fixed<Q, D> first, Args&&... rest) {
     uint64_t sum = sum_of_squares(first, rest...);
-    return math::fixed_t<Q, uint32_t>::from_bits(
+    return math::fixed<Q, uint32_t>::from_bits(
         IqSqrtCoeffs::template from_sqsum<Q, SqrtNormStrategy::IMAG>(sum).template compute<Q, SqrtNormStrategy::IMAG>()
     );
 }

@@ -11,14 +11,14 @@ public:
     NodeId node_id;
 
     struct PositionSetpoint{
-        real_t position;
-        real_t speed;
-        real_t accerlation = 0;
+        iq16 position;
+        iq16 speed;
+        iq16 accerlation = 0;
     };
 
     struct SpeedSetpoint{
-        real_t speed;
-        real_t accerlation = 0;
+        iq16 speed;
+        iq16 accerlation = 0;
     };
 
     FlatPacket set_position(const PositionSetpoint pos);

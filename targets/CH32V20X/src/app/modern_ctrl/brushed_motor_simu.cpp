@@ -31,9 +31,9 @@ void test_burshed_motor(){
 
     [[maybe_unused]]
     auto test_td = [&](const auto t){
-        // const auto u = 6 * Vec2<iq16>::RIGHT.rotated(real_t(TAU) * t);
-        // const auto [x,y] = sincos(real_t(TAU) * t);
-        // const auto m = sin(3 * real_t(TAU) * t);
+        // const auto u = 6 * Vec2<iq16>::RIGHT.rotated(iq16(TAU) * t);
+        // const auto [x,y] = sincos(iq16(TAU) * t);
+        // const auto m = sin(3 * iq16(TAU) * t);
         // const auto [x,y] = sincos(ret);
         // const auto u = Vec2<iq16>{CLAMP(70 * x, -30, 30), 6 * y};
         // const auto u = Vec2<iq16>{CLAMP(70 * x, -5, 5) + m, 0};
@@ -130,7 +130,7 @@ void test_burshed_motor(){
 
     clock::delay(20ms);
 
-    real_t t = 0.0_r;
+    iq16 t = 0.0_r;
 
     auto & timer = hal::timer1;
     timer.init({

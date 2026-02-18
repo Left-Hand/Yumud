@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/fixed/fixed.hpp"
 
 namespace ymd::dsp{
 

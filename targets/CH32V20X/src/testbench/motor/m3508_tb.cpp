@@ -58,11 +58,11 @@ void m3508_main(){
 
     while(true){
         // port.setTargetCurrent();
-        // real_t targ_curr = real_t(1.5) * sin(real_t(TAU/4) * t);
-        // real_t target = 3 * sin(t);
-        real_t target = 3 * clock::seconds();
-        // real_t targ_curr = 4 * sin( t*real_t(1.7));
-        // real_t targ_curr = 0;
+        // iq16 targ_curr = iq16(1.5) * sin(iq16(TAU/4) * t);
+        // iq16 target = 3 * sin(t);
+        iq16 target = 3 * clock::seconds();
+        // iq16 targ_curr = 4 * sin( t*iq16(1.7));
+        // iq16 targ_curr = 0;
         // motor.setTargetCurrent(targ_curr);
         motor.set_target_position(target);   
         motor2.set_target_position(target);   
@@ -80,9 +80,9 @@ void m3508_main(){
         // clock::delay(3ms);
         led = BoolLevel::from((clock::millis().count() % 400) > 200);
 
-        // static real_t last_pos = 0;
+        // static iq16 last_pos = 0;
         // DEBUG_PRINTLN(std::setprecision(3), target, motor.getPosition(), motor.getSpeed(), motor.getCurrent(), motor.delta());
-        // DEBUG_PRINTLN(std::setprecision(3), real_t(1.2), std::hex, std::showbase, std::setprecision(2) ,0x23, basis);
+        // DEBUG_PRINTLN(std::setprecision(3), iq16(1.2), std::hex, std::showbase, std::setprecision(2) ,0x23, basis);
         // clock::delay(10ms);
         // last_pos = motor.getPosition();
     }

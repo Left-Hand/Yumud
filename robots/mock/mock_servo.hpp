@@ -6,8 +6,8 @@
 
 namespace ymd::robots::mock{
 struct MotorCmd{
-    real_t ref_x1;
-    real_t ref_x2;
+    iq16 ref_x1;
+    iq16 ref_x2;
 };
 
 class MotorIntf{
@@ -16,21 +16,21 @@ class MotorIntf{
 
 class MockServo final:public MotorIntf{
 public:
-    void set_angle(const real_t angle){
+    void set_angle(const iq16 angle){
         // DEBUG_PRINTLN("set", angle_);
         angle_ = angle;
     }
 
-    real_t get_angle(){
+    iq16 get_angle(){
         // DEBUG_PRINTLN("get", angle_);
         return angle_;
     }
 
     void set_motorcmd(const MotorCmd & cmd){
-        set_angle(cmd.ref_x1 * real_t(M_PI));
+        set_angle(cmd.ref_x1 * iq16(M_PI));
     }
 private:
-    real_t angle_;
+    iq16 angle_;
 };
 
 }

@@ -276,7 +276,7 @@ IResult<> VL6180X::start_interleaved_continuous(uint16_t period){
 }
 
 
-// real_t VL6180X::readLux(uint8_t gain) {
+// iq16 VL6180X::readLux(uint8_t gain) {
 // 	uint8_t reg;
 
 // 	reg = read8(RegAddr::SYSTEM__INTERRUPT_CONFIG_GPIO);

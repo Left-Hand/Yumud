@@ -6,12 +6,12 @@
 #include "hal/bus/i2c/soft/soft_i2c.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/timer/hw_singleton.hpp"
+#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 #include "drivers/IMU/Magnetometer/AK09911C/AK09911C.hpp"
 
 #include "robots/gesture/mahony.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
-#include "hal/gpio/gpio_port.hpp"
 
 using namespace ymd;
 

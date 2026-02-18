@@ -26,7 +26,7 @@ struct alignas(4) [[nodiscard]] Atan2Flag final{
     }
 
 
-    [[nodiscard]] constexpr ymd::math::fixed_t<32, uint32_t> apply_to_uq32(uint32_t uq32_result_pu) const {
+    [[nodiscard]] constexpr ymd::math::fixed<32, uint32_t> apply_to_uq32(uint32_t uq32_result_pu) const {
         auto & self = *this;
 
         /* Check if we swapped the transformation. */
@@ -47,7 +47,7 @@ struct alignas(4) [[nodiscard]] Atan2Flag final{
             uq32_result_pu = ~uq32_result_pu;
         }
 
-        return ymd::math::fixed_t<32, uint32_t>::from_bits(uq32_result_pu);
+        return ymd::math::fixed<32, uint32_t>::from_bits(uq32_result_pu);
     };
 };
 
@@ -103,7 +103,7 @@ private:
 
 
 template<size_t Q>
-constexpr ymd::math::fixed_t<32, uint32_t> _atan2pu_impl(
+constexpr ymd::math::fixed<32, uint32_t> _atan2pu_impl(
     uint32_t uqn_y,
     uint32_t uqn_x
 ){
@@ -137,7 +137,7 @@ constexpr ymd::math::fixed_t<32, uint32_t> _atan2pu_impl(
 }
 
 template<size_t Q>
-constexpr ymd::math::fixed_t<32, uint32_t> _atanpu_impl(
+constexpr ymd::math::fixed<32, uint32_t> _atanpu_impl(
     uint32_t uqn_y
 ){
     Atan2Flag flag = Atan2Flag::zero();

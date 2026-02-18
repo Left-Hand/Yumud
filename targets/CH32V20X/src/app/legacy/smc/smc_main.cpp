@@ -14,7 +14,7 @@ std::tuple<Point, Range2i> SmartCar::get_entry(const ImageReadable<Binary> & src
     Range2i road_valid_pixels = {WorldUtils::pixels(config.valid_road_meters.from),
                                 WorldUtils::pixels(config.valid_road_meters.to)};
 
-    real_t road_align_pixels = {WorldUtils::pixels(config.road_width)};
+    iq16 road_align_pixels = {WorldUtils::pixels(config.road_width)};
     auto align_mode = switches.align_mode;
     auto align_right = (LR)align_mode;
     auto y = last_seed_pos.y ? last_seed_pos.y : src.get_size().y - config.seed_height_base;
@@ -1085,7 +1085,7 @@ void SmartCar::main(){
         //进行引导修正
         if(false){
             [[maybe_unused]]auto coast_fix_lead = [](const Coast & coast, const LR is_right) -> Coast{
-                static constexpr real_t k = 1.2;
+                static constexpr iq16 k = 1.2;
 
                 auto coast_point_valid = [](const CoastItem & host, const CoastItem & guest, const LR _is_right) -> bool{
                     Vec2i delta = Vec2i(guest) - Vec2i(host);

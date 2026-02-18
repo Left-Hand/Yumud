@@ -97,8 +97,8 @@ IResult<> IST8310::set_y_average_times(const AverageTimes times){
 
 
 IResult<math::Vec3<iq24>> IST8310::read_mag(){
-    auto conv = [](const int16_t data) -> real_t{
-        return data * real_t(0.3);
+    auto conv = [](const int16_t data) -> iq16{
+        return data * iq16(0.3);
     };
 
     return Ok{math::Vec3<iq24>{

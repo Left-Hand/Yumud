@@ -20,8 +20,8 @@ namespace details{
 
     template<typename T>
     struct TweenerFacade : pro::facade_builder
-        ::add_convention<details::MemPeriod, real_t() const>
-        ::add_convention<details::MemUpdate, void(real_t)>
+        ::add_convention<details::MemPeriod, iq16() const>
+        ::add_convention<details::MemUpdate, void(iq16)>
         ::build {};
 }
 

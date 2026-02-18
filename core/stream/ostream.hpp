@@ -18,7 +18,7 @@
 
 #include "core/stream/CharOpTraits.hpp"
 #include "core/utils/stdrange.hpp"
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/fixed/fixed.hpp"
 
 
 namespace std{
@@ -375,8 +375,8 @@ private:
 public:
 
     template<size_t Q, typename D>
-    OutputStream & operator<<(const math::fixed_t<Q, D> & q_val){
-        // print_iq16(math::fixed_t<16, int32_t>(q_val));
+    OutputStream & operator<<(const math::fixed<Q, D> & q_val){
+        // print_iq16(math::fixed<16, int32_t>(q_val));
         static_assert(sizeof(D) <= 4);
 
         if constexpr (std::is_signed_v<D>){

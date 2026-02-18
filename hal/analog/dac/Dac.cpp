@@ -22,7 +22,7 @@ void DacChannel::init(){
     plant();
 }
 
-DacChannel &ymd::hal::DacChannel::operator=(const real_t value){
+DacChannel &ymd::hal::DacChannel::operator=(const iq16 value){
     const auto d = uni_to_u16(value);
     const auto align_mask = uint32_t(align_);
 

@@ -199,20 +199,20 @@ namespace SMC{
 
         bool is_ccw(const Coast & coast, const bool);
 
-        static constexpr real_t default_corner_threshold = -0.4;
+        static constexpr iq16 default_corner_threshold = -0.4;
 
-        Corners search_corners(const Coast & coast, const CornerType default_ct = CornerType::ALL, const real_t threshold = default_corner_threshold);
+        Corners search_corners(const Coast & coast, const CornerType default_ct = CornerType::ALL, const iq16 threshold = default_corner_threshold);
 
-        // Points a_points(const Coast & coast, const real_t threshold = default_corner_threshold);//120 deg
+        // Points a_points(const Coast & coast, const iq16 threshold = default_corner_threshold);//120 deg
 
-        // Points v_points(const Coast & coast, const real_t threshold = default_corner_threshold);//120 deg
+        // Points v_points(const Coast & coast, const iq16 threshold = default_corner_threshold);//120 deg
 
         Coast trim(const Coast & coast, const Vec2i & window_size);
         Coast form(const ImageReadable<Binary> &, const Vec2i &, const LR);
         Coast constrain(const Coast & coast, const Rect2i & rect);
-        Coast shrink(const Coast & line, const real_t width, const Vec2i & window_size);
+        Coast shrink(const Coast & line, const iq16 width, const Vec2i & window_size);
 
-        Coast douglas_peucker(const Coast & line, const real_t epsilon);
+        Coast douglas_peucker(const Coast & line, const iq16 epsilon);
 
         __inline bool dir_until(const Coast & coast, const Vec2i & point,const Vec2i & dir){
             if(coast.size() < 2) return false;
@@ -270,7 +270,7 @@ namespace SMC{
 
     struct Circle{
             Vec2 pos;
-            real_t r;
+            iq16 r;
     };
 
     Circle calculate_cicular(const Vec2 &, const Vec2 &, const Vec2 &);
@@ -278,7 +278,7 @@ namespace SMC{
     Circle calculate_cicular(const Coast &, const int, const int);
 
     namespace WorldUtils{
-        static constexpr real_t scale = 0.014;
+        static constexpr iq16 scale = 0.014;
         static constexpr int blind_rows = 15;
     
         __fast_inline Vec2 position(const Point & point){
@@ -290,20 +290,20 @@ namespace SMC{
         __fast_inline Vec2 displacement(const Point & p1, const Point & p2 = {0,0}){
             return ((p2 - p1) * scale);
         }
-        __fast_inline real_t distance(const Point & p1, const Point & p2 = {0,0}){
+        __fast_inline iq16 distance(const Point & p1, const Point & p2 = {0,0}){
             return displacement(p1, p2).length();
         }
 
         template<arithmetic T>
-        __fast_inline real_t distance(const T & val){
+        __fast_inline iq16 distance(const T & val){
             return val * scale;
         }
 
-        __fast_inline real_t pixels(const real_t l){
+        __fast_inline iq16 pixels(const iq16 l){
             return l / scale;
         }
         
-        __fast_inline real_t pixels(const Vec2 & p1, const Vec2 & p2 = {0,0}){
+        __fast_inline iq16 pixels(const Vec2 & p1, const Vec2 & p2 = {0,0}){
             return pixels((p2 - p1).length());
         }
 

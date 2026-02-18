@@ -67,7 +67,7 @@ void Mahony::myupdate(const IV3 & gyr,const IV3 & acc) {
 	// const auto err = IQuat(acc) .cross(q.xform_up());
 	// const auto err = acc.cross(v);
 	// const auto delta = gyr + (kp_ * err) + ki_ * (inte_ += gyr * dt_);
-	// const auto delta = IV3<real_t>(0,0,real_t(2 * TAU));
+	// const auto delta = IV3<iq16>(0,0,iq16(2 * TAU));
 	const auto e1 = IQuat::from_direction(acc) * q.inverse();
 	// q = q.integral(gyr_hat_, dt_).slerp(v, 1);
 	// const auto e1_euler = e1.to_euler();
@@ -91,7 +91,7 @@ void Mahony::myupdate_v2(const IV3 & gyr,const IV3 & acc) {
 	// const auto err = IQuat(acc) .cross(q.xform_up());
 	// const auto err = acc.cross(v);
 	// const auto delta = gyr + (kp_ * err) + ki_ * (inte_ += gyr * dt_);
-	// const auto delta = IV3<real_t>(0,0,real_t(2 * TAU));
+	// const auto delta = IV3<iq16>(0,0,iq16(2 * TAU));
 	// const auto e1 =  * q.inverse();
 	// q = q.integral(gyr_hat_, dt_).slerp(v, 1);
 	// const auto e1_euler = e1.to_euler();

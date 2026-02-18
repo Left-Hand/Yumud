@@ -591,7 +591,7 @@ void anti_pepper(Image<Binary> & dst,const Image<Binary> & src){
 }
 
 
-void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real_t percent){
+void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const iq16 percent){
     const auto size = src.size();
     const size_t w = size_t(size.x);
     const size_t h = size_t(size.y);

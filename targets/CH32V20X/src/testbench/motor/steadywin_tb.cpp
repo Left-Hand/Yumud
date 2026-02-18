@@ -8,20 +8,14 @@
 #include "core/clock/time.hpp"
 #include "core/math/realmath.hpp"
 #include "core/async/timer.hpp"
+#include "core/utils/zero.hpp"
 
 #include "hal/timer/hw_singleton.hpp"
 #include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/can/hw_singleton.hpp"
 
-#include "robots/vendor/bmkj/m1502e_highlayer.hpp"
-
-#include "dsp/controller/adrc/linear/ltd2o.hpp"
-#include "dsp/controller/adrc/linear/leso2o.hpp"
-#include "dsp/controller/adrc/nonlinear/nltd2o.hpp"
-
 #include "drivers/CommonIO/Key/Key.hpp"
-#include "drivers/Proximeter/ALX_AOA/alx_aoa_prelude.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_msgs.hpp"
 #include "robots/vendor/steadywin/can_simple/steadywin_can_simple_factory.hpp"
 

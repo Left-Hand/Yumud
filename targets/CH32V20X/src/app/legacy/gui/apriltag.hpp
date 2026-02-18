@@ -1,4 +1,4 @@
-    // [[maybe_unused]] auto plot_april = [&](const Vertexs & vertex, const int index, const real_t dir){
+    // [[maybe_unused]] auto plot_april = [&](const Vertexs & vertex, const int index, const iq16 dir){
     //     painter.bindImage(sketch);
     //     painter.setColor(RGB565::FUCHSIA);
 

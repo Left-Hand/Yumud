@@ -34,7 +34,7 @@ struct alignas(2) [[nodiscard]] bf16 final{
     }
 
     template<size_t Q>
-    constexpr bf16(fixed_t<Q, int32_t> qv) : bf16(float(qv)) {}
+    constexpr bf16(fixed<Q, int32_t> qv) : bf16(float(qv)) {}
     constexpr bf16(int int_val) : bf16(float(int_val)) {}
     constexpr bf16 operator -() const{
         return from_bits(to_bits() ^ 0x8000);
@@ -61,8 +61,8 @@ struct alignas(2) [[nodiscard]] bf16 final{
     }
 
     template <size_t Q>
-    [[nodiscard]] explicit constexpr operator fixed_t<Q, int32_t>() const{
-        return fixed_t<Q, int32_t>::from(float(*this));
+    [[nodiscard]] explicit constexpr operator fixed<Q, int32_t>() const{
+        return fixed<Q, int32_t>::from(float(*this));
     }
 
     [[nodiscard]] constexpr std::array<uint8_t, 2> to_bytes() const {

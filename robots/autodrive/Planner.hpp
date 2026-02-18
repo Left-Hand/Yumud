@@ -18,11 +18,11 @@ class Planner{
 public:
 
     struct Config{
-        real_t max_acc;
-        real_t max_spd;
+        iq16 max_acc;
+        iq16 max_spd;
         
-        real_t max_agr;
-        real_t max_spr;
+        iq16 max_agr;
+        iq16 max_spr;
     };
 
     //预设的固定路线类

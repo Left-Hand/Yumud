@@ -22,22 +22,22 @@ struct GlobalConfig{
     Gray positive_threshold = 255;
     Gray edge_threshold = 2;
     int seed_height_base = 5;
-    real_t dpv = 1.8;
+    iq16 dpv = 1.8;
 
-    real_t road_width = 0.4;
+    iq16 road_width = 0.4;
     Range valid_road_meters = {0.2, 0.6};
 
-    real_t dir_merge_max_sin = real_t(0.27);
+    iq16 dir_merge_max_sin = iq16(0.27);
 };
 
 
 
 struct RingConfig{
-    real_t s1 = 1.0;
-    real_t c1 = 0.3;
-    real_t o = 1.6;
-    real_t c2 = 0.4;
-    real_t s2 = 1.0;
+    iq16 s1 = 1.0;
+    iq16 c1 = 0.3;
+    iq16 o = 1.6;
+    iq16 c2 = 0.4;
+    iq16 s2 = 1.0;
 };
 
 
@@ -73,7 +73,7 @@ union Flags{
 };
 
 struct SetPoints{
-    real_t targ_spd = 0.24;
+    iq16 targ_spd = 0.24;
 };
 
 struct Benchmark{

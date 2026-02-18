@@ -33,9 +33,9 @@ static constexpr uq16 PLL_KI_BY_FS = uq16::from_bits(
     static_cast<uint32_t>((static_cast<uint64_t>(PLL_KI) * (1u << 16)) / F_SAMPLE)
 );
 
-static constexpr math::fixed_t<32, uint32_t> uq32_mul(const math::fixed_t<32, uint32_t> a, const size_t b){
+static constexpr math::fixed<32, uint32_t> uq32_mul(const math::fixed<32, uint32_t> a, const size_t b){
     const auto bits = static_cast<uint32_t>((static_cast<uint64_t>(a.to_bits()) * b) & std::numeric_limits<uint32_t>::max());
-    return math::fixed_t<32, uint32_t>::from_bits(bits);
+    return math::fixed<32, uint32_t>::from_bits(bits);
 }
 static_assert(uq32_mul(0.125_uq32,13) == 0.625_uq32);
 
@@ -54,14 +54,14 @@ struct [[nodiscard]] SinCosCorrector{
 
 //a * d - b * c
 template<size_t Q1, typename D1, size_t Q2, typename D2, typename ED = tmp::extended_mul_underlying_t<D1, D2>>
-static constexpr math::fixed_t<Q1, D1> cross2v2(
-    const math::fixed_t<Q1, D1> & a, const math::fixed_t<Q2, D2> & b,
-    const math::fixed_t<Q1, D1> & c, const math::fixed_t<Q2, D2> & d
+static constexpr math::fixed<Q1, D1> cross2v2(
+    const math::fixed<Q1, D1> & a, const math::fixed<Q2, D2> & b,
+    const math::fixed<Q1, D1> & c, const math::fixed<Q2, D2> & d
 ){
     ED bits = 0;
     bits += static_cast<ED>(a.to_bits()) * static_cast<ED>(d.to_bits());
     bits -= static_cast<ED>(b.to_bits()) * static_cast<ED>(c.to_bits());
-    return math::fixed_t<Q1, D1>::from_bits(static_cast<D1>(bits >> Q2));
+    return math::fixed<Q1, D1>::from_bits(static_cast<D1>(bits >> Q2));
 }
 
 

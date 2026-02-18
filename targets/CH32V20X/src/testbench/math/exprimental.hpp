@@ -1,5 +1,5 @@
-#include "core/math/iq/iqmath.hpp"
-#include "core/math/iq/fixed_t.hpp"
+#include "core/math/fixed/iqmath.hpp"
+#include "core/math/fixed/fixed.hpp"
 #include <cmath>
 
 
@@ -60,14 +60,14 @@ template<size_t Q>
 }
 
 
-static constexpr ymd::math::fixed_t<32, uint32_t> iq31_length_squared(const ymd::math::fixed_t<31, int32_t> x){
+static constexpr ymd::math::fixed<32, uint32_t> iq31_length_squared(const ymd::math::fixed<31, int32_t> x){
     const auto abs_x_bits = x.to_bits() < 0 ? static_cast<uint32_t>(-x.to_bits()) : static_cast<uint32_t>(x.to_bits());
     const auto bits = static_cast<uint64_t>(abs_x_bits) * static_cast<uint64_t>(abs_x_bits);
-    return ymd::math::fixed_t<32, uint32_t>::from_bits(static_cast<uint32_t>(bits >> 30));
+    return ymd::math::fixed<32, uint32_t>::from_bits(static_cast<uint32_t>(bits >> 30));
 }
-static_assert(iq31_length_squared(ymd::math::fixed_t<31, int32_t>(0.5)) == ymd::literals::iq32(0.25));
+static_assert(iq31_length_squared(ymd::math::fixed<31, int32_t>(0.5)) == ymd::literals::iq32(0.25));
 
-static constexpr ymd::math::fixed_t<32, uint32_t> dual_iq31_length_squared(const ymd::math::fixed_t<31, int32_t> x, const ymd::math::fixed_t<31, int32_t> y){
+static constexpr ymd::math::fixed<32, uint32_t> dual_iq31_length_squared(const ymd::math::fixed<31, int32_t> x, const ymd::math::fixed<31, int32_t> y){
     // IQ31 格式：1 位符号 + 31 位小数
     
     // 方法1：使用数学运算（推荐）
@@ -101,7 +101,7 @@ static constexpr ymd::math::fixed_t<32, uint32_t> dual_iq31_length_squared(const
         shifted = max_uq32;
     }
     
-    return ymd::math::fixed_t<32, uint32_t>::from_bits(static_cast<uint32_t>(shifted));
+    return ymd::math::fixed<32, uint32_t>::from_bits(static_cast<uint32_t>(shifted));
 }
 
 static_assert(dual_iq31_length_squared(ymd::literals::iq31(0.5), ymd::literals::iq31(0.5)).to_bits() == (ymd::literals::uq32(0.5)).to_bits());

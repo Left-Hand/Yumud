@@ -45,7 +45,7 @@ struct INA226_Prelude{
 
     using RegAddr = uint8_t;
 
-    static constexpr real_t VOLTAGE_LSB_MV = real_t(1.25);
+    static constexpr iq16 VOLTAGE_LSB_MV = iq16(1.25);
 };
 
 struct INA226_Regs:public INA226_Prelude{

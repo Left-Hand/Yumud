@@ -158,15 +158,10 @@ private:
     // 直接从sine和cosine构造
     constexpr explicit Rotation2(T sin_val, T cos_val) : sine_(sin_val), cosine_(cos_val) {;}
 
-    friend OutputStream& operator<<(OutputStream& os, const Rotation2<T>& self) {
-        const auto guard = os.create_guard();
-        os.set_splitter(',');
-        return os << os.brackets<'('>() <<
-            "sin=" << self.sine_ << os.splitter() << 
-            "cos=" << self.cosine_ << os.splitter() <<
-            // self.sine_ << self.cosine_
-            "angle=" << self.to_angle().to_degrees() << "°" <<
-            os.brackets<')'>()
+    friend OutputStream & operator <<(OutputStream & os, const Rotation2<T> & self){
+        return os    
+            << os.field("sine")(self.sine_) << os.splitter()
+            << os.field("cosine")(self.cosine_)
         ;
     }
 };

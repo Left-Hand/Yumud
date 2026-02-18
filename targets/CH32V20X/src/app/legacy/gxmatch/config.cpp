@@ -5,29 +5,29 @@ using namespace gxm;
 SysConfig gxm::create_default_config(){
     return SysConfig{
         .joint_config = {
-            .max_rad_delta = real_t(1.13),
-            // .left_basis_radian = real_t(-PI/2 + 0.2),
-            .left_basis_radian = real_t(-PI/2 + 0.34),
-            // .right_basis_radian = real_t(PI/2 - 0.10),
-            // .right_basis_radian = real_t(PI/2 - 0.20),
-            // .right_basis_radian = real_t(PI/2 + 0.3),
-            // .right_basis_radian = real_t(PI/2 - 0.2),
-            // .right_basis_radian = real_t(PI/2 + 0.16),
-            .right_basis_radian = real_t(PI/2 - 0.01),
-            // .right_basis_radian = real_t(0),
-            // .z_basis_radian = real_t(PI/2 + 0.17),
-            .z_basis_radian = real_t(PI/2 + 0.25),
+            .max_rad_delta = iq16(1.13),
+            // .left_basis_radian = iq16(-PI/2 + 0.2),
+            .left_basis_radian = iq16(-PI/2 + 0.34),
+            // .right_basis_radian = iq16(PI/2 - 0.10),
+            // .right_basis_radian = iq16(PI/2 - 0.20),
+            // .right_basis_radian = iq16(PI/2 + 0.3),
+            // .right_basis_radian = iq16(PI/2 - 0.2),
+            // .right_basis_radian = iq16(PI/2 + 0.16),
+            .right_basis_radian = iq16(PI/2 - 0.01),
+            // .right_basis_radian = iq16(0),
+            // .z_basis_radian = iq16(PI/2 + 0.17),
+            .z_basis_radian = iq16(PI/2 + 0.25),
         },
 
         .scara_config = {
             .solver_config = {
-                .should_length_meter = real_t(0.08),
-                .upperarm_length_meter = real_t(0.10),
-                .forearm_length_meter = real_t(0.18),
+                .should_length_meter = iq16(0.08),
+                .upperarm_length_meter = iq16(0.10),
+                .forearm_length_meter = iq16(0.18),
             },
 
             .claw_config = {
-                .press_radian = real_t(PI/2),
+                .press_radian = iq16(PI/2),
                 .release_radian = 0
             },
 
@@ -42,17 +42,17 @@ SysConfig gxm::create_default_config(){
             // .free_height = 0.15_r,
             // .ground_height = 0.12_r,
             
-            // .basis_radian = real_t(0),
+            // .basis_radian = iq16(0),
             .solver_config = CrossSolver::Config{
                 .xoffs_length_meter = 0.042_r,
                 .upperarm_length_meter = 0.082_r,
                 .forearm_length_meter = 0.1_r
             }
             // //1m / (3cm * PI)
-            // .meter_to_turns_scaler = real_t(1 / (0.03 * PI)),
+            // .meter_to_turns_scaler = iq16(1 / (0.03 * PI)),
             
             // //1mm tolerance
-            // .reached_threshold = real_t(0.001),  
+            // .reached_threshold = iq16(0.001),  
         },
 
         .grab_config = {

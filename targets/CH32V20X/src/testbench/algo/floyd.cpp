@@ -12,7 +12,7 @@ struct Node{
 struct Edge{
 	size_t a;
 	size_t b;
-	real_t cost;
+	iq16 cost;
 };
 
 template<typename T, size_t X_N, size_t Y_N>
@@ -82,7 +82,7 @@ static constexpr auto W = 7u;
 static constexpr auto H = 7u;
 
 using MatrixR = Matrix<size_t, W, H>;
-using MatrixS = Matrix<real_t, W, H>;
+using MatrixS = Matrix<iq16, W, H>;
 using Path = std::vector<size_t>;
 
 struct Topology{
@@ -94,7 +94,7 @@ struct Topology{
 		_edges.push_back(edge);
 	}
 
-	void emplaceEdge(const size_t a, const size_t b, const real_t cost){
+	void emplaceEdge(const size_t a, const size_t b, const iq16 cost){
 		_edges.push_back({std::min(a, b), std::max(a,b),cost});
 	}
 	
@@ -143,7 +143,7 @@ struct Topology{
 		}
 	}
 	
-	real_t bestCost(MatrixS & s, const size_t from, const size_t to){
+	iq16 bestCost(MatrixS & s, const size_t from, const size_t to){
 		return s[to - 1, from - 1];
 	}
 	

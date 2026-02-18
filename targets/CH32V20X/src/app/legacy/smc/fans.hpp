@@ -9,12 +9,12 @@ class SideFan{
 protected:
     TimerOC & instanceP;
     TimerOC & instanceN;
-    static constexpr real_t duty_clamp = 0.92;
-    static constexpr real_t k = 6.5;
+    static constexpr iq16 duty_clamp = 0.92;
+    static constexpr iq16 k = 6.5;
 
     bool enabled = true;
-    real_t last_force = 0;
-    real_t last_t = 0;
+    iq16 last_force = 0;
+    iq16 last_t = 0;
 public:
     SideFan(TimerOC & _instanceP,TimerOC & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
 
@@ -31,33 +31,33 @@ public:
     void enable(const Enable en){
         enabled = en;
         if(!en){
-            instanceP = (real_t(0));
-            instanceN = (real_t(0));
+            instanceP = (iq16(0));
+            instanceN = (iq16(0));
         }
     }
 
-    void setDuty(const real_t _duty){
+    void setDuty(const iq16 _duty){
         if(!enabled){
             return;
         }
 
-        real_t duty = CLAMP(_duty, -duty_clamp, duty_clamp);
+        iq16 duty = CLAMP(_duty, -duty_clamp, duty_clamp);
         if(duty > 0){
             instanceP = (duty);
-            instanceN = (real_t(0));
+            instanceN = (iq16(0));
         }else{
-            instanceP = (real_t(0));
+            instanceP = (iq16(0));
             instanceN = (-duty);
         }
     }
 
-    void setForce(const real_t force){
+    void setForce(const iq16 force){
         setDuty(SIGN_AS(sqrt(ABS(force)), force));
     }
 
-    auto & operator = (const real_t _force){
+    auto & operator = (const iq16 _force){
 
-        real_t step = k * (t - last_t);
+        iq16 step = k * (t - last_t);
 
         last_force = STEP_TO(last_force, _force, step);
         last_t = t;
@@ -76,7 +76,7 @@ public:
 
     HriFanPair(SideFan & _left_fan, SideFan & _right_fan):
         left_fan(_left_fan), right_fan(_right_fan){;}
-    void setForce(const real_t force){
+    void setForce(const iq16 force){
         left_fan.setForce(-force);
         right_fan.setForce(force);
     }
@@ -96,7 +96,7 @@ public:
         right_fan.reset();
     }
 
-    auto & operator = (const real_t _force){
+    auto & operator = (const iq16 _force){
         setForce(_force);
         return *this;
     }

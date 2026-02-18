@@ -64,8 +64,8 @@ public:
             case "offset"_ha:
                 if(args.size() == 3){
                     offset_ = Vec2{
-                        real_t(args[1]),
-                        real_t(args[2])
+                        iq16(args[1]),
+                        iq16(args[2])
                     };
                 }else{
                     offset_ = std::nullopt;
@@ -140,7 +140,7 @@ void host_main(){
         PCA9685 pca{i2c};
         pca.init();
         
-        pca.setFrequency(50, real_t(1.09));
+        pca.setFrequency(50, iq16(1.09));
 
 
         MG995 servo_left{pca[0]};
@@ -219,111 +219,111 @@ void host_main(){
         //     // pca.v
         // }
 
-        // joint_left.setRadian(real_t(PI/2));
-        // joint_right.setRadian(real_t(PI/2));
+        // joint_left.setRadian(iq16(PI/2));
+        // joint_right.setRadian(iq16(PI/2));
         // while(true);
 
-        // test_servo(servo_cross, [](const real_t time) -> real_t{
-        //     // return real_t(PI);
-        //     return real_t(1);
+        // test_servo(servo_cross, [](const iq16 time) -> iq16{
+        //     // return iq16(PI);
+        //     return iq16(1);
         // });
-        // test_joint(joint_z, [](const real_t time) -> real_t{
+        // test_joint(joint_z, [](const iq16 time) -> iq16{
         //     return  0;
         // });
 
-        // joint_left.setRadian(real_t(PI));
-        // joint_right.setRadian(real_t(0));
+        // joint_left.setRadian(iq16(PI));
+        // joint_right.setRadian(iq16(0));
         // while(true);
-        // test_joint(joint_left, [](const real_t time)->real_t{
-        //     // return real_t(PI);
-        //     // return real_t(PI*0.75) + sin(t) * real_t(PI/4);
-        //     return real_t(PI*0.75) + sin(t) * real_t(PI*0.25);
-        //     // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+        // test_joint(joint_left, [](const iq16 time)->iq16{
+        //     // return iq16(PI);
+        //     // return iq16(PI*0.75) + sin(t) * iq16(PI/4);
+        //     return iq16(PI*0.75) + sin(t) * iq16(PI*0.25);
+        //     // return LERP(0, iq16(PI/2), (sin(t) + 1) >> 1);
         // });
         
-        // test_joint(joint_right, [](const real_t time)->real_t{
-        //     // return real_t(PI);
-        //     // return real_t(PI*0.75) + sin(t) * real_t(PI/4);
-        //     return real_t(PI*0.25) + sin(t) * real_t(PI*0.25);
-        //     // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+        // test_joint(joint_right, [](const iq16 time)->iq16{
+        //     // return iq16(PI);
+        //     // return iq16(PI*0.75) + sin(t) * iq16(PI/4);
+        //     return iq16(PI*0.25) + sin(t) * iq16(PI*0.25);
+        //     // return LERP(0, iq16(PI/2), (sin(t) + 1) >> 1);
         // });
 
         // SG90 servo_test = {pca[14]};
-        // test_servo(servo_test, [](const real_t time)->real_t{
-        //     // return real_t(PI);
-        //     // auto ret =real_t(PI*0.75) + sin(t) * real_t(PI/4);
+        // test_servo(servo_test, [](const iq16 time)->iq16{
+        //     // return iq16(PI);
+        //     // auto ret =iq16(PI*0.75) + sin(t) * iq16(PI/4);
         //     auto ret = 0;
         //     DEBUG_PRINTLN(ret);
         //     return ret;
-        //     // return real_t(PI*0.25) + sin(t) * real_t(PI*0.25);
-        //     // return real_t(PI*0.25) + sin(t) * real_t(PI*0.25);
-        //     // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+        //     // return iq16(PI*0.25) + sin(t) * iq16(PI*0.25);
+        //     // return iq16(PI*0.25) + sin(t) * iq16(PI*0.25);
+        //     // return LERP(0, iq16(PI/2), (sin(t) + 1) >> 1);
         // });
 
-        // test_joint(joint_z, [](const real_t time)->real_t{
-        //     // return sin(time) * real_t(0.2) + real_t(0.6);
-        //     auto ret = sin(time) * real_t(0.6); 
+        // test_joint(joint_z, [](const iq16 time)->iq16{
+        //     // return sin(time) * iq16(0.2) + iq16(0.6);
+        //     auto ret = sin(time) * iq16(0.6); 
         //     // auto ret = 0; 
         //     // DEBUG_PRINTLN(ret);
         //     return ret;
         //     // return  0;
-        //     // return (sin(time))* real_t(PI/2);
+        //     // return (sin(time))* iq16(PI/2);
         //     // return 0;
-        //     // return real_t(PI);
+        //     // return iq16(PI);
         //     // return 0.2_r;
         // });
         if(false){
         // if(true){
-            // test_joint(joint_z, [](const real_t time)->real_t{
-            //     // return sin(time) * real_t(0.2) + real_t(0.6);
-            //     return sin(time) * real_t(0.6);
-            //     // return (sin(time))* real_t(PI/2);
+            // test_joint(joint_z, [](const iq16 time)->iq16{
+            //     // return sin(time) * iq16(0.2) + iq16(0.6);
+            //     return sin(time) * iq16(0.6);
+            //     // return (sin(time))* iq16(PI/2);
             //     // return 0;
-            //     // return real_t(PI);
+            //     // return iq16(PI);
             //     // return 0.2_r;
             // });
 
-            // servo_left.setRadian(real_t(PI/2));
-            // joint_left.setRadian(real_t(PI/2));
-            joint_left.setRadian(real_t(PI/2));
-            // joint_right.setRadian(real_t(PI/2));
-            // joint_right.setRadian(real_t(PI/2));
-            // joint_right.setRadian(real_t(0));
-            // servo_right.setRadian(real_t(0));
-            // servo_right.setRadian(real_t(PI));
+            // servo_left.setRadian(iq16(PI/2));
+            // joint_left.setRadian(iq16(PI/2));
+            joint_left.setRadian(iq16(PI/2));
+            // joint_right.setRadian(iq16(PI/2));
+            // joint_right.setRadian(iq16(PI/2));
+            // joint_right.setRadian(iq16(0));
+            // servo_right.setRadian(iq16(0));
+            // servo_right.setRadian(iq16(PI));
 
-            joint_right.setRadian(real_t(PI/2));
+            joint_right.setRadian(iq16(PI/2));
             joint_z.setRadian(0);
             // servo_z.setRadian
             // joint_right.setRadian(
-            // servo_right.setRadian(real_t(PI/2));
-            // servo_right.setRadian(real_t(PI/2));
+            // servo_right.setRadian(iq16(PI/2));
+            // servo_right.setRadian(iq16(PI/2));
             while(true);
-            // joint_left.setRadian(real_t(PI/2));
-            // joint_left.setRadian(real_t(PI/2));
-            joint_left.setRadian(real_t(PI));
+            // joint_left.setRadian(iq16(PI/2));
+            // joint_left.setRadian(iq16(PI/2));
+            joint_left.setRadian(iq16(PI));
             // joint_left.setRadian(0);
             // 
-            // test_joint(joint_left, [](const real_t time)->real_t{
-            //     // return real_t(PI);
-            //     // return real_t(PI/2);
-            //     return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+            // test_joint(joint_left, [](const iq16 time)->iq16{
+            //     // return iq16(PI);
+            //     // return iq16(PI/2);
+            //     return LERP(0, iq16(PI/2), (sin(t) + 1) >> 1);
             // });
 
 
-            // test_servo(servo_right, [](const real_t time)->real_t{
-            //     // return real_t(PI);
-            //     // return real_t(PI*0.75) + sin(t) * real_t(PI/4);
-            //     return real_t(PI*0.25) + sin(t) * real_t(PI*0.25);
-            //     // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+            // test_servo(servo_right, [](const iq16 time)->iq16{
+            //     // return iq16(PI);
+            //     // return iq16(PI*0.75) + sin(t) * iq16(PI/4);
+            //     return iq16(PI*0.25) + sin(t) * iq16(PI*0.25);
+            //     // return LERP(0, iq16(PI/2), (sin(t) + 1) >> 1);
             // });
 
-            test_joint(joint_right, [](const real_t time)->real_t{
-                return real_t(PI);
-                // return real_t(PI*0.75) + sin(t) * real_t(PI/4);
-                // return real_t(PI*0.25) + real_t(PI*0.25) * sin(time());
+            test_joint(joint_right, [](const iq16 time)->iq16{
+                return iq16(PI);
+                // return iq16(PI*0.75) + sin(t) * iq16(PI/4);
+                // return iq16(PI*0.25) + iq16(PI*0.25) * sin(time());
 
-                // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+                // return LERP(0, iq16(PI/2), (sin(t) + 1) >> 1);
             });
 
             // while(true);
@@ -337,9 +337,9 @@ void host_main(){
             while(true){
 
 
-                // auto height = real_t(0.02);//catch_height
-                // auto height = real_t(0.163);//free_height
-                auto height = real_t(0.14);//tray_height
+                // auto height = iq16(0.02);//catch_height
+                // auto height = iq16(0.163);//free_height
+                auto height = iq16(0.14);//tray_height
 
 
                 // auto height = LERP(0, 0, (sin(t) + 1) >> 1);
@@ -376,7 +376,7 @@ void host_main(){
 
                 // DEBUG_PRINTLN(joint_left.getRadian(), joint_right.getRadian(), joint_z.getRadian());
                 joint_z.setRadian(inv_radz);
-                // servo_cross.setRadian(real_t(0.4));
+                // servo_cross.setRadian(iq16(0.4));
                 clock::delay(20ms);
             }
         }
@@ -541,35 +541,35 @@ void host_main(){
 
 
             // chassis_module << new DelayAction(2000);
-            // chassis_module << new StrictSpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new StrictSpinAction(chassis_module, iq16(PI/2));
             // chassis_module << new DelayAction(1000);
-            // chassis_module << new StrictSpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new StrictSpinAction(chassis_module, iq16(-PI/2));
             // chassis_module << new DelayAction(1000);
 
             // chassis_module << new DelayAction(1000);
 
             // chassis_module << new StraightAction(chassis_module, 1.72_r);
-            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(PI/2));
             // chassis_module << new StraightAction(chassis_module, 1.72_r);
 
-            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
-            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(-PI/2));
 
             // chassis_module << new StraightAction(chassis_module, -1.72_r);
-            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(-PI/2));
             // chassis_module << new StraightAction(chassis_module, -1.72_r);
-            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(-PI/2));
             // chassis_module << new StraightAction(chassis_module, -1.72_r);
 
             // chassis_module << new DelayAction(2000);
-            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
-            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(PI/2));
 
-            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
-            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(-PI/2));
 
-            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
-            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(-PI/2));
+            // chassis_module << new SpinAction(chassis_module, iq16(-PI/2));
 
             while(true){
                 // DEBUG_PRINTLN(chassis_module.rot(), chassis_module.gyr());
@@ -591,7 +591,7 @@ void host_main(){
                 // DEBUG_PRINTLN(std::setprecision(4))
                 DEBUG_PRINTLN(x,y);
 
-                // chassis_module.setPosition({0,0,sin(t) * real_t(PI/2)});
+                // chassis_module.setPosition({0,0,sin(t) * iq16(PI/2)});
                 // , x,y,rad);
                 // chassis_module.setCurrent({{0,0}, 0.2_r});
                 // DEBUG_PRINTLN("???");
@@ -630,8 +630,8 @@ void host_main(){
         // if(false){
         auto test_gest_obs = [&](){//测试观测姿态
             ComplementaryFilter::Config rot_config = {
-                .kq = real_t(0.92),
-                .ko = real_t(0.5)
+                .kq = iq16(0.92),
+                .ko = iq16(0.5)
             };
             
             ComplementaryFilter rot_obs = {rot_config};
@@ -655,7 +655,7 @@ void host_main(){
                 // const auto [x,y] = flow_sensor_.getPosition();
 
                 // DEBUG_PRINTLN(rot, gyr_raw, x, y);
-                DEBUG_PRINTLN(mag3_raw.x, mag3_raw.y, mag3_raw.z, fposmod(rot_raw, real_t(PI/2)));
+                DEBUG_PRINTLN(mag3_raw.x, mag3_raw.y, mag3_raw.z, fposmod(rot_raw, iq16(PI/2)));
                 // DEBUG_PRINTLN(gyr_raw);
                 clock::delay(5ms);
             }
@@ -703,7 +703,7 @@ void host_main(){
 
             // auto delta = solver.inverse(Vec2{0, 0}, 0.7_r*sin(t));
 
-            real_t ang;
+            iq16 ang;
             bind_tick_200hz(
                 [&](){
                 // wheels.request();
@@ -714,7 +714,7 @@ void host_main(){
                 ang += math::Vec3(acc_gyr_sensor_.read_gyr()).z * 0.005_r;
                 // auto delta = solver.inverse(Vec2{0.4_r*sin(t), 0}, 0);
 
-                // static constexpr real_t delta = {0.003_r};
+                // static constexpr iq16 delta = {0.003_r};
                 // auto delta = solver.inverse(Vec2{0, 0.0003_r}, 0);
                 // auto delta = solver.inverse(Vec2{0, 0.3_r * sin(t)}, 0);
                 
@@ -722,8 +722,8 @@ void host_main(){
                 // auto delta = solver.inverse(Vec2{0, 0}, 0.005_r);
                 // auto delta = solver.inverse(Vec2{0.003_r, 0.003_r}, 0);
                 // auto delta = solver.inverse(Vec2{-0.003_r, 0.00_r}, 0);
-                // auto delta = solver.inverse(Vec2{real_t(1.0/200) * sin(t), 0.00_r}, 0);
-                auto delta = solver.inverse(Vec2{0, 0.00_r}, CLAMP2((1-ang) * real_t(9), 1));
+                // auto delta = solver.inverse(Vec2{iq16(1.0/200) * sin(t), 0.00_r}, 0);
+                auto delta = solver.inverse(Vec2{0, 0.00_r}, CLAMP2((1-ang) * iq16(9), 1));
                 // DEBUG_PRINTLN(millis());
                 // wheels.setCurrent(delta);
                 // DEBUG_PRINTLN(std::get<0>(delta));
@@ -750,7 +750,7 @@ void host_main(){
         if(true){
             wheels.init();
 
-            real_t py;
+            iq16 py;
             bind_tick_200hz(
                 [&](){
                 flow_sensor_.update();
@@ -758,7 +758,7 @@ void host_main(){
                 py = Vec2(flow_sensor_.getPosition()).y;
                 // py = Vec2(flow_sensor_.getPosition()).x;
                 
-                auto delta = solver.inverse(Vec2{0, CLAMP2((0.2_r-py) * real_t(20), 0.8_r)}, 0);
+                auto delta = solver.inverse(Vec2{0, CLAMP2((0.2_r-py) * iq16(20), 0.8_r)}, 0);
                 // auto delta = solver.inverse(Vec2{0, 1}, 0);
                 // DEBUG_PRINTLN(delta);
                 wheels.setCurrent(delta);
@@ -855,7 +855,7 @@ void host_main(){
         PCA9685 pca{i2c};
         pca.init();
         
-        pca.setFrequency(50, real_t(1.09));
+        pca.setFrequency(50, iq16(1.09));
 
         MG995 servo_left{pca[0]};
         MG995 servo_right{pca[1]};
@@ -1009,9 +1009,9 @@ void host_main(){
 
 
             chassis << new StraightAction(chassis, 1.72_r);
-            chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+            chassis << new StrictSpinAction(chassis, iq16(-PI/2));
             chassis << new StraightAction(chassis, 0.825_r);
-            chassis << new StrictSpinAction(chassis, real_t(PI/2));
+            chassis << new StrictSpinAction(chassis, iq16(PI/2));
         };
 
         // debuguart
@@ -1039,8 +1039,8 @@ void host_main(){
 
         Process process = Process::INIT;
 
-        static constexpr real_t g_width = 0.15_r;
-        static constexpr real_t g_back = 0.15_r;
+        static constexpr iq16 g_width = 0.15_r;
+        static constexpr iq16 g_back = 0.15_r;
 
         auto process_field = [&](){
             return;
@@ -1168,11 +1168,11 @@ void host_main(){
         };
 
         auto sm_go_staging = [&](){
-            chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+            chassis << new StrictSpinAction(chassis, iq16(-PI/2));
             chassis << new StraightAction(chassis, 0.825_r);
-            chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+            chassis << new StrictSpinAction(chassis, iq16(-PI/2));
             chassis << new StraightAction(chassis, 0.860_r);
-            chassis << new StrictSpinAction(chassis, real_t(PI/2));
+            chassis << new StrictSpinAction(chassis, iq16(PI/2));
         };
 
         auto sm_at_staging = [&](){
@@ -1206,9 +1206,9 @@ void host_main(){
         };
 
         auto sm_end = [&](){
-            chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+            chassis << new StrictSpinAction(chassis, iq16(-PI/2));
             chassis << new StraightAction(chassis, 0.860_r);
-            chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+            chassis << new StrictSpinAction(chassis, iq16(-PI/2));
             chassis << new StraightAction(chassis, 1.65_r);
             chassis << new StrictShiftAction(chassis, {-0.155_r, 0.225_r});   
         };
@@ -1305,15 +1305,15 @@ void host_main(){
         });
 
         // sm_go_rough();
-        // chassis.strict_spin(real_t(PI/2));
+        // chassis.strict_spin(iq16(PI/2));
         // for(size_t i = 0; i < 10; i ++){
-            // chassis.spin(real_t(PI/2));
+            // chassis.spin(iq16(PI/2));
             
         //     chassis.wait(1500);
         // }
         // chassis.wait(500);
-        // chassis.strict_spin(real_t(-PI/2));
-        // chassis.spin(real_t(-PI/2));
+        // chassis.strict_spin(iq16(-PI/2));
+        // chassis.spin(iq16(-PI/2));
         // chassis.wait(500);
 
         // grab.wait(4000);
@@ -1330,25 +1330,25 @@ void host_main(){
         // clock::delay(1000ms);
         // chassis << new ShiftAction(chassis, {0.255_r, 0.155_r});
         // chassis << new StraightAction(chassis, 1.74_r);
-        // chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+        // chassis << new StrictSpinAction(chassis, iq16(-PI/2));
         // chassis << new StraightAction(chassis, 0.805_r);
-        // chassis << new StrictSpinAction(chassis, real_t(PI/2));
+        // chassis << new StrictSpinAction(chassis, iq16(PI/2));
         // txo.outpp();
         // usart2.init(115200);
         // chassis.shift({0.2_r, 0});
         // chassis.shift({-0.2_r, 0});
-        // chassis.spin(real_t(PI/2));
-        // chassis.spin(real_t(PI/2));
-        // chassis.spin(real_t(PI/2));
-        // chassis.spin(real_t(-PI/2));
-        // chassis.spin(real_t(-PI/2));
-        // chassis.spin(real_t(-PI/2));
-        // chassis.spin(real_t(-PI/2));
+        // chassis.spin(iq16(PI/2));
+        // chassis.spin(iq16(PI/2));
+        // chassis.spin(iq16(PI/2));
+        // chassis.spin(iq16(-PI/2));
+        // chassis.spin(iq16(-PI/2));
+        // chassis.spin(iq16(-PI/2));
+        // chassis.spin(iq16(-PI/2));
         while(true){
             // chassis.setCurrent({0,0, 3 * sin(t)});
             // chassis.setCurrent({0, /sin(t), 0});
             // chassis.setCurrent({0.4_r, 0, 0});
-            // wheels.setCurrent({real_t(1), 0, 0, 0});
+            // wheels.setCurrent({iq16(1), 0, 0, 0});
             // wheels.setCurrent({1, -1, 1, -1});
             // wheels.setCurrent({0, 1, 0, 0});
             // wheels.setCurrent({0, 0, 1, 0});
@@ -1429,7 +1429,7 @@ void host_main(){
             // DEBUG_PRINTLN(int(status));
             // DEBUG_PRINTLN(grab.pending());
 
-            // chassis_module.setPosition({0,0,sin(t) * real_t(PI/2)});
+            // chassis_module.setPosition({0,0,sin(t) * iq16(PI/2)});
             // , x,y,rad);
             // chassis_module.setCurrent({{0,0}, 0.2_r});
             // DEBUG_PRINTLN("???");
@@ -1468,10 +1468,10 @@ void host_main(){
             led.toggle();
             clock::delay(19ms);
 
-            real_t spd = 0;
+            iq16 spd = 0;
             if(can.available()){
                 // DEBUG_PRINTLN(can.read());
-                spd = real_t(can.read());
+                spd = iq16(can.read());
             }
             DEBUG_PRINTLN(millis(), targ, can.pending(), spd);
         }

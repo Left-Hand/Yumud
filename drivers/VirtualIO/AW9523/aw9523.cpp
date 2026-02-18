@@ -147,7 +147,7 @@ IResult<> Self::set_led_current_limit(const CurrentLimit limit){
 
 IResult<> Self::set_led_current_dutycycle(
     const hal::PinMask pin_mask, 
-    const real_t dutycycle
+    const iq16 dutycycle
 ){
     TODO();
     #if 0

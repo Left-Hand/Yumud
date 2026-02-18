@@ -181,7 +181,7 @@ void sincos_pwm_main(){
 
     while(true){
         
-        const auto t = clock::seconds() * real_t(3 * TAU);
+        const auto t = clock::seconds() * iq16(3 * TAU);
         const auto [st, ct] = math::sincospu(t);
         
         pwm_a.set_dutycycle(st);

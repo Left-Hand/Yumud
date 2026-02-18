@@ -226,7 +226,7 @@ public:
     [[nodiscard]] IResult<> validate();
 
     [[nodiscard]] IResult<> set_exposure_value(const uint16_t value);
-    [[nodiscard]] IResult<> set_gain(const real_t gain);
+    [[nodiscard]] IResult<> set_gain(const iq16 gain);
 
     [[nodiscard]] const auto & frame() const {return frame_;}
     [[nodiscard]] constexpr auto size() const {return FRAME_SIZE;}

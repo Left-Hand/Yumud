@@ -41,7 +41,7 @@ public:
 
     [[nodiscard]] IResult<> validate();
     
-    [[nodiscard]] IResult<> set_frequency(const uint32_t freq, const real_t trim);
+    [[nodiscard]] IResult<> set_frequency(const uint32_t freq, const iq16 trim);
 
     [[nodiscard]] IResult<> set_pwm(const Nth nth, const uint16_t on, const uint16_t off);
 

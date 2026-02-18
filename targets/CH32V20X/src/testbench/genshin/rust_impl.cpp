@@ -61,16 +61,16 @@ struct ImplFor<DeserializeFrom<RawBytes>, D> {
 
 
 template<size_t Q>
-struct ImplFor<SerializeAs<RawBytes>, math::fixed_t<Q, int32_t>> {
-    static constexpr std::array<uint8_t, 4> serialize(const math::fixed_t<Q, int32_t> obj){
+struct ImplFor<SerializeAs<RawBytes>, math::fixed<Q, int32_t>> {
+    static constexpr std::array<uint8_t, 4> serialize(const math::fixed<Q, int32_t> obj){
         return ImplFor<SerializeAs<RawBytes>, int32_t>::serialize(obj.to_bits());
     }
 };
 
 template<size_t Q>
-struct ImplFor<DeserializeFrom<RawBytes>, math::fixed_t<Q, int32_t>> {
-    static constexpr math::fixed_t<Q, int32_t> deserialize(const std::span<const uint8_t, 4> bytes){
-        return math::fixed_t<Q, int32_t>::from_bits(ImplFor<DeserializeFrom<RawBytes>, int32_t>::deserialize(bytes));
+struct ImplFor<DeserializeFrom<RawBytes>, math::fixed<Q, int32_t>> {
+    static constexpr math::fixed<Q, int32_t> deserialize(const std::span<const uint8_t, 4> bytes){
+        return math::fixed<Q, int32_t>::from_bits(ImplFor<DeserializeFrom<RawBytes>, int32_t>::deserialize(bytes));
     }
 };
 
@@ -241,7 +241,7 @@ struct ImplFor<SerializeAs<uint8_t>, MyStruct> {
 
 
 template<>
-struct ImplFor<real_t, MyStruct> {
+struct ImplFor<iq16, MyStruct> {
     static auto method(const MyStruct & obj) {
         // return tmp::make_bytes_from_tuple(std::make_tu)
     }
@@ -261,9 +261,9 @@ protected:
     //     Triangle,
     // };
 
-    struct Circle{real_t radius;};
-    struct Square{real_t length;};
-    struct Triangle{real_t a,b,c;};
+    struct Circle{iq16 radius;};
+    struct Square{iq16 length;};
+    struct Triangle{iq16 a,b,c;};
 
 private:    
     using Element = std::variant<Circle, Square, Triangle>;
@@ -274,7 +274,7 @@ private:
 void genshin_main() {
     MyStruct obj;
     my_method<int>(obj); // 输出：Set to 42 via int
-    my_method<real_t>(obj); // 输出：Set to 42.0 via real_t
+    my_method<iq16>(obj); // 输出：Set to 42.0 via iq16
 }
 
 }

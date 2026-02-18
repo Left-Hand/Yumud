@@ -55,8 +55,8 @@ struct alignas(16) [[nodiscard]] SincosIntermediate{
     using Self = SincosIntermediate;
 
     struct SinCosResult{
-        math::fixed_t<31, int32_t> sin;
-        math::fixed_t<31, int32_t> cos;
+        math::fixed<31, int32_t> sin;
+        math::fixed<31, int32_t> cos;
 
     };
 
@@ -69,7 +69,7 @@ struct alignas(16) [[nodiscard]] SincosIntermediate{
 
     template<typename Fn>
     __attribute__((always_inline)) constexpr 
-    math::fixed_t<31, int32_t> exact_sin(Fn && taylor_law) const {
+    math::fixed<31, int32_t> exact_sin(Fn && taylor_law) const {
         //获取查找表的校准值
         int32_t a, b;
         switch(sect_num){
@@ -108,12 +108,12 @@ struct alignas(16) [[nodiscard]] SincosIntermediate{
             default:
                 __builtin_unreachable();
         }
-        return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(uq32_x_offset, a, b));
+        return math::fixed<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(uq32_x_offset, a, b));
     }
 
     template<typename Fn>
     __attribute__((always_inline)) constexpr 
-    math::fixed_t<31, int32_t> exact_cos(Fn && taylor_law) const {
+    math::fixed<31, int32_t> exact_cos(Fn && taylor_law) const {
         int32_t a, b;
         switch(sect_num){
             case 0:
@@ -152,7 +152,7 @@ struct alignas(16) [[nodiscard]] SincosIntermediate{
                 __builtin_unreachable();
         }
 
-        return math::fixed_t<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(uq32_x_offset, a, b));
+        return math::fixed<31, int32_t>::from_bits(std::forward<Fn>(taylor_law)(uq32_x_offset, a, b));
     }
 
     template<typename Fn>
@@ -216,11 +216,11 @@ struct alignas(16) [[nodiscard]] SincosIntermediate{
 
             #if 0
             /* 0.333*x*C(k) */
-            constexpr int32_t ONE_BY_3_IQ31_BITS = math::fixed_t<31, int32_t>(1.0/3).to_bits() + 1;
+            constexpr int32_t ONE_BY_3_IQ31_BITS = math::fixed<31, int32_t>(1.0/3).to_bits() + 1;
             res_iq31_bits = iq31_mpy_uq32(ONE_BY_3_IQ31_BITS, uq32_x_offset);
             res_iq31_bits = iqmath::details::__mpyf_l(iq31_cos_coeff, res_iq31_bits);
             #else
-            constexpr int32_t TWO_BY_3_IQ31_BITS = math::fixed_t<31, int32_t>(2.0/3).to_bits() + 1;
+            constexpr int32_t TWO_BY_3_IQ31_BITS = math::fixed<31, int32_t>(2.0/3).to_bits() + 1;
             res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(TWO_BY_3_IQ31_BITS) * uq32_x_offset) >> 32);
             res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(res_iq31_bits) * iq31_cos_coeff) >> 32);
             #endif

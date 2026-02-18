@@ -169,7 +169,7 @@ IResult<> MT9V034::read_reg(const uint8_t addr, uint16_t & pbuf){
     return Ok();
 }
 
-IResult<> MT9V034::set_gain(const real_t gain){
+IResult<> MT9V034::set_gain(const iq16 gain){
     static constexpr auto GAIN_LSB = 0.0625_iq16;
     static constexpr auto INV_GAIN_LSB = 1 / GAIN_LSB;
     static constexpr auto MAX_GAIN = 127 * GAIN_LSB;

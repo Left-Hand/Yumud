@@ -43,20 +43,20 @@ protected:
 class PwmServo final:public ServoBase{
 private:
     ScaledPwm pwm_;
-    Angular<real_t> last_angle;
+    Angular<iq16> last_angle;
 
-    void set_global_angle(const Angular<real_t> angle) {
+    void set_global_angle(const Angular<iq16> angle) {
         pwm_.set_dutycycle((angle).to_turns());
         last_angle = angle;
     }
 
-    Angular<real_t> get_global_angle() {
+    Angular<iq16> get_global_angle() {
         return last_angle;
     }
     
 public:
     PwmServo(hal::PwmIntf & pwm):
-        pwm_(pwm, {real_t(0.025), real_t(0.125)})
+        pwm_(pwm, {iq16(0.025), iq16(0.125)})
         {;}
 
 };
@@ -64,26 +64,26 @@ public:
 class PwmSpeedServo:public SpeedServo{
 protected: 
     ScaledPwm pwm_;
-    real_t max_turns_per_second_;
-    real_t expect_speed_;
+    iq16 max_turns_per_second_;
+    iq16 expect_speed_;
 
-    void set_speed_directly(const real_t rps) {
+    void set_speed_directly(const iq16 rps) {
         expect_speed_ = rps;
         set_dutycycle(rps / max_turns_per_second_);
     }
 
-    real_t get_speed() {
+    iq16 get_speed() {
         return expect_speed_;
     }
 
-    void set_dutycycle(const real_t dutycycle){
-        pwm_.set_dutycycle((dutycycle + 1) * real_t(0.5));
+    void set_dutycycle(const iq16 dutycycle){
+        pwm_.set_dutycycle((dutycycle + 1) * iq16(0.5));
     }
 public:
-    PwmSpeedServo(hal::PwmIntf & pwm, const real_t max_turns_per_second = 2):
-            pwm_(pwm, {real_t(0.025), real_t(0.125)}),
+    PwmSpeedServo(hal::PwmIntf & pwm, const iq16 max_turns_per_second = 2):
+            pwm_(pwm, {iq16(0.025), iq16(0.125)}),
             max_turns_per_second_(max_turns_per_second),
-            expect_speed_(real_t(0))
+            expect_speed_(iq16(0))
             {;}
 
 

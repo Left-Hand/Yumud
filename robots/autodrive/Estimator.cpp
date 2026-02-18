@@ -9,11 +9,11 @@
 
 
 
-// real_t Estimator::calculate_raw_dir(const math::Vec3 & mag) const {
+// iq16 Estimator::calculate_raw_dir(const math::Vec3 & mag) const {
 //     return -atan2(mag.y, mag.x);
 // }
 
-// void Estimator::update(const real_t time){
+// void Estimator::update(const iq16 time){
 //     // acc_gyr_sensor_.update();
 //     // mag_sensor_.update();
 
@@ -47,7 +47,7 @@
 
 
 
-//     // flow_sensor_.update(rot_ + real_t(PI/2));
+//     // flow_sensor_.update(rot_ + iq16(PI/2));
 
 //     // const auto new_pos = Vec2(flow_sensor_.getPosition());
 //     // const auto delta_pos = new_pos - pos_;
@@ -63,7 +63,7 @@
 //     // DEBUG_PRINTLN(rot_, gyr_, x, y);
 // }
 
-// void Estimator::recalibrate(const Vec2 & _pos, const real_t _rot){
+// void Estimator::recalibrate(const Vec2 & _pos, const iq16 _rot){
 //     TODO();
 //     pos_ = _pos;
 //     rot_ = _rot;

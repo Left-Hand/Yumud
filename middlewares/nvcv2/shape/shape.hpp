@@ -115,7 +115,7 @@ namespace ymd::nvcv2::shape{
         Image<Binary> dst,
         const Image<Binary> & src, 
         const size_t m, 
-        const real_t percent);
+        const iq16 percent);
 
     void zhang_suen(Image<Binary> & dst, const Image<Binary> & src);
 

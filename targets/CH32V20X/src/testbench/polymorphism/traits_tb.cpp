@@ -16,20 +16,20 @@ private:
     template<typename T> 
     struct vtable_t {
         using Self = vtable_t<T>;
-        static real_t area_dispatcher (const void* self ) {
+        static iq16 area_dispatcher (const void* self ) {
             return (reinterpret_cast<const T *>(self))->area ( ); 
         };
 
-        static constexpr real_t (* area) (const void* self ) = &Self::area_dispatcher;
+        static constexpr iq16 (* area) (const void* self ) = &Self::area_dispatcher;
     }; 
 
     struct vtable{
-        real_t (* area) (const void* self );
+        iq16 (* area) (const void* self );
     }; 
 
     struct body{
         public:
-        inline real_t area ( ) const{
+        inline iq16 area ( ) const{
             return vtable_-> area (self_);
         } 
 
@@ -60,7 +60,7 @@ public:
 
 class Rectangle {
 public:
-    Rectangle(real_t width, real_t height) : width_(width), height_(height) {
+    Rectangle(iq16 width, iq16 height) : width_(width), height_(height) {
         // DEBUG_PRINTLN("rect created");
         // cnt++;
     }
@@ -72,7 +72,7 @@ public:
     ~Rectangle(){
         // DEBUG_PRINTLN("rect dropped");
     }
-    real_t area() const { return width_ * height_; }
+    iq16 area() const { return width_ * height_; }
 
     friend OutputStream & operator<<(OutputStream & os, const Rectangle & rect) {
         return os << "{Rectangle: width = " << rect.width_ << ", height = " << rect.height_ << "}";
@@ -80,26 +80,26 @@ public:
 
     auto & width() { return width_; }
 private:
-    real_t width_;
-    real_t height_;
+    iq16 width_;
+    iq16 height_;
 };
 
 class Circle {
 public:
-    Circle(real_t radius) : radius_(radius){
+    Circle(iq16 radius) : radius_(radius){
     }
     Circle(const Circle&) = delete;
     Circle(Circle &&) = delete;
     ~Circle(){
     }
 
-    real_t area() const { return radius_ * radius_ * real_t(M_PI);}
+    iq16 area() const { return radius_ * radius_ * iq16(M_PI);}
 
     friend OutputStream & operator<<(OutputStream & os, const Circle & circle) {
         return os << "{Circle: radius = " << circle.radius_ << "}";
     }
 private:
-    real_t radius_;
+    iq16 radius_;
 };
 
 

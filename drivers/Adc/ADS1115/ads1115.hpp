@@ -31,7 +31,7 @@ public:
 
     [[nodiscard]] IResult<bool> is_busy();
 
-    [[nodiscard]] Option<real_t> get_voltage();
+    [[nodiscard]] Option<iq16> get_voltage();
 
     [[nodiscard]] IResult<> validate();
 

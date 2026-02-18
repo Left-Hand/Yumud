@@ -15,8 +15,8 @@ class JointMotorActuatorIntf{
 public:
     virtual void activate() = 0;
     virtual void deactivate() = 0;
-    virtual void set_angle(Angular<real_t> angle) = 0;
-    virtual Angular<real_t> last_angle() = 0;
+    virtual void set_angle(Angular<iq16> angle) = 0;
+    virtual Angular<iq16> last_angle() = 0;
     virtual void trig_homing() = 0;
     virtual void trig_cali() = 0;
     virtual bool is_homing_done() = 0;
@@ -41,15 +41,15 @@ class MockJointMotorActuator final:
 public:
     void activate() {}
     void deactivate() {}
-    void set_angle(Angular<real_t> angle) {
+    void set_angle(Angular<iq16> angle) {
         angle = position_;
     }
     void trig_homing() {}
     void trig_cali() {}
     bool is_homing_done() {return true;}
-    Angular<real_t> last_angle(){return 0_deg;}
+    Angular<iq16> last_angle(){return 0_deg;}
 private:
-    Angular<real_t> position_ = 0_deg;
+    Angular<iq16> position_ = 0_deg;
 };
 
 class ZdtJointMotorActuator final
@@ -77,7 +77,7 @@ public:
         write_packet(flat_packet);
     }
 
-    void set_angle(Angular<real_t> angle){
+    void set_angle(Angular<iq16> angle){
         last_angle_ = angle;
         const auto flat_packet = factory_.set_angle(
             angle,
@@ -86,7 +86,7 @@ public:
         write_packet(flat_packet);
     }
 
-    Angular<real_t> last_angle(){
+    Angular<iq16> last_angle(){
         return last_angle_ ;
     }
 
@@ -122,7 +122,7 @@ private:
     Config cfg_;
     zdtmotor::ZdtFrameFactory & factory_;
 
-    Angular<real_t> last_angle_;
+    Angular<iq16> last_angle_;
     Option<Milliseconds> homing_begin_ = None;
     std::atomic<bool> is_homed_ = false;
 

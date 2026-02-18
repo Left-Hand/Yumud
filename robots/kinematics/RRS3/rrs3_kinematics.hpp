@@ -153,14 +153,14 @@ public:
         T z;
 
         struct [[nodiscard]] Initializer{
-            Angular<real_t> yaw;
-            Angular<real_t> pitch;
-            real_t height;
+            Angular<iq16> yaw;
+            Angular<iq16> pitch;
+            iq16 height;
         };
 
         static constexpr Gesture from(const Initializer & iz){
             const Gesture gest{
-                .orientation = math::Quat<real_t>::from_euler_angles<EulerAnglePolicy::XYZ>({
+                .orientation = math::Quat<iq16>::from_euler_angles<EulerAnglePolicy::XYZ>({
                     .x = iz.yaw, 
                     .y = iz.pitch, 
                     .z = 0

@@ -18,7 +18,7 @@ struct QuadraticInterpolation final{
         if (a == iq16(0.5)){
             a += epsilon;
         }
-        // fixed_t a = 1;
+        // fixed a = 1;
         // solve t from x (an inverse operation)
         iq16 om2a = 1 - 2*a;
         iq16 k = (math::sqrt(a*a + om2a*x) - a)/om2a;
