@@ -46,7 +46,7 @@ constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
      *     0.666666 < uiq31Input < 1.333333.
      */
     uiq31Input = (uint32_t)iqNInput;
-    while (uiq31Input < _iq31_twoThird) {
+    while (uiq31Input < uint32_t(_iq31_twoThird)) {
         uiq31Input <<= 1;
         i16Exp--;
     }
@@ -59,24 +59,16 @@ constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
      */
     iq30Result = *piq30Coeffs++;
 
-    #if 1
-    uiq31Input -= _iq31_one;
 
-    /* Calculate log(uiq31Input) using the iq30 Taylor Series coefficients. */
-    for (uint8_t ui8Counter = IQ30LOG_ORDER; ui8Counter > 0; ui8Counter--) {
-        iq30Result = __mpyf_l(uiq31Input, iq30Result);
-        iq30Result += *piq30Coeffs++;
+    const int32_t iq31Input = uiq31Input - _iq31_one;
+    if(iq31Input > INT32_MAX) __builtin_unreachable();
+    const int32_t iq32Input = int32_t(iq31Input) * 2;
+    for (size_t i = 0; i < IQ30LOG_ORDER; i++) {
+        iq30Result = static_cast<int32_t>((static_cast<int64_t>(iq32Input) * iq30Result) >> 32);
+        iq30Result += piq30Coeffs[i];
     }
-    #else
-    const uint32_t uiq32Input = (uiq31Input - _iq31_one) << 1;
-    for (uint8_t ui8Counter = IQ30LOG_ORDER; ui8Counter > 0; ui8Counter--) {
-        // iq30Result = __mpyf_l(uiq31Input, iq30Result);
-        iq30Result = static_cast<uint32_t>((static_cast<int64_t>(uiq32Input) * iq30Result) >> 32);
-        iq30Result += *piq30Coeffs++;
-    }
-    #endif
 
-
+    int32_t iqNResult = iq30Result >> (30 - Q);
     /*
      * Add i16Exp * ln(2) to the iqN result. This will never saturate since we
      * check for the minimum value at the start of the function. Negative
@@ -84,16 +76,17 @@ constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
      * unsigned data type.
      */
     if (i16Exp > 0) {
-        return iq30Result + static_cast<int32_t>((static_cast<int64_t>(_uq32_ln2) * ((int32_t)i16Exp << 30)) >> 32);
+        iqNResult += uint32_t(uint64_t(_uq32_ln2) * uint32_t(((int32_t)i16Exp << Q)) >> 32) ;
     } else {
-        return iq30Result - static_cast<int32_t>((static_cast<int64_t>(_uq32_ln2) * (((uint32_t) - i16Exp) << 30)) >> 32);
+        iqNResult -= uint32_t(uint64_t(_uq32_ln2) * uint32_t((((uint32_t) - i16Exp) << Q)) >> 32) ;
     }
 
+    return iqNResult;
 }
 
 template<size_t Q>
-constexpr math::fixed<30, int32_t> _IQNlog(math::fixed<Q, uint32_t> a){
-    return math::fixed<30, int32_t>::from_bits(__IQNlog<Q>(a.to_bits(), ((Q >= 27) ? IQNLOG_MIN[Q - 27] : 1)));
+constexpr math::fixed<Q, int32_t> _IQNlog(math::fixed<Q, uint32_t> a){
+    return math::fixed<Q, int32_t>::from_bits(__IQNlog<Q>(a.to_bits(), ((Q >= 27) ? IQNLOG_MIN[Q - 27] : 1)));
 }
 
 }

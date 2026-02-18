@@ -56,6 +56,8 @@ constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input)
      *
      *     (sqrt((1 - uiq31Input)/2))
      */
+
+     #if 0
     uint32_t uiq32Input;
     {
         const uint32_t Temp = 0x80000000u - uiq31Input;
@@ -77,10 +79,36 @@ constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input)
             is_acos = false;
         }
     }
+    #else
+    /*
+     * Apply the transformation from asin to acos if input is greater than 0.5.
+     * The first step is to calculate the following:
+     *
+     *     (sqrt((1 - uiq31Input)/2))
+     */
+    {
+        const uint32_t uiq31InputTemp = 0x80000000u - uiq31Input;
+        if (uiq31InputTemp < 0x40000000u) {
+            /* Halve the result. */
+            uiq31Input = uiq31InputTemp >> 1;
+
+            /* Calculate sqrt((1 - uiq31Input)/2) */
+            uiq31Input = _IQNsqrt32<31>(math::fixed<31, int32_t>::from_bits(uiq31Input)).to_bits();
+
+            /* Flag that the transformation was used. */
+            is_acos = true;
+        }else{
+            is_acos = false;
+        }
+    }
+
+    if(uiq31Input & 0x80000000) __builtin_unreachable();
+    const uint32_t uiq32Input = (uiq31Input << 1); 
+    #endif
     
     /* Calculate the index using the left 6 most bits of the input. */
     /* Set the coefficient pointer. */
-    const int32_t * piq29Coeffs = IQ29ASIN_COEFFS[size_t((uiq32Input >> 27) & 0x003f)];
+    const int32_t * piq29Coeffs = IQ29ASIN_COEFFS[size_t((uiq31Input >> 26) & 0x003f)];
     int32_t iq29Result;
 
     /*
@@ -128,78 +156,6 @@ constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input)
 
 }
 
-
-constexpr math::fixed<29, int32_t> __IQNasin32(uint32_t uiq32Input)
-{
-    bool is_acos = false;
-
-    /*
-     * Apply the transformation from asin to acos if input is greater than 0.5.
-     * The first step is to calculate the following:
-     *
-     *     (sqrt((1 - x)/2))
-     */
-    {
-        const uint32_t Temp = ~uiq32Input;
-        if (Temp < 0x80000000u) {
-            // uiq32Input = _IQNsqrt32<32>(math::fixed<32, uint32_t>::from_bits(Temp)).to_bits();
-            uiq32Input = _IQNsqrt32<32>(math::fixed<32, uint32_t>::from_bits(Temp)).to_bits() >> 1;
-            is_acos = true;
-        }else{
-            is_acos = false;
-        }
-    }
-    
-    /* Calculate the index using the left 6 most bits of the input. */
-    /* Set the coefficient pointer. */
-    // const int32_t * piq29Coeffs = IQ29ASIN_COEFFS[size_t((uiq32Input >> 27) & 0x003f)];
-    const int32_t * piq29Coeffs = IQ29ASIN_COEFFS[size_t((uiq32Input >> 27))];
-    int32_t iq29Result;
-
-    /*
-     * Calculate asin(x) using the following Taylor series:
-     *
-     *     asin(x) = (((c4*x + c3)*x + c2)*x + c1)*x + c0
-     */
-
-    /* c4*x */
-    iq29Result = int32_t(((int64_t(uiq32Input) * (*piq29Coeffs++)) >> 32));
-
-    /* c4*x + c3 */
-    iq29Result += *piq29Coeffs++;
-
-    /* (c4*x + c3)*x */
-    iq29Result = int32_t(((int64_t(uiq32Input) * iq29Result) >> 32));
-
-    /* (c4*x + c3)*x + c2 */
-    iq29Result += *piq29Coeffs++;
-
-    /* ((c4*x + c3)*x + c2)*x */
-    iq29Result = int32_t(((int64_t(uiq32Input) * iq29Result) >> 32));
-
-    /* ((c4*x + c3)*x + c2)*x + c1 */
-    iq29Result += *piq29Coeffs++;
-
-    /* (((c4*x + c3)*x + c2)*x + c1)*x */
-    iq29Result = int32_t(((int64_t(uiq32Input) * iq29Result) >> 32));
-
-    /* (((c4*x + c3)*x + c2)*x + c1)*x + c0 */
-    iq29Result += *piq29Coeffs++;
-
-    /* check if we switched to acos */
-    if (is_acos) {
-        /* asin(x) = pi/2 - 2*iq29Result */
-
-        // acos(x) = -(2 * asin(sqrt(1-x)/2)-pi/2)
-        // 2\arcsin\left(\sqrt{\frac{\left(1-x\right)}{2}}\right)-\frac{\pi}{2}
-        iq29Result = iq29Result << 1;
-        iq29Result -= _iq29_halfPi;      // this is equivalent to the above
-        iq29Result = -iq29Result;       // but avoids using temporary registers
-    }
-
-    return math::fixed<29, int32_t>::from_bits(iq29Result);
-
-}
 
 template<const size_t Q>
 constexpr math::fixed<29, int32_t> _IQNasin(math::fixed<Q, int32_t> iqNInput){
