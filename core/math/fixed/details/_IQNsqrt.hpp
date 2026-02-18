@@ -32,8 +32,7 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
 
 
         /* Use left most byte as index into lookup table (range: 32-128) */
-        const uint32_t ui8Index = ((uiq32Input >> 25) - 32);
-        uiq30Guess = (uint32_t)IQ14SQRT_LOOKUP[ui8Index] << 16;
+        uiq30Guess = (uint32_t)IQ14SQRT_LOOKUP[uint32_t(((uiq32Input >> 25) - 32))] << 16;
 
         /*
         * Set the loop counter:
@@ -65,20 +64,13 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
         *     root(x) = x * 1/root(x)
         */
         {
-            #if 0
             auto newton_iter = [&]() __attribute__((always_inline)){
-                uint32_t uiq32_temp = __mpyf_ul(uiq32Input, uiq30Guess);
-                uint32_t uiq31_temp = (0xC0000000 - __mpyf_ul(uiq32_temp, uiq30Guess));
-                uiq30Guess = __mpyf_ul(uiq30Guess, uiq31_temp);
+                if(uiq30Guess & 0x80000000) __builtin_unreachable();
+                const uint32_t uiq31Guess = uiq30Guess << 1;
+                uint32_t uiq32_temp = (uint64_t(uiq32Input) * (uiq31Guess)) >> 32;
+                uint32_t uiq31_temp = (0xC0000000 - uint32_t((uint64_t(uiq32_temp) * (uiq31Guess)) >> 32));
+                uiq30Guess = (uint64_t(uiq31Guess) * (uiq31_temp)) >> 32;
             };
-            #else
-            auto newton_iter = [&]() __attribute__((always_inline)){
-                uint32_t uiq32_temp = (uint64_t(uiq32Input) * (uiq30Guess << 1)) >> 32;
-                uint32_t uiq31_temp = (0xC0000000 - uint32_t((uint64_t(uiq32_temp) * (uiq30Guess << 1)) >> 32));
-                uiq30Guess = (uint64_t(uiq30Guess << 1) * (uiq31_temp)) >> 32;
-            };
-
-            #endif
 
             /* Iterate through Newton-Raphson algorithm. */
             newton_iter();
@@ -96,7 +88,8 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
             * uiq30Guess contains the inverse square root approximation, multiply
             * by uiq32Input to get square root result.
             */
-            uiq31Result = __mpyf_ul(uiq30Guess, uiq32Input);
+            if(uiq30Guess & 0x80000000) __builtin_unreachable();
+            uiq31Result = (uint64_t(uiq30Guess << 1) * (uiq32Input)) >> 32;
 
 
             /*

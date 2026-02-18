@@ -79,6 +79,34 @@ static constexpr int64_t err64(const uint64_t a, const uint64_t b){
     static_assert(math::sinpu(iq30(1.0)) == iq30(0));
 }
 
+
+
+[[maybe_unused]] static void test_atan(){
+    static_assert(std::abs((double)math::atan2pu(ymd::literals::iq16(1.0), ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
+    static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), -ymd::literals::iq16(1.0)) - 0.625) < 1E-7);
+    static_assert(std::abs((double)math::atan2pu(ymd::literals::iq16(1.0), -ymd::literals::iq16(1.0)) - 0.375) < 1E-7);
+    static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), ymd::literals::iq16(1.0)) - 0.875) < 1E-7);
+
+    static_assert(std::abs((double)math::atanpu(ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
+    static_assert(std::abs((double)math::atanpu(-ymd::literals::iq16(1.0)) - 0.875) < 1E-7);
+}
+
+[[maybe_unused]] static void test_asin(){
+    static_assert(std::abs((double)math::asin(ymd::literals::iq16(0)) - (0)) < 1E-7);
+    static_assert(std::abs((double)math::asin(ymd::literals::iq16(1.0)) - (M_PI / 2)) < 1E-7);
+    static_assert(std::abs((double)math::asin(ymd::literals::iq16(-1.0)) - (-M_PI / 2)) < 1E-7);
+
+    constexpr auto e1 = std::abs((double)math::asin(ymd::literals::iq16(0.707106781187)) - (M_PI / 4));
+    static_assert(e1 < 2.06E-4);
+
+    static_assert(std::abs((double)math::asin(ymd::literals::iq16(0.866025403784)) - (M_PI / 3)) < 1E-4);
+    
+    static_assert(std::abs((double)math::asin(ymd::literals::iq16(0.5)) - (M_PI / 6)) < 1E-7);
+
+    constexpr auto e2 = std::abs((double)math::asin(ymd::literals::iq16(0.7)) - (0.775397496611));
+    static_assert(e2 < 1E-4);
+}
+
 [[maybe_unused]] static void test_log(){
     constexpr float f_n3 = float(math::log(uq16(0.0497870683679)));
     constexpr float f_n2 = float(math::log(uq16(0.135335283237)));
@@ -163,32 +191,6 @@ static constexpr int64_t err64(const uint64_t a, const uint64_t b){
         static_assert(std::abs(f_n3 - 0.0497870683679) < 1e-4);
         static_assert(std::abs(f_n5 - 0.00673794699909) < 1e-4);
     }
-}
-
-[[maybe_unused]] static void test_atan(){
-    static_assert(std::abs((double)math::atan2pu(ymd::literals::iq16(1.0), ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
-    static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), -ymd::literals::iq16(1.0)) - 0.625) < 1E-7);
-    static_assert(std::abs((double)math::atan2pu(ymd::literals::iq16(1.0), -ymd::literals::iq16(1.0)) - 0.375) < 1E-7);
-    static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), ymd::literals::iq16(1.0)) - 0.875) < 1E-7);
-
-    static_assert(std::abs((double)math::atanpu(ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
-    static_assert(std::abs((double)math::atanpu(-ymd::literals::iq16(1.0)) - 0.875) < 1E-7);
-}
-
-[[maybe_unused]] static void test_asin(){
-    static_assert(std::abs((double)math::asin(ymd::literals::iq16(0)) - (0)) < 1E-7);
-    static_assert(std::abs((double)math::asin(ymd::literals::iq16(1.0)) - (M_PI / 2)) < 1E-7);
-    static_assert(std::abs((double)math::asin(ymd::literals::iq16(-1.0)) - (-M_PI / 2)) < 1E-7);
-
-    constexpr auto e1 = std::abs((double)math::asin(ymd::literals::iq16(0.707106781187)) - (M_PI / 4));
-    static_assert(e1 < 2.06E-4);
-
-    static_assert(std::abs((double)math::asin(ymd::literals::iq16(0.866025403784)) - (M_PI / 3)) < 1E-4);
-    
-    static_assert(std::abs((double)math::asin(ymd::literals::iq16(0.5)) - (M_PI / 6)) < 1E-7);
-
-    constexpr auto e2 = std::abs((double)math::asin(ymd::literals::iq16(0.7)) - (0.775397496611));
-    static_assert(e2 < 1E-4);
 }
 
 }

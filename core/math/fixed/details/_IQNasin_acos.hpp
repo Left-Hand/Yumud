@@ -108,7 +108,7 @@ constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input)
     
     /* Calculate the index using the left 6 most bits of the input. */
     /* Set the coefficient pointer. */
-    const int32_t * piq29Coeffs = IQ29ASIN_COEFFS[size_t((uiq31Input >> 26) & 0x003f)];
+    const int32_t * piq29Coeffs = IQ29ASIN_COEFFS[size_t(uiq32Input >> 27)];
     int32_t iq29Result;
 
     /*
