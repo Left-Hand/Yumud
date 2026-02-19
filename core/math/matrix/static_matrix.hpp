@@ -2,7 +2,7 @@
 
 #include "memory.h"
 
-#include "core/math/real.hpp"
+#include "core/math/realmath.hpp"
 #include "core/stream/ostream.hpp"
 #include "core/utils/Option.hpp"
 
@@ -80,8 +80,11 @@ public:
         { return storage_[row * C + col];}
 
     template<size_t I, size_t J>
-    [[nodiscard]] __fast_inline constexpr T & at() 
-        { return storage_[I * C + J];}
+    [[nodiscard]] __fast_inline constexpr T & at() { 
+        static_assert(I < R, "Row index out of range");
+        static_assert(J < C, "Column index out of range");
+        return storage_[I * C + J];
+    }
 
     template<size_t I, size_t J>
     [[nodiscard]] __fast_inline constexpr const T & at() const 
@@ -123,8 +126,9 @@ public:
             storage_.begin(), storage_.end(), T(0), 
             [](T a, T b) { return a + square(b); 
         });
-        return sqrt(sum_sq);
+        return math::sqrt(sum_sq);
     }
+
 
     template<size_t Y, size_t X, size_t R2, size_t C2>
     [[nodiscard]] __fast_inline constexpr Matrix<T, R2, C2> submatrix() const {
@@ -381,7 +385,8 @@ public:
         return W_n;
     }
 
-    template<typename U = T, typename std::enable_if_t<std::is_arithmetic_v<U>, int> = 0>
+    template<typename U = T>
+    requires(std::is_arithmetic_v<U>)
     [[nodiscard]] constexpr Matrix<T, R, R> inverse() const{
         static_assert(R == C);
 

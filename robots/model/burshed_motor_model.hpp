@@ -4,16 +4,16 @@
 #include "dsp/state_vector.hpp"
 
 namespace ymd::robots::mock{
-struct MockBrushedMotor final{
+struct BrushedMotorModel final{
 public:
     using State = dsp::StateVector<iq16, 2>;
     struct Config{
         uint32_t fs;
     };
 
-    MockBrushedMotor(const Config & cfg){reconf(cfg);}
+    constexpr BrushedMotorModel(const Config & cfg){reconf(cfg);}
 
-    void reconf(const Config & cfg){
+    constexpr void reconf(const Config & cfg){
         dt_ = 1_r / cfg.fs;
     }
 
@@ -33,7 +33,7 @@ public:
         };
     }
 private:
-    using Self = MockBrushedMotor;
+    using Self = BrushedMotorModel;
 
 
     State state_;
