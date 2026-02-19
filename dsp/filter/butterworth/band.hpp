@@ -41,7 +41,7 @@ requires (N % 4 == 0)
 class ButterBandFilterBase{
 public:
     struct Config{
-        uint fs;
+        uint32_t fs;
         T fl;
         T fh;
     };

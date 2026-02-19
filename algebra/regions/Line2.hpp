@@ -19,7 +19,7 @@ private:
 public:
 
     [[nodiscard]] constexpr Line2(const Segment2<auto> & seg):
-        d(((seg.start).cross(seg.stop)) / (seg.stop - seg.start).length()), 
+        d(((seg.start).cross(seg.stop)) * (seg.stop - seg.start).inv_length()), 
         orientation(seg.angle()){;}
 
     [[nodiscard]] constexpr Line2(const math::Vec2<auto> & _from, const math::Vec2<auto> & _to): 

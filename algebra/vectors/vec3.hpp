@@ -336,13 +336,13 @@ public:
     [[nodiscard]] __fast_inline constexpr 
     T length() const{
         static_assert(not std::is_integral_v<T>);
-        return math::sqrt(x * x + y * y + z * z);
+        return math::mag(x, y, z);
     }
 
     [[nodiscard]] __fast_inline constexpr 
     T inv_length() const{
         static_assert(not std::is_integral_v<T>);
-        return math::inv_sqrt(this->length_squared());
+        return math::inv_mag(x, y, z);
     }
 
     [[nodiscard]] __fast_inline constexpr 

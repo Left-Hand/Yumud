@@ -171,7 +171,7 @@ public:
             if(std::is_constant_evaluated()){
                 return D(fv * uint64_t(uint64_t(1) << Q));
             }
-            return static_cast<D>(fxmath::details::_IQFtoN<Q>(fv));
+            return static_cast<D>(fxmath::details::_IQFtoN(fv, Q));
         }();
         return fixed{bits_ctor{
             bits
@@ -252,7 +252,7 @@ public:
         if(std::is_constant_evaluated()){
             return static_cast<long double>(this->to_bits()) / static_cast<long double>(uint64_t(1u) << Q);
         }else{
-            return fxmath::details::_IQNtoF<Q>(this->to_bits());
+            return fxmath::details::_IQNtoF(this->to_bits(), Q);
         }
     }
 };

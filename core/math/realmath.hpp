@@ -45,24 +45,6 @@ __attribute__((always_inline)) constexpr T cospu(const T val){
     return std::cos(static_cast<T>(val * tau));
 }
 
-template<std::floating_point T>
-__attribute__((always_inline)) constexpr T inv_sqrt(const T val){
-    return 1 / std::sqrt(val);
-}
-
-
-
-template<std::floating_point T>
-__attribute__((always_inline)) constexpr  T mag(const T a, const T b){
-    return std::sqrt(a * a + b * b);
-    // return std::hypot(a, b);
-}
-
-template<std::floating_point T>
-__attribute__((always_inline)) constexpr T inv_mag(const T a, const T b){
-    return 1 / mag(a,b);
-}
-
 
 template<typename T>
 requires (std::is_arithmetic_v<T>)
@@ -91,14 +73,35 @@ __attribute__((always_inline)) constexpr T normal(const T a, const T b){
 
 
 template<std::floating_point T>
-std::array<T, 2> math::sincospu(const T turns){
-    const auto radian = turns * static_cast<T>(TAU);
-    return {std::sin(radian), std::cos(radian)};
+__attribute__((always_inline)) constexpr T inv_sqrt(const T val){
+    return 1 / std::sqrt(val);
+}
+
+
+
+template<std::floating_point T, typename... Args>
+__attribute__((always_inline)) constexpr T mag(const T first, const Args... rest) {
+    if constexpr (sizeof...(rest) == 0) {
+        return std::abs(first);
+    } else {
+        return std::sqrt(square(first) + (square(rest) + ...));
+    }
+}
+
+template<std::floating_point T, typename... Args>
+__attribute__((always_inline)) constexpr T inv_mag(const T first, const Args... rest) {
+    return 1 / mag(first, rest...);
 }
 
 template<std::floating_point T>
-std::array<T, 2> sincos(const T radian){
-    return {std::sin(radian), std::cos(radian)};
+std::array<T, 2> math::sincospu(const T turns){
+    const auto radians = turns * static_cast<T>(TAU);
+    return {std::sin(radians), std::cos(radians)};
+}
+
+template<std::floating_point T>
+std::array<T, 2> sincos(const T radians){
+    return {std::sin(radians), std::cos(radians)};
 }
 
 template<std::floating_point T>

@@ -3,10 +3,6 @@
 #include "support.hpp"
 #include "_IQNtables.hpp"
 
-
-
-
-
 namespace ymd::fxmath::details{
 enum class [[nodiscard]] SqrtNormStrategy {
     SQRT,   // from_u64 with SqrtNormStrategy::SQRT
@@ -32,7 +28,9 @@ struct alignas(8) [[nodiscard]] IqSqrtCoeffs final{
 
 
         /* Use left most byte as index into lookup table (range: 32-128) */
-        uiq30Guess = (uint32_t)IQ14SQRT_LOOKUP[uint32_t(((uiq32Input >> 25) - 32))] << 16;
+        uiq30Guess = static_cast<uint32_t>(IQ14SQRT_LOOKUP[
+            uint32_t(((uiq32Input >> 25) - 32))
+        ]) << 16;
 
         /*
         * Set the loop counter:
@@ -405,5 +403,102 @@ constexpr math::fixed<Q, uint32_t> _IQNimag(math::fixed<Q, D> first, Args&&... r
     );
 }
 
+
+}
+
+
+namespace ymd::math{
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, int32_t> sqrt(const fixed<Q, int32_t> x){
+    if(x.to_bits() == 0) return 0;
+    if(x.to_bits() < 0) __builtin_trap();
+    return fixed<Q, int32_t>(fxmath::details::_IQNsqrt32(
+        fixed<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()))
+    ));
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, int32_t> ssqrt(const fixed<Q, int32_t> x){
+    if(x.to_bits() == 0) return 0;
+    if(x.to_bits() < 0){
+        return -fixed<Q, int32_t>(fxmath::details::_IQNsqrt32(
+            fixed<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(-x.to_bits()))
+        ));
+    }else{
+        return fixed<Q, int32_t>(fxmath::details::_IQNsqrt32(
+            fixed<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()))
+        ));
+    }
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, uint32_t> sqrt(const fixed<Q, uint32_t> x){
+    if(x.to_bits() == 0) return 0;
+    return fixed<Q, uint32_t>(fxmath::details::_IQNsqrt32(x));
+}
+
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, int32_t> sqrt(const fixed<Q, int64_t> x){
+    if(x.to_bits() == 0) return 0;
+    if(x.to_bits() < 0) __builtin_trap();
+    return fixed<Q, int32_t>(fxmath::details::_IQNsqrt64(
+        fixed<Q, uint64_t>::from_bits(std::bit_cast<uint64_t>(x.to_bits()))
+    ));
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, int32_t> ssqrt(const fixed<Q, int64_t> x){
+    if(x.to_bits() == 0) return 0;
+    if(x.to_bits() < 0){
+        return -fixed<Q, int32_t>(fxmath::details::_IQNsqrt64(
+            fixed<Q, uint64_t>::from_bits(std::bit_cast<uint64_t>(-x.to_bits()))
+        ));
+    }else{
+        return fixed<Q, int32_t>(fxmath::details::_IQNsqrt64(
+            fixed<Q, uint64_t>::from_bits(std::bit_cast<uint64_t>(x.to_bits()))
+        ));
+    }
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, uint32_t> sqrt(const fixed<Q, uint64_t> x){
+    if(x.to_bits() == 0) return 0;
+    return fixed<Q, uint32_t>(fxmath::details::_IQNsqrt64(x));
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, int32_t> inv_sqrt(const fixed<Q, int32_t> x){
+    return fixed<Q, int32_t>(fxmath::details::_IQNisqrt32(
+        fixed<Q, uint32_t>::from_bits(std::bit_cast<uint32_t>(x.to_bits()))
+    ));
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, uint32_t> inv_sqrt(const fixed<Q, uint32_t> x){
+    return fixed<Q, uint32_t>(fxmath::details::_IQNisqrt32<Q>(x));
+}
+
+
+template<typename D, size_t Q, typename... Args>
+__attribute__((always_inline)) constexpr 
+fixed<Q, uint32_t> mag(const fixed<Q, D> first, Args&&... rest) {
+    return fixed<Q, uint32_t>(fxmath::details::_IQNmag(first, rest...));
+}
+
+template<typename D, size_t Q, typename... Args>
+__attribute__((always_inline)) constexpr 
+fixed<Q, uint32_t> inv_mag(const fixed<Q, D> first, Args&&... rest) {
+    return fixed<Q, uint32_t>(fxmath::details::_IQNimag(first, rest...));
+}
 
 }

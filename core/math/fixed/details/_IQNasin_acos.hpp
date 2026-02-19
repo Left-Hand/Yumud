@@ -6,14 +6,7 @@
 #include "_IQNsqrt.hpp"
 
 namespace ymd::fxmath::details{
-/**
- * @brief Computes the inverse sine of the IQN input.
- *
- * @param iqNInput        IQN type input.
- * @param Q         IQ format.
- *
- * @return                IQN type result of inverse sine.
- */
+
 /*
  * Calculate asin using a 4th order Taylor series for inputs in the range of
  * zero to 0.5. The coefficients are stored in a lookup table with 17 ranges
@@ -192,4 +185,19 @@ constexpr math::fixed<29, int32_t> _IQNasin(math::fixed<Q, int32_t> iqNInput){
 
 
 
+}
+
+namespace ymd::math{
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<29, int32_t> asin(const fixed<Q, int32_t> x){
+    return fixed<29, int32_t>(fxmath::details::_IQNasin(x));
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<29, int32_t> acos(const fixed<Q, int32_t> x){
+    return fixed<29, int32_t>(M_PI/2) - asin(x);
+}
 }

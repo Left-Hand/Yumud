@@ -105,21 +105,23 @@ struct [[nodiscard]] VerticalSpeedCode final{
     using Self = VerticalSpeedCode;
     
     static constexpr uint32_t KL = 100;       // linearity constant;
+    static constexpr uq32 INV_KL = uq32(1.0 / KL);       // linearity constant;
     static constexpr uq16 KR = iq16(.026); // range constant;
+    static constexpr uq16 INV_KR = iq16(1.0/.026); // range constant;
 
     int8_t bits;
 
     [[nodiscard]] static constexpr int8_t cm_per_seconds_to_bits (int16_t val){
-        const iq16 base = math::log(static_cast<uq16>(uint32_t(val < 0 ? -val : val))/KL + 1)/KR;
-        if(val >= 0)
-            return static_cast<int8_t>(base);
-        else
-            return static_cast<int8_t>(-base);
+        const bool is_negative = val < 0;
+        const uint16_t unsigned_val = is_negative ? -val : val;
+        const iq16 base = math::ln(static_cast<uq16>(uint32_t(unsigned_val)) * INV_KL + 1) * INV_KR;
+        if(is_negative) return static_cast<int8_t>(-base);
+        return static_cast<int8_t>(base);
     }
 
-    [[nodiscard]] static constexpr int16_t bits_to_cm_per_seconds(int8_t bits_val){
-        const int32_t u_result = static_cast<int32_t>((math::exp(math::abs(static_cast<iq16>(bits_val) * KR)) - 1) * KL);
-        if(bits_val >= 0) 
+    [[nodiscard]] static constexpr int16_t bits_to_cm_per_seconds(int8_t bits){
+        const int32_t u_result = static_cast<int32_t>((math::exp(math::abs(static_cast<iq16>(bits) * KR)) - 1) * KL);
+        if(bits >= 0) 
             return static_cast<int16_t>(u_result);
         else 
             return static_cast<int16_t>(-u_result);
@@ -143,7 +145,10 @@ struct [[nodiscard]] VerticalSpeedCode final{
 struct [[nodiscard]] VoltageCode final{
     using Self = VoltageCode;
     
+    static constexpr double RATIO = 1E-3;
+    
     int16_t bits;  // LSB = 10 µV
+    static constexpr double MAX_VOLT = std::numeric_limits<int16_t>::max() * RATIO;
 
     [[nodiscard]] constexpr float to_volts() const {
         return static_cast<float>(bits) * 0.00001f;  // Convert from 10µV units to volts
@@ -153,12 +158,14 @@ struct [[nodiscard]] VoltageCode final{
         return bits / 100;  // Convert to millivolts
     }
 
-    static constexpr Self from_volts(float volts) {
-        const int16_t bits = static_cast<int16_t>(volts * 100000.0f);
+    template<typename T>
+    static constexpr Self from_volts(T volts) {
+        const int16_t bits = static_cast<int16_t>(volts * 100000);
         return Self{bits};
     }
 
-    static constexpr Self from_mv(float mv) {
+    template<typename T>
+    static constexpr Self from_mv(T mv) {
         const int16_t bits = static_cast<int16_t>(mv * 100);
         return Self{bits};
     }

@@ -4,8 +4,10 @@
 #include "core/utils/nth.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
-#include "primitive/arithmetic/rescaler.hpp"
 #include "core/string/owned/heapless_string.hpp"
+
+#include "primitive/arithmetic/rescaler.hpp"
+#include "primitive/arithmetic/db.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/hw_singleton.hpp"
@@ -13,7 +15,6 @@
 #include "hal/bus/uart/hw_singleton.hpp"
 
 #include "dsp/z_transformation.hpp"
-#include "primitive/arithmetic/db.hpp"
 
 namespace ymd{
 

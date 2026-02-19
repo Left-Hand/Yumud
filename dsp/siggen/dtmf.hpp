@@ -7,9 +7,9 @@ namespace ymd::dsp{
 class DoubleToneMultiFrequencySiggen{
 public:
     struct Config{
+        uint32_t fs;
         std::array<uint16_t, 4> fl_map;
         std::array<uint16_t, 4> fh_map;
-        uint32_t fs;
     };
 
     constexpr DoubleToneMultiFrequencySiggen(const Config & cfg){
@@ -21,7 +21,7 @@ public:
         fl_map_ = cfg.fl_map;
         fh_map_ = cfg.fh_map;
 
-        delta_ = iq16(1) / cfg.fs;
+        dt_ = uq32::from_rcp(cfg.fs);
     }
 
     constexpr void reset(){
@@ -59,7 +59,7 @@ private:
     std::array<uint16_t, 4> fl_map_;
     std::array<uint16_t, 4> fh_map_;
 
-    iq16 delta_;
+    uq32 dt_;
     iq16 result_;
 };
 
