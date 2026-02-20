@@ -39,8 +39,7 @@ namespace ymd::fxmath::details{
  */
 
 
-constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input)
-{
+constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input){
     bool is_acos = false;
 
     /*
@@ -50,7 +49,7 @@ constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input)
      *     (sqrt((1 - uiq31Input)/2))
      */
 
-     #if 0
+    #if 0
     uint32_t uiq32Input;
     {
         const uint32_t Temp = 0x80000000u - uiq31Input;
@@ -199,5 +198,17 @@ template<size_t Q>
 __attribute__((always_inline)) constexpr 
 fixed<29, int32_t> acos(const fixed<Q, int32_t> x){
     return fixed<29, int32_t>(M_PI/2) - asin(x);
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<32, uint32_t> asinpu(const fixed<Q, int32_t> x){
+    return rad_to_uq32(asin(x));
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<32, uint32_t> acospu(const fixed<Q, int32_t> x){
+    return rad_to_uq32(acos(x));
 }
 }
