@@ -17,7 +17,7 @@
 namespace ymd::drivers{
 
 struct PMW3901_Prelude{
-    struct MotionReg:public Reg8<>{
+    struct R8_Motion:public Reg8<>{
 
         uint8_t frame_from0:1;
         uint8_t run_mode:2;
@@ -27,17 +27,12 @@ struct PMW3901_Prelude{
         uint8_t occured:1;
     };
 
-    struct DeltaReg:public Reg16<>{
-        int16_t bits;
-    };
-
-
     #pragma pack(push, 1)
-    struct PMW3901_Packet {
-        alignas(1) MotionReg motion = {};
+    struct [[nodiscard]] PMW3901_Packet final{
+        alignas(1) R8_Motion motion = {};
         alignas(1) uint8_t observation = {};
-        alignas(2) DeltaReg dx = {};
-        alignas(2) DeltaReg dy = {};
+        alignas(2) int16_t dx = {};
+        alignas(2) int16_t dy = {};
     };
     #pragma pack(pop)
     static_assert(sizeof(PMW3901_Packet) == 1 + 1 + 2 + 2, "PMW3901_Packet size error");

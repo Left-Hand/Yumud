@@ -5,9 +5,9 @@
 #include "core/utils/Errno.hpp"
 #include "core/utils/Option.hpp"
 
-
-
 #include "hal/bus/i2c/i2cdrv.hpp"
+
+
 
 namespace ymd::drivers{
 
@@ -56,12 +56,12 @@ struct ADS111X_Prelude{
 
 struct ADS111X_Regs:public ADS111X_Prelude{ 
 
-    struct ConversionReg:public Reg16<>{
+    struct R16_Conversion:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0b00; 
         int16_t bits;
     };
 
-    struct ConfigReg:public Reg16<>{
+    struct R16_Config:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0b01; 
         uint16_t comp_que:2;
         uint16_t comp_latch:1;
@@ -77,20 +77,20 @@ struct ADS111X_Regs:public ADS111X_Prelude{
         uint16_t busy:1;
     };
 
-    struct LowThreshReg:public Reg16<>{
+    struct R16_LowThresh:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0b10;
         int16_t bits;
     };
 
-    struct HighThreshReg:public Reg16<>{
+    struct R16_HighThresh:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0b11; 
         int16_t bits;
     };
 
-    ConversionReg conversion_reg = {};
-    ConfigReg config_reg = {};
-    LowThreshReg low_thresh_reg = {};
-    HighThreshReg high_thresh_reg = {};
+    R16_Conversion conversion_reg = {};
+    R16_Config config_reg = {};
+    R16_LowThresh low_thresh_reg = {};
+    R16_HighThresh high_thresh_reg = {};
 };
 
 };

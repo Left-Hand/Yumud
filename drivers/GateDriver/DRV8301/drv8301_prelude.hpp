@@ -91,7 +91,7 @@ struct DRV8301_Prelude{
 };
 
 struct DRV8301_Regset:public DRV8301_Prelude{
-    struct Status1Reg:public Reg16<>{
+    struct R16_Status1:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x00;
 
         uint16_t fetlc_oc:1;
@@ -110,7 +110,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t :6;
     };
 
-    struct Status2Reg:public Reg16<>{
+    struct R16_Status2:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x01;
 
         uint16_t device_id:4;
@@ -119,7 +119,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t :9;
     };
 
-    struct Ctrl1Reg:public Reg16<>{
+    struct R16_Ctrl1:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x02;
 
         PeakCurrent gate_current:2;
@@ -130,7 +130,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t :6;
     };
 
-    struct Ctrl2Reg:public Reg16<>{
+    struct R16_Ctrl2:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x03;
 
         OctwMode octw_mode:2;
@@ -142,10 +142,10 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t :10;
     };
 
-    Status1Reg status1_reg = {};
-    Status2Reg status2_reg = {};
-    Ctrl1Reg ctrl1_reg = {};
-    Ctrl2Reg ctrl2_reg = {}; 
+    R16_Status1 status1_reg = {};
+    R16_Status2 status2_reg = {};
+    R16_Ctrl1 ctrl1_reg = {};
+    R16_Ctrl2 ctrl2_reg = {}; 
 };
 
 

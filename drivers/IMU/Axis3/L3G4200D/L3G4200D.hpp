@@ -45,8 +45,8 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(uint8_t reg, std::span<uint8_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(reg, pbuf, std::endian::little);
+    [[nodiscard]] IResult<> read_burst(uint8_t reg_addr, std::span<uint8_t> pbuf){
+        if(const auto res = i2c_drv_.read_burst(reg_addr, pbuf, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

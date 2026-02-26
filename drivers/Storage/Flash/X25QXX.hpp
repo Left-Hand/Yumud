@@ -35,7 +35,7 @@ struct X25QXX_Prelude:public StorageCollections{
         JedecId = 0x9F
     };
 
-    struct StatusReg:public Reg8<>{
+    struct R8_Status:public Reg8<>{
 
         uint8_t busy:1;
         uint8_t write_enable_latch:1;

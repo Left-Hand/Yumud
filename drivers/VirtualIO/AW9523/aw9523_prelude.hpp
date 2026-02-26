@@ -120,7 +120,7 @@ struct AW9523_Regset final:public AW9523_Prelude{
     }DEF_R16(led_mode_reg);
 
 
-    struct ChipIdReg:public Reg8<>{
+    struct R8_ChipId:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr::ChipId;
 
         uint8_t id;

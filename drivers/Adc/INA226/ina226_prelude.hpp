@@ -49,7 +49,7 @@ struct INA226_Prelude{
 };
 
 struct INA226_Regs:public INA226_Prelude{
-    struct ConfigReg:public Reg16<>{
+    struct R16_Config:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x00;
 
         uint16_t shunt_voltage_enable :1;
@@ -62,32 +62,32 @@ struct INA226_Regs:public INA226_Prelude{
         uint16_t rst:1;
     }DEF_R16(config_reg)
 
-    struct ShuntVoltReg:public Reg16<>{
+    struct R16_ShuntVolt:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x01;
         uint16_t bits;
     }DEF_R16(shunt_volt_reg)
 
-    struct BusVoltReg:public Reg16<>{
+    struct R16_BusVolt:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x02;
         uint16_t bits;
     }DEF_R16(bus_volt_reg)
 
-    struct PowerReg:public Reg16<>{
+    struct R16_Power:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x03;
         int16_t bits;
     }DEF_R16(power_reg)
 
-    struct CurrentReg:public Reg16<>{
+    struct R16_Current:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x04;
         int16_t bits;
     }DEF_R16(current_reg)
     
-    struct CalibrationReg:public Reg16<>{
+    struct R16_Calibration:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x05;
         int16_t bits;
     }DEF_R16(calibration_reg)
     
-    struct MaskReg:public Reg16<>{
+    struct R16_Mask:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x06;
 
         uint16_t alert_latch_enable:1;
@@ -104,17 +104,17 @@ struct INA226_Regs:public INA226_Prelude{
         uint16_t shunt_over_voltage:1;
     }DEF_R16(mask_reg)
 
-    struct AlertLimitReg:public Reg16<>{
+    struct R16_AlertLimit:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x07;
         uint16_t bits;
     }DEF_R16(alert_limit_reg)
 
-    struct ManufactureReg:public Reg16<>{
+    struct R16_Manufacture:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0xfe;
         uint16_t bits;
     }DEF_R16(manufacture_reg)
 
-    struct ChipIdReg:public Reg16<>{
+    struct R16_ChipId:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0xff;
         uint16_t bits;
     }DEF_R16(chip_id_reg)

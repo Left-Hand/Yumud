@@ -220,13 +220,13 @@ IResult<> PMW3901::read_data_slow(){
         if(res.is_err()) return Err(res.unwrap_err());
     }
 
-    const auto dx_ubits = static_cast<uint16_t>((static_cast<uint16_t>(buf[2] << 8)) | buf[1]);
-    const auto dy_ubits = static_cast<uint16_t>((static_cast<uint16_t>(buf[4] << 8)) | buf[3]);
+    const auto dx_ubits = static_cast<uint16_t>((buf[2] << 8) | buf[1]);
+    const auto dy_ubits = static_cast<uint16_t>((buf[4] << 8) | buf[3]);
 
 
     packet_.motion.as_bits_mut() = buf[0];
-    packet_.dx.bits = std::bit_cast<int16_t>(dx_ubits);
-    packet_.dy.bits = std::bit_cast<int16_t>(dy_ubits);
+    packet_.dx = std::bit_cast<int16_t>(dx_ubits);
+    packet_.dy = std::bit_cast<int16_t>(dy_ubits);
 
     return Ok();
 }
@@ -240,8 +240,8 @@ IResult<> PMW3901::read_data_burst(){
 IResult<> PMW3901::update(){
     return read_data()
     .if_ok([&]{
-        x_cm += int16_t(packet_.dx.to_bits()) * scale;
-        y_cm += int16_t(packet_.dy.to_bits()) * scale;
+        x_cm += int16_t(packet_.dx) * scale;
+        y_cm += int16_t(packet_.dy) * scale;
     });
 
 }
