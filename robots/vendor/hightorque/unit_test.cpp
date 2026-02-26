@@ -1,6 +1,7 @@
 #include "hightorque_primitive.hpp"
 #include "hightorque_utils.hpp"
 #include "hightorque_slots.hpp"
+#include <compare>
 
 using namespace ymd;
 using namespace robots::hightorque;
@@ -22,8 +23,8 @@ static_assert(element_type_v<float> == ElementType::Float);
 static_assert(element_type_v<CurrentCode> == ElementType::B2);
 static_assert(element_type_v<PositionCode> == ElementType::B2);
 
-static_assert(PositionCode::from_angle(Angular<iq16>::from_turns(0.5_iq16)).bits == 5000);
-static_assert(PositionCode::from_angle(Angular<iq16>::from_turns(0.25_iq16)).bits == 2500);
+static_assert(PositionCode::try_from_angle(Angular<iq16>::from_turns(0.5_iq16)).unwrap().bits == 5000);
+static_assert(PositionCode::try_from_angle(Angular<iq16>::from_turns(0.25_iq16)).unwrap().bits == 2500);
 static_assert(PositionCode{.bits = 32767}.bits == 0x7fff);
 
 
@@ -94,12 +95,12 @@ static_assert(make_slot_specifier<SpeedCode, PositionCode, TorqueCode>(SlotComma
     {
         constexpr auto bytes = []{
             std::array<uint8_t, 8> buf;
-            SlotBuilder{
+            SlotFiller{
                 SlotCommand::Write, 
                 RegAddr{0x35}
-            }.build(
+            }.fill_bytes_from_elements(
                 std::span(buf), 
-                PositionCode::from_angle(Angular<iq16>::from_turns(0.5_iq16)),
+                PositionCode::try_from_angle(Angular<iq16>::from_turns(0.5_iq16)).unwrap(),
                 SpeedCode{0},
                 TorqueCode{0}
             );
@@ -117,11 +118,11 @@ static_assert(make_slot_specifier<SpeedCode, PositionCode, TorqueCode>(SlotComma
     {
         constexpr auto bytes = []{
             std::array<uint8_t, 3> buf;
-            SlotBuilder{
+            SlotFiller{
                 SlotCommand::Write, 
                 RegAddr{0x00}
 
-            }.build(
+            }.fill_bytes_from_elements(
                 std::span(buf), 
                 Mode::DqVoltage
             );

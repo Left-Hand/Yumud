@@ -1,8 +1,11 @@
 #pragma once
 
+#include <compare>
 #include <cstdint>
-#include "core/utils/Option.hpp"
+#include "core/math/fixed/fixed.hpp"
+#include "core/utils/Result.hpp"
 #include "primitive/arithmetic/angular.hpp"
+
 
 namespace ymd::robots::hightorque{
 
@@ -75,8 +78,8 @@ enum class Fault:uint8_t{
     // 43 位置无效 没有可用的有效输出编码器
     // 44 驱动器使能故障 驱动芯片异常
 
-    DmaDataTransferError = 1,
-    DmaDataStreamFifoError = 2,
+    DmaTransferError = 1,
+    DmaStreamFifoError = 2,
     UartOverflowError = 3,
     UartFrameError = 4,
     UartNoiseError = 5,
@@ -232,7 +235,7 @@ enum class SlotCommand:uint8_t{
     Response = 0x02
 };
 
-struct [[nodiscard]] SlotSpecifier{
+struct [[nodiscard]] SlotSpecifier final{
     uint8_t quantity:2;
     ElementType element_type:2; 
     SlotCommand command:4;
@@ -244,15 +247,50 @@ struct [[nodiscard]] SlotSpecifier{
 
 static_assert(sizeof(SlotSpecifier) == 1);
 
-struct [[nodiscard]] PositionCode{
+struct [[nodiscard]] PositionCode final{
     // 单位 0.0001 圈，如 pos = 5000 表示转到 0.5 圈的位置。
     using Self = PositionCode;
     int16_t bits;
     static constexpr ElementType ELEMENT_TYPE = ElementType::B2;
 
-    static constexpr Self from_angle(const Angular<iq16> angle){
-        return Self{static_cast<int16_t>(angle.to_turns() * 10000)};
+    static constexpr uint32_t LSB_PER_TURN = 10000;
+    static constexpr double MAX_TURNS = std::numeric_limits<int16_t>::max() / double(LSB_PER_TURN);
+    static constexpr double MIN_TURNS = std::numeric_limits<int16_t>::min() / double(LSB_PER_TURN);
+
+    #if 0
+    // template<typename T>
+    static constexpr Result<Self, std::strong_ording> try_from_turns(const iq16 turns){
+        constexpr iq16 MAX_TURNS_T = static_cast<iq16>(MAX_TURNS);
+        constexpr iq16 MIN_TURNS_T = static_cast<iq16>(MIN_TURNS);
+        // return Self{static_cast<int16_t>(turns * 10000)};
+        if(turns >= MAX_TURNS_T) return Err(std::strong_ordering::greater);
+        else if(turns <= MAX_TURNS_T) return Err(std::strong_ordering::less);
+        const int16_t bits = static_cast<int16_t>(turns * 10000);
+        return Ok(Self{bits});
     }
+
+
+
+    // template<typename iq16>
+    static constexpr Result<Self, std::strong_ording> try_from_angle(const Angular<iq16> angle){
+        return try_from_turns(angle.to_turns());
+    }
+    #else
+
+    static constexpr Option<Self> try_from_turns(const iq16 turns){
+        constexpr iq16 MAX_TURNS_T = static_cast<iq16>(MAX_TURNS);
+        constexpr iq16 MIN_TURNS_T = static_cast<iq16>(MIN_TURNS);
+        // return Self{static_cast<int16_t>(turns * 10000)};
+        if(turns >= MAX_TURNS_T) return None;
+        else if(turns <= MIN_TURNS_T) return None;
+        const int16_t bits = static_cast<int16_t>(turns * 10000);
+        return Some(Self{bits});
+    }
+
+    static constexpr Option<Self> try_from_angle(const Angular<iq16> angle){
+        return try_from_turns(angle.to_turns());
+    }
+    #endif
 
     constexpr Angular<iq16> to_angle() const {
         const iq16 turns = iq16(bits) / 10000;

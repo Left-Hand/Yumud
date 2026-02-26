@@ -18,13 +18,13 @@ struct [[nodiscard]] CurrentCode final{
 
     uint16_t bits;
     static constexpr Self from_amps(const iq16 amps){
-        int16_t temp = int16_t((amps / 20)* 16384);
+        int16_t temp = int16_t((amps / 20) << 14);
         return Self{
             .bits = std::bit_cast<uint16_t>(__builtin_bswap16(temp))
         };
     }
     constexpr iq16 to_amps() const {
-        return (iq16(std::bit_cast<int16_t>(bits)) / 16384) * 20;
+        return (iq16(std::bit_cast<int16_t>(bits)) >> 14) * 20;
     }
 };
 
@@ -42,7 +42,7 @@ struct [[nodiscard]] SpeedCode final{
     uint16_t bits;
 
     constexpr iq16 to_tps() const {
-        return iq16(1.0 / 60) * std::bit_cast<int16_t>(__builtin_bswap16(bits));
+        return uq32(1.0 / 60) * std::bit_cast<int16_t>(__builtin_bswap16(bits));
     }
 };
 

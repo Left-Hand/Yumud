@@ -6,9 +6,9 @@
 namespace ymd::robots::myactuator{
 namespace req_msgs{
 
-#define DEF_COMMAND_ONLY_REQ_MSG(cmd_t)\
-struct [[nodiscard]] cmd_t final{\
-    static constexpr ReqCommand COMMAND = ReqCommand::cmd_t;\
+#define DEF_COMMAND_ONLY_REQ_MSG(cmd_type)\
+struct [[nodiscard]] cmd_type final{\
+    static constexpr ReqCommand COMMAND = ReqCommand::cmd_type;\
     constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {\
     BytesFiller(bytes).fill_remaining(0);}};\
 
@@ -265,8 +265,8 @@ enum class [[nodiscard]] LoopWiring:uint8_t{
 
 namespace resp_msgs{
 
-#define DEF_COMMAND_ONLY_RESP_MSG(cmd_t)\
-struct [[nodiscard]] cmd_t final{};
+#define DEF_COMMAND_ONLY_RESP_MSG(cmd_type)\
+struct [[nodiscard]] cmd_type final{};
 // struct cmd{
 //    constexpr CommandHeadedDataFielfill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
 //        return CommandHeadedDataField::from_command(ReqCommand::cmd)};}
@@ -332,10 +332,12 @@ struct [[nodiscard]] _MotorStatusReport{
 
     [[nodiscard]] static constexpr Result<Derived, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
-        Derived ret;
-        const auto exacter = make_bytes_exacter<std::endian::little>(bytes);
-        exacter.exact_to_elements(ret.motor_temperature, ret.q_current, ret.axis_speed, ret.axis_degrees);
-        return Ok(ret);
+        Derived self;
+        self.motor_temperature.bits = bytes[0];
+        self.q_current.bits = le_bytes_ctor_bits(bytes.subspan<1, 2>());
+        self.axis_speed.bits = le_bytes_ctor_bits(bytes.subspan<3, 2>());
+        self.axis_degrees.bits = le_bytes_ctor_bits(bytes.subspan<5, 2>());
+        return Ok(self);
     };
 };
 
@@ -353,10 +355,12 @@ struct [[nodiscard]] _MotorStatusReport2{
 
     static constexpr Result<Self, DeMsgError>
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
-        Self ret;
-        const auto exacter = make_bytes_exacter<std::endian::little>(bytes);
-        exacter.exact_to_elements(ret.motor_temperature, ret.q_current, ret.axis_speed, ret.axis_lap_position);
-        return ret;
+        Derived self;
+        self.motor_temperature.bits = bytes[0];
+        self.q_current.bits = le_bytes_ctor_bits(bytes.subspan<1, 2>());
+        self.axis_speed.bits = le_bytes_ctor_bits(bytes.subspan<3, 2>());
+        self.axis_lap_angle_code.bits = le_bytes_ctor_bits(bytes.subspan<5, 2>());
+        return Ok(self);
     };
 };
 

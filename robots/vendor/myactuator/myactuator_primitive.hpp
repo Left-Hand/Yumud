@@ -106,7 +106,7 @@ struct [[nodiscard]] AccelCode_u32 final{
     static constexpr Result<Self, DeMsgError> try_from_bits(const uint32_t bits){
         return Ok(Self{.bits = std::bit_cast<uint32_t>(bits)});
     }
-    [[nodiscard]] static constexpr Result<AccelCode_u32, std::strong_ordering> 
+    [[nodiscard]] static constexpr Result<Self, std::strong_ordering> 
     try_from_dpss(const uq16 dpss){
         if(dpss > MAX_DPSS) [[unlikely]]
             return Err(std::strong_ordering::greater);
