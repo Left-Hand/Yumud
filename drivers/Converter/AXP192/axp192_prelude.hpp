@@ -26,7 +26,7 @@
 #include "core/utils/Errno.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "core/utils/strong_type_gradation.hpp"
+#include "core/utils/enum/strong_type_gradation.hpp"
 
 namespace ymd::drivers{
 
@@ -135,9 +135,8 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
     // 8F           过温关机控制寄存器 R/W 01H 
 
     // 00           电源状态寄存器 R  
-
-
     struct R8_PowerInputState:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::PowerInputState;
         // 指示启动源是否为ACIN或VBUS 
         // 0:启动源非ACIN/VBUS； 1:启动源为 ACIN/VBUS 
         uint8_t setup_source_is_acin_or_vbus:1;
@@ -164,8 +163,9 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
         // 指示ACIN输入是否存在
         uint8_t is_acin_exist:1;
     }DEF_R8(power_input_state_reg)
-    // 01           电源模式/充电状态寄存器 R  
 
+
+    // 01           电源模式/充电状态寄存器 R  
     struct R8_PowerModeChargeState:public Reg8<>{
         uint8_t :1;
         uint8_t powerdown_strategy_is_b_either_a:1;
@@ -176,8 +176,8 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
         uint8_t is_charing:1;
         uint8_t is_overheat:1;
     }DEF_R8(power_mode_charge_state_reg)
-    // 04           OTG VBUS状态寄存器 R  
 
+    // 04           OTG VBUS状态寄存器 R  
     struct R8_UsbOtgVbusState:public Reg8<>{
         uint8_t is_session_end:1;
         uint8_t is_vbus_session_valid:1;
@@ -186,7 +186,6 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
     }DEF_R8(usb_otg_vbus_state_reg)
 
     // 10           EXTEN & DC-DC2开关控制寄存器 R/W X5H 
-
     struct R8_ExtenDcDc2SwitchCtrl:public Reg8<>{
         uint8_t dcdc2_en:1;
         uint8_t :1;
