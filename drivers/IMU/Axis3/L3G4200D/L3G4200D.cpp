@@ -14,6 +14,10 @@
 
 #include "L3G4200D.hpp"
 
+
+using namespace ymd;
+using namespace ymd::drivers;
+
 static constexpr uint8_t ADDRESS = 0xD2; // SDO->High:11010010(0xD2), SDO->Low:11010000(0xD0)
 
 static constexpr uint8_t REG_WHO_AM_I = 0x0F; // Fixed value: 11010011(D3)
@@ -116,8 +120,6 @@ static constexpr auto DPS_500                    = iq16(.0175f);
 static constexpr auto DPS_2000                   = iq16(.07f);
 
 
-using namespace ymd;
-using namespace ymd::drivers;
 
 using Error = L3G4200D::Error;
 using Dps = L3G4200D::Dps;

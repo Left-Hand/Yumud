@@ -3,9 +3,8 @@
 #include <bitset>
 
 #include "primitive/can/bxcan_frame.hpp"
-#include "dsp/controller/pid_ctrl.hpp"
-#include "drivers/Encoder/Encoder.hpp"
-
+#include "core/math/fixed/fixed.hpp"
+#include "primitive/arithmetic/angular.hpp"
 
 
 namespace ymd::robots::dji::m3508{
@@ -56,10 +55,16 @@ struct [[nodiscard]] TemperatureCode final{
 
 
 struct alignas(8) [[nodiscard]] TxContext final{
+    using Self = TxContext;
+
     std::array<CurrentCode, 4> current_codes; 
 
     constexpr hal::BxCanPayload to_can_payload() const {
         return hal::BxCanPayload::from_u64(std::bit_cast<uint64_t>(*this));
+    }
+
+    constexpr Self from_can_payload(const hal::BxCanPayload& payload){
+        return std::bit_cast<Self>(payload.u8x8());
     }
 };
 

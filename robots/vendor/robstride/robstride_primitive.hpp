@@ -17,7 +17,6 @@
 namespace ymd::robots::robstride{
 
 namespace primitive{
-using literals::iq16;
 
 enum class [[nodiscard]] DeMsgError:uint8_t{
     StdFrame,

@@ -1,6 +1,7 @@
 #include "myactuator_primitive.hpp"
 #include "myactuator_msgs.hpp"
 
+using namespace ymd;
 using namespace ymd::robots::myactuator;
 
 namespace {

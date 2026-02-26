@@ -145,7 +145,7 @@ namespace std {
 
     template <size_t N>
     struct tuple_element<N, ::ymd::dsp::PackedCalibrateSample> {
-        using type = iq31;
+        using type = ymd::iq31;
     };
 
     template <>
@@ -154,7 +154,7 @@ namespace std {
 
     template <size_t N>
     struct tuple_element<N, ::ymd::dsp::CalibrateSample> {
-        using type = iq31;
+        using type = ymd::iq31;
     };
 }
 

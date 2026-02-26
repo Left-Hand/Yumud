@@ -54,7 +54,7 @@ namespace ymd::math{
 
 
 template<size_t Q, std::integral D>
-struct [[nodiscard]] fixed{
+struct [[nodiscard]] fixed final{
 private:
     static_assert(std::is_same_v<D, bool> == false);
 
@@ -779,6 +779,8 @@ math::fixed<29, int32_t> uq32_to_rad(const math::fixed<32, uint32_t> x){
 
 
 }
+
+
 
 namespace std{
 

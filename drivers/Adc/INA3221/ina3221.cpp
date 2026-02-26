@@ -1,6 +1,7 @@
 #include "ina3221.hpp"
 #include "core/debug/debug.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 #define INA3221_DEBUG_EN
@@ -124,8 +125,6 @@ IResult<> INA3221::enable_channel(const ChannelSelection sel, const Enable en){
         case ChannelSelection::CH3:
             reg.ch3_en = en == EN;
             break;
-        default:
-            __builtin_trap();
     }
     return write_reg(reg);
 }

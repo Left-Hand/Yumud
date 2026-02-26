@@ -115,8 +115,13 @@ struct [[nodiscard]] FaultCode final{
     [[nodiscard]] bool is_err() const {return (bits > 0) and (bits <= MAX_NUM);}
 
     [[nodiscard]] Fault unwrap_err() const {
-        if(is_err()) __builtin_abort();
+        if(not is_err()) __builtin_abort();
         return static_cast<Fault>(bits);
+    }
+    
+    [[nodiscard]] Result<void, Fault> decode(){
+        if(is_ok()) return Ok();
+        return Err(static_cast<Fault>(bits));
     }
 };
 
