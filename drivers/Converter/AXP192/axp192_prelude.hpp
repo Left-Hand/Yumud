@@ -136,7 +136,6 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
 
     // 00           电源状态寄存器 R  
     struct R8_PowerInputState:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = RegAddr::PowerInputState;
         // 指示启动源是否为ACIN或VBUS 
         // 0:启动源非ACIN/VBUS； 1:启动源为 ACIN/VBUS 
         uint8_t setup_source_is_acin_or_vbus:1;
@@ -322,21 +321,9 @@ class AXP192 final: public AXP192_Prelude{
     explicit AXP192(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){}
 
-    IResult<> set_dcdc1_voltage(const DcdcVoltage voltage){
-        auto reg = RegCopy(pw_regs_.dcdc1_voltage_setting_reg);
-        reg.dcdc1_voltage_setting = voltage.to_u8();
-        return write_reg(reg);
-    }
-    IResult<> set_dcdc2_voltage(const DcdcVoltage voltage){
-        auto reg = RegCopy(pw_regs_.dcdc2_voltage_setting_reg);
-        reg.dcdc2_voltage_setting = voltage.to_u8();
-        return write_reg(reg);
-    }
-    IResult<> set_dcdc3_voltage(const DcdcVoltage voltage){
-        auto reg = RegCopy(pw_regs_.dcdc3_voltage_setting_reg);
-        reg.dcdc3_voltage_setting = voltage.to_u8();
-        return write_reg(reg);
-    }
+    IResult<> set_dcdc1_voltage(const DcdcVoltage voltage);
+    IResult<> set_dcdc2_voltage(const DcdcVoltage voltage);
+    IResult<> set_dcdc3_voltage(const DcdcVoltage voltage);
 private:
     hal::I2cDrv i2c_drv_;
     AXP192_PowerCtl_Regset pw_regs_ = {};
@@ -360,9 +347,10 @@ private:
         return Ok();
     }
 
+    #if 0
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -370,8 +358,9 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(T::ADDRESS, reg.as_bits_mut());
+        return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
+    #endif
 };
 
 }

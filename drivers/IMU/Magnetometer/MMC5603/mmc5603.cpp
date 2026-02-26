@@ -21,7 +21,7 @@ using IResult= Result<T, Error>;
 
 IResult<> MMC5603::update(){
     auto reg = RegCopy(regs_.x_reg);
-    return read_burst(ADDRESS_X, std::span(&reg.data_h, 6));
+    return read_burst(REG_ADDR_X, std::span(&reg.data_h, 6));
 }
 
 IResult<> MMC5603::reset(){

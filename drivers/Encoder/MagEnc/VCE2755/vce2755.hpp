@@ -81,7 +81,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        constexpr auto address = T::ADDRESS;
+        constexpr auto address = T::REG_ADDR;
         const uint8_t data = reg.to_bits();
         if(const auto res = write_reg(address, data); 
             res.is_err()) return Err(res.unwrap_err());
@@ -92,7 +92,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        constexpr auto address = T::ADDRESS;
+        constexpr auto address = T::REG_ADDR;
         if(const auto res = read_reg(address, reg.as_bits_mut()); 
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

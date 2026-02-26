@@ -101,24 +101,24 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
 
 
     struct R8_TempOut:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x0D; 
+        static constexpr RegAddr REG_ADDR = 0x0D; 
         uint8_t bits;
     };
 
     struct R8_WhoAmI:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x0F; 
+        static constexpr RegAddr REG_ADDR = 0x0F; 
         uint8_t bits;
     };
 
     struct R8_Ctrl1:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x20;
+        static constexpr RegAddr REG_ADDR = 0x20;
         uint8_t lp_mode:2;
         uint8_t mode:2;
         uint8_t odr:4;    
     };
 
     struct R8_Ctrl2:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x21;
+        static constexpr RegAddr REG_ADDR = 0x21;
         uint8_t sim:1;
         uint8_t i2c_disable:1;
         uint8_t if_add_inc:1;
@@ -130,7 +130,7 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
     };
 
     struct R8_Ctrl3:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x22;
+        static constexpr RegAddr REG_ADDR = 0x22;
         uint8_t slp_mode_1:1;
         uint8_t slp_mode_sel:1;
         uint8_t :1;
@@ -141,7 +141,7 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
     };
 
     struct R8_Ctrl4:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x23;
+        static constexpr RegAddr REG_ADDR = 0x23;
         uint8_t int1_drdy:1;
         uint8_t int1_fth:1;
         uint8_t int1_diff5:1;
@@ -153,7 +153,7 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
     };
 
     struct R8_Ctrl5:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x24;
+        static constexpr RegAddr REG_ADDR = 0x24;
         uint8_t int2_drdy:1;
         uint8_t int2_fth:1;
         uint8_t int2_diff5:1;
@@ -165,7 +165,7 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
     };
 
     struct R8_Ctrl6:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x25;
+        static constexpr RegAddr REG_ADDR = 0x25;
         uint8_t :2;
         uint8_t low_noise:1;
         uint8_t fds:1;
@@ -174,12 +174,12 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
     };
 
     struct R8_TempOut8:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x26; 
+        static constexpr RegAddr REG_ADDR = 0x26; 
         uint8_t bits;
     };
 
     struct R8_Status:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x27;
+        static constexpr RegAddr REG_ADDR = 0x27;
         uint8_t drdy:1;
         uint8_t ff_ia:1;
         uint8_t _6d_ia:1;
@@ -191,26 +191,26 @@ struct LIS2DW12_Regs:public LIS2DW12_Prelude{
     };
 
     struct R16_OutputX:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x28; 
+        static constexpr RegAddr REG_ADDR = 0x28; 
         int16_t bits;
     };
     struct R16_OutputY:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x2A; 
+        static constexpr RegAddr REG_ADDR = 0x2A; 
         int16_t bits;
     };
     struct R16_OutputZ:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x2C; 
+        static constexpr RegAddr REG_ADDR = 0x2C; 
         int16_t bits;
     };
 
     struct R8_FifoCtrl:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x2E;
+        static constexpr RegAddr REG_ADDR = 0x2E;
         uint8_t fth:5;
         uint8_t fmode:3;
     };
 
     struct R8_FifoSamples:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x2F;
+        static constexpr RegAddr REG_ADDR = 0x2F;
         uint8_t diff0:6;
         uint8_t fifo_ovr:1;
         uint8_t fifo_fth:1;

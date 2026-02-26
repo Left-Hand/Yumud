@@ -111,22 +111,22 @@ struct MT6835_Prelude{
 
 class MT6835_Regs:public MT6835_Prelude{
 struct R8_UserId:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x001;
+    static constexpr RegAddr REG_ADDR = 0x001;
     uint8_t id:8;
 };
 
 struct R8_AngleH:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x003;
+    static constexpr RegAddr REG_ADDR = 0x003;
     uint8_t angle:8;
 };
 
 struct R8_AngleM:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x004;
+    static constexpr RegAddr REG_ADDR = 0x004;
     uint8_t angle:8;
 };
 
 struct R8_AngleL:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x005;
+    static constexpr RegAddr REG_ADDR = 0x005;
     uint8_t over_speed:1;
     uint8_t mag_weak:1;
     uint8_t under_voltage:1;
@@ -134,29 +134,29 @@ struct R8_AngleL:public Reg8<>{
 };
 
 struct R8_Crc:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x006;
+    static constexpr RegAddr REG_ADDR = 0x006;
     uint8_t crc:8;
 };
 
 struct R8_AbzResH:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x007;
+    static constexpr RegAddr REG_ADDR = 0x007;
     uint8_t resolution:8;
 };
 
 struct R8_AbzResL:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x008;
+    static constexpr RegAddr REG_ADDR = 0x008;
     uint8_t ab_swap:1;
     uint8_t abz_off:1;
     uint8_t resolution:6;
 };
 
 struct R8_ZeroPosH:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x009;
+    static constexpr RegAddr REG_ADDR = 0x009;
     uint8_t zero_pos:8;
 };
 
 struct R8_ZeroPosL:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x00A;
+    static constexpr RegAddr REG_ADDR = 0x00A;
     uint8_t z_pul_wid:3;
     uint8_t z_falling_on_0edge:1;
     uint8_t zero_pos:4;
@@ -164,7 +164,7 @@ struct R8_ZeroPosL:public Reg8<>{
 
 
 struct R8_Uvw:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x00B;
+    static constexpr RegAddr REG_ADDR = 0x00B;
     uint8_t uvw_res:4;
     uint8_t uvw_off:1;
     uint8_t uvw_mux:1;
@@ -173,7 +173,7 @@ struct R8_Uvw:public Reg8<>{
 
 
 struct R8_Pwm:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x00C;
+    static constexpr RegAddr REG_ADDR = 0x00C;
     uint8_t pwm_sel:3;
     uint8_t pwm_pol:1;
     uint8_t pwm_fq:1;
@@ -181,13 +181,13 @@ struct R8_Pwm:public Reg8<>{
 };
 
 struct R8_Roatation:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x00D;
+    static constexpr RegAddr REG_ADDR = 0x00D;
     uint8_t hyst:3;
     uint8_t rot_dir:1;
 };
 
 struct R8_Cali:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x00E;
+    static constexpr RegAddr REG_ADDR = 0x00E;
 
     uint8_t :4;
     uint8_t autocal_freq:3;
@@ -195,14 +195,14 @@ struct R8_Cali:public Reg8<>{
 };
 
 struct R8_BandWidth:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x011;
+    static constexpr RegAddr REG_ADDR = 0x011;
     uint8_t bw:3;
     uint8_t :5;
 };
 
 struct R8_Nlc:public Reg8<>{
-    static constexpr RegAddr ADDRESS = 0x013;
-    static constexpr RegAddr ADDRESS_end = 0x0D2;
+    static constexpr RegAddr REG_ADDR = 0x013;
+    static constexpr RegAddr REG_ADDR_end = 0x0D2;
 
     uint8_t bits;
 };

@@ -92,7 +92,7 @@ struct DRV8301_Prelude{
 
 struct DRV8301_Regset:public DRV8301_Prelude{
     struct Status1Reg:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x00;
+        static constexpr RegAddr REG_ADDR = 0x00;
 
         uint16_t fetlc_oc:1;
         uint16_t fethc_oc:1;
@@ -111,7 +111,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
     };
 
     struct Status2Reg:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x01;
+        static constexpr RegAddr REG_ADDR = 0x01;
 
         uint16_t device_id:4;
         uint16_t :3;
@@ -120,7 +120,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
     };
 
     struct Ctrl1Reg:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x02;
+        static constexpr RegAddr REG_ADDR = 0x02;
 
         PeakCurrent gate_current:2;
         uint16_t gate_reset:1;
@@ -131,7 +131,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
     };
 
     struct Ctrl2Reg:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x03;
+        static constexpr RegAddr REG_ADDR = 0x03;
 
         OctwMode octw_mode:2;
         Gain gain:2;

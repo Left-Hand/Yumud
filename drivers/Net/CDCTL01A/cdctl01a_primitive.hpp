@@ -44,19 +44,19 @@ enum class RegAddr:uint8_t{
 
 struct Regset{
 struct R8_HwVersion:public Reg8<>{
-    static constexpr RegAddr ADDRESS = RegAddr::VERSION;
+    static constexpr RegAddr REG_ADDR = RegAddr::VERSION;
     uint8_t bits;
 };
 
 struct R8_ClockCtl:public Reg8<>{
-    static constexpr RegAddr ADDRESS = RegAddr::CLK_CTRL;
+    static constexpr RegAddr REG_ADDR = RegAddr::CLK_CTRL;
     uint8_t clk_is_pll_else_osc:1;
     uint8_t :6;
     uint8_t sw_rst:1;//write 1 to reset device
 };
 
 struct R8_Setting:public Reg8<>{
-    static constexpr RegAddr ADDRESS = RegAddr::SETTING;
+    static constexpr RegAddr REG_ADDR = RegAddr::SETTING;
     uint8_t enable_tote_pushpull:1;
     uint8_t invert_to:1;
     uint8_t enable_crc_handled_by_user:1;
@@ -70,12 +70,12 @@ struct R8_Setting:public Reg8<>{
 
 
 struct R8_TxPreamableLen:public Reg8<>{
-    static constexpr RegAddr ADDRESS = RegAddr::TX_PRE_LEN;
+    static constexpr RegAddr REG_ADDR = RegAddr::TX_PRE_LEN;
     uint8_t bits;
 };
 
 struct R8_PllCtrl:public Reg8<>{ 
-    static constexpr RegAddr ADDRESS = RegAddr::PLL_CTRL;
+    static constexpr RegAddr REG_ADDR = RegAddr::PLL_CTRL;
     uint8_t pll_sleep_en:1;
     uint8_t :3;
     uint8_t pll_on:1;
@@ -83,14 +83,14 @@ struct R8_PllCtrl:public Reg8<>{
 };
 
 struct R8_IntCtrl:public Reg8<>{
-    static constexpr RegAddr ADDRESS = RegAddr::PIN_INT_CTRL;
+    static constexpr RegAddr REG_ADDR = RegAddr::PIN_INT_CTRL;
     uint8_t :4;
     uint8_t is_pp_else_od:1;
     uint8_t :3;
 };
 
 struct R8_ReCtrl:public Reg8<>{
-    static constexpr RegAddr ADDRESS = RegAddr::PIN_RE_CTRL;
+    static constexpr RegAddr REG_ADDR = RegAddr::PIN_RE_CTRL;
     uint8_t output_is_high:1;
     uint8_t :2;
     uint8_t is_pp_else_od:1;
@@ -99,7 +99,7 @@ struct R8_ReCtrl:public Reg8<>{
 
 
 struct R8_ClockStatus:public Reg8<>{
-    static constexpr RegAddr ADDRESS = RegAddr::CLK_STATUS;
+    static constexpr RegAddr REG_ADDR = RegAddr::CLK_STATUS;
     uint8_t sysclk_source_is_osc:1;
     uint8_t sysclk_source_is_pll:1;
     uint8_t is_clock_switching:1;

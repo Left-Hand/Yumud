@@ -111,7 +111,7 @@ IResult<bool> ADS1115::is_busy(){
 
 Option<iq16> ADS1115::get_voltage(){
     auto & reg = conversion_reg;
-    if(read_reg(reg.ADDRESS, reg.as_bits_mut()).is_err()) return None;
+    if(read_reg(reg.REG_ADDR, reg.as_bits_mut()).is_err()) return None;
     return Some(iq16::from_bits(~std::bit_cast<int16_t>(reg.bits)) * 3.3_iq16);
     // return None;
 }

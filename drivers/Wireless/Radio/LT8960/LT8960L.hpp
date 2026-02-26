@@ -132,42 +132,42 @@ private:
 
     Channel now_channel_ = Channel(0);
 
-    [[nodiscard]] __fast_inline
+    [[nodiscard]]
     IResult<> write_reg(const RegAddr address, const uint16_t reg){
         return transport_.write_reg(address, reg);
     }
 
     template<typename T>
-    [[nodiscard]] __fast_inline
+    [[nodiscard]]
     IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
 
 
-    [[nodiscard]] __fast_inline
+    [[nodiscard]]
     IResult<> read_reg(const RegAddr address, uint16_t & reg){
         return transport_.read_reg(address, reg);
     }
 
 
     template<typename ... Ts>
-    [[nodiscard]] __fast_inline
+    [[nodiscard]]
     IResult<> read_regs(Ts & ... reg) {
-        return (transport_.read_reg(reg.ADDRESS, reg.as_bits_mut()) | ...);
+        return (transport_.read_reg(reg.REG_ADDR, reg.as_bits_mut()) | ...);
     }
 
     template<typename T>
-    [[nodiscard]] __fast_inline
+    [[nodiscard]]
     IResult<> read_reg(T & reg){
-        return transport_.read_reg(reg.ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(reg.REG_ADDR, reg.as_bits_mut());
     }
 
 
-    [[nodiscard]] __fast_inline IResult<size_t> write_fifo(std::span<const uint8_t> buf){
-        return transport_.write_burst(Regs::R16_Fifo::ADDRESS, buf);
+    [[nodiscard]] IResult<size_t> write_fifo(std::span<const uint8_t> buf){
+        return transport_.write_burst(Regs::R16_Fifo::REG_ADDR, buf);
     }
 
     [[nodiscard]] IResult<size_t> read_fifo(std::span<uint8_t> buf);

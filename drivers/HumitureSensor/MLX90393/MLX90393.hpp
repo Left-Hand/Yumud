@@ -49,7 +49,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res =write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res =write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();

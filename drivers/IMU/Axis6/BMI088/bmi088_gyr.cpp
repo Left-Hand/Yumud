@@ -33,7 +33,7 @@ static constexpr uint8_t GYR_CHIP_ID = 0;
 IResult<> BMI088_Gyr::update(){
     auto & reg = regs_.gyr_x_reg;
     return transport_.read_burst(
-        reg.ADDRESS, 
+        reg.REG_ADDR, 
         std::span(
             reinterpret_cast<int16_t *>(&(reg.as_bits_mut()))
             , 3

@@ -45,7 +45,7 @@ private:
     }
 
     [[nodiscard]] IResult<> 
-    requestBurst(const RegAddr addr, uint8_t * data, size_t len){
+    req_burst(const RegAddr addr, uint8_t * data, size_t len){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
             res.is_err()) return Err(Error(res.unwrap_err()));
         return Ok();
@@ -53,7 +53,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(Error(res.unwrap_err()));
         reg.apply();
         return Ok();

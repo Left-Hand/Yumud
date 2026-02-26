@@ -16,46 +16,47 @@
 #endif
 
 
-static constexpr uint8_t STATUS_Reg          = 0x00;
-static constexpr uint8_t MODE_Reg            = 0x01;
-static constexpr uint8_t RTP_INPUT_Reg       = 0x02;
-static constexpr uint8_t LIB_SEL_Reg         = 0x03;
-static constexpr uint8_t WAV_SEQ1_Reg        = 0x04;
-static constexpr uint8_t WAV_SEQ2_Reg        = 0x05;
-static constexpr uint8_t WAV_SEQ3_Reg        = 0x06;
-static constexpr uint8_t WAV_SEQ4_Reg        = 0x07;
-static constexpr uint8_t WAV_SEQ5_Reg        = 0x08;
-static constexpr uint8_t WAV_SEQ6_Reg        = 0x09;
-static constexpr uint8_t WAV_SEQ7_Reg        = 0x0A;
-static constexpr uint8_t WAV_SEQ8_Reg        = 0x0B;
-static constexpr uint8_t GO_Reg              = 0x0C;
-static constexpr uint8_t ODT_OFFSET_Reg      = 0x0D;
-static constexpr uint8_t SPT_Reg             = 0x0E;
-static constexpr uint8_t SNT_Reg             = 0x0F;
-static constexpr uint8_t BRT_Reg             = 0x10;
-static constexpr uint8_t ATV_CON_Reg         = 0x11;
-static constexpr uint8_t ATV_MIN_IN_Reg      = 0x12;
-static constexpr uint8_t ATV_MAX_IN_Reg      = 0x13;
-static constexpr uint8_t ATV_MIN_OUT_Reg     = 0x14;
-static constexpr uint8_t ATV_MAX_OUT_Reg     = 0x15;
-static constexpr uint8_t RATED_VOLTAGE_Reg   = 0x16;
-static constexpr uint8_t OD_CLAMP_Reg        = 0x17;
-static constexpr uint8_t A_CAL_COMP_Reg      = 0x18;
-static constexpr uint8_t A_CAL_BEMF_Reg      = 0x19;
-static constexpr uint8_t FB_CON_Reg          = 0x1A;
-static constexpr uint8_t CONTRL1_Reg         = 0x1B;
-static constexpr uint8_t CONTRL2_Reg         = 0x1C;
-static constexpr uint8_t CONTRL3_Reg         = 0x1D;
-static constexpr uint8_t CONTRL4_Reg         = 0x1E;
-static constexpr uint8_t VBAT_MON_Reg        = 0x21;
-static constexpr uint8_t LRA_RESON_Reg       = 0x22;
-
-
-
 using namespace ymd;
 using namespace ymd::drivers;
 
 using Error = DRV2605L::Error;
+using RegAddr = DRV2605L::RegAddr;
+
+static constexpr auto STATUS_Reg          = RegAddr::Status;
+static constexpr auto MODE_Reg            = RegAddr::Mode;
+static constexpr auto RTP_INPUT_Reg       = RegAddr::RtpInput;
+static constexpr auto LIB_SEL_Reg         = RegAddr::LibSel;
+static constexpr auto WAV_SEQ1_Reg        = RegAddr::WavSEQ1;
+static constexpr auto WAV_SEQ2_Reg        = RegAddr::WavSEQ2;
+static constexpr auto WAV_SEQ3_Reg        = RegAddr::WavSEQ3;
+static constexpr auto WAV_SEQ4_Reg        = RegAddr::WavSEQ4;
+static constexpr auto WAV_SEQ5_Reg        = RegAddr::WavSEQ5;
+static constexpr auto WAV_SEQ6_Reg        = RegAddr::WavSEQ6;
+static constexpr auto WAV_SEQ7_Reg        = RegAddr::WavSEQ7;
+static constexpr auto WAV_SEQ8_Reg        = RegAddr::WavSEQ8;
+static constexpr auto GO_Reg              = RegAddr::Go;
+static constexpr auto ODT_OFFSET_Reg      = RegAddr::OdtOffset;
+static constexpr auto SPT_Reg             = RegAddr::Spt;
+static constexpr auto SNT_Reg             = RegAddr::Snt;
+static constexpr auto BRT_Reg             = RegAddr::Brt;
+static constexpr auto ATV_CON_Reg         = RegAddr::AtvCon;
+static constexpr auto ATV_MIN_IN_Reg      = RegAddr::AtvMinIn;
+static constexpr auto ATV_MAX_IN_Reg      = RegAddr::AtvMaxIn;
+static constexpr auto ATV_MIN_OUT_Reg     = RegAddr::AtvMinOut;
+static constexpr auto ATV_MAX_OUT_Reg     = RegAddr::AtvMaxOut;
+static constexpr auto RATED_VOLTAGE_Reg   = RegAddr::RatedVoltage;
+static constexpr auto OD_CLAMP_Reg        = RegAddr::OdClamp;
+static constexpr auto A_CAL_COMP_Reg      = RegAddr::ACalComp;
+static constexpr auto A_CAL_BEMF_Reg      = RegAddr::ACalBemf;
+static constexpr auto FB_CON_Reg          = RegAddr::FbCon;
+static constexpr auto CONTRL1_Reg         = RegAddr::Control1;
+static constexpr auto CONTRL2_Reg         = RegAddr::Control2;
+static constexpr auto CONTRL3_Reg         = RegAddr::Control3;
+static constexpr auto CONTRL4_Reg         = RegAddr::Control4;
+static constexpr auto VBAT_MON_Reg        = RegAddr::VbatMon;
+static constexpr auto LRA_RESON_Reg       = RegAddr::LraReson;
+
+
 
 Result<void, Error> DRV2605L::set_fb_brake_factor(const FbBrakeFactor factor){
     auto reg = RegCopy(feedback_control_reg);
@@ -139,10 +140,10 @@ Result<void, Error> DRV2605L::reset(){
 }
 
 Result<void, Error> DRV2605L::play(const uint8_t idx){
-    if(const auto res = write_reg(0x01, 0x00); res.is_err()) return res;
-    if(const auto res = write_reg(0x04, idx); res.is_err()) return res;
-    if(const auto res = write_reg(0x05, 0x00); res.is_err()) return res;
-    if(const auto res = write_reg(0x0c, 0x01); res.is_err()) return res;
+    if(const auto res = write_reg(RegAddr{0x01}, 0x00); res.is_err()) return res;
+    if(const auto res = write_reg(RegAddr{0x04}, idx); res.is_err()) return res;
+    if(const auto res = write_reg(RegAddr{0x05}, 0x00); res.is_err()) return res;
+    if(const auto res = write_reg(RegAddr{0x0c}, 0x01); res.is_err()) return res;
     return Ok();
 }
 

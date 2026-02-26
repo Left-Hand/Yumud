@@ -126,19 +126,19 @@ struct Coeffs{
 struct BMP280_Regset final: public BMP280_Prelude {
 
     struct R8_ChipID:public Reg8<>{
-        static constexpr RegAddr ADDRESS=0xD0;
+        static constexpr RegAddr REG_ADDR=0xD0;
         uint8_t bits;
     }DEF_R8(chipid_reg)
 
     struct R8_Reset:public Reg8<>{
-        static constexpr RegAddr ADDRESS=0xE0;
+        static constexpr RegAddr REG_ADDR=0xE0;
 
         using Reg8<>::operator=;
         uint8_t bits;
     }DEF_R8(reset_reg)
 
     struct R8_Status:public Reg8<>{
-        static constexpr RegAddr ADDRESS=0xF3;
+        static constexpr RegAddr REG_ADDR=0xF3;
         uint8_t im:1;
         uint8_t __resv1__:2;
         uint8_t busy:1;
@@ -147,14 +147,14 @@ struct BMP280_Regset final: public BMP280_Prelude {
     }DEF_R8(status_reg)
 
     struct R8_Ctrl:public Reg8<>{
-        static constexpr RegAddr ADDRESS=0xF4;
+        static constexpr RegAddr REG_ADDR=0xF4;
         Mode mode:2;
         PressureSampleMode   osrs_p:3;
         TempratureSampleMode osrs_t:3;
     }DEF_R8(ctrl_reg)
 
     struct R8_Config:public Reg8<>{
-        static constexpr RegAddr ADDRESS=0xF5;
+        static constexpr RegAddr REG_ADDR=0xF5;
         uint8_t spi3_en:1;
         uint8_t __resv__:1;
         FilterCoefficient filter_coeff:3;
@@ -162,22 +162,22 @@ struct BMP280_Regset final: public BMP280_Prelude {
     }DEF_R8(config_reg)
 
     struct R16_Pressure:public Reg16<>{
-        static constexpr RegAddr ADDRESS=0xF6;
+        static constexpr RegAddr REG_ADDR=0xF6;
         uint16_t bits;
     }DEF_R16(pressure_reg)
 
     struct R8_PressureX:public Reg8<>{
-        static constexpr RegAddr ADDRESS=0xF9;
+        static constexpr RegAddr REG_ADDR=0xF9;
         uint8_t bits;
     }DEF_R8(pressure_x_reg)
 
     struct R16_Temperature:public Reg16<>{
-        static constexpr RegAddr ADDRESS=0xFA;
+        static constexpr RegAddr REG_ADDR=0xFA;
         uint16_t bits;
     }DEF_R16(temperature_reg)
 
     struct R8_TemperatureX:public Reg8<>{
-        static constexpr RegAddr ADDRESS=0xFC;
+        static constexpr RegAddr REG_ADDR=0xFC;
         uint8_t bits;
     }DEF_R8(temperature_x_reg)
 

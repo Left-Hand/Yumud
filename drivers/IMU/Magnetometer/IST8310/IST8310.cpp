@@ -44,7 +44,7 @@ IResult<> IST8310::init(){
 }
 IResult<> IST8310::update(){
     std::array<int16_t, 3> buf;
-    if(const auto res = read_burst(regs_.axis_x_reg.ADDRESS, std::span(buf));
+    if(const auto res = read_burst(regs_.axis_x_reg.REG_ADDR, std::span(buf));
         res.is_err()) return Err(res.unwrap_err());
 
     regs_.axis_x_reg.bits = buf[0];

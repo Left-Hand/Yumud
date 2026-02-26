@@ -397,7 +397,7 @@ IResult<> LT8960L_Transport::_read_reg(
 
 
 IResult<size_t> LT8960L::read_fifo(std::span<uint8_t> buf){
-    return transport_.read_burst(Regs::R16_Fifo::ADDRESS, buf)
+    return transport_.read_burst(Regs::R16_Fifo::REG_ADDR, buf)
         // .if_ok([&](){clear_fifo_write_and_read_ptr().unwrap();})
     ;
 }
@@ -475,7 +475,7 @@ IResult<> LT8960L::validate(){
 
     if(const auto res = reset() ;
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = read_reg(Regs::R16_ChipId::ADDRESS, buf);
+    if(const auto res = read_reg(Regs::R16_ChipId::REG_ADDR, buf);
         res.is_err()) return Err(res.unwrap_err());
     if((buf == Regs::R16_ChipId::key))
         return Err(Error::ChipIdMismatch);

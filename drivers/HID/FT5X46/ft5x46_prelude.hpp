@@ -69,7 +69,7 @@ struct [[nodiscard]] FT5X46_Prelude{
 struct [[nodiscard]] FT5X46_Regs : public FT5X46_Prelude {
     
     struct [[nodiscard]] R8_PxH : public Reg8<> {
-        static constexpr RegAddr ADDRESS = 0x03;
+        static constexpr RegAddr REG_ADDR = 0x03;
 
         
         uint8_t x_high : 4;
@@ -78,29 +78,29 @@ struct [[nodiscard]] FT5X46_Regs : public FT5X46_Prelude {
     } DEF_R8(pxh)
 
     struct [[nodiscard]] R8_PxL : public Reg8<> {
-        static constexpr RegAddr ADDRESS = 0x04;
+        static constexpr RegAddr REG_ADDR = 0x04;
         uint8_t x_low;
     } DEF_R8(pxl)
 
     struct [[nodiscard]] R8_PyH : public Reg8<> {
-        static constexpr RegAddr ADDRESS = 0x05;
+        static constexpr RegAddr REG_ADDR = 0x05;
         
         uint8_t y_high : 4;
         uint8_t touch_id : 4;  // Touch ID of Touch Point, this value is 0x0F when the ID is invalid
     } DEF_R8(pyh)
 
     struct [[nodiscard]] R8_PyL : public Reg8<> {
-        static constexpr RegAddr ADDRESS = 0x06;
+        static constexpr RegAddr REG_ADDR = 0x06;
         uint8_t y_low;
     } DEF_R8(pyl)
 
     struct [[nodiscard]] R8_PWeight : public Reg8<> {
-        static constexpr RegAddr ADDRESS = 0x07;
+        static constexpr RegAddr REG_ADDR = 0x07;
         uint8_t weight;  // Touch pressure value
     } DEF_R8(pweight)
 
     struct [[nodiscard]] R8_PMisc : public Reg8<> {
-        static constexpr RegAddr ADDRESS = 0x08;
+        static constexpr RegAddr REG_ADDR = 0x08;
         
         uint8_t : 4;
         uint8_t touch_area : 4;  // Touch area value
@@ -110,7 +110,7 @@ struct [[nodiscard]] FT5X46_Regs : public FT5X46_Prelude {
 struct [[nodiscard]] FT6336_MainRegs : public FT5X46_Prelude {
     
     struct [[nodiscard]] R8_ModeSwitch : public Reg8<> {
-        static constexpr RegAddr ADDRESS = 0x00;
+        static constexpr RegAddr REG_ADDR = 0x00;
         
         enum class DeviceMode : uint8_t {
             Working = 0x0,
@@ -123,7 +123,7 @@ struct [[nodiscard]] FT6336_MainRegs : public FT5X46_Prelude {
     } DEF_R8(modeswitch)
 
     struct [[nodiscard]] R8_Guesture : public Reg8<> {
-        static constexpr RegAddr ADDRESS = 0x01;
+        static constexpr RegAddr REG_ADDR = 0x01;
         
 
         
@@ -131,7 +131,7 @@ struct [[nodiscard]] FT6336_MainRegs : public FT5X46_Prelude {
     } DEF_R8(guesture)
 
     struct [[nodiscard]] R8_Status : public Reg8<> {
-        static constexpr RegAddr ADDRESS = 0x02;
+        static constexpr RegAddr REG_ADDR = 0x02;
         
         uint8_t td_status : 4;
         uint8_t : 4;

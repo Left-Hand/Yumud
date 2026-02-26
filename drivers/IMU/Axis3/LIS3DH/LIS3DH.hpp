@@ -125,7 +125,7 @@ namespace ymd::drivers{
 
 template<typename T>
 LIS3DH::IResult<> LIS3DH::write_reg(const RegCopy<T> & reg){
-    const auto res = transport_.write_reg(T::ADDRESS, reg.to_bits());
+    const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
     if(res.is_err()) return res;
     reg.apply();
     return Ok();
@@ -133,7 +133,7 @@ LIS3DH::IResult<> LIS3DH::write_reg(const RegCopy<T> & reg){
 
 template<typename T>    
 LIS3DH::IResult<> LIS3DH::read_reg(T & reg){
-    return LIS3DH::IResult<>(transport_.read_reg(T::ADDRESS, reg.as_bits_mut()));
+    return LIS3DH::IResult<>(transport_.read_reg(T::REG_ADDR, reg.as_bits_mut()));
 }
 
 LIS3DH::IResult<> LIS3DH::verify_phy(){

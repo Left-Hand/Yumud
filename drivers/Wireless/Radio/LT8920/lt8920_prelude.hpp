@@ -73,20 +73,20 @@ struct LT8920_Regs:public LT8920_Prelude{
 
     using RegAddr = uint8_t;
     struct R16_RfSynthLock:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 3;
+        static constexpr RegAddr REG_ADDR = 3;
         uint16_t __resv1__ :12;
         uint16_t synth_locked:1;//RF 频率综合器锁定标志位
         uint16_t __resv2__ :3;
     };
 
     struct R16_RawRssi:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 6;
+        static constexpr RegAddr REG_ADDR = 6;
         uint16_t __resv__ :10;
         uint16_t raw_rssi:6;//RSSI 原始数据
     };
 
     struct R16_RfConfig:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 7;
+        static constexpr RegAddr REG_ADDR = 7;
         uint16_t rf_channel_no :7;//设定 RF 频道，空中频率为：f=2402+ RF_PLL_CH_NO
         uint16_t rx_en:1;//使芯片进入 TX 状态，1 有效
         uint16_t tx_en:1;//使芯片进入 RX 状态，1 有效
@@ -94,7 +94,7 @@ struct LT8920_Regs:public LT8920_Prelude{
     };
 
     struct R16_PaConfig:public Reg16<>{
-        static constexpr RegAddr ADDRESS =9;
+        static constexpr RegAddr REG_ADDR =9;
         uint16_t __resv1__ :7;
         uint16_t pa_gain:4;//PA增益控制
         uint16_t __resv2__ :1;
@@ -102,27 +102,27 @@ struct LT8920_Regs:public LT8920_Prelude{
     };
 
     struct R16_OscEnable:public Reg16<>{
-        static constexpr RegAddr ADDRESS =10;
+        static constexpr RegAddr REG_ADDR =10;
         uint16_t osc_en :1;//开启晶体振荡器
         uint16_t __resv__ :15;
     };
 
     struct R16_RssiPdn:public Reg16<>{
-        static constexpr RegAddr ADDRESS =11;
+        static constexpr RegAddr REG_ADDR =11;
         uint16_t __resv1__ :8;
         uint16_t rssi_pdn:1;//关闭 RSSI
         uint16_t __resv2__ :7;
     };
 
     struct R16_AutoCali:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 23;
+        static constexpr RegAddr REG_ADDR = 23;
         uint16_t __resv__ :2;
         uint16_t auto_cali:1;//在 TX/RX 开启前重新校准 VCO
         uint16_t __resv1__ :13;
     };
 
     struct R16_DeviceID:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 29;
+        static constexpr RegAddr REG_ADDR = 29;
         uint16_t digi_version:3;//数字版本号
         uint16_t __resv1__ :1;
         uint16_t rf_version:4;//RF 版本号
@@ -130,7 +130,7 @@ struct LT8920_Regs:public LT8920_Prelude{
     };
 
     struct R16_Config1:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 32;
+        static constexpr RegAddr REG_ADDR = 32;
         uint16_t __resv1__ :1;
         uint16_t brclk_sel:3;//时钟选择
         uint16_t __resv2__ :2;
@@ -141,14 +141,14 @@ struct LT8920_Regs:public LT8920_Prelude{
     };
 
     struct R16_Delay1:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 33;
+        static constexpr RegAddr REG_ADDR = 33;
         uint16_t tx_pa_on_delays:6;//在 VCO_ON 以后，等待内部 PA开启的时间，单位为 1uS
         uint16_t tx_pa_off_delays:2;//PA 关闭的等待时间，单位是 1uS，基数是 4uS，00 表示 4uS
         uint16_t vco_on_delays:8;//在每次进入 RX或者 TX 后，等待内部 VCO 稳定的时间，单位为 1uS。
     };
 
     struct R16_Delay2:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 34;
+        static constexpr RegAddr REG_ADDR = 34;
         uint16_t tx_sw_on_delays:6;//VCO_ON 后，等待 RF switch 开启的时间，单位 1uS
         uint16_t __resv__ :2;
         uint16_t rx_cw_delays:7;//在发射数据前，传输 CW 调制信号的时间
@@ -157,7 +157,7 @@ struct LT8920_Regs:public LT8920_Prelude{
 
 
     struct R16_Config2:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 35;
+        static constexpr RegAddr REG_ADDR = 35;
         uint16_t scramable_data :7;//Scramble data 的种子，收发两边必须一致
         uint16_t miso_tri :1; //当 SPI_SS=1 时，MISO 保持三态/低阻
         uint16_t retrans_times:4;//在 auto-ack 功能开启时，最多的重发次数。设为 3 时，为重发 2 次
@@ -173,7 +173,7 @@ struct LT8920_Regs:public LT8920_Prelude{
     };
 
     struct R16_Threshold:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 40;
+        static constexpr RegAddr REG_ADDR = 40;
         uint16_t errbits:6;//认为 SYNCWORD 为正确的阈值 07 表示可以错 6bits，01 表示 0bit 可以错 0bits
         uint16_t fifo_full_threshold:4;//认为 FIFO 为满的阈值
         uint16_t fifo_empty_threshold:4;//认为 FIFO 为空的阈值
@@ -181,7 +181,7 @@ struct LT8920_Regs:public LT8920_Prelude{
     };
 
     struct R16_Config3:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 41;
+        static constexpr RegAddr REG_ADDR = 41;
         uint16_t crc_inital_data:8;//CRC 计算初始值。
         uint16_t __resv1__ :2;
         uint16_t pkt_fifo_polarity:1; //PKT flag, FIFO flag 低有效.
@@ -194,27 +194,27 @@ struct LT8920_Regs:public LT8920_Prelude{
     };
 
     struct R16_RxConfig:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 42;
+        static constexpr RegAddr REG_ADDR = 42;
         uint16_t rx_ack_time:8;//等待 RX_ACK 的时间，1 表示 1uS
         uint16_t __resv__ :2;
         uint16_t scan_rssi_ch_no:6;//RSSI 扫描的信道数量，RSSI 值将保留到 FIFO 中
     };
 
     struct R16_RssiConfig:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 43;
+        static constexpr RegAddr REG_ADDR = 43;
         uint16_t wait_rssi_scan_time :8;//设置在扫描不同信道 RSSI 时，VCO&SYN 稳定时间
         uint16_t rssi_start_ch_offset:7;//通常 RSSI 从 2402MHz 开始扫描（0 信道）。这里可以开始的信道数 如设为 10，将从 2412MHz 开始扫描
         uint16_t scan_rssi_en :1;//开始扫描 RSSI
     };
 
     struct R16_DataRate:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 44;
+        static constexpr RegAddr REG_ADDR = 44;
         uint16_t __resv__ :8;
         uint16_t dataRate:8;//透传速率
     };
 
     struct R16_Flag:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 48;
+        static constexpr RegAddr REG_ADDR = 48;
         uint16_t __resv__ :5;
         uint16_t fifo_flag:1;
         uint16_t pkt_flag:1;
@@ -226,7 +226,7 @@ struct LT8920_Regs:public LT8920_Prelude{
 
 
     struct R16_FifoPtr:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 52;
+        static constexpr RegAddr REG_ADDR = 52;
         //FIFO 读指针
         //当使用 auto-ack 功能时，此位可以做为标志位。
         //当 PKT 拉高后，读此寄存器，如果为 0，即收到 ack。

@@ -22,7 +22,7 @@ using Error = EncoderError;
 struct AS5048A_Regs{
     using RegAddr = uint16_t;
     struct [[nodiscard]] R16_Nop:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x0000;
+        static constexpr RegAddr REG_ADDR = 0x0000;
         uint16_t bits;
     };
 
@@ -33,7 +33,7 @@ struct AS5048A_Regs{
     // information which error type was occurred. On the next new 
     // READ register the ERROR FLAG is cleared
     struct [[nodiscard]] R16_ClearError:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x0001;
+        static constexpr RegAddr REG_ADDR = 0x0001;
         uint16_t framing_error:1;
         uint16_t command_invalid:1;
         uint16_t parity_error:1;
@@ -41,7 +41,7 @@ struct AS5048A_Regs{
     };
 
     struct [[nodiscard]] R16_ProgrammingControl:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x0003;
+        static constexpr RegAddr REG_ADDR = 0x0003;
         uint16_t programming_enable:1;
         uint16_t :2;
         uint16_t burn:1;
@@ -51,19 +51,19 @@ struct AS5048A_Regs{
     };
 
     struct [[nodiscard]] R16_OtpZeroPositionHi:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x0016;
+        static constexpr RegAddr REG_ADDR = 0x0016;
         uint16_t zero_position_hi_8b:8;
         uint16_t :8;
     };
 
     struct [[nodiscard]] R16_OtpZeroPositionLo:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x00017;
+        static constexpr RegAddr REG_ADDR = 0x00017;
         uint16_t zero_position_lo_6b:6;
         uint16_t :10;
     };
 
     struct [[nodiscard]] R16_Agc:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x3ffd;
+        static constexpr RegAddr REG_ADDR = 0x3ffd;
         uint16_t agc_value:8;
         uint16_t ocf:1;
         uint16_t cof:1;
@@ -74,12 +74,12 @@ struct AS5048A_Regs{
 
 
     struct [[nodiscard]] R16_Magnitude:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x3ffe;
+        static constexpr RegAddr REG_ADDR = 0x3ffe;
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_Angle:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x3fff;
+        static constexpr RegAddr REG_ADDR = 0x3fff;
         uint16_t bits;
     };
 };
@@ -89,7 +89,7 @@ struct AS5048B_Regs{
     using RegAddr = uint8_t;
 
     struct [[nodiscard]] R8_ProgrammingControl:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x0003;
+        static constexpr RegAddr REG_ADDR = 0x0003;
         uint8_t programming_enable:1;
         uint8_t :2;
         uint8_t burn:1;
@@ -99,7 +99,7 @@ struct AS5048B_Regs{
     };
 
     struct [[nodiscard]] R8_I2cSlaveAddress:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x0015;
+        static constexpr RegAddr REG_ADDR = 0x0015;
         // I²C slave address slave 
         // address consist of 5 bits 
         // (MSBs) and the hardware 
@@ -111,23 +111,23 @@ struct AS5048B_Regs{
     };
 
     struct [[nodiscard]] R8_OtpZeroPositionHi:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x0016;
+        static constexpr RegAddr REG_ADDR = 0x0016;
         uint8_t zero_position_hi_8b:8;
     };
 
     struct [[nodiscard]] R8_OtpZeroPositionLo:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x00017;
+        static constexpr RegAddr REG_ADDR = 0x00017;
         uint8_t zero_position_lo_6b:6;
         uint8_t :2;
     };
 
     struct [[nodiscard]] R8_Agc:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0xfa;
+        static constexpr RegAddr REG_ADDR = 0xfa;
         uint8_t agc_value;
     };
 
     struct [[nodiscard]] R8_Diagnostics:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0xfb;
+        static constexpr RegAddr REG_ADDR = 0xfb;
         uint8_t ocf:1;
         uint8_t cof:1;
         uint8_t comp_low:1;
@@ -137,12 +137,12 @@ struct AS5048B_Regs{
 
 
     struct [[nodiscard]] R16_Magnitude:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0xfc;
+        static constexpr RegAddr REG_ADDR = 0xfc;
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_Angle:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0xff;
+        static constexpr RegAddr REG_ADDR = 0xff;
         uint16_t bits;
     };
 };
