@@ -40,28 +40,8 @@ private:
 
 static_assert(sizeof(DM9008_Fault) == 1);
 
-// struct SpdCtrlParams{
-//     iq16 x2;
-//     void fill_bytes(std::span<uint8_t, 4> bytes) const{
-
-//     }
-// };
-// struct PosSpdCtrlParams{
-//     iq16 x1;
-//     iq16 x2;
-// };
-
 class [[nodiscard]] DM9008{
 public:
-
-
-    // struct MitCtrlParams{
-    //     iq16 p_des;
-    //     iq16 v_des;
-    //     iq16 kp;
-    //     iq16 kd;
-    //     iq16 t_ff;
-    // };
     using NodeId = uint8_t;
 
     struct FrameFactory{
