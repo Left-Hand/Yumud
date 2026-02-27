@@ -14,7 +14,7 @@ public:
     constexpr BrushedMotorModel(const Config & cfg){reconf(cfg);}
 
     constexpr void reconf(const Config & cfg){
-        dt_ = 1_r / cfg.fs;
+        dt_ = uq32::from_rcp(cfg.fs);
     }
 
     constexpr State update(const State & state, const iq16 u_in) const {
@@ -37,7 +37,7 @@ private:
 
 
     State state_;
-    iq16 dt_;
+    uq32 dt_;
 
 };
 

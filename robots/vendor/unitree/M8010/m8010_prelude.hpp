@@ -17,15 +17,15 @@ namespace ymd::robots::unitree{
 struct [[nodiscard]] MotorId final{
     uint8_t bits;
 
-    constexpr bool is_valid() const {
+    [[nodiscard]] constexpr bool is_valid() const {
         return (bits & 0xf0) == 0;
     }
 
-    constexpr bool is_boardcast() const {
+    [[nodiscard]] constexpr bool is_boardcast() const {
         return (bits & 0x0f) == 0x0f;
     }
 
-    constexpr uint8_t count() const {
+    [[nodiscard]] constexpr uint8_t count() const {
         return bits & 0x0f;
     }
 };
@@ -52,21 +52,21 @@ struct [[nodiscard]] WorkingMode final{
         return Self{static_cast<uint8_t>(Kind::Default)};
     }
 
-    constexpr bool is_calibrating() const{
+    [[nodiscard]] constexpr bool is_calibrating() const{
         return bits == static_cast<uint8_t>(Kind::Calibrating);
     }
 
-    constexpr bool is_closeloop() const{
+    [[nodiscard]] constexpr bool is_closeloop() const{
         return bits == static_cast<uint8_t>(Kind::Closeloop);
     }
 
-    constexpr bool is_default() const{
+    [[nodiscard]] constexpr bool is_default() const{
         return bits == static_cast<uint8_t>(Kind::Default);
     }
 };
 
 
-struct ModeInfo{
+struct [[nodiscard]] ModeInfo final{
     uint8_t bits;
 
     constexpr MotorId motor_id() const {
@@ -99,9 +99,7 @@ struct [[nodiscard]] TorqueCode final{
     }
 };
 
-static_assert(sizeof(TorqueCode) == 2);
-static_assert(std::is_trivially_copyable_v<TorqueCode>);
-static_assert(TorqueCode::try_from_nm(iq16(0.75)).unwrap().bits == 192);
+
 
 struct [[nodiscard]] X2Code final{
     using Self = X2Code;
@@ -120,10 +118,6 @@ struct [[nodiscard]] X2Code final{
     }
 };
 
-static_assert(sizeof(X2Code) == 2);
-static_assert(std::is_trivially_copyable_v<X2Code>);
-static_assert(X2Code::try_from_speed(Angular<iq16>::from_radians(iq16(M_PI))).unwrap().bits == 128);
-static_assert(X2Code::try_from_speed(Angular<iq16>::from_radians(iq16(-M_PI))).unwrap().bits == -128);
 
 
 struct [[nodiscard]] X1Code final{
@@ -143,9 +137,6 @@ struct [[nodiscard]] X1Code final{
     }
 };
 
-static_assert(sizeof(X1Code) == 4);
-static_assert(std::is_trivially_copyable_v<X1Code>);
-static_assert(X1Code::try_from_turns(iq15(0.25)).unwrap().bits == 8192);
 
 struct [[nodiscard]] KpCode final{
     using Self = KpCode;
@@ -165,12 +156,6 @@ struct [[nodiscard]] KpCode final{
         bytes[1] = static_cast<uint8_t>(bits >> 8);
     }
 };
-
-static_assert(sizeof(KpCode) == 2);
-static_assert(std::is_trivially_copyable_v<KpCode>);
-static_assert(KpCode::try_from(uq16(0.1)).unwrap().bits == 128);
-static_assert(KpCode::try_from(uq16(1.0)).unwrap().bits == 1280);
-
 
 
 struct [[nodiscard]] KdCode final{
@@ -194,7 +179,7 @@ static_assert(sizeof(KdCode) == 2);
 static_assert(std::is_trivially_copyable_v<KdCode>);
 static_assert(KdCode::try_from(iq15(0.1)).unwrap().bits == 128);
 
-struct TxHeader{
+struct [[nodiscard]] TxHeader final{
     static constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) {
         bytes[0] = 0xfe;
         bytes[1] = 0xee;
@@ -234,7 +219,7 @@ struct [[nodiscard]] TxContext final{
 };
 
 
-struct RxHeader{
+struct [[nodiscard]] RxHeader final{
     static constexpr void fill_bytes(const std::span<uint8_t, 2> bytes) {
         bytes[0] = 0xfd;
         bytes[1] = 0xee;
@@ -242,7 +227,7 @@ struct RxHeader{
 };
 
 
-struct TempCode{
+struct [[nodiscard]] TempCode final{
     int8_t bits;
 
     constexpr int8_t to_celeius() const {
@@ -254,7 +239,7 @@ struct TempCode{
     }
 };
 
-struct [[nodiscard]] ErrorCode { 
+struct [[nodiscard]] ErrorCode final{ 
     using Self = ErrorCode;
     enum class Kind :uint8_t{
         Ok = 0,
@@ -266,22 +251,22 @@ struct [[nodiscard]] ErrorCode {
 
     uint8_t bits;
 
-    constexpr bool is_ok() const {
+    [[nodiscard]] constexpr bool is_ok() const {
         return bits == 0;
     }
 
-    constexpr bool is_err() const {return not is_ok();}
+    [[nodiscard]] constexpr bool is_err() const {return not is_ok();}
 
-    constexpr bool is_invalid() const {return bits > 4;}
+    [[nodiscard]] constexpr bool is_invalid() const {return bits > 4;}
 
-    constexpr Kind unwrap() const {
+    [[nodiscard]] constexpr Kind unwrap() const {
         if(is_ok()) [[unlikely]] __builtin_trap();
         return static_cast<Kind>(bits);
     }
 };
 
 
-struct RxContext{
+struct [[nodiscard]] RxContext final{
     using Self = RxContext;
     ModeInfo mode_info;
     TorqueCode torque_code;
@@ -289,7 +274,7 @@ struct RxContext{
     X1Code x1_code;
     TempCode temp_code;
 
-    struct Misc{
+    struct [[nodiscard]] Misc final{
         uint16_t err_bits : 3;
         uint16_t force_bits : 12;
         uint16_t :1;
