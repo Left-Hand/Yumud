@@ -11,7 +11,7 @@
 #endif
 
 #ifdef ARCH_QKV4
-#include "arch/riscv/qkv4.hpp"
+#include "arch/riscv/riscv_v4c.hpp"
 #endif
 
 

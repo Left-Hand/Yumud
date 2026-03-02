@@ -62,7 +62,7 @@ IResult<> TCS34725::set_int_persistence(const uint8_t times){
         uint8_t value = 0b0100 + (times / 5) - 1;
         reg.apers = value;
     }else{
-        reg.apers = (uint8_t)MIN(times, 3);
+        reg.apers = std::min<uint8_t>(times, 3);
     }
 
     return write_reg(reg);
@@ -70,7 +70,7 @@ IResult<> TCS34725::set_int_persistence(const uint8_t times){
 
 
 IResult<> TCS34725::set_integration_time(const Milliseconds ms){
-    const uint16_t cycles = CLAMP(ms.count() * 10 / 24, 1, 256);
+    const uint16_t cycles = std::clamp(int(ms.count() * 10 / 24), 1, 256);
     const uint16_t temp = 256 - cycles;
     auto reg = RegCopy(regs_.integration_reg);
     reg.data = temp;
@@ -78,21 +78,21 @@ IResult<> TCS34725::set_integration_time(const Milliseconds ms){
 }
 
 IResult<> TCS34725::set_wait_time(const Milliseconds ms){
-    const uint16_t ms_l = MAX(ms.count() * 10 / 24,1);
-    uint16_t value;
+    const uint16_t ms_l = std::max(int(ms.count() * 10 / 24),1);
+    uint8_t wait_time;
     bool long_wait_flag = false;
 
     if(ms_l <= 256){
-        value = 256 - ms_l;
+        wait_time = 256 - ms_l;
     }else{
-        uint16_t ms_h = CLAMP(ms.count() * 10 / 24 / 12, 1, 256);
-        value = 256 - ms_h;
+        uint16_t ms_h = std::clamp(int(ms.count() * 10 / 24 / 12), 1, 256);
+        wait_time = 256 - ms_h;
         long_wait_flag = true;
     }
 
     {
         auto reg = RegCopy(regs_.wait_time_reg);
-        reg.data = value;
+        reg.wait_time = wait_time;
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }

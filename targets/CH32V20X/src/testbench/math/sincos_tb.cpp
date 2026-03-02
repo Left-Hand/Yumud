@@ -1,7 +1,5 @@
 #include "exprimental.hpp"
 
-#include "core/arch/riscv/riscv_common.hpp"
-
 #include "core/debug/debug.hpp"
 #include "core/clock/time.hpp"
 
@@ -209,25 +207,30 @@ void sincos_main(){
         
         // const auto y1 = fn1(s, c);
         // const auto y2 = fn2(s, c);
-        const auto y3 = math::asin(iq16(s));
-        const auto y4 = math::acos(iq16(s));
-        const auto y5 = math::atan2(iq16(s), iq16(c));
+        // const auto y3 = math::asin(iq16(s));
+        // const auto y4 = math::acos(iq16(s));
+        // const auto y5 = math::atan2pu(iq16(s), iq16(c));
+        const auto y5 = math::atan2(s, c);
+        // const auto y5 = math::atanpu(iq16(s) / iq16(c));
         const auto elapsed_us = measure_total_elapsed_us([&]{
             formatter.println(
                 // uq30(x),
                 // std::showpos, 
                 // std::showbase,
                 // std::hex,
-                uq16(x),
-                uq32(x),
+                // uq16(x),
+                // uq32(x),
                 // (s).to_bits() - fn2(x).to_bits(), 
-                c,
-                s, fn2(x),
+                // c,
+                // s, fn2(x),
                 // std::numeric_limits<iq31>::min(), 
                 // std::numeric_limits<iq31>::max(), 
                 // y1, y2,
-                y3, y4, 
-                iq16::from(float(-y5)),
+                // y3, y4, 
+                s,c,
+                y5,
+                // iq16(s)/iq16(c),
+                // iq16::from(float(-y5)),
                 // -y5,
 
                 int32_t(-1)

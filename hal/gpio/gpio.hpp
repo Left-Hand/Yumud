@@ -37,7 +37,7 @@ public:
     void set_mode(const GpioMode mode) ;
     __fast_inline void * inst() const {return inst_;} 
     __fast_inline Nth nth() const {
-        return Nth(CTZ(static_cast<uint16_t>(pin_nth_)));
+        return Nth(__builtin_ctz(static_cast<uint16_t>(pin_nth_)));
     }
 
     constexpr PinSource pin_nth() const {return pin_nth_;}

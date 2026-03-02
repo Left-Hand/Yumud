@@ -162,7 +162,9 @@ public:
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     T length() const{
-        return ABS(stop - start);
+        if(stop > start) return static_cast<T>(stop - start);
+        return static_cast<T>(start - stop);
+        // return std::abs(stop - start);
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -378,15 +380,15 @@ private:
         const uint gsize
     ){
         const auto grid_remaining = gsize - range.start % gsize;
-        return Range2u32(range.start, MIN(range.start + grid_remaining, range.stop));
+        return Range2u32(range.start, std::min(range.start + grid_remaining, range.stop));
     }
 
     static constexpr Range2u32 end_of_range(
         const Range2u32 range,
         const uint gsize
     ){
-        const auto grid_begin = range.stop - range.stop % gsize;
-        return Range2u32(MAX(range.start, grid_begin), range.stop);
+        const uint32_t grid_begin = range.stop - range.stop % gsize;
+        return Range2u32(std::max(range.start, grid_begin), range.stop);
     }
     static constexpr Option<Range2u32> next_of_range(
         const Range2u32 range_in,
@@ -395,7 +397,7 @@ private:
     ){
         const auto end_range = end_of_range(range_targ, gsize);
         if(range_in.stop >= end_range.stop) return None;
-        const auto next_stop = MIN(range_in.stop + gsize, range_targ.stop);
+        const auto next_stop = std::min(range_in.stop + gsize, range_targ.stop);
         const auto remainder = next_stop % gsize;
         if(remainder == 0) return Some(Range2u32{next_stop - gsize , next_stop});
         else return Some(Range2u32{next_stop - remainder , next_stop});
@@ -408,7 +410,7 @@ private:
     ){
         const auto begin_range = begin_of_range(range_targ, gsize);
         if(range_in.start <= begin_range.start) return None;
-        const auto prev_start = MAX(range_in.start - gsize, range_targ.start);
+        const auto prev_start = std::max(range_in.start - gsize, range_targ.start);
         const auto remainder = prev_start % gsize;
         return Some(Range2u32(prev_start, prev_start - remainder + gsize));
     }

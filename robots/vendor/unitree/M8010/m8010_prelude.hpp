@@ -317,7 +317,7 @@ struct [[nodiscard]] RxContext final{
     template<typename Receiver>
     void sink_to(Receiver && receiver) const {
         auto & self = *this;
-        std::array<uint8_t, 17> buffer;
+        std::array<uint8_t, 16> buffer;
         TxHeader::fill_bytes(std::span(buffer).template subspan<0, 2>());
         self.fill_bytes(std::span(buffer).template subspan<2, 12>());
         const auto crc_code = encrypt::crc::crc16_ccitt(std::span(buffer).template subspan<0, 14>());

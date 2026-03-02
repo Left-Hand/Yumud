@@ -326,6 +326,6 @@ constexpr auto phi = B * A;         // 0.0003 Wb
 
 // Inductive reactance XL = 2πfL
 constexpr auto f = 50_ghz; // 1Hz = 1/s
-constexpr auto XL = f * L * TAU; // ~31.4159 Ω
+constexpr auto XL = f * L * (M_PI); // ~31.4159 Ω
 }
 }

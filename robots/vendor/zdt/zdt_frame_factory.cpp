@@ -8,7 +8,7 @@ using namespace ymd::robots::zdtmotor;
 FlatPacket ZdtFrameFactory::set_angle(const Angular<iq16> angle, iq16 speed){
     return ser_req(req_msgs::SetPosition{
         .is_ccw = (angle.is_negative()),
-        .rpm = Rpm::from_speed(speed),
+        .rpm = Rpm::from_tps(speed),
         .acc_level = AcclerationLevel::from_u8(0),
         .pulse_cnt = PulseCnt::from_angle(angle.abs().cast_inner<uq16>()).unwrap(),
         .is_absolute = true,
@@ -19,8 +19,8 @@ FlatPacket ZdtFrameFactory::set_angle(const Angular<iq16> angle, iq16 speed){
 FlatPacket ZdtFrameFactory::set_speed(iq16 speed){
     return ser_req(req_msgs::SetSpeed{
         .is_ccw = speed < 0,
-        .rpm = Rpm::from_speed(math::abs(speed)),
-        .acc_level = AcclerationLevel::from(0),
+        .rpm = Rpm::from_tps(math::abs(speed)),
+        .acc_level = AcclerationLevel::from_tpss(0),
         .is_absolute = true,
         .is_sync = is_multi_axis_sync
     });

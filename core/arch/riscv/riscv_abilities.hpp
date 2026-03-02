@@ -1,6 +1,6 @@
 #pragma once
 
-namespace riscv_abilities{
+namespace ymd::arch::riscv{
 #ifdef __riscv
 #ifdef __riscv_float_abi_single
 static constexpr bool has_native_hard_f32 = true;

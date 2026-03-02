@@ -79,8 +79,8 @@ public:
         if(buf.size() < RECORD_LENGTH) buf.push_back(item);
     }
 
-    const E & operator[](uint index) const {
-        return buf[MIN(index, RECORD_LENGTH - 1)];
+    const E & operator[](size_t index) const {
+        return buf[std::min<size_t>(index, RECORD_LENGTH - 1)];
     }
 private:
 

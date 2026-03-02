@@ -299,7 +299,7 @@ IResult<> PainterBase::draw_filled_triangle(const math::Vec2u & p0,const math::V
         sa += dx01;
         sb += dx02;
 
-        if (a > b) SWAP(a, b);
+        if (a > b) std::swap(a, b);
         if(const auto res = draw_hri_line(math::Range2u(a, b + 1), y); res.is_err()) return res;
     }
 
@@ -311,7 +311,7 @@ IResult<> PainterBase::draw_filled_triangle(const math::Vec2u & p0,const math::V
         sa += dx12;
         sb += dx02;
 
-        if (a > b) SWAP(a, b);
+        if (a > b) std::swap(a, b);
         if(const auto res = draw_hri_line(math::Range2u(a, b + 1), y); res.is_err()) return res;
     }
 

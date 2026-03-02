@@ -39,9 +39,11 @@ private:
 
     IResult<> read_fifo(const std::span<uint8_t> pbuf){
         if(pbuf.size() == 0) return Ok();
-        const uint8_t size = MIN(pbuf.size(), 32);
-        if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_bits_mut(), 
-            uint8_t(Command::R_RX_PAYLOAD), CONT); res.is_err()) return Err(res.unwrap_err());
+        const uint8_t size = static_cast<uint8_t>(std::min(pbuf.size(), 32u));
+        if(const auto res = spi_drv_.transceive_single<uint8_t>(
+            regs_.status_reg.as_bits_mut(), 
+            uint8_t(Command::R_RX_PAYLOAD), CONT
+        ); res.is_err()) return Err(res.unwrap_err());
         
         if(const auto res = spi_drv_.read_burst<uint8_t>(std::span(pbuf.data(), size));
             res.is_err()) return Err(res.unwrap_err());
@@ -52,9 +54,11 @@ private:
 
     IResult<> write_fifo(const std::span<const uint8_t> pbuf){
         if(pbuf.size() == 0) return Ok();
-        const uint8_t size = MIN(pbuf.size(), 32);
-        if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_bits_mut(), 
-            uint8_t(Command::W_TX_PAYLOAD), CONT); res.is_err()) return Err(res.unwrap_err());
+        const uint8_t size = static_cast<uint8_t>(std::min(pbuf.size(), 32u));
+        if(const auto res = spi_drv_.transceive_single<uint8_t>(
+            regs_.status_reg.as_bits_mut(), 
+            uint8_t(Command::W_TX_PAYLOAD), CONT
+        ); res.is_err()) return Err(res.unwrap_err());
 
         if(const auto res = spi_drv_.write_burst<uint8_t>(std::span(pbuf.data(), size));
             res.is_err()) return Err(res.unwrap_err());
@@ -65,7 +69,7 @@ private:
 
     IResult<> write_fifo_no_ack(const std::span<const uint8_t> pbuf){
         if(pbuf.size() == 0) return Ok();
-        const uint8_t size = MIN(pbuf.size(), 32);
+        const uint8_t size = static_cast<uint8_t>(std::min(pbuf.size(), 32u));
         if(const auto res = spi_drv_.transceive_single<uint8_t>(regs_.status_reg.as_bits_mut(), 
             uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT); res.is_err()) return Err(res.unwrap_err());
     

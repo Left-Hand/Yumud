@@ -136,14 +136,14 @@ public:
         bool steep = false;
 
         if (ABS(x1 - x0) < ABS(y1 - y0)) {
-            SWAP(x0, y0);
-            SWAP(x1, y1);
+            std::swap(x0, y0);
+            std::swap(x1, y1);
             steep = true;
         }
 
         if (x0 > x1) {
-            SWAP(x0, x1);
-            SWAP(y0, y1);
+            std::swap(x0, x1);
+            std::swap(y0, y1);
         }
 
         int dx = x1 - x0;

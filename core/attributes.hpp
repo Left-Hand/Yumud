@@ -47,12 +47,6 @@
 #endif
 
 
-#define ISSFR(ptr) (((uint32_t)ptr > 0x40000000))
-#define ISRAM(ptr) ((!ISSFR(ptr)) && (((uint32_t)(ptr)) > 0x20000000))
-#define ISROM(ptr) (((uint32_t)(ptr)) < 0x20000000)
-#define ISALIGNED(ptr) ((((uint32_t)(ptr)) & 0x3) == 0)
-
-
 #ifndef __nopn
 #define __nopn(N) __asm__ volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)
 #endif
@@ -71,25 +65,14 @@
 #define TYPE_CMP(a,b) __builtin_types_compatible_p(type_a, type_b);
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
-#define VAR_AND_SIZE(x) x,sizeof(x)
-#define PTR8_AND_SIZE(x) (const uint8_t *)&x, sizeof(x)
-#define CHR8_AND_SIZE(x) (const char *)&x, sizeof(x)
-
 #define BREAKPOINT __nopn(1);
 
 #if defined(__riscv)
-#define __HALT asm("csrrw zero, mstatus, zero");
 #define DISABLE_INT   __asm volatile ("csrw 0x800, %0" : : "r" (0x6000) );
 #define ENABLE_INT    __asm volatile ("csrw 0x800, %0" : : "r" (0x6088) );
 #elif defined(__arm__)
-    #if defined(__thumb__)
-    #define __HALT asm("bkpt 0x00000000");
-    #else
-    #define HALT asm("swi 0x00000000");
-    #endif
-
-    #define DISABLE_INT
-    #define ENABLE_INT
+#define DISABLE_INT
+#define ENABLE_INT
 #else
 #error "Not supported architecture"
 #endif

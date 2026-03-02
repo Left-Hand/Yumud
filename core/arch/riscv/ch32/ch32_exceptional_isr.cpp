@@ -1,9 +1,9 @@
-#include "isr.hpp"
+#include "exceptional_isr.hpp"
 #include "core/debug/debug.hpp"
 #include "core/tmp/reflect/enum.hpp"
 
-#include "arch/riscv/cpu.hpp"
-#include "sdk.hpp"
+// #include "arch/riscv/cpu.hpp"
+#include "core/sdk.hpp"
 #include "core/system.hpp"
 
 using namespace ymd;

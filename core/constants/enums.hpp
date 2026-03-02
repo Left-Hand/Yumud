@@ -3,8 +3,6 @@
 #include <type_traits>
 #include <cstdint>
 
-#include "core/sys_defs.hpp"
-// #include "core/stream/ostream.hpp"
 namespace ymd{
 
 class OutputStream;

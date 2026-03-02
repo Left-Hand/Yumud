@@ -98,6 +98,7 @@ namespace static_test{
 IResult<> AT24CXX::store_bytes_inblock_impl(const Address loc, const std::span<const uint8_t> pbuf){
     return write_burst(loc, pbuf);
 }
+
 IResult<> AT24CXX::load_bytes_inblock_impl(const Address loc, const std::span<uint8_t> pbuf){
     return read_burst(loc, pbuf);
 }

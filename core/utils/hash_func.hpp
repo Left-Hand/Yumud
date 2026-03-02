@@ -1,8 +1,9 @@
 #pragma once
 
-#include "core/platform.hpp"
 #include "core/utils/stdrange.hpp"
 #include <span>
+#include <cstdint>
+#include <bit>
 
 
 namespace ymd{

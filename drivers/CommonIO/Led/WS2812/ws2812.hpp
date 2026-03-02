@@ -96,9 +96,9 @@ public:
             uni_to_u16(led.color.g, g);
             uni_to_u16(led.color.b, b);
 
-            transport_.send_byte(CLAMP(uint8_t(r * 255), 0, 255));
-            transport_.send_byte(CLAMP(uint8_t(g * 255), 0, 255));
-            transport_.send_byte(CLAMP(uint8_t(b * 255), 0, 255));
+            transport_.send_byte(std::clamp(int(r * 255), 0, 255));
+            transport_.send_byte(std::clamp(int(g * 255), 0, 255));
+            transport_.send_byte(std::clamp(int(b * 255), 0, 255));
 
         }
 

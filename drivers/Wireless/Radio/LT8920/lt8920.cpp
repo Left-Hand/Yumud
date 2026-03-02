@@ -184,7 +184,7 @@ IResult<> LT8920::enable_crc(const Enable en){
 }
 
 IResult<> LT8920::set_err_bits_tolerance(uint8_t errbits){
-    errbits = MIN(errbits, 6);
+    errbits = std::min<uint8_t>(errbits, 6);
     auto reg = RegCopy(threshold_reg);
     reg.errbits = errbits + 1;
     return write_reg(reg);
@@ -222,12 +222,13 @@ IResult<> LT8920::set_data_rate(const uint32_t dr){
 }
 
 IResult<> LT8920::write_block(const std::span<const uint8_t> pbuf){
-    uint8_t len = pbuf.size();
+
     if(state_ != State::IDLE) return Ok();
     if(role_ == Role::LISTENER) return Ok();
+
+    const uint8_t len = static_cast<uint8_t>(std::min(pbuf.size(), 32u));
     if(len == 0) return Ok();
 
-    len = MIN(len, 32);
 
     CHANGE_STATE(State::TX_PKT);
     
@@ -296,15 +297,14 @@ IResult<> LT8920::tick(){
 }
 
 IResult<> LT8920::read_block(std::span<uint8_t> pbuf){
-    uint8_t len = pbuf.size();
-    if(len == 0) return Ok();
+
     if(role_ != Role::LISTENER) return Ok();
     
     if(PKT_FLAG == false) return Ok();
     if(CRCERR_FLAG == true) return Ok();
 
-    len = MIN(len, 32);
-
+    uint8_t len = static_cast<uint8_t>(std::min(pbuf.size(), 32u));
+    if(len == 0) return Ok();
     if(first_as_len_en_){
         if(const auto res = read_fifo(std::span(&len, 1));
             res.is_err()) return res;

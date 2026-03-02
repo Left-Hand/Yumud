@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "core/math/real.hpp"
 #include "core/utils/Result.hpp"
+#include "core/math_defs.hpp"
 
 namespace ymd::details{
 

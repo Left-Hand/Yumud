@@ -48,7 +48,7 @@ Gpio::Gpio(void * inst, const PinSource pin):
 
 
 void Gpio::set_mode(const GpioMode mode){
-    const auto ctz_pin = CTZ(uint16_t(pin_nth_));
+    const auto ctz_pin = __builtin_ctz(uint16_t(pin_nth_));
     auto & pin_cfg = (ctz_pin >= 8 ? ((SDK_INST(inst_) -> CFGHR)) : ((SDK_INST(inst_) -> CFGLR)));
     uint32_t tempreg = pin_cfg;
     const auto shifts = ((ctz_pin % 8) * 4);

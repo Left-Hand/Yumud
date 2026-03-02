@@ -305,7 +305,7 @@ static constexpr size_t VL53L5CX_MAX_RESULTS_SIZE = ( 40U
  * the output configuration.
  */
 
-static constexpr size_t VL53L5CX_TEMPORARY_BUFFER_SIZE = MAX(1024U, VL53L5CX_MAX_RESULTS_SIZE);
+static constexpr size_t VL53L5CX_TEMPORARY_BUFFER_SIZE = std::max(1024U, VL53L5CX_MAX_RESULTS_SIZE);
 
 /**
  * @brief Structure VL53L5CX_Configuration contains the sensor configuration.

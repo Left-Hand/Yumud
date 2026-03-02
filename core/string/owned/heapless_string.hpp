@@ -14,7 +14,7 @@ struct [[nodiscard]] HeaplessString final{
         length_(0) {;}
 
     constexpr explicit HeaplessString(const StringView str):
-        length_(MIN(str.length(), N)){
+        length_(std::min(str.length(), N)){
         #pragma GCC unroll 4
         for(size_t i = 0; i < length_; i++){
             buf_[i] = str.data()[i];

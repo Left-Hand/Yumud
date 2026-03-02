@@ -17,20 +17,6 @@ using namespace ymd::drivers;
 #endif
 
 
-class RAIIfunctor{
-protected:
-    using Callback = std::function<void(void)>; 
-    Callback end_f_;
-public:
-    RAIIfunctor(Callback && begin_f, Callback && end_f):
-        end_f_(std::move(end_f)){
-            begin_f();
-        }
-
-    ~RAIIfunctor(){
-        end_f_();
-    }
-};
 
 void X25QXX::update_device_id(){
     write_byte(0x90, CONT);

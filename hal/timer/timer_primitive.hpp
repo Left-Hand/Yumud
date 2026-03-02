@@ -20,12 +20,12 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
     const uint32_t target_div = periph_freq / count_freq;
     
     auto calc_psc_from_arr = [target_div](const uint16_t arr) -> uint16_t {
-        return CLAMP(int(target_div) / (int(arr) + 1) - 1, 0, 0xFFFF);
+        return std::clamp(int(target_div) / (int(arr) + 1) - 1, 0, 0xFFFF);
     };
 
     [[maybe_unused]]
     auto calc_arr_from_psc = [target_div](const uint16_t psc) -> uint16_t {
-        return CLAMP(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF);
+        return std::clamp(int(target_div) / (int(psc) + 1) - 1, 0, 0xFFFF);
     };
     
     auto calc_freq_from_arr_and_psc = [periph_freq](const uint16_t arr, const uint16_t psc) -> uint32_t {
@@ -51,13 +51,15 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
         std::optional<uint32_t> last_freq_;
 
         for(int psc = expect_psc - 2; psc < expect_psc + 2; psc++){
-            const auto freq = calc_freq_from_arr_and_psc(arr, psc);
+            const uint32_t freq = calc_freq_from_arr_and_psc(arr, psc);
             if(last_freq_.has_value()){
                 if((last_freq_.value() - count_freq) * (freq - count_freq) < 0) break;
             }else{
                 last_freq_ = freq;
             }
-            const auto freq_err = uint32_t(ABS(int(freq) - int(count_freq)));
+            // const uint32_t freq_err = uint32_t(ABS(int(freq) - int(count_freq)));
+            const uint32_t freq_err = freq < count_freq ? 
+                uint32_t(count_freq - freq) : uint32_t(freq - count_freq);
             if(freq_err < best.freq_err){
                 if(freq_err == 0) return {uint16_t(arr), psc};
                 best = {uint16_t(arr), uint16_t(psc), freq_err};
@@ -291,17 +293,17 @@ struct [[nodiscard]] DeadzoneCode{
                 constexpr uint8_t head = 0b10000000;
                 constexpr uint8_t mask = 0b00111111;
 
-                return static_cast<uint8_t>(((((MIN(scale, 254) >> 1) - 64) & mask) | head));
+                return static_cast<uint8_t>(((((std::min<uint16_t>(scale, 254) >> 1) - 64) & mask) | head));
             }else if(scale < 509){
                 constexpr uint8_t head = 0b11000000;
                 constexpr uint8_t mask = 0b00011111;
 
-                return static_cast<uint8_t>(((((MIN(scale, 504) >> 1) - 32) & mask) | head));
+                return static_cast<uint8_t>(((((std::min<uint16_t>(scale, 504) >> 1) - 32) & mask) | head));
             }else if(scale < 1009){
                 constexpr uint8_t head = 0b11100000;
                 constexpr uint8_t mask = 0b00011111;
 
-                return static_cast<uint8_t>((((MIN(scale, 1008) >> 4) - 32) & mask) | head);
+                return static_cast<uint8_t>((((std::min<uint16_t>(scale, 1008) >> 4) - 32) & mask) | head);
             }else{
                 return static_cast<uint8_t>(0xff);
             }

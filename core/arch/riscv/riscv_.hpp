@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+
+
 namespace cpu{
     struct sp{};
     struct t0{};
@@ -70,4 +73,21 @@ namespace cpu{
     struct f30{};
     struct f31{};
     #endif
+}
+
+
+#define QKV4_REG_DEF(name) static inline volatile name##_Def * name = reinterpret_cast<name##_Def *>(name##_Def::ADDRESS);
+
+namespace QingKeV4{
+    struct PFIC_CFGR_Def{
+        static constexpr uint32_t ADDRESS = 0xE000E04C;
+        uint32_t NESTSTA:8;
+        uint32_t GACTSTA:1;
+        uint32_t GPENDSTA:1;
+        uint32_t:22;
+    };
+
+    QKV4_REG_DEF(PFIC_CFGR)
+
+
 }

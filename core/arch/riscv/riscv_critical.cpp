@@ -1,10 +1,7 @@
 #ifdef __riscv
 #include "riscv_critical.hpp"
 
-namespace ymd::cpu_core{
-
-
-
+namespace ymd::arch::riscv{
 }
 
 #else

@@ -82,4 +82,78 @@ void memcpy_src_aligned4(__restrict__ void *dest, __restrict__ const void *sourc
         }
     }
 }
+
+
+#if 0
+//TODO 提高memcmp的性能
+__fast_inline constexpr int __ymd_memcmp(const void * str1, const void * str2, uint32_t len){
+    for (uint32_t i = 0; i < len; i++) {
+        if ((static_cast<const uint8_t*>(str1))[i] < (static_cast<const uint8_t*>(str2))[i]) {
+            return -1;
+        } else if ((static_cast<const uint8_t*>(str1))[i] > (static_cast<const uint8_t*>(str2))[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+#define memcmp(str1, str2, len) __ymd_memcmp(str1, str2, len)
+
+//TODO 提高memset的性能
+__fast_inline constexpr void * __ymd_memset(void * dest, const char c, const uint32_t len){
+	if(std::is_constant_evaluated()){
+		return __builtin_memset(dest, c, len);
+	}
+
+    for(uint32_t i = 0; i < len; i++){
+        reinterpret_cast<char *>(dest)[i] = c;
+    }
+
+    return dest;
+}
+
+#define memset(source, c, len) __ymd_memset(source, c, len)
+
+
+//TODO 提高memcpy的性能
+__fast_inline constexpr void * __ymd_memcpy(void * dest, const void * src, const uint32_t len){
+	if(std::is_constant_evaluated()){
+		return __builtin_memcpy(dest, src, len);
+	}
+
+    for (uint32_t i = 0; i < len; ++i) {
+        (static_cast<uint8_t*>(dest))[i] = (static_cast<const uint8_t*>(src))[i];
+    }
+    return dest;
+}
+
+#define memcpy(dest, source, len) __ymd_memcpy(dest, source, len)
+
+//TODO 提高strlen的性能
+__fast_inline constexpr size_t __ymd_strlen(const char * str){
+	if(std::is_constant_evaluated()){
+		return __builtin_strlen(str);
+	}
+	
+	size_t len = 0;
+	while (str[len] != '\0') {
+		++len;
+	}
+	return len;
+}
+
+#define strlen(str) __ymd_strlen(str)
+
+
+//TODO 提高strcpy的性能
+__fast_inline constexpr char * __ymd_strcpy(char * dest, const char * src){
+    for (; *src != '\0'; ++src, ++dest) {
+        *dest = *src;
+    }
+    return dest;
+}
+
+#define strcpy(d, s) __ymd_strcpy(d, s)
+
+#endif
 }

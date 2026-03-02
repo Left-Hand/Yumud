@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/sys_defs.hpp"
+#include "core/attributes.hpp"
 
 #ifdef __cplusplus
 extern "C"{

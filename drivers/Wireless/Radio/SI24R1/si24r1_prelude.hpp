@@ -184,7 +184,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__:2;
     };
 
-    struct FeatureReg:public Reg8<> {
+    struct R8_Feature:public Reg8<> {
         static constexpr RegAddr REG_ADDR = 0x1d;
         uint8_t en_dyn_ack : 1;          // Set 1 enables the W_TX_PAYLOAD_NOACK command
         uint8_t en_ack_pay : 1;          // Set 1 enables payload on ACK
@@ -207,7 +207,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
     R8_RxPower rx_power_regs[6];
     R8_FifoStatus fifo_status_reg;
     R8_DynamicPayloadLength dynamic_payload_length_reg;
-    FeatureReg feature_reg;
+    R8_Feature feature_reg;
 };
 
 }

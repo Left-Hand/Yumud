@@ -237,22 +237,10 @@ public:
     OutputStream & operator<<(const wchar_t chr);
 
     // !warning, take care of your stupid null-terminated c-style string
-    __inline OutputStream & operator<<(char * str){
-        write_bytes(std::span<const uint8_t>(
-            reinterpret_cast<const uint8_t *>(str),
-            strlen(str))
-        );
-        return *this;
-    }
+    OutputStream & operator<<(char * str);
 
     // !warning, take care of your stupid null-terminated c-style string
-    __inline OutputStream & operator<<(const char* str){
-        write_bytes(std::span<const uint8_t>(
-            reinterpret_cast<const uint8_t *>(str),
-            strlen(str))
-        );
-        return *this;
-    }
+    OutputStream & operator<<(const char* str);
 
     OutputStream & operator<<(const std::string & str);
 

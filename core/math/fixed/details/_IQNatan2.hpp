@@ -95,11 +95,6 @@ private:
     static constexpr int32_t fast_mul(uint32_t arg1, int32_t arg2){
         return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 32);
     }
-
-    [[nodiscard]] __attribute__((__always_inline__)) 
-    static constexpr int32_t fast_mul(uint32_t arg1, uint32_t arg2){
-        return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 32);
-    }
 };
 
 

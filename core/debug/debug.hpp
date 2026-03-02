@@ -87,20 +87,6 @@ template <typename... Args>
 DEBUG_SRC(Args &&...) -> DEBUG_SRC<Args ...>;
 
 
-// template <typename... Args>
-// struct DEBUG_ERROR
-// {    
-// 	DEBUG_ERROR(Args &&... args, const std::source_location& loc = std::source_location::current()){
-//         sys::trip();
-//         DEBUG_PRINT("[Err] ");
-//         DEBUG_SRC<Args...>(std::forward<Args>(args)..., loc);
-// 	}
-// };
-
-// template <typename... Args>
-// DEBUG_ERROR(Args &&...) -> DEBUG_ERROR<Args...>;
-
-
 template <typename... Args>
 struct DEBUG_WARN
 {    
@@ -161,6 +147,13 @@ public:
 
 template <typename Texpr, typename... Args>
 ASSERT(Texpr&&, Args &&...) -> ASSERT<Texpr, Args...>;
+
+
+#ifdef NDEBUG
+#define DEBUG_ASSERT(...) ((void)0)
+#else
+#define DEBUG_ASSERT(...) ASSERT{__VA_ARGS__}
+#endif
 
 
 #define TODO(...) PANIC("todo:", ##__VA_ARGS__)
