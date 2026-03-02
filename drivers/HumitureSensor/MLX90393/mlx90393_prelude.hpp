@@ -217,7 +217,7 @@ struct MLX90393_Regset:public MLX90393_Prelude{
     struct R16_Conf2:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x01;
 
-        BurstDataRate burst_data_rate:6;
+        BurstDataRate burst_datarate:6;
         BurstSel burst_sel:4;
         uint16_t tcmp_en:1;
         uint16_t ext_trg:1;

@@ -20,7 +20,7 @@ public:
 
     [[nodiscard]] IResult<> reset();
 
-    [[nodiscard]] IResult<> set_data_rate(const DataRate dr);
+    [[nodiscard]] IResult<> set_datarate(const DataRate dr);
 
     [[nodiscard]] IResult<> set_band_width(const BandWidth bw);
 

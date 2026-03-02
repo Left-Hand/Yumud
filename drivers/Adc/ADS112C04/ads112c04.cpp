@@ -53,8 +53,8 @@ IResult<> ADS112C04::set_idac(const IDAC idac){
     return write_reg(reg);
 }
 
-IResult<> ADS112C04::set_data_rate(const DataRate data_rate){
+IResult<> ADS112C04::set_datarate(const DataRate datarate){
     auto reg = RegCopy(config1_reg);
-    reg.data_rate = data_rate;
+    reg.datarate = datarate;
     return write_reg(reg);
 }

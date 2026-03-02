@@ -81,7 +81,7 @@ struct MMC5603_Regset:public MMC5603_Prelude {
 
 
         static constexpr RegAddr REG_ADDR = 0x1a;
-        DataRate data_rate;
+        DataRate datarate;
     };
 
     struct R8_Ctrl0:public Reg8<>{

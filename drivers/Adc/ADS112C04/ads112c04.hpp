@@ -35,7 +35,7 @@ public:
 
     [[nodiscard]] IResult<> set_idac(const IDAC idac);
 
-    [[nodiscard]] IResult<> set_data_rate(const DataRate data_rate);
+    [[nodiscard]] IResult<> set_datarate(const DataRate datarate);
 private:
     hal::I2cDrv i2c_drv_;
 

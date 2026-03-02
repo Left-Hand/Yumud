@@ -29,13 +29,13 @@ public:
     struct [[nodiscard]] Config{
         PrdSet prd_set;
         BandWidth bandwidth;
-        Odr data_rate;
+        Odr datarate;
 
         static constexpr Config from_default() {
             return Config{
                 .prd_set = PrdSet::_100,
                 .bandwidth = BandWidth::_200Hz,
-                .data_rate = Odr::_200Hz
+                .datarate = Odr::_200Hz
             };
         }
     };

@@ -139,7 +139,7 @@ struct ADS112C04_Regs:public ADS112C04_Prelude{
         Vref vref:2;
         uint8_t cont_mode:1;
         uint8_t turbo_mode:1;
-        DataRate data_rate:3;
+        DataRate datarate:3;
     }DEF_R8(config1_reg)
 
     struct R8_Config2:public Reg8<>{

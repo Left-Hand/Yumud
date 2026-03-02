@@ -30,7 +30,8 @@ void lt8920_main(){
     });
     auto spi_cs_pin_ = hal::PA<0>();
 
-    LT8920 lt{&spi, spi.allocate_cs_pin(&spi_cs_pin_).unwrap()};
+    auto transport = LT8920_SpiTransport{&spi, spi.allocate_cs_pin(&spi_cs_pin_).unwrap()};
+    LT8920 lt{transport};
     set_systick_handler([&](){
         lt.tick().examine();
     });
@@ -40,7 +41,7 @@ void lt8920_main(){
     
     lt.bind_nrst_gpio(nrst_pin_).examine();
     lt.init().examine();
-    lt.set_data_rate(1_MHz).examine();
+    lt.set_datarate(LT8920::DataRate::_1M).examine();
 
     // LT8920::Role role = LT8920::Role::BROADCASTER;
     // lt.setRole(role);
@@ -53,9 +54,9 @@ void lt8920_main(){
     }else{
         auto src = StringView("Hello World!!!");
         while(true){
-            // lt.validate();
-            // lt.setDataRate(LT8920::DataRate::Kbps125);
-            // DEBUG_PRINTLN(lt.isRfSynthLocked());
+            lt.validate().examine();
+            lt.set_datarate(LT8920::DataRate::_125K).examine();
+            DEBUG_PRINTLN(lt.is_rf_synth_locked());
 
             lt.write_block(std::span(
                 reinterpret_cast<const uint8_t *>(src.data()), 

@@ -106,7 +106,7 @@ struct SGM58031_Regset:public SGM58031_Prelude{
         uint16_t comp_lat : 1;
         uint16_t comp_pol : 1;
         uint16_t comp_mode :1;
-        uint16_t data_rate :3;
+        uint16_t datarate :3;
         uint16_t mode:   1;
         PGA pga:    3;
         MUX mux:    3;

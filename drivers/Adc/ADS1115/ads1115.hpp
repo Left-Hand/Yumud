@@ -27,7 +27,7 @@ public:
 
     [[nodiscard]] IResult<> set_mux(const MUX mux);
 
-    [[nodiscard]] IResult<> set_data_rate(const DataRate data_rate);
+    [[nodiscard]] IResult<> set_datarate(const DataRate datarate);
 
     [[nodiscard]] IResult<bool> is_busy();
 

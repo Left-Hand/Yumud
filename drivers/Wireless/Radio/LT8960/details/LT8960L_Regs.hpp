@@ -129,8 +129,8 @@ struct _LT8960L_Regs:public details::LT8960L_Prelude{
     struct R16_DataRate:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x2C;
         uint16_t __resv__ :8;
-        uint16_t data_rate:8;//透传速率
-    }DEF_R16(data_rate_reg)
+        uint16_t datarate:8;//透传速率
+    }DEF_R16(datarate_reg)
 
     struct R16_ModemOption:public Reg16<>{
         static constexpr RegAddr REG_ADDR = 0x2D;

@@ -68,7 +68,7 @@ struct ADS111X_Regs:public ADS111X_Prelude{
         uint16_t comp_pol:1;
 
         uint16_t comp_mode_is_window:1;
-        uint16_t data_rate:3;
+        uint16_t datarate:3;
 
         uint16_t oneshot_en:1;
         uint16_t pga:3;

@@ -88,7 +88,7 @@ void ads1115_main()
 
     static constexpr auto datarate = ConfigBuilder().datarate(860).unwrap();
     static constexpr auto mux = ConfigBuilder().differential(2,3).unwrap();
-    ads.set_data_rate(datarate).examine();
+    ads.set_datarate(datarate).examine();
     ads.set_mux(mux).examine();
     // ads.setMux(ads.builder().singleend(0).unwarp());
     ads.set_pga(drivers::ADS1115::PGA::_1_024V).examine();

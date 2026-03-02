@@ -92,9 +92,9 @@ IResult<> ADS1115::set_mux(const MUX mux){
     return Ok();
 }
 
-IResult<> ADS1115::set_data_rate(const DataRate data_rate){
+IResult<> ADS1115::set_datarate(const DataRate datarate){
     auto reg = RegCopy(config_reg);
-    reg.data_rate = uint16_t(data_rate);
+    reg.datarate = uint16_t(datarate);
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
 

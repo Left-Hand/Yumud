@@ -47,10 +47,10 @@ IResult<> MMC5603::validate(){
     return Ok();
 }
 
-IResult<> MMC5603::set_data_rate(const DataRate dr){
+IResult<> MMC5603::set_datarate(const DataRate dr){
     {
         auto reg = RegCopy(regs_.odr_reg);
-        reg.data_rate = dr;
+        reg.datarate = dr;
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }

@@ -93,10 +93,6 @@ public:
 
     [[nodiscard]] IResult<bool> is_rst_done();
 
-    [[nodiscard]] IResult<> wait_pkt_ready(const size_t timeout);
-
-    [[nodiscard]] IResult<> wait_rst_done(const size_t timeout);
-
     [[nodiscard]] IResult<> set_rf_channel(const Channel ch){
         now_channel_ = ch; return Ok();}
 

@@ -82,7 +82,7 @@ IResult<> MMC5983::init(const Config & cfg){
     if(const auto res = set_bandwidth(cfg.bandwidth);
         res.is_err()) return CHECK_RES(res);
 
-    if(const auto res = set_odr(cfg.data_rate);
+    if(const auto res = set_odr(cfg.datarate);
         res.is_err()) return CHECK_RES(res);
 
     return Ok();
@@ -117,7 +117,7 @@ IResult<> MMC5983::reset(){
 
 IResult<> MMC5983::set_odr(const Odr odr){
     auto reg = RegCopy(regs_.internal_control_2_reg);
-    reg.data_rate = odr;
+    reg.datarate = odr;
     reg.cmm_en = (odr != Odr::SingleShot);
     return write_reg(reg);
 }

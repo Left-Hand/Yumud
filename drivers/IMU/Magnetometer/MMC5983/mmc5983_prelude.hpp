@@ -128,7 +128,7 @@ struct MMC5983_Regs final:public MMC5983_Prelude{
 
     struct [[nodiscard]] R8_InternalControl2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = 0x0B;
-        Odr data_rate:3;
+        Odr datarate:3;
         uint8_t cmm_en:1;
         PrdSet prd_set:3;
         uint8_t en_prd_set:1 = 0;
