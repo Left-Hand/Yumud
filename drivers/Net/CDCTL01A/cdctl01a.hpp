@@ -5,6 +5,8 @@
 
 namespace ymd::drivers::cdctl01a{
 
+
+
 struct CDCTL01A final{
 
 };
