@@ -13,7 +13,7 @@
 
 #include "hal/bus/spi/spidrv.hpp"
 
-#include "drivers/Encoder/MagEncoder.hpp"
+#include "drivers/Encoder/encoder.hpp"
 
 
 namespace ymd::drivers{

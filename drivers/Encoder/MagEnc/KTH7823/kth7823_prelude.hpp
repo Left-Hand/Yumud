@@ -3,7 +3,7 @@
 //KTH7823是一款16位磁编码器
 
 #include "core/io/regs.hpp"
-#include "drivers/Encoder/MagEncoder.hpp"
+#include "drivers/Encoder/encoder.hpp"
 
 #include "hal/bus/spi/spidrv.hpp"
 
@@ -23,7 +23,7 @@ enum class [[nodiscard]] ZeroPulsePhase:uint8_t{
 };
 
 enum class [[nodiscard]] MagThreshold:uint8_t{
-    mT23, mT38, mT53, mT67, mT81, mT95, mT109, mT123
+    _23mT, _38mT, _53mT, _67mT, _81mT, _95mT, _109mT, _123mT
 };
 
 using RegAddr = uint8_t;

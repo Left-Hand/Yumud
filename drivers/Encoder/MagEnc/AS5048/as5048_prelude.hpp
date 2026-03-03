@@ -2,7 +2,7 @@
 
 #include "hal/bus/spi/spidrv.hpp"
 
-#include "drivers/Encoder/MagEncoder.hpp"
+#include "drivers/Encoder/encoder.hpp"
 #include "core/io/regs.hpp"
 
 //AS5048是一款18年的14位磁编码器 已经不推荐用于新设计
