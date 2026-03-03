@@ -342,7 +342,7 @@ struct ADXL345_Regset final :public ADXL345_Prelude{
         // 8)。默认值为0x0A，转换为100 Hz的输出数据速率。应选择
         // 适合所选通信协议和频率的输出数据速率。选择太高输出
         // 数据速率和低通信速度会导致采样丢弃。
-        DataRate data_rate :4;
+        DataRate datarate :4;
 
         // LOW_POWER位设置为0，选择正常操作，设置为1，选择
         // 低功率操作，而此时噪声有所增加(详情见功率模式部分)。

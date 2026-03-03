@@ -167,7 +167,7 @@ struct [[nodiscard]] HT16K33_Prelude{
 
             const uint8_t y = idx >> 1;
             const auto line = (idx % 2 == 0) ? uint16_t(*it) : uint16_t(*(it + 1) << 8);
-            const uint8_t x = CTZ(line);
+            const uint8_t x = __builtin_ctz(line);
             return Some{std::make_tuple(x,y)};
         }
 

@@ -95,11 +95,6 @@ private:
     static constexpr int32_t fast_mul(uint32_t arg1, int32_t arg2){
         return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 32);
     }
-
-    [[nodiscard]] __attribute__((__always_inline__)) 
-    static constexpr int32_t fast_mul(uint32_t arg1, uint32_t arg2){
-        return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 32);
-    }
 };
 
 
@@ -167,6 +162,45 @@ constexpr ymd::math::fixed<32, uint32_t> _atanpu_impl(
 
     const uint32_t uq32_result_pu = Atan2Intermediate::transfrom_pu_x_to_uq32_result(uq32_input);
     return flag.apply_to_uq32(uq32_result_pu);
+}
+
+}
+
+namespace ymd::math{
+
+
+
+template<size_t Q>
+constexpr ymd::math::fixed<32, uint32_t> atan2pu(
+    ymd::math::fixed<Q, int32_t> iqn_input_y, 
+    ymd::math::fixed<Q, int32_t> iqn_input_x
+){
+    return fxmath::details::_atan2pu_impl<Q>(iqn_input_y.to_bits(), iqn_input_x.to_bits());
+}
+
+
+
+template<size_t Q>
+constexpr ymd::math::fixed<29, int32_t> atan2(
+    ymd::math::fixed<Q, int32_t> iqn_input_y, 
+    ymd::math::fixed<Q, int32_t> iqn_input_x
+){
+    return ymd::math::uq32_to_rad(atan2pu<Q>(iqn_input_y, iqn_input_x));
+}
+
+template<size_t Q>
+constexpr ymd::math::fixed<32, uint32_t> atanpu(
+    ymd::math::fixed<Q, int32_t> iqn_input_y
+){
+    return fxmath::details::_atanpu_impl<Q>(iqn_input_y.to_bits());
+}
+
+
+template<size_t Q>
+constexpr ymd::math::fixed<29, int32_t> atan(
+    ymd::math::fixed<Q, int32_t> iqn_input_y
+){
+    return ymd::math::uq32_to_rad(atanpu<Q>(iqn_input_y));
 }
 
 }

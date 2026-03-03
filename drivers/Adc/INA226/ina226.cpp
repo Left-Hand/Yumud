@@ -48,7 +48,7 @@ using IResult = Result<T, Error>;
 
 
 static constexpr INA226::AverageTimes times_to_avtimes(const uint16_t times){
-    const uint8_t temp = CTZ(times);
+    const uint8_t temp = __builtin_ctz(times);
 
     if(times <= 64){
         return std::bit_cast<INA226::AverageTimes>(uint16_t(temp / 2));

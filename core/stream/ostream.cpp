@@ -4,6 +4,7 @@
 #include "core/string/view/string_view.hpp"
 #include "core/string/view/mut_string_view.hpp"
 
+
 #include <source_location>
 
 using namespace ymd;
@@ -282,3 +283,20 @@ OutputStream & OutputStream::operator<<(const uint8_t val){
     return *this;
 }
 
+// !warning, take care of your stupid null-terminated c-style string
+OutputStream & OutputStream::operator<<(char * str){
+    write_bytes(std::span<const uint8_t>(
+        reinterpret_cast<const uint8_t *>(str),
+        strlen(str))
+    );
+    return *this;
+}
+
+// !warning, take care of your stupid null-terminated c-style string
+OutputStream & OutputStream::operator<<(const char* str){
+    write_bytes(std::span<const uint8_t>(
+        reinterpret_cast<const uint8_t *>(str),
+        strlen(str))
+    );
+    return *this;
+}

@@ -205,7 +205,7 @@ struct MLX90393_Prelude{
 
 struct MLX90393_Regset:public MLX90393_Prelude{
     struct R16_Conf1:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x00;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         HallConf hall_conf:4;
         Gain gain_sel:3;
@@ -215,9 +215,9 @@ struct MLX90393_Regset:public MLX90393_Prelude{
     }DEF_R16(conf1_reg)
 
     struct R16_Conf2:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x01;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
-        BurstDataRate burst_data_rate:6;
+        BurstDataRate burst_datarate:6;
         BurstSel burst_sel:4;
         uint16_t tcmp_en:1;
         uint16_t ext_trg:1;
@@ -227,7 +227,7 @@ struct MLX90393_Regset:public MLX90393_Prelude{
     }DEF_R16(conf2_reg)
 
     struct R16_Conf3:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x02;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         OverSampling osr:2;
         Filter digit_filter:3;
         Resolution res_x:2;

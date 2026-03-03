@@ -27,7 +27,7 @@ public:
 
     [[nodiscard]] IResult<> set_mux(const MUX mux);
 
-    [[nodiscard]] IResult<> set_data_rate(const DataRate data_rate);
+    [[nodiscard]] IResult<> set_datarate(const DataRate datarate);
 
     [[nodiscard]] IResult<bool> is_busy();
 
@@ -44,14 +44,14 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = write_reg(T::ADDRESS, reg.to_bits());
+        const auto res = write_reg(T::REG_ADDR, reg.to_bits());
         if(res.is_ok()) reg.apply();
         return res;
     }
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(T::ADDRESS, reg.as_bits_mut());
+        return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 
 

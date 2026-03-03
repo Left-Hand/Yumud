@@ -92,9 +92,9 @@ IResult<> ADS1115::set_mux(const MUX mux){
     return Ok();
 }
 
-IResult<> ADS1115::set_data_rate(const DataRate data_rate){
+IResult<> ADS1115::set_datarate(const DataRate datarate){
     auto reg = RegCopy(config_reg);
-    reg.data_rate = uint16_t(data_rate);
+    reg.datarate = uint16_t(datarate);
     if(const auto res = write_reg(reg);
         res.is_err()) return res;
 
@@ -111,7 +111,7 @@ IResult<bool> ADS1115::is_busy(){
 
 Option<iq16> ADS1115::get_voltage(){
     auto & reg = conversion_reg;
-    if(read_reg(reg.ADDRESS, reg.as_bits_mut()).is_err()) return None;
+    if(read_reg(reg.REG_ADDR, reg.as_bits_mut()).is_err()) return None;
     return Some(iq16::from_bits(~std::bit_cast<int16_t>(reg.bits)) * 3.3_iq16);
     // return None;
 }

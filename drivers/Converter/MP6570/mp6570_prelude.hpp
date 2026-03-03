@@ -12,10 +12,6 @@
 namespace ymd::drivers::mp6750{
 
 
-
-
-
-
 struct [[nodiscard]] WriteConfig{
     const uint8_t slave_addr;
     const uint8_t reg_addr;
@@ -38,7 +34,7 @@ struct [[nodiscard]] ReadConfig{
 }
 
 
-struct [[nodiscard]] TxPacket{
+struct [[nodiscard]] TxPacket final{
     using Self = TxPacket;
 
     std::array<uint8_t, 2> header_bytes;
@@ -81,6 +77,8 @@ struct [[nodiscard]] TxPacket{
         };
     }
 };
+
+
 static constexpr Option<uint16_t> rx_bytes_to_data(std::span<const uint8_t, 3> bytes){
 
     //fuck you big endian!!!
@@ -109,118 +107,107 @@ DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
 
 using RegAddr = uint8_t;
 
-struct [[nodiscard]] MP6570_Transport{
-public: 
+struct [[nodiscard]] MP6570_I2cTransport final{
 
-    MP6570_Transport(const hal::I2cDrv & i2c_drv) : 
+    explicit MP6570_I2cTransport(const hal::I2cDrv & i2c_drv) : 
         i2c_drv_(i2c_drv) {}
-    MP6570_Transport(hal::I2cDrv && i2c_drv) : 
+    explicit MP6570_I2cTransport(hal::I2cDrv && i2c_drv) : 
         i2c_drv_(std::move(i2c_drv)) {}
 
-    MP6570_Transport(const SlaveAddress spi_slave_addr, const hal::SpiDrv & spi_drv)
-        : spi_slave_addr_(spi_slave_addr), spi_drv_(spi_drv) {}
-    MP6570_Transport(const SlaveAddress spi_slave_addr, hal::SpiDrv && spi_drv)
-        : spi_slave_addr_(spi_slave_addr), spi_drv_(std::move(spi_drv)) {}
-
-    
-    // hal::HalResult write_reg(const uint8_t reg_addr, const uint16_t data);
-    
-    // hal::HalResult read_reg(const uint8_t reg_addr, uint16_t & data);
-
-
-
     hal::HalResult write_reg(const uint8_t reg_addr, const uint16_t data){
-        if(i2c_drv_){
-            return i2c_drv_->write_reg(reg_addr, data, std::endian::big);
-        }else if(spi_drv_){
-
-            const TxPacket packet = TxPacket::from_write({
-                .slave_addr = spi_slave_addr_,
-                .reg_addr = reg_addr,
-                .pen = true,
-                .data = data,
-            });
-
-            return spi_drv_->write_burst<uint8_t>(
-                std::span(packet.payload_bytes),
-                DISC);
-        }else{
-            PANIC("No phy");
-            __builtin_unreachable();
-        }
+        return i2c_drv_.write_reg(reg_addr, data, std::endian::big);
     }
 
     hal::HalResult read_reg(const uint8_t reg_addr, uint16_t & data){
-        if(i2c_drv_){
-            return i2c_drv_->read_reg(reg_addr, data, std::endian::big);
-        }else if(spi_drv_){
-            const TxPacket packet = TxPacket::from_read({
-                .slave_addr = spi_slave_addr_,
-                .reg_addr = reg_addr,
-                .pen = true,
-            });
+        return i2c_drv_.read_reg(reg_addr, data, std::endian::big);
+    }
 
-            if(const auto res = spi_drv_->write_burst<uint8_t>(
-                std::span(packet.payload_bytes),
-                CONT); res.is_err()) return res;
+private:
+    hal::I2cDrv i2c_drv_;
+};
 
-            std::array<uint8_t, 3> rx_bytes;
+struct [[nodiscard]] MP6570_SpiTransport final{
+    explicit MP6570_SpiTransport(const SlaveAddress spi_slave_addr, const hal::SpiDrv & spi_drv)
+        : spi_slave_addr_(spi_slave_addr), spi_drv_(spi_drv) {}
+    explicit MP6570_SpiTransport(const SlaveAddress spi_slave_addr, hal::SpiDrv && spi_drv)
+        : spi_slave_addr_(spi_slave_addr), spi_drv_(std::move(spi_drv)) {}
 
-            if(const auto res = spi_drv_->read_burst<uint8_t>(
-                std::span(rx_bytes),
-                DISC); res.is_err()) return res;
 
-            if(const auto may_data = rx_bytes_to_data(std::span(rx_bytes)); 
-                may_data.is_none()
-            ){
-                PANIC{};
-            } else{
-                data = may_data.unwrap();
-            }
-            
-        }else{
-            PANIC("No phy");
-            __builtin_unreachable();
+    hal::HalResult write_reg(const uint8_t reg_addr, const uint16_t data){
+        const TxPacket packet = TxPacket::from_write({
+            .slave_addr = spi_slave_addr_,
+            .reg_addr = reg_addr,
+            .pen = true,
+            .data = data,
+        });
+
+        return spi_drv_.write_burst<uint8_t>(
+            std::span(packet.payload_bytes),
+            DISC);
+    }
+
+    hal::HalResult read_reg(const uint8_t reg_addr, uint16_t & data){
+        const TxPacket packet = TxPacket::from_read({
+            .slave_addr = spi_slave_addr_,
+            .reg_addr = reg_addr,
+            .pen = true,
+        });
+
+        if(const auto res = spi_drv_.write_burst<uint8_t>(
+            std::span(packet.payload_bytes),
+            CONT); res.is_err()) return res;
+
+        std::array<uint8_t, 3> rx_bytes;
+
+        if(const auto res = spi_drv_.read_burst<uint8_t>(
+            std::span(rx_bytes),
+            DISC); res.is_err()) return res;
+
+        if(const auto may_data = rx_bytes_to_data(std::span(rx_bytes)); 
+            may_data.is_none()
+        ){
+            PANIC{};
+        } else{
+            data = may_data.unwrap();
         }
     }
 
 private:
-    std::optional<hal::I2cDrv> i2c_drv_;
     SlaveAddress spi_slave_addr_ = 0;
-    std::optional<hal::SpiDrv> spi_drv_;
+    hal::SpiDrv spi_drv_;
 };
 
 
-struct [[nodiscard]] MP6570_Regs{
+struct [[nodiscard]] MP6570_Regset{
 
 
     struct [[nodiscard]] R16_ThetaCmdL:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x01;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_ThetaCmdM:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x02;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_ThetaCmH:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x03;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_CycleReg:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x04;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x04};
 
         uint8_t pole_pair;
         uint8_t cycle_p;
     };
 
     struct [[nodiscard]] R16_Ctrl1:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x05;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x05};
         uint16_t nstep:9;
         uint16_t fgsel:5;
         uint16_t theta_cmd_type:1;
@@ -228,7 +215,7 @@ struct [[nodiscard]] MP6570_Regs{
     };
 
     struct [[nodiscard]] R16_Gain1:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x06;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x06};
 
         uint16_t iq_limit:11;
         uint16_t gain_coe:4;
@@ -236,56 +223,56 @@ struct [[nodiscard]] MP6570_Regs{
     };
 
     struct [[nodiscard]] R16_ThetaBias:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x07;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x07};
 
         uint16_t theta_bias:11;
         uint16_t :5;
     };
 
     struct [[nodiscard]] R32_ThetaKi:public Reg32<>{
-        static constexpr RegAddr REG_ADDR = 0x08;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x08};
 
         using Reg32::operator =;
         uint32_t :32;
     };
 
     struct [[nodiscard]] R16_ErrLimitH:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x0a;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0a};
 
         using Reg16::operator =;
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_ZP1A:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x0b;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0b};
 
         using Reg16::operator =;
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_ZP1B:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x0c;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0c};
 
         using Reg16::operator =;
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_ZP2A:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x0d;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0d};
 
         using Reg16::operator =;
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_ZP2B:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x0e;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0e};
 
         using Reg16::operator =;
         uint16_t bits;
     };
 
     struct [[nodiscard]] R16_Gain2:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x0f;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0f};
 
         uint16_t set_gain2:4;
         uint16_t set_gain1:5;
@@ -293,14 +280,14 @@ struct [[nodiscard]] MP6570_Regs{
     };
 
     struct [[nodiscard]] R16_IdRef:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x10;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x10};
 
         using Reg16::operator =;
     uint16_t bits;        
     };
 
     struct [[nodiscard]] R16_IqRef:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x11;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x11};
 
         using Reg16::operator =;
     uint16_t bits;        
@@ -308,21 +295,21 @@ struct [[nodiscard]] MP6570_Regs{
 
     
     struct [[nodiscard]] R16_CurrentKi:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x12;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x12};
 
         using Reg16::operator =;
     uint16_t bits;        
     };
 
     struct [[nodiscard]] R16_CurrentKp:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x13;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x13};
 
         using Reg16::operator =;
     uint16_t bits;        
     };
 
     struct [[nodiscard]] R16_ThetaDir:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x05;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x05};
 
         uint16_t :15;
         uint16_t theta_dir:1;
@@ -330,7 +317,7 @@ struct [[nodiscard]] MP6570_Regs{
 
 
     struct [[nodiscard]] R16_SpiSdoMod:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x33;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x33};
 
         uint16_t spi_o_mod:1;
         uint16_t :15;

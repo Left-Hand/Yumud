@@ -12,14 +12,13 @@ namespace fxmath::details{
 
 #if 1
 
-template<size_t Q>
-[[nodiscard]] static constexpr float _IQNtoF(const int32_t iqNInput) {
-    uint32_t ui16Exp;
-    uint32_t uiq23Result;
+[[nodiscard]] static constexpr float _IQNtoF(const int32_t iqNInput, size_t Q){
+    //这段代码只有一处使用了Q, 不需要使用模板
+    uint32_t uiq23_result_bits;
     uint32_t uiq31Input;
 
     /* Initialize exponent to the offset iq value. */
-    ui16Exp = 0x3f80 + ((31 - Q) * ((uint32_t) 1 << (23 - 16)));
+    uint32_t ui16Exp = static_cast<uint32_t>(0x3f80 + ((31u - Q) * (0x80)));
 
     /* Save the sign of the iqN input to the exponent construction. */
     if (iqNInput < 0) {
@@ -40,29 +39,23 @@ template<size_t Q>
     ui16Exp -= (leading_zeros << 7);
 
     /* Right shift to uiq23 */
-    uiq23Result = uiq31Input >> 8;
+    uiq23_result_bits = uiq31Input >> 8;
 
     /* Remove the implied MSB bit of the mantissa. */
-    // 这里就是问题所在：当 uiq23Result == 0x00800000 时
-    // 清除后得到0，但尾数应该是1.0（隐含位）
-    // 实际上不需要特殊处理，因为尾数0 + 隐含1 = 1.0
-    uiq23Result &= ~0x00800000;
+    uiq23_result_bits &= ~0x00800000;
 
-    /* 
-     * 修复：检查尾数是否为0且原始值不为0
-     * 这种情况下，指数可能需要调整
-     */
-    if (uiq23Result == 0 && uiq31Input != 0) {
+
+    if (uiq23_result_bits == 0 && uiq31Input != 0) {
         // 尾数为0但值不为0，这意味着尾数是1.0
         // 指数已经正确，不需要调整
         // 但需要确保浮点数构造正确
     }
 
     /* Add the constructed exponent and sign bit to the mantissa. */
-    uiq23Result += (uint32_t) ui16Exp << 16;
+    uiq23_result_bits += ui16Exp << 16;
 
     /* Return as float. */
-    return std::bit_cast<float>(uiq23Result);
+    return std::bit_cast<float>(uiq23_result_bits);
 }
 #else
 
@@ -71,8 +64,8 @@ template<size_t Q>
 
 
 
-template<size_t Q>
-[[nodiscard]] static constexpr int32_t _IQFtoN(const float fv) {
+[[nodiscard]] static constexpr int32_t _IQFtoN(const float fv, size_t Q){
+    //这段代码没有使用Q进行特化，可以动态输入
     static_assert(sizeof(float) == 4);
     
     // IEEE 754 浮点数常量定义

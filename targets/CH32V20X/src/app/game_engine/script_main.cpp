@@ -4,30 +4,29 @@
 #include "core/utils/nth.hpp"
 #include "core/utils/stdrange.hpp"
 #include "core/utils/data_iter.hpp"
-#include "primitive/arithmetic/rescaler.hpp"
+#include "core/string/conv/strconv2.hpp"
 #include "core/string/owned/heapless_string.hpp"
+
+#include "primitive/arithmetic/rescaler.hpp"
+#include "primitive/image/painter/painter.hpp"
+#include "primitive/image/image.hpp"
+#include "primitive/image/font/font.hpp"
+#include "primitive/colors/rgb/rgb.hpp"
+#include "algebra/regions/rect2.hpp"
+#include "algebra/vectors/quat.hpp"
 
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/uart/hw_singleton.hpp"
 
-#include "primitive/image/painter/painter.hpp"
-#include "primitive/colors/rgb/rgb.hpp"
-#include "algebra/regions/rect2.hpp"
-
-#include "algebra/vectors/quat.hpp"
-#include "primitive/image/image.hpp"
-#include "primitive/image/font/font.hpp"
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 
+#include "middlewares/raster/frame_buffer.hpp"
 #include "middlewares/repl/repl.hpp"
 #include "middlewares/repl/repl_server.hpp"
-#include "robots/mock/mock_burshed_motor.hpp"
 
-#include "middlewares/raster/frame_buffer.hpp"
-#include "core/string/conv/strconv2.hpp"
 
 
 using namespace ymd;

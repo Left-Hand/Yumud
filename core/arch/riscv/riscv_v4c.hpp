@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-namespace ymd::ral::V4C{
+namespace ymd::arch::riscv::qkv4c{
 
-struct CFGR_Reg{
+struct R32_CFGR{
     uint32_t :7;
     uint32_t SYSRESET:1;
     uint32_t :8;
@@ -12,7 +12,7 @@ struct CFGR_Reg{
 };
 
 
-struct GISR_Reg{
+struct R32_GISR{
     //当前中断嵌套状态
     uint32_t NESTSTA:8;
 
@@ -24,7 +24,7 @@ struct GISR_Reg{
     uint32_t :22;
 };
 
-struct SCTLR_Reg{
+struct R32_SCTLR{
     uint32_t :1;
     uint32_t SLEEPONEXIT:1;
     uint32_t SLEEPDEEP:1;
@@ -35,7 +35,7 @@ struct SCTLR_Reg{
     uint32_t SYSRESET:1;
 };
 
-struct INTSYSCR_Reg{
+struct R32_INTSYSCR{
     uint32_t HWSTKEN:1;    //硬件硬件压栈使能
     uint32_t INESTEN:1;    // 中断嵌套使能
     uint32_t PMTCFG:2;    // 中断嵌套深度配置
@@ -46,13 +46,13 @@ struct INTSYSCR_Reg{
     uint32_t :16;
 };
 
-struct MTVEC_Reg{
+struct R32_MTVEC{
     uint32_t MODE0:1;//中断或异常入口地址模式选择
     uint32_t MODE1:1;//中断向量表识别模式
     uint32_t BASEADDR:30;//异常基地址寄存器
 };
 
-struct ITHRESDR_Reg{
+struct R32_ITHRESDR{
     uint32_t :5;
     uint32_t THRESD:3;
     uint32_t :24;
@@ -68,10 +68,10 @@ struct PFIC_Def{
     // 共 32 个状态位[n]，表示#n
     // 中断的挂起状态
     volatile  uint32_t    IPR[8];
-    volatile  ITHRESDR_Reg    ITHRESDR;
+    volatile  R32_ITHRESDR    ITHRESDR;
     volatile  uint32_t    __RESV__;
-    volatile  CFGR_Reg    CFGR;
-    volatile  GISR_Reg    GISR;
+    volatile  R32_CFGR    CFGR;
+    volatile  R32_GISR    GISR;
     volatile  uint8_t     VTFIDR[4];
     uint8_t               __RESV0__[12];
     volatile  uint32_t    VTFADDR[4];
@@ -105,8 +105,8 @@ struct PMP_Def{
 
 };
 
-struct SYSTICK_Def{
-    struct CTLR_Reg{
+struct SystickDef{
+    struct R32_CTLR{
         // 系统计数器使能控制位：
         // 1：启动系统计数器 STK；
         // 0：关闭系统计数器 STK，计数器停止计数。
@@ -147,7 +147,7 @@ struct SYSTICK_Def{
         uint32_t SWIE:1;
     };
 
-    struct SR_Reg{
+    struct R32_SR{
         // 计数值比较标志，写 0 清除，写 1 无效：
         // 1：向上计数达到比较值，向下计数到 0；
         // 0：未达到比较值。
@@ -155,8 +155,8 @@ struct SYSTICK_Def{
         uint32_t :31;
     };
 
-    volatile CTLR_Reg   CTLR;
-    volatile SR_Reg     SR;
+    volatile R32_CTLR   CTLR;
+    volatile R32_SR     SR;
     volatile uint64_t   CNT;
     volatile uint64_t   CMP;
 };
@@ -165,18 +165,17 @@ struct DBG_Def{
     uint32_t DATA[2];
 };
 
-static inline PFIC_Def * PFIC_Inst = (PFIC_Def *)(0xE000E000);
+[[maybe_unused]] static inline PFIC_Def * PFIC_Inst = reinterpret_cast<PFIC_Def *>(0xE000E000);
 
-__inline bool isInterruptPending(){
+__inline bool is_interrupt_pending(){
     return PFIC_Inst->GISR.GPENDSTA;
 }
 
-__inline bool isIntrruptActing(){
+__inline bool is_intrrupt_acting(){
     return PFIC_Inst->GISR.GACTSTA;
 }
 
-__inline uint8_t getInterruptDepth(){
-    return PFIC_Inst->GISR.NESTSTA;
+__inline uint8_t get_interrupt_depth(){
+    return static_cast<uint8_t>(PFIC_Inst->GISR.NESTSTA);
 }
-
 }

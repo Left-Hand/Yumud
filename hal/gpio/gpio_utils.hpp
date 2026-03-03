@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <bit>
 #include "core/platform.hpp"
 #include "core/utils/nth.hpp"
 #include "primitive/gpio/pin_source.hpp"

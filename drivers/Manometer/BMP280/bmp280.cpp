@@ -44,9 +44,9 @@ IResult<> Self::set_mode(const Mode mode){
 }
 
 
-IResult<> Self::set_datarate(const DataRate data_rate){
+IResult<> Self::set_datarate(const DataRate datarate){
     auto reg = RegCopy(regs_.config_reg);
-    reg.t_sb = data_rate;
+    reg.t_sb = datarate;
     return write_reg(reg);
 }
 

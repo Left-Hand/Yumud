@@ -11,14 +11,14 @@ using IResult = Result<T, Error>;
 IResult<> BH1750::change_measure_time(const uint16_t ms){
     uint8_t x;
     if(current_mode_ == Mode::HMode || current_mode_ == Mode::HMode2){
-        x = CLAMP(ms * 69 / 120, 31, 254);
+        x = std::clamp(ms * 69 / 120, 31, 254);
         lsb.num = 5 * 69;
         lsb.den = 6 * x;
         if(current_mode_ == Mode::HMode2){
             lsb.den *= 2;
         }
     }else{
-        x = CLAMP(ms * 69 / 16, 31, 254);
+        x = std::clamp(ms * 69 / 16, 31, 254);
         lsb.num = 5 * 69 * 4;
         lsb.den = 6 * x;
     }

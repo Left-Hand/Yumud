@@ -5,18 +5,10 @@
 
 
 namespace ymd::fxmath::details{
-/**
- * @brief Computes the base-e logarithm of an IQN input.
- *
- * @param iqNInput          IQN type input.
- * @param iqNMin            Minimum parameter value.
- * @param Q           IQ format.
- *
- * @return                  IQN type result of exponential.
- */
+
 
 template<size_t Q>
-constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
+constexpr int32_t __IQNln(uint32_t iqNInput)
 {
     int32_t i16Exp;
     int32_t iq30Result;
@@ -31,11 +23,6 @@ constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
      * Only check the sign of the input and that it is not equal to zero for
      * Qs less than or equal to iq26.
      */
-    if constexpr(Q > 26) {
-        if (iqNInput <= iqNMin) {
-            return INT32_MIN;
-        }
-    }
 
     /* Initialize the exponent value. */
     i16Exp = (31 - Q);
@@ -85,8 +72,56 @@ constexpr int32_t __IQNlog(uint32_t iqNInput, const int32_t iqNMin)
 }
 
 template<size_t Q>
-constexpr math::fixed<Q, int32_t> _IQNlog(math::fixed<Q, uint32_t> a){
-    return math::fixed<Q, int32_t>::from_bits(__IQNlog<Q>(a.to_bits(), ((Q >= 27) ? IQNLOG_MIN[Q - 27] : 1)));
+constexpr math::fixed<Q, int32_t> _IQNln(math::fixed<Q, uint32_t> a){
+    const uint32_t iqNMin = ((Q >= 27) ? IQNLOG_MIN[Q - 27] : 1);
+    const uint32_t iqNInput = a.to_bits();
+    const int32_t ret_bits = [&] -> int32_t{
+        if constexpr(Q > 26) {
+            if (iqNInput <= iqNMin) {
+                return INT32_MIN;
+            }
+        }
+        return __IQNln<Q>(iqNInput);
+    }();
+
+    return math::fixed<Q, int32_t>::from_bits(ret_bits);
+}
+
+}
+
+namespace ymd::math{
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, int32_t> lg(const fixed<Q, uint32_t> x) {
+    constexpr double LN10 = 2.30258509299;
+    constexpr auto INV_LN10 = fixed<32, uint32_t>(1.0 / LN10);
+    return fixed<Q, int32_t>(fxmath::details::_IQNln(x)) * INV_LN10;
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, int32_t> ln(const fixed<Q, uint32_t> x) {
+    return fixed<Q, int32_t>(fxmath::details::_IQNln(x));
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, uint32_t> exp(const fixed<Q, int32_t> x) {
+    return fixed<Q, uint32_t>(fxmath::details::_IQNexp<Q>(x));
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, uint32_t> pow(const fixed<Q, uint32_t> base, const fixed<Q, int32_t> exponent) {
+    return exp(exponent * ln(base));
+}
+
+template<size_t Q>
+__attribute__((always_inline)) constexpr 
+fixed<Q, uint32_t> pow(const fixed<Q, uint32_t> base, const int32_t times) {
+    //TODO 判断使用循环还是pow运算 选取最优时间
+    return exp(times * ln(base));
 }
 
 }

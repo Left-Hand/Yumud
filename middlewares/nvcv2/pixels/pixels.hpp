@@ -36,11 +36,11 @@ void iter_threshold(
     const iq16 k = iq16(0.5), 
     const iq16 eps = iq16(0.02));
 
-void max_entropy(const Image<Gray> & src,const int thresh);
+void max_entropy(const Image<Gray> & src,const int32_t thresh);
 
-int get_huang_fuzzy_threshold(Histogram hist);
+int32_t get_huang_fuzzy_threshold(Histogram hist);
 
-int huang(Image<Binary> & dst, const Image<Gray> & src);
+int32_t huang(Image<Binary> & dst, const Image<Gray> & src);
 
 
 

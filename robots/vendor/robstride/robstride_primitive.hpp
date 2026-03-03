@@ -17,7 +17,6 @@
 namespace ymd::robots::robstride{
 
 namespace primitive{
-using literals::iq16;
 
 enum class [[nodiscard]] DeMsgError:uint8_t{
     StdFrame,
@@ -164,7 +163,7 @@ struct [[nodiscard]] TorqueCode final{
         if(nm > 6) return Err(std::partial_ordering::greater);
         if(nm < -6) return Err(std::partial_ordering::less);
         const uint16_t bits = static_cast<uint16_t>(
-            ((nm + 6) * iq16(1.0/12)).to_bits()
+            ((nm + 6) * uq32(1.0/12)).to_bits()
         );
         return Ok(TorqueCode::from_bits(bits));
     }

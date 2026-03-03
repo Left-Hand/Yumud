@@ -57,7 +57,7 @@ IResult<> Self::validate(){
 IResult<> Self::set_datarate(const DataRate dr){
     {
         auto reg = RegCopy(regs_.config_reg);
-        reg.data_rate = uint8_t(std::bit_cast<uint8_t>(dr) & 0b111);
+        reg.datarate = uint8_t(std::bit_cast<uint8_t>(dr) & 0b111);
         if(const auto res = write_reg(reg);
             res.is_err()) return res;
     }

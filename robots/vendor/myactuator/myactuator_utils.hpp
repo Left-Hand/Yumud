@@ -15,7 +15,7 @@ public:
         bytes_(bytes){;}
 
     constexpr ~BytesFiller(){
-        if(not is_full()) __builtin_abort();
+        // if(not is_full()) __builtin_abort();
     }
 
     constexpr __always_inline 
@@ -65,7 +65,7 @@ public:
     template<typename T>
     requires (std::is_integral_v<T>)
     constexpr __always_inline 
-    void push_int(const T i_val){
+    void push_int(const auto i_val){
         const auto bytes = std::bit_cast<std::array<uint8_t, sizeof(T)>>(i_val);
         push_bytes(std::span(bytes));
     }

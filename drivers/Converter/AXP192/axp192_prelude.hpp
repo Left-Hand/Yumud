@@ -26,7 +26,7 @@
 #include "core/utils/Errno.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include "core/utils/strong_type_gradation.hpp"
+#include "core/utils/enum/strong_type_gradation.hpp"
 
 namespace ymd::drivers{
 
@@ -135,8 +135,6 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
     // 8F           过温关机控制寄存器 R/W 01H 
 
     // 00           电源状态寄存器 R  
-
-
     struct R8_PowerInputState:public Reg8<>{
         // 指示启动源是否为ACIN或VBUS 
         // 0:启动源非ACIN/VBUS； 1:启动源为 ACIN/VBUS 
@@ -164,8 +162,9 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
         // 指示ACIN输入是否存在
         uint8_t is_acin_exist:1;
     }DEF_R8(power_input_state_reg)
-    // 01           电源模式/充电状态寄存器 R  
 
+
+    // 01           电源模式/充电状态寄存器 R  
     struct R8_PowerModeChargeState:public Reg8<>{
         uint8_t :1;
         uint8_t powerdown_strategy_is_b_either_a:1;
@@ -176,8 +175,8 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
         uint8_t is_charing:1;
         uint8_t is_overheat:1;
     }DEF_R8(power_mode_charge_state_reg)
-    // 04           OTG VBUS状态寄存器 R  
 
+    // 04           OTG VBUS状态寄存器 R  
     struct R8_UsbOtgVbusState:public Reg8<>{
         uint8_t is_session_end:1;
         uint8_t is_vbus_session_valid:1;
@@ -186,7 +185,6 @@ struct AXP192_PowerCtl_Regset:public AXP192_Prelude{
     }DEF_R8(usb_otg_vbus_state_reg)
 
     // 10           EXTEN & DC-DC2开关控制寄存器 R/W X5H 
-
     struct R8_ExtenDcDc2SwitchCtrl:public Reg8<>{
         uint8_t dcdc2_en:1;
         uint8_t :1;
@@ -323,21 +321,9 @@ class AXP192 final: public AXP192_Prelude{
     explicit AXP192(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){}
 
-    IResult<> set_dcdc1_voltage(const DcdcVoltage voltage){
-        auto reg = RegCopy(pw_regs_.dcdc1_voltage_setting_reg);
-        reg.dcdc1_voltage_setting = voltage.to_u8();
-        return write_reg(reg);
-    }
-    IResult<> set_dcdc2_voltage(const DcdcVoltage voltage){
-        auto reg = RegCopy(pw_regs_.dcdc2_voltage_setting_reg);
-        reg.dcdc2_voltage_setting = voltage.to_u8();
-        return write_reg(reg);
-    }
-    IResult<> set_dcdc3_voltage(const DcdcVoltage voltage){
-        auto reg = RegCopy(pw_regs_.dcdc3_voltage_setting_reg);
-        reg.dcdc3_voltage_setting = voltage.to_u8();
-        return write_reg(reg);
-    }
+    IResult<> set_dcdc1_voltage(const DcdcVoltage voltage);
+    IResult<> set_dcdc2_voltage(const DcdcVoltage voltage);
+    IResult<> set_dcdc3_voltage(const DcdcVoltage voltage);
 private:
     hal::I2cDrv i2c_drv_;
     AXP192_PowerCtl_Regset pw_regs_ = {};
@@ -361,9 +347,10 @@ private:
         return Ok();
     }
 
+    #if 0
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -371,8 +358,9 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(T::ADDRESS, reg.as_bits_mut());
+        return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
+    #endif
 };
 
 }

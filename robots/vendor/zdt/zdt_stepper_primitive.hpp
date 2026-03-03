@@ -106,7 +106,7 @@ struct [[nodiscard]] FlatPacket final{
                 MAX_PAYLOAD_LENGTH_PER_CAN_FRAME
             );
 
-            const auto frame = make_canmsg(
+            const auto frame = make_can_frame(
                 node_id_, func_code_,
                 offset_ / MAX_PAYLOAD_LENGTH_PER_CAN_FRAME,
                 tailed_context_bytes_.subspan(offset_, frame_len)
@@ -117,7 +117,7 @@ struct [[nodiscard]] FlatPacket final{
             return frame;
         }
     private:
-        static constexpr hal::BxCanFrame make_canmsg(
+        static constexpr hal::BxCanFrame make_can_frame(
             const NodeId node_id,
             const FuncCode func_code,
             const uint8_t piece_cnt,
@@ -224,8 +224,8 @@ static_assert(sizeof(HommingStatus) == 1);
 
 
 struct [[nodiscard]] Rpm final{
-    static constexpr Rpm from_speed(const iq16 speed){
-        const uint16_t temp = uint16_t(iq16(speed) * 600);
+    static constexpr Rpm from_tps(const iq16 tps){
+        const uint16_t temp = uint16_t(iq16(tps) * 600);
         return {__builtin_bswap16(temp)};
     }
     constexpr uint16_t to_u16() const {
@@ -236,17 +236,18 @@ struct [[nodiscard]] Rpm final{
 };
 
 struct [[nodiscard]] PulseCnt final{
+    using Self = PulseCnt;
     static constexpr uint32_t SCALE = 3200 * (256/16);
 
-    static constexpr PulseCnt from_pulses(const uint32_t pulses){
+    static constexpr Self from_pulses(const uint32_t pulses){
         return {__builtin_bswap32(pulses)};
     }
 
-    static constexpr Option<PulseCnt> from_angle(const Angular<uq16> angle){
+    static constexpr Option<Self> from_angle(const Angular<uq16> angle){
         const uq16 turns = (angle.to_turns());
         const uint32_t frac_part = uint32_t(math::frac(turns) * SCALE);
-        const uint32_t int_part  = uint32_t(uint32_t(turns) * SCALE);
-        const uint32_t pulses = uint32_t(frac_part + int_part);
+        const uint32_t digit_part  = uint32_t(uint32_t(turns) * SCALE);
+        const uint32_t pulses = uint32_t(frac_part + digit_part);
         return Some(from_pulses(pulses));
     }
 
@@ -258,17 +259,18 @@ struct [[nodiscard]] PulseCnt final{
 };
 
 struct [[nodiscard]] AcclerationLevel{
-    static constexpr AcclerationLevel from(const iq16 acc_per_second){
+    using Self = AcclerationLevel;
+    static constexpr Self from_tpss(const iq16 acc_per_second){
         // TODO
-        return AcclerationLevel{10};
+        return Self{10};
     }
 
-    static constexpr AcclerationLevel zero(){
-        return AcclerationLevel{0};
+    static constexpr Self zero(){
+        return Self{0};
     }
 
-    static constexpr AcclerationLevel from_u8(const uint8_t raw){
-        return AcclerationLevel{raw};
+    static constexpr Self from_u8(const uint8_t raw){
+        return Self{raw};
     }
     uint8_t bits;
 };

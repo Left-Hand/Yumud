@@ -29,6 +29,8 @@ static_assert(ctz32(0x00040000) == 18, "ctz(0x00040000) should be 18");
 static_assert(ctz32(0x00080000) == 19, "ctz(0x00080000) should be 19");
 static_assert(ctz32(0x00100000) == 20, "ctz(0x00100000) should be 20");
 static_assert(ctz32(0x00200000) == 21, "ctz(0x00200000) should be 21");
+
+
 static_assert(ctz32(0x00400000) == 22, "ctz(0x00400000) should be 22");
 static_assert(ctz32(0x00800000) == 23, "ctz(0x00800000) should be 23");
 static_assert(ctz32(0x01000000) == 24, "ctz(0x01000000) should be 24");

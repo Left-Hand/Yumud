@@ -67,8 +67,8 @@ struct [[nodiscard]] TemperatureCode final{
     }
 };
 
-DEF_PER_UNIT(CmdRad, uint16_t, -2 * TAU, 2 * TAU)
-DEF_PER_UNIT(CmdOmega, uint16_t, -30 * TAU, 30 * TAU)
+DEF_PER_UNIT(CmdRad, uint16_t, -2 * (2 * M_PI), 2 * (2 * M_PI))
+DEF_PER_UNIT(CmdOmega, uint16_t, -30 * (2 * M_PI), 30 * (2 * M_PI))
 DEF_PER_UNIT(CmdTorque, uint16_t, -12, 12)
 DEF_PER_UNIT(CmdKp, uint16_t, 0, 500)
 DEF_PER_UNIT(CmdKd, uint16_t, 0, 5)

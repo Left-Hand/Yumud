@@ -35,7 +35,7 @@ public:
 
     [[nodiscard]] IResult<> set_idac(const IDAC idac);
 
-    [[nodiscard]] IResult<> set_data_rate(const DataRate data_rate);
+    [[nodiscard]] IResult<> set_datarate(const DataRate datarate);
 private:
     hal::I2cDrv i2c_drv_;
 
@@ -62,7 +62,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -70,7 +70,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return read_reg(T::ADDRESS, reg.as_bits_mut());
+        return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 };
 

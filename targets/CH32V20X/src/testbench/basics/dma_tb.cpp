@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "src/testbench/tb.h"
 #include "core/clock/clock.hpp"
 

@@ -3,6 +3,7 @@
 #include "core/utils/Option.hpp"
 #include "core/string/view/string_view.hpp"
 #include "core/utils/serde/serde.hpp"
+#include "core/math_defs.hpp"
 #include <utility>
 
 namespace ymd{
@@ -69,6 +70,7 @@ private:
         return {{hash(Month::MONTH_STR[Is])...}};
     }
 
+    using SmallString = const char *;
     static constexpr std::array<const char *, 12> MONTH_STR = {
         "Jan","Feb","Mar","Apr","May","Jun",
         "Jul","Aug","Sep","Oct","Nov","Dec"
@@ -118,9 +120,11 @@ struct [[nodiscard]] Date final{
 
 
     constexpr bool is_valid() const {
-        return IN_RANGE(year, 24, 30) //no one will use this shit after 2030
-            and month.is_valid()
-            and IN_RANGE(day, 1, 31);
+        if(year < BUILT_YEAR) return false;
+        if(month.is_valid() == false) return false;
+        if(day < 1) return false;
+        if(day > 31) return false;
+        return true;
     }
 
     constexpr bool operator == (const Date & rhs){

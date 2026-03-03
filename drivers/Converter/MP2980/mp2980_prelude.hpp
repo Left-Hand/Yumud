@@ -83,7 +83,7 @@ struct MP2980_Prelude{
 struct MP2980_Regs:public MP2980_Prelude{
 
     struct RefReg:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x00;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         uint16_t data;
 
@@ -103,7 +103,7 @@ struct MP2980_Regs:public MP2980_Prelude{
     };
 
     struct Ctrl1Reg:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x02;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t en_pwr:1;
         uint8_t go_bit:1;
@@ -115,7 +115,7 @@ struct MP2980_Regs:public MP2980_Prelude{
     };
 
     struct Ctrl2Reg:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x03;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t ovp_mode:1;
         uint8_t ocp_mode:1;
@@ -125,7 +125,7 @@ struct MP2980_Regs:public MP2980_Prelude{
     };
 
     struct IlimReg:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x04;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x04};
 
         uint8_t ilim:3;
         uint8_t :5;
@@ -133,12 +133,12 @@ struct MP2980_Regs:public MP2980_Prelude{
 
 
     struct StatusReg:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x05;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x05};
         Interrupts interrupts;
     };
 
     struct MaskReg:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x06;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x06};
         Interrupts interrupts_mask;
     };
 

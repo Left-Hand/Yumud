@@ -52,8 +52,8 @@ public:
 struct Si24R1_Regset:public Si24R1_Prelude{
 
 
-    struct TopConfigReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x00;
+    struct R8_TopConfig:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
         uint8_t prim_rx:1;
         uint8_t power_up:1;
         uint8_t crc_2bytes:1;
@@ -64,8 +64,8 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__:1;
     };
 
-    struct AutoAcknowledgeReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x01;
+    struct R8_AutoAcknowledge:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
         uint8_t p0:1;
         uint8_t p1:1;
         uint8_t p2:1;
@@ -75,8 +75,8 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__ :2;
     };
     
-    struct EnableRxAddressReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x02;
+    struct R8_EnableRxAddress:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         uint8_t p0:1;
         uint8_t p1:1;
         uint8_t p2:1;
@@ -86,14 +86,14 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__ :2;
     };
 
-    struct AddressWidthReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x03;
+    struct R8_AddressWidth:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
         uint8_t pipex_address_width:2;
         uint8_t __resv__:6;
     };
 
-    struct AutoRetransmissionReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x04;
+    struct R8_AutoRetransmission:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x04};
         // 0000: disabled
         // 0001: up to 1 re-transmit on fail of AA
         // ...
@@ -108,15 +108,15 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t retrans_delay:4;
     };
 
-    struct RFChannelReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x05;
+    struct R8_RFChannel:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x05};
 
         uint8_t rf_channel:7;
         uint8_t __resv__:1;
     };
 
-    struct RFConfigReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x06;
+    struct R8_RFConfig:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x06};
         uint8_t rf_power:3;
         uint8_t rf_datarate_highbit:1;
         uint8_t pll_lock:1;
@@ -125,8 +125,8 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t cont_wave:1;
     };
 
-    struct StatusReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x07;
+    struct R8_Status:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x07};
         uint8_t tx_full:1;
         uint8_t rx_pipe_number:2;
         uint8_t max_rt:1;
@@ -135,35 +135,35 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__ :1;
     };
 
-    struct TransmissionObservationReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x08;
+    struct R8_TransmissionObservation:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x08};
         uint8_t arc_cnt:4;
         uint8_t plos_cnt:4;
     };
 
-    struct RssiReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x09;
+    struct R8_Rssi:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x09};
         uint8_t rssi_less_than_60dbm:1;
         uint8_t __resv__:7;
     };
 
-    struct RxAddrReg:public Reg8<>{
+    struct R8_RxAddr:public Reg8<>{
         static constexpr RegAddr head_address = 0x0A;
         uint8_t data;
     };
 
-    struct TxAddrReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x10;
+    struct R8_TxAddr:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x10};
         uint64_t data;
     };
     
-    struct RxPowerReg:public Reg8<>{
+    struct R8_RxPower:public Reg8<>{
         static constexpr RegAddr head_address = 0x11;
         uint8_t data;
     };
 
-    struct FifoStatusReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x17;
+    struct R8_FifoStatus:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x17};
         uint8_t rx_empty:1;
         uint8_t rx_full:1;
         uint8_t __resv1__:2;
@@ -173,8 +173,8 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv2__:1;
     };
 
-    struct DynamicPayloadLengthReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x1c;
+    struct R8_DynamicPayloadLength:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x1c};
         uint8_t dpl_p0:1;
         uint8_t dpl_p1:1;
         uint8_t dpl_p2:1;
@@ -184,30 +184,30 @@ struct Si24R1_Regset:public Si24R1_Prelude{
         uint8_t __resv__:2;
     };
 
-    struct FeatureReg:public Reg8<> {
-        static constexpr RegAddr ADDRESS = 0x1d;
+    struct R8_Feature:public Reg8<> {
+        static constexpr RegAddr REG_ADDR = RegAddr{0x1d};
         uint8_t en_dyn_ack : 1;          // Set 1 enables the W_TX_PAYLOAD_NOACK command
         uint8_t en_ack_pay : 1;          // Set 1 enables payload on ACK
         uint8_t en_dpl : 1;              // Set 1 enables dynamic payload length
         uint8_t __resv__:5; 
     };
 
-    TopConfigReg top_config_reg;
-    AutoAcknowledgeReg auto_acknowledge_reg;
-    EnableRxAddressReg enable_rx_address_reg;
-    AddressWidthReg address_width_reg;
-    AutoRetransmissionReg auto_retransmission_reg;
-    RFChannelReg rf_channel_reg;
-    RFConfigReg rf_config_reg;
-    StatusReg status_reg;
-    TransmissionObservationReg transmission_observation_reg;
-    RssiReg rssi_reg;
-    RxAddrReg rx_addr_regs[6];
-    TxAddrReg tx_addr_reg;
-    RxPowerReg rx_power_regs[6];
-    FifoStatusReg fifo_status_reg;
-    DynamicPayloadLengthReg dynamic_payload_length_reg;
-    FeatureReg feature_reg;
+    R8_TopConfig top_config_reg;
+    R8_AutoAcknowledge auto_acknowledge_reg;
+    R8_EnableRxAddress enable_rx_address_reg;
+    R8_AddressWidth address_width_reg;
+    R8_AutoRetransmission auto_retransmission_reg;
+    R8_RFChannel rf_channel_reg;
+    R8_RFConfig rf_config_reg;
+    R8_Status status_reg;
+    R8_TransmissionObservation transmission_observation_reg;
+    R8_Rssi rssi_reg;
+    R8_RxAddr rx_addr_regs[6];
+    R8_TxAddr tx_addr_reg;
+    R8_RxPower rx_power_regs[6];
+    R8_FifoStatus fifo_status_reg;
+    R8_DynamicPayloadLength dynamic_payload_length_reg;
+    R8_Feature feature_reg;
 };
 
 }

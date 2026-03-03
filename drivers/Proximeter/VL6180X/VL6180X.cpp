@@ -225,7 +225,7 @@ IResult<> VL6180X::set_scaling(uint8_t new_scaling){
 // for details.
 IResult<> VL6180X::start_range_continuous(uint16_t period)
 {
-	const uint8_t period_reg = CLAMP(int16_t(period / 10) - 1, 0, 254);
+	const uint8_t period_reg = static_cast<uint8_t>(std::clamp((period / 10) - 1, 0, 254));
 
 	if(const auto res = write_reg(RegAddr::SYSRANGE__INTERMEASUREMENT_PERIOD, period_reg);
 		res.is_err()) return res;
@@ -242,7 +242,7 @@ IResult<> VL6180X::start_range_continuous(uint16_t period)
 // measurement. See section "Continuous mode limits" in the datasheet
 // for details.
 IResult<> VL6180X::start_ambient_continuous(uint16_t period){
-	const uint8_t bits = CLAMP(int16_t(period / 10) - 1, 0, 254);
+	const uint8_t bits = static_cast<uint8_t>(std::clamp<int>(period / 10 - 1, 0, 254));
 
 	if(const auto res = write_reg<uint8_t>(RegAddr::SYSALS__INTERMEASUREMENT_PERIOD, bits);
 		res.is_err()) return res;
@@ -263,7 +263,7 @@ IResult<> VL6180X::start_ambient_continuous(uint16_t period){
 // measurements. See section "Continuous mode limits" in the datasheet
 // for details.
 IResult<> VL6180X::start_interleaved_continuous(uint16_t period){
-	const uint8_t bits = CLAMP(int16_t(period / 10) - 1, 0, 254);
+	const uint8_t bits = static_cast<uint8_t>(std::clamp<int>(period / 10 - 1, 0, 254));
 
 	if(const auto res = write_reg<uint8_t>(RegAddr::INTERLEAVED_MODE__ENABLE, 1);
 		res.is_err()) return res;

@@ -65,13 +65,13 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        if(const auto res = write_reg(reg.ADDRESS, reg.to_bits());
+        if(const auto res = write_reg(reg.REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
     [[nodiscard]] IResult<> read_reg(auto & reg){
-        return transport_.read_reg(reg.ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(reg.REG_ADDR, reg.as_bits_mut());
     }
 
     

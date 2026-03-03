@@ -24,7 +24,7 @@ public:
 
     constexpr void reconf(const Config & config){
         alpha_ = solve_alpha(config.fc, config.fs);
-        wc_ = T(TAU) * config.fc;
+        wc_ = T((2 * M_PI)) * config.fc;
     }
 
     constexpr void reset(){
@@ -51,7 +51,7 @@ public:
     }
 
     static constexpr T solve_alpha(const auto fc, const auto fs){
-        return (T(fs) / (fs + T(TAU) * fc));
+        return (T(fs) / (fs + T((2 * M_PI)) * fc));
     }
 
 private:

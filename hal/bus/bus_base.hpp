@@ -2,6 +2,7 @@
 
 #include "core/system.hpp"
 #include <atomic>
+#include <bit>
 
 namespace ymd::hal{
 

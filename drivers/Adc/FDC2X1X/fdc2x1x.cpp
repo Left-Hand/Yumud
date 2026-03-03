@@ -49,7 +49,7 @@ IResult<> FDC2X1X::init(){
 
 
 IResult<bool> FDC2X1X::is_conv_done(){
-	if(const auto res = read_reg(R16_Status::ADDRESS, status_reg.as_bits_mut());
+	if(const auto res = read_reg(R16_Status::REG_ADDR, status_reg.as_bits_mut());
 		res.is_err()) return Err(res.unwrap_err());
 	return Ok(bool(status_reg.data_ready));
 }
@@ -57,7 +57,7 @@ IResult<bool> FDC2X1X::is_conv_done(){
 IResult<bool> FDC2X1X::is_conv_done(uint8_t idx){
 	if(idx > 3) return Err(Error::ChannelSelectionOutOfRange);
 
-	if(const auto res = read_reg(R16_Status::ADDRESS, status_reg.as_bits_mut());
+	if(const auto res = read_reg(R16_Status::REG_ADDR, status_reg.as_bits_mut());
 		res.is_err()) return Err(res.unwrap_err());
 	switch(idx){
 		case 0: return Ok(bool(status_reg.ch0_unread_conv));
@@ -71,7 +71,7 @@ IResult<bool> FDC2X1X::is_conv_done(uint8_t idx){
 IResult<> FDC2X1X::reset(){
 	auto reg = RegCopy(reset_dev_reg);
 	reg.reset_dev = true;
-	return write_reg(R16_ResetDev::ADDRESS,(reg.to_bits()));
+	return write_reg(R16_ResetDev::REG_ADDR,(reg.to_bits()));
 }
 
 IResult<uint32_t> FDC2X1X::get_data(uint8_t idx){
@@ -80,9 +80,9 @@ IResult<uint32_t> FDC2X1X::get_data(uint8_t idx){
 	auto & highreg = conv_data[idx].high;
 	auto & lowreg = conv_data[idx].low;
 	
-	if(const auto res = read_reg(highreg.ADDRESS, (highreg.as_bits_mut()));
+	if(const auto res = read_reg(highreg.REG_ADDR, (highreg.as_bits_mut()));
 		res.is_err()) return Err(res.unwrap_err());
-	if(const auto res = read_reg(lowreg.ADDRESS, (lowreg.as_bits_mut()));
+	if(const auto res = read_reg(lowreg.REG_ADDR, (lowreg.as_bits_mut()));
 		res.is_err()) return Err(res.unwrap_err());
 	
 	const uint32_t ret = 

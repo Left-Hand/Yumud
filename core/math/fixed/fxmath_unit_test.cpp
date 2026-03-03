@@ -39,6 +39,7 @@ static constexpr int64_t err64(const uint64_t a, const uint64_t b){
     static_assert(math::inv_sqrt(iq16(16)) == iq16(0.25));
     static_assert(math::inv_sqrt(uq16(16)) == uq16(0.25));
 
+    static_assert(math::mag(iq2(3), iq2(4)) == iq2(5));
     static_assert(math::mag(iq16(3), iq16(4)) == iq16(5));
     static_assert(math::mag(iq26(3), iq26(4)) == iq26(5));
 
@@ -53,7 +54,7 @@ static constexpr int64_t err64(const uint64_t a, const uint64_t b){
 
     static_assert(math::mag(iq16(0), iq16(0), iq16(0)) == iq16(0));
     static_assert(math::mag(iq16(1), iq16(2), iq16(2)) == iq16(3));
-    static_assert(math::mag(iq16(3), iq16(4), iq16(0)) == iq16(5));
+    static_assert(math::mag(iq16(3), iq16(4), iq16(12)) == iq16(13));
     static_assert(math::mag(iq16(1), iq16(1), iq16(1), iq16(1)) == iq16(2));
 
     static_assert(math::inv_mag(iq16(1), iq16(2), iq16(2)).to_bits() == iq16(1.0/3).to_bits());
@@ -82,58 +83,63 @@ static constexpr int64_t err64(const uint64_t a, const uint64_t b){
 
 
 [[maybe_unused]] static void test_atan(){
-    static_assert(std::abs((double)math::atan2pu(ymd::literals::iq16(1.0), ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
-    static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), -ymd::literals::iq16(1.0)) - 0.625) < 1E-7);
-    static_assert(std::abs((double)math::atan2pu(ymd::literals::iq16(1.0), -ymd::literals::iq16(1.0)) - 0.375) < 1E-7);
-    static_assert(std::abs((double)math::atan2pu(-ymd::literals::iq16(1.0), ymd::literals::iq16(1.0)) - 0.875) < 1E-7);
+    static_assert(std::abs((double)math::atan2pu(iq16(1.0), iq16(1.0)) - 0.125) < 1E-7);
+    static_assert(std::abs((double)math::atan2pu(-iq16(1.0), -iq16(1.0)) - 0.625) < 1E-7);
+    static_assert(std::abs((double)math::atan2pu(iq16(1.0), -iq16(1.0)) - 0.375) < 1E-7);
+    static_assert(std::abs((double)math::atan2pu(-iq16(1.0), iq16(1.0)) - 0.875) < 1E-7);
 
-    static_assert(std::abs((double)math::atanpu(ymd::literals::iq16(1.0)) - 0.125) < 1E-7);
-    static_assert(std::abs((double)math::atanpu(-ymd::literals::iq16(1.0)) - 0.875) < 1E-7);
+    static_assert(std::abs((double)math::atanpu(iq16(1.0)) - 0.125) < 1E-7);
+    static_assert(std::abs((double)math::atanpu(-iq16(1.0)) - 0.875) < 1E-7);
 }
 
 [[maybe_unused]] static void test_asin(){
-    static_assert(std::abs((double)math::asin(ymd::literals::iq16(0)) - (0)) < 1E-7);
-    static_assert(std::abs((double)math::asin(ymd::literals::iq16(1.0)) - (M_PI / 2)) < 1E-7);
-    static_assert(std::abs((double)math::asin(ymd::literals::iq16(-1.0)) - (-M_PI / 2)) < 1E-7);
+    static_assert(std::abs((double)math::asin(iq16(0)) - (0)) < 1E-7);
+    static_assert(std::abs((double)math::asin(iq16(1.0)) - (M_PI / 2)) < 1E-7);
+    static_assert(std::abs((double)math::asin(iq16(-1.0)) - (-M_PI / 2)) < 1E-7);
 
-    constexpr auto e1 = std::abs((double)math::asin(ymd::literals::iq16(0.707106781187)) - (M_PI / 4));
+    constexpr auto e1 = std::abs((double)math::asin(iq16(0.707106781187)) - (M_PI / 4));
     static_assert(e1 < 2.06E-4);
 
-    static_assert(std::abs((double)math::asin(ymd::literals::iq16(0.866025403784)) - (M_PI / 3)) < 1E-4);
+    static_assert(std::abs((double)math::asin(iq16(0.866025403784)) - (M_PI / 3)) < 1E-4);
     
-    static_assert(std::abs((double)math::asin(ymd::literals::iq16(0.5)) - (M_PI / 6)) < 1E-7);
+    static_assert(std::abs((double)math::asin(iq16(0.5)) - (M_PI / 6)) < 1E-7);
 
-    constexpr auto e2 = std::abs((double)math::asin(ymd::literals::iq16(0.7)) - (0.775397496611));
+    constexpr auto e2 = std::abs((double)math::asin(iq16(0.7)) - (0.775397496611));
     static_assert(e2 < 1E-4);
 }
 
 [[maybe_unused]] static void test_log(){
-    constexpr float f_n3 = float(math::log(uq16(0.0497870683679)));
-    constexpr float f_n2 = float(math::log(uq16(0.135335283237)));
-    constexpr float f_n1_25 = float(math::log(uq16(0.28650479686)));
-    constexpr float f_n1 = float(math::log(uq16(0.367879441171)));
-    constexpr float f0_25 = float(math::log(uq16(1.28402541669)));
-    constexpr float f0_5 = float(math::log(uq16(1.6487212707)));
-    constexpr float f0_75 = float(math::log(uq16(2.11700001661)));
-    constexpr float f0_95 = float(math::log(uq16(2.58570965932)));
-    constexpr float f1 = float(math::log(uq16(2.7182818284590451)));
-    constexpr float f3 = float(math::log(uq16(20.0855369232)));
-    static_assert(std::abs(f_n3 - -3) < 3e-4);
-    static_assert(std::abs(f_n2 - -2) < 3e-4);
-    static_assert(std::abs(f_n1_25 - -1.25) < 1e-4);
-    static_assert(std::abs(f_n1 - -1) < 1e-4);
-    static_assert(std::abs(f0_25 - 0.25) < 1e-4);
-    static_assert(std::abs(f0_5 - 0.5) < 1e-4);
-    static_assert(std::abs(f0_75 - 0.75) < 1e-4);
-    static_assert(std::abs(f0_95 - 0.95) < 1e-4);
-    static_assert(std::abs(f1 - 1.0) < 1e-4);
-    static_assert(std::abs(f3 - 3.0) < 1e-4);
-    // constexpr float f0_5 = float(math::log(uq16(0.5)));
-    // constexpr float f1 = float(math::log(uq16(1)));
-    // constexpr float f3 = float(math::log(uq16(3)));
-    // constexpr float f5 = float(math::log(uq16(5)));
-    // constexpr float f7 = float(math::log(uq16(7)));
-    // constexpr float f9 = float(math::log(uq16(9)));
+    {
+        constexpr float f_n3 = float(math::ln(uq16(0.0497870683679)));
+        constexpr float f_n2 = float(math::ln(uq16(0.135335283237)));
+        constexpr float f_n1_25 = float(math::ln(uq16(0.28650479686)));
+        constexpr float f_n1 = float(math::ln(uq16(0.367879441171)));
+        constexpr float f0_25 = float(math::ln(uq16(1.28402541669)));
+        constexpr float f0_5 = float(math::ln(uq16(1.6487212707)));
+        constexpr float f0_75 = float(math::ln(uq16(2.11700001661)));
+        constexpr float f0_95 = float(math::ln(uq16(2.58570965932)));
+        constexpr float f1 = float(math::ln(uq16(2.7182818284590451)));
+        constexpr float f3 = float(math::ln(uq16(20.0855369232)));
+        static_assert(std::abs(f_n3 - -3) < 3e-4);
+        static_assert(std::abs(f_n2 - -2) < 3e-4);
+        static_assert(std::abs(f_n1_25 - -1.25) < 1e-4);
+        static_assert(std::abs(f_n1 - -1) < 1e-4);
+        static_assert(std::abs(f0_25 - 0.25) < 1e-4);
+        static_assert(std::abs(f0_5 - 0.5) < 1e-4);
+        static_assert(std::abs(f0_75 - 0.75) < 1e-4);
+        static_assert(std::abs(f0_95 - 0.95) < 1e-4);
+        static_assert(std::abs(f1 - 1.0) < 1e-4);
+        static_assert(std::abs(f3 - 3.0) < 1e-4);
+    }
+    {
+        constexpr float f_n2 = float(math::lg(uq16(0.01)));
+        constexpr float f1 = float(math::lg(uq16(10)));
+        constexpr float f3 = float(math::lg(uq16(1000)));
+        static_assert(std::abs(f_n2 - -2.0) < 3e-4);
+        static_assert(std::abs(f1 - 1.0) < 1e-4);
+        static_assert(std::abs(f3 - 3.0) < 1e-4);
+    }
+
 }
 
 [[maybe_unused]] static void test_exp(){

@@ -123,9 +123,9 @@ public:
     
     const uint8_t dma_nth_;
     const uint8_t ch_sel_nth_;
+    Mode mode_ = Mode::Default;
     
     Callback event_callback_ = nullptr;
-    Mode mode_ = Mode::Default;
 
 
     void enable_done_it(const Enable en);

@@ -380,7 +380,11 @@ struct [[nodiscard]] IGray final{
         return bits <=> other.bits;}
 
     [[nodiscard]] constexpr Binary to_binary(const Gray threshold){
-        return Binary::from_bool(ABS(bits) > threshold.to_u8());}
+        bool ret = false;
+        if(int(bits) > int(threshold.to_u8())) ret = true;
+        if(int(bits) < -int(threshold.to_u8())) ret = true;
+        return Binary::from_bool(ret);
+    }
 
     [[nodiscard]] constexpr Binary to_binary_signed(const IGray threshold){
         return Binary::from_bool(bits > threshold.as_i8());}
@@ -502,12 +506,17 @@ struct [[nodiscard]] ColorCaster<HSV888, RGB888> {
 
     __attribute__((always_inline))
     [[nodiscard]] static constexpr uint8_t qsub8(const uint8_t i, const uint8_t j){
-        return MAX(int(i) - int(j), 0);
+        // return MAX(int(i) - int(j), 0);
+        if(i < j) return 0;
+        return i - j;
     };
 
     __attribute__((always_inline))
     [[nodiscard]] static constexpr uint8_t qadd8(const uint8_t i, const uint8_t j){
-        return MIN(int(i) + int(j), 255);
+        // return MIN(int(i) + int(j), 255);
+        const uint32_t sum = i + j;
+        if(sum > 255) return 255;
+        return sum; 
     };
 
     static constexpr HSV888 cast(const RGB888 & rgb){

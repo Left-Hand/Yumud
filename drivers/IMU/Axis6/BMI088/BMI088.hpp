@@ -42,7 +42,7 @@ public:
     [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
     [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
 private:
-    BoschImu_Transport transport_;
+    Transport transport_;
     iq20 acc_scaler_ = 0;
     BMI088_AccRegs regs_ = {};
 
@@ -128,7 +128,7 @@ public:
     [[nodiscard]] IResult<> set_gyr_fs(const GyrFs gyr_fs);
     [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
 private:
-    BoschImu_Transport transport_;
+    Transport transport_;
     iq20 gyr_scaler_ = 0;
 
     BMI088_GyrRegs regs_ = {};

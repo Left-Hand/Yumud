@@ -1,88 +1,12 @@
 #pragma once
 
-#include "core/sys_defs.hpp"
 #include <type_traits>
 #include <bits/move.h>
 #include <bit>
 
-#if defined(YMD_USE_MY_MEMORY)
-//TODO 提高memcmp的性能
-__fast_inline constexpr int __ymd_memcmp(const void * str1, const void * str2, uint32_t len){
-    for (uint32_t i = 0; i < len; i++) {
-        if ((static_cast<const uint8_t*>(str1))[i] < (static_cast<const uint8_t*>(str2))[i]) {
-            return -1;
-        } else if ((static_cast<const uint8_t*>(str1))[i] > (static_cast<const uint8_t*>(str2))[i]) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-#define memcmp(str1, str2, len) __ymd_memcmp(str1, str2, len)
-
-//TODO 提高memset的性能
-__fast_inline constexpr void * __ymd_memset(void * dest, const char c, const uint32_t len){
-	if(std::is_constant_evaluated()){
-		return __builtin_memset(dest, c, len);
-	}
-
-    for(uint32_t i = 0; i < len; i++){
-        reinterpret_cast<char *>(dest)[i] = c;
-    }
-
-    return dest;
-}
-
-#define memset(source, c, len) __ymd_memset(source, c, len)
-
-
-//TODO 提高memcpy的性能
-__fast_inline constexpr void * __ymd_memcpy(void * dest, const void * src, const uint32_t len){
-	if(std::is_constant_evaluated()){
-		return __builtin_memcpy(dest, src, len);
-	}
-
-    for (uint32_t i = 0; i < len; ++i) {
-        (static_cast<uint8_t*>(dest))[i] = (static_cast<const uint8_t*>(src))[i];
-    }
-    return dest;
-}
-
-#define memcpy(dest, source, len) __ymd_memcpy(dest, source, len)
-
-//TODO 提高strlen的性能
-__fast_inline constexpr size_t __ymd_strlen(const char * str){
-	if(std::is_constant_evaluated()){
-		return __builtin_strlen(str);
-	}
-	
-	size_t len = 0;
-	while (str[len] != '\0') {
-		++len;
-	}
-	return len;
-}
-
-#define strlen(str) __ymd_strlen(str)
-
-
-//TODO 提高strcpy的性能
-__fast_inline constexpr char * __ymd_strcpy(char * dest, const char * src){
-    for (; *src != '\0'; ++src, ++dest) {
-        *dest = *src;
-    }
-    return dest;
-}
-
-#define strcpy(d, s) __ymd_strcpy(d, s)
-
-#endif
-
-#ifndef YMD_USE_MY_MEMORY
 #include "string.h"
-#endif
 
-
+namespace ymd{
 #define CMP_EPSILON 0.001
 #define CMP_EPSILON2 (CMP_EPSILON * CMP_EPSILON)
 
@@ -135,84 +59,31 @@ __fast_inline constexpr char * __ymd_strcpy(char * dest, const char * src){
 #endif
 
 
-
+namespace details{
 template<typename First>
-constexpr First __max_helper(const First & value) {
+constexpr First max_helper(const First & value) {
     return value;
 }
 
 template<typename First, typename Second, typename... Rest>
-constexpr First __max_helper(const First & first,const Second & second,const Rest & ... rest){
+constexpr First max_helper(const First & first,const Second & second,const Rest & ... rest){
     First max_value = first > First(second) ? first : First(second);
-    return __max_helper(max_value, rest...);
+    return max_helper(max_value, rest...);
 }
 
-template<typename ... Ts >
-static constexpr auto MAX(Ts && ... args){return __max_helper(std::forward<Ts>(args)...);}
-
-
-
-
-
 template<typename First>
-constexpr First __min_helper(const First & value) {
+constexpr First min_helper(const First & value) {
     return value;
 }
 
 template<typename First, typename Second, typename... Rest>
-constexpr First __min_helper(const First & first,const Second & second,const Rest &... rest) {
+constexpr First min_helper(const First & first,const Second & second,const Rest &... rest) {
     First min_value = first < First(second) ? first : First(second);
-    return __min_helper(min_value, rest...);
-}
-
-template<typename ... Ts >
-static constexpr auto MIN(Ts && ... args){return __min_helper(std::forward<Ts>(args)...);}
-
-
-template <typename T>
-requires std::is_arithmetic_v<T>
-constexpr __fast_inline T ABS(const T a){
-    return (a < 0) ? -a : a;
-}
-
-
-
-template <typename T>
-requires std::is_arithmetic_v<T>
-static constexpr __fast_inline T SIGN(const T a){
-    return (a < 0) ? T(-1) : T(1);
-}
-
-
-
-
-static constexpr bool IN_RANGE(auto x,auto a,auto b) {return((a < b) ? (x >= a && x < b) : (x < a && x >= b));}
-
-
-void SWAP(auto && m_x, auto && m_y){
-    std::swap((m_x), (m_y));
-}
-
-
-
-template <typename T, typename U>
-requires std::is_arithmetic_v<U>
-constexpr __fast_inline T LERP(const T & a, const T & b, const U & x){
-    return T((U(U(1) - x) * a) + (x * b));
-}
-
-
-
-
-template <typename T, typename U, typename V>
-constexpr __fast_inline T INVLERP(const U & _a, const V & _b, const T& t){
-    T a = static_cast<T>(_a);
-    T b = static_cast<T>(_b);
-    return (t - a) / (b - a);
+    return min_helper(min_value, rest...);
 }
 
 template<typename T>
-constexpr __fast_inline T __clamp_tmpl(const T x, const auto mi, const auto ma) {
+constexpr T __clamp_tmpl(const T x, const auto mi, const auto ma) {
     if((x > static_cast<T>(ma))) [[unlikely]]
         return static_cast<T>(ma);
     if((x < static_cast<T>(mi))) [[unlikely]]
@@ -221,14 +92,57 @@ constexpr __fast_inline T __clamp_tmpl(const T x, const auto mi, const auto ma) 
 }
 
 
-static constexpr auto CLAMP(auto x,auto mi,auto ma){return __clamp_tmpl(x, mi, ma);}
-static constexpr auto CLAMP2(auto x, auto ma){ return __clamp_tmpl(x, -ma, ma);}
+}
+
+template<typename ... Ts >
+static constexpr auto MAX(Ts && ... args){return details::max_helper(std::forward<Ts>(args)...);}
+
+template<typename ... Ts >
+static constexpr auto MIN(Ts && ... args){return details::min_helper(std::forward<Ts>(args)...);}
+
+
+template <typename T>
+requires std::is_arithmetic_v<T>
+static constexpr T ABS(const T a){
+    return (a < 0) ? -a : a;
+}
 
 
 
 template <typename T>
 requires std::is_arithmetic_v<T>
-constexpr __fast_inline T STEP_TO(const T x,const T y, const T s){
+static constexpr T SIGN(const T a){
+    return (a < 0) ? T(-1) : T(1);
+}
+
+static constexpr bool IN_RANGE(auto x,auto a,auto b) {return((a < b) ? (x >= a && x < b) : (x < a && x >= b));}
+
+
+template <typename T, typename U>
+requires std::is_arithmetic_v<U>
+static constexpr T LERP(const T & a, const T & b, const U & x){
+    return T((U(U(1) - x) * a) + (x * b));
+}
+
+
+
+
+template <typename T, typename U, typename V>
+static constexpr T INVLERP(const U & _a, const V & _b, const T& t){
+    T a = static_cast<T>(_a);
+    T b = static_cast<T>(_b);
+    return (t - a) / (b - a);
+}
+
+
+
+static constexpr auto CLAMP(auto x,auto mi,auto ma){return details::__clamp_tmpl(x, mi, ma);}
+static constexpr auto CLAMP2(auto x, auto ma){ return details::__clamp_tmpl(x, -ma, ma);}
+
+
+template <typename T>
+requires std::is_arithmetic_v<T>
+constexpr T STEP_TO(const T x,const T y, const T s){
     T err = y-x;
     if(err > s){
         return x + s;
@@ -241,7 +155,7 @@ constexpr __fast_inline T STEP_TO(const T x,const T y, const T s){
 
 
 template<typename T>
-constexpr __fast_inline T LSHIFT(const T x, const int s){
+constexpr T LSHIFT(const T x, const int s){
     if (s >= 0){
         return x << s;
     }else{
@@ -251,7 +165,7 @@ constexpr __fast_inline T LSHIFT(const T x, const int s){
 
 
 template<typename T>
-constexpr __fast_inline T RSHIFT(const T x, const int s){
+constexpr T RSHIFT(const T x, const int s){
     if (s >= 0){
         return x >> s;
     }else{
@@ -269,71 +183,14 @@ constexpr __fast_inline T RSHIFT(const T x, const int s){
 
 
 #ifndef CTZ
-#ifdef __cplusplus
-#define CTZ(x) __ymd_ctz_impl(x)
-[[nodiscard]] __fast_inline static constexpr uint32_t __ymd_ctz_impl(uint32_t x) {
-    // under both the University of Illinois "BSD-Like" license and the MIT license
-    //https://github.com/microsoft/compiler-rt/blob/master/lib/builtins/ctzsi2.c
-
-    int32_t t = ((x & 0x0000FFFF) == 0) << 4;  /* if (x has no small bits) t = 16 else 0 */
-    x >>= t;           /* x = [0 - 0xFFFF] + higher garbage bits */
-    uint32_t r = t;       /* r = [0, 16]  */
-    /* return r + ctz(x) */
-    t = ((x & 0x00FF) == 0) << 3;
-    x >>= t;           /* x = [0 - 0xFF] + higher garbage bits */
-    r += t;            /* r = [0, 8, 16, 24] */
-    /* return r + ctz(x) */
-    t = ((x & 0x0F) == 0) << 2;
-    x >>= t;           /* x = [0 - 0xF] + higher garbage bits */
-    r += t;            /* r = [0, 4, 8, 12, 16, 20, 24, 28] */
-    /* return r + ctz(x) */
-    t = ((x & 0x3) == 0) << 1;
-    x >>= t;
-    x &= 3;            /* x = [0 - 3] */
-    r += t;            /* r = [0 - 30] and is even */
-
-    return r + ((2 - (x >> 1)) & -((x & 1) == 0));
-}
-
-#else
 #define CTZ(x) __builtin_ctz((size_t)(x))
 #endif
-#endif
+
 
 #ifndef CLZ
-#ifdef __cplusplus
-#define CLZ(x) __ymd_clz_impl(x)
-
-[[nodiscard]] __fast_inline static constexpr uint32_t  __ymd_clz_impl(uint32_t x){
-    // under both the University of Illinois "BSD-Like" license and the MIT license
-    // https://github.com/m-labs/compiler-rt-lm32/blob/master/lib/clzsi2.c
-
-    int32_t t = ((x & 0xFFFF0000) == 0) << 4;  /* if (x is small) t = 16 else 0 */
-    x >>= 16 - t;      /* x = [0 - 0xFFFF] */
-    uint32_t r = t;       /* r = [0, 16] */
-    /* return r + clz(x) */
-    t = ((x & 0xFF00) == 0) << 3;
-    x >>= 8 - t;       /* x = [0 - 0xFF] */
-    r += t;            /* r = [0, 8, 16, 24] */
-    /* return r + clz(x) */
-    t = ((x & 0xF0) == 0) << 2;
-    x >>= 4 - t;       /* x = [0 - 0xF] */
-    r += t;            /* r = [0, 4, 8, 12, 16, 20, 24, 28] */
-    /* return r + clz(x) */
-    t = ((x & 0xC) == 0) << 1;
-    x >>= 2 - t;       /* x = [0 - 3] */
-    r += t;            /* r = [0 - 30] and is even */
-
-    return r + ((2 - x) & -((x & 2) == 0));
-}
-
-#else
 #define CLZ(x) __builtin_clz(((size_t)(x)) << (PLAT_WIDTH - BITS(x)))
 #endif
-#endif
 
-static constexpr auto BITS(auto x) {return (sizeof(x) * 8);}
-static consteval auto PLAT_WIDTH() {return BITS(std::size_t());}
 
 static constexpr double DEG2RAD_RATIO = (TAU / 360);
 static constexpr double RAD2DEG_RATIO = (360 / TAU);
@@ -371,3 +228,5 @@ static constexpr uint8_t BUILT_MINUTE = []{
 static constexpr uint8_t BUILT_SECOND = []{
     return((__TIME__[6]-'0') * 10 + __TIME__[7]-'0');
 }();
+
+}

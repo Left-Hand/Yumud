@@ -7,30 +7,30 @@ using namespace ymd::hal;
 
 
 namespace {
-static constexpr uint8_t _calc_dma_nth(const void * inst){
+static constexpr uint8_t _calc_dma_nth(const uint32_t inst_base){
     #ifdef DMA2_PRESENT
-    return inst < DMA2_Channel1 ? 1 : 2;
+    return inst_base < DMA2_Channel1_BASE ? 1 : 2;
     #else
     return 1;
     #endif
 }
 
-static constexpr uint8_t _calc_ch_sel_nth(const void * inst){
-    uint8_t dma_nth = _calc_dma_nth(inst);
+static constexpr uint8_t _calc_ch_sel_nth(const uint32_t inst_base){
+    uint8_t dma_nth = _calc_dma_nth(inst_base);
     switch(dma_nth){
         #ifdef DMA1_PRESENT
         case 1:
-            return (reinterpret_cast<uint32_t>(inst) - DMA1_Channel1_BASE) / 
+            return (reinterpret_cast<uint32_t>(inst_base) - DMA1_Channel1_BASE) / 
                 (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
         #endif
 
         #ifdef DMA2_PRESENT
         case 2:
-            if(reinterpret_cast<uint32_t>(inst) < DMA2_Channel7_BASE){ 
-                return ((reinterpret_cast<uint32_t>(inst) - DMA2_Channel1_BASE) / 
+            if(reinterpret_cast<uint32_t>(inst_base) < DMA2_Channel7_BASE){ 
+                return ((reinterpret_cast<uint32_t>(inst_base) - DMA2_Channel1_BASE) / 
                     (DMA2_Channel2_BASE - DMA2_Channel1_BASE)) + 1;
             }else{
-                return ((reinterpret_cast<uint32_t>(inst) - DMA2_Channel7_BASE) / 
+                return ((reinterpret_cast<uint32_t>(inst_base) - DMA2_Channel7_BASE) / 
                     (DMA2_Channel8_BASE - DMA2_Channel7_BASE)) + 7;
             }
         #endif
@@ -39,20 +39,21 @@ static constexpr uint8_t _calc_ch_sel_nth(const void * inst){
     __builtin_trap();
 }
 
-static constexpr uint32_t _calc_done_mask(const void * inst){
-    uint8_t dma_nth = _calc_dma_nth(inst);
-    uint8_t ch_sel_nth = _calc_ch_sel_nth(inst);
+
+static constexpr uint32_t _calc_done_mask(const uint32_t inst_base){
+    uint8_t dma_nth = _calc_dma_nth(inst_base);
+    uint8_t ch_sel_nth = _calc_ch_sel_nth(inst_base);
     switch(dma_nth){
         #ifdef DMA1_PRESENT
         case 1:
-            return (DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (ch_sel_nth - 1)));
+            return (DMA1_IT_TC1 << ((__builtin_ctz(DMA1_IT_TC2) - __builtin_ctz(DMA1_IT_TC1)) * (ch_sel_nth - 1)));
         #endif
         #ifdef DMA2_PRESENT
         case 2:
-            if(reinterpret_cast<uint32_t>(inst) <= DMA2_Channel7_BASE){ 
-                return ((uint32_t)(DMA2_IT_TC1 & 0xff) << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (ch_sel_nth - 1))) | (uint32_t)(0x10000000);
+            if(reinterpret_cast<uint32_t>(inst_base) <= DMA2_Channel7_BASE){ 
+                return ((uint32_t)(DMA2_IT_TC1 & 0xff) << ((__builtin_ctz(DMA2_IT_TC2) - __builtin_ctz(DMA2_IT_TC1)) * (ch_sel_nth - 1))) | (uint32_t)(0x10000000);
             }else{
-                return ((uint32_t)(DMA2_IT_TC8 & 0xff) << ((CTZ(DMA2_IT_TC9) - CTZ(DMA2_IT_TC8)) * (ch_sel_nth - 8))) | (uint32_t)(0x20000000);
+                return ((uint32_t)(DMA2_IT_TC8 & 0xff) << ((__builtin_ctz(DMA2_IT_TC9) - __builtin_ctz(DMA2_IT_TC8)) * (ch_sel_nth - 8))) | (uint32_t)(0x20000000);
             }
         #endif
         default:
@@ -61,20 +62,24 @@ static constexpr uint32_t _calc_done_mask(const void * inst){
     __builtin_trap();
 }
 
-static constexpr uint32_t _calc_half_mask(const void * inst){
-    uint8_t dma_nth = _calc_dma_nth(inst);
-    uint8_t ch_sel_nth = _calc_ch_sel_nth(inst);
+static constexpr uint32_t _calc_half_mask(const uint32_t inst_base){
+    uint8_t dma_nth = _calc_dma_nth(inst_base);
+    uint8_t ch_sel_nth = _calc_ch_sel_nth(inst_base);
     switch(dma_nth){
         #ifdef DMA1_PRESENT
-        case 1:
-            return (DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (ch_sel_nth - 1)));
+        case 1:{
+            constexpr auto EVERY_SHIFT = (__builtin_ctz(DMA1_IT_HT2) - __builtin_ctz(DMA1_IT_HT1));
+            return (DMA1_IT_HT1 << (EVERY_SHIFT * (ch_sel_nth - 1)));
+        }
         #endif
         #ifdef DMA2_PRESENT
         case 2:
-            if(reinterpret_cast<uint32_t>(inst) <= DMA2_Channel7_BASE){ 
-                return ((uint32_t)(DMA2_IT_HT1 & 0xff) << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (ch_sel_nth - 1))) | (uint32_t)(0x10000000);
+            if(reinterpret_cast<uint32_t>(inst_base) <= DMA2_Channel7_BASE){ 
+                constexpr auto EVERY_SHIFT = ((__builtin_ctz(DMA2_IT_HT2) - __builtin_ctz(DMA2_IT_HT1)));
+                return ((uint32_t)(DMA2_IT_HT1 & 0xff) << (EVERY_SHIFT * (ch_sel_nth - 1))) | (uint32_t)(0x10000000);
             }else{
-                return ((uint32_t)(DMA2_IT_HT8 & 0xff) << ((CTZ(DMA2_IT_HT9) - CTZ(DMA2_IT_HT8)) * (ch_sel_nth - 8))) | (uint32_t)(0x20000000);
+                constexpr auto EVERY_SHIFT = ((__builtin_ctz(DMA2_IT_HT9) - __builtin_ctz(DMA2_IT_HT8)));
+                return ((uint32_t)(DMA2_IT_HT8 & 0xff) << (EVERY_SHIFT * (ch_sel_nth - 8))) | (uint32_t)(0x20000000);
             }
         #endif
         default:
@@ -82,6 +87,20 @@ static constexpr uint32_t _calc_half_mask(const void * inst){
     }
     __builtin_trap();
 }
+
+void _enable_rcc(const uint32_t inst_base, Enable en){
+    #ifdef DMA2_PRESENT
+    if(inst_base < DMA2_Channel1_BASE){
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en == EN);
+    }else{
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, en == EN);
+    }
+
+    #else
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en == EN);
+    #endif
+}
+
 }
 
 #if 0
@@ -158,7 +177,7 @@ static constexpr IRQn dma_to_irqn(const uint8_t dma_nth, const uint8_t ch_sel_nt
 template<typename T, typename Fn>
 static inline void modify_reg(volatile T* reg, Fn&& fn) {
     static_assert(std::is_trivially_copyable_v<T>, 
-                  "T must be trivially copyable for register operations");
+        "T must be trivially copyable for register operations");
     
     // 读取并转换
     T temp = std::bit_cast<T>(*const_cast<const T*>(reg));
@@ -174,22 +193,13 @@ static inline void modify_reg(volatile T* reg, Fn&& fn) {
 
 DmaChannel::DmaChannel(void * inst):
     inst_(inst), 
-    done_mask_(_calc_done_mask(inst)),
-    half_mask_(_calc_half_mask(inst)),
-    dma_nth_(_calc_dma_nth(inst)),
-    ch_sel_nth_(_calc_ch_sel_nth(inst)){;}
+    done_mask_(_calc_done_mask(reinterpret_cast<uint32_t>(inst))),
+    half_mask_(_calc_half_mask(reinterpret_cast<uint32_t>(inst))),
+    dma_nth_(_calc_dma_nth(reinterpret_cast<uint32_t>(inst))),
+    ch_sel_nth_(_calc_ch_sel_nth(reinterpret_cast<uint32_t>(inst))){;}
     
 void DmaChannel::enable_rcc(Enable en){
-    #ifdef DMA2_PRESENT
-    if(inst_ < DMA2_Channel1){
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en == EN);
-    }else{
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, en == EN);
-    }
-
-    #else
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en == EN);
-    #endif
+    _enable_rcc(reinterpret_cast<uint32_t>(inst_), en);
 }
 
 

@@ -54,25 +54,14 @@ struct QMC5883L_Prelude{
 struct QMC5883L_Regs:public QMC5883L_Prelude{
 
 
-    struct MagXReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::MagX;
-        int16_t bits;
+    struct NestedXyz{
+        int16_t x;
+        int16_t y;
+        int16_t z;
     };
 
-    struct MagYReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::MagY;
-
-        int16_t bits;
-    };
-
-    struct MagZReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::MagZ;
-
-        int16_t bits;
-    };
-
-    struct StatusReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Status;
+    struct R8_Status:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::Status;
 
         uint8_t ready:1;
         uint8_t ovl:1;
@@ -80,22 +69,22 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
         uint8_t __resv__:5;
     };
 
-    struct TemperatureReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Tempature;
+    struct R16_Temperature:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::Tempature;
 
         uint16_t bits;
     };
 
-    struct ConfigAReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ConfigA;
+    struct R8_ConfigA:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::ConfigA;
         uint8_t measure_mode:2;
         Odr odr:2;
         FullScale fs:2;
         OverSampleRatio ovs_ratio:2;
     };
 
-    struct ConfigBReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ConfigB;
+    struct R8_ConfigB:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::ConfigB;
 
         uint8_t int_en:1;
         uint8_t __resv__:5;
@@ -104,28 +93,25 @@ struct QMC5883L_Regs:public QMC5883L_Prelude{
         
     };
 
-    struct ResetPeriodReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ResetPeriod;
+    struct R8_ResetPeriod:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::ResetPeriod;
 
         uint8_t bits;
     };
 
-    struct ChipIdReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ChipID;
+    struct R8_ChipId:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::ChipID;
 
         uint8_t bits;
     };
 
-
-    MagXReg mag_x_reg;
-    MagYReg mag_y_reg;
-    MagZReg mag_z_reg;
-    StatusReg status_reg;
-    TemperatureReg temperature_reg;
-    ConfigAReg config_a_reg;
-    ConfigBReg config_b_reg;
-    ResetPeriodReg reset_period_reg;
-    ChipIdReg chip_id_reg;
+    NestedXyz xyz;
+    R8_Status status_reg;
+    R16_Temperature temperature_reg;
+    R8_ConfigA config_a_reg;
+    R8_ConfigB config_b_reg;
+    R8_ResetPeriod reset_period_reg;
+    R8_ChipId chip_id_reg;
 
 };
 

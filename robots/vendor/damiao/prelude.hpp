@@ -26,7 +26,7 @@ enum class [[nodiscard]] MotorKind : uint8_t {
     DMG6220 = 12,
 };
 
-enum class [[nodiscard]] RID : uint8_t {
+enum class [[nodiscard]] RegAddr : uint8_t {
     UV_Value = 0,
     KT_Value = 1,
     OT_Value = 2,
@@ -75,6 +75,38 @@ enum class [[nodiscard]] RID : uint8_t {
     COUNT = 82
 };
 
+
+struct [[nodiscard]] Status{
+
+    enum class [[nodiscard]] Kind:uint8_t{
+        // 0——失能；
+        // 1——使能；
+        // 8——超压；
+        // 9——欠压；
+        // A——过电流；
+        // B——MOS 过温；
+        // C——电机线圈过温；
+        // D——通讯丢失；
+        // E——过载；
+
+
+        Disabled  = 0x0,
+        Enabled = 0x01,
+        OverVoltage = 0x08,
+        UnderVoltage = 0x09,
+        OverCurrent = 0x0a,
+        MosOverTemp = 0x0b,
+        CoilOverTemp = 0x0c,
+        LostCommunication = 0x0d,
+        Overload = 0x0e
+    };
+
+    constexpr Status(const Kind kind):
+        kind_(kind){}
+private:
+    Kind kind_;
+};
+
 // Limit parameters structure for different motor types
 struct LimitParam {
     Angular<uq16> x1_limit;  // Position limit (rad)
@@ -110,21 +142,4 @@ DEF_DAMIAO_MOTOR_LIMIT_TABLE(MotorKind::DMG6220,        12.5, 45, 10)
 #undef DEF_DAMIAO_MOTOR_LIMIT_TABLE
 }
 
-
-namespace msgs{
-struct ParamResult {
-    int rid;
-    iq16 value;
-    bool valid;
-};
-
-struct StateResult {
-    iq16 x1;
-    iq16 x2;
-    iq16 torque;
-    int t_mos;
-    int t_rotor;
-    bool valid;
-};
-}
 }

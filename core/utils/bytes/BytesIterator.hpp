@@ -10,7 +10,7 @@
 namespace ymd{
 
 template<typename T, typename Fn1, typename Fn2, typename Fn3>
-[[nodiscard]] __fast_inline
+[[nodiscard]] 
 auto iterate_bytes(std::span<T> pbuf, std::endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){
     using Byte = std::conditional_t<std::is_const_v<T>, const uint8_t, uint8_t>;
     constexpr size_t dsize = sizeof(T);
@@ -40,7 +40,7 @@ auto iterate_bytes(std::span<T> pbuf, std::endian endian, Fn1 && do_fn, Fn2 && c
 }
 
 template<typename T, typename Fn1, typename Fn2, typename Fn3>
-[[nodiscard]] __fast_inline
+[[nodiscard]] 
 auto iterate_bytes(T & data, size_t len, std::endian endian, Fn1 && do_fn, Fn2 && check_fn, Fn3 && ok_fn){
     using Byte = std::conditional_t<std::is_const_v<T>, const uint8_t, uint8_t>;
     constexpr size_t dsize = sizeof(T);

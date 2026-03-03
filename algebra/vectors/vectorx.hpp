@@ -83,7 +83,7 @@ public:
         VectorX result;
         for (size_t i = 0; i < N; ++i) {
             if constexpr (std::is_integral_v<T>){
-                result[i] = CLAMP(
+                result[i] = std::clamp(
                     int(sto_[i] - other[i]), 
                     int(std::numeric_limits<T>::min()), 
                     int(std::numeric_limits<T>::max())
@@ -103,7 +103,7 @@ public:
         VectorX result;
         for (size_t i = 0; i < size(); ++i) {
             if constexpr(std::is_integral<T>::value) {
-                result[i] = CLAMP(
+                result[i] = std::clamp(
                     int(sto_[i] + other[i]), 
                     int(std::numeric_limits<T>::min()), 
                     int(std::numeric_limits<T>::max())

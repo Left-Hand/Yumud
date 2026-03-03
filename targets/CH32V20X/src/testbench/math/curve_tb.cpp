@@ -9,12 +9,9 @@
 
 #include "hal/bus/uart/hw_singleton.hpp"
 #include "algo/interpolation/Polynomial.hpp"
-// #include "algo/interpolation/Linear.hpp"
 #include "algebra/vectors/vec2.hpp"
 #include "algebra/vectors/vec3.hpp"
 
-#include "robots/curve/CurveConcept_t.hpp"
-#include "robots/curve/CurveTrapezoid_t.hpp"
 
 #include "core/math/realmath.hpp"
 

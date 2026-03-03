@@ -127,23 +127,23 @@ struct ADS112C04_Prelude{
 
 struct ADS112C04_Regs:public ADS112C04_Prelude{
     struct R8_Config0:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0;
+        static constexpr RegAddr REG_ADDR = 0;
         uint8_t pga_bypass:1;
         Gain gain:3;
         Mux mux:4;
     }DEF_R8(config0_reg)
 
     struct R8_Config1:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 1;
+        static constexpr RegAddr REG_ADDR = 1;
         uint8_t temp_sensor_mode:1;
         Vref vref:2;
         uint8_t cont_mode:1;
         uint8_t turbo_mode:1;
-        DataRate data_rate:3;
+        DataRate datarate:3;
     }DEF_R8(config1_reg)
 
     struct R8_Config2:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 2;
+        static constexpr RegAddr REG_ADDR = 2;
         IDAC idac:3;
         uint8_t current_sense_en:1;
         CrcType crc_type:2;
@@ -152,7 +152,7 @@ struct ADS112C04_Regs:public ADS112C04_Prelude{
     }DEF_R8(config2_reg)
 
     struct R8_Config3:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 3;
+        static constexpr RegAddr REG_ADDR = 3;
         uint8_t __resv__:2;
         IDAC1_MUX idac1_mux:3;
         IDAC2_MUX idac2_mux:3;

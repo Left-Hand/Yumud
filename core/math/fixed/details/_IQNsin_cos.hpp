@@ -12,13 +12,6 @@
 
 namespace ymd::fxmath::details{
 
-/**
- * @brief Computes the sine of an UIQ31 input.
- *
- * @param uiq31Input      UIQ31 type input.
- *
- * @return                UIQ31 type result of sine.
- */
 /*
  * Perform the calculation where the input is only in the first quadrant
  * using one of the following two functions.
@@ -297,5 +290,144 @@ constexpr SincosIntermediate __IQNgetCosSinPU(uint32_t uq32_x_pu_bits){
     };
 }
 
+
+}
+
+namespace ymd::math{
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+math::fixed<31, int32_t> sin(const math::fixed<Q, D> x){
+    return fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
+        .exact_sin(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+math::fixed<31, int32_t> cos(const math::fixed<Q, D> x){
+    return fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
+        .exact_cos(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+math::fixed<31, int32_t> sin_approx(const math::fixed<Q, D> x){
+    return fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
+        .exact_sin(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+math::fixed<31, int32_t> cos_approx(const math::fixed<Q, D> x){
+    return fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
+        .exact_cos(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+}
+
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+math::fixed<31, int32_t> sinpu(const math::fixed<Q, D> x){
+    return fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
+        .exact_sin(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+math::fixed<31, int32_t> cospu(const math::fixed<Q, D> x){
+    return fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
+        .exact_cos(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+math::fixed<31, int32_t> sinpu_approx(const math::fixed<Q, D> x){
+    return fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
+        .exact_sin(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+math::fixed<31, int32_t> cospu_approx(const math::fixed<Q, D> x){
+    return fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
+        .exact_cos(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+}
+
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+std::array<math::fixed<31, int32_t>, 2> sincos(const math::fixed<Q, D> x){
+    const auto res = fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
+        .exact_sincos(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+    return {res.sin, res.cos};
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+std::array<math::fixed<31, int32_t>, 2> sincospu(const math::fixed<Q, D> x){
+    const auto res = fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
+        .exact_sincos(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+    return {res.sin, res.cos};
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+std::array<math::fixed<31, int32_t>, 2> sincospu_approx(const math::fixed<Q, D> x){
+    const auto res = fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
+        .exact_sincos(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+    return {res.sin, res.cos};
+}
+
+template<size_t Q, typename D>
+requires (sizeof(D) == 4)
+__attribute__((always_inline)) constexpr 
+std::array<math::fixed<31, int32_t>, 2> sincos_approx(const math::fixed<Q, D> x){
+    const auto res = fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
+        .exact_sincos(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+    return {res.sin, res.cos};
+}
+
+template<size_t Q, typename D>
+__attribute__((always_inline)) constexpr 
+fixed<16, int32_t> tan(const fixed<Q, D> x) {
+    const auto [s, c] = sincos(x);
+    return iq16(s) / iq16(c);
+}
+
+
+template<size_t Q, typename D>
+__attribute__((always_inline)) constexpr 
+fixed<16, int32_t> tanpu(const fixed<Q, D> x) {
+    const auto [s, c] = sincospu(x);
+    return iq16(s) / iq16(c);
+}
+
+
+//为了避免计算tan的倒数时调用了两次除法 提供cot函数
+template<size_t Q, typename D>
+__attribute__((always_inline)) constexpr 
+fixed<16, int32_t> cot(const fixed<Q, D> x) {
+    const auto [s, c] = sincos(x);
+    return iq16(c) / iq16(s);
+}
+
+
+
+//为了避免计算tan的倒数时调用了两次除法 提供cot函数
+template<size_t Q, typename D>
+__attribute__((always_inline)) constexpr 
+fixed<16, int32_t> cotpu(const fixed<Q, D> x) {
+    const auto [s, c] = sincospu(x);
+    return iq16(c) / iq16(s);
+}
 
 }

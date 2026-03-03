@@ -64,6 +64,7 @@ static constexpr Matrix3x3<T> quat_to_mat3x3(const auto q){
 template <arithmetic T>
 
 struct [[nodiscard]] Quat{
+    static_assert(std::is_integral_v<T> == false, "Quat can't be integral");
     using Self = Quat;
 
     T x;
@@ -232,8 +233,13 @@ struct [[nodiscard]] Quat{
     }
 
     [[nodiscard]]
+    constexpr T length() const {
+        return T(math::mag(x, y, z, w));
+    }
+
+    [[nodiscard]]
     constexpr T inv_length() const {
-        return T(math::inv_sqrt(x * x + y * y + z * z + w * w));
+        return T(math::inv_mag(x, y, z, w));
     }
 
     constexpr void operator*=(const Quat<T> &p_q) {
@@ -261,11 +267,6 @@ struct [[nodiscard]] Quat{
     [[nodiscard]]
     constexpr bool is_equal_approx(const Quat<T> & other) const {
         return is_equal_approx(x, other.x) && is_equal_approx(y, other.y) && is_equal_approx(z, other.z) && is_equal_approx(w, other.w);
-    }
-
-    [[nodiscard]]
-    constexpr T length() const {
-        return sqrt(length_squared());
     }
 
     [[nodiscard]]

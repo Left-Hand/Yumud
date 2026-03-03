@@ -5,21 +5,6 @@
 
 namespace ymd::fxmath::details{
 
-/**
- * @brief Computes the exponential of an IQN input.
- *
- * @param iqNInput          IQN type input.
- * @param iqNLookupTable    Integer result lookup table.
- * @param ui8IntegerOffset  Integer portion offset
- * @param iqN_MIN           Minimum parameter value.
- * @param iqN_MAX           Maximum parameter value.
- * @param Q           IQ format.
- *
- *
- * @return                  IQN type result of exponential.
- */
-
-
 struct alignas(8) [[nodiscard]] ExpIntermediate final{
 
     uint32_t uiq32Fractional;

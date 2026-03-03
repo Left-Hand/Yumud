@@ -2,7 +2,7 @@
 
 #include "hal/bus/spi/spidrv.hpp"
 
-#include "drivers/Encoder/MagEncoder.hpp"
+#include "drivers/Encoder/encoder.hpp"
 #include "core/io/regs.hpp"
 
 namespace ymd::drivers{
@@ -18,7 +18,7 @@ struct AS5047_Regs:public AS5047_Prelude{
 
     // static constexpr RegAddr MAG_ENC_REG_ADDR = 0x3FF;
     struct ErrflReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x001;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x001};
         uint8_t frame_error:1;
         uint8_t invalid_cmd_error:1;
         uint8_t parity_error:1;
@@ -26,7 +26,7 @@ struct AS5047_Regs:public AS5047_Prelude{
     };
 
     struct ProgReg:public Reg8<>{
-        static constexpr RegAddr ADDRESS = 0x002;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x002};
 
         uint8_t prog_otp_en:1;
         uint8_t otp_reflash:1;

@@ -50,9 +50,12 @@ void AdcPrimary::set_injected_channels(
                 static_cast<uint8_t>(injected_cfg.cycles));
 
             ADC_SetInjectedOffset(
-                SDK_INST(inst_), ADC_InjectedChannel_1 + 
-                (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data_, 0)); 
+                SDK_INST(inst_), 
+                ADC_InjectedChannel_1 + (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),
+                
                 // offset can`t be negative
+                static_cast<uint16_t>(std::max<int>(cali_data_, 0))
+            ); 
             adc::details::install_pin(injected_cfg.sel);
 
             if(i > 4) break;
@@ -103,7 +106,7 @@ void AdcPrimary::init(
 
     if(temp_verf_activation) enable_temp_vref(EN);
 
-    if(MAX(injected_list.size(), regular_list.size()) > 1){
+    if(std::max(injected_list.size(), regular_list.size()) > 1){
         enable_scan(EN);  
     }else{
         enable_singleshot(EN);
@@ -179,8 +182,8 @@ void AdcPrimary::set_injected_trigger(const InjectedTrigger trigger){
 }
 
 void AdcPrimary::set_wdt_threshold(const uint16_t low,const uint16_t high){
-    SDK_INST(inst_)->WDHTR = CLAMP(low, 0, get_max_value());
-    SDK_INST(inst_)->WDLTR = CLAMP(high, 0, get_max_value());
+    SDK_INST(inst_)->WDLTR = std::clamp<uint32_t>(low, 0u, get_max_value());
+    SDK_INST(inst_)->WDHTR = std::clamp<uint32_t>(high, 0u, get_max_value());
 }
 
 

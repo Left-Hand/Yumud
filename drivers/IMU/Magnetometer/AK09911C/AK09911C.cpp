@@ -61,7 +61,7 @@ IResult<> Self::init(){
 IResult<> Self::update(){
     std::array<int16_t, 3> buf;
     if(const auto res = read_burst(
-        regs_.mag_x_reg.ADDRESS, std::span(buf));
+        regs_.mag_x_reg.REG_ADDR, std::span(buf));
         res.is_err()) return res;
 
     regs_.mag_x_reg.bits = (buf[0]);
@@ -110,7 +110,7 @@ IResult<> Self::blocking_update(){
     std::array<int16_t, 3> mag_vec_buf;
 
     if(const auto res = read_burst(
-        regs_.mag_x_reg.ADDRESS, 
+        regs_.mag_x_reg.REG_ADDR, 
         std::span(mag_vec_buf)
     );
         res.is_err()) return res;

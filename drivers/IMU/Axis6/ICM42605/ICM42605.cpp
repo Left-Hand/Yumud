@@ -1,30 +1,5 @@
 #include "ICM42605.hpp"
 
-static constexpr uint8_t ICM42605_DEVICE_CONFIG = 0x11;
-static constexpr uint8_t ICM42605_DRIVE_CONFIG = 0x13;
-static constexpr uint8_t ICM42605_ACC_DATA_X1 = 0x1F;
-static constexpr uint8_t ICM42605_ACC_DATA_X0 = 0x20;
-static constexpr uint8_t ICM42605_ACC_DATA_Y1 = 0x21;
-static constexpr uint8_t ICM42605_ACC_DATA_Y0 = 0x22;
-static constexpr uint8_t ICM42605_ACC_DATA_Z1 = 0x23;
-static constexpr uint8_t ICM42605_ACC_DATA_Z0 = 0x24;
-static constexpr uint8_t ICM42605_GYR_DATA_X1 = 0x25;
-static constexpr uint8_t ICM42605_GYR_DATA_X0 = 0x26;
-static constexpr uint8_t ICM42605_GYR_DATA_Y1 = 0x27;
-static constexpr uint8_t ICM42605_GYR_DATA_Y0 = 0x28;
-static constexpr uint8_t ICM42605_GYR_DATA_Z1 = 0x29;
-static constexpr uint8_t ICM42605_GYR_DATA_Z0 = 0x2A;
-static constexpr uint8_t ICM42605_TEMP_DATA1 = 0x1D;
-static constexpr uint8_t ICM42605_TEMP_DATA0 = 0x1E;
-static constexpr uint8_t ICM42605_PWR_MGMT0 = 0x4E;
-static constexpr uint8_t ICM42605_GYR_CONFIG0 = 0x4F;
-static constexpr uint8_t ICM42605_ACC_CONFIG0 = 0x50;
-static constexpr uint8_t ICM42605_GYR_CONFIG1 = 0x51;
-static constexpr uint8_t ICM42605_GYR_ACC_CONFIG0 = 0x52;
-static constexpr uint8_t ICM42605_ACC_CONFIG1 = 0x53;
-static constexpr uint8_t ICM42605_WHO_AM_I = 0x75;
-static constexpr uint8_t ICM42605_BANK_SEL = 0x76;
-static constexpr uint8_t ICM42605_INTF_CONFIG4 = 0x7A;
 
 static constexpr uint8_t ICM_MODE_ACC                        = (1<<0);
 static constexpr uint8_t ICM_MODE_GYR                        = (1<<1);
@@ -40,19 +15,19 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 IResult<> ICM42605::init() {
-    if(const auto res = write_reg(ICM42605_BANK_SEL, 0);
+    if(const auto res = write_reg(RegAddr::BANK_SEL, 0);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = write_reg(ICM42605_BANK_SEL, 1);
+    if(const auto res = write_reg(RegAddr::BANK_SEL, 1);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = write_reg(ICM42605_INTF_CONFIG4, 0x02);
+    if(const auto res = write_reg(RegAddr::INTF_CONFIG4, 0x02);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = write_reg(ICM42605_BANK_SEL, 0);
+    if(const auto res = write_reg(RegAddr::BANK_SEL, 0);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = write_reg(ICM42605_GYR_CONFIG0, 0b00000110);
+    if(const auto res = write_reg(RegAddr::GYR_CONFIG0, 0b00000110);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = write_reg(ICM42605_ACC_CONFIG0, 0b00000011);
+    if(const auto res = write_reg(RegAddr::ACC_CONFIG0, 0b00000011);
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = write_reg(ICM42605_PWR_MGMT0, 0b00011111);
+    if(const auto res = write_reg(RegAddr::PWR_MGMT0, 0b00011111);
         res.is_err()) return Err(res.unwrap_err());
 
     return Ok();
@@ -62,10 +37,10 @@ IResult<> ICM42605::validate(){
     static constexpr uint8_t VALID_WHO_AM_I = 0;
     TODO();
 
-    if(const auto res = write_reg(ICM42605_BANK_SEL, 0);
+    if(const auto res = write_reg(RegAddr::BANK_SEL, 0);
         res.is_err()) return Err(res.unwrap_err());
     uint8_t id = 0;
-    if(const auto res = read_reg(ICM42605_WHO_AM_I, id);
+    if(const auto res = read_reg(RegAddr::WHO_AM_I, id);
         res.is_err()) return Err(res.unwrap_err());
 
     if(id != VALID_WHO_AM_I) return Err(Error::InvalidChipId);

@@ -112,7 +112,7 @@ IResult<uint8_t> Self::get_touch_count() {
 
 IResult<Self::TouchPoints> Self::get_touch_points(){
     std::array<uint8_t, 9> buf;
-    if(const auto res = read_burst(regs_.td_status.ADDRESS, std::span(buf));
+    if(const auto res = read_burst(regs_.td_status.REG_ADDR, std::span(buf));
         res.is_err()) return Err(res.unwrap_err());
     const uint8_t touch_cnt = buf[0] & 0x0f;
 

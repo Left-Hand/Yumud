@@ -2,6 +2,7 @@
 
 #include "core/utils/hash_func.hpp"
 #include "core/utils/option.hpp"
+#include <cstring>
 
 namespace ymd{
 

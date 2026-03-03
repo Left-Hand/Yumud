@@ -64,26 +64,30 @@ IResult<> DRV8301::enable_pwm3(const Enable en){
     return write_reg(reg);
 }
 
+namespace {
 struct Packet{
     uint16_t data:11;
-    uint16_t addr:4;
+    uint16_t reg_addr:4;
     uint16_t is_write:1;
 
-    operator uint16_t() const{
+    [[nodiscard]] constexpr uint16_t to_bits() const {
         return std::bit_cast<uint16_t>(*this);
     }
 
-    operator uint16_t &(){
+    [[nodiscard]] uint16_t & as_bits_mut(){
         return *reinterpret_cast<uint16_t *>(this);
     }
 };
+}
+
+
 
 static_assert(sizeof(Packet) == 2);
 
-IResult<> DRV8301::_write_reg(const RegAddr addr, const uint16_t data){
+IResult<> DRV8301::_write_reg(const RegAddr reg_addr, const uint16_t reg_val){
     const Packet payload = {
-        .data = data,
-        .addr = uint16_t(addr),
+        .data = reg_val,
+        .reg_addr = uint16_t(reg_addr),
         .is_write = 0
     };
 
@@ -92,19 +96,19 @@ IResult<> DRV8301::_write_reg(const RegAddr addr, const uint16_t data){
     return Ok();
 }
 
-IResult<> DRV8301::_read_reg(const RegAddr addr, uint16_t & data){
+IResult<> DRV8301::_read_reg(const RegAddr reg_addr, uint16_t & reg_val){
     Packet tx = {
         .data = 0,
-        .addr = uint16_t(addr),
+        .reg_addr = uint16_t(reg_addr),
         .is_write = 1
     };
 
     Packet rx;
     if(const auto res = spi_drv_.transceive_single<uint16_t>(
-        rx.operator uint16_t &(), tx.operator uint16_t()
+        rx.as_bits_mut(), tx.to_bits()
     );  res.is_err()) return Err(res.unwrap_err());
 
-    data = rx.data;
+    reg_val = rx.data;
 
     return Ok();
 }

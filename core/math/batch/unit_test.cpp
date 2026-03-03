@@ -1,5 +1,6 @@
 #include "accmulation_builder.hpp"
 
+using namespace ymd;
 using namespace ymd::math;
 namespace{
 [[maybe_unused]] void test1(){

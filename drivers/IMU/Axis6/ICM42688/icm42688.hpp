@@ -59,7 +59,7 @@ private:
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        if(const auto res = transport_.write_reg(T::ADDRESS, reg.to_bits());
+        if(const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return res;
         reg.apply();
         return Ok();
@@ -76,7 +76,7 @@ private:
     [[nodiscard]] IResult<> read_reg(T & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
-        return transport_.read_reg(T::ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());
     };
 
     [[nodiscard]] static constexpr iq16 calc_gyr_scale(const GyrFs fs){

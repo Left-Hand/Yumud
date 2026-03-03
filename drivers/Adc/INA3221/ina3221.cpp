@@ -1,6 +1,7 @@
 #include "ina3221.hpp"
 #include "core/debug/debug.hpp"
 
+using namespace ymd;
 using namespace ymd::drivers;
 
 #define INA3221_DEBUG_EN
@@ -124,8 +125,6 @@ IResult<> INA3221::enable_channel(const ChannelSelection sel, const Enable en){
         case ChannelSelection::CH3:
             reg.ch3_en = en == EN;
             break;
-        default:
-            __builtin_trap();
     }
     return write_reg(reg);
 }
@@ -206,9 +205,9 @@ IResult<iq16> INA3221::get_bus_volt(const ChannelSelection sel){
 IResult<> INA3221::set_instant_ovc_threshold(const ChannelSelection sel, const iq16 volt){
     const RegAddr addr = [&]{
         switch(sel){
-            case ChannelSelection::CH1: return instant_ovc1_reg.ADDRESS; 
-            case ChannelSelection::CH2: return instant_ovc1_reg.ADDRESS; 
-            case ChannelSelection::CH3: return instant_ovc1_reg.ADDRESS; 
+            case ChannelSelection::CH1: return instant_ovc1_reg.REG_ADDR; 
+            case ChannelSelection::CH2: return instant_ovc1_reg.REG_ADDR; 
+            case ChannelSelection::CH3: return instant_ovc1_reg.REG_ADDR; 
         }
         __builtin_trap();
     }();
@@ -220,9 +219,9 @@ IResult<> INA3221::set_instant_ovc_threshold(const ChannelSelection sel, const i
 IResult<> INA3221::set_constant_ovc_threshold(const ChannelSelection sel, const iq16 volt){
     const RegAddr addr = [&]{
         switch(sel){
-            case ChannelSelection::CH1: return constant_ovc1_reg.ADDRESS; 
-            case ChannelSelection::CH2: return constant_ovc1_reg.ADDRESS; 
-            case ChannelSelection::CH3: return constant_ovc1_reg.ADDRESS; 
+            case ChannelSelection::CH1: return constant_ovc1_reg.REG_ADDR; 
+            case ChannelSelection::CH2: return constant_ovc1_reg.REG_ADDR; 
+            case ChannelSelection::CH3: return constant_ovc1_reg.REG_ADDR; 
         }
         __builtin_trap();
     }();

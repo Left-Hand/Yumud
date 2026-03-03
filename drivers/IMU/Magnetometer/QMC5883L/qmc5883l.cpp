@@ -69,21 +69,21 @@ IResult<> QMC5883L::set_over_sample_ratio(const OverSampleRatio ratio){
 
 IResult<> QMC5883L::update(){
     std::array<int16_t, 3> buf;
-    if(const auto res = read_burst(regs_.mag_x_reg.ADDRESS, std::span(buf));
+    if(const auto res = read_burst(RegAddr::MagX, std::span(buf));
         res.is_err()) return res;
 
-    regs_.mag_x_reg.bits = buf[0];
-    regs_.mag_y_reg.bits = buf[1];
-    regs_.mag_z_reg.bits = buf[2];
+    regs_.xyz.x = buf[0];
+    regs_.xyz.y = buf[1];
+    regs_.xyz.z = buf[2];
 
     return Ok();
 }
 
 IResult<math::Vec3<iq16>> QMC5883L::read_mag(){
     return Ok{math::Vec3<iq16>{
-        iq16::from_bits(std::bit_cast<int16_t>(regs_.mag_x_reg.to_bits())) * scaler_,
-        iq16::from_bits(std::bit_cast<int16_t>(regs_.mag_y_reg.to_bits())) * scaler_,
-        iq16::from_bits(std::bit_cast<int16_t>(regs_.mag_z_reg.to_bits())) * scaler_
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.xyz.x)) * scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.xyz.y)) * scaler_,
+        iq16::from_bits(std::bit_cast<int16_t>(regs_.xyz.z)) * scaler_
     }};
 }
 

@@ -1,6 +1,7 @@
 #include <functional>
 #include <atomic>
 
+#include "core/math_defs.hpp"
 #include "core/math/fixed/fixed.hpp"
 #include "core/utils/scope_guard.hpp"
 #include "core/clock/clock.hpp"
@@ -180,7 +181,10 @@ static void _delay_us(const uint64_t num_us){
 }
 
 static void _delay_ns(const uint64_t num_ns) {
-    const uint64_t duration_ticks = _ticks_to_nanos(MAX(num_ns - NANO_TRIM, 0));
+    const uint64_t duration_ticks = [&] -> uint64_t{
+        if(num_ns > NANO_TRIM) return _ticks_to_nanos(num_ns - NANO_TRIM);
+        else return 0;
+    }();
     _delay_ticks(duration_ticks);
 }
 

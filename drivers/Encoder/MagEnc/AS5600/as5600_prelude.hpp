@@ -5,7 +5,7 @@
 #include "core/math/real.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
-#include "drivers/Encoder/MagEncoder.hpp"
+#include "drivers/Encoder/encoder.hpp"
 
 namespace ymd::drivers{
 

@@ -29,13 +29,13 @@ public:
     struct [[nodiscard]] Config{
         PrdSet prd_set;
         BandWidth bandwidth;
-        Odr data_rate;
+        Odr datarate;
 
         static constexpr Config from_default() {
             return Config{
                 .prd_set = PrdSet::_100,
                 .bandwidth = BandWidth::_200Hz,
-                .data_rate = Odr::_200Hz
+                .datarate = Odr::_200Hz
             };
         }
     };
@@ -84,7 +84,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto res = transport_.write_reg(T::ADDRESS, reg.to_bits());
+        const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
         if(res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return res;
@@ -92,7 +92,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        return transport_.read_reg(T::ADDRESS, reg.as_bits_mut());
+        return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 
     [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){

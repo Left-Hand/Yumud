@@ -17,7 +17,7 @@ namespace ymd::encrypt::crc{
  * Xorout:  0x00
  * Note:
  *****************************************************************************/
-static constexpr uint8_t crc4_itu(std::span<uint8_t> bytes)
+static constexpr uint8_t crc4_itu(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -46,7 +46,7 @@ static constexpr uint8_t crc4_itu(std::span<uint8_t> bytes)
  * Xorout:  0x00
  * Note:
  *****************************************************************************/
-static constexpr uint8_t crc5_epc(std::span<uint8_t> bytes)
+static constexpr uint8_t crc5_epc(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -75,7 +75,7 @@ static constexpr uint8_t crc5_epc(std::span<uint8_t> bytes)
  * Xorout:  0x00
  * Note:
  *****************************************************************************/
-static constexpr uint8_t crc5_itu(std::span<uint8_t> bytes)
+static constexpr uint8_t crc5_itu(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -104,7 +104,7 @@ static constexpr uint8_t crc5_itu(std::span<uint8_t> bytes)
  * Xorout:  0x1F
  * Note:
  *****************************************************************************/
-static constexpr uint8_t crc5_usb(std::span<uint8_t> bytes)
+static constexpr uint8_t crc5_usb(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -133,7 +133,7 @@ static constexpr uint8_t crc5_usb(std::span<uint8_t> bytes)
  * Xorout:  0x00
  * Note:
  *****************************************************************************/
-static constexpr uint8_t crc6_itu(std::span<uint8_t> bytes)
+static constexpr uint8_t crc6_itu(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -162,7 +162,7 @@ static constexpr uint8_t crc6_itu(std::span<uint8_t> bytes)
  * Xorout:  0x00
  * Use:     MultiMediaCard,SD,ect.
  *****************************************************************************/
-static constexpr uint8_t crc7_mmc(std::span<uint8_t> bytes)
+static constexpr uint8_t crc7_mmc(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -191,7 +191,7 @@ static constexpr uint8_t crc7_mmc(std::span<uint8_t> bytes)
  * Xorout:  0x00
  * Note:
  *****************************************************************************/
-static constexpr uint8_t crc8(std::span<uint8_t> bytes)
+static constexpr uint8_t crc8(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -220,7 +220,7 @@ static constexpr uint8_t crc8(std::span<uint8_t> bytes)
  * Xorout:  0x55
  * Alias:   CRC-8/ATM
  *****************************************************************************/
-static constexpr uint8_t crc8_itu(std::span<uint8_t> bytes)
+static constexpr uint8_t crc8_itu(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -249,7 +249,7 @@ static constexpr uint8_t crc8_itu(std::span<uint8_t> bytes)
  * Xorout:  0x00
  * Note:
  *****************************************************************************/
-static constexpr uint8_t crc8_rohc(std::span<uint8_t> bytes)
+static constexpr uint8_t crc8_rohc(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -279,7 +279,7 @@ static constexpr uint8_t crc8_rohc(std::span<uint8_t> bytes)
  * Alias:   DOW-CRC,CRC-8/IBUTTON
  * Use:     Maxim(Dallas)'s some devices,e.g. DS18B20
  *****************************************************************************/
-static constexpr uint8_t crc8_maxim(std::span<uint8_t> bytes)
+static constexpr uint8_t crc8_maxim(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -308,7 +308,7 @@ static constexpr uint8_t crc8_maxim(std::span<uint8_t> bytes)
  * Xorout:  0x0000
  * Alias:   CRC-16,CRC-16/ARC,CRC-16/LHA
  *****************************************************************************/
-static constexpr uint16_t crc16_ibm(std::span<uint8_t> bytes)
+static constexpr uint16_t crc16_ibm(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -337,7 +337,7 @@ static constexpr uint16_t crc16_ibm(std::span<uint8_t> bytes)
  * Xorout:  0xFFFF
  * Note:
  *****************************************************************************/
-static constexpr uint16_t crc16_maxim(std::span<uint8_t> bytes)
+static constexpr uint16_t crc16_maxim(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -366,7 +366,7 @@ static constexpr uint16_t crc16_maxim(std::span<uint8_t> bytes)
  * Xorout:  0xFFFF
  * Note:
  *****************************************************************************/
-static constexpr uint16_t crc16_usb(std::span<uint8_t> bytes)
+static constexpr uint16_t crc16_usb(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -395,7 +395,7 @@ static constexpr uint16_t crc16_usb(std::span<uint8_t> bytes)
  * Xorout:  0x0000
  * Note:
  *****************************************************************************/
-static constexpr uint16_t crc16_modbus(std::span<uint8_t> bytes)
+static constexpr uint16_t crc16_modbus(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -424,7 +424,7 @@ static constexpr uint16_t crc16_modbus(std::span<uint8_t> bytes)
  * Xorout:  0x0000
  * Alias:   CRC-CCITT,CRC-16/CCITT-TRUE,CRC-16/KERMIT
  *****************************************************************************/
-static constexpr uint16_t crc16_ccitt(std::span<uint8_t> bytes)
+static constexpr uint16_t crc16_ccitt(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -453,7 +453,7 @@ static constexpr uint16_t crc16_ccitt(std::span<uint8_t> bytes)
  * Xorout:  0x0000
  * Note:
  *****************************************************************************/
-static constexpr uint16_t crc16_ccitt_false(std::span<uint8_t> bytes)
+static constexpr uint16_t crc16_ccitt_false(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -482,7 +482,7 @@ static constexpr uint16_t crc16_ccitt_false(std::span<uint8_t> bytes)
  * Xorout:  0XFFFF
  * Note:
  *****************************************************************************/
-static constexpr uint16_t crc16_x25(std::span<uint8_t> bytes)
+static constexpr uint16_t crc16_x25(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -511,7 +511,7 @@ static constexpr uint16_t crc16_x25(std::span<uint8_t> bytes)
  * Xorout:  0x0000
  * Alias:   CRC-16/ZMODEM,CRC-16/ACORN
  *****************************************************************************/
-static constexpr uint16_t crc16_xmodem(std::span<uint8_t> bytes)
+static constexpr uint16_t crc16_xmodem(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -540,7 +540,7 @@ static constexpr uint16_t crc16_xmodem(std::span<uint8_t> bytes)
  * Xorout:  0xFFFF
  * Use:     M-Bus,ect.
  *****************************************************************************/
-static constexpr uint16_t crc16_dnp(std::span<uint8_t> bytes)
+static constexpr uint16_t crc16_dnp(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -570,7 +570,7 @@ static constexpr uint16_t crc16_dnp(std::span<uint8_t> bytes)
  * Alias:   CRC_32/ADCCP
  * Use:     WinRAR,ect.
  *****************************************************************************/
-static constexpr uint32_t crc32(std::span<uint8_t> bytes)
+static constexpr uint32_t crc32(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
@@ -599,7 +599,7 @@ static constexpr uint32_t crc32(std::span<uint8_t> bytes)
  * Xorout:  0x0000000
  * Note:
  *****************************************************************************/
-static constexpr uint32_t crc32_mpeg_2(std::span<uint8_t> bytes)
+static constexpr uint32_t crc32_mpeg_2(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();

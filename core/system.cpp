@@ -8,7 +8,7 @@
 #include "hal/timer/hw_singleton.hpp"
 
 #include "core/clock/clock.hpp"
-
+#include "core/math_defs.hpp"
 #include "core/debug/debug.hpp"
 
 #ifdef N32G45X
@@ -279,7 +279,7 @@ void sys::clock::set_apb2_clk_freq(const uint32_t freq){
 
 bool sys::exception::is_interrupt_pending(){
     #ifdef ARCH_QKV4
-    return QingKeV4::is_interrupt_pending();
+    return arch::riscv::qkv4c::is_interrupt_pending();
     #else
     #error "not supported yet"
     #endif
@@ -287,7 +287,7 @@ bool sys::exception::is_interrupt_pending(){
 
 bool sys::exception::is_interrupt_acting(){
     #ifdef ARCH_QKV4
-    return QingKeV4::is_intrrupt_acting();
+    return arch::riscv::qkv4c::is_intrrupt_acting();
     #else
     #error "not supported yet"
     #endif
@@ -295,7 +295,7 @@ bool sys::exception::is_interrupt_acting(){
 
 uint8_t sys::exception::get_interrupt_depth(){
     #ifdef ARCH_QKV4
-    return QingKeV4::get_interrupt_depth();
+    return arch::riscv::qkv4c::get_interrupt_depth();
     #else
     #error "not supported yet"
     #endif

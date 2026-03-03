@@ -1,6 +1,7 @@
 #include "vl53l5cx.hpp"
 #include "details/vl53l5cx_buffers.hpp"
 #include "details/vl53l5cx_firmware.ipp"
+#include <cstring>
 
 using namespace ymd;
 using namespace ymd::drivers;

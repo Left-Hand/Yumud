@@ -21,7 +21,7 @@ using IResult= Result<T, Error>;
 
 IResult<> MMC5603::update(){
     auto reg = RegCopy(regs_.x_reg);
-    return read_burst(ADDRESS_X, std::span(&reg.data_h, 6));
+    return read_burst(REG_ADDR_X, std::span(&reg.data_h, 6));
 }
 
 IResult<> MMC5603::reset(){
@@ -47,10 +47,10 @@ IResult<> MMC5603::validate(){
     return Ok();
 }
 
-IResult<> MMC5603::set_data_rate(const DataRate dr){
+IResult<> MMC5603::set_datarate(const DataRate dr){
     {
         auto reg = RegCopy(regs_.odr_reg);
-        reg.data_rate = dr;
+        reg.datarate = dr;
         if(const auto res = write_reg(reg);
             res.is_err()) return Err(res.unwrap_err());
     }

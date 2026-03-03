@@ -26,9 +26,9 @@ void dtmf_main(){
     static constexpr uint FS = 8000;
     using DTMF = dsp::DoubleToneMultiFrequencySiggen;
     DTMF dtmf = {{
+        .fs = FS,
         .fl_map = {70, 77, 85, 94}, 
-        .fh_map = {120, 133, 148, 163}, 
-        .fs = FS
+        .fh_map = {120, 133, 148, 163}
     }};
 
     const iq16 fl = dtmf.fl();

@@ -16,6 +16,8 @@ limitations under the License.
 #include "core/platform.hpp"
 #include "core/debug/debug.hpp"
 #include "core/math/real.hpp"
+#include <memory>
+#include <cstring>
 
 #define TM_ARCH_OPT0        (0) //default
 #define TM_ARCH_OPT1        (1)

@@ -211,8 +211,8 @@ struct DRV832X_Prelude{
 };
 
 struct DRV832X_Regs:public DRV832X_Prelude{
-    struct R16_Status1{
-        static constexpr RegAddr ADDRESS = 0x00;
+    struct [[nodiscard]] R16_Status1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         uint16_t vds_lc:1;
         uint16_t vds_hc:1;
@@ -229,17 +229,10 @@ struct DRV832X_Regs:public DRV832X_Prelude{
 
         uint16_t :5;
 
-        uint16_t & as_bits_mut(){
-            return *reinterpret_cast<uint16_t*>(this);
-        }
-
-        std::bitset<11> to_bitset() const {
-            return std::bitset<11>(*reinterpret_cast<const uint16_t*>(this));
-        }
     }DEF_R16(status1_reg)
 
-    struct R16_Status2{
-        static constexpr RegAddr ADDRESS = 0x01;
+    struct [[nodiscard]] R16_Status2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint16_t vgs_lc:1;
         uint16_t vgs_hc:1;
@@ -255,17 +248,10 @@ struct DRV832X_Regs:public DRV832X_Prelude{
 
         uint16_t :5;
 
-        uint16_t & as_bits_mut(){
-            return *reinterpret_cast<uint16_t*>(this);
-        }
-
-        std::bitset<11> to_bitset() const {
-            return std::bitset<11>(*reinterpret_cast<const uint16_t*>(this));
-        }
     }DEF_R16(status2_reg)
 
-    struct R16_Ctrl1:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x02;
+    struct [[nodiscard]] R16_Ctrl1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint16_t clr_flt:1;
         uint16_t brake:1;
@@ -280,8 +266,8 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t :6;
     }DEF_R16(ctrl1_reg)
 
-    struct R16_GateDriveHs:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x03;
+    struct [[nodiscard]] R16_GateDriveHs:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         IDriveN idrive_n_hs:4;
         IDriveP idrive_p_hs:4;
@@ -290,8 +276,8 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t :5;
     }DEF_R16(gate_drv_hs_reg)
 
-    struct R16_GateDriveLs:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x04;
+    struct [[nodiscard]] R16_GateDriveLs:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x04};
 
         IDriveN idrive_n_ls:4;
         IDriveP idrive_p_ls:4;
@@ -301,8 +287,8 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t :5;
     }DEF_R16(gate_drv_ls_reg)
 
-    struct R16_OcpCtrl:public Reg16<>{
-        static constexpr RegAddr ADDRESS = 0x05;
+    struct [[nodiscard]] R16_OcpCtrl:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x05};
 
         VdsLevel vds_lvl:4;
         OcpDeglitchTime ocp_deg:2;
@@ -313,8 +299,8 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t :5;
     }DEF_R16(ocp_ctrl_reg)
 
-    struct R16_CsaCtrl{
-        static constexpr RegAddr ADDRESS = 0x06;
+    struct [[nodiscard]] R16_CsaCtrl{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x06};
 
         SenseLevel sen_lvl:2;
         uint16_t csa_cal_c:1;
@@ -341,8 +327,8 @@ public:
     explicit DRV8323R_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv(spi, rank)){;}
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t reg);
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & reg);
+    [[nodiscard]] IResult<> write_reg(const RegAddr reg_addr, const uint16_t reg_val);
+    [[nodiscard]] IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val);
 private:
     hal::SpiDrv spi_drv_;
 };

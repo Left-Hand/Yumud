@@ -17,7 +17,6 @@
 #include "dsp/controller/adrc/utils.hpp"
 
 #include "drivers/Encoder/Encoder.hpp"
-#include "drivers/Encoder/AnalogEncoder.hpp"
 
 using namespace ymd;
 

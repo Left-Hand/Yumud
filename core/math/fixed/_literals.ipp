@@ -1,5 +1,5 @@
+namespace ymd{
 
-namespace ymd::literals{ 
 using iq1 = math::fixed<1, int32_t>;
 using iq2 = math::fixed<2, int32_t>;
 using iq3 = math::fixed<3, int32_t>;
@@ -213,9 +213,8 @@ using uuq61 = math::fixed<61, uint64_t>;
 using uuq62 = math::fixed<62, uint64_t>;
 using uuq63 = math::fixed<63, uint64_t>;
 using uuq64 = math::fixed<64, uint64_t>;
-
-
-
+}
+namespace ymd::literals{ 
 
 [[nodiscard]] consteval iq1 operator"" _iq1(long double x) { return iq1(x); }
 [[nodiscard]] consteval iq2 operator"" _iq2(long double x) { return iq2(x); }

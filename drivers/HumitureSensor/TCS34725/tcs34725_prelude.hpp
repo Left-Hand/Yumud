@@ -106,7 +106,7 @@ struct TCS34725_Regset final:public TCS34725_Prelude{
 
     struct R8_WaitTime:public Reg8<>{
         static constexpr auto ADDRESS = RegAddr::WaitTime;
-        uint8_t data;
+        uint8_t wait_time;
     }DEF_R8(wait_time_reg)
 
     struct R16_LowThr:public Reg16<>{

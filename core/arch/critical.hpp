@@ -1,12 +1,13 @@
 #include "common.hpp"
 #include <cstdint>
 
-namespace ymd::cpu_core{
+
+namespace ymd::arch{
 
 
 struct [[nodiscard]] CriticalSectionGuard final{
-    explicit CriticalSectionGuard() : mask_(cpu_core::enter_critical()) {}
-    ~CriticalSectionGuard() {cpu_core::exit_critical(mask_); }
+    explicit CriticalSectionGuard() : mask_(arch::enter_critical()) {}
+    ~CriticalSectionGuard() {arch::exit_critical(mask_); }
 
     CriticalSectionGuard(const CriticalSectionGuard&) = delete;
     CriticalSectionGuard(const CriticalSectionGuard&&) = delete;

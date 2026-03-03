@@ -49,7 +49,7 @@ public:
     __fast_inline void set_dutycycle(const iq16 value){
         const bool is_negative = math::signbit(value);
         const iq16 zero_value = is_inversed_ ? 1 : 0;
-        const auto abs_value = (is_inversed_) ? (1 - ABS(value)) : ABS(value);
+        const auto abs_value = (is_inversed_) ? (1 - math::abs(value)) : math::abs(value);
 
         if(is_negative){
             pos_oc_.set_dutycycle(zero_value);

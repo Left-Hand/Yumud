@@ -81,47 +81,47 @@ struct AW9523_Prelude{
 struct AW9523_Regset final:public AW9523_Prelude{
 
     struct InputReg  : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::In;
+        static constexpr RegAddr REG_ADDR = RegAddr::In;
 
         hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(input_reg)
 
     struct OutputReg  : public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Out;
+        static constexpr RegAddr REG_ADDR = RegAddr::Out;
 
         hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(output_reg)
 
-    struct DirReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Dir;
+    struct R16_Dir:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::Dir;
 
         hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(dir_reg)
 
     struct CtlReg:Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::Ctl;
+        static constexpr RegAddr REG_ADDR = RegAddr::Ctl;
         CurrentLimit isel:2;
         uint8_t __resv1__:2;
         uint8_t p0mod:1;
         uint8_t __resv2__:3;
     }DEF_R8(ctl_reg)
 
-    struct IntEnReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::Inten;
+    struct R16_IntEn:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::Inten;
 
         hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(inten_reg)
 
 
-    struct LedModeReg:public Reg16<>{
-        static constexpr auto ADDRESS = RegAddr::LedMode;
+    struct R16_LedMode:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::LedMode;
 
         hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(led_mode_reg);
 
 
-    struct ChipIdReg:public Reg8<>{
-        static constexpr auto ADDRESS = RegAddr::ChipId;
+    struct R8_ChipId:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr::ChipId;
 
         uint8_t id;
     }DEF_R8(chip_id_reg)

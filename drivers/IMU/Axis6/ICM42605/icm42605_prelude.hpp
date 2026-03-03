@@ -25,21 +25,21 @@ struct ICM42605_Prelude{
 
     enum class [[nodiscard]] AccOdr:uint8_t
     {
-        _32000HZ,
-        _16000HZ,
-        _8000HZ,
-        _4000HZ,
-        _2000HZ,
-        _1000HZ,// default
-        _200HZ,
-        _100HZ,
-        _50HZ,
-        _25HZ,
-        _12_5HZ,
-        _6_25HZ,
-        _3_125HZ,
-        _1_5625HZ,
-        _500HZ,
+        _32000Hz,
+        _16000Hz,
+        _8000Hz,
+        _4000Hz,
+        _2000Hz,
+        _1000Hz,// default
+        _200Hz,
+        _100Hz,
+        _50Hz,
+        _25Hz,
+        _12_5Hz,
+        _6_25Hz,
+        _3_125Hz,
+        _1_5625Hz,
+        _500Hz,
     };
 
     enum class [[nodiscard]] GyrFs:uint8_t{
@@ -54,22 +54,23 @@ struct ICM42605_Prelude{
     };
 
     enum class [[nodiscard]] GyrOdr:uint8_t{
-        _32000HZ,
-        _16000HZ,
-        _8000HZ,
-        _4000HZ,
-        _2000HZ,
-        _1000HZ,// default
-        _200HZ,
-        _100HZ,
-        _50HZ,
-        _25HZ,
-        _12_5HZ,
-        _X0HZ,
-        _X1HZ,
-        _X2HZ,
-        _500HZ,
+        _32000Hz,
+        _16000Hz,
+        _8000Hz,
+        _4000Hz,
+        _2000Hz,
+        _1000Hz,// default
+        _200Hz,
+        _100Hz,
+        _50Hz,
+        _25Hz,
+        _12_5Hz,
+        _X0Hz,
+        _X1Hz,
+        _X2Hz,
+        _500Hz,
     };
+
 
     enum class [[nodiscard]] RegAddr:uint8_t{
         ID = 0x47,
@@ -131,7 +132,7 @@ struct ICM42605_Prelude{
         FIFO_LOST_PKT1            = 0x6D,
         SELF_TEST_CONFIG          = 0x70,
         WHO_AM_I                  = 0x75,
-        REG_BANK_SEL              = 0x76,
+        BANK_SEL              = 0x76,
         SENSOR_CONFIG0            = 0x03,
         GYR_CONFIG_STATIC2       = 0x0B,
         GYR_CONFIG_STATIC3       = 0x0C,

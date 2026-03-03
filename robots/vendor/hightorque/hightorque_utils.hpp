@@ -123,7 +123,8 @@ static constexpr void fill_bytes(
 ){
     constexpr auto common_element_type = common_element_type_v<std::decay_t<Args> ...>;
     constexpr size_t total_elements_size = sizeof...(Args) * element_type_to_size(common_element_type);
-    constexpr size_t required_size = (1 + // Slot specifier 
+    constexpr size_t required_size = (
+        1 + // Slot specifier 
         1 + // Reg addr
         total_elements_size
     );
@@ -143,7 +144,10 @@ static constexpr void fill_bytes(
 
         const auto bits = utils::element_to_bits<element_type>(element);
         // Fill bytes
-        int_fill_bytes<std::endian::little>(std::span<uint8_t, element_size>(bytes.data() + offset, element_size), bits);
+        int_fill_bytes<std::endian::little>(
+            std::span<uint8_t, element_size>(bytes.data() + offset, element_size), 
+            bits
+        );
         offset += element_size;
     };
 
@@ -151,12 +155,12 @@ static constexpr void fill_bytes(
 }
 
 
-struct [[nodiscard]] SlotBuilder{
+struct [[nodiscard]] SlotFiller{
     SlotCommand slot_command;
     RegAddr reg_addr;
 
     template<size_t N, typename ... Args>
-    constexpr void build(std::span<uint8_t, N> bytes, Args && ... args) const{
+    constexpr void fill_bytes_from_elements(std::span<uint8_t, N> bytes, Args && ... args) const{
         utils::fill_bytes(bytes, slot_command, reg_addr, std::forward<Args>(args)...);
     }
 };
