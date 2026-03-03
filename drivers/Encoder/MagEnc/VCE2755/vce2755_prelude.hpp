@@ -13,48 +13,13 @@
 
 
 namespace ymd::drivers{
-namespace vce2755{
-// 对应的 CRC 生成多项式为 X4+X+1，初始值=0000b，数据输入输出不取反。
-static constexpr uint8_t calc_crc4(uint32_t bits20) {
-    // 确保只使用低20位
-    bits20 &= 0x000FFFFF;
-    
-    // CRC 寄存器，初始值为 0000 (4位)
-    uint8_t crc = 0x00;
-    
-    // 处理20个数据位，从最高位开始
-    for (int i = 19; i >= 0; i--) {
-        // 获取当前数据位
-        bool data_bit = (bits20 >> i) & 0x01;
-        
-        // 计算反馈位：CRC最高位(bit3)与数据位异或
-        bool feedback = ((crc >> 3) & 0x01) ^ data_bit;
-        
-        // CRC左移1位
-        crc = (crc << 1) & 0x0F;
-        
-        // 如果反馈位为1，则与多项式异或
-        if (feedback) {
-            // 多项式 X^4 + X + 1 对应的二进制: 10011
-            // 去掉最高位后为: 0011 (0x03)
-            crc ^= 0x03;
-        }
-    }
-    
-    return crc & 0x0F;  // 确保只返回低4位
-}
-static_assert(calc_crc4(0x12345) == 0x08);
-static_assert(calc_crc4(0x00) == 0x00);
-static_assert(calc_crc4(0x00001) == 0x03);
-
-
-
-}
 struct VCE2755_Prelude{
     using Error = EncoderError;
 
     template<typename T = void>
     using IResult = Result<T, Error>;
+
+    using RegAddr = uint8_t;
 
     enum class [[nodiscard]] Package:uint8_t{
         SOIC8 = 0x5A,
@@ -162,19 +127,8 @@ struct VCE2755_Prelude{
     };
 
 
-
-    using RegAddr = uint8_t;
-};
-
-struct VCE2755_Regset:public VCE2755_Prelude{
-    //0x00
-    struct [[nodiscard]] R8_ChipId:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
-        PackageCode code;
-    };
-
     struct [[nodiscard]] AnglePacket final{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
+        static constexpr RegAddr BASE_ADDR = RegAddr{0x03};
         union{
             struct {
                 uint8_t angle_17_10;
@@ -224,10 +178,21 @@ struct VCE2755_Regset:public VCE2755_Prelude{
             bits |= static_cast<uint32_t>(bytes[2]) >> 4;
             return bits;
         }
-
-
     };
     static_assert(sizeof(AnglePacket) == 4);
+
+};
+
+struct VCE2755_Regset:public VCE2755_Prelude{
+    AnglePacket packet_;
+
+    //0x00
+    struct [[nodiscard]] R8_ChipId:public Reg8<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
+        PackageCode code;
+    };
+
+    CHECK_R8(R8_ChipId)
 
     //0x40
     struct [[nodiscard]] R8_IO:public Reg8<> {
@@ -242,6 +207,8 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         uint8_t :2;
     };
 
+    CHECK_R8(R8_IO)
+
     //0x41
     struct [[nodiscard]] R8_AbzInvert:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x41};
@@ -251,12 +218,17 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         uint8_t :1;
     };
 
+    CHECK_R8(R8_AbzInvert)
+
     //0x42
     struct [[nodiscard]] R8_Direction:public Reg8<> {
+        static constexpr RegAddr REG_ADDR = RegAddr{0x42};
         uint8_t :5;
         uint8_t is_ccw:1;
         uint8_t :2;
     };
+
+    CHECK_R8(R8_Direction)
 
 
     //0x43,0x44,
@@ -275,6 +247,8 @@ struct VCE2755_Regset:public VCE2755_Prelude{
             return (abz_res_9_8 << 8) | abz_res_7_0;
         }
     };
+
+    CHECK_R16(R16_AbzResolution)
     
     //0x46,0x47
     struct [[nodiscard]] R16_ZeroPosition:public Reg8<> {
@@ -290,6 +264,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         }
     };
 
+    CHECK_R16(R16_ZeroPosition)
 
     //0x48
     struct [[nodiscard]] R8_Hysteresis:public Reg8<> {
@@ -298,12 +273,16 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         Hysteresis hysteresis:3;
     };
 
+    CHECK_R8(R8_Hysteresis)
+
     //0x4a
     struct [[nodiscard]] R8_ZWidth:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x4a};
         uint8_t :5;
         uint8_t z_width:3;
     };
+
+    CHECK_R8(R8_ZWidth)
 
     //0x4c
     struct [[nodiscard]] R8_UvwResolution:public Reg8<> {
@@ -312,6 +291,8 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         uint8_t :5;
     };
 
+    CHECK_R8(R8_UvwResolution)
+
     //0x4d
     struct [[nodiscard]] R8_Bandwidth:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x4d};
@@ -319,7 +300,9 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         WeakMagAlarmLevel weak_mag_alarm_lvl:2;
     };
 
-    AnglePacket packet_;
+    CHECK_R8(R8_Bandwidth)
+
+
 };
 
 

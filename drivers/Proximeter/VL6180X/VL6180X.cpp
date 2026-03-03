@@ -9,7 +9,7 @@
 #define VL6180X_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define VL6180X_DEBUG(...)
-#define VL6180X_PANIC(...)  PANIC()
+#define VL6180X_PANIC(...)  PANIC_NSRC()
 #define VL6180X_ASSERT(cond, ...) ASSERT(cond)
 #endif
 

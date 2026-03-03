@@ -13,7 +13,7 @@ using namespace ymd::drivers;
 #define AT24CXX_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define AT24CXX_DEBUG(...)
-#define AT24CXX_PANIC(...)  PANIC()
+#define AT24CXX_PANIC(...)  PANIC_NSRC()
 #define AT24CXX_ASSERT(cond, ...) ASSERT(cond)
 #endif
 

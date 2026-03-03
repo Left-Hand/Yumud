@@ -11,7 +11,7 @@ using namespace ymd::drivers;
 #define AK8975_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define AK8975_DEBUG(...)
-#define AK8975_PANIC(...)  PANIC()
+#define AK8975_PANIC(...)  PANIC_NSRC()
 #define AK8975_ASSERT(cond, ...) ASSERT(cond)
 #endif
 

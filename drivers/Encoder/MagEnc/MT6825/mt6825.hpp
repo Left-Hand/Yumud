@@ -32,7 +32,7 @@ enum class RegAddr:uint16_t{
 };
 
 #pragma pack(push, 1)
-struct [[nodiscard]] Packet final{
+struct [[nodiscard]] alignas(4) Packet final{
     using Self = Packet;
     union{
         struct{
@@ -121,31 +121,39 @@ struct MT6825:
     explicit MT6825(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){}
 
-    [[nodiscard]] IResult<> init();
     [[nodiscard]] IResult<Angular<uq32>> read_lap_angle();
 private:
     hal::SpiDrv spi_drv_;
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        const auto address = T::ADDRESS;
-        const auto tx = uint16_t(
-            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | std::bit_cast<uint8_t>(reg.to_bits()));
-        if(const auto res = spi_drv_.write_single<uint16_t>(tx);
-            res.is_err()) return Err(Error(res.unwrap_err()));
+        if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
+            res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(const T & reg){
-        const auto address = T::ADDRESS;
+    [[nodiscard]] IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
         const auto tx = uint16_t(
-            0x8000 | (std::bit_cast<uint8_t>(address) << 8) | std::bit_cast<uint8_t>(reg.to_bits()));
+            0x8000 | (reg_addr << 8) | reg_val);
+        if(const auto res = spi_drv_.write_single<uint16_t>(tx);
+            res.is_err()) return Err(Error(res.unwrap_err()));
+        return Ok();
+    }
+
+    template<typename T>
+    [[nodiscard]] IResult<> read_reg(const T & reg){
+        return read_reg(T::REG_ADDR, reg.as_bits_mut());
+    }
+
+    [[nodiscard]] IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+        const uint16_t tx = uint16_t(
+            0x8000 | (reg_addr << 8) | reg_val);
         uint16_t rx;
         if(const auto res = spi_drv_.transceive_single<uint16_t>(rx, tx);
             res.is_err()) return Err(Error(res.unwrap_err()));
-        reg.as_bits_mut() = rx;
+        reg_val = static_cast<uint8_t>(rx);
         return Ok();
     }
 

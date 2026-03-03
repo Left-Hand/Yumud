@@ -10,7 +10,7 @@
 #define DRV8301_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define DRV8301_DEBUG(...)
-#define DRV8301_PANIC(...)  PANIC()
+#define DRV8301_PANIC(...)  PANIC_NSRC()
 #define DRV8301_ASSERT(cond, ...) ASSERT(cond)
 #endif
 

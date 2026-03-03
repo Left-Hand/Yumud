@@ -22,7 +22,7 @@ enum class [[nodiscard]] EncoderError_Kind:uint8_t{
     InvalidPc2,
     InvalidCrc,
 
-    RegProgramFailed,
+    RegProgramUncovered,
     RegProgramResponseFormatInvalid,
     ValueOverflow,
     ValueUnderflow,
