@@ -4,10 +4,6 @@
 #include "core/io/regs.hpp"
 
 
-#ifndef BIT_CAST
-#define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
-#endif
-
 namespace ymd::ral::ch32::common_uart{
 
 struct R32_STATR{
@@ -57,6 +53,8 @@ struct R32_STATR{
         return bool(std::bit_cast<uint32_t>(*this) & 0x0f);
     }
 };   
+
+CHECK_R32(R32_STATR)
 
 struct R32_DATAR{
     uint32_t DR:9;

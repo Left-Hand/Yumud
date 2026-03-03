@@ -57,6 +57,8 @@ public:
     };
 
     using RegAddr = uint8_t;
+
+    using Transport = BoschImu_Transport;
 };
 
 struct BMI088_AccRegs:public BMI088_Prelude{
