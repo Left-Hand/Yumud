@@ -24,7 +24,7 @@ struct TM7705_Prelude{
 
 struct TM7705_Regset:public TM7705_Prelude{
     struct R8_Comm:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x00;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
         uint8_t ch0:1;
         uint8_t ch1:1;
         uint8_t stby:1;
@@ -36,35 +36,35 @@ struct TM7705_Regset:public TM7705_Prelude{
     static_assert(sizeof(R8_Comm) == 1);
 
     struct R8_Setting:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x01;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
         // uint8_t 
     };
 
     struct R8_Clock:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x02;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         // uint8_t 
     };
 
     struct R16_Data:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x03;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
         // uint16_t 
     };
 
     struct R8_Test:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x04;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x04};
         // uint8_t 
     };
 
     struct R8_Nop:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x05;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x05};
     };
 
     struct R24_Offset:public Reg24<>{
-        static constexpr RegAddr REG_ADDR = 0x06;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x06};
     };
 
     struct R24_Gain:public Reg24<>{
-        static constexpr RegAddr REG_ADDR = 0x07;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x07};
     };
 };
 

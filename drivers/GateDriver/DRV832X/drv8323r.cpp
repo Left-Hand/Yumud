@@ -90,9 +90,10 @@ IResult<DRV8323R::R16_Status2> DRV8323R::get_status2(){
 }
 
 
+namespace {
 struct Packet{
     uint16_t data:11;
-    uint16_t addr:4;
+    uint16_t reg_addr:4;
     uint16_t is_write:1;
 
     [[nodiscard]] constexpr uint16_t to_bits() const {
@@ -103,13 +104,15 @@ struct Packet{
         return *reinterpret_cast<uint16_t *>(this);
     }
 };
+}
+
 
 static_assert(sizeof(Packet) == sizeof(uint16_t));
 
-IResult<> DRV8323R_Transport::write_reg(const RegAddr addr, const uint16_t reg_val){
+IResult<> DRV8323R_Transport::write_reg(const RegAddr reg_addr, const uint16_t reg_val){
     const Packet packet = {
         .data = reg_val,
-        .addr = uint16_t(addr),
+        .reg_addr = uint16_t(reg_addr),
         .is_write = 0
     };
 
@@ -119,10 +122,10 @@ IResult<> DRV8323R_Transport::write_reg(const RegAddr addr, const uint16_t reg_v
     return Ok();
 }
 
-IResult<> DRV8323R_Transport::read_reg(const RegAddr addr, uint16_t & reg_val){
+IResult<> DRV8323R_Transport::read_reg(const RegAddr reg_addr, uint16_t & reg_val){
     Packet packet = {
         .data = 0,
-        .addr = uint16_t(addr),
+        .reg_addr = uint16_t(reg_addr),
         .is_write = 1
     };
 

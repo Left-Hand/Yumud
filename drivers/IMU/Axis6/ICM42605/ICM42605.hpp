@@ -58,8 +58,8 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
-        if(const auto res = transport_.write_reg(reg_addr, reg_val);
+    [[nodiscard]] IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val){
+        if(const auto res = transport_.write_reg(uint8_t(reg_addr), reg_val);
             res.is_err()) return res;
         return Ok();
     }
@@ -71,8 +71,8 @@ private:
         return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());
     };
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
-        if(const auto res = transport_.read_reg(reg_addr, reg_val);
+    [[nodiscard]] IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val){
+        if(const auto res = transport_.read_reg(uint8_t(reg_addr), reg_val);
             res.is_err()) return res;
         return Ok();
     }

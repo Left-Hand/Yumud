@@ -91,47 +91,59 @@ struct DRV8301_Prelude{
 };
 
 struct DRV8301_Regset:public DRV8301_Prelude{
-    struct R16_Status1:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x00;
+    struct [[nodiscard]] R16_Status1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
 
         uint16_t fetlc_oc:1;
         uint16_t fethc_oc:1;
         uint16_t fetlb_oc:1;
         uint16_t fettb_oc:1;
+
         uint16_t fetla_oc:1;
         uint16_t fetha_oc:1;
-
         uint16_t otw:1;
         uint16_t otsd:1;
+
         uint16_t pvdd_uv:1;
-        uint16_t gvdd_uw:1;
+        uint16_t gvdd_uv:1;
         uint16_t fault:1;
 
-        uint16_t :6;
+        uint16_t :5;
     };
 
-    struct R16_Status2:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x01;
+    CHECK_R16(R16_Status1)
+
+    struct [[nodiscard]] R16_Status2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
 
         uint16_t device_id:4;
         uint16_t :3;
         uint16_t gvdd_ov:1;
-        uint16_t :9;
+        uint16_t :8;
     };
 
-    struct R16_Ctrl1:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x02;
+
+    CHECK_R16(R16_Status2)
+
+    struct [[nodiscard]] R16_Ctrl1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
 
         PeakCurrent gate_current:2;
         uint16_t gate_reset:1;
         uint16_t pwm3_en:1;
-        OcpMode ocp_mode:3;
+        OcpMode ocp_mode:2;
         OcAdTable oc_adj_set:5;
-        uint16_t :6;
+        uint16_t :5;
     };
 
-    struct R16_Ctrl2:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x03;
+    CHECK_R16(R16_Ctrl1)
+
+    struct [[nodiscard]] R16_Ctrl2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
+        static constexpr uint16_t RESET_VALUE = 0x0000;
 
         OctwMode octw_mode:2;
         Gain gain:2;
@@ -139,8 +151,10 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t dc_cal_ch2:1;
 
         uint16_t oc_toff:1;
-        uint16_t :10;
+        uint16_t :9;
     };
+
+    CHECK_R16(R16_Ctrl2)
 
     R16_Status1 status1_reg = {};
     R16_Status2 status2_reg = {};

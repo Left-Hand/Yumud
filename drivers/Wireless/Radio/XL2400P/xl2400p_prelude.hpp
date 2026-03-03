@@ -13,7 +13,7 @@ struct XL2400P_Prelude{
 
 struct XL2400P_Regset:public XL2400P_Prelude {
     struct R8_TopConfig:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x01;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
         uint8_t rx_on:1;
         uint8_t power_on:1;
@@ -50,12 +50,12 @@ struct XL2400P_Regset:public XL2400P_Prelude {
     struct R8_EnableRxAddress:public Reg8<>{
         uint8_t data;
     public:
-        static constexpr RegAddr REG_ADDR = 0x02;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         auto p(const size_t n){return make_bfarray<0, 6, 6>(data);}
     };
 
     struct R8_AddressWidth:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = 0x03;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t pipex_address_width:2;
         uint8_t tx_address_width:2;

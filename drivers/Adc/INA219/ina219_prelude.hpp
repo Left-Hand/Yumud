@@ -47,7 +47,7 @@ struct INA219_Prelude{
 
 struct INA219_Regs:public INA219_Prelude{
     struct R16_Config:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x00;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         uint16_t mode:3;
         uint16_t sdac:4;
@@ -59,27 +59,27 @@ struct INA219_Regs:public INA219_Prelude{
     }DEF_R16(config_reg)
 
     struct R16_ShuntVolt:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x01;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
         uint16_t bits;
     }DEF_R16(shunt_volt_reg)
 
     struct R16_BusVolt:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x02;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x02};
         uint16_t bits;
     }DEF_R16(bus_volt_reg)
 
     struct R16_Power:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x03;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
         int16_t bits;
     }DEF_R16(power_reg)
     
     struct R16_Current:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x04;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x04};
         int16_t bits;
     }DEF_R16(current_reg)
     
     struct R16_Calibration:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = 0x05;
+        static constexpr RegAddr REG_ADDR = RegAddr{0x05};
         int16_t bits;
     }DEF_R16(calibration_reg)
 };
