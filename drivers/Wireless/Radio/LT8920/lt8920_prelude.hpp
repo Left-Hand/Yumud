@@ -80,7 +80,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t synth_locked:1;//RF 频率综合器锁定标志位
         uint16_t __resv2__ :3;
     };
-    CHECK_R16(R16_RfSynthLock)
+    VALIDATE_R16(R16_RfSynthLock)
 
     struct R16_RawRssi:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{6};
@@ -88,7 +88,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t raw_rssi:6;//RSSI 原始数据
     };
 
-    CHECK_R16(R16_RawRssi)
+    VALIDATE_R16(R16_RawRssi)
 
     struct R16_RfConfig:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{7};
@@ -98,7 +98,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t __resv__ :7;
     };
 
-    CHECK_R16(R16_RfConfig)
+    VALIDATE_R16(R16_RfConfig)
 
     struct R16_PaConfig:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{9};
@@ -108,7 +108,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t pa_current:4;//PA电流控制
     };
 
-    CHECK_R16(R16_PaConfig)
+    VALIDATE_R16(R16_PaConfig)
 
     struct R16_OscEnable:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{10};
@@ -116,7 +116,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t __resv__ :15;
     };
 
-    CHECK_R16(R16_OscEnable)
+    VALIDATE_R16(R16_OscEnable)
 
     struct R16_RssiPdn:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{11};
@@ -125,7 +125,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t __resv2__ :7;
     };
 
-    CHECK_R16(R16_RssiPdn)
+    VALIDATE_R16(R16_RssiPdn)
 
 
     struct R16_AutoCali:public Reg16<>{
@@ -135,7 +135,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t __resv1__ :13;
     };
 
-    CHECK_R16(R16_AutoCali)
+    VALIDATE_R16(R16_AutoCali)
 
     struct R16_DeviceID:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{29};
@@ -145,7 +145,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t __resv2__ :8;
     };
 
-    CHECK_R16(R16_DeviceID)
+    VALIDATE_R16(R16_DeviceID)
 
     struct R16_Config1:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{32};
@@ -158,7 +158,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t preamble_len :3;//数据载荷长度
     };
 
-    CHECK_R16(R16_Config1)
+    VALIDATE_R16(R16_Config1)
 
     struct R16_Delay1:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{33};
@@ -167,7 +167,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t vco_on_delays:8;//在每次进入 RX或者 TX 后，等待内部 VCO 稳定的时间，单位为 1uS。
     };
 
-    CHECK_R16(R16_Delay1)
+    VALIDATE_R16(R16_Delay1)
 
     struct R16_Delay2:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{34};
@@ -177,7 +177,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t bpkt_direct:1;//在 direct mode 中，它控制 TX 的 PA 和 RX 的宽带/窄带模式
     };
 
-    CHECK_R16(R16_Delay2)
+    VALIDATE_R16(R16_Delay2)
 
 
     struct R16_Config2:public Reg16<>{
@@ -191,7 +191,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t power_down:1;//先关闭晶体振荡器，再关闭 LDO。（寄存器值将丢失）
     };
 
-    CHECK_R16(R16_Config2)
+    VALIDATE_R16(R16_Config2)
 
 
 
@@ -199,7 +199,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t bits;
     };
 
-    CHECK_R16(R16_SyncWord)
+    VALIDATE_R16(R16_SyncWord)
 
     struct R16_Threshold:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{40};
@@ -209,7 +209,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t __resv__:2;
     };
 
-    CHECK_R16(R16_Threshold)
+    VALIDATE_R16(R16_Threshold)
 
     struct R16_Config3:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{41};
@@ -224,7 +224,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t crc_en:1;//开启 CRC
     };
 
-    CHECK_R16(R16_Config3)
+    VALIDATE_R16(R16_Config3)
 
     struct R16_RxConfig:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{42};
@@ -233,7 +233,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t scan_rssi_ch_no:6;//RSSI 扫描的信道数量，RSSI 值将保留到 FIFO 中
     };
 
-    CHECK_R16(R16_RxConfig)
+    VALIDATE_R16(R16_RxConfig)
 
     struct R16_RssiConfig:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{43};
@@ -242,7 +242,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t scan_rssi_en :1;//开始扫描 RSSI
     };
 
-    CHECK_R16(R16_RssiConfig);
+    VALIDATE_R16(R16_RssiConfig);
 
     struct R16_DataRate:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{44};
@@ -250,7 +250,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t dataRate:8;//透传速率
     };
 
-    CHECK_R16(R16_DataRate);
+    VALIDATE_R16(R16_DataRate);
 
 
     struct [[nodiscard]] FlagBitFields final{
@@ -274,7 +274,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t crc_error_flag:1;//CRC 错误标志位
     };
 
-    CHECK_R16(R16_Flag)
+    VALIDATE_R16(R16_Flag)
 
 
     struct R16_FifoPtr:public Reg16<>{
@@ -291,7 +291,7 @@ struct LT8920_Regset:public LT8920_Prelude{
         uint16_t clear_write_ptr:1;//清空 TX FIFO 指针为 0，但不清空 TX FIFO 中的数据
     };
 
-    CHECK_R16(R16_FifoPtr)
+    VALIDATE_R16(R16_FifoPtr)
 
     // uint16_t __resv1__[2];
     // REG3 RO

@@ -11,7 +11,7 @@ using namespace ymd::drivers;
 #else
 #define MMC5603_DEBUG(...)
 #define MMC5603_PANIC(...)  PANIC_NSRC()
-#define MMC5603_ASSERT(cond, ...) ASSERT(cond)
+#define MMC5603_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 using Error = ImuError;

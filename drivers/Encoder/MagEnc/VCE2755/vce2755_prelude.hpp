@@ -192,7 +192,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         PackageCode code;
     };
 
-    CHECK_R8(R8_ChipId)
+    VALIDATE_R8(R8_ChipId)
 
     //0x40
     struct [[nodiscard]] R8_IO:public Reg8<> {
@@ -207,7 +207,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         uint8_t :2;
     };
 
-    CHECK_R8(R8_IO)
+    VALIDATE_R8(R8_IO)
 
     //0x41
     struct [[nodiscard]] R8_AbzInvert:public Reg8<> {
@@ -218,7 +218,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         uint8_t :1;
     };
 
-    CHECK_R8(R8_AbzInvert)
+    VALIDATE_R8(R8_AbzInvert)
 
     //0x42
     struct [[nodiscard]] R8_Direction:public Reg8<> {
@@ -228,7 +228,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         uint8_t :2;
     };
 
-    CHECK_R8(R8_Direction)
+    VALIDATE_R8(R8_Direction)
 
 
     //0x43,0x44,
@@ -248,7 +248,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         }
     };
 
-    CHECK_R16(R16_AbzResolution)
+    VALIDATE_R16(R16_AbzResolution)
     
     //0x46,0x47
     struct [[nodiscard]] R16_ZeroPosition:public Reg8<> {
@@ -264,7 +264,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         }
     };
 
-    CHECK_R16(R16_ZeroPosition)
+    VALIDATE_R16(R16_ZeroPosition)
 
     //0x48
     struct [[nodiscard]] R8_Hysteresis:public Reg8<> {
@@ -273,7 +273,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         Hysteresis hysteresis:3;
     };
 
-    CHECK_R8(R8_Hysteresis)
+    VALIDATE_R8(R8_Hysteresis)
 
     //0x4a
     struct [[nodiscard]] R8_ZWidth:public Reg8<> {
@@ -282,7 +282,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         uint8_t z_width:3;
     };
 
-    CHECK_R8(R8_ZWidth)
+    VALIDATE_R8(R8_ZWidth)
 
     //0x4c
     struct [[nodiscard]] R8_UvwResolution:public Reg8<> {
@@ -291,7 +291,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         uint8_t :5;
     };
 
-    CHECK_R8(R8_UvwResolution)
+    VALIDATE_R8(R8_UvwResolution)
 
     //0x4d
     struct [[nodiscard]] R8_Bandwidth:public Reg8<> {
@@ -300,7 +300,7 @@ struct VCE2755_Regset:public VCE2755_Prelude{
         WeakMagAlarmLevel weak_mag_alarm_lvl:2;
     };
 
-    CHECK_R8(R8_Bandwidth)
+    VALIDATE_R8(R8_Bandwidth)
 
 
 };

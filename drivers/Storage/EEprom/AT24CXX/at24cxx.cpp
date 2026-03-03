@@ -14,7 +14,7 @@ using namespace ymd::drivers;
 #else
 #define AT24CXX_DEBUG(...)
 #define AT24CXX_PANIC(...)  PANIC_NSRC()
-#define AT24CXX_ASSERT(cond, ...) ASSERT(cond)
+#define AT24CXX_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 using Error = AT24CXX::Error;

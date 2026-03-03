@@ -10,7 +10,7 @@
 #else
 #define TCS34725_DEBUG(...)
 #define TCS34725_PANIC(...)  PANIC_NSRC()
-#define TCS34725_ASSERT(cond, ...) ASSERT(cond)
+#define TCS34725_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 

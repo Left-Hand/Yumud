@@ -11,7 +11,7 @@
 #else
 #define MT6701_DEBUG(...)
 #define MT6701_PANIC(...)  PANIC_NSRC()
-#define MT6701_ASSERT(cond, ...) ASSERT(cond)
+#define MT6701_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 using namespace ymd::drivers;

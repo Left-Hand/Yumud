@@ -11,7 +11,7 @@
 #else
 #define MA730_DEBUG(...)
 #define MA730_PANIC(...)  PANIC_NSRC()
-#define MA730_ASSERT(cond, ...) ASSERT(cond)
+#define MA730_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 

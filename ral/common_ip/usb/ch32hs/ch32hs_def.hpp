@@ -99,7 +99,7 @@ struct R32_USB_CTRL {
         return RB_UC_DMA_EN == 1;
     }
 };
-CHECK_R32(R32_USB_CTRL);
+VALIDATE_R32(R32_USB_CTRL);
 
 /**
  * @brief USB中断使能寄存器 (R8_USB_INT_EN)
@@ -166,7 +166,7 @@ struct R8_USB_INT_EN {
         return RB_UIE_TRANSFER == 1;
     }
 };
-CHECK_R8(R8_USB_INT_EN);
+VALIDATE_R8(R8_USB_INT_EN);
 
 /**
  * @brief USB设备地址寄存器 (R8_USB_DEV_AD)
@@ -197,7 +197,7 @@ struct R32_USB_DEV_AD {
         return static_cast<uint8_t>(RB_MASK_USB_ADDR & 0x7F);
     }
 };
-CHECK_R32(R32_USB_DEV_AD);
+VALIDATE_R32(R32_USB_DEV_AD);
 
 /**
  * @brief USB帧号寄存器 (R16_USB_FRAME_NO)
@@ -236,7 +236,7 @@ struct R32_USB_FRAME_NO {
         return MICRO_FRAME != 0;
     }
 };
-CHECK_R32(R32_USB_FRAME_NO);
+VALIDATE_R32(R32_USB_FRAME_NO);
 
 /**
  * @brief USB挂起控制寄存器 (R8_USB_SUSPEND)
@@ -281,7 +281,7 @@ struct R32_USB_SUSPEND {
         return static_cast<uint8_t>(RB_USB_LINESTATE & 0x03);
     }
 };
-CHECK_R32(R32_USB_SUSPEND);
+VALIDATE_R32(R32_USB_SUSPEND);
 
 /**
  * @brief USB当前速度类型寄存器 (R8_USB_SPEED_TYPE)
@@ -326,7 +326,7 @@ struct R32_USB_SPEED_TYPE {
         return static_cast<uint8_t>(RB_USB_SPEED_TYPE & 0x03);
     }
 };
-CHECK_R32(R32_USB_SPEED_TYPE);
+VALIDATE_R32(R32_USB_SPEED_TYPE);
 
 /**
  * @brief USB杂项状态寄存器 (R8_USB_MIS_ST)
@@ -385,7 +385,7 @@ struct R32_USB_MIS_ST {
         return RB_UMS_DEV_ATTACH == 1;
     }
 };
-CHECK_R32(R32_USB_MIS_ST);
+VALIDATE_R32(R32_USB_MIS_ST);
 
 /**
  * @brief USB中断标志寄存器 (R8_USB_INT_FG)
@@ -455,7 +455,7 @@ struct R8_USB_INT_FG {
         return RB_UIF_FIFO_OV == 1;
     }
 };
-CHECK_R32(R8_USB_INT_FG);
+VALIDATE_R32(R8_USB_INT_FG);
 
 /**
  * @brief USB中断状态寄存器 (R8_USB_INT_ST)
@@ -514,7 +514,7 @@ struct R32_USB_INT_ST {
         return static_cast<uint8_t>(MASK_UIS_H_RES_ENDP & 0x0F);
     }
 };
-CHECK_R32(R32_USB_INT_ST);
+VALIDATE_R32(R32_USB_INT_ST);
 
 /**
  * @brief USB接收长度寄存器 (R16_USB_RX_LEN)
@@ -535,7 +535,7 @@ struct R32_USB_RX_LEN {
         return static_cast<uint16_t>(R16_USB_RX_LEN & 0xFFFF);
     }
 };
-CHECK_R32(R32_USB_RX_LEN);
+VALIDATE_R32(R32_USB_RX_LEN);
 
 /******************************************************************************************
  * 22.2.2 设备模式寄存器（基地址 0x40023410）
@@ -614,7 +614,7 @@ struct R32_UEP_CONFIG {
         return (ep_id >=1 && ep_id <=15) ? ((RB_UEP_R_EN & (1 << (ep_id - 1))) != 0) : false;
     }
 };
-CHECK_R32(R32_UEP_CONFIG);
+VALIDATE_R32(R32_UEP_CONFIG);
 
 /**
  * @brief USB端点类型配置寄存器 (R32_UEP_TYPE)
@@ -680,7 +680,7 @@ struct R32_UEP_TYPE {
         return (ep_id >=1 && ep_id <=15) ? ((RB_UEP_T_TYPE & (1 << (ep_id - 1))) != 0) : false;
     }
 };
-CHECK_R32(R32_UEP_TYPE);
+VALIDATE_R32(R32_UEP_TYPE);
 
 /**
  * @brief USB端点缓冲区模式寄存器 (R32_UEP_BUF_MOD)
@@ -732,7 +732,7 @@ struct R32_UEP_BUF_MOD {
         return (ep_id >=0 && ep_id <=15) ? ((RB_UEP_BUF_MOD & (1 << ep_id)) != 0) : false;
     }
 };
-CHECK_R32(R32_UEP_BUF_MOD);
+VALIDATE_R32(R32_UEP_BUF_MOD);
 
 /**
  * @brief 端点0缓冲区DMA地址寄存器 (R32_UEP0_DMA)
@@ -759,7 +759,7 @@ struct R32_UEP0_DMA {
         return R32_UEP0_DMA;
     }
 };
-CHECK_R32(R32_UEP0_DMA);
+VALIDATE_R32(R32_UEP0_DMA);
 
 /**
  * @brief 端点n接收缓冲区DMA地址寄存器 (R32_UEPn_RX_DMA)
@@ -786,7 +786,7 @@ struct R32_UEPn_RX_DMA {
         return R32_UEPn_RX_DMA;
     }
 };
-CHECK_R32(R32_UEPn_RX_DMA);
+VALIDATE_R32(R32_UEPn_RX_DMA);
 
 /**
  * @brief 端点n发送缓冲区DMA地址寄存器 (R32_UEPn_TX_DMA)
@@ -813,7 +813,7 @@ struct R32_UEPn_TX_DMA {
         return R32_UEPn_TX_DMA;
     }
 };
-CHECK_R32(R32_UEPn_TX_DMA);
+VALIDATE_R32(R32_UEPn_TX_DMA);
 
 /**
  * @brief 端点n最大包长度寄存器 (R16_UEPn_MAX_LEN)
@@ -842,7 +842,7 @@ struct R32_UEPn_MAX_LEN {
         return static_cast<uint16_t>(UEPn_MAX_LEN & 0x7FF);
     }
 };
-CHECK_R32(R32_UEPn_MAX_LEN);
+VALIDATE_R32(R32_UEPn_MAX_LEN);
 
 /**
  * @brief 端点n发送长度寄存器 (R16_UEPn_T_LEN)
@@ -876,7 +876,7 @@ struct R32_UEPn_T_LEN {
         return static_cast<uint16_t>(UEPn_T_LEN & 0x7FF);
     }
 };
-CHECK_R32(R32_UEPn_T_LEN);
+VALIDATE_R32(R32_UEPn_T_LEN);
 
 /**
  * @brief 端点n发送控制寄存器 (R8_UEPn_TX_CTRL)
@@ -950,7 +950,7 @@ struct R32_UEPn_TX_CTRL {
         return RB_UEP_T_TOG_AUTO == 1;
     }
 };
-CHECK_R32(R32_UEPn_TX_CTRL);
+VALIDATE_R32(R32_UEPn_TX_CTRL);
 
 /**
  * @brief 端点n接收控制寄存器 (R8_UEPn_RX_CTRL)
@@ -1011,7 +1011,7 @@ struct R32_UEPn_RX_CTRL {
         return RB_UEP_R_TOG_AUTO == 1;
     }
 };
-CHECK_R32(R32_UEPn_RX_CTRL);
+VALIDATE_R32(R32_UEPn_RX_CTRL);
 
 /******************************************************************************************
  * 22.2.3 主机模式寄存器（基地址 0x40023401/0x40023410）
@@ -1053,7 +1053,7 @@ struct R32_UHOST_CTRL {
         UHOST_CTRL &= ~mask;
     }
 };
-CHECK_R32(R32_UHOST_CTRL);
+VALIDATE_R32(R32_UHOST_CTRL);
 
 /******************************************************************************************
  * 寄存器基地址与映射定义（工程直接使用）

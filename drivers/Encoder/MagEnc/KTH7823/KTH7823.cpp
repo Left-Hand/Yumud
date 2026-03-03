@@ -13,7 +13,7 @@
 #else
 #define KTH7823_DEBUG(...)
 #define KTH7823_PANIC(...)  PANIC_NSRC()
-#define KTH7823_ASSERT(cond, ...) ASSERT(cond)
+#define KTH7823_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 using namespace ymd;

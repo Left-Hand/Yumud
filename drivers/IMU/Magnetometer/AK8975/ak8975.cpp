@@ -12,7 +12,7 @@ using namespace ymd::drivers;
 #else
 #define AK8975_DEBUG(...)
 #define AK8975_PANIC(...)  PANIC_NSRC()
-#define AK8975_ASSERT(cond, ...) ASSERT(cond)
+#define AK8975_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 using Error = AK8975::Error;

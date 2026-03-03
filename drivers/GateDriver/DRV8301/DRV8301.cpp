@@ -11,7 +11,7 @@
 #else
 #define DRV8301_DEBUG(...)
 #define DRV8301_PANIC(...)  PANIC_NSRC()
-#define DRV8301_ASSERT(cond, ...) ASSERT(cond)
+#define DRV8301_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 using namespace ymd;

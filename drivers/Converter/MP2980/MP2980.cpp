@@ -14,7 +14,7 @@ using namespace ymd::drivers;
 #else
 #define MP2980_DEBUG(...)
 #define MP2980_PANIC(...)  PANIC_NSRC()
-#define MP2980_ASSERT(cond, ...) ASSERT(cond)
+#define MP2980_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 

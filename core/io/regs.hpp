@@ -93,30 +93,30 @@ DEF_REG_TEMPLATE(Reg64, uint64_t,       to_u64)
 
 
 
-#define CHECK_R8(type)\
+#define VALIDATE_R8(type)\
 static_assert(sizeof(type) == 1, "x must be 8bit register");\
 static_assert(std::has_unique_object_representations_v<type>, "x must has unique bitfield");\
 
-#define CHECK_R16(type)\
+#define VALIDATE_R16(type)\
 static_assert(sizeof(type) == 2, "x must be 16bit register");\
 static_assert(std::has_unique_object_representations_v<type>, "x must has unique bitfield");\
 
-#define CHECK_R32(type)\
+#define VALIDATE_R32(type)\
 static_assert(sizeof(type) == 4, "x must be 32bit register");\
 static_assert(std::has_unique_object_representations_v<type>, "x must has unique bitfield");\
 
 
 #define DEF_R8(name)\
 name{};\
-CHECK_R8(std::decay_t<decltype(name)>)\
+VALIDATE_R8(std::decay_t<decltype(name)>)\
 
 #define DEF_R16(name)\
 name{};\
-CHECK_R16(std::decay_t<decltype(name)>)\
+VALIDATE_R16(std::decay_t<decltype(name)>)\
 
 #define DEF_R32(name)\
 name{};\
-CHECK_R32(std::decay_t<decltype(name)>)\
+VALIDATE_R32(std::decay_t<decltype(name)>)\
 
 
 #define REG8_QUICK_DEF(addr, type, name)\

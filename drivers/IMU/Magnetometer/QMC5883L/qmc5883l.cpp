@@ -11,7 +11,7 @@
 #else
 #define QMC5883L_DEBUG(...)
 #define QMC5883L_PANIC(...)  PANIC_NSRC()
-#define QMC5883L_ASSERT(cond, ...) ASSERT(cond)
+#define QMC5883L_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 

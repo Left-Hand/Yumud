@@ -11,7 +11,7 @@ using namespace ymd::drivers;
 #else
 #define IST8310_DEBUG(...)
 #define IST8310_PANIC(...)  PANIC_NSRC()
-#define IST8310_ASSERT(cond, ...) ASSERT(cond)
+#define IST8310_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 

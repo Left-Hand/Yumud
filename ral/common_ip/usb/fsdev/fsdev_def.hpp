@@ -8,7 +8,7 @@ namespace ymd::ral::usb::fsdev{
 
 
 // 寄存器大小校验宏，确保结构体为32位（CH32寄存器按32位访问）
-#define CHECK_R32(T) static_assert(sizeof(T) == sizeof(uint32_t), #T " must be 32-bit")
+#define VALIDATE_R32(T) static_assert(sizeof(T) == sizeof(uint32_t), #T " must be 32-bit")
 
 /******************************************************************************************
  * 21.3 通用类寄存器（基地址 0x40005C00）
@@ -89,7 +89,7 @@ struct R32_USBD_CNTR {
         return FRES == 1;
     }
 };
-CHECK_R32(R32_USBD_CNTR);
+VALIDATE_R32(R32_USBD_CNTR);
 
 /**
  * @brief USB中断状态寄存器 (USBD_ISTR)
@@ -158,7 +158,7 @@ struct R32_USBD_ISTR {
         return DIR == 1 && CTR == 1;
     }
 };
-CHECK_R32(R32_USBD_ISTR);
+VALIDATE_R32(R32_USBD_ISTR);
 
 /**
  * @brief USB帧编号寄存器 (USBD_FNR)
@@ -211,7 +211,7 @@ struct R32_USBD_FNR {
         return static_cast<uint8_t>(LSOF & 0x03);
     }
 };
-CHECK_R32(R32_USBD_FNR);
+VALIDATE_R32(R32_USBD_FNR);
 
 /**
  * @brief USB设备地址寄存器 (USBD_DADDR)
@@ -262,7 +262,7 @@ struct R32_USBD_DADDR {
         return static_cast<uint8_t>(ADD & 0x7F);
     }
 };
-CHECK_R32(R32_USBD_DADDR);
+VALIDATE_R32(R32_USBD_DADDR);
 
 /**
  * @brief USB分组缓冲区描述表地址寄存器 (USBD_BTABLE)
@@ -303,7 +303,7 @@ struct R32_USBD_BTABLE {
         return (get_btable_addr() & 0x07) == 0;
     }
 };
-CHECK_R32(R32_USBD_BTABLE);
+VALIDATE_R32(R32_USBD_BTABLE);
 
 /******************************************************************************************
  * 21.3 端点类寄存器（基地址 0x40005C00，偏移0x00~0x1C，共8个端点EP0~EP7）
@@ -434,7 +434,7 @@ struct R32_USBD_EPRx {
         return EP_KIND == 1 && EP_TYPE == static_cast<uint8_t>(EpType::BULK);
     }
 };
-CHECK_R32(R32_USBD_EPRx);
+VALIDATE_R32(R32_USBD_EPRx);
 
 /******************************************************************************************
  * 21.3 缓冲区描述类寄存器（基地址 0x40006000 + USBD_BTABLE）
@@ -471,7 +471,7 @@ struct R32_USBD_ADDRx_TX {
         return static_cast<uint32_t>(ADDRx_TX << 1) | 0x40006000;
     }
 };
-CHECK_R32(R32_USBD_ADDRx_TX);
+VALIDATE_R32(R32_USBD_ADDRx_TX);
 
 /**
  * @brief 端点发送数据字节数寄存器 (USBD_COUNTx_TX)
@@ -502,7 +502,7 @@ struct R32_USBD_COUNTx_TX {
         return static_cast<uint16_t>(COUNTx_TX & 0x3FF);
     }
 };
-CHECK_R32(R32_USBD_COUNTx_TX);
+VALIDATE_R32(R32_USBD_COUNTx_TX);
 
 /**
  * @brief 端点接收缓冲区地址寄存器 (USBD_ADDRx_RX)
@@ -535,7 +535,7 @@ struct R32_USBD_ADDRx_RX {
         return static_cast<uint32_t>(ADDRx_RX << 1) | 0x40006000;
     }
 };
-CHECK_R32(R32_USBD_ADDRx_RX);
+VALIDATE_R32(R32_USBD_ADDRx_RX);
 
 /**
  * @brief 端点接收数据字节数寄存器 (USBD_COUNTx_RX)
@@ -595,7 +595,7 @@ struct R32_USBD_COUNTx_RX {
         return get_actual_rx_len() >= get_rx_buf_size();
     }
 };
-CHECK_R32(R32_USBD_COUNTx_RX);
+VALIDATE_R32(R32_USBD_COUNTx_RX);
 
 static constexpr uint32_t USBD_BASE        = 0x40005C00;
 static constexpr uint32_t USBD_BUF_BASE    = 0x40006000;

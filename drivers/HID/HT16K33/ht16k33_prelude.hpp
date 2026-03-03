@@ -206,7 +206,7 @@ struct HT16K33_Regs:public HT16K33_Prelude{
         uint8_t addr:4;
         const uint8_t __resv__:4 = 0b0000; 
     };
-    CHECK_R8(SetDataPtrCommand)
+    VALIDATE_R8(SetDataPtrCommand)
 
     struct SystemSetupCommand:public Reg8<>{
         uint8_t turn_on:1;
@@ -216,20 +216,20 @@ struct HT16K33_Regs:public HT16K33_Prelude{
             turn_on(_turn_on){;}
     };
 
-    CHECK_R8(SystemSetupCommand)
+    VALIDATE_R8(SystemSetupCommand)
 
     struct KeyDataPtrCommand:public Reg8<>{
         uint8_t key:3;
         const uint8_t __resv__:5 = 0b01000;
     };
 
-    CHECK_R8(KeyDataPtrCommand)
+    VALIDATE_R8(KeyDataPtrCommand)
 
     struct IntFlagPtr:public Reg8<>{
         const uint8_t __resv__ = 0b01100000;
     };
 
-    CHECK_R8(IntFlagPtr)
+    VALIDATE_R8(IntFlagPtr)
 
     struct DisplaySetupCommand:public Reg8<>{
         uint8_t display_on:1;
@@ -245,7 +245,7 @@ struct HT16K33_Regs:public HT16K33_Prelude{
         }
     };
 
-    CHECK_R8(DisplaySetupCommand)
+    VALIDATE_R8(DisplaySetupCommand)
 
     struct IntSet:public Reg8<>{
         IntPinFunc int_pin_func:2;
@@ -256,7 +256,7 @@ struct HT16K33_Regs:public HT16K33_Prelude{
         {;}
     };
 
-    CHECK_R8(IntSet)
+    VALIDATE_R8(IntSet)
 
     struct DimmingSet:public Reg8<>{
         PulseDuty dimming:4;
@@ -267,7 +267,7 @@ struct HT16K33_Regs:public HT16K33_Prelude{
         }
     };
 
-    CHECK_R8(DimmingSet)
+    VALIDATE_R8(DimmingSet)
 
     //  HOLTEK use only
     // struct TestMode:public Reg8<>{

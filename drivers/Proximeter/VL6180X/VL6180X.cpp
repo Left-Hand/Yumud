@@ -1,16 +1,15 @@
 #include "VL6180X.hpp"
 
-#define VL6180X_DEBUG
+#define VL6180X_DEBUG_EN 0
 
-#ifdef VL6180X_DEBUG
-#undef VL6180X_DEBUG
+#if VL6180X_DEBUG_EN == 1
 #define VL6180X_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define VL6180X_PANIC(...) PANIC(__VA_ARGS__)
 #define VL6180X_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define VL6180X_DEBUG(...)
 #define VL6180X_PANIC(...)  PANIC_NSRC()
-#define VL6180X_ASSERT(cond, ...) ASSERT(cond)
+#define VL6180X_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 using namespace ymd;

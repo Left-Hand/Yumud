@@ -16,7 +16,7 @@ using namespace ymd::drivers;
 #else
 #define SC8815_DEBUG(...)
 #define SC8815_PANIC(...)  PANIC_NSRC()
-#define SC8815_ASSERT(cond, ...) ASSERT(cond)
+#define SC8815_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 using Error = SC8815::Error;

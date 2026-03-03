@@ -12,7 +12,7 @@ using namespace ymd::drivers;
 #else
 #define SC8721_DEBUG(...)
 #define SC8721_PANIC(...)  PANIC_NSRC()
-#define SC8721_ASSERT(cond, ...) ASSERT(cond)
+#define SC8721_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 #define CHECK_RES(x, ...) ({\
