@@ -2,6 +2,7 @@
 
 
 #include "zdt_stepper_utils.hpp"
+#include "zdt_stepper_msg.hpp"
 
 namespace ymd::robots::zdtmotor{
 
@@ -14,19 +15,67 @@ public:
     bool is_multi_axis_sync = false;
 
 
-    FlatPacket brake();
-    FlatPacket set_subdivides(const uint16_t subdivides);
-    FlatPacket activate(const Enable en);
-    FlatPacket trig_cali();
-    FlatPacket query_homming_paraments();
-    FlatPacket trig_homming(const HommingMode mode);
-    FlatPacket set_angle(const Angular<iq16> position, iq16 speed);
-    FlatPacket set_speed(iq16 speed);
+    constexpr FlatPacket set_angle(const Angular<iq16> angle, iq16 speed) const {
+        return ser_req(req_msgs::SetPosition{
+            .is_ccw = (angle.is_negative()),
+            .rpm = Rpm::from_tps(speed),
+            .acc_level = AcclerationLevel::from_u8(0),
+            .pulse_cnt = PulseCnt::from_angle(angle.abs().cast_inner<uq16>()).unwrap(),
+            .is_absolute = true,
+            .is_sync = is_multi_axis_sync
+        });
+    }
+
+    constexpr FlatPacket set_speed(iq16 speed) const {
+        return ser_req(req_msgs::SetSpeed{
+            .is_ccw = speed < 0,
+            .rpm = Rpm::from_tps(math::abs(speed)),
+            .acc_level = AcclerationLevel::from_tpss(0),
+            .is_absolute = true,
+            .is_sync = is_multi_axis_sync
+        });
+    }
+
+    constexpr FlatPacket brake() const {
+        return ser_req(req_msgs::Brake{
+            .is_sync = is_multi_axis_sync
+        });
+    }
+
+    constexpr FlatPacket set_subdivides(const uint16_t subdivides) const {
+        return ser_req(req_msgs::SetSubDivides{
+            .is_burned = false,
+            .subdivides = uint8_t(subdivides & 0xff)
+        });
+    }
+
+    constexpr FlatPacket activate(const Enable en) const {
+        return ser_req(req_msgs::Actvation{
+            .en = en == EN,
+            .is_sync = is_multi_axis_sync
+        });
+    }
+
+
+    constexpr FlatPacket trig_cali() const {
+        return ser_req(req_msgs::TrigCali{});  
+    }
+
+    constexpr FlatPacket query_homming_paraments() const {
+        return ser_req(req_msgs::QueryHommingParaments{});
+    }
+
+    constexpr FlatPacket trig_homming(const HommingMode mode) const {
+        return ser_req(req_msgs::TrigHomming{
+            .homming_mode = mode,
+            .is_sync = is_multi_axis_sync
+        });
+    }
+
 
 private:
 template<typename T>
-    [[nodiscard]] constexpr FlatPacket ser_req(
-        const T & req){
+    [[nodiscard]] constexpr FlatPacket ser_req(const T & req) const {
         return make_req(node_id, verify_method, req);
     }
 
@@ -36,7 +85,7 @@ template<typename T>
         const NodeId node_id,   
         const VerifyMethod verify_method,
         const T & req_msg
-    ){
+    ) {
         constexpr FuncCode FUNC_CODE = std::decay_t<T>::FUNC_CODE;
         constexpr size_t PAYLOAD_LENGTH = std::decay_t<T>::PAYLOAD_LENGTH;
 
@@ -44,7 +93,7 @@ template<typename T>
         static_assert(PAYLOAD_LENGTH + 1 <= std::size(flat_packet.context));
 
         flat_packet.node_id = node_id;
-        flat_packet.func_code = std::decay_t<T>::FUNC_CODE;
+        flat_packet.func_code = FUNC_CODE;
 
         const auto payload_bytes = std::span<uint8_t, PAYLOAD_LENGTH>(
             &flat_packet.context[0],

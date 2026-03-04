@@ -10,13 +10,14 @@
 
 namespace ymd::robots::cybergear{
 
-struct [[nodiscard]] FaultBitFields{
-    using Self = FaultBitFields;
+struct [[nodiscard]] StatusBitFields final{
+    using Self = StatusBitFields;
     uint8_t can_id;
     uint8_t under_voltage:1;
     uint8_t over_current:1;
     uint8_t over_temp:1;
     uint8_t mag_enc_err:1;
+
     uint8_t hall_enc_err:1;
     uint8_t uncalibrated:1;
     uint8_t mode:2;
@@ -25,7 +26,7 @@ struct [[nodiscard]] FaultBitFields{
     [[nodiscard]] constexpr bool is_reset() const {return mode == 0;}
     [[nodiscard]] constexpr bool is_calibrating() const {return mode == 1;}
 };
-static_assert(sizeof(FaultBitFields) == 2);
+static_assert(sizeof(StatusBitFields) == 2);
 
 
 enum class [[nodiscard]] Error:uint8_t{
@@ -67,11 +68,11 @@ struct [[nodiscard]] TemperatureCode final{
     }
 };
 
-DEF_PER_UNIT(CmdRad, uint16_t, -2 * (2 * M_PI), 2 * (2 * M_PI))
-DEF_PER_UNIT(CmdOmega, uint16_t, -30 * (2 * M_PI), 30 * (2 * M_PI))
-DEF_PER_UNIT(CmdTorque, uint16_t, -12, 12)
-DEF_PER_UNIT(CmdKp, uint16_t, 0, 500)
-DEF_PER_UNIT(CmdKd, uint16_t, 0, 5)
+DEF_PER_UNIT(RadCode, uint16_t, -2 * (2 * M_PI), 2 * (2 * M_PI))
+DEF_PER_UNIT(OmegaCode, uint16_t, -30 * (2 * M_PI), 30 * (2 * M_PI))
+DEF_PER_UNIT(TorqueCode, uint16_t, -12, 12)
+DEF_PER_UNIT(KpCode, uint16_t, 0, 500)
+DEF_PER_UNIT(KdCode, uint16_t, 0, 5)
 
 
 struct [[nodiscard]] Feedback final{
@@ -93,11 +94,11 @@ public:
 
     using Feedback = details::Feedback;
     using TemperatureCode = details::TemperatureCode;
-    using CmdRad = details::CmdRad;
-    using CmdOmega = details::CmdOmega;
-    using CmdTorque = details::CmdTorque;
-    using CmdKp = details::CmdKp;
-    using CmdKd = details::CmdKd;
+    using RadCode = details::RadCode;
+    using OmegaCode = details::OmegaCode;
+    using TorqueCode = details::TorqueCode;
+    using KpCode = details::KpCode;
+    using KdCode = details::KdCode;
 
 
     CyberGear(hal::Can & can, uint8_t host_id, uint8_t node_id):
@@ -141,7 +142,7 @@ private:
     const uint8_t host_id_;
     uint8_t node_id_;
     
-    FaultBitFields fault_ = {};
+    StatusBitFields fault_ = {};
     Option<uint64_t> device_mcu_id_ = None;
 
 

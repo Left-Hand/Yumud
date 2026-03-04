@@ -57,9 +57,9 @@ void WS2812_Transport::init(){
 }
 
 void WS2812::set_rgb(const RGB<iq16> &color){
-    uint8_t g = uint8_t(std::clamp(int(color.g * 256), 0, 255));
-    uint8_t r = uint8_t(std::clamp(int(color.r * 256), 0, 255));
-    uint8_t b = uint8_t(std::clamp(int(color.b * 256), 0, 255));
+    const uint8_t g = uint8_t(std::clamp(int(color.g * 256), 0, 255));
+    const uint8_t r = uint8_t(std::clamp(int(color.r * 256), 0, 255));
+    const uint8_t b = uint8_t(std::clamp(int(color.b * 256), 0, 255));
     
 
     transport_.send_reset();

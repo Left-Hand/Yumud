@@ -16,15 +16,15 @@ struct BMI270_Prelude{
     using RegAddr = uint8_t;
 
 
-    enum class DPS:uint8_t{
+    enum class [[nodiscard]] DPS:uint8_t{
         _250, _500, _1000, _2000
     };
 
-    enum class G:uint8_t{
+    enum class [[nodiscard]] G:uint8_t{
         _2, _4, _8, _16
     };
 
-    enum class Command:uint8_t{
+    enum class [[nodiscard]] Command:uint8_t{
         START_FOC = 0x04,
         ACC_SET_PMU = 0b0001'0000,
         GYR_SET_PMU = 0b0001'0100,
@@ -35,13 +35,13 @@ struct BMI270_Prelude{
         STEP_CNT_CLR = 0xB2
     };
 
-    enum class PmuType:uint8_t{
+    enum class [[nodiscard]] PmuType:uint8_t{
         ACC,
         GYR,
         MAG
     };
 
-    enum class PmuMode:uint8_t{
+    enum class [[nodiscard]] PmuMode:uint8_t{
         SUSPEND,
         NORMAL,
         LOW_POWER,
@@ -53,14 +53,14 @@ struct BMI270_Prelude{
 
 struct BMI270_Regset:public BMI270_Prelude{
 
-    struct R8_ChipId:public Reg8<>{
+    struct [[nodiscard]] R8_ChipId:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
 
         static constexpr uint8_t KEY = 0x24;
         uint8_t data;
     };
 
-    struct R8_Err:public Reg8<>{
+    struct [[nodiscard]] R8_Err:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
 
         uint8_t fatal_err:1;
@@ -70,7 +70,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t aux_err:1;
     };
 
-    struct R8_Status:public Reg8<>{
+    struct [[nodiscard]] R8_Status:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
         uint8_t :2;
@@ -82,21 +82,21 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t drdy_acc:1;
     };
 
-    struct R8_Data0:public Reg8<>{
+    struct [[nodiscard]] R8_Data0:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
         static constexpr size_t size = 20;
 
-        uint8_t :8;
+        uint8_t bits;
     };
 
-    struct R8_SensorTime0:public Reg8<>{
+    struct [[nodiscard]] R8_SensorTime0:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x18};
         static constexpr size_t size = 3;
 
-        uint8_t :8;
+        uint8_t bits;
     };
 
-    struct R8_Event:public Reg8<>{
+    struct [[nodiscard]] R8_Event:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1B};
         uint8_t por_detected:1;
         uint8_t :1;
@@ -104,7 +104,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :3;
     };
 
-    struct R8_IntStatus0:public Reg8<>{
+    struct [[nodiscard]] R8_IntStatus0:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1C};
 
         uint8_t sign_motion_out:1;
@@ -117,7 +117,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :1;
     };
 
-    struct R8_IntStatus1:public Reg8<>{
+    struct [[nodiscard]] R8_IntStatus1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1D};
 
         uint8_t full_int:1;
@@ -129,13 +129,13 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t acc_drdy_int:1;
     };
 
-    struct R16_ScOut:public Reg16<>{
+    struct [[nodiscard]] R16_ScOut:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1E};
 
         uint16_t bits;
     };
 
-    struct R8_WrGestOut:public Reg8<>{
+    struct [[nodiscard]] R8_WrGestOut:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x20};
 
         uint8_t wr_gest_out:3;
@@ -143,7 +143,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :3;
     };
 
-    struct R8_InternalStatus:public Reg8<>{
+    struct [[nodiscard]] R8_InternalStatus:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x21};
 
         uint8_t message:4;
@@ -153,26 +153,26 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :1;
     };
 
-    struct R16_Temperature:public Reg16<>{
+    struct [[nodiscard]] R16_Temperature:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x22};
 
         uint16_t bits;
     };
 
-    struct R16_FifoLength:public Reg16<>{
+    struct [[nodiscard]] R16_FifoLength:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x24};
 
         uint16_t data:14;
         uint16_t :2;
     };
 
-    struct R8_FifoData:public Reg8<>{
+    struct [[nodiscard]] R8_FifoData:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x26};
 
-        uint8_t :8;
+        uint8_t bits;
     };
 
-    struct R8_FeatPage:public Reg8<>{
+    struct [[nodiscard]] R8_FeatPage:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x2F};
 
         uint8_t page:3;
@@ -182,7 +182,7 @@ struct BMI270_Regset:public BMI270_Prelude{
 
     //...
 
-    struct R8_AccConf:public Reg8<>{
+    struct [[nodiscard]] R8_AccConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x40};
 
         uint8_t acc_odr:4;
@@ -190,14 +190,14 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t acc_filter_perf:1;
     };
 
-    struct R8_AccFs:public Reg8<>{
+    struct [[nodiscard]] R8_AccFs:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x41};
 
         uint8_t acc_range:2;
         uint8_t :6;
     };
 
-    struct R8_GyrConf:public Reg8<>{
+    struct [[nodiscard]] R8_GyrConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x42};
 
         uint8_t gyr_odr:4;
@@ -206,7 +206,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t gyr_filter_perf:1;
     };
 
-    struct R8_GyrFs:public Reg8<>{
+    struct [[nodiscard]] R8_GyrFs:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x43};
 
         uint8_t gyr_range:3;
@@ -214,7 +214,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :4;
     };
 
-    struct R8_AuxConf:public Reg8<>{
+    struct [[nodiscard]] R8_AuxConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x44};
 
         uint8_t aux_odr:4;
@@ -222,7 +222,7 @@ struct BMI270_Regset:public BMI270_Prelude{
     };
 
 
-    struct R8_FifoDowns:public Reg8<>{
+    struct [[nodiscard]] R8_FifoDowns:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x45};
         uint8_t gyr_fifo_downs:3;
         uint8_t gyr_fifo_filt_data:1;
@@ -230,20 +230,20 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t acc_fifo_filt_data:1;
     };
 
-    struct R8_FifoWtm:public Reg16<>{
+    struct [[nodiscard]] R8_FifoWtm:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x46};
         uint8_t fifo_stop_on_full:1;
         uint8_t fifo_time_en:1;
         uint8_t :6;
     };
 
-    struct R8_FifoConfig0:public Reg8<>{
+    struct [[nodiscard]] R8_FifoConfig0:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x48};
         uint8_t fifo_overrun:1;
     };
 
 
-    struct R8_FifoConfig1:public Reg8<>{
+    struct [[nodiscard]] R8_FifoConfig1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x49};
 
         uint8_t fifo_tag_int1_en:2;
@@ -254,7 +254,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t fifo_gyr_en:1;
     };
 
-    struct R8_Saturation:public Reg8<>{
+    struct [[nodiscard]] R8_Saturation:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x4A};
 
         uint8_t acc_x:1;
@@ -268,14 +268,14 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :2;
     };
 
-    struct R8_AuxDevId:public Reg8<>{
+    struct [[nodiscard]] R8_AuxDevId:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x4b};
 
         uint8_t :1;
-        uint8_t i2c_device_addr;
+        uint8_t i2c_device_addr:7;
     };
 
-    struct R8_AuxIfConf:public Reg8<>{
+    struct [[nodiscard]] R8_AuxIfConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x4c};
 
         uint8_t aux_rd_burst:2;
@@ -285,25 +285,25 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t aux_manual_en:1;
     };
 
-    struct R8_AuxRdAddr:public Reg8<>{
+    struct [[nodiscard]] R8_AuxRdAddr:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x4d};
 
-        uint8_t :8;
+        uint8_t bits;
     };
 
-    struct R8_AuxWrAddr:public Reg8<>{
+    struct [[nodiscard]] R8_AuxWrAddr:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x4e};
 
-        uint8_t :8;
+        uint8_t bits;
     };
 
-    struct R8_AuxWrData:public Reg8<>{
+    struct [[nodiscard]] R8_AuxWrData:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x4d};
 
-        uint8_t :8;
+        uint8_t bits;
     };
 
-    struct R8_ErrRegMsk:public Reg8<>{
+    struct [[nodiscard]] R8_ErrRegMsk:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x52};
 
         uint8_t fatal_err:1;
@@ -313,7 +313,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t aux_err:1;
     };
 
-    struct R8_IntIoCtrl1:public Reg8<>{
+    struct [[nodiscard]] R8_IntIoCtrl1:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x53};
 
         uint8_t :1;
@@ -324,7 +324,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :3;
     };
 
-    struct R8_IntIoCtrl2:public Reg8<>{
+    struct [[nodiscard]] R8_IntIoCtrl2:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x54};
 
         uint8_t :1;
@@ -335,14 +335,14 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :3;
     };
 
-    struct R8_IntLatch:public Reg8<>{
+    struct [[nodiscard]] R8_IntLatch:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x55};
 
         uint8_t int_latch:1;
         uint8_t:7;
     };
 
-    struct R8_Int1MapFeat:public Reg8<>{
+    struct [[nodiscard]] R8_Int1MapFeat:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x56};
 
         uint8_t sig_motion_out:1;
@@ -355,7 +355,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :1;
     };
 
-    struct R8_Int2MapFeat:public Reg8<>{
+    struct [[nodiscard]] R8_Int2MapFeat:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x57};
 
         uint8_t sig_motion_out:1;
@@ -368,7 +368,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :1;
     };
 
-    struct R8_IntCtrl:public Reg8<>{
+    struct [[nodiscard]] R8_IntCtrl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x58};
 
         uint8_t ffull_int1:1;
@@ -382,14 +382,14 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t err_int2:1;
     };
 
-    struct R8_InitCtrl:public Reg8<>{
+    struct [[nodiscard]] R8_InitCtrl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x59};
-        uint8_t :8;
+        uint8_t bits;
     };
 
     //0x5a resv
 
-    struct R16_InitAddr:public Reg16<>{
+    struct [[nodiscard]] R16_InitAddr:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x5B};
 
         uint16_t base_0_3:4;
@@ -399,13 +399,13 @@ struct BMI270_Regset:public BMI270_Prelude{
 
     //0x5d resv
 
-    struct R8_InitData:public Reg16<>{
+    struct [[nodiscard]] R8_InitData:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x5E};
 
-        uint8_t :8;
+        uint8_t bits;
     };
 
-    struct R8_InternalError:public Reg8<>{
+    struct [[nodiscard]] R8_InternalError:public Reg8<>{
         uint8_t :1;
         uint8_t int_err_1:1;
         uint8_t int_err_2:1;
@@ -414,14 +414,14 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :3;
     };
 
-    struct R8_AuxIfTrm:public Reg8<>{
+    struct [[nodiscard]] R8_AuxIfTrm:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x68};
 
         uint8_t asda_pupsel:2;
         uint8_t spare3:1;
     };
 
-    struct R8_GyrCrtConf:public Reg8<>{
+    struct [[nodiscard]] R8_GyrCrtConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x69};
 
         uint8_t:2;
@@ -430,7 +430,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :4;
     };
 
-    struct R8_NvmConf:public Reg8<>{
+    struct [[nodiscard]] R8_NvmConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x6A};
 
         uint8_t:1;
@@ -438,7 +438,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t:6;
     };
 
-    struct R8_IfConf:public Reg8<>{
+    struct [[nodiscard]] R8_IfConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x6B};
 
         uint8_t spi3:1;
@@ -449,7 +449,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :2;
     };
 
-    struct R8_Dev:public Reg8<>{
+    struct [[nodiscard]] R8_Dev:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x6c};
 
         uint8_t io_pad_drv1:3;
@@ -458,7 +458,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t io_pad_i2c_b2:1;
     };
 
-    struct R8_AccSelfTest:public Reg8<>{
+    struct [[nodiscard]] R8_AccSelfTest:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x6D};
 
         uint8_t acc_self_test_en:1;
@@ -469,7 +469,7 @@ struct BMI270_Regset:public BMI270_Prelude{
     };
 
 
-    struct R8_GyeoSelfTest:public Reg8<>{
+    struct [[nodiscard]] R8_GyeoSelfTest:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x6E};
 
         uint8_t gyr_st_axes_done:1;
@@ -479,7 +479,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t:4;
     };
 
-    struct R8_NvConf:public Reg8<>{
+    struct [[nodiscard]] R8_NvConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x70};
 
         uint8_t spi_en:1;
@@ -490,7 +490,7 @@ struct BMI270_Regset:public BMI270_Prelude{
     };
 
 
-    struct R8_PwrConf{
+    struct [[nodiscard]] R8_PwrConf:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x7C};
 
         uint8_t adv_power_save:1;
@@ -499,7 +499,7 @@ struct BMI270_Regset:public BMI270_Prelude{
         uint8_t :5;
     };
 
-    struct R8_PweCtrl{
+    struct [[nodiscard]] R8_PweCtrl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x7D};
         uint8_t aux_en:1;
         uint8_t gyr_en:1;
