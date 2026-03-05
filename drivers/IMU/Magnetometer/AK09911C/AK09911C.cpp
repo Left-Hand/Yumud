@@ -1,24 +1,33 @@
 #include "ak09911c.hpp"
 
 
-#define DEBUG_EN
 
-#ifdef DEBUG_EN
+#ifdef AK09911C_DEBUG_EN
+#define AK09911C_TODO(...) TODO()
+#define AK09911C_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define AK09911C_PANIC(...) PANIC{__VA_ARGS__}
+#define AK09911C_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+
 
 #define CHECK_RES(x, ...) ({\
     const auto __res_check_res = (x);\
-    if(x.is_err()) DEBUG_SRC{__VA_ARGS__};\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
     __res_check_res;\
 })\
 
 
 #define CHECK_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
-    DEBUG_SRC{#x, ##__VA_ARGS__};\
+    PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
 })\
 
 #else
+#define AK09911C_DEBUG(...)
+#define AK09911C_TODO(...) PANIC_NSRC()
+#define AK09911C_PANIC(...)  PANIC_NSRC()
+#define AK09911C_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
 #define CHECK_RES(x, ...) (x)
 #define CHECK_ERR(x, ...) (x)
 #endif
@@ -43,10 +52,17 @@ __inline Result<void, Error> retry(const size_t times, Fn && fn, Fn_Dur && fn_du
 }
 
 
+
 template<typename Fn>
 __inline Result<void, Error> retry(const size_t times, Fn && fn){
     return retry(times, std::forward<Fn>(fn), nullptr);
 }
+
+[[nodiscard]] static constexpr math::Vec3<iq24> 
+transform_coeff_into_scale(const math::Vec3<int8_t> coeff){
+    return math::Vec3<iq24>(coeff) / 128 + math::Vec3<iq24>(1, 1, 1); 
+}
+
 
 IResult<> Self::init(){
     if(const auto res = validate(); 

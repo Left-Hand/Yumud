@@ -4,24 +4,32 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-// #define MMC5983_DEBUG_EN
-
 #ifdef MMC5983_DEBUG_EN
+#define MMC5983_TODO(...) TODO()
+#define MMC5983_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define MMC5983_PANIC(...) PANIC{__VA_ARGS__}
+#define MMC5983_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+
 
 #define CHECK_RES(x, ...) ({\
     const auto __res_check_res = (x);\
-    ASSERT{__res_check_res.is_ok(), __res_check_res.unwrap_err(), ##__VA_ARGS__};\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
     __res_check_res;\
 })\
 
 
 #define CHECK_ERR(x, ...) ({\
     const auto && __err_check_err = (x);\
-    PANIC{x.unwrap(), ##__VA_ARGS__};\
+    PANIC{#x, ##__VA_ARGS__};\
     __err_check_err;\
 })\
 
 #else
+#define MMC5983_DEBUG(...)
+#define MMC5983_TODO(...) PANIC_NSRC()
+#define MMC5983_PANIC(...)  PANIC_NSRC()
+#define MMC5983_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
 #define CHECK_RES(x, ...) (x)
 #define CHECK_ERR(x, ...) (x)
 #endif

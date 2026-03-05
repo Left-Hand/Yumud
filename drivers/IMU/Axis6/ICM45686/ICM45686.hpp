@@ -37,8 +37,8 @@ public:
 private:
     InvensenseImu_Transport transport_;
     
-    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t reg_val){
-        return transport_.write_reg(addr, reg_val);
+    [[nodiscard]] IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
+        return transport_.write_reg(reg_addr, reg_val);
     }
 
 
@@ -54,8 +54,8 @@ private:
     }
 
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & reg_val){
-        return transport_.read_reg(addr, reg_val);
+    [[nodiscard]] IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+        return transport_.read_reg(reg_addr, reg_val);
     }
 
 };

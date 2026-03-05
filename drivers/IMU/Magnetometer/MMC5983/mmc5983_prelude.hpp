@@ -67,8 +67,8 @@ struct MMC5983_Prelude{
 
 
 struct MMC5983_Regs final:public MMC5983_Prelude{
-    struct DataPacket{
-        static constexpr uint8_t address = 0;
+    struct [[nodiscard]] DataPacket final{
+        static constexpr uint8_t ADDR = 0;
 
         constexpr math::Vec3<int32_t> to_vec3_bits() const{
             //每个数据18位

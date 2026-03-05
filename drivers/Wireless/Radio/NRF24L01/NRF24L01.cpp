@@ -2,11 +2,12 @@
 
 
 
-// #define NRF24L01_DEBUG_EN
 
-#ifdef NRF24L01_DEBUG_EN
+#define NRF24L01_DEBUG_EN 0
+
+#if NRF24L01_DEBUG_EN == 1
 #define NRF24L01_TODO(...) TODO()
-#define NRF24L01_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define NRF24L01_DEBUG(...) DEBUG_PRINTS(__VA_ARGS__);
 #define NRF24L01_PANIC(...) PANIC{__VA_ARGS__}
 #define NRF24L01_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 #else

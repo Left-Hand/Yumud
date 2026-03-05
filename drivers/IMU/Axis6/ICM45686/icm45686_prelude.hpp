@@ -22,7 +22,7 @@ struct ICM45686_Prelude{
 
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0x68 >> 1);
 
-    enum class RegAddr: uint8_t{ 
+    enum class [[nodiscard]] RegAddr: uint8_t{ 
         AccelDataX1Ui = 0x00,
         PwrMgmt0        = 0x10,
         AccConfig     = 0x1B,
@@ -64,19 +64,19 @@ struct ICM45686_Prelude{
 
     enum class [[nodiscard]] Odr: uint8_t{
 
-        _6400_Hz = 3,
-        _3200_Hz,
-        _1600_Hz,
-        _800_Hz,
-        _400_Hz,
-        _200_Hz,
-        _100_Hz,
-        _50_Hz,
-        _25_Hz,
-        _12_Hz,
-        _6_Hz,
-        _3_Hz,
-        _1_Hz
+        _6400Hz = 3,
+        _3200Hz,
+        _1600Hz,
+        _800Hz,
+        _400Hz,
+        _200Hz,
+        _100Hz,
+        _50Hz,
+        _25Hz,
+        _12Hz,
+        _6Hz,
+        _3Hz,
+        _1Hz
     };
 };
 

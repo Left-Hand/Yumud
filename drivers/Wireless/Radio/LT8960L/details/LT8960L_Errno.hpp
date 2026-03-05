@@ -7,9 +7,9 @@
 #include "hal/gpio/gpio.hpp"
 
 
-#define LT8960L_DEBUG_EN
+#define LT8960L_DEBUG_EN 0
 
-#ifdef LT8960L_DEBUG_EN
+#if LT8960L_DEBUG_EN == 1
 #define LT8960L_TODO(...) TODO()
 #define LT8960L_DEBUG(...) DEBUG_PRINTS(__VA_ARGS__);
 #define LT8960L_PANIC(...) PANIC{__VA_ARGS__}

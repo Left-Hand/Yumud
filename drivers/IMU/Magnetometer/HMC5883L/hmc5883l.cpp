@@ -4,17 +4,34 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-// #define HMC5883L_DEBUG
-
-#ifdef HMC5883L_DEBUG
-#undef HMC5883L_DEBUG
+#ifdef HMC5883L_DEBUG_EN
+#define HMC5883L_TODO(...) TODO()
 #define HMC5883L_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
-#define HMC5883L_PANIC(...) PANIC(__VA_ARGS__)
-#define HMC5883L_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#define HMC5883L_PANIC(...) PANIC{__VA_ARGS__}
+#define HMC5883L_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+
+
+#define CHECK_RES(x, ...) ({\
+    const auto __res_check_res = (x);\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
+    __res_check_res;\
+})\
+
+
+#define CHECK_ERR(x, ...) ({\
+    const auto && __err_check_err = (x);\
+    PANIC{#x, ##__VA_ARGS__};\
+    __err_check_err;\
+})\
+
 #else
 #define HMC5883L_DEBUG(...)
-#define HMC5883L_PANIC(...)  PANIC{}
-#define HMC5883L_ASSERT(cond, ...) ASSERT{cond}
+#define HMC5883L_TODO(...) PANIC_NSRC()
+#define HMC5883L_PANIC(...)  PANIC_NSRC()
+#define HMC5883L_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
+#define CHECK_RES(x, ...) (x)
+#define CHECK_ERR(x, ...) (x)
 #endif
 
 

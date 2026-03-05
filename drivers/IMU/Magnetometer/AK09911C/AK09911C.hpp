@@ -81,11 +81,7 @@ private:
 
     [[nodiscard]] IResult<math::Vec3<int8_t>> get_coeff();
 
-    [[nodiscard]] static constexpr math::Vec3<iq24> 
-    transform_coeff_into_scale(const math::Vec3<int8_t> coeff){
-        return math::Vec3<iq24>(coeff) / 128 + math::Vec3<iq24>(1, 1, 1); 
-    }
-    
+
 };
 
 };

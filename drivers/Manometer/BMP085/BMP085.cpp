@@ -88,7 +88,7 @@ IResult<uint32_t> BMP085::read_raw_pressure(void) {
     if(const auto res = write8(RegAddr::CONTROL, command);
         res.is_err()) return Err(res.unwrap_err());
 
-    const auto delay = [&]() {
+    const auto ms_delay = [&]() {
         switch (mode_) {
             case Mode::UltraLowPower:       return 5ms;
             case Mode::Standard:        return 8ms;
@@ -98,7 +98,7 @@ IResult<uint32_t> BMP085::read_raw_pressure(void) {
         __builtin_unreachable();
     }();
 
-    clock::delay(delay);
+    clock::delay(ms_delay);
 
     uint16_t b1;
     uint8_t b2;

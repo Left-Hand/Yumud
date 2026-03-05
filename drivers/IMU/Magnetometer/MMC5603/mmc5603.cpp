@@ -3,16 +3,36 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-#ifdef MMC5603_DEBUG
-#undef MMC5603_DEBUG
+#ifdef MMC5603_DEBUG_EN
+#define MMC5603_TODO(...) TODO()
 #define MMC5603_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
-#define MMC5603_PANIC(...) PANIC(__VA_ARGS__)
-#define MMC5603_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#define MMC5603_PANIC(...) PANIC{__VA_ARGS__}
+#define MMC5603_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+
+
+#define CHECK_RES(x, ...) ({\
+    const auto __res_check_res = (x);\
+    ASSERT{__res_check_res.is_ok(), ##__VA_ARGS__};\
+    __res_check_res;\
+})\
+
+
+#define CHECK_ERR(x, ...) ({\
+    const auto && __err_check_err = (x);\
+    PANIC{#x, ##__VA_ARGS__};\
+    __err_check_err;\
+})\
+
 #else
 #define MMC5603_DEBUG(...)
+#define MMC5603_TODO(...) PANIC_NSRC()
 #define MMC5603_PANIC(...)  PANIC_NSRC()
 #define MMC5603_ASSERT(cond, ...) ASSERT_NSRC(cond)
+
+#define CHECK_RES(x, ...) (x)
+#define CHECK_ERR(x, ...) (x)
 #endif
+
 
 using Error = ImuError;
 
