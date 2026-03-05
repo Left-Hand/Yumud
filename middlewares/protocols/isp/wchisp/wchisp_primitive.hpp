@@ -60,7 +60,7 @@ static constexpr std::array<uint8_t, 8> xor_key(
         checksum += byte;
     }
 
-    std::array<uint8_t, 8> key{};
+    std::array<uint8_t, 8> key;
     key.fill(checksum);
 
     key.back() += chip_id;

@@ -147,70 +147,6 @@ private:
 }
 
 
-namespace ymd::repl{
-
-struct ReplServer2 final{
-public:
-    ReplServer2(ReadCharProxy && is, WriteCharProxy && os) :
-        is_(std::move(is)),
-        os_(std::move(os)){;}
-
-    template<typename T>
-    void invoke(T && obj){
-        while(is_->available()){
-            uint8_t byte;
-            is_->try_read_byte(byte);
-            if(not is_visible_char(byte)) continue;
-            DEBUG_PRINTLN(byte);
-        }
-    }
-
-    void enable_echo(Enable outen){ outen_ = outen == EN; }
-private:
-    ReadCharProxy is_;
-    OutputStreamByRoute os_;
-    // FixedString<32> temp_str_;
-
-    bool outen_ = false;
-
-    template<typename T>
-    auto respond(T && obj, const std::span<const StringView> strs){
-        const auto guard = os_.create_guard();
-        if(outen_){
-            os_.force_sync(EN);
-            os_.prints("<<=", strs);
-        }
-
-        return [&]{
-            if(!this->outen_){
-                DummyReceiver dos{};
-                return script::visit(obj, dos, script::AccessProvider_ByStringViews(strs));
-            }else{
-                return script::visit(obj, os_, script::AccessProvider_ByStringViews(strs));
-            }
-        }();
-    }
-
-    [[nodiscard]] static constexpr bool is_visible_char(const char c){
-        return (c >= 32) and (c <= 126);
-    }
-
-    struct DummyReceiver{
-        template<typename T>
-        DummyReceiver & operator <<(T && arg){
-            //do nothing
-            return *this;
-        }
-
-        template<typename ... Args>
-        void println(Args && ... args){;}
-    };
-};
-
-
-}
-
-
 // pub enum JsonVariant {
 //     Object(Vec<(String, JsonVariant)>),
 //     Array(Vec<JsonVariant>),
@@ -261,7 +197,7 @@ void script_main(){
 
     while(true){
         [[maybe_unused]] auto repl_service_poller = [&]{
-            static repl::ReplServer2 repl_server{&DBG_UART, &DBG_UART};
+            static repl::ReplServer repl_server{&DBG_UART, &DBG_UART};
 
             static const auto list = script::make_list(
                 "list",
