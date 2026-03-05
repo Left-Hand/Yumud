@@ -27,38 +27,38 @@ struct MP2980_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class VrefSlewRate:uint8_t{
+    enum class [[nodiscard]] VrefSlewRate:uint8_t{
         _38_V_S,
         _50_V_S,
         _75_V_S,
         _150_V_S
     };
 
-    enum class OvpMode:uint8_t{
+    enum class [[nodiscard]] OvpMode:uint8_t{
         NoProtect,
         Discharge, // default
         LatchOff
     };
 
-    enum class OcpMode:uint8_t{
+    enum class [[nodiscard]] OcpMode:uint8_t{
         CycleByCycle,
         Hiccup, // default
         LatchOff
     };
 
-    enum class BuckBoostFsw:uint8_t{
+    enum class [[nodiscard]] BuckBoostFsw:uint8_t{
         _40_P,
         _80_P
     };
 
-    enum class Fsw:uint8_t{
+    enum class [[nodiscard]] Fsw:uint8_t{
         _200_kHz,
         _300_kHz,
         _400_kHz,
         _600_kHz
     };
 
-    enum class CurrLimitThreshold:uint8_t{
+    enum class [[nodiscard]] CurrLimitThreshold:uint8_t{
         _27_9_mV,
         _33_3_mV,
         _39_3_mV,

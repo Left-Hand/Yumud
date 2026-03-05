@@ -14,6 +14,8 @@ using namespace primitive;
 
 // REQ[0x1A] 全部信息
 struct [[nodiscard]] GetAllInfo final {
+    using Self = GetAllInfo;
+
     static constexpr CfCode CF_CODE = CfCode::GetAllInfo;
     static constexpr size_t CONTEXT_LENGTH = 0;
 };
@@ -21,18 +23,24 @@ struct [[nodiscard]] GetAllInfo final {
 
 // REQ[0x02] ABS信息
 struct [[nodiscard]] GetAbs final{
+    using Self = GetAbs;
+
     static constexpr CfCode CF_CODE = CfCode::GetAbs;
     static constexpr size_t CONTEXT_LENGTH = 0;
 };
 
 // REQ[0x8A] ABM信息
 struct [[nodiscard]] GetAbm final {
+    using Self = GetAbm;
+
     static constexpr CfCode CF_CODE = CfCode::GetAbm;
     static constexpr size_t CONTEXT_LENGTH = 0;
 };
 
 // REQ[0x92] 型号与版本信息
 struct [[nodiscard]] GetVersion final {
+    using Self = GetVersion;
+
     static constexpr CfCode CF_CODE = CfCode::GetVersion;
     static constexpr size_t CONTEXT_LENGTH = 0;
 };
@@ -40,6 +48,8 @@ struct [[nodiscard]] GetVersion final {
 
 // REQ[0x62] ABM清零，故障清除
 struct [[nodiscard]] ClearAbmAndFault final {
+    using Self = ClearAbmAndFault;
+
     static constexpr CfCode CF_CODE = CfCode::ClearAbmAndFault;
     static constexpr size_t CONTEXT_LENGTH = 0;
 };
@@ -47,12 +57,16 @@ struct [[nodiscard]] ClearAbmAndFault final {
 
 // REQ[0xC2] ABS清零
 struct [[nodiscard]] ClearAbs final {
+    using Self = ClearAbs;
+
     static constexpr CfCode CF_CODE = CfCode::ClearAbs;
     static constexpr size_t CONTEXT_LENGTH = 0;
 };
 
 // REQ[0x32] 写指定地址数据
 struct [[nodiscard]] WriteEEprom final {
+    using Self = WriteEEprom;
+
     static constexpr CfCode CF_CODE = CfCode::WriteEEprom;
     static constexpr size_t CONTEXT_LENGTH = 2;
 
@@ -69,10 +83,22 @@ struct [[nodiscard]] WriteEEprom final {
 
         return Ok();
     }
+
+
+    static constexpr Self from_bytes(
+        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+    ) noexcept {
+        return Self{
+            .address = bytes[0],
+            .val = bytes[1]
+        };
+    }
 };
 
 // REQ[0xEA] 读指定地址数据
 struct [[nodiscard]] ReadEEprom final {
+    using Self = ReadEEprom;
+
     static constexpr CfCode CF_CODE = CfCode::ReadEEprom;
     static constexpr size_t CONTEXT_LENGTH = 1;
 
@@ -88,6 +114,14 @@ struct [[nodiscard]] ReadEEprom final {
 
         return Ok();
     }
+
+    static constexpr Self from_bytes(
+        std::span<const uint8_t, CONTEXT_LENGTH> bytes
+    ) noexcept {
+        return Self{
+            .address = bytes[0]
+        };
+    }
 };
 
 
@@ -101,6 +135,8 @@ using namespace primitive;
 
 // RESP[0x1A] 全部信息
 struct [[nodiscard]] GetAllInfo final {
+    using Self = GetAllInfo;
+
     static constexpr CfCode CF_CODE = CfCode::GetAllInfo;
     static constexpr size_t CONTEXT_LENGTH = 9;
 
@@ -143,6 +179,8 @@ struct [[nodiscard]] GetAllInfo final {
 
 // RESP[0x02] ABS信息
 struct [[nodiscard]] GetAbs final{
+    using Self = GetAbs;
+
     static constexpr CfCode CF_CODE = CfCode::GetAbs;
     static constexpr size_t CONTEXT_LENGTH = 4;
 
@@ -175,6 +213,8 @@ struct [[nodiscard]] GetAbs final{
 
 // RESP[0x8A] ABM信息
 struct [[nodiscard]] GetAbm final {
+    using Self = GetAbm;
+
     static constexpr CfCode CF_CODE = CfCode::GetAbm;
     static constexpr size_t CONTEXT_LENGTH = 4;
 
@@ -207,6 +247,8 @@ struct [[nodiscard]] GetAbm final {
 
 // RESP[0x92] 型号与版本信息
 struct [[nodiscard]] GetVersion final {
+    using Self = GetVersion;
+
     static constexpr CfCode CF_CODE = CfCode::GetVersion;
     static constexpr size_t CONTEXT_LENGTH = 8;
 
@@ -257,6 +299,8 @@ struct [[nodiscard]] GetVersion final {
 
 // RESP[0x62] ABM清零，故障清除
 struct [[nodiscard]] ClearAbmAndFault final {
+    using Self = ClearAbmAndFault;
+
     static constexpr CfCode CF_CODE = CfCode::ClearAbmAndFault;
     static constexpr size_t CONTEXT_LENGTH = 4;
 
@@ -290,6 +334,8 @@ struct [[nodiscard]] ClearAbmAndFault final {
 
 // RESP[0xC2] ABS清零
 struct [[nodiscard]] ClearAbs final {
+    using Self = ClearAbs;
+
     static constexpr CfCode CF_CODE = CfCode::ClearAbs;
     static constexpr size_t CONTEXT_LENGTH = 4;
 
@@ -322,6 +368,8 @@ struct [[nodiscard]] ClearAbs final {
 
 // RESP[0x32] 写指定地址数据
 struct [[nodiscard]] WriteEEprom final {
+    using Self = WriteEEprom;
+
     static constexpr CfCode CF_CODE = CfCode::WriteEEprom;
     static constexpr size_t CONTEXT_LENGTH = 2;
 
@@ -351,6 +399,8 @@ struct [[nodiscard]] WriteEEprom final {
 
 // RESP[0xEA] 读指定地址数据
 struct [[nodiscard]] ReadEEprom final {
+    using Self = ReadEEprom;
+
     static constexpr CfCode CF_CODE = CfCode::ReadEEprom;
     static constexpr size_t CONTEXT_LENGTH = 2;
 
@@ -383,6 +433,8 @@ struct [[nodiscard]] ReadEEprom final {
 #if 0
 
 struct [[nodiscard]] Response final{
+    using Self = Response;
+
     CfCode cf;
 
     union{
