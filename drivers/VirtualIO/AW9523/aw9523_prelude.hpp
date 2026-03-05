@@ -80,25 +80,25 @@ struct AW9523_Prelude{
 
 struct AW9523_Regset final:public AW9523_Prelude{
 
-    struct InputReg  : public Reg16<>{
+    struct [[nodiscard]] R16_Input  : public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr::In;
 
         hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(input_reg)
 
-    struct OutputReg  : public Reg16<>{
+    struct [[nodiscard]] R16_Output : public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr::Out;
 
         hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(output_reg)
 
-    struct R16_Dir:public Reg16<>{
+    struct [[nodiscard]] R16_Dir:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr::Dir;
 
         hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(dir_reg)
 
-    struct CtlReg:Reg8<>{
+    struct [[nodiscard]] R8_Ctl:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr::Ctl;
         CurrentLimit isel:2;
         uint8_t __resv1__:2;
@@ -106,21 +106,21 @@ struct AW9523_Regset final:public AW9523_Prelude{
         uint8_t __resv2__:3;
     }DEF_R8(ctl_reg)
 
-    struct R16_IntEn:public Reg16<>{
+    struct [[nodiscard]] R16_IntEn:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr::Inten;
 
         hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(inten_reg)
 
 
-    struct R16_LedMode:public Reg16<>{
+    struct [[nodiscard]] R16_LedMode:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr::LedMode;
 
         hal::PinMask mask = hal::PinMask::zero();
     }DEF_R16(led_mode_reg);
 
 
-    struct R8_ChipId:public Reg8<>{
+    struct [[nodiscard]] R8_ChipId:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr::ChipId;
 
         uint8_t id;

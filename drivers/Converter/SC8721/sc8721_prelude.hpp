@@ -15,7 +15,7 @@ struct SC8721_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b01100000 >> 1);
     using RegAddr = uint8_t;
 
-    enum class Error_Kind{
+    enum class [[nodiscard]] Error_Kind{
 
     };
 
@@ -24,12 +24,12 @@ struct SC8721_Prelude{
     template<typename T = void>
     using IResult = Result<T, Error>;
 
-    enum class DeadZone:uint8_t{
+    enum class [[nodiscard]] DeadZone:uint8_t{
         _20ns,
         _40ns
     };
 
-    enum class SwitchFreq:uint8_t{
+    enum class [[nodiscard]] SwitchFreq:uint8_t{
         // Switching frequency setting:
         // 00: 260kHz 
         // 01: 500kHz(default)
@@ -41,14 +41,14 @@ struct SC8721_Prelude{
         _920kHz = 0b11
     };
 
-    enum class SlopComp:uint8_t{
+    enum class [[nodiscard]] SlopComp:uint8_t{
         _0,
         _50,
         _100,
         _150
     };
 
-    struct Status{
+    struct [[nodiscard]] Status final{
         uint8_t short_circuit:1;
         uint8_t vout_vin_h:1;
         uint8_t thermal_shutdown:1;

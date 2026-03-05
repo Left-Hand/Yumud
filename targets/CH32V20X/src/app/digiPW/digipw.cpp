@@ -20,7 +20,6 @@
 #include "drivers/Adc/INA226/ina226.hpp"
 #include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
 #include "drivers/Adc/HX711/HX711.hpp"
-#include "drivers/Wireless/Radio/HC12/HC12.hpp"
 
 
 #include "hal/bus/i2c/i2cdrv.hpp"

@@ -13,7 +13,7 @@ static constexpr uint8_t LEN_TOKEN = 0x05;
 static constexpr uint8_t TAIL_TOKEN = 0xAA;
 
 
-struct [[nodiscard]] SignalStrengthCode{
+struct [[nodiscard]] SignalStrengthCode final{
     using Self = SignalStrengthCode;
     uint8_t bits;
 
@@ -32,7 +32,7 @@ struct [[nodiscard]] SignalStrengthCode{
 };
 
 #pragma pack(push, 1)
-struct [[nodiscard]] Packet{
+struct [[nodiscard]] Packet final{
     using Self = Packet;
 
     uint16_t sender_addr;

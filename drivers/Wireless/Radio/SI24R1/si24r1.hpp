@@ -3,6 +3,8 @@
 #pragma once
 
 #include "si24r1_prelude.hpp"
+
+
 namespace ymd::drivers{
 
 class Si24R1:public Si24R1_Prelude{

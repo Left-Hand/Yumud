@@ -5,8 +5,7 @@
 namespace ymd::drivers{
 
 
-class DRV8323R final:
-    public DRV832X_Regs{
+class DRV8323R final:public DRV832X_Prelude{
 public:
     explicit DRV8323R(const hal::SpiDrv & spi_drv):
         transport_(spi_drv){;}
@@ -28,11 +27,12 @@ public:
     [[nodiscard]] IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);
     [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
 
-    [[nodiscard]] IResult<R16_Status1> get_status1();
-    [[nodiscard]] IResult<R16_Status2> get_status2();
+    [[nodiscard]] IResult<Status1> get_status1();
+    [[nodiscard]] IResult<Status2> get_status2();
 private:
     using Phy = DRV8323R_Transport;
     Phy transport_;
+    DRV832X_Regs regs_;
 
 
     template<typename T>

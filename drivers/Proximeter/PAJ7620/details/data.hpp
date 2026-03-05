@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 
 /* Register bank select R/W*/
 static constexpr uint8_t GESTURE_REG_BANK_SEL = 0xEF;

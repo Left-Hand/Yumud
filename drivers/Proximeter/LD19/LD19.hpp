@@ -20,7 +20,7 @@ static constexpr uint8_t HEADER_TOKEN = 0x54;
 static constexpr uint8_t VERLEN_TOKEN = 0x2C;
 static constexpr size_t POINTS_PER_FRAME = 12;
 
-struct [[nodiscard]] LidarPoint{
+struct [[nodiscard]] LidarPoint final{
 
     uint16_t distance_mm;
     uint8_t intensity;
@@ -43,7 +43,7 @@ struct [[nodiscard]] LidarPoint{
     }
 };
 
-struct [[nodiscard]] LidarSpinSpeedCode{
+struct [[nodiscard]] LidarSpinSpeedCode final{
 public:
     static constexpr LidarSpinSpeedCode from_bits(const uint16_t bits){
         return LidarSpinSpeedCode{bits};
@@ -57,7 +57,7 @@ public:
     uint16_t bits;
 };
 
-struct [[nodiscard]] LidarAngleCode{
+struct [[nodiscard]] LidarAngleCode final{
 public:
     static constexpr LidarAngleCode from_bits(const uint16_t bits){
         return LidarAngleCode{bits};
@@ -71,7 +71,7 @@ public:
     uint16_t bits;
 };
 
-struct [[nodiscard]] TimeStamp{
+struct [[nodiscard]] TimeStamp final{
     uint16_t bits;
 
     static constexpr TimeStamp from_bits(const uint16_t bits){

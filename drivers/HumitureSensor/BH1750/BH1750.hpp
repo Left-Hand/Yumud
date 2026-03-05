@@ -30,8 +30,10 @@ public:
 
 class BH1750 final:public BH1750_Prelude{
 public:
-    explicit BH1750(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    explicit BH1750(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    explicit BH1750(const hal::I2cDrv & i2c_drv):
+        i2c_drv_(i2c_drv){;}
+    explicit BH1750(hal::I2cDrv && i2c_drv):
+        i2c_drv_(std::move(i2c_drv)){;}
 
     [[nodiscard]] IResult<> power_down(){
         return send_command(Command::PowerDown);
