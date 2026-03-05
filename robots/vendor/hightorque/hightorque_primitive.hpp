@@ -126,7 +126,7 @@ struct [[nodiscard]] FaultCode final{
 };
 
 
-enum class RegAddr:uint8_t{
+enum class [[nodiscard]] RegAddr:uint8_t{
     // 0x000 模式 R/W 电机运行模式（具体模式见 表2电机运行模式）
     Mode = 0x00,
     // 0x001 位置 R 电机输出轴位置

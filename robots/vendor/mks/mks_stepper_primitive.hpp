@@ -207,7 +207,7 @@ struct [[nodiscard]] PulseCnt final{
         return (bytes[0] << 16) | (bytes[1] << 8) | bytes[2];
     }
 
-    uint8_t bytes[3];
+    std::array<uint8_t, 3> bytes;
 };
 #pragma pack(pop)
 static_assert(sizeof(PulseCnt) == 3);

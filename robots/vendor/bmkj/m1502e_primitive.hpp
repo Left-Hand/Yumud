@@ -49,11 +49,11 @@ struct [[nodiscard]] MotorId final{
         return Some(from_bits(static_cast<uint8_t>(nth.count())));
     }
 
-    constexpr uint8_t to_bits() const{
+    [[nodiscard]] constexpr uint8_t to_bits() const{
         return bits_;
     }
 
-    constexpr bool operator==(const MotorId& rhs) const{
+    [[nodiscard]] constexpr bool operator==(const MotorId& rhs) const{
         return bits_ == rhs.bits_;
     }
 

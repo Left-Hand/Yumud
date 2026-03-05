@@ -13,13 +13,13 @@
 
 #include "middlewares/script/script_primitive.hpp"
 #include "middlewares/repl/repl_server.hpp"
+#include "middlewares/gcode/gcode.hpp"
 
 #include "algebra/vectors/polar.hpp"
 #include "algebra/vectors/vec2.hpp"
 
 #include "common_service.hpp"
 #include "joints.hpp"
-#include "robots/gcode/gcode.hpp"
 #include "details/gcode_file.hpp"
 
 #ifdef USART1_PRESENT

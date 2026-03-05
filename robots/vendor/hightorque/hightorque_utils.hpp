@@ -155,7 +155,7 @@ static constexpr void fill_bytes(
 }
 
 
-struct [[nodiscard]] SlotFiller{
+struct [[nodiscard]] SlotFiller final{
     SlotCommand slot_command;
     RegAddr reg_addr;
 

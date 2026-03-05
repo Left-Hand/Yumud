@@ -11,6 +11,7 @@ static constexpr uint16_t NIL_U16 = 0x8000;
 
 struct [[nodiscard]] SetMode final{
     static constexpr size_t NUM_BYTES = 3;
+    
     Mode mode;
 
     constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const {
@@ -22,6 +23,7 @@ struct [[nodiscard]] SetMode final{
 
 struct [[nodiscard]] ControlQCurrent final{
     static constexpr size_t NUM_BYTES = 4;
+    
     CurrentCode q_current_code;
 
     constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const {
@@ -32,6 +34,7 @@ struct [[nodiscard]] ControlQCurrent final{
 
 struct [[nodiscard]] ControlPosition final{
     static constexpr size_t NUM_BYTES = 8;
+    
     PositionCode position_code;
     TorqueCode torque_code;
 
@@ -43,6 +46,7 @@ struct [[nodiscard]] ControlPosition final{
 
 struct [[nodiscard]] ControlTorque final{
     static constexpr size_t NUM_BYTES = 4;
+    
     TorqueCode torque_code;
 
     constexpr void fill_bytes(std::span<uint8_t, NUM_BYTES> bytes) const {
@@ -54,6 +58,7 @@ struct [[nodiscard]] ControlTorque final{
 // 电机位置-速度-最大力矩控制，int16型
 struct [[nodiscard]] ControlPvt final{
     static constexpr size_t NUM_BYTES = 8;
+    
 
     PositionCode position_code;
     SpeedCode speed_code;
@@ -68,6 +73,7 @@ struct [[nodiscard]] ControlPvt final{
 // 梯形控制（电机固件 v4.6.0 开始支持）
 struct [[nodiscard]] ControlTrapezoidal final{
     static constexpr size_t NUM_BYTES = 8;
+    
     PositionCode position_code;
     SpeedCode speed_code;
     AccelerationCode accel_code;

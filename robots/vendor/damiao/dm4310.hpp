@@ -198,25 +198,8 @@ struct FrameFactory{
         return hal::BxCanFrame::from_parts(NMT_CAN_FRAME_ID, pack_query_param_data(motor_can_id, reg_addr));
     }
 
-    // constexpr hal::BxCanFrame set_control_mode(ControlMode mode) const {
-    //     return hal::BxCanFrame::from_parts(0x7FF, pack_write_param_data(motor_can_id, static_cast<int>(reg_addr::CTRL_MODE), mode));
-    // }
-
-    // constexpr hal::BxCanFrame refresh() const {
-        
-    //     uint8_t send_can_id = motor_can_id;
-    //     std::vector<uint8_t> data = {static_cast<uint8_t>(send_can_id & 0xFF),
-    //                                 static_cast<uint8_t>((send_can_id >> 8) & 0xFF),
-    //                                 0xCC,
-    //                                 0x00,
-    //                                 0x00,
-    //                                 0x00,
-    //                                 0x00,
-    //                                 0x00};
-    //     return hal::BxCanFrame::from_parts(0x7FF, data);
-    // }
 private:
-    struct IdBase{
+    struct [[nodiscard]] IdBase final{
         uint16_t count;
 
         constexpr hal::CanStdId  operator +(const hal::CanStdId stdid) const {

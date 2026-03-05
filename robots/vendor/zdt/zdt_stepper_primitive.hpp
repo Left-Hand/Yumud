@@ -47,6 +47,79 @@ enum class [[nodiscard]] FuncCode:uint8_t{
     MultiAxisSync = 0xff
 };
 
+struct [[nodiscard]] Bytes2CanFrameIterator{
+    static constexpr size_t MAX_PAYLOAD_LENGTH_PER_CAN_FRAME = 7;
+    explicit constexpr Bytes2CanFrameIterator(
+        const NodeId node_id,
+        const FuncCode func_code,
+        const std::span<const uint8_t> context
+    ):
+        node_id_(node_id),
+        func_code_(func_code),
+        bytes_(context){;}
+
+    [[nodiscard]] constexpr bool has_next() const {
+        return bytes_.size() > offset_;
+    }
+
+
+    [[nodiscard]] constexpr hal::BxCanFrame next(){
+
+        const auto frame_len = std::min(
+            size_t(bytes_.size() - offset_),
+            MAX_PAYLOAD_LENGTH_PER_CAN_FRAME
+        );
+
+        const auto frame = make_can_frame(
+            node_id_, 
+            func_code_,
+            static_cast<uint8_t>(piece_cnt_),    
+            bytes_.subspan(offset_, frame_len)
+        );
+
+        offset_ += frame_len;
+        piece_cnt_++;
+
+        return frame;
+    }
+private:
+    static constexpr hal::BxCanFrame make_can_frame(
+        const NodeId node_id,
+        const FuncCode func_code,
+        const uint8_t piece_cnt,
+        const std::span<const uint8_t> bytes
+    ){
+        constexpr size_t CAN_MAX_PAYLOAD_SIZE = 8;
+
+        auto buf = HeaplessVector<uint8_t, CAN_MAX_PAYLOAD_SIZE>{};
+        buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
+        buf.append_unchecked(bytes);
+
+        return hal::BxCanFrame(
+            nodeid_and_piececnt_to_canid(node_id, piece_cnt),
+            hal::BxCanPayload::from_bytes(buf.as_slice())
+        );
+    }
+
+    //固定为拓展帧
+    static constexpr hal::CanExtId nodeid_and_piececnt_to_canid(
+        const NodeId node_id,
+        const uint8_t piece
+    ){
+        return hal::CanExtId::from_bits(
+            uint32_t(node_id.to_u8() << 8) |
+            uint32_t(piece << 0)
+        );
+    }
+
+private:
+    NodeId node_id_;
+    FuncCode func_code_;
+    std::span<const uint8_t> bytes_;
+    size_t offset_ = 0;
+    size_t piece_cnt_ = 0;
+};
+
 
 struct [[nodiscard]] FlatPacket final{
     NodeId node_id;
@@ -75,82 +148,6 @@ struct [[nodiscard]] FlatPacket final{
             , payload_len
         );
     }
-
-    struct [[nodiscard]] Bytes2CanFrameIterator{
-        static constexpr size_t MAX_PAYLOAD_LENGTH_PER_CAN_FRAME = 7;
-        explicit constexpr Bytes2CanFrameIterator(
-            const NodeId node_id,
-            const FuncCode func_code,
-            const std::span<const uint8_t> tailed_context_bytes
-        ):
-            node_id_(node_id),
-            func_code_(func_code),
-            tailed_context_bytes_(tailed_context_bytes){;}
-
-        explicit constexpr Bytes2CanFrameIterator(
-            const FlatPacket & flat_packet
-        ):
-            Bytes2CanFrameIterator(
-                flat_packet.node_id,
-                flat_packet.func_code,
-                flat_packet.tailed_context_bytes()
-            ){;}
-
-        [[nodiscard]] constexpr bool has_next() const {
-            return tailed_context_bytes_.size() > offset_;
-        }
-        [[nodiscard]] constexpr hal::BxCanFrame next(){
-
-            const auto frame_len = MIN(
-                tailed_context_bytes_.size() - offset_,
-                MAX_PAYLOAD_LENGTH_PER_CAN_FRAME
-            );
-
-            const auto frame = make_can_frame(
-                node_id_, func_code_,
-                offset_ / MAX_PAYLOAD_LENGTH_PER_CAN_FRAME,
-                tailed_context_bytes_.subspan(offset_, frame_len)
-            );
-
-            offset_ += frame_len;
-
-            return frame;
-        }
-    private:
-        static constexpr hal::BxCanFrame make_can_frame(
-            const NodeId node_id,
-            const FuncCode func_code,
-            const uint8_t piece_cnt,
-            const std::span<const uint8_t> bytes
-        ){
-            constexpr size_t CAN_MAX_PAYLOAD_SIZE = 8;
-            auto buf = HeaplessVector<uint8_t, CAN_MAX_PAYLOAD_SIZE>{};
-            buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
-            buf.append_unchecked(bytes);
-
-            return hal::BxCanFrame(
-                nodeid_and_piececnt_to_canid(node_id, piece_cnt),
-                hal::BxCanPayload::from_bytes(buf.as_slice())
-            );
-        }
-
-        //固定为拓展帧
-        static constexpr hal::CanExtId nodeid_and_piececnt_to_canid(
-            const NodeId node_id,
-            const uint8_t piece
-        ){
-            return hal::CanExtId::from_bits(
-                uint32_t(node_id.to_u8() << 8) |
-                uint32_t(piece << 0)
-            );
-        }
-
-    private:
-        NodeId node_id_;
-        FuncCode func_code_;
-        std::span<const uint8_t> tailed_context_bytes_;
-        size_t offset_ = 0;
-    };
 
     constexpr Bytes2CanFrameIterator to_canframe_iter() const {
         auto & self = *this;
@@ -258,7 +255,7 @@ struct [[nodiscard]] PulseCnt final{
     uint32_t bits;
 };
 
-struct [[nodiscard]] AcclerationLevel{
+struct [[nodiscard]] AcclerationLevel final{
     using Self = AcclerationLevel;
     static constexpr Self from_tpss(const iq16 acc_per_second){
         // TODO

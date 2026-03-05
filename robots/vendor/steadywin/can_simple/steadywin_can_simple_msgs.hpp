@@ -9,25 +9,20 @@
 namespace ymd::robots::steadywin::can_simple{
 namespace req_msgs{
 using namespace steadywin::primitive;
-// struct SpeedForwardCode{
-//     int16_t bits;
 
-//     static constexpr SpeedForwardCode from_tps(const )
-//     {
-//         return SpeedForwardCode{speed};
-//     }
-// }
 
 // CMD ID: 0x002（主机→电机）⽆参数⽆数据。
 // 此指令会导致电机紧急停机，并报 ESTOP_REQUESTED 异常
 struct [[nodiscard]] Estop final{
     static constexpr CommandKind COMMAND = Command::Estop;
+
 };
 
 // CMD ID: 0x003
 struct [[nodiscard]] GetError final{
     using Self = GetError;
     static constexpr CommandKind COMMAND = Command::GetError;
+
     ErrorSource source;
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
@@ -39,12 +34,14 @@ struct [[nodiscard]] GetEncoderCount final{
     using Self = GetEncoderCount;
     static constexpr CommandKind COMMAND = Command::GetEncoderCount;
 
+
 };
 
 //ID 0x004
 struct [[nodiscard]] RxSdo final{
     using Self = RxSdo;
     static constexpr CommandKind COMMAND = Command::RxSdo;
+
     bool is_read;
     uint32_t endpoint_id;
     uint32_t value_bits;
@@ -54,6 +51,7 @@ struct [[nodiscard]] RxSdo final{
 struct [[nodiscard]] TxSdo final{
     using Self = RxSdo;
     static constexpr CommandKind COMMAND = Command::TxSdo;
+
     bool is_read;
     uint32_t endpoint_id;
     uint32_t value_bits;
@@ -63,6 +61,7 @@ struct [[nodiscard]] TxSdo final{
 struct [[nodiscard]] SetAxisNodeId final{
     using Self = SetAxisNodeId;
     static constexpr CommandKind COMMAND = Command::SetAxisNodeId;
+
     uint32_t axis_node_id;
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
@@ -75,6 +74,7 @@ struct [[nodiscard]] SetAxisNodeId final{
 struct [[nodiscard]] SetAxisState final{
     using Self = SetAxisState;
     static constexpr CommandKind COMMAND = Command::SetAxisState;
+
     AxisState axis_state;
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
@@ -145,6 +145,7 @@ struct [[nodiscard]] GetMotorCurrent final{
 struct [[nodiscard]] SetControllerMode final{
     using Self = SetControllerMode;
     static constexpr CommandKind COMMAND = Command::SetControllerMode;
+
     LoopMode loop_mode;
     InputMode input_mode;
 
@@ -317,6 +318,7 @@ struct [[nodiscard]] SetMoveIncremental final{
 struct [[nodiscard]] SetPosGain final{
     using Self = SetPosGain;
     static constexpr Command COMMAND = CommandKind{0x01a};
+
     math::fp32 pos_gain;
 
     constexpr void fill_bytes(std::span<uint8_t, 8> bytes) const {
@@ -329,6 +331,7 @@ struct [[nodiscard]] SetPosGain final{
 struct [[nodiscard]] SetVelGain final{
     using Self = SetVelGain;
     static constexpr Command COMMAND = CommandKind{0x01b};
+
     math::fp32 vel_gain;
     math::fp32 vel_integrator_gain;
 
@@ -357,6 +360,7 @@ struct [[nodiscard]] SetVelGain final{
 struct [[nodiscard]] GetPowers final{
     using Self = GetPowers;
     static constexpr Command COMMAND = CommandKind{0x01d};
+
     math::fp32 electrical_power;
     math::fp32 mechanical_power;
 
@@ -371,12 +375,14 @@ struct [[nodiscard]] GetPowers final{
 struct [[nodiscard]] DisableCan final{
     using Self = DisableCan;
     static constexpr Command COMMAND = CommandKind{0x01e};
+
 };
 
 //ID 0x01f
 struct [[nodiscard]] SaveConfig final{
     using Self = SaveConfig;
     static constexpr Command COMMAND = CommandKind{0x01f};
+
 };
 
 }
@@ -430,6 +436,7 @@ struct [[nodiscard]] HeartbeatV513 final{
 struct [[nodiscard]] GetError final{
     using Self = GetError;
     static constexpr CommandKind COMMAND = Command::GetError;
+
     union{
         uint64_t motor_exception; 
         uint32_t encoder_exception;
@@ -453,6 +460,7 @@ static_assert(sizeof(GetError) == 8);
 struct MitControl{
     using Self = MitControl;
     static constexpr CommandKind COMMAND = Command::MitControl;
+
     uint8_t node_id;
 
     // 位置：总共 16 位，BYTE1 为高 8 位，BYTE2 为低 8 位
@@ -493,6 +501,7 @@ struct MitControl{
 struct [[nodiscard]] GetEncoderEstimates final{
     using Self = GetEncoderEstimates;
     static constexpr CommandKind COMMAND = Command::GetEncoderEstimates;
+
     math::fp32 position;
     math::fp32 velocity;
 
@@ -517,6 +526,7 @@ struct [[nodiscard]] GetEncoderEstimates final{
 struct [[nodiscard]] GetEncoderCount final{
     using Self = GetEncoderCount;
     static constexpr CommandKind COMMAND = Command::GetEncoderCount;
+
     Angular<iq14> multilap_angle;
     Angular<uq32> lap_angle;
 
@@ -540,6 +550,7 @@ struct [[nodiscard]] GetEncoderCount final{
 struct [[nodiscard]] GetIq final{
     using Self = GetIq;
     static constexpr CommandKind COMMAND = Command::GetIq;
+
     math::fp32 iq_setpoint;
     math::fp32 iq_measured;
     static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
@@ -560,6 +571,7 @@ struct [[nodiscard]] GetIq final{
 struct [[nodiscard]] GetBusVoltageCurrent final{
     using Self = GetBusVoltageCurrent;
     static constexpr CommandKind COMMAND = Command::GetBusVoltageCurrent;
+
     math::fp32 bus_voltage;
     math::fp32 bus_current;
     static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
@@ -580,6 +592,7 @@ struct [[nodiscard]] GetBusVoltageCurrent final{
 struct [[nodiscard]] GetTorques final{
     using Self = GetTorques;
     static constexpr CommandKind COMMAND = Command::GetTorques;
+
     math::fp32 torque_setpoint;
     math::fp32 torque_measured;
     static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
@@ -600,6 +613,7 @@ struct [[nodiscard]] GetTorques final{
 struct [[nodiscard]] GetPowers final{
     using Self = GetPowers;
     static constexpr CommandKind COMMAND = Command::GetPowers;
+
     math::fp32 eletrical_power;
     math::fp32 mechanical_power;
     static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
