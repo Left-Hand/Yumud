@@ -12,6 +12,8 @@ public:
     using Self = BxCanPayload;
 
     using U8X8 = std::array<uint8_t, 8>;
+
+
     //这里并没有用零拷贝，原因是对齐排列的uint64比零拷贝效率更高
     static constexpr U8X8 ZERO_U8X8 = std::bit_cast<U8X8>(uint64_t(0));
 
@@ -67,8 +69,14 @@ public:
         ));
     }
 
-    __attribute__((always_inline)) static imconstexpr Self from_uninitialized(){
+    __attribute__((always_inline)) static constexpr Self from_uninitialized(){
         return Self();
+    }
+
+    __attribute__((always_inline)) static constexpr Self with_capacity(size_t len){
+        Self self{};
+        self.dlc_ = BxCanDlc::from_length(len);
+        return self;
     }
 
     __attribute__((always_inline)) static constexpr Self from_u8x8(std::array<uint8_t, 8> array){
@@ -240,7 +248,7 @@ private:
     BxCanPayload(const U8X8 bytes, const BxCanDlc dlc):
         bytes_(bytes), dlc_(dlc){;}
 
-    __attribute__((always_inline)) explicit
+    __attribute__((always_inline)) constexpr explicit
     BxCanPayload():
         bytes_({}), dlc_(BxCanDlc::from_uninitialized()){;}
 

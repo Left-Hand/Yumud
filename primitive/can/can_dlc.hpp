@@ -19,7 +19,7 @@ struct [[nodiscard]] BxCanDlc final{
     static constexpr size_t NUM_BITS = 4;
     using Self = BxCanDlc;
 
-    static imconstexpr Self from_uninitialized(){
+    static constexpr Self from_uninitialized(){
         return Self();
     }
 

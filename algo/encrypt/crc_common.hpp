@@ -36,7 +36,7 @@ static constexpr uint8_t crc4_itu(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-5/EPC           x5+x3+1
  * Poly:    0x09
@@ -65,7 +65,7 @@ static constexpr uint8_t crc5_epc(std::span<const uint8_t> bytes)
     }
     return crc >> 3;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-5/ITU           x5+x4+x2+1
  * Poly:    0x15
@@ -94,7 +94,7 @@ static constexpr uint8_t crc5_itu(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-5/USB           x5+x2+1
  * Poly:    0x05
@@ -123,7 +123,7 @@ static constexpr uint8_t crc5_usb(std::span<const uint8_t> bytes)
     }
     return crc ^ 0x1F;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-6/ITU           x6+x+1
  * Poly:    0x03
@@ -152,7 +152,7 @@ static constexpr uint8_t crc6_itu(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-7/MMC           x7+x3+1
  * Poly:    0x09
@@ -181,7 +181,7 @@ static constexpr uint8_t crc7_mmc(std::span<const uint8_t> bytes)
     }
     return crc >> 1;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-8               x8+x2+x+1
  * Poly:    0x07
@@ -210,7 +210,7 @@ static constexpr uint8_t crc8(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-8/ITU           x8+x2+x+1
  * Poly:    0x07
@@ -239,7 +239,7 @@ static constexpr uint8_t crc8_itu(std::span<const uint8_t> bytes)
     }
     return crc ^ 0x55;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-8/ROHC          x8+x2+x+1
  * Poly:    0x07
@@ -268,7 +268,7 @@ static constexpr uint8_t crc8_rohc(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-8/MAXIM         x8+x5+x4+1
  * Poly:    0x31
@@ -298,7 +298,7 @@ static constexpr uint8_t crc8_maxim(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-16/IBM          x16+x15+x2+1
  * Poly:    0x8005
@@ -327,7 +327,7 @@ static constexpr uint16_t crc16_ibm(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-16/MAXIM        x16+x15+x2+1
  * Poly:    0x8005
@@ -356,7 +356,7 @@ static constexpr uint16_t crc16_maxim(std::span<const uint8_t> bytes)
     }
     return ~crc;    // crc^0xffff
 }
- 
+
 /******************************************************************************
  * Name:    CRC-16/USB          x16+x15+x2+1
  * Poly:    0x8005
@@ -385,7 +385,7 @@ static constexpr uint16_t crc16_usb(std::span<const uint8_t> bytes)
     }
     return ~crc;    // crc^0xffff
 }
- 
+
 /******************************************************************************
  * Name:    CRC-16/MODBUS       x16+x15+x2+1
  * Poly:    0x8005
@@ -414,7 +414,7 @@ static constexpr uint16_t crc16_modbus(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-16/CCITT        x16+x12+x5+1
  * Poly:    0x1021
@@ -443,7 +443,7 @@ static constexpr uint16_t crc16_ccitt(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-16/CCITT-FALSE   x16+x12+x5+1
  * Poly:    0x1021
@@ -457,12 +457,11 @@ static constexpr uint16_t crc16_ccitt_false(std::span<const uint8_t> bytes)
 {
     const uint8_t *data = bytes.data();
     size_t length = bytes.size();
-    uint8_t i;
     uint16_t crc = 0xffff;        //Initial value
     while(length--)
     {
         crc ^= (uint16_t)(*data++) << 8; // crc ^= (uint6_t)(*data)<<8; data++;
-        for (i = 0; i < 8; ++i)
+        for (size_t i = 0; i < 8; ++i)
         {
             if ( crc & 0x8000 )
                 crc = (crc << 1) ^ 0x1021;
@@ -472,7 +471,7 @@ static constexpr uint16_t crc16_ccitt_false(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-16/X25          x16+x12+x5+1
  * Poly:    0x1021
@@ -501,7 +500,7 @@ static constexpr uint16_t crc16_x25(std::span<const uint8_t> bytes)
     }
     return ~crc;                // crc^Xorout
 }
- 
+
 /******************************************************************************
  * Name:    CRC-16/XMODEM       x16+x12+x5+1
  * Poly:    0x1021
@@ -530,7 +529,7 @@ static constexpr uint16_t crc16_xmodem(std::span<const uint8_t> bytes)
     }
     return crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-16/DNP          x16+x13+x12+x11+x10+x8+x6+x5+x2+1
  * Poly:    0x3D65
@@ -559,7 +558,7 @@ static constexpr uint16_t crc16_dnp(std::span<const uint8_t> bytes)
     }
     return ~crc;                // crc^Xorout
 }
- 
+
 /******************************************************************************
  * Name:    CRC-32  x32+x26+x23+x22+x16+x12+x11+x10+x8+x7+x5+x4+x2+x+1
  * Poly:    0x4C11DB7
@@ -589,7 +588,7 @@ static constexpr uint32_t crc32(std::span<const uint8_t> bytes)
     }
     return ~crc;
 }
- 
+
 /******************************************************************************
  * Name:    CRC-32/MPEG-2  x32+x26+x23+x22+x16+x12+x11+x10+x8+x7+x5+x4+x2+x+1
  * Poly:    0x4C11DB7

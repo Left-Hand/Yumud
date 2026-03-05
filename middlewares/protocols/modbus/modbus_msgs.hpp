@@ -10,6 +10,9 @@
 
 namespace ymd::modbus{
 
+// 0x49~0x77	非法功能
+// 0x78~0x7F	保留
+// 0x80~0xFF	保留
 enum class FunctionCode : uint8_t {
     None = 0,
     ReadCoils = 1,
@@ -20,18 +23,21 @@ enum class FunctionCode : uint8_t {
     WriteSingleHoldingRegister = 6,
     WriteMultipleCoils = 15,
     WriteMultipleRegisters = 16,
+    ReportSlaveId = 17,
     ReadFileRecord = 20,
     WriteFileRecord = 21,
     MaskWriteRegister = 22,
     ReadWriteRegisters = 23,
+    ResetSlave = 41,
     ReadDeviceIdentification = 43
 };
 
 namespace req_msg{
 
-// [1] 读取线圈
+// REQ[1] 读取线圈
 struct [[nodiscard]] ReadCoils final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadCoils;
+    static constexpr size_t CONSTANT_LENGTH = 4;
 
     //基地址
     uint16_t base_addr;
@@ -40,7 +46,7 @@ struct [[nodiscard]] ReadCoils final{
     uint16_t quantity; 
 
     static constexpr size_t context_length(){
-        return 4;
+        return CONSTANT_LENGTH;
     }
 
     template<typename Receiver>
@@ -50,9 +56,10 @@ struct [[nodiscard]] ReadCoils final{
     }
 };
 
-// [2] 读取离散状态
+// REQ[2] 读取离散状态
 struct [[nodiscard]] ReadDiscreteInputs final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadDiscreteInputs;
+    static constexpr size_t CONSTANT_LENGTH = 4;
 
     //基地址
     uint16_t base_addr;
@@ -60,8 +67,9 @@ struct [[nodiscard]] ReadDiscreteInputs final{
     //数量
     uint16_t quantity; 
 
+
     static constexpr size_t context_length(){
-        return 4;
+        return CONSTANT_LENGTH;
     }
 
     template<typename Receiver>
@@ -71,9 +79,11 @@ struct [[nodiscard]] ReadDiscreteInputs final{
     }
 };
 
-// [3] 读取保持寄存器
+// REQ[3] 读取保持寄存器
 struct [[nodiscard]] ReadHoldingRegisters final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadHoldingRegisters;
+    static constexpr size_t CONSTANT_LENGTH = 4;
+
     //基地址
     uint16_t base_addr;
 
@@ -81,7 +91,7 @@ struct [[nodiscard]] ReadHoldingRegisters final{
     uint16_t quantity; 
 
     static constexpr size_t context_length(){
-        return 4;
+        return CONSTANT_LENGTH;
     }
 
     template<typename Receiver>
@@ -95,9 +105,11 @@ struct [[nodiscard]] ReadHoldingRegisters final{
     }
 };
 
-// [4] 读取输入寄存器
+// REQ[4] 读取输入寄存器
 struct [[nodiscard]] ReadInputRegisters final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadInputRegisters;
+    static constexpr size_t CONSTANT_LENGTH = 4;
+
     //基地址
     uint16_t base_addr;
 
@@ -105,7 +117,7 @@ struct [[nodiscard]] ReadInputRegisters final{
     uint16_t quantity; 
 
     static constexpr size_t context_length(){
-        return 4;
+        return CONSTANT_LENGTH;
     }
 
     template<typename Receiver>
@@ -115,14 +127,16 @@ struct [[nodiscard]] ReadInputRegisters final{
     }
 };
 
-// [5] 写入单个线圈
+// REQ[5] 写入单个线圈
 struct [[nodiscard]] WriteSingleCoil final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteSingleCoil;
+    static constexpr size_t CONSTANT_LENGTH = 4;
+
     uint16_t coil_addr;
     bool coil_value;
 
     static constexpr size_t context_length(){
-        return 4;
+        return CONSTANT_LENGTH;
     }
 
     template<typename Receiver>
@@ -133,14 +147,16 @@ struct [[nodiscard]] WriteSingleCoil final{
 };
 
 
-// [6] 写单个寄存器
+// REQ[6] 写单个寄存器
 struct [[nodiscard]] WriteSingleHoldingRegister final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteSingleHoldingRegister;
+    static constexpr size_t CONSTANT_LENGTH = 4;
+
     uint16_t reg_addr;
     uint16_t reg_value;
 
     static constexpr size_t context_length(){
-        return 4;
+        return CONSTANT_LENGTH;
     }
 
     template<typename Receiver>
@@ -151,9 +167,12 @@ struct [[nodiscard]] WriteSingleHoldingRegister final{
 };
 
 
-// [0x10/16] 写入多个寄存器
-struct WriteMultipleRegisters{
+
+// REQ[0x10/16] 写入多个寄存器
+struct [[nodiscard]] WriteMultipleRegisters final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteMultipleRegisters;
+    //length not constant
+
     uint16_t base_addr;
     std::span<const uint16_t> reg_values;
 
@@ -198,15 +217,27 @@ struct WriteMultipleRegisters{
 };
 
 
-// [0x16/22] 掩码写寄存器
+
+// REQ[0x11/17] 报告从机Id
+struct [[nodiscard]] ReportSlaveId final{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::ReportSlaveId;
+    static constexpr size_t CONSTANT_LENGTH = 0;
+
+    //0长报文不需要序列化方法
+};
+
+
+// REQ[0x16/22] 掩码写寄存器
 struct [[nodiscard]] MaskWriteRegister final{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::MaskWriteRegister;
+    static constexpr size_t CONSTANT_LENGTH = 6;
+
     uint16_t reg_addr;
     uint16_t and_mask;
     uint16_t or_mask;
 
     static constexpr size_t context_length(){
-        return 6;
+        return CONSTANT_LENGTH;
     }
 
     template<typename Receiver>
@@ -221,25 +252,36 @@ struct [[nodiscard]] MaskWriteRegister final{
     }
 };
 
+// REQ[0x29/41] 重启指定从机
+struct [[nodiscard]] ResetSlave final{
+    static constexpr FunctionCode FUNC_CODE = FunctionCode::ResetSlave;
+    static constexpr size_t CONSTANT_LENGTH = 0;
+
+    //0长报文不需要序列化方法
+};
 
 
 
 }
 
 namespace resp_msg{
-// [3]
+
+
+// RESP[3] 读保持寄存器
 struct ReadHoldingRegisters{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::ReadHoldingRegisters;
     std::span<const uint16_t> reg_values;
 };
 
 
-// [6]
+// RESP[6] 写单个寄存器
+// 应答帧与发送帧完全一致，表明写入成功
 struct WriteSingleHoldingRegister{
     static constexpr FunctionCode FUNC_CODE = FunctionCode::WriteSingleHoldingRegister;
     uint16_t reg_addr;
     uint16_t reg_value;
 };
+
 
 }
 

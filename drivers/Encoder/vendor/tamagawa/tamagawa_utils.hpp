@@ -3,34 +3,45 @@
 #include <cstdint>
 #include <span>
 
-namespace ymd::drivers::tamagawa::utils{
+namespace ymd::drivers::tamagawa{
 
 // 多项式：G(X)=X^8+1 LSB first  Poly: 0000 0001
 // LSB first  : 1000 0000 =0X80
-[[nodiscard]] static constexpr uint8_t calc_crc8(std::span<const uint8_t> bytes) {
+struct [[nodiscard]] Crc8XorAccumulator final {
+    using Self = Crc8XorAccumulator;
+    static constexpr uint8_t POLY = 0x01;
+
     uint8_t crc = 0;
-    
-    for (size_t i = 0; i < bytes.size(); i++) {
-        uint8_t data = bytes[i];
-        
-        for (int j = 0; j < 8; j++) {
-            uint8_t val = ((data >> 7) & 0x01) ^ ((crc >> 7) & 0x01);
-            crc = (crc << 1) & 0xFF;
-            data = (data << 1) & 0xFF;
-            crc |= val;
+
+
+    constexpr Self push_bytes(std::span<const uint8_t> bytes) const {
+        auto self = *this;
+
+
+        for (size_t i = 0; i < bytes.size(); ++i) {
+            self = self.push_byte(bytes[i]);
         }
-    }
-    
-    return crc;
-}
-[[nodiscard]] static constexpr uint8_t calc_xor(std::span<const uint8_t> bytes){
-    uint8_t sum = 0;
-
-    #pragma GCC unroll 4
-    for(size_t i = 0; i < bytes.size(); i++){
-        sum ^= bytes[i];
+        return self;
     }
 
-    return sum;
-}
+    constexpr Self push_byte(uint8_t byte) const {
+        auto self = *this;
+        self.crc ^= byte;
+        for (size_t i = 0; i < 8; ++i) {
+            if (self.crc & 0x80) {
+                self.crc = (self.crc << 1) ^ POLY;
+            } else {
+                self.crc <<= 1;
+            }
+        }
+        return self;
+    }
+
+    [[nodiscard]] constexpr uint8_t finalize() const {
+        return crc;
+    }
+};
+
+
+
 }

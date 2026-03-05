@@ -1,12 +1,8 @@
 #include "modbus_primitive.hpp"
-#include "algo/encrypt/crc_common.hpp"
+#include "modbus_crc.hpp"
 
 
 namespace ymd::modbus{
-
-[[nodiscard]] static constexpr uint16_t modbus_crc(std::span<const uint8_t> bytes){
-    return encrypt::crc::crc16_ccitt_false(bytes);
-}
 
 template<typename Receiver, size_t N>
 static constexpr Result<void, typename Receiver::Error> serialize_u16_args(
@@ -62,7 +58,10 @@ static constexpr Result<void, typename Receiver::Error> serialize_rtu_request(
 
     {
         //crc字段为小端序
-        const uint16_t crc = modbus_crc(receiver.collected_bytes());
+        const uint16_t crc =  Crc16ModbusAccumulator{}
+            .push_bytes(receiver.collected_bytes())
+            .finalize()
+        ;
 
         const std::array<uint8_t, 2> buffer = {
             static_cast<uint8_t>(crc & 0xff),
