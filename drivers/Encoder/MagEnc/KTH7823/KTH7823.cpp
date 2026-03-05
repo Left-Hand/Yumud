@@ -2,26 +2,41 @@
 #include "core/math/real.hpp"
 #include "core/math/realmath.hpp"
 
+
+
+#define KTH7823_DEBUG_EN
+
+#ifdef KTH7823_DEBUG_EN
+#define KTH7823_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define KTH7823_PANIC(...) PANIC(__VA_ARGS__)
+#define KTH7823_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define KTH7823_DEBUG(...)
+#define KTH7823_PANIC(...)  PANIC_NSRC()
+#define KTH7823_ASSERT(cond, ...) ASSERT_NSRC(cond)
+#endif
+
 using namespace ymd;
 using namespace ymd::drivers::kth7823;
 
-IResult<uint16_t> Transport::direct_read(){
+IResult<> Transport::direct_read(uint16_t & val){
     uint16_t rx_bits;
     if(const auto res = transceive_u16(rx_bits, 0);
         res.is_err()) return Err(res.unwrap_err());
-
-    return Ok(rx_bits);
+    val = rx_bits;
+    return Ok();
 }
 
-IResult<uint8_t> Transport::read_reg(const uint8_t addr){
-    const uint16_t tx_bits = static_cast<uint16_t>(static_cast<uint16_t>((addr & 0b00'111111) | 0b01'000000) << 8);
+IResult<> Transport::read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+    const uint16_t tx_bits = ((reg_addr & 0b00'111111) | 0b01'000000) << 8;
     uint16_t rx_bits;
     const auto res = transceive_u16(rx_bits, tx_bits);
     if(res.is_err()) return Err(res.unwrap_err());
-    return Ok(rx_bits >> 8);
+    reg_val = rx_bits >> 8;
+    return Ok();
 }
 
-IResult<> Transport::burn_reg(const uint8_t addr, const uint8_t data){
+IResult<> Transport::burn_reg(const uint8_t reg_addr, const uint8_t reg_val){
     // SPI 烧写寄存器操作由两个 16 位的帧组成。第一个帧是写请求
     // 帧，其中包含一个 2 位的写命令（10），后跟一个 6 位的寄存器
     // 地址和一个 8 位的数值。写命令指示芯片执行写操作，寄存器地
@@ -37,7 +52,7 @@ IResult<> Transport::burn_reg(const uint8_t addr, const uint8_t data){
     // 执行写入寄存器操作时务必遵守这个等待时间。
     
     {
-        const uint16_t tx_bits = static_cast<uint16_t>(static_cast<uint16_t>((addr & 0b00'111111) | 0b10'000000) << 8) | data;
+        const uint16_t tx_bits = static_cast<uint16_t>(static_cast<uint16_t>((reg_addr & 0b00'111111) | 0b10'000000) << 8) | reg_val;
         if(const auto res = spi_drv_.write_single<uint16_t>(tx_bits, CONT);
             res.is_err()) return Err(res.unwrap_err());
     }
@@ -50,8 +65,8 @@ IResult<> Transport::burn_reg(const uint8_t addr, const uint8_t data){
     if(const auto res = spi_drv_.read_single<uint16_t>(rx_bits);
         res.is_err()) return Err(res.unwrap_err());
     
-    if((rx_bits >> 8) != data) 
-        return Err(Error::RegProgramFailed);
+    if((rx_bits >> 8) != reg_val) 
+        return Err(Error::RegProgramUncovered);
     
     if((rx_bits & 0xff) != 0) 
         return Err(Error::RegProgramResponseFormatInvalid);
@@ -79,13 +94,10 @@ IResult<> Transport::transceive_u16(uint16_t & rx, const uint16_t tx){
 }
 
 IResult<> KTH7823::update(){
-    
-    const auto bits = ({
-        const auto res = transport_.direct_read(); 
-        if(res.is_err()) 
-            return Err(res.unwrap_err());
-        res.unwrap();
-    });
+    uint16_t bits;
+        
+    if(const auto res = transport_.direct_read(bits); 
+        res.is_err()) return Err(res.unwrap_err());
 
 
     lap_turns_ = lap_turns_.from_bits(static_cast<uint32_t>(bits) << 16);
@@ -94,7 +106,6 @@ IResult<> KTH7823::update(){
 }
 
 IResult<> KTH7823::validate(){
-    TODO();
     return Ok();
 }
 
@@ -108,27 +119,77 @@ IResult<> KTH7823::burn_zero_angle(const Angular<uq32> angle){
     reg_high.bits = static_cast<uint8_t>(b16 >> 8);
 
     // return Ok();
-    if(const auto res = transport_.burn_reg(reg_low); 
+    if(const auto res = burn_reg(reg_low); 
         res.is_err()) return Err(res.unwrap_err());
-    if(const auto res = transport_.burn_reg(reg_high); 
+    if(const auto res = burn_reg(reg_high); 
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
-IResult<> KTH7823::set_trim_x(const iq16 k){
-    TODO();
-    return Ok();
+
+static constexpr uint8_t quantize_trim(const uq16 trim){
+    const auto temp = math::round_cast<uint32_t>(trim * 256);
+    // const auto temp = static_cast<uint32_t>(trim * uq16(258.0 / 256));
+    if(temp > 255) return 255;
+    return static_cast<uint8_t>(temp);
 }
 
-IResult<> KTH7823::set_trim_y(const iq16 k){
-    TODO();
-    return Ok();
+//keep mu >= 1
+static constexpr uint8_t ratio_to_trim_quantized(const uq16 mu){
+    const uq16 trim = 1 - 1/mu;
+    return quantize_trim(trim);
 }
 
-IResult<> KTH7823::set_trim(const iq16 am, const iq16 e){
-    iq16 k = math::tan(am + e) / math::tan(am);
-    if(k > 1) return set_trim_x(k);
-    else return set_trim_y(k);
+
+//these tests are fitting from datasheet
+static_assert(ratio_to_trim_quantized(1) == 0);
+static_assert(ratio_to_trim_quantized(1.5_uq16) == 85);
+static_assert(ratio_to_trim_quantized(2) == 128);
+static_assert(ratio_to_trim_quantized(2.5_uq16) == 154);
+static_assert(ratio_to_trim_quantized(3) == 171);
+static_assert(ratio_to_trim_quantized(3.5_uq16) == 183);
+static_assert(ratio_to_trim_quantized(4) == 192);
+static_assert(ratio_to_trim_quantized(4.5_uq16) == 199);
+static_assert(ratio_to_trim_quantized(5) == 205);
+
+
+//mu effect to mag-encoder
+// paste in desmos
+// \ \arctan\left(\frac{c\sin\left(x\right)}{\cos\left(x\right)}\right)-\left(\operatorname{mod}\left(x+\frac{\pi}{2},\pi\right)-\frac{\pi}{2}\right)
+
+IResult<> KTH7823::set_trim(const uq16 x, const uq16 y){
+    uint8_t trim_bits = 0;
+
+    //apply trim to weaker
+    bool x_need_trim = false;
+    bool y_need_trim = false;
+
+    if(x > y){
+        const uq16 trim = 1 - y/x;
+        trim_bits = quantize_trim(trim);
+        y_need_trim = false;
+    }else{
+        const uq16 trim = 1 - x/y;
+        trim_bits = quantize_trim(trim);
+        x_need_trim = true;
+    }
+
+    {
+        auto reg = RegCopy(regset_.gain_trim_reg);
+        reg.gain_trim = trim_bits;
+        if(const auto res = burn_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
+    }
+
+    {
+        auto reg = RegCopy(regset_.xy_trim_reg);
+        reg.x_trim = x_need_trim;
+        reg.y_trim = y_need_trim;
+        if(const auto res = burn_reg(reg);
+            res.is_err()) return Err(res.unwrap_err());
+    }
+
+    return Ok();
 }
 
 IResult<> KTH7823::set_mag_threshold(const MagThreshold low, const MagThreshold high){
@@ -136,20 +197,47 @@ IResult<> KTH7823::set_mag_threshold(const MagThreshold low, const MagThreshold 
     reg.mag_low = low;
     reg.mag_high = high;
 
-    return transport_.burn_reg(reg);
+    return burn_reg(reg);
 }
 
 IResult<> KTH7823::set_direction(const RotateDirection direction){
-    TODO();
-    return Ok();
+    auto reg = RegCopy(regset_.rd_reg);
+    reg.rd = direction == RotateDirection::CW;
+
+    return burn_reg(reg);
 }
 
 IResult<> KTH7823::set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase){
-    TODO();
-    return Ok();
+    auto reg = RegCopy(regset_.z_config_reg);
+    reg.zl = width;
+    reg.zd = phase;
+
+    return burn_reg(reg);
 }
 
-IResult<> KTH7823::set_pulse_per_turn(const uint16_t ppt){
-    TODO();
+IResult<> KTH7823::set_abz_freq_limit(const AbzFreqLimit freq_lim){
+    auto reg = RegCopy(regset_.abz_limit_reg);
+    reg.abz_limit = freq_lim;
+    return burn_reg(reg);
+}
+
+
+IResult<> KTH7823::set_pulse_per_turn(const uint16_t num_ppt){
+    KTH7823_ASSERT(num_ppt < 1024, "num_ppt must be less than 1024");
+    KTH7823_ASSERT(num_ppt != 0, "num_ppt must not be zero");
+    
+    const uint8_t ppt_low = num_ppt & 0x03;
+    const uint8_t ppt_high = num_ppt >> 2;
+    {
+        auto reg = RegCopy(regset_.ppt_high_reg);
+        reg.ppt_high = ppt_high;
+        return burn_reg(reg);
+    }
+
+    {
+        auto reg = RegCopy(regset_.z_config_reg);
+        reg.ppt_low = ppt_low;
+        return burn_reg(reg);
+    }
     return Ok();
 }

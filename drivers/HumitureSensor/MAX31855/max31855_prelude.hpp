@@ -9,8 +9,8 @@
 namespace ymd::drivers{
 
 struct MAX31855_Prelude{
-    static constexpr q16 JUNC_TEMP_LSB = 0.0625_r;
-    static constexpr q16 THER_TEMP_LSB = 0.25_r;
+    static constexpr iq16 JUNC_TEMP_LSB = iq16(0.0625);
+    static constexpr iq16 THER_TEMP_LSB = iq16(0.25);
 
     struct MAX31855_Payload{
         // D0 OC Fault This bit is a 1 when the thermocouple is open (no connections). Default value is 0.
@@ -28,14 +28,14 @@ struct MAX31855_Prelude{
         uint32_t __resv2__:1;
         uint32_t ther_temp:14;
 
-        q16 ther_temperature() const{
-            const q16 uns_ther_temp = (ther_temp & ((1 << 13) - 1)) * THER_TEMP_LSB;
+        iq16 ther_temperature() const{
+            const iq16 uns_ther_temp = (ther_temp & ((1 << 13) - 1)) * THER_TEMP_LSB;
             const bool is_negative = (ther_temp & (1 << 13)) != 0;
             return is_negative ? (-uns_ther_temp) : uns_ther_temp;
         }
 
-        q16 junc_temperature() const{
-            const q16 uns_junc_temp = (junc_temp & ((1 << 11) - 1)) * JUNC_TEMP_LSB;
+        iq16 junc_temperature() const{
+            const iq16 uns_junc_temp = (junc_temp & ((1 << 11) - 1)) * JUNC_TEMP_LSB;
             const bool is_negative = (junc_temp & (1 << 11)) != 0;
             return is_negative ? (-uns_junc_temp) : uns_junc_temp;
         }

@@ -6,7 +6,7 @@
 // CH9431 通过标准串行外设接口（Searial Peripheral Interface，SPI）和主机设备进行通讯，
 // 可为主机设备扩展CAN功能，连接到外部CAN总线。 
 
-#include "details/CH9431_phy.hpp"
+#include "details/ch9431_transport.hpp"
 #include "primitive/can/bxcan_frame.hpp"
 
 namespace ymd::drivers{

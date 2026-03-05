@@ -5,7 +5,7 @@
 #include "core/stream/ostream.hpp"
 
 namespace ymd::drivers{
-struct XL2400_Address{
+struct [[nodiscard]] XL2400_Address final{
     using Self = XL2400_Address;
 
     std::array<uint8_t, 5> bytes;
@@ -104,11 +104,14 @@ struct XL2400_Prelude{
     static constexpr  uint8_t XL2400_FLAG_MAX_RT       = 0X10;   // Max retried
     static constexpr  uint8_t XL2400_FLAG_TX_FULL      = 0x01; // 1:TX FIFO full
 };
+
+
+
 struct XL2400_Regset:public XL2400_Prelude{
     using R8_RxAddrP0 = uint64_t;
     using R8_RxAddrP1 = uint64_t;
     using R8_TxAddr = uint64_t;
-    struct R32_TopConfig{
+    struct [[nodiscard]] R32_TopConfig:public Reg32<>{
         uint32_t rx_on:1;
         uint32_t power_on:1;
 
@@ -145,7 +148,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint32_t pmu_en:1;
     }DEF_R32(top_config_reg)
 
-    struct R8_AutoAcknowledge:public Reg8<>{
+    struct [[nodiscard]] R8_AutoAcknowledge:public Reg8<>{
         uint8_t p0:1;
         uint8_t p1:1;
         uint8_t p2:1;
@@ -155,7 +158,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint8_t __resv__ :2;
     }DEF_R8(auto_acknowledge_reg)
 
-    struct R8_EnableRxAddress:public Reg8<>{
+    struct [[nodiscard]] R8_EnableRxAddress:public Reg8<>{
         uint8_t p0:1;
         uint8_t p1:1;
         uint8_t p2:1;
@@ -179,13 +182,13 @@ struct XL2400_Regset:public XL2400_Prelude{
 
     
 
-    struct R8_AddressWidth:public Reg8<>{
+    struct [[nodiscard]] R8_AddressWidth:public Reg8<>{
         PrxAddressWidth pipex_address_width:2;
         PrxAddressWidth tx_address_width:2;
         uint8_t pillon_lock_time:4;
     };
 
-    struct R32_AutoRetransmission{
+    struct [[nodiscard]] R32_AutoRetransmission{
         // 0000: disabled
         // 0001: up to 1 re-transmit on fail of AA
         // ...
@@ -211,7 +214,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint32_t gpio_config:2;
     };
 
-    struct R32_RFChannel{
+    struct [[nodiscard]] R32_RFChannel{
         // Set frequency channel in 1 MHz
         // increment, 0x962 is 2402MHz
         uint16_t rx_channel:14;
@@ -220,7 +223,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint8_t rf_power:6;
     };
 
-    struct R8_RFSetting{
+    struct [[nodiscard]] R8_RFSetting{
         uint8_t cyclix_pattern_tx_enable:1;
         uint8_t __resv__ :2;
         uint8_t rf_datarate_high_bit:1;
@@ -231,7 +234,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint8_t tx_pattern:8;
     };
 
-    struct R8_Status{
+    struct [[nodiscard]] R8_Status{
         uint8_t tx_full:1;
         uint8_t rx_pipe_number:2;
         uint8_t max_rt:1;
@@ -240,7 +243,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint8_t __resv__ :1;
     };
 
-    struct R32_TransmissionObservation{
+    struct [[nodiscard]] R32_TransmissionObservation{
         uint8_t arc_cnt:4;
         uint8_t plos_cnt:4;
         uint8_t dc_offset_i;
@@ -248,7 +251,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint8_t freq_offset;
     };
 
-    struct R8_Rssi{
+    struct [[nodiscard]] R8_Rssi{
         uint8_t rssi1:1;
         uint8_t rssi2:1;
         uint8_t __resv1__:2;
@@ -259,19 +262,19 @@ struct XL2400_Regset:public XL2400_Prelude{
 
 
 
-    struct R32_RxAddrP2Tops{//0x0c
+    struct [[nodiscard]] R32_RxAddrP2Tops{//0x0c
         uint8_t rx_addr_p2;
         uint8_t rx_addr_p3;
         uint8_t rx_addr_p4;
         uint8_t rx_addr_p5;
     };
 
-    struct R8_Bn9Result{
+    struct [[nodiscard]] R8_Bn9Result : public Reg8<>{
         uint32_t total_bit_counter:32;
         uint32_t err_bit_counter:32;
     };
 
-    struct R8_AGCSetting{
+    struct [[nodiscard]] R8_AGCSetting : public Reg8<>{
         uint8_t agc_gain_1:7;
         uint8_t agc_gain_2:7;
         uint8_t agc_gain_3:7;
@@ -281,7 +284,7 @@ struct XL2400_Regset:public XL2400_Prelude{
 
 
 
-    struct R8_RxPower{
+    struct [[nodiscard]] R8_RxPower : public Reg8<>{
         uint8_t rx_power_p0:6;
         uint8_t __resv1__:2;
         uint8_t rx_power_p1:6;
@@ -296,13 +299,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint8_t __resv6__:2;
     };
 
-    // using R8_AnalogConfig0 = uint128;
-    // using R8_AnalogConfig1 = uint128_t;
-    // using R8_AnalogConfig2 = __uint128_t;
-    // using R8_AnalogConfig3 = __uint128_t;
-
-
-    struct R8_FifoStatus{
+    struct [[nodiscard]] R8_FifoStatus : public Reg8<>{
         uint8_t rx_empty:1;
         uint8_t rx_full:1;
         uint8_t pend_rxfrm_num_l:2;
@@ -316,7 +313,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint8_t R8_bb_ana3_7t3:5;
     };
 
-    struct R8_RssiRecoder{
+    struct [[nodiscard]] R8_RssiRecoder : public Reg8<>{
         uint8_t rssirec1:8;
         uint8_t rssirec2:8;
         uint8_t rssi1x_vref_sel:3;
@@ -326,7 +323,7 @@ struct XL2400_Regset:public XL2400_Prelude{
     };
 
 
-    struct R8_TxProcessConfig{
+    struct [[nodiscard]] R8_TxProcessConfig : public Reg8<>{
         uint8_t     freq_dev:8;
         uint8_t        gasflt_bt_sel:1;
         uint8_t        gasflt_bps:1;
@@ -334,7 +331,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint8_t        kmod_bps:1;
     };
 
-    struct R8_RxProcessConfig {
+    struct [[nodiscard]] R8_RxProcessConfig  : public Reg8<>{
         uint8_t rx_iq_swap : 1;        // IF ADC data IQ swap
         uint8_t adc_sample_pha : 1;    // IF ADC data sample edge select; 1: invert
         uint8_t pre_dc_manu : 1;    // Freq offset manual setting enable
@@ -348,7 +345,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint8_t rx_dem_start_cf : 1;    // Enable RX Start Delay
     };
 
-    struct R8_Feature {
+    struct [[nodiscard]] R8_Feature  : public Reg8<>{
         uint8_t en_dyn_ack : 1;          // Set 1 enables the W_TX_PAYLOAD_NOACK command
         uint8_t en_ack_pay : 1;          // Set 1 enables payload on ACK
         uint8_t en_dpl : 1;              // Set 1 enables dynamic payload length
@@ -358,7 +355,7 @@ struct XL2400_Regset:public XL2400_Prelude{
         uint8_t stat_setup : 2;       // Adjust the output of SDO during command input
     };
 
-    struct R8_PayloadLength{
+    struct [[nodiscard]] R8_PayloadLength : public Reg8<>{
         uint8_t dpl_p0:1;
         uint8_t dpl_p1:1;
         uint8_t dpl_p2:1;
@@ -369,7 +366,7 @@ struct XL2400_Regset:public XL2400_Prelude{
     };
 
 
-    struct R8_PARampConfig{
+    struct [[nodiscard]] R8_PARampConfig : public Reg8<>{
         uint8_t ramp_time:3;
         uint8_t ramp_1:5;
         uint8_t ramp_2:5;

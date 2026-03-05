@@ -1,8 +1,6 @@
 #include "ma730.hpp"
 #include "core/math/realmath.hpp"
 
-using namespace ymd;
-using namespace ymd::drivers;
 
 #define MA730_DEBUG_EN
 
@@ -12,9 +10,13 @@ using namespace ymd::drivers;
 #define MA730_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define MA730_DEBUG(...)
-#define MA730_PANIC(...)  PANIC()
-#define MA730_ASSERT(cond, ...) ASSERT(cond)
+#define MA730_PANIC(...)  PANIC_NSRC()
+#define MA730_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
+
+
+using namespace ymd;
+using namespace ymd::drivers;
 
 using Error = MA730::Error;
 template<typename T = void>

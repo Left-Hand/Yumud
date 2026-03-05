@@ -11,7 +11,7 @@
 #define PAJ7620_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define PAJ7620_DEBUG(...)
-#define PAJ7620_PANIC(...)  PANIC()
+#define PAJ7620_PANIC(...)  PANIC_NSRC()
 #define PAJ7620_ASSERT(cond, ...) ASSERT(cond, ##__VA_ARGS__)
 #endif
 

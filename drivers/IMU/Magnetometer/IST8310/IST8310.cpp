@@ -10,8 +10,8 @@ using namespace ymd::drivers;
 #define IST8310_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define IST8310_DEBUG(...)
-#define IST8310_PANIC(...)  PANIC()
-#define IST8310_ASSERT(cond, ...) ASSERT(cond)
+#define IST8310_PANIC(...)  PANIC_NSRC()
+#define IST8310_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 

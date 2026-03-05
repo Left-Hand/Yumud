@@ -15,8 +15,8 @@ using namespace ymd::drivers;
 #define SC8815_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define SC8815_DEBUG(...)
-#define SC8815_PANIC(...)  PANIC()
-#define SC8815_ASSERT(cond, ...) ASSERT(cond)
+#define SC8815_PANIC(...)  PANIC_NSRC()
+#define SC8815_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
 
 using Error = SC8815::Error;
@@ -25,7 +25,7 @@ template<typename T = void>
 using IResult = Result<T, Error>;
 
 
-static constexpr uint16_t b10(const uint32_t value, const uint32_t step) {
+[[nodiscard]] static constexpr uint16_t b10(const uint32_t value, const uint32_t step) {
     uint32_t cnt = (value / step) - 1;
     uint8_t byte2 = cnt % 4;
 
@@ -35,7 +35,7 @@ static constexpr uint16_t b10(const uint32_t value, const uint32_t step) {
     return (byte2 << 8) | byte1;
 }
 
-static constexpr uint32_t inv_b10(const uint16_t data) {
+[[nodiscard]] static constexpr uint32_t inv_b10(const uint16_t data) {
     uint8_t byte1 = data & 0xFF;
     uint8_t byte2 = data >> 14;
 
@@ -97,11 +97,6 @@ IResult<> SC8815::init(const BatConfig & bat_conf){
         .indet = true,
         .ac_ok = true
     }); res.is_err()) return Err(res.unwrap_err());
-
-    // set_bat_current_limit(1.2_r);
-    // set_bus_current_limit(1.2_r);
-    // setVinRegRefVolt(12);
-    // enable_otg(false);
 
     return Ok();
 }

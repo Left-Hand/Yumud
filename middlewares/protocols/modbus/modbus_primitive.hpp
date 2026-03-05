@@ -125,8 +125,8 @@ static constexpr Err<ModbusError> make_err(auto err){
     return Err<ModbusError>(err);
 }
 
-struct [[nodiscard]] Address{
-    using Self = Address;
+struct [[nodiscard]] NodeId{
+    using Self = NodeId;
 
     static constexpr Self from_bits(const uint8_t bits){
         return std::bit_cast<Self>(bits);
@@ -157,61 +157,7 @@ enum class [[nodiscard]] Transport:uint8_t{
     TCP = 2,
 };
 
-struct Quantity{
-    uint16_t bits;
-};
 
-struct BoolInterator{
 
-};
-
-struct reqs{
-
-#if 0
-struct ReadCoils{
-    Address address, 
-    Quantity
-};
-struct ReadDiscreteInputs{
-    Address address, 
-    Quantity
-};
-struct WriteSingleCoil{
-    Address address, 
-    bool
-};
-struct WriteMultipleCoils{
-    Address address, 
-    BoolInterator
-};
-struct ReadInputRegisters{
-    Address address, 
-    Quantity
-};
-struct ReadHoldingRegisters{
-    Address address, 
-    Quantity
-};
-struct WriteSingleRegister{
-    Address address, 
-    uint16_t
-};
-struct WriteMultipleRegisters{
-    Address address, 
-    std::
-    span<uint16_t>};
-struct ReportServerId{};
-struct MaskWriteRegister{
-    Address address, 
-    uint16_t
-    , uint16_t};
-struct ReadWriteMultipleRegisters{
-    Address address, 
-    Quantity
-    , Address, std::span<uint16_t>};
-struct ReadDeviceIdentification{ReadCode, ObjectId};
-
-#endif
-};
 }
 }

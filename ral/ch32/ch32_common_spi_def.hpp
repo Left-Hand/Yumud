@@ -26,7 +26,7 @@ struct [[nodiscard]] R32_SPI_CTLR1{
     uint32_t BIDIMODE:1;
 
     uint32_t __RESV__:16;
-};CHECK_R32(R32_SPI_CTLR1);
+};VALIDATE_R32(R32_SPI_CTLR1);
 
 
 struct [[nodiscard]] R32_SPI_CTLR2{
@@ -38,7 +38,7 @@ struct [[nodiscard]] R32_SPI_CTLR2{
     uint32_t RXNEIE:1;
     uint32_t TXEIE:1;
     uint32_t :24;
-};CHECK_R32(R32_SPI_CTLR2);
+};VALIDATE_R32(R32_SPI_CTLR2);
 
 
 
@@ -55,7 +55,7 @@ struct [[nodiscard]] R32_SPI_STATR{
     uint32_t BSY:1;
 
     uint32_t :24;
-};CHECK_R32(R32_SPI_STATR);
+};VALIDATE_R32(R32_SPI_STATR);
 
 struct [[nodiscard]] R32_SPI_DATAR{
     uint32_t DR;

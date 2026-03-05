@@ -10,12 +10,13 @@
 namespace ymd::drivers{
 
 
-struct _NRF24L01_Regs{
+struct [[nodiscard]] _NRF24L01_Regs{
 
     using RegAddr = uint8_t;    
 
-    struct R8_Config:public Reg8<>{
+    struct [[nodiscard]] R8_Config:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
+
         uint8_t prim_rx:1;
         uint8_t pwr_up:1;
         uint8_t crco:1;
@@ -24,8 +25,9 @@ struct _NRF24L01_Regs{
         uint8_t mask_tx_ds:3;
     }DEF_R8(config_reg)
     
-    struct R8_EnAA:public Reg8<>{
+    struct [[nodiscard]] R8_EnAA:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
+
         uint8_t enaa_p5:1;
         uint8_t enaa_p4:1;
         uint8_t enaa_p3:1;
@@ -35,8 +37,9 @@ struct _NRF24L01_Regs{
         uint8_t reserved:2;
     }DEF_R8(en_aa_reg)
 
-    struct R8_EnRxAddr:public Reg8<>{
+    struct [[nodiscard]] R8_EnRxAddr:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
+
         uint8_t erx_p5:1;
         uint8_t erx_p4:1;
         uint8_t erx_p3:1;
@@ -46,26 +49,30 @@ struct _NRF24L01_Regs{
         uint8_t reserved:2;
     };
 
-    struct R8_SetupAddressWidth:public Reg8<>{
+    struct [[nodiscard]] R8_SetupAddressWidth:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
+
         uint8_t aw:2;
         uint8_t __resv__:6;
     }DEF_R8(setup_addrwidth_reg)
 
-    struct R8_SetupAutoRetransmit:public Reg8<>{
+    struct [[nodiscard]] R8_SetupAutoRetransmit:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
+
         uint8_t ard:4;
         uint8_t arc:4;
     }DEF_R8(setup_auto_retransmit_reg)
 
-    struct R8_RfChannel:public Reg8<>{
+    struct [[nodiscard]] R8_RfChannel:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
+
         uint8_t ch:7;
         uint8_t __resv__:1;
     }DEF_R8(rf_channel_reg)
 
-    struct R8_RfSetup:public Reg8<>{
+    struct [[nodiscard]] R8_RfSetup:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
+
         uint8_t lna_hcurr:1;
         uint8_t pf_pwr:2;
         uint8_t rf_dr:1;
@@ -73,8 +80,9 @@ struct _NRF24L01_Regs{
         uint8_t __rsv__:3;
     }DEF_R8(rf_setup_reg)
 
-    struct R8_Status:public Reg8<>{
+    struct [[nodiscard]] R8_Status:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x07};
+
         uint8_t tx_full:1;
         uint8_t rx_p_no:3;
         uint8_t max_rt:1;
@@ -83,29 +91,33 @@ struct _NRF24L01_Regs{
         uint8_t __resv__:1;
     }DEF_R8(status_reg)
 
-    struct R8_ObserveTx:public Reg8<>{
+    struct [[nodiscard]] R8_ObserveTx:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
+
         uint8_t plos_cnt:4;
         uint8_t arc_cnt:4;
     }DEF_R8(observe_tx_reg)
 
 
-    struct R8_CarrierDetect:public Reg8<>{
+    struct [[nodiscard]] R8_CarrierDetect:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
+
         uint8_t cd:1;
         uint8_t __resv__:7;
     }DEF_R8(carrier_detect_reg)
 
-    struct _R8_RxPwPn:public Reg8<>{
+    struct [[nodiscard]] _R8_RxPwPn:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
+
         uint8_t rx_pw:6;
         uint8_t __resv__:2;
     };
 
     _R8_RxPwPn rx_pw_p0, rx_pw_p1, rx_pw_p2, rx_pw_p3, rx_pw_p4, rx_pw_p5;
 
-    struct R8_FifoStatus{
+    struct [[nodiscard]] R8_FifoStatus{
         static constexpr RegAddr REG_ADDR = RegAddr{0x17};
+
         uint8_t rx_empty:1;
         uint8_t rx_full:1;
         uint8_t __resv1__:2;

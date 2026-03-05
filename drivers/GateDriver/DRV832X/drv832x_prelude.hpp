@@ -208,12 +208,8 @@ struct DRV832X_Prelude{
     struct Config{
 
     };
-};
 
-struct DRV832X_Regs:public DRV832X_Prelude{
-    struct [[nodiscard]] R16_Status1:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
-
+    struct [[nodiscard]] Status1 final{
         uint16_t vds_lc:1;
         uint16_t vds_hc:1;
         uint16_t vds_lb:1;
@@ -228,12 +224,9 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t fault:1;
 
         uint16_t :5;
+    };
 
-    }DEF_R16(status1_reg)
-
-    struct [[nodiscard]] R16_Status2:public Reg16<>{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
-
+    struct [[nodiscard]] Status2 final{
         uint16_t vgs_lc:1;
         uint16_t vgs_hc:1;
         uint16_t vgs_lb:1;
@@ -247,7 +240,23 @@ struct DRV832X_Regs:public DRV832X_Prelude{
         uint16_t sa_oc:1;
 
         uint16_t :5;
+    };
+};
 
+struct DRV832X_Regs:public DRV832X_Prelude{
+
+
+
+    struct [[nodiscard]] R16_Status1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x00};
+
+        Status1 status;
+    }DEF_R16(status1_reg)
+
+    struct [[nodiscard]] R16_Status2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
+
+        Status2 status;
     }DEF_R16(status2_reg)
 
     struct [[nodiscard]] R16_Ctrl1:public Reg16<>{

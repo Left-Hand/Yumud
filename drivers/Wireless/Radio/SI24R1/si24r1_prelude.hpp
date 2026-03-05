@@ -54,6 +54,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
 
     struct R8_TopConfig:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x00};
+
         uint8_t prim_rx:1;
         uint8_t power_up:1;
         uint8_t crc_2bytes:1;
@@ -66,6 +67,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
 
     struct R8_AutoAcknowledge:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
+
         uint8_t p0:1;
         uint8_t p1:1;
         uint8_t p2:1;
@@ -77,6 +79,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
     
     struct R8_EnableRxAddress:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
+
         uint8_t p0:1;
         uint8_t p1:1;
         uint8_t p2:1;
@@ -88,12 +91,14 @@ struct Si24R1_Regset:public Si24R1_Prelude{
 
     struct R8_AddressWidth:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
+
         uint8_t pipex_address_width:2;
         uint8_t __resv__:6;
     };
 
     struct R8_AutoRetransmission:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
+
         // 0000: disabled
         // 0001: up to 1 re-transmit on fail of AA
         // ...
@@ -111,12 +116,14 @@ struct Si24R1_Regset:public Si24R1_Prelude{
     struct R8_RFChannel:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x05};
 
+
         uint8_t rf_channel:7;
         uint8_t __resv__:1;
     };
 
     struct R8_RFConfig:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
+
         uint8_t rf_power:3;
         uint8_t rf_datarate_highbit:1;
         uint8_t pll_lock:1;
@@ -127,8 +134,9 @@ struct Si24R1_Regset:public Si24R1_Prelude{
 
     struct R8_Status:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x07};
+
         uint8_t tx_full:1;
-        uint8_t rx_pipe_number:2;
+        uint8_t rx_pipe_number:3;
         uint8_t max_rt:1;
         uint8_t tx_ds:1;
         uint8_t rx_dr:1;
@@ -137,33 +145,39 @@ struct Si24R1_Regset:public Si24R1_Prelude{
 
     struct R8_TransmissionObservation:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
+
         uint8_t arc_cnt:4;
         uint8_t plos_cnt:4;
     };
 
     struct R8_Rssi:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
+
         uint8_t rssi_less_than_60dbm:1;
         uint8_t __resv__:7;
     };
 
     struct R8_RxAddr:public Reg8<>{
         static constexpr RegAddr head_address = 0x0A;
+
         uint8_t data;
     };
 
     struct R8_TxAddr:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x10};
-        uint64_t data;
+
+        uint8_t data;
     };
     
     struct R8_RxPower:public Reg8<>{
         static constexpr RegAddr head_address = 0x11;
+
         uint8_t data;
     };
 
     struct R8_FifoStatus:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x17};
+
         uint8_t rx_empty:1;
         uint8_t rx_full:1;
         uint8_t __resv1__:2;
@@ -175,6 +189,7 @@ struct Si24R1_Regset:public Si24R1_Prelude{
 
     struct R8_DynamicPayloadLength:public Reg8<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x1c};
+
         uint8_t dpl_p0:1;
         uint8_t dpl_p1:1;
         uint8_t dpl_p2:1;
@@ -186,11 +201,29 @@ struct Si24R1_Regset:public Si24R1_Prelude{
 
     struct R8_Feature:public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x1d};
+
         uint8_t en_dyn_ack : 1;          // Set 1 enables the W_TX_PAYLOAD_NOACK command
         uint8_t en_ack_pay : 1;          // Set 1 enables payload on ACK
         uint8_t en_dpl : 1;              // Set 1 enables dynamic payload length
         uint8_t __resv__:5; 
     };
+
+    VALIDATE_R8(R8_TopConfig)
+    VALIDATE_R8(R8_AutoAcknowledge)
+    VALIDATE_R8(R8_EnableRxAddress)
+    VALIDATE_R8(R8_AddressWidth)
+    VALIDATE_R8(R8_AutoRetransmission)
+    VALIDATE_R8(R8_RFChannel)
+    VALIDATE_R8(R8_RFConfig)
+    VALIDATE_R8(R8_Status)
+    VALIDATE_R8(R8_TransmissionObservation)
+    VALIDATE_R8(R8_Rssi)
+    VALIDATE_R8(R8_RxAddr)
+    VALIDATE_R8(R8_TxAddr)
+    VALIDATE_R8(R8_RxPower)
+    VALIDATE_R8(R8_FifoStatus)
+    VALIDATE_R8(R8_DynamicPayloadLength)
+    VALIDATE_R8(R8_Feature)
 
     R8_TopConfig top_config_reg;
     R8_AutoAcknowledge auto_acknowledge_reg;

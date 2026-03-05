@@ -19,7 +19,7 @@ IResult<> LT8960L::set_pa_gain(const uint8_t gain){
 }
 IResult<> LT8960L::set_brclk_sel(const BrclkSel brclk_sel){
     auto reg = RegCopy(regs_.config1_reg);
-    reg.brclkSel = uint16_t(brclk_sel);
+    reg.brclk_sel = uint16_t(brclk_sel);
     return write_reg(reg);
 }
 

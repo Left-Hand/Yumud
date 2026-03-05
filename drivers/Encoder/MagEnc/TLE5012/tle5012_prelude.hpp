@@ -117,7 +117,7 @@ struct [[nodiscard]] R16_STAT : public Reg16<> {
     uint16_t rd_st     : 1;  // Bit15 读状态标志
 };
 
-CHECK_R16(R16_STAT)
+VALIDATE_R16(R16_STAT)
 
 // 0x01 ACSTAT - Activation Status Register
 struct [[nodiscard]] R16_ACSTAT : public Reg16<> {
@@ -137,7 +137,7 @@ struct [[nodiscard]] R16_ACSTAT : public Reg16<> {
     uint16_t res15_10  : 6;  // Bit15-10 保留
 };
 
-CHECK_R16(R16_ACSTAT)
+VALIDATE_R16(R16_ACSTAT)
 
 // 0x02 AVAL - Angle Value Register
 struct [[nodiscard]] R16_AVAL : public Reg16<> {
@@ -148,7 +148,7 @@ struct [[nodiscard]] R16_AVAL : public Reg16<> {
     uint16_t rd_av     : 1;  // Bit15 角度值更新标志
 };
 
-CHECK_R16(R16_AVAL)
+VALIDATE_R16(R16_AVAL)
 
 // 0x03 ASPD - Angular Speed Register
 struct [[nodiscard]] R16_ASPD : public Reg16<> {
@@ -159,7 +159,7 @@ struct [[nodiscard]] R16_ASPD : public Reg16<> {
     uint16_t rd_as     : 1;  // Bit15 角速度更新标志
 };
 
-CHECK_R16(R16_ASPD)
+VALIDATE_R16(R16_ASPD)
 
 // 0x04 AREV - Angle Revolution Counter
 struct [[nodiscard]] R16_AREV : public Reg16<> {
@@ -171,7 +171,7 @@ struct [[nodiscard]] R16_AREV : public Reg16<> {
     uint16_t rd_rev    : 1;  // Bit15 旋转计数更新标志
 };
 
-CHECK_R16(R16_AREV)
+VALIDATE_R16(R16_AREV)
 
 // 0x05 FSYNC - Frame Sync Register
 struct [[nodiscard]] R16_FSYNC : public Reg16<> {
@@ -182,7 +182,7 @@ struct [[nodiscard]] R16_FSYNC : public Reg16<> {
     uint16_t fsync     : 7;  // Bit15-9 帧同步值
 };
 
-CHECK_R16(R16_FSYNC)
+VALIDATE_R16(R16_FSYNC)
 
 // 0x06 MOD_1 - Mode Register 1
 struct [[nodiscard]] R16_MOD1 : public Reg16<> {
@@ -197,7 +197,7 @@ struct [[nodiscard]] R16_MOD1 : public Reg16<> {
     uint16_t fir_md    : 2;  // Bit15-14 滤波器配置
 };
 
-CHECK_R16(R16_MOD1)
+VALIDATE_R16(R16_MOD1)
 
 // 0x07 SIL - Safety Test Register
 struct [[nodiscard]] R16_SIL : public Reg16<> {
@@ -214,7 +214,7 @@ struct [[nodiscard]] R16_SIL : public Reg16<> {
     uint16_t filt_par  : 1;  // Bit15 滤波器并行
 };
 
-CHECK_R16(R16_SIL)
+VALIDATE_R16(R16_SIL)
 
 // 0x08 MOD_2 - Mode Register 2
 struct [[nodiscard]] R16_MOD2 : public Reg16<> {
@@ -228,7 +228,7 @@ struct [[nodiscard]] R16_MOD2 : public Reg16<> {
     uint16_t res15     : 1;  // Bit15 保留
 };
 
-CHECK_R16(R16_MOD2)
+VALIDATE_R16(R16_MOD2)
 
 // 0x09 MOD_3 - Mode Register 3
 struct [[nodiscard]] R16_MOD3 : public Reg16<> {
@@ -241,7 +241,7 @@ struct [[nodiscard]] R16_MOD3 : public Reg16<> {
     uint16_t ang_base  : 12; // Bit15-4 角度基准
 };
 
-CHECK_R16(R16_MOD3)
+VALIDATE_R16(R16_MOD3)
 
 // 0x0A OFFX - X Offset Register
 struct [[nodiscard]] R16_OFFX : public Reg16<> {
@@ -252,7 +252,7 @@ struct [[nodiscard]] R16_OFFX : public Reg16<> {
     uint16_t x_offset  : 12; // Bit15-4 X偏移
 };
 
-CHECK_R16(R16_OFFX)
+VALIDATE_R16(R16_OFFX)
 
 // 0x0B OFFY - Y Offset Register
 struct [[nodiscard]] R16_OFFY : public Reg16<> {
@@ -263,7 +263,7 @@ struct [[nodiscard]] R16_OFFY : public Reg16<> {
     uint16_t y_offset  : 12; // Bit15-4 Y偏移
 };
 
-CHECK_R16(R16_OFFY)
+VALIDATE_R16(R16_OFFY)
 
 // 0x0C SYNCH - Magnitude Synchronization
 struct [[nodiscard]] R16_SYNCH : public Reg16<> {
@@ -274,7 +274,7 @@ struct [[nodiscard]] R16_SYNCH : public Reg16<> {
     uint16_t synch     : 12; // Bit15-4 幅值同步
 };
 
-CHECK_R16(R16_SYNCH)
+VALIDATE_R16(R16_SYNCH)
 
 // 0x0D IFAB - IFAB Configuration Register
 struct [[nodiscard]] R16_IFAB : public Reg16<> {
@@ -287,7 +287,7 @@ struct [[nodiscard]] R16_IFAB : public Reg16<> {
     uint16_t ortho     : 12; // Bit15-4 正交校正
 };
 
-CHECK_R16(R16_IFAB)
+VALIDATE_R16(R16_IFAB)
 
 // 0x0E MOD_4 - Mode Register 4
 struct [[nodiscard]] R16_MOD4 : public Reg16<> {

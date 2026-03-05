@@ -63,7 +63,7 @@ struct [[nodiscard]] FlatPacket final{
         return std::span<const uint8_t>(context, payload_len + 1);
     }
 
-    void set_tailed_context_bytes(std::span<const uint8_t> bytes) {
+    constexpr void set_tailed_context_bytes(std::span<const uint8_t> bytes) {
         if(bytes.size() < 1) __builtin_trap();
         payload_len = bytes.size() - 1;
         std::copy(bytes.begin(), bytes.end(), context);

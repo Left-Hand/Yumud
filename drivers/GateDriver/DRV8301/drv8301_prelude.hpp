@@ -112,7 +112,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t :5;
     };
 
-    CHECK_R16(R16_Status1)
+    VALIDATE_R16(R16_Status1)
 
     struct [[nodiscard]] R16_Status2:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
@@ -125,7 +125,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
     };
 
 
-    CHECK_R16(R16_Status2)
+    VALIDATE_R16(R16_Status2)
 
     struct [[nodiscard]] R16_Ctrl1:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
@@ -139,7 +139,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t :5;
     };
 
-    CHECK_R16(R16_Ctrl1)
+    VALIDATE_R16(R16_Ctrl1)
 
     struct [[nodiscard]] R16_Ctrl2:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x03};
@@ -154,7 +154,7 @@ struct DRV8301_Regset:public DRV8301_Prelude{
         uint16_t :9;
     };
 
-    CHECK_R16(R16_Ctrl2)
+    VALIDATE_R16(R16_Ctrl2)
 
     R16_Status1 status1_reg = {};
     R16_Status2 status2_reg = {};

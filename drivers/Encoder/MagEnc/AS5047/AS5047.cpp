@@ -24,9 +24,8 @@ IResult<> AS5047::update() {
     return Ok();
 }
 
-
-
-class TransmissionFrame{
+namespace {
+struct TransmissionFrame{
 protected:
     uint16_t addr_:14;
     union{
@@ -45,6 +44,9 @@ protected:
         return (count % 2 == 0) ? true : false;
     }
 };
+
+}
+
 
 IResult<> AS5047::write_reg(const RegAddr addr, const uint8_t data){
 

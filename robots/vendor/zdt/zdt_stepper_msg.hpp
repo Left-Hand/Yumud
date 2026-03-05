@@ -44,7 +44,7 @@ struct [[nodiscard]] SetPosition final{
 
 struct [[nodiscard]] SetSpeed final{
     static constexpr FuncCode FUNC_CODE = FuncCode::SetSpeed;
-    static constexpr size_t PAYLOAD_LENGTH = 9;
+    static constexpr size_t PAYLOAD_LENGTH = 7;
     bool is_ccw;//2
     Rpm rpm;//3-4
     AcclerationLevel acc_level;

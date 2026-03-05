@@ -42,15 +42,14 @@ public:
         spi_drv_(hal::SpiDrv(spi, rank)){;}
 
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
-    [[nodiscard]] IResult<> update();
+    IResult<> init(const Config & cfg);
+    IResult<> update();
 
-    [[nodiscard]] IResult<> set_zero_angle(const Angular<uq32> angle);
-    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle(){
+    IResult<Angular<uq32>> read_lap_angle(){
         return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 
-    [[nodiscard]] IResult<PackageCode> get_package_code();
+    IResult<PackageCode> get_package_code();
 
 private:
     hal::SpiDrv spi_drv_;
@@ -58,9 +57,9 @@ private:
     uq32 lap_turns_ = 0;
 
 
-    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_data){
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
         const auto tx_u16 = uint16_t(
-            0x0000 | static_cast<uint16_t>(reg_addr << 8) | reg_data);
+            0x0000 | static_cast<uint16_t>(reg_addr << 8) | reg_val);
         if(const auto res = spi_drv_.write_single<uint16_t>(tx_u16);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
@@ -75,15 +74,14 @@ private:
         return Ok();
     }
 
-    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_data){
-        return read_burst(reg_addr, std::span(&reg_data, 1));
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+        return read_burst(reg_addr, std::span(&reg_val, 1));
     }
 
     template<typename T>
     [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
-        constexpr auto address = T::REG_ADDR;
-        const uint8_t data = reg.to_bits();
-        if(const auto res = write_reg(address, data); 
+        const uint8_t bits = reg.to_bits();
+        if(const auto res = write_reg(T::REG_ADDR, bits); 
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
@@ -92,8 +90,7 @@ private:
 
     template<typename T>
     [[nodiscard]] IResult<> read_reg(T & reg){
-        constexpr auto address = T::REG_ADDR;
-        if(const auto res = read_reg(address, reg.as_bits_mut()); 
+        if(const auto res = read_reg(T::REG_ADDR, reg.as_bits_mut()); 
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

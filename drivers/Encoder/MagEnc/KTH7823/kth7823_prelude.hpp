@@ -26,53 +26,64 @@ enum class [[nodiscard]] MagThreshold:uint8_t{
     _23mT, _38mT, _53mT, _67mT, _81mT, _95mT, _109mT, _123mT
 };
 
+enum class [[nodiscard]] AbzFreqLimit:uint8_t{
+    _16MHz = 0,
+    _8MHz,
+    _4MHz,
+    _2MHz,
+    _1MHz,
+    _0_5MHz,
+    _0_25MHz,
+    _0_125MHz,
+};
+
 using RegAddr = uint8_t;
 
 struct Regset final{
 
-struct R8_Zero_low:public Reg8<>{
+struct [[nodiscard]] R8_Zero_low:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x00};
     uint8_t bits;
 }DEF_R8(zero_low_reg)
 
-struct R8_Zero_high:public Reg8<>{
+struct [[nodiscard]] R8_Zero_high:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x01};
     uint8_t bits;
 }DEF_R8(zero_high_reg)
 
-struct R8_GainTrim:public Reg8<>{
+struct [[nodiscard]] R8_GainTrim:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x02};
     uint8_t gain_trim;
 }DEF_R8(gain_trim_reg)
 
-struct R8_XyTraim:public Reg8<>{
+struct [[nodiscard]] R8_XyTraim:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x03};
     uint8_t x_trim:1;
     uint8_t y_trim:1;
     uint8_t __resv__:6;
 }DEF_R8(xy_trim_reg)
 
-struct R8_Z_Config:public Reg8<>{
+struct [[nodiscard]] R8_Z_Config:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x04};
     uint8_t __resv__:2;
-    uint8_t zd:2;
-    uint8_t zl:2;
-    uint8_t ppt:2;
+    ZeroPulsePhase zd:2;
+    ZeroPulseWidth zl:2;
+    uint8_t ppt_low:2;
 }DEF_R8(z_config_reg)
 
-struct R8_PPT_High:public Reg8<>{
+struct [[nodiscard]] R8_PPT_High:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x05};
     uint8_t ppt_high;
 }DEF_R8(ppt_high_reg)
 
-struct R8_MagAlert:public Reg8<>{
+struct [[nodiscard]] R8_MagAlert:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x06};
     uint8_t __resv__:2;
     MagThreshold mag_low:3;
     MagThreshold mag_high:3;
 }DEF_R8(mag_alert_reg)
 
-struct R8_Npp:public Reg8<>{
+struct [[nodiscard]] R8_Npp:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x07};
     uint8_t __resv__:5;
     uint8_t npp:3;
@@ -80,7 +91,7 @@ struct R8_Npp:public Reg8<>{
 
 struct R8_AbzLimit:public Reg8<>{
     static constexpr RegAddr REG_ADDR = RegAddr{0x08};
-    uint8_t abz_limit;
+    AbzFreqLimit abz_limit;
 }DEF_R8(abz_limit_reg)
 
 struct R8_Rd:public Reg8<>{
@@ -96,19 +107,12 @@ public:
     Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
         spi_drv_(hal::SpiDrv(spi, idx)){}
 
-    [[nodiscard]] IResult<uint16_t> direct_read();
+    [[nodiscard]] IResult<> direct_read(uint16_t & reg_val);
 
-    [[nodiscard]] IResult<uint8_t> read_reg(const uint8_t addr);
+    [[nodiscard]] IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val);
 
-    [[nodiscard]] IResult<> burn_reg(const uint8_t addr, const uint8_t bits);
+    [[nodiscard]] IResult<> burn_reg(const uint8_t reg_addr, const uint8_t reg_val);
 
-    template<typename T>
-    [[nodiscard]] IResult<> burn_reg(const RegCopy<T> & reg){
-        if(const auto res = burn_reg(T::REG_ADDR, reg.to_bits()); 
-            res.is_err()) return res;
-        reg.apply();
-        return Ok();
-    }
 
     [[nodiscard]] IResult<> disable_reg_oper();
 

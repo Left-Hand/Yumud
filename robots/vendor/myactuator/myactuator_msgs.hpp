@@ -17,10 +17,10 @@ struct [[nodiscard]] cmd_type final{\
 // 值来确定，具体见2.1.4索引说明表。
 struct [[nodiscard]] GetPidParameter final{
     static constexpr ReqCommand COMMAND = ReqCommand::GetPidParameter;  
-    PidIndex index;
+    PidIndex pid_idx;
     constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = BytesFiller(bytes);
-        filler.push_byte(std::bit_cast<uint8_t>(index));
+        filler.push_byte(std::bit_cast<uint8_t>(pid_idx));
         filler.fill_remaining(0);
     }
 };
@@ -28,12 +28,12 @@ struct [[nodiscard]] GetPidParameter final{
 // 写入PID参数到RAM命令(0×31) page 4
 struct [[nodiscard]] WritePidParameterToRam final{
     static constexpr ReqCommand COMMAND = ReqCommand::WritePidParameterToRam;  
-    PidIndex index;
+    PidIndex pid_idx;
     math::fp32 value;
 
     constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = BytesFiller(bytes);
-        filler.push_byte(std::bit_cast<uint8_t>(index));
+        filler.push_byte(std::bit_cast<uint8_t>(pid_idx));
         filler.push_zeros(2);
         filler.push_float(value);
     }
@@ -42,12 +42,12 @@ struct [[nodiscard]] WritePidParameterToRam final{
 // 写入PID参数到ROM 命令(0x32) page 5
 struct [[nodiscard]] WritePidParameterToRom final{
     static constexpr ReqCommand COMMAND = ReqCommand::WritePidParameterToRom;  
-    PidIndex index;
+    PidIndex pid_idx;
     math::fp32 value;
 
     constexpr void fill_bytes(std::span<uint8_t, PAYLOAD_CAPACITY> bytes) const {
         auto filler = BytesFiller(bytes);
-        filler.push_byte(std::bit_cast<uint8_t>(index));
+        filler.push_byte(std::bit_cast<uint8_t>(pid_idx));
         filler.push_zeros(2);
         filler.push_float(value);
     }
@@ -277,13 +277,13 @@ struct [[nodiscard]] cmd_type final{};
 // 值来确定，具体见2.1.4索引说明表。
 struct [[nodiscard]] GetPidParameter final{
     using Self = GetPidParameter;
-    PidIndex index;
+    PidIndex pid_idx;
     math::fp32 value;
 
     [[nodiscard]] static constexpr Result<Self, DeMsgError>
     try_from_bytes(const std::span<const uint8_t, 7> bytes){
         return Ok(Self{
-            .index = std::bit_cast<PidIndex>(bytes[0]),
+            .pid_idx = std::bit_cast<PidIndex>(bytes[0]),
             .value = math::fp32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<3, 4>()))
         });
     }

@@ -105,19 +105,19 @@ void cast_color(Image<RGB565>& dst, const Image<Binary>& src) {
 }
 
 
-static UniqueRandomGenerator lcg;
+// static UniqueRandomGenerator lcg;
 
-void dyeing(Image<Gray>& dst, const Image<Gray>& src){
-    for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
-        for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
-            dst[math::Vec2u{x, y}] = Gray::from_u8(lcg[src[math::Vec2u{x, y}].to_u8()]);
-        }
-    }
-}
+// void dyeing(Image<Gray>& dst, const Image<Gray>& src){
+//     for (auto x = 0u; x < MIN(dst.size().x, src.size().x); x++) {
+//         for (auto y = 0u; y < MIN(dst.size().y, src.size().y); y++) {
+//             dst[math::Vec2u{x, y}] = Gray::from_u8(lcg[src[math::Vec2u{x, y}].to_u8()]);
+//         }
+//     }
+// }
 
-Gray dyeing(const Gray in){
-    return Gray::from_u8(lcg[in.to_u8()]);
-}
+// Gray dyeing(const Gray in){
+//     return Gray::from_u8(lcg[in.to_u8()]);
+// }
 
 auto dyeing(const Image<Gray>& src){
     Image<Gray> tmp{src.size()};

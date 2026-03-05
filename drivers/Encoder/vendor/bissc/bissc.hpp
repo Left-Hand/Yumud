@@ -51,17 +51,17 @@ static constexpr Option<uint32_t> parse(std::span<const uint8_t> bytes, const si
         d64 >>= num_bit-(resolution + 10);
     }
 
-    const uint8_t crc_expected = d64 & 0x3F; 									 //extract last 6-bit digits to get CRC
-    const uint32_t d32 = (d64 >> 6) & ((1<<(resolution + 2)) - 1);  //Shift out CRC, AND with 24-bit mask to get raw data (position, error, warning)
-    const uint32_t spi_val = (d32 >> 2) & ((1<<resolution) - 1); 			     //Shift out error and warning, AND with 22-bit mask to get position
+    const uint8_t crc_expected = d64 & 0x3F;
+    const uint32_t d32 = (d64 >> 6) & ((1<<(resolution + 2)) - 1);
+    const uint32_t spi_val = (d32 >> 2) & ((1<<resolution) - 1);
 
     uint8_t crc_actual;  //CRC seed is 0b000000
     crc_actual = ((d32 >> 30) & 0x03);
-    crc_actual = CRC6_TABLE[((d32 >> 24) & 0x3F) ^ crc_actual];
-    crc_actual = CRC6_TABLE[((d32 >> 18) & 0x3F) ^ crc_actual];
-    crc_actual = CRC6_TABLE[((d32 >> 12) & 0x3F) ^ crc_actual];
-    crc_actual = CRC6_TABLE[((d32 >> 6) & 0x3F) ^ crc_actual];
-    crc_actual = CRC6_TABLE[((d32 >> 0) & 0x3F) ^ crc_actual];
+    crc_actual = CRC6_TABLE[static_cast<size_t>(((d32 >> 24) & 0x3F) ^ crc_actual)];
+    crc_actual = CRC6_TABLE[static_cast<size_t>(((d32 >> 18) & 0x3F) ^ crc_actual)];
+    crc_actual = CRC6_TABLE[static_cast<size_t>(((d32 >> 12) & 0x3F) ^ crc_actual)];
+    crc_actual = CRC6_TABLE[static_cast<size_t>(((d32 >> 6) & 0x3F) ^ crc_actual)];
+    crc_actual = CRC6_TABLE[static_cast<size_t>(((d32 >> 0) & 0x3F) ^ crc_actual)];
     crc_actual = 0x3F & ~crc_actual; //CRC is output inverted
 
     if(crc_actual != crc_expected) return None;

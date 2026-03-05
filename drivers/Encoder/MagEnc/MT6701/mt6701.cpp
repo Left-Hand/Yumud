@@ -2,14 +2,17 @@
 #include "core/debug/debug.hpp"
 
 
+#define MT6701_DEBUG_EN
 
-#ifdef MT6701_DEBUG
-#undef MT6701_DEBUG
-#define MT6701_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
+#ifdef MT6701_DEBUG_EN
+#define MT6701_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define MT6701_PANIC(...) PANIC(__VA_ARGS__)
+#define MT6701_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define MT6701_DEBUG(...)
+#define MT6701_PANIC(...)  PANIC_NSRC()
+#define MT6701_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #endif
-
 
 using namespace ymd::drivers;
 using namespace ymd;

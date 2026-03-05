@@ -172,7 +172,7 @@ struct R8_USB_CTRL {
         return RB_UC_DMA_EN == 1U;
     }
 };
-CHECK_R8(R8_USB_CTRL);
+VALIDATE_R8(R8_USB_CTRL);
 
 /**
  * @brief USB中断使能寄存器 (R8_USB_INT_EN)
@@ -277,7 +277,7 @@ struct R8_USB_INT_EN {
         return RB_UIE_BUS_RST_DETECT == 1U;
     }
 };
-CHECK_R8(R8_USB_INT_EN);
+VALIDATE_R8(R8_USB_INT_EN);
 
 /**
  * @brief USB设备地址寄存器 (R8_USB_DEV_AD)
@@ -330,7 +330,7 @@ struct R8_USB_DEV_AD {
         return RB_UDA_GP_BIT == 1U;
     }
 };
-CHECK_R8(R8_USB_DEV_AD);
+VALIDATE_R8(R8_USB_DEV_AD);
 
 /**
  * @brief USB杂项状态寄存器 (R8_USB_MIS_ST)
@@ -428,7 +428,7 @@ struct R8_USB_MIS_ST {
         return RB_UMS_DEV_ATTACH == 1U;
     }
 };
-CHECK_R8(R8_USB_MIS_ST);
+VALIDATE_R8(R8_USB_MIS_ST);
 
 /**
  * @brief USB中断标志寄存器 (R8_USB_INT_FG)
@@ -527,7 +527,7 @@ struct R8_USB_INT_FG {
         return RB_U_TOG_OK == 1U;
     }
 };
-CHECK_R8(R8_USB_INT_FG);
+VALIDATE_R8(R8_USB_INT_FG);
 
 /**
  * @brief USB中断状态寄存器 (R8_USB_INT_ST)
@@ -609,7 +609,7 @@ struct R8_USB_INT_ST {
         return dev_get_token_pid() == 3U;
     }
 };
-CHECK_R8(R8_USB_INT_ST);
+VALIDATE_R8(R8_USB_INT_ST);
 
 /**
  * @brief USB接收长度寄存器 (R16_USB_RX_LEN)
@@ -637,7 +637,7 @@ struct R32_USB_RX_LEN {
         return static_cast<uint16_t>(R16_USB_RX_LEN & 0x3FFU);
     }
 };
-CHECK_R32(R32_USB_RX_LEN);
+VALIDATE_R32(R32_USB_RX_LEN);
 
 /**
  * @brief USB OTG控制寄存器 (R32_USB_OTG_CR)
@@ -737,7 +737,7 @@ struct R32_USB_OTG_CR {
         return RB_CR_OTG_EN == 1U;
     }
 };
-CHECK_R32(R32_USB_OTG_CR);
+VALIDATE_R32(R32_USB_OTG_CR);
 
 /**
  * @brief USB OTG状态寄存器 (R32_USB_OTG_SR)
@@ -799,7 +799,7 @@ struct R32_USB_OTG_SR {
         return RB_SR_SESS_VLD == 1U;
     }
 };
-CHECK_R32(R32_USB_OTG_SR);
+VALIDATE_R32(R32_USB_OTG_SR);
 
 /******************************************************************************************
  * 23.2.2 设备模式寄存器（Device Mode Registers）
@@ -903,7 +903,7 @@ struct R8_UDEV_CTRL {
         return RB_UD_DP_PIN == 1U;
     }
 };
-CHECK_R8(R8_UDEV_CTRL);
+VALIDATE_R8(R8_UDEV_CTRL);
 
 /**
  * @brief 端点1(9)/4(8/12)模式控制寄存器 (R8_UEP4_1_MOD)
@@ -991,7 +991,7 @@ struct R8_UEP4_1_MOD {
         return RB_UEP1_RX_EN == 1U;
     }
 };
-CHECK_R8(R8_UEP4_1_MOD);
+VALIDATE_R8(R8_UEP4_1_MOD);
 
 /**
  * @brief 端点2(10)/3(11)模式控制寄存器 (R8_UEP2_3_MOD)
@@ -1071,7 +1071,7 @@ struct R8_UEP2_3_MOD {
         RB_UEP3_BUF_MOD = is_double_buf ? 1U : 0U;
     }
 };
-CHECK_R8(R8_UEP2_3_MOD);
+VALIDATE_R8(R8_UEP2_3_MOD);
 
 /**
  * @brief 端点5(13)/6(14)模式控制寄存器 (R8_UEP5_6_MOD)
@@ -1151,7 +1151,7 @@ struct R8_UEP5_6_MOD {
         RB_UEP6_BUF_MOD = is_double_buf ? 1U : 0U;
     }
 };
-CHECK_R8(R8_UEP5_6_MOD);
+VALIDATE_R8(R8_UEP5_6_MOD);
 
 /**
  * @brief 端点7(15)模式控制寄存器 (R8_UEP7_MOD)
@@ -1200,7 +1200,7 @@ struct R8_UEP7_MOD {
         RB_UEP7_BUF_MOD = is_double_buf ? 1U : 0U;
     }
 };
-CHECK_R8(R8_UEP7_MOD);
+VALIDATE_R8(R8_UEP7_MOD);
 
 /**
  * @brief 端点n缓冲区起始地址寄存器 (R32_UEPn_DMA)

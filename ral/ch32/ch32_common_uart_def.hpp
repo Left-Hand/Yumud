@@ -54,7 +54,7 @@ struct R32_STATR{
     }
 };   
 
-CHECK_R32(R32_STATR)
+VALIDATE_R32(R32_STATR)
 
 struct R32_DATAR{
     uint32_t DR:9;

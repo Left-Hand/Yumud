@@ -20,32 +20,23 @@ using namespace ymd::robots::cybergear::details;
 
 using BxCanFrame = hal::BxCanFrame;
 using TemperatureCode = cybergear::details::TemperatureCode;
-using CmdRad = cybergear::details::CmdRad;
-using CmdOmega = cybergear::details::CmdOmega;
-using CmdTorque = cybergear::details::CmdTorque;
-using CmdKp = cybergear::details::CmdKp;
-using CmdKd = cybergear::details::CmdKd;
+using RadCode = cybergear::details::RadCode;
+using OmegaCode = cybergear::details::OmegaCode;
+using TorqueCode = cybergear::details::TorqueCode;
+using KpCode = cybergear::details::KpCode;
+using KdCode = cybergear::details::KdCode;
 
 using Self = cybergear::CyberGear;
 
 using Error = cybergear::Error;
+
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-static constexpr Err<Error> make_err_from_cmp(const std::weak_ordering ord){
-    if (ord == std::weak_ordering::less) {
-        return Err<Error>(Error::INPUT_LOWER_THAN_LIMIT);
-    } else if (ord == std::weak_ordering::greater) {
-        return Err<Error>(Error::INPUT_HIGHER_THAN_LIMIT);
-    } else {
-        __builtin_unreachable();
-    }
-}
+namespace{
+struct alignas(4) [[nodiscard]] CgId final{
 
-namespace ymd::robots::cybergear{
-
-struct [[nodiscard]] CgId final{
-
+    uint32_t bits;
 
     [[nodiscard]] constexpr auto cmd() {
         return make_bitfield_proxy<24, 29, cybergear::Command>(bits);}
@@ -77,11 +68,52 @@ struct [[nodiscard]] CgId final{
 
     [[nodiscard]] constexpr uint32_t to_bits() const {return bits;}
 
-    uint32_t bits;
 
 };
 
 
+struct alignas(8)  [[nodiscard]] TxContext final{
+    uint64_t bits;
+    [[nodiscard]] constexpr auto cmd_rad() {
+        return make_bitfield_proxy<0, 16, RadCode>(bits);}
+    [[nodiscard]] constexpr auto cmd_omega() {
+        return make_bitfield_proxy<16, 32, OmegaCode>(bits);}
+    [[nodiscard]] constexpr auto cmd_kp() {
+        return make_bitfield_proxy<32, 48, KpCode>(bits);}
+    [[nodiscard]] constexpr auto cmd_kd() {
+        return make_bitfield_proxy<48, 64, KdCode>(bits);}
+};
+
+static_assert(sizeof(TxContext) == 8);  
+
+struct alignas(8)  [[nodiscard]] RxContext final{
+    uint64_t bits;
+    [[nodiscard]] constexpr auto radians() const {            
+        return make_bitfield_proxy<0, 16, RadCode>(bits);}
+    [[nodiscard]] constexpr auto omega() const {          
+        return make_bitfield_proxy<16, 32, OmegaCode>(bits);}
+    [[nodiscard]] constexpr auto torque() const {         
+        return make_bitfield_proxy<32, 48, TorqueCode>(bits);}
+    [[nodiscard]] constexpr auto temperature() const {    
+        return make_bitfield_proxy<48, 64, TemperatureCode>(bits);}
+};
+
+static_assert(sizeof(RxContext) == 8);
+
+
+static constexpr Err<Error> make_err_from_cmp(const std::weak_ordering ord){
+    if (ord == std::weak_ordering::less) {
+        return Err<Error>(Error::INPUT_LOWER_THAN_LIMIT);
+    } else if (ord == std::weak_ordering::greater) {
+        return Err<Error>(Error::INPUT_HIGHER_THAN_LIMIT);
+    } else {
+        __builtin_unreachable();
+    }
+}
+
+}
+
+namespace ymd::robots::cybergear{
 
 IResult<> Self::init(){
     return Ok{};
@@ -93,16 +125,7 @@ IResult<> Self::request_mcu_id(){
 }
 
 IResult<> Self::ctrl(const MitParams & params){
-
-    struct [[nodiscard]] CgPayload{
-        uint64_t bits;
-        [[nodiscard]] auto cmd_rad() {return make_bitfield_proxy<0, 16, CmdRad>(bits);}
-        [[nodiscard]] auto cmd_omega() {return make_bitfield_proxy<16, 32, CmdOmega>(bits);}
-        [[nodiscard]] auto cmd_kp() {return make_bitfield_proxy<32, 48, CmdKp>(bits);}
-        [[nodiscard]] auto cmd_kd() {return make_bitfield_proxy<48, 64, CmdKd>(bits);}
-    };
-
-    CgPayload payload = {0};
+    TxContext context = {0};
 
     #define TRY_DESERIALIZE_PAYLOAD(class_name, field_name)\
     ({\
@@ -111,15 +134,15 @@ IResult<> Self::ctrl(const MitParams & params){
         res.unwrap();\
     });\
 
-    payload.cmd_rad() = TRY_DESERIALIZE_PAYLOAD(CmdRad, params.radians); 
-    payload.cmd_omega() = TRY_DESERIALIZE_PAYLOAD(CmdOmega, params.omega);
-    payload.cmd_kd() = TRY_DESERIALIZE_PAYLOAD(CmdKd, params.kd);
-    payload.cmd_kp() = TRY_DESERIALIZE_PAYLOAD(CmdKp, params.kp);
+    context.cmd_rad() = TRY_DESERIALIZE_PAYLOAD(RadCode, params.radians); 
+    context.cmd_omega() = TRY_DESERIALIZE_PAYLOAD(OmegaCode, params.omega);
+    context.cmd_kd() = TRY_DESERIALIZE_PAYLOAD(KdCode, params.kd);
+    context.cmd_kp() = TRY_DESERIALIZE_PAYLOAD(KpCode, params.kp);
 
     return this->transmit(
         CgId::from_parts(cybergear::Command::SEND_CTRL1, 
-        CmdTorque(params.torque).count(), node_id_).to_bits(),
-        payload.bits, sizeof(payload)
+        TorqueCode(params.torque).count(), node_id_).to_bits(),
+        context.bits, sizeof(context)
     );
 }
 
@@ -172,11 +195,11 @@ IResult<> Self::request_write_para(const uint16_t idx, const uint32_t bits){
     );
 }
 
-IResult<> Self::transmit(const uint32_t bits, const uint64_t payload, const uint8_t dlc){
+IResult<> Self::transmit(const uint32_t bits, const uint64_t context, const uint8_t dlc){
     if (dlc > 8) 
         return Err(Error::RET_DLC_LONGER);
 
-    const auto buf = std::bit_cast<std::array<uint8_t, 8>>(payload);
+    const auto buf = std::bit_cast<std::array<uint8_t, 8>>(context);
     const auto frame = BxCanFrame(
         hal::CanStdId::from_bits(bits), 
         hal::BxCanPayload::from_bytes(std::span(buf.data(), dlc))
@@ -222,32 +245,19 @@ IResult<> Self::on_mcu_id_feed_back(const uint32_t id_u32, const uint64_t bits, 
     return Ok();
 }
 
-struct [[nodiscard]] CgPayload{
-    uint64_t bits;
-    [[nodiscard]] constexpr auto radians() const {            
-        return make_bitfield_proxy<0, 16, CmdRad>(bits);}
-    [[nodiscard]] constexpr auto omega() const {          
-        return make_bitfield_proxy<16, 32, CmdOmega>(bits);}
-    [[nodiscard]] constexpr auto torque() const {         
-        return make_bitfield_proxy<32, 48, CmdTorque>(bits);}
-    [[nodiscard]] constexpr auto temperature() const {    
-        return make_bitfield_proxy<48, 64, TemperatureCode>(bits);}
-};
 
 
 IResult<> Self::on_ctrl2_feed_back(const uint32_t id_u32, const uint64_t bits, const uint8_t dlc){
-
-
-    if(dlc != sizeof(CgPayload)){
+    if(dlc != sizeof(TxContext)){
         return Err(Error::RET_DLC_SHORTER);
     }
 
-    const CgPayload payload = {bits};
+    const RxContext context = {bits};
 
-    feedback_.radians =         payload.radians().get().to<iq16>();
-    feedback_.omega =       payload.omega().get().to<iq16>();
-    feedback_.torque =      payload.torque().get().to<iq16>();
-    feedback_.celsius = payload.temperature().get().to_celsius();
+    feedback_.radians =         context.radians().get().to<iq16>();
+    feedback_.omega =       context.omega().get().to<iq16>();
+    feedback_.torque =      context.torque().get().to<iq16>();
+    feedback_.celsius = context.temperature().get().to_celsius();
 
     return Ok();
 }

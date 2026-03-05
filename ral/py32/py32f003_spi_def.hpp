@@ -24,7 +24,7 @@ namespace ymd::ral::py32::py32f003{
         uint16_t CRCEN:1;
         uint16_t BIDIOE:1;
         uint16_t BIDIMODE:1;
-    };CHECK_R16(R16_SPI_CTLR1);
+    };VALIDATE_R16(R16_SPI_CTLR1);
 
 
     struct R16_SPI_CTLR2{
@@ -36,7 +36,7 @@ namespace ymd::ral::py32::py32f003{
         uint16_t RXNEIE:1;
         uint16_t TXEIE:1;
         uint16_t :8;
-    };CHECK_R16(R16_SPI_CTLR2);
+    };VALIDATE_R16(R16_SPI_CTLR2);
 
 
 
@@ -53,7 +53,7 @@ namespace ymd::ral::py32::py32f003{
         uint16_t BSY:1;
 
         uint16_t :8;
-    };CHECK_R16(R16_SPI_STATR);
+    };VALIDATE_R16(R16_SPI_STATR);
 
     struct R16_SPI_DATAR{
         uint16_t DR;

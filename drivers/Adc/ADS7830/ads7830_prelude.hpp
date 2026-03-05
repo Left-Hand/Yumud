@@ -163,7 +163,7 @@ struct ADS7830_Prelude{
         }
     };
 
-    CHECK_R8(CommandByte)
+    VALIDATE_R8(CommandByte)
 
     using ConvData = uint8_t;
 };
