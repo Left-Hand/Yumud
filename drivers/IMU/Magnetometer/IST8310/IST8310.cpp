@@ -73,7 +73,7 @@ IResult<> IST8310::reset(){
 
 IResult<> IST8310::enable_continous(const Enable en){
     auto reg = RegCopy(regs_.ctrl1_reg);
-    reg.cont = en == EN;
+    reg.cont = (en == EN);
     return write_reg(reg);;
 }
 
@@ -122,7 +122,7 @@ IResult<bool> IST8310::is_data_ready(){
 
 IResult<> IST8310::enable_interrupt(const Enable en){
     auto reg = RegCopy(regs_.ctrl2_reg);
-    reg.int_en = en == EN;
+    reg.int_en = (en == EN);
     return write_reg(reg);
 }
 

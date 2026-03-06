@@ -59,7 +59,7 @@ private:
 
     //     IResult<> enable_output(const Enable en){
     //         auto reg = RegCopy(ctrl_);
-    //         reg.int_out = en == EN;
+    //         reg.int_out = (en == EN);
     //         return bmi_.transport_.write_reg(reg);
     //     }
     // protected:

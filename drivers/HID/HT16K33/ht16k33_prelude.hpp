@@ -240,7 +240,7 @@ struct HT16K33_Regs:public HT16K33_Prelude{
             const Enable en,
             const BlinkFreq freq
         ){
-            display_on = en == EN;
+            display_on = (en == EN);
             blink_freq = freq;
         }
     };

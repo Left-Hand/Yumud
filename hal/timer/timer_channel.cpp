@@ -54,7 +54,7 @@ void TimerChannel::enable_dma(const Enable en){
         }
     }();
 
-    TIM_DMACmd(SDK_INST(inst_), source, en == EN);
+    TIM_DMACmd(SDK_INST(inst_), source, (en == EN));
 }
 
 

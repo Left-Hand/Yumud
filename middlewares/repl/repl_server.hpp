@@ -49,7 +49,7 @@ public:
         }
     }
 
-    void enable_echo(Enable echo_en){ echo_en_ = echo_en == EN; }
+    void enable_echo(Enable echo_en){ echo_en_ = (echo_en == EN); }
 // private:
 public:
     ReadCharProxy is_;

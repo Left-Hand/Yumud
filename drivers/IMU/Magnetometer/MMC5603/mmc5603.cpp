@@ -101,7 +101,7 @@ IResult<> MMC5603::set_band_width(const BandWidth bw){
 
 IResult<> MMC5603::enable_continuous(const Enable en){
     auto reg = RegCopy(regs_.ctrl2_reg);
-    reg.cont_en = en == EN;
+    reg.cont_en = (en == EN);
     if(const auto res = write_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     return Ok();

@@ -148,17 +148,17 @@ void Spi::enable_rcc(const Enable en){
     switch(reinterpret_cast<size_t>(inst_)){
         #ifdef SPI1_PRESENT
         case SPI1_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en == EN);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, (en == EN));
             return;
         #endif
         #ifdef SPI2_PRESENT
         case SPI2_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, en == EN);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, (en == EN));
             return;
         #endif
         #ifdef SPI3_PRESENT
         case SPI3_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, en == EN);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, (en == EN));
             return;
         #endif
     }

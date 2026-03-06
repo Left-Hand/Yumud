@@ -151,12 +151,12 @@ void AdcPrimary::set_pga(const Pga pga){
 
 void AdcPrimary::enable_continous(const Enable en){
     auto tempreg = std::bit_cast<CTLR2>(SDK_INST(inst_)->CTLR2);
-    tempreg.CONT = en == EN;
+    tempreg.CONT = (en == EN);
     SDK_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
 }
 
 void AdcPrimary::enable_auto_inject(const Enable en){
-    ADC_AutoInjectedConvCmd(SDK_INST(inst_), en == EN);
+    ADC_AutoInjectedConvCmd(SDK_INST(inst_), (en == EN));
 }
 
 
@@ -164,7 +164,7 @@ void AdcPrimary::enable_right_align(const Enable en){
     auto tempreg = std::bit_cast<CTLR2>(SDK_INST(inst_)->CTLR2);
     tempreg.ALIGN = en == DISEN;
     SDK_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
-    right_align_ = en == EN;
+    right_align_ = (en == EN);
 }
 
 void AdcPrimary::set_regular_trigger(const RegularTrigger trigger){
@@ -211,7 +211,7 @@ void AdcPrimary::sw_start_injected(const bool force){
 }
 
 void AdcPrimary::enable_dma(const Enable en){
-    ADC_DMACmd(SDK_INST(inst_), en == EN);
+    ADC_DMACmd(SDK_INST(inst_), (en == EN));
 }
 
 uint16_t AdcPrimary::get_conv_result(){
@@ -254,22 +254,22 @@ void AdcPrimary::set_regular_sample_cycles(const ChannelSelection sel,  const Sa
 
 void AdcPrimary::enable_singleshot(const Enable en){
     auto tempreg = std::bit_cast<CTLR1>(SDK_INST(inst_)->CTLR1);
-    tempreg.DISCEN = en == EN;
+    tempreg.DISCEN = (en == EN);
     SDK_INST(inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
 }
 
 void AdcPrimary::enable_scan(const Enable en){
     auto tempreg = std::bit_cast<CTLR1>(SDK_INST(inst_)->CTLR1);
-    tempreg.SCAN = en == EN;
+    tempreg.SCAN = (en == EN);
     SDK_INST(inst_)->CTLR1 = std::bit_cast<uint32_t>(tempreg);
 }
 
 void AdcPrimary::enable_temp_vref(const Enable en){
     auto tempreg = std::bit_cast<CTLR2>(SDK_INST(inst_)->CTLR2);
-    tempreg.TSVREFE = en == EN;
+    tempreg.TSVREFE = (en == EN);
     SDK_INST(inst_)->CTLR2 = std::bit_cast<uint32_t>(tempreg);
 }
 
 void AdcPrimary::dyn_enable_interrupt(const AdcIT I, const Enable en){
-    ADC_ITConfig(SDK_INST(inst_), std::bit_cast<uint16_t>(I), en == EN);
+    ADC_ITConfig(SDK_INST(inst_), std::bit_cast<uint16_t>(I), (en == EN));
 }

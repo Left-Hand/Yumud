@@ -147,6 +147,6 @@ IResult<> Self::set_mux(const MUX _mux){
 
 IResult<> Self::enable_ch3_as_bits_mut(const Enable en){
     auto reg = RegCopy(regs_.config1_reg);
-    reg.ext_ref = en == EN;
+    reg.ext_ref = (en == EN);
     return write_reg(reg);
 }

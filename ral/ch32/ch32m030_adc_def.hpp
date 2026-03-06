@@ -269,35 +269,35 @@ struct [[nodiscard]] ADC_Def{
     }
 
     constexpr void enable_eoc_it(const Enable en){
-        CTLR1.EOCIE = en == EN;
+        CTLR1.EOCIE = (en == EN);
     }
 
     constexpr void enable_awd_it(const Enable en){
-        CTLR1.AWDIE = en == EN;
+        CTLR1.AWDIE = (en == EN);
     }
 
     constexpr void enable_jeoc_it(const Enable en){
-        CTLR1.JEOCIE = en == EN;
+        CTLR1.JEOCIE = (en == EN);
     }
 
     constexpr void enable_scan_mode(const Enable en){
-        CTLR1.SCAN = en == EN;
+        CTLR1.SCAN = (en == EN);
     }
 
     constexpr void enable_single_channel_watchdog_when_scan(const Enable en){
-        CTLR1.AWDSGL = en == EN;
+        CTLR1.AWDSGL = (en == EN);
     }
 
     constexpr void enable_auto_inject(const Enable en){
-        CTLR1.JAUTO = en == EN;
+        CTLR1.JAUTO = (en == EN);
     }
 
     constexpr void enable_regular_disc_mode(const Enable en){
-        CTLR1.DISCEN = en == EN;
+        CTLR1.DISCEN = (en == EN);
     }
 
     constexpr void enable_injected_disc_mode(const Enable en){
-        CTLR1.JDISCEN = en == EN;
+        CTLR1.JDISCEN = (en == EN);
     }
 
     constexpr void set_regular_disc_num(const uint8_t num){
@@ -306,38 +306,38 @@ struct [[nodiscard]] ADC_Def{
 
 
     constexpr void enable_injected_watchdog(const Enable en){
-        CTLR1.JAWDEN = en == EN;
+        CTLR1.JAWDEN = (en == EN);
     }
 
     constexpr void enable_regular_watchdog(const Enable en){
-        CTLR1.AWDEN = en == EN;
+        CTLR1.AWDEN = (en == EN);
     }
     constexpr void enable_buffer(const Enable en){
-        CTLR1.BUFEN = en == EN;
+        CTLR1.BUFEN = (en == EN);
     }
 
     constexpr void enable(const Enable en){
-        CTLR2.ADON = en == EN;
+        CTLR2.ADON = (en == EN);
     }
 
     constexpr void enable_cont_mode(const Enable en){
-        CTLR2.CONT = en == EN;
+        CTLR2.CONT = (en == EN);
     }
 
     constexpr void enable_calibrate(const Enable en){
-        CTLR2.CAL = en == EN;
+        CTLR2.CAL = (en == EN);
     }
 
     constexpr void reset_calibrate(const Enable en){
-        CTLR2.RSTCAL = en == EN;
+        CTLR2.RSTCAL = (en == EN);
     }
 
     constexpr void enable_dma(const Enable en){
-        CTLR2.DMA = en == EN;
+        CTLR2.DMA = (en == EN);
     }
 
     constexpr void enable_left_align(const Enable en){
-        CTLR2.ALIGN = en == EN;
+        CTLR2.ALIGN = (en == EN);
     }
 
     // 000：定时器 1 的 TRGO 事件；
@@ -353,7 +353,7 @@ struct [[nodiscard]] ADC_Def{
     }
 
     constexpr void enable_injected_trigger(const Enable en){
-        CTLR2.JEXTTRIG = en == EN;
+        CTLR2.JEXTTRIG = (en == EN);
     }
 
     constexpr void select_regular_trigger(const uint8_t trigger){
@@ -361,7 +361,7 @@ struct [[nodiscard]] ADC_Def{
     }
 
     constexpr void enable_regular_trigger(const Enable en){
-        CTLR2.EXTTRIG = en == EN;
+        CTLR2.EXTTRIG = (en == EN);
     }
 
     constexpr void soft_start_injected(){

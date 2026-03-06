@@ -35,10 +35,10 @@ struct [[nodiscard]] OPA_Def{
 
     constexpr void enable(const uint8_t nth, const Enable en){
         switch(nth){
-            case 1: this->CTLR.EN1 = en == EN; return;
-            case 2: this->CTLR.EN2 = en == EN; return;
-            case 3: this->CTLR.EN3 = en == EN; return;
-            case 4: this->CTLR.EN4 = en == EN; return;
+            case 1: this->CTLR.EN1 = (en == EN); return;
+            case 2: this->CTLR.EN2 = (en == EN); return;
+            case 3: this->CTLR.EN3 = (en == EN); return;
+            case 4: this->CTLR.EN4 = (en == EN); return;
         }
     }
     constexpr void select_out(const uint8_t nth, const uint8_t sel){

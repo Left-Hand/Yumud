@@ -173,13 +173,13 @@ IResult<> LT8920::set_retrans_time(const uint8_t times) {
 
 IResult<> LT8920::enable_auto_ack(const Enable en) {
     auto reg = RegCopy(regs_.config3_reg);
-    reg.auto_ack = en == EN;
+    reg.auto_ack = (en == EN);
     return write_reg((reg));
 }
 
 IResult<> LT8920::enable_crc(const Enable en){
     auto reg = RegCopy(regs_.config3_reg);
-    reg.crc_en = en == EN;
+    reg.crc_en = (en == EN);
     return write_reg((reg));
 }
 

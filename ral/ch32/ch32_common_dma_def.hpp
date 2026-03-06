@@ -52,35 +52,35 @@ struct [[nodiscard]] DMA_CH_Def{
     volatile R32_DMA_MADDR MADDR;
 
     constexpr void enable(const Enable en){
-        CFGR.EN = en == EN;
+        CFGR.EN = (en == EN);
     }
 
     constexpr void enable_transfer_done_interrupt(const Enable en){
-        CFGR.TCIE = en == EN;
+        CFGR.TCIE = (en == EN);
     }
 
     constexpr void enable_transfer_onhalf_interrupt(const Enable en){
-        CFGR.HTIE = en == EN;
+        CFGR.HTIE = (en == EN);
     }
 
     void enable_transfer_error_interrupt(const Enable en){
-        CFGR.TEIE = en == EN;
+        CFGR.TEIE = (en == EN);
     }
 
     void set_source_is_mem(const Enable en){
-        CFGR.DIR = en == EN;
+        CFGR.DIR = (en == EN);
     }
 
     void enable_circular_mode(const Enable en){
-        CFGR.CIRC = en == EN;
+        CFGR.CIRC = (en == EN);
     }
 
     void enable_periph_increment(const Enable en){
-        CFGR.PINC = en == EN;
+        CFGR.PINC = (en == EN);
     }
 
     void enable_mem_increment(const Enable en){
-        CFGR.MINC = en == EN;
+        CFGR.MINC = (en == EN);
     }
 
     void set_priority(const uint8_t prio){
@@ -88,7 +88,7 @@ struct [[nodiscard]] DMA_CH_Def{
     }
 
     void enable_mem2mem(const Enable en){
-        CFGR.MEM2MEM = en == EN;
+        CFGR.MEM2MEM = (en == EN);
     }
 
     void set_periph_address(const uint32_t addr){

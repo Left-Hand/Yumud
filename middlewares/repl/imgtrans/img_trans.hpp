@@ -82,7 +82,7 @@ public:
     }
 
     void enable(const Enable en){
-        enabled = en == EN;
+        enabled = (en == EN);
     }
 };
 

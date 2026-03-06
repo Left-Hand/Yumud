@@ -304,42 +304,42 @@ static void uart_enable_rcc(const void * inst, const Enable en){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef USART1_PRESENT
         case USART1_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, en == EN);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, (en == EN));
             return;
         #endif
         #ifdef USART2_PRESENT
         case USART2_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, en == EN);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, (en == EN));
             return;
         #endif
         #ifdef USART3_PRESENT
         case USART3_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, en == EN);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, (en == EN));
             return;
         #endif
         #ifdef UART4_PRESENT
         case UART4_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, en == EN);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, (en == EN));
             return;
         #endif
         #ifdef UART5_PRESENT
         case UART5_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, en == EN);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, (en == EN));
             return;
         #endif
         #ifdef UART6_PRESENT
         case UART6_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART6, en == EN);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART6, (en == EN));
             return;
         #endif
         #ifdef UART7_PRESENT
         case UART7_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, en == EN);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, (en == EN));
             return;
         #endif
         #ifdef UART8_PRESENT
         case UART8_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART8, en == EN);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART8, (en == EN));
             return;
         #endif
     }
@@ -497,8 +497,8 @@ Uart::Uart(
     rx_dma_(uart_to_rx_dma(reinterpret_cast<uint32_t>(inst))){;}
 
 void usart_enable_error_interrupt(void * inst_, const Enable en){
-	USART_ITConfig(SDK_INST(inst_), USART_IT_PE, en == EN);
-	USART_ITConfig(SDK_INST(inst_), USART_IT_ERR, en == EN);
+	USART_ITConfig(SDK_INST(inst_), USART_IT_PE, (en == EN));
+	USART_ITConfig(SDK_INST(inst_), USART_IT_ERR, (en == EN));
 }
 
 void Uart::init(const Config & cfg){
@@ -606,7 +606,7 @@ void Uart::set_remap(const UartRemap remap){
 }
 
 void Uart::enable_single_line_mode(const Enable en){
-    USART_HalfDuplexCmd(SDK_INST(inst_), en == EN);
+    USART_HalfDuplexCmd(SDK_INST(inst_), (en == EN));
 }
 
 
@@ -642,7 +642,7 @@ void Uart::set_tx_strategy(const CommStrategy tx_strategy){
 }
 
 void Uart::enable_tx_dma(const Enable en){
-    USART_DMACmd(SDK_INST(inst_), USART_DMAReq_Tx, en == EN);
+    USART_DMACmd(SDK_INST(inst_), USART_DMAReq_Tx, (en == EN));
 
     if(en != EN){
         tx_dma_.set_event_callback(nullptr);
@@ -722,7 +722,7 @@ void Uart::set_rx_strategy(const CommStrategy rx_strategy){
 
 void Uart::enable_rx_dma(const Enable en){
 
-    USART_DMACmd(SDK_INST(inst_), USART_DMAReq_Rx, en == EN);
+    USART_DMACmd(SDK_INST(inst_), USART_DMAReq_Rx, (en == EN));
     if(en == DISEN){
         rx_dma_.set_event_callback(nullptr);
         return;
@@ -879,17 +879,17 @@ void UartInterruptDispatcher::isr_rxidle(Uart & self){
 
 void Uart::enable_rxne_interrupt(const Enable en){
     USART_ClearITPendingBit(SDK_INST(inst_), USART_IT_RXNE);
-    USART_ITConfig(SDK_INST(inst_), USART_IT_RXNE, en == EN);
+    USART_ITConfig(SDK_INST(inst_), USART_IT_RXNE, (en == EN));
 }
 
 void Uart::enable_tx_interrupt(const Enable en){
-    USART_ITConfig(SDK_INST(inst_), USART_IT_TXE, en == EN);
+    USART_ITConfig(SDK_INST(inst_), USART_IT_TXE, (en == EN));
 }
 
 
 void Uart::enable_idle_interrupt(const Enable en){
     USART_ClearITPendingBit(SDK_INST(inst_), USART_IT_IDLE);
-    USART_ITConfig(SDK_INST(inst_), USART_IT_IDLE, en == EN);
+    USART_ITConfig(SDK_INST(inst_), USART_IT_IDLE, (en == EN));
 }
 
 struct alignas(4) [[nodiscard]] BareUartEvent{

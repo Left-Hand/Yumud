@@ -144,15 +144,15 @@ struct USART_Def{
     static_assert(sizeof(R32_GPR) == 4);
 
     void enable(const Enable en){
-        CTLR1.UE = en == EN;
+        CTLR1.UE = (en == EN);
     }
 
     void enable_tx_dma(const Enable en){
-        CTLR3.DMAT = en == EN;
+        CTLR3.DMAT = (en == EN);
     }
 
     void enable_rx_dma(const Enable en){
-        CTLR3.DMAR = en == EN;
+        CTLR3.DMAR = (en == EN);
     }
 
     void set_address(const uint8_t addr){
@@ -168,7 +168,7 @@ struct USART_Def{
     }
 
     void enable_slave_wakeup(const Enable en){
-        CTLR1.RWU = en == EN;
+        CTLR1.RWU = (en == EN);
     }
 
     void switch_lin_breakdetect_11bit(){
@@ -180,7 +180,7 @@ struct USART_Def{
     }
 
     void enable_lin(const Enable en){
-        CTLR2.LINEN = en == EN;
+        CTLR2.LINEN = (en == EN);
     }
 
     void send(const uint16_t data){
@@ -204,15 +204,15 @@ struct USART_Def{
     }
 
     void enable_smartcard(const Enable en){
-        CTLR3.SCEN = en == EN;
+        CTLR3.SCEN = (en == EN);
     }
 
     void enable_smartcard_nack(const Enable en){
-        CTLR3.NACK = en == EN;
+        CTLR3.NACK = (en == EN);
     }
 
     void enable_halfduplex(const Enable en){
-        CTLR3.HDSEL = en == EN;
+        CTLR3.HDSEL = (en == EN);
     }
 
     void enable_oversamp8(const Enable en){
@@ -220,11 +220,11 @@ struct USART_Def{
     }
 
     void enable_irda_lowpower(const Enable en){
-        CTLR3.IRLP = en == EN;
+        CTLR3.IRLP = (en == EN);
     }
 
     void enable_irda(const Enable en){
-        CTLR3.IREN = en == EN;
+        CTLR3.IREN = (en == EN);
     }
 
     void wait_transmit_complete(){

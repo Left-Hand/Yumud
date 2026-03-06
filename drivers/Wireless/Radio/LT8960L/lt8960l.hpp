@@ -97,7 +97,7 @@ public:
         now_channel_ = ch; return Ok();}
 
     IResult<> enable_use_hw_pkt(const Enable en){
-        use_hw_pkt_ = en == EN; return Ok();}
+        use_hw_pkt_ = (en == EN); return Ok();}
 
     IResult<> tick();
     

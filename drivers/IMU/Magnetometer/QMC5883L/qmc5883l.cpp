@@ -62,7 +62,7 @@ IResult<> QMC5883L::init(){
 
 IResult<> QMC5883L::enable_cont_mode(const Enable en){
     auto reg = RegCopy(regs_.config_a_reg);
-    reg.measure_mode = en == EN;
+    reg.measure_mode = (en == EN);
     return write_reg(reg);
 }
 
@@ -130,7 +130,7 @@ IResult<> QMC5883L::reset(){
 
 IResult<> QMC5883L::enable_interrupt(const Enable en){
     auto reg = RegCopy(regs_.config_b_reg);
-    reg.int_en = en == EN;
+    reg.int_en = (en == EN);
     return write_reg(reg);
 }
 

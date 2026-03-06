@@ -58,7 +58,7 @@ struct VtfRequest{
         index(_index), 
         func_base(uint32_t(_func)){;}
     void enable(const Enable en){
-        SetVTFIRQ(func_base, irqn, index, en == EN);
+        SetVTFIRQ(func_base, irqn, index, (en == EN));
     }
 
 private:

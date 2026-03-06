@@ -224,7 +224,7 @@ public:
     }
 
     void enable_seg7(const Enable en){
-        display_command_.seg7_else_sge8 = en == EN;
+        display_command_.seg7_else_sge8 = (en == EN);
     }
 
 private:

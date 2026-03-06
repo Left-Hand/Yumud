@@ -26,7 +26,7 @@ public:
 
     HalResult set_baudrate(const I2cBuadrate baudrate);
     void set_timeout(const Timeout timeout){timeout_ = timeout;}
-    void discard_ack(const Enable en){discard_ack_ = en == EN;}
+    void discard_ack(const Enable en){discard_ack_ = (en == EN);}
     void lend(){
         this->trail();
         owner_.lend();

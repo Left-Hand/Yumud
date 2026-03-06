@@ -37,12 +37,12 @@ public:
     IResult<> update();
 
     IResult<> enable_display(const Enable en);
-    IResult<> enable_flip_y(const Enable flip_en = EN){
-        return transport_.write_command(0xA0 | (flip_en == EN));}
-    IResult<> enable_flip_x(const Enable flip_en = EN){
-        return transport_.write_command(0xC0 | ((flip_en == EN) << 3));}
-    IResult<> enable_inversion(const Enable inv_en = EN){
-        return transport_.write_command(0xA7 - (inv_en == EN));}  
+    IResult<> enable_flip_y(const Enable flip_en){
+        return transport_.write_command(0xA0 | ((flip_en == EN)));}
+    IResult<> enable_flip_x(const Enable flip_en){
+        return transport_.write_command(0xC0 | (((flip_en == EN)) << 3));}
+    IResult<> enable_inversion(const Enable inv_en){
+        return transport_.write_command(0xA7 - ((inv_en == EN)));}  
 
     [[nodiscard]] math::Vec2<uint16_t> size() const {return frame_.size();}
     VerticalBinaryImage & fetch_frame() {return frame_;};

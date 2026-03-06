@@ -114,7 +114,7 @@ IResult<> MLX90393::set_oversampling(OverSampling oversampling) {
 
 IResult<> MLX90393::enable_trig_interrupt(Enable en) {
     auto reg = RegCopy(regs_.conf2_reg);
-    reg.trig_int = en == EN;
+    reg.trig_int = (en == EN);
     return write_reg(reg);
 }
 

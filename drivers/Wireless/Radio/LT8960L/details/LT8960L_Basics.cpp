@@ -67,7 +67,7 @@ IResult<> LT8960L::set_retrans_time(const uint8_t times){
 
 IResult<> LT8960L::enable_autoack(const Enable en){
     auto reg = RegCopy(regs_.config3_reg);
-    reg.autoack_en = en == EN;
+    reg.autoack_en = (en == EN);
     return write_reg(reg);
 }
 

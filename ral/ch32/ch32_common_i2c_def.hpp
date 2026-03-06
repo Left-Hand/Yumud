@@ -145,27 +145,27 @@ struct [[nodiscard]] I2C_Def{
 
 
     constexpr void enable(const Enable en){
-        this->CTLR1.PE = en == EN;
+        this->CTLR1.PE = (en == EN);
     }
 
     constexpr void enable_dma(const Enable en){
-        this->CTLR2.DMAEN = en == EN;
+        this->CTLR2.DMAEN = (en == EN);
     }
 
     constexpr void set_next_dma_is_last(const Enable en){
-        CTLR2.LAST = en == EN;
+        CTLR2.LAST = (en == EN);
     }
 
     constexpr void generate_start(const Enable en){
-        CTLR1.START = en == EN;
+        CTLR1.START = (en == EN);
     }
 
     constexpr void generate_stop(const Enable en){
-        CTLR1.STOP = en == EN;
+        CTLR1.STOP = (en == EN);
     }
 
     constexpr void enable_ack(const Enable en){
-        CTLR1.ACK = en == EN;
+        CTLR1.ACK = (en == EN);
     }
 
     constexpr void set_address2(const uint8_t addr){
@@ -173,11 +173,11 @@ struct [[nodiscard]] I2C_Def{
     }
 
     constexpr void enable_dual_address(const Enable en){
-        OADDR2.ENDUAL = en == EN;
+        OADDR2.ENDUAL = (en == EN);
     }
 
     constexpr void generate_call(const Enable en){
-        CTLR1.ENGC = en == EN;
+        CTLR1.ENGC = (en == EN);
     }
 
     // #define LOAD16(d,s) auto d = __builtin_bit_cast(std::decay_t, s)
@@ -186,9 +186,9 @@ struct [[nodiscard]] I2C_Def{
         const Enable event_en,
         const Enable buf_en
     ){
-        CTLR2.ITERREN = err_en == EN;
-        CTLR2.ITEVTEN = event_en == EN;
-        CTLR2.ITBUFEN = buf_en == EN;
+        CTLR2.ITERREN = (err_en == EN);
+        CTLR2.ITEVTEN = (event_en == EN);
+        CTLR2.ITBUFEN = (buf_en == EN);
     }
 
     constexpr void send(const uint8_t data){
@@ -212,7 +212,7 @@ struct [[nodiscard]] I2C_Def{
     }
 
     constexpr void soft_reset(const Enable en){
-        CTLR1.SWRST = en == EN;
+        CTLR1.SWRST = (en == EN);
     }
 
     constexpr void nack_next_transmit(){
@@ -228,11 +228,11 @@ struct [[nodiscard]] I2C_Def{
     }
 
     constexpr void transmit_pec(const Enable en){
-        CTLR1.PEC = en == EN;
+        CTLR1.PEC = (en == EN);
     }
 
     constexpr void calculate_pec(const Enable en){
-        CTLR1.ENPEC = en == EN;
+        CTLR1.ENPEC = (en == EN);
     }
 
     constexpr uint8_t get_pec(){
@@ -240,7 +240,7 @@ struct [[nodiscard]] I2C_Def{
     }
 
     constexpr void enable_arp(const Enable en){
-        CTLR1.ENARP = en == EN;
+        CTLR1.ENARP = (en == EN);
     }
 
     constexpr void set_stretch(const bool set){

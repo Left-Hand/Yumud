@@ -91,13 +91,13 @@ static constexpr uint32_t _calc_half_mask(const uint32_t inst_base){
 void _enable_rcc(const uint32_t inst_base, Enable en){
     #ifdef DMA2_PRESENT
     if(inst_base < DMA2_Channel1_BASE){
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en == EN);
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, (en == EN));
     }else{
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, en == EN);
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, (en == EN));
     }
 
     #else
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en == EN);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, (en == EN));
     #endif
 }
 
@@ -306,11 +306,11 @@ size_t DmaChannel::pending_count(){
 
 void DmaChannel::enable_done_it(const Enable en){
     DMA_ClearITPendingBit(done_mask_);
-    DMA_ITConfig(SDK_INST(inst_), DMA_IT_TC, en == EN);
+    DMA_ITConfig(SDK_INST(inst_), DMA_IT_TC, (en == EN));
 }
 
 void DmaChannel::enable_half_it(const Enable en){
     DMA_ClearITPendingBit(half_mask_);
-    DMA_ITConfig(SDK_INST(inst_), DMA_IT_HT, en == EN);
+    DMA_ITConfig(SDK_INST(inst_), DMA_IT_HT, (en == EN));
 }
 

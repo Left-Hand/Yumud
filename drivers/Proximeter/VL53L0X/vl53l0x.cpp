@@ -121,12 +121,12 @@ IResult<> VL53L0X::flush(){
 }
 
 IResult<> VL53L0X::enable_high_precision(const Enable en){
-    high_prec_en_ = en == EN;
+    high_prec_en_ = (en == EN);
 	return write_byte_data(VL53L0X_REG_SYSTEM_RANGE_CONFIG, high_prec_en_);
 }
 
 IResult<> VL53L0X::enable_cont_mode(const Enable en){
-    continuous_en_ = en == EN;
+    continuous_en_ = (en == EN);
 	return Ok();
 }
 

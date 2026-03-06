@@ -118,31 +118,31 @@ struct I2C_Def{
 
 
     constexpr void enable(const Enable en){
-        this->CTLR1.PE = en == EN;
+        this->CTLR1.PE = (en == EN);
     }
 
     constexpr void enable_dma(const Enable en){
-        this->CTLR2.DMAEN = en == EN;
+        this->CTLR2.DMAEN = (en == EN);
     }
 
     constexpr void set_next_dma_is_last(const Enable en){
-        CTLR2.LAST = en == EN;
+        CTLR2.LAST = (en == EN);
     }
 
     constexpr void generate_start(const Enable en){
-        CTLR1.START = en == EN;
+        CTLR1.START = (en == EN);
     }
 
     constexpr void generate_stop(const Enable en){
-        CTLR1.STOP = en == EN;
+        CTLR1.STOP = (en == EN);
     }
 
     constexpr void enable_ack(const Enable en){
-        CTLR1.ACK = en == EN;
+        CTLR1.ACK = (en == EN);
     }
 
     constexpr void generate_call(const Enable en){
-        CTLR1.ENGC = en == EN;
+        CTLR1.ENGC = (en == EN);
     }
 
     constexpr void enable_interrupt(
@@ -176,7 +176,7 @@ struct I2C_Def{
     }
 
     constexpr void soft_reset(const Enable en){
-        CTLR1.SWRST = en == EN;
+        CTLR1.SWRST = (en == EN);
     }
 
     constexpr void nack_next_transmit(){

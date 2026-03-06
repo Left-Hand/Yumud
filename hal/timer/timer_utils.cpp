@@ -295,50 +295,50 @@ void enable_rcc(void* inst_, const Enable en){
     switch(reinterpret_cast<size_t>(inst_)){
     #ifdef TIM1_PRESENT
     case TIM1_BASE:
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, en == EN);
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, (en == EN));
         return;
     #endif
 
     #ifdef TIM2_PRESENT
     case TIM2_BASE:
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, en == EN);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, (en == EN));
         return;
     #endif
 
     #ifdef TIM3_PRESENT
     case TIM3_BASE:
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, en == EN);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, (en == EN));
         return;
     #endif
 
     #ifdef TIM4_PRESENT
     case TIM4_BASE:
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, en == EN);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, (en == EN));
         return;
     #endif
 
     #ifdef TIM5_PRESENT
     case TIM5_BASE:
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, en == EN);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, (en == EN));
         return;
     #endif
 
     
     #ifdef TIM6_PRESENT
     case TIM6_BASE:
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, en == EN);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, (en == EN));
         return;
     #endif
 
     #ifdef TIM7_PRESENT
     case TIM7_BASE:
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, en == EN);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, (en == EN));
         return;
     #endif
 
     #ifdef TIM8_PRESENT
     case TIM8_BASE:
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, en == EN);
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, (en == EN));
         return;
     #endif
     }

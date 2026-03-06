@@ -51,13 +51,13 @@ public:
 
     IResult<> enable_drdy_pulse(const Enable en){
         auto reg = RegCopy(regs_.ctrl1_reg); 
-        reg.drdy_pulse = en == EN; 
+        reg.drdy_pulse = (en == EN); 
         return write_reg(reg);
     }
 
     IResult<> block_when_update(const Enable en){
         auto reg = RegCopy(regs_.ctrl1_reg); 
-        reg.drdy_pulse = en == EN; 
+        reg.drdy_pulse = (en == EN); 
         return write_reg(reg);
     }
 
@@ -94,12 +94,12 @@ public:
         
     IResult<> enable_fifo(const Enable en){
         auto reg = RegCopy(regs_.ctrl4_reg); 
-        reg.fifo_en = en == EN; 
+        reg.fifo_en = (en == EN); 
         return write_reg(reg);}
 
     IResult<> enable_spi_hw(const Enable en){
         auto reg = RegCopy(regs_.ctrl5_reg); 
-        reg.fifo_spi_hs_on = en == EN; 
+        reg.fifo_spi_hs_on = (en == EN); 
         return write_reg(reg);
     }
 

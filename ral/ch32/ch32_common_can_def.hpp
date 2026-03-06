@@ -472,14 +472,14 @@ struct [[nodiscard]] CAN_Def{
     FifoMailBox sFifoMailBox[3];
 
     void enable_dbg_freeze(const Enable en){
-        CTLR.DBF = en == EN;
+        CTLR.DBF = (en == EN);
     }
 
     void enable_ttcom_mode(const Enable en){
-        CTLR.TTCM = en == EN;
-        sTxMailBox[0].TXMDTR.TGT = en == EN;
-        sTxMailBox[1].TXMDTR.TGT = en == EN;
-        sTxMailBox[2].TXMDTR.TGT = en == EN;
+        CTLR.TTCM = (en == EN);
+        sTxMailBox[0].TXMDTR.TGT = (en == EN);
+        sTxMailBox[1].TXMDTR.TGT = (en == EN);
+        sTxMailBox[2].TXMDTR.TGT = (en == EN);
     }
 
     [[nodiscard]] uint8_t get_rx_err_cnt(){

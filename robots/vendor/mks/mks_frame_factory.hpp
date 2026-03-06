@@ -51,28 +51,28 @@ public:
 
     constexpr FlatPacket activate(const Enable en) const {
         return ser_msg(req_msgs::SetEnableStatus{
-            .is_enabled = en == EN
+            .is_enabled = (en == EN)
         });
     }
 
     #if 0
     constexpr FlatPacket trig_cali() const {
         return ser_msg(req_msgs::SetEnableStatus{
-            .is_enabled = en == EN
+            .is_enabled = (en == EN)
         });
 
     }
 
     constexpr FlatPacket query_homming_paraments() const {
         return ser_msg(req_msgs::SetEnableStatus{
-            .is_enabled = en == EN
+            .is_enabled = (en == EN)
         });
 
     }
 
     constexpr FlatPacket trig_homming(const HommingMode mode) const {
         return ser_msg(req_msgs::SetEnableStatus{
-            .is_enabled = en == EN
+            .is_enabled = (en == EN)
         });
     }
     #endif

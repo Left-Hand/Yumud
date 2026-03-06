@@ -35,7 +35,7 @@ public:
     }
 
     void inverse(const Enable en){
-        inversed = en == EN;
+        inversed = (en == EN);
     }
     void compensate(){
         while(!is_idle());

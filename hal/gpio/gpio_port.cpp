@@ -27,27 +27,27 @@ void gpio_enable_rcc(const void * inst, const Enable en){
     switch(reinterpret_cast<size_t>(inst)){
         #ifdef GPIOA_PRESENT
         case GPIOA_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, en == EN);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, (en == EN));
             break;
         #endif
         #ifdef GPIOB_PRESENT
         case GPIOB_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, en == EN);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, (en == EN));
             break;
         #endif
         #ifdef GPIOC_PRESENT
         case GPIOC_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, en == EN);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, (en == EN));
             break;
         #endif
         #ifdef GPIOD_PRESENT
         case GPIOD_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, en == EN);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, (en == EN));
             break;
         #endif
         #ifdef GPIOE_PRESENT
         case GPIOE_BASE:
-            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, en == EN);
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, (en == EN));
             break;
         #endif
     }

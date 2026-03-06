@@ -27,7 +27,7 @@ struct [[nodiscard]] SetTarget final{
         bytes[2] = 0;
         bytes[3] = 0;
         bytes[4] = static_cast<uint8_t>(acceleration_time_code.bits);
-        bytes[5] = brake_en == EN ? 0xff : 0x00;
+        bytes[5] = (brake_en == EN) ? 0xff : 0x00;
         bytes[6] = 0;
     }
 };

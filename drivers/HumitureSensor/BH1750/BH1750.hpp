@@ -48,7 +48,7 @@ public:
     }
 
     void enable_continuous(const Enable en){
-        cont_en_ = en == EN;
+        cont_en_ = (en == EN);
     }
 
     IResult<> start_conv();

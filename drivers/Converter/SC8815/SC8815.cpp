@@ -244,7 +244,7 @@ IResult<> SC8815::set_ibat_lim_ratio(){
 
 IResult<> SC8815::enable_otg(const Enable en){
     auto reg = RegCopy(regs_.ctrl0_set_reg);
-    reg.en_otg = en == EN;
+    reg.en_otg = (en == EN);
     return write_reg(reg);
 }
 
@@ -269,20 +269,20 @@ IResult<> SC8815::power_up(){
 
 IResult<> SC8815::enable_dither(const Enable en){
     auto reg = RegCopy(regs_.ctrl2_set_reg);
-    reg.en_dither = en == EN;
+    reg.en_dither = (en == EN);
     return write_reg(reg);
 
 }
 
 IResult<> SC8815::enable_adc_conv(const Enable en){
     auto reg = RegCopy(regs_.ctrl3_set_reg);
-    reg.ad_start = en == EN;
+    reg.ad_start = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> SC8815::enable_pfm_mode(const Enable en){
     auto reg = RegCopy(regs_.ctrl3_set_reg);
-    reg.en_pfm = en == EN;
+    reg.en_pfm = (en == EN);
     return write_reg(reg);
 }
 
@@ -294,13 +294,13 @@ IResult<> SC8815::enable_sfb(const Enable en){
 
 IResult<> SC8815::enable_gpo(const Enable en){
     auto reg = RegCopy(regs_.ctrl3_set_reg);
-    reg.gpo_ctrl = en == EN;
+    reg.gpo_ctrl = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> SC8815::enable_pgate(const Enable en){
     auto reg = RegCopy(regs_.ctrl3_set_reg);
-    reg.en_pgate = en == EN;
+    reg.en_pgate = (en == EN);
     return write_reg(reg);
 }
 
@@ -345,7 +345,7 @@ IResult<> SC8815::set_bat_cells(const BatCells bat_cells){
 
 IResult<> SC8815::enable_vbat_use_extneral(const Enable en){
     auto reg = RegCopy(regs_.vbat_set_reg);
-    reg.vbat_sel = en == EN;
+    reg.vbat_sel = (en == EN);
     return write_reg(reg);
 }
 

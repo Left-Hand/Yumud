@@ -329,7 +329,7 @@ struct [[nodiscard]] RCC_Def{
     volatile R32_RCC_AHBRSTR        AHBRSTR;
 
     constexpr void enable_hsi(const Enable en){
-        CTLR.HSION = en == EN;
+        CTLR.HSION = (en == EN);
     }
 
     [[nodiscard]] constexpr bool is_hsi_ready(){
@@ -345,7 +345,7 @@ struct [[nodiscard]] RCC_Def{
     }
 
     constexpr void enable_hse(const Enable en){
-        CTLR.HSION = en == EN;
+        CTLR.HSION = (en == EN);
     }
 
     [[nodiscard]] constexpr bool is_hse_ready(){
@@ -353,18 +353,18 @@ struct [[nodiscard]] RCC_Def{
     }
 
     constexpr void enable_hse_bypass(const Enable en){
-        CTLR.HSEBYP = en == EN;
+        CTLR.HSEBYP = (en == EN);
     }
 
     constexpr void enable_css(const Enable en){
-        CTLR.CSSON = en == EN;
+        CTLR.CSSON = (en == EN);
     }
 
     constexpr void enable_pll(const uint8_t pll_idx, const Enable en){
         switch(pll_idx){
-            case 1: CTLR.PLLON = en == EN; return;
-            case 2: CTLR.PLLON = en == EN; return;
-            case 3: CTLR.PLLON = en == EN; return;
+            case 1: CTLR.PLLON = (en == EN); return;
+            case 2: CTLR.PLLON = (en == EN); return;
+            case 3: CTLR.PLLON = (en == EN); return;
         }
     }
 
@@ -594,56 +594,56 @@ struct [[nodiscard]] RCC_Def{
     constexpr void reset_spi(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.SPI1_EN = en == EN; return;
-            case 2:   APB1PCENR.SPI2_EN = en == EN; return;
-            case 3:   APB1PCENR.SPI3_EN = en == EN; return;
+            case 1:   APB2PCENR.SPI1_EN = (en == EN); return;
+            case 2:   APB1PCENR.SPI2_EN = (en == EN); return;
+            case 3:   APB1PCENR.SPI3_EN = (en == EN); return;
         }
     }
 
     constexpr void enable_i2c(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
-            case 1:   APB1PCENR.I2C1_EN = en == EN;return;
-            case 2:   APB1PCENR.I2C2_EN = en == EN;return;
+            case 1:   APB1PCENR.I2C1_EN = (en == EN);return;
+            case 2:   APB1PCENR.I2C2_EN = (en == EN);return;
         }
     }
 
     constexpr void enable_timer(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.TIM1_EN = en == EN; return;
-            case 2:   APB1PCENR.TIM2_EN = en == EN; return;
-            case 3:   APB1PCENR.TIM3_EN = en == EN; return;
-            case 4:   APB1PCENR.TIM4_EN = en == EN; return;
-            case 5:   APB1PCENR.TIM5_EN = en == EN; return;
-            case 6:   APB1PCENR.TIM6_EN = en == EN; return;
-            case 7:   APB1PCENR.TIM7_EN = en == EN; return;
-            case 8:   APB2PCENR.TIM8_EN = en == EN; return;
-            case 9:   APB2PCENR.TIM9_EN = en == EN; return;
-            case 10:  APB2PCENR.TIM10_EN = en == EN; return;
+            case 1:   APB2PCENR.TIM1_EN = (en == EN); return;
+            case 2:   APB1PCENR.TIM2_EN = (en == EN); return;
+            case 3:   APB1PCENR.TIM3_EN = (en == EN); return;
+            case 4:   APB1PCENR.TIM4_EN = (en == EN); return;
+            case 5:   APB1PCENR.TIM5_EN = (en == EN); return;
+            case 6:   APB1PCENR.TIM6_EN = (en == EN); return;
+            case 7:   APB1PCENR.TIM7_EN = (en == EN); return;
+            case 8:   APB2PCENR.TIM8_EN = (en == EN); return;
+            case 9:   APB2PCENR.TIM9_EN = (en == EN); return;
+            case 10:  APB2PCENR.TIM10_EN = (en == EN); return;
         }
     }
 
     constexpr void enable_usart(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.USART1_EN = en == EN; return;
-            case 2:   APB1PCENR.USART2_EN = en == EN; return;
-            case 3:   APB1PCENR.USART3_EN = en == EN; return;
-            case 4:   APB1PCENR.USART4_EN = en == EN; return;
-            case 5:   APB1PCENR.USART5_EN = en == EN; return;
-            case 6:   APB1PCENR.USART6_EN = en == EN; return;
-            case 7:   APB1PCENR.USART7_EN = en == EN; return;
-            case 8:   APB1PCENR.USART8_EN = en == EN; return;
+            case 1:   APB2PCENR.USART1_EN = (en == EN); return;
+            case 2:   APB1PCENR.USART2_EN = (en == EN); return;
+            case 3:   APB1PCENR.USART3_EN = (en == EN); return;
+            case 4:   APB1PCENR.USART4_EN = (en == EN); return;
+            case 5:   APB1PCENR.USART5_EN = (en == EN); return;
+            case 6:   APB1PCENR.USART6_EN = (en == EN); return;
+            case 7:   APB1PCENR.USART7_EN = (en == EN); return;
+            case 8:   APB1PCENR.USART8_EN = (en == EN); return;
         }
     }
 
     constexpr void enable_spi(const uint8_t index, const Enable en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.SPI1_EN = en == EN; return;
-            case 2:   APB1PCENR.SPI2_EN = en == EN; return;
-            case 3:   APB1PCENR.SPI3_EN = en == EN; return;
+            case 1:   APB2PCENR.SPI1_EN = (en == EN); return;
+            case 2:   APB1PCENR.SPI2_EN = (en == EN); return;
+            case 3:   APB1PCENR.SPI3_EN = (en == EN); return;
         }
     }
 };

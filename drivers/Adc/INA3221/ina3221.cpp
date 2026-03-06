@@ -70,13 +70,13 @@ IResult<> INA3221::enable_channel(const ChannelSelection ch_sel, const Enable en
     auto reg = RegCopy(regs_.config_reg);
     switch(ch_sel){
         case ChannelSelection::CH1:
-            reg.ch1_en = en == EN;
+            reg.ch1_en = (en == EN);
             break;
         case ChannelSelection::CH2:
-            reg.ch2_en = en == EN;
+            reg.ch2_en = (en == EN);
             break;
         case ChannelSelection::CH3:
-            reg.ch3_en = en == EN;
+            reg.ch3_en = (en == EN);
             break;
     }
     return write_reg(reg);
@@ -149,20 +149,20 @@ IResult<> INA3221::set_constant_ovc_threshold(const ChannelSelection ch_sel, con
 
 IResult<> INA3221::enable_measure_bus(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
-    reg.bus_measure_en = en == EN;
+    reg.bus_measure_en = (en == EN);
     return write_reg(reg);
 }
 
 
 IResult<> INA3221::enable_measure_shunt(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
-    reg.shunt_measure_en = en == EN;
+    reg.shunt_measure_en = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> INA3221::enable_continuous(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
-    reg.continuous = en == EN;
+    reg.continuous = (en == EN);
     return write_reg(reg);
 }
 

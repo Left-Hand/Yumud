@@ -214,30 +214,32 @@ IResult<> INA226::set_scale(const uint32_t sample_res_mohms, const uint32_t max_
 IResult<> INA226::reset(){
     auto reg = RegCopy(regs_.config_reg);
     reg.rst = 1;
-    return write_reg(reg);
+    const auto res = write_reg(reg);
+    reg.rst = 0;
+    return res;
 }
 
 IResult<> INA226::enable_shunt_voltage_measure(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
-    reg.shunt_voltage_enable = en == EN;
+    reg.shunt_voltage_enable = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> INA226::enable_bus_voltage_measure(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
-    reg.bus_voltage_enable = en == EN;
+    reg.bus_voltage_enable = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> INA226::enable_continuous_measure(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
-    reg.continuos = en == EN;
+    reg.continuos = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> INA226::enable_alert_latch(const Enable en){
     auto  reg = RegCopy(regs_.mask_reg);
-    reg.alert_latch_enable = en == EN;
+    reg.alert_latch_enable = (en == EN);
     return write_reg(reg);
 }
 

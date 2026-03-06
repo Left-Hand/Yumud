@@ -210,13 +210,13 @@ IResult<> MMC5983::set_prd_mag_set(const PrdSet prdset){
 }
 IResult<> MMC5983::enable_mag_set(const Enable en){
     auto reg = RegCopy(regs_.internal_control_0_reg);
-    reg.set = en == EN;
+    reg.set = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> MMC5983::enable_mag_reset(const Enable en){
     auto reg = RegCopy(regs_.internal_control_0_reg);
-    reg.reset = en == EN;
+    reg.reset = (en == EN);
     return write_reg(reg);
 }
 
@@ -230,6 +230,6 @@ MMC5983::IResult<math::Vec3<iq24>> MMC5983::do_mag_reset(){
 
 IResult<> MMC5983::enable_auto_mag_sr(const Enable en){
     auto reg = RegCopy(regs_.internal_control_0_reg);
-    reg.auto_sr_en = en == EN;
+    reg.auto_sr_en = (en == EN);
     return write_reg(reg);
 }

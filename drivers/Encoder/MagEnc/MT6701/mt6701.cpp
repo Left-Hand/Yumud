@@ -73,13 +73,13 @@ IResult<Angular<uq32>> MT6701::read_lap_angle(){
 
 IResult<> MT6701::enable_uvwmux(const Enable en){
     auto reg = RegCopy(regs_.uvw_mux_reg);
-    reg.uvw_mux = en == EN;
+    reg.uvw_mux = (en == EN);
     return write_reg(reg);
 }
 
 IResult<> MT6701::enable_abzmux(const Enable en){
     auto reg = RegCopy(regs_.abz_mux_reg);
-    reg.abz_mux = en == EN;
+    reg.abz_mux = (en == EN);
     return write_reg(reg);
 }
 
@@ -133,13 +133,13 @@ IResult<> MT6701::set_hysteresis(const Hysteresis hysteresis){
 }
 
 IResult<> MT6701::enable_fast_mode(const Enable en){
-    fast_mode_ = en == EN;
+    fast_mode_ = (en == EN);
     return Ok();
 }
 
 IResult<> MT6701::enable_pwm(const Enable en){
     auto reg = RegCopy(regs_.wire_config_reg);
-    reg.pwm_en = en == EN;
+    reg.pwm_en = (en == EN);
     return write_reg(reg);
 }
 

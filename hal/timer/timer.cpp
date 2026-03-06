@@ -451,7 +451,7 @@ void BasicTimer::stop(){
 }
 
 void BasicTimer::dyn_enable_interrupt(const IT I, const Enable en){
-    TIM_ITConfig(SDK_INST(inst_), std::bit_cast<uint16_t>(I), en == EN);
+    TIM_ITConfig(SDK_INST(inst_), std::bit_cast<uint16_t>(I), (en == EN));
 }
 
 uint32_t BasicTimer::get_periph_clk_freq(){
@@ -556,10 +556,10 @@ void BasicTimer::deinit(){
 
 
 void BasicTimer::enable(const Enable en){
-    TIM_Cmd(SDK_INST(inst_), en == EN);
+    TIM_Cmd(SDK_INST(inst_), (en == EN));
     
     if((en == EN) and timer::details::is_advanced_timer(SDK_INST(inst_))){
-        TIM_CtrlPWMOutputs(SDK_INST(inst_), en == EN);
+        TIM_CtrlPWMOutputs(SDK_INST(inst_), (en == EN));
     }
 }
 
@@ -636,7 +636,7 @@ void GeneralTimer::set_slave_mode(const SlaveMode slave_mode){
 
 void GeneralTimer::enable_master_slave_mode(const Enable en){
     TIM_SelectMasterSlaveMode(SDK_INST(inst_), 
-        en == EN ? TIM_MasterSlaveMode_Enable : TIM_MasterSlaveMode_Disable);
+        (en == EN) ? TIM_MasterSlaveMode_Enable : TIM_MasterSlaveMode_Disable);
 }
 
 void TimerBdtr::init(const Config & cfg){
@@ -683,7 +683,7 @@ void TimerBdtr::set_deadzone_code(const TimerDeadzoneCode deadzone_code){
 #endif
 
 void BasicTimer::enable_cc_ctrl_sync(const Enable en){
-    TIM_CCPreloadControl(SDK_INST(inst_), en == EN);
+    TIM_CCPreloadControl(SDK_INST(inst_), (en == EN));
 }
 
 

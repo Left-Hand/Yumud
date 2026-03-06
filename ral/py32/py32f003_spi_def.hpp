@@ -133,19 +133,19 @@ namespace ymd::ral::py32::py32f003{
 
 
         constexpr void enable_spi(const Enable en){
-            CTLR1.SPE = en == EN;
+            CTLR1.SPE = (en == EN);
         }
 
         constexpr void enable_i2s(const Enable en){
-            CFGR.ISSE = en == EN;
+            CFGR.ISSE = (en == EN);
         }
 
         constexpr void enable_dma_tx(const Enable en){
-            CTLR2.TXDMAEN = en == EN;
+            CTLR2.TXDMAEN = (en == EN);
         }
 
         constexpr void enable_dma_rx(const Enable en){
-            CTLR2.RXDMAEN = en == EN;
+            CTLR2.RXDMAEN = (en == EN);
         }
 
         constexpr void send(const uint16_t data){
@@ -157,15 +157,15 @@ namespace ymd::ral::py32::py32f003{
         }
 
         constexpr void enable_soft_cs(const Enable en){
-            CTLR1.SSI = en == EN;
+            CTLR1.SSI = (en == EN);
         }
 
         constexpr void enable_ss_output(const Enable en){
-            CTLR2.SSOE = en == EN;
+            CTLR2.SSOE = (en == EN);
         }
 
         constexpr void enable_dualbyte(const Enable en){
-            CTLR1.DFF = en == EN;
+            CTLR1.DFF = (en == EN);
         }
 
         constexpr void transmit_crc(){
@@ -197,7 +197,7 @@ namespace ymd::ral::py32::py32f003{
         }
 
         constexpr void enable_bidi(const Enable en){
-            CTLR1.BIDIMODE = en == EN;
+            CTLR1.BIDIMODE = (en == EN);
         }
 
         constexpr Events get_events(){

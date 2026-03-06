@@ -71,7 +71,7 @@ IResult<bool> Self::is_idle(){
 
 IResult<> Self::enable_3wire_spi(const Enable en){
     auto reg = RegCopy(regs_.config_reg);
-    reg.spi3_en = en == EN;
+    reg.spi3_en = (en == EN);
     return write_reg(reg);
 }
 
