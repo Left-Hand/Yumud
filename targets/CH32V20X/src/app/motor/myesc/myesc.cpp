@@ -763,7 +763,7 @@ void myesc_main(){
         // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
 
         // const iq20 current_cmd = 0.24_iq20;
-        const iq20 current_cmd = 0.64_iq20;
+        const iq20 current_cmd = 1.24_iq20;
         // const iq20 current_cmd = 0.7_iq20;
         // const iq20 current_cmd = 0;
         // const iq20 current_cmd = 0.1_iq20 * iq16(math::sin(now_secs));

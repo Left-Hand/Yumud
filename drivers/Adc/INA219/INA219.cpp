@@ -21,12 +21,34 @@ using namespace ymd;
 
 #endif
 
-
+using Self = INA219;
 using Error = INA219::Error;
 
 template<typename T = void>
 using IResult = Result<T, Error>;
 
+
+IResult<> INA219::update(){
+    TODO();
+    return Ok();
+}
+
+
+IResult<> INA219::validate(){
+    // static constexpr uint16_t valid_manu_id = 0x5449;
+    // static constexpr uint16_t valid_chip_id = 0x2260;
+    
+    INA219_ASSERT(i2c_drv_.validate().is_ok(), "INA219 i2c lost");
+
+    // READ_REG(chipIDReg);
+    // READ_REG(manufactureIDReg);
+
+    // return INA219_ASSERT(
+    //     (chipIDReg == valid_chip_id and manufactureIDReg == valid_manu_id), 
+    //     "INA219 who am i failed", chipIDReg.to_bits(), manufactureIDReg.to_bits()
+    // );
+    return Ok();
+}
 
 IResult<> INA219::write_reg(const RegAddr addr, const uint16_t data){
     if(const auto res = i2c_drv_.write_reg(uint8_t(addr), data, std::endian::big);
@@ -55,26 +77,3 @@ IResult<> INA219::read_burst(
     return Ok();
 }
 
-
-
-IResult<> INA219::update(){
-    TODO();
-    return Ok();
-}
-
-
-IResult<> INA219::validate(){
-    // static constexpr uint16_t valid_manu_id = 0x5449;
-    // static constexpr uint16_t valid_chip_id = 0x2260;
-    
-    INA219_ASSERT(i2c_drv_.validate().is_ok(), "INA219 i2c lost");
-
-    // READ_REG(chipIDReg);
-    // READ_REG(manufactureIDReg);
-
-    // return INA219_ASSERT(
-    //     (chipIDReg == valid_chip_id and manufactureIDReg == valid_manu_id), 
-    //     "INA219 who am i failed", chipIDReg.to_bits(), manufactureIDReg.to_bits()
-    // );
-    return Ok();
-}

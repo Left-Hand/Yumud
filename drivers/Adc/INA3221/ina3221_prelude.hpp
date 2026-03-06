@@ -133,7 +133,7 @@ public:
         _8_244ms
     };
 
-    struct Config{
+    struct [[nodiscard]] Config final{
         ConversionTime shunt_conv_time;
         ConversionTime bus_conv_time;
         AverageTimes average_times;
@@ -148,56 +148,135 @@ public:
     };
 
 
-    static constexpr int16_t volt_to_i16(const iq16 volt){
-        return int16_t(iq16(volt) * 100000) & 0xfff8;
-    }
+
 
     struct [[nodiscard]] ShuntVoltCode final{
+        using Self = ShuntVoltCode;
 
-        int16_t bits;
+        uint16_t bits;
 
-        [[nodiscard]] constexpr iq16 to_volt() const {
-            return iq24(iq16(bits >> 3) / 25) / 1000;
-            // return iq16(this->to_bits());
+        static constexpr Self from_mv(const int32_t mv){
+            return Self{.bits = mv_to_sv_code(mv)};
         }
 
-        [[nodiscard]] constexpr int32_t to_uv() const {
-            return ((bits >> 3) * 40);
-            // return (this->to_bits());
+        [[nodiscard]] constexpr int32_t to_mv() const { 
+            return sv_code_to_mv(bits); 
         }
 
-        static constexpr int16_t to_i16(const iq16 volt){
-            return volt_to_i16(volt);
+        [[nodiscard]] constexpr int32_t to_uv() const { 
+            return sv_code_to_uv(bits); 
+        }
+
+        [[nodiscard]] constexpr iq16 to_volts() const { 
+            return sv_code_to_volts(bits); 
+        }
+
+        [[nodiscard]] static constexpr uint16_t mv_to_sv_code(const int32_t mv){
+            uint16_t bits = uint16_t(mv * (1000 / 40)) << 3;
+            return bits;
+        }
+
+        [[nodiscard]] static constexpr int32_t sv_code_to_mv(const uint16_t bits){
+            constexpr uint32_t RATIO = static_cast<uint32_t>((1ull << 32) * 40 / (1000));
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return static_cast<int32_t>(static_cast<int64_t>(signed_bits >> 3) * RATIO >> 32);
+        }
+
+        [[nodiscard]] static constexpr int32_t sv_code_to_uv(const uint16_t bits){
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return static_cast<int32_t>(signed_bits >> 3) * 40;
+        }
+
+        [[nodiscard]] static constexpr iq16 sv_code_to_volts(const uint16_t bits){
+            constexpr uint64_t RATIO = static_cast<uint64_t>((1ull << 48) * 40 / (1000000));
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return iq16::from_bits(static_cast<int32_t>(static_cast<int64_t>(signed_bits >> 3) * RATIO >> 32));
+        }
+
+
+
+    };
+
+    struct [[nodiscard]] ShuntVoltSumCode final{
+        using Self = ShuntVoltSumCode;
+
+        uint16_t bits;
+
+        static constexpr Self from_mv(const int32_t mv){
+            return Self{.bits = mv_to_svsum_code(mv)};
+        }
+
+        [[nodiscard]] constexpr int32_t to_mv() const { 
+            return svsum_code_to_mv(bits); 
+        }
+
+        [[nodiscard]] constexpr int32_t to_uv() const { 
+            return svsum_code_to_uv(bits); 
+        }
+
+        [[nodiscard]] constexpr iq16 to_volts() const { 
+            return svsum_code_to_volts(bits); 
+        }
+
+        [[nodiscard]] static constexpr uint16_t mv_to_svsum_code(const int32_t mv){
+            uint16_t bits = uint16_t(mv * (1000 / 40)) << 1;
+            return bits;
+        }
+
+        [[nodiscard]] static constexpr int32_t svsum_code_to_mv(const uint16_t bits){
+            constexpr uint32_t RATIO = static_cast<uint32_t>((1ull << 32) * 40 / (1000));
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return static_cast<int32_t>((static_cast<int64_t>(signed_bits >> 1) * RATIO) >> 32);
+        }
+
+        [[nodiscard]] static constexpr iq16 svsum_code_to_volts(const uint16_t bits){
+            constexpr uint32_t RATIO = static_cast<uint32_t>((1ull << 48) * 40 / (1000000));
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return iq16::from_bits(static_cast<int32_t>((static_cast<int64_t>(signed_bits >> 1) * RATIO) >> 32));
+        }
+
+        [[nodiscard]] static constexpr int32_t svsum_code_to_uv(const uint16_t bits){
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return static_cast<int32_t>(signed_bits >> 1) * 40;
         }
     };
 
 
     struct [[nodiscard]] BusVoltCode final{
+        using Self = BusVoltCode;
+        uint16_t bits;
 
-        int16_t bits;
-
-        [[nodiscard]] constexpr iq16 to_volt() const {
-            return iq16((int16_t(bits) >> 3) * 8) * iq16(0.001);
+        static constexpr Self from_mv(const int32_t mv){
+            return Self{.bits = mv_to_bv_code(mv)};
         }
 
-        [[nodiscard]] constexpr int to_mv() const {
-            return int16_t((int16_t(bits) >> 3) * 8);
+        [[nodiscard]] constexpr int32_t to_mv() const { 
+            return bv_code_to_mv(bits); 
         }
 
-        static constexpr int16_t to_i16(const iq16 volt){
-            return int16_t(iq16(volt) * 1000) & 0xfff8;
+        [[nodiscard]] constexpr iq16 to_volts() const { 
+            return bv_code_to_volts(bits); 
         }
+
+
+        [[nodiscard]] static constexpr uint16_t mv_to_bv_code(const int32_t mv){ 
+            uint16_t bits = uint16_t(mv & (~0x07));
+            return bits;
+        }
+
+        [[nodiscard]] static constexpr int32_t bv_code_to_mv(const uint16_t bits){ 
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            return static_cast<int32_t>(signed_bits & (~0x07));
+        }
+
+        [[nodiscard]] static constexpr iq16 bv_code_to_volts(const uint16_t bits){ 
+            constexpr uint64_t RATIO = static_cast<uint64_t>((1ull << 48) / (1000));
+            const int16_t signed_bits = static_cast<int16_t>(bits);
+            // return iq16(static_cast<int32_t>(signed_bits & (~0x07))) / 1000;
+            return iq16::from_bits((static_cast<int64_t>(signed_bits & (~0x07)) * RATIO) >> 32);
+        }
+
     };
-
-
-    struct [[nodiscard]] InstantOvcCode final{
-        int16_t bits;
-    };
-
-    struct [[nodiscard]] ConstantOvcCode final{
-        int16_t bits;
-    };
-
 
 };
 
@@ -242,13 +321,13 @@ struct INA3221_Regs:public INA3221_Prelude {
     struct [[nodiscard]] R16_ShuntVoltSum: public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0D};
 
-        ShuntVoltCode code;
+        ShuntVoltSumCode code;
     };
 
     struct [[nodiscard]] R16_ShuntVoltSumLimit: public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0E};
 
-        ShuntVoltCode code;
+        ShuntVoltSumCode code;
     };
 
 
@@ -273,38 +352,47 @@ struct INA3221_Regs:public INA3221_Prelude {
 
 
 
-
+    //0x07
     struct [[nodiscard]] R16_InstantOVC1:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x07};
 
-        InstantOvcCode code;
+        ShuntVoltCode code;
     };
+
+    //0x09
     struct [[nodiscard]] R16_InstantOVC2:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x09};
 
-        InstantOvcCode code;
+        ShuntVoltCode code;
     };
+
+    //0x0b
     struct [[nodiscard]] R16_InstantOVC3:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0b};
 
-        InstantOvcCode code;
+        ShuntVoltCode code;
     };
 
 
+    //0x08
     struct [[nodiscard]] R16_ConstantOVC1:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x08};
 
-        ConstantOvcCode code;
+        ShuntVoltCode code;
     };
+
+    //0x0a
     struct [[nodiscard]] R16_ConstantOVC2:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
 
-        ConstantOvcCode code;
+        ShuntVoltCode code;
     };
+
+    //0x0c
     struct [[nodiscard]] R16_ConstantOVC3:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
 
-        ConstantOvcCode code;
+        ShuntVoltCode code;
     };
 
     struct [[nodiscard]] R16_Mask:public Reg16<>{

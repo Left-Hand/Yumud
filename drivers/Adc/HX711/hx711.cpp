@@ -15,7 +15,7 @@ uint32_t HX711::read_data(void){
         data <<= 1; data |= bool(sdo_pin_.read() == HIGH);
     }
 
-    for(uint8_t i = 0; i < (uint8_t)conv_type; i++){
+    for(uint8_t i = 0; i < (uint8_t)conv_type_; i++){
         sck_pin_.set_high();
         __nopn(2);
         sck_pin_.set_low();

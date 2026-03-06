@@ -46,6 +46,111 @@ struct INA226_Prelude{
     using RegAddr = uint8_t;
 
     static constexpr iq16 VOLTAGE_LSB_MV = iq16(1.25);
+
+    [[nodiscard]] static constexpr uint16_t mv_to_sv_code(const int32_t mv){
+        uint16_t bits = uint16_t(mv * (10000 / 25));
+        return bits;
+    }
+
+    [[nodiscard]] static constexpr uint16_t volts_to_sv_code(const iq16 volts){
+        #if 0
+        constexpr uint32_t RATIO = (10000'000 / 25);
+        uint16_t bits = uint16_t((static_cast<int64_t>(volts.to_bits()) * RATIO) >> 16);
+        return bits;
+        #else
+        return mv_to_sv_code(round_cast<int32_t>(volts * 1000));
+        #endif
+    }
+
+    [[nodiscard]] static constexpr uint16_t uv_to_sv_code(const int32_t uv){
+        constexpr uint32_t UQ32_2_BY_5 = static_cast<uint32_t>((1ull << 32) * 2 / 5); 
+        uint16_t bits = uint16_t((int64_t(uv) * UQ32_2_BY_5) >> 32);
+        return bits;
+    }
+
+
+    [[nodiscard]] static constexpr iq16 sv_code_to_volts(const uint16_t sv_code){ 
+        constexpr uint32_t RATIO = static_cast<uint32_t>((1ull << 48) * 2.5 / 1000000);
+        return iq16::from_bits((static_cast<int64_t>(std::bit_cast<int16_t>(sv_code)) * RATIO) >> 32);
+    }
+
+    [[nodiscard]] static constexpr int32_t sv_code_to_mv(const uint16_t sv_code){ 
+        constexpr uint32_t RATIO = static_cast<uint32_t>((1ull << 32) * 2.5 / 1000);
+        return int32_t((static_cast<int64_t>(std::bit_cast<int16_t>(sv_code)) * RATIO) >> 32);
+    }
+
+    [[nodiscard]] static constexpr int32_t sv_code_to_uv(const uint16_t sv_code){ 
+        int32_t uv = 0;
+        uv += (std::bit_cast<int16_t>(sv_code) >> 1);
+        uv += (std::bit_cast<int16_t>(sv_code) << 1);
+        return int32_t(uv);
+    }
+
+    [[nodiscard]] static constexpr iq16 bv_code_to_volts(uint16_t bv_code){ 
+        bv_code &= 0x7FFF;
+        constexpr uint64_t RATIO = static_cast<uint64_t>((1ull << 48) * (40.96 / 0x7fff));
+        return iq16::from_bits((uint64_t(bv_code) * RATIO) >> 32);
+    }
+
+    [[nodiscard]] static constexpr uint32_t bv_code_to_mv(uint16_t bv_code){ 
+        bv_code &= 0x7FFF;
+
+        #if 0
+        // mv * 1.25
+        uint32_t mv = 0;
+        mv += ((bv_code) >> 2);
+        mv += ((bv_code) << 0);
+        return uint32_t(mv);
+        #else
+        constexpr uint64_t RATIO = static_cast<uint64_t>((1ull << 32) * (40.96 / 0x7fff) * 1000);
+        uint32_t mv = (uint64_t(bv_code) * RATIO) >> 32;
+        return uint32_t(mv);
+        #endif
+    }
+
+    [[nodiscard]] static constexpr uint32_t bv_code_to_uv(uint16_t bv_code){ 
+        bv_code &= 0x7FFF;
+
+        constexpr uint64_t RATIO = static_cast<uint64_t>((1ull << 32) * (40.96 / 0x7fff) * 1000000);
+        uint32_t uv = (uint64_t(bv_code) * RATIO) >> 32;
+        return uint32_t(uv);
+    }
+
+
+    struct [[nodiscard]] ShuntVoltageCode final{
+        using Self = ShuntVoltageCode;
+        uint16_t bits;
+
+        constexpr int32_t to_uv() const {
+            return sv_code_to_uv(bits);
+        }
+
+        constexpr int32_t to_mv() const {
+            return sv_code_to_mv(bits);
+        }
+
+        constexpr iq16 to_volts() const {
+            return sv_code_to_volts(bits);
+        }
+    };
+
+
+    struct [[nodiscard]] BusVoltageCode final{
+        using Self = BusVoltageCode;
+        uint16_t bits;
+
+        constexpr int32_t to_uv() const {
+            return bv_code_to_uv(bits);
+        }
+
+        constexpr int32_t to_mv() const {
+            return bv_code_to_mv(bits);
+        }
+
+        constexpr iq16 to_volts() const {
+            return bv_code_to_volts(bits);
+        }
+    };
 };
 
 struct INA226_Regs:public INA226_Prelude{
@@ -64,12 +169,12 @@ struct INA226_Regs:public INA226_Prelude{
 
     struct R16_ShuntVolt:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
-        uint16_t bits;
+        ShuntVoltageCode code;
     }DEF_R16(shunt_volt_reg)
 
     struct R16_BusVolt:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
-        uint16_t bits;
+        BusVoltageCode code;
     }DEF_R16(bus_volt_reg)
 
     struct R16_Power:public Reg16<>{

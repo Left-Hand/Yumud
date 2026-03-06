@@ -19,11 +19,13 @@ public:
     static constexpr iq16 GRAVITY_G = iq16(9.8);
 public:
     explicit HX711(
-        hal::Gpio & sck_gpio, 
-        hal::Gpio & sdo_gpio
+        hal::Gpio & sck_pin, 
+        hal::Gpio & sdo_pin
     ):
-        sck_pin_(sck_gpio), 
-        sdo_pin_(sdo_gpio){;}
+        sck_pin_(sck_pin), 
+        sdo_pin_(sdo_pin){;}
+
+
     ~HX711(){;}
     void init();
     bool is_idle();
@@ -46,13 +48,13 @@ public:
     }
 
 
-    void set_conv_type(const ConvType & convtype){
-        conv_type = convtype;
+    void set_conv_type(const ConvType convtype){
+        conv_type_ = convtype;
     }
 private:
     hal::Gpio & sck_pin_;
     hal::Gpio & sdo_pin_;
-    ConvType conv_type = ConvType::A128;
+    ConvType conv_type_ = ConvType::A128;
 
     uint32_t last_bits_;
     uint32_t zero_offset_;

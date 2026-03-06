@@ -4,7 +4,7 @@
 
 namespace ymd::drivers{
 
-class INA226 final:public INA226_Regs{
+class INA226 final:public INA226_Prelude{
 public:
     
     struct Config{
@@ -34,11 +34,9 @@ public:
 
     IResult<> set_average_times(const uint16_t times);
 
-    IResult<iq16> get_voltage();
+    IResult<BusVoltageCode> get_bus_voltage_code();
 
-    IResult<int> get_shunt_voltage_uv();
-
-    IResult<iq16> get_shunt_voltage();
+    IResult<ShuntVoltageCode> get_shunt_voltage_code();
 
     IResult<iq16> get_current();
 
@@ -61,6 +59,7 @@ public:
     IResult<> enable_alert_latch(const Enable en);
 private:
     hal::I2cDrv i2c_drv_;
+    INA226_Regs regs_ = {};
     
     iq16 current_lsb_ma_ = iq16(0.2);
 

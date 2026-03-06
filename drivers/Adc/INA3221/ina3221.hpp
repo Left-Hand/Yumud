@@ -38,8 +38,7 @@ public:
 
     IResult<> init(const Config & cfg);
     IResult<> reconf(const Config & cfg);
-    IResult<> update();
-    IResult<> update(const ChannelSelection sel);
+    IResult<> update(const ChannelSelection ch_sel);
     IResult<> validate();
     IResult<> reset();
     IResult<> set_average_times(const AverageTimes times);
@@ -47,19 +46,18 @@ public:
     IResult<> enable_measure_shunt(const Enable en);
     IResult<> enable_continuous(const Enable en);
 
-    IResult<> enable_channel(const ChannelSelection sel, const Enable en);
+    IResult<> enable_channel(const ChannelSelection ch_sel, const Enable en);
 
     IResult<> set_bus_conversion_time(const ConversionTime time);
     IResult<> set_shunt_conversion_time(const ConversionTime time);
 
-    IResult<int> get_shunt_volt_uv(const ChannelSelection sel);
-    IResult<int> get_bus_volt_mv(const ChannelSelection sel);
+    IResult<ShuntVoltCode> get_shunt_volt_code(const ChannelSelection ch_sel);
 
-    IResult<iq16> get_shunt_volt(const ChannelSelection sel);
-    IResult<iq16> get_bus_volt(const ChannelSelection sel);
+    IResult<iq16> get_shunt_volt(const ChannelSelection ch_sel);
+    IResult<iq16> get_bus_volt(const ChannelSelection ch_sel);
 
-    IResult<> set_instant_ovc_threshold(const ChannelSelection sel, const iq16 volt);
-    IResult<> set_constant_ovc_threshold(const ChannelSelection sel, const iq16 volt);
+    IResult<> set_instant_ovc_threshold(const ChannelSelection ch_sel, const ShuntVoltCode volt_code);
+    IResult<> set_constant_ovc_threshold(const ChannelSelection ch_sel, const ShuntVoltCode volt_code);
 private:
     INA3221_Transport transport_;
     INA3221_Regs regs_ = {};
@@ -77,12 +75,12 @@ private:
         return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 
-    IResult<> read_reg(const RegAddr addr, auto & data){
-        return transport_.read_reg(addr, data);
+    IResult<> read_reg(const RegAddr reg_addr, auto & reg_data){
+        return transport_.read_reg(reg_addr, reg_data);
     }
 
-    IResult<> write_reg(const RegAddr addr, const auto data){
-        return transport_.write_reg(addr, data);
+    IResult<> write_reg(const RegAddr reg_addr, const auto reg_data){
+        return transport_.write_reg(reg_addr, reg_data);
     }
 
 };

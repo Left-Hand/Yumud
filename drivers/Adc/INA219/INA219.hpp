@@ -5,7 +5,7 @@
 namespace ymd::drivers{
 
 class INA219 final:
-    public INA219_Regs{
+    public INA219_Prelude{
 public:
 
     explicit INA219(const hal::I2cDrv & i2c_drv):
@@ -25,6 +25,7 @@ public:
 
 private:
     hal::I2cDrv i2c_drv_;
+    INA219_Regs regs_ = {}; 
     
     iq16 current_lsb_ma_ = iq16(0.2);
 

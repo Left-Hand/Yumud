@@ -40,7 +40,7 @@ enum class [[nodiscard]] Error:uint8_t{
 DEF_DERIVE_DEBUG(Error)
 
 using Buf = HeaplessVector<uint8_t, 8>;
-struct [[nodiscard]]FlatPacket final{ 
+struct [[nodiscard]] FlatPacket final{ 
     NodeId node_id;
     Buf buf;
 };

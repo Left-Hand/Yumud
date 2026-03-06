@@ -34,11 +34,137 @@ using namespace ymd::drivers;
 #define CHECKERR(x, ...) (x)
 #endif
 
+using Self = INA3221;
 template<typename T = void>
-using IResult = INA3221::IResult<T>;
+using IResult = Self::IResult<T>;
 
-using Error = INA3221::Error;
+using Error = Self::Error;
 using Regs = INA3221_Regs;
+
+
+
+static_assert(Self::ShuntVoltCode::from_mv(-80).bits == 0xc180);
+static_assert(Self::ShuntVoltCode(0xc180).to_mv() == -80);
+static_assert(std::abs((float)Self::ShuntVoltCode(0xc180).to_volts() - (-0.08)) < 1E-4);
+
+
+// static_assert(Self::mv_to_svsum_code(-80) == 0xc180);
+// static_assert(Self::svsum_code_to_mv(0xc180) == -80);
+
+static_assert(Self::BusVoltCode::from_mv(32760).bits == 0x7ff8);
+static_assert(Self::BusVoltCode(0x7ff8).to_mv() == 32760);
+
+// static constexpr auto f = (float)Self::BusVoltCode(0x7ff8).to_volts();
+static_assert(std::abs((float)Self::BusVoltCode(0x7ff8).to_volts() - (32.76)) < 1E-4);
+// static_assert( == 32760);
+
+
+
+IResult<> INA3221::set_average_times(const AverageTimes times){
+    auto reg = RegCopy(regs_.config_reg);
+    reg.average_times = times.as_raw();
+    return write_reg(reg);
+}
+
+IResult<> INA3221::enable_channel(const ChannelSelection ch_sel, const Enable en){
+    auto reg = RegCopy(regs_.config_reg);
+    switch(ch_sel){
+        case ChannelSelection::CH1:
+            reg.ch1_en = en == EN;
+            break;
+        case ChannelSelection::CH2:
+            reg.ch2_en = en == EN;
+            break;
+        case ChannelSelection::CH3:
+            reg.ch3_en = en == EN;
+            break;
+    }
+    return write_reg(reg);
+}
+
+
+IResult<> INA3221::set_bus_conversion_time(const ConversionTime time){
+    auto reg = RegCopy(regs_.config_reg);
+    reg.bus_conv_time = time;
+    return write_reg(reg);
+}
+
+
+IResult<> INA3221::set_shunt_conversion_time(const ConversionTime time){
+    auto reg = RegCopy(regs_.config_reg);
+    reg.shunt_conv_time = time;
+    return write_reg(reg);
+}
+
+
+IResult<> INA3221::reset(){
+    auto reg = RegCopy(regs_.config_reg);
+    reg.rst = false;
+    const auto res = write_reg(reg);
+    reg.rst = true;
+    return res;
+}
+
+
+IResult<Self::ShuntVoltCode> INA3221::get_shunt_volt_code(const ChannelSelection ch_sel){
+    const ShuntVoltCode code = [&]() -> ShuntVoltCode{
+        switch(ch_sel){
+            case ChannelSelection::CH1:return regs_.shuntvolt1_reg.code;
+            case ChannelSelection::CH2:return regs_.shuntvolt2_reg.code;
+            case ChannelSelection::CH3:return regs_.shuntvolt3_reg.code;
+        }
+        __builtin_unreachable();
+    }();
+
+    return Ok(code);
+}
+
+
+IResult<> INA3221::set_instant_ovc_threshold(const ChannelSelection ch_sel, const ShuntVoltCode volt_code){
+    const RegAddr reg_addr = [&]{
+        switch(ch_sel){
+            case ChannelSelection::CH1: return regs_.instant_ovc1_reg.REG_ADDR; 
+            case ChannelSelection::CH2: return regs_.instant_ovc2_reg.REG_ADDR; 
+            case ChannelSelection::CH3: return regs_.instant_ovc3_reg.REG_ADDR; 
+        }
+        __builtin_unreachable();
+    }();
+
+    return write_reg(reg_addr, volt_code.bits);
+}
+
+
+IResult<> INA3221::set_constant_ovc_threshold(const ChannelSelection ch_sel, const ShuntVoltCode volt_code){
+    const RegAddr reg_addr = [&]{
+        switch(ch_sel){
+            case ChannelSelection::CH1: return regs_.constant_ovc1_reg.REG_ADDR; 
+            case ChannelSelection::CH2: return regs_.constant_ovc2_reg.REG_ADDR; 
+            case ChannelSelection::CH3: return regs_.constant_ovc3_reg.REG_ADDR; 
+        }
+        __builtin_unreachable();
+    }();
+
+    return write_reg(reg_addr, volt_code.bits);
+}
+
+IResult<> INA3221::enable_measure_bus(const Enable en){
+    auto reg = RegCopy(regs_.config_reg);
+    reg.bus_measure_en = en == EN;
+    return write_reg(reg);
+}
+
+
+IResult<> INA3221::enable_measure_shunt(const Enable en){
+    auto reg = RegCopy(regs_.config_reg);
+    reg.shunt_measure_en = en == EN;
+    return write_reg(reg);
+}
+
+IResult<> INA3221::enable_continuous(const Enable en){
+    auto reg = RegCopy(regs_.config_reg);
+    reg.continuous = en == EN;
+    return write_reg(reg);
+}
 
 IResult<> INA3221::init(const Config & cfg){
     if(const auto res = this->validate(); 
@@ -102,7 +228,7 @@ IResult<> INA3221::validate(){
     return Ok();
 }
 
-IResult<> INA3221::update(const ChannelSelection sel){
+IResult<> INA3221::update(const ChannelSelection ch_sel){
     #define READ_DUAL_REG(r1, r2)\
         if(const auto res = read_reg(r1); \
             res.is_err()) return CHECKRES(res);\
@@ -111,7 +237,7 @@ IResult<> INA3221::update(const ChannelSelection sel){
         return Ok();\
 
     // update bus and shunt
-    switch(sel){
+    switch(ch_sel){
         case ChannelSelection::CH1: 
             READ_DUAL_REG(regs_.shuntvolt1_reg, regs_.busvolt1_reg);
         case ChannelSelection::CH2: 
@@ -123,145 +249,3 @@ IResult<> INA3221::update(const ChannelSelection sel){
 
     #undef READ_DUAL_REG
 } 
-
-IResult<> INA3221::set_average_times(const AverageTimes times){
-    auto reg = RegCopy(regs_.config_reg);
-    reg.average_times = times.as_raw();
-    return write_reg(reg);
-}
-
-IResult<> INA3221::enable_channel(const ChannelSelection sel, const Enable en){
-    auto reg = RegCopy(regs_.config_reg);
-    switch(sel){
-        case ChannelSelection::CH1:
-            reg.ch1_en = en == EN;
-            break;
-        case ChannelSelection::CH2:
-            reg.ch2_en = en == EN;
-            break;
-        case ChannelSelection::CH3:
-            reg.ch3_en = en == EN;
-            break;
-    }
-    return write_reg(reg);
-}
-
-
-IResult<> INA3221::set_bus_conversion_time(const ConversionTime time){
-    auto reg = RegCopy(regs_.config_reg);
-    reg.bus_conv_time = time;
-    return write_reg(reg);
-}
-
-
-IResult<> INA3221::set_shunt_conversion_time(const ConversionTime time){
-    auto reg = RegCopy(regs_.config_reg);
-    reg.shunt_conv_time = time;
-    return write_reg(reg);
-}
-
-
-IResult<> INA3221::reset(){
-    auto reg = RegCopy(regs_.config_reg);
-    reg.rst = false;
-    const auto res = write_reg(reg);
-    reg.rst = true;
-    return res;
-}
-
-
-IResult<int> INA3221::get_shunt_volt_uv(const ChannelSelection sel){
-
-    // RegAddr addr;
-    const Regs::ShuntVoltCode code = [&]() -> ShuntVoltCode{
-        switch(sel){
-            case ChannelSelection::CH1:return regs_.shuntvolt1_reg.code;
-            case ChannelSelection::CH2:return regs_.shuntvolt2_reg.code;
-            case ChannelSelection::CH3:return regs_.shuntvolt3_reg.code;
-        }
-        __builtin_unreachable();
-    }();
-
-    // const auto res = read_reg(addr, reg.as_bits_mut());
-    // if(res.is_err()) return Err(res.unwrap_err());
-    return Ok(code.to_uv());
-}
-
-
-
-IResult<int> INA3221::get_bus_volt_mv(const ChannelSelection sel){
-    // RegAddr addr;
-    Regs::BusVoltCode code = [&]() -> Regs::BusVoltCode{
-        switch(sel){
-            case ChannelSelection::CH1:return regs_.busvolt1_reg.code;
-            case ChannelSelection::CH2:return regs_.busvolt2_reg.code;
-            case ChannelSelection::CH3:return regs_.busvolt3_reg.code;
-        }
-        __builtin_unreachable();
-    }();
-
-    // if(const auto res = read_reg(addr, reg.as_bits_mut()); res.is_err())
-    //     return Err(res.unwrap_err());
-
-    return Ok(code.to_mv());
-}
-
-
-IResult<iq16> INA3221::get_shunt_volt(const ChannelSelection sel){
-    const auto res = get_shunt_volt_uv(sel);
-    if(res.is_err()) return Err(res.unwrap_err());
-    return Ok(iq16(iq8(res.unwrap()) / 100) / 10000);
-}
-
-IResult<iq16> INA3221::get_bus_volt(const ChannelSelection sel){
-    const auto res = get_bus_volt_mv(sel);
-    if(res.is_err()) return Err(res.unwrap_err());
-    return Ok(iq16(res.unwrap()) / 1000);
-}
-
-
-IResult<> INA3221::set_instant_ovc_threshold(const ChannelSelection sel, const iq16 volt){
-    const RegAddr addr = [&]{
-        switch(sel){
-            case ChannelSelection::CH1: return regs_.instant_ovc1_reg.REG_ADDR; 
-            case ChannelSelection::CH2: return regs_.instant_ovc2_reg.REG_ADDR; 
-            case ChannelSelection::CH3: return regs_.instant_ovc3_reg.REG_ADDR; 
-        }
-        __builtin_unreachable();
-    }();
-
-    return write_reg(addr, ShuntVoltCode::to_i16(volt));
-}
-
-
-IResult<> INA3221::set_constant_ovc_threshold(const ChannelSelection sel, const iq16 volt){
-    const RegAddr addr = [&]{
-        switch(sel){
-            case ChannelSelection::CH1: return regs_.constant_ovc1_reg.REG_ADDR; 
-            case ChannelSelection::CH2: return regs_.constant_ovc2_reg.REG_ADDR; 
-            case ChannelSelection::CH3: return regs_.constant_ovc3_reg.REG_ADDR; 
-        }
-        __builtin_unreachable();
-    }();
-
-    return write_reg(addr, ShuntVoltCode::to_i16(volt));
-}
-
-IResult<> INA3221::enable_measure_bus(const Enable en){
-    auto reg = RegCopy(regs_.config_reg);
-    reg.bus_measure_en = en == EN;
-    return write_reg(reg);
-}
-
-
-IResult<> INA3221::enable_measure_shunt(const Enable en){
-    auto reg = RegCopy(regs_.config_reg);
-    reg.shunt_measure_en = en == EN;
-    return write_reg(reg);
-}
-
-IResult<> INA3221::enable_continuous(const Enable en){
-    auto reg = RegCopy(regs_.config_reg);
-    reg.continuous = en == EN;
-    return write_reg(reg);
-}
