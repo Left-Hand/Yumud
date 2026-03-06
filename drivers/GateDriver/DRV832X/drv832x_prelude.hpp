@@ -336,8 +336,8 @@ public:
     explicit DRV8323R_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv(spi, rank)){;}
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr reg_addr, const uint16_t reg_val);
-    [[nodiscard]] IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val);
+    IResult<> write_reg(const RegAddr reg_addr, const uint16_t reg_val);
+    IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val);
 private:
     hal::SpiDrv spi_drv_;
 };

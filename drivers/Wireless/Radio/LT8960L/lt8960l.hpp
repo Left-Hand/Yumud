@@ -42,77 +42,77 @@ public:
         transport_(scl, sda){;}
 
 
-    [[nodiscard]] IResult<> set_rf_freq_mhz(const size_t freq);
+    IResult<> set_rf_freq_mhz(const size_t freq);
 
-    [[nodiscard]] IResult<> set_syncword(const uint32_t syncword);
+    IResult<> set_syncword(const uint32_t syncword);
 
-    [[nodiscard]] IResult<> set_retrans_time(const uint8_t times);
+    IResult<> set_retrans_time(const uint8_t times);
 
-    [[nodiscard]] IResult<> enable_autoack(const Enable en);
+    IResult<> enable_autoack(const Enable en);
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
+    IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<> init_rf();
+    IResult<> init_rf();
     
-    [[nodiscard]] IResult<> init_ble(const Power power);
+    IResult<> init_ble(const Power power);
 
-    [[nodiscard]] IResult<> set_preamble_bytes(const size_t bytes);
+    IResult<> set_preamble_bytes(const size_t bytes);
 
-    [[nodiscard]] IResult<> set_syncword_bytes(const size_t bytes);
+    IResult<> set_syncword_bytes(const size_t bytes);
     
-    [[nodiscard]] IResult<> set_trailer_bits(const size_t bits);
+    IResult<> set_trailer_bits(const size_t bits);
 
-    [[nodiscard]] IResult<> set_pack_type(const PacketType ptype);
+    IResult<> set_pack_type(const PacketType ptype);
 
-    [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<> wakeup(){return reset();}
+    IResult<> reset();
+    IResult<> wakeup(){return reset();}
 
-    [[nodiscard]] IResult<> sleep();
+    IResult<> sleep();
     
-    [[nodiscard]] IResult<> wake();
+    IResult<> wake();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> set_tx_power(const Power power);
+    IResult<> set_tx_power(const Power power);
 
-    [[nodiscard]] IResult<size_t> transmit_rf(std::span<const uint8_t> buf);
+    IResult<size_t> transmit_rf(std::span<const uint8_t> buf);
 
-    [[nodiscard]] IResult<size_t> receive_rf(std::span<uint8_t> buf);
+    IResult<size_t> receive_rf(std::span<uint8_t> buf);
 
-    [[nodiscard]] IResult<size_t> transmit_ble(std::span<const uint8_t> buf);
+    IResult<size_t> transmit_ble(std::span<const uint8_t> buf);
     
-    [[nodiscard]] IResult<size_t> receive_ble(std::span<uint8_t> buf);
+    IResult<size_t> receive_ble(std::span<uint8_t> buf);
 
-    [[nodiscard]] IResult<> set_datarate(LT8960L::DataRate rate);
+    IResult<> set_datarate(LT8960L::DataRate rate);
 
-    [[nodiscard]] IResult<> enable_gain_weaken(const Enable en);
+    IResult<> enable_gain_weaken(const Enable en);
 
-    [[nodiscard]] IResult<bool> is_pkt_ready();
+    IResult<bool> is_pkt_ready();
     
-    [[nodiscard]] IResult<bool> is_receiving();
+    IResult<bool> is_receiving();
 
-    [[nodiscard]] IResult<bool> is_rst_done();
+    IResult<bool> is_rst_done();
 
-    [[nodiscard]] IResult<> set_rf_channel(const Channel ch){
+    IResult<> set_rf_channel(const Channel ch){
         now_channel_ = ch; return Ok();}
 
-    [[nodiscard]] IResult<> enable_use_hw_pkt(const Enable en){
+    IResult<> enable_use_hw_pkt(const Enable en){
         use_hw_pkt_ = en == EN; return Ok();}
 
-    [[nodiscard]] IResult<> tick();
+    IResult<> tick();
     
 
-    [[nodiscard]] IResult<> write(const std::span<const uint8_t> pbuf);
+    IResult<> write(const std::span<const uint8_t> pbuf);
 
-    [[nodiscard]] IResult<> read(const std::span<uint8_t> pbuf);
+    IResult<> read(const std::span<uint8_t> pbuf);
 
     [[nodiscard]] size_t available() const;
 
     [[nodiscard]] size_t pending() const;
 
-    [[nodiscard]] IResult<> on_interrupt();
+    IResult<> on_interrupt();
 
-    [[nodiscard]] IResult<> set_syncword_tolerance_bits(const size_t bits);
+    IResult<> set_syncword_tolerance_bits(const size_t bits);
 
 private:
 
@@ -128,13 +128,11 @@ private:
 
     Channel now_channel_ = Channel(0);
 
-    [[nodiscard]]
     IResult<> write_reg(const RegAddr address, const uint16_t reg){
         return transport_.write_reg(address, reg);
     }
 
     template<typename T>
-    [[nodiscard]]
     IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
@@ -143,85 +141,82 @@ private:
     }
 
 
-    [[nodiscard]]
     IResult<> read_reg(const RegAddr address, uint16_t & reg){
         return transport_.read_reg(address, reg);
     }
 
 
     template<typename ... Ts>
-    [[nodiscard]]
     IResult<> read_regs(Ts & ... reg) {
         return (transport_.read_reg(reg.REG_ADDR, reg.as_bits_mut()) | ...);
     }
 
     template<typename T>
-    [[nodiscard]]
     IResult<> read_reg(T & reg){
         return transport_.read_reg(reg.REG_ADDR, reg.as_bits_mut());
     }
 
 
-    [[nodiscard]] IResult<size_t> write_fifo(std::span<const uint8_t> buf){
+    IResult<size_t> write_fifo(std::span<const uint8_t> buf){
         return transport_.write_burst(Regs::R16_Fifo::REG_ADDR, buf);
     }
 
-    [[nodiscard]] IResult<size_t> read_fifo(std::span<uint8_t> buf);
+    IResult<size_t> read_fifo(std::span<uint8_t> buf);
 
-    [[nodiscard]] IResult<> set_pa_current(const uint8_t nowent);
+    IResult<> set_pa_current(const uint8_t nowent);
 
-    [[nodiscard]] IResult<> set_pa_gain(const uint8_t gain);
+    IResult<> set_pa_gain(const uint8_t gain);
 
-    [[nodiscard]] IResult<> enable_analog(Enable en);
+    IResult<> enable_analog(Enable en);
 
-    [[nodiscard]] IResult<> change_carrier(const Channel ch);
+    IResult<> change_carrier(const Channel ch);
 
-    [[nodiscard]] IResult<> set_rf_channel(const Channel ch, const bool tx, const bool rx);
-    [[nodiscard]] IResult<> set_rf_channel_and_enter_tx(const Channel ch){
+    IResult<> set_rf_channel(const Channel ch, const bool tx, const bool rx);
+    IResult<> set_rf_channel_and_enter_tx(const Channel ch){
         return set_rf_channel(ch, 1, 0);
     }
-    [[nodiscard]] IResult<> set_rf_channel_and_enter_rx(const Channel ch){
+    IResult<> set_rf_channel_and_enter_rx(const Channel ch){
         return set_rf_channel(ch, 0, 1);
     }
-    [[nodiscard]] IResult<> set_rf_channel_and_exit_tx_rx(const Channel ch){
+    IResult<> set_rf_channel_and_exit_tx_rx(const Channel ch){
         return set_rf_channel(ch, 0, 0);
     }
 
-    [[nodiscard]] IResult<> enter_tx(){
+    IResult<> enter_tx(){
         return set_rf_channel(now_channel_, 1, 0);
     }
 
-    [[nodiscard]] IResult<> enter_rx(){
+    IResult<> enter_rx(){
         return set_rf_channel(now_channel_, 0, 1);
     }
 
-    [[nodiscard]] IResult<> exit_tx_rx(){
+    IResult<> exit_tx_rx(){
         return set_rf_channel(now_channel_, 0, 0);
     }
 
-    [[nodiscard]] IResult<> clear_fifo_write_and_read_ptr();
+    IResult<> clear_fifo_write_and_read_ptr();
 
-    [[nodiscard]] IResult<> ensure_correct_0x08();
+    IResult<> ensure_correct_0x08();
 
-    [[nodiscard]] IResult<> begin_receive();
+    IResult<> begin_receive();
 
-    [[nodiscard]] IResult<> begin_transmit();
+    IResult<> begin_transmit();
 
-    [[nodiscard]] IResult<> start_listen_pkt();
+    IResult<> start_listen_pkt();
 
-    [[nodiscard]] IResult<> set_radio_mode(const bool isRx);
+    IResult<> set_radio_mode(const bool isRx);
 
-    [[nodiscard]] IResult<> set_brclk_sel(const BrclkSel brclkSel);
+    IResult<> set_brclk_sel(const BrclkSel brclkSel);
 
-    [[nodiscard]] IResult<> clear_fifo_write_ptr();
+    IResult<> clear_fifo_write_ptr();
 
-    [[nodiscard]] IResult<> clear_fifo_read_ptr();
+    IResult<> clear_fifo_read_ptr();
 
-    [[nodiscard]] IResult<bool> is_rfsynth_locked();
+    IResult<bool> is_rfsynth_locked();
 
-    [[nodiscard]] IResult<> set_fifo_full_threshold(const size_t thd);
+    IResult<> set_fifo_full_threshold(const size_t thd);
 
-    [[nodiscard]] IResult<> set_fifo_empty_threshold(const size_t thd);
+    IResult<> set_fifo_empty_threshold(const size_t thd);
 };
 
 }

@@ -310,19 +310,19 @@ public:
         i2c_drv_(i2c_drv),
         int_input_(int_input){;}
 
-    [[nodiscard]] IResult<> write_command(const Command cmd){
+    IResult<> write_command(const Command cmd){
         if(const auto res = i2c_drv_.write_blocks<>(cmd.to_u8(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_data(const RegAddr addr, const uint8_t data){
+    IResult<> write_data(const RegAddr addr, const uint8_t data){
         if(const auto res = i2c_drv_.write_reg(addr, data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_burst(
+    IResult<> write_burst(
         const RegAddr addr, 
         const std::span<const uint8_t> pbuf
     ){
@@ -334,13 +334,13 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_data(const RegAddr addr, uint8_t & data){
+    IResult<> read_data(const RegAddr addr, uint8_t & data){
         if(const auto res = i2c_drv_.read_reg(addr, data);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(
+    IResult<> read_burst(
         const RegAddr addr, 
         const std::span<uint8_t> pbuf
     ){
@@ -349,7 +349,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> set_int_io_active_level(const BoolLevel level){
+    IResult<> set_int_io_active_level(const BoolLevel level){
         // if(int_input_.is_some()){
         //     int_input_.unwrap()
         //         .set_active_level(level);

@@ -21,20 +21,20 @@ public:
     MPU6050(const MPU6050 & other) = delete;
     MPU6050(MPU6050 && other) = delete;
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
+    IResult<> init(const Config & cfg);
     
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_gyr();
-    [[nodiscard]] IResult<iq16> read_temp();
+    IResult<math::Vec3<iq24>> read_acc();
+    IResult<math::Vec3<iq24>> read_gyr();
+    IResult<iq16> read_temp();
 
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
-    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
+    IResult<> set_acc_fs(const AccFs fs);
+    IResult<> set_gyr_fs(const GyrFs fs);
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
     void set_package(const Package package){
         package_ = package;
@@ -42,7 +42,7 @@ public:
 
     [[nodiscard]] Result<Package, Error> get_package();
 
-    [[nodiscard]] IResult<> enable_direct_mode(const Enable en);
+    IResult<> enable_direct_mode(const Enable en);
 private:
 
     using Phy = InvensenseImu_Transport;
@@ -56,28 +56,28 @@ private:
 
     MPU6050(const hal::I2cDrv i2c_drv, const Package package);
 
-    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
+    IResult<> write_reg(const uint8_t addr, const uint8_t data){
         return transport_.write_reg(addr, data);
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
+    IResult<> read_reg(const uint8_t addr, uint8_t & data){
         return transport_.read_reg(addr, data);
     }
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
+    IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
         return transport_.read_burst(addr, pbuf);
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 

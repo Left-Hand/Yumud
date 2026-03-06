@@ -19,30 +19,30 @@ public:
         spi_drv_(hal::SpiDrv(spi, rank)){;}
 
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
-    [[nodiscard]] IResult<> update();
+    IResult<> init(const Config & cfg);
+    IResult<> update();
 
-    [[nodiscard]] IResult<> set_zero_angle(const Angular<uq32> angle);
-    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle(){
+    IResult<> set_zero_angle(const Angular<uq32> angle);
+    IResult<Angular<uq32>> read_lap_angle(){
         return Ok(Angular<uq32>::from_turns(lap_turns_));
     }
 
-    [[nodiscard]] IResult<> set_trim_x(const uq16 k);
+    IResult<> set_trim_x(const uq16 k);
 
-    [[nodiscard]] IResult<> set_trim_y(const uq16 k);
+    IResult<> set_trim_y(const uq16 k);
 
-    [[nodiscard]] IResult<> set_trim(const uq16 am, const uq16 e);
+    IResult<> set_trim(const uq16 am, const uq16 e);
 
-    [[nodiscard]] IResult<> set_mag_threshold(
+    IResult<> set_mag_threshold(
         const MagThreshold low, const MagThreshold high);
 
-    [[nodiscard]] IResult<> set_direction(const RotateDirection direction);
-    [[nodiscard]] IResult<EncoderFaultBitFields> get_fault();
+    IResult<> set_direction(const RotateDirection direction);
+    IResult<EncoderFaultBitFields> get_fault();
 
-    [[nodiscard]] IResult<> 
+    IResult<> 
     set_zero_parameters(const ZeroPulseWidth width, const ZeroPulsePhase phase);
 
-    [[nodiscard]] IResult<> 
+    IResult<> 
     set_pulse_per_turn(const uint16_t ppt);
 private:
     hal::SpiDrv spi_drv_;
@@ -50,7 +50,7 @@ private:
     uq32 lap_turns_ = 0;
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         uint16_t tx_bits = uint16_t(0x8000);
         tx_bits |= (static_cast<uint16_t>(T::ADDRESS) << 8);
         tx_bits |= reg.to_bits();
@@ -63,7 +63,7 @@ private:
 
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         uint16_t rx_bits;
 
         uint16_t tx_bits = uint16_t(0x4000);
@@ -79,10 +79,8 @@ private:
         return Ok();
     }
 
-    [[nodiscard]]
     IResult<uint16_t> direct_read();
     
-    [[nodiscard]]
     IResult<uint16_t> get_raw_data();
     
 };

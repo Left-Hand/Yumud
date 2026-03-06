@@ -20,27 +20,27 @@ public:
         DataRate datarate;
     };
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
+    IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> set_temprature_sample_mode(const TempratureSampleMode tempMode);
+    IResult<> set_temprature_sample_mode(const TempratureSampleMode tempMode);
 
-    [[nodiscard]] IResult<> set_pressure_sample_mode(const PressureSampleMode pressureMode);
+    IResult<> set_pressure_sample_mode(const PressureSampleMode pressureMode);
 
-    [[nodiscard]] IResult<> set_mode(const Mode mode);
+    IResult<> set_mode(const Mode mode);
 
-    [[nodiscard]] IResult<> set_datarate(const DataRate datarate);
+    IResult<> set_datarate(const DataRate datarate);
 
-    [[nodiscard]] IResult<> set_filter_coefficient(const FilterCoefficient filterCoeff);
+    IResult<> set_filter_coefficient(const FilterCoefficient filterCoeff);
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<bool> is_idle();
+    IResult<bool> is_idle();
 
-    [[nodiscard]] IResult<> enable_3wire_spi(const Enable en);
+    IResult<> enable_3wire_spi(const Enable en);
 
-    [[nodiscard]] IResult<int32_t> get_pressure();
+    IResult<int32_t> get_pressure();
 
 
 
@@ -49,28 +49,28 @@ private:
     BMP280_Regset regs_ = {};
     Coeffs coeffs_;
 
-    [[nodiscard]] IResult<uint32_t> get_pressure_data();
+    IResult<uint32_t> get_pressure_data();
 
-    [[nodiscard]] IResult<uint32_t> read_temp_data();
+    IResult<uint32_t> read_temp_data();
 
 
-    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
+    IResult<> write_reg(const uint8_t addr, const uint8_t data){
         return transport_.write_reg(addr, data);
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return res;
         reg.apply();
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
+    IResult<> read_reg(const uint8_t addr, uint8_t & data){
         return transport_.read_reg(addr, data);
     }
 
-    [[nodiscard]] IResult<> read_burst(
+    IResult<> read_burst(
         const uint8_t addr, 
         std::span<int16_t> pbuf
     ){
@@ -78,7 +78,7 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 };

@@ -15,20 +15,20 @@ public:
         transport_(hal::SpiDrv(spi, rank)){;}
 
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
-    [[nodiscard]] IResult<> reconf(const Config & cfg);
+    IResult<> init(const Config & cfg);
+    IResult<> reconf(const Config & cfg);
 
-    [[nodiscard]] IResult<> set_peak_current(const PeakCurrent peak_current);
-    [[nodiscard]] IResult<> set_ocp_mode(const OcpMode ocp_mode);
-    [[nodiscard]] IResult<> set_gain(const Gain gain);
-    [[nodiscard]] IResult<> enable_pwm3(const Enable en);
+    IResult<> set_peak_current(const PeakCurrent peak_current);
+    IResult<> set_ocp_mode(const OcpMode ocp_mode);
+    IResult<> set_gain(const Gain gain);
+    IResult<> enable_pwm3(const Enable en);
 
-    [[nodiscard]] IResult<> set_drive_hs(const IDriveP drive_p, const IDriveN drive_n);
-    [[nodiscard]] IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);
-    [[nodiscard]] IResult<> set_drive_time(const PeakDriveTime ptime);
+    IResult<> set_drive_hs(const IDriveP drive_p, const IDriveN drive_n);
+    IResult<> set_drive_ls(const IDriveP drive_p, const IDriveN drive_n);
+    IResult<> set_drive_time(const PeakDriveTime ptime);
 
-    [[nodiscard]] IResult<Status1> get_status1();
-    [[nodiscard]] IResult<Status2> get_status2();
+    IResult<Status1> get_status1();
+    IResult<Status2> get_status2();
 private:
     using Phy = DRV8323R_Transport;
     Phy transport_;
@@ -36,7 +36,7 @@ private:
 
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -45,7 +45,7 @@ private:
 
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 };

@@ -11,17 +11,17 @@ using Error = Self::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-[[nodiscard]] IResult<> Self::init(const Config & cfg){
+IResult<> Self::init(const Config & cfg){
     if(const auto res = validate();
         res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }
 
-[[nodiscard]] IResult<> Self::update(){
+IResult<> Self::update(){
     return Ok();
 }
 
-[[nodiscard]] IResult<> Self::validate(){
+IResult<> Self::validate(){
     auto & reg = regs_.chipid_reg;
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
@@ -29,7 +29,7 @@ using IResult = Result<T, Error>;
     return Err(Error::UnknownDevice);
 }
 
-[[nodiscard]] IResult<> Self::reset(){
+IResult<> Self::reset(){
     auto reg = RegCopy(regs_.power_control_reg);
     reg.soft_reset = 1;
     if(const auto res = write_reg(reg);

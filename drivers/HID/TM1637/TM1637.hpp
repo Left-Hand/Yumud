@@ -21,12 +21,9 @@ public:
         transport_(TM1637_Transport(scl_pin, sda_pin)){;}
 
 
-    [[nodiscard]]
     IResult<> flush();
     
-    [[nodiscard]]
     IResult<Option<KeyPlacement>> read_key();
-    [[nodiscard]]
     IResult<> set(const size_t pos, const uint8_t val){
         if(pos > CGRAM_MAX_LEN) return Err(Error::IndexOutOfRange);
         buf_.set(pos, val);
@@ -34,7 +31,6 @@ public:
     }
 
 
-    [[nodiscard]]
     IResult<> set_display_dutycycle(const iq16 dutycycle);
     
 private:
@@ -45,8 +41,8 @@ private:
     DisplayCommand disp_cmd_;
     bool is_on_display_else_readkey_ = true;
 
-    [[nodiscard]] IResult<> switch_to_display();
-    [[nodiscard]] IResult<> switch_to_readkey();
+    IResult<> switch_to_display();
+    IResult<> switch_to_readkey();
 
 
 };

@@ -339,8 +339,8 @@ struct [[nodiscard]] R16_IIFCNT : public Reg16<> {
 
 struct TLE5012_Transport final: public TLE5012_Prelude{
 public:
-    [[nodiscard]] IResult<> write_reg(const RegAddr reg_addr, const uint16_t reg_val);
-    [[nodiscard]] IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val);
+    IResult<> write_reg(const RegAddr reg_addr, const uint16_t reg_val);
+    IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val);
 private:
 
 };

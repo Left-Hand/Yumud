@@ -30,24 +30,24 @@ public:
         transport_(hal::SpiDrv{spi, rank}){;}
 
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> update();
+    IResult<> init();
+    IResult<> reset();
+    IResult<> validate();
+    IResult<> update();
 
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
-    [[nodiscard]] IResult<iq16> read_temp();
+    IResult<math::Vec3<iq24>> read_acc();
+    IResult<iq16> read_temp();
 
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs gyr_fs);
-    [[nodiscard]] IResult<> set_acc_bwp(const AccBwp bwp);
-    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
+    IResult<> set_acc_fs(const AccFs gyr_fs);
+    IResult<> set_acc_bwp(const AccBwp bwp);
+    IResult<> set_acc_odr(const AccOdr odr);
 private:
     Transport transport_;
     iq20 acc_scaler_ = 0;
     BMI088_AccRegs regs_ = {};
 
 
-    [[nodiscard]] IResult<> verify_chip_id();
+    IResult<> verify_chip_id();
 
     #if 0
     // class InterruptChannel{
@@ -57,7 +57,7 @@ private:
     //     InterruptChannel(BMI088_Acc & bmi, _R8_IoCtrl & ctrl, const uint8_t address):
     //         bmi_(bmi), ctrl_(ctrl), address_(address){;}
 
-    //     [[nodiscard]] IResult<> enable_output(const Enable en){
+    //     IResult<> enable_output(const Enable en){
     //         auto reg = RegCopy(ctrl_);
     //         reg.int_out = en == EN;
     //         return bmi_.transport_.write_reg(reg);
@@ -118,22 +118,22 @@ public:
         transport_(hal::SpiDrv{spi, rank}){;}
 
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_gyr();
+    IResult<> init();
+    IResult<> reset();
+    IResult<> validate();
+    IResult<> update();
+    IResult<math::Vec3<iq24>> read_gyr();
 
 
-    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs gyr_fs);
-    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
+    IResult<> set_gyr_fs(const GyrFs gyr_fs);
+    IResult<> set_gyr_odr(const GyrOdr odr);
 private:
     Transport transport_;
     iq20 gyr_scaler_ = 0;
 
     BMI088_GyrRegs regs_ = {};
 
-    [[nodiscard]] IResult<> verify_chip_id();
+    IResult<> verify_chip_id();
 
     [[nodiscard]] static constexpr iq20
     calculate_gyr_scale(const GyrFs gyr_fs){

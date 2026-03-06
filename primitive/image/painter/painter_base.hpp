@@ -70,7 +70,7 @@ public:
     PainterBase(PainterBase && other) = delete;
 
     PainterBase() = default;
-    [[nodiscard]] IResult<> fill(const RGB888 & color){
+    IResult<> fill(const RGB888 & color){
         const auto orginal_color = get_color();
         auto guard = make_scope_guard([&]{
             set_color(orginal_color);
@@ -84,12 +84,12 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> set_ch_font(Some<Font *> chfont){
+    IResult<> set_ch_font(Some<Font *> chfont){
         may_chfont_ = chfont;
         return Ok();
     }
 
-    [[nodiscard]] IResult<> set_en_font(Some<Font *> enfont){
+    IResult<> set_en_font(Some<Font *> enfont){
         may_enfont_ = enfont;
         return Ok();
     }
@@ -115,30 +115,30 @@ public:
         return color_;
     }
 
-    [[nodiscard]] IResult<> draw_hollow_rect(const math::Rect2u & rect);
+    IResult<> draw_hollow_rect(const math::Rect2u & rect);
 
-    [[nodiscard]] IResult<> draw_hollow_circle(const math::Vec2u & pos, const uint radius);
+    IResult<> draw_hollow_circle(const math::Vec2u & pos, const uint radius);
 
-    [[nodiscard]] IResult<> draw_filled_circle(const math::Vec2u & pos, const uint radius);
+    IResult<> draw_filled_circle(const math::Vec2u & pos, const uint radius);
 
 
-    [[nodiscard]] IResult<> draw_hollow_ellipse(const math::Vec2u & pos, const math::Vec2u & r);
+    IResult<> draw_hollow_ellipse(const math::Vec2u & pos, const math::Vec2u & r);
 
-    [[nodiscard]] IResult<> draw_filled_ellipse(const math::Vec2u & pos, const math::Vec2u & r);
+    IResult<> draw_filled_ellipse(const math::Vec2u & pos, const math::Vec2u & r);
 
-    [[nodiscard]] IResult<> draw_polyline(std::span<const math::Vec2u> points);
+    IResult<> draw_polyline(std::span<const math::Vec2u> points);
 
-    [[nodiscard]] IResult<> draw_polygon(std::span<const math::Vec2u> points);
+    IResult<> draw_polygon(std::span<const math::Vec2u> points);
 
-    [[nodiscard]] IResult<> draw_hollow_triangle(const math::Vec2u & p0,const math::Vec2u & p1,const math::Vec2u & p2);
+    IResult<> draw_hollow_triangle(const math::Vec2u & p0,const math::Vec2u & p1,const math::Vec2u & p2);
 
-    [[nodiscard]] IResult<> draw_filled_triangle(const math::Vec2u & p0,const math::Vec2u & p1,const math::Vec2u & p2);
+    IResult<> draw_filled_triangle(const math::Vec2u & p0,const math::Vec2u & p1,const math::Vec2u & p2);
 
-    [[nodiscard]] IResult<> draw_roi(const math::Rect2u & rect);
+    IResult<> draw_roi(const math::Rect2u & rect);
 
     #if 0
     template<typename ... Ts>
-    [[nodiscard]] IResult<> draw_args(const math::Vec2u pos, Ts && ... args){
+    IResult<> draw_args(const math::Vec2u pos, Ts && ... args){
         StringStream ss;
         ss.print(std::forward<Ts>(args)...);
         return draw_string(pos, StringView(std::move(ss).move_str()));
@@ -146,7 +146,6 @@ public:
     #endif
     
     template<typename Fn>
-    [[nodiscard]]
     IResult<> draw_fx(const math::Rect2u rect, Fn && fn) {
         const auto x_range = rect.x_range();
         const auto y_range = rect.y_range();
@@ -180,7 +179,7 @@ public:
 
     [[nodiscard]] virtual IResult<> draw_filled_rect(const math::Rect2u & rect) = 0;
 
-    [[nodiscard]] IResult<> set_crop_rect(const math::Rect2u & rect){
+    IResult<> set_crop_rect(const math::Rect2u & rect){
         crop_rect_ = rect;
         return Ok();
     }
@@ -198,13 +197,13 @@ protected:
     Option<Font &> may_chfont_ = None;
     size_t padding_ = 1;
 
-    [[nodiscard]] IResult<> draw_hri_line(const math::Vec2u & pos,const int l);
+    IResult<> draw_hri_line(const math::Vec2u & pos,const int l);
 
-    [[nodiscard]] IResult<> draw_ver_line(const math::Vec2u & pos,const int l);
+    IResult<> draw_ver_line(const math::Vec2u & pos,const int l);
 
-    [[nodiscard]] IResult<> draw_ver_line(const math::Range2u & y_range, const int x);
+    IResult<> draw_ver_line(const math::Range2u & y_range, const int x);
 
-    [[nodiscard]] IResult<> draw_hri_line(const math::Range2u & x_range, const int y);
+    IResult<> draw_hri_line(const math::Range2u & x_range, const int y);
 };
 
 }

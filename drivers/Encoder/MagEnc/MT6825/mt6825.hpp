@@ -76,7 +76,7 @@ struct [[nodiscard]] alignas(4) Packet final{
         return std::span<const uint8_t, 3>(reinterpret_cast<const uint8_t *>(this), sizeof(Self));
     }
 
-    [[nodiscard]] IResult<Angular<uq32>> parse() const {
+    IResult<Angular<uq32>> parse() const {
         
         // if(not is_overspeed) [[unlikely]] 
         //     return Err(Error::OverSpeed);
@@ -121,12 +121,12 @@ struct MT6825:
     explicit MT6825(hal::SpiDrv && spi_drv):
         spi_drv_(std::move(spi_drv)){}
 
-    [[nodiscard]] IResult<Angular<uq32>> read_lap_angle();
+    IResult<Angular<uq32>> read_lap_angle();
 private:
     hal::SpiDrv spi_drv_;
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::ADDRESS, reg.as_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -134,7 +134,7 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
         const auto tx = uint16_t(
             0x8000 | (reg_addr << 8) | reg_val);
         if(const auto res = spi_drv_.write_single<uint16_t>(tx);
@@ -143,11 +143,11 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(const T & reg){
+    IResult<> read_reg(const T & reg){
         return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
         const uint16_t tx = uint16_t(
             0x8000 | (reg_addr << 8) | reg_val);
         uint16_t rx;
@@ -158,6 +158,6 @@ private:
     }
 
 
-    [[nodiscard]] IResult<Packet> read_packet();
+    IResult<Packet> read_packet();
 };
 }

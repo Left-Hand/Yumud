@@ -68,17 +68,17 @@ public:
     ):
         i2c_drv_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> set_inversion(const hal::PinMask mask);
-    [[nodiscard]] IResult<> write_port(const uint16_t data);
-    [[nodiscard]] IResult<uint16_t> read_port();
-    [[nodiscard]] IResult<> set_mode(const Nth nth, const hal::GpioMode mode);
+    IResult<> init();
+    IResult<> set_inversion(const hal::PinMask mask);
+    IResult<> write_port(const uint16_t data);
+    IResult<uint16_t> read_port();
+    IResult<> set_mode(const Nth nth, const hal::GpioMode mode);
 private:
     hal::I2cDrv i2c_drv_;
 
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(std::bit_cast<uint8_t>(T::REG_ADDR), reg.to_bits(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -86,7 +86,7 @@ private:
     }
     
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(std::bit_cast<uint8_t>(T::REG_ADDR), reg.as_bits_mut(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

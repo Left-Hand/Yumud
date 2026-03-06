@@ -29,19 +29,19 @@ private:
     iq16 current_lsb_ma_ = iq16(0.2);
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(reg.address, reg.to_bits());
             res.is_err()) return res;
         reg.apply();
         return Ok();
     }
     
-    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t data);
+    IResult<> write_reg(const RegAddr addr, const uint16_t data);
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & data);
+    IResult<> read_reg(const RegAddr addr, uint16_t & data);
     
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, int16_t & data);
+    IResult<> read_reg(const RegAddr addr, int16_t & data);
 
-    [[nodiscard]] IResult<> read_burst(const RegAddr addr, std::span<uint16_t> pbuf);
+    IResult<> read_burst(const RegAddr addr, std::span<uint16_t> pbuf);
 };
 }

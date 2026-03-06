@@ -15,7 +15,7 @@
 #include "hal/gpio/gpio_port.hpp"
 #include "hal/bus/uart/hw_singleton.hpp"
 
-#include "drivers/wireless/Radio/LT8960/LT8960L.hpp"
+#include "drivers/wireless/Radio/LT8960L/lt8960l.hpp"
 
 #include "digipw/SVPWM/svpwm3.hpp"
 

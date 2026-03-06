@@ -17,40 +17,40 @@ public:
     explicit ADS111X(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
-    [[nodiscard]] IResult<> start_conv();
+    IResult<> start_conv();
 
-    [[nodiscard]] IResult<> set_threshold(int16_t low, int16_t high);
+    IResult<> set_threshold(int16_t low, int16_t high);
 
-    [[nodiscard]] IResult<> enable_cont_mode(const Enable en);
+    IResult<> enable_cont_mode(const Enable en);
 
-    [[nodiscard]] IResult<> set_pga(const PGA pga);
+    IResult<> set_pga(const PGA pga);
 
-    [[nodiscard]] IResult<> set_mux(const MUX mux);
+    IResult<> set_mux(const MUX mux);
 
-    [[nodiscard]] IResult<> set_datarate(const DataRate datarate);
+    IResult<> set_datarate(const DataRate datarate);
 
-    [[nodiscard]] IResult<bool> is_busy();
+    IResult<bool> is_busy();
 
     [[nodiscard]] Option<iq16> get_voltage();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
 private:
     hal::I2cDrv i2c_drv_;
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & data);
+    IResult<> read_reg(const RegAddr addr, uint16_t & data);
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t data); 
+    IResult<> write_reg(const RegAddr addr, const uint16_t data); 
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         const auto res = write_reg(T::REG_ADDR, reg.to_bits());
         if(res.is_ok()) reg.apply();
         return res;
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 

@@ -323,7 +323,7 @@ public:
     explicit INA3221_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
     
-    [[nodiscard]] IResult<> read_reg(
+    IResult<> read_reg(
         const RegAddr addr, uint16_t & data
     ){
         if(const auto res = i2c_drv_.read_reg((addr), data, ENDIAN);
@@ -331,7 +331,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_reg(
+    IResult<> write_reg(
         const RegAddr addr, const uint16_t data
     ){
         if(const auto res = (i2c_drv_.write_reg((addr), data, ENDIAN));
@@ -339,7 +339,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(
+    IResult<> read_reg(
         const RegAddr addr, int16_t & data
     ){
         if(const auto res = (i2c_drv_.read_reg((addr), data, ENDIAN));
@@ -347,7 +347,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_reg(
+    IResult<> write_reg(
         const RegAddr addr, const int16_t data
     ){
         if(const auto res = (i2c_drv_.write_reg((addr), data, ENDIAN));
@@ -355,7 +355,7 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(
+    IResult<> read_burst(
         const RegAddr addr, std::span<uint16_t> pbuf){
         if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, ENDIAN);
             res.is_err()) return Err(res.unwrap_err());

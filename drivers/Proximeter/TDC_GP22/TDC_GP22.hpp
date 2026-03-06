@@ -19,25 +19,25 @@ class GP22 final:
 public:
 
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
     
-    [[nodiscard]] IResult<> reconf();
+    IResult<> reconf();
 
-    [[nodiscard]] IResult<> start_measurement();
+    IResult<> start_measurement();
 
-    [[nodiscard]] IResult<bool> is_measurement_done();
+    IResult<bool> is_measurement_done();
 
-    [[nodiscard]] IResult<iq16> blocking_get_meas_value(Milliseconds timeout_ms);
+    IResult<iq16> blocking_get_meas_value(Milliseconds timeout_ms);
     
 
     // 等待读取TDC测量结果，需要先启动TDC测量，超时返回0xFFFFFFFF
     // 测量模式1下最大时间差：2*Tref*DIV_CLKHS=1us，超时TDC读出的数据为0xFFFFFFFF
-    [[nodiscard]] IResult<iq16> get_meas_value() {
+    IResult<iq16> get_meas_value() {
         clock::delay(1us);
         return transport_.trans_u8_receive_u32(0xB0)
             .transform([](const uint32_t x){return iq16::from_bits(x);}); // Read REG0
@@ -45,7 +45,7 @@ public:
 private:
     GP22_Transport transport_;
 
-    [[nodiscard]] IResult<> soft_reset() {
+    IResult<> soft_reset() {
         if(const auto res = transport_.write_u8(0x50);
             res.is_err()) return res;
         clock::delay(1ms);

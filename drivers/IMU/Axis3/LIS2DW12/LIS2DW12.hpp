@@ -21,18 +21,18 @@ public:
     explicit LIS2DW12(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         transport_(hal::SpiDrv{spi, rank}){;}
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> update();
+    IResult<> init();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs range);
+    IResult<> set_acc_odr(const AccOdr odr);
+    IResult<> set_acc_fs(const AccFs range);
     
-    [[nodiscard]] IResult<> set_pmu_mode(const PmuType pum, const PmuMode mode);
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
+    IResult<> set_pmu_mode(const PmuType pum, const PmuMode mode);
+    IResult<math::Vec3<iq24>> read_acc();
 
 private:
     using Phy = StmicroImu_Transport;
@@ -41,19 +41,19 @@ private:
     iq16 acc_scale = 0;
     iq16 gyr_scale = 0;
 
-    [[nodiscard]] IResult<> write_reg(uint8_t reg_addr, uint8_t reg_val){
+    IResult<> write_reg(uint8_t reg_addr, uint8_t reg_val){
         if(const auto res = transport_.write_reg(reg_addr, reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(uint8_t reg_addr, uint8_t & reg_val){
+    IResult<> read_reg(uint8_t reg_addr, uint8_t & reg_val){
         if(const auto res = transport_.read_reg(reg_addr, reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    // [[nodiscard]] IResult<> read_burst(uint8_t reg_addr, std::span<uint8_t> pbuf){
+    // IResult<> read_burst(uint8_t reg_addr, std::span<uint8_t> pbuf){
     //     if(const auto res = transport_.read_burst(reg_addr, pbuf, std::endian::little);
     //         res.is_err()) return Err(res.unwrap_err());
     //     return Ok();

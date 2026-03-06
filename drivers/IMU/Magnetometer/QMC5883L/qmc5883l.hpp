@@ -25,29 +25,29 @@ public:
     QMC5883L(const QMC5883L & other) = delete;
     QMC5883L(QMC5883L && other) = delete;
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> enable_cont_mode(const Enable en);
+    IResult<> enable_cont_mode(const Enable en);
     
-    [[nodiscard]] IResult<> set_odr(const Odr rate);
+    IResult<> set_odr(const Odr rate);
     
-    [[nodiscard]] IResult<> set_fs(const FullScale fullscale);
+    IResult<> set_fs(const FullScale fullscale);
     
-    [[nodiscard]] IResult<> set_over_sample_ratio(const OverSampleRatio ratio);
+    IResult<> set_over_sample_ratio(const OverSampleRatio ratio);
 
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<math::Vec3<iq16>> read_mag();
+    IResult<math::Vec3<iq16>> read_mag();
     
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> set_reset_period(const uint8_t resetPeriod);
+    IResult<> set_reset_period(const uint8_t resetPeriod);
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<> enable_interrupt(const Enable en);
+    IResult<> enable_interrupt(const Enable en);
 
-    [[nodiscard]] IResult<bool> is_overflow();
+    IResult<bool> is_overflow();
 private:
     QMC5883L_Regs regs_;
     hal::I2cDrv i2c_drv_;
@@ -63,7 +63,7 @@ private:
     iq16 scaler_ = 2;
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(uint8_t(T::REG_ADDR), reg.to_bits(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -71,7 +71,7 @@ private:
     }
     
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(uint8_t(T::REG_ADDR), reg.as_bits_mut(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
 
@@ -79,7 +79,7 @@ private:
     }
 
 
-    [[nodiscard]] IResult<> read_burst(
+    IResult<> read_burst(
         const RegAddr addr, 
         std::span<int16_t> pbuf
     ){
@@ -89,7 +89,7 @@ private:
     }
 
 
-    [[nodiscard]] IResult<bool> is_busy();
+    IResult<bool> is_busy();
 };
 
 

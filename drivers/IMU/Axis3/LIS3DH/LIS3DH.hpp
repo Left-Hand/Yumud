@@ -29,75 +29,75 @@ public:
     explicit LIS3DH(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
         transport_(hal::SpiDrv{spi, index}){;}
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> reset();
+    IResult<> init();
+    IResult<> update();
+    IResult<> validate();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<> clear_flag();
+    IResult<> clear_flag();
 
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
-    [[nodiscard]] IResult<> sleep(){
+    IResult<math::Vec3<iq24>> read_acc();
+    IResult<> sleep(){
         auto reg = RegCopy(regs_.ctrl1_reg); 
         reg.norm_mod_en = false; 
         return write_reg(reg);
     }
 
-    [[nodiscard]] IResult<> wakeup(){
+    IResult<> wakeup(){
         auto reg = RegCopy(regs_.ctrl1_reg); 
         reg.norm_mod_en = true; 
         return write_reg(reg);
     }
 
-    [[nodiscard]] IResult<> enable_drdy_pulse(const Enable en){
+    IResult<> enable_drdy_pulse(const Enable en){
         auto reg = RegCopy(regs_.ctrl1_reg); 
         reg.drdy_pulse = en == EN; 
         return write_reg(reg);
     }
 
-    [[nodiscard]] IResult<> block_when_update(const Enable en){
+    IResult<> block_when_update(const Enable en){
         auto reg = RegCopy(regs_.ctrl1_reg); 
         reg.drdy_pulse = en == EN; 
         return write_reg(reg);
     }
 
 
-    [[nodiscard]] IResult<> set_filtering_strategy(const FilteringStrategy st){
+    IResult<> set_filtering_strategy(const FilteringStrategy st){
         auto reg = RegCopy(regs_.ctrl4_reg); 
         reg.dsp_lp_type = bool(st); 
         return write_reg(reg);
     }
 
-    [[nodiscard]] IResult<> set_bandwidth(const Bandwidth bw){
+    IResult<> set_bandwidth(const Bandwidth bw){
         auto reg = RegCopy(regs_.ctrl4_reg); 
         reg.dsp_bw_sel = bool(bw); 
         return write_reg(reg);
     }
 
-    [[nodiscard]] IResult<> set_selftest_mode(const SelfTestMode mode){
+    IResult<> set_selftest_mode(const SelfTestMode mode){
         auto reg = RegCopy(regs_.ctrl4_reg); 
         reg.selftest_mode = uint8_t(mode); 
         return write_reg(reg);
     }
 
-    [[nodiscard]] IResult<> set_int1_pp_or_od(const FormerLatter sel){
+    IResult<> set_int1_pp_or_od(const FormerLatter sel){
         auto reg = RegCopy(regs_.ctrl4_reg); 
         reg.pp_od_int1 = sel; 
         return write_reg(reg);
     }
 
-    [[nodiscard]] IResult<> set_int2_pp_or_od(const FormerLatter sel){
+    IResult<> set_int2_pp_or_od(const FormerLatter sel){
         auto reg = RegCopy(regs_.ctrl4_reg); 
         reg.pp_od_int2 = sel; 
         return write_reg(reg);
     }
         
-    [[nodiscard]] IResult<> enable_fifo(const Enable en){
+    IResult<> enable_fifo(const Enable en){
         auto reg = RegCopy(regs_.ctrl4_reg); 
         reg.fifo_en = en == EN; 
         return write_reg(reg);}
 
-    [[nodiscard]] IResult<> enable_spi_hw(const Enable en){
+    IResult<> enable_spi_hw(const Enable en){
         auto reg = RegCopy(regs_.ctrl5_reg); 
         reg.fifo_spi_hs_on = en == EN; 
         return write_reg(reg);

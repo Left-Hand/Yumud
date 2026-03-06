@@ -144,23 +144,23 @@ struct LT8960L_Transport final:public details::LT8960L_Prelude{
     ):
         i2c_(hal::SoftI2c(scl, sda)){};
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> write_reg(uint8_t address, uint16_t data);
+    IResult<> write_reg(uint8_t address, uint16_t data);
 
-    [[nodiscard]] IResult<> read_reg(uint8_t address, uint16_t & data);
+    IResult<> read_reg(uint8_t address, uint16_t & data);
 
-    [[nodiscard]] IResult<size_t> read_burst(uint8_t address, std::span<uint8_t> pbuf);
+    IResult<size_t> read_burst(uint8_t address, std::span<uint8_t> pbuf);
 
-    [[nodiscard]] IResult<size_t> write_burst(uint8_t address, std::span<const uint8_t> pbuf);
+    IResult<size_t> write_burst(uint8_t address, std::span<const uint8_t> pbuf);
 
-    [[nodiscard]] IResult<> start_hw_listen_pkt();
+    IResult<> start_hw_listen_pkt();
 
-    [[nodiscard]] IResult<bool> check_and_skip_hw_listen_pkt();
+    IResult<bool> check_and_skip_hw_listen_pkt();
 private:
     hal::SoftI2c i2c_;
-    [[nodiscard]] IResult<> _write_reg(uint8_t address, uint16_t data);
+    IResult<> _write_reg(uint8_t address, uint16_t data);
 
-    [[nodiscard]] IResult<> _read_reg(uint8_t address, uint16_t & data);
+    IResult<> _read_reg(uint8_t address, uint16_t & data);
 };
 }

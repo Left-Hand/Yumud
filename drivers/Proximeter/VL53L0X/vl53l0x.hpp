@@ -44,21 +44,21 @@ public:
     VL53L0X(VL53L0X &&) = delete;
     ~VL53L0X(){;}
 
-    [[nodiscard]] IResult<> start_conv();
+    IResult<> start_conv();
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> stop();
+    IResult<> stop();
 
-    [[nodiscard]] IResult<uint16_t> read_distance_mm();
+    IResult<uint16_t> read_distance_mm();
 
-    [[nodiscard]] IResult<uint16_t> read_ambient_count();
+    IResult<uint16_t> read_ambient_count();
 
-    [[nodiscard]] IResult<uint16_t> read_signal_count();
+    IResult<uint16_t> read_signal_count();
 
-    [[nodiscard]] IResult<> enable_high_precision(const Enable en);
-    [[nodiscard]] IResult<> enable_cont_mode(const Enable en);
-    [[nodiscard]] IResult<> update();
+    IResult<> enable_high_precision(const Enable en);
+    IResult<> enable_cont_mode(const Enable en);
+    IResult<> update();
 
 private:
     hal::I2cDrv i2c_drv_;
@@ -73,15 +73,15 @@ private:
 
     ConvResult result, last_result;
 
-    [[nodiscard]] IResult<> flush();
+    IResult<> flush();
 
-    [[nodiscard]] IResult<bool> is_busy();
+    IResult<bool> is_busy();
 
-    [[nodiscard]] IResult<> read_byte_data(const uint8_t reg_addr, uint8_t & data);
+    IResult<> read_byte_data(const uint8_t reg_addr, uint8_t & data);
 
-    [[nodiscard]] IResult<> read_burst(const uint8_t reg_addr, const std::span<uint16_t> pbuf);
+    IResult<> read_burst(const uint8_t reg_addr, const std::span<uint16_t> pbuf);
 
-    [[nodiscard]] IResult<> write_byte_data(const uint8_t reg_addr, const uint8_t byte);
+    IResult<> write_byte_data(const uint8_t reg_addr, const uint8_t byte);
 
 };
 

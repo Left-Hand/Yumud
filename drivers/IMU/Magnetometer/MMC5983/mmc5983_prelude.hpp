@@ -68,13 +68,19 @@ struct MMC5983_Prelude{
 
 struct MMC5983_Regs final:public MMC5983_Prelude{
     struct [[nodiscard]] DataPacket final{
-        static constexpr uint8_t ADDR = 0;
+        static constexpr RegAddr BASE_ADDR = RegAddr{0};
 
         constexpr math::Vec3<int32_t> to_vec3_bits() const{
             //每个数据18位
-            const int32_t x_bits = (int32_t(buf_[0]) << 10) | (int32_t(buf_[1]) << 2) | (buf_[6] >> 6);
-            const int32_t y_bits = (int32_t(buf_[2]) << 10) | (int32_t(buf_[3]) << 2) | (buf_[6] >> 4);
-            const int32_t z_bits = (int32_t(buf_[4]) << 10) | (int32_t(buf_[5]) << 2) | (buf_[6] >> 2);
+            const int32_t x_bits = static_cast<int32_t>(
+                (int32_t(buf_[0]) << 10) | (int32_t(buf_[1]) << 2) | (buf_[6] >> 6));
+
+            const int32_t y_bits = static_cast<int32_t>(
+                (int32_t(buf_[2]) << 10) | (int32_t(buf_[3]) << 2) | (buf_[6] >> 4));
+
+            const int32_t z_bits = static_cast<int32_t>(
+                (int32_t(buf_[4]) << 10) | (int32_t(buf_[5]) << 2) | (buf_[6] >> 2));
+
 
             return {x_bits,y_bits,z_bits};
         }

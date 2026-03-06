@@ -28,28 +28,28 @@ public:
     };
 
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
+    IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> set_integration_time(const Milliseconds ms);
+    IResult<> set_integration_time(const Milliseconds ms);
 
-    [[nodiscard]] IResult<> set_wait_time(const Milliseconds ms);
+    IResult<> set_wait_time(const Milliseconds ms);
 
-    [[nodiscard]] IResult<> set_int_thr_low(const uint16_t thr);
+    IResult<> set_int_thr_low(const uint16_t thr);
 
-    [[nodiscard]] IResult<> set_int_thr_high(const uint16_t thr);
+    IResult<> set_int_thr_high(const uint16_t thr);
 
-    [[nodiscard]] IResult<> set_int_persistence(const uint8_t times);
+    IResult<> set_int_persistence(const uint8_t times);
 
-    [[nodiscard]] IResult<> set_gain(const Gain gain);
+    IResult<> set_gain(const Gain gain);
 
-    [[nodiscard]] IResult<uint8_t> get_id();
-    [[nodiscard]] IResult<bool> is_idle();
+    IResult<uint8_t> get_id();
+    IResult<bool> is_idle();
 
-    [[nodiscard]] IResult<> set_power(const bool on);
-    [[nodiscard]] IResult<> start_conv();
-    [[nodiscard]] IResult<> update();
+    IResult<> set_power(const bool on);
+    IResult<> start_conv();
+    IResult<> update();
 
     [[nodiscard]] std::tuple<uq16, uq16, uq16, uq16> get_crgb();
 
@@ -60,7 +60,7 @@ private:
     std::array<uint16_t, 4> crgb_ = {0};
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(
             conv_reg_address_repeated(T::ADDRESS), 
             reg.to_bits(), std::endian::little);
@@ -70,14 +70,14 @@ private:
     }
     
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(
             conv_reg_address_repeated(T::ADDRESS), reg.as_bits_mut(), std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddr addr, const std::span<uint16_t> pbuf);
+    IResult<> read_burst(const RegAddr addr, const std::span<uint16_t> pbuf);
 
     [[nodiscard]] static constexpr uint8_t conv_reg_address_norepeat(const RegAddr addr){
         return (std::bit_cast<uint8_t>(addr) | 0x80);

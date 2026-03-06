@@ -48,39 +48,39 @@ public:
         transport_(hal::I2cDrv(i2c, addr)){;}
     ~INA3221(){;}
     
-    [[nodiscard]] IResult<bool> is_ready();
+    IResult<bool> is_ready();
 
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
-    [[nodiscard]] IResult<> reconf(const Config & cfg);
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<> update(const ChannelSelection sel);
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
-    [[nodiscard]] IResult<> enable_measure_bus(const Enable en);
-    [[nodiscard]] IResult<> enable_measure_shunt(const Enable en);
-    [[nodiscard]] IResult<> enable_continuous(const Enable en);
+    IResult<> init(const Config & cfg);
+    IResult<> reconf(const Config & cfg);
+    IResult<> update();
+    IResult<> update(const ChannelSelection sel);
+    IResult<> validate();
+    IResult<> reset();
+    IResult<> set_average_times(const AverageTimes times);
+    IResult<> enable_measure_bus(const Enable en);
+    IResult<> enable_measure_shunt(const Enable en);
+    IResult<> enable_continuous(const Enable en);
 
-    [[nodiscard]] IResult<> enable_channel(const ChannelSelection sel, const Enable en);
+    IResult<> enable_channel(const ChannelSelection sel, const Enable en);
 
-    [[nodiscard]] IResult<> set_bus_conversion_time(const ConversionTime time);
-    [[nodiscard]] IResult<> set_shunt_conversion_time(const ConversionTime time);
+    IResult<> set_bus_conversion_time(const ConversionTime time);
+    IResult<> set_shunt_conversion_time(const ConversionTime time);
 
-    [[nodiscard]] IResult<int> get_shunt_volt_uv(const ChannelSelection sel);
-    [[nodiscard]] IResult<int> get_bus_volt_mv(const ChannelSelection sel);
+    IResult<int> get_shunt_volt_uv(const ChannelSelection sel);
+    IResult<int> get_bus_volt_mv(const ChannelSelection sel);
 
-    [[nodiscard]] IResult<iq16> get_shunt_volt(const ChannelSelection sel);
-    [[nodiscard]] IResult<iq16> get_bus_volt(const ChannelSelection sel);
+    IResult<iq16> get_shunt_volt(const ChannelSelection sel);
+    IResult<iq16> get_bus_volt(const ChannelSelection sel);
 
-    [[nodiscard]] IResult<> set_instant_ovc_threshold(const ChannelSelection sel, const iq16 volt);
-    [[nodiscard]] IResult<> set_constant_ovc_threshold(const ChannelSelection sel, const iq16 volt);
+    IResult<> set_instant_ovc_threshold(const ChannelSelection sel, const iq16 volt);
+    IResult<> set_constant_ovc_threshold(const ChannelSelection sel, const iq16 volt);
 private:
     INA3221_Transport transport_;
 
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return res;
         reg.apply();
@@ -88,15 +88,15 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, auto & data){
+    IResult<> read_reg(const RegAddr addr, auto & data){
         return transport_.read_reg(addr, data);
     }
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const auto data){
+    IResult<> write_reg(const RegAddr addr, const auto data){
         return transport_.write_reg(addr, data);
     }
 

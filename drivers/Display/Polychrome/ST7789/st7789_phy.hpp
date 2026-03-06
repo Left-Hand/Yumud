@@ -27,13 +27,13 @@ public:
         nrst_pin_(nrst_pin)
         {};
 
-    [[nodiscard]] IResult<> init(){
+    IResult<> init(){
         dc_pin_.outpp();
 
         return reset();
     }
 
-    [[nodiscard]] IResult<> reset(){
+    IResult<> reset(){
         if(nrst_pin_.is_none()) return Ok();
         auto & nrst_pin = nrst_pin_.unwrap();
         nrst_pin.outpp(HIGH);
@@ -45,28 +45,28 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_command(const uint8_t cmd){
+    IResult<> write_command(const uint8_t cmd){
         dc_pin_.set_low();
         return transport_write_single<uint8_t>(cmd);
     }
 
-    [[nodiscard]] IResult<> write_data8(const uint8_t data){
+    IResult<> write_data8(const uint8_t data){
         dc_pin_.set_high();
         return transport_write_single<uint8_t>(data);
     }
 
-    [[nodiscard]] IResult<> write_data16(const uint16_t data){
+    IResult<> write_data16(const uint16_t data){
         dc_pin_.set_high();
         return transport_write_single<uint16_t>(data);
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_burst_pixels(std::span<const T> pbuf){
+    IResult<> write_burst_pixels(std::span<const T> pbuf){
         dc_pin_.set_high();
         return spi_fast_write_burst<uint16_t>(pbuf);
     }
 
-    [[nodiscard]] IResult<> write_repeat_pixels(const auto & data, size_t len){
+    IResult<> write_repeat_pixels(const auto & data, size_t len){
         dc_pin_.set_high();
         return spi_fast_write_repeat<uint16_t>(data, len);
     }
@@ -78,7 +78,7 @@ private:
     Option<hal::GpioIntf &>nrst_pin_;
 
     template <hal::valid_spi_data T>
-    [[nodiscard]] IResult<> spi_fast_write_burst(
+    IResult<> spi_fast_write_burst(
         const std::span<const auto> pbuf, 
         Continuous cont = DISC) {
         if (const auto res = spi_
@@ -109,7 +109,7 @@ private:
     }
 
     template <hal::valid_spi_data T>
-    [[nodiscard]] IResult<> spi_fast_write_repeat(
+    IResult<> spi_fast_write_repeat(
         const is_stdlayout auto data, 
         const size_t len, 
         Continuous cont = DISC) {
@@ -133,7 +133,7 @@ private:
     }
 
     template<hal::valid_spi_data T>
-    [[nodiscard]] IResult<> transport_write_single(
+    IResult<> transport_write_single(
         const is_stdlayout auto data, 
         Continuous cont = DISC) {
         static_assert(sizeof(T) == sizeof(std::decay_t<decltype(data)>));

@@ -39,19 +39,19 @@ public:
     SSD1306_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         p_i2c_drv_(hal::I2cDrv{i2c, addr}){};
 
-    [[nodiscard]] IResult<> init(){
+    IResult<> init(){
         return Ok();
     }
 
-    [[nodiscard]] IResult<> write_command(const uint8_t cmd);
+    IResult<> write_command(const uint8_t cmd);
 
-    [[nodiscard]] IResult<> write_data(const uint8_t data);
-
-    template<is_stdlayout T>
-    [[nodiscard]] IResult<> write_burst(const std::span<const T> pbuf);
+    IResult<> write_data(const uint8_t data);
 
     template<is_stdlayout T>
-    [[nodiscard]] IResult<> write_repeat(const T data, size_t len);
+    IResult<> write_burst(const std::span<const T> pbuf);
+
+    template<is_stdlayout T>
+    IResult<> write_repeat(const T data, size_t len);
 private:
     std::optional<hal::I2cDrv> p_i2c_drv_;
     std::optional<hal::SpiDrv> p_spi_drv_;

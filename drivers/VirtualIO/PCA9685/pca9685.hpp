@@ -26,30 +26,30 @@ public:
     explicit PCA9685(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_{i2c, addr}{;}
 
-    [[nodiscard]] IResult<> init(const Config & cfg){
+    IResult<> init(const Config & cfg){
         if(const auto res = init(); res.is_err()) return Err(res.unwrap_err());
         if(const auto res = reconf(cfg); res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
-    [[nodiscard]] IResult<> reconf(const Config & cfg){
+    IResult<> reconf(const Config & cfg){
         return set_frequency(cfg.freq, cfg.trim);
     }
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
     
-    [[nodiscard]] IResult<> set_frequency(const uint32_t freq, const iq16 trim);
+    IResult<> set_frequency(const uint32_t freq, const iq16 trim);
 
-    [[nodiscard]] IResult<> set_pwm(const Nth nth, const uint16_t on, const uint16_t off);
+    IResult<> set_pwm(const Nth nth, const uint16_t on, const uint16_t off);
 
-    [[nodiscard]] IResult<> set_sub_addr(const uint8_t index, const uint8_t addr);
+    IResult<> set_sub_addr(const uint8_t index, const uint8_t addr);
 
-    [[nodiscard]] IResult<> enable_ext_clk(const Enable en);
+    IResult<> enable_ext_clk(const Enable en);
 
-    [[nodiscard]] IResult<> enable_sleep(const Enable en);
+    IResult<> enable_sleep(const Enable en);
 
 
     template<typename ...Args>
@@ -69,33 +69,33 @@ private:
     hal::I2cDrv i2c_drv_;
     PCA9685_Regset regs_ = {};
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t reg){
+    IResult<> write_reg(const RegAddr addr, const uint8_t reg){
         const auto res = i2c_drv_.write_reg(uint8_t(addr), reg);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     };
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t reg){
+    IResult<> write_reg(const RegAddr addr, const uint16_t reg){
         const auto res = i2c_drv_.write_reg(uint8_t(addr), reg, std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & reg){
+    IResult<> read_reg(const RegAddr addr, uint8_t & reg){
         const auto res = i2c_drv_.read_reg(uint8_t(addr), reg);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & reg){
+    IResult<> read_reg(const RegAddr addr, uint16_t & reg){
         const auto res = i2c_drv_.read_reg(uint8_t(addr), reg, std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits()); 
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -103,7 +103,7 @@ private:
     };
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         if(const auto res = read_reg(T::REG_ADDR, reg.as_bits_mut()); 
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

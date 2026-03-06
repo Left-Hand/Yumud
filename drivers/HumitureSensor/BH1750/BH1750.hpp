@@ -35,11 +35,11 @@ public:
     explicit BH1750(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
 
-    [[nodiscard]] IResult<> power_down(){
+    IResult<> power_down(){
         return send_command(Command::PowerDown);
     }
 
-    [[nodiscard]] IResult<> reset(){
+    IResult<> reset(){
         return send_command(Command::Reset);
     }
 
@@ -51,11 +51,11 @@ public:
         cont_en_ = en == EN;
     }
 
-    [[nodiscard]] IResult<> start_conv();
+    IResult<> start_conv();
 
-    [[nodiscard]] IResult<> change_measure_time(const uint16_t ms);
+    IResult<> change_measure_time(const uint16_t ms);
 
-    [[nodiscard]] IResult<uint32_t> get_lx();
+    IResult<uint32_t> get_lx();
 
 private:
     hal::I2cDrv i2c_drv_;

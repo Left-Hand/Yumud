@@ -20,21 +20,21 @@ public:
     explicit ICM42688(hal::SpiDrv && spi_drv):
         transport_(std::move(spi_drv)){;}
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
+    IResult<> init(const Config & cfg);
     
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_gyr();
+    IResult<math::Vec3<iq24>> read_acc();
+    IResult<math::Vec3<iq24>> read_gyr();
 
-    [[nodiscard]] IResult<> set_gyr_odr(const GyrOdr odr);
-    [[nodiscard]] IResult<> set_gyr_fs(const GyrFs fs);
-    [[nodiscard]] IResult<> set_acc_odr(const AccOdr odr);
-    [[nodiscard]] IResult<> set_acc_fs(const AccFs fs);
+    IResult<> set_gyr_odr(const GyrOdr odr);
+    IResult<> set_gyr_fs(const GyrFs fs);
+    IResult<> set_acc_odr(const AccOdr odr);
+    IResult<> set_acc_fs(const AccFs fs);
     
 private:
     Regset regs_ = {};
@@ -45,7 +45,7 @@ private:
     iq16 gyr_scale_ = 0;
 
 
-    [[nodiscard]] IResult<> switch_bank(const Bank bank){
+    IResult<> switch_bank(const Bank bank){
         static constexpr uint8_t SWITCH_BANK_COMMAND = 0x76; 
         if(last_bank_.is_some() and (last_bank_.unwrap() == bank))
             return Ok();
@@ -56,7 +56,7 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
         if(const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
@@ -66,14 +66,14 @@ private:
     }
 
 
-    [[nodiscard]] IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
         if(const auto res = transport_.write_reg(reg_addr, reg_val);
             res.is_err()) return res;
         return Ok();
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
         return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());

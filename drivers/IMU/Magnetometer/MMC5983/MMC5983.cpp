@@ -67,7 +67,7 @@ static auto do_set_reset(MMC5983 & imu, Fn && fn) -> decltype(imu.read_mag()){
 
 IResult<> MMC5983::update(){
     auto & packet = regs_.data_packet_;
-    return read_burst(packet.address, packet.as_bytes_mut());
+    return read_burst(packet.BASE_ADDR, packet.as_bytes_mut());
 }
 
 

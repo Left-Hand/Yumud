@@ -221,12 +221,12 @@ public:
     explicit MT9V034(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         MT9V034(hal::SccbDrv{i2c, addr}){;}
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> set_exposure_value(const uint16_t value);
-    [[nodiscard]] IResult<> set_gain(const iq16 gain);
+    IResult<> set_exposure_value(const uint16_t value);
+    IResult<> set_gain(const iq16 gain);
 
     [[nodiscard]] const auto & frame() const {return frame_;}
     [[nodiscard]] constexpr auto size() const {return FRAME_SIZE;}
@@ -234,47 +234,47 @@ private:
     hal::SccbDrv sccb_drv_;
     Image<Gray> frame_ = Image<Gray>{FRAME_SIZE};
 
-    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint16_t data);
+    IResult<> write_reg(const uint8_t addr, const uint16_t data);
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint16_t & data);
+    IResult<> read_reg(const uint8_t addr, uint16_t & data);
 
-    [[nodiscard]] IResult<> write_general_reg(
+    IResult<> write_general_reg(
         const GeneralRegAddr addr, 
         const uint16_t data
     ){
         return write_reg(static_cast<uint8_t>(addr), data);
     }
 
-    [[nodiscard]] IResult<> write_context_a_reg(
+    IResult<> write_context_a_reg(
         const ContextARegAddr addr, 
         const uint16_t data
     ){
         return write_reg(static_cast<uint8_t>(addr), data);
     }
 
-    [[nodiscard]] IResult<> write_context_b_reg(
+    IResult<> write_context_b_reg(
         const ContextBRegAddr addr, 
         const uint16_t data
     ){
         return write_reg(static_cast<uint8_t>(addr), data);
     }
 
-    [[nodiscard]] IResult<> set_context(const ParamContext context){
+    IResult<> set_context(const ParamContext context){
         return write_general_reg(GeneralRegAddr::Control, uint16_t(context));
     }
 
-    [[nodiscard]] IResult<> set_exposure_range(const math::Range2u range);
+    IResult<> set_exposure_range(const math::Range2u range);
 
-    [[nodiscard]] IResult<> enable_pixel_test_pattern(
+    IResult<> enable_pixel_test_pattern(
         const Enable en,
         const PixelTestPattern pattern
     );
 
-    [[nodiscard]] IResult<> init_general_regs(const uint16_t max_pixel_count);
+    IResult<> init_general_regs(const uint16_t max_pixel_count);
 
     /// Set just the maximum pixels to be used for adjusting automatic gain control
     /// Note this the _output_ pixel count, ie the pixels post-binning
-    [[nodiscard]] IResult<> set_agc_pixel_count(uint16_t max_pixels){
+    IResult<> set_agc_pixel_count(uint16_t max_pixels){
         return write_general_reg(GeneralRegAddr::AgcAecPixelCount, max_pixels);
     }
 };

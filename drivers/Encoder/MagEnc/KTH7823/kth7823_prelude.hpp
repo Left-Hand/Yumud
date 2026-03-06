@@ -107,20 +107,20 @@ public:
     Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank idx):
         spi_drv_(hal::SpiDrv(spi, idx)){}
 
-    [[nodiscard]] IResult<> direct_read(uint16_t & reg_val);
+    IResult<> direct_read(uint16_t & reg_val);
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val);
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val);
 
-    [[nodiscard]] IResult<> burn_reg(const uint8_t reg_addr, const uint8_t reg_val);
+    IResult<> burn_reg(const uint8_t reg_addr, const uint8_t reg_val);
 
 
-    [[nodiscard]] IResult<> disable_reg_oper();
+    IResult<> disable_reg_oper();
 
-    [[nodiscard]] IResult<> enable_reg_oper();
+    IResult<> enable_reg_oper();
 private:
     hal::SpiDrv spi_drv_;
 
-    [[nodiscard]] IResult<> transceive_u16(uint16_t & rx, const uint16_t tx);
+    IResult<> transceive_u16(uint16_t & rx, const uint16_t tx);
 };
 
 }

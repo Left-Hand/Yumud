@@ -15,35 +15,35 @@ public:
     explicit IST8310(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
         i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> update();
+    IResult<> init();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<> enable_continous(const Enable en);
+    IResult<> enable_continous(const Enable en);
 
-    [[nodiscard]] IResult<> set_x_average_times(const AverageTimes times);
-    [[nodiscard]] IResult<> set_y_average_times(const AverageTimes times);
+    IResult<> set_x_average_times(const AverageTimes times);
+    IResult<> set_y_average_times(const AverageTimes times);
 
-    [[nodiscard]] IResult<iq16> get_temperature();
+    IResult<iq16> get_temperature();
 
-    [[nodiscard]] IResult<bool> is_data_ready();
-    [[nodiscard]] IResult<> enable_interrupt(const Enable en);
-    [[nodiscard]] IResult<> set_interrupt_level(const BoolLevel lv);
-    [[nodiscard]] IResult<bool> get_interrupt_status();
+    IResult<bool> is_data_ready();
+    IResult<> enable_interrupt(const Enable en);
+    IResult<> set_interrupt_level(const BoolLevel lv);
+    IResult<bool> get_interrupt_status();
 
-    [[nodiscard]] IResult<> enable_sleep(const Enable en);
+    IResult<> enable_sleep(const Enable en);
 
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag();
+    IResult<math::Vec3<iq24>> read_mag();
 
 private:
     hal::I2cDrv i2c_drv_;
     IST8310_Regset regs_ = {};
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = i2c_drv_.write_reg(uint8_t(T::REG_ADDR), reg.to_bits(), std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -51,13 +51,13 @@ private:
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         if(const auto res = i2c_drv_.read_reg(uint8_t(T::REG_ADDR), reg.as_bits_mut(), std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_burst(const RegAddr addr, std::span<int16_t> pbuf){
+    IResult<> read_burst(const RegAddr addr, std::span<int16_t> pbuf){
         if(const auto res = i2c_drv_.read_burst(std::bit_cast<uint8_t>(addr), pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

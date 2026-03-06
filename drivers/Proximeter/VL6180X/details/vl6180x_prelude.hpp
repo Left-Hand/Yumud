@@ -114,14 +114,14 @@ public:
         i2c_drv_(std::move(i2c_drv)){;}
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const uint16_t command, const T data){
+    IResult<> write_reg(const uint16_t command, const T data){
         const auto res = i2c_drv_.write_reg(command, data, std::endian::big);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
     
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(const uint16_t command, T & data){
+    IResult<> read_reg(const uint16_t command, T & data){
         const auto res = i2c_drv_.read_reg(command, data, std::endian::big);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();

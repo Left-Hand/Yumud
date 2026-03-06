@@ -24,29 +24,29 @@ public:
     ):
         transport_(i2c, i2c_addr){;}
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> update();
+    IResult<> init();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> set_mode(Mode mode);
+    IResult<> validate();
+    IResult<> set_mode(Mode mode);
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_gyr();
+    IResult<math::Vec3<iq24>> read_acc();
+    IResult<math::Vec3<iq24>> read_gyr();
 private:
     InvensenseImu_Transport transport_;
     
-    [[nodiscard]] IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
         return transport_.write_reg(reg_addr, reg_val);
     }
 
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){return read_reg(T::REG_ADDR, reg);}
+    IResult<> read_reg(T & reg){return read_reg(T::REG_ADDR, reg);}
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
@@ -54,7 +54,7 @@ private:
     }
 
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
         return transport_.read_reg(reg_addr, reg_val);
     }
 

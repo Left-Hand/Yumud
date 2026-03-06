@@ -65,13 +65,13 @@ public:
     PMW3901(PMW3901 && other) = delete;
     ~PMW3901() = default;
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> set_led(bool on);
+    IResult<> set_led(bool on);
 private:
 
     hal::SpiDrv spi_drv_;
@@ -80,17 +80,17 @@ private:
     iq16 x_cm = 0;
     iq16 y_cm = 0;
 
-    [[nodiscard]] IResult<> assert_reg(const uint8_t command, const uint8_t data, const Error & error);
+    IResult<> assert_reg(const uint8_t command, const uint8_t data, const Error & error);
 
-    [[nodiscard]] IResult<> write_reg(const uint8_t command, const uint8_t data);
-    [[nodiscard]] IResult<> read_reg(const uint8_t command, uint8_t & data);
-    [[nodiscard]] IResult<> read_burst(const uint8_t commnad, std::span<uint8_t> pbuf);
+    IResult<> write_reg(const uint8_t command, const uint8_t data);
+    IResult<> read_reg(const uint8_t command, uint8_t & data);
+    IResult<> read_burst(const uint8_t commnad, std::span<uint8_t> pbuf);
 
-    [[nodiscard]] IResult<> read_data_slow();
-    [[nodiscard]] IResult<> read_data_burst();
-    [[nodiscard]] IResult<> read_data();
+    IResult<> read_data_slow();
+    IResult<> read_data_burst();
+    IResult<> read_data();
 
-    [[nodiscard]] IResult<> write_list(std::span<const std::pair<uint8_t, uint8_t>>);
+    IResult<> write_list(std::span<const std::pair<uint8_t, uint8_t>>);
 };
 
 }

@@ -24,60 +24,60 @@ public:
         i2c_drv_(hal::I2cDrv(i2c, addr)){};
 
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
+    IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<> set_scale(const uint32_t mohms, const uint32_t max_current_a);
+    IResult<> set_scale(const uint32_t mohms, const uint32_t max_current_a);
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> set_average_times(const uint16_t times);
+    IResult<> set_average_times(const uint16_t times);
 
-    [[nodiscard]] IResult<iq16> get_voltage();
+    IResult<iq16> get_voltage();
 
-    [[nodiscard]] IResult<int> get_shunt_voltage_uv();
+    IResult<int> get_shunt_voltage_uv();
 
-    [[nodiscard]] IResult<iq16> get_shunt_voltage();
+    IResult<iq16> get_shunt_voltage();
 
-    [[nodiscard]] IResult<iq16> get_current();
+    IResult<iq16> get_current();
 
-    [[nodiscard]] IResult<iq16> get_power();
+    IResult<iq16> get_power();
 
-    [[nodiscard]] IResult<> set_average_times(const AverageTimes times);
+    IResult<> set_average_times(const AverageTimes times);
 
-    [[nodiscard]] IResult<> set_bus_conversion_time(const ConversionTime time);
+    IResult<> set_bus_conversion_time(const ConversionTime time);
 
-    [[nodiscard]] IResult<> set_shunt_conversion_time(const ConversionTime time);
+    IResult<> set_shunt_conversion_time(const ConversionTime time);
 
-    [[nodiscard]] IResult<> reset();
+    IResult<> reset();
 
-    [[nodiscard]] IResult<> enable_shunt_voltage_measure(const Enable en);
+    IResult<> enable_shunt_voltage_measure(const Enable en);
 
-    [[nodiscard]] IResult<> enable_bus_voltage_measure(const Enable en);
+    IResult<> enable_bus_voltage_measure(const Enable en);
 
-    [[nodiscard]] IResult<> enable_continuous_measure(const Enable en);
+    IResult<> enable_continuous_measure(const Enable en);
 
-    [[nodiscard]] IResult<> enable_alert_latch(const Enable en);
+    IResult<> enable_alert_latch(const Enable en);
 private:
     hal::I2cDrv i2c_drv_;
     
     iq16 current_lsb_ma_ = iq16(0.2);
 
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint16_t data);
+    IResult<> write_reg(const RegAddr addr, const uint16_t data);
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint16_t & data);
+    IResult<> read_reg(const RegAddr addr, uint16_t & data);
     
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, int16_t & data);
+    IResult<> read_reg(const RegAddr addr, int16_t & data);
 
     template<typename T>
-    [[nodiscard]] IResult<> read_reg(T & reg){
+    IResult<> read_reg(T & reg){
         return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
     
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(T::REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();

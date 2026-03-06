@@ -18,12 +18,12 @@ public:
     ):
         transport_(hal::I2cDrv(i2c, addr)){;}
 
-    [[nodiscard]] IResult<> init();
+    IResult<> init();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<ConvData> read_pos_channel(const ChannelSelection nth);
-    [[nodiscard]] IResult<ConvData> read_channel(const PairSelection ch);
+    IResult<ConvData> read_pos_channel(const ChannelSelection nth);
+    IResult<ConvData> read_channel(const PairSelection ch);
 
     void set_pwdn_sel(const PowerDownSel sel){
         pwdn_sel_ = sel;

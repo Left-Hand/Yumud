@@ -253,7 +253,7 @@ public:
     MLX90393_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank slave_index):
         MLX90393_Transport(std::nullopt, hal::SpiDrv(spi, slave_index)){;}
 
-    [[nodiscard]] IResult<> transceive(
+    IResult<> transceive(
         std::span<uint8_t> rx_pbuf, std::span<const uint8_t> tx_pbuf);
 };
 

@@ -20,12 +20,12 @@ public:
         i2c_drv_(std::move(i2c_drv)){;}
 
 
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> update();
+    IResult<> validate();
+    IResult<> init();
+    IResult<> update();
 
 
-    [[nodiscard]] IResult<Flags> detect();
+    IResult<Flags> detect();
 
 private:
     hal::I2cDrv i2c_drv_;
@@ -37,11 +37,11 @@ private:
     };
 
     //  Write to addressed register
-    [[nodiscard]] IResult<> write_reg(uint8_t addr, uint8_t cmd);
+    IResult<> write_reg(uint8_t addr, uint8_t cmd);
     // Read data from addressed register
-    [[nodiscard]] IResult<> read_reg(uint8_t addr, uint8_t & data);
-    [[nodiscard]] IResult<> select_bank(Bank bank);
-    [[nodiscard]] IResult<> unlock_i2c();//bad i2c device;
+    IResult<> read_reg(uint8_t addr, uint8_t & data);
+    IResult<> select_bank(Bank bank);
+    IResult<> unlock_i2c();//bad i2c device;
     
 };
 

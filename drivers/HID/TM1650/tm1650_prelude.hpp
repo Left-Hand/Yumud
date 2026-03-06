@@ -152,11 +152,11 @@ public:
         return Ok(key_event_from_bits(0));
     }
 private:
-    [[nodiscard]] IResult<> write_display_cmd(const DisplayCommand cmd){
+    IResult<> write_display_cmd(const DisplayCommand cmd){
         return write_u8x2(uint8_t(DataCommand::MODE_CMD), cmd.to_bits());
     }
 
-    [[nodiscard]] IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){
+    IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){
         const auto guard = i2c_.create_guard();
 
         TODO();

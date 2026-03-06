@@ -17,7 +17,7 @@ public:
 
 
     template<typename Cfg>
-    [[nodiscard]] IResult<> init(Cfg && cfg){
+    IResult<> init(Cfg && cfg){
             // DEBUG_PRINTLN(std::showbase, std::hex, init_cmds_list_);
         if(const auto res = transport_.init() ; 
             res.is_err()) return res;
@@ -34,14 +34,14 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> update();
+    IResult<> update();
 
-    [[nodiscard]] IResult<> enable_display(const Enable en);
-    [[nodiscard]] IResult<> enable_flip_y(const Enable flip_en = EN){
+    IResult<> enable_display(const Enable en);
+    IResult<> enable_flip_y(const Enable flip_en = EN){
         return transport_.write_command(0xA0 | (flip_en == EN));}
-    [[nodiscard]] IResult<> enable_flip_x(const Enable flip_en = EN){
+    IResult<> enable_flip_x(const Enable flip_en = EN){
         return transport_.write_command(0xC0 | ((flip_en == EN) << 3));}
-    [[nodiscard]] IResult<> enable_inversion(const Enable inv_en = EN){
+    IResult<> enable_inversion(const Enable inv_en = EN){
         return transport_.write_command(0xA7 - (inv_en == EN));}  
 
     [[nodiscard]] math::Vec2<uint16_t> size() const {return frame_.size();}
@@ -55,31 +55,31 @@ private:
     const math::Vec2<uint16_t> offset_;
     VerticalBinaryImage frame_;
 
-    [[nodiscard]] IResult<> put_pixel_unchecked(const math::Vec2<uint16_t> pos, const Binary color){
+    IResult<> put_pixel_unchecked(const math::Vec2<uint16_t> pos, const Binary color){
         auto & frame = fetch_frame();
         frame.put_pixel_unchecked(pos, color);
         return Ok();
     }
 
-    [[nodiscard]] IResult<> putrect_unchecked(const math::Rect2u16 rect, const Binary color){
+    IResult<> putrect_unchecked(const math::Rect2u16 rect, const Binary color){
         auto & frame = fetch_frame();
         frame.put_pixel_unchecked(rect.top_left, color);
         return Ok();
     }
 
-    [[nodiscard]] IResult<> put_texture_unchecked(const math::Rect2u16 rect, const Binary * pcolor){
+    IResult<> put_texture_unchecked(const math::Rect2u16 rect, const Binary * pcolor){
         auto & frame = fetch_frame();
         frame.put_pixel_unchecked(rect.top_left, pcolor[0]);
         return Ok();
     }
 
-    [[nodiscard]] IResult<> setpos_unchecked(const math::Vec2<uint16_t> pos) ;
+    IResult<> setpos_unchecked(const math::Vec2<uint16_t> pos) ;
 
-    [[nodiscard]] IResult<> set_offset(const math::Vec2<uint16_t> offset);
+    IResult<> set_offset(const math::Vec2<uint16_t> offset);
 
-    [[nodiscard]] IResult<> set_flush_pos(const math::Vec2<uint16_t> pos);
+    IResult<> set_flush_pos(const math::Vec2<uint16_t> pos);
 
-    [[nodiscard]] IResult<> preinit_by_cmds(const std::span<const uint8_t> pbuf);
+    IResult<> preinit_by_cmds(const std::span<const uint8_t> pbuf);
 
     IResult<> write_command(const uint8_t cmd){
         return transport_.write_command(cmd);

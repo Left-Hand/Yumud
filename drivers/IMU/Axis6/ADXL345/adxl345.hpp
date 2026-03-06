@@ -29,11 +29,11 @@ public:
     explicit ADXL345(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank): 
         transport_(hal::SpiDrv{spi, rank}){;}
 
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_acc();
+    IResult<math::Vec3<iq24>> read_acc();
     
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<> self_test();
+    IResult<> self_test();
 private:
     AnalogDeviceIMU_Transport transport_;
     ADXL345_Regset regs_ = {};
@@ -41,7 +41,7 @@ private:
 
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = switch_bank(reg.bank);
             res.is_err()) return res;
         if(const auto res = transport_.write_reg(std::bit_cast<uint8_t>(reg.address), reg.to_bits());
@@ -50,13 +50,13 @@ private:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> read_reg(auto & reg){
+    IResult<> read_reg(auto & reg){
         return transport_.read_reg(std::bit_cast<uint8_t>(reg.address), reg.as_bits_mut());
     };
 
-    [[nodiscard]] IResult<> write_reg(const RegAddr reg_address, const uint8_t reg_data);
+    IResult<> write_reg(const RegAddr reg_address, const uint8_t reg_data);
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr reg_address, uint8_t & reg_data);
+    IResult<> read_reg(const RegAddr reg_address, uint8_t & reg_data);
 };
 
 };

@@ -28,37 +28,37 @@ public:
         uint16_t dpi_num;
     };
 
-    [[nodiscard]] IResult<> init(const Config & cfg);
+    IResult<> init(const Config & cfg);
 
-    [[nodiscard]] IResult<> corded_gaming();
+    IResult<> corded_gaming();
 
-    [[nodiscard]] IResult<> validate();
+    IResult<> validate();
 
-    [[nodiscard]] IResult<math::Vec2i> update();
+    IResult<math::Vec2i> update();
 
-    [[nodiscard]] IResult<bool> is_motioned();
+    IResult<bool> is_motioned();
 
-    [[nodiscard]] IResult<> enable_ripple(const Enable en);
+    IResult<> enable_ripple(const Enable en);
 
-    [[nodiscard]] IResult<> set_led(bool on);
+    IResult<> set_led(bool on);
 
-    [[nodiscard]] IResult<> set_dpi(uint16_t dpi_num);
+    IResult<> set_dpi(uint16_t dpi_num);
 
-    [[nodiscard]] IResult<> set_lift_off(bool height);
+    IResult<> set_lift_off(bool height);
 private:
     hal::SpiDrv spi_drv_;
 
-    [[nodiscard]] IResult<math::Vec2i> query_xy();
-    [[nodiscard]] IResult<> write_reg(const RegAddr addr, const uint8_t RegAddr);
+    IResult<math::Vec2i> query_xy();
+    IResult<> write_reg(const RegAddr addr, const uint8_t RegAddr);
 
-    [[nodiscard]] IResult<> read_reg(const RegAddr addr, uint8_t & data);
+    IResult<> read_reg(const RegAddr addr, uint8_t & data);
 
-    [[nodiscard]] IResult<int16_t> read_i16(const RegAddr low_addr, const RegAddr high_addr);
+    IResult<int16_t> read_i16(const RegAddr low_addr, const RegAddr high_addr);
 
-    [[nodiscard]] IResult<> write_list(
+    IResult<> write_list(
         std::span<const std::pair<uint8_t, uint8_t>> list);
 
-    [[nodiscard]] IResult<> powerup();
+    IResult<> powerup();
 };
 
 }

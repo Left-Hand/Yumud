@@ -30,20 +30,20 @@ public:
     explicit AK09911C(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         transport_(hal::SpiDrv(spi, rank)){;}
 
-    [[nodiscard]] IResult<> init();
-    [[nodiscard]] IResult<> update();
-    [[nodiscard]] IResult<> validate();
-    [[nodiscard]] IResult<bool> is_busy();
-    [[nodiscard]] IResult<bool> is_stable();
-    [[nodiscard]] IResult<> set_mode(const Mode mode);
-    [[nodiscard]] IResult<> disable_i2c();
-    [[nodiscard]] IResult<math::Vec3<iq24>> read_mag();
+    IResult<> init();
+    IResult<> update();
+    IResult<> validate();
+    IResult<bool> is_busy();
+    IResult<bool> is_stable();
+    IResult<> set_mode(const Mode mode);
+    IResult<> disable_i2c();
+    IResult<math::Vec3<iq24>> read_mag();
 
-    [[nodiscard]] IResult<bool> is_data_ready();
-    [[nodiscard]] IResult<bool> is_data_overrun();
-    [[nodiscard]] IResult<> enable_hs_i2c(const Enable en);
-    [[nodiscard]] IResult<> reset();
-    [[nodiscard]] IResult<> set_odr(const Odr odr);
+    IResult<bool> is_data_ready();
+    IResult<bool> is_data_overrun();
+    IResult<> enable_hs_i2c(const Enable en);
+    IResult<> reset();
+    IResult<> set_odr(const Odr odr);
 
 private:
     
@@ -51,35 +51,35 @@ private:
     AK09911C_Regset regs_ = {};
     Option<math::Vec3<iq24>> scale_ = None; 
     
-    [[nodiscard]] IResult<> selftest();
-    [[nodiscard]] IResult<> blocking_update();
-    [[nodiscard]] IResult<> update_adj();
+    IResult<> selftest();
+    IResult<> blocking_update();
+    IResult<> update_adj();
 
-    [[nodiscard]] IResult<> write_reg(const uint8_t addr, const uint8_t data){
+    IResult<> write_reg(const uint8_t addr, const uint8_t data){
         return transport_.write_reg(addr, data);
     }
 
-    [[nodiscard]] IResult<> read_reg(const uint8_t addr, uint8_t & data){
+    IResult<> read_reg(const uint8_t addr, uint8_t & data){
         return transport_.read_reg(addr, data);
     }
 
     template<typename T>
-    [[nodiscard]] IResult<> write_reg(const RegCopy<T> & reg){
+    IResult<> write_reg(const RegCopy<T> & reg){
         if(const auto res = write_reg(reg.REG_ADDR, reg.to_bits());
             res.is_err()) return Err(res.unwrap_err());
         reg.apply();
         return Ok();
     }
-    [[nodiscard]] IResult<> read_reg(auto & reg){
+    IResult<> read_reg(auto & reg){
         return transport_.read_reg(reg.REG_ADDR, reg.as_bits_mut());
     }
 
     
-    [[nodiscard]] IResult<> read_burst(const RegAddr addr, std::span<int16_t> pbuf){
+    IResult<> read_burst(const RegAddr addr, std::span<int16_t> pbuf){
         return transport_.read_burst(addr, pbuf);
     }
 
-    [[nodiscard]] IResult<math::Vec3<int8_t>> get_coeff();
+    IResult<math::Vec3<int8_t>> get_coeff();
 
 
 };

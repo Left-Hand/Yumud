@@ -83,7 +83,7 @@ public:
         return write_command((inv_en == EN) ? 0x21 : 0x20);
     }
 
-    [[nodiscard]] __fast_inline IResult<> put_pixel_unchecked(
+    __fast_inline IResult<> put_pixel_unchecked(
         const math::Vec2<uint16_t> pos, 
         const RGB565 color
     ){
@@ -94,17 +94,17 @@ public:
         return Ok();
     }
 
-    [[nodiscard]] IResult<> putrect_unchecked(
+    IResult<> putrect_unchecked(
         const math::Rect2<uint16_t> rect, 
         const RGB565 color
     );
 
-    [[nodiscard]] IResult<> put_texture_unchecked(
+    IResult<> put_texture_unchecked(
         const math::Rect2<uint16_t> rect, 
         const RGB565 * pcolor
     );
 
-    [[nodiscard]] math::Rect2u get_expose_rect(){
+    math::Rect2u get_expose_rect(){
         return math::Rect2u::from_size(algo_.size());
     }
 
@@ -117,21 +117,21 @@ private:
     math::Vec2<uint16_t> offset_ = math::Vec2<uint16_t>::ZERO;
     uint8_t scr_ctrl_ = 0;
 
-    [[nodiscard]] __fast_inline IResult<> write_command(const uint8_t cmd){
+    __fast_inline IResult<> write_command(const uint8_t cmd){
         return transport_.write_command(cmd);
     }
 
-    [[nodiscard]] __fast_inline IResult<> write_data8(const uint8_t data){
+    __fast_inline IResult<> write_data8(const uint8_t data){
         return transport_.write_data8(data);
     }
 
-    [[nodiscard]] __fast_inline IResult<> write_data16(const uint16_t data){
+    __fast_inline IResult<> write_data16(const uint16_t data){
         return transport_.write_data16(data);
     }
 
-    [[nodiscard]] IResult<> modify_ctrl_reg(const bool is_high, const uint8_t pos);
+    IResult<> modify_ctrl_reg(const bool is_high, const uint8_t pos);
 
-    [[nodiscard]] IResult<> common_init();
+    IResult<> common_init();
     template<typename T>
     friend class DrawTarget;
 };
