@@ -125,8 +125,6 @@ struct [[nodiscard]] FT6336_MainRegs : public FT5X46_Prelude {
     struct [[nodiscard]] R8_Guesture : public Reg8<> {
         static constexpr RegAddr REG_ADDR = RegAddr{0x01};
         
-
-        
         GestureId gesture_id;
     } DEF_R8(guesture)
 

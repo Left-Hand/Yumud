@@ -1,15 +1,15 @@
 #pragma once
 
 #include "vesc_can_primitive.hpp"
+#include "vesc_can_utils.hpp"
 
 #include "core/math/float/fp32.hpp"
 
 #include "core/utils/bits/bits_caster.hpp"
 #include "primitive/can/bxcan_payload.hpp"
 
+
 namespace ymd::robots::vesc::can{
-
-
 
 // [0] 
 // Purpose: Set motor duty cycle (0.0 to 1.0)

@@ -21,19 +21,65 @@ public:
         iq16 accerlation = 0;
     };
 
-    FlatPacket set_position(const PositionSetpoint pos);
-    FlatPacket set_speed(const SpeedSetpoint spd);
-    FlatPacket brake();
-    FlatPacket set_subdivides(const uint16_t subdivides);
-    FlatPacket activate(const Enable en);
-    FlatPacket trig_cali();
-    FlatPacket query_homming_paraments();
-    FlatPacket trig_homming(const HommingMode mode);
+    constexpr FlatPacket set_position(const PositionSetpoint msg) const {
+        return ser_msg(req_msgs::SetPositionMode3{
+            .rpm = Rpm::from_tps(msg.speed),
+            .acc_level = AcclerationLevel::from_tpss(msg.accerlation),
+            .abs_pulse_cnt = PulseCnt::from_turns(msg.position)
+        });
+    }
+
+    constexpr FlatPacket set_speed(const SpeedSetpoint msg) const {
+        return ser_msg(req_msgs::SetSpeed{
+            .rpm = iRpm::from_tps(msg.speed),
+            .acc_level = AcclerationLevel::from_tpss(msg.accerlation)
+        });
+    }
+
+    #if 0
+    constexpr FlatPacket brake() const {
+        TODO();
+
+    }
+    #endif
+
+    constexpr FlatPacket set_subdivides(const uint16_t subdivides) const {
+        return ser_msg(req_msgs::SetSubdivides{
+            .subdivides = uint8_t(subdivides & 0xff)
+        });
+    }
+
+    constexpr FlatPacket activate(const Enable en) const {
+        return ser_msg(req_msgs::SetEnableStatus{
+            .is_enabled = en == EN
+        });
+    }
+
+    #if 0
+    constexpr FlatPacket trig_cali() const {
+        return ser_msg(req_msgs::SetEnableStatus{
+            .is_enabled = en == EN
+        });
+
+    }
+
+    constexpr FlatPacket query_homming_paraments() const {
+        return ser_msg(req_msgs::SetEnableStatus{
+            .is_enabled = en == EN
+        });
+
+    }
+
+    constexpr FlatPacket trig_homming(const HommingMode mode) const {
+        return ser_msg(req_msgs::SetEnableStatus{
+            .is_enabled = en == EN
+        });
+    }
+    #endif
+
 private:
     template<typename Msg, typename T = std::decay_t<Msg>>
-    constexpr FlatPacket ser_msg(
-        Msg && msg
-    ){
+    constexpr FlatPacket ser_msg(Msg && msg) const {
         return make_msg(node_id, std::forward<Msg>(msg));
     }
 

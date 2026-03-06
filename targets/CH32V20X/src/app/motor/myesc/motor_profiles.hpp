@@ -15,7 +15,7 @@ namespace ymd::myesc{
 //磁结构
 //直观理解表贴于内置式的磁路
 // https://blog.csdn.net/u010632165/article/details/103637894
-enum class [[nodiscard]] MagneticStructure{
+enum class [[nodiscard]] PmsmMagneticStructure{
     //表贴式永磁同步电机(Surface-Mounted Permanent Magnet Synchronous Motor)
     SurfaceMounted,
     //内嵌式永磁同步电机(Interior Permanent Magnet Synchronous Motor)
@@ -71,7 +71,7 @@ struct MotorProfile_Ysc{
 struct MotorProfile_3505{
     //3505航模电机
     //具有良好的凸极性
-    static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
+    static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::Interior;
     static constexpr size_t POLE_PAIRS = 7u;
     static constexpr auto PHASE_INDUCTANCE = iq20(20 * 1E-6);
     // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
@@ -96,7 +96,7 @@ struct MotorProfile_Gim4010{
     static constexpr auto PHASE_INDUCTANCE = iq20(300 * 1E-6);
     static constexpr auto PHASE_RESISTANCE = 1.03_iq20;
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
-    static constexpr auto MODU_VOLT_LIMIT = iq16(7.5);
+    static constexpr auto MODU_VOLT_LIMIT = iq16(5.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 1600;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
     // const iq16 MACHINE_KD = 0.16_iq16;
@@ -106,15 +106,15 @@ struct MotorProfile_Gim4010{
 
 struct MotorProfile_36BLDB{
     //苏州凯航电机
-    static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::Interior;
+    static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::Interior;
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(200 * 1E-6);
     // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq32);
-    static constexpr auto MODU_VOLT_LIMIT = iq16(7.5);
+    static constexpr auto MODU_VOLT_LIMIT = iq16(5.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 400;
-    static constexpr auto leso_coeffs = Leso::Config{
+    static constexpr auto LESO_COEFFS = Leso::Config{
         .fs = FOC_FREQ,
         // .fc = 2000,
         .fc = 50,
@@ -136,7 +136,34 @@ struct MotorProfile_NiuLiu{
     // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
-    static constexpr auto MODU_VOLT_LIMIT = iq16(7.5);
+    static constexpr auto MODU_VOLT_LIMIT = iq16(5.5);
+    static constexpr auto CURRENT_CUTOFF_FREQ = 400;
+    static constexpr iq16 MACHINE_KP = 2.23_iq16;
+    // const iq16 MACHINE_KD = 0.16_iq16;
+    static constexpr iq16 MACHINE_KD = 0.045_iq16;
+
+    static constexpr auto LESO_COEFFS = Leso::Config{
+        .fs = FOC_FREQ,
+        // .fc = 2000,
+        .fc = 50,
+        // .b0 = 1000
+        .b0 = 30
+    }.try_into_coeffs().unwrap();
+
+    using MagEncoder = drivers::VCE2755;
+};
+
+struct MotorProfile_M06Bare{
+    //本末M06剪线电机（又名ddsm400)
+    //!不具有任何凸极性
+    static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::SurfaceMounted;
+    static constexpr size_t POLE_PAIRS = 14u;
+    static constexpr auto PHASE_INDUCTANCE = iq20(2200 * 1E-6);
+    // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
+    // static constexpr auto PHASE_RESISTANCE = 3.03_iq20;
+    static constexpr auto PHASE_RESISTANCE = 2.45_iq20;
+    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
+    static constexpr auto MODU_VOLT_LIMIT = iq16(5.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 400;
     static constexpr iq16 MACHINE_KP = 2.23_iq16;
     // const iq16 MACHINE_KD = 0.16_iq16;
@@ -144,21 +171,16 @@ struct MotorProfile_NiuLiu{
     using MagEncoder = drivers::VCE2755;
 };
 
-struct MotorProfile_M06Bare{
-    //本末M06剪线电机（又名ddsm400)
+struct MotorProfile_Wheel{
     //!不具有任何凸极性
-    static constexpr auto MAGNETIC_STRUCTURE = MagneticStructure::SurfaceMounted;
+    static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::SurfaceMounted;
     static constexpr size_t POLE_PAIRS = 14u;
-    static constexpr auto PHASE_INDUCTANCE = iq20(2200 * 1E-6);
+    static constexpr auto PHASE_INDUCTANCE = iq20(86.24 * 1E-6);
     // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
     // static constexpr auto PHASE_RESISTANCE = 3.03_iq20;
-    static constexpr auto PHASE_RESISTANCE = 2.45_iq20;
-    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
-    static constexpr auto MODU_VOLT_LIMIT = iq16(7.5);
+    static constexpr auto PHASE_RESISTANCE = 0.0645_iq20;
+    static constexpr auto MODU_VOLT_LIMIT = iq16(5.5);
     static constexpr auto CURRENT_CUTOFF_FREQ = 700;
-    static constexpr iq16 MACHINE_KP = 2.23_iq16;
-    // const iq16 MACHINE_KD = 0.16_iq16;
-    static constexpr iq16 MACHINE_KD = 0.045_iq16;
     using MagEncoder = drivers::VCE2755;
 };
 

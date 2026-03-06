@@ -5,21 +5,6 @@
 //这个驱动已经测试
 //这个驱动还未支持所有特性
 
-// eg:
-// INA3221 ina = {&i2c};
-
-// ina.init().unwrap();
-
-// while(true){
-//     ina.update(INA3221::ChannelSelection::CH1).unwrap();
-//     DEBUG_PRINTLN(
-//         ina.get_bus_volt(ch).unwrap(), 
-//         ina.get_shunt_volt(ch).unwrap() * iq16(INV_SHUNT_RES)
-//     );
-//     clock::delay(2ms);
-// }
-
-
 
 // 注意：
 // 1. INA3221不支持地址自增模式，每次对寄存器的操作都是单独的
@@ -37,7 +22,7 @@ namespace ymd::drivers{
 
 
 class INA3221 final:
-    public INA3221_Regs{
+    public INA3221_Prelude{
 public:
 
     explicit INA3221(const hal::I2cDrv & i2c_drv):
@@ -77,7 +62,7 @@ public:
     IResult<> set_constant_ovc_threshold(const ChannelSelection sel, const iq16 volt);
 private:
     INA3221_Transport transport_;
-
+    INA3221_Regs regs_ = {};
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){

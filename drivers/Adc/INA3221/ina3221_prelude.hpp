@@ -147,6 +147,58 @@ public:
         }
     };
 
+
+    static constexpr int16_t volt_to_i16(const iq16 volt){
+        return int16_t(iq16(volt) * 100000) & 0xfff8;
+    }
+
+    struct [[nodiscard]] ShuntVoltCode final{
+
+        int16_t bits;
+
+        [[nodiscard]] constexpr iq16 to_volt() const {
+            return iq24(iq16(bits >> 3) / 25) / 1000;
+            // return iq16(this->to_bits());
+        }
+
+        [[nodiscard]] constexpr int32_t to_uv() const {
+            return ((bits >> 3) * 40);
+            // return (this->to_bits());
+        }
+
+        static constexpr int16_t to_i16(const iq16 volt){
+            return volt_to_i16(volt);
+        }
+    };
+
+
+    struct [[nodiscard]] BusVoltCode final{
+
+        int16_t bits;
+
+        [[nodiscard]] constexpr iq16 to_volt() const {
+            return iq16((int16_t(bits) >> 3) * 8) * iq16(0.001);
+        }
+
+        [[nodiscard]] constexpr int to_mv() const {
+            return int16_t((int16_t(bits) >> 3) * 8);
+        }
+
+        static constexpr int16_t to_i16(const iq16 volt){
+            return int16_t(iq16(volt) * 1000) & 0xfff8;
+        }
+    };
+
+
+    struct [[nodiscard]] InstantOvcCode final{
+        int16_t bits;
+    };
+
+    struct [[nodiscard]] ConstantOvcCode final{
+        int16_t bits;
+    };
+
+
 };
 
 struct INA3221_Regs:public INA3221_Prelude {
@@ -167,90 +219,93 @@ struct INA3221_Regs:public INA3221_Prelude {
 
     static_assert(sizeof(R16_Config) == 2);
 
-    static constexpr int16_t volt_to_i16(const iq16 volt){
-        return int16_t(iq16(volt) * 100000) & 0xfff8;
-    }
 
-    struct [[nodiscard]] R16_ShuntVolt:public Reg16<>{
 
-        int16_t bits;
+    struct [[nodiscard]] R16_ShuntVolt1: public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x01};
 
-        constexpr iq16 to_volt() const {
-            return iq24(iq16(this->to_bits() >> 3) / 25) / 1000;
-            // return iq16(this->to_bits());
-        }
-
-        constexpr int32_t to_uv() const {
-            return ((this->to_bits() >> 3) * 40);
-            // return (this->to_bits());
-        }
-
-        static constexpr int16_t to_i16(const iq16 volt){
-            return volt_to_i16(volt);
-        }
+        ShuntVoltCode code;
     };
 
-    struct [[nodiscard]] R16_ShuntVolt1:public R16_ShuntVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x01};};
-    struct [[nodiscard]] R16_ShuntVolt2:public R16_ShuntVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x03};};
-    struct [[nodiscard]] R16_ShuntVolt3:public R16_ShuntVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x05};};
-    struct [[nodiscard]] R16_ShuntVoltSum:public R16_ShuntVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x0D};};
-    struct [[nodiscard]] R16_ShuntVoltSumLimit:public R16_ShuntVolt{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x0E};};
+    struct [[nodiscard]] R16_ShuntVolt2: public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x03};
 
-    struct [[nodiscard]] R16_BusVolt:public Reg16<>{
-
-        int16_t bits;
-
-        constexpr iq16 to_volt() const {
-            return iq16((int16_t(this->to_bits()) >> 3) * 8) * iq16(0.001);
-        }
-
-        constexpr int to_mv() const {
-            return int16_t((int16_t(this->to_bits()) >> 3) * 8);
-        }
-
-        static constexpr int16_t to_i16(const iq16 volt){
-            return int16_t(iq16(volt) * 1000) & 0xfff8;
-        }
+        ShuntVoltCode code;
     };
 
-    struct [[nodiscard]] R16_BusVolt1:public R16_BusVolt{
+    struct [[nodiscard]] R16_ShuntVolt3: public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x05};
+
+        ShuntVoltCode code;
+    };
+
+    struct [[nodiscard]] R16_ShuntVoltSum: public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0D};
+
+        ShuntVoltCode code;
+    };
+
+    struct [[nodiscard]] R16_ShuntVoltSumLimit: public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0E};
+
+        ShuntVoltCode code;
+    };
+
+
+
+    struct [[nodiscard]] R16_BusVolt1:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x02};
+
+        BusVoltCode code;
     };
-    struct [[nodiscard]] R16_BusVolt2:public R16_BusVolt{
+
+    struct [[nodiscard]] R16_BusVolt2:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x04};
+
+        BusVoltCode code;
     };
-    struct [[nodiscard]] R16_BusVolt3:public R16_BusVolt{
+
+    struct [[nodiscard]] R16_BusVolt3:public Reg16<>{
         static constexpr RegAddr REG_ADDR = RegAddr{0x06};
+
+        BusVoltCode code;
     };
 
 
 
-    struct [[nodiscard]] R16_InstantOVC:public Reg16<>{
-        int16_t bits;
+
+    struct [[nodiscard]] R16_InstantOVC1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x07};
+
+        InstantOvcCode code;
+    };
+    struct [[nodiscard]] R16_InstantOVC2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x09};
+
+        InstantOvcCode code;
+    };
+    struct [[nodiscard]] R16_InstantOVC3:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0b};
+
+        InstantOvcCode code;
     };
 
-    struct [[nodiscard]] R16_InstantOVC1:public R16_InstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x07};};
-    struct [[nodiscard]] R16_InstantOVC2:public R16_InstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x09};};
-    struct [[nodiscard]] R16_InstantOVC3:public R16_InstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x0b};};
 
-    struct [[nodiscard]] R16_ConstantOVC:public Reg16<>{
-        int16_t bits;
+    struct [[nodiscard]] R16_ConstantOVC1:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x08};
+
+        ConstantOvcCode code;
     };
+    struct [[nodiscard]] R16_ConstantOVC2:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0A};
 
-    struct [[nodiscard]] R16_ConstantOVC1:public R16_ConstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x08};};
-    struct [[nodiscard]] R16_ConstantOVC2:public R16_ConstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x0A};};
-    struct [[nodiscard]] R16_ConstantOVC3:public R16_ConstantOVC{
-        static constexpr RegAddr REG_ADDR = RegAddr{0x0C};};
+        ConstantOvcCode code;
+    };
+    struct [[nodiscard]] R16_ConstantOVC3:public Reg16<>{
+        static constexpr RegAddr REG_ADDR = RegAddr{0x0C};
+
+        ConstantOvcCode code;
+    };
 
     struct [[nodiscard]] R16_Mask:public Reg16<>{
         uint16_t conv_ready:1;
@@ -292,6 +347,27 @@ struct INA3221_Regs:public INA3221_Prelude {
         uint16_t bits;
     };
 
+    VALIDATE_R16(R16_Config)
+    VALIDATE_R16(R16_ShuntVolt1)
+    VALIDATE_R16(R16_BusVolt1)
+    VALIDATE_R16(R16_ShuntVolt2)
+    VALIDATE_R16(R16_BusVolt2)
+    VALIDATE_R16(R16_ShuntVolt3)
+    VALIDATE_R16(R16_BusVolt3)
+    VALIDATE_R16(R16_InstantOVC1)
+    VALIDATE_R16(R16_ConstantOVC1)
+    VALIDATE_R16(R16_InstantOVC2)
+    VALIDATE_R16(R16_ConstantOVC2)
+    VALIDATE_R16(R16_InstantOVC3)
+    VALIDATE_R16(R16_ConstantOVC3)
+    VALIDATE_R16(R16_ShuntVoltSum)
+    VALIDATE_R16(R16_ShuntVoltSumLimit)
+    VALIDATE_R16(R16_Mask)
+    VALIDATE_R16(R16_PowerHo)
+    VALIDATE_R16(R16_PowerLo)
+    VALIDATE_R16(R16_ManuId)
+    VALIDATE_R16(R16_ChipId)
+
     R16_Config       config_reg = {};
     R16_ShuntVolt1    shuntvolt1_reg = {};
     R16_BusVolt1      busvolt1_reg = {};
@@ -305,13 +381,11 @@ struct INA3221_Regs:public INA3221_Prelude {
     R16_ConstantOVC2  constant_ovc2_reg = {};
     R16_InstantOVC3   instant_ovc3_reg = {};
     R16_ConstantOVC3  constant_ovc3_reg = {};
-
     R16_ShuntVoltSum    shuntvolt_sum_reg = {};
     R16_ShuntVoltSumLimit    shuntvolt_sum_limit_reg = {};
     R16_Mask         mask_reg = {};
     R16_PowerHo      power_ho_reg = {};
     R16_PowerLo      power_lo_reg = {};
-
     R16_ManuId       manu_id_reg = {};
     R16_ChipId       chip_id_reg = {};
 };

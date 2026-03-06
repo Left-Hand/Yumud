@@ -69,8 +69,8 @@ void sincospll_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommStrategy::Blocking);
     hal::usart2.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
-        // .baudrate = hal::NearestFreq(576_KHz),
-        .baudrate = hal::NearestFreq(6000000),
+        .baudrate = hal::NearestFreq(576_KHz),
+        // .baudrate = hal::NearestFreq(6000000),
         .tx_strategy = CommStrategy::Blocking,
     });
     DEBUGGER.retarget(&DEBUGGER_INST);
@@ -107,7 +107,8 @@ void sincospll_main(){
         // if(false){//simulate input
             static uq32 now_secs = 0;
             now_secs += uq32::from_rcp(F_SAMPLE);
-            // const iq16 angular_speed = 450 * iq16(math::sinpu(now_secs)) + 164 * iq16(math::sinpu(32 * now_secs));
+            // const iq16 angular_speed = 450 * iq16(math::sinpu(now_secs)) + 14 * iq16(math::sinpu(32 * now_secs));
+            // const iq16 angular_speed = 45;
             // const iq16 angular_speed = 450 * iq16(math::sinpu(now_secs)) + 64 * iq16(math::sinpu(32 * now_secs));
             const iq16 angular_speed = 1450 * iq16(math::sinpu(now_secs)) + 64 * iq16(math::sinpu(10 * now_secs));
             // const iq16 angular_speed = 45 * iq16(math::sinpu(now_secs));

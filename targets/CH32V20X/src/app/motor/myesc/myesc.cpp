@@ -65,9 +65,10 @@ using namespace ymd::myesc;
 
 // using MotorProfile = MotorProfile_Ysc;
 // using MotorProfile = MotorProfile_Gim4010;
-// using MotorProfile = MotorProfile_M06Bare;
+using MotorProfile = MotorProfile_M06Bare;
 // using MotorProfile = MotorProfile_3505;
-using MotorProfile = MotorProfile_36BLDB;
+// using MotorProfile = MotorProfile_36BLDB;
+// using MotorProfile = MotorProfile_NiuLiu;
 
 
 struct LrSeriesCurrentRegulatorConfig{
@@ -172,8 +173,8 @@ static void init_adc(){
         },{
 
             {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T13_5},
-            // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
-            // {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T13_5},
+            {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T13_5},
+            {hal::AdcChannelSelection::CH5, hal::AdcSampleCycles::T13_5},
 
             // {hal::AdcChannelSelection::CH1, hal::AdcSampleCycles::T7_5},
             // {hal::AdcChannelSelection::CH4, hal::AdcSampleCycles::T7_5},
@@ -213,8 +214,8 @@ void myesc_main(){
     DBG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
         // .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
-        .baudrate = hal::NearestFreq(6000000),
-        // .baudrate = hal::NearestFreq(576000),
+        // .baudrate = hal::NearestFreq(6000000),
+        .baudrate = hal::NearestFreq(576000),
         .tx_strategy = CommStrategy::Blocking,
     });
 
@@ -281,15 +282,12 @@ void myesc_main(){
 
     timer.oc<4>().init(Default);
     timer.oc<4>().enable_cvr_sync(DISEN);
-    // timer.oc<4>().cvr() = timer.arr() - 10;
-    timer.oc<4>().cvr() = 10;
+    timer.oc<4>().cvr() = timer.arr() - 2;
+    // timer.oc<4>().cvr() = 2;
     // timer.oc<4>().cvr() = timer.arr() / 2;
 
     timer.oc<4>().enable_output(EN);
 
-
-    const auto full_arr = timer.arr();
-    // constexpr auto full_arr = 7200;
     auto set_uvw_dutycycle = [&]<typename T>(const T & dutycycle){
         // timer.enable_udis(DISEN);
         pwm_u_.set_dutycycle((dutycycle.template get<0>()));
@@ -305,9 +303,10 @@ void myesc_main(){
     // #endregion 初始化定时器
 
     // #region 初始化ADC
-    static constexpr auto SHUNT_RES = 0.002f;
-    static constexpr auto OPA_GAIN = 40;
+    static constexpr auto SHUNT_RES = 0.006f;
+    static constexpr auto OPA_GAIN = 20;
     static constexpr auto AMPS_FULLSCALE = 3.3 / (OPA_GAIN * SHUNT_RES);
+    // static constexpr auto AMPS_PER_ADC_LSB = uq32(AMPS_FULLSCALE / (1 << 12));
     static constexpr auto AMPS_PER_ADC_LSB = iq20(AMPS_FULLSCALE / (1 << 12));
     // const auto scaler_u = Rescaler<iq16>::from_scale(AMPS_PER_ADC_LSB);
     // const auto scaler_v = Rescaler<iq16>::from_scale(AMPS_PER_ADC_LSB);
@@ -381,8 +380,8 @@ void myesc_main(){
     // drv8323_gain_pin_.outpp(LOW);
     // drv8323_gain_pin_.outpp(LOW);
     // drv8323_gain_pin_.inpd();//10x
-    // drv8323_gain_pin_.inflt();//20x
-    drv8323_gain_pin_.outpp(HIGH);//40x
+    drv8323_gain_pin_.inflt();//20x
+    // drv8323_gain_pin_.outpp(HIGH);//40x
 
 
     drv8323_idrive_pin_.outpp(HIGH);//Sink 2A / Source1A
@@ -452,11 +451,6 @@ void myesc_main(){
     static bool is_samp_n = false;
     Microseconds exe_elapsed_ = 0us;
 
-    Leso leso = Leso{
-        MotorProfile::leso_coeffs
-    };
-
-    Leso::State leso_state_var_ = Zero;
 
     // PANIC{PI_CONTROLLER_COEFFS};
 
@@ -496,6 +490,14 @@ void myesc_main(){
     using Nltd2o = NonlinearTrackingDifferentiator<iq16, 2>;
 
     #if 0
+
+    Leso leso = Leso{
+        MotorProfile::LESO_COEFFS
+    };
+
+    Leso::State leso_state_var_ = Zero;
+
+
     static constexpr auto command_shaper_coeffs = Nltd2o::Config{
         .fs = FOC_FREQ,
         // .r = 30.5_q24,
@@ -550,6 +552,88 @@ void myesc_main(){
     static constexpr size_t DC_CAL_TIMES = 32 * 128;
     bool dc_cal_done_ = false;
     size_t dc_cal_cnt_ = 0;
+
+
+    #if 0
+        //#region 位速合成力矩
+        const auto [position_cmd, speed_cmd] = [&]{
+
+            enum class ExamplePattern{
+                Sine,
+                Saw,
+                Levels
+            };
+
+            // static constexpr auto example_pattern = ExamplePattern::Saw;
+            static constexpr auto example_pattern = ExamplePattern::Levels;
+
+            const auto [x1_cmd, x2_cmd] = [&] -> std::tuple<iq16, iq16>{
+                if constexpr(example_pattern == ExamplePattern::Sine){
+                    constexpr auto omega = 16_iq16;
+                    constexpr auto side_amplitude = 0.4_iq16;
+
+                    const auto [s,c] = math::sincos(omega * now_secs);
+                    return {
+                        side_amplitude * iq16(s),
+                        side_amplitude * omega * iq16(c)
+                    };
+                }else if constexpr(example_pattern == ExamplePattern::Saw){
+                    // const auto [s,c] = math::sincos(omega * now_secs);
+
+                    constexpr auto freq = 1.6_iq16;
+                    constexpr auto amplitude = 0.8_iq16;
+                    constexpr auto slew_rate = amplitude * freq;
+                    return {math::frac(now_secs * freq) * amplitude, slew_rate};
+                }else if constexpr(example_pattern == ExamplePattern::Levels){
+                    constexpr auto freq = 0.3_iq16;
+                    constexpr size_t num_steps = 6;
+                    constexpr auto half_amplitude = 0.4_iq16;
+                    constexpr auto step = half_amplitude * 2/ num_steps;
+                    const auto s = iq16(math::sinpu(now_secs * freq));
+                    return {(math::floor(s * (num_steps / 2)) * step), 0};
+                }
+            }();
+            // command_shaper_.update(10 + 12 * sign(iq16(math::sinpu(now_secs * 0.5_r))));
+            // const auto s = iq16(math::sinpu(now_secs * 0.7_r));
+            // const auto s = iq16(math::sinpu(now_secs * 0.16_r));
+            // command_shaper_.update(100 + 6 * (int(s * 8) / 8));
+            // track_ref_ = command_shaper_.update(track_ref_, );
+            track_ref_ = command_shaper_.iterate(track_ref_, {
+                x1_cmd,
+                x2_cmd
+            });
+            // track_ref_ = command_shaper_.update(track_ref_, {now_secs * 15, 15});
+            // track_ref_ = command_shaper_.update(track_ref_, {
+            //     1_iq16 * iq16(sin(now_secs / 100)),
+            //     0.01_iq16 *  iq16(cos(now_secs / 100))});
+                // 1_iq16 * iq16(sin(now_secs)),
+                // 1_iq16 *  iq16(cos(now_secs))});
+                // _iq16 * iq16(sin(now_secs)),
+                // 1_iq16 *  iq16(cos(now_secs))});
+            return std::make_tuple(
+                iq16::from_bits(track_ref_.x1.to_bits() >> 16),
+                track_ref_.x2
+            );
+
+            // return std::make_tuple<iq16, iq16>(
+            //     amplitude * int(omega * now_secs),
+            //     0
+            // );
+        }();
+
+
+        [[maybe_unused]] const iq20 torque_cmd = [&]{
+            const auto kp = MotorProfile::MACHINE_KP;
+            const auto kd = MotorProfile::MACHINE_KD;
+
+            // const iq16 e1 = position_cmd - pos_filter_.accumulated_angle().to_turns();
+            // const iq16 e2 = speed_cmd - pos_filter_.speed();
+            const iq16 e1 = CLAMP2(position_cmd - math::fixed_downcast<16>(rotor_rotation_state_var_.x1), 100);
+            const iq16 e2 = CLAMP2(speed_cmd - rotor_rotation_state_var_.x2, 1000);
+
+            return CLAMP2((kp * e1) + (kd * e2), 1);
+        }();
+    #endif
     [[maybe_unused]] auto ctrl_isr = [&]{
         const auto uvw_current_bits = get_uvw_current_bits();
         if(dc_cal_done_ == false) [[unlikely]]{
@@ -666,84 +750,7 @@ void myesc_main(){
         [[maybe_unused]] const auto elec_omega = rotor_rotation_state_var_.x2 * MotorProfile::POLE_PAIRS;
         //#endregion
 
-        //#region 位速合成力矩
-        const auto [position_cmd, speed_cmd] = [&]{
 
-            enum class ExamplePattern{
-                Sine,
-                Saw,
-                Levels
-            };
-
-            // static constexpr auto example_pattern = ExamplePattern::Saw;
-            static constexpr auto example_pattern = ExamplePattern::Levels;
-
-            const auto [x1_cmd, x2_cmd] = [&] -> std::tuple<iq16, iq16>{
-                if constexpr(example_pattern == ExamplePattern::Sine){
-                    constexpr auto omega = 16_iq16;
-                    constexpr auto side_amplitude = 0.4_iq16;
-
-                    const auto [s,c] = math::sincos(omega * now_secs);
-                    return {
-                        side_amplitude * iq16(s),
-                        side_amplitude * omega * iq16(c)
-                    };
-                }else if constexpr(example_pattern == ExamplePattern::Saw){
-                    // const auto [s,c] = math::sincos(omega * now_secs);
-
-                    constexpr auto freq = 1.6_iq16;
-                    constexpr auto amplitude = 0.8_iq16;
-                    constexpr auto slew_rate = amplitude * freq;
-                    return {math::frac(now_secs * freq) * amplitude, slew_rate};
-                }else if constexpr(example_pattern == ExamplePattern::Levels){
-                    constexpr auto freq = 0.3_iq16;
-                    constexpr size_t num_steps = 6;
-                    constexpr auto half_amplitude = 0.4_iq16;
-                    constexpr auto step = half_amplitude * 2/ num_steps;
-                    const auto s = iq16(math::sinpu(now_secs * freq));
-                    return {(math::floor(s * (num_steps / 2)) * step), 0};
-                }
-            }();
-            // command_shaper_.update(10 + 12 * sign(iq16(math::sinpu(now_secs * 0.5_r))));
-            // const auto s = iq16(math::sinpu(now_secs * 0.7_r));
-            // const auto s = iq16(math::sinpu(now_secs * 0.16_r));
-            // command_shaper_.update(100 + 6 * (int(s * 8) / 8));
-            // track_ref_ = command_shaper_.update(track_ref_, );
-            track_ref_ = command_shaper_.iterate(track_ref_, {
-                x1_cmd,
-                x2_cmd
-            });
-            // track_ref_ = command_shaper_.update(track_ref_, {now_secs * 15, 15});
-            // track_ref_ = command_shaper_.update(track_ref_, {
-            //     1_iq16 * iq16(sin(now_secs / 100)),
-            //     0.01_iq16 *  iq16(cos(now_secs / 100))});
-                // 1_iq16 * iq16(sin(now_secs)),
-                // 1_iq16 *  iq16(cos(now_secs))});
-                // _iq16 * iq16(sin(now_secs)),
-                // 1_iq16 *  iq16(cos(now_secs))});
-            return std::make_tuple(
-                iq16::from_bits(track_ref_.x1.to_bits() >> 16),
-                track_ref_.x2
-            );
-
-            // return std::make_tuple<iq16, iq16>(
-            //     amplitude * int(omega * now_secs),
-            //     0
-            // );
-        }();
-
-
-        [[maybe_unused]] const iq20 torque_cmd = [&]{
-            const auto kp = MotorProfile::MACHINE_KP;
-            const auto kd = MotorProfile::MACHINE_KD;
-
-            // const iq16 e1 = position_cmd - pos_filter_.accumulated_angle().to_turns();
-            // const iq16 e2 = speed_cmd - pos_filter_.speed();
-            const iq16 e1 = CLAMP2(position_cmd - math::fixed_downcast<16>(rotor_rotation_state_var_.x1), 100);
-            const iq16 e2 = CLAMP2(speed_cmd - rotor_rotation_state_var_.x2, 1000);
-
-            return CLAMP2((kp * e1) + (kd * e2), 1);
-        }();
 
         //#endregion
 
@@ -755,7 +762,8 @@ void myesc_main(){
         // const iq20 current_cmd = CLAMP2((torque_cmd - math::fixed_downcast<16>(leso_state_var_.x2) / 1000) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
         // const iq20 current_cmd = CLAMP2((torque_cmd) * TORQUE_2_current_RATIO, CURRENT_LIMIT);
 
-        const iq20 current_cmd = 0.54_iq20;
+        // const iq20 current_cmd = 0.24_iq20;
+        const iq20 current_cmd = 0.64_iq20;
         // const iq20 current_cmd = 0.7_iq20;
         // const iq20 current_cmd = 0;
         // const iq20 current_cmd = 0.1_iq20 * iq16(math::sin(now_secs));
@@ -837,8 +845,8 @@ void myesc_main(){
 
         // const auto dq_volt = (generate_dq_volt_by_hfi()).clamp(MODU_VOLT_LIMIT);
         // const auto dq_volt = (generate_dq_volt_by_pi_ctrl()).clamp(MotorProfile::MODU_VOLT_LIMIT);
-        // const auto dq_volt = (generate_dq_volt_by_pi_ctrl()).clamp(MotorProfile::MODU_VOLT_LIMIT);
-        const auto dq_volt = DqCoord<iq20>{1.0_iq20, 0};
+        const auto dq_volt = (generate_dq_volt_by_pi_ctrl()).clamp(MotorProfile::MODU_VOLT_LIMIT);
+        // const auto dq_volt = DqCoord<iq20>{2.0_iq20, 0};
         // const auto dq_volt = generate_dq_volt_by_constant_voltage().clamp(MotorProfile::MODU_VOLT_LIMIT);
 
         [[maybe_unused]] const auto hfi_alphabeta_volt = generate_alpha_beta_volt_by_hfi();
@@ -859,11 +867,11 @@ void myesc_main(){
             // };
         }();
 
-        // auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation);
+        auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation);
         // alphabeta_volt = alphabeta_volt + hfi_alphabeta_volt;
 
-        auto alphabeta_volt = openloop_alphabeta_volt;
-        alphabeta_volt = alphabeta_volt + hfi_alphabeta_volt;
+        // auto alphabeta_volt = openloop_alphabeta_volt;
+        // alphabeta_volt = alphabeta_volt + hfi_alphabeta_volt;
 
 
         // const auto alphabeta_volt = dq_volt.to_alphabeta(elec_rotation) + generate_alpha_beta_volt_by_hfi();
@@ -889,7 +897,7 @@ void myesc_main(){
         set_uvw_dutycycle(uvw_dutycycle);
 
         // leso_state_var_ = leso.iterate(leso_state_var_, rotor_rotation_state_var_.x1, current_cmd);
-        leso_state_var_ = leso.iterate(leso_state_var_, rotor_rotation_state_var_.x2, current_cmd);
+        // leso_state_var_ = leso.iterate(leso_state_var_, rotor_rotation_state_var_.x2, current_cmd);
         // leso_state_var_ = leso.iterate(leso_state_var_, math::fixed_downcast<16>(rotor_rotation_state_var_.x1), current_cmd);
         busbar_current_unfilted_ = UvwCoord<iq20>(iq20(uvw_dutycycle.u), iq20(uvw_dutycycle.v), iq20(uvw_dutycycle.w)).dot(uvw_curr);
         hfi_alphabeta_volt_ = hfi_alphabeta_volt;
@@ -903,7 +911,8 @@ void myesc_main(){
         openloop_elec_angle_ = openloop_elec_angle;
         encoder_elec_angle_ = encoder_elec_angle;
     };
-    static size_t trig_prog = 0;
+
+    [[maybe_unused]] static size_t trig_prog = 0;
     auto jeoc_isr = [&]{
         timming_watch_pin_.set_high();
         const auto now_us = clock::micros();
@@ -960,44 +969,6 @@ void myesc_main(){
         }
     );
 
-    [[maybe_unused]] auto repl_service_poller = [&]{
-        static repl::ReplServer repl_server{&DBG_UART, &DBG_UART};
-
-        static const auto list = script::make_list(
-            "list",
-
-            script::make_function("errn", [&](int32_t a, int32_t b){
-                DEBUG_PRINTLN(a,b);
-            }),
-            script::make_function("errn2", [&](int32_t a, int32_t b){
-                DEBUG_PRINTLN(a,b);
-            })
-
-        );
-
-        repl_server.invoke(list);
-    };
-
-    // DBG_UART.set_event_callback([&](const hal::UartEvent & event){
-    //     switch(event.kind()){
-    //         case hal::UartEvent::TxIdle:{
-    //             // __builtin_trap();
-    //             // poll_blink_service();
-    //             // toggle_blue_led();
-    //             break;
-    //         }
-    //         case hal::UartEvent::RxIdle:{
-    //             // __builtin_trap();
-    //             // poll_blink_service();
-    //             // toggle_blue_led();
-    //             break;
-    //         }
-    //         default:{
-    //             break;
-    //         }
-    //     }
-    // });
-
     set_uvw_dutycycle(UvwCoord<iq16>::HALF);
     timer.start();
 
@@ -1017,58 +988,14 @@ void myesc_main(){
         // const auto power_v = ((uvw_dutycycle_.v - 0.5_iq16)* uvw_current_.v);
         // const auto power_w = ((uvw_dutycycle_.w - 0.5_iq16)* uvw_current_.w);
         if(true)DEBUG_PRINTLN(
-            trig_prog,
-            // SINCOS32_2_TABLE[i][0].to_bits(),
-            // SINCOS32_2_TABLE[i][1].to_bits(),
-            // openloop_elec_angle_.unsigned_normalized().to_turns(),
-            // hfi_lap_angle_.to_turns(),
-            // hfi_elec_angle_.to_turns(),
-            // iq16::from_bits(hfi_response_real_bin0_.to_bits()),
-            // hfi_response_real_bin0_.to_bits(),
-            // hfi_response_real_bin0_,
-            // alphabeta_volt_,
-            // uvw_current_bits_offset_,
-            // dq_volt_,
-            // hfi_alphabeta_volt_,
-            // alphabeta_current_,
-            // busbar_current_,
-            // power_u, power_v, power_w,
-            // power_u + power_v + power_w,
-            // dq_volt_.d * dq_current_.d,
-            // dq_volt_.q * dq_current_.q,
-            // (dq_volt_.d * dq_current_.q + dq_volt_.q * dq_current_.d) / 8,
-            // hfi_response_real_bin1_,
-            // hfi_response_imag_bin1_,
-            // hfi_response_real_bin2_,
-            // hfi_response_imag_bin2_,
-            // alphabeta_current_,
-            // (1 / iq16(hfi_response_real_bin0_ + length_hfi_response)) * (1000000 / FOC_FREQ),
-            // (1 / iq16(hfi_response_real_bin0_ - length_hfi_response)) * (1000000 / FOC_FREQ),
-            // hfi_response_real_bin1,
-            // hfi_response_imag_bin1,
-            // busbar_current_,
-            // uvw_dutycycle_,
-
-            // math::atan2pu(hfi_response_imag_bin1 - 0.002_iq20, hfi_response_real_bin1) + 0.5_iq20,
-            // hfi_bin2_angle.to_turns(),
-            // hfi_bin2_half_angle.to_turns(),
-            // cosine_hfi_bin2_half_angle * hfi_response_real_bin1 + sine_hfi_bin2_half_angle * hfi_response_imag_bin1,
-            // cosine_hfi_bin2_half_angle * hfi_response_real_bin1 - sine_hfi_bin2_half_angle * hfi_response_imag_bin1,
-            // hfi_response_real_bin1 - hfi_response_imag_bin1,
-            // hfi_response_real_bin1 + hfi_response_imag_bin1,
-            // hfi_response_real_bin1,
-            // openloop_elec_angle_.unsigned_normalized().to_turns(),
-            // pwm_u_.cvr(),
-            // tim_cnt_,
-            // timer.arr(),
-            // pwm_v_.cvr(),
-            // pwm_w_.cvr(),
-            // timer.oc<4>().cvr(),
-            // smo_sensorless_ob.angle().to_turns(),
+            alphabeta_current_,
+            // u_current_sense_ch_.read_u12(),
+            // v_current_sense_ch_.read_u12(),
+            // w_current_sense_ch_.read_u12(),
             pwm_u_.cvr(),
             pwm_v_.cvr(),
             pwm_w_.cvr(),
-            full_arr,
+            // full_arr,
             // exe_duration_.count(),
             exe_elapsed_.count(),
             exe_duration_.count()

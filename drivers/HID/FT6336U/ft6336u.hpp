@@ -77,14 +77,15 @@ private:
     FT6336_Regs regs_;
     TouchPoints points_ = TouchPoints::from_none();
 
-    IResult<> write_reg(const uint8_t addr, const uint8_t data);
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val);
+    
+    IResult<uint8_t> read_reg(const uint8_t reg_addr);
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){
         return write_reg(T::REG_ADDR, reg.to_bits());
     }
 
-    IResult<uint8_t> read_reg(const uint8_t addr);
 
     template<typename T>
     IResult<> read_reg(T & reg){
@@ -94,21 +95,21 @@ private:
         return Ok();
     }
 
-    IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(addr, pbuf);
+    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf){
+        if(const auto res = i2c_drv_.read_burst(reg_addr, pbuf);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<uint16_t> read_u12(const uint8_t addr){
+    IResult<uint16_t> read_u12(const uint8_t reg_addr){
         uint16_t ret;
-        if(const auto res = read_burst_u12(addr, std::span(&ret, 1));
+        if(const auto res = read_burst_u12(reg_addr, std::span(&ret, 1));
             res.is_err()) return Err(res.unwrap_err());
         return Ok(ret);
     }
 
-    IResult<> read_burst_u12(const uint8_t addr, std::span<uint16_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(addr, pbuf, std::endian::big);
+    IResult<> read_burst_u12(const uint8_t reg_addr, std::span<uint16_t> pbuf){
+        if(const auto res = i2c_drv_.read_burst(reg_addr, pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         for(auto & item : pbuf){
             item = item & 0x0fff;
