@@ -45,10 +45,16 @@ public:
 
     explicit MMC5983(hal::I2cDrv && i2c_drv):
         transport_(std::move(i2c_drv)){;}
-    explicit MMC5983(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        transport_(hal::I2cDrv{i2c, addr}){;}
+
+    explicit MMC5983(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        transport_(hal::I2cDrv{i2c, i2c_addr}){;}
+
     explicit MMC5983(const hal::SpiDrv & spi_drv):
         transport_(spi_drv){;}
+
     explicit MMC5983(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         transport_(hal::SpiDrv{spi, rank}){;}
 
@@ -95,8 +101,8 @@ private:
         return transport_.read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 
-    IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
-        return transport_.read_burst(addr, pbuf);
+    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf){
+        return transport_.read_burst(reg_addr, pbuf);
     }
 
 };

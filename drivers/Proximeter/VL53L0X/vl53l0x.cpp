@@ -32,24 +32,6 @@ using Error = VL53L0X::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> VL53L0X::read_byte_data(const uint8_t reg, uint8_t & data){
-	const auto res = i2c_drv_.read_reg(reg, data);
-	if(res.is_err()) return Err(res.unwrap_err());
-	return Ok();
-}
-
-IResult<> VL53L0X::read_burst(const uint8_t reg, const std::span<uint16_t> pbuf){
-	const auto res = i2c_drv_.read_burst(reg, pbuf, std::endian::big);
-	if(res.is_err()) return Err(res.unwrap_err());
-	return Ok();
-}
-
-IResult<> VL53L0X::write_byte_data(const uint8_t reg, const uint8_t byte){
-	const auto res = i2c_drv_.write_reg(reg, byte);
-	if(res.is_err()) return Err(res.unwrap_err());
-	return Ok();
-}
-
 
 IResult<> VL53L0X::init(){
 	uint8_t data;
@@ -180,3 +162,22 @@ IResult<uint16_t> VL53L0X::read_ambient_count(){
 IResult<uint16_t> VL53L0X::read_signal_count(){
 	return Ok(result.signal_count);
 }
+
+IResult<> VL53L0X::read_byte_data(const uint8_t reg, uint8_t & data){
+	const auto res = i2c_drv_.read_reg(reg, data);
+	if(res.is_err()) return Err(res.unwrap_err());
+	return Ok();
+}
+
+IResult<> VL53L0X::read_burst(const uint8_t reg, const std::span<uint16_t> pbuf){
+	const auto res = i2c_drv_.read_burst(reg, pbuf, std::endian::big);
+	if(res.is_err()) return Err(res.unwrap_err());
+	return Ok();
+}
+
+IResult<> VL53L0X::write_byte_data(const uint8_t reg, const uint8_t byte){
+	const auto res = i2c_drv_.write_reg(reg, byte);
+	if(res.is_err()) return Err(res.unwrap_err());
+	return Ok();
+}
+

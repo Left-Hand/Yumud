@@ -19,7 +19,7 @@ struct TCS34725_Prelude{
 
 
     enum class [[nodiscard]] Error_Kind:uint8_t{
-        WrongChipId
+        ChipIdMismatch
     };
     
     DEF_FRIEND_DERIVE_DEBUG(Error_Kind)

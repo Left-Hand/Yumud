@@ -79,7 +79,7 @@ void ads1115_main()
 
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    auto i2c = hal::SoftI2c(&scl_pin_, &sda_pin_);
+    auto i2c = hal::SoftI2c(scl_pin_, sda_pin_);
     i2c.init({
         .baudrate = hal::NearestFreq(400_KHz)
     });

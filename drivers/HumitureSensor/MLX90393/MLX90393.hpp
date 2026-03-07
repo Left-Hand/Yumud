@@ -14,14 +14,15 @@
 // https://wiki.lckfb.com/zh-hans/lspi/module/sensor/mlx90393-3d-hall-sensor.html
 
 #include "mlx90393_prelude.hpp"
+#include "mlx90393_transport.hpp"
 
 
 namespace ymd::drivers{
 
 class MLX90393 final: public MLX90393_Prelude{
 public:
-    explicit MLX90393(MLX90393_Transport && phy):
-        transport_(phy){;}
+    explicit MLX90393(MLX90393_TransportIntf & transport):
+        transport_(transport){;}
 
     IResult<> init();
     IResult<> reset();
@@ -43,9 +44,9 @@ public:
 
     
 private:
-    MLX90393_Transport transport_;
-    IResult<> read_reg(uint8_t reg_addr, uint16_t & data);
-    IResult<> write_reg(uint8_t reg_addr, uint16_t data);
+    MLX90393_TransportIntf & transport_;
+    IResult<> read_reg(uint8_t reg_addr, uint16_t & reg_val);
+    IResult<> write_reg(uint8_t reg_addr, uint16_t reg_val);
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){

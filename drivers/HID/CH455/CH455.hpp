@@ -29,8 +29,8 @@ namespace ymd::drivers{
 class CH455 final:public CH455_Prelude{
 public:
     struct Config{
-        Some<hal::Gpio *> scl_pin;
-        Some<hal::Gpio *> sda_pin;
+        const hal::Gpio & scl_pin;
+        const hal::Gpio & sda_pin;
         Option<hal::Gpio &> int_gpio;
     };
 

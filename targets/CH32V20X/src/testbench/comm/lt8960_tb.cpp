@@ -132,8 +132,8 @@ void lt8960_tb(){
     auto scl2_pin_ = hal::PA<9>();
     auto sda2_pin_ = hal::PA<10>();
 
-    LT8960L tx_ltr{&scl1_pin_, &sda1_pin_};
-    LT8960L rx_ltr{&scl2_pin_, &sda2_pin_};
+    LT8960L tx_ltr{scl1_pin_, sda1_pin_};
+    LT8960L rx_ltr{scl2_pin_, sda2_pin_};
     
     auto common_settings = [](LT8960L & ltr) -> Result<void, LT8960L::Error>{
         static constexpr auto DATA_RATE = LT8960L::DataRate::_62_5K;

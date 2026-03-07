@@ -24,7 +24,6 @@ namespace ymd::drivers{
 // TM1637 常用基础工具
 struct _TM1637_Prelude{
     enum class Error_Kind:uint8_t{
-        KeyFormatWrong,
         DisplayLengthTooLong,
         IndexOutOfRange,
         DutyGreatThanOne,

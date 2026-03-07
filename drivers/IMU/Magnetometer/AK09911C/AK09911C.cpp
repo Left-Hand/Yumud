@@ -201,8 +201,8 @@ IResult<> Self::selftest(){
 IResult<> Self::validate(){
     
     auto check_vendor = [&] -> IResult<> {
-        auto & wia1_reg = regs_.wia1_reg;
-        auto & wia2_reg = regs_.wia2_reg;
+        auto wia1_reg = Regs::R8_WIA1{};
+        auto wia2_reg = Regs::R8_WIA2{};
         
         if(const auto res = read_reg(wia1_reg);
             res.is_err()) return CHECK_RES(
@@ -216,7 +216,7 @@ IResult<> Self::validate(){
                 "failed to read reg when validate, check RSTN pin is HIGH",
                 "error is", res.unwrap_err());
 
-        if(wia1_reg.to_bits() != wia1_reg.KEY) return CHECK_ERR(Err(Error::WrongCompanyId),  
+        if(wia1_reg.to_bits() != wia1_reg.KEY) return CHECK_ERR(Err(Error::CompanyIdMisMatch),  
             "wrong company id, correct is", wia1_reg.KEY, "but read is", wia1_reg.to_bits());
 
         if(wia2_reg.to_bits() != wia2_reg.KEY) return CHECK_ERR(Err(Error::InvalidChipId), 

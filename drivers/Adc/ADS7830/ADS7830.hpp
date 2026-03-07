@@ -14,16 +14,16 @@ public:
 
     explicit ADS7830(
         Some<hal::I2cBase *> i2c, 
-        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        transport_(hal::I2cDrv(i2c, addr)){;}
+        transport_(hal::I2cDrv(i2c, i2c_addr)){;}
 
     IResult<> init();
 
     IResult<> validate();
 
-    IResult<ConvData> read_pos_channel(const ChannelSelection nth);
-    IResult<ConvData> read_channel(const PairSelection ch);
+    IResult<ConvResult> read_pos_channel(const ChannelSelection nth);
+    IResult<ConvResult> read_channel(const PairSelection ch);
 
     void set_pwdn_sel(const PowerDownSel sel){
         pwdn_sel_ = sel;

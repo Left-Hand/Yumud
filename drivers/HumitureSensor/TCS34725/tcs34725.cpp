@@ -22,15 +22,6 @@ using Error = TCS34725::Error;
 template<typename T = void>
 using IResult = Result<T, Error>;
 
-IResult<> TCS34725::read_burst(
-    const TCS34725::RegAddr addr, 
-    const std::span<uint16_t> pbuf
-){
-    uint8_t address = conv_reg_address_repeated(addr);
-    if(const auto res = i2c_drv_.read_burst(address, pbuf, std::endian::little);
-        res.is_err()) return Err(res.unwrap_err());
-    return Ok();
-}
 
 
 std::tuple<uq16, uq16, uq16, uq16> TCS34725::get_crgb(){
@@ -52,7 +43,7 @@ IResult<> TCS34725::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return Err(res.unwrap_err());
     if(reg.id != reg.KEY)
-        return Err(Error::WrongChipId);
+        return Err(Error::ChipIdMismatch);
     return Ok();
 }
 
@@ -164,5 +155,15 @@ IResult<> TCS34725::init(const Config & cfg){
         res.is_err()) return res;
     if(const auto res = set_gain(cfg.gain);
         res.is_err()) return res;
+    return Ok();
+}
+
+IResult<> TCS34725::read_burst(
+    const TCS34725::RegAddr addr, 
+    const std::span<uint16_t> pbuf
+){
+    uint8_t address = conv_reg_address_repeated(addr);
+    if(const auto res = i2c_drv_.read_burst(address, pbuf, std::endian::little);
+        res.is_err()) return Err(res.unwrap_err());
     return Ok();
 }

@@ -483,8 +483,8 @@ IResult<> LT8960L::validate(){
 }
 
 IResult<bool> LT8960L_Transport::check_and_skip_hw_listen_pkt(){
-    bool is_completed = i2c_.sda().read() == HIGH;
-    if(is_completed) i2c_.sda().set_high();
+    bool is_completed = i2c_.sda_pin().read() == HIGH;
+    if(is_completed) i2c_.sda_pin().set_high();
     return Ok(is_completed);
 }
 
@@ -499,9 +499,9 @@ IResult<bool> LT8960L::is_receiving(){
 }
 
 IResult<> LT8960L_Transport::start_hw_listen_pkt(){
-    i2c_.scl().set_low(); 
-    i2c_.sda().set_high(); 
-    i2c_.sda().inpu();
+    i2c_.scl_pin().set_low(); 
+    i2c_.sda_pin().set_high(); 
+    i2c_.sda_pin().inpu();
 
     return Ok();
 }

@@ -15,8 +15,11 @@ public:
     explicit MPU6050(hal::I2cDrv && i2c_drv):
         MPU6050(std::move(i2c_drv), Package::MPU6050){;}
 
-    explicit MPU6050(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        MPU6050(hal::I2cDrv(i2c, addr), Package::MPU6050){;}
+    explicit MPU6050(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        MPU6050(hal::I2cDrv(i2c, i2c_addr), Package::MPU6050){;}
 
     MPU6050(const MPU6050 & other) = delete;
     MPU6050(MPU6050 && other) = delete;
@@ -68,12 +71,12 @@ private:
         return Ok();
     }
 
-    IResult<> read_reg(const uint8_t addr, uint8_t & data){
-        return transport_.read_reg(addr, data);
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+        return transport_.read_reg(reg_addr, reg_val);
     }
 
-    IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
-        return transport_.read_burst(addr, pbuf);
+    IResult<> read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
+        return transport_.read_burst(reg_addr, pbuf);
     }
 
     template<typename T>
@@ -81,26 +84,7 @@ private:
         return read_reg(T::REG_ADDR, reg.as_bits_mut());
     }
 
-    static constexpr iq16 calculate_acc_scaler(const AccFs fs){
-        constexpr double g = 9.806;
-        switch(fs){
-            case AccFs::_2G: return iq16(g * 4);
-            case AccFs::_4G: return iq16(g * 8);
-            case AccFs::_8G: return iq16(g * 16);
-            case AccFs::_16G: return iq16(g * 32);
-        }
-        __builtin_unreachable();
-    }
 
-    static constexpr iq16 calculate_gyr_scaler(const GyrFs fs){
-        switch(fs){
-            case GyrFs::_250deg: return iq16(500 * DEG2RAD_RATIO);
-            case GyrFs::_500deg: return iq16(1000 * DEG2RAD_RATIO);
-            case GyrFs::_1000deg: return iq16(2000 * DEG2RAD_RATIO);
-            case GyrFs::_2000deg: return iq16(4000 * DEG2RAD_RATIO);
-        }
-        __builtin_unreachable();
-    }
 
 };
 

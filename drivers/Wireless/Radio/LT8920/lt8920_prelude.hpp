@@ -13,7 +13,7 @@ namespace ymd::drivers{
 
 struct LT8920_Prelude{
     enum class Error_Kind:uint8_t{
-        WrongChipId,
+        ChipIdMismatch,
         NoAvailablePhy
     };
 

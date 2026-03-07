@@ -151,6 +151,16 @@ struct INA226_Prelude{
             return bv_code_to_volts(bits);
         }
     };
+
+    static constexpr AverageTimes times_to_avtimes(const uint16_t times){
+        const uint8_t temp = __builtin_ctz(times);
+
+        if(times <= 64){
+            return std::bit_cast<AverageTimes>(uint16_t(temp / 2));
+        }else{
+            return std::bit_cast<AverageTimes>(uint16_t(4 + (temp - 7))); 
+        }
+    } 
 };
 
 struct INA226_Regs:public INA226_Prelude{

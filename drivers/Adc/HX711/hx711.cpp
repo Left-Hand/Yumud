@@ -5,24 +5,24 @@
 using namespace ymd::drivers;
 
 uint32_t HX711::read_data(void){
-    uint32_t data=0;
+    uint32_t bits=0;
 
-    for(uint8_t i = 0; i < 24; i++){
+    for(size_t i = 0; i < 24; i++){
         sck_pin_.set_high();
         __nopn(2);
         sck_pin_.set_low();
 
-        data <<= 1; data |= bool(sdo_pin_.read() == HIGH);
+        bits <<= 1; 
+        bits |= bool(sdo_pin_.read() == HIGH);
     }
 
-    for(uint8_t i = 0; i < (uint8_t)conv_type_; i++){
+    for(size_t i = 0; i < static_cast<uint8_t>(conv_type_); i++){
         sck_pin_.set_high();
         __nopn(2);
         sck_pin_.set_low();
     }
 
-    data ^= 0x800000;
-    return(data);
+    return(bits ^ 0x800000);
 }
 
 void HX711::init(){

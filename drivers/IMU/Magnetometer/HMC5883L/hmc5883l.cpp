@@ -35,10 +35,43 @@ using namespace ymd::drivers;
 #endif
 
 
+using Self = HMC5883L;
+
 using Error = ImuError;
 
 template<typename T = void>
 using IResult= Result<T, Error>;
+
+static constexpr iq24 transfrom_gain_into_lsb(const Self::Gain gain){
+    switch(gain){
+    case Self::Gain::GL0_73:
+        return iq24(0.73);
+    case Self::Gain::GL0_92:
+        return iq24(0.92);
+    case Self::Gain::GL1_22:
+        return iq24(1.22);
+    case Self::Gain::GL1_52:
+        return iq24(1.52);
+    case Self::Gain::GL2_27:
+        return iq24(2.27);
+    case Self::Gain::GL2_56:
+        return iq24(2.56);
+    case Self::Gain::GL3_03:
+        return iq24(3.03);
+    case Self::Gain::GL4_35:
+        return iq24(4.35);
+    default: __builtin_unreachable();
+    }
+}
+
+static constexpr iq16 transform_raw_to_gauss(const uint16_t data, const iq24 lsb){
+    return iq16::from_bits(data & 0x8fff) * lsb;
+}
+
+void HMC5883L::set_lsb(const Gain gain){
+    lsb_ = transfrom_gain_into_lsb(gain);
+}
+
 
 IResult<> HMC5883L::init(){
     if(const auto res = validate();

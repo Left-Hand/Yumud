@@ -8,7 +8,10 @@ namespace ymd::drivers{
 
 class LIS2DW12:public LIS2DW12_Prelude{
 public:
-    explicit LIS2DW12(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+    explicit LIS2DW12(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
         transport_(hal::I2cDrv{i2c, i2c_addr}){;}
     explicit LIS2DW12(const hal::I2cDrv & i2c_drv):
         transport_(i2c_drv){;}

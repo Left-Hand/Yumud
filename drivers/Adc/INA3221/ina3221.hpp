@@ -29,10 +29,17 @@ public:
         transport_(i2c_drv){;}
     explicit INA3221(hal::I2cDrv && i2c_drv):
         transport_(std::move(i2c_drv)){;}
-    explicit INA3221(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        transport_(hal::I2cDrv(i2c, addr)){;}
+    explicit INA3221(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        transport_(hal::I2cDrv(i2c, i2c_addr)){;}
+
+    INA3221(const INA3221 &) = delete;
+    INA3221(INA3221 &&) = delete;
+
     ~INA3221(){;}
-    
+
     IResult<bool> is_ready();
 
 
@@ -52,9 +59,7 @@ public:
     IResult<> set_shunt_conversion_time(const ConversionTime time);
 
     IResult<ShuntVoltCode> get_shunt_volt_code(const ChannelSelection ch_sel);
-
-    IResult<iq16> get_shunt_volt(const ChannelSelection ch_sel);
-    IResult<iq16> get_bus_volt(const ChannelSelection ch_sel);
+    IResult<BusVoltCode> get_bus_volt_code(const ChannelSelection ch_sel);
 
     IResult<> set_instant_ovc_threshold(const ChannelSelection ch_sel, const ShuntVoltCode volt_code);
     IResult<> set_constant_ovc_threshold(const ChannelSelection ch_sel, const ShuntVoltCode volt_code);

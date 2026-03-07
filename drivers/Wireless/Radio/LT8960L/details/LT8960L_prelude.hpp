@@ -139,8 +139,8 @@ struct LT8960L_Prelude{
 
 struct LT8960L_Transport final:public details::LT8960L_Prelude{
     explicit LT8960L_Transport(
-        Some<hal::Gpio *> scl, 
-        Some<hal::Gpio *> sda
+        const hal::Gpio & scl, 
+        const hal::Gpio & sda
     ):
         i2c_(hal::SoftI2c(scl, sda)){};
 

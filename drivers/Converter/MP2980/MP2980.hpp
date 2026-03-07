@@ -10,8 +10,11 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit MP2980(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit MP2980(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    explicit MP2980(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){;}
 
     IResult<> set_feed_back_vref(const uq10 vref);
     IResult<> set_feed_back_vref_mv(const uint32_t vref_mv);
@@ -36,8 +39,15 @@ private:
     uint32_t fb_down_res_ohms = 10 * 1000;
 
 
-    IResult<> write_reg(const RegAddr address, const uint8_t reg){
-        if(const auto res = i2c_drv_.write_reg(uint8_t(address), reg);
+    IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val){
+        if(const auto res = i2c_drv_.write_reg(uint8_t(reg_addr), reg_val);
+            res.is_err()) return Err(res.unwrap_err());
+        return Ok();
+    }
+
+
+    IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val){
+        if(const auto res = i2c_drv_.read_reg(uint8_t(reg_addr), reg_val);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
@@ -50,11 +60,6 @@ private:
         return Ok();
     }
 
-    IResult<> read_reg(const RegAddr address, uint8_t & reg){
-        if(const auto res = i2c_drv_.read_reg(uint8_t(address), reg);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
 
     template<typename T>
     IResult<> read_reg(T & reg){

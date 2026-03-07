@@ -38,7 +38,7 @@ public:
         }
     };
 
-    explicit LT8960L(Some<hal::Gpio *> scl, Some<hal::Gpio *> sda):
+    explicit LT8960L(const hal::Gpio & scl, const hal::Gpio & sda):
         transport_(scl, sda){;}
 
 

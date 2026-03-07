@@ -15,7 +15,7 @@ namespace ymd::drivers{
 struct SGM58031_Prelude{
     static constexpr auto DEFAULT_I2C_ADDR = hal::I2cSlaveAddr<7>::from_u7(0b0100000 >> 1);
     enum class Error_Kind{
-        WrongChipId
+        ChipIdMismatch
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -88,7 +88,7 @@ struct SGM58031_Prelude{
     };
 
 
-    enum class RegAddr:uint8_t{
+    enum class [[nodiscard]] RegAddr:uint8_t{
         Conv = 0,
         Config,
         LowThr, 
@@ -97,30 +97,92 @@ struct SGM58031_Prelude{
         DeviceID,
         Trim
     };
+
+    struct [[nodiscard]] ConvCode final{
+
+        uint16_t bits;
+    };
 };
 
 struct SGM58031_Regset:public SGM58031_Prelude{
     struct R16_Config:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Config;
+        static constexpr uint16_t RESET_VALUE = 0x8583;
+
+        // Comparator Queue and Disable Function
+        // 00 = Assert after one conversion
+        // 01 = Assert after two conversions
+        // 10 = Assert after four conversions
+        // 11 = Disable comparator (default)
         uint16_t comp_que : 2;
+
+        // Latching Comparator
+        // 0 = Non-latching comparator (default)
+        // 1 = Latching comparator
         uint16_t comp_lat : 1;
+
+        // Comparator Polarity
+        // 0 = Active low (default)
+        // 1 = Active high
         uint16_t comp_pol : 1;
+
+        // Comparator Mode
+        // 0 = A traditional comparator with hysteresis (default)
+        // 1 = A window comparator
         uint16_t comp_mode :1;
         uint16_t datarate :3;
+
+        // Device Operating Mode
+        // 0 = Continuous conversion mode
+        // 1 = Power-down single-shot mode (default)
         uint16_t mode:   1;
         PGA pga:    3;
         MUX mux:    3;
+
+
+        // Working Status/Single-Shot Conversion Start
+        // For a write status:
+        // 0 = No effect
+        // 1 = Start a single conversion (when in single-shot
+        // mode)
+        // For a read status:
+        // 0 = The chip is doing a conversion
+        // 1 = The chip isn’t doing a conversion
         uint16_t os:     1;
     }DEF_R16(config_reg)
 
     struct R16_Config1:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Config1;        
         uint16_t __resv1__    :3;
+
+        // 0 = None (default)
+        // 1 = Use AIN3 as external reference for ADC
         uint16_t ext_ref      :1;
+
+        // 0 = Disable leakage blocking circuit for the scenario that I 2
+        // C bus voltage is lower
+        // than V DD of the part. The I 2
+        // C interface is still functional but V DD sees leakage when
+        // V BUS < V DD - 0.3V (default)
+        // 1 = Bus voltage can be lower than V DD without causing leakage. The V DD range is
+        // 3V to 5.5V and the I 2
+        // C bus voltage should be limited to 3V to 5.5V
         uint16_t bus_flex     :1;
         uint16_t __resv2__   :1;
+
+        // 0 = No current sourced (default)
+        // 1 = Source a pair of 2μA current to selected pair of AINs
         uint16_t burn_out     :1;
+
+        // 0 = DR[2:0] = 000 ~ 111 for conversion rate of 6.25Hz, 12.5Hz, 25Hz, 50Hz, 100Hz,
+        // 200Hz, 400Hz and 800Hz (default)
+        // 1 = DR[2:0] = 000 ~ 111 for conversion rate of 7.5Hz, 15Hz, 30Hz, 60Hz, 120Hz,
+        // 240Hz, 480Hz and 960Hz
         uint16_t dr_sel       :1;
+
+        // Writing '1' to PD powers down this part, and this PD bit is automatically cleared
+        // internally. Another continuous/single conversion can be carried out again without
+        // the need to clear this bit.
         uint16_t pd          :1;
         uint16_t __resv3__   :7;
     }DEF_R16(config1_reg)
@@ -133,7 +195,8 @@ struct SGM58031_Regset:public SGM58031_Prelude{
         uint16_t id          :5;
         uint16_t __resv2__   :3;
         
-    }DEF_R16(device_id_reg)
+    };
+    VALIDATE_R16(R16_DeviceId)
 
     struct R16_Trim:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Trim;
@@ -144,17 +207,17 @@ struct SGM58031_Regset:public SGM58031_Prelude{
 
     struct R16_Conv:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::Conv;
-        uint16_t bits;
+        ConvCode code;
     }DEF_R16(conv_reg)
 
     struct R16_LowThr:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::LowThr;
-        uint16_t bits;
+        ConvCode code;
     }DEF_R16(low_thr_reg)
 
     struct R16_HighThr:public Reg16<>{
         static constexpr auto ADDRESS = RegAddr::HighThr;
-        uint16_t bits;
+        ConvCode code;
     }DEF_R16(high_thr_reg)
 };
 

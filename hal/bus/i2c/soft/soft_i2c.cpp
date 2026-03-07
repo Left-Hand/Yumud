@@ -19,17 +19,17 @@ void SoftI2c::delay_dur(){
 HalResult SoftI2c::wait_ack(){
 
     delay_dur();
-    sda().set_high();
-    sda().inpu();
+    sda_pin().set_high();
+    sda_pin().inpu();
     delay_dur();
-    scl().set_high();
+    scl_pin().set_high();
     // TimeStamp delta;
 
     bool ovt = false;
 
     #ifndef SoftI2c_DISCARD_ACK
     const auto m = clock::micros();
-    while(sda().read() == HIGH){
+    while(sda_pin().read() == HIGH){
         if(clock::micros() - m >= 
         #if SoftI2c_TEST_TIMEOUT
             SoftI2c_TEST_TIMEOUT
@@ -47,9 +47,9 @@ HalResult SoftI2c::wait_ack(){
     #endif
 
     delay_dur();
-    scl().set_low();
+    scl_pin().set_low();
     // delay_dur();
-    sda().outod();
+    sda_pin().outod();
     
     if(ovt and (discard_ack_ == false)){
         return HalResult::WritePayloadAckTimeout;
@@ -73,17 +73,17 @@ HalResult SoftI2c::borrow(const I2cSlaveAddrWithRw req){
 
 HalResult SoftI2c::lead(const I2cSlaveAddrWithRw req){
     #ifdef SoftI2c_SCL_USE_PP_THAN_OD
-    scl().outpp();
+    scl_pin().outpp();
     #else
-    scl().outod();
+    scl_pin().outod();
     #endif
-    sda().outod();
-    sda().set_high();
-    scl().set_high();
+    sda_pin().outod();
+    sda_pin().set_high();
+    scl_pin().set_high();
     delay_dur();
-    sda().set_low();
+    sda_pin().set_low();
     delay_dur();
-    scl().set_low();
+    scl_pin().set_low();
     delay_dur();
 
     constexpr auto header_err_transform = [](const HalResult res) -> HalResult{
@@ -102,27 +102,27 @@ HalResult SoftI2c::lead(const I2cSlaveAddrWithRw req){
 }
 
 void SoftI2c::trail(){
-    scl().set_low();
-    sda().outod();
-    sda().set_low();
+    scl_pin().set_low();
+    sda_pin().outod();
+    sda_pin().set_low();
     delay_dur();
-    scl().set_high();
+    scl_pin().set_high();
     delay_dur();
-    sda().set_high();
+    sda_pin().set_high();
     delay_dur();
 }
 
 
 
 HalResult SoftI2c::write(const uint32_t data){
-    sda().outod();
+    sda_pin().outod();
 
     for(uint8_t mask = 0x80; mask; mask >>= 1){
-        sda().write(BoolLevel::from(mask & data));
+        sda_pin().write(BoolLevel::from(mask & data));
         delay_dur();
-        scl().set_high();
+        scl_pin().set_high();
         delay_dur();
-        scl().set_low();
+        scl_pin().set_low();
     }
 
     return wait_ack();
@@ -131,25 +131,25 @@ HalResult SoftI2c::write(const uint32_t data){
 HalResult SoftI2c::read(uint8_t & data, const Ack ack){
     uint8_t ret = 0;
 
-    sda().set_high();
-    sda().inpu();
+    sda_pin().set_high();
+    sda_pin().inpu();
     delay_dur();
 
     for(uint8_t i = 0; i < 8; i++){
-        scl().set_high();
-        ret <<= 1; ret |= sda().read().to_bool();
+        scl_pin().set_high();
+        ret <<= 1; ret |= sda_pin().read().to_bool();
         delay_dur();
-        scl().set_low();
+        scl_pin().set_low();
         delay_dur();
     }
 
-    sda().write((ack == ACK) ? LOW : HIGH);
-    sda().outod();
-    scl().set_high();
+    sda_pin().write((ack == ACK) ? LOW : HIGH);
+    sda_pin().outod();
+    scl_pin().set_high();
     delay_dur();
 
-    scl().set_low();
-    sda().inpu();
+    scl_pin().set_low();
+    sda_pin().inpu();
 
     data = ret;
     return HalResult::Ok();
@@ -157,14 +157,14 @@ HalResult SoftI2c::read(uint8_t & data, const Ack ack){
 
 void SoftI2c::init(const Config & cfg){
 
-    sda().set_high();
-    sda().outod();
-    scl().set_high();
+    sda_pin().set_high();
+    sda_pin().outod();
+    scl_pin().set_high();
 
     #ifdef SoftI2c_SCL_USE_PP_THAN_OD
-    scl().outpp();
+    scl_pin().outpp();
     #else
-    scl().outod();
+    scl_pin().outod();
     #endif
 
     auto release_bus = [&]{

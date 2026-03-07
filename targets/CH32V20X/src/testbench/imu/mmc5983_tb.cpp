@@ -122,7 +122,7 @@ void mmc5983_main(){
     // SoftI2c i2c{hal::PA<12>(), hal::PA<15>()};
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{scl_pin_, sda_pin_};
     // i2c.init(400_KHz);
     // i2c.init();
     

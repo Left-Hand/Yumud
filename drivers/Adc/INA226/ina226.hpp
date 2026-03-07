@@ -20,8 +20,16 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit INA226(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit INA226(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){};
+    explicit INA226(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){};
+
+    INA226(const INA226 &) = delete;
+    INA226(INA226 &&) = delete;
+    ~INA226() = default;
+
 
 
     IResult<> init(const Config & cfg);

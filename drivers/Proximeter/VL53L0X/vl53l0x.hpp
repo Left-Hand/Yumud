@@ -35,10 +35,17 @@ public:
 
     explicit VL53L0X(hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
+
+
     explicit VL53L0X(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit VL53L0X(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(i2c, addr){;}
+
+
+    explicit VL53L0X(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(i2c, i2c_addr){;}
 
     VL53L0X(const VL53L0X &) = delete;
     VL53L0X(VL53L0X &&) = delete;

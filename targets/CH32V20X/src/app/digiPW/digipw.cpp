@@ -137,10 +137,10 @@ void digipw_main(){
     auto scl_pin = hal::PB<15>();
     auto sda_pin = hal::PB<14>();
     
-    hal::SoftI2c SoftI2c{&scl_pin, &sda_pin};
+    hal::SoftI2c i2c{scl_pin, sda_pin};
     // SoftI2c.init({1000000});
 
-    SoftI2c.init({
+    i2c.init({
         .baudrate = hal::NearestFreq(100_KHz)
     });
 

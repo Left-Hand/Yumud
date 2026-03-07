@@ -12,8 +12,11 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit HMC5883L(hal::I2cDrv && i2c_drv):
         i2c_drv_(i2c_drv){;}
-    explicit HMC5883L(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    explicit HMC5883L(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){;}
 
     IResult<> init();
     IResult<> enable_high_speed(const Enable en);
@@ -53,41 +56,13 @@ private:
         return Ok();
     }
 
-    IResult<> read_burst(const RegAddr addr, std::span<int16_t> pbuf){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, std::endian::big);
+    IResult<> read_burst(const RegAddr reg_addr, std::span<int16_t> pbuf){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(reg_addr), pbuf, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    void set_lsb(const Gain gain){
-        lsb_ = transfrom_gain_into_lsb(gain);
-    }
-
-    static constexpr iq24 transfrom_gain_into_lsb(const Gain gain){
-        switch(gain){
-        case Gain::GL0_73:
-            return iq24(0.73);
-        case Gain::GL0_92:
-            return iq24(0.92);
-        case Gain::GL1_22:
-            return iq24(1.22);
-        case Gain::GL1_52:
-            return iq24(1.52);
-        case Gain::GL2_27:
-            return iq24(2.27);
-        case Gain::GL2_56:
-            return iq24(2.56);
-        case Gain::GL3_03:
-            return iq24(3.03);
-        case Gain::GL4_35:
-            return iq24(4.35);
-        default: __builtin_unreachable();
-        }
-    }
-
-    static constexpr iq16 transform_raw_to_gauss(const uint16_t data, const iq24 lsb){
-        return iq16::from_bits(data & 0x8fff) * lsb;
-    }
+    void set_lsb(const Gain gain);
 };
 
 };

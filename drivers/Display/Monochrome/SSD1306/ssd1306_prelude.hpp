@@ -36,8 +36,11 @@ public:
         p_i2c_drv_(i2c_drv){};
     SSD1306_Transport(hal::I2cDrv && i2c_drv):
         p_i2c_drv_(std::move(i2c_drv)){};
-    SSD1306_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        p_i2c_drv_(hal::I2cDrv{i2c, addr}){};
+    SSD1306_Transport(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        p_i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){};
 
     IResult<> init(){
         return Ok();

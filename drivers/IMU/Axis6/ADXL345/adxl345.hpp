@@ -17,8 +17,8 @@ public:
 
     explicit ADXL345(
         Some<hal::I2cBase *> i2c, 
-        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        transport_(hal::I2cDrv(i2c, addr)){;}
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+        transport_(hal::I2cDrv(i2c, i2c_addr)){;}
 
     explicit ADXL345(const hal::SpiDrv & spi_drv): 
         transport_(spi_drv){;}

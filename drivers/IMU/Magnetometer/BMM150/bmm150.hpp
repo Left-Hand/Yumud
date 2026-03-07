@@ -9,11 +9,11 @@ class BMM150:
 public:
     explicit BMM150(
         Some<hal::I2cBase *> i2c, 
-        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        transport_(hal::I2cDrv(i2c, addr)){;}
+        transport_(hal::I2cDrv(i2c, i2c_addr)){;}
 
-    struct Config{
+    struct [[nodiscard]] Config final{
 
     };
 
@@ -51,8 +51,8 @@ private:
         );
     }
 
-    IResult<> read_burst(const uint8_t addr, std::span<int16_t> pbuf){
-        return transport_.read_burst(addr, pbuf);
+    IResult<> read_burst(const uint8_t reg_addr, std::span<int16_t> pbuf){
+        return transport_.read_burst(reg_addr, pbuf);
     }
 };
 

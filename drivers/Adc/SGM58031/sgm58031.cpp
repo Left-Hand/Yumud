@@ -47,11 +47,12 @@ IResult<> Self::init(){
 }
 
 IResult<> Self::validate(){
-    auto & reg = regs_.device_id_reg;
+    // auto & reg = regs_.device_id_reg;
+    auto reg = Regs::R16_DeviceId{};
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
     if(reg.to_u16() != reg.KEY) 
-        return Err(Error::WrongChipId);
+        return Err(Error::ChipIdMismatch);
     return Ok();
 }
 IResult<> Self::set_datarate(const DataRate dr){

@@ -21,7 +21,7 @@ IResult<> Self::validate(){
         res.is_err()) return res;
     BMP280_DEBUG("CHIP code: ", uint8_t(chip_id_reg));
     if(reg.to_bits() != VALID_CHIPID) 
-        return Err(Error::WrongChipId);
+        return Err(Error::ChipIdMismatch);
     return Ok();
 }
 

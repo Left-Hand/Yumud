@@ -58,7 +58,7 @@ static constexpr uint8_t RESET_KEY = 0xB6;
 using RegAddr = uint8_t;
 
 enum class [[nodiscard]] Error_Kind{
-    WrongChipId,
+    ChipIdMismatch,
     NoPressure
 };
 

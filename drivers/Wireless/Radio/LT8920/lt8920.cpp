@@ -60,7 +60,7 @@ IResult<> LT8920::validate(){
     if(const auto res = read_reg(30, reg);
         res.is_err()) return res;
     if(reg != 0xf413)
-        return Err(Error::WrongChipId);
+        return Err(Error::ChipIdMismatch);
     return Ok();
 }
 

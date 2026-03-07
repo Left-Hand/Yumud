@@ -46,21 +46,21 @@ public:
     IResult<> set_odr(const Odr odr);
 
 private:
-    
+    using Regs = AK09911C_Regset;
     AsahiKaseiImu_Transport transport_;
-    AK09911C_Regset regs_ = {};
+    Regs regs_ = {};
     Option<math::Vec3<iq24>> scale_ = None; 
     
     IResult<> selftest();
     IResult<> blocking_update();
     IResult<> update_adj();
 
-    IResult<> write_reg(const uint8_t addr, const uint8_t data){
-        return transport_.write_reg(addr, data);
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
+        return transport_.write_reg(reg_addr, reg_val);
     }
 
-    IResult<> read_reg(const uint8_t addr, uint8_t & data){
-        return transport_.read_reg(addr, data);
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
+        return transport_.read_reg(reg_addr, reg_val);
     }
 
     template<typename T>

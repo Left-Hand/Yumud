@@ -17,9 +17,9 @@ public:
 
     explicit QMC5883L(
         Some<hal::I2cBase *> i2c, 
-        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){;}
 
 
     QMC5883L(const QMC5883L & other) = delete;
@@ -80,10 +80,10 @@ private:
 
 
     IResult<> read_burst(
-        const RegAddr addr, 
+        const RegAddr reg_addr, 
         std::span<int16_t> pbuf
     ){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), pbuf, std::endian::little);
+        if(const auto res = i2c_drv_.read_burst(uint8_t(reg_addr), pbuf, std::endian::little);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }

@@ -33,8 +33,8 @@ public:
         i2c_drv_(std::move(i2c_drv)){;}
     explicit MLX90640(
         Some<hal::I2cBase *> i2c, 
-        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(i2c, addr){;}
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(i2c, i2c_addr){;}
 
     IResult<> init(uint16_t EE[832], MLX90640_Coeffs & MLXPars);
     

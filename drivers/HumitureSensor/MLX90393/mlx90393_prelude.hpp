@@ -238,24 +238,6 @@ struct MLX90393_Regset:public MLX90393_Prelude{
     }DEF_R16(conf3_reg)
 };
 
-class MLX90393_Transport final:public MLX90393_Prelude{
-private:
-    MLX90393_Transport(std::optional<hal::I2cDrv> && i2c_drv, std::optional<hal::SpiDrv> && spi_drv):
-        i2c_drv_(std::move(i2c_drv)),
-        spi_drv_(std::move(spi_drv)){;}
-
-    std::optional<hal::I2cDrv> i2c_drv_;
-    std::optional<hal::SpiDrv> spi_drv_;
-public:
-    MLX90393_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        MLX90393_Transport(hal::I2cDrv(i2c, addr), std::nullopt){;}
-
-    MLX90393_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank slave_index):
-        MLX90393_Transport(std::nullopt, hal::SpiDrv(spi, slave_index)){;}
-
-    IResult<> transceive(
-        std::span<uint8_t> rx_pbuf, std::span<const uint8_t> tx_pbuf);
-};
 
 
 }

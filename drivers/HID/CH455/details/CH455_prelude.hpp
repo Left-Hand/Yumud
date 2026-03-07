@@ -77,8 +77,8 @@ struct CH455_Prelude{
 class CH455_phy final :public CH455_Prelude{
 public:
     CH455_phy(
-        Some<hal::Gpio *> scl, 
-        Some<hal::Gpio *> sda
+        const hal::Gpio & scl, 
+        const hal::Gpio & sda
     ):
         i2c_(scl, sda){;}
 

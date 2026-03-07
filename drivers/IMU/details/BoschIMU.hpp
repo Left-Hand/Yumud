@@ -14,12 +14,12 @@ public:
     using Error = ImuError;
     explicit BoschImu_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    explicit BoschImu_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
-        BoschImu_Transport(hal::I2cDrv{i2c, addr}){;}
+    explicit BoschImu_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
+        BoschImu_Transport(hal::I2cDrv{i2c, i2c_addr}){;}
     explicit BoschImu_Transport(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
-    explicit BoschImu_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank index):
-        BoschImu_Transport(hal::SpiDrv{spi, index}){;}
+    explicit BoschImu_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
+        BoschImu_Transport(hal::SpiDrv{spi, rank}){;}
 
     [[nodiscard]] 
     Result<void, Error> write_reg(const uint8_t addr, const uint8_t data);

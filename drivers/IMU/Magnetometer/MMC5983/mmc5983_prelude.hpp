@@ -151,16 +151,16 @@ class MMC5983_Transport: public MMC5983_Prelude{
 public:
     explicit MMC5983_Transport(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv), spi_drv_(std::nullopt){;}
-    explicit MMC5983_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr):
-        MMC5983_Transport(hal::I2cDrv{i2c, addr}){;}
+    explicit MMC5983_Transport(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> i2c_addr):
+        MMC5983_Transport(hal::I2cDrv{i2c, i2c_addr}){;}
     explicit MMC5983_Transport(const hal::SpiDrv & spi_drv):
         i2c_drv_(std::nullopt), spi_drv_(spi_drv){;}
     explicit MMC5983_Transport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank):
         spi_drv_(hal::SpiDrv{spi, rank}){;}
 
-    IResult<> write_reg(const uint8_t addr, const uint8_t data){
+    IResult<> write_reg(const uint8_t reg_addr, const uint8_t reg_val){
         if(i2c_drv_){
-            if(const auto res = i2c_drv_->write_reg(addr, data);
+            if(const auto res = i2c_drv_->write_reg(reg_addr, reg_val);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else if(spi_drv_){
@@ -169,9 +169,9 @@ public:
         return Err(Error::NoAvailablePhy);
     }
 
-    IResult<> read_reg(const uint8_t addr, uint8_t & data){
+    IResult<> read_reg(const uint8_t reg_addr, uint8_t & reg_val){
         if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_reg(uint8_t(addr), data);
+            if(const auto res = i2c_drv_->read_reg(uint8_t(reg_addr), reg_val);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else if(spi_drv_){
@@ -180,9 +180,9 @@ public:
         return Err(Error::NoAvailablePhy);
     }
 
-    IResult<> read_burst(const uint8_t addr, std::span<uint8_t> pbuf){
+    IResult<> read_burst(const uint8_t reg_addr, std::span<uint8_t> pbuf){
         if(i2c_drv_){
-            if(const auto res = i2c_drv_->read_burst<uint8_t>(uint8_t(addr), pbuf);
+            if(const auto res = i2c_drv_->read_burst<uint8_t>(uint8_t(reg_addr), pbuf);
                 res.is_err()) return Err(res.unwrap_err());
             return Ok();
         }else if(spi_drv_){

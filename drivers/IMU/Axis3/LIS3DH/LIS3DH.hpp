@@ -16,8 +16,11 @@ class LIS3DH: public LIS3DH_Prelude{
 
 public:
 
-    explicit LIS3DH(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        transport_(hal::I2cDrv{i2c, addr}){;}
+    explicit LIS3DH(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        transport_(hal::I2cDrv{i2c, i2c_addr}){;}
     explicit LIS3DH(const hal::I2cDrv & i2c_drv):
         transport_(i2c_drv){;}
     explicit LIS3DH(hal::I2cDrv && i2c_drv):
@@ -104,40 +107,30 @@ public:
     }
 
 private:
-
-
-    template<typename T>
-    IResult<> write_reg(const RegCopy<T> & reg);
-
-    IResult<> read_reg(auto & reg);
-
-    IResult<> verify_phy();
+    Transport transport_;
 
     using Regs = _LIS3DH_Regs;
     Regs regs_ = {};
 
-    Transport transport_;
+
+    template<typename T>
+    IResult<> write_reg(const RegCopy<T> & reg){
+        const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
+        if(res.is_err()) return res;
+        reg.apply();
+        return Ok();
+    }
+
+    template<typename T>
+    IResult<> read_reg(T & reg){
+        return LIS3DH::IResult<>(transport_.read_reg(T::REG_ADDR, reg.as_bits_mut()));
+    }
+
+    IResult<> verify_phy(){
+        return LIS3DH::IResult<>(transport_.validate());
+    }
+
+
 };
-
-}
-
-namespace ymd::drivers{
-
-template<typename T>
-LIS3DH::IResult<> LIS3DH::write_reg(const RegCopy<T> & reg){
-    const auto res = transport_.write_reg(T::REG_ADDR, reg.to_bits());
-    if(res.is_err()) return res;
-    reg.apply();
-    return Ok();
-}
-
-template<typename T>    
-LIS3DH::IResult<> LIS3DH::read_reg(T & reg){
-    return LIS3DH::IResult<>(transport_.read_reg(T::REG_ADDR, reg.as_bits_mut()));
-}
-
-LIS3DH::IResult<> LIS3DH::verify_phy(){
-    return LIS3DH::IResult<>(transport_.validate());
-}
 
 }

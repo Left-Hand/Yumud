@@ -91,7 +91,7 @@ void i2c_scanner_main(){
     // DEBUGGER.force_sync();
     auto scl_pin_ = SCL_PIN;
     auto sda_pin_ = SDA_PIN;
-    hal::SoftI2c i2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c{scl_pin_, sda_pin_};
     i2c.init({
         .baudrate = hal::NearestFreq(200_KHz)
     });

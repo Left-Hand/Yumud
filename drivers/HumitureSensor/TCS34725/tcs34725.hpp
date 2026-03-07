@@ -15,16 +15,23 @@ public:
         i2c_drv_(std::move(i2c_drv)){;}
     explicit TCS34725(
         Some<hal::I2cBase *> i2c, 
-        const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(i2c, addr){;}
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR):
+        i2c_drv_(i2c, i2c_addr){;}
 
     TCS34725(const TCS34725 &) = delete;
     TCS34725(TCS34725 &&) = delete;
     ~TCS34725() = default;
 
-    struct Config{
-        Milliseconds integration_time = 240ms;
-        Gain gain = Gain::_1x;
+    struct [[nodiscard]] Config final{
+        Milliseconds integration_time;
+        Gain gain;
+
+        static constexpr Config from_default() noexcept {
+            return Config{
+                .integration_time = 240ms,
+                .gain = Gain::_1x,
+            };
+        }
     };
 
 
@@ -77,14 +84,14 @@ private:
         return Ok();
     }
 
-    IResult<> read_burst(const RegAddr addr, const std::span<uint16_t> pbuf);
+    IResult<> read_burst(const RegAddr reg_addr, const std::span<uint16_t> pbuf);
 
-    [[nodiscard]] static constexpr uint8_t conv_reg_address_norepeat(const RegAddr addr){
-        return (std::bit_cast<uint8_t>(addr) | 0x80);
+    [[nodiscard]] static constexpr uint8_t conv_reg_address_norepeat(const RegAddr reg_addr){
+        return (std::bit_cast<uint8_t>(reg_addr) | 0x80);
     }
 
-    [[nodiscard]] static constexpr uint8_t conv_reg_address_repeated(const RegAddr addr){
-        return conv_reg_address_norepeat(addr) | (1 << 5);
+    [[nodiscard]] static constexpr uint8_t conv_reg_address_repeated(const RegAddr reg_addr){
+        return conv_reg_address_norepeat(reg_addr) | (1 << 5);
     }
 
 };

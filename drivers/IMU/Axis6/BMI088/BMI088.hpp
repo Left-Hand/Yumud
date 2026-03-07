@@ -19,7 +19,10 @@ public:
         transport_(i2c_drv){;}
     explicit BMI088_Acc(hal::I2cDrv && i2c_drv):
         transport_(std::move(i2c_drv)){;}
-    explicit BMI088_Acc(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit BMI088_Acc(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
         transport_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     explicit BMI088_Acc(const hal::SpiDrv & spi_drv):
@@ -107,7 +110,10 @@ public:
         transport_(i2c_drv){;}
     explicit BMI088_Gyr(hal::I2cDrv && i2c_drv):
         transport_(std::move(i2c_drv)){;}
-    explicit BMI088_Gyr(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
+    explicit BMI088_Gyr(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
         transport_(hal::I2cDrv{i2c, DEFAULT_I2C_ADDR}){;}
 
     explicit BMI088_Gyr(const hal::SpiDrv & spi_drv):

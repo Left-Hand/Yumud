@@ -199,12 +199,12 @@ void smc2025_main(){
 
     auto cam_i2c_scl = hal::PD<2>();
     auto cam_i2c_sda = hal::PC<12>();
-    hal::SoftI2c cam_i2c{&cam_i2c_scl, &cam_i2c_sda};
+    hal::SoftI2c cam_i2c{cam_i2c_scl, cam_i2c_sda};
     cam_i2c.init({.baudrate = hal::NearestFreq(100_KHz)});
 
     auto i2c_scl = hal::PB<3>();
     auto i2c_sda = hal::PB<5>();
-    hal::SoftI2c i2c{&i2c_scl, &i2c_sda};
+    hal::SoftI2c i2c{i2c_scl, i2c_sda};
     i2c.init({.baudrate = hal::NearestFreq(400_KHz)});
     
     #if 0

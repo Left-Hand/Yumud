@@ -98,7 +98,7 @@ void mlx90640_main(){
     hal::Gpio scl_pin_ = SCL_PIN;
     hal::Gpio sda_pin_ = SDA_PIN;
 
-    hal::SoftI2c i2c_sw_ = hal::SoftI2c{&scl_pin_, &sda_pin_};
+    hal::SoftI2c i2c_sw_ = hal::SoftI2c{scl_pin_, sda_pin_};
 
     drivers::ST7789 tft{
         drivers::ST7789_Transport{&spi, spi_rank, &lcd_dc, &dev_rst}, 

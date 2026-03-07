@@ -181,24 +181,24 @@ IResult<math::Vec3<iq24>> MLX90393::read_data() {
     return read_measurement();
 }
 
-IResult<> MLX90393::write_reg(uint8_t reg, uint16_t data) {
+IResult<> MLX90393::write_reg(uint8_t reg_addr, uint16_t reg_val) {
     const uint8_t tx[4] = {
         MLX90393_REG_WR,
-        (uint8_t)(data >> 8),   // high byte
-        (uint8_t)(data & 0xFF), // low byte
-        (uint8_t)(reg << 2)
-    };   // the reg itself, shift up by 2 bits!
+        (uint8_t)(reg_val >> 8),   // high byte
+        (uint8_t)(reg_val & 0xFF), // low byte
+        (uint8_t)(reg_addr << 2)
+    };   // the reg_addr itself, shift up by 2 bits!
 
     uint8_t rx[1] = {0};
     /* Perform the transaction. */
     return transceive(std::span(rx), std::span(tx), 0);
 }
 
-IResult<> MLX90393::read_reg(uint8_t reg, uint16_t & data) {
+IResult<> MLX90393::read_reg(uint8_t reg_addr, uint16_t & reg_val) {
     const uint8_t tx[2] = {
         MLX90393_REG_RR,
-        (uint8_t)(reg << 2)
-    }; // the reg itself, shift up by 2 bits!
+        (uint8_t)(reg_addr << 2)
+    }; // the reg_addr itself, shift up by 2 bits!
 
     uint8_t rx[2] = {0};
 
@@ -206,13 +206,13 @@ IResult<> MLX90393::read_reg(uint8_t reg, uint16_t & data) {
     if (const auto res = transceive(std::span(rx), std::span(tx), 0); 
         res.is_err()) return Err(res.unwrap_err());
 
-    data = ((uint16_t)rx[0] << 8) | rx[1];
+    reg_val = ((uint16_t)rx[0] << 8) | rx[1];
 
     return Ok();
 }
 
 
-IResult<> MLX90393_Transport::transceive(std::span<uint8_t> rx_pbuf, std::span<const uint8_t> tx_pbuf){
+IResult<> MLX90393_I2cTransport::transceive(std::span<uint8_t> rx_pbuf, std::span<const uint8_t> tx_pbuf){
     TODO();
     return Ok();
     // uint8_t status = 0;
@@ -235,6 +235,17 @@ IResult<> MLX90393_Transport::transceive(std::span<uint8_t> rx_pbuf, std::span<c
     //     rxbuf[i] = rxbuf2[i + 1];
     //     }
     // }
+
+    // /* Mask out bytes available in the status response. */
+    // return (status >> 2);
+}
+
+IResult<> MLX90393_SpiTransport::transceive(std::span<uint8_t> rx_pbuf, std::span<const uint8_t> tx_pbuf){
+    TODO();
+    return Ok();
+    // uint8_t status = 0;
+    // uint8_t i;
+    // uint8_t rxbuf2[rxlen + 2];
 
     // if (spi_drv_) {
     //     spi_drv_->write_then_read(txbuf, txlen, rxbuf2, rxlen + 1, 0x00);

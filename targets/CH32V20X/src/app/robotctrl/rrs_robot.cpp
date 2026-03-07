@@ -56,7 +56,7 @@ class Environment{
 public:
     hal::Gpio scl_pin = SCL_PIN;
     hal::Gpio sda_pin = SDA_PIN;
-    hal::SoftI2c i2c = hal::SoftI2c{&scl_pin, &sda_pin};
+    hal::SoftI2c i2c = hal::SoftI2c{scl_pin, sda_pin};
     PCA9685 pca{&i2c};
 
 

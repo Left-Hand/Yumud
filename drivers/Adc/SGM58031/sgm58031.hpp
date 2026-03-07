@@ -11,8 +11,11 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit SGM58031(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit SGM58031(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){};
+    explicit SGM58031(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){};
 
     IResult<> init();
     IResult<> validate();
@@ -28,8 +31,9 @@ public:
     IResult<> set_trim(const iq16 trim);
     IResult<> enable_ch3_as_bits_mut(const Enable en);
 private:
+    using Regs = SGM58031_Regset;
     hal::I2cDrv i2c_drv_;
-    SGM58031_Regset regs_ = {};
+    Regs regs_ = {};
     iq16 full_scale_ = 0;
 
     template<typename T>

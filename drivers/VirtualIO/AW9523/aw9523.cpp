@@ -171,7 +171,7 @@ IResult<> Self::validate(){
     if(const auto res = read_reg(reg);
         res.is_err()) return res;
     if(reg.id != VALID_CHIP_ID)
-        return CHECK_ERR(Err(Error::WrongChipId), reg.id);
+        return CHECK_ERR(Err(Error::ChipIdMismatch), reg.id);
     return Ok();
 }
 

@@ -180,7 +180,7 @@ struct MT9V034_Prelude{
     };
 
     enum class Error_Kind:uint8_t{
-        WrongChipVersion
+        ChipVersionMisMatch
     };
 
     DEF_ERROR_SUMWITH_HALERROR(Error, Error_Kind)
@@ -218,8 +218,11 @@ public:
         sccb_drv_(sccb_drv){;}
     explicit MT9V034(hal::SccbDrv && sccb_drv):
         sccb_drv_(std::move(sccb_drv)){;}
-    explicit MT9V034(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        MT9V034(hal::SccbDrv{i2c, addr}){;}
+    explicit MT9V034(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        MT9V034(hal::SccbDrv{i2c, i2c_addr}){;}
 
     IResult<> init();
 
@@ -234,29 +237,29 @@ private:
     hal::SccbDrv sccb_drv_;
     Image<Gray> frame_ = Image<Gray>{FRAME_SIZE};
 
-    IResult<> write_reg(const uint8_t addr, const uint16_t data);
+    IResult<> write_reg(const uint8_t reg_addr, const uint16_t reg_val);
 
-    IResult<> read_reg(const uint8_t addr, uint16_t & data);
+    IResult<> read_reg(const uint8_t reg_addr, uint16_t & reg_val);
 
     IResult<> write_general_reg(
-        const GeneralRegAddr addr, 
-        const uint16_t data
+        const GeneralRegAddr reg_addr, 
+        const uint16_t reg_val
     ){
-        return write_reg(static_cast<uint8_t>(addr), data);
+        return write_reg(static_cast<uint8_t>(reg_addr), reg_val);
     }
 
     IResult<> write_context_a_reg(
-        const ContextARegAddr addr, 
-        const uint16_t data
+        const ContextARegAddr reg_addr, 
+        const uint16_t reg_val
     ){
-        return write_reg(static_cast<uint8_t>(addr), data);
+        return write_reg(static_cast<uint8_t>(reg_addr), reg_val);
     }
 
     IResult<> write_context_b_reg(
-        const ContextBRegAddr addr, 
-        const uint16_t data
+        const ContextBRegAddr reg_addr, 
+        const uint16_t reg_val
     ){
-        return write_reg(static_cast<uint8_t>(addr), data);
+        return write_reg(static_cast<uint8_t>(reg_addr), reg_val);
     }
 
     IResult<> set_context(const ParamContext context){

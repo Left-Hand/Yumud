@@ -12,8 +12,11 @@ public:
         i2c_drv_(i2c_drv){;}
     explicit DRV2605L(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit DRV2605L(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_(hal::I2cDrv(i2c, addr)){;}
+    explicit DRV2605L(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){;}
 
     IResult<> reset();
     IResult<> update();
@@ -29,24 +32,21 @@ public:
 private:
     hal::I2cDrv i2c_drv_;
 
-    IResult<> 
-    write_reg(const RegAddr address, const uint8_t reg){
-        if(const auto res = i2c_drv_.write_reg<uint8_t>(uint8_t(address), reg);
+    IResult<>  write_reg(const RegAddr reg_addr, const uint8_t reg_val){
+        if(const auto res = i2c_drv_.write_reg<uint8_t>(uint8_t(reg_addr), reg_val);
             res.is_err()) return Err(Error(res.unwrap_err()));
 
         return Ok();
     }
 
-    IResult<> 
-    read_reg(const RegAddr addr, uint8_t & reg){
-        const auto res = i2c_drv_.read_reg<uint8_t>(uint8_t(addr), reg);
+    IResult<>  read_reg(const RegAddr reg_addr, uint8_t & reg_val){
+        const auto res = i2c_drv_.read_reg<uint8_t>(uint8_t(reg_addr), reg_val);
         if(res.is_err()) return Err(Error(res.unwrap_err()));
         return Ok();
     }
 
-    IResult<> 
-    req_burst(const RegAddr addr, uint8_t * data, size_t len){
-        if(const auto res = i2c_drv_.read_burst(uint8_t(addr), std::span(data, len));
+    IResult<> req_burst(const RegAddr reg_addr, std::span<uint8_t> bytes){
+        if(const auto res = i2c_drv_.read_burst(uint8_t(reg_addr), bytes);
             res.is_err()) return Err(Error(res.unwrap_err()));
         return Ok();
     }
@@ -59,7 +59,7 @@ private:
         return Ok();
     }
     IResult<> read_reg(auto & reg){
-        return read_reg(reg.address, reg.as_bits_mut());
+        return read_reg(reg.reg_addr, reg.as_bits_mut());
     }
 
 

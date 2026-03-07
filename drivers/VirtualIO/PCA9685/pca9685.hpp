@@ -21,10 +21,15 @@ public:
     class PCA9685_Vport;
     explicit PCA9685(const hal::I2cDrv & i2c_drv):
         i2c_drv_(i2c_drv){;}
+
     explicit PCA9685(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){;}
-    explicit PCA9685(Some<hal::I2cBase *> i2c, const hal::I2cSlaveAddr<7> addr = DEFAULT_I2C_ADDR):
-        i2c_drv_{i2c, addr}{;}
+
+    explicit PCA9685(
+        Some<hal::I2cBase *> i2c, 
+        const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
+    ):
+        i2c_drv_{i2c, i2c_addr}{;}
 
     IResult<> init(const Config & cfg){
         if(const auto res = init(); res.is_err()) return Err(res.unwrap_err());
@@ -69,27 +74,27 @@ private:
     hal::I2cDrv i2c_drv_;
     PCA9685_Regset regs_ = {};
 
-    IResult<> write_reg(const RegAddr addr, const uint8_t reg){
-        const auto res = i2c_drv_.write_reg(uint8_t(addr), reg);
+    IResult<> write_reg(const RegAddr reg_addr, const uint8_t reg_val){
+        const auto res = i2c_drv_.write_reg(uint8_t(reg_addr), reg_val);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     };
 
-    IResult<> write_reg(const RegAddr addr, const uint16_t reg){
-        const auto res = i2c_drv_.write_reg(uint8_t(addr), reg, std::endian::little);
+    IResult<> write_reg(const RegAddr reg_addr, const uint16_t reg_val){
+        const auto res = i2c_drv_.write_reg(uint8_t(reg_addr), reg_val, std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
 
-    IResult<> read_reg(const RegAddr addr, uint8_t & reg){
-        const auto res = i2c_drv_.read_reg(uint8_t(addr), reg);
+    IResult<> read_reg(const RegAddr reg_addr, uint8_t & reg_val){
+        const auto res = i2c_drv_.read_reg(uint8_t(reg_addr), reg_val);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
 
-    IResult<> read_reg(const RegAddr addr, uint16_t & reg){
-        const auto res = i2c_drv_.read_reg(uint8_t(addr), reg, std::endian::little);
+    IResult<> read_reg(const RegAddr reg_addr, uint16_t & reg_val){
+        const auto res = i2c_drv_.read_reg(uint8_t(reg_addr), reg_val, std::endian::little);
         if(res.is_err()) return Err(res.unwrap_err());
         return Ok();
     }
