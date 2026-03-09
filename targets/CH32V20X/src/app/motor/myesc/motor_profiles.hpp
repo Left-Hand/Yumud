@@ -36,15 +36,11 @@ using Leso = ymd::dsp::adrc::MotorLeso;
 struct MotorProfile_Gim6010{
     //伺泰威关节电机
     static constexpr size_t POLE_PAIRS = 10u;
-    // static constexpr auto PHASE_INDUCTANCE = 0.0085_iq20;
-    // static constexpr auto PHASE_INDUCTANCE = 0.00245_iq20;
-    // static constexpr auto PHASE_INDUCTANCE = 0.0025_iq20;
 
     //100uh
     static constexpr auto PHASE_INDUCTANCE = iq20(22.3 * 1E-6);
 
     //1ohm
-    // static constexpr auto PHASE_RESISTANCE = 1.123_iq20;
     static constexpr auto PHASE_RESISTANCE = 0.123_iq20;
 };
 
@@ -109,7 +105,6 @@ struct MotorProfile_36BLDB{
     static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::Interior;
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(200 * 1E-6);
-    // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq32);
     static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
@@ -133,7 +128,6 @@ struct MotorProfile_NiuLiu{
 
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(200 * 1E-6);
-    // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
     static constexpr auto PHASE_RESISTANCE = 2.57_iq20;
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
     static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
@@ -159,8 +153,6 @@ struct MotorProfile_M06Bare{
     static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::SurfaceMounted;
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(2200 * 1E-6);
-    // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
-    // static constexpr auto PHASE_RESISTANCE = 3.03_iq20;
     static constexpr auto PHASE_RESISTANCE = 2.45_iq20;
     static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.265_uq16);
     static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
@@ -173,14 +165,13 @@ struct MotorProfile_M06Bare{
 
 struct MotorProfile_Wheel{
     //!不具有任何凸极性
+    static constexpr auto SENSORED_ELEC_ANGLE_BASE = Angular<uq32>::from_turns(0.145_uq16);
     static constexpr auto MAGNETIC_STRUCTURE = PmsmMagneticStructure::SurfaceMounted;
     static constexpr size_t POLE_PAIRS = 14u;
     static constexpr auto PHASE_INDUCTANCE = iq20(86.24 * 1E-6);
-    // static constexpr auto PHASE_INDUCTANCE = 0.00325_iq20;
-    // static constexpr auto PHASE_RESISTANCE = 3.03_iq20;
     static constexpr auto PHASE_RESISTANCE = 0.0645_iq20;
-    static constexpr auto MODU_VOLT_LIMIT = iq16(4.5);
-    static constexpr auto CURRENT_CUTOFF_FREQ = 700;
+    static constexpr auto MODU_VOLT_LIMIT = iq16(3.5);
+    static constexpr auto CURRENT_CUTOFF_FREQ = 300;
     using MagEncoder = drivers::VCE2755;
 };
 

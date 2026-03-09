@@ -104,21 +104,21 @@ size_t O1HeapInstance::fragGetSize(const Fragment* const frag) const
     return sz;
 }
 
-static void fragSetNext(Fragment* const frag, Fragment* const value)
+static __always_inline void fragSetNext(Fragment* const frag, Fragment* const value)
 {
     // O1HEAP_ASSERT((((size_t) frag) % O1HEAP_ALIGNMENT) == 0U);
     // O1HEAP_ASSERT((((size_t) value) % O1HEAP_ALIGNMENT) == 0U);
     frag->header.next = value;
 }
 
-static void fragSetPrev(Fragment* const frag, Fragment* const value)
+static __always_inline void fragSetPrev(Fragment* const frag, Fragment* const value)
 {
     // O1HEAP_ASSERT((((size_t) frag) % O1HEAP_ALIGNMENT) == 0U);
     // O1HEAP_ASSERT((((size_t) value) % O1HEAP_ALIGNMENT) == 0U);
     frag->header.prev_used = (frag->header.prev_used & (uintptr_t) 1U) | (uintptr_t) value;
 }
 
-static void fragSetUsed(Fragment* const frag, const bool value)
+static __always_inline void fragSetUsed(Fragment* const frag, const bool value)
 {
     // O1HEAP_ASSERT((((size_t) frag) % O1HEAP_ALIGNMENT) == 0U);
     if (value)
@@ -134,7 +134,7 @@ static void fragSetUsed(Fragment* const frag, const bool value)
 // ---------------------------------------- FRAGMENT MANAGEMENT ----------------------------------------
 
 /// Links two fragments so that their next/prev pointers point to each other; left goes before right.
-static void interlink(Fragment* const left, Fragment* const right)
+static __always_inline void interlink(Fragment* const left, Fragment* const right)
 {
     if (O1HEAP_LIKELY(left != NULL))
     {
