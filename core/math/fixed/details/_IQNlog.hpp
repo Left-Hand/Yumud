@@ -8,6 +8,7 @@ namespace ymd::fxmath::details{
 
 
 template<size_t Q>
+__attribute__((always_inline,  optimize( "-Ofast" )))
 constexpr int32_t __IQNln(uint32_t iqNInput)
 {
     int32_t i16Exp;
@@ -92,33 +93,34 @@ constexpr math::fixed<Q, int32_t> _IQNln(math::fixed<Q, uint32_t> a){
 namespace ymd::math{
 
 template<size_t Q>
-__attribute__((always_inline)) constexpr 
+constexpr 
 fixed<Q, int32_t> lg(const fixed<Q, uint32_t> x) {
     constexpr double LN10 = 2.30258509299;
     constexpr auto INV_LN10 = fixed<32, uint32_t>(1.0 / LN10);
-    return fixed<Q, int32_t>(fxmath::details::_IQNln(x)) * INV_LN10;
+    return fixed<Q, int32_t>::from_bits(
+        fxmath::details::mul32hsu(fxmath::details::_IQNln(x).to_bits(), INV_LN10.to_bits()));
 }
 
 template<size_t Q>
-__attribute__((always_inline)) constexpr 
+constexpr 
 fixed<Q, int32_t> ln(const fixed<Q, uint32_t> x) {
     return fixed<Q, int32_t>(fxmath::details::_IQNln(x));
 }
 
 template<size_t Q>
-__attribute__((always_inline)) constexpr 
+constexpr 
 fixed<Q, uint32_t> exp(const fixed<Q, int32_t> x) {
     return fixed<Q, uint32_t>(fxmath::details::_IQNexp<Q>(x));
 }
 
 template<size_t Q>
-__attribute__((always_inline)) constexpr 
+constexpr 
 fixed<Q, uint32_t> pow(const fixed<Q, uint32_t> base, const fixed<Q, int32_t> exponent) {
     return exp(exponent * ln(base));
 }
 
 template<size_t Q>
-__attribute__((always_inline)) constexpr 
+constexpr 
 fixed<Q, uint32_t> pow(const fixed<Q, uint32_t> base, const int32_t times) {
     //TODO 判断使用循环还是pow运算 选取最优时间
     return exp(times * ln(base));

@@ -61,7 +61,7 @@ struct alignas(16) [[nodiscard]] SincosIntermediate{
 
 
     template<typename Fn>
-    __attribute__((always_inline)) constexpr 
+    __attribute__((always_inline,  optimize( "-Ofast" ))) constexpr 
     math::fixed<31, int32_t> exact_sin(Fn && taylor_law) const {
         //获取查找表的校准值
         int32_t a, b;
@@ -105,7 +105,7 @@ struct alignas(16) [[nodiscard]] SincosIntermediate{
     }
 
     template<typename Fn>
-    __attribute__((always_inline)) constexpr 
+    __attribute__((always_inline,  optimize( "-Ofast" ))) constexpr 
     math::fixed<31, int32_t> exact_cos(Fn && taylor_law) const {
         int32_t a, b;
         switch(sect_num){
@@ -149,138 +149,122 @@ struct alignas(16) [[nodiscard]] SincosIntermediate{
     }
 
     template<typename Fn>
-    __attribute__((always_inline)) constexpr 
+    __attribute__((always_inline,  optimize( "-Ofast" ))) constexpr 
     auto exact_sincos(Fn && taylor_law) const {
-
         return SinCosResult{
             exact_sin(std::forward<Fn>(taylor_law)),
             exact_cos(std::forward<Fn>(taylor_law))
         };
     }
-
-    struct exact_laws{
-        //将这些latex公式复制到desmos中打开
-        //拖动x0 观察有效位数
-
-        // s\ =\sin\left(x_{0}\right)
-        // c\ =\cos\left(x_{0}\right)
-
-        // h_{1}\left(x\right)=s\ +\ x\ \cdot\left(c\ +\ 0.5x\left(-s-\frac{1}{3}cx\right)\right)
-        // h_{2}\left(x\right)=s\ +\ x\ \cdot\left(c\ +\ 0.5x\left(-s\right)\right)
-
-        // w_{1}\left(x\right)=-\frac{\ln\left(\operatorname{abs}\left(h_{1}\left(x\right)-\sin\left(x+a\right)\right)\right)}{\ln\left(2\right)}
-        // w_{2}\left(x\right)=-\frac{\ln\left(\operatorname{abs}\left(h_{2}\left(x\right)-\sin\left(x+x_{0}\right)\right)\right)}{\ln\left(2\right)}
-
-        // res1: w_{1}\left(\frac{\pi}{4}\cdot\frac{1}{52}\right)
-        // res2: w_{2}\left(\frac{\pi}{4}\cdot\frac{1}{52}\right)
-
-        //二阶泰勒公式在x0处近似为二次方程
-        //三阶泰勒公式在x0处近似为三次方程
-
-        //通过分析发现 二阶泰勒公式能提供最低约20.73位的精度
-        //通过分析发现 三阶泰勒公式能提供最低约28.78位的精度(因此精度比浮点数还高)
-        static constexpr int32_t 
-        taylor_2o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
-            int32_t res_iq31_bits = 0;
-
-            /* -S(k) */
-            res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
-
-            /* 0.5*x*(-S(k)) */
-            res_iq31_bits = res_iq31_bits >> 1;
-            res_iq31_bits = (static_cast<int64_t>(res_iq31_bits) * uq32_x_offset) >> 32;
-
-            /* C(k) + 0.5*x*(-S(k)) */
-            res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
-
-            /* x*(C(k) + 0.5*x*(-S(k))) */
-            res_iq31_bits = (static_cast<int64_t>(res_iq31_bits) *  uq32_x_offset) >> 32;
-
-            /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k))) */
-            res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
-
-            return res_iq31_bits;
-        }
-
-
-        static constexpr int32_t 
-        taylor_3o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
-            int32_t res_iq31_bits;
-
-            #if 0
-            /* 0.333*x*C(k) */
-            constexpr int32_t ONE_BY_3_IQ31_BITS = math::fixed<31, int32_t>(1.0/3).to_bits() + 1;
-            res_iq31_bits = iq31_mpy_uq32(ONE_BY_3_IQ31_BITS, uq32_x_offset);
-            res_iq31_bits = fxmath::details::__mpyf_l(iq31_cos_coeff, res_iq31_bits);
-            #else
-            constexpr int32_t TWO_BY_3_IQ31_BITS = math::fixed<31, int32_t>(2.0/3).to_bits() + 1;
-            res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(TWO_BY_3_IQ31_BITS) * uq32_x_offset) >> 32);
-            res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(res_iq31_bits) * iq31_cos_coeff) >> 32);
-            #endif
-
-            /* -S(k) - 0.333*x*C(k) */
-            res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
-
-            /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
-            res_iq31_bits = res_iq31_bits >> 1;
-            res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(res_iq31_bits) * uq32_x_offset) >> 32);
-
-            /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
-            res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
-
-            /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-            res_iq31_bits = static_cast<int32_t>((static_cast<int64_t>(res_iq31_bits) * uq32_x_offset) >> 32);
-
-            /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
-            res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
-
-            return res_iq31_bits;
-        }
-
-    private:
-        static constexpr int32_t iq31_mpy_uq32(int32_t iq31_x, uint32_t uq32_y){ 
-            return static_cast<int32_t>(static_cast<int64_t>(iq31_x) * static_cast<int64_t>(uq32_y) >> 32);
-        }
-    };
 };
 
 
-constexpr SincosIntermediate __IQNgetCosSinPU(uint32_t uq32_x_pu_bits){
+namespace sincos_exact_laws{
+    //将这些latex公式复制到desmos中打开
+    //拖动x0 观察有效位数
+
+    // s\ =\sin\left(x_{0}\right)
+    // c\ =\cos\left(x_{0}\right)
+
+    // h_{1}\left(x\right)=s\ +\ x\ \cdot\left(c\ +\ 0.5x\left(-s-\frac{1}{3}cx\right)\right)
+    // h_{2}\left(x\right)=s\ +\ x\ \cdot\left(c\ +\ 0.5x\left(-s\right)\right)
+
+    // w_{1}\left(x\right)=-\frac{\ln\left(\operatorname{abs}\left(h_{1}\left(x\right)-\sin\left(x+a\right)\right)\right)}{\ln\left(2\right)}
+    // w_{2}\left(x\right)=-\frac{\ln\left(\operatorname{abs}\left(h_{2}\left(x\right)-\sin\left(x+x_{0}\right)\right)\right)}{\ln\left(2\right)}
+
+    // res1: w_{1}\left(\frac{\pi}{4}\cdot\frac{1}{52}\right)
+    // res2: w_{2}\left(\frac{\pi}{4}\cdot\frac{1}{52}\right)
+
+    //二阶泰勒公式在x0处近似为二次方程
+    //三阶泰勒公式在x0处近似为三次方程
+
+    //通过分析发现 二阶泰勒公式能提供最低约20.73位的精度
+    //通过分析发现 三阶泰勒公式能提供最低约28.78位的精度(因此精度比浮点数还高)
+    __attribute__((always_inline,  optimize( "-Ofast" )))
+    static constexpr int32_t 
+    taylor_2o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
+        int32_t res_iq31_bits = 0;
+
+        /* -S(k) */
+        res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
+
+        /* 0.5*x*(-S(k)) */
+        res_iq31_bits = res_iq31_bits >> 1;
+        res_iq31_bits = mul32hsu(res_iq31_bits, uq32_x_offset);
+
+        /* C(k) + 0.5*x*(-S(k)) */
+        res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
+
+        /* x*(C(k) + 0.5*x*(-S(k))) */
+        res_iq31_bits = mul32hsu(res_iq31_bits,  uq32_x_offset);
+
+        /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k))) */
+        res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
+
+        return res_iq31_bits;
+    }
+
+    static constexpr uint32_t TWO_BY_3_UQ31 = static_cast<uint32_t>((1ull << 31) * (2.0/3)) + 1;
+    static constexpr uint32_t ONE_BY_3_UQ32 = static_cast<uint32_t>((1ull << 32) * (1.0/3)) + 1;
+    static_assert(TWO_BY_3_UQ31 == ONE_BY_3_UQ32);
+
+    static constexpr uint32_t ONE_BY_3_UQ31 = static_cast<uint32_t>((1ull << 31) * (1.0/3)) + 1;
+
+    __attribute__((always_inline,  optimize( "-Ofast" )))
+    static constexpr int32_t 
+    taylor_3o(uint32_t uq32_x_offset, int32_t iq31_sin_coeff, int32_t iq31_cos_coeff){
+        int32_t res_iq31_bits;
+
+        res_iq31_bits = static_cast<int32_t>(mul32hu(TWO_BY_3_UQ31, uq32_x_offset));
+        res_iq31_bits = mul32hss(res_iq31_bits, iq31_cos_coeff);
+
+        /* -S(k) - 0.333*x*C(k) */
+        res_iq31_bits = -(iq31_sin_coeff + res_iq31_bits);
+
+        /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
+        res_iq31_bits = res_iq31_bits >> 1;
+        res_iq31_bits = mul32hsu(res_iq31_bits, uq32_x_offset);
+
+        /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
+        res_iq31_bits = iq31_cos_coeff + res_iq31_bits;
+
+        /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
+        res_iq31_bits = mul32hsu(res_iq31_bits, uq32_x_offset);
+
+        /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
+        res_iq31_bits = iq31_sin_coeff + res_iq31_bits;
+
+        return res_iq31_bits;
+    }
+
+};
+
+__attribute__((always_inline,  optimize( "-Ofast" )))
+constexpr SincosIntermediate CosSinPU(uint32_t uq32_x_pu_bits){
     constexpr uint32_t uq32_quatpi_bits = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
 
     //将一个周期拆分为八个区块 每个区块长度pi/4 获取区块索引
     const uint32_t sect_num = static_cast<uint32_t>((uq32_x_pu_bits) >> (32 - 3));
     
     //将x由锯齿波变为三角波
-    uq32_x_pu_bits = ((sect_num & 0b1)) ? ~uq32_x_pu_bits : uq32_x_pu_bits;
-
     #if 0
-    //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块
-    const uint32_t uq32_eeq_x = static_cast<uint32_t>(
-        (static_cast<uint64_t>(uq32_x_pu_bits & eeq_mask) * (uq32_quatpi_bits)) >> (32 - 3)) ;
+    uq32_x_pu_bits = ((sect_num & 0b1)) ? ~uq32_x_pu_bits : uq32_x_pu_bits;
     #else
-    uint32_t uq32_eeq_x = static_cast<uint32_t>(
-        (static_cast<uint64_t>(uq32_x_pu_bits << 3) * (uq32_quatpi_bits)) >> (32));
-        // (static_cast<uint64_t>(uq32_x_pu_bits) * (uq32_quatpi_bits)) >> (32)) << 3;
+    const uint32_t inverse_mask = static_cast<uint32_t>(-(int32_t(bool(sect_num & 0b1))));
+    uq32_x_pu_bits = (uq32_x_pu_bits ^ inverse_mask);
     #endif
+
+    //将x继续塌陷 从[0, 2 * pi)变为[0, pi/4) 后期通过诱导公式映射到八个区块的任一区块
+    const uint32_t uq32_eeq_x = mul32hu(uq32_x_pu_bits << 3, uq32_quatpi_bits);
 
     //获取每个扇区的偏移值
     const uint32_t uq32_x_offset = (uq32_eeq_x)& 0x03ffffff;
 
-    #if 0
-    const uint8_t lut_index = (uint16_t)(uq32_eeq_x >> 26) & 0x003f;
-    #else
     const uint32_t lut_index = uint32_t(uq32_eeq_x >> 26);
-    #endif
     //计算查找表索引
 
-    #if 1
     const int32_t iq31_sin_coeff = fxmath::details::IQ31_SINCOS_TABLE[lut_index][0];
     const int32_t iq31_cos_coeff = fxmath::details::IQ31_SINCOS_TABLE[lut_index][1];
-    #else
-    const int32_t iq31_sin_coeff = fxmath::details::_IQ31SinLookup[lut_index];
-    const int32_t iq31_cos_coeff = fxmath::details::_IQ31CosLookup[lut_index];
-    #endif  
 
     return fxmath::details::SincosIntermediate{
         uq32_x_offset, 
@@ -296,108 +280,108 @@ constexpr SincosIntermediate __IQNgetCosSinPU(uint32_t uq32_x_pu_bits){
 namespace ymd::math{
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 math::fixed<31, int32_t> sin(const math::fixed<Q, D> x){
-    return fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_sin(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+    return fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+        .exact_sin(fxmath::details::sincos_exact_laws::taylor_3o);
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 math::fixed<31, int32_t> cos(const math::fixed<Q, D> x){
-    return fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_cos(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+    return fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+        .exact_cos(fxmath::details::sincos_exact_laws::taylor_3o);
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 math::fixed<31, int32_t> sin_approx(const math::fixed<Q, D> x){
-    return fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_sin(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+    return fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+        .exact_sin(fxmath::details::sincos_exact_laws::taylor_2o);
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 math::fixed<31, int32_t> cos_approx(const math::fixed<Q, D> x){
-    return fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_cos(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+    return fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+        .exact_cos(fxmath::details::sincos_exact_laws::taylor_2o);
 }
 
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 math::fixed<31, int32_t> sinpu(const math::fixed<Q, D> x){
-    return fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_sin(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+    return fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+        .exact_sin(fxmath::details::sincos_exact_laws::taylor_3o);
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 math::fixed<31, int32_t> cospu(const math::fixed<Q, D> x){
-    return fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_cos(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+    return fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+        .exact_cos(fxmath::details::sincos_exact_laws::taylor_3o);
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 math::fixed<31, int32_t> sinpu_approx(const math::fixed<Q, D> x){
-    return fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_sin(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+    return fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+        .exact_sin(fxmath::details::sincos_exact_laws::taylor_2o);
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 math::fixed<31, int32_t> cospu_approx(const math::fixed<Q, D> x){
-    return fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_cos(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+    return fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+        .exact_cos(fxmath::details::sincos_exact_laws::taylor_2o);
 }
 
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 std::array<math::fixed<31, int32_t>, 2> sincos(const math::fixed<Q, D> x){
-    const auto res = fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_sincos(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+    const auto res = fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+        .exact_sincos(fxmath::details::sincos_exact_laws::taylor_3o);
     return {res.sin, res.cos};
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 std::array<math::fixed<31, int32_t>, 2> sincospu(const math::fixed<Q, D> x){
-    const auto res = fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_sincos(fxmath::details::SincosIntermediate::exact_laws::taylor_3o);
+    const auto res = fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+        .exact_sincos(fxmath::details::sincos_exact_laws::taylor_3o);
     return {res.sin, res.cos};
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 std::array<math::fixed<31, int32_t>, 2> sincospu_approx(const math::fixed<Q, D> x){
-    const auto res = fxmath::details::__IQNgetCosSinPU(pu_to_uq32(x).to_bits())
-        .exact_sincos(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+    const auto res = fxmath::details::CosSinPU(pu_to_uq32(x).to_bits())
+        .exact_sincos(fxmath::details::sincos_exact_laws::taylor_2o);
     return {res.sin, res.cos};
 }
 
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
-__attribute__((always_inline)) constexpr 
+constexpr 
 std::array<math::fixed<31, int32_t>, 2> sincos_approx(const math::fixed<Q, D> x){
-    const auto res = fxmath::details::__IQNgetCosSinPU(rad_to_uq32(x).to_bits())
-        .exact_sincos(fxmath::details::SincosIntermediate::exact_laws::taylor_2o);
+    const auto res = fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+        .exact_sincos(fxmath::details::sincos_exact_laws::taylor_2o);
     return {res.sin, res.cos};
 }
 
 template<size_t Q, typename D>
-__attribute__((always_inline)) constexpr 
+constexpr 
 fixed<16, int32_t> tan(const fixed<Q, D> x) {
     const auto [s, c] = sincos(x);
     return iq16(s) / iq16(c);
@@ -405,7 +389,7 @@ fixed<16, int32_t> tan(const fixed<Q, D> x) {
 
 
 template<size_t Q, typename D>
-__attribute__((always_inline)) constexpr 
+constexpr 
 fixed<16, int32_t> tanpu(const fixed<Q, D> x) {
     const auto [s, c] = sincospu(x);
     return iq16(s) / iq16(c);
@@ -414,7 +398,7 @@ fixed<16, int32_t> tanpu(const fixed<Q, D> x) {
 
 //为了避免计算tan的倒数时调用了两次除法 提供cot函数
 template<size_t Q, typename D>
-__attribute__((always_inline)) constexpr 
+constexpr 
 fixed<16, int32_t> cot(const fixed<Q, D> x) {
     const auto [s, c] = sincos(x);
     return iq16(c) / iq16(s);
@@ -424,7 +408,7 @@ fixed<16, int32_t> cot(const fixed<Q, D> x) {
 
 //为了避免计算tan的倒数时调用了两次除法 提供cot函数
 template<size_t Q, typename D>
-__attribute__((always_inline)) constexpr 
+constexpr 
 fixed<16, int32_t> cotpu(const fixed<Q, D> x) {
     const auto [s, c] = sincospu(x);
     return iq16(c) / iq16(s);

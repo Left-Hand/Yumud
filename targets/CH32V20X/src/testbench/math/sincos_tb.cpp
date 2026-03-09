@@ -19,6 +19,7 @@ __no_inline Microseconds eval_one_func(GFn && g_fn, size_t times, EFn && fn){
     for(size_t i = 0; i < times; ++i){
         
         (y) += std::apply(std::forward<EFn>(fn), std::make_tuple(std::forward<GFn>(g_fn)(x)));
+        // (y) += (std::forward<EFn>(fn(std::forward<GFn>(g_fn)(x))));
         x+= step;
     }
 
@@ -83,26 +84,26 @@ void test_div_10000(){
 }
 
 
-template<typename Fn>
-__no_inline auto eval_func(Fn && fn){
-    auto y = std::forward<Fn>(fn)(clock::seconds());
+// template<typename Fn>
+// __no_inline auto eval_func(Fn && fn){
+//     auto y = std::forward<Fn>(fn)(clock::seconds());
 
-    static constexpr size_t times = 10000;
+//     static constexpr size_t times = 10000;
 
-    const auto begin_us = clock::micros();
-    const auto t = clock::seconds();
-    for(size_t i = 0; i < times; ++i){
-        // __nop;
-        // (y) += (std::forward<Fn>(fn)(t));
-        // __nop;
-        // __nop;
-    }
+//     const auto begin_us = clock::micros();
+//     const auto t = clock::seconds();
+//     for(size_t i = 0; i < times; ++i){
+//         // __nop;
+//         // (y) += (std::forward<Fn>(fn)(t));
+//         // __nop;
+//         // __nop;
+//     }
 
-    const auto end_us = clock::micros();
-    // DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()) / times );
-    DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()), y);
-    return (end_us - begin_us);
-}
+//     const auto end_us = clock::micros();
+//     // DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()) / times );
+//     DEBUG_PRINTLN(static_cast<uint32_t>((end_us - begin_us).count()), y);
+//     return (end_us - begin_us);
+// }
 
 
 
@@ -161,14 +162,15 @@ void sincos_main(){
     // PANIC{riscv_has_native_ctz};
 
 
+
     auto fn1 = [](const iq16 x) -> auto {
-        // const auto [s, c] = sincospu_approx(x);
-        // return iq20(math::cospu_approx(x));
-        return iq20(math::atan2pu(iq16(1),x));
-        // return iq20(math::atan2pu(iq16(x),iq16(1)));
+        const auto [s, c] = math::sincospu(x);
+        // const auto s = math::sinpu_approx(x);
+        // return iq20(math::(x));
+        // return iq20((s) + iq20(c));
         // return iq20(math::cospu(x));
         // return iq20(math::sinpu_approx(x));
-        // return iq20(s) + iq20(c);
+        return iq20(s) + iq20(c);
         // return math::exp(iq16(math::inv_mag(2 * s, c)));
         // return iq16::from_bits(m__IQNdiv_impl<16, true>(s.to_bits(),c.to_bits()));
         // return iq20(s);
@@ -189,13 +191,14 @@ void sincos_main(){
             // return iq20(s);
     };
 
+
     std::array<uint8_t, 128> format_buf;
     auto formatter = BufStream (std::span(format_buf));
     // formatter.set_radix(8);
     // formatter.set_splitter(", ");
     formatter.set_splitter(",");
     formatter.set_eps(4);
-    while(true){
+    while(false){
         const auto now_secs = clock::seconds_precious();
         // const auto x = 2 * iq16(frac(now_secs * 2)) * iq16(2 * M_PI) -  1000 * iq16(2 * M_PI);
         // const auto x = iq16(2 * M_PI) * iq16(math::frac(now_secs * 2));
@@ -256,3 +259,4 @@ void sincos_main(){
     );
     PANIC{};
 }
+

@@ -32,7 +32,7 @@ int main(){
     //  can_ring_main();
     // qlz_main();
     // embd_main();
-    ina3221_main();
+    // ina3221_main();
     // mpu6050_main();
     // vl6180x_main();
     // svpwm3_main();

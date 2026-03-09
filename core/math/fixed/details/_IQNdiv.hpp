@@ -18,6 +18,7 @@ static constexpr uint8_t IQ6DIV_LOOPUP[65] = {
 };
 
 template<int8_t Q, bool IS_SIGNED>
+__attribute__((optimize( "-Ofast" )))
 constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
 {
     size_t ui8Index = 0;

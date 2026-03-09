@@ -18,11 +18,12 @@ struct alignas(4) [[nodiscard]] Atan2Flag final{
     uint8_t x_is_neg;
     uint8_t swapped;
 
+    __attribute__((always_inline,  optimize( "-Ofast" )))
     static constexpr Self zero(){
         return std::bit_cast<Self>(uint32_t(0));
     }
 
-
+    __attribute__((always_inline,  optimize( "-Ofast" )))
     [[nodiscard]] constexpr ymd::math::fixed<32, uint32_t> apply_to_uq32(uint32_t uq32_result_pu) const {
         auto & self = *this;
 
@@ -61,7 +62,8 @@ struct [[nodiscard]] Atan2Intermediate{
     // *
     // *     atan(y/x) = pi/2 - atan(x/y)
     // */
-    static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
+    __attribute__((always_inline,  optimize( "-Ofast" )))
+    [[nodiscard]] static constexpr uint32_t transfrom_pu_x_to_uq32_result(uint32_t uq32_input) {
         // return 0;
         const int32_t * piq32Coeffs = &ymd::fxmath::details::IQ32ATAN_COEFFS[(uq32_input >> 25) & 0x00fc];
         /*
@@ -71,35 +73,30 @@ struct [[nodiscard]] Atan2Intermediate{
         */
 
         /* c3*x */
-        uint32_t uq32_result_pu = fast_mul(uq32_input, piq32Coeffs[0]);
+        uint32_t uq32_result_pu = mul32hsu(piq32Coeffs[0], uq32_input);
 
         /* c3*x + c2 */
         uq32_result_pu = uq32_result_pu + piq32Coeffs[1];
 
         /* (c3*x + c2)*x */
-        uq32_result_pu = fast_mul(uq32_input, uq32_result_pu);
+        uq32_result_pu = mul32hsu(uq32_result_pu, uq32_input);
 
         /* (c3*x + c2)*x + c1 */
         uq32_result_pu = uq32_result_pu + piq32Coeffs[2];
 
         /* ((c3*x + c2)*x + c1)*x */
-        uq32_result_pu = fast_mul(uq32_input, uq32_result_pu);
+        uq32_result_pu = mul32hsu(uq32_result_pu, uq32_input);
 
         /* ((c3*x + c2)*x + c1)*x + c0 */
         uq32_result_pu = uq32_result_pu + piq32Coeffs[3];
         return uq32_result_pu;
-    }
-
-private:
-    [[nodiscard]] __attribute__((__always_inline__)) 
-    static constexpr int32_t fast_mul(uint32_t arg1, int32_t arg2){
-        return uint32_t((uint64_t(arg1) * uint64_t(arg2)) >> 32);
     }
 };
 
 
 
 template<size_t Q>
+__attribute__((always_inline,  optimize( "-Ofast" )))
 constexpr ymd::math::fixed<32, uint32_t> _atan2pu_impl(
     uint32_t uqn_y,
     uint32_t uqn_x
@@ -134,6 +131,7 @@ constexpr ymd::math::fixed<32, uint32_t> _atan2pu_impl(
 }
 
 template<size_t Q>
+__attribute__((always_inline,  optimize( "-Ofast" )))
 constexpr ymd::math::fixed<32, uint32_t> _atanpu_impl(
     uint32_t uqn_y
 ){

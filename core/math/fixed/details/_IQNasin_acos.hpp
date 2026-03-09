@@ -38,7 +38,7 @@ namespace ymd::fxmath::details{
  * Acos is implemented using asin and identity (1).
  */
 
-
+__attribute__((always_inline,  optimize( "-Ofast" )))
 constexpr math::fixed<29, int32_t> __IQNasin31(uint32_t uiq31Input){
     bool is_acos = false;
 

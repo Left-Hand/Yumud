@@ -11,6 +11,7 @@ struct alignas(8) [[nodiscard]] ExpIntermediate final{
     uint32_t uiqNIntegerResult;
 
     template<size_t Q>
+    __attribute__((always_inline,  optimize( "-Ofast" )))
     static constexpr ExpIntermediate from(int32_t iqNInput){
         static_assert(Q <= 30, "out of table range");
 
@@ -51,8 +52,8 @@ struct alignas(8) [[nodiscard]] ExpIntermediate final{
     }
 
 
-
-    constexpr uint32_t into() const {
+    __attribute__((always_inline,  optimize( "-Ofast" )))
+    [[nodiscard]] constexpr uint32_t into() const {
 
         /*
         * Initialize the coefficient pointer to the Taylor Series iq30 coefficients
@@ -64,7 +65,7 @@ struct alignas(8) [[nodiscard]] ExpIntermediate final{
         uint32_t uiq31FractionalResult = (*piq31Coeffs++);
         /* Compute exp^(uiq31Fractional). */
         for (uint32_t i = 0; i < IQ30EXP_ORDER; i++) {
-            uiq31FractionalResult = uint32_t((uint64_t(uiq32Fractional) * uint64_t(uiq31FractionalResult)) >> 32);
+            uiq31FractionalResult = mul32hu(uiq32Fractional, uiq31FractionalResult);
             uiq31FractionalResult += (piq31Coeffs[i]);
         }
 
@@ -72,12 +73,13 @@ struct alignas(8) [[nodiscard]] ExpIntermediate final{
         * Multiply the integer result in iqN format and the fractional result in
         * iq31 format to obtain the result in iqN format.
         */
-        return uint32_t((uint64_t(uiqNIntegerResult) * uint64_t(uiq31FractionalResult)) >> 32);
+        return mul32hu(uiqNIntegerResult, uiq31FractionalResult);
     }
 };
 
 template<const size_t Q>
-constexpr math::fixed<Q, uint32_t> _IQNexp(math::fixed<Q, int32_t> input){
+constexpr math::fixed<Q, uint32_t> 
+_IQNexp(math::fixed<Q, int32_t> input){
     static_assert(Q <= 30, "out of table range");
     int32_t iqNInput = input.to_bits();
     const uint32_t ret_bits = [&] -> uint32_t{

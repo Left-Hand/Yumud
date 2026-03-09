@@ -7,7 +7,7 @@
 namespace ymd::dsp{
 
 template<size_t Q>
-__attribute__((optimize("O3"), hot, flatten))
+__attribute__((optimize("Ofast"), hot, flatten))
 constexpr math::fixed<Q, int32_t> dft32_bin0(
     std::span<const math::fixed<Q, int32_t>, 32> real_in
 ){
@@ -45,7 +45,7 @@ static constexpr auto _make_sincos_table(){
 };
 
 template<size_t N_BITS, size_t BinNum, size_t Q>
-__attribute__((optimize("O3"), hot, flatten))
+__attribute__((optimize("Ofast"), hot, flatten))
 constexpr std::tuple<math::fixed<Q, int32_t>, math::fixed<Q, int32_t>> _dft(
     std::span<const math::fixed<Q, int32_t>, (1u << N_BITS)> real_in
 ){
@@ -74,11 +74,11 @@ constexpr std::tuple<math::fixed<Q, int32_t>, math::fixed<Q, int32_t>> _dft(
 
 }
 
-static constexpr auto SINCOS32_1_TABLE = _make_sincos_table<15, int16_t, 32, 1>();
-static constexpr auto SINCOS32_2_TABLE = _make_sincos_table<15, int16_t, 32, 2>();
+static constexpr auto DFT32_BIN1_SINCOS_TABLE = _make_sincos_table<15, int16_t, 32, 1>();
+static constexpr auto DFT32_BIN2_SINCOS_TABLE = _make_sincos_table<15, int16_t, 32, 2>();
 
 template<size_t Q>
-__attribute__((optimize("O3"), hot, flatten))
+__attribute__((optimize("Ofast"), hot, flatten))
 constexpr std::tuple<math::fixed<Q, int32_t>, math::fixed<Q, int32_t>> dft32_bin1(
     std::span<const math::fixed<Q, int32_t>, 32> real_in
 ){
@@ -88,7 +88,7 @@ constexpr std::tuple<math::fixed<Q, int32_t>, math::fixed<Q, int32_t>> dft32_bin
 
 
 template<size_t Q>
-__attribute__((optimize("O3"), hot, flatten))
+__attribute__((optimize("Ofast"), hot, flatten))
 constexpr std::tuple<math::fixed<Q, int32_t>, math::fixed<Q, int32_t>> dft32_bin2(
     std::span<const math::fixed<Q, int32_t>, 32> real_in
 ){

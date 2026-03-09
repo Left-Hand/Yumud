@@ -4,6 +4,8 @@
 
 
 namespace ymd::fxmath::details{
+
+#if 1
 [[nodiscard]] __attribute__((__always_inline__)) constexpr 
 int16_t __mpy_w(int16_t arg1, int16_t arg2){
     return (arg1 * arg2);
@@ -113,5 +115,81 @@ int64_t __mpyfx(int32_t arg1, int32_t arg2){
 uint64_t __mpyfx_u(uint32_t arg1, uint32_t arg2){
     return ((uint64_t(arg1) * uint64_t(arg2)) << 1);
 }
+#endif
 
+__attribute__((always_inline))
+static constexpr uint32_t mul32(uint32_t a, uint32_t b) {
+    if (std::is_constant_evaluated()){
+        return static_cast<uint32_t>(static_cast<uint32_t>(a) * static_cast<uint32_t>(b));
+    }else{
+        uint32_t result;
+        __asm__ (
+            "mul %0, %1, %2"
+            : "=r"(result)
+            : "r"(a), "r"(b)
+        );
+        return result;
+    }
+}
+
+
+__attribute__((always_inline))
+static constexpr int32_t mul32hss(int32_t a, int32_t b) {
+    if (std::is_constant_evaluated()){
+        return static_cast<int32_t>(static_cast<int64_t>(a) * static_cast<int64_t>(b) >> 32);
+    }else{
+        int32_t result;
+        __asm__ (
+            "mulh %0, %1, %2"
+            : "=r"(result)
+            : "r"(a), "r"(b)
+        );
+        return result;
+    }
+}
+
+__attribute__((always_inline))
+static constexpr uint32_t mul32hu(uint32_t a, uint32_t b) {
+    if (std::is_constant_evaluated()){
+        return static_cast<uint32_t>(static_cast<uint64_t>(a) * static_cast<uint64_t>(b) >> 32);
+    }else{
+        uint32_t result;
+        __asm__ (
+            "mulhu %0, %1, %2"
+            : "=r"(result)
+            : "r"(a), "r"(b)
+        );
+        return result;
+    }
+}
+
+__attribute__((always_inline))
+static constexpr int32_t mul32hsu(int32_t a, uint32_t b) {
+    if (std::is_constant_evaluated()){
+        return static_cast<int32_t>(static_cast<int64_t>(a) * static_cast<uint64_t>(b) >> 32);
+    }else{
+        int32_t result;
+        __asm__ (
+            "mulhsu %0, %1, %2"
+            : "=r"(result)
+            : "r"(a), "r"(b)
+        );
+        return result;
+    }
+}
+
+__attribute__((always_inline))
+static constexpr int32_t mul32hus(uint32_t a, int32_t b) {
+    if (std::is_constant_evaluated()){
+        return static_cast<int32_t>(static_cast<uint64_t>(a) * static_cast<int64_t>(b) >> 32);
+    }else{
+        int32_t result;
+        __asm__ (
+            "mulhsu %0, %1, %2"
+            : "=r"(result)
+            : "r"(b), "r"(a)
+        );
+        return result;
+    }
+}
 }
