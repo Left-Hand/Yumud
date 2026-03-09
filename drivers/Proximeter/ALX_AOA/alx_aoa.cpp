@@ -46,18 +46,18 @@ struct [[nodiscard]] BytesSpawner{
         bytes_(bytes) {}
 
     template<size_t N>
-    [[nodiscard]] constexpr std::span<const uint8_t, N> spawn(){
-        // if(bytes_.size() < N) __builtin_abort();
-        const auto ret = std::span<const uint8_t, N>(bytes_.data(), N);
-        bytes_ = std::span<const uint8_t>(bytes_.data() + N, bytes_.size() - N);
+    [[nodiscard]] __fast_inline constexpr std::span<const uint8_t, N> spawn(){
+        const auto ret = std::span<const uint8_t, N>(bytes_.data() + offset_, N);
+        offset_ += N;
         return ret;
     }
 
     [[nodiscard]] constexpr std::span<const uint8_t> remaining() const {
-        return bytes_;
+        return bytes_.subspan(offset_);
     }
 private:
     std::span<const uint8_t> bytes_;
+    size_t offset_ = 0;
 };
 
 [[nodiscard]] static constexpr uint8_t xor_bytes(
@@ -139,7 +139,7 @@ template<typename T>
 
 
 
-static Result<Location, Error> parse_location(BytesSpawner & spawner){
+static Result<Location, Error> parse_location(std::span<const uint8_t, 25> bytes){
     // AnchorID 4 unsigned Integer 基站 ID 
     // TagID 4 unsigned Integer 标签 ID 
     // Distance 4 unsigned Integer 标签与基站间的距离，单位 cm 
@@ -149,9 +149,7 @@ static Result<Location, Error> parse_location(BytesSpawner & spawner){
     // BatchSn 2 Byte 测距序号 
     // Reserve 4 Byte 预留 
     // XorByte 1 Byte 该字节前所有字节的异或校验
-    if(spawner.remaining().size() != 25){
-        return Err(Error::InvalidLength);
-    }
+    auto spawner = BytesSpawner(bytes);
 
     const auto anchor_id = ({
         const auto res = parse_device_id(spawner.spawn<4>());
@@ -331,11 +329,13 @@ Result<Event, Error>  Self::parse(){
             if(actual_xor != expected_xor) {
                 return Err(Error::InvalidXor);
             }
-            
-            const auto res = parse_location(spawner);
-            if(res.is_err()) return Err(res.unwrap_err());
-            return Ok(Event(res.unwrap()));
-            // return Err(Error::InvalidProtocolVersion);
+
+            const auto location = ({
+                const auto res = parse_location(spawner.spawn<25>());
+                if(res.is_err()) return Err(res.unwrap_err());
+                res.unwrap();
+            });
+            return Ok(Event(location));
             break;
             #endif
         }

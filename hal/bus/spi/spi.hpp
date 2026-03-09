@@ -6,6 +6,7 @@
 #include "ral/spi.hpp"
 #include "spi_layout.hpp"
 
+#include "core/utils/nth.hpp"
 
 
 
@@ -21,8 +22,7 @@ class Spi final:public SpiBase{
 public:
     using Callback = std::function<void(SpiEvent)>;
 
-    explicit Spi(ral::SPI_Def * inst):
-        inst_(inst){;}
+    explicit Spi(ral::SPI_Def * inst);
 
     Spi(const Spi & other) = delete;
     Spi(Spi && other) = delete;
@@ -73,6 +73,7 @@ public:
 
 private:
     ral::SPI_Def * inst_ = nullptr;
+    Nth inst_nth_;
     Callback callback_ = nullptr;
     bool hw_cs_enabled_ = false;
 

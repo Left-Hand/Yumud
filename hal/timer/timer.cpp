@@ -31,46 +31,8 @@ __inline void TIM_ASSERT(bool x){
 
 
 
-[[maybe_unused]] static Nth _timer_to_nth(const void * inst){
-
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef TIM1_PRESENT
-        case TIM1_BASE: return Nth(1);
-        #endif
-        #ifdef TIM2_PRESENT
-        case TIM2_BASE: return Nth(2);
-        #endif
-        #ifdef TIM3_PRESENT
-        case TIM3_BASE: return Nth(3);
-        #endif
-        #ifdef TIM4_PRESENT
-        case TIM4_BASE: return Nth(4);
-        #endif
-        #ifdef TIM5_PRESENT
-        case TIM5_BASE: return Nth(5);
-        #endif
-        #ifdef TIM6_PRESENT
-        case TIM6_BASE: return Nth(6);
-        #endif
-        #ifdef TIM7_PRESENT
-        case TIM7_BASE: return Nth(7);
-        #endif
-        #ifdef TIM8_PRESENT
-        case TIM8_BASE: return Nth(8);
-        #endif
-        #ifdef TIM9_PRESENT
-        case TIM9_BASE: return Nth(9);
-        #endif
-        #ifdef TIM10_PRESENT
-        case TIM10_BASE: return Nth(10);
-        #endif
-    }
-    __builtin_trap();
-}
-
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch1_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch1_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -109,8 +71,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch2_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch2_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -149,8 +110,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch3_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch3_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -189,8 +149,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch4_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch4_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -229,8 +188,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch1n_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch1n_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -269,8 +227,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch2n_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch2n_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -309,8 +266,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_ch3n_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_ch3n_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -349,8 +305,7 @@ template<TimerRemap REMAP>
 }
 
 template<TimerRemap REMAP>
-[[maybe_unused]] static Gpio _timer_to_bkin_pin(const void * inst){
-    const auto nth = _timer_to_nth(inst);
+[[maybe_unused]] static Gpio _timer_to_bkin_pin(const Nth nth){
     switch(nth.count()){
         #ifdef TIM1_PRESENT
         case 1:
@@ -373,12 +328,12 @@ template<TimerRemap REMAP>
 }
 
 #define DEF_TIM_BIND_PIN_LAYOUTER(name)\
-[[maybe_unused]] static Gpio tim_to_##name##_pin(const void * inst, const TimerRemap remap){\
+[[maybe_unused]] static Gpio tim_to_##name##_pin(const Nth nth, const TimerRemap remap){\
     switch(remap){\
-        case TimerRemap::_0: return _timer_to_##name##_pin<TimerRemap::_0>(inst);\
-        case TimerRemap::_1: return _timer_to_##name##_pin<TimerRemap::_1>(inst);\
-        case TimerRemap::_2: return _timer_to_##name##_pin<TimerRemap::_2>(inst);\
-        case TimerRemap::_3: return _timer_to_##name##_pin<TimerRemap::_3>(inst);\
+        case TimerRemap::_0: return _timer_to_##name##_pin<TimerRemap::_0>(nth);\
+        case TimerRemap::_1: return _timer_to_##name##_pin<TimerRemap::_1>(nth);\
+        case TimerRemap::_2: return _timer_to_##name##_pin<TimerRemap::_2>(nth);\
+        case TimerRemap::_3: return _timer_to_##name##_pin<TimerRemap::_3>(nth);\
     }\
     __builtin_trap();\
 }\
@@ -404,25 +359,25 @@ Result<TimerPinSetuper::Next, TimerPinSetuper::Error> TimerPinSetuper::alter_to_
     for(const auto & sel : list){
         switch(sel.kind()){
         case ChannelSelection::CH1:
-            tim_to_ch1_pin(inst_, remap_).afpp();
+            tim_to_ch1_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH2:
-            tim_to_ch2_pin(inst_, remap_).afpp();
+            tim_to_ch2_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH3:
-            tim_to_ch3_pin(inst_, remap_).afpp();
+            tim_to_ch3_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH4:
-            tim_to_ch4_pin(inst_, remap_).afpp();
+            tim_to_ch4_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH1N:
-            tim_to_ch1n_pin(inst_, remap_).afpp();
+            tim_to_ch1n_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH2N:
-            tim_to_ch2n_pin(inst_, remap_).afpp();
+            tim_to_ch2n_pin(tim_nth_, remap_).afpp();
             break;
         case ChannelSelection::CH3N:
-            tim_to_ch3n_pin(inst_, remap_).afpp();
+            tim_to_ch3n_pin(tim_nth_, remap_).afpp();
             break;
         }
     }
@@ -434,12 +389,12 @@ TimerPinSetuper::Next TimerPinSetuper::dont_alter_to_pins(){
 }
 
 void BasicTimer::enable_rcc(const Enable en){
-    timer::details::enable_rcc(SDK_INST(inst_), en);
+    timer::details::enable_rcc(tim_nth_, en);
 }
 
 void BasicTimer::set_remap(const TimerRemap rm){
     // PANIC{uint8_t(rm)};
-    timer::details::set_remap(SDK_INST(inst_), rm);
+    timer::details::set_remap(tim_nth_, rm);
 }
 
 void BasicTimer::start(){
@@ -455,7 +410,7 @@ void BasicTimer::dyn_enable_interrupt(const IT I, const Enable en){
 }
 
 uint32_t BasicTimer::get_periph_clk_freq(){
-    return timer::details::is_advanced_timer(SDK_INST(inst_)) ? 
+    return timer::details::is_advanced_timer(tim_nth_) ? 
         sys::clock::get_apb2_clk_freq() : 
         sys::clock::get_apb1_clk_freq();
 }
@@ -558,7 +513,7 @@ void BasicTimer::deinit(){
 void BasicTimer::enable(const Enable en){
     TIM_Cmd(SDK_INST(inst_), (en == EN));
     
-    if((en == EN) and timer::details::is_advanced_timer(SDK_INST(inst_))){
+    if((en == EN) and timer::details::is_advanced_timer(tim_nth_)){
         TIM_CtrlPWMOutputs(SDK_INST(inst_), (en == EN));
     }
 }
@@ -687,7 +642,7 @@ void BasicTimer::enable_cc_ctrl_sync(const Enable en){
 }
 
 
-#define TRY_ACCEPT_AND_CLEAR_IT(I)\
+#define TRY_ACCEPT_AND_CLEAR_IT(itstatus, I)\
 if((itstatus & static_cast<uint16_t>(I))) {\
     accept_interrupt(I); \
     TIM_ClearITPendingBit(SDK_INST(inst_), uint8_t(I)); \
@@ -697,26 +652,26 @@ if((itstatus & static_cast<uint16_t>(I))) {\
 void AdvancedTimer::on_cc_interrupt(){
     const uint16_t itstatus = SDK_INST(inst_)->INTFR;
 
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC1);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC2);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC3);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC4);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC1);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC2);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC3);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC4);
 }
 
 void GeneralTimer::on_interrupt(){
     const uint16_t itstatus = SDK_INST(inst_)->INTFR;
 
-    TRY_ACCEPT_AND_CLEAR_IT(IT::Update);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC1);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC2);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC3);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::CC4);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::COM);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::Trigger);
-    TRY_ACCEPT_AND_CLEAR_IT(IT::Break);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::Update);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC1);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC2);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC3);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC4);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::COM);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::Trigger);
+    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::Break);
 }
 
-void AdvancedTimer::set_repeat_times(const uint8_t rep){
+void AdvancedTimer::set_repeat_times(const uint16_t rep){
     SDK_INST(inst_)->RPTCR = rep;
 }
 

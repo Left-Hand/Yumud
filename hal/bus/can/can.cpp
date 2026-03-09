@@ -57,8 +57,8 @@ if(self.event_callback_ != nullptr){\
 
 
 namespace {
-[[maybe_unused]] static Nth _can_to_nth(const void * inst){
-    switch(reinterpret_cast<size_t>(inst)){
+[[maybe_unused]] static constexpr Nth _can_to_nth(const uintptr_t inst_base){
+    switch(inst_base){
         #ifdef CAN1_PRESENT
         case CAN1_BASE:
             return Nth(1);
@@ -77,8 +77,7 @@ namespace {
 
 
 template<CanRemap REMAP>
-[[maybe_unused]] static Gpio _can_to_tx_pin(const void * inst){
-    const auto nth = _can_to_nth(inst);
+[[maybe_unused]] static Gpio _can_to_tx_pin(const Nth nth){
     switch(nth.count()){
         #ifdef CAN1_PRESENT
         case 1:
@@ -98,8 +97,7 @@ template<CanRemap REMAP>
 }
 
 template<CanRemap REMAP>
-[[maybe_unused]] static Gpio _can_to_rx_pin(const void * inst){
-    const auto nth = _can_to_nth(inst);
+[[maybe_unused]] static Gpio _can_to_rx_pin(const Nth nth){
     switch(nth.count()){
         #ifdef CAN1_PRESENT
         case 1:
@@ -119,12 +117,12 @@ template<CanRemap REMAP>
 }
 
 #define DEF_CAN_BIND_PIN_LAYOUTER(name)\
-[[maybe_unused]] static Gpio can_to_##name##_pin(const void * inst, const CanRemap remap){\
+[[maybe_unused]] static Gpio can_to_##name##_pin(const Nth nth, const CanRemap remap){\
     switch(remap){\
-        case CanRemap::_0: return _can_to_##name##_pin<CanRemap::_0>(inst);\
-        case CanRemap::_1: return _can_to_##name##_pin<CanRemap::_1>(inst);\
-        case CanRemap::_2: return _can_to_##name##_pin<CanRemap::_2>(inst);\
-        case CanRemap::_3: return _can_to_##name##_pin<CanRemap::_3>(inst);\
+        case CanRemap::_0: return _can_to_##name##_pin<CanRemap::_0>(nth);\
+        case CanRemap::_1: return _can_to_##name##_pin<CanRemap::_1>(nth);\
+        case CanRemap::_2: return _can_to_##name##_pin<CanRemap::_2>(nth);\
+        case CanRemap::_3: return _can_to_##name##_pin<CanRemap::_3>(nth);\
     }\
     __builtin_trap();\
 }\
@@ -164,13 +162,13 @@ namespace {
     __builtin_unreachable();
 }
 
-static Option<CanMailboxIndex> _can_get_idle_mailbox_index(void * inst_){
+static Option<CanMailboxIndex> _can_get_idle_mailbox_index(void * inst){
     static constexpr uint32_t ANY_MAILBOX_IDLE_BITMASK = 
         (_can_tstatr_tme_mask(CanMailboxIndex::_0) 
         | _can_tstatr_tme_mask(CanMailboxIndex::_1) 
         | _can_tstatr_tme_mask(CanMailboxIndex::_2));
 
-    const uint32_t tempreg = SDK_INST(inst_)->TSTATR;
+    const uint32_t tempreg = SDK_INST(inst)->TSTATR;
     const bool is_any_mailbox_idle = (tempreg & ANY_MAILBOX_IDLE_BITMASK) != 0;
     if(not is_any_mailbox_idle) return None;
     const uint8_t idle_mbox_idx_bits = static_cast<uint8_t>((tempreg & CAN_TSTATR_CODE) >> 24);
@@ -254,38 +252,39 @@ static void can_clear_it_pending_bit(void * inst)
 	}
 }
 
-static void can_enable_rcc(void * inst, const Enable en){
-    switch(reinterpret_cast<size_t>(inst)){
+static void _can_enable_rcc(const Nth nth, const Enable en){
+    switch(nth.count()){
         #ifdef CAN1_PRESENT
-        case CAN1_BASE:{
+        case 1:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
             return;
         }
         #endif
 
         #ifdef CAN2_PRESENT
-        case CAN2_BASE:{
+        case 2:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, ENABLE);
             return;
         }
         #endif
 
         #ifdef CAN3_PRESENT
-        case CAN3_BASE:{
+        case 3:{
             // TODO: 暂不支持CAN3
             __builtin_trap();
         }
         #endif
     }
+
     //如果运行到这里 说明调用了预期外的外设 请检查是否正确配置开关宏
     __builtin_trap();
 }
 
 
-static void can_set_remap(void * inst_, const CanRemap remap){
-    switch(reinterpret_cast<uint32_t>(inst_)){
+static void _can_set_remap(const Nth nth, const CanRemap remap){
+    switch(nth.count()){
         #ifdef CAN1_PRESENT
-        case CAN1_BASE:{
+        case 1:{
             switch(remap){
                 case CanRemap::_0:
                     GPIO_PinRemapConfig(GPIO_Remap1_CAN1, DISABLE);
@@ -304,7 +303,7 @@ static void can_set_remap(void * inst_, const CanRemap remap){
         #endif
 
         #ifdef CAN2_PRESENT
-        case CAN2_BASE:{
+        case 2:{
             switch(remap){
                 case CanRemap::_0:
                     GPIO_PinRemapConfig(GPIO_Remap_CAN2, DISABLE);
@@ -318,7 +317,7 @@ static void can_set_remap(void * inst_, const CanRemap remap){
         #endif
 
         #ifdef CAN3_PRESENT
-        case CAN3_BASE:{
+        case 3:{
             //还未实现
             __builtin_trap();
         }
@@ -337,7 +336,10 @@ static constexpr uint32_t CAN_RFIFO_FOV_MASK =  0b01'0000;
 
 }
 
-
+Can::Can(void * inst):
+    inst_(inst),
+    nth_(_can_to_nth(reinterpret_cast<uintptr_t>(inst)))
+    {;}
 
 
 void Can::init(const Config & cfg){
@@ -408,9 +410,9 @@ void Can::init_interrupts(){
     CAN_ITConfig(SDK_INST(inst_), it_mask, ENABLE);
 
 
-    switch(reinterpret_cast<uint32_t>(inst_)){
+    switch(nth_.count()){
         #ifdef CAN1_PRESENT
-        case CAN1_BASE:
+        case 1:
             //tx interrupt
             CAN_TX_INTERRUPT_NVIC_PRIORITY.with_irqn(USB_HP_CAN1_TX_IRQn).enable(EN);
             //rx0 interrupt
@@ -426,7 +428,7 @@ void Can::init_interrupts(){
         #endif
 
         #ifdef CAN2_PRESENT
-        case CAN2_BASE:
+        case 2:
             //tx interrupt
             CAN_TX_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN2_TX_IRQn).enable(EN);
             //rx0 interrupt
@@ -441,7 +443,7 @@ void Can::init_interrupts(){
         #endif
 
         #ifdef CAN3_PRESENT
-        case CAN3_BASE:
+        case 3:
             //tx interrupt
             CAN_TX_INTERRUPT_NVIC_PRIORITY.with_irqn(CAN3_TX_IRQn).enable(EN);
             //rx0 interrupt
@@ -483,7 +485,7 @@ void Can::transmit(const BxCanFrame & frame, CanMailboxIndex mbox_idx){
     //将高四字节装载到txmdhr
     mailbox_inst.TXMDHR = static_cast<uint32_t>(payload_u64 >> 32);
 
-    std::atomic_thread_fence(std::memory_order_release);
+    // std::atomic_thread_fence(std::memory_order_release);
 
     //有关TXMIR和TXMDTR的描述，请参考芯片数据手册
     //!txmir必须最后填写 因为填写txmir时会导致当前正在填充的报文被发出
@@ -572,18 +574,18 @@ size_t Can::available(){
 }
 
 void Can::alter_to_pins(const CanRemap remap){
-    can_to_tx_pin(inst_, remap).afpp();
-    can_to_rx_pin(inst_, remap).afpp();
+    can_to_tx_pin(nth_, remap).afpp();
+    can_to_rx_pin(nth_, remap).afpp();
 }
 
 
 
 void Can::enable_rcc(const Enable en){
-    can_enable_rcc(inst_, en);
+    _can_enable_rcc(nth_, en);
 }
 
 void Can::set_remap(const CanRemap remap){
-    can_set_remap(inst_, remap);
+    _can_set_remap(nth_, remap);
 }
 
 
@@ -712,7 +714,11 @@ void CanInterruptDispatcher::isr_rx1(Can & can){
     );
 }
 
-void CanInterruptDispatcher::isr_rx(Can & self, volatile uint32_t & rfifo_reg, const CanFifoIndex fifo_idx){
+void CanInterruptDispatcher::isr_rx(
+    Can & self, 
+    volatile uint32_t & rfifo_reg, 
+    const CanFifoIndex fifo_idx
+){
     const uint32_t temp_rfifo_reg = rfifo_reg;
 
     if(temp_rfifo_reg & CAN_RFIFO_FFULL_MASK){

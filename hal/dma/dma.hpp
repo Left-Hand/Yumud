@@ -9,6 +9,7 @@
 #include "hal/sysmisc/nvic/nvic.hpp"
 
 #include "dma_utils.hpp"
+#include "core/utils/nth.hpp"
 
 
 namespace ymd::hal{
@@ -118,11 +119,12 @@ public:
 public:
     void * inst_;
     
+    const Nth dma_nth_;
+    const Nth ch_sel_nth_;
+
     const uint32_t done_mask_;
     const uint32_t half_mask_;
     
-    const uint8_t dma_nth_;
-    const uint8_t ch_sel_nth_;
     Mode mode_ = Mode::Default;
     
     Callback event_callback_ = nullptr;
@@ -153,7 +155,7 @@ public:
         EXECUTE(event_callback_, event);
     }
     
-    void start_transfer(const size_t dst_addr, const size_t src_addr, size_t size);
+    void start_transfer(const uintptr_t dst_addr, const uintptr_t src_addr, size_t size);
 
     friend class DmaInterruptDispatcher;
 };

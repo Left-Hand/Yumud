@@ -4,7 +4,7 @@
 #include "timer_utils.hpp"
 #include "hal/sysmisc/nvic/nvic.hpp"
 #include "core/utils/result.hpp"
-
+#include "core/utils/nth.hpp"
 
 #ifdef HDW_SXX32
 
@@ -118,12 +118,14 @@ struct [[nodiscard]] TimerPinSetuper final{
 
     explicit TimerPinSetuper(void * inst, const TimerRemap remap) : 
         inst_(inst),
+        tim_nth_(hal::timer::details::timer_to_nth(reinterpret_cast<uintptr_t>(inst_))),
         remap_(remap){}
 
     Result<Next, Error> alter_to_pins(const std::initializer_list<TimerChannelSelection> list);
     Next dont_alter_to_pins();
 private:
     void * inst_;
+    Nth tim_nth_;
     TimerRemap remap_;
 };
 
@@ -141,7 +143,10 @@ private:
     Callback event_callback_ = nullptr;
     void enable(const Enable en);
 public:
-    explicit BasicTimer(void * inst):inst_(inst){;}
+    explicit BasicTimer(void * inst):
+        inst_(inst),
+        tim_nth_(hal::timer::details::timer_to_nth(reinterpret_cast<uintptr_t>(inst_)))
+        {;}
 
     struct [[nodiscard]] Config{
         TimerRemap remap;
@@ -188,7 +193,7 @@ public:
     //将中断优先级注册到NVIC
     template<IT I>
     void register_nvic(const NvicPriority priority, const Enable en){
-        priority.with_irqn(timer::details::it_to_irq(inst_, I)).enable(en);
+        priority.with_irqn(timer::details::it_to_irq(tim_nth_, I)).enable(en);
     }
 
     //使能ARR同步更新（shadow）
@@ -210,6 +215,7 @@ public:
     void set_remap(const TimerRemap rm);
 protected:
     void * inst_;
+    Nth tim_nth_;
 
     [[nodiscard]] uint32_t get_periph_clk_freq();
     void enable_rcc(const Enable en);
@@ -301,7 +307,7 @@ public:
         .inst_ = inst_,
         .bus_freq = this->get_periph_clk_freq()
     };}
-    void set_repeat_times(const uint8_t rep);
+    void set_repeat_times(const uint16_t rep);
 
     template<size_t I>
     requires(I >= 1 and I <= 4)

@@ -19,136 +19,51 @@ using namespace ymd::hal;
 
 
 namespace ymd::hal::timer::details{
-bool is_basic_timer(const void * inst){
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef TIM6_PRESENT
-        case TIM6_BASE: return true;
-        #endif
 
-        #ifdef TIM7_PRESENT
-        case TIM7_BASE: return true;
-        #endif
-
-        default:return false;
-    }
-}
-
-bool is_generic_timer(const void * inst){
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef TIM2_PRESENT
-        case TIM2_BASE: return true;
-        #endif
-
-        #ifdef TIM3_PRESENT
-        case TIM3_BASE: return true;
-        #endif
-
-        #ifdef TIM4_PRESENT
-        case TIM4_BASE: return true;
-        #endif
-
-        #ifdef TIM5_PRESENT
-        case TIM5_BASE: return true;
-        #endif
-    }
-    return false;
-}
-
-bool is_advanced_timer(const void * inst){
-    switch(reinterpret_cast<size_t>(inst)){
+Nth timer_to_nth(const uintptr_t inst_base){
+    switch(inst_base){
         #ifdef TIM1_PRESENT
-        case TIM1_BASE: return true;
-        #endif
-
-        #ifdef TIM8_PRESENT
-        case TIM8_BASE: return true;
-        #endif
-
-        #ifdef TIM9_PRESENT
-        case TIM9_BASE: return true;
-        #endif
-
-        #ifdef TIM10_PRESENT
-        case TIM10_BASE: return true;
-        #endif
-    
-        default:
-            return false;
-    }
-}
-
-IRQn it_to_irq(const void * inst, const TimerIT it){
-
-    #define GENERIC_TIMER_IRQ_TEMPLATE(x)\
-    case TIM##x##_BASE:\
-        return TIM##x##_IRQn;\
-
-    #define ADVANCED_TIMER_IRQ_TEMPLATE(x)\
-    case TIM##x##_BASE:\
-        switch(it){\
-            case TimerIT::Update:\
-                return TIM##x##_UP_IRQn;\
-            case TimerIT::CC1:\
-            case TimerIT::CC2:\
-            case TimerIT::CC3:\
-            case TimerIT::CC4:\
-                return TIM##x##_CC_IRQn;\
-            case TimerIT::Trigger:\
-            case TimerIT::COM:\
-                return TIM##x##_TRG_COM_IRQn;\
-            case TimerIT::Break:\
-                return TIM##x##_BRK_IRQn;\
-        }\
-        break;\
-
-    switch(reinterpret_cast<size_t>(inst)){
-        #ifdef TIM1_PRESENT
-        ADVANCED_TIMER_IRQ_TEMPLATE(1)
+        case TIM1_BASE: return Nth{1}; 
         #endif
 
         #ifdef TIM2_PRESENT
-        GENERIC_TIMER_IRQ_TEMPLATE(2)
+        case TIM2_BASE: return Nth{2}; 
         #endif
 
         #ifdef TIM3_PRESENT
-        GENERIC_TIMER_IRQ_TEMPLATE(3)
+        case TIM3_BASE: return Nth{3}; 
         #endif
 
         #ifdef TIM4_PRESENT
-        GENERIC_TIMER_IRQ_TEMPLATE(4)
+        case TIM4_BASE: return Nth{4}; 
         #endif
 
         #ifdef TIM5_PRESENT
-        GENERIC_TIMER_IRQ_TEMPLATE(5)
+        case TIM5_BASE: return Nth{5}; 
         #endif
 
         #ifdef TIM6_PRESENT
-        GENERIC_TIMER_IRQ_TEMPLATE(6)
+        case TIM6_BASE: return Nth{6}; 
         #endif
 
         #ifdef TIM7_PRESENT
-        GENERIC_TIMER_IRQ_TEMPLATE(7)
+        case TIM7_BASE: return Nth{7}; 
         #endif
 
         #ifdef TIM8_PRESENT
-        ADVANCED_TIMER_IRQ_TEMPLATE(8)
+        case TIM8_BASE: return Nth{8}; 
         #endif
 
         #ifdef TIM9_PRESENT
-        ADVANCED_TIMER_IRQ_TEMPLATE(9)
+        case TIM9_BASE: return Nth{9}; 
         #endif
 
         #ifdef TIM10_PRESENT
-        ADVANCED_TIMER_IRQ_TEMPLATE(10)
+        case TIM10_BASE: return Nth{10}; 
         #endif
-
-        default:
-            break;
     }
-    return Software_IRQn;
 
-    #undef GENERIC_TIMER_IRQ_TEMPLATE
-    #undef ADVANCED_TIMER_IRQ_TEMPLATE
+    __builtin_trap();
 }
 
 
@@ -172,10 +87,10 @@ std::tuple<uint16_t, uint16_t> calc_arr_and_psc(
     }
 }
 
-void set_remap(void* inst_, const TimerRemap rm){
-    switch(reinterpret_cast<size_t>(inst_)){
+void set_remap(const Nth nth, const TimerRemap rm){
+    switch(nth.count()){
     #ifdef TIM1_PRESENT
-    case TIM1_BASE:
+    case 1:
         switch(rm){
             case TimerRemap::_0:
                 GPIO_PinRemapConfig(GPIO_PartialRemap_TIM1, DISABLE);
@@ -194,7 +109,7 @@ void set_remap(void* inst_, const TimerRemap rm){
     #endif
 
     #ifdef TIM2_PRESENT
-    case TIM2_BASE:
+    case 2:
         switch(rm){
             case TimerRemap::_0:
                 return;
@@ -212,7 +127,7 @@ void set_remap(void* inst_, const TimerRemap rm){
     #endif
 
     #ifdef TIM3_PRESENT
-    case TIM3_BASE:
+    case 3:
         switch(rm){
             case TimerRemap::_0:
                 return;
@@ -229,7 +144,7 @@ void set_remap(void* inst_, const TimerRemap rm){
     #endif
 
     #ifdef TIM4_PRESENT
-    case TIM4_BASE:
+    case 4:
         switch(rm){
             case TimerRemap::_0:
                 GPIO_PinRemapConfig(GPIO_Remap_TIM4, DISABLE);
@@ -243,7 +158,7 @@ void set_remap(void* inst_, const TimerRemap rm){
     #endif
 
     #ifdef TIM5_PRESENT
-    case TIM5_BASE:
+    case 5:
         //no remap
         switch(rm){
             case TimerRemap::_0:
@@ -254,7 +169,7 @@ void set_remap(void* inst_, const TimerRemap rm){
     #endif
     
     #ifdef TIM6_PRESENT
-    case TIM6_BASE:
+    case 6:
         //no remap
         switch(rm){
             case TimerRemap::_0:
@@ -264,7 +179,7 @@ void set_remap(void* inst_, const TimerRemap rm){
         break;
     #endif
     #ifdef TIM7_PRESENT
-    case TIM7_BASE:
+    case 7:
         //no remap
         switch(rm){
             case TimerRemap::_0:
@@ -275,7 +190,7 @@ void set_remap(void* inst_, const TimerRemap rm){
     #endif
 
     #ifdef TIM8_PRESENT
-    case TIM8_BASE:
+    case 8:
         switch(rm){
             case TimerRemap::_0:
                 return;
@@ -291,53 +206,53 @@ void set_remap(void* inst_, const TimerRemap rm){
     __builtin_trap();
 }
 
-void enable_rcc(void* inst_, const Enable en){
-    switch(reinterpret_cast<size_t>(inst_)){
+void enable_rcc(const Nth nth, const Enable en){
+    switch(nth.count()){
     #ifdef TIM1_PRESENT
-    case TIM1_BASE:
+    case 1:
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, (en == EN));
         return;
     #endif
 
     #ifdef TIM2_PRESENT
-    case TIM2_BASE:
+    case 2:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, (en == EN));
         return;
     #endif
 
     #ifdef TIM3_PRESENT
-    case TIM3_BASE:
+    case 3:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, (en == EN));
         return;
     #endif
 
     #ifdef TIM4_PRESENT
-    case TIM4_BASE:
+    case 4:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, (en == EN));
         return;
     #endif
 
     #ifdef TIM5_PRESENT
-    case TIM5_BASE:
+    case 5:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, (en == EN));
         return;
     #endif
 
     
     #ifdef TIM6_PRESENT
-    case TIM6_BASE:
+    case 6:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, (en == EN));
         return;
     #endif
 
     #ifdef TIM7_PRESENT
-    case TIM7_BASE:
+    case 7:
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, (en == EN));
         return;
     #endif
 
     #ifdef TIM8_PRESENT
-    case TIM8_BASE:
+    case 8:
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, (en == EN));
         return;
     #endif

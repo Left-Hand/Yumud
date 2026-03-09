@@ -27,8 +27,8 @@ static constexpr SpiPrescaler calculate_prescaler(
 }
 
 namespace {
-[[maybe_unused]] static Nth _spi_to_nth(const void * inst){
-    switch(reinterpret_cast<size_t>(inst)){
+[[maybe_unused]] static constexpr Nth _spi_to_nth(const uintptr_t inst_base){
+    switch(inst_base){
         #ifdef SPI1_PRESENT
         case SPI1_BASE:
             return Nth(1);
@@ -46,8 +46,7 @@ namespace {
 }
 
 template<SpiRemap REMAP>
-[[maybe_unused]] static Gpio _spi_to_miso_gpio(const void * inst){
-    const auto nth = _spi_to_nth(inst);
+[[maybe_unused]] static Gpio _spi_to_miso_gpio(const Nth nth){
     switch(nth.count()){
         #ifdef SPI1_PRESENT
         case 1:
@@ -66,8 +65,7 @@ template<SpiRemap REMAP>
 }
 
 template<SpiRemap REMAP>
-[[maybe_unused]] static Gpio _spi_to_mosi_gpio(const void * inst){
-    const auto nth = _spi_to_nth(inst);
+[[maybe_unused]] static Gpio _spi_to_mosi_gpio(const Nth nth){
     switch(nth.count()){
         #ifdef SPI1_PRESENT
         case 1:
@@ -86,8 +84,7 @@ template<SpiRemap REMAP>
 }
 
 template<SpiRemap REMAP>
-[[maybe_unused]] static Gpio _spi_to_sclk_gpio(const void * inst){
-    const auto nth = _spi_to_nth(inst);
+[[maybe_unused]] static Gpio _spi_to_sclk_gpio(const Nth nth){
     switch(nth.count()){
         #ifdef SPI1_PRESENT
         case 1:
@@ -106,8 +103,7 @@ template<SpiRemap REMAP>
 }
 
 template<SpiRemap REMAP>
-[[maybe_unused]] static Gpio _spi_to_hwcs_gpio(const void * inst){
-    const auto nth = _spi_to_nth(inst);
+[[maybe_unused]] static Gpio _spi_to_hwcs_gpio(const Nth nth){
     switch(nth.count()){
         #ifdef SPI1_PRESENT
         case 1:
@@ -127,12 +123,12 @@ template<SpiRemap REMAP>
 
 
 #define DEF_SPI_BIND_PIN_LAYOUTER(name)\
-[[maybe_unused]] static Gpio spi_to_##name##_gpio(const void * inst, const SpiRemap remap){\
+[[maybe_unused]] static Gpio spi_to_##name##_gpio(const Nth nth, const SpiRemap remap){\
     switch(remap){\
-        case SpiRemap::_0: return _spi_to_##name##_gpio<SpiRemap::_0>(inst);\
-        case SpiRemap::_1: return _spi_to_##name##_gpio<SpiRemap::_1>(inst);\
-        case SpiRemap::_2: return _spi_to_##name##_gpio<SpiRemap::_2>(inst);\
-        case SpiRemap::_3: return _spi_to_##name##_gpio<SpiRemap::_3>(inst);\
+        case SpiRemap::_0: return _spi_to_##name##_gpio<SpiRemap::_0>(nth);\
+        case SpiRemap::_1: return _spi_to_##name##_gpio<SpiRemap::_1>(nth);\
+        case SpiRemap::_2: return _spi_to_##name##_gpio<SpiRemap::_2>(nth);\
+        case SpiRemap::_3: return _spi_to_##name##_gpio<SpiRemap::_3>(nth);\
     }\
     __builtin_trap();\
 }\
@@ -142,22 +138,20 @@ DEF_SPI_BIND_PIN_LAYOUTER(mosi)
 DEF_SPI_BIND_PIN_LAYOUTER(sclk)
 DEF_SPI_BIND_PIN_LAYOUTER(hwcs)
 
-}
-
-void Spi::enable_rcc(const Enable en){
-    switch(reinterpret_cast<size_t>(inst_)){
+void spi_enable_rcc(const Nth nth, const Enable en){
+    switch(nth.count()){
         #ifdef SPI1_PRESENT
-        case SPI1_BASE:
+        case 1:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, (en == EN));
             return;
         #endif
         #ifdef SPI2_PRESENT
-        case SPI2_BASE:
+        case 2:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, (en == EN));
             return;
         #endif
         #ifdef SPI3_PRESENT
-        case SPI3_BASE:
+        case 3:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, (en == EN));
             return;
         #endif
@@ -165,10 +159,10 @@ void Spi::enable_rcc(const Enable en){
     __builtin_trap();
 }
 
-void Spi::set_remap(const SpiRemap remap){
-    switch(reinterpret_cast<size_t>(inst_)){
+void spi_set_remap(const Nth nth, const SpiRemap remap){
+    switch(nth.count()){
         #ifdef SPI1_PRESENT
-        case SPI1_BASE:
+        case 1:
             switch(remap){
                 case SpiRemap::_0: return GPIO_PinRemapConfig(GPIO_Remap_SPI1, DISABLE);
                 case SpiRemap::_1: return GPIO_PinRemapConfig(GPIO_Remap_SPI1, ENABLE);
@@ -177,7 +171,7 @@ void Spi::set_remap(const SpiRemap remap){
             break;
         #endif
         #ifdef SPI2_PRESENT
-        case SPI2_BASE:
+        case 2:
             switch(remap){
                 case SpiRemap::_0: return; //SPI2 NO REMAP
                 default: break;
@@ -185,7 +179,7 @@ void Spi::set_remap(const SpiRemap remap){
             break;
         #endif
         #ifdef SPI3_PRESENT
-        case SPI3_BASE:
+        case 3:
             switch(remap){
                 case SpiRemap::_0: return GPIO_PinRemapConfig(GPIO_Remap_SPI3, DISABLE);
                 case SpiRemap::_1: return GPIO_PinRemapConfig(GPIO_Remap_SPI3, ENABLE);
@@ -197,18 +191,61 @@ void Spi::set_remap(const SpiRemap remap){
     __builtin_trap();
 }
 
+[[nodiscard]] static uint32_t spi_get_periph_clk_freq(const Nth nth) {
+    switch(nth.count()) {
+        #ifdef SPI1_PRESENT
+        case 1:
+            return sys::clock::get_apb1_clk_freq();
+            break;
+        #endif
 
+        #ifdef SPI2_PRESENT
+        case 2:
+            return sys::clock::get_apb2_clk_freq();
+            break;
+        #endif
+
+        #ifdef SPI3_PRESENT
+        case 3:
+            return sys::clock::get_apb2_clk_freq();
+            break;
+        #endif
+    }
+    __builtin_trap();
+}
+
+}
+
+
+Spi::Spi(ral::SPI_Def * inst):
+    inst_(inst),
+    inst_nth_(_spi_to_nth(reinterpret_cast<uintptr_t>(inst_)))
+    {;}
+
+    
+void Spi::enable_rcc(const Enable en){
+    spi_enable_rcc(inst_nth_, en);
+}
+
+void Spi::set_remap(const SpiRemap remap){
+    spi_set_remap(inst_nth_, remap);
+}
+
+
+uint32_t Spi::get_periph_clk_freq() const {
+    return spi_get_periph_clk_freq(inst_nth_);
+}
 
 
 void Spi::alter_to_pins(const SpiRemap remap){
-    spi_to_mosi_gpio(inst_, remap).afpp();
+    spi_to_mosi_gpio(inst_nth_, remap).afpp();
 
-    spi_to_miso_gpio(inst_, remap).inflt();
+    spi_to_miso_gpio(inst_nth_, remap).inflt();
 
-    spi_to_sclk_gpio(inst_, remap).afpp();
+    spi_to_sclk_gpio(inst_nth_, remap).afpp();
     
     if(hw_cs_enabled_){
-        spi_to_hwcs_gpio(inst_, remap).afpp();
+        spi_to_hwcs_gpio(inst_nth_, remap).afpp();
     }
 }
 
@@ -229,28 +266,6 @@ void Spi::enable_hw_cs(const Enable en){
     #endif
 }
 
-uint32_t Spi::get_periph_clk_freq() const {
-    switch(reinterpret_cast<size_t>(inst_)) {
-        #ifdef SPI1_PRESENT
-        case SPI1_BASE:
-            return sys::clock::get_apb1_clk_freq();
-            break;
-        #endif
-
-        #ifdef SPI2_PRESENT
-        case SPI2_BASE:
-            return sys::clock::get_apb2_clk_freq();
-            break;
-        #endif
-
-        #ifdef SPI3_PRESENT
-        case SPI3_BASE:
-            return sys::clock::get_apb2_freq();
-            break;
-        #endif
-    }
-    __builtin_trap();
-}
 
 HalResult Spi::init(const SpiConfig & cfg){
 	enable_rcc(EN);

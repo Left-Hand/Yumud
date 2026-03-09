@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/utils/Result.hpp"
+#include "core/utils/nth.hpp"
 #include "core/container/ringbuf.hpp"
 #include "ral/can.hpp"
 #include "can_layout.hpp"
@@ -52,7 +53,7 @@ public:
     };
 
 public:
-    explicit Can(void * inst):inst_(inst){;}
+    explicit Can(void * inst);
     Can(const Can & other) = delete;
     Can(Can && other) = delete;
 
@@ -124,6 +125,7 @@ public:
 
 private:
     void * inst_;
+    Nth nth_;
     
     #ifndef CAN_BUFFERED_QUEUE_SIZE
     static constexpr size_t CAN_BUFFERED_QUEUE_SIZE = 8;

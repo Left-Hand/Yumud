@@ -1,6 +1,7 @@
 #pragma once
 
 #include "uart_base.hpp"
+#include "core/utils/nth.hpp"
 
 
 namespace ymd::hal{
@@ -42,6 +43,7 @@ public:
 
 private:
     void * inst_;
+    Nth nth_;
 
     void enable_rcc(const Enable en);
     void register_nvic(const Enable en);
