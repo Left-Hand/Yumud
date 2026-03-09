@@ -4,7 +4,7 @@
 
 #include "core/system.hpp"
 #include "core/clock/clock.hpp"
-#include <source_location>
+#include "core/utils/abort_info.hpp"
 
 #include "core/stream/ostream.hpp"
 
@@ -43,23 +43,13 @@ __fast_inline void DEBUG_PRINT(Args&& ... args) {
 template<typename ... Args>
 __attribute__((noreturn))
 __fast_inline void PANIC_NSRC(Args&& ... args) {
-    sys::trip();
-    ymd::DEBUGGER.set_indent(0);
-    DEBUG_PRINTLN();
-    DEBUG_PRINTLN("panicked: ");
-    clock::delay(10ms);
-    sys::abort();
+    sys::abort(AbortInfo::from_reason("panicked"));
 }
 
 template<typename Expr, typename ... Args>
 __fast_inline bool ASSERT_NSRC(Expr &&expr, Args&& ... args) {
     if(false == bool(std::forward<Expr>(expr))){
-        sys::trip();
-        ymd::DEBUGGER.set_indent(0);
-        DEBUG_PRINTLN();
-        DEBUG_PRINTLN("assert failed: ");
-        clock::delay(10ms);
-        sys::abort();
+        sys::abort(AbortInfo::from_reason("assert failed"));
     }
     return true;
 }
@@ -88,32 +78,12 @@ DEBUG_SRC(Args &&...) -> DEBUG_SRC<Args ...>;
 
 
 template <typename... Args>
-struct DEBUG_WARN
-{    
-	DEBUG_WARN(Args &&... args, const std::source_location& loc = std::source_location::current()){
-        DEBUG_PRINT("[Warn] ");
-        DEBUG_SRC<Args ...>(std::forward<Args>(args)..., loc);
-	}
-};
-
-template <typename... Args>
-DEBUG_WARN(Args &&...) -> DEBUG_WARN<Args ...>;
-
-
-template <typename... Args>
 struct PANIC
 {    
 	__attribute__((noreturn)) PANIC(Args &&... args, const std::source_location& loc = std::source_location::current()){
-        sys::trip();
-        ymd::DEBUGGER.set_indent(0);
-
-        DEBUG_PRINTLN();
-        DEBUG_PRINTLN("panicked: ");
-
-        ymd::DEBUGGER.set_indent(1);
-        DEBUG_SRC<Args...>(std::forward<Args>(args)..., loc);
-        clock::delay(10ms);
-        sys::abort();
+        sys::abort(AbortInfo::without_arguments(
+            "panicked", loc)
+        );
 	}
 };
 
@@ -125,7 +95,8 @@ template <typename... Args>
 __attribute__((noreturn))
 PANIC<Args ...> __PANIC_EXPLICIT_SOURCE(
     const std::source_location& loc, 
-    Args &&... args){
+    Args &&... args
+){
     PANIC<Args ...>(std::forward<Args>(args)..., loc);
 }
 

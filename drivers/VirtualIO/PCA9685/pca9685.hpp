@@ -60,8 +60,8 @@ public:
     template<typename ...Args>
     requires (std::is_integral_v<Args> && ...)
     constexpr std::array<uint16_t, sizeof...(Args)> dump_cvr(Args ...args){
-        auto dump_one = [&](const uint idx) -> uint16_t{
-            if(idx >= CHANNELS_COUNT) sys::abort();
+        auto dump_one = [&](const size_t idx) -> uint16_t{
+            if(idx >= CHANNELS_COUNT) __builtin_trap();
             return regs_.sub_channels[idx].off.cvr;
         };
 

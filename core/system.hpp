@@ -1,12 +1,14 @@
 #pragma once
 
 #include "core/platform.hpp"
+#include "core/utils/abort_info.hpp"
+
 
 namespace ymd::sys{
     void preinit();
     
     __attribute__((noreturn))
-    void abort();
+    void abort(const AbortInfo & info = AbortInfo::from_default());
 
     void trip();
 

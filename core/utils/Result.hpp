@@ -4,6 +4,7 @@
 #include "core/tmp/bits/width.hpp"
 
 
+
 namespace ymd{
 
 namespace custom{
@@ -58,147 +59,145 @@ using result_err_t = details::_result_type<TResult>::err_type;
 
 namespace details{
     template<typename T, typename E>
-    struct _Result_Storage_Diff {
+    struct ResultStorage_Diff {
     public:
-        using Data = std::variant<T, E>;
         using ok_type = T;
         using err_type = E;
+        using Data = std::variant<T, E>;
 
         // Constructor for Ok case - copy if trivially copyable
         template<typename U = T, std::enable_if_t<std::is_trivially_copy_assignable_v<U>, int> = 0>
-        __fast_inline constexpr _Result_Storage_Diff(const Ok<T>& okay)
-            : data_(Data{std::in_place_index<0>, okay.get()}) {}
+        __fast_inline constexpr ResultStorage_Diff(const Ok<T>& okay)
+            : val_(Data{std::in_place_index<0>, okay.get_inner()}) {}
 
         // Constructor for Ok case - move otherwise
         template<typename U = T, std::enable_if_t<!std::is_trivially_copy_assignable_v<U>, int> = 0>
-        __fast_inline constexpr _Result_Storage_Diff(Ok<T>&& okay)
-            : data_(Data{std::in_place_index<0>, std::move(okay).get()}) {}
+        __fast_inline constexpr ResultStorage_Diff(Ok<T>&& okay)
+            : val_(Data{std::in_place_index<0>, std::move(okay).get_inner()}) {}
 
         // Constructor for Err case - const reference
-        __fast_inline constexpr _Result_Storage_Diff(const Err<E>& error)
-            : data_(Data{std::in_place_index<1>, error.get()}) {}
+        __fast_inline constexpr ResultStorage_Diff(const Err<E>& error)
+            : val_(Data{std::in_place_index<1>, error.get_inner()}) {}
 
         // Constructor for Err case - rvalue reference
-        __fast_inline constexpr _Result_Storage_Diff(Err<E>&& error)
-            : data_(Data{std::in_place_index<1>, std::move(error).get()}) {}
+        __fast_inline constexpr ResultStorage_Diff(Err<E>&& error)
+            : val_(Data{std::in_place_index<1>, std::move(error).get_inner()}) {}
 
         // Copy/move constructors
-        __fast_inline constexpr _Result_Storage_Diff(const _Result_Storage_Diff&) = default;
-        __fast_inline constexpr _Result_Storage_Diff(_Result_Storage_Diff&&) = default;
+        __fast_inline constexpr ResultStorage_Diff(const ResultStorage_Diff&) = default;
+        __fast_inline constexpr ResultStorage_Diff(ResultStorage_Diff&&) = default;
 
         // Assignment operators
-        __fast_inline constexpr _Result_Storage_Diff& operator=(const _Result_Storage_Diff&) = default;
-        __fast_inline constexpr _Result_Storage_Diff& operator=(_Result_Storage_Diff&&) = default;
+        __fast_inline constexpr ResultStorage_Diff& operator=(const ResultStorage_Diff&) = default;
+        __fast_inline constexpr ResultStorage_Diff& operator=(ResultStorage_Diff&&) = default;
 
         // State checks
-        __fast_inline constexpr bool is_ok() const noexcept { return data_.index() == 0; }
-        __fast_inline constexpr bool is_err() const noexcept { return data_.index() == 1; }
+        __fast_inline constexpr bool is_ok() const noexcept { return val_.index() == 0; }
+        __fast_inline constexpr bool is_err() const noexcept { return val_.index() == 1; }
 
         // Value access (const &)
-        __fast_inline constexpr const T& unwrap() const & { return std::get<0>(data_); }
-        __fast_inline constexpr const E& unwrap_err() const & { return std::get<1>(data_); }
+        __fast_inline constexpr const T& get_ok() const & { return std::get<0>(val_); }
+        __fast_inline constexpr const E& get_err() const & { return std::get<1>(val_); }
 
         // Value access (rvalue &&)
-        __fast_inline constexpr T&& unwrap() && { return std::get<0>(std::move(data_)); }
-        __fast_inline constexpr E&& unwrap_err() && { return std::get<1>(std::move(data_)); }
+        __fast_inline constexpr T&& get_ok() && { return std::get<0>(std::move(val_)); }
+        __fast_inline constexpr E&& get_err() && { return std::get<1>(std::move(val_)); }
 
     private:
-        Data data_;
+        std::variant<T, E> val_;
     };
     
 
     template<typename T>
-    struct _Result_Storage_Same{
+    struct ResultStorage_Same{
     public:
         using ok_type = T;
         using err_type = T;
-        __fast_inline constexpr _Result_Storage_Same(const Ok<T> & val):
-            ok_data_(T(val)), is_ok_(true){;}    
-        __fast_inline constexpr _Result_Storage_Same(const Err<T> & val):
-            err_data_(T(val)), is_ok_(false){;}
+        __fast_inline constexpr ResultStorage_Same(const Ok<T> & val):
+            ok_val_(T(val)), is_ok_(true){;}    
+        __fast_inline constexpr ResultStorage_Same(const Err<T> & val):
+            err_val_(T(val)), is_ok_(false){;}
     
-        __fast_inline constexpr _Result_Storage_Same(const _Result_Storage_Same &) = default;
-        __fast_inline constexpr _Result_Storage_Same(_Result_Storage_Same &&) = default;
+        __fast_inline constexpr ResultStorage_Same(const ResultStorage_Same &) = default;
+        __fast_inline constexpr ResultStorage_Same(ResultStorage_Same &&) = default;
     
         __fast_inline constexpr bool is_ok() const{return is_ok_;}
         __fast_inline constexpr bool is_err() const{return !is_ok_;}
     
-        __fast_inline constexpr T unwrap() const{return ok_data_;}
-        __fast_inline constexpr T unwrap_err() const{return err_data_;}
+        __fast_inline constexpr T get_ok() const{return ok_val_;}
+        __fast_inline constexpr T get_err() const{return err_val_;}
     private:
         union{
-            T ok_data_;
-            T err_data_;
+            T ok_val_;
+            T err_val_;
         };
 
         bool is_ok_;
     };
     
     template<typename E>
-    struct _Result_Storage_ErrorOnly{
+    struct ResultStorage_ErrorOnly{
         using ok_type = void;
         using err_type = E;
-        using Data = std::optional<E>;
-        __fast_inline constexpr _Result_Storage_ErrorOnly(Ok<void> &&):
-            data_(std::nullopt){;}
+        __fast_inline constexpr ResultStorage_ErrorOnly(Ok<void> &&):
+            val_(std::nullopt){;}
     
-        __fast_inline constexpr _Result_Storage_ErrorOnly(const Ok<void> &):
-            data_(std::nullopt){;}
+        __fast_inline constexpr ResultStorage_ErrorOnly(const Ok<void> &):
+            val_(std::nullopt){;}
     
-        __fast_inline constexpr _Result_Storage_ErrorOnly(const Err<E> & val):
-            data_(val.get()){;}
+        __fast_inline constexpr ResultStorage_ErrorOnly(const Err<E> & val):
+            val_(val.get_inner()){;}
     
-        __fast_inline constexpr bool is_ok() const{return !data_.has_value();}
-        __fast_inline constexpr bool is_err() const{return data_.has_value();}
+        __fast_inline constexpr bool is_ok() const{return !val_.has_value();}
+        __fast_inline constexpr bool is_err() const{return val_.has_value();}
     
-        __fast_inline constexpr void unwrap() const{}
-        __fast_inline constexpr E unwrap_err() const{return (data_.value());}
+        __fast_inline constexpr void get_ok() const{}
+        __fast_inline constexpr E get_err() const{return (val_.value());}
     private:
-        Data data_;
+        std::optional<E> val_;
     };
 
     template<typename T>
-    struct _Result_Storage_OkOnly{
+    struct ResultStorage_OkOnly{
         using ok_type = T;
         using err_type = void;
-        using Data = std::optional<T>;
-        __fast_inline constexpr _Result_Storage_OkOnly(const Ok<T> & val):
-            data_(val.get()){;}
+        __fast_inline constexpr ResultStorage_OkOnly(const Ok<T> & val):
+            val_(val.get_inner()){;}
     
-        __fast_inline constexpr _Result_Storage_OkOnly(const Err<void> &):
-            data_(std::nullopt){;}
+        __fast_inline constexpr ResultStorage_OkOnly(const Err<void> &):
+            val_(std::nullopt){;}
     
-        __fast_inline constexpr _Result_Storage_OkOnly(const _Result_Storage_OkOnly &) = default;
-        __fast_inline constexpr _Result_Storage_OkOnly(_Result_Storage_OkOnly &&) = default;
+        __fast_inline constexpr ResultStorage_OkOnly(const ResultStorage_OkOnly &) = default;
+        __fast_inline constexpr ResultStorage_OkOnly(ResultStorage_OkOnly &&) = default;
     
-        __fast_inline constexpr bool is_ok() const{return data_.has_value();}
-        __fast_inline constexpr bool is_err() const{return !data_.has_value();}
+        __fast_inline constexpr bool is_ok() const{return val_.has_value();}
+        __fast_inline constexpr bool is_err() const{return !val_.has_value();}
     
-        __fast_inline constexpr T unwrap() const{return (data_.value());}
-        __fast_inline constexpr void unwrap_err() const{return;}
+        __fast_inline constexpr T get_ok() const{return (val_.value());}
+        __fast_inline constexpr void get_err() const{return;}
     private:
-        Data data_;
+        std::optional<T> val_;
     };
     
-    struct _Result_Storage_VoidOnly {
+    struct ResultStorage_VoidOnly {
         using ok_type = void;
         using err_type = void;
 
-        __fast_inline constexpr _Result_Storage_VoidOnly(const Ok<void> &):
+        __fast_inline constexpr ResultStorage_VoidOnly(const Ok<void> &):
             is_ok_(true){}
-        __fast_inline constexpr _Result_Storage_VoidOnly(const Err<void> &):
+        __fast_inline constexpr ResultStorage_VoidOnly(const Err<void> &):
             is_ok_(false){}
 
-        __fast_inline constexpr _Result_Storage_VoidOnly(const _Result_Storage_VoidOnly &) = default;
-        __fast_inline constexpr _Result_Storage_VoidOnly(_Result_Storage_VoidOnly &&) = default;
+        __fast_inline constexpr ResultStorage_VoidOnly(const ResultStorage_VoidOnly &) = default;
+        __fast_inline constexpr ResultStorage_VoidOnly(ResultStorage_VoidOnly &&) = default;
         
-        __fast_inline constexpr _Result_Storage_VoidOnly& operator=(const _Result_Storage_VoidOnly &) = default;
-        __fast_inline constexpr _Result_Storage_VoidOnly& operator=(_Result_Storage_VoidOnly &&) = default;
+        __fast_inline constexpr ResultStorage_VoidOnly& operator=(const ResultStorage_VoidOnly &) = default;
+        __fast_inline constexpr ResultStorage_VoidOnly& operator=(ResultStorage_VoidOnly &&) = default;
 
         __fast_inline constexpr bool is_ok() const{return is_ok_;}
         __fast_inline constexpr bool is_err() const{return !is_ok_;}
-        __fast_inline constexpr void unwrap() const{}
-        __fast_inline constexpr void unwrap_err() const{}
+        __fast_inline constexpr void get_ok() const{}
+        __fast_inline constexpr void get_err() const{}
     private:
         bool is_ok_;
     };
@@ -207,30 +206,27 @@ namespace details{
     template<typename T>
     using storage_same_type_t = std::conditional_t<
         std::is_same_v<T, void>,
-        _Result_Storage_VoidOnly,
-        _Result_Storage_Same<T>
+        ResultStorage_VoidOnly,
+        ResultStorage_Same<T>
     >;
 
     template<typename T, typename E>
     using storage_diff_type_t = std::conditional_t<
         std::is_same_v<T, void>,
-        _Result_Storage_ErrorOnly<E>,
+        ResultStorage_ErrorOnly<E>,
         std::conditional_t<
             std::is_same_v<E, void>,
-            _Result_Storage_OkOnly<T>,
-            _Result_Storage_Diff<T, E>
+            ResultStorage_OkOnly<T>,
+            ResultStorage_Diff<T, E>
         >
     >;
 
     template<typename T, typename E>
-    using storage_not_int_t = std::conditional_t<
+    using storage_t = std::conditional_t<
         std::is_same_v<T, E>,
         storage_same_type_t<T>,
         storage_diff_type_t<T, E>
     >;
-
-    template<typename T, typename E>
-    using storage_t = storage_not_int_t<T, E>;
 }
 
 
@@ -263,12 +259,9 @@ private:
         Args && ... args
     ) const {
         if ((is_ok())) [[likely]] {
-            return storage_.unwrap();
+            return storage_.get_ok();
         } else {
-            #ifdef __DEBUG_INCLUDED
-            __PANIC_EXPLICIT_SOURCE(loc, std::forward<Args>(args)...);
-            #endif
-            sys::abort();
+            abort_unwrap_nonexist_err();
         }
     }
     friend class _Loc;
@@ -295,12 +288,12 @@ public:
     template<typename E2>
     requires ((not std::is_void_v<E2>) and std::is_convertible_v<Err<E2>, Err<E>>)
     [[nodiscard]] __fast_inline constexpr Result(const Err<E2> & error) : 
-        storage_(Err<E>(static_cast<E>(error.get()))){}
+        storage_(Err<E>(static_cast<E>(error.get_inner()))){}
 
     template<typename E2>
     requires ((not std::is_void_v<E2>) and std::is_convertible_v<Err<E2>, Err<E>>)
     [[nodiscard]] __fast_inline constexpr Result(Err<E2> && error) : 
-        storage_(Err<E>(static_cast<E>(std::move(error).get()))){}
+        storage_(Err<E>(static_cast<E>(std::move(error).get_inner()))){}
 
     template<typename E2 = E>
     requires (std::is_void_v<E2>)
@@ -325,7 +318,7 @@ public:
     [[nodiscard]] __fast_inline constexpr auto map(Fn && fn) const -> Result<TFReturn, E>{
         if (is_ok()) {
             if constexpr(std::is_void_v<TFReturn>) return Ok<TFReturn>(std::forward<Fn>(fn)());
-            else return Ok<TFReturn>(std::forward<Fn>(fn)(storage_.unwrap()));
+            else return Ok<TFReturn>(std::forward<Fn>(fn)(storage_.get_ok()));
         }
         else return Err<E>(unwrap_err());
     }
@@ -477,23 +470,12 @@ public:
     constexpr 
     T expect(Args && ... args) const{
         if ((is_ok())) [[likely]]{
-            return storage_.unwrap();
+            return storage_.get_ok();
         } else {
             PANIC_NSRC(std::forward<Args>(args)...);
-            sys::abort();
         }
     }
     
-    template<typename ... Args>
-    [[nodiscard]] constexpr
-    const Result & check(Args && ... args) const{
-        if((is_err())) [[unlikely]]{
-            #ifdef __DEBUG_INCLUDED
-            DEBUG_PRINTLN(unwrap_err(), std::forward<Args>(args)...);
-            #endif
-        }
-        return *this;
-    } 
     
     template<bool en, typename ... Args>
     [[nodiscard]] constexpr 
@@ -511,31 +493,30 @@ public:
     __fast_inline constexpr 
     T unwrap() const {
         if ((is_ok())) [[likely]] {
-            return storage_.unwrap();
+            return storage_.get_ok();
         } else {
-            sys::abort();
+            abort_unwrap_nonexist_err();
         }
     }
 
-    template<typename ... Args>
     __fast_inline constexpr
-    T examine(
-        const std::source_location & loca = std::source_location::current())
-    {
+    T examine(const std::source_location & loca = std::source_location::current()) const {
         if ((!is_ok())) [[unlikely]]{
             if constexpr (not std::is_same_v<E, void>)
-                __PANIC_EXPLICIT_SOURCE(loca, unwrap_err());
+                abort_unwrap_nonexist_err(loca);
             else
-                __PANIC_EXPLICIT_SOURCE(loca);
+                abort_unwrap_nonexist_err(loca);
+        }else{
+            return storage_.get_ok();
         }
-        return unwrap();
+
     }
 
     template<typename U = T>
     __fast_inline constexpr 
     T unwrap_or(const U & val) const {
         if ((is_ok())) [[likely]]{
-            return storage_.unwrap();
+            return storage_.get_ok();
         } else {
             return static_cast<T>(val);
         }
@@ -543,16 +524,16 @@ public:
     __fast_inline constexpr 
     E unwrap_err() const {
         if ((is_err())) [[likely]]{
-            return storage_.unwrap_err();
+            return storage_.get_err();
         } else {
-            sys::abort();
+            abort_unwrap_nonexist_err();
         }
     }
 
     constexpr Option<T> 
     ok() const{
         if ((is_ok())) [[likely]]{
-            return Some(storage_.unwrap());
+            return Some(storage_.get_ok());
         } else {
             return None;
         }
@@ -561,14 +542,10 @@ public:
     constexpr Option<E> 
     err() const{
         if ((is_err())) [[likely]]{
-            return Some(storage_.unwrap_err());
+            return Some(storage_.get_err());
         } else {
             return None;
         }
-    }
-
-    constexpr bool contains(auto && val){
-        return is_ok() ? (unwrap() == static_cast<T>(val)) : false;
     }
 
     template<
@@ -582,7 +559,23 @@ public:
         if(is_ok()) return Ok<TOkReturn>(std::forward<FnOk>(fn_ok)(unwrap()));
         return Ok<TOkReturn>(std::forward<FnOk>(fn_ok)(unwrap()));
     }
+private:
+    __no_inline __attribute__((noreturn)) 
+    static void abort_unwrap_nonexist_err(){
+        sys::abort(AbortInfo::from_reason(
+            "unwrap nonexist err",
+            AbortInfo::Arguments::from_result<T, E>()
+        ));
+    }
 
+    __no_inline __attribute__((noreturn)) 
+    static void abort_unwrap_nonexist_err(const std::source_location loca){
+        sys::abort(AbortInfo::with_location(
+            "unwrap nonexist err", 
+            AbortInfo::Arguments::from_result<T, E>(),
+            loca)
+        );
+    }
 };
 
 template<typename E>
@@ -596,7 +589,7 @@ Result() -> Result<void, void>;
 
 template<typename T>
 struct [[nodiscard]] Result<T, Infallible>{
-    constexpr Result(Ok<T> && okay):value_(okay.get()){;}
+    constexpr Result(Ok<T> && okay):value_(okay.get_inner()){;}
     consteval Result(Err<Infallible> && error){;}
 
     constexpr T examine() const {return value_;}

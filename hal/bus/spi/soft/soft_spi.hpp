@@ -51,7 +51,7 @@ public:
     ):
         SoftSpi(sclk_gpio, mosi_gpio, miso_gpio)
     {
-        bind_cs_pin(cs_gpio.get(), 0_nth);
+        bind_cs_pin(&cs_gpio.deref(), 0_nth);
     }
 
     SoftSpi(const SoftSpi &) = delete;

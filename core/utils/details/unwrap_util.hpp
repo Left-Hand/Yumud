@@ -24,11 +24,11 @@ public:
     constexpr Some(const T & val):val_(val){}
     constexpr Some(T && val):val_(std::move(val)){;}
 
-    constexpr T & get(){
+    constexpr T & get_inner(){
         return val_;
     }
 
-    constexpr const T & get() const{
+    constexpr const T & get_inner() const{
         return val_;
     }
 private:
@@ -48,7 +48,7 @@ public:
     constexpr Some(std::nullptr_t) = delete;
     constexpr Some(T * ptr):ptr_(ptr){;}
 
-    constexpr T * get() const {
+    constexpr T * get_inner() const {
         return ptr_;
     }
 
@@ -97,26 +97,26 @@ public:
             std::is_convertible_v<U&&, value_type>)
     constexpr Ok(Ok<U>&& other)
         noexcept(std::is_nothrow_constructible_v<value_type, U&&>)
-        : value_(std::move(other).get()) {}
+        : value_(std::move(other).get_inner()) {}
     
     // 默认构造函数 (仅当 T 可默认构造时)
     constexpr Ok() requires std::is_default_constructible_v<value_type>
         : value_() {}
     
     // 访问器
-    [[nodiscard]] constexpr const value_type& get() const & noexcept {
+    [[nodiscard]] constexpr const value_type& get_inner() const & noexcept {
         return value_;
     }
     
-    [[nodiscard]] constexpr value_type& get() & noexcept {
+    [[nodiscard]] constexpr value_type& get_inner() & noexcept {
         return value_;
     }
     
-    [[nodiscard]] constexpr value_type&& get() && noexcept {
+    [[nodiscard]] constexpr value_type&& get_inner() && noexcept {
         return std::move(value_);
     }
     
-    [[nodiscard]] constexpr const value_type&& get() const && noexcept {
+    [[nodiscard]] constexpr const value_type&& get_inner() const && noexcept {
         return std::move(value_);
     }
 
@@ -190,7 +190,7 @@ public:
             !std::is_same_v<U, E>)
     constexpr Err(const Err<U>& other)
         noexcept(std::is_nothrow_constructible_v<error_type, const U&>)
-        : value_(other.get()) {}
+        : value_(other.get_inner()) {}
     
     // 跨类型移动构造函数
     template<typename U>
@@ -199,26 +199,26 @@ public:
             !std::is_same_v<U, E>)
     constexpr Err(Err<U>&& other)
         noexcept(std::is_nothrow_constructible_v<error_type, U&&>)
-        : value_(std::move(other).get()) {}
+        : value_(std::move(other).get_inner()) {}
     
     // 默认构造函数 (仅当 E 可默认构造时)
     constexpr Err() requires std::is_default_constructible_v<error_type>
         : value_() {}
     
     // 访问器 - 完整的值类别支持
-    [[nodiscard]] constexpr const error_type& get() const & noexcept {
+    [[nodiscard]] constexpr const error_type& get_inner() const & noexcept {
         return value_;
     }
     
-    [[nodiscard]] constexpr error_type& get() & noexcept {
+    [[nodiscard]] constexpr error_type& get_inner() & noexcept {
         return value_;
     }
     
-    [[nodiscard]] constexpr error_type&& get() && noexcept {
+    [[nodiscard]] constexpr error_type&& get_inner() && noexcept {
         return std::move(value_);
     }
     
-    [[nodiscard]] constexpr const error_type&& get() const && noexcept {
+    [[nodiscard]] constexpr const error_type&& get_inner() const && noexcept {
         return std::move(value_);
     }
 
@@ -234,7 +234,7 @@ struct [[nodiscard]] Err<void> {
     template<typename U>
     constexpr Err(U&&) = delete; // 防止误用
     
-    constexpr void get() const noexcept {}
+    constexpr void get_inner() const noexcept {}
 };
 
 

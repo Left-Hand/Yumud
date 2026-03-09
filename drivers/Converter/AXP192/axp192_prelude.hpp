@@ -316,7 +316,7 @@ class AXP192 final: public AXP192_Prelude{
         Some<hal::I2cBase *> i2c, 
         const hal::I2cSlaveAddr<7> i2c_addr = DEFAULT_I2C_ADDR
     ):
-        i2c_drv_(hal::I2cDrv(i2c.get(), i2c_addr)){}
+        i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){}
 
     explicit AXP192(hal::I2cDrv && i2c_drv):
         i2c_drv_(std::move(i2c_drv)){}

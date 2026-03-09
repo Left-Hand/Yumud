@@ -4,6 +4,7 @@
 #include "core/debug/debug.hpp"
 #include "core/tmp/functor.hpp"
 
+
 #include "details/unwrap_util.hpp"
 #include <variant>
 #include <source_location>
@@ -69,8 +70,8 @@ private:
 
     bool exists_;
 
-    constexpr T & get(){return storage_;}
-    constexpr const T & get() const {return storage_;}
+    constexpr T & get_inner(){return storage_;}
+    constexpr const T & get_inner() const {return storage_;}
 public:
     [[nodiscard]] constexpr 
     Option(_None_t):
@@ -81,7 +82,7 @@ public:
     Option(const Some<T> & something):
         exists_(true)
         {
-            std::construct_at(&storage_, something.get());
+            std::construct_at(&storage_, something.get_inner());
         }
 
     template<typename U>
@@ -90,7 +91,7 @@ public:
     Option(const Some<U> & something):
         exists_(true)
         {
-            std::construct_at(&storage_, static_cast<T>(something.get()));
+            std::construct_at(&storage_, static_cast<T>(something.get_inner()));
         }
 
     [[nodiscard]] constexpr 
@@ -127,7 +128,7 @@ public:
     constexpr 
     Option & operator = (const Some<T> & something){ 
         if (exists_) std::destroy_at(&storage_);
-        std::construct_at(&storage_, something.get());
+        std::construct_at(&storage_, something.get_inner());
         exists_ = true;
         return *this;
     }
@@ -158,37 +159,37 @@ public:
 
     [[nodiscard]] __fast_inline constexpr const T & 
     value_or(const T & default_value) const{
-        return exists_ ? get() : default_value;
+        return exists_ ? get_inner() : default_value;
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 
     unwrap_loc(const std::source_location & loc = std::source_location::current()) const {
         if((exists_ == false)) [[unlikely]]{
-            __PANIC_EXPLICIT_SOURCE(loc);
+            abort_unwrap_empty_option(loc);
         }
-        return get();
+        return get_inner();
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 
     unwrap() const {
         if((exists_ == false)) [[unlikely]] 
-            sys::abort();
-        return get();
+            abort_unwrap_empty_option();
+        return get_inner();
     }
 
     [[nodiscard]] __fast_inline constexpr T & 
     unwrap(){
         if((exists_ == false)) [[unlikely]] 
-            sys::abort();
-        return get();
+            abort_unwrap_empty_option();
+        return get_inner();
     }
 
     [[nodiscard]] __fast_inline constexpr const T & 
     examine(const std::source_location loca = std::source_location::current()) const {
         if ((!is_some())) [[unlikely]] {
-            __PANIC_EXPLICIT_SOURCE(loca);
+            abort_unwrap_empty_option(loca);
         }
-        return get();
+        return get_inner();
     }
 
 
@@ -198,27 +199,20 @@ public:
         if ((!is_some())) [[unlikely]] {
             PANIC_NSRC(std::forward<Args>(args) ...);
         }
-        return get();
+        return get_inner();
     }
 
     [[nodiscard]] __fast_inline constexpr const T 
     unwrap_or(const T choice) const {
         if((exists_ == false)) [[unlikely]]
             return choice;
-        return get();
+        return get_inner();
     }
-
-
-    __fast_inline constexpr void 
-    unexpected() const {
-        return;
-    }
-
 
     template<typename FnSome, typename FnNone>
     constexpr auto match(FnSome&& some_fn, FnNone&& none_fn) const& {
         if (is_some()) {
-            return std::invoke(std::forward<FnSome>(some_fn), get());
+            return std::invoke(std::forward<FnSome>(some_fn), get_inner());
         } else {
             return std::invoke(std::forward<FnNone>(none_fn));
         }
@@ -231,7 +225,7 @@ public:
     >
     constexpr auto map(Fn&& fn) const& -> Option<TIResult> {
         if (is_some()) 
-            return Some<TIResult>(std::forward<Fn>(fn)(get()));
+            return Some<TIResult>(std::forward<Fn>(fn)(get_inner()));
         return None;
     }
 
@@ -249,9 +243,9 @@ public:
     constexpr auto and_then(Fn&& fn) const -> Option<TData>{
         if (is_some()){
             if constexpr(is_option_v<TIResult>){
-                return std::forward<Fn>(fn)(get());
+                return std::forward<Fn>(fn)(get_inner());
             }else{
-                return Some<TData>(std::forward<Fn>(fn)(get()));
+                return Some<TData>(std::forward<Fn>(fn)(get_inner()));
             }
         }
         return None;
@@ -280,6 +274,23 @@ public:
         else
             return Ret(None);
     }
+private:
+    __no_inline __attribute__((noreturn)) 
+    static void abort_unwrap_empty_option() {
+        sys::abort(AbortInfo::from_reason(
+            "unwrap empty option",
+            AbortInfo::Arguments::from_option<T>()
+        ));
+    }
+
+    __no_inline __attribute__((noreturn)) 
+    static void abort_unwrap_empty_option(const std::source_location loc) {
+        sys::abort(AbortInfo::with_location(
+            "unwrap empty option", 
+            AbortInfo::Arguments::from_option<T>(),
+            loc)
+        );
+    }
 };
 
 template<typename T>
@@ -287,7 +298,7 @@ class Option<T &>{
 public:
     [[nodiscard]] constexpr 
     Option(const Some<T *> & something):
-        pobj_(something.get()){;}
+        pobj_(something.get_inner()){;}
     [[nodiscard]] constexpr 
     Option(T * pobj):
         pobj_(pobj){;}
@@ -319,6 +330,22 @@ public:
     }
 private:
     T * pobj_;
+
+    __no_inline __attribute__((noreturn)) 
+    static void abort_unwrap_empty_option() {
+        sys::abort(AbortInfo::from_reason(
+            "unwrap empty option",
+            AbortInfo::Arguments::from_option<T>()
+        ));
+    }
+
+    __no_inline __attribute__((noreturn)) 
+    static void abort_unwrap_empty_option(const std::source_location loc) {
+        sys::abort(AbortInfo::with_location(
+            "unwrap empty option", 
+            AbortInfo::Arguments::from_option<T>(),
+            loc));
+    }
 };
 
 // 增强CTAD
