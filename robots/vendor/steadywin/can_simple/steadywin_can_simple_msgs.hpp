@@ -105,7 +105,8 @@ struct [[nodiscard]] MitControl final{
         bytes[7] = static_cast<uint8_t>(torque.to_bits() & 0xf);
     }
 
-    constexpr Result<Self, DeMsgError> try_from_bytes(std::span<const uint8_t, 8> bytes) const {
+    constexpr Result<Self, DeMsgError> 
+    try_from_bytes(std::span<const uint8_t, 8> bytes) const {
         const uint16_t position_bits = 
             (bytes[0] << 8) | bytes[1];
         const uint16_t speed_bits = 
@@ -405,7 +406,8 @@ struct [[nodiscard]] HeartbeatV513 final{
     // 失，即通信不稳
     uint8_t life;
 
-    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+    static constexpr Result<Self, DeMsgError> 
+    try_from_bytes(const std::span<const uint8_t, 8> bytes){
         const auto self = Self{
             .axis_fault_flags = std::bit_cast<AxisFaultFlags>(
                 le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())
@@ -443,8 +445,9 @@ struct [[nodiscard]] GetError final{
         uint32_t controller_exception;
         uint32_t system_exception;
     };
-    __no_inline static constexpr Result<Self, DeMsgError> 
-    try_from_bytes(const std::span<const uint8_t, 8> bytes){
+static constexpr Result<Self, DeMsgError> 
+    
+try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self;
         self.motor_exception = le_bytes_to_int<uint64_t>(bytes);
         return Ok(self);
@@ -478,7 +481,8 @@ struct MitControl{
     // 范围-mit_max_torque～mit_max_torque
     mit::MitTorqueCode_u12 torque_code;
 
-    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 5> bytes){
+    static constexpr Result<Self, DeMsgError> 
+    try_from_bytes(const std::span<const uint8_t, 5> bytes){
         const uint16_t position_code_bits = le_bytes_to_int<uint16_t>(bytes.subspan<1, 2>());
         const int16_t speed_code_bits = 
             (static_cast<int16_t>(bytes[3]) << 4)
@@ -505,7 +509,7 @@ struct [[nodiscard]] GetEncoderEstimates final{
     math::fp32 position;
     math::fp32 velocity;
 
-    __no_inline  static constexpr Result<Self, DeMsgError> 
+    static constexpr Result<Self, DeMsgError> 
     try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
             // .position = std::bit_cast<math::fp32>(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
@@ -530,7 +534,8 @@ struct [[nodiscard]] GetEncoderCount final{
     Angular<iq14> multilap_angle;
     Angular<uq32> lap_angle;
 
-    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+    static constexpr Result<Self, DeMsgError> 
+    try_from_bytes(const std::span<const uint8_t, 8> bytes){
         const iq14 multilap_turns = iq14::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>()));
         const uq32 lap_turns = uq32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()) << (32 - 14));
         Self self{
@@ -553,10 +558,13 @@ struct [[nodiscard]] GetIq final{
 
     math::fp32 iq_setpoint;
     math::fp32 iq_measured;
-    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+
+
+    static constexpr Result<Self, DeMsgError> 
+    try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
-            .iq_setpoint = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
-            .iq_measured = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))
+            .iq_setpoint = math::fp32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<0, 4>())),
+            .iq_measured = math::fp32::from_bits(le_bytes_to_int<uint32_t>(bytes.subspan<4, 4>()))
         };
         return Ok(self);
     }
@@ -574,7 +582,10 @@ struct [[nodiscard]] GetBusVoltageCurrent final{
 
     math::fp32 bus_voltage;
     math::fp32 bus_current;
-    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+
+
+    static constexpr Result<Self, DeMsgError> 
+    try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
             .bus_voltage = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
             .bus_current = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))
@@ -595,7 +606,10 @@ struct [[nodiscard]] GetTorques final{
 
     math::fp32 torque_setpoint;
     math::fp32 torque_measured;
-    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+
+
+    static constexpr Result<Self, DeMsgError> 
+    try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
             .torque_setpoint = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
             .torque_measured = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))
@@ -616,7 +630,10 @@ struct [[nodiscard]] GetPowers final{
 
     math::fp32 eletrical_power;
     math::fp32 mechanical_power;
-    static constexpr Result<Self, DeMsgError> try_from_bytes(const std::span<const uint8_t, 8> bytes){
+
+
+    static constexpr Result<Self, DeMsgError> 
+    try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self{
             .eletrical_power = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<0, 4>())),
             .mechanical_power = math::fp32::from_bits(le_bytes_to_int<int32_t>(bytes.subspan<4, 4>()))

@@ -249,7 +249,7 @@ void myesc_main(){
         // .baudrate = hal::NearestFreq(DEBUG_UART_BAUD),
         // .baudrate = hal::NearestFreq(6000000),
         .baudrate = hal::NearestFreq(576000),
-        .rx_strategy = CommStrategy::Nil,
+        .rx_strategy = CommStrategy::Disabled,
         .tx_strategy = CommStrategy::Blocking,
     });
 

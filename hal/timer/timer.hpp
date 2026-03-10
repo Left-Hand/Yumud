@@ -1,7 +1,7 @@
 #pragma once
 
 #include "timer_oc.hpp"
-#include "timer_utils.hpp"
+#include "timer_lld.hpp"
 #include "hal/sysmisc/nvic/nvic.hpp"
 #include "core/utils/result.hpp"
 #include "core/utils/nth.hpp"
@@ -118,7 +118,7 @@ struct [[nodiscard]] TimerPinSetuper final{
 
     explicit TimerPinSetuper(void * inst, const TimerRemap remap) : 
         inst_(inst),
-        tim_nth_(hal::timer::details::timer_to_nth(reinterpret_cast<uintptr_t>(inst_))),
+        tim_nth_(lld::timer_to_nth(reinterpret_cast<uintptr_t>(inst_))),
         remap_(remap){}
 
     Result<Next, Error> alter_to_pins(const std::initializer_list<TimerChannelSelection> list);
@@ -145,7 +145,7 @@ private:
 public:
     explicit BasicTimer(void * inst):
         inst_(inst),
-        tim_nth_(hal::timer::details::timer_to_nth(reinterpret_cast<uintptr_t>(inst_)))
+        tim_nth_(lld::timer_to_nth(reinterpret_cast<uintptr_t>(inst_)))
         {;}
 
     struct [[nodiscard]] Config{
@@ -193,7 +193,7 @@ public:
     //将中断优先级注册到NVIC
     template<IT I>
     void register_nvic(const NvicPriority priority, const Enable en){
-        priority.with_irqn(timer::details::it_to_irq(tim_nth_, I)).enable(en);
+        priority.with_irqn(lld::it_to_irq(tim_nth_, I)).enable(en);
     }
 
     //使能ARR同步更新（shadow）

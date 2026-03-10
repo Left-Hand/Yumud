@@ -5,7 +5,7 @@
 namespace ymd{
 
 enum class CommStrategy:unsigned char{
-    Nil,
+    Disabled,
     Blocking = 1,
     Interrupt,
     Dma

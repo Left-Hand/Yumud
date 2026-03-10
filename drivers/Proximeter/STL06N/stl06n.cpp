@@ -13,14 +13,20 @@ using Self = STL06N_ParseReceiver;
 })\
 
 
-void Self::push_byte(const uint8_t byte){
+void STL06N_ParseReceiver::push_byte(const uint8_t byte){
+    if(is_emitting_){
+        PANIC{"racing condition is happening!!!"};
+        return;
+    }
+    auto set_fsm_state = [this](const FsmState new_state){ fsm_state_ = new_state; };
+
     switch(fsm_state_){
         case FsmState::AwaitingHeader:
             if(byte != HEADER_TOKEN){
                 reset();
                 return;
             }
-            fsm_state_ = FsmState::AwaitingVerlen;
+            set_fsm_state(FsmState::AwaitingVerlen);
             return;
 
         case FsmState::AwaitingVerlen:
@@ -29,9 +35,9 @@ void Self::push_byte(const uint8_t byte){
             if(may_command_.is_none()){
                 reset();
                 return;
-
             }
-            fsm_state_ = FsmState::Payload;
+
+            set_fsm_state(FsmState::Payload);
 
             return;
 
@@ -39,22 +45,22 @@ void Self::push_byte(const uint8_t byte){
             bytes_[bytes_count_] = byte;
             bytes_count_++;
 
-            if(bytes_count_ > may_command_.unwrap().payload_length()){
-                flush();
+            may_command_.match([&](const Command command){
+                if(bytes_count_ > command.payload_length()){
+                    flush(command);
+                    reset();
+                }
+            }, [&]{
                 reset();
-            }
-            return;
-
-        case FsmState::Emitting:
-            PANIC{"racing condition is happening!!!"};
+            });
             return;
 
     }
-    PANIC{"unreachable"};
-    reset();
+
+    __builtin_unreachable();
 }
 
-void Self::push_bytes(const std::span<const uint8_t> bytes){
+void STL06N_ParseReceiver::push_bytes(const std::span<const uint8_t> bytes){
     for(const auto byte: bytes){
         push_byte(byte);
     }
@@ -71,10 +77,13 @@ STL06N_ParseReceiver::STL06N_ParseReceiver(Callback && callback):
     reset();
 }
 
-void Self::flush(){
-    fsm_state_ = FsmState::Emitting;
+void STL06N_ParseReceiver::flush(const Command command){
+    auto guard = make_scope_guard([&]{
+        is_emitting_ = false;
+    });
 
-    const auto command = may_command_.unwrap();
+    is_emitting_ = true;
+
     const size_t num_context_bytes = command.payload_length();
 
     const auto context = std::span(bytes_.data(), num_context_bytes);
@@ -128,7 +137,7 @@ void Self::flush(){
     __builtin_trap();
 }
 
-void Self::reset(){
+void STL06N_ParseReceiver::reset(){
     bytes_count_ = 0;
     fsm_state_ = FsmState::AwaitingHeader;
     may_command_ = None;

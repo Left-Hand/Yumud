@@ -17,11 +17,7 @@ public:
 
     void push_bytes(const std::span<const uint8_t> bytes);
 
-    [[nodiscard]] bool is_emitting() const{
-        return fsm_state_ == FsmState::Emitting;
-    }
 
-    void flush();
 
     void reset();
 
@@ -33,18 +29,30 @@ public:
 
     Callback callback_;
 
+    struct CommandCode{
+        uint8_t bits;
+
+        constexpr Option<Command> parse() const {
+            return Command::try_from_u8(bits);
+        }
+    };
+
     Option<Command> may_command_ = None;
 
     enum class FsmState:uint8_t{
         AwaitingHeader = 0,
         AwaitingVerlen,
         Payload,
-        Emitting,
     };
 
-    size_t bytes_count_;
-    volatile FsmState fsm_state_;
 
+    volatile FsmState fsm_state_ = FsmState::AwaitingHeader;
+    volatile bool is_emitting_ = false; 
+
+
+    size_t bytes_count_;
+
+    void flush(const Command command);
 };
 
 }

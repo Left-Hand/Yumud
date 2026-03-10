@@ -136,7 +136,7 @@ static Option<DmaChannel &> timch_to_dma(const Nth nth, timer::ChannelSelection:
 
 
 Option<DmaChannel &> TimerChannel::dma() const {
-    return timch_to_dma(timer::details::timer_to_nth(reinterpret_cast<uintptr_t>(inst_)), sel_.kind());
+    return timch_to_dma(lld::timer_to_nth(reinterpret_cast<uintptr_t>(inst_)), sel_.kind());
 }
 
 

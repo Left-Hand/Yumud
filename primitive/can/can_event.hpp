@@ -18,17 +18,17 @@ struct alignas(4) TransmitEvent{
 
     Kind kind;
     MailboxIndex mbox_idx;
-    uint16_t padding = 0;
+    uint16_t _padding = 0;
 };
 
 static_assert(sizeof(TransmitEvent) == 4);
 
 /// @brief CAN接收事件
-struct alignas(4) [[nodiscard]] ReceiveEvent{
+struct alignas(4) [[nodiscard]] ReceiveEvent final{
     enum class [[nodiscard]] Kind:uint8_t{
-        Pending,
-        Full,
-        Overrun,
+        FifoPending,
+        FifoFull,
+        FifoOverrun,
     };
 
     using Self = ReceiveEvent;
@@ -36,7 +36,7 @@ struct alignas(4) [[nodiscard]] ReceiveEvent{
 
     Kind kind;
     FifoIndex fifo_idx;
-    uint16_t padding = 0;
+    uint16_t _padding = 0;
 };
 
 static_assert(sizeof(ReceiveEvent) == 4);
@@ -65,7 +65,7 @@ struct alignas(4) [[nodiscard]] Event final{
     enum class [[nodiscard]] Type:uint32_t{
         Transmit,
         Receive,
-        Status
+        StatusChange
     };
 
     struct ErasuredArg{
@@ -102,7 +102,7 @@ struct alignas(4) [[nodiscard]] Event final{
             return Self{Type::Receive, ErasuredArg{.u32_digit = std::bit_cast<uint32_t>(ev)}};
             // return Self{Type::Receive, ErasuredArg{.u32_digit = ev.to_u16()}};
         }else if constexpr (std::is_same_v<E, StatusFlag>){
-            return Self{Type::Status, ErasuredArg{.u32_digit = std::bit_cast<uint32_t>(ev)}};
+            return Self{Type::StatusChange, ErasuredArg{.u32_digit = std::bit_cast<uint32_t>(ev)}};
         }
         __builtin_unreachable();
     }

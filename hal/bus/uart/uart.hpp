@@ -1,7 +1,7 @@
 #pragma once
 
 #include "uart_base.hpp"
-#include "core/utils/nth.hpp"
+#include "uart_lld.hpp"
 
 
 namespace ymd::hal{
@@ -23,7 +23,7 @@ struct UartInterruptDispatcher{
 class Uart final:public UartBase{
 public:
     explicit Uart(
-        void * inst
+        void * p_inst
     );
 
     void init(const Config & cfg);
@@ -42,8 +42,8 @@ public:
     [[nodiscard]] size_t sink_bytes(std::span<const uint8_t> bytes);
 
 private:
-    void * inst_;
-    Nth nth_;
+    void * p_inst_;
+    Nth inst_nth_;
 
     void enable_rcc(const Enable en);
     void register_nvic(const Enable en);
@@ -58,8 +58,8 @@ private:
 
 
 
-    std::array<uint8_t, UART_DMA_BUF_SIZE> tx_dma_buf_;
-    std::array<uint8_t, UART_DMA_BUF_SIZE> rx_dma_buf_;
+    std::array<uint8_t, UART_TX_DMA_BUF_SIZE> tx_dma_buf_;
+    std::array<uint8_t, UART_RX_DMA_BUF_SIZE> rx_dma_buf_;
 
     DmaChannel & tx_dma_;
     DmaChannel & rx_dma_;

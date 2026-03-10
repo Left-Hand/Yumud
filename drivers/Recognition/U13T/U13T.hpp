@@ -1,13 +1,13 @@
 #pragma once
 
 #include "core/io/regs.hpp"
-#include "hal/bus/uart/hw_singleton.hpp"
+#include "hal/bus/uart/uart.hpp"
 
 namespace ymd::drivers{
 
 class U13T{
 public:
-    class Command{
+    struct [[nodiscard]] Command final{
     public:
         enum Kind:uint8_t{
             ReadCardNumber = 0x10,
@@ -54,17 +54,8 @@ public:
     int8_t dead_ticks = 0;
     const int8_t dead_limit = 3;
 
-    // bool checkNew();
-    // void clearBuffer();
-
-    // void lineCb();
 
     hal::UartBase & uart_;
-
-    // template<size_t N>
-    // static constexpr std::array<uint8_t, N> make_payload()
-
-
 
 public:
     U13T(hal::UartBase & uart):uart_(uart){;}

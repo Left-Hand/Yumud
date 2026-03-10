@@ -1,4 +1,4 @@
-#include "timer_utils.hpp"
+#include "timer_lld.hpp"
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/gpio_port.hpp"
 #include "timer_layout.hpp"
@@ -18,7 +18,7 @@ using namespace ymd::hal;
 
 
 
-namespace ymd::hal::timer::details{
+namespace ymd::lld{
 
 Nth timer_to_nth(const uintptr_t inst_base){
     switch(inst_base){
@@ -67,27 +67,27 @@ Nth timer_to_nth(const uintptr_t inst_base){
 }
 
 
-std::tuple<uint16_t, uint16_t> calc_arr_and_psc(
+std::tuple<uint16_t, uint16_t> timer_calc_arr_and_psc(
     const uint32_t aligned_bus_clk_freq,
     const TimerCountFreq count_freq
 ){
     if(count_freq.is<NearestFreq>()){
-        const auto arr_and_psc = ArrAndPsc::from_nearest_count_freq(
+        const auto arr_and_psc = hal::timer::ArrAndPsc::from_nearest_count_freq(
             aligned_bus_clk_freq,
             count_freq.unwrap_as<NearestFreq>().count, 
             {0, 65535}
         );
         // PANIC(arr_and_psc.arr, arr_and_psc.psc);
         return std::make_tuple(arr_and_psc.arr, arr_and_psc.psc);
-    }else if(count_freq.is<ArrAndPsc>()){
-        const auto arr_and_psc = count_freq.unwrap_as<ArrAndPsc>();
+    }else if(count_freq.is<hal::timer::ArrAndPsc>()){
+        const auto arr_and_psc = count_freq.unwrap_as<hal::timer::ArrAndPsc>();
         return std::make_tuple(arr_and_psc.arr, arr_and_psc.psc);
     }else{
         __builtin_trap();
     }
 }
 
-void set_remap(const Nth nth, const TimerRemap rm){
+void timer_set_remap(const Nth nth, const TimerRemap rm){
     switch(nth.count()){
     #ifdef TIM1_PRESENT
     case 1:
@@ -206,7 +206,7 @@ void set_remap(const Nth nth, const TimerRemap rm){
     __builtin_trap();
 }
 
-void enable_rcc(const Nth nth, const Enable en){
+void timer_enable_rcc(const Nth nth, const Enable en){
     switch(nth.count()){
     #ifdef TIM1_PRESENT
     case 1:

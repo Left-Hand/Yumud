@@ -40,12 +40,14 @@ static_assert((FRAGMENT_SIZE_MAX & (FRAGMENT_SIZE_MAX - 1U)) == 0U, "Not a power
 static_assert(INSTANCE_SIZE_PADDED >= sizeof(O1HeapInstance), "Invalid instance footprint computation");
 static_assert((INSTANCE_SIZE_PADDED % O1HEAP_ALIGNMENT) == 0U, "Invalid instance footprint computation");
 
+__attribute__((always_inline))
 static constexpr size_t larger(const size_t a, const size_t b)
 {
     return (a > b) ? a : b;
 }
 
 /// Undefined for zero argument.
+__attribute__((always_inline))
 static constexpr uint_fast8_t log2Floor(const size_t x)
 {
     O1HEAP_ASSERT(x > 0);
@@ -56,12 +58,14 @@ static constexpr uint_fast8_t log2Floor(const size_t x)
 /// Raise 2 into the specified power.
 /// You might be tempted to do something like (1U << power). WRONG! We humans are prone to forgetting things.
 /// If you forget to cast your 1U to size_t or ULL, you may end up with undefined behavior.
+__attribute__((always_inline))
 static constexpr size_t pow2(const uint_fast8_t power)
 {
     return ((size_t) 1U) << power;
 }
 
 /// This is equivalent to pow2(log2Ceil(x)). Undefined for x<2.
+__attribute__((always_inline))
 static constexpr size_t roundUpToPowerOf2(const size_t x)
 {
     O1HEAP_ASSERT(x >= 2U);
@@ -72,6 +76,7 @@ static constexpr size_t roundUpToPowerOf2(const size_t x)
 // ---------------------------------------- FRAGMENT HEADER ACCESSORS ----------------------------------------
 
 #define ASSUME_ALIGNED_FRAG_PTR(x) O1HEAP_ASSUME_ALIGNED(x, sizeof(Fragment*))
+
 
 Fragment * Fragment::GetNext() const{
     Fragment* const out = ASSUME_ALIGNED_FRAG_PTR(this)->header.next;

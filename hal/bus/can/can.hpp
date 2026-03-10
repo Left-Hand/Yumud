@@ -1,16 +1,6 @@
 #pragma once
 
-#include "core/utils/Result.hpp"
-#include "core/utils/nth.hpp"
-#include "core/container/ringbuf.hpp"
-#include "ral/can.hpp"
-#include "can_layout.hpp"
-
-#include "primitive/can/bxcan_frame.hpp"
-#include "primitive/can/can_event.hpp"
-
-#include "can_filter.hpp"
-
+#include "can_lld.hpp"
 
 
 //#region switches
@@ -67,9 +57,6 @@ public:
     // 尝试读取一个报文 如果没有可读的报文将返回空
     [[nodiscard]] Option<BxCanFrame> try_read();
 
-    // 读取一个报文 如果没有可读的报文时立即终止程序
-    [[nodiscard]] BxCanFrame read();
-
     // 可以继续写入的CAN报文数量
     [[nodiscard]] size_t free_capacity();
 
@@ -120,12 +107,12 @@ public:
     template<size_t I>
     requires (I < 14)
     CanFilter filters() const {
-        return CanFilter(this->inst_, Nth(I));
+        return CanFilter(this->p_inst_, Nth(I));
     }
 
 private:
-    void * inst_;
-    Nth nth_;
+    void * p_inst_;
+    Nth inst_nth_;
     
     #ifndef CAN_BUFFERED_QUEUE_SIZE
     static constexpr size_t CAN_BUFFERED_QUEUE_SIZE = 8;
@@ -143,13 +130,12 @@ private:
     void init_interrupts();
 
     //在指定的邮箱填写报文
-    void transmit(const BxCanFrame & frame, const CanMailboxIndex mbox_idx);
-
-    void poll_backup_fifo();
+    void transmit(const CanMailboxIndex mbox_idx, const BxCanFrame & frame);
 
     //在指定的fifo读取报文
     [[nodiscard]] BxCanFrame receive(const CanFifoIndex fifo_idx);
 
+    void poll_tx_queue();
     
     [[nodiscard]] uint32_t get_aligned_bus_clk_freq();
 

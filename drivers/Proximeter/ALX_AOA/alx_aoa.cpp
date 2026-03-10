@@ -60,15 +60,6 @@ private:
     size_t offset_ = 0;
 };
 
-[[nodiscard]] static constexpr uint8_t xor_bytes(
-    const std::span<const uint8_t> bytes
-){
-    uint8_t ret = 0;
-    for(const auto byte : bytes){
-        ret ^= byte;
-    }
-    return ret;
-}
 
 
 template<typename T>
@@ -223,30 +214,30 @@ static Result<Location, Error> parse_location(std::span<const uint8_t, 25> bytes
 
 
 void Self::push_byte(const uint8_t byte){
-    auto fsm_update = [&](const auto state){ 
+    auto set_fsm_state = [&](const auto state){ 
         // ALXAOA_DEBUG(state);
         fsm_state_ = state; 
     };
     switch(fsm_state_){
         case FsmState::Header0:
-            if(byte != 0xff){reset(); break;}
-            fsm_update(FsmState::Header1);
+            if(byte != 0xff){reset(); return;}
+            set_fsm_state(FsmState::Header1);
             break;
         case FsmState::Header1:
-            if(byte != 0xff){reset(); break;}
-            fsm_update(FsmState::Header2);
+            if(byte != 0xff){reset(); return;}
+            set_fsm_state(FsmState::Header2);
             break;
         case FsmState::Header2:
-            if(byte != 0xff){reset(); break;}
-            fsm_update(FsmState::Header3);
+            if(byte != 0xff){reset(); return;}
+            set_fsm_state(FsmState::Header3);
             break;
         case FsmState::Header3:
-            if(byte != 0xff){reset(); break;}
-            fsm_update(FsmState::WaitingLen0);
+            if(byte != 0xff){reset(); return;}
+            set_fsm_state(FsmState::WaitingLen0);
             break;
         case FsmState::WaitingLen0: 
-            if(byte != 0x00){reset(); break;}
-            fsm_update(FsmState::WaitingLen1);
+            if(byte != 0x00){reset(); return;}
+            set_fsm_state(FsmState::WaitingLen1);
             break;
         case FsmState::WaitingLen1:{
             const auto len = static_cast<uint8_t>(byte);
@@ -260,9 +251,9 @@ void Self::push_byte(const uint8_t byte){
                 }
             }();
             
-            if(not is_valid_len) {reset(); break;}
+            if(not is_valid_len) {reset(); return;}
             leader_info_.len = len;
-            fsm_update(FsmState::Remaining);
+            set_fsm_state(FsmState::Remaining);
             break;
         }
         case FsmState::Remaining:
@@ -277,21 +268,45 @@ void Self::push_byte(const uint8_t byte){
 
 }
 
+[[nodiscard]] static constexpr uint8_t xor_bytes(
+    const std::span<const uint8_t> bytes
+){
+    uint8_t ret = 0;
+    for(const auto byte : bytes){
+        ret ^= byte;
+    }
+    return ret;
+}
 
 
+struct [[nodiscard]] CrcAccumulator{
+    using Self = CrcAccumulator;
+    uint8_t crc = 0;
 
-Result<Event, Error>  Self::parse(){
+    constexpr Self push_byte(const uint8_t byte) const { 
+        auto self = *this;
+        self.crc ^= byte;
+        return self;
+    }
+
+    constexpr Self push_bytes(const std::span<const uint8_t> bytes) const { 
+        auto self = *this;
+        for(const auto byte : bytes){
+            self.crc ^= byte;
+        }
+        return self;
+    }
+
+    [[nodiscard]] constexpr uint8_t finalize(){ return crc; }
+};
+
+
+Result<Event, Error> Self::parse(){
     const size_t size = payload_bytes_.size();
     if(size < 10) ALXAOA_PANIC("size too small", size, leader_info_.len);
 
 
     const auto context_bytes = std::span(payload_bytes_.data(), size);
-
-    // ALXAOA_DEBUG("header");
-    // for(const auto byte : header_bytes) {ALXAOA_DEBUG(std::hex, std::showbase, byte); clock::delay(1ms);}
-    // ALXAOA_DEBUG("context");
-    // for(const auto byte : context_bytes) {ALXAOA_DEBUG(std::hex, std::showbase, byte); clock::delay(1ms);}
-
 
 
     BytesSpawner spawner(context_bytes);
@@ -315,14 +330,14 @@ Result<Event, Error>  Self::parse(){
     //     return Err(Error::InvalidProtocolVersion);
     // }
 
-
     switch(req_command){
 
         case RequestCommand::Location:{
-            #if 1
-            const auto header_xor = leader_info_.len; // 0xff ^ 0xff ^ 0xff ^ 0xff ^ 0x00 ^ len = len
-            const auto context_xor = xor_bytes(std::span(context_bytes.begin(), std::prev(context_bytes.end())));
-            const auto actual_xor = header_xor ^ context_xor;
+
+            const auto actual_xor = CrcAccumulator{}
+                .push_byte(static_cast<uint8_t>(leader_info_.len))
+                .push_bytes(std::span(context_bytes.begin(), std::prev(context_bytes.end())))
+                .finalize();
 
             const auto expected_xor = *std::prev(context_bytes.end());
             
@@ -337,13 +352,8 @@ Result<Event, Error>  Self::parse(){
             });
             return Ok(Event(location));
             break;
-            #endif
         }
         case RequestCommand::HeartBeat:{
-            #if 1
-            // const auto res = parse_heartbeat(spawner);
-            // if(res.is_err()) return Err(res.unwrap_err());
-            // return Ok(Event(res.unwrap()));
 
             if(spawner.remaining().size() != 4) return Err(Error::InvalidLength);
             const auto anchor_id = ({
@@ -351,13 +361,7 @@ Result<Event, Error>  Self::parse(){
                 if(res.is_err()) return Err(res.unwrap_err());
                 res.unwrap();
             });
-            // AnchorID 4 unsigned Integer ID
 
-            // Event ev = Event(parse_location(spawner).unwrap());
-            // Event ev = Event(Self::HeartBeat{
-            //     // .anchor_id = DeviceIdCode::from_bits(0)
-            //     .anchor_id = anchor_id
-            // });
             Event ev = Event(std::monostate{});
             HeartBeat msg{
                 .anchor_id = anchor_id
@@ -365,7 +369,6 @@ Result<Event, Error>  Self::parse(){
 
             ev = Event(msg);
             return Ok(ev);
-            #endif
             break;
         }
         default:

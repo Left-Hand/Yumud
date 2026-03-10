@@ -52,7 +52,7 @@ void at8222_tb(){
     hal::usart2.init({
         hal::USART2_REMAP_PA2_PA3,
         hal::NearestFreq(4000000), 
-        CommStrategy::Nil
+        CommStrategy::Disabled
     });
 
     DEBUGGER.retarget(&hal::usart2);

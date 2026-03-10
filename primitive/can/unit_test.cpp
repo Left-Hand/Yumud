@@ -253,12 +253,12 @@ namespace {
 
     {
         static constexpr auto ev = hal::CanEvent::from(hal::CanReceiveEvent{
-            .kind = hal::CanReceiveEvent::Pending,
+            .kind = hal::CanReceiveEvent::FifoPending,
             .fifo_idx = hal::CanFifoIndex::_0
         });
 
         static constexpr auto rx_ev = ev.exact_arg<hal::CanReceiveEvent>();
-        static_assert(rx_ev.kind == hal::CanReceiveEvent::Pending);
+        static_assert(rx_ev.kind == hal::CanReceiveEvent::FifoPending);
         static_assert(rx_ev.fifo_idx == hal::CanFifoIndex::_0);
     }
 

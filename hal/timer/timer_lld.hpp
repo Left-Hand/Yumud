@@ -6,9 +6,19 @@
 #include "core/irqn.hpp"
 #include "core/utils/nth.hpp"
 
-namespace ymd::hal::timer{
 
-namespace details{
+
+namespace ymd::lld{
+
+
+std::tuple<uint16_t, uint16_t> timer_calc_arr_and_psc(
+    const uint32_t aligned_bus_clk_freq,
+    const hal::TimerCountFreq count_freq
+);
+
+void timer_set_remap(const Nth nth, const hal::TimerRemap rm);
+void timer_enable_rcc(const Nth nth, const Enable en);
+
 
 Nth timer_to_nth(const uintptr_t inst_base);
 
@@ -69,7 +79,7 @@ Nth timer_to_nth(const uintptr_t inst_base);
     return false;
 }
 
-[[nodiscard]] static constexpr IRQn it_to_irq(const Nth nth, const TimerIT it){
+[[nodiscard]] static constexpr IRQn it_to_irq(const Nth nth, const hal::TimerIT it){
 
     #define GENERIC_TIMER_IRQ_TEMPLATE(x)\
     case x:\
@@ -78,17 +88,17 @@ Nth timer_to_nth(const uintptr_t inst_base);
     #define ADVANCED_TIMER_IRQ_TEMPLATE(x)\
     case x:\
         switch(it){\
-            case TimerIT::Update:\
+            case hal::TimerIT::Update:\
                 return TIM##x##_UP_IRQn;\
-            case TimerIT::CC1:\
-            case TimerIT::CC2:\
-            case TimerIT::CC3:\
-            case TimerIT::CC4:\
+            case hal::TimerIT::CC1:\
+            case hal::TimerIT::CC2:\
+            case hal::TimerIT::CC3:\
+            case hal::TimerIT::CC4:\
                 return TIM##x##_CC_IRQn;\
-            case TimerIT::Trigger:\
-            case TimerIT::COM:\
+            case hal::TimerIT::Trigger:\
+            case hal::TimerIT::COM:\
                 return TIM##x##_TRG_COM_IRQn;\
-            case TimerIT::Break:\
+            case hal::TimerIT::Break:\
                 return TIM##x##_BRK_IRQn;\
         }\
         break;\
@@ -141,15 +151,5 @@ Nth timer_to_nth(const uintptr_t inst_base);
     #undef ADVANCED_TIMER_IRQ_TEMPLATE
 }
 
-
-
-std::tuple<uint16_t, uint16_t> calc_arr_and_psc(
-    const uint32_t aligned_bus_clk_freq,
-    const TimerCountFreq count_freq
-);
-
-void set_remap(const Nth nth, const TimerRemap rm);
-void enable_rcc(const Nth nth, const Enable en);
-}
 
 };

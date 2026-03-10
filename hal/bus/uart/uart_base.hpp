@@ -18,18 +18,12 @@ namespace ymd::hal{
 static constexpr size_t UART_BUFFERED_QUEUE_SIZE = 256;
 #endif
 
-
-#ifndef UART_DMA_BUF_SIZE
-static constexpr size_t UART_DMA_BUF_SIZE = 64;
-#endif
-
 #ifndef UART_TX_DMA_BUF_SIZE
-static constexpr size_t UART_TX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
+static constexpr size_t UART_TX_DMA_BUF_SIZE = 128;
 #endif
-
 
 #ifndef UART_RX_DMA_BUF_SIZE
-static constexpr size_t UART_RX_DMA_BUF_SIZE = UART_DMA_BUF_SIZE;
+static constexpr size_t UART_RX_DMA_BUF_SIZE = 128;
 #endif
 
 
@@ -59,12 +53,13 @@ public:
     [[nodiscard]] __fast_inline size_t available() const {return rx_queue_.length();}
     [[nodiscard]] __fast_inline size_t free_capacity() const {
         switch(tx_strategy_){
-            case CommStrategy::Nil: __builtin_trap();
+            case CommStrategy::Disabled: return 0;
             case CommStrategy::Blocking: return std::numeric_limits<size_t>::max();
             case CommStrategy::Dma: return tx_queue_.free_capacity();
             case CommStrategy::Interrupt: return tx_queue_.free_capacity();
         }
-        __builtin_trap();
+        __builtin_unreachable();
+        return 0;
     }
 
     virtual void set_tx_strategy(const CommStrategy tx_strategy) = 0;

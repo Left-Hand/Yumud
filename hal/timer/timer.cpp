@@ -389,12 +389,12 @@ TimerPinSetuper::Next TimerPinSetuper::dont_alter_to_pins(){
 }
 
 void BasicTimer::enable_rcc(const Enable en){
-    timer::details::enable_rcc(tim_nth_, en);
+    lld::timer_enable_rcc(tim_nth_, en);
 }
 
 void BasicTimer::set_remap(const TimerRemap rm){
     // PANIC{uint8_t(rm)};
-    timer::details::set_remap(tim_nth_, rm);
+    lld::timer_set_remap(tim_nth_, rm);
 }
 
 void BasicTimer::start(){
@@ -410,7 +410,7 @@ void BasicTimer::dyn_enable_interrupt(const IT I, const Enable en){
 }
 
 uint32_t BasicTimer::get_periph_clk_freq(){
-    return timer::details::is_advanced_timer(tim_nth_) ? 
+    return lld::is_advanced_timer(tim_nth_) ? 
         sys::clock::get_apb2_clk_freq() : 
         sys::clock::get_apb1_clk_freq();
 }
@@ -475,7 +475,7 @@ void BasicTimer::enable_udis(const Enable en){
 
 void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
 
-    const auto [arr, psc] = timer::details::calc_arr_and_psc(
+    const auto [arr, psc] = lld::timer_calc_arr_and_psc(
         get_periph_clk_freq(), count_freq);
     set_arr(arr);
     set_psc(psc);
@@ -513,7 +513,7 @@ void BasicTimer::deinit(){
 void BasicTimer::enable(const Enable en){
     TIM_Cmd(SDK_INST(inst_), (en == EN));
     
-    if((en == EN) and timer::details::is_advanced_timer(tim_nth_)){
+    if((en == EN) and lld::is_advanced_timer(tim_nth_)){
         TIM_CtrlPWMOutputs(SDK_INST(inst_), (en == EN));
     }
 }

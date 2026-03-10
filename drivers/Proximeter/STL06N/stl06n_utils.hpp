@@ -177,18 +177,26 @@ struct alignas(1) [[nodiscard]] Command final{
 
     constexpr Command(Kind kind):kind_(kind){}
 
-    [[nodiscard]] static constexpr Option<Self> try_from_u8(const uint8_t bits){
+    [[nodiscard]] static constexpr bool is_valid(const uint8_t bits){ 
         switch(bits){
-            case 0x2c:
-            case 0xa0:
-            case 0xa1:
-            case 0xa2:
-            case 0xa3:{
-                return Some(Self(static_cast<Kind>(bits)));
+            case static_cast<uint8_t>(Sector):
+            case static_cast<uint8_t>(Start):
+            case static_cast<uint8_t>(Stop):
+            case static_cast<uint8_t>(SetSpeed):
+            case static_cast<uint8_t>(GetSpeed):{
+                return true;
             }
         }
-        return None;
+        return false;
     }
+
+    [[nodiscard]] static constexpr Option<Self> try_from_u8(const uint8_t bits){
+        if(not is_valid(bits))
+            return None;
+        return Some(Self(static_cast<Kind>(bits)));
+    }
+
+
     [[nodiscard]] constexpr uint8_t to_u8() const{
         return static_cast<uint8_t>(kind_);
     }

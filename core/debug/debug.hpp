@@ -43,12 +43,14 @@ __fast_inline void DEBUG_PRINT(Args&& ... args) {
 template<typename ... Args>
 __attribute__((noreturn))
 __fast_inline void PANIC_NSRC(Args&& ... args) {
+    DEBUG_PRINTLN(std::forward<Args>(args)...);
     sys::abort(AbortInfo::from_reason("panicked"));
 }
 
 template<typename Expr, typename ... Args>
 __fast_inline bool ASSERT_NSRC(Expr &&expr, Args&& ... args) {
     if(false == bool(std::forward<Expr>(expr))){
+        DEBUG_PRINTLN(std::forward<Args>(args)...);
         sys::abort(AbortInfo::from_reason("assert failed"));
     }
     return true;
@@ -81,6 +83,7 @@ template <typename... Args>
 struct PANIC
 {    
 	__attribute__((noreturn)) PANIC(Args &&... args, const std::source_location& loc = std::source_location::current()){
+        DEBUG_PRINTLN(std::forward<Args>(args)...);
         sys::abort(AbortInfo::without_arguments(
             "panicked", loc)
         );
