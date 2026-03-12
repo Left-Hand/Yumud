@@ -95,7 +95,7 @@ private:
         buf.append_unchecked(std::bit_cast<uint8_t>(func_code));
         buf.append_unchecked(bytes);
 
-        return hal::BxCanFrame(
+        return hal::BxCanFrame::from_parts(
             nodeid_and_piececnt_to_canid(node_id, piece_cnt),
             hal::BxCanPayload::from_bytes(buf.as_slice())
         );

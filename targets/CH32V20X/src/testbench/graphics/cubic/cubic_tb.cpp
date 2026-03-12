@@ -23,6 +23,8 @@
 
 using namespace ymd;
 
+#if 0
+
 
 #define RADIANS(x) ((3.1415926f / 180) * (x))
 
@@ -505,3 +507,6 @@ void cubic_main(void){
 		DEBUG_PRINTLN(clock::millis() - m);
 	}
 }
+
+
+#endif

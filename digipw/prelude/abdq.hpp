@@ -33,7 +33,7 @@ static constexpr void dq_to_alphabeta(
 }
 
 template<typename T>
-struct [[nodiscard]] AlphaBetaCoord final{
+struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaCoord final{
     static_assert(std::is_signed_v<T>);
 
     T alpha;
@@ -174,7 +174,7 @@ private:
 };
 
 template<typename T>
-struct [[nodiscard]] AlphaBetaZeroCoord final{
+struct [[nodiscard]] alignas(sizeof(T)) AlphaBetaZeroCoord final{
     static_assert(std::is_signed_v<T>);
 
     T alpha;
@@ -213,7 +213,7 @@ private:
 
 
 template<typename T>
-struct [[nodiscard]] DqCoord final{
+struct [[nodiscard]] alignas(sizeof(T)) DqCoord final{
     static_assert(std::is_signed_v<T>);
     
     T d;

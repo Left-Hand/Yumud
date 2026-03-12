@@ -88,7 +88,7 @@ void mks_stepper_main(){
         }
         #else
         if(COMM_CAN.available()){
-            DEBUG_PRINTLN("rx", COMM_CAN.read());
+            DEBUG_PRINTLN("rx", COMM_CAN.try_read().unwrap());
         }
 
         // DEBUG_PRINTLN(COMM_CAN.pending());

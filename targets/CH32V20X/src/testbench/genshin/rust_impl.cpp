@@ -201,35 +201,50 @@ struct ImplFor<int, MyStruct> {
 
 
 
-static constexpr auto serialized1 = serialize<RawBytes>(uint8_t(42));
-static constexpr auto serialized2 = serialize<RawBytes>(1_iq16);
-static constexpr auto serialized3 = serialize<RawBytes>(1.0f);
-static constexpr auto serialized4 = serialize<RawBytes>(1.0f, 1_iq16);
-
-static constexpr auto deserialized1 = deserialize<RawBytes, uint8_t>(std::span(serialized1));
-static constexpr auto deserialized2 = deserialize<RawBytes, iq16>(std::span(serialized2));
-static constexpr auto deserialized3 = deserialize<RawBytes, float>(std::span(serialized3));
-static constexpr auto deserialized4 = deserialize<RawBytes, float, iq16>(std::span(serialized4));
-static constexpr auto deserialized4f = std::get<0>(deserialized4);
-static constexpr auto deserialized4q = std::get<1>(deserialized4);
-
-static constexpr auto frame = hal::BxCanFrame(
-    hal::CanStdId::from_bits(0x123), 
-    hal::BxCanPayload::from_bytes(std::span(serialized2))
-);
-// static constexpr auto deserialized4m = deserialize<BxCanFrame, MyStruct>(frame);
-static constexpr auto msg_size = frame.length();
-static constexpr auto deserialized4m = deserialize<hal::BxCanFrame, MyStruct>(frame).unwrap();
-
-// static_assert(deserialized1 == 42, "deserialized1 != 42");
-static_assert(deserialized2 == 1_iq16, "deserialized2 != 1_iq16");
-static_assert(deserialized4q == 1_iq16, "deserialized2 != 1_iq16");
-static_assert(deserialized4f == 1.0f, "deserialized2 != 1_iq16");
-// static_assert(deserialized3 == 1.0f, "deserialized3 != 1.0f");
 
 
-static_assert(msg_size == 4, "msg_size != 4");
-// static_assert(deseru == 4, "msg_size != 4");
+
+
+namespace{
+
+[[maybe_unused]] void test_ser(){
+
+}
+[[maybe_unused]] void test_de(){
+    static constexpr auto serialized1 = serialize<RawBytes>(uint8_t(42));
+    static constexpr auto serialized2 = serialize<RawBytes>(1_iq16);
+    static constexpr auto serialized3 = serialize<RawBytes>(1.0f);
+    static constexpr auto serialized4 = serialize<RawBytes>(1.0f, 1_iq16);
+
+
+    static constexpr auto deserialized1 = deserialize<RawBytes, uint8_t>(std::span(serialized1));
+    static constexpr auto deserialized2 = deserialize<RawBytes, iq16>(std::span(serialized2));
+    static constexpr auto deserialized3 = deserialize<RawBytes, float>(std::span(serialized3));
+
+    static constexpr auto deserialized4 = deserialize<RawBytes, float, iq16>(std::span(serialized4));
+    static constexpr auto deserialized4f = std::get<0>(deserialized4);
+    static constexpr auto deserialized4q = std::get<1>(deserialized4);
+
+    static constexpr auto frame = hal::BxCanFrame::from_parts(
+        hal::CanStdId::from_bits(0x123), 
+        hal::BxCanPayload::from_bytes(std::span(serialized2))
+    );
+    // static constexpr auto deserialized4m = deserialize<BxCanFrame, MyStruct>(frame);
+    static constexpr auto msg_size = frame.length();
+    static constexpr auto deserialized4m = deserialize<hal::BxCanFrame, MyStruct>(frame).unwrap();
+
+    // static_assert(deserialized1 == 42, "deserialized1 != 42");
+    static_assert(deserialized2 == 1_iq16, "deserialized2 != 1_iq16");
+    static_assert(deserialized4q == 1_iq16, "deserialized2 != 1_iq16");
+    static_assert(deserialized4f == 1.0f, "deserialized2 != 1_iq16");
+    // static_assert(deserialized3 == 1.0f, "deserialized3 != 1.0f");
+
+
+    static_assert(msg_size == 4, "msg_size != 4");
+    // static_assert(deseru == 4, "msg_size != 4");
+
+}
+}
 
 template<>
 struct ImplFor<SerializeAs<uint8_t>, MyStruct> {

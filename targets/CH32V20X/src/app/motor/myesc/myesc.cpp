@@ -243,6 +243,9 @@ static constexpr iiq32 iiq32_inc_uq32_wrapped(const iiq32 state, const uq32 last
     return state + diff;
 }
 
+
+
+
 void myesc_main(){
     DBG_UART.init({
         .remap = hal::USART2_REMAP_PA2_PA3,
@@ -1011,7 +1014,7 @@ void myesc_main(){
     iq16 temperature_ = temp_comp.comp_u12(hal::adc1.inj<4>().read_u12());
     
     while(true){
-        // [[maybe_unused]] const auto now_secs = clock::seconds();
+        [[maybe_unused]] const auto now_secs = clock::seconds();
         // [[maybe_unused]] const auto [s,c] = my_sincospu(now_secs);
         // repl_service_poller();
         // const auto hfi_response_real_bin1 = hfi_response_real_bin1_ * 100;

@@ -436,9 +436,25 @@ void nuedc_2025e_joint_main(){
 
 
     auto read_can_frame = [&] -> Option<hal::BxCanFrame>{
-        while(can.available()){
-            auto frame = can.read();
-            if(frame.is_extended()) continue;
+
+        static constexpr size_t MAX_TIMES = 3u;
+        const size_t iter_times = std::min(MAX_TIMES, can.available());
+
+        for(size_t _ = 0; _ < iter_times; _++){
+            const auto frame = ({
+                if(can.available() == 0){
+                    //cant read more can frame;
+                    break;
+                }
+
+                const auto may_frame = can.try_read();
+                if(may_frame.is_none()){
+                    //cant read more can frame;
+                    break;
+                }
+                may_frame.unwrap();
+            });
+
             (void)msg_queue_.try_push(frame);
         }
 

@@ -5,6 +5,10 @@
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 
+//参考资料：
+// https://github.com/tstellanova/hmc5983/blob/master/src/lib.rs
+
+
 namespace ymd::drivers{
 
 struct HMC5883L_Prelude{
@@ -41,7 +45,8 @@ struct HMC5883L_Prelude{
         Status = 0x09,
         IDA = 10,
         IDB = 11,
-        IDC = 12
+        IDC = 12,
+        Temperature = 0x31
     };
 
 };
@@ -77,24 +82,7 @@ struct HMC5883L_Regset:public HMC5883L_Prelude{
         uint8_t __resv__:6;
     }DEF_R8(status_reg)
 
-    struct R8_IdA:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = RegAddr::IDA;
-        uint8_t data;
-    }DEF_R8(id_a_reg)
-
-    struct R8_IdB:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = RegAddr::IDB;
-        uint8_t data;
-    }DEF_R8(id_b_reg)
-
-    struct R8_IdC:public Reg8<>{
-        static constexpr RegAddr REG_ADDR = RegAddr::IDC;
-        uint8_t data;
-    }DEF_R8(id_c_reg)
-
-    int16_t mag_x_reg = {};
-    int16_t mag_y_reg = {};
-    int16_t mag_z_reg = {};
+    std::array<int16_t, 3> xyz;
 };
 
 };

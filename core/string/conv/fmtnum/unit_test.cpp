@@ -242,5 +242,33 @@ static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.5999995) * (1u 
 static_assert(_dump_from_unsigned_fixed_scientific((uint32_t)((0.5999995) * (1u << 24)), 3, 24).exponent == -1);
 
 
+[[maybe_unused]] void test_fmt_u8(){
+    {
+        constexpr auto buf = []{
+            std::array<char, 32> ret;
+            (void)_fmtnum_u32_r16(ret.data(), 0x5a, 2);
+            return ret;
+        }();
 
+        static_assert(buf[0] == '5');
+        static_assert(buf[1] == 'A');
+    }
+
+    {
+        constexpr auto buf = []{
+            std::array<char, 32> ret;
+            (void)_fmtnum_u32_r2(ret.data(), 0x5a, 8);
+            return ret;
+        }();
+
+        static_assert(buf[0] == '0');
+        static_assert(buf[1] == '1');
+        static_assert(buf[2] == '0');
+        static_assert(buf[3] == '1');
+        static_assert(buf[4] == '1');
+        static_assert(buf[5] == '0');
+        static_assert(buf[6] == '1');
+        static_assert(buf[7] == '0');
+    }
+}
 }

@@ -440,26 +440,11 @@ struct [[nodiscard]] CAN_Def{
         static_assert(sizeof(R32_CAN_RXMDHR) == 4);
     };
 
-    struct [[nodiscard]] Events{
-        uint16_t INAK:1;
-        uint16_t SLAK:1;
-        uint16_t ERRI:1;
-        uint16_t WKUI:1;
-
-        uint16_t SLAKI:1;
-        uint16_t :3;
-
-        uint16_t TXM:1;
-        uint16_t RXM:1;
-        uint16_t SAMP:1;
-        uint16_t RX:1;
-        uint16_t :4;
-    };
 
     volatile R32_CAN_CTLR CTLR;
     volatile R32_CAN_STATR STATR;
     volatile R32_CAN_TSTATR TSTATR;
-    R32_CAN_RFIFO RFIFO[2];
+    volatile R32_CAN_RFIFO RFIFO[2];
     volatile R32_CAN_INTEN INTENR;
     volatile R32_CAN_ERRSR ERRSR;
     volatile R32_CAN_BTIMR BTIMR;
@@ -517,9 +502,9 @@ static_assert(__builtin_offsetof(CAN_Def, CAN_Def::sTxMailBox[2]) == 0x1a0);
 static_assert(__builtin_offsetof(CAN_Def, CAN_Def::sFifoMailBox[0]) == 0x1B0);
 static_assert(__builtin_offsetof(CAN_Def, CAN_Def::sFifoMailBox[1]) == 0x1c0);
 
-struct [[nodiscard]] CAN_Filt_Def{
+struct [[nodiscard]] CAN_Filter_Def{
 private:
-    struct [[nodiscard]] CAN_Filt_Pair{
+    struct [[nodiscard]] CAN_Filter_Pair{
         R32_CAN_FiR FIR[2];
     };
 public:
@@ -531,13 +516,13 @@ public:
     volatile R32_CAN_FAFIFOR FAFIFOR;
     volatile R32_CAN_FWR FWR;
 
-    volatile CAN_Filt_Pair FILTER[28];
+    volatile CAN_Filter_Pair FILTER[28];
 };
 
 
 
 [[maybe_unused]] static inline CAN_Def * CAN1_Inst = reinterpret_cast<CAN_Def *>(0x40006400);
 [[maybe_unused]] static inline CAN_Def * CAN2_Inst = reinterpret_cast<CAN_Def *>(0x40006800);
-[[maybe_unused]] static inline CAN_Filt_Def * CAN_Filt = reinterpret_cast<CAN_Filt_Def *>(0x40006600);
+[[maybe_unused]] static inline CAN_Filter_Def * CAN_Filt = reinterpret_cast<CAN_Filter_Def *>(0x40006600);
 
 }

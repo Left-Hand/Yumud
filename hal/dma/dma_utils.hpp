@@ -97,7 +97,7 @@ enum class [[nodiscard]] WordSize:uint8_t{
 };
 
 enum class [[nodiscard]] Event:uint8_t{
-    TransferComplete,
+    TransferOnhalf,
     HalfTransfer,
     TransferError
 };

@@ -6,9 +6,17 @@
 using namespace ymd;
 using namespace ymd::hal;
 
+#define COPY_CONST(a,b) std::conditional_t<\
+    std::is_const_v<std::decay_t<decltype(a)>>,\
+    std::add_const_t<b *>,\
+    std::remove_const_t<b *>>\
+
+#define SDK_INST(x) (reinterpret_cast<COPY_CONST(inst_, DMA_Channel_TypeDef)>(x))
+#define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::DMA_CH_Def)>(x))
+
 
 namespace {
-static constexpr Nth _dma_nth(const uint32_t inst_base){
+static constexpr Nth _dma_calc_nth(const uint32_t inst_base){
     #ifdef DMA2_PRESENT
     return inst_base < DMA2_Channel1_BASE ? Nth(1) : Nth(2);
     #else
@@ -17,7 +25,7 @@ static constexpr Nth _dma_nth(const uint32_t inst_base){
 }
 
 static constexpr Nth _dma_ch_sel_nth(const uint32_t inst_base){
-    const Nth dma_nth = _dma_nth(inst_base);
+    const Nth dma_nth = _dma_calc_nth(inst_base);
     switch(dma_nth.count()){
         #ifdef DMA1_PRESENT
         case 1:
@@ -41,7 +49,7 @@ static constexpr Nth _dma_ch_sel_nth(const uint32_t inst_base){
 }
 
 
-static constexpr uint32_t _calc_done_mask(const Nth dma_nth, const Nth ch_sel_nth){
+static constexpr uint32_t _calc_transfer_complete_mask(const Nth dma_nth, const Nth ch_sel_nth){
     switch(dma_nth.count()){
         #ifdef DMA1_PRESENT
         case 1:{
@@ -65,7 +73,7 @@ static constexpr uint32_t _calc_done_mask(const Nth dma_nth, const Nth ch_sel_nt
     __builtin_trap();
 }
 
-static constexpr uint32_t _calc_half_mask(const Nth dma_nth, const Nth ch_sel_nth){
+static constexpr uint32_t _calc_transfer_onhalf_mask(const Nth dma_nth, const Nth ch_sel_nth){
     switch(dma_nth.count()){
         #ifdef DMA1_PRESENT
         case 1:{
@@ -133,12 +141,7 @@ void _dma_enable_rcc(const Nth nth, Enable en){
     #endif
 #endif
 
-#define COPY_CONST(a,b) std::conditional_t<\
-    std::is_const_v<std::decay_t<decltype(a)>>,\
-    std::add_const_t<b *>,\
-    std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(inst_,DMA_Channel_TypeDef)>(x))
 
 static constexpr IRQn dma_to_irqn(const Nth dma_nth, const Nth ch_sel_nth){
     switch(dma_nth.count()){
@@ -196,10 +199,10 @@ static inline void modify_reg(volatile T* reg, Fn&& fn) {
 
 DmaChannel::DmaChannel(void * inst):
     inst_(inst), 
-    dma_nth_(_dma_nth(reinterpret_cast<uint32_t>(inst))),
+    dma_nth_(_dma_calc_nth(reinterpret_cast<uint32_t>(inst))),
     ch_sel_nth_(_dma_ch_sel_nth(reinterpret_cast<uint32_t>(inst))),
-    done_mask_(_calc_done_mask(dma_nth_, ch_sel_nth_)),
-    half_mask_(_calc_half_mask(dma_nth_, ch_sel_nth_))
+    transfer_complete_mask_(_calc_transfer_complete_mask(dma_nth_, ch_sel_nth_)),
+    transfer_onhalf_mask_(_calc_transfer_onhalf_mask(dma_nth_, ch_sel_nth_))
     {;}
     
 void DmaChannel::enable_rcc(Enable en){
@@ -210,14 +213,14 @@ void DmaChannel::enable_rcc(Enable en){
 void DmaChannel::start_transfer(uintptr_t dst_addr, uintptr_t src_addr, const size_t size){
 
     if(mode_.dst_is_periph()){
-        reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> PADDR = dst_addr;
-        reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> MADDR = src_addr;
+        RAL_INST(inst_) -> PADDR.BITS = dst_addr;
+        RAL_INST(inst_) -> MADDR.BITS = src_addr;
     }else{
-        reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> PADDR = src_addr;
-        reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> MADDR = dst_addr;
+        RAL_INST(inst_) -> PADDR.BITS = src_addr;
+        RAL_INST(inst_) -> MADDR.BITS = dst_addr;
     }
-    reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> CNTR = size;
-    clear_it_flag_and_start();
+    RAL_INST(inst_) -> CNTR.BITS = size;
+    clear_pending_flag_and_restart();
 }
 
 
@@ -277,20 +280,20 @@ void DmaChannel::init(const Config & cfg){
 }
 
 void DmaChannel::register_nvic(const NvicPriority priority, const Enable en){
-    const auto irq = dma_to_irqn(dma_nth_, ch_sel_nth_);
-    priority.with_irqn(irq).enable(en);
+    const auto iqrn = dma_to_irqn(dma_nth_, ch_sel_nth_);
+    priority.with_irqn(iqrn).enable(en);
 }
 
 
-[[nodiscard]] bool DmaChannel::is_done(){
-    return DMA_GetFlagStatus(done_mask_);
+[[nodiscard]] bool DmaChannel::is_transfer_complete(){
+    return DMA_GetFlagStatus(transfer_complete_mask_);
 }
 
 void DmaChannel::set_mem_and_periph_wordsize(
     const WordSize mem_wordsize, 
     const WordSize periph_wordsize
 ){ 
-    auto * dma_ch = reinterpret_cast<ral::DMA_CH_Def *>(inst_);
+    auto * dma_ch = RAL_INST(inst_);
     modify_reg(&dma_ch->CFGR, [&](auto reg){
         reg.MSIZE = static_cast<uint8_t>(mem_wordsize);
         reg.PSIZE = static_cast<uint8_t>(periph_wordsize);
@@ -298,23 +301,64 @@ void DmaChannel::set_mem_and_periph_wordsize(
     });
 }
 
-void DmaChannel::clear_it_flag_and_start(){
-    DMA_ClearFlag(done_mask_ | half_mask_);
+void DmaChannel::clear_pending_flag_and_restart(){
+    DMA_ClearFlag(transfer_complete_mask_ | transfer_onhalf_mask_);
 
     DMA_Cmd(SDK_INST(inst_), ENABLE);
 }
 
 size_t DmaChannel::pending_count(){
-    return reinterpret_cast<ral::DMA_CH_Def *>(inst_) -> CNTR;
+    return RAL_INST(inst_) -> CNTR.BITS;
 }
 
-void DmaChannel::enable_done_it(const Enable en){
-    DMA_ClearITPendingBit(done_mask_);
-    DMA_ITConfig(SDK_INST(inst_), DMA_IT_TC, (en == EN));
+
+#ifdef DMA2
+
+static void my_DMA_ClearITPendingBit(uint32_t DMAy_IT)
+{
+    if((DMAy_IT & 0x10000000) == 0x10000000)
+    {
+        DMA2->INTFCR = DMAy_IT;
+    }
+    else if((DMAy_IT & 0x20000000) == 0x20000000)
+    {
+        DMA2_EXTEN->INTFCR = DMAy_IT;
+    }
+    else
+    {
+        DMA1->INTFCR = DMAy_IT;
+    }
 }
 
-void DmaChannel::enable_half_it(const Enable en){
-    DMA_ClearITPendingBit(half_mask_);
-    DMA_ITConfig(SDK_INST(inst_), DMA_IT_HT, (en == EN));
+#else
+
+static void my_DMA_ClearITPendingBit(uint32_t DMAy_IT)
+{
+    DMA1->INTFCR = DMAy_IT;
+}
+
+#endif
+
+static void my_DMA_ITConfig(DMA_Channel_TypeDef *DMAy_Channelx, uint32_t DMA_IT, FunctionalState NewState)
+{
+    if(NewState != DISABLE)
+    {
+        DMAy_Channelx->CFGR |= DMA_IT;
+    }
+    else
+    {
+        DMAy_Channelx->CFGR &= ~DMA_IT;
+    }
+}
+
+
+void DmaChannel::enable_transfer_complete_interrupt(const Enable en){
+    my_DMA_ClearITPendingBit(transfer_complete_mask_);
+    my_DMA_ITConfig(SDK_INST(inst_), DMA_IT_TC, (en == EN));
+}
+
+void DmaChannel::enable_transfer_onhalf_interrupt(const Enable en){
+    my_DMA_ClearITPendingBit(transfer_onhalf_mask_);
+    my_DMA_ITConfig(SDK_INST(inst_), DMA_IT_HT, (en == EN));
 }
 

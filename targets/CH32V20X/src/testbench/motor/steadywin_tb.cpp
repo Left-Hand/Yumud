@@ -271,8 +271,8 @@ void steadywin_main(){
             {
                 const auto num_rx_frames = can.available();
                 for(size_t i = 0; i < num_rx_frames; ++i){
-                    parse_can_frame(can.read());
-                    // (void)(can.read());
+                    parse_can_frame(can.try_read().unwrap());
+                    // (void)(can.try_read().unwrap());
                 }
             }
 
@@ -347,8 +347,8 @@ void steadywin_main(){
 
 
         // while(can.available()){
-        //     parse_can_frame(can.read());
-        //     // (void)(can.read());
+        //     parse_can_frame(can.try_read().unwrap());
+        //     // (void)(can.try_read().unwrap());
         // }
 
         DEBUG_PRINTLN_IDLE(encoder_feedbacks[0], encoder_feedbacks[1]);

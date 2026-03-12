@@ -6,6 +6,9 @@ namespace ymd::str{
 
 [[nodiscard]] char * fmtnum_i32(char * p_str, const int32_t value, uint8_t radix);
 [[nodiscard]] char * fmtnum_u32(char * p_str, const uint32_t value, uint8_t radix);
+[[nodiscard]] char * fmtnum_u8(char * p_str, const uint8_t value, uint8_t radix);
+
+
 [[nodiscard]] char * fmtnum_u64(char * p_str, const uint64_t value, uint8_t radix);
 [[nodiscard]] char * fmtnum_i64(char * p_str, const int64_t value, uint8_t radix);
 [[nodiscard]] char * fmtnum_f32(char * p_str, const float value, uint8_t precsion);

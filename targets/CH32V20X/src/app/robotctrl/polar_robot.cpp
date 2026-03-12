@@ -477,16 +477,6 @@ void polar_robot_main(){
         repl_server.invoke(list);
     };
 
-    [[maybe_unused]] auto can_watch_service = [&]{
-        while(COMM_CAN.available()){
-            DEBUG_PRINTLN(COMM_CAN.read());
-        }
-
-        // static size_t cnt = 0;
-        // cnt++;
-        // if(cnt > 10) PANIC();
-    };
-
     [[maybe_unused]] auto report_service = [&]{
 
     };

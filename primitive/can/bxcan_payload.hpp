@@ -73,20 +73,15 @@ public:
         return Self();
     }
 
-    __attribute__((always_inline)) static constexpr Self with_capacity(size_t len){
-        Self self{};
-        self.dlc_ = BxCanDlc::from_length(len);
-        return self;
-    }
+    // __attribute__((always_inline)) static constexpr Self with_capacity(size_t len){
+    //     Self self = Self();
+    //     self.dlc_ = BxCanDlc::from_length(len);
+    //     return self;
+    // }
 
     __attribute__((always_inline)) static constexpr Self from_u8x8(std::array<uint8_t, 8> array){
         return Self(std::move(array), BxCanDlc::full());
     }
-
-
-
-
-
 
     /// \brief 从给定的id和迭代器创建一个数据帧 当数据超长时立即终止程序
     template<typename Iter>
@@ -95,22 +90,23 @@ public:
         U8X8 buf = ZERO_U8X8;
         size_t len = 0;
         
-        #pragma GCC unroll 8
         for(;len < 8; len++) {
             if(not iter.has_next()) break;
             buf[len] = iter.next();
         }
+
         if(iter.has_next()) [[unlikely]]
             __builtin_trap();
+
         #pragma GCC unroll 8
         for(;len < 8; len++){
             buf[len] = 0;
         }
 
-        return Some(Self(
+        return Self(
             buf, 
             BxCanDlc::from_bits(len)
-        ));
+        );
     }
 
     /// \brief 尝试从给定的id和迭代器创建一个数据帧 当数据超长时返回空
@@ -197,26 +193,26 @@ public:
 
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t * data() {return bytes_.data();}
+    uint8_t * data() {return u8x8_.data();}
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t * begin() {return bytes_.begin();}
+    uint8_t * begin() {return u8x8_.begin();}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    const uint8_t * data() const noexcept {return bytes_.data();}
+    const uint8_t * data() const noexcept {return u8x8_.data();}
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    const uint8_t * begin() const noexcept {return bytes_.begin();}
+    const uint8_t * begin() const noexcept {return u8x8_.begin();}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     uint8_t size() const noexcept {return dlc_.to_bits();}
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t operator[](uint8_t i) const noexcept {return bytes_[i];}
+    uint8_t operator[](uint8_t i) const noexcept {return u8x8_[i];}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    uint8_t & operator[](uint8_t i) noexcept {return bytes_[i];}
+    uint8_t & operator[](uint8_t i) noexcept {return u8x8_[i];}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     std::span<const uint8_t> bytes() const noexcept {
-        return std::span(bytes_.data(), dlc_.length());
+        return std::span(u8x8_.data(), dlc_.length());
     }
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
@@ -226,7 +222,7 @@ public:
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     std::span<uint8_t> bytes_mut() noexcept {
-        return std::span(bytes_.data(), dlc_.length());
+        return std::span(u8x8_.data(), dlc_.length());
     }
 
 
@@ -239,25 +235,35 @@ public:
     uint8_t & get() {return get_element<I>(*this);}
 
     [[nodiscard]] __attribute__((always_inline)) constexpr 
-    const U8X8 & u8x8() const {return bytes_;}
+    const U8X8 & u8x8() const {return u8x8_;}
 
-    alignas(4) U8X8 bytes_;
-    BxCanDlc dlc_;
+    // union{
+        alignas(4) U8X8 u8x8_;
+    // };
+    alignas(4) BxCanDlc dlc_;
+
+    __attribute__((always_inline)) constexpr explicit
+    BxCanPayload(const BxCanPayload & other):
+        u8x8_{other.u8x8_}, dlc_(other.dlc_){;}
+        
+    __attribute__((always_inline)) constexpr explicit
+    BxCanPayload(BxCanPayload && other):
+        u8x8_{other.u8x8_}, dlc_(other.dlc_){;}
+
 private:
     __attribute__((always_inline)) constexpr explicit
     BxCanPayload(const U8X8 bytes, const BxCanDlc dlc):
-        bytes_(bytes), dlc_(dlc){;}
+        u8x8_(bytes), dlc_(dlc){;}
 
     __attribute__((always_inline)) constexpr explicit
-    BxCanPayload():
-        bytes_({}), dlc_(BxCanDlc::from_uninitialized()){;}
+    BxCanPayload():dlc_(BxCanDlc::from_uninitialized()){;}
 
     friend class BxCanFrame;
 
     template<size_t I>
     [[nodiscard]] static __attribute__((always_inline)) constexpr 
     auto get_element(auto & self) noexcept {
-        return std::get<I>(self.bytes_);
+        return std::get<I>(self.u8x8_);
     }
 };
 

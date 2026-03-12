@@ -51,7 +51,7 @@ public:
 
     void init(const Config & cfg);
 
-    void clear_it_flag_and_start();
+    void clear_pending_flag_and_restart();
 
     template <typename T>
     void start_transfer_pph2mem(void * dst, const volatile void * src, size_t size){
@@ -103,9 +103,9 @@ public:
     template<DmaIT I>
     void enable_interrupt(const Enable en){
         if constexpr(I == DmaIT::Half){
-            enable_half_it(en);
+            enable_transfer_onhalf_interrupt(en);
         }else if constexpr(I == DmaIT::Done){
-            enable_done_it(en);
+            enable_transfer_complete_interrupt(en);
         }
     }
 
@@ -114,7 +114,7 @@ public:
         event_callback_ = std::forward<Fn>(cb);
     }
 
-    [[nodiscard]] bool is_done();
+    [[nodiscard]] bool is_transfer_complete();
 
 public:
     void * inst_;
@@ -122,16 +122,16 @@ public:
     const Nth dma_nth_;
     const Nth ch_sel_nth_;
 
-    const uint32_t done_mask_;
-    const uint32_t half_mask_;
+    const uint32_t transfer_complete_mask_;
+    const uint32_t transfer_onhalf_mask_;
     
     Mode mode_ = Mode::Default;
     
     Callback event_callback_ = nullptr;
 
 
-    void enable_done_it(const Enable en);
-    void enable_half_it(const Enable en);
+    void enable_transfer_complete_interrupt(const Enable en);
+    void enable_transfer_onhalf_interrupt(const Enable en);
 
     void enable_rcc(const Enable en);
 

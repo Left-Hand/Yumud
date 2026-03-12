@@ -13,7 +13,7 @@ using namespace ymd::str;
 
 
 template<bool IS_SIGNED>
-constexpr char * _fmtnum_int32_impl(char * p_str, uint32_t int_val, uint8_t radix){
+constexpr char * _fmtnum_mayneg_i32_r10(char * p_str, uint32_t int_val){
     auto preprocess_ifneg = [&]{
         if constexpr (IS_SIGNED) {
             const bool is_negative = int32_t(int_val) < 0;
@@ -26,20 +26,8 @@ constexpr char * _fmtnum_int32_impl(char * p_str, uint32_t int_val, uint8_t radi
         } 
     };
 
-    switch(radix){
-        case 10:
-            preprocess_ifneg();
-            return _fmtnum_u32_r10(p_str, int_val);
-        case 16:
-            return _fmtnum_u32_r16(p_str, int_val);
-        case 8:
-            return _fmtnum_u32_r8(p_str, int_val);
-        case 2:
-            return _fmtnum_u32_r2(p_str, int_val);
-        default:
-            //no chars 
-            return p_str;
-    }
+    preprocess_ifneg();
+    return _fmtnum_u32_r10(p_str, int_val);
 
     __builtin_unreachable();
 }
@@ -47,14 +35,50 @@ constexpr char * _fmtnum_int32_impl(char * p_str, uint32_t int_val, uint8_t radi
 template<typename T>
 requires (sizeof(T) <= 4)
 constexpr char * _fmtnum_int32(char * p_str, T int_val, uint8_t radix){
-    return _fmtnum_int32_impl<std::is_signed_v<T>>(p_str, static_cast<uint32_t>(int_val), radix);
+    switch(radix){
+        case 10:
+            return _fmtnum_mayneg_i32_r10<std::is_signed_v<T>>(p_str, static_cast<uint32_t>(int_val));
+        case 16:
+            return _fmtnum_u32_r16(p_str, static_cast<uint32_t>(int_val), (sizeof(T) * 8) / 4);
+        case 8:
+            // return _fmtnum_u32_r8(p_str, static_cast<uint32_t>(int_val));
+            //TODO
+            return p_str;
+        case 2:
+            return _fmtnum_u32_r2(p_str, static_cast<uint32_t>(int_val), (sizeof(T) * 8));
+        default:
+            //no chars 
+            return p_str;
+    }
+
 }
 
 template<typename T>
 requires ((sizeof(T) == 8))
 constexpr char * _fmtnum_int64(char * p_str, T int_val, uint8_t radix){
-    //TODO support 64bit
-    return _fmtnum_int32_impl<std::is_signed_v<T>>(p_str, static_cast<uint32_t>(int_val), radix);
+
+    switch(radix){
+        case 10:
+            //TODO support 64bit
+            return _fmtnum_mayneg_i32_r10<std::is_signed_v<T>>(p_str, static_cast<uint32_t>(int_val));
+        case 16:{
+            constexpr size_t NUM_DIGITS_U32 = (sizeof(uint32_t) * 8) / 4;
+            p_str = _fmtnum_u32_r16(p_str, static_cast<uint32_t>(int_val >> 32), NUM_DIGITS_U32);
+            return _fmtnum_u32_r16(p_str, static_cast<uint32_t>(int_val), NUM_DIGITS_U32);
+        }
+        case 8:
+            // return _fmtnum_u32_r8(p_str, static_cast<uint32_t>(int_val));
+            //TODO
+            return p_str;
+        case 2:{
+            constexpr size_t NUM_DIGITS_U32 = (sizeof(uint32_t) * 8) / 1;
+            p_str = _fmtnum_u32_r2(p_str, static_cast<uint32_t>(int_val >> 32), NUM_DIGITS_U32);
+            return _fmtnum_u32_r2(p_str, static_cast<uint32_t>(int_val), NUM_DIGITS_U32);
+        }
+        default:
+            //no chars 
+            return p_str;
+    }
 }
 
 char * str::fmtnum_i32(
@@ -71,6 +95,14 @@ char * str::fmtnum_u32(
     uint8_t radix
 ){
     return _fmtnum_int32<uint32_t>(p_str, int_val, radix);
+}
+
+char * str::fmtnum_u8(
+    char *p_str, 
+    uint8_t int_val,
+    uint8_t radix
+){
+    return _fmtnum_int32<uint8_t>(p_str, int_val, radix);
 }
 
 

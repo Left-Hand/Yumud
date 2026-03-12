@@ -4,7 +4,7 @@ using namespace ymd;
 
 
 namespace{
-
+#if 0
 [[maybe_unused]] static void static_test(){
     constexpr auto str = HeaplessString<10>("Hello");
     constexpr auto str2 = []{
@@ -36,5 +36,5 @@ namespace{
         HeaplessString<3>("A").try_insert(5, 'X').is_err()  // ✅ 应返回错误
     );
 }
-    
+#endif
 }

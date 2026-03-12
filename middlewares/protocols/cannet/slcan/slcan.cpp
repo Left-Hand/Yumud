@@ -237,7 +237,7 @@ IResult<hal::BxCanFrame> parse_msg(const StringView str, hal::CanRtr can_rtr){
 
             const auto bytes = std::span(payload.data(), dlc);
             
-            return Ok(hal::BxCanFrame(
+            return Ok(hal::BxCanFrame::from_parts(
                 ID::from_bits(id_u32_checked), 
                 hal::BxCanPayload::from_bytes(bytes))
             );

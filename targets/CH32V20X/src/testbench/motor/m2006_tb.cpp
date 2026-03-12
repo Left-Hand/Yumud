@@ -38,16 +38,19 @@ void m2006_main(){
         struct Payload{
             int16_t d;
             int16_t d2;
+
+            constexpr std::array<uint8_t, 4> to_bytes() const{
+                return std::bit_cast<std::array<uint8_t, 4>>(*this);
+            }
         };
 
-        hal::BxCanFrame msg = hal::BxCanFrame(
+        hal::BxCanFrame msg = hal::BxCanFrame::from_parts(
             hal::CanStdId::from_bits(0x200), 
             hal::BxCanPayload::from_bytes(
-                std::bit_cast<std::array<uint8_t, 4>>(
-                Payload{__bswap16(d), __bswap16(d2)})
+                Payload{__bswap16(d), __bswap16(d2)}.to_bytes()
             )
         );
-        DEBUG_PRINTLN(can.read());
+        DEBUG_PRINTLN(can.try_read().unwrap());
         can.try_write(msg).examine();
         clock::delay(10ms);
     }

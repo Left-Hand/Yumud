@@ -62,8 +62,7 @@ struct [[nodiscard]] R16_I2C_OADDR2{
 
 //I2C 数据寄存器
 struct [[nodiscard]] R16_I2C_DATAR{
-    uint8_t DR;
-    uint8_t __resv__;
+    uint16_t DR;
 };
 
 //I2C 状态寄存器1
@@ -144,44 +143,44 @@ struct [[nodiscard]] I2C_Def{
     uint16_t :16;
 
 
-    constexpr void enable(const Enable en){
+    void enable(const Enable en){
         this->CTLR1.PE = (en == EN);
     }
 
-    constexpr void enable_dma(const Enable en){
+    void enable_dma(const Enable en){
         this->CTLR2.DMAEN = (en == EN);
     }
 
-    constexpr void set_next_dma_is_last(const Enable en){
+    void set_next_dma_is_last(const Enable en){
         CTLR2.LAST = (en == EN);
     }
 
-    constexpr void generate_start(const Enable en){
+    void generate_start(const Enable en){
         CTLR1.START = (en == EN);
     }
 
-    constexpr void generate_stop(const Enable en){
+    void generate_stop(const Enable en){
         CTLR1.STOP = (en == EN);
     }
 
-    constexpr void enable_ack(const Enable en){
+    void enable_ack(const Enable en){
         CTLR1.ACK = (en == EN);
     }
 
-    constexpr void set_address2(const uint8_t addr){
+    void set_address2(const uint8_t addr){
         OADDR2.ADD2 = addr;
     }
 
-    constexpr void enable_dual_address(const Enable en){
+    void enable_dual_address(const Enable en){
         OADDR2.ENDUAL = (en == EN);
     }
 
-    constexpr void generate_call(const Enable en){
+    void generate_call(const Enable en){
         CTLR1.ENGC = (en == EN);
     }
 
-    // #define LOAD16(d,s) auto d = __builtin_bit_cast(std::decay_t, s)
-    constexpr void enable_interrupt(
+
+    void enable_interrupt(
         const Enable err_en,
         const Enable event_en,
         const Enable buf_en
@@ -191,63 +190,63 @@ struct [[nodiscard]] I2C_Def{
         CTLR2.ITBUFEN = (buf_en == EN);
     }
 
-    constexpr void send(const uint8_t data){
+    void send(const uint8_t data){
         DATAR.DR = data;
     }
 
-    constexpr uint8_t receive(){
-        return std::bit_cast<uint8_t>(DATAR.DR);
+    [[nodiscard]] uint16_t receive(){
+        return static_cast<uint16_t>(DATAR.DR);
     }
 
-    constexpr void master_send_7bit_addr(const uint8_t addr){
+    void master_send_7bit_addr(const uint8_t addr){
         DATAR.DR = addr << 1;
     }
 
-    constexpr void slave_send_7bit_addr(const uint8_t addr){
+    void slave_send_7bit_addr(const uint8_t addr){
         DATAR.DR = (addr << 1) | 0x01;
     }
 
-    constexpr void send_8bit_addr(const uint8_t addr){
+    void send_8bit_addr(const uint8_t addr){
         DATAR.DR = addr;
     }
 
-    constexpr void soft_reset(const Enable en){
+    void soft_reset(const Enable en){
         CTLR1.SWRST = (en == EN);
     }
 
-    constexpr void nack_next_transmit(){
+    void nack_next_transmit(){
         CTLR1.POS = 1;
     }
 
-    constexpr void nack_curr_transmit(){
+    void nack_curr_transmit(){
         CTLR1.POS = 0;
     }
 
-    constexpr void smbus_alert_level(const bool level){
+    void smbus_alert_level(const bool level){
         CTLR1.ALERT = !level;
     }
 
-    constexpr void transmit_pec(const Enable en){
+    void transmit_pec(const Enable en){
         CTLR1.PEC = (en == EN);
     }
 
-    constexpr void calculate_pec(const Enable en){
+    void calculate_pec(const Enable en){
         CTLR1.ENPEC = (en == EN);
     }
 
-    constexpr uint8_t get_pec(){
+    uint8_t get_pec(){
         return std::bit_cast<uint8_t>(STAR2.PEC);
     }
 
-    constexpr void enable_arp(const Enable en){
+    void enable_arp(const Enable en){
         CTLR1.ENARP = (en == EN);
     }
 
-    constexpr void set_stretch(const bool set){
+    void set_stretch(const bool set){
         CTLR1.NOSTRETCH = !set;
     }
 
-    constexpr void set_dutycycle_16_9(const bool set){
+    void set_dutycycle_16_9(const bool set){
         CKCFRG.DUTY = set;
     }
 

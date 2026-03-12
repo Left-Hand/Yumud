@@ -200,7 +200,7 @@ IResult<> Self::transmit(const uint32_t bits, const uint64_t context, const uint
         return Err(Error::RET_DLC_LONGER);
 
     const auto buf = std::bit_cast<std::array<uint8_t, 8>>(context);
-    const auto frame = BxCanFrame(
+    const auto frame = BxCanFrame::from_parts(
         hal::CanStdId::from_bits(bits), 
         hal::BxCanPayload::from_bytes(std::span(buf.data(), dlc))
     );

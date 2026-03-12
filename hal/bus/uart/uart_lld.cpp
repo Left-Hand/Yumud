@@ -6,7 +6,34 @@ using namespace ymd;
 using namespace ymd::lld;
 using namespace ymd::hal;
 
+
+
+#define COPY_CONST(a,b) std::conditional_t<\
+    std::is_const_v<std::decay_t<decltype(a)>>,\
+    std::add_const_t<b *>,\
+    std::remove_const_t<b *>>\
+
+#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, USART_TypeDef)>(x))
+#define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
+
+
+
 namespace ymd::lld{ 
+void uart_enable_rxne_interrupt(void * p_inst, const Enable en){
+    USART_ClearITPendingBit(SDK_INST(p_inst), USART_IT_RXNE);
+    USART_ITConfig(SDK_INST(p_inst), USART_IT_RXNE, (en == EN));
+}
+
+
+void uart_enable_tx_interrupt(void * p_inst, const Enable en){
+    USART_ITConfig(SDK_INST(p_inst), USART_IT_TXE, (en == EN));
+}
+
+void uart_enable_idle_interrupt(void * p_inst, const Enable en){ 
+    USART_ClearITPendingBit(SDK_INST(p_inst), USART_IT_IDLE);
+    USART_ITConfig(SDK_INST(p_inst), USART_IT_IDLE, (en == EN));
+}
+
 
 Nth uart_to_nth(const uintptr_t inst_base){
     switch(inst_base){

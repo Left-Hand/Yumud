@@ -43,7 +43,9 @@ public:
 
 private:
     hal::I2cDrv i2c_drv_;
-    IST8310_Regset regs_ = {};
+
+    using Regs = IST8310_Regset;
+    Regs regs_ = {};
 
     template<typename T>
     IResult<> write_reg(const RegCopy<T> & reg){

@@ -13,6 +13,11 @@
 
 namespace ymd::lld{
 
+void uart_enable_rxne_interrupt(void * p_inst, const Enable en);
+
+void uart_enable_tx_interrupt(void * p_inst, const Enable en);
+
+void uart_enable_idle_interrupt(void * p_inst, const Enable en);
 
 void uart_enable_rcc(const Nth nth, const Enable en);
 

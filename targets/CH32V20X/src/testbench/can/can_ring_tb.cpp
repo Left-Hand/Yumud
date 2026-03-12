@@ -38,26 +38,26 @@ void can_ring_main(){
     };
 
     static constexpr auto UNREACHABLE_FRAMES = std::to_array({
-        hal::BxCanFrame(
+        hal::BxCanFrame::from_parts(
             hal::CanStdId::from_bits(0x100), 
             hal::BxCanPayload::from_list({0, 1, 3})
         ),
-        hal::BxCanFrame(
+        hal::BxCanFrame::from_parts(
             hal::CanStdId::from_bits(0x300), 
             hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         ),
-        hal::BxCanFrame(
+        hal::BxCanFrame::from_parts(
             hal::CanExtId::from_bits(0x400), 
             hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         )
     });
 
     static constexpr auto REACHABLE_FRAMES = std::to_array({
-        hal::BxCanFrame(
+        hal::BxCanFrame::from_parts(
             hal::CanStdId::from_bits(0x200), 
             hal::BxCanPayload::from_list({0, 1, 2})
         ),
-        hal::BxCanFrame(
+        hal::BxCanFrame::from_parts(
             hal::CanStdId::from_bits(0x200), 
             hal::BxCanPayload::from_bytes(std::bit_cast<std::array<uint8_t, 4>>(0x12345678))
         ),
@@ -79,7 +79,7 @@ void can_ring_main(){
         if(can.available()){
             DEBUG_PRINTLN(can.available());
             while(can.available()){
-                auto rx_frame = can.read();
+                auto rx_frame = can.try_read().unwrap();
                 DEBUG_PRINTLN("rx", rx_frame);
             }
         }else{

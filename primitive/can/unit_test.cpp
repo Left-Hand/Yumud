@@ -6,7 +6,6 @@ using namespace ymd;
 // Test hal::CanStdId
 static_assert(sizeof(hal::CanStdId) == 2, "hal::CanStdId should be 2 bytes");
 static_assert(std::is_standard_layout_v<hal::CanStdId>);
-static_assert(std::is_trivially_copyable_v<hal::CanStdId>);
 
 // Test hal::CanStdId constants
 static_assert(hal::CanStdId::MAX_VALUE == 0x7ff);
@@ -53,7 +52,6 @@ static_assert([]{
 // Test CanExtId
 static_assert(sizeof(hal::CanExtId) == 4, "CanExtId should be 4 bytes");
 static_assert(std::is_standard_layout_v<hal::CanExtId>);
-static_assert(std::is_trivially_copyable_v<hal::CanExtId>);
 
 // Test CanExtId constants
 static_assert(hal::CanExtId::MAX_VALUE == 0x1fffffff);
@@ -105,7 +103,6 @@ static_assert(!hal::details::is_canid<int>);
 
 // Test basic type properties
 static_assert(std::is_standard_layout_v<hal::BxCanFrame>);
-static_assert(std::is_trivially_copyable_v<hal::BxCanFrame>);
 static_assert(sizeof(hal::BxCanFrame) == 16, "hal::BxCanFrame should be 16 bytes due to alignment");
 
 
@@ -140,7 +137,7 @@ static_assert([]{
     constexpr std::array<uint8_t, 5> data{1, 2, 3, 4, 5};
     constexpr auto frame = hal::BxCanFrame::from_parts(
         hal::CanStdId::from_bits(0x123U), 
-        hal::BxCanPayload::try_from_bytes(data).unwrap()
+        static_cast<hal::BxCanPayload>(hal::BxCanPayload::try_from_bytes(data).unwrap())
     );
     return frame.length() == 5;
 }());

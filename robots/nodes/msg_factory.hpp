@@ -52,9 +52,9 @@ struct MsgFactory{
     constexpr hal::BxCanFrame operator()(const T cmd) const {
         const auto id = comb_role_and_cmd(role, command_to_kind_v<CommandKind, T>);
         const auto generator = serde::make_serialize_generator<serde::RawLeBytes>(cmd);
-        return hal::BxCanFrame(
+        return hal::BxCanFrame::from_parts(
             id, 
-            hal::BxCanPayload::try_from_iter(generator).unwrap()
+            hal::BxCanPayload::from_iter(generator)
         );
     };
 };

@@ -191,7 +191,7 @@ private:
         
         // Precompute shifts
         constexpr auto compute_shifts = []() constexpr {
-            std::array<size_t, sizeof...(Sizes) + 1> shifts = {};
+            std::array<size_t, sizeof...(Sizes) + 1> shifts;
             size_t shift_acc = 0;
             for (int i = int(sizeof...(Sizes)); i >= 0; --i) {
                 shifts[i] = shift_acc;

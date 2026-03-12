@@ -36,7 +36,7 @@ void dma_tb(OutputStream & logger, hal::DmaChannel & channel){
 
     channel.set_event_callback([&](const hal::DmaEvent ev){
         switch(ev){
-            case hal::DmaEvent::TransferComplete:
+            case hal::DmaEvent::TransferOnhalf:
                 logger.println("d", channel.pending_count());
                 break;
             case hal::DmaEvent::HalfTransfer:

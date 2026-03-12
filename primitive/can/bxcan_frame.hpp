@@ -14,7 +14,7 @@
 
 namespace ymd::hal{
 
-struct alignas(16) [[nodiscard]] BxCanFrame final{
+struct alignas(4) [[nodiscard]] BxCanFrame final{
 public:
     using Payload = BxCanPayload;
 
@@ -23,10 +23,16 @@ public:
     static constexpr U8X8 ZERO_U8X8 = std::bit_cast<U8X8>(uint64_t(0));
 
     using Self = BxCanFrame;
-    constexpr BxCanFrame(const BxCanFrame & other) = default;
-    constexpr BxCanFrame & operator = (const BxCanFrame & other) = default;
-    constexpr BxCanFrame(BxCanFrame && other) = default;
-    constexpr BxCanFrame & operator = (BxCanFrame && other) = default;
+
+
+    constexpr BxCanFrame(const BxCanFrame & other):
+        identifier_(other.identifier_), 
+        payload_(other.payload_){}
+
+
+    constexpr BxCanFrame(BxCanFrame && other):
+        identifier_(other.identifier_), 
+        payload_(other.payload_){}
 
 
     /// \brief 从创建一个未初始化的帧
@@ -55,17 +61,11 @@ public:
     /// \brief 从id和载荷创建一个数据帧
     __attribute__((always_inline)) static constexpr Self from_parts(
         details::is_canid auto id,
-        Payload payload
+        const Payload payload
     ) noexcept{
-        return Self(CanIdentifier::from_parts(id, CanRtr::Data), payload);
+        return Self(CanIdentifier::from_parts(id, CanRtr::Data), std::move(payload));
     }
 
-    __attribute__((always_inline)) constexpr BxCanFrame(
-        details::is_canid auto id,
-        const Payload payload
-    ):
-        identifier_(CanIdentifier::from_parts(id, CanRtr::Data)),
-        payload_(payload){}
 
     /// \brief (SXX32专属)从寄存器值构造报文 不对比特做任何检查
     __attribute__((always_inline)) static constexpr Self from_sxx32_regs(
@@ -224,7 +224,7 @@ public:
     /// @brief 不顾帧长度直接获取载荷的64位数据
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     uint64_t payload_u64() const noexcept{
-        return std::bit_cast<uint64_t>(payload_.bytes_);
+        return std::bit_cast<uint64_t>(payload_.u8x8());
     }
 
     /// @brief 获取首部标识符
@@ -240,10 +240,12 @@ private:
 
     __attribute__((always_inline)) constexpr BxCanFrame(
         const CanIdentifier identifier,
-        const Payload payload
+        const Payload && payload
     ):
         identifier_(identifier),
         payload_(payload){}
+
+
 
     __attribute__((always_inline)) imconstexpr BxCanFrame():
         identifier_(CanIdentifier::from_uninitialized()),

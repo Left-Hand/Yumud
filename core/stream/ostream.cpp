@@ -263,23 +263,23 @@ OutputStream & OutputStream::operator<<(const double val){
 }
 
 void OutputStream::print_u32(const uint32_t val){
-    PRINT_INT_TEMPLATE(val, 32, str::fmtnum_u32, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum_u32, this->config_.radix);
 }
 
 void OutputStream::print_i32(const int32_t val){
-    PRINT_INT_TEMPLATE(val, 32, str::fmtnum_i32, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, (32 + 12), str::fmtnum_i32, this->config_.radix);
 }
 
 void OutputStream::print_u64(const uint64_t val){
-    PRINT_INT_TEMPLATE(val, 32, str::fmtnum_u64, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum_u64, this->config_.radix);
 }
 
 void OutputStream::print_i64(const int64_t val){
-    PRINT_INT_TEMPLATE(val, 32, str::fmtnum_i64, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, (64 + 12), str::fmtnum_i64, this->config_.radix);
 }
 
 OutputStream & OutputStream::operator<<(const uint8_t val){
-    PRINT_INT_TEMPLATE(val, 8, str::fmtnum_u32, this->config_.radix);
+    PRINT_INT_TEMPLATE(val, (32), str::fmtnum_u8, this->config_.radix);
     return *this;
 }
 

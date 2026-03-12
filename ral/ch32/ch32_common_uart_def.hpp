@@ -57,8 +57,7 @@ struct R32_STATR{
 VALIDATE_R32(R32_STATR)
 
 struct R32_DATAR{
-    uint32_t DR:9;
-    uint32_t :23;
+    uint32_t DR;
 };
 
 struct R32_BRR{

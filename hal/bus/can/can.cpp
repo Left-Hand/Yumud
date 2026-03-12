@@ -62,7 +62,7 @@ if(self.event_callback_ != nullptr){\
     sys::abort(AbortInfo::from_reason(str));\
 }\
 
-#define RAISE_ABORT_ERR(str)\
+#define ABORT(str)\
 sys::abort(AbortInfo::from_reason(str));\
 
 

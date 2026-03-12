@@ -119,7 +119,7 @@ struct MsgSerde<nmt_msgs::NetManage>{
     [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self){
         std::array<uint8_t, 2> bytes;
         self.fill_bytes(bytes);
-        return CanFrame(
+        return CanFrame::from_parts(
             Self::COBID.to_stdid(), 
             hal::BxCanPayload::from_bytes(std::span(bytes))
         );
@@ -173,7 +173,7 @@ struct MsgSerde<nmt_msgs::Heartbeat>{
     [[nodiscard]] static constexpr CanFrame to_can_frame(const Self & self){
         const auto can_id = hal::CanStdId::from_bits(0x700 | self.station_nodeid.to_u7());
         const std::array<uint8_t, 1> bytes = {static_cast<uint8_t>(self.station_state)};
-        return CanFrame(can_id, CanPayload::from_bytes(std::span(bytes)));
+        return CanFrame::from_parts(can_id, CanPayload::from_bytes(std::span(bytes)));
     }
 
     template<VerifyLevel verify_level>
@@ -223,7 +223,7 @@ struct MsgSerde<nmt_msgs::NodeGuardingResponse> {
     [[nodiscard]] static constexpr CanFrame to_can_frame(const Self& self) {
         const auto can_id = self.cobid().to_stdid();
         const std::array<uint8_t, 1> bytes = {static_cast<uint8_t>(self.station_state)};
-        return CanFrame(can_id, CanPayload::from_bytes(std::span(bytes)));
+        return CanFrame::from_parts(can_id, CanPayload::from_bytes(std::span(bytes)));
     }
 
     template<VerifyLevel verify_level>
@@ -250,7 +250,7 @@ struct MsgSerde<nmt_msgs::Emergency> {
         const auto can_id = self.cobid().to_stdid();
         std::array<uint8_t, 8> bytes{};
         self.fill_bytes(bytes);
-        return CanFrame(can_id, CanPayload::from_bytes(std::span(bytes)));
+        return CanFrame::from_parts(can_id, CanPayload::from_bytes(std::span(bytes)));
     }
 
     template<VerifyLevel verify_level>

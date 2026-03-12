@@ -5,7 +5,92 @@ using namespace ymd;
 using namespace ymd::fxmath::details;
 
 
+
 namespace {
+
+#if 0
+[[nodiscard]] static constexpr float _IQNtoF2(const int32_t iqNInput, size_t Q){
+    //这段代码只有一处使用了Q, 不需要使用模板
+    uint32_t uiq23_result_bits;
+    uint32_t uiq31Input;
+
+    /* Initialize exponent to the offset iq value. */
+    uint32_t ui16Exp = static_cast<uint32_t>(0x3f80 + ((31u - Q) * (0x80)));
+
+    /* Save the sign of the iqN input to the exponent construction. */
+    if (iqNInput < 0) {
+        ui16Exp |= 0x8000;
+        if (iqNInput == std::numeric_limits<int32_t>::min()) [[unlikely]] {
+            uiq31Input = 0x80000000;
+        } else {
+            uiq31Input = -iqNInput;
+        }
+    } else if (iqNInput == 0) {
+        return (0);
+    } else {
+        uiq31Input = iqNInput;
+    }
+
+    const size_t leading_zeros = __builtin_clz(uiq31Input);
+    uiq31Input <<= leading_zeros;
+    ui16Exp -= (leading_zeros << 7);
+
+    /* Right shift to uiq23 */
+    uiq23_result_bits = uiq31Input >> 8;
+
+    /* Remove the implied MSB bit of the mantissa. */
+    uiq23_result_bits &= ~0x00800000;
+
+
+    if (uiq23_result_bits == 0 && uiq31Input != 0) {
+        // 尾数为0但值不为0，这意味着尾数是1.0
+        // 指数已经正确，不需要调整
+        // 但需要确保浮点数构造正确
+    }
+
+    /* Add the constructed exponent and sign bit to the mantissa. */
+    uiq23_result_bits += ui16Exp << 16;
+
+    /* Return as float. */
+    return std::bit_cast<float>(uiq23_result_bits);
+}
+#else
+[[nodiscard]] static constexpr float _IQNtoF2(const int32_t iqn_input, size_t Q){
+    //这段代码只有一处使用了Q, 不需要使用模板
+    uint32_t uiq23_result_bits;
+
+    /* Initialize exponent to the offset iq value. */
+    uint32_t ui16_exp = static_cast<uint32_t>(
+        int32_t(0x3f80) + (int32_t(31 - int32_t(Q)) * (0x80)));
+
+    auto conv_unsigned = [&](uint32_t uiqn_input) constexpr -> uint32_t {
+        // return static_cast<uint32_t>(iqn_input) << (31 - Q);
+        const size_t leading_zeros = __builtin_clz(uiqn_input);
+        ui16_exp -= (leading_zeros << 7);
+        return ((uiqn_input << leading_zeros) & 0x7fffffff) >> 8;
+    };
+
+
+    /* Save the sign of the iqN input to the exponent construction. */
+    if (iqn_input < 0) {
+        ui16_exp |= 0x8000;
+        if (iqn_input == std::numeric_limits<int32_t>::min()) [[unlikely]] {
+            uiq23_result_bits = 0;
+        } else {
+            uiq23_result_bits = conv_unsigned(std::bit_cast<uint32_t>(-iqn_input));
+        }
+    } else if (iqn_input == 0) {
+        return std::bit_cast<float>(uint32_t(0));
+    } else {
+        uiq23_result_bits = conv_unsigned(std::bit_cast<uint32_t>(iqn_input));
+    }
+
+
+    /* Return as float. */
+    return std::bit_cast<float>(uiq23_result_bits + (ui16_exp << 16));
+}
+
+#endif
 
 [[maybe_unused]] void test_n_to_f(){ 
 
@@ -13,7 +98,7 @@ namespace {
         [[maybe_unused]] constexpr float f1 = _IQNtoF(std::numeric_limits<int32_t>::min(), 16);
         [[maybe_unused]] constexpr float f2 = _IQNtoF(std::numeric_limits<int32_t>::max(), 16);
         // INT_MIN 的负数溢出
-        // 当 iqNInput = INT_MIN 时，-iqNInput 溢出
+        // 当 iqn_input = INT_MIN 时，-iqn_input 溢出
         static_assert(std::abs(f1 - (-32768.0f)) < 1E-4);
 
         [[maybe_unused]] constexpr float e2 = std::abs(f2 - (32768.0f));
@@ -91,8 +176,8 @@ namespace {
 
     {
         // 测试舍入溢出
-        // 找一個会使 uiq31Input + 0x0080 溢出的值
-        // 需要 uiq31Input >= 0xFFFFFF80
+        // 找一個会使 uiq31_input + 0x0080 溢出的值
+        // 需要 uiq31_input >= 0xFFFFFF80
         constexpr int32_t round_overflow_test = 0x7FFFFFFF;  // 在Q格式中
         // 当Q=0时，这对应很大的浮点数
         [[maybe_unused]] constexpr auto i = int64_t(_IQNtoF(round_overflow_test, 0));
