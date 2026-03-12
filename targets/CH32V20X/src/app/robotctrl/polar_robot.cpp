@@ -312,7 +312,9 @@ void polar_robot_main(){
 
     can.enable_hw_retransmit(DISEN);
 
-    can.filters<0>().apply(
+    can.configure_filter(
+        0_nth, 
+        hal::CanFifoIndex::_0,
         hal::CanFilterConfig::accept_all()
     );
 

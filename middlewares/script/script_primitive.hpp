@@ -275,7 +275,7 @@ struct alignas(4) [[nodiscard]] List final{
                 [](auto && obj){return obj.name().hash();}, 
                 entries...); // 修复：传递解包的entries
             if(res.is_err()) 
-                PANIC("Hash collision detected", res.unwrap_err());
+                PANIC_NSRC("Hash collision detected", res.unwrap_err());
         }
 
     constexpr const auto & entries() const { return entries_; } 

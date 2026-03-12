@@ -13,19 +13,19 @@ void AdcInterruptDispatcher::on_interrupt(){
     // const uint32_t tempCTLR = ADC1->CTLR1;
     const uint32_t temp_statr = ADC1->STATR;
 
-    // #define CHECK_IT(x) (temp_statr & (x >> 8) and tempCTLR & (x & 0xFF))
-    #define CHECK_IT(x) (temp_statr & (x >> 8))
-    #define CLEAR_IT(x) ADC1->STATR = ~(uint32_t)(x >> 8);
+    // #define TEST_INTERRUPT_BIT(x) (temp_statr & (x >> 8) and tempCTLR & (x & 0xFF))
+    #define TEST_INTERRUPT_BIT(x) (temp_statr & (x >> 8))
+    #define CLEAR_INTERRUPT_BIT(x) ADC1->STATR = ~(uint32_t)(x >> 8);
 
-    if(CHECK_IT(ADC_IT_JEOC)){
-        adc1.isr_jeoc();
-        CLEAR_IT(ADC_IT_JEOC);
-    }else if(CHECK_IT(ADC_IT_EOC)){
-        adc1.isr_eoc();
-        CLEAR_IT(ADC_IT_EOC);
-    }else if(CHECK_IT(ADC_IT_AWD)){
-        adc1.isr_awd();
-        CLEAR_IT(ADC_IT_AWD);
+    if(TEST_INTERRUPT_BIT(ADC_IT_JEOC)){
+        hal::adc1.isr_jeoc();
+        CLEAR_INTERRUPT_BIT(ADC_IT_JEOC);
+    }else if(TEST_INTERRUPT_BIT(ADC_IT_EOC)){
+        hal::adc1.isr_eoc();
+        CLEAR_INTERRUPT_BIT(ADC_IT_EOC);
+    }else if(TEST_INTERRUPT_BIT(ADC_IT_AWD)){
+        hal::adc1.isr_awd();
+        CLEAR_INTERRUPT_BIT(ADC_IT_AWD);
     }
 }
 

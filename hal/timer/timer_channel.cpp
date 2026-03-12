@@ -11,7 +11,7 @@ using namespace ymd::hal;
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
 
@@ -24,15 +24,15 @@ volatile uint16_t & TimerChannel::from_channel_to_cvr(
         default: __builtin_trap();
         case ChannelSelection::CH1:
         case ChannelSelection::CH1N:
-            return (SDK_INST(inst)->CH1CVR);
+            return (SPL_INST(inst)->CH1CVR);
         case ChannelSelection::CH2:
         case ChannelSelection::CH2N:
-            return (SDK_INST(inst)->CH2CVR);
+            return (SPL_INST(inst)->CH2CVR);
         case ChannelSelection::CH3:
         case ChannelSelection::CH3N:
-            return (SDK_INST(inst)->CH3CVR);
+            return (SPL_INST(inst)->CH3CVR);
         case ChannelSelection::CH4:
-            return (SDK_INST(inst)->CH4CVR);
+            return (SPL_INST(inst)->CH4CVR);
     }
 }
 
@@ -54,7 +54,7 @@ void TimerChannel::enable_dma(const Enable en){
         }
     }();
 
-    TIM_DMACmd(SDK_INST(inst_), source, (en == EN));
+    TIM_DMACmd(SPL_INST(inst_), source, (en == EN));
 }
 
 

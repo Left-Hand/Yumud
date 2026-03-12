@@ -70,14 +70,16 @@ void steadywin_main(){
     });
     
     //配置can过滤器为接收标准数据帧（滤除拓展和远程帧）
-    can.filters<0>().apply(
+    can.configure_filter(
+        0_nth, 
+        hal::CanFifoIndex::_0,
         hal::CanFilterConfig::from_pairs(
             hal::CAN_FILTER_PAIR_STD_DATA_FRAME_ONLY,
             hal::CanStdIdMaskPair::reject_all()
         )
         // hal::CanFilterConfig::accept_all()
         // FILTER_CONFIG
-    );
+    ).unwrap();
 
     can.enable_hw_retransmit(EN);
     std::array<EncoderFeedback, 2> encoder_feedbacks = {Zero, Zero};

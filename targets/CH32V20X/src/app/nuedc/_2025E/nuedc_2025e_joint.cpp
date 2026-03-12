@@ -179,14 +179,17 @@ void nuedc_2025e_joint_main(){
         .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
     });
 
-    can.filters<0>() 
-        .apply(hal::CanFilterConfig::from_pair(
+    can.configure_filter(
+        0_nth, 
+        hal::CanFifoIndex::_0,
+        hal::CanFilterConfig::from_pair(
             hal::CanStdIdMaskPair::from_parts(
                 comb_role_and_cmd(self_node_role_, uint8_t(0x00)), 
-                hal::CanStdId::from_bits(0b1111'000'0000), hal::CanRtrSpecfier::Discard
-            ))
-        )
-    ;
+                hal::CanStdId::from_bits(0b1111'000'0000), 
+                hal::CanRtrSpecfier::Discard
+            )))
+        .unwrap();
+
 
     spi.init({
         .remap = hal::SPI1_REMAP_PA5_PA6_PA7_PA4,

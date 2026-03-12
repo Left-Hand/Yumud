@@ -13,7 +13,7 @@ using namespace ymd::hal;
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef *)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef *)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
 

@@ -189,9 +189,12 @@ void m1502e_main(){
         .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_500K)
     });
 
-    can.filters<0>().apply(
+    can.configure_filter(
+        0_nth, 
+        hal::CanFifoIndex::_0,
         hal::CanFilterConfig::accept_all()
-    );
+    )
+        .unwrap();
 
     sync::AtomicCell<iq16> left_torque;
     sync::AtomicCell<iq16> right_torque;

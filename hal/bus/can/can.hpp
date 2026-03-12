@@ -1,5 +1,12 @@
 #pragma once
 
+#include "core/utils/Result.hpp"
+#include "core/utils/nth.hpp"
+#include "core/container/ringbuf.hpp"
+
+#include "can_layout.hpp"
+
+
 #include "can_lld.hpp"
 
 
@@ -83,6 +90,9 @@ public:
     // 出，邮箱未释放时，新接收到的报文被丢弃；
     void enable_rxfifo_lock(const Enable en);
 
+    // 使能debug冻结
+    void enable_debug_freeze(const Enable en);
+
     //使能报文索引优先级 开启前顺序发送报文 开启后按报文标识符优先级发送
     void enable_index_priority(const Enable en);
 
@@ -104,11 +114,16 @@ public:
     }
 
 
-    template<size_t I>
-    requires (I < 14)
-    CanFilter filters() const {
-        return CanFilter(this->p_inst_, Nth(I));
-    }
+    // 初始化指定的过滤器
+    static Result<void, Infallible> configure_filter(
+        const Nth filter_nth, 
+        const hal::CanFifoIndex route_fifo_idx,
+        const hal::CanFilterConfig & filter_cfg
+    );
+
+    Result<void, Infallible> set_filter_origin(
+        const Nth filter_offset 
+    );
 
 private:
     void * p_inst_;

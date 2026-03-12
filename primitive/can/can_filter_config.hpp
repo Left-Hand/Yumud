@@ -4,11 +4,8 @@
 
 namespace ymd::hal{
 
-class CanFilter;
-
 struct [[nodiscard]] CanFilterConfig final{ 
 public:
-    friend class CanFilter;
 
     static constexpr CanFilterConfig accept_all(){
         return from_pairs(

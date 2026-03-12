@@ -25,9 +25,11 @@ void m2006_main(){
         .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
     });
 
-    can.filters<0>().apply(
+    can.configure_filter(
+        0_nth, 
+        hal::CanFifoIndex::_0,
         hal::CanFilterConfig::accept_all()
-    );
+    ).unwrap();
 
     while(true){
         const auto now_secs = clock::seconds();

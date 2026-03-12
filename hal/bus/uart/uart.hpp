@@ -2,6 +2,7 @@
 
 #include "uart_base.hpp"
 #include "uart_lld.hpp"
+#include "hal/dma/dma_primitive.hpp"
 
 
 namespace ymd::hal{
@@ -10,14 +11,13 @@ class DmaChannel;
 
 struct Uart;
 struct UartInterruptDispatcher{
+    static void on_interrupt(Uart & self);
 
     static void isr_txe(Uart & self);
     static void isr_tc(Uart & self);
 
     static void isr_rxne(Uart & self);
     static void isr_rxidle(Uart & self);
-
-    static void on_interrupt(Uart & uart);
 };
 
 class Uart final:public UartBase{
@@ -38,9 +38,6 @@ public:
     void set_tx_strategy(const CommStrategy tx_strategy);
 
     void set_rx_strategy(const CommStrategy rx_strategy);
-
-    [[nodiscard]] size_t sink_bytes(std::span<const uint8_t> bytes);
-
 private:
     void * p_inst_;
     Nth inst_nth_;
@@ -50,11 +47,13 @@ private:
     void set_remap(const UartRemap remap);
 
     void enable_rxne_interrupt(const Enable en);
-    void enable_idle_interrupt(const Enable en);
+    void enable_rxidle_interrupt(const Enable en);
     void enable_tx_interrupt(const Enable en);
 
-    void enable_rx_dma(const Enable en);
     void enable_tx_dma(const Enable en);
+    void enable_rx_dma(const Enable en);
+    void setup_rx_dma(const DmaPriority priority);
+    void setup_tx_dma(const DmaPriority priority);
 
 
 
@@ -65,8 +64,8 @@ private:
     DmaChannel & rx_dma_;
 
 public:
-    size_t tx_dma_buf_index_ = 0;
-    size_t rx_dma_buf_index_ = 0;
+    volatile size_t tx_dma_buf_index_ = 0;
+    volatile size_t rx_dma_buf_index_ = 0;
 
     friend class UartInterruptDispatcher;
 };

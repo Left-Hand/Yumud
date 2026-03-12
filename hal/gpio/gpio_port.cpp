@@ -11,7 +11,7 @@ using namespace ymd::hal;
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, GPIO_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, GPIO_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
 
@@ -65,17 +65,17 @@ void GpioPort::init(){
 
 
 void GpioPort::set_by_mask(const PinMask mask){
-    SDK_INST(inst_)->BSHR = mask.to_u16();
+    SPL_INST(inst_)->BSHR = mask.to_u16();
 }
 
 void GpioPort::clr_by_mask(const PinMask mask){
-    SDK_INST(inst_)->BCR = mask.to_u16();
+    SPL_INST(inst_)->BCR = mask.to_u16();
 }
 
 void GpioPort::write_by_mask(const PinMask mask){
-    SDK_INST(inst_)->OUTDR = mask.to_u16();}
+    SPL_INST(inst_)->OUTDR = mask.to_u16();}
 PinMask GpioPort::read_mask(){
-    return PinMask::from_u16(SDK_INST(inst_)->INDR);
+    return PinMask::from_u16(SPL_INST(inst_)->INDR);
 }
 
 void GpioPort::write_nth(const Nth nth, const BoolLevel data){

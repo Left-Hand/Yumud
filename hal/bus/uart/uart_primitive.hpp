@@ -11,25 +11,25 @@ namespace ymd{
 namespace ymd::hal{
 class Gpio;
 
-enum class [[nodiscard]] UartParity{
+enum class [[nodiscard]] UartParity : uint16_t{
     None    = 0x0000,
     Even    = 0x0400,
     Odd     = 0x0600
 };
 
 
-enum class [[nodiscard]] UartStopBits{
+enum class [[nodiscard]] UartStopBits : uint16_t{
     _1b,
     _0_5b,
     _2b,
     _1_5b
 };
 
-enum class [[nodiscard]] UartWordSize{
+enum class [[nodiscard]] UartWordSize : uint16_t{
     _8b, _9b
 };
 
-struct [[nodiscard]] UartEvent{
+struct [[nodiscard]] UartEvent final{
     enum class [[nodiscard]] Kind:uint8_t{
         TxIdle,
         TxOverrun,

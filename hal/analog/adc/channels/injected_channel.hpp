@@ -1,14 +1,13 @@
 #pragma once
 
-#include "adc_channel.hpp"
+#include "../adc_utils.hpp"
 
 namespace ymd::hal{
 
-class AdcInjectedChannel final:  public AdcChannelOnChip{
+class alignas(4) AdcInjectedChannel final{
 public:
     explicit AdcInjectedChannel(
         void * inst, 
-        const AdcChannelSelection sel, 
         const uint8_t rank
     );
 
@@ -24,11 +23,19 @@ public:
         return uq16::from_bits(static_cast<uint32_t>(read_u12()) << 4);
     }
 
+    using ChannelSelection = AdcChannelSelection;
+    using SampleCycles = AdcSampleCycles;
 private:
+    void * inst_;
+    uint8_t rank_;
+
     uint8_t mask_;
 
     void set_cali_data(const uint16_t bits);
 
+    friend class AdcOnChip;
+    friend class AdcPrimary;
+    friend class AdcCompanion;
     friend class AdcOnChip;
     friend class AdcPrimary;
     friend class AdcCompanion;

@@ -13,7 +13,7 @@ using namespace ymd;
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, I2C_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, I2C_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::I2C_Def)>(x))
 
 
@@ -58,7 +58,7 @@ I2c::I2c(void * inst):
 
 
 void I2c::enable_rcc(const Enable en){
-    switch(reinterpret_cast<uint32_t>(SDK_INST(inst_))){
+    switch(reinterpret_cast<uint32_t>(SPL_INST(inst_))){
         #ifdef I2C1_PRESENT
         case I2C1_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, en);
@@ -82,8 +82,8 @@ void I2c::enable_rcc(const Enable en){
 
 
 bool I2c::locked(){
-    return bool(SDK_INST(inst_)->STAR2 & I2C_STAR2_BUSY) 
-        & bool(!(SDK_INST(inst_)->STAR1 & I2C_STAR1_STOPF));
+    return bool(SPL_INST(inst_)->STAR2 & I2C_STAR2_BUSY) 
+        & bool(!(SPL_INST(inst_)->STAR1 & I2C_STAR1_STOPF));
 }
 
 void I2c::init(const uint32_t baudrate){
@@ -99,30 +99,30 @@ void I2c::init(const uint32_t baudrate){
     I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
     I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
     I2C_InitStructure.I2C_ClockSpeed = baudrate;
-    I2C_Init(SDK_INST(inst_), &I2C_InitStructure);
-    I2C_Cmd(SDK_INST(inst_), ENABLE);
+    I2C_Init(SPL_INST(inst_), &I2C_InitStructure);
+    I2C_Cmd(SPL_INST(inst_), ENABLE);
 
     enable_hw_timeout(EN);
 }
 
 void I2c::reset(){
-    I2C_Cmd(SDK_INST(inst_),DISABLE);
+    I2C_Cmd(SPL_INST(inst_),DISABLE);
     __nopn(4);
-    I2C_Cmd(SDK_INST(inst_),ENABLE);
+    I2C_Cmd(SPL_INST(inst_),ENABLE);
     __nopn(2);
-    SDK_INST(inst_)->CTLR1 |= I2C_CTLR1_SWRST;
+    SPL_INST(inst_)->CTLR1 |= I2C_CTLR1_SWRST;
     __nopn(4);
-    SDK_INST(inst_)->CTLR1 &= ~I2C_CTLR1_SWRST;
+    SPL_INST(inst_)->CTLR1 &= ~I2C_CTLR1_SWRST;
 }
 
 void I2c::enable_hw_timeout(const Enable en){
-    if(en == EN) SDK_INST(inst_)->STAR1 |= I2C_STAR1_TIMEOUT;
-    else SDK_INST(inst_)->STAR1 &= ~I2C_STAR1_TIMEOUT;
+    if(en == EN) SPL_INST(inst_)->STAR1 |= I2C_STAR1_TIMEOUT;
+    else SPL_INST(inst_)->STAR1 &= ~I2C_STAR1_TIMEOUT;
 }
 
 hal::HalResult I2c::unlock_bus(){
     if(locked()){
-        I2C_Cmd(SDK_INST(inst_), DISABLE);
+        I2C_Cmd(SPL_INST(inst_), DISABLE);
 
         scl().outpp();
         sda().outpp();
@@ -144,7 +144,7 @@ hal::HalResult I2c::unlock_bus(){
         scl().afod();
         sda().afod();
 
-        I2C_Cmd(SDK_INST(inst_), ENABLE);
+        I2C_Cmd(SPL_INST(inst_), ENABLE);
         reset();
 
         return hal::HalResult::Ok();
@@ -154,8 +154,8 @@ hal::HalResult I2c::unlock_bus(){
 }
 
 void I2c::trail(){
-    I2C_GenerateSTOP(SDK_INST(inst_), ENABLE);
-    // I2C_AcknowledgeConfig(SDK_INST(inst_), ENABLE);
+    I2C_GenerateSTOP(SPL_INST(inst_), ENABLE);
+    // I2C_AcknowledgeConfig(SPL_INST(inst_), ENABLE);
 }
 
 
@@ -163,15 +163,15 @@ hal::HalResult I2c::lead(const hal::I2cSlaveAddrWithRw req){
     const auto address = req.addr_without_rw();
     const bool is_read = req.is_read();
 
-    I2C_GenerateSTART(SDK_INST(inst_), ENABLE);
+    I2C_GenerateSTART(SPL_INST(inst_), ENABLE);
 
-    while(I2C_CheckEvent(SDK_INST(inst_), I2C_EVENT_MASTER_MODE_SELECT) 
+    while(I2C_CheckEvent(SPL_INST(inst_), I2C_EVENT_MASTER_MODE_SELECT) 
         == ErrorStatus::NoREADY);
 
-    I2C_Send7bitAddress(SDK_INST(inst_), address & 0xFE, 
+    I2C_Send7bitAddress(SPL_INST(inst_), address & 0xFE, 
         is_read ? I2C_Direction_Receiver : I2C_Direction_Transmitter);
 
-    while(I2C_CheckEvent(SDK_INST(inst_), is_read ? 
+    while(I2C_CheckEvent(SPL_INST(inst_), is_read ? 
         I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED :  I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) 
         == ErrorStatus::NoREADY);
 
@@ -179,17 +179,17 @@ hal::HalResult I2c::lead(const hal::I2cSlaveAddrWithRw req){
 }
 
 hal::HalResult I2c::write(const uint32_t data){
-    I2C_SendData(SDK_INST(inst_), data);
-    while(I2C_CheckEvent(SDK_INST(inst_), I2C_EVENT_MASTER_BYTE_TRANSMITTED) 
+    I2C_SendData(SPL_INST(inst_), data);
+    while(I2C_CheckEvent(SPL_INST(inst_), I2C_EVENT_MASTER_BYTE_TRANSMITTED) 
         == ErrorStatus::NoREADY);
     return hal::HalResult::Ok();
 }
 
 hal::HalResult I2c::read(uint8_t & data, const Ack ack){
-    I2C_AcknowledgeConfig(SDK_INST(inst_), ack == ACK);
-    while(I2C_GetFlagStatus(SDK_INST(inst_), I2C_FLAG_RXNE) == ErrorStatus::NoREADY);
+    I2C_AcknowledgeConfig(SPL_INST(inst_), ack == ACK);
+    while(I2C_GetFlagStatus(SPL_INST(inst_), I2C_FLAG_RXNE) == ErrorStatus::NoREADY);
 
-    data = I2C_ReceiveData(SDK_INST(inst_));
+    data = I2C_ReceiveData(SPL_INST(inst_));
     return hal::HalResult::Ok();
 }
 

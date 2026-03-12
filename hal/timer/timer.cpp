@@ -26,7 +26,7 @@ __inline void TIM_ASSERT(bool x){
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, TIM_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
 
@@ -349,8 +349,8 @@ DEF_TIM_BIND_PIN_LAYOUTER(bkin)
 
 
 
-volatile uint16_t & BasicTimer::cnt(){return SDK_INST(inst_)->CNT;}
-volatile uint16_t & BasicTimer::arr(){return SDK_INST(inst_)->ATRLR;}
+volatile uint16_t & BasicTimer::cnt(){return SPL_INST(inst_)->CNT;}
+volatile uint16_t & BasicTimer::arr(){return SPL_INST(inst_)->ATRLR;}
 
 
 Result<TimerPinSetuper::Next, TimerPinSetuper::Error> TimerPinSetuper::alter_to_pins(
@@ -406,7 +406,7 @@ void BasicTimer::stop(){
 }
 
 void BasicTimer::dyn_enable_interrupt(const IT I, const Enable en){
-    TIM_ITConfig(SDK_INST(inst_), std::bit_cast<uint16_t>(I), (en == EN));
+    TIM_ITConfig(SPL_INST(inst_), std::bit_cast<uint16_t>(I), (en == EN));
 }
 
 uint32_t BasicTimer::get_periph_clk_freq(){
@@ -416,11 +416,11 @@ uint32_t BasicTimer::get_periph_clk_freq(){
 }
 
 void BasicTimer::set_psc(const uint16_t psc){
-    SDK_INST(inst_)->PSC = psc;
+    SPL_INST(inst_)->PSC = psc;
 }
 
 void BasicTimer::set_arr(const uint16_t arr){
-    SDK_INST(inst_)->ATRLR = arr;
+    SPL_INST(inst_)->ATRLR = arr;
 }
 
 //ckd = 0 : 1分频
@@ -430,46 +430,46 @@ void BasicTimer::set_arr(const uint16_t arr){
 void BasicTimer::set_ckd(const uint8_t ckd){
     if(ckd > 2) __builtin_trap();
 
-    auto tmpcr1 = SDK_INST(inst_)->CTLR1;
+    auto tmpcr1 = SPL_INST(inst_)->CTLR1;
     
     tmpcr1 &= (uint16_t)(~((uint16_t)TIM_CTLR1_CKD));
     tmpcr1 |= (static_cast<uint16_t>(ckd) << 8);
 
-    SDK_INST(inst_)->CTLR1 = tmpcr1;
+    SPL_INST(inst_)->CTLR1 = tmpcr1;
 }
 
 
 void BasicTimer::set_count_mode(const TimerCountMode mode){
-    auto tmpcr1 = SDK_INST(inst_)->CTLR1;
+    auto tmpcr1 = SPL_INST(inst_)->CTLR1;
 
     tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_DIR | TIM_CMS)));
     tmpcr1 |= (mode.to_bits() << 4);
 
 
-    SDK_INST(inst_)->CTLR1 = tmpcr1;
+    SPL_INST(inst_)->CTLR1 = tmpcr1;
 }
 
 void BasicTimer::enable_arr_sync(const Enable en){
     if(en == EN){
-        SDK_INST(inst_)->CTLR1 = SDK_INST(inst_)->CTLR1 | TIM_ARPE;
+        SPL_INST(inst_)->CTLR1 = SPL_INST(inst_)->CTLR1 | TIM_ARPE;
     }else{
-        SDK_INST(inst_)->CTLR1 = (SDK_INST(inst_)->CTLR1) & uint16_t( ~((uint16_t)TIM_ARPE));
+        SPL_INST(inst_)->CTLR1 = (SPL_INST(inst_)->CTLR1) & uint16_t( ~((uint16_t)TIM_ARPE));
     }
 }
 
 void BasicTimer::enable_psc_sync(const Enable en){
     if(en == EN){
-        SDK_INST(inst_)->SWEVGR = SDK_INST(inst_)->SWEVGR | TIM_PSCReloadMode_Immediate;
+        SPL_INST(inst_)->SWEVGR = SPL_INST(inst_)->SWEVGR | TIM_PSCReloadMode_Immediate;
     }else{
-        SDK_INST(inst_)->SWEVGR = SDK_INST(inst_)->SWEVGR & uint16_t( ~((uint16_t)TIM_PSCReloadMode_Immediate));
+        SPL_INST(inst_)->SWEVGR = SPL_INST(inst_)->SWEVGR & uint16_t( ~((uint16_t)TIM_PSCReloadMode_Immediate));
     }
 }
 
 void BasicTimer::enable_udis(const Enable en){
     if(en == EN){
-        SDK_INST(inst_)->CTLR1 |= TIM_UDIS;
+        SPL_INST(inst_)->CTLR1 |= TIM_UDIS;
     }else{
-        SDK_INST(inst_)->CTLR1 &= ~TIM_UDIS;
+        SPL_INST(inst_)->CTLR1 &= ~TIM_UDIS;
     }
 }
 
@@ -483,12 +483,12 @@ void BasicTimer::set_count_freq(const TimerCountFreq count_freq){
 
 
 Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
-    TIM_DeInit(SDK_INST(inst_));
+    TIM_DeInit(SPL_INST(inst_));
     set_remap(cfg.remap);
-    SDK_INST(inst_)->CNT = 0;
+    SPL_INST(inst_)->CNT = 0;
     this->enable_rcc(EN);
 
-    TIM_InternalClockConfig(SDK_INST(inst_));
+    TIM_InternalClockConfig(SPL_INST(inst_));
     set_count_freq(cfg.count_freq);
     set_count_mode(cfg.count_mode);
 
@@ -496,8 +496,8 @@ Result<TimerPinSetuper, TimerLibError> BasicTimer::init(const Config & cfg){
     set_ckd(0);
     enable_arr_sync(EN);
 
-    TIM_ClearFlag(SDK_INST(inst_), 0x1e7f);
-    TIM_ClearITPendingBit(SDK_INST(inst_), 0x00ff);
+    TIM_ClearFlag(SPL_INST(inst_), 0x1e7f);
+    TIM_ClearITPendingBit(SPL_INST(inst_), 0x00ff);
 
 
     return Ok(TimerPinSetuper{inst_, cfg.remap});
@@ -511,10 +511,10 @@ void BasicTimer::deinit(){
 
 
 void BasicTimer::enable(const Enable en){
-    TIM_Cmd(SDK_INST(inst_), (en == EN));
+    TIM_Cmd(SPL_INST(inst_), (en == EN));
     
     if((en == EN) and lld::is_advanced_timer(tim_nth_)){
-        TIM_CtrlPWMOutputs(SDK_INST(inst_), (en == EN));
+        TIM_CtrlPWMOutputs(SPL_INST(inst_), (en == EN));
     }
 }
 
@@ -530,7 +530,7 @@ void GeneralTimer::init_as_encoder(){
             .TIM_RepetitionCounter = 0,
         };
 
-        TIM_TimeBaseInit(SDK_INST(inst_), &TIM_TimeBaseStructure);
+        TIM_TimeBaseInit(SPL_INST(inst_), &TIM_TimeBaseStructure);
     }
 
 
@@ -543,7 +543,7 @@ void GeneralTimer::init_as_encoder(){
             .TIM_ICFilter = 0x0F
         };
 
-        TIM_ICInit(SDK_INST(inst_),&TIM_ICInitStruct);
+        TIM_ICInit(SPL_INST(inst_),&TIM_ICInitStruct);
     }
 
     {
@@ -555,42 +555,42 @@ void GeneralTimer::init_as_encoder(){
             .TIM_ICFilter = 0x0F
         };
 
-        TIM_ICInit(SDK_INST(inst_),&TIM_ICInitStruct);
+        TIM_ICInit(SPL_INST(inst_),&TIM_ICInitStruct);
     }
 
-	TIM_EncoderInterfaceConfig(SDK_INST(inst_),
+	TIM_EncoderInterfaceConfig(SPL_INST(inst_),
         TIM_EncoderMode_TI12, 
         TIM_ICPolarity_Rising,
         TIM_ICPolarity_Rising
     );
 
-    TIM_Cmd(SDK_INST(inst_), ENABLE);
+    TIM_Cmd(SPL_INST(inst_), ENABLE);
 }
 
 bool GeneralTimer::is_up_counting(){
-    auto tmpcr1 = SDK_INST(inst_)->CTLR1;
+    auto tmpcr1 = SPL_INST(inst_)->CTLR1;
     return (tmpcr1 & TIM_DIR) == 0;
 }
 
 
 void GeneralTimer::enable_single_shot(const Enable en){
-    TIM_SelectOnePulseMode(SDK_INST(inst_), (en == EN) ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
+    TIM_SelectOnePulseMode(SPL_INST(inst_), (en == EN) ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
 }
 
 void GeneralTimer::set_trgo_source(const TrgoSource source){
-    TIM_SelectOutputTrigger(SDK_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
+    TIM_SelectOutputTrigger(SPL_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
 }
 
 void GeneralTimer::set_trgi_source(const TrgiSource source){
-    TIM_SelectInputTrigger(SDK_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
+    TIM_SelectInputTrigger(SPL_INST(inst_), std::bit_cast<uint8_t>(source) << 4);
 }
 
 void GeneralTimer::set_slave_mode(const SlaveMode slave_mode){
-    TIM_SelectSlaveMode(SDK_INST(inst_), std::bit_cast<uint8_t>(slave_mode));
+    TIM_SelectSlaveMode(SPL_INST(inst_), std::bit_cast<uint8_t>(slave_mode));
 }
 
 void GeneralTimer::enable_master_slave_mode(const Enable en){
-    TIM_SelectMasterSlaveMode(SDK_INST(inst_), 
+    TIM_SelectMasterSlaveMode(SPL_INST(inst_), 
         (en == EN) ? TIM_MasterSlaveMode_Enable : TIM_MasterSlaveMode_Disable);
 }
 
@@ -625,53 +625,53 @@ void TimerBdtr::init(const Config & cfg){
         .TIM_AutomaticOutput = TIM_AutomaticOutput_Enable
     };
 
-    TIM_BDTRConfig(SDK_INST(inst_), &TIM_BDTRInitStructure);
+    TIM_BDTRConfig(SPL_INST(inst_), &TIM_BDTRInitStructure);
 }
 
 #if 0
 void TimerBdtr::set_deadzone_code(const TimerDeadzoneCode deadzone_code){
-    uint16_t tempreg = SDK_INST(inst_)->BDTR;
+    uint16_t tempreg = SPL_INST(inst_)->BDTR;
     tempreg &= 0xff00;
     tempreg |= deadzone_code.bits;
-    SDK_INST(inst_)->BDTR = tempreg;
+    SPL_INST(inst_)->BDTR = tempreg;
 }
 #endif
 
 void BasicTimer::enable_cc_ctrl_sync(const Enable en){
-    TIM_CCPreloadControl(SDK_INST(inst_), (en == EN));
+    TIM_CCPreloadControl(SPL_INST(inst_), (en == EN));
 }
 
 
-#define TRY_ACCEPT_AND_CLEAR_IT(itstatus, I)\
+#define TRY_HANDLE_AND_CLEAR_IT(itstatus, I)\
 if((itstatus & static_cast<uint16_t>(I))) {\
-    accept_interrupt(I); \
-    TIM_ClearITPendingBit(SDK_INST(inst_), uint8_t(I)); \
+    invoke_callback(I); \
+    TIM_ClearITPendingBit(SPL_INST(inst_), uint8_t(I)); \
     return;\
 }\
 
 void AdvancedTimer::on_cc_interrupt(){
-    const uint16_t itstatus = SDK_INST(inst_)->INTFR;
+    const uint16_t itstatus = SPL_INST(inst_)->INTFR;
 
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC1);
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC2);
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC3);
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC4);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC1);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC2);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC3);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC4);
 }
 
-void GeneralTimer::on_interrupt(){
-    const uint16_t itstatus = SDK_INST(inst_)->INTFR;
+void BasicTimer::on_common_interrupt(){
+    const uint16_t itstatus = SPL_INST(inst_)->INTFR;
 
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::Update);
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC1);
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC2);
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC3);
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::CC4);
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::COM);
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::Trigger);
-    TRY_ACCEPT_AND_CLEAR_IT(itstatus, IT::Break);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::Update);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC1);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC2);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC3);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::CC4);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::COM);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::Trigger);
+    TRY_HANDLE_AND_CLEAR_IT(itstatus, IT::Break);
 }
 
 void AdvancedTimer::set_repeat_times(const uint16_t rep){
-    SDK_INST(inst_)->RPTCR = rep;
+    SPL_INST(inst_)->RPTCR = rep;
 }
 

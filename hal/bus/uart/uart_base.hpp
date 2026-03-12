@@ -50,8 +50,10 @@ public:
 
     virtual void init(const Config & cfg) = 0;
 
-    [[nodiscard]] __fast_inline size_t available() const {return rx_queue_.length();}
-    [[nodiscard]] __fast_inline size_t free_capacity() const {
+    [[nodiscard]] size_t available() const {return rx_queue_.length();}
+
+
+    [[nodiscard]] size_t free_capacity() const {
         switch(tx_strategy_){
             case CommStrategy::Disabled: return 0;
             case CommStrategy::Blocking: return std::numeric_limits<size_t>::max();
@@ -77,12 +79,10 @@ public:
 
     auto & tx_queue(){return tx_queue_;}
     auto & rx_queue(){return rx_queue_;}
-// private:
+
 protected:
     EventCallback event_callback_;
 
-
-// protected:
 public:
     CommStrategy tx_strategy_;
     CommStrategy rx_strategy_;

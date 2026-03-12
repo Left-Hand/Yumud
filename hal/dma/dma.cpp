@@ -11,7 +11,7 @@ using namespace ymd::hal;
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(inst_, DMA_Channel_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(inst_, DMA_Channel_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::DMA_CH_Def)>(x))
 
 
@@ -276,7 +276,7 @@ void DmaChannel::init(const Config & cfg){
 
     DMA_InitStructure.DMA_Priority = static_cast<uint32_t>(cfg.priority) << 12;
 
-    DMA_Init(SDK_INST(inst_), &DMA_InitStructure);
+    DMA_Init(SPL_INST(inst_), &DMA_InitStructure);
 }
 
 void DmaChannel::register_nvic(const NvicPriority priority, const Enable en){
@@ -304,7 +304,7 @@ void DmaChannel::set_mem_and_periph_wordsize(
 void DmaChannel::clear_pending_flag_and_restart(){
     DMA_ClearFlag(transfer_complete_mask_ | transfer_onhalf_mask_);
 
-    DMA_Cmd(SDK_INST(inst_), ENABLE);
+    DMA_Cmd(SPL_INST(inst_), ENABLE);
 }
 
 size_t DmaChannel::pending_count(){
@@ -354,11 +354,11 @@ static void my_DMA_ITConfig(DMA_Channel_TypeDef *DMAy_Channelx, uint32_t DMA_IT,
 
 void DmaChannel::enable_transfer_complete_interrupt(const Enable en){
     my_DMA_ClearITPendingBit(transfer_complete_mask_);
-    my_DMA_ITConfig(SDK_INST(inst_), DMA_IT_TC, (en == EN));
+    my_DMA_ITConfig(SPL_INST(inst_), DMA_IT_TC, (en == EN));
 }
 
 void DmaChannel::enable_transfer_onhalf_interrupt(const Enable en){
     my_DMA_ClearITPendingBit(transfer_onhalf_mask_);
-    my_DMA_ITConfig(SDK_INST(inst_), DMA_IT_HT, (en == EN));
+    my_DMA_ITConfig(SPL_INST(inst_), DMA_IT_HT, (en == EN));
 }
 

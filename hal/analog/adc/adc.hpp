@@ -2,7 +2,6 @@
 
 #include <initializer_list>
 #include "hal/sysmisc/nvic/nvic.hpp"
-#include "channels/regular_channel.hpp"
 #include "channels/injected_channel.hpp"
 #include "adc_utils.hpp"
 
@@ -100,10 +99,10 @@ public:
     explicit AdcPrimary(void * inst):
         inst_(inst),
         injected_channels_{
-            AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 1),
-            AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 2),
-            AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 3),
-            AdcInjectedChannel(inst_, AdcChannelSelection::VREF, 4)
+            AdcInjectedChannel(inst_, 1),
+            AdcInjectedChannel(inst_, 2),
+            AdcInjectedChannel(inst_, 3),
+            AdcInjectedChannel(inst_, 4)
         }{;}
 
 
@@ -186,22 +185,27 @@ protected:
     void * inst_;
     Callback event_callback_;
 
-    bool right_align_ = true;
+    bool left_aligned_ = false;
 
     int16_t cali_data_;
 
-    uint8_t regular_cnt_ = 0;
-    uint8_t injected_cnt_ = 0;
+    uint8_t num_regular_ = 0;
+    uint8_t num_injected_ = 0;
 
     AdcInjectedChannel injected_channels_[4];
 
 
-    uint32_t get_max_value() const;
+    [[nodiscard]] uint32_t get_max_value() const{
+        // return ((1 << 12) - 1) << (left_aligned_ ? 4 : 4);
+        if(left_aligned_) return 0xFFFF;
+        else return 0x0FFF;
+    }
+
     void set_regular_count(const uint8_t cnt);
 
     void set_injected_count(const uint8_t cnt);
 
-    void set_regular_sample_cycles(const ChannelSelection sel,  const SampleCycles sample_cycles);
+    void set_regular_sample_cycles(const ChannelSelection sel, const SampleCycles sample_cycles);
     void enable_singleshot(const Enable en);
     void enable_scan(const Enable en);
 
@@ -232,5 +236,31 @@ protected:
     friend class AdcInterruptDispatcher;
 };
 
+
+struct [[nodiscard]] TemperatureCompensator final{ 
+    using Self = TemperatureCompensator;
+
+    static constexpr uintptr_t REFER_VOLT_BASE = 0x1FFFF720;
+    static constexpr float COEFF1 = (-3300.0 * 10 / 4096 / 43);
+    static constexpr iq16 COEFF1_IQ16 = static_cast<iq16>(COEFF1);
+    static constexpr float COEFF2 = (10.0 / 43);
+
+    iq16 b;
+
+    static imconstexpr Self load() {
+        const uint32_t compressed_u32 = *reinterpret_cast<const volatile uint32_t*>(REFER_VOLT_BASE);
+        const int32_t refer_volt = static_cast<int32_t>((compressed_u32) & 0xffff);
+        const int32_t refer_temper = static_cast<int32_t>((compressed_u32) >> 16);
+        
+        return Self{
+            .b = static_cast<iq16>(refer_temper) + static_cast<iq16>(COEFF2) * refer_volt
+        };
+    }
+    
+    constexpr iq16 comp_u12(const uint16_t x) const {
+        constexpr uint16_t K = static_cast<uint16_t>(-COEFF1 * 65536);
+        return iq16::from_bits(b.to_bits() - (K * x)); 
+    }
+};
 
 }

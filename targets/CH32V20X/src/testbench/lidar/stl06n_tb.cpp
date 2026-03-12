@@ -277,7 +277,8 @@ void stl06n_main(){
                 //find min
 
                 return *std::min_element(cluster.points.begin(), cluster.points.end(), 
-                [](const PackedLidarPoint & a, const PackedLidarPoint & b){ return a.distance_code.bits < b.distance_code.bits; });
+                [](const PackedLidarPoint & a, const PackedLidarPoint & b){ 
+                    return a.distance_code.millis < b.distance_code.millis; });
             })
             // | std::views::filter([i = 0](const auto&) mutable { 
             //     return (i++) % 4 == 0; 

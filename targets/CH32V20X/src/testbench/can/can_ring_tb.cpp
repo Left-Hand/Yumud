@@ -64,12 +64,12 @@ void can_ring_main(){
     });
 
     while(true){
-        for(const auto frame : UNREACHABLE_FRAMES){
+        for(const auto & frame : UNREACHABLE_FRAMES){
             write_frame(frame).examine();
             clock::delay(2ms);
         }
 
-        for(const auto frame : REACHABLE_FRAMES){
+        for(const auto & frame : REACHABLE_FRAMES){
             write_frame(frame).examine();
             clock::delay(2ms);
         }

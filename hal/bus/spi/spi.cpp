@@ -365,7 +365,7 @@ HalResult Spi::set_bitorder(const BitOrder bitorder){
     return HalResult::Ok();
 }
 
-void Spi::accept_interrupt(const SpiI2sIT it){
+void Spi::on_interrupt(const SpiI2sIT it){
 
 }
 

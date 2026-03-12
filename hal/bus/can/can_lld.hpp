@@ -1,26 +1,39 @@
 #pragma once
 
-
-#include "core/utils/Result.hpp"
-#include "core/utils/nth.hpp"
-#include "core/container/ringbuf.hpp"
 #include "ral/can.hpp"
-#include "can_layout.hpp"
-
 #include "primitive/can/bxcan_frame.hpp"
 #include "primitive/can/can_event.hpp"
+#include "primitive/can/can_filter_config.hpp"
 
-#include "can_filter.hpp"
 
 
 namespace ymd::lld{
-Nth can_to_nth(const uintptr_t inst_base);
 
+
+#ifdef CAN3_PRESENT
+static constexpr size_t NUM_CAN_FILTERS = 14 * 3;
+#else
+static constexpr size_t NUM_CAN_FILTERS = 14 * 2;
+#endif
+
+
+
+Nth can_to_nth(const uintptr_t inst_base);
 void can_enable_rcc(const Nth can_nth, const Enable en);
 void can_set_remap(const Nth can_nth, const hal::CanRemap remap);
 
+uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct);
+
 void can_transmit(void * p_inst, const hal::CanMailboxIndex mbox_idx, const hal::BxCanFrame & frame);
 hal::BxCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx);
+
+void can_configure_filter(
+    const size_t filter_nth, 
+    const hal::CanFifoIndex route_fifo_idx,
+    const hal::CanFilterConfig & filter_cfg
+);
+
+void can_set_filter_origin(const size_t inst_nth, const size_t base);
 
 
 [[nodiscard]] static constexpr 

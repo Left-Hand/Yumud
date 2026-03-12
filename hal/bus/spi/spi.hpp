@@ -86,7 +86,7 @@ private:
     void enable_rx_interrupt(const Enable en);
     void enable_tx_interrupt(const Enable en);
 
-    void accept_interrupt(const SpiI2sIT it);
+    void on_interrupt(const SpiI2sIT it);
 };
 
 

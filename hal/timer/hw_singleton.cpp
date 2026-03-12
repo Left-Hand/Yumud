@@ -8,19 +8,19 @@ using IT = TimerIT;
 
 #define ADVANCED_TIMER_IT_TEMPLATE(x)\
 void TIM##x##_BRK_IRQHandler(void){\
-    timer##x.accept_interrupt(IT::Break);\
+    timer##x.on_specified_interrupt(IT::Break);\
     TIM_ClearFlag(TIM##x, TIM_IT_Break);\
 }\
 void TIM##x##_UP_IRQHandler(void){\
-    timer##x.accept_interrupt(IT::Update);\
+    timer##x.on_specified_interrupt(IT::Update);\
     TIM_ClearFlag(TIM##x, TIM_IT_Update);\
 }\
 void TIM##x##_TRG_COM_IRQHandler(void){\
     if(TIM_GetITStatus(TIM##x, TIM_IT_Trigger)){\
-        timer##x.accept_interrupt(IT::Trigger);\
+        timer##x.on_specified_interrupt(IT::Trigger);\
         TIM_ClearFlag(TIM##x, TIM_IT_Trigger);\
     }else if(TIM_GetITStatus(TIM##x, TIM_IT_COM)){\
-        timer##x.accept_interrupt(IT::COM);\
+        timer##x.on_specified_interrupt(IT::COM);\
         TIM_ClearFlag(TIM##x, TIM_IT_COM);\
     }\
 }\
@@ -31,7 +31,7 @@ void TIM##x##_CC_IRQHandler(void){\
 
 #define GENERIC_TIMER_IT_TEMPLATE(x)\
 void TIM##x##_IRQHandler(void){\
-    timer##x.on_interrupt();\
+    timer##x.on_common_interrupt();\
 }\
 
 

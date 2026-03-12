@@ -126,9 +126,11 @@ void nuedc_2025e_laser_main(){
     });
 
 
-    can.filters<0>().apply(
+    can.configure_filter(
+        0_nth,
+        hal::CanFifoIndex::_0, 
         hal::CanFilterConfig::accept_all()
-    );
+    ).unwrap();
 
 
     bool is_basic3 = false;

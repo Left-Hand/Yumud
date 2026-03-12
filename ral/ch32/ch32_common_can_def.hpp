@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/constants/enums.hpp"
-#include <cstdint>
+#include "core/io/regs.hpp"
 
 namespace ymd::ral::ch32::common_can{
 struct [[nodiscard]] R32_CAN_CTLR{
@@ -153,9 +153,6 @@ struct [[nodiscard]] R32_CAN_ERRSR{
     // 过 127 时，CAN 进入错误被动状态。
     uint32_t REC:8;
 
-    [[nodiscard]] uint32_t to_bits() const {
-        return std::bit_cast<uint32_t>(*this);
-    }
 };
 
 struct [[nodiscard]] R32_CAN_BTIMR{
@@ -233,187 +230,42 @@ struct [[nodiscard]] R32_CAN_FCTLR{
 
     //CAN2 过滤器开始组（取值范围 1-27）
     uint32_t CAN2SB:6;
+    uint32_t :2;
+    
+    #ifdef CAN3_PRESENT
+    // 仅h417
+    //CAN3 过滤器开始组（取值范围 CAN2SB-42）
+    uint32_t CAN3SB:6;
+    uint32_t :2;
+    uint32_t :8;
+    #else
+    uint32_t :16;
+    #endif
 };
 
+VALIDATE_R32(R32_CAN_FCTLR)
+
 struct [[nodiscard]] R32_CAN_FMCFGR{
-    uint32_t FBM0:1;
-    uint32_t FBM1:1;
-    uint32_t FBM2:1;
-    uint32_t FBM3:1;
-    uint32_t FBM4:1;
-    uint32_t FBM5:1;
-    uint32_t FBM6:1;
-    uint32_t FBM7:1;
-    uint32_t FBM8:1;
-    uint32_t FBM9:1;
-
-    uint32_t FBM10:1;
-    uint32_t FBM11:1;
-    uint32_t FBM12:1;
-    uint32_t FBM13:1;
-    uint32_t FBM14:1;
-    uint32_t FBM15:1;
-    uint32_t FBM16:1;
-    uint32_t FBM17:1;
-    uint32_t FBM18:1;
-    uint32_t FBM19:1;
-
-    uint32_t FBM20:1;
-    uint32_t FBM21:1;
-    uint32_t FBM22:1;
-    uint32_t FBM23:1;
-    uint32_t FBM24:1;
-    uint32_t FBM25:1;
-    uint32_t FBM26:1;
-    uint32_t FBM27:1;
-    uint32_t FBM28:1;
-
-    uint32_t :4;
+    uint32_t bits;
 };
 
 struct [[nodiscard]] R32_CAN_FSCFGR{
-    uint32_t FSC0:1;
-    uint32_t FSC1:1;
-    uint32_t FSC2:1;
-    uint32_t FSC3:1;
-    uint32_t FSC4:1;
-    uint32_t FSC5:1;
-    uint32_t FSC6:1;
-    uint32_t FSC7:1;
-    uint32_t FSC8:1;
-    uint32_t FSC9:1;
-
-    uint32_t FSC10:1;
-    uint32_t FSC11:1;
-    uint32_t FSC12:1;
-    uint32_t FSC13:1;
-    uint32_t FSC14:1;
-    uint32_t FSC15:1;
-    uint32_t FSC16:1;
-    uint32_t FSC17:1;
-    uint32_t FSC18:1;
-    uint32_t FSC19:1;
-
-    uint32_t FSC20:1;
-    uint32_t FSC21:1;
-    uint32_t FSC22:1;
-    uint32_t FSC23:1;
-    uint32_t FSC24:1;
-    uint32_t FSC25:1;
-    uint32_t FSC26:1;
-    uint32_t FSC27:1;
-    uint32_t FSC28:1;
-
-    uint32_t :4;
+    uint32_t bits;
 };
 
 struct [[nodiscard]] R32_CAN_FAFIFOR{
-    uint32_t FFA0:1;
-    uint32_t FFA1:1;
-    uint32_t FFA2:1;
-    uint32_t FFA3:1;
-    uint32_t FFA4:1;
-    uint32_t FFA5:1;
-    uint32_t FFA6:1;
-    uint32_t FFA7:1;
-    uint32_t FFA8:1;
-    uint32_t FFA9:1;
-
-    uint32_t FFA10:1;
-    uint32_t FFA11:1;
-    uint32_t FFA12:1;
-    uint32_t FFA13:1;
-    uint32_t FFA14:1;
-    uint32_t FFA15:1;
-    uint32_t FFA16:1;
-    uint32_t FFA17:1;
-    uint32_t FFA18:1;
-    uint32_t FFA19:1;
-
-    uint32_t FFA20:1;
-    uint32_t FFA21:1;
-    uint32_t FFA22:1;
-    uint32_t FFA23:1;
-    uint32_t FFA24:1;
-    uint32_t FFA25:1;
-    uint32_t FFA26:1;
-    uint32_t FFA27:1;
-    uint32_t FFA28:1;
-
-    uint32_t :4;
+    uint32_t bits;
 };
 
 struct [[nodiscard]] R32_CAN_FWR{
-    uint32_t FACT0:1;
-    uint32_t FACT1:1;
-    uint32_t FACT2:1;
-    uint32_t FACT3:1;
-    uint32_t FACT4:1;
-    uint32_t FACT5:1;
-    uint32_t FACT6:1;
-    uint32_t FACT7:1;
-    uint32_t FACT8:1;
-    uint32_t FACT9:1;
-
-    uint32_t FACT10:1;
-    uint32_t FACT11:1;
-    uint32_t FACT12:1;
-    uint32_t FACT13:1;
-    uint32_t FACT14:1;
-    uint32_t FACT15:1;
-    uint32_t FACT16:1;
-    uint32_t FACT17:1;
-    uint32_t FACT18:1;
-    uint32_t FACT19:1;
-
-    uint32_t FACT20:1;
-    uint32_t FACT21:1;
-    uint32_t FACT22:1;
-    uint32_t FACT23:1;
-    uint32_t FACT24:1;
-    uint32_t FACT25:1;
-    uint32_t FACT26:1;
-    uint32_t FACT27:1;
-    uint32_t FACT28:1;
-
-    uint32_t :4;
+    uint32_t bits;
 };
 
 struct [[nodiscard]] R32_CAN_FiR{
-    uint32_t FB0:1;
-    uint32_t FB1:1;
-    uint32_t FB2:1;
-    uint32_t FB3:1;
-    uint32_t FB4:1;
-    uint32_t FB5:1;
-    uint32_t FB6:1;
-    uint32_t FB7:1;
-    uint32_t FB8:1;
-    uint32_t FB9:1;
-
-    uint32_t FB10:1;
-    uint32_t FB11:1;
-    uint32_t FB12:1;
-    uint32_t FB13:1;
-    uint32_t FB14:1;
-    uint32_t FB15:1;
-    uint32_t FB16:1;
-    uint32_t FB17:1;
-    uint32_t FB18:1;
-    uint32_t FB19:1;
-
-    uint32_t FB20:1;
-    uint32_t FB21:1;
-    uint32_t FB22:1;
-    uint32_t FB23:1;
-    uint32_t FB24:1;
-    uint32_t FB25:1;
-    uint32_t FB26:1;
-    uint32_t FB27:1;
-    uint32_t FB28:1;
-
-    uint32_t :4;
+    uint32_t bits;
 };
+
+static_assert(sizeof(R32_CAN_FiR) == 4);
 
 struct [[nodiscard]] CAN_Def{
     struct [[nodiscard]] TxMailBox{
@@ -505,19 +357,34 @@ static_assert(__builtin_offsetof(CAN_Def, CAN_Def::sFifoMailBox[1]) == 0x1c0);
 struct [[nodiscard]] CAN_Filter_Def{
 private:
     struct [[nodiscard]] CAN_Filter_Pair{
-        R32_CAN_FiR FIR[2];
+        // R32_CAN_FiR FIR[2];
+        R32_CAN_FiR FR1;
+        R32_CAN_FiR FR2;
     };
 public:
     //0x40006600
     volatile R32_CAN_FCTLR FCTLR;
-
     volatile R32_CAN_FMCFGR FMCFGR;
+    uint32_t __RESV0__;
     volatile R32_CAN_FSCFGR FSCFGR;
+    uint32_t __RESV1__;
     volatile R32_CAN_FAFIFOR FAFIFOR;
+    uint32_t __RESV2__;
     volatile R32_CAN_FWR FWR;
 
-    volatile CAN_Filter_Pair FILTER[28];
+    uint32_t __RESV__[8];
+
+    volatile CAN_Filter_Pair FILTER_PAIR[28];
 };
+
+static_assert(__builtin_offsetof(CAN_Filter_Def, CAN_Filter_Def::FCTLR) == 0);
+static_assert(__builtin_offsetof(CAN_Filter_Def, CAN_Filter_Def::FMCFGR) == 4);
+static_assert(__builtin_offsetof(CAN_Filter_Def, CAN_Filter_Def::FSCFGR) == 0x0c);
+static_assert(__builtin_offsetof(CAN_Filter_Def, CAN_Filter_Def::FAFIFOR) == 0x14);
+static_assert(__builtin_offsetof(CAN_Filter_Def, CAN_Filter_Def::FWR) == 0x1c);
+static_assert(__builtin_offsetof(CAN_Filter_Def, CAN_Filter_Def::FILTER_PAIR[0]) == 0x40);
+static_assert(__builtin_offsetof(CAN_Filter_Def, CAN_Filter_Def::FILTER_PAIR[14]) == 0xb0);
+static_assert(__builtin_offsetof(CAN_Filter_Def, CAN_Filter_Def::FILTER_PAIR[27]) == 0x118);
 
 
 

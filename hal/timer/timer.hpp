@@ -139,9 +139,13 @@ public:
     using CountMode = TimerCountMode;
     using TrgoSource = TimerTrgoSource;
     using Callback = std::function<void(TimerEvent)>;
-private:
+protected:
     Callback event_callback_ = nullptr;
     void enable(const Enable en);
+    void invoke_callback(TimerEvent event){
+        if(event_callback_ == nullptr) [[unlikely]] return;
+        event_callback_(event);
+    }
 public:
     explicit BasicTimer(void * inst):
         inst_(inst),
@@ -220,12 +224,7 @@ protected:
     [[nodiscard]] uint32_t get_periph_clk_freq();
     void enable_rcc(const Enable en);
 
-    //处理中断响应
-    void accept_interrupt(const IT I){
-        if(event_callback_ == nullptr) [[unlikely]]
-            return;
-        event_callback_(I);
-    }
+    void on_common_interrupt();
 
     void dyn_enable_interrupt(IT I,Enable en);
 
@@ -242,7 +241,6 @@ class [[nodiscard]] GeneralTimer:public BasicTimer{
 protected:
     TimerOC channels_[4];
 private:
-    void on_interrupt();
 public:
     explicit GeneralTimer(void * inst):
         BasicTimer(inst),
@@ -266,6 +264,12 @@ public:
         return channels_[I - 1];
     }
 
+    //处理中断响应
+    void on_specified_interrupt(const IT I){
+        if(event_callback_ == nullptr) [[unlikely]]
+            return;
+        event_callback_(I);
+    }
 
     [[nodiscard]] bool is_up_counting();
 

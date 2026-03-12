@@ -13,25 +13,30 @@ using namespace ymd::hal;
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, USART_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, USART_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::USART_Def)>(x))
 
 
 
 namespace ymd::lld{ 
+
+void usart_enable_error_interrupt(void * p_inst_, const Enable en){
+	USART_ITConfig(SPL_INST(p_inst_), USART_IT_PE, (en == EN));
+	USART_ITConfig(SPL_INST(p_inst_), USART_IT_ERR, (en == EN));
+}
+
 void uart_enable_rxne_interrupt(void * p_inst, const Enable en){
-    USART_ClearITPendingBit(SDK_INST(p_inst), USART_IT_RXNE);
-    USART_ITConfig(SDK_INST(p_inst), USART_IT_RXNE, (en == EN));
+    USART_ClearITPendingBit(SPL_INST(p_inst), USART_IT_RXNE);
+    USART_ITConfig(SPL_INST(p_inst), USART_IT_RXNE, (en == EN));
 }
 
 
 void uart_enable_tx_interrupt(void * p_inst, const Enable en){
-    USART_ITConfig(SDK_INST(p_inst), USART_IT_TXE, (en == EN));
+    USART_ITConfig(SPL_INST(p_inst), USART_IT_TXE, (en == EN));
 }
 
 void uart_enable_idle_interrupt(void * p_inst, const Enable en){ 
-    USART_ClearITPendingBit(SDK_INST(p_inst), USART_IT_IDLE);
-    USART_ITConfig(SDK_INST(p_inst), USART_IT_IDLE, (en == EN));
+    USART_ITConfig(SPL_INST(p_inst), USART_IT_IDLE, (en == EN));
 }
 
 

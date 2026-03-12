@@ -1,15 +1,14 @@
-#include "can.hpp"
-#include "can_filter.hpp"
-
-#include "can_layout.hpp"
-
-#include "hal/sysmisc/nvic/nvic.hpp"
-#include "hal/gpio/gpio_port.hpp"
+#include "ral/can.hpp"
 
 #include "core/debug/debug.hpp"
 #include "core/utils/scope_guard.hpp"
 #include "core/sdk.hpp"
-#include "ral/can.hpp"
+
+#include "can.hpp"
+#include "can_layout.hpp"
+
+#include "hal/sysmisc/nvic/nvic.hpp"
+#include "hal/gpio/gpio_port.hpp"
 
 
 using namespace ymd;
@@ -28,13 +27,9 @@ static constexpr NvicPriority CAN_RX1_INTERRUPT_NVIC_PRIORITY = {1, 2};
 //CAN状态改变中断 NVIC优先级
 static constexpr NvicPriority CAN_SCE_INTERRUPT_NVIC_PRIORITY = {1, 1};
 
-#ifdef RELEASE
-#define DEBUG_TRAP() {};
-#define DEBUG_UNREACHABLE() __builtin_unreachable();
-#else
-#define DEBUG_TRAP() __builtin_trap();
-#define DEBUG_UNREACHABLE() __builtin_trap();
-#endif
+
+
+
 
 
 using EventCallback = Can::EventCallback;
@@ -45,8 +40,33 @@ using EventCallback = Can::EventCallback;
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, CAN_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, CAN_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::CAN_Def)>(x))
+
+
+#define CAN_READABLE_ABORT_REASON_EN 0
+
+#ifdef RELEASE
+
+//release 模式下尽可能避免panic导致的用户体验下降 同时对错误进行沉默处理 优化性能
+
+#define DEBUG_TRAP() {};
+#define DEBUG_UNREACHABLE() __builtin_unreachable();
+
+#define TRY_EMIT_EVENT(self, x)   \
+if(self.event_callback_ != nullptr) {\
+    self.event_callback_(x);\
+}else{/* do nothing */}
+
+#define TRY_EMIT_EVENT_OR_ABORT(self, x, str) TRY_EMIT_EVENT(self, x);
+#define ABORT(str) {;};
+
+
+#else
+
+
+#define DEBUG_TRAP() __builtin_trap();
+#define DEBUG_UNREACHABLE() __builtin_trap();
 
 
 #define TRY_EMIT_EVENT(self, x)   \
@@ -54,16 +74,33 @@ if(self.event_callback_ != nullptr) {\
     self.event_callback_(x);\
 }\
 
+#if CAN_READABLE_ABORT_REASON_EN == 1
 
-#define TRY_EMIT_EVENT_OR_ABORT(self, x, str)\
-if(self.event_callback_ != nullptr){\
-    self.event_callback_(x);\
-} else{\
+    #define TRY_EMIT_EVENT_OR_ABORT(self, x, str)\
+    if(self.event_callback_ != nullptr){\
+        self.event_callback_(x);\
+    } else{\
+        sys::abort(AbortInfo::from_reason(str));\
+    }\
+
+    #define ABORT(str)\
     sys::abort(AbortInfo::from_reason(str));\
-}\
 
-#define ABORT(str)\
-sys::abort(AbortInfo::from_reason(str));\
+#else
+
+    #define TRY_EMIT_EVENT_OR_ABORT(self, x, str)\
+    if(self.event_callback_ != nullptr){\
+        self.event_callback_(x);\
+    } else{\
+        sys::abort(AbortInfo::from_default());\
+    }\
+
+    #define ABORT(str)\
+    sys::abort(AbortInfo::from_default());\
+
+
+#endif
+#endif
 
 
 namespace {
@@ -136,7 +173,7 @@ static Option<CanMailboxIndex> can_get_idle_mailbox_index(void * p_inst){
         | lld::can_tstatr_tme_mask(CanMailboxIndex::_1) 
         | lld::can_tstatr_tme_mask(CanMailboxIndex::_2));
 
-    const uint32_t tempreg = SDK_INST(p_inst)->TSTATR;
+    const uint32_t tempreg = SPL_INST(p_inst)->TSTATR;
     const bool is_any_mailbox_idle = (tempreg & ANY_MAILBOX_IDLE_BITMASK) != 0;
     if(not is_any_mailbox_idle) return None;
     const uint8_t idle_mbox_idx_bits = static_cast<uint8_t>((tempreg & CAN_TSTATR_CODE) >> 24);
@@ -146,8 +183,8 @@ static Option<CanMailboxIndex> can_get_idle_mailbox_index(void * p_inst){
 template<CanFifoIndex fifo_idx>
 [[nodiscard]] static volatile uint32_t & can_get_rfifo_reg(void * p_inst){
     switch(fifo_idx){
-        case CanFifoIndex::_0: return SDK_INST(p_inst)->RFIFO0;
-        case CanFifoIndex::_1: return SDK_INST(p_inst)->RFIFO1;
+        case CanFifoIndex::_0: return SPL_INST(p_inst)->RFIFO0;
+        case CanFifoIndex::_1: return SPL_INST(p_inst)->RFIFO1;
     }
     __builtin_unreachable();
 }
@@ -156,33 +193,33 @@ template<uint32_t IT>
 [[nodiscard]] static ITStatus can_get_it_status(void * p_inst, const uint32_t inten_reg){
     if((inten_reg & IT) != RESET){
         if constexpr(IT == CAN_IT_TME){
-            return(SDK_INST(p_inst)->TSTATR & (CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2));  
+            return(SPL_INST(p_inst)->TSTATR & (CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2));  
         }else if constexpr(IT == CAN_IT_FMP0){
-            return (SDK_INST(p_inst)->RFIFO0 & CAN_RFIFO0_FMP0);  
+            return (SPL_INST(p_inst)->RFIFO0 & CAN_RFIFO0_FMP0);  
         }else if constexpr(IT == CAN_IT_FF0){
-            return (SDK_INST(p_inst)->RFIFO0 & CAN_RFIFO0_FULL0);  
+            return (SPL_INST(p_inst)->RFIFO0 & CAN_RFIFO0_FULL0);  
         }else if constexpr(IT == CAN_IT_FOV0){
-            return (SDK_INST(p_inst)->RFIFO0 & CAN_RFIFO0_FOVR0);  
+            return (SPL_INST(p_inst)->RFIFO0 & CAN_RFIFO0_FOVR0);  
         }else if constexpr(IT == CAN_IT_FMP1){
-            return (SDK_INST(p_inst)->RFIFO1 & CAN_RFIFO1_FMP1);  
+            return (SPL_INST(p_inst)->RFIFO1 & CAN_RFIFO1_FMP1);  
         }else if constexpr(IT == CAN_IT_FF1){
-            return (SDK_INST(p_inst)->RFIFO1 & CAN_RFIFO1_FULL1);  
+            return (SPL_INST(p_inst)->RFIFO1 & CAN_RFIFO1_FULL1);  
         }else if constexpr(IT == CAN_IT_FOV1){
-            return (SDK_INST(p_inst)->RFIFO1 & CAN_RFIFO1_FOVR1);  
+            return (SPL_INST(p_inst)->RFIFO1 & CAN_RFIFO1_FOVR1);  
         }else if constexpr (IT == CAN_IT_WKU)
-            return (SDK_INST(p_inst)->STATR & CAN_STATR_WKUI);  
+            return (SPL_INST(p_inst)->STATR & CAN_STATR_WKUI);  
         else if constexpr (IT == CAN_IT_SLK)
-            return (SDK_INST(p_inst)->STATR & CAN_STATR_SLAKI);  
+            return (SPL_INST(p_inst)->STATR & CAN_STATR_SLAKI);  
         else if constexpr (IT == CAN_IT_EWG)
-            return (SDK_INST(p_inst)->ERRSR & CAN_ERRSR_EWGF);  
+            return (SPL_INST(p_inst)->ERRSR & CAN_ERRSR_EWGF);  
         else if constexpr (IT == CAN_IT_EPV)
-            return (SDK_INST(p_inst)->ERRSR & CAN_ERRSR_EPVF); 
+            return (SPL_INST(p_inst)->ERRSR & CAN_ERRSR_EPVF); 
         else if constexpr (IT == CAN_IT_BOF)
-            return (SDK_INST(p_inst)->ERRSR & CAN_ERRSR_BOFF);  
+            return (SPL_INST(p_inst)->ERRSR & CAN_ERRSR_BOFF);  
         else if constexpr (IT == CAN_IT_LEC)
-            return (SDK_INST(p_inst)->ERRSR & CAN_ERRSR_LEC);  
+            return (SPL_INST(p_inst)->ERRSR & CAN_ERRSR_LEC);  
         else if constexpr (IT == CAN_IT_ERR)
-            return (SDK_INST(p_inst)->STATR & CAN_STATR_ERRI); 
+            return (SPL_INST(p_inst)->STATR & CAN_STATR_ERRI); 
     }
     return RESET;
 }
@@ -192,31 +229,31 @@ template<uint32_t IT>
 static void can_clear_it_pending_bit(void * p_inst)
 {
     if constexpr(IT == CAN_IT_TME){
-        SDK_INST(p_inst)->TSTATR = CAN_TSTATR_RQCP0 | CAN_TSTATR_RQCP1 | CAN_TSTATR_RQCP2;  
+        SPL_INST(p_inst)->TSTATR = CAN_TSTATR_RQCP0 | CAN_TSTATR_RQCP1 | CAN_TSTATR_RQCP2;  
     }else if constexpr(IT == CAN_IT_FF0){
-        SDK_INST(p_inst)->RFIFO0 = CAN_RFIFO0_FULL0;
+        SPL_INST(p_inst)->RFIFO0 = CAN_RFIFO0_FULL0;
     }else if constexpr(IT == CAN_IT_FOV0){
-        SDK_INST(p_inst)->RFIFO0 = CAN_RFIFO0_FOVR0;
+        SPL_INST(p_inst)->RFIFO0 = CAN_RFIFO0_FOVR0;
     }else if constexpr(IT == CAN_IT_FF1){
-        SDK_INST(p_inst)->RFIFO1 = CAN_RFIFO1_FULL1;
+        SPL_INST(p_inst)->RFIFO1 = CAN_RFIFO1_FULL1;
     }else if constexpr(IT == CAN_IT_FOV1){
-        SDK_INST(p_inst)->RFIFO1 = CAN_RFIFO1_FOVR1;
+        SPL_INST(p_inst)->RFIFO1 = CAN_RFIFO1_FOVR1;
     }else if constexpr(IT == CAN_IT_WKU){
-        SDK_INST(p_inst)->STATR = CAN_STATR_WKUI;
+        SPL_INST(p_inst)->STATR = CAN_STATR_WKUI;
     }else if constexpr(IT == CAN_IT_SLK){
-        SDK_INST(p_inst)->STATR = CAN_STATR_SLAKI;
+        SPL_INST(p_inst)->STATR = CAN_STATR_SLAKI;
     }else if constexpr(IT == CAN_IT_EWG){
-        SDK_INST(p_inst)->STATR = CAN_STATR_ERRI;
+        SPL_INST(p_inst)->STATR = CAN_STATR_ERRI;
     }else if constexpr(IT == CAN_IT_EPV){
-        SDK_INST(p_inst)->STATR = CAN_STATR_ERRI; 
+        SPL_INST(p_inst)->STATR = CAN_STATR_ERRI; 
     }else if constexpr (IT == CAN_IT_BOF){
-        SDK_INST(p_inst)->STATR = CAN_STATR_ERRI; 
+        SPL_INST(p_inst)->STATR = CAN_STATR_ERRI; 
     }else if constexpr (IT == CAN_IT_LEC){
-        SDK_INST(p_inst)->ERRSR = RESET; 
-        SDK_INST(p_inst)->STATR = CAN_STATR_ERRI; 
+        SPL_INST(p_inst)->ERRSR = RESET; 
+        SPL_INST(p_inst)->STATR = CAN_STATR_ERRI; 
     }else if constexpr (IT == CAN_IT_ERR){
-        SDK_INST(p_inst)->ERRSR = RESET; 
-        SDK_INST(p_inst)->STATR = CAN_STATR_ERRI; 
+        SPL_INST(p_inst)->ERRSR = RESET; 
+        SPL_INST(p_inst)->STATR = CAN_STATR_ERRI; 
 	}
 }
 
@@ -238,8 +275,8 @@ static void can_setup_interrupts(void * p_inst){
         #endif
     ;
 
-    CAN_ClearITPendingBit(SDK_INST(p_inst), it_mask);
-    CAN_ITConfig(SDK_INST(p_inst), it_mask, ENABLE);
+    CAN_ClearITPendingBit(SPL_INST(p_inst), it_mask);
+    CAN_ITConfig(SPL_INST(p_inst), it_mask, ENABLE);
 
     const auto inst_nth = lld::can_to_nth(reinterpret_cast<uintptr_t>(p_inst));
     switch(inst_nth.count()){
@@ -348,7 +385,7 @@ void Can::init(const Config & cfg){
         .CAN_TXFP = DISABLE,
     };
 
-    if(const auto status = CAN_Init(SDK_INST(p_inst_), &CAN_InitConf);
+    if(const auto status = lld::my_barecan_init(SPL_INST(p_inst_), &CAN_InitConf);
         status == CAN_InitStatus_Failed){
         //初始化失败
         DEBUG_TRAP();
@@ -357,6 +394,32 @@ void Can::init(const Config & cfg){
 
     can_setup_interrupts(p_inst_);
 
+}
+
+
+Result<void, Infallible> Can::configure_filter(
+    const Nth filter_nth, 
+    const hal::CanFifoIndex route_fifo_idx,
+    const hal::CanFilterConfig & filter_cfg
+){ 
+    if(filter_nth.count() >= lld::NUM_CAN_FILTERS) ABORT("filter_nth out of range");
+    lld::can_configure_filter(filter_nth.count(), route_fifo_idx, filter_cfg);
+    return Ok();
+}
+
+
+
+Result<void, Infallible> Can::set_filter_origin(
+    const Nth filter_offset 
+){
+    if(inst_nth_.count() == 1) {
+        if(filter_offset.count() != 0){
+            ABORT("can1 filter origin is always 0");
+        }
+    }
+    
+    lld::can_set_filter_origin(inst_nth_.count(), filter_offset.count());
+    return Ok();
 }
 
 void Can::deinit(){
@@ -440,11 +503,11 @@ uint32_t Can::get_aligned_bus_clk_freq(){
 }
 
 uint8_t Can::get_rx_errcnt(){
-    return static_cast<uint8_t>(SDK_INST(p_inst_)->ERRSR >> 24);
+    return static_cast<uint8_t>(SPL_INST(p_inst_)->ERRSR >> 24);
 }
 
 uint8_t Can::get_tx_errcnt(){
-    return static_cast<uint8_t>(SDK_INST(p_inst_)->ERRSR >> 16);
+    return static_cast<uint8_t>(SPL_INST(p_inst_)->ERRSR >> 16);
 }
 
 Option<Can::Error> Can::last_error(){
@@ -465,8 +528,10 @@ bool Can::is_busoff(){
     return bool(RAL_INST(p_inst_)->ERRSR.BOFF);
 }
 
+
+
 void Can::abort_transmit(const CanMailboxIndex mbox_idx){
-    SDK_INST(p_inst_)->TSTATR = lld::can_statr_rqcp_mask(mbox_idx);
+    SPL_INST(p_inst_)->TSTATR = lld::can_statr_rqcp_mask(mbox_idx);
 }
 
 void Can::abort_all_transmits(){
@@ -475,7 +540,7 @@ void Can::abort_all_transmits(){
         | lld::can_statr_rqcp_mask(CanMailboxIndex::_1)  
         | lld::can_statr_rqcp_mask(CanMailboxIndex::_2)
     ;
-    SDK_INST(p_inst_)->TSTATR = MASK;
+    SPL_INST(p_inst_)->TSTATR = MASK;
 }
 
 void Can::enable_rxfifo_lock(const Enable en){
@@ -486,9 +551,13 @@ void Can::enable_index_priority(const Enable en){
     RAL_INST(p_inst_)->CTLR.TXFP = (en == EN);
 }
 
+void Can::enable_debug_freeze(const Enable en){
+    RAL_INST(p_inst_)->CTLR.DBF = (en == EN);
+}
+
 
 void CanInterruptDispatcher::isr_tx(Can & self){
-    volatile uint32_t & tstatr_reg = SDK_INST(self.p_inst_)->TSTATR;
+    volatile uint32_t & tstatr_reg = SPL_INST(self.p_inst_)->TSTATR;
     const auto temp_tstatr = tstatr_reg;
     //遍历每个邮箱
 
@@ -624,57 +693,57 @@ void CanInterruptDispatcher::isr_rx(
 
 void CanInterruptDispatcher::isr_sce(Can & self){
     void * p_inst = self.p_inst_;
-    const uint32_t temp_inten_reg = SDK_INST(p_inst)->INTENR;
+    const uint32_t temp_inten_reg = SPL_INST(p_inst)->INTENR;
 
     auto flag_bits = hal::CanStatusFlag::zero();
 
-    if (can_get_it_status<CAN_IT_WKU>(SDK_INST(p_inst), temp_inten_reg)) {
+    if (can_get_it_status<CAN_IT_WKU>(SPL_INST(p_inst), temp_inten_reg)) {
         // Handle Wake-up interrupt
         // 唤醒中断
         flag_bits.wakeup = 1;
-        can_clear_it_pending_bit<CAN_IT_WKU>(SDK_INST(p_inst));
+        can_clear_it_pending_bit<CAN_IT_WKU>(SPL_INST(p_inst));
     } 
     
-    if (can_get_it_status<CAN_IT_SLK>(SDK_INST(p_inst), temp_inten_reg)) {
+    if (can_get_it_status<CAN_IT_SLK>(SPL_INST(p_inst), temp_inten_reg)) {
         // Handle Sleep acknowledge interrupt
         // 睡眠确认中断
         flag_bits.sleep_acknowledge = 1;
-        can_clear_it_pending_bit<CAN_IT_SLK>(SDK_INST(p_inst));
+        can_clear_it_pending_bit<CAN_IT_SLK>(SPL_INST(p_inst));
     } 
     
-    if (can_get_it_status<CAN_IT_ERR>(SDK_INST(p_inst), temp_inten_reg)) {
+    if (can_get_it_status<CAN_IT_ERR>(SPL_INST(p_inst), temp_inten_reg)) {
         // Handle Error interrupt
         // 错误中断
         flag_bits.error = 1;
-        can_clear_it_pending_bit<CAN_IT_ERR>(SDK_INST(p_inst));
+        can_clear_it_pending_bit<CAN_IT_ERR>(SPL_INST(p_inst));
     } 
     
-    if (can_get_it_status<CAN_IT_EWG>(SDK_INST(p_inst), temp_inten_reg)) {
+    if (can_get_it_status<CAN_IT_EWG>(SPL_INST(p_inst), temp_inten_reg)) {
         // Handle Error warning interrupt
         // 主动错误中断
         flag_bits.error_warning = 1;
-        can_clear_it_pending_bit<CAN_IT_EWG>(SDK_INST(p_inst));
+        can_clear_it_pending_bit<CAN_IT_EWG>(SPL_INST(p_inst));
     } 
     
-    if (can_get_it_status<CAN_IT_EPV>(SDK_INST(p_inst), temp_inten_reg)) {
+    if (can_get_it_status<CAN_IT_EPV>(SPL_INST(p_inst), temp_inten_reg)) {
         // Handle Error passive interrupt
         // 被动错误中断
         flag_bits.error_passive = 1;
-        can_clear_it_pending_bit<CAN_IT_EPV>(SDK_INST(p_inst));
+        can_clear_it_pending_bit<CAN_IT_EPV>(SPL_INST(p_inst));
     } 
     
-    if (can_get_it_status<CAN_IT_BOF>(SDK_INST(p_inst), temp_inten_reg)) {
+    if (can_get_it_status<CAN_IT_BOF>(SPL_INST(p_inst), temp_inten_reg)) {
         // Handle Bus-off interrupt
         // 掉线中断
         flag_bits.bus_off = 1;
-        can_clear_it_pending_bit<CAN_IT_BOF>(SDK_INST(p_inst));
+        can_clear_it_pending_bit<CAN_IT_BOF>(SPL_INST(p_inst));
     } 
     
-    if (can_get_it_status<CAN_IT_LEC>(SDK_INST(p_inst), temp_inten_reg)) {
+    if (can_get_it_status<CAN_IT_LEC>(SPL_INST(p_inst), temp_inten_reg)) {
         // Handle Last error code interrupt
         // 错误码中断
         flag_bits.last_error_code = 1;
-        can_clear_it_pending_bit<CAN_IT_LEC>(SDK_INST(p_inst));
+        can_clear_it_pending_bit<CAN_IT_LEC>(SPL_INST(p_inst));
     }
 
     TRY_EMIT_EVENT(self, CanEvent::from(flag_bits));

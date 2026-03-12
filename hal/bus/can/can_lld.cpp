@@ -1,5 +1,4 @@
 #include "can.hpp"
-#include "can_filter.hpp"
 
 #include "can_layout.hpp"
 
@@ -16,10 +15,143 @@
     std::add_const_t<b *>,\
     std::remove_const_t<b *>>\
 
-#define SDK_INST(x) (reinterpret_cast<COPY_CONST(x, CAN_TypeDef)>(x))
+#define SPL_INST(x) (reinterpret_cast<COPY_CONST(x, CAN_TypeDef)>(x))
 #define RAL_INST(x) (reinterpret_cast<COPY_CONST(x, ral::CAN_Def)>(x))
 
+using namespace ymd;
+
+namespace {
+
+static void set_or_reset_bits(bool cond, volatile uint32_t & reg, uint32_t mask){
+    if(cond){
+        reg = reg | mask;
+    }else{
+        reg = reg & (~mask);
+    }
+}
+
+template<typename T>
+T clone_volatile(volatile T * p_reg){
+    return *const_cast<T *>(p_reg);
+}
+
+template<typename T>
+void store_volatile(volatile T * p_reg, const T x){
+    *const_cast<T *>(p_reg) = x;
+}
+
+
+
+}
+
+[[maybe_unused]] static void ch32v20xd6_can_bugfix();
+
+#if defined (CH32H417)
+[[maybe_unused]] static void ch32h417_can_bugfix();
+#endif
+
 namespace ymd::lld{
+
+struct FinitGuard{
+    FinitGuard(){
+        ral::CAN_Filt->FCTLR.FINIT = 1;
+    };
+
+    ~FinitGuard(){
+        ral::CAN_Filt->FCTLR.FINIT = 0;
+    }
+};
+
+
+
+void can_configure_filter(
+    const size_t filter_nth, 
+    const hal::CanFifoIndex fifo_idx,
+    const hal::CanFilterConfig & filter_cfg
+){
+    auto * p_inst = ral::CAN_Filt;
+    
+    const uint32_t bitmask = 1u << filter_nth;
+    // p_inst->FCTLR.FINIT = 1;
+    auto guard = FinitGuard();
+
+    set_or_reset_bits(false, p_inst->FWR.bits, bitmask);
+
+    uint32_t FR1;
+    uint32_t FR2;
+
+    if (filter_cfg.is_32bit_) {
+        FR1 = (static_cast<uint32_t>(filter_cfg.id16[1]) << 16) |
+            static_cast<uint32_t>(filter_cfg.id16[0]);
+        
+        FR2 = (static_cast<uint32_t>(filter_cfg.mask16[1]) << 16) |
+            static_cast<uint32_t>(filter_cfg.mask16[0]);
+    } else {
+        FR1 = (static_cast<uint32_t>(filter_cfg.mask16[0]) << 16) |
+            static_cast<uint32_t>(filter_cfg.id16[0]);
+        
+        FR2 = (static_cast<uint32_t>(filter_cfg.mask16[1]) << 16) |
+            static_cast<uint32_t>(filter_cfg.id16[1]);
+    }
+
+    p_inst->FILTER_PAIR[filter_nth].FR1.bits = FR1;
+    p_inst->FILTER_PAIR[filter_nth].FR2.bits = FR2;
+
+    set_or_reset_bits(
+        filter_cfg.is_32bit_,
+        p_inst->FSCFGR.bits,
+        bitmask
+    );
+
+    #if defined (CH32V20x_D6)
+    ch32v20xd6_can_bugfix();
+    #endif
+
+    
+    set_or_reset_bits(
+        filter_cfg.is_list_mode_,
+        p_inst->FMCFGR.bits,
+        bitmask
+    );
+
+    set_or_reset_bits(
+        fifo_idx == hal::CanFifoIndex::_1,
+        p_inst->FAFIFOR.bits,
+        bitmask
+    );
+
+    set_or_reset_bits(
+        // filter_en == EN,
+        true,
+        p_inst->FWR.bits,
+        bitmask
+    );
+}
+
+void can_set_filter_origin(const size_t inst_nth, const size_t base){
+    auto guard = FinitGuard();
+    auto temp_reg = clone_volatile(&ral::CAN_Filt->FCTLR);
+    
+    switch(inst_nth){
+        #ifdef CAN1_PRESENT
+        case 1:
+            return;
+        #endif
+        #ifdef CAN2_PRESENT
+        case 2:
+            temp_reg.CAN2SB = base;
+            break;
+        #endif
+        #ifdef CAN3_PRESENT
+        case 3:
+            temp_reg.CAN3SB = base;
+            break;
+        #endif
+    }
+
+    store_volatile(&ral::CAN_Filt->FCTLR, temp_reg);
+    return;
+}
 
 Nth can_to_nth(const uintptr_t inst_base){
     switch(inst_base){
@@ -120,7 +252,7 @@ void can_set_remap(const Nth can_nth, const hal::CanRemap remap){
 void can_transmit(void * p_inst, const hal::CanMailboxIndex mbox_idx, const hal::BxCanFrame & frame){
     if(size_t(mbox_idx) > 2) __builtin_unreachable();
 
-    auto & mailbox_inst = SDK_INST(p_inst)->sTxMailBox[
+    auto & mailbox_inst = SPL_INST(p_inst)->sTxMailBox[
         static_cast<size_t>(mbox_idx)];
 
     const uint32_t tempmir = frame.identifier().to_sxx32_reg_bits();
@@ -141,7 +273,7 @@ void can_transmit(void * p_inst, const hal::CanMailboxIndex mbox_idx, const hal:
 }
 
 hal::BxCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx){
-    const auto & mailbox = SDK_INST(p_inst)->sFIFOMailBox[std::bit_cast<uint8_t>(fifo_idx)];
+    const auto & mailbox = SPL_INST(p_inst)->sFIFOMailBox[std::bit_cast<uint8_t>(fifo_idx)];
     const uint32_t rxmir = mailbox.RXMIR;
     const uint32_t rxmdtr = mailbox.RXMDTR;
 
@@ -157,4 +289,228 @@ hal::BxCanFrame can_receive(void * p_inst, const hal::CanFifoIndex fifo_idx){
 }
 
 
+
+
+
+uint8_t my_barecan_init(void * _CANx, const void * _CAN_InitStruct)
+{
+    CAN_TypeDef* CANx = reinterpret_cast<CAN_TypeDef*>(_CANx);
+    const CAN_InitTypeDef * CAN_InitStruct = reinterpret_cast<const CAN_InitTypeDef *>(_CAN_InitStruct);
+    static constexpr size_t INAK_TIMEOUT = 0x0000FFFF;
+	uint8_t InitStatus = CAN_InitStatus_Failed;
+	uint32_t wait_ack = 0x00000000;
+
+    #ifdef CH32H417
+    ch32h417_can_bugfix();
+    #endif
+
+	CANx->CTLR &= (~(uint32_t)CAN_CTLR_SLEEP);
+	CANx->CTLR |= CAN_CTLR_INRQ ;
+
+	while (((CANx->STATR & CAN_STATR_INAK) != CAN_STATR_INAK) && (wait_ack != INAK_TIMEOUT))
+	{
+		wait_ack++;
+	}
+
+	if ((CANx->STATR & CAN_STATR_INAK) != CAN_STATR_INAK)
+	{
+		InitStatus = CAN_InitStatus_Failed;
+	}
+	else 
+	{
+		if (CAN_InitStruct->CAN_TTCM == ENABLE)
+		{
+			CANx->CTLR |= CAN_CTLR_TTCM;
+		}
+		else
+		{
+			CANx->CTLR &= ~(uint32_t)CAN_CTLR_TTCM;
+		}
+
+		if (CAN_InitStruct->CAN_ABOM == ENABLE)
+		{
+			CANx->CTLR |= CAN_CTLR_ABOM;
+		}
+		else
+		{
+			CANx->CTLR &= ~(uint32_t)CAN_CTLR_ABOM;
+		}
+
+		if (CAN_InitStruct->CAN_AWUM == ENABLE)
+		{
+			CANx->CTLR |= CAN_CTLR_AWUM;
+		}
+		else
+		{
+			CANx->CTLR &= ~(uint32_t)CAN_CTLR_AWUM;
+		}
+
+		if (CAN_InitStruct->CAN_NART == ENABLE)
+		{
+			CANx->CTLR |= CAN_CTLR_NART;
+		}
+		else
+		{
+			CANx->CTLR &= ~(uint32_t)CAN_CTLR_NART;
+		}
+
+		if (CAN_InitStruct->CAN_RFLM == ENABLE)
+		{
+			CANx->CTLR |= CAN_CTLR_RFLM;
+		}
+		else
+		{
+			CANx->CTLR &= ~(uint32_t)CAN_CTLR_RFLM;
+		}
+
+		if (CAN_InitStruct->CAN_TXFP == ENABLE)
+		{
+			CANx->CTLR |= CAN_CTLR_TXFP;
+		}
+		else
+		{
+			CANx->CTLR &= ~(uint32_t)CAN_CTLR_TXFP;
+		}
+
+		CANx->BTIMR = (uint32_t)((uint32_t)CAN_InitStruct->CAN_Mode << 30) | \
+								((uint32_t)CAN_InitStruct->CAN_SJW << 24) | \
+								((uint32_t)CAN_InitStruct->CAN_BS1 << 16) | \
+								((uint32_t)CAN_InitStruct->CAN_BS2 << 20) | \
+								((uint32_t)CAN_InitStruct->CAN_Prescaler - 1);
+		CANx->CTLR &= ~(uint32_t)CAN_CTLR_INRQ;
+		wait_ack = 0;
+
+		while (((CANx->STATR & CAN_STATR_INAK) == CAN_STATR_INAK) && (wait_ack != INAK_TIMEOUT))
+		{
+			wait_ack++;
+		}
+
+		if ((CANx->STATR & CAN_STATR_INAK) == CAN_STATR_INAK)
+		{
+			InitStatus = CAN_InitStatus_Failed;
+		}
+		else
+		{
+			InitStatus = CAN_InitStatus_Success ;
+		}
+	}
+
+	return InitStatus;
 }
+
+
+}
+
+[[maybe_unused]] static void ch32v20xd6_can_bugfix(){
+    //见数据手册 我认为是给usbd和can的共享sram打补丁
+
+    if(((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)
+    {
+        uint32_t i;
+
+        for(i = 0; i < 64; i++){
+            *(volatile uint16_t *)(0x40006000 + 512 + 4 * i) = *(volatile uint16_t *)(0x40006000 + 768 + 4 * i);
+        }
+    }
+}
+
+#ifdef CH32H417
+[[maybe_unused]] static void ch32h417_can_bugfix(){
+	uint32_t chip = DBGMCU_GetCHIPID();
+	if((chip & 0x000000F0) == 0)
+	{
+		if(CAN1 == CANx)
+        {
+            (*(__IO uint32_t *)(0x40021014)) |= 0x02000000;
+            (*(__IO uint32_t *)(0x40021014)) &= ~(0x02000000);
+        }else if(CAN2 == CANx)
+        {
+            (*(__IO uint32_t *)(0x40021014)) |= 0x04000000;
+            (*(__IO uint32_t *)(0x40021014)) &= ~(0x04000000);
+        }else if(CAN3 == CANx)
+		{
+			(*(__IO uint32_t *)(0x40021014)) |= 0x01000000;
+            (*(__IO uint32_t *)(0x40021014)) &= ~(0x01000000);
+		}
+        
+        CANx->CTLR &= ~0x2;
+        CANx->CTLR |= 0x1;
+        
+        while(!(CANx->STATR & 0x1) && (wait_ack != 0x0000FFFF))
+        {
+            wait_ack++;
+        }
+
+        if((CANx->STATR & 0x1))
+        {
+            CANx->BTIMR = ( uint32_t)0xC1100000| \
+                                    ((uint32_t)SystemCoreClock/(((((*(__IO uint32_t *)(0x40021004)) >> 8) & 0x7) < 0x4) ? 1 : (uint32_t)0x2<<(((*(__IO uint32_t *)(0x40021004)) >> 8) & 0x3))/4000000 - 1);
+        }
+        else
+        {
+            return CAN_InitStatus_Failed;
+        }
+        CANx->CTLR &= ~0x1;
+        wait_ack = 0;
+        while((CANx->STATR & 0x1) && (wait_ack != 0x0000FFFF))
+        {
+            wait_ack++;
+        }
+
+        if((CANx->STATR & 0x1)){
+            return CAN_InitStatus_Failed;
+        }
+
+        (*(__IO uint32_t *)(0x4000660C)) |= 0xFFFFFFF;
+		(*(__IO uint32_t *)(0x40006620)) |= 0x3FF;
+        (*(__IO uint32_t *)(0x40006640)) = 0x0;
+        (*(__IO uint32_t *)(0x40006644)) = 0x0;
+        (*(__IO uint32_t *)(0x40006648)) = 0x0;
+        (*(__IO uint32_t *)(0x4000664C)) = 0x0;
+		(*(__IO uint32_t *)(0x40006650)) = 0x0;
+        (*(__IO uint32_t *)(0x40006654)) = 0x0;
+        (*(__IO uint32_t *)(0x4000661C)) |= 0xFFFFFFF;	
+		(*(__IO uint32_t *)(0x40006620)) |= 0x3FF;	
+		(*(__IO uint32_t *)(0x40006600)) = 0x2A010101;
+        (*(__IO uint32_t *)(0x40006600)) &= ~0x1; 	
+        if(CAN1 == CANx)
+        {
+            (*(__IO uint32_t *)(0x40006580)) |= 0x3;
+            while(!((*(__IO uint32_t *)(0x4000640C)) & 0x3));
+            (*(__IO uint32_t *)(0x4000640C)) = 0x38;
+        }else if (CAN2 == CANx)
+        {
+            (*(__IO uint32_t *)(0x40006980)) |= 0x3;
+            while(!((*(__IO uint32_t *)(0x4000680C)) & 0x3));
+            (*(__IO uint32_t *)(0x4000680C)) = 0x38;
+        }else if (CAN3 == CANx)
+        {
+            (*(__IO uint32_t *)(0x40007980)) |= 0x3;
+            while(!((*(__IO uint32_t *)(0x4000780C)) & 0x3));
+            (*(__IO uint32_t *)(0x4000780C)) = 0x38;
+        }
+
+        if(CAN1 == CANx)
+        {
+            (*(__IO uint32_t *)(0x40021014)) |= 0x02000000;
+            (*(__IO uint32_t *)(0x40021014)) &= ~(0x02000000);
+        }else if(CAN2 == CANx)
+        {
+            (*(__IO uint32_t *)(0x40021014)) |= 0x04000000;
+            (*(__IO uint32_t *)(0x40021014)) &= ~(0x04000000);
+        }else if(CAN3 == CANx)
+		{
+			(*(__IO uint32_t *)(0x40021014)) |= 0x01000000;
+            (*(__IO uint32_t *)(0x40021014)) &= ~(0x01000000);
+		}
+        (*(__IO uint32_t *)(0x40006600)) |= 0x1; 	
+        (*(__IO uint32_t *)(0x4000660C)) |= 0xFFFFFFF;	
+        (*(__IO uint32_t *)(0x4000661C)) |= 0xFFFFFFF;	
+        (*(__IO uint32_t *)(0x40006600)) &= ~0x1;
+		(*(__IO uint32_t *)(0x40006600)) |= 0x1; 	
+		(*(__IO uint32_t *)(0x40006600)) = 0x2A010101;
+		(*(__IO uint32_t *)(0x40006600)) &= ~0x1;
+        wait_ack = 0;
+	}
+}
+#endif

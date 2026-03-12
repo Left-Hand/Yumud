@@ -13,6 +13,8 @@
 
 namespace ymd::lld{
 
+void usart_enable_error_interrupt(void * p_inst_, const Enable en);
+
 void uart_enable_rxne_interrupt(void * p_inst, const Enable en);
 
 void uart_enable_tx_interrupt(void * p_inst, const Enable en);

@@ -113,31 +113,7 @@ struct LrSeriesCurrentRegulatorConfig{
 };
 
 
-struct [[nodiscard]] TemperatureCompensator final{ 
-    using Self = TemperatureCompensator;
 
-    static constexpr uintptr_t REFER_VOLT_BASE = 0x1FFFF720;
-    static constexpr float COEFF1 = (-3300.0 * 10 / 4096 / 43);
-    static constexpr iq16 COEFF1_IQ16 = static_cast<iq16>(COEFF1);
-    static constexpr float COEFF2 = (10.0 / 43);
-
-    iq16 b;
-
-    static imconstexpr Self load() {
-        const uint32_t compressed_u32 = *reinterpret_cast<const volatile uint32_t*>(REFER_VOLT_BASE);
-        const int32_t refer_volt = static_cast<int32_t>((compressed_u32) & 0xffff);
-        const int32_t refer_temper = static_cast<int32_t>((compressed_u32) >> 16);
-        
-        return Self{
-            .b = static_cast<iq16>(refer_temper) + static_cast<iq16>(COEFF2) * refer_volt
-        };
-    }
-    
-    constexpr iq16 comp_u12(const uint16_t x) const {
-        constexpr uint16_t K = static_cast<uint16_t>(-COEFF1 * 65536);
-        return iq16::from_bits(b.to_bits() - (K * x)); 
-    }
-};
 
 #if 0
 [[maybe_unused]] auto speed_compansate_dq_volt = [&]{
@@ -1010,7 +986,7 @@ void myesc_main(){
 
     clock::delay(2ms);
 
-    const auto temp_comp = TemperatureCompensator::load();
+    const auto temp_comp = hal::TemperatureCompensator::load();
     iq16 temperature_ = temp_comp.comp_u12(hal::adc1.inj<4>().read_u12());
     
     while(true){

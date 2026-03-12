@@ -6,10 +6,10 @@
 #include <type_traits>
 #include <array>
 
-#include "hal/sysmisc/nvic/nvic.hpp"
-
-#include "dma_utils.hpp"
 #include "core/utils/nth.hpp"
+
+#include "hal/sysmisc/nvic/nvic.hpp"
+#include "dma_primitive.hpp"
 
 
 namespace ymd::hal{
@@ -151,7 +151,7 @@ public:
         const WordSize dst_wordsize
     );
 
-    __fast_inline void accept_interrupt(DmaEvent event){
+    __fast_inline void on_interrupt(DmaEvent event){
         EXECUTE(event_callback_, event);
     }
     
