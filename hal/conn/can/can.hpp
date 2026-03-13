@@ -129,6 +129,7 @@ public:
         const Nth filter_offset 
     );
 
+    size_t queue_full_count = 0;
 private:
     void * p_inst_;
     Nth inst_nth_;

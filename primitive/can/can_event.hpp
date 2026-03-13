@@ -8,17 +8,10 @@ namespace ymd::hal::can{
 
 /// @brief CAN发送事件
 struct alignas(4) TransmitEvent{
-    enum class [[nodiscard]] Kind:uint8_t{
-        Failed,
-        Success
-    };
-
     using Self = TransmitEvent;
-    using enum Kind;
 
-    Kind kind;
     MailboxIndex mbox_idx;
-    uint16_t _padding = 0;
+    uint8_t code;
 };
 
 static_assert(sizeof(TransmitEvent) == 4);
@@ -26,17 +19,17 @@ static_assert(sizeof(TransmitEvent) == 4);
 /// @brief CAN接收事件
 struct alignas(4) [[nodiscard]] ReceiveEvent final{
     enum class [[nodiscard]] Kind:uint8_t{
-        FifoPending,
         FifoFull,
         FifoOverrun,
+        FrameEnqueued,
+        FrameEnqueueFailed,
     };
 
     using Self = ReceiveEvent;
     using enum Kind;
 
-    Kind kind;
     FifoIndex fifo_idx;
-    uint16_t _padding = 0;
+    Kind kind;
 };
 
 static_assert(sizeof(ReceiveEvent) == 4);
@@ -51,7 +44,7 @@ struct alignas(4) [[nodiscard]] StatusFlag final{
     uint32_t bus_off:1 = 0;
     uint32_t last_error_code:1 = 0;
     uint32_t error:1 = 0;
-    uint32_t __resv__:1+16 = 0;
+    uint32_t __resv__:1 = 0;
 
     static consteval Self zero(){
         return Self{};
