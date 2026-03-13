@@ -10,7 +10,7 @@ namespace ymd::hal{
 class DmaChannel;
 
 struct Uart;
-struct UartInterruptDispatcher{
+struct UartIrqHandler{
     static void on_interrupt(Uart & self);
 
     static void isr_txe(Uart & self);
@@ -67,7 +67,7 @@ public:
     volatile size_t tx_dma_buf_index_ = 0;
     volatile size_t rx_dma_buf_index_ = 0;
 
-    friend class UartInterruptDispatcher;
+    friend class UartIrqHandler;
 };
 
 

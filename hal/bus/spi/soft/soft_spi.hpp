@@ -69,6 +69,7 @@ public:
         uint32_t ret;
         static constexpr uint32_t dummy = 0;
         blocking_transceive(ret, dummy); 
+        data = ret;
         return hal::HalResult::Ok();
     }
 

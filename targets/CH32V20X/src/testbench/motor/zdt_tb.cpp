@@ -45,7 +45,7 @@ void zdt_main(){
     COMM_CAN.init({
         .remap = hal::CanRemap::_0,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
 
     COMM_CAN.enable_hw_retransmit(DISEN);

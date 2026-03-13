@@ -19,6 +19,7 @@ using namespace ymd;
 
 
 static hal::Gpio i2c_get_scl(const void * inst, const uint8_t remap){
+    (void)remap;
     switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef I2C1_PRESENT
         case I2C1_BASE:
@@ -35,6 +36,7 @@ static hal::Gpio i2c_get_scl(const void * inst, const uint8_t remap){
 }
 
 static hal::Gpio i2c_get_sda(const void * inst, const uint8_t remap){
+    (void)remap;
     switch(reinterpret_cast<uint32_t>(inst)){
         #ifdef I2C1_PRESENT
         case I2C1_BASE:
@@ -56,27 +58,49 @@ I2c::I2c(void * inst):
     sda_(i2c_get_sda(inst, 0))
     {;}
 
-
-void I2c::enable_rcc(const Enable en){
-    switch(reinterpret_cast<uint32_t>(SPL_INST(inst_))){
+static constexpr Nth i2c_calc_nth([[maybe_unused]] const uintptr_t inst_base){
+    switch(inst_base){
         #ifdef I2C1_PRESENT
         case I2C1_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, en);
-            if(I2C1_REMAP){
-                GPIO_PinRemapConfig(GPIO_Remap_I2C1, ENABLE);
-            }
+            return 1_nth;
             break;
         #endif
 
         #ifdef I2C2_PRESENT
         case I2C2_BASE:
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, en);
+            return 2_nth;
+            break;
+        #endif
+    }
+    __builtin_trap();
+}
+
+static void i2c_enable_rcc(
+    [[maybe_unused]] const Nth i2c_nth, 
+    [[maybe_unused]] const Enable en
+){
+    switch(i2c_nth.count()){
+        #ifdef I2C1_PRESENT
+        case 1:
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, en == EN);
+            if(I2C1_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_I2C1, en == EN);
+            }
+            break;
+        #endif
+
+        #ifdef I2C2_PRESENT
+        case 2:
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, en == EN);
             break;
         #endif
 
         default:
             break;
     }
+}
+void I2c::enable_rcc(const Enable en){
+    i2c_enable_rcc(i2c_calc_nth(reinterpret_cast<uintptr_t>(inst_)), en);
 }
 
 

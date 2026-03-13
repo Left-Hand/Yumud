@@ -307,7 +307,7 @@ void polar_robot_main(){
     can.init({
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
 
     can.enable_hw_retransmit(DISEN);
@@ -316,7 +316,7 @@ void polar_robot_main(){
         0_nth, 
         hal::CanFifoIndex::_0,
         hal::CanFilterConfig::accept_all()
-    );
+    ).unwrap();
 
     zdtmotor::ZdtFrameFactory factory1{.node_id = {1}};
     zdtmotor::ZdtFrameFactory factory2{.node_id = {2}};

@@ -89,13 +89,15 @@ public:
 
     struct DummyReceiver{
         template<typename T>
-        DummyReceiver & operator <<(T && arg){
+        DummyReceiver & operator <<([[maybe_unused]] T && arg){
             //do nothing
             return *this;
         }
 
         template<typename ... Args>
-        void println(Args && ... args){;}
+        void println([[maybe_unused]] Args && ... args){
+            
+        }
     };
 };
 }

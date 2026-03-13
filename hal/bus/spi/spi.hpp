@@ -14,7 +14,7 @@ namespace ymd::hal{
 
 class Gpio;
 
-struct SpiInterruptDispatcher{
+struct SpiIrqHandler{
 
 };
 

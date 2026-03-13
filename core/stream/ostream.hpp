@@ -634,6 +634,7 @@ public:
         }
 
         __inline friend OutputStream & operator<<(OutputStream & os, const FieldName & self){
+            (void)self;
             return os;
         }
     private:
@@ -666,6 +667,7 @@ public:
         }
 
         friend OutputStream & operator<<(OutputStream & os, const ScopedInfo & info){
+            (void)info;//unused
             return os;
         }
     private:

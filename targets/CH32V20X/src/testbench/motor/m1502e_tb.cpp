@@ -186,7 +186,7 @@ void m1502e_main(){
     can.init({
         .remap = hal::CAN1_REMAP_PB9_PB8,//tx:b9 rx:b8
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_500K)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_500K)
     });
 
     can.configure_filter(

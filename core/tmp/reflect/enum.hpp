@@ -99,7 +99,9 @@ consteval size_t _enum_count_valid() {
 }
 
 template <typename E, size_t... I> 
-consteval size_t _enum_internal_element_count(std::integer_sequence<size_t, I...> unused) {
+consteval size_t _enum_internal_element_count(
+    [[maybe_unused]] std::integer_sequence<size_t, I...> _
+) {
     return _enum_count_valid<E, (E)I...>();
 }
 

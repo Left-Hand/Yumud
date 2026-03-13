@@ -25,12 +25,12 @@ struct CanFilter;
 
 struct Can;
 
-struct CanInterruptDispatcher{
-    static void isr_tx(Can & can);
-    static void isr_rx(Can & can, volatile uint32_t & rfifo_reg, const CanFifoIndex fifo_idx);
-    static void isr_rx0(Can & can);
-    static void isr_rx1(Can & can);
-    static void isr_sce(Can & can);
+struct CanIrqHandler{
+    static void isr_tx(Can & self);
+    static void isr_rx(Can & self, const CanFifoIndex fifo_idx);
+    static void isr_rx0(Can & self);
+    static void isr_rx1(Can & self);
+    static void isr_sce(Can & self);
 };
 
 class [[nodiscard]] Can final{
@@ -155,7 +155,7 @@ private:
     [[nodiscard]] uint32_t get_aligned_bus_clk_freq();
 
     friend class CanFilter;
-    friend class CanInterruptDispatcher;
+    friend class CanIrqHandler;
 };
 
 

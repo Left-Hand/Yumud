@@ -67,6 +67,8 @@ void AdcPrimary::init(
     const std::initializer_list<AdcChannelConfig> & injected_list, 
     const Config & cfg
 ){
+    (void)cfg;
+
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
     RCC_ADCCLKConfig(RCC_PCLK2_Div8);	
     ADC_DeInit(SPL_INST(inst_));

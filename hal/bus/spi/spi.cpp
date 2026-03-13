@@ -250,6 +250,7 @@ void Spi::alter_to_pins(const SpiRemap remap){
 }
 
 void Spi::enable_hw_cs(const Enable en){
+
     #if 0
     auto && cs_gpio = spi_to_hwcs_gpio(inst_, remap);
     cs_gpio.set_high();
@@ -262,6 +263,7 @@ void Spi::enable_hw_cs(const Enable en){
 
     inst_->enable_soft_cs(!en);
     #else
+    (void)(en);
     __builtin_trap();
     #endif
 }
@@ -366,7 +368,7 @@ HalResult Spi::set_bitorder(const BitOrder bitorder){
 }
 
 void Spi::on_interrupt(const SpiI2sIT it){
-
+    (void)it;
 }
 
 void Spi::deinit(){

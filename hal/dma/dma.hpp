@@ -27,7 +27,7 @@ static constexpr dma::WordSize type_to_dma_wordsize_v = [] -> dma::WordSize{
 };
 
 
-struct DmaInterruptDispatcher{};
+struct DmaIrqHandler{};
 struct DmaChannel final{
 
 public:
@@ -157,7 +157,7 @@ public:
     
     void start_transfer(const uintptr_t dst_addr, const uintptr_t src_addr, size_t size);
 
-    friend class DmaInterruptDispatcher;
+    friend class DmaIrqHandler;
 };
 
 

@@ -256,6 +256,7 @@ IResult<> SC8815::enable_trikle_charge(const Enable en){
 }
 
 IResult<> SC8815::enable_ovp_protect(const Enable en){
+    (void)en;
     TODO();
     return Ok();
 }

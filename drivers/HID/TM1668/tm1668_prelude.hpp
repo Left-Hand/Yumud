@@ -126,6 +126,7 @@ public:
     }
 private:
     IResult<> write_display_cmd(const DisplayCommand cmd){
+        (void)cmd;
         // return write_u8x2(uint8_t(DataCommand::MODE_CMD), cmd.to_u8());
         return Ok();
     }

@@ -27,7 +27,7 @@ void m3508_main(){
     hal::can1.init({
         .remap = 0,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
 
     M3508Port port{hal::can1};

@@ -14,9 +14,10 @@ using namespace ymd::hal;
 
 
 AdcInjectedChannel::AdcInjectedChannel(
-    void * inst, 
+    void * inst,
     const uint8_t rank
 ):
+    inst_(inst),
     rank_(rank),
     mask_((ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (rank_ - 1) + ADC_InjectedChannel_1){;}
 

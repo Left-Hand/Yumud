@@ -9,6 +9,7 @@ using namespace ymd;
 extern "C"{
 
 int _write(int file, char * buf_begin, int len){
+    (void)file;
     DEBUGGER.write_bytes(std::span(
         reinterpret_cast<const uint8_t *>(buf_begin),
         len
@@ -30,10 +31,14 @@ void *_sbrk(ptrdiff_t incr){
 }
 
 void _exit(int status){
+    (void)status;
     __builtin_trap();
 }
 
 ssize_t _read(int fd, void *buf, size_t count){
+    (void)fd;
+    (void)buf;
+    (void)count;
     return 0;
 }
 
@@ -41,6 +46,8 @@ void _init(void) {}
 void _fini(void) {}
 
 void _kill(int pid, int sig) {
+    (void)pid;
+    (void)sig;
     // 空实现
 }
 
@@ -49,17 +56,20 @@ pid_t _getpid(){
 }
 
 int raise(int sig) {
+    (void)sig;
     // 不执行任何操作
     return 0; // 返回0表示成功
 }
 
 void abort(void){
-  while(1);
+    while(1);
 }
 
 void *__dso_handle = nullptr;
-void __cxa_atexit(void (*func)(void), void *objptr, void *dso_handle) {}
-
+void __cxa_atexit(void (*func)(void), void *objptr, void *dso_handle){
+    (void)func;
+    (void)objptr;
+    (void)dso_handle;
 }
 
 // 避免链接器错误，提供空实现
@@ -67,8 +77,6 @@ void __cxa_pure_virtual() {
     // 纯虚函数调用时的处理
     while(1);  // 或你的错误处理
 }
-
-extern "C" {
 
 
 // ------------------------------------------------------------

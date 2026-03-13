@@ -126,10 +126,10 @@ static_assert(math::signbit(iq16(-167)) == 1);
 static_assert(math::signbit(iq31(0.5)) == 0);
 static_assert(math::signbit(iq31(-0.5)) == 1);
 
-static_assert(math::square(iq16(2)) = 4);
-static_assert(math::square(uq29(2)) = 4);
-static_assert(math::square(iq29(-2)) = 4);
-static_assert(math::square(uq16(2)) = 4);
-static_assert(math::square(uq16(100)) = 10000);
+static_assert(math::square(iq16(2)) == 4);
+static_assert(math::square(uq29(2)) == 4);
+static_assert(math::square(iq29(-2)) == 4);
+static_assert(math::square(uq16(2)) == 4);
+static_assert(math::square(uq16(100)) == 10000);
 
 }

@@ -149,7 +149,7 @@ IResult<> Self::set_led_current_dutycycle(
     const hal::PinMask pin_mask, 
     const iq16 dutycycle
 ){
-    TODO();
+
     #if 0
     auto iter = pin_mask.iter();
     while(iter.has_next()){
@@ -161,6 +161,10 @@ IResult<> Self::set_led_current_dutycycle(
             res.is_err()) return Err(res.unwrap_err());
 
     }
+    #else
+    (void)pin_mask;
+    (void)dutycycle;
+    TODO();
     #endif
     return Ok();
 }

@@ -22,7 +22,7 @@ void m2006_main(){
     can.init({
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M), 
     });
 
     can.configure_filter(

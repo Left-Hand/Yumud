@@ -445,15 +445,17 @@ struct [[nodiscard]] GetError final{
         uint32_t controller_exception;
         uint32_t system_exception;
     };
-static constexpr Result<Self, DeMsgError> 
-    
-try_from_bytes(const std::span<const uint8_t, 8> bytes){
+
+    static constexpr Result<Self, DeMsgError> 
+    try_from_bytes(const std::span<const uint8_t, 8> bytes){
         Self self;
         self.motor_exception = le_bytes_to_int<uint64_t>(bytes);
         return Ok(self);
     }
+
+
     friend OutputStream & operator<<(OutputStream & os, const Self & self) {
-        return os;
+        return os << self.motor_exception;
     }
 };
 

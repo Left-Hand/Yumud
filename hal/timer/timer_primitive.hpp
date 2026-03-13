@@ -53,7 +53,7 @@ static constexpr std::tuple<uint16_t, uint16_t> calc_best_arr_and_psc(
         for(int psc = expect_psc - 2; psc < expect_psc + 2; psc++){
             const uint32_t freq = calc_freq_from_arr_and_psc(arr, psc);
             if(last_freq_.has_value()){
-                if((last_freq_.value() - count_freq) * (freq - count_freq) < 0) break;
+                if((int32_t(last_freq_.value()) - int32_t(count_freq)) * (int32_t(freq) - int32_t(count_freq)) < 0) break;
             }else{
                 last_freq_ = freq;
             }

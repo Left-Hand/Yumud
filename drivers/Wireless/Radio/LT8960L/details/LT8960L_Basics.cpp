@@ -107,6 +107,7 @@ IResult<> LT8960L::set_tx_power(const LT8960L::Power power){
 }
 
 IResult<> trasmit_rf(const std::span<uint8_t> buf){
+    (void)buf;
     TODO();
     return Ok();
 }

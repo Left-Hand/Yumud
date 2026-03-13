@@ -3,12 +3,16 @@
 
 using namespace ymd::hal;
 
-void UartSw::init(const Config & cfg){
+void SoftUart::init(const Config & cfg){
     set_rx_strategy(cfg.rx_strategy);
     set_tx_strategy(cfg.tx_strategy);
 }
 
-void UartSw::tick(){
+void SoftUart::set_parity(const Parity parity){
+    parity_ = parity;
+}
+
+void SoftUart::tick(){
     // tx_pin_.toggle();
     switch(prog_){
         case ByteProg::START:
@@ -37,10 +41,12 @@ void UartSw::tick(){
 
 }
 
-void UartSw::set_tx_strategy(const CommStrategy tx_strategy){
+void SoftUart::set_tx_strategy(const CommStrategy tx_strategy){
+    (void)(tx_strategy);
     tx_pin_.outpp(HIGH);
 }
 
-void UartSw::set_rx_strategy(const CommStrategy rx_strategy){
+void SoftUart::set_rx_strategy(const CommStrategy rx_strategy){
+    (void)(rx_strategy);
     rx_pin_.inpu();
 }

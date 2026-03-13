@@ -28,13 +28,13 @@ enum class [[nodiscard]] JedecManufacturer:uint8_t{
 };
 
 enum class [[nodiscard]] JedecStorageType:uint8_t{
-    SRAM = 0x01,
-    NOR_Flash = 0x02,
-    NAND_Flash = 0x04,
-    Fast_Read_Flash = 0x08,
-    Sector_Erase_Flash = 0x10,
-    Block_Erase_Flash = 0x20,
-    Page_Program_Flash = 0x40,
+    Sram = 0x01,
+    Nor = 0x02,
+    Nand = 0x04,
+    FastReadFlash = 0x08,
+    SectorEraseFlash = 0x10,
+    BlockEraseFlash = 0x20,
+    PageProgramFlash = 0x40,
 };
 
 class OutputStream;

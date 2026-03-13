@@ -53,6 +53,29 @@ using IResult = Result<T, Error>;
 
 using R16_Flag = LT8920_Regset::R16_Flag;
 
+IResult<> LT8920_SpiTransport::write_reg(FlagReg & flag_reg, const uint8_t reg_addr, const uint16_t reg_val){
+    if(const auto res = 
+        spi_drv_.transceive_single(
+            reinterpret_cast<uint8_t &>(flag_reg), 
+            uint8_t(reg_addr), CONT);
+        res.is_err()) return Err(res.unwrap_err());
+    delayT3();
+
+    if(const auto res = 
+        spi_drv_.write_single<uint16_t>(reg_val);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
+}
+
+IResult<> LT8920_SpiTransport::read_reg(FlagReg & flag_reg, const uint8_t reg_addr, uint16_t & reg_val){
+    if(const auto res = spi_drv_.transceive_single(
+        (flag_reg.as_bytes_mut()[0]), 
+        uint8_t(reg_addr | 0x80), CONT); 
+    res.is_err()) return Err(res.unwrap_err());
+    if(const auto res = spi_drv_.read_single<uint16_t>(reg_val);
+        res.is_err()) return Err(res.unwrap_err());
+    return Ok();
+}
 
 
 IResult<> LT8920::validate(){

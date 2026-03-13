@@ -504,7 +504,7 @@ __always_inline static constexpr void static_fmt_u32(
 		const auto [q, r] = fast_div<Radix>(value);
 		str[--i] = digit2char(r);
 		value = q;
-	} while (i > 0 && value >= 0);
+	} while (i > 0);
 
 	if constexpr(S == DigitPaddingStrategy::ZeroPadded){
 		while (i > 0) {
@@ -532,7 +532,7 @@ __always_inline static constexpr void dyn_fmt_u32(
 				uint8_t digit = int_val % radix_count;
 				str[--i] = digit2char(digit);
 				int_val /= radix_count;
-			} while (i > 0 && int_val >= 0);
+			} while (i > 0);
 
 			if constexpr( S == DigitPaddingStrategy::ZeroPadded){
 				while (i > 0) {

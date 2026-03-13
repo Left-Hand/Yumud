@@ -114,8 +114,13 @@ public:
         return fixed<Q, D>::from_bits(bits);
     };
 
-    __attribute__((always_inline)) constexpr fixed(const fixed<Q, D> & other):
-        bits(other.bits){};
+    template<size_t P>
+    __attribute__((always_inline)) constexpr fixed(const fixed<P, D> & other):
+        bits(fixed<P, D>::template transform<Q>(other.to_bits())){};
+
+    template<size_t P>
+    __attribute__((always_inline)) constexpr fixed(fixed<P, D> && other):
+        bits(fixed<P, D>::template transform<Q>(other.to_bits())){};
 
 
     template<size_t P, typename U>

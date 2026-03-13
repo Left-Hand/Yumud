@@ -146,6 +146,8 @@ OutputStream & OutputStream::operator<<(const std::_Setw){
 
 OutputStream & OutputStream::operator<<(const std::_Setfill<char> setfill){
     //TODO
+
+    (void)setfill;
     return *this;
 }
 
@@ -219,6 +221,15 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     this->println(loc.file_name(), '(', loc.line(), ':', loc.column(), ')');
 }
 
+template<typename T>
+static constexpr bool is_positive(T val){
+    if constexpr(std::is_signed_v<T>) {
+        return val >= 0;
+    } else {
+        return true;
+    }
+} 
+
 #define PRINT_NUMERIC_BEGIN(cap)\
     std::array<char, cap> buf;\
     char * p_str = buf.data();\
@@ -227,9 +238,11 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     size_t len = convfunc(p_str, val, ##__VA_ARGS__) - p_str;\
     this->write_bytes(std::span(reinterpret_cast<const uint8_t *>(buf.data()), len));\
 
+
+
 #define PRINT_NUMERIC_TEMPLATE(val, cap, convfunc, ...)\
     PRINT_NUMERIC_BEGIN(cap)\
-    if((config_.specifier.showpos and val >= 0)) [[unlikely]]{\
+    if((config_.specifier.showpos and is_positive(val))) [[unlikely]]{\
         p_str[0] = ('+');\
         p_str++;}\
     PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\
@@ -238,7 +251,7 @@ void OutputStream::print_source_loc(const std::source_location & loc){
     PRINT_NUMERIC_BEGIN(cap)\
     if((config_.specifier.showbase)) [[unlikely]]{\
         p_str = put_basealpha_lower(p_str, config_.radix);}\
-    else {if((config_.specifier.showpos and val >= 0)) [[unlikely]]{\
+    else {if((config_.specifier.showpos and is_positive(val))) [[unlikely]]{\
         p_str[0] = ('+');\
         p_str++;}}\
     PRINT_NUMERIC_END(convfunc, ##__VA_ARGS__)\

@@ -42,49 +42,49 @@ extern "C"{
 
 #ifdef USART1_PRESENT
 __interrupt void USART1_IRQHandler(){
-    ymd::hal::UartInterruptDispatcher::on_interrupt(ymd::hal::usart1);
+    ymd::hal::UartIrqHandler::on_interrupt(ymd::hal::usart1);
 }
 #endif
 
 #ifdef USART2_PRESENT
 __interrupt void USART2_IRQHandler(){
-    ymd::hal::UartInterruptDispatcher::on_interrupt(ymd::hal::usart2);
+    ymd::hal::UartIrqHandler::on_interrupt(ymd::hal::usart2);
 }
 #endif
 
 #ifdef USART3_PRESENT
 __interrupt void USART3_IRQHandler(){
-    ymd::hal::UartInterruptDispatcher::on_interrupt(ymd::hal::usart3);
+    ymd::hal::UartIrqHandler::on_interrupt(ymd::hal::usart3);
 }
 #endif
 
 #ifdef UART4_PRESENT
 __interrupt void UART4_IRQHandler(){
-    ymd::hal::UartInterruptDispatcher::on_interrupt(ymd::hal::uart4);
+    ymd::hal::UartIrqHandler::on_interrupt(ymd::hal::uart4);
 }
 #endif
 
 #ifdef UART5_PRESENT
 __interrupt void UART5_IRQHandler(){
-    ymd::hal::UartInterruptDispatcher::on_interrupt(ymd::hal::uart5);
+    ymd::hal::UartIrqHandler::on_interrupt(ymd::hal::uart5);
 }
 #endif
 
 #ifdef UART6_PRESENT
 __interrupt void UART6_IRQHandler(){
-    ymd::hal::UartInterruptDispatcher::on_interrupt(ymd::hal::uart6);
+    ymd::hal::UartIrqHandler::on_interrupt(ymd::hal::uart6);
 }
 #endif
 
 #ifdef UART7_PRESENT
 __interrupt void UART7_IRQHandler(){
-    ymd::hal::UartInterruptDispatcher::on_interrupt(ymd::hal::uart7);
+    ymd::hal::UartIrqHandler::on_interrupt(ymd::hal::uart7);
 }
 #endif
 
 #ifdef UART8_PRESENT
 __interrupt void UART8_IRQHandler(){
-    ymd::hal::UartInterruptDispatcher::on_interrupt(ymd::hal::uart8);
+    ymd::hal::UartIrqHandler::on_interrupt(ymd::hal::uart8);
 }
 #endif
 }

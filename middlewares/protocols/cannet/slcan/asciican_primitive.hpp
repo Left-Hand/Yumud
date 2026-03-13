@@ -60,12 +60,14 @@ namespace operations{
 
     struct [[nodiscard]] Open{
         friend OutputStream & operator<<(OutputStream & os, const Open & self){ 
+            (void)self;
             return os;
         }
     };
 
     struct [[nodiscard]] Close{
         friend OutputStream & operator<<(OutputStream & os, const Close & self){ 
+            (void)self;
             return os;
         }
     };

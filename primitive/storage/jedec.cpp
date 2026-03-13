@@ -25,10 +25,26 @@ OutputStream & ymd::operator<<(OutputStream &os, const JedecManufacturer man){
         case JedecManufacturer::Issi:return os << "Issi";
         case JedecManufacturer::Winbond:return os << "Winbond";
         case JedecManufacturer::Puya:return os << "Puya";
-        default:return os << "Unknown";
     }
+    return os << "Unknown";
 }
 
 OutputStream & ymd::operator<<(OutputStream &os, const JedecStorageType type){
-    return os;
+    switch(type){
+        case JedecStorageType::Sram:
+            return os << "Sram";
+        case JedecStorageType::Nor:
+            return os << "Nor";
+        case JedecStorageType::Nand:
+            return os << "Nand";
+        case JedecStorageType::FastReadFlash:
+            return os << "FastReadFlash";
+        case JedecStorageType::SectorEraseFlash:
+            return os << "SectorEraseFlash";
+        case JedecStorageType::BlockEraseFlash:
+            return os << "BlockEraseFlash";
+        case JedecStorageType::PageProgramFlash:
+            return os << "PageProgramFlash";
+    }
+    return os << "Unknown";
 }

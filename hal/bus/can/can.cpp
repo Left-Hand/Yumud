@@ -556,7 +556,7 @@ void Can::enable_debug_freeze(const Enable en){
 }
 
 
-void CanInterruptDispatcher::isr_tx(Can & self){
+void CanIrqHandler::isr_tx(Can & self){
     volatile uint32_t & tstatr_reg = SPL_INST(self.p_inst_)->TSTATR;
     const auto temp_tstatr = tstatr_reg;
     //遍历每个邮箱
@@ -572,7 +572,7 @@ void CanInterruptDispatcher::isr_tx(Can & self){
             return;
         }
 
-        auto isr_clear_guard = make_scope_guard([&]{
+        auto isr_flag_clear_guard = make_scope_guard([&]{
             //清除发送标志位
             tstatr_reg = TSTATR_RQCP_MASK;
         });
@@ -613,31 +613,36 @@ void Can::poll_tx_queue(){
     return;
 }
 
-void CanInterruptDispatcher::isr_rx0(Can & can){
-    CanInterruptDispatcher::isr_rx(
-        can, 
-        can_get_rfifo_reg<CanFifoIndex::_0>(can.p_inst_), 
+void CanIrqHandler::isr_rx0(Can & self){
+    CanIrqHandler::isr_rx(
+        self, 
         CanFifoIndex::_0
     );
 }
 
-void CanInterruptDispatcher::isr_rx1(Can & can){
-    CanInterruptDispatcher::isr_rx(
-        can, 
-        can_get_rfifo_reg<CanFifoIndex::_1>(can.p_inst_), 
+void CanIrqHandler::isr_rx1(Can & self){
+    CanIrqHandler::isr_rx(
+        self, 
         CanFifoIndex::_1
     );
 }
 
-void CanInterruptDispatcher::isr_rx(
+void CanIrqHandler::isr_rx(
     Can & self, 
-    volatile uint32_t & rfifo_reg, 
     const CanFifoIndex fifo_idx
 ){
+    volatile uint32_t & rfifo_reg = [&] -> volatile uint32_t &{
+        switch(fifo_idx){
+            case CanFifoIndex::_0: return can_get_rfifo_reg<CanFifoIndex::_0>(self.p_inst_);
+            case CanFifoIndex::_1: return can_get_rfifo_reg<CanFifoIndex::_1>(self.p_inst_);
+        }
+        __builtin_unreachable();
+    }();
+
     const uint32_t temp_rfifo_reg = rfifo_reg;
 
     if(temp_rfifo_reg & CAN_RFIFO_FFULL_MASK){
-        auto isr_clear_guard = make_scope_guard([&](){
+        auto isr_flag_clear_guard = make_scope_guard([&](){
             rfifo_reg = CAN_RFIFO_FFULL_MASK;
         });
 
@@ -653,7 +658,7 @@ void CanInterruptDispatcher::isr_rx(
     }
     
     if(temp_rfifo_reg & CAN_RFIFO_FOV_MASK){
-        auto isr_clear_guard = make_scope_guard([&](){
+        auto isr_flag_clear_guard = make_scope_guard([&](){
             rfifo_reg = CAN_RFIFO_FOV_MASK;
         });
 
@@ -670,7 +675,7 @@ void CanInterruptDispatcher::isr_rx(
 
     //注意这里是判断fmp掩码 但是清零的是fom
     if (temp_rfifo_reg & CAN_RFIFO_FMP_MASK){
-        auto isr_clear_guard = make_scope_guard([&](){
+        auto isr_flag_clear_guard = make_scope_guard([&](){
             rfifo_reg = CAN_RFIFO_FOM_MASK;
         });
 
@@ -691,7 +696,7 @@ void CanInterruptDispatcher::isr_rx(
     }
 }
 
-void CanInterruptDispatcher::isr_sce(Can & self){
+void CanIrqHandler::isr_sce(Can & self){
     void * p_inst = self.p_inst_;
     const uint32_t temp_inten_reg = SPL_INST(p_inst)->INTENR;
 

@@ -159,6 +159,7 @@ static constexpr IRQn dma_to_irqn(const Nth dma_nth, const Nth ch_sel_nth){
                 case 8: return DMA1_Channel8_IRQn;
                 #endif
             }
+            break;
         #endif
         #ifdef DMA2_PRESENT
         case 2:
@@ -175,6 +176,7 @@ static constexpr IRQn dma_to_irqn(const Nth dma_nth, const Nth ch_sel_nth){
                 case 10: return DMA2_Channel10_IRQn;
                 case 11: return DMA2_Channel11_IRQn;
             }
+            break;
         #endif
     }
     __builtin_trap();

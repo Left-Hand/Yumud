@@ -159,6 +159,8 @@ private:
     IResult<> write_u8x2(const uint8_t payload1, const uint8_t payload2){
         const auto guard = i2c_.create_guard();
 
+        (void) payload1;
+        (void) payload2;
         TODO();
         // auto res = i2c_.begin(I2cs payload1)
         //     .then([&](){return bus_.write(payload2);})

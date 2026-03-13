@@ -9,7 +9,7 @@ using namespace ymd::hal;
 Adc1::Adc1():AdcPrimary(ADC1){;}
 #endif
 
-void AdcInterruptDispatcher::on_interrupt(){
+void AdcIrqHandler::on_interrupt(){
     // const uint32_t tempCTLR = ADC1->CTLR1;
     const uint32_t temp_statr = ADC1->STATR;
 
@@ -31,7 +31,7 @@ void AdcInterruptDispatcher::on_interrupt(){
 
 #if defined(ADC1_PRESENT) || defined(ADC2_PRESENT)
 __interrupt void ADC1_2_IRQHandler(void){
-    AdcInterruptDispatcher::on_interrupt();
+    AdcIrqHandler::on_interrupt();
 }
 #endif
 

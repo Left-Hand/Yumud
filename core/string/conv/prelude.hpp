@@ -179,6 +179,7 @@ struct [[nodiscard]] chars_capacity_for_int<bool>{
 	static constexpr size_t NUM_FALSE_STR_LENGTH = 5;
 
 	[[nodiscard]] static constexpr size_t value(const Eps eps){
+		(void)eps; //unused
 		return NUM_FALSE_STR_LENGTH;
 	}
 };

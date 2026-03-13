@@ -383,7 +383,7 @@ void Uart::enable_single_line_mode(const Enable en){
 void Uart::register_nvic(const Enable en){
     UART_INTERRUPT_NVIC_PRIORITY.with_irqn(
         lld::uart_calc_nvic_irqn(inst_nth_)
-    ).enable(EN);
+    ).enable(en);
 }
 
 void Uart::set_tx_strategy(const CommStrategy tx_strategy){
@@ -590,7 +590,7 @@ void Uart::setup_rx_dma(const DmaPriority priority){
     );
 }
 
-void UartInterruptDispatcher::isr_rxne(Uart & self){
+void UartIrqHandler::isr_rxne(Uart & self){
     switch(self.rx_strategy_){
         case CommStrategy::Dma:{
             break;
@@ -612,10 +612,12 @@ void UartInterruptDispatcher::isr_rxne(Uart & self){
 
 }
 
-void UartInterruptDispatcher::isr_tc(Uart & self){
+void UartIrqHandler::isr_tc(Uart & self){
+    //TODO
+    (void)self;
 }
 
-void UartInterruptDispatcher::isr_txe(Uart & self){
+void UartIrqHandler::isr_txe(Uart & self){
     switch(self.tx_strategy_){
         case CommStrategy::Dma:
             break;
@@ -632,7 +634,7 @@ void UartInterruptDispatcher::isr_txe(Uart & self){
     }
 }
 
-void UartInterruptDispatcher::isr_rxidle(Uart & self){
+void UartIrqHandler::isr_rxidle(Uart & self){
 
     auto emit_rxidle_event = [&self](){
         const auto uev = Event::RxIdle;
@@ -723,7 +725,7 @@ struct alignas(4) [[nodiscard]] BareUartEvent final{
     uint32_t cts_state_change:1;
 };
 
-void UartInterruptDispatcher::on_interrupt(Uart & self){
+void UartIrqHandler::on_interrupt(Uart & self){
     auto * ral_inst = RAL_INST(self.p_inst_);
     const auto flags = ral_inst->get_flags();
     if(flags.any_fault()){
@@ -765,21 +767,21 @@ void UartInterruptDispatcher::on_interrupt(Uart & self){
 
     if(flags.RXNE){
         // 对数据寄存器的读操作可以将该位清零
-        UartInterruptDispatcher::isr_rxne(self);
+        UartIrqHandler::isr_rxne(self);
     }
 
     if(flags.TXE){
         // 对数据寄存器进行写操作，此位将会清零
-        UartInterruptDispatcher::isr_txe(self);
+        UartIrqHandler::isr_txe(self);
     }
 
     if(flags.TC){
-        UartInterruptDispatcher::isr_tc(self);
+        UartIrqHandler::isr_tc(self);
         USART_ClearITPendingBit(SPL_INST(self.p_inst_), USART_IT_TC);
     }
 
     if(flags.IDLE){
-        UartInterruptDispatcher::isr_rxidle(self);
+        UartIrqHandler::isr_rxidle(self);
         ral_inst->STATR;
         ral_inst->DATAR;
     }

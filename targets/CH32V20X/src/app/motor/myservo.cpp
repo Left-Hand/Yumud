@@ -290,7 +290,7 @@ void myservo_main(){
     can.init({
         .remap = CAN1_REMAP,
         .wiring_mode = hal::CanWiringMode::Normal,
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M)
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M)
     });
     init_adc();
 

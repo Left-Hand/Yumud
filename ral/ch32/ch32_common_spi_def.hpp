@@ -177,7 +177,7 @@ struct [[nodiscard]] SPI_Def{
     }
 
     constexpr void enable_crc(const Enable en){
-        CTLR1.CRCNEXT = 1;
+        CTLR1.CRCNEXT = (en == EN);
     }
 
     constexpr uint32_t get_rx_crc(){

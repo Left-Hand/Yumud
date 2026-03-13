@@ -132,31 +132,11 @@ public:
     explicit LT8920_SpiTransport(Some<hal::Spi *> spi, const hal::SpiSlaveRank rank) : 
         spi_drv_(hal::SpiDrv(spi, rank)) {;}
 
-    IResult<> write_reg(FlagReg & flag_reg, const uint8_t reg_addr, const uint16_t reg_val){
-        if(const auto res = 
-            spi_drv_.transceive_single(
-                reinterpret_cast<uint8_t &>(flag_reg), 
-                uint8_t(reg_addr), CONT);
-            res.is_err()) return Err(res.unwrap_err());
-        delayT3();
+    IResult<> write_reg(FlagReg & flag_reg, const uint8_t reg_addr, const uint16_t reg_val);
 
-        if(const auto res = 
-            spi_drv_.write_single<uint16_t>(reg_val);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-    }
+    IResult<> read_reg(FlagReg & flag_reg, const uint8_t reg_addr, uint16_t & reg_val);
 
 
-    IResult<> read_reg(FlagReg & flag_reg, const uint8_t reg_addr, uint16_t & reg_val){
-        if(const auto res = spi_drv_.transceive_single(
-            (flag_reg.as_bytes_mut()[0]), 
-            uint8_t(reg_addr | 0x80), CONT); 
-        res.is_err()) return Err(res.unwrap_err());
-        if(const auto res = spi_drv_.read_single<uint16_t>(reg_val);
-            res.is_err()) return Err(res.unwrap_err());
-        return Ok();
-
-    }
     IResult<> write_fifo(std::span<const uint8_t> bytes){
         if(const auto res = spi_drv_.write_single<uint8_t>(uint8_t(50), CONT); 
             res.is_err()) return Err(res.unwrap_err());
@@ -174,6 +154,7 @@ public:
     }
 
     IResult<> update_fifo_status(FlagReg & flag_reg){
+        (void)flag_reg;
         // return spi_drv_->transceive_single(flag_reg.as_bits_mut(), flag_reg.reg_addr);
         TODO();
     }
@@ -194,7 +175,10 @@ public:
         i2c_drv_(i2c_drv) {;}
     explicit LT8920_I2cTransport(hal::I2cDrv && i2c_drv) : 
         i2c_drv_(std::move(i2c_drv)) {;}
+
+
     IResult<> write_reg(FlagReg & flag_reg, const uint8_t reg_addr, const uint16_t reg_val){
+        (void)flag_reg;
         if(const auto res = i2c_drv_.write_reg(uint8_t(reg_addr), reg_val, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
 
@@ -203,6 +187,7 @@ public:
 
 
     IResult<> read_reg(FlagReg & flag_reg, const uint8_t reg_addr, uint16_t & reg_val){
+        (void)flag_reg;
         if(const auto res = i2c_drv_.read_reg(uint8_t(reg_addr), reg_val, std::endian::big);
             res.is_err()) return Err(res.unwrap_err());
         return Ok();

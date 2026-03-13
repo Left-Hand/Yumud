@@ -20,8 +20,6 @@
 
 using namespace ymd;
 
-namespace {
-
 static void set_or_reset_bits(bool cond, volatile uint32_t & reg, uint32_t mask){
     if(cond){
         reg = reg | mask;
@@ -31,18 +29,15 @@ static void set_or_reset_bits(bool cond, volatile uint32_t & reg, uint32_t mask)
 }
 
 template<typename T>
-T clone_volatile(volatile T * p_reg){
+static T clone_volatile(volatile T * p_reg){
     return *const_cast<T *>(p_reg);
 }
 
 template<typename T>
-void store_volatile(volatile T * p_reg, const T x){
+static void store_volatile(volatile T * p_reg, const T x){
     *const_cast<T *>(p_reg) = x;
 }
 
-
-
-}
 
 [[maybe_unused]] static void ch32v20xd6_can_bugfix();
 
@@ -72,7 +67,6 @@ void can_configure_filter(
     auto * p_inst = ral::CAN_Filt;
     
     const uint32_t bitmask = 1u << filter_nth;
-    // p_inst->FCTLR.FINIT = 1;
     auto guard = FinitGuard();
 
     set_or_reset_bits(false, p_inst->FWR.bits, bitmask);
@@ -80,7 +74,7 @@ void can_configure_filter(
     uint32_t FR1;
     uint32_t FR2;
 
-    if (filter_cfg.is_32bit_) {
+    if (filter_cfg.is_32bit()) {
         FR1 = (static_cast<uint32_t>(filter_cfg.id16[1]) << 16) |
             static_cast<uint32_t>(filter_cfg.id16[0]);
         
@@ -98,7 +92,7 @@ void can_configure_filter(
     p_inst->FILTER_PAIR[filter_nth].FR2.bits = FR2;
 
     set_or_reset_bits(
-        filter_cfg.is_32bit_,
+        filter_cfg.is_32bit(),
         p_inst->FSCFGR.bits,
         bitmask
     );
@@ -109,7 +103,7 @@ void can_configure_filter(
 
     
     set_or_reset_bits(
-        filter_cfg.is_list_mode_,
+        filter_cfg.is_list_mode(),
         p_inst->FMCFGR.bits,
         bitmask
     );
@@ -128,7 +122,10 @@ void can_configure_filter(
     );
 }
 
-void can_set_filter_origin(const size_t inst_nth, const size_t base){
+void can_set_filter_origin(
+    const size_t inst_nth, 
+    [[maybe_unused]] const size_t origin
+){
     auto guard = FinitGuard();
     auto temp_reg = clone_volatile(&ral::CAN_Filt->FCTLR);
     
@@ -139,12 +136,12 @@ void can_set_filter_origin(const size_t inst_nth, const size_t base){
         #endif
         #ifdef CAN2_PRESENT
         case 2:
-            temp_reg.CAN2SB = base;
+            temp_reg.CAN2SB = origin;
             break;
         #endif
         #ifdef CAN3_PRESENT
         case 3:
-            temp_reg.CAN3SB = base;
+            temp_reg.CAN3SB = origin;
             break;
         #endif
     }
@@ -176,14 +173,14 @@ void can_enable_rcc(const Nth can_nth, const Enable en){
     switch(can_nth.count()){
         #ifdef CAN1_PRESENT
         case 1:{
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, en == EN);
             return;
         }
         #endif
 
         #ifdef CAN2_PRESENT
         case 2:{
-            RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, ENABLE);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, en == EN);
             return;
         }
         #endif

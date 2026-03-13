@@ -1,12 +1,13 @@
 #pragma once
 
 #include "../uart_base.hpp"
+#include "hal/gpio/gpio.hpp"
 
 namespace ymd::hal{
-class UartSw final: public UartBase{
+class SoftUart final: public UartBase{
 public:
 
-    UartSw(Gpio & tx_pin, Gpio & rx_pin): tx_pin_(tx_pin), rx_pin_(rx_pin){;}
+    SoftUart(Gpio & tx_pin, Gpio & rx_pin): tx_pin_(tx_pin), rx_pin_(rx_pin){;}
 
     void init(const Config & cfg);
 
@@ -26,11 +27,12 @@ public:
 
     Gpio & tx_pin(){return tx_pin_;}
     Gpio & rx_pin(){return rx_pin_;}
-    void set_parity(const Parity parity){;}
+    void set_parity(const Parity parity);
 
 private:
-    Gpio & tx_pin_;
-    Gpio & rx_pin_;
+    Gpio tx_pin_;
+    Gpio rx_pin_;
+    Parity parity_ = Parity::None;
 
     enum class ByteProg: int8_t{
         D0 = 0,D1,D2,D3,D4,D5,D6,D7,

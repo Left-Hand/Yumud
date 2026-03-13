@@ -214,9 +214,9 @@ struct USART_Def{
         CTLR3.HDSEL = (en == EN);
     }
 
-    void enable_oversamp8(const Enable en){
-        // CTLR1.
-    }
+    // void enable_oversamp8(const Enable en){
+    //     CTLR1.
+    // }
 
     void enable_irda_lowpower(const Enable en){
         CTLR3.IRLP = (en == EN);

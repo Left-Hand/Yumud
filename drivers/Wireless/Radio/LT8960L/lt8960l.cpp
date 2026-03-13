@@ -250,6 +250,7 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> IResult<size_t>{
         })
     ;
     #else
+    (void)buf;
     TODO();
     #endif
     
@@ -300,6 +301,7 @@ auto LT8960L::transmit_ble(std::span<const uint8_t> buf) -> IResult<size_t>{
 }
 
 IResult<size_t> LT8960L::receive_ble(std::span<uint8_t> buf){
+    (void)buf;
     TODO();
     // uint8_t i, len;
     // LT8960L_start();

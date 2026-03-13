@@ -63,6 +63,7 @@ void tm_unload(tm_mdl_t* mdl)
 
 //preprocess data input
 tm_err_t tm_preprocess(tm_mdl_t* mdl, tm_pp_t pp_type, tm_mat_t* in, tm_mat_t* out){
+    (void)mdl;
     //    tm_mdlbin_t* b = (tm_mdlbin_t*)l_buf;
     TM_READ_LAYER(LAYER_BODY,l_bin+sizeof(tm_mdlbin_t),sizeof(tml_head_t));
     tml_head_t* l0h = (tml_head_t*)(l_buf+sizeof(tm_mdlbin_t));

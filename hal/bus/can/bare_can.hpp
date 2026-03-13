@@ -128,7 +128,7 @@ private:
     [[nodiscard]] uint32_t get_aligned_bus_clk_freq();
 
     friend class CanFilter;
-    friend class CanInterruptDispatcher;
+    friend class CanIrqHandler;
 };
 
 struct [[nodiscard]] BareCanSender final{

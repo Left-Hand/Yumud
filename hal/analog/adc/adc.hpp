@@ -89,7 +89,7 @@ struct [[nodiscard]] AdcChannelConfig{
     SampleCycles cycles;
 };
 
-struct AdcInterruptDispatcher{
+struct AdcIrqHandler{
     static void on_interrupt();
 };
 
@@ -233,7 +233,7 @@ protected:
         return event_callback_(AdcEvent::AnalogWatchdog);
     }
 
-    friend class AdcInterruptDispatcher;
+    friend class AdcIrqHandler;
 };
 
 

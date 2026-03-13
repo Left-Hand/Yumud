@@ -66,7 +66,7 @@ void steadywin_main(){
         .remap = hal::CAN1_REMAP_PA12_PA11,
         .wiring_mode = hal::CanWiringMode::Normal,
         //波特率为1M
-        .bit_timming = hal::CanBaudrate(hal::CanBaudrate::_1M), 
+        .bit_timming = hal::CanNominalBitTimming(hal::CanBaudrate::_1M), 
     });
     
     //配置can过滤器为接收标准数据帧（滤除拓展和远程帧）

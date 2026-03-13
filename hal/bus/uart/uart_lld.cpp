@@ -138,6 +138,7 @@ void uart_set_remap(const Nth nth, const UartRemap remap){
                 default:
                     break;
             }
+            break;
         #endif
         #ifdef USART2_PRESENT
         case 2:
@@ -151,6 +152,7 @@ void uart_set_remap(const Nth nth, const UartRemap remap){
                 default:
                     break;
             }
+            break;
         #endif
         #ifdef USART3_PRESENT
         case 3:

@@ -33,7 +33,7 @@ void can_configure_filter(
     const hal::CanFilterConfig & filter_cfg
 );
 
-void can_set_filter_origin(const size_t inst_nth, const size_t base);
+void can_set_filter_origin(const size_t inst_nth, const size_t origin);
 
 
 [[nodiscard]] static constexpr 

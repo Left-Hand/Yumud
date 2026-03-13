@@ -25,6 +25,7 @@ public:
         };
 
         constexpr Command(const Kind kind, bool is_rx):
+            kind_(kind),
             is_rx_(is_rx){;}
 
         static constexpr Command from_bits(const uint8_t bits){
@@ -108,14 +109,17 @@ public:
     }
 
     static constexpr std::array<uint8_t, 5> make_read_card_num_message(const uint8_t mod_address = 0){
+        (void)mod_address;
         return {0x7F, 0x03, 0x00, 0x10, 0x13};
     }
 
     static constexpr std::array<uint8_t, 6> make_read_block_data_message(const uint8_t mod_address = 0){
+        (void)mod_address;
         return {0x7F, 0x04, 0x00, 0x11, 0x01, 0x14};
     }
 
     void set_baudrate(const uint32_t baudrate){
+        (void)(baudrate);
             // DEBUG_PRINTLN(std::hex, drivers::U13T::make_baudrate_message(9600));
     // const auto msg  =drivers::U13T::make_baudrate_message(115200);
     // const auto msg  =drivers::U13T::make_read_card_num_message();

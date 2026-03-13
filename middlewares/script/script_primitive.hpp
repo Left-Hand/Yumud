@@ -51,8 +51,8 @@ public:
         return views_[idx];
     }
 
-    AccessProvider_ByStringViews subspan(const size_t idx) const {
-        return AccessProvider_ByStringViews(views_.subspan(1));
+    AccessProvider_ByStringViews subspan(const size_t offset) const {
+        return AccessProvider_ByStringViews(views_.subspan(offset));
     }
 private:    
     std::span<const StringView> views_;

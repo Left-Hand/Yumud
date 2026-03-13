@@ -282,7 +282,7 @@ public:
 
     template<typename T2 = T>
     requires (std::is_void_v<T2>)
-    [[nodiscard]] __fast_inline constexpr Result(const Ok<T2> & okay) : 
+    [[nodiscard]] __fast_inline constexpr Result([[maybe_unused]] const Ok<T2> & okay) : 
         storage_(Ok<void>()){}
     
     template<typename E2>
@@ -605,8 +605,8 @@ private:
 
 template<>
 struct [[nodiscard]] Result<void, Infallible>{
-    consteval Result(Ok<void> && okay){;}
-    consteval Result(Err<Infallible> && error){;}
+    consteval Result([[maybe_unused]] Ok<void> && okay){;}
+    consteval Result([[maybe_unused]] Err<Infallible> && error){;}
 
     constexpr void examine() const {}
     constexpr void unwrap() const {}

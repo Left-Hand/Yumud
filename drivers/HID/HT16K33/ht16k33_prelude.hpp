@@ -350,6 +350,7 @@ public:
     }
 
     IResult<> set_int_io_active_level(const BoolLevel level){
+        (void)level;
         // if(int_input_.is_some()){
         //     int_input_.unwrap()
         //         .set_active_level(level);
