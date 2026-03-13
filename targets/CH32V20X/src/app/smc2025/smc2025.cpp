@@ -338,7 +338,9 @@ void smc2025_main(){
             mpu.update().examine();
             qmc.update().examine();
             const auto gyr = mpu.read_gyr().examine();
-            yaw_angle = Angular<iq16>::from_turns((yaw_angle + Angular<iq16>::from_radians(gyr.z) * 0.04_iq16).unsigned_normalized().to_turns());
+            yaw_angle = Angular<iq16>::from_turns(
+                (yaw_angle + Angular<iq16>::from_radians(static_cast<iq16>(gyr.z)) * 0.04_iq16)
+                .unsigned_normalized().to_turns());
             break;
         }
         default: break;

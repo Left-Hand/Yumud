@@ -6,7 +6,7 @@
 #include "hal/conn/uart/hw_singleton.hpp"
 #include "hal/gpio/gpio_port.hpp"
 
-#include "drivers/Virtualconn/TCA9548A/TCA9548A.hpp"
+#include "drivers/VirtualBus/TCA9548A/TCA9548A.hpp"
 #include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
 
 

@@ -7,13 +7,13 @@
 int main(){
     ymd::sys::preinit();
     #ifdef CH32V20X
-    myesc_main();
+    // myesc_main();
     // sincos_main();
     // sincospll_main();
     // pwm_main();
     // cap_main();
     // stl06n_main();
-    // nuedc_2025e_joint_main();
+    nuedc_2025e_joint_main();
     // nuedc_2025e_laser_main();
     // winter_mc_tutorial_main();
     // lz77_main();

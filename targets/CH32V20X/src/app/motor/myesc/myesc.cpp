@@ -85,7 +85,7 @@ struct LrSeriesCurrentRegulatorConfig{
     uint32_t fc;                 // 截止频率/带宽 (Hz)
     iq20 phase_inductance;        // 相电感 (H)
     iq20 phase_resistance;        // 相电阻 (Ω)
-    iq20 voltage_limit;                // 最大电压 (V)
+    iq16 voltage_limit;                // 最大电压 (V)
 
     [[nodiscard]] constexpr Result<digipw::PiController::Cofficients, StringView> try_into_coeffs() const {
         //U(s) = I(s) * R + s * I(s) * L

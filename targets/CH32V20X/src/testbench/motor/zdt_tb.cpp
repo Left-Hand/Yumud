@@ -92,8 +92,8 @@ void zdt_main(){
 
         // clock::delay(200ms);
         // motor.activate();
-        const auto d1 = math::sin(clock::seconds()*0.7_r);
-        const auto d2 = math::sin(clock::seconds()*0.2_r);
+        const auto d1 = static_cast<iq16>(math::sin(clock::seconds()*0.7_r));
+        const auto d2 = static_cast<iq16>(math::sin(clock::seconds()*0.2_r));
         write_packet(factory1.set_angle(
             Angular<iq16>::from_turns(d1), 
             0

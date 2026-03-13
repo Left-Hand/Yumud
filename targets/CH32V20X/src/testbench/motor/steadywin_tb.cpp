@@ -131,7 +131,7 @@ void steadywin_main(){
         // const auto payload_bytes = std::span(frame.payload().u8x8());
         
         // const auto payload_bytes = frame.payload_bytes_fixed<8>();
-        const auto payload_bytes = std::span(frame.payload().u8x8());
+        const auto payload_bytes = std::span(frame.payload().u8x8);
         switch(command.kind()){
             case Command::Nop:{
                 //nothing

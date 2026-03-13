@@ -16,46 +16,58 @@ Can can3 = Can{CAN3};
 #endif
 }
 
-
+using namespace ymd;
 
 extern "C"{
 #ifdef CAN1_PRESENT
 __interrupt void USB_HP_CAN1_TX_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_tx(ymd::hal::can1);
+    hal::CanIrqHandler::isr_tx(hal::can1);
 }
 
 __interrupt void USB_LP_CAN1_RX0_IRQHandler() {
-    ymd::hal::CanIrqHandler::isr_rx0(ymd::hal::can1);
+    hal::CanIrqHandler::isr_rx(
+        hal::can1, 
+        hal::CanFifoIndex::_0
+    );
 }
 
 __interrupt void CAN1_RX1_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_rx1(ymd::hal::can1);
+    hal::CanIrqHandler::isr_rx(
+        hal::can1, 
+        hal::CanFifoIndex::_1
+    );
 }
 
 
 #ifdef CAN_SCE_ENABLED
 __interrupt void CAN1_SCE_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_sce(ymd::hal::can1);
+    hal::CanIrqHandler::isr_sce(hal::can1);
 }
 #endif
 #endif
 
 #ifdef CAN2_PRESENT
 __interrupt void CAN2_TX_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_tx(ymd::hal::can2);
+    hal::CanIrqHandler::isr_tx(hal::can2);
 }
 
 __interrupt void CAN2_RX0_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_rx0(ymd::hal::can2);
+    hal::CanIrqHandler::isr_rx(
+        hal::can2, 
+        hal::CanFifoIndex::_0
+    );
 }
 
 __interrupt void CAN2_RX1_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_rx1(ymd::hal::can2);
+    CanIrqHandler::isr_rx(
+        hal::can2, 
+        hal::CanFifoIndex::_1
+    );
 }
 
 #ifdef CAN_SCE_ENABLED
 __interrupt void CAN2_SCE_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_sce(ymd::hal::can2);
+    hal::CanIrqHandler::isr_sce(hal::can2);
 }
 
 #endif
@@ -63,20 +75,26 @@ __interrupt void CAN2_SCE_IRQHandler(){
 
 #ifdef CAN3_PRESENT
 __interrupt void CAN3_TX_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_tx(ymd::hal::can3);
+    hal::CanIrqHandler::isr_tx(hal::can3);
 }
 
 __interrupt void CAN3_RX0_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_rx0(ymd::hal::can3);
+    CanIrqHandler::isr_rx(
+        hal::can3, 
+        hal::CanFifoIndex::_0
+    );
 }
 
 __interrupt void CAN3_RX1_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_rx1(ymd::hal::can3);
+    hal::CanIrqHandler::isr_rx(
+        hal::can3, 
+        hal::CanFifoIndex::_1
+    );
 }
 
 #ifdef CAN_SCE_ENABLED
 __interrupt void CAN3_SCE_IRQHandler(){
-    ymd::hal::CanIrqHandler::isr_sce(ymd::hal::can3);
+    hal::CanIrqHandler::isr_sce(hal::can3);
 }
 
 #endif

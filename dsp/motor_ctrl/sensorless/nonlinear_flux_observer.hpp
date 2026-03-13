@@ -21,7 +21,7 @@ public:
     struct [[nodiscard]] Config final{
         uint32_t fs;
         iq20 phase_inductance;
-        iq20 phase_resistance;
+        iq16 phase_resistance;
         iq20 observer_gain; // [rad/s]
         iq20 pm_flux_linkage; // [V / (rad/s)]
 

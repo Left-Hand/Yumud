@@ -64,7 +64,7 @@ struct alignas(8) [[nodiscard]] TxContext final{
     }
 
     constexpr Self from_can_payload(const hal::BxCanPayload& payload){
-        return std::bit_cast<Self>(payload.u8x8());
+        return std::bit_cast<Self>(payload.to_u64());
     }
 };
 

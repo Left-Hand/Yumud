@@ -184,8 +184,8 @@ void sincos_pwm_main(){
         const auto t = clock::seconds() * iq16(3 * TAU);
         const auto [st, ct] = math::sincospu(t);
         
-        pwm_a.set_dutycycle(st);
-        pwm_b.set_dutycycle(ct);
+        pwm_a.set_dutycycle(static_cast<iq16>(st));
+        pwm_b.set_dutycycle(static_cast<iq16>(ct));
 
         DEBUG_PRINTLN_IDLE(st, ct, inj.get_perunit());
     }

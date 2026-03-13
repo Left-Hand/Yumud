@@ -196,7 +196,7 @@ fixed<29, int32_t> asin(const fixed<Q, int32_t> x){
 template<size_t Q>
 __attribute__((always_inline)) constexpr 
 fixed<29, int32_t> acos(const fixed<Q, int32_t> x){
-    return fixed<29, int32_t>(M_PI/2) - asin32i(x);
+    return fixed<29, int32_t>(M_PI/2) - fxmath::details::asin32i(x);
 }
 
 template<size_t Q>

@@ -246,23 +246,78 @@ void can_set_remap(const Nth can_nth, const hal::CanRemap remap){
 }
 
 
-void can_transmit(void * p_inst, const hal::CanMailboxIndex mbox_idx, const hal::BxCanFrame & frame){
+void can_transmit_nott(
+    void * p_inst, 
+    const hal::CanMailboxIndex mbox_idx, 
+    const hal::BxCanFrame & frame
+){
     if(size_t(mbox_idx) > 2) __builtin_unreachable();
 
     auto & mailbox_inst = SPL_INST(p_inst)->sTxMailBox[
         static_cast<size_t>(mbox_idx)];
 
-    const uint32_t tempmir = frame.identifier().to_sxx32_reg_bits();
-    const uint64_t payload_u64 = frame.payload_u64();
+    const uint32_t tempmir = frame.identifier().to_sxx32_txmir_with_txrq();
+    const auto [low32, high32] = frame.payload().to_u32x2();
 
 
-    mailbox_inst.TXMDTR = uint32_t(0xFFFF0000 | (frame.dlc().to_bits() & 0xf));
+    mailbox_inst.TXMDTR = [&]{
+        uint32_t temp_txmdtr = 0;
+
+        #if 0
+        temp_txmdtr |= static_cast<uint32_t>(frame.dlc().to_bits()) & 0xf;
+        #else
+        //dlc 为4位以上被视为ub 不需要进行掩码操作
+        temp_txmdtr |= static_cast<uint32_t>(frame.dlc().to_bits());
+        #endif
+
+        return temp_txmdtr;
+    }();
 
     //将低四字节装载到txmdlr
-    mailbox_inst.TXMDLR = static_cast<uint32_t>(payload_u64);
+    mailbox_inst.TXMDLR = low32;
 
     //将高四字节装载到txmdhr
-    mailbox_inst.TXMDHR = static_cast<uint32_t>(payload_u64 >> 32);
+    mailbox_inst.TXMDHR = high32;
+
+    //有关TXMIR和TXMDTR的描述，请参考芯片数据手册
+    //!txmir必须最后填写 因为填写txmir时会导致当前正在填充的报文被发出
+    mailbox_inst.TXMIR = tempmir;
+}
+
+void can_transmit_ttcan(
+    void * p_inst, 
+    const hal::CanMailboxIndex mbox_idx, 
+    const hal::BxCanFrame & frame,
+    uint16_t tick
+){
+    if(size_t(mbox_idx) > 2) __builtin_unreachable();
+
+    auto & mailbox_inst = SPL_INST(p_inst)->sTxMailBox[
+        static_cast<size_t>(mbox_idx)];
+
+    const uint32_t tempmir = frame.identifier().to_sxx32_txmir_with_txrq();
+    const auto [low32, high32] = frame.payload().to_u32x2();
+    
+    mailbox_inst.TXMDTR = [&]{
+        uint32_t temp_txmdtr = 0;
+        temp_txmdtr |= static_cast<uint32_t>(tick) << 16;
+        temp_txmdtr |= static_cast<uint32_t>(1u) << 8;
+
+        #if 0
+        temp_txmdtr |= static_cast<uint32_t>(frame.dlc().to_bits()) & 0xf;
+        #else
+        //dlc 为4位以上被视为ub 不需要进行掩码操作
+        temp_txmdtr |= static_cast<uint32_t>(frame.dlc().to_bits());
+        #endif
+
+        return temp_txmdtr;
+    }();
+
+    //将低四字节装载到txmdlr
+    mailbox_inst.TXMDLR = low32;
+
+    //将高四字节装载到txmdhr
+    mailbox_inst.TXMDHR = high32;
 
     //有关TXMIR和TXMDTR的描述，请参考芯片数据手册
     //!txmir必须最后填写 因为填写txmir时会导致当前正在填充的报文被发出

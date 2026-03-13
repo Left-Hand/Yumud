@@ -173,10 +173,10 @@ static Option<CanMailboxIndex> can_get_idle_mailbox_index(void * p_inst){
         | lld::can_tstatr_tme_mask(CanMailboxIndex::_1) 
         | lld::can_tstatr_tme_mask(CanMailboxIndex::_2));
 
-    const uint32_t tempreg = SPL_INST(p_inst)->TSTATR;
-    const bool is_any_mailbox_idle = (tempreg & ANY_MAILBOX_IDLE_BITMASK) != 0;
+    const uint32_t temp_tstar = SPL_INST(p_inst)->TSTATR;
+    const bool is_any_mailbox_idle = (temp_tstar & ANY_MAILBOX_IDLE_BITMASK) != 0;
     if(not is_any_mailbox_idle) return None;
-    const uint8_t idle_mbox_idx_bits = static_cast<uint8_t>((tempreg & CAN_TSTATR_CODE) >> 24);
+    const uint8_t idle_mbox_idx_bits = static_cast<uint8_t>(((temp_tstar) >> 24) & 0b11);
     return Some(std::bit_cast<CanMailboxIndex>(idle_mbox_idx_bits));
 };
 
@@ -431,12 +431,16 @@ void Can::init_interrupts(){
 }
 
 void Can::transmit(CanMailboxIndex mbox_idx, const BxCanFrame & frame){
-    lld::can_transmit(p_inst_, mbox_idx, frame);
+    lld::can_transmit_nott(p_inst_, mbox_idx, frame);
 }
 
 Result<void, CanLibError> Can::try_write(const BxCanFrame & frame){
+    // 注意这段代码不能改为直接往队列中存报文 
+    // 因为如果没有报文被发送完成，中断一直不会被触发, 队列数据也就不会被外设消费
+
     //查找空闲的邮箱
     const auto may_idle_mbox_idx = can_get_idle_mailbox_index(p_inst_);
+
 
     //如果有空闲邮箱，直接发送
     if(may_idle_mbox_idx.is_some()){
@@ -524,6 +528,10 @@ bool Can::is_receiving(){
     return bool(RAL_INST(p_inst_)->STATR.RXM);
 }
 
+bool Can::is_sleeping(){
+    return bool(RAL_INST(p_inst_)->STATR.SLAK);
+}
+
 bool Can::is_busoff(){
     return bool(RAL_INST(p_inst_)->ERRSR.BOFF);
 }
@@ -558,10 +566,13 @@ void Can::enable_debug_freeze(const Enable en){
 
 void CanIrqHandler::isr_tx(Can & self){
     volatile uint32_t & tstatr_reg = SPL_INST(self.p_inst_)->TSTATR;
-    const auto temp_tstatr = tstatr_reg;
+    const uint32_t temp_tstatr = tstatr_reg;
     //遍历每个邮箱
 
-    auto iter_mailbox = [&]<CanMailboxIndex mbox_idx>() __attribute__((always_inline)){
+    // const uint32_t ANY_READY_MASK = lld::can_statr_rqcp_mask(CanMailboxIndex::_0) | lld::can_statr_tkok_mask(CanMailboxIndex::_0) |
+    //     lld::can_statr_rqcp_mask(CanMailboxIndex::_1) | lld::can_statr_tkok_mask(CanMailboxIndex::_1) |
+    //     lld::can_statr_rqcp_mask(CanMailboxIndex::_2) | lld::can_statr_tkok_mask(CanMailboxIndex::_2)
+    auto iter_mailbox = [&]<CanMailboxIndex mbox_idx>() {
         static constexpr uint32_t TSTATR_TME_MASK = lld::can_tstatr_tme_mask(mbox_idx);
         static constexpr uint32_t TSTATR_RQCP_MASK = lld::can_statr_rqcp_mask(mbox_idx);
         static constexpr uint32_t TSTATR_TXOK_MASK = lld::can_statr_tkok_mask(mbox_idx);
@@ -572,21 +583,17 @@ void CanIrqHandler::isr_tx(Can & self){
             return;
         }
 
-        auto isr_flag_clear_guard = make_scope_guard([&]{
-            //清除发送标志位
-            tstatr_reg = TSTATR_RQCP_MASK;
-        });
-
         const bool is_success = (temp_tstatr & TSTATR_TXOK_MASK) != 0;
         const CanTransmitEvent::Kind ev_kind = is_success ? 
             CanTransmitEvent::Kind::Success : CanTransmitEvent::Kind::Failed;
 
-        const auto tx_ev = hal::CanTransmitEvent{
+        const auto ev = CanEvent::from(hal::CanTransmitEvent{
             .kind = ev_kind,
             .mbox_idx = mbox_idx
-        };
-        const auto ev = CanEvent::from(tx_ev);
-        TRY_EMIT_EVENT(self, ev);
+        });
+
+        tstatr_reg = TSTATR_RQCP_MASK;
+        if(self.event_callback_ != nullptr) { self.event_callback_(ev);}
     };
 
     iter_mailbox.template operator() < CanMailboxIndex::_0 > ();
@@ -594,16 +601,13 @@ void CanIrqHandler::isr_tx(Can & self){
     iter_mailbox.template operator() < CanMailboxIndex::_2 > ();
 
 
-    self.poll_tx_queue();
-}
-
-void Can::poll_tx_queue(){
-    auto & self = *this;
+    // self.poll_tx_queue();
+    // auto & self = *this;
     if(self.tx_queue_.length() == 0) return;
     const auto may_idle_mailbox = can_get_idle_mailbox_index(self.p_inst_);
     if(may_idle_mailbox.is_none()) return;
-
-    if(const auto quantity = tx_queue_.consume_one([&](const hal::BxCanFrame & frame){
+    
+    if(const auto quantity = self.tx_queue_.consume_one([&](const hal::BxCanFrame & frame){
         self.transmit(may_idle_mailbox.unwrap(), frame);
     }); quantity == 0){
         //can't consume
@@ -613,19 +617,6 @@ void Can::poll_tx_queue(){
     return;
 }
 
-void CanIrqHandler::isr_rx0(Can & self){
-    CanIrqHandler::isr_rx(
-        self, 
-        CanFifoIndex::_0
-    );
-}
-
-void CanIrqHandler::isr_rx1(Can & self){
-    CanIrqHandler::isr_rx(
-        self, 
-        CanFifoIndex::_1
-    );
-}
 
 void CanIrqHandler::isr_rx(
     Can & self, 

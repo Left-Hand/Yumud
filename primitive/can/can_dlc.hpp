@@ -183,4 +183,6 @@ private:
 
     friend OutputStream & operator <<(OutputStream & os, const Self & self);
 };
+
+static_assert(sizeof(BxCanDlc) == 1);
 }

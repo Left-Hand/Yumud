@@ -37,7 +37,7 @@ public:
     [[nodiscard]] __fast_inline static constexpr 
     UnitComplex from_angle(const Angular<T> angle) {
         const auto [s,c] = angle.sincos();
-        return UnitComplex(c, s);
+        return UnitComplex(static_cast<T>(c), static_cast<T>(s));
     }
 
     [[nodiscard]] __fast_inline static constexpr 

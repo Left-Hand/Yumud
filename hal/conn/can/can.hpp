@@ -28,8 +28,6 @@ struct Can;
 struct CanIrqHandler{
     static void isr_tx(Can & self);
     static void isr_rx(Can & self, const CanFifoIndex fifo_idx);
-    static void isr_rx0(Can & self);
-    static void isr_rx1(Can & self);
     static void isr_sce(Can & self);
 };
 
@@ -72,6 +70,9 @@ public:
 
     // 是否正在进行发送
     [[nodiscard]] bool is_tranmitting();
+
+    // 是否正在睡眠
+    [[nodiscard]] bool is_sleeping();
 
     // 是否正在进行接收
     [[nodiscard]] bool is_receiving();
@@ -150,7 +151,7 @@ private:
     //在指定的fifo读取报文
     [[nodiscard]] BxCanFrame receive(const CanFifoIndex fifo_idx);
 
-    void poll_tx_queue();
+    // void poll_tx_queue();
     
     [[nodiscard]] uint32_t get_aligned_bus_clk_freq();
 

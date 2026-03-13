@@ -56,7 +56,7 @@ static_assert(div_10000(uint32_t(0xFFFFFFFF)) == 0xFFFFFFFF / 10000);
 template<int8_t Q, bool IS_SIGNED>
 constexpr int32_t m__IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
 {
-    using namespace iqmath::details;
+    using namespace fxmath::details;
     bool is_neg = 0;
     uint32_t uiqNResult;
 
@@ -142,7 +142,7 @@ constexpr int32_t m__IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
 
     /* use left most 7 bits as ui8Index into lookup table (range: 32-64) */
     const size_t ui8Index = size_t((uiq32Input2 >> 25) - 64);
-    uint32_t uiq30Guess = uint32_t(_IQ6div_lookup[ui8Index]) << 24;
+    uint32_t uiq30Guess = uint32_t(fxmath::details::IQ6DIV_LOOPUP[ui8Index]) << 24;
 
     
 
@@ -375,7 +375,7 @@ static constexpr int32_t taylor_3o_optimized(uint32_t t, int32_t S, int32_t C) {
 
 template<typename Fn>
 __attribute__((always_inline, optimize("-Ofast"))) constexpr 
-math::fixed<31, int32_t> ds_exact_sin(fxmath::details::SincosIntermediate inter, Fn&& taylor_law) {
+math::fixed<31, int32_t> ds_exact_sin(fxmath::details::IqSincosIntermediate inter, Fn&& taylor_law) {
 
     #if 0
         //获取查找表的校准值
@@ -453,7 +453,7 @@ constexpr std::tuple<uint32_t, uint32_t> left_shift_two_part(const uint32_t x, c
 
 
 __attribute__((always_inline,  optimize( "-Ofast" )))
-constexpr fxmath::details::SincosIntermediate DsCosSinPU(uint32_t uq32_x_pu_bits){
+constexpr fxmath::details::IqSincosIntermediate DsCosSinPU(uint32_t uq32_x_pu_bits){
     #if 0
     constexpr uint32_t uq32_quatpi_bits = uint32_t(((uint64_t(1u) << 32) / 4) * (M_PI));
 
@@ -522,7 +522,7 @@ constexpr fxmath::details::SincosIntermediate DsCosSinPU(uint32_t uq32_x_pu_bits
     const int32_t iq31_cos_coeff = fxmath::details::IQ31_SINCOS_TABLE[lut_index][1];
     #endif
 
-    return fxmath::details::SincosIntermediate{
+    return fxmath::details::IqSincosIntermediate{
         uq32_x_offset, 
         iq31_sin_coeff,
         iq31_cos_coeff,
@@ -570,7 +570,7 @@ MAY_INLINE math::fixed<31, int32_t> my_cos2o(const math::fixed<Q, D> x){
 template<size_t Q, typename D>
 requires (sizeof(D) == 4)
 MAY_INLINE math::fixed<31, int32_t> ds_sin3o(const math::fixed<Q, D> x){
-    return fxmath::details::CosSinPU(rad_to_uq32(x).to_bits())
+    return fxmath::details::make_sincospu_intermdeiate(rad_to_uq32(x).to_bits())
         .exact_sin(taylor_3o_optimized);
 }
 

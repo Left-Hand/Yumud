@@ -14,7 +14,7 @@
 
 namespace ymd::hal{
 
-struct alignas(4) [[nodiscard]] BxCanFrame final{
+struct [[nodiscard]] BxCanFrame final{
 public:
     using Payload = BxCanPayload;
 
@@ -86,7 +86,7 @@ public:
 
     /// \brief 获取dlc标识符
     [[nodiscard]] __attribute__((always_inline)) constexpr BxCanDlc dlc() 
-    const noexcept{return payload_.dlc_;}
+    const noexcept{return payload_.dlc;}
 
     /// \brief 获取dlc标识符
     [[nodiscard]] __attribute__((always_inline)) constexpr const Payload & 
@@ -224,7 +224,7 @@ public:
     /// @brief 不顾帧长度直接获取载荷的64位数据
     [[nodiscard]] __attribute__((always_inline)) constexpr 
     uint64_t payload_u64() const noexcept{
-        return std::bit_cast<uint64_t>(payload_.u8x8());
+        return payload_.to_u64();
     }
 
     /// @brief 获取首部标识符
@@ -235,7 +235,7 @@ public:
 private:
 
     alignas(4) CanIdentifier identifier_;
-    alignas(4) Payload payload_;
+    Payload payload_;
 
 
     __attribute__((always_inline)) constexpr BxCanFrame(
@@ -245,13 +245,12 @@ private:
         identifier_(identifier),
         payload_(payload){}
 
-
-
-    __attribute__((always_inline)) imconstexpr BxCanFrame():
+    __attribute__((always_inline)) constexpr BxCanFrame():
         identifier_(CanIdentifier::from_uninitialized()),
         payload_(Payload::from_uninitialized()){;}
 };
 
+// static_assert(sizeof(BxCanFrame) == 12 + 1);
 static_assert(sizeof(BxCanFrame) == 16);
 
 
